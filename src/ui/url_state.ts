@@ -156,6 +156,13 @@ export const GREEDY_TRAPS: GreedyTrap[] = ["off", "on"];
 // committed move, as on the turn clock.
 export type MazeClock = ClockMode | "beat";
 export const CLOCK_MODES: MazeClock[] = ["turn", "realtime", "beat"];
+// K804: the beat indicator at the dot while the beat is the clock:
+// pulse (the head ring swells on each beat, K114 item 6), ring (a crisp
+// ring spreads from the marker on each beat) or off. A look only: it
+// applies live and never restarts the solve, and it is a design
+// setting like the other beat settings (not a daily-exempt preference).
+export type BeatIndicator = "pulse" | "ring" | "off";
+export const BEAT_INDICATORS: BeatIndicator[] = ["pulse", "ring", "off"];
 
 // K323 Stage A: the game mode (the Game folder's first row). classic =
 // the plain maze; minotaur = the minotaur (its clock is `clock`);
@@ -984,6 +991,9 @@ export interface UrlParams extends ShapeInjectionParams {
   // beatCap). Free play only.
   beatTiming: BeatTiming;
   beatPerRun: number;
+  // K804: the beat indicator at the dot (pulse | ring | off), shown
+  // only while the clock is beat. Live; only the fabric renderer reads it.
+  beatIndicator: BeatIndicator;
 }
 
 // The turn minotaur's slider tops (url_state clamps; the panel's ranges).
@@ -1371,6 +1381,7 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   loaderTrail: 2.6, // K852 (today's trail, world units)
   labelInk: false, // K868 S3a
   labelGpu: false, // K868 S3a7
+  beatIndicator: "pulse", // K804: today's look (the pulse) by default
 };
 
 // The burn race a design plays (K114; gameMode "burn" since K323), or
@@ -1672,6 +1683,7 @@ export const ENUM_OPTIONS: {
   sleepKind: SLEEP_KINDS, // K137 stage 3d
   lockMode: LOCK_MODES, // K138 stage 4
   beatTiming: BEAT_TIMINGS, // K795
+  beatIndicator: BEAT_INDICATORS, // K804
 };
 
 // K398: every numeric param held to the panel's range (param_codec's
@@ -2277,6 +2289,8 @@ function readLegacy(
     // beats to 1..4).
     beatTiming: readChoice(query, "btm", BEAT_TIMINGS, D.beatTiming),
     beatPerRun: readNumber(query, "btr", D.beatPerRun),
+    // K804's beat indicator (`&bin=ring`; an unknown value reads the default).
+    beatIndicator: readChoice(query, "bin", BEAT_INDICATORS, D.beatIndicator),
     mud: readNumber(query, "mud", D.mud),
   };
 }

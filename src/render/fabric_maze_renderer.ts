@@ -64,7 +64,8 @@ import { walkedGold, type WalkedGold } from "./walked_gold";
 import { openPair } from "../game/turnstiles";
 import type { PaintRoute } from "./junction_routes";
 import { trailFade, trailSpans } from "./trail_paint";
-import type { MinoFog, PathViz } from "../ui/url_state";
+import type { BeatIndicator, MinoFog, PathViz } from "../ui/url_state";
+import { beatRing } from "../game/beat_clock";
 import { spotCtrl } from "../game/minotaur";
 import type { ChaseGraph, MinotaurMode, Spot } from "../game/minotaur";
 import type { SwordState } from "../game/sword";
@@ -742,6 +743,16 @@ export class FabricMazeRenderer {
   // reduced motion).
   beatPulse = -1;
   beatPulseReduced = false;
+  // K804: the beat indicator the fed phase drives (main.ts tickBeat and
+  // syncExploration keep it on the param): pulse swells the head ring,
+  // ring spreads a crisp ring from it instead, off feeds no pulse. One
+  // reused Graphics draws the ring (the win ring's stroked-circle
+  // pattern); no new shader text.
+  beatIndicator: BeatIndicator = "pulse";
+  private beatSolvedNow = false;
+  private beatRingGfx: Graphics;
+  private beatRingDrawnR = -1;
+  private beatRingDrawnAlpha = 0;
   private headR = 0;
   private headY = 0;
   private headValid = false;
@@ -947,6 +958,7 @@ export class FabricMazeRenderer {
     this.overContainer = new Container();
     this.yarnGfx = new Graphics();
     this.gfx = new Graphics();
+    this.beatRingGfx = new Graphics(); // K804: the one reused beat-ring stroke
     this.markers = markerMeshes();
     // Yarn under the markers: the markers stay readable on top of the
     // laid string. The head sits above the start (at the entrance the
@@ -960,7 +972,8 @@ export class FabricMazeRenderer {
       this.markers.exit.mesh,
       // K137 stage 3b: the sword, under the fog like the exit.
       this.markers.sword.mesh,
-      this.gfx
+      this.gfx,
+      this.beatRingGfx
     );
     // K80: the minotaur above them all (on the player's dot, a catch shows
     // the minotaur). Hidden until a real-time chase syncs it.
@@ -4318,6 +4331,8 @@ export class FabricMazeRenderer {
     this.headR = r;
     m.head.place(this.headX, this.headY, this.pulsedHeadR());
     this.pulseGlow();
+    this.beatSolvedNow = controller.solved; // K804: no beat ring once solved
+    this.drawBeatRing();
     this.placeWalkerGlow(controller, r); // K713
     this.drawTunnels(controller); // K137 tunnels (4.13)
     this.drawAids(controller, dotChain >= 0, r); // K137 stage 2
@@ -4452,15 +4467,59 @@ export class FabricMazeRenderer {
     return (1 - f) * (1 - f);
   }
   private pulsedHeadR(): number {
+    // K804: only the pulse swells; ring and off keep the plain radius.
+    if (this.beatIndicator !== "pulse") return this.headR;
     return this.beatPulseReduced ? this.headR : this.headR * (1 + 0.16 * this.pulseEnv());
   }
   private pulseGlow(): void {
-    this.glowSprite.alpha = HEAD_GLOW_ALPHA + (this.beatPulseReduced ? 0.25 * this.pulseEnv() : 0);
+    this.glowSprite.alpha =
+      HEAD_GLOW_ALPHA +
+      (this.beatIndicator === "pulse" && this.beatPulseReduced ? 0.25 * this.pulseEnv() : 0);
+  }
+  // K804: the crisp beat ring's drawn radius and alpha (world units), or
+  // null when no ring draws (the probes read these).
+  beatRingRadius(): number | null {
+    return this.beatRingDrawnR > 0 ? this.beatRingDrawnR : null;
+  }
+  beatRingAlpha(): number | null {
+    return this.beatRingDrawnR > 0 ? this.beatRingDrawnAlpha : null;
+  }
+  private drawBeatRing(): void {
+    const g = this.beatRingGfx;
+    g.clear();
+    this.beatRingDrawnR = -1;
+    this.beatRingDrawnAlpha = 0;
+    if (
+      this.beatIndicator !== "ring" ||
+      this.beatPulse < 0 ||
+      !this.headValid ||
+      this.headR <= 0 ||
+      this.beatSolvedNow
+    ) {
+      return;
+    }
+    const ring = beatRing(this.beatPulse, this.beatPulseReduced);
+    if (!(ring.alpha > 0)) return;
+    const r = this.headR * ring.radius;
+    this.polyCircle(g, this.headX, this.headY, r, 72);
+    g.stroke({
+      color: 0xffffff,
+      width: Math.max(0.05, this.threadWidth * 0.22),
+      alpha: ring.alpha,
+    });
+    this.beatRingDrawnR = r;
+    this.beatRingDrawnAlpha = ring.alpha;
   }
   pulseHead(): void {
-    if (!this.headValid || this.headR <= 0) return;
+    if (!this.headValid || this.headR <= 0) {
+      this.beatRingGfx.clear();
+      this.beatRingDrawnR = -1;
+      this.beatRingDrawnAlpha = 0;
+      return;
+    }
     this.markers.head.place(this.headX, this.headY, this.pulsedHeadR());
     this.pulseGlow();
+    this.drawBeatRing();
   }
 
   private drawAids(controller: FabricMazeController, moving: boolean, r: number): void {

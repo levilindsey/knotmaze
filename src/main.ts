@@ -777,6 +777,7 @@ async function main(): Promise<void> {
     const li = (EXPLORE_LOOKS as readonly string[]).indexOf(params.revealLook);
     if (li >= 0) ex.look = li;
     f.burntLook = params.burnt; // K290: how burnt runs draw
+    f.beatIndicator = params.beatIndicator; // K804: the beat look at the dot (live)
     f.revealFinish = params.revealFinish; // K465: the finish under the reveal
     ex.endCross = params.revealEndCross; // K466: an end under a crossing
     ex.endGlow = params.revealEndGlow; // K466: the ends' halo
@@ -4270,9 +4271,12 @@ async function main(): Promise<void> {
       tickBeat: (dt: number) => {
         const moved = beat?.tick(dt) ?? false;
         // K114 item 6: the head ring pulses on the beat (brightness
-        // only under reduced motion).
+        // only under reduced motion). K804: the beatIndicator param
+        // chooses what the fed phase drives - the pulse, a crisp ring,
+        // or nothing; off feeds no pulse at all.
         if (scene.fabric && beat) {
-          scene.fabric.beatPulse = beat.phase();
+          scene.fabric.beatIndicator = params.beatIndicator;
+          scene.fabric.beatPulse = params.beatIndicator === "off" ? -1 : beat.phase();
           scene.fabric.beatPulseReduced = motion.reduced;
           scene.fabric.pulseHead();
         }

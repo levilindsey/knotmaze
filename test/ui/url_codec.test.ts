@@ -161,7 +161,7 @@ describe("links", () => {
       followDelayMin: 1, followDelayMax: 2, followShortcut: 0.25, // K807
       swordRingMin: 4, swordRingMax: 8, sleeperRingMin: 1, sleeperRingMax: 3,
       nearHops: 2, routeWeight: 4,
-      beatTiming: "even", beatPerRun: 1, // K795 beat timing
+      beatTiming: "even", beatPerRun: 1, beatIndicator: "pulse", // K795 beat timing; K804 indicator
       mud: 0, // K137 s5
       threadLook: "fill", // K797b
       goldWidth: 1, goldTexture: "solid", // K799
@@ -702,6 +702,22 @@ describe("links", () => {
     expect(fireSettingsOf(r)?.clock).toBe("turn");
   });
 
+  // K804: the beat indicator reads from its legacy key and its token,
+  // each value round-trips, and a bad value reads the default (pulse).
+  it("reads the beat indicator from bin and the token", () => {
+    expect(parseParams("?7&clk=beat").beatIndicator).toBe("pulse");
+    for (const v of ["pulse", "ring", "off"] as const) {
+      const p = parseParams(`?7&clk=beat&bin=${v}`);
+      expect(p.beatIndicator).toBe(v);
+      expect(parseParams(`?${encodeParams(p)}`)).toEqual(p);
+    }
+    expect(parseParams("?7&clk=beat&bin=blink").beatIndicator).toBe("pulse");
+    // The default stays out of the token.
+    expect(encodeParams(parseParams("?7&clk=beat&bin=pulse"))).toBe(
+      encodeParams(parseParams("?7&clk=beat"))
+    );
+  });
+
   // K324: the link keeps both stop lengths as written; the chase reads the
   // max held at least the min. Every new knob clamps to its range.
   it("orders the junction stop pair and clamps K324's knobs", () => {
@@ -1031,7 +1047,7 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   lures: "lur", snares: "snr", // K137 stage 4
   keys: "ky", lockMode: "lkm", // K138 stage 4
   snareHold: "snh", lureRange: "lrg", hiddenReveal: "hrv", // K795
-  beatTiming: "btm", beatPerRun: "btr", // K795 beat timing
+  beatTiming: "btm", beatPerRun: "btr", beatIndicator: "bin", // K795 beat timing; K804 indicator
   mud: "mud", // K137 s5
   followDelayMin: "fdm", followDelayMax: "fdx", followShortcut: "fsc", // K807
   swordRingMin: "srm", swordRingMax: "srx", sleeperRingMin: "zrm", sleeperRingMax: "zrx",

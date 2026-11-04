@@ -462,6 +462,7 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   num("nearHops"),
   num("routeWeight"),
   num("touchPickMargin"), // K331: touch's pick margin (CSS px past the edge)
+  choice("beatIndicator", ["pulse", "ring", "off"]), // K804: the beat indicator at the dot
 ]);
 
 // The format version a blob names first. Bump it for anything but an

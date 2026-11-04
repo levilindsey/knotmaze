@@ -45,6 +45,29 @@ export function beatPhase(tick: number, tempo: number): number {
   return b > a ? (tick - a) / (b - a) : 0;
 }
 
+// K804: the beat ring at the dot (the fabric renderer's `ring` indicator).
+// The ring starts on the beat at the head ring's own radius (a multiple
+// of 1) and expands to BEAT_RING_END times that radius over the beat
+// while its alpha fades linearly from BEAT_RING_ALPHA to 0. Under
+// Reduced motion it does not expand: it stays at the head's radius and
+// brightens on the beat, fading with the pulse's squared envelope.
+// Radius is a multiple of the head radius; the renderer multiplies.
+export const BEAT_RING_END = 2.5;
+export const BEAT_RING_ALPHA = 0.9;
+export interface BeatRing {
+  radius: number;
+  alpha: number;
+}
+export function beatRing(phase: number, reduced = false): BeatRing {
+  if (!Number.isFinite(phase) || phase < 0) return { radius: 1, alpha: 0 };
+  const f = Math.min(1, Math.max(0, phase));
+  if (reduced) {
+    const e = (1 - f) * (1 - f);
+    return { radius: 1, alpha: BEAT_RING_ALPHA * e };
+  }
+  return { radius: 1 + (BEAT_RING_END - 1) * f, alpha: BEAT_RING_ALPHA * (1 - f) };
+}
+
 // Float noise in a frame's seconds (5.5 + 1/60 - 5.5 is a hair under 1/60):
 // a tick owed within this much is stepped, so a 60 Hz frame steps 2.
 const TICK_EPS = 1e-9;

@@ -307,6 +307,7 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["nearHops", "number"],
   ["routeWeight", "number"],
   ["touchPickMargin", "number"], // K331
+  ["beatIndicator", "enum", ["pulse", "ring", "off"]], // K804 (appended only)
 ];
 
 const asPin = (p: CodecParam): readonly unknown[] =>

@@ -9,6 +9,7 @@ import {
   TICKS_PER_MINUTE,
   beatAt,
   beatPhase,
+  beatRing,
   beatTick,
 } from "../../src/game/beat_clock";
 import { CHASE_HZ, MAX_STEPS_PER_ADVANCE } from "../../src/game/minotaur";
@@ -38,6 +39,24 @@ describe("beat math", () => {
     expect(beatPhase(36, 100)).toBe(0.5);
     expect(beatPhase(72, 100)).toBe(0);
     expect(beatPhase(71, 100)).toBeCloseTo(71 / 72, 12);
+  });
+
+  // K804: the beat ring (radius x the head's, alpha) over one beat.
+  it("spreads the beat ring from the head's radius and fades it", () => {
+    expect(beatRing(0)).toEqual({ radius: 1, alpha: 0.9 });
+    expect(beatRing(0.25)).toEqual({ radius: 1.375, alpha: 0.675 });
+    expect(beatRing(0.5)).toEqual({ radius: 1.75, alpha: 0.45 });
+    expect(beatRing(1)).toEqual({ radius: 2.5, alpha: 0 });
+  });
+
+  it("holds the beat ring at the head under Reduced motion", () => {
+    expect(beatRing(0, true)).toEqual({ radius: 1, alpha: 0.9 });
+    expect(beatRing(0.25, true)).toEqual({ radius: 1, alpha: 0.50625 });
+    expect(beatRing(0.5, true)).toEqual({ radius: 1, alpha: 0.225 });
+    expect(beatRing(1, true)).toEqual({ radius: 1, alpha: 0 });
+    // Off the beat (or no beat) nothing draws; past the end it is done.
+    expect(beatRing(-1).alpha).toBe(0);
+    expect(beatRing(2)).toEqual({ radius: 2.5, alpha: 0 });
   });
 });
 

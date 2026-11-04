@@ -1390,6 +1390,15 @@ export function buildPanel(
     "Beat, by run length: the most beats one run takes, however long it is, so a long run never crawls past this. 1 rides every run in one beat. Restarts the solve.",
     D.beatCap, () => callbacks.onClockChange()
   );
+  // K804: the beat indicator at the dot, beside the beat rows. A look
+  // only, so it applies live (onTrailChange; undo_stack lists it there)
+  // and never restarts the solve.
+  const beatIndicatorRow = row(
+    fGame, p, "beatIndicator",
+    { options: { Pulse: "pulse", Ring: "ring", Off: "off" }, label: "Beat indicator" },
+    "Beat: how each beat shows at your dot. Pulse swells its ring on the beat (under Reduced motion only its halo brightens). Ring sends a crisp ring out from your marker on each beat (under Reduced motion it brightens at your marker instead of spreading). Off shows nothing. Applies live.",
+    D.beatIndicator, () => callbacks.onTrailChange()
+  );
   const playerPaceRow = row(
     fGame, p, "playerPace", { min: 2, max: 30, step: 0.5, label: "Your speed (units/s)" },
     "Your speed in real time, along the threads, in lattice units per second. Applies live.",
@@ -3681,6 +3690,7 @@ export function buildPanel(
     beatPerRunRow.hidden = !beat || byLength;
     beatLengthRow.hidden = !beat || !byLength;
     beatCapRow.hidden = !beat || !byLength;
+    beatIndicatorRow.hidden = !beat; // K804: only while the clock is beat
     playerPaceRow.hidden = !realtime;
     const turnMinoOn = gameMino && !realtime;
     const minoOn = gameMino;

@@ -150,6 +150,7 @@ export const LIVE_EFFECTS = {
     "hoverGlowWidth", "hoverGlowLength", "hoverGlowFade",
     "revealDistance", "revealFade", "revealLook", "burnt", "revealFinish",
     "revealEndCross", "revealEndGlow",
+    "beatIndicator", // K804: a look at the dot; tickBeat reads it live
   ],
   // K137 stage 2: the compass row's effect (main.ts reads it every frame).
   onAidsChange: ["compass", "showShortestPath"], // K839

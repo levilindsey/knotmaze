@@ -32,6 +32,7 @@ export const PARAM_TAGS: Readonly<Record<string, readonly string[]>> = {
   beatTempo: ["btp", "beat", "tempo", "bpm", "speed", "metronome", "faster", "slower", "rhythm"],
   beatTiming: ["btm", "beat", "timing", "same per run", "by run length", "even speed", "steady pulse"],
   beatPerRun: ["btr", "beat", "beats per run", "same per run", "one per run", "steady pulse", "runs"],
+  beatIndicator: ["bin", "beat", "indicator", "pulse", "ring", "marker", "dot"],
   beatLength: ["btl", "beat", "by run length", "beat length", "dot speed", "units", "run length"],
   beatCap: ["btc", "beat", "by run length", "max beats", "cap", "long runs", "limit"],
   playerPace: ["plp", "speed", "player speed", "run speed", "walk speed", "faster", "slower", "pace", "real time"],
