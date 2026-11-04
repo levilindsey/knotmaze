@@ -1,0 +1,2 @@
+# K1139 S1: re-run of the x4 fixed stand (frames 1-7 of the first run were recentred on the head with an empty background)
+$env:K1139_INJECT = "fixed"; node strips.mjs pre4 out/fixed8b 8 60 "&pr=8"

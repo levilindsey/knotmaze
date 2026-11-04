@@ -149,6 +149,16 @@ try {
     decl = await dumpPulses(page);
   }
   await page.evaluate(PIN);
+  // K1139_LEAD0=1 (Q3's pass-through look): after every paint tick the
+  // outward crests' travel equals the inward one (PULSE_OUT_LEAD 0).
+  if (process.env.K1139_LEAD0 === "1") {
+    await page.evaluate(async () => {
+      const MD = await import("/src/render/paint_model.ts");
+      const U = MD.knotUniformValues(), r = window.__knotRenderer(), tp = r.tickPaint;
+      r.tickPaint = function (...a) { const x = tp.apply(this, a); U.uKPulse[1] = U.uKPulse[0]; return x; };
+      r.tickPaint(0);
+    });
+  }
   await sleep(200);
   const foc = await page.evaluate((ids) => {
     const k = window.__knotFabric();

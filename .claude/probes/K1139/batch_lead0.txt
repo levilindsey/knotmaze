@@ -1,0 +1,2 @@
+# K1139 S1 Q3: the cross stand under the fixed model with the outward lead at 0 (straight through your junction)
+$env:K1139_INJECT = "fixed"; $env:K1139_LEAD0 = "1"; node strips.mjs cross out/lead0 8 60; $env:K1139_LEAD0 = $null
