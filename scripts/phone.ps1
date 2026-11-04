@@ -23,6 +23,7 @@ param(
   [string[]]$Ports = @("5173"),
   [string]$Url = "",
   [switch]$Wireless,
+  [switch]$Wake,
   [string]$TailscaleHost = "pixel-11"
 )
 $ErrorActionPreference = "Stop"
@@ -87,8 +88,12 @@ if (-not $serial) {
 }
 Write-Host "Phone: $serial$(if ($serial -eq $tcpSerial) { ' (Tailscale; you may unplug)' } else { ' (USB)' })"
 
-# Wake the screen; Chrome throttles rendering on a sleeping display.
-& $adb -s $serial shell input keyevent KEYCODE_WAKEUP | Out-Null
+# No wake by default: the phone rule forbids key events and the phone stays
+# awake on its charger. Pass -Wake when Levi asks for it by hand - a sleeping
+# display throttles Chrome's rendering.
+if ($Wake) {
+  & $adb -s $serial shell input keyevent KEYCODE_WAKEUP | Out-Null
+}
 $keyguard = & $adb -s $serial shell "dumpsys window | grep -c 'isKeyguardShowing=true'"
 if ([int]$keyguard -gt 0) { Write-Warning "The phone is locked; unlock it before probing." }
 

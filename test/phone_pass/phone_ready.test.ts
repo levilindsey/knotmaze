@@ -268,6 +268,52 @@ describe("K1142 phone_ready: waiting for a quiet launcher", () => {
 
 // Every tracked script that opens something on the phone goes through the check; scripts/phone.ps1 is Levi's interactive
 // tunnel and is exempt. A new opener must call phone_ready.mjs (or be listed here with the reason).
+// K170: scripts/phone.ps1 is Levi's interactive tunnel (exempt below); its one key event is opt-in.
+describe("K170 phone.ps1: the wake is opt-in", () => {
+  const phonePs1 = () => readFileSync(join(repo, "scripts", "phone.ps1"), "utf8");
+
+  // For each `KEYCODE_WAKEUP` / `input keyevent` occurrence in order, was it inside `if ($Wake) { ... }`
+  // (or on the same line as the guard)? The before shape (an unconditional wake line) yields [false, false].
+  function wakeGuarded(text: string): boolean[] {
+    const guarded: boolean[] = [];
+    let inWake = false;
+    let depth = 0;
+    for (const line of text.split(/\r?\n/)) {
+      const hits = (line.match(/KEYCODE_WAKEUP|input\s+keyevent/g) ?? []).length;
+      if (/if\s*\(\s*\$Wake\s*\)/.test(line)) {
+        for (let i = 0; i < hits; i++) guarded.push(true);
+        const net = (line.match(/\{/g) ?? []).length - (line.match(/\}/g) ?? []).length;
+        inWake = net > 0;
+        depth = net;
+        continue;
+      }
+      if (inWake) {
+        for (let i = 0; i < hits; i++) guarded.push(true);
+        depth += (line.match(/\{/g) ?? []).length - (line.match(/\}/g) ?? []).length;
+        if (depth <= 0) inWake = false;
+        continue;
+      }
+      for (let i = 0; i < hits; i++) guarded.push(false);
+    }
+    return guarded;
+  }
+
+  it("the param block names -Wake", () => {
+    const src = phonePs1();
+    const paramBlock = src.slice(src.indexOf("param("), src.indexOf("$ErrorActionPreference"));
+    expect(paramBlock).toContain("[switch]$Wake");
+  });
+
+  it("the only KEYCODE_WAKEUP and the only input keyevent sit under -Wake", () => {
+    const src = phonePs1();
+    expect(src.match(/KEYCODE_WAKEUP/g) ?? []).toHaveLength(1);
+    expect(src.match(/input\s+keyevent/g) ?? []).toHaveLength(1);
+    const guarded = wakeGuarded(src);
+    expect(guarded.length).toBe(2);
+    expect(guarded).toEqual([true, true]);
+  });
+});
+
 describe("K1142 phone_ready: no tracked runner opens the phone unguarded", () => {
   const files: string[] = [];
   const walk = (dir: string) => {
