@@ -98,7 +98,7 @@ PAR ROWS, COLLAPSE ROW and CUT ROW. The headers of `fragile.ts`, `par.ts`,
   K155's profiles (greedy 0/50, random 0/400; every crack game is the same
   walk as its fragile-off game, 1150 of 1150); snap strands greedy and
   explorer on 40/50 (dailies 25/30), random on 397/400, careful never. The
-  design expected snap near 20 of 30.
+  design expected snap near 20 of 30. (Measured before K840, 2026-10-22, made END runs break too; not re-measured since, so today's rates are higher.)
 - BROKEN RUNS BLOCK THE CHASES (K137-b, stage 3a, 2026-10-20; brief
   `docs/design/K137_s3a.md`): a broken run is a wall for the minotaur on
   both clocks (gameplay-minotaur.md's BROKEN RUNS BLOCK IT) and for the

@@ -86,17 +86,17 @@ pushed. Branch `worktree-agent-ae83ec07a4b4a228c` (worktree
 the pictures is all that is left; no judgment on the looks is made here.
 
 ### What landed, by commit
-- `adb27a13` the site list (`s1h_sites.ts`: builds the S1f-final, the
+- `6ed0fd55` the site list (`s1h_sites.ts`: builds the S1f-final, the
   defaults, F1-only and F2-only forms per scene, picks the sites, writes
   `out/s1h/sites.json` and `sites.txt`) and the pair probe
   (`s1h_pair.ts`), WIP.
-- `8052a5ad` the 36 pair PNGs, `sheet.png`, `index.md`, `pairs.txt` (WIP).
-- `5eca305e` the diff panel made signed (after minus before: red = more ink
+- `aa049a13` the 36 pair PNGs, `sheet.png`, `index.md`, `pairs.txt` (WIP).
+- `e73a0317` the diff panel made signed (after minus before: red = more ink
   after, blue = less), one `seen` line per site (what differs, no verdict)
   in the pictures, `pairs.txt`, the sheet and `index.md`; the figures of
   sites 05, 16, 17, 18 re-measured along rows or columns of the forms' ink
   (WIP).
-- `ccf5f785` site 17's elbow in its `seen` line; `s1h_runs.ts` (ink
+- `f58553ac` site 17's elbow in its `seen` line; `s1h_runs.ts` (ink
   runs along rows or columns) and `s1h_zoom.ts` (zoom 6-10 crops, before |
   after | signed diff) kept (WIP).
 - the commit holding this Handoff.
