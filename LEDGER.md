@@ -539,9 +539,6 @@ Binding for every stage:
   new, and pause running agents with their WIP committed.
 
 Running agents are listed under In progress, each with its own next step.
-- **K1142** · Phone kit guard, before the next phone pass: at 08:04 on 2026-11-03 an S3c run opened Chrome over
-  an app on the awake, unlocked phone (stopped a second later by a touch; nothing timed). Fold `680651fe`'s
-  guard (K1097's branch: the launcher in front, the phone quiet; `phone_quiet.mjs`) into every phone runner.
 - **K875** · K868 S1b, master's side: on Muse's link master registers only 58-80% with the oracle at
   j49/j123 and #6 finds every band end off (18/18, 19/19; cause untested: gaps or a reveal/fog state);
   its sdf and strip silhouettes differ in width; joinery.ts:1469-1471's comment is stale. s1b_oracle.md.
@@ -2016,6 +2013,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1142** · Phone kit guard: one shared read-only readiness check (`scripts/phone_pass/phone_ready.mjs`: screen on, unlocked, the launcher in front, 120 s without a touch) that every tracked phone runner calls before opening anything. Done in 2887abc5 (2026-11-03).
 - **K1141** · Muse batch 10: A, K1138's backdrop tuning (27cb9202; the slider's top waits on Levi); B, batch 11's draft, reviewed into K1146 with its Run B dropped. Done in 77d02919 (2026-11-03).
 - **K1137** · Muse batch 9: A, K1132's key-hint pictures; B, K1083 closed and K1133 kept open on the flow-on retrace; C, K1135's Reset test; D, batch 10's draft (K1141). Done in 5f769558 (2026-11-03).
 - **K1129** · With Reduced motion on and the camera following the player, the view still glides after every move. Dropped: Levi 2026-11-03: "camera glide with reduced motion is fine", so the view keeps gliding (2026-11-03).
