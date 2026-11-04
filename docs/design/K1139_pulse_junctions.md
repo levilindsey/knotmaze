@@ -164,8 +164,9 @@ panel today, bottom panel S2.
   stripes on e198 lean the other way: the light leaves node_116 in both
   directions (f); bottom, one direction throughout.
   ![src kymograph](../../.claude/probes/K1139/out/doc/kymo_src.png)
-- Also in `out/doc/`: `strip_fork_today.png` (a plain fork at your
-  junction, node_12: only the hand-off d shows at reach 3),
+- Also made, kept local (untracked, to keep the repo small; the
+  appendix's commands rebuild them): `strip_fork_today.png` (a plain fork
+  at your junction, node_12: only the hand-off d shows at reach 3),
   `strip_four_today.png` (you on the 4-arm node_378), `strip_x4_today.png`
   (node_378 lit from e176 at reach 8), `strip_src_today.png` (node_116
   behind you), `kymo_cross.png`, `kymo_four.png`.
@@ -220,11 +221,16 @@ kept), so the bars of 1.2 do not paint underneath.
 
 ![Option A mock-up](../../.claude/probes/K1139/out/doc/mock_A_cross.png)
 
-`mock_A_cross.png`: frames 2-7 at mnode_48 (cross), drawn over the S2
-frames: inside the fan the pixels come from the same state rendered
-without pulses, and the crest is drawn on curves from e150 into e21 and
-e151 at the S2 distances (`mock.mjs`). A mock-up: S3's bands are K81's
-curves, not these Bezier stand-ins.
+`mock_A_cross.png`: frames 2-7 (of 8 over one period) at mnode_48
+(cross), drawn over the S2 frames: inside the fan (radius R = 0.55
+world, the web's own extent there) the pixels come from the same state
+rendered without pulses, and the crest is drawn on curves from e150 into
+e21 and e151 at the S2 distances, whitened with the paint's own gain
+(K_BAND, 0.93), and feathered into the real arms over 6 px at R
+(`mock.mjs`). A mock-up: S3's bands are K81's curves, not these Bezier
+stand-ins, and the darker wedge between the two lights (the middle of
+the fan, which no band covers) is a choice S3 settles by looking: unlit
+as here, or a dim share of both.
 
 ### 2.3 Option B: straight through the middle
 
@@ -234,10 +240,10 @@ middle of the junction, with a chevron between the arms beyond.
 
 ![Option B, real frames](../../.claude/probes/K1139/out/doc/strip_cross_fixed.png)
 
-`strip_cross_fixed.png` (and `strip_x4_fixed.png`, `strip_src_fixed.png`,
-`strip_four_fixed.png`): real frames, the S2 declaration injected into
-the live renderer by `strips.mjs` (`K1139_INJECT=fixed`), same states
-as the today strips.
+`strip_cross_fixed.png` (and, kept local, `strip_x4_fixed.png`,
+`strip_src_fixed.png`, `strip_four_fixed.png`): real frames, the S2
+declaration injected into the live renderer by `strips.mjs`
+(`K1139_INJECT=fixed`), same states as the today strips.
 
 ### 2.4 Option C: the junction flashes
 
@@ -250,7 +256,9 @@ beacon.
 ![Option C mock-up](../../.claude/probes/K1139/out/doc/mock_C_cross.png)
 
 `mock_C_cross.png`: frames 2-7 at mnode_48, drawn over the S2 frames
-the same way (`mock.mjs`).
+the same way (`mock.mjs`): the fan takes the crest's brightness at the
+junction, full to 0.45 R and gone by 1.2 R, and each arm's S2 light
+fades in over 0.45 world past R.
 
 ### 2.5 Recommendation, and what was rejected
 
@@ -272,13 +280,24 @@ declarations (P9).
 
 - **Behind you** (Q2): toward you (S2) or away from the previous
   junction (today). Recommended: toward you, for one direction of flow
-  everywhere. `q2_behind.png`: top today, bottom S2, at node_116 (src).
+  everywhere. `q2_behind.png`: top today, bottom S2, at node_116 (src),
+  zoomed 1.6x, all 8 frames of one period.
 - **Your junction** (Q3): today the outgoing crests leave 0.3 s before
   the incoming one arrives (a hand-off); with the lead at 0 the light
   runs straight through you. Recommended: straight through (it is the
   same rule as every other junction). `q3_head.png`: top today's lead,
-  bottom lead 0, at node_116 (cross, S2 declaration), plus
-  `kymo_head.png` (the same, as a kymograph).
+  bottom lead 0, at node_116 (cross, S2 declaration), zoomed 1.6x, all
+  8 frames, plus `kymo_head.png` (the same, as a kymograph). By the
+  mirror, at frame 1 the incoming crest is at the head in both rows;
+  the outgoing one is already 0.48 world out with the lead and at the
+  head without it. Both rows dim the crest within 0.5 world of the head
+  (`CREST_RAMP`, under the marker), so lead 0 alone leaves the head dim
+  for about 0.6 s (0.5 world each side at 1.6 world/s); the lead, 0.3 s,
+  roughly covers that, which may be why it exists (inferred: no comment
+  or commit gives a reason). Straight through therefore means lead 0 and
+  no ramp at a carry-through head (the incoming crest becomes the
+  outgoing one), with the ramp kept where a crest is born (the reach's
+  start when nothing arrives). S5 does both.
 
 ## 3. A route pulse (K1140's Glimpse)
 
@@ -468,8 +487,13 @@ are named; `npm test` must stay green at every commit.
   cost); the frozen fixtures.
 
 **S5: your own junction. Only if Q3 says straight through.** Set
-`PULSE_OUT_LEAD` to 0 (and review `CREST_RAMP`); re-shoot `q3_head`.
-Small enough to fold into S2. No phone.
+`PULSE_OUT_LEAD` to 0 and drop `CREST_RAMP`'s dip where a crest carries
+through the head (an arrival exists), keeping it where a crest is born
+(no arrival). That touches `kPulseV` and its GLSL twin, so the pre_g23
+fixtures re-freeze (as in S4; name what moved). Re-shoot `q3_head` with
+both and show Levi before it lands (Q3's "without the dim moment").
+Small enough to fold into S2 (then S2 re-freezes) or S4. No phone: the
+ribbon shader's cost does not change (one branch on a uniform).
 
 **S6: the route pulse (K1140). A light phone look.** After K1140's
 Glimpse design: path mode in `pulse_path.ts`, the one-shot clock and
@@ -479,23 +503,37 @@ tail uniforms, reuse of S3's band evaluation; checks of section 3.
 
 **Q1. When the light reaches a fork, how should it pass?**
 ![Q1](../../.claude/probes/K1139/out/doc/q1_fork.png)
-`q1_fork.png`, one junction over one period, left to right: top row A,
-the light splits and follows each way on; middle row B, it sweeps
-straight across the middle of the junction; bottom row C, the junction
-flashes, then the light starts again on each way on. **Recommended: A.**
+`q1_fork.png`, one fork, zoomed in, four moments a fifth of a second
+apart, left to right. The light comes down from the top right (from
+your junction), and the path forks in the middle of the picture: one
+way on to the left, one to the bottom left. Top row A: the light splits
+and follows each way on. Middle row B: it sweeps across the middle of
+the fork as a straight bar. Bottom row C: the fork glows as a whole,
+then the light starts again on each way on. **Recommended: A.**
 
 **Q2. On the paths behind you, which way should the light run?**
 ![Q2](../../.claude/probes/K1139/out/doc/q2_behind.png)
-`q2_behind.png`, the junction you came from, over one period: top, away
-from it (today: the light starts there and runs both ways); bottom,
-toward you (it gathers there and flows on to you). `kymo_src.png` shows
-the same as stripes. **Recommended: toward you.**
+`q2_behind.png`, the junction you came from, in the middle of the
+picture (you are off the bottom left corner, down the gold path), eight
+moments a fifth of a second apart, left to right. Top, today: the light
+starts at that junction and runs out of it both ways. Bottom: the light
+comes down the gold path from beyond the junction and flows on through
+it toward you. `kymo_src.png` shows the same as stripes.
+**Recommended: toward you.**
 
 **Q3. At your own junction, should the light run straight through?**
 ![Q3](../../.claude/probes/K1139/out/doc/q3_head.png)
-`q3_head.png`, your junction over one period: top, today (the light on
-your choices sets off a moment before the light coming in arrives);
-bottom, straight through. **Recommended: straight through.**
+`q3_head.png`, your junction (under your marker), eight moments a fifth
+of a second apart, left to right; the light comes toward you down the
+gold path at the top, and your ways on are the green paths below. Top,
+today: the light ahead sets off before the light coming in has reached
+you (in the first picture the incoming light has only just gone under
+your marker, and the light ahead is already well along the paths
+below). Bottom: the light ahead leaves your marker as the incoming light
+reaches it, after a short dim moment under the marker. That dim moment
+can go too (the light would pass under your marker without fading); the
+stage that makes the change would show it to you first.
+**Recommended: straight through (bottom), without the dim moment.**
 
 ## Appendix: the probe harness (`.claude/probes/K1139/`)
 
