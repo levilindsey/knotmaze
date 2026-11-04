@@ -210,6 +210,23 @@ J3f did); the coordinator sends Levi the PNGs.
   92.2-92.6 for q.
 - Round 2 is running: x3, x5 and x6 have flatter, deeper ends (2 u back
   at -18.5 to -24 deg, 15-16.6 u below the top).
+- 08:17, round 2 measured; the choices made, the checks running.
+  - The ends: x6 (`R_R=3 R_DX=24 R_DROP=17 R_A1=-10 R_L1=11`). Its
+    joins leave at -16.0 to -16.8 deg and drop 15.9-17.3 u, about two
+    thirds of the way from v6.9 (-8 deg, 3 u) to v6.8. All 78 pairs
+    converge (x3 and x5 too). Census against v6.9: spikes 29 to 26,
+    rough 75 to 65, hooks 19 and seams 7 unchanged. x5 (-22 deg) counts
+    best but looks nearly the same, so there is one candidate.
+  - The dip: x6's exits bring a's back by themselves (lowest 99.3-99.5
+    u, v6.6 99.0-99.3) but not q's (97.5, v6.6 92.2-92.6). Variant Pa
+    adds one rule: a band on the lowest point of a's and q's entry after
+    b, v and w, [hi - 4, hi] u, with hi at v6.6's shallowest. q comes
+    to 93.0 and its meet turn to 1.1-1.3 deg (v6.6 1.2-1.3).
+  - e: one e rule (Pae90). e's own record after b, v and w is dropped,
+    so e takes o's 90 u window after every high exit. be, ve and we go
+    from rough FAIL to ok, oe is unchanged and e's eye stays open in the
+    crops (smaller than the font's). Pe60 (one 60 u window for all
+    four) leaves be/ve/we as they are and moves oe, so it is out.
 
 ## Handoff
 
