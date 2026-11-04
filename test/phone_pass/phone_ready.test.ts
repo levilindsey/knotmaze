@@ -55,7 +55,7 @@ describe("K1142 phone_ready: reading the state", () => {
     expect(frontKind(null)).toBe("unknown");
   });
 
-  it("asks for exactly the three reads phone_quiet.mjs made", () => {
+  it("asks for exactly the three state reads", () => {
     expect(STATE_CMD).toContain("mWakefulness=");
     expect(STATE_CMD).toContain("isKeyguardShowing");
     expect(STATE_CMD).toContain("topResumedActivity");
@@ -349,5 +349,29 @@ describe("K1142 phone_ready: no tracked runner opens the phone unguarded", () =>
     for (const rel of ["scripts/phone_pass/idle_wait.ps1", "scripts/phone_pass/retry_quiet.ps1"]) {
       expect(readFileSync(join(repo, rel), "utf8"), rel).toContain("phone_ready.mjs");
     }
+  });
+});
+
+describe("K1152/K1148 phone_ready: its own words and the hand-run guard", () => {
+  const tools = ["scripts/bench_frame.mjs", "scripts/k923/sync.mjs", "scripts/k923/close_tabs.mjs"];
+  for (const rel of tools) {
+    it(`${rel} carries --ready with the shared check`, () => {
+      const src = readFileSync(join(repo, rel), "utf8");
+      expect(src).toContain("--ready");
+      expect(src).toContain("ensurePhoneReady");
+      expect(src).toContain("allowChrome: true");
+    });
+  }
+
+  it("phone_ready.mjs states its check in its own words", () => {
+    const src = readFileSync(join(repo, "scripts", "phone_pass", "phone_ready.mjs"), "utf8");
+    expect(src).not.toContain("phone_quiet");
+    expect(src).not.toContain("680651fe");
+  });
+
+  it("phone_pass.ps1 states the quiet window in its own words", () => {
+    const src = readFileSync(join(repo, "scripts", "phone_pass.ps1"), "utf8");
+    expect(src).not.toContain("phone_quiet");
+    expect(src).not.toContain("680651fe");
   });
 });

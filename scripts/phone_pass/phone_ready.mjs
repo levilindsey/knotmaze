@@ -7,11 +7,11 @@
 //     Chrome, and the state text cannot tell them apart. A person's open Chrome gets a new tab and a pass's page in front of
 //     the one being read; the kit's own leftover (a pass's cleanup closes its tab and leaves Chrome in front) must not stop
 //     the next pass of a bisect, so bisect2.mjs and run_pass.ps1 pass the allowance after their own first pass;
-//   - nobody has touched the phone for the QUIET WINDOW (120 s, phone_quiet.mjs's of K1097, commit 680651fe). The window is
+//   - nobody has touched the phone for the QUIET WINDOW (120 s without an event from a watched device; any such event restarts it). The window is
 //     OBSERVED, not read from the phone's clock: `getevent -l` streams the kernel's input events (touchscreen, keys, power),
 //     and a line from a watched device restarts the window. Our CDP traffic and adb `input` inject above the kernel and print
 //     none (watchdog.ps1 documents it); mLastUserActivityTime cannot be used, because puppeteer.connect() alone moves it.
-//     A state that is not ready holds the window at zero, as phone_quiet.mjs does.
+//     A state that is not ready holds the window at zero, so only readings that are ready count quiet time.
 // The same filter as watchdog.ps1 picks the watched devices (touch|gpio_keys|keys|power: the haptics device prints EV_FF
 // whenever anything vibrates, which is not a person); test/phone_pass/phone_ready.test.ts pins both copies.
 //
@@ -41,11 +41,11 @@ import { existsSync, readdirSync, appendFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
-export const QUIET_S = 120; // phone_quiet.mjs's window
+export const QUIET_S = 120; // the quiet window, in seconds
 export const POLL_S = 5;
 export const MAX_POLL_S = 60;
 export const CHROME = "com.android.chrome";
-// phone_quiet.mjs's way of reading the state, one adb call: wakefulness, keyguard, the top resumed activity.
+// One adb call that reads the state the decision needs: wakefulness, keyguard, the top resumed activity.
 export const STATE_CMD = "dumpsys power | grep -E 'mWakefulness='; dumpsys window | grep -E 'isKeyguardShowing'; dumpsys activity activities | grep -m1 topResumedActivity";
 export const WATCH_RE = /touch|gpio_keys|keys|power/; // watchdog.ps1's filter, verbatim
 export const EXIT = { READY: 0, STATE: 3, TOUCH: 4, NO_INPUT: 5, NO_PHONE: 6 };
@@ -65,7 +65,7 @@ export function parseState(text) {
   };
 }
 
-// launcher | chrome | app | unknown. The launcher is any package with "launcher" in its name (phone_quiet.mjs's test).
+// launcher | chrome | app | unknown. The launcher is any package with "launcher" in its name.
 export function frontKind(top) {
   if (!top) return "unknown";
   if (top === CHROME) return "chrome";

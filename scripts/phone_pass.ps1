@@ -69,7 +69,7 @@
 #                     phone). Exit 3 at the deadline. Default 0 = no wait (a phone
 #                     that is not ready stops the pass at once)
 #   -QuietS <s>       the quiet window the shared check demands: nobody touched the
-#                     phone for this long (default 120; phone_quiet.mjs's)
+#                     phone for this long (default 120 s without an input event)
 #   -AllowChrome      Chrome in front counts as ready. For a pass that follows
 #                     another of the kit's own (a cleanup leaves Chrome in front);
 #                     by default Chrome in front is a person's, like any app

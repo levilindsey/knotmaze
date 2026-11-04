@@ -20,7 +20,7 @@
 //
 // Usage:
 //   node scripts/bench_frame.mjs <url> [<url2> ...] [--sec 5] [--rounds 1]
-//        [--cdp http://127.0.0.1:9222] [--size 1600x900] [--dpr 2]
+//        [--cdp http://127.0.0.1:9222] [--ready] [--size 1600x900] [--dpr 2]
 //        [--angle d3d11] [--profile-root <dir>] [--rest-ms 120000]
 //        [--settle-ms 1500] [--out <file.json>]
 // Several URLs alternate for --rounds rounds, the order reversed every
@@ -30,24 +30,31 @@
 // headed desktop Chrome off-screen with its own profile (deleted at the
 // end); with --cdp it connects to a running Chrome (the phone over
 // `scripts/phone.ps1`: adb forward tcp:9222 localabstract:chrome_devtools_remote)
-// and closes its tabs when done. Hold $env:TEMP\claude-perf.lock while it
+// and closes its tabs when done. With --ready (only valid with --cdp) it runs the phone readiness check before connecting. Hold $env:TEMP\claude-perf.lock while it
 // runs (claude-config rules/sessions.md).
 import puppeteer from "puppeteer-core";
+import { ensurePhoneReady, PhoneNotReady } from "./phone_pass/phone_ready.mjs";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 const argv = process.argv.slice(2);
 const urls = [];
-const opt = { sec: 5, rounds: 1, cdp: "", size: "1600x900", dpr: 2, angle: "d3d11", "profile-root": tmpdir(), "rest-ms": 120000, "settle-ms": 1500, out: "" };
+const opt = { sec: 5, rounds: 1, cdp: "", size: "1600x900", dpr: 2, angle: "d3d11", "profile-root": tmpdir(), "rest-ms": 120000, "settle-ms": 1500, out: "", ready: false };
 for (let i = 0; i < argv.length; i++) {
   if (argv[i].startsWith("--")) {
     const k = argv[i].slice(2);
+    if (k === "ready") { opt.ready = true; continue; }
     if (!(k in opt)) { console.error(`unknown option --${k}`); process.exit(2); }
     opt[k] = typeof opt[k] === "number" ? Number(argv[++i]) : argv[++i];
   } else urls.push(argv[i]);
 }
 if (urls.length === 0) { console.error("usage: node scripts/bench_frame.mjs <url> [<url2> ...] [--sec 5] [--rounds 1] [--cdp <browserURL>] [--out <file>]"); process.exit(2); }
+if (opt.ready && !opt.cdp) { console.error("--ready guards the phone connection; use it with --cdp"); process.exit(2); }
+if (opt.ready) {
+  try { await ensurePhoneReady({ allowChrome: true }); }
+  catch (e) { if (e instanceof PhoneNotReady) { console.error(e.line); process.exit(e.exit); } throw e; }
+}
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // In-page: the GL caps the SDF stages budget against.

@@ -5,25 +5,32 @@
 // renders (scripts/phone_pass/walk.mjs renderLoop's method). ABBA rounds.
 //   node scripts/k923/sync.mjs --target desk|phone [--cells muse_fit,g41_fit,muse_6x,g41_6x]
 //        [--variants floor,label,band,both,search,both~step=4] [--rounds 2] [--iter 60] [--iter6s 20]
-//        [--extra "&lr=2"] [--tag _x] [--port 5923] [--cdp http://127.0.0.1:9222]
+//        [--extra "&lr=2"] [--tag _x] [--port 5923] [--cdp http://127.0.0.1:9222] [--ready]
 // desk: own temp Chrome profile, off-screen headed window, ANGLE d3d11, 411x753 @2.
 // phone: needs serve.mjs, adb reverse of --port, the 9222 forward, Chrome in front.
+// --ready (only valid with --target phone) runs the phone readiness check before connecting.
 // Writes sync_<target><tag>.json next to this file and prints a table.
 import puppeteer from "puppeteer-core";
+import { ensurePhoneReady, PhoneNotReady } from "../phone_pass/phone_ready.mjs";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const opt = { target: "desk", cells: "muse_fit,g41_fit,muse_6x,g41_6x", variants: "floor,label,band,both,search", rounds: 2, iter: 60, iter6s: 20, extra: "", tag: "", port: 5923, cdp: "http://127.0.0.1:9222" };
+const opt = { target: "desk", cells: "muse_fit,g41_fit,muse_6x,g41_6x", variants: "floor,label,band,both,search", rounds: 2, iter: 60, iter6s: 20, extra: "", tag: "", port: 5923, cdp: "http://127.0.0.1:9222", ready: false };
 const av = process.argv.slice(2);
-for (let i = 0; i < av.length; i++) { const k = av[i].replace(/^--/, ""); opt[k] = typeof opt[k] === "number" ? Number(av[++i]) : av[++i]; }
+for (let i = 0; i < av.length; i++) { const k = av[i].replace(/^--/, ""); if (k === "ready") { opt.ready = true; continue; } opt[k] = typeof opt[k] === "number" ? Number(av[++i]) : av[++i]; }
 const Q = { muse_fit: "scene=muse_hash&z=1", muse_6x: "scene=muse_hash&z=6", g41_fit: "scene=g41_def_tw64&z=1", g41_6x: "scene=g41_def_tw64&z=6",
   muse_2x: "scene=muse_hash&z=2", muse_3x: "scene=muse_hash&z=3", g41_2x: "scene=g41_def_tw64&z=2", g41_3x: "scene=g41_def_tw64&z=3" };
 const host = opt.target === "phone" ? "localhost" : "127.0.0.1";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+if (opt.ready && opt.target !== "phone") { console.error("--ready guards the phone connection; use it with --target phone"); process.exit(2); }
+if (opt.ready) {
+  try { await ensurePhoneReady({ allowChrome: true }); }
+  catch (e) { if (e instanceof PhoneNotReady) { console.error(e.line); process.exit(e.exit); } throw e; }
+}
 let browser, profile = null;
 if (opt.target === "phone") browser = await puppeteer.connect({ browserURL: opt.cdp, defaultViewport: null });
 else {
