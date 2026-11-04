@@ -237,7 +237,7 @@ moves change no corner. The tracer copy differs from form B by 0.
 - dEdgeTip 1.15 (`dedge_tip115.txt`) changes nothing at the sites (tee
   ink 0.1480, ring 0.1736): 1 is enough and keeps S1g's bound.
 
-### F4 (17:35): S1g's F6 gate, i1 against g1 (`run_s1i_gate.ps1 -Tag i1`)
+### F4 (17:31): S1g's F6 gate, i1 against g1 (`run_s1i_gate.ps1 -Tag i1`)
 
 | check | g1 | i1 |
 |---|---|---|
@@ -260,7 +260,7 @@ defects); q4's over+fade is 1 px (max 0.537, n 2449) and its unexplained
 fades 218 and 639 px, as S1f's. q5's blobs, 448 (24268 px) against S1f's
 451 (24304), have no g1 line to compare.
 
-### F5 (17:35): the label pass needs no change
+### F5 (17:31): the label pass needs no change
 
 The app's GPU label pass (`src/render/label/`) builds on the oracle's
 `FieldModel` (`src/render/field/oracle.ts`), whose spans (K883) have no
@@ -270,7 +270,7 @@ took S1g's cut, so S1i's has nothing to match. Form B's own label sketch,
 (line 122's breakpoints) and follows F3 as is. (`label_b_verdict.ts`'s
 `dEdge` is a local distance to an edge.)
 
-### F6 (17:35): the whole scene at rest
+### F6 (17:31): the whole scene at rest
 
 `s1i_whole.ts`: every device px at dpr 2 over each K868 scene's bounds +
 2h, against S1f's final. Px with |Δink| > 0.02 (lost / gained: by more
@@ -308,7 +308,7 @@ sites (3 px at worst over the twelve scenes, muse_hash), 275 px lost and
 of 2.000 with it, which S1g's F2 removed. Keep 0.5, or open a stage for a
 softer gate: sheet rows 06-15 show what is at stake.
 
-## Handoff (17:40)
+## Handoff (17:33)
 
 **Landed** on `worktree-agent-af4c9ecd37b7bc266` (not pushed):
 
