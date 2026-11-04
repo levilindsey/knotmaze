@@ -414,7 +414,7 @@ const LEAN = ["leanempty", "leanemptynoup", "leantentv", "leantentvrest", "leant
 //                 host's restore (the viewport and Pixi's resetState())
 //   ffloor        the new sync alone (no query): the host floor
 // Every older variant runs S3e's query and restore (probeQuery).
-const FNEW = ["ftentv", "ftentvrest", "ftentvsetup", "fempty", "femptynoup", "femptynouph0", "ffloor", "femptyb", "femptynoupnc", "femptynoupst"];
+const FNEW = ["ftentv", "ftentvrest", "ftentvsetup", "fempty", "femptynoup", "femptynouph0", "ffloor", "femptyb", "femptynoupnc", "femptynoupst", "ftentvone", "ftentvhalf", "ftentvclip", "ftentvflat", "ftentvnw1c", "ftentvvid"];
 const VARIANTS = ["tent", "empty", "noup", "degen", "fs0", "fsconst", "half", "nw1", "floor"];
 let kickFb: WebGLFramebuffer | null = null;
 const kickPx = new Uint32Array(4);
@@ -589,13 +589,51 @@ function variantPass(v: string, host: LabelBHost | null = null): LabelBPass {
   const have = vpasses.get(v);
   if (have) return have;
   if (FNEW.includes(v)) {
-    const p = new LabelBPass(gl, false, "tentv", { lean: true, host: v === "femptynouph0" ? null : host });
+    // K1040 S3f4: the drawing's bound, on today's lean pass beside ftentv.
+    //   ftentvone  one segment instance, no caps or fills (probeSegLimit /
+    //              probeSkipCapsFills): a pass that draws anything
+    //   ftentvhalf half the segment instances (probeSegFrac 0.5)
+    //   ftentvclip every vertex clipped after its full computation (as
+    //              tentvdegen, on the segment, cap and fill shaders)
+    //   ftentvflat a fragment shader that reads every flat/varying (as
+    //              fs0) but does none of the label arithmetic, its output
+    //              kept off the clear value (0)
+    //   ftentvnw1c S3f3's circumscribed wedge at NW 1 (facetOpts): 8
+    //              segment vertices against today's 12
+    //   ftentvvid  the segment strips as one non-instanced draw
+    //              (probeVid in label_b_pass.ts; bit-identical positions)
+    let p: LabelBPass;
+    const swap1 = (s: string, a: string, b: string) => {
+      if (s.split(a).length !== 2) throw new Error(`variant ${v}: ${JSON.stringify(a.slice(0, 40))} not found once`);
+      return s.replace(a, b);
+    };
+    if (v === "ftentvclip") {
+      const sv = labelBTentVSources(false);
+      const ts = labelBTentSources(false);
+      const GLPOS = "-2.0 * key * uKeyScale, 1.0);\n";
+      const d = (s: string) => swap1(s, GLPOS, GLPOS + "  gl_Position.z = 2.0;\n");
+      p = new LabelBPass(gl, false, "tentv", { lean: true, host, tentVSources: { ...sv, segVs: d(sv.segVs), capVs: d(sv.capVs) }, tentSources: { ...ts, fillVs: d(ts.fillVs) } });
+    } else if (v === "ftentvflat") {
+      const sv = labelBTentVSources(false);
+      const ts = labelBTentSources(false);
+      const FSMAIN = "void main() {\n  vec2 dev = vec2(gl_FragCoord.x";
+      const FSREST = "\n  return;\n  vec2 dev = vec2(gl_FragCoord.x";
+      const flatV = swap1(sv.fs, "void main() {\n  vec4 A = fetch(uPts, vQ.x);", "void main() {\n  oWord = (uint(vQ.x) * 3u + uint(vQ.y) * 5u + uint(vQ.z)) | 1u;\n  return;\n  vec4 A = fetch(uPts, vQ.x);");
+      const flatF = swap1(ts.fs, FSMAIN, "void main() {\n  oWord = (floatBitsToUint(dot(vAB, vec4(1.0)) + dot(vS, vec4(1.0)) + dot(vSp, vec3(1.0))) ^ uint(vI.x + vI.y + vI.z + vI.w)) | 1u;" + FSREST);
+      p = new LabelBPass(gl, false, "tentv", { lean: true, host, tentVSources: { ...sv, fs: flatV }, tentSources: { ...ts, fs: flatF } });
+    } else if (v === "ftentvnw1c") {
+      p = new LabelBPass(gl, false, "tentv", { lean: true, host, ...facetOpts(1, true, false) });
+    } else {
+      p = new LabelBPass(gl, false, "tentv", { lean: true, host: v === "femptynouph0" ? null : host });
+    }
     p.probeAllDirty = v !== "ftentvrest";
     if (v.startsWith("fempty")) p.probeDraw = false;
     p.probeBindOnly = v === "femptyb";
     p.probeNoClear = v === "femptynoupnc";
     p.leanStoreDepth = v === "femptynoupst";
     p.probeNoDrawCalls = v === "ftentvsetup";
+    if (v === "ftentvone") { p.probeSegLimit = 1; p.probeSkipCapsFills = true; }
+    if (v === "ftentvhalf") p.probeSegFrac = 0.5;
     vpasses.set(v, p);
     return p;
   }
@@ -878,4 +916,55 @@ async function ab(scene: FieldScene, opts: { scale?: number } = {}) {
   return { lost, renderer: renderer(), W: dev.W, H: dev.H, canvas: [cw, ch], drawn, setupErr: pre.setup, arms: res };
 }
 
-(window as unknown as { s3: unknown }).s3 = { verdict, time, timeMany, ab, renderer };
+
+// K1040 S3f4 step 2: the variants' checks. Each variant pass (today's
+// lean ftentv beside it) draws the scene once and its label target is
+// read back (LabelBPass.read: the word at every pixel, row 0 at the
+// top; the clear value is 0). Counts, per variant against ftentv:
+//   clipNonClear  pixels differing from the clear value (ftentvclip: 0)
+//   oneNonZero    pixels written (ftentvone: one segment's worth)
+//   flatMaskDiff  pixels whose written/not-written differs (ftentvflat: 0)
+//   flatNonZero   pixels ftentvflat wrote (its output is off the clear)
+//   nwOnlyBase / nwOnlyNw  pixels only one of ftentv / ftentvnw1c wrote
+//   vidWordDiff   pixels whose word differs (ftentvvid: 0, bit for bit)
+//   halfNonZero   pixels ftentvhalf wrote (sanity: about half the area)
+async function check(scene: FieldScene, opts: { scale?: number } = {}) {
+  const scale = opts.scale ?? 2;
+  scene.look.ctrlArc ??= 0.47;
+  const fb = new FormB(scene, { dpr: scale });
+  const T: LabelBTables = buildLabelB(fb);
+  const dev = camera(scene, scale);
+  const { M, W, H } = dev;
+  const draw = (v: string): Uint32Array => {
+    const pass = variantPass(v, null);
+    if (pass.width !== W || pass.height !== H) pass.resize(W, H);
+    pass.upload(T);
+    pass.draw(M);
+    const w = pass.read().word;
+    pass.dispose();
+    vpasses.delete(v);
+    return w;
+  };
+  const base = draw("ftentv");
+  const words: Record<string, Uint32Array> = {};
+  for (const v of ["ftentvclip", "ftentvone", "ftentvflat", "ftentvnw1c", "ftentvvid", "ftentvhalf"]) words[v] = draw(v);
+  const nz = (w: Uint32Array) => { let n = 0; for (let i = 0; i < w.length; i++) if (w[i] !== 0) n++; return n; };
+  const maskDiff = (a: Uint32Array, b: Uint32Array) => { let n = 0; for (let i = 0; i < a.length; i++) if ((a[i] !== 0) !== (b[i] !== 0)) n++; return n; };
+  let nwOnlyBase = 0, nwOnlyNw = 0;
+  for (let i = 0; i < base.length; i++) { if (base[i] !== 0 && words.ftentvnw1c[i] === 0) nwOnlyBase++; if (base[i] === 0 && words.ftentvnw1c[i] !== 0) nwOnlyNw++; }
+  let vidWordDiff = 0;
+  for (let i = 0; i < base.length; i++) if (base[i] !== words.ftentvvid[i]) vidWordDiff++;
+  return {
+    lost, renderer: renderer(), W, H, segs: T.nInst, fills: T.nFills,
+    baseNonZero: nz(base),
+    clipNonClear: nz(words.ftentvclip),
+    oneNonZero: nz(words.ftentvone),
+    flatMaskDiff: maskDiff(words.ftentvflat, base),
+    flatNonZero: nz(words.ftentvflat),
+    nwOnlyBase, nwOnlyNw,
+    vidWordDiff,
+    halfNonZero: nz(words.ftentvhalf),
+  };
+}
+
+(window as unknown as { s3: unknown }).s3 = { verdict, time, timeMany, ab, renderer, check };

@@ -191,6 +191,10 @@ export class LabelBPass {
    * beside today's instanced draw; caps and fills are unchanged.
    */
   probeStrip = false;
+  /** Probe knob (S3f4, ftentvone): draw at most this many segment instances (-1 = all). */
+  probeSegLimit = -1;
+  /** Probe knob (S3f4, ftentvone): skip the cap and fill draws. */
+  probeSkipCapsFills = false;
   /** A full upload has landed, so upload(T, true) may skip (header). */
   private hasUploaded = false;
   private segVerts = TENT_SEG_VERTS;
@@ -695,17 +699,18 @@ export class LabelBPass {
       if (!this.probeNoDrawCalls) gl.drawArrays(gl.TRIANGLE_STRIP, 0, this.stripCount);
     }
     gl.bindVertexArray(this.vao);
-    const nSeg = this.probeStrip && t.strip ? 0 : this.probeSegFrac === 1 ? this.nInst : Math.round(this.nInst * this.probeSegFrac);
+    let nSeg = this.probeStrip && t.strip ? 0 : this.probeSegFrac === 1 ? this.nInst : Math.round(this.nInst * this.probeSegFrac);
+    if (this.probeSegLimit >= 0) nSeg = Math.min(nSeg, this.probeSegLimit);
     if (nSeg > 0) {
       use(t.seg);
       if (!this.probeNoDrawCalls) gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, this.segVerts, nSeg);
     }
-    if (this.nCaps > 0) {
+    if (this.nCaps > 0 && !this.probeSkipCapsFills) {
       gl.bindVertexArray(t.capVao);
       use(t.cap);
       if (!this.probeNoDrawCalls) gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, TENT_CAP_VERTS, this.nCaps);
     }
-    if (this.nFills > 0) {
+    if (this.nFills > 0 && !this.probeSkipCapsFills) {
       gl.bindVertexArray(this.vao);
       use(t.fill);
       if (!this.probeNoDrawCalls) gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, TENT_FILL_VERTS, this.nFills);

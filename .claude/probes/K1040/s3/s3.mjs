@@ -31,8 +31,8 @@ const SCENES = [
 const SCENE_DIR = "C:/Users/lsl/Repositories/knotmaze/.claude/probes/K868/scenes";
 const args = process.argv.slice(2);
 const mode = args[0];
-if (mode !== "verdict" && mode !== "time" && mode !== "many" && mode !== "ab") {
-  console.error("usage: node s3.mjs verdict|time|many|ab [scene,...] [--stride n] [--scale s] [--frames n] [--state new|host]");
+if (mode !== "verdict" && mode !== "time" && mode !== "many" && mode !== "ab" && mode !== "check") {
+  console.error("usage: node s3.mjs verdict|time|many|ab|check [scene,...] [--stride n] [--scale s] [--frames n] [--state new|host]");
   process.exit(2);
 }
 const val = (k, d) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : d; };
@@ -135,6 +135,15 @@ try {
       const r = await page.evaluate((s, o) => window.s3.ab(s, o), scene, { scale });
       writeFileSync(join(outDir, `${pre}_${name}.json`), JSON.stringify(r, null, 1));
       const line = `- ${name}: label ${r.W}x${r.H}, canvas ${r.canvas.join("x")}, stage drew ${r.drawn} px; setup gl error ${r.setupErr}; px differing from control (max diff, gl error[, error left before the arm]): ${Object.entries(r.arms).map(([a, d]) => `${a} ${d.px} (${d.max}, ${d.err}${d.pre ? `, pre ${d.pre}` : ""})`).join(", ")}; lost ${r.lost}; ${Date.now() - t0} ms`;
+      summary.push(line);
+      console.log(line);
+      continue;
+    }
+    if (mode === "check") {
+      const r = await page.evaluate((s, o) => window.s3.check(s, o), scene, { scale });
+      r.scene = name;
+      writeFileSync(join(outDir, `${pre}_${name}.json`), JSON.stringify(r, null, 1));
+      const line = `- ${name}: ${r.W}x${r.H}, segs ${r.segs}; base nz ${r.baseNonZero}; clip nonClear ${r.clipNonClear}; one nz ${r.oneNonZero}; flat maskDiff ${r.flatMaskDiff} (flat nz ${r.flatNonZero}); nw1c onlyBase ${r.nwOnlyBase} onlyNw ${r.nwOnlyNw}; vid wordDiff ${r.vidWordDiff}; half nz ${r.halfNonZero}; lost ${r.lost}; ${Date.now() - t0} ms`;
       summary.push(line);
       console.log(line);
       continue;
