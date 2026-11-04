@@ -517,11 +517,11 @@ Next free ID: K1178.
 - **K1097** · K1040 S3, the label pass (F7 of `docs/design/K1040_junction_field.md`): the depth-tested label on
   the GPU, gated by oracle30's verdicts on the 12 scenes (0 DEFECT closes K1033), the recordings' pops and the
   Pixel's 2 ms.
-  - owner: nobody since 2026-11-03 23:43 (S3f2 done in Muse run 15I)
-  - branch: mainline; last commit: `b68ecc24`
+  - owner: nobody since 2026-11-04 01:55 (S3f3 done in Muse run 15J)
+  - branch: mainline; last commit: `95fd087b`
   - evidence: `.claude/probes/K1040/s3/` (s3f_gate.ps1, span_bench.ts, vert_count.ts; out/phone_table_s3f.md, out/split_s3f1.md, out/phone_table_s3e.md)
-  - next: S3f3: the drawing - tents only within the junctions' reach, then continuous strips per chain run (Handoff in docs/design/K1040_s3f2_levers.md)
-  - brief: `docs/design/K1040_s3f2_levers.md`
+  - next: Coordinator runs the Pixel batch (s3f3_gate.ps1 -SkipDesktop); all drawing levers failed their census, gate waits on S4 fixed part and S5 SAMP upload
+  - brief: `docs/design/K1040_s3f3_draw.md`
   - env: the phone through `.claude/probes/K1040/s3/phone_batch.ps1` (run_phone.ps1: both locks, then K1142's ready check), `phone_time.mjs` serving on 5403; desktop timing through `run_locked.ps1`, never piped through `Select-Object -First` (K1174)
 - **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate correctly across
   junctions"). S1, S2 done (a4dc218a, 16246c90). Answers: the light splits at a fork (A), runs toward you behind
