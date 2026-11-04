@@ -205,12 +205,14 @@ describe("background clock (drift + the K24 hook)", () => {
 describe("animation speed (K79)", () => {
   // The drift every effect had before backgroundSpeed existed (K21): AUTO
   // must reproduce it exactly, or every existing link changes pace.
+  // K1138 (Levi 2026-11-03) doubled aurora's own pace in place, so its
+  // AUTO entry is 2 below, not the pre-K79 1.
   const PRE_K79_DRIFT: Record<string, number> = {
     vellum: 0,
     mist: 0.35,
     wash: 0.8,
     silk: 0.8,
-    aurora: 1,
+    aurora: 2,
     contours: 0.3,
     paper: 0,
   };
@@ -261,6 +263,32 @@ describe("animation speed (K79)", () => {
     expect(effectiveSpeed("mist", -3)).toBe(1);
     expect(backgroundDrift("none", 2)).toBe(0);
     expect(effectiveSpeed("none", BACKGROUND_SPEED_AUTO)).toBe(0);
+  });
+
+  it("runs vellum at 10x and aurora at 2x (K1138, Levi 2026-11-03)", () => {
+    expect(BACKGROUND_PROFILES.vellum.drift).toBe(10);
+    expect(BACKGROUND_PROFILES.aurora.drift).toBe(2);
+    // At AUTO: vellum stays still (its AUTO frame does not move), and
+    // aurora's own pace is the doubled 2.
+    expect(backgroundDrift("vellum", BACKGROUND_SPEED_AUTO)).toBe(0);
+    expect(backgroundDrift("aurora", BACKGROUND_SPEED_AUTO)).toBe(2);
+    // At set speeds 0, 1 and 2.
+    expect([0, 1, 2].map((s) => backgroundDrift("vellum", s))).toEqual([0, 10, 20]);
+    expect([0, 1, 2].map((s) => backgroundDrift("aurora", s))).toEqual([0, 2, 4]);
+    // Every other effect's drift is unchanged (AUTO, 1, 2).
+    const others: Record<string, [number, number, number]> = {
+      mist: [0.35, 0.35, 0.7],
+      wash: [0.8, 0.8, 1.6],
+      silk: [0.8, 0.8, 1.6],
+      contours: [0.3, 0.3, 0.6],
+      paper: [0, 1, 2],
+    };
+    for (const [id, want] of Object.entries(others)) {
+      const got = [BACKGROUND_SPEED_AUTO, 1, 2].map((s) =>
+        backgroundDrift(id as (typeof BACKGROUNDS)[number], s)
+      );
+      expect([id, got]).toEqual([id, want]);
+    }
   });
 
   it("runs the drift clock at the effective drift (2x = twice the time)", () => {

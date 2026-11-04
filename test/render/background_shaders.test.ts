@@ -29,8 +29,8 @@ const DEFAULT_PROGRAMS: Record<string, string> = {
   mist: "b853589320cf4a59c8d432914bfb69d8eb608ad3bb447393b47c8d44b2997136",
   wash: "b57fe2536128eec13048f61ac182c6d5074d08679a737dd478dda896dfef9fc2",
   silk: "b0edde84bf825719122484e531d938734e720b1a81e04b5fe2d80ca11b4afd3f",
-  aurora: "b49f2bb5e1980d67530827183d241a8b84541c35a04bc9be41470f4d2294ccff",
-  contours: "b866eef661eedbe0d81f346aab6a125208a22b709a97c0d1b069deeb6fdcf956",
+  aurora: "6ec843d4b5062862878d602dac884828b9e23596e808c33c0c2eee211abddba3",
+  contours: "8192726628a91f55ed02f80b56ed8ffcc7743c98edef50bb9179a1f7c0820260",
 };
 const SHARED_SOURCES: Record<string, [string, string]> = {
   QUAD_VERT: [

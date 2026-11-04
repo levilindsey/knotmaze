@@ -180,7 +180,7 @@ vec3 effect(vec2 p, float t, float I) {
   }
   float grain = tpdf(gl_FragCoord.xy + 31.0);
   float tex = 0.55 * m1 + 0.28 * m2 + 0.2 * (fib - 0.12) + 0.08 * grain;
-  vec3 c = vec3(0.965, 0.945, 0.906) * (1.0 - 0.16 * I * clamp(tex, -1.0, 1.0));
+  vec3 c = vec3(0.965, 0.945, 0.906) * (1.0 - 0.64 * I * clamp(tex, -1.0, 1.0));
   c = mix(c, uA2.rgb, 0.05 * I);
   float vig = smoothstep(0.35, 1.3, length(p));
   return c * (1.0 - 0.10 * I * vig);
@@ -209,7 +209,7 @@ vec3 effect(vec2 p, float t, float I) {
   float grain = tpdf(gl_FragCoord.xy + 31.0);
   float tex = 0.55 * m1 + 0.28 * m2 + 0.2 * uShape.z * (fib - 0.12)
     + 0.08 * uShape.w * grain;
-  vec3 c = vec3(0.965, 0.945, 0.906) * (1.0 - 0.16 * I * clamp(tex, -1.0, 1.0));
+  vec3 c = vec3(0.965, 0.945, 0.906) * (1.0 - 0.64 * I * clamp(tex, -1.0, 1.0));
   c = mix(c, uA2.rgb, 0.05 * I);
   float vig = smoothstep(0.35, 1.3, length(gScreen));
   return c * (1.0 - 0.10 * I * vig);
@@ -291,10 +291,10 @@ vec3 effect(vec2 p, float t, float I) {
     float hem = 0.34 + 0.2 * fk
       + 0.13 * fbm(vec2(x * 0.7 + 5.0 * fk, 0.012 * t + 3.0 * fk), 3);
     float d = y - hem;
-    float shape = d < 0.0 ? exp(d * 3.4) : exp(-d * 16.0);
+    float shape = d < 0.0 ? exp(d * 1.7) : exp(-d * 8.0);
     float fold = fbm(vec2(x * 1.3 + 4.0 * fk, 0.016 * t + fk), 2);
     float rays = 0.5 + 0.5 * gnoise(vec2(x * 22.0 + 3.0 * fold + 9.0 * fk,
-                                         y * 0.45 - 0.02 * t));
+                                         y * 0.225 - 0.02 * t));
     rays = smoothstep(0.25, 0.85, rays);
     float band = smoothstep(-0.28, 0.32,
       fbm(vec2(x * 0.8 - 0.008 * t + 9.0 * fk, 4.0 * fk), 3));
@@ -312,7 +312,10 @@ vec3 effect(vec2 p, float t, float I) {
 const CONTOURS = /* glsl */ `
 vec3 effect(vec2 p, float t, float I) {
   vec2 s = p * 1.3 + uParams.xy;
-  float h = fbm(s + vec2(0.004 * t, 0.003 * t), 5);
+  vec2 e = vec2(sin(0.006 * t), cos(0.005 * t));
+  vec2 warp = 0.25 * vec2(gnoise(s * 0.75 + e),
+    gnoise(s * 0.75 + vec2(5.2, 1.3) - e));
+  float h = fbm(s + warp, 5);
   float v = h * 12.0;
   float fw = max(fwidth(v), 1e-4);
   float g = abs(fract(v + 0.5) - 0.5);

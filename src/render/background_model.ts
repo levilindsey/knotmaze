@@ -65,7 +65,7 @@ export const BACKGROUND_PROFILES: Record<
   // Paper grain: one texel per CSS pixel (the fibers are fine). Static at
   // auto; at a set speed its mottling drifts and its light wanders, while
   // the fibers and the grain stay put (paper does not move).
-  vellum: { scale: 1, phoneScale: 1, drift: 1, autoSpeed: 0, fps: 10, phoneFps: 6 },
+  vellum: { scale: 1, phoneScale: 1, drift: 10, autoSpeed: 0, fps: 10, phoneFps: 6 },
   // Domain-warped fbm: big soft clouds - a third-res field is plenty. The
   // warp of a warp amplifies its offsets, so its clock runs slowest.
   mist: { scale: 0.34, phoneScale: 0.3, drift: 0.35, autoSpeed: 1, fps: 15, phoneFps: 10 },
@@ -74,7 +74,7 @@ export const BACKGROUND_PROFILES: Record<
   // Flow streaks: thin features - half-res.
   silk: { scale: 0.5, phoneScale: 0.4, drift: 0.8, autoSpeed: 1, fps: 15, phoneFps: 10 },
   // Curtains: the vertical rays need some horizontal detail.
-  aurora: { scale: 0.4, phoneScale: 0.34, drift: 1, autoSpeed: 1, fps: 15, phoneFps: 10 },
+  aurora: { scale: 0.4, phoneScale: 0.34, drift: 2, autoSpeed: 1, fps: 15, phoneFps: 10 },
   // Contour lines: the sharpest feature (antialiased lines about 1.5
   // texels wide - at half resolution a phone's 5x upscale stair-stepped
   // them) - and lines that visibly creep are the one motion the eye
