@@ -6,9 +6,10 @@ and closed. Each run is a fresh Muse agent that reads this brief,
 does its run's tasks, and stops. Claude reviews each run on master
 afterwards and closes K1178. Run A was the drafting run
 (`docs/design/K1178_muse_batch16_run_a.md`), so the runs here are B
-to G. Chain run 16J (K1097 S3f4,
-`docs/design/K1040_s3f4_bound.md`) runs before them; no run below
-touches its lane.
+to I, in the order B, H, I, C, D, E, F, G (Claude added H and I
+after Run B). Chain run 16J (K1097 S3f4,
+`docs/design/K1040_s3f4_bound.md`) ran before them; no run below
+touches its lane except Run H (see below).
 
 Where the runs came from (the drafting run's order, from
 `docs/design/K1178_muse_batch16_run_a.md`): (1) K1139 S3b, the fan
@@ -38,9 +39,12 @@ coordinator (Run B plans that batch with a dry run and touches no
 phone). S4 is not in this batch: it waits on Claude's look check.
 No run changes physics (the simulation), the cursive, or anything
 in `src/render/field/` or `.claude/probes/K1040/` (K1040's label
-pass, K1097, works there in its own lane, run 16J included). No
-two runs touch one file, and each run starts from the latest
-master, in the order B to G.
+pass, K1097, works there in its own lane, run 16J included),
+except Run H: K1097 is idle between stages, so Claude gives Run H
+that lane for `src/render/field/form_b.ts`, its test and new files
+under `.claude/probes/K1040/s1/`. No two runs touch one file, and
+each run starts from the latest master, in the order B, H, I, C,
+D, E, F, G.
 
 Claude reviewed this draft on 2026-11-04, before the chain ran it,
 and amended five runs: Run B raises a k320 shader ceiling with a
@@ -51,7 +55,10 @@ K467 lines are 217-222; Run G substeps the whole streamer step,
 head included, adds a 960 x 1/480 row and an exact 1/30 case, and
 gates on the 60 fps body. K390 and K435 (two `probes.md` fixes)
 were folded in at review, in the same commit, so Run D's diff
-stays the frontmatter and the index row.
+stays the frontmatter and the index row. After Run B, Claude added
+Runs H (K1163, the softer root gate, from Levi's 11-04 answer) and
+I (K1179 S1, the fill-outline spike, from the geometry review,
+`docs/design/K1179_geometry_review.md`); they run before C.
 
 ## How to work
 
@@ -68,11 +75,11 @@ stand is copied, and rule 12 (dependencies: no run should need a
 new or changed package; if one changes anyway, `npm audit` must
 report no high or critical advisory afterwards, and a security fix
 is taken even when it was published less than two weeks ago)
-wherever a dependency moves. Batch 16 uses ports 5550-5599; each
+wherever a dependency moves. Batch 16 uses ports 5550-5619; each
 run below names its range.
 
 After each run, update K1178's handle, naming the next run in the
-order B to G:
+order B, H, I, C, D, E, F, G:
 `ledger.mjs handle K1178 --last-commit <sha8> --next "Run <X> done; next Run <Y>"`
 (after Run G: `--next "Run G done; batch 16 complete, Claude reviews and closes K1178"`).
 
@@ -260,6 +267,227 @@ K1139's handle (it stays In progress; Claude's look check is
 next):
 `ledger.mjs handle K1139 --owner "nobody since <yyyy-mm-dd hh:mm> (S3b done in Muse batch 16 run B)" --last-commit <sha8> --next "Claude judges the S3b look sheet (.claude/probes/K1139/out/doc/s3b_*.png); then S4, with the Pixel batch (.claude/probes/K1139/out/s3b/pixel_batch_plan.md)" --brief "docs/design/K1178_muse_batch16.md (Run B); the plan: docs/design/K1139_pulse_junctions.md"`
 Suggested ports: 5550-5559.
+
+## Run H · K1163: the softer root gate
+
+Read first: `docs/design/K1179_geometry_review.md` (section 4, and
+section 6's F4 paragraph); `docs/design/K1114_s1i_rounding.md` (F4
+at line 240, the Handoff at 311, its commands at 327-345);
+`docs/design/K1040_s1g_gates.md`; in `src/render/field/form_b.ts`,
+`solveCorner` (806) and its `wOf` (1000-1008), and `rootBand`'s
+doc (146-153), field (412) and default (460); and
+`test/render/field/form_b.test.ts`. No `.claude/rules/` file covers
+`src/render/field/` yet (a Residual), so these docs are its lore.
+
+The lane: K1097 is idle between stages, so Claude gives this run
+K1040's lane for `form_b.ts`, its test and new files under
+`.claude/probes/K1040/s1/`. Copy the S1i scripts rather than edit
+them, and leave `out/s1i/` as it is.
+
+The ledger says (In progress):
+
+> **K1163** · Corner rounding (K1114, 8b436272): the root-gate guard leaves ten near-straight
+> corners up to 1 px tight, some with a concave cusp, in the border look only (`tlk=border`).
+> Levi 11-04, “Smoother is better”: the softer guard (band scaled by the tip, K1179 review
+> section 4) is K1178 Run H.
+
+What is there today (read it, don't trust this summary). S1g's
+root gate multiplies each corner's weight by a smoothstep of each
+foot's distance from its root, over a flat band of rootBand·h
+(0.5h by default). At a near-straight corner the tip moves far
+less than the feet when r changes, so the flat band clamps r
+wherever a foot sits near a root: ten corners (rows 06-15 of
+K1114's S1i sheet, `.claude/probes/K1040/s1/out/s1i/sheet.png`)
+end up to 1 px tighter than S1f, and some show a concave cusp in
+the border look. `rootBand: 0` restores S1f exactly, but the round
+jumps in size in motion again (gate699's 2.000 step). The fill
+look is unaffected: joinery's fans draw those corners.
+
+The change (review section 4): scale the band by the tip factor,
+rb = rootBand·h·min(1, t(θ)/t(2.0)), with t(θ) = 1/sin(θ/2) − 1
+and t(2.0) ≈ 0.188395, so the tip moves at about 1.1 times the
+root's speed at every angle. Expected bands: about 0.005h at rows
+12-14, 0.01-0.12h at rows 06-11 and 0.31h at row 15.
+
+Tasks, in order (Node only, through `npx.cmd vite-node`; nothing
+is timed, so no perf lock; ports 5600-5609 only if something needs
+a server):
+
+1. The gate script. Copy `.claude/probes/K1040/s1/run_s1i_gate.ps1`
+   to `run_k1163_gate.ps1` beside it. Its toplevel check names
+   `C:/Users/lsl/Repositories/knotmaze` (the S1i copy names an old
+   agent worktree), its outputs go under `out/k1163/` (pops'
+   `OUTSUB` included), and its tags are new (`k1163_*`), so nothing
+   in `out/s1i/` is overwritten. The jobs stay the same: pins, pops
+   x4 (def_drag, def_flow, muse_drag, muse_flow), scenes, q5, q4,
+   rate and npm, then `-What mech`. `git add -f` the script.
+2. The before run, on master before any edit: the gate
+   (`-Tag k1163_before`, then `-What mech`); `s1i_sites.ts` with
+   today's settings and with `rootBand: 0`; `gate699_s1i.ts`
+   (section C, the census at rest); and `dedge_s1i.ts` (tee, ring).
+   K1114's Handoff gives each command and its env.
+3. The change, in `form_b.ts`: a param `rootBandScale?: "tip" |
+   "flat"` (default "tip"; "flat" is today's band), the reference
+   angle 2.0 (gate699's θ) as a named constant with a comment, and
+   `rootBand`'s doc updated. Guard the limit: t goes to 0 as θ
+   approaches π, so a band under 1e-9·h acts as its step limit,
+   with no division by zero. Pins in `form_b.test.ts`: at θ = 2.0
+   "tip" and "flat" are bit-identical; at θ ≥ 3.0 "tip" gives the
+   small band; r is continuous in θ across 2.0 and on up to π. A
+   golden pin that moves is re-frozen and named in the commit (the
+   pre-launch rule in CLAUDE.md).
+4. The after run: task 2's commands again, tagged `k1163_after`.
+5. The sheet, `.claude/probes/K1040/s1/out/k1163/sheet.png`: per
+   row, S1f | flat (today) | tip, rows 06-15 first, through
+   `s1i_mk_pair.mjs` and then `s1i_pair.ts` (copies under new
+   names if they need edits), with each row's z1 and z4 images
+   beside it.
+
+Pass, against the before run:
+
+- Rows 06-14 read 0/0/0/0 (differ/strong/maxdist/far) against S1f.
+  Report a row that misses, with its foot's distance from its root
+  and the band. Don't tune: Claude decides.
+- gate699: ink step ≤ 0.125 and r step ≤ 0.030h.
+- tee ≤ 0.148 and ring ≤ 0.174.
+- pops and mech no worse, naming the corners of any rise.
+- b_rate: 0 breaches.
+- q4 and q5 no worse, or each rise attributed.
+- `npm test` passes.
+
+A miss in rows 06-14 alone still ships the change. Any other line
+that fails: don't push the change; restore `form_b.ts` and its
+test, push the scripts and the outputs, and report.
+
+Row 15 is out of scope (its foot sits 0.06h from its root, at
+127°): report its r, expected about 0.2h.
+
+Baselines from K1114, for spotting a drift (the before run's
+numbers are the ones that count):
+
+| Sites | differ/strong/maxdist/far |
+|---|---|
+| row 06 | 31/9/1/0 |
+| row 07 | 58/19/1/0 |
+| row 08 | 36/4/1/0 |
+| row 09 | 34/7/0/0 |
+| row 10 | 76/28/1/0 |
+| row 11 | 45/12/1/0 |
+| row 12 | 43/15/1/0 |
+| row 13 | 24/7/1/0 |
+| row 14 | 24/7/1/0 |
+| row 15 | 48/20/1/0 |
+| rows 03 and 04 | 2/0/0/0 |
+| all | 423/128/1/0 |
+
+`rootBand: 0` gives 0/0/0/0 everywhere. Elsewhere: tee 0.148, ring
+0.174; gate699 r step 0.030h, ink step 0.125; pins 27/27; npm 2756
+passed; b_rate 0 breaches (max 2.92); pops def 0, muse_drag 6
+(36 px), muse_flow 10 (132 px); mech merge 16 (168 px); q4
+muse_hash 7; scenes #1 158, free ends 110.
+
+Done:
+
+- The change and its pins pushed to master, and the deploy passed.
+- `run_k1163_gate.ps1` committed.
+- The outputs force-added: the sheet, the row images and the text
+  results, not the JSON dumps.
+- `npm test` passes.
+
+Report: the before and after tables, row 15's r, the pins that
+moved, the sheet's path and the commits. Then update K1163's
+handle (it stays In progress; Claude's look at the sheet is next):
+`ledger.mjs handle K1163 --owner "nobody since <yyyy-mm-dd hh:mm> (Run H done in Muse batch 16)" --last-commit <sha8> --evidence ".claude/probes/K1040/s1/out/k1163/; docs/design/K1179_geometry_review.md section 4" --next "Claude looks at the sheet (.claude/probes/K1040/s1/out/k1163/sheet.png), then asks Levi with the rows"`
+Suggested ports: 5600-5609 (only if needed).
+
+## Run I · K1179 S1: the fill-outline spike, offline
+
+Read first: `docs/design/K1179_geometry_review.md` (all of it;
+sections 6 and 7 are this run's design);
+`docs/design/K868_field_border.md`;
+`docs/design/G3G4_sdf_geometry.md` (its summary and status only);
+`docs/design/K1114_s1i_rounding.md` and
+`docs/design/K1040_s1g_gates.md`; `solveCorner` in
+`src/render/field/form_b.ts`, with Run H's change if it landed;
+`src/render/field/scene.ts`; and
+`.claude/probes/K868/scenes/README.md` (untracked, on this desktop
+only).
+
+The ledger says (In progress):
+
+> **K1179** · Thread geometry (Levi 11-04: rethink how thread bodies, junction rounds and gaps are
+> built, maybe as a skin on the thread centres). Review (`docs/design/K1179_geometry_review.md`):
+> keep threads and physics, one per-pixel outline rule for both looks, no simulated skin. S1
+> spike: K1178 Run I.
+
+What is there today (read it, don't trust this summary). The fill
+look builds each junction from separate pieces: strips, fans,
+discs, wedges and rims (`src/render/ribbon/joinery.ts` and its
+neighbours). The border look (`tlk=border`, K868) draws one field
+per junction, and form B's rolling-ball corners round it; the root
+gate applies (S1g), scaled by the tip since Run H. The review
+proposes one outline rule for both looks: the union of the arm
+bodies (half-width h) and form B's rounds. This run tests that rule
+offline, before anything is built.
+
+Tasks, in order (Node only, through `npx.cmd vite-node`; no GPU,
+browser, server or phone; ports 5610-5619 only if something needs
+one). Write only new files under `.claude/probes/K1179/` (outside
+`review/`) and `docs/design/K1179_spike.md`; change nothing in
+`src/` or `test/`.
+
+1. Inputs. Copy `seq13_lib.ts`, and whatever it imports, from
+   `.claude/worktrees/k868-s3a/.claude/probes/S3a/` into
+   `.claude/probes/K1179/`, and point it at the main checkout's
+   `.claude/probes/S3a/seq13/` (def_drag, def_flow, muse_drag,
+   muse_flow; don't add the recordings to git). Use the 12 K868
+   scenes (FieldScene v1, sim 40.0167, physics frozen). Their
+   `.master.png` frames are border-look captures of c4e4e67e
+   (2026-10-26), not today's fill: don't compare against them.
+2. The outline: the union boundary under master's form B settings
+   (say whether Run H's "tip" band was on). Sample it in float64:
+   100 points per round, and every 0.01h along the edges.
+3. The criteria, over the 12 scenes and the 4 recordings:
+   1. No concave cusp: κ ≥ −0.01/h from foot to foot, plus 0.1h on
+      each side; and no round below 0.25h where the rule gives at
+      least 1h, except in a null band (counted and listed).
+   2. G1 where pieces meet: a tangent jump of at most 1° and a gap
+      of at most 0.05 device px (dpr 2) at every foot and hand-off,
+      with no exceptions on the 12 scenes.
+   3. Stable in motion: per frame, no boundary point moves more
+      than its skeleton's motion plus 1 device px. An edge point is
+      (arm, s, side); a round point is (corner, fraction from foot
+      A to foot B), and its skeleton motion is the larger of its
+      two feet's. Count the appear and vanish events by cause. The
+      sweeps, measured as K1114's probes measure them: gate699, tee
+      and ring, with ink steps of at most 0.125, 0.148 and 0.174,
+      appearing and vanishing corners included; plus a synthetic
+      sweep of one arm through 60° about its junction, in 0.005h
+      steps.
+   4. Cost: the corner solve's p95 is at most 0.75 ms on the
+      desktop, under the perf lock (`$env:TEMP\claude-perf.lock`).
+      Over budget: report the split, and try one optimization only
+      if the boundary stays bit-identical.
+4. Stop if criteria 1-3 can't hold together: that is a result.
+   Name the conflict and where it is.
+5. Optional: SVG plots of the worst sites under
+   `.claude/probes/K1179/out/`. No pngjs. The z4 crops against
+   today's fill are Claude's, later.
+
+Done:
+
+- `docs/design/K1179_spike.md`: a table per criterion, the worst
+  sites, a verdict (pass, fail or stop), the cost split, and what
+  S2 should check.
+- The probe code force-added and pushed with the doc (a docs and
+  probes push, so no deploy runs).
+- `npm test` passes.
+
+Report: the verdicts, the worst sites, the cost, the doc's path and
+the commit. Then update K1179's handle (S2, the phone GPU check,
+is not in this run):
+`ledger.mjs handle K1179 --owner "nobody since <yyyy-mm-dd hh:mm> (S1 done in Muse batch 16 run I)" --last-commit <sha8> --evidence "docs/design/K1179_geometry_review.md; docs/design/K1179_spike.md; .claude/probes/K1179/" --next "S1 done (<pass, fail or stop>); Claude reviews the spike, then S2 (the phone GPU check, 4 ms at 2x) or a rethink"`
+Suggested ports: 5610-5619 (only if needed).
 
 ## Run C · K1175: key hints can go stale under flow
 
