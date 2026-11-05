@@ -58,6 +58,15 @@ for (const rc of meta.recs) {
     if (!existsSync(fu)) continue;
     const u8 = new Uint8Array(readFileSync(fu));
     const f32 = new Float32Array(new Uint8Array(readFileSync(join(DIR, `r${rc.ji}_t${k}.f32`))).buffer);
+    // Stage 3 (S3.1): per pixel per band, the twin's compression c (from the
+    // header's P; 1 off the pivot, -1 where the band is absent) and mode.
+    const fc = join(DIR, `r${rc.ji}_t${k}.c32`);
+    const C32 = existsSync(fc) ? new Float32Array(new Uint8Array(readFileSync(fc)).buffer) : null;
+    const cAt = (i, b) => {
+      if (!C32 || b < 0) return 1;
+      const c = C32[(i * NB + b) * 2];
+      return c > 0 ? c : 1;
+    };
     const n = BW * BH;
     const win = new Int8Array(n), mc = new Uint8Array(n);
     for (let i = 0; i < n; i++) {
@@ -104,6 +113,15 @@ for (const rc of meta.recs) {
     const seamG = new Uint8Array(n), seamC = new Uint8Array(n);
     let nSeamG = 0, nSeamC = 0, maxStepG = 0, maxStepC = 0, maxSame = 0;
     const byCls = {};
+    // S3.1: same-band steps in (T, T x c] are compression ramps (c the
+    // band's compression, the larger of the two pixels', clamped at 1 so the
+    // outer side keeps T); everything else above T is a seam, as before.
+    // seamOld is Stage 2's count (every step above T).
+    const rampG = new Uint8Array(n), seamOld = new Uint8Array(n);
+    const ramp = { maxC: 0, atMaxC: null, worst: 0, atWorst: null, outerStrict: 0 };
+    const m0 = new Set(rc.bands.map((b, bi) => (!b.piv || b.piv.code < 4096 ? bi : -1)).filter((bi) => bi >= 0));
+    let m0Seams = 0;
+    const sameSub = {}, sameG = { max: 0, gOverC: 0, jumps: [] };
     const sw = { n: 0, dv: 0, dOut: 0 };
     // Stage 2 (b): kFanPulseV is the max over bands of v * cov (win is its argmax).
     const cpuG = (i) => {
@@ -133,17 +151,55 @@ for (const rc of meta.recs) {
           if (footIn[i] && footIn[j]) {
             const sg = Math.abs(at(gD, X, Y, 1) - at(gD, X + dx, Y + dy, 1));
             maxStepG = Math.max(maxStepG, sg);
+            const same = win[i] === win[j] && win[i] >= 0;
+            const cS = same ? Math.max(cAt(i, win[i]), cAt(j, win[i])) : 1;
+            // A literal T x c on the outer side (c < 1) would flag these too.
+            if (same && cS < 1 && sg > T * cS && sg <= T) ramp.outerStrict++;
             if (sg > T) {
-              if (!seamG[i]) {
-                const key = win[i] >= 0 && win[j] >= 0 && win[i] !== win[j] ? cls(win[i], win[j]) : win[i] === win[j] ? "same-band" : "edge";
-                byCls[key] = (byCls[key] ?? 0) + 1;
+              seamOld[i] = 1;
+              if (same && sg <= T * Math.max(1, cS)) {
+                rampG[i] = 1;
+                if (cS > ramp.maxC) { ramp.maxC = cS; ramp.atMaxC = [X, Y, dx, dy, sg, win[i]]; }
+                const rr = sg / T;
+                if (rr > ramp.worst) { ramp.worst = rr; ramp.atWorst = [X, Y, dx, dy, sg, +cS.toFixed(3), win[i]]; }
+              } else {
+                if (!seamG[i]) {
+                  const key = win[i] >= 0 && win[j] >= 0 && win[i] !== win[j] ? cls(win[i], win[j]) : win[i] === win[j] ? "same-band" : "edge";
+                  byCls[key] = (byCls[key] ?? 0) + 1;
+                  if (m0.has(win[i]) || m0.has(win[j])) m0Seams++;
+                  // Diagnosis only (not the ruling's count): what a same-band
+                  // seam above T x c is. "steep" = the twin's own tau step along
+                  // this pixel step explains it (SLOPE x |dtau| x 255 + 2, both
+                  // covers full); "cover" = the band's AA edge over another band;
+                  // "jump" = neither.
+                  if (same) {
+                    const b = win[i];
+                    const ci = u8[i * PX + b * PB + 1], cj = u8[j * PX + b * PB + 1];
+                    const dt = Math.abs(f32[(i * NB + b) * 2 + 1] - f32[(j * NB + b) * 2 + 1]);
+                    const g = dt / meta.pxW;
+                    let sub = ci < 255 || cj < 255 ? "cover" : sg <= SLOPE * dt * 255 + 2 ? "steep" : "jump";
+                    // A jump the twin cannot see: one side's GPU pulse is 0 (a web
+                    // piece with no band pulse), or equals the webs-off frame's
+                    // (the arm's own ribbon shows there, not the fan).
+                    if (sub === "jump") {
+                      const gi = at(gD, X, Y, 1), gj = at(gD, X + dx, Y + dy, 1);
+                      const wi = at(gDW, X, Y, 1), wj = at(gDW, X + dx, Y + dy, 1);
+                      sub = gi === 0 || gj === 0 ? "jump:zero" : gi === wi || gj === wj ? "jump:arm" : "jump:other";
+                    }
+                    sameSub[sub] = (sameSub[sub] ?? 0) + 1;
+                    if (sub === "steep") { sameG.max = Math.max(sameG.max, g); sameG.gOverC = Math.max(sameG.gOverC, g / Math.max(1, cS)); }
+                    if (sub === "jump:other" && sameG.jumps.length < 6) sameG.jumps.push([X, Y, dx, dy, sg, +g.toFixed(2), +cS.toFixed(2), b]);
+                  }
+                }
+                seamG[i] = 1;
               }
-              seamG[i] = 1;
             }
           }
         }
       }
     for (let i = 0; i < n; i++) { nSeamG += seamG[i]; nSeamC += seamC[i]; }
+    let nRamp = 0, nOld = 0;
+    for (let i = 0; i < n; i++) { if (rampG[i] && !seamG[i]) nRamp++; nOld += seamOld[i]; }
     // Fan pixels outside every band (the quiet base shows).
     let nBare = 0;
     for (let i = 0; i < n; i++) if (foot[i] && mc[i] === 0) nBare++;
@@ -151,6 +207,10 @@ for (const rc of meta.recs) {
       ji: rc.ji, k, foot: nFoot, inner: inner.reduce((a, b) => a + b, 0), bare: nBare,
       switches: sw.n, swDv: sw.dv, swDout: sw.dOut, seamG: nSeamG, seamC: nSeamC,
       maxStepG, maxStepC: +maxStepC.toFixed(1), maxSame: +maxSame.toFixed(1), byCls,
+      seamOld: nOld, ramps: nRamp, rampMaxC: +ramp.maxC.toFixed(3), rampAtMaxC: ramp.atMaxC,
+      rampWorst: +ramp.worst.toFixed(3), rampAtWorst: ramp.atWorst, outerStrict: ramp.outerStrict,
+      m0: m0.size, m0Seams, hasC: !!C32,
+      sameSub, steepGmax: +sameG.max.toFixed(3), steepGoverC: +sameG.gOverC.toFixed(3), jumps: sameG.jumps,
     };
     summary.push(row);
     console.log(JSON.stringify(row));
@@ -182,17 +242,30 @@ for (const rc of meta.recs) {
         } else put(3, X, Y, foot[i] ? [90, 90, 90] : [0, 0, 0]);
         const g = Math.max(0, at(gD, bx, by, 1));
         put(4, X, Y, [g, g, g]);
-        put(5, X, Y, seamG[i] ? [255, 255, 255] : foot[i] ? (inner[i] ? [60, 60, 110] : [40, 40, 60]) : [0, 0, 0]);
+        put(5, X, Y, seamG[i] ? [255, 255, 255] : rampG[i] ? [255, 150, 40] : foot[i] ? (inner[i] ? [60, 60, 110] : [40, 40, 60]) : [0, 0, 0]);
       }
     writeFileSync(join(OUT, `an_r${rc.ji}_t${k}.png`), encodePNG({ W, H: PH2, data }));
   }
 }
 const tot = {};
 for (const r of summary) {
-  const t = (tot[r.ji] ??= { seamG: 0, seamC: 0, bare: 0, switches: 0, swDv: 0, maxStepG: 0 });
+  const t = (tot[r.ji] ??= { seamG: 0, seamC: 0, bare: 0, switches: 0, swDv: 0, maxStepG: 0, seamOld: 0, ramps: 0, rampMaxC: 0, rampWorst: 0, rampAtWorst: null, outerStrict: 0, m0: r.m0, m0Seams: 0, byCls: {} });
   t.seamG += r.seamG; t.seamC += r.seamC; t.bare += r.bare; t.switches += r.switches;
   t.swDv = Math.max(t.swDv, r.swDv); t.maxStepG = Math.max(t.maxStepG, r.maxStepG);
+  t.seamOld += r.seamOld; t.ramps += r.ramps; t.rampMaxC = Math.max(t.rampMaxC, r.rampMaxC);
+  if (r.rampWorst > t.rampWorst) { t.rampWorst = r.rampWorst; t.rampAtWorst = [r.k, ...r.rampAtWorst]; }
+  t.outerStrict += r.outerStrict; t.m0Seams += r.m0Seams;
+  for (const [kk, v] of Object.entries(r.byCls)) t.byCls[kk] = (t.byCls[kk] ?? 0) + v;
+  t.sameSub ??= {};
+  for (const [kk, v] of Object.entries(r.sameSub)) t.sameSub[kk] = (t.sameSub[kk] ?? 0) + v;
+  t.steepGmax = Math.max(t.steepGmax ?? 0, r.steepGmax); t.steepGoverC = Math.max(t.steepGoverC ?? 0, r.steepGoverC);
 }
+const all = { seamG: 0, seamOld: 0, ramps: 0, rampMaxC: 0, m0: 0, m0Seams: 0, outerStrict: 0 };
+for (const t of Object.values(tot)) {
+  all.seamG += t.seamG; all.seamOld += t.seamOld; all.ramps += t.ramps; all.m0 += t.m0;
+  all.m0Seams += t.m0Seams; all.outerStrict += t.outerStrict; all.rampMaxC = Math.max(all.rampMaxC, t.rampMaxC);
+}
+console.log("stand " + JSON.stringify(all));
 console.log(`T = ${T.toFixed(2)}/255 (slope ${SLOPE.toFixed(3)}/world, pxW ${meta.pxW.toFixed(5)})`);
 console.log("totals " + JSON.stringify(tot));
-if (OUT) writeFileSync(join(OUT, "an_summary.json"), JSON.stringify({ T, summary, tot }, null, 1));
+if (OUT) writeFileSync(join(OUT, "an_summary.json"), JSON.stringify({ T, summary, tot, all }, null, 1));
