@@ -517,17 +517,17 @@ Next free ID: K1184.
 - **K1178** · Muse batch 16: run A drafts the brief (`docs/design/K1178_muse_batch16_run_a.md`), runs B-I from
   the draft (Claude added H and I after B), after 16J.
   - owner: nobody since 2026-11-04 09:58 (16B done; runs H, I, then C-G queued as Muse chain runs 16H, 16I, 16C-16G, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `ab7cad9a`
+  - branch: mainline; last commit: `9de9006e`
   - evidence: `docs/design/K1178_muse_batch16_run_a.md`; the chain in `.claude/probes/K1053/` (queue.txt, chain.log)
-  - next: Run H done; next Run I
+  - next: Run I done; next Run C
   - brief: `docs/design/K1178_muse_batch16.md`
 - **K1179** · Thread geometry (Levi 11-04: rethink how thread bodies, junction rounds and gaps are built, maybe
   as a skin on the thread centres). Review (`docs/design/K1179_geometry_review.md`): keep threads and physics,
   one per-pixel outline rule for both looks, no simulated skin. S1 spike: K1178 Run I.
-  - owner: nobody since 2026-11-04 09:58 (review done; S1 queued as Muse chain run 16I, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `25ffd212`
-  - evidence: `docs/design/K1179_geometry_review.md`; `.claude/probes/K1179/review/`
-  - next: S1 (K1178 Run I); if it passes, S2 measures the phone, then the rebuild: G4 with the one outline rule in place of its planned soft blend (the review's plan)
+  - owner: nobody since 2026-11-04 10:51 (S1 done in Muse batch 16 run I)
+  - branch: mainline; last commit: `9de9006e`
+  - evidence: docs/design/K1179_geometry_review.md; docs/design/K1179_spike.md; .claude/probes/K1179/
+  - next: S1 done (fail); Claude reviews the spike, then S2 (the phone GPU check, 4 ms at 2x) or a rethink
   - brief: `docs/design/K1178_muse_batch16.md` (Run I)
 - **K1163** · Corner rounding (K1114, 8b436272): the root-gate guard leaves ten near-straight corners up to 1
   px tight, some with a concave cusp, in the border look (`tlk=border`). Levi 11-04, “Smoother is better”: the
