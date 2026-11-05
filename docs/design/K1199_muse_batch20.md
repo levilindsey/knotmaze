@@ -642,7 +642,7 @@ these files.
    control pair (the stand's control drag, no flip) heads
    the sheet.
 3. **The sheet.** One sheet under `.claude/probes/K1186/`:
-   five rows (the control first), each with its before,
+   six rows (the control first, then the five flips), each with its before,
    after and held crops at 3x, labelled by stand, junction,
    kind and drawn ink in the report (the sheet itself follows
    the kit's no-label shape; the report is its key). State

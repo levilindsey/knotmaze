@@ -524,13 +524,13 @@ Next free ID: K1204.
   - next: Levi's look K1200 (`docs/asks/K1200.md`); the Pixel batch for S3b's fix, S4 and S4b when the phone is awake (`out/s3b/pixel_batch_plan.md`, `out/s4cyc/pixel_batch_plan.md`, built from 36aed2d5 or later, under the K1040 phone wrappers); S5 (Levi: straight through, no dim moment) in Muse batch 20 (K1199); K1201-K1203; K1190's fixes once Levi answers
   - brief: the plan `docs/design/K1139_pulse_junctions.md` section 5 (S5); S4b's Handoff in `docs/design/K1139_s4b_ridge_fade.md`
   - env: the server `npx vite --config .claude/probes/K1139/vite.private-cache.config.ts --port 5620 --strictPort --host 127.0.0.1` from a worktree (ports 5620-5639; the node_modules junction: `docs/design/K1139_s3b_fix.md` section 7); GPU probes through `.claude/probes/K1139/run_locked.ps1 -Batch`
-- **K1199** · Muse batch 20 (`docs/design/K1199_muse_batch20.md`, drafted by run A): junction and cursive work
-  first (K1139 S5, K1186's crops, K1196's timing, K1191's gk, c's v7.2 leftovers), then batch 19's follow-ups
-  - owner: nobody since 2026-11-04 22:00 (run 20A queued in the Muse chain after 19F, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
+- **K1199** · Muse batch 20 (`docs/design/K1199_muse_batch20.md`): K1139 S5 with K1182's removal (run B),
+  K1202 (C), K1186's crops (D), K1201 (E), K1196's timing (F) and K1198's Plc1m and ij (G), one at a time
+  - owner: nobody since 2026-11-04 22:57 (runs 20B to 20G queued in the Muse chain, one at a time, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
   - branch: mainline; last commit: `b6c91064`
   - evidence: docs/design/K1199_muse_batch20_run_a.md; the chain in .claude/probes/K1053/ (queue.txt, chain.log)
-  - next: Run A done; Claude reviews the draft
-  - brief: `docs/design/K1199_muse_batch20_run_a.md`
+  - next: Run B (K1139 S5, then K1182's removal) runs first; Claude reviews each run as it lands
+  - brief: `docs/design/K1199_muse_batch20.md`
 
 ## Next, in order
 
