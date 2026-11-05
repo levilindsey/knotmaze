@@ -1,0 +1,39 @@
+stamp: P4 v0.4.0 64e38a14 2026-11-05 13:46 | sim 5.0s / wall 30.5s | settle lag 17.5s | asleep
+clip {"x":949,"y":43,"width":143,"height":163}, ppw 23.22, head node_382; junction at 92,115, e18's far end at 122,152 (device px in the clip)
+t 100.000: off/on 0 px max 0; off/off 0 px max 0
+t 100.065: off/on 0 px max 0; off/off 0 px max 0
+t 100.130: off/on 0 px max 0; off/off 0 px max 0
+t 100.195: off/on 0 px max 0; off/off 0 px max 0
+t 100.260: off/on 0 px max 0; off/off 0 px max 0
+t 100.326: off/on 0 px max 0; off/off 0 px max 0
+t 100.391: off/on 0 px max 0; off/off 0 px max 0
+t 100.456: off/on 0 px max 0; off/off 0 px max 0
+t 100.521: off/on 0 px max 0; off/off 0 px max 0
+t 100.586: off/on 0 px max 0; off/off 0 px max 0
+t 100.651: off/on 0 px max 0; off/off 0 px max 0
+t 100.716: off/on 0 px max 0; off/off 0 px max 0
+t 100.781: off/on 0 px max 0; off/off 0 px max 0
+t 100.846: off/on 0 px max 0; off/off 0 px max 0
+t 100.911: off/on 0 px max 0; off/off 0 px max 0
+t 100.977: off/on 0 px max 0; off/off 0 px max 0
+t 101.042: off/on 0 px max 0; off/off 0 px max 0
+t 101.107: off/on 0 px max 0; off/off 0 px max 0
+t 101.172: off/on 0 px max 0; off/off 0 px max 0
+t 101.237: off/on 0 px max 0; off/off 0 px max 0
+t 101.302: off/on 0 px max 0; off/off 0 px max 0
+t 101.367: off/on 0 px max 0; off/off 0 px max 0
+t 101.432: off/on 0 px max 0; off/off 0 px max 0
+t 101.497: off/on 0 px max 0; off/off 0 px max 0
+t 101.563: off/on 0 px max 0; off/off 0 px max 0
+t 101.628: off/on 0 px max 0; off/off 0 px max 0
+t 101.693: off/on 0 px max 0; off/off 0 px max 0
+t 101.758: off/on 0 px max 0; off/off 0 px max 0
+t 101.823: off/on 0 px max 0; off/off 0 px max 0
+t 101.888: off/on 0 px max 0; off/off 0 px max 0
+t 101.953: off/on 0 px max 0; off/off 0 px max 0
+t 102.018: off/on 0 px max 0; off/off 0 px max 0
+t 102.083: off/on 0 px max 0; off/off 0 px max 0
+t 102.148: off/on 0 px max 0; off/off 0 px max 0
+t 102.214: off/on 0 px max 0; off/off 0 px max 0
+t 102.279: off/on 0 px max 0; off/off 0 px max 0
+all 36 clocks: off/on 0 px, max 0; off/off 0 px, max 0; context lost 0

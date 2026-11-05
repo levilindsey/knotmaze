@@ -3751,3 +3751,12 @@ Muse batch 20 Run G (c3ab0a46, `.claude/probes/K1198/SUMMARY.md`) measured Plc1m
 ## K1190 (2026-11-05, K1202's finding)
 
 If Levi picks spot 1 (soften the sharp fronts): K1202's judgment (5e0d5914; its notes) found that widening a band's cover ramp to 2 pxW spreads a front's step over two pixels and changes nothing visible at 1x; the step there was the two bands' fields disagreeing across the cover edge. Check each front for that mismatch first.
+
+## K1203 (2026-11-05, Claude's judgment of Run D)
+
+Run D (a0f1d634) put the child arm's end window into a pulse band behind `setPulseBandEndWindow` (off by default, on `uJParams.w`; R3.w holds the child's span for a one-ended, non-cont child at its near end, else 0), and its copy of `table_cyc.mjs` reads BAND EXTENT past the arm. Claude's verdict: the switch goes on, and K1207 makes it the only path in Muse batch 22 (K1208).
+- Muse's checks (`.claude/probes/K1203/out/`): x4's mnode_27 e135 to e18 reads 0.0170 off and 0.0000 on in the CPU table and 0 px on the GPU at every phase; that band's R3.w forced to 0.95 read 0 px too (`check_gpu5.mjs`: distJ 6.811 of reach 8, so the reach window crushes its crest).
+- Claude's frames (`.claude/probes/K1203/claude21d/frames21d.mjs`, `out21d_log.txt` beside it): 0 px off/on over 36 clocks across 1.5 periods, off/off 0 px, no context loss.
+- Claude's positive control (`claude21d/posctl.mjs`, with `posctl_log.txt` and the strip `posctl/t0_on_onhack_diff.png` beside it): all 11 of x4's bands' R3.w forced to 0.05 at four clocks a quarter period apart reads 0 px with the switch off and 958 to 1479 px (max 105 to 111 of 255) with it on, in three fans; every band's distJ moved to 0.5 with the switch off reads 3021 to 3855 px (a record hack reaches the GPU); the controls read 0 px and each hack was intact after its shot.
+- Why on: it is a correctness fix (the band equals the child's ribbon pulse to 1e-9: `test/render/paint_gameplay.test.ts`, "pulse band end window (K1203)"), it adds 127 characters of fragment shader (`test/render/k320_slim.test.ts`) and no measurable cold compile (K307: 6.078 base, 6.061 edited; base spread 5.934 to 6.154), and the GPU applies it.
+- Open: `check_field.mjs`'s CPU twin moved about 2.3/255 at tau 0.91, from (0.5052, 0.8065, 0.6131) off to (0.4960, 0.8030, 0.6059) on (`out/check_field.txt`), where the GPU showed 0 px: either the fan does not draw that point or the twin and the GPU disagree. K1207's run says which.
