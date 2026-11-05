@@ -508,6 +508,23 @@ export function burntAt(
   return false;
 }
 
+// K1187: one burnt span minus a cut span (both chain ctrls, the cut in
+// either end order): the zero, one or two spans that lie outside the
+// cut, zero-width pieces dropped. A cut that only touches an endpoint
+// leaves the span whole (cutPiece's endpoint behaviour), and a cut on
+// another chain returns the span untouched. The renderer cuts a broken
+// anim run's swept interval out of its burn this way.
+export function cutBurntSpan(span: BurntSpan, cut: BurntSpan): BurntSpan[] {
+  if (span.chain !== cut.chain) return [span];
+  const c0 = Math.min(cut.b0, cut.b1);
+  const c1 = Math.max(cut.b0, cut.b1);
+  if (c1 <= span.b0 || c0 >= span.b1) return [span];
+  const out: BurntSpan[] = [];
+  if (c0 > span.b0) out.push({ chain: span.chain, b0: span.b0, b1: c0 });
+  if (c1 < span.b1) out.push({ chain: span.chain, b0: c1, b1: span.b1 });
+  return out;
+}
+
 // K290: the pieces with every burnt span cut out (burnt thread is not
 // drawn: the `burnt` param's "gone"). `ringN(chain)` = the chain's ctrl
 // count for a ring, 0 for an open chain; a ring's span is cut at each

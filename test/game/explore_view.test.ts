@@ -13,6 +13,7 @@ import {
   endPullBack,
   endPushPast,
   burntAt,
+  cutBurntSpan,
   exploreView,
   pieceVis,
 } from "../../src/game/explore_view";
@@ -535,5 +536,35 @@ describe("burntAt (K796: the string burns with its thread)", () => {
     expect(burntAt([{ chain: 1, b0: 3, b1: 5 }], 1, 4, ring)).toBe(true);
     expect(burntAt([{ chain: 1, b0: 3, b1: 5 }], 1, 5, ring)).toBe(false);
     expect(burntAt([{ chain: 1, b0: 3, b1: 5 }], 0, 4, ring)).toBe(false);
+  });
+});
+
+describe("cutBurntSpan (K1187: a burnt span minus a cut span)", () => {
+  const span = { chain: 2, b0: 10, b1: 20 };
+  it("cuts off each end", () => {
+    expect(cutBurntSpan(span, { chain: 2, b0: 4, b1: 14 })).toEqual([{ chain: 2, b0: 14, b1: 20 }]);
+    expect(cutBurntSpan(span, { chain: 2, b0: 16, b1: 26 })).toEqual([{ chain: 2, b0: 10, b1: 16 }]);
+  });
+  it("cuts through the middle, leaving two spans", () => {
+    expect(cutBurntSpan(span, { chain: 2, b0: 13, b1: 17 })).toEqual([
+      { chain: 2, b0: 10, b1: 13 },
+      { chain: 2, b0: 17, b1: 20 },
+    ]);
+  });
+  it("leaves nothing when the cut covers the span", () => {
+    expect(cutBurntSpan(span, { chain: 2, b0: 9, b1: 21 })).toEqual([]);
+    expect(cutBurntSpan(span, { chain: 2, b0: 10, b1: 20 })).toEqual([]);
+  });
+  it("returns the span when the cut misses, or only touches an endpoint", () => {
+    expect(cutBurntSpan(span, { chain: 2, b0: 22, b1: 30 })).toEqual([span]);
+    expect(cutBurntSpan(span, { chain: 2, b0: 20, b1: 26 })).toEqual([span]);
+    expect(cutBurntSpan(span, { chain: 2, b0: 4, b1: 10 })).toEqual([span]);
+  });
+  it("returns the span for a cut on another chain, and reads the cut in either end order", () => {
+    expect(cutBurntSpan(span, { chain: 3, b0: 12, b1: 18 })).toEqual([span]);
+    expect(cutBurntSpan(span, { chain: 2, b0: 17, b1: 13 })).toEqual([
+      { chain: 2, b0: 10, b1: 13 },
+      { chain: 2, b0: 17, b1: 20 },
+    ]);
   });
 });

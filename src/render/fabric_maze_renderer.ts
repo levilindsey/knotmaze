@@ -118,6 +118,7 @@ import { MarkerMesh } from "./marker_mesh";
 import type { Diagonal, KeyDir } from "../ui/key_moves";
 import {
   chainVis,
+  cutBurntSpan,
   exploreDistances,
   exploreView,
   burntAt,
@@ -2635,24 +2636,49 @@ export class FabricMazeRenderer {
       return;
     }
     const lit = L <= fire.delay;
+    // K1187: the anim run's unswept stretch is still drawn (syncBroken
+    // keeps it until the dot arrives), so the anim run reads its burn
+    // without the broken predicate and keeps only the part the dot has
+    // not swept yet; every other run reads exactly as today.
+    const animEdge = a ? a.e.id : -1;
+    const swept: BurntSpan | null = a
+      ? { chain: a.e.chain, b0: Math.min(a.from, a.cur), b1: Math.max(a.from, a.cur) }
+      : null;
     for (let eid = 0; eid < this.walk.edges.length; eid++) {
       const e = this.walk.edges[eid];
-      const b = runBurnAt(this.walk, fire, eid, L, (r) => controller.broken(r));
+      const isAnim = eid === animEdge;
+      const b = isAnim
+        ? runBurnAt(this.walk, fire, eid, L)
+        : runBurnAt(this.walk, fire, eid, L, (r) => controller.broken(r));
       if (b.state === "unburnt") continue;
       if (b.state === "burnt") {
-        spans.push(this.burnSpan(e, 0, e.length));
+        const span = this.burnSpan(e, 0, e.length);
+        if (isAnim && swept) {
+          for (const s of cutBurntSpan(span, swept)) spans.push(s);
+        } else spans.push(span);
         continue;
       }
       const sk = e.ctrlB >= e.ctrlA ? 1 : -1;
       for (let i = 0; i < b.burnt.length; i++) {
         const [x0, x1] = b.burnt[i];
-        if (x1 > x0) spans.push(this.burnSpan(e, x0, x1));
+        if (x1 > x0) {
+          const span = this.burnSpan(e, x0, x1);
+          if (isAnim && swept) {
+            for (const s of cutBurntSpan(span, swept)) spans.push(s);
+          } else spans.push(span);
+        }
         // Within the delay the fire has not spread (at h = 0 the start's
         // runs hold zero-length stretches): the lit fuse stands for it.
         if (lit) continue;
         // runBurnAt pairs each stretch with its front: from the va end
         // [0, x] (the unburnt side lies toward vb), from the vb end [x, len].
         const x = b.front[i];
+        if (isAnim && swept) {
+          // K1187: no front on the swept stretch, nor at the dot itself
+          // (its ctrl, by burnSpan's distance-to-ctrl conversion).
+          const fc = e.ctrlA + x * (e.length > 0 ? (e.ctrlB - e.ctrlA) / e.length : 0);
+          if ((fc >= swept.b0 && fc <= swept.b1) || (a !== null && fc === a.cur)) continue;
+        }
         const fromA = x0 === 0 && x === x1;
         this.pushFront(fronts, e, x, fromA ? sk : -sk, 0);
       }

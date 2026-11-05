@@ -370,7 +370,7 @@ describe("the fire model (K114)", () => {
     expect(runBurnAt(w, f, 2, 6, broken1)).toEqual({ state: "burnt" });
   });
 
-  it("K711 (b): drawFire's burnt-spans loop passes the controller's broken predicate", () => {
+  it("K711 (b): drawFire's burnt-spans loop passes the controller's broken predicate to non-anim runs", () => {
     // A source scan, in the panel_rect.test.ts manner: drawFire's
     // burnt-spans loop is the one runBurnAt call that must skip gone
     // runs (the smolder loop below it reads choices(), which already
@@ -386,6 +386,24 @@ describe("the fire model (K114)", () => {
     expect(src.slice(start, end)).toContain(
       "runBurnAt(this.walk, fire, eid, L, (r) => controller.broken(r))"
     );
+  });
+
+  it("K1187: drawFire's burnt-spans loop cuts the anim run's spans by the swept interval", () => {
+    // A source scan in the same manner: the anim run reads its burn with
+    // no broken predicate, each pushed span is cut by the swept interval
+    // (cutBurntSpan), and no front stands at the dot (a.cur).
+    const src = readFileSync(
+      fileURLToPath(new URL("../../src/render/fabric_maze_renderer.ts", import.meta.url)),
+      "utf8"
+    );
+    const start = src.indexOf("const lit = L <= fire.delay;");
+    const end = src.indexOf("// A smoldering arm", start);
+    expect(start).toBeGreaterThanOrEqual(0);
+    expect(end).toBeGreaterThan(start);
+    const slice = src.slice(start, end);
+    expect(slice).toContain("runBurnAt(this.walk, fire, eid, L)");
+    expect(slice).toContain("cutBurntSpan(span, swept)");
+    expect(slice).toContain("fc === a.cur");
   });
 
   it("K711 (c): the controller passes its broken runs to the trap test", () => {
