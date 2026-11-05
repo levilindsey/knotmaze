@@ -8,6 +8,24 @@ has the same shape). Run it under the K1040 wrappers
 and waits for the ready check), not with a hand-started
 `scripts/phone.ps1`.
 
+## Desktop results first (RX 6800 XT, D3D11, perf lock)
+
+- Frame cost at rest, pulses on (`bench_rest.json`, ABBA x4, 5 s):
+  frameP50 base 7.15 ms, S4 (3dbd0be0) 7.10; PASS (gate +0.5 ms).
+- Cold compile of section-rgb (K307 trace_intro, link to
+  COMPLETION_STATUS, fresh profile per load): base 6.55 / 6.75 / 6.71 /
+  6.52 s; 3dbd0be0's kPulseV2 (two inlined kPulseCrestK calls) 7.06 /
+  7.52 s, about +0.66 s, and first visible +0.63 s. The single-call
+  form (one kPulseCrestK, arguments selected first; the S4 head) 6.84 /
+  6.54 s, inside base's spread, and 0 px against 3dbd0be0 on the cyc,
+  loop, preloop and x4 stands. BUILD THE PIXEL PAIR FROM THE S4 HEAD,
+  not 3dbd0be0. Text: +555 characters per program (+561 at 3dbd0be0).
+- Open defect (S4b): a fan band into a two-ended arm draws the
+  one-ended crest, with no ridge fade, so a step shows at the fan's edge
+  when the ridge is within about 1.2 world of that junction (cyc e210 at
+  node_218; brief's Handoff). The Pixel batch can run before the fix
+  (cost only) or wait to cover it too.
+
 ## What S4 changes on the GPU
 
 Only the paint core's text: `kPulseV2` and the TWO dispatch in

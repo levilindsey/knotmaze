@@ -1,0 +1,252 @@
+{
+ "stand": "loop",
+ "base": {
+  "head": "node_635",
+  "pulses": [
+   {
+    "edge": 101,
+    "two": false,
+    "key": "[45,8,0,true,false,0,true,false,0,false]"
+   },
+   {
+    "edge": 102,
+    "two": true,
+    "key": "[45,8,24,false,false,0,true,true,0,false]"
+   },
+   {
+    "edge": 56,
+    "two": false,
+    "key": "[38,40,0,true,false,4.253,false,false,0,false]"
+   },
+   {
+    "edge": 57,
+    "two": false,
+    "key": "[38,40,42,true,false,4.253,true,false,0,false]"
+   },
+   {
+    "edge": 58,
+    "two": false,
+    "key": "[38,42,50,true,false,5.177,false,false,0,false]"
+   },
+   {
+    "edge": 178,
+    "two": false,
+    "key": "[60,8,0,true,false,5.177,false,false,0,false]"
+   }
+  ],
+  "bands": [
+   {
+    "vertex": "mnode_77",
+    "aEdge": 101,
+    "bEdge": 56,
+    "a": {
+     "chain": 45,
+     "ctrl": 0,
+     "dir": 1
+    },
+    "b": {
+     "chain": 38,
+     "ctrl": 40,
+     "dir": -1
+    },
+    "distJ": 4.253,
+    "inward": true,
+    "slot": 1,
+    "shared": false,
+    "fallback": false,
+    "used": 2
+   },
+   {
+    "vertex": "mnode_77",
+    "aEdge": 101,
+    "bEdge": 57,
+    "a": {
+     "chain": 45,
+     "ctrl": 0,
+     "dir": 1
+    },
+    "b": {
+     "chain": 38,
+     "ctrl": 40,
+     "dir": 1
+    },
+    "distJ": 4.253,
+    "inward": true,
+    "slot": 0,
+    "shared": true,
+    "fallback": false,
+    "used": 2
+   },
+   {
+    "vertex": "node_649",
+    "aEdge": 57,
+    "bEdge": 58,
+    "a": {
+     "chain": 38,
+     "ctrl": 42,
+     "dir": -1
+    },
+    "b": {
+     "chain": 38,
+     "ctrl": 42,
+     "dir": 1
+    },
+    "distJ": 5.177,
+    "inward": true,
+    "slot": 1,
+    "shared": false,
+    "fallback": false,
+    "used": 2
+   },
+   {
+    "vertex": "node_649",
+    "aEdge": 57,
+    "bEdge": 178,
+    "a": {
+     "chain": 38,
+     "ctrl": 42,
+     "dir": -1
+    },
+    "b": {
+     "chain": 60,
+     "ctrl": 8,
+     "dir": -1
+    },
+    "distJ": 5.177,
+    "inward": true,
+    "slot": 0,
+    "shared": true,
+    "fallback": false,
+    "used": 2
+   }
+  ],
+  "errs": []
+ },
+ "s4": {
+  "head": "node_635",
+  "pulses": [
+   {
+    "edge": 101,
+    "two": false,
+    "key": "[45,8,0,true,false,0,true,false,0,false]"
+   },
+   {
+    "edge": 102,
+    "two": true,
+    "key": "[45,8,24,false,false,0,true,true,0,false]"
+   },
+   {
+    "edge": 56,
+    "two": false,
+    "key": "[38,40,0,true,false,4.253,false,false,0,false]"
+   },
+   {
+    "edge": 57,
+    "two": false,
+    "key": "[38,40,42,true,false,4.253,true,false,0,false]"
+   },
+   {
+    "edge": 58,
+    "two": false,
+    "key": "[38,42,50,true,false,5.177,false,false,0,false]"
+   },
+   {
+    "edge": 178,
+    "two": false,
+    "key": "[60,8,0,true,false,5.177,false,false,0,false]"
+   }
+  ],
+  "bands": [
+   {
+    "vertex": "mnode_77",
+    "aEdge": 101,
+    "bEdge": 56,
+    "a": {
+     "chain": 45,
+     "ctrl": 0,
+     "dir": 1
+    },
+    "b": {
+     "chain": 38,
+     "ctrl": 40,
+     "dir": -1
+    },
+    "distJ": 4.253,
+    "inward": true,
+    "slot": 1,
+    "shared": false,
+    "fallback": false,
+    "used": 2
+   },
+   {
+    "vertex": "mnode_77",
+    "aEdge": 101,
+    "bEdge": 57,
+    "a": {
+     "chain": 45,
+     "ctrl": 0,
+     "dir": 1
+    },
+    "b": {
+     "chain": 38,
+     "ctrl": 40,
+     "dir": 1
+    },
+    "distJ": 4.253,
+    "inward": true,
+    "slot": 0,
+    "shared": true,
+    "fallback": false,
+    "used": 2
+   },
+   {
+    "vertex": "node_649",
+    "aEdge": 57,
+    "bEdge": 58,
+    "a": {
+     "chain": 38,
+     "ctrl": 42,
+     "dir": -1
+    },
+    "b": {
+     "chain": 38,
+     "ctrl": 42,
+     "dir": 1
+    },
+    "distJ": 5.177,
+    "inward": true,
+    "slot": 1,
+    "shared": false,
+    "fallback": false,
+    "used": 2
+   },
+   {
+    "vertex": "node_649",
+    "aEdge": 57,
+    "bEdge": 178,
+    "a": {
+     "chain": 38,
+     "ctrl": 42,
+     "dir": -1
+    },
+    "b": {
+     "chain": 60,
+     "ctrl": 8,
+     "dir": -1
+    },
+    "distJ": 5.177,
+    "inward": true,
+    "slot": 0,
+    "shared": true,
+    "fallback": false,
+    "used": 2
+   }
+  ],
+  "errs": []
+ },
+ "twoEdges": [
+  102
+ ],
+ "bandDiff": [],
+ "declDiff": []
+}

@@ -1,0 +1,5 @@
+# K1139 S4: the single-call kPulseV2 experiment (one kPulseCrestK, arguments selected first) on 5632, against base 5630, ABBA cold compiles
+node --max-old-space-size=8192 k307/trace_intro.mjs http://127.0.0.1:5632 s4c-one-a "?k111&am=instant&fw=0&snd=none&phw=0" --max 12 --trace none
+node --max-old-space-size=8192 k307/trace_intro.mjs http://127.0.0.1:5630 s4c-base-c "?k111&am=instant&fw=0&snd=none&phw=0" --max 12 --trace none
+node --max-old-space-size=8192 k307/trace_intro.mjs http://127.0.0.1:5630 s4c-base-d "?k111&am=instant&fw=0&snd=none&phw=0" --max 12 --trace none
+node --max-old-space-size=8192 k307/trace_intro.mjs http://127.0.0.1:5632 s4c-one-b "?k111&am=instant&fw=0&snd=none&phw=0" --max 12 --trace none

@@ -852,7 +852,8 @@ highp float kPulseV2(highp float d, highp float span, highp float dA, highp floa
   highp float gA = dA + d;
   highp float gB = dB + span - d;
   bK *= min(1.0, abs(gA - gB) * ${(0.5 / PULSE_RIDGE_FADE).toFixed(4)});
-  return gA <= gB ? kPulseCrestK(gA, inA, hov, 1.0, bK) : kPulseCrestK(gB, inB, hov, 1.0, bK);
+  bool sA = gA <= gB;
+  return kPulseCrestK(sA ? gA : gB, sA ? inA : inB, hov, 1.0, bK);
 }
 
 highp float kRingDist(highp float a, highp float b, highp float total, bool closed) {

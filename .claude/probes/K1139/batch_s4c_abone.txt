@@ -1,0 +1,2 @@
+# K1139 S4: same-state A/B, S4 two-call kPulseV2 (3dbd0be0, 5631) vs the single-call form (5632): expect 0 px
+node ab_cyc.mjs http://127.0.0.1:5631 http://127.0.0.1:5632 out/s4cyc/ab_one cyc,loop,preloop,x4
