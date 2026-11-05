@@ -515,10 +515,10 @@ Next free ID: K1200.
 - **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate
   correctly across junctions"). S1 to S3b landed (the fix 71eedb94; the Pixel check waits for the
   phone); Levi's looks K1190, leftovers K1191. S4 to S6 next. Notes: `docs/ledger_notes.md`.
-  - owner: claude agent a90af0fe8b4cf82a5 of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (S4b: the band ridge fade; launched 2026-11-04 20:32, stops by about 22:35); S4's agent stopped at its 2 h cap at 20:28
-  - branch: `worktree-agent-a90af0fe8b4cf82a5` (`.claude/worktrees/agent-a90af0fe8b4cf82a5`), started from S4's `worktree-agent-a023a39925efe4816` (kept, tip `0aaa0dee`); the fix's worktree `.claude/worktrees/agent-a8280f4d14ebd8ad1` kept; last commit: `0aaa0dee`
+  - owner: nobody since 2026-11-04 22:36 (merged; agent `a90af0fe8b4cf82a5` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
+  - branch: mainline; last commit: `36aed2d5`
   - evidence: `.claude/probes/K1139/` on S4's branch (tracked: `*_cyc.mjs`, `out/s4cyc/` sheets, table, bench and `pixel_batch_plan.md`, `k307/`); S4's numbers in the Handoff of `docs/design/K1139_s4_cycles.md`
-  - next: S4b (node_218's fan band draws the crest without the ridge fade: a step about 0.57 world into cyc e210), then merge S4 and S4b; Claude's look, then Levi's look questions with S4b's sheets (crests vanishing in pairs at a ridge; the dark stretch on long loops, P5 loop 2.07 and preloop 2.45 world; preloop's ridge at dG 8.09 just past the reach 8); the Pixel batch for S3b's fix and S4 when the phone is awake (`out/s3b/pixel_batch_plan.md`, `out/s4cyc/pixel_batch_plan.md`, built from b306333f or later, under the K1040 phone wrappers); S5 (Levi: straight through, no dim moment); K1190's fixes once Levi answers
+  - next: Levi's look on loops; the Pixel batch when the phone is awake; S5 in Muse batch 20 (K1199)
   - brief: `docs/design/K1139_s4b_ridge_fade.md` (on S4b's branch) and S4's Handoff in `docs/design/K1139_s4_cycles.md`; the plan `docs/design/K1139_pulse_junctions.md` section 5
   - env: the server `npx vite --config .claude/probes/K1139/vite.private-cache.config.ts --port 5620 --strictPort --host 127.0.0.1` from a worktree (ports 5620-5639; the node_modules junction: `docs/design/K1139_s3b_fix.md` section 7); GPU probes through `.claude/probes/K1139/run_locked.ps1 -Batch`
 - **K1192** · Muse batch 19 (`docs/design/K1192_muse_batch19.md`, drafted by run A): junction work first
