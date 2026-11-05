@@ -1,0 +1,158 @@
+{
+ "targets": [
+  {
+   "stand": "four",
+   "ji": 28,
+   "tag": "four_ji28",
+   "center": [
+    24.578250885009766,
+    2.8866220315297446
+   ],
+   "record": 2206,
+   "arms": 3,
+   "scale": 89.99963479806267,
+   "clip": {
+    "x": 913,
+    "y": 23,
+    "width": 200,
+    "height": 200
+   },
+   "stamp": "P4 v0.4.0 cf0c2462 2026-11-05 06:07 | sim 5.0s / wall 58.5s | settle lag 17.1s | asleep",
+   "ctxLost": 0,
+   "log": [
+    "[debug] [vite] connecting...",
+    "[debug] [vite] connected.",
+    "[log] KnotMaze P4 v0.4.0 cf0c2462 2026-11-05 06:07 | dpr 1.5 | gpu WebKit WebGL",
+    "[log] KnotMaze: seed 934453, 1027 nodes, 1470 edges, 91 strands."
+   ]
+  },
+  {
+   "stand": "four",
+   "ji": 147,
+   "tag": "four_ji147",
+   "center": [
+    25.88448429107666,
+    1.3619499802589417
+   ],
+   "record": 11394,
+   "arms": 4,
+   "scale": 89.99963479806267,
+   "clip": {
+    "x": 944,
+    "y": 0,
+    "width": 200,
+    "height": 200
+   },
+   "stamp": "P4 v0.4.0 cf0c2462 2026-11-05 06:07 | sim 5.0s / wall 50.4s | settle lag 14.0s | asleep",
+   "ctxLost": 0,
+   "log": [
+    "[debug] [vite] connecting...",
+    "[debug] [vite] connected.",
+    "[log] KnotMaze P4 v0.4.0 cf0c2462 2026-11-05 06:07 | dpr 1.5 | gpu WebKit WebGL",
+    "[log] KnotMaze: seed 934453, 1027 nodes, 1470 edges, 91 strands."
+   ]
+  },
+  {
+   "stand": "four",
+   "ji": 149,
+   "tag": "four_ji149",
+   "center": [
+    22.427570978800457,
+    5.832747618357341
+   ],
+   "record": 11573,
+   "arms": 3,
+   "scale": 89.99963479806267,
+   "clip": {
+    "x": 863,
+    "y": 90,
+    "width": 200,
+    "height": 200
+   },
+   "stamp": "P4 v0.4.0 cf0c2462 2026-11-05 06:07 | sim 5.0s / wall 50.2s | settle lag 13.8s | asleep",
+   "ctxLost": 0,
+   "log": [
+    "[debug] [vite] connecting...",
+    "[debug] [vite] connected.",
+    "[log] KnotMaze P4 v0.4.0 cf0c2462 2026-11-05 06:07 | dpr 1.5 | gpu WebKit WebGL",
+    "[log] KnotMaze: seed 934453, 1027 nodes, 1470 edges, 91 strands."
+   ]
+  },
+  {
+   "stand": "cross",
+   "ji": 33,
+   "tag": "cross_ji33",
+   "center": [
+    1.7914319435755413,
+    19.68517557779948
+   ],
+   "record": 2591,
+   "arms": 3,
+   "scale": 89.99963479806259,
+   "clip": {
+    "x": 383,
+    "y": 413,
+    "width": 200,
+    "height": 200
+   },
+   "stamp": "P4 v0.4.0 cf0c2462 2026-11-05 06:07 | sim 5.0s / wall 41.9s | settle lag 13.8s | asleep",
+   "ctxLost": 0,
+   "log": [
+    "[debug] [vite] connecting...",
+    "[debug] [vite] connected.",
+    "[log] KnotMaze P4 v0.4.0 cf0c2462 2026-11-05 06:07 | dpr 1.5 | gpu WebKit WebGL",
+    "[log] KnotMaze: seed 934453, 1027 nodes, 1470 edges, 91 strands."
+   ]
+  }
+ ],
+ "geometry": [
+  {
+   "tag": "four_ji28",
+   "wedgeCountOff": 2,
+   "wedgeCountOn": 2,
+   "roundedCount": 2,
+   "sharpCount": 0,
+   "biarcFiredOrders": [
+    0,
+    1
+   ]
+  },
+  {
+   "tag": "four_ji147",
+   "wedgeCountOff": 4,
+   "wedgeCountOn": 4,
+   "roundedCount": 4,
+   "sharpCount": 0,
+   "biarcFiredOrders": [
+    0,
+    1,
+    2,
+    3
+   ]
+  },
+  {
+   "tag": "four_ji149",
+   "wedgeCountOff": 3,
+   "wedgeCountOn": 3,
+   "roundedCount": 3,
+   "sharpCount": 0,
+   "biarcFiredOrders": [
+    0,
+    1,
+    2
+   ]
+  },
+  {
+   "tag": "cross_ji33",
+   "wedgeCountOff": 3,
+   "wedgeCountOn": 3,
+   "roundedCount": 3,
+   "sharpCount": 0,
+   "biarcFiredOrders": [
+    0,
+    1,
+    2
+   ]
+  }
+ ]
+}

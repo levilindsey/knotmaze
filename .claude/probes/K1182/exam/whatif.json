@@ -1,0 +1,465 @@
+{
+ "targets": [
+  {
+   "tag": "four_ji28",
+   "stand": "four",
+   "ji": 28,
+   "controlOffOff": {
+    "px": 0,
+    "exact": 0,
+    "W": 300,
+    "H": 300
+   },
+   "onOff": {
+    "px": 664,
+    "exact": 1003,
+    "W": 300,
+    "H": 300
+   },
+   "whatifs": {
+    "A": {
+     "vsOff": {
+      "px": 664,
+      "exact": 998,
+      "W": 300,
+      "H": 300
+     },
+     "vsOn": {
+      "px": 1,
+      "exact": 28,
+      "W": 300,
+      "H": 300
+     },
+     "shareToOffPx": 0,
+     "shareToOffExact": 0.004985044865403743
+    },
+    "B": {
+     "vsOff": {
+      "px": 664,
+      "exact": 1003,
+      "W": 300,
+      "H": 300
+     },
+     "vsOn": {
+      "px": 0,
+      "exact": 0,
+      "W": 300,
+      "H": 300
+     },
+     "shareToOffPx": 0,
+     "shareToOffExact": 0
+    },
+    "CswapOn": {
+     "vsOff": {
+      "px": 269,
+      "exact": 314,
+      "W": 300,
+      "H": 300
+     },
+     "vsOn": {
+      "px": 395,
+      "exact": 690,
+      "W": 300,
+      "H": 300
+     },
+     "shareToOffPx": 0.5948795180722892,
+     "shareToOffExact": 0.6869391824526421
+    },
+    "CswapOff": {
+     "vsOff": {
+      "px": 395,
+      "exact": 689,
+      "W": 300,
+      "H": 300
+     },
+     "vsOn": {
+      "px": 269,
+      "exact": 314,
+      "W": 300,
+      "H": 300
+     },
+     "shareToOffPx": 0.4051204819277109,
+     "shareToOffExact": 0.31306081754735793
+    },
+    "Doff": {
+     "vsOff": {
+      "px": 53,
+      "exact": 757,
+      "W": 300,
+      "H": 300
+     },
+     "vsOn": {
+      "px": 710,
+      "exact": 1702,
+      "W": 300,
+      "H": 300
+     },
+     "shareToOffPx": 0.9201807228915663,
+     "shareToOffExact": 0.24526420737786636
+    },
+    "Don": {
+     "vsOff": {
+      "px": 670,
+      "exact": 1679,
+      "W": 300,
+      "H": 300
+     },
+     "vsOn": {
+      "px": 73,
+      "exact": 761,
+      "W": 300,
+      "H": 300
+     },
+     "shareToOffPx": -0.009036144578313143,
+     "shareToOffExact": -0.6739780658025922
+    }
+   }
+  },
+  {
+   "tag": "four_ji147",
+   "stand": "four",
+   "ji": 147,
+   "controlOffOff": {
+    "px": 0,
+    "exact": 0,
+    "W": 300,
+    "H": 300
+   },
+   "onOff": {
+    "px": 4604,
+    "exact": 5395,
+    "W": 300,
+    "H": 300
+   },
+   "whatifs": {
+    "A": {
+     "vsOff": {
+      "px": 4631,
+      "exact": 5641,
+      "W": 300,
+      "H": 300
+     },
+     "vsOn": {
+      "px": 212,
+      "exact": 626,
+      "W": 300,
+      "H": 300
+     },
+     "shareToOffPx": -0.005864465682015707,
+     "shareToOffExact": -0.04559777571825774
+    },
+    "B": {
+     "vsOff": {
+      "px": 4604,
+      "exact": 5395,
+      "W": 300,
+      "H": 300
+     },
+     "vsOn": {
+      "px": 0,
+      "exact": 0,
+      "W": 300,
+      "H": 300
+     },
+     "shareToOffPx": 0,
+     "shareToOffExact": 0
+    },
+    "CswapOn": {
+     "vsOff": {
+      "px": 4568,
+      "exact": 5353,
+      "W": 300,
+      "H": 300
+     },
+     "vsOn": {
+      "px": 36,
+      "exact": 42,
+      "W": 300,
+      "H": 300
+     },
+     "shareToOffPx": 0.007819287576020906,
+     "shareToOffExact": 0.007784986098239077
+    },
+    "CswapOff": {
+     "vsOff": {
+      "px": 36,
+      "exact": 42,
+      "W": 300,
+      "H": 300
+     },
+     "vsOn": {
+      "px": 4568,
+      "exact": 5353,
+      "W": 300,
+      "H": 300
+     },
+     "shareToOffPx": 0.9921807124239791,
+     "shareToOffExact": 0.9922150139017609
+    },
+    "Doff": {
+     "vsOff": {
+      "px": 612,
+      "exact": 1437,
+      "W": 300,
+      "H": 300
+     },
+     "vsOn": {
+      "px": 4750,
+      "exact": 5921,
+      "W": 300,
+      "H": 300
+     },
+     "shareToOffPx": 0.8670721112076455,
+     "shareToOffExact": 0.7336422613531047
+    },
+    "Don": {
+     "vsOff": {
+      "px": 4392,
+      "exact": 5262,
+      "W": 300,
+      "H": 300
+     },
+     "vsOn": {
+      "px": 969,
+      "exact": 2042,
+      "W": 300,
+      "H": 300
+     },
+     "shareToOffPx": 0.04604691572545616,
+     "shareToOffExact": 0.024652455977757226
+    }
+   }
+  },
+  {
+   "tag": "four_ji149",
+   "stand": "four",
+   "ji": 149,
+   "controlOffOff": {
+    "px": 0,
+    "exact": 0,
+    "W": 300,
+    "H": 300
+   },
+   "onOff": {
+    "px": 554,
+    "exact": 570,
+    "W": 300,
+    "H": 300
+   },
+   "whatifs": {
+    "A": {
+     "vsOff": {
+      "px": 597,
+      "exact": 625,
+      "W": 300,
+      "H": 300
+     },
+     "vsOn": {
+      "px": 49,
+      "exact": 63,
+      "W": 300,
+      "H": 300
+     },
+     "shareToOffPx": -0.07761732851985559,
+     "shareToOffExact": -0.09649122807017552
+    },
+    "B": {
+     "vsOff": {
+      "px": 554,
+      "exact": 570,
+      "W": 300,
+      "H": 300
+     },
+     "vsOn": {
+      "px": 0,
+      "exact": 0,
+      "W": 300,
+      "H": 300
+     },
+     "shareToOffPx": 0,
+     "shareToOffExact": 0
+    },
+    "CswapOn": {
+     "vsOff": {
+      "px": 554,
+      "exact": 570,
+      "W": 300,
+      "H": 300
+     },
+     "vsOn": {
+      "px": 0,
+      "exact": 0,
+      "W": 300,
+      "H": 300
+     },
+     "shareToOffPx": 0,
+     "shareToOffExact": 0
+    },
+    "CswapOff": {
+     "vsOff": {
+      "px": 0,
+      "exact": 0,
+      "W": 300,
+      "H": 300
+     },
+     "vsOn": {
+      "px": 554,
+      "exact": 570,
+      "W": 300,
+      "H": 300
+     },
+     "shareToOffPx": 1,
+     "shareToOffExact": 1
+    },
+    "Doff": {
+     "vsOff": {
+      "px": 164,
+      "exact": 190,
+      "W": 300,
+      "H": 300
+     },
+     "vsOn": {
+      "px": 528,
+      "exact": 557,
+      "W": 300,
+      "H": 300
+     },
+     "shareToOffPx": 0.703971119133574,
+     "shareToOffExact": 0.6666666666666667
+    },
+    "Don": {
+     "vsOff": {
+      "px": 565,
+      "exact": 584,
+      "W": 300,
+      "H": 300
+     },
+     "vsOn": {
+      "px": 101,
+      "exact": 113,
+      "W": 300,
+      "H": 300
+     },
+     "shareToOffPx": -0.019855595667870096,
+     "shareToOffExact": -0.024561403508772006
+    }
+   }
+  },
+  {
+   "tag": "cross_ji33",
+   "stand": "cross",
+   "ji": 33,
+   "controlOffOff": {
+    "px": 0,
+    "exact": 0,
+    "W": 300,
+    "H": 300
+   },
+   "onOff": {
+    "px": 1725,
+    "exact": 2444,
+    "W": 300,
+    "H": 300
+   },
+   "whatifs": {
+    "A": {
+     "vsOff": {
+      "px": 1861,
+      "exact": 2541,
+      "W": 300,
+      "H": 300
+     },
+     "vsOn": {
+      "px": 163,
+      "exact": 264,
+      "W": 300,
+      "H": 300
+     },
+     "shareToOffPx": -0.07884057971014502,
+     "shareToOffExact": -0.03968903436988547
+    },
+    "B": {
+     "vsOff": {
+      "px": 1725,
+      "exact": 2444,
+      "W": 300,
+      "H": 300
+     },
+     "vsOn": {
+      "px": 0,
+      "exact": 0,
+      "W": 300,
+      "H": 300
+     },
+     "shareToOffPx": 0,
+     "shareToOffExact": 0
+    },
+    "CswapOn": {
+     "vsOff": {
+      "px": 124,
+      "exact": 264,
+      "W": 300,
+      "H": 300
+     },
+     "vsOn": {
+      "px": 1601,
+      "exact": 2184,
+      "W": 300,
+      "H": 300
+     },
+     "shareToOffPx": 0.9281159420289855,
+     "shareToOffExact": 0.8919803600654664
+    },
+    "CswapOff": {
+     "vsOff": {
+      "px": 1601,
+      "exact": 2182,
+      "W": 300,
+      "H": 300
+     },
+     "vsOn": {
+      "px": 124,
+      "exact": 274,
+      "W": 300,
+      "H": 300
+     },
+     "shareToOffPx": 0.07188405797101449,
+     "shareToOffExact": 0.10720130932896887
+    },
+    "Doff": {
+     "vsOff": {
+      "px": 55,
+      "exact": 1267,
+      "W": 300,
+      "H": 300
+     },
+     "vsOn": {
+      "px": 1752,
+      "exact": 3582,
+      "W": 300,
+      "H": 300
+     },
+     "shareToOffPx": 0.9681159420289855,
+     "shareToOffExact": 0.4815875613747954
+    },
+    "Don": {
+     "vsOff": {
+      "px": 1767,
+      "exact": 3563,
+      "W": 300,
+      "H": 300
+     },
+     "vsOn": {
+      "px": 71,
+      "exact": 1325,
+      "W": 300,
+      "H": 300
+     },
+     "shareToOffPx": -0.024347826086956514,
+     "shareToOffExact": -0.4578559738134207
+    }
+   }
+  }
+ ],
+ "note": "px/exact as Run C counts (max channel diff >8 / >0) on 300x300 device crops; shareToOff = 1 - diff(W,off).px/diff(on,off).px"
+}

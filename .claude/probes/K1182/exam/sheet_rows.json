@@ -1,0 +1,19 @@
+{
+ "rows": [
+  "off",
+  "on",
+  "A",
+  "B",
+  "CswapOn",
+  "CswapOff",
+  "Doff",
+  "Don"
+ ],
+ "columns": [
+  "four_ji28",
+  "four_ji147",
+  "four_ji149",
+  "cross_ji33"
+ ],
+ "cell": "200 CSS px crop at sheet.mjs's clip, screenshot at DSF 1.5 (300x300), upscaled 2x"
+}

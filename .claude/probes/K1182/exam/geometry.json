@@ -1,0 +1,1552 @@
+{
+ "targets": [
+  {
+   "tag": "four_ji28",
+   "stand": "four",
+   "ji": 28,
+   "center": [
+    24.578250885009766,
+    2.8866220315297446
+   ],
+   "record": 2206,
+   "style": {
+    "threadWidth": 0.52,
+    "casingWidth": 0.6,
+    "cuspRadius": 3,
+    "borderWidth": 0.38,
+    "threadLook": 0
+   },
+   "armsCount": 3,
+   "wedgeCountOff": 2,
+   "wedgeCountOn": 2,
+   "roundedCount": 2,
+   "sharpCount": 0,
+   "biarcFiredOrders": [
+    0,
+    1
+   ],
+   "pairs": [
+    {
+     "tag": "four_ji28",
+     "tipA": 6,
+     "tipB": 14,
+     "rimCount": 19,
+     "interior": 7,
+     "rounded": true,
+     "corner": [
+      24.91649896208983,
+      2.9024750554867227
+     ],
+     "quadErr": 0,
+     "branch": "quadratic",
+     "onOffMax": 0.177948244298622,
+     "biarcFired": true,
+     "maxROff": 1.0173854734891579,
+     "maxROn": 1.0173854734891579,
+     "off": {
+      "h1": {
+       "whole": {
+        "minority": 8,
+        "pos": 8,
+        "neg": 10,
+        "total": 18
+       },
+       "rim": {
+        "minority": 0,
+        "pos": 8,
+        "neg": 0,
+        "total": 8
+       },
+       "maxBackwardDeg": 11.106558858876715
+      },
+      "h2": {
+       "outsideWorld": 0
+      },
+      "h3": {
+       "r1": 1.3596171220117559,
+       "r2": 0.35796395824093113,
+       "split": 4,
+       "ratio": 3.7981955744735965,
+       "smaller": 0.35796395824093113,
+       "bandIn": 0.06619999999999998,
+       "bandOut": 0.04780000000000001,
+       "smallerLtBandIn": false,
+       "smallerLtBandOut": false,
+       "maxTurnDeg": 179.6595756049323
+      },
+      "h6": {
+       "tipTurnADeg": 179.6595756049323,
+       "tipTurnBDeg": 173.19690447308147,
+       "innerFlips": 0,
+       "outerFlips": 0,
+       "innerWrong": 0,
+       "outerWrong": 0,
+       "maxNormalDeg": 25.319667960172485,
+       "hasInner": true,
+       "hasOuter": true
+      },
+      "h4": {
+       "maxDiffFlank": 0.27464064814389383,
+       "maxDiffNorm": 0.18309376542926256
+      }
+     },
+     "on": {
+      "h1": {
+       "whole": {
+        "minority": 8,
+        "pos": 8,
+        "neg": 10,
+        "total": 18
+       },
+       "rim": {
+        "minority": 0,
+        "pos": 8,
+        "neg": 0,
+        "total": 8
+       },
+       "maxBackwardDeg": 17.01082444156543
+      },
+      "h2": {
+       "outsideWorld": 0
+      },
+      "h3": {
+       "r1": 1.852889873652218,
+       "r2": 0.338436689064054,
+       "split": 5,
+       "ratio": 5.474849310151276,
+       "smaller": 0.338436689064054,
+       "bandIn": 0.06619999999999998,
+       "bandOut": 0.04780000000000001,
+       "smallerLtBandIn": false,
+       "smallerLtBandOut": false,
+       "maxTurnDeg": 178.43896058468812
+      },
+      "h6": {
+       "tipTurnADeg": 178.43896058468812,
+       "tipTurnBDeg": 173.00487574598884,
+       "innerFlips": 0,
+       "outerFlips": 0,
+       "innerWrong": 0,
+       "outerWrong": 0,
+       "maxNormalDeg": 20.912350190517362,
+       "hasInner": true,
+       "hasOuter": true
+      },
+      "h4": {
+       "maxDiffFlank": 0.12216716122621452,
+       "maxDiffNorm": 0.08144477415080968
+      }
+     },
+     "order": 0,
+     "wedgeK": 0
+    },
+    {
+     "tag": "four_ji28",
+     "tipA": 4,
+     "tipB": 12,
+     "rimCount": 17,
+     "interior": 7,
+     "rounded": true,
+     "corner": [
+      24.509023804956122,
+      3.2009078173859953
+     ],
+     "quadErr": 4.440892098500626e-16,
+     "branch": "quadratic",
+     "onOffMax": 0.08919425597569586,
+     "biarcFired": true,
+     "maxROff": 0.6604521290457602,
+     "maxROn": 0.6604521290457602,
+     "off": {
+      "h1": {
+       "whole": {
+        "minority": 8,
+        "pos": 8,
+        "neg": 8,
+        "total": 16
+       },
+       "rim": {
+        "minority": 0,
+        "pos": 8,
+        "neg": 0,
+        "total": 8
+       },
+       "maxBackwardDeg": 7.859992241865295
+      },
+      "h2": {
+       "outsideWorld": 0
+      },
+      "h3": {
+       "r1": 0.6326356364478153,
+       "r2": 0.24897476353095707,
+       "split": 3,
+       "ratio": 2.540962897105652,
+       "smaller": 0.24897476353095707,
+       "bandIn": 0.06619999999999998,
+       "bandOut": 0.04780000000000001,
+       "smallerLtBandIn": false,
+       "smallerLtBandOut": false,
+       "maxTurnDeg": 176.84273445369328
+      },
+      "h6": {
+       "tipTurnADeg": 176.84273445369328,
+       "tipTurnBDeg": 173.15528759319625,
+       "innerFlips": 0,
+       "outerFlips": 0,
+       "innerWrong": 0,
+       "outerWrong": 0,
+       "maxNormalDeg": 21.249512698268198,
+       "hasInner": true,
+       "hasOuter": true
+      },
+      "h4": {
+       "maxDiffFlank": 0.25219202753703196,
+       "maxDiffNorm": 0.1681280183580213
+      }
+     },
+     "on": {
+      "h1": {
+       "whole": {
+        "minority": 8,
+        "pos": 8,
+        "neg": 8,
+        "total": 16
+       },
+       "rim": {
+        "minority": 0,
+        "pos": 8,
+        "neg": 0,
+        "total": 8
+       },
+       "maxBackwardDeg": 11.540923528806545
+      },
+      "h2": {
+       "outsideWorld": 0
+      },
+      "h3": {
+       "r1": 0.5291317170708939,
+       "r2": 0.24363284668600846,
+       "split": 4,
+       "ratio": 2.1718406375345336,
+       "smaller": 0.24363284668600846,
+       "bandIn": 0.06619999999999998,
+       "bandOut": 0.04780000000000001,
+       "smallerLtBandIn": false,
+       "smallerLtBandOut": false,
+       "maxTurnDeg": 177.91432135315827
+      },
+      "h6": {
+       "tipTurnADeg": 177.91432135315827,
+       "tipTurnBDeg": 174.0656484841738,
+       "innerFlips": 0,
+       "outerFlips": 0,
+       "innerWrong": 0,
+       "outerWrong": 0,
+       "maxNormalDeg": 17.356537631062963,
+       "hasInner": true,
+       "hasOuter": true
+      },
+      "h4": {
+       "maxDiffFlank": 0.12215893080503837,
+       "maxDiffNorm": 0.08143928720335891
+      }
+     },
+     "order": 1,
+     "wedgeK": 1
+    }
+   ],
+   "h5": [],
+   "routesOff": [],
+   "routesOn": []
+  },
+  {
+   "tag": "four_ji147",
+   "stand": "four",
+   "ji": 147,
+   "center": [
+    25.88448429107666,
+    1.3619499802589417
+   ],
+   "record": 11394,
+   "style": {
+    "threadWidth": 0.52,
+    "casingWidth": 0.6,
+    "cuspRadius": 3,
+    "borderWidth": 0.38,
+    "threadLook": 0
+   },
+   "armsCount": 4,
+   "wedgeCountOff": 4,
+   "wedgeCountOn": 4,
+   "roundedCount": 4,
+   "sharpCount": 0,
+   "biarcFiredOrders": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "pairs": [
+    {
+     "tag": "four_ji147",
+     "tipA": 6,
+     "tipB": 14,
+     "rimCount": 21,
+     "interior": 7,
+     "rounded": true,
+     "corner": [
+      25.784778597639722,
+      1.0963034512802214
+     ],
+     "quadErr": 2.220446049250313e-16,
+     "branch": "quadratic",
+     "onOffMax": 0.23995086483113431,
+     "biarcFired": true,
+     "maxROff": 1.097219501597257,
+     "maxROn": 1.097219501597257,
+     "off": {
+      "h1": {
+       "whole": {
+        "minority": 8,
+        "pos": 8,
+        "neg": 12,
+        "total": 20
+       },
+       "rim": {
+        "minority": 0,
+        "pos": 8,
+        "neg": 0,
+        "total": 8
+       },
+       "maxBackwardDeg": 27.833523587190605
+      },
+      "h2": {
+       "outsideWorld": 0
+      },
+      "h3": {
+       "r1": 2.7332621229416634,
+       "r2": 3.450592338022205,
+       "split": 5,
+       "ratio": 1.262444720928748,
+       "smaller": 2.7332621229416634,
+       "bandIn": 0.06619999999999998,
+       "bandOut": 0.04780000000000001,
+       "smallerLtBandIn": false,
+       "smallerLtBandOut": false,
+       "maxTurnDeg": 179.03953620688227
+      },
+      "h6": {
+       "tipTurnADeg": 179.03953620688227,
+       "tipTurnBDeg": 160.59694721662564,
+       "innerFlips": 0,
+       "outerFlips": 0,
+       "innerWrong": 0,
+       "outerWrong": 0,
+       "maxNormalDeg": 136.31706378664634,
+       "hasInner": true,
+       "hasOuter": true
+      },
+      "h4": {
+       "maxDiffFlank": 0.20250463732065405,
+       "maxDiffNorm": 0.1350030915471027
+      }
+     },
+     "on": {
+      "h1": {
+       "whole": {
+        "minority": 8,
+        "pos": 8,
+        "neg": 12,
+        "total": 20
+       },
+       "rim": {
+        "minority": 0,
+        "pos": 8,
+        "neg": 0,
+        "total": 8
+       },
+       "maxBackwardDeg": 29.82030081950549
+      },
+      "h2": {
+       "outsideWorld": 0.051998088507148474
+      },
+      "h3": {
+       "r1": 2.4304116294277973,
+       "r2": 2.291200236277925,
+       "split": 4,
+       "ratio": 1.0607591562473049,
+       "smaller": 2.291200236277925,
+       "bandIn": 0.06619999999999998,
+       "bandOut": 0.04780000000000001,
+       "smallerLtBandIn": false,
+       "smallerLtBandOut": false,
+       "maxTurnDeg": 174.12672955553185
+      },
+      "h6": {
+       "tipTurnADeg": 172.4553734209218,
+       "tipTurnBDeg": 174.12672955553185,
+       "innerFlips": 2,
+       "outerFlips": 0,
+       "innerWrong": 0,
+       "outerWrong": 0,
+       "maxNormalDeg": 148.0357219132027,
+       "hasInner": true,
+       "hasOuter": true
+      },
+      "h4": {
+       "maxDiffFlank": 0.12191976367157953,
+       "maxDiffNorm": 0.08127984244771969
+      }
+     },
+     "order": 0,
+     "wedgeK": 0
+    },
+    {
+     "tag": "four_ji147",
+     "tipA": 6,
+     "tipB": 14,
+     "rimCount": 21,
+     "interior": 7,
+     "rounded": true,
+     "corner": [
+      26.29354455027974,
+      1.2858836169931536
+     ],
+     "quadErr": 3.5596458096434965e-15,
+     "branch": "quadratic",
+     "onOffMax": 0.11161937065318536,
+     "biarcFired": true,
+     "maxROff": 0.8711123316432046,
+     "maxROn": 0.8711123316432046,
+     "off": {
+      "h1": {
+       "whole": {
+        "minority": 9,
+        "pos": 11,
+        "neg": 9,
+        "total": 20
+       },
+       "rim": {
+        "minority": 0,
+        "pos": 8,
+        "neg": 0,
+        "total": 8
+       },
+       "maxBackwardDeg": 3.118694545599588
+      },
+      "h2": {
+       "outsideWorld": 0
+      },
+      "h3": {
+       "r1": 0.22298874215727757,
+       "r2": 0.33735245091882626,
+       "split": 4,
+       "ratio": 1.5128676347296768,
+       "smaller": 0.22298874215727757,
+       "bandIn": 0.06619999999999998,
+       "bandOut": 0.04780000000000001,
+       "smallerLtBandIn": false,
+       "smallerLtBandOut": false,
+       "maxTurnDeg": 163.82615376812407
+      },
+      "h6": {
+       "tipTurnADeg": 161.32912548768383,
+       "tipTurnBDeg": 163.82615376812407,
+       "innerFlips": 1,
+       "outerFlips": 1,
+       "innerWrong": 0,
+       "outerWrong": 0,
+       "maxNormalDeg": 172.79413357912452,
+       "hasInner": true,
+       "hasOuter": true
+      },
+      "h4": {
+       "maxDiffFlank": 0.29592682655084523,
+       "maxDiffNorm": 0.19728455103389683
+      }
+     },
+     "on": {
+      "h1": {
+       "whole": {
+        "minority": 9,
+        "pos": 9,
+        "neg": 11,
+        "total": 20
+       },
+       "rim": {
+        "minority": 2,
+        "pos": 6,
+        "neg": 2,
+        "total": 8
+       },
+       "maxBackwardDeg": 6.315820230667899
+      },
+      "h2": {
+       "outsideWorld": 0.010947693514266405
+      },
+      "h3": {
+       "r1": 0.11801104546950633,
+       "r2": 0.1711472133327372,
+       "split": 4,
+       "ratio": 1.4502643600167162,
+       "smaller": 0.11801104546950633,
+       "bandIn": 0.06619999999999998,
+       "bandOut": 0.04780000000000001,
+       "smallerLtBandIn": false,
+       "smallerLtBandOut": false,
+       "maxTurnDeg": 179.20955336948614
+      },
+      "h6": {
+       "tipTurnADeg": 179.10820274245285,
+       "tipTurnBDeg": 179.20955336948614,
+       "innerFlips": 1,
+       "outerFlips": 3,
+       "innerWrong": 0,
+       "outerWrong": 0,
+       "maxNormalDeg": 172.79413357912452,
+       "hasInner": true,
+       "hasOuter": true
+      },
+      "h4": {
+       "maxDiffFlank": 0.1228670247903132,
+       "maxDiffNorm": 0.0819113498602088
+      }
+     },
+     "order": 1,
+     "wedgeK": 1
+    },
+    {
+     "tag": "four_ji147",
+     "tipA": 6,
+     "tipB": 14,
+     "rimCount": 21,
+     "interior": 7,
+     "rounded": true,
+     "corner": [
+      25.97476743772235,
+      1.6900031599685827
+     ],
+     "quadErr": 2.220446049250313e-16,
+     "branch": "quadratic",
+     "onOffMax": 0.19425356267001256,
+     "biarcFired": true,
+     "maxROff": 1.0822529766027869,
+     "maxROn": 1.0822529766027869,
+     "off": {
+      "h1": {
+       "whole": {
+        "minority": 8,
+        "pos": 8,
+        "neg": 12,
+        "total": 20
+       },
+       "rim": {
+        "minority": 0,
+        "pos": 8,
+        "neg": 0,
+        "total": 8
+       },
+       "maxBackwardDeg": 17.322314908694917
+      },
+      "h2": {
+       "outsideWorld": 0
+      },
+      "h3": {
+       "r1": 1.7927422040037098,
+       "r2": 1.1872260024545613,
+       "split": 2,
+       "ratio": 1.5100260610003977,
+       "smaller": 1.1872260024545613,
+       "bandIn": 0.06619999999999998,
+       "bandOut": 0.04780000000000001,
+       "smallerLtBandIn": false,
+       "smallerLtBandOut": false,
+       "maxTurnDeg": 178.70166493090187
+      },
+      "h6": {
+       "tipTurnADeg": 166.48382885066894,
+       "tipTurnBDeg": 178.70166493090187,
+       "innerFlips": 0,
+       "outerFlips": 0,
+       "innerWrong": 0,
+       "outerWrong": 0,
+       "maxNormalDeg": 136.94800847777967,
+       "hasInner": true,
+       "hasOuter": true
+      },
+      "h4": {
+       "maxDiffFlank": 0.2124336574483472,
+       "maxDiffNorm": 0.14162243829889812
+      }
+     },
+     "on": {
+      "h1": {
+       "whole": {
+        "minority": 8,
+        "pos": 8,
+        "neg": 12,
+        "total": 20
+       },
+       "rim": {
+        "minority": 0,
+        "pos": 8,
+        "neg": 0,
+        "total": 8
+       },
+       "maxBackwardDeg": 20.74380778441946
+      },
+      "h2": {
+       "outsideWorld": 0
+      },
+      "h3": {
+       "r1": 80.73584258887388,
+       "r2": 1.088739446546303,
+       "split": 4,
+       "ratio": 74.15533885998524,
+       "smaller": 1.088739446546303,
+       "bandIn": 0.06619999999999998,
+       "bandOut": 0.04780000000000001,
+       "smallerLtBandIn": false,
+       "smallerLtBandOut": false,
+       "maxTurnDeg": 176.05672785208301
+      },
+      "h6": {
+       "tipTurnADeg": 175.27914392716002,
+       "tipTurnBDeg": 176.05672785208301,
+       "innerFlips": 0,
+       "outerFlips": 0,
+       "innerWrong": 0,
+       "outerWrong": 0,
+       "maxNormalDeg": 22.26059576808949,
+       "hasInner": true,
+       "hasOuter": true
+      },
+      "h4": {
+       "maxDiffFlank": 0.1219706884181837,
+       "maxDiffNorm": 0.08131379227878914
+      }
+     },
+     "order": 2,
+     "wedgeK": 2
+    },
+    {
+     "tag": "four_ji147",
+     "tipA": 6,
+     "tipB": 14,
+     "rimCount": 21,
+     "interior": 7,
+     "rounded": true,
+     "corner": [
+      25.456165256221247,
+      1.5655695106532306
+     ],
+     "quadErr": 2.220446049250313e-16,
+     "branch": "quadratic",
+     "onOffMax": 0.11057373699858294,
+     "biarcFired": true,
+     "maxROff": 0.9746138341803383,
+     "maxROn": 0.9746138341803383,
+     "off": {
+      "h1": {
+       "whole": {
+        "minority": 8,
+        "pos": 8,
+        "neg": 12,
+        "total": 20
+       },
+       "rim": {
+        "minority": 0,
+        "pos": 8,
+        "neg": 0,
+        "total": 8
+       },
+       "maxBackwardDeg": 4.993080440161477
+      },
+      "h2": {
+       "outsideWorld": 0
+      },
+      "h3": {
+       "r1": 0.35695338032496543,
+       "r2": 0.35345380442289587,
+       "split": 4,
+       "ratio": 1.0099010842669625,
+       "smaller": 0.35345380442289587,
+       "bandIn": 0.06619999999999998,
+       "bandOut": 0.04780000000000001,
+       "smallerLtBandIn": false,
+       "smallerLtBandOut": false,
+       "maxTurnDeg": 174.74048748165748
+      },
+      "h6": {
+       "tipTurnADeg": 173.01564978798896,
+       "tipTurnBDeg": 174.74048748165748,
+       "innerFlips": 2,
+       "outerFlips": 0,
+       "innerWrong": 0,
+       "outerWrong": 0,
+       "maxNormalDeg": 143.00508055103012,
+       "hasInner": true,
+       "hasOuter": true
+      },
+      "h4": {
+       "maxDiffFlank": 0.2519558802206787,
+       "maxDiffNorm": 0.16797058681378582
+      }
+     },
+     "on": {
+      "h1": {
+       "whole": {
+        "minority": 8,
+        "pos": 8,
+        "neg": 12,
+        "total": 20
+       },
+       "rim": {
+        "minority": 0,
+        "pos": 8,
+        "neg": 0,
+        "total": 8
+       },
+       "maxBackwardDeg": 7.700782442123097
+      },
+      "h2": {
+       "outsideWorld": 0.0027677426225608975
+      },
+      "h3": {
+       "r1": 0.286369029273884,
+       "r2": 0.2535082075228281,
+       "split": 4,
+       "ratio": 1.12962429134803,
+       "smaller": 0.2535082075228281,
+       "bandIn": 0.06619999999999998,
+       "bandOut": 0.04780000000000001,
+       "smallerLtBandIn": false,
+       "smallerLtBandOut": false,
+       "maxTurnDeg": 178.8892691825423
+      },
+      "h6": {
+       "tipTurnADeg": 175.62772898699018,
+       "tipTurnBDeg": 178.8892691825423,
+       "innerFlips": 0,
+       "outerFlips": 0,
+       "innerWrong": 0,
+       "outerWrong": 0,
+       "maxNormalDeg": 23.804015111895414,
+       "hasInner": true,
+       "hasOuter": true
+      },
+      "h4": {
+       "maxDiffFlank": 0.12232779538025029,
+       "maxDiffNorm": 0.08155186358683353
+      }
+     },
+     "order": 3,
+     "wedgeK": 3
+    }
+   ],
+   "h5": [
+    {
+     "route": 0,
+     "ia": 0,
+     "ib": -1,
+     "wedgeK": null,
+     "wedgeOrder": null,
+     "dOff": 0,
+     "mOff": 0.13,
+     "dOn": 0,
+     "mOn": 0.13
+    }
+   ],
+   "routesOff": [
+    {
+     "ia": 0,
+     "ib": -1,
+     "d": 0,
+     "m": 0.13
+    }
+   ],
+   "routesOn": [
+    {
+     "ia": 0,
+     "ib": -1,
+     "d": 0,
+     "m": 0.13
+    }
+   ]
+  },
+  {
+   "tag": "four_ji149",
+   "stand": "four",
+   "ji": 149,
+   "center": [
+    22.427570978800457,
+    5.832747618357341
+   ],
+   "record": 11573,
+   "style": {
+    "threadWidth": 0.52,
+    "casingWidth": 0.6,
+    "cuspRadius": 3,
+    "borderWidth": 0.38,
+    "threadLook": 0
+   },
+   "armsCount": 3,
+   "wedgeCountOff": 3,
+   "wedgeCountOn": 3,
+   "roundedCount": 3,
+   "sharpCount": 0,
+   "biarcFiredOrders": [
+    0,
+    1,
+    2
+   ],
+   "pairs": [
+    {
+     "tag": "four_ji149",
+     "tipA": 6,
+     "tipB": 14,
+     "rimCount": 21,
+     "interior": 7,
+     "rounded": true,
+     "corner": [
+      22.295289240585806,
+      5.529704136920036
+     ],
+     "quadErr": 8.881784197001252e-16,
+     "branch": "quadratic",
+     "onOffMax": 0.12710598588215807,
+     "biarcFired": true,
+     "maxROff": 0.9532840955048644,
+     "maxROn": 0.9532840955048644,
+     "off": {
+      "h1": {
+       "whole": {
+        "minority": 8,
+        "pos": 8,
+        "neg": 12,
+        "total": 20
+       },
+       "rim": {
+        "minority": 0,
+        "pos": 8,
+        "neg": 0,
+        "total": 8
+       },
+       "maxBackwardDeg": 8.840283222359686
+      },
+      "h2": {
+       "outsideWorld": 0
+      },
+      "h3": {
+       "r1": 0.5166240434856301,
+       "r2": 0.4825253783184849,
+       "split": 4,
+       "ratio": 1.0706670917205907,
+       "smaller": 0.4825253783184849,
+       "bandIn": 0.06619999999999998,
+       "bandOut": 0.04780000000000001,
+       "smallerLtBandIn": false,
+       "smallerLtBandOut": false,
+       "maxTurnDeg": 172.05006420225354
+      },
+      "h6": {
+       "tipTurnADeg": 172.05006420225354,
+       "tipTurnBDeg": 170.05879958849974,
+       "innerFlips": 0,
+       "outerFlips": 0,
+       "innerWrong": 0,
+       "outerWrong": 0,
+       "maxNormalDeg": 97.06583025877359,
+       "hasInner": true,
+       "hasOuter": true
+      },
+      "h4": {
+       "maxDiffFlank": 0.23839478118734692,
+       "maxDiffNorm": 0.15892985412489793
+      }
+     },
+     "on": {
+      "h1": {
+       "whole": {
+        "minority": 8,
+        "pos": 8,
+        "neg": 12,
+        "total": 20
+       },
+       "rim": {
+        "minority": 0,
+        "pos": 8,
+        "neg": 0,
+        "total": 8
+       },
+       "maxBackwardDeg": 13.179577966992564
+      },
+      "h2": {
+       "outsideWorld": 0.0045866469421122
+      },
+      "h3": {
+       "r1": 0.47846602778307223,
+       "r2": 0.3753121570689154,
+       "split": 4,
+       "ratio": 1.2748481997486043,
+       "smaller": 0.3753121570689154,
+       "bandIn": 0.06619999999999998,
+       "bandOut": 0.04780000000000001,
+       "smallerLtBandIn": false,
+       "smallerLtBandOut": false,
+       "maxTurnDeg": 177.45223799742863
+      },
+      "h6": {
+       "tipTurnADeg": 174.3344549774622,
+       "tipTurnBDeg": 177.45223799742863,
+       "innerFlips": 2,
+       "outerFlips": 0,
+       "innerWrong": 0,
+       "outerWrong": 0,
+       "maxNormalDeg": 174.2393112257901,
+       "hasInner": true,
+       "hasOuter": true
+      },
+      "h4": {
+       "maxDiffFlank": 0.12225653664688796,
+       "maxDiffNorm": 0.08150435776459197
+      }
+     },
+     "order": 0,
+     "wedgeK": 0
+    },
+    {
+     "tag": "four_ji149",
+     "tipA": 6,
+     "tipB": 14,
+     "rimCount": 19,
+     "interior": 7,
+     "rounded": true,
+     "corner": [
+      22.724084840559655,
+      5.80089510599735
+     ],
+     "quadErr": 3.66205343881779e-15,
+     "branch": "quadratic",
+     "onOffMax": 0.19926431786825066,
+     "biarcFired": true,
+     "maxROff": 0.9842485386253211,
+     "maxROn": 0.9842485386253211,
+     "off": {
+      "h1": {
+       "whole": {
+        "minority": 8,
+        "pos": 8,
+        "neg": 10,
+        "total": 18
+       },
+       "rim": {
+        "minority": 0,
+        "pos": 8,
+        "neg": 0,
+        "total": 8
+       },
+       "maxBackwardDeg": 14.181002542864642
+      },
+      "h2": {
+       "outsideWorld": 0
+      },
+      "h3": {
+       "r1": 2.3612610965749665,
+       "r2": 0.4282351243634383,
+       "split": 4,
+       "ratio": 5.513936065111256,
+       "smaller": 0.4282351243634383,
+       "bandIn": 0.06619999999999998,
+       "bandOut": 0.04780000000000001,
+       "smallerLtBandIn": false,
+       "smallerLtBandOut": false,
+       "maxTurnDeg": 174.79150673865053
+      },
+      "h6": {
+       "tipTurnADeg": 174.79150673865053,
+       "tipTurnBDeg": 169.18402941952124,
+       "innerFlips": 2,
+       "outerFlips": 0,
+       "innerWrong": 0,
+       "outerWrong": 0,
+       "maxNormalDeg": 155.598203130682,
+       "hasInner": true,
+       "hasOuter": true
+      },
+      "h4": {
+       "maxDiffFlank": 0.2875922937067499,
+       "maxDiffNorm": 0.19172819580449993
+      }
+     },
+     "on": {
+      "h1": {
+       "whole": {
+        "minority": 8,
+        "pos": 8,
+        "neg": 10,
+        "total": 18
+       },
+       "rim": {
+        "minority": 0,
+        "pos": 8,
+        "neg": 0,
+        "total": 8
+       },
+       "maxBackwardDeg": 22.807617130760764
+      },
+      "h2": {
+       "outsideWorld": 0
+      },
+      "h3": {
+       "r1": 7.142591229504601,
+       "r2": 0.3402668632498035,
+       "split": 5,
+       "ratio": 20.99114548295271,
+       "smaller": 0.3402668632498035,
+       "bandIn": 0.06619999999999998,
+       "bandOut": 0.04780000000000001,
+       "smallerLtBandIn": false,
+       "smallerLtBandOut": false,
+       "maxTurnDeg": 177.6218590529605
+      },
+      "h6": {
+       "tipTurnADeg": 177.6218590529605,
+       "tipTurnBDeg": 171.23474442979952,
+       "innerFlips": 0,
+       "outerFlips": 0,
+       "innerWrong": 0,
+       "outerWrong": 0,
+       "maxNormalDeg": 36.97157288829724,
+       "hasInner": true,
+       "hasOuter": true
+      },
+      "h4": {
+       "maxDiffFlank": 0.12215119316917922,
+       "maxDiffNorm": 0.08143412877945282
+      }
+     },
+     "order": 1,
+     "wedgeK": 1
+    },
+    {
+     "tag": "four_ji149",
+     "tipA": 4,
+     "tipB": 12,
+     "rimCount": 19,
+     "interior": 7,
+     "rounded": true,
+     "corner": [
+      22.279113597652724,
+      6.05149474461421
+     ],
+     "quadErr": 3.66205343881779e-15,
+     "branch": "quadratic",
+     "onOffMax": 0.23348573984639412,
+     "biarcFired": true,
+     "maxROff": 1.0327399934697317,
+     "maxROn": 1.0327399934697317,
+     "off": {
+      "h1": {
+       "whole": {
+        "minority": 8,
+        "pos": 8,
+        "neg": 10,
+        "total": 18
+       },
+       "rim": {
+        "minority": 0,
+        "pos": 8,
+        "neg": 0,
+        "total": 8
+       },
+       "maxBackwardDeg": 21.135027472793208
+      },
+      "h2": {
+       "outsideWorld": 0
+      },
+      "h3": {
+       "r1": 4.541867497957577,
+       "r2": 14.587026475376318,
+       "split": 4,
+       "ratio": 3.211680323553236,
+       "smaller": 4.541867497957577,
+       "bandIn": 0.06619999999999998,
+       "bandOut": 0.04780000000000001,
+       "smallerLtBandIn": false,
+       "smallerLtBandOut": false,
+       "maxTurnDeg": 177.3549195704818
+      },
+      "h6": {
+       "tipTurnADeg": 177.3549195704818,
+       "tipTurnBDeg": 170.47859957357005,
+       "innerFlips": 0,
+       "outerFlips": 0,
+       "innerWrong": 0,
+       "outerWrong": 0,
+       "maxNormalDeg": 20.91791946408894,
+       "hasInner": true,
+       "hasOuter": true
+      },
+      "h4": {
+       "maxDiffFlank": 0.25051577494565014,
+       "maxDiffNorm": 0.16701051663043343
+      }
+     },
+     "on": {
+      "h1": {
+       "whole": {
+        "minority": 8,
+        "pos": 8,
+        "neg": 10,
+        "total": 18
+       },
+       "rim": {
+        "minority": 0,
+        "pos": 8,
+        "neg": 0,
+        "total": 8
+       },
+       "maxBackwardDeg": 21.135027472793208
+      },
+      "h2": {
+       "outsideWorld": 0.018100107679036085
+      },
+      "h3": {
+       "r1": 3.0996401787455476,
+       "r2": 5.1652777206256015,
+       "split": 3,
+       "ratio": 1.6664120422893847,
+       "smaller": 3.0996401787455476,
+       "bandIn": 0.06619999999999998,
+       "bandOut": 0.04780000000000001,
+       "smallerLtBandIn": false,
+       "smallerLtBandOut": false,
+       "maxTurnDeg": 179.16455936534697
+      },
+      "h6": {
+       "tipTurnADeg": 179.16455936534697,
+       "tipTurnBDeg": 177.93293589508778,
+       "innerFlips": 0,
+       "outerFlips": 0,
+       "innerWrong": 0,
+       "outerWrong": 0,
+       "maxNormalDeg": 15.330043291135878,
+       "hasInner": true,
+       "hasOuter": true
+      },
+      "h4": {
+       "maxDiffFlank": 0.12188421872518784,
+       "maxDiffNorm": 0.0812561458167919
+      }
+     },
+     "order": 2,
+     "wedgeK": 2
+    }
+   ],
+   "h5": [
+    {
+     "route": 0,
+     "ia": 0,
+     "ib": 1,
+     "wedgeK": 0,
+     "wedgeOrder": 0,
+     "dOff": 0.6377961486141459,
+     "mOff": 0.6377961486141459,
+     "dOn": 0.6377961486141459,
+     "mOn": 0.6377961486141459
+    }
+   ],
+   "routesOff": [
+    {
+     "ia": 0,
+     "ib": 1,
+     "d": 0.6377961486141459,
+     "m": 0.6377961486141459
+    }
+   ],
+   "routesOn": [
+    {
+     "ia": 0,
+     "ib": 1,
+     "d": 0.6377961486141459,
+     "m": 0.6377961486141459
+    }
+   ]
+  },
+  {
+   "tag": "cross_ji33",
+   "stand": "cross",
+   "ji": 33,
+   "center": [
+    1.7914319435755413,
+    19.68517557779948
+   ],
+   "record": 2591,
+   "style": {
+    "threadWidth": 0.52,
+    "casingWidth": 0.6,
+    "cuspRadius": 3,
+    "borderWidth": 0.38,
+    "threadLook": 0
+   },
+   "armsCount": 3,
+   "wedgeCountOff": 3,
+   "wedgeCountOn": 3,
+   "roundedCount": 3,
+   "sharpCount": 0,
+   "biarcFiredOrders": [
+    0,
+    1,
+    2
+   ],
+   "pairs": [
+    {
+     "tag": "cross_ji33",
+     "tipA": 4,
+     "tipB": 12,
+     "rimCount": 17,
+     "interior": 7,
+     "rounded": true,
+     "corner": [
+      1.8829317843581796,
+      19.386132418917082
+     ],
+     "quadErr": 2.220446049250313e-16,
+     "branch": "quadratic",
+     "onOffMax": 0.10304643862588132,
+     "biarcFired": true,
+     "maxROff": 0.6471729812536643,
+     "maxROn": 0.6471729812536643,
+     "off": {
+      "h1": {
+       "whole": {
+        "minority": 8,
+        "pos": 8,
+        "neg": 8,
+        "total": 16
+       },
+       "rim": {
+        "minority": 0,
+        "pos": 8,
+        "neg": 0,
+        "total": 8
+       },
+       "maxBackwardDeg": 6.609300181311249
+      },
+      "h2": {
+       "outsideWorld": 0
+      },
+      "h3": {
+       "r1": 1.9021995165852918,
+       "r2": 0.1205969447972277,
+       "split": 5,
+       "ratio": 15.773198233036995,
+       "smaller": 0.1205969447972277,
+       "bandIn": 0.06619999999999998,
+       "bandOut": 0.04780000000000001,
+       "smallerLtBandIn": false,
+       "smallerLtBandOut": false,
+       "maxTurnDeg": 178.82528233138555
+      },
+      "h6": {
+       "tipTurnADeg": 178.82528233138555,
+       "tipTurnBDeg": 147.43252113293502,
+       "innerFlips": 0,
+       "outerFlips": 1,
+       "innerWrong": 0,
+       "outerWrong": 0,
+       "maxNormalDeg": 62.44714308194952,
+       "hasInner": true,
+       "hasOuter": true
+      },
+      "h4": {
+       "maxDiffFlank": 0.3469792726546024,
+       "maxDiffNorm": 0.23131951510306825
+      }
+     },
+     "on": {
+      "h1": {
+       "whole": {
+        "minority": 8,
+        "pos": 8,
+        "neg": 8,
+        "total": 16
+       },
+       "rim": {
+        "minority": 0,
+        "pos": 8,
+        "neg": 0,
+        "total": 8
+       },
+       "maxBackwardDeg": 11.670199770909509
+      },
+      "h2": {
+       "outsideWorld": 0.016807950555924867
+      },
+      "h3": {
+       "r1": 1.2887736609774327,
+       "r2": 0.09653440681507304,
+       "split": 5,
+       "ratio": 13.350407419463227,
+       "smaller": 0.09653440681507304,
+       "bandIn": 0.06619999999999998,
+       "bandOut": 0.04780000000000001,
+       "smallerLtBandIn": false,
+       "smallerLtBandOut": false,
+       "maxTurnDeg": 178.27281271128444
+      },
+      "h6": {
+       "tipTurnADeg": 178.27281271128444,
+       "tipTurnBDeg": 171.91551310285863,
+       "innerFlips": 0,
+       "outerFlips": 0,
+       "innerWrong": 0,
+       "outerWrong": 0,
+       "maxNormalDeg": 44.37195956158743,
+       "hasInner": true,
+       "hasOuter": true
+      },
+      "h4": {
+       "maxDiffFlank": 0.12263964756259438,
+       "maxDiffNorm": 0.08175976504172959
+      }
+     },
+     "order": 0,
+     "wedgeK": 0
+    },
+    {
+     "tag": "cross_ji33",
+     "tipA": 4,
+     "tipB": 12,
+     "rimCount": 19,
+     "interior": 7,
+     "rounded": true,
+     "corner": [
+      1.9732766481485933,
+      19.888834307239822
+     ],
+     "quadErr": 3.552713678800501e-15,
+     "branch": "quadratic",
+     "onOffMax": 0.2547642057554008,
+     "biarcFired": true,
+     "maxROff": 1.0359577438615515,
+     "maxROn": 1.0359577438615515,
+     "off": {
+      "h1": {
+       "whole": {
+        "minority": 8,
+        "pos": 8,
+        "neg": 10,
+        "total": 18
+       },
+       "rim": {
+        "minority": 0,
+        "pos": 8,
+        "neg": 0,
+        "total": 8
+       },
+       "maxBackwardDeg": 21.119226905947965
+      },
+      "h2": {
+       "outsideWorld": 0
+      },
+      "h3": {
+       "r1": 1.1576658279651397,
+       "r2": 9.246921967068808,
+       "split": 3,
+       "ratio": 7.987557154833161,
+       "smaller": 1.1576658279651397,
+       "bandIn": 0.06619999999999998,
+       "bandOut": 0.04780000000000001,
+       "smallerLtBandIn": false,
+       "smallerLtBandOut": false,
+       "maxTurnDeg": 176.11769790746465
+      },
+      "h6": {
+       "tipTurnADeg": 176.11769790746465,
+       "tipTurnBDeg": 170.46099408301131,
+       "innerFlips": 0,
+       "outerFlips": 0,
+       "innerWrong": 0,
+       "outerWrong": 0,
+       "maxNormalDeg": 48.77606292743434,
+       "hasInner": true,
+       "hasOuter": true
+      },
+      "h4": {
+       "maxDiffFlank": 0.2983487108548364,
+       "maxDiffNorm": 0.19889914056989091
+      }
+     },
+     "on": {
+      "h1": {
+       "whole": {
+        "minority": 8,
+        "pos": 8,
+        "neg": 10,
+        "total": 18
+       },
+       "rim": {
+        "minority": 0,
+        "pos": 8,
+        "neg": 0,
+        "total": 8
+       },
+       "maxBackwardDeg": 21.119226905947965
+      },
+      "h2": {
+       "outsideWorld": 0.014042353518102664
+      },
+      "h3": {
+       "r1": 2.151756450887904,
+       "r2": 4.972396831349508,
+       "split": 3,
+       "ratio": 2.31085485037012,
+       "smaller": 2.151756450887904,
+       "bandIn": 0.06619999999999998,
+       "bandOut": 0.04780000000000001,
+       "smallerLtBandIn": false,
+       "smallerLtBandOut": false,
+       "maxTurnDeg": 178.23023712263748
+      },
+      "h6": {
+       "tipTurnADeg": 175.62243356311765,
+       "tipTurnBDeg": 178.23023712263748,
+       "innerFlips": 0,
+       "outerFlips": 0,
+       "innerWrong": 0,
+       "outerWrong": 0,
+       "maxNormalDeg": 18.443380864216174,
+       "hasInner": true,
+       "hasOuter": true
+      },
+      "h4": {
+       "maxDiffFlank": 0.12188752833362093,
+       "maxDiffNorm": 0.08125835222241395
+      }
+     },
+     "order": 1,
+     "wedgeK": 1
+    },
+    {
+     "tag": "cross_ji33",
+     "tipA": 6,
+     "tipB": 14,
+     "rimCount": 19,
+     "interior": 7,
+     "rounded": true,
+     "corner": [
+      1.4978698334877663,
+      19.713503998171547
+     ],
+     "quadErr": 3.552713678800501e-15,
+     "branch": "quadratic",
+     "onOffMax": 0.1562442203010305,
+     "biarcFired": true,
+     "maxROff": 0.9501790857313023,
+     "maxROn": 0.9501790857313023,
+     "off": {
+      "h1": {
+       "whole": {
+        "minority": 8,
+        "pos": 8,
+        "neg": 10,
+        "total": 18
+       },
+       "rim": {
+        "minority": 0,
+        "pos": 8,
+        "neg": 0,
+        "total": 8
+       },
+       "maxBackwardDeg": 10.613947026455051
+      },
+      "h2": {
+       "outsideWorld": 0
+      },
+      "h3": {
+       "r1": 1.2822976080542126,
+       "r2": 0.3428993874810536,
+       "split": 3,
+       "ratio": 3.739573924217243,
+       "smaller": 0.3428993874810536,
+       "bandIn": 0.06619999999999998,
+       "bandOut": 0.04780000000000001,
+       "smallerLtBandIn": false,
+       "smallerLtBandOut": false,
+       "maxTurnDeg": 172.50790082131522
+      },
+      "h6": {
+       "tipTurnADeg": 172.50790082131522,
+       "tipTurnBDeg": 171.68069540963145,
+       "innerFlips": 0,
+       "outerFlips": 0,
+       "innerWrong": 0,
+       "outerWrong": 0,
+       "maxNormalDeg": 62.924192208087106,
+       "hasInner": true,
+       "hasOuter": true
+      },
+      "h4": {
+       "maxDiffFlank": 0.2711898324084828,
+       "maxDiffNorm": 0.18079322160565522
+      }
+     },
+     "on": {
+      "h1": {
+       "whole": {
+        "minority": 8,
+        "pos": 8,
+        "neg": 10,
+        "total": 18
+       },
+       "rim": {
+        "minority": 0,
+        "pos": 8,
+        "neg": 0,
+        "total": 8
+       },
+       "maxBackwardDeg": 17.48787290354064
+      },
+      "h2": {
+       "outsideWorld": 0.0025572332484530952
+      },
+      "h3": {
+       "r1": 0.9260269245116111,
+       "r2": 0.30213380216665764,
+       "split": 5,
+       "ratio": 3.064956379825428,
+       "smaller": 0.30213380216665764,
+       "bandIn": 0.06619999999999998,
+       "bandOut": 0.04780000000000001,
+       "smallerLtBandIn": false,
+       "smallerLtBandOut": false,
+       "maxTurnDeg": 176.7625060795391
+      },
+      "h6": {
+       "tipTurnADeg": 176.7625060795391,
+       "tipTurnBDeg": 175.96365575896806,
+       "innerFlips": 0,
+       "outerFlips": 0,
+       "innerWrong": 0,
+       "outerWrong": 0,
+       "maxNormalDeg": 21.159950213172124,
+       "hasInner": true,
+       "hasOuter": true
+      },
+      "h4": {
+       "maxDiffFlank": 0.12223838852032909,
+       "maxDiffNorm": 0.08149225901355273
+      }
+     },
+     "order": 2,
+     "wedgeK": 2
+    }
+   ],
+   "h5": [],
+   "routesOff": [],
+   "routesOn": []
+  }
+ ]
+}
