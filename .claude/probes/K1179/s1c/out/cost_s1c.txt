@@ -1,0 +1,17 @@
+def: closed median 27.329 ms over 361 corners; per-corner median 69.9 us p95 124.1 us; master build median 31.2 ms
+fat: closed median 0.001 ms over 0 corners; per-corner median 0.0 us p95 0.0 us; master build median 3.7 ms
+ring: closed median 3.008 ms over 45 corners; per-corner median 51.7 us p95 101.5 us; master build median 4.7 ms
+user_tw42.lightpaper: closed median 9.486 ms over 150 corners; per-corner median 56.0 us p95 108.9 us; master build median 12.3 ms
+g41_def_tw42: closed median 29.109 ms over 385 corners; per-corner median 64.6 us p95 103.7 us; master build median 31.7 ms
+g41_def_tw64: closed median 22.031 ms over 302 corners; per-corner median 48.9 us p95 113.4 us; master build median 24.0 ms
+muse_hash: closed median 14.302 ms over 192 corners; per-corner median 20.1 us p95 239.3 us; master build median 17.0 ms
+muse_default_tw: closed median 38.289 ms over 320 corners; per-corner median 80.8 us p95 237.5 us; master build median 40.5 ms
+g41_ring_tw42: closed median 5.662 ms over 51 corners; per-corner median 98.2 us p95 186.4 us; master build median 6.4 ms
+g41_ring_tw64: closed median 1.943 ms over 41 corners; per-corner median 38.6 us p95 67.9 us; master build median 5.5 ms
+g41_user_tw42: closed median 9.487 ms over 150 corners; per-corner median 49.2 us p95 91.8 us; master build median 14.6 ms
+g41_user_tw64: closed median 6.764 ms over 122 corners; per-corner median 35.6 us p95 86.4 us; master build median 13.5 ms
+def_drag: 41 frames, closed p50 35.420 ms p95 58.533 ms max 61.574 ms (gate 0.75); per-corner(frame) p95 0.16214 ms; parts windows 137.2 walk 1164.1 gates 266.5 omega 110.4 ms over 41 frames; master build p95 62.7 ms; moved>0.001/0.01/0.05h 0.6037/0.1867/0.0534 of 14469
+def_flow: 41 frames, closed p50 31.393 ms p95 43.505 ms max 54.534 ms (gate 0.75); per-corner(frame) p95 0.12118 ms; parts windows 124.7 walk 1040.7 gates 247.9 omega 100.4 ms over 41 frames; master build p95 50.6 ms; moved>0.001/0.01/0.05h 1/0.9905/0.2848 of 14312
+muse_drag: 41 frames, closed p50 17.385 ms p95 29.462 ms max 37.826 ms (gate 0.75); per-corner(frame) p95 0.15425 ms; parts windows 92.6 walk 539.4 gates 119.2 omega 71.2 ms over 41 frames; master build p95 35.4 ms; moved>0.001/0.01/0.05h 0.7767/0.2497/0.0815 of 7644
+muse_flow: 41 frames, closed p50 15.906 ms p95 23.078 ms max 30.405 ms (gate 0.75); per-corner(frame) p95 0.12341 ms; parts windows 85.4 walk 490.0 gates 109.3 omega 64.1 ms over 41 frames; master build p95 26.4 ms; moved>0.001/0.01/0.05h 1/0.9563/0.1447 of 7408
+per-corner (12 scenes, n=2488): median 58.4 us p95 164 us p99 348.2 us max 941 us

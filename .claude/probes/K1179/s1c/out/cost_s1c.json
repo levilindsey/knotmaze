@@ -1,0 +1,205 @@
+{
+ "scenes": [
+  {
+   "scene": "def",
+   "corners": 361,
+   "closedMedianMs": 27.329,
+   "perCornerMedianUs": 69.9,
+   "perCornerP95Us": 124.1,
+   "masterBuildMedianMs": 31.2
+  },
+  {
+   "scene": "fat",
+   "corners": 0,
+   "closedMedianMs": 0.001,
+   "perCornerMedianUs": 0,
+   "perCornerP95Us": 0,
+   "masterBuildMedianMs": 3.7
+  },
+  {
+   "scene": "ring",
+   "corners": 45,
+   "closedMedianMs": 3.008,
+   "perCornerMedianUs": 51.7,
+   "perCornerP95Us": 101.5,
+   "masterBuildMedianMs": 4.7
+  },
+  {
+   "scene": "user_tw42.lightpaper",
+   "corners": 150,
+   "closedMedianMs": 9.486,
+   "perCornerMedianUs": 56,
+   "perCornerP95Us": 108.9,
+   "masterBuildMedianMs": 12.3
+  },
+  {
+   "scene": "g41_def_tw42",
+   "corners": 385,
+   "closedMedianMs": 29.109,
+   "perCornerMedianUs": 64.6,
+   "perCornerP95Us": 103.7,
+   "masterBuildMedianMs": 31.7
+  },
+  {
+   "scene": "g41_def_tw64",
+   "corners": 302,
+   "closedMedianMs": 22.031,
+   "perCornerMedianUs": 48.9,
+   "perCornerP95Us": 113.4,
+   "masterBuildMedianMs": 24
+  },
+  {
+   "scene": "muse_hash",
+   "corners": 192,
+   "closedMedianMs": 14.302,
+   "perCornerMedianUs": 20.1,
+   "perCornerP95Us": 239.3,
+   "masterBuildMedianMs": 17
+  },
+  {
+   "scene": "muse_default_tw",
+   "corners": 320,
+   "closedMedianMs": 38.289,
+   "perCornerMedianUs": 80.8,
+   "perCornerP95Us": 237.5,
+   "masterBuildMedianMs": 40.5
+  },
+  {
+   "scene": "g41_ring_tw42",
+   "corners": 51,
+   "closedMedianMs": 5.662,
+   "perCornerMedianUs": 98.2,
+   "perCornerP95Us": 186.4,
+   "masterBuildMedianMs": 6.4
+  },
+  {
+   "scene": "g41_ring_tw64",
+   "corners": 41,
+   "closedMedianMs": 1.943,
+   "perCornerMedianUs": 38.6,
+   "perCornerP95Us": 67.9,
+   "masterBuildMedianMs": 5.5
+  },
+  {
+   "scene": "g41_user_tw42",
+   "corners": 150,
+   "closedMedianMs": 9.487,
+   "perCornerMedianUs": 49.2,
+   "perCornerP95Us": 91.8,
+   "masterBuildMedianMs": 14.6
+  },
+  {
+   "scene": "g41_user_tw64",
+   "corners": 122,
+   "closedMedianMs": 6.764,
+   "perCornerMedianUs": 35.6,
+   "perCornerP95Us": 86.4,
+   "masterBuildMedianMs": 13.5
+  }
+ ],
+ "recordings": [
+  {
+   "recording": "def_drag",
+   "frames": 41,
+   "closedP50Ms": 35.42,
+   "closedP95Ms": 58.533,
+   "closedMaxMs": 61.574,
+   "perCornerFrameP95Ms": 0.16214,
+   "partsMsTotal": {
+    "windows": 137.2,
+    "walk": 1164.1,
+    "gatesMargin": 266.5,
+    "omega": 110.4
+   },
+   "wEvals": 809030,
+   "pairSteps": 218125,
+   "nearestScans": 545900,
+   "masterBuildP95Ms": 62.7,
+   "moved": {
+    "compared": 14469,
+    "gt0001h": 0.6037,
+    "gt001h": 0.1867,
+    "gt005h": 0.0534
+   }
+  },
+  {
+   "recording": "def_flow",
+   "frames": 41,
+   "closedP50Ms": 31.393,
+   "closedP95Ms": 43.505,
+   "closedMaxMs": 54.534,
+   "perCornerFrameP95Ms": 0.12118,
+   "partsMsTotal": {
+    "windows": 124.7,
+    "walk": 1040.7,
+    "gatesMargin": 247.9,
+    "omega": 100.4
+   },
+   "wEvals": 802843,
+   "pairSteps": 217015,
+   "nearestScans": 544716,
+   "masterBuildP95Ms": 50.6,
+   "moved": {
+    "compared": 14312,
+    "gt0001h": 1,
+    "gt001h": 0.9905,
+    "gt005h": 0.2848
+   }
+  },
+  {
+   "recording": "muse_drag",
+   "frames": 41,
+   "closedP50Ms": 17.385,
+   "closedP95Ms": 29.462,
+   "closedMaxMs": 37.826,
+   "perCornerFrameP95Ms": 0.15425,
+   "partsMsTotal": {
+    "windows": 92.6,
+    "walk": 539.4,
+    "gatesMargin": 119.2,
+    "omega": 71.2
+   },
+   "wEvals": 366740,
+   "pairSteps": 93043,
+   "nearestScans": 287174,
+   "masterBuildP95Ms": 35.4,
+   "moved": {
+    "compared": 7644,
+    "gt0001h": 0.7767,
+    "gt001h": 0.2497,
+    "gt005h": 0.0815
+   }
+  },
+  {
+   "recording": "muse_flow",
+   "frames": 41,
+   "closedP50Ms": 15.906,
+   "closedP95Ms": 23.078,
+   "closedMaxMs": 30.405,
+   "perCornerFrameP95Ms": 0.12341,
+   "partsMsTotal": {
+    "windows": 85.4,
+    "walk": 490,
+    "gatesMargin": 109.3,
+    "omega": 64.1
+   },
+   "wEvals": 361115,
+   "pairSteps": 91615,
+   "nearestScans": 283214,
+   "masterBuildP95Ms": 26.4,
+   "moved": {
+    "compared": 7408,
+    "gt0001h": 1,
+    "gt001h": 0.9563,
+    "gt005h": 0.1447
+   }
+  }
+ ],
+ "perCornerDist": {
+  "n": 2488,
+  "medianUs": 58.4,
+  "p95Us": 164,
+  "p99Us": 348.2,
+  "maxUs": 941
+ }
+}

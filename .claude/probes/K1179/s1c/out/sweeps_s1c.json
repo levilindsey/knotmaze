@@ -1,0 +1,86 @@
+[
+ {
+  "name": "gate699 coarse (e 0.005h)",
+  "gate": 0.127,
+  "before": 0.127,
+  "beforeAt": 0.37,
+  "closed": 0.127,
+  "closedAt": 0.37,
+  "closedMaxDiffH": 8.105816159446078e-14,
+  "cornersCompared": 531,
+  "passBefore": true,
+  "passClosed": true
+ },
+ {
+  "name": "gate699 fine",
+  "gate": 0.127,
+  "before": 0.0007,
+  "beforeAt": 0.64205,
+  "closed": 0.0007,
+  "closedAt": 0.64205,
+  "closedMaxDiffH": 1.609823385706477e-15,
+  "cornersCompared": 496,
+  "passBefore": true,
+  "passClosed": true
+ },
+ {
+  "name": "tee coarse (dc 0.01)",
+  "gate": 0.148,
+  "before": 0.148,
+  "beforeAt": 2.2300000000000004,
+  "closed": 0.148,
+  "closedAt": 2.2300000000000004,
+  "closedMaxDiffH": 0.0006577494347864803,
+  "cornersCompared": 385,
+  "passBefore": true,
+  "passClosed": true
+ },
+ {
+  "name": "tee fine",
+  "gate": 0.148,
+  "before": 0,
+  "beforeAt": 0,
+  "closed": 0,
+  "closedAt": 0,
+  "closedMaxDiffH": 0,
+  "cornersCompared": 0,
+  "passBefore": true,
+  "passClosed": true
+ },
+ {
+  "name": "ring coarse (dc 0.01)",
+  "gate": 0.1737,
+  "before": 0.1737,
+  "beforeAt": -1.6,
+  "closed": 0.1737,
+  "closedAt": -1.6,
+  "closedMaxDiffH": 0.0009092281568010368,
+  "cornersCompared": 409,
+  "passBefore": true,
+  "passClosed": true
+ },
+ {
+  "name": "ring fine",
+  "gate": 0.1737,
+  "before": 0,
+  "beforeAt": 0,
+  "closed": 0,
+  "closedAt": 0,
+  "closedMaxDiffH": 0,
+  "cornersCompared": 0,
+  "passBefore": true,
+  "passClosed": true
+ },
+ {
+  "name": "synthetic arm 60deg (2095 steps of 0.005h tip)",
+  "gate": 0.0508,
+  "before": 0.0508,
+  "beforeAt": 61.43239448782706,
+  "closed": 0.0508,
+  "closedAt": 61.43239448782706,
+  "closedMaxDiffH": 9.41008164741723e-15,
+  "cornersCompared": 4192,
+  "passBefore": true,
+  "passClosed": true
+ }
+]

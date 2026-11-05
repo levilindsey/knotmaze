@@ -1,0 +1,40 @@
+K1179 S1c: exact outline + closed-form solve - FAIL (stop case): 1v fails on master's rule, closed form cannot reproduce its tracked branch, cost 31-78x over
+
+What I did (K1178 Run L, offline, no subagents; nothing in src/ or
+test/ changed):
+
+Task 1 - the exact outline (segment offset lines + vertex arcs,
+unioned with the fills, meets in closed form; no sampling step, so
+the measurement error is float64 + stated tolerances). Run K's
+kappa form on the pieces fails 0 corners: the sampled cusps were
+joint readings. Criterion 1v on master: (a) 63 corners (c 62, d 1),
+(b) 0 deg everywhere, (c) the same 16 small rounds. Class b does
+not survive (0/267 fail 1v). Criterion 2 exact: 0 failing feet.
+Criterion 3 master column reproduces Run K's corrected numbers to
+the digit.
+
+Task 2 - the closed-form solve (piece-pair walk of the medial
+branch, gates at adaptive-Simpson points, stated work maxima).
+V agrees exactly everywhere (max dV = 0 on 47,109 corners). But
+377/2,119 scene corners (17.8%) and 7,356/44,990 recording corners
+(16.3%) sit outside 0.01h in q/r/feet: of the scene outs, 90 are
+form B's 32-node trapezoid, 67 its tracked advance against the
+converged branch, 70 the pair sheet diverging, 150 all three apart.
+
+Task 3 - cost under the perf lock: p95 58.5/43.5/29.5/23.1 ms a
+frame against 0.75 ms (31-78x over); per-corner median 58 us,
+p99 348 us; split walk 69%, margin gates 16%, windows 8%, omega 7%.
+Incremental ceiling (moved >0.05h: 5-29%) still leaves 1.2-6.5 ms.
+
+Task 4 - three columns for every criterion: 1v fails on master's
+rule itself (closed column 91, same class), 2 passes exactly, 3
+passes in substance (round overs 3/2/6/29 closed vs 3/2/8/25
+master; sweeps pass at form B's rates in both columns), 4 fails.
+
+Record: docs/design/K1179_s1c.md. Verdict: fail - criteria 1v, 2
+and 3 cannot hold together on master's rule, and the closed form
+cannot reproduce its tracked branch; the rethink must answer the
+margin crease (overshoot <=0.029h, median jump 7.3 deg), the
+branch definition, and the per-pixel distance question before S2.
+Plots: 4 SVGs (class-b/d worst, 1v worst, motion worst).
+npm test passes (2,833).

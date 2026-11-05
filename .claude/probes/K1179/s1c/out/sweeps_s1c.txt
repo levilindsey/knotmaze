@@ -1,0 +1,7 @@
+gate699 coarse (e 0.005h): master 0.127 vs 0.127 PASS; closed 0.127 PASS; closed diff 8.105816159446078e-14h/531
+gate699 fine: master 0.0007 vs 0.127 PASS; closed 0.0007 PASS; closed diff 1.609823385706477e-15h/496
+tee coarse (dc 0.01): master 0.148 vs 0.148 PASS; closed 0.148 PASS; closed diff 0.0006577494347864803h/385
+tee fine: master 0 vs 0.148 PASS; closed 0 PASS; closed diff 0h/0
+ring coarse (dc 0.01): master 0.1737 vs 0.1737 PASS; closed 0.1737 PASS; closed diff 0.0009092281568010368h/409
+ring fine: master 0 vs 0.1737 PASS; closed 0 PASS; closed diff 0h/0
+synthetic arm 60deg (2095 steps of 0.005h tip): master 0.0508 vs 0.0508 PASS; closed 0.0508 PASS; closed diff 9.41008164741723e-15h/4192
