@@ -185,10 +185,15 @@ for (const rc of meta.recs) {
                       const gi = at(gD, X, Y, 1), gj = at(gD, X + dx, Y + dy, 1);
                       const wi = at(gDW, X, Y, 1), wj = at(gDW, X + dx, Y + dy, 1);
                       sub = gi === 0 || gj === 0 ? "jump:zero" : gi === wi || gj === wj ? "jump:arm" : "jump:other";
+                      // jump:twin = the twin's own G steps as far (v is not
+                      // crest(tau) there); jump:gpu = the twin is smooth and
+                      // the GPU leaves it at one of the two pixels.
+                      if (sub === "jump:other") sub = sc >= sg - 3 ? "jump:twin" : "jump:gpu";
                     }
                     sameSub[sub] = (sameSub[sub] ?? 0) + 1;
                     if (sub === "steep") { sameG.max = Math.max(sameG.max, g); sameG.gOverC = Math.max(sameG.gOverC, g / Math.max(1, cS)); }
-                    if (sub === "jump:other" && sameG.jumps.length < 6) sameG.jumps.push([X, Y, dx, dy, sg, +g.toFixed(2), +cS.toFixed(2), b]);
+                    if (sub.startsWith("jump:") && sub !== "jump:zero" && sameG.jumps.length < 6)
+                      sameG.jumps.push([X, Y, dx, dy, sg, Math.round(sc), Math.round(cpuG(i)), at(gD, X, Y, 1), Math.round(cpuG(j)), at(gD, X + dx, Y + dy, 1), sub.slice(5), b]);
                   }
                 }
                 seamG[i] = 1;
