@@ -9,6 +9,7 @@ import {
   turnSeed,
 } from "../../src/game/minotaur_turns";
 import type { TurnMinoParams } from "../../src/game/minotaur_turns";
+import { followDelay } from "../../src/game/monsters";
 import {
   canSnare,
   holdTurn,
@@ -194,5 +195,40 @@ describe("K137 s4: snares on the turn clock", () => {
     play(t, 0);
     expect(t.setSnare(1)).toBe(false);
     expect(t.tools).toEqual([]);
+  });
+});
+
+describe("K782: the follower's first step is snare-checked", () => {
+  function seedWithDelay(d: number): number {
+    for (let s = 1; s < 500; s++) if (followDelay(s, 0) === d) return s;
+    throw new Error("no seed");
+  }
+
+  it("springs the snare on its first step, holds at the start, then walks the trail", () => {
+    const seed = seedWithDelay(1);
+    const t = new TurnMinotaur(line(), turnConfig({ ...STALK, sleep: 100 }), turnSeed(seed));
+    const v = (n: string): number => t.g.index.get(n)!;
+    t.setMonsters([{ kind: "follower", home: v("A") }], seed);
+    expect(play(t, 0)).toBe("moved"); // S -> A.
+    expect(play(t, 1)).toBe("moved"); // A -> B; the follower sets off.
+    expect(t.extras[0].phase).toBe("waiting");
+    expect(t.setSnare(1)).toBe(true); // A-B, laid at B.
+    expect(play(t, 2)).toBe("moved"); // B -> C; its first step is onto the snare.
+    expect(t.extras[0].phase).toBe("awake");
+    expect(t.extras[0].state.v).toBe(v("A"));
+    expect(t.extras[0].lastPath).toEqual([]);
+    expect(t.extras[0].at).toBe(0);
+    expect(t.snares[0]).toEqual({ edge: 1, phase: "holding", holder: 0, left: SNARE_HOLD });
+    expect(t.heldBySnare(0)).toBe(true);
+    for (let i = 0; i < SNARE_HOLD; i++) {
+      expect(play(t, -1)).toBe("moved"); // Waits at C while it holds.
+      expect(t.extras[0].state.v).toBe(v("A"));
+    }
+    expect(t.snares[0].phase).toBe("spent");
+    expect(t.heldBySnare(0)).toBe(false);
+    expect(play(t, 3)).toBe("moved"); // C -> D; it walks on: A -> B.
+    expect(t.extras[0].state.v).toBe(v("B"));
+    expect(play(t, -1)).toBe("moved"); // Waits at D; B -> C along the trail.
+    expect(t.extras[0].state.v).toBe(v("C"));
   });
 });

@@ -1442,7 +1442,17 @@ export class TurnMinotaur {
       } else if (x.phase === "waiting") {
         if (!stand && --x.wait <= 0) {
           x.phase = "awake";
+          // K137 s4 (4.30) / K782: the first step is snare-checked as an awake step is (snare only).
+          const before = this.snares.length > 0 ? cloneMino(x.state) : null;
+          const at0 = x.at;
           path = followStep(g, x, p, x.rng.at(this.turns), this.cfg.followShortcut);
+          if (before !== null && x.phase === "awake") {
+            const k = cutAtSnare(this.snares, path, before, x.state);
+            if (k >= 0) {
+              x.at = at0;
+              springSnare(this.snares[k], i, this.cfg.snareHold);
+            }
+          }
           live = x.phase === "awake";
         }
       } else if (x.kind === "sleeper") {
