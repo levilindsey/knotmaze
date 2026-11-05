@@ -103,15 +103,6 @@ import type { RibbonRenderer, RouteJArm } from "../ribbon_renderer";
 // them leaves any far-reaching patch floating in the background. The
 // user's cuspRadius slider multiplies the reach (0 disables the fillets;
 // the center/tip seal discs stay regardless).
-// K1139 S3b-fix DIAG (temporary): what cpuJunctionField's pulse section saw.
-interface K1139Diag {
-  base: number[] | null;
-  gold: number[] | null;
-  bands: number[][] | null;
-  win: number;
-  drawn: number[] | null;
-  out: number[] | null;
-}
 // K1139 Stage 2: cpuJunctionField's per-band pulse scratch (the twin of
 // the shader's sTau / sShift / sCov / sDist / sPb arrays).
 const PULSE_TAU = new Float64Array(MAX_ROUTES);
@@ -579,16 +570,6 @@ export class Joinery {
         out[3] = lo ? p3 + (o3 - p3) * fz : o3 + (p3 - o3) * fz;
       }
     }
-    // K1139 S3b-fix DIAG (temporary): the pulse section's inputs per pixel.
-    const DG = (globalThis as unknown as { __k1139diag?: K1139Diag }).__k1139diag;
-    if (DG) {
-      DG.base = Array.from(out);
-      DG.gold = null;
-      DG.bands = [];
-      DG.win = -1;
-      DG.drawn = null;
-      DG.out = null;
-    }
     if ((!routed && !banded) || dbg === 3 || dbg === 4) return;
     // K81 ROUTE BANDS, oldest first (FIELD_GLSL junctionField): the nearest
     // point of each band's centerline polyline and its tau; a one-pixel
@@ -648,12 +629,9 @@ export class Joinery {
     // shared band draws nothing: its gold block above already drew it.
     const U = knotUniformValues();
     const KB = PAINT_CONST.K_BAND;
-    if (DG) DG.gold = Array.from(out);
     let pb = base + 1;
     const npp = Math.min(np, MAX_ROUTES);
     let dShared = 1e20;
-    let bestVC = -1;
-    let bIdx = -1;
     for (let r = 0; r < npp; r++) {
       const r0 = at(pb);
       const r1 = at(pb + 1);
@@ -680,9 +658,6 @@ export class Joinery {
       let hit = false;
       let tauP = 0;
       let shiftP = 0;
-      let DG_C = 1;
-      let DG_K = -1;
-      let DG_KB = -1;
       let eA0 = v0;
       let eA1 = v0;
       let eB0 = v0;
@@ -705,7 +680,6 @@ export class Joinery {
           tau = J[q0 + 2] + (J[q1 + 2] - J[q0 + 2]) * u;
           shift = J[q0 + 3] + (J[q1 + 3] - J[q0 + 3]) * u;
           side = dx * wy - dy * wx;
-          DG_KB = k;
         }
         const a1x = J[q1] - J[v0];
         const a1y = J[q1 + 1] - J[v0 + 1];
@@ -726,15 +700,8 @@ export class Joinery {
           const qhy = a0y + (a1y - a0y) * us;
           if ((PW * qhx - PX) * (PW * prx - PX) + (PW * qhy - PY) * (PW * pry - PY) > 0) {
             hit = true;
-            DG_K = k;
             tauP = J[q0 + 2] + (J[q1 + 2] - J[q0 + 2]) * us;
             shiftP = J[q0 + 3] + (J[q1 + 3] - J[q0 + 3]) * us;
-            // K1139 S3 DIAG: the compression c = |q - P| / |p - P| from the header's P.
-            if (DG) {
-              const nq = Math.hypot(PW * qhx - PX, PW * qhy - PY);
-              const np2 = Math.hypot(PW * prx - PX, PW * pry - PY);
-              DG_C = np2 > 1e-12 ? nq / np2 : 1;
-            }
           }
         }
         q0 = q1;
@@ -762,34 +729,6 @@ export class Joinery {
       }
       const dnow = Math.sqrt(best);
       const cov = Math.max(0, Math.min(1, (reach - dnow) / pxW));
-      if (DG && DG.bands) {
-        const fl = J[r1 + 1];
-        const vv = kPulseBandV(U, J[r1], tau, fl % 2 === 1, fl >= 2);
-        const qq = kPulseCrest(U, J[r1] + tau, fl % 2 === 1, fl >= 2, 1, 0);
-        const ffa = KB * qq;
-        const ff = Math.max(0, Math.min(1, (KB * vv - ffa) / Math.max(1 - ffa, 1e-3)));
-        const ta = new Float32Array(4);
-        const tb = new Float32Array(4);
-        const mm = J[r0 + 1];
-        let ss = Math.max(0, Math.min(1, (tau + mm) / (2 * mm)));
-        ss = ss * ss * (3 - 2 * ss);
-        armPaint(rec + 2 + Math.round(J[r0 + 2]) * stride, -tau + shift, true, true, ta);
-        armPaint(rec + 2 + Math.round(J[r0 + 3]) * stride, tau + shift, true, true, tb);
-        const pq = [0, 1, 2].map((c) => ta[c] + (tb[c] - ta[c]) * ss);
-        armPaint(rec + 2 + Math.round(J[r0 + 2]) * stride, -tau + shift, true, false, ta);
-        armPaint(rec + 2 + Math.round(J[r0 + 3]) * stride, tau + shift, true, false, tb);
-        const pc = [0, 1, 2].map((c) => ta[c] + (tb[c] - ta[c]) * ss);
-        DG.bands.push([r, dnow, tau, shift, cov, J[r1 + 2], J[r1], fl, J[r0 + 2], J[r0 + 3], mm,
-          vv, qq, ff, ...pq, ...pc, piv && hit ? DG_C : 1, piv ? (hit ? 1 : 2) : 0, DG_K, DG_KB, kA, kB]);
-      }
-      if (cov > 0 && DG) {
-        const fl = J[r1 + 1];
-        const vc = kPulseBandV(U, J[r1], tau, fl % 2 === 1, fl >= 2) * cov;
-        if (vc > bestVC) {
-          bestVC = vc;
-          bIdx = r;
-        }
-      }
       if (J[r1 + 2] >= 0.5) dShared = Math.min(dShared, dnow);
       PULSE_TAU[r] = tau;
       PULSE_SHIFT[r] = shift;
@@ -803,7 +742,6 @@ export class Joinery {
       PULSE_SD[r] = side < 0 ? -dnow : dnow;
       pb += 4 + nv;
     }
-    if (DG) DG.win = bIdx;
     let wW = 0;
     for (let r = 0; r < npp; r++) {
       const cw = PULSE_COV[r] * (1 - pulseSmooth(0, 3 * pxW, PULSE_DIST[r] - dShared));
@@ -843,7 +781,6 @@ export class Joinery {
         for (let c = 0; c < nc; c++) out[c] += ((tgt ? tgt[c] : 1) - out[c]) * wW;
       }
     }
-    if (DG) DG.out = Array.from(out);
   }
   // Section RGB at a world ARC along a chain into out[0..2] - the ribbon's
   // own color there (its vertex shader's section at the two bracketing
