@@ -1,0 +1,3 @@
+# K1139 Stage 3 S3.2: (d)'s crotch far edge at 3.0 (from 1.56); diag_s3b now also dumps fa32 (cr, qq per band)
+node diag_s3b.mjs cross out\s3\e30\cross 8
+node diag_s3b.mjs x4 out\s3\e30\x4 8
