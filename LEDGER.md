@@ -526,7 +526,7 @@ Next free ID: K1185.
 - **K1184** · Muse batch 17 (`docs/design/K1184_muse_batch17.md`, drafted by run A): runs B-G, plus run H
   (K1179 S1d), added at Claude's review and run first.
   - owner: nobody since 2026-11-04 13:47 (run H queued as Muse chain run 17H, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `2febd57d`
+  - branch: mainline; last commit: `5549f824`
   - evidence: `docs/design/K1184_muse_batch17.md`; the chain in `.claude/probes/K1053/` (queue.txt, chain.log)
   - next: chain run 17H (K1179 S1d) runs first and alone; Claude reviews runs B-G against the code meanwhile, applies the amendments at the quiet point after it, then queues 17B-17G
   - brief: `docs/design/K1184_muse_batch17.md`
