@@ -212,5 +212,46 @@ State: diagnosis in progress (4.1); no shader change yet.
   bands.
 - The cross wedge (s3b_seams_cross.png, frames 3-4) sits 0.3-0.6 world
   left of mnode_48, between the two branch arms (e21 up-left, e151
-  down-left), past the split: hypothesis, outside both bands, so the
-  quiet base shows beside whitened arms. Being tested with diag_an.
+  down-left), past the split.
+
+### 4.1 findings (S3b, measured on the diag2 dumps, 2026-11-04 11:55)
+
+- SEAMS (diag_an: dbg 5's G steps above T = 5.54/255 inside the web
+  footprint, its AA rim eroded). cross ji 33 per phase t0..t7: 4, 0, 0,
+  89, 259, 282, 111, 163 (908 in all; the CPU twin's G 1763). x4: ji 28
+  1929, ji 125 439, ji 147 489, ji 149 4802, ji 108 0. Three classes:
+  - (a) SAME-BAND tau jumps, most of cross's (t3 87 of 89, t4 216 of
+    259, t5 265 of 282). On the inner side of a band's turn, past its
+    radius of curvature, the nearest point flips between the band's A
+    leg and its B leg: tau jumps by about 2d/tan(alpha/2). cross t4: 166
+    jumping pixel pairs, the worst dtau 0.44 at d 0.241, a G step of
+    158/255 (taujump.mjs). The nearest-band rule cannot see it: it is
+    inside one band.
+  - (b) BAND SWITCHES between fork siblings: the winner changes along
+    the wedge's bisector and the crest steps there, up to 94/255 at
+    cross, 22-44 at x4.
+  - (c) THE DARK WEDGE. wedge.mjs counts footprint pixels that lie
+    between two drawing bands (on band 2's side of band 1 and on band
+    1's side of band 2, the feet well apart) and read darker in luma
+    than both bands' own composed arm paint at their projections (pc)
+    by more than 2/255. S3b: cross ji 33 t0..t7 608, 0, 0, 1, 202, 399,
+    669, 1491; x4 ji 28 16130, ji 147 3078. The wedge pixels read the
+    QUIET FLOOR, not below it: cross t5 GPU 169.9 against pc 187.5 and
+    pq (the quiet A->B blend) 163.4; x4 ji 147 t6 160.1 / 169.8 / 157.0.
+    Most are bare (cross t5 355 of 399; x4 ji 147 99 of 106): no band
+    covers them, so the quiet base shows beside whitened arms.
+    Before S3b the base read the arms' composed rows and the angular
+    blend whitened them. The rest are band-edge pixels, cov < 1 mixing
+    back to that quiet base. A shared band does not cause it: cross ji
+    33 and x4 ji 28 / 147 have no shared band.
+- node_386 e79 (x4 ji 108): inferred, not run: e79 is a non-tree
+  (cycle) arm, and pulseTree (pulse_path.ts, the tree-children filter
+  near line 200) declares bands only to tree children, like e134 at
+  node_378. The banded record's base reads quiet rows, so e79's own
+  crest shows only in its ribbon. S4's; not fixed here.
+- P8's worst points (cross e21 19, x4 e175 15, x4 e135 59): not
+  analysed separately; the P8 run after the fix answers whether they
+  move.
+- Harness additions: `wedge.mjs <dumpDir> [phases] [ji,...]` (the
+  count above, GPU and CPU twin); diag_an gained the AA-rim erosion and
+  AN_SCALE / AN_CROP for panel crops.

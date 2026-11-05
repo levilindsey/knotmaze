@@ -90,6 +90,16 @@ for (const rc of meta.recs) {
         for (let c = 0; c < 3; c++) d = Math.max(d, Math.abs(at(gD, X, Y, c) - at(gDW, X, Y, c)), Math.abs(at(gN, X, Y, c) - at(gW, X, Y, c)));
         if (d > 0) { foot[Y * BW + X] = 1; nFoot++; }
       }
+    // The web mesh's own AA rim is not a seam: keep footprint pixels whose
+    // 8 neighbours are footprint too.
+    const footIn = new Uint8Array(n);
+    for (let Y = 1; Y < BH - 1; Y++)
+      for (let X = 1; X < BW - 1; X++) {
+        let ok = 1;
+        for (let dy = -1; dy <= 1 && ok; dy++)
+          for (let dx = -1; dx <= 1; dx++) if (!foot[(Y + dy) * BW + X + dx]) { ok = 0; break; }
+        footIn[Y * BW + X] = ok;
+      }
     // Seams: GPU G and the CPU twin's G (winner v * cov) in the same mask.
     const seamG = new Uint8Array(n), seamC = new Uint8Array(n);
     let nSeamG = 0, nSeamC = 0, maxStepG = 0, maxStepC = 0, maxSame = 0;
@@ -115,7 +125,7 @@ for (const rc of meta.recs) {
           if (win[i] === win[j]) maxSame = Math.max(maxSame, sc);
           maxStepC = Math.max(maxStepC, sc);
           if (sc > T) seamC[i] = 1;
-          if (foot[i] && foot[j]) {
+          if (footIn[i] && footIn[j]) {
             const sg = Math.abs(at(gD, X, Y, 1) - at(gD, X + dx, Y + dy, 1));
             maxStepG = Math.max(maxStepG, sg);
             if (sg > T) {
@@ -141,11 +151,12 @@ for (const rc of meta.recs) {
     console.log(JSON.stringify(row));
     if (!OUT) continue;
     // Panels at 2x around the record's centre (the box is centred on it).
-    const S = 2, CWp = Math.min(BW, 200), CHp = Math.min(BH, 200);
-    const x0 = Math.floor((BW - CWp) / 2), y0 = Math.floor((BH - CHp) / 2);
+    const S = Number(process.env.AN_SCALE ?? 2), CWp = Math.min(BW, 200), CHp = Math.min(BH, 200);
+    let x0 = Math.floor((BW - CWp) / 2), y0 = Math.floor((BH - CHp) / 2), cw = CWp, ch = CHp;
+    if (process.env.AN_CROP) [x0, y0, cw, ch] = process.env.AN_CROP.split(",").map(Number);
     const NP = 6, G = 4;
-    const PW = CWp * S, PH2 = CHp * S, W = NP * PW + (NP - 1) * G;
-    const data = new Uint8Array(W * PH2 * 3).fill(40);
+    const PW = cw * S, PH2 = ch * S, W = NP * PW + (NP - 1) * G;
+    const data = Buffer.alloc(W * PH2 * 3, 40);
     const COL = [[255, 60, 60], [60, 220, 60], [80, 120, 255], [240, 220, 40]];
     const put = (p, X, Y, rgb) => {
       for (let sy = 0; sy < S; sy++)
@@ -154,8 +165,8 @@ for (const rc of meta.recs) {
           data[o] = rgb[0]; data[o + 1] = rgb[1]; data[o + 2] = rgb[2];
         }
     };
-    for (let Y = 0; Y < CHp; Y++)
-      for (let X = 0; X < CWp; X++) {
+    for (let Y = 0; Y < ch; Y++)
+      for (let X = 0; X < cw; X++) {
         const bx = X + x0, by = Y + y0, i = by * BW + bx, o = i * PX;
         put(0, X, Y, [0, 1, 2].map((c) => Math.max(0, at(gN, bx, by, c))));
         put(1, X, Y, [0, 1, 2].map((c) => Math.max(0, at(gW, bx, by, c))));
