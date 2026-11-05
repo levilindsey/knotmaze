@@ -827,3 +827,292 @@ milestone, broken or not.
      `docs/ledger_notes.md`.
    - Never write into the main checkout (Muse runs there) or into
      the old worktrees.
+
+### Stage 3 handoff
+
+Agent a8280f4d14ebd8ad1, 2026-11-04, 14:59:47 to 16:25: the stage is
+done, inside the 2 h cap. Stage 3
+changes no source: `src/` is 944bb761's (Stage 2's final code). The
+`__k1139diag` hook went back in for the dumps (a072dc4c, e7dc5fda adds
+c and mode) and out again (a5698618). The cherry-pick renamed Stage 2's
+commits: 38784fca = ac0cf168 (a), 9d8edfe4 = 5ca8ee2e, 8ec4c30d =
+ced3cea3 (b)+(c), c4f5b9d2 = f923140e (d), b40392d7 = 952fe803.
+Evidence: `.claude/probes/K1139/` (scripts tracked; `out/s3/` untracked
+except `out/s3/sheets/`, added with -f).
+
+Stage 3's commits, oldest first: a072dc4c (the hook back), e7dc5fda (c
+and mode in the dumps), e0669c2d (S3.1's classifier), c5bca162 (the
+same-band jumps split), 28552345 (far edge 2.5, tried), be7e023b (back
+to 1.56), a5698618 (the hook out), d540fabc (S3.3's probes and sheets),
+then this handoff's.
+
+**S3.1, the classifier** (`diag_an.mjs`, on fresh (d) dumps,
+`out/s3/d/`). T = 5.54/255; a same-band step is a seam above
+T max(1, c), c = |w q - Pxy| / |w p - Pxy|; ramps are counted apart.
+
+| record | seams (old rule) | fork / shared | ramps | max c | worst ramp: step/T at (k, X, Y), c |
+|---|---|---|---|---|---|
+| cross ji 33 | 1599 (1954) | 121 fork | 355 | 1.456 | 1.263 at (0, 138, 110), 1.286 |
+| x4 ji 28 | 2025 | 96 fork | 1380 | 1.328 | 1.263 at (3, 180, 117), 1.286 |
+| x4 ji 108 | 0 | - | 0 | - | - |
+| x4 ji 125 | 445 (all steep) | - | 0 | - | no ramp |
+| x4 ji 147 | 162 | 5 fork | 773 | 1.945 | 1.805 at (0, 78, 179), 1.905 |
+| x4 ji 149 | 1449 | 203 shared | 2541 | 1.58 | 1.444 at (2, 89, 84), 1.536 |
+
+x4 in all: 4081 (old rule 8775). Mode-0 bands: none. The same-band
+seams by class (`diag_an.mjs` ~170: steep = the twin's own tau step
+explains it; jump:twin = the twin steps as far; jump:gpu = the twin is
+smooth and the GPU leaves it; jump:zero = one side's GPU pulse is 0;
+jump:arm = one side is the webs-off frame's; cover = a band's AA edge):
+
+| record | steep | jump:twin | jump:gpu | jump:zero | jump:arm | cover |
+|---|---|---|---|---|---|---|
+| cross ji 33 | 561 | 540 | 296 | 70 | 6 | 5 |
+| x4 ji 28 | 1145 | 237 | 447 | 90 | 5 | 5 |
+| x4 ji 125 | 445 | 0 | 0 | 0 | 0 | 0 |
+| x4 ji 147 | 13 | 49 | 87 | 8 | 0 | 0 |
+| x4 ji 149 | 838 | 1 | 297 | 56 | 8 | 46 |
+
+- The ruling's c misses two things: the arc-true tau rate (1.2-1.56
+  where c reads 1) and the band's obliqueness. So "steep" seams pass
+  as compression only up to T c, and ramps reach 1.8 T.
+- jump:twin was attributed to rule (a)'s ray-hit segment flip: tau
+  jumps where the ray from P changes segment.
+- jump:gpu at cross t7, box (115-120, 78-83), is unattributed.
+
+S3b against the fix. The old-rule columns are the Stage 2 handoff's
+table. S3b's new-rule count is not measured: the rule needs c per
+pixel, and only this branch's hook (e7dc5fda) dumps it.
+
+| record | seams, S3b (old rule) | fix (old rule) | fix (new rule) | wedges GPU / twin, S3b | fix |
+|---|---|---|---|---|---|
+| cross ji 33 | 908 | 1954 | 1599 | 3370 / 9922 | 2363 / 8670 |
+| x4 ji 28 | 1929 | 3405 | 2025 | 16130 / 6049 | 15301 / 6451 |
+| x4 ji 108 | 0 | 0 | 0 | - | - |
+| x4 ji 125 | 439 | 445 | 445 | - | - |
+| x4 ji 147 | 489 | 935 | 162 | 3078 / 3369 | 2591 / 3814 |
+| x4 ji 149 | 4802 | 3990 | 1449 | - | - |
+
+Under the old rule the fix is still above S3b at cross, ji 28 and
+ji 147, and below it at ji 149.
+
+**S3.2, the crotch far edge: kept at 1.56** (be7e023b; 28552345 tried
+2.5).
+- The wedges (GPU / twin) are the same at 1.56, 2.5 and 3.0: cross
+  2363 / 8670, ji 28 15301 / 6451, ji 147 2591 / 3814.
+- The d and dw frames change 0 px from 1.56 to 2.5. At 3.0, 66 px change
+  on ji 147's lit arm 2, by up to +11 luma.
+- Fill pixels at 1.56 / 2.5 / 3.0: ji 147 9735 / 10358 / 10374, ji 28
+  6226 / 6321 / 6339, ji 33 6811 at all three.
+- So the far edge does not bind the wedges; they need a different fill
+  rule.
+- The fa kink is unreachable: max fa with cov > 0 is 0.3077.
+- Stage 2's 3089 px was not reproduced.
+- Offline and the GPU disagree at ji 28: +113 fill px offline, 0 on the
+  GPU.
+
+**The half-pixel suspicion: there is no sub-pixel offset**
+(`halfpx.mjs`).
+- The GPU's edge fitted against the twin's on fan-class pixels: cross
+  shift (-0.007, -0.012) device px, bias -0.011; ji 28 (0.005, 0.006),
+  bias -0.003.
+- The "about 1 px ahead" is the cover strip's designed pad. A strip
+  fragment reaches fh + 1.5 pxW (`reach`, `junction_field.ts:346`,
+  ROUTE_BAND_PAD + 1); a fan fragment reaches fh + 0.5 pxW. The twin
+  draws no strip: `diag_s3b.mjs:176` passes strip = false.
+- Edge pixels by class, fan / strip / neither: cross 103 / 23 / 98
+  (whole-fit bias +0.149 px), ji 28 281 / 35 / 129 (+0.113).
+- **The t5 ghost at (122, 121) is the strip pad.** Its G 89 is band 0's
+  cov-1 value. The pixels beside it are band 1's strip edge: (123, 121)
+  reads G 227 against a strip model of 226.8 and a fan model of 4.2;
+  (122, 122) reads 220 against 220.3 and 32.7.
+- **The pad does not explain ji 28's 2.4x wedges** (`wedge_strip.mjs`).
+  - Wedges: GPU 15301, twin 6451, both 6386, GPU only 8915, twin only
+    65.
+  - Of the GPU-only wedges, 6055 lie beyond any strip's reach (e <
+    -1.5 px), 2557 inside the fan's own reach, and 6358 are bare (both
+    bands cov 0).
+  - In those pixels the GPU is 16.3 luma darker than the twin (p10
+    -22.4, p90 -10.7).
+  - Unattributed: the GPU and the twin disagree on the fan's base
+    material at ji 28, plausibly the same disagreement as the fill's
+    above.
+  - At ji 33 and ji 147 it runs the other way, with the extra wedges in
+    the twin (twin only 6522 and 1275).
+
+**Section 5 on the fix** (a5698618 on 5620; S3b is Run B's after
+record, the main checkout's `out/s3b/after/`). The pages' stamp reads
+a072dc4c because the dev server fixes its SHA when it starts. It serves
+the working tree, whose `src/` matches 944bb761's (0 files differ).
+
+P8 (`fan.mjs`: max |G - model| on each band's centreline, ceiling 4/255;
+fix's worst point as tau, v, G), P1 and P4 (/255 and %), and P3 (the
+model's value in brackets where `fan.mjs` gives one). P5min is
+unchanged on every band.
+
+| band (record, slot) | S3b P8 | fix P8 (tau, v, G) | S3b P1 / P3 / P4 | fix P1 / P3 / P4 |
+|---|---|---|---|---|
+| cross e150>e21 (ji 33, 0) | 19 | 67 (0.19, 0, 67) | 4.3 / 1.229 / - | 4.3 / 0.781 (1.221) / - |
+| cross e150>e151 (ji 33, 1) | 2.6 | 13.5 (0.15, 0.747, 204) | 1.7 / 1.344 / - | 2.4 / 1.267 / - |
+| src e150>e198 (ji 155, 1) | 7.3 | 120 (0.06, 0, 120) | 2 / -1.229 / 21.42 | 2.1 / -0.562 (-1.279) / 3.1 |
+| src e150>e199 (ji 155, 0 shared) | 4.4 | 50 (0, 0, 50) | 4.4 / -1.281 / 26.78 | 4.4 / -0.854 (-1.288) / 26.45 |
+| four e135>e18 (ji 28, 0) | 4.3 | 61 (0.23, 0, 61) | 5.3 / 1.354 / 23.02 | 5.3 / 1.045 / 12.56 |
+| four e135>e136 (ji 28, 1) | 7.7 | 15 (0.12, 0, 15) | 3.3 / 1.363 / 20.14 | 3.3 / 1.346 / 17.75 |
+| x4 e180>e140 (ji 149, 0 shared) | 4.4 | 128 (0.09, 0, 128) | 2.9 / -1.619 / 0.02 | 7.7 / -1.256 (-1.615) / 2.59 |
+| x4 e180>e141 (ji 149, 1) | 5.8 | 18.8 (v 0.824) | 4.9 / -1.638 / 1.44 | 8.6 / -1.556 / 6.1 |
+| x4 e176>e135 (ji 147, 0) | 59.1 | 71.8 (0.05, 0.792, 130) | 3 / 1.391 / 9.56 | 3 / 1.404 / 1.09 |
+| x4 e176>e175 (ji 147, 1) | 15.1 | 14.1 (the same point) | 1.5 / 1.638 / 9.66 | 3.1 / 1.638 / 4.19 |
+| x4 e177>e178 (ji 108, 0) | 4.4 | 6.5 | 4.5 / 1.638 / 0.72 | 4.5 / 1.638 / 1.39 |
+| x4 e140>e95 (ji 125, 0 shared) | 5.5 | 15.8 | 4 / -1.599 / 1.9 | 5.9 / -1.638 (-1.485) / 3.09 |
+| x4 e140>e139 (ji 125, 1) | 3.4 | 61 (0.02, 0, 61) | 3.9 / -1.638 / 0.55 | 6 / -1.43 (-1.506) / 8.27 |
+| x4 e135>e18 (ji 28, 0) | 6.7 | 64 (0.23, 0, 64) | 6.8 / 1.499 / 6.91 | 6.8 / 1.229 / 2.96 |
+| x4 e135>e136 (ji 28, 1) | 6.5 | 11 (v 0) | 2.9 / 1.516 / 5.06 | 2.9 / 1.491 / 2.85 |
+
+- Observed:
+  - Stages 2-3 moved P8 on 14 of 15 bands, all up. Only x4 e175 held
+    (15.1 to 14.1).
+  - The named worst points: cross e21 19 to 67; x4 e175 15 to 14.1;
+    x4 e135 59 to 71.8.
+  - Nine of the fix's worst points read v 0 (the band's own pulse off)
+    with G 11-128.
+  - The drawn P3 fell below the model's on 7 bands.
+  - fanmax rose on e175 (1.9 to 4.9), e95 (2.2 to 5.2), e139 (1 to
+    2.8) and e135 (11.3 to 11.9).
+- **Most of it is rule (b), by design** (`p8max.mjs` on the e30 dumps;
+  centreline pixels, dnow < 0.5 px, inside the fan's foot where d
+  differs from dw).
+  - 467 of the 561 off-crest centreline pixels (83%) sit within 4/255
+    of the max over bands: a sibling band's crest lights them.
+    `fan.mjs`'s P8 model reads one band's own pulse; it predates (b).
+  - P8 has to be re-measured against the max over bands before it can
+    pass or fail the fix.
+  - The v-0 worst points fit this. Inferred, untested: the P3 drop is
+    the same effect.
+  - 94 pixels remain. 70 of them are ji 28 band 0, where G sits above
+    even the max, by up to 69 (k4 (146, 148): G 200, own 126.2, max
+    130.9). Candidates, untested: the strip pad and rule (a)'s segment
+    flip.
+
+| record, band | centreline px | off own crest > 4 (max) | of them within 4 of the max |
+|---|---|---|---|
+| ji 33, 0 | 252 | 78 (125.3) | 67 |
+| ji 33, 1 | 252 | 19 | 17 |
+| ji 28, 0 | 372 | 149 (73.8) | 79 |
+| ji 28, 1 | 247 | 60 | 58 |
+| ji 147, 0 / 1 | 66 / 117 | 13 / 27 | 13 / 27 |
+| ji 149, 0 shared / 1 | 904 / 666 | 118 / 97 | 114 / 92 |
+| ji 125, 0 / 1 | 120 / 120 | 0 / 0 | - |
+
+ji 108 has no centreline pixels inside the foot.
+
+- **P10** (`bands.mjs`): every stand reads hook == model, with max
+  |dDistJ| 0.0000. Bands per stand: fork 0, cross 2, src 2, four 2,
+  x4 9. x4 keeps two lit arms with no band, e134 (node_378) and e79
+  (node_386), in both builds. Both are S4's.
+- **The A/B against master c4a9dd60** (`ab_s3b.mjs`, `phw=0`, clocks
+  pinned): **PASS, 0 px outside banded records** on every frame.
+  - The same-build control read 0 px.
+  - Pixels that differ, t0 / t1 (max /255): fork 0 / 0; cross 730 /
+    703 (92); src 608 / 547 (106); four 534 / 749 (59); x4 2958 / 3617
+    (131).
+- **P8 on the arms** (`p8live.mjs`): **PASS on all five stands**, 0
+  extrema over 2/255 anywhere. max |dv| /255 (extrema): fork 0.0 (2),
+  cross 0.0 (3), src 1.1 (7; e151 at t100, v 0.051, G 12), four 0.3 (7;
+  e176 at t100, v 0.143, G 36), x4 0.5 (16; e176 at t100.45, v 0.900,
+  G 229).
+- **`npm test`**: exit 0 on d540fabc's tree. tsc passed on all three
+  projects, then Vitest: 213 files passed and 2 skipped; 2839 tests
+  passed and 9 skipped (`out/s3/npm_test.txt`). The batch itself
+  exited 1, but only from the false "!! exit" after its `$env:` lines
+  (ledger item below).
+- The cold compile of junction-field and its explore variant is not
+  timed: `k320_slim.test.ts` measures program text, and builds no
+  program.
+
+**The sheets** (`.claude/probes/K1139/out/s3/sheets/`, tracked). No
+labels are drawn; the file names and this list say what is where.
+- `s3b_fix_{cross,src,x4}.png`: eight phases a row. The rows are before
+  S3b (the main checkout's `out/s3b/today/`), S3b (`out/s3b/s3b/`) and
+  the fix (`out/s3/after/`).
+- `s3b_fix_seams_cross.png` (ji 33) and `s3b_fix_seams_x4.png` (ji 28,
+  ji 147, ji 149, three rows each): 48 CSS px at 4x, centred on the
+  junction, phases t0, t2, t4 and t6. Each record's rows are before
+  S3b, S3b and the fix. ji 108 and ji 125 lie outside the x4 strips'
+  clip.
+- `crop2x_ramp_<stand>_ji<ji>_t<k>_c<c>.png`: the worst compression ramp
+  per record, the fix's n frame beside its debug view 5, 48 CSS px at
+  2x: cross ji 33 (c 1.286), ji 28 (1.286), ji 147 (1.905), ji 149
+  (1.536). ji 125 has no ramp.
+- `crop2x_ghost_cross_t5.png` and `crop8x_ghost_cross_t5.png`: the t5
+  ghost, n beside d, with band 1's strip edge beside it.
+- `crop2x_crotch_x4_ji28_e156_e25_e30.png`: ji 28's crotch. The columns
+  are far edge 1.56 (kept), 2.5 and 3.0; the rows are t2, t4 and t6.
+- `crop2x_fork_front_cross_ji33.png`: the fork's shared arrival front
+  at cross ji 33, all eight phases. The rows are S3b and the fix.
+  - Observed: S3b's front has a chevron, a V notch between the two
+    bands at t5 and t6.
+  - The fix's front is one round arc about the pivot, with no chevron
+    and no smear.
+  - But at t4 and t5 the fix's lit disc ends at its lower left in a
+    crisp arc, a hard edge where S3b ramps. It shows again in
+    `s3b_fix_seams_cross.png`, the fix row at t4.
+  - This is a finding; it is unattributed.
+- The ji 28 crotch crop's three columns look the same, as the d frames
+  say (0 px from 1.56 to 2.5).
+
+**`pixel_batch_plan.md`** (in the main checkout; not edited) should
+change in two places:
+- the twin and the strip pad: model the cover strips (reach
+  fh + 1.5 pxW), or mask the strip ring, before any GPU-against-twin
+  comparison;
+- P8: measure it against (b)'s max over bands, not one band's own
+  pulse.
+
+**Ledger items** (for the coordinator to file):
+- P8 against the max over bands. 14 of 15 bands read worse under
+  `fan.mjs`'s per-band model; 83% of the off-crest pixels are (b) by
+  design. Re-measure, then attribute the 94 px that remain (70 at ji 28
+  band 0).
+- The twin must model the cover strips (`diag_s3b.mjs:176`). That
+  explains the "1 px ahead" and the t5 ghost.
+- ji 28's GPU-only wedges: the GPU's bare fan is about 16 luma darker
+  than the twin's, and 6055 of the 8915 lie beyond any strip.
+  Unattributed; check it against the offline/GPU fill disagreement at
+  ji 28 (+113 px).
+- The crotch fill's far edge does not bind the wedges: a new fill rule
+  is needed. The fa kink is unreachable.
+- The seam ruling's c misses the arc-true rate and the obliqueness.
+- jump:gpu at cross t7 is unattributed.
+- Stage 2's 3089 px was not reproduced.
+- `scripts/preview.ps1` fails under a long `-Root` (the short root
+  `C:\Users\lsl\AppData\Local\Temp\k1139s3pv` works).
+- `run_locked.ps1` logs a false "!! exit" after `$env:` lines, and the
+  batch then exits 1.
+- A `preview.ps1 -Ref` server stopped by killing its process (TaskStop)
+  skips the script's `finally`, so its temporary worktree stays
+  registered with a `node_modules` junction inside. A plain
+  `git worktree remove --force` on it would follow the junction. This
+  stage's leftover (`k1139s3pv\src-c4a9dd60`) was unlinked first, then
+  removed, the way the script's own `finally` does it.
+- e79 and e134 stay S4's.
+
+**Handle**
+- owner: nobody since 16:25 on 2026-11-04 (stage done); it was claude
+  session 01TnQvxftruF6gxzRe3bigQ6, agent a8280f4d14ebd8ad1.
+- branch: `worktree-agent-a8280f4d14ebd8ad1` at
+  `.claude/worktrees/agent-a8280f4d14ebd8ad1`. last commit: this
+  handoff's; the WIP before it is d540fabc.
+- evidence: `.claude/probes/K1139/` (`diag_an.mjs`, `halfpx.mjs`,
+  `wedge_strip.mjs`, `p8max.mjs`, `crotch_fill.mjs`, `sheets_s3.mjs`,
+  `batch_st3_checks.txt`; `out/s3/` holds the dumps, untracked; its
+  `sheets/` is tracked).
+- next: re-measure P8 against (b)'s max over bands; give the twin the
+  cover strips; attribute ji 28's darker bare fan and the 94 px. All of
+  these come before S4 or a merge.
+- brief: `docs/design/K1139_s3b_fix.md` (Stage 3 and this handoff).
+- env: `npx vite --config
+  .claude/probes/K1139/vite.private-cache.config.ts --port 5620
+  --strictPort --host 127.0.0.1` from the worktree (the node_modules
+  junction, section 7); master on `pwsh scripts/preview.ps1 -Port 5630
+  -Ref c4a9dd60 -Root C:\Users\lsl\AppData\Local\Temp\k1139s3pv`; GPU
+  probes through `run_locked.ps1 -Batch`.
