@@ -527,9 +527,9 @@ Next free ID: K1204.
 - **K1199** · Muse batch 20 (`docs/design/K1199_muse_batch20.md`, drafted by run A): junction and cursive work
   first (K1139 S5, K1186's crops, K1196's timing, K1191's gk, c's v7.2 leftovers), then batch 19's follow-ups
   - owner: nobody since 2026-11-04 22:00 (run 20A queued in the Muse chain after 19F, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `79fec895`
+  - branch: mainline; last commit: `b6c91064`
   - evidence: docs/design/K1199_muse_batch20_run_a.md; the chain in .claude/probes/K1053/ (queue.txt, chain.log)
-  - next: Run A drafts the batch's brief; Claude reviews it, merges K1139 S4 and S4b, then queues runs B to G
+  - next: Run A done; Claude reviews the draft
   - brief: `docs/design/K1199_muse_batch20_run_a.md`
 
 ## Next, in order
