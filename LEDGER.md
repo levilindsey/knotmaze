@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1185.
+Next free ID: K1186.
 
 ## Waiting on Levi
 
@@ -515,14 +515,6 @@ Next free ID: K1185.
   - next: the agent runs Stage 2: a pivot param per band, no winner across bands, a continuous shared/drawing yield, a ramped crotch fill; T stands at 5.54/255 at cross (Claude's look at S3b's 2x crops of t4 and t5). Then Claude looks at its sheets and merges it or briefs the next stage; the __k1139diag hook goes before any merge
   - brief: Stage 2 at the end of `docs/design/K1139_s3b_fix.md` (c3ec166f on the old branch; on the agent's branch after its cherry-pick)
   - env: the brief's section 7 (the node_modules junction), then Resume step 2 (ports 5620-5639)
-- **K1179** · Thread geometry (Levi 11-04: rethink how thread bodies, junction rounds and gaps are built, maybe
-  as a skin on the thread centres). Review (`docs/design/K1179_geometry_review.md`): keep threads and physics,
-  one per-pixel outline rule for both looks, no simulated skin. S1-S1d: K1178 Runs I, K, L, K1184 H (all fail).
-  - owner: nobody since 2026-11-04 14:37 (S1e done in Muse batch 17 run I)
-  - branch: mainline; last commit: `b6174b00`
-  - evidence: docs/design/K1179_geometry_review.md; docs/design/K1179_spike.md; docs/design/K1179_s1b.md; docs/design/K1179_s1c.md; docs/design/K1179_s1d.md; .claude/probes/K1179/
-  - next: S1e done (fail both variants: (i) K=32 and (ii) K=8); Claude reviews it and looks at the plots
-  - brief: Run I of `docs/design/K1184_muse_batch17.md` (Claude's read of S1d, the rule and the criteria); the record it builds on, `docs/design/K1179_s1d.md`
 - **K1184** · Muse batch 17 (`docs/design/K1184_muse_batch17.md`, drafted by run A): runs B-G, plus runs H
   and I (K1179 S1d and S1e), added at Claude's review and run first.
   - owner: nobody since 2026-11-04 14:16 (run I queued as Muse chain run 17I, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
@@ -761,8 +753,8 @@ Every other item below waits on the trigger it names.
   K441's old briefs: ask Levi) after K1058, since a removal can empty node_modules. First copy `k868-s3a`'s
   `.claude/probes/S3a/` scripts to main (its seq13 recordings already are).
 - **K1180** · Form B: let a round's feet run past an arm's root onto the neighbouring arm, so no null band is
-  left there (row 15's class: j124, r 1.967h, 0.274h after K1163's softer gate, ab7cad9a). After K1179's spike
-  (review section 4).
+  left there (row 15's class: j124, r 1.967h, 0.274h after K1163's softer gate, ab7cad9a). K1179's spike ended
+  with no rebuild, so this goes ahead on form B (review section 4).
 
 ## Residuals (known, not fixed)
 
@@ -1991,9 +1983,14 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K1157** · K1040 label pass, a lever for S5's live integration: x,y from K8's SAMP, at most a quarter of the
   moving upload (0.3 of the Pixel's 1.3 ms; needs both tent shaders rewritten and a vertex-to-sample map). S3f2
   dropped one texture: the bytes cost, not the calls (`docs/design/K1040_s3f2_levers.md`).
+- **K1185** · V-pinned rounds, if K1179's one-rule outline is ever revisited: S1e's remaining failure is the
+  probe point on a curved arm (walking the edge at r cot(theta/2) leaves the medial axis), so a successor needs
+  a new rule, a medial correction to q_k or feet placed by centreline arc; its cost is measurable only in a
+  rebuild that walks the renderer's sampled outlines (`docs/design/K1179_s1e.md`, What comes next).
 
 ## Done
 
+- **K1179** · Thread geometry (Levi 11-04: rethink how thread bodies, junction rounds and gaps are built, maybe as a skin on the thread centres). Done in b6174b00 (2026-11-04).
 - **K1178** · Muse batch 16 (runs A-L, `docs/design/K1178_muse_batch16.md`), each through the chain's gate; the open leftovers stay on their own items (K484, K648, K1179). Done in 20453e7c (2026-11-04).
 - **K178** · K79, K99 and K104 private-cache wrappers load the config with loadConfigFromFile, as K1139's tracked copy does. Done in 1a02e2b8 (2026-11-04).
 - **K999** · probes.md's paths narrowed to the probe scripts; K863's trace and data reads no longer carry it. Done in 2b302a3f (2026-11-04).
