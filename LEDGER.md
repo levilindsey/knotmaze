@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1196.
+Next free ID: K1197.
 
 ## Waiting on Levi
 
@@ -512,18 +512,18 @@ Next free ID: K1196.
 - **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate
   correctly across junctions"). S1 to S3b landed (the fix 71eedb94; the Pixel check waits for the
   phone); Levi's looks K1190, leftovers K1191. S4 to S6 next. Notes: `docs/ledger_notes.md`.
-  - owner: claude agent a023a39925efe4816 of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (S4: cycles and self-loops; launched 2026-11-04 18:48, stops by about 20:50)
-  - branch: `worktree-agent-a023a39925efe4816` (`.claude/worktrees/agent-a023a39925efe4816`); the fix's worktree `.claude/worktrees/agent-a8280f4d14ebd8ad1` kept; last commit: `3dbd0be0`
-  - evidence: `.claude/probes/K1139/` (tracked: Stage 4's `*_s4.mjs` probes, `cover_lib.mjs` and `out/s4/{p8,seams,wedge,front,look,sheets}`; the dumps in `out/s4/d/` untracked); the numbers in Stage 4's handoff in `docs/design/K1139_s3b_fix.md`
-  - next: merge S4 after Claude's look at its sheets (`.claude/probes/K1139/out/s4cyc/sheets/`, on the branch); the Pixel batch for S3b's fix and S4 when the phone is awake (`out/s3b/pixel_batch_plan.md` and S4's `out/s4cyc/pixel_batch_plan.md`, under the K1040 phone wrappers); S5 (Levi: straight through, no dim moment) as its own stage; K1190's fixes once Levi answers
-  - brief: `docs/design/K1139_s4_cycles.md` (on the branch); the plan `docs/design/K1139_pulse_junctions.md` section 5
+  - owner: claude agent a90af0fe8b4cf82a5 of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (S4b: the band ridge fade; launched 2026-11-04 20:32, stops by about 22:35); S4's agent stopped at its 2 h cap at 20:28
+  - branch: `worktree-agent-a90af0fe8b4cf82a5` (`.claude/worktrees/agent-a90af0fe8b4cf82a5`), started from S4's `worktree-agent-a023a39925efe4816` (kept, tip `0aaa0dee`); the fix's worktree `.claude/worktrees/agent-a8280f4d14ebd8ad1` kept; last commit: `0aaa0dee`
+  - evidence: `.claude/probes/K1139/` on S4's branch (tracked: `*_cyc.mjs`, `out/s4cyc/` sheets, table, bench and `pixel_batch_plan.md`, `k307/`); S4's numbers in the Handoff of `docs/design/K1139_s4_cycles.md`
+  - next: S4b (node_218's fan band draws the crest without the ridge fade: a step about 0.57 world into cyc e210), then merge S4 and S4b; Claude's look, then Levi's look questions with S4b's sheets (crests vanishing in pairs at a ridge; the dark stretch on long loops, P5 loop 2.07 and preloop 2.45 world; preloop's ridge at dG 8.09 just past the reach 8); the Pixel batch for S3b's fix and S4 when the phone is awake (`out/s3b/pixel_batch_plan.md`, `out/s4cyc/pixel_batch_plan.md`, built from b306333f or later, under the K1040 phone wrappers); S5 (Levi: straight through, no dim moment); K1190's fixes once Levi answers
+  - brief: `docs/design/K1139_s4b_ridge_fade.md` (on S4b's branch) and S4's Handoff in `docs/design/K1139_s4_cycles.md`; the plan `docs/design/K1139_pulse_junctions.md` section 5
   - env: the server `npx vite --config .claude/probes/K1139/vite.private-cache.config.ts --port 5620 --strictPort --host 127.0.0.1` from a worktree (ports 5620-5639; the node_modules junction: `docs/design/K1139_s3b_fix.md` section 7); GPU probes through `.claude/probes/K1139/run_locked.ps1 -Batch`
 - **K1192** · Muse batch 19 (`docs/design/K1192_muse_batch19.md`, drafted by run A): junction work first
   (K1186's flip count, K1182's G1 rim, K1191's examinations), then batch 18's follow-ups
-  - owner: nobody since 2026-11-04 20:12 (runs 19B-19E queued in the Muse chain, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
+  - owner: nobody since 2026-11-04 20:08 (runs 19C-19E queued in the Muse chain, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
   - branch: mainline; last commit: `f657ac15`
   - evidence: docs/design/K1192_muse_batch19.md; the chain in .claude/probes/K1053/ (queue.txt, chain.log)
-  - next: Run B done; Claude reviews it, Run C next
+  - next: Run B done and reviewed (K1186's text applied); Run C next: Claude judges its sheet and flips the rim default; then D and E; Claude applies their item texts and closes K1192 after E
   - brief: `docs/design/K1192_muse_batch19.md`
 
 ## Next, in order
@@ -756,8 +756,11 @@ Every other item below waits on the trigger it names.
   left there (row 15's class: j124, r 1.967h, 0.274h after K1163's softer gate, ab7cad9a). K1179's spike ended
   with no rebuild, so this goes ahead on form B (review section 4).
 - **K1186** · Fill look: hold junction pieces' per-frame choices (fillet layer vote, armReach clamp) while the
-  knot moves and fade them on change, same picture at rest; first count which flip on scripted drags and sweeps
-  and the ink each moves (K1179 review 5c). Muse; Claude judges the look.
+  knot moves, fading them on change, same picture at rest (K1179 review 5c). Counted (19B, f657ac15): drags flip
+  about 1/s, drawn ink median 0, worst 4314 px. Next, Muse crops the worst flips and Claude judges whether they pop, before any fix. Notes: `docs/ledger_notes.md`.
+- **K1196** · K1139 S4's frame bench timed only the start head's one-ended pulses at rest
+  (`out/s4cyc/bench_rest.json` on S4's branch, 7.15 vs 7.10 ms): time two-ended pulses on loops and cycles with
+  a harness that plays moves onto them (numeric, a Muse candidate)
 
 ## Residuals (known, not fixed)
 

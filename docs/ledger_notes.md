@@ -3674,3 +3674,13 @@ Walker modes, Levi's brainstorm (2026-11-03, five messages): guide it, program i
   mud cut. Fixed since: the follower's first step is snare-checked
   (4b1886c7, batch 17 run E); the Snared toast waits for the monster's
   arrival (8ba8dc69, batch 18 run B).
+
+## K1186
+
+Muse batch 19 run B (19B, f657ac15) counted the flips, probes only, in `.claude/probes/K1186/` (`flips.mjs`, `out/summary.md`, the raw dumps; the step PNGs were deleted after tabulation, 302 MB, and come back by rerunning the batch). Stands: seed3 (`?3&am=instant&snd=none&fw=0&phw=0`) and fat11 (`?11&am=instant&snd=none&fw=0&phw=0&tw=0.72&cr=4.5`); per stand three scripted drags, then sweeps of cr 0.25-6 (24 steps) and tw 0.20-0.80 (11 steps), one rebuild per step.
+- Drags: seed3 37 flips over 570 rebuilds (0.99/s), fat11 44 over 392 (0.58/s); 13 of them fillet-vote and 12 reach-bound flips. Most-flipping junctions: seed3 ji116 (72), fat11 ji55 (48).
+- Ink: geometric worst wedge 3177 dev px (cover 2153, reachBound 1532, disc 509); a bare armVote flip moves 0 by construction. Drawn (crop diff minus the non-flip median minus the control median, 4484 and 8641 px): median 0 for every kind on both stands; worst single 4314 px (seed3, reachBound, n = 1).
+- Sweeps flip 65-159 pieces per rebuild knot-wide; their drawn ink is only a full-frame upper bound, since a parameter move redraws the whole knot.
+- Limits: seed3's ji2 drag barely moved its crop; the reach bounds were recomputed from the live `underWindows`, not checked against drawn flank lengths.
+
+Claude's reading: the drawn median sits under the control's noise floor (whole-knot motion of 4484 and 8641 px per step), so the case for the hold-and-fade fix rests on whether the few large flips pop at their junction. Crop the five worst drawn flips (before and after, 3x) and judge them before briefing the fix.
