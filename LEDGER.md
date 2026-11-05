@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1192.
+Next free ID: K1195.
 
 ## Waiting on Levi
 
@@ -309,8 +309,8 @@ Next free ID: K1192.
   defense), steer it live, bend and tilt. Which family first? (`docs/design/K1172_walker_modes.md`; full text:
   `docs/ledger_notes.md`)
 - **K1190** · K1139 Stage 4's look calls (card `docs/asks/K1190.md`; sheets t4, t6 in
-  `.claude/probes/K1139/out/s4/sheets/`): soften the fork front's new arc at ji 33; ji 149's gold edge round
-  again; fill the notch where a pulse turns. Rec: all three (the handoff's proposals 1-3)
+  `.claude/probes/K1139/out/s4/sheets/`): soften the sharp fronts (ji 33, ji 149); smooth ji 33's
+  straight edges; ji 149's gold edge round again; fill the notch. Rec: all four (2 causes to find)
 
 ## In progress
 
@@ -326,11 +326,11 @@ Next free ID: K1192.
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
   Levi to edit instead of drawing all 26 (Levi, 2026-10-26). Muse's prototype parked at abc135e7.
-  - owner: nobody since 2026-11-04 19:35 (merged; agent `a3b2dcbad71e5cbd8` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `d5d0a2c7`
-  - evidence: `.claude/probes/K863/trace/` (J3h: `work31/`, `out31/`, `work31/dbg/*_k1112c.*`, NOTES `## K1112 c`; J3g: `work30/`, `out30/`, NOTES `## K1119`); Drive `K863/` (v7.0: `*_v70.svg`); Levi's template `out25/cursive_template.svg`; the full file list in `docs/ledger_notes.md` `## K863`
-  - next: J3i runs K1112's cusp-entry rule for every low exit (v7.2); then Levi looks at c's v7.2 sheet and the cusp sheet; K1119's look in its own stage
-  - brief: `docs/design/K1112_cursive_j3h.md` on the J3h branch; J3g's Handoff in `docs/design/K1119_cursive_j3g.md`
+  - owner: claude agent a2d2f19ad8f0a41d7 of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (J3i: K1112's cusp-entry rule for every low exit, v7.2; launched 2026-11-04 about 19:35, stops by about 21:35)
+  - branch: `worktree-agent-a2d2f19ad8f0a41d7` (`.claude/worktrees/agent-a2d2f19ad8f0a41d7`); J3h's worktree `.claude/worktrees/agent-a3b2dcbad71e5cbd8` kept (merged at d5d0a2c7); last commit: `2da6e2a1`
+  - evidence: `.claude/probes/K863/trace/` (J3i: `work32/`, `out32/`, `work32/dbg/*_k1112cusp.*`, NOTES `## K1112 cusp`; J3h: `work31/`, `out31/`, `work31/dbg/*_k1112c.*`, NOTES `## K1112 c`; J3g: `work30/`, `out30/`, NOTES `## K1119`); Drive `K863/` (v7.0: `*_v70.svg`; v7.1: `c_v71.svg`, `cursive_v71_words.svg`); Levi's template `out25/cursive_template.svg`; the full file list in `docs/ledger_notes.md` `## K863`
+  - next: J3i runs (v7.1, c's exit port, failed the seam gate by 4); then Claude looks at its sheets and merges it; Levi looks at c's v7.2 sheet and the cusp sheet; K1119's look in its own stage; then the next exit, g
+  - brief: `docs/design/K1112_cursive_j3i.md` (on J3i's branch); J3h's Handoff in `docs/design/K1112_cursive_j3h.md`
 - **K114** · Gameplay round 2, designed in
   `docs/design/K80_gameplay_additions.md` section R: burn race, cut
   verb, beat rider, spider, Pluck Hero MVP. Levi took the recs (calls
@@ -512,19 +512,26 @@ Next free ID: K1192.
 - **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate
   correctly across junctions"). S1 to S3b landed (the fix 71eedb94; the Pixel check waits for the
   phone); Levi's looks K1190, leftovers K1191. S4 to S6 next. Notes: `docs/ledger_notes.md`.
-  - owner: nobody since 2026-11-04 18:16 (Stage 4 merged; the S4 brief is being written, claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline (the fix's worktree `.claude/worktrees/agent-a8280f4d14ebd8ad1` kept); last commit: `71eedb94`
+  - owner: claude agent a023a39925efe4816 of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (S4: cycles and self-loops; launched 2026-11-04 18:48, stops by about 20:50)
+  - branch: `worktree-agent-a023a39925efe4816` (`.claude/worktrees/agent-a023a39925efe4816`); the fix's worktree `.claude/worktrees/agent-a8280f4d14ebd8ad1` kept; last commit: `3dbd0be0`
   - evidence: `.claude/probes/K1139/` (tracked: Stage 4's `*_s4.mjs` probes, `cover_lib.mjs` and `out/s4/{p8,seams,wedge,front,look,sheets}`; the dumps in `out/s4/d/` untracked); the numbers in Stage 4's handoff in `docs/design/K1139_s3b_fix.md`
-  - next: Levi's look calls (K1190); the Pixel batch (`.claude/probes/K1139/out/s3b/pixel_batch_plan.md`, against 71eedb94, under the K1040 phone wrappers); S4, loops and cycles (plan section 5: kPulseV's two-ended form, T6/T7, bands on cycle arms e79/e134), from a new brief
-  - brief: `docs/design/K1139_pulse_junctions.md` section 5 (S4-S6); the fix's record: Stage 4's handoff in `docs/design/K1139_s3b_fix.md`
+  - next: merge S4 after Claude's look at its sheets (`.claude/probes/K1139/out/s4cyc/sheets/`, on the branch); the Pixel batch for S3b's fix and S4 when the phone is awake (`out/s3b/pixel_batch_plan.md` and S4's `out/s4cyc/pixel_batch_plan.md`, under the K1040 phone wrappers); S5 (Levi: straight through, no dim moment) as its own stage; K1190's fixes once Levi answers
+  - brief: `docs/design/K1139_s4_cycles.md` (on the branch); the plan `docs/design/K1139_pulse_junctions.md` section 5
   - env: the server `npx vite --config .claude/probes/K1139/vite.private-cache.config.ts --port 5620 --strictPort --host 127.0.0.1` from a worktree (ports 5620-5639; the node_modules junction: `docs/design/K1139_s3b_fix.md` section 7); GPU probes through `.claude/probes/K1139/run_locked.ps1 -Batch`
 - **K1189** · Muse batch 18 (`docs/design/K1189_muse_batch18.md`, drafted by run A): Run F turns
   K292's corner marks on, then B to E (K782 toast, K711 chase tap, K1187 burn, K1188 preview.ps1)
   - owner: nobody since 2026-11-04 17:22 (runs 18F, then 18B-18E queued in the Muse chain, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `0a776aa0`
+  - branch: mainline; last commit: `222452e3`
   - evidence: `docs/design/K1189_muse_batch18.md`; the chain in `.claude/probes/K1053/` (queue.txt, chain.log)
-  - next: Run D done; Claude reviews it (no stand in seeds 1-100: crops skipped, K1187 stays open on the tables)
+  - next: Run D done (K1187 closed; Claude scoped its cut to a broken anim run in 222452e3); Run E (K1188) queued; Claude closes K1189 at the pause after 19A
   - brief: `docs/design/K1189_muse_batch18.md`
+- **K1192** · Muse batch 19 (`docs/design/K1192_muse_batch19.md`, drafted by run A): junction work first
+  (K1186's flip count, K1182's G1 rim, K1191's examinations), then batch 18's follow-ups
+  - owner: nobody since 2026-11-04 19:38 (run 19A queued in the Muse chain after 18E, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
+  - branch: mainline; last commit: `e245002a`
+  - evidence: `docs/design/K1192_muse_batch19_run_a.md`; the chain in `.claude/probes/K1053/` (queue.txt, chain.log)
+  - next: Run A drafts the batch's brief; Claude reviews it and queues runs B-G
+  - brief: `docs/design/K1192_muse_batch19_run_a.md`
 
 ## Next, in order
 
@@ -1683,12 +1690,13 @@ Every other item below waits on the trigger it names.
   old history back (Levi 11-04 dropped K1166).
 - **K1182** · The fill rim meets the flank tips with a tangent break (G0 only:
   `src/render/ribbon/rim_curve.ts`, a quadratic); a biarc would make it G1 (K1179 review sections 2-3).
-- **K1187** · Fire with breaking runs: a run that breaks behind the moving dot keeps its unswept stretch until
-  the dot arrives (fabric_maze_renderer.ts syncBroken); since e5e75477 (K711 b) that stretch draws unburnt even
-  where the fire reached it. Rare.
 - **K1191** · K1139 Stage 4 leftovers (handoff in `docs/design/K1139_s3b_fix.md`): ji 147's 52 GPU wedges; the
   full model's 12/6/11 threshold flips; no arc-true tau rate or obliqueness in the classifier; unexamined: ji
   147's unlit arm 1, records 2129 and 2668's overlapping fans
+- **K1193** · Cursive c (v7.1, J3h): 14 of the 26 c joins sit at the 10 u bound of c's exit port
+  (`docs/design/K1112_cursive_j3h.md`, Handoff)
+- **K1194** · Cursive v7.0: c's lead-in is rough FAIL in c-initial words (facet 0.0098), and the er and es
+  solves stop at MAXFEV 3000 (`docs/design/K1112_cursive_j3h.md`, Handoff)
 
 ## Approved, to schedule (2026-10-11)
 
@@ -1993,6 +2001,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1187** · Fire with breaking runs: a broken anim run's unswept stretch draws its burn again (Muse batch 18 run D; Claude scoped the cut to a broken run in 222452e3). Done in 0a776aa0 (2026-11-04).
 - **K292** · the panel's corner marks and key line show for everyone, Seed row marked too (Levi 2026-11-04: yes as shown). Done in 38116577 (2026-11-04).
 - **K1184** · Muse batch 17 (runs B-G: K1183 rules file, K711 b, K737 fire piece, K782 follower, K188 restart, K292 dog-ears gated for the look) reviewed by Claude. Done in 06a41d1d (2026-11-04).
 - **K1183** · .claude/rules/render-field.md covers src/render/field/ and test/render/field/ with narrow paths, distilling only the binding form B and field-scene grammar from the design docs and code headers; no open K1179 question settled. Done in 9ebf6ace (2026-11-04).
