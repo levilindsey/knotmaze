@@ -1,0 +1,30 @@
+# K1139 Stage 3 S3.3: section 5 on the fix (dev server 5620 serving
+# a5698618, whose src is 944bb761's = Stage 2's final code) and the A/B
+# against master c4a9dd60 (S3b; preview on 5630). Same stands verbatim as
+# batch_s3b_after.txt. Order: P8 + P1/P3/P4/P5 (fan full), P10 (bands),
+# the A/B (build/build control first), the strips for the sheets, P8 on
+# the arms (p8live), then npm test from the worktree root.
+$env:K1139_HOST = "http://127.0.0.1:5620"
+$env:K1139_INJECT = $null
+node fan.mjs fork out/s3/after/fan_fork.json full
+node fan.mjs cross out/s3/after/fan_cross.json full
+node fan.mjs src out/s3/after/fan_src.json full
+node fan.mjs four out/s3/after/fan_four.json full
+node fan.mjs x4 out/s3/after/fan_x4.json full
+node bands.mjs fork out/s3/after
+node bands.mjs cross out/s3/after
+node bands.mjs src out/s3/after
+node bands.mjs four out/s3/after
+node bands.mjs x4 out/s3/after
+node ab_s3b.mjs http://127.0.0.1:5630 out/s3/ab
+node strips.mjs cross out/s3/after/cross 8 60
+node strips.mjs src out/s3/after/src 8 60
+node strips.mjs pre4 out/s3/after/x4 8 60 "&pr=8"
+node strips.mjs fork out/s3/after/fork 8 60
+node p8live.mjs fork
+node p8live.mjs cross
+node p8live.mjs src
+node p8live.mjs four
+node p8live.mjs x4
+$env:K1139_HOST = $null
+Push-Location ..\..\..; npm.cmd test *> .claude\probes\K1139\out\s3\npm_test.txt; Write-Output "npm test exit $LASTEXITCODE"; Pop-Location
