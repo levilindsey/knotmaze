@@ -1,0 +1,18 @@
+def: corners 361, FormB build median 30.17 ms (min 29.26), per corner 83.6 us
+fat: corners 0, FormB build median 3.30 ms (min 2.66), per corner 3304.9 us
+ring: corners 45, FormB build median 3.53 ms (min 3.26), per corner 78.5 us
+user_tw42.lightpaper: corners 150, FormB build median 12.90 ms (min 11.35), per corner 86.0 us
+g41_def_tw42: corners 385, FormB build median 31.74 ms (min 31.26), per corner 82.5 us
+g41_def_tw64: corners 302, FormB build median 23.58 ms (min 22.84), per corner 78.1 us
+muse_hash: corners 192, FormB build median 17.38 ms (min 17.15), per corner 90.5 us
+muse_default_tw: corners 320, FormB build median 26.60 ms (min 25.10), per corner 83.1 us
+g41_ring_tw42: corners 51, FormB build median 4.46 ms (min 3.93), per corner 87.5 us
+g41_ring_tw64: corners 41, FormB build median 3.02 ms (min 2.70), per corner 73.6 us
+g41_user_tw42: corners 150, FormB build median 11.50 ms (min 10.47), per corner 76.7 us
+g41_user_tw64: corners 122, FormB build median 9.14 ms (min 8.23), per corner 74.9 us
+def split: baseline (no junctions) 3.11 ms, +V/arm spans (sharp) 11.34 ms, +ball integration 16.80 ms, total 31.26 ms over 361 corners
+muse_hash split: baseline (no junctions) 4.98 ms, +V/arm spans (sharp) 13.11 ms, +ball integration 1.57 ms, total 19.66 ms over 192 corners
+def_drag: 41 frames, build p50 48.09 ms, p95 62.85 ms, max 75.98 ms; per-corner p95 0.1736 ms
+def_flow: 41 frames, build p50 45.15 ms, p95 68.71 ms, max 71.01 ms; per-corner p95 0.1914 ms
+muse_drag: 41 frames, build p50 24.83 ms, p95 33.38 ms, max 43.99 ms; per-corner p95 0.1739 ms
+muse_flow: 41 frames, build p50 18.70 ms, p95 28.56 ms, max 31.33 ms; per-corner p95 0.1535 ms

@@ -1,0 +1,100 @@
+def: build 80.3 ms, corners 361/386 (null 25, not exposed 29, fold sites 63, sharp joins 16, no-V diag 0), min k*h -21.7223 (cusps 108), small rounds 63 (in null band 61), foot gap max 0.2369 devpx, foot jump max 7.6916 deg (over gate 19)
+fat: build 15.5 ms, corners 0/0 (null 0, not exposed 0, fold sites 0, sharp joins 0, no-V diag 0), min k*h Infinity (cusps 0), small rounds 0 (in null band 0), foot gap max 0.0000 devpx, foot jump max 0.0000 deg (over gate 0)
+ring: build 6.9 ms, corners 45/52 (null 7, not exposed 4, fold sites 11, sharp joins 3, no-V diag 0), min k*h -0.6448 (cusps 15), small rounds 8 (in null band 8), foot gap max 0.2495 devpx, foot jump max 7.1719 deg (over gate 2)
+user_tw42.lightpaper: build 21.0 ms, corners 150/164 (null 14, not exposed 7, fold sites 38, sharp joins 8, no-V diag 0), min k*h -24.4822 (cusps 46), small rounds 15 (in null band 15), foot gap max 1.0807 devpx, foot jump max 6.2632 deg (over gate 5)
+g41_def_tw42: build 47.8 ms, corners 385/386 (null 1, not exposed 5, fold sites 68, sharp joins 9, no-V diag 0), min k*h -31.9194 (cusps 102), small rounds 19 (in null band 19), foot gap max 0.8717 devpx, foot jump max 7.3019 deg (over gate 13)
+g41_def_tw64: build 41.1 ms, corners 302/386 (null 84, not exposed 41, fold sites 64, sharp joins 18, no-V diag 0), min k*h -64.1065 (cusps 103), small rounds 82 (in null band 80), foot gap max 1.1980 devpx, foot jump max 8.9237 deg (over gate 19)
+muse_hash: build 32.5 ms, corners 192/342 (null 150, not exposed 43, fold sites 40, sharp joins 26, no-V diag 0), min k*h -54.0955 (cusps 82), small rounds 109 (in null band 102), foot gap max 0.2243 devpx, foot jump max 180.0000 deg (over gate 11)
+muse_default_tw: build 40.0 ms, corners 320/342 (null 22, not exposed 15, fold sites 46, sharp joins 14, no-V diag 0), min k*h -37.1950 (cusps 119), small rounds 47 (in null band 47), foot gap max 0.3506 devpx, foot jump max 6.1158 deg (over gate 14)
+g41_ring_tw42: build 8.0 ms, corners 51/51 (null 0, not exposed 0, fold sites 14, sharp joins 0, no-V diag 0), min k*h -21.3270 (cusps 10), small rounds 2 (in null band 0), foot gap max 1.2203 devpx, foot jump max 0.3757 deg (over gate 5)
+g41_ring_tw64: build 6.4 ms, corners 41/52 (null 11, not exposed 3, fold sites 9, sharp joins 7, no-V diag 0), min k*h -14.9899 (cusps 18), small rounds 9 (in null band 9), foot gap max 0.8771 devpx, foot jump max 7.2962 deg (over gate 5)
+g41_user_tw42: build 19.2 ms, corners 150/164 (null 14, not exposed 7, fold sites 38, sharp joins 8, no-V diag 0), min k*h -24.4421 (cusps 44), small rounds 15 (in null band 15), foot gap max 1.1049 devpx, foot jump max 6.2639 deg (over gate 5)
+g41_user_tw64: build 18.6 ms, corners 122/163 (null 41, not exposed 12, fold sites 40, sharp joins 11, no-V diag 1), min k*h -51.3387 (cusps 48), small rounds 31 (in null band 28), foot gap max 1.9503 devpx, foot jump max 7.2066 deg (over gate 18)
+
+Worst cusps (min k*h, gate -0.01):
+  g41_def_tw64 j102 arms 0-1 theta 67.2 r 0.105h r0 0.997h minK*h -64.1065 at seq
+  muse_hash j43 arms 0-1 theta 84.2 r 2.712h r0 2.712h minK*h -54.0955 at seq
+  g41_user_tw64 j35 arms 2-3 theta 77.9 r 0.129h r0 1.213h minK*h -51.3387 at seq
+  muse_default_tw j58 arms 0-1 theta 88.7 r 0.056h r0 2.934h minK*h -37.1950 at seq
+  muse_hash j61 arms 1-2 theta 108.4 r 0.181h r0 4.000h minK*h -36.6420 at seq
+  g41_user_tw64 j26 arms 2-0 theta 51.7 r 0.045h r0 0.727h minK*h -35.6117 at seq
+  g41_user_tw64 j66 arms 0-1 theta 76.2 r 0.072h r0 1.177h minK*h -33.2012 at seq
+  g41_def_tw42 j65 arms 2-0 theta 161.6 r 2.000h r0 2.000h minK*h -31.9194 at seq
+  g41_def_tw42 j126 arms 0-1 theta 94.2 r 1.614h r0 1.614h minK*h -28.8269 at seq
+  g41_def_tw42 j48 arms 0-1 theta 93.5 r 0.548h r0 1.593h minK*h -27.2374 at seq
+  g41_def_tw42 j15 arms 0-1 theta 150.9 r 2.000h r0 2.000h minK*h -25.2300 at seq
+  muse_default_tw j60 arms 1-2 theta 93.8 r 0.489h r0 3.205h minK*h -24.4948 at seq
+  user_tw42.lightpaper j12 arms 0-1 theta 168.1 r 2.000h r0 2.000h minK*h -24.4822 at seq
+  g41_user_tw42 j17 arms 1-2 theta 62.0 r 0.418h r0 0.901h minK*h -24.4421 at seq
+  muse_default_tw j22 arms 0-1 theta 92.3 r 0.331h r0 3.121h minK*h -24.2580 at seq
+  def j102 arms 0-1 theta 63.1 r 0.124h r0 0.921h minK*h -21.7223 at seq
+  def j137 arms 1-2 theta 75.7 r 0.114h r0 1.166h minK*h -21.4122 at seq
+  muse_hash j74 arms 1-2 theta 78.2 r 0.267h r0 2.438h minK*h -21.3824 at seq
+  g41_ring_tw42 j4 arms 1-2 theta 145.5 r 2.000h r0 2.000h minK*h -21.3270 at seq
+  muse_default_tw j37 arms 1-2 theta 111.9 r 4.000h r0 4.000h minK*h -20.7178 at seq
+
+Small rounds (r0>=1h, r<0.25h): 400, in null band 384, outside 16
+  def j1 arms 0-1 theta 98.9 r 0.0000h r0 1.754h dVmin 0.7862h rbEff 0.5000h room -0.263h omega 1.000 IN null band (cap band (room<=0.5h))
+  def j3 arms 0-1 theta 99.0 r 0.0000h r0 1.757h dVmin 0.8242h rbEff 0.5000h room -0.318h omega 1.000 IN null band (cap band (room<=0.5h))
+  def j7 arms 0-1 theta 108.1 r 0.0000h r0 2.000h dVmin 0.6640h rbEff 0.5000h room -0.122h omega 1.000 IN null band (cap band (room<=0.5h))
+  def j10 arms 0-1 theta 76.0 r 0.0002h r0 1.171h dVmin 1.1678h rbEff 0.5000h room -0.011h omega 1.000 IN null band (cap band (room<=0.5h))
+  def j21 arms 0-1 theta 81.0 r 0.0000h r0 1.282h dVmin 1.0979h rbEff 0.5000h room -0.092h omega 1.000 IN null band (cap band (room<=0.5h))
+  def j22 arms 0-1 theta 97.3 r 0.0015h r0 1.704h dVmin 0.8617h rbEff 0.5000h room -0.026h omega 1.000 IN null band (cap band (room<=0.5h))
+  def j26 arms 0-1 theta 68.8 r 0.0455h r0 1.027h dVmin 1.4966h rbEff 0.5000h room -0.018h omega 1.000 IN null band (cap band (room<=0.5h))
+  def j27 arms 1-2 theta 101.2 r 0.1664h r0 1.828h dVmin 0.7344h rbEff 0.5000h room -0.003h omega 1.000 IN null band (cap band (room<=0.5h))
+  def j28 arms 1-2 theta 108.7 r 0.0000h r0 2.000h dVmin 0.7061h rbEff 0.5000h room -0.105h omega 1.000 IN null band (cap band (room<=0.5h))
+  def j32 arms 1-2 theta 85.9 r 0.0000h r0 1.396h dVmin 1.1314h rbEff 0.5000h room -0.327h omega 1.000 IN null band (cap band (room<=0.5h))
+  def j35 arms 1-2 theta 74.9 r 0.0816h r0 1.148h dVmin 1.2465h rbEff 0.5000h room -0.015h omega 1.000 IN null band (cap band (room<=0.5h))
+  def j36 arms 0-1 theta 105.4 r 0.0134h r0 1.969h dVmin 0.7190h rbEff 0.5000h room -0.036h omega 1.000 IN null band (cap band (room<=0.5h))
+  def j37 arms 0-1 theta 90.1 r 0.2243h r0 1.503h dVmin 1.0843h rbEff 0.5000h room -0.036h omega 1.000 IN null band (cap band (room<=0.5h))
+  def j39 arms 0-1 theta 88.0 r 0.2290h r0 1.449h dVmin 0.7912h rbEff 0.5000h room -0.064h omega 1.000 IN null band (cap band (room<=0.5h))
+  def j41 arms 0-1 theta 93.3 r 0.2492h r0 1.588h dVmin 0.7037h rbEff 0.5000h room -0.038h omega 1.000 IN null band (cap band (room<=0.5h))
+  def j43 arms 0-1 theta 87.1 r 0.0000h r0 1.426h dVmin 1.0540h rbEff 0.5000h room -0.291h omega 1.000 IN null band (cap band (room<=0.5h))
+  def j43 arms 1-2 theta 100.2 r 0.0000h r0 1.793h dVmin 0.8797h rbEff 0.5000h room -0.133h omega 1.000 IN null band (cap band (room<=0.5h))
+  def j44 arms 0-1 theta 94.9 r 0.0000h r0 1.634h dVmin 0.7357h rbEff 0.5000h room -0.201h omega 1.000 IN null band (cap band (room<=0.5h))
+  def j45 arms 2-0 theta 97.6 r 0.1731h r0 1.714h dVmin 0.9724h rbEff 0.5000h room -0.013h omega 1.000 IN null band (cap band (room<=0.5h))
+  def j46 arms 2-0 theta 87.4 r 0.0000h r0 1.434h dVmin 0.9688h rbEff 0.5000h room -0.257h omega 1.000 IN null band (cap band (room<=0.5h))
+  def j47 arms 0-1 theta 94.2 r 0.0000h r0 1.615h dVmin 0.7943h rbEff 0.5000h room -0.030h omega 1.000 IN null band (cap band (room<=0.5h))
+  def j48 arms 0-1 theta 93.5 r 0.0180h r0 1.593h dVmin 0.7922h rbEff 0.5000h room -0.035h omega 1.000 IN null band (cap band (room<=0.5h))
+  def j49 arms 0-1 theta 107.2 r 0.0000h r0 2.000h dVmin 0.7579h rbEff 0.5000h room -0.078h omega 1.000 IN null band (cap band (room<=0.5h))
+  def j50 arms 2-0 theta 108.0 r 0.0000h r0 2.000h dVmin 0.6650h rbEff 0.5000h room -0.151h omega 1.000 IN null band (cap band (room<=0.5h))
+  def j51 arms 0-1 theta 75.0 r 0.0229h r0 1.152h dVmin 1.3825h rbEff 0.5000h room -0.002h omega 1.000 IN null band (cap band (room<=0.5h))
+  def j51 arms 1-2 theta 102.0 r 0.0000h r0 1.851h dVmin 0.6618h rbEff 0.5000h room -0.011h omega 1.000 IN null band (cap band (room<=0.5h))
+  def j52 arms 2-0 theta 115.8 r 0.0000h r0 2.000h dVmin 0.5475h rbEff 0.4791h room -0.208h omega 1.000 IN null band (cap band (room<=0.5h))
+  def j53 arms 0-1 theta 81.2 r 0.0421h r0 1.286h dVmin 1.0847h rbEff 0.5000h room -0.022h omega 1.000 IN null band (cap band (room<=0.5h))
+  def j54 arms 1-2 theta 82.9 r 0.0000h r0 1.326h dVmin 1.1528h rbEff 0.5000h room -0.287h omega 1.000 IN null band (cap band (room<=0.5h))
+  def j57 arms 1-2 theta 82.6 r 0.0989h r0 1.317h dVmin 1.2434h rbEff 0.5000h room -0.057h omega 1.000 IN null band (cap band (room<=0.5h))
+  def j60 arms 2-0 theta 102.3 r 0.0000h r0 1.863h dVmin 0.6696h rbEff 0.5000h room -0.008h omega 1.000 IN null band (cap band (room<=0.5h))
+  def j61 arms 0-1 theta 74.7 r 0.0577h r0 1.144h dVmin 1.2170h rbEff 0.5000h room -0.030h omega 1.000 IN null band (cap band (room<=0.5h))
+  def j66 arms 1-2 theta 97.4 r 0.2226h r0 1.706h dVmin 0.5436h rbEff 0.5000h room 0.816h omega 1.000 OUTSIDE null band (none)
+  def j67 arms 1-2 theta 75.0 r 0.0904h r0 1.151h dVmin 1.3301h rbEff 0.5000h room -0.010h omega 1.000 IN null band (cap band (room<=0.5h))
+  def j67 arms 2-0 theta 87.4 r 0.0188h r0 1.432h dVmin 1.0412h rbEff 0.5000h room -0.008h omega 1.000 IN null band (cap band (room<=0.5h))
+  def j72 arms 1-2 theta 70.3 r 0.0000h r0 1.057h dVmin 1.2920h rbEff 0.5000h room -0.130h omega 1.000 IN null band (cap band (room<=0.5h))
+  def j75 arms 0-1 theta 102.3 r 0.0000h r0 1.863h dVmin 0.8804h rbEff 0.5000h room -0.083h omega 1.000 IN null band (cap band (room<=0.5h))
+  def j79 arms 2-0 theta 88.9 r 0.0000h r0 1.470h dVmin 0.9918h rbEff 0.5000h room -0.175h omega 1.000 IN null band (cap band (room<=0.5h))
+  def j80 arms 1-2 theta 86.6 r 0.0000h r0 1.414h dVmin 1.0734h rbEff 0.5000h room -0.099h omega 1.000 IN null band (cap band (room<=0.5h))
+  def j80 arms 2-0 theta 77.4 r 0.0115h r0 1.201h dVmin 1.2248h rbEff 0.5000h room -0.024h omega 1.000 IN null band (cap band (room<=0.5h))
+
+Worst feet (gate: gap 0.05 devpx, jump 1 deg):
+  muse_hash j155 arms 1-2 foot B gap 0.0000 devpx jump 180.0000 deg
+  muse_hash j155 arms 1-2 foot A gap 0.0000 devpx jump 180.0000 deg
+  muse_hash j156 arms 2-0 foot A gap 0.0000 devpx jump 180.0000 deg
+  muse_hash j73 arms 2-0 foot B gap 0.0000 devpx jump 180.0000 deg
+  muse_hash j156 arms 2-0 foot B gap 0.0000 devpx jump 180.0000 deg
+  muse_hash j73 arms 2-0 foot A gap 0.0000 devpx jump 179.7847 deg
+  g41_user_tw64 j35 arms 2-3 foot B gap 1.9503 devpx jump 0.0000 deg
+  g41_ring_tw42 j4 arms 2-0 foot A gap 1.2203 devpx jump 0.0000 deg
+  g41_def_tw64 j102 arms 0-1 foot B gap 1.1980 devpx jump 8.9237 deg
+  g41_ring_tw42 j9 arms 1-2 foot A gap 1.1734 devpx jump 0.0000 deg
+  g41_user_tw42 j17 arms 1-2 foot B gap 1.1049 devpx jump 0.0000 deg
+  user_tw42.lightpaper j17 arms 1-2 foot B gap 1.0807 devpx jump 0.0000 deg
+  g41_user_tw64 j42 arms 2-0 foot A gap 1.0138 devpx jump 0.0000 deg
+  user_tw42.lightpaper j8 arms 2-0 foot B gap 0.9208 devpx jump 0.0000 deg
+  g41_user_tw42 j8 arms 2-0 foot B gap 0.9204 devpx jump 0.0000 deg
+  g41_ring_tw64 j3 arms 1-2 foot A gap 0.8771 devpx jump 7.2962 deg
+  g41_def_tw42 j48 arms 0-1 foot A gap 0.8717 devpx jump 0.0000 deg
+  g41_def_tw42 j15 arms 2-0 foot B gap 0.8562 devpx jump 0.0000 deg
+  g41_ring_tw42 j1 arms 1-2 foot B gap 0.8496 devpx jump 0.0000 deg
+  g41_user_tw64 j41 arms 3-0 foot B gap 0.8225 devpx jump 7.2066 deg
+
+Hand-off at L: 6358 arm-sides, max tangent jump 0.0000 deg at g41_def_tw42 arm 51 (j16 ei1) side 1 L 4.16h, over 1 deg: 0; position gap 0 by construction (same offset point at L on both sides).

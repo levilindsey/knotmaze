@@ -1,0 +1,382 @@
+[
+ {
+  "recording": "def_drag",
+  "frames": 41,
+  "keptDistinct": 41,
+  "pairs": 40,
+  "pointsCompared": 1678961,
+  "roundCompared": 302873,
+  "exceeded1DevPx": 279,
+  "exceededEdge": 273,
+  "exceededRound": 6,
+  "maxExcessDevPx": 2.854,
+  "buildMsP50": 35.6,
+  "worst": [
+   {
+    "key": "E|60|2|-1|9",
+    "frame": 1,
+    "excessDev": 2.854,
+    "dispDev": 6.499,
+    "skelDev": 3.645
+   },
+   {
+    "key": "E|61|1|1|53",
+    "frame": 1,
+    "excessDev": 2.749,
+    "dispDev": 5.653,
+    "skelDev": 2.904
+   },
+   {
+    "key": "E|60|2|-1|10",
+    "frame": 1,
+    "excessDev": 2.738,
+    "dispDev": 6.496,
+    "skelDev": 3.758
+   },
+   {
+    "key": "E|61|1|1|52",
+    "frame": 1,
+    "excessDev": 2.685,
+    "dispDev": 5.723,
+    "skelDev": 3.037
+   },
+   {
+    "key": "E|60|2|-1|11",
+    "frame": 1,
+    "excessDev": 2.684,
+    "dispDev": 6.572,
+    "skelDev": 3.888
+   },
+   {
+    "key": "E|60|2|-1|12",
+    "frame": 1,
+    "excessDev": 2.627,
+    "dispDev": 6.661,
+    "skelDev": 4.034
+   },
+   {
+    "key": "E|61|1|1|51",
+    "frame": 1,
+    "excessDev": 2.618,
+    "dispDev": 5.809,
+    "skelDev": 3.191
+   },
+   {
+    "key": "E|61|1|1|12",
+    "frame": 31,
+    "excessDev": 2.564,
+    "dispDev": 14.143,
+    "skelDev": 11.579
+   },
+   {
+    "key": "E|61|1|1|13",
+    "frame": 31,
+    "excessDev": 2.502,
+    "dispDev": 14.419,
+    "skelDev": 11.917
+   },
+   {
+    "key": "E|60|2|-1|13",
+    "frame": 1,
+    "excessDev": 2.491,
+    "dispDev": 6.68,
+    "skelDev": 4.189
+   }
+  ],
+  "appear": {
+   "exposure gained (was buried)": 6097,
+   "edge: span grew / arm appeared": 216,
+   "round: window/wedge null (inferred)": 42
+  },
+  "vanish": {
+   "exposure lost (buried)": 6096,
+   "edge: span shrank / arm gone": 294,
+   "round: window/wedge null (inferred)": 63
+  }
+ },
+ {
+  "recording": "def_flow",
+  "frames": 41,
+  "keptDistinct": 41,
+  "pairs": 40,
+  "pointsCompared": 1640885,
+  "roundCompared": 299388,
+  "exceeded1DevPx": 752,
+  "exceededEdge": 750,
+  "exceededRound": 2,
+  "maxExcessDevPx": 5.952,
+  "buildMsP50": 43.7,
+  "worst": [
+   {
+    "key": "E|105|0|-1|7",
+    "frame": 38,
+    "excessDev": 5.952,
+    "dispDev": 13.906,
+    "skelDev": 7.954
+   },
+   {
+    "key": "E|105|0|-1|8",
+    "frame": 38,
+    "excessDev": 5.49,
+    "dispDev": 14.595,
+    "skelDev": 9.105
+   },
+   {
+    "key": "E|63|2|1|8",
+    "frame": 21,
+    "excessDev": 5.208,
+    "dispDev": 14.198,
+    "skelDev": 8.991
+   },
+   {
+    "key": "E|63|0|1|29",
+    "frame": 21,
+    "excessDev": 5.129,
+    "dispDev": 34.155,
+    "skelDev": 29.026
+   },
+   {
+    "key": "E|63|2|-1|11",
+    "frame": 21,
+    "excessDev": 5.115,
+    "dispDev": 17.527,
+    "skelDev": 12.411
+   },
+   {
+    "key": "E|105|0|-1|9",
+    "frame": 38,
+    "excessDev": 4.99,
+    "dispDev": 15.245,
+    "skelDev": 10.256
+   },
+   {
+    "key": "E|63|0|1|32",
+    "frame": 21,
+    "excessDev": 4.989,
+    "dispDev": 37.286,
+    "skelDev": 32.297
+   },
+   {
+    "key": "E|63|0|1|30",
+    "frame": 21,
+    "excessDev": 4.961,
+    "dispDev": 35.074,
+    "skelDev": 30.113
+   },
+   {
+    "key": "E|63|2|-1|13",
+    "frame": 21,
+    "excessDev": 4.915,
+    "dispDev": 19.58,
+    "skelDev": 14.664
+   },
+   {
+    "key": "E|63|0|1|33",
+    "frame": 21,
+    "excessDev": 4.843,
+    "dispDev": 38.234,
+    "skelDev": 33.392
+   }
+  ],
+  "appear": {
+   "exposure gained (was buried)": 36093,
+   "edge: span grew / arm appeared": 2910,
+   "round: window/wedge null (inferred)": 504
+  },
+  "vanish": {
+   "exposure lost (buried)": 35999,
+   "edge: span shrank / arm gone": 2814,
+   "round: window/wedge null (inferred)": 441
+  }
+ },
+ {
+  "recording": "muse_drag",
+  "frames": 41,
+  "keptDistinct": 41,
+  "pairs": 40,
+  "pointsCompared": 667222,
+  "roundCompared": 159452,
+  "exceeded1DevPx": 1013,
+  "exceededEdge": 993,
+  "exceededRound": 20,
+  "maxExcessDevPx": 12.746,
+  "buildMsP50": 22.6,
+  "worst": [
+   {
+    "key": "E|113|0|1|43",
+    "frame": 19,
+    "excessDev": 12.746,
+    "dispDev": 78.696,
+    "skelDev": 65.951
+   },
+   {
+    "key": "E|113|0|1|42",
+    "frame": 19,
+    "excessDev": 12.646,
+    "dispDev": 77.348,
+    "skelDev": 64.702
+   },
+   {
+    "key": "E|113|0|1|41",
+    "frame": 19,
+    "excessDev": 12.547,
+    "dispDev": 75.99,
+    "skelDev": 63.443
+   },
+   {
+    "key": "E|113|0|1|39",
+    "frame": 19,
+    "excessDev": 12.351,
+    "dispDev": 73.219,
+    "skelDev": 60.869
+   },
+   {
+    "key": "E|113|0|1|40",
+    "frame": 19,
+    "excessDev": 12.136,
+    "dispDev": 74.297,
+    "skelDev": 62.161
+   },
+   {
+    "key": "E|113|0|1|37",
+    "frame": 19,
+    "excessDev": 12.053,
+    "dispDev": 70.292,
+    "skelDev": 58.239
+   },
+   {
+    "key": "E|113|0|1|38",
+    "frame": 19,
+    "excessDev": 11.942,
+    "dispDev": 71.498,
+    "skelDev": 59.556
+   },
+   {
+    "key": "E|113|0|1|35",
+    "frame": 19,
+    "excessDev": 11.793,
+    "dispDev": 67.348,
+    "skelDev": 55.555
+   },
+   {
+    "key": "E|113|0|1|36",
+    "frame": 19,
+    "excessDev": 11.67,
+    "dispDev": 68.573,
+    "skelDev": 56.903
+   },
+   {
+    "key": "E|113|0|1|40",
+    "frame": 24,
+    "excessDev": 11.584,
+    "dispDev": 70.506,
+    "skelDev": 58.922
+   }
+  ],
+  "appear": {
+   "exposure gained (was buried)": 4315,
+   "edge: span grew / arm appeared": 884,
+   "round: window/wedge null (inferred)": 273
+  },
+  "vanish": {
+   "exposure lost (buried)": 4399,
+   "edge: span shrank / arm gone": 922,
+   "round: window/wedge null (inferred)": 294
+  }
+ },
+ {
+  "recording": "muse_flow",
+  "frames": 41,
+  "keptDistinct": 41,
+  "pairs": 40,
+  "pointsCompared": 650831,
+  "roundCompared": 154211,
+  "exceeded1DevPx": 1609,
+  "exceededEdge": 1572,
+  "exceededRound": 37,
+  "maxExcessDevPx": 7.392,
+  "buildMsP50": 19.8,
+  "worst": [
+   {
+    "key": "E|109|0|-1|11",
+    "frame": 37,
+    "excessDev": 7.392,
+    "dispDev": 26.126,
+    "skelDev": 18.734
+   },
+   {
+    "key": "E|109|0|-1|13",
+    "frame": 37,
+    "excessDev": 6.964,
+    "dispDev": 29.069,
+    "skelDev": 22.105
+   },
+   {
+    "key": "E|58|2|1|11",
+    "frame": 6,
+    "excessDev": 6.958,
+    "dispDev": 7.077,
+    "skelDev": 0.119
+   },
+   {
+    "key": "E|109|0|-1|12",
+    "frame": 37,
+    "excessDev": 6.939,
+    "dispDev": 27.365,
+    "skelDev": 20.426
+   },
+   {
+    "key": "E|109|0|-1|11",
+    "frame": 27,
+    "excessDev": 6.912,
+    "dispDev": 25.642,
+    "skelDev": 18.73
+   },
+   {
+    "key": "E|109|0|-1|14",
+    "frame": 37,
+    "excessDev": 6.851,
+    "dispDev": 30.629,
+    "skelDev": 23.779
+   },
+   {
+    "key": "E|109|0|-1|15",
+    "frame": 37,
+    "excessDev": 6.823,
+    "dispDev": 32.268,
+    "skelDev": 25.445
+   },
+   {
+    "key": "E|109|0|-1|12",
+    "frame": 27,
+    "excessDev": 6.82,
+    "dispDev": 27.244,
+    "skelDev": 20.424
+   },
+   {
+    "key": "E|58|2|1|11",
+    "frame": 20,
+    "excessDev": 6.504,
+    "dispDev": 6.602,
+    "skelDev": 0.098
+   },
+   {
+    "key": "E|109|0|-1|16",
+    "frame": 37,
+    "excessDev": 6.361,
+    "dispDev": 33.459,
+    "skelDev": 27.098
+   }
+  ],
+  "appear": {
+   "exposure gained (was buried)": 14699,
+   "edge: span grew / arm appeared": 1776,
+   "round: window/wedge null (inferred)": 462
+  },
+  "vanish": {
+   "exposure lost (buried)": 14660,
+   "edge: span shrank / arm gone": 1784,
+   "round: window/wedge null (inferred)": 462
+  }
+ }
+]

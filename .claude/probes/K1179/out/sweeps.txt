@@ -1,0 +1,7 @@
+gate699 coarse (e step 0.005h): ink 0.127 vs 0.125 FAIL at 0.37; boundary maxExcess 0 devpx over 0/125193; corners +3/-1
+gate699 fine (e step 0.00005h): ink 0.0007 vs 0.125 PASS at 0.64205; boundary maxExcess 0 devpx over 0/124965; corners +3/-1
+tee coarse (dc step 0.01): ink 0.148 vs 0.148 FAIL at 2.2300000000000004; boundary maxExcess 0 devpx over 0/109850; corners +2/-1
+tee fine (dc step 0.0001): ink 0 vs 0.148 PASS at 0; boundary maxExcess 0 devpx over 0/14600; corners +0/-0
+ring coarse (dc step 0.01): ink 0.1737 vs 0.174 PASS at -1.6; boundary maxExcess 0 devpx over 0/111866; corners +2/-1
+ring fine (dc step 0.0001): ink 0 vs 0.174 PASS at 0; boundary maxExcess 0 devpx over 0/14800; corners +0/-0
+synthetic arm sweep (boundary gate 1 devpx): ink 0.0508 vs 1 PASS at 61.43239448782706; boundary maxExcess 0.006 devpx over 0/1265424; corners +2/-0

@@ -1,0 +1,142 @@
+{
+ "scenes": [
+  {
+   "scene": "def",
+   "corners": 361,
+   "medianMs": 30.17,
+   "minMs": 29.26,
+   "perCornerUs": 83.6
+  },
+  {
+   "scene": "fat",
+   "corners": 0,
+   "medianMs": 3.3,
+   "minMs": 2.66,
+   "perCornerUs": 3304.9
+  },
+  {
+   "scene": "ring",
+   "corners": 45,
+   "medianMs": 3.53,
+   "minMs": 3.26,
+   "perCornerUs": 78.5
+  },
+  {
+   "scene": "user_tw42.lightpaper",
+   "corners": 150,
+   "medianMs": 12.9,
+   "minMs": 11.35,
+   "perCornerUs": 86
+  },
+  {
+   "scene": "g41_def_tw42",
+   "corners": 385,
+   "medianMs": 31.74,
+   "minMs": 31.26,
+   "perCornerUs": 82.5
+  },
+  {
+   "scene": "g41_def_tw64",
+   "corners": 302,
+   "medianMs": 23.58,
+   "minMs": 22.84,
+   "perCornerUs": 78.1
+  },
+  {
+   "scene": "muse_hash",
+   "corners": 192,
+   "medianMs": 17.38,
+   "minMs": 17.15,
+   "perCornerUs": 90.5
+  },
+  {
+   "scene": "muse_default_tw",
+   "corners": 320,
+   "medianMs": 26.6,
+   "minMs": 25.1,
+   "perCornerUs": 83.1
+  },
+  {
+   "scene": "g41_ring_tw42",
+   "corners": 51,
+   "medianMs": 4.46,
+   "minMs": 3.93,
+   "perCornerUs": 87.5
+  },
+  {
+   "scene": "g41_ring_tw64",
+   "corners": 41,
+   "medianMs": 3.02,
+   "minMs": 2.7,
+   "perCornerUs": 73.6
+  },
+  {
+   "scene": "g41_user_tw42",
+   "corners": 150,
+   "medianMs": 11.5,
+   "minMs": 10.47,
+   "perCornerUs": 76.7
+  },
+  {
+   "scene": "g41_user_tw64",
+   "corners": 122,
+   "medianMs": 9.14,
+   "minMs": 8.23,
+   "perCornerUs": 74.9
+  }
+ ],
+ "split": [
+  {
+   "scene": "def",
+   "corners": 361,
+   "noJunctionsMs": 3.11,
+   "sharpMs": 14.45,
+   "defaultMs": 31.26,
+   "vAndArmsMs": 11.34,
+   "ballMs": 16.8
+  },
+  {
+   "scene": "muse_hash",
+   "corners": 192,
+   "noJunctionsMs": 4.98,
+   "sharpMs": 18.09,
+   "defaultMs": 19.66,
+   "vAndArmsMs": 13.11,
+   "ballMs": 1.57
+  }
+ ],
+ "recordings": [
+  {
+   "recording": "def_drag",
+   "frames": 41,
+   "buildP50Ms": 48.09,
+   "buildP95Ms": 62.85,
+   "buildMaxMs": 75.98,
+   "perCornerP95Ms": 0.1736
+  },
+  {
+   "recording": "def_flow",
+   "frames": 41,
+   "buildP50Ms": 45.15,
+   "buildP95Ms": 68.71,
+   "buildMaxMs": 71.01,
+   "perCornerP95Ms": 0.1914
+  },
+  {
+   "recording": "muse_drag",
+   "frames": 41,
+   "buildP50Ms": 24.83,
+   "buildP95Ms": 33.38,
+   "buildMaxMs": 43.99,
+   "perCornerP95Ms": 0.1739
+  },
+  {
+   "recording": "muse_flow",
+   "frames": 41,
+   "buildP50Ms": 18.7,
+   "buildP95Ms": 28.56,
+   "buildMaxMs": 31.33,
+   "perCornerP95Ms": 0.1535
+  }
+ ]
+}

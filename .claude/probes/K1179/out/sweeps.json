@@ -1,0 +1,93 @@
+[
+ {
+  "name": "gate699 coarse (e step 0.005h)",
+  "steps": 200,
+  "maxInkStep": 0.127,
+  "atParam": 0.37,
+  "gate": 0.125,
+  "pass": false,
+  "maxExcessDev": 0,
+  "overPts": 0,
+  "comparedPts": 125193,
+  "cornerAppear": 3,
+  "cornerVanish": 1
+ },
+ {
+  "name": "gate699 fine (e step 0.00005h)",
+  "steps": 200,
+  "maxInkStep": 0.0007,
+  "atParam": 0.64205,
+  "gate": 0.125,
+  "pass": true,
+  "maxExcessDev": 0,
+  "overPts": 0,
+  "comparedPts": 124965,
+  "cornerAppear": 3,
+  "cornerVanish": 1
+ },
+ {
+  "name": "tee coarse (dc step 0.01)",
+  "steps": 500,
+  "maxInkStep": 0.148,
+  "atParam": 2.2300000000000004,
+  "gate": 0.148,
+  "pass": false,
+  "maxExcessDev": 0,
+  "overPts": 0,
+  "comparedPts": 109850,
+  "cornerAppear": 2,
+  "cornerVanish": 1
+ },
+ {
+  "name": "tee fine (dc step 0.0001)",
+  "steps": 100,
+  "maxInkStep": 0,
+  "atParam": 0,
+  "gate": 0.148,
+  "pass": true,
+  "maxExcessDev": 0,
+  "overPts": 0,
+  "comparedPts": 14600,
+  "cornerAppear": 0,
+  "cornerVanish": 0
+ },
+ {
+  "name": "ring coarse (dc step 0.01)",
+  "steps": 500,
+  "maxInkStep": 0.1737,
+  "atParam": -1.6,
+  "gate": 0.174,
+  "pass": true,
+  "maxExcessDev": 0,
+  "overPts": 0,
+  "comparedPts": 111866,
+  "cornerAppear": 2,
+  "cornerVanish": 1
+ },
+ {
+  "name": "ring fine (dc step 0.0001)",
+  "steps": 100,
+  "maxInkStep": 0,
+  "atParam": 0,
+  "gate": 0.174,
+  "pass": true,
+  "maxExcessDev": 0,
+  "overPts": 0,
+  "comparedPts": 14800,
+  "cornerAppear": 0,
+  "cornerVanish": 0
+ },
+ {
+  "name": "synthetic arm sweep (boundary gate 1 devpx)",
+  "steps": 2095,
+  "maxInkStep": 0.0508,
+  "atParam": 61.43239448782706,
+  "gate": 1,
+  "pass": true,
+  "maxExcessDev": 0.006,
+  "overPts": 0,
+  "comparedPts": 1265424,
+  "cornerAppear": 2,
+  "cornerVanish": 0
+ }
+]
