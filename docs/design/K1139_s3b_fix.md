@@ -263,7 +263,10 @@ end is the next step.
   move.
 - Harness additions: `wedge.mjs <dumpDir> [phases] [ji,...]` (the
   count above, GPU and CPU twin); diag_an gained the AA-rim erosion and
-  AN_SCALE / AN_CROP for panel crops.
+  AN_SCALE / AN_CROP for panel crops; `taujump.mjs <dumpDir> <ji>
+  <phase>` (class a's pairs; re-run at the stop on diag2's cross t4: 166
+  pairs, worst dv 158 at dtau 0.44, d 0.241) and `grid.mjs` (a dump's
+  per-pixel values over a box).
 
 ### fix1 measured (d5fb1f62, 2026-11-04 12:05): it FAILS both checks
 
