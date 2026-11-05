@@ -179,10 +179,10 @@ and no CLAUDE.md, is edited.
 
 Claude to mark the item done:
 
-`node C:\Users\lsl\Repositories\claude-config\tools\ledger.mjs done K1183 --commit <sha8> --what ".claude/rules/render-field.md covers src/render/field/ and test/render/field/ with narrow paths, distilling only the binding form B and field-scene grammar from the design docs and code headers; no open K1179 question settled" --write`
+`node C:\Users\lsl\Repositories\claude-config\tools\ledger.mjs done K1183 --commit <sha8> --what ".claude/rules/render-field.md covers src/render/field/ and test/render/field/ with narrow paths, distilling only the binding form B and field-scene grammar from the design docs and code headers; no open K1179 question settled"`
 
 After the run, update K1184's handle:
-`node C:\Users\lsl\Repositories\claude-config\tools\ledger.mjs handle K1184 --last-commit <sha8> --next "Run B done; Claude reviews it" --write`
+`node C:\Users\lsl\Repositories\claude-config\tools\ledger.mjs handle K1184 --last-commit <sha8> --next "Run B done; Claude reviews it"`
 
 ## Run C - K711 piece (b): a gone run stops drawing burnt
 
@@ -282,7 +282,7 @@ piece)" - and the (d), (e) and (f) leftovers kept, for Claude
 to apply by hand. Then:
 
 After the run, update K1184's handle:
-`node C:\Users\lsl\Repositories\claude-config\tools\ledger.mjs handle K1184 --last-commit <sha8> --next "Run C done; Claude reviews it" --write`
+`node C:\Users\lsl\Repositories\claude-config\tools\ledger.mjs handle K1184 --last-commit <sha8> --next "Run C done; Claude reviews it"`
 
 ## Run D - K737's fire piece: hints stop naming a refused arm
 
@@ -385,7 +385,7 @@ kept hints, the walker modes, the saved attempts and the
 shared mint kept, for Claude to apply by hand. Then:
 
 After the run, update K1184's handle:
-`node C:\Users\lsl\Repositories\claude-config\tools\ledger.mjs handle K1184 --last-commit <sha8> --next "Run D done; Claude reviews it" --write`
+`node C:\Users\lsl\Repositories\claude-config\tools\ledger.mjs handle K1184 --last-commit <sha8> --next "Run D done; Claude reviews it"`
 
 ## Run E - K782's follower piece: the first step checks the snare
 
@@ -486,7 +486,7 @@ untested beat clock and the ring glyph kept, for Claude to
 apply by hand. Then:
 
 After the run, update K1184's handle:
-`node C:\Users\lsl\Repositories\claude-config\tools\ledger.mjs handle K1184 --last-commit <sha8> --next "Run E done; Claude reviews it" --write`
+`node C:\Users\lsl\Repositories\claude-config\tools\ledger.mjs handle K1184 --last-commit <sha8> --next "Run E done; Claude reviews it"`
 
 ## Run F - K188's first piece: a restart drops the confetti
 
@@ -573,7 +573,7 @@ since <sha8>") and the covered spray and the rain's fall
 time kept, for Claude to apply by hand. Then:
 
 After the run, update K1184's handle:
-`node C:\Users\lsl\Repositories\claude-config\tools\ledger.mjs handle K1184 --last-commit <sha8> --next "Run F done; Claude reviews it" --write`
+`node C:\Users\lsl\Repositories\claude-config\tools\ledger.mjs handle K1184 --last-commit <sha8> --next "Run F done; Claude reviews it"`
 
 ## Run G - K292: dog-ears on the panel's design rows
 
@@ -684,10 +684,10 @@ Use ports 5690-5699.
 
 Claude to mark the item done once the sheet is judged:
 
-`node C:\Users\lsl\Repositories\claude-config\tools\ledger.mjs done K292 --commit <sha8> --what "panel design rows carry a top-right dog-ear (params minus DAILY_EXEMPT_KEYS, derived from the lists so K57's review moves them), key line at the panel top; look sheet at .claude/probes/K292/sheet/ judged by Claude <date>" --write`
+`node C:\Users\lsl\Repositories\claude-config\tools\ledger.mjs done K292 --commit <sha8> --what "panel design rows carry a top-right dog-ear (params minus DAILY_EXEMPT_KEYS, derived from the lists so K57's review moves them), key line at the panel top; look sheet at .claude/probes/K292/sheet/ judged by Claude <date>"`
 
 After the run, update K1184's handle:
-`node C:\Users\lsl\Repositories\claude-config\tools\ledger.mjs handle K1184 --last-commit <sha8> --next "Run G done; Claude reviews the batch and closes K1184" --write`
+`node C:\Users\lsl\Repositories\claude-config\tools\ledger.mjs handle K1184 --last-commit <sha8> --next "Run G done; Claude reviews the batch and closes K1184"`
 
 ## Left out on purpose
 
