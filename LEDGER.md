@@ -518,17 +518,17 @@ Next free ID: K1185.
 - **K1179** · Thread geometry (Levi 11-04: rethink how thread bodies, junction rounds and gaps are built, maybe
   as a skin on the thread centres). Review (`docs/design/K1179_geometry_review.md`): keep threads and physics,
   one per-pixel outline rule for both looks, no simulated skin. S1, S1b, S1c: K1178 Runs I, K, L (all fail).
-  - owner: nobody since 2026-11-04 13:47 (S1d queued as Muse batch 17 run H, chain run 17H, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `8df07b54`
+  - owner: nobody since 2026-11-04 14:05 (S1d done in Muse batch 17 run H)
+  - branch: mainline; last commit: `7cefb993`
   - evidence: docs/design/K1179_geometry_review.md; docs/design/K1179_spike.md; docs/design/K1179_s1b.md; docs/design/K1179_s1c.md; .claude/probes/K1179/
-  - next: Muse chain run 17H builds S1d (a round pinned at V in closed form, variants (i) and (ii) beside form B, offline); Claude reviews it and looks at the plots; S2, the phone GPU check, only after a pass
+  - next: S1d done (fail both variants (i) and (ii)); Claude reviews it and looks at the plots
   - brief: Run H of `docs/design/K1184_muse_batch17.md` (Claude's read of S1c, the rule and the criteria); the verdict it builds on, `docs/design/K1179_s1c.md`
 - **K1184** · Muse batch 17 (`docs/design/K1184_muse_batch17.md`, drafted by run A): runs B-G, plus run H
   (K1179 S1d), added at Claude's review and run first.
   - owner: nobody since 2026-11-04 13:47 (run H queued as Muse chain run 17H, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `5549f824`
+  - branch: mainline; last commit: `7cefb993`
   - evidence: `docs/design/K1184_muse_batch17.md`; the chain in `.claude/probes/K1053/` (queue.txt, chain.log)
-  - next: chain run 17H (K1179 S1d) runs first and alone; Claude reviews runs B-G against the code meanwhile, applies the amendments at the quiet point after it, then queues 17B-17G
+  - next: Run H done; Claude reviews runs B-G and queues them
   - brief: `docs/design/K1184_muse_batch17.md`
 
 ## Next, in order
