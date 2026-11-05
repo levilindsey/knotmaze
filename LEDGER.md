@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1179.
+Next free ID: K1184.
 
 ## Waiting on Levi
 
@@ -282,9 +282,6 @@ Next free ID: K1179.
   (K368, 89836d3b)
 - **K1127** · On a narrow phone, the hidden-runs line in the corner panel now wraps in whole phrases (no lone
   'them', no dot at a line's end). Does it read well? Pictures: .claude/probes/K1100/out/k1127/stills/ (360x740 and 320x640, stats off and on; K1100, 22b5ebab)
-- **K144** · Accounts and shared stats, a stretch goal (Levi 10-13). The options doc is done
-  (`docs/design/K144_accounts.md`, 61a24a82). Levi 2026-11-03: Workers + D1, Google sign-in first, results
-  synced first (Q1, Q2; stage 1 is K1168). Q3-Q5 still wait: the sharing switch's words, same-day bands, resume.
 - **K1150** · Under the beat, a new Beat indicator choice: the pulse you have today, a crisp ring that spreads
   from your marker on each beat, or off. Does the ring read well? Pictures: .claude/probes/K804/shots/ (K804,
   4f6ff982)
@@ -308,12 +305,6 @@ Next free ID: K1179.
   - evidence: .claude/probes/K863/trace/ (work30/, out30/, NOTES ## K1119)
   - next: Levi looks at the v7.0 sheets (b/v/w exits, the a/q dip, be/ve/we: v7.0 or e60, the br dip), then the c stage (K1112's next letter)
   - brief: docs/design/K1119_cursive_j3g.md (its Handoff); J3f's in docs/design/K1113_cursive_j3f.md
-- **K1163** · Corner rounding (K1114, 8b436272): the restore keeps a root-gate guard that leaves ten
-  near-straight corners up to 1 px tighter than before the junction rework. Keep it (rec), drop it (the round
-  jumps in size in motion again), or design a softer guard? Card: docs/asks/K1163.md.
-- **K1166** · After the history rewrite (K1164), two things only you can do: send GitHub Support the drafted
-  request so closed PR #1 stops serving the old commits, and reset the laptop's knotmaze copy before its next
-  use. Card: `docs/asks/K1166.md`.
 - **K1172** · Walker modes, Levi's brainstorm (2026-11-03): guide it, program it, a flock, stop them (and a tower
   defense), steer it live, bend and tilt. Which family first? (`docs/design/K1172_walker_modes.md`; full text:
   `docs/ledger_notes.md`)
@@ -518,18 +509,34 @@ Next free ID: K1179.
 - **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate correctly across
   junctions"). S1, S2 done (a4dc218a, 16246c90). Answers: the light splits at a fork (A), runs toward you behind
   you, straight through your junction with no dim moment. S3a-S6 next. Full text: `docs/ledger_notes.md`.
-  - owner: nobody since 2026-11-04 09:05 (S3b done in Muse batch 16 run B)
+  - owner: nobody since 2026-11-04 09:05 (S3b done in Muse batch 16 run B; Claude's look review found seams)
   - branch: mainline; last commit: `df30a7f3`
-  - evidence: `.claude/probes/K1139/` (the scripts and the doc's pictures tracked; other outputs untracked, S2's record in `out/s2/`; the doc's appendix lists the commands)
-  - next: Claude judges the S3b look sheet (.claude/probes/K1139/out/doc/s3b_*.png); then S4, with the Pixel batch (.claude/probes/K1139/out/s3b/pixel_batch_plan.md)
+  - evidence: `.claude/probes/K1139/` (the scripts and the doc's pictures tracked; other outputs untracked, S2's record in `out/s2/`; the doc's appendix lists the commands); Claude's seam crops `out/doc/s3b_seams_cross.png`, `s3b_seams_x4.png`
+  - next: the S3b fix run (blend the crest across the nearest-band switch, plus deviation 2's P8 misses and P10's unbanded lit arms; brief to write), then S4 with the Pixel batch (.claude/probes/K1139/out/s3b/pixel_batch_plan.md)
   - brief: docs/design/K1178_muse_batch16.md (Run B); the plan: docs/design/K1139_pulse_junctions.md
-- **K1178** · Muse batch 16: run A drafts the brief (`docs/design/K1178_muse_batch16_run_a.md`), runs B-G from
-  the draft, after 16J.
-  - owner: nobody since 2026-11-04 03:22 (runs B-G queued as Muse chain runs 16B-16G, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `df30a7f3`
+- **K1178** · Muse batch 16: run A drafts the brief (`docs/design/K1178_muse_batch16_run_a.md`), runs B-I from
+  the draft (Claude added H and I after B), after 16J.
+  - owner: nobody since 2026-11-04 09:58 (16B done; runs H, I, then C-G queued as Muse chain runs 16H, 16I, 16C-16G, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
+  - branch: mainline; last commit: `8211a12e`
   - evidence: `docs/design/K1178_muse_batch16_run_a.md`; the chain in `.claude/probes/K1053/` (queue.txt, chain.log)
-  - next: Run B done; next Run C
+  - next: Run B done; next Run H
   - brief: `docs/design/K1178_muse_batch16.md`
+- **K1179** · Thread geometry (Levi 11-04: rethink how thread bodies, junction rounds and gaps are built, maybe
+  as a skin on the thread centres). Review (`docs/design/K1179_geometry_review.md`): keep threads and physics,
+  one per-pixel outline rule for both looks, no simulated skin. S1 spike: K1178 Run I.
+  - owner: nobody since 2026-11-04 09:58 (review done; S1 queued as Muse chain run 16I, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
+  - branch: mainline; last commit: `25ffd212`
+  - evidence: `docs/design/K1179_geometry_review.md`; `.claude/probes/K1179/review/`
+  - next: S1 (K1178 Run I); if it passes, S2 measures the phone, then the rebuild: G4 with the one outline rule in place of its planned soft blend (the review's plan)
+  - brief: `docs/design/K1178_muse_batch16.md` (Run I)
+- **K1163** · Corner rounding (K1114, 8b436272): the root-gate guard leaves ten near-straight corners up to 1
+  px tight, some with a concave cusp, in the border look (`tlk=border`). Levi 11-04, “Smoother is better”: the
+  softer guard (band scaled by the tip, K1179 review section 4) is K1178 Run H.
+  - owner: nobody since 2026-11-04 09:58 (queued as Muse chain run 16H, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
+  - branch: mainline; last commit: `8b436272`
+  - evidence: `docs/design/K1179_geometry_review.md` section 4; `.claude/probes/K1040/s1/out/s1i/`
+  - next: Run H (Muse chain run 16H), then Claude looks at its sheet and asks Levi with the rows
+  - brief: `docs/design/K1178_muse_batch16.md` (Run H)
 
 ## Next, in order
 
@@ -757,9 +764,12 @@ Every other item below waits on the trigger it names.
 - **K1168** · K144 stage 1: Google sign-in and per-account sync of the daily results, on a Cloudflare Worker +
   D1 (`docs/design/K144_accounts.md` sections 9-10; brief to write). Built and tested locally first; deploying
   needs a Google OAuth client and the Worker + D1 on the Cloudflare account, from Levi.
-- **K1176** · Remove the merged, clean agent worktrees (50 under `.claude/worktrees/` on 2026-11-03; the 10-30
-  hand-off of session bf876705 found 21, and 3 holding closed items' WIP, K372, K578 and K441's old briefs: ask
-  Levi about those) after K1058, since a removal can empty node_modules.
+- **K1176** · Remove the merged, clean agent worktrees (50 on 11-03; 3 hold closed items' WIP, K372, K578 and
+  K441's old briefs: ask Levi) after K1058, since a removal can empty node_modules. First copy `k868-s3a`'s
+  `.claude/probes/S3a/` scripts to main (its seq13 recordings already are).
+- **K1180** · Form B: let a round's feet run past an arm's root onto the neighbouring arm, so no null band is
+  left there (row 15's class: j124, r 1.967h, about 0.2h after K1163's softer gate). After K1179's spike
+  (review section 4).
 
 ## Residuals (known, not fixed)
 
@@ -1692,6 +1702,14 @@ Every other item below waits on the trigger it names.
   `.claude/probes/K332/out/after_k1170.json`). Check what a press of the shown key takes.
 - **K1177** · K907's `scripts/phone_pass/k539_g31.mjs` and `pixdiff_g31.mjs` are only parse-checked, never run
   on the phone: round 2026-10-30's brief (b581f620) left them out. The next K156 round runs each once.
+- **K1181** · The laptop's knotmaze checkout still has the pre-rewrite history (K1164): before its next use
+  there, fetch, then reset to origin/master (after saving any local work); never pull, which would merge the
+  old history back (Levi 11-04 dropped K1166).
+- **K1182** · The fill rim meets the flank tips with a tangent break (G0 only:
+  `src/render/ribbon/rim_curve.ts`, a quadratic); a biarc would make it G1 (K1179 review sections 2-3).
+- **K1183** · No `.claude/rules/` file covers `src/render/field/` (form B and the field scene's lore lives only
+  in design docs): write `render-field.md` with narrow `paths:` and add its `docs/lore_index.md` row (K1179
+  review).
 
 ## Approved, to schedule (2026-10-11)
 
@@ -1708,6 +1726,9 @@ Every other item below waits on the trigger it names.
   enemies score); enemies enter at a third marker (its own icon and placement param, its last run
   closed to you); turns or real time. Builds on K804 dots, K80, K114, K83, K138 one-way runs
   (`docs/design/levi_notes_2026-10-21.md`)
+- **K144** · Accounts and shared stats, a stretch goal (Levi 10-13; `docs/design/K144_accounts.md`, 61a24a82).
+  Levi answered Q1-Q5 on 11-03 and 11-04 (recorded in the doc's Questions section, 12048678): Workers + D1,
+  Google sign-in first, results synced first. Stage 1 is K1168.
 
 ## Ideas (not scheduled)
 
@@ -1990,6 +2011,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1166** · After the history rewrite (K1164), two things only you can do: send GitHub Support the drafted request so closed PR #1 stops serving the old commits, and reset the laptop's knotmaze copy before its next use. Dropped: Levi 11-04: “let's ignore this”: the Support request is not sent; the laptop reset is Residual K1181 now (2026-11-04).
 - **K701** · Section shader lengths rose again, limits now 47,750 / 64,150 characters (K324 s2: +85 each; `test/render/k320_slim.test.ts`). Dropped: a record, not open work: k320_slim.test.ts pins the section shader limits (57,430 and 73,850 today) (2026-11-04).
 - **K511** · K334/K348 note (2026-10-15): K334's pointer queueing is superseded by Levi's correction in 2bcf771; K348's mid-move wait-tap leftover is now intentional for pointers. Dropped: a note, not open work: K334's queueing was superseded by 2bcf771 and K348's leftover is intentional (2026-11-04).
 - **K69** · String mode (`pv=string`) on pre-G2.3 builds drew a 1-px diagonal sliver from the start to the exit marker (`?b.c&pv=string`, 6 moves); G2.3 doesn't show it, never attributed (G2 doc section 7, Follow-ups). Dropped: moot: G2.3 and later never showed the sliver, and since K83 (21a525e) that Graphics draws only the win ring (2026-11-04).
