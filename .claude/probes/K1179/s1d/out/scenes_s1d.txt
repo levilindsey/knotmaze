@@ -1,0 +1,13 @@
+def: corners 361; master 1v raw/vis 11/1 feet 0; v1 raw/vis 0/0 feet 0 small 11 concave 0; v2 raw/vis 0/0 feet 0 small 11 concave 0
+fat: corners 0; master 1v raw/vis 0/0 feet 0; v1 raw/vis 0/0 feet 0 small 0 concave 0; v2 raw/vis 0/0 feet 0 small 0 concave 0
+ring: corners 45; master 1v raw/vis 1/0 feet 0; v1 raw/vis 1/0 feet 0 small 0 concave 0; v2 raw/vis 1/0 feet 0 small 0 concave 0
+user_tw42.lightpaper: corners 150; master 1v raw/vis 4/0 feet 0; v1 raw/vis 1/0 feet 0 small 1 concave 4; v2 raw/vis 1/0 feet 0 small 1 concave 3
+g41_def_tw42: corners 385; master 1v raw/vis 7/0 feet 0; v1 raw/vis 1/0 feet 0 small 4 concave 1; v2 raw/vis 1/0 feet 0 small 4 concave 1
+g41_def_tw64: corners 302; master 1v raw/vis 8/0 feet 0; v1 raw/vis 0/0 feet 0 small 0 concave 3; v2 raw/vis 0/0 feet 0 small 0 concave 3
+muse_hash: corners 192; master 1v raw/vis 4/2 feet 0; v1 raw/vis 1/1 feet 0 small 0 concave 3; v2 raw/vis 1/1 feet 0 small 0 concave 3
+muse_default_tw: corners 320; master 1v raw/vis 8/1 feet 0; v1 raw/vis 0/0 feet 0 small 0 concave 3; v2 raw/vis 0/0 feet 0 small 0 concave 3
+g41_ring_tw42: corners 51; master 1v raw/vis 4/0 feet 0; v1 raw/vis 1/0 feet 0 small 0 concave 0; v2 raw/vis 1/0 feet 0 small 0 concave 0
+g41_ring_tw64: corners 41; master 1v raw/vis 3/2 feet 0; v1 raw/vis 1/1 feet 0 small 0 concave 2; v2 raw/vis 1/1 feet 0 small 0 concave 2
+g41_user_tw42: corners 150; master 1v raw/vis 2/0 feet 0; v1 raw/vis 1/0 feet 0 small 1 concave 4; v2 raw/vis 1/0 feet 0 small 1 concave 3
+g41_user_tw64: corners 122; master 1v raw/vis 11/4 feet 0; v1 raw/vis 0/0 feet 0 small 0 concave 1; v2 raw/vis 0/0 feet 0 small 0 concave 1
+TOTALS master {"fRaw":63,"fVis":10,"feetFail":0,"small":16,"concave":0} v1 {"fRaw":7,"fVis":2,"feetFail":0,"small":17,"concave":21} v2 {"fRaw":7,"fVis":2,"feetFail":0,"small":17,"concave":19}; classes {"master":{"c":{"raw":62,"vis":9},"d":{"raw":1,"vis":1}},"v1":{"s":{"raw":5,"vis":0},"d":{"raw":1,"vis":1},"c":{"raw":1,"vis":1}},"v2":{"s":{"raw":5,"vis":0},"d":{"raw":1,"vis":1},"c":{"raw":1,"vis":1}}}; fallback {"v1":21,"v2":19,"total":2119}; agreement {"v1":{"n":2119,"p50":1.572,"p95":7.98,"max":15.6716,"over1":1260},"v2":{"n":2119,"p50":1.572,"p95":7.9938,"max":15.6716,"over1":1261}}

@@ -1,0 +1,4 @@
+gate699 coarse (e 0.005h): master 0.0848 vs 0.127; v1 1; v2 1
+tee coarse (dc 0.01): master 0.1 vs 0.148; v1 0.1; v2 0.1
+ring coarse (dc 0.01): master 0.116 vs 0.1737; v1 0.116; v2 0.116
+synthetic arm 60deg (2095 steps of 0.005h tip): master 0.034 vs 0.0508; v1 0.034; v2 0.034
