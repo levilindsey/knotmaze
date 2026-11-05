@@ -121,15 +121,6 @@ export const MAX_ROUTE_VERTS = 64;
 // only (junctionField): a strip's own edge is the ribbon's MSAA edge, and
 // the pad keeps the untraveled material out of it.
 export const ROUTE_BAND_PAD = 0.5;
-// K1139 S3b fix: the pulse bands' soft switches (junctionField; the CPU
-// twin is joinery.ts cpuJunctionField). Where two feet of a band (its A
-// and B legs) or two bands sit at nearly the same distance, the crest
-// blends over |d1 - d2| < BAND_SOFT * d1 + one pixel instead of
-// switching; BAND_SEP_LO..HI ramp the fill between two drawing bands in
-// by their feet's separation over d1 + d2.
-export const BAND_SOFT = 3;
-export const BAND_SEP_LO = 0.3;
-export const BAND_SEP_HI = 0.7;
 // Added to a cover strip's aRec (TriFanMesh.pushStrip): the fragment tells a
 // strip from a fan by fract(vRec) and still finds the record at
 // int(vRec + 0.5) (exact in float32 below 2^21 records).
@@ -409,42 +400,22 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
   // on). A shared band draws nothing: its gold block carries the crest
   // through the strips; it still feeds kFanPulseV (debug 5). On a tie
   // a drawing band wins over a shared one.
-  // K1139 S3b fix: three soft rules keep the crest continuous. (1) Each
-  // band keeps its nearest foot on its A leg (tau < 0) and on its B leg:
-  // on the inside of a turn the nearest point jumps from one leg to the
-  // other, so tau (and shift) blend toward the far leg's while the two
-  // distances differ by less than BAND_SOFT * d + one pixel. (2) The
-  // nearest band and one more candidate: where both draw, their crest
-  // and whitening blend toward the second by w2 (0.5 where the two are
-  // equidistant, so the switch has no step). (3) Between two drawing
-  // bands (the pixel on each band's side of the other, their feet apart)
-  // the web outside both bands wears that blended whitening over its
-  // quiet base, rising from band 1's edge to 0.5 midway: before S3b the
-  // composed rows' angular blend whitened that wedge; with the quiet base
-  // alone it read the quiet floor beside whitened arms (the dark wedge).
   int pb = pbase + 1;
   float bDist = 1e20;
-  vec2 bTs = vec2(0.0);
-  vec4 bFoot = vec4(0.0);
+  float bTau = 0.0;
+  float bShift = 0.0;
+  float bCov = 0.0;
   vec4 bR0 = vec4(0.0);
   vec4 bR1 = vec4(0.0);
   bool haveBand = false;
-  float sDist = 1e20;
-  vec2 sTs = vec2(0.0);
-  vec4 sFoot = vec4(0.0);
-  vec4 sR1 = vec4(0.0);
-  bool haveSecond = false;
   for (int r = 0; r < ${MAX_ROUTES}; r++) {
     if (r >= np) break;
     vec4 r0 = jAt(pb);
     vec4 r1 = jAt(pb + 1);
     int nv = int(r0.x + 0.5);
-    float bestA = 1e20;
-    float bestB = 1e20;
-    vec2 tsA = vec2(0.0);
-    vec2 tsB = vec2(0.0);
-    vec4 ftA = vec4(0.0, 0.0, 1.0, 0.0);
-    vec4 ftB = vec4(0.0, 0.0, 1.0, 0.0);
+    float best = 1e20;
+    float tau = 0.0;
+    float shift = 0.0;
     vec4 q0 = jAt(pb + 2);
     for (int k = 0; k < ${MAX_ROUTE_VERTS - 1}; k++) {
       if (k + 1 >= nv) break;
@@ -455,94 +426,43 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
       float u = l2 > 1e-12 ? clamp(dot(w, d) / l2, 0.0, 1.0) : 0.0;
       vec2 off = w - d * u;
       float dd = dot(off, off);
-      if (q0.z + q1.z < 0.0) {
-        if (dd < bestA) {
-          bestA = dd;
-          tsA = mix(q0.zw, q1.zw, u);
-          ftA = vec4(q0.xy + d * u, d);
-        }
-      } else if (dd < bestB) {
-        bestB = dd;
-        tsB = mix(q0.zw, q1.zw, u);
-        ftB = vec4(q0.xy + d * u, d);
+      if (dd < best) {
+        best = dd;
+        tau = mix(q0.z, q1.z, u);
+        shift = mix(q0.w, q1.w, u);
       }
       q0 = q1;
     }
-    float dA = sqrt(bestA);
-    float dB = sqrt(bestB);
-    bool nearA = dA <= dB;
-    float dnow = min(dA, dB);
-    float wf = 0.5 * clamp(1.0 - abs(dA - dB) / (${BAND_SOFT.toFixed(1)} * dnow + pxW), 0.0, 1.0);
-    vec2 ts = nearA ? mix(tsA, tsB, wf) : mix(tsB, tsA, wf);
-    vec4 ft = nearA ? ftA : ftB;
-    bool drw = r1.z < 0.5;
-    bool take = !haveBand || dnow < bDist - 1e-6 ||
-      (dnow <= bDist + 1e-6 && bR1.z >= 0.5 && drw);
-    if (take) {
-      if (haveBand) {
-        haveSecond = true;
-        sDist = bDist;
-        sTs = bTs;
-        sFoot = bFoot;
-        sR1 = bR1;
+    float cov = clamp((reach - sqrt(best)) / pxW, 0.0, 1.0);
+    if (cov > 0.0) {
+      float dnow = sqrt(best);
+      bool take = !haveBand || dnow < bDist - 1e-6 ||
+        (dnow <= bDist + 1e-6 && bR1.z >= 0.5 && r1.z < 0.5);
+      if (take) {
+        haveBand = true;
+        bDist = dnow;
+        bTau = tau;
+        bShift = shift;
+        bCov = cov;
+        bR0 = r0;
+        bR1 = r1;
       }
-      haveBand = true;
-      bDist = dnow;
-      bTs = ts;
-      bFoot = ft;
-      bR0 = r0;
-      bR1 = r1;
-    } else if (!haveSecond || dnow < sDist - 1e-6 ||
-      (dnow <= sDist + 1e-6 && sR1.z >= 0.5 && drw)) {
-      haveSecond = true;
-      sDist = dnow;
-      sTs = ts;
-      sFoot = ft;
-      sR1 = r1;
     }
     pb += 2 + nv;
   }
   if (haveBand) {
-    float bCov = clamp((reach - bDist) / pxW, 0.0, 1.0);
-    float bTau = bTs.x;
     bool inw = bR1.y == 1.0 || bR1.y == 3.0;
     bool hov = bR1.y > 1.5;
     float v = kPulseCrest(bR1.x + bTau, inw, hov, 1.0);
-    if (bR1.z >= 0.5) {
-      kFanPulseV = v * bCov;
-    } else {
+    kFanPulseV = v * bCov;
+    if (bR1.z < 0.5) {
+      vec3 pm = armPaint(rec + 2 + int(bR0.z + 0.5) * stride, -bTau + bShift, true, true);
+      pm = mix(pm, armPaint(rec + 2 + int(bR0.w + 0.5) * stride, bTau + bShift, true, true), smoothstep(-bR0.y, bR0.y, bTau));
       float fa = K_BAND * kPulseCrestQuiet(bR1.x + bTau, inw, hov, 1.0);
-      float f = fa >= 0.999 ? 0.0 : clamp((K_BAND * v - fa) / (1.0 - fa), 0.0, 1.0);
-      float bt = 0.0;
-      if (haveSecond && sR1.z < 0.5) {
-        vec2 qq = sFoot.xy - bFoot.xy;
-        float s1p = bFoot.z * (p.y - bFoot.y) - bFoot.w * (p.x - bFoot.x);
-        float s1q = bFoot.z * qq.y - bFoot.w * qq.x;
-        float s2p = sFoot.z * (p.y - sFoot.y) - sFoot.w * (p.x - sFoot.x);
-        float s2q = sFoot.w * qq.x - sFoot.z * qq.y;
-        if (s1p * s1q > 0.0 && s2p * s2q > 0.0)
-          bt = smoothstep(${BAND_SEP_LO.toFixed(2)}, ${BAND_SEP_HI.toFixed(2)}, length(qq) / max(bDist + sDist, 1e-6));
-        float w2 = 0.5 * clamp(1.0 - (sDist - bDist) / (${BAND_SOFT.toFixed(1)} * bDist + pxW), 0.0, 1.0);
-        float tg = clamp((bDist - reach) / max(bDist + sDist - 2.0 * reach, 1e-6), 0.0, 0.5);
-        w2 = max(w2, bt * tg);
-        bool inw2 = sR1.y == 1.0 || sR1.y == 3.0;
-        bool hov2 = sR1.y > 1.5;
-        float v2 = kPulseCrest(sR1.x + sTs.x, inw2, hov2, 1.0);
-        float fa2 = K_BAND * kPulseCrestQuiet(sR1.x + sTs.x, inw2, hov2, 1.0);
-        float f2 = fa2 >= 0.999 ? 0.0 : clamp((K_BAND * v2 - fa2) / (1.0 - fa2), 0.0, 1.0);
-        v = mix(v, v2, w2);
-        f = mix(f, f2, w2);
-      }
-      float cw = max(bCov, bt);
-      kFanPulseV = v * cw;
-      f *= cw;
-    if (cw > 0.0) {
-      vec3 pm = armPaint(rec + 2 + int(bR0.z + 0.5) * stride, -bTau + bTs.y, true, true);
-      pm = mix(pm, armPaint(rec + 2 + int(bR0.w + 0.5) * stride, bTau + bTs.y, true, true), smoothstep(-bR0.y, bR0.y, bTau));
-      pm = mix(c, pm, bCov);
+      float fb = K_BAND * v;
+      float f = fa >= 0.999 ? 0.0 : clamp((fb - fa) / (1.0 - fa), 0.0, 1.0);
       pm = mix(pm, uKHlPulse.rgb, f);
-      c = pm;
-    }
+      c = mix(c, pm, bCov);
     }
   }
   return c;
