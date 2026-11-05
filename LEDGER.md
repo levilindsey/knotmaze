@@ -509,17 +509,17 @@ Next free ID: K1184.
 - **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate correctly across
   junctions"). S1, S2 done (a4dc218a, 16246c90). Answers: the light splits at a fork (A), runs toward you behind
   you, straight through your junction with no dim moment. S3a-S6 next. Full text: `docs/ledger_notes.md`.
-  - owner: nobody since 2026-11-04 09:05 (S3b done in Muse batch 16 run B; Claude's look review found seams)
-  - branch: mainline; last commit: `df30a7f3`
-  - evidence: `.claude/probes/K1139/` (the scripts and the doc's pictures tracked; other outputs untracked, S2's record in `out/s2/`; the doc's appendix lists the commands); Claude's seam crops `out/doc/s3b_seams_cross.png`, `s3b_seams_x4.png`
-  - next: the S3b fix run (blend the crest across the nearest-band switch, plus deviation 2's P8 misses and P10's unbanded lit arms; brief to write), then S4 with the Pixel batch (.claude/probes/K1139/out/s3b/pixel_batch_plan.md)
-  - brief: docs/design/K1178_muse_batch16.md (Run B); the plan: docs/design/K1139_pulse_junctions.md
+  - owner: agent `abc94fe39cb25940c` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (opus, started 2026-11-04 10:47, 2 h cap ~12:47)
+  - branch: `worktree-agent-abc94fe39cb25940c`, worktree `.claude/worktrees/agent-abc94fe39cb25940c`; last commit: `98595d3a`
+  - evidence: .claude/probes/K1139/ (the scripts and the doc's pictures tracked; other outputs untracked, S2's record in out/s2/; the doc's appendix lists the commands); Claude's seam crops out/doc/s3b_seams_cross.png, s3b_seams_x4.png
+  - next: the S3b fix (seams, dark wedges, P8 points, e79), then S4 with the Pixel batch (.claude/probes/K1139/out/s3b/pixel_batch_plan.md)
+  - brief: docs/design/K1139_s3b_fix.md (on the agent's branch until it merges)
 - **K1178** · Muse batch 16: run A drafts the brief (`docs/design/K1178_muse_batch16_run_a.md`), runs B-I from
   the draft (Claude added H and I after B), after 16J.
-  - owner: nobody since 2026-11-04 09:58 (16B done; runs H, I, then C-G queued as Muse chain runs 16H, 16I, 16C-16G, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
+  - owner: nobody since 2026-11-04 10:54 (16I done; runs C-G queued as Muse chain runs 16C-16G, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
   - branch: mainline; last commit: `9de9006e`
   - evidence: `docs/design/K1178_muse_batch16_run_a.md`; the chain in `.claude/probes/K1053/` (queue.txt, chain.log)
-  - next: Run I done; next Run C
+  - next: Run I done; next Run C (K1175)
   - brief: `docs/design/K1178_muse_batch16.md`
 - **K1179** · Thread geometry (Levi 11-04: rethink how thread bodies, junction rounds and gaps are built, maybe
   as a skin on the thread centres). Review (`docs/design/K1179_geometry_review.md`): keep threads and physics,
@@ -529,14 +529,6 @@ Next free ID: K1184.
   - evidence: docs/design/K1179_geometry_review.md; docs/design/K1179_spike.md; .claude/probes/K1179/
   - next: S1 done (fail); Claude reviews the spike, then S2 (the phone GPU check, 4 ms at 2x) or a rethink
   - brief: `docs/design/K1178_muse_batch16.md` (Run I)
-- **K1163** · Corner rounding (K1114, 8b436272): the root-gate guard leaves ten near-straight corners up to 1
-  px tight, some with a concave cusp, in the border look (`tlk=border`). Levi 11-04, “Smoother is better”: the
-  softer guard (band scaled by the tip, K1179 review section 4) is K1178 Run H.
-  - owner: nobody since 2026-11-04 10:29 (Run H done in Muse batch 16)
-  - branch: mainline; last commit: `ab7cad9a`
-  - evidence: .claude/probes/K1040/s1/out/k1163/; docs/design/K1179_geometry_review.md section 4
-  - next: Claude looks at the sheet (.claude/probes/K1040/s1/out/k1163/sheet.png), then asks Levi with the rows
-  - brief: `docs/design/K1178_muse_batch16.md` (Run H)
 
 ## Next, in order
 
@@ -768,7 +760,7 @@ Every other item below waits on the trigger it names.
   K441's old briefs: ask Levi) after K1058, since a removal can empty node_modules. First copy `k868-s3a`'s
   `.claude/probes/S3a/` scripts to main (its seq13 recordings already are).
 - **K1180** · Form B: let a round's feet run past an arm's root onto the neighbouring arm, so no null band is
-  left there (row 15's class: j124, r 1.967h, about 0.2h after K1163's softer gate). After K1179's spike
+  left there (row 15's class: j124, r 1.967h, 0.274h after K1163's softer gate, ab7cad9a). After K1179's spike
   (review section 4).
 
 ## Residuals (known, not fixed)
@@ -2011,6 +2003,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1163** · Corner rounding's softer root gate (the root band scaled by the tip factor, Muse batch 16 Run H): the ten near-straight cusp corners now match S1f; row 15's corner goes on in K1180. Done in ab7cad9a (2026-11-04).
 - **K1166** · After the history rewrite (K1164), two things only you can do: send GitHub Support the drafted request so closed PR #1 stops serving the old commits, and reset the laptop's knotmaze copy before its next use. Dropped: Levi 11-04: “let's ignore this”: the Support request is not sent; the laptop reset is Residual K1181 now (2026-11-04).
 - **K701** · Section shader lengths rose again, limits now 47,750 / 64,150 characters (K324 s2: +85 each; `test/render/k320_slim.test.ts`). Dropped: a record, not open work: k320_slim.test.ts pins the section shader limits (57,430 and 73,850 today) (2026-11-04).
 - **K511** · K334/K348 note (2026-10-15): K334's pointer queueing is superseded by Levi's correction in 2bcf771; K348's mid-move wait-tap leftover is now intentional for pointers. Dropped: a note, not open work: K334's queueing was superseded by 2bcf771 and K348's leftover is intentional (2026-11-04).
