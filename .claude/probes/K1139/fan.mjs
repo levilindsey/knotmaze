@@ -89,10 +89,13 @@ try {
               const nv = Math.round(rd[pb * 4]);
               if (!(nv >= 2 && nv <= 64)) break; // Not a pulse section (a before build): fall through.
               const bIa = Math.round(rd[pb * 4 + 2]), bIb = Math.round(rd[pb * 4 + 3]);
+              // Stage 2: a 4-texel header (R2 = P, unit norm or 0); S3b had 2.
+              const hn = rd[(pb + 2) * 4] ** 2 + rd[(pb + 2) * 4 + 1] ** 2 + rd[(pb + 2) * 4 + 2] ** 2;
+              const HB = Math.abs(hn - 1) < 1e-3 || hn === 0 ? 4 : 2;
               if (bIa === ia && bIb === ib) {
                 const cand = [];
                 for (let v = 0; v < nv; v++) {
-                  const o = (pb + 2 + v) * 4;
+                  const o = (pb + HB + v) * 4;
                   cand.push([rd[o], rd[o + 1], rd[o + 2]]);
                 }
                 // A true band hugs its junction; garbage texels do not.
@@ -101,7 +104,7 @@ try {
                   rec.source = "record";
                 }
               }
-              pb += 2 + nv;
+              pb += HB + nv;
             }
             if (rec.source === "none") {
               // A shared band on a before build: its gold block is the

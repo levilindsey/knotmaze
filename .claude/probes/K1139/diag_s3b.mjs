@@ -101,13 +101,18 @@ try {
       let pb = base + 1;
       for (let i = 0; i < np; i++) {
         const nv = Math.round(rd[pb * 4]);
+        // Stage 2: a 4-texel header (R2 = P homogeneous, unit norm or 0;
+        // R3 = the side line) before the verts; S3b had 2.
+        const hn = rd[(pb + 2) * 4] ** 2 + rd[(pb + 2) * 4 + 1] ** 2 + rd[(pb + 2) * 4 + 2] ** 2;
+        const HB = Math.abs(hn - 1) < 1e-3 || hn === 0 ? 4 : 2;
+        const piv = HB === 4 ? { code: rd[(pb + 1) * 4 + 3], P: [rd[(pb + 2) * 4], rd[(pb + 2) * 4 + 1], rd[(pb + 2) * 4 + 2]], side: [rd[(pb + 3) * 4], rd[(pb + 3) * 4 + 1], rd[(pb + 3) * 4 + 2]] } : null;
         const verts = [];
         for (let v = 0; v < nv; v++) {
-          const o = (pb + 2 + v) * 4;
+          const o = (pb + HB + v) * 4;
           verts.push([rd[o], rd[o + 1], rd[o + 2], rd[o + 3]]);
         }
-        bands.push({ i, nv, m: rd[pb * 4 + 1], ia: rd[pb * 4 + 2], ib: rd[pb * 4 + 3], distJ: rd[(pb + 1) * 4], flags: rd[(pb + 1) * 4 + 1], shared: rd[(pb + 1) * 4 + 2], verts });
-        pb += 2 + nv;
+        bands.push({ i, nv, m: rd[pb * 4 + 1], ia: rd[pb * 4 + 2], ib: rd[pb * 4 + 3], distJ: rd[(pb + 1) * 4], flags: rd[(pb + 1) * 4 + 1], shared: rd[(pb + 1) * 4 + 2], piv, verts });
+        pb += HB + nv;
       }
       const arms = fp.arms(ji);
       const label = arms.map((a) => ({ chain: a.chain, slot: a.slot, dir: a.dir, dx: a.dx, dy: a.dy }));
