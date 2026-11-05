@@ -60,3 +60,4 @@ files it is about; `docs/lore_index.md` lists every rules file and its paths.
 - `render-explore.md`: the thread reveal (K76): visibility pieces, the explore program, its looks, the stub's two dots (K397)
 - `render-shaders.md`: shader compiles and what they freeze, the warm-up (K307)
 - `render-loader.md`: the inline loader (K313): geometry, worker, boot, sizing traps
+- `render-field.md`: the field: form B, the field scene, the oracle and the label pass (K868, K1040)
