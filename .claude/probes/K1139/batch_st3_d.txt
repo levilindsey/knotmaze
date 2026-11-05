@@ -1,0 +1,3 @@
+# K1139 Stage 3: fresh dumps of (d) (c4f5b9d2 + the hook, with the compression c per band)
+node diag_s3b.mjs cross out\s3\d\cross 8
+node diag_s3b.mjs x4 out\s3\d\x4 8

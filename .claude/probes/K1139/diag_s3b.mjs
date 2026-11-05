@@ -161,6 +161,8 @@ try {
         const out = new Float32Array(4);
         const n = box.w * box.h, NB = 4, PB = 9, PX = NB * PB + 10;
         const f32 = new Float32Array(n * NB * 2);
+        // Stage 3: per band, the pivot's compression c (1 off the pivot) and its mode (0 nearest foot, 1 ray hit, 2 end line).
+        const c32 = new Float32Array(n * NB * 2).fill(-1);
         const u8 = new Uint8Array(n * PX);
         const q = (x) => Math.max(0, Math.min(255, Math.round(x * 255)));
         for (let Y = 0; Y < box.h; Y++) {
@@ -176,6 +178,7 @@ try {
               if (!B) { f32[(i * NB + b) * 2] = 1e9; continue; }
               f32[(i * NB + b) * 2] = B[1];
               f32[(i * NB + b) * 2 + 1] = B[2];
+              if (B.length > 21) { c32[(i * NB + b) * 2] = B[20]; c32[(i * NB + b) * 2 + 1] = B[21]; }
               const ob = o + b * PB;
               u8[ob] = q(B[11]); u8[ob + 1] = q(B[4]); u8[ob + 2] = q(B[13]);
               u8[ob + 3] = q(B[14]); u8[ob + 4] = q(B[15]); u8[ob + 5] = q(B[16]);
@@ -195,10 +198,11 @@ try {
           for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000));
           return btoa(s);
         };
-        return { f32: b64(new Uint8Array(f32.buffer)), u8: b64(u8) };
+        return { f32: b64(new Uint8Array(f32.buffer)), u8: b64(u8), c32: b64(new Uint8Array(c32.buffer)) };
       }, rc.ji, rc.box, pxW, A);
       writeFileSync(join(OUT, `r${rc.ji}_t${kf}.f32`), Buffer.from(res.f32, "base64"));
       writeFileSync(join(OUT, `r${rc.ji}_t${kf}.u8`), Buffer.from(res.u8, "base64"));
+      writeFileSync(join(OUT, `r${rc.ji}_t${kf}.c32`), Buffer.from(res.c32, "base64"));
     }
     console.log(`${STAND} t${kf} done`);
   }
