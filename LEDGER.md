@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1195.
+Next free ID: K1196.
 
 ## Waiting on Levi
 
@@ -518,20 +518,13 @@ Next free ID: K1195.
   - next: merge S4 after Claude's look at its sheets (`.claude/probes/K1139/out/s4cyc/sheets/`, on the branch); the Pixel batch for S3b's fix and S4 when the phone is awake (`out/s3b/pixel_batch_plan.md` and S4's `out/s4cyc/pixel_batch_plan.md`, under the K1040 phone wrappers); S5 (Levi: straight through, no dim moment) as its own stage; K1190's fixes once Levi answers
   - brief: `docs/design/K1139_s4_cycles.md` (on the branch); the plan `docs/design/K1139_pulse_junctions.md` section 5
   - env: the server `npx vite --config .claude/probes/K1139/vite.private-cache.config.ts --port 5620 --strictPort --host 127.0.0.1` from a worktree (ports 5620-5639; the node_modules junction: `docs/design/K1139_s3b_fix.md` section 7); GPU probes through `.claude/probes/K1139/run_locked.ps1 -Batch`
-- **K1189** · Muse batch 18 (`docs/design/K1189_muse_batch18.md`, drafted by run A): Run F turns
-  K292's corner marks on, then B to E (K782 toast, K711 chase tap, K1187 burn, K1188 preview.ps1)
-  - owner: nobody since 2026-11-04 17:22 (runs 18F, then 18B-18E queued in the Muse chain, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `f5035e0d`
-  - evidence: `docs/design/K1189_muse_batch18.md`; the chain in `.claude/probes/K1053/` (queue.txt, chain.log)
-  - next: Run E done; all batch 18 runs are in, Claude reviews and closes K1189
-  - brief: `docs/design/K1189_muse_batch18.md`
 - **K1192** · Muse batch 19 (`docs/design/K1192_muse_batch19.md`, drafted by run A): junction work first
   (K1186's flip count, K1182's G1 rim, K1191's examinations), then batch 18's follow-ups
-  - owner: nobody since 2026-11-04 19:38 (run 19A queued in the Muse chain after 18E, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `dd9b78b8`
-  - evidence: `docs/design/K1192_muse_batch19_run_a.md`; the chain in `.claude/probes/K1053/` (queue.txt, chain.log)
-  - next: Run A done; Claude reviews the draft
-  - brief: `docs/design/K1192_muse_batch19_run_a.md`
+  - owner: nobody since 2026-11-04 20:12 (runs 19B-19E queued in the Muse chain, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
+  - branch: mainline; last commit: `1ac119e5`
+  - evidence: docs/design/K1192_muse_batch19.md; the chain in .claude/probes/K1053/ (queue.txt, chain.log)
+  - next: Runs B-E queued (B first); Claude reviews each run (judges Run C's sheet, applies B, D and E's item texts) and closes K1192 after E
+  - brief: `docs/design/K1192_muse_batch19.md`
 
 ## Next, in order
 
@@ -765,9 +758,6 @@ Every other item below waits on the trigger it names.
 - **K1186** · Fill look: hold junction pieces' per-frame choices (fillet layer vote, armReach clamp) while the
   knot moves and fade them on change, same picture at rest; first count which flip on scripted drags and sweeps
   and the ink each moves (K1179 review 5c). Muse; Claude judges the look.
-- **K1188** · `scripts/preview.ps1` (K1139 Stage 3, not reproduced): fails under a long `-Root`; a `-Ref`
-  server killed outright skips the `finally`, so its temp worktree stays registered with a `node_modules`
-  junction inside, which `git worktree remove --force` may follow. Muse.
 
 ## Residuals (known, not fixed)
 
@@ -1697,6 +1687,9 @@ Every other item below waits on the trigger it names.
   (`docs/design/K1112_cursive_j3h.md`, Handoff)
 - **K1194** · Cursive v7.0: c's lead-in is rough FAIL in c-initial words (facet 0.0098), and the er and es
   solves stop at MAXFEV 3000 (`docs/design/K1112_cursive_j3h.md`, Handoff)
+- **K1195** · `scripts/preview.ps1` (K1188, f5035e0d): a src-* folder that `git worktree remove` half-deletes
+  (a file held open) loses its `.git`, so the fallback keeps it and later -Ref runs of that sha under that
+  -Root are refused as a live run until it is cleared by hand
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2001,6 +1994,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1189** · Muse batch 18: K292 corner marks (38116577), K782 toast (8ba8dc69), K711 chase tap (ee46522e), K1187 burn (0a776aa0, scoped by 222452e3), K1188 preview.ps1 (f5035e0d). Done in f5035e0d (2026-11-04).
+- **K1188** · scripts/preview.ps1 reproduced and fixed: a -Root whose -Ref worktree files pass 260 chars is refused before creating anything (git 2.33: GIT_DIR too big); a killed -Ref server's temp worktree is cleaned by the next run under the same -Root, junction unlinked first, live siblings untouched (Claude read the cleanup: src-* under that root only, any doubt kept). Done in f5035e0d (2026-11-04).
 - **K1187** · Fire with breaking runs: a broken anim run's unswept stretch draws its burn again (Muse batch 18 run D; Claude scoped the cut to a broken run in 222452e3). Done in 0a776aa0 (2026-11-04).
 - **K292** · the panel's corner marks and key line show for everyone, Seed row marked too (Levi 2026-11-04: yes as shown). Done in 38116577 (2026-11-04).
 - **K1184** · Muse batch 17 (runs B-G: K1183 rules file, K711 b, K737 fire piece, K782 follower, K188 restart, K292 dog-ears gated for the look) reviewed by Claude. Done in 06a41d1d (2026-11-04).
