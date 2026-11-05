@@ -255,3 +255,53 @@ State: diagnosis in progress (4.1); no shader change yet.
 - Harness additions: `wedge.mjs <dumpDir> [phases] [ji,...]` (the
   count above, GPU and CPU twin); diag_an gained the AA-rim erosion and
   AN_SCALE / AN_CROP for panel crops.
+
+### fix1 measured (d5fb1f62, 2026-11-04 12:05): it FAILS both checks
+
+fix1 is d5fb1f62's rule: two-leg feet (wf), a second candidate blended
+by w2 = max(soft, bt * tg), the wedge cover cw = max(bCov, bt) (bt =
+the side test times smoothstep(0.3, 0.7, sep)). Dumps
+`batch_fix_fix1.txt` (scratchpad `s3bfix\fix1\{cross,x4}`), same
+harness as diag2.
+
+| seamG (GPU, dbg 5) | S3b (diag2) | fix1 |
+|---|---|---|
+| cross ji 33, t0..t7 | 4, 0, 0, 89, 259, 282, 111, 163 | 96, 0, 0, 171, 955, 1548, 830, 296 |
+| cross ji 33, all | 908 (CPU 1763) | 3896 (CPU 8037) |
+| x4 ji 28 | 1929 | 6213 |
+| x4 ji 125 | 439 | 1771 |
+| x4 ji 147 | 489 | 5128 |
+| x4 ji 149 | 4802 | 11626 |
+| x4 ji 108 | 0 | 0 |
+
+Most of fix1's seams are SAME-BAND (cross t4 932, t5 1540, t6 818 of
+them; fork siblings 4-23 a phase), so they are not the old tau jumps
+moved: the rule itself makes them. The worst switch step at cross fell
+94 -> 41/255. x4 ji 125 / 149 add shared/drawing steps (13-95 and
+48-200 a phase); x4 ji 147's worst switch step reads 97.
+
+| wedgeG (GPU) | S3b | fix1 |
+|---|---|---|
+| cross ji 33, t0..t7 | 608, 0, 0, 1, 202, 399, 669, 1491 | 539, 52, 52, 51, 167, 339, 692, 1537 |
+| cross ji 33, all (CPU) | 3370 (9922) | 3429 (5536) |
+| x4 ji 28 (CPU) | 16130 (6049) | 15549 (4159) |
+| x4 ji 147 (CPU) | 3078 (3369) | 539 (152) |
+
+Cross t5 luma in the wedge: GPU 188.9 against pc 200.5 (S3b 169.9
+against 187.5): lighter, still below both arms.
+
+Hypotheses (inferred, not tested):
+- H1, the same-band seams: the soft rules hold HARD SWITCHES. The side
+  test in bt is binary (s1p s1q > 0 and s2p s2q > 0), and it gates cw
+  and w2's bt * tg term, so kFanPulseV = v * cw steps wherever the test
+  flips outside a band's cover; the second candidate also swaps when
+  the 2nd and 3rd nearest bands tie (x4, forks), stepping v by w2 (v2 -
+  v3) while the nearest band stays the same; and the soft ramps'
+  denominators fall to pxW near a centreline. Attribute by disabling
+  bt (GLSL only: the seams are counted on the GPU) and then wf.
+- H2, the wedge stays dark: the cover whitens the bare quiet base c by
+  f * cw with bt < 1 and tg <= 0.5, so it stays below the composed pc.
+  The fill likely needs the arms' quiet blend as its base (pm), not c.
+- H3, x4 ji 28's GPU wedge count is several times the CPU twin's in
+  both builds: maybe cover-strip pixels in the footprint mask (strip
+  records use their own reach/base); not checked.
