@@ -5,7 +5,7 @@
 # Muse runs); phone_pass reuses <Out>\builds\<sha> when index.html exists, so the passes touch
 # neither git nor the build tools. phone_pass takes no perf lock by design (the phone's timings do
 # not depend on the desktop's load). Masks addresses in everything it prints.
-param([string]$Flip, [int]$Reps = 3, [string[]]$Only = @())
+param([string]$Flip, [int]$Reps = 3, [string[]]$Only = @(), [switch]$AllowChrome)
 if (-not $Flip) { throw '-Flip <sha> is required' }
 $k = 'C:\Users\lsl\Repositories\knotmaze'
 $probes = "$k\.claude\probes\agents"
@@ -31,13 +31,24 @@ Say ($took -join ' / ')
 if (-not ($took -match 'phone lock taken')) { Say 'no phone lock: stopping'; exit 3 }
 $codes = @{}
 try {
+  $first = $true
   foreach ($p in $passes) {
     Say "pass $($p.tag): $($p.base) -> $($p.head), out $($p.out)"
+    # K1142's guard (probes-phone.md): a pass chained after the last one's cleanup finds the Chrome
+    # that pass left in front, so later passes take -AllowChrome with the 30 s window. The first
+    # takes -AllowChrome only when the caller passed it, having checked that the Chrome in front is
+    # the kit's own leftover (dumpsys power's mLastUserActivityTime at an earlier pass's cleanup).
+    # @(...) keeps a one-flag result an array: a bare string would splat as its characters.
+    $guard = @(if (-not $first) { '-AllowChrome', '-QuietS', '30' } elseif ($AllowChrome) { '-AllowChrome' })
+    $first = $false
     # Not captured: run_pass.ps1's header records callers hanging on a piped pass (its servers and
     # watchdog inherit the pipe); the background task's own output file takes the stream instead.
-    pwsh -NoProfile -File "$k\scripts\phone_pass.ps1" -Base $p.base -Head $p.head -Reps $Reps -Out $p.out -WaitReady 15
+    pwsh -NoProfile -File "$k\scripts\phone_pass.ps1" -Base $p.base -Head $p.head -Reps $Reps -Out $p.out -WaitReady 15 @guard
     $codes[$p.tag] = $LASTEXITCODE
     Say "pass $($p.tag): exit $($codes[$p.tag]) (summary: $($p.out)\summary.md)"
+    # A failed pass (not ready, or the watchdog saw a person) ends the batch: the next pass's
+    # Chrome allowance assumes this one finished cleanly. Rerun the rest with -Only.
+    if ($codes[$p.tag] -ne 0) { Say "pass $($p.tag) failed: the later passes stay unrun"; break }
   }
 } finally {
   & "$probes\phone_lock_release.ps1" -Owner $owner | ForEach-Object { Say $_ }
