@@ -294,6 +294,15 @@ export const DAILY_EXEMPT_KEYS = [
 const EXEMPT: ReadonlySet<string> = new Set(DAILY_EXEMPT_KEYS);
 const NOTHING: ReadonlySet<string> = new Set();
 
+// K292: is `key` a design param - a param that rides in the link and the
+// daily's design, not one of the player's exempt playback preferences?
+// The panel marks exactly these rows (Seed and Daily are not params, so
+// they never mark). Derived from the two tables, so K57's review of the
+// exempt list moves the marks with it.
+export function isDesignParam(key: string): boolean {
+  return Object.hasOwn(PARAM_DEFAULTS, key) && !EXEMPT.has(key);
+}
+
 // One param value against another, numbers at link precision (slider
 // float noise is no change).
 function sameValue(a: unknown, b: unknown): boolean {

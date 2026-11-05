@@ -10,6 +10,7 @@ import {
   dailySeed,
   dailyTitle,
   isDailyDesign,
+  isDesignParam,
   LOOK_KEYS,
   linkLookActive,
   matchesDesign,
@@ -580,5 +581,35 @@ describe("link looks (K800)", () => {
       expect(MAZE_PARAM_KEYS as readonly string[]).not.toContain(k);
       expect(DAILY_EXEMPT_KEYS as readonly string[]).toContain(k);
     }
+  });
+});
+
+describe("the design rows (K292)", () => {
+  it("marks a design key, not an exempt key, not a non-param key", () => {
+    // A design param (rides in the link and the daily's design).
+    expect(isDesignParam("gridSize")).toBe(true);
+    expect(isDesignParam("clock")).toBe(true);
+    // Playback preferences: the player's alone, unmarked.
+    expect(isDesignParam("volume")).toBe(false);
+    expect(isDesignParam("background")).toBe(false); // a look (LOOK_KEYS)
+    // Not params at all: Seed is hand-built in the panel, never a param.
+    expect(isDesignParam("seed")).toBe(false);
+    expect(isDesignParam("notAParam")).toBe(false);
+  });
+
+  it("marks exactly the params minus the exempt set (K292's table)", () => {
+    const exempt = new Set<string>(DAILY_EXEMPT_KEYS);
+    const expected = Object.keys(PARAM_DEFAULTS)
+      .filter((k) => !exempt.has(k))
+      .sort();
+    const got = Object.keys(PARAM_DEFAULTS)
+      .filter((k) => isDesignParam(k))
+      .sort();
+    expect(got).toEqual(expected);
+    // The counted table: 269 params, 82 exempt, 187 to mark.
+    expect([Object.keys(PARAM_DEFAULTS).length, exempt.size, got.length]).toEqual([
+      269, 82, 187,
+    ]);
+    for (const k of DAILY_EXEMPT_KEYS) expect(isDesignParam(k)).toBe(false);
   });
 });

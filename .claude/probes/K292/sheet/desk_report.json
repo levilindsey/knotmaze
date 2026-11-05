@@ -1,0 +1,63 @@
+{
+  "tag": "desk",
+  "base": "http://127.0.0.1:5690/",
+  "steps": [
+    {
+      "name": "ready",
+      "waitMs": 6050
+    }
+  ],
+  "checks": [
+    {
+      "name": "marked set in DOM = params minus exempt, less no-row params",
+      "ok": true,
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "counts: 269 params, 82 exempt, 187 marked, 185 DOM keys",
+      "ok": true,
+      "params": 269,
+      "exempt": 82,
+      "marked": 187,
+      "domKeys": 185
+    },
+    {
+      "0": "mazeFabric",
+      "1": "labelGpu",
+      "name": "no-row marked params named (mazeFabric, labelGpu)",
+      "ok": true
+    },
+    {
+      "name": "clock view rows both carry clock (186 rows, 185 keys)",
+      "ok": true,
+      "clockRows": 2,
+      "domRows": 186
+    },
+    {
+      "0": {
+        "cls": "tp-lblv kp-row kp-seed kp-has-help",
+        "design": false,
+        "key": null
+      },
+      "1": {
+        "cls": "tp-lblv tp-v-lst kp-row kp-daily kp-has-help",
+        "design": false,
+        "key": null
+      },
+      "name": "Seed and Daily rows unmarked",
+      "ok": true
+    },
+    {
+      "name": "gate on: key line shown with its words, triangle drawn",
+      "ok": true,
+      "gate": true,
+      "keyText": "The corner mark: this setting is in the link",
+      "keyDisplay": "flex",
+      "triContent": "\"\"",
+      "triBorderTop": "6.66667px"
+    }
+  ],
+  "errors": [],
+  "failed": []
+}

@@ -1,0 +1,28 @@
+{
+  "tag": "off",
+  "base": "http://127.0.0.1:5690/",
+  "steps": [
+    {
+      "name": "ready",
+      "waitMs": 8534
+    }
+  ],
+  "checks": [
+    {
+      "name": "no gate: key line hidden, no triangle (panel as today)",
+      "ok": true,
+      "gate": false,
+      "keyText": "The corner mark: this setting is in the link",
+      "keyDisplay": "none",
+      "triContent": "none",
+      "triBorderTop": "0px"
+    },
+    {
+      "name": "no gate: kp-design classes present but invisible",
+      "ok": true,
+      "rows": 186
+    }
+  ],
+  "errors": [],
+  "failed": []
+}
