@@ -536,7 +536,7 @@ Next free ID: K1209.
   `docs/design/K1208_muse_batch22_run_a.md` after 21G, through the chain (queued as 22A); Claude reviews the
   draft and queues runs B to G (ports 5880-5939)
   - owner: the chain in `.claude/probes/K1053/` (queue.txt, chain.log): batch 22's Run A (22A) after batch 21's 21G, a fresh Muse session, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
-  - branch: mainline
+  - branch: mainline; last commit: `76f3dbc6`
   - evidence: `docs/design/K1208_muse_batch22_run_a.md` (Run A's brief; its 21E to 21G slots say what is still to fill); the chain in `.claude/probes/K1053/` (queue.txt, chain.log)
   - next: Claude fills the Run A brief's 21E, 21F and 21G slots under each run's hold and holds the chain before 22A until 21G is judged; 22A drafts `docs/design/K1208_muse_batch22.md`; Claude reviews it and queues 22B to 22G
   - brief: `docs/design/K1208_muse_batch22_run_a.md`
@@ -779,8 +779,6 @@ Every other item below waits on the trigger it names.
 - **K1196** · Two-ended pulses (K1139 S4) on the desktop, 20F (345a189f, `.claude/probes/K1196/out/`): frame
   p50 at rest 7.50 (cyc e210), 7.82 (loop e102), start head 7.07; in play 7.25, 7.22, 6.95 (spread 0.2, 0.1).
   Other stands, so not S4's own cost: next, those stands on S4's base and head (ABBA), the Pixel if it costs
-- **K1206** · Batch 22's Run A brief: its draft checks each path it cites and quotes numbers from the files
-  (21A's cited seven files 20G never wrote and misread one; fixed in 854823fa)
 - **K1207** · In Muse batch 22 (K1208): remove Run C's switch (`setPulseCoverRamp`, 5e0d5914, off by K1202)
   and make Run D's end window (`setPulseBandEndWindow`, a0f1d634, on by K1203) the only path, re-freezing
   the pins it moves; it also says whether 21D's twin point is a fan pixel (K1203's notes)
@@ -2024,6 +2022,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1206** · Batch 22's Run A brief (`docs/design/K1208_muse_batch22_run_a.md`) has its draft check every path it cites, quote each number from the file that holds it, and list the paths in its report. Done in 76f3dbc6 (2026-11-05).
 - **K1203** · A pulse band ignored its child arm's end window: Run D's fix (a0f1d634, behind a switch) judged on by a GPU positive control, its `table_cyc.mjs` copy reads BAND EXTENT past the arm (notes); K1207 makes the window the only path. Done in a0f1d634 (2026-11-05).
 - **K1202** · cyc e210's kymograph step at the other band's cover edge: Muse's wider ramp (5e0d5914) changed nothing visible at 1x and stays off; the step is the two fields' mismatch, not the edge (K1190's fronts; notes). Done in 5e0d5914 (2026-11-05).
 - **K1199** · Muse batch 20 (`docs/design/K1199_muse_batch20.md`): K1139 S5 (B), K1202's cause (C), K1186's crops (D), K1201's GPU step (E), K1196's timing (F), K1198's Plc1m and ij (G). Done in c3ab0a46 (2026-11-05).
