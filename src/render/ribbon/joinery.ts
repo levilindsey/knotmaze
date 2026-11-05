@@ -681,6 +681,8 @@ export class Joinery {
       let tauP = 0;
       let shiftP = 0;
       let DG_C = 1;
+      let DG_K = -1;
+      let DG_KB = -1;
       let eA0 = v0;
       let eA1 = v0;
       let eB0 = v0;
@@ -703,6 +705,7 @@ export class Joinery {
           tau = J[q0 + 2] + (J[q1 + 2] - J[q0 + 2]) * u;
           shift = J[q0 + 3] + (J[q1 + 3] - J[q0 + 3]) * u;
           side = dx * wy - dy * wx;
+          DG_KB = k;
         }
         const a1x = J[q1] - J[v0];
         const a1y = J[q1 + 1] - J[v0 + 1];
@@ -723,6 +726,7 @@ export class Joinery {
           const qhy = a0y + (a1y - a0y) * us;
           if ((PW * qhx - PX) * (PW * prx - PX) + (PW * qhy - PY) * (PW * pry - PY) > 0) {
             hit = true;
+            DG_K = k;
             tauP = J[q0 + 2] + (J[q1 + 2] - J[q0 + 2]) * us;
             shiftP = J[q0 + 3] + (J[q1 + 3] - J[q0 + 3]) * us;
             // K1139 S3 DIAG: the compression c = |q - P| / |p - P| from the header's P.
@@ -776,7 +780,7 @@ export class Joinery {
         armPaint(rec + 2 + Math.round(J[r0 + 3]) * stride, tau + shift, true, false, tb);
         const pc = [0, 1, 2].map((c) => ta[c] + (tb[c] - ta[c]) * ss);
         DG.bands.push([r, dnow, tau, shift, cov, J[r1 + 2], J[r1], fl, J[r0 + 2], J[r0 + 3], mm,
-          vv, qq, ff, ...pq, ...pc, piv && hit ? DG_C : 1, piv ? (hit ? 1 : 2) : 0]);
+          vv, qq, ff, ...pq, ...pc, piv && hit ? DG_C : 1, piv ? (hit ? 1 : 2) : 0, DG_K, DG_KB, kA, kB]);
       }
       if (cov > 0 && DG) {
         const fl = J[r1 + 1];

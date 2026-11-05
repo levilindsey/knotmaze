@@ -1,0 +1,5 @@
+$env:K1139_HOST = "http://127.0.0.1:5620"
+node diag_s4.mjs cross out\s4\d\cross 8
+node diag_s4.mjs src out\s4\d\src 8
+node diag_s4.mjs four out\s4\d\four 8
+node diag_s4.mjs x4 out\s4\d\x4 8
