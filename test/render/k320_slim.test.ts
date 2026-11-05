@@ -139,7 +139,10 @@ describe("K320 stage 1: char budgets", () => {
     // 2,087 (37,050 -> 39,137), no winner and the shared yield ramp
     // (b)+(c) add 101 (-> 39,238), and the crotch fill (d) adds 859
     // (-> 40,097), measured here.
-    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(40_150);
+    // K1139 S4b (2026-11-04): the band ridge fade (a two-ended B arm's
+    // ridge in R2.w; the band loop reads kPulseV2's field past the
+    // joint) adds 245 (40,097 -> 40,342), measured here.
+    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(40_350);
     // K799: uKPath joins KNOT_UNIFORMS_GLSL, which the still pluck
     // includes (+18 here).
     expect(PLUCK_STILL_FRAG.length).toBeLessThanOrEqual(20_550);

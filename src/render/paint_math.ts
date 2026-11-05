@@ -1542,14 +1542,33 @@ export function kPulseV2(
 // its junction end), so the field is continuous across the fan by
 // construction. S3b: the fan shader calls this function's GLSL twin
 // (PULSE_CREST_GLSL kPulseCrest) on the band at distJ + tau.
+// S4b: when the far-side arm is lit from both ends (gR > 0, its ridge's
+// drawn distance; inwardR its other end's direction), the band's far
+// side reads that arm's own field, kPulseV2's: past the ridge the other
+// end's train (2 gR - g), and the crests faded over PULSE_RIDGE_FADE
+// either side of it (|gA - gB| / 2 = |g - gR|). The head-side arm is a
+// tree arm, always one-ended. bumpScale 0 is the quiet field.
 export function kPulseBandV(
   U: KUniforms,
   distJ: number,
   tau: number,
   inward: boolean,
-  hovered = false
+  hovered = false,
+  gR = 0,
+  inwardR = false,
+  bumpScale = 1
 ): number {
-  return kPulseCrest(U, distJ + tau, inward, hovered, 1);
+  let g = distJ + tau;
+  let inw = inward;
+  let bK = bumpScale;
+  if (tau > 0 && gR > 0) {
+    bK *= Math.min(1, Math.abs(g - gR) / PULSE_RIDGE_FADE);
+    if (g > gR) {
+      g = 2 * gR - g;
+      inw = inwardR;
+    }
+  }
+  return kPulseCrest(U, g, inw, hovered, 1, bK);
 }
 
 // Paint state at a point: the gold ramp amount p (the thread's own paint),

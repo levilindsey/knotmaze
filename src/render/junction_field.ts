@@ -50,7 +50,10 @@
 //          half-covers texel 0. PULSE BANDS (K1139 S3b): after the gold
 //          blocks a routed-or-banded record holds a count texel, then
 //          per pulse band R0 = (nVerts, m, armA, armB), R1 = (distJ,
-//          inward + 2 * hovered, shared, 0) and nVerts texels (x, y,
+//          inward + 2 * hovered, shared, 0), R2 and R3 (the pivot and
+//          side line; R2.w = S4b's gR: armB's ridge when it is lit from
+//          both ends, negative when its other end runs inward, else 0)
+//          and nVerts texels (x, y,
 //          tau, strip-arc shift): the lit tree's band through this fan,
 //          tau ARC-TRUE (junction_routes.ts arcTrueTau), sharing slots
 //          with the gold blocks (assignPulseSlots): a band whose pair a
@@ -97,6 +100,7 @@ import { GAP_FRAG_LIB_FAN, defaultGapTexture } from "./gap_mask";
 import { FloatRows, ROW_SHIFT } from "./float_rows";
 import { KNOT_UNIFORMS_GLSL, PAINT_CONST_GLSL, PAINT_GATE_GLSL, PULSE_CREST_GLSL } from "./paint_glsl";
 import { knotUniforms } from "./paint_model";
+import { PULSE_RIDGE_FADE } from "./paint_const";
 import { STRIP_LOOKUP_GLSL, STRIP_LOOKUP_P_GLSL, stripTexture } from "./arm_strip";
 import { exploreGapEdits } from "./explore_glsl";
 import { fabricUniforms, sampSource } from "./fabric_sdf";
@@ -389,15 +393,15 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
   // armB), R1 = (distJ, flags, shared, code) - flags = inward + 2 *
   // hovered, shared = its pair already has a gold block above, code =
   // kA + 64 kB + 4096 mode (pulsePivot) - R2 = the pivot P homogeneous
-  // (X, Y, w, 0) and R3 = the side line (a, b, c, 0), both relative to
+  // (X, Y, w, gR) and R3 = the side line (a, b, c, 0), both relative to
   // the first vert, then its arc-true centerline verts (x, y, tau,
   // strip-arc shift). Stage 2 (a): with mode 1 a band's tau and shift
   // are the centreline's where the ray from P through the pixel meets it
   // (kA..kB), beyond the end rays the nearer L-end's projected along its
   // segment: continuous wherever the cover is above 0. Mode 0 keeps the
   // nearest foot. The cover stays the true distance's. The
-  // crest is the arms' own field at dG = distJ + tau (PULSE_CREST_GLSL),
-  // whitened over the arms' QUIET material: the quiet rows already wear
+  // crest is the arms' own field at dG = distJ + tau (PULSE_CREST_GLSL;
+  // S4b: kPulseBandV), whitened over the arms' QUIET material: the quiet rows already wear
   // the crest's floor, so only the trains' share whitens here and the
   // band meets its arms. Stage 2 (b): no winner. kFanPulseV (debug 5)
   // is the max over every band of crest x cover; each drawing band
@@ -506,9 +510,19 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
     float cov = clamp((reach - dnow) / pxW, 0.0, 1.0);
     bool inw = r1.y == 1.0 || r1.y == 3.0;
     bool hov = r1.y > 1.5;
-    float cr = kPulseCrest(r1.x + tau, inw, hov, 1.0);
+    float g = r1.x + tau;
+    float bk = 1.0;
+    if (tau > 0.0 && r2.w != 0.0) {
+      float gR = abs(r2.w);
+      bk = min(1.0, abs(g - gR) * ${(1 / PULSE_RIDGE_FADE).toFixed(4)});
+      if (g > gR) {
+        g = 2.0 * gR - g;
+        inw = r2.w < 0.0;
+      }
+    }
+    float cr = kPulseCrestK(g, inw, hov, 1.0, bk);
     kFanPulseV = max(kFanPulseV, cr * cov);
-    float fa = K_BAND * kPulseCrestQuiet(r1.x + tau, inw, hov, 1.0);
+    float fa = K_BAND * kPulseCrestQuiet(g, inw, hov, 1.0);
     if (r1.z >= 0.5) dShared = min(dShared, dnow);
     sTau[r] = tau;
     sShift[r] = shift;

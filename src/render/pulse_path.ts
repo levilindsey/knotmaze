@@ -70,7 +70,11 @@ export interface PulseItem {
 // the tree children: a cycle arm at each lit end (the far end's band
 // from that end's own parent, its distJ the item's dB) and a self-loop
 // at each lit end. `bAtA` names bEdge's end at the vertex (a loop has
-// both there).
+// both there). S4b: on a two-ended bEdge, gR is its ridge's drawn
+// distance, (dA + dB + span) / 2 (0 on a one-ended arm), and inwardR
+// the other end's direction, so the band's far side reads the arm's own
+// field (kPulseV2): the nearer end's train, faded at the ridge. aEdge is
+// a tree arm, always one-ended.
 export interface PulseBandSpec {
   vertex: string;
   aEdge: number;
@@ -78,6 +82,8 @@ export interface PulseBandSpec {
   distJ: number;
   inward: boolean;
   bAtA: boolean;
+  gR: number;
+  inwardR: boolean;
 }
 
 const q3 = (x: number): number => Math.round(x * 1000) / 1000;
@@ -237,10 +243,19 @@ export function pulseTree(
   // behind you alike (see PulseBandSpec). S4 appends the rest after
   // them (so a junction's tree-child bands keep their slots): each
   // non-tree arm and self-loop end at its near junction, and a
-  // two-ended arm's far end, from that end's own parent.
+  // two-ended arm's far end, from that end's own parent. S4b: a
+  // two-ended arm's bands carry its ridge and the other end's direction.
   const treeEdges = new Set(parentEdge.values());
-  const band = (vertex: string, eid: number, distJ: number, inward: boolean, bAtA: boolean): void => {
-    bands.push({ vertex, aEdge: parentEdge.get(vertex)!, bEdge: eid, distJ, inward, bAtA });
+  const band = (
+    vertex: string,
+    eid: number,
+    distJ: number,
+    inward: boolean,
+    bAtA: boolean,
+    gR = 0,
+    inwardR = false
+  ): void => {
+    bands.push({ vertex, aEdge: parentEdge.get(vertex)!, bEdge: eid, distJ, inward, bAtA, gR, inwardR });
   };
   for (const it of items) {
     if (it.near === head || it.parent < 0 || !treeEdges.has(it.edge)) continue;
@@ -251,11 +266,12 @@ export function pulseTree(
   for (const it of items) {
     const e = walk.edges[it.edge];
     const loop = e.va === e.vb;
+    const gR = it.two ? (it.dist0 + it.dB + it.span) / 2 : 0;
     if (it.near !== head && (loop || !treeEdges.has(it.edge))) {
-      band(it.near, it.edge, it.dist0, it.inward, it.atA);
-      if (loop && it.two) band(it.near, it.edge, it.dist0, it.inward, false);
+      band(it.near, it.edge, it.dist0, it.inward, it.atA, gR, it.inwardB);
+      if (loop && it.two) band(it.near, it.edge, it.dist0, it.inward, false, gR, it.inwardB);
     }
-    if (it.two && !loop) band(it.far, it.edge, it.dB, it.inwardB, !it.atA);
+    if (it.two && !loop) band(it.far, it.edge, it.dB, it.inwardB, !it.atA, gR, it.inward);
   }
   return { items, bands };
 }

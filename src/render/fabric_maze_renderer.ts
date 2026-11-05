@@ -4071,6 +4071,8 @@ export class FabricMazeRenderer {
     b: { chain: number; ctrl: number; dir: number };
     distJ: number;
     inward: boolean;
+    gR: number;
+    inwardR: boolean;
     slot: number;
     shared: boolean;
     fallback: boolean;
@@ -4132,6 +4134,8 @@ export class FabricMazeRenderer {
               s.bEdge === this.hoverEdge ||
               (this.hoverRoute?.includes(s.aEdge) ?? false) ||
               (this.hoverRoute?.includes(s.bEdge) ?? false),
+            gR: s.gR,
+            inwardR: s.inwardR,
           });
         }
         out.push({
@@ -4142,6 +4146,8 @@ export class FabricMazeRenderer {
           b: { chain: r.outChain!, ctrl: r.outCtrl!, dir: r.outDir! },
           distJ: s.distJ,
           inward: s.inward,
+          gR: s.gR,
+          inwardR: s.inwardR,
           slot: slot ? slot.slot : -1,
           shared: slot ? slot.shared : false,
           fallback: alloc.fallback,

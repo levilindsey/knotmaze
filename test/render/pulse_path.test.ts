@@ -259,7 +259,7 @@ describe("pulseTree bands (K1139 S3a, T10)", () => {
       [0, 4, false],
     ]);
     expect(at("K")).toEqual([
-      { vertex: "K", aEdge: 4, bEdge: 5, distJ: 3.5, inward: false, bAtA: true },
+      { vertex: "K", aEdge: 4, bEdge: 5, distJ: 3.5, inward: false, bAtA: true, gR: 0, inwardR: false },
     ]);
     // distJ is where the parent arm ended (its dist0 + span), quantized.
     for (const b of at("J")) expect(b.distJ).toBeCloseTo(2.2, 9);
@@ -284,7 +284,7 @@ describe("pulseTree bands (K1139 S3a, T10)", () => {
     ]);
     // One junction further back the same rule: e4 bands into e1.
     expect(at("Q")).toEqual([
-      { vertex: "Q", aEdge: 1, bEdge: 4, distJ: 2, inward: true, bAtA: true },
+      { vertex: "Q", aEdge: 1, bEdge: 4, distJ: 2, inward: true, bAtA: true, gR: 0, inwardR: false },
     ]);
     expect(at("H")).toEqual([]);
   });
@@ -312,6 +312,21 @@ describe("pulseTree bands (K1139 S3a, T10)", () => {
       ["A", 0, 1, 1, true],
       ["B", 2, 1, 1, false],
     ]);
+    // S4b: the cycle arm's bands carry its ridge, (dA + dB + span) / 2,
+    // and the other end's direction; the tree child's none.
+    expect(bands.map((b) => [b.gR, b.inwardR])).toEqual([
+      [0, false],
+      [1.5, false],
+      [1.5, false],
+    ]);
+    // Arrived by e2 (B's side runs inward): each end's band names the
+    // OTHER end's direction.
+    const back = pulseTree(G, "H", 2, 10, () => 1).bands;
+    expect(back.map((b) => [b.vertex, b.bEdge, b.inward, b.gR, b.inwardR])).toEqual([
+      ["A", 3, false, 0, false],
+      ["A", 1, false, 1.5, true],
+      ["B", 1, true, 1.5, false],
+    ]);
     // A one-ended cycle arm (its far end past the reach) is banded at
     // its near end alone.
     const one = pulseTree(G, "H", -1, 1.3, () => 1).bands;
@@ -333,6 +348,8 @@ describe("pulseTree bands (K1139 S3a, T10)", () => {
       ["J", 0, 1, true],
       ["J", 0, 1, false],
     ]);
+    // S4b: both loop bands carry the loop's ridge (1 + 1 + 1) / 2.
+    expect(bands.map((b) => b.gR)).toEqual([0, 1.5, 1.5]);
     // Your own loop: no band (S5).
     const own = pulseTree(graph([["H", "H", 3], ["H", "E", 1]]), "H", -1, 10, () => 1);
     expect(own.bands).toEqual([]);

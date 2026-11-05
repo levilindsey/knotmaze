@@ -60,7 +60,6 @@ import {
   kGlow,
   kPaintAt,
   kPulseBandV,
-  kPulseCrest,
   kSectionAtArc,
   kWrap,
   knotSection,
@@ -736,8 +735,10 @@ export class Joinery {
       PULSE_DIST[r] = dnow;
       PULSE_R0[r] = r0;
       const fl0 = J[r1 + 1];
-      const fb0 = KB * kPulseBandV(U, J[r1], tau, fl0 % 2 === 1, fl0 >= 2);
-      const fa0 = KB * kPulseCrest(U, J[r1] + tau, fl0 % 2 === 1, fl0 >= 2, 1, 0);
+      // S4b: R2.w, armB's signed ridge (the GLSL band loop's twin).
+      const gw = J[r2 + 3];
+      const fb0 = KB * kPulseBandV(U, J[r1], tau, fl0 % 2 === 1, fl0 >= 2, Math.abs(gw), gw < 0);
+      const fa0 = KB * kPulseBandV(U, J[r1], tau, fl0 % 2 === 1, fl0 >= 2, Math.abs(gw), gw < 0, 0);
       PULSE_F[r] = J[r1 + 2] < 0.5 ? Math.max(0, Math.min(1, (fb0 - fa0) / Math.max(1 - fa0, 1e-3))) : 0;
       PULSE_SD[r] = side < 0 ? -dnow : dnow;
       pb += 4 + nv;
@@ -1176,7 +1177,9 @@ export class Joinery {
       // drawn distance), inward, hovered, and shared (its pair already
       // has a gold band: the block is written for the probe view and
       // draws nothing). Empty when the record's distinct pairs would
-      // pass MAX_ROUTES: no pulse band there (option B, plan 2.2).
+      // pass MAX_ROUTES: no pulse band there (option B, plan 2.2). S4b:
+      // gR and inwardR, the B arm's ridge and other end's direction
+      // when it is lit from both ends (gR 0: one-ended).
       pulseBands: Array<{
         ia: number;
         ib: number;
@@ -1186,6 +1189,8 @@ export class Joinery {
         inward: boolean;
         hovered: boolean;
         shared: boolean;
+        gR: number;
+        inwardR: boolean;
       }>;
     }
     // Radial profile of one arm around its joint (JArm.pth/ps): walk the
@@ -1535,6 +1540,8 @@ export class Joinery {
             inward: p.inward,
             hovered: p.hovered,
             shared,
+            gR: p.gR,
+            inwardR: p.inwardR,
           });
         }
         if (pairs.size <= MAX_ROUTES) rec.pulseBands = bands;
@@ -2018,7 +2025,8 @@ export class Joinery {
         // +-d) and its shift carries the strip-arc offset, so the arms'
         // material stays where the ribbon has it. After the gold blocks: the
         // pulse count texel, then per pulse band R0, R1 = (distJ, flags,
-        // shared, 0) and its centerline the same way.
+        // shared, 0), R2.w = the B arm's signed ridge (S4b) and its
+        // centerline the same way.
         const routeBase = cursor;
         let nr = 0;
         const scratch = this.routeScratch;
@@ -2124,7 +2132,9 @@ export class Joinery {
             D2[o + 8] = b.pv.X;
             D2[o + 9] = b.pv.Y;
             D2[o + 10] = b.pv.w;
-            D2[o + 11] = 0;
+            // S4b: the B arm's ridge gR, signed by its other end's
+            // direction (negative: inward; 0: a one-ended arm).
+            D2[o + 11] = b.pb.gR > 0 ? (b.pb.inwardR ? -b.pb.gR : b.pb.gR) : 0;
             D2[o + 12] = b.pv.a;
             D2[o + 13] = b.pv.b;
             D2[o + 14] = b.pv.c;
