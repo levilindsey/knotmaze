@@ -187,9 +187,18 @@ fix (seams, wedges, P8 per band, P1-P5, P10, the A/B); the sheet paths;
 the commits; and at the end a `Ledger items` list and K1139's handle
 fields (owner, branch, last commit, evidence, next, brief).
 
-## Handoff (WIP, 2026-11-04 11:20)
+## Handoff (stopped 2026-11-04 12:30, before the 12:47 cap: no time to build and measure a second rule)
 
-State: diagnosis in progress (4.1); no shader change yet.
+State: 4.1 diagnosed with numbers; 4.2 NOT done. One rule was built in
+the GLSL and the CPU twin (fix1, d5fb1f62), measured and backed out
+(db172cb), because it fails the seams, the wedges and k320. The branch
+head's shader and twin are S3b's again, plus the temporary diag hook,
+so merging it ships no behaviour change. `npm test` on db172cb4: green
+(212 files passed, 2 skipped; 2831 tests passed, 9 skipped; 12:17-12:19,
+after the perf lock was free). Not run: P8, P1-P5, P10, the A/B and the
+sheets (section 6), all of which wait for a passing rule.
+The sections below are in the order they were written; "Resume" at the
+end is the next step.
 
 - Harness: `.claude/probes/K1139/diag_s3b.mjs <stand> <outDir> [frames]`
   dumps, per banded record and phase, the CPU twin over every device
@@ -305,3 +314,82 @@ Hypotheses (inferred, not tested):
 - H3, x4 ji 28's GPU wedge count is several times the CPU twin's in
   both builds: maybe cover-strip pixels in the footprint mask (strip
   records use their own reach/base); not checked.
+
+### Attribution (GLSL-only variants of fix1, 2026-11-04 12:10-12:16)
+
+The seams are counted on the GPU's dbg 5, so each variant changed the
+shader alone (the CPU twin's columns are not comparable) and was dumped
+through run_locked.ps1 like fix1.
+
+- Side test off (bt = 0; `batch_fix_nobt.txt`): dbg 5 changed in 396 to
+  569 px a phase (the wedge, G by up to 196/255; `imgdiff.mjs`), and the
+  seam count did not move by one pixel: cross 96, 0, 0, 171, 955, 1548,
+  830, 296, exactly fix1's. H1's side-test part is FALSE: the seams are
+  not where bt acts.
+- Both soft denominators floored at 0.5 reach (`batch_fix_floor.txt`):
+  cross 69, 0, 0, 138, 826, 1412, 777, 267 (3489 against fix1's 3896);
+  x4 ji 28 5851 (6213), ji 125 2041 (1771), ji 147 5636 (5128), ji 149
+  11759 (11626), ji 108 0. The floor part of H1 is false too.
+- fix1 does not make the worst step smaller either. diag_an's maxStepG
+  (the worst GPU G step a phase, /255), S3b -> fix1:
+
+  | record | S3b t0..t7 | fix1 t0..t7 |
+  |---|---|---|
+  | cross ji 33 | 6, 1, 0, 92, 153, 62, 64, 23 | 32, 3, 2, 16, 30, 53, 77, 73 |
+  | x4 ji 28 | 0, 9, 26, 28, 29, 29, 28, 27 | 43, 40, 16, 15, 17, 92, 137, 82 |
+  | x4 ji 125 | 15, 10, 5, 0, 3, 15, 16, 15 | 35, 35, 27, 0, 12, 35, 35, 34 |
+  | x4 ji 147 | 13, 12, 10, 56, 56, 38, 56, 21 | 43, 40, 30, 33, 26, 33, 40, 35 |
+  | x4 ji 149 | 40, 25, 18, 19, 44, 44, 44, 44 | 47, 48, 47, 18, 35, 44, 48, 48 |
+
+  Only cross t3-t5 (the leg flips) fell; elsewhere it rose. The CPU
+  twin's worst same-band step (maxSame) fell at cross (up to 153 -> up
+  to 47) and x4 ji 28 (29 -> 19) and stayed about 60 at x4 ji 147.
+- And the seams are not a soft field over T: they are RAYS.
+  `out/doc/s3b_fix1_cross_panels.png` (diag_an
+  panels, cross ji 33; rows S3b t5, fix1 t5, S3b t4, fix1 t4; panels
+  GPU, GPU webs off, CPU twin, winner, dbg 5 G, seams) shows fix1's
+  whitening as a star of white spokes out of the joint, in the GPU and
+  the CPU twin alike, where S3b shows one bright wedge with a few short
+  seam lines. It reads worse than S3b, not better.
+- Inferred from the sheet, not measured: the rays are the FAR feet's
+  own jumps. A nearest point on a polyline jumps on the inner side of
+  every vertex, by about 2 d tan(theta_i / 2), so by more the farther
+  the pixel is. S3b used only the nearest foot of all, whose one big
+  jump is the leg flip (class a). fix1 also reads the far leg's foot
+  (wf) and the second band's (w2), at distances where their vertex
+  jumps are large, and mixes them in at weights up to 0.5 over wide
+  areas (BAND_SOFT 3 * d): each far vertex draws a ray.
+- So the next rule may blend only quantities that are continuous where
+  their weight is above 0. A foot on a sampled polyline is not. Two
+  ways: an analytic band (each leg a line plus a circular arc for the
+  corner, whose foot is continuous everywhere but at the arc's centre),
+  or no far feet at all (blend the crest VALUES of the nearest foot
+  across the leg flip and the band switch only, with ramps that vanish
+  before the next discontinuity). The winner map also shows the fork
+  siblings' stripes on their shared arrival arm (the two centrelines
+  coincide, so the winner alternates): their two taus there must agree
+  by construction.
+
+### Resume
+
+1. Start from the head (S3b's shader plus the harness) for a new rule;
+   `git show d5fb1f62` is fix1, two-leg feet, a second candidate and
+   the wedge cover in both GLSL and twin; `git revert db172cb` restores
+   it whole.
+2. Serve the worktree: `npx vite --config
+   .claude/probes/K1139/vite.private-cache.config.ts --port 5620
+   --strictPort --host 127.0.0.1` (ports 5620-5639).
+3. Dump: copy `batch_fix_fix1.txt` with a new out dir, then `pwsh -File
+   .claude/probes/K1139/run_locked.ps1 -Batch <file> -What <text>`
+   (cross + x4, 8 phases: about 3 minutes under the lock).
+4. Count, from `.claude/probes/K1139/`: `node diag_an.mjs <dump>\cross -`
+   (and `x4`) for the seams, `node wedge.mjs <dump>\cross` (and `x4`)
+   for the wedges, `node imgdiff.mjs <dumpA> <dumpB>` for a same-stand
+   frame diff. The S3b reference is `batch_fix_diag2.txt`'s dump; all
+   four dumps (diag2, fix1, nobt, floor) sat in the session scratchpad,
+   which does not outlive it, so re-dump S3b from its batch file.
+5. Then the rest of section 5 (P8, P1-P5, P10, the same-state A/B
+   against master), section 6's sheets, k320 (fix1 measured 40,147
+   against the 37,100 ceiling: fit or raise to a measured length with
+   a dated comment), and remove the `__k1139diag` hook (joinery.ts, the
+   K1139Diag interface and the DG block) with the fix.
