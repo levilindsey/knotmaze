@@ -1541,7 +1541,7 @@ describe("kPulseBandV on a two-ended arm (K1139 S4b)", () => {
   });
 });
 // K1139 S5: at your own junction the switch (pulseHeadPass, default
-// off = today's picture) takes the lead and, where a crest carries
+// on; off = the pre-S5 picture) takes the lead and, where a crest carries
 // through (uKHead 1, written by the tick only when the flag is on and
 // an arrival exists), the CREST_RAMP dip. Before table (task 1, on
 // unmodified source): the outward crest leads the inward one by
@@ -1550,7 +1550,7 @@ describe("kPulseBandV on a two-ended arm (K1139 S4b)", () => {
 // dG 0 -> 0, 0.1 -> 0.2, 0.25 -> 0.5, 0.5 -> 1.
 describe("kPulseCrest head carry (K1139 S5)", () => {
   afterEach(() => {
-    setPulseHeadPass(false);
+    setPulseHeadPass(true);
   });
   const floorAt = (dG: number): number =>
     (PAINT_CONST.PULSE_FLOOR + PAINT_CONST.PULSE_CORE_BOOST * Math.max(0, 1 - dG / PAINT_CONST.PULSE_CORE_RADIUS)) *
@@ -1570,7 +1570,12 @@ describe("kPulseCrest head carry (K1139 S5)", () => {
   const bumpFactorAtPeak = (U: KUniforms, dG: number, inward: boolean): number =>
     (kPulseCrest(U, dG, inward, false, 0.4) / 0.4 - floorAt(dG)) / 0.9;
 
+  it("the switch is on by default (Claude's flip after the q3_head sheet)", () => {
+    expect(pulseHeadPass).toBe(true);
+  });
+
   it("flag off reproduces the before table (lead 0.48 world, ramp dip 0 at the head)", () => {
+    setPulseHeadPass(false);
     expect(pulseHeadPass).toBe(false);
     const U0 = uniforms({ clock: 100, pulseBorn: 0, spacing: 2.5 });
     expect(U0.uKPulse[1] - U0.uKPulse[0]).toBeCloseTo(0.48, 6);

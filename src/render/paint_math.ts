@@ -1474,10 +1474,12 @@ export function kReachWin(U: KUniforms, d: number): number {
 // kPulseV, and the S3b fan shader's twin must call the same shape.
 // K1139 S5: pulseHeadPass selects the straight-through head (lead 0
 // and, where a crest carries through your own junction, no CREST_RAMP
-// dip - the tick writes that carry as uKHead); it defaults to today's
-// picture (off), and Claude flips the default after judging the
-// q3_head sheet in .claude/probes/K1139/out/s5/.
-export let pulseHeadPass = false;
+// dip - the tick writes that carry as uKHead). On by default since
+// Claude judged the q3_head sheet (.claude/probes/K1139/out/s5/): on,
+// the arriving crest stays bright up to the marker and through it;
+// off, it dims beside the marker for two of the eight frames. Off is
+// the pre-S5 picture (lead 0.48 world and the dip), kept for A/B.
+export let pulseHeadPass = true;
 export function setPulseHeadPass(on: boolean): void {
   pulseHeadPass = on;
 }
