@@ -46,8 +46,12 @@ try {
   foreach ($cmd in Get-Content -LiteralPath (Join-Path $here $Batch)) {
     if (-not $cmd.Trim() -or $cmd.Trim().StartsWith("#")) { continue }
     Write-Output ">> $cmd  ($(Get-Date -Format HH:mm:ss))"
+    # A line that runs no native command ($env:X = ..., a cmdlet) leaves
+    # $LASTEXITCODE as it was, so a stale non-zero (or $null) read as a
+    # failure: reset it before each line, and read the global one.
+    $global:LASTEXITCODE = 0
     Invoke-Expression $cmd
-    if ($LASTEXITCODE -ne 0) { Write-Output "!! exit $LASTEXITCODE"; $code = 1 }
+    if ($global:LASTEXITCODE -ne 0) { Write-Output "!! exit $global:LASTEXITCODE"; $code = 1 }
   }
 } finally {
   Pop-Location

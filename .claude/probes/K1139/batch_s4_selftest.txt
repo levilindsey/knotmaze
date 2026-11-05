@@ -1,0 +1,7 @@
+# run_locked.ps1's exit check: only the node line that exits 3 may print "!! exit".
+$env:K1139_SELFTEST = "a"
+node -e "process.exit(0)"
+$env:K1139_SELFTEST = "b"
+node -e "process.exit(3)"
+$env:K1139_SELFTEST = "c"
+Write-Output "selftest done"
