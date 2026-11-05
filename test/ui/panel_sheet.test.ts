@@ -82,10 +82,11 @@ describe("whether the panel starts open", () => {
 
 // A fake history: records the pushes and backs, and lets a test deliver the
 // popstate the browser would send.
-function rig() {
+function rig(sheetMark = false) {
   const log: string[] = [];
   const hist = new SheetHistory(
     {
+      sheetMark: () => sheetMark,
       push: (s) => log.push(`push:${JSON.stringify(s)}`),
       back: () => log.push("back"),
     },
@@ -139,9 +140,10 @@ describe("the sheet's history entry", () => {
     hist.release();
     hist.open();
     log.length = 0;
-    // The first pop (ours) arrives while the sheet is open again.
+    // The first pop (ours) arrives while the sheet is open again: it is
+    // spent, and the reopened sheet's deferred push lands on it (K484).
     hist.onPop();
-    expect(log).toEqual(["rewrite"]);
+    expect(log).toEqual(["rewrite", `push:${JSON.stringify(SHEET_STATE)}`]);
     expect(hist.owned).toBe(true);
     // The next one is the player's Back.
     log.length = 0;
@@ -167,5 +169,77 @@ describe("the sheet's history entry", () => {
       "rewrite",
       "rewrite",
     ]);
+  });
+
+  it("a stale marked entry at load is consumed: one back, its pop only writes the link (K484)", () => {
+    const { hist, log } = rig(true);
+    hist.reconcileOnLoad();
+    hist.reconcileOnLoad();
+    expect(log).toEqual(["back"]);
+    expect(hist.owned).toBe(false);
+    // The counted pop: the link is written and nothing closes.
+    hist.onPop();
+    expect(log).toEqual(["back", "rewrite"]);
+    expect(hist.owned).toBe(false);
+  });
+
+  it("an unmarked entry at load is left alone (K484)", () => {
+    const { hist, log } = rig(false);
+    hist.reconcileOnLoad();
+    expect(log).toEqual([]);
+  });
+
+  it("a reopen while our pop is in flight defers its push until the pop (K484)", () => {
+    const { hist, log } = rig();
+    hist.open();
+    hist.release();
+    hist.open();
+    // One back outstanding, and no second push yet.
+    expect(log).toEqual([`push:${JSON.stringify(SHEET_STATE)}`, "back"]);
+    expect(hist.owned).toBe(false);
+    hist.onPop();
+    expect(log).toEqual([
+      `push:${JSON.stringify(SHEET_STATE)}`,
+      "back",
+      "rewrite",
+      `push:${JSON.stringify(SHEET_STATE)}`,
+    ]);
+    expect(hist.owned).toBe(true);
+  });
+
+  it("a release before the deferred pop cancels the want: no push ever lands (K484)", () => {
+    const { hist, log } = rig();
+    hist.open();
+    hist.release();
+    hist.open();
+    hist.release();
+    expect(log).toEqual([`push:${JSON.stringify(SHEET_STATE)}`, "back"]);
+    hist.onPop();
+    expect(log).toEqual([
+      `push:${JSON.stringify(SHEET_STATE)}`,
+      "back",
+      "rewrite",
+    ]);
+    expect(hist.owned).toBe(false);
+  });
+
+  it("a Back pressed while a push was deferred closes the reopened sheet (K484)", () => {
+    const { hist, log } = rig();
+    hist.open();
+    hist.release();
+    hist.open();
+    // The counted pop lands first (the deferred push takes its entry),
+    // then the player's Back — pressed during the flight — pops it.
+    hist.onPop();
+    hist.onPop();
+    expect(log).toEqual([
+      `push:${JSON.stringify(SHEET_STATE)}`,
+      "back",
+      "rewrite",
+      `push:${JSON.stringify(SHEET_STATE)}`,
+      "close",
+      "rewrite",
+    ]);
+    expect(hist.owned).toBe(false);
   });
 });

@@ -1,0 +1,222 @@
+{
+  "mode": "after",
+  "base": "http://127.0.0.1:5580/",
+  "link": "?7&am=instant&snd=none",
+  "viewport": "412x915",
+  "cases": {
+    "A": [
+      {
+        "name": "loaded, sheet closed",
+        "len": 2,
+        "state": null,
+        "expanded": "false",
+        "rootOpen": false,
+        "sheetShown": false,
+        "search": "?7.FMMQ9",
+        "marker": "A-before-reload"
+      },
+      {
+        "name": "sheet opened by the menu button",
+        "len": 3,
+        "state": {
+          "kmSheet": 1
+        },
+        "expanded": "true",
+        "rootOpen": true,
+        "sheetShown": true,
+        "search": "?7.FMMQ9",
+        "marker": "A-before-reload"
+      },
+      {
+        "name": "after reload (settled)",
+        "len": 3,
+        "state": null,
+        "expanded": "false",
+        "rootOpen": false,
+        "sheetShown": false,
+        "search": "?7.FMMQ9",
+        "marker": "A-after-reload"
+      },
+      {
+        "name": "after one Back",
+        "len": 3,
+        "state": null,
+        "expanded": null,
+        "rootOpen": false,
+        "sheetShown": false,
+        "search": "",
+        "marker": null,
+        "designKept": false
+      }
+    ],
+    "B": [
+      {
+        "name": "loaded, sheet closed",
+        "len": 2,
+        "state": null,
+        "expanded": "false",
+        "rootOpen": false,
+        "sheetShown": false,
+        "search": "?7.FMMQ9",
+        "marker": "B"
+      },
+      {
+        "name": "sheet opened",
+        "len": 3,
+        "state": {
+          "kmSheet": 1
+        },
+        "expanded": "true",
+        "rootOpen": true,
+        "sheetShown": true,
+        "search": "?7.FMMQ9",
+        "marker": "B"
+      },
+      {
+        "name": "five fast cycles done (one task)",
+        "len": 3,
+        "state": {
+          "kmSheet": 1
+        },
+        "expanded": "true",
+        "cycleMs": 84
+      },
+      {
+        "name": "settled, sheet open again",
+        "len": 3,
+        "state": {
+          "kmSheet": 1
+        },
+        "expanded": "true",
+        "rootOpen": true,
+        "sheetShown": true,
+        "search": "?7.FMMQ9",
+        "marker": "B"
+      },
+      {
+        "name": "final close (settled)",
+        "len": 3,
+        "state": null,
+        "expanded": "false",
+        "rootOpen": false,
+        "sheetShown": false,
+        "search": "?7.FMMQ9",
+        "marker": "B"
+      },
+      {
+        "name": "after the final Back",
+        "len": 3,
+        "state": null,
+        "expanded": null,
+        "rootOpen": false,
+        "sheetShown": false,
+        "search": "",
+        "marker": null
+      }
+    ]
+  },
+  "checks": [
+    {
+      "name": "A: closed on load",
+      "ok": true,
+      "len": 2,
+      "state": null,
+      "expanded": "false",
+      "rootOpen": false,
+      "sheetShown": false,
+      "search": "?7.FMMQ9",
+      "marker": "A-before-reload"
+    },
+    {
+      "name": "A: open owns one entry",
+      "ok": true,
+      "len": 3,
+      "state": {
+        "kmSheet": 1
+      },
+      "expanded": "true",
+      "rootOpen": true,
+      "sheetShown": true,
+      "search": "?7.FMMQ9",
+      "marker": "A-before-reload"
+    },
+    {
+      "name": "A: reload left no stale entry (current entry unmarked, sheet closed)",
+      "ok": true,
+      "len": 3,
+      "state": null,
+      "expanded": "false",
+      "rootOpen": false,
+      "sheetShown": false,
+      "search": "?7.FMMQ9",
+      "marker": "A-after-reload"
+    },
+    {
+      "name": "A: first Back is a fresh page's (no dead entry to spend it on; it leaves the app)",
+      "ok": true,
+      "len": 3,
+      "state": null,
+      "expanded": null,
+      "rootOpen": false,
+      "sheetShown": false,
+      "search": "",
+      "marker": null
+    },
+    {
+      "name": "B: open owns one entry",
+      "ok": true,
+      "len": 3,
+      "state": {
+        "kmSheet": 1
+      },
+      "expanded": "true",
+      "rootOpen": true,
+      "sheetShown": true,
+      "search": "?7.FMMQ9",
+      "marker": "B"
+    },
+    {
+      "name": "B: cycles ran fast (one task, <50 ms a cycle)",
+      "ok": true,
+      "cycleMs": 84
+    },
+    {
+      "name": "B: five cycles left exactly the one entry an open sheet owns",
+      "ok": true,
+      "openLen": 3,
+      "len": 3,
+      "state": {
+        "kmSheet": 1
+      },
+      "expanded": "true",
+      "rootOpen": true,
+      "sheetShown": true,
+      "search": "?7.FMMQ9",
+      "marker": "B"
+    },
+    {
+      "name": "B: final close closed and gave the entry back (current entry unmarked)",
+      "ok": true,
+      "len": 3,
+      "state": null,
+      "expanded": "false",
+      "rootOpen": false,
+      "sheetShown": false,
+      "search": "?7.FMMQ9",
+      "marker": "B"
+    },
+    {
+      "name": "B: the final Back spends nothing of the sheet's (it leaves the app, as a fresh page's would)",
+      "ok": true,
+      "len": 3,
+      "state": null,
+      "expanded": null,
+      "rootOpen": false,
+      "sheetShown": false,
+      "search": "",
+      "marker": null
+    }
+  ],
+  "errors": [],
+  "failed": []
+}

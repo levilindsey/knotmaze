@@ -4020,6 +4020,8 @@ export function buildPanel(
   // K468: an open sheet owns one history entry, so Android's Back closes it.
   const sheetHistory = new SheetHistory(
     {
+      sheetMark: () =>
+        (history.state as { kmSheet?: unknown } | null)?.kmSheet === 1,
       push: (state) => history.pushState(state, ""),
       back: () => history.back(),
     },
@@ -4029,6 +4031,10 @@ export function buildPanel(
     }
   );
   window.addEventListener("popstate", () => sheetHistory.onPop());
+  // K484: the sheet starts closed here, so a marked entry under this fresh
+  // page is a dead page's: consume it before the first link write replaces
+  // the mark with null.
+  sheetHistory.reconcileOnLoad();
   // The menu button reads as a close button while the sheet is up.
   const labelMenu = (): void => {
     const sheetOpen = open && sheetNow();

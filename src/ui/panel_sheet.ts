@@ -50,11 +50,15 @@ export function panelStartsOpen(
 }
 
 // The history entry's state: marks the entry the open sheet pushed. (The
-// app's own writes replace it with null soon enough, so nothing reads it
-// back; it is for a person looking at history.state.)
+// app's own writes replace it with null soon enough; the one read is the
+// load reconcile below, which runs before the fresh page's first write.)
 export const SHEET_STATE = { kmSheet: 1 } as const;
 
 export interface SheetHistoryEnv {
+  // Whether the current entry carries the sheet mark (history.state's
+  // kmSheet): true when the page has loaded on an entry a previous,
+  // now-dead page's sheet pushed (a reload or discard with it open).
+  sheetMark?: () => boolean;
   // history.pushState(SHEET_STATE, ""): a new entry at the same URL.
   push: (state: unknown) => void;
   // history.back().
@@ -78,6 +82,11 @@ export interface SheetHistoryHooks {
 export class SheetHistory {
   private pushed = false;
   private pending = 0;
+  // An open() that arrived while our counted pop was still in flight: it
+  // wants its push when that pop lands, so the reopened sheet ends with
+  // exactly one entry however fast the close-then-reopen cycle ran.
+  private wantPush = false;
+  private loadReconciled = false;
   private readonly env: SheetHistoryEnv;
   private readonly hooks: SheetHistoryHooks;
 
@@ -93,13 +102,39 @@ export class SheetHistory {
 
   // The sheet opened: take an entry, once.
   open(): void {
-    if (this.pushed) return;
+    if (this.pushed || this.wantPush) return;
+    // A counted pop is still in flight (a close just asked for its entry
+    // back): pushing now would stack a second entry the pop cannot take.
+    // Defer the push until onPop spends that pop.
+    if (this.pending > 0) {
+      this.wantPush = true;
+      return;
+    }
     this.env.push(SHEET_STATE);
     this.pushed = true;
   }
 
+  // Once, at load: the page has loaded (sheet closed, as it always starts)
+  // on an entry a dead page's sheet pushed. Consume that stale entry the
+  // way release() consumes an owned one — a counted back whose pop only
+  // rewrites the link — so the player's first Back behaves as a fresh
+  // page's would instead of spending itself on the dead entry.
+  reconcileOnLoad(): void {
+    if (this.loadReconciled) return;
+    this.loadReconciled = true;
+    if (this.pushed || this.wantPush) return;
+    if (!this.env.sheetMark?.()) return;
+    this.pending++;
+    this.env.back();
+  }
+
   // The sheet closed some way other than Back: give the entry back.
   release(): void {
+    // A deferred push is cancelled, not given back: no entry was taken.
+    if (this.wantPush) {
+      this.wantPush = false;
+      return;
+    }
     if (!this.pushed) return;
     this.pushed = false;
     this.pending++;
@@ -114,6 +149,13 @@ export class SheetHistory {
     if (this.pending > 0) {
       this.pending--;
       this.hooks.rewriteLink();
+      // The counted pop has landed: a sheet reopened during its flight
+      // takes its (single) entry now.
+      if (this.wantPush) {
+        this.wantPush = false;
+        this.env.push(SHEET_STATE);
+        this.pushed = true;
+      }
       return;
     }
     if (this.pushed) {
