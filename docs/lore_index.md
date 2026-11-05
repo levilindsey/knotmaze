@@ -79,7 +79,7 @@ rules file or its `paths:` change. Not auto-loaded.
 - `physics-collision.md`: the P3 saga's invariants, mechanisms, lessons and negative results; the open loud attractor (K13)
   paths: `src/physics/particle_system.ts`, `src/physics/forces.ts`, `test/physics/particle_system.test.ts`, `test/quiescence.regression.test.ts`
 - `probes.md`: probing: a bare URL is the daily, same-state A/Bs, the scratchpad, gotchas, hooks, recipes, the general diagnosis rules
-  paths: `.claude/probes/**`, `scripts/*.mjs`, `scripts/*.ps1`, `scripts/*.ts`, `src/app/probe_hooks.ts`
+  paths: `.claude/probes/**/*.mjs`, `.claude/probes/**/*.ps1`, `.claude/probes/**/*.ts`, `.claude/probes/**/*.js`, `.claude/probes/**/*.cjs`, `.claude/probes/**/*.mts`, `.claude/probes/**/*.cts`, `.claude/probes/**/*.html`, `.claude/probes/**/*.sh`, `.claude/probes/**/*.bat`, `.claude/probes/**/*.cmd`, `scripts/*.mjs`, `scripts/*.ps1`, `scripts/*.ts`, `src/app/probe_hooks.ts`
 - `probes-census.md`: the per-pixel gaps census, the census and scanner rules from P3
   paths: `scripts/diag_scan.mjs`, `scripts/fold_census.mjs`, `scripts/fold_census.ps1`, `scripts/fold_census.ts`, `scripts/fold_census.vite.config.mjs`
 - `probes-phone.md`: the round phone pass (K156), phone gate probes (K79 B3), the physics worker on the phone (K7 stage 5)

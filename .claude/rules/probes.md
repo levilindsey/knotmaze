@@ -1,6 +1,16 @@
 ---
 paths:
-  - ".claude/probes/**"
+  - ".claude/probes/**/*.mjs"
+  - ".claude/probes/**/*.ps1"
+  - ".claude/probes/**/*.ts"
+  - ".claude/probes/**/*.js"
+  - ".claude/probes/**/*.cjs"
+  - ".claude/probes/**/*.mts"
+  - ".claude/probes/**/*.cts"
+  - ".claude/probes/**/*.html"
+  - ".claude/probes/**/*.sh"
+  - ".claude/probes/**/*.bat"
+  - ".claude/probes/**/*.cmd"
   - "scripts/*.mjs"
   - "scripts/*.ps1"
   - "scripts/*.ts"
