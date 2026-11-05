@@ -509,10 +509,10 @@ Next free ID: K1190.
 - **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate correctly across
   junctions"). S1, S2 done (a4dc218a, 16246c90). Answers: the light splits at a fork (A), runs toward you behind
   you, straight through your junction with no dim moment. S3a-S6 next. Full text: `docs/ledger_notes.md`.
-  - owner: claude agent a01f07292c48d6db9 (K1139 fix stage 4, launched 2026-11-04 about 16:39, 2 h cap), coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
-  - branch: `worktree-agent-a8280f4d14ebd8ad1`, worktree `.claude/worktrees/agent-a8280f4d14ebd8ad1` (Stage 3's; master at c4a9dd60 plus Stage 2's branch cherry-picked; Stage 4 runs on it too, no rebase); last commit: `6b847b4c`
+  - owner: nobody since 2026-11-04 18:16 (merged)
+  - branch: mainline; last commit: `71eedb94`
   - evidence: .claude/probes/K1139/ on the branch (tracked: diag_s3b.mjs, diag_an.mjs, halfpx.mjs, wedge_strip.mjs, p8max.mjs, crotch_fill.mjs, sheets_s3.mjs, run_locked.ps1, batch_st3_checks.txt; sheets in out/s3/sheets/); Stage 3's dumps under out/s3/ (untracked); Stage 3's numbers in its handoff in the brief
-  - next: the agent runs Stage 4: P8 against the max over bands, the twin's cover strips, ji 28's darker bare fan, the fork front's crisp arc, jump:gpu at cross t7, ji 149's partition corner, 2x sheets of each. Then Claude reads the handoff and merges (the __k1139diag hook out first) or briefs a fill rule; the Pixel batch (`out/s3b/pixel_batch_plan.md`, its note) builds what merges
+  - next: Levi's three look calls on Stage 4's sheets (the fork front's arc at ji 33, ji 149's gold edge and corner, its notch); the Pixel batch (out/s3b/pixel_batch_plan.md, against this merge); then S4, cycle arms get no band
   - brief: Stage 4 at the end of `docs/design/K1139_s3b_fix.md` on the branch (6b847b4c), after Stage 3 and its handoff
   - env: the brief's section 7 (the node_modules junction); the server `npx vite --config .claude/probes/K1139/vite.private-cache.config.ts --port 5620 --strictPort --host 127.0.0.1` from the worktree (ports 5620-5639); master's preview `pwsh scripts/preview.ps1 -Port 5630 -Ref c4a9dd60 -Root $env:TEMP\k1139s4pv`; GPU probes through `run_locked.ps1 -Batch`
 - **K1189** · Muse batch 18 (`docs/design/K1189_muse_batch18.md`, drafted by run A): Run F turns
