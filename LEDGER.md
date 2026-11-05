@@ -518,9 +518,9 @@ Next free ID: K1186.
 - **K1184** · Muse batch 17 (`docs/design/K1184_muse_batch17.md`, drafted by run A): runs B-G, plus runs H
   and I (K1179 S1d and S1e), added at Claude's review and run first.
   - owner: nobody since 2026-11-04 14:58 (runs B-G queued as Muse chain runs 17B-17G, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `0876de0f`
+  - branch: mainline; last commit: `9ebf6ace`
   - evidence: `docs/design/K1184_muse_batch17.md`; the chain in `.claude/probes/K1053/` (queue.txt, chain.log)
-  - next: chain runs 17B-17G in order (Run G stops at its look sheet); Claude reviews each run as it lands, applies the item texts its report gives and looks at Run G's sheet
+  - next: Run B done; Claude reviews it
   - brief: `docs/design/K1184_muse_batch17.md`
 
 ## Next, in order
@@ -1682,9 +1682,6 @@ Every other item below waits on the trigger it names.
   old history back (Levi 11-04 dropped K1166).
 - **K1182** · The fill rim meets the flank tips with a tangent break (G0 only:
   `src/render/ribbon/rim_curve.ts`, a quadratic); a biarc would make it G1 (K1179 review sections 2-3).
-- **K1183** · No `.claude/rules/` file covers `src/render/field/` (form B and the field scene's lore lives only
-  in design docs): write `render-field.md` with narrow `paths:` and add its `docs/lore_index.md` row (K1179
-  review).
 
 ## Approved, to schedule (2026-10-11)
 
@@ -1989,6 +1986,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1183** · .claude/rules/render-field.md covers src/render/field/ and test/render/field/ with narrow paths, distilling only the binding form B and field-scene grammar from the design docs and code headers; no open K1179 question settled. Done in 9ebf6ace (2026-11-04).
 - **K1179** · Thread geometry (Levi 11-04: rethink how thread bodies, junction rounds and gaps are built, maybe as a skin on the thread centres): reviewed (`docs/design/K1179_geometry_review.md`), no simulated skin; its one-rule outline failed the spike five times (S1-S1e, `docs/design/K1179_s1e.md`), so no rebuild. Done in b6174b00 (2026-11-04).
 - **K1178** · Muse batch 16 (runs A-L, `docs/design/K1178_muse_batch16.md`), each through the chain's gate; the open leftovers stay on their own items (K484, K648, K1179). Done in 20453e7c (2026-11-04).
 - **K178** · K79, K99 and K104 private-cache wrappers load the config with loadConfigFromFile, as K1139's tracked copy does. Done in 1a02e2b8 (2026-11-04).
