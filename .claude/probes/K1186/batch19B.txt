@@ -1,0 +1,3 @@
+node flips.mjs seed3 out
+node flips.mjs fat11 out
+node table.mjs out seed3 fat11

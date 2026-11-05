@@ -1,0 +1,346 @@
+{
+ "seed3": {
+  "perScript": [
+   {
+    "script": "control-drag1",
+    "rebuilds": 134,
+    "transitions": 133,
+    "counts": {
+     "armVote": 2,
+     "wedge": 6,
+     "disc": 2,
+     "cover": 6,
+     "reachBound": 0
+    },
+    "seconds": 16.24
+   },
+   {
+    "script": "drag1",
+    "rebuilds": 137,
+    "transitions": 136,
+    "counts": {
+     "armVote": 2,
+     "wedge": 6,
+     "disc": 2,
+     "cover": 6,
+     "reachBound": 0
+    },
+    "seconds": 16.06
+   },
+   {
+    "script": "drag2",
+    "rebuilds": 296,
+    "transitions": 295,
+    "counts": {
+     "armVote": 0,
+     "wedge": 0,
+     "disc": 0,
+     "cover": 0,
+     "reachBound": 0
+    },
+    "seconds": 5.4
+   },
+   {
+    "script": "drag3",
+    "rebuilds": 137,
+    "transitions": 136,
+    "counts": {
+     "armVote": 2,
+     "wedge": 8,
+     "disc": 2,
+     "cover": 8,
+     "reachBound": 1
+    },
+    "seconds": 16.05
+   },
+   {
+    "script": "sweep-cr",
+    "rebuilds": 27,
+    "transitions": 26,
+    "counts": {
+     "armVote": 228,
+     "wedge": 588,
+     "disc": 186,
+     "cover": 610,
+     "reachBound": 618
+    },
+    "seconds": null
+   },
+   {
+    "script": "sweep-tw",
+    "rebuilds": 14,
+    "transitions": 13,
+    "counts": {
+     "armVote": 252,
+     "wedge": 560,
+     "disc": 196,
+     "cover": 526,
+     "reachBound": 537
+    },
+    "seconds": null
+   }
+  ],
+  "geoByKind": {
+   "armVote": {
+    "n": 486,
+    "median": 0,
+    "worst": 0
+   },
+   "wedge": {
+    "n": 1168,
+    "median": 251.0927177574637,
+    "worst": 1985.7612834196561
+   },
+   "disc": {
+    "n": 388,
+    "median": 225.30532350572878,
+    "worst": 533.2670378833817
+   },
+   "cover": {
+    "n": 1156,
+    "median": 529.5731323968473,
+    "worst": 1504.1130387602766
+   },
+   "reachBound": {
+    "n": 1156,
+    "median": 38.47471016047495,
+    "worst": 614.4417078668703
+   }
+  },
+  "drawnByKind": {
+   "armVote": {
+    "n": 4,
+    "median": 0,
+    "worst": 0
+   },
+   "wedge": {
+    "n": 4,
+    "median": 0,
+    "worst": 0
+   },
+   "disc": {
+    "n": 4,
+    "median": 0,
+    "worst": 0
+   },
+   "cover": {
+    "n": 4,
+    "median": 0,
+    "worst": 0
+   },
+   "reachBound": {
+    "n": 1,
+    "median": 4314,
+    "worst": 4314
+   }
+  },
+  "ctrlMedian": 4484,
+  "ctrlWorst": 11836,
+  "topJ": [
+   [
+    "116",
+    72
+   ],
+   [
+    "7",
+    62
+   ],
+   [
+    "158",
+    56
+   ],
+   [
+    "32",
+    54
+   ],
+   [
+    "60",
+    54
+   ],
+   [
+    "42",
+    52
+   ],
+   [
+    "2",
+    50
+   ],
+   [
+    "22",
+    50
+   ]
+  ]
+ },
+ "fat11": {
+  "perScript": [
+   {
+    "script": "control-drag1",
+    "rebuilds": 134,
+    "transitions": 133,
+    "counts": {
+     "armVote": 1,
+     "wedge": 2,
+     "disc": 1,
+     "cover": 1,
+     "reachBound": 2
+    },
+    "seconds": 25.14
+   },
+   {
+    "script": "drag1",
+    "rebuilds": 137,
+    "transitions": 136,
+    "counts": {
+     "armVote": 3,
+     "wedge": 6,
+     "disc": 0,
+     "cover": 6,
+     "reachBound": 6
+    },
+    "seconds": 24.58
+   },
+   {
+    "script": "drag2",
+    "rebuilds": 127,
+    "transitions": 126,
+    "counts": {
+     "armVote": 1,
+     "wedge": 1,
+     "disc": 0,
+     "cover": 2,
+     "reachBound": 0
+    },
+    "seconds": 24.67
+   },
+   {
+    "script": "drag3",
+    "rebuilds": 128,
+    "transitions": 127,
+    "counts": {
+     "armVote": 5,
+     "wedge": 3,
+     "disc": 0,
+     "cover": 6,
+     "reachBound": 5
+    },
+    "seconds": 26.19
+   },
+   {
+    "script": "sweep-cr",
+    "rebuilds": 26,
+    "transitions": 25,
+    "counts": {
+     "armVote": 201,
+     "wedge": 359,
+     "disc": 102,
+     "cover": 403,
+     "reachBound": 572
+    },
+    "seconds": null
+   },
+   {
+    "script": "sweep-tw",
+    "rebuilds": 13,
+    "transitions": 12,
+    "counts": {
+     "armVote": 227,
+     "wedge": 423,
+     "disc": 139,
+     "cover": 412,
+     "reachBound": 475
+    },
+    "seconds": null
+   }
+  ],
+  "geoByKind": {
+   "armVote": {
+    "n": 438,
+    "median": 0,
+    "worst": 0
+   },
+   "wedge": {
+    "n": 794,
+    "median": 478.2578057942125,
+    "worst": 3176.733067556176
+   },
+   "disc": {
+    "n": 242,
+    "median": 412.2664165888499,
+    "worst": 508.9708846775926
+   },
+   "cover": {
+    "n": 830,
+    "median": 754.4224763281971,
+    "worst": 2153.3763282037003
+   },
+   "reachBound": {
+    "n": 1060,
+    "median": 26.658798943161838,
+    "worst": 1532.2373189737077
+   }
+  },
+  "drawnByKind": {
+   "armVote": {
+    "n": 9,
+    "median": 0,
+    "worst": 0
+   },
+   "wedge": {
+    "n": 7,
+    "median": 0,
+    "worst": 0
+   },
+   "disc": {
+    "n": 0,
+    "median": 0,
+    "worst": 0
+   },
+   "cover": {
+    "n": 7,
+    "median": 0,
+    "worst": 0
+   },
+   "reachBound": {
+    "n": 6,
+    "median": 0,
+    "worst": 0
+   }
+  },
+  "ctrlMedian": 8641,
+  "ctrlWorst": 21380,
+  "topJ": [
+   [
+    "55",
+    48
+   ],
+   [
+    "1",
+    44
+   ],
+   [
+    "173",
+    41
+   ],
+   [
+    "148",
+    39
+   ],
+   [
+    "95",
+    39
+   ],
+   [
+    "174",
+    38
+   ],
+   [
+    "109",
+    38
+   ],
+   [
+    "76",
+    37
+   ]
+  ]
+ }
+}
