@@ -126,3 +126,10 @@ only with the files it is about; `render.md` lists the area's other files.
   gpu_sum.mjs (GPU A/B). Before/after builds: detach to the base commit,
   `vite build --config .claude\probes\K81\vite.private-cache.config.ts
   --outDir ...`, switch back, `vite preview` on 5312/5313.
+- PULSE BANDS IN THE FANS (K1139 Stage 4, `docs/design/K1139_s3b_fix.md`;
+  the model: `.claude/probes/K1139/cover_lib.mjs`): a count of GPU pixels
+  against the fan's CPU twin must model the cover strips the GPU draws
+  over the fan and leave out MSAA samples that belong to other junctions'
+  fan primitives (per 4x sample the last covering fillet primitive in draw
+  order wins; a later record's fan over the box reads G 0 on its samples,
+  (samples x twin G)/4 along its edge).

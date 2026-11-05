@@ -1205,8 +1205,9 @@ The six tasks:
 
 ### Stage 4.3 Sheets
 
-For each of tasks 3-6, a 2x crop with three rows, before (master
-c4a9dd60), S3b and the fix, in Stage 3's layout. Files go under
+For each of tasks 3-6, a 2x crop with three rows, before S3b (build
+7474d09b; master c4a9dd60 already carries S3b, see the handoff), S3b and
+the fix, in Stage 3's layout. Files go under
 `.claude/probes/K1139/out/s4/sheets/`, tracked with `-f`, and the
 handoff lists what is where.
 

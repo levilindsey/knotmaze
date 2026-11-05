@@ -3616,6 +3616,12 @@ quantities continuous wherever their weight is above 0. Residuals the next stage
 ji 125 and 149; the sibling stripes on cross e150; x4 ji 28's GPU wedges 2.7x the CPU twin's (cover strips in the
 footprint mask?, not checked); for S4, cycle arms e79 (node_386) and e134 (node_378) get no band (pulseTree declares
 bands only to tree children).
+
+Levi's answers (2026-11-03, the plan's Q1-Q3): the light splits at a fork (A); behind you it runs toward you; through
+your own junction it goes straight through, with no dim moment. The fix for S3b (`docs/design/K1139_s3b_fix.md`,
+branch `worktree-agent-a8280f4d14ebd8ad1`, its worktree kept) merged at 71eedb94 on 2026-11-04; its record is Stage
+4's handoff there. Its three look calls are K1190, its leftovers K1191.
+
 ## K1162
 
 Found by the six ask-card agents on 2026-11-03 (their cards are in `docs/asks/`); not re-checked by Claude:
@@ -3661,10 +3667,10 @@ Walker modes, Levi's brainstorm (2026-11-03, five messages): guide it, program i
 ## K782 (2026-11-04, shortened at batch 17's close)
 
 - **K782** · K137 s4 lure and snare residuals (docs/design/K137_s4.md
-  Handoff): the Snared toast fires before the monster reaches the snare; an
-  armed tool lights any run on hover; a live switch to travel by length
-  keeps snares that never spring, rings drawn; under length a lure clears
-  one hop late (read, untested); untested under clk=beat; the ring is a
-  stand-in for a glyph; a waiting follower's first step still skips the mud
-  cut. Fixed since: the follower's first step is snare-checked (4b1886c7,
-  batch 17 run E).
+  Handoff): an armed tool lights any run on hover; a live switch to travel
+  by length keeps snares that never spring, rings drawn; under length a lure
+  clears one hop late (read, untested); untested under clk=beat; the ring is
+  a stand-in for a glyph; a waiting follower's first step still skips the
+  mud cut. Fixed since: the follower's first step is snare-checked
+  (4b1886c7, batch 17 run E); the Snared toast waits for the monster's
+  arrival (8ba8dc69, batch 18 run B).
