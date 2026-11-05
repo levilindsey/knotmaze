@@ -330,6 +330,64 @@ describe("the fire model (K114)", () => {
     expect(fireTrapped(w, f, 3, "B", () => false)).toBe(fireTrapped(w, f, 3, "B"));
   });
 
+  it("K711 (b): a mid-graph run's burning and burnt clocks, no predicate", () => {
+    const w = graph(RUNS, "S", "X");
+    const f = buildFire(w, 0.5, 0);
+    // Run 1 (A-B, len 1; not the S-A run): d(A) 2, d(B) 3, r 0.5, h 0.
+    // It starts burning at 4, reads burning at 5 and burnt at 6.
+    expect(runBurnAt(w, f, 1, 5)).toEqual({
+      state: "burning",
+      burnt: [[0, 0.5]],
+      front: [0.5],
+    });
+    expect(runBurnAt(w, f, 1, 6)).toEqual({ state: "burnt" });
+  });
+
+  it("K711 (b): a broken run reads unburnt at every clock", () => {
+    const w = graph(RUNS, "S", "X");
+    const f = buildFire(w, 0.5, 0);
+    const broken1 = (eid: number) => eid === 1;
+    // The clocks where the run above reads burning (5) and burnt (6),
+    // and every other clock, read unburnt once the run is named broken.
+    expect(runBurnAt(w, f, 1, 5, broken1)).toEqual({ state: "unburnt" });
+    expect(runBurnAt(w, f, 1, 6, broken1)).toEqual({ state: "unburnt" });
+    expect(runBurnAt(w, f, 1, 0, broken1)).toEqual({ state: "unburnt" });
+    expect(runBurnAt(w, f, 1, 100, broken1)).toEqual({ state: "unburnt" });
+    // A predicate that names nothing, or names another run, keeps
+    // today's answers for run 1; run 2 (the second A-B) is unaffected
+    // by run 1's predicate.
+    expect(runBurnAt(w, f, 1, 5, () => false)).toEqual({
+      state: "burning",
+      burnt: [[0, 0.5]],
+      front: [0.5],
+    });
+    expect(runBurnAt(w, f, 1, 6, () => false)).toEqual({ state: "burnt" });
+    expect(runBurnAt(w, f, 2, 5, broken1)).toEqual({
+      state: "burning",
+      burnt: [[0, 0.5]],
+      front: [0.5],
+    });
+    expect(runBurnAt(w, f, 2, 6, broken1)).toEqual({ state: "burnt" });
+  });
+
+  it("K711 (b): drawFire's burnt-spans loop passes the controller's broken predicate", () => {
+    // A source scan, in the panel_rect.test.ts manner: drawFire's
+    // burnt-spans loop is the one runBurnAt call that must skip gone
+    // runs (the smolder loop below it reads choices(), which already
+    // drops them), so slice that loop out and assert the call there.
+    const src = readFileSync(
+      fileURLToPath(new URL("../../src/render/fabric_maze_renderer.ts", import.meta.url)),
+      "utf8"
+    );
+    const start = src.indexOf("const lit = L <= fire.delay;");
+    const end = src.indexOf("// A smoldering arm", start);
+    expect(start).toBeGreaterThanOrEqual(0);
+    expect(end).toBeGreaterThan(start);
+    expect(src.slice(start, end)).toContain(
+      "runBurnAt(this.walk, fire, eid, L, (r) => controller.broken(r))"
+    );
+  });
+
   it("K711 (c): the controller passes its broken runs to the trap test", () => {
     // A source scan, in the panel_rect.test.ts manner: the controller's own
     // fire-and-fragile walk in k137b_block.test.ts does not reach a stated

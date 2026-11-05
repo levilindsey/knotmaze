@@ -136,7 +136,17 @@ export type RunBurn =
 const UNBURNT: RunBurn = { state: "unburnt" };
 const BURNT: RunBurn = { state: "burnt" };
 
-export function runBurnAt(walk: WalkGraph, fire: Fire, eid: number, L: number): RunBurn {
+// K711 (b): a run the `broken` predicate names (fragile breaks and cuts
+// alike) is gone, so it reads unburnt at every clock. A caller that
+// passes nothing reads today's answers.
+export function runBurnAt(
+  walk: WalkGraph,
+  fire: Fire,
+  eid: number,
+  L: number,
+  broken?: (eid: number) => boolean
+): RunBurn {
+  if (broken?.(eid)) return UNBURNT;
   const e = walk.edges[eid];
   const da = fire.dist.get(e.va) ?? Infinity;
   const db = fire.dist.get(e.vb) ?? Infinity;

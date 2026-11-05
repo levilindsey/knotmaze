@@ -2637,7 +2637,7 @@ export class FabricMazeRenderer {
     const lit = L <= fire.delay;
     for (let eid = 0; eid < this.walk.edges.length; eid++) {
       const e = this.walk.edges[eid];
-      const b = runBurnAt(this.walk, fire, eid, L);
+      const b = runBurnAt(this.walk, fire, eid, L, (r) => controller.broken(r));
       if (b.state === "unburnt") continue;
       if (b.state === "burnt") {
         spans.push(this.burnSpan(e, 0, e.length));
