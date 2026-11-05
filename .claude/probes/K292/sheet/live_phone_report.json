@@ -1,0 +1,72 @@
+{
+  "tag": "live_phone",
+  "base": "http://127.0.0.1:5680/",
+  "steps": [
+    {
+      "name": "ready",
+      "waitMs": 6275
+    }
+  ],
+  "checks": [
+    {
+      "name": "marked set in DOM = params minus exempt, less no-row params, plus seed",
+      "ok": true,
+      "missing": [],
+      "extra": []
+    },
+    {
+      "name": "counts: 269 params, 82 exempt, 187 marked, 186 DOM keys",
+      "ok": true,
+      "params": 269,
+      "exempt": 82,
+      "marked": 187,
+      "domKeys": 186
+    },
+    {
+      "0": "mazeFabric",
+      "1": "labelGpu",
+      "name": "no-row marked params named (mazeFabric, labelGpu)",
+      "ok": true
+    },
+    {
+      "name": "clock view rows both carry clock (187 rows, 186 keys)",
+      "ok": true,
+      "clockRows": 2,
+      "domRows": 187
+    },
+    {
+      "0": {
+        "cls": "tp-lblv kp-row kp-seed kp-design kp-has-help",
+        "seed": true,
+        "daily": false,
+        "design": true,
+        "key": "seed"
+      },
+      "1": {
+        "cls": "tp-lblv tp-v-lst kp-row kp-daily kp-has-help",
+        "seed": false,
+        "daily": true,
+        "design": false,
+        "key": null
+      },
+      "name": "Seed marked with key seed, Daily unmarked",
+      "ok": true
+    },
+    {
+      "name": "plain load: key line shown with its words, triangle drawn (no gate)",
+      "ok": true,
+      "gate": false,
+      "keyText": "The corner mark: this setting is in the link",
+      "keyDisplay": "flex",
+      "triContent": "\"\"",
+      "triBorderTop": "6.66667px"
+    },
+    {
+      "name": "plain load: 187 marked rows",
+      "ok": true,
+      "rows": 187
+    }
+  ],
+  "errors": [],
+  "failed": []
+}

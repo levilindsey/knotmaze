@@ -400,9 +400,8 @@ export function buildPanel(
   headVer.textContent = `v${APP_VERSION} · ${BUILD_SHA}`;
   if (BUILD_TIME) headVer.title = `Built ${BUILD_TIME} UTC`;
   headTop.append(headName, headVer);
-  // K292: the dog-ear key, beside the version line. Shown only behind
-  // :root[data-dogear] (the look-sheet probe sets it) until the look is
-  // judged; without the attribute the panel is exactly as before.
+  // K292: the dog-ear key, beside the version line. Shown for everyone
+  // since Levi's yes (2026-11-04).
   const headKey = document.createElement("div");
   headKey.className = "kp-dogear-key";
   headKey.textContent = "The corner mark: this setting is in the link";
@@ -495,22 +494,19 @@ export function buildPanel(
     ".kp-row.kp-greyed .tp-lblv_l{opacity:.6}" +
     // K292: the dog-ear - a subtle top-right triangle on design rows
     // (theme-neutral: the panel's own label tint, no new colour) - and
-    // its key line at the panel's top. Both live only behind
-    // :root[data-dogear], which only the look-sheet probe sets, so
-    // without it the panel is pixel-identical to before. The triangle
-    // is the row's own ::after: the label's ::after is the search hint
-    // (panel_search_ui.ts) and .kp-i::before is the help mark, each on
-    // its own element, so the row's ::after is free and cannot collide
-    // with either.
-    ":root[data-dogear] .kp-row.kp-design{position:relative}" +
-    ":root[data-dogear] .kp-row.kp-design::after{content:'';position:absolute;" +
+    // its key line at the panel's top. Shown for everyone since Levi's
+    // yes (2026-11-04). The triangle is the row's own ::after: the
+    // label's ::after is the search hint (panel_search_ui.ts) and
+    // .kp-i::before is the help mark, each on its own element, so the
+    // row's ::after is free and cannot collide with either.
+    ".kp-row.kp-design{position:relative}" +
+    ".kp-row.kp-design::after{content:'';position:absolute;" +
     "top:0;right:0;width:0;height:0;border-top:7px solid rgba(187,188,196,.55);" +
     "border-left:7px solid transparent;pointer-events:none}" +
-    ".kp-dogear-key{display:none}" +
-    ":root[data-dogear] .kp-dogear-key{display:flex;align-items:flex-start;" +
+    ".kp-dogear-key{display:flex;align-items:flex-start;" +
     "gap:6px;margin-top:4px;font-weight:400;font-size:10px;" +
     "color:rgba(187,188,196,.62)}" +
-    ":root[data-dogear] .kp-dogear-key::before{content:'';flex:0 0 auto;" +
+    ".kp-dogear-key::before{content:'';flex:0 0 auto;" +
     "width:0;height:0;border-top:6px solid rgba(187,188,196,.55);" +
     "border-left:6px solid transparent}" +
     // Folder disclosure marker: a plain triangle (right when collapsed,
@@ -977,9 +973,10 @@ export function buildPanel(
     api.element.classList.add("kp-row");
     // K292: a design row (its param rides in the link; personal rows
     // and settings rows do not) gains the dog-ear class and its param
-    // key for the census. The triangle is CSS behind :root[data-dogear]
-    // (see the style block); Seed and Daily are hand-built outside
-    // row(), so they stay unmarked, as do buttons.
+    // key for the census. The triangle shows for everyone since Levi's
+    // yes (2026-11-04) (see the style block); the Seed row is hand-built
+    // outside row() and marked beside its build, and the Daily button
+    // stays unmarked, as do the other buttons.
     const designKey = obj === p ? key : (VIEW_PARAM[key] ?? null);
     if (designKey !== null && isDesignParam(designKey)) {
       api.element.classList.add("kp-design");
@@ -1291,7 +1288,9 @@ export function buildPanel(
   const seedApi = fDesign.addBinding(seedView, "seed" as never, { label: "Seed" } as Record<string, unknown>) as RowApi;
   seedApi.element.title =
     "The design's seed - the first part of the link. Type a seed (or any word) and press Enter to load that design; the dice rolls a random one.";
-  seedApi.element.classList.add("kp-row", "kp-seed");
+  // K292: the seed rides in the link, so its row is marked too (Levi 2026-11-04).
+  seedApi.element.classList.add("kp-row", "kp-seed", "kp-design");
+  seedApi.element.dataset.kpKey = "seed";
   // K486: the seed row is a binding built by hand, so wire its help here.
   const seedLabel = seedApi.element.querySelector(".tp-lblv_l");
   if (seedLabel instanceof HTMLElement) wireHelp(seedApi.element, seedLabel, null);
