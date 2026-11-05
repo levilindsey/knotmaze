@@ -1,0 +1,320 @@
+{
+ "cyc": {
+  "target": 210,
+  "standHead": "node_221",
+  "reach": 3,
+  "standable": 181,
+  "headsTried": 2,
+  "headsItem3": 0,
+  "headsItem4": 0,
+  "minAbsXR": 0.68,
+  "minAbsTargetXR": 0.68,
+  "predAtMin": 0,
+  "rows": [
+   {
+    "stand": "cyc",
+    "head": "node_218",
+    "wanted": "node_218",
+    "moves": [
+     0,
+     246,
+     82,
+     83,
+     199,
+     150,
+     151,
+     38,
+     155,
+     211,
+     39
+    ],
+    "ext": [
+     39
+    ],
+    "twos": [
+     {
+      "edge": 210,
+      "near": "node_218",
+      "far": "node_221",
+      "W": 2.746,
+      "dA": 0,
+      "dB": 1.386,
+      "gR": 2.066,
+      "xRa": 2.066,
+      "xRb": 0.68,
+      "facA": 1,
+      "facB": 1,
+      "predA": 0,
+      "predB": 0
+     }
+    ],
+    "target": {
+     "edge": 210,
+     "near": "node_218",
+     "far": "node_221",
+     "W": 2.746,
+     "dA": 0,
+     "dB": 1.386,
+     "gR": 2.066,
+     "xRa": 2.066,
+     "xRb": 0.68,
+     "facA": 1,
+     "facB": 1,
+     "predA": 0,
+     "predB": 0
+    },
+    "dumpHead": "node_218",
+    "dumpTwos": 4,
+    "ctxLost": 0,
+    "pageErrors": []
+   },
+   {
+    "stand": "cyc",
+    "head": "node_221",
+    "wanted": "node_221",
+    "moves": [
+     0,
+     246,
+     82,
+     83,
+     199,
+     150,
+     151,
+     38,
+     155,
+     211
+    ],
+    "ext": [],
+    "twos": [
+     {
+      "edge": 210,
+      "near": "node_221",
+      "far": "node_218",
+      "W": 2.746,
+      "dA": 0,
+      "dB": 1.386,
+      "gR": 2.066,
+      "xRa": 2.066,
+      "xRb": 0.68,
+      "facA": 1,
+      "facB": 1,
+      "predA": 0,
+      "predB": 0
+     }
+    ],
+    "target": {
+     "edge": 210,
+     "near": "node_221",
+     "far": "node_218",
+     "W": 2.746,
+     "dA": 0,
+     "dB": 1.386,
+     "gR": 2.066,
+     "xRa": 2.066,
+     "xRb": 0.68,
+     "facA": 1,
+     "facB": 1,
+     "predA": 0,
+     "predB": 0
+    },
+    "dumpHead": "node_221",
+    "dumpTwos": 4,
+    "ctxLost": 0,
+    "pageErrors": []
+   }
+  ]
+ },
+ "loop": {
+  "target": 102,
+  "standHead": "node_635",
+  "reach": 8,
+  "standable": 170,
+  "headsTried": 3,
+  "headsItem3": 0,
+  "headsItem4": 0,
+  "minAbsXR": 3.835,
+  "minAbsTargetXR": 3.835,
+  "predAtMin": 0,
+  "rows": [
+   {
+    "stand": "loop",
+    "head": "mnode_77",
+    "wanted": "mnode_77",
+    "moves": [
+     185,
+     186,
+     187,
+     122,
+     50,
+     118,
+     117,
+     165,
+     60,
+     9,
+     178,
+     57,
+     101,
+     101
+    ],
+    "ext": [
+     101
+    ],
+    "twos": [
+     {
+      "edge": 102,
+      "near": "node_635",
+      "far": "node_635",
+      "W": 7.671,
+      "dA": 4.253,
+      "dB": 4.253,
+      "gR": 8.088,
+      "xRa": 3.835,
+      "xRb": 3.835,
+      "facA": 1,
+      "facB": 1,
+      "predA": 0,
+      "predB": 0
+     }
+    ],
+    "target": {
+     "edge": 102,
+     "near": "node_635",
+     "far": "node_635",
+     "W": 7.671,
+     "dA": 4.253,
+     "dB": 4.253,
+     "gR": 8.088,
+     "xRa": 3.835,
+     "xRb": 3.835,
+     "facA": 1,
+     "facB": 1,
+     "predA": 0,
+     "predB": 0
+    },
+    "dumpHead": "mnode_77",
+    "dumpTwos": 10,
+    "ctxLost": 0,
+    "pageErrors": []
+   },
+   {
+    "stand": "loop",
+    "head": "node_649",
+    "wanted": "node_649",
+    "moves": [
+     185,
+     186,
+     187,
+     122,
+     50,
+     118,
+     117,
+     165,
+     60,
+     9,
+     178,
+     57,
+     101,
+     101,
+     57
+    ],
+    "ext": [
+     101,
+     57
+    ],
+    "twos": [
+     {
+      "edge": 102,
+      "near": "node_635",
+      "far": "node_635",
+      "W": 7.671,
+      "dA": 5.177,
+      "dB": 5.177,
+      "gR": 9.012,
+      "xRa": 3.835,
+      "xRb": 3.835,
+      "facA": 1,
+      "facB": 1,
+      "predA": 0,
+      "predB": 0
+     }
+    ],
+    "target": {
+     "edge": 102,
+     "near": "node_635",
+     "far": "node_635",
+     "W": 7.671,
+     "dA": 5.177,
+     "dB": 5.177,
+     "gR": 9.012,
+     "xRa": 3.835,
+     "xRb": 3.835,
+     "facA": 1,
+     "facB": 1,
+     "predA": 0,
+     "predB": 0
+    },
+    "dumpHead": "node_649",
+    "dumpTwos": 10,
+    "ctxLost": 0,
+    "pageErrors": []
+   },
+   {
+    "stand": "loop",
+    "head": "node_635",
+    "wanted": "node_635",
+    "moves": [
+     185,
+     186,
+     187,
+     122,
+     50,
+     118,
+     117,
+     165,
+     60,
+     9,
+     178,
+     57,
+     101
+    ],
+    "ext": [],
+    "twos": [
+     {
+      "edge": 102,
+      "near": "node_635",
+      "far": "node_635",
+      "W": 7.671,
+      "dA": 0,
+      "dB": 0,
+      "gR": 3.835,
+      "xRa": 3.835,
+      "xRb": 3.835,
+      "facA": 1,
+      "facB": 1,
+      "predA": 0,
+      "predB": 0
+     }
+    ],
+    "target": {
+     "edge": 102,
+     "near": "node_635",
+     "far": "node_635",
+     "W": 7.671,
+     "dA": 0,
+     "dB": 0,
+     "gR": 3.835,
+     "xRa": 3.835,
+     "xRb": 3.835,
+     "facA": 1,
+     "facB": 1,
+     "predA": 0,
+     "predB": 0
+    },
+    "dumpHead": "node_635",
+    "dumpTwos": 6,
+    "ctxLost": 0,
+    "pageErrors": []
+   }
+  ]
+ }
+}

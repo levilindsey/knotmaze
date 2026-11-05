@@ -1,0 +1,8 @@
+cyc stand, head node_221, joint node_218 (e39 parent -> e210 two-ended child), moves [0,246,82,83,199,150,151,38,155,211]
+injection: xR_B = (dA + W - dB)/2 = 0.2 -> dB = dA + W - 0.4 = 0.000 + 2.746 - 0.4 = 2.346; gR = (dA+dB+W)/2 = 2.546; applied {"two":true,"dB":2.34639892578125,"dist0":0}
+predicted (ridge_joint.ts, xR 0.2): 0.54
+natural control: CPU band step 0 at t 100.422, P1 0.0001; GPU step 0.0471 (cpu -0.1743), max |GPU-CPU| 0.1259 (P8 tol 0.00784313725490196)
+injected: CPU band step 0.3885 at t 101.469, P1 1; GPU step 0.5255 (cpu -0.5628), max |GPU-CPU| 0.039
+samples natural: band@-0.3 gpu 144 cpu 0.560; band@-0.1 gpu 69 cpu 0.272; band@-0.03 gpu 43 cpu 0.171; band@0.03 gpu 39 cpu 0.111; band@0.1 gpu 57 cpu 0.098; band@0.3 gpu 15 cpu 0.060; band@0.8 gpu 3 cpu 0.010; child-ribbon@1.6 gpu 132 cpu 0.473; child-ribbon@2 gpu 255 cpu 1.000
+samples injected: band@-0.3 gpu 132 cpu 0.517; band@-0.1 gpu 167 cpu 0.653; band@-0.03 gpu 167 cpu 0.655; band@0.03 gpu 56 cpu 0.201; band@0.1 gpu 33 cpu 0.090; band@0.3 gpu 23 cpu 0.090; band@0.8 gpu 101 cpu 0.406; child-ribbon@1.6 gpu 43 cpu 0.162; child-ribbon@2 gpu 62 cpu 0.238
+ctxLost 0, pageErrors 0

@@ -1,0 +1,7 @@
+cyc (target e210, stand head node_221, reach 3, 181 standable vertices enumerated): heads tried 2, item3 heads (0<=xR<0.5) 0, item4 heads (xR<0) 0, smallest |xR| 0.68 (target 0.68), predicted step at it 0
+  head node_218 moves [0,246,82,83,199,150,151,38,155,211,39]: e210 node_218->node_221 W 2.746 dA 0 dB 1.386 gR 2.066 xR A 2.066 (fac 1, pred 0) B 0.68 (fac 1, pred 0)
+  head node_221 moves [0,246,82,83,199,150,151,38,155,211]: e210 node_221->node_218 W 2.746 dA 0 dB 1.386 gR 2.066 xR A 2.066 (fac 1, pred 0) B 0.68 (fac 1, pred 0)
+loop (target e102, stand head node_635, reach 8, 170 standable vertices enumerated): heads tried 3, item3 heads (0<=xR<0.5) 0, item4 heads (xR<0) 0, smallest |xR| 3.835 (target 3.835), predicted step at it 0
+  head mnode_77 moves [185,186,187,122,50,118,117,165,60,9,178,57,101,101]: e102 node_635->node_635 W 7.671 dA 4.253 dB 4.253 gR 8.088 xR A 3.835 (fac 1, pred 0) B 3.835 (fac 1, pred 0)
+  head node_649 moves [185,186,187,122,50,118,117,165,60,9,178,57,101,101,57]: e102 node_635->node_635 W 7.671 dA 5.177 dB 5.177 gR 9.012 xR A 3.835 (fac 1, pred 0) B 3.835 (fac 1, pred 0)
+  head node_635 moves [185,186,187,122,50,118,117,165,60,9,178,57,101]: e102 node_635->node_635 W 7.671 dA 0 dB 0 gR 3.835 xR A 3.835 (fac 1, pred 0) B 3.835 (fac 1, pred 0)
