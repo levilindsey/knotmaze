@@ -525,9 +525,9 @@ Next free ID: K1199.
   (K1186's flip count, K1182's G1 rim, K1191's examinations), then batch 18's follow-ups; Claude added Run F
   (what cuts K1182's stepped corners)
   - owner: nobody since 2026-11-04 20:08 (runs 19E and 19F queued in the Muse chain, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `d740e698`
+  - branch: mainline; last commit: `b806f9fb`
   - evidence: docs/design/K1192_muse_batch19.md; the chain in .claude/probes/K1053/ (queue.txt, chain.log)
-  - next: Run D done; Claude reviews it, Run E next
+  - next: Run E done; Run F next
   - brief: `docs/design/K1192_muse_batch19.md`
 
 ## Next, in order
