@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1206.
+Next free ID: K1207.
 
 ## Waiting on Levi
 
@@ -509,11 +509,11 @@ Next free ID: K1206.
 - **K1097** · K1040 S3, the label pass (F7 of `docs/design/K1040_junction_field.md`): the depth-tested label on
   the GPU, gated by oracle30's verdicts on the 12 scenes (0 DEFECT closes K1033), the recordings' pops and the
   Pixel's 2 ms.
-  - owner: nobody since 2026-11-04 23:20 (the coordinator read S3f4's Pixel batch; S3f5 goes to Muse batch 21)
-  - branch: mainline; last commit: `b3dab0c9`
-  - evidence: .claude/probes/K1040/s3/ (s3f4_gate.ps1, split.mjs, vert_count.ts; out/split_s3f4.md and out/phone_table_s3f4.md (the Pixel), out/split_s3f4_desktop.md, out/vert_count_s3f4.md, out/check_s3f4chk_summary.md, out/ab_s3f4ab_summary.md; earlier splits out/split_s3f2.md, out/split_s3d2.md)
-  - next: S3f5 in Muse batch 21 (the coordinator drafts its brief from the Pixel's reading in the S3f4 doc): default-off variants for the pass's fixed cost (attachments, formats, depth's store, load and store hints) and cheaper segment vertices (fewer fetches per vertex), with S3f4's checks and the desktop split, then the Pixel batch in S3f4's columns
-  - brief: `docs/design/K1040_s3f4_bound.md` (its Handoff ends with the Pixel's reading)
+  - owner: nobody since 2026-11-05 03:53: the Pixel batch waits for the phone (the read-only check found Chrome in front, not the launcher; the guard never wakes, unlocks or sends keys)
+  - branch: mainline; last commit: `8b7a2b4a`
+  - evidence: .claude/probes/K1040/s3/ (s3f5_gate.ps1, s3f4_gate.ps1, split.mjs, vert_count.ts; S3f5: out/ab_s3f5ab_summary.md, out/check_s3f5chk_summary.md, out/many_s3f5d1_summary.md, out/many_s3f5d2_summary.md, out/split_s3f5_desktop.md; S3f4: out/split_s3f4.md and out/phone_table_s3f4.md (the Pixel), out/split_s3f4_desktop.md, out/vert_count_s3f4.md, out/check_s3f4chk_summary.md, out/ab_s3f4ab_summary.md; earlier splits out/split_s3f2.md, out/split_s3d2.md)
+  - next: S3f5's variants built behind their probe switches in 8b7a2b4a, all at 0 px against `ftentv`; the desktop split at `.claude/probes/K1040/s3/out/split_s3f5_desktop.md`; Claude runs `s3f5_gate.ps1 -SkipDesktop` for the Pixel batch, then the lever its columns point to
+  - brief: Run B of `docs/design/K1204_muse_batch21.md` (S3f5); `docs/design/K1040_s3f4_bound.md` (its Handoff ends with the Pixel's reading)
   - env: the phone through `.claude/probes/K1040/s3/phone_batch.ps1` (run_phone.ps1: both locks, then K1142's ready check), `phone_time.mjs` serving on 5403; desktop timing through `run_locked.ps1`, never piped through `Select-Object -First` (K1174)
 - **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate correctly
   across junctions"). S1 to S5 landed (S5 on since fbc1b212); S3b-S5 held the Pixel's frames (render +2%).
@@ -524,13 +524,13 @@ Next free ID: K1206.
   - next: Levi's look K1200 (`docs/asks/K1200.md`); K1201-K1203 (K1201's census and K1202/K1203's fixes are Muse batch 21 candidates, K1204); S6 (plan section 5) after K1140's Glimpse picks; K1190's fixes once Levi answers. The next pulse step's Pixel pass watches fabric 7 moves' frames over 25 ms (+14 and +15 in the fix's and S5's passes, floor 13)
   - brief: the plan `docs/design/K1139_pulse_junctions.md` section 5 (S6); S5 was Muse batch 20's Run B (`docs/design/K1199_muse_batch20.md`)
   - env: the passes' builds first and never while Muse runs: `scripts/preview.ps1 -Ref <sha> -Root <out>\builds -BuildOnly` for each sha (`pixel_passes.ps1` stops before the phone lock when one is missing); probe server `npx vite --config .claude/probes/K1139/vite.private-cache.config.ts --port 5620 --strictPort --host 127.0.0.1` from a worktree (ports 5620-5639); GPU probes through `.claude/probes/K1139/run_locked.ps1 -Batch`
-- **K1204** · Muse batch 21 (after K1199's batch 20): Run A drafts the brief from
-  `docs/design/K1204_muse_batch21_run_a.md` (committed after 20G); Claude reviews the draft and queues runs B
-  to G (ports 5820-5879)
+- **K1204** · Muse batch 21 (after K1199's batch 20): runs B to G from `docs/design/K1204_muse_batch21.md`
+  (Run A's draft, Claude's review 854823fa), one at a time through the chain, ports 5820-5879; B done
+  (8b7a2b4a, K1097's S3f5)
   - owner: the chain in `.claude/probes/K1053/` (queue.txt, chain.log): batch 21's runs B to G, fresh Muse sessions, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
   - branch: mainline; last commit: `8b7a2b4a`
   - evidence: `docs/design/K1204_muse_batch21.md` (runs B to G), `docs/design/K1204_muse_batch21_run_a.md`; the chain in `.claude/probes/K1053/` (queue.txt, chain.log)
-  - next: Run B done; Claude reviews it, Run C next
+  - next: Run C (K1202's fix behind a switch), then D to G; Claude judges each run's sheet or table and files its findings under a hold (`.claude/probes/K1053/hold.txt`) before the next run
   - brief: `docs/design/K1204_muse_batch21.md`
 
 ## Next, in order
@@ -774,6 +774,8 @@ Every other item below waits on the trigger it names.
 - **K1196** · Two-ended pulses (K1139 S4) on the desktop, 20F (345a189f, `.claude/probes/K1196/out/`): frame
   p50 at rest 7.50 (cyc e210), 7.82 (loop e102), start head 7.07; in play 7.25, 7.22, 6.95 (spread 0.2, 0.1).
   Other stands, so not S4's own cost: next, those stands on S4's base and head (ABBA), the Pixel if it costs
+- **K1206** · Batch 22's Run A brief: its draft checks each path it cites and quotes numbers from the files
+  (21A's cited seven files 20G never wrote and misread one; fixed in 854823fa)
 
 ## Residuals (known, not fixed)
 
