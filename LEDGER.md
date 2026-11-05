@@ -519,14 +519,14 @@ Next free ID: K1185.
   as a skin on the thread centres). Review (`docs/design/K1179_geometry_review.md`): keep threads and physics,
   one per-pixel outline rule for both looks, no simulated skin. S1-S1d: K1178 Runs I, K, L, K1184 H (all fail).
   - owner: nobody since 2026-11-04 14:16 (S1e queued as Muse batch 17 run I, chain run 17I, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `7cefb993`
+  - branch: mainline; last commit: `c494467b`
   - evidence: docs/design/K1179_geometry_review.md; docs/design/K1179_spike.md; docs/design/K1179_s1b.md; docs/design/K1179_s1c.md; docs/design/K1179_s1d.md; .claude/probes/K1179/
   - next: Muse chain run 17I builds S1e (the pinned round with form B's own gate integral, K = 32 and 8, offline); Claude reviews it and looks at the plots; S2, the phone GPU check, only after a pass
   - brief: Run I of `docs/design/K1184_muse_batch17.md` (Claude's read of S1d, the rule and the criteria); the record it builds on, `docs/design/K1179_s1d.md`
 - **K1184** · Muse batch 17 (`docs/design/K1184_muse_batch17.md`, drafted by run A): runs B-G, plus runs H
   and I (K1179 S1d and S1e), added at Claude's review and run first.
   - owner: nobody since 2026-11-04 14:16 (run I queued as Muse chain run 17I, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `7cefb993`
+  - branch: mainline; last commit: `c494467b`
   - evidence: `docs/design/K1184_muse_batch17.md`; the chain in `.claude/probes/K1053/` (queue.txt, chain.log)
   - next: chain run 17I (K1179 S1e) runs alone; Claude reviews runs B-G against the code meanwhile, applies the amendments at the quiet point after it, then queues 17B-17G
   - brief: `docs/design/K1184_muse_batch17.md`
