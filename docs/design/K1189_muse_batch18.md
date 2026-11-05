@@ -8,10 +8,12 @@ afterwards and closes K1189.
 
 This was a drafting run (Run A,
 `docs/design/K1189_muse_batch18_run_a.md`), so the batch's runs are
-B to G in the drafting brief. Only four runs fit (B to E below);
-F and G are not commissioned, and their port ranges stay unused.
-The chain tags are 18B to 18E. Batch 18 uses ports 5640-5699, one
-range per run.
+B to G in the drafting brief. Four runs fit (B to E below).
+Claude added Run F at review (K292: Levi said yes to the panel's
+corner marks on 2026-11-04), and it runs first; G is not
+commissioned, and its port range (5690-5699) stays unused. The
+chain tags are 18F, then 18B to 18E, one run at a time. Batch 18
+uses ports 5640-5699, one range per run.
 
 Runs came from the candidates in Run A's order:
 
@@ -26,7 +28,8 @@ Runs came from the candidates in Run A's order:
 - (3) "Next, in order", from K265 on: nothing there fits. The
   section was read from K265 to its end (K1188, already Run E from
   step (1)), then from its top (K875) through K10 (batch 17 read
-  that stretch through K292; K292 now sits in Waiting on Levi).
+  that stretch through K292; K292 sat in Waiting on Levi when this
+  draft ran, and is Run F since Levi's yes).
   The last
   Next item read is K10, so batch 19's draft starts again at
   K265 (the section will have changed by then; this draft left
@@ -37,8 +40,9 @@ Runs came from the candidates in Run A's order:
   read the whole section in a full circle and found nothing
   more that fit, and Run A directs this draft not to repeat it).
 
-No item ends outright except K1187 and K1188, and K1187 closes
-only once Claude judges Run D's crops. Runs B and C each take
+No item ends outright except K292, K1187 and K1188: K292 closes
+only once Claude checks Run F's sheets, and K1187 only once
+Claude judges Run D's crops. Runs B and C each take
 one piece of a bundled item and leave the rest; their close
 lines give the item's new text in their reports, for Claude to
 apply (`ledger.mjs` has no command that rewrites an item's
@@ -54,8 +58,10 @@ tables, not a look (batch 17's Runs C to F are the shape). Run D
 changes what the player sees (a burnt stretch draws again), so
 it shoots before/after crops and stops there: Claude judges
 the crops before K1187 closes. Run E is tooling only, decided
-by dry runs. A run that stops keeps its item open (batch 8
-rule 1).
+by dry runs. Run F turns on a look Levi already judged, so its
+probe census and a source pin decide it, and its sheets are for
+Claude to check the live panel against the judged one. A run
+that stops keeps its item open (batch 8 rule 1).
 
 No two runs touch one file ("How to work", rule 3). Read the
 whole brief before your first command.
@@ -67,12 +73,156 @@ Batch 17's "How to work" applies unchanged: read it in
 16's, batch 15's, batch 8's ten rules and the shared process in
 `docs/design/K1050_muse_week.md`) before anything else. Read
 K1189 wherever it, or a page it sends you to, says K1184,
-K1178, K1169 or K1131; the chain tags are 18B to 18E, and
-Claude may start more than one at a time. Batch 18 uses ports
+K1178, K1169 or K1131; the chain tags are 18F, then 18B to
+18E, and Claude starts them one at a time. Batch 18 uses ports
 5640-5699; each run below names its own range. After each run,
-update K1189's handle (the next run in B, C, D, E order, or,
+update K1189's handle (the next run in F, B, C, D, E order, or,
 after E, that all the runs are in and Claude reviews and
 closes K1189).
+
+## Run F - K292: the corner marks on for everyone
+
+**Chain tag:** 18F, the batch's first run · **Suggested ports:**
+5680-5689 (the probe's Vite dev server takes one port in this
+range).
+
+Claude added this run at review. Levi judged K292's look sheet
+on 2026-11-04 and said yes, as shown, with the change Claude
+recommended beside it: the Seed row is marked too, and the
+Daily button stays unmarked. This run turns the marks and the
+key line on for everyone and marks the Seed row; nothing else
+in the look changes. It stops at its sheets: Claude checks the
+live panel against the judged sheet before K292 closes.
+
+### Read first
+
+- `docs/design/K1184_muse_batch17.md`, Run G (from its line
+  984): how the marks were built behind the gate, and why.
+- `src/ui/tweakpane_panel.ts`: the key line and its comment
+  (about lines 403-408), the K292 CSS block and its comment
+  (about 496-515), the `.kp-seed` and `.kp-daily` rules (about
+  566-567 and 579-580), the row marking in `row()` (about
+  978-987), the Seed row's build (about 1291-1294) and the
+  Daily button's (about 1343).
+- `.claude/probes/K292/dogear.mjs`, whole: the census, the gate
+  checks, the ungated page and the sheet names (`open()` in
+  `.claude/probes/K793/lib.mjs` names each file
+  `<tag>_<name>.png` and writes `<tag>_report.json`).
+- `test/ui/panel_rows.test.ts`: the source-scan pin the new
+  pin follows.
+- `test/ui/daily_link.test.ts` (about lines 590-613):
+  `isDesignParam("seed")` is false and stays false (`seed` is
+  not a `PARAM_DEFAULTS` key). This run does not touch
+  `isDesignParam`.
+- `.claude/rules/probes.md`: `dogear.mjs` imports `/src`
+  modules in the page, so it needs a Vite DEV server with a
+  private-cache config (the K79 entry, and K178's
+  `loadConfigFromFile` note), not a built preview.
+
+### What is there today
+
+> **K292** · Panel dog-ears (Levi 10-14): design rows carry a
+> top-right triangle and a key line, built behind a gate only the
+> probe sets (06a41d1d); Levi 11-04: yes as shown, Seed row marked
+> too, Daily not; Muse batch 18 Run F flips the gate (K1189). K57
+> settles edge cases; leads to K297.
+
+Every design row already carries the `kp-design` class and a
+`data-kp-key` (only the probe reads the key). The triangle and
+the key line draw only behind `:root[data-dogear]`, which only
+the probe sets; without it `.kp-dogear-key` is `display:none`.
+The Seed row is built by hand outside `row()`, so it is never
+marked, and neither is the Daily button.
+
+### Tasks
+
+Use ports 5680-5689 for the dev server.
+
+**Write set:** `src/ui/tweakpane_panel.ts` (the K292 CSS, its
+three K292 comments - key line, CSS block, row marking - and
+the Seed row's build only), `.claude/probes/K292/dogear.mjs`, a
+copy of `.claude/probes/K79/vite.private-cache.config.ts` in
+`.claude/probes/K292/` (rule 11; its cache folder is not
+committed), new sheet files under `.claude/probes/K292/sheet/`
+(`git add -f`; the judged files there are not touched), and new
+`test/ui/dogear.test.ts`. Nothing else; Runs B to E touch none
+of these files.
+
+1. **Before run (unmodified tree).** Serve the checkout with
+   the copied config (`npx vite --config
+   .claude/probes/K292/vite.private-cache.config.ts --port
+   <port> --strictPort --host 127.0.0.1`) and run
+   `DOGEAR_NOSHOOT=1 node .claude/probes/K292/dogear.mjs
+   http://127.0.0.1:<port>/` (pass the base: the default,
+   5690, was batch 17's port). Record its census lines and
+   check results in the report; today they read 269 params,
+   82 exempt, 187 marked, 185 DOM keys and 186 rows, all
+   checks passing.
+2. **Gate off.** In the K292 CSS, drop every
+   `:root[data-dogear] ` prefix and drop the
+   `.kp-dogear-key{display:none}` rule, so the triangle and
+   the key line draw on every load. Nothing else in the look
+   changes: sizes, colours, positions and the key line's words
+   stay as they are. Rewrite the three K292 comments to say
+   the marks show for everyone since Levi's yes (2026-11-04),
+   dropping "until the look is judged" and the gate.
+3. **Seed marked.** Where the Seed row is built, it gains
+   `kp-design` beside `kp-row` and `kp-seed`, and
+   `dataset.kpKey = "seed"`, with a one-line K292 comment (the
+   seed rides in the link; Levi 2026-11-04). The Daily button
+   stays unmarked. The triangle must sit in the row's corner
+   without covering the seed field or anything beside it in
+   the `.kp-seed` flex row: task 4's Seed crop shows it.
+4. **The probe.** Update `dogear.mjs`: no gate snippet (keep
+   the `knotmaze.panelOpen` preset). The census expects `seed`
+   as one more DOM key than the params give: DOM keys 186 and
+   `kp-design` rows 187, with 269 params, 82 exempt, 187 marked
+   and the no-row and clock-row checks as before. The checks
+   become: Seed marked with key `seed`, Daily unmarked; on a
+   plain load the key line shows with its words and the
+   triangle draws. The old ungated page goes (every load is
+   plain now); its row count joins the plain-load checks. Tag
+   the pages `live_desk` and `live_phone`, so the sheets land
+   as new files (`live_desk_00_top.png` and so on) beside
+   Levi's judged set, and add a magnified crop of the Seed row
+   (`04_seed_row`, as `02_help_row` crops gridSize). The top
+   sheet must show the Seed row. Run it with the sheets on the
+   edited tree; every check passes.
+5. **Pin.** New `test/ui/dogear.test.ts`, a source scan in
+   `panel_rows.test.ts`'s manner, on
+   `src/ui/tweakpane_panel.ts`: no `data-dogear` anywhere, no
+   `display:none` rule for `.kp-dogear-key`, an ungated
+   `.kp-row.kp-design::after` rule, and the Seed row's build
+   adds `kp-design` and sets `kpKey` to "seed" while the
+   Daily button's does not (slice each build so a match
+   elsewhere in the file cannot satisfy it). Rule 9: in
+   scratch changes put one `:root[data-dogear] ` prefix back,
+   then drop the Seed row's `kp-design`; show the pin fails
+   each time, then undo both.
+6. `npm test`.
+
+### Done and close
+
+**Done when:**
+
+- The probe passes on a plain load (no gate): every design row
+  and the Seed row marked, the Daily button and the personal
+  rows unmarked, the key line shown, the counts as task 4
+  states.
+- The new sheets exist beside Levi's judged set, the top one
+  shows the Seed row, and the Seed crop shows the triangle
+  clear of the field.
+- The pin catches each scratch change (rule 9), and `npm test`
+  passes.
+
+**Close lines:**
+
+Claude to mark the item done once the sheets are checked:
+
+`node C:\Users\lsl\Repositories\claude-config\tools\ledger.mjs done K292 --commit <sha8> --what "the panel's corner marks and key line show for everyone, Seed row marked too (Levi 2026-11-04: yes as shown)"`
+
+After the run, update K1189's handle:
+`node C:\Users\lsl\Repositories\claude-config\tools\ledger.mjs handle K1189 --last-commit <sha8> --next "Run F done; Claude checks its sheets, Run B next"`
 
 ## Run B - K782's toast piece: "Snared!" waits for the monster
 
@@ -112,6 +262,14 @@ server takes one port in this range).
   under rule 11 (its base argument, the `../K120/lib.mjs`
   launch it imports, the `knotmaze.panelOpen` preset and its
   full design links).
+- `.claude/probes/K137/s4/tools_page.mjs` (Claude, at review):
+  the page stand that already lays a snare and springs it on
+  the turn clock (`?<seed>&am=instant&mt=hunter&lur=3&snr=2&snd=none`;
+  the snare button and a click on the run, or
+  `__knotTool("snare")` with `__knotFabric().cutPick`; a wait
+  springs it and the "Snared!" toast shows). Lay the snare
+  its way, through main's own tool path, rather than calling
+  the model directly.
 - `.claude/rules/probes.md` (every run with a probe reads it)
   and the rules file `docs/lore_index.md` maps to
   `src/main.ts`.
@@ -139,17 +297,18 @@ clk=beat and the glyph all stay with the item.
 
 ### Tasks
 
-**Write set:** `src/main.ts` (`toolTick` only; Runs C, D and E
-do not touch this file), new `test/app/snare_toast.test.ts`,
-and new probes under `.claude/probes/K782/` (`search.ts` with
-its copied vite-node config, `toast.mjs`, `git add -f`).
-Nothing else.
+**Write set:** `src/main.ts` (`toolTick` and the `snaresSprung`
+state declared beside it only; Runs C, D, E and F do not touch
+this file), new `test/app/snare_toast.test.ts`, and new probes
+under `.claude/probes/K782/` (`search.ts`, `toast.mjs`, `git
+add -f`). Nothing else.
 
 1. **Before stand (Node, unmodified source).** A search in
-   `.claude/probes/K782/search.ts`, run through `npx.cmd
-   vite-node` with a copy of
-   `.claude/probes/K137/vite.node.config.mjs` beside it (the
-   K137 sims' way). Build mazes the page's way
+   `.claude/probes/K782/search.ts`, run with `node
+   scripts/run_node.mjs .claude/probes/K782/search.ts` (no
+   config: vite-node is not installed any more, so the
+   `vite-node` recipe in `k137_sim.ts`'s header is stale; the
+   runner's header says what it bakes in). Build mazes the page's way
    (`.claude/probes/K137/k137_lib.ts`'s `buildDesign` /
    `designParams`, as `k137_sim.ts` does) and drive a
    `TurnMinotaur` on each walk built as `main.ts` builds it
@@ -171,11 +330,18 @@ Nothing else.
    `.claude/probes/K782/toast.mjs` (`git add -f`), copying
    K657's stand under rule 11 (base URL and output name
    change; its private cache and Chrome profile die with the
-   run). Load the stand's link (not `am=instant`: the move
-   must animate), replay the move list with
-   `__knotTurnMove` / `__knotTurnWait`, lay the snare at the
-   scripted turn through `__knotTurnMinoObj().setSnare(edge)`,
-   and poll on a short timer from before the springing move:
+   run). Before the load, emulate `prefers-reduced-motion:
+   no-preference` (K104: probe Chrome under Remote Desktop
+   reports `reduce`, and reduced motion skips the move's
+   animation, so `progress` would read 1 at once). Load the
+   stand's link with `am=instant` (it sets only the intro's
+   appearance; moves still animate), run the frame loop
+   continuously while polling (`__knotLoop({continuous:
+   true})`, K6-3: the on-demand loop draws nothing while
+   idle), replay the move list with `__knotTurnMove` /
+   `__knotTurnWait`, lay the snare at the scripted turn the
+   way `tools_page.mjs` does, and poll on a short timer from
+   before the springing move:
    the first frame where `.km-toast.km-toast-on` reads
    "Snared! ...", together with `__knotTurnMino().progress`,
    its `minoAt` and the springing snare's phase. Today: the
@@ -187,9 +353,16 @@ Nothing else.
    advance the `snaresSprung` baseline) only once the turn's
    animation is at rest (`scene.turnMino.progress >= 1`; main
    sets it to 1 when nothing animates, reduced motion
-   included). While `progress < 1`, leave the baseline
-   untouched, so the toast is delayed, never dropped, and
-   still fires once if two snares spring in one turn. With no
+   included) or once a later turn has begun
+   (`scene.turnMino.turns` past the turn the count grew on,
+   kept in state beside `snaresSprung`): a chained K120 hold,
+   or a tap mid-move, starts the next turn before the last
+   one rests, and the toast must not wait for the chain to
+   stop. State in the report, from the code, whether a new
+   turn can start while `progress < 1`. While neither holds,
+   leave the baseline untouched, so the toast is delayed,
+   never dropped, and still fires once if two snares spring
+   in one turn. With no
    turn minotaur (the real-time clock), today's immediate
    toast stands exactly. The toast's text, duration and
    counting (a "holding" or "spent" snare counts once, as
@@ -200,8 +373,8 @@ Nothing else.
    `test/app/snare_toast.test.ts`, in the panel_rect manner:
    read `src/main.ts`, slice `toolTick`'s body (from `const
    toolTick` to the `snaresSprung` assignment) and match the
-   progress gate there, so a gate elsewhere in the file
-   cannot satisfy it. Rule 9: in a scratch change drop the
+   gate there (both the `progress` and the `turns` release),
+   so a gate elsewhere in the file cannot satisfy it. Rule 9: in a scratch change drop the
    gate from the slice, show the pin fails, then undo it.
    The existing snare and monster suites pass unchanged (the
    model is untouched).
@@ -438,7 +611,36 @@ and new `.claude/probes/K1187/` (`git add -f`). Nothing else.
    at clock 6 the whole run minus the swept interval. The
    swept interval, in ctrl, is the one `syncBroken` builds
    (`min(from, cur)` to `max(from, cur)` on the anim run).
-2. **The helper (pure).** In `src/game/explore_view.ts`,
+2. **Stand and before crop (unmodified tree).** First find
+   the stand in Node: a script under `.claude/probes/K1187/`,
+   run with `node scripts/run_node.mjs <script>` (no config;
+   vite-node is not installed any more). Over real designs
+   built the page's way (as Run B's task 1), find the first
+   seed and move list where, mid-move, the anim run is in
+   `brokenRuns()` and the fire's no-predicate answer on its
+   unswept stretch is non-empty at the break's clock; state
+   in the report which end of the run the fire entered from.
+   Then a page probe copying K657's stand under rule 11 (Run
+   B's read-first names it), ports 5660-5669: the stand's
+   link with `phw=0` (K550: the same state on every load)
+   and the fire key the search used (K114's burn probes run
+   `fi=fuse`), reduced motion emulated as `no-preference`
+   before the load and the frame loop continuous while
+   polling (as Run B's task 2), and the burn FX pinned by
+   the K550 recipe in `.claude/rules/probes.md`
+   (`F.tickFireFx = function () {}`, then `F.fireFx.clear()`,
+   then two frames). Replay the move animated, poll
+   `__knotFabric()` while the fabric is animating and the
+   anim run reads broken, record the progress window, and
+   crop the broken run's stretch there (a choice's screen
+   point from the fabric hooks names where it is; crop with
+   `page.screenshot({clip})`, K653). Save it as the before
+   crop under `.claude/probes/K1187/sheet/`. This task runs
+   on the unmodified tree, before any edit below. If the Node
+   search finds no stand in seeds 1 to 100, skip the crops
+   and say so (batch 8 rule 2); the span tables still go in
+   the report.
+3. **The helper (pure).** In `src/game/explore_view.ts`,
    beside `subtractBurnt`, a pure span cut (a name in that
    file's style): given a `BurntSpan` and a cut `BurntSpan`
    (ctrl, either end order), it returns the zero, one or two
@@ -450,12 +652,12 @@ and new `.claude/probes/K1187/` (`git add -f`). Nothing else.
    end, a cut through the middle (two spans), a cut that
    covers the span (none), a cut that misses (the span
    back), and a cut on another chain (the span back).
-3. **Fix (renderer half).** In `drawFire`'s burnt-spans
+4. **Fix (renderer half).** In `drawFire`'s burnt-spans
    loop: for the anim run (`this.anim`'s edge, when an anim
    is running) ask `runBurnAt` with no broken predicate; for
    every other run keep today's predicate call. Convert the
    anim run's answer to spans as the loop does today, then
-   cut each with task 2's helper by the swept interval
+   cut each with task 3's helper by the swept interval
    before pushing it. Fronts follow the same cut: a front
    whose ctrl point (the loop's own distance-to-ctrl
    conversion, as `burnSpan` does it) lies inside the swept
@@ -464,32 +666,20 @@ and new `.claude/probes/K1187/` (`git add -f`). Nothing else.
    stays as it is (it reads `choices()`, which already drops
    broken runs), and a broken run that is not the anim run
    pushes exactly what it pushes today.
-4. **Pins.** Update the K711 (b) source pin in
+5. **Pins.** Update the K711 (b) source pin in
    `test/game/fire.test.ts` to the loop's new form, and add
    a pin in the same manner: the loop slice cuts the anim
    run's spans by the swept interval (match the helper's
    call there). Rule 9 for both: in scratch changes drop the
    predicate from a non-anim call and drop the cut call,
    show each pin fails, then undo both.
-5. **After table + crops (desktop probe).** First find the
-   stand in Node (a script under `.claude/probes/K1187/`,
-   through `npx.cmd vite-node` on a copy of
-   `.claude/probes/K137/vite.node.config.mjs`): over real
-   designs the page's way (as Run B's task 1), the first
-   seed and move list where, mid-move, the anim run is in
-   `brokenRuns()` and the fire's no-predicate answer on its
-   unswept stretch is non-empty at the break's clock. Then a
-   page probe copying K657's stand under rule 11 (Run B's
-   read-first names it), ports 5660-5669, replays the move
-   animated, polls `__knotFabric()` while the fabric is
-   animating and the anim run reads broken, and crops the
-   broken run's stretch (a choice's screen point from the
-   fabric hooks names where it is) before the fix and after
-   it, at the same progress window. Save the pair under
-   `.claude/probes/K1187/sheet/`. If the Node search finds
-   no stand in seeds 1 to 100, stop and say so (batch 8 rule
-   2); the span tables above still go in the report.
-6. `npm test`.
+6. **After table + crop (desktop probe).** The task 1 table
+   again on the fixed source (the pushed spans now match
+   what the stretch needs, at both clocks), then the page
+   probe again on task 2's stand, link and pins, at the same
+   progress window: the after crop goes beside the before
+   one under `.claude/probes/K1187/sheet/`.
+7. `npm test`.
 
 ### Done and close
 
@@ -530,7 +720,14 @@ After the run, update K1189's handle:
   cleaned at startup (the junction is unlinked first, since
   `git worktree remove --force` follows a junction into its
   target). The server's cleanup is a `finally` - a process
-  killed outright never runs it.
+  killed outright never runs it. Claude, at review: the
+  server itself runs from the main checkout (`Push-Location
+  $repo` before `npx vite preview --outDir $out`), so a
+  `-Ref` run's temp worktree serves only the build. Two runs
+  of one `-Ref` under one `-Root` share both `src-<sha>` and
+  the output folder `<root>\<sha>`: the second run's startup
+  removes the first one's worktree, and its `--emptyOutDir`
+  build empties the folder the first one is serving.
 - `docs/design/K1139_pulse_junctions.md` (the item's
   source, K1139 Stage 3; read it before citing any stand
   from it - rule 11).
@@ -581,9 +778,16 @@ no `src/` or `test/` change.
    Start `pwsh scripts/preview.ps1 -Port <in range> -Ref
    <sha> -Root $env:TEMP\k1188e-kill\` as its own process,
    wait until it serves (an HTTP answer on its port, not a
-   fixed sleep), record its process id, then kill that
-   process outright (`Stop-Process -Force` on that id only).
-   Record what is left: `git worktree list --porcelain` still
+   fixed sleep), and record its process id. Before the kill,
+   record the port's listener (`Get-NetTCPConnection
+   -LocalPort <port> -State Listen`'s `OwningProcess`) and
+   its parent chain up to that pwsh (`Win32_Process`'s
+   `ParentProcessId`). Then kill the pwsh outright
+   (`Stop-Process -Force` on that id only). That orphans its
+   `npx vite preview` node child, which keeps serving: record
+   whether the port still answers, then stop exactly the
+   recorded child ids (this run's own processes) and show
+   the port free. Record what is left: `git worktree list --porcelain` still
    names the run's `src-<sha>`, the folder is still there,
    and its `node_modules` junction still points at the main
    checkout. Afterwards remove only that worktree, the safe
@@ -606,17 +810,36 @@ no `src/` or `test/` change.
      removes a killed run's leftover before it adds its own
      worktree: each `src-*` leftover under that root only,
      its junction unlinked before any remove, and never a
-     worktree whose server is still alive - how the script
-     tells a live sibling from a killed one (a marker the
-     serving run leaves, or an equal check) is the run's to
-     choose, but task 4 proves a live sibling keeps serving.
-     No `git worktree prune` and no sweep of any other root.
+     worktree whose server is still alive. A run is alive
+     while its pwsh or its server child (the node process
+     listening on its port) is alive, so an orphaned server
+     counts as live. How the script tells a live sibling
+     from a killed one (a marker the serving run leaves with
+     its pwsh id, its server child's id and their start
+     times, or an equal check) is the run's to choose; a
+     process id another process has since reused errs toward
+     keeping the worktree (compare start times). Task 4
+     proves a live sibling keeps serving.
+   - The same-ref hazard (Read first): either each run gets
+     its own folders (for example `src-<sha>-<pid>` and an
+     output folder to match), or the script refuses a second
+     run of a `-Ref` whose first run is alive under that
+     root. The report names which, and task 4's live-sibling
+     proof uses a different `-Ref` unless the fix makes the
+     same one safe. Removing a `-Ref` run's worktree as soon
+     as its build is done is allowed too, if the report shows
+     nothing reads it afterwards.
+   - No `git worktree prune` and no sweep of any other root.
 4. **After dry runs.** Repeat tasks 1 and 2 against the
    fixed script: the long root reads as task 3 requires; a
    server killed outright leaves a worktree that the next
    run under the same root cleans up, while a second server
    started under the same root on another port of the range
-   is still serving after that cleanup run. Then the
+   is still serving after that cleanup run. One more case:
+   the pwsh killed while its server child still serves. The
+   next run under the same root keeps that worktree (the
+   orphan is live); once the orphan is stopped by its
+   recorded id, the run after that cleans it up. Then the
    controls, unchanged: a working-tree `-BuildOnly` and a
    short-root `-Ref -BuildOnly` both build, and `git
    worktree list --porcelain` before the run and after it
@@ -634,7 +857,8 @@ no `src/` or `test/` change.
   before creating anything; a killed `-Ref` server's
   worktree is gone after the next run under the same root,
   a live sibling under that root is untouched and serving,
-  and the normal builds read as today.
+  an orphaned server's worktree is kept until the orphan
+  stops, and the normal builds read as today.
 - `npm test` passes.
 
 **Close lines:**
@@ -649,7 +873,8 @@ After the run, update K1189's handle:
 ## Left out on purpose
 
 Drafting order, with what was read and skipped. Runs B to E
-above are the fits; everything named here was read and left.
+above are the fits (Run F is Claude's addition at review);
+everything named here was read and left.
 
 **Step (1), Claude's picks (all four taken; the pieces left
 behind stay with their items, as Runs B and C say):** K782's
@@ -676,8 +901,8 @@ Cloudflare Worker and D1; not read as a candidate):**
 **Step (3), Next from K265 on, read to the section's end
 (K1188, Run E from step (1)), then from its top (K875)
 through K10 - the last item read (batch 17 read that stretch
-through K292; it is in Waiting on Levi now, and Run A bars
-it):**
+through K292; it was in Waiting on Levi when this draft ran,
+so Run A barred it, and it is Run F since Levi's yes):**
 
 - The field, junction and label lanes (Claude's K1040 and
   K868 work; Run A bars their paths): K873 (flow as a K868
@@ -719,8 +944,9 @@ it):**
   the look check), K649 (K525's tuning by eye), K240 (after
   K238's review; K238 sits in Waiting on Levi today),
   K340 (its folder look is Levi's pick), K341 with K297
-  (sequenced after the panel's churn - K292's sheet is
-  still waiting on Levi, so the churn has not settled),
+  (sequenced after the panel's churn - Levi said yes to
+  K292's sheet on 2026-11-04 and K297 follows Run F, but the
+  churn has not settled),
   K46 (daily variety themes - a design), K78 (the handbook,
   written once the churn settles; it has not), K116
   (pluck instruments - a Pixel audio probe first, and
@@ -762,7 +988,7 @@ Residuals, and belongs to the K1179 revisit lane Run A bars;
 K1186 sits in Next and is listed above.
 
 Nothing in Waiting on Levi or Ideas was a candidate beyond
-what Run A names: Waiting holds Levi's calls (K292 and K647
-among them, both barred by Run A), and Ideas are not
-scheduled by these drafts.
+what Run A names: Waiting holds Levi's calls (K647 among
+them, barred by Run A; K292 was too, until Levi's yes made
+it Run F), and Ideas are not scheduled by these drafts.
 

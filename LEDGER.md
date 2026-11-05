@@ -308,9 +308,6 @@ Next free ID: K1190.
 - **K1172** · Walker modes, Levi's brainstorm (2026-11-03): guide it, program it, a flock, stop them (and a tower
   defense), steer it live, bend and tilt. Which family first? (`docs/design/K1172_walker_modes.md`; full text:
   `docs/ledger_notes.md`)
-- **K292** · Panel dog-ears (Levi 10-14): design rows carry a top-right triangle and a key line,
-  built behind a gate only the probe sets (06a41d1d); Levi judges the sheet (`docs/asks/K292.md`);
-  on yes, flip the gate and mark the Seed row too. K57 settles edge cases; leads to K297.
 
 ## In progress
 
@@ -518,7 +515,8 @@ Next free ID: K1190.
   - next: the agent runs Stage 4: P8 against the max over bands, the twin's cover strips, ji 28's darker bare fan, the fork front's crisp arc, jump:gpu at cross t7, ji 149's partition corner, 2x sheets of each. Then Claude reads the handoff and merges (the __k1139diag hook out first) or briefs a fill rule; the Pixel batch (`out/s3b/pixel_batch_plan.md`, its note) builds what merges
   - brief: Stage 4 at the end of `docs/design/K1139_s3b_fix.md` on the branch (6b847b4c), after Stage 3 and its handoff
   - env: the brief's section 7 (the node_modules junction); the server `npx vite --config .claude/probes/K1139/vite.private-cache.config.ts --port 5620 --strictPort --host 127.0.0.1` from the worktree (ports 5620-5639); master's preview `pwsh scripts/preview.ps1 -Port 5630 -Ref c4a9dd60 -Root $env:TEMP\k1139s4pv`; GPU probes through `run_locked.ps1 -Batch`
-- **K1189** · Muse batch 18: run A drafts the brief (`docs/design/K1189_muse_batch18_run_a.md`), then runs B-G
+- **K1189** · Muse batch 18 (`docs/design/K1189_muse_batch18.md`, drafted by run A): Run F turns
+  K292's corner marks on, then B to E (K782 toast, K711 chase tap, K1187 burn, K1188 preview.ps1)
   - owner: nobody since 2026-11-04 16:43 (run A queued as Muse chain run 18A, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
   - branch: mainline; last commit: `38a0dbf7`
   - evidence: `docs/design/K1189_muse_batch18_run_a.md`; the chain in `.claude/probes/K1053/` (queue.txt, chain.log)
@@ -543,6 +541,9 @@ Binding for every stage:
   new, and pause running agents with their WIP committed.
 
 Running agents are listed under In progress, each with its own next step.
+- **K292** · Panel dog-ears (Levi 10-14): design rows carry a top-right triangle and a key line,
+  built behind a gate only the probe sets (06a41d1d); Levi 11-04: yes as shown, Seed row marked too,
+  Daily not; Muse batch 18 Run F flips the gate (K1189). K57 settles edge cases; leads to K297.
 - **K875** · K868 S1b, master's side: on Muse's link master registers only 58-80% with the oracle at
   j49/j123 and #6 finds every band end off (18/18, 19/19; cause untested: gaps or a reveal/fog state);
   its sdf and strip silhouettes differ in width; joinery.ts:1469-1471's comment is stale. s1b_oracle.md.
