@@ -112,7 +112,7 @@ import { PluckHostPart } from "./ribbon/pluck_host";
 import { SdfPass } from "./ribbon/ribbon_sdf";
 import { StripPass } from "./ribbon/strip_pass";
 import type { ThreadPass } from "./ribbon/thread_pass";
-import { FILLET_REACH_PER_HALF, Joinery } from "./ribbon/joinery";
+import { FILLET_REACH_PER_HALF, Joinery, type VoteOverride } from "./ribbon/joinery";
 import {
   cornerWedgeKey,
   roundedCornerKeys,
@@ -771,6 +771,14 @@ export class RibbonRenderer {
   }
   set skipJointPairs(v: boolean) {
     this.crossing.skipJointPairs = v;
+  }
+  // K1186 (21E): the probe-only fillet vote override (joinery.ts);
+  // null = today's votes (A/B probes force one arm's vote both ways).
+  get voteOverride(): VoteOverride | null {
+    return this.joinery.voteOverride;
+  }
+  set voteOverride(v: VoteOverride | null) {
+    this.joinery.voteOverride = v;
   }
   // Per-chain UNDER-GAP windows, rebuilt every update() from the live
   // crossing solve (emergent crossings included): flat triplets

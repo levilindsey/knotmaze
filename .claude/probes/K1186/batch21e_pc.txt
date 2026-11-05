@@ -1,0 +1,2 @@
+$env:K1186_BASE = "http://127.0.0.1:5851"
+node pc21e.mjs out21e > out21e/pc21e_log.txt 2>&1

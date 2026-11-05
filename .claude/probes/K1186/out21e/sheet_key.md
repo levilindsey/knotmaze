@@ -1,0 +1,42 @@
+# K1186 run E sheet key (sheet.png: control first, then each flip; columns resolved / forced-before / diff)
+
+Crops: 260 CSS px at the flipping junction on its stand's pinned state (`__knotPinClocks(100)`, `phw=0`, headed real-time Chrome), shown at 780 px (3x CSS). Both ways render the flip's one captured state (captureScene in the rebuild wrapper at the flip; restoreScene for each render, physics frozen): resolved = vote as resolved, forced = override forcing the flip's before pair on that one arm. Pixel counts at native resolution (changed px, any channel over 8, 20D's threshold). near = the flipping arm's gap-near (world; -1 = no under-window ahead); NEAR-JUMP names a window appearing (or a >1 world jump) across the flip.
+
+| row | stand / script | junction (centre, record) | arm (key) | vote before -> after | own ink px (max) | near before -> after |
+|---|---|---|---|---|---|---|
+| control-seed3 | seed3 control | ji0 (22.62, 10.50) rec 0 | - | rendered twice, override unset | 0 (max 0) | - |
+| seed3_f01_ji116 | seed3 control-drag1 (drag ji0, rebuild 72, control-drag1:step4) | ji116 (25.91, 12.92) rec 9007 | arm1 50:28:-1 | [1,0] -> [0,0] | 0 (max 0) | 5.76502 -> 5.76881 |
+| seed3_f02_ji116 | seed3 control-drag1 (drag ji0, rebuild 103, control-drag1:step14) | ji116 (25.92, 12.93) rec 9007 | arm1 50:28:-1 | [0,0] -> [1,0] | 0 (max 0) | 5.76814 -> 5.76735 |
+| seed3_f03_ji116 | seed3 drag1 (drag ji0, rebuild 176, drag1:step4) | ji116 (25.91, 12.93) rec 9007 | arm1 50:28:-1 | [1,0] -> [0,0] | 0 (max 0) | 5.76774 -> 5.77 |
+| seed3_f04_ji116 | seed3 drag1 (drag ji0, rebuild 209, drag1:step14) | ji116 (25.92, 12.93) rec 9007 | arm1 50:28:-1 | [0,0] -> [1,0] | 0 (max 0) | 5.76781 -> 5.76742 |
+| seed3_f05_ji7 | seed3 drag3 (drag ji7, rebuild 475, drag3:step8) | ji7 (26.57, 1.61) rec 539 | arm3 3:62:-1 | [1,0] -> [0,0] | 0 (max 0) | 2.80366 -> 2.80522 |
+| seed3_f06_ji7 | seed3 drag3 (drag ji7, rebuild 478, drag3:step9) | ji7 (26.56, 1.61) rec 539 | arm3 3:62:-1 | [0,0] -> [1,0] | 0 (max 0) | 2.80247 -> 2.80009 |
+| control-fat11 | fat11 control | ji0 (23.25, 32.88) rec 0 | - | rendered twice, override unset | 0 (max 0) | - |
+| fat11_f01_ji1 | fat11 control-drag1 (drag ji0, rebuild 64, control-drag1:step2) | ji1 (20.23, 34.60) rec 128 | arm0 45:72:-1 | [0,1] -> [0,0] | 0 (max 0) | 0.71771 -> 0.76521 |
+| fat11_f02_ji55 | fat11 drag1 (drag ji0, rebuild 180, drag1:step2) | ji55 (23.82, 29.79) rec 7250 | arm0 45:88:1 | [1,0] -> [0,1] | 0 (max 0) | 2.61276 -> 0.53915 NEAR-JUMP |
+| fat11_f03_ji55 | fat11 drag1 (drag ji0, rebuild 180, drag1:step2) | ji55 (23.82, 29.79) rec 7250 | arm1 23:0:1 | [0,1] -> [0,0] | 0 (max 0) | 0.53895 -> -1 NEAR-JUMP |
+| fat11_f04_ji55 | fat11 drag1 (drag ji0, rebuild 180, drag1:step2) | ji55 (23.82, 29.79) rec 7250 | arm2 45:88:-1 | [0,0] -> [1,0] | 0 (max 0) | -1 -> 2.60841 NEAR-JUMP |
+| fat11_f05_ji55 | fat11 drag1 (drag ji0, rebuild 181, drag1:step3) | ji55 (23.81, 29.81) rec 7250 | arm0 45:88:-1 | [0,1] -> [1,0] | 0 (max 0) | 0.53915 -> 2.60248 NEAR-JUMP |
+| fat11_f06_ji55 | fat11 drag1 (drag ji0, rebuild 181, drag1:step3) | ji55 (23.81, 29.81) rec 7250 | arm1 45:88:1 | [0,0] -> [0,1] | 0 (max 0) | -1 -> 0.53813 NEAR-JUMP |
+| fat11_f07_ji55 | fat11 drag1 (drag ji0, rebuild 181, drag1:step3) | ji55 (23.81, 29.81) rec 7250 | arm2 23:0:1 | [1,0] -> [0,0] | 0 (max 0) | 2.60841 -> -1 NEAR-JUMP |
+| fat11_f08_ji55 | fat11 drag1 (drag ji0, rebuild 216, drag1:step14) | ji55 (23.81, 29.84) rec 7250 | arm0 45:88:1 | [1,0] -> [0,1] | 0 (max 0) | 2.59041 -> 0.53901 NEAR-JUMP |
+| fat11_f09_ji55 | fat11 drag1 (drag ji0, rebuild 216, drag1:step14) | ji55 (23.81, 29.84) rec 7250 | arm1 23:0:1 | [0,1] -> [0,0] | 0 (max 0) | 0.53789 -> -1 NEAR-JUMP |
+| fat11_f10_ji55 | fat11 drag1 (drag ji0, rebuild 216, drag1:step14) | ji55 (23.81, 29.84) rec 7250 | arm2 45:88:-1 | [0,0] -> [1,0] | 0 (max 0) | -1 -> 2.59138 NEAR-JUMP |
+| fat11_f11_ji1 | fat11 drag1 (drag ji0, rebuild 224, drag1:release) | ji1 (19.87, 35.08) rec 128 | arm0 45:72:-1 | [0,0] -> [0,1] | 0 (max 0) | 0.72436 -> 0.71981 |
+| fat11_f12_ji55 | fat11 drag1 (drag ji0, rebuild 224, drag1:release) | ji55 (23.79, 29.82) rec 7250 | arm0 45:88:-1 | [0,1] -> [1,0] | 0 (max 0) | 0.54129 -> 2.62474 NEAR-JUMP |
+| fat11_f13_ji55 | fat11 drag1 (drag ji0, rebuild 224, drag1:release) | ji55 (23.79, 29.82) rec 7250 | arm1 45:88:1 | [0,0] -> [0,1] | 0 (max 0) | -1 -> 0.53106 NEAR-JUMP |
+| fat11_f14_ji55 | fat11 drag1 (drag ji0, rebuild 224, drag1:release) | ji55 (23.79, 29.82) rec 7250 | arm2 23:0:1 | [1,0] -> [0,0] | 0 (max 0) | 2.61406 -> -1 NEAR-JUMP |
+| fat11_f15_ji1 | fat11 drag1 (drag ji0, rebuild 225, drag1:release) | ji1 (19.88, 35.09) rec 128 | arm0 45:72:-1 | [0,1] -> [0,0] | 0 (max 0) | 0.71981 -> 0.7223 |
+| fat11_f16_ji4 | fat11 drag2 (drag ji3, rebuild 289, drag2:step1) | ji4 (1.66, 5.25) rec 554 | arm2 6:0:1 | [1,0] -> [0,0] | 0 (max 0) | -1 -> -1 |
+| fat11_f17_ji4 | fat11 drag2 (drag ji3, rebuild 304, drag2:step6) | ji4 (1.70, 5.37) rec 554 | arm2 6:0:1 | [0,0] -> [1,0] | 0 (max 0) | -1 -> -1 |
+| fat11_f18_ji4 | fat11 drag2 (drag ji3, rebuild 305, drag2:step7) | ji4 (1.71, 5.38) rec 554 | arm2 6:0:1 | [1,0] -> [0,0] | 0 (max 0) | -1 -> -1 |
+| fat11_f19_ji4 | fat11 drag2 (drag ji3, rebuild 338, drag2:release) | ji4 (1.71, 5.32) rec 554 | arm2 6:0:1 | [0,0] -> [1,0] | 0 (max 0) | -1 -> -1 |
+| fat11_f20_ji104 | fat11 drag3 (drag ji8, rebuild 394, drag3:step3) | ji104 (8.70, 3.32) rec 13606 | arm1 40:116:-1 | [0,0] -> [1,0] | 0 (max 0) | 3.07697 -> 3.06147 |
+| fat11_f21_ji104 | fat11 drag3 (drag ji8, rebuild 395, drag3:step3) | ji104 (8.70, 3.33) rec 13606 | arm1 40:116:-1 | [1,0] -> [0,0] | 0 (max 0) | 3.06147 -> 3.05393 |
+| fat11_f22_ji104 | fat11 drag3 (drag ji8, rebuild 397, drag3:step4) | ji104 (8.71, 3.31) rec 13606 | arm1 40:116:-1 | [0,0] -> [1,0] | 0 (max 0) | 3.04428 -> 3.03471 |
+| fat11_f23_ji104 | fat11 drag3 (drag ji8, rebuild 398, drag3:step4) | ji104 (8.71, 3.30) rec 13606 | arm1 40:116:-1 | [1,0] -> [0,0] | 0 (max 0) | 3.03471 -> 3.03792 |
+| fat11_f24_ji104 | fat11 drag3 (drag ji8, rebuild 411, drag3:step8) | ji104 (8.79, 3.20) rec 13606 | arm1 64:46:1 | [0,0] -> [0,1] | 0 (max 0) | 3.10275 -> 0.3602 NEAR-JUMP |
+| fat11_f25_ji104 | fat11 drag3 (drag ji8, rebuild 411, drag3:step8) | ji104 (8.79, 3.20) rec 13606 | arm2 64:46:-1 | [0,1] -> [0,0] | 0 (max 0) | 0.35985 -> 1.96233 NEAR-JUMP |
+| fat11_f26_ji104 | fat11 drag3 (drag ji8, rebuild 414, drag3:step9) | ji104 (8.79, 3.21) rec 13606 | arm1 40:116:-1 | [0,1] -> [0,0] | 0 (max 0) | 0.3595 -> 3.10232 NEAR-JUMP |
+| fat11_f27_ji104 | fat11 drag3 (drag ji8, rebuild 414, drag3:step9) | ji104 (8.79, 3.21) rec 13606 | arm2 64:46:1 | [0,0] -> [0,1] | 0 (max 0) | 1.95967 -> 0.35906 NEAR-JUMP |
+| fat11_f28_ji104 | fat11 drag3 (drag ji8, rebuild 429, drag3:step14) | ji104 (8.68, 3.31) rec 13606 | arm1 40:116:-1 | [0,0] -> [1,0] | 0 (max 0) | 3.07124 -> 3.04937 |

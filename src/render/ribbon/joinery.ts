@@ -184,6 +184,17 @@ for (let i = 0; i <= DISC_SEGS; i++) {
 // JOINT_CLEAR_REACH_SCALE's, in ribbon/crossing_gaps.ts (K5 R2).
 const ERASE_WIDTH_PAD = 0.02;
 
+// K1186 (21E): one arm's forced layer vote for the same-state A/B
+// probe: `key` names the arm as the vote names it (the armKey shape,
+// chain:slot:dir) and (top, dives) is the pair rebuildFillets resolves
+// that arm to while the override is set. Probe-only; null (the
+// default) is today's vote, arm for arm.
+export interface VoteOverride {
+  key: string;
+  top: boolean;
+  dives: boolean;
+}
+
 export class Joinery {
   readonly r: RibbonRenderer;
   // Per junction: the gap slots masking its fans (pooled; rebuildFillets).
@@ -234,6 +245,11 @@ export class Joinery {
   // A fused tip's disc radius in half-widths (TIP_DISC_SCALE; public for
   // same-state probes).
   tipDiscScale = TIP_DISC_SCALE;
+  // K1186 (21E): the probe-only vote override (VoteOverride above).
+  // Unset (null) by default, so a rebuild's votes are today's; when
+  // set, rebuildFillets resolves the one named arm to the forced
+  // (top, dives) pair for that rebuild and no other arm's.
+  voteOverride: VoteOverride | null = null;
   private fieldLastArm: number[] = [];
   // ARM STRIPS (arm_strip.ts): rows written by the current rebuild, and
   // the CPU mirror's scratch (two quantized texels).
@@ -1597,6 +1613,10 @@ export class Joinery {
         const under = underNear.has(k);
         a.top = overNear.has(k) && !under;
         a.dives = under && gapNearOf(a) < fillHalf * FILLET_DIVE_NEAR;
+        if (this.voteOverride !== null && this.voteOverride.key === k) {
+          a.top = this.voteOverride.top;
+          a.dives = this.voteOverride.dives;
+        }
       }
     }
     const armTop = (a: JArm): boolean => a.top;
