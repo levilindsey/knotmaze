@@ -520,9 +520,9 @@ Next free ID: K1190.
   - env: the brief's section 7 (the node_modules junction); the server `npx vite --config .claude/probes/K1139/vite.private-cache.config.ts --port 5620 --strictPort --host 127.0.0.1` from the worktree (ports 5620-5639); master's preview `pwsh scripts/preview.ps1 -Port 5630 -Ref c4a9dd60 -Root $env:TEMP\k1139s4pv`; GPU probes through `run_locked.ps1 -Batch`
 - **K1189** · Muse batch 18: run A drafts the brief (`docs/design/K1189_muse_batch18_run_a.md`), then runs B-G
   - owner: nobody since 2026-11-04 16:43 (run A queued as Muse chain run 18A, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `7cb1e34f`
+  - branch: mainline; last commit: `38a0dbf7`
   - evidence: `docs/design/K1189_muse_batch18_run_a.md`; the chain in `.claude/probes/K1053/` (queue.txt, chain.log)
-  - next: Muse chain run 18A drafts `docs/design/K1189_muse_batch18.md` (runs B-G); Claude reviews it and queues 18B-18G
+  - next: Run A done; Claude reviews the draft
   - brief: `docs/design/K1189_muse_batch18_run_a.md`
 
 ## Next, in order
