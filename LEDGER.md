@@ -326,10 +326,10 @@ Next free ID: K1192.
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
   Levi to edit instead of drawing all 26 (Levi, 2026-10-26). Muse's prototype parked at abc135e7.
-  - owner: claude agent a3b2dcbad71e5cbd8 of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (J3h, K1112's c, launched 2026-11-04 18:12)
-  - branch: `worktree-agent-a3b2dcbad71e5cbd8` at `.claude/worktrees/agent-a3b2dcbad71e5cbd8`; last commit: `8b61c966`
+  - owner: nobody since 2026-11-04 19:35 (merged; agent `a3b2dcbad71e5cbd8` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
+  - branch: mainline; last commit: `d5d0a2c7`
   - evidence: `.claude/probes/K863/trace/` (J3h: `work31/`, `out31/`, `work31/dbg/*_k1112c.*`, NOTES `## K1112 c`; J3g: `work30/`, `out30/`, NOTES `## K1119`); Drive `K863/` (v7.0: `*_v70.svg`); Levi's template `out25/cursive_template.svg`; the full file list in `docs/ledger_notes.md` `## K863`
-  - next: J3h (c's exit port, v7.1) runs; Levi's v7.0 look (K1119) in its own stage; then K1112's next letter, g
+  - next: J3i runs K1112's cusp-entry rule for every low exit (v7.2); then Levi looks at c's v7.2 sheet and the cusp sheet; K1119's look in its own stage
   - brief: `docs/design/K1112_cursive_j3h.md` on the J3h branch; J3g's Handoff in `docs/design/K1119_cursive_j3g.md`
 - **K114** · Gameplay round 2, designed in
   `docs/design/K80_gameplay_additions.md` section R: burn race, cut
