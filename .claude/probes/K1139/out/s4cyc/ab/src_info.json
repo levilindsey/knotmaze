@@ -1,0 +1,228 @@
+{
+ "stand": "src",
+ "base": {
+  "head": "mnode_48",
+  "pulses": [
+   {
+    "edge": 21,
+    "two": false,
+    "key": "[16,0,2,false,false,0,true,false,null,false]"
+   },
+   {
+    "edge": 150,
+    "two": false,
+    "key": "[61,4,0,true,false,0,true,false,null,false]"
+   },
+   {
+    "edge": 151,
+    "two": false,
+    "key": "[61,4,12,false,false,0,false,false,null,false]"
+   },
+   {
+    "edge": 157,
+    "two": false,
+    "key": "[61,110,88,false,false,1.279,false,false,null,false]"
+   },
+   {
+    "edge": 158,
+    "two": false,
+    "key": "[61,110,136,false,false,1.279,false,false,null,false]"
+   },
+   {
+    "edge": 198,
+    "two": false,
+    "key": "[71,30,16,true,false,2.075,false,false,null,false]"
+   },
+   {
+    "edge": 199,
+    "two": false,
+    "key": "[71,30,46,true,false,2.075,false,false,null,false]"
+   }
+  ],
+  "bands": [
+   {
+    "vertex": "node_116",
+    "aEdge": 150,
+    "bEdge": 198,
+    "a": {
+     "chain": 61,
+     "ctrl": 0,
+     "dir": 1
+    },
+    "b": {
+     "chain": 71,
+     "ctrl": 30,
+     "dir": -1
+    },
+    "distJ": 2.075,
+    "inward": true,
+    "slot": 1,
+    "shared": false,
+    "fallback": false,
+    "used": 2
+   },
+   {
+    "vertex": "node_116",
+    "aEdge": 150,
+    "bEdge": 199,
+    "a": {
+     "chain": 61,
+     "ctrl": 0,
+     "dir": 1
+    },
+    "b": {
+     "chain": 71,
+     "ctrl": 30,
+     "dir": 1
+    },
+    "distJ": 2.075,
+    "inward": true,
+    "slot": 0,
+    "shared": true,
+    "fallback": false,
+    "used": 2
+   }
+  ],
+  "errs": []
+ },
+ "s4": {
+  "head": "mnode_48",
+  "pulses": [
+   {
+    "edge": 21,
+    "two": false,
+    "key": "[16,0,2,false,false,0,true,false,0,false]"
+   },
+   {
+    "edge": 150,
+    "two": false,
+    "key": "[61,4,0,true,false,0,true,false,0,false]"
+   },
+   {
+    "edge": 151,
+    "two": false,
+    "key": "[61,4,12,false,false,0,false,false,0,false]"
+   },
+   {
+    "edge": 157,
+    "two": false,
+    "key": "[61,110,88,false,false,1.279,false,false,0,false]"
+   },
+   {
+    "edge": 158,
+    "two": false,
+    "key": "[61,110,136,false,false,1.279,false,false,0,false]"
+   },
+   {
+    "edge": 198,
+    "two": false,
+    "key": "[71,30,16,true,false,2.075,false,false,0,false]"
+   },
+   {
+    "edge": 199,
+    "two": false,
+    "key": "[71,30,46,true,false,2.075,false,false,0,false]"
+   }
+  ],
+  "bands": [
+   {
+    "vertex": "node_116",
+    "aEdge": 150,
+    "bEdge": 198,
+    "a": {
+     "chain": 61,
+     "ctrl": 0,
+     "dir": 1
+    },
+    "b": {
+     "chain": 71,
+     "ctrl": 30,
+     "dir": -1
+    },
+    "distJ": 2.075,
+    "inward": true,
+    "slot": 1,
+    "shared": false,
+    "fallback": false,
+    "used": 2
+   },
+   {
+    "vertex": "node_116",
+    "aEdge": 150,
+    "bEdge": 199,
+    "a": {
+     "chain": 61,
+     "ctrl": 0,
+     "dir": 1
+    },
+    "b": {
+     "chain": 71,
+     "ctrl": 30,
+     "dir": 1
+    },
+    "distJ": 2.075,
+    "inward": true,
+    "slot": 0,
+    "shared": true,
+    "fallback": false,
+    "used": 2
+   },
+   {
+    "vertex": "mnode_49",
+    "aEdge": 21,
+    "bEdge": 157,
+    "a": {
+     "chain": 16,
+     "ctrl": 2,
+     "dir": -1
+    },
+    "b": {
+     "chain": 61,
+     "ctrl": 110,
+     "dir": -1
+    },
+    "distJ": 1.279,
+    "inward": false,
+    "slot": 0,
+    "shared": false,
+    "fallback": false,
+    "used": 2
+   },
+   {
+    "vertex": "mnode_49",
+    "aEdge": 21,
+    "bEdge": 158,
+    "a": {
+     "chain": 16,
+     "ctrl": 2,
+     "dir": -1
+    },
+    "b": {
+     "chain": 61,
+     "ctrl": 110,
+     "dir": 1
+    },
+    "distJ": 1.279,
+    "inward": false,
+    "slot": 1,
+    "shared": false,
+    "fallback": false,
+    "used": 2
+   }
+  ],
+  "errs": []
+ },
+ "twoEdges": [],
+ "bandDiff": [
+  "mnode_49"
+ ],
+ "declDiff": [
+  21,
+  150,
+  151,
+  157,
+  158,
+  198,
+  199
+ ]
+}

@@ -1,0 +1,8 @@
+# K1139 S4 (cycles): the sheets (base 25ce2321 on 5630 vs S4 3dbd0be0 on 5631), then the desktop frame bench at rest, pulses on (ABBA x4)
+node sheets_cyc.mjs http://127.0.0.1:5630 http://127.0.0.1:5631 cyc,loop
+node ../../../scripts/bench_frame.mjs "http://127.0.0.1:5630/?k111&am=instant&fw=0&snd=none&phw=0" "http://127.0.0.1:5631/?k111&am=instant&fw=0&snd=none&phw=0" --rounds 4 --sec 5 --out out/s4cyc/bench_rest.json
+# K307 trace_intro (a copy in k307/, no performance trace): each program's cold compile+link (its LINK_STATUS wait), base vs S4, ABBA, a fresh profile per run
+node --max-old-space-size=8192 k307/trace_intro.mjs http://127.0.0.1:5630 s4c-base-a "?k111&am=instant&fw=0&snd=none&phw=0" --max 12 --trace none
+node --max-old-space-size=8192 k307/trace_intro.mjs http://127.0.0.1:5631 s4c-s4-a "?k111&am=instant&fw=0&snd=none&phw=0" --max 12 --trace none
+node --max-old-space-size=8192 k307/trace_intro.mjs http://127.0.0.1:5631 s4c-s4-b "?k111&am=instant&fw=0&snd=none&phw=0" --max 12 --trace none
+node --max-old-space-size=8192 k307/trace_intro.mjs http://127.0.0.1:5630 s4c-base-b "?k111&am=instant&fw=0&snd=none&phw=0" --max 12 --trace none

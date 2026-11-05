@@ -1,0 +1,36 @@
+(world spans from the pre-S4 dump out/s4cyc/d/cyc.json)
+out/s4cyc/db/cyc.json: head node_221, reach 3, spacing 2.5, 4 pulse item(s)
+  P6a declared once: pass (4 edges)
+  e210 TWO node_221->node_218: W 2.746 dA 0.000 (out) dB 1.386 (out) ridge at d 2.066 (dG 2.066)
+    end A at node_221: no declared arm ends there (the head)
+    end B at node_218 from e39 (out cont): P2 step -0.0001  P1 max |dv| 0.0001
+    ridge: max |dv| across it 0.0000; largest change per 0.01 world on Q 0.0316 at d 1.58 (a one-ended arm from A: 0.0213)
+    P5 longest unlit stretch with light on both sides: 0.135 world (one-ended from A: 0.730; want <= 0.1)
+    P3 speed: A 1.600-1.600, B none world/s (want 1.6)
+    P4 width: A 0.721-0.722, B none world (one-ended NaN; crests at least 0.75 from the ridge and the ends)
+    P6b crest maxima/expected at 8 times: 1/1 1/1 1/1 2/2 2/2 2/2 2/0 1/1
+(world spans from the pre-S4 dump out/s4cyc/d/loop.json)
+out/s4cyc/db/loop.json: head node_635, reach 8, spacing 2.5, 6 pulse item(s)
+  P6a declared once: pass (6 edges)
+  e102 TWO node_635->node_635: W 7.671 dA 0.000 (out) dB 0.000 (out) ridge at d 3.835 (dG 3.835)
+    end A at node_635: no declared arm ends there (the head)
+    end B at node_635: no declared arm ends there (the head)
+    ridge: max |dv| across it 0.0000; largest change per 0.01 world on Q 0.0299 at d 3.34 (a one-ended arm from A: 0.0213)
+    P5 longest unlit stretch with light on both sides: 2.065 world (one-ended from A: 1.065; want <= 0.1)
+    P3 speed: A 1.600-1.600, B 1.600-1.600 world/s (want 1.6)
+    P4 width: A 0.720-0.722, B 0.719-0.720 world (one-ended 0.720; crests at least 0.75 from the ridge and the ends)
+    P6b crest maxima/expected at 8 times: 4/4 4/4 4/4 4/2 4/2 2/2 2/2 4/4
+(world spans from the pre-S4 dump out/s4cyc/d/preloop.json)
+out/s4cyc/db/preloop.json: head mnode_77, reach 8, spacing 2.5, 10 pulse item(s)
+  P6a declared once: pass (10 edges)
+  e102 TWO node_635->node_635: W 7.671 dA 4.253 (out) dB 4.253 (out) ridge at d 3.835 (dG 8.088)
+    end A at node_635 from e101 (out cont): P2 step -0.0005  P1 max |dv| 0.0006
+    end B at node_635 from e101 (out cont): P2 step -0.0005  P1 max |dv| 0.0006
+    ridge: max |dv| across it 0.0000; largest change per 0.01 world on Q 0.0232 at d 3.34 (a one-ended arm from A: 0.0211)
+    P5 longest unlit stretch with light on both sides: 2.445 world (one-ended from A: 1.065; want <= 0.1)
+    P3 speed: A 1.600-1.600, B 1.600-1.600 world/s (want 1.6)
+    P4 width: A 0.623-0.722, B 0.623-0.720 world (one-ended 0.720; crests at least 0.75 from the ridge and the ends)
+    P6b crest maxima/expected at 8 times: 4/2 4/2 2/2 2/2 2/2 4/4 4/4 4/4
+(world spans from the pre-S4 dump out/s4cyc/d/x4.json)
+out/s4cyc/db/x4.json: head node_382, reach 8, spacing 2.5, 14 pulse item(s)
+  P6a declared once: pass (14 edges)

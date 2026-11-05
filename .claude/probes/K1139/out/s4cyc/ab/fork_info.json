@@ -1,0 +1,54 @@
+{
+ "stand": "fork",
+ "base": {
+  "head": "node_12",
+  "pulses": [
+   {
+    "edge": 0,
+    "two": false,
+    "key": "[0,32,0,true,false,0,false,false,null,false]"
+   },
+   {
+    "edge": 246,
+    "two": false,
+    "key": "[82,30,8,false,false,0,false,false,null,false]"
+   },
+   {
+    "edge": 247,
+    "two": false,
+    "key": "[82,30,36,false,false,0,false,false,null,false]"
+   }
+  ],
+  "bands": [],
+  "errs": []
+ },
+ "s4": {
+  "head": "node_12",
+  "pulses": [
+   {
+    "edge": 0,
+    "two": false,
+    "key": "[0,32,0,true,false,0,false,false,0,false]"
+   },
+   {
+    "edge": 246,
+    "two": false,
+    "key": "[82,30,8,false,false,0,false,false,0,false]"
+   },
+   {
+    "edge": 247,
+    "two": false,
+    "key": "[82,30,36,false,false,0,false,false,0,false]"
+   }
+  ],
+  "bands": [],
+  "errs": []
+ },
+ "twoEdges": [],
+ "bandDiff": [],
+ "declDiff": [
+  0,
+  246,
+  247
+ ]
+}

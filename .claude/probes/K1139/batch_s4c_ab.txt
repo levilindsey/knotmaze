@@ -1,0 +1,5 @@
+# K1139 S4 (cycles): locality same-state A/B, base 25ce2321 (5630) vs S4 3dbd0be0 (5631), then the S4 dumps on the branch dev server (5620)
+node ab_cyc.mjs http://127.0.0.1:5630 http://127.0.0.1:5631 out/s4cyc/ab
+$env:K1139_HOST = "http://127.0.0.1:5620"
+node dump_cyc.mjs out/s4cyc/db x4 cyc loop preloop
+$env:K1139_HOST = $null

@@ -1,0 +1,4 @@
+# K1139 S4 (cycles): stand dumps on the branch build (5620)
+$env:K1139_HOST = "http://127.0.0.1:5620"
+node dump_cyc.mjs out/s4cyc/d x4 cyc loop preloop
+$env:K1139_HOST = $null

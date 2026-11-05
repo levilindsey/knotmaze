@@ -1,0 +1,134 @@
+{
+ "stand": "cyc",
+ "base": {
+  "head": "node_221",
+  "pulses": [
+   {
+    "edge": 39,
+    "two": false,
+    "key": "[34,2,0,false,false,0,true,false,null,false]"
+   },
+   {
+    "edge": 210,
+    "two": false,
+    "key": "[72,116,110,false,false,0,true,false,null,false]"
+   },
+   {
+    "edge": 211,
+    "two": false,
+    "key": "[72,116,122,true,false,0,false,false,null,false]"
+   },
+   {
+    "edge": 209,
+    "two": false,
+    "key": "[72,110,100,false,false,1.386,false,false,null,false]"
+   }
+  ],
+  "bands": [
+   {
+    "vertex": "node_218",
+    "aEdge": 39,
+    "bEdge": 209,
+    "a": {
+     "chain": 34,
+     "ctrl": 0,
+     "dir": 1
+    },
+    "b": {
+     "chain": 72,
+     "ctrl": 110,
+     "dir": -1
+    },
+    "distJ": 1.386,
+    "inward": false,
+    "slot": 0,
+    "shared": false,
+    "fallback": false,
+    "used": 1
+   }
+  ],
+  "errs": []
+ },
+ "s4": {
+  "head": "node_221",
+  "pulses": [
+   {
+    "edge": 39,
+    "two": false,
+    "key": "[34,2,0,false,false,0,true,false,0,false]"
+   },
+   {
+    "edge": 210,
+    "two": true,
+    "key": "[72,116,110,false,false,0,true,true,1.386,false]"
+   },
+   {
+    "edge": 211,
+    "two": false,
+    "key": "[72,116,122,true,false,0,false,false,0,false]"
+   },
+   {
+    "edge": 209,
+    "two": false,
+    "key": "[72,110,100,false,false,1.386,false,false,0,false]"
+   }
+  ],
+  "bands": [
+   {
+    "vertex": "node_218",
+    "aEdge": 39,
+    "bEdge": 209,
+    "a": {
+     "chain": 34,
+     "ctrl": 0,
+     "dir": 1
+    },
+    "b": {
+     "chain": 72,
+     "ctrl": 110,
+     "dir": -1
+    },
+    "distJ": 1.386,
+    "inward": false,
+    "slot": 0,
+    "shared": false,
+    "fallback": false,
+    "used": 2
+   },
+   {
+    "vertex": "node_218",
+    "aEdge": 39,
+    "bEdge": 210,
+    "a": {
+     "chain": 34,
+     "ctrl": 0,
+     "dir": 1
+    },
+    "b": {
+     "chain": 72,
+     "ctrl": 110,
+     "dir": 1
+    },
+    "distJ": 1.386,
+    "inward": false,
+    "slot": 1,
+    "shared": false,
+    "fallback": false,
+    "used": 2
+   }
+  ],
+  "errs": []
+ },
+ "twoEdges": [
+  210
+ ],
+ "bandDiff": [
+  "node_218"
+ ],
+ "declDiff": [
+  39,
+  209,
+  210,
+  211
+ ]
+}
