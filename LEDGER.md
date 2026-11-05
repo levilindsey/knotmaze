@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1204.
+Next free ID: K1206.
 
 ## Waiting on Levi
 
@@ -516,17 +516,17 @@ Next free ID: K1204.
   - brief: `docs/design/K1040_s3f4_bound.md` (its Handoff ends with the Pixel's reading)
   - env: the phone through `.claude/probes/K1040/s3/phone_batch.ps1` (run_phone.ps1: both locks, then K1142's ready check), `phone_time.mjs` serving on 5403; desktop timing through `run_locked.ps1`, never piped through `Select-Object -First` (K1174)
 - **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate correctly
-  across junctions"). S1 to S5 landed (S5 on since fbc1b212); S4/S4b held the Pixel's frames (render +2%).
+  across junctions"). S1 to S5 landed (S5 on since fbc1b212); S3b-S5 held the Pixel's frames (render +2%).
   Levi's looks K1190 and K1200, leftovers K1191 and K1201-K1203; S6 next. Notes: `docs/ledger_notes.md`.
-  - owner: claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (coordinator: the Pixel passes for S3b, S3b's fix and S5, under the phone lock)
+  - owner: claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (coordinator)
   - branch: mainline (the worktrees `.claude/worktrees/agent-a90af0fe8b4cf82a5` (S4b), `agent-a023a39925efe4816` (S4) and `agent-a8280f4d14ebd8ad1` (the S3b fix) kept); last commit: `fbc1b212`
-  - evidence: `.claude/probes/K1139/` (tracked: `*_cyc.mjs`, `ridge_joint.ts`, `s5_sheet.mjs`, `pixel_passes.ps1`, `out/s4cyc/` sheets, table, bench and `pixel_batch_plan.md` (its Result: S4/S4b on the Pixel), `out/s5/` (20B's q3_head sheet, `s5_sheet.json`), `k307/`; untracked: `out/s4b/`, the round outputs `.claude/probes/rounds/2026-11-04-k1139s4/` and `2026-11-05-k1139s3b`, `-k1139fix`, `-k1139s5`); the Handoffs of `docs/design/K1139_s4_cycles.md` and `docs/design/K1139_s4b_ridge_fade.md`
-  - next: the Pixel passes (`pixel_passes.ps1 -Flip fbc1b212`: S3b 7474d09b -> df30a7f3, its fix 1fe793f5 -> 71eedb94, S5 36aed2d5 -> fbc1b212; gate frameMs +0.5, `out/s3b/pixel_batch_plan.md`); Levi's look K1200 (`docs/asks/K1200.md`); K1201-K1203; S6 (plan section 5); K1190's fixes once Levi answers
+  - evidence: `.claude/probes/K1139/` (tracked: `*_cyc.mjs`, `ridge_joint.ts`, `s5_sheet.mjs`, `pixel_passes.ps1`, `s5_cool_rerun.ps1`, `out/s4cyc/` sheets, table, bench and `pixel_batch_plan.md` (its Result: S4/S4b on the Pixel), `out/s3b/pixel_batch_plan.md` (its Result: S3b, its fix and S5 on the Pixel), `out/s5/` (20B's q3_head sheet, `s5_sheet.json`), `k307/`; untracked: `out/s4b/`, the round outputs `.claude/probes/rounds/2026-11-04-k1139s4/` and `2026-11-05-k1139s3b`, `-k1139fix`, `-k1139s5`, `-k1139s5b`); the Handoffs of `docs/design/K1139_s4_cycles.md` and `docs/design/K1139_s4b_ridge_fade.md`
+  - next: Levi's look K1200 (`docs/asks/K1200.md`); K1201-K1203 (K1201's census and K1202/K1203's fixes are Muse batch 21 candidates, K1204); S6 (plan section 5) after K1140's Glimpse picks; K1190's fixes once Levi answers. The next pulse step's Pixel pass watches fabric 7 moves' frames over 25 ms (+14 and +15 in the fix's and S5's passes, floor 13)
   - brief: the plan `docs/design/K1139_pulse_junctions.md` section 5 (S6); S5 was Muse batch 20's Run B (`docs/design/K1199_muse_batch20.md`)
   - env: the passes' builds first and never while Muse runs: `scripts/preview.ps1 -Ref <sha> -Root <out>\builds -BuildOnly` for each sha (`pixel_passes.ps1` stops before the phone lock when one is missing); probe server `npx vite --config .claude/probes/K1139/vite.private-cache.config.ts --port 5620 --strictPort --host 127.0.0.1` from a worktree (ports 5620-5639); GPU probes through `.claude/probes/K1139/run_locked.ps1 -Batch`
 - **K1199** · Muse batch 20 (`docs/design/K1199_muse_batch20.md`): K1139 S5 with K1182's removal (run B),
   K1202 (C), K1186's crops (D), K1201 (E), K1196's timing (F) and K1198's Plc1m and ij (G), one at a time
-  - owner: nobody since 2026-11-05 00:07 (the chain held before 20D for the coordinator's commits and builds; runs 20D to 20G queued, one at a time, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
+  - owner: the chain in `.claude/probes/K1053/` (queue.txt, chain.log): batch 20's runs one at a time, each a fresh Muse session (20F done, 20G queued), coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
   - branch: mainline; last commit: `345a189f`
   - evidence: docs/design/K1199_muse_batch20_run_a.md; the chain in .claude/probes/K1053/ (queue.txt, chain.log)
   - next: Run F done; Claude reviews it, Run G next
@@ -550,12 +550,15 @@ Binding for every stage:
   new, and pause running agents with their WIP committed.
 
 Running agents are listed under In progress, each with its own next step.
+- **K1204** · Muse batch 21 (after K1199's batch 20): Run A drafts the brief from
+  `docs/design/K1204_muse_batch21_run_a.md` (committed after 20G); Claude reviews the draft and queues runs B
+  to G (ports 5820-5879)
 - **K1202** · The step at columns 20 to 21 of cyc e210's kymograph (up to 43 luma) is the cover edge of
   node_218's other pulse band (e39->e209) crossing e210's centreline in the fan (20C, 5f9c3207; the CPU
   twin ramps it over cols 18-20); a fix is a later stage behind a switch. Notes: `docs/ledger_notes.md`.
-- **K1201** · S4b's joint step (K1139): where a two-ended arm's ridge lies near or before its joint, the light
-  steps there by 0.18 to 0.90 (`ridge_joint.ts`, synthetic; no stand shows it). Reproduce it on screen and on
-  the GPU, measure how often play meets it, then fix (b) behind a switch (S4b's Handoff)
+- **K1201** · S4b's joint step (K1139): a two-ended arm's ridge near or before its joint (xR < 0.5) steps the
+  light 0.18-0.90 there. 20E (9637302e): the GPU shows it by injection; play met it at 0 of 5 heads (notes).
+  Next: census xR over every head and two-ended arm of a few mazes (CPU); fix (b) only where play meets it.
 - **K875** · K868 S1b, master's side: on Muse's link master registers only 58-80% with the oracle at
   j49/j123 and #6 finds every band end off (18/18, 19/19; cause untested: gaps or a reveal/fog state);
   its sdf and strip silhouettes differ in width; joinery.ts:1469-1471's comment is stale. s1b_oracle.md.
@@ -770,9 +773,9 @@ Every other item below waits on the trigger it names.
 - **K1186** · Fill look: hold the fillet layer vote while the knot moves, fading on change (K1179 review 5c).
   20D's crops (`.claude/probes/K1186/out20d/`) carry 140 ms of drag each; armReach binds, it can't jump.
   Next: same-state A/B of each vote flip's own ink (probe-only override); Claude judges. Notes: ledger_notes.
-- **K1196** · K1139 S4's frame bench timed only the start head's one-ended pulses at rest
-  (`out/s4cyc/bench_rest.json` on S4's branch, 7.15 vs 7.10 ms): time two-ended pulses on loops and cycles with
-  a harness that plays moves onto them (numeric, a Muse candidate)
+- **K1196** · Two-ended pulses (K1139 S4) on the desktop, 20F (345a189f, `.claude/probes/K1196/out/`): frame
+  p50 at rest 7.50 (cyc e210), 7.82 (loop e102), start head 7.07; in play 7.25, 7.22, 6.95 (spread 0.2, 0.1).
+  Other stands, so not S4's own cost: next, those stands on S4's base and head (ABBA), the Pixel if it costs
 
 ## Residuals (known, not fixed)
 
@@ -1708,6 +1711,9 @@ Every other item below waits on the trigger it names.
   (`docs/ledger_notes.md` `## K1198`; `docs/design/K1112_cursive_j3i.md` Handoff).
 - **K1203** · A pulse band ignores its child arm's end window (x4 mnode_27 e135 to e18 reads 0.0170, before S4b
   too), and `table_cyc.mjs`'s BAND EXTENT stops at the arm's length (K1139 S4b's Handoff)
+- **K1205** · A warm Pixel draws fabric at rest at 30 fps: at thermal status 1 (skin 39-40 C) 0 moves read p50
+  33.1 (builds 36aed2d5 and fbc1b212) while 7 moves held 16.7; cool, 0 moves holds 16.7 (K1139's passes
+  `.claude/probes/rounds/2026-11-05-k1139s5`, `-s5b`). Cause untested (notes)
 
 ## Approved, to schedule (2026-10-11)
 

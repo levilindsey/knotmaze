@@ -100,3 +100,52 @@ tunnel and the labels above keep the two runs apart.
   the coordinator schedules them, per plan section 5.
 - No look judgement: the sheets are Run B's
   `.claude/probes/K1139/out/doc/s3b_*.png`, Claude reviews first.
+
+## Result (coordinator, 2026-11-05 00:15-01:07; S5 again, cool, 01:20-01:41)
+
+Run as round phone passes instead of the steps above:
+`../../pixel_passes.ps1 -Flip fbc1b212 -AllowChrome` runs
+`scripts/phone_pass.ps1 -Reps 3` (K156) for each step under one phone
+lock, out in `.claude/probes/rounds/2026-11-05-k1139s3b/`, `-k1139fix/`
+and `-k1139s5/` (untracked: `summary.md`, `logs/run.log`). S5 ran again
+on a cool phone with 4 reps (`-Only s5 -Reps 4 -Suffix b`, out in
+`-k1139s5b/`) through `../../s5_cool_rerun.ps1`, which waits for
+thermal status 0 and a skin of at most 31 C. Viewport 411x753 at 2.625,
+canvas 822x1506. Verdicts against `scripts/phone_pass/noise.json`;
+render ms is the median of 60 synchronous renders with a 1-px readback
+(about 40 ms in fabric).
+
+| step | base -> head | better / worse / within | fabric p50, 0 / 7 moves | render ms, fabric 0 / 7 / 13 moves | knot render ms | thermal start -> end |
+|---|---|---|---|---|---|---|
+| S3b, the fan shader | 7474d09b -> df30a7f3 | 4 / 0 / 36 | 16.7 = 16.7 / 16.7 = 16.7 | -1.20 (better) / +0.10 / +0.50 | +0.10 | status 0, skin 27.2 -> status 0, 38.5 |
+| S3b's fix | 1fe793f5 -> 71eedb94 | 1 / 2 / 37 | 16.7 = 16.7 / 16.7 = 16.7 | +0.50 / +0.50 / +0.40 | -0.40 | status 0, 38.0 -> status 1, 39.5 |
+| S5's default flip | 36aed2d5 -> fbc1b212 | 1 / 2 / 37 | 33.1 -> 33.2 / 16.7 = 16.7 | +1.00 (worse, floor 0.70) / -0.30 / +1.10 | -0.50 | status 1, 39.0 -> 39.8 |
+| S5 again, cool (s5b, 4 reps) | 36aed2d5 -> fbc1b212 | 1 / 2 / 37 | 16.7 = 16.7 / 16.7 = 16.7 | +0.30 / -0.45 / -0.75 | -0.45 | status 0, 32.9 -> status 1, 39.4 |
+
+- S3b: better on render ms at 0 moves, the longest frame at 0 moves
+  (33.4 -> 17.1) and the slow load gs=18's fps and frames (38.3 ->
+  44.3, as in S4's pass: not K1139's doing).
+- The fix: worse on fabric 7 moves' fps (59.0 -> 55.3, floor 3.5) and
+  frames over 25 ms (6 -> 20, floor 13), with p50 16.7 on both; better
+  on the default link's load frames over 50 ms (96 -> 51).
+- S5, warm: both builds drew fabric at 0 moves at 30 fps (p50 33.1 and
+  33.2, asleep) and at 7 moves at 60; worse on render ms at 0 moves
+  (+1.00) and the slow load's p95 (50.3 -> 66.7, one vsync); better on
+  knot's longest frame (18.0 -> 17.2). 36aed2d5 drew 0 moves at 16.7 in
+  S4's pass (`../s4cyc/pixel_batch_plan.md`), so the rerun on a cool
+  phone separates the build from the heat.
+- S5, cool (s5b): both builds drew 0 moves at 60 again (p50 16.7) and
+  render ms is within noise (+0.30 at 0 moves, -0.45 at 7), so the warm
+  pass's 30 fps and +1.00 came from the heat (K1205). Worse on fabric 7
+  moves' frames over 25 ms (14 -> 28, floor 13; the fix's pass read +14
+  at the same scene) and the slow load's first sleep (11.3 -> 12.3 s,
+  floor 0.8; the default link's went 10.5 -> 9.9, better). 13 moves
+  (the finish) read p50 25.0 -> 33.2 as the phone reached status 1 again.
+- Gate (frameMs(head) - frameMs(base) at most 0.5): S3b and its fix
+  pass (frames unchanged), and S5 passes on the cool rerun (frames
+  unchanged, render within noise). Watch: fabric 7 moves' frames over
+  25 ms grew in both the fix's and S5's passes, just past the floor;
+  the next pulse step's pass checks it.
+- 13 moves is the finish (stars and confetti in the timing; no noise
+  floor). Cold compile: not measured on the Pixel (K307's trace_intro
+  is desktop only).

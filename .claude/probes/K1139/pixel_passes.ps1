@@ -5,16 +5,18 @@
 # Muse runs); phone_pass reuses <Out>\builds\<sha> when index.html exists, so the passes touch
 # neither git nor the build tools. phone_pass takes no perf lock by design (the phone's timings do
 # not depend on the desktop's load). Masks addresses in everything it prints.
-param([string]$Flip, [int]$Reps = 3, [string[]]$Only = @(), [switch]$AllowChrome)
+# -Suffix names a rerun's out folders (2026-11-05-k1139s5b for -Suffix b); the caller copies its builds in first
+# (s5_cool_rerun.ps1 does): a missing build stops this script before the phone lock.
+param([string]$Flip, [int]$Reps = 3, [string[]]$Only = @(), [switch]$AllowChrome, [string]$Suffix = '')
 if (-not $Flip) { throw '-Flip <sha> is required' }
 $k = 'C:\Users\lsl\Repositories\knotmaze'
 $probes = "$k\.claude\probes\agents"
 $owner = 'K1139 Pixel passes'
 $rounds = "$k\.claude\probes\rounds"
 $passes = @(
-  @{ tag = 's3b'; base = '7474d09b'; head = 'df30a7f3'; out = "$rounds\2026-11-05-k1139s3b" },
-  @{ tag = 'fix'; base = '1fe793f5'; head = '71eedb94'; out = "$rounds\2026-11-05-k1139fix" },
-  @{ tag = 's5'; base = '36aed2d5'; head = $Flip; out = "$rounds\2026-11-05-k1139s5" }
+  @{ tag = 's3b'; base = '7474d09b'; head = 'df30a7f3'; out = "$rounds\2026-11-05-k1139s3b$Suffix" },
+  @{ tag = 'fix'; base = '1fe793f5'; head = '71eedb94'; out = "$rounds\2026-11-05-k1139fix$Suffix" },
+  @{ tag = 's5'; base = '36aed2d5'; head = $Flip; out = "$rounds\2026-11-05-k1139s5$Suffix" }
 )
 if ($Only.Count) { $passes = @($passes | Where-Object { $Only -contains $_.tag }) }
 $mask = { param([string]$t) (($t -replace '\b\d{1,3}(\.\d{1,3}){3}(:\d+)?\b', '<addr>') -replace 'adb devices:[^)\r\n]*', 'adb devices: <masked>') }
