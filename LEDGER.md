@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1199.
+Next free ID: K1200.
 
 ## Waiting on Levi
 
@@ -529,6 +529,13 @@ Next free ID: K1199.
   - evidence: docs/design/K1192_muse_batch19.md; the chain in .claude/probes/K1053/ (queue.txt, chain.log)
   - next: Run E done; Run F next
   - brief: `docs/design/K1192_muse_batch19.md`
+- **K1199** · Muse batch 20 (`docs/design/K1199_muse_batch20.md`, drafted by run A): junction and cursive work
+  first (K1139 S5, K1186's crops, K1196's timing, K1191's gk, c's v7.2 leftovers), then batch 19's follow-ups
+  - owner: nobody since 2026-11-04 22:00 (run 20A queued in the Muse chain after 19F, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
+  - branch: mainline; last commit: `79fec895`
+  - evidence: docs/design/K1199_muse_batch20_run_a.md; the chain in .claude/probes/K1053/ (queue.txt, chain.log)
+  - next: Run A drafts the batch's brief; Claude reviews it, merges K1139 S4 and S4b, then queues runs B to G
+  - brief: `docs/design/K1199_muse_batch20_run_a.md`
 
 ## Next, in order
 
@@ -1511,9 +1518,9 @@ Every other item below waits on the trigger it names.
 - **K781** · K138 s3 one-way chevrons: a placeholder design, each its own mesh and draw call (116 at
   seed 7, ow 0.4; not timed), unchecked under the fog and the thread reveal. With the color rule
   leaving no solvable draw (seed 1, alternate, 0.4) nothing is one-way and the HUD row reads 0
-- **K782** · K137 s4 lure and snare residuals (K137_s4.md Handoff; list in docs/ledger_notes.md; the
-  toast fixed in 8ba8dc69): a live switch to travel by length keeps dead snares drawn; a waiting
-  follower's first step skips the mud cut; plus hover, a late lure clear, clk=beat, the glyph
+- **K782** · K137 s4 lure and snare residuals (K137_s4.md Handoff; list in docs/ledger_notes.md; the toast
+  fixed in 8ba8dc69, the waiting follower's mud cut in b806f9fb): a live switch to travel by length keeps dead
+  snares drawn; plus hover, a late lure clear, clk=beat, the glyph
 - **K791** · Locks and keys (K138 s4 slice 2, unmerged): ky 2 with the alternate color rule bites on
   only 41 of 50 seeds, taking up to 32 draws; the lock dim covers only a stretch at each end of a
   lock run, not the whole run; the census trap check skips clocked configs (turnstiles)

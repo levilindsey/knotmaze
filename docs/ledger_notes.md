@@ -3670,10 +3670,11 @@ Walker modes, Levi's brainstorm (2026-11-03, five messages): guide it, program i
   Handoff): an armed tool lights any run on hover; a live switch to travel
   by length keeps snares that never spring, rings drawn; under length a lure
   clears one hop late (read, untested); untested under clk=beat; the ring is
-  a stand-in for a glyph; a waiting follower's first step still skips the
-  mud cut. Fixed since: the follower's first step is snare-checked
-  (4b1886c7, batch 17 run E); the Snared toast waits for the monster's
-  arrival (8ba8dc69, batch 18 run B).
+  a stand-in for a glyph. Fixed since: the follower's first step is
+  snare-checked (4b1886c7, batch 17 run E); the Snared toast waits for the
+  monster's arrival (8ba8dc69, batch 18 run B); a waiting follower's first
+  step is mud-cut (b806f9fb, batch 19 run E): it crosses and spends its next
+  turn in the mud, as an awake follower's does.
 
 ## K1186
 
