@@ -1,0 +1,11 @@
+ji 33 (cross), orientation 1, phases 0,1,2,3,4,5,6,7: candidate px 37334, masked in the composite (another record's sample) 18461
+  fan: wedges GPU 2363, model 8670, both 2148, GPU only 215, model only 6522
+    GPU-only by e: {"e<-1.5":2,"-1.5..-0.5":1,"-0.5..0":1,"e>=0":211}; bare (both bands cov 0 in the fan twin) 4; GPU = webs-off 71
+    GPU-only by sample kinds: {"other record":203,"fan x4":10,"strip x4":2}
+    luma GPU - model on GPU-only: n 215 mean -6.0 p10 -11.2 med -5.0 p90 -2.8
+    beyond strip reach (e < -1.5): 2, GPU = webs-off 0, kinds {"fan x4":2}, luma GPU - model n 2 mean -0.7 p10 -0.9 med -0.6 p90 -0.6
+  comp: wedges GPU 358, model 347, both 346, GPU only 12, model only 1
+    GPU-only by e: {"e<-1.5":2,"-1.5..-0.5":1,"-0.5..0":1,"e>=0":8}; bare (both bands cov 0 in the fan twin) 4; GPU = webs-off 0
+    GPU-only by sample kinds: {"fan x4":10,"strip x4":2}
+    luma GPU - model on GPU-only: n 12 mean -0.6 p10 -0.9 med -0.6 p90 -0.6
+    beyond strip reach (e < -1.5): 2, GPU = webs-off 0, kinds {"fan x4":2}, luma GPU - model n 2 mean -0.7 p10 -0.9 med -0.6 p90 -0.6
