@@ -1,10 +1,12 @@
 import { describe, it, expect } from "vitest";
 import type { WalkEdge, WalkGraph, WalkVertex } from "../../src/core/walk_graph";
 import { pulsePath, pulseTree } from "../../src/render/pulse_path";
+import { kPulseCrest, kPulseV, kPulseV2, type KUniforms } from "../../src/render/paint_math";
 
 // K1139 S2 (plan 4.1): the pure lit-tree model on small invented graphs.
-// T6 (cycles' two-ended form) and T7 (self-loops) are S4's; here a cycle
-// arm keeps the one parent the tree gives it.
+// S4: T6 (an arm lit from both ends: the two-ended form, its ridge and
+// the field's continuity there, on the CPU mirror) and T7 (self-loops:
+// one item per loop).
 
 // A hand-built walk graph from runs [va, vb, lattice length] (the
 // route_plan.test.ts helper's shape).
@@ -136,7 +138,7 @@ describe("pulsePath (K1139 S2, T1-T5/T8/T9)", () => {
     }
   });
 
-  it("a cycle arm keeps the one parent the tree gives it (S4's two-ended form aside)", () => {
+  it("a cycle arm keeps the one parent the tree gives it", () => {
     const G = graph([
       ["H", "A", 1],
       ["A", "B", 1],
@@ -149,6 +151,84 @@ describe("pulsePath (K1139 S2, T1-T5/T8/T9)", () => {
     expect(items.find((i) => i.edge === 2)!.near).toBe("H");
     expect(items.find((i) => i.edge === 1)!.parent).toBe(0);
     expect(items.find((i) => i.edge === 1)!.near).toBe("A");
+  });
+
+  // The triangle H-A-B: B's tree arm is e2 (1.5 < 2 through A), so e1
+  // (A-B) closes the cycle. Drawn spans differ from the lattice.
+  const TRI = graph([
+    ["H", "A", 1],
+    ["A", "B", 1],
+    ["B", "H", 1.5],
+  ]);
+  const TRI_SPANS = { 0: 1.1, 1: 0.9, 2: 1.4 };
+
+  it("T6 cycles: an arm lit from both ends is one two-ended item; the tree arms stay one-ended", () => {
+    const items = pulsePath(TRI, "H", -1, 10, spansOf(TRI_SPANS));
+    const e1 = items.find((i) => i.edge === 1)!;
+    expect(e1).toMatchObject({ near: "A", far: "B", atA: true, two: true, cont: true, inward: false, inwardB: false });
+    expect(e1.dist0).toBeCloseTo(1.1, 9); // A through e0
+    expect(e1.dB).toBeCloseTo(1.4, 9); // B through e2, not through A
+    for (const eid of [0, 2]) {
+      expect(items.find((i) => i.edge === eid)).toMatchObject({ two: false, dB: 0, inwardB: false });
+    }
+    // The ridge: dA + d = dB + W - d, d = (dB + W - dA) / 2 = 0.6.
+    const dR = (e1.dB + e1.span - e1.dist0) / 2;
+    expect(dR).toBeCloseTo(0.6, 9);
+    expect(e1.dist0 + dR).toBeCloseTo(e1.dB + e1.span - dR, 9);
+  });
+
+  it("T6 cycles: the far end must be lit, past its own gate; else the arm stays one-ended", () => {
+    // Reach 1.3: A (1) lit, B (1.5) not - e1 lights from A alone.
+    const short = pulsePath(TRI, "H", -1, 1.3, spansOf(TRI_SPANS)).find((i) => i.edge === 1)!;
+    expect(short).toMatchObject({ near: "A", two: false, cont: false, dB: 0 });
+    // B's end of e1 gated (hidden there): one-ended from A.
+    const gated = pulsePath(TRI, "H", -1, 10, spansOf(TRI_SPANS), (eid, atA) => !(eid === 1 && !atA));
+    expect(gated.find((i) => i.edge === 1)).toMatchObject({ near: "A", two: false, cont: true });
+    // A's end gated: spent, as before S4 (it never lights from B).
+    const spent = pulsePath(TRI, "H", -1, 10, spansOf(TRI_SPANS), (eid, atA) => !(eid === 1 && atA));
+    expect(spent.find((i) => i.edge === 1)).toBeUndefined();
+  });
+
+  it("T6 cycles: behind you each end keeps its own direction", () => {
+    // Arrived by e0 from A: A's side is behind you, B's ahead; e1 joins
+    // the two (crests run A-ward on A's side, away from B on B's).
+    const items = pulsePath(TRI, "H", 0, 10, spansOf(TRI_SPANS));
+    expect(items.find((i) => i.edge === 1)).toMatchObject({ two: true, inward: true, inwardB: false });
+    // A head arm that closes a cycle: two-ended, its A end at you.
+    const G = graph([
+      ["H", "B", 1],
+      ["H", "B", 2.5],
+      ["B", "C", 1],
+      ["B", "D", 1],
+    ]);
+    const e1 = pulsePath(G, "H", -1, 10, () => 1).find((i) => i.edge === 1)!;
+    expect(e1).toMatchObject({ near: "H", far: "B", two: true, dist0: 0, dB: 1 });
+  });
+
+  it("T7 self-loops: one item per loop, two-ended at its junction", () => {
+    const G = graph([
+      ["H", "J", 1],
+      ["J", "J", 3],
+      ["J", "E", 1],
+      ["H", "F", 1],
+      ["H", "H", 2],
+    ]);
+    const items = pulsePath(G, "H", -1, 10, (eid) => [1.2, 2.8, 1, 1, 1.9][eid]);
+    const loops = items.filter((i) => i.edge === 1 || i.edge === 4);
+    expect(loops.map((i) => i.edge).sort()).toEqual([1, 4]); // each once
+    const j = loops.find((i) => i.edge === 1)!;
+    expect(j).toMatchObject({ near: "J", far: "J", atA: true, two: true, cont: true, inward: false, inwardB: false });
+    expect(j.dB).toBe(j.dist0);
+    expect(j.dist0).toBeCloseTo(1.2, 9);
+    // Your own loop: dist0 = dB = 0; arrived by it, both ends inward.
+    expect(loops.find((i) => i.edge === 4)).toMatchObject({ near: "H", two: true, dist0: 0, dB: 0 });
+    expect(pulsePath(G, "H", 4, 10, () => 1).find((i) => i.edge === 4)).toMatchObject({ two: true, inward: true, inwardB: true });
+    // One end gated: one-ended from the other end (from ctrlB: atA false).
+    const fromB = pulsePath(G, "H", -1, 10, () => 1, (eid, atA) => !(eid === 1 && atA)).filter((i) => i.edge === 1);
+    expect(fromB).toHaveLength(1);
+    expect(fromB[0]).toMatchObject({ near: "J", atA: false, two: false, cont: false });
+    // Both ends gated: dark.
+    expect(pulsePath(G, "H", -1, 10, () => 1, (eid) => eid !== 1).some((i) => i.edge === 1)).toBe(false);
   });
 
   it("T9 determinism: same input, byte-identical output; sub-1e-3 jitter holds dist0", () => {
@@ -179,7 +259,7 @@ describe("pulseTree bands (K1139 S3a, T10)", () => {
       [0, 4, false],
     ]);
     expect(at("K")).toEqual([
-      { vertex: "K", aEdge: 4, bEdge: 5, distJ: 3.5, inward: false },
+      { vertex: "K", aEdge: 4, bEdge: 5, distJ: 3.5, inward: false, bAtA: true },
     ]);
     // distJ is where the parent arm ended (its dist0 + span), quantized.
     for (const b of at("J")) expect(b.distJ).toBeCloseTo(2.2, 9);
@@ -204,7 +284,7 @@ describe("pulseTree bands (K1139 S3a, T10)", () => {
     ]);
     // One junction further back the same rule: e4 bands into e1.
     expect(at("Q")).toEqual([
-      { vertex: "Q", aEdge: 1, bEdge: 4, distJ: 2, inward: true },
+      { vertex: "Q", aEdge: 1, bEdge: 4, distJ: 2, inward: true, bAtA: true },
     ]);
     expect(at("H")).toEqual([]);
   });
@@ -217,14 +297,45 @@ describe("pulseTree bands (K1139 S3a, T10)", () => {
     expect(mid.bands.filter((b) => b.vertex === "K")).toEqual([]); // e5 unlit.
   });
 
-  it("T10 cycles: a non-tree arm gets no band (the two-ended form is S4's)", () => {
+  it("T10 cycles (S4): a two-ended arm gets a band at each lit end, after the tree-child bands", () => {
     const G = graph([
       ["H", "A", 1],
       ["A", "B", 1],
       ["B", "H", 1.5],
+      ["A", "C", 1],
     ]);
     const { bands } = pulseTree(G, "H", -1, 10, () => 1);
-    expect(bands).toEqual([]);
+    // At A: e0 into the tree child e3 first, then into the cycle arm e1;
+    // at B (e1's far end): from B's own parent e2, at B's distance.
+    expect(bands.map((b) => [b.vertex, b.aEdge, b.bEdge, b.distJ, b.bAtA])).toEqual([
+      ["A", 0, 3, 1, true],
+      ["A", 0, 1, 1, true],
+      ["B", 2, 1, 1, false],
+    ]);
+    // A one-ended cycle arm (its far end past the reach) is banded at
+    // its near end alone.
+    const one = pulseTree(G, "H", -1, 1.3, () => 1).bands;
+    expect(one.map((b) => [b.vertex, b.bEdge])).toEqual([
+      ["A", 3],
+      ["A", 1],
+    ]);
+  });
+
+  it("T10 self-loops (S4): a loop past your junction gets a band at each lit end", () => {
+    const G = graph([
+      ["H", "J", 1],
+      ["J", "J", 3],
+      ["J", "E", 1],
+    ]);
+    const { bands } = pulseTree(G, "H", -1, 10, () => 1);
+    expect(bands.map((b) => [b.vertex, b.aEdge, b.bEdge, b.bAtA])).toEqual([
+      ["J", 0, 2, true],
+      ["J", 0, 1, true],
+      ["J", 0, 1, false],
+    ]);
+    // Your own loop: no band (S5).
+    const own = pulseTree(graph([["H", "H", 3], ["H", "E", 1]]), "H", -1, 10, () => 1);
+    expect(own.bands).toEqual([]);
   });
 
   it("pulsePath still returns exactly pulseTree's items", () => {

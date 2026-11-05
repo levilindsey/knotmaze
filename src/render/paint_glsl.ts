@@ -24,7 +24,14 @@
 //   KGEOM at geomBase:          G0 = (total, arcPer, fxDone, -), then the
 //                               control arcs packed 4 per texel (slot order)
 
-import { PAINT_CONST, PAINT_ITEM_FRAY, PAINT_ITEM_TELE, glslConstBlock } from "./paint_const";
+import {
+  PAINT_CONST,
+  PAINT_ITEM_FRAY,
+  PAINT_ITEM_TELE,
+  PULSE_FLAG,
+  PULSE_RIDGE_FADE,
+  glslConstBlock,
+} from "./paint_const";
 
 const W1 = (1 << PAINT_CONST.K_ROW_SHIFT) - 1;
 const S = PAINT_CONST.K_ROW_SHIFT;
@@ -839,6 +846,14 @@ highp float kPulseV(highp float d, highp float span, bool inward, bool hovered, 
   highp float endWin = cont ? 1.0 : clamp((span - d) / PULSE_END_WINDOW, 0.0, 1.0);
   return kPulseCrest(dist0 + d, inward, hovered, endWin);
 }
+// K1139 S4: lit from both ends; trains fade to the floor at the ridge.
+highp float kPulseV2(highp float d, highp float span, highp float dA, highp float dB, bool inA, bool inB, bool hov, highp float bK) {
+  if (d < 0.0 || d > span) return 0.0;
+  highp float gA = dA + d;
+  highp float gB = dB + span - d;
+  bK *= min(1.0, abs(gA - gB) * ${(0.5 / PULSE_RIDGE_FADE).toFixed(4)});
+  return gA <= gB ? kPulseCrestK(gA, inA, hov, 1.0, bK) : kPulseCrestK(gB, inB, hov, 1.0, bK);
+}
 
 highp float kRingDist(highp float a, highp float b, highp float total, bool closed) {
   highp float d = abs(a - b);
@@ -938,7 +953,9 @@ highp vec4 kPaintAt(KChain c, highp float ctrl, highp float arc, highp float px,
       }
       bool inwP = (flags & IF_INWARD) != 0;
       bool hovP = (flags & IF_HOVER) != 0;
-      highp float v = quiet
+      highp float v = (flags & ${PULSE_FLAG.TWO}) != 0
+        ? kPulseV2(d, span, T0.w, T1.w, inwP, (flags & ${PULSE_FLAG.INWARD_B}) != 0, hovP, quiet ? 0.0 : 1.0)
+        : quiet
         ? (d < 0.0 || d > span
             ? 0.0
             : kPulseCrestQuiet(T0.w + d, inwP, hovP, T1.z > 0.5 ? 1.0 : clamp((span - d) / PULSE_END_WINDOW, 0.0, 1.0)))

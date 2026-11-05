@@ -33,7 +33,15 @@ import { MAX_ROUTES, recordData } from "../junction_field";
 import { WebFade } from "../web_fade";
 import { FILLET_REACH_PER_HALF } from "./joinery";
 import { setFabricJunctionCut } from "../fabric_sdf";
-import { FX_STYLE, ITEM_FLAG, PAINT_CONST, PAINT_ITEM, PAINT_ITEM_FRAY, PAINT_ITEM_TELE } from "../paint_const";
+import {
+  FX_STYLE,
+  ITEM_FLAG,
+  PAINT_CONST,
+  PAINT_ITEM,
+  PAINT_ITEM_FRAY,
+  PAINT_ITEM_TELE,
+  PULSE_FLAG,
+} from "../paint_const";
 import {
   EXPLORE_ITEM_CHAR,
   EXPLORE_ITEM_FRONT,
@@ -1160,9 +1168,13 @@ export class PaintState {
     }
     for (const p of this.paintPulses) {
       const i = items.length / 8;
+      // K1139 S4: a two-ended arm's flags and its far end's distance (T1.w).
       const flags =
-        (p.inward ? ITEM_FLAG.INWARD : 0) | (p.hovered ? ITEM_FLAG.HOVER : 0);
-      items.push(PAINT_ITEM.PULSE, p.cJunction, p.cFar, p.dist0 ?? 0, 0, flags, p.cont ? 1 : 0, 0);
+        (p.inward ? ITEM_FLAG.INWARD : 0) |
+        (p.hovered ? ITEM_FLAG.HOVER : 0) |
+        (p.two ? PULSE_FLAG.TWO : 0) |
+        (p.two && p.inwardB ? PULSE_FLAG.INWARD_B : 0);
+      items.push(PAINT_ITEM.PULSE, p.cJunction, p.cFar, p.dist0 ?? 0, 0, flags, p.cont ? 1 : 0, p.two ? (p.dB ?? 0) : 0);
       touch(p.chain, Math.min(p.cJunction, p.cFar), Math.max(p.cJunction, p.cFar), i);
     }
     // K76: the thread reveal's visibility pieces (explore_glsl.ts), but

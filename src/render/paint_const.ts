@@ -140,6 +140,16 @@ export const PAINT_ITEM_TELE = 9;
 // not in PAINT_ITEM, so the junction and pluck programs keep their text.
 export const PAINT_ITEM_FRAY = 10;
 export const ITEM_FLAG = { INWARD: 1, HOVER: 4 } as const;
+// K1139 S4: a PULSE item lit from both ends (pulse_path.ts PulseItem.two):
+// TWO, with T1.w its far end's drawn distance, and INWARD_B, that end's
+// crests running inward. Kept out of ITEM_FLAG and PAINT_CONST, which
+// glslConstBlock emits into every paint program: kPaintAt's own chunk
+// inlines them, so the junction and pluck programs keep their text (K307).
+export const PULSE_FLAG = { TWO: 8, INWARD_B: 16 } as const;
+// K1139 S4: a two-ended arm's crest trains fade to the floor over this
+// drawn distance either side of the ridge, where its two ends' fields
+// meet (plan 2.1), so the field is continuous there.
+export const PULSE_RIDGE_FADE = 0.5;
 
 // RUNS flags (R1.w).
 export const RUN_FLAG = {

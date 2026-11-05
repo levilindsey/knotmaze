@@ -11,7 +11,16 @@
 // Precision: the GPU evaluates in fp32 from the same fp32 texel values; the
 // mirror runs in f64. Censuses compare at <= 2/255.
 
-import { FX_STYLE, ITEM_FLAG, PAINT_CONST, PAINT_ITEM, PAINT_ITEM_TELE, RUN_FLAG } from "./paint_const";
+import {
+  FX_STYLE,
+  ITEM_FLAG,
+  PAINT_CONST,
+  PAINT_ITEM,
+  PAINT_ITEM_TELE,
+  PULSE_FLAG,
+  PULSE_RIDGE_FADE,
+  RUN_FLAG,
+} from "./paint_const";
 import {
   EXPLORE_CHAR_EDGE,
   EXPLORE_DOT_AT,
@@ -1500,6 +1509,31 @@ export function kPulseV(
   return kPulseCrest(U, dG, inward, hovered, endWin);
 }
 
+// K1139 S4 (GLSL twin in paint_glsl.ts): the field on an arm lit from
+// both ends (pulse_path.ts PulseItem.two): the nearer end's, dG =
+// min(dA + d, dB + span - d), each side in its own end's direction, with
+// no end fade. The crest trains fade to the floor over PULSE_RIDGE_FADE
+// either side of the ridge, where the two sides meet (|gA - gB| / 2 is
+// the distance from it), so the field is continuous there whichever way
+// each side runs. bumpScale 0 is the quiet field (the floor alone).
+export function kPulseV2(
+  U: KUniforms,
+  d: number,
+  span: number,
+  dA: number,
+  dB: number,
+  inwA: boolean,
+  inwB: boolean,
+  hovered: boolean,
+  bumpScale = 1
+): number {
+  if (d < 0 || d > span) return 0;
+  const gA = dA + d;
+  const gB = dB + span - d;
+  const rK = Math.min(1, (Math.abs(gA - gB) * 0.5) / PULSE_RIDGE_FADE) * bumpScale;
+  return gA <= gB ? kPulseCrest(U, gA, inwA, hovered, 1, rK) : kPulseCrest(U, gB, inwB, hovered, 1, rK);
+}
+
 // K1139 S3a: the crest on a pulse band through a junction fan, at signed
 // band arc tau from the joint (negative on the head-side arm, positive
 // on the far-side arm; pulse_path.ts PulseBandSpec). The band carries
@@ -1650,11 +1684,15 @@ export function kPaintAt(
       const inward = (flags & ITEM_FLAG.INWARD) !== 0;
       const hovered = (flags & ITEM_FLAG.HOVER) !== 0;
       const cont = P[o + 6] > 0.5;
-      const v = quiet
-        ? d < 0 || d > span
-          ? 0
-          : kPulseCrest(U, P[o + 3] + d, inward, hovered, cont ? 1 : Math.min(1, Math.max(0, (span - d) / PAINT_CONST.PULSE_END_WINDOW)), 0)
-        : kPulseV(U, d, span, inward, hovered, P[o + 3], cont);
+      // K1139 S4: a two-ended arm (its far end's distance in T1.w).
+      const v =
+        (flags & PULSE_FLAG.TWO) !== 0
+          ? kPulseV2(U, d, span, P[o + 3], P[o + 7], inward, (flags & PULSE_FLAG.INWARD_B) !== 0, hovered, quiet ? 0 : 1)
+          : quiet
+            ? d < 0 || d > span
+              ? 0
+              : kPulseCrest(U, P[o + 3] + d, inward, hovered, cont ? 1 : Math.min(1, Math.max(0, (span - d) / PAINT_CONST.PULSE_END_WINDOW)), 0)
+            : kPulseV(U, d, span, inward, hovered, P[o + 3], cont);
       if (v > PAINT_CONST.PULSE_MIN_V) {
         out.band = true;
         out.v = v;

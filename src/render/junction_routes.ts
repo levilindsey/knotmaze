@@ -120,13 +120,17 @@ export const MAX_BAND_SLOTS = 4;
 
 // A band spec's two arms as one route: arm A leaves the junction by the
 // head-side edge, arm B by the far-side edge (edgeArm at the vertex).
+// K1139 S4: `bAtA` names b's end at the vertex, which a self-loop needs
+// (both its ends are there); it defaults to b's ctrlA end when b.va is
+// the vertex.
 export function pulseBandRoute(
   a: RouteEdge,
   b: RouteEdge,
-  vertex: string
+  vertex: string,
+  bAtA?: boolean
 ): PaintRoute {
   const A = edgeArm(a, a.va === vertex);
-  const B = edgeArm(b, b.va === vertex);
+  const B = edgeArm(b, bAtA ?? b.va === vertex);
   return {
     chain: A.chain,
     ctrl: A.ctrl,

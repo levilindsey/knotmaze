@@ -282,6 +282,9 @@ export interface PulseArm {
   hovered: boolean; // Steady bright highlight instead of the pulse.
   dist0?: number; // K480 s2: arc from the head to this arm's junction (branched arms).
   cont?: boolean; // K480 s2: the light carries past the far end (no end fade).
+  two?: boolean; // K1139 S4: lit from both ends (pulse_path.ts PulseItem.two).
+  dB?: number; // K1139 S4: arc from the head to the far end (two-ended arms).
+  inwardB?: boolean; // K1139 S4: the far end's crests run inward (two-ended arms).
 }
 // A small gold disc of thread around one occurrence of a traversed
 // junction. At a fusion several ribbons overlap; painting every arm's
