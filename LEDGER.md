@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1189.
+Next free ID: K1190.
 
 ## Waiting on Levi
 
@@ -518,6 +518,12 @@ Next free ID: K1189.
   - next: the agent runs Stage 4: P8 against the max over bands, the twin's cover strips, ji 28's darker bare fan, the fork front's crisp arc, jump:gpu at cross t7, ji 149's partition corner, 2x sheets of each. Then Claude reads the handoff and merges (the __k1139diag hook out first) or briefs a fill rule; the Pixel batch (`out/s3b/pixel_batch_plan.md`, its note) builds what merges
   - brief: Stage 4 at the end of `docs/design/K1139_s3b_fix.md` on the branch (6b847b4c), after Stage 3 and its handoff
   - env: the brief's section 7 (the node_modules junction); the server `npx vite --config .claude/probes/K1139/vite.private-cache.config.ts --port 5620 --strictPort --host 127.0.0.1` from the worktree (ports 5620-5639); master's preview `pwsh scripts/preview.ps1 -Port 5630 -Ref c4a9dd60 -Root $env:TEMP\k1139s4pv`; GPU probes through `run_locked.ps1 -Batch`
+- **K1189** · Muse batch 18: run A drafts the brief (`docs/design/K1189_muse_batch18_run_a.md`), then runs B-G
+  - owner: nobody since 2026-11-04 16:43 (run A queued as Muse chain run 18A, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
+  - branch: mainline
+  - evidence: `docs/design/K1189_muse_batch18_run_a.md`; the chain in `.claude/probes/K1053/` (queue.txt, chain.log)
+  - next: Muse chain run 18A drafts `docs/design/K1189_muse_batch18.md` (runs B-G); Claude reviews it and queues 18B-18G
+  - brief: `docs/design/K1189_muse_batch18_run_a.md`
 
 ## Next, in order
 
