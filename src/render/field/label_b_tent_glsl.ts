@@ -529,3 +529,51 @@ export function labelBTentVidSources(debugOut: boolean): { segVs: string } {
   if (sv.segVs.split(a).length !== 2) throw new Error("vid: gl_VertexID line not found once in tentv's segVs");
   return { segVs: sv.segVs.replace(a, "int v = gl_VertexID % (2 * NW + 6);") };
 }
+
+// K1040 S3f5 (cheaper vertices, probe-only beside tentv): two segment
+// source sets whose positions are tentv's, bit for bit (the same emit
+// lines on the same values); only the fetch path changes. Caps and
+// fills keep tentv's programs, except where spanflat's shared fragment
+// shader forces its cap vertex shader to write the same flat (below).
+//   fetch: SEG_MAIN fetches the chain's c1 texel, which the
+//     vertex-light path never reads (its vQ needs c0 alone), and it
+//     fetches the previous point even where there is no joint (np is
+//     then overwritten by nr). This set drops the c1 fetch and fetches
+//     the previous point only under `joint`, with A.xy standing in
+//     where the value cannot be read (not joint: np = nr regardless).
+//   spanflat: the fragment shader fetches the first point's span
+//     record (uPs) at every fragment. This set fetches it once per
+//     vertex in the segment and cap vertex shaders and passes
+//     (index, code, nextLo) as one flat vec3; the fragment reads the
+//     flat instead. The span walk past the switch is unchanged.
+export function labelBTentFetchSources(debugOut: boolean): { segVs: string } {
+  const sv = labelBTentVSources(debugOut);
+  const c1 = "  vec4 c1 = fetch(uChain, 2 * ci + 1);\n";
+  if (sv.segVs.split(c1).length !== 2) throw new Error("fetch: c1 fetch not found once in tentv's segVs");
+  const pp = "  vec2 Pp = fetch(uPts, off + (k > 0 ? k - 1 : closed ? nseg - 1 : 0)).xy;\n";
+  if (sv.segVs.split(pp).length !== 2) throw new Error("fetch: Pp fetch not found once in tentv's segVs");
+  const segVs = sv.segVs.replace(c1, "").replace(pp, "  vec2 Pp = A.xy;\n  if (joint) Pp = fetch(uPts, off + (k > 0 ? k - 1 : closed ? nseg - 1 : 0)).xy;\n");
+  return { segVs };
+}
+
+export function labelBTentSpanFlatSources(debugOut: boolean): LabelBTentVSources {
+  const sv = labelBTentVSources(debugOut);
+  const flat = "flat out ivec3 vQ;";
+  if (sv.segVs.split(flat).length !== 2 || sv.capVs.split(flat).length !== 2 || sv.fs.split(flat.replace("out", "in")).length !== 2)
+    throw new Error("spanflat: vQ flat not found once in tentv's sources");
+  const decl = "flat out ivec3 vQ;\nflat out vec3 vSpF;\nuniform sampler2D uPs;";
+  const segVs = sv.segVs.replace(flat, decl).replace(
+    "  vQ = ivec3(off + k, off + kb, ci | (((closed ? 4 : 0) | (kb == 0 ? 8 : 0)) << 8));",
+    "  vQ = ivec3(off + k, off + kb, ci | (((closed ? 4 : 0) | (kb == 0 ? 8 : 0)) << 8));\n  vec4 spR = fetch(uPs, off + k);\n  vSpF = vec3(spR.x, spR.y, spR.z);",
+  );
+  if (segVs === sv.segVs) throw new Error("spanflat: segment vQ line not found once");
+  const capVs = sv.capVs.replace(flat, decl).replace(
+    "  vQ = ivec3(ic, ic, ci | (2 << 8));",
+    "  vQ = ivec3(ic, ic, ci | (2 << 8));\n  vec4 spR = fetch(uPs, ic);\n  vSpF = vec3(spR.x, spR.y, spR.z);",
+  );
+  if (capVs === sv.capVs) throw new Error("spanflat: cap vQ line not found once");
+  const spFetch = "  vec4 sp = fetch(uPs, vQ.x);";
+  if (sv.fs.split(spFetch).length !== 2) throw new Error("spanflat: uPs fetch not found once in tentv's fs");
+  const fs = sv.fs.replace("flat in ivec3 vQ;", "flat in ivec3 vQ;\nflat in vec3 vSpF;").replace(spFetch, "  vec4 sp = vec4(vSpF.x, vSpF.y, vSpF.z, 0.0);");
+  return { segVs, capVs, fs };
+}

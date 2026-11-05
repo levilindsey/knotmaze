@@ -205,6 +205,20 @@ export class LabelBPass {
    * today's instanced draws; positions are bit-identical to today's.
    */
   probeVid = false;
+  /**
+   * Probe knob (S3f5, ftentvdtex): lean D as a DEPTH_COMPONENT32F
+   * texture instead of a renderbuffer (set before resize()). The
+   * label's keys are the texture's, so the label is today's.
+   */
+  probeDepthTexture = false;
+  /**
+   * Probe knob (S3f5, ftentvnodepth): lean with no depth attachment
+   * at all (set before resize()); draw() then skips its depth clear.
+   * The depth test has no buffer to test against, so this cannot
+   * keep today's label where tents overlap: a drop candidate, kept
+   * only if its readback still equals ftentv's.
+   */
+  probeNoDepth = false;
   /** A full upload has landed, so upload(T, true) may skip (header). */
   private hasUploaded = false;
   private segVerts = TENT_SEG_VERTS;
@@ -247,8 +261,12 @@ export class LabelBPass {
         fill: compile(gl, ts.fillVs, ts.fs),
         capVao: gl.createVertexArray() as WebGLVertexArrayObject,
         capBuf: gl.createBuffer() as WebGLBuffer,
-        strip: tv ? compile(gl, labelBTentStripSources(debug).segVs, tv.fs) : null,
-        vid: tv ? compile(gl, labelBTentVidSources(debug).segVs, tv.fs) : null,
+        // The strip and vid probe draws keep tentv's own fragment shader:
+        // a variant source set beside tentv's (S3f5's spanflat) may add
+        // varyings its segment and cap shaders write but these do not.
+        // With no variant (the default pass) tv.fs is that same shader.
+        strip: tv ? compile(gl, labelBTentStripSources(debug).segVs, labelBTentVSources(debug).fs) : null,
+        vid: tv ? compile(gl, labelBTentVidSources(debug).segVs, labelBTentVSources(debug).fs) : null,
         vidVao: gl.createVertexArray() as WebGLVertexArrayObject,
         vidBuf: gl.createBuffer() as WebGLBuffer,
         vidIdx: gl.createBuffer() as WebGLBuffer,
@@ -300,12 +318,17 @@ export class LabelBPass {
       gl.texStorage2D(gl.TEXTURE_2D, 1, gl.R32UI, w, h);
       this.L = L;
       this.D = null;
-      // Pixi binds no renderbuffer outside its own setup (which binds first).
-      const prevRb = query ? gl.getParameter(gl.RENDERBUFFER_BINDING) : null;
-      this.Drb = gl.createRenderbuffer() as WebGLRenderbuffer;
-      gl.bindRenderbuffer(gl.RENDERBUFFER, this.Drb);
-      gl.renderbufferStorage(gl.RENDERBUFFER, this.probeDepth24 ? gl.DEPTH_COMPONENT24 : gl.DEPTH_COMPONENT32F, w, h);
-      gl.bindRenderbuffer(gl.RENDERBUFFER, prevRb);
+      if (this.probeDepthTexture) {
+        // S3f5 (ftentvdtex): D a sampleable texture, as the non-lean pass's.
+        this.D = this.target(gl.DEPTH_COMPONENT32F, gl.DEPTH_COMPONENT, gl.FLOAT);
+      } else if (!this.probeNoDepth) {
+        // Pixi binds no renderbuffer outside its own setup (which binds first).
+        const prevRb = query ? gl.getParameter(gl.RENDERBUFFER_BINDING) : null;
+        this.Drb = gl.createRenderbuffer() as WebGLRenderbuffer;
+        gl.bindRenderbuffer(gl.RENDERBUFFER, this.Drb);
+        gl.renderbufferStorage(gl.RENDERBUFFER, this.probeDepth24 ? gl.DEPTH_COMPONENT24 : gl.DEPTH_COMPONENT32F, w, h);
+        gl.bindRenderbuffer(gl.RENDERBUFFER, prevRb);
+      }
     } else {
       this.L = this.target(gl.R32UI, gl.RED_INTEGER, gl.UNSIGNED_INT);
       this.D = this.target(gl.DEPTH_COMPONENT32F, gl.DEPTH_COMPONENT, gl.FLOAT);
@@ -674,7 +697,8 @@ export class LabelBPass {
     gl.depthMask(true);
     if (!this.probeNoClear) gl.clearBufferuiv(gl.COLOR, 0, [0, 0, 0, 0]);
     if (this.G && !this.probeNoClear) gl.clearBufferfv(gl.COLOR, 1, [-1e30, 0, 0, 0]);
-    if (!this.probeNoClear) gl.clearBufferfv(gl.DEPTH, 0, [1]);
+    // S3f5 (ftentvnodepth): no depth attachment to clear.
+    if (!this.probeNoClear && !this.probeNoDepth) gl.clearBufferfv(gl.DEPTH, 0, [1]);
     const ppd = Math.sqrt(Math.abs(M[0] * M[3] - M[1] * M[2]));
     const pad = 2 / Math.max(ppd, 1e-9);
     if (this.tent) this.drawTent(M, ppd);

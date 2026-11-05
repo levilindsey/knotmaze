@@ -11,7 +11,7 @@ import { buildLabelB, labelAt, type LabelBTables } from "../../../../src/render/
 import { LabelBPass, type Affine, type LabelBHost, type LabelBMode } from "../../../../src/render/field/label_b_pass";
 import { pixiLabelHost } from "../../../../src/render/field/label_b_host";
 import { autoDetectRenderer, BlurFilter, Container, Graphics, Mesh, MeshGeometry, Shader, Sprite, Text, Texture, type WebGLRenderer } from "pixi.js";
-import { labelBTentSources, labelBTentVSources, TENT_NW, type LabelBTentSources, type LabelBTentVSources } from "../../../../src/render/field/label_b_tent_glsl";
+import { labelBTentFetchSources, labelBTentSources, labelBTentSpanFlatSources, labelBTentVSources, TENT_NW, type LabelBTentSources, type LabelBTentVSources } from "../../../../src/render/field/label_b_tent_glsl";
 import { pointAt } from "../../../../src/render/field/geom";
 
 // K1040 S3d: opts.mode names the pass's mode (capsule | tent | tentv); opts.tent
@@ -414,7 +414,7 @@ const LEAN = ["leanempty", "leanemptynoup", "leantentv", "leantentvrest", "leant
 //                 host's restore (the viewport and Pixi's resetState())
 //   ffloor        the new sync alone (no query): the host floor
 // Every older variant runs S3e's query and restore (probeQuery).
-const FNEW = ["ftentv", "ftentvrest", "ftentvsetup", "fempty", "femptynoup", "femptynouph0", "ffloor", "femptyb", "femptynoupnc", "femptynoupst", "ftentvone", "ftentvhalf", "ftentvclip", "ftentvflat", "ftentvnw1c", "ftentvvid"];
+const FNEW = ["ftentv", "ftentvrest", "ftentvsetup", "fempty", "femptynoup", "femptynouph0", "ffloor", "femptyb", "femptynoupnc", "femptynoupst", "ftentvone", "ftentvhalf", "ftentvclip", "ftentvflat", "ftentvnw1c", "ftentvvid", "ftentvd24", "ftentvdinv", "ftentvdtex", "ftentvnodepth", "ftentvfetch", "ftentvspflat"];
 const VARIANTS = ["tent", "empty", "noup", "degen", "fs0", "fsconst", "half", "nw1", "floor"];
 let kickFb: WebGLFramebuffer | null = null;
 const kickPx = new Uint32Array(4);
@@ -602,6 +602,13 @@ function variantPass(v: string, host: LabelBHost | null = null): LabelBPass {
     //              segment vertices against today's 12
     //   ftentvvid  the segment strips as one non-instanced draw
     //              (probeVid in label_b_pass.ts; bit-identical positions)
+    // K1040 S3f5 beside them (each lean, the host, default off):
+    //   ftentvd24    depth a DEPTH_COMPONENT24 renderbuffer (format)
+    //   ftentvdinv   depth's store discarded after the draws (store hint)
+    //   ftentvdtex   depth a DEPTH_COMPONENT32F texture (attachment kind)
+    //   ftentvnodepth no depth attachment (count; a drop candidate)
+    //   ftentvfetch  fewer fetches per segment vertex (fetch sources)
+    //   ftentvspflat the span record via a flat (spanflat sources)
     let p: LabelBPass;
     const swap1 = (s: string, a: string, b: string) => {
       if (s.split(a).length !== 2) throw new Error(`variant ${v}: ${JSON.stringify(a.slice(0, 40))} not found once`);
@@ -623,6 +630,12 @@ function variantPass(v: string, host: LabelBHost | null = null): LabelBPass {
       p = new LabelBPass(gl, false, "tentv", { lean: true, host, tentVSources: { ...sv, fs: flatV }, tentSources: { ...ts, fs: flatF } });
     } else if (v === "ftentvnw1c") {
       p = new LabelBPass(gl, false, "tentv", { lean: true, host, ...facetOpts(1, true, false) });
+    } else if (v === "ftentvfetch") {
+      // K1040 S3f5: fewer fetches per segment vertex (labelBTentFetchSources).
+      p = new LabelBPass(gl, false, "tentv", { lean: true, host, tentVSources: { ...labelBTentVSources(false), segVs: labelBTentFetchSources(false).segVs } });
+    } else if (v === "ftentvspflat") {
+      // K1040 S3f5: the span record as a flat, not a per-fragment fetch.
+      p = new LabelBPass(gl, false, "tentv", { lean: true, host, tentVSources: labelBTentSpanFlatSources(false) });
     } else {
       p = new LabelBPass(gl, false, "tentv", { lean: true, host: v === "femptynouph0" ? null : host });
     }
@@ -635,6 +648,13 @@ function variantPass(v: string, host: LabelBHost | null = null): LabelBPass {
     if (v === "ftentvone") { p.probeSegLimit = 1; p.probeSkipCapsFills = true; }
     if (v === "ftentvhalf") p.probeSegFrac = 0.5;
     if (v === "ftentvvid") p.probeVid = true;
+    // K1040 S3f5, the fixed-cost family (set before the first resize):
+    // d24 depth's format, dinv depth's store discarded, dtex depth as a
+    // texture, nodepth no depth attachment (a drop candidate).
+    if (v === "ftentvd24") p.probeDepth24 = true;
+    if (v === "ftentvdinv") p.probeInvalidateDepth = true;
+    if (v === "ftentvdtex") p.probeDepthTexture = true;
+    if (v === "ftentvnodepth") p.probeNoDepth = true;
     vpasses.set(v, p);
     return p;
   }
@@ -955,6 +975,26 @@ async function check(scene: FieldScene, opts: { scale?: number } = {}) {
   for (let i = 0; i < base.length; i++) { if (base[i] !== 0 && words.ftentvnw1c[i] === 0) nwOnlyBase++; if (base[i] === 0 && words.ftentvnw1c[i] !== 0) nwOnlyNw++; }
   let vidWordDiff = 0;
   for (let i = 0; i < base.length; i++) if (base[i] !== words.ftentvvid[i]) vidWordDiff++;
+  // K1040 S3f5: every candidate's word at every pixel against ftentv's
+  // (0 = it keeps today's label). ftentvhalfres is check-only: drawn at
+  // half size (M and target halved) and nearest-upscaled for the count;
+  // a smaller target cannot keep the label, so it is dropped, not timed.
+  const wordDiff: Record<string, number> = {};
+  for (const v of ["ftentvd24", "ftentvdinv", "ftentvdtex", "ftentvnodepth", "ftentvfetch", "ftentvspflat"]) {
+    const w = draw(v);
+    let d = 0;
+    for (let i = 0; i < base.length; i++) if (base[i] !== w[i]) d++;
+    wordDiff[v] = d;
+  }
+  const hr = new LabelBPass(gl, false, "tentv", { lean: true, host: null });
+  const W2 = Math.ceil(W / 2), H2 = Math.ceil(H / 2);
+  hr.resize(W2, H2);
+  hr.upload(T);
+  hr.draw(M.map((x) => x / 2) as unknown as Affine);
+  const hw = hr.read().word;
+  hr.dispose();
+  let halfresWordDiff = 0;
+  for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) if (hw[(j >> 1) * W2 + (i >> 1)] !== base[j * W + i]) halfresWordDiff++;
   return {
     lost, renderer: renderer(), W, H, segs: T.nInst, fills: T.nFills,
     baseNonZero: nz(base),
@@ -965,6 +1005,8 @@ async function check(scene: FieldScene, opts: { scale?: number } = {}) {
     nwOnlyBase, nwOnlyNw,
     vidWordDiff,
     halfNonZero: nz(words.ftentvhalf),
+    wordDiff,
+    halfresWordDiff,
   };
 }
 
