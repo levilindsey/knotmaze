@@ -517,17 +517,17 @@ Next free ID: K1184.
 - **K1178** · Muse batch 16: run A drafts the brief (`docs/design/K1178_muse_batch16_run_a.md`), runs B-I and K from
   the draft (Claude added H and I after B, K after I), after 16J.
   - owner: nobody since 2026-11-04 11:23 (16C done; runs K and D-G queued as Muse chain runs 16K and 16D-16G, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `2a856876`
+  - branch: mainline; last commit: `755c44eb`
   - evidence: `docs/design/K1178_muse_batch16_run_a.md`; the chain in `.claude/probes/K1053/` (queue.txt, chain.log)
-  - next: Run C done; next Run K (K1179 S1b)
+  - next: Run K done; next Run D
   - brief: `docs/design/K1178_muse_batch16.md`
 - **K1179** · Thread geometry (Levi 11-04: rethink how thread bodies, junction rounds and gaps are built, maybe
   as a skin on the thread centres). Review (`docs/design/K1179_geometry_review.md`): keep threads and physics,
   one per-pixel outline rule for both looks, no simulated skin. S1 spike: K1178 Run I (fail); S1b: K1178 Run K.
-  - owner: nobody since 2026-11-04 11:23 (S1b queued as Muse chain run 16K, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `9de9006e`
-  - evidence: docs/design/K1179_geometry_review.md; docs/design/K1179_spike.md; .claude/probes/K1179/
-  - next: S1b (K1178 Run K): the corrected measurement, the margin band at [0, 0.05h], a lean corner solve; then Claude reviews it (and makes the z4 crops against today's fill if it passes)
+  - owner: nobody since 2026-11-04 11:42 (S1b done in Muse batch 16 run K)
+  - branch: mainline; last commit: `755c44eb`
+  - evidence: docs/design/K1179_geometry_review.md; docs/design/K1179_spike.md; docs/design/K1179_s1b.md; .claude/probes/K1179/
+  - next: S1b done (fail); Claude reviews, then S2 (the phone GPU check, 4 ms at 2x, after K1097's Pixel batch) or a rethink
   - brief: `docs/design/K1178_muse_batch16.md` (Run K)
 
 ## Next, in order
