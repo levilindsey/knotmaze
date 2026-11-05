@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1184.
+Next free ID: K1185.
 
 ## Waiting on Levi
 
@@ -523,6 +523,13 @@ Next free ID: K1184.
   - evidence: docs/design/K1179_geometry_review.md; docs/design/K1179_spike.md; docs/design/K1179_s1b.md; docs/design/K1179_s1c.md; .claude/probes/K1179/
   - next: Claude reviews S1c (fail, the stop case) and writes what a rethink must answer, then Levi picks the direction; S2 (the phone GPU check) is not next
   - brief: `docs/design/K1179_s1c.md` (the verdict; the review's sections 6-7)
+- **K1184** · Muse batch 17: run A drafts the brief (`docs/design/K1184_muse_batch17_run_a.md`), then runs B-G
+  from the draft after Claude's review.
+  - owner: nobody since 2026-11-04 13:25 (run A queued as Muse chain run 17A, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
+  - branch: mainline
+  - evidence: `docs/design/K1184_muse_batch17_run_a.md`; the chain in `.claude/probes/K1053/` (queue.txt, chain.log)
+  - next: Muse chain run 17A drafts `docs/design/K1184_muse_batch17.md` (runs B-G); Claude reviews it and queues 17B-17G
+  - brief: `docs/design/K1184_muse_batch17_run_a.md`
 
 ## Next, in order
 
