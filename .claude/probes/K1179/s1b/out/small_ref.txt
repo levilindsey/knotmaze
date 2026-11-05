@@ -1,0 +1,13 @@
+def: small total/outside before 63/2 ref 147/67 lean 147/67
+fat: small total/outside before 0/0 ref 0/0 lean 0/0
+ring: small total/outside before 8/0 ref 20/11 lean 20/11
+user_tw42.lightpaper: small total/outside before 15/0 ref 56/37 lean 56/37
+g41_def_tw42: small total/outside before 19/0 ref 92/54 lean 92/54
+g41_def_tw64: small total/outside before 82/2 ref 148/44 lean 148/44
+muse_hash: small total/outside before 109/7 ref 128/15 lean 128/15
+muse_default_tw: small total/outside before 47/0 ref 96/30 lean 96/30
+g41_ring_tw42: small total/outside before 2/2 ref 16/15 lean 16/15
+g41_ring_tw64: small total/outside before 9/0 ref 19/8 lean 19/8
+g41_user_tw42: small total/outside before 15/0 ref 55/36 lean 55/36
+g41_user_tw64: small total/outside before 31/3 ref 64/26 lean 64/26
+TOTAL before {"total":400,"inside":384,"outside":16} ref {"total":841,"inside":498,"outside":343} lean {"total":841,"inside":498,"outside":343}

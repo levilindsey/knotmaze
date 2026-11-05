@@ -1,0 +1,7 @@
+gate699 coarse (e 0.005h): before 0.127 vs 0.127 PASS; ref/lean 0.199 FAIL; lean diff 0h/531
+gate699 fine: before 0.0007 vs 0.127 PASS; ref/lean 0.0007 PASS; lean diff 0h/491
+tee coarse (dc 0.01): before 0.148 vs 0.148 PASS; ref/lean 0.148 PASS; lean diff 0h/385
+tee fine: before 0 vs 0.148 PASS; ref/lean 0 PASS; lean diff 0h/0
+ring coarse (dc 0.01): before 0.1737 vs 0.1737 PASS; ref/lean 0.1737 PASS; lean diff 0h/409
+ring fine: before 0 vs 0.1737 PASS; ref/lean 0 PASS; lean diff 0h/0
+synthetic arm 60deg (2095 steps of 0.005h tip): before 0.0508 vs 0.0508 PASS; ref/lean 0.0508 PASS; lean diff 0h/4192

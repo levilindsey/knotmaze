@@ -1,0 +1,194 @@
+[
+ {
+  "recording": "def_drag",
+  "frames": 41,
+  "keptDistinct": 41,
+  "comparedCorners": 14832,
+  "maxVH": 0,
+  "maxQH": 0,
+  "maxRH": 0,
+  "maxFeetH": 0,
+  "maxDevPxDpr2": 0,
+  "outs": [],
+  "beforeCorrected": {
+   "compared": 1167813,
+   "over": 3,
+   "overEdge": 0,
+   "overRound": 3,
+   "maxExcessDev": 1.777,
+   "worst": "R|60|2-0|1",
+   "appear": {
+    "exposure gained (was buried)": 73453,
+    "edge: span grew / arm appeared": 216,
+    "round: corner appeared": 42
+   },
+   "vanish": {
+    "exposure lost (buried)": 73439,
+    "edge: span shrank / arm gone": 294,
+    "round: corner vanished": 63
+   }
+  },
+  "leanCorrected": {
+   "compared": 1316624,
+   "over": 2,
+   "overEdge": 0,
+   "overRound": 2,
+   "maxExcessDev": 1.014,
+   "worst": "R|102|1-2|0",
+   "appear": {
+    "exposure gained (was buried)": 77540,
+    "edge: span grew / arm appeared": 216,
+    "round: corner appeared": 42
+   },
+   "vanish": {
+    "exposure lost (buried)": 77388,
+    "edge: span shrank / arm gone": 294,
+    "round: corner vanished": 63
+   }
+  }
+ },
+ {
+  "recording": "def_flow",
+  "frames": 41,
+  "keptDistinct": 41,
+  "comparedCorners": 14694,
+  "maxVH": 0,
+  "maxQH": 0,
+  "maxRH": 0,
+  "maxFeetH": 0,
+  "maxDevPxDpr2": 0,
+  "outs": [],
+  "beforeCorrected": {
+   "compared": 1137414,
+   "over": 2,
+   "overEdge": 0,
+   "overRound": 2,
+   "maxExcessDev": 2.539,
+   "worst": "R|63|0-1|0",
+   "appear": {
+    "exposure gained (was buried)": 98283,
+    "edge: span grew / arm appeared": 2910,
+    "round: corner appeared": 504
+   },
+   "vanish": {
+    "exposure lost (buried)": 98185,
+    "edge: span shrank / arm gone": 2814,
+    "round: corner vanished": 441
+   }
+  },
+  "leanCorrected": {
+   "compared": 1263998,
+   "over": 5,
+   "overEdge": 0,
+   "overRound": 5,
+   "maxExcessDev": 1.977,
+   "worst": "R|63|0-1|0",
+   "appear": {
+    "exposure gained (was buried)": 118492,
+    "edge: span grew / arm appeared": 2910,
+    "round: corner appeared": 504
+   },
+   "vanish": {
+    "exposure lost (buried)": 118263,
+    "edge: span shrank / arm gone": 2814,
+    "round: corner vanished": 441
+   }
+  }
+ },
+ {
+  "recording": "muse_drag",
+  "frames": 41,
+  "keptDistinct": 41,
+  "comparedCorners": 7849,
+  "maxVH": 0,
+  "maxQH": 0,
+  "maxRH": 0,
+  "maxFeetH": 0,
+  "maxDevPxDpr2": 0,
+  "outs": [],
+  "beforeCorrected": {
+   "compared": 504314,
+   "over": 8,
+   "overEdge": 0,
+   "overRound": 8,
+   "maxExcessDev": 4.033,
+   "worst": "R|28|0-1|20",
+   "appear": {
+    "exposure gained (was buried)": 33852,
+    "edge: span grew / arm appeared": 884,
+    "round: corner appeared": 273
+   },
+   "vanish": {
+    "exposure lost (buried)": 33984,
+    "edge: span shrank / arm gone": 922,
+    "round: corner vanished": 294
+   }
+  },
+  "leanCorrected": {
+   "compared": 533386,
+   "over": 19,
+   "overEdge": 0,
+   "overRound": 19,
+   "maxExcessDev": 3.129,
+   "worst": "R|113|0-1|18",
+   "appear": {
+    "exposure gained (was buried)": 35247,
+    "edge: span grew / arm appeared": 884,
+    "round: corner appeared": 273
+   },
+   "vanish": {
+    "exposure lost (buried)": 35426,
+    "edge: span shrank / arm gone": 922,
+    "round: corner vanished": 294
+   }
+  }
+ },
+ {
+  "recording": "muse_flow",
+  "frames": 41,
+  "keptDistinct": 41,
+  "comparedCorners": 7615,
+  "maxVH": 0,
+  "maxQH": 0,
+  "maxRH": 0,
+  "maxFeetH": 0,
+  "maxDevPxDpr2": 0,
+  "outs": [],
+  "beforeCorrected": {
+   "compared": 491908,
+   "over": 25,
+   "overEdge": 0,
+   "overRound": 25,
+   "maxExcessDev": 3.786,
+   "worst": "R|109|1-2|0",
+   "appear": {
+    "exposure gained (was buried)": 42515,
+    "edge: span grew / arm appeared": 1776,
+    "round: corner appeared": 462
+   },
+   "vanish": {
+    "exposure lost (buried)": 42337,
+    "edge: span shrank / arm gone": 1784,
+    "round: corner vanished": 462
+   }
+  },
+  "leanCorrected": {
+   "compared": 519824,
+   "over": 29,
+   "overEdge": 0,
+   "overRound": 29,
+   "maxExcessDev": 3.786,
+   "worst": "R|109|1-2|0",
+   "appear": {
+    "exposure gained (was buried)": 46478,
+    "edge: span grew / arm appeared": 1776,
+    "round: corner appeared": 462
+   },
+   "vanish": {
+    "exposure lost (buried)": 46356,
+    "edge: span shrank / arm gone": 1784,
+    "round: corner vanished": 462
+   }
+  }
+ }
+]

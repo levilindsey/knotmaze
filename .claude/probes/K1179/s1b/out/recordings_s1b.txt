@@ -1,0 +1,4 @@
+def_drag: kept 41 compared 14832 maxV 0h maxQ 0h maxR 0h maxFeet 0h maxDev 0px outs 0; before over 3 maxExcess 1.777; lean over 2 maxExcess 1.014
+def_flow: kept 41 compared 14694 maxV 0h maxQ 0h maxR 0h maxFeet 0h maxDev 0px outs 0; before over 2 maxExcess 2.539; lean over 5 maxExcess 1.977
+muse_drag: kept 41 compared 7849 maxV 0h maxQ 0h maxR 0h maxFeet 0h maxDev 0px outs 0; before over 8 maxExcess 4.033; lean over 19 maxExcess 3.129
+muse_flow: kept 41 compared 7615 maxV 0h maxQ 0h maxR 0h maxFeet 0h maxDev 0px outs 0; before over 25 maxExcess 3.786; lean over 29 maxExcess 3.786

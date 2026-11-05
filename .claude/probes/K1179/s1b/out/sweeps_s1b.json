@@ -1,0 +1,86 @@
+[
+ {
+  "name": "gate699 coarse (e 0.005h)",
+  "gate": 0.127,
+  "before": 0.127,
+  "beforeAt": 0.37,
+  "ref": 0.199,
+  "refAt": 0.36,
+  "leanMaxDiffH": 0,
+  "cornersCompared": 531,
+  "passBefore": true,
+  "passRef": false
+ },
+ {
+  "name": "gate699 fine",
+  "gate": 0.127,
+  "before": 0.0007,
+  "beforeAt": 0.64205,
+  "ref": 0.0007,
+  "refAt": 0.64205,
+  "leanMaxDiffH": 0,
+  "cornersCompared": 491,
+  "passBefore": true,
+  "passRef": true
+ },
+ {
+  "name": "tee coarse (dc 0.01)",
+  "gate": 0.148,
+  "before": 0.148,
+  "beforeAt": 2.2300000000000004,
+  "ref": 0.148,
+  "refAt": 2.2300000000000004,
+  "leanMaxDiffH": 0,
+  "cornersCompared": 385,
+  "passBefore": true,
+  "passRef": true
+ },
+ {
+  "name": "tee fine",
+  "gate": 0.148,
+  "before": 0,
+  "beforeAt": 0,
+  "ref": 0,
+  "refAt": 0,
+  "leanMaxDiffH": 0,
+  "cornersCompared": 0,
+  "passBefore": true,
+  "passRef": true
+ },
+ {
+  "name": "ring coarse (dc 0.01)",
+  "gate": 0.1737,
+  "before": 0.1737,
+  "beforeAt": -1.6,
+  "ref": 0.1737,
+  "refAt": -1.6,
+  "leanMaxDiffH": 0,
+  "cornersCompared": 409,
+  "passBefore": true,
+  "passRef": true
+ },
+ {
+  "name": "ring fine",
+  "gate": 0.1737,
+  "before": 0,
+  "beforeAt": 0,
+  "ref": 0,
+  "refAt": 0,
+  "leanMaxDiffH": 0,
+  "cornersCompared": 0,
+  "passBefore": true,
+  "passRef": true
+ },
+ {
+  "name": "synthetic arm 60deg (2095 steps of 0.005h tip)",
+  "gate": 0.0508,
+  "before": 0.0508,
+  "beforeAt": 61.43239448782706,
+  "ref": 0.0508,
+  "refAt": 61.43239448782706,
+  "leanMaxDiffH": 0,
+  "cornersCompared": 4192,
+  "passBefore": true,
+  "passRef": true
+ }
+]

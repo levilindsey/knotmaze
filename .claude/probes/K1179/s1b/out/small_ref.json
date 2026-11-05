@@ -1,0 +1,237 @@
+{
+ "rows": [
+  {
+   "scene": "def",
+   "before": {
+    "total": 63,
+    "inside": 61,
+    "outside": 2
+   },
+   "ref": {
+    "total": 147,
+    "inside": 80,
+    "outside": 67
+   },
+   "lean": {
+    "total": 147,
+    "inside": 80,
+    "outside": 67
+   }
+  },
+  {
+   "scene": "fat",
+   "before": {
+    "total": 0,
+    "inside": 0,
+    "outside": 0
+   },
+   "ref": {
+    "total": 0,
+    "inside": 0,
+    "outside": 0
+   },
+   "lean": {
+    "total": 0,
+    "inside": 0,
+    "outside": 0
+   }
+  },
+  {
+   "scene": "ring",
+   "before": {
+    "total": 8,
+    "inside": 8,
+    "outside": 0
+   },
+   "ref": {
+    "total": 20,
+    "inside": 9,
+    "outside": 11
+   },
+   "lean": {
+    "total": 20,
+    "inside": 9,
+    "outside": 11
+   }
+  },
+  {
+   "scene": "user_tw42.lightpaper",
+   "before": {
+    "total": 15,
+    "inside": 15,
+    "outside": 0
+   },
+   "ref": {
+    "total": 56,
+    "inside": 19,
+    "outside": 37
+   },
+   "lean": {
+    "total": 56,
+    "inside": 19,
+    "outside": 37
+   }
+  },
+  {
+   "scene": "g41_def_tw42",
+   "before": {
+    "total": 19,
+    "inside": 19,
+    "outside": 0
+   },
+   "ref": {
+    "total": 92,
+    "inside": 38,
+    "outside": 54
+   },
+   "lean": {
+    "total": 92,
+    "inside": 38,
+    "outside": 54
+   }
+  },
+  {
+   "scene": "g41_def_tw64",
+   "before": {
+    "total": 82,
+    "inside": 80,
+    "outside": 2
+   },
+   "ref": {
+    "total": 148,
+    "inside": 104,
+    "outside": 44
+   },
+   "lean": {
+    "total": 148,
+    "inside": 104,
+    "outside": 44
+   }
+  },
+  {
+   "scene": "muse_hash",
+   "before": {
+    "total": 109,
+    "inside": 102,
+    "outside": 7
+   },
+   "ref": {
+    "total": 128,
+    "inside": 113,
+    "outside": 15
+   },
+   "lean": {
+    "total": 128,
+    "inside": 113,
+    "outside": 15
+   }
+  },
+  {
+   "scene": "muse_default_tw",
+   "before": {
+    "total": 47,
+    "inside": 47,
+    "outside": 0
+   },
+   "ref": {
+    "total": 96,
+    "inside": 66,
+    "outside": 30
+   },
+   "lean": {
+    "total": 96,
+    "inside": 66,
+    "outside": 30
+   }
+  },
+  {
+   "scene": "g41_ring_tw42",
+   "before": {
+    "total": 2,
+    "inside": 0,
+    "outside": 2
+   },
+   "ref": {
+    "total": 16,
+    "inside": 1,
+    "outside": 15
+   },
+   "lean": {
+    "total": 16,
+    "inside": 1,
+    "outside": 15
+   }
+  },
+  {
+   "scene": "g41_ring_tw64",
+   "before": {
+    "total": 9,
+    "inside": 9,
+    "outside": 0
+   },
+   "ref": {
+    "total": 19,
+    "inside": 11,
+    "outside": 8
+   },
+   "lean": {
+    "total": 19,
+    "inside": 11,
+    "outside": 8
+   }
+  },
+  {
+   "scene": "g41_user_tw42",
+   "before": {
+    "total": 15,
+    "inside": 15,
+    "outside": 0
+   },
+   "ref": {
+    "total": 55,
+    "inside": 19,
+    "outside": 36
+   },
+   "lean": {
+    "total": 55,
+    "inside": 19,
+    "outside": 36
+   }
+  },
+  {
+   "scene": "g41_user_tw64",
+   "before": {
+    "total": 31,
+    "inside": 28,
+    "outside": 3
+   },
+   "ref": {
+    "total": 64,
+    "inside": 38,
+    "outside": 26
+   },
+   "lean": {
+    "total": 64,
+    "inside": 38,
+    "outside": 26
+   }
+  }
+ ],
+ "totals": {
+  "before": {
+   "total": 400,
+   "inside": 384,
+   "outside": 16
+  },
+  "ref": {
+   "total": 841,
+   "inside": 498,
+   "outside": 343
+  },
+  "lean": {
+   "total": 841,
+   "inside": 498,
+   "outside": 343
+  }
+ }
+}

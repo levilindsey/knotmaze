@@ -1,0 +1,17 @@
+def: cusp RunI 108 -> corrected before 64 / ref 62 / lean 62; feet fail 0/0/0 (buried 326/293/293); dr moved 194/361 max -2.000h at j42 1-2
+fat: cusp RunI 0 -> corrected before 0 / ref 0 / lean 0; feet fail 0/0/0 (buried 0/0/0); dr moved 0/0 max 0.000h at 
+ring: cusp RunI 15 -> corrected before 8 / ref 7 / lean 7; feet fail 0/0/0 (buried 44/33/33); dr moved 24/45 max -1.906h at j14 0-1
+user_tw42.lightpaper: cusp RunI 46 -> corrected before 29 / ref 27 / lean 27; feet fail 0/0/0 (buried 132/116/116); dr moved 96/150 max -2.000h at j17 0-1
+g41_def_tw42: cusp RunI 102 -> corrected before 75 / ref 54 / lean 54; feet fail 0/0/0 (buried 365/329/329); dr moved 212/385 max -2.000h at j5 2-0
+g41_def_tw64: cusp RunI 103 -> corrected before 66 / ref 47 / lean 47; feet fail 0/0/0 (buried 277/212/212); dr moved 157/302 max -2.000h at j182 2-0
+muse_hash: cusp RunI 82 -> corrected before 65 / ref 53 / lean 53; feet fail 3/0/0 (buried 134/101/101); dr moved 76/192 max -3.313h at j76 0-1
+muse_default_tw: cusp RunI 119 -> corrected before 82 / ref 68 / lean 68; feet fail 0/0/0 (buried 313/271/271); dr moved 169/320 max -3.562h at j133 2-0
+g41_ring_tw42: cusp RunI 10 -> corrected before 5 / ref 4 / lean 4; feet fail 0/0/0 (buried 57/41/41); dr moved 35/51 max -1.969h at j14 0-1
+g41_ring_tw64: cusp RunI 18 -> corrected before 13 / ref 9 / lean 9; feet fail 0/0/0 (buried 29/23/23); dr moved 20/41 max -2.000h at j20 0-1
+g41_user_tw42: cusp RunI 44 -> corrected before 30 / ref 28 / lean 28; feet fail 0/0/0 (buried 141/92/92); dr moved 95/150 max -1.969h at j41 0-1
+g41_user_tw64: cusp RunI 48 -> corrected before 35 / ref 33 / lean 33; feet fail 0/0/0 (buried 120/70/70); dr moved 72/122 max -1.886h at j60 1-2
+
+Cusp classes {"d":146,"b":267,"a":268,"c":13,"e":1}; foot classes {"b":111,"c":1,"a":3,"e":1}; ref cusp classes {"d":95,"b":280,"a":223,"c":1}; ref foot classes {"b":1}; cure {"d":{"n":146,"cured":45},"b":{"n":267,"cured":63},"a":{"n":268,"cured":247},"c":{"n":13,"cured":8},"e":{"n":1,"cured":1}}
+dr |.| p50 0.07092h p90 1.1367h p99 2h max 3.5624h; moved>0.01h 1150/2119
+ref omega 1..1; lean max V 0h Q 0h r 0h feet 0h outs 0/2119
+small rounds outside null bands: 16

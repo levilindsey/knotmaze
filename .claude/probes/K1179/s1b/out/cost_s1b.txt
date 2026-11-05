@@ -1,0 +1,16 @@
+def: lean median 15.345 ms over 361 corners (42.5 us/corner); reference build median 26.4 ms
+fat: lean median 0.001 ms over 0 corners (1.0 us/corner); reference build median 3.4 ms
+ring: lean median 1.717 ms over 45 corners (38.2 us/corner); reference build median 3.3 ms
+user_tw42.lightpaper: lean median 5.829 ms over 150 corners (38.9 us/corner); reference build median 9.5 ms
+g41_def_tw42: lean median 17.913 ms over 385 corners (46.5 us/corner); reference build median 28.1 ms
+g41_def_tw64: lean median 11.680 ms over 302 corners (38.7 us/corner); reference build median 20.7 ms
+muse_hash: lean median 6.834 ms over 192 corners (35.6 us/corner); reference build median 15.5 ms
+muse_default_tw: lean median 13.021 ms over 320 corners (40.7 us/corner); reference build median 22.1 ms
+g41_ring_tw42: lean median 1.895 ms over 51 corners (37.2 us/corner); reference build median 3.5 ms
+g41_ring_tw64: lean median 1.475 ms over 41 corners (36.0 us/corner); reference build median 2.6 ms
+g41_user_tw42: lean median 5.588 ms over 150 corners (37.3 us/corner); reference build median 8.7 ms
+g41_user_tw64: lean median 4.259 ms over 122 corners (34.9 us/corner); reference build median 7.1 ms
+def_drag: 41 frames, lean p50 17.810 ms p95 26.767 ms max 28.530 ms; per-corner p95 0.07374 ms; parts (instrumented totals over 41 frames) V 61.1 spans+omega 67.9 ball-advance 286.0 gates 252.0 ms; inputs moved 14469/14469 (1)
+def_flow: 41 frames, lean p50 16.786 ms p95 25.852 ms max 27.166 ms; per-corner p95 0.07201 ms; parts (instrumented totals over 41 frames) V 61.1 spans+omega 66.3 ball-advance 284.5 gates 253.4 ms; inputs moved 14312/14312 (1)
+muse_drag: 41 frames, lean p50 7.828 ms p95 13.672 ms max 19.203 ms; per-corner p95 0.07121 ms; parts (instrumented totals over 41 frames) V 55.5 spans+omega 51.6 ball-advance 123.6 gates 77.5 ms; inputs moved 7644/7644 (1)
+muse_flow: 41 frames, lean p50 7.482 ms p95 10.811 ms max 16.797 ms; per-corner p95 0.05813 ms; parts (instrumented totals over 41 frames) V 53.9 spans+omega 47.6 ball-advance 115.4 gates 67.6 ms; inputs moved 7408/7408 (1)
