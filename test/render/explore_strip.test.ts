@@ -42,7 +42,7 @@ function count(s: string, sub: string): number {
 }
 
 const MASTER_OUT =
-  "  finalColor = vec4(chainMaterial(int(t0.x + 0.5), t0.y + t0.z * fk, t1.x + t1.y * fk, t1.z > 0.5), 1.0);\n";
+  "  finalColor = vec4(chainMaterial(int(t0.x + 0.5), t0.y + t0.z * fk, t1.x + t1.y * fk, t1.z), 1.0);\n";
 
 describe("K268 stage 2: the strip variant", () => {
   const ex = withExploreStrip(STRIP_FRAG);

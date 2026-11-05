@@ -766,11 +766,16 @@ vec3 kSectionAtArc(KChain c, highp float a, highp float seed) {
 `;
 // G2.3 GAMEPLAY PAINT (needs PAINT_DATA_GLSL + KNOT_UNIFORMS_GLSL +
 // PAINT_FX_GLSL). KPAINT layout and semantics: paint_math.ts (kPaintAt).
-const PAINT_PAINT_CORE_GLSL = /* glsl */ `
-highp float kGoldU(highp float p) {
-  return p >= 1.0 ? 121.0 / 256.0 : p <= 0.0 ? 115.0 / 256.0 : (115.0 + 6.0 * p) / 256.0;
-}
-
+// K1139 S3b: the one crest field (paint_math.ts kPulseCrest), shared by
+// the arms (kPulseV in the paint core) and the junction fan's pulse
+// bands (junction_field.ts), which carry no paint items of their own:
+// the band holds distJ, inward and hover, so the fan evaluates this at
+// dG = distJ + tau with endWin 1. kPulseCrestQuiet is the same field
+// with its trains removed (the strips' quiet rows, arm_strip.ts: floor
+// and hover kept, no crest bars under a band). Needs
+// KNOT_UNIFORMS_GLSL + PAINT_CONST_GLSL + kSmooth (PAINT_GATE_THREAD),
+// all of which precede it in every program that includes it.
+export const PULSE_CREST_GLSL = /* glsl */ `
 // The pulse trains' reach window (K75): full strength out to reach - fade
 // from the junction, smoothly gone at reach. The hover stops there too
 // (K93).
@@ -778,7 +783,6 @@ highp float kReachWin(highp float d) {
   highp float f = max(uKReach.y, 1e-4);
   return 1.0 - kSmooth((d - (uKReach.x - f)) / f);
 }
-
 // K111 stage 4 (K265): High contrast's highlight prototype, uKBase.y. 0 =
 // today's pulses: every prototype branch is skipped and the paint is
 // master's. 1 contrast, 2 outline, 3 chevrons (kComposePaintAcross). The
@@ -787,6 +791,40 @@ highp float kReachWin(highp float d) {
 int kHcLook() {
   return int(uKBase.y + 0.5);
 }
+
+// Brightness at global distance dG; bumpK scales the crest trains (1 on
+// the arms and the fan's bands, 0 in a strip's quiet row). A High
+// contrast prototype has no trains and no breath: one steady level out
+// to the reach (the looks shape it; prototypes skip mirror parity).
+highp float kPulseCrestK(highp float dG, bool inward, bool hovered, highp float endWin, highp float bumpK) {
+  if (kHcLook() != 0) return endWin * uKPulse.w * kReachWin(dG);
+  if (hovered) return endWin * uKPaint.w * kReachWin(dG);
+  highp float s = uKPulse.z;
+  highp float raw = inward ? dG + uKPulse.x : dG - uKPulse.y;
+  highp float ph = raw - s * floor(raw / s);
+  highp float dist = min(ph, s - ph);
+  highp float dC = max(0.0, dG - (ph <= s - ph ? ph : ph - s));
+  highp float bump = max(0.0, 1.0 - dist / CREST_WIDTH) * min(1.0, dC / CREST_RAMP) * bumpK;
+  highp float fl = (PULSE_FLOOR + PULSE_CORE_BOOST * max(0.0, 1.0 - dG / PULSE_CORE_RADIUS)) *
+    max(0.0, 1.0 - dG / PULSE_FLOOR_REACH);
+  return min(1.0, (fl + bump * 0.9) * endWin) * uKPulse.w * kReachWin(dG);
+}
+highp float kPulseCrest(highp float dG, bool inward, bool hovered, highp float endWin) {
+  return kPulseCrestK(dG, inward, hovered, endWin, 1.0);
+}
+highp float kPulseCrestQuiet(highp float dG, bool inward, bool hovered, highp float endWin) {
+  return kPulseCrestK(dG, inward, hovered, endWin, 0.0);
+}
+`;
+
+const PAINT_PAINT_CORE_GLSL = /* glsl */ `
+// kReachWin, kHcLook and the crest itself live in PULSE_CREST_GLSL
+// (above), which paintCore prepends: the fan shader includes that chunk
+// without the paint items.
+highp float kGoldU(highp float p) {
+  return p >= 1.0 ? 121.0 / 256.0 : p <= 0.0 ? 115.0 / 256.0 : (115.0 + 6.0 * p) / 256.0;
+}
+
 // The choice band's pulse distance (world arc from the junction) and pixel
 // size at this pixel, for the chevrons (kPaintAt sets them with st.z).
 highp float kHcD;
@@ -798,21 +836,8 @@ highp float kFrayHere = 0.0;
 @TELE_DECL@
 highp float kPulseV(highp float d, highp float span, bool inward, bool hovered, highp float dist0, bool cont) {
   if (d < 0.0 || d > span) return 0.0;
-  highp float dG = dist0 + d;
   highp float endWin = cont ? 1.0 : clamp((span - d) / PULSE_END_WINDOW, 0.0, 1.0);
-  // A prototype: no trains and no breath, one steady level out to the
-  // reach, faded in after a move like the trains; the look shapes it.
-  if (kHcLook() != 0) return endWin * uKPulse.w * kReachWin(dG);
-  if (hovered) return endWin * uKPaint.w * kReachWin(dG);
-  highp float s = uKPulse.z;
-  highp float raw = inward ? dG + uKPulse.x : dG - uKPulse.y;
-  highp float ph = raw - s * floor(raw / s);
-  highp float dist = min(ph, s - ph);
-  highp float dC = max(0.0, dG - (ph <= s - ph ? ph : ph - s));
-  highp float bump = max(0.0, 1.0 - dist / CREST_WIDTH) * min(1.0, dC / CREST_RAMP);
-  highp float fl = (PULSE_FLOOR + PULSE_CORE_BOOST * max(0.0, 1.0 - dG / PULSE_CORE_RADIUS)) *
-    max(0.0, 1.0 - dG / PULSE_FLOOR_REACH);
-  return min(1.0, (fl + bump * 0.9) * endWin) * uKPulse.w * kReachWin(dG);
+  return kPulseCrest(dist0 + d, inward, hovered, endWin);
 }
 
 highp float kRingDist(highp float a, highp float b, highp float total, bool closed) {
@@ -845,7 +870,7 @@ highp float kTeleAcross(highp float side) {
 
 // (p, band, v, rim): the gold ramp amount, a pulse band and its strength,
 // and the hover glow along the thread (K145; kRimAcross shapes it across).
-highp vec4 kPaintAt(KChain c, highp float ctrl, highp float arc, highp float px) {
+highp vec4 kPaintAt(KChain c, highp float ctrl, highp float arc, highp float px, bool quiet) {
   highp vec4 st = vec4(0.0);
   kFrayHere = 0.0;
   if (uKPaint.x < 0.5) return st;
@@ -911,7 +936,13 @@ highp vec4 kPaintAt(KChain c, highp float ctrl, highp float arc, highp float px)
       } else {
         d = dirPos ? arc - aJ : aJ - arc;
       }
-      highp float v = kPulseV(d, span, (flags & IF_INWARD) != 0, (flags & IF_HOVER) != 0, T0.w, T1.z > 0.5);
+      bool inwP = (flags & IF_INWARD) != 0;
+      bool hovP = (flags & IF_HOVER) != 0;
+      highp float v = quiet
+        ? (d < 0.0 || d > span
+            ? 0.0
+            : kPulseCrestQuiet(T0.w + d, inwP, hovP, T1.z > 0.5 ? 1.0 : clamp((span - d) / PULSE_END_WINDOW, 0.0, 1.0)))
+        : kPulseV(d, span, inwP, hovP, T0.w, T1.z > 0.5);
       if (v > PULSE_MIN_V) {
         // 2 = a hovered choice under a High contrast prototype (K111 stage
         // 4), which the looks draw apart; anything over 0.5 is a band.
@@ -1098,7 +1129,7 @@ const TELE_ITEM_GLSL = /* glsl */ ` else if (type == ${PAINT_ITEM_TELE}) {
       kTele = max(kTele, T0.w * min(kSmooth((u - u0 - T1.x) / f0), kSmooth((u1 - u - T1.y) / f1)));
     }`;
 const paintCore = (tele: boolean): string =>
-  PAINT_PAINT_CORE_GLSL.replace("@TELE_DECL@", tele ? TELE_DECL_GLSL : "").replace(
+  (PULSE_CREST_GLSL + PAINT_PAINT_CORE_GLSL).replace("@TELE_DECL@", tele ? TELE_DECL_GLSL : "").replace(
     "@TELE_ITEM@",
     tele ? TELE_ITEM_GLSL : ""
   );

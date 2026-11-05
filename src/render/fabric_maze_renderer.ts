@@ -42,6 +42,7 @@ import { walkDistances } from "../core/walk_graph";
 import { planRoute, planRouteRuled } from "../game/route_plan";
 import { pulseTree, type PulseBandSpec, type PulseItem } from "./pulse_path";
 import { kData } from "./paint_model";
+import type { PulseBandDecl } from "./ribbon/paint_state";
 import { kArcOfCtrl, kArcU, kChain } from "./paint_math";
 import { darknessAlpha, pruneDarkStamps } from "../game/darkness";
 import {
@@ -668,7 +669,8 @@ export class FabricMazeRenderer {
   // K1139 S3a: the lit tree's band specs (pulse_path.ts) and the route
   // bands last declared (gold + turnstiles), kept for the
   // __knotPulseBands probe: which record slot each pulse band shares.
-  // Nothing draws from these until S3b.
+  // S3b: update() feeds the same allocation to the ribbons with the
+  // paint (computePulseBands); the fan shader draws the bands.
   private pulseBandDecl: PulseBandSpec[] = [];
   private paintRouteDecl: PaintRoute[] = [];
   // K145: the run under the pointer (or a touch press) for the hover glow,
@@ -4046,6 +4048,18 @@ export class FabricMazeRenderer {
     fallback: boolean;
     used: number;
   }> {
+    return this.computePulseBands().rows;
+  }
+
+  // S3b: the same allocation as feed for the ribbons - every
+  // non-fallback band as a PulseBandDecl (route, distJ, inward, and
+  // whether either arm is hovered: a hovered arm's band wears the
+  // steady hover light, not the trains). Probe and drawing share this,
+  // so they cannot disagree.
+  private computePulseBands(): {
+    rows: ReturnType<FabricMazeRenderer["pulseBandsProbe"]>;
+    feed: PulseBandDecl[];
+  } {
     // The declared route bands grouped by the junction they pass: a
     // route's A arm names its edge's end there.
     const existing = new Map<string, PaintRoute[]>();
@@ -4071,6 +4085,7 @@ export class FabricMazeRenderer {
       else byVertex.set(b.vertex, [b]);
     }
     const out: ReturnType<FabricMazeRenderer["pulseBandsProbe"]> = [];
+    const feed: PulseBandDecl[] = [];
     for (const [vertex, specs] of byVertex) {
       const routes = specs.map((s) =>
         pulseBandRoute(this.walk.edges[s.aEdge], this.walk.edges[s.bEdge], vertex)
@@ -4079,6 +4094,18 @@ export class FabricMazeRenderer {
       specs.forEach((s, i) => {
         const r = routes[i];
         const slot = alloc.fallback ? null : alloc.slots[i];
+        if (!alloc.fallback) {
+          feed.push({
+            route: r,
+            distJ: s.distJ,
+            inward: s.inward,
+            hovered:
+              s.aEdge === this.hoverEdge ||
+              s.bEdge === this.hoverEdge ||
+              (this.hoverRoute?.includes(s.aEdge) ?? false) ||
+              (this.hoverRoute?.includes(s.bEdge) ?? false),
+          });
+        }
         out.push({
           vertex,
           aEdge: s.aEdge,
@@ -4094,7 +4121,7 @@ export class FabricMazeRenderer {
         });
       });
     }
-    return out;
+    return { rows: out, feed };
   }
 
   // Refresh the paint declaration (traveled spans + pulse arms) and redraw
@@ -4252,7 +4279,9 @@ export class FabricMazeRenderer {
       }
     }
     this.paintRouteDecl = [...this.turnstileBands(controller), ...passes.routes];
-    this.ribbons.setPaint(spans, pulses, caps, this.paintRouteDecl, passes.traveled);
+    // K1139 S3b: the pulse bands ride with the paint (their own pass
+    // stays quiet while a move animates: emitAnimFrame declares none).
+    this.ribbons.setPaint(spans, pulses, caps, this.paintRouteDecl, passes.traveled, this.computePulseBands().feed);
     this.ribbons.setRim(this.rimDecl());
     // K100: the fog's explored memory belongs to one solve. It starts over
     // when the solve restarts (Reset path's restart, a clock change, a

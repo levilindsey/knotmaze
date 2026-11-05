@@ -20,7 +20,13 @@
 //                                       paint is dropped, pulses / hover /
 //                                       the reveal glow still brighten the
 //                                       section color - what a routed
-//                                       joint's web wears off its band
+//                                       joint's web wears off its band;
+//                                       2 (K1139 S3b) = QUIET: the
+//                                       untraveled material without the
+//                                       crest trains (floor and hover
+//                                       kept) - what a pulse-banded
+//                                       joint's base and band material
+//                                       wear, the fan drawing the crest
 //   STRIP TEXTURE (RGBA8 render target, STRIP_RT_W wide): row r occupies
 //     texels [(r % STRIP_LINE) * STRIP_W, +STRIP_W) of line r / STRIP_LINE.
 //     Read with texelFetch + manual lerp (exact weights: the CPU mirror in
@@ -209,9 +215,11 @@ highp float kStripPx;
 // shader's section at the two bracketing samples, lerped - its own
 // Gouraud; seed = a ctrl near the arc), the appearance FX that tint (burn /
 // roots - the joinery wears no stripes or transparency: its gate fades
-// it), then the gameplay paint and the reveal glow (G2.3). untrav (K81):
-// the paint without its gold amount (pulses and the glow kept).
-vec3 chainMaterial(int ch, highp float a, highp float seedIn, bool untrav) {
+// it), then the gameplay paint and the reveal glow (G2.3). mode (K81,
+// K1139 S3b): 0 composed; 1 untraveled - the paint without its gold
+// amount (pulses and the glow kept); 2 quiet - untraveled without the
+// crest trains (floor and hover kept), what a pulse-banded fan reads.
+vec3 chainMaterial(int ch, highp float a, highp float seedIn, highp float mode) {
   KChain c = kChain(ch);
   // The ctrl search seed, normalized onto the chain (rings wrap, runs clamp).
   highp float nc = float(c.nCtrl);
@@ -230,8 +238,8 @@ vec3 chainMaterial(int ch, highp float a, highp float seedIn, bool untrav) {
     }
   }
   if ((uKPaint.x > 0.5 && c.paintOn) || uKFx2.z > 0.5) {
-    highp vec4 st = kPaintAt(c, actrl, an, kStripPx);
-    if (untrav) st.x = 0.0;
+    highp vec4 st = kPaintAt(c, actrl, an, kStripPx, mode > 1.5);
+    if (mode > 0.5) st.x = 0.0;
     m = kComposePaintFlat(m, st, kGlow(c, actrl));
   }
   return m;
@@ -251,7 +259,7 @@ void main(void) {
   highp vec4 t1 = texelFetch(uStripTable, ivec2((t + 1) & ${ROW_W - 1}, (t + 1) >> ${ROW_SHIFT}), 0);
   kStripPx = t0.w;
   highp float fk = float(k);
-  finalColor = vec4(chainMaterial(int(t0.x + 0.5), t0.y + t0.z * fk, t1.x + t1.y * fk, t1.z > 0.5), 1.0);
+  finalColor = vec4(chainMaterial(int(t0.x + 0.5), t0.y + t0.z * fk, t1.x + t1.y * fk, t1.z), 1.0);
 }
 `;
 
@@ -260,7 +268,7 @@ void main(void) {
 const STRIP_ANCHOR_DECL = "highp float kStripPx;\n";
 const STRIP_ANCHOR_CTRL = "  highp float actrl = kCtrlOfArcNear(c, an, kSecK0);\n";
 const STRIP_ANCHOR_OUT =
-  "  finalColor = vec4(chainMaterial(int(t0.x + 0.5), t0.y + t0.z * fk, t1.x + t1.y * fk, t1.z > 0.5), 1.0);\n";
+  "  finalColor = vec4(chainMaterial(int(t0.x + 0.5), t0.y + t0.z * fk, t1.x + t1.y * fk, t1.z), 1.0);\n";
 
 // The visibility the variant multiplies in: the thread's at the texel's
 // ctrl (kExploreAt, the ribbons' visibility before their end look), 1 for a
@@ -279,7 +287,7 @@ export const STRIP_EXPLORE_CTRL_GLSL =
 export const STRIP_EXPLORE_OUT_GLSL = /* glsl */ `  kStripVis = 1.0;
   kStripChar = 0.0;
   kFireEmber = 0.0;
-  vec3 exM = chainMaterial(int(t0.x + 0.5), t0.y + t0.z * fk, t1.x + t1.y * fk, t1.z > 0.5);
+  vec3 exM = chainMaterial(int(t0.x + 0.5), t0.y + t0.z * fk, t1.x + t1.y * fk, t1.z);
   if (kStripChar > 0.0) exM = kCharLook(exM, kStripChar, 0.0);
   if (kFireEmber > 0.0) exM = kEmberLook(exM, kFireEmber, 0.0);
   finalColor = vec4(exM * kStripVis, kStripVis);

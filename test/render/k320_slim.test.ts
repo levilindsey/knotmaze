@@ -107,9 +107,14 @@ describe("K320 stage 1: char budgets", () => {
     // K849 (2026-10-23): the side cut's world-arc form adds 180 to
     // the pair (57,187 -> 57,367 measured here); the fans' metric
     // rim band adds ~340 to the junction field (under its budget).
-    expect(SECTION_FRAG.length).toBeLessThanOrEqual(57_430);
-    expect(SECTION_EXPLORE_FRAG.length).toBeLessThanOrEqual(73_850);
-    expect(STRIP_FRAG.length).toBeLessThanOrEqual(32_550);
+    // K1139 S3b (2026-11-04): the crest extracted into PULSE_CREST_GLSL
+    // (kPulseCrestK + its two wrappers; kPulseV is its caller now) and
+    // kPaintAt's quiet mode bring the pair to 58,440 / 74,855 and the
+    // strips to 33,695 (the same core; chainMaterial reads the mode
+    // float), measured here.
+    expect(SECTION_FRAG.length).toBeLessThanOrEqual(58_450);
+    expect(SECTION_EXPLORE_FRAG.length).toBeLessThanOrEqual(74_900);
+    expect(STRIP_FRAG.length).toBeLessThanOrEqual(33_700);
     // K797b/K798 fillets (2026-10-21): the fan look gate and stroke
     // (junction_field.ts) add 755 (26,600 -> 27,355 here).
     // K815: the fans' flank coordinate (aFlank + the fanEdge block) adds
@@ -120,7 +125,13 @@ describe("K320 stage 1: char budgets", () => {
     // outer-ring discard + the two-AA fanEdge + the pixel-wide tip
     // switch in the border-look block) adds 649 (29,940 -> 30,589
     // measured here).
-    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(30_650);
+    // K1139 S3b (2026-11-04): the fan's pulse bands (PULSE_CREST_GLSL,
+    // the pulse route loop, kFanPulseV and debug view 5) bring the
+    // junction field to 36,270, measured here; the nearest-band
+    // arbitration in that loop (a pixel takes its nearest band's
+    // crest, not the max over bands) adds 780 (36,270 -> 37,050
+    // measured here).
+    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(37_100);
     // K799: uKPath joins KNOT_UNIFORMS_GLSL, which the still pluck
     // includes (+18 here).
     expect(PLUCK_STILL_FRAG.length).toBeLessThanOrEqual(20_550);

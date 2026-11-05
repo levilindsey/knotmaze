@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  arcTrueTau,
   assignPulseSlots,
   bandPairKey,
   edgeArm,
@@ -439,6 +440,80 @@ describe("pulse bands (K1139 S3a, T10)", () => {
     for (const s of a.slots) expect(s.slot).toBeLessThan(4);
   });
 
+});
+
+describe("arcTrueTau (K1139 S3b)", () => {
+  // A 90-degree band as joinery builds it: arm A in along +x from arc
+  // 1.1 to the turn start d, the corner cubic, arm B out along +y.
+  const buildBand = (): number[] => {
+    const d = 0.5;
+    const pts: number[] = [];
+    for (const s of [1.1, 1.0, 0.9, 0.8, 0.7, 0.6]) pts.push(s, 0, -s);
+    routeCubic(d, 0, 1, 0, 0, d, 0, 1, d, 14, pts);
+    for (const s of [0.6, 0.7, 0.8, 0.9, 1.0, 1.1]) pts.push(0, s, s);
+    return pts;
+  };
+  const chords = (pts: number[]): number[] => {
+    const out = [0];
+    for (let i = 1; i < pts.length / 3; i++) {
+      out.push(out[i - 1] + Math.hypot(pts[i * 3] - pts[(i - 1) * 3], pts[i * 3 + 1] - pts[(i - 1) * 3 + 1]));
+    }
+    return out;
+  };
+
+  it("rescales the turn's tau in proportion to its arc at 90 degrees, meeting the arms at +-d", () => {
+    const pts = buildBand();
+    const before = [...pts];
+    const cum = chords(pts);
+    const shifts = arcTrueTau(pts, 0.5);
+    const n = pts.length / 3;
+    const cs = 6, ce = 20; // 6 arm points, then routeCubic's 15, then 6 out
+    const cornerArc = cum[ce] - cum[cs];
+    // The corner's true arc runs 0.7-0.85 of its tau span 2d (the ratio
+    // routeCubic's pin reads); the rescale absorbs it: inside the turn
+    // every tau step is the same multiple of its arc step, so a crest
+    // phased by distJ + tau no longer bunches in the Bezier parameter.
+    expect(cornerArc / (2 * 0.5)).toBeGreaterThan(0.7);
+    expect(cornerArc / (2 * 0.5)).toBeLessThan(0.85);
+    const ratio = (2 * 0.5) / cornerArc;
+    for (let i = cs + 1; i <= ce; i++) {
+      expect(pts[i * 3 + 2] - pts[(i - 1) * 3 + 2]).toBeCloseTo(ratio * (cum[i] - cum[i - 1]), 9);
+      expect(pts[i * 3 + 2]).toBeGreaterThan(pts[(i - 1) * 3 + 2]);
+    }
+    // The ends still meet the arms at +-d, and the arm stretches keep
+    // tau = -+arc (shift 0): sibling bands over one arm carry the same
+    // crest there, and the geometry is routeCubic's, only tau moved.
+    expect(pts[cs * 3 + 2]).toBeCloseTo(-0.5, 9);
+    expect(pts[ce * 3 + 2]).toBeCloseTo(0.5, 9);
+    for (let i = 0; i < n; i++) {
+      expect(pts[i * 3]).toBeCloseTo(before[i * 3], 9);
+      expect(pts[i * 3 + 1]).toBeCloseTo(before[i * 3 + 1], 9);
+      if (i < cs || i > ce) {
+        expect(pts[i * 3 + 2]).toBeCloseTo(before[i * 3 + 2], 9);
+        expect(shifts[i]).toBeCloseTo(0, 9);
+      } else {
+        // |tau| + shift is the tau routeCubic wrote: the strip arc a
+        // shader samples for this point is unchanged.
+        expect(Math.abs(pts[i * 3 + 2]) + shifts[i]).toBeCloseTo(Math.abs(before[i * 3 + 2]), 9);
+      }
+    }
+    expect(shifts[cs]).toBeCloseTo(0, 9);
+    expect(shifts[ce]).toBeCloseTo(0, 9);
+  });
+
+  it("leaves a straight band's tau alone (arc == tau there)", () => {
+    const pts: number[] = [];
+    for (let s = 1.0; s > 0.05; s -= 0.1) pts.push(s, 0, -s);
+    pts.push(0, 0, 0);
+    for (let s = 0.1; s <= 1.0; s += 0.1) pts.push(-s, 0, s);
+    const before = [...pts];
+    const shifts = arcTrueTau(pts, 1.0);
+    for (let i = 0; i < pts.length; i++) expect(pts[i]).toBeCloseTo(before[i], 9);
+    for (const s of shifts) expect(s).toBeCloseTo(0, 9);
+  });
+});
+
+describe("pulse bands (K1139 S3a, T10)", () => {
   it("draws its corner with routeCorner/routeCubic, tau -d..+d", () => {
     // A right-angle band: the cubic's arc runs long against its tau span
     // (about 0.79 at 90 deg), the ratio S3b's tau rescale must absorb so

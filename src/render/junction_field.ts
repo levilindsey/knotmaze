@@ -47,7 +47,19 @@
 //          smoothstep-blended over |tau| < m), so it follows every paint
 //          the arms show - trail fades included, with no clock of its own.
 //          Band reads are floored at texel 1: a span ending at the joint
-//          half-covers texel 0. The CPU side re-draws the arms' ribbon
+//          half-covers texel 0. PULSE BANDS (K1139 S3b): after the gold
+//          blocks a routed-or-banded record holds a count texel, then
+//          per pulse band R0 = (nVerts, m, armA, armB), R1 = (distJ,
+//          inward + 2 * hovered, shared, 0) and nVerts texels (x, y,
+//          tau, strip-arc shift): the lit tree's band through this fan,
+//          tau ARC-TRUE (junction_routes.ts arcTrueTau), sharing slots
+//          with the gold blocks (assignPulseSlots): a band whose pair a
+//          gold block already draws is shared and draws nothing. A
+//          pulse-banded record's second strip row is QUIET (the
+//          untraveled material without the crest trains), its base reads
+//          those rows, and the fan evaluates the crest itself at
+//          dG = distJ + tau over the quiet material, so no radial bars
+//          paint under a band. The CPU side re-draws the arms' ribbon
 //          quads near a routed joint in this pass (COVER STRIPS, tagged by
 //          a fractional aRec: STRIP_REC_TAG) and drops the paint caps
 //          there, so the field and the bands decide those pixels.
@@ -83,7 +95,7 @@ import { Buffer, BufferUsage, GlProgram, Shader, Texture, UniformGroup } from "p
 import type { MeshGeometry } from "pixi.js";
 import { GAP_FRAG_LIB_FAN, defaultGapTexture } from "./gap_mask";
 import { FloatRows, ROW_SHIFT } from "./float_rows";
-import { KNOT_UNIFORMS_GLSL, PAINT_CONST_GLSL, PAINT_GATE_GLSL } from "./paint_glsl";
+import { KNOT_UNIFORMS_GLSL, PAINT_CONST_GLSL, PAINT_GATE_GLSL, PULSE_CREST_GLSL } from "./paint_glsl";
 import { knotUniforms } from "./paint_model";
 import { STRIP_LOOKUP_GLSL, STRIP_LOOKUP_P_GLSL, stripTexture } from "./arm_strip";
 import { exploreGapEdits } from "./explore_glsl";
@@ -162,6 +174,12 @@ ${KNOT_UNIFORMS_GLSL}
 ${PAINT_CONST_GLSL}
 ${PAINT_GATE_GLSL}
 ${STRIP_LOOKUP_GLSL}
+${PULSE_CREST_GLSL}
+
+// K1139 S3b: the pulse field this fan draws (the nearest band's crest
+// at this pixel), read back by debug view 5 in JUNCTION_FRAG.
+// junctionField sets it; a pixel under no band keeps 0.
+float kFanPulseV = 0.0;
 
 const float TAU = 6.283185307179586;
 const float HALF_PI = 1.5707963267948966;
@@ -299,14 +317,30 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
   int nr = int(j1.w + 0.5);
   bool routed = nr > 0 && hd.z > 0.5;
   float fz = routed ? j1.z : 0.0;
-  vec3 c = junctionBase(rec, p, hd, routed && fz < 0.5);
+  int base0 = int(hd.w + 0.5);
+  // K1139 S3b: the pulse section (a count texel, then one block per
+  // pulse band) sits right after the gold blocks. Walk to its count
+  // before anything draws: a pulse-banded record's base reads its arms'
+  // QUIET rows (no crest bars under the bands it draws). A record with
+  // no blocks keeps base0 0.
+  int np = 0;
+  int pbase = base0;
+  if (base0 > 0) {
+    for (int r = 0; r < ${MAX_ROUTES}; r++) {
+      if (r >= nr) break;
+      pbase += 1 + int(jAt(pbase).x + 0.5);
+    }
+    np = int(jAt(pbase).x + 0.5);
+  }
+  bool banded = np > 0;
+  vec3 c = junctionBase(rec, p, hd, (routed || banded) && fz < 0.5);
   if (routed && fz > 0.0 && fz < 1.0) {
     // K169: a web fading in blends its two bases (c is the side below 0.5).
     vec3 o = junctionBase(rec, p, hd, fz >= 0.5);
     c = fz < 0.5 ? mix(c, o, fz) : mix(o, c, fz);
   }
-  if (!routed || (uKBase.z > 2.5 && uKBase.z < 4.5)) return c;
-  int base = int(hd.w + 0.5);
+  if ((!routed && !banded) || (uKBase.z > 2.5 && uKBase.z < 4.5)) return c;
+  int base = base0;
   int stride = 2 + int(uJParams.y + 0.5);
   float reach = uJParams.x + (strip ? ${(ROUTE_BAND_PAD + 1).toFixed(3)} : 0.5) * pxW;
   for (int r = 0; r < ${MAX_ROUTES}; r++) {
@@ -315,6 +349,7 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
     int nv = int(r0.x + 0.5);
     float best = 1e20;
     float tau = 0.0;
+    float shift = 0.0;
     vec4 q0 = jAt(base + 1);
     for (int k = 0; k < ${MAX_ROUTE_VERTS - 1}; k++) {
       if (k + 1 >= nv) break;
@@ -328,22 +363,107 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
       if (dd < best) {
         best = dd;
         tau = mix(q0.z, q1.z, u);
+        shift = mix(q0.w, q1.w, u);
       }
       q0 = q1;
     }
     float cov = clamp((reach - sqrt(best)) / pxW, 0.0, 1.0);
     if (cov > 0.0) {
-      vec3 bm = armPaint(rec + 2 + int(r0.z + 0.5) * stride, -tau, true, false);
+      // A banded record's verts carry the strip-arc shift (their tau is
+      // arc-true, K1139 S3b): the arms are sampled where the ribbon has
+      // their material. Unbanded records write shift 0.
+      vec3 bm = armPaint(rec + 2 + int(r0.z + 0.5) * stride, -tau + shift, true, false);
       if (r0.w > -0.5) {
         bm = mix(
           bm,
-          armPaint(rec + 2 + int(r0.w + 0.5) * stride, tau, true, false),
+          armPaint(rec + 2 + int(r0.w + 0.5) * stride, tau + shift, true, false),
           smoothstep(-r0.y, r0.y, tau)
         );
       }
       c = mix(c, bm, cov);
     }
     base += 1 + nv;
+  }
+  // K1139 S3b: the pulse bands. Each block is R0 = (nVerts, m, armA,
+  // armB), R1 = (distJ, flags, shared, 0) - flags = inward + 2 *
+  // hovered, shared = its pair already has a gold block above - then
+  // its arc-true centerline verts (x, y, tau, strip-arc shift). The
+  // crest is the arms' own field at dG = distJ + tau (PULSE_CREST_GLSL),
+  // whitened over the arms' QUIET material: the quiet rows already wear
+  // the crest's floor, so only the trains' share whitens here and the
+  // band meets its arms. A pixel takes its NEAREST band's crest: where
+  // two bands still overlap near the arm they came from their
+  // centerlines coincide and carry the same crest (plan 2.2), so the
+  // choice is invisible there; past the split, a max over bands would
+  // paint the sibling's at-joint value across this band's wedge (its
+  // nearest point sits at the joint while this band's crest has run
+  // on). A shared band draws nothing: its gold block carries the crest
+  // through the strips; it still feeds kFanPulseV (debug 5). On a tie
+  // a drawing band wins over a shared one.
+  int pb = pbase + 1;
+  float bDist = 1e20;
+  float bTau = 0.0;
+  float bShift = 0.0;
+  float bCov = 0.0;
+  vec4 bR0 = vec4(0.0);
+  vec4 bR1 = vec4(0.0);
+  bool haveBand = false;
+  for (int r = 0; r < ${MAX_ROUTES}; r++) {
+    if (r >= np) break;
+    vec4 r0 = jAt(pb);
+    vec4 r1 = jAt(pb + 1);
+    int nv = int(r0.x + 0.5);
+    float best = 1e20;
+    float tau = 0.0;
+    float shift = 0.0;
+    vec4 q0 = jAt(pb + 2);
+    for (int k = 0; k < ${MAX_ROUTE_VERTS - 1}; k++) {
+      if (k + 1 >= nv) break;
+      vec4 q1 = jAt(pb + 3 + k);
+      vec2 d = q1.xy - q0.xy;
+      vec2 w = p - q0.xy;
+      float l2 = dot(d, d);
+      float u = l2 > 1e-12 ? clamp(dot(w, d) / l2, 0.0, 1.0) : 0.0;
+      vec2 off = w - d * u;
+      float dd = dot(off, off);
+      if (dd < best) {
+        best = dd;
+        tau = mix(q0.z, q1.z, u);
+        shift = mix(q0.w, q1.w, u);
+      }
+      q0 = q1;
+    }
+    float cov = clamp((reach - sqrt(best)) / pxW, 0.0, 1.0);
+    if (cov > 0.0) {
+      float dnow = sqrt(best);
+      bool take = !haveBand || dnow < bDist - 1e-6 ||
+        (dnow <= bDist + 1e-6 && bR1.z >= 0.5 && r1.z < 0.5);
+      if (take) {
+        haveBand = true;
+        bDist = dnow;
+        bTau = tau;
+        bShift = shift;
+        bCov = cov;
+        bR0 = r0;
+        bR1 = r1;
+      }
+    }
+    pb += 2 + nv;
+  }
+  if (haveBand) {
+    bool inw = bR1.y == 1.0 || bR1.y == 3.0;
+    bool hov = bR1.y > 1.5;
+    float v = kPulseCrest(bR1.x + bTau, inw, hov, 1.0);
+    kFanPulseV = v * bCov;
+    if (bR1.z < 0.5) {
+      vec3 pm = armPaint(rec + 2 + int(bR0.z + 0.5) * stride, -bTau + bShift, true, true);
+      pm = mix(pm, armPaint(rec + 2 + int(bR0.w + 0.5) * stride, bTau + bShift, true, true), smoothstep(-bR0.y, bR0.y, bTau));
+      float fa = K_BAND * kPulseCrestQuiet(bR1.x + bTau, inw, hov, 1.0);
+      float fb = K_BAND * v;
+      float f = fa >= 0.999 ? 0.0 : clamp((fb - fa) / (1.0 - fa), 0.0, 1.0);
+      pm = mix(pm, uKHlPulse.rgb, f);
+      c = mix(c, pm, bCov);
+    }
   }
   return c;
 }
@@ -490,6 +610,13 @@ void main(void) {
       : mix(rgb, stroke, lookEdge * 0.9);
   }
   float gk = gapKeepAt(pxW, vPos, -1.0, vec2(0.0), vMaskId);
+  // DEBUG VIEW 5 (probes, K1139 S3b): the fan's own pulse field, the
+  // way the ribbons show theirs - G is the band crest at this pixel.
+  if (uKBase.z > 4.5) {
+    if (gk <= 0.002) discard;
+    finalColor = vec4(0.0, clamp(kFanPulseV, 0.0, 1.0), 0.0, 1.0);
+    return;
+  }
   if (gk < 1.0 && gapProbe()) {
     rgb = mix(rgb, vec3(1.0, 0.0, 0.85), (1.0 - gk) * 0.75);
     gk = 1.0;
@@ -533,14 +660,19 @@ export const FIELD_EXPLORE_EDITS: ReadonlyArray<readonly [string, string]> = [
     "vec4 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {",
   ],
   [
-    "  vec3 c = junctionBase(rec, p, hd, routed && fz < 0.5);",
-    "  vec4 c = junctionBase(rec, p, hd, routed && fz < 0.5);",
+    "  vec3 c = junctionBase(rec, p, hd, (routed || banded) && fz < 0.5);",
+    "  vec4 c = junctionBase(rec, p, hd, (routed || banded) && fz < 0.5);",
   ],
   [
     "    vec3 o = junctionBase(rec, p, hd, fz >= 0.5);",
     "    vec4 o = junctionBase(rec, p, hd, fz >= 0.5);",
   ],
   ["      vec3 bm = armPaint(", "      vec4 bm = armPaint("],
+  ["      vec3 pm = armPaint(", "      vec4 pm = armPaint("],
+  [
+    "      pm = mix(pm, uKHlPulse.rgb, f);",
+    "      pm.rgb = mix(pm.rgb, uKHlPulse.rgb * pm.a, f);",
+  ],
   [
     "  vec3 rgb = junctionField(rec, vPos, pxW, j1, strip);",
     "  vec4 exC = junctionField(rec, vPos, pxW, j1, strip);",

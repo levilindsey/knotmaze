@@ -244,7 +244,7 @@ void main(void) {
   float kctrl = fxHere || paintHere ? kCtrlNear(kc, kpt.x, kpt.y) : 0.0;
   if (fxHere) base = kFxColor(kc, kctrl, kpt.x / kc.arcPer, base, pRain, aM);
   if (pRain > 0.0) base = kRainbowBlend(base, pRain, side01);
-  vec4 kst = paintHere ? kPaintAt(kc, kctrl, kpt.x, pxArc) : vec4(0.0);
+  vec4 kst = paintHere ? kPaintAt(kc, kctrl, kpt.x, pxArc, false) : vec4(0.0);
   float kgl = paintHere ? kGlow(kc, kctrl) : 0.0;
   if (paintHere && kst.x > 0.0 && (uKPath.x < 1.0 || uKPath.y > 0.5)) {
     float ge = abs(2.0 * side01 - 1.0);

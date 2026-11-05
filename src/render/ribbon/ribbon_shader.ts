@@ -170,7 +170,7 @@ void main(void) {
   if (fxHere) base = kFxColor(kc, kctrl, kpt.x / kc.arcPer, base, pRain, aM);
   if (pRain > 0.0) base = kRainbowBlend(base, pRain, vUV.y);
   // Gameplay paint + the reveal glow, composed over the section (G2.3).
-  highp vec4 kst = paintHere ? kPaintAt(kc, kctrl, kpt.x, pxArc) : vec4(0.0);
+  highp vec4 kst = paintHere ? kPaintAt(kc, kctrl, kpt.x, pxArc, false) : vec4(0.0);
   highp float kgl = paintHere ? kGlow(kc, kctrl) : 0.0;
   // K799: the traveled path's look (uKPath.x = width 0..1, .y = texture
   // 0 solid, 1 pencil, 2 crayon, 3 highlighter): narrow the gold toward

@@ -49,7 +49,7 @@ import type { CrossingPass } from "../../physics/particle_system";
 import type { SplineSamples } from "../../geometry/spline_generator";
 import { TriFanMesh } from "../ribbon_mesh";
 import { kData, knotUniformValues } from "../paint_model";
-import { FX_STYLE } from "../paint_const";
+import { FX_STYLE, PAINT_CONST } from "../paint_const";
 import {
   kChain,
   kComposePaint,
@@ -59,6 +59,8 @@ import {
   kFxColor,
   kGlow,
   kPaintAt,
+  kPulseBandV,
+  kPulseCrest,
   kSectionAtArc,
   kWrap,
   knotSection,
@@ -77,7 +79,7 @@ import {
   recordData,
   setFieldParams,
 } from "../junction_field";
-import { routeCorner, routeCubic } from "../junction_routes";
+import { arcTrueTau, routeCorner, routeCubic } from "../junction_routes";
 import { STRIP_W, setStripRows, stripTable } from "../arm_strip";
 import { GAP_SLOTS } from "../gap_mask";
 import { rimCurvePoints } from "./rim_curve";
@@ -279,7 +281,7 @@ export class Joinery {
     out: Float32Array,
     seedIn: number,
     px = 0,
-    untrav = false
+    mode = 0
   ): void {
     const D = kData();
     const U = knotUniformValues();
@@ -303,8 +305,9 @@ export class Joinery {
       }
     }
     if ((U.uKPaint[0] > 0.5 && c.paintOn) || U.uKFx2[2] > 0.5) {
-      const st = kPaintAt(D, U, c, actrl, an, px, this.r.paintTmp);
-      if (untrav) st.p = 0;
+      // mode: 0 composed, 1 untraveled, 2 quiet (K1139 S3b).
+      const st = kPaintAt(D, U, c, actrl, an, px, this.r.paintTmp, mode > 1.5);
+      if (mode > 0.5) st.p = 0;
       kComposePaint(U, out, st, kGlow(D, U, c, actrl));
     }
     const E = U.uKExplore;
@@ -312,8 +315,9 @@ export class Joinery {
   }
   // Append one ARM STRIP row (arm_strip.ts table layout): texel k = the
   // material of `chain` at arc arc0 + arcStep * k (ctrl seed seed0 +
-  // seedStep * k), paint edges antialiased over px; untrav 1 = the
-  // untraveled material (K81). Returns the row.
+  // seedStep * k), paint edges antialiased over px; mode 1 = the
+  // untraveled material (K81), 2 = its quiet row (K1139 S3b). Returns
+  // the row.
   private writeStripRow(
     chain: number,
     arc0: number,
@@ -321,7 +325,7 @@ export class Joinery {
     px: number,
     seed0: number,
     seedStep: number,
-    untrav = 0
+    mode = 0
   ): number {
     const r = this.stripRowsUsed++;
     const tb = stripTable();
@@ -334,7 +338,7 @@ export class Joinery {
     d[o + 3] = px;
     d[o + 4] = seed0;
     d[o + 5] = seedStep;
-    d[o + 6] = untrav;
+    d[o + 6] = mode;
     d[o + 7] = 0;
     return r;
   }
@@ -352,9 +356,9 @@ export class Joinery {
     const q = (v: number): number => Math.round(Math.max(0, Math.min(1, v)) * 255) / 255;
     const m0 = this.stripK0;
     const m1 = this.stripK1;
-    const un = T[o + 6] > 0.5;
-    this.cpuChainMaterial(T[o], T[o + 1] + T[o + 2] * k0, m0, T[o + 4] + T[o + 5] * k0, T[o + 3], un);
-    this.cpuChainMaterial(T[o], T[o + 1] + T[o + 2] * k1, m1, T[o + 4] + T[o + 5] * k1, T[o + 3], un);
+    const mode = T[o + 6];
+    this.cpuChainMaterial(T[o], T[o + 1] + T[o + 2] * k0, m0, T[o + 4] + T[o + 5] * k0, T[o + 3], mode);
+    this.cpuChainMaterial(T[o], T[o + 1] + T[o + 2] * k1, m1, T[o + 4] + T[o + 5] * k1, T[o + 3], mode);
     // K268 stage 2: the texels are premultiplied by the visibility (1 with
     // the reveal off: master's texels), and out[3] is the lerped alpha.
     const v0 = m0[3];
@@ -517,7 +521,18 @@ export class Joinery {
         }
       }
     };
-    baseField(routed && fz < 0.5);
+    // K1139 S3b: the pulse section after the gold blocks (junctionField's
+    // twin walk); a pulse-banded record's base reads the quiet rows.
+    const base0 = Math.round(J[hd + 3]);
+    let np = 0;
+    if (base0 > 0) {
+      let w = base0;
+      const nw = Math.min(nr, MAX_ROUTES);
+      for (let r = 0; r < nw; r++) w += 1 + Math.round(J[at(w)]);
+      np = Math.round(J[at(w)]);
+    }
+    const banded = np > 0;
+    baseField((routed || banded) && fz < 0.5);
     if (routed && fz > 0 && fz < 1) {
       // K169, mid-fade (FIELD_GLSL junctionField): the other side's base,
       // blended by the level. (lastArms then lists that second pass's arms.)
@@ -540,20 +555,21 @@ export class Joinery {
         out[3] = lo ? p3 + (o3 - p3) * fz : o3 + (p3 - o3) * fz;
       }
     }
-    if (!routed || dbg === 3 || dbg === 4) return;
+    if ((!routed && !banded) || dbg === 3 || dbg === 4) return;
     // K81 ROUTE BANDS, oldest first (FIELD_GLSL junctionField): the nearest
     // point of each band's centerline polyline and its tau; a one-pixel
     // ramp centered on the half-width (a cover strip: solid ROUTE_BAND_PAD
     // pixels further first).
     const pxW = Math.max(px, 1e-5);
     const reach = fillHalf + (strip ? ROUTE_BAND_PAD + 1 : 0.5) * pxW;
-    let base = Math.round(J[hd + 3]);
+    let base = base0;
     const nrr = Math.min(nr, MAX_ROUTES);
     for (let r = 0; r < nrr; r++) {
       const r0 = at(base);
       const nv = Math.round(J[r0]);
       let best = 1e20;
       let tau = 0;
+      let shift = 0;
       let q0 = at(base + 1);
       for (let k = 0; k < MAX_ROUTE_VERTS - 1 && k + 1 < nv; k++) {
         const q1 = at(base + 2 + k);
@@ -569,14 +585,15 @@ export class Joinery {
         if (dd < best) {
           best = dd;
           tau = J[q0 + 2] + (J[q1 + 2] - J[q0 + 2]) * u;
+          shift = J[q0 + 3] + (J[q1 + 3] - J[q0 + 3]) * u;
         }
         q0 = q1;
       }
       const cov = Math.max(0, Math.min(1, (reach - Math.sqrt(best)) / pxW));
       if (cov > 0) {
-        armPaint(rec + 2 + Math.round(J[r0 + 2]) * stride, -tau, true, false, mA);
+        armPaint(rec + 2 + Math.round(J[r0 + 2]) * stride, -tau + shift, true, false, mA);
         if (J[r0 + 3] > -0.5) {
-          armPaint(rec + 2 + Math.round(J[r0 + 3]) * stride, tau, true, false, mB);
+          armPaint(rec + 2 + Math.round(J[r0 + 3]) * stride, tau + shift, true, false, mB);
           const m = J[r0 + 1];
           let s = Math.max(0, Math.min(1, (tau + m) / (2 * m)));
           s = s * s * (3 - 2 * s);
@@ -585,6 +602,92 @@ export class Joinery {
         for (let c = 0; c < nc; c++) out[c] = out[c] + (mA[c] - out[c]) * cov;
       }
       base += 1 + nv;
+    }
+    // K1139 S3b PULSE BANDS (FIELD_GLSL junctionField's twin loop): the
+    // crest at dG = distJ + tau over the arms' quiet material, whitened
+    // by the trains' share only (the quiet rows already wear the floor).
+    // The pixel takes its NEAREST band (a drawing band wins a tie over
+    // a shared one); a shared band's gold block above already drew it.
+    const U = knotUniformValues();
+    const KB = PAINT_CONST.K_BAND;
+    let pb = base + 1;
+    const npp = Math.min(np, MAX_ROUTES);
+    let bDist = 1e20;
+    let bTau = 0;
+    let bShift = 0;
+    let bCov = 0;
+    let bR0 = -1;
+    let bR1 = -1;
+    for (let r = 0; r < npp; r++) {
+      const r0 = at(pb);
+      const r1 = at(pb + 1);
+      const nv = Math.round(J[r0]);
+      let best = 1e20;
+      let tau = 0;
+      let shift = 0;
+      let q0 = at(pb + 2);
+      for (let k = 0; k < MAX_ROUTE_VERTS - 1 && k + 1 < nv; k++) {
+        const q1 = at(pb + 3 + k);
+        const dx = J[q1] - J[q0];
+        const dy = J[q1 + 1] - J[q0 + 1];
+        const wx = x - J[q0];
+        const wy = y - J[q0 + 1];
+        const l2 = dx * dx + dy * dy;
+        const u = l2 > 1e-12 ? Math.max(0, Math.min(1, (wx * dx + wy * dy) / l2)) : 0;
+        const ox = wx - dx * u;
+        const oy = wy - dy * u;
+        const dd = ox * ox + oy * oy;
+        if (dd < best) {
+          best = dd;
+          tau = J[q0 + 2] + (J[q1 + 2] - J[q0 + 2]) * u;
+          shift = J[q0 + 3] + (J[q1 + 3] - J[q0 + 3]) * u;
+        }
+        q0 = q1;
+      }
+      const cov = Math.max(0, Math.min(1, (reach - Math.sqrt(best)) / pxW));
+      if (cov > 0) {
+        const dnow = Math.sqrt(best);
+        const take =
+          bR0 < 0 ||
+          dnow < bDist - 1e-6 ||
+          (dnow <= bDist + 1e-6 && J[bR1 + 2] >= 0.5 && J[r1 + 2] < 0.5);
+        if (take) {
+          bDist = dnow;
+          bTau = tau;
+          bShift = shift;
+          bCov = cov;
+          bR0 = r0;
+          bR1 = r1;
+        }
+      }
+      pb += 2 + nv;
+    }
+    if (bR0 >= 0 && J[bR1 + 2] < 0.5) {
+      const r0 = bR0;
+      const r1 = bR1;
+      const tau = bTau;
+      const shift = bShift;
+      const cov = bCov;
+      const flags = J[r1 + 1];
+      const inw = flags % 2 === 1;
+      const hov = flags >= 2;
+      const v = kPulseBandV(U, J[r1], tau, inw, hov);
+      armPaint(rec + 2 + Math.round(J[r0 + 2]) * stride, -tau + shift, true, true, mA);
+      armPaint(rec + 2 + Math.round(J[r0 + 3]) * stride, tau + shift, true, true, mB);
+      const m = J[r0 + 1];
+      let s = Math.max(0, Math.min(1, (tau + m) / (2 * m)));
+      s = s * s * (3 - 2 * s);
+      for (let c = 0; c < nc; c++) mA[c] = mA[c] + (mB[c] - mA[c]) * s;
+      const qv = kPulseCrest(U, J[r1] + tau, inw, hov, 1, 0);
+      const fa = KB * qv;
+      const f = fa >= 0.999 ? 0 : Math.max(0, Math.min(1, (KB * v - fa) / (1 - fa)));
+      const tgt = U.uKHlPulse;
+      if (exA) {
+        for (let c = 0; c < 3; c++) mA[c] += ((tgt ? tgt[c] : 1) * mA[3] - mA[c]) * f;
+      } else {
+        for (let c = 0; c < nc; c++) mA[c] += ((tgt ? tgt[c] : 1) - mA[c]) * f;
+      }
+      for (let c = 0; c < nc; c++) out[c] = out[c] + (mA[c] - out[c]) * cov;
     }
   }
   // Section RGB at a world ARC along a chain into out[0..2] - the ribbon's
@@ -975,6 +1078,23 @@ export class Joinery {
       // arms[0..n) (ib -1 = a one-arm band, the head), the turn's start
       // arc d along both arms and the half-length m of its A -> B blend.
       routes: Array<{ ia: number; ib: number; d: number; m: number }>;
+      // K1139 S3b PULSE BANDS through this joint (pulse_path.ts, resolved
+      // in paint_state): arm indexes, the turn's d/m (filled by the route
+      // pass, like routes) and the band's light: distJ (its vertex's
+      // drawn distance), inward, hovered, and shared (its pair already
+      // has a gold band: the block is written for the probe view and
+      // draws nothing). Empty when the record's distinct pairs would
+      // pass MAX_ROUTES: no pulse band there (option B, plan 2.2).
+      pulseBands: Array<{
+        ia: number;
+        ib: number;
+        d: number;
+        m: number;
+        distJ: number;
+        inward: boolean;
+        hovered: boolean;
+        shared: boolean;
+      }>;
     }
     // Radial profile of one arm around its joint (JArm.pth/ps): walk the
     // centerline outward in FIELD_PROF_ARC steps and resample angle + arc
@@ -1187,6 +1307,7 @@ export class Joinery {
         mask,
         rMax: 0,
         routes: [],
+        pulseBands: [],
       });
     }
     // JUNCTION RECORDS (joints with >= 2 arms - nothing else draws or reads
@@ -1272,6 +1393,59 @@ export class Joinery {
           if (r.b && ib < 0) continue;
           rec.routes.push({ ia, ib, d: 0, m: 0.5 * fillHalf });
         }
+      }
+    }
+    // K1139 S3b PULSE BANDS: each record's resolved pulse bands as arm
+    // indexes, sharing band slots with its gold routes (the declared
+    // allocation is assignPulseSlots' on the fabric side; this is its
+    // record-side twin on the resolved lists). A band whose pair a gold
+    // route already draws is shared (written, draws nothing). A record
+    // whose distinct pairs would pass MAX_ROUTES keeps no pulse band:
+    // option B there, its arms' crests stay radial bars (plan 2.2).
+    if (this.r.pulseByJn.size > 0) {
+      for (const rec of recs) {
+        if (rec.rb < 0) continue;
+        const list = this.r.pulseByJn.get(rec.jn);
+        if (!list) continue;
+        const n = Math.min(rec.arms.length, MAX_ARMS);
+        const find = (x: RouteJArm): number => {
+          for (let i = 0; i < n; i++) {
+            const a = rec.arms[i];
+            if (a.chain === x.chain && a.slot === x.slot && a.dir === x.dir) {
+              return i;
+            }
+          }
+          return -1;
+        };
+        // Arm-index pair keys within this record (bandPairKey's shape,
+        // on record arm indexes; a one-arm band keys on its arm alone).
+        const pairOf = (ia: number, ib: number): string =>
+          ib < 0 ? `${ia}|` : ia < ib ? `${ia}|${ib}` : `${ib}|${ia}`;
+        const pairs = new Set<string>();
+        for (const r of rec.routes) pairs.add(pairOf(r.ia, r.ib));
+        const bands: JRec["pulseBands"] = [];
+        for (const p of list) {
+          const ia = find(p.a);
+          const ib = find(p.b);
+          if (ia < 0 || ib < 0 || ia === ib) continue;
+          const key = pairOf(ia, ib);
+          const shared = rec.routes.some((r) => pairOf(r.ia, r.ib) === key);
+          if (!shared) {
+            if (pairs.has(key)) continue;
+            pairs.add(key);
+          }
+          bands.push({
+            ia,
+            ib,
+            d: 0,
+            m: 0.5 * fillHalf,
+            distJ: p.distJ,
+            inward: p.inward,
+            hovered: p.hovered,
+            shared,
+          });
+        }
+        if (pairs.size <= MAX_ROUTES) rec.pulseBands = bands;
       }
     }
     // Nearest under-gap near edge ahead along an arm (mid-lane extents of
@@ -1708,16 +1882,19 @@ export class Joinery {
         if (rec.rb < 0) continue;
         const n = Math.min(rec.arms.length, MAX_ARMS);
         const routed = rec.routes.length > 0;
+        const banded = rec.pulseBands.length > 0;
         // K127: a fully traveled record's base reads the composed rows;
         // K169: while it fades in, it still blends from the untraveled ones
-        // (K191: and while it fades out, down to them).
-        const untrav = routed && (!this.r.fullJn.has(rec.jn) || this.r.webFade.has(rec.jn));
+        // (K191: and while it fades out, down to them). K1139 S3b: a
+        // pulse-banded record's second row is its QUIET row and is always
+        // written (its base and band material read it at any fade level).
+        const untrav = (routed && (!this.r.fullJn.has(rec.jn) || this.r.webFade.has(rec.jn))) || banded;
         for (let i = 0; i < n; i++) {
           const a = rec.arms[i];
           const ab = (rec.rb + 2 + i * armStride) * 4;
           const sMax = Math.max(
             1e-4,
-            Math.min(a.domain, routed ? bandEnd(rec, a) : profArcAt(a.ps, rec.rMax))
+            Math.min(a.domain, routed || banded ? bandEnd(rec, a) : profArcAt(a.ps, rec.rMax))
           );
           const step = sMax / (STRIP_W - 1);
           const slope = rd.data[ab + 1];
@@ -1729,47 +1906,55 @@ export class Joinery {
             a.slot,
             a.dir * step * slope
           );
-          // A routed record's arms also get their UNTRAVELED row (row + 1).
+          // A routed record's arms also get their UNTRAVELED row (row + 1);
+          // a pulse-banded record's is its QUIET row instead (mode 2).
           if (untrav) {
-            this.writeStripRow(a.chain, a.arc0, a.dir * step, step, a.slot, a.dir * step * slope, 1);
+            this.writeStripRow(a.chain, a.arc0, a.dir * step, step, a.slot, a.dir * step * slope, banded ? 2 : 1);
           }
           rd.data[ab + 2] = row;
           rd.data[ab + 3] = 1 / step;
         }
-        if (!routed) continue;
+        if (!routed && !banded) continue;
         // ROUTE BLOCKS (junction_field.ts ROUTES): per band R0 = (nVerts, m,
-        // armA, armB or -1), then its centerline (x, y, tau, 0) - arm A's
+        // armA, armB or -1), then its centerline (x, y, tau, shift) - arm A's
         // own centerline in from bandEnd to the turn's start d, the turn,
         // arm B's out to bandEnd (tau = -arc along A, +arc along B); a
-        // one-arm band (the head) runs in to the joint (tau 0 there).
+        // one-arm band (the head) runs in to the joint (tau 0 there). Gold
+        // bands keep that tau (shift 0); a PULSE band's turn tau is made
+        // ARC-TRUE below (junction_routes.ts arcTrueTau: rescaled in
+        // proportion to the turn's true arc, still meeting the arms at
+        // +-d) and its shift carries the strip-arc offset, so the arms'
+        // material stays where the ribbon has it. After the gold blocks: the
+        // pulse count texel, then per pulse band R0, R1 = (distJ, flags,
+        // shared, 0) and its centerline the same way.
         const routeBase = cursor;
         let nr = 0;
+        const scratch = this.routeScratch;
+        // Centerline points of `arm` from arc s0 to s1 in at most `cap`
+        // segments of ~0.08 world, tau = sign * arc; each end included
+        // on request. Vertex budget: 24 + 15 (the turn) + 24, or 41.
+        const along = (
+          arm: JArm,
+          s0: number,
+          s1: number,
+          sign: number,
+          cap: number,
+          incStart: boolean,
+          incEnd: boolean
+        ): void => {
+          const len = Math.abs(s1 - s0);
+          const segs = len < 1e-4 ? 0 : Math.min(cap, Math.max(1, Math.ceil(len / 0.08)));
+          const k0 = incStart ? 0 : 1;
+          const k1 = incEnd ? segs : segs - 1;
+          for (let k = k0; k <= k1; k++) {
+            const s = segs > 0 ? s0 + ((s1 - s0) * k) / segs : s1;
+            armAt(arm, s, scratch, 0);
+            pts.push(scratch[0], scratch[1], sign * s);
+          }
+        };
         for (const r of rec.routes) {
           const A = rec.arms[r.ia];
           pts.length = 0;
-          const scratch = this.routeScratch;
-          // Centerline points of `arm` from arc s0 to s1 in at most `cap`
-          // segments of ~0.08 world, tau = sign * arc; each end included
-          // on request. Vertex budget: 24 + 15 (the turn) + 24, or 41.
-          const along = (
-            arm: JArm,
-            s0: number,
-            s1: number,
-            sign: number,
-            cap: number,
-            incStart: boolean,
-            incEnd: boolean
-          ): void => {
-            const len = Math.abs(s1 - s0);
-            const segs = len < 1e-4 ? 0 : Math.min(cap, Math.max(1, Math.ceil(len / 0.08)));
-            const k0 = incStart ? 0 : 1;
-            const k1 = incEnd ? segs : segs - 1;
-            for (let k = k0; k <= k1; k++) {
-              const s = segs > 0 ? s0 + ((s1 - s0) * k) / segs : s1;
-              armAt(arm, s, scratch, 0);
-              pts.push(scratch[0], scratch[1], sign * s);
-            }
-          };
           if (r.ib >= 0) {
             const B = rec.arms[r.ib];
             along(A, Math.max(bandEnd(rec, A), r.d), r.d, -1, 24, true, false);
@@ -1778,6 +1963,7 @@ export class Joinery {
           } else {
             along(A, bandEnd(rec, A), 0, -1, 40, true, true);
           }
+          const shifts = null; // gold bands keep routeCubic's tau (K1139 S3b task 2)
           const nv = Math.min(pts.length / 3, MAX_ROUTE_VERTS);
           if (nv < 2) continue;
           rd.ensure(cursor + 1 + nv);
@@ -1791,7 +1977,7 @@ export class Joinery {
             D[o + 4 + k * 4] = pts[k * 3];
             D[o + 5 + k * 4] = pts[k * 3 + 1];
             D[o + 6 + k * 4] = pts[k * 3 + 2];
-            D[o + 7 + k * 4] = 0;
+            D[o + 7 + k * 4] = shifts ? shifts[k] : 0;
           }
           cursor += 1 + nv;
           nr++;
@@ -1799,6 +1985,52 @@ export class Joinery {
         const D = rd.data;
         D[rec.rb * 4 + 3] = routeBase;
         D[rec.rb * 4 + 7] = nr;
+        {
+          // PULSE BLOCKS: the count texel (0 when the record is routed
+          // but not pulse-banded: the shader walks here either way),
+          // then per band R0, R1 and its arc-true centerline (built
+          // first: the count precedes them).
+          const built: Array<{ pb: (typeof rec.pulseBands)[number]; nv: number; shifts: number[]; line: number[] }> = [];
+          for (const pb of rec.pulseBands) {
+            const A = rec.arms[pb.ia];
+            const B = rec.arms[pb.ib];
+            pts.length = 0;
+            along(A, Math.max(bandEnd(rec, A), pb.d), pb.d, -1, 24, true, false);
+            cornerCubic(A, B, pb.d, pts);
+            along(B, pb.d, Math.max(bandEnd(rec, B), pb.d), 1, 24, false, true);
+            const shifts = arcTrueTau(pts, pb.d);
+            const nv = Math.min(pts.length / 3, MAX_ROUTE_VERTS);
+            if (nv < 2) continue;
+            built.push({ pb, nv, shifts, line: pts.slice(0, nv * 3) });
+          }
+          let need = 1;
+          for (const b of built) need += 2 + b.nv;
+          rd.ensure(cursor + need);
+          const D2 = rd.data;
+          D2[cursor * 4] = built.length;
+          D2[cursor * 4 + 1] = 0;
+          D2[cursor * 4 + 2] = 0;
+          D2[cursor * 4 + 3] = 0;
+          cursor += 1;
+          for (const b of built) {
+            const o = cursor * 4;
+            D2[o] = b.nv;
+            D2[o + 1] = b.pb.m;
+            D2[o + 2] = b.pb.ia;
+            D2[o + 3] = b.pb.ib;
+            D2[o + 4] = b.pb.distJ;
+            D2[o + 5] = (b.pb.inward ? 1 : 0) + (b.pb.hovered ? 2 : 0);
+            D2[o + 6] = b.pb.shared ? 1 : 0;
+            D2[o + 7] = 0;
+            for (let k = 0; k < b.nv; k++) {
+              D2[o + 8 + k * 4] = b.line[k * 3];
+              D2[o + 9 + k * 4] = b.line[k * 3 + 1];
+              D2[o + 10 + k * 4] = b.line[k * 3 + 2];
+              D2[o + 11 + k * 4] = b.shifts[k];
+            }
+            cursor += 2 + b.nv;
+          }
+        }
       }
       this.r.junctionCutEntries = juncEntries; // K846
       const tb = stripTable();
@@ -1985,6 +2217,7 @@ export class Joinery {
         // Nothing of a gated joint draws this rebuild, its bands included
         // (K76 2b: nor of a joint the thread reveal hides).
         rec.routes.length = 0;
+        rec.pulseBands.length = 0;
         continue;
       }
       fm = layerFor(rec);
@@ -2278,20 +2511,21 @@ export class Joinery {
     // base with the bands over it) decides those pixels: the arms' own
     // gold ribbons met in an L whose outer corner squared off the turn.
     for (const rec of recs) {
-      if (rec.routes.length === 0 || rec.rb < 0) continue;
+      if ((rec.routes.length === 0 && rec.pulseBands.length === 0) || rec.rb < 0) continue;
       const arms = rec.arms;
       const n = Math.min(arms.length, MAX_ARMS);
       const rims = rimsOf.get(rec) ?? null;
       // Per arm: the largest turn start of a band on it (-1: no band).
       const dArm = new Float64Array(n).fill(-1);
       let dMax = 0;
-      for (const r of rec.routes) {
+      // One band's corner (gold routes and pulse bands alike, K1139 S3b).
+      const cornerOf = (r: { ia: number; ib: number; d: number; m: number }): void => {
         if (r.ib < 0) {
           // The head: a one-arm band in to the joint center.
           r.d = 0;
           r.m = 0.5 * fillHalf;
           dArm[r.ia] = Math.max(dArm[r.ia], 0);
-          continue;
+          return;
         }
         const A = arms[r.ia];
         const B = arms[r.ib];
@@ -2324,7 +2558,9 @@ export class Joinery {
         dArm[r.ia] = Math.max(dArm[r.ia], d);
         dArm[r.ib] = Math.max(dArm[r.ib], d);
         if (d > dMax) dMax = d;
-      }
+      };
+      for (const r of rec.routes) cornerOf(r);
+      for (const r of rec.pulseBands) cornerOf(r);
       setFanMask(rec.mask);
       const jointTop = arms.some(armTop);
       for (let i = 0; i < n; i++) {

@@ -1,0 +1,15 @@
+# K1139 S3b final record: same-state A/B (master 5551 vs build 5550,
+# 0 px outside banded records, build/build control first), the S3b
+# strips into out/s3b/s3b/, and the look sheets (today above S3b).
+$env:K1139_HOST = "http://127.0.0.1:5550"
+$env:K1139_INJECT = $null
+node ab_s3b.mjs http://127.0.0.1:5551 out/s3b/ab
+node strips.mjs fork out/s3b/s3b/fork 8 60
+node strips.mjs cross out/s3b/s3b/cross 8 60
+node strips.mjs src out/s3b/s3b/src 8 60
+node strips.mjs four out/s3b/s3b/four 8 60
+node strips.mjs pre4 out/s3b/s3b/x4 8 60 "&pr=8"
+node sheet.mjs out/doc/s3b_cross.png 8 out/s3b/today/cross/cross_t0_n.png out/s3b/today/cross/cross_t1_n.png out/s3b/today/cross/cross_t2_n.png out/s3b/today/cross/cross_t3_n.png out/s3b/today/cross/cross_t4_n.png out/s3b/today/cross/cross_t5_n.png out/s3b/today/cross/cross_t6_n.png out/s3b/today/cross/cross_t7_n.png out/s3b/s3b/cross/cross_t0_n.png out/s3b/s3b/cross/cross_t1_n.png out/s3b/s3b/cross/cross_t2_n.png out/s3b/s3b/cross/cross_t3_n.png out/s3b/s3b/cross/cross_t4_n.png out/s3b/s3b/cross/cross_t5_n.png out/s3b/s3b/cross/cross_t6_n.png out/s3b/s3b/cross/cross_t7_n.png
+node sheet.mjs out/doc/s3b_src.png 8 out/s3b/today/src/src_t0_n.png out/s3b/today/src/src_t1_n.png out/s3b/today/src/src_t2_n.png out/s3b/today/src/src_t3_n.png out/s3b/today/src/src_t4_n.png out/s3b/today/src/src_t5_n.png out/s3b/today/src/src_t6_n.png out/s3b/today/src/src_t7_n.png out/s3b/s3b/src/src_t0_n.png out/s3b/s3b/src/src_t1_n.png out/s3b/s3b/src/src_t2_n.png out/s3b/s3b/src/src_t3_n.png out/s3b/s3b/src/src_t4_n.png out/s3b/s3b/src/src_t5_n.png out/s3b/s3b/src/src_t6_n.png out/s3b/s3b/src/src_t7_n.png
+node sheet.mjs out/doc/s3b_x4.png 8 out/s3b/today/x4/pre4_t0_n.png out/s3b/today/x4/pre4_t1_n.png out/s3b/today/x4/pre4_t2_n.png out/s3b/today/x4/pre4_t3_n.png out/s3b/today/x4/pre4_t4_n.png out/s3b/today/x4/pre4_t5_n.png out/s3b/today/x4/pre4_t6_n.png out/s3b/today/x4/pre4_t7_n.png out/s3b/s3b/x4/pre4_t0_n.png out/s3b/s3b/x4/pre4_t1_n.png out/s3b/s3b/x4/pre4_t2_n.png out/s3b/s3b/x4/pre4_t3_n.png out/s3b/s3b/x4/pre4_t4_n.png out/s3b/s3b/x4/pre4_t5_n.png out/s3b/s3b/x4/pre4_t6_n.png out/s3b/s3b/x4/pre4_t7_n.png
+$env:K1139_HOST = $null

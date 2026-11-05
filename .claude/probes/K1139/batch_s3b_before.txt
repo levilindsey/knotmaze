@@ -1,0 +1,28 @@
+# K1139 S3b before record: today's master (7474d09b) on 5550, before any change.
+# Stands verbatim from strips.mjs STANDS / bands.mjs (query
+# k111&am=instant&fw=0&snd=none&phw=0; fork [0], cross [0,246,82,83,199],
+# src those plus 150, four [0,247,248,69,72,73,95,140,180,176], x4 = pre4
+# plus &pr=8) - the only change from the source is the host's port (5550).
+$env:K1139_HOST = "http://127.0.0.1:5550"
+$env:K1139_INJECT = $null
+node bands.mjs fork out/s3b/today
+node bands.mjs cross out/s3b/today
+node bands.mjs src out/s3b/today
+node bands.mjs four out/s3b/today
+node bands.mjs x4 out/s3b/today
+node strips.mjs fork out/s3b/today/fork 8 60
+node strips.mjs cross out/s3b/today/cross 8 60
+node strips.mjs src out/s3b/today/src 8 60
+node strips.mjs four out/s3b/today/four 8 60
+node strips.mjs pre4 out/s3b/today/x4 8 60 "&pr=8"
+node p8live.mjs fork
+node p8live.mjs cross
+node p8live.mjs src
+node p8live.mjs four
+node p8live.mjs x4
+node fan.mjs fork out/s3b/today/fan_fork.json p8
+node fan.mjs cross out/s3b/today/fan_cross.json p8
+node fan.mjs src out/s3b/today/fan_src.json p8
+node fan.mjs four out/s3b/today/fan_four.json p8
+node fan.mjs x4 out/s3b/today/fan_x4.json p8
+$env:K1139_HOST = $null

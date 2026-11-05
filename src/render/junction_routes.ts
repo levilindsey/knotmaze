@@ -341,6 +341,51 @@ export function routeCorner(
 // (4/3) tan(theta/4) R for the turn angle theta (0 = straight through),
 // with R from the chord. Pushes steps + 1 points (x, y, tau), t = 0..1,
 // tau running linearly -d -> +d.
+// K1139 S3b: make a built pulse band's tau ARC-TRUE in place. routeCubic
+// runs tau linearly in its Bezier parameter -d..+d across the turn, while
+// the cubic's true arc runs about 0.79 of that span at 90 degrees and is
+// not uniform in the parameter, so a crest phased by dG = distJ + tau
+// (paint_math.ts kPulseBandV) would bunch and stretch through the turn.
+// Here the turn's tau is rescaled in proportion to its true arc: tau
+// still meets the arms at +-d (the arm stretches keep tau = -+arc, so
+// sibling bands over one arm carry the same crest there and the crest
+// meets each arm's own at the turn's ends), but equal arc steps inside
+// the turn take equal tau steps (plan 2.2: "rescaled so both ends meet
+// the arms' distances"; mock.mjs draws option A the same way). Returns
+// the per-point strip-arc shift |tau before| - |tau after|: the arm arc
+// a shader samples for the band point at tau is |tau| + shift, so the
+// arms' material (gold paint included) stays where the ribbon has it.
+// Joinery applies this to pulse bands only; gold bands keep
+// routeCubic's tau (shift 0), banded record or not.
+export function arcTrueTau(pts: number[], d: number): number[] {
+  const n = pts.length / 3;
+  const shifts = new Array<number>(n).fill(0);
+  if (!(d > 1e-9) || n < 2) return shifts;
+  // The turn's points are the contiguous run with |old tau| <= d (the
+  // arm stretches sit outside it, at |tau| = their arc from the joint).
+  let cs = -1;
+  let ce = -1;
+  for (let i = 0; i < n; i++) {
+    if (Math.abs(pts[i * 3 + 2]) <= d + 1e-9) {
+      if (cs < 0) cs = i;
+      ce = i;
+    }
+  }
+  if (cs < 0 || ce <= cs) return shifts;
+  const cum = new Float64Array(ce - cs + 1);
+  for (let i = cs + 1; i <= ce; i++) {
+    cum[i - cs] = cum[i - cs - 1] + Math.hypot(pts[i * 3] - pts[(i - 1) * 3], pts[i * 3 + 1] - pts[(i - 1) * 3 + 1]);
+  }
+  const total = cum[ce - cs];
+  if (!(total > 1e-12)) return shifts;
+  for (let i = cs; i <= ce; i++) {
+    const tau = -d + 2 * d * (cum[i - cs] / total);
+    shifts[i] = Math.abs(pts[i * 3 + 2]) - Math.abs(tau);
+    pts[i * 3 + 2] = tau;
+  }
+  return shifts;
+}
+
 export function routeCubic(
   pax: number,
   pay: number,

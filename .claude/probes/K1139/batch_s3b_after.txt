@@ -1,0 +1,26 @@
+# K1139 S3b after record: the S3b build on 5550 (master for A/B on 5551).
+# Same stands verbatim as batch_s3b_before.txt; fan.mjs in full mode
+# (P8 in the fan + P1/P3/P4/P5 through the fan).
+$env:K1139_HOST = "http://127.0.0.1:5550"
+$env:K1139_INJECT = $null
+node bands.mjs fork out/s3b/after
+node bands.mjs cross out/s3b/after
+node bands.mjs src out/s3b/after
+node bands.mjs four out/s3b/after
+node bands.mjs x4 out/s3b/after
+node strips.mjs fork out/s3b/after/fork 8 60
+node strips.mjs cross out/s3b/after/cross 8 60
+node strips.mjs src out/s3b/after/src 8 60
+node strips.mjs four out/s3b/after/four 8 60
+node strips.mjs pre4 out/s3b/after/x4 8 60 "&pr=8"
+node p8live.mjs fork
+node p8live.mjs cross
+node p8live.mjs src
+node p8live.mjs four
+node p8live.mjs x4
+node fan.mjs fork out/s3b/after/fan_fork.json full
+node fan.mjs cross out/s3b/after/fan_cross.json full
+node fan.mjs src out/s3b/after/fan_src.json full
+node fan.mjs four out/s3b/after/fan_four.json full
+node fan.mjs x4 out/s3b/after/fan_x4.json full
+$env:K1139_HOST = $null

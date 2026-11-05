@@ -91,6 +91,26 @@ function paintRangesEqual(
   return true;
 }
 
+// K1139 S3b: one pulse band as the fabric declares it (pulse_path.ts
+// PulseBandSpec as a PaintRoute at its vertex): the route, its vertex's
+// drawn distance distJ, its direction (inward = the light runs toward
+// you there) and whether either of its arms is hovered.
+export interface PulseBandDecl {
+  route: PaintRoute;
+  distJ: number;
+  inward: boolean;
+  hovered: boolean;
+}
+// A pulse band resolved against the static junction arms (ResolvedRoute's
+// shape plus its light), grouped per junction in pulseByJn.
+export interface ResolvedPulseBand {
+  a: RouteJArm;
+  b: RouteJArm;
+  distJ: number;
+  inward: boolean;
+  hovered: boolean;
+}
+
 export class PaintState {
   readonly r: RibbonRenderer;
   constructor(r: RibbonRenderer) {
@@ -115,6 +135,8 @@ export class PaintState {
   private get junctionArms() { return this.r.junctionArms; }
   private get routesByJn() { return this.r.routesByJn; }
   private set routesByJn(v: Map<number, ResolvedRoute[]>) { this.r.routesByJn = v; }
+  private get pulseByJn() { return this.r.pulseByJn; }
+  private set pulseByJn(v: Map<number, ResolvedPulseBand[]>) { this.r.pulseByJn = v; }
   private get routedArms() { return this.r.routedArms; }
   private set routedArms(v: Set<string>) { this.r.routedArms = v; }
   private get fullJn() { return this.r.fullJn; }
@@ -194,6 +216,9 @@ export class PaintState {
   /** @internal ribbon */ paintClock = 0;
   /** @internal ribbon */ paintRoutes: PaintRoute[] = [];
   /** @internal ribbon */ paintTraveled: PaintRoute[] = [];
+  // K1139 S3b: the declared pulse bands (setPaint), resolved per junction
+  // into the façade's pulseByJn by resolvePulseRoutes.
+  /** @internal ribbon */ paintPulseBands: PulseBandDecl[] = [];
   webFade = new WebFade();
   /** @internal ribbon */ sectionNoise: ((x: number, y: number) => number) | null = null;
   // Texels the last paint declaration change uploaded (probes).
@@ -475,17 +500,20 @@ export class PaintState {
     pulses: PulseArm[],
     caps: PaintCap[],
     routes: PaintRoute[] = [],
-    traveled: PaintRoute[] = []
+    traveled: PaintRoute[] = [],
+    pulseBands: PulseBandDecl[] = []
   ): void {
     this.paintSpans = spans;
     this.paintPulses = pulses;
     this.paintCaps = caps;
-    const rk = JSON.stringify(routes) + "|" + JSON.stringify(traveled);
+    const rk = JSON.stringify(routes) + "|" + JSON.stringify(traveled) + "|" + JSON.stringify(pulseBands);
     if (rk !== this.routeKey) {
       this.routeKey = rk;
       this.paintRoutes = routes;
       this.paintTraveled = traveled;
+      this.paintPulseBands = pulseBands;
       this.resolveRoutes();
+      this.resolvePulseRoutes();
     }
     // The routes key the caps too: a routed junction drops its caps
     // (unless fully traveled, K127).
@@ -686,6 +714,54 @@ export class PaintState {
     // K169: a newly full web starts its fade in; K191: one that stopped being
     // full fades out, if it still holds a route (perJn) to blend over.
     this.webFade.retarget(this.fullJn, this.paintClock, perJn);
+  }
+
+  // K1139 S3b: resolve the declared pulse bands against the static
+  // junction arms (resolveRoutes' arm tables), grouped per junction for
+  // joinery's records. No traveled/full bookkeeping: pulse bands never
+  // drop caps or fade a web (that is the gold routes' business). A band
+  // whose arms resolve to two different junctions, or twice to the same
+  // arm, is dropped; duplicates of a pair keep the first.
+  private resolvePulseRoutes(): void {
+    this.pulseByJn = new Map();
+    if (this.paintPulseBands.length === 0 || !this.junctionArms) return;
+    if (!this.armJunction) {
+      const map = new Map<string, number>();
+      for (let ji = 0; ji < this.junctionArms.length; ji++) {
+        for (const a of this.junctionArms[ji].arms) {
+          map.set(a.chain + ":" + a.slot + ":" + a.dir, ji);
+        }
+      }
+      this.armJunction = map;
+    }
+    const aj = this.armJunction;
+    const perJn = new Map<number, ResolvedPulseBand[]>();
+    const seen = new Set<string>();
+    for (const p of this.paintPulseBands) {
+      const r = p.route;
+      const slotA = this.routeArmSlot(r.chain, r.ctrl);
+      const ji = aj.get(r.chain + ":" + slotA + ":" + r.dir);
+      if (ji === undefined || r.outChain === undefined || r.outCtrl === undefined || r.outDir === undefined) continue;
+      const slotB = this.routeArmSlot(r.outChain, r.outCtrl);
+      const jk = aj.get(r.outChain + ":" + slotB + ":" + r.outDir);
+      if (jk !== ji) continue;
+      if (r.chain === r.outChain && slotA === slotB && r.dir === r.outDir) continue;
+      const key =
+        ji + "|" + [r.chain + ":" + slotA + ":" + r.dir, r.outChain + ":" + slotB + ":" + r.outDir].sort().join("|");
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const band: ResolvedPulseBand = {
+        a: { chain: r.chain, slot: slotA, dir: r.dir },
+        b: { chain: r.outChain, slot: slotB, dir: r.outDir as 1 | -1 },
+        distJ: p.distJ,
+        inward: p.inward,
+        hovered: p.hovered,
+      };
+      const list = perJn.get(ji);
+      if (list) list.push(band);
+      else perJn.set(ji, [band]);
+    }
+    this.pulseByJn = perJn;
   }
 
   // The light per-frame paint pass: advances the pulse clock and rewrites

@@ -1465,7 +1465,8 @@ export function kPulseCrest(
   dG: number,
   inward: boolean,
   hovered: boolean,
-  endWin: number
+  endWin: number,
+  bumpScale = 1
 ): number {
   const C = PAINT_CONST;
   if (hovered) return endWin * U.uKPaint[3] * kReachWin(U, dG);
@@ -1474,7 +1475,7 @@ export function kPulseCrest(
   const ph = raw - s * Math.floor(raw / s);
   const dist = Math.min(ph, s - ph);
   const dC = Math.max(0, dG - (ph <= s - ph ? ph : ph - s));
-  const bump = Math.max(0, 1 - dist / C.CREST_WIDTH) * Math.min(1, dC / C.CREST_RAMP);
+  const bump = Math.max(0, 1 - dist / C.CREST_WIDTH) * Math.min(1, dC / C.CREST_RAMP) * bumpScale;
   const floor =
     (C.PULSE_FLOOR + C.PULSE_CORE_BOOST * Math.max(0, 1 - dG / C.PULSE_CORE_RADIUS)) *
     Math.max(0, 1 - dG / C.PULSE_FLOOR_REACH);
@@ -1505,7 +1506,8 @@ export function kPulseV(
 // no end window: at tau's ends it meets the arms where their own value
 // has window 1 (the parent arm carries through, the child's window at
 // its junction end), so the field is continuous across the fan by
-// construction. CPU mirror only until S3b's fan shader calls its twin.
+// construction. S3b: the fan shader calls this function's GLSL twin
+// (PULSE_CREST_GLSL kPulseCrest) on the band at distJ + tau.
 export function kPulseBandV(
   U: KUniforms,
   distJ: number,
@@ -1561,6 +1563,10 @@ function kCov(sd: number, px: number): number {
 }
 
 // GLSL twin: kPaintAt - the declaration's paint at (ctrl, arc) of chain c.
+// K1139 S3b: quiet (the junction arm strips' third row mode, arm_strip.ts)
+// keeps the crest's floor and any hover but drops the crest trains
+// (bumpScale 0), so a pulse-banded fan's base and band material carry no
+// radial bars under the band; the fan shader draws the crest itself.
 export function kPaintAt(
   D: KData,
   U: KUniforms,
@@ -1568,7 +1574,8 @@ export function kPaintAt(
   ctrl: number,
   arc: number,
   px: number,
-  out: KPaintState
+  out: KPaintState,
+  quiet = false
 ): KPaintState {
   out.p = 0;
   out.band = false;
@@ -1640,7 +1647,14 @@ export function kPaintAt(
       } else {
         d = dirPos ? arc - aJ : aJ - arc;
       }
-      const v = kPulseV(U, d, span, (flags & ITEM_FLAG.INWARD) !== 0, (flags & ITEM_FLAG.HOVER) !== 0, P[o + 3], P[o + 6] > 0.5);
+      const inward = (flags & ITEM_FLAG.INWARD) !== 0;
+      const hovered = (flags & ITEM_FLAG.HOVER) !== 0;
+      const cont = P[o + 6] > 0.5;
+      const v = quiet
+        ? d < 0 || d > span
+          ? 0
+          : kPulseCrest(U, P[o + 3] + d, inward, hovered, cont ? 1 : Math.min(1, Math.max(0, (span - d) / PAINT_CONST.PULSE_END_WINDOW)), 0)
+        : kPulseV(U, d, span, inward, hovered, P[o + 3], cont);
       if (v > PAINT_CONST.PULSE_MIN_V) {
         out.band = true;
         out.v = v;
