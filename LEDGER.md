@@ -519,15 +519,15 @@ Next free ID: K1184.
   - owner: nobody since 2026-11-04 12:02 (16E done; runs L, F and G queued as Muse chain runs 16L, 16F and 16G, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
   - branch: mainline; last commit: `1a02e2b8`
   - evidence: `docs/design/K1178_muse_batch16_run_a.md`; the chain in `.claude/probes/K1053/` (queue.txt, chain.log)
-  - next: Run E done; next Run L (K1179 S1c)
+  - next: Run L done; next Run F (K1260 batch-2 closeout review)
   - brief: `docs/design/K1178_muse_batch16.md`
 - **K1179** · Thread geometry (Levi 11-04: rethink how thread bodies, junction rounds and gaps are built, maybe
   as a skin on the thread centres). Review (`docs/design/K1179_geometry_review.md`): keep threads and physics,
   one per-pixel outline rule for both looks, no simulated skin. S1: K1178 Run I (fail); S1b: Run K (fail); S1c: Run L.
   - owner: nobody since 2026-11-04 12:02 (S1c queued as Muse chain run 16L, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `755c44eb`
+  - branch: mainline; last commit: `8df07b54`
   - evidence: docs/design/K1179_geometry_review.md; docs/design/K1179_spike.md; docs/design/K1179_s1b.md; .claude/probes/K1179/
-  - next: S1c (K1178 Run L): the exact outline, criterion 1v, a closed-form solve of master's rule and its cost; then Claude reviews it
+  - next: K1179 S1c done (8df07b54): exact/closed on master's rule, verdict fail (branch definition + cost); rethink must answer, S2 not next. S1c: 1v fails on master's rule (63 master, 91 closed), criterion 2 passes exactly, cost p95 23-59 ms vs 0.75 ms. Rethink: (1) margin crease, (2) sheet-independent branch definition, (3) per-pixel distance question (review S2 item 2). Record: docs/design/K1179_s1c.md
   - brief: `docs/design/K1178_muse_batch16.md` (Run L)
 
 ## Next, in order
