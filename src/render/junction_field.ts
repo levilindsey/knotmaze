@@ -385,9 +385,16 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
     base += 1 + nv;
   }
   // K1139 S3b: the pulse bands. Each block is R0 = (nVerts, m, armA,
-  // armB), R1 = (distJ, flags, shared, 0) - flags = inward + 2 *
-  // hovered, shared = its pair already has a gold block above - then
-  // its arc-true centerline verts (x, y, tau, strip-arc shift). The
+  // armB), R1 = (distJ, flags, shared, code) - flags = inward + 2 *
+  // hovered, shared = its pair already has a gold block above, code =
+  // kA + 64 kB + 4096 mode (pulsePivot) - R2 = the pivot P homogeneous
+  // (X, Y, w, 0) and R3 = the side line (a, b, c, 0), both relative to
+  // the first vert, then its arc-true centerline verts (x, y, tau,
+  // strip-arc shift). Stage 2 (a): with mode 1 a band's tau and shift
+  // are the centreline's where the ray from P through the pixel meets it
+  // (kA..kB), beyond the end rays the nearer L-end's projected along its
+  // segment: continuous wherever the cover is above 0. Mode 0 keeps the
+  // nearest foot. The cover stays the true distance's. The
   // crest is the arms' own field at dG = distJ + tau (PULSE_CREST_GLSL),
   // whitened over the arms' QUIET material: the quiet rows already wear
   // the crest's floor, so only the trains' share whitens here and the
@@ -412,14 +419,33 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
     if (r >= np) break;
     vec4 r0 = jAt(pb);
     vec4 r1 = jAt(pb + 1);
+    vec4 r2 = jAt(pb + 2);
+    vec4 r3 = jAt(pb + 3);
     int nv = int(r0.x + 0.5);
+    int ic = int(r1.w + 0.5);
+    int kA = ic - (ic / 64) * 64;
+    int kB = ic / 64 - (ic / 4096) * 64;
+    bool piv = ic >= 4096;
     float best = 1e20;
     float tau = 0.0;
     float shift = 0.0;
-    vec4 q0 = jAt(pb + 2);
+    vec4 v0 = jAt(pb + 4);
+    vec2 pr = p - v0.xy;
+    vec2 a0 = vec2(0.0);
+    // s = w cross(v - v0, pr) + cross(XY, v - v0 - pr) = w cross(v - P,
+    // p - P): which side of the ray from P a vertex lies on.
+    float s0 = r2.y * pr.x - r2.x * pr.y;
+    bool hit = false;
+    float tauP = 0.0;
+    float shiftP = 0.0;
+    vec4 eA0 = v0;
+    vec4 eA1 = v0;
+    vec4 eB0 = v0;
+    vec4 eB1 = v0;
+    vec4 q0 = v0;
     for (int k = 0; k < ${MAX_ROUTE_VERTS - 1}; k++) {
       if (k + 1 >= nv) break;
-      vec4 q1 = jAt(pb + 3 + k);
+      vec4 q1 = jAt(pb + 5 + k);
       vec2 d = q1.xy - q0.xy;
       vec2 w = p - q0.xy;
       float l2 = dot(d, d);
@@ -431,7 +457,42 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
         tau = mix(q0.z, q1.z, u);
         shift = mix(q0.w, q1.w, u);
       }
+      vec2 a1 = q1.xy - v0.xy;
+      vec2 e1 = a1 - pr;
+      float s1 = r2.z * (a1.x * pr.y - a1.y * pr.x) + (r2.x * e1.y - r2.y * e1.x);
+      if (k == kA) {
+        eA0 = q0;
+        eA1 = q1;
+      }
+      if (k + 1 == kB) {
+        eB0 = q0;
+        eB1 = q1;
+      }
+      if (piv && !hit && k >= kA && k < kB && s0 != s1 &&
+          ((s0 <= 0.0 && s1 >= 0.0) || (s0 >= 0.0 && s1 <= 0.0))) {
+        float us = s0 / (s0 - s1);
+        vec2 qh = mix(a0, a1, us);
+        if (dot(r2.z * qh - r2.xy, r2.z * pr - r2.xy) > 0.0) {
+          hit = true;
+          tauP = mix(q0.z, q1.z, us);
+          shiftP = mix(q0.w, q1.w, us);
+        }
+      }
       q0 = q1;
+      a0 = a1;
+      s0 = s1;
+    }
+    if (piv) {
+      if (hit) {
+        tau = tauP;
+        shift = shiftP;
+      } else if (dot(r3.xy, pr) + r3.z < 0.0) {
+        tau = eA0.z + dot(p - eA0.xy, normalize(eA1.xy - eA0.xy));
+        shift = eA0.w;
+      } else {
+        tau = eB1.z + dot(p - eB1.xy, normalize(eB1.xy - eB0.xy));
+        shift = eB1.w;
+      }
     }
     float cov = clamp((reach - sqrt(best)) / pxW, 0.0, 1.0);
     if (cov > 0.0) {
@@ -448,7 +509,7 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
         bR1 = r1;
       }
     }
-    pb += 2 + nv;
+    pb += 4 + nv;
   }
   if (haveBand) {
     bool inw = bR1.y == 1.0 || bR1.y == 3.0;

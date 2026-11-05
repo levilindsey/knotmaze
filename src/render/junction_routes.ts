@@ -372,18 +372,233 @@ export function arcTrueTau(pts: number[], d: number): number[] {
     }
   }
   if (cs < 0 || ce <= cs) return shifts;
+  const step = (i: number): number =>
+    Math.hypot(pts[i * 3] - pts[(i - 1) * 3], pts[i * 3 + 1] - pts[(i - 1) * 3 + 1]);
+  // K1139 Stage 2: an arm's material can be bunched where it meets the
+  // turn (cross ji 33: arm B's arc runs 0.12 -> 0.20 over 0.007 world), a
+  // tau step many pixels steep inside one pixel. The run takes in each
+  // such arm vertex next to it (a tau step over 1.5x its length), so the
+  // rescale spreads it over the turn; tau still meets the arm stretch at
+  // the run's ends.
+  const steep = (i: number): boolean => Math.abs(pts[i * 3 + 2] - pts[(i - 1) * 3 + 2]) > 1.5 * step(i) + 1e-6;
+  while (cs > 0 && steep(cs)) cs--;
+  while (ce + 1 < n && steep(ce + 1)) ce++;
+  const t0 = pts[cs * 3 + 2];
+  const t1 = pts[ce * 3 + 2];
+  const plain = Math.abs(t0 + d) < 1e-9 && Math.abs(t1 - d) < 1e-9;
   const cum = new Float64Array(ce - cs + 1);
   for (let i = cs + 1; i <= ce; i++) {
-    cum[i - cs] = cum[i - cs - 1] + Math.hypot(pts[i * 3] - pts[(i - 1) * 3], pts[i * 3 + 1] - pts[(i - 1) * 3 + 1]);
+    cum[i - cs] = cum[i - cs - 1] + step(i);
   }
   const total = cum[ce - cs];
   if (!(total > 1e-12)) return shifts;
   for (let i = cs; i <= ce; i++) {
-    const tau = -d + 2 * d * (cum[i - cs] / total);
+    const tau = plain ? -d + 2 * d * (cum[i - cs] / total) : t0 + (t1 - t0) * (cum[i - cs] / total);
     shifts[i] = Math.abs(pts[i * 3 + 2]) - Math.abs(tau);
     pts[i * 3 + 2] = tau;
   }
   return shifts;
+}
+
+// K1139 Stage 2 (a): a pulse band's PIVOT param, continuous by
+// construction. The band's tau at a pixel p is the centreline's tau where
+// the ray from P through p meets the polyline, P being where the normals
+// at its two L-ends meet (kA, kB: the vertices nearest the arc where the
+// band crosses the footprint, a half-width in from each end, zero-length
+// end segments skipped). The nearest foot it replaces jumps wherever two
+// stretches of the polyline sit equally near (leg flips, vertex jumps).
+// P is homogeneous, (X, Y, w) with X^2 + Y^2 + w^2 = 1 and the point at
+// (X, Y) / w, relative to the band's first vertex, so a straight-through
+// band (parallel end normals, w -> 0) is the same formula. Outside the
+// sweep a pixel takes the nearer end's tau projected along that end's
+// segment; the side line (a, b, c) splits A's side (h < 0) from B's at
+// the outer bisector through P, which the checks keep out of reach. The
+// CPU checks, each failing to mode 0 (the nearest foot): P at least
+// 1.25 fh from the polyline, the angle from P monotone over kA..kB, the
+// sweep under 175 degrees, the outer bisector 1.25 fh clear of the
+// polyline. code = kA + 64 kB + 4096 mode.
+export interface PulsePivot {
+  code: number;
+  X: number;
+  Y: number;
+  w: number;
+  a: number;
+  b: number;
+  c: number;
+  rp: number;
+  sweep: number;
+  fail: string;
+}
+
+export function pulsePivot(line: ArrayLike<number>, nv: number, fillHalf: number): PulsePivot {
+  const out: PulsePivot = { code: 0, X: 0, Y: 0, w: 0, a: 0, b: 0, c: 0, rp: Infinity, sweep: 0, fail: "" };
+  const x0 = line[0];
+  const y0 = line[1];
+  const vx = (k: number): number => line[k * 3] - x0;
+  const vy = (k: number): number => line[k * 3 + 1] - y0;
+  const tau = (k: number): number => line[k * 3 + 2];
+  const len = (k: number): number => Math.hypot(vx(k + 1) - vx(k), vy(k + 1) - vy(k));
+  if (nv < 3 || nv > 64) {
+    out.fail = "nv";
+    return out;
+  }
+  let k0 = 0;
+  while (k0 + 1 < nv && len(k0) < 1e-6) k0++;
+  let k1 = nv - 1;
+  while (k1 > 0 && len(k1 - 1) < 1e-6) k1--;
+  if (k1 - k0 < 2) {
+    out.fail = "short";
+    return out;
+  }
+  const LA = -tau(k0) - fillHalf;
+  const LB = tau(k1) - fillHalf;
+  let kA = k0;
+  let kB = k1;
+  let bA = Infinity;
+  let bB = Infinity;
+  for (let k = k0; k <= k1; k++) {
+    if (k + 1 <= k1 && Math.abs(-tau(k) - LA) < bA) {
+      bA = Math.abs(-tau(k) - LA);
+      kA = k;
+    }
+    if (k - 1 >= k0 && Math.abs(tau(k) - LB) < bB) {
+      bB = Math.abs(tau(k) - LB);
+      kB = k;
+    }
+  }
+  while (kA + 1 < kB && len(kA) < 1e-6) kA++;
+  while (kB - 1 > kA && len(kB - 1) < 1e-6) kB--;
+  if (kB - kA < 1 || len(kA) < 1e-6 || len(kB - 1) < 1e-6) {
+    out.fail = "ends";
+    return out;
+  }
+  const lA = len(kA);
+  const tAx = (vx(kA + 1) - vx(kA)) / lA;
+  const tAy = (vy(kA + 1) - vy(kA)) / lA;
+  const lB = len(kB - 1);
+  const tBx = (vx(kB) - vx(kB - 1)) / lB;
+  const tBy = (vy(kB) - vy(kB - 1)) / lB;
+  const pAx = vx(kA);
+  const pAy = vy(kA);
+  const pBx = vx(kB);
+  const pBy = vy(kB);
+  const cA = -(tAx * pAx + tAy * pAy);
+  const cB = -(tBx * pBx + tBy * pBy);
+  let X = tAy * cB - cA * tBy;
+  let Y = cA * tBx - tAx * cB;
+  let w = tAx * tBy - tAy * tBx;
+  const nn = Math.hypot(X, Y, w);
+  if (!(nn > 1e-12)) {
+    out.fail = "coincident";
+    return out;
+  }
+  X /= nn;
+  Y /= nn;
+  w /= nn;
+  if (w < 0) {
+    X = -X;
+    Y = -Y;
+    w = -w;
+  }
+  // The direction from P to vertex k, scaled by w (any sign): w v - XY.
+  const dx = (k: number): number => w * vx(k) - X;
+  const dy = (k: number): number => w * vy(k) - Y;
+  // Star and sweep over kA..kB.
+  let pos = 0;
+  let neg = 0;
+  let sweep = 0;
+  for (let k = kA; k < kB; k++) {
+    if (len(k) < 1e-9) continue;
+    const g = w * (vx(k) * vy(k + 1) - vy(k) * vx(k + 1)) + (X * (vy(k) - vy(k + 1)) - Y * (vx(k) - vx(k + 1)));
+    if (g > 1e-12) pos++;
+    else if (g < -1e-12) neg++;
+    const cr = dx(k) * dy(k + 1) - dy(k) * dx(k + 1);
+    const dt = dx(k) * dx(k + 1) + dy(k) * dy(k + 1);
+    sweep += Math.atan2(cr, dt);
+  }
+  out.sweep = (Math.abs(sweep) * 180) / Math.PI;
+  // P's distance from the whole polyline, and the outer bisector's.
+  const segDist = (px: number, py: number, k: number): number => {
+    const ax = vx(k);
+    const ay = vy(k);
+    const ex = vx(k + 1) - ax;
+    const ey = vy(k + 1) - ay;
+    const l2 = ex * ex + ey * ey;
+    const u = l2 > 1e-12 ? Math.max(0, Math.min(1, ((px - ax) * ex + (py - ay) * ey) / l2)) : 0;
+    return Math.hypot(px - ax - ex * u, py - ay - ey * u);
+  };
+  const lenA = Math.hypot(dx(kA), dy(kA));
+  const lenB = Math.hypot(dx(kB), dy(kB));
+  let Mx = dx(kA) / lenA + dx(kB) / lenB;
+  let My = dy(kA) / lenA + dy(kB) / lenB;
+  const lM = Math.hypot(Mx, My);
+  let bis = Infinity;
+  if (w > 1e-6) {
+    const Px = X / w;
+    const Py = Y / w;
+    let rp = Infinity;
+    for (let k = 0; k + 1 < nv; k++) rp = Math.min(rp, segDist(Px, Py, k));
+    out.rp = rp;
+    // The outer bisector: the ray from P away from the band. A ray and a
+    // segment are nearest at an end of one of them, unless they cross.
+    if (lM > 1e-9) {
+      const ux = -Mx / lM;
+      const uy = -My / lM;
+      const toRay = (qx: number, qy: number): number => {
+        const t = Math.max(0, (qx - Px) * ux + (qy - Py) * uy);
+        return Math.hypot(qx - Px - ux * t, qy - Py - uy * t);
+      };
+      for (let k = 0; k + 1 < nv; k++) {
+        const ax = vx(k);
+        const ay = vy(k);
+        const ex = vx(k + 1) - ax;
+        const ey = vy(k + 1) - ay;
+        const den = ux * ey - uy * ex;
+        if (Math.abs(den) > 1e-12) {
+          const t = ((ax - Px) * ey - (ay - Py) * ex) / den;
+          const s = ((ax - Px) * uy - (ay - Py) * ux) / den;
+          if (t >= 0 && s >= 0 && s <= 1) {
+            bis = 0;
+            break;
+          }
+        }
+        bis = Math.min(bis, toRay(ax, ay), toRay(ax + ex, ay + ey), segDist(Px, Py, k));
+      }
+    }
+  }
+  const lim = 1.25 * fillHalf;
+  if (!(lM > 1e-9)) out.fail = "M";
+  else if (pos > 0 && neg > 0) out.fail = `star ${pos}+/${neg}-`;
+  else if (out.sweep >= 175) out.fail = "sweep";
+  else if (out.rp < lim) out.fail = "rp";
+  else if (bis < lim) out.fail = "bisector";
+  // The side line through the bisector: M, and Q where it meets the chord
+  // (the angle-bisector point; the midpoint when parallel).
+  let a = 0;
+  let b = 0;
+  let c = 0;
+  if (lM > 1e-9) {
+    Mx /= lM;
+    My /= lM;
+    const Qx = (lenB * pAx + lenA * pBx) / (lenA + lenB);
+    const Qy = (lenB * pAy + lenA * pBy) / (lenA + lenB);
+    a = -My;
+    b = Mx;
+    c = My * Qx - Mx * Qy;
+    if (a * pAx + b * pAy + c > 0) {
+      a = -a;
+      b = -b;
+      c = -c;
+    }
+  }
+  out.X = X;
+  out.Y = Y;
+  out.w = w;
+  out.a = a;
+  out.b = b;
+  out.c = c;
+  out.code = kA + 64 * kB + (out.fail ? 0 : 4096);
+  return out;
 }
 
 export function routeCubic(

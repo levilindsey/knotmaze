@@ -79,7 +79,7 @@ import {
   recordData,
   setFieldParams,
 } from "../junction_field";
-import { arcTrueTau, routeCorner, routeCubic } from "../junction_routes";
+import { arcTrueTau, pulsePivot, routeCorner, routeCubic, type PulsePivot } from "../junction_routes";
 import { STRIP_W, setStripRows, stripTable } from "../arm_strip";
 import { GAP_SLOTS } from "../gap_mask";
 import { rimCurvePoints } from "./rim_curve";
@@ -642,13 +642,36 @@ export class Joinery {
     for (let r = 0; r < npp; r++) {
       const r0 = at(pb);
       const r1 = at(pb + 1);
+      const r2 = at(pb + 2);
+      const r3 = at(pb + 3);
       const nv = Math.round(J[r0]);
+      // Stage 2 (a): the pivot param (FIELD_GLSL junctionField's twin).
+      const ic = Math.round(J[r1 + 3]);
+      const kA = ic % 64;
+      const kB = Math.floor(ic / 64) % 64;
+      const piv = ic >= 4096;
+      const PX = J[r2];
+      const PY = J[r2 + 1];
+      const PW = J[r2 + 2];
       let best = 1e20;
       let tau = 0;
       let shift = 0;
-      let q0 = at(pb + 2);
+      const v0 = at(pb + 4);
+      const prx = x - J[v0];
+      const pry = y - J[v0 + 1];
+      let a0x = 0;
+      let a0y = 0;
+      let s0 = PY * prx - PX * pry;
+      let hit = false;
+      let tauP = 0;
+      let shiftP = 0;
+      let eA0 = v0;
+      let eA1 = v0;
+      let eB0 = v0;
+      let eB1 = v0;
+      let q0 = v0;
       for (let k = 0; k < MAX_ROUTE_VERTS - 1 && k + 1 < nv; k++) {
-        const q1 = at(pb + 3 + k);
+        const q1 = at(pb + 5 + k);
         const dx = J[q1] - J[q0];
         const dy = J[q1 + 1] - J[q0 + 1];
         const wx = x - J[q0];
@@ -663,7 +686,51 @@ export class Joinery {
           tau = J[q0 + 2] + (J[q1 + 2] - J[q0 + 2]) * u;
           shift = J[q0 + 3] + (J[q1 + 3] - J[q0 + 3]) * u;
         }
+        const a1x = J[q1] - J[v0];
+        const a1y = J[q1 + 1] - J[v0 + 1];
+        const e1x = a1x - prx;
+        const e1y = a1y - pry;
+        const s1 = PW * (a1x * pry - a1y * prx) + (PX * e1y - PY * e1x);
+        if (k === kA) {
+          eA0 = q0;
+          eA1 = q1;
+        }
+        if (k + 1 === kB) {
+          eB0 = q0;
+          eB1 = q1;
+        }
+        if (piv && !hit && k >= kA && k < kB && s0 !== s1 && ((s0 <= 0 && s1 >= 0) || (s0 >= 0 && s1 <= 0))) {
+          const us = s0 / (s0 - s1);
+          const qhx = a0x + (a1x - a0x) * us;
+          const qhy = a0y + (a1y - a0y) * us;
+          if ((PW * qhx - PX) * (PW * prx - PX) + (PW * qhy - PY) * (PW * pry - PY) > 0) {
+            hit = true;
+            tauP = J[q0 + 2] + (J[q1 + 2] - J[q0 + 2]) * us;
+            shiftP = J[q0 + 3] + (J[q1 + 3] - J[q0 + 3]) * us;
+          }
+        }
         q0 = q1;
+        a0x = a1x;
+        a0y = a1y;
+        s0 = s1;
+      }
+      if (piv) {
+        if (hit) {
+          tau = tauP;
+          shift = shiftP;
+        } else if (J[r3] * prx + J[r3 + 1] * pry + J[r3 + 2] < 0) {
+          const tx = J[eA1] - J[eA0];
+          const ty = J[eA1 + 1] - J[eA0 + 1];
+          const tl = Math.sqrt(tx * tx + ty * ty);
+          tau = J[eA0 + 2] + ((x - J[eA0]) * tx + (y - J[eA0 + 1]) * ty) / tl;
+          shift = J[eA0 + 3];
+        } else {
+          const tx = J[eB1] - J[eB0];
+          const ty = J[eB1 + 1] - J[eB0 + 1];
+          const tl = Math.sqrt(tx * tx + ty * ty);
+          tau = J[eB1 + 2] + ((x - J[eB1]) * tx + (y - J[eB1 + 1]) * ty) / tl;
+          shift = J[eB1 + 3];
+        }
       }
       const cov = Math.max(0, Math.min(1, (reach - Math.sqrt(best)) / pxW));
       if (DG && DG.bands) {
@@ -702,7 +769,7 @@ export class Joinery {
           bIdx = r;
         }
       }
-      pb += 2 + nv;
+      pb += 4 + nv;
     }
     if (DG) DG.win = bIdx;
     if (bR0 >= 0 && J[bR1 + 2] < 0.5) {
@@ -2036,7 +2103,13 @@ export class Joinery {
           // but not pulse-banded: the shader walks here either way),
           // then per band R0, R1 and its arc-true centerline (built
           // first: the count precedes them).
-          const built: Array<{ pb: (typeof rec.pulseBands)[number]; nv: number; shifts: number[]; line: number[] }> = [];
+          const built: Array<{
+            pb: (typeof rec.pulseBands)[number];
+            nv: number;
+            shifts: number[];
+            line: number[];
+            pv: PulsePivot;
+          }> = [];
           for (const pb of rec.pulseBands) {
             const A = rec.arms[pb.ia];
             const B = rec.arms[pb.ib];
@@ -2047,10 +2120,11 @@ export class Joinery {
             const shifts = arcTrueTau(pts, pb.d);
             const nv = Math.min(pts.length / 3, MAX_ROUTE_VERTS);
             if (nv < 2) continue;
-            built.push({ pb, nv, shifts, line: pts.slice(0, nv * 3) });
+            const line = pts.slice(0, nv * 3);
+            built.push({ pb, nv, shifts, line, pv: pulsePivot(line, nv, fillHalf) });
           }
           let need = 1;
-          for (const b of built) need += 2 + b.nv;
+          for (const b of built) need += 4 + b.nv;
           rd.ensure(cursor + need);
           const D2 = rd.data;
           D2[cursor * 4] = built.length;
@@ -2067,14 +2141,22 @@ export class Joinery {
             D2[o + 4] = b.pb.distJ;
             D2[o + 5] = (b.pb.inward ? 1 : 0) + (b.pb.hovered ? 2 : 0);
             D2[o + 6] = b.pb.shared ? 1 : 0;
-            D2[o + 7] = 0;
+            D2[o + 7] = b.pv.code;
+            D2[o + 8] = b.pv.X;
+            D2[o + 9] = b.pv.Y;
+            D2[o + 10] = b.pv.w;
+            D2[o + 11] = 0;
+            D2[o + 12] = b.pv.a;
+            D2[o + 13] = b.pv.b;
+            D2[o + 14] = b.pv.c;
+            D2[o + 15] = 0;
             for (let k = 0; k < b.nv; k++) {
-              D2[o + 8 + k * 4] = b.line[k * 3];
-              D2[o + 9 + k * 4] = b.line[k * 3 + 1];
-              D2[o + 10 + k * 4] = b.line[k * 3 + 2];
-              D2[o + 11 + k * 4] = b.shifts[k];
+              D2[o + 16 + k * 4] = b.line[k * 3];
+              D2[o + 17 + k * 4] = b.line[k * 3 + 1];
+              D2[o + 18 + k * 4] = b.line[k * 3 + 2];
+              D2[o + 19 + k * 4] = b.shifts[k];
             }
-            cursor += 2 + b.nv;
+            cursor += 4 + b.nv;
           }
         }
       }
