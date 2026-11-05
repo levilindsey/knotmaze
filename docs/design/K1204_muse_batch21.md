@@ -966,7 +966,7 @@ step here.
   on cyc's e210 and 3.835 on loop's self-loop e102, predicted
   step 0 at both; the cycle arm meets itself in one
   transition of fifteen) and
-  `census.mjs` (its `ridge_joint.mjs` copy shows how 20E
+  `census.mjs` (its `ridge_joint.ts` copy shows how 20E
   read `xR`, `W` and the span from the page dump; its span
   source is the drawn span, against which task 2 below
   names its own).
@@ -1151,22 +1151,20 @@ ports. Neither depends on K1197.
 - The ledger's K1198 (quoted below) and
   `docs/ledger_notes.md`'s `## K1198` entries (both Claude
   judgments: v7.1's and v7.2's hands, then 20G's - Plc1m
-  replaces v7.2 if its sheet reads as well; ij's hand hides
-  behind the font's ligature, and saying so closes K1198
-  without a join).
-- `.claude/probes/K1198/SUMMARY.md` (20G, whole): the hands
-  (v7.1's L/R curve ports, v7.2's `P = R - B, B = 1` pinned
-  join curve, Plc1m's `P = L, B = 1`), the census tool's pairs
-  (which port sets it reads `Q` from: `ports_Plc1m` for
-  Plc1m, `portL_manual` for v7.1, `Q` for v7.2), the gates
-  bench (locality), the determinism half, the K1009_PINS
-  front door, and the history every solver copy here follows
-  (the ports the solver reads are built before it by solve's
-  own step-1 pass; `K926_FINAL_E=shear` and
-  `K1009_PINS={}` before every solver, everywhere). Read
-  its Do not / open list as this run's boundary: K1198
-  claimed v7.1 -> v7.2 replaces no J3i letter until a hand
-  changes; K1112's R-only hand sits outside this item.
+  replaces v7.2 if its sheet reads as well; ij never reaches
+  the join, because the font shapes it as one glyph,
+  `ij.jmc`, and Claude's call is tasks 2 and 3 below: list
+  the pairs the font ligates, shape with those ligatures off
+  everywhere, and solve the joins they hid through the
+  ports).
+- `.claude/probes/K1198/SUMMARY.md` (20G, whole, 100 lines):
+  how 20G worked (its own folder, `K926_FINAL_E=shear`,
+  `K1009_PINS` cleared, at most 4 processes), Plc1m (B = 1 u:
+  every cusp entry, i j p r s t u w y, stretched over
+  [1, hi], maxfev 8000 on the cusp records), its gates table
+  against v7.1, v7.2 and v7.2b, and ij's dropping step (the
+  shaping returns one glyph, `ij.jmc`, so `assemble` places
+  one letter and its pair loop never runs).
 - `docs/design/K1112_cursive_j3i.md`, its Handoff (its open
   items 1 to 3, "How to run" - the sheet drawings its steps
   draw - and the largest word moves it names under v7.2:
@@ -1175,8 +1173,10 @@ ports. Neither depends on K1197.
   `out32/cusp_v72.svg`, `c_v72.svg` and
   `cursive_v72_words.svg`).
 - `.claude/probes/K863/trace/NOTES.md` at `## K1112 cusp`
-  (its rerun commands, whole): the sheets are regenerated
-  with `sheets_k1112cusp.py` into `out32`, and a copied
+  (its rerun commands, whole): the sheets are drawn by the
+  `sheets` and `png` steps of `checks_k1112cusp.ps1` (the
+  kit's `work32\dbg\checks_k1112cusp.ps1`; 20G's copy is
+  `.claude/probes/K1198/checks_k1112cusp.ps1`), and a copied
   harness may need its output dir created first, as 20G's
   rerun did (nothing to install or copy back, since the
   kit is untracked there; do not rebuild kit state into it,
@@ -1193,13 +1193,15 @@ ports. Neither depends on K1197.
   the ligature list below shapes 26x26 pairs through the
   same tool, not a subset).
 - 20G's copies in `.claude/probes/K1198/` (its SUMMARY's
-  file list: `census_k1112cusp.py` and its siblings,
-  `solve_lib_k1112cusp.py`, `checks_k1112cusp.py`,
-  `sheets_k1112cusp.py`, `locality_k1112cusp.py`,
-  `ports_k1112cusp.json`, `ports_Plc1m.json`); its gates
-  benches are `census_Plc1m.md` (the pair rows) and
-  `locality_k1112cusp.txt`, and its gates set is in
-  `check_final_k1112cusp.py` (20G ran it for the bench).
+  file list): `checks_k1112cusp.ps1`, `probe_k1112cusp.ps1`,
+  `census_k1027.py`, `pairs_k1112cusp.py`,
+  `mk_ports_k1112cusp.py`, `locality_k1112cusp.py`,
+  `side_k1112c.py` and `ports_k1112cusp.json` (Plc1m's ports
+  among them). Its benches are `census_Plc1m.txt` and
+  `.json` (the pair rows), `census_cmp_v71_Plc1m.txt`,
+  `census_sum_v71_Plc1m.txt`, `locality_k1112cusp.txt` and
+  `side_Plc1m.txt`, written by `checks_k1112cusp.ps1 -Cand
+  Plc1m census cmp locality side`.
 
 ### What is there today
 
@@ -1207,13 +1209,16 @@ ports. Neither depends on K1197.
 > (B = 1 u) clears the gates, ci 2.31 u from the font (budget 2.5), nearer than v7.2 on cr, cs, cy, er, es;
 > replaces v7.2 if its sheet reads as well (K1204). ij: the font ligates it (ij.jmc), so no join is built
 
-Plc1m is built and clears every census gate 20G ran, and it
-draws 2.31 u from the font where v7.2 drew 2.49 (the budget
-is 2.5): nearer than v7.2 on five pairs and further on the
-other five. It has never been sheeted, four of its font
-distances have never been measured, and its fr and fs pins
-have never been tested. ij was never built because the font
-already ligates it (`ij.jmc`), so no join exists to draw.
+Plc1m is built and matches the bench on every census gate
+20G ran (hooks, spikes and rough fail 50, 77 and 147 times
+under all four hands). Its ci draws 2.31 u from the font
+where v7.2's drew 3.79 (the budget is 2.5), and it is nearer
+the font than v7.2 on all six pairs 20G measured (ci, cr,
+cs, cy, er and es). It has never been sheeted, four of its
+font distances have never been measured, and its fr and fs
+pins have never been tested under it. ij was never built
+because the font ligates it (`ij.jmc`): no join exists to
+draw until task 3 shapes it without the ligature.
 
 ### Tasks
 
@@ -1225,9 +1230,10 @@ font by its absolute path may need that path read as the
 kit's JMJ Cursive face - say it if so; do not rebuild kit
 state into the kit.
 
-Use at most 4 workers on this machine, `python -I`, with
-`K926_FINAL_E=shear` and `K1009_PINS={}` set before every
-solver call, as 20G did.
+Ports 5870-5879 (no browser; unused). Use at most 4 workers
+on this machine, `python -I`, with `K926_FINAL_E=shear` set
+and `K1009_PINS` unset (the default pins) before every
+solver call, as 20G did (task 1's pin test aside).
 
 1. **Plc1m's sheet and missing numbers.**
    - **Sheet.** Draw J3i's three sheets
@@ -1249,9 +1255,12 @@ solver call, as 20G did.
      assume), which of the four Plc1m reads nearer than v7.2
      on, and Plc1m's mean over the four against v7.2's over
      the same four.
-   - **fr and fs pins** (`K1009_PINS={}` front door): solve
-     fr and fs with pins cleared vs set, both under Plc1m,
-     and state whether the pins change anything (a no-op
+   - **fr and fs pins**: solve fr and fs under Plc1m with
+     their pins (`K1009_PINS` unset, the default) and
+     without them (`K1009_PINS={"fr":{},"fs":{}}`, which
+     `gen_k1009.py` merges over the default pins; the form
+     `probe_k1112cusp.ps1 -Pins` passes), and state
+     whether the pins change anything (a no-op
      under v7.2; the numbers, not the flag: each pair's
      shape hash, font distance, local census).
    - **Largest word moves**: list under Plc1m the largest
@@ -1276,8 +1285,11 @@ solver call, as 20G did.
    it. `feats_for` itself opens only `ss02` on `p`, so a
    ligature `feats_for` makes is named as such; a pair no
    single feature splits is named as such, with the features
-   that were tried. No per-pair data ships in any rule; the
-   list is a measurement.
+   that were tried. Then shape the census corpus's words the
+   same way and name any word that still returns fewer
+   glyphs than letters with no listed pair inside it (a
+   longer ligature), with its glyph and feature. No per-pair
+   data ships in any rule; the list is a measurement.
 
 3. **Solve the hidden joins through the ports, everywhere.**
    Shape with those ligatures off everywhere (one rule takes
@@ -1297,9 +1309,10 @@ solver call, as 20G did.
    the ports do not give.
 
 4. **Gates against 20G.** One table: 20G's bench (its pair
-   rows in `census_Plc1m.md`, its locality in
-   `locality_k1112cusp.txt`, its gates in
-   `check_final_k1112cusp.py`) against this run's - the
+   rows in `census_Plc1m.txt`, its comparison in
+   `census_cmp_v71_Plc1m.txt`, its locality in
+   `locality_k1112cusp.txt` and its side test in
+   `side_Plc1m.txt`) against this run's - the
    pieces' pairs in both hands, their budget counts, and the
    first row where a run diverges from its bench.
 
@@ -1313,13 +1326,13 @@ solver call, as 20G did.
 
 - The four-way sheet exists under `.claude/probes/K1198/`:
   every join and word drawn for font, v7.1, v7.2 and Plc1m.
-- ai, ar, ei and ni's font distances are in the table,
-  with their accuracy added to 20G's benches from task 1's
-  readings.
-- fr and fs pins under Plc1m: pin on and off, byte or
-  Census, and whether either changed anything.
-- Largest word moves under Plc1m are listed against v7.1,
-  the top three named.
+- ai, ar, ei and ni's font distances under v7.1, v7.2 and
+  Plc1m are in 20G's table, with task 1's comparisons.
+- fr and fs under Plc1m with their pins and without: each
+  pair's shape hash, font distance and local census, and
+  whether the pins change anything.
+- Plc1m's largest word moves are listed with their words,
+  and whether first, fifty, hit and fruit still lead.
 - Task 2's list names every pair the font ligates and the
   feature that makes each (or says no single feature does,
   with what was tried).
@@ -1364,7 +1377,7 @@ directs.
 ### Step 1 (junction work), past Run F
 
 - **K1196's next step, and K1139's watch with it** - these
-  do not fit as one run. K1196's step is K1139's S4 cost,
+  do not fit this batch. K1196's step is K1139's S4 cost,
   split from S4b by ABBA x4: the same three stands on S4's
   base (`aa1156ae`) and on `36aed2d5` (S4 and S4b; between
   the two only `src/render/` files and tests change), each
@@ -1431,23 +1444,21 @@ watch as one combined first candidate, then K1191, then
 K1205); no run here read their code beyond what the
 candidates above state.
 
-### Skipped lanes (as Run A names them, unchanged)
+### Skipped lanes (as Run A names them)
 
-- **K1042**, **K1132** and **K1053** - the tooling debt Levi
-  revoked on 2026-11-04. None is read, and none belongs in a
-  batch until Levi restores it.
-- **K1190** (Levi's look, his notes in `docs/asks/K1190.md`)
-  and the K1132 "no G2 debt" cut - both wait on Levi's answer
-  in `docs/asks/K1190.md`; no run waits on Levi.
-- **K1197** (K1140's Glimpse picks) - Levi directed Muse to
-  make its decisions, since K1197 stands or falls with K1190;
-  Run G depends on neither.
-- S6 (K1139's occupancy-scaled pulses) - gated on K1197's
-  Glimpse picks; S4b's tail (K1201's steps and the ordering
-  one) and S5's children wait on their own censuses and
-  Claude's judgments (Run F is K1201's census; its fix comes
-  after, only if play meets it).
-- **K1195** (the loop-mode tooling needs) - read by batch
-  20's draft and left there; Run A reads only items numbered
-  above K1199 in steps (4) and (5), so it is not re-read
-  here and waits as it waited.
+- The cursive's next letters and c's joins (K863, K1112,
+  K1119 and K1197) wait on Levi. Run G takes only K1198's
+  two pieces, which depend on neither answer; it works in
+  `.claude/probes/K1198/` and lands nothing in the ports.
+- K1139's S6, the route pulse, follows K1140's Glimpse
+  design, which waits on Levi's picks.
+- K1190 and K1200 (Levi's look calls on the junction light),
+  K647, and every other item waiting on Levi: no run takes
+  or answers any of them.
+- Physics (the simulation), phone passes, items In progress
+  other than K1097's S3f5 (Run B), K144 and K1168 (Claude
+  writes their briefs; deploying them needs the Google OAuth
+  client, Cloudflare Worker and D1 database from Levi),
+  K1181 (the laptop's checkout), and anything under
+  `.claude/worktrees/` (runs copy what they need from the
+  K1139 kit's tracked tools into their own folders).
