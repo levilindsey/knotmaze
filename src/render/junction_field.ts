@@ -406,13 +406,20 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
   // once. (c): a drawing band's weight is its cover times its yield to
   // the shared bands' gold, a ramp over the 3 px where a shared band is
   // nearer (1 on a tie, S3b's tie rule). A shared band draws nothing:
-  // its gold block carries the crest through the strips.
+  // its gold block carries the crest through the strips. (d): the crotch
+  // between two drawing bands that share an arm, on the outer side of
+  // both (their signed distances' signs differ, after the shared arm's
+  // direction), takes the smaller of the two whitenings, each at its own
+  // tau without the cover, ramped in by the sides' product and out by
+  // the gap between the bands.
   int pb = pbase + 1;
   float dShared = 1e20;
   float sTau[${MAX_ROUTES}];
   float sShift[${MAX_ROUTES}];
   float sCov[${MAX_ROUTES}];
   float sDist[${MAX_ROUTES}];
+  float sSd[${MAX_ROUTES}];
+  float sF[${MAX_ROUTES}];
   int sPb[${MAX_ROUTES}];
   for (int r = 0; r < ${MAX_ROUTES}; r++) {
     if (r >= np) break;
@@ -442,6 +449,7 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
     vec4 eB0 = v0;
     vec4 eB1 = v0;
     vec4 q0 = v0;
+    float side = 0.0;
     for (int k = 0; k < ${MAX_ROUTE_VERTS - 1}; k++) {
       if (k + 1 >= nv) break;
       vec4 q1 = jAt(pb + 5 + k);
@@ -455,6 +463,7 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
         best = dd;
         tau = mix(q0.z, q1.z, u);
         shift = mix(q0.w, q1.w, u);
+        side = d.x * w.y - d.y * w.x;
       }
       vec2 a1 = q1.xy - v0.xy;
       vec2 e1 = a1 - pr;
@@ -497,31 +506,39 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
     float cov = clamp((reach - dnow) / pxW, 0.0, 1.0);
     bool inw = r1.y == 1.0 || r1.y == 3.0;
     bool hov = r1.y > 1.5;
-    if (cov > 0.0) kFanPulseV = max(kFanPulseV, kPulseCrest(r1.x + tau, inw, hov, 1.0) * cov);
+    float cr = kPulseCrest(r1.x + tau, inw, hov, 1.0);
+    kFanPulseV = max(kFanPulseV, cr * cov);
+    float fa = K_BAND * kPulseCrestQuiet(r1.x + tau, inw, hov, 1.0);
     if (r1.z >= 0.5) dShared = min(dShared, dnow);
     sTau[r] = tau;
     sShift[r] = shift;
     sCov[r] = r1.z < 0.5 ? cov : 0.0;
     sDist[r] = dnow;
+    sSd[r] = side < 0.0 ? -dnow : dnow;
+    sF[r] = r1.z < 0.5 ? clamp((K_BAND * cr - fa) / max(1.0 - fa, 1e-3), 0.0, 1.0) : 0.0;
     sPb[r] = pb;
     pb += 4 + nv;
   }
   float wW = 0.0;
   for (int r = 0; r < ${MAX_ROUTES}; r++) {
     if (r >= np) break;
-    float cw = sCov[r] * (1.0 - smoothstep(0.0, 3.0 * pxW, sDist[r] - dShared));
+    float yr = 1.0 - smoothstep(0.0, 3.0 * pxW, sDist[r] - dShared);
+    float cw = sCov[r] * yr;
+    vec4 r0 = jAt(sPb[r]);
     if (cw > 0.0) {
-      vec4 r0 = jAt(sPb[r]);
-      vec4 r1 = jAt(sPb[r] + 1);
-      bool inw = r1.y == 1.0 || r1.y == 3.0;
-      bool hov = r1.y > 1.5;
       float tau = sTau[r];
       vec3 pm = armPaint(rec + 2 + int(r0.z + 0.5) * stride, -tau + sShift[r], true, true);
       pm = mix(pm, armPaint(rec + 2 + int(r0.w + 0.5) * stride, tau + sShift[r], true, true), smoothstep(-r0.y, r0.y, tau));
-      float fa = K_BAND * kPulseCrestQuiet(r1.x + tau, inw, hov, 1.0);
-      float fb = K_BAND * kPulseCrest(r1.x + tau, inw, hov, 1.0);
-      wW = max(wW, clamp((fb - fa) / max(1.0 - fa, 1e-3), 0.0, 1.0) * cw);
+      wW = max(wW, sF[r] * cw);
       c = mix(c, pm, cw);
+    }
+    for (int s = 0; s < ${MAX_ROUTES}; s++) {
+      if (s >= np) break;
+      if (s <= r) continue;
+      vec4 q = jAt(sPb[s]);
+      float fl = abs(r0.z - q.z) < 0.5 || abs(r0.w - q.w) < 0.5 ? 1.0 : abs(r0.z - q.w) < 0.5 || abs(r0.w - q.z) < 0.5 ? -1.0 : 0.0;
+      float ys = sF[s] * (1.0 - smoothstep(0.0, 3.0 * pxW, sDist[s] - dShared));
+      wW = max(wW, smoothstep(0.0, reach * reach, -sSd[r] * sSd[s] * fl) * (1.0 - smoothstep(0.52, 1.56, sDist[r] + sDist[s] - 2.0 * reach)) * min(sF[r] * yr, ys));
     }
   }
   c = mix(c, uKHlPulse.rgb, wW);

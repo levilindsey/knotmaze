@@ -130,8 +130,11 @@ describe("K320 stage 1: char budgets", () => {
     // junction field to 36,270, measured here; the nearest-band
     // arbitration in that loop (a pixel takes its nearest band's
     // crest, not the max over bands) adds 780 (36,270 -> 37,050
-    // measured here).
-    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(37_100);
+    // measured here). K1139 S2 (2026-11-04): the pivot param (a) adds
+    // 2,087 (37,050 -> 39,137), no winner and the shared yield ramp
+    // (b)+(c) add 101 (-> 39,238), and the crotch fill (d) adds 859
+    // (-> 40,097), measured here.
+    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(40_150);
     // K799: uKPath joins KNOT_UNIFORMS_GLSL, which the still pluck
     // includes (+18 here).
     expect(PLUCK_STILL_FRAG.length).toBeLessThanOrEqual(20_550);

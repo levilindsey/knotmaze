@@ -119,6 +119,14 @@ const PULSE_SHIFT = new Float64Array(MAX_ROUTES);
 const PULSE_COV = new Float64Array(MAX_ROUTES);
 const PULSE_DIST = new Float64Array(MAX_ROUTES);
 const PULSE_R0 = new Int32Array(MAX_ROUTES);
+// (d): each band's signed distance (the nearest foot's side) and its
+// whitening at its own tau without the cover (0 for a shared band).
+const PULSE_SD = new Float64Array(MAX_ROUTES);
+const PULSE_F = new Float64Array(MAX_ROUTES);
+const pulseSmooth = (e0: number, e1: number, v: number): number => {
+  const t = Math.max(0, Math.min(1, (v - e0) / (e1 - e0)));
+  return t * t * (3 - 2 * t);
+};
 export const FILLET_REACH_PER_HALF = 1.25; // * fillHalf, along each arm.
 const FILLET_MAX_WEDGE = 2.6; // Radians.
 const FILLET_CORNER_LIM = 2.2; // * edge half-width: skip distant corners.
@@ -677,6 +685,7 @@ export class Joinery {
       let eB0 = v0;
       let eB1 = v0;
       let q0 = v0;
+      let side = 0;
       for (let k = 0; k < MAX_ROUTE_VERTS - 1 && k + 1 < nv; k++) {
         const q1 = at(pb + 5 + k);
         const dx = J[q1] - J[q0];
@@ -692,6 +701,7 @@ export class Joinery {
           best = dd;
           tau = J[q0 + 2] + (J[q1 + 2] - J[q0 + 2]) * u;
           shift = J[q0 + 3] + (J[q1 + 3] - J[q0 + 3]) * u;
+          side = dx * wy - dy * wx;
         }
         const a1x = J[q1] - J[v0];
         const a1y = J[q1 + 1] - J[v0 + 1];
@@ -775,33 +785,44 @@ export class Joinery {
       PULSE_COV[r] = J[r1 + 2] < 0.5 ? cov : 0;
       PULSE_DIST[r] = dnow;
       PULSE_R0[r] = r0;
+      const fl0 = J[r1 + 1];
+      const fb0 = KB * kPulseBandV(U, J[r1], tau, fl0 % 2 === 1, fl0 >= 2);
+      const fa0 = KB * kPulseCrest(U, J[r1] + tau, fl0 % 2 === 1, fl0 >= 2, 1, 0);
+      PULSE_F[r] = J[r1 + 2] < 0.5 ? Math.max(0, Math.min(1, (fb0 - fa0) / Math.max(1 - fa0, 1e-3))) : 0;
+      PULSE_SD[r] = side < 0 ? -dnow : dnow;
       pb += 4 + nv;
     }
     if (DG) DG.win = bIdx;
     let wW = 0;
     for (let r = 0; r < npp; r++) {
-      let e = Math.max(0, Math.min(1, (PULSE_DIST[r] - dShared) / (3 * pxW)));
-      e = e * e * (3 - 2 * e);
-      const cw = PULSE_COV[r] * (1 - e);
+      const cw = PULSE_COV[r] * (1 - pulseSmooth(0, 3 * pxW, PULSE_DIST[r] - dShared));
       if (!(cw > 0)) continue;
       const r0 = PULSE_R0[r];
-      const r1 = r0 + 4;
       const tau = PULSE_TAU[r];
       const shift = PULSE_SHIFT[r];
-      const flags = J[r1 + 1];
-      const inw = flags % 2 === 1;
-      const hov = flags >= 2;
       armPaint(rec + 2 + Math.round(J[r0 + 2]) * stride, -tau + shift, true, true, mA);
       armPaint(rec + 2 + Math.round(J[r0 + 3]) * stride, tau + shift, true, true, mB);
       const m = J[r0 + 1];
       let s = Math.max(0, Math.min(1, (tau + m) / (2 * m)));
       s = s * s * (3 - 2 * s);
       for (let c = 0; c < nc; c++) mA[c] = mA[c] + (mB[c] - mA[c]) * s;
-      const fa = KB * kPulseCrest(U, J[r1] + tau, inw, hov, 1, 0);
-      const fb = KB * kPulseBandV(U, J[r1], tau, inw, hov);
-      const f = Math.max(0, Math.min(1, (fb - fa) / Math.max(1 - fa, 1e-3)));
-      wW = Math.max(wW, f * cw);
+      wW = Math.max(wW, PULSE_F[r] * cw);
       for (let c = 0; c < nc; c++) out[c] = out[c] + (mA[c] - out[c]) * cw;
+    }
+    // (d) the crotch fill between two drawing bands that share an arm.
+    for (let r = 0; r < npp; r++) {
+      const ra = J[PULSE_R0[r] + 2];
+      const rb = J[PULSE_R0[r] + 3];
+      const yr = PULSE_F[r] * (1 - pulseSmooth(0, 3 * pxW, PULSE_DIST[r] - dShared));
+      for (let q = r + 1; q < npp; q++) {
+        const qa = J[PULSE_R0[q] + 2];
+        const qb = J[PULSE_R0[q] + 3];
+        const fl = Math.abs(ra - qa) < 0.5 || Math.abs(rb - qb) < 0.5 ? 1
+          : Math.abs(ra - qb) < 0.5 || Math.abs(rb - qa) < 0.5 ? -1 : 0;
+        const yq = PULSE_F[q] * (1 - pulseSmooth(0, 3 * pxW, PULSE_DIST[q] - dShared));
+        wW = Math.max(wW, pulseSmooth(0, reach * reach, -PULSE_SD[r] * PULSE_SD[q] * fl)
+          * (1 - pulseSmooth(0.52, 1.56, PULSE_DIST[r] + PULSE_DIST[q] - 2 * reach)) * Math.min(yr, yq));
+      }
     }
     if (wW > 0) {
       const tgt = U.uKHlPulse;

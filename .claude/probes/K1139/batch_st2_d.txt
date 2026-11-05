@@ -1,0 +1,3 @@
+# K1139 Stage 2 (d): the crotch fill between drawing bands that share an arm
+node diag_s3b.mjs cross out\s2\d\cross 8
+node diag_s3b.mjs x4 out\s2\d\x4 8
