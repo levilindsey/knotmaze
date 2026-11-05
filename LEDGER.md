@@ -518,17 +518,17 @@ Next free ID: K1179.
 - **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate correctly across
   junctions"). S1, S2 done (a4dc218a, 16246c90). Answers: the light splits at a fork (A), runs toward you behind
   you, straight through your junction with no dim moment. S3a-S6 next. Full text: `docs/ledger_notes.md`.
-  - owner: nobody since 2026-11-04 01:33 (S3a done in Muse run 15G)
-  - branch: mainline; last commit: `4f625916`
+  - owner: nobody since 2026-11-04 09:05 (S3b done in Muse batch 16 run B)
+  - branch: mainline; last commit: `df30a7f3`
   - evidence: `.claude/probes/K1139/` (the scripts and the doc's pictures tracked; other outputs untracked, S2's record in `out/s2/`; the doc's appendix lists the commands)
-  - next: S3b, the fan shader, in Muse batch 16 (K1178, drafted by run 16A): its numeric checks and look sheet, then Claude's look check; the Pixel later, with S4 (the plan's section 5)
-  - brief: docs/design/K1139_s3a.md; the plan: docs/design/K1139_pulse_junctions.md
+  - next: Claude judges the S3b look sheet (.claude/probes/K1139/out/doc/s3b_*.png); then S4, with the Pixel batch (.claude/probes/K1139/out/s3b/pixel_batch_plan.md)
+  - brief: docs/design/K1178_muse_batch16.md (Run B); the plan: docs/design/K1139_pulse_junctions.md
 - **K1178** · Muse batch 16: run A drafts the brief (`docs/design/K1178_muse_batch16_run_a.md`), runs B-G from
   the draft, after 16J.
   - owner: nobody since 2026-11-04 03:22 (runs B-G queued as Muse chain runs 16B-16G, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `08e2165e`
+  - branch: mainline; last commit: `df30a7f3`
   - evidence: `docs/design/K1178_muse_batch16_run_a.md`; the chain in `.claude/probes/K1053/` (queue.txt, chain.log)
-  - next: Claude reviews each run on master as the chain lands it, and looks at Run B's sheets (.claude/probes/K1139/out/doc/s3b_*.png) before Levi sees them
+  - next: Run B done; next Run C
   - brief: `docs/design/K1178_muse_batch16.md`
 
 ## Next, in order
