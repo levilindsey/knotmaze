@@ -1,0 +1,162 @@
+K1201 census (21F): CPU only (Node, scripts/run_node.mjs), lattice spans (WalkEdge.length), pulseTree arrival -1, no gate/blocked.
+Run day: todayNumber()=25; dailies #19..#25. Primary reach: Infinity (whole walk graph); play reach per maze beside it.
+Metric self-check (dA 5, W 2.5; ridge_joint.txt reads 0.18/0.36/0.54/0.72/0.90): xR 0.4 -> 0.18, xR 0.3 -> 0.36, xR 0.2 -> 0.54, xR 0.1 -> 0.72, xR 0 -> 0.9
+
+20E reproduction (lattice xR here vs 20E drawn-span xR; brief tolerance 0.05):
+  cyc e210 head node_218: lattice ends [2.179, 0.765], 20E drawn B-end 0.680/3.835 = 0.68
+  cyc e210 head node_221: lattice ends [2.179, 0.765], 20E drawn B-end 0.680/3.835 = 0.68
+  loop e102 head node_635: lattice ends [4.004], 20E drawn B-end 0.680/3.835 = 3.835
+  loop e102 head mnode_77: lattice ends [4.004], 20E drawn B-end 0.680/3.835 = 3.835
+  loop e102 head node_649: lattice ends [4.004], 20E drawn B-end 0.680/3.835 = 3.835
+
+Per maze, whole-graph reach (primary):
+  cyc        heads  181  two(head,arm) 16471  distinct 261  arm-ends 32942  meet<0.5 3846 ends / 181 heads  smallest xR -0.000  largest step 0.9000
+  loop       heads  170  two(head,arm) 14620  distinct 246  arm-ends 28900  meet<0.5 3539 ends / 170 heads  smallest xR -0.000  largest step 0.9000
+  x4         heads  181  two(head,arm) 16471  distinct 261  arm-ends 32942  meet<0.5 3846 ends / 181 heads  smallest xR -0.000  largest step 0.9000
+  daily-19   heads  175  two(head,arm) 15575  distinct 250  arm-ends 30975  meet<0.5 2855 ends / 175 heads  smallest xR -0.000  largest step 0.9000
+  daily-20   heads  184  two(head,arm) 17296  distinct 269  arm-ends 34408  meet<0.5 4091 ends / 184 heads  smallest xR -0.000  largest step 0.9000
+  daily-21   heads  176  two(head,arm) 15488  distinct 256  arm-ends 30976  meet<0.5 2548 ends / 176 heads  smallest xR -0.000  largest step 0.9000
+  daily-22   heads  179  two(head,arm) 16110  distinct 258  arm-ends 31862  meet<0.5 3094 ends / 179 heads  smallest xR -0.000  largest step 0.9000
+  daily-23   heads  174  two(head,arm) 15486  distinct 251  arm-ends 30798  meet<0.5 2842 ends / 174 heads  smallest xR -0.000  largest step 0.9000
+  daily-24   heads  187  two(head,arm) 17578  distinct 274  arm-ends 35156  meet<0.5 3305 ends / 187 heads  smallest xR -0.000  largest step 0.9000
+  daily-25   heads  169  two(head,arm) 14196  distinct 233  arm-ends 28223  meet<0.5 3158 ends / 169 heads  smallest xR -0.000  largest step 0.9000
+  OVERALL    heads 1776  two(head,arm) 159291  arm-ends 317182  meet<0.5 33124 ends / 1776 heads  smallest xR -0.000  largest step 0.9000
+
+Per maze, play reach (pulseReach param; sensitivity, same trees):
+  cyc        heads  181  two(head,arm)     6  distinct   4  arm-ends    12  meet<0.5    0 ends /   0 heads  smallest xR 0.765  largest step -
+  loop       heads  170  two(head,arm)   136  distinct  52  arm-ends   268  meet<0.5   46 ends /  43 heads  smallest xR -0.000  largest step 0.8993
+  x4         heads  181  two(head,arm)   131  distinct  59  arm-ends   262  meet<0.5   31 ends /  30 heads  smallest xR -0.000  largest step 0.9000
+  daily-19   heads  175  two(head,arm)    34  distinct  17  arm-ends    67  meet<0.5    7 ends /   7 heads  smallest xR 0.000  largest step 0.8993
+  daily-20   heads  184  two(head,arm)    25  distinct  13  arm-ends    49  meet<0.5    6 ends /   6 heads  smallest xR 0.000  largest step 0.8981
+  daily-21   heads  176  two(head,arm)    23  distinct  13  arm-ends    46  meet<0.5    5 ends /   5 heads  smallest xR 0.000  largest step 0.8993
+  daily-22   heads  179  two(head,arm)    27  distinct  16  arm-ends    50  meet<0.5    7 ends /   7 heads  smallest xR 0.000  largest step 0.8993
+  daily-23   heads  174  two(head,arm)    24  distinct  12  arm-ends    47  meet<0.5   10 ends /   9 heads  smallest xR 0.000  largest step 0.8993
+  daily-24   heads  187  two(head,arm)    33  distinct  17  arm-ends    66  meet<0.5    2 ends /   2 heads  smallest xR 0.140  largest step 0.6462
+  daily-25   heads  169  two(head,arm)    32  distinct  15  arm-ends    63  meet<0.5    7 ends /   7 heads  smallest xR 0.000  largest step 0.8993
+
+Meeting arm-ends (xR < 0.5) at play reach, every one:
+  loop head mnode_100 e246 node_134->node_136 end node_136 xR 0.000 span/W 2.236 dA 3.091 dB 5.327 onCycle true step 0.8974
+  loop head mnode_114 e252 mnode_114->mnode_48 end mnode_48 xR 0.214 span/W 4.357 dA 0.000 dB 3.930 onCycle true step 0.5154
+  loop head mnode_115 e252 mnode_114->mnode_48 end mnode_48 xR 0.214 span/W 4.357 dA 1.768 dB 5.698 onCycle true step 0.5139
+  loop head mnode_117 e214 mnode_117->mnode_69 end mnode_69 xR 0.214 span/W 4.357 dA 0.000 dB 3.930 onCycle true step 0.5154
+  loop head mnode_118 e31 mnode_26->mnode_27 end mnode_27 xR 0.176 span/W 1.768 dA 2.680 dB 4.095 onCycle true step 0.5805
+  loop head mnode_119 e31 mnode_27->mnode_26 end mnode_26 xR 0.176 span/W 1.768 dA 2.680 dB 4.095 onCycle true step 0.5805
+  loop head mnode_120 e37 mnode_56->mnode_57 end mnode_57 xR 0.156 span/W 1.414 dA 2.828 dB 3.930 onCycle true step 0.6190
+  loop head mnode_121 e82 mnode_121->mnode_41 end mnode_41 xR 0.271 span/W 6.092 dA 0.000 dB 5.550 onCycle true step 0.4124
+  loop head mnode_121 e37 mnode_57->mnode_56 end mnode_56 xR 0.008 span/W 1.414 dA 2.680 dB 4.078 onCycle true step 0.8829
+  loop head mnode_122 e205 node_341->node_339 end node_339 xR 0.000 span/W 2.236 dA 0.707 dB 2.943 onCycle true step 0.8993
+  loop head mnode_131 e71 node_693->node_695 end node_695 xR 0.000 span/W 2.236 dA 3.536 dB 5.772 onCycle true step 0.8962
+  loop head mnode_138 e120 node_14->mnode_87 end mnode_87 xR 0.148 span/W 0.707 dA 4.711 dB 5.122 onCycle true step 0.6309
+  loop head mnode_22 e78 mnode_23->mnode_67 end mnode_67 xR 0.008 span/W 4.095 dA 1.414 dB 5.493 onCycle true step 0.8854
+  loop head mnode_22 e239 node_254->node_253 end node_253 xR -0.000 span/W 1.414 dA 4.357 dB 5.772 onCycle true step 0.8963
+  loop head mnode_23 e66 mnode_22->mnode_66 end mnode_66 xR 0.156 span/W 4.243 dA 1.414 dB 5.345 onCycle true step 0.6174
+  loop head mnode_23 e67 mnode_22->node_254 end node_254 xR -0.000 span/W 4.357 dA 1.414 dB 5.772 onCycle true step 0.8963
+  loop head mnode_26 e75 mnode_27->mnode_119 end mnode_119 xR 0.177 span/W 2.680 dA 1.768 dB 4.095 onCycle true step 0.5800
+  loop head mnode_27 e73 mnode_26->mnode_118 end mnode_118 xR 0.177 span/W 2.680 dA 1.768 dB 4.095 onCycle true step 0.5800
+  loop head mnode_34 e177 mnode_34->node_123 end node_123 xR 0.205 span/W 5.213 dA 0.000 dB 4.802 onCycle true step 0.5290
+  loop head mnode_35 e177 mnode_34->node_123 end node_123 xR 0.206 span/W 5.213 dA 1.803 dB 6.604 onCycle true step 0.5288
+  loop head mnode_40 e82 mnode_41->mnode_121 end mnode_121 xR 0.271 span/W 6.092 dA 1.768 dB 7.318 onCycle true step 0.4121
+  loop head mnode_41 e82 mnode_41->mnode_121 end mnode_121 xR 0.271 span/W 6.092 dA 0.000 dB 5.550 onCycle true step 0.4124
+  loop head mnode_48 e252 mnode_48->mnode_114 end mnode_114 xR 0.214 span/W 4.357 dA 0.000 dB 3.930 onCycle true step 0.5154
+  loop head mnode_56 e83 mnode_57->mnode_121 end mnode_121 xR 0.008 span/W 2.680 dA 1.414 dB 4.078 onCycle true step 0.8828
+  loop head mnode_57 e80 mnode_56->mnode_120 end mnode_120 xR 0.156 span/W 2.828 dA 1.414 dB 3.930 onCycle true step 0.6188
+  loop head mnode_61 e177 node_123->mnode_34 end mnode_34 xR 0.205 span/W 5.213 dA 0.707 dB 5.509 onCycle true step 0.5279
+  loop head mnode_64 e205 node_341->node_339 end node_339 xR -0.000 span/W 2.236 dA 3.387 dB 5.624 onCycle true step 0.8987
+  loop head mnode_65 e205 node_341->node_339 end node_339 xR 0.000 span/W 2.236 dA 5.190 dB 7.426 onCycle true step 0.8987
+  loop head mnode_66 e30 mnode_22->mnode_23 end mnode_23 xR 0.156 span/W 1.414 dA 4.243 dB 5.345 onCycle true step 0.6169
+  loop head mnode_67 e30 mnode_23->mnode_22 end mnode_22 xR 0.008 span/W 1.414 dA 4.095 dB 5.493 onCycle true step 0.8848
+  loop head mnode_68 e214 mnode_69->mnode_117 end mnode_117 xR 0.214 span/W 4.357 dA 1.803 dB 5.733 onCycle true step 0.5132
+  loop head mnode_69 e214 mnode_69->mnode_117 end mnode_117 xR 0.214 span/W 4.357 dA 0.000 dB 3.930 onCycle true step 0.5154
+  loop head mnode_87 e50 mnode_139->mnode_138 end mnode_138 xR 0.148 span/W 1.768 dA 3.650 dB 5.122 onCycle true step 0.6312
+  loop head node_123 e177 node_123->mnode_34 end mnode_34 xR 0.205 span/W 5.213 dA 0.000 dB 4.802 onCycle true step 0.5290
+  loop head node_134 e246 node_134->node_136 end node_136 xR 0.000 span/W 2.236 dA 0.000 dB 2.236 onCycle true step 0.8981
+  loop head node_136 e246 node_136->node_134 end node_134 xR 0.000 span/W 2.236 dA 0.000 dB 2.236 onCycle true step 0.8981
+  loop head node_143 e177 node_123->mnode_34 end mnode_34 xR 0.205 span/W 5.213 dA 2.828 dB 7.630 onCycle true step 0.5305
+  loop head node_178 e246 node_136->node_134 end node_134 xR -0.000 span/W 2.236 dA 5.064 dB 7.301 onCycle true step 0.8987
+  loop head node_253 e67 node_254->mnode_22 end mnode_22 xR -0.000 span/W 4.357 dA 1.414 dB 5.772 onCycle true step 0.8963
+  loop head node_254 e30 mnode_22->mnode_23 end mnode_23 xR -0.000 span/W 1.414 dA 4.357 dB 5.772 onCycle true step 0.8963
+  loop head node_260 e71 node_693->node_695 end node_695 xR 0.000 span/W 2.236 dA 4.243 dB 6.479 onCycle true step 0.8987
+  loop head node_336 e205 node_339->node_341 end node_341 xR 0.000 span/W 2.236 dA 3.650 dB 5.886 onCycle true step 0.8981
+  loop head node_339 e205 node_339->node_341 end node_341 xR 0.000 span/W 2.236 dA 0.000 dB 2.236 onCycle true step 0.8981
+  loop head node_341 e205 node_341->node_339 end node_339 xR 0.000 span/W 2.236 dA 0.000 dB 2.236 onCycle true step 0.8981
+  loop head node_693 e71 node_693->node_695 end node_695 xR 0.000 span/W 2.236 dA 0.000 dB 2.236 onCycle true step 0.8981
+  loop head node_695 e71 node_695->node_693 end node_693 xR 0.000 span/W 2.236 dA 0.000 dB 2.236 onCycle true step 0.8981
+  x4 head mnode_111 e81 mnode_111->mnode_86 end mnode_86 xR 0.000 span/W 3.930 dA 0.000 dB 3.930 onCycle true step 0.8997
+  x4 head mnode_119 e171 mnode_119->mnode_17 end mnode_17 xR 0.038 span/W 5.327 dA 0.000 dB 5.251 onCycle true step 0.8301
+  x4 head mnode_121 e82 mnode_121->node_114 end node_114 xR 0.296 span/W 4.950 dA 0.000 dB 4.357 onCycle true step 0.3655
+  x4 head mnode_130 e35 mnode_132->mnode_133 end mnode_133 xR 0.000 span/W 1.250 dA 2.680 dB 3.930 onCycle true step 0.9000
+  x4 head mnode_131 e35 mnode_133->mnode_132 end mnode_132 xR 0.000 span/W 1.250 dA 2.680 dB 3.930 onCycle true step 0.9000
+  x4 head mnode_132 e34 mnode_130->mnode_131 end mnode_131 xR 0.000 span/W 1.250 dA 2.680 dB 3.930 onCycle true step 0.9000
+  x4 head mnode_133 e34 mnode_131->mnode_130 end mnode_130 xR 0.000 span/W 1.250 dA 2.680 dB 3.930 onCycle true step 0.9000
+  x4 head mnode_134 e112 mnode_135->node_585 end node_585 xR -0.000 span/W 2.121 dA 1.414 dB 3.536 onCycle true step 0.8981
+  x4 head mnode_135 e8 node_585->node_541 end node_541 xR -0.000 span/W 1.414 dA 2.121 dB 3.536 onCycle true step 0.8981
+  x4 head mnode_138 e77 mnode_148->node_370 end node_370 xR 0.337 span/W 3.223 dA 3.930 dB 6.479 onCycle true step 0.2928
+  x4 head mnode_167 e81 mnode_86->mnode_111 end mnode_111 xR 0.000 span/W 3.930 dA 3.985 dB 7.915 onCycle true step 0.8966
+  x4 head mnode_17 e171 mnode_17->mnode_119 end mnode_119 xR 0.038 span/W 5.327 dA 0.000 dB 5.251 onCycle true step 0.8301
+  x4 head mnode_36 e194 mnode_109->mnode_84 end mnode_84 xR 0.038 span/W 5.475 dA 2.532 dB 7.931 onCycle true step 0.8301
+  x4 head mnode_39 e8 node_585->node_541 end node_541 xR 0.000 span/W 1.414 dA 5.772 dB 7.186 onCycle true step 0.8979
+  x4 head mnode_56 e70 mnode_57->node_18 end node_18 xR 0.316 span/W 4.209 dA 1.601 dB 5.179 onCycle true step 0.3314
+  x4 head mnode_8 e243 node_367->mnode_138 end mnode_138 xR 0.337 span/W 3.223 dA 4.637 dB 7.186 onCycle true step 0.2926
+  x4 head mnode_84 e193 mnode_109->mnode_36 end mnode_36 xR 0.038 span/W 2.532 dA 5.475 dB 7.931 onCycle true step 0.8302
+  x4 head mnode_86 e81 mnode_86->mnode_111 end mnode_111 xR 0.000 span/W 3.930 dA 0.000 dB 3.930 onCycle true step 0.8997
+  x4 head mnode_95 e82 node_114->mnode_121 end mnode_121 xR 0.296 span/W 4.950 dA 3.536 dB 7.893 onCycle true step 0.3663
+  x4 head node_114 e82 node_114->mnode_121 end mnode_121 xR 0.296 span/W 4.950 dA 0.000 dB 4.357 onCycle true step 0.3655
+  x4 head node_18 e23 mnode_57->mnode_56 end mnode_56 xR 0.315 span/W 1.601 dA 4.209 dB 5.179 onCycle true step 0.3318
+  x4 head node_364 e274 mnode_45->node_446 end node_446 xR 0.046 span/W 3.913 dA 3.480 dB 7.301 onCycle true step 0.8160
+  x4 head node_364 e77 mnode_148->node_370 end node_370 xR 0.337 span/W 3.223 dA 4.637 dB 7.186 onCycle true step 0.2926
+  x4 head node_370 e243 node_367->mnode_138 end mnode_138 xR 0.337 span/W 3.223 dA 3.930 dB 6.479 onCycle true step 0.2928
+  x4 head node_389 e81 mnode_111->mnode_86 end mnode_86 xR 0.000 span/W 3.930 dA 0.707 dB 4.637 onCycle true step 0.8991
+  x4 head node_393 e81 mnode_86->mnode_111 end mnode_111 xR 0.000 span/W 3.930 dA 0.707 dB 4.637 onCycle true step 0.8991
+  x4 head node_395 e81 mnode_86->mnode_111 end mnode_111 xR -0.000 span/W 3.930 dA 2.943 dB 6.874 onCycle true step 0.8987
+  x4 head node_446 e52 mnode_45->node_364 end node_364 xR 0.046 span/W 3.480 dA 3.913 dB 7.301 onCycle true step 0.8162
+  x4 head node_463 e8 node_585->node_541 end node_541 xR 0.000 span/W 1.414 dA 6.479 dB 7.893 onCycle true step 0.8992
+  x4 head node_541 e112 node_585->mnode_135 end mnode_135 xR -0.000 span/W 2.121 dA 1.414 dB 3.536 onCycle true step 0.8981
+  x4 head node_585 e36 mnode_135->mnode_134 end mnode_134 xR -0.000 span/W 1.414 dA 2.121 dB 3.536 onCycle true step 0.8981
+  daily-19 head mnode_138 e13 mnode_138->node_793 end node_793 xR 0.464 span/W 3.722 dA 0.000 dB 2.795 onCycle true step 0.0654
+  daily-19 head mnode_152 e269 node_17->node_19 end node_19 xR 0.000 span/W 2.236 dA 0.707 dB 2.943 onCycle true step 0.8993
+  daily-19 head node_17 e269 node_17->node_19 end node_19 xR 0.000 span/W 2.236 dA 0.000 dB 2.236 onCycle true step 0.8981
+  daily-19 head node_19 e269 node_19->node_17 end node_17 xR 0.000 span/W 2.236 dA 0.000 dB 2.236 onCycle true step 0.8981
+  daily-19 head node_487 e229 node_487->node_489 end node_489 xR 0.000 span/W 2.236 dA 0.000 dB 2.236 onCycle true step 0.8981
+  daily-19 head node_489 e229 node_489->node_487 end node_487 xR 0.000 span/W 2.236 dA 0.000 dB 2.236 onCycle true step 0.8981
+  daily-19 head node_793 e13 node_793->mnode_138 end mnode_138 xR 0.464 span/W 3.722 dA 0.000 dB 2.795 onCycle true step 0.0654
+  daily-20 head mnode_7 e85 mnode_7->node_625 end node_625 xR 0.140 span/W 1.957 dA 0.000 dB 1.677 onCycle true step 0.6461
+  daily-20 head node_11 e6 node_11->node_13 end node_13 xR 0.000 span/W 2.236 dA 0.000 dB 2.236 onCycle true step 0.8981
+  daily-20 head node_13 e6 node_13->node_11 end node_11 xR 0.000 span/W 2.236 dA 0.000 dB 2.236 onCycle true step 0.8981
+  daily-20 head node_625 e85 node_625->mnode_7 end mnode_7 xR 0.140 span/W 1.957 dA 0.000 dB 1.677 onCycle true step 0.6461
+  daily-20 head node_659 e26 node_659->node_661 end node_661 xR 0.000 span/W 2.236 dA 0.000 dB 2.236 onCycle true step 0.8981
+  daily-20 head node_661 e26 node_661->node_659 end node_659 xR 0.000 span/W 2.236 dA 0.000 dB 2.236 onCycle true step 0.8981
+  daily-21 head mnode_115 e165 node_13->node_15 end node_15 xR 0.000 span/W 2.236 dA 0.707 dB 2.943 onCycle true step 0.8993
+  daily-21 head node_13 e165 node_13->node_15 end node_15 xR 0.000 span/W 2.236 dA 0.000 dB 2.236 onCycle true step 0.8981
+  daily-21 head node_15 e165 node_15->node_13 end node_13 xR 0.000 span/W 2.236 dA 0.000 dB 2.236 onCycle true step 0.8981
+  daily-21 head node_281 e259 node_600->node_283 end node_283 xR 0.296 span/W 1.414 dA 1.414 dB 2.236 onCycle true step 0.3662
+  daily-21 head node_283 e219 node_600->node_281 end node_281 xR 0.296 span/W 1.414 dA 1.414 dB 2.236 onCycle true step 0.3662
+  daily-22 head mnode_141 e125 mnode_141->node_13 end node_13 xR 0.296 span/W 3.536 dA 0.000 dB 2.943 onCycle true step 0.3665
+  daily-22 head mnode_59 e202 node_566->node_568 end node_568 xR 0.000 span/W 2.236 dA 0.707 dB 2.943 onCycle true step 0.8993
+  daily-22 head node_13 e125 node_13->mnode_141 end mnode_141 xR 0.296 span/W 3.536 dA 0.000 dB 2.943 onCycle true step 0.3665
+  daily-22 head node_337 e227 node_337->node_339 end node_339 xR 0.000 span/W 2.236 dA 0.000 dB 2.236 onCycle true step 0.8981
+  daily-22 head node_339 e227 node_339->node_337 end node_337 xR 0.000 span/W 2.236 dA 0.000 dB 2.236 onCycle true step 0.8981
+  daily-22 head node_566 e202 node_566->node_568 end node_568 xR 0.000 span/W 2.236 dA 0.000 dB 2.236 onCycle true step 0.8981
+  daily-22 head node_568 e202 node_568->node_566 end node_566 xR 0.000 span/W 2.236 dA 0.000 dB 2.236 onCycle true step 0.8981
+  daily-23 head mnode_0 e4 mnode_0->node_15 end node_15 xR 0.296 span/W 3.536 dA 0.000 dB 2.943 onCycle true step 0.3665
+  daily-23 head mnode_19 e63 node_283->node_281 end node_281 xR 0.000 span/W 2.236 dA 0.707 dB 2.943 onCycle true step 0.8993
+  daily-23 head mnode_54 e62 node_279->node_281 end node_281 xR 0.000 span/W 2.236 dA 0.707 dB 2.943 onCycle true step 0.8993
+  daily-23 head node_15 e4 node_15->mnode_0 end mnode_0 xR 0.296 span/W 3.536 dA 0.000 dB 2.943 onCycle true step 0.3665
+  daily-23 head node_26 e187 node_26->node_28 end node_28 xR 0.000 span/W 2.236 dA 0.000 dB 2.236 onCycle true step 0.8981
+  daily-23 head node_279 e62 node_279->node_281 end node_281 xR 0.000 span/W 2.236 dA 0.000 dB 2.236 onCycle true step 0.8981
+  daily-23 head node_28 e187 node_28->node_26 end node_26 xR 0.000 span/W 2.236 dA 0.000 dB 2.236 onCycle true step 0.8981
+  daily-23 head node_281 e62 node_281->node_279 end node_279 xR 0.000 span/W 2.236 dA 0.000 dB 2.236 onCycle true step 0.8981
+  daily-23 head node_281 e63 node_281->node_283 end node_283 xR 0.000 span/W 2.236 dA 0.000 dB 2.236 onCycle true step 0.8981
+  daily-23 head node_283 e63 node_283->node_281 end node_281 xR 0.000 span/W 2.236 dA 0.000 dB 2.236 onCycle true step 0.8981
+  daily-24 head mnode_11 e21 mnode_10->node_433 end node_433 xR 0.140 span/W 0.707 dA 1.250 dB 1.677 onCycle true step 0.6461
+  daily-24 head node_433 e26 mnode_10->mnode_11 end mnode_11 xR 0.140 span/W 1.250 dA 0.707 dB 1.677 onCycle true step 0.6462
+  daily-25 head mnode_0 e15 mnode_0->node_735 end node_735 xR 0.140 span/W 1.957 dA 0.000 dB 1.677 onCycle true step 0.6461
+  daily-25 head mnode_6 e251 node_216->node_218 end node_218 xR 0.000 span/W 2.236 dA 0.707 dB 2.943 onCycle true step 0.8993
+  daily-25 head node_216 e251 node_216->node_218 end node_218 xR 0.000 span/W 2.236 dA 0.000 dB 2.236 onCycle true step 0.8981
+  daily-25 head node_218 e251 node_218->node_216 end node_216 xR 0.000 span/W 2.236 dA 0.000 dB 2.236 onCycle true step 0.8981
+  daily-25 head node_735 e15 node_735->mnode_0 end mnode_0 xR 0.140 span/W 1.957 dA 0.000 dB 1.677 onCycle true step 0.6461
+  daily-25 head node_741 e51 node_741->node_743 end node_743 xR 0.000 span/W 2.236 dA 0.000 dB 2.236 onCycle true step 0.8981
+  daily-25 head node_743 e51 node_743->node_741 end node_741 xR 0.000 span/W 2.236 dA 0.000 dB 2.236 onCycle true step 0.8981
+
+Whole-graph reach meeting ends are too many to list (count in the table);
+the whole-graph rows for every maze are in census21f.json as compact tuples.
+Smallest xR overall (whole-graph): {"maze":"daily-19","head":"node_72","edge":229,"near":"node_487","far":"node_489","loop":false,"onCycle":true,"span":2.2360679774997863,"dA":69.109,"dB":71.346,"endVertex":"node_489","xR":-0.0004660112501255753,"step":0.8951268355040647}
