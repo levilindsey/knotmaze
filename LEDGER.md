@@ -509,19 +509,12 @@ Next free ID: K1184.
 - **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate correctly across
   junctions"). S1, S2 done (a4dc218a, 16246c90). Answers: the light splits at a fork (A), runs toward you behind
   you, straight through your junction with no dim moment. S3a-S6 next. Full text: `docs/ledger_notes.md`.
-  - owner: nobody since 2026-11-04 12:30 (the S3b-fix agent stopped before its 2 h cap with no passing rule; Claude briefs the next stage)
-  - branch: `worktree-agent-abc94fe39cb25940c`, worktree `.claude/worktrees/agent-abc94fe39cb25940c` (S3b plus an inert diag hook: not for merging as is); last commit: `eb615c2f`
-  - evidence: .claude/probes/K1139/ on the branch (diag_an.mjs, wedge.mjs, taujump.mjs, imgdiff.mjs, run_locked.ps1, batch_fix_*.txt); out/doc/s3b_fix1_cross_panels.png and s3b_fix1_nowf_cross_t5.png at the worktree root; diagnosis and residuals in `docs/ledger_notes.md`
-  - next: Claude looks at the two sheets (do 6-30/255 steps read as seams? that calibrates T), then a new stage from the Handoff's Resume: a tau rule continuous by construction, section 5's checks, k320 (fix1 40,147 vs 37,100), section 6's sheets; the __k1139diag hook goes before any merge
-  - brief: docs/design/K1139_s3b_fix.md on the agent's branch (Handoff and Resume at the end)
+  - owner: claude agent a70924906f47e96b0 (K1139 stage 2, launched 2026-11-04 about 13:16, 2 h cap), coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
+  - branch: `worktree-agent-a70924906f47e96b0`, worktree `.claude/worktrees/agent-a70924906f47e96b0` (master at acdc2f42 plus the S3b-fix branch cherry-picked, so its copies carry new SHAs; the old worktree `.claude/worktrees/agent-abc94fe39cb25940c` stays as it is); last commit: `c3ec166f`
+  - evidence: .claude/probes/K1139/ on both branches (diag_an.mjs, wedge.mjs, taujump.mjs, imgdiff.mjs, run_locked.ps1, batch_fix_*.txt); out/doc/s3b_fix1_*.png; the stage's dumps under .claude/probes/K1139/out/s2/ in the new worktree (untracked); diagnosis and residuals in `docs/ledger_notes.md`
+  - next: the agent runs Stage 2: a pivot param per band, no winner across bands, a continuous shared/drawing yield, a ramped crotch fill; T stands at 5.54/255 at cross (Claude's look at S3b's 2x crops of t4 and t5). Then Claude looks at its sheets and merges it or briefs the next stage; the __k1139diag hook goes before any merge
+  - brief: Stage 2 at the end of `docs/design/K1139_s3b_fix.md` (c3ec166f on the old branch; on the agent's branch after its cherry-pick)
   - env: the brief's section 7 (the node_modules junction), then Resume step 2 (ports 5620-5639)
-- **K1178** · Muse batch 16: run A drafts the brief (`docs/design/K1178_muse_batch16_run_a.md`), runs B-I, K and L
-  from the draft (Claude added H and I after B, K after I, L after K), after 16J.
-  - owner: nobody since 2026-11-04 12:30 (16L done; runs F and G queued as Muse chain runs 16F and 16G, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `20453e7c`
-  - evidence: `docs/design/K1178_muse_batch16_run_a.md`; the chain in `.claude/probes/K1053/` (queue.txt, chain.log)
-  - next: Run G done; batch 16 complete, Claude reviews and closes K1178
-  - brief: `docs/design/K1178_muse_batch16.md`
 - **K1179** · Thread geometry (Levi 11-04: rethink how thread bodies, junction rounds and gaps are built, maybe
   as a skin on the thread centres). Review (`docs/design/K1179_geometry_review.md`): keep threads and physics,
   one per-pixel outline rule for both looks, no simulated skin. S1, S1b, S1c: K1178 Runs I, K, L (all fail).
@@ -1244,9 +1237,9 @@ Every other item below waits on the trigger it names.
 - **K477** · K459's free cap, narrowed by the phone pass (2026-10-16, 6d8bb4a): the free-cap look is seen on the phone (chain 48 fade pluck, lobe keyB -1, blur reaches the cap tip at t 0.06) and a reveal-off pluck draws unfretted on the phone. Still open: the base collapse under a free cap (this stub's swing never engages it; overlay-hidden diff 0 px), a strict reveal-off 0-px A/B against a pre-K459 build, the rounded tip's AA along the strip's end, and a cap a node pins staying still, as in K397
   (`docs/design/K459.md`, Handoff; phone evidence `.claude/probes/K397/stage6/out/`).
 
-- **K484** · Sheet history entries (K467): a stale entry after a reload or discard with the sheet
-  open, an extra one on a fast close-then-reopen, and a live switch pushing one without a gesture
-  (docs/design/K467.md Handoff)
+- **K484** · Sheet history (K467): a live switch to the sheet with the panel open pushes an entry
+  without a gesture, which Chrome may skip on Back (the stale-on-load and fast close-then-reopen
+  entries were fixed in 072b5ae5) (docs/design/K467.md Handoff)
 - **K487** · The shipped probes .claude/probes/K92/undo.mjs and K198/stage2/pan.mjs predate the
   phone sheet; sheet-aware copies are in .claude/probes/K467/
 - **K491** · K465's exit marker over unseen thread is pixel-verified only at 2600x1600 `&gs=4` (the
@@ -1374,9 +1367,8 @@ Every other item below waits on the trigger it names.
 - **K642** · K580 s2 leftovers (`docs/design/K580_s2.md` Handoff, "Left"): tp60 draws a dark bite at
   the top of J at xh 2 (tp60 not used); the root's inner edge hooks at R at xh 2 (edge cos -0.883,
   hidden in the bowl); the taper reads TAPER_THREAD_LU 0.52, not the live tw.
-- **K648** · K336 leftovers: the streamers' sag only roughly holds across frame rates (the follow
-  runs once a frame); on the phone the closest cannon arc tops out 0.081 w from its edge (median
-  0.26 w).
+- **K648** · K336 leftover: on the phone the closest cannon arc tops out 0.081 w from its edge
+  (median 0.26 w); the streamers' sag holds across frame rates since 20453e7c.
 - **K652** · The telegraph line draws over unrevealed threads under the thread reveal (K525 report;
   the line is master's).
 - **K659** · K155's star thresholds look stale (K137's sim): the greedy median is 4.98 against
@@ -1995,6 +1987,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1178** · Muse batch 16 (runs A-L, `docs/design/K1178_muse_batch16.md`), each through the chain's gate; the open leftovers stay on their own items (K484, K648, K1179). Done in 20453e7c (2026-11-04).
 - **K178** · K79, K99 and K104 private-cache wrappers load the config with loadConfigFromFile, as K1139's tracked copy does. Done in 1a02e2b8 (2026-11-04).
 - **K999** · probes.md's paths narrowed to the probe scripts; K863's trace and data reads no longer carry it. Done in 2b302a3f (2026-11-04).
 - **K1175** · key hints recompute while the flow is on, so a disc never names a stale key on a bisector run. Done in 2a856876 (2026-11-04).
