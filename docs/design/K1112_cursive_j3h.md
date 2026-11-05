@@ -123,3 +123,13 @@ stop; after one, re-read this brief and `git log`. This stage is c only.
 - K1112's next exits, g, j, k, l, m, p, q, r, s, t, u, x, y and z, one
   stage each. Then J2's presets and the six pins are deleted.
 - Levi's v7.0 answers (K1119), in their own stage.
+
+## Progress (J3h agent, 18:52)
+
+- Step 3 done: the choice is the port alone (merge at c's end node within
+  [0, 10] u, as a, d, h, i and n), with c's template unchanged. Moving c's
+  end out along the font's exit (14 u and 20 u, one cubic, P1 kept G2) and
+  stretches of 2, 5 and 10 u all gave the same census within 0.2 u of font
+  distance and the same look. Trials are in the trace dir's work31\try* and
+  work31\census\v_*.
+- Step 4 running: work31\dbg\checks_k1112c.ps1.
