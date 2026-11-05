@@ -514,21 +514,21 @@ Next free ID: K1184.
   - evidence: .claude/probes/K1139/ (the scripts and the doc's pictures tracked; other outputs untracked, S2's record in out/s2/; the doc's appendix lists the commands); Claude's seam crops out/doc/s3b_seams_cross.png, s3b_seams_x4.png
   - next: the S3b fix (seams, dark wedges, P8 points, e79), then S4 with the Pixel batch (.claude/probes/K1139/out/s3b/pixel_batch_plan.md)
   - brief: docs/design/K1139_s3b_fix.md (on the agent's branch until it merges)
-- **K1178** · Muse batch 16: run A drafts the brief (`docs/design/K1178_muse_batch16_run_a.md`), runs B-I and K from
-  the draft (Claude added H and I after B, K after I), after 16J.
-  - owner: nobody since 2026-11-04 11:23 (16C done; runs K and D-G queued as Muse chain runs 16K and 16D-16G, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
+- **K1178** · Muse batch 16: run A drafts the brief (`docs/design/K1178_muse_batch16_run_a.md`), runs B-I, K and L
+  from the draft (Claude added H and I after B, K after I, L after K), after 16J.
+  - owner: nobody since 2026-11-04 12:02 (16E done; runs L, F and G queued as Muse chain runs 16L, 16F and 16G, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
   - branch: mainline; last commit: `1a02e2b8`
   - evidence: `docs/design/K1178_muse_batch16_run_a.md`; the chain in `.claude/probes/K1053/` (queue.txt, chain.log)
-  - next: Run E done; next Run F
+  - next: Run E done; next Run L (K1179 S1c)
   - brief: `docs/design/K1178_muse_batch16.md`
 - **K1179** · Thread geometry (Levi 11-04: rethink how thread bodies, junction rounds and gaps are built, maybe
   as a skin on the thread centres). Review (`docs/design/K1179_geometry_review.md`): keep threads and physics,
-  one per-pixel outline rule for both looks, no simulated skin. S1 spike: K1178 Run I (fail); S1b: K1178 Run K.
-  - owner: nobody since 2026-11-04 11:42 (S1b done in Muse batch 16 run K)
+  one per-pixel outline rule for both looks, no simulated skin. S1: K1178 Run I (fail); S1b: Run K (fail); S1c: Run L.
+  - owner: nobody since 2026-11-04 12:02 (S1c queued as Muse chain run 16L, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
   - branch: mainline; last commit: `755c44eb`
   - evidence: docs/design/K1179_geometry_review.md; docs/design/K1179_spike.md; docs/design/K1179_s1b.md; .claude/probes/K1179/
-  - next: S1b done (fail); Claude reviews, then S2 (the phone GPU check, 4 ms at 2x, after K1097's Pixel batch) or a rethink
-  - brief: `docs/design/K1178_muse_batch16.md` (Run K)
+  - next: S1c (K1178 Run L): the exact outline, criterion 1v, a closed-form solve of master's rule and its cost; then Claude reviews it
+  - brief: `docs/design/K1178_muse_batch16.md` (Run L)
 
 ## Next, in order
 
