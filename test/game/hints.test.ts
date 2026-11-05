@@ -2,9 +2,10 @@ import { describe, it, expect } from "vitest";
 import { generateLatticeKnotwork } from "../../src/core/lattice_grower";
 import { buildMazePlan, DEFAULT_MAZE_PARAMS } from "../../src/core/maze_plan";
 import { applyMazePlan, applyMazeCuts } from "../../src/core/maze_apply";
-import { buildWalkGraph } from "../../src/core/walk_graph";
-import type { WalkGraph } from "../../src/core/walk_graph";
+import { buildWalkGraph, walkDistances } from "../../src/core/walk_graph";
+import type { WalkGraph, WalkEdge, WalkVertex } from "../../src/core/walk_graph";
 import { FabricMazeController } from "../../src/game/fabric_controller";
+import { buildFire } from "../../src/game/fire";
 import { HINTS_MAX, HINT_DISTANCE, hintSpans, hintsOf, hintsTag, liveDistances, nextGoodArm } from "../../src/game/hints";
 import type { HintSpan } from "../../src/game/hints";
 
@@ -126,6 +127,79 @@ describe("hints (K137 stage 2, pure)", () => {
     const w = walkFor(5);
     expect(liveDistances(w)).toBe(w.distToExit);
     expect(liveDistances(w, () => true)).toBe(w.distToExit);
+  });
+});
+
+// K737 fire piece: a hand graph (fire.test.ts's graph() shape), lengths on
+// the runs: S-H 2, H-A 1, A-X 4, H-B 3, B-X 3, S-A 1. Fire rate 0.5, hold 0:
+// d = S 0, A 1, H 2, B 5, X 5, so T = 2d (A 2, H 4, B 10, X 10). At H with
+// L = 2 (after S-H), H-A arrives at 3, after T(A) = 2, so it smolders; H-B
+// arrives at 5 and B-X at 8, both inside 10. H-A-X (5) beats H-B-X (6) on
+// length, so the shortest arm is the refused one.
+function handGraph(runs: Array<[string, string, number]>): WalkGraph {
+  const vertices = new Map<string, WalkVertex>();
+  const edges: WalkEdge[] = [];
+  const at = (id: string): WalkVertex => {
+    let v = vertices.get(id);
+    if (!v) {
+      v = { id, isEnd: false, chain: 0, ctrl: 0, edges: [] };
+      vertices.set(id, v);
+    }
+    return v;
+  };
+  runs.forEach(([va, vb, length], id) => {
+    edges.push({ id, va, vb, chain: id, ctrlA: 0, ctrlB: 2, length });
+    at(va).edges.push(id);
+    if (vb !== va) at(vb).edges.push(id);
+  });
+  for (const v of vertices.values()) v.isEnd = v.edges.length === 1;
+  const distToExit = walkDistances(vertices, edges, "X");
+  return { vertices, edges, start: "S", exit: "X", optimalLength: distToExit.get("S")!, distToExit };
+}
+
+const FIRE_RUNS: Array<[string, string, number]> = [
+  ["S", "H", 2],
+  ["H", "A", 1],
+  ["A", "X", 4],
+  ["H", "B", 3],
+  ["B", "X", 3],
+  ["S", "A", 1],
+];
+
+describe("hints and the fire (K737)", () => {
+  it("names the fire-safe arm from the head, not the smoldering shortest arm", () => {
+    const w = handGraph(FIRE_RUNS);
+    const c = new FabricMazeController(w, false, buildFire(w, 0.5, 0));
+    expect(c.tapEdge(0)).toBe("advance");
+    expect(c.head).toBe("H");
+    expect(c.smoldering(1)).toBe(true);
+    expect(c.tapEdge(1)).toBe("smolder");
+    expect(c.head).toBe("H");
+    expect(c.goodArm()).toBe(3);
+    expect(c.shortestRoute()).toEqual([3, 4]);
+    expect(c.hintRoute()[0]?.eid).toBe(3);
+    expect(c.tapEdge(c.goodArm())).toBe("advance");
+    expect(c.head).toBe("B");
+  });
+
+  it("names nothing when no arm from the head is fire-safe", () => {
+    const w = handGraph([...FIRE_RUNS, ["S", "B", 1]]);
+    const c = new FabricMazeController(w, false, buildFire(w, 0.5, 0));
+    expect(c.tapEdge(0)).toBe("advance");
+    expect(c.head).toBe("H");
+    expect(c.fireLost).toBe(true);
+    expect(c.goodArm()).toBe(-1);
+    expect(c.shortestRoute()).toEqual([]);
+    expect(c.hintRoute()).toEqual([]);
+  });
+
+  it("without a fire the same graph still names the shortest arm", () => {
+    const w = handGraph(FIRE_RUNS);
+    const c = new FabricMazeController(w);
+    expect(c.tapEdge(0)).toBe("advance");
+    expect(c.goodArm()).toBe(1);
+    expect(c.shortestRoute()).toEqual([1, 2]);
+    expect(c.hintRoute()[0]?.eid).toBe(1);
   });
 });
 

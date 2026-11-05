@@ -533,7 +533,8 @@ export class FabricMazeController {
   // the first run of the shortest route to the exit over the runs still
   // there (never a broken, cut or burnt one), or -1 (solved, lost, at the
   // exit, or no route left). It ignores the minotaur (it still points to
-  // the exit) and the spool (a refused arm can still be the good one).
+  // the exit) and the spool (a refused arm can still be the good one -
+  // for the spool only: a run smoldering from the head is skipped too).
   goodArm(): number {
     if (this.choices().length === 0) return -1;
     if (this.rule) return this.ruleGoodArm();
@@ -542,8 +543,15 @@ export class FabricMazeController {
     const gone = this.breakable || this.cuts.size > 0;
     const live =
       gone || fire
-        ? (eid: number): boolean =>
-            !this.broken(eid) && !(fire && runBurnAt(this.walk, fire, eid, L).state === "burnt")
+        ? (eid: number): boolean => {
+            if (this.broken(eid)) return false;
+            if (fire && runBurnAt(this.walk, fire, eid, L).state === "burnt") return false;
+            if (fire) {
+              const e = this.walk.edges[eid];
+              if (e && (e.va === this.head || e.vb === this.head) && this.smoldering(eid)) return false;
+            }
+            return true;
+          }
         : undefined;
     return nextGoodArm(this.walk, liveDistances(this.walk, live), this.head, live);
   }
@@ -586,8 +594,15 @@ export class FabricMazeController {
     const gone = this.breakable || this.cuts.size > 0;
     const live =
       gone || fire
-        ? (eid: number): boolean =>
-            !this.broken(eid) && !(fire && runBurnAt(this.walk, fire, eid, L).state === "burnt")
+        ? (eid: number): boolean => {
+            if (this.broken(eid)) return false;
+            if (fire && runBurnAt(this.walk, fire, eid, L).state === "burnt") return false;
+            if (fire) {
+              const e = this.walk.edges[eid];
+              if (e && (e.va === this.head || e.vb === this.head) && this.smoldering(eid)) return false;
+            }
+            return true;
+          }
         : undefined;
     const dist = liveDistances(this.walk, live);
     const route: number[] = [];

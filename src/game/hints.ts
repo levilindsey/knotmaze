@@ -1,7 +1,8 @@
 // K137 stage 2 (4.28): HINTS AND THE COMPASS. Both point along the next
 // good arm: the first run of the shortest walk-graph route from the head to
 // the exit, over the live runs (broken and cut runs removed). They ignore
-// the minotaur and the fire: with a chase on they still point to the exit.
+// the minotaur (with a chase on they still point to the exit) but not
+// the fire: a run smoldering from the head is not live.
 // Pure.
 
 import type { WalkGraph } from "../core/walk_graph";
