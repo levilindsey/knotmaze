@@ -9,3 +9,4 @@ ji 28 (four), orientation 1, phases 0,1,2,3,4,5,6,7: candidate px 35863, masked 
     GPU-only by sample kinds: {"mixed f2 s2 n0":2,"fan x4":3,"strip x4":6}
     luma GPU - model on GPU-only: n 11 mean -0.5 p10 -0.9 med -0.4 p90 -0.3
     beyond strip reach (e < -1.5): 1, GPU = webs-off 0, kinds {"fan x4":1}, luma GPU - model n 1 mean -1.0 p10 -1.0 med -1.0 p90 -1.0
+  fan-only beyond-reach GPU-only wedges: other-record samples by aRec {"2129":25972}

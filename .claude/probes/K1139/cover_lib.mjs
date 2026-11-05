@@ -67,6 +67,39 @@ export function coverage(DIR, rc) {
   return kinds;
 }
 
+// Per pixel and sample (one orientation): the record id (aRec, strips
+// carry rec + 0.25) of the last covering primitive, NaN where none.
+export function owners(DIR, rc, or) {
+  const { w: BW, h: BH } = rc.box;
+  const own = new Float32Array(BW * BH * 4).fill(NaN);
+  const buf = readFileSync(join(DIR, `r${rc.ji}.tri.bin`));
+  const T = new Float32Array(buf.buffer, buf.byteOffset, buf.byteLength / 4);
+  for (let t = 0; t < T.length / 14; t++) {
+    const o = t * 14;
+    const ax = T[o + 2], ay = T[o + 3], bx = T[o + 4], by = T[o + 5], cx = T[o + 6], cy = T[o + 7];
+    const la = T[o + 8], lb = T[o + 9], lc = T[o + 10], rec = T[o + 11];
+    const strip = rec - Math.floor(rec) > 0.125;
+    const area = (bx - ax) * (cy - ay) - (by - ay) * (cx - ax);
+    if (Math.abs(area) < 1e-9) continue;
+    const x0 = Math.max(0, Math.floor(Math.min(ax, bx, cx) - rc.box.x) - 1), x1 = Math.min(BW - 1, Math.ceil(Math.max(ax, bx, cx) - rc.box.x) + 1);
+    const y0 = Math.max(0, Math.floor(Math.min(ay, by, cy) - rc.box.y) - 1), y1 = Math.min(BH - 1, Math.ceil(Math.max(ay, by, cy) - rc.box.y) + 1);
+    for (let Y = y0; Y <= y1; Y++)
+      for (let X = x0; X <= x1; X++) {
+        const px = rc.box.x + X + 0.5, py = rc.box.y + Y + 0.5;
+        const wa = ((bx - px) * (cy - py) - (by - py) * (cx - px)) / area;
+        const wb = ((cx - px) * (ay - py) - (cy - py) * (ax - px)) / area;
+        if (!strip && wa * la + wb * lb + (1 - wa - wb) * lc > 1.001) continue;
+        for (let s = 0; s < 4; s++) {
+          const qx = px + OFFS[or][s][0], qy = py + OFFS[or][s][1];
+          const ea = ((bx - qx) * (cy - qy) - (by - qy) * (cx - qx)) / area;
+          const eb = ((cx - qx) * (ay - qy) - (cy - qy) * (ax - qx)) / area;
+          if (ea >= 0 && eb >= 0 && 1 - ea - eb >= 0) own[(Y * BW + X) * 4 + s] = rec;
+        }
+      }
+  }
+  return own;
+}
+
 const imgCache = new Map();
 export const img = (DIR, k, v) => {
   const p = join(DIR, `t${k}_${v}.png`);

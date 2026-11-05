@@ -35,6 +35,14 @@ const rc = meta.recs.find((r) => r.ji === Number(JI));
 const { w: BW, h: BH } = rc.box;
 const ox = rc.box.x - meta.clip.x * meta.dsf, oy = rc.box.y - meta.clip.y * meta.dsf;
 const n = BW * BH;
+// Stage 4 (4.2 task 3): K1139_COVER=1 also sorts the pixels the far edge
+// changes (fill > 0.02 at E = 3.0 and not at 1.56; and the largest fill
+// change from 1.56 to 3.0) by what cover_lib says the GPU's 4 samples show.
+const COVER = process.env.K1139_COVER === "1";
+const coverLib = COVER ? await import("./cover_lib.mjs") : null;
+const cKinds = COVER ? coverLib.coverage(DIR, rc) : null;
+const cPo = cKinds ? coverLib.pickOrient(DIR, meta, rc, cKinds, PH) : null;
+const gain = { n: 0, byKind: {}, dMax: {}, dOver: {} };
 const used = new Set();
 for (const b of rc.bands) { used.add(b.ia); used.add(b.ib); }
 const unlit = rc.arms.map((a, i) => i).filter((i) => !used.has(i));
@@ -81,6 +89,7 @@ for (const k of PH) {
     return im.data[(y * im.W + x) * 3 + c];
   };
   const fill3 = OUTP && k === PH[PH.length - 1] ? new Float32Array(n * 3) : null;
+  const CC = cPo ? coverLib.composite(DIR, meta, rc, cKinds, k, cPo.or, coverLib.loadTwin(DIR, rc.ji, k)) : null;
   for (let Y = 0; Y < BH; Y++)
     for (let X = 0; X < BW; X++) {
       const i = Y * BW + X;
@@ -94,6 +103,7 @@ for (const k of PH) {
       rc.bands.forEach((b, bi) => { if (b.shared > 0.5) dShared = Math.min(dShared, f32[(i * NB + bi) * 2]); });
       let bare = true;
       rc.bands.forEach((b, bi) => { if (b.shared < 0.5 && u8[o + bi * PB + 1] > 0) bare = false; });
+      const wv = [0, 0, 0];
       ES.forEach((E, ei) => {
         let wW = 0;
         for (let r = 0; r < rc.bands.length; r++) {
@@ -111,6 +121,15 @@ for (const k of PH) {
           }
         }
         if (fill3) fill3[i * 3 + ei] = wW;
+        wv[ei] = wW;
+        if (CC && ei === ES.length - 1) {
+          const c = [0, 1, 2, 3].map((j) => CC.cnt[i * 4 + j]);
+          const key = c[3] === 4 ? "other record x4" : c[3] ? "other record part" : c[2] ? "strip" : c[1] ? "fan" : "none";
+          const dW = wv[2] - wv[0];
+          if (wv[2] > 0.02 && wv[0] <= 0.02) { gain.n++; gain.byKind[key] = (gain.byKind[key] ?? 0) + 1; }
+          gain.dMax[key] = Math.max(gain.dMax[key] ?? 0, dW);
+          if (dW > 0.004) gain.dOver[key] = (gain.dOver[key] ?? 0) + 1;
+        }
         if (wW > 0.02) {
           S[E].fill++;
           if (bare) S[E].bare++;
@@ -136,6 +155,10 @@ for (const k of PH) {
 }
 console.log(`ji ${rc.ji} phases ${PH.join(",")}: fan px ${footN}, unlit arms [${unlit.join(",")}] px ${armN}`);
 for (const E of ES) console.log(`  E=${E}: fill>0.02 px ${S[E].fill} (bare ${S[E].bare}); unlit-arm px with fill>0.02 ${JSON.stringify(S[E].arm)} max ${JSON.stringify(Object.fromEntries(Object.entries(S[E].armMax).map(([a, v]) => [a, +v.toFixed(3)])))}`);
+if (cPo) {
+  console.log(`  cover (orientation ${cPo.or}): px over 0.02 at E=3.0 and not at 1.56: ${gain.n}, by the GPU's samples ${JSON.stringify(gain.byKind)}`);
+  console.log(`    fill change 1.56 -> 3.0, max by kind ${JSON.stringify(Object.fromEntries(Object.entries(gain.dMax).map(([a, v]) => [a, +v.toFixed(4)])))}; px with a change over 0.004 ${JSON.stringify(gain.dOver)}`);
+}
 if (pngOut && OUTP) {
   writeFileSync(OUTP, encodePNG({ W: pngOut.W, H: pngOut.H, data: Buffer.from(pngOut.rgb.buffer) }));
   console.log("wrote", OUTP);

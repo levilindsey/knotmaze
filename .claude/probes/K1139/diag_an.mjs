@@ -25,6 +25,13 @@ const PH = (process.argv[4] ?? "0-7").split(",").flatMap((t) => {
 const ONLY = process.argv[5] ? process.argv[5].split(",").map(Number) : null;
 const meta = JSON.parse(readFileSync(join(DIR, "meta.json"), "utf8"));
 if (OUT) mkdirSync(OUT, { recursive: true });
+// Stage 4 (4.2 task 2): K1139_COVER=1 takes the CPU's G from cover_lib's
+// per-sample composite (this fan's twin, this record's cover strip's twin
+// with strip = true, or the webs-off frame) instead of the fan-only twin,
+// and drops every GPU step where either pixel has another record's sample
+// (counted as masked). Unset, the classes are Stage 3's.
+const COVER = process.env.K1139_COVER === "1";
+const coverLib = COVER ? await import("./cover_lib.mjs") : null;
 
 const NB = 4, PB = 9, PX = NB * PB + 10;
 // The crest's steepest slope: the bump rises 0.9 over CREST_WIDTH 0.72
@@ -53,9 +60,13 @@ for (const rc of meta.recs) {
     if (sa && sb) return "shared/shared";
     return pairA ? "fork-siblings" : "other-pairs";
   };
+  const kinds = COVER ? coverLib.coverage(DIR, rc) : null;
+  const po = kinds ? coverLib.pickOrient(DIR, meta, rc, kinds, PH) : null;
   for (const k of PH) {
     const fu = join(DIR, `r${rc.ji}_t${k}.u8`);
     if (!existsSync(fu)) continue;
+    const CC = po ? coverLib.composite(DIR, meta, rc, kinds, k, po.or, coverLib.loadTwin(DIR, rc.ji, k)) : null;
+    let masked = 0;
     const u8 = new Uint8Array(readFileSync(fu));
     const f32 = new Float32Array(new Uint8Array(readFileSync(join(DIR, `r${rc.ji}_t${k}.f32`))).buffer);
     // Stage 3 (S3.1): per pixel per band, the twin's compression c (from the
@@ -125,6 +136,7 @@ for (const rc of meta.recs) {
     const sw = { n: 0, dv: 0, dOut: 0 };
     // Stage 2 (b): kFanPulseV is the max over bands of v * cov (win is its argmax).
     const cpuG = (i) => {
+      if (CC) return CC.G[i];
       let g = 0;
       for (let b = 0; b < nb; b++) g = Math.max(g, (u8[i * PX + b * PB] * u8[i * PX + b * PB + 1]) / 255);
       return g;
@@ -148,7 +160,9 @@ for (const rc of meta.recs) {
           if (win[i] === win[j]) maxSame = Math.max(maxSame, sc);
           maxStepC = Math.max(maxStepC, sc);
           if (sc > T) seamC[i] = 1;
-          if (footIn[i] && footIn[j]) {
+          const other = CC && (CC.cnt[i * 4 + 3] || CC.cnt[j * 4 + 3]);
+          if (other && footIn[i] && footIn[j]) masked++;
+          if (footIn[i] && footIn[j] && !other) {
             const sg = Math.abs(at(gD, X, Y, 1) - at(gD, X + dx, Y + dy, 1));
             maxStepG = Math.max(maxStepG, sg);
             const same = win[i] === win[j] && win[i] >= 0;
@@ -214,7 +228,7 @@ for (const rc of meta.recs) {
       maxStepG, maxStepC: +maxStepC.toFixed(1), maxSame: +maxSame.toFixed(1), byCls,
       seamOld: nOld, ramps: nRamp, rampMaxC: +ramp.maxC.toFixed(3), rampAtMaxC: ramp.atMaxC,
       rampWorst: +ramp.worst.toFixed(3), rampAtWorst: ramp.atWorst, outerStrict: ramp.outerStrict,
-      m0: m0.size, m0Seams, hasC: !!C32,
+      m0: m0.size, m0Seams, hasC: !!C32, cover: CC ? { or: po.or, masked } : null,
       sameSub, steepGmax: +sameG.max.toFixed(3), steepGoverC: +sameG.gOverC.toFixed(3), jumps: sameG.jumps,
     };
     summary.push(row);
@@ -260,6 +274,7 @@ for (const r of summary) {
   t.seamOld += r.seamOld; t.ramps += r.ramps; t.rampMaxC = Math.max(t.rampMaxC, r.rampMaxC);
   if (r.rampWorst > t.rampWorst) { t.rampWorst = r.rampWorst; t.rampAtWorst = [r.k, ...r.rampAtWorst]; }
   t.outerStrict += r.outerStrict; t.m0Seams += r.m0Seams;
+  if (r.cover) t.masked = (t.masked ?? 0) + r.cover.masked;
   for (const [kk, v] of Object.entries(r.byCls)) t.byCls[kk] = (t.byCls[kk] ?? 0) + v;
   t.sameSub ??= {};
   for (const [kk, v] of Object.entries(r.sameSub)) t.sameSub[kk] = (t.sameSub[kk] ?? 0) + v;

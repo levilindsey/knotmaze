@@ -1,0 +1,6 @@
+ji 28 phases 0,1,2,3,4,5,6,7: fan px 89487, unlit arms [] px 0
+  E=1.56: fill>0.02 px 6226 (bare 862); unlit-arm px with fill>0.02 {} max {}
+  E=2.5: fill>0.02 px 6321 (bare 957); unlit-arm px with fill>0.02 {} max {}
+  E=3: fill>0.02 px 6339 (bare 975); unlit-arm px with fill>0.02 {} max {}
+  cover (orientation 1): px over 0.02 at E=3.0 and not at 1.56: 113, by the GPU's samples {"other record x4":113}
+    fill change 1.56 -> 3.0, max by kind {"other record x4":0.0142,"other record part":0,"fan":0,"strip":0}; px with a change over 0.004 {"other record x4":655}

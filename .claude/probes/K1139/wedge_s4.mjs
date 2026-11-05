@@ -12,7 +12,7 @@
 //   node wedge_s4.mjs <dumpDir> <ji> [phases=0-7]
 import { readFileSync } from "fs";
 import { join } from "path";
-import { coverage, composite, loadTwin, pickOrient, NB, PB, PX } from "./cover_lib.mjs";
+import { coverage, composite, loadTwin, pickOrient, owners, NB, PB, PX } from "./cover_lib.mjs";
 
 const [DIR, JI, PHS] = process.argv.slice(2);
 const PH = (PHS ?? "0-7").split(",").flatMap((t) => {
@@ -56,6 +56,10 @@ for (let Y = 0; Y < BH; Y++)
   }
 const kinds = coverage(DIR, rc);
 const po = pickOrient(DIR, meta, rc, kinds, PH);
+// Which record's primitive wins the other-record samples of the
+// beyond-reach GPU-only wedges (the fan-only scoring), by aRec.
+const own = owners(DIR, rc, po.or);
+const farOwners = {};
 const mk = () => ({ gpu: 0, mod: 0, both: 0, gOnly: 0, mOnly: 0, bins: { "e<-1.5": 0, "-1.5..-0.5": 0, "-0.5..0": 0, "e>=0": 0 }, kinds: {}, dL: [], dLfar: [], gpuIsDW: 0, gpuIsDWfar: 0, bare: 0, far: 0 });
 const R = { fan: mk(), comp: mk() };
 let masked = 0, cand = 0;
@@ -114,7 +118,10 @@ for (const k of PH) {
           S.dL.push(lg - lm);
           if (gpuIsDW) S.gpuIsDW++;
           if (u8[o + b1 * PB + 1] === 0 && u8[o + b2 * PB + 1] === 0) S.bare++;
-          if (bin === "e<-1.5") { S.far++; S.dLfar.push(lg - lm); if (gpuIsDW) S.gpuIsDWfar++; S.farKinds = S.farKinds ?? {}; S.farKinds[kk] = (S.farKinds[kk] ?? 0) + 1; }
+          if (bin === "e<-1.5") {
+            S.far++; S.dLfar.push(lg - lm); if (gpuIsDW) S.gpuIsDWfar++; S.farKinds = S.farKinds ?? {}; S.farKinds[kk] = (S.farKinds[kk] ?? 0) + 1;
+            if (S === R.fan) for (let s = 0; s < 4; s++) { const r = own[i * 4 + s]; if (r === r && Math.floor(r + 0.5) !== rc.rb) farOwners[r] = (farOwners[r] ?? 0) + 1; }
+          }
         }
       };
       score(R.fan, L(u8[o + 42], u8[o + 43], u8[o + 44]));
@@ -135,3 +142,5 @@ for (const [name, S] of Object.entries(R)) {
   console.log(`    luma GPU - model on GPU-only: ${st(S.dL)}`);
   if (S.far) console.log(`    beyond strip reach (e < -1.5): ${S.far}, GPU = webs-off ${S.gpuIsDWfar}, kinds ${JSON.stringify(S.farKinds)}, luma GPU - model ${st(S.dLfar)}`);
 }
+const recName = (r) => { const m = meta.recs.find((x) => x.rb === Math.floor(r + 0.5)); return `${r}${m ? ` (ji ${m.ji})` : ""}`; };
+console.log(`  fan-only beyond-reach GPU-only wedges: other-record samples by aRec ${JSON.stringify(Object.fromEntries(Object.entries(farOwners).map(([r, v]) => [recName(Number(r)), v])))}`);
