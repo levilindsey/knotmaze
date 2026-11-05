@@ -1,0 +1,64 @@
+out/s4b/s4d/x4.json: head node_382, reach 8, spacing 2.5, 14 pulse item(s)
+  P6a declared once: pass (14 edges)
+  BAND EXTENT (fillHalf 0.260; band - ribbon over 64 times; STEP over 1e-3):
+    band mnode_171 e180->e140 distJ 3.211 in (near end; R2.w 0.000): B fan (0, 1.047] 0.0000 at tau 0.000; to tauHi 1.307 0.0000 at 0.000; A [-1.363, 0) 0.0005 at -1.215
+    band mnode_171 e180->e141 distJ 3.211 in (near end; R2.w 0.000): B fan (0, 1.018] 0.0000 at tau 0.000; to tauHi 1.278 0.0000 at 0.000; A [-1.363, 0) 0.0005 at -1.215
+    band node_378 e176->e135 distJ 4.793 out (near end; R2.w 0.000): B fan (0, 1.101] 0.0000 at tau 0.000; to tauHi 1.361 0.0000 at 0.000; A [-1.361, 0) 0.0003 at -0.785
+    band node_378 e176->e175 distJ 4.793 out (near end; R2.w 0.000): B fan (0, 1.139] 0.0000 at tau 0.000; to tauHi 1.399 0.0000 at 0.000; A [-1.361, 0) 0.0003 at -0.785
+    band node_378 e176->e134 distJ 4.793 out (near end; R2.w 0.000): B fan (0, 1.170] 0.0000 at tau 0.000; to tauHi 1.430 0.0000 at 0.000; A [-1.361, 0) 0.0003 at -0.785
+    band node_386 e177->e178 distJ 4.725 out (near end; R2.w 0.000): B fan (0, 1.120] 0.0000 at tau 0.000; to tauHi 1.380 0.0000 at 0.000; A [-1.329, 0) 0.0001 at -1.310
+    band node_386 e177->e79 distJ 4.725 out (near end; R2.w 0.000): B fan (0, 1.194] 0.0000 at tau 0.000; to tauHi 1.454 0.0000 at 0.000; A [-1.329, 0) 0.0001 at -1.310
+    band node_714 e140->e95 distJ 5.897 in (near end; R2.w 0.000): B fan (0, 1.179] 0.0000 at tau 0.000; to tauHi 1.439 0.0000 at 0.000; A [-1.431, 0) 0.0006 at -0.015
+    band node_714 e140->e139 distJ 5.897 in (near end; R2.w 0.000): B fan (0, 1.124] 0.0000 at tau 0.000; to tauHi 1.384 0.0000 at 0.000; A [-1.431, 0) 0.0006 at -0.015
+    band mnode_27 e135->e18 distJ 6.811 out (near end; R2.w 0.000): B fan (0, 1.083] 0.0170 at tau 1.010 STEP; to tauHi 1.343 0.0170 at 1.010 STEP; A [-1.278, 0) 0.0003 at -0.945
+    band mnode_27 e135->e136 distJ 6.811 out (near end; R2.w 0.000): B fan (0, 1.017] 0.0000 at tau 0.000; to tauHi 1.277 0.0000 at 0.000; A [-1.278, 0) 0.0003 at -0.945
+out/s4b/s4d/cyc.json: head node_221, reach 3, spacing 2.5, 4 pulse item(s)
+  P6a declared once: pass (4 edges)
+  e210 TWO node_221->node_218: W 2.746 dA 0.000 (out) dB 1.386 (out) ridge at d 2.066 (dG 2.066)
+    gR 2.066: xR at A 2.066 (joint ridge factor 1.000), at B 0.680 (1.000)
+    end A at node_221: no declared arm ends there (the head)
+    end B at node_218 from e39 (out cont): P2 step -0.0001  P1 max |dv| 0.0001
+    ridge: max |dv| across it 0.0000; largest change per 0.01 world on Q 0.0316 at d 1.58 (a one-ended arm from A: 0.0213)
+    P5 longest unlit stretch with light on both sides: 0.135 world (one-ended from A: 0.730; want <= 0.1)
+    P3 speed: A 1.600-1.600, B none world/s (want 1.6)
+    P4 width: A 0.721-0.722, B none world (one-ended NaN; crests at least 0.75 from the ridge and the ends)
+    P6b crest maxima/expected at 8 times: 1/1 1/1 1/1 2/2 2/2 2/2 2/0 1/1
+  BAND EXTENT (fillHalf 0.260; band - ribbon over 64 times; STEP over 1e-3):
+    band node_218 e39->e209 distJ 1.386 out (near end; R2.w 0.000): B fan (0, 1.083] 0.0000 at tau 0.000; to tauHi 1.343 0.0000 at 0.000; A [-1.386, 0) 0.0001 at -0.860
+    band node_218 e39->e210 distJ 1.386 out (far end TWO gR 2.066; R2.w 0.000): B fan (0, 1.212] 0.9859 at tau 1.210 STEP; to tauHi 1.472 1.0000 at 1.460 STEP; A [-1.386, 0) 0.0001 at -0.860
+out/s4b/s4d/loop.json: head node_635, reach 8, spacing 2.5, 6 pulse item(s)
+  P6a declared once: pass (6 edges)
+  e102 TWO node_635->node_635: W 7.671 dA 0.000 (out) dB 0.000 (out) ridge at d 3.835 (dG 3.835)
+    gR 3.835: xR at A 3.835 (joint ridge factor 1.000), at B 3.835 (1.000)
+    end A at node_635: no declared arm ends there (the head)
+    end B at node_635: no declared arm ends there (the head)
+    ridge: max |dv| across it 0.0000; largest change per 0.01 world on Q 0.0299 at d 3.34 (a one-ended arm from A: 0.0213)
+    P5 longest unlit stretch with light on both sides: 2.065 world (one-ended from A: 1.065; want <= 0.1)
+    P3 speed: A 1.600-1.600, B 1.600-1.600 world/s (want 1.6)
+    P4 width: A 0.720-0.722, B 0.719-0.720 world (one-ended 0.720; crests at least 0.75 from the ridge and the ends)
+    P6b crest maxima/expected at 8 times: 4/4 4/4 4/4 4/2 4/2 2/2 2/2 4/4
+  BAND EXTENT (fillHalf 0.260; band - ribbon over 64 times; STEP over 1e-3):
+    band mnode_77 e101->e56 distJ 4.253 in (near end; R2.w 0.000): B fan (0, 1.069] 0.0000 at tau 0.000; to tauHi 1.329 0.0000 at 0.000; A [-1.407, 0) 0.0006 at -0.020
+    band mnode_77 e101->e57 distJ 4.253 in (near end; R2.w 0.000): B fan (0, 1.048] 0.0000 at tau 0.000; to tauHi 1.308 0.0000 at 0.000; A [-1.407, 0) 0.0006 at -0.020 [B arm W 0.923: compared to there]
+    band node_649 e57->e58 distJ 5.177 in (near end; R2.w 0.000): B fan (0, 1.128] 0.0000 at tau 0.000; to tauHi 1.388 0.0000 at 0.000; A [-1.316, 0) 0.0008 at -0.020 [A arm W 0.923: compared to there]
+    band node_649 e57->e178 distJ 5.177 in (near end; R2.w 0.000): B fan (0, 1.149] 0.0000 at tau 0.000; to tauHi 1.409 0.0000 at 0.000; A [-1.316, 0) 0.0008 at -0.020 [A arm W 0.923: compared to there]
+out/s4b/s4d/preloop.json: head mnode_77, reach 8, spacing 2.5, 10 pulse item(s)
+  P6a declared once: pass (10 edges)
+  e102 TWO node_635->node_635: W 7.671 dA 4.253 (out) dB 4.253 (out) ridge at d 3.835 (dG 8.088)
+    gR 8.088: xR at A 3.835 (joint ridge factor 1.000), at B 3.835 (1.000)
+    end A at node_635 from e101 (out cont): P2 step -0.0005  P1 max |dv| 0.0006
+    end B at node_635 from e101 (out cont): P2 step -0.0005  P1 max |dv| 0.0006
+    ridge: max |dv| across it 0.0000; largest change per 0.01 world on Q 0.0232 at d 3.34 (a one-ended arm from A: 0.0211)
+    P5 longest unlit stretch with light on both sides: 2.445 world (one-ended from A: 1.065; want <= 0.1)
+    P3 speed: A 1.600-1.600, B 1.600-1.600 world/s (want 1.6)
+    P4 width: A 0.623-0.722, B 0.623-0.720 world (one-ended 0.720; crests at least 0.75 from the ridge and the ends)
+    P6b crest maxima/expected at 8 times: 4/2 4/2 2/2 2/2 2/2 4/4 4/4 4/4
+  BAND EXTENT (fillHalf 0.260; band - ribbon over 64 times; STEP over 1e-3):
+    band node_649 e57->e58 distJ 0.923 in (near end; R2.w 0.000): B fan (0, 1.128] 0.0000 at tau 0.000; to tauHi 1.388 0.0000 at 0.000; A [-1.316, 0) 0.0007 at -0.410 [A arm W 0.923: compared to there]
+    band node_649 e57->e178 distJ 0.923 in (near end; R2.w 0.000): B fan (0, 1.149] 0.0000 at tau 0.000; to tauHi 1.409 0.0000 at 0.000; A [-1.316, 0) 0.0007 at -0.410 [A arm W 0.923: compared to there]
+    band mnode_19 e58->e91 distJ 4.847 in (near end; R2.w 0.000): B fan (0, 1.220] 0.0000 at tau 0.000; to tauHi 1.480 0.0000 at 0.000; A [-1.412, 0) 0.0001 at -0.095
+    band mnode_19 e58->e59 distJ 4.847 in (near end; R2.w 0.000): B fan (0, 1.755] 0.0000 at tau 0.000; to tauHi 2.015 0.0000 at 0.000; A [-1.412, 0) 0.0001 at -0.095
+    band node_765 e178->e9 distJ 5.069 in (near end; R2.w 0.000): B fan (0, 1.102] 0.0000 at tau 0.000; to tauHi 1.362 0.0000 at 0.000; A [-1.440, 0) 0.0008 at -0.380
+    band node_765 e178->e10 distJ 5.069 in (near end; R2.w 0.000): B fan (0, 1.070] 0.0000 at tau 0.000; to tauHi 1.330 0.0000 at 0.000; A [-1.440, 0) 0.0008 at -0.380
+    band node_635 e101->e102 distJ 4.253 out (near end TWO gR 8.088; R2.w 0.000): B fan (0, 1.105] 0.0000 at tau 0.000; to tauHi 1.365 0.0000 at 0.000; A [-1.306, 0) 0.0006 at -0.925
+    band node_635 e101->e102 distJ 4.253 out (far end TWO gR 8.088; R2.w 0.000): B fan (0, 1.108] 0.0000 at tau 0.000; to tauHi 1.368 0.0000 at 0.000; A [-1.306, 0) 0.0006 at -0.925

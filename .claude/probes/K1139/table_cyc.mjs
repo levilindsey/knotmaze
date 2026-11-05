@@ -238,17 +238,20 @@ function bandExtent(j, P, raw, sp, reach, period) {
     const far = ends[0] === "far";
     const gR = Math.abs(x.r2w), inwR = x.r2w < 0;
     const dOf = (tau) => (far ? B.W - tau : tau);
+    // Only the stretch on the arm itself is compared: an arm shorter than
+    // the band (e57, 0.923 world) carries it past its far junction onto
+    // the next run of the chain, whose ribbon is another pulse item.
     let fan = 0, fanAt = 0, all = 0, allAt = 0, aSide = 0, aAt = 0;
     for (let k = 0; k < 64; k++) {
       const U = uniforms(100 + (k / 64) * period, sp, reach);
-      for (let tau = 0.005; tau <= x.tauHi + 1e-9; tau += 0.005) {
+      for (let tau = 0.005; tau <= Math.min(x.tauHi, B.W) + 1e-9; tau += 0.005) {
         const dv = Math.abs(bandV(U, b.distJ, tau, b.inward, gR, inwR) - B.v(U, dOf(tau)));
         if (dv > all) { all = dv; allAt = tau; }
         if (tau <= x.tauHi - fh + 1e-9 && dv > fan) { fan = dv; fanAt = tau; }
       }
       if (A) {
         const dA = (tau) => (A.p.far === b.vertex ? A.W + tau : -tau);
-        for (let tau = -0.005; tau >= x.tauLo - 1e-9; tau -= 0.005) {
+        for (let tau = -0.005; tau >= Math.max(x.tauLo, -A.W) - 1e-9; tau -= 0.005) {
           const dv = Math.abs(bandV(U, b.distJ, tau, b.inward, gR, inwR) - A.v(U, dA(tau)));
           if (dv > aSide) { aSide = dv; aAt = tau; }
         }
@@ -256,6 +259,7 @@ function bandExtent(j, P, raw, sp, reach, period) {
     }
     const two = B.r.two ? ` TWO gR ${((B.p.dist0 + +B.r.dB + B.W) / 2).toFixed(3)}` : "";
     const st = (v) => (v > 1e-3 ? " STEP" : "");
-    console.log(`${tag} (${far ? "far" : "near"} end${two}; R2.w ${x.r2w.toFixed(3)}): B fan (0, ${(x.tauHi - fh).toFixed(3)}] ${fan.toFixed(4)} at tau ${fanAt.toFixed(3)}${st(fan)}; to tauHi ${x.tauHi.toFixed(3)} ${all.toFixed(4)} at ${allAt.toFixed(3)}${st(all)}; A [${x.tauLo.toFixed(3)}, 0) ${A ? aSide.toFixed(4) + " at " + aAt.toFixed(3) + st(aSide) : "(no arm)"}`);
+    const cut = (x.tauHi > B.W ? ` [B arm W ${B.W.toFixed(3)}: compared to there]` : "") + (A && -x.tauLo > A.W ? ` [A arm W ${A.W.toFixed(3)}: compared to there]` : "");
+    console.log(`${tag} (${far ? "far" : "near"} end${two}; R2.w ${x.r2w.toFixed(3)}): B fan (0, ${(x.tauHi - fh).toFixed(3)}] ${fan.toFixed(4)} at tau ${fanAt.toFixed(3)}${st(fan)}; to tauHi ${x.tauHi.toFixed(3)} ${all.toFixed(4)} at ${allAt.toFixed(3)}${st(all)}; A [${x.tauLo.toFixed(3)}, 0) ${A ? aSide.toFixed(4) + " at " + aAt.toFixed(3) + st(aSide) : "(no arm)"}${cut}`);
   });
 }

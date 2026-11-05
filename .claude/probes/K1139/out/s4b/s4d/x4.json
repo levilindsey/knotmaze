@@ -1,0 +1,824 @@
+{
+ "stand": "x4",
+ "decl": {
+  "head": "node_382",
+  "headArms": 3,
+  "choices": [
+   {
+    "edge": 176,
+    "far": "node_378",
+    "farDeadEnd": false
+   },
+   {
+    "edge": 177,
+    "far": "node_386",
+    "farDeadEnd": false
+   },
+   {
+    "edge": 180,
+    "far": "mnode_171",
+    "farDeadEnd": false
+   }
+  ],
+  "reach": 8,
+  "spacing": 2.5,
+  "pathEdges": [
+   0,
+   247,
+   248,
+   69,
+   72,
+   73,
+   95,
+   140,
+   180
+  ],
+  "pulses": [
+   {
+    "chain": 67,
+    "cJ": 16,
+    "cF": 8,
+    "inward": false,
+    "hovered": false,
+    "dist0": 0,
+    "cont": true,
+    "edge": 176,
+    "near": "node_382",
+    "far": "node_378",
+    "lattice": 5.0644951022459805,
+    "world": 4.79324746131897,
+    "farEnd": false,
+    "farArms": 4
+   },
+   {
+    "chain": 67,
+    "cJ": 16,
+    "cF": 24,
+    "inward": false,
+    "hovered": false,
+    "dist0": 0,
+    "cont": true,
+    "edge": 177,
+    "near": "node_382",
+    "far": "node_386",
+    "lattice": 5.064495102245981,
+    "world": 4.7251176834106445,
+    "farEnd": false,
+    "farArms": 3
+   },
+   {
+    "chain": 69,
+    "cJ": 0,
+    "cF": 6,
+    "inward": true,
+    "hovered": false,
+    "dist0": 0,
+    "cont": true,
+    "edge": 180,
+    "near": "node_382",
+    "far": "mnode_171",
+    "lattice": 3.5355339059327378,
+    "world": 3.211332321166992,
+    "farEnd": false,
+    "farArms": 3
+   },
+   {
+    "chain": 58,
+    "cJ": 126,
+    "cF": 120,
+    "inward": true,
+    "hovered": false,
+    "dist0": 3.211,
+    "cont": true,
+    "edge": 140,
+    "near": "mnode_171",
+    "far": "node_714",
+    "lattice": 2.9431747586863537,
+    "world": 2.685504913330078,
+    "farEnd": false,
+    "farArms": 3
+   },
+   {
+    "chain": 58,
+    "cJ": 126,
+    "cF": 146,
+    "inward": true,
+    "hovered": false,
+    "dist0": 3.211,
+    "cont": false,
+    "edge": 141,
+    "near": "mnode_171",
+    "far": "mnode_151",
+    "lattice": 10.836096985678537,
+    "world": 10.318801879882812,
+    "farEnd": false,
+    "farArms": 3
+   },
+   {
+    "chain": 58,
+    "cJ": 68,
+    "cF": 42,
+    "inward": false,
+    "hovered": false,
+    "dist0": 4.793,
+    "cont": false,
+    "edge": 134,
+    "near": "node_378",
+    "far": "mnode_26",
+    "lattice": 13.894019378304968,
+    "world": 13.730161666870117,
+    "farEnd": false,
+    "farArms": 3
+   },
+   {
+    "chain": 58,
+    "cJ": 68,
+    "cF": 72,
+    "inward": false,
+    "hovered": false,
+    "dist0": 4.793,
+    "cont": true,
+    "edge": 135,
+    "near": "node_378",
+    "far": "mnode_27",
+    "lattice": 2.1213203435596384,
+    "world": 2.0177841186523438,
+    "farEnd": false,
+    "farArms": 3
+   },
+   {
+    "chain": 67,
+    "cJ": 8,
+    "cF": 0,
+    "inward": false,
+    "hovered": false,
+    "dist0": 4.793,
+    "cont": false,
+    "edge": 175,
+    "near": "node_378",
+    "far": "mnode_78",
+    "lattice": 4.045084971874737,
+    "world": 3.8197743892669678,
+    "farEnd": false,
+    "farArms": 3
+   },
+   {
+    "chain": 45,
+    "cJ": 0,
+    "cF": 10,
+    "inward": false,
+    "hovered": false,
+    "dist0": 4.725,
+    "cont": false,
+    "edge": 79,
+    "near": "node_386",
+    "far": "node_389",
+    "lattice": 5.1792427361861275,
+    "world": 4.75164270401001,
+    "farEnd": false,
+    "farArms": 3
+   },
+   {
+    "chain": 67,
+    "cJ": 24,
+    "cF": 30,
+    "inward": false,
+    "hovered": false,
+    "dist0": 4.725,
+    "cont": false,
+    "edge": 178,
+    "near": "node_386",
+    "far": "node_389",
+    "lattice": 3.6502815398728856,
+    "world": 3.348902702331543,
+    "farEnd": false,
+    "farArms": 3
+   },
+   {
+    "chain": 49,
+    "cJ": 0,
+    "cF": 14,
+    "inward": true,
+    "hovered": false,
+    "dist0": 5.897,
+    "cont": false,
+    "edge": 95,
+    "near": "node_714",
+    "far": "mnode_154",
+    "lattice": 8.600029008178717,
+    "world": 8.265957832336426,
+    "farEnd": false,
+    "farArms": 3
+   },
+   {
+    "chain": 58,
+    "cJ": 120,
+    "cF": 108,
+    "inward": true,
+    "hovered": false,
+    "dist0": 5.897,
+    "cont": false,
+    "edge": 139,
+    "near": "node_714",
+    "far": "mnode_137",
+    "lattice": 6.593456298559211,
+    "world": 6.382961273193359,
+    "farEnd": false,
+    "farArms": 3
+   },
+   {
+    "chain": 13,
+    "cJ": 2,
+    "cF": 0,
+    "inward": false,
+    "hovered": false,
+    "dist0": 6.811,
+    "cont": false,
+    "edge": 18,
+    "near": "mnode_27",
+    "far": "mnode_26",
+    "lattice": 1.4142135623730951,
+    "world": 1.3590532541275024,
+    "farEnd": false,
+    "farArms": 3
+   },
+   {
+    "chain": 58,
+    "cJ": 72,
+    "cF": 86,
+    "inward": false,
+    "hovered": false,
+    "dist0": 6.811,
+    "cont": false,
+    "edge": 136,
+    "near": "mnode_27",
+    "far": "mnode_167",
+    "lattice": 8.485281374238554,
+    "world": 8.49530029296875,
+    "farEnd": false,
+    "farArms": 3
+   }
+  ],
+  "headScreen": {
+   "x": 944.1626091320582,
+   "y": 127.00294550190222
+  },
+  "view": {
+   "x": 440.69617671756345,
+   "y": 53.755905888574766,
+   "s": 23.222911213197133,
+   "zoom": 1,
+   "panX": 0,
+   "panY": 0,
+   "panel": {
+    "left": 1370,
+    "mazeRight": 1283.5452956412164,
+    "open": 1
+   },
+   "mazeRight": 1283.5452956412164,
+   "range": {
+    "loX": 0,
+    "hiX": 0,
+    "loY": 0,
+    "hiY": 0
+   },
+   "allow": {
+    "loX": 0,
+    "hiX": 0,
+    "loY": 0,
+    "hiY": 0
+   },
+   "panelT": 1
+  }
+ },
+ "raw": [
+  {
+   "chain": 67,
+   "cJunction": 16,
+   "cFar": 8,
+   "inward": false,
+   "hovered": false,
+   "dist0": 0,
+   "cont": true,
+   "two": false,
+   "dB": 0,
+   "inwardB": false
+  },
+  {
+   "chain": 67,
+   "cJunction": 16,
+   "cFar": 24,
+   "inward": false,
+   "hovered": false,
+   "dist0": 0,
+   "cont": true,
+   "two": false,
+   "dB": 0,
+   "inwardB": false
+  },
+  {
+   "chain": 69,
+   "cJunction": 0,
+   "cFar": 6,
+   "inward": true,
+   "hovered": false,
+   "dist0": 0,
+   "cont": true,
+   "two": false,
+   "dB": 0,
+   "inwardB": false
+  },
+  {
+   "chain": 58,
+   "cJunction": 126,
+   "cFar": 120,
+   "inward": true,
+   "hovered": false,
+   "dist0": 3.211,
+   "cont": true,
+   "two": false,
+   "dB": 0,
+   "inwardB": false
+  },
+  {
+   "chain": 58,
+   "cJunction": 126,
+   "cFar": 146,
+   "inward": true,
+   "hovered": false,
+   "dist0": 3.211,
+   "cont": false,
+   "two": false,
+   "dB": 0,
+   "inwardB": false
+  },
+  {
+   "chain": 58,
+   "cJunction": 68,
+   "cFar": 42,
+   "inward": false,
+   "hovered": false,
+   "dist0": 4.793,
+   "cont": false,
+   "two": false,
+   "dB": 0,
+   "inwardB": false
+  },
+  {
+   "chain": 58,
+   "cJunction": 68,
+   "cFar": 72,
+   "inward": false,
+   "hovered": false,
+   "dist0": 4.793,
+   "cont": true,
+   "two": false,
+   "dB": 0,
+   "inwardB": false
+  },
+  {
+   "chain": 67,
+   "cJunction": 8,
+   "cFar": 0,
+   "inward": false,
+   "hovered": false,
+   "dist0": 4.793,
+   "cont": false,
+   "two": false,
+   "dB": 0,
+   "inwardB": false
+  },
+  {
+   "chain": 45,
+   "cJunction": 0,
+   "cFar": 10,
+   "inward": false,
+   "hovered": false,
+   "dist0": 4.725,
+   "cont": false,
+   "two": false,
+   "dB": 0,
+   "inwardB": false
+  },
+  {
+   "chain": 67,
+   "cJunction": 24,
+   "cFar": 30,
+   "inward": false,
+   "hovered": false,
+   "dist0": 4.725,
+   "cont": false,
+   "two": false,
+   "dB": 0,
+   "inwardB": false
+  },
+  {
+   "chain": 49,
+   "cJunction": 0,
+   "cFar": 14,
+   "inward": true,
+   "hovered": false,
+   "dist0": 5.897,
+   "cont": false,
+   "two": false,
+   "dB": 0,
+   "inwardB": false
+  },
+  {
+   "chain": 58,
+   "cJunction": 120,
+   "cFar": 108,
+   "inward": true,
+   "hovered": false,
+   "dist0": 5.897,
+   "cont": false,
+   "two": false,
+   "dB": 0,
+   "inwardB": false
+  },
+  {
+   "chain": 13,
+   "cJunction": 2,
+   "cFar": 0,
+   "inward": false,
+   "hovered": false,
+   "dist0": 6.811,
+   "cont": false,
+   "two": false,
+   "dB": 0,
+   "inwardB": false
+  },
+  {
+   "chain": 58,
+   "cJunction": 72,
+   "cFar": 86,
+   "inward": false,
+   "hovered": false,
+   "dist0": 6.811,
+   "cont": false,
+   "two": false,
+   "dB": 0,
+   "inwardB": false
+  }
+ ],
+ "bands": [
+  {
+   "vertex": "mnode_171",
+   "aEdge": 180,
+   "bEdge": 140,
+   "a": {
+    "chain": 69,
+    "ctrl": 6,
+    "dir": -1
+   },
+   "b": {
+    "chain": 58,
+    "ctrl": 126,
+    "dir": -1
+   },
+   "distJ": 3.211,
+   "inward": true,
+   "slot": 0,
+   "shared": true,
+   "fallback": false,
+   "used": 2
+  },
+  {
+   "vertex": "mnode_171",
+   "aEdge": 180,
+   "bEdge": 141,
+   "a": {
+    "chain": 69,
+    "ctrl": 6,
+    "dir": -1
+   },
+   "b": {
+    "chain": 58,
+    "ctrl": 126,
+    "dir": 1
+   },
+   "distJ": 3.211,
+   "inward": true,
+   "slot": 1,
+   "shared": false,
+   "fallback": false,
+   "used": 2
+  },
+  {
+   "vertex": "node_378",
+   "aEdge": 176,
+   "bEdge": 135,
+   "a": {
+    "chain": 67,
+    "ctrl": 8,
+    "dir": 1
+   },
+   "b": {
+    "chain": 58,
+    "ctrl": 68,
+    "dir": 1
+   },
+   "distJ": 4.793,
+   "inward": false,
+   "slot": 0,
+   "shared": false,
+   "fallback": false,
+   "used": 3
+  },
+  {
+   "vertex": "node_378",
+   "aEdge": 176,
+   "bEdge": 175,
+   "a": {
+    "chain": 67,
+    "ctrl": 8,
+    "dir": 1
+   },
+   "b": {
+    "chain": 67,
+    "ctrl": 8,
+    "dir": -1
+   },
+   "distJ": 4.793,
+   "inward": false,
+   "slot": 1,
+   "shared": false,
+   "fallback": false,
+   "used": 3
+  },
+  {
+   "vertex": "node_378",
+   "aEdge": 176,
+   "bEdge": 134,
+   "a": {
+    "chain": 67,
+    "ctrl": 8,
+    "dir": 1
+   },
+   "b": {
+    "chain": 58,
+    "ctrl": 68,
+    "dir": -1
+   },
+   "distJ": 4.793,
+   "inward": false,
+   "slot": 2,
+   "shared": false,
+   "fallback": false,
+   "used": 3
+  },
+  {
+   "vertex": "node_386",
+   "aEdge": 177,
+   "bEdge": 178,
+   "a": {
+    "chain": 67,
+    "ctrl": 24,
+    "dir": -1
+   },
+   "b": {
+    "chain": 67,
+    "ctrl": 24,
+    "dir": 1
+   },
+   "distJ": 4.725,
+   "inward": false,
+   "slot": 0,
+   "shared": false,
+   "fallback": false,
+   "used": 2
+  },
+  {
+   "vertex": "node_386",
+   "aEdge": 177,
+   "bEdge": 79,
+   "a": {
+    "chain": 67,
+    "ctrl": 24,
+    "dir": -1
+   },
+   "b": {
+    "chain": 45,
+    "ctrl": 0,
+    "dir": 1
+   },
+   "distJ": 4.725,
+   "inward": false,
+   "slot": 1,
+   "shared": false,
+   "fallback": false,
+   "used": 2
+  },
+  {
+   "vertex": "node_714",
+   "aEdge": 140,
+   "bEdge": 95,
+   "a": {
+    "chain": 58,
+    "ctrl": 120,
+    "dir": 1
+   },
+   "b": {
+    "chain": 49,
+    "ctrl": 0,
+    "dir": 1
+   },
+   "distJ": 5.897,
+   "inward": true,
+   "slot": 0,
+   "shared": true,
+   "fallback": false,
+   "used": 2
+  },
+  {
+   "vertex": "node_714",
+   "aEdge": 140,
+   "bEdge": 139,
+   "a": {
+    "chain": 58,
+    "ctrl": 120,
+    "dir": 1
+   },
+   "b": {
+    "chain": 58,
+    "ctrl": 120,
+    "dir": -1
+   },
+   "distJ": 5.897,
+   "inward": true,
+   "slot": 1,
+   "shared": false,
+   "fallback": false,
+   "used": 2
+  },
+  {
+   "vertex": "mnode_27",
+   "aEdge": 135,
+   "bEdge": 18,
+   "a": {
+    "chain": 58,
+    "ctrl": 72,
+    "dir": -1
+   },
+   "b": {
+    "chain": 13,
+    "ctrl": 2,
+    "dir": -1
+   },
+   "distJ": 6.811,
+   "inward": false,
+   "slot": 0,
+   "shared": false,
+   "fallback": false,
+   "used": 2
+  },
+  {
+   "vertex": "mnode_27",
+   "aEdge": 135,
+   "bEdge": 136,
+   "a": {
+    "chain": 58,
+    "ctrl": 72,
+    "dir": -1
+   },
+   "b": {
+    "chain": 58,
+    "ctrl": 72,
+    "dir": 1
+   },
+   "distJ": 6.811,
+   "inward": false,
+   "slot": 1,
+   "shared": false,
+   "fallback": false,
+   "used": 2
+  }
+ ],
+ "head": "node_382",
+ "ext": {
+  "fillHalf": 0.26,
+  "bands": [
+   {
+    "ji": 149,
+    "iA": 1,
+    "iB": 0,
+    "nv": 34,
+    "m": 0.63779616355896,
+    "flags": 1,
+    "tauLo": -1.362945318222046,
+    "tauHi": 1.307372808456421,
+    "r2w": 0
+   },
+   {
+    "ji": 149,
+    "iA": 1,
+    "iB": 2,
+    "nv": 40,
+    "m": 0.3417493402957916,
+    "flags": 1,
+    "tauLo": -1.362945318222046,
+    "tauHi": 1.277787208557129,
+    "r2w": 0
+   },
+   {
+    "ji": 147,
+    "iA": 0,
+    "iB": 3,
+    "nv": 39,
+    "m": 0.4232429265975952,
+    "flags": 0,
+    "tauLo": -1.3610179424285889,
+    "tauHi": 1.3607560396194458,
+    "r2w": 0
+   },
+   {
+    "ji": 147,
+    "iA": 0,
+    "iB": 2,
+    "nv": 45,
+    "m": 0.2175045907497406,
+    "flags": 0,
+    "tauLo": -1.3610179424285889,
+    "tauHi": 1.39919114112854,
+    "r2w": 0
+   },
+   {
+    "ji": 147,
+    "iA": 0,
+    "iB": 1,
+    "nv": 48,
+    "m": 0.13849343359470367,
+    "flags": 0,
+    "tauLo": -1.3610179424285889,
+    "tauHi": 1.4299044609069824,
+    "r2w": 0
+   },
+   {
+    "ji": 108,
+    "iA": 1,
+    "iB": 0,
+    "nv": 48,
+    "m": 0.12999999523162842,
+    "flags": 0,
+    "tauLo": -1.3288092613220215,
+    "tauHi": 1.3795655965805054,
+    "r2w": 0
+   },
+   {
+    "ji": 108,
+    "iA": 1,
+    "iB": 2,
+    "nv": 40,
+    "m": 0.4214208722114563,
+    "flags": 0,
+    "tauLo": -1.3288092613220215,
+    "tauHi": 1.454403281211853,
+    "r2w": 0
+   },
+   {
+    "ji": 125,
+    "iA": 1,
+    "iB": 0,
+    "nv": 39,
+    "m": 0.5167811512947083,
+    "flags": 1,
+    "tauLo": -1.4307916164398193,
+    "tauHi": 1.4393075704574585,
+    "r2w": 0
+   },
+   {
+    "ji": 125,
+    "iA": 1,
+    "iB": 2,
+    "nv": 50,
+    "m": 0.12999999523162842,
+    "flags": 1,
+    "tauLo": -1.4307916164398193,
+    "tauHi": 1.3843269348144531,
+    "r2w": 0
+   },
+   {
+    "ji": 28,
+    "iA": 0,
+    "iB": 1,
+    "nv": 40,
+    "m": 0.32628142833709717,
+    "flags": 0,
+    "tauLo": -1.2781533002853394,
+    "tauHi": 1.3427042961120605,
+    "r2w": 0
+   },
+   {
+    "ji": 28,
+    "iA": 0,
+    "iB": 2,
+    "nv": 45,
+    "m": 0.12999999523162842,
+    "flags": 0,
+    "tauLo": -1.2781533002853394,
+    "tauHi": 1.2766648530960083,
+    "r2w": 0
+   }
+  ]
+ }
+}

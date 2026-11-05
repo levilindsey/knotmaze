@@ -1,0 +1,383 @@
+{
+ "stand": "loop",
+ "decl": {
+  "head": "node_635",
+  "headArms": 3,
+  "choices": [
+   {
+    "edge": 101,
+    "far": "mnode_77",
+    "farDeadEnd": false
+   },
+   {
+    "edge": 102,
+    "far": "node_635",
+    "farDeadEnd": false
+   }
+  ],
+  "reach": 8,
+  "spacing": 2.5,
+  "pathEdges": [
+   185,
+   186,
+   187,
+   122,
+   50,
+   118,
+   117,
+   165,
+   60,
+   9,
+   178,
+   57,
+   101
+  ],
+  "pulses": [
+   {
+    "chain": 45,
+    "cJ": 8,
+    "cF": 0,
+    "inward": true,
+    "hovered": false,
+    "dist0": 0,
+    "cont": true,
+    "edge": 101,
+    "near": "node_635",
+    "far": "mnode_77",
+    "lattice": 4.637444119121137,
+    "world": 4.253499984741211,
+    "farEnd": false,
+    "farArms": 3
+   },
+   {
+    "chain": 45,
+    "cJ": 8,
+    "cF": 24,
+    "inward": false,
+    "hovered": false,
+    "dist0": 0,
+    "cont": true,
+    "edge": 102,
+    "near": "node_635",
+    "far": "node_635",
+    "lattice": 8.007669860932321,
+    "world": 7.670727729797363,
+    "farEnd": false,
+    "farArms": 3
+   },
+   {
+    "chain": 38,
+    "cJ": 40,
+    "cF": 0,
+    "inward": true,
+    "hovered": false,
+    "dist0": 4.253,
+    "cont": false,
+    "edge": 56,
+    "near": "mnode_77",
+    "far": "mdead0_b",
+    "lattice": 21.342672244862356,
+    "world": 20.07164764404297,
+    "farEnd": true,
+    "farArms": 1
+   },
+   {
+    "chain": 38,
+    "cJ": 40,
+    "cF": 42,
+    "inward": true,
+    "hovered": false,
+    "dist0": 4.253,
+    "cont": true,
+    "edge": 57,
+    "near": "mnode_77",
+    "far": "node_649",
+    "lattice": 0.7071067811865461,
+    "world": 0.9233226776123047,
+    "farEnd": false,
+    "farArms": 3
+   },
+   {
+    "chain": 38,
+    "cJ": 42,
+    "cF": 50,
+    "inward": true,
+    "hovered": false,
+    "dist0": 5.177,
+    "cont": false,
+    "edge": 58,
+    "near": "node_649",
+    "far": "mnode_19",
+    "lattice": 4.209298534247829,
+    "world": 3.9238815307617188,
+    "farEnd": false,
+    "farArms": 3
+   },
+   {
+    "chain": 60,
+    "cJ": 8,
+    "cF": 0,
+    "inward": true,
+    "hovered": false,
+    "dist0": 5.177,
+    "cont": false,
+    "edge": 178,
+    "near": "node_649",
+    "far": "node_765",
+    "lattice": 4.47213595499958,
+    "world": 4.145346641540527,
+    "farEnd": false,
+    "farArms": 3
+   }
+  ],
+  "headScreen": {
+   "x": 1212.617680477836,
+   "y": 96.68540960451497
+  },
+  "view": {
+   "x": 439.88131206785124,
+   "y": 53.12338959192709,
+   "s": 23.240066215957405,
+   "zoom": 1,
+   "panX": 0,
+   "panY": 0,
+   "panel": {
+    "left": 1370,
+    "mazeRight": 1283.3530522825597,
+    "open": 1
+   },
+   "mazeRight": 1283.3530522825597,
+   "range": {
+    "loX": 0,
+    "hiX": 0,
+    "loY": 0,
+    "hiY": 0
+   },
+   "allow": {
+    "loX": 0,
+    "hiX": 0,
+    "loY": 0,
+    "hiY": 0
+   },
+   "panelT": 1
+  }
+ },
+ "raw": [
+  {
+   "chain": 45,
+   "cJunction": 8,
+   "cFar": 0,
+   "inward": true,
+   "hovered": false,
+   "dist0": 0,
+   "cont": true,
+   "two": false,
+   "dB": 0,
+   "inwardB": false
+  },
+  {
+   "chain": 45,
+   "cJunction": 8,
+   "cFar": 24,
+   "inward": false,
+   "hovered": false,
+   "dist0": 0,
+   "cont": true,
+   "two": true,
+   "dB": 0,
+   "inwardB": false
+  },
+  {
+   "chain": 38,
+   "cJunction": 40,
+   "cFar": 0,
+   "inward": true,
+   "hovered": false,
+   "dist0": 4.253,
+   "cont": false,
+   "two": false,
+   "dB": 0,
+   "inwardB": false
+  },
+  {
+   "chain": 38,
+   "cJunction": 40,
+   "cFar": 42,
+   "inward": true,
+   "hovered": false,
+   "dist0": 4.253,
+   "cont": true,
+   "two": false,
+   "dB": 0,
+   "inwardB": false
+  },
+  {
+   "chain": 38,
+   "cJunction": 42,
+   "cFar": 50,
+   "inward": true,
+   "hovered": false,
+   "dist0": 5.177,
+   "cont": false,
+   "two": false,
+   "dB": 0,
+   "inwardB": false
+  },
+  {
+   "chain": 60,
+   "cJunction": 8,
+   "cFar": 0,
+   "inward": true,
+   "hovered": false,
+   "dist0": 5.177,
+   "cont": false,
+   "two": false,
+   "dB": 0,
+   "inwardB": false
+  }
+ ],
+ "bands": [
+  {
+   "vertex": "mnode_77",
+   "aEdge": 101,
+   "bEdge": 56,
+   "a": {
+    "chain": 45,
+    "ctrl": 0,
+    "dir": 1
+   },
+   "b": {
+    "chain": 38,
+    "ctrl": 40,
+    "dir": -1
+   },
+   "distJ": 4.253,
+   "inward": true,
+   "gR": 0,
+   "inwardR": false,
+   "slot": 1,
+   "shared": false,
+   "fallback": false,
+   "used": 2
+  },
+  {
+   "vertex": "mnode_77",
+   "aEdge": 101,
+   "bEdge": 57,
+   "a": {
+    "chain": 45,
+    "ctrl": 0,
+    "dir": 1
+   },
+   "b": {
+    "chain": 38,
+    "ctrl": 40,
+    "dir": 1
+   },
+   "distJ": 4.253,
+   "inward": true,
+   "gR": 0,
+   "inwardR": false,
+   "slot": 0,
+   "shared": true,
+   "fallback": false,
+   "used": 2
+  },
+  {
+   "vertex": "node_649",
+   "aEdge": 57,
+   "bEdge": 58,
+   "a": {
+    "chain": 38,
+    "ctrl": 42,
+    "dir": -1
+   },
+   "b": {
+    "chain": 38,
+    "ctrl": 42,
+    "dir": 1
+   },
+   "distJ": 5.177,
+   "inward": true,
+   "gR": 0,
+   "inwardR": false,
+   "slot": 1,
+   "shared": false,
+   "fallback": false,
+   "used": 2
+  },
+  {
+   "vertex": "node_649",
+   "aEdge": 57,
+   "bEdge": 178,
+   "a": {
+    "chain": 38,
+    "ctrl": 42,
+    "dir": -1
+   },
+   "b": {
+    "chain": 60,
+    "ctrl": 8,
+    "dir": -1
+   },
+   "distJ": 5.177,
+   "inward": true,
+   "gR": 0,
+   "inwardR": false,
+   "slot": 0,
+   "shared": true,
+   "fallback": false,
+   "used": 2
+  }
+ ],
+ "head": "node_635",
+ "ext": {
+  "fillHalf": 0.26,
+  "bands": [
+   {
+    "ji": 88,
+    "iA": 1,
+    "iB": 0,
+    "nv": 32,
+    "m": 0.7250505685806274,
+    "flags": 1,
+    "tauLo": -1.4067084789276123,
+    "tauHi": 1.3291285037994385,
+    "r2w": 0
+   },
+   {
+    "ji": 88,
+    "iA": 1,
+    "iB": 2,
+    "nv": 42,
+    "m": 0.3183284401893616,
+    "flags": 1,
+    "tauLo": -1.4067084789276123,
+    "tauHi": 1.3075464963912964,
+    "r2w": 0
+   },
+   {
+    "ji": 89,
+    "iA": 0,
+    "iB": 1,
+    "nv": 49,
+    "m": 0.12999999523162842,
+    "flags": 1,
+    "tauLo": -1.316012978553772,
+    "tauHi": 1.388069748878479,
+    "r2w": 0
+   },
+   {
+    "ji": 89,
+    "iA": 0,
+    "iB": 2,
+    "nv": 42,
+    "m": 0.3316613435745239,
+    "flags": 1,
+    "tauLo": -1.316012978553772,
+    "tauHi": 1.4092810153961182,
+    "r2w": 0
+   }
+  ]
+ }
+}

@@ -4,7 +4,8 @@
 // S4b: plus `ext`, each band's record as the fans read it (uJData): the
 // tau range of its centerline (tauLo on the A arm, tauHi on the B arm,
 // the band's reach), R2.w (the signed ridge, 0 on S4) and fillHalf, so
-// table_cyc.mjs can compare the band with the ribbon over its extent.
+// table_cyc.mjs can compare the band with the ribbon over its extent. It
+// reads junction_field.ts's recordData() (no texture readback).
 //   node dump_cyc.mjs <outDir> <stand>...      (K1139_HOST picks the server)
 // PROBE GOTCHA (S4, corrected in S4b): dumpPulses import()s
 // /src/render/paint_math.ts and paint_model.ts inside the page, so it
@@ -44,12 +45,19 @@ try {
     // whose arms hold the band's two arms (chain, slot = ctrl, dir), walk
     // its route blocks to the pulse count texel, then match the band by
     // its arm indices and distJ.
-    extra.ext = await page.evaluate(() => {
+    // The records' CPU copy is junction_field.ts's module-level
+    // recordData() (the uJData texture's mirror), so this import needs the
+    // same fresh dev server as dumpPulses (the gotcha above).
+    extra.ext = await page.evaluate(async () => {
       const r = window.__knotRenderer(), fp = r.fieldProbe;
       const fillHalf = r.style.threadWidth / 2;
-      const src = r.filletMesh?.shader?.resources?.uJData;
-      const D = src && src.resource;
-      if (!D || !(D.length > 0)) return { fillHalf, err: "no uJData resource", bands: [] };
+      let D = null;
+      try {
+        D = (await import("/src/render/junction_field.ts")).recordData().data;
+      } catch (e) {
+        return { fillHalf, err: `recordData import: ${e.message}`, bands: [] };
+      }
+      if (!D || !(D.length > 0)) return { fillHalf, err: "recordData() is empty", bands: [] };
       const recs = [];
       for (let ji = 0; ji < 8192; ji++) {
         const rb = fp.record(ji);

@@ -1,0 +1,6 @@
+# K1139 S4b: stand dumps, S4 (0aaa0dee, dev server 5621) then S4b (this branch, dev server 5620)
+$env:K1139_HOST = "http://127.0.0.1:5621"
+node dump_cyc.mjs out/s4b/s4d x4 cyc loop preloop
+$env:K1139_HOST = "http://127.0.0.1:5620"
+node dump_cyc.mjs out/s4b/d x4 cyc loop preloop
+$env:K1139_HOST = $null

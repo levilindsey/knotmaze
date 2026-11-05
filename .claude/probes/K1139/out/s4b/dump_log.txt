@@ -1,0 +1,133 @@
+lock taken after 0 min: K1139-S1 | 2026-11-04T21:21:22-08:00 | K1139 S4b stand dumps (2)
+>> $env:K1139_HOST = "http://127.0.0.1:5621"  (21:21:22)
+>> node dump_cyc.mjs out/s4b/s4d x4 cyc loop preloop  (21:21:22)
+x4: head node_382, 14 pulse(s), 11 band(s)
+  e176 node_382->node_378 dist0 0.000 world 4.793 lat 5.064 out cont
+  e177 node_382->node_386 dist0 0.000 world 4.725 lat 5.064 out cont
+  e180 node_382->mnode_171 dist0 0.000 world 3.211 lat 3.536 in cont
+  e140 mnode_171->node_714 dist0 3.211 world 2.686 lat 2.943 in cont
+  e141 mnode_171->mnode_151 dist0 3.211 world 10.319 lat 10.836 in
+  e134 node_378->mnode_26 dist0 4.793 world 13.730 lat 13.894 out
+  e135 node_378->mnode_27 dist0 4.793 world 2.018 lat 2.121 out cont
+  e175 node_378->mnode_78 dist0 4.793 world 3.820 lat 4.045 out
+  e79 node_386->node_389 dist0 4.725 world 4.752 lat 5.179 out
+  e178 node_386->node_389 dist0 4.725 world 3.349 lat 3.650 out
+  e95 node_714->mnode_154 dist0 5.897 world 8.266 lat 8.600 in
+  e139 node_714->mnode_137 dist0 5.897 world 6.383 lat 6.593 in
+  e18 mnode_27->mnode_26 dist0 6.811 world 1.359 lat 1.414 out
+  e136 mnode_27->mnode_167 dist0 6.811 world 8.495 lat 8.485 out
+  band mnode_171: e180 -> e140 distJ 3.211 in slot 0 tau -1.363..1.307 R2.w 0.000
+  band mnode_171: e180 -> e141 distJ 3.211 in slot 1 tau -1.363..1.278 R2.w 0.000
+  band node_378: e176 -> e135 distJ 4.793 out slot 0 tau -1.361..1.361 R2.w 0.000
+  band node_378: e176 -> e175 distJ 4.793 out slot 1 tau -1.361..1.399 R2.w 0.000
+  band node_378: e176 -> e134 distJ 4.793 out slot 2 tau -1.361..1.430 R2.w 0.000
+  band node_386: e177 -> e178 distJ 4.725 out slot 0 tau -1.329..1.380 R2.w 0.000
+  band node_386: e177 -> e79 distJ 4.725 out slot 1 tau -1.329..1.454 R2.w 0.000
+  band node_714: e140 -> e95 distJ 5.897 in slot 0 tau -1.431..1.439 R2.w 0.000
+  band node_714: e140 -> e139 distJ 5.897 in slot 1 tau -1.431..1.384 R2.w 0.000
+  band mnode_27: e135 -> e18 distJ 6.811 out slot 0 tau -1.278..1.343 R2.w 0.000
+  band mnode_27: e135 -> e136 distJ 6.811 out slot 1 tau -1.278..1.277 R2.w 0.000
+cyc: head node_221, 4 pulse(s), 2 band(s)
+  e39 node_221->node_218 dist0 0.000 world 1.386 lat 1.414 out cont
+  e210 node_221->node_218 dist0 0.000 world 2.746 lat 2.943 out cont TWO dB 1.386 inwB false
+  e211 node_221->mnode_158 dist0 0.000 world 3.454 lat 3.889 in
+  e209 node_218->node_213 dist0 1.386 world 5.499 lat 5.886 out
+  band node_218: e39 -> e209 distJ 1.386 out slot 0 tau -1.386..1.343 R2.w 0.000
+  band node_218: e39 -> e210 distJ 1.386 out slot 1 tau -1.386..1.472 R2.w 0.000
+loop: head node_635, 6 pulse(s), 4 band(s)
+  e101 node_635->mnode_77 dist0 0.000 world 4.253 lat 4.637 in cont
+  e102 node_635->node_635 dist0 0.000 world 7.671 lat 8.008 out cont TWO dB 0.000 inwB false
+  e56 mnode_77->mdead0_b dist0 4.253 world 20.072 lat 21.343 in
+  e57 mnode_77->node_649 dist0 4.253 world 0.923 lat 0.707 in cont
+  e58 node_649->mnode_19 dist0 5.177 world 3.924 lat 4.209 in
+  e178 node_649->node_765 dist0 5.177 world 4.145 lat 4.472 in
+  band mnode_77: e101 -> e56 distJ 4.253 in slot 1 tau -1.407..1.329 R2.w 0.000
+  band mnode_77: e101 -> e57 distJ 4.253 in slot 0 tau -1.407..1.308 R2.w 0.000
+  band node_649: e57 -> e58 distJ 5.177 in slot 1 tau -1.316..1.388 R2.w 0.000
+  band node_649: e57 -> e178 distJ 5.177 in slot 0 tau -1.316..1.409 R2.w 0.000
+preloop: head mnode_77, 10 pulse(s), 8 band(s)
+  e56 mnode_77->mdead0_b dist0 0.000 world 20.072 lat 21.343 out
+  e57 mnode_77->node_649 dist0 0.000 world 0.923 lat 0.707 in cont
+  e101 mnode_77->node_635 dist0 0.000 world 4.253 lat 4.637 out cont
+  e58 node_649->mnode_19 dist0 0.923 world 3.924 lat 4.209 in cont
+  e178 node_649->node_765 dist0 0.923 world 4.145 lat 4.472 in cont
+  e102 node_635->node_635 dist0 4.253 world 7.671 lat 8.008 out cont TWO dB 4.253 inwB false
+  e59 mnode_19->node_658 dist0 4.847 world 4.992 lat 5.327 in
+  e91 mnode_19->mnode_65 dist0 4.847 world 13.476 lat 14.544 in
+  e9 node_765->node_658 dist0 5.069 world 3.974 lat 4.243 in
+  e10 node_765->mnode_3 dist0 5.069 world 8.472 lat 8.978 in
+  band node_649: e57 -> e58 distJ 0.923 in slot 1 tau -1.316..1.388 R2.w 0.000
+  band node_649: e57 -> e178 distJ 0.923 in slot 0 tau -1.316..1.409 R2.w 0.000
+  band mnode_19: e58 -> e91 distJ 4.847 in slot 0 tau -1.412..1.480 R2.w 0.000
+  band mnode_19: e58 -> e59 distJ 4.847 in slot 1 tau -1.412..2.015 R2.w 0.000
+  band node_765: e178 -> e9 distJ 5.069 in slot 0 tau -1.440..1.362 R2.w 0.000
+  band node_765: e178 -> e10 distJ 5.069 in slot 1 tau -1.440..1.330 R2.w 0.000
+  band node_635: e101 -> e102 distJ 4.253 out slot 0 tau -1.306..1.365 R2.w 0.000
+  band node_635: e101 -> e102 distJ 4.253 out slot 1 tau -1.306..1.368 R2.w 0.000
+>> $env:K1139_HOST = "http://127.0.0.1:5620"  (21:24:38)
+>> node dump_cyc.mjs out/s4b/d x4 cyc loop preloop  (21:24:38)
+x4: head node_382, 14 pulse(s), 11 band(s)
+  e176 node_382->node_378 dist0 0.000 world 4.793 lat 5.064 out cont
+  e177 node_382->node_386 dist0 0.000 world 4.725 lat 5.064 out cont
+  e180 node_382->mnode_171 dist0 0.000 world 3.211 lat 3.536 in cont
+  e140 mnode_171->node_714 dist0 3.211 world 2.686 lat 2.943 in cont
+  e141 mnode_171->mnode_151 dist0 3.211 world 10.319 lat 10.836 in
+  e134 node_378->mnode_26 dist0 4.793 world 13.730 lat 13.894 out
+  e135 node_378->mnode_27 dist0 4.793 world 2.018 lat 2.121 out cont
+  e175 node_378->mnode_78 dist0 4.793 world 3.820 lat 4.045 out
+  e79 node_386->node_389 dist0 4.725 world 4.752 lat 5.179 out
+  e178 node_386->node_389 dist0 4.725 world 3.349 lat 3.650 out
+  e95 node_714->mnode_154 dist0 5.897 world 8.266 lat 8.600 in
+  e139 node_714->mnode_137 dist0 5.897 world 6.383 lat 6.593 in
+  e18 mnode_27->mnode_26 dist0 6.811 world 1.359 lat 1.414 out
+  e136 mnode_27->mnode_167 dist0 6.811 world 8.495 lat 8.485 out
+  band mnode_171: e180 -> e140 distJ 3.211 in slot 0 tau -1.363..1.307 R2.w 0.000
+  band mnode_171: e180 -> e141 distJ 3.211 in slot 1 tau -1.363..1.278 R2.w 0.000
+  band node_378: e176 -> e135 distJ 4.793 out slot 0 tau -1.361..1.361 R2.w 0.000
+  band node_378: e176 -> e175 distJ 4.793 out slot 1 tau -1.361..1.399 R2.w 0.000
+  band node_378: e176 -> e134 distJ 4.793 out slot 2 tau -1.361..1.430 R2.w 0.000
+  band node_386: e177 -> e178 distJ 4.725 out slot 0 tau -1.329..1.380 R2.w 0.000
+  band node_386: e177 -> e79 distJ 4.725 out slot 1 tau -1.329..1.454 R2.w 0.000
+  band node_714: e140 -> e95 distJ 5.897 in slot 0 tau -1.431..1.439 R2.w 0.000
+  band node_714: e140 -> e139 distJ 5.897 in slot 1 tau -1.431..1.384 R2.w 0.000
+  band mnode_27: e135 -> e18 distJ 6.811 out slot 0 tau -1.278..1.343 R2.w 0.000
+  band mnode_27: e135 -> e136 distJ 6.811 out slot 1 tau -1.278..1.277 R2.w 0.000
+cyc: head node_221, 4 pulse(s), 2 band(s)
+  e39 node_221->node_218 dist0 0.000 world 1.386 lat 1.414 out cont
+  e210 node_221->node_218 dist0 0.000 world 2.746 lat 2.943 out cont TWO dB 1.386 inwB false
+  e211 node_221->mnode_158 dist0 0.000 world 3.454 lat 3.889 in
+  e209 node_218->node_213 dist0 1.386 world 5.499 lat 5.886 out
+  band node_218: e39 -> e209 distJ 1.386 out slot 0 tau -1.386..1.343 R2.w 0.000
+  band node_218: e39 -> e210 distJ 1.386 out slot 1 tau -1.386..1.472 R2.w 2.066
+loop: head node_635, 6 pulse(s), 4 band(s)
+  e101 node_635->mnode_77 dist0 0.000 world 4.253 lat 4.637 in cont
+  e102 node_635->node_635 dist0 0.000 world 7.671 lat 8.008 out cont TWO dB 0.000 inwB false
+  e56 mnode_77->mdead0_b dist0 4.253 world 20.072 lat 21.343 in
+  e57 mnode_77->node_649 dist0 4.253 world 0.923 lat 0.707 in cont
+  e58 node_649->mnode_19 dist0 5.177 world 3.924 lat 4.209 in
+  e178 node_649->node_765 dist0 5.177 world 4.145 lat 4.472 in
+  band mnode_77: e101 -> e56 distJ 4.253 in slot 1 tau -1.407..1.329 R2.w 0.000
+  band mnode_77: e101 -> e57 distJ 4.253 in slot 0 tau -1.407..1.308 R2.w 0.000
+  band node_649: e57 -> e58 distJ 5.177 in slot 1 tau -1.316..1.388 R2.w 0.000
+  band node_649: e57 -> e178 distJ 5.177 in slot 0 tau -1.316..1.409 R2.w 0.000
+preloop: head mnode_77, 10 pulse(s), 8 band(s)
+  e56 mnode_77->mdead0_b dist0 0.000 world 20.072 lat 21.343 out
+  e57 mnode_77->node_649 dist0 0.000 world 0.923 lat 0.707 in cont
+  e101 mnode_77->node_635 dist0 0.000 world 4.253 lat 4.637 out cont
+  e58 node_649->mnode_19 dist0 0.923 world 3.924 lat 4.209 in cont
+  e178 node_649->node_765 dist0 0.923 world 4.145 lat 4.472 in cont
+  e102 node_635->node_635 dist0 4.253 world 7.671 lat 8.008 out cont TWO dB 4.253 inwB false
+  e59 mnode_19->node_658 dist0 4.847 world 4.992 lat 5.327 in
+  e91 mnode_19->mnode_65 dist0 4.847 world 13.476 lat 14.544 in
+  e9 node_765->node_658 dist0 5.069 world 3.974 lat 4.243 in
+  e10 node_765->mnode_3 dist0 5.069 world 8.472 lat 8.978 in
+  band node_649: e57 -> e58 distJ 0.923 in slot 1 tau -1.316..1.388 R2.w 0.000
+  band node_649: e57 -> e178 distJ 0.923 in slot 0 tau -1.316..1.409 R2.w 0.000
+  band mnode_19: e58 -> e91 distJ 4.847 in slot 0 tau -1.412..1.480 R2.w 0.000
+  band mnode_19: e58 -> e59 distJ 4.847 in slot 1 tau -1.412..2.015 R2.w 0.000
+  band node_765: e178 -> e9 distJ 5.069 in slot 0 tau -1.440..1.362 R2.w 0.000
+  band node_765: e178 -> e10 distJ 5.069 in slot 1 tau -1.440..1.330 R2.w 0.000
+  band node_635: e101 -> e102 distJ 4.253 out slot 0 tau -1.306..1.365 R2.w 8.088
+  band node_635: e101 -> e102 distJ 4.253 out slot 1 tau -1.306..1.368 R2.w 8.088
+>> $env:K1139_HOST = $null  (21:27:54)
+lock released (21:27:54)
