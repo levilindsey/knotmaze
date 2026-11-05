@@ -526,11 +526,11 @@ Next free ID: K1210.
   - env: the passes' builds first and never while Muse runs: `scripts/preview.ps1 -Ref <sha> -Root <out>\builds -BuildOnly` for each sha (`pixel_passes.ps1` stops before the phone lock when one is missing); probe server `npx vite --config .claude/probes/K1139/vite.private-cache.config.ts --port 5620 --strictPort --host 127.0.0.1` from a worktree (ports 5620-5639); GPU probes through `.claude/probes/K1139/run_locked.ps1 -Batch`
 - **K1204** · Muse batch 21 (after K1199's batch 20): runs B to G from `docs/design/K1204_muse_batch21.md`
   (review 854823fa), one at a time through the chain, ports 5820-5879; B done (8b7a2b4a, S3f5); judged:
-  C 5e0d5914 off (K1202), D a0f1d634 on (K1203), E 080d4b49 closed (K1186)
+  C 5e0d5914 off (K1202), D a0f1d634 on (K1203), E 080d4b49 closed (K1186), F 8e0c5a1c fix (b) next (K1201)
   - owner: the chain in `.claude/probes/K1053/` (queue.txt, chain.log): batch 21's runs B to G, fresh Muse sessions, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
   - branch: mainline; last commit: `8e0c5a1c`
   - evidence: `docs/design/K1204_muse_batch21.md` (runs B to G), `docs/design/K1204_muse_batch21_run_a.md`; the chain in `.claude/probes/K1053/` (queue.txt, chain.log)
-  - next: Run F done; Claude reviews it, Run G next
+  - next: Run F judged (8e0c5a1c: play meets the step in every daily, fix (b) next, K1201); Run G (K1198) next, through the chain; Claude judges it under a hold, fills its slot in K1208's Run A brief, files its findings and closes K1204
   - brief: `docs/design/K1204_muse_batch21.md`
 - **K1208** · Muse batch 22 (after K1204's batch 21): Run A drafts its brief from
   `docs/design/K1208_muse_batch22_run_a.md` after 21G, through the chain (queued as 22A); Claude reviews the
@@ -559,9 +559,9 @@ Binding for every stage:
   new, and pause running agents with their WIP committed.
 
 Running agents are listed under In progress, each with its own next step.
-- **K1201** · S4b's joint step (K1139): a two-ended arm's ridge near or before its joint (xR < 0.5) steps the
-  light 0.18-0.90 there. 20E (9637302e): the GPU shows it by injection; play met it at 0 of 5 heads (notes).
-  Next: census xR over every head and two-ended arm of a few mazes (CPU); fix (b) only where play meets it.
+- **K1201** · S4b's joint step (K1139): a two-ended arm's ridge near its joint (xR < 0.5) steps the light.
+  21F (8e0c5a1c): play meets it in every daily of a week, 2-6 arm-ends each, steps up to 0.77 after the reach
+  window (CPU, lattice spans; notes). Next: fix (b), the band crossfade, in batch 22 behind a switch (K1208).
 - **K875** · K868 S1b, master's side: on Muse's link master registers only 58-80% with the oracle at
   j49/j123 and #6 finds every band end off (18/18, 19/19; cause untested: gaps or a reveal/fog state);
   its sdf and strip silhouettes differ in width; joinery.ts:1469-1471's comment is stale. s1b_oracle.md.

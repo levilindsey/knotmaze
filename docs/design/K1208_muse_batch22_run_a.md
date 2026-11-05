@@ -54,7 +54,15 @@ What batch 21 left (each run's findings are in its item's notes in
   them (the TWO-LAYER JOINERY comment in
   `src/render/ribbon/joinery.ts`), so a vote only reorders fans.
   K1209 retires the vote.
-- 21F: (Claude fills this in after judging 21F.)
+- 21F: K1201's census (8e0c5a1c), CPU only, lattice spans,
+  every non-end head of cyc, loop, x4 and dailies #19-#25. Claude's
+  judgment: play meets the joint step. The census's step column is
+  `ridge_joint.ts`'s metric without the reach window; weighted by
+  `kReachWin` at each joint (K1201's notes), every daily at the default
+  reach still has 2-6 arm-ends stepping over 0.3, up to 0.77 (31 heads
+  in the seven dailies; 24 of their 32 ends are equal-length cycles
+  with the ridge at the far joint, e.g. daily #25's node_216 on e251).
+  Fix (b) is item 1's K1201 run.
 - 21G: (Claude fills this in after judging 21G.)
 
 No Claude agent will be running when batch 22's runs start. Claude
@@ -101,9 +109,22 @@ that fit:
    - K1209: retire the fillet layer vote and its top layer (K1186's
      notes, Claude's judgment of 21E). A pin may move only where fans
      overlap; each one that moves is re-frozen and named in the commit.
-   - K1201's next step, by Claude's judgment of 21F (K1201's notes).
-     Fix (b) is a candidate only where 21F's census found play meeting
-     the step.
+   - K1201's fix (b), by Claude's judgment of 21F (K1201's notes): the
+     band crossfade in `docs/design/K1139_s4b_ridge_fade.md` ("Fix
+     options" (b), then its "Next step" 3 and 4), behind a switch that
+     defaults to today's picture. It starts from the K1207 run's commit
+     (both change `src/render/junction_field.ts`). The fix needs
+     JUNCTION_FRAG room (that doc's "Open" item 5): raise
+     `test/render/k320_slim.test.ts`'s budget by no more than the fix
+     adds, measured with the K307 cold compile as batch 21's Run C
+     states it, and name it in the commit. Three stands: 20E's injected
+     one (cyc's node_218 on e210 at xR 0.2,
+     `.claude/probes/K1201/out/SUMMARY.md`) and two natural ones from
+     `.claude/probes/K1201/out/census21f.txt`: daily #25
+     (`dailyParams(25)`, as 21F built it) at node_216 on e251, and x4 at
+     mnode_130 on e35. Dump each natural stand's drawn-span xR from the
+     page first (21F counted lattice spans), then shoot off/on sheets at
+     all three.
    - K1097's next stage, by the Pixel's reading of S3f5 (K1097's
      handle; `.claude/probes/K1040/s3/out/phone_table_s3f5.md` and
      `out/split_s3f5.md` once Claude has run the Pixel batch). If
