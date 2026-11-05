@@ -56,6 +56,7 @@ import {
   STREAMER_CAP,
   STREAMER_FADE,
   STREAMER_LIFE_MAX,
+  STREAMER_MAX_STEP,
   STREAMER_SEGS,
   STREAMER_STRIDE,
   SWAY,
@@ -936,6 +937,37 @@ describe("the streamers (K336)", () => {
     // Before its release a streamer holds still.
     const held = head(100, 0.01);
     expect([held[0], held[1]]).toEqual([-30, 720]);
+  });
+
+  it("sags the same at any frame rate: large steps substep at STREAMER_MAX_STEP (K648)", () => {
+    expect(STREAMER_MAX_STEP).toBe(1 / 60);
+    const [w, h] = [1400, 900];
+    // One seeded streamer, as spawned in the cases above; 2 s of life,
+    // still in the air at every rate (the census's flights run 3.9 s+).
+    const fly = (steps: number, dt: number): number[] => {
+      const pool = new ConfettiPool(1, STREAMER_STRIDE);
+      spawnStreamers(pool, finishCannons(w, h, 0, 1)[0], h, rainPieceScale(w, h), 0, seeded(41));
+      for (let k = 0; k < steps; k++) stepStreamers(pool, dt, h);
+      expect(pool.alive).toBe(1);
+      const pts: number[] = [];
+      for (let j = 0; j <= STREAMER_SEGS; j++) {
+        pts.push(pool.data[S_PTS + 2 * j], pool.data[S_PTS + 2 * j + 1]);
+      }
+      return pts;
+    };
+    const at60 = fly(120, 1 / 60);
+    // (1 / 30) / 2 === 1 / 60 in doubles, so each substep is a 60 fps step.
+    expect(fly(60, 1 / 30)).toEqual(at60);
+    // 0.1 / 6 === 1 / 60 too; the bound the brief sets is 0.001 px.
+    const coarse = fly(20, 0.1);
+    let worst = 0;
+    for (let j = 0; j <= STREAMER_SEGS; j++) {
+      worst = Math.max(
+        worst,
+        Math.hypot(coarse[2 * j] - at60[2 * j], coarse[2 * j + 1] - at60[2 * j + 1])
+      );
+    }
+    expect(worst).toBeLessThanOrEqual(0.001);
   });
 
   it("keeps every segment within its length while the body trails the head", () => {

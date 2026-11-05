@@ -172,6 +172,13 @@ export const STREAMER_CAP = 200;
 export const STREAMER_LIFE_MAX = 8;
 export const STREAMER_FADE = 0.5;
 export const STREAMER_SAG = 0.06;
+// K648: the largest step a streamer's follow takes. The head is analytic
+// in dt, but the body is not: each step sags by the whole step and pulls
+// back to one segment once, so a larger step cuts corners a smaller one
+// walks around. stepStreamers splits a longer frame into substeps of at
+// most this much, head included, so every frame rate trails the 60 fps
+// body; at dt <= this cap the single pass is exactly today's.
+export const STREAMER_MAX_STEP = 1 / 60;
 
 // K337 SHINE: the specular strength's top (the slider and the link clamp).
 export const CONFETTI_SHINE_MAX = 2;
@@ -787,7 +794,7 @@ export function stepCannon(
 // of the point before it (follow-the-leader: the body trails the head's
 // path and folds where it turns). A streamer dies once its whole body is
 // below the bottom edge, or at S_LIFE.
-export function stepStreamers(
+function stepStreamersPass(
   pool: ConfettiPool,
   dt: number,
   height: number
@@ -860,6 +867,26 @@ export function stepStreamers(
     }
     i++;
   }
+}
+
+// Advance the streamers by dt seconds over a screen `height` CSS px tall.
+// K648: a step longer than STREAMER_MAX_STEP runs as n = ceil(dt /
+// STREAMER_MAX_STEP) equal substeps of h = dt / n, each the whole
+// per-streamer step above (stepStreamersPass) with h for dt — the age,
+// the release (t = age < h ? age : h), the life and fall-out kills (a
+// streamer that dies runs no more substeps), the head's analytic advance
+// and the body's sag and pull, chained. Streamers are independent rows,
+// so repeating the pass steps each live streamer through its substeps in
+// turn. At dt <= STREAMER_MAX_STEP, n is 1 and h is dt: the single pass
+// it is today, so the 60 fps body does not move.
+export function stepStreamers(
+  pool: ConfettiPool,
+  dt: number,
+  height: number
+): void {
+  const n = dt > STREAMER_MAX_STEP ? Math.ceil(dt / STREAMER_MAX_STEP) : 1;
+  const h = dt / n;
+  for (let sub = 0; sub < n; sub++) stepStreamersPass(pool, h, height);
 }
 
 // K337 SHINE. One directional light, upper left and toward the viewer, in
