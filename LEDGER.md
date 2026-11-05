@@ -528,9 +528,9 @@ Next free ID: K1207.
   (Run A's draft, Claude's review 854823fa), one at a time through the chain, ports 5820-5879; B done
   (8b7a2b4a, K1097's S3f5)
   - owner: the chain in `.claude/probes/K1053/` (queue.txt, chain.log): batch 21's runs B to G, fresh Muse sessions, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
-  - branch: mainline; last commit: `8b7a2b4a`
+  - branch: mainline; last commit: `5e0d5914`
   - evidence: `docs/design/K1204_muse_batch21.md` (runs B to G), `docs/design/K1204_muse_batch21_run_a.md`; the chain in `.claude/probes/K1053/` (queue.txt, chain.log)
-  - next: Run C (K1202's fix behind a switch), then D to G; Claude judges each run's sheet or table and files its findings under a hold (`.claude/probes/K1053/hold.txt`) before the next run
+  - next: Run C done (5e0d5914, Claude reviews it and judges the sheet, flips the default if it reads well); Run D next
   - brief: `docs/design/K1204_muse_batch21.md`
 
 ## Next, in order
