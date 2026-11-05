@@ -1,0 +1,36 @@
+ji 28 (x4), orientation 1, phases 0,1,2,3,4,5,6,7
+  band 0 e135>e18: centreline px 574 (another record's sample 160); P8 own 73.8; P8 max 69.1 (FAIL); no other record 69.1; composite 1.0 (PASS); px over 4 vs max 71 {"other record":68,"strip (composite fits)":3}
+    over-4 px: set by {"band 0 mode 1":21,"band 0 mode 2":48,"band 1 mode 1":2}; ray changes segment at 10; strip sample at 3
+    pad check on the over-4 px with a strip sample (3): the strip twin's G within 4 of the GPU 3; the strip twin's argmax band has more cov than in the fan twin 3; the argmax band differs 1
+      {"k":4,"X":146,"Y":148,"G":200,"own":126.2,"max":130.9,"comp":200,"by":1,"mode":1,"distJ":6.811,"tau":0.012,"kinds":"f0 s4 o0 n0","rayK":22,"segChange":true,"cls":"strip (composite fits)","fanCov":"255/167","stripCov":"255/255","stripG":199.9,"stripBy":1,"dnow":"0.28/23.24"}
+      {"k":7,"X":181,"Y":193,"G":0,"own":45.8,"max":45.8,"comp":46,"by":0,"mode":1,"distJ":6.811,"tau":0.893,"kinds":"f0 s0 o4 n0","rayK":33,"segChange":false,"cls":"other record","fanCov":"255/0","stripCov":"255/0","stripG":45.8,"stripBy":0,"dnow":"0.25/80.24"}
+      {"k":7,"X":182,"Y":194,"G":0,"own":40.7,"max":40.7,"comp":41,"by":0,"mode":1,"distJ":6.811,"tau":0.909,"kinds":"f0 s0 o4 n0","rayK":33,"segChange":false,"cls":"other record","fanCov":"255/0","stripCov":"255/0","stripG":40.7,"stripBy":0,"dnow":"0.08/81.63"}
+      {"k":7,"X":183,"Y":195,"G":0,"own":35.9,"max":35.9,"comp":35,"by":0,"mode":1,"distJ":6.811,"tau":0.925,"kinds":"f0 s0 o4 n0","rayK":33,"segChange":false,"cls":"other record","fanCov":"255/0","stripCov":"255/0","stripG":35.9,"stripBy":0,"dnow":"0.1/83.03"}
+  band 1 e135>e136: centreline px 385 (another record's sample 0); P8 own 22.9; P8 max 22.9 (FAIL); no other record 22.9; composite 1.0 (PASS); px over 4 vs max 2 {"strip (composite fits)":2}
+    over-4 px: set by {"band 1 mode 1":2}; ray changes segment at 0; strip sample at 2
+    pad check on the over-4 px with a strip sample (2): the strip twin's G within 4 of the GPU 2; the strip twin's argmax band has more cov than in the fan twin 2; the argmax band differs 2
+      {"k":4,"X":120,"Y":139,"G":177,"own":154.1,"max":154.1,"comp":177,"by":1,"mode":1,"distJ":6.811,"tau":0.155,"kinds":"f0 s4 o0 n0","rayK":29,"segChange":false,"cls":"strip (composite fits)","fanCov":"67/255","stripCov":"255/255","stripG":176.9,"stripBy":0,"dnow":"23.64/0.16"}
+      {"k":3,"X":120,"Y":139,"G":77,"own":54.5,"max":54.5,"comp":77,"by":1,"mode":1,"distJ":6.811,"tau":0.155,"kinds":"f0 s4 o0 n0","rayK":29,"segChange":false,"cls":"strip (composite fits)","fanCov":"67/255","stripCov":"255/255","stripG":77.3,"stripBy":0,"dnow":"23.64/0.16"}
+ji 108 (x4), orientation 0, phases 0,1,2,3,4,5,6,7
+  band 0 e177>e178: centreline px 0 (another record's sample 0); P8 own 0.0; P8 max 0.0 (PASS); no other record 0.0; composite 0.0 (PASS); px over 4 vs max 0 {}
+ji 125 (x4), orientation 0, phases 0,1,2,3,4,5,6,7
+  band 0 e140>e95 shared: centreline px 120 (another record's sample 0); P8 own 2.2; P8 max 0.6 (PASS); no other record 0.6; composite 1.0 (PASS); px over 4 vs max 0 {}
+  band 1 e140>e139: centreline px 120 (another record's sample 0); P8 own 2.1; P8 max 0.6 (PASS); no other record 0.6; composite 1.0 (PASS); px over 4 vs max 0 {}
+ji 147 (x4), orientation 1, phases 0,1,2,3,4,5,6,7
+  band 0 e176>e135: centreline px 86 (another record's sample 0); P8 own 25.5; P8 max 0.6 (PASS); no other record 0.6; composite 1.0 (PASS); px over 4 vs max 0 {}
+  band 1 e176>e175: centreline px 159 (another record's sample 0); P8 own 15.3; P8 max 0.6 (PASS); no other record 0.6; composite 1.0 (PASS); px over 4 vs max 0 {}
+ji 149 (x4), orientation 1, phases 0,1,2,3,4,5,6,7
+  band 0 e180>e140 shared: centreline px 904 (another record's sample 0); P8 own 131.3; P8 max 131.3 (FAIL); no other record 131.3; composite 1.0 (PASS); px over 4 vs max 4 {"strip (composite fits)":4}
+    over-4 px: set by {"band 0 mode 1":2,"band 1 mode 1":2}; ray changes segment at 1; strip sample at 4
+    pad check on the over-4 px with a strip sample (4): the strip twin's G within 4 of the GPU 4; the strip twin's argmax band has more cov than in the fan twin 4; the argmax band differs 2
+      {"k":7,"X":120,"Y":118,"G":205,"own":73.7,"max":73.7,"comp":205,"by":0,"mode":1,"distJ":3.211,"tau":0.09,"kinds":"f0 s4 o0 n0","rayK":18,"segChange":true,"cls":"strip (composite fits)","fanCov":"255/75","stripCov":"255/255","stripG":204.9,"stripBy":1,"dnow":"0.11/23.6"}
+      {"k":0,"X":120,"Y":118,"G":105,"own":0,"max":31,"comp":105,"by":1,"mode":1,"distJ":3.211,"tau":-0.321,"kinds":"f0 s4 o0 n0","rayK":13,"segChange":false,"cls":"strip (composite fits)","fanCov":"255/75","stripCov":"255/255","stripG":105.2,"stripBy":1,"dnow":"0.11/23.6"}
+      {"k":0,"X":119,"Y":118,"G":34,"own":0,"max":0,"comp":34,"by":0,"mode":1,"distJ":3.211,"tau":0.105,"kinds":"f0 s4 o0 n0","rayK":18,"segChange":false,"cls":"strip (composite fits)","fanCov":"255/0","stripCov":"255/81","stripG":33.6,"stripBy":1,"dnow":"0.18/24.58"}
+      {"k":1,"X":120,"Y":118,"G":6,"own":0,"max":1.7,"comp":6,"by":1,"mode":1,"distJ":3.211,"tau":-0.321,"kinds":"f0 s4 o0 n0","rayK":13,"segChange":false,"cls":"strip (composite fits)","fanCov":"255/75","stripCov":"255/255","stripG":5.6,"stripBy":1,"dnow":"0.11/23.6"}
+  band 1 e180>e141: centreline px 795 (another record's sample 0); P8 own 25.6; P8 max 25.6 (FAIL); no other record 25.6; composite 1.0 (PASS); px over 4 vs max 5 {"strip (composite fits)":5}
+    over-4 px: set by {"band 1 mode 1":4,"band 0 mode 1":1}; ray changes segment at 0; strip sample at 5
+    pad check on the over-4 px with a strip sample (5): the strip twin's G within 4 of the GPU 5; the strip twin's argmax band has more cov than in the fan twin 5; the argmax band differs 4
+      {"k":7,"X":143,"Y":136,"G":135,"own":109.4,"max":109.4,"comp":135,"by":1,"mode":1,"distJ":3.211,"tau":-0.022,"kinds":"f0 s4 o0 n0","rayK":19,"segChange":false,"cls":"strip (composite fits)","fanCov":"7/255","stripCov":"255/255","stripG":134.7,"stripBy":0,"dnow":"23.87/0.22"}
+      {"k":0,"X":143,"Y":136,"G":35,"own":9.8,"max":9.8,"comp":35,"by":1,"mode":1,"distJ":3.211,"tau":-0.022,"kinds":"f0 s4 o0 n0","rayK":19,"segChange":false,"cls":"strip (composite fits)","fanCov":"7/255","stripCov":"255/255","stripG":35.1,"stripBy":0,"dnow":"23.87/0.22"}
+      {"k":6,"X":143,"Y":136,"G":225,"own":209,"max":209,"comp":225,"by":1,"mode":1,"distJ":3.211,"tau":-0.022,"kinds":"f0 s4 o0 n0","rayK":19,"segChange":false,"cls":"strip (composite fits)","fanCov":"7/255","stripCov":"255/255","stripG":224.7,"stripBy":0,"dnow":"23.87/0.22"}
+      {"k":7,"X":143,"Y":135,"G":136,"own":113.6,"max":125,"comp":136,"by":0,"mode":1,"distJ":3.211,"tau":-0.106,"kinds":"f0 s4 o0 n0","rayK":15,"segChange":false,"cls":"strip (composite fits)","fanCov":"234/255","stripCov":"255/255","stripG":136.3,"stripBy":0,"dnow":"22.98/0.05"}

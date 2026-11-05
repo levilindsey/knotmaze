@@ -1,0 +1,13 @@
+ji 33 (cross), orientation 1, phases 0,1,2,3,4,5,6,7
+  band 0 e150>e21: centreline px 406 (another record's sample 99); P8 own 125.3; P8 max 85.4 (FAIL); no other record 85.4; composite 1.0 (PASS); px over 4 vs max 11 {"other record":3,"strip (composite fits)":8}
+    over-4 px: set by {"band 0 mode 1":8,"band 1 mode 1":3}; ray changes segment at 7; strip sample at 8
+    pad check on the over-4 px with a strip sample (8): the strip twin's G within 4 of the GPU 8; the strip twin's argmax band has more cov than in the fan twin 8; the argmax band differs 5
+      {"k":5,"X":124,"Y":121,"G":227,"own":101.7,"max":141.6,"comp":227,"by":1,"mode":1,"distJ":2.075,"tau":-0.037,"kinds":"f0 s4 o0 n0","rayK":16,"segChange":false,"cls":"strip (composite fits)","fanCov":"255/159","stripCov":"255/255","stripG":227.1,"stripBy":1,"dnow":"0.13/23.28"}
+      {"k":5,"X":124,"Y":120,"G":185,"own":100.8,"max":100.8,"comp":185,"by":0,"mode":1,"distJ":2.075,"tau":0.26,"kinds":"f0 s4 o0 n0","rayK":30,"segChange":true,"cls":"strip (composite fits)","fanCov":"255/0","stripCov":"255/210","stripG":185.2,"stripBy":1,"dnow":"0.46/24.08"}
+      {"k":4,"X":124,"Y":120,"G":110,"own":27.2,"max":27.2,"comp":110,"by":0,"mode":1,"distJ":2.075,"tau":0.26,"kinds":"f0 s4 o0 n0","rayK":30,"segChange":true,"cls":"strip (composite fits)","fanCov":"255/0","stripCov":"255/210","stripG":110,"stripBy":1,"dnow":"0.46/24.08"}
+      {"k":4,"X":124,"Y":121,"G":131,"own":27.8,"max":81.5,"comp":131,"by":1,"mode":1,"distJ":2.075,"tau":-0.037,"kinds":"f0 s4 o0 n0","rayK":16,"segChange":false,"cls":"strip (composite fits)","fanCov":"255/159","stripCov":"255/255","stripG":130.7,"stripBy":1,"dnow":"0.13/23.28"}
+  band 1 e150>e151: centreline px 329 (another record's sample 0); P8 own 20.8; P8 max 20.8 (FAIL); no other record 20.8; composite 1.0 (PASS); px over 4 vs max 2 {"strip (composite fits)":2}
+    over-4 px: set by {"band 1 mode 1":2}; ray changes segment at 0; strip sample at 2
+    pad check on the over-4 px with a strip sample (2): the strip twin's G within 4 of the GPU 2; the strip twin's argmax band has more cov than in the fan twin 2; the argmax band differs 2
+      {"k":5,"X":126,"Y":155,"G":141,"own":120.2,"max":120.2,"comp":141,"by":1,"mode":1,"distJ":2.075,"tau":0.214,"kinds":"f0 s4 o0 n0","rayK":20,"segChange":false,"cls":"strip (composite fits)","fanCov":"7/255","stripCov":"255/255","stripG":140.8,"stripBy":0,"dnow":"23.87/0.01"}
+      {"k":4,"X":126,"Y":155,"G":56,"own":40.8,"max":40.8,"comp":56,"by":1,"mode":1,"distJ":2.075,"tau":0.214,"kinds":"f0 s4 o0 n0","rayK":20,"segChange":false,"cls":"strip (composite fits)","fanCov":"7/255","stripCov":"255/255","stripG":56,"stripBy":0,"dnow":"23.87/0.01"}
