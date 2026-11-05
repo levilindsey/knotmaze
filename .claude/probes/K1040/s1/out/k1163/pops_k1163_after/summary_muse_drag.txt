@@ -1,0 +1,3 @@
+== muse_drag: 41 kept frames; windows at frames 0 x 41; 40 pairs, 41 frames in 317 s
+  label_pops' rule: 6 pops (36 px) by {"crossing60+":1,"junction":3,"crossing30-60":2}; unexplained outside fades 218 px; inside fades {"f2":7,"f16":56,"f4":62,"f20":8,"f1":1,"f6":9,"f5":1,"f22":3}; max motion 21.501 px
+  Q3 tie band (nSurf >= 2, dz < zt) per frame 18644-19019 px, sum {"junction":35536,"crossing<15":8844,"crossing60+":664687,"crossing30-60":62433,"crossing15-30":1179}; tie mix px per frame 16982,16990,16962,16964,16963,16954,16955,16973,16961,16976,16967,16971,16982,16963,16993,17017,17036,17006,17021,17013,17025,17106,17093,17072,17052,17059,17064,17038,17020,16982,16976,16982,17026,17047,17039,17062,17028,17013,17002,16998,16993

@@ -64,6 +64,24 @@ export function ss(e0: number, e1: number, x: number): number {
   return t * t * (3 - 2 * t);
 }
 
+/**
+ * K1163: gate699's corner angle (rad), the reference for the root gate's
+ * tip scaling. A round of radius r at angle θ has its tip
+ * r·(1/sin(θ/2) − 1) inside V, so t(θ) = 1/sin(θ/2) − 1 measures how much
+ * ink a null at that angle would move; t(2.0) ≈ 0.188395.
+ */
+export const ROOT_BAND_REF_THETA = 2.0;
+
+/** The tip factor's scale at θ: min(1, t(θ)/t(ROOT_BAND_REF_THETA)); 1 at and below the reference angle. */
+function rootTipScale(theta: number): number {
+  const s = Math.sin(theta / 2);
+  if (!(s > 0)) return 1;
+  const t = 1 / s - 1;
+  if (!(t > 0)) return 0;
+  const tRef = 1 / Math.sin(ROOT_BAND_REF_THETA / 2) - 1;
+  return Math.min(1, t / tRef);
+}
+
 export interface FormBParams {
   /** Device px per CSS px (default: the scene camera's dpr). */
   dpr?: number;
@@ -148,9 +166,21 @@ export interface FormBParams {
    * F2). A fourth factor of solveCorner's w (after the margin, steep and cap
    * gates), ss(d/band) on each tracked foot's distance d from its arm's
    * root, the low-side twin of the cap gate: r goes to 0 as either foot
-   * reaches its root, before the window test's null (dV ≤ tol) does.
+   * reaches its root, before the window test's null (dV ≤ tol) does. The
+   * band itself is scaled per corner by rootBandScale (K1163).
    */
   rootBand?: number;
+  /**
+   * K1163: how the root gate's band scales with the corner's angle.
+   * 'tip' (default): the band is rootBand*h*min(1, t(theta)/t(ROOT_BAND_REF_THETA))
+   * with t(theta) = 1/sin(theta/2) - 1, so at gate699's angle (theta = 2.0) it is
+   * the flat band and at near-straight corners it shrinks with the ink a null
+   * would move (the tip moves at about 1.1x the root's speed at every angle).
+   * 'flat' is S1g's band, rootBand*h at every angle. A scaled band under
+   * 1e-9*h acts as its step limit (the gate is 1 for any foot off its root),
+   * with no division by zero as theta approaches pi and t approaches 0.
+   */
+  rootBandScale?: "tip" | "flat";
   /**
    * S3b: who names a surface in the label (evalPoint's top, chain, s, z,
    * key, dkey). "cover" (default, S3b F1): its covering pieces (within h,
@@ -410,6 +440,8 @@ export class FormB {
   readonly dEdgeKMax: number;
   /** S1g: the root gate's band, in h (0: off). */
   readonly rootBand: number;
+  /** K1163: the root band's scaling with the corner angle ('tip' default; 'flat' is S1g's band). */
+  readonly rootBandScale: "tip" | "flat";
   /** S3b: who names a surface in the label ("cover": its covering pieces and fills). */
   readonly labelBy: "cover" | "reach";
   readonly force: NonNullable<FormBParams["force"]>;
@@ -458,6 +490,7 @@ export class FormB {
     this.dEdgeTip = params.dEdgeTip ?? 1;
     this.dEdgeKMax = params.dEdgeKMax ?? 4;
     this.rootBand = params.rootBand ?? 0.5;
+    this.rootBandScale = params.rootBandScale ?? "tip";
     this.labelBy = params.labelBy ?? "cover";
     this.force = params.force ?? {};
     this.fillKey = params.fillKey ?? "nearer";
@@ -997,14 +1030,20 @@ export class FormB {
       if (hi < win[1]) d2 = Math.min(d2, footInWindow(pl, x, y, hi, win[1]).d);
       return d2 - dc;
     };
+    // K1163: this corner's root band: the flat band scaled by the tip
+    // factor at theta, so a near-straight corner's round is not clamped
+    // where a null would move almost no ink. At ROOT_BAND_REF_THETA the
+    // scale is exactly 1 ('tip' is bit-identical to 'flat' there); a band
+    // under 1e-9*h acts as its step limit, with no division by zero.
+    const rbEff = Math.max(this.rootBand * h * (this.rootBandScale === "tip" ? rootTipScale(theta) : 1), 1e-9 * h);
     const wOf = (p: Tk): number => {
       const mA = marginOf(pa, p.x, p.y, p.fa.u, winA, p.fa.d);
       const mB = marginOf(pb, p.x, p.y, p.fb.u, winB, p.fb.d);
       const w = ss(0, 1, 1 + Math.min(0, mA, mB) / (0.05 * h)) * ss(0, 1, (denOf(p) / denV - 0.3) / 0.4) * ss(0, 1, slackOf(p) / (0.5 * h));
       if (!(this.rootBand > 0)) return w;
-      // S1g: the root gate (rootBand), each foot's distance from its root.
-      const rb = this.rootBand * h;
-      return w * ss(0, 1, ((p.fa.u - A.sR) * A.dir) / rb) * ss(0, 1, ((p.fb.u - B.sR) * B.dir) / rb);
+      // S1g: the root gate (rootBand), each foot's distance from its root,
+      // over this corner's band rbEff (K1163's tip scaling above).
+      return w * ss(0, 1, ((p.fa.u - A.sR) * A.dir) / rbEff) * ss(0, 1, ((p.fb.u - B.sR) * B.dir) / rbEff);
     };
     let r = 0;
     let q = v0;

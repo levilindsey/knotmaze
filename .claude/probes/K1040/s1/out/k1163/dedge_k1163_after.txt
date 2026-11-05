@@ -1,0 +1,386 @@
+1. census at rest: S1f final (old) vs the worktree's form B with {} (new)
+  def arm 67 (j21 c90 dir -1 through): L 3.511h -> 3.511h, Lcut Infinityh -> 11.360h
+  def arm 73 (j23 c60 dir -1 through): L 7.975h -> 7.975h, Lcut 15.301h -> 14.073h
+  def arm 100 (j32 c80 dir 1 through): L 3.589h -> 3.589h, Lcut 11.868h -> 8.358h
+  def arm 233 (j76 c89 dir -1 through): L 3.704h -> 3.704h, Lcut Infinityh -> 18.223h
+  def arm 242 (j79 c30 dir -1 through): L 3.546h -> 3.546h, Lcut 12.344h -> 7.794h
+  def arm 270 (j88 c56 dir -1 through): L 3.398h -> 3.398h, Lcut Infinityh -> 13.838h
+  def arm 309 (j101 c43 dir 1 through): L 3.526h -> 3.526h, Lcut 12.270h -> 8.267h
+  def arm 342 (j112 c42 dir 1 through): L 3.557h -> 3.557h, Lcut 17.120h -> 12.863h
+  def arm 352 (j115 c42 dir -1 through): L 3.463h -> 3.463h, Lcut 17.168h -> 14.697h
+  def arm 372 (j122 c44 dir 1 through): L 8.063h -> 8.063h, Lcut Infinityh -> 17.272h
+  def arm 400 (j131 c50 dir -1 through): L 3.535h -> 3.535h, Lcut Infinityh -> 8.926h
+  def arm 412 (j135 c50 dir -1 through): L 4.849h -> 4.849h, Lcut Infinityh -> 15.326h
+  def arm 427 (j140 c89 dir -1 through): L 3.542h -> 3.542h, Lcut Infinityh -> 9.111h
+  def arm 431 (j141 c56 dir -1 through): L 12.777h -> 12.777h, Lcut Infinityh -> 15.928h
+  def arm 463 (j152 c61 dir -1 through): L 3.461h -> 3.461h, Lcut 7.270h -> 5.442h
+  def arm 511 (j167 c63 dir 1 through): L 3.336h -> 3.336h, Lcut Infinityh -> 14.096h
+  def arm 514 (j168 c63 dir 1 through): L 4.644h -> 4.644h, Lcut Infinityh -> 14.980h
+  def arm 515 (j169 c82 dir -1 through): L 4.898h -> 4.898h, Lcut Infinityh -> 16.549h
+  def arm 518 (j170 c66 dir -1 through): L 10.312h -> 10.312h, Lcut Infinityh -> 15.137h
+  def arm 550 (j180 c90 dir -1 through): L 8.318h -> 8.318h, Lcut Infinityh -> 14.953h
+  def arm 551 (j181 c76 dir -1 through): L 8.120h -> 8.120h, Lcut Infinityh -> 17.435h
+  def arm 557 (j183 c88 dir -1 through): L 8.239h -> 8.239h, Lcut Infinityh -> 18.621h
+  def corner j35 109-110: r 1.009h -> 1.005h, ω 1.000 -> 1.000
+  def corner j54 166-167: r 0.987h -> 0.946h, ω 1.000 -> 1.000
+  def F6 arm 425 (j139) d -2.499h reach 1.608h: 425-426 r 2.000h ω 1.000 -> r 2.000h ω 1.000
+  user_tw42.lightpaper arm 0 (j0 c15 dir 1 through): L 3.621h -> 3.621h, Lcut Infinityh -> 7.920h
+  user_tw42.lightpaper arm 3 (j1 c0 dir -1 through): L 5.117h -> 4.607h, Lcut 5.117h -> 4.607h
+  user_tw42.lightpaper arm 8 (j2 c15 dir -1 through): L 3.501h -> 3.501h, Lcut 11.405h -> 7.136h
+  user_tw42.lightpaper arm 14 (j4 c24 dir 1 through): L 8.317h -> 6.100h, Lcut 8.317h -> 6.100h
+  user_tw42.lightpaper arm 16 (j5 c15 dir 1 through): L 3.507h -> 3.507h, Lcut 14.129h -> 8.828h
+  user_tw42.lightpaper arm 31 (j10 c29 dir 1 through): L 3.625h -> 3.625h, Lcut Infinityh -> 9.441h
+  user_tw42.lightpaper arm 38 (j12 c6 dir 1 through): L 11.121h -> 10.960h, Lcut 11.121h -> 10.960h
+  user_tw42.lightpaper arm 42 (j14 c30 dir -1 through): L 3.530h -> 3.530h, Lcut 14.434h -> 7.897h
+  user_tw42.lightpaper arm 64 (j21 c28 dir 1 through): L 10.043h -> 10.043h, Lcut Infinityh -> 11.206h
+  user_tw42.lightpaper arm 65 (j21 c7 dir 1 through): L 9.925h -> 9.925h, Lcut 18.127h -> 15.644h
+  user_tw42.lightpaper arm 73 (j24 c15 dir 1 through): L 3.598h -> 3.598h, Lcut 7.475h -> 6.681h
+  user_tw42.lightpaper arm 81 (j26 c22 dir -1 through): L 3.621h -> 3.621h, Lcut 17.371h -> 7.661h
+  user_tw42.lightpaper arm 95 (j31 c23 dir 1 through): L 3.665h -> 3.665h, Lcut 30.337h -> 16.929h
+  user_tw42.lightpaper arm 101 (j33 c30 dir -1 through): L 3.454h -> 3.454h, Lcut 14.267h -> 7.812h
+  user_tw42.lightpaper arm 112 (j36 c30 dir -1 through): L 5.991h -> 5.991h, Lcut 17.012h -> 14.311h
+  user_tw42.lightpaper arm 120 (j39 c26 dir -1 through): L 3.529h -> 3.529h, Lcut 10.951h -> 9.184h
+  user_tw42.lightpaper arm 123 (j40 c23 dir 1 through): L 9.708h -> 9.708h, Lcut 26.672h -> 12.661h
+  user_tw42.lightpaper arm 131 (j42 c23 dir -1 through): L 9.783h -> 9.783h, Lcut 25.288h -> 17.139h
+  user_tw42.lightpaper arm 148 (j48 c15 dir 1 through): L 5.804h -> 5.804h, Lcut Infinityh -> 17.522h
+  user_tw42.lightpaper arm 153 (j49 c29 dir 1 through): L 12.850h -> 12.527h, Lcut Infinityh -> 12.527h
+  user_tw42.lightpaper arm 166 (j54 c22 dir 1 through): L 9.889h -> 9.889h, Lcut 15.507h -> 11.239h
+  user_tw42.lightpaper arm 190 (j61 c30 dir -1 through): L 3.574h -> 3.574h, Lcut 20.587h -> 6.433h
+  user_tw42.lightpaper arm 198 (j64 c26 dir -1 through): L 6.025h -> 6.025h, Lcut Infinityh -> 14.944h
+  user_tw42.lightpaper arm 214 (j69 c29 dir 1 through): L 10.115h -> 9.290h, Lcut 14.995h -> 9.290h
+  user_tw42.lightpaper arm 229 (j74 c31 dir -1 through): L 6.137h -> 6.137h, Lcut Infinityh -> 16.446h
+  g41_def_tw42 arm 67 (j21 c90 dir -1 through): L 4.406h -> 4.406h, Lcut Infinityh -> 16.756h
+  g41_def_tw42 arm 73 (j23 c60 dir -1 through): L 9.788h -> 9.788h, Lcut 19.519h -> 18.678h
+  g41_def_tw42 arm 100 (j32 c80 dir 1 through): L 4.330h -> 4.330h, Lcut 15.228h -> 11.612h
+  g41_def_tw42 arm 233 (j76 c89 dir -1 through): L 4.508h -> 4.508h, Lcut Infinityh -> 22.071h
+  g41_def_tw42 arm 242 (j79 c30 dir -1 through): L 4.415h -> 4.415h, Lcut 15.372h -> 9.733h
+  g41_def_tw42 arm 270 (j88 c56 dir -1 through): L 4.352h -> 4.352h, Lcut Infinityh -> 16.946h
+  g41_def_tw42 arm 309 (j101 c43 dir 1 through): L 4.264h -> 4.264h, Lcut 15.368h -> 11.110h
+  g41_def_tw42 arm 342 (j112 c42 dir 1 through): L 4.357h -> 4.357h, Lcut 20.666h -> 14.607h
+  g41_def_tw42 arm 352 (j115 c42 dir -1 through): L 4.282h -> 4.282h, Lcut 21.352h -> 12.201h
+  g41_def_tw42 arm 372 (j122 c44 dir 1 through): L 9.789h -> 9.789h, Lcut Infinityh -> 21.987h
+  g41_def_tw42 arm 400 (j131 c50 dir -1 through): L 4.442h -> 4.442h, Lcut Infinityh -> 10.434h
+  g41_def_tw42 arm 412 (j135 c50 dir -1 through): L 5.948h -> 5.948h, Lcut Infinityh -> 19.731h
+  g41_def_tw42 arm 427 (j140 c89 dir -1 through): L 4.264h -> 4.264h, Lcut Infinityh -> 10.915h
+  g41_def_tw42 arm 431 (j141 c56 dir -1 through): L 15.585h -> 15.585h, Lcut Infinityh -> 19.772h
+  g41_def_tw42 arm 511 (j167 c63 dir 1 through): L 4.104h -> 4.104h, Lcut Infinityh -> 14.470h
+  g41_def_tw42 arm 514 (j168 c63 dir 1 through): L 5.780h -> 5.780h, Lcut Infinityh -> 18.978h
+  g41_def_tw42 arm 515 (j169 c82 dir -1 through): L 6.198h -> 6.198h, Lcut Infinityh -> 19.733h
+  g41_def_tw42 arm 518 (j170 c66 dir -1 through): L 12.640h -> 12.640h, Lcut Infinityh -> 17.367h
+  g41_def_tw42 arm 550 (j180 c90 dir -1 through): L 10.093h -> 10.093h, Lcut Infinityh -> 21.072h
+  g41_def_tw42 arm 551 (j181 c76 dir -1 through): L 9.863h -> 9.863h, Lcut Infinityh -> 21.495h
+  g41_def_tw42 arm 557 (j183 c88 dir -1 through): L 9.953h -> 9.953h, Lcut Infinityh -> 25.324h
+  g41_def_tw64 arm 67 (j21 c90 dir -1 through): L 2.775h -> 2.775h, Lcut Infinityh -> 9.458h
+  g41_def_tw64 arm 73 (j23 c60 dir -1 through): L 6.502h -> 6.502h, Lcut 11.988h -> 10.903h
+  g41_def_tw64 arm 100 (j32 c80 dir 1 through): L 2.899h -> 2.899h, Lcut 9.463h -> 6.322h
+  g41_def_tw64 arm 233 (j76 c89 dir -1 through): L 3.000h -> 3.000h, Lcut Infinityh -> 16.233h
+  g41_def_tw64 arm 242 (j79 c30 dir -1 through): L 2.967h -> 2.967h, Lcut 10.409h -> 5.563h
+  g41_def_tw64 arm 270 (j88 c56 dir -1 through): L 2.707h -> 2.707h, Lcut Infinityh -> 12.448h
+  g41_def_tw64 arm 309 (j101 c43 dir 1 through): L 2.851h -> 2.851h, Lcut 9.590h -> 6.606h
+  g41_def_tw64 arm 342 (j112 c42 dir 1 through): L 2.861h -> 2.861h, Lcut 13.820h -> 10.513h
+  g41_def_tw64 arm 372 (j122 c44 dir 1 through): L 6.555h -> 6.555h, Lcut Infinityh -> 14.619h
+  g41_def_tw64 arm 400 (j131 c50 dir -1 through): L 2.792h -> 2.792h, Lcut Infinityh -> 7.268h
+  g41_def_tw64 arm 412 (j135 c50 dir -1 through): L 3.973h -> 3.973h, Lcut Infinityh -> 11.871h
+  g41_def_tw64 arm 427 (j140 c89 dir -1 through): L 2.888h -> 2.888h, Lcut Infinityh -> 7.921h
+  g41_def_tw64 arm 431 (j141 c56 dir -1 through): L 10.684h -> 10.684h, Lcut Infinityh -> 13.040h
+  g41_def_tw64 arm 463 (j152 c61 dir -1 through): L 2.876h -> 2.876h, Lcut 5.721h -> 4.458h
+  g41_def_tw64 arm 511 (j167 c63 dir 1 through): L 2.752h -> 2.752h, Lcut Infinityh -> 8.602h
+  g41_def_tw64 arm 514 (j168 c63 dir 1 through): L 3.803h -> 3.803h, Lcut Infinityh -> 12.370h
+  g41_def_tw64 arm 515 (j169 c82 dir -1 through): L 3.938h -> 3.938h, Lcut Infinityh -> 11.817h
+  g41_def_tw64 arm 518 (j170 c66 dir -1 through): L 8.487h -> 8.487h, Lcut Infinityh -> 12.435h
+  g41_def_tw64 arm 550 (j180 c90 dir -1 through): L 6.780h -> 6.780h, Lcut Infinityh -> 11.461h
+  g41_def_tw64 arm 551 (j181 c76 dir -1 through): L 6.598h -> 6.598h, Lcut Infinityh -> 13.283h
+  g41_def_tw64 arm 557 (j183 c88 dir -1 through): L 6.687h -> 6.687h, Lcut Infinityh -> 17.278h
+  g41_def_tw64 corner j35 109-110: r 0.807h -> 0.616h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j58 178-179: r 0.332h -> 0.332h, ω 1.000 -> 1.000
+  g41_def_tw64 corner j64 197-198: r 0.328h -> 0.327h, ω 1.000 -> 1.000
+  g41_def_tw64 F6 arm 107 (j34) d -2.583h reach 1.727h: 107-108 r 0.339h ω 1.000 -> r 0.339h ω 1.000
+  g41_def_tw64 F6 arm 169 (j55) d -2.129h reach 1.614h: 171-169 r 0.397h ω 1.000 -> r 0.397h ω 1.000
+  g41_def_tw64 F6 arm 173 (j56) d -2.387h reach 1.788h: 173-174 r 0.015h ω 1.000 -> r 0.015h ω 1.000
+  g41_def_tw64 F6 arm 283 (j93) d -2.152h reach 1.407h: 283-284 r 1.958h ω 1.000 -> r 1.958h ω 1.000
+  g41_def_tw64 F6 arm 383 (j125) d -2.101h reach 1.132h: 382-383 r 2.000h ω 1.000 -> r 2.000h ω 1.000
+  g41_def_tw64 F6 arm 388 (j127) d -2.438h reach 1.479h: 387-388 r 1.578h ω 1.000 -> r 1.578h ω 1.000
+  g41_def_tw64 F6 arm 404 (j132) d -2.111h reach 1.123h: 403-404 r 0.118h ω 1.000 -> r 0.118h ω 1.000
+  g41_def_tw64 F6 arm 425 (j139) d -2.176h reach 1.512h: 425-426 r 2.000h ω 1.000 -> r 2.000h ω 1.000
+  g41_def_tw64 F6 arm 447 (j146) d -2.279h reach 1.364h: 447-445 r 2.000h ω 1.000 -> r 2.000h ω 1.000
+  g41_def_tw64 F6 arm 463 (j152) d -2.158h reach 1.892h: 465-463 r 0.585h ω 1.000 -> r 0.585h ω 1.000
+  muse_hash arm 0 (j0 c77 dir 1 through): L 3.652h -> 3.652h, Lcut 9.517h -> 4.786h
+  muse_hash arm 22 (j7 c3 dir 1 through): L 5.379h -> 5.379h, Lcut 6.775h -> 6.439h
+  muse_hash arm 23 (j7 c37 dir -1 through): L 5.368h -> 5.368h, Lcut Infinityh -> 10.754h
+  muse_hash arm 25 (j8 c3 dir -1 through): L 5.379h -> 5.379h, Lcut 6.274h -> 5.987h
+  muse_hash arm 57 (j18 c5 dir 1 through): L 6.676h -> 6.676h, Lcut 9.403h -> 8.751h
+  muse_hash arm 61 (j20 c62 dir 1 through): L 2.244h -> 2.244h, Lcut Infinityh -> 7.060h
+  muse_hash arm 119 (j39 c35 dir -1 through): L 7.601h -> 7.601h, Lcut Infinityh -> 10.147h
+  muse_hash arm 201 (j66 c68 dir 1 through): L 3.545h -> 3.545h, Lcut Infinityh -> 8.696h
+  muse_hash arm 205 (j68 c50 dir -1 through): L 5.569h -> 5.534h, Lcut 7.159h -> 5.534h
+  muse_hash arm 222 (j73 c61 dir 1 through): L 6.958h -> 6.958h, Lcut Infinityh -> 8.573h
+  muse_hash arm 224 (j74 c33 dir -1 through): L 3.228h -> 3.228h, Lcut Infinityh -> 10.133h
+  muse_hash arm 228 (j75 c33 dir -1 through): L 2.490h -> 2.490h, Lcut Infinityh -> 4.033h
+  muse_hash arm 233 (j77 c33 dir 1 through): L 2.244h -> 2.244h, Lcut Infinityh -> 7.816h
+  muse_hash arm 237 (j78 c33 dir 1 through): L 8.055h -> 8.055h, Lcut Infinityh -> 12.418h
+  muse_hash arm 286 (j95 c69 dir 1 through): L 2.561h -> 2.561h, Lcut Infinityh -> 4.587h
+  muse_hash arm 410 (j135 c62 dir 1 through): L 7.837h -> 7.837h, Lcut Infinityh -> 19.050h
+  muse_hash arm 442 (j146 c71 dir -1 through): L 3.202h -> 3.202h, Lcut Infinityh -> 7.214h
+  muse_hash arm 448 (j147 c67 dir -1 through): L 7.200h -> 7.200h, Lcut 8.722h -> 7.260h
+  muse_hash arm 449 (j148 c82 dir -1 through): L 5.196h -> 5.196h, Lcut Infinityh -> 8.309h
+  muse_hash arm 459 (j151 c69 dir 1 through): L 3.051h -> 3.051h, Lcut Infinityh -> 10.569h
+  muse_hash arm 472 (j155 c74 dir -1 through): L 5.304h -> 5.304h, Lcut Infinityh -> 6.872h
+  muse_hash arm 473 (j156 c72 dir -1 through): L 5.401h -> 5.011h, Lcut Infinityh -> 5.011h
+  muse_hash corner j16 50-51: r 0.001h -> 0.001h, ω 1.000 -> 1.000
+  muse_hash corner j61 185-186: r 0.187h -> 0.181h, ω 0.660 -> 0.926
+  muse_hash corner j124 375-376: r 1.967h -> 0.274h, ω 1.000 -> 1.000
+  muse_hash corner j165 502-500: r 0.163h -> 0.163h, ω 1.000 -> 1.000
+  muse_hash F6 arm 15 (j5) d -1.999h reach 1.025h: 17-15 r 2.757h ω 1.000 -> r 2.757h ω 1.000
+  muse_hash F6 arm 75 (j24) d -2.151h reach 1.281h: 74-75 r 0.218h ω 1.000 -> r 0.218h ω 1.000
+  muse_hash F6 arm 79 (j26) d -2.005h reach 1.280h: 79-80 r 3.921h ω 1.000 -> r 3.921h ω 1.000
+  muse_hash F6 arm 109 (j36) d -1.112h reach 4.000h: 109-110 r 2.721h ω 1.000 -> r 2.721h ω 1.000
+  muse_hash F6 arm 150 (j49) d -1.911h reach 1.455h: 150-148 r 4.000h ω 1.000 -> r 4.000h ω 1.000
+  muse_hash F6 arm 156 (j51) d -1.841h reach 1.094h: 155-156 r 3.293h ω 1.000 -> r 3.293h ω 1.000
+  muse_hash F6 arm 158 (j52) d -2.022h reach 1.268h: 157-158 r 4.000h ω 1.000 -> r 4.000h ω 1.000
+  muse_hash F6 arm 168 (j55) d -1.842h reach 1.254h: 168-166 r 0.008h ω 1.000 -> r 0.008h ω 1.000
+  muse_hash F6 arm 185 (j61) d -2.207h reach 1.337h: 185-186 r 0.187h ω 0.660 -> r 0.181h ω 0.926
+  muse_hash F6 arm 187 (j62) d -2.165h reach 1.222h: 189-187 r 2.438h ω 1.000 -> r 2.438h ω 1.000
+  muse_hash F6 arm 301 (j99) d -1.598h reach 1.158h: 301-299 r 2.518h ω 1.000 -> r 2.518h ω 1.000
+  muse_hash F6 arm 335 (j110) d -1.748h reach 1.092h: 335-333 r 4.000h ω 1.000 -> r 4.000h ω 1.000
+  muse_hash F6 arm 381 (j126) d -2.195h reach 1.213h: 381-382 r 0.404h ω 1.000 -> r 0.404h ω 1.000
+  muse_hash F6 arm 397 (j131) d -2.135h reach 1.204h: 397-398 r 3.183h ω 1.000 -> r 3.183h ω 1.000
+  muse_hash F6 arm 422 (j139) d -2.165h reach 1.432h: 422-420 r 0.889h ω 1.000 -> r 0.889h ω 1.000
+  muse_hash F6 arm 423 (j140) d -3.142h reach 2.334h: 423-424 r 2.457h ω 1.000 -> r 2.457h ω 1.000
+  muse_hash F6 arm 433 (j143) d -2.170h reach 1.215h: 433-434 r 0.065h ω 1.000 -> r 0.065h ω 1.000
+  muse_default_tw arm 0 (j0 c77 dir 1 through): L 4.771h -> 4.771h, Lcut 13.651h -> 6.075h
+  muse_default_tw arm 22 (j7 c3 dir 1 through): L 8.398h -> 8.398h, Lcut 11.467h -> 10.116h
+  muse_default_tw arm 23 (j7 c37 dir -1 through): L 8.262h -> 8.262h, Lcut Infinityh -> 16.327h
+  muse_default_tw arm 25 (j8 c3 dir -1 through): L 8.398h -> 8.398h, Lcut 11.094h -> 10.569h
+  muse_default_tw arm 57 (j18 c5 dir 1 through): L 8.865h -> 8.865h, Lcut 14.013h -> 12.501h
+  muse_default_tw arm 61 (j20 c62 dir 1 through): L 3.237h -> 3.237h, Lcut Infinityh -> 11.706h
+  muse_default_tw arm 120 (j39 c35 dir -1 through): L 10.920h -> 10.920h, Lcut Infinityh -> 18.211h
+  muse_default_tw arm 201 (j66 c68 dir 1 through): L 5.232h -> 5.232h, Lcut Infinityh -> 15.266h
+  muse_default_tw arm 205 (j68 c50 dir -1 through): L 8.293h -> 8.293h, Lcut 11.562h -> 10.407h
+  muse_default_tw arm 222 (j73 c61 dir 1 through): L 10.480h -> 10.480h, Lcut Infinityh -> 14.645h
+  muse_default_tw arm 224 (j74 c33 dir -1 through): L 5.006h -> 5.006h, Lcut Infinityh -> 15.078h
+  muse_default_tw arm 228 (j75 c33 dir -1 through): L 3.674h -> 3.674h, Lcut Infinityh -> 6.776h
+  muse_default_tw arm 233 (j77 c33 dir 1 through): L 3.421h -> 3.421h, Lcut Infinityh -> 15.048h
+  muse_default_tw arm 237 (j78 c33 dir 1 through): L 12.001h -> 12.001h, Lcut Infinityh -> 27.603h
+  muse_default_tw arm 286 (j95 c69 dir 1 through): L 3.725h -> 3.725h, Lcut Infinityh -> 7.964h
+  muse_default_tw arm 348 (j115 c50 dir 1 through): L 8.293h -> 8.293h, Lcut 11.106h -> 10.318h
+  muse_default_tw arm 408 (j135 c62 dir 1 through): L 11.071h -> 11.071h, Lcut Infinityh -> 16.880h
+  muse_default_tw arm 442 (j146 c71 dir -1 through): L 4.962h -> 4.962h, Lcut Infinityh -> 12.256h
+  muse_default_tw arm 448 (j147 c67 dir -1 through): L 10.653h -> 10.653h, Lcut 14.949h -> 12.282h
+  muse_default_tw arm 449 (j148 c82 dir -1 through): L 7.990h -> 7.990h, Lcut Infinityh -> 14.007h
+  muse_default_tw arm 459 (j151 c69 dir 1 through): L 4.792h -> 4.792h, Lcut Infinityh -> 12.149h
+  muse_default_tw arm 472 (j155 c74 dir -1 through): L 8.355h -> 8.355h, Lcut Infinityh -> 12.599h
+  muse_default_tw arm 473 (j156 c72 dir -1 through): L 8.299h -> 8.299h, Lcut Infinityh -> 9.438h
+  muse_default_tw corner j22 69-67: r 1.078h -> 1.058h, ω 1.000 -> 1.000
+  muse_default_tw corner j60 181-182: r 0.690h -> 0.687h, ω 1.000 -> 1.000
+  g41_ring_tw64 F6 arm 24 (j7) d -2.324h reach 1.740h: 23-24 r 0.593h ω 1.000 -> r 0.593h ω 1.000
+  g41_ring_tw64 F6 arm 46 (j15) d -2.490h reach 1.562h: 48-46 r 2.000h ω 1.000 -> r 2.000h ω 1.000
+  g41_ring_tw64 F6 arm 51 (j16) d -2.652h reach 1.802h: 50-51 r 0.591h ω 1.000 -> r 0.591h ω 1.000
+  g41_user_tw42 arm 0 (j0 c15 dir 1 through): L 3.621h -> 3.621h, Lcut Infinityh -> 7.920h
+  g41_user_tw42 arm 3 (j1 c0 dir -1 through): L 5.117h -> 4.607h, Lcut 5.117h -> 4.607h
+  g41_user_tw42 arm 8 (j2 c15 dir -1 through): L 3.501h -> 3.501h, Lcut 11.405h -> 7.136h
+  g41_user_tw42 arm 14 (j4 c24 dir 1 through): L 8.317h -> 6.100h, Lcut 8.317h -> 6.100h
+  g41_user_tw42 arm 16 (j5 c15 dir 1 through): L 3.507h -> 3.507h, Lcut 14.129h -> 8.828h
+  g41_user_tw42 arm 31 (j10 c29 dir 1 through): L 3.625h -> 3.625h, Lcut Infinityh -> 9.440h
+  g41_user_tw42 arm 38 (j12 c6 dir 1 through): L 11.121h -> 10.960h, Lcut 11.121h -> 10.960h
+  g41_user_tw42 arm 42 (j14 c30 dir -1 through): L 3.530h -> 3.530h, Lcut 14.434h -> 7.897h
+  g41_user_tw42 arm 64 (j21 c28 dir 1 through): L 10.043h -> 10.043h, Lcut Infinityh -> 11.205h
+  g41_user_tw42 arm 65 (j21 c7 dir 1 through): L 9.925h -> 9.925h, Lcut 18.127h -> 15.644h
+  g41_user_tw42 arm 73 (j24 c15 dir 1 through): L 3.598h -> 3.598h, Lcut 7.475h -> 6.682h
+  g41_user_tw42 arm 81 (j26 c22 dir -1 through): L 3.621h -> 3.621h, Lcut 17.371h -> 7.661h
+  g41_user_tw42 arm 95 (j31 c23 dir 1 through): L 3.665h -> 3.665h, Lcut 30.337h -> 16.929h
+  g41_user_tw42 arm 101 (j33 c30 dir -1 through): L 3.454h -> 3.454h, Lcut 14.267h -> 7.812h
+  g41_user_tw42 arm 112 (j36 c30 dir -1 through): L 5.991h -> 5.991h, Lcut 17.012h -> 14.311h
+  g41_user_tw42 arm 120 (j39 c26 dir -1 through): L 3.529h -> 3.529h, Lcut 10.951h -> 9.184h
+  g41_user_tw42 arm 123 (j40 c23 dir 1 through): L 9.708h -> 9.708h, Lcut 26.672h -> 12.662h
+  g41_user_tw42 arm 131 (j42 c23 dir -1 through): L 9.783h -> 9.783h, Lcut 25.288h -> 17.139h
+  g41_user_tw42 arm 148 (j48 c15 dir 1 through): L 5.804h -> 5.804h, Lcut Infinityh -> 17.521h
+  g41_user_tw42 arm 153 (j49 c29 dir 1 through): L 12.850h -> 12.527h, Lcut Infinityh -> 12.527h
+  g41_user_tw42 arm 166 (j54 c22 dir 1 through): L 9.889h -> 9.889h, Lcut 15.507h -> 11.239h
+  g41_user_tw42 arm 190 (j61 c30 dir -1 through): L 3.574h -> 3.574h, Lcut 20.587h -> 6.433h
+  g41_user_tw42 arm 198 (j64 c26 dir -1 through): L 6.025h -> 6.025h, Lcut Infinityh -> 14.944h
+  g41_user_tw42 arm 214 (j69 c29 dir 1 through): L 10.115h -> 9.290h, Lcut 14.995h -> 9.290h
+  g41_user_tw42 arm 229 (j74 c31 dir -1 through): L 6.137h -> 6.137h, Lcut Infinityh -> 16.446h
+  g41_user_tw64 arm 2 (j0 c15 dir 1 through): L 2.454h -> 2.454h, Lcut Infinityh -> 6.968h
+  g41_user_tw64 arm 31 (j10 c29 dir 1 through): L 2.468h -> 2.468h, Lcut Infinityh -> 5.613h
+  g41_user_tw64 arm 43 (j14 c30 dir -1 through): L 2.228h -> 2.228h, Lcut 8.684h -> 7.064h
+  g41_user_tw64 arm 64 (j21 c28 dir 1 through): L 6.864h -> 6.864h, Lcut Infinityh -> 7.811h
+  g41_user_tw64 arm 65 (j21 c7 dir 1 through): L 6.663h -> 6.663h, Lcut 11.679h -> 10.523h
+  g41_user_tw64 arm 81 (j26 c22 dir -1 through): L 2.413h -> 2.413h, Lcut 10.981h -> 5.690h
+  g41_user_tw64 arm 95 (j31 c23 dir 1 through): L 2.448h -> 2.448h, Lcut 18.831h -> 11.905h
+  g41_user_tw64 arm 112 (j36 c30 dir -1 through): L 3.917h -> 3.917h, Lcut 10.123h -> 9.375h
+  g41_user_tw64 arm 123 (j40 c23 dir 1 through): L 6.540h -> 6.540h, Lcut 16.383h -> 8.413h
+  g41_user_tw64 arm 131 (j42 c23 dir -1 through): L 6.528h -> 6.528h, Lcut 16.264h -> 10.124h
+  g41_user_tw64 arm 148 (j48 c15 dir 1 through): L 4.187h -> 4.187h, Lcut Infinityh -> 11.936h
+  g41_user_tw64 arm 153 (j49 c29 dir 1 through): L 8.836h -> 8.836h, Lcut Infinityh -> 10.847h
+  g41_user_tw64 arm 166 (j54 c22 dir 1 through): L 6.665h -> 6.665h, Lcut 10.395h -> 7.893h
+  g41_user_tw64 arm 190 (j61 c30 dir -1 through): L 2.470h -> 2.470h, Lcut 12.593h -> 5.337h
+  g41_user_tw64 arm 198 (j64 c26 dir -1 through): L 4.215h -> 4.215h, Lcut Infinityh -> 12.057h
+  g41_user_tw64 arm 229 (j74 c31 dir -1 through): L 4.219h -> 4.219h, Lcut Infinityh -> 10.792h
+  g41_user_tw64 corner j5 17-15: r 0.333h -> 0.332h, ω 1.000 -> 1.000
+  g41_user_tw64 corner j13 39-40: r 0.656h -> 0.654h, ω 1.000 -> 1.000
+  g41_user_tw64 corner j53 163-164: r 0.847h -> 0.839h, ω 1.000 -> 1.000
+  g41_user_tw64 corner j58 179-180: r 0.511h -> 0.432h, ω 1.000 -> 1.000
+  g41_user_tw64 corner j71 221-222: r 0.479h -> 0.266h, ω 1.000 -> 1.000
+  g41_user_tw64 F6 arm 3 (j1) d -2.062h reach 1.432h: 3-4 r 1.742h ω 1.000 -> r 1.742h ω 1.000
+  g41_user_tw64 F6 arm 8 (j2) d -2.249h reach 1.334h: 7-8 r 0.788h ω 1.000 -> r 0.788h ω 1.000
+  g41_user_tw64 F6 arm 18 (j6) d -2.110h reach 1.417h: 20-18 r 0.000h ω 1.000 -> r 0.000h ω 1.000
+  g41_user_tw64 F6 arm 73 (j24) d -2.204h reach 1.252h: 75-73 r 0.239h ω 1.000 -> r 0.239h ω 1.000
+  g41_user_tw64 F6 arm 190 (j61) d -1.921h reach 1.066h: 189-190 r 1.814h ω 1.000 -> r 1.814h ω 1.000
+  g41_user_tw64 F6 arm 210 (j67) d -3.298h reach 2.336h: 209-210 r 1.918h ω 1.000 -> r 1.918h ω 1.000
+  def                    arms moved  22, corners moved   2 (lost fill 0, gained 0); F6 arms with fill 1, their filled corners now empty 0
+  fat                    arms moved   0, corners moved   0 (lost fill 0, gained 0); F6 arms with fill 0, their filled corners now empty 0
+  ring                   arms moved   0, corners moved   0 (lost fill 0, gained 0); F6 arms with fill 0, their filled corners now empty 0
+  user_tw42.lightpaper   arms moved  25, corners moved   0 (lost fill 0, gained 0); F6 arms with fill 0, their filled corners now empty 0
+  g41_def_tw42           arms moved  21, corners moved   0 (lost fill 0, gained 0); F6 arms with fill 0, their filled corners now empty 0
+  g41_def_tw64           arms moved  21, corners moved   3 (lost fill 0, gained 0); F6 arms with fill 10, their filled corners now empty 0
+  muse_hash              arms moved  22, corners moved   4 (lost fill 0, gained 0); F6 arms with fill 17, their filled corners now empty 0
+  muse_default_tw        arms moved  23, corners moved   2 (lost fill 0, gained 0); F6 arms with fill 0, their filled corners now empty 0
+  g41_ring_tw42          arms moved   0, corners moved   0 (lost fill 0, gained 0); F6 arms with fill 0, their filled corners now empty 0
+  g41_ring_tw64          arms moved   0, corners moved   0 (lost fill 0, gained 0); F6 arms with fill 3, their filled corners now empty 0
+  g41_user_tw42          arms moved  25, corners moved   0 (lost fill 0, gained 0); F6 arms with fill 0, their filled corners now empty 0
+  g41_user_tw64          arms moved  16, corners moved   5 (lost fill 0, gained 0); F6 arms with fill 6, their filled corners now empty 0
+  all: arms moved 175, corners moved 16 (lost fill 0, gained 0); F6 arms with fill 37, filled corners now empty 0
+2. tee coarse, old, dc in [-2.5, 2.5] step 0.0100
+   -2.5000 L+1  10.000 L−1   0.500   0-1: 0.866, 1.000                        ink 0.000 0.000 0.000 0.000
+   -2.2500 L+1  10.000 L−1   0.250   0-1: 0.866, 1.000                        ink 0.000 0.500 0.000 0.500
+   -2.0000 L+1  10.000 L−1   0.000   0-1: 0.866, 1.000                        ink 0.000 1.000 0.000 1.000
+   -1.7500 L+1  10.000 L−1   0.000   0-1: 0.866, 1.000                        ink 0.000 0.000 0.000 0.000
+   -1.5000 L+1  10.000 L−1   0.000   0-1: 0.866, 1.000                        ink 0.000 0.000 0.000 0.000
+   -1.2500 L+1  10.000 L−1   0.000   0-1: 0.866, 1.000                        ink 0.000 0.000 0.000 0.000
+   -1.0000 L+1  10.000 L−1   0.000   0-1: 0.866, 1.000                        ink 0.000 0.000 0.000 0.000
+   -0.7500 L+1  10.000 L−1   0.000   0-1: 0.866, 1.000                        ink 0.000 0.000 0.000 0.000
+   -0.5000 L+1  10.000 L−1   0.000   0-1: 0.866, 1.000                        ink 0.000 1.000 0.000 1.000
+   -0.2500 L+1  10.000 L−1   0.000   0-1: 0.866, 1.000                        ink 0.000 0.500 0.000 0.500
+    0.0000 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+    0.2500 L+1   0.000 L−1  10.000   1-2: 2.000, 1.000                        ink 1.000 0.000 0.500 0.000
+    0.5000 L+1   0.000 L−1  10.000   1-2: 2.000, 1.000                        ink 1.000 0.000 1.000 0.000
+    0.7500 L+1   0.000 L−1  10.000   1-2: 2.000, 1.000                        ink 1.000 0.000 0.000 0.000
+    1.0000 L+1   0.000 L−1  10.000   1-2: 2.000, 1.000                        ink 0.216 0.000 0.000 0.000
+    1.2500 L+1   0.000 L−1  10.000   1-2: 2.000, 1.000                        ink 0.000 0.000 0.000 0.000
+    1.5000 L+1   0.000 L−1  10.000   1-2: 2.000, 1.000                        ink 0.000 0.000 0.000 0.000
+    1.7500 L+1   0.000 L−1  10.000   1-2: 2.000, 1.000                        ink 0.000 0.000 0.000 0.000
+    2.0000 L+1   0.000 L−1  10.000   1-2: 2.000, 1.000                        ink 0.000 0.000 1.000 0.000
+    2.2500 L+1   0.250 L−1  10.000   1-2: 2.000, 1.000                        ink 0.896 0.000 0.500 0.000
+    2.5000 L+1   0.500 L−1  10.000   1-2: 2.000, 1.000                        ink 1.000 0.000 0.000 0.000
+  tee coarse old: largest step (dc step 0.0100): L+1 10.0000 (dc 0.0000); L−1 10.0000 (dc 0.0100); ink(1.6, 1.25) 1.0000 (dc 0.0000); ink(-1.25, 1.25) 0.1480 (dc -1.8600); ink(1.25, -1.25) 0.1480 (dc 0.6400); ink(-1.25, -1.25) 0.1480 (dc -1.8600)
+2. tee coarse, new, dc in [-2.5, 2.5] step 0.0100
+   -2.5000 L+1   4.330 L−1   0.500   0-1: 0.866, 1.000                        ink 0.000 0.000 0.000 0.000
+   -2.2500 L+1   3.897 L−1   0.250   0-1: 0.848, 1.000                        ink 0.000 0.500 0.000 0.500
+   -2.0000 L+1   3.464 L−1   0.000   0-1: 0.636, 1.000                        ink 0.000 1.000 0.000 1.000
+   -1.7500 L+1   3.031 L−1   0.000   0-1: 0.386, 1.000                        ink 0.004 0.000 0.000 0.000
+   -1.5000 L+1   2.598 L−1   0.000   0-1: 0.136, 1.000                        ink 1.000 0.000 0.000 0.000
+   -1.2500 L+1   2.165 L−1   0.000   0-1: 0.000, 1.000                        ink 1.000 0.000 0.000 0.000
+   -1.0000 L+1   1.732 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+   -0.7500 L+1   1.299 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+   -0.5000 L+1   0.866 L−1   0.000                                            ink 1.000 1.000 0.000 1.000
+   -0.2500 L+1   0.433 L−1   0.000                                            ink 1.000 0.500 0.000 0.500
+    0.0000 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+    0.2500 L+1   0.000 L−1   0.933   1-2: 0.000, 1.000                        ink 1.000 0.000 0.500 0.000
+    0.5000 L+1   0.000 L−1   1.866   1-2: 1.141, 1.000                        ink 1.000 0.000 1.000 0.000
+    0.7500 L+1   0.000 L−1   2.799   1-2: 2.000, 1.000                        ink 1.000 0.000 0.000 0.000
+    1.0000 L+1   0.000 L−1   3.732   1-2: 2.000, 1.000                        ink 0.216 0.000 0.000 0.000
+    1.2500 L+1   0.000 L−1   4.665   1-2: 2.000, 1.000                        ink 0.000 0.000 0.000 0.000
+    1.5000 L+1   0.000 L−1   5.598   1-2: 2.000, 1.000                        ink 0.000 0.000 0.000 0.000
+    1.7500 L+1   0.000 L−1   6.531   1-2: 2.000, 1.000                        ink 0.000 0.000 0.000 0.000
+    2.0000 L+1   0.000 L−1   7.464   1-2: 2.000, 1.000                        ink 0.000 0.000 1.000 0.000
+    2.2500 L+1   0.250 L−1   8.397   1-2: 2.000, 1.000                        ink 0.896 0.000 0.500 0.000
+    2.5000 L+1   0.500 L−1   9.330   1-2: 2.000, 1.000                        ink 1.000 0.000 0.000 0.000
+  tee coarse new: largest step (dc step 0.0100): L+1 0.0173 (dc -1.9500); L−1 0.0373 (dc 0.0500); ink(1.6, 1.25) 0.1480 (dc 2.2300); ink(-1.25, 1.25) 0.1480 (dc -1.8600); ink(1.25, -1.25) 0.1480 (dc 0.6400); ink(-1.25, -1.25) 0.1480 (dc -1.8600)
+2. tee fine, old, dc in [-0.005, 0.005] step 0.0001
+   -0.0050 L+1  10.000 L−1   0.000   0-1: 0.866, 1.000                        ink 0.000 0.000 0.000 0.000
+   -0.0040 L+1  10.000 L−1   0.000   0-1: 0.866, 1.000                        ink 0.000 0.000 0.000 0.000
+   -0.0030 L+1  10.000 L−1   0.000   0-1: 0.866, 1.000                        ink 0.000 0.000 0.000 0.000
+   -0.0020 L+1  10.000 L−1   0.000   0-1: 0.866, 1.000                        ink 0.000 0.000 0.000 0.000
+   -0.0010 L+1  10.000 L−1   0.000   0-1: 0.866, 1.000                        ink 0.000 0.000 0.000 0.000
+    0.0000 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+    0.0010 L+1   0.000 L−1  10.000   1-2: 2.000, 1.000                        ink 1.000 0.000 0.000 0.000
+    0.0020 L+1   0.000 L−1  10.000   1-2: 2.000, 1.000                        ink 1.000 0.000 0.000 0.000
+    0.0030 L+1   0.000 L−1  10.000   1-2: 2.000, 1.000                        ink 1.000 0.000 0.000 0.000
+    0.0040 L+1   0.000 L−1  10.000   1-2: 2.000, 1.000                        ink 1.000 0.000 0.000 0.000
+    0.0050 L+1   0.000 L−1  10.000   1-2: 2.000, 1.000                        ink 1.000 0.000 0.000 0.000
+  tee fine old: largest step (dc step 0.0001): L+1 10.0000 (dc 0.0000); L−1 10.0000 (dc 0.0001); ink(1.6, 1.25) 1.0000 (dc 0.0000); ink(-1.25, 1.25) 0.0000 (dc 0.0000); ink(1.25, -1.25) 0.0000 (dc 0.0000); ink(-1.25, -1.25) 0.0000 (dc 0.0000)
+2. tee fine, new, dc in [-0.005, 0.005] step 0.0001
+   -0.0050 L+1   0.009 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+   -0.0040 L+1   0.007 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+   -0.0030 L+1   0.005 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+   -0.0020 L+1   0.003 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+   -0.0010 L+1   0.002 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+    0.0000 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+    0.0010 L+1   0.000 L−1   0.004                                            ink 1.000 0.000 0.000 0.000
+    0.0020 L+1   0.000 L−1   0.007                                            ink 1.000 0.000 0.000 0.000
+    0.0030 L+1   0.000 L−1   0.011                                            ink 1.000 0.000 0.000 0.000
+    0.0040 L+1   0.000 L−1   0.015                                            ink 1.000 0.000 0.000 0.000
+    0.0050 L+1   0.000 L−1   0.019                                            ink 1.000 0.000 0.000 0.000
+  tee fine new: largest step (dc step 0.0001): L+1 0.0002 (dc -0.0041); L−1 0.0004 (dc 0.0012); ink(1.6, 1.25) 0.0000 (dc 0.0000); ink(-1.25, 1.25) 0.0000 (dc 0.0000); ink(1.25, -1.25) 0.0000 (dc 0.0000); ink(-1.25, -1.25) 0.0000 (dc 0.0000)
+2. ring coarse, old, dc in [-2.5, 2.5] step 0.0100
+   -2.5000 L+1  45.765 L−1   0.499   0-1: 0.996, 1.000                        ink 0.000 0.000 0.000 1.000
+   -2.2500 L+1  46.015 L−1   0.249   0-1: 0.996, 1.000                        ink 0.000 0.000 0.000 1.000
+   -2.0000 L+1  46.265 L−1   0.000   0-1: 0.996, 1.000                        ink 0.000 0.000 0.000 1.000
+   -1.7500 L+1  46.515 L−1   0.000   0-1: 0.996, 1.000                        ink 0.000 1.000 0.000 1.000
+   -1.5000 L+1  46.765 L−1   0.000   0-1: 0.996, 1.000                        ink 0.000 0.000 0.000 1.000
+   -1.2500 L+1  47.015 L−1   0.000   0-1: 0.996, 1.000                        ink 0.000 0.000 0.000 1.000
+   -1.0000 L+1  47.265 L−1   0.000   0-1: 0.996, 1.000                        ink 0.000 0.000 0.000 1.000
+   -0.7500 L+1  47.515 L−1   0.000   0-1: 0.996, 1.000                        ink 0.000 0.000 1.000 0.972
+   -0.5000 L+1  47.765 L−1   0.000   0-1: 0.996, 1.000                        ink 0.000 1.000 0.000 0.000
+   -0.2500 L+1  48.015 L−1   0.000   0-1: 0.996, 1.000                        ink 0.000 0.970 0.000 0.000
+    0.0000 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+    0.2500 L+1   0.000 L−1  48.015   1-2: 2.000, 1.000                        ink 1.000 0.000 0.000 0.000
+    0.5000 L+1   0.000 L−1  47.765   1-2: 2.000, 1.000                        ink 1.000 0.000 0.000 0.000
+    0.7500 L+1   0.000 L−1  47.515   1-2: 2.000, 1.000                        ink 1.000 0.000 1.000 0.972
+    1.0000 L+1   0.000 L−1  47.265   1-2: 2.000, 1.000                        ink 0.000 0.000 0.000 1.000
+    1.2500 L+1   0.000 L−1  47.015   1-2: 2.000, 1.000                        ink 0.000 0.000 0.000 1.000
+    1.5000 L+1   0.000 L−1  46.765   1-2: 2.000, 1.000                        ink 0.000 0.000 0.000 1.000
+    1.7500 L+1   0.000 L−1  46.515   1-2: 2.000, 1.000                        ink 0.000 0.000 0.000 1.000
+    2.0000 L+1   0.000 L−1  46.265   1-2: 2.000, 1.000                        ink 1.000 0.000 0.000 1.000
+    2.2500 L+1   0.250 L−1  46.015   1-2: 2.000, 1.000                        ink 1.000 0.000 0.000 1.000
+    2.5000 L+1   0.500 L−1  45.765   1-2: 2.000, 1.000                        ink 1.000 0.000 0.000 1.000
+  ring coarse old: largest step (dc step 0.0100): L+1 48.2554 (dc 0.0000); L−1 48.2550 (dc 0.0100); ink(1.6, 1.25) 1.0000 (dc 0.0000); ink(-1.25, 1.25) 0.1737 (dc -1.6000); ink(0, 1.05) 0.1679 (dc 0.8900); ink(0, -0.95) 0.1313 (dc 0.7100)
+2. ring coarse, new, dc in [-2.5, 2.5] step 0.0100
+   -2.5000 L+1   4.660 L−1   0.499   0-1: 0.996, 1.000                        ink 0.000 0.000 0.000 1.000
+   -2.2500 L+1   4.194 L−1   0.249   0-1: 0.996, 1.000                        ink 0.000 0.000 0.000 1.000
+   -2.0000 L+1   3.728 L−1   0.000   0-1: 0.996, 1.000                        ink 0.000 0.000 0.000 1.000
+   -1.7500 L+1   3.262 L−1   0.000   0-1: 0.973, 1.000                        ink 0.000 1.000 0.000 1.000
+   -1.5000 L+1   2.795 L−1   0.000   0-1: 0.599, 1.000                        ink 0.667 0.000 0.000 1.000
+   -1.2500 L+1   2.329 L−1   0.000   0-1: 0.188, 1.000                        ink 1.000 0.000 0.000 1.000
+   -1.0000 L+1   1.863 L−1   0.000   0-1: 0.000, 1.000                        ink 1.000 0.000 0.000 1.000
+   -0.7500 L+1   1.397 L−1   0.000                                            ink 1.000 0.000 1.000 0.972
+   -0.5000 L+1   0.931 L−1   0.000                                            ink 1.000 1.000 0.000 0.000
+   -0.2500 L+1   0.465 L−1   0.000                                            ink 1.000 0.970 0.000 0.000
+    0.0000 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+    0.2500 L+1   0.000 L−1   1.000   1-2: 0.007, 1.000                        ink 1.000 0.000 0.000 0.000
+    0.5000 L+1   0.000 L−1   2.000   1-2: 1.918, 1.000                        ink 1.000 0.000 0.000 0.000
+    0.7500 L+1   0.000 L−1   3.000   1-2: 2.000, 1.000                        ink 1.000 0.000 1.000 0.972
+    1.0000 L+1   0.000 L−1   4.000   1-2: 2.000, 1.000                        ink 0.000 0.000 0.000 1.000
+    1.2500 L+1   0.000 L−1   5.000   1-2: 2.000, 1.000                        ink 0.000 0.000 0.000 1.000
+    1.5000 L+1   0.000 L−1   6.000   1-2: 2.000, 1.000                        ink 0.000 0.000 0.000 1.000
+    1.7500 L+1   0.000 L−1   7.000   1-2: 2.000, 1.000                        ink 0.000 0.000 0.000 1.000
+    2.0000 L+1   0.000 L−1   8.000   1-2: 2.000, 1.000                        ink 1.000 0.000 0.000 1.000
+    2.2500 L+1   0.250 L−1   9.000   1-2: 2.000, 1.000                        ink 1.000 0.000 0.000 1.000
+    2.5000 L+1   0.500 L−1  10.000   1-2: 2.000, 1.000                        ink 1.000 0.000 0.000 1.000
+  ring coarse new: largest step (dc step 0.0100): L+1 0.0186 (dc -2.4400); L−1 0.0400 (dc 0.0200); ink(1.6, 1.25) 0.1736 (dc 0.8500); ink(-1.25, 1.25) 0.1737 (dc -1.6000); ink(0, 1.05) 0.1679 (dc 0.8900); ink(0, -0.95) 0.1313 (dc 0.7100)
+2. ring fine, old, dc in [-0.005, 0.005] step 0.0001
+   -0.0050 L+1  48.260 L−1   0.000   0-1: 0.996, 1.000                        ink 0.000 0.000 0.000 0.000
+   -0.0040 L+1  48.261 L−1   0.000   0-1: 0.996, 1.000                        ink 0.000 0.000 0.000 0.000
+   -0.0030 L+1  48.262 L−1   0.000   0-1: 0.996, 1.000                        ink 0.000 0.000 0.000 0.000
+   -0.0020 L+1  48.263 L−1   0.000   0-1: 0.996, 1.000                        ink 0.000 0.000 0.000 0.000
+   -0.0010 L+1  48.264 L−1   0.000   0-1: 0.996, 1.000                        ink 0.000 0.000 0.000 0.000
+    0.0000 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+    0.0010 L+1   0.000 L−1  48.264   1-2: 2.000, 1.000                        ink 1.000 0.000 0.000 0.000
+    0.0020 L+1   0.000 L−1  48.263   1-2: 2.000, 1.000                        ink 1.000 0.000 0.000 0.000
+    0.0030 L+1   0.000 L−1  48.262   1-2: 2.000, 1.000                        ink 1.000 0.000 0.000 0.000
+    0.0040 L+1   0.000 L−1  48.261   1-2: 2.000, 1.000                        ink 1.000 0.000 0.000 0.000
+    0.0050 L+1   0.000 L−1  48.260   1-2: 2.000, 1.000                        ink 1.000 0.000 0.000 0.000
+  ring fine old: largest step (dc step 0.0001): L+1 48.2648 (dc -0.0005); L−1 48.2649 (dc -0.0005); ink(1.6, 1.25) 1.0000 (dc -0.0005); ink(-1.25, 1.25) 0.0000 (dc 0.0000); ink(0, 1.05) 0.0000 (dc 0.0000); ink(0, -0.95) 0.0000 (dc 0.0000)
+2. ring fine, new, dc in [-0.005, 0.005] step 0.0001
+   -0.0050 L+1   0.008 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+   -0.0040 L+1   0.006 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+   -0.0030 L+1   0.005 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+   -0.0020 L+1   0.003 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+   -0.0010 L+1   0.001 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+    0.0000 L+1   0.000 L−1   0.000                                            ink 1.000 0.000 0.000 0.000
+    0.0010 L+1   0.000 L−1   0.004                                            ink 1.000 0.000 0.000 0.000
+    0.0020 L+1   0.000 L−1   0.008                                            ink 1.000 0.000 0.000 0.000
+    0.0030 L+1   0.000 L−1   0.012                                            ink 1.000 0.000 0.000 0.000
+    0.0040 L+1   0.000 L−1   0.016                                            ink 1.000 0.000 0.000 0.000
+    0.0050 L+1   0.000 L−1   0.020                                            ink 1.000 0.000 0.000 0.000
+  ring fine new: largest step (dc step 0.0001): L+1 0.0002 (dc -0.0049); L−1 0.0017 (dc 0.0000); ink(1.6, 1.25) 0.0000 (dc 0.0000); ink(-1.25, 1.25) 0.0000 (dc 0.0000); ink(0, 1.05) 0.0000 (dc 0.0000); ink(0, -0.95) 0.0000 (dc 0.0000)

@@ -1,0 +1,501 @@
+
+> knotmaze@0.4.0 test
+> npm run typecheck && vitest run
+
+
+> knotmaze@0.4.0 typecheck
+> tsc && tsc -p notices && tsc -p tsconfig.tests.json
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.12 [39m[90mC:/Users/lsl/Repositories/knotmaze[39m
+
+[90mstdout[2m | test/render/field/form_b.test.ts[2m > [22m[2mform B: the fades are continuous[2m > [22m[2mD2 + D5: a crossing slides up the END; the cap ramp and r move the ink by what the step explains
+[22m[39m[form_b] D2+D5 sweep: max |Δink| per step 0.002 = 0.0300
+
+[90mstdout[2m | test/render/field/form_b.test.ts[2m > [22m[2mform B: the fades are continuous[2m > [22m[2mD6: ω from 0 to 1 moves the ink at most in proportion
+[22m[39m[form_b] D6: max |Δink| per Δω 0.01 = 0.01000
+
+[90mstdout[2m | test/render/field/form_b.test.ts[2m > [22m[2mform B: the fades are continuous[2m > [22m[2mD1: the fold across a hairpin moves the ink no faster than an outline's AA
+[22m[39m[form_b] D1 fold: max |Δink| along the hairpin walks = 0.0748 (step aa/10)
+
+[90mstdout[2m | test/render/field/form_b.test.ts[2m > [22m[2mform B: the max decomposition[2m > [22m[2mevery winning term lies in one of its strips
+[22m[39m[form_b] strips: tube: 2408 inked, 0 outside, edge 2408; dead end: 1455 inked, 0 outside, edge 1204, cap 251; crossing: 4396 inked, 0 outside, edge 4396; T: 3144 inked, 0 outside, edge 2594, arc 448, endpoint 90, cap 12; acute: 2844 inked, 0 outside, edge 2639, arc 121, endpoint 72, cap 12; Y: 3602 inked, 0 outside, edge 3147, endpoint 87, arc 368
+
+[90mstdout[2m | test/game/minotaur.test.ts[2m > [22m[2mK174: the minotaur's controls[2m > [22m[2ma pull finds a still player sooner
+[22m[39mK174 mean seconds to find a still player: pull 0 69.1, pull 1 48.8
+
+[90mstdout[2m | test/render/field/form_b.test.ts[2m > [22m[2mform B: watertight and the rate rule at every fade value (S1b)[2m > [22m[2meye: 1 enclosed paper component(s) with each fade held at 0, 0.25, 0.5, 0.75 and 1
+[22m[39m[form_b] watertight eye: natural 20, fold=0 20, fold=0.25 20, fold=0.5 20, fold=0.75 20, fold=1 20, omega=0 20, omega=0.25 20, omega=0.5 20, omega=0.75 20, omega=1 20, cap=0 20, cap=0.25 20, cap=0.5 20, cap=0.75 20, cap=1 20, tie=0 20, tie=0.25 20, tie=0.5 20, tie=0.75 20, tie=1 20
+
+[90mstdout[2m | test/render/field/form_b.test.ts[2m > [22m[2mform B: watertight and the rate rule at every fade value (S1b)[2m > [22m[2mT: 0 enclosed paper component(s) with each fade held at 0, 0.25, 0.5, 0.75 and 1
+[22m[39m[form_b] watertight T: natural 0, fold=0 0, fold=0.25 0, fold=0.5 0, fold=0.75 0, fold=1 0, omega=0 0, omega=0.25 0, omega=0.5 0, omega=0.75 0, omega=1 0, cap=0 0, cap=0.25 0, cap=0.5 0, cap=0.75 0, cap=1 0, tie=0 0, tie=0.25 0, tie=0.5 0, tie=0.75 0, tie=1 0
+
+[90mstdout[2m | test/render/field/form_b.test.ts[2m > [22m[2mform B: watertight and the rate rule at every fade value (S1b)[2m > [22m[2macute: 0 enclosed paper component(s) with each fade held at 0, 0.25, 0.5, 0.75 and 1
+[22m[39m[form_b] watertight acute: natural 0, fold=0 0, fold=0.25 0, fold=0.5 0, fold=0.75 0, fold=1 0, omega=0 0, omega=0.25 0, omega=0.5 0, omega=0.75 0, omega=1 0, cap=0 0, cap=0.25 0, cap=0.5 0, cap=0.75 0, cap=1 0, tie=0 0, tie=0.25 0, tie=0.5 0, tie=0.75 0, tie=1 0
+
+[90mstdout[2m | test/render/field/form_b.test.ts[2m > [22m[2mform B: watertight and the rate rule at every fade value (S1b)[2m > [22m[2mhairpin: 0 enclosed paper component(s) with each fade held at 0, 0.25, 0.5, 0.75 and 1
+[22m[39m[form_b] watertight hairpin: natural 0, fold=0 0, fold=0.25 0, fold=0.5 0, fold=0.75 0, fold=1 0, omega=0 0, omega=0.25 0, omega=0.5 0, omega=0.75 0, omega=1 0, cap=0 0, cap=0.25 0, cap=0.5 0, cap=0.75 0, cap=1 0, tie=0 0, tie=0.25 0, tie=0.5 0, tie=0.75 0, tie=1 0
+
+ [32m✓[39m test/render/field/label_yield.test.ts [2m([22m[2m10 tests[22m[2m)[22m[33m 8280[2mms[22m[39m
+     [33m[2m✓[22m[39m j_pair_cross [33m 1467[2mms[22m[39m
+     [33m[2m✓[22m[39m x4_throughs [33m 1741[2mms[22m[39m
+     [33m[2m✓[22m[39m x4_ends [33m 1149[2mms[22m[39m
+     [33m[2m✓[22m[39m y120 [33m 1307[2mms[22m[39m
+     [33m[2m✓[22m[39m j_hook_cross [33m 1726[2mms[22m[39m
+ [32m✓[39m test/physics/host_seam.test.ts [2m([22m[2m9 tests[22m[2m)[22m[33m 8061[2mms[22m[39m
+     [33m[2m✓[22m[39m main.ts and src/app have no write to the system outside the host [33m 1332[2mms[22m[39m
+     [33m[2m✓[22m[39m the scan sees main's system and host (it is not scanning nothing) [33m 3305[2mms[22m[39m
+     [33m[2m✓[22m[39m the scan covers src/app and sees the SceneRef's and the probe context's fields [33m 3361[2mms[22m[39m
+ [32m✓[39m test/physics/worker_host.test.ts [2m([22m[2m27 tests[22m[2m)[22m[33m 7519[2mms[22m[39m
+     [33m[2m✓[22m[39m clears main's grab on a reset and on a rebuild [33m 1054[2mms[22m[39m
+     [33m[2m✓[22m[39m counts visible time: a hidden hour mid-load ends nothing [33m 2261[2mms[22m[39m
+     [33m[2m✓[22m[39m steps the adopted build as an init-built one, bit for bit [33m 403[2mms[22m[39m
+     [33m[2m✓[22m[39m does not fail a working worker over a main-thread stall [33m 1519[2mms[22m[39m
+     [33m[2m✓[22m[39m matches the in-thread host: the freeze patch, stepUntil and the dump [33m 930[2mms[22m[39m
+ [32m✓[39m test/phone_pass/k895.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 9949[2mms[22m[39m
+     [33m[2m✓[22m[39m median averages the two middle values at even n [33m 425[2mms[22m[39m
+     [33m[2m✓[22m[39m looks refuses with exit 5 once the pass has tripped [33m 1289[2mms[22m[39m
+     [33m[2m✓[22m[39m frames refuses with exit 5 once the pass has tripped [33m 1244[2mms[22m[39m
+     [33m[2m✓[22m[39m looks without a trip runs (skips with no -Looks) with exit 0 [33m 950[2mms[22m[39m
+     [33m[2m✓[22m[39m summary and cleanup still run on a tripped pass (exit 2, not 5) [33m 6036[2mms[22m[39m
+[90mstdout[2m | test/render/field/form_b.test.ts[2m > [22m[2mform B: watertight and the rate rule at every fade value (S1b)[2m > [22m[2mT: the rate rule, |Δink| ≤ 3 per px, natural and with ω held at 0, 0.25, 0.5, 0.75 and 1
+[22m[39m[form_b] rate T (ink per px): natural 1.50, omega=0 1.50, omega=0.25 1.50, omega=0.5 1.50, omega=0.75 1.50, omega=1 1.50
+
+ [32m✓[39m test/render/ribbon_round.test.ts [2m([22m[2m12 tests[22m[2m)[22m[33m 10697[2mms[22m[39m
+     [33m[2m✓[22m[39m a hairpin with unequal legs: no thorn, no bite, the concave clamp holds [33m 1234[2mms[22m[39m
+     [33m[2m✓[22m[39m a 130 deg turn (the i's joint) and a 180 deg fold meet the target [33m 5034[2mms[22m[39m
+     [33m[2m✓[22m[39m K675: the glyph cusps that turn 103 to 114 deg are fully round [33m 3279[2mms[22m[39m
+     [33m[2m✓[22m[39m the outline meets the target at every degree from 100 deg up [33m 916[2mms[22m[39m
+ [32m✓[39m test/game/minotaur.test.ts [2m([22m[2m62 tests[22m[2m)[22m[33m 11973[2mms[22m[39m
+     [33m[2m✓[22m[39m never sets foot on a tail once out, and roams to the dead ends [33m 686[2mms[22m[39m
+     [33m[2m✓[22m[39m the chase at roamPull 0 is pinned tick for tick [33m 602[2mms[22m[39m
+     [33m[2m✓[22m[39m a pull finds a still player sooner [33m 1483[2mms[22m[39m
+     [33m[2m✓[22m[39m the guard and the stalker are pinned tick for tick [33m 864[2mms[22m[39m
+     [33m[2m✓[22m[39m a roaming guard never leaves its territory, and walks back into it [33m 6282[2mms[22m[39m
+     [33m[2m✓[22m[39m each hunting step aims with the model's accuracy, else steps at random [33m 548[2mms[22m[39m
+ [32m✓[39m test/physics/emblem_physics.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 11806[2mms[22m[39m
+     [33m[2m✓[22m[39m holds every pinned emblem particle at its initial position [33m 817[2mms[22m[39m
+     [33m[2m✓[22m[39m sleeps a live star island in its maze hole, inside the hole (K115 5b) [33m 10448[2mms[22m[39m
+     [33m[2m✓[22m[39m settles and sleeps a live trefoil [33m 375[2mms[22m[39m
+ [32m✓[39m test/core/title_topology.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 11909[2mms[22m[39m
+     [33m[2m✓[22m[39m keeps the plan, the maze walk, start, exit and optimal on dailies 1-30 and every shape at gs 6/12/18 [33m 11878[2mms[22m[39m
+ [32m✓[39m test/physics/open_chain.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 4708[2mms[22m[39m
+     [33m[2m✓[22m[39m settles with the seam removed and the loose ends pinned [33m 2162[2mms[22m[39m
+     [33m[2m✓[22m[39m stays healthy when the seam is carved right next to a crossing [33m 2520[2mms[22m[39m
+[90mstdout[2m | test/render/field/form_b.test.ts[2m > [22m[2mform B: watertight and the rate rule at every fade value (S1b)[2m > [22m[2macute: the rate rule, |Δink| ≤ 3 per px, natural and with ω held at 0, 0.25, 0.5, 0.75 and 1
+[22m[39m[form_b] rate acute (ink per px): natural 1.50, omega=0 1.50, omega=0.25 1.50, omega=0.5 1.50, omega=0.75 1.50, omega=1 1.50
+
+ [32m✓[39m test/game/beat_clock.test.ts [2m([22m[2m16 tests[22m[2m)[22m[33m 4679[2mms[22m[39m
+     [33m[2m✓[22m[39m round-trips every beat of every tempo [33m 4655[2mms[22m[39m
+ [32m✓[39m test/physics/particle_system.test.ts [2m([22m[2m10 tests[22m[2m)[22m[33m 16814[2mms[22m[39m
+     [33m[2m✓[22m[39m keeps crossings coupled while bindings slide [33m 1707[2mms[22m[39m
+     [33m[2m✓[22m[39m keeps crossings transversal (no tangential gluing) [33m 1861[2mms[22m[39m
+     [33m[2m✓[22m[39m relaxes without NaN [33m 1495[2mms[22m[39m
+     [33m[2m✓[22m[39m reduces total path length as the knot settles [33m 1283[2mms[22m[39m
+     [33m[2m✓[22m[39m higher slack settles to a longer (looser) rest state [33m 3561[2mms[22m[39m
+     [33m[2m✓[22m[39m grab drags a particle toward the target; release reports a pluck [33m 1447[2mms[22m[39m
+     [33m[2m✓[22m[39m goes quiescent at rest and reports settle completion [33m 4288[2mms[22m[39m
+     [33m[2m✓[22m[39m reset returns particles to the lattice [33m 1128[2mms[22m[39m
+ [32m✓[39m test/core/maze_plan_identity.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 15805[2mms[22m[39m
+     [33m[2m✓[22m[39m builds the same plan as the frozen pre-K87 module [33m 7334[2mms[22m[39m
+     [33m[2m✓[22m[39m builds the pinned plans, each reaching every piece [33m 1117[2mms[22m[39m
+     [33m[2m✓[22m[39m builds the pinned searched walk graphs for dailies 1-3 [33m 3181[2mms[22m[39m
+     [33m[2m✓[22m[39m builds the pinned walk graphs with H1 off and at the default share [33m 4162[2mms[22m[39m
+ [32m✓[39m test/core/text_pen_order.test.ts [2m([22m[2m12 tests[22m[2m)[22m[33m 8090[2mms[22m[39m
+     [33m[2m✓[22m[39m pins the maze crossings of titled and cartouche scenes (text excluded) [33m 329[2mms[22m[39m
+     [33m[2m✓[22m[39m a titled daily and a cartouche word follow pen order too [33m 396[2mms[22m[39m
+     [33m[2m✓[22m[39m marks only text crossings penOrder, and never ties [33m 406[2mms[22m[39m
+     [33m[2m✓[22m[39m reverse flips every text crossing and nothing else [33m 449[2mms[22m[39m
+     [33m[2m✓[22m[39m keeps checkAlternation true, with no warning, on titled dailies 1-30, cartouches and words [33m 5977[2mms[22m[39m
+ [32m✓[39m test/render/field/corner_continuity.test.ts [2m([22m[2m5 tests[22m[2m | [22m[33m2 skipped[39m[2m)[22m[33m 18449[2mms[22m[39m
+     [33m[2m✓[22m[39m (A) a corner swept through the cap: t90's END cut from 6h to 1h [33m 3215[2mms[22m[39m
+     [33m[2m✓[22m[39m (B) an arm swept through a graze: acute30's END parallel at H, 2.3h to 3.3h [33m 6672[2mms[22m[39m
+     [33m[2m✓[22m[39m (C) the tangent feet through a second contact: the END's far part rising at 10° [33m 8558[2mms[22m[39m
+ [32m✓[39m test/core/glyph_lint.test.ts [2m([22m[2m20 tests[22m[2m)[22m[33m 9612[2mms[22m[39m
+     [33m[2m✓[22m[39m K643: the lint judges the taper at the part it is given [33m 814[2mms[22m[39m
+     [33m[2m✓[22m[39m K643: an injected bulge past taperBulgeLU fails taper-g1 [33m 397[2mms[22m[39m
+     [33m[2m✓[22m[39m K643: widenCrotch lengthens the tangent exemplar's crotch and keeps it lint-clean [33m 1662[2mms[22m[39m
+     [33m[2m✓[22m[39m K643: the probe flags build changed glyphs, and nothing when absent [33m 5228[2mms[22m[39m
+ [32m✓[39m test/ui/url_codec.test.ts [2m([22m[2m58 tests[22m[2m)[22m[33m 4322[2mms[22m[39m
+     [33m[2m✓[22m[39m reads every param's override key after a token [33m 404[2mms[22m[39m
+     [33m[2m✓[22m[39m never throws on random queries [33m 1094[2mms[22m[39m
+     [33m[2m✓[22m[39m reads back what it writes, and writes it back the same [33m 2491[2mms[22m[39m
+ [32m✓[39m test/game/explore_burn.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 3640[2mms[22m[39m
+     [33m[2m✓[22m[39m hides every burnt point and keeps every unburnt solid point (seeded) [33m 3630[2mms[22m[39m
+ [32m✓[39m test/render/field/label_b.test.ts [2m([22m[2m23 tests[22m[2m)[22m[33m 5322[2mms[22m[39m
+     [33m[2m✓[22m[39m wye [33m 304[2mms[22m[39m
+     [33m[2m✓[22m[39m raisedTee [33m 380[2mms[22m[39m
+     [33m[2m✓[22m[39m under the reach rule a non-covering piece within h + aa named the group [33m 648[2mms[22m[39m
+     [33m[2m✓[22m[39m hairpin [33m 324[2mms[22m[39m
+     [33m[2m✓[22m[39m tee [33m 501[2mms[22m[39m
+     [33m[2m✓[22m[39m hairpinX [33m 589[2mms[22m[39m
+[90mstdout[2m | test/render/field/form_b.test.ts[2m > [22m[2mform B: watertight and the rate rule at every fade value (S1b)[2m > [22m[2mhairpin: the rate rule, |Δink| ≤ 3 per px, natural and with ω held at 0, 0.25, 0.5, 0.75 and 1
+[22m[39m[form_b] rate hairpin (ink per px): natural 1.50, omega=0 1.50, omega=0.25 1.50, omega=0.5 1.50, omega=0.75 1.50, omega=1 1.50
+
+ [32m✓[39m test/notices/notices.test.ts [2m([22m[2m51 tests[22m[2m)[22m[33m 6319[2mms[22m[39m
+     [33m[2m✓[22m[39m builds, and its page lists exactly the packages the bundle contains [33m 5686[2mms[22m[39m
+ [32m✓[39m test/physics/byte_identity.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 18947[2mms[22m[39m
+     [33m[2m✓[22m[39m is deterministic across identical runs [33m 1940[2mms[22m[39m
+     [33m[2m✓[22m[39m matches the recorded knot-mode fingerprints [33m 1642[2mms[22m[39m
+     [33m[2m✓[22m[39m is deterministic across identical runs [33m 10092[2mms[22m[39m
+     [33m[2m✓[22m[39m matches the recorded maze fingerprints [33m 5269[2mms[22m[39m
+ [32m✓[39m test/render/paint_fx.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 17596[2mms[22m[39m
+     [33m[2m✓[22m[39m burn / roots colors match applyBurnColors' per-sample block [33m 427[2mms[22m[39m
+     [33m[2m✓[22m[39m the reveal width mask equals revealMaskFor's interval union [33m 9997[2mms[22m[39m
+     [33m[2m✓[22m[39m ignition times are continuous along a chain (no bands by design) [33m 445[2mms[22m[39m
+     [33m[2m✓[22m[39m a chain's FX settle time (fxDone) skips only identity FX [33m 2464[2mms[22m[39m
+     [33m[2m✓[22m[39m the settled-slot skip (CTRLIDX .w) changes nothing, at any time [33m 1623[2mms[22m[39m
+     [33m[2m✓[22m[39m the burn hot head leaves points continuously, BURN_HOT_ARC behind the tip [33m 2538[2mms[22m[39m
+ [32m✓[39m test/render/paint_gameplay.test.ts [2m([22m[2m21 tests[22m[2m)[22m[33m 17793[2mms[22m[39m
+     [33m[2m✓[22m[39m gold spans, caps, pulses and hover compose as the accent strip did [33m 637[2mms[22m[39m
+     [33m[2m✓[22m[39m K75: crests over a trail fade brighten the thread's own paint (no gold bands) [33m 2788[2mms[22m[39m
+     [33m[2m✓[22m[39m K75 + K93: pulse trains and the hover end at the reach, fading over its end [33m 7911[2mms[22m[39m
+     [33m[2m✓[22m[39m K145, K111 stage 3: the hover glow peaks at both edges and fades out toward the middle [33m 563[2mms[22m[39m
+     [33m[2m✓[22m[39m K145, K298: the glow peaks at the hover point, ends at its length and fades toward the run's ends [33m 804[2mms[22m[39m
+     [33m[2m✓[22m[39m K298: a hovered choice's band and the glow both show, at every breath phase [33m 413[2mms[22m[39m
+     [33m[2m✓[22m[39m K145: the glow wraps across a closed chain's seam, and strength 0 draws nothing [33m 1551[2mms[22m[39m
+     [33m[2m✓[22m[39m K525: a telegraph piece lights its span between its end gaps and fades, at its alpha [33m 570[2mms[22m[39m
+     [33m[2m✓[22m[39m K525: the telegraph mixes toward its colour across both rims, under the hover glow's whitening [33m 1001[2mms[22m[39m
+     [33m[2m✓[22m[39m K324 s2: a riding lead piece paints the fixed piece from uKTeleAt, on open and closed chains [33m 970[2mms[22m[39m
+ [32m✓[39m test/render/samp_table.test.ts [2m([22m[2m15 tests[22m[2m)[22m[33m 7784[2mms[22m[39m
+     [33m[2m✓[22m[39m daily4: lanes and RANGES reproduce the renderer's idScratch exactly [33m 1238[2mms[22m[39m
+     [33m[2m✓[22m[39m dense: lanes and RANGES reproduce the renderer's idScratch exactly [33m 2766[2mms[22m[39m
+     [33m[2m✓[22m[39m fat: lanes and RANGES reproduce the renderer's idScratch exactly [33m 1508[2mms[22m[39m
+     [33m[2m✓[22m[39m knot: lanes and RANGES reproduce the renderer's idScratch exactly [33m 1092[2mms[22m[39m
+     [33m[2m✓[22m[39m round-trips float32 and float64 arrays bit for bit [33m 681[2mms[22m[39m
+ [32m✓[39m test/render/paint_fire.test.ts [2m([22m[2m15 tests[22m[2m)[22m[33m 19068[2mms[22m[39m
+     [33m[2m✓[22m[39m matches the every-item reference on random scenes (rings, wraps, open chains), char [33m 5598[2mms[22m[39m
+     [33m[2m✓[22m[39m matches the every-item reference on random scenes (rings, wraps, open chains), gone [33m 4832[2mms[22m[39m
+     [33m[2m✓[22m[39m frontRange covers every point a front touches, at the chain's tightest ctrl [33m 8419[2mms[22m[39m
+ [32m✓[39m test/game/turnstiles.test.ts [2m([22m[2m17 tests[22m[2m)[22m[33m 8987[2mms[22m[39m
+     [33m[2m✓[22m[39m at a turnstile dead end, a hint and the compass point back out [33m 8046[2mms[22m[39m
+ [32m✓[39m test/render/gap_mask.test.ts [2m([22m[2m16 tests[22m[2m)[22m[33m 3432[2mms[22m[39m
+     [33m[2m✓[22m[39m the walk reads gapOverPt's points, chunk by chunk and in the protect run [33m 2380[2mms[22m[39m
+     [33m[2m✓[22m[39m keeps the bounds and covers the reach on smooth chains [33m 728[2mms[22m[39m
+ [32m✓[39m test/render/pluck_model.test.ts [2m([22m[2m79 tests[22m[2m)[22m[33m 3043[2mms[22m[39m
+     [33m[2m✓[22m[39m sweeps the parallelogram: tri_beta above, -tri_(1-beta) below [33m 350[2mms[22m[39m
+     [33m[2m✓[22m[39m never narrows past the allowance; zero stays zero [33m 458[2mms[22m[39m
+     [33m[2m✓[22m[39m still tucks the under pass under its partner [33m 684[2mms[22m[39m
+     [33m[2m✓[22m[39m the weight falls smoothly from 1 at the node to 0 at G1's split [33m 733[2mms[22m[39m
+ [32m✓[39m test/core/maze_trapzone.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 2854[2mms[22m[39m
+     [33m[2m✓[22m[39m taper at R or K 0 is identical to taper off [33m 358[2mms[22m[39m
+     [33m[2m✓[22m[39m corridor plans still reach every piece and carry the H1 guard only when H1 runs [33m 669[2mms[22m[39m
+     [33m[2m✓[22m[39m away and near flank plans are valid and differ from stub on some seed [33m 1036[2mms[22m[39m
+     [33m[2m✓[22m[39m H1's guard adds no junctions inside the exit clearance [33m 782[2mms[22m[39m
+ [32m✓[39m test/core/greedy_trap.test.ts [2m([22m[2m17 tests[22m[2m)[22m[33m 3850[2mms[22m[39m
+     [33m[2m✓[22m[39m the far-end walker reaches the exit and yields in-radius candidates [33m 361[2mms[22m[39m
+     [33m[2m✓[22m[39m walks differ only on the pinned near-tie days [33m 1154[2mms[22m[39m
+     [33m[2m✓[22m[39m with greedyTrap on, daily 3 is cut, solvable and within the growth cap [33m 2112[2mms[22m[39m
+ [32m✓[39m test/core/maze_reachable.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 2541[2mms[22m[39m
+     [33m[2m✓[22m[39m leaves no piece unreached in small shaped designs [33m 1338[2mms[22m[39m
+     [33m[2m✓[22m[39m leaves no piece unreached with long-tail dead ends (K74 defaults) [33m 875[2mms[22m[39m
+ [32m✓[39m test/render/paint_explore.test.ts [2m([22m[2m13 tests[22m[2m)[22m[33m 2911[2mms[22m[39m
+     [33m[2m✓[22m[39m agrees exactly on random pieces (rings, wraps, open chains), flags off [33m 1318[2mms[22m[39m
+     [33m[2m✓[22m[39m the whole-chain flag is sound: chainWhole => visibility 1 everywhere [33m 1364[2mms[22m[39m
+ [32m✓[39m test/ui/param_codec.test.ts [2m([22m[2m26 tests[22m[2m)[22m[33m 4770[2mms[22m[39m
+     [33m[2m✓[22m[39m never throws on random input [33m 794[2mms[22m[39m
+     [33m[2m✓[22m[39m decodes exactly what it encodes, over random subsets and values [33m 3857[2mms[22m[39m
+ [32m✓[39m test/physics/junction.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 2340[2mms[22m[39m
+     [33m[2m✓[22m[39m fuses three arms into a stable merge with a straight-through stem [33m 2334[2mms[22m[39m
+ [32m✓[39m test/physics/snapshot.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 2761[2mms[22m[39m
+     [33m[2m✓[22m[39m carries positions, passes, emergent rows and the header exactly [33m 1159[2mms[22m[39m
+     [33m[2m✓[22m[39m reads what the live system reads, in the same pass objects [33m 1183[2mms[22m[39m
+ [32m✓[39m test/core/scene_graph.test.ts [2m([22m[2m16 tests[22m[2m)[22m[33m 23010[2mms[22m[39m
+     [33m[2m✓[22m[39m hangs the title on the chosen entrance, keeping exit and optimal [33m 720[2mms[22m[39m
+     [33m[2m✓[22m[39m builds the same titled scene twice, bit for bit [33m 832[2mms[22m[39m
+     [33m[2m✓[22m[39m attaches on dailies 1-30 and every shape at gs 6/12/18 [33m 10875[2mms[22m[39m
+     [33m[2m✓[22m[39m never disconnects start/exit (solvability sweep) [33m 4516[2mms[22m[39m
+     [33m[2m✓[22m[39m pins a rect gs 18 emblem island scene (hole + counts + hash) [33m 384[2mms[22m[39m
+     [33m[2m✓[22m[39m keeps the holed walk exactly (island sweep, solvability as in 4a) [33m 4440[2mms[22m[39m
+ [32m✓[39m test/render/paint_math.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 2261[2mms[22m[39m
+     [33m[2m✓[22m[39m kArcU is monotone and wraps by one total per lap [33m 946[2mms[22m[39m
+     [33m[2m✓[22m[39m kCtrlOfArc reproduces the bake's per-sample ctrl exactly [33m 713[2mms[22m[39m
+ [32m✓[39m test/game/locks.test.ts [2m([22m[2m18 tests[22m[2m)[22m[33m 6741[2mms[22m[39m
+     [33m[2m✓[22m[39m never traps the player without ice: the exit stays reachable from every state a walker reaches [33m 2757[2mms[22m[39m
+     [33m[2m✓[22m[39m composes with ice, the color rule, turnstiles, one-way runs and hidden runs [33m 3070[2mms[22m[39m
+ [32m✓[39m test/phone_pass/phone_tailscale_pass.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 2321[2mms[22m[39m
+     [33m[2m✓[22m[39m picks the one online android peer, and only that one [33m 1271[2mms[22m[39m
+     [33m[2m✓[22m[39m scripts/phone_pass.ps1 parses with no errors [33m 1039[2mms[22m[39m
+ [32m✓[39m test/game/one_way.test.ts [2m([22m[2m17 tests[22m[2m)[22m[33m 4478[2mms[22m[39m
+     [33m[2m✓[22m[39m never leaves the player stuck: a fresh run or the backtrack is always open [33m 841[2mms[22m[39m
+     [33m[2m✓[22m[39m K788: seeds 3 and 4 lay no one-way + ice trap, with or without keys [33m 1852[2mms[22m[39m
+     [33m[2m✓[22m[39m composes with turnstiles and hidden runs, and fills the HUD row and the share tag [33m 959[2mms[22m[39m
+ [32m✓[39m test/render/explore_cut.test.ts [2m([22m[2m24 tests[22m[2m)[22m[33m 4509[2mms[22m[39m
+     [33m[2m✓[22m[39m HC lifts only the strength: hc x (1 - 0.55 u^2) is the plain coverage [33m 2930[2mms[22m[39m
+     [33m[2m✓[22m[39m draws a cap and exactly two dots inside every fade, short or long [33m 1250[2mms[22m[39m
+ [32m✓[39m test/render/field/k883.test.ts [2m([22m[2m13 tests[22m[2m)[22m[33m 2452[2mms[22m[39m
+     [33m[2m✓[22m[39m the oracle builds t90 and y120's corners at the mapped radius [33m 304[2mms[22m[39m
+     [33m[2m✓[22m[39m needs both K900 rules: the cut at L + h and the refused same-chain joins [33m 426[2mms[22m[39m
+     [33m[2m✓[22m[39m groups geo keeps #15 and #16 on the synthetic crossing scenes [33m 339[2mms[22m[39m
+     [33m[2m✓[22m[39m floors each arm's span at the K883 span [33m 340[2mms[22m[39m
+ [32m✓[39m test/render/confetti_model.test.ts [2m([22m[2m50 tests[22m[2m)[22m[33m 1973[2mms[22m[39m
+ [32m✓[39m test/app/beat_catch.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 2466[2mms[22m[39m
+     [33m[2m✓[22m[39m lands every catch exactly once on the fixed flow, and the rider rests at the start (length) [33m 1306[2mms[22m[39m
+     [33m[2m✓[22m[39m lands every catch exactly once on the fixed flow, and the rider rests at the start (even) [33m 999[2mms[22m[39m
+ [32m✓[39m test/render/loss_fx_model.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 1755[2mms[22m[39m
+     [33m[2m✓[22m[39m releases taper over the window and every piece dies bounded [33m 1646[2mms[22m[39m
+ [32m✓[39m test/app/auto_pick.test.ts [2m([22m[2m16 tests[22m[2m)[22m[33m 1332[2mms[22m[39m
+     [33m[2m✓[22m[39m never picks an invalid segment over many picks, and reaches every valid one [33m 809[2mms[22m[39m
+     [33m[2m✓[22m[39m never picks an invalid segment, and stays in the note's own pitch while it can [33m 407[2mms[22m[39m
+ [32m✓[39m test/render/field/corner_solve.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 1629[2mms[22m[39m
+     [33m[2m✓[22m[39m every synthetic corner solves: §3.8's r under the web cap, and r = 2h [33m 1167[2mms[22m[39m
+     [33m[2m✓[22m[39m the one-sided windows agree with S1b's two-sided ones where both solve [33m 409[2mms[22m[39m
+ [32m✓[39m test/core/maze_apply.test.ts [2m([22m[2m10 tests[22m[2m)[22m[33m 1171[2mms[22m[39m
+     [33m[2m✓[22m[39m cuts H's and keeps every invariant, tail and vertex [33m 530[2mms[22m[39m
+ [32m✓[39m test/core/section_colors.test.ts [2m([22m[2m23 tests[22m[2m)[22m[33m 1976[2mms[22m[39m
+     [33m[2m✓[22m[39m stays continuous along every run at every distance [33m 1674[2mms[22m[39m
+ [32m✓[39m test/game/monsters.test.ts [2m([22m[2m16 tests[22m[2m)[22m[33m 1898[2mms[22m[39m
+     [33m[2m✓[22m[39m lays distinct junctions 1-3 runs off the route, clear of the start, the exit, the tails and the lair [33m 420[2mms[22m[39m
+     [33m[2m✓[22m[39m extras never stand on the start or the exit, sleep at home, and replay from the taps [33m 1189[2mms[22m[39m
+ [32m✓[39m test/game/k137b_block.test.ts [2m([22m[2m19 tests[22m[2m)[22m[33m 1460[2mms[22m[39m
+     [33m[2m✓[22m[39m stalker: never enters a broken run, plans around them, replays [33m 402[2mms[22m[39m
+ [32m✓[39m test/phone_pass/phone_tailscale.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 2433[2mms[22m[39m
+     [33m[2m✓[22m[39m picks the one online android peer, and only that one [33m 1408[2mms[22m[39m
+     [33m[2m✓[22m[39m scripts/phone.ps1 parses with no errors [33m 1018[2mms[22m[39m
+ [32m✓[39m test/physics/load_clock.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 1300[2mms[22m[39m
+     [33m[2m✓[22m[39m counts visible time: a hidden hour mid-load ends nothing [33m 1298[2mms[22m[39m
+ [32m✓[39m test/game/minotaur_turns.test.ts [2m([22m[2m59 tests[22m[2m)[22m[33m 2228[2mms[22m[39m
+     [33m[2m✓[22m[39m never enters the sanctuary, never returns to its lair, never sees the entrance [33m 785[2mms[22m[39m
+     [33m[2m✓[22m[39m puts every runs catch of many games on one point inside the move [33m 823[2mms[22m[39m
+ [32m✓[39m test/game/sword.test.ts [2m([22m[2m14 tests[22m[2m)[22m[33m 981[2mms[22m[39m
+     [33m[2m✓[22m[39m lies 4-8 runs off the optimal route, never on a tail's end or junction, tips first [33m 319[2mms[22m[39m
+ [32m✓[39m test/render/hash2d.test.ts [2m([22m[2m10 tests[22m[2m)[22m[33m 949[2mms[22m[39m
+     [33m[2m✓[22m[39m is a bijection: no two cells share both words [33m 514[2mms[22m[39m
+ [32m✓[39m test/core/maze_solvable.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 1387[2mms[22m[39m
+     [33m[2m✓[22m[39m leaves no small shaped design without a route [33m 1161[2mms[22m[39m
+ [32m✓[39m test/ui/daily_link.test.ts [2m([22m[2m31 tests[22m[2m)[22m[33m 1146[2mms[22m[39m
+     [33m[2m✓[22m[39m builds the same mazes it always has (golden) [33m 715[2mms[22m[39m
+ [32m✓[39m test/core/text_graph.test.ts [2m([22m[2m32 tests[22m[2m)[22m[33m 2124[2mms[22m[39m
+     [33m[2m✓[22m[39m plans and attaches a cartouche word (K115 stage 4a) [33m 626[2mms[22m[39m
+ [32m✓[39m test/game/collapse.test.ts [2m([22m[2m13 tests[22m[2m)[22m[33m 764[2mms[22m[39m
+     [33m[2m✓[22m[39m agrees with a brute force on 120 random small mazes [33m 617[2mms[22m[39m
+ [32m✓[39m test/game/sprint.test.ts [2m([22m[2m10 tests[22m[2m)[22m[33m 1377[2mms[22m[39m
+     [33m[2m✓[22m[39m by runs: two moves make one minotaur turn, and it stands through the first [33m 478[2mms[22m[39m
+     [33m[2m✓[22m[39m a catch ends a sprint; replays bit for bit with its sprints [33m 563[2mms[22m[39m
+ [32m✓[39m test/game/beat_rider.test.ts [2m([22m[2m15 tests[22m[2m)[22m[33m 630[2mms[22m[39m
+ [32m✓[39m test/render/label/label_band_gpu.test.ts [2m([22m[2m36 tests[22m[2m)[22m[33m 581[2mms[22m[39m
+ [32m✓[39m test/physics/tug.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 684[2mms[22m[39m
+     [33m[2m✓[22m[39m defaults to 0.6 and follows tuning.grabChase [33m 400[2mms[22m[39m
+ [32m✓[39m test/game/rule_controller.test.ts [2m([22m[2m7 tests[22m[2m)[22m[33m 593[2mms[22m[39m
+ [32m✓[39m test/core/glyph_flag.test.ts [2m([22m[2m15 tests[22m[2m)[22m[33m 593[2mms[22m[39m
+ [32m✓[39m test/game/color_rule.test.ts [2m([22m[2m7 tests[22m[2m)[22m[33m 986[2mms[22m[39m
+     [33m[2m✓[22m[39m the planted route is legal after obeyAlong, on every draw [33m 362[2mms[22m[39m
+ [32m✓[39m test/core/shapes.test.ts [2m([22m[2m18 tests[22m[2m)[22m[33m 502[2mms[22m[39m
+ [32m✓[39m test/game/hidden_runs.test.ts [2m([22m[2m11 tests[22m[2m)[22m[33m 941[2mms[22m[39m
+ [32m✓[39m test/core/maze_plan.test.ts [2m([22m[2m13 tests[22m[2m)[22m[33m 943[2mms[22m[39m
+     [33m[2m✓[22m[39m bridges are short, on their claimed strands, and cross no thread [33m 451[2mms[22m[39m
+ [32m✓[39m test/core/deterministic_math.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 1057[2mms[22m[39m
+     [33m[2m✓[22m[39m builds mazes without calling an approximated function [33m 1038[2mms[22m[39m
+ [32m✓[39m test/game/fabric_controller.test.ts [2m([22m[2m25 tests[22m[2m)[22m[33m 1132[2mms[22m[39m
+     [33m[2m✓[22m[39m walks the word as counted maze ground [33m 325[2mms[22m[39m
+ [32m✓[39m test/game/fire_clock.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 436[2mms[22m[39m
+     [33m[2m✓[22m[39m never lets the fire reach the dot mid-run (generated mazes, r < 1) [33m 399[2mms[22m[39m
+ [32m✓[39m test/game/title_attempt.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 551[2mms[22m[39m
+     [33m[2m✓[22m[39m both walks share one fingerprint, and the title's forced walk reaches the seam [33m 519[2mms[22m[39m
+[90mstdout[2m | test/render/field/form_b.test.ts[2m > [22m[2mform B: watertight and the rate rule at every fade value (S1b)[2m > [22m[2meye: the rate rule, |Δink| ≤ 3 per px, natural and with ω held at 0, 0.25, 0.5, 0.75 and 1
+[22m[39m[form_b] rate eye (ink per px): natural 1.50, omega=0 1.50, omega=0.25 2.30, omega=0.5 1.50, omega=0.75 1.50, omega=1 1.50
+
+ [32m✓[39m test/render/label/label_switch_cache.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 519[2mms[22m[39m
+     [33m[2m✓[22m[39m a kept topology gives the uncached lines on moved geometry with the same key [33m 451[2mms[22m[39m
+ [32m✓[39m test/phone_pass/install_floor.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 1114[2mms[22m[39m
+     [33m[2m✓[22m[39m refuses a finish sample without --force and writes nothing [33m 402[2mms[22m[39m
+     [33m[2m✓[22m[39m writes a PARTIAL floor with --force, finish count in the note [33m 396[2mms[22m[39m
+     [33m[2m✓[22m[39m installs a clean A/A without --force [33m 313[2mms[22m[39m
+ [32m✓[39m test/render/label/label_strips_pin.test.ts [2m([22m[2m31 tests[22m[2m)[22m[33m 464[2mms[22m[39m
+ [32m✓[39m test/physics/settle_budget.test.ts [2m([22m[2m9 tests[22m[2m)[22m[33m 346[2mms[22m[39m
+ [32m✓[39m test/game/ice.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 585[2mms[22m[39m
+     [33m[2m✓[22m[39m walks straight on along the strand and stops where the header says [33m 341[2mms[22m[39m
+ [32m✓[39m test/core/glyph_taper.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 573[2mms[22m[39m
+ [32m✓[39m test/render/trail_paint.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 330[2mms[22m[39m
+     [33m[2m✓[22m[39m paints the ideal fade along the whole trail; the old spans faded early [33m 309[2mms[22m[39m
+ [32m✓[39m test/game/rule_search.test.ts [2m([22m[2m11 tests[22m[2m)[22m[33m 309[2mms[22m[39m
+ [32m✓[39m test/game/hints.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 213[2mms[22m[39m
+ [32m✓[39m test/render/label/label_tables.test.ts [2m([22m[2m17 tests[22m[2m)[22m[33m 415[2mms[22m[39m
+ [32m✓[39m test/game/cut.test.ts [2m([22m[2m18 tests[22m[2m)[22m[33m 536[2mms[22m[39m
+ [32m✓[39m test/render/field/depth.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 363[2mms[22m[39m
+     [33m[2m✓[22m[39m passes on every crossing scene with the diagram rule [33m 303[2mms[22m[39m
+ [32m✓[39m test/game/star_rating.test.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 215[2mms[22m[39m
+ [32m✓[39m test/loader/worker_preload.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 327[2mms[22m[39m
+ [32m✓[39m test/game/spool.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 252[2mms[22m[39m
+ [32m✓[39m test/game/daily_attempt.test.ts [2m([22m[2m12 tests[22m[2m)[22m[33m 323[2mms[22m[39m
+ [32m✓[39m test/render/paint_ring_lap.test.ts [2m([22m[2m10 tests[22m[2m)[22m[33m 1190[2mms[22m[39m
+     [33m[2m✓[22m[39m kWrap lands in [0, m) at the true ring position [33m 792[2mms[22m[39m
+     [33m[2m✓[22m[39m every floor/mod of a division is an exact helper or a reviewed site [33m 314[2mms[22m[39m
+ [32m✓[39m test/game/fire.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 200[2mms[22m[39m
+ [32m✓[39m test/game/mud.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 184[2mms[22m[39m
+ [32m✓[39m test/core/walk_graph.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 226[2mms[22m[39m
+ [32m✓[39m test/game/fragile.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 244[2mms[22m[39m
+ [32m✓[39m test/game/k807_tunables.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 422[2mms[22m[39m
+ [32m✓[39m test/render/paint_section.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 384[2mms[22m[39m
+ [32m✓[39m test/ui/view_clamp.test.ts [2m([22m[2m34 tests[22m[2m)[22m[32m 251[2mms[22m[39m
+ [32m✓[39m test/render/label/label_fills_pin.test.ts [2m([22m[2m32 tests[22m[2m)[22m[33m 355[2mms[22m[39m
+ [32m✓[39m test/ui/panel_search.test.ts [2m([22m[2m54 tests[22m[2m)[22m[32m 125[2mms[22m[39m
+ [32m✓[39m test/game/daily_calendar.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 226[2mms[22m[39m
+ [32m✓[39m test/game/text_walk.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 247[2mms[22m[39m
+ [32m✓[39m test/game/explore_view.test.ts [2m([22m[2m42 tests[22m[2m)[22m[32m 234[2mms[22m[39m
+ [32m✓[39m test/core/glyph_flare.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 173[2mms[22m[39m
+ [32m✓[39m test/ui/grid_align_curve.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 125[2mms[22m[39m
+ [32m✓[39m test/core/lattice_grower.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 88[2mms[22m[39m
+ [32m✓[39m test/game/route_plan.test.ts [2m([22m[2m19 tests[22m[2m)[22m[32m 199[2mms[22m[39m
+ [32m✓[39m test/render/marker_glyphs.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 121[2mms[22m[39m
+ [32m✓[39m test/game/fabric_trail.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 307[2mms[22m[39m
+ [32m✓[39m test/render/web_fade.test.ts [2m([22m[2m31 tests[22m[2m)[22m[32m 93[2mms[22m[39m
+ [32m✓[39m test/game/daily_store.test.ts [2m([22m[2m34 tests[22m[2m)[22m[32m 73[2mms[22m[39m
+ [32m✓[39m test/render/background_model.test.ts [2m([22m[2m28 tests[22m[2m)[22m[32m 70[2mms[22m[39m
+ [32m✓[39m test/game/par.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 69[2mms[22m[39m
+ [32m✓[39m test/render/field/label_b_tent.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 77[2mms[22m[39m
+ [32m✓[39m test/core/hershey_greek.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 80[2mms[22m[39m
+ [32m✓[39m test/core/emblem_graph.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 71[2mms[22m[39m
+ [32m✓[39m test/ui/key_moves.test.ts [2m([22m[2m68 tests[22m[2m)[22m[32m 49[2mms[22m[39m
+ [32m✓[39m test/render/junction_routes.test.ts [2m([22m[2m43 tests[22m[2m)[22m[32m 44[2mms[22m[39m
+ [32m✓[39m test/loader/loader_geometry.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 55[2mms[22m[39m
+ [32m✓[39m test/phone_pass/phone_ready.test.ts [2m([22m[2m41 tests[22m[2m | [22m[33m1 skipped[39m[2m)[22m[32m 147[2mms[22m[39m
+ [32m✓[39m test/audio/pitch_space.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 36[2mms[22m[39m
+ [32m✓[39m test/ui/mode_badge.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 44[2mms[22m[39m
+ [32m✓[39m test/render/field/label_b_tentv.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 46[2mms[22m[39m
+ [32m✓[39m test/ui/appear_mode.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 93[2mms[22m[39m
+ [32m✓[39m test/audio/knot_synth.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 44[2mms[22m[39m
+ [32m✓[39m test/game/walker.test.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 39[2mms[22m[39m
+ [32m✓[39m test/render/explore_gates.test.ts [2m([22m[2m18 tests[22m[2m)[22m[32m 213[2mms[22m[39m
+ [32m✓[39m test/physics/physics_host.test.ts [2m([22m[2m15 tests[22m[2m)[22m[33m 31173[2mms[22m[39m
+     [33m[2m✓[22m[39m matches bit for bit at 60 fps through every input [33m 8602[2mms[22m[39m
+     [33m[2m✓[22m[39m matches bit for bit at 25 fps, the remainder carried between frames [33m 2837[2mms[22m[39m
+     [33m[2m✓[22m[39m matches bit for bit with the temperature on, and both sleep once it is off [33m 2530[2mms[22m[39m
+     [33m[2m✓[22m[39m pre-settles as the in-thread loop does, to its sim cap, then goes live [33m 2499[2mms[22m[39m
+     [33m[2m✓[22m[39m settles first (until the first sleep) and asleep after it [33m 2111[2mms[22m[39m
+     [33m[2m✓[22m[39m runs the physics-off load as the in-thread loop does [33m 2358[2mms[22m[39m
+     [33m[2m✓[22m[39m drops messages of another gen and rebuilds on a newer init [33m 739[2mms[22m[39m
+     [33m[2m✓[22m[39m applies a drag that arrives between a frame's substeps to the next substep [33m 339[2mms[22m[39m
+     [33m[2m✓[22m[39m steps until a sim time, dumps, freezes, pauses, and stops on an error [33m 471[2mms[22m[39m
+     [33m[2m✓[22m[39m matches bit for bit with the reverse switch on, through a drag, and both sleep [33m 7908[2mms[22m[39m
+ [32m✓[39m test/ui/undo_stack.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 43[2mms[22m[39m
+ [32m✓[39m test/physics/text_pinned.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 34[2mms[22m[39m
+ [32m✓[39m test/ui/accessibility.test.ts [2m([22m[2m27 tests[22m[2m)[22m[32m 33[2mms[22m[39m
+ [32m✓[39m test/util/det_math.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 33[2mms[22m[39m
+ [32m✓[39m test/ui/maze_hud.test.ts [2m([22m[2m36 tests[22m[2m)[22m[32m 33[2mms[22m[39m
+ [32m✓[39m test/ui/title_flag.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 36[2mms[22m[39m
+[90mstdout[2m | test/render/field/form_b.test.ts[2m > [22m[2mform B: watertight and the rate rule at every fade value (S1b)[2m > [22m[2mcap: the rate rule, |Δink| ≤ 3 per px, natural and with ω held at 0, 0.25, 0.5, 0.75 and 1
+[22m[39m[form_b] rate cap (ink per px): natural 1.62, omega=0 1.62, omega=0.25 1.62, omega=0.5 1.62, omega=0.75 1.62, omega=1 1.62
+
+ [32m✓[39m test/physics/sleep_gate.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 31[2mms[22m[39m
+ [32m✓[39m test/ui/offscreen_indicators.test.ts [2m([22m[2m22 tests[22m[2m)[22m[32m 22[2mms[22m[39m
+ [32m✓[39m test/ui/snore_link.test.ts [2m([22m[2m35 tests[22m[2m)[22m[32m 28[2mms[22m[39m
+ [32m✓[39m test/render/field/label_b_upload.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 32[2mms[22m[39m
+ [32m✓[39m test/geometry/bend_radius.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32m✓[39m test/render/corner_share.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 26[2mms[22m[39m
+ [32m✓[39m test/render/program_registry.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 128[2mms[22m[39m
+ [32m✓[39m test/ui/toast_reflow.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 52[2mms[22m[39m
+ [32m✓[39m test/audio/snore_sfx.test.ts [2m([22m[2m25 tests[22m[2m)[22m[32m 22[2mms[22m[39m
+ [32m✓[39m test/ui/daily_stats_view.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 70[2mms[22m[39m
+ [32m✓[39m test/game/lures.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 21[2mms[22m[39m
+ [32m✓[39m test/render/rim_curve.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 29[2mms[22m[39m
+ [32m✓[39m test/game/snares.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32m✓[39m test/render/pulse_path.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m test/core/reveal_plan.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m test/audio/song_scheduler.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m test/geometry/spline_generator.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m test/render/paint_root.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 33[2mms[22m[39m
+ [32m✓[39m test/render/fog_arc.test.ts [2m([22m[2m20 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m test/game/mino_feedback.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m test/game/share_text.test.ts [2m([22m[2m18 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m test/ui/head_indicator.test.ts [2m([22m[2m21 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m test/ui/gamepad.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m test/game/maze_stats.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m test/game/k795_tunables.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 21[2mms[22m[39m
+ [32m✓[39m test/render/field/field_core.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m test/game/explore_finish.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m test/app/context_loss.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m test/app/loop_flags.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m test/ui/param_tags.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m test/render/telegraph_route.test.ts [2m([22m[2m20 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m test/ui/panel_rows.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m test/ui/motion.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m test/ui/panel_sheet.test.ts [2m([22m[2m19 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m test/render/background_shaders.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m test/game/tap_pick.test.ts [2m([22m[2m19 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m test/core/glyph_fairness.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+[90mstdout[2m | test/render/field/form_b.test.ts[2m > [22m[2mform B: watertight and the rate rule at every fade value (S1b)[2m > [22m[2mtie: the rate rule, |Δink| ≤ 3 per px, natural and with ω held at 0, 0.25, 0.5, 0.75 and 1
+[22m[39m[form_b] rate tie (ink per px): natural 1.50, omega=0 1.50, omega=0.25 1.50, omega=0.5 1.50, omega=0.75 1.50, omega=1 1.50
+
+ [32m✓[39m test/render/tip_stadium.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m test/render/field/scene_export.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m test/render/pluck_ripple.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m test/ui/maze_hud_undo.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 23[2mms[22m[39m
+ [32m✓[39m test/render/shader_warmup.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 23[2mms[22m[39m
+ [32m✓[39m test/game/tunnels.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m test/app/tug_toggle.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m test/render/walked_gold.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m test/core/shape_injection.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m test/ui/seed_text.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m test/ui/tug_threads.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m test/game/lives.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m test/app/respawn_loss.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+[90mstdout[2m | test/render/field/form_b.test.ts[2m > [22m[2mform B: a crossing's reach (S1f, K1092)[2m > [22m[2man eye: the arm's L is continuous where the walk's jumps (reach_eye.ts)
+[22m[39m[form_b] eye sweep, largest |ΔL| per 0.002 of w: quad 0.0211, walk 3.2522; quad L 0.136..2.034
+
+ [32m✓[39m test/render/path_irregularity.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m test/render/field/form_b.test.ts [2m([22m[2m27 tests[22m[2m)[22m[33m 35319[2mms[22m[39m
+     [33m[2m✓[22m[39m D2 + D5: a crossing slides up the END; the cap ramp and r move the ink by what the step explains [33m 600[2mms[22m[39m
+     [33m[2m✓[22m[39m D6: ω from 0 to 1 moves the ink at most in proportion [33m 598[2mms[22m[39m
+     [33m[2m✓[22m[39m every winning term lies in one of its strips [33m 995[2mms[22m[39m
+     [33m[2m✓[22m[39m eye: 1 enclosed paper component(s) with each fade held at 0, 0.25, 0.5, 0.75 and 1 [33m 1860[2mms[22m[39m
+     [33m[2m✓[22m[39m T: 0 enclosed paper component(s) with each fade held at 0, 0.25, 0.5, 0.75 and 1 [33m 947[2mms[22m[39m
+     [33m[2m✓[22m[39m acute: 0 enclosed paper component(s) with each fade held at 0, 0.25, 0.5, 0.75 and 1 [33m 1037[2mms[22m[39m
+     [33m[2m✓[22m[39m hairpin: 0 enclosed paper component(s) with each fade held at 0, 0.25, 0.5, 0.75 and 1 [33m 1244[2mms[22m[39m
+     [33m[2m✓[22m[39m T: the rate rule, |Δink| ≤ 3 per px, natural and with ω held at 0, 0.25, 0.5, 0.75 and 1 [33m 2899[2mms[22m[39m
+     [33m[2m✓[22m[39m acute: the rate rule, |Δink| ≤ 3 per px, natural and with ω held at 0, 0.25, 0.5, 0.75 and 1 [33m 3408[2mms[22m[39m
+     [33m[2m✓[22m[39m hairpin: the rate rule, |Δink| ≤ 3 per px, natural and with ω held at 0, 0.25, 0.5, 0.75 and 1 [33m 6021[2mms[22m[39m
+     [33m[2m✓[22m[39m eye: the rate rule, |Δink| ≤ 3 per px, natural and with ω held at 0, 0.25, 0.5, 0.75 and 1 [33m 8700[2mms[22m[39m
+     [33m[2m✓[22m[39m cap: the rate rule, |Δink| ≤ 3 per px, natural and with ω held at 0, 0.25, 0.5, 0.75 and 1 [33m 4146[2mms[22m[39m
+     [33m[2m✓[22m[39m tie: the rate rule, |Δink| ≤ 3 per px, natural and with ω held at 0, 0.25, 0.5, 0.75 and 1 [33m 1859[2mms[22m[39m
+     [33m[2m✓[22m[39m an eye: the arm's L is continuous where the walk's jumps (reach_eye.ts) [33m 602[2mms[22m[39m
+ [32m✓[39m test/ui/move_pad.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m test/ui/loader_config.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m test/game/sonar.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m test/render/clip_band.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m test/game/darkness.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m test/ui/toast_place.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m test/ui/finish_peek.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m test/app/panel_rect.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m test/ui/pointer_blur.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m test/ui/cut_buttons.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m test/ui/reanchor_step.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 43[2mms[22m[39m
+ [2m[90m↓[39m[22m test/sweep.manual.test.ts [2m([22m[2m1 test[22m[2m | [22m[33m1 skipped[39m[2m)[22m
+ [2m[90m↓[39m[22m test/render/field/oracle.manual.test.ts [2m([22m[2m5 tests[22m[2m | [22m[33m5 skipped[39m[2m)[22m
+ [32m✓[39m test/physics/maze_fabric.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 35895[2mms[22m[39m
+     [33m[2m✓[22m[39m settles finite, bounded, and quiescent [33m 14437[2mms[22m[39m
+     [33m[2m✓[22m[39m holds every junction coincident at rest [33m 16380[2mms[22m[39m
+     [33m[2m✓[22m[39m pins the corner ends exactly at their anchors [33m 5004[2mms[22m[39m
+ [32m✓[39m test/app/lifecycle.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m test/app/pick_radius.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m test/render/ribbon_lean.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m test/render/field/cap19_continuity.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 37181[2mms[22m[39m
+     [33m[2m✓[22m[39m (A) the side at a tie: j1's END leans from 110° to 130° [33m 3188[2mms[22m[39m
+     [33m[2m✓[22m[39m (B) membership: the crossing slides into the padded span of j0's END [33m 5045[2mms[22m[39m
+     [33m[2m✓[22m[39m (C) θ: the crossing slides over the vertices of an arc [33m 2660[2mms[22m[39m
+     [33m[2m✓[22m[39m (D) the cluster: j1 moves away until the Ts' spans on the through part [33m 26286[2mms[22m[39m
+ [32m✓[39m test/render/explore_strip.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m test/render/thread_look.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m test/render/k320_slim.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m test/render/label/label_limits.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m test/render/sdf_gap_bind.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m test/render/explore_incremental.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m test/render/joint_pairs.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m test/render/sdf_explore.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m test/physics/sleep.regression.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 52676[2mms[22m[39m
+     [33m[2m✓[22m[39m the fat knot link sleeps [33m 8691[2mms[22m[39m
+     [33m[2m✓[22m[39m the user's rect fabric link sleeps [33m 7701[2mms[22m[39m
+     [33m[2m✓[22m[39m Daily #12 with its title thread sleeps [33m 18089[2mms[22m[39m
+     [33m[2m✓[22m[39m a rect cartouche design sleeps [33m 7528[2mms[22m[39m
+     [33m[2m✓[22m[39m sleeps at one sim time at 10 and 60 fps [33m 10660[2mms[22m[39m
+ [32m✓[39m test/render/field/g2.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 55248[2mms[22m[39m
+     [33m[2m✓[22m[39m clothoid and quintic: G2 joins, no crossing, one hump, both sizings [33m 55087[2mms[22m[39m
+ [32m✓[39m test/quiescence.regression.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 138002[2mms[22m[39m
+     [33m[2m✓[22m[39m re-sleeps after a realistic drag session [33m 37180[2mms[22m[39m
+     [33m[2m✓[22m[39m keeps a pathological wound out of the loud attractor [33m 100819[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m212 passed[39m[22m[2m | [22m[33m2 skipped[39m[90m (214)[39m
+[2m      Tests [22m [1m[32m2828 passed[39m[22m[2m | [22m[33m9 skipped[39m[90m (2837)[39m
+[2m   Start at [22m 10:02:06
+[2m   Duration [22m 139.38s[2m (transform 36.00s, setup 0ms, import 116.34s, tests 782.90s, environment 5.61s)[22m
+

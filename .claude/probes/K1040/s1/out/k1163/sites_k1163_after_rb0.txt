@@ -1,0 +1,24 @@
+s1i_sites k1163_after_rb0: forms today {}; rb0 {"rootBand":0}
+per form: differ (|d| > 0.02) / strong (> 0.5) / max dist from S1f's contour (px) / far (> 3 px)
+== window z4
+site id                                              today                    rb0
+   1 muse_hash j0 0-1                              0/0/0/0                0/0/0/0
+   2 muse_hash j36 109-110                         0/0/0/0                0/0/0/0
+   3 muse_hash j155 471-472                        0/0/0/0                0/0/0/0
+   4 muse_hash j156 475-473                        0/0/0/0                0/0/0/0
+   5 muse_hash j62 189-187                         0/0/0/0                0/0/0/0
+   6 muse_default_tw j57 172-173                   0/0/0/0                0/0/0/0
+   7 muse_hash j23 72-70                           0/0/0/0                0/0/0/0
+   8 muse_hash j110 335-333                        0/0/0/0                0/0/0/0
+   9 muse_default_tw j110 335-333                  0/0/0/0                0/0/0/0
+  10 muse_default_tw j164 499-497                  0/0/0/0                0/0/0/0
+  11 muse_hash j57 172-173                         0/0/0/0                0/0/0/0
+  12 g41_user_tw64 j12 36-37                       0/0/0/0                0/0/0/0
+  13 user_tw42.lightpaper j49 151-152                0/0/0/0                0/0/0/0
+  14 g41_user_tw42 j49 151-152                     0/0/0/0                0/0/0/0
+  15 muse_hash j124 375-376                      48/18/1/0                0/0/0/0
+  16 muse_hash j131 397-398                        0/0/0/0                0/0/0/0
+  17 muse_hash j99 301-299                         0/0/0/0                0/0/0/0
+  18 muse_hash j73 222-220                         0/0/0/0                0/0/0/0
+ all                                             48/18/1/0                0/0/0/0
+(4.7 s)

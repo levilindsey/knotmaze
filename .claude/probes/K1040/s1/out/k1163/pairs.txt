@@ -1,0 +1,77 @@
+06 [F2-r] muse_default_tw/j57/172-173: r: S1f 4.000h, flat 0.678h, tip 4.000h
+     zoom 4 (81 px): differ from S1f: flat 31 px (lost 4, gained 5; max 1 px from S1f's edge, 0 beyond 3 px), tip 0 px; tip vs flat 31 px (lost 5, gained 4); bbox (tip vs S1f) none
+     play size: differ from S1f: flat 31 px (lost 4, gained 5; max 1 px from S1f's edge, 0 beyond 3 px), tip 0 px; tip vs flat 31 px (lost 5, gained 4); bbox (tip vs S1f) none
+     checks (px off by > 1e-6, both windows): S1f vs frozen form_b_s1f_q.ts 0; 
+07 [F2-r] muse_hash/j23/72-70: r: S1f 4.000h, flat 1.252h, tip 4.000h
+     zoom 4 (119 px): differ from S1f: flat 58 px (lost 8, gained 11; max 1 px from S1f's edge, 0 beyond 3 px), tip 0 px; tip vs flat 58 px (lost 11, gained 8); bbox (tip vs S1f) none
+     play size: differ from S1f: flat 58 px (lost 8, gained 11; max 1 px from S1f's edge, 0 beyond 3 px), tip 0 px; tip vs flat 58 px (lost 11, gained 8); bbox (tip vs S1f) none
+     checks (px off by > 1e-6, both windows): S1f vs frozen form_b_s1f_q.ts 0; 
+08 [F2-r] muse_hash/j110/335-333: r: S1f 4.000h, flat 1.283h, tip 4.000h
+     zoom 4 (119 px): differ from S1f: flat 36 px (lost 4, gained 0; max 1 px from S1f's edge, 0 beyond 3 px), tip 0 px; tip vs flat 36 px (lost 0, gained 4); bbox (tip vs S1f) none
+     play size: differ from S1f: flat 104 px (lost 4, gained 0; max 1 px from S1f's edge, 0 beyond 3 px), tip 0 px; tip vs flat 104 px (lost 0, gained 4); bbox (tip vs S1f) none
+     checks (px off by > 1e-6, both windows): S1f vs frozen form_b_s1f_q.ts 0; 
+09 [F2-r] muse_default_tw/j110/335-333: r: S1f 4.000h, flat 1.362h, tip 4.000h
+     zoom 4 (81 px): differ from S1f: flat 34 px (lost 4, gained 3; max 0 px from S1f's edge, 0 beyond 3 px), tip 0 px; tip vs flat 34 px (lost 3, gained 4); bbox (tip vs S1f) none
+     play size: differ from S1f: flat 83 px (lost 4, gained 3; max 0 px from S1f's edge, 0 beyond 3 px), tip 0 px; tip vs flat 83 px (lost 3, gained 4); bbox (tip vs S1f) none
+     checks (px off by > 1e-6, both windows): S1f vs frozen form_b_s1f_q.ts 0; 
+10 [F2-r] muse_default_tw/j164/499-497: r: S1f 3.993h, flat 1.683h, tip 3.993h
+     zoom 4 (81 px): differ from S1f: flat 76 px (lost 14, gained 14; max 1 px from S1f's edge, 0 beyond 3 px), tip 0 px; tip vs flat 76 px (lost 14, gained 14); bbox (tip vs S1f) none
+     play size: differ from S1f: flat 76 px (lost 14, gained 14; max 1 px from S1f's edge, 0 beyond 3 px), tip 0 px; tip vs flat 76 px (lost 14, gained 14); bbox (tip vs S1f) none
+     checks (px off by > 1e-6, both windows): S1f vs frozen form_b_s1f_q.ts 0; 
+11 [F2-r] muse_hash/j57/172-173: r: S1f 4.000h, flat 1.716h, tip 4.000h
+     zoom 4 (119 px): differ from S1f: flat 45 px (lost 6, gained 6; max 1 px from S1f's edge, 0 beyond 3 px), tip 0 px; tip vs flat 45 px (lost 6, gained 6); bbox (tip vs S1f) none
+     play size: differ from S1f: flat 45 px (lost 6, gained 6; max 1 px from S1f's edge, 0 beyond 3 px), tip 0 px; tip vs flat 45 px (lost 6, gained 6); bbox (tip vs S1f) none
+     checks (px off by > 1e-6, both windows): S1f vs frozen form_b_s1f_q.ts 0; 
+12 [F2-r] g41_user_tw64/j12/36-37: r: S1f 2.000h, flat 0.028h, tip 2.000h
+     zoom 4 (147 px): differ from S1f: flat 43 px (lost 5, gained 10; max 1 px from S1f's edge, 0 beyond 3 px), tip 0 px; tip vs flat 43 px (lost 10, gained 5); bbox (tip vs S1f) none
+     play size: differ from S1f: flat 43 px (lost 5, gained 10; max 1 px from S1f's edge, 0 beyond 3 px), tip 0 px; tip vs flat 43 px (lost 10, gained 5); bbox (tip vs S1f) none
+     checks (px off by > 1e-6, both windows): S1f vs frozen form_b_s1f_q.ts 0; 
+13 [F2-r] user_tw42.lightpaper/j49/151-152: r: S1f 2.000h, flat 0.037h, tip 2.000h
+     zoom 4 (100 px): differ from S1f: flat 24 px (lost 2, gained 5; max 1 px from S1f's edge, 0 beyond 3 px), tip 0 px; tip vs flat 24 px (lost 5, gained 2); bbox (tip vs S1f) none
+     play size: differ from S1f: flat 24 px (lost 2, gained 5; max 1 px from S1f's edge, 0 beyond 3 px), tip 0 px; tip vs flat 24 px (lost 5, gained 2); bbox (tip vs S1f) none
+     checks (px off by > 1e-6, both windows): S1f vs frozen form_b_s1f_q.ts 0; 
+14 [F2-r] g41_user_tw42/j49/151-152: r: S1f 2.000h, flat 0.037h, tip 2.000h
+     zoom 4 (100 px): differ from S1f: flat 24 px (lost 2, gained 5; max 1 px from S1f's edge, 0 beyond 3 px), tip 0 px; tip vs flat 24 px (lost 5, gained 2); bbox (tip vs S1f) none
+     play size: differ from S1f: flat 24 px (lost 2, gained 5; max 1 px from S1f's edge, 0 beyond 3 px), tip 0 px; tip vs flat 24 px (lost 5, gained 2); bbox (tip vs S1f) none
+     checks (px off by > 1e-6, both windows): S1f vs frozen form_b_s1f_q.ts 0; 
+15 [F2-r] muse_hash/j124/375-376: r: S1f 1.967h, flat 0.078h, tip 0.274h
+     zoom 4 (119 px): differ from S1f: flat 48 px (lost 9, gained 11; max 1 px from S1f's edge, 0 beyond 3 px), tip 48 px (lost 8, gained 10; max 1 px from S1f's edge, 0 beyond 3 px); tip vs flat 9 px (lost 0, gained 0); bbox (tip vs S1f) x -0.34..0.19h, y -0.56..0.32h
+     play size: differ from S1f: flat 48 px (lost 9, gained 11; max 1 px from S1f's edge, 0 beyond 3 px), tip 48 px (lost 8, gained 10; max 1 px from S1f's edge, 0 beyond 3 px); tip vs flat 9 px (lost 0, gained 0); bbox (tip vs S1f) x -0.34..0.19h, y -0.56..0.32h
+     checks (px off by > 1e-6, both windows): S1f vs frozen form_b_s1f_q.ts 0; 
+01 [F1-lost] muse_hash/j0/0-1: r: S1f 0.043h, flat 0.043h, tip 0.043h
+     zoom 4 (119 px): differ from S1f: flat 0 px, tip 0 px; tip vs flat 0 px; bbox (tip vs S1f) none
+     play size: differ from S1f: flat 0 px, tip 0 px; tip vs flat 0 px; bbox (tip vs S1f) none
+     checks (px off by > 1e-6, both windows): S1f vs frozen form_b_s1f_q.ts 0; 
+02 [F1-lost] muse_hash/j36/109-110: r: S1f 2.721h, flat 2.721h, tip 2.721h
+     zoom 4 (119 px): differ from S1f: flat 0 px, tip 0 px; tip vs flat 0 px; bbox (tip vs S1f) none
+     play size: differ from S1f: flat 0 px, tip 0 px; tip vs flat 0 px; bbox (tip vs S1f) none
+     checks (px off by > 1e-6, both windows): S1f vs frozen form_b_s1f_q.ts 0; 
+03 [F1-lost] muse_hash/j155/471-472: r: S1f 0.120h, flat 0.120h, tip 0.120h
+     zoom 4 (119 px): differ from S1f: flat 2 px (lost 0, gained 0; max 0 px from S1f's edge, 0 beyond 3 px), tip 0 px; tip vs flat 2 px (lost 0, gained 0); bbox (tip vs S1f) none
+     play size: differ from S1f: flat 5 px (lost 0, gained 0; max 0 px from S1f's edge, 0 beyond 3 px), tip 0 px; tip vs flat 5 px (lost 0, gained 0); bbox (tip vs S1f) none
+     checks (px off by > 1e-6, both windows): S1f vs frozen form_b_s1f_q.ts 0; 
+04 [F1-lost] muse_hash/j156/475-473: r: S1f 0.125h, flat 0.125h, tip 0.125h
+     zoom 4 (119 px): differ from S1f: flat 2 px (lost 0, gained 0; max 0 px from S1f's edge, 0 beyond 3 px), tip 0 px; tip vs flat 2 px (lost 0, gained 0); bbox (tip vs S1f) none
+     play size: differ from S1f: flat 5 px (lost 0, gained 0; max 0 px from S1f's edge, 0 beyond 3 px), tip 0 px; tip vs flat 5 px (lost 0, gained 0); bbox (tip vs S1f) none
+     checks (px off by > 1e-6, both windows): S1f vs frozen form_b_s1f_q.ts 0; 
+05 [F1-j62] muse_hash/j62/189-187: r: S1f 2.438h, flat 2.438h, tip 2.438h
+     zoom 4 (119 px): differ from S1f: flat 0 px, tip 0 px; tip vs flat 0 px; bbox (tip vs S1f) none
+     play size: differ from S1f: flat 0 px, tip 0 px; tip vs flat 0 px; bbox (tip vs S1f) none
+     checks (px off by > 1e-6, both windows): S1f vs frozen form_b_s1f_q.ts 0; 
+16 [extra-tip] muse_hash/j131/397-398: r: S1f 3.183h, flat 3.183h, tip 3.183h
+     zoom 4 (119 px): differ from S1f: flat 0 px, tip 0 px; tip vs flat 0 px; bbox (tip vs S1f) none
+     play size: differ from S1f: flat 0 px, tip 0 px; tip vs flat 0 px; bbox (tip vs S1f) none
+     checks (px off by > 1e-6, both windows): S1f vs frozen form_b_s1f_q.ts 0; 
+17 [extra-tip] muse_hash/j99/301-299: r: S1f 2.518h, flat 2.518h, tip 2.518h
+     zoom 4 (119 px): differ from S1f: flat 0 px, tip 0 px; tip vs flat 0 px; bbox (tip vs S1f) none
+     play size: differ from S1f: flat 0 px, tip 0 px; tip vs flat 0 px; bbox (tip vs S1f) none
+     checks (px off by > 1e-6, both windows): S1f vs frozen form_b_s1f_q.ts 0; 
+18 [extra-tip] muse_hash/j73/222-220: r: S1f 0.297h, flat 0.297h, tip 0.297h
+     zoom 4 (119 px): differ from S1f: flat 0 px, tip 0 px; tip vs flat 0 px; bbox (tip vs S1f) none
+     play size: differ from S1f: flat 0 px, tip 0 px; tip vs flat 0 px; bbox (tip vs S1f) none
+     checks (px off by > 1e-6, both windows): S1f vs frozen form_b_s1f_q.ts 0; 
+all: zoom 4: differ from S1f flat 423 (beyond 3 px 0), tip 48 (beyond 3 px 0); tip vs flat 384
+     play size: differ from S1f flat 546 (beyond 3 px 0), tip 48 (beyond 3 px 0); tip vs flat 507
+     checks: 0 px off between S1f and its frozen copy
+sheet.png: 5600 x 4662, 18 triples, 3 columns, panels up to 588 px
+(32.2 s)

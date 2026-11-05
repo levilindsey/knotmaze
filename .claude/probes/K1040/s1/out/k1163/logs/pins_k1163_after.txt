@@ -1,0 +1,69 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.12 [39m[90mC:/Users/lsl/Repositories/knotmaze[39m
+
+[90mstdout[2m | test/render/field/form_b.test.ts[2m > [22m[2mform B: the fades are continuous[2m > [22m[2mD2 + D5: a crossing slides up the END; the cap ramp and r move the ink by what the step explains
+[22m[39m[form_b] D2+D5 sweep: max |Δink| per step 0.002 = 0.0300
+
+[90mstdout[2m | test/render/field/form_b.test.ts[2m > [22m[2mform B: the fades are continuous[2m > [22m[2mD6: ω from 0 to 1 moves the ink at most in proportion
+[22m[39m[form_b] D6: max |Δink| per Δω 0.01 = 0.01000
+
+[90mstdout[2m | test/render/field/form_b.test.ts[2m > [22m[2mform B: the fades are continuous[2m > [22m[2mD1: the fold across a hairpin moves the ink no faster than an outline's AA
+[22m[39m[form_b] D1 fold: max |Δink| along the hairpin walks = 0.0748 (step aa/10)
+
+[90mstdout[2m | test/render/field/form_b.test.ts[2m > [22m[2mform B: the max decomposition[2m > [22m[2mevery winning term lies in one of its strips
+[22m[39m[form_b] strips: tube: 2408 inked, 0 outside, edge 2408; dead end: 1455 inked, 0 outside, edge 1204, cap 251; crossing: 4396 inked, 0 outside, edge 4396; T: 3144 inked, 0 outside, edge 2594, arc 448, endpoint 90, cap 12; acute: 2843 inked, 0 outside, edge 2567, arc 175, endpoint 89, cap 12; Y: 3602 inked, 0 outside, edge 3147, endpoint 87, arc 368
+
+[90mstdout[2m | test/render/field/form_b.test.ts[2m > [22m[2mform B: watertight and the rate rule at every fade value (S1b)[2m > [22m[2meye: 1 enclosed paper component(s) with each fade held at 0, 0.25, 0.5, 0.75 and 1
+[22m[39m[form_b] watertight eye: natural 20, fold=0 20, fold=0.25 20, fold=0.5 20, fold=0.75 20, fold=1 20, omega=0 20, omega=0.25 20, omega=0.5 20, omega=0.75 20, omega=1 20, cap=0 20, cap=0.25 20, cap=0.5 20, cap=0.75 20, cap=1 20, tie=0 20, tie=0.25 20, tie=0.5 20, tie=0.75 20, tie=1 20
+
+[90mstdout[2m | test/render/field/form_b.test.ts[2m > [22m[2mform B: watertight and the rate rule at every fade value (S1b)[2m > [22m[2mT: 0 enclosed paper component(s) with each fade held at 0, 0.25, 0.5, 0.75 and 1
+[22m[39m[form_b] watertight T: natural 0, fold=0 0, fold=0.25 0, fold=0.5 0, fold=0.75 0, fold=1 0, omega=0 0, omega=0.25 0, omega=0.5 0, omega=0.75 0, omega=1 0, cap=0 0, cap=0.25 0, cap=0.5 0, cap=0.75 0, cap=1 0, tie=0 0, tie=0.25 0, tie=0.5 0, tie=0.75 0, tie=1 0
+
+[90mstdout[2m | test/render/field/form_b.test.ts[2m > [22m[2mform B: watertight and the rate rule at every fade value (S1b)[2m > [22m[2macute: 0 enclosed paper component(s) with each fade held at 0, 0.25, 0.5, 0.75 and 1
+[22m[39m[form_b] watertight acute: natural 0, fold=0 0, fold=0.25 0, fold=0.5 0, fold=0.75 0, fold=1 0, omega=0 0, omega=0.25 0, omega=0.5 0, omega=0.75 0, omega=1 0, cap=0 0, cap=0.25 0, cap=0.5 0, cap=0.75 0, cap=1 0, tie=0 0, tie=0.25 0, tie=0.5 0, tie=0.75 0, tie=1 0
+
+[90mstdout[2m | test/render/field/form_b.test.ts[2m > [22m[2mform B: watertight and the rate rule at every fade value (S1b)[2m > [22m[2mhairpin: 0 enclosed paper component(s) with each fade held at 0, 0.25, 0.5, 0.75 and 1
+[22m[39m[form_b] watertight hairpin: natural 0, fold=0 0, fold=0.25 0, fold=0.5 0, fold=0.75 0, fold=1 0, omega=0 0, omega=0.25 0, omega=0.5 0, omega=0.75 0, omega=1 0, cap=0 0, cap=0.25 0, cap=0.5 0, cap=0.75 0, cap=1 0, tie=0 0, tie=0.25 0, tie=0.5 0, tie=0.75 0, tie=1 0
+
+[90mstdout[2m | test/render/field/form_b.test.ts[2m > [22m[2mform B: watertight and the rate rule at every fade value (S1b)[2m > [22m[2mT: the rate rule, |Δink| ≤ 3 per px, natural and with ω held at 0, 0.25, 0.5, 0.75 and 1
+[22m[39m[form_b] rate T (ink per px): natural 1.50, omega=0 1.50, omega=0.25 1.50, omega=0.5 1.50, omega=0.75 1.50, omega=1 1.50
+
+[90mstdout[2m | test/render/field/form_b.test.ts[2m > [22m[2mform B: watertight and the rate rule at every fade value (S1b)[2m > [22m[2macute: the rate rule, |Δink| ≤ 3 per px, natural and with ω held at 0, 0.25, 0.5, 0.75 and 1
+[22m[39m[form_b] rate acute (ink per px): natural 1.50, omega=0 1.50, omega=0.25 1.50, omega=0.5 1.50, omega=0.75 1.50, omega=1 1.50
+
+[90mstdout[2m | test/render/field/form_b.test.ts[2m > [22m[2mform B: watertight and the rate rule at every fade value (S1b)[2m > [22m[2mhairpin: the rate rule, |Δink| ≤ 3 per px, natural and with ω held at 0, 0.25, 0.5, 0.75 and 1
+[22m[39m[form_b] rate hairpin (ink per px): natural 1.50, omega=0 1.50, omega=0.25 1.50, omega=0.5 1.50, omega=0.75 1.50, omega=1 1.50
+
+[90mstdout[2m | test/render/field/form_b.test.ts[2m > [22m[2mform B: watertight and the rate rule at every fade value (S1b)[2m > [22m[2meye: the rate rule, |Δink| ≤ 3 per px, natural and with ω held at 0, 0.25, 0.5, 0.75 and 1
+[22m[39m[form_b] rate eye (ink per px): natural 1.50, omega=0 1.50, omega=0.25 2.30, omega=0.5 1.50, omega=0.75 1.50, omega=1 1.50
+
+[90mstdout[2m | test/render/field/form_b.test.ts[2m > [22m[2mform B: watertight and the rate rule at every fade value (S1b)[2m > [22m[2mcap: the rate rule, |Δink| ≤ 3 per px, natural and with ω held at 0, 0.25, 0.5, 0.75 and 1
+[22m[39m[form_b] rate cap (ink per px): natural 1.62, omega=0 1.62, omega=0.25 1.62, omega=0.5 1.62, omega=0.75 1.62, omega=1 1.62
+
+[90mstdout[2m | test/render/field/form_b.test.ts[2m > [22m[2mform B: watertight and the rate rule at every fade value (S1b)[2m > [22m[2mtie: the rate rule, |Δink| ≤ 3 per px, natural and with ω held at 0, 0.25, 0.5, 0.75 and 1
+[22m[39m[form_b] rate tie (ink per px): natural 1.50, omega=0 1.50, omega=0.25 1.50, omega=0.5 1.50, omega=0.75 1.50, omega=1 1.50
+
+[90mstdout[2m | test/render/field/form_b.test.ts[2m > [22m[2mform B: a crossing's reach (S1f, K1092)[2m > [22m[2man eye: the arm's L is continuous where the walk's jumps (reach_eye.ts)
+[22m[39m[form_b] eye sweep, largest |ΔL| per 0.002 of w: quad 0.0211, walk 3.2522; quad L 0.136..2.034
+
+ [32m✓[39m test/render/field/form_b.test.ts [2m([22m[2m30 tests[22m[2m)[22m[33m 14978[2mms[22m[39m
+     [33m[2m✓[22m[39m D2 + D5: a crossing slides up the END; the cap ramp and r move the ink by what the step explains [33m 432[2mms[22m[39m
+     [33m[2m✓[22m[39m D6: ω from 0 to 1 moves the ink at most in proportion [33m 411[2mms[22m[39m
+     [33m[2m✓[22m[39m every winning term lies in one of its strips [33m 329[2mms[22m[39m
+     [33m[2m✓[22m[39m eye: 1 enclosed paper component(s) with each fade held at 0, 0.25, 0.5, 0.75 and 1 [33m 946[2mms[22m[39m
+     [33m[2m✓[22m[39m T: 0 enclosed paper component(s) with each fade held at 0, 0.25, 0.5, 0.75 and 1 [33m 504[2mms[22m[39m
+     [33m[2m✓[22m[39m acute: 0 enclosed paper component(s) with each fade held at 0, 0.25, 0.5, 0.75 and 1 [33m 448[2mms[22m[39m
+     [33m[2m✓[22m[39m hairpin: 0 enclosed paper component(s) with each fade held at 0, 0.25, 0.5, 0.75 and 1 [33m 778[2mms[22m[39m
+     [33m[2m✓[22m[39m T: the rate rule, |Δink| ≤ 3 per px, natural and with ω held at 0, 0.25, 0.5, 0.75 and 1 [33m 1398[2mms[22m[39m
+     [33m[2m✓[22m[39m acute: the rate rule, |Δink| ≤ 3 per px, natural and with ω held at 0, 0.25, 0.5, 0.75 and 1 [33m 1251[2mms[22m[39m
+     [33m[2m✓[22m[39m hairpin: the rate rule, |Δink| ≤ 3 per px, natural and with ω held at 0, 0.25, 0.5, 0.75 and 1 [33m 1975[2mms[22m[39m
+     [33m[2m✓[22m[39m eye: the rate rule, |Δink| ≤ 3 per px, natural and with ω held at 0, 0.25, 0.5, 0.75 and 1 [33m 2993[2mms[22m[39m
+     [33m[2m✓[22m[39m cap: the rate rule, |Δink| ≤ 3 per px, natural and with ω held at 0, 0.25, 0.5, 0.75 and 1 [33m 1817[2mms[22m[39m
+     [33m[2m✓[22m[39m tie: the rate rule, |Δink| ≤ 3 per px, natural and with ω held at 0, 0.25, 0.5, 0.75 and 1 [33m 910[2mms[22m[39m
+     [33m[2m✓[22m[39m r is continuous in theta across 2.0 and on up to pi [33m 351[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m30 passed[39m[22m[90m (30)[39m
+[2m   Start at [22m 10:12:08
+[2m   Duration [22m 15.60s[2m (transform 295ms, setup 0ms, import 368ms, tests 14.98s, environment 0ms)[22m
+

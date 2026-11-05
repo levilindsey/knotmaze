@@ -4,7 +4,7 @@
 // fade swept across its width; the max decomposition (every winning term
 // lies in one of its strips).
 import { describe, expect, it } from "vitest";
-import { F_CAP, F_FOLD, F_TIE, FormB, OWN, T_ARC, T_FOOT } from "../../../src/render/field/form_b";
+import { F_CAP, F_FOLD, F_TIE, FormB, OWN, ROOT_BAND_REF_THETA, T_ARC, T_FOOT } from "../../../src/render/field/form_b";
 import type { FormBParams } from "../../../src/render/field/form_b";
 import { FieldModel, cornerRadius } from "../../../src/render/field/oracle";
 import type { FieldScene, SceneArm, SceneCrossing, SceneJunction, SceneLook } from "../../../src/render/field/scene";
@@ -738,5 +738,101 @@ describe("form B: a pass behind the root (S1g F1, S1i F3)", () => {
     }
     expect(worst).toBeLessThan((1 + Math.SQRT2) * step + 1e-9);
     expect(back(new FormB(behind(90, 1e-6))).L).toBeLessThan(1e-5);
+  });
+});
+
+describe("form B: the root gate's tip scaling (K1163)", () => {
+  // Three END arms from the origin at 0, theta and the middle of the reflex
+  // side; the corner between the first two arms opens theta. On straight
+  // arms V's feet sit h*cot(theta/2) from their roots, so at theta >= 3 the
+  // feet are within S1g's flat band (0.5h) while the tip-scaled band
+  // (0.5h * t(theta)/t(2.0), about 0.007h at theta = 3) leaves them clear.
+  const yScene = (theta: number): FieldScene => {
+    const third = theta + (2 * Math.PI - theta) / 2;
+    const arm = (a: number) => line(0, 0, 10 * Math.cos(a), 10 * Math.sin(a));
+    const arms: SceneArm[] = [0, 1, 2].map((chain) => ({ chain, s: 0, dir: 1, kind: "end" as const }));
+    return scene([arm(0), arm(theta), arm(third)], [junction([0, 0], arms)]);
+  };
+  const cornerAt = (fb: FormB, theta: number) => fb.corners.find((c) => Math.abs(c.theta - theta) < 1e-9);
+
+  it("at theta = 2.0 (gate699's angle) 'tip' and 'flat' are bit-identical", () => {
+    const theta = ROOT_BAND_REF_THETA;
+    const tip = new FormB(yScene(theta), { rootBandScale: "tip" });
+    const flat = new FormB(yScene(theta), { rootBandScale: "flat" });
+    expect(tip.corners.length).toBe(flat.corners.length);
+    for (let i = 0; i < tip.corners.length; i++) {
+      const a = tip.corners[i];
+      const b = flat.corners[i];
+      expect(a.theta, `corner ${i}`).toBe(b.theta);
+      expect(a.r, `corner ${i} r`).toBe(b.r);
+      expect(a.omega, `corner ${i} omega`).toBe(b.omega);
+      expect(a.qx, `corner ${i} qx`).toBe(b.qx);
+      expect(a.qy, `corner ${i} qy`).toBe(b.qy);
+      expect(a.dA, `corner ${i} dA`).toBe(b.dA);
+      expect(a.dB, `corner ${i} dB`).toBe(b.dB);
+    }
+    // The same where the gate binds: gate699's Y, chain 1's root at (-e, 0),
+    // corner 0-1 opening 2.0 with its foot inside the band.
+    const gate = (): FieldScene => {
+      const e = 0.3;
+      const pb = 2.0;
+      const pc = -2.2;
+      const pts = [line(0, 0, 10, 0), line(-e, 0, -e + 10 * Math.cos(pb), 10 * Math.sin(pb)), line(0, 0, 10 * Math.cos(pc), 10 * Math.sin(pc))];
+      return {
+        version: 1,
+        name: "gate699",
+        source: { kind: "synthetic", generator: "form_b.test", params: {} },
+        camera: { worldToCss: [10, 0, 0, -10, 100, 100], pxPerUnit: 10, dpr: 1, viewport: [200, 200] },
+        look: { halfWidth: H, band: W, cornerRoundShare: 1, cuspRadius: 3, depthAmp: 1, depthWindow: 3, paper: "#fff", ink: "#000" },
+        chains: pts.map((p, id) => ({ id, closed: false, pts: p, z: new Array(p.length / 2).fill(0) })),
+        crossings: [],
+        junctions: [{ id: "j0", c: [0, 0], arms: [0, 1, 2].map((chain) => ({ chain, s: 0, dir: 1, kind: "end" as const })), corners: [0, 1, 2].map(() => ({ style: "round" as const, pinned: false })) }],
+        deadEnds: [],
+      } as FieldScene;
+    };
+    const gTip = new FormB(gate(), { rootBandScale: "tip" });
+    const gFlat = new FormB(gate(), { rootBandScale: "flat" });
+    const ct = gTip.corners.find((c) => Math.abs(c.theta - theta) < 1e-9);
+    const cf = gFlat.corners.find((c) => Math.abs(c.theta - theta) < 1e-9);
+    expect(ct).toBeDefined();
+    expect(cf).toBeDefined();
+    expect(ct!.r).toBe(cf!.r);
+    expect(ct!.omega).toBe(cf!.omega);
+    expect(ct!.qx).toBe(cf!.qx);
+    expect(ct!.qy).toBe(cf!.qy);
+  });
+
+  it("at theta >= 3.0 'tip' gives the small band: the round is the ungated one, 'flat' shrinks it", () => {
+    for (const theta of [3.0, Math.PI - 2e-6]) {
+      const sc = yScene(theta);
+      const tip = cornerAt(new FormB(sc, { rootBandScale: "tip" }), theta);
+      const flat = cornerAt(new FormB(sc, { rootBandScale: "flat" }), theta);
+      const ungated = cornerAt(new FormB(sc, { rootBand: 0 }), theta);
+      expect(tip, `theta ${theta}`).toBeDefined();
+      expect(flat, `theta ${theta}`).toBeDefined();
+      expect(ungated, `theta ${theta}`).toBeDefined();
+      // The scaled band (about 0.007h at 3.0, under 1e-9h near pi) leaves
+      // the feet clear: r is the ungated round, finite, with no NaN from
+      // the t -> 0 limit; the flat band still clamps it to almost nothing.
+      expect(Number.isFinite(tip!.r)).toBe(true);
+      expect(tip!.r).toBe(ungated!.r);
+      expect(tip!.r).toBeGreaterThan(100 * flat!.r);
+    }
+  });
+
+  it("r is continuous in theta across 2.0 and on up to pi", () => {
+    const step = 0.002;
+    let prev = -1;
+    let worst = 0;
+    for (let theta = 1.9; theta <= Math.PI - 2e-6; theta += step) {
+      const c = cornerAt(new FormB(yScene(theta), { rootBandScale: "tip" }), theta);
+      expect(c, `theta ${theta}`).toBeDefined();
+      expect(Number.isFinite(c!.r)).toBe(true);
+      if (prev >= 0) worst = Math.max(worst, Math.abs(c!.r - prev));
+      prev = c!.r;
+    }
+    // r0 itself moves at most 0.75*sec^2(theta/4)... the round's own slope
+    // over this range is under 0.002 per step; a gate pop would step by O(r).
+    expect(worst).toBeLessThan(0.01);
   });
 });
