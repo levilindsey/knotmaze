@@ -1983,14 +1983,13 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K1157** · K1040 label pass, a lever for S5's live integration: x,y from K8's SAMP, at most a quarter of the
   moving upload (0.3 of the Pixel's 1.3 ms; needs both tent shaders rewritten and a vertex-to-sample map). S3f2
   dropped one texture: the bytes cost, not the calls (`docs/design/K1040_s3f2_levers.md`).
-- **K1185** · V-pinned rounds, if K1179's one-rule outline is ever revisited: S1e's remaining failure is the
-  probe point on a curved arm (walking the edge at r cot(theta/2) leaves the medial axis), so a successor needs
-  a new rule, a medial correction to q_k or feet placed by centreline arc; its cost is measurable only in a
-  rebuild that walks the renderer's sampled outlines (`docs/design/K1179_s1e.md`, What comes next).
+- **K1185** · V-pinned rounds, if K1179's outline is revisited: S1e's failure is the probe point on a curved
+  arm, off the medial axis, so a successor needs a new rule (a medial correction to q_k, or feet by centreline
+  arc), costed only in a rebuild (`docs/design/K1179_s1e.md`, What comes next).
 
 ## Done
 
-- **K1179** · Thread geometry (Levi 11-04: rethink how thread bodies, junction rounds and gaps are built, maybe as a skin on the thread centres). Done in b6174b00 (2026-11-04).
+- **K1179** · Thread geometry (Levi 11-04: rethink how thread bodies, junction rounds and gaps are built, maybe as a skin on the thread centres): reviewed (`docs/design/K1179_geometry_review.md`), no simulated skin; its one-rule outline failed the spike five times (S1-S1e, `docs/design/K1179_s1e.md`), so no rebuild. Done in b6174b00 (2026-11-04).
 - **K1178** · Muse batch 16 (runs A-L, `docs/design/K1178_muse_batch16.md`), each through the chain's gate; the open leftovers stay on their own items (K484, K648, K1179). Done in 20453e7c (2026-11-04).
 - **K178** · K79, K99 and K104 private-cache wrappers load the config with loadConfigFromFile, as K1139's tracked copy does. Done in 1a02e2b8 (2026-11-04).
 - **K999** · probes.md's paths narrowed to the probe scripts; K863's trace and data reads no longer carry it. Done in 2b302a3f (2026-11-04).
