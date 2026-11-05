@@ -527,11 +527,11 @@ Next free ID: K1206.
 - **K1204** · Muse batch 21 (after K1199's batch 20): Run A drafts the brief from
   `docs/design/K1204_muse_batch21_run_a.md` (committed after 20G); Claude reviews the draft and queues runs B
   to G (ports 5820-5879)
-  - owner: the chain in `.claude/probes/K1053/` (queue.txt, chain.log): batch 21's Run A, a fresh Muse session, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
-  - branch: mainline; last commit: `f61da7cc`
-  - evidence: `docs/design/K1204_muse_batch21_run_a.md`; the chain in `.claude/probes/K1053/` (queue.txt, chain.log)
-  - next: Claude reviews the draft and queues runs B to G
-  - brief: `docs/design/K1204_muse_batch21_run_a.md`
+  - owner: the chain in `.claude/probes/K1053/` (queue.txt, chain.log): batch 21's runs B to G, fresh Muse sessions, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
+  - branch: mainline; last commit: `854823fa`
+  - evidence: `docs/design/K1204_muse_batch21.md` (runs B to G), `docs/design/K1204_muse_batch21_run_a.md`; the chain in `.claude/probes/K1053/` (queue.txt, chain.log)
+  - next: runs B to G one at a time; Claude judges each run's sheet or table and files its findings
+  - brief: `docs/design/K1204_muse_batch21.md`
 
 ## Next, in order
 
