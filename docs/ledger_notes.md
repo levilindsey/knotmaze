@@ -3605,6 +3605,17 @@ The K1091 planner's ledger-hygiene list (2026-11-02), unverified by the coordina
 ## K1139
 
 Choice pulses across junctions. Levi 2026-11-03: "Pulse reach is good. BUT, we have to make pulses animate correctly across junctions. This will be important to get right, so take some time to properly plan what this should look like, how to verify it, and how to implement it." Stage 1 (Claude Opus, planning only): a design doc with the look, the checks and the implementation plan, plus pictures of today's behavior. Pointers: `docs/design/K299_choice_pulse_bug.md`, K175, K189, `src/render/junction_field.ts`, `junction_routes.ts`. Cover a route pulse (one path through several junctions) for K1140. Launch when the S3c agent ends (pacing: 19% of the week used at day 1).
+
+S3b fix (2026-11-04, a Claude agent on `worktree-agent-abc94fe39cb25940c`, eb615c2f; stopped 12:30 with no passing
+rule; record: the Handoff of `docs/design/K1139_s3b_fix.md` on that branch). Master's S3b (df30a7f3) seams: (a) tau
+jumps within one band where the nearest point flips between legs on a turn's inner side (most of cross's), (b) fork
+siblings alternating on their shared arrival arm (cross e150), (c) shared/drawing band switches (x4 ji 125, 149); its
+dark wedge is bare quiet base between two drawing bands. fix1 (d5fb1f62: two-leg feet, a second candidate) made about
+4x the seams, radial spokes from the far leg's foot, and k320 40,147 against the 37,100 ceiling: blend only
+quantities continuous wherever their weight is above 0. Residuals the next stage carries: the band-switch seams at x4
+ji 125 and 149; the sibling stripes on cross e150; x4 ji 28's GPU wedges 2.7x the CPU twin's (cover strips in the
+footprint mask?, not checked); for S4, cycle arms e79 (node_386) and e134 (node_378) get no band (pulseTree declares
+bands only to tree children).
 ## K1162
 
 Found by the six ask-card agents on 2026-11-03 (their cards are in `docs/asks/`); not re-checked by Claude:

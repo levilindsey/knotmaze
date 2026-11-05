@@ -509,26 +509,27 @@ Next free ID: K1184.
 - **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate correctly across
   junctions"). S1, S2 done (a4dc218a, 16246c90). Answers: the light splits at a fork (A), runs toward you behind
   you, straight through your junction with no dim moment. S3a-S6 next. Full text: `docs/ledger_notes.md`.
-  - owner: agent `abc94fe39cb25940c` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (opus, started 2026-11-04 10:47, 2 h cap ~12:47)
-  - branch: `worktree-agent-abc94fe39cb25940c`, worktree `.claude/worktrees/agent-abc94fe39cb25940c`; last commit: `98595d3a`
-  - evidence: .claude/probes/K1139/ (the scripts and the doc's pictures tracked; other outputs untracked, S2's record in out/s2/; the doc's appendix lists the commands); Claude's seam crops out/doc/s3b_seams_cross.png, s3b_seams_x4.png
-  - next: the S3b fix (seams, dark wedges, P8 points, e79), then S4 with the Pixel batch (.claude/probes/K1139/out/s3b/pixel_batch_plan.md)
-  - brief: docs/design/K1139_s3b_fix.md (on the agent's branch until it merges)
+  - owner: nobody since 2026-11-04 12:30 (the S3b-fix agent stopped before its 2 h cap with no passing rule; Claude briefs the next stage)
+  - branch: `worktree-agent-abc94fe39cb25940c`, worktree `.claude/worktrees/agent-abc94fe39cb25940c` (S3b plus an inert diag hook: not for merging as is); last commit: `eb615c2f`
+  - evidence: .claude/probes/K1139/ on the branch (diag_an.mjs, wedge.mjs, taujump.mjs, imgdiff.mjs, run_locked.ps1, batch_fix_*.txt); out/doc/s3b_fix1_cross_panels.png and s3b_fix1_nowf_cross_t5.png at the worktree root; diagnosis and residuals in `docs/ledger_notes.md`
+  - next: Claude looks at the two sheets (do 6-30/255 steps read as seams? that calibrates T), then a new stage from the Handoff's Resume: a tau rule continuous by construction, section 5's checks, k320 (fix1 40,147 vs 37,100), section 6's sheets; the __k1139diag hook goes before any merge
+  - brief: docs/design/K1139_s3b_fix.md on the agent's branch (Handoff and Resume at the end)
+  - env: the brief's section 7 (the node_modules junction), then Resume step 2 (ports 5620-5639)
 - **K1178** · Muse batch 16: run A drafts the brief (`docs/design/K1178_muse_batch16_run_a.md`), runs B-I, K and L
   from the draft (Claude added H and I after B, K after I, L after K), after 16J.
-  - owner: nobody since 2026-11-04 12:02 (16E done; runs L, F and G queued as Muse chain runs 16L, 16F and 16G, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `1a02e2b8`
+  - owner: nobody since 2026-11-04 12:30 (16L done; runs F and G queued as Muse chain runs 16F and 16G, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
+  - branch: mainline; last commit: `8df07b54`
   - evidence: `docs/design/K1178_muse_batch16_run_a.md`; the chain in `.claude/probes/K1053/` (queue.txt, chain.log)
-  - next: Run L done; next Run F (K1260 batch-2 closeout review)
+  - next: Run L done (8df07b54, fail); next Run F (K484, the sheet's history entries), then Run G (K648)
   - brief: `docs/design/K1178_muse_batch16.md`
 - **K1179** · Thread geometry (Levi 11-04: rethink how thread bodies, junction rounds and gaps are built, maybe
   as a skin on the thread centres). Review (`docs/design/K1179_geometry_review.md`): keep threads and physics,
-  one per-pixel outline rule for both looks, no simulated skin. S1: K1178 Run I (fail); S1b: Run K (fail); S1c: Run L.
-  - owner: nobody since 2026-11-04 12:02 (S1c queued as Muse chain run 16L, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
+  one per-pixel outline rule for both looks, no simulated skin. S1, S1b, S1c: K1178 Runs I, K, L (all fail).
+  - owner: nobody since 2026-11-04 12:30 (S1c done in Muse batch 16 run L; Claude reviews it)
   - branch: mainline; last commit: `8df07b54`
-  - evidence: docs/design/K1179_geometry_review.md; docs/design/K1179_spike.md; docs/design/K1179_s1b.md; .claude/probes/K1179/
-  - next: K1179 S1c done (8df07b54): exact/closed on master's rule, verdict fail (branch definition + cost); rethink must answer, S2 not next. S1c: 1v fails on master's rule (63 master, 91 closed), criterion 2 passes exactly, cost p95 23-59 ms vs 0.75 ms. Rethink: (1) margin crease, (2) sheet-independent branch definition, (3) per-pixel distance question (review S2 item 2). Record: docs/design/K1179_s1c.md
-  - brief: `docs/design/K1178_muse_batch16.md` (Run L)
+  - evidence: docs/design/K1179_geometry_review.md; docs/design/K1179_spike.md; docs/design/K1179_s1b.md; docs/design/K1179_s1c.md; .claude/probes/K1179/
+  - next: Claude reviews S1c (fail, the stop case) and writes what a rethink must answer, then Levi picks the direction; S2 (the phone GPU check) is not next
+  - brief: `docs/design/K1179_s1c.md` (the verdict; the review's sections 6-7)
 
 ## Next, in order
 

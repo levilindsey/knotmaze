@@ -243,10 +243,11 @@ for a flow-on retrace).
   caught|escape|indicator[:phone] [seeds]` (real taps; EXTRA adds link
   keys) and `rt_page.mjs`. Probe links: `?<seed>.J&am=instant&clk=realtime`.
   GOTCHA: since K122 vite.config.ts imports the extensionless
-  `notices/vite_plugin`, so the older private-cache wrappers (K19-K20,
-  K79, K99), which import() the config natively, fail with
-  ERR_MODULE_NOT_FOUND; K80's wrapper loads it through vite's
-  `loadConfigFromFile` instead. The turn-aligned minotaur (K80 turns
+  `notices/vite_plugin`, which a native import() cannot resolve, so
+  every private-cache wrapper (K19-K20, K79, K99, K104, K1139, and
+  K80's) loads the config through vite's `loadConfigFromFile` (K178,
+  1a02e2b8); a wrapper that import()s the config natively fails with
+  ERR_MODULE_NOT_FOUND. The turn-aligned minotaur (K80 turns
   stage 1, 2026-10-14): `.claude/probes/K80/turns/` holds `compare.ts`
   (the module against the research harness `sim.ts`, trace by trace;
   run with `node scripts/run_node.mjs <that folder>\compare.ts` (K1057: no config - the runner reads none; the folder's vite.node.config.mjs only set the private cache, log level and noDiscovery now baked into it), output compare.md) and
