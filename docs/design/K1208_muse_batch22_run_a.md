@@ -44,7 +44,16 @@ What batch 21 left (each run's findings are in its item's notes in
   switch off and 958-1479 px with it on
   (`.claude/probes/K1203/claude21d/posctl.mjs`), so the GPU applies the
   window. K1207 makes it the only path.
-- 21E: (Claude fills this in after judging 21E.)
+- 21E: K1186's layer-vote A/B behind a probe-only `voteOverride`
+  (080d4b49). Claude's judgment: no hold-and-fade, and K1186 is
+  closed. All 34 of Run E's forced votes (18 real flips and 16 arm
+  order rotations, which also account for every near jump) drew 0 px
+  (max 0) at their own captured states, and so did its positive
+  control, whose fan geometry did move between the layers: both fan
+  layers draw above the ribbons with only an empty container between
+  them (the TWO-LAYER JOINERY comment in
+  `src/render/ribbon/joinery.ts`), so a vote only reorders fans.
+  K1209 retires the vote.
 - 21F: (Claude fills this in after judging 21F.)
 - 21G: (Claude fills this in after judging 21G.)
 
@@ -89,7 +98,9 @@ that fit:
      `test/render/k320_slim.test.ts`'s budgets come down by what the
      run removes, measured, with the K307 cold compile as batch 21's
      Run C states it.
-   - K1186's next step, by Claude's judgment of 21E (K1186's notes).
+   - K1209: retire the fillet layer vote and its top layer (K1186's
+     notes, Claude's judgment of 21E). A pin may move only where fans
+     overlap; each one that moves is re-frozen and named in the commit.
    - K1201's next step, by Claude's judgment of 21F (K1201's notes).
      Fix (b) is a candidate only where 21F's census found play meeting
      the step.

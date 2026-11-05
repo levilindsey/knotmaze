@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1209.
+Next free ID: K1210.
 
 ## Waiting on Levi
 
@@ -525,12 +525,12 @@ Next free ID: K1209.
   - brief: the plan `docs/design/K1139_pulse_junctions.md` section 5 (S6); S5 was Muse batch 20's Run B (`docs/design/K1199_muse_batch20.md`)
   - env: the passes' builds first and never while Muse runs: `scripts/preview.ps1 -Ref <sha> -Root <out>\builds -BuildOnly` for each sha (`pixel_passes.ps1` stops before the phone lock when one is missing); probe server `npx vite --config .claude/probes/K1139/vite.private-cache.config.ts --port 5620 --strictPort --host 127.0.0.1` from a worktree (ports 5620-5639); GPU probes through `.claude/probes/K1139/run_locked.ps1 -Batch`
 - **K1204** · Muse batch 21 (after K1199's batch 20): runs B to G from `docs/design/K1204_muse_batch21.md`
-  (Run A's draft, review 854823fa), one at a time through the chain, ports 5820-5879; B done (8b7a2b4a,
-  K1097's S3f5), C judged (5e0d5914: switch stays off, K1202), D judged (a0f1d634: switch goes on, K1203)
+  (review 854823fa), one at a time through the chain, ports 5820-5879; B done (8b7a2b4a, S3f5); judged:
+  C 5e0d5914 off (K1202), D a0f1d634 on (K1203), E 080d4b49 closed (K1186)
   - owner: the chain in `.claude/probes/K1053/` (queue.txt, chain.log): batch 21's runs B to G, fresh Muse sessions, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
   - branch: mainline; last commit: `080d4b49`
   - evidence: `docs/design/K1204_muse_batch21.md` (runs B to G), `docs/design/K1204_muse_batch21_run_a.md`; the chain in `.claude/probes/K1053/` (queue.txt, chain.log)
-  - next: Run E done; Claude reviews it, Run F next
+  - next: Run E judged (080d4b49: a flip draws 0 px, closed, K1186); Run F (K1201) next, then G, one at a time through the chain; Claude judges each under a hold, fills its slot in K1208's Run A brief and files its findings
   - brief: `docs/design/K1204_muse_batch21.md`
 - **K1208** · Muse batch 22 (after K1204's batch 21): Run A drafts its brief from
   `docs/design/K1208_muse_batch22_run_a.md` after 21G, through the chain (queued as 22A); Claude reviews the
@@ -773,15 +773,15 @@ Every other item below waits on the trigger it names.
 - **K1180** · Form B: let a round's feet run past an arm's root onto the neighbouring arm, so no null band is
   left there (row 15's class: j124, r 1.967h, 0.274h after K1163's softer gate, ab7cad9a). K1179's spike ended
   with no rebuild, so this goes ahead on form B (review section 4).
-- **K1186** · Fill look: hold the fillet layer vote while the knot moves, fading on change (K1179 review 5c).
-  20D's crops (`.claude/probes/K1186/out20d/`) carry 140 ms of drag each; armReach binds, it can't jump.
-  Next: same-state A/B of each vote flip's own ink (probe-only override); Claude judges. Notes: ledger_notes.
 - **K1196** · Two-ended pulses (K1139 S4) on the desktop, 20F (345a189f, `.claude/probes/K1196/out/`): frame
   p50 at rest 7.50 (cyc e210), 7.82 (loop e102), start head 7.07; in play 7.25, 7.22, 6.95 (spread 0.2, 0.1).
   Other stands, so not S4's own cost: next, those stands on S4's base and head (ABBA), the Pixel if it costs
 - **K1207** · In Muse batch 22 (K1208): remove Run C's switch (`setPulseCoverRamp`, 5e0d5914, off by K1202)
   and make Run D's end window (`setPulseBandEndWindow`, a0f1d634, on by K1203) the only path, re-freezing
   the pins it moves; it also says whether 21D's twin point is a fan pixel (K1203's notes)
+- **K1209** · Retire the fillet layer vote (21E: a flip only reorders fans, 0 px; K1186): one fan layer, once
+  joinery.ts's "kept for the junction-shader merge" is checked. Removes the vote loop, layerFor, the fm
+  routing, filletTopMesh, `voteOverride` and its test; a moved pin is re-frozen and named.
 
 ## Residuals (known, not fixed)
 
@@ -2022,6 +2022,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1186** · Fill look: no hold-and-fade, a layer-vote flip draws 0 px (21E). Done in 080d4b49 (2026-11-05).
 - **K1206** · Batch 22's Run A brief (`docs/design/K1208_muse_batch22_run_a.md`) has its draft check every path it cites, quote each number from the file that holds it, and list the paths in its report. Done in 76f3dbc6 (2026-11-05).
 - **K1203** · A pulse band ignored its child arm's end window: Run D's fix (a0f1d634, behind a switch) judged on by a GPU positive control, its `table_cyc.mjs` copy reads BAND EXTENT past the arm (notes); K1207 makes the window the only path. Done in a0f1d634 (2026-11-05).
 - **K1202** · cyc e210's kymograph step at the other band's cover edge: Muse's wider ramp (5e0d5914) changed nothing visible at 1x and stays off; the step is the two fields' mismatch, not the edge (K1190's fronts; notes). Done in 5e0d5914 (2026-11-05).
