@@ -527,9 +527,9 @@ Next free ID: K1204.
 - **K1199** · Muse batch 20 (`docs/design/K1199_muse_batch20.md`): K1139 S5 with K1182's removal (run B),
   K1202 (C), K1186's crops (D), K1201 (E), K1196's timing (F) and K1198's Plc1m and ij (G), one at a time
   - owner: nobody since 2026-11-05 00:07 (the chain held before 20D for the coordinator's commits and builds; runs 20D to 20G queued, one at a time, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `5f9c3207`
+  - branch: mainline; last commit: `75fddf77`
   - evidence: docs/design/K1199_muse_batch20_run_a.md; the chain in .claude/probes/K1053/ (queue.txt, chain.log)
-  - next: Run C reviewed (K1202 attributed, its fix a later stage); Run D (K1186's flips, six rows; Claude judges the pops), then E to G
+  - next: Run D done; Claude reviews it and judges the sheet, Run E next
   - brief: `docs/design/K1199_muse_batch20.md`
 
 ## Next, in order
