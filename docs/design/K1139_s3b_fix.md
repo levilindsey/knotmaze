@@ -351,14 +351,34 @@ through run_locked.ps1 like fix1.
   whitening as a star of white spokes out of the joint, in the GPU and
   the CPU twin alike, where S3b shows one bright wedge with a few short
   seam lines. It reads worse than S3b, not better.
-- Inferred from the sheet, not measured: the rays are the FAR feet's
-  own jumps. A nearest point on a polyline jumps on the inner side of
-  every vertex, by about 2 d tan(theta_i / 2), so by more the farther
-  the pixel is. S3b used only the nearest foot of all, whose one big
-  jump is the leg flip (class a). fix1 also reads the far leg's foot
-  (wf) and the second band's (w2), at distances where their vertex
-  jumps are large, and mixes them in at weights up to 0.5 over wide
-  areas (BAND_SOFT 3 * d): each far vertex draws a ray.
+- Inferred from the sheet: the rays are the FAR feet's own jumps. A
+  nearest point on a polyline jumps on the inner side of every vertex,
+  by about 2 d tan(theta_i / 2), so by more the farther the pixel is.
+  S3b used only the nearest foot of all, whose one big jump is the leg
+  flip (class a). fix1 also reads the far leg's foot (wf) and the
+  second band's (w2), at distances where their vertex jumps are large,
+  and mixes them in at weights up to 0.5 over wide areas (BAND_SOFT 3 *
+  d): each far vertex draws a ray.
+- Tested for wf (12:24-12:28): fix1's GLSL with `wf = 0.0`, the twin
+  left fix1's (`batch_fix_nowf.txt`; dbg 5 changed in 3540-4436 px a
+  frame against fix1). seamG all phases, S3b / fix1 / nowf:
+
+  | record | S3b | fix1 | nowf |
+  |---|---|---|---|
+  | cross ji 33 | 908 | 3896 | 1971 (19, 2, 2, 91, 670, 871, 160, 156) |
+  | x4 ji 28 | 1929 | 6213 | 2487 |
+  | x4 ji 125 | 439 | 1771 | 439 |
+  | x4 ji 147 | 489 | 5128 | 623 |
+  | x4 ji 149 | 4802 | 11626 | 4802 |
+
+  The far leg's foot made all of fix1's added seams at the
+  shared/drawing records (ji 125 and 149 read S3b's counts and worst
+  steps exactly), about 97% of the excess at ji 147, 87% at ji 28 and
+  64% at cross. `out/doc/s3b_fix1_nowf_cross_t5.png` (rows S3b, fix1,
+  nowf at cross t5, same panels; nowf's CPU panel is fix1's twin):
+  nowf keeps fewer, fainter spokes. The rest of the excess (cross 1063
+  px, ji 28 558) is the second candidate's blend, w2 (inferred: bt was
+  ruled out above, w2's own term was not run).
 - So the next rule may blend only quantities that are continuous where
   their weight is above 0. A foot on a sampled polyline is not. Two
   ways: an analytic band (each leg a line plus a circular arc for the
@@ -386,8 +406,10 @@ through run_locked.ps1 like fix1.
    (and `x4`) for the seams, `node wedge.mjs <dump>\cross` (and `x4`)
    for the wedges, `node imgdiff.mjs <dumpA> <dumpB>` for a same-stand
    frame diff. The S3b reference is `batch_fix_diag2.txt`'s dump; all
-   four dumps (diag2, fix1, nobt, floor) sat in the session scratchpad,
-   which does not outlive it, so re-dump S3b from its batch file.
+   five dumps (diag2, fix1, nobt, floor, nowf) sat in the session
+   scratchpad, which does not outlive it, and every batch file names an
+   absolute out dir there: re-dump S3b from a copy of its batch file
+   with an out dir of your own.
 5. Then the rest of section 5 (P8, P1-P5, P10, the same-state A/B
    against master), section 6's sheets, k320 (fix1 measured 40,147
    against the 37,100 ceiling: fit or raise to a measured length with
