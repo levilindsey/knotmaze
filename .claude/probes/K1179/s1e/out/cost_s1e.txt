@@ -1,0 +1,17 @@
+def: rule(i) median 27.498 ms over 361 corners; per-corner median 69.9 us; master build median 31.0 ms
+fat: rule(i) median 0.001 ms over 0 corners; per-corner median 0.0 us; master build median 3.7 ms
+ring: rule(i) median 3.492 ms over 45 corners; per-corner median 57.1 us; master build median 6.9 ms
+user_tw42.lightpaper: rule(i) median 10.661 ms over 150 corners; per-corner median 61.1 us; master build median 13.1 ms
+g41_def_tw42: rule(i) median 23.829 ms over 385 corners; per-corner median 50.3 us; master build median 31.1 ms
+g41_def_tw64: rule(i) median 22.146 ms over 302 corners; per-corner median 52.4 us; master build median 23.4 ms
+muse_hash: rule(i) median 14.320 ms over 192 corners; per-corner median 27.9 us; master build median 17.0 ms
+muse_default_tw: rule(i) median 24.666 ms over 320 corners; per-corner median 66.6 us; master build median 33.5 ms
+g41_ring_tw42: rule(i) median 3.330 ms over 51 corners; per-corner median 52.0 us; master build median 4.9 ms
+g41_ring_tw64: rule(i) median 2.895 ms over 41 corners; per-corner median 53.2 us; master build median 3.9 ms
+g41_user_tw42: rule(i) median 9.871 ms over 150 corners; per-corner median 52.3 us; master build median 12.6 ms
+g41_user_tw64: rule(i) median 8.987 ms over 122 corners; per-corner median 48.8 us; master build median 12.0 ms
+def_drag: 41 frames, (i) p50 25.850 p95 38.081 max 41.370 ms (gate 0.75); (ii) p95 25.956 ms; no-margin p95 25.825 ms; parts(i) V+theta 153.9 edges 515.8 nodeFeet 212.5 margin 138.3 steep 10.5 cap 10.2 root 16.2 round 16.5 ms total; master build p95 62.8 ms
+def_flow: 41 frames, (i) p50 25.472 p95 32.274 max 36.896 ms (gate 0.75); (ii) p95 27.060 ms; no-margin p95 25.624 ms; parts(i) V+theta 145.9 edges 501.6 nodeFeet 192.0 margin 130.8 steep 9.5 cap 9.9 root 15.1 round 15.4 ms total; master build p95 51.8 ms
+muse_drag: 41 frames, (i) p50 16.029 p95 19.950 max 25.733 ms (gate 0.75); (ii) p95 14.385 ms; no-margin p95 17.546 ms; parts(i) V+theta 101.1 edges 337.4 nodeFeet 109.2 margin 47.4 steep 4.8 cap 5.0 root 7.4 round 8.3 ms total; master build p95 35.2 ms
+muse_flow: 41 frames, (i) p50 15.025 p95 19.251 max 21.283 ms (gate 0.75); (ii) p95 20.516 ms; no-margin p95 19.139 ms; parts(i) V+theta 99.1 edges 328.4 nodeFeet 102.0 margin 47.7 steep 5.0 cap 4.9 root 7.2 round 7.2 ms total; master build p95 32.4 ms
+per-corner (12 scenes, n=2488): median 54.8 us p95 122.2 us p99 316.9 us max 843.9 us; production V vs master max 5.800484271168851e-13h

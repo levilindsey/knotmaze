@@ -1,0 +1,218 @@
+{
+ "scenes": [
+  {
+   "scene": "def",
+   "corners": 361,
+   "medianMs": 27.498,
+   "perCornerMedianUs": 69.9,
+   "masterBuildMedianMs": 31
+  },
+  {
+   "scene": "fat",
+   "corners": 0,
+   "medianMs": 0.001,
+   "perCornerMedianUs": 0,
+   "masterBuildMedianMs": 3.7
+  },
+  {
+   "scene": "ring",
+   "corners": 45,
+   "medianMs": 3.492,
+   "perCornerMedianUs": 57.1,
+   "masterBuildMedianMs": 6.9
+  },
+  {
+   "scene": "user_tw42.lightpaper",
+   "corners": 150,
+   "medianMs": 10.661,
+   "perCornerMedianUs": 61.1,
+   "masterBuildMedianMs": 13.1
+  },
+  {
+   "scene": "g41_def_tw42",
+   "corners": 385,
+   "medianMs": 23.829,
+   "perCornerMedianUs": 50.3,
+   "masterBuildMedianMs": 31.1
+  },
+  {
+   "scene": "g41_def_tw64",
+   "corners": 302,
+   "medianMs": 22.146,
+   "perCornerMedianUs": 52.4,
+   "masterBuildMedianMs": 23.4
+  },
+  {
+   "scene": "muse_hash",
+   "corners": 192,
+   "medianMs": 14.32,
+   "perCornerMedianUs": 27.9,
+   "masterBuildMedianMs": 17
+  },
+  {
+   "scene": "muse_default_tw",
+   "corners": 320,
+   "medianMs": 24.666,
+   "perCornerMedianUs": 66.6,
+   "masterBuildMedianMs": 33.5
+  },
+  {
+   "scene": "g41_ring_tw42",
+   "corners": 51,
+   "medianMs": 3.33,
+   "perCornerMedianUs": 52,
+   "masterBuildMedianMs": 4.9
+  },
+  {
+   "scene": "g41_ring_tw64",
+   "corners": 41,
+   "medianMs": 2.895,
+   "perCornerMedianUs": 53.2,
+   "masterBuildMedianMs": 3.9
+  },
+  {
+   "scene": "g41_user_tw42",
+   "corners": 150,
+   "medianMs": 9.871,
+   "perCornerMedianUs": 52.3,
+   "masterBuildMedianMs": 12.6
+  },
+  {
+   "scene": "g41_user_tw64",
+   "corners": 122,
+   "medianMs": 8.987,
+   "perCornerMedianUs": 48.8,
+   "masterBuildMedianMs": 12
+  }
+ ],
+ "recordings": [
+  {
+   "recording": "def_drag",
+   "frames": 41,
+   "k32P50Ms": 25.85,
+   "k32P95Ms": 38.081,
+   "k32MaxMs": 41.37,
+   "k8P95Ms": 25.956,
+   "noMarginP95Ms": 25.825,
+   "partsK32Ms": {
+    "vTheta": 153.9,
+    "edgeBuild": 515.8,
+    "nodeFeet": 212.5,
+    "gateMargin": 138.3,
+    "gateSteep": 10.5,
+    "gateCap": 10.2,
+    "gateRoot": 16.2,
+    "round": 16.5
+   },
+   "partsK8Ms": {
+    "vTheta": 145.2,
+    "edgeBuild": 494.5,
+    "nodeFeet": 63.4,
+    "gateMargin": 42.9,
+    "gateSteep": 3.6,
+    "gateCap": 4,
+    "gateRoot": 5.3,
+    "round": 14.3
+   },
+   "masterBuildP95Ms": 62.8
+  },
+  {
+   "recording": "def_flow",
+   "frames": 41,
+   "k32P50Ms": 25.472,
+   "k32P95Ms": 32.274,
+   "k32MaxMs": 36.896,
+   "k8P95Ms": 27.06,
+   "noMarginP95Ms": 25.624,
+   "partsK32Ms": {
+    "vTheta": 145.9,
+    "edgeBuild": 501.6,
+    "nodeFeet": 192,
+    "gateMargin": 130.8,
+    "gateSteep": 9.5,
+    "gateCap": 9.9,
+    "gateRoot": 15.1,
+    "round": 15.4
+   },
+   "partsK8Ms": {
+    "vTheta": 142.4,
+    "edgeBuild": 509.6,
+    "nodeFeet": 63.1,
+    "gateMargin": 42.9,
+    "gateSteep": 3.8,
+    "gateCap": 4.3,
+    "gateRoot": 5.7,
+    "round": 13.4
+   },
+   "masterBuildP95Ms": 51.8
+  },
+  {
+   "recording": "muse_drag",
+   "frames": 41,
+   "k32P50Ms": 16.029,
+   "k32P95Ms": 19.95,
+   "k32MaxMs": 25.733,
+   "k8P95Ms": 14.385,
+   "noMarginP95Ms": 17.546,
+   "partsK32Ms": {
+    "vTheta": 101.1,
+    "edgeBuild": 337.4,
+    "nodeFeet": 109.2,
+    "gateMargin": 47.4,
+    "gateSteep": 4.8,
+    "gateCap": 5,
+    "gateRoot": 7.4,
+    "round": 8.3
+   },
+   "partsK8Ms": {
+    "vTheta": 98.8,
+    "edgeBuild": 324.4,
+    "nodeFeet": 33.1,
+    "gateMargin": 15.9,
+    "gateSteep": 1.8,
+    "gateCap": 2,
+    "gateRoot": 2.9,
+    "round": 6.3
+   },
+   "masterBuildP95Ms": 35.2
+  },
+  {
+   "recording": "muse_flow",
+   "frames": 41,
+   "k32P50Ms": 15.025,
+   "k32P95Ms": 19.251,
+   "k32MaxMs": 21.283,
+   "k8P95Ms": 20.516,
+   "noMarginP95Ms": 19.139,
+   "partsK32Ms": {
+    "vTheta": 99.1,
+    "edgeBuild": 328.4,
+    "nodeFeet": 102,
+    "gateMargin": 47.7,
+    "gateSteep": 5,
+    "gateCap": 4.9,
+    "gateRoot": 7.2,
+    "round": 7.2
+   },
+   "partsK8Ms": {
+    "vTheta": 98.5,
+    "edgeBuild": 340.2,
+    "nodeFeet": 32.9,
+    "gateMargin": 16.7,
+    "gateSteep": 1.8,
+    "gateCap": 2.1,
+    "gateRoot": 2.7,
+    "round": 6.5
+   },
+   "masterBuildP95Ms": 32.4
+  }
+ ],
+ "perCornerDist": {
+  "n": 2488,
+  "medianUs": 54.8,
+  "p95Us": 122.2,
+  "p99Us": 316.9,
+  "maxUs": 843.9,
+  "maxDVh": 5.800484271168851e-13
+ }
+}

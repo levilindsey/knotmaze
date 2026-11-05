@@ -1,0 +1,13 @@
+def: corners 361; master 1v raw/vis 11/1 feet 0; k32 raw/vis 1/0 feet 0 small 1 concave 0; k8 raw/vis 0/0 feet 0 small 1 concave 0
+fat: corners 0; master 1v raw/vis 0/0 feet 0; k32 raw/vis 0/0 feet 0 small 0 concave 0; k8 raw/vis 0/0 feet 0 small 0 concave 0
+ring: corners 45; master 1v raw/vis 1/0 feet 0; k32 raw/vis 0/0 feet 0 small 0 concave 0; k8 raw/vis 0/0 feet 0 small 0 concave 0
+user_tw42.lightpaper: corners 150; master 1v raw/vis 4/0 feet 0; k32 raw/vis 0/0 feet 0 small 0 concave 0; k8 raw/vis 0/0 feet 0 small 0 concave 0
+g41_def_tw42: corners 385; master 1v raw/vis 7/0 feet 0; k32 raw/vis 0/0 feet 0 small 0 concave 0; k8 raw/vis 0/0 feet 0 small 0 concave 0
+g41_def_tw64: corners 302; master 1v raw/vis 8/0 feet 0; k32 raw/vis 0/0 feet 0 small 1 concave 0; k8 raw/vis 0/0 feet 0 small 1 concave 0
+muse_hash: corners 192; master 1v raw/vis 4/2 feet 0; k32 raw/vis 0/0 feet 0 small 5 concave 0; k8 raw/vis 1/1 feet 0 small 5 concave 0
+muse_default_tw: corners 320; master 1v raw/vis 8/1 feet 0; k32 raw/vis 0/0 feet 0 small 1 concave 0; k8 raw/vis 0/0 feet 0 small 2 concave 0
+g41_ring_tw42: corners 51; master 1v raw/vis 4/0 feet 0; k32 raw/vis 0/0 feet 0 small 0 concave 0; k8 raw/vis 0/0 feet 0 small 0 concave 0
+g41_ring_tw64: corners 41; master 1v raw/vis 3/2 feet 0; k32 raw/vis 0/0 feet 0 small 0 concave 0; k8 raw/vis 1/0 feet 0 small 0 concave 0
+g41_user_tw42: corners 150; master 1v raw/vis 2/0 feet 0; k32 raw/vis 0/0 feet 0 small 0 concave 0; k8 raw/vis 0/0 feet 0 small 0 concave 0
+g41_user_tw64: corners 122; master 1v raw/vis 11/4 feet 0; k32 raw/vis 0/0 feet 0 small 1 concave 0; k8 raw/vis 0/0 feet 0 small 1 concave 0
+TOTALS master {"fRaw":63,"fVis":10,"feetFail":0,"small":16,"concave":0} k32 {"fRaw":1,"fVis":0,"feetFail":0,"small":9,"concave":0} k8 {"fRaw":2,"fVis":1,"feetFail":0,"small":10,"concave":0}; classes {"master":{"c":{"raw":62,"vis":9},"d":{"raw":1,"vis":1}},"k32":{"s":{"raw":1,"vis":0}},"k8":{"d":{"raw":1,"vis":1},"s":{"raw":1,"vis":0}}}; fallback {"k32":20,"k8":20,"nullCount":{"k32":1,"k8":5},"total":2119}; smallCensus {"k32":{"candidates":392,"inSlack":381,"beyond":0,"inRoot":12,"outside":9,"outsideLive":9,"outsideNull":0},"k8":{"candidates":402,"inSlack":390,"beyond":0,"inRoot":12,"outside":10,"outsideLive":10,"outsideNull":0}}; live {"master":1953,"k32":1952,"k8":1948}; agreementGated {"k32":{"n":2056,"p50":0.2245,"p95":2.2006,"max":15.3316,"over1":342,"over2":124},"k8":{"n":2056,"p50":0.2517,"p95":2.181,"max":15.3417,"over1":340,"over2":118}}; agreementApart {"k32":{"n":63,"p50":0.3193,"p95":1.7776,"max":4.4607,"over1":8,"over2":3},"k8":{"n":63,"p50":0.3495,"p95":1.8706,"max":4.885,"over1":8,"over2":3}}
