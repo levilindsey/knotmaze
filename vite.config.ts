@@ -12,10 +12,13 @@ import { workerPreloadScript } from "./src/loader/worker_preload";
 // package.json version, the git short SHA ("+" = built with uncommitted
 // changes to tracked files) and the build time. Derived at build time,
 // never hand-edited - so a phone showing the live site says exactly which
-// commit it is running.
+// commit it is running. No optional locks: preview servers load this
+// config from the main checkout while other sessions commit there, and a
+// plain git status takes the index lock to refresh it (a commit landing
+// in that moment fails on index.lock).
 const git = (args: string): string => {
   try {
-    return execSync(`git ${args}`, { stdio: ["ignore", "pipe", "ignore"] })
+    return execSync(`git --no-optional-locks ${args}`, { stdio: ["ignore", "pipe", "ignore"] })
       .toString()
       .trim();
   } catch {
