@@ -1,0 +1,96 @@
+== ji 147 t0 before: 178 edge px (contrast >= 12); w10-90 min 0.68 p10 1.00 med 2.30; the 8 steepest:
+  (1527,147) n(-0.266,0.964) lo 165 hi 211 w10-90 1.00 px slope 51.7/px
+  (1527,148) n(-0.093,0.996) lo 170 hi 211 w10-90 0.68 px slope 50.1/px
+  (1530,148) n(-0.145,0.989) lo 157 hi 209 w10-90 0.90 px slope 49.6/px
+== ji 147 t1 before: 78 edge px (contrast >= 12); w10-90 min 1.14 p10 1.96 med 3.24; the 8 steepest:
+  (1527,148) n(-0.109,0.994) lo 161 hi 177 w10-90 2.48 px slope 15.3/px
+  (1528,148) n(-0.06,0.998) lo 157 hi 176 w10-90 2.24 px slope 15.3/px
+  (1529,148) n(-0.092,0.996) lo 157 hi 176 w10-90 2.66 px slope 14.4/px
+== ji 147 t2 before: 11 edge px (contrast >= 12); w10-90 min 0.96 p10 1.50 med 2.84; the 8 steepest:
+  (1623,106) n(-0.206,-0.978) lo 158 hi 171 w10-90 0.96 px slope 12.6/px
+  (1625,106) n(0.138,-0.99) lo 159 hi 175 w10-90 1.64 px slope 12.3/px
+  (1624,106) n(-0.252,-0.968) lo 159 hi 172 w10-90 1.50 px slope 11.8/px
+== ji 147 t3 before: 87 edge px (contrast >= 12); w10-90 min 0.60 p10 1.50 med 4.76; the 8 steepest:
+  (1527,147) n(0.216,-0.976) lo 160 hi 179 w10-90 0.94 px slope 26.6/px
+  (1527,148) n(0.048,-0.999) lo 160 hi 176 w10-90 0.60 px slope 26.0/px
+  (1528,148) n(-0.025,-1) lo 160 hi 184 w10-90 0.88 px slope 24.7/px
+== ji 147 t4 before: 195 edge px (contrast >= 12); w10-90 min 0.64 p10 0.94 med 3.60; the 8 steepest:
+  (1527,147) n(0.241,-0.971) lo 160 hi 209 w10-90 0.94 px slope 62.6/px
+  (1527,148) n(0.058,-0.998) lo 160 hi 202 w10-90 0.64 px slope 61.1/px
+  (1528,148) n(-0.009,-1) lo 160 hi 219 w10-90 0.90 px slope 60.3/px
+== ji 147 t5 before: 197 edge px (contrast >= 12); w10-90 min 0.70 p10 1.12 med 2.54; the 8 steepest:
+  (1543,148) n(0.095,-0.996) lo 174 hi 235 w10-90 0.94 px slope 59.3/px
+  (1544,149) n(0.117,-0.993) lo 174 hi 233 w10-90 0.90 px slope 57.8/px
+  (1530,148) n(0.147,-0.989) lo 166 hi 226 w10-90 0.92 px slope 57.8/px
+== ji 147 t6 before: 84 edge px (contrast >= 12); w10-90 min 0.80 p10 1.62 med 2.28; the 8 steepest:
+  (1578,109) n(-0.348,0.937) lo 212 hi 239 w10-90 1.06 px slope 27.3/px
+  (1578,108) n(-0.318,0.948) lo 211 hi 239 w10-90 1.96 px slope 25.4/px
+  (1581,110) n(-0.467,0.884) lo 209 hi 236 w10-90 1.92 px slope 21.0/px
+== ji 147 t7 before: 260 edge px (contrast >= 12); w10-90 min 0.64 p10 1.20 med 3.02; the 8 steepest:
+  (1530,148) n(-0.11,0.994) lo 157 hi 235 w10-90 0.92 px slope 82.6/px
+  (1527,147) n(-0.254,0.967) lo 170 hi 234 w10-90 0.92 px slope 81.0/px
+  (1529,147) n(0.004,1) lo 158 hi 236 w10-90 0.88 px slope 80.2/px
+== ji 147 t0 S3b: 262 edge px (contrast >= 12); w10-90 min 0.90 p10 0.96 med 1.50; the 8 steepest:
+  (1566,91) n(0.729,0.685) lo 127 hi 196 w10-90 4.02 px slope 154.1/px
+  (1554,187) n(-0.808,-0.589) lo 120 hi 229 w10-90 3.10 px slope 108.6/px
+  (1509,169) n(0.807,0.59) lo 120 hi 234 w10-90 3.12 px slope 107.2/px
+== ji 147 t1 S3b: 127 edge px (contrast >= 12); w10-90 min 0.88 p10 0.94 med 1.46; the 8 steepest:
+  (1566,91) n(0.698,0.716) lo 128 hi 160 w10-90 3.22 px slope 159.8/px
+  (1509,169) n(0.767,0.641) lo 126 hi 212 w10-90 3.08 px slope 111.1/px
+  (1555,186) n(-0.813,-0.582) lo 120 hi 194 w10-90 3.40 px slope 105.8/px
+== ji 147 t2 S3b: 24 edge px (contrast >= 12); w10-90 min 0.84 p10 0.88 med 1.56; the 8 steepest:
+  (1508,170) n(0.703,0.711) lo 132 hi 181 w10-90 3.14 px slope 173.6/px
+  (1509,168) n(0.756,0.655) lo 128 hi 178 w10-90 3.66 px slope 94.0/px
+  (1509,169) n(0.707,0.707) lo 146 hi 179 w10-90 3.18 px slope 89.3/px
+== ji 147 t3 S3b: 79 edge px (contrast >= 12); w10-90 min 0.84 p10 0.90 med 1.58; the 8 steepest:
+  (1512,146) n(0.014,-1) lo 158 hi 204 w10-90 0.90 px slope 46.3/px
+  (1511,146) n(0.07,-0.998) lo 158 hi 205 w10-90 0.90 px slope 43.2/px
+  (1513,147) n(0.164,-0.986) lo 158 hi 201 w10-90 0.90 px slope 42.7/px
+== ji 147 t4 S3b: 145 edge px (contrast >= 12); w10-90 min 0.88 p10 0.90 med 1.50; the 8 steepest:
+  (1525,147) n(-0.569,-0.822) lo 160 hi 226 w10-90 1.04 px slope 83.9/px
+  (1524,147) n(-0.442,-0.897) lo 160 hi 226 w10-90 0.90 px slope 81.9/px
+  (1512,146) n(0.064,-0.998) lo 158 hi 239 w10-90 0.90 px slope 81.2/px
+== ji 147 t5 S3b: 221 edge px (contrast >= 12); w10-90 min 0.86 p10 0.92 med 1.60; the 8 steepest:
+  (1566,91) n(0.7,0.714) lo 128 hi 173 w10-90 3.92 px slope 159.8/px
+  (1565,92) n(0.674,0.739) lo 129 hi 175 w10-90 3.96 px slope 100.6/px
+  (1567,91) n(0.68,0.733) lo 131 hi 173 w10-90 3.04 px slope 89.1/px
+== ji 147 t6 S3b: 285 edge px (contrast >= 12); w10-90 min 0.80 p10 0.96 med 1.54; the 8 steepest:
+  (1566,91) n(0.713,0.701) lo 128 hi 209 w10-90 4.06 px slope 159.8/px
+  (1554,187) n(-0.768,-0.641) lo 125 hi 182 w10-90 2.96 px slope 112.7/px
+  (1555,186) n(-0.784,-0.621) lo 123 hi 184 w10-90 3.34 px slope 109.7/px
+== ji 147 t7 S3b: 282 edge px (contrast >= 12); w10-90 min 0.88 p10 0.96 med 1.48; the 8 steepest:
+  (1566,91) n(0.729,0.684) lo 127 hi 232 w10-90 4.06 px slope 154.1/px
+  (1554,187) n(-0.787,-0.618) lo 122 hi 216 w10-90 3.08 px slope 111.5/px
+  (1555,186) n(-0.793,-0.609) lo 121 hi 218 w10-90 3.50 px slope 108.9/px
+== ji 147 t0 fix: 302 edge px (contrast >= 12); w10-90 min 0.62 p10 0.92 med 1.54; the 8 steepest:
+  (1508,170) n(0.721,0.693) lo 132 hi 218 w10-90 3.86 px slope 167.4/px
+  (1566,91) n(0.729,0.685) lo 127 hi 196 w10-90 4.02 px slope 154.1/px
+  (1554,187) n(-0.791,-0.612) lo 121 hi 229 w10-90 3.02 px slope 111.1/px
+== ji 147 t1 fix: 196 edge px (contrast >= 12); w10-90 min 0.38 p10 0.92 med 1.48; the 8 steepest:
+  (1566,91) n(0.698,0.716) lo 128 hi 160 w10-90 3.22 px slope 159.8/px
+  (1550,189) n(0.576,0.817) lo 199 hi 123 w10-90 2.94 px slope 130.1/px
+  (1508,170) n(0.605,0.796) lo 121 hi 184 w10-90 4.06 px slope 108.8/px
+== ji 147 t2 fix: 65 edge px (contrast >= 12); w10-90 min 0.82 p10 0.86 med 1.50; the 8 steepest:
+  (1551,189) n(0.711,0.703) lo 165 hi 133 w10-90 2.98 px slope 173.4/px
+  (1550,189) n(0.576,0.818) lo 165 hi 120 w10-90 2.98 px slope 120.7/px
+  (1552,188) n(0.797,0.605) lo 163 hi 121 w10-90 2.98 px slope 116.0/px
+== ji 147 t3 fix: 102 edge px (contrast >= 12); w10-90 min 0.88 p10 0.90 med 1.56; the 8 steepest:
+  (1512,146) n(0.04,-0.999) lo 158 hi 210 w10-90 0.90 px slope 53.3/px
+  (1513,147) n(0.174,-0.985) lo 158 hi 209 w10-90 0.88 px slope 50.6/px
+  (1526,100) n(-0.028,1) lo 157 hi 206 w10-90 0.88 px slope 49.7/px
+== ji 147 t4 fix: 170 edge px (contrast >= 12); w10-90 min 0.78 p10 0.90 med 1.56; the 8 steepest:
+  (1527,101) n(0,1) lo 157 hi 239 w10-90 0.90 px slope 79.5/px
+  (1526,101) n(0.007,1) lo 157 hi 238 w10-90 0.90 px slope 78.6/px
+  (1528,101) n(-0.011,1) lo 157 hi 239 w10-90 0.90 px slope 78.0/px
+== ji 147 t5 fix: 317 edge px (contrast >= 12); w10-90 min 0.76 p10 0.92 med 1.68; the 8 steepest:
+  (1566,91) n(0.7,0.714) lo 128 hi 173 w10-90 3.92 px slope 159.8/px
+  (1565,92) n(0.674,0.739) lo 129 hi 175 w10-90 3.96 px slope 100.6/px
+  (1567,91) n(0.68,0.733) lo 131 hi 173 w10-90 3.04 px slope 89.1/px
+== ji 147 t6 fix: 476 edge px (contrast >= 12); w10-90 min 0.28 p10 0.90 med 1.86; the 8 steepest:
+  (1566,91) n(0.713,0.701) lo 128 hi 209 w10-90 4.06 px slope 159.8/px
+  (1552,188) n(-0.757,-0.653) lo 128 hi 180 w10-90 3.46 px slope 113.0/px
+  (1551,189) n(-0.753,-0.658) lo 130 hi 179 w10-90 3.16 px slope 109.9/px
+== ji 147 t7 fix: 380 edge px (contrast >= 12); w10-90 min 0.72 p10 0.92 med 1.70; the 8 steepest:
+  (1566,91) n(0.729,0.684) lo 127 hi 232 w10-90 4.06 px slope 154.1/px
+  (1555,186) n(-0.771,-0.637) lo 134 hi 218 w10-90 4.42 px slope 121.5/px
+  (1554,187) n(-0.783,-0.622) lo 130 hi 216 w10-90 3.96 px slope 121.4/px

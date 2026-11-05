@@ -1,0 +1,66 @@
+ji 149 t4: bands 0: ia 1 ib 0 shared, 1: ia 1 ib 2; reach 23.90 px
+(160,136) b0 e -8.62 cov 0 | b1 e 7.57 cov 255 yield 1.00 (D-Dsh -16.19 px) | win b1 twin 156,209,200 GPU 156,208,200
+(161,136) b0 e -9.19 cov 0 | b1 e 6.63 cov 255 yield 1.00 (D-Dsh -15.82 px) | win b1 twin 156,209,200 GPU 156,208,200
+(162,136) b0 e -9.76 cov 0 | b1 e 5.69 cov 255 yield 1.00 (D-Dsh -15.46 px) | win b1 twin 157,209,200 GPU 157,208,200
+(163,136) b0 e -10.36 cov 0 | b1 e 4.75 cov 255 yield 1.00 (D-Dsh -15.11 px) | win b1 twin 157,209,201 GPU 157,209,201
+(164,136) b0 e -10.98 cov 0 | b1 e 3.81 cov 255 yield 1.00 (D-Dsh -14.79 px) | win b1 twin 158,210,201 GPU 158,209,201
+(165,136) b0 e -11.61 cov 0 | b1 e 2.88 cov 255 yield 1.00 (D-Dsh -14.49 px) | win b1 twin 158,210,201 GPU 158,210,201
+(166,136) b0 e -12.26 cov 0 | b1 e 1.96 cov 255 yield 1.00 (D-Dsh -14.22 px) | win b1 twin 159,210,202 GPU 159,210,202
+(167,136) b0 e -12.92 cov 0 | b1 e 1.06 cov 255 yield 1.00 (D-Dsh -13.98 px) | win b1 twin 160,211,202 GPU 160,210,202
+(168,136) b0 e -13.60 cov 0 | b1 e 0.15 cov 39 yield 1.00 (D-Dsh -13.75 px) | win b1 twin 128,196,187 GPU 128,195,187
+(169,136) b0 e -14.27 cov 0 | b1 e -0.75 cov 0 yield 1.00 (D-Dsh -13.52 px) | win b-1 twin 122,193,185 GPU 122,193,185
+(170,136) b0 e -14.94 cov 0 | b1 e -1.61 cov 0 yield 1.00 (D-Dsh -13.33 px) | win b-1 twin 122,193,185 GPU 122,193,185
+(171,136) b0 e -15.61 cov 0 | b1 e -2.47 cov 0 yield 1.00 (D-Dsh -13.14 px) | win b-1 twin 122,193,186 GPU 122,193,186
+(172,136) b0 e -16.28 cov 0 | b1 e -3.31 cov 0 yield 1.00 (D-Dsh -12.97 px) | win b-1 twin 122,193,186 GPU 122,193,186
+(173,136) b0 e -16.96 cov 0 | b1 e -4.12 cov 0 yield 1.00 (D-Dsh -12.84 px) | win b-1 twin 122,193,186 GPU 122,192,186
+(174,136) b0 e -17.63 cov 0 | b1 e -4.90 cov 0 yield 1.00 (D-Dsh -12.72 px) | win b-1 twin 122,193,187 GPU 23,30,43
+(175,136) b0 e -18.30 cov 0 | b1 e -5.66 cov 0 yield 1.00 (D-Dsh -12.64 px) | win b-1 twin 122,193,187 GPU 25,32,45
+(176,136) b0 e -18.97 cov 0 | b1 e -6.36 cov 0 yield 1.00 (D-Dsh -12.62 px) | win b-1 twin 122,193,187 GPU 24,32,45
+=== t4 vertical X=170, Y 118..140
+ji 149 t4: bands 0: ia 1 ib 0 shared, 1: ia 1 ib 2; reach 23.90 px
+(170,118) b0 e -2.50 cov 0 | b1 e 0.21 cov 55 yield 1.00 (D-Dsh -2.71 px) | win b1 twin 122,191,184 GPU 122,191,183
+(170,119) b0 e -3.14 cov 0 | b1 e -0.21 cov 0 yield 1.00 (D-Dsh -2.92 px) | win b-1 twin 122,190,185 GPU 122,190,184
+(170,120) b0 e -3.78 cov 0 | b1 e -0.64 cov 0 yield 1.00 (D-Dsh -3.14 px) | win b-1 twin 122,190,184 GPU 122,190,184
+(170,121) b0 e -4.42 cov 0 | b1 e -1.07 cov 0 yield 1.00 (D-Dsh -3.35 px) | win b-1 twin 122,190,184 GPU 122,190,184
+(170,122) b0 e -5.06 cov 0 | b1 e -1.50 cov 0 yield 1.00 (D-Dsh -3.56 px) | win b-1 twin 122,191,184 GPU 122,191,184
+(170,123) b0 e -5.70 cov 0 | b1 e -1.92 cov 0 yield 1.00 (D-Dsh -3.77 px) | win b-1 twin 122,191,184 GPU 122,191,184
+(170,124) b0 e -6.34 cov 0 | b1 e -2.32 cov 0 yield 1.00 (D-Dsh -4.01 px) | win b-1 twin 122,192,184 GPU 122,191,184
+(170,125) b0 e -6.99 cov 0 | b1 e -2.71 cov 0 yield 1.00 (D-Dsh -4.27 px) | win b-1 twin 122,192,184 GPU 122,191,184
+(170,126) b0 e -7.66 cov 0 | b1 e -3.04 cov 0 yield 1.00 (D-Dsh -4.62 px) | win b-1 twin 122,192,184 GPU 122,192,183
+(170,127) b0 e -8.34 cov 0 | b1 e -3.28 cov 0 yield 1.00 (D-Dsh -5.06 px) | win b-1 twin 122,192,184 GPU 122,192,183
+(170,128) b0 e -9.05 cov 0 | b1 e -3.43 cov 0 yield 1.00 (D-Dsh -5.61 px) | win b-1 twin 122,192,183 GPU 122,192,183
+(170,129) b0 e -9.76 cov 0 | b1 e -3.49 cov 0 yield 1.00 (D-Dsh -6.27 px) | win b-1 twin 122,192,184 GPU 122,192,184
+(170,130) b0 e -10.50 cov 0 | b1 e -3.46 cov 0 yield 1.00 (D-Dsh -7.04 px) | win b-1 twin 122,192,184 GPU 122,192,184
+(170,131) b0 e -11.24 cov 0 | b1 e -3.33 cov 0 yield 1.00 (D-Dsh -7.90 px) | win b-1 twin 122,192,184 GPU 122,192,184
+(170,132) b0 e -11.98 cov 0 | b1 e -3.13 cov 0 yield 1.00 (D-Dsh -8.85 px) | win b-1 twin 122,192,185 GPU 122,192,184
+(170,133) b0 e -12.72 cov 0 | b1 e -2.85 cov 0 yield 1.00 (D-Dsh -9.86 px) | win b-1 twin 122,192,185 GPU 122,192,184
+(170,134) b0 e -13.46 cov 0 | b1 e -2.51 cov 0 yield 1.00 (D-Dsh -10.95 px) | win b-1 twin 122,193,185 GPU 122,192,184
+(170,135) b0 e -14.20 cov 0 | b1 e -2.08 cov 0 yield 1.00 (D-Dsh -12.12 px) | win b-1 twin 122,193,185 GPU 122,193,185
+(170,136) b0 e -14.94 cov 0 | b1 e -1.61 cov 0 yield 1.00 (D-Dsh -13.33 px) | win b-1 twin 122,193,185 GPU 122,193,185
+(170,137) b0 e -15.68 cov 0 | b1 e -1.10 cov 0 yield 1.00 (D-Dsh -14.58 px) | win b-1 twin 122,193,186 GPU 122,193,186
+(170,138) b0 e -16.42 cov 0 | b1 e -0.52 cov 0 yield 1.00 (D-Dsh -15.90 px) | win b-1 twin 122,193,186 GPU 122,193,186
+(170,139) b0 e -17.16 cov 0 | b1 e 0.08 cov 21 yield 1.00 (D-Dsh -17.24 px) | win b1 twin 126,195,188 GPU 126,194,188
+(170,140) b0 e -17.90 cov 0 | b1 e 0.74 cov 189 yield 1.00 (D-Dsh -18.64 px) | win b1 twin 158,210,203 GPU 164,212,206
+=== t4 horizontal Y=128, X 158..178
+ji 149 t4: bands 0: ia 1 ib 0 shared, 1: ia 1 ib 2; reach 23.90 px
+(158,128) b0 e -0.98 cov 0 | b1 e 8.52 cov 255 yield 1.00 (D-Dsh -9.51 px) | win b1 twin 137,200,189 GPU 137,199,189
+(159,128) b0 e -1.63 cov 0 | b1 e 7.52 cov 255 yield 1.00 (D-Dsh -9.15 px) | win b1 twin 138,200,190 GPU 138,199,190
+(160,128) b0 e -2.29 cov 0 | b1 e 6.52 cov 255 yield 1.00 (D-Dsh -8.82 px) | win b1 twin 138,200,190 GPU 138,200,190
+(161,128) b0 e -2.97 cov 0 | b1 e 5.52 cov 255 yield 1.00 (D-Dsh -8.49 px) | win b1 twin 139,200,190 GPU 139,200,190
+(162,128) b0 e -3.64 cov 0 | b1 e 4.52 cov 255 yield 1.00 (D-Dsh -8.16 px) | win b1 twin 139,200,191 GPU 139,200,191
+(163,128) b0 e -4.31 cov 0 | b1 e 3.53 cov 255 yield 1.00 (D-Dsh -7.84 px) | win b1 twin 140,201,191 GPU 140,200,191
+(164,128) b0 e -4.98 cov 0 | b1 e 2.53 cov 255 yield 1.00 (D-Dsh -7.52 px) | win b1 twin 140,201,191 GPU 140,201,191
+(165,128) b0 e -5.66 cov 0 | b1 e 1.54 cov 255 yield 1.00 (D-Dsh -7.19 px) | win b1 twin 141,201,191 GPU 141,201,191
+(166,128) b0 e -6.33 cov 0 | b1 e 0.54 cov 139 yield 1.00 (D-Dsh -6.87 px) | win b1 twin 132,197,188 GPU 132,197,188
+(167,128) b0 e -7.00 cov 0 | b1 e -0.45 cov 0 yield 1.00 (D-Dsh -6.55 px) | win b-1 twin 122,192,183 GPU 122,192,183
+(168,128) b0 e -7.67 cov 0 | b1 e -1.44 cov 0 yield 1.00 (D-Dsh -6.23 px) | win b-1 twin 122,192,183 GPU 122,192,183
+(169,128) b0 e -8.35 cov 0 | b1 e -2.44 cov 0 yield 1.00 (D-Dsh -5.91 px) | win b-1 twin 122,192,183 GPU 122,192,183
+(170,128) b0 e -9.05 cov 0 | b1 e -3.43 cov 0 yield 1.00 (D-Dsh -5.61 px) | win b-1 twin 122,192,183 GPU 122,192,183
+(171,128) b0 e -9.76 cov 0 | b1 e -4.43 cov 0 yield 1.00 (D-Dsh -5.33 px) | win b-1 twin 122,192,184 GPU 122,192,184
+(172,128) b0 e -10.48 cov 0 | b1 e -5.42 cov 0 yield 1.00 (D-Dsh -5.06 px) | win b-1 twin 122,192,184 GPU 122,192,184
+(173,128) b0 e -11.22 cov 0 | b1 e -6.41 cov 0 yield 1.00 (D-Dsh -4.81 px) | win b-1 twin 122,192,184 GPU 24,32,45
+(174,128) b0 e -11.97 cov 0 | b1 e -7.40 cov 0 yield 1.00 (D-Dsh -4.57 px) | win b-1 twin 122,192,185 GPU 24,31,44
+(175,128) b0 e -12.74 cov 0 | b1 e -8.38 cov 0 yield 1.00 (D-Dsh -4.36 px) | win b-1 twin 122,192,185 GPU 21,29,42
+(176,128) b0 e -13.51 cov 0 | b1 e -9.36 cov 0 yield 1.00 (D-Dsh -4.15 px) | win b-1 twin 122,192,185 GPU 22,29,42
+(177,128) b0 e -14.27 cov 0 | b1 e -10.32 cov 0 yield 1.00 (D-Dsh -3.96 px) | win b-1 twin 122,192,185 GPU 22,29,42
+(178,128) b0 e -15.04 cov 0 | b1 e -11.25 cov 0 yield 1.00 (D-Dsh -3.79 px) | win b-1 twin 122,192,185 GPU 22,29,42

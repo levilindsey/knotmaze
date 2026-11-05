@@ -1,0 +1,60 @@
+== ji 33 t4 before (fan window 624..744 x 746..866), luma
+cross/cross_t4_n.png L: 159 edge px (contrast >= 12); w10-90 min 3.42 p10 4.14 med 4.68; the 8 steepest:
+  (699,779) n(0.819,-0.574) lo 220 hi 244 w10-90 3.66 px slope 10.2/px
+  (700,780) n(0.832,-0.555) lo 224 hi 244 w10-90 3.92 px slope 8.4/px
+  (699,788) n(0.931,-0.364) lo 223 hi 237 w10-90 4.46 px slope 6.5/px
+  (698,787) n(0.996,0.084) lo 219 hi 235 w10-90 3.92 px slope 6.5/px
+  (701,781) n(0.855,-0.519) lo 227 hi 244 w10-90 3.86 px slope 6.3/px
+  (701,784) n(0.928,0.372) lo 226 hi 240 w10-90 3.42 px slope 6.0/px
+  (699,789) n(0.941,-0.338) lo 223 hi 236 w10-90 4.24 px slope 5.9/px
+  (700,784) n(0.958,0.288) lo 224 hi 239 w10-90 3.86 px slope 5.7/px
+== ji 33 t4 S3b (fan window 624..744 x 746..866), luma
+cross/cross_t4_n.png L: 86 edge px (contrast >= 12); w10-90 min 0.94 p10 1.04 med 3.18; the 8 steepest:
+  (693,780) n(0.823,0.568) lo 172 hi 232 w10-90 1.00 px slope 75.2/px
+  (693,781) n(0.898,0.44) lo 173 hi 232 w10-90 1.00 px slope 71.0/px
+  (692,784) n(0.898,0.44) lo 175 hi 229 w10-90 0.96 px slope 63.3/px
+  (692,785) n(0.869,0.494) lo 176 hi 228 w10-90 1.04 px slope 62.1/px
+  (694,779) n(0.679,0.734) lo 166 hi 233 w10-90 1.62 px slope 58.7/px
+  (693,782) n(1,-0.007) lo 175 hi 233 w10-90 0.94 px slope 51.2/px
+  (692,783) n(1,0.031) lo 175 hi 231 w10-90 0.94 px slope 50.0/px
+  (693,783) n(1,0.001) lo 176 hi 232 w10-90 0.94 px slope 49.9/px
+== ji 33 t4 fix (fan window 624..744 x 746..866), luma
+cross/cross_t4_n.png L: 117 edge px (contrast >= 12); w10-90 min 1.16 p10 1.28 med 1.88; the 8 steepest:
+  (676,789) n(0.635,0.772) lo 173 hi 214 w10-90 1.22 px slope 46.6/px
+  (676,788) n(0.641,0.768) lo 173 hi 215 w10-90 1.52 px slope 46.1/px
+  (672,791) n(0.619,0.785) lo 166 hi 208 w10-90 1.60 px slope 44.3/px
+  (672,792) n(0.634,0.773) lo 167 hi 208 w10-90 1.22 px slope 44.2/px
+  (679,786) n(0.622,0.783) lo 180 hi 220 w10-90 2.20 px slope 42.9/px
+  (682,785) n(0.57,0.822) lo 189 hi 224 w10-90 1.18 px slope 41.3/px
+  (675,789) n(0.629,0.777) lo 171 hi 213 w10-90 1.84 px slope 40.1/px
+  (673,791) n(0.624,0.782) lo 168 hi 209 w10-90 1.52 px slope 39.7/px
+== ji 33 t5 before (fan window 624..744 x 746..866), luma
+cross/cross_t5_n.png L: 176 edge px (contrast >= 12); w10-90 min 2.58 p10 4.04 med 4.62; the 8 steepest:
+  (655,824) n(-0.115,-0.993) lo 184 hi 200 w10-90 3.24 px slope 9.9/px
+  (655,825) n(-0.057,-0.998) lo 183 hi 198 w10-90 2.98 px slope 9.8/px
+  (653,825) n(-0.172,-0.985) lo 182 hi 196 w10-90 2.96 px slope 9.7/px
+  (658,822) n(-0.1,-0.995) lo 190 hi 205 w10-90 3.22 px slope 9.3/px
+  (650,827) n(-0.133,-0.991) lo 178 hi 191 w10-90 2.86 px slope 9.0/px
+  (666,819) n(0.555,-0.832) lo 201 hi 217 w10-90 4.44 px slope 7.8/px
+  (664,818) n(-0.065,-0.998) lo 202 hi 217 w10-90 3.90 px slope 7.5/px
+  (654,825) n(-0.229,-0.973) lo 183 hi 196 w10-90 2.58 px slope 7.4/px
+== ji 33 t5 S3b (fan window 624..744 x 746..866), luma
+cross/cross_t5_n.png L: 119 edge px (contrast >= 12); w10-90 min 0.94 p10 1.10 med 3.08; the 8 steepest:
+  (694,779) n(0.464,0.886) lo 115 hi 223 w10-90 3.10 px slope 101.2/px
+  (656,809) n(0.864,-0.504) lo 166 hi 205 w10-90 1.04 px slope 46.3/px
+  (655,813) n(0.875,0.483) lo 167 hi 206 w10-90 1.00 px slope 44.7/px
+  (657,811) n(0.934,0.356) lo 166 hi 211 w10-90 1.16 px slope 43.5/px
+  (656,811) n(0.9,0.437) lo 166 hi 210 w10-90 1.06 px slope 43.4/px
+  (657,809) n(0.936,-0.351) lo 167 hi 211 w10-90 2.08 px slope 41.2/px
+  (656,813) n(0.907,0.421) lo 167 hi 207 w10-90 1.00 px slope 40.7/px
+  (656,808) n(0.807,-0.591) lo 166 hi 203 w10-90 1.36 px slope 40.7/px
+== ji 33 t5 fix (fan window 624..744 x 746..866), luma
+cross/cross_t5_n.png L: 174 edge px (contrast >= 12); w10-90 min 0.98 p10 1.30 med 3.06; the 8 steepest:
+  (671,792) n(0.708,0.706) lo 187 hi 239 w10-90 1.32 px slope 63.0/px
+  (672,792) n(0.658,0.753) lo 189 hi 239 w10-90 1.16 px slope 62.9/px
+  (666,797) n(0.749,0.663) lo 179 hi 228 w10-90 1.32 px slope 58.7/px
+  (671,793) n(0.712,0.702) lo 187 hi 238 w10-90 1.24 px slope 58.5/px
+  (667,797) n(0.761,0.649) lo 181 hi 229 w10-90 1.16 px slope 58.3/px
+  (666,798) n(0.76,0.65) lo 180 hi 227 w10-90 1.14 px slope 57.9/px
+  (667,796) n(0.765,0.643) lo 181 hi 231 w10-90 1.50 px slope 57.8/px
+  (668,796) n(0.768,0.641) lo 182 hi 232 w10-90 1.20 px slope 56.4/px

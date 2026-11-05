@@ -1,0 +1,5 @@
+(170,129) nearest b1 seg 17/39 u 0.51 dist 27.39 px (reach 23.90 px); turn sign -1 (segs 15..19), pixel side -1 -> INSIDE of the turn
+(170,118) nearest b1 seg 12/39 u 0.26 dist 23.69 px (reach 23.90 px); turn sign -1 (segs 10..14), pixel side -1 -> INSIDE of the turn
+(170,140) nearest b1 seg 25/39 u 0.54 dist 23.16 px (reach 23.90 px); turn sign -1 (segs 23..27), pixel side -1 -> INSIDE of the turn
+(166,128) nearest b1 seg 16/39 u 0.63 dist 23.36 px (reach 23.90 px); turn sign -1 (segs 14..18), pixel side -1 -> INSIDE of the turn
+b1 verts 40, pxW(world) 1.111e-2 meta.pxW 0.011111139019047159
