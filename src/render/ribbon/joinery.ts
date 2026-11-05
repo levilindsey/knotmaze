@@ -112,6 +112,13 @@ interface K1139Diag {
   drawn: number[] | null;
   out: number[] | null;
 }
+// K1139 Stage 2: cpuJunctionField's per-band pulse scratch (the twin of
+// the shader's sTau / sShift / sCov / sDist / sPb arrays).
+const PULSE_TAU = new Float64Array(MAX_ROUTES);
+const PULSE_SHIFT = new Float64Array(MAX_ROUTES);
+const PULSE_COV = new Float64Array(MAX_ROUTES);
+const PULSE_DIST = new Float64Array(MAX_ROUTES);
+const PULSE_R0 = new Int32Array(MAX_ROUTES);
 export const FILLET_REACH_PER_HALF = 1.25; // * fillHalf, along each arm.
 const FILLET_MAX_WEDGE = 2.6; // Radians.
 const FILLET_CORNER_LIM = 2.2; // * edge half-width: skip distant corners.
@@ -625,19 +632,19 @@ export class Joinery {
     // K1139 S3b PULSE BANDS (FIELD_GLSL junctionField's twin loop): the
     // crest at dG = distJ + tau over the arms' quiet material, whitened
     // by the trains' share only (the quiet rows already wear the floor).
-    // The pixel takes its NEAREST band (a drawing band wins a tie over
-    // a shared one); a shared band's gold block above already drew it.
+    // Stage 2 (b): no winner. Each drawing band mixes its material in by
+    // its own weight, in block order, and the whitening (the max over
+    // drawing bands of f x weight) is applied once after. (c): the
+    // weight is the cover times the yield to the shared bands' gold, a
+    // ramp over the 3 px where a shared band is nearer (1 on a tie). A
+    // shared band draws nothing: its gold block above already drew it.
     const U = knotUniformValues();
     const KB = PAINT_CONST.K_BAND;
     if (DG) DG.gold = Array.from(out);
     let pb = base + 1;
     const npp = Math.min(np, MAX_ROUTES);
-    let bDist = 1e20;
-    let bTau = 0;
-    let bShift = 0;
-    let bCov = 0;
-    let bR0 = -1;
-    let bR1 = -1;
+    let dShared = 1e20;
+    let bestVC = -1;
     let bIdx = -1;
     for (let r = 0; r < npp; r++) {
       const r0 = at(pb);
@@ -732,13 +739,14 @@ export class Joinery {
           shift = J[eB1 + 3];
         }
       }
-      const cov = Math.max(0, Math.min(1, (reach - Math.sqrt(best)) / pxW));
+      const dnow = Math.sqrt(best);
+      const cov = Math.max(0, Math.min(1, (reach - dnow) / pxW));
       if (DG && DG.bands) {
         const fl = J[r1 + 1];
         const vv = kPulseBandV(U, J[r1], tau, fl % 2 === 1, fl >= 2);
         const qq = kPulseCrest(U, J[r1] + tau, fl % 2 === 1, fl >= 2, 1, 0);
         const ffa = KB * qq;
-        const ff = ffa >= 0.999 ? 0 : Math.max(0, Math.min(1, (KB * vv - ffa) / (1 - ffa)));
+        const ff = Math.max(0, Math.min(1, (KB * vv - ffa) / Math.max(1 - ffa, 1e-3)));
         const ta = new Float32Array(4);
         const tb = new Float32Array(4);
         const mm = J[r0 + 1];
@@ -750,56 +758,58 @@ export class Joinery {
         armPaint(rec + 2 + Math.round(J[r0 + 2]) * stride, -tau + shift, true, false, ta);
         armPaint(rec + 2 + Math.round(J[r0 + 3]) * stride, tau + shift, true, false, tb);
         const pc = [0, 1, 2].map((c) => ta[c] + (tb[c] - ta[c]) * ss);
-        DG.bands.push([r, Math.sqrt(best), tau, shift, cov, J[r1 + 2], J[r1], fl, J[r0 + 2], J[r0 + 3], mm,
+        DG.bands.push([r, dnow, tau, shift, cov, J[r1 + 2], J[r1], fl, J[r0 + 2], J[r0 + 3], mm,
           vv, qq, ff, ...pq, ...pc]);
       }
-      if (cov > 0) {
-        const dnow = Math.sqrt(best);
-        const take =
-          bR0 < 0 ||
-          dnow < bDist - 1e-6 ||
-          (dnow <= bDist + 1e-6 && J[bR1 + 2] >= 0.5 && J[r1 + 2] < 0.5);
-        if (take) {
-          bDist = dnow;
-          bTau = tau;
-          bShift = shift;
-          bCov = cov;
-          bR0 = r0;
-          bR1 = r1;
+      if (cov > 0 && DG) {
+        const fl = J[r1 + 1];
+        const vc = kPulseBandV(U, J[r1], tau, fl % 2 === 1, fl >= 2) * cov;
+        if (vc > bestVC) {
+          bestVC = vc;
           bIdx = r;
         }
       }
+      if (J[r1 + 2] >= 0.5) dShared = Math.min(dShared, dnow);
+      PULSE_TAU[r] = tau;
+      PULSE_SHIFT[r] = shift;
+      PULSE_COV[r] = J[r1 + 2] < 0.5 ? cov : 0;
+      PULSE_DIST[r] = dnow;
+      PULSE_R0[r] = r0;
       pb += 4 + nv;
     }
     if (DG) DG.win = bIdx;
-    if (bR0 >= 0 && J[bR1 + 2] < 0.5) {
-      const r0 = bR0;
-      const r1 = bR1;
-      const tau = bTau;
-      const shift = bShift;
-      const cov = bCov;
+    let wW = 0;
+    for (let r = 0; r < npp; r++) {
+      let e = Math.max(0, Math.min(1, (PULSE_DIST[r] - dShared) / (3 * pxW)));
+      e = e * e * (3 - 2 * e);
+      const cw = PULSE_COV[r] * (1 - e);
+      if (!(cw > 0)) continue;
+      const r0 = PULSE_R0[r];
+      const r1 = r0 + 4;
+      const tau = PULSE_TAU[r];
+      const shift = PULSE_SHIFT[r];
       const flags = J[r1 + 1];
       const inw = flags % 2 === 1;
       const hov = flags >= 2;
-      const v = kPulseBandV(U, J[r1], tau, inw, hov);
       armPaint(rec + 2 + Math.round(J[r0 + 2]) * stride, -tau + shift, true, true, mA);
       armPaint(rec + 2 + Math.round(J[r0 + 3]) * stride, tau + shift, true, true, mB);
       const m = J[r0 + 1];
       let s = Math.max(0, Math.min(1, (tau + m) / (2 * m)));
       s = s * s * (3 - 2 * s);
       for (let c = 0; c < nc; c++) mA[c] = mA[c] + (mB[c] - mA[c]) * s;
-      const qv = kPulseCrest(U, J[r1] + tau, inw, hov, 1, 0);
-      const fa = KB * qv;
-      const f = fa >= 0.999 ? 0 : Math.max(0, Math.min(1, (KB * v - fa) / (1 - fa)));
+      const fa = KB * kPulseCrest(U, J[r1] + tau, inw, hov, 1, 0);
+      const fb = KB * kPulseBandV(U, J[r1], tau, inw, hov);
+      const f = Math.max(0, Math.min(1, (fb - fa) / Math.max(1 - fa, 1e-3)));
+      wW = Math.max(wW, f * cw);
+      for (let c = 0; c < nc; c++) out[c] = out[c] + (mA[c] - out[c]) * cw;
+    }
+    if (wW > 0) {
       const tgt = U.uKHlPulse;
-      const pq = DG ? Array.from(mA) : null;
       if (exA) {
-        for (let c = 0; c < 3; c++) mA[c] += ((tgt ? tgt[c] : 1) * mA[3] - mA[c]) * f;
+        for (let c = 0; c < 3; c++) out[c] += ((tgt ? tgt[c] : 1) * out[3] - out[c]) * wW;
       } else {
-        for (let c = 0; c < nc; c++) mA[c] += ((tgt ? tgt[c] : 1) - mA[c]) * f;
+        for (let c = 0; c < nc; c++) out[c] += ((tgt ? tgt[c] : 1) - out[c]) * wW;
       }
-      if (DG && pq) DG.drawn = [v, qv, fa, f, ...pq.slice(0, 3), mA[0], mA[1], mA[2]];
-      for (let c = 0; c < nc; c++) out[c] = out[c] + (mA[c] - out[c]) * cov;
     }
     if (DG) DG.out = Array.from(out);
   }

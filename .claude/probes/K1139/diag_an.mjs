@@ -105,7 +105,12 @@ for (const rc of meta.recs) {
     let nSeamG = 0, nSeamC = 0, maxStepG = 0, maxStepC = 0, maxSame = 0;
     const byCls = {};
     const sw = { n: 0, dv: 0, dOut: 0 };
-    const cpuG = (i) => (win[i] < 0 ? 0 : (u8[i * PX + win[i] * PB] * u8[i * PX + win[i] * PB + 1]) / 255);
+    // Stage 2 (b): kFanPulseV is the max over bands of v * cov (win is its argmax).
+    const cpuG = (i) => {
+      let g = 0;
+      for (let b = 0; b < nb; b++) g = Math.max(g, (u8[i * PX + b * PB] * u8[i * PX + b * PB + 1]) / 255);
+      return g;
+    };
     for (let Y = 1; Y < BH - 1; Y++)
       for (let X = 1; X < BW - 1; X++) {
         const i = Y * BW + X;

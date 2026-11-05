@@ -176,8 +176,9 @@ ${PAINT_GATE_GLSL}
 ${STRIP_LOOKUP_GLSL}
 ${PULSE_CREST_GLSL}
 
-// K1139 S3b: the pulse field this fan draws (the nearest band's crest
-// at this pixel), read back by debug view 5 in JUNCTION_FRAG.
+// K1139 S3b: the pulse field this fan draws (Stage 2: the max over
+// bands of crest x cover at this pixel), read back by debug view 5 in
+// JUNCTION_FRAG.
 // junctionField sets it; a pixel under no band keeps 0.
 float kFanPulseV = 0.0;
 
@@ -398,23 +399,21 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
   // crest is the arms' own field at dG = distJ + tau (PULSE_CREST_GLSL),
   // whitened over the arms' QUIET material: the quiet rows already wear
   // the crest's floor, so only the trains' share whitens here and the
-  // band meets its arms. A pixel takes its NEAREST band's crest: where
-  // two bands still overlap near the arm they came from their
-  // centerlines coincide and carry the same crest (plan 2.2), so the
-  // choice is invisible there; past the split, a max over bands would
-  // paint the sibling's at-joint value across this band's wedge (its
-  // nearest point sits at the joint while this band's crest has run
-  // on). A shared band draws nothing: its gold block carries the crest
-  // through the strips; it still feeds kFanPulseV (debug 5). On a tie
-  // a drawing band wins over a shared one.
+  // band meets its arms. Stage 2 (b): no winner. kFanPulseV (debug 5)
+  // is the max over every band of crest x cover; each drawing band
+  // mixes its material in by its own weight, in block order, and the
+  // whitening, the max over drawing bands of f x weight, is applied
+  // once. (c): a drawing band's weight is its cover times its yield to
+  // the shared bands' gold, a ramp over the 3 px where a shared band is
+  // nearer (1 on a tie, S3b's tie rule). A shared band draws nothing:
+  // its gold block carries the crest through the strips.
   int pb = pbase + 1;
-  float bDist = 1e20;
-  float bTau = 0.0;
-  float bShift = 0.0;
-  float bCov = 0.0;
-  vec4 bR0 = vec4(0.0);
-  vec4 bR1 = vec4(0.0);
-  bool haveBand = false;
+  float dShared = 1e20;
+  float sTau[${MAX_ROUTES}];
+  float sShift[${MAX_ROUTES}];
+  float sCov[${MAX_ROUTES}];
+  float sDist[${MAX_ROUTES}];
+  int sPb[${MAX_ROUTES}];
   for (int r = 0; r < ${MAX_ROUTES}; r++) {
     if (r >= np) break;
     vec4 r0 = jAt(pb);
@@ -494,38 +493,38 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
         shift = eB1.w;
       }
     }
-    float cov = clamp((reach - sqrt(best)) / pxW, 0.0, 1.0);
-    if (cov > 0.0) {
-      float dnow = sqrt(best);
-      bool take = !haveBand || dnow < bDist - 1e-6 ||
-        (dnow <= bDist + 1e-6 && bR1.z >= 0.5 && r1.z < 0.5);
-      if (take) {
-        haveBand = true;
-        bDist = dnow;
-        bTau = tau;
-        bShift = shift;
-        bCov = cov;
-        bR0 = r0;
-        bR1 = r1;
-      }
-    }
+    float dnow = sqrt(best);
+    float cov = clamp((reach - dnow) / pxW, 0.0, 1.0);
+    bool inw = r1.y == 1.0 || r1.y == 3.0;
+    bool hov = r1.y > 1.5;
+    if (cov > 0.0) kFanPulseV = max(kFanPulseV, kPulseCrest(r1.x + tau, inw, hov, 1.0) * cov);
+    if (r1.z >= 0.5) dShared = min(dShared, dnow);
+    sTau[r] = tau;
+    sShift[r] = shift;
+    sCov[r] = r1.z < 0.5 ? cov : 0.0;
+    sDist[r] = dnow;
+    sPb[r] = pb;
     pb += 4 + nv;
   }
-  if (haveBand) {
-    bool inw = bR1.y == 1.0 || bR1.y == 3.0;
-    bool hov = bR1.y > 1.5;
-    float v = kPulseCrest(bR1.x + bTau, inw, hov, 1.0);
-    kFanPulseV = v * bCov;
-    if (bR1.z < 0.5) {
-      vec3 pm = armPaint(rec + 2 + int(bR0.z + 0.5) * stride, -bTau + bShift, true, true);
-      pm = mix(pm, armPaint(rec + 2 + int(bR0.w + 0.5) * stride, bTau + bShift, true, true), smoothstep(-bR0.y, bR0.y, bTau));
-      float fa = K_BAND * kPulseCrestQuiet(bR1.x + bTau, inw, hov, 1.0);
-      float fb = K_BAND * v;
-      float f = fa >= 0.999 ? 0.0 : clamp((fb - fa) / (1.0 - fa), 0.0, 1.0);
-      pm = mix(pm, uKHlPulse.rgb, f);
-      c = mix(c, pm, bCov);
+  float wW = 0.0;
+  for (int r = 0; r < ${MAX_ROUTES}; r++) {
+    if (r >= np) break;
+    float cw = sCov[r] * (1.0 - smoothstep(0.0, 3.0 * pxW, sDist[r] - dShared));
+    if (cw > 0.0) {
+      vec4 r0 = jAt(sPb[r]);
+      vec4 r1 = jAt(sPb[r] + 1);
+      bool inw = r1.y == 1.0 || r1.y == 3.0;
+      bool hov = r1.y > 1.5;
+      float tau = sTau[r];
+      vec3 pm = armPaint(rec + 2 + int(r0.z + 0.5) * stride, -tau + sShift[r], true, true);
+      pm = mix(pm, armPaint(rec + 2 + int(r0.w + 0.5) * stride, tau + sShift[r], true, true), smoothstep(-r0.y, r0.y, tau));
+      float fa = K_BAND * kPulseCrestQuiet(r1.x + tau, inw, hov, 1.0);
+      float fb = K_BAND * kPulseCrest(r1.x + tau, inw, hov, 1.0);
+      wW = max(wW, clamp((fb - fa) / max(1.0 - fa, 1e-3), 0.0, 1.0) * cw);
+      c = mix(c, pm, cw);
     }
   }
+  c = mix(c, uKHlPulse.rgb, wW);
   return c;
 }
 `;
@@ -730,10 +729,7 @@ export const FIELD_EXPLORE_EDITS: ReadonlyArray<readonly [string, string]> = [
   ],
   ["      vec3 bm = armPaint(", "      vec4 bm = armPaint("],
   ["      vec3 pm = armPaint(", "      vec4 pm = armPaint("],
-  [
-    "      pm = mix(pm, uKHlPulse.rgb, f);",
-    "      pm.rgb = mix(pm.rgb, uKHlPulse.rgb * pm.a, f);",
-  ],
+  ["  c = mix(c, uKHlPulse.rgb, wW);", "  c.rgb = mix(c.rgb, uKHlPulse.rgb * c.a, wW);"],
   [
     "  vec3 rgb = junctionField(rec, vPos, pxW, j1, strip);",
     "  vec4 exC = junctionField(rec, vPos, pxW, j1, strip);",

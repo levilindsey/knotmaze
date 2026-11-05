@@ -1,0 +1,3 @@
+# K1139 Stage 2 (b)+(c): no winner, the shared yield ramp, re-dump
+node diag_s3b.mjs cross out\s2\b\cross 8
+node diag_s3b.mjs x4 out\s2\b\x4 8
