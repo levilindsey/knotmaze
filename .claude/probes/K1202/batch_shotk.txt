@@ -1,0 +1,1 @@
+node shot_kymo.mjs > out/shot_kymo.txt 2>&1

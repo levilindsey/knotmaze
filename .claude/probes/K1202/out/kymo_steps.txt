@@ -1,0 +1,19 @@
+﻿kymo 268x306: 256 columns, 72 rows (top half)
+cols 15..60 max|dL|: 0 4 3 0 0 40 0 0 5 6 0 0 11 0 0 4 5 0 4 5 0 0 4 4 0 4 4 0 4 0 0 4 0 4 2 0 4 0 4 0 0 4 0 2 1 0
+largest step overall: col 215->216 max|dL| 249.1, rows>10: 72/72
+  col 17->18: max|dL| 3.4, rows>10: 0/72
+  col 18->19: max|dL| 0.0, rows>10: 0/72
+  col 19->20: max|dL| 0.0, rows>10: 0/72
+  col 20->21: max|dL| 40.3, rows>10: 34/72
+  col 21->22: max|dL| 0.0, rows>10: 0/72
+  col 22->23: max|dL| 0.0, rows>10: 0/72
+  col 23->24: max|dL| 4.7, rows>10: 0/72
+  col 24->25: max|dL| 6.2, rows>10: 0/72
+  col 50->51: max|dL| 0.0, rows>10: 0/72
+  col 51->52: max|dL| 4.2, rows>10: 0/72
+  col 52->53: max|dL| 0.0, rows>10: 0/72
+  col 53->54: max|dL| 4.0, rows>10: 0/72
+  col 54->55: max|dL| 0.0, rows>10: 0/72
+  col 55->56: max|dL| 0.0, rows>10: 0/72
+  col 56->57: max|dL| 4.0, rows>10: 0/72
+  col 57->58: max|dL| 0.0, rows>10: 0/72

@@ -1,0 +1,1 @@
+node diag_s4.mjs cyc out/diag 8

@@ -1,0 +1,30 @@
+﻿t 100.456; band codes: e39->e209 6661; e39->e210 2565
+col 16: band0 tau -0.119 d 0.259 cov 0.55 cr 0.966 -> 135 | band1 tau 0.171 d 0.021 cov 1.00 cr 0.549 -> 140 | twin max 140 vs GPU 234
+col 17: band0 tau -0.125 d 0.270 cov 0.16 cr 0.976 -> 41 | band1 tau 0.183 d 0.018 cov 1.00 cr 0.530 -> 135 | twin max 135 vs GPU 245
+col 18: band0 tau -0.132 d 0.281 cov 0.00 cr 0.986 -> 0 | band1 tau 0.197 d 0.014 cov 1.00 cr 0.498 -> 127 | twin max 127 vs GPU 242
+col 19: band0 tau -0.139 d 0.292 cov 0.00 cr 0.995 -> 0 | band1 tau 0.211 d 0.010 cov 1.00 cr 0.467 -> 119 | twin max 119 vs GPU 242
+col 20: band0 tau -0.145 d 0.303 cov 0.00 cr 1.000 -> 0 | band1 tau 0.224 d 0.007 cov 1.00 cr 0.439 -> 112 | twin max 112 vs GPU 242
+col 21: band0 tau -0.152 d 0.314 cov 0.00 cr 1.000 -> 0 | band1 tau 0.238 d 0.004 cov 1.00 cr 0.409 -> 104 | twin max 104 vs GPU 112
+col 22: band0 tau -0.159 d 0.325 cov 0.00 cr 1.000 -> 0 | band1 tau 0.252 d 0.002 cov 1.00 cr 0.381 -> 97 | twin max 97 vs GPU 112
+col 23: band0 tau -0.165 d 0.337 cov 0.00 cr 1.000 -> 0 | band1 tau 0.266 d 0.001 cov 1.00 cr 0.353 -> 90 | twin max 90 vs GPU 112
+col 24: band0 tau -0.172 d 0.348 cov 0.00 cr 1.000 -> 0 | band1 tau 0.280 d 0.002 cov 1.00 cr 0.326 -> 83 | twin max 83 vs GPU 102
+col 25: band0 tau -0.179 d 0.359 cov 0.00 cr 1.000 -> 0 | band1 tau 0.295 d 0.004 cov 1.00 cr 0.300 -> 77 | twin max 77 vs GPU 88
+transect (world offsets, device px at the sheets view):
+  col 20 off -4: twin max 95 (0/95)
+  col 20 off -3: twin max 99 (0/99)
+  col 20 off -2: twin max 104 (0/104)
+  col 20 off -1: twin max 108 (0/108)
+  col 20 off 0: twin max 112 (0/112)
+  col 20 off 1: twin max 117 (0/117)
+  col 20 off 2: twin max 124 (0/124)
+  col 20 off 3: twin max 130 (0/130)
+  col 20 off 4: twin max 136 (0/136)
+  col 21 off -4: twin max 92 (0/92)
+  col 21 off -3: twin max 92 (0/92)
+  col 21 off -2: twin max 96 (0/96)
+  col 21 off -1: twin max 100 (0/100)
+  col 21 off 0: twin max 104 (0/104)
+  col 21 off 1: twin max 109 (0/109)
+  col 21 off 2: twin max 113 (0/113)
+  col 21 off 3: twin max 122 (0/122)
+  col 21 off 4: twin max 128 (0/128)

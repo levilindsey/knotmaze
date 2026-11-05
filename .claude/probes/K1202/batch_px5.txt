@@ -1,0 +1,1 @@
+node px5_cyc.mjs > out/px5_cyc.txt 2>&1

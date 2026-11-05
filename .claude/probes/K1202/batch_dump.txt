@@ -1,0 +1,4 @@
+$env:K1139_HOST = "http://127.0.0.1:5770"
+node dump_cyc.mjs out/dump cyc
+$env:K1139_SHEETS_OUT = "out/sheets"
+node sheets_cyc.mjs http://127.0.0.1:5770 http://127.0.0.1:5770 cyc

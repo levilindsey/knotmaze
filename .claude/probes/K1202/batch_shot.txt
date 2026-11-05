@@ -1,0 +1,1 @@
+node shot218.mjs > out/shot218.txt 2>&1
