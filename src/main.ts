@@ -3850,6 +3850,9 @@ async function main(): Promise<void> {
   // turn clock minotaur, the keys are live and no open panel covers them;
   // hidden, the tool goes down. A snare sprung since the last frame says so.
   let snaresSprung = 0;
+  // K782: on the turn clock, the turn the sprung count last grew on,
+  // while its toast waits for that turn's animation (-1: none waiting).
+  let snareSprungTurn = -1;
   const toolTick = (): void => {
     const lure = luresOn();
     const snare = snaresOn();
@@ -3871,9 +3874,25 @@ async function main(): Promise<void> {
     const cm = scene.chase; // K137 stage 7
     if (cm) for (const s of cm.snares) if (s.phase !== "set") sprung++;
     if (sprung > snaresSprung) {
-      showToast(`Snared! It stands ${countWords(snareHoldOf(params.snareHold), tm ? "turn" : "second")}.`, CUT_TOAST_MS);
+      // K782: on the turn clock the toast waits until the monster
+      // visibly arrives: the turn's animation at rest, or a later turn
+      // begun (a chained hold or a mid-move tap can start one first).
+      // While neither holds the baseline stays, so the toast is
+      // delayed, never dropped. No turn minotaur (real time): at once.
+      let ready = !tm;
+      if (tm) {
+        if (snareSprungTurn < 0 || snareSprungTurn > tm.turns) snareSprungTurn = tm.turns;
+        ready = tm.progress >= 1 || tm.turns > snareSprungTurn;
+      }
+      if (ready) {
+        showToast(`Snared! It stands ${countWords(snareHoldOf(params.snareHold), tm ? "turn" : "second")}.`, CUT_TOAST_MS);
+        snaresSprung = sprung;
+        snareSprungTurn = -1;
+      }
+    } else if (sprung < snaresSprung) {
+      snaresSprung = sprung;
+      snareSprungTurn = -1;
     }
-    snaresSprung = sprung;
   };
   // K114 beat rider: the pause shows while the beat plays (the keys live);
   // an open panel over it hides it but keeps a pause, and an ended game or
