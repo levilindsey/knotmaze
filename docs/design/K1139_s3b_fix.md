@@ -1116,3 +1116,128 @@ change in two places:
   junction, section 7); master on `pwsh scripts/preview.ps1 -Port 5630
   -Ref c4a9dd60 -Root C:\Users\lsl\AppData\Local\Temp\k1139s3pv`; GPU
   probes through `run_locked.ps1 -Batch`.
+
+## Stage 4 (2026-11-04): attribution before any merge
+
+This is the fix brief's Stage 4. K1139's own S4 (e79 and e134) is a
+different stage and stays where it is.
+
+A new agent runs this stage in Stage 3's worktree,
+`.claude/worktrees/agent-a8280f4d14ebd8ad1`, on its branch
+`worktree-agent-a8280f4d14ebd8ad1`, so that Stage 3's untracked dumps
+under `.claude/probes/K1139/out/s3/` stay at hand.
+- Make no new worktree, and do not rebase onto or merge master.
+- Sections 1-8, Stage 2's S2.1-S2.5 and Stage 3 hold except where this
+  section says otherwise.
+- Read Stage 3 and its handoff first.
+
+### Stage 4.1 Claude's ruling on Stage 3 (2026-11-04)
+
+- **No line-arc-line turn.** At 2x the compression ramps read as soft
+  shading, not creases. ji 147's curved edge at t0 (c 1.905) is no
+  crisper than master's own fronts there, so S3.1's rule stands.
+- **The classifier's missing terms are recorded, not fixed.** These are
+  the arc-true tau rate and the band's obliqueness. Use the classes as
+  they are and say where a class depends on them.
+- **No merge yet.** The fix removes S3b's chevron with one round arc,
+  but four things are visible and unexplained:
+  - The fork front at cross ji 33, t4-t5, ends at its lower left in a
+    crisp arc where S3b ramps.
+  - ji 28 has 8915 GPU-only wedges, 6055 of them beyond any strip's
+    reach and 16.3 luma darker than the twin.
+  - P8 rose on 14 of 15 bands under a model that predates rule (b).
+  - ji 149's partition. In master the yellow/teal boundary at ji 149 is
+    an arc; in S3b and the fix it is a straight edge with a corner,
+    the same in both rows (`s3b_fix_seams_x4.png`, the ji 149 tiles).
+    The right-edge notch at t4 and t6 shows in both too.
+
+### Stage 4.2 The work
+
+Measurement and attribution come first. The rules for source changes:
+- A source change lands only where an attribution proves a defect,
+  meaning a bug rather than a design choice.
+- Each such change goes in its own commit, with section 5 re-run on it.
+- A new fill rule is a design choice: propose it in the handoff with
+  its numbers, and do not build it.
+
+The six tasks:
+1. **P8 against the max over bands.**
+   - Re-measure P8 on every band of section 5's table. The model's
+     value at each pixel becomes the max over bands of each band's
+     crest there, which is rule (b)'s design.
+   - Give Stage 3's table again with this column added, and say pass
+     or fail against 4/255 per band.
+   - Then attribute the pixels that remain over 4/255 (Stage 3 counted
+     94, 70 of them on ji 28 band 0). For each, give:
+     - the rule (a)-(d) that set it;
+     - its band, distJ and tau;
+     - whether a strip covers it;
+     - whether rule (a)'s ray changes segment there.
+2. **The twin draws the cover strips.**
+   - Give `diag_s3b.mjs`'s twin the strips. Today it passes
+     strip = false (line 176). A strip reaches fh + 1.5 pxW, per
+     `junction_field.ts:346`.
+   - If that cannot be exact, mask the strip ring out of every
+     GPU-against-twin comparison. Say which you did.
+   - Re-run the wedge census and the seam classes with it, and give how
+     many GPU-only wedges remain at ji 28, ji 33 and ji 147.
+3. **ji 28's darker bare fan.** In the GPU-only wedges beyond strip
+   reach, find which input differs between the GPU and the twin:
+   - the fan's base material;
+   - the arm strip it samples (`arm_strip.ts`, K4);
+   - the band partition;
+   - the light.
+   Check the answer against offline's +113 fill px at ji 28. A twin bug
+   is fixed in the twin. A shader bug is named with its line and fix,
+   and lands only under 4.2's rule.
+4. **The fork front's crisp arc** (cross ji 33, t4-t5).
+   - Name the rule that draws the arc.
+   - Measure its edge width: the 10-90% rise in px at 1x, along the
+     edge's normal. Measure master's fronts the same way, at the same
+     place and at ji 147.
+   - If the fix's arc is no crisper than master's fronts, it is not a
+     defect. Say so, with the numbers.
+5. **jump:gpu at cross t7**, box (115-120, 78-83): attribute it.
+6. **ji 149's partition corner.** Name the code that draws master's arc
+   and the code that draws the fix's straight edge. Say whether the
+   corner is the route band's designed corner (K81,
+   `junction_routes.ts`) or the fill.
+
+### Stage 4.3 Sheets
+
+For each of tasks 3-6, a 2x crop with three rows, before (master
+c4a9dd60), S3b and the fix, in Stage 3's layout. Files go under
+`.claude/probes/K1139/out/s4/sheets/`, tracked with `-f`, and the
+handoff lists what is where.
+
+### Stage 4.4 Order of work and stop
+
+Times run from your `Get-Date` at the start. Commit WIP at every
+milestone, broken or not.
+
+1. **Setup, 15 min.**
+   - Start the server on 5620-5639 from this worktree, and master's
+     preview on 5630 (the Stage 3 handoff's env line, the same short
+     `-Root`).
+   - Fix `run_locked.ps1`'s false "!! exit" after `$env:` lines in its
+     own commit. It reads a stale exit code.
+   - If dumps are needed, put the `__k1139diag` hook back in a WIP
+     commit (e7dc5fda's version). Take it out again before the end.
+2. **Tasks 1-2 by 1 h.** Their numbers change how 3-6 read.
+3. **Tasks 3-6, then 4.3's sheets.**
+4. **The stop:** done or 2 h, whichever comes first.
+   - Neither a compaction nor context size is a stop. After one,
+     re-read this section and `git log`.
+   - Stop the servers. Remove master's preview worktree the way
+     `preview.ps1`'s `finally` does: unlink its `node_modules` junction
+     first, then remove the worktree.
+   - Release the perf lock.
+   - Commit WIP, append `### Stage 4 handoff` at the end of this
+     section, commit, and report as section 8 says.
+     - Give the handle fields, env among them.
+     - List the ledger items.
+     - For each finding, say whether it blocks a merge.
+   - Never push. No subagents. No edits to `LEDGER.md` or
+     `docs/ledger_notes.md`.
+   - Never write into the main checkout (Muse runs there) or into the
+     other worktrees.
