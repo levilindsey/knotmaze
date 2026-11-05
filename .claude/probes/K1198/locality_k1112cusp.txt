@@ -1,0 +1,385 @@
+K1112 cusp locality: v7.1 (work31/base, ports Pc10) against v7.2 (work31\base, K1198 ports Plc1m); the rule's pairs: low exits acdefhin into cusp windows ijprstuwy (72 pairs); named pairs []
+(0) the data, v7.1 (work31/base) against v7.2, raw JSON per key
+  bodies.json: 26 keys, 0 differ: []
+  join_params.json: 12 keys, 0 differ: []
+
+(1) the pieces, 433 words (J3h's list plus every low-exit pair into a cusp window and words holding one), 2309 pieces
+  untouched (not a rule's join, its right letter's stroke 0 or its exit stroke): 2000 pieces, 0 not byte-identical PASS
+  touched, by kind: pieces, moved, the largest move
+    exit stroke of a touched join       105 pieces,  102 moved, largest 9.824 u (fruit|letter 3 i s0)
+    stroke 0 after a touched join        99 pieces,   96 moved, largest 9.785 u (fi|letter 1 i s0)
+    touched join ai                       3 pieces,    3 moved, largest 1.242 u (air|join ai #0)
+    touched join aj                       1 pieces,    1 moved, largest 0.001 u (aj|join aj #0)
+    touched join ap                       1 pieces,    1 moved, largest 0.000 u (ap|join ap #0)
+    touched join ar                       1 pieces,    1 moved, largest 1.374 u (ar|join ar #0)
+    touched join as                       1 pieces,    1 moved, largest 1.122 u (as|join as #0)
+    touched join at                       2 pieces,    2 moved, largest 0.299 u (oat|join at #1)
+    touched join au                       1 pieces,    1 moved, largest 0.000 u (au|join au #0)
+    touched join aw                       2 pieces,    2 moved, largest 0.554 u (lawgiver|join aw #1)
+    touched join ay                       1 pieces,    1 moved, largest 0.006 u (ay|join ay #0)
+    touched join ci                       1 pieces,    1 moved, largest 7.181 u (ci|join ci #0)
+    touched join cj                       1 pieces,    1 moved, largest 0.456 u (cj|join cj #0)
+    touched join cp                       1 pieces,    1 moved, largest 0.003 u (cp|join cp #0)
+    touched join cr                       1 pieces,    1 moved, largest 1.960 u (cr|join cr #0)
+    touched join cs                       1 pieces,    1 moved, largest 1.553 u (cs|join cs #0)
+    touched join ct                       1 pieces,    1 moved, largest 0.000 u (ct|join ct #0)
+    touched join cu                       2 pieces,    2 moved, largest 0.000 u (cu|join cu #0)
+    touched join cw                       1 pieces,    1 moved, largest 0.505 u (cw|join cw #0)
+    touched join cy                       2 pieces,    2 moved, largest 1.001 u (cyst|join cy #0)
+    touched join di                       2 pieces,    2 moved, largest 1.312 u (di|join di #0)
+    touched join dj                       1 pieces,    1 moved, largest 0.000 u (dj|join dj #0)
+    touched join dp                       1 pieces,    1 moved, largest 0.562 u (dp|join dp #0)
+    touched join dr                       1 pieces,    1 moved, largest 1.401 u (dr|join dr #0)
+    touched join ds                       1 pieces,    1 moved, largest 1.133 u (ds|join ds #0)
+    touched join dt                       1 pieces,    1 moved, largest 0.000 u (dt|join dt #0)
+    touched join du                       1 pieces,    1 moved, largest 0.001 u (du|join du #0)
+    touched join dw                       1 pieces,    1 moved, largest 0.001 u (dw|join dw #0)
+    touched join dy                       1 pieces,    1 moved, largest 0.000 u (dy|join dy #0)
+    touched join ei                       1 pieces,    1 moved, largest 8.152 u (ei|join ei #0)
+    touched join ej                       1 pieces,    1 moved, largest 0.312 u (ej|join ej #0)
+    touched join ep                       1 pieces,    1 moved, largest 1.271 u (ep|join ep #0)
+    touched join er                       4 pieces,    4 moved, largest 1.892 u (over|join er #2)
+    touched join es                       4 pieces,    4 moved, largest 2.355 u (es|join es #0)
+    touched join et                       3 pieces,    3 moved, largest 2.585 u (et|join et #0)
+    touched join eu                       1 pieces,    1 moved, largest 0.966 u (eu|join eu #0)
+    touched join ew                       1 pieces,    1 moved, largest 3.917 u (ew|join ew #0)
+    touched join ey                       2 pieces,    2 moved, largest 1.355 u (eyes|join ey #0)
+    touched join fi                       3 pieces,    3 moved, largest 9.785 u (fi|join fi #0)
+    touched join fj                       1 pieces,    1 moved, largest 1.449 u (fj|join fj #0)
+    touched join fp                       1 pieces,    1 moved, largest 0.042 u (fp|join fp #0)
+    touched join fr                       2 pieces,    0 moved
+    touched join fs                       1 pieces,    0 moved
+    touched join ft                       3 pieces,    3 moved, largest 1.915 u (ft|join ft #0)
+    touched join fu                       1 pieces,    1 moved, largest 0.001 u (fu|join fu #0)
+    touched join fw                       1 pieces,    1 moved, largest 0.215 u (fw|join fw #0)
+    touched join fy                       1 pieces,    1 moved, largest 0.000 u (fy|join fy #0)
+    touched join hi                       4 pieces,    4 moved, largest 1.256 u (hi|join hi #0)
+    touched join hj                       1 pieces,    1 moved, largest 0.001 u (hj|join hj #0)
+    touched join hp                       1 pieces,    1 moved, largest 0.276 u (hp|join hp #0)
+    touched join hr                       1 pieces,    1 moved, largest 1.381 u (hr|join hr #0)
+    touched join hs                       1 pieces,    1 moved, largest 1.116 u (hs|join hs #0)
+    touched join ht                       1 pieces,    1 moved, largest 0.211 u (ht|join ht #0)
+    touched join hu                       2 pieces,    2 moved, largest 0.002 u (hu|join hu #0)
+    touched join hw                       1 pieces,    1 moved, largest 0.193 u (hw|join hw #0)
+    touched join hy                       1 pieces,    1 moved, largest 0.000 u (hy|join hy #0)
+    touched join ii                       1 pieces,    1 moved, largest 1.278 u (ii|join ii #0)
+    touched join ip                       2 pieces,    2 moved, largest 1.437 u (hippo|join ip #1)
+    touched join ir                       5 pieces,    5 moved, largest 1.436 u (air|join ir #1)
+    touched join is                       1 pieces,    1 moved, largest 1.128 u (is|join is #0)
+    touched join it                       3 pieces,    3 moved, largest 9.824 u (hit|join it #1)
+    touched join iu                       1 pieces,    1 moved, largest 0.001 u (iu|join iu #0)
+    touched join iw                       1 pieces,    1 moved, largest 0.000 u (iw|join iw #0)
+    touched join iy                       1 pieces,    1 moved, largest 0.000 u (iy|join iy #0)
+    touched join ni                       2 pieces,    2 moved, largest 2.878 u (ni|join ni #0)
+    touched join nj                       1 pieces,    1 moved, largest 0.002 u (nj|join nj #0)
+    touched join np                       1 pieces,    1 moved, largest 1.582 u (np|join np #0)
+    touched join nr                       1 pieces,    1 moved, largest 1.396 u (nr|join nr #0)
+    touched join ns                       2 pieces,    2 moved, largest 1.112 u (ns|join ns #0)
+    touched join nt                       1 pieces,    1 moved, largest 0.000 u (nt|join nt #0)
+    touched join nu                       1 pieces,    1 moved, largest 0.000 u (nu|join nu #0)
+    touched join nw                       1 pieces,    1 moved, largest 0.184 u (nw|join nw #0)
+    touched join ny                       1 pieces,    1 moved, largest 0.004 u (ny|join ny #0)
+
+  every moved touched piece (move in u, max distance after resampling)
+    exit stroke of a touched join         9.824  fruit|letter 3 i s0
+    exit stroke of a touched join         9.824  hit|letter 1 i s0
+    exit stroke of a touched join         9.824  it|letter 0 i s0
+    exit stroke of a touched join         8.076  first|letter 1 i s0
+    exit stroke of a touched join         7.181  ci|letter 0 c s0
+    exit stroke of a touched join         3.917  ew|letter 0 e s0
+    exit stroke of a touched join         1.000  dirt|letter 1 i s0
+    exit stroke of a touched join         1.000  hippo|letter 1 i s0
+    exit stroke of a touched join         1.000  hairy|letter 2 i s0
+    exit stroke of a touched join         1.000  air|letter 1 i s0
+    exit stroke of a touched join         0.505  cw|letter 0 c s0
+    exit stroke of a touched join         0.315  ni|letter 0 n s0
+    exit stroke of a touched join         0.299  oat|letter 1 a s0
+    exit stroke of a touched join         0.237  eyes|letter 0 e s0
+    exit stroke of a touched join         0.232  cs|letter 0 c s0
+    exit stroke of a touched join         0.211  ht|letter 0 h s0
+    exit stroke of a touched join         0.188  nr|letter 0 n s0
+    exit stroke of a touched join         0.142  ey|letter 0 e s0
+    exit stroke of a touched join         0.140  es|letter 0 e s0
+    exit stroke of a touched join         0.129  at|letter 0 a s0
+    exit stroke of a touched join         0.052  minimum|letter 2 n s0
+    exit stroke of a touched join         0.050  ns|letter 0 n s0
+    exit stroke of a touched join         0.050  inside|letter 1 n s0
+    exit stroke of a touched join         0.011  np|letter 0 n s0
+    exit stroke of a touched join         0.007  ip|letter 0 i s0
+    exit stroke of a touched join         0.007  fi|letter 0 f s0
+    exit stroke of a touched join         0.003  ep|letter 0 e s0
+    exit stroke of a touched join         0.002  nw|letter 0 n s0
+    exit stroke of a touched join         0.001  ej|letter 0 e s0
+    exit stroke of a touched join         0.001  fw|letter 0 f s0
+    exit stroke of a touched join         0.001  di|letter 0 d s0
+    exit stroke of a touched join         0.001  nj|letter 0 n s0
+    exit stroke of a touched join         0.000  ir|letter 0 i s0
+    exit stroke of a touched join         0.000  ny|letter 0 n s0
+    exit stroke of a touched join         0.000  ei|letter 0 e s0
+    exit stroke of a touched join         0.000  cu|letter 0 c s0
+    exit stroke of a touched join         0.000  iw|letter 0 i s0
+    exit stroke of a touched join         0.000  fifty|letter 2 f s0
+    exit stroke of a touched join         0.000  after|letter 1 f s0
+    exit stroke of a touched join         0.000  cy|letter 0 c s0
+    exit stroke of a touched join         0.000  cursive|letter 0 c s0
+    exit stroke of a touched join         0.000  er|letter 0 e s0
+    exit stroke of a touched join         0.000  nu|letter 0 n s0
+    exit stroke of a touched join         0.000  nt|letter 0 n s0
+    exit stroke of a touched join         0.000  ds|letter 0 d s0
+    exit stroke of a touched join         0.000  dr|letter 0 d s0
+    exit stroke of a touched join         0.000  cp|letter 0 c s0
+    exit stroke of a touched join         0.000  hs|letter 0 h s0
+    exit stroke of a touched join         0.000  hi|letter 0 h s0
+    exit stroke of a touched join         0.000  eyes|letter 2 e s0
+    exit stroke of a touched join         0.000  boxes|letter 3 e s0
+    exit stroke of a touched join         0.000  ft|letter 0 f s0
+    exit stroke of a touched join         0.000  lawgiver|letter 1 a s0
+    exit stroke of a touched join         0.000  as|letter 0 a s0
+    exit stroke of a touched join         0.000  dt|letter 0 d s0
+    exit stroke of a touched join         0.000  cj|letter 0 c s0
+    exit stroke of a touched join         0.000  is|letter 0 i s0
+    exit stroke of a touched join         0.000  nest|letter 1 e s0
+    exit stroke of a touched join         0.000  fp|letter 0 f s0
+    exit stroke of a touched join         0.000  hr|letter 0 h s0
+    exit stroke of a touched join         0.000  cyst|letter 0 c s0
+    exit stroke of a touched join         0.000  dirt|letter 0 d s0
+    exit stroke of a touched join         0.000  iy|letter 0 i s0
+    exit stroke of a touched join         0.000  hairy|letter 1 a s0
+    exit stroke of a touched join         0.000  ai|letter 0 a s0
+    exit stroke of a touched join         0.000  du|letter 0 d s0
+    exit stroke of a touched join         0.000  aw|letter 0 a s0
+    exit stroke of a touched join         0.000  hu|letter 0 h s0
+    exit stroke of a touched join         0.000  eu|letter 0 e s0
+    exit stroke of a touched join         0.000  dw|letter 0 d s0
+    exit stroke of a touched join         0.000  cr|letter 0 c s0
+    exit stroke of a touched join         0.000  jet|letter 1 e s0
+    exit stroke of a touched join         0.000  banquet|letter 5 e s0
+    exit stroke of a touched join         0.000  ii|letter 0 i s0
+    exit stroke of a touched join         0.000  dp|letter 0 d s0
+    exit stroke of a touched join         0.000  hw|letter 0 h s0
+    exit stroke of a touched join         0.000  air|letter 0 a s0
+    exit stroke of a touched join         0.000  hit|letter 0 h s0
+    exit stroke of a touched join         0.000  hippo|letter 0 h s0
+    exit stroke of a touched join         0.000  hj|letter 0 h s0
+    exit stroke of a touched join         0.000  ar|letter 0 a s0
+    exit stroke of a touched join         0.000  hy|letter 0 h s0
+    exit stroke of a touched join         0.000  iu|letter 0 i s0
+    exit stroke of a touched join         0.000  ct|letter 0 c s0
+    exit stroke of a touched join         0.000  which|letter 1 h s0
+    exit stroke of a touched join         0.000  hp|letter 0 h s0
+    exit stroke of a touched join         0.000  dy|letter 0 d s0
+    exit stroke of a touched join         0.000  au|letter 0 a s0
+    exit stroke of a touched join         0.000  dj|letter 0 d s0
+    exit stroke of a touched join         0.000  aj|letter 0 a s0
+    exit stroke of a touched join         0.000  lawgiver|letter 6 e s0
+    exit stroke of a touched join         0.000  over|letter 2 e s0
+    exit stroke of a touched join         0.000  after|letter 3 e s0
+    exit stroke of a touched join         0.000  et|letter 0 e s0
+    exit stroke of a touched join         0.000  ay|letter 0 a s0
+    exit stroke of a touched join         0.000  fy|letter 0 f s0
+    exit stroke of a touched join         0.000  fu|letter 0 f s0
+    exit stroke of a touched join         0.000  ap|letter 0 a s0
+    exit stroke of a touched join         0.000  fj|letter 0 f s0
+    exit stroke of a touched join         0.000  first|letter 0 f s0
+    exit stroke of a touched join         0.000  fifty|letter 0 f s0
+    exit stroke of a touched join         0.000  huge|letter 0 h s0
+    stroke 0 after a touched join         9.785  fi|letter 1 i s0
+    stroke 0 after a touched join         8.152  ei|letter 1 i s0
+    stroke 0 after a touched join         8.076  fifty|letter 1 i s0
+    stroke 0 after a touched join         2.585  et|letter 1 t s0
+    stroke 0 after a touched join         2.581  ni|letter 1 i s0
+    stroke 0 after a touched join         1.915  ft|letter 1 t s0
+    stroke 0 after a touched join         1.582  np|letter 1 p s0
+    stroke 0 after a touched join         1.532  es|letter 1 s s0
+    stroke 0 after a touched join         1.449  fj|letter 1 j s0
+    stroke 0 after a touched join         1.437  hippo|letter 2 p s0
+    stroke 0 after a touched join         1.355  eyes|letter 1 y s0
+    stroke 0 after a touched join         1.327  ey|letter 1 y s0
+    stroke 0 after a touched join         1.271  ep|letter 1 p s0
+    stroke 0 after a touched join         1.001  cyst|letter 1 y s0
+    stroke 0 after a touched join         1.001  cy|letter 1 y s0
+    stroke 0 after a touched join         1.001  ir|letter 1 r s0
+    stroke 0 after a touched join         1.001  hr|letter 1 r s0
+    stroke 0 after a touched join         1.001  dr|letter 1 r s0
+    stroke 0 after a touched join         1.001  nr|letter 1 r s0
+    stroke 0 after a touched join         1.001  after|letter 4 r s0
+    stroke 0 after a touched join         1.001  over|letter 3 r s0
+    stroke 0 after a touched join         1.001  lawgiver|letter 7 r s0
+    stroke 0 after a touched join         1.001  cr|letter 1 r s0
+    stroke 0 after a touched join         1.001  ar|letter 1 r s0
+    stroke 0 after a touched join         1.001  er|letter 1 r s0
+    stroke 0 after a touched join         1.001  hairy|letter 3 r s0
+    stroke 0 after a touched join         1.001  first|letter 2 r s0
+    stroke 0 after a touched join         1.001  dirt|letter 2 r s0
+    stroke 0 after a touched join         1.000  air|letter 2 r s0
+    stroke 0 after a touched join         1.000  is|letter 1 s s0
+    stroke 0 after a touched join         1.000  as|letter 1 s s0
+    stroke 0 after a touched join         1.000  nest|letter 2 s s0
+    stroke 0 after a touched join         1.000  ds|letter 1 s s0
+    stroke 0 after a touched join         1.000  cs|letter 1 s s0
+    stroke 0 after a touched join         1.000  eyes|letter 3 s s0
+    stroke 0 after a touched join         1.000  boxes|letter 4 s s0
+    stroke 0 after a touched join         1.000  ns|letter 1 s s0
+    stroke 0 after a touched join         1.000  hs|letter 1 s s0
+    stroke 0 after a touched join         1.000  di|letter 1 i s0
+    stroke 0 after a touched join         1.000  ii|letter 1 i s0
+    stroke 0 after a touched join         1.000  ci|letter 1 i s0
+    stroke 0 after a touched join         1.000  hi|letter 1 i s0
+    stroke 0 after a touched join         1.000  which|letter 2 i s0
+    stroke 0 after a touched join         1.000  ai|letter 1 i s0
+    stroke 0 after a touched join         0.991  inside|letter 2 s s0
+    stroke 0 after a touched join         0.966  eu|letter 1 u s0
+    stroke 0 after a touched join         0.625  hit|letter 2 t s0
+    stroke 0 after a touched join         0.625  fruit|letter 4 t s0
+    stroke 0 after a touched join         0.562  dp|letter 1 p s0
+    stroke 0 after a touched join         0.554  lawgiver|letter 2 w s0
+    stroke 0 after a touched join         0.517  minimum|letter 3 i s0
+    stroke 0 after a touched join         0.456  cj|letter 1 j s0
+    stroke 0 after a touched join         0.373  it|letter 1 t s0
+    stroke 0 after a touched join         0.312  ej|letter 1 j s0
+    stroke 0 after a touched join         0.285  ip|letter 1 p s0
+    stroke 0 after a touched join         0.276  hp|letter 1 p s0
+    stroke 0 after a touched join         0.215  fw|letter 1 w s0
+    stroke 0 after a touched join         0.193  hw|letter 1 w s0
+    stroke 0 after a touched join         0.184  nw|letter 1 w s0
+    stroke 0 after a touched join         0.184  aw|letter 1 w s0
+    stroke 0 after a touched join         0.082  cw|letter 1 w s0
+    stroke 0 after a touched join         0.028  fifty|letter 3 t s0
+    stroke 0 after a touched join         0.028  after|letter 2 t s0
+    stroke 0 after a touched join         0.022  ew|letter 1 w s0
+    stroke 0 after a touched join         0.002  oat|letter 2 t s0
+    stroke 0 after a touched join         0.001  ht|letter 1 t s0
+    stroke 0 after a touched join         0.001  aj|letter 1 j s0
+    stroke 0 after a touched join         0.000  at|letter 1 t s0
+    stroke 0 after a touched join         0.000  iu|letter 1 u s0
+    stroke 0 after a touched join         0.000  hu|letter 1 u s0
+    stroke 0 after a touched join         0.000  nt|letter 1 t s0
+    stroke 0 after a touched join         0.000  dt|letter 1 t s0
+    stroke 0 after a touched join         0.000  au|letter 1 u s0
+    stroke 0 after a touched join         0.000  ct|letter 1 t s0
+    stroke 0 after a touched join         0.000  fu|letter 1 u s0
+    stroke 0 after a touched join         0.000  huge|letter 1 u s0
+    stroke 0 after a touched join         0.000  dw|letter 1 w s0
+    stroke 0 after a touched join         0.000  iw|letter 1 w s0
+    stroke 0 after a touched join         0.000  banquet|letter 6 t s0
+    stroke 0 after a touched join         0.000  jet|letter 2 t s0
+    stroke 0 after a touched join         0.000  du|letter 1 u s0
+    stroke 0 after a touched join         0.000  cursive|letter 1 u s0
+    stroke 0 after a touched join         0.000  nu|letter 1 u s0
+    stroke 0 after a touched join         0.000  ap|letter 1 p s0
+    stroke 0 after a touched join         0.000  dj|letter 1 j s0
+    stroke 0 after a touched join         0.000  cp|letter 1 p s0
+    stroke 0 after a touched join         0.000  cu|letter 1 u s0
+    stroke 0 after a touched join         0.000  ny|letter 1 y s0
+    stroke 0 after a touched join         0.000  nj|letter 1 j s0
+    stroke 0 after a touched join         0.000  hj|letter 1 j s0
+    stroke 0 after a touched join         0.000  fp|letter 1 p s0
+    stroke 0 after a touched join         0.000  ay|letter 1 y s0
+    stroke 0 after a touched join         0.000  iy|letter 1 y s0
+    stroke 0 after a touched join         0.000  dy|letter 1 y s0
+    stroke 0 after a touched join         0.000  hy|letter 1 y s0
+    stroke 0 after a touched join         0.000  fy|letter 1 y s0
+    touched join ai                       1.242  air|join ai #0
+    touched join ai                       1.234  ai|join ai #0
+    touched join ai                       1.234  hairy|join ai #1
+    touched join aj                       0.001  aj|join aj #0
+    touched join ap                       0.000  ap|join ap #0
+    touched join ar                       1.374  ar|join ar #0
+    touched join as                       1.122  as|join as #0
+    touched join at                       0.299  oat|join at #1
+    touched join at                       0.129  at|join at #0
+    touched join au                       0.000  au|join au #0
+    touched join aw                       0.554  lawgiver|join aw #1
+    touched join aw                       0.184  aw|join aw #0
+    touched join ay                       0.006  ay|join ay #0
+    touched join ci                       7.181  ci|join ci #0
+    touched join cj                       0.456  cj|join cj #0
+    touched join cp                       0.003  cp|join cp #0
+    touched join cr                       1.960  cr|join cr #0
+    touched join cs                       1.553  cs|join cs #0
+    touched join ct                       0.000  ct|join ct #0
+    touched join cu                       0.000  cu|join cu #0
+    touched join cu                       0.000  cursive|join cu #0
+    touched join cw                       0.505  cw|join cw #0
+    touched join cy                       1.001  cyst|join cy #0
+    touched join cy                       1.001  cy|join cy #0
+    touched join di                       1.312  di|join di #0
+    touched join di                       1.276  dirt|join di #0
+    touched join dj                       0.000  dj|join dj #0
+    touched join dp                       0.562  dp|join dp #0
+    touched join dr                       1.401  dr|join dr #0
+    touched join ds                       1.133  ds|join ds #0
+    touched join dt                       0.000  dt|join dt #0
+    touched join du                       0.001  du|join du #0
+    touched join dw                       0.001  dw|join dw #0
+    touched join dy                       0.000  dy|join dy #0
+    touched join ei                       8.152  ei|join ei #0
+    touched join ej                       0.312  ej|join ej #0
+    touched join ep                       1.271  ep|join ep #0
+    touched join er                       1.892  over|join er #2
+    touched join er                       1.892  after|join er #3
+    touched join er                       1.892  lawgiver|join er #6
+    touched join er                       1.806  er|join er #0
+    touched join es                       2.355  es|join es #0
+    touched join es                       1.654  nest|join es #1
+    touched join es                       1.646  boxes|join es #3
+    touched join es                       1.646  eyes|join es #2
+    touched join et                       2.585  et|join et #0
+    touched join et                       0.000  banquet|join et #5
+    touched join et                       0.000  jet|join et #1
+    touched join eu                       0.966  eu|join eu #0
+    touched join ew                       3.917  ew|join ew #0
+    touched join ey                       1.355  eyes|join ey #0
+    touched join ey                       1.327  ey|join ey #0
+    touched join fi                       9.785  fi|join fi #0
+    touched join fi                       8.076  first|join fi #0
+    touched join fi                       8.076  fifty|join fi #0
+    touched join fj                       1.449  fj|join fj #0
+    touched join fp                       0.042  fp|join fp #0
+    touched join ft                       1.915  ft|join ft #0
+    touched join ft                       0.041  after|join ft #1
+    touched join ft                       0.041  fifty|join ft #2
+    touched join fu                       0.001  fu|join fu #0
+    touched join fw                       0.215  fw|join fw #0
+    touched join fy                       0.000  fy|join fy #0
+    touched join hi                       1.256  hi|join hi #0
+    touched join hi                       1.253  hit|join hi #0
+    touched join hi                       1.253  hippo|join hi #0
+    touched join hi                       1.252  which|join hi #1
+    touched join hj                       0.001  hj|join hj #0
+    touched join hp                       0.276  hp|join hp #0
+    touched join hr                       1.381  hr|join hr #0
+    touched join hs                       1.116  hs|join hs #0
+    touched join ht                       0.211  ht|join ht #0
+    touched join hu                       0.002  hu|join hu #0
+    touched join hu                       0.000  huge|join hu #0
+    touched join hw                       0.193  hw|join hw #0
+    touched join hy                       0.000  hy|join hy #0
+    touched join ii                       1.278  ii|join ii #0
+    touched join ip                       1.437  hippo|join ip #1
+    touched join ip                       0.285  ip|join ip #0
+    touched join ir                       1.436  air|join ir #1
+    touched join ir                       1.404  hairy|join ir #2
+    touched join ir                       1.404  first|join ir #1
+    touched join ir                       1.404  dirt|join ir #1
+    touched join ir                       1.395  ir|join ir #0
+    touched join is                       1.128  is|join is #0
+    touched join it                       9.824  hit|join it #1
+    touched join it                       9.824  fruit|join it #3
+    touched join it                       9.824  it|join it #0
+    touched join iu                       0.001  iu|join iu #0
+    touched join iw                       0.000  iw|join iw #0
+    touched join iy                       0.000  iy|join iy #0
+    touched join ni                       2.878  ni|join ni #0
+    touched join ni                       0.628  minimum|join ni #2
+    touched join nj                       0.002  nj|join nj #0
+    touched join np                       1.582  np|join np #0
+    touched join nr                       1.396  nr|join nr #0
+    touched join ns                       1.112  ns|join ns #0
+    touched join ns                       1.101  inside|join ns #1
+    touched join nt                       0.000  nt|join nt #0
+    touched join nu                       0.000  nu|join nu #0
+    touched join nw                       0.184  nw|join nw #0
+    touched join ny                       0.004  ny|join ny #0
+
+summary: data that differ []; untouched pieces PASS

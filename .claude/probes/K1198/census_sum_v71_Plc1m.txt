@@ -1,0 +1,40 @@
+v7.1 (Pc10) (C:\Users\lsl\Repositories\knotmaze\.claude\probes\K863\trace\work32\census_v71.json)
+  all:   pieces 718, hooks 50, spikes 77, rough 147, seams 29, over 399
+  acdefhin joins: pieces 150, hooks 0, spikes 0, rough 0, seams 23, over 143
+  a: 9 joins (solved 9), dmax mean 10.42 max 18.26 (at), dmean mean 4.86
+     joins out of a in every word: pieces 18, hooks 0, spikes 0, rough 0, seams 2, over 18
+  c: 26 joins (solved 26), dmax mean 11.02 max 27.86 (cg), dmean mean 4.00
+     joins out of c in every word: pieces 31, hooks 0, spikes 0, rough 0, seams 4, over 25
+  d: 9 joins (solved 9), dmax mean 10.36 max 18.03 (dt), dmean mean 4.91
+     joins out of d in every word: pieces 10, hooks 0, spikes 0, rough 0, seams 3, over 10
+  e: 9 joins (solved 9), dmax mean 10.24 max 15.49 (ep), dmean mean 4.41
+     joins out of e in every word: pieces 19, hooks 0, spikes 0, rough 0, seams 6, over 18
+  f: 26 joins (solved 26), dmax mean 9.42 max 13.62 (fe), dmean mean 4.06
+     joins out of f in every word: pieces 30, hooks 0, spikes 0, rough 0, seams 0, over 30
+  h: 9 joins (solved 9), dmax mean 10.46 max 17.97 (ht), dmean mean 5.00
+     joins out of h in every word: pieces 14, hooks 0, spikes 0, rough 0, seams 4, over 14
+  i: 8 joins (solved 8), dmax mean 10.42 max 15.95 (it), dmean mean 5.11
+     joins out of i in every word: pieces 16, hooks 0, spikes 0, rough 0, seams 3, over 16
+  n: 9 joins (solved 9), dmax mean 9.71 max 16.31 (nt), dmean mean 4.56
+     joins out of n in every word: pieces 12, hooks 0, spikes 0, rough 0, seams 1, over 12
+  flagged acdefhin joins (23): dr(dr) seam; as(as) seam; nr(nr) seam; ds(ds) seam; hr(hr) seam; ar(ar) seam; ir(ir) seam; hi(hippo) seam; is(is) seam; ii(ii) seam; er(lawgiver) seam; er(after) seam; er(jumps over t) seam; hi(hi) seam; hi(which) seam; di(di) seam; cr(cr) seam; cs(cs) seam; er(er) seam; ci(ci) seam; es(es) seam; es(boxes) seam; cy(cy) seam
+Plc1m (K1198) (C:\Users\lsl\Repositories\knotmaze\.claude\probes\K1198\census_Plc1m.json)
+  all:   pieces 718, hooks 50, spikes 77, rough 147, seams 6, over 399
+  acdefhin joins: pieces 150, hooks 0, spikes 0, rough 0, seams 0, over 143
+  a: 9 joins (solved 9), dmax mean 10.21 max 18.26 (at), dmean mean 4.80
+     joins out of a in every word: pieces 18, hooks 0, spikes 0, rough 0, seams 0, over 18
+  c: 26 joins (solved 26), dmax mean 11.15 max 27.86 (cg), dmean mean 4.08
+     joins out of c in every word: pieces 31, hooks 0, spikes 0, rough 0, seams 0, over 25
+  d: 9 joins (solved 9), dmax mean 10.16 max 18.03 (dt), dmean mean 4.84
+     joins out of d in every word: pieces 10, hooks 0, spikes 0, rough 0, seams 0, over 10
+  e: 9 joins (solved 9), dmax mean 10.01 max 15.69 (ep), dmean mean 4.32
+     joins out of e in every word: pieces 19, hooks 0, spikes 0, rough 0, seams 0, over 18
+  f: 26 joins (solved 26), dmax mean 9.42 max 13.62 (fe), dmean mean 4.12
+     joins out of f in every word: pieces 30, hooks 0, spikes 0, rough 0, seams 0, over 30
+  h: 9 joins (solved 9), dmax mean 10.26 max 17.98 (ht), dmean mean 4.93
+     joins out of h in every word: pieces 14, hooks 0, spikes 0, rough 0, seams 0, over 14
+  i: 8 joins (solved 8), dmax mean 10.06 max 14.95 (it), dmean mean 4.78
+     joins out of i in every word: pieces 16, hooks 0, spikes 0, rough 0, seams 0, over 16
+  n: 9 joins (solved 9), dmax mean 9.39 max 16.31 (nt), dmean mean 4.44
+     joins out of n in every word: pieces 12, hooks 0, spikes 0, rough 0, seams 0, over 12
+  flagged acdefhin joins (0): 

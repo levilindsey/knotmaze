@@ -1,0 +1,72 @@
+ai   side_min   0.0066 u  ok    | attach s   1.00 in [ 1.00,  20.00] BOUND | status 0 nfev 2994
+aj   side_min   0.0019 u  ok    | attach s   3.03 in [ 1.00,  20.00]       | status 0 nfev 1246
+ap   side_min   0.0009 u  ok    | attach s  10.32 in [ 1.00,  20.00]       | status 0 nfev 1151
+ar   side_min   0.0126 u  ok    | attach s   1.00 in [ 1.00,  20.00] BOUND | status 0 nfev 1904
+as   side_min   0.0108 u  ok    | attach s   1.00 in [ 1.00,  20.00] BOUND | status 0 nfev 4075
+at   side_min   0.0010 u  ok    | attach s  34.70 in [ 1.00,  55.70]       | status 0 nfev 910
+au   side_min   0.0018 u  ok    | attach s   3.15 in [ 1.00,  20.00]       | status 0 nfev 1125
+aw   side_min   0.0017 u  ok    | attach s   9.82 in [ 1.00,  20.00]       | status 0 nfev 1344
+ay   side_min   0.0042 u  ok    | attach s   3.00 in [ 1.00,  20.00]       | status 0 nfev 937
+ci   side_min   0.0045 u  ok    | attach s   1.00 in [ 1.00,  20.00] BOUND | status 0 nfev 568
+cj   side_min   0.0003 u  ok    | attach s  14.06 in [ 1.00,  20.00]       | status 0 nfev 1420
+cp   side_min   0.0004 u  ok    | attach s  15.32 in [ 1.00,  20.00]       | status 0 nfev 1456
+cr   side_min   0.0101 u  ok    | attach s   1.00 in [ 1.00,  20.00] BOUND | status 0 nfev 909
+cs   side_min   0.0066 u  ok    | attach s   1.00 in [ 1.00,  20.00] BOUND | status 0 nfev 1016
+ct   side_min   0.0004 u  ok    | attach s  34.95 in [ 1.00,  55.70]       | status 0 nfev 893
+cu   side_min   0.0004 u  ok    | attach s   4.34 in [ 1.00,  20.00]       | status 0 nfev 591
+cw   side_min  -0.0092 u  ok    | attach s   8.71 in [ 1.00,  20.00]       | status 0 nfev 1848
+cy   side_min   0.0022 u  ok    | attach s   1.00 in [ 1.00,  20.00] BOUND | status 0 nfev 1634
+di   side_min   0.0067 u  ok    | attach s   1.00 in [ 1.00,  20.00] BOUND | status 0 nfev 2305
+dj   side_min   0.0015 u  ok    | attach s   3.16 in [ 1.00,  20.00]       | status 0 nfev 1254
+dp   side_min   0.0013 u  ok    | attach s  10.89 in [ 1.00,  20.00]       | status 0 nfev 998
+dr   side_min   0.0127 u  ok    | attach s   1.00 in [ 1.00,  20.00] BOUND | status 0 nfev 876
+ds   side_min   0.0106 u  ok    | attach s   1.00 in [ 1.00,  20.00] BOUND | status 0 nfev 692
+dt   side_min   0.0009 u  ok    | attach s  34.69 in [ 1.00,  55.70]       | status 0 nfev 1696
+du   side_min   0.0018 u  ok    | attach s   3.16 in [ 1.00,  20.00]       | status 0 nfev 1320
+dw   side_min   0.0016 u  ok    | attach s  10.04 in [ 1.00,  20.00]       | status 0 nfev 749
+dy   side_min   0.0040 u  ok    | attach s   3.00 in [ 1.00,  20.00]       | status 0 nfev 1048
+ei   side_min   0.0116 u  ok    | attach s   1.00 in [ 1.00,  20.00] BOUND | status 0 nfev 4679
+ej   side_min   0.0001 u  ok    | attach s  19.69 in [ 1.00,  20.00]       | status 0 nfev 1360
+ep   side_min   0.0017 u  ok    | attach s  18.06 in [ 1.00,  20.00]       | status 0 nfev 1590
+er   side_min   0.0037 u  ok    | attach s   1.00 in [ 1.00,  20.00] BOUND | status 0 nfev 903
+es   side_min   0.0008 u  ok    | attach s   1.53 in [ 1.00,  20.00]       | status 0 nfev 1748
+et   side_min  -0.0062 u  ok    | attach s  33.36 in [ 1.00,  55.70]       | status 0 nfev 3008
+eu   side_min   0.0005 u  ok    | attach s   5.61 in [ 1.00,  20.00]       | status 0 nfev 3165
+ew   side_min  -0.0002 u  ok    | attach s   9.72 in [ 1.00,  20.00]       | status 0 nfev 2471
+ey   side_min   0.0011 u  ok    | attach s   3.16 in [ 1.00,  20.00]       | status 0 nfev 1354
+fi   side_min   0.0001 u  ok    | attach s  12.79 in [ 1.00,  20.00]       | status 0 nfev 1794
+fj   side_min   0.0007 u  ok    | attach s  19.36 in [ 1.00,  20.00]       | status 0 nfev 1557
+fp   side_min   0.0003 u  ok    | attach s  16.78 in [ 1.00,  20.00]       | status 0 nfev 993
+fr   side_min   0.0140 u  ok    | attach s   2.00 in [ 2.00,  20.00] BOUND | status 0 nfev 5664
+fs   side_min   0.0093 u  ok    | attach s   2.00 in [ 2.00,  20.00] BOUND | status 0 nfev 2709
+ft   side_min  -0.0015 u  ok    | attach s  34.03 in [ 1.00,  55.70]       | status 0 nfev 1475
+fu   side_min   0.0001 u  ok    | attach s   5.78 in [ 1.00,  20.00]       | status 0 nfev 1595
+fw   side_min  -0.0128 u  ok    | attach s   9.22 in [ 1.00,  20.00]       | status 0 nfev 2204
+fy   side_min   0.0005 u  ok    | attach s   3.00 in [ 1.00,  20.00]       | status 0 nfev 4933
+hi   side_min   0.0067 u  ok    | attach s   1.00 in [ 1.00,  20.00] BOUND | status 0 nfev 758
+hj   side_min   0.0018 u  ok    | attach s   3.00 in [ 1.00,  20.00]       | status 0 nfev 1339
+hp   side_min   0.0012 u  ok    | attach s  10.59 in [ 1.00,  20.00]       | status 0 nfev 842
+hr   side_min   0.0126 u  ok    | attach s   1.00 in [ 1.00,  20.00] BOUND | status 0 nfev 2767
+hs   side_min   0.0105 u  ok    | attach s   1.00 in [ 1.00,  20.00] BOUND | status 0 nfev 4188
+ht   side_min   0.0009 u  ok    | attach s  34.70 in [ 1.00,  55.70]       | status 0 nfev 1466
+hu   side_min   0.0018 u  ok    | attach s   3.14 in [ 1.00,  20.00]       | status 0 nfev 1358
+hw   side_min   0.0014 u  ok    | attach s   9.42 in [ 1.00,  20.00]       | status 0 nfev 1268
+hy   side_min   0.0041 u  ok    | attach s   3.00 in [ 1.00,  20.00]       | status 0 nfev 1730
+ii   side_min   0.0067 u  ok    | attach s   1.00 in [ 1.00,  20.00] BOUND | status 0 nfev 2886
+ip   side_min   0.0007 u  ok    | attach s  10.33 in [ 1.00,  20.00]       | status 0 nfev 523
+ir   side_min   0.0123 u  ok    | attach s   1.00 in [ 1.00,  20.00] BOUND | status 0 nfev 1781
+is   side_min   0.0102 u  ok    | attach s   1.00 in [ 1.00,  20.00] BOUND | status 0 nfev 1128
+it   side_min   0.0011 u  ok    | attach s  34.90 in [ 1.00,  55.70]       | status 0 nfev 2119
+iu   side_min   0.0017 u  ok    | attach s   3.15 in [ 1.00,  20.00]       | status 0 nfev 1073
+iw   side_min   0.0013 u  ok    | attach s  10.03 in [ 1.00,  20.00]       | status 0 nfev 491
+iy   side_min   0.0039 u  ok    | attach s   3.00 in [ 1.00,  20.00]       | status 0 nfev 1790
+ni   side_min   0.0052 u  ok    | attach s   3.00 in [ 1.00,  20.00]       | status 0 nfev 1269
+nj   side_min   0.0018 u  ok    | attach s   3.00 in [ 1.00,  20.00]       | status 0 nfev 613
+np   side_min   0.0004 u  ok    | attach s   9.47 in [ 1.00,  20.00]       | status 0 nfev 416
+nr   side_min   0.0118 u  ok    | attach s   1.00 in [ 1.00,  20.00] BOUND | status 0 nfev 1069
+ns   side_min   0.0103 u  ok    | attach s   1.00 in [ 1.00,  20.00] BOUND | status 0 nfev 489
+nt   side_min   0.0011 u  ok    | attach s  34.87 in [ 1.00,  55.70]       | status 0 nfev 853
+nu   side_min   0.0017 u  ok    | attach s   3.15 in [ 1.00,  20.00]       | status 0 nfev 736
+nw   side_min   0.0013 u  ok    | attach s   9.59 in [ 1.00,  20.00]       | status 0 nfev 392
+ny   side_min   0.0041 u  ok    | attach s   3.00 in [ 1.00,  20.00]       | status 0 nfev 777
+71 cusp entries, 0 below -0.05 u

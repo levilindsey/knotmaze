@@ -1,0 +1,330 @@
+v71: pieces 718, hooks 50, spikes 77, rough 147, seams 29, over 399
+  undesigned seams (29): q$(cq), q$(fq), q$(vq), q$(oq), q$(bq), q$(wq), dr(dr), as(as), nr(nr), ds(ds), hr(hr), ar(ar), ir(ir), hi(hippo), is(is), ii(ii), er(lawgiver), er(after), er(jumps over the lazy dog), hi(hi), hi(which), di(di), cr(cr), cs(cs), er(er), ci(ci), es(es), es(boxes), cy(cy)
+Plc1m: pieces 718, hooks 50, spikes 77, rough 147, seams 6, over 399
+  undesigned seams (6): q$(cq), q$(fq), q$(vq), q$(oq), q$(bq), q$(wq)
+v72: pieces 718, hooks 50, spikes 77, rough 147, seams 6, over 400
+  undesigned seams (6): q$(cq), q$(fq), q$(vq), q$(oq), q$(bq), q$(wq)
+v72b: pieces 718, hooks 50, spikes 77, rough 147, seams 6, over 400
+  undesigned seams (6): q$(cq), q$(fq), q$(vq), q$(oq), q$(bq), q$(wq)
+
+the rule's pairs in their two-letter words: attach | font distance dmax u | flags, census by census
+pair                                           v71                                        Plc1m                                          v72                                         v72b
+ai         0.00 u rt    9.83  port-cusp          -      1.00 u rt    9.18  port-cusp          -      2.00 u rt    8.61  port-cusp          -      3.00 u rt    8.14  port-cusp          -
+aj         3.03 u rt    6.43  port-cusp          -      3.03 u rt    6.43  port-cusp          -      3.03 u rt    6.43  port-cusp          -      3.03 u rt    6.43  port-cusp          -
+ap        10.32 u rt    5.28  port-cusp          -     10.32 u rt    5.28  port-cusp          -     10.60 u rt    5.30  port-cusp          -     10.60 u rt    5.30  port-cusp          -
+ar         0.00 u rt   15.68  port-cusp       seam      1.00 u rt   15.04  port-cusp          -      2.00 u rt   14.39  port-cusp          -      3.00 u rt   13.72  port-cusp          -
+as         0.00 u rt   15.25  port-cusp       seam      1.00 u rt   14.72  port-cusp          -      2.00 u rt   14.18  port-cusp          -      3.00 u rt   13.57  port-cusp          -
+at        34.70 u rt   18.26  port-cusp          -     34.70 u rt   18.26  port-cusp          -     34.70 u rt   18.25  port-cusp          -     34.70 u rt   18.25  port-cusp          -
+au         3.15 u rt    7.93  port-cusp          -      3.15 u rt    7.93  port-cusp          -      3.15 u rt    7.93  port-cusp          -      3.15 u rt    7.93  port-cusp          -
+aw        10.01 u rt    6.56  port-cusp          -      9.82 u rt    6.54  port-cusp          -     10.01 u rt    6.56  port-cusp          -      9.82 u rt    6.54  port-cusp          -
+ay         3.00 u rt    8.52  port-cusp          -      3.00 u rt    8.52  port-cusp          -      3.00 u rt    8.52  port-cusp          -      3.00 u rt    8.52  port-cusp          -
+ci         0.00 u rt    1.20  port-cusp       seam      1.00 u rt    2.31  port-cusp          -      2.00 u rt    3.79  port-cusp          -      3.00 u rt    4.99  port-cusp          -
+cj        14.51 u rt   10.43  port-cusp          -     14.06 u rt   10.42  port-cusp          -     15.01 u rt   10.45  port-cusp          -     14.52 u rt   10.43  port-cusp          -
+cp        15.32 u rt   11.57  port-cusp          -     15.32 u rt   11.57  port-cusp          -     15.32 u rt   11.57  port-cusp          -     15.32 u rt   11.57  port-cusp          -
+cr         0.00 u rt    3.40  port-cusp       seam      1.00 u rt    4.01  port-cusp          -      2.00 u rt    6.02  port-cusp          -      3.00 u rt    8.25  port-cusp          -
+cs         0.00 u rt    2.75  port-cusp       seam      1.00 u rt    4.04  port-cusp          -      2.00 u rt    5.43  port-cusp          -      3.00 u rt    6.89  port-cusp          -
+ct        34.95 u rt    9.03  port-cusp          -     34.95 u rt    9.03  port-cusp          -     32.90 u rt    8.87  port-cusp          -     34.95 u rt    9.03  port-cusp          -
+cu         4.34 u rt    5.76  port-cusp          -      4.34 u rt    5.75  port-cusp          -      4.34 u rt    5.78  port-cusp          -      4.34 u rt    5.78  port-cusp          -
+cw         8.63 u rt    9.14  port-cusp          -      8.71 u rt    9.14  port-cusp          -      8.72 u rt    9.26  port-cusp          -      8.49 u rt    9.11  port-cusp          -
+cy         0.00 u rt    2.52  port-cusp       seam      1.00 u rt    2.98  port-cusp          -      2.00 u rt    3.46  port-cusp          -      3.00 u rt    3.97  port-cusp          -
+di         0.00 u rt    9.81  port-cusp       seam      1.00 u rt    9.09  port-cusp          -      2.00 u rt    8.50  port-cusp          -      3.00 u rt    8.03  port-cusp          -
+dj         3.16 u rt    6.32  port-cusp          -      3.16 u rt    6.32  port-cusp          -      3.16 u rt    6.32  port-cusp          -      3.54 u rt    6.31  port-cusp          -
+dp        10.33 u rt    5.53  port-cusp          -     10.89 u rt    5.56  port-cusp          -     10.11 u rt    5.51  port-cusp          -     10.61 u rt    5.54  port-cusp          -
+dr         0.00 u rt   15.50  port-cusp       seam      1.00 u rt   14.86  port-cusp          -      2.00 u rt   14.21  port-cusp          -      3.00 u rt   13.53  port-cusp          -
+ds         0.00 u rt   15.07  port-cusp       seam      1.00 u rt   14.55  port-cusp          -      2.00 u rt   13.99  port-cusp          -      3.00 u rt   13.41  port-cusp          -
+dt        34.69 u rt   18.03  port-cusp          -     34.69 u rt   18.03  port-cusp          -     34.69 u rt   18.03  port-cusp          -     34.69 u rt   18.03  port-cusp          -
+du         3.16 u rt    7.82  port-cusp          -      3.16 u rt    7.82  port-cusp          -      3.16 u rt    7.82  port-cusp          -      3.16 u rt    7.82  port-cusp          -
+dw        10.04 u rt    6.82  port-cusp          -     10.04 u rt    6.81  port-cusp          -     10.04 u rt    6.82  port-cusp          -     10.22 u rt    6.84  port-cusp          -
+dy         3.00 u rt    8.38  port-cusp          -      3.00 u rt    8.38  port-cusp          -      3.00 u rt    8.38  port-cusp          -      3.00 u rt    8.38  port-cusp          -
+ei         9.15 u rt   13.17  port-cusp          -      1.00 u rt    8.63  port-cusp          -      2.00 u rt    9.43  port-cusp          -      3.00 u rt   10.41  port-cusp          -
+ej        20.00 u rt   14.37  port-cusp          -     19.69 u rt   14.36  port-cusp          -     16.85 u rt   14.38  port-cusp          -     15.66 u rt   14.36  port-cusp          -
+ep        16.78 u rt   15.49  port-cusp          -     18.06 u rt   15.69  port-cusp          -     18.06 u rt   15.69  port-cusp          -     16.78 u rt   15.53  port-cusp          -
+er         0.00 u rt    7.54  port-cusp       seam      1.00 u rt    8.72  port-cusp          -      2.00 u rt   10.07  port-cusp          -      3.00 u rt   11.71  port-cusp          -
+es         0.00 u rt    5.91  port-cusp       seam      1.53 u rt    7.29  port-cusp          -      2.00 u rt    7.63  port-cusp          -      3.00 u rt    8.52  port-cusp          -
+et        35.95 u rt    2.26  port-cusp          -     33.36 u rt    2.30  port-cusp          -     33.36 u rt    2.30  port-cusp          -     35.95 u rt    2.26  port-cusp          -
+eu         6.58 u rt   11.00  port-cusp          -      5.61 u rt   10.89  port-cusp          -      6.58 u rt   10.99  port-cusp          -      6.58 u rt   11.00  port-cusp          -
+ew         9.75 u rt   11.67  port-cusp          -      9.72 u rt   11.96  port-cusp          -      9.72 u rt   12.01  port-cusp          -      9.72 u rt   11.79  port-cusp          -
+ey         1.84 u rt   10.75  port-cusp          -      3.16 u rt   10.23  port-cusp          -      2.00 u rt    9.69  port-cusp          -      3.16 u rt   10.23  port-cusp          -
+fi         3.00 u rt   12.68  port-cusp          -     12.79 u rt   12.61  port-cusp          -      3.00 u rt   12.67  port-cusp          -      3.00 u rt   12.67  port-cusp          -
+fj        17.91 u rt   12.63  port-cusp          -     19.36 u rt   12.62  port-cusp          -     17.91 u rt   12.63  port-cusp          -     18.33 u rt   12.64  port-cusp          -
+fp        16.78 u rt   12.82  port-cusp          -     16.78 u rt   12.83  port-cusp          -     18.06 u rt   12.82  port-cusp          -     16.78 u rt   12.83  port-cusp          -
+fr         2.00 u rt    6.34  port-cusp          -      2.00 u rt    6.34  port-cusp          -      2.00 u rt    6.34  port-cusp          -      2.00 u rt    6.34  port-cusp          -
+fs         2.00 u rt    9.37  port-cusp          -      2.00 u rt    9.37  port-cusp          -      2.00 u rt    9.37  port-cusp          -      2.00 u rt    9.37  port-cusp          -
+ft        35.95 u rt   13.24  port-cusp          -     34.03 u rt   13.23  port-cusp          -     34.03 u rt   13.23  port-cusp          -     35.95 u rt   13.24  port-cusp          -
+fu         5.78 u rt   12.64  port-cusp          -      5.78 u rt   12.64  port-cusp          -      5.78 u rt   12.64  port-cusp          -      5.78 u rt   12.64  port-cusp          -
+fw         9.01 u rt   12.96  port-cusp          -      9.22 u rt   12.97  port-cusp          -      9.42 u rt   12.95  port-cusp          -     10.24 u rt   12.87  port-cusp          -
+fy         3.00 u rt   12.68  port-cusp          -      3.00 u rt   12.68  port-cusp          -      3.00 u rt   12.70  port-cusp          -      3.00 u rt   12.68  port-cusp          -
+hi         0.00 u rt    9.96  port-cusp       seam      1.00 u rt    9.29  port-cusp          -      2.00 u rt    8.72  port-cusp          -      3.00 u rt    8.26  port-cusp          -
+hj         3.00 u rt    6.59  port-cusp          -      3.00 u rt    6.59  port-cusp          -      3.00 u rt    6.58  port-cusp          -      3.00 u rt    6.59  port-cusp          -
+hp        10.31 u rt    5.32  port-cusp          -     10.59 u rt    5.33  port-cusp          -     10.31 u rt    5.32  port-cusp          -     10.31 u rt    5.32  port-cusp          -
+hr         0.00 u rt   15.79  port-cusp       seam      1.00 u rt   15.17  port-cusp          -      2.00 u rt   14.52  port-cusp          -      3.00 u rt   13.86  port-cusp          -
+hs         0.00 u rt   15.29  port-cusp          -      1.00 u rt   14.79  port-cusp          -      2.00 u rt   14.26  port-cusp          -      3.00 u rt   13.68  port-cusp          -
+ht        34.70 u rt   17.97  port-cusp          -     34.70 u rt   17.98  port-cusp          -     34.70 u rt   17.98  port-cusp          -     34.70 u rt   17.98  port-cusp          -
+hu         3.14 u rt    8.05  port-cusp          -      3.14 u rt    8.05  port-cusp          -      3.14 u rt    8.05  port-cusp          -      3.14 u rt    8.05  port-cusp          -
+hw         9.62 u rt    6.55  port-cusp          -      9.42 u rt    6.53  port-cusp          -      9.62 u rt    6.55  port-cusp          -      9.81 u rt    6.57  port-cusp          -
+hy         3.00 u rt    8.61  port-cusp          -      3.00 u rt    8.61  port-cusp          -      3.00 u rt    8.61  port-cusp          -      3.00 u rt    8.61  port-cusp          -
+ii         0.00 u rt    9.37  port-cusp       seam      1.00 u rt    8.70  port-cusp          -      2.00 u rt    8.11  port-cusp          -      3.00 u rt    7.65  port-cusp          -
+ij                                        (no row)                                     (no row)                                     (no row)                                     (no row)
+ip        10.61 u rt    5.76  port-cusp          -     10.33 u rt    5.74  port-cusp          -     10.33 u rt    5.74  port-cusp          -     10.61 u rt    5.76  port-cusp          -
+ir         0.00 u rt   15.14  port-cusp       seam      1.00 u rt   14.51  port-cusp          -      2.00 u rt   13.88  port-cusp          -      3.00 u rt   13.22  port-cusp          -
+is         0.00 u rt   14.65  port-cusp       seam      1.00 u rt   14.13  port-cusp          -      2.00 u rt   13.60  port-cusp          -      3.00 u rt   12.97  port-cusp          -
+it        34.52 u rt   15.95  port-cusp          -     34.90 u rt   14.95  port-cusp          -     34.52 u rt   15.95  port-cusp          -     34.52 u rt   15.95  port-cusp          -
+iu         3.15 u rt    7.44  port-cusp          -      3.15 u rt    7.44  port-cusp          -      3.15 u rt    7.44  port-cusp          -      3.15 u rt    7.44  port-cusp          -
+iw        10.03 u rt    7.04  port-cusp          -     10.03 u rt    7.04  port-cusp          -     10.03 u rt    7.04  port-cusp          -     10.03 u rt    7.04  port-cusp          -
+iy         3.00 u rt    8.00  port-cusp          -      3.00 u rt    8.00  port-cusp          -      3.00 u rt    8.00  port-cusp          -      3.00 u rt    8.00  port-cusp          -
+ni         0.42 u rt    9.03  port-cusp          -      3.00 u rt    7.47  port-cusp          -      3.00 u rt    7.47  port-cusp          -      3.00 u rt    7.47  port-cusp          -
+nj         3.00 u rt    5.53  port-cusp          -      3.00 u rt    5.53  port-cusp          -      3.00 u rt    5.53  port-cusp          -      3.00 u rt    5.53  port-cusp          -
+np         7.88 u rt    5.32  port-cusp          -      9.47 u rt    5.37  port-cusp          -     10.30 u rt    5.41  port-cusp          -     10.58 u rt    5.43  port-cusp          -
+nr         0.00 u rt   15.17  port-cusp       seam      1.00 u rt   14.40  port-cusp          -      2.00 u rt   13.70  port-cusp          -      3.00 u rt   12.88  port-cusp          -
+ns         0.00 u rt   14.37  port-cusp          -      1.00 u rt   13.84  port-cusp          -      2.00 u rt   13.28  port-cusp          -      3.00 u rt   12.68  port-cusp          -
+nt        34.87 u rt   16.31  port-cusp          -     34.87 u rt   16.31  port-cusp          -     34.87 u rt   16.28  port-cusp          -     34.87 u rt   16.31  port-cusp          -
+nu         3.15 u rt    7.18  port-cusp          -      3.15 u rt    7.18  port-cusp          -      3.15 u rt    7.18  port-cusp          -      3.10 u rt    8.26  port-cusp          -
+nw         9.78 u rt    6.65  port-cusp          -      9.59 u rt    6.62  port-cusp          -      9.02 u rt    6.57  port-cusp          -      9.59 u rt    6.62  port-cusp          -
+ny         3.00 u rt    7.79  port-cusp          -      3.00 u rt    7.79  port-cusp          -      3.00 u rt    7.79  port-cusp          -      3.00 u rt    7.79  port-cusp          -
+
+flags that differ, v71 -> Plc1m (pieces in both)
+  w196:dr:J0-2dr                               seam                     -> -
+  w189:as:J0-2as                               seam                     -> -
+  w230:nr:J0-2nr                               seam                     -> -
+  w197:ds:J0-2ds                               seam                     -> -
+  w213:hr:J0-2hr                               seam                     -> -
+  w188:ar:J0-2ar                               seam                     -> -
+  w222:ir:J0-2ir                               seam                     -> -
+  w6:hippo:J0-2hi                              seam                     -> -
+  w223:is:J0-2is                               seam                     -> -
+  w219:ii:J0-2ii                               seam                     -> -
+  w50:it:tail0t                                spk 18,rough             -> spk 19,rough
+  w20:lawgiver:J12-14er                        seam                     -> -
+  w79:after:J6-8er                             seam                     -> -
+  w12:jumps over the lazy dog:J14-16er         seam                     -> -
+  w210:hi:J0-2hi                               seam                     -> -
+  w16:which:J2-4hi                             seam                     -> -
+  w193:di:J0-2di                               seam                     -> -
+  w176:cr:J0-2cr                               seam                     -> -
+  w177:cs:J0-2cs                               seam                     -> -
+  w205:er:J0-2er                               seam                     -> -
+  w167:ci:J0-2ci                               seam                     -> -
+  w206:es:J0-2es                               seam                     -> -
+  w4:boxes:J6-8es                              seam                     -> -
+  w183:cy:J0-2cy                               seam                     -> -
+  24 pieces; only in v71: 0, only in Plc1m: 0
+pieces whose attach or font distance moved, v71 -> Plc1m (dmax change > 0.005 u or a new attach)
+  w196:dr:J0-2dr                               port at 0.00 u, retrace    15.50 -> port at 1.00 u, retrace    14.86
+  w189:as:J0-2as                               port at 0.00 u, retrace    15.25 -> port at 1.00 u, retrace    14.72
+  w230:nr:J0-2nr                               port at 0.00 u, retrace    15.17 -> port at 1.00 u, retrace    14.40
+  w197:ds:J0-2ds                               port at 0.00 u, retrace    15.07 -> port at 1.00 u, retrace    14.55
+  w213:hr:J0-2hr                               port at 0.00 u, retrace    15.79 -> port at 1.00 u, retrace    15.17
+  w188:ar:J0-2ar                               port at 0.00 u, retrace    15.68 -> port at 1.00 u, retrace    15.04
+  w222:ir:J0-2ir                               port at 0.00 u, retrace    15.14 -> port at 1.00 u, retrace    14.51
+  w6:hippo:J0-2hi                              port at 0.00 u, retrace     9.98 -> port at 1.00 u, retrace     9.31
+  w223:is:J0-2is                               port at 0.00 u, retrace    14.65 -> port at 1.00 u, retrace    14.13
+  w219:ii:J0-2ii                               port at 0.00 u, retrace     9.37 -> port at 1.00 u, retrace     8.70
+  w215:ht:J0-2ht                               port at 34.70 u, retrace   17.97 -> port at 34.70 u, retrace   17.98
+  w20:lawgiver:J12-14er                        port at 0.00 u, retrace     6.59 -> port at 1.00 u, retrace     7.84
+  w79:after:J6-8er                             port at 0.00 u, retrace     6.59 -> port at 1.00 u, retrace     7.84
+  w12:jumps over the lazy dog:J14-16er         port at 0.00 u, retrace     6.59 -> port at 1.00 u, retrace     7.84
+  w50:it:J0-2it                                port at 34.52 u, retrace   15.95 -> port at 34.90 u, retrace   14.95
+  w204:ep:J0-2ep                               port at 16.78 u, retrace   15.49 -> port at 18.06 u, retrace   15.69
+  w214:hs:J0-2hs                               port at 0.00 u, retrace    15.29 -> port at 1.00 u, retrace    14.79
+  w210:hi:J0-2hi                               port at 0.00 u, retrace     9.96 -> port at 1.00 u, retrace     9.29
+  w16:which:J2-4hi                             port at 0.00 u, retrace     9.94 -> port at 1.00 u, retrace     9.27
+  w193:di:J0-2di                               port at 0.00 u, retrace     9.81 -> port at 1.00 u, retrace     9.09
+  w231:ns:J0-2ns                               port at 0.00 u, retrace    14.37 -> port at 1.00 u, retrace    13.84
+  w203:ej:J0-2ej                               port at 20.00 u, retrace   14.37 -> port at 19.69 u, retrace   14.36
+  w176:cr:J0-2cr                               port at 0.00 u, retrace     3.40 -> port at 1.00 u, retrace     4.01
+  w71:ft:J0-2ft                                port at 35.95 u, retrace   13.24 -> port at 34.03 u, retrace   13.23
+  w79:after:J2-4ft                             port at 33.97 u, retrace   13.21 -> port at 34.00 u, retrace   13.22
+  w202:ei:J0-2ei                               port at 9.15 u, retrace    13.17 -> port at 1.00 u, retrace     8.63
+  w74:fw:J0-2fw                                port at 9.01 u, retrace    12.96 -> port at 9.22 u, retrace    12.97
+  w67:fp:J0-2fp                                port at 16.78 u, retrace   12.82 -> port at 16.78 u, retrace   12.83
+  w177:cs:J0-2cs                               port at 0.00 u, retrace     2.75 -> port at 1.00 u, retrace     4.04
+  w60:fi:J0-2fi                                port at 3.00 u, retrace    12.68 -> port at 12.79 u, retrace   12.61
+  w61:fj:J0-2fj                                port at 17.91 u, retrace   12.63 -> port at 19.36 u, retrace   12.62
+  w205:er:J0-2er                               port at 0.00 u, retrace     7.54 -> port at 1.00 u, retrace     8.72
+  w167:ci:J0-2ci                               port at 0.00 u, retrace     1.20 -> port at 1.00 u, retrace     2.31
+  w208:ew:J0-2ew                               port at 9.75 u, retrace    11.67 -> port at 9.72 u, retrace    11.96
+  w207:eu:J0-2eu                               port at 6.58 u, retrace    11.00 -> port at 5.61 u, retrace    10.89
+  w206:es:J0-2es                               port at 0.00 u, retrace     5.91 -> port at 1.53 u, retrace     7.29
+  w209:ey:J0-2ey                               port at 1.84 u, retrace    10.75 -> port at 3.16 u, retrace    10.23
+  w168:cj:J0-2cj                               port at 14.51 u, retrace   10.43 -> port at 14.06 u, retrace   10.42
+  w4:boxes:J6-8es                              port at 0.00 u, retrace     4.87 -> port at 1.00 u, retrace     5.88
+  w185:ai:J0-2ai                               port at 0.00 u, retrace     9.83 -> port at 1.00 u, retrace     9.18
+  w181:cw:J0-2cw                               port at 8.63 u, retrace     9.14 -> port at 8.71 u, retrace     9.14
+  w227:ni:J0-2ni                               port at 0.42 u, retrace     9.03 -> port at 3.00 u, retrace     7.47
+  w1:minimum:J4-6ni                            port at 0.48 u, retrace     8.78 -> port at 1.00 u, retrace     8.42
+  w183:cy:J0-2cy                               port at 0.00 u, retrace     2.52 -> port at 1.00 u, retrace     2.98
+  w233:nw:J0-2nw                               port at 9.78 u, retrace     6.65 -> port at 9.59 u, retrace     6.62
+  w20:lawgiver:J2-4aw                          port at 10.19 u, retrace    6.63 -> port at 9.63 u, retrace     6.55
+  w191:aw:J0-2aw                               port at 10.01 u, retrace    6.56 -> port at 9.82 u, retrace     6.54
+  w217:hw:J0-2hw                               port at 9.62 u, retrace     6.55 -> port at 9.42 u, retrace     6.53
+  w221:ip:J0-2ip                               port at 10.61 u, retrace    5.76 -> port at 10.33 u, retrace    5.74
+  w195:dp:J0-2dp                               port at 10.33 u, retrace    5.53 -> port at 10.89 u, retrace    5.56
+  w6:hippo:J2-4ip                              port at 10.89 u, retrace    5.44 -> port at 9.45 u, retrace     5.38
+  w229:np:J0-2np                               port at 7.88 u, retrace     5.32 -> port at 9.47 u, retrace     5.37
+  w212:hp:J0-2hp                               port at 10.31 u, retrace    5.32 -> port at 10.59 u, retrace    5.33
+  w51:et:J0-2et                                port at 35.95 u, retrace    2.26 -> port at 33.36 u, retrace    2.30
+  54 pieces
+
+flags that differ, v71 -> v72 (pieces in both)
+  w196:dr:J0-2dr                               seam                     -> -
+  w189:as:J0-2as                               seam                     -> -
+  w230:nr:J0-2nr                               seam                     -> -
+  w197:ds:J0-2ds                               seam                     -> -
+  w213:hr:J0-2hr                               seam                     -> -
+  w188:ar:J0-2ar                               seam                     -> -
+  w222:ir:J0-2ir                               seam                     -> -
+  w6:hippo:J0-2hi                              seam                     -> -
+  w223:is:J0-2is                               seam                     -> -
+  w219:ii:J0-2ii                               seam                     -> -
+  w20:lawgiver:J12-14er                        seam                     -> -
+  w79:after:J6-8er                             seam                     -> -
+  w12:jumps over the lazy dog:J14-16er         seam                     -> -
+  w210:hi:J0-2hi                               seam                     -> -
+  w16:which:J2-4hi                             seam                     -> -
+  w193:di:J0-2di                               seam                     -> -
+  w176:cr:J0-2cr                               seam                     -> -
+  w177:cs:J0-2cs                               seam                     -> -
+  w205:er:J0-2er                               seam                     -> -
+  w167:ci:J0-2ci                               seam                     -> -
+  w206:es:J0-2es                               seam                     -> -
+  w4:boxes:J6-8es                              seam                     -> -
+  w183:cy:J0-2cy                               seam                     -> -
+  23 pieces; only in v71: 0, only in v72: 0
+pieces whose attach or font distance moved, v71 -> v72 (dmax change > 0.005 u or a new attach)
+  w196:dr:J0-2dr                               port at 0.00 u, retrace    15.50 -> port at 2.00 u, retrace    14.21
+  w189:as:J0-2as                               port at 0.00 u, retrace    15.25 -> port at 2.00 u, retrace    14.18
+  w230:nr:J0-2nr                               port at 0.00 u, retrace    15.17 -> port at 2.00 u, retrace    13.70
+  w197:ds:J0-2ds                               port at 0.00 u, retrace    15.07 -> port at 2.00 u, retrace    13.99
+  w213:hr:J0-2hr                               port at 0.00 u, retrace    15.79 -> port at 2.00 u, retrace    14.52
+  w188:ar:J0-2ar                               port at 0.00 u, retrace    15.68 -> port at 2.00 u, retrace    14.39
+  w222:ir:J0-2ir                               port at 0.00 u, retrace    15.14 -> port at 2.00 u, retrace    13.88
+  w6:hippo:J0-2hi                              port at 0.00 u, retrace     9.98 -> port at 2.00 u, retrace     8.74
+  w223:is:J0-2is                               port at 0.00 u, retrace    14.65 -> port at 2.00 u, retrace    13.60
+  w219:ii:J0-2ii                               port at 0.00 u, retrace     9.37 -> port at 2.00 u, retrace     8.11
+  w215:ht:J0-2ht                               port at 34.70 u, retrace   17.97 -> port at 34.70 u, retrace   17.98
+  w20:lawgiver:J12-14er                        port at 0.00 u, retrace     6.59 -> port at 2.00 u, retrace     9.24
+  w79:after:J6-8er                             port at 0.00 u, retrace     6.59 -> port at 2.00 u, retrace     9.24
+  w12:jumps over the lazy dog:J14-16er         port at 0.00 u, retrace     6.59 -> port at 2.00 u, retrace     9.24
+  w48:nt:J0-2nt                                port at 34.87 u, retrace   16.31 -> port at 34.87 u, retrace   16.28
+  w204:ep:J0-2ep                               port at 16.78 u, retrace   15.49 -> port at 18.06 u, retrace   15.69
+  w214:hs:J0-2hs                               port at 0.00 u, retrace    15.29 -> port at 2.00 u, retrace    14.26
+  w210:hi:J0-2hi                               port at 0.00 u, retrace     9.96 -> port at 2.00 u, retrace     8.72
+  w16:which:J2-4hi                             port at 0.00 u, retrace     9.94 -> port at 2.00 u, retrace     8.71
+  w193:di:J0-2di                               port at 0.00 u, retrace     9.81 -> port at 2.00 u, retrace     8.50
+  w231:ns:J0-2ns                               port at 0.00 u, retrace    14.37 -> port at 2.00 u, retrace    13.28
+  w203:ej:J0-2ej                               port at 20.00 u, retrace   14.37 -> port at 16.85 u, retrace   14.38
+  w176:cr:J0-2cr                               port at 0.00 u, retrace     3.40 -> port at 2.00 u, retrace     6.02
+  w71:ft:J0-2ft                                port at 35.95 u, retrace   13.24 -> port at 34.03 u, retrace   13.23
+  w79:after:J2-4ft                             port at 33.97 u, retrace   13.21 -> port at 35.95 u, retrace   13.22
+  w202:ei:J0-2ei                               port at 9.15 u, retrace    13.17 -> port at 2.00 u, retrace     9.43
+  w74:fw:J0-2fw                                port at 9.01 u, retrace    12.96 -> port at 9.42 u, retrace    12.95
+  w67:fp:J0-2fp                                port at 16.78 u, retrace   12.82 -> port at 18.06 u, retrace   12.82
+  w177:cs:J0-2cs                               port at 0.00 u, retrace     2.75 -> port at 2.00 u, retrace     5.43
+  w76:fy:J0-2fy                                port at 3.00 u, retrace    12.68 -> port at 3.00 u, retrace    12.70
+  w205:er:J0-2er                               port at 0.00 u, retrace     7.54 -> port at 2.00 u, retrace    10.07
+  w167:ci:J0-2ci                               port at 0.00 u, retrace     1.20 -> port at 2.00 u, retrace     3.79
+  w208:ew:J0-2ew                               port at 9.75 u, retrace    11.67 -> port at 9.72 u, retrace    12.01
+  w207:eu:J0-2eu                               port at 6.58 u, retrace    11.00 -> port at 6.58 u, retrace    10.99
+  w206:es:J0-2es                               port at 0.00 u, retrace     5.91 -> port at 2.00 u, retrace     7.63
+  w209:ey:J0-2ey                               port at 1.84 u, retrace    10.75 -> port at 2.00 u, retrace     9.69
+  w168:cj:J0-2cj                               port at 14.51 u, retrace   10.43 -> port at 15.01 u, retrace   10.45
+  w4:boxes:J6-8es                              port at 0.00 u, retrace     4.87 -> port at 2.00 u, retrace     6.71
+  w185:ai:J0-2ai                               port at 0.00 u, retrace     9.83 -> port at 2.00 u, retrace     8.61
+  w181:cw:J0-2cw                               port at 8.63 u, retrace     9.14 -> port at 8.72 u, retrace     9.26
+  w227:ni:J0-2ni                               port at 0.42 u, retrace     9.03 -> port at 3.00 u, retrace     7.47
+  w178:ct:J0-2ct                               port at 34.95 u, retrace    9.03 -> port at 32.90 u, retrace    8.87
+  w1:minimum:J4-6ni                            port at 0.48 u, retrace     8.78 -> port at 3.00 u, retrace     7.21
+  w13:be we shoe maze huge bye:J24-26hu        port at 3.14 u, retrace     8.08 -> port at 3.02 u, retrace     8.08
+  w183:cy:J0-2cy                               port at 0.00 u, retrace     2.52 -> port at 2.00 u, retrace     3.46
+  w233:nw:J0-2nw                               port at 9.78 u, retrace     6.65 -> port at 9.02 u, retrace     6.57
+  w20:lawgiver:J2-4aw                          port at 10.19 u, retrace    6.63 -> port at 9.82 u, retrace     6.58
+  w221:ip:J0-2ip                               port at 10.61 u, retrace    5.76 -> port at 10.33 u, retrace    5.74
+  w179:cu:J0-2cu                               port at 4.34 u, retrace     5.76 -> port at 4.34 u, retrace     5.78
+  w10:cursive:J0-2cu                           port at 4.54 u, retrace     5.60 -> port at 4.34 u, retrace     5.61
+  w195:dp:J0-2dp                               port at 10.33 u, retrace    5.53 -> port at 10.11 u, retrace    5.51
+  w6:hippo:J2-4ip                              port at 10.89 u, retrace    5.44 -> port at 10.61 u, retrace    5.42
+  w229:np:J0-2np                               port at 7.88 u, retrace     5.32 -> port at 10.30 u, retrace    5.41
+  w187:ap:J0-2ap                               port at 10.32 u, retrace    5.28 -> port at 10.60 u, retrace    5.30
+  w14:ice jet even:J8-10et                     port at 33.24 u, retrace    2.60 -> port at 35.60 u, retrace    2.82
+  w51:et:J0-2et                                port at 35.95 u, retrace    2.26 -> port at 33.36 u, retrace    2.30
+  56 pieces
+
+flags that differ, v71 -> v72b (pieces in both)
+  w196:dr:J0-2dr                               seam                     -> -
+  w189:as:J0-2as                               seam                     -> -
+  w230:nr:J0-2nr                               seam                     -> -
+  w197:ds:J0-2ds                               seam                     -> -
+  w213:hr:J0-2hr                               seam                     -> -
+  w188:ar:J0-2ar                               seam                     -> -
+  w222:ir:J0-2ir                               seam                     -> -
+  w6:hippo:J0-2hi                              seam                     -> -
+  w223:is:J0-2is                               seam                     -> -
+  w219:ii:J0-2ii                               seam                     -> -
+  w20:lawgiver:J12-14er                        seam                     -> -
+  w79:after:J6-8er                             seam                     -> -
+  w12:jumps over the lazy dog:J14-16er         seam                     -> -
+  w210:hi:J0-2hi                               seam                     -> -
+  w16:which:J2-4hi                             seam                     -> -
+  w193:di:J0-2di                               seam                     -> -
+  w176:cr:J0-2cr                               seam                     -> -
+  w177:cs:J0-2cs                               seam                     -> -
+  w205:er:J0-2er                               seam                     -> -
+  w167:ci:J0-2ci                               seam                     -> -
+  w206:es:J0-2es                               seam                     -> -
+  w4:boxes:J6-8es                              seam                     -> -
+  w183:cy:J0-2cy                               seam                     -> -
+  23 pieces; only in v71: 0, only in v72b: 0
+pieces whose attach or font distance moved, v71 -> v72b (dmax change > 0.005 u or a new attach)
+  w196:dr:J0-2dr                               port at 0.00 u, retrace    15.50 -> port at 3.00 u, retrace    13.53
+  w189:as:J0-2as                               port at 0.00 u, retrace    15.25 -> port at 3.00 u, retrace    13.57
+  w230:nr:J0-2nr                               port at 0.00 u, retrace    15.17 -> port at 3.00 u, retrace    12.88
+  w197:ds:J0-2ds                               port at 0.00 u, retrace    15.07 -> port at 3.00 u, retrace    13.41
+  w213:hr:J0-2hr                               port at 0.00 u, retrace    15.79 -> port at 3.00 u, retrace    13.86
+  w188:ar:J0-2ar                               port at 0.00 u, retrace    15.68 -> port at 3.00 u, retrace    13.72
+  w222:ir:J0-2ir                               port at 0.00 u, retrace    15.14 -> port at 3.00 u, retrace    13.22
+  w6:hippo:J0-2hi                              port at 0.00 u, retrace     9.98 -> port at 3.00 u, retrace     8.27
+  w223:is:J0-2is                               port at 0.00 u, retrace    14.65 -> port at 3.00 u, retrace    12.97
+  w219:ii:J0-2ii                               port at 0.00 u, retrace     9.37 -> port at 3.00 u, retrace     7.65
+  w215:ht:J0-2ht                               port at 34.70 u, retrace   17.97 -> port at 34.70 u, retrace   17.98
+  w20:lawgiver:J12-14er                        port at 0.00 u, retrace     6.59 -> port at 3.00 u, retrace    10.95
+  w79:after:J6-8er                             port at 0.00 u, retrace     6.59 -> port at 3.00 u, retrace    10.95
+  w12:jumps over the lazy dog:J14-16er         port at 0.00 u, retrace     6.59 -> port at 3.00 u, retrace    10.95
+  w204:ep:J0-2ep                               port at 16.78 u, retrace   15.49 -> port at 16.78 u, retrace   15.53
+  w214:hs:J0-2hs                               port at 0.00 u, retrace    15.29 -> port at 3.00 u, retrace    13.68
+  w210:hi:J0-2hi                               port at 0.00 u, retrace     9.96 -> port at 3.00 u, retrace     8.26
+  w16:which:J2-4hi                             port at 0.00 u, retrace     9.94 -> port at 3.00 u, retrace     8.23
+  w193:di:J0-2di                               port at 0.00 u, retrace     9.81 -> port at 3.00 u, retrace     8.03
+  w231:ns:J0-2ns                               port at 0.00 u, retrace    14.37 -> port at 3.00 u, retrace    12.68
+  w203:ej:J0-2ej                               port at 20.00 u, retrace   14.37 -> port at 15.66 u, retrace   14.36
+  w176:cr:J0-2cr                               port at 0.00 u, retrace     3.40 -> port at 3.00 u, retrace     8.25
+  w79:after:J2-4ft                             port at 33.97 u, retrace   13.21 -> port at 35.95 u, retrace   13.22
+  w202:ei:J0-2ei                               port at 9.15 u, retrace    13.17 -> port at 3.00 u, retrace    10.41
+  w74:fw:J0-2fw                                port at 9.01 u, retrace    12.96 -> port at 10.24 u, retrace   12.87
+  w177:cs:J0-2cs                               port at 0.00 u, retrace     2.75 -> port at 3.00 u, retrace     6.89
+  w61:fj:J0-2fj                                port at 17.91 u, retrace   12.63 -> port at 18.33 u, retrace   12.64
+  w205:er:J0-2er                               port at 0.00 u, retrace     7.54 -> port at 3.00 u, retrace    11.71
+  w167:ci:J0-2ci                               port at 0.00 u, retrace     1.20 -> port at 3.00 u, retrace     4.99
+  w208:ew:J0-2ew                               port at 9.75 u, retrace    11.67 -> port at 9.72 u, retrace    11.79
+  w206:es:J0-2es                               port at 0.00 u, retrace     5.91 -> port at 3.00 u, retrace     8.52
+  w209:ey:J0-2ey                               port at 1.84 u, retrace    10.75 -> port at 3.16 u, retrace    10.23
+  w168:cj:J0-2cj                               port at 14.51 u, retrace   10.43 -> port at 14.52 u, retrace   10.43
+  w4:boxes:J6-8es                              port at 0.00 u, retrace     4.87 -> port at 3.00 u, retrace     7.80
+  w185:ai:J0-2ai                               port at 0.00 u, retrace     9.83 -> port at 3.00 u, retrace     8.14
+  w181:cw:J0-2cw                               port at 8.63 u, retrace     9.14 -> port at 8.49 u, retrace     9.11
+  w227:ni:J0-2ni                               port at 0.42 u, retrace     9.03 -> port at 3.00 u, retrace     7.47
+  w1:minimum:J4-6ni                            port at 0.48 u, retrace     8.78 -> port at 3.00 u, retrace     7.21
+  w183:cy:J0-2cy                               port at 0.00 u, retrace     2.52 -> port at 3.00 u, retrace     3.97
+  w232:nu:J0-2nu                               port at 3.15 u, retrace     7.18 -> port at 3.10 u, retrace     8.26
+  w200:dw:J0-2dw                               port at 10.04 u, retrace    6.82 -> port at 10.22 u, retrace    6.84
+  w233:nw:J0-2nw                               port at 9.78 u, retrace     6.65 -> port at 9.59 u, retrace     6.62
+  w20:lawgiver:J2-4aw                          port at 10.19 u, retrace    6.63 -> port at 10.01 u, retrace    6.60
+  w191:aw:J0-2aw                               port at 10.01 u, retrace    6.56 -> port at 9.82 u, retrace     6.54
+  w217:hw:J0-2hw                               port at 9.62 u, retrace     6.55 -> port at 9.81 u, retrace     6.57
+  w194:dj:J0-2dj                               port at 3.16 u, retrace     6.32 -> port at 3.54 u, retrace     6.31
+  w179:cu:J0-2cu                               port at 4.34 u, retrace     5.76 -> port at 4.34 u, retrace     5.78
+  w10:cursive:J0-2cu                           port at 4.54 u, retrace     5.60 -> port at 4.34 u, retrace     5.61
+  w195:dp:J0-2dp                               port at 10.33 u, retrace    5.53 -> port at 10.61 u, retrace    5.54
+  w229:np:J0-2np                               port at 7.88 u, retrace     5.32 -> port at 10.58 u, retrace    5.43
+  w187:ap:J0-2ap                               port at 10.32 u, retrace    5.28 -> port at 10.60 u, retrace    5.30
+  w14:ice jet even:J8-10et                     port at 33.24 u, retrace    2.60 -> port at 35.60 u, retrace    2.82
+  52 pieces
