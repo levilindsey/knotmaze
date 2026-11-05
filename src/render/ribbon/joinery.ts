@@ -67,6 +67,9 @@ import {
 } from "../paint_math";
 import type { KExploreState } from "../paint_math";
 import {
+  BAND_SEP_HI,
+  BAND_SEP_LO,
+  BAND_SOFT,
   FIELD_BLEND_MIN,
   FIELD_PROF_ARC,
   FIELD_PROF_DR,
@@ -627,6 +630,15 @@ export class Joinery {
     // by the trains' share only (the quiet rows already wear the floor).
     // The pixel takes its NEAREST band (a drawing band wins a tie over
     // a shared one); a shared band's gold block above already drew it.
+    // K1139 S3b fix: the GLSL's three soft rules, line for line. (1) Each
+    // band keeps its nearest point on its A leg (segments whose two taus
+    // sum below 0) and on its B leg and blends toward the far leg's
+    // (tau, shift) by wf, so a turn's inner side has no tau jump. (2) The
+    // loop carries the nearest band and one second candidate (every band;
+    // a drawing band wins a tie over a shared one). (3) With both drawing,
+    // v and f blend toward the second by w2 (BAND_SOFT), and between the
+    // two bands' feet (the side test, BAND_SEP_LO..HI) the crest covers
+    // the wedge (cw) and leans toward the second band in the middle (tg).
     const U = knotUniformValues();
     const KB = PAINT_CONST.K_BAND;
     if (DG) DG.gold = Array.from(out);
@@ -635,17 +647,38 @@ export class Joinery {
     let bDist = 1e20;
     let bTau = 0;
     let bShift = 0;
-    let bCov = 0;
     let bR0 = -1;
     let bR1 = -1;
     let bIdx = -1;
+    let bFx = 0;
+    let bFy = 0;
+    let bDx = 1;
+    let bDy = 0;
+    let sDist = 1e20;
+    let sTau = 0;
+    let sR1 = -1;
+    let sFx = 0;
+    let sFy = 0;
+    let sDx = 1;
+    let sDy = 0;
     for (let r = 0; r < npp; r++) {
       const r0 = at(pb);
       const r1 = at(pb + 1);
       const nv = Math.round(J[r0]);
-      let best = 1e20;
-      let tau = 0;
-      let shift = 0;
+      let bestA = 1e20;
+      let bestB = 1e20;
+      let tauA = 0;
+      let shA = 0;
+      let tauB = 0;
+      let shB = 0;
+      let fAx = 0;
+      let fAy = 0;
+      let dAx = 1;
+      let dAy = 0;
+      let fBx = 0;
+      let fBy = 0;
+      let dBx = 1;
+      let dBy = 0;
       let q0 = at(pb + 2);
       for (let k = 0; k < MAX_ROUTE_VERTS - 1 && k + 1 < nv; k++) {
         const q1 = at(pb + 3 + k);
@@ -658,14 +691,35 @@ export class Joinery {
         const ox = wx - dx * u;
         const oy = wy - dy * u;
         const dd = ox * ox + oy * oy;
-        if (dd < best) {
-          best = dd;
-          tau = J[q0 + 2] + (J[q1 + 2] - J[q0 + 2]) * u;
-          shift = J[q0 + 3] + (J[q1 + 3] - J[q0 + 3]) * u;
+        if (J[q0 + 2] + J[q1 + 2] < 0) {
+          if (dd < bestA) {
+            bestA = dd;
+            tauA = J[q0 + 2] + (J[q1 + 2] - J[q0 + 2]) * u;
+            shA = J[q0 + 3] + (J[q1 + 3] - J[q0 + 3]) * u;
+            fAx = J[q0] + dx * u;
+            fAy = J[q0 + 1] + dy * u;
+            dAx = dx;
+            dAy = dy;
+          }
+        } else if (dd < bestB) {
+          bestB = dd;
+          tauB = J[q0 + 2] + (J[q1 + 2] - J[q0 + 2]) * u;
+          shB = J[q0 + 3] + (J[q1 + 3] - J[q0 + 3]) * u;
+          fBx = J[q0] + dx * u;
+          fBy = J[q0 + 1] + dy * u;
+          dBx = dx;
+          dBy = dy;
         }
         q0 = q1;
       }
-      const cov = Math.max(0, Math.min(1, (reach - Math.sqrt(best)) / pxW));
+      const dA = Math.sqrt(bestA);
+      const dB = Math.sqrt(bestB);
+      const nearA = dA <= dB;
+      const dnow = Math.min(dA, dB);
+      const wf = 0.5 * Math.max(0, Math.min(1, 1 - Math.abs(dA - dB) / (BAND_SOFT * dnow + pxW)));
+      const tau = nearA ? tauA + (tauB - tauA) * wf : tauB + (tauA - tauB) * wf;
+      const shift = nearA ? shA + (shB - shA) * wf : shB + (shA - shB) * wf;
+      const cov = Math.max(0, Math.min(1, (reach - dnow) / pxW));
       if (DG && DG.bands) {
         const fl = J[r1 + 1];
         const vv = kPulseBandV(U, J[r1], tau, fl % 2 === 1, fl >= 2);
@@ -683,24 +737,39 @@ export class Joinery {
         armPaint(rec + 2 + Math.round(J[r0 + 2]) * stride, -tau + shift, true, false, ta);
         armPaint(rec + 2 + Math.round(J[r0 + 3]) * stride, tau + shift, true, false, tb);
         const pc = [0, 1, 2].map((c) => ta[c] + (tb[c] - ta[c]) * ss);
-        DG.bands.push([r, Math.sqrt(best), tau, shift, cov, J[r1 + 2], J[r1], fl, J[r0 + 2], J[r0 + 3], mm,
+        DG.bands.push([r, dnow, tau, shift, cov, J[r1 + 2], J[r1], fl, J[r0 + 2], J[r0 + 3], mm,
           vv, qq, ff, ...pq, ...pc]);
       }
-      if (cov > 0) {
-        const dnow = Math.sqrt(best);
-        const take =
-          bR0 < 0 ||
-          dnow < bDist - 1e-6 ||
-          (dnow <= bDist + 1e-6 && J[bR1 + 2] >= 0.5 && J[r1 + 2] < 0.5);
-        if (take) {
-          bDist = dnow;
-          bTau = tau;
-          bShift = shift;
-          bCov = cov;
-          bR0 = r0;
-          bR1 = r1;
-          bIdx = r;
+      const drw = J[r1 + 2] < 0.5;
+      const take = bR0 < 0 || dnow < bDist - 1e-6 || (dnow <= bDist + 1e-6 && J[bR1 + 2] >= 0.5 && drw);
+      if (take) {
+        if (bR0 >= 0) {
+          sDist = bDist;
+          sTau = bTau;
+          sFx = bFx;
+          sFy = bFy;
+          sDx = bDx;
+          sDy = bDy;
+          sR1 = bR1;
         }
+        bDist = dnow;
+        bTau = tau;
+        bShift = shift;
+        bFx = nearA ? fAx : fBx;
+        bFy = nearA ? fAy : fBy;
+        bDx = nearA ? dAx : dBx;
+        bDy = nearA ? dAy : dBy;
+        bR0 = r0;
+        bR1 = r1;
+        bIdx = r;
+      } else if (sR1 < 0 || dnow < sDist - 1e-6 || (dnow <= sDist + 1e-6 && J[sR1 + 2] >= 0.5 && drw)) {
+        sDist = dnow;
+        sTau = tau;
+        sFx = nearA ? fAx : fBx;
+        sFy = nearA ? fAy : fBy;
+        sDx = nearA ? dAx : dBx;
+        sDy = nearA ? dAy : dBy;
+        sR1 = r1;
       }
       pb += 2 + nv;
     }
@@ -710,29 +779,61 @@ export class Joinery {
       const r1 = bR1;
       const tau = bTau;
       const shift = bShift;
-      const cov = bCov;
+      const bCov = Math.max(0, Math.min(1, (reach - bDist) / pxW));
       const flags = J[r1 + 1];
       const inw = flags % 2 === 1;
       const hov = flags >= 2;
-      const v = kPulseBandV(U, J[r1], tau, inw, hov);
-      armPaint(rec + 2 + Math.round(J[r0 + 2]) * stride, -tau + shift, true, true, mA);
-      armPaint(rec + 2 + Math.round(J[r0 + 3]) * stride, tau + shift, true, true, mB);
-      const m = J[r0 + 1];
-      let s = Math.max(0, Math.min(1, (tau + m) / (2 * m)));
-      s = s * s * (3 - 2 * s);
-      for (let c = 0; c < nc; c++) mA[c] = mA[c] + (mB[c] - mA[c]) * s;
+      let v = kPulseBandV(U, J[r1], tau, inw, hov);
       const qv = kPulseCrest(U, J[r1] + tau, inw, hov, 1, 0);
       const fa = KB * qv;
-      const f = fa >= 0.999 ? 0 : Math.max(0, Math.min(1, (KB * v - fa) / (1 - fa)));
-      const tgt = U.uKHlPulse;
-      const pq = DG ? Array.from(mA) : null;
-      if (exA) {
-        for (let c = 0; c < 3; c++) mA[c] += ((tgt ? tgt[c] : 1) * mA[3] - mA[c]) * f;
-      } else {
-        for (let c = 0; c < nc; c++) mA[c] += ((tgt ? tgt[c] : 1) - mA[c]) * f;
+      let f = fa >= 0.999 ? 0 : Math.max(0, Math.min(1, (KB * v - fa) / (1 - fa)));
+      let bt = 0;
+      if (sR1 >= 0 && J[sR1 + 2] < 0.5) {
+        const qx = sFx - bFx;
+        const qy = sFy - bFy;
+        const s1p = bDx * (y - bFy) - bDy * (x - bFx);
+        const s1q = bDx * qy - bDy * qx;
+        const s2p = sDx * (y - sFy) - sDy * (x - sFx);
+        const s2q = sDy * qx - sDx * qy;
+        if (s1p * s1q > 0 && s2p * s2q > 0) {
+          let t = (Math.sqrt(qx * qx + qy * qy) / Math.max(bDist + sDist, 1e-6) - BAND_SEP_LO) / (BAND_SEP_HI - BAND_SEP_LO);
+          t = Math.max(0, Math.min(1, t));
+          bt = t * t * (3 - 2 * t);
+        }
+        let w2 = 0.5 * Math.max(0, Math.min(1, 1 - (sDist - bDist) / (BAND_SOFT * bDist + pxW)));
+        const tg = Math.max(0, Math.min(0.5, (bDist - reach) / Math.max(bDist + sDist - 2 * reach, 1e-6)));
+        w2 = Math.max(w2, bt * tg);
+        const fl2 = J[sR1 + 1];
+        const inw2 = fl2 % 2 === 1;
+        const hov2 = fl2 >= 2;
+        const v2 = kPulseBandV(U, J[sR1], sTau, inw2, hov2);
+        const fa2 = KB * kPulseCrest(U, J[sR1] + sTau, inw2, hov2, 1, 0);
+        const f2 = fa2 >= 0.999 ? 0 : Math.max(0, Math.min(1, (KB * v2 - fa2) / (1 - fa2)));
+        v = v + (v2 - v) * w2;
+        f = f + (f2 - f) * w2;
       }
-      if (DG && pq) DG.drawn = [v, qv, fa, f, ...pq.slice(0, 3), mA[0], mA[1], mA[2]];
-      for (let c = 0; c < nc; c++) out[c] = out[c] + (mA[c] - out[c]) * cov;
+      const cw = Math.max(bCov, bt);
+      f *= cw;
+      if (cw > 0) {
+        armPaint(rec + 2 + Math.round(J[r0 + 2]) * stride, -tau + shift, true, true, mA);
+        armPaint(rec + 2 + Math.round(J[r0 + 3]) * stride, tau + shift, true, true, mB);
+        const m = J[r0 + 1];
+        let s = Math.max(0, Math.min(1, (tau + m) / (2 * m)));
+        s = s * s * (3 - 2 * s);
+        for (let c = 0; c < nc; c++) mA[c] = mA[c] + (mB[c] - mA[c]) * s;
+        const pq = DG ? Array.from(mA) : null;
+        // pm = mix(c, pm, bCov): past the band's own reach (bt > bCov) the
+        // crest whitens the material already there, the quiet web.
+        for (let c = 0; c < nc; c++) mA[c] = out[c] + (mA[c] - out[c]) * bCov;
+        const tgt = U.uKHlPulse;
+        if (exA) {
+          for (let c = 0; c < 3; c++) mA[c] += ((tgt ? tgt[c] : 1) * mA[3] - mA[c]) * f;
+        } else {
+          for (let c = 0; c < nc; c++) mA[c] += ((tgt ? tgt[c] : 1) - mA[c]) * f;
+        }
+        if (DG && pq) DG.drawn = [v, qv, fa, f, ...pq.slice(0, 3), mA[0], mA[1], mA[2]];
+        for (let c = 0; c < nc; c++) out[c] = mA[c];
+      }
     }
     if (DG) DG.out = Array.from(out);
   }
