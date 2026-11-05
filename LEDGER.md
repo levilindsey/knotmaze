@@ -518,9 +518,9 @@ Next free ID: K1190.
 - **K1189** · Muse batch 18 (`docs/design/K1189_muse_batch18.md`, drafted by run A): Run F turns
   K292's corner marks on, then B to E (K782 toast, K711 chase tap, K1187 burn, K1188 preview.ps1)
   - owner: nobody since 2026-11-04 17:22 (runs 18F, then 18B-18E queued in the Muse chain, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `d2d55224`
+  - branch: mainline; last commit: `38116577`
   - evidence: `docs/design/K1189_muse_batch18.md`; the chain in `.claude/probes/K1053/` (queue.txt, chain.log)
-  - next: Muse chain runs 18F, then 18B to 18E, one at a time; Claude reviews each (F's sheets before K292 closes, D's crops before K1187 closes), applies B and C's item texts, closes K1188 after E and K1189 at the end
+  - next: Run F done; Claude checks its sheets, Run B next
   - brief: `docs/design/K1189_muse_batch18.md`
 
 ## Next, in order
