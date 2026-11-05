@@ -64,6 +64,10 @@ run 17H, while Claude reviews runs B to G against the code; those
 are queued only after that review, which records its amendments
 here.
 
+Run I (K1179 S1e, after Run H) was added the same day, after Claude
+read Run H's record (7cefb993). It runs second and alone, as chain
+run 17I, before runs B to G.
+
 ## How to work
 
 Batch 16's "How to work" applies unchanged: read it in
@@ -227,6 +231,144 @@ commit. Then update K1179's handle:
 `ledger.mjs handle K1179 --owner "nobody since <yyyy-mm-dd hh:mm> (S1d done in Muse batch 17 run H)" --last-commit <sha8> --next "S1d done (<pass or fail per variant>); Claude reviews it and looks at the plots"`
 and K1184's:
 `ledger.mjs handle K1184 --last-commit <sha8> --next "Run H done; Claude reviews runs B-G and queues them"`.
+
+## Run I - K1179 S1e: the pinned round with form B's own gate integral, offline
+
+Read first: `docs/design/K1179_s1d.md` (all of it: Run H's record,
+which this run builds on); Run H's section above (its rule, criteria
+and harness, which stand except where this section changes them); in
+`src/render/field/form_b.ts`, `solveCorner`'s gates: the comment at
+about line 870, then from `denV` at about line 976 through the
+integral that ends at about line 1075 (`marginOf`, `rbEff`, `wOf`,
+with `denOf` and `slackOf` above them); and Run H's probes,
+`.claude/probes/K1179/s1d/` (`lib_s1d.ts`, `walkEdge`, the harness
+scripts).
+
+The ledger says (In progress):
+
+> **K1179** · Thread geometry (Levi 11-04: rethink how thread bodies, junction rounds and gaps are built, maybe
+> as a skin on the thread centres). Review (`docs/design/K1179_geometry_review.md`): keep threads and physics,
+> one per-pixel outline rule for both looks, no simulated skin. S1-S1d: K1178 Runs I, K, L, K1184 H (all fail).
+
+What Run H found (7cefb993): V is exact (5.8e-13h), criterion 2
+passes exactly and the raw 1v meets fall from 63 to 7. But the gates,
+read once at the full feet, null 883 of master's 1,833 live rounds
+(`muse_default_tw` j130: form B draws r ≈ 1.9h, the variants draw
+none). That one choice drives the motion overs (up to 256 against
+master's 25), most of the agreement gap (p50 1.57 device px) and,
+with no root gate in the rule, gate699's pop (an ink step of 1.0
+against 0.127). All 21 concave rounds are the 0.55 fallback cubic.
+The cost is 18.8 µs a corner (median), mostly exact-edge walks built
+per corner (45%) and V's window scans (25%).
+
+Claude's read of that record:
+
+1. The gate was the brief's error, not the pinning. Form B's round
+   is r = ∫S dρ, S the running minimum of `wOf` over 32 nodes, so a
+   gate that closes partway leaves a partial round. Read once at the
+   full feet, the same gate leaves none. The same integral taken
+   along the pinned path is form B's own gate on straight arms, by
+   construction, and is continuous wherever `wOf` is.
+2. All four factors, as form B has them: margin, steep, cap and root
+   (S1g's band with K1163's tip scale, `rbEff`). Run H had no root
+   gate, and gate699 popped.
+3. The fallback must not be able to turn concave. Where the feet's
+   tangent lines do not meet on the fill side within 4h of V, no
+   convex G1 round exists at those feet. Use the largest node already
+   evaluated at which one does.
+4. Share what a frame shares. Each arm's exact edge is built once a
+   frame and walked cumulatively across the nodes, and that build is
+   counted once in the frame's cost.
+
+The rule under test, per corner form B makes (the same cyclically
+adjacent arm pairs; style, cr, h, θ and r0 as `solveCorner` has
+them, r0 = style·(cr/3)·min(2h, 1.5h·tan(θ/2))):
+
+- V and θ exactly as `solveCorner` computes them (any exact method:
+  |ΔV| ≤ 1e-9h against the built corner's V on every corner).
+- Nodes k = 0..K at r_k = k·r0/K. At each node, the edge points E_a
+  and E_b sit at arc length r_k·cot(θ/2) from V along each arm's
+  exact edge (Run H's walk), with the centreline feet E − h·n (n the
+  edge's normal away from its own centreline). The probe point q_k
+  is the mean of E_a + r_k·n_a and E_b + r_k·n_b, which on straight
+  arms is form B's ball centre.
+- w_k = `wOf` at node k: the margin gate with `marginOf`'s own
+  definition (each arm's window outside its foot's basin, against
+  dc = |q_k − that arm's centreline foot|), the steep gate (den from
+  the normals at the feet, den(V) as `denV`), the cap gate
+  (`slackOf`'s slack at the feet) and the root gate (each centreline
+  foot's distance from its root over `rbEff`).
+- S_0 = w_0 and S_k = min(S_{k−1}, w_k). Then r = Σ ½(S_{k−1} +
+  S_k)·r0/K, form B's trapezoid. A node whose feet would pass an
+  arm's window end ends the sum (S = 0 past it), as the branch's end
+  does in form B.
+- The feet at arc length r·cot(θ/2) from V, and Run H's round: the
+  rational quadratic with C where the feet's tangent lines meet and
+  weight cos(φ/2). Where C is not on the fill side, or is farther
+  than 4h from V, use the largest node radius r_k ≤ r at which it
+  is (null at k = 0). Count those corners and list their sites.
+  There is no cubic fallback.
+- The fill as Run H's.
+
+Two variants, both measured: (i) K = 32 (form B's node count);
+(ii) K = 8.
+
+Tasks, in order (Node only, through `npx.cmd vite-node`; no GPU,
+browser, server or phone, so no port). Write only new files under
+`.claude/probes/K1179/s1e/` and `docs/design/K1179_s1e.md`. Import
+Run H's or Run L's probes, or copy one into `s1e/` to change it;
+leave their files and outputs as they are. Change nothing in `src/`
+or `test/`.
+
+1. The rule, deterministic and cold every frame: no warm start, no
+   tracking, no Newton, no bisection. State the most work a corner
+   can take.
+2. The criteria, three columns: master's form B on the exact outline
+   (Run H's column, re-run, not copied), variant (i) and variant
+   (ii), on Run H's inputs (the 12 scenes, every distinct frame of
+   the 4 recordings, the four sweeps): 1v, visible and raw, per
+   class, with Run H's clauses; 2; 3, the recordings and the sweeps
+   against form B's rates; no concave turning anywhere along a
+   round; the small-round clause with its null bands; and the
+   node-fallback count.
+3. Agreement with form B's look, now gated: over the 12 scenes and
+   over the recordings, p95 ≤ 1 device px at dpr 2, measured as Run H
+   measured it. Corners where master itself fails 1v are reported
+   apart and left out of the gate. Give p50, p95 and the maximum,
+   and list every corner over 2 device px with its θ, its arms'
+   curvature at the feet and the factor whose running minimum set S.
+4. Cost, under the perf lock as Run H took it: p95 a frame at most
+   0.75 ms on the desktop, cold, over every distinct frame of the 4
+   recordings, counting everything beyond the sampled centrelines.
+   Time the parts: the edges' build, V and θ, the nodes (feet, then
+   each gate factor apart), and the round. Give the cost per corner
+   with its p50 and p99 and the scene medians. Also give, not gated,
+   the p95 a frame without the margin gate.
+5. SVG plots under `.claude/probes/K1179/s1e/out/`, drawn as Run H's:
+   Run H's sites (`muse_default_tw` j130, `muse_hash` j49, `muse_flow`
+   R|18|2-0, the gate699 corner at its pop), and per variant the
+   worst agreement corner, the worst visible 1v failure and the worst
+   criterion 3 failure. No pngjs.
+6. Stop when the tables are done. A variant passes when 1v (visible),
+   2, 3, no concave turning, agreement and cost all hold.
+
+Done:
+
+- `docs/design/K1179_s1e.md`: the rule as built, the tables per
+  criterion (three columns), the agreement, the cost split, a verdict
+  per variant (pass or fail, and by how much), and what comes next:
+  on a pass, which variant and why; on a fail, what failed and where,
+  and for cost, which parts would have to shrink, and by how much,
+  to meet 0.75 ms.
+- The probe code force-added and pushed with the doc (a docs and
+  probes push, so no deploy runs).
+- `npm test` passes.
+
+Report: the verdicts, the agreement, the cost, the doc's path and the
+commit. Then update K1179's handle:
+`ledger.mjs handle K1179 --owner "nobody since <yyyy-mm-dd hh:mm> (S1e done in Muse batch 17 run I)" --last-commit <sha8> --next "S1e done (<pass or fail per variant>); Claude reviews it and looks at the plots"`
+and K1184's:
+`ledger.mjs handle K1184 --last-commit <sha8> --next "Run I done; Claude applies the review of runs B-G and queues them"`.
 
 ## Run B - K1183: the field's own rules file
 
