@@ -76,6 +76,18 @@ GPU probes and timings hold the machine's perf lock (each
 harness's `run_locked.ps1`). Say so in each such run's tasks,
 and never time without it.
 
+node_modules (Claude, 2026-11-04, after Run B): the main checkout's
+node_modules is shared. Worktrees reach it through a junction, and
+other servers hold its native binaries open. Never run `npm ci` in
+the main checkout. Before removing a worktree, unlink its
+node_modules junction first (`scripts/preview.ps1`'s
+`Remove-PreviewWorktree` shows how; on this git 2.33, `git worktree
+remove --force` follows a junction into its target). To build an
+older commit, run `pwsh -NoProfile -File scripts/preview.ps1 -Ref
+<sha> -Root $env:TEMP\knotmaze-previews -BuildOnly`. If node_modules
+looks broken, repair it with `npm install` (never `npm ci`) and say
+so in the report.
+
 ## Run B - K1139 S5: straight through your own junction, behind a switch (K1182 folded in)
 
 **Chain tag:** 20B · **Suggested ports:** 5760-5769 (the probe's

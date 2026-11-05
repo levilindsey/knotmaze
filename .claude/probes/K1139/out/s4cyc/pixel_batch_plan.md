@@ -117,3 +117,34 @@ compile+link on the Pixel against base.
   `.claude/probes/K1139/out/s4cyc/sheets/` (desktop, base and S4 rows),
   for Claude's review.
 - No S5 work (`PULSE_OUT_LEAD`, `CREST_RAMP`).
+
+
+## Result (coordinator, 2026-11-04 23:11-23:27)
+
+Run as one round phone pass instead of the steps above:
+`scripts/phone_pass.ps1 -Base 25ce2321 -Head 36aed2d5 -Reps 3` (K156),
+under the phone lock, out in `.claude/probes/rounds/2026-11-04-k1139s4/`
+(untracked: `summary.md`, `logs/run.log`). Viewport 411x753 at 2.625,
+canvas 822x1506. Between the two builds: K1139 S4 and S4b, plus K782
+b806f9fb (game logic), K1187 222452e3 and 0a776aa0 (fire mode only) and
+K1182 ed14f2c9 (behind a flag, off); at rest only K1139's paint differs.
+
+Verdicts against `scripts/phone_pass/noise.json` (4 better, 2 worse, 34
+within noise):
+
+- Frames: fabric at rest (0 and 7 moves) p50 16.7 = 16.7, knot 16.7 =
+  16.7; no frame lost at 60 Hz. One 33.6 ms frame in the head's 0-move
+  samples.
+- Render ms (the median of 60 synchronous renders with a 1-px readback,
+  about 40 ms on the Pixel): fabric 0 moves 39.6 -> 40.5 (+0.9 against a
+  0.7 floor: worse), 7 moves 41.0 -> 41.6 (+0.6), 13 moves (the finish)
+  41.1 -> 42.1 (+1.0); knot 21.9 -> 21.6. The pulse paint costs about 2%
+  of a synchronous render, in fabric only.
+- Load: gs=18's fps 32.8 -> 40.7 (better; not K1139's doing, unexplained;
+  the phone warmed from 27 to 38 C over the pass).
+- Gate (frameMs(head) - frameMs(base) at most 0.5): frames unchanged, so
+  it passes; accepted. S5's default flip gets the same pass with 36aed2d5
+  as base (`../../pixel_passes.ps1`), so the pulse paint does not grow
+  unseen.
+- Cold compile: not measurable on the Pixel with this kit (K307's
+  trace_intro is desktop only).

@@ -353,3 +353,47 @@ difference (a reading smaller than that spread decides nothing):
 K1097's gate stands where S3f3 left it: the Pixel reads 3.3-9.9 ms
 against 2, and this batch's split says where the drawing's 0.8 ms
 must come from.
+
+
+### The Pixel's reading (coordinator, 2026-11-04 23:04-23:11)
+
+`s3f4_gate.ps1 -SkipDesktop`, run from an ignored copy of the kit
+(`.claude/probes/K1097/s3f4run/`, because `phone_time.mjs` appends to
+the tracked summary). Its outputs are in `out/`: `split_s3f4.md`,
+`phone_table_s3f4.md`, and four blocks appended to
+`out/phone_time_summary.md`. Target 822x1506 at scale 2 (fit 411x753).
+
+The split (render-sync p50 ms, the median of the 12 scenes; a column
+clears a scene when its reading there is larger than the difference
+of its two runs):
+
+| column | ms | range | clears |
+|---|---|---|---|
+| drawing | 2.2 | 1.3 to 3.7 | 12/12 |
+| a pass that draws | 0.8 | 0.6 to 1.6 | 12/12 |
+| vertex side | 0.9 | 0.2 to 2.0 | 10/12, all positive |
+| segments | 1.0 | -0.4 to 2.8 | 8/12 |
+| caps, fills, rest | 0.5 | | 6/12 |
+| fragment side | 0.4 | | 7/12 |
+| shading | 0.0 | | 4 positive, 2 negative |
+| vertex slope | 0.0 | | 1/12 (negative) |
+| instancing | -0.3 | | negative on 9/12, never positive |
+
+By the rule above, two families clear on nearly every scene: the
+pass's fixed cost (its attachments and their stores; by itself 0.8,
+the drawing's whole budget at S4's and S5's targets) and the vertex
+side (cheaper vertices: fewer fetches per vertex, a cheaper span and
+point path; not fewer vertices, since the slope reads 0). The
+fragment side is at most 0.4. Rejected: `ftentvvid` (its
+non-instanced draw is slower on 9 of 12 scenes and never faster) and
+cheaper fragment arithmetic.
+
+The gate (`phone_table_s3f4.md`: s3f3new - s3ffloorall + upload)
+reads 3.2 to 10.7 ms against 2 and fails on all 12 scenes (S3f3: 3.3
+to 9.9). The drawing's 0.8 target needs the pass's fixed cost nearly
+gone and the vertex side cut. Next: S3f5 in Muse batch 21, default-off
+probe variants for (a) the pass's fixed cost (attachment count,
+format and size, depth's store, load and store hints) and (b) cheaper
+segment vertices, each with this stage's checks (0 px against
+`ftentv`) and the desktop split, then the coordinator's Pixel batch
+in these columns.

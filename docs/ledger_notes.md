@@ -3714,3 +3714,8 @@ Muse batch 19 Run D (d740e698) examined Stage 4's three leftovers; summaries and
 - ji 147's unlit arm 1: no pulse band declares it (its bands are 0>3 and 0>2), and rule (d)'s side factor is 0 at all 276 px, so the crotch fill cannot reach it; its fan is the uniform quiet base (luma 148), not a dark base. The bright GPU colours there at bright phases are not explained by the cover model (candidate: its unmodelled gk discard); recorded, not attributed.
 - ji 147's 52 wedges are threshold flips: the GPU sits 0.11-1.00 luma under the float model at all 52 (51 are fan x4, with no other record), and at a census line of T = 1 none stays GPU-only.
 - Stage 4's `out/s4/d/` dumps were read as they were: nothing retaken, the `__k1139diag` hook not checked out.
+
+## K1202 (2026-11-05, Run C's attribution)
+
+Muse batch 20 Run C (5f9c3207), as Muse proposed it:
+A step at columns 20 to 21 of cyc e210's kymograph (up to 43 luma), the same before and after K1139 S4b: the cover edge of node_218's other pulse band (e39->e209, record 5363) crossing e210's centreline inside the fan — within its strip cover the pixel takes that band's crest (read on e39, cr ~1.0), past it (dnow over the 0.303 strip reach, tau 0.239 to 0.251) it falls to the e39->e210 band's own field; the CPU twin ramps the same cover over cols 18-20 (master: 40.3 luma, 34/72 rows; `.claude/probes/K1202/out/SUMMARY.md`); a fix is a later stage behind a switch.

@@ -509,27 +509,27 @@ Next free ID: K1204.
 - **K1097** · K1040 S3, the label pass (F7 of `docs/design/K1040_junction_field.md`): the depth-tested label on
   the GPU, gated by oracle30's verdicts on the 12 scenes (0 DEFECT closes K1033), the recordings' pops and the
   Pixel's 2 ms.
-  - owner: nobody since 2026-11-04 03:16 (S3f4 done in Muse run 16J)
+  - owner: nobody since 2026-11-04 23:20 (the coordinator read S3f4's Pixel batch; S3f5 goes to Muse batch 21)
   - branch: mainline; last commit: `b3dab0c9`
-  - evidence: .claude/probes/K1040/s3/ (s3f4_gate.ps1, split.mjs, vert_count.ts; out/split_s3f4_desktop.md, out/vert_count_s3f4.md, out/check_s3f4chk_summary.md, out/ab_s3f4ab_summary.md; earlier splits out/split_s3f2.md, out/split_s3d2.md)
-  - next: Pixel batch (coordinator): s3f4_gate.ps1 -SkipDesktop fills out/split_s3f4.md + out/phone_table_s3f4.md; read it by the Handoff's rule (pass-that-draws -> attachments/stores, instancing -> ftentvvid's draw, vertex side -> cheaper vertices, fragment side -> fewer covered pixels)
-  - brief: `docs/design/K1040_s3f4_bound.md`
+  - evidence: .claude/probes/K1040/s3/ (s3f4_gate.ps1, split.mjs, vert_count.ts; out/split_s3f4.md and out/phone_table_s3f4.md (the Pixel), out/split_s3f4_desktop.md, out/vert_count_s3f4.md, out/check_s3f4chk_summary.md, out/ab_s3f4ab_summary.md; earlier splits out/split_s3f2.md, out/split_s3d2.md)
+  - next: S3f5 in Muse batch 21 (the coordinator drafts its brief from the Pixel's reading in the S3f4 doc): default-off variants for the pass's fixed cost (attachments, formats, depth's store, load and store hints) and cheaper segment vertices (fewer fetches per vertex), with S3f4's checks and the desktop split, then the Pixel batch in S3f4's columns
+  - brief: `docs/design/K1040_s3f4_bound.md` (its Handoff ends with the Pixel's reading)
   - env: the phone through `.claude/probes/K1040/s3/phone_batch.ps1` (run_phone.ps1: both locks, then K1142's ready check), `phone_time.mjs` serving on 5403; desktop timing through `run_locked.ps1`, never piped through `Select-Object -First` (K1174)
 - **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate correctly
-  across junctions"). S1 to S4b landed (S4b 88e1039d; the Pixel check waits for the phone); Levi's looks K1190
-  and K1200, leftovers K1191 and K1201-K1203. S5 (Muse batch 20) and S6 next. Notes: `docs/ledger_notes.md`.
-  - owner: nobody since 2026-11-04 22:41 (S4b's agent stopped done at 22:06 and both stages merged; S5 goes to Muse batch 20, K1199, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline (S4 and S4b merged at 36aed2d5; the worktrees `.claude/worktrees/agent-a90af0fe8b4cf82a5` (S4b), `agent-a023a39925efe4816` (S4) and `agent-a8280f4d14ebd8ad1` (the S3b fix) kept); last commit: `36aed2d5`
-  - evidence: `.claude/probes/K1139/` (tracked: `*_cyc.mjs`, `ridge_joint.ts`, `out/s4cyc/` sheets, table, bench and `pixel_batch_plan.md`, `k307/`; untracked: `out/s4b/` crops, sheets and A/B); the numbers in the Handoffs of `docs/design/K1139_s4_cycles.md` and `docs/design/K1139_s4b_ridge_fade.md`
-  - next: Levi's look K1200 (`docs/asks/K1200.md`); the Pixel batch for S3b's fix, S4 and S4b when the phone is awake (`out/s3b/pixel_batch_plan.md`, `out/s4cyc/pixel_batch_plan.md`, built from 36aed2d5 or later, under the K1040 phone wrappers); S5 (Levi: straight through, no dim moment) in Muse batch 20 (K1199); K1201-K1203; K1190's fixes once Levi answers
-  - brief: the plan `docs/design/K1139_pulse_junctions.md` section 5 (S5); S4b's Handoff in `docs/design/K1139_s4b_ridge_fade.md`
-  - env: the server `npx vite --config .claude/probes/K1139/vite.private-cache.config.ts --port 5620 --strictPort --host 127.0.0.1` from a worktree (ports 5620-5639; the node_modules junction: `docs/design/K1139_s3b_fix.md` section 7); GPU probes through `.claude/probes/K1139/run_locked.ps1 -Batch`
+  across junctions"). S1 to S5 landed (S5 on since fbc1b212); S4/S4b held the Pixel's frames (render +2%).
+  Levi's looks K1190 and K1200, leftovers K1191 and K1201-K1203; S6 next. Notes: `docs/ledger_notes.md`.
+  - owner: claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (coordinator: the Pixel passes for S3b, S3b's fix and S5, under the phone lock)
+  - branch: mainline (the worktrees `.claude/worktrees/agent-a90af0fe8b4cf82a5` (S4b), `agent-a023a39925efe4816` (S4) and `agent-a8280f4d14ebd8ad1` (the S3b fix) kept); last commit: `fbc1b212`
+  - evidence: `.claude/probes/K1139/` (tracked: `*_cyc.mjs`, `ridge_joint.ts`, `s5_sheet.mjs`, `pixel_passes.ps1`, `out/s4cyc/` sheets, table, bench and `pixel_batch_plan.md` (its Result: S4/S4b on the Pixel), `out/s5/` (20B's q3_head sheet, `s5_sheet.json`), `k307/`; untracked: `out/s4b/`, the round outputs `.claude/probes/rounds/2026-11-04-k1139s4/` and `2026-11-05-k1139s3b`, `-k1139fix`, `-k1139s5`); the Handoffs of `docs/design/K1139_s4_cycles.md` and `docs/design/K1139_s4b_ridge_fade.md`
+  - next: the Pixel passes (`pixel_passes.ps1 -Flip fbc1b212`: S3b 7474d09b -> df30a7f3, its fix 1fe793f5 -> 71eedb94, S5 36aed2d5 -> fbc1b212; gate frameMs +0.5, `out/s3b/pixel_batch_plan.md`); Levi's look K1200 (`docs/asks/K1200.md`); K1201-K1203; S6 (plan section 5); K1190's fixes once Levi answers
+  - brief: the plan `docs/design/K1139_pulse_junctions.md` section 5 (S6); S5 was Muse batch 20's Run B (`docs/design/K1199_muse_batch20.md`)
+  - env: the passes' builds first and never while Muse runs: `scripts/preview.ps1 -Ref <sha> -Root <out>\builds -BuildOnly` for each sha (`pixel_passes.ps1` stops before the phone lock when one is missing); probe server `npx vite --config .claude/probes/K1139/vite.private-cache.config.ts --port 5620 --strictPort --host 127.0.0.1` from a worktree (ports 5620-5639); GPU probes through `.claude/probes/K1139/run_locked.ps1 -Batch`
 - **K1199** · Muse batch 20 (`docs/design/K1199_muse_batch20.md`): K1139 S5 with K1182's removal (run B),
   K1202 (C), K1186's crops (D), K1201 (E), K1196's timing (F) and K1198's Plc1m and ij (G), one at a time
-  - owner: nobody since 2026-11-04 22:57 (runs 20B to 20G queued in the Muse chain, one at a time, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
+  - owner: nobody since 2026-11-05 00:07 (the chain held before 20D for the coordinator's commits and builds; runs 20D to 20G queued, one at a time, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
   - branch: mainline; last commit: `5f9c3207`
   - evidence: docs/design/K1199_muse_batch20_run_a.md; the chain in .claude/probes/K1053/ (queue.txt, chain.log)
-  - next: Run C done; Claude reviews it, Run D next
+  - next: Run C reviewed (K1202 attributed, its fix a later stage); Run D (K1186's flips, six rows; Claude judges the pops), then E to G
   - brief: `docs/design/K1199_muse_batch20.md`
 
 ## Next, in order
@@ -550,12 +550,9 @@ Binding for every stage:
   new, and pause running agents with their WIP committed.
 
 Running agents are listed under In progress, each with its own next step.
-- **K1182** · Remove 19C's biarc rim and its flag `rimCurveBiarc` (`src/render/ribbon/rim_curve.ts`), saying
-  why in the header: the quadratic reads smooth on Run C's and Run F's crops and the biarc grows stepped
-  notches at all four targets (Run F 3ddaec22: a G1 rim leaves the corridor or turns tight). Muse batch 20.
-- **K1202** · A step at columns 20 to 21 of cyc e210's kymograph (up to 43 luma), the same before and after
-  K1139 S4b, unattributed (a guess: two bands meeting in node_218's fan); attribute it with probes
-  (`.claude/probes/K1139/out/s4b/crops/kymo_steps.txt`, untracked)
+- **K1202** · The step at columns 20 to 21 of cyc e210's kymograph (up to 43 luma) is the cover edge of
+  node_218's other pulse band (e39->e209) crossing e210's centreline in the fan (20C, 5f9c3207; the CPU
+  twin ramps it over cols 18-20); a fix is a later stage behind a switch. Notes: `docs/ledger_notes.md`.
 - **K1201** · S4b's joint step (K1139): where a two-ended arm's ridge lies near or before its joint, the light
   steps there by 0.18 to 0.90 (`ridge_joint.ts`, synthetic; no stand shows it). Reproduce it on screen and on
   the GPU, measure how often play meets it, then fix (b) behind a switch (S4b's Handoff)
@@ -2015,6 +2012,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1182** · 19C's biarc rim, its rimCurveBiarc flag and their tests removed; the header beside K859's Hermite says why it stays out (the quadratic reads smooth, the biarc notched at all four targets). Done in b05e7a5a (2026-11-05).
 - **K1192** · Muse batch 19 (`docs/design/K1192_muse_batch19.md`): K1186's flip count, K1182's biarc and Run F's look at its corners, K1191's examinations, K782's waiting follower. Done in 3ddaec22 (2026-11-04).
 - **K1189** · Muse batch 18: K292 corner marks (38116577), K782 toast (8ba8dc69), K711 chase tap (ee46522e), K1187 burn (0a776aa0, scoped by 222452e3), K1188 preview.ps1 (f5035e0d). Done in f5035e0d (2026-11-04).
 - **K1188** · scripts/preview.ps1 reproduced and fixed: a -Root whose -Ref worktree files pass 260 chars is refused before creating anything (git 2.33: GIT_DIR too big); a killed -Ref server's temp worktree is cleaned by the next run under the same -Root, junction unlinked first, live siblings untouched (Claude read the cleanup: src-* under that root only, any doubt kept). Done in f5035e0d (2026-11-04).
