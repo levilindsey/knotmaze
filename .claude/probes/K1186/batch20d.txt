@@ -1,0 +1,3 @@
+$env:K1186_BASE = "http://127.0.0.1:5781"
+node rank.mjs out20d
+node crops.mjs out20d

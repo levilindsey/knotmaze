@@ -1,0 +1,742 @@
+{
+ "base": "http://127.0.0.1:5781",
+ "rows": [
+  {
+   "rowId": "control",
+   "source": "control",
+   "stand": "seed3",
+   "link": "3&am=instant&snd=none&fw=0&phw=0",
+   "script": "control-drag1",
+   "jiRanked": 0,
+   "jiUsed": 0,
+   "centreRanked": [
+    22.62101682027181,
+    10.499191602071127
+   ],
+   "centreLive": [
+    22.62101682027181,
+    10.499191602071127
+   ],
+   "centreDist": 0,
+   "centreSearched": false,
+   "recRanked": 0,
+   "recLive": 0,
+   "nj": 166,
+   "rankedStep": 5,
+   "observedStep": -1,
+   "reproducedAtRankedStep": false,
+   "usedStep": 5,
+   "headline": null,
+   "values19B": null,
+   "valuesObserved": null,
+   "flipsAtTargetControl": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ],
+   "clip": {
+    "x": 829,
+    "y": 168,
+    "width": 260,
+    "height": 260
+   },
+   "ctxLost": 0,
+   "flipPx": 4891,
+   "heldPx": 277,
+   "excessPx": 4614,
+   "files": {
+    "before": "control_before.png",
+    "after": "control_after.png",
+    "held": "control_held.png"
+   },
+   "holdMethod": "paused stand-in (drag paused at the before sample, mouse down, one 140 ms step interval); no joinery choice can be held from outside rebuildFillets",
+   "logTail": [
+    "[debug] [vite] connecting...",
+    "[debug] [vite] connected.",
+    "[log] KnotMaze P4 v0.4.0 94404dd2 2026-11-05 08:21 | dpr 1.5 | gpu WebKit WebGL",
+    "[log] KnotMaze: seed 3, 1002 nodes, 1433 edges, 86 strands."
+   ]
+  },
+  {
+   "rowId": "flip1",
+   "source": "drawn",
+   "stand": "seed3",
+   "link": "3&am=instant&snd=none&fw=0&phw=0",
+   "script": "drag3",
+   "jiRanked": 6,
+   "jiUsed": 6,
+   "centreRanked": [
+    24.634,
+    2.532
+   ],
+   "centreLive": [
+    24.677611033121746,
+    2.6484957536061606
+   ],
+   "centreDist": 0.12439124896154584,
+   "centreSearched": false,
+   "recRanked": 462,
+   "recLive": 462,
+   "nj": 166,
+   "rankedStep": 2,
+   "observedStep": 2,
+   "reproducedAtRankedStep": true,
+   "usedStep": 2,
+   "headline": {
+    "kind": "reachBound",
+    "idx": 0,
+    "geo": 36.33686416138366,
+    "before": [
+     0,
+     0,
+     0,
+     0.975,
+     -0.5368,
+     -0.8437
+    ],
+    "after": [
+     0,
+     0,
+     1,
+     0.91925,
+     -0.5079,
+     -0.8614
+    ]
+   },
+   "values19B": {
+    "before": [
+     0,
+     0,
+     0,
+     0.975,
+     -0.5368,
+     -0.8437
+    ],
+    "after": [
+     0,
+     0,
+     1,
+     0.91925,
+     -0.5079,
+     -0.8614
+    ]
+   },
+   "valuesObserved": {
+    "before": {
+     "bound": 0,
+     "reach": 0.975
+    },
+    "after": {
+     "bound": 1,
+     "reach": 0.93261
+    },
+    "heldAfter": {
+     "bound": 0,
+     "reach": 0.975
+    },
+    "heldFlippedDuringPause": false,
+    "trace": [
+     {
+      "bound": 0,
+      "reach": 0.975
+     },
+     {
+      "bound": 0,
+      "reach": 0.975
+     },
+     {
+      "bound": 0,
+      "reach": 0.975
+     },
+     {
+      "bound": 1,
+      "reach": 0.93261
+     },
+     {
+      "bound": 1,
+      "reach": 0.81984
+     },
+     {
+      "bound": 1,
+      "reach": 0.81127
+     },
+     {
+      "bound": 1,
+      "reach": 0.80771
+     },
+     {
+      "bound": 1,
+      "reach": 0.80422
+     },
+     {
+      "bound": 1,
+      "reach": 0.7998
+     },
+     {
+      "bound": 1,
+      "reach": 0.79895
+     },
+     {
+      "bound": 1,
+      "reach": 0.80191
+     },
+     {
+      "bound": 1,
+      "reach": 0.80631
+     },
+     {
+      "bound": 1,
+      "reach": 0.80788
+     },
+     {
+      "bound": 1,
+      "reach": 0.81393
+     },
+     {
+      "bound": 1,
+      "reach": 0.82194
+     },
+     {
+      "bound": 1,
+      "reach": 0.84592
+     },
+     {
+      "bound": 1,
+      "reach": 0.90127
+     },
+     {
+      "bound": 1,
+      "reach": 0.94185
+     }
+    ],
+    "heldTrace": [
+     {
+      "bound": 0,
+      "reach": 0.975
+     },
+     {
+      "bound": 0,
+      "reach": 0.975
+     },
+     {
+      "bound": 1,
+      "reach": 0.85268
+     },
+     {
+      "bound": 1,
+      "reach": 0.82206
+     },
+     {
+      "bound": 1,
+      "reach": 0.81401
+     },
+     {
+      "bound": 1,
+      "reach": 0.80771
+     },
+     {
+      "bound": 1,
+      "reach": 0.80447
+     },
+     {
+      "bound": 1,
+      "reach": 0.8016
+     },
+     {
+      "bound": 1,
+      "reach": 0.7993
+     },
+     {
+      "bound": 1,
+      "reach": 0.8016
+     },
+     {
+      "bound": 1,
+      "reach": 0.80448
+     },
+     {
+      "bound": 1,
+      "reach": 0.80768
+     },
+     {
+      "bound": 1,
+      "reach": 0.81406
+     },
+     {
+      "bound": 1,
+      "reach": 0.82215
+     },
+     {
+      "bound": 1,
+      "reach": 0.84648
+     },
+     {
+      "bound": 1,
+      "reach": 0.90222
+     },
+     {
+      "bound": 1,
+      "reach": 0.93908
+     }
+    ]
+   },
+   "clip": {
+    "x": 878,
+    "y": 0,
+    "width": 260,
+    "height": 260
+   },
+   "ctxLost": 0,
+   "flipPx": 14397,
+   "heldPx": 0,
+   "excessPx": 14397,
+   "files": {
+    "before": "flip1_before.png",
+    "after": "flip1_after.png",
+    "held": "flip1_held.png"
+   },
+   "holdMethod": "paused stand-in (drag paused at the before sample, mouse down, one 140 ms step interval); no joinery choice can be held from outside rebuildFillets",
+   "logTail": [
+    "[debug] [vite] connecting...",
+    "[debug] [vite] connected.",
+    "[log] KnotMaze P4 v0.4.0 94404dd2 2026-11-05 08:21 | dpr 1.5 | gpu WebKit WebGL",
+    "[log] KnotMaze: seed 3, 1002 nodes, 1433 edges, 86 strands."
+   ]
+  },
+  {
+   "rowId": "flip2",
+   "source": "geometric",
+   "stand": "fat11",
+   "link": "11&am=instant&snd=none&fw=0&phw=0&tw=0.72&cr=4.5",
+   "script": "drag1",
+   "jiRanked": 55,
+   "jiUsed": 55,
+   "centreRanked": [
+    23.837,
+    29.829
+   ],
+   "centreLive": [
+    23.629568735758465,
+    29.82078742980957
+   ],
+   "centreDist": 0.2075937756628899,
+   "centreSearched": false,
+   "recRanked": 7250,
+   "recLive": 7250,
+   "nj": 178,
+   "rankedStep": 3,
+   "observedStep": -1,
+   "reproducedAtRankedStep": false,
+   "usedStep": 3,
+   "headline": {
+    "kind": "cover",
+    "idx": 0,
+    "geo": 1744.2348258449972,
+    "before": 0,
+    "after": 1
+   },
+   "values19B": {
+    "before": 0,
+    "after": 1
+   },
+   "valuesObserved": {
+    "before": 1,
+    "after": 1,
+    "heldAfter": 1,
+    "heldFlippedDuringPause": false,
+    "trace": [
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1
+    ],
+    "heldTrace": [
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1
+    ]
+   },
+   "clip": {
+    "x": 850,
+    "y": 618,
+    "width": 260,
+    "height": 260
+   },
+   "ctxLost": 0,
+   "flipPx": 18717,
+   "heldPx": 13850,
+   "excessPx": 4867,
+   "files": {
+    "before": "flip2_before.png",
+    "after": "flip2_after.png",
+    "held": "flip2_held.png"
+   },
+   "holdMethod": "paused stand-in (held shot immediately after the before shot, drag paused at the before sample, mouse down); no joinery choice can be held from outside rebuildFillets",
+   "stepTiming": "exact 19B step timing (140 ms move dwell; held shot immediately after the before shot)",
+   "retryOf": "subset re-shoot (K1186_EXACT=1)",
+   "logTail": [
+    "[debug] [vite] connecting...",
+    "[debug] [vite] connected.",
+    "[log] KnotMaze P4 v0.4.0 94404dd2 2026-11-05 08:30 | dpr 1.5 | gpu WebKit WebGL",
+    "[log] KnotMaze: seed 37, 1010 nodes, 1441 edges, 85 strands."
+   ]
+  },
+  {
+   "rowId": "flip3",
+   "source": "geometric",
+   "stand": "fat11",
+   "link": "11&am=instant&snd=none&fw=0&phw=0&tw=0.72&cr=4.5",
+   "script": "drag2",
+   "jiRanked": 4,
+   "jiUsed": 4,
+   "centreRanked": [
+    1.658,
+    5.253
+   ],
+   "centreLive": [
+    1.6680010557174683,
+    5.2598945299784345
+   ],
+   "centreDist": 0.012147249033729293,
+   "centreSearched": false,
+   "recRanked": 554,
+   "recLive": 554,
+   "nj": 178,
+   "rankedStep": 1,
+   "observedStep": 1,
+   "reproducedAtRankedStep": true,
+   "usedStep": 1,
+   "headline": {
+    "kind": "cover",
+    "idx": 0,
+    "geo": 1744.2348258449972,
+    "before": 1,
+    "after": 0
+   },
+   "values19B": {
+    "before": 1,
+    "after": 0
+   },
+   "valuesObserved": {
+    "before": 1,
+    "after": 0,
+    "heldAfter": 1,
+    "heldFlippedDuringPause": false,
+    "trace": [
+     1,
+     1,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "heldTrace": [
+     1,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   },
+   "clip": {
+    "x": 343,
+    "y": 51,
+    "width": 260,
+    "height": 260
+   },
+   "ctxLost": 0,
+   "flipPx": 10504,
+   "heldPx": 0,
+   "excessPx": 10504,
+   "files": {
+    "before": "flip3_before.png",
+    "after": "flip3_after.png",
+    "held": "flip3_held.png"
+   },
+   "holdMethod": "paused stand-in (drag paused at the before sample, mouse down, one 140 ms step interval); no joinery choice can be held from outside rebuildFillets",
+   "logTail": [
+    "[debug] [vite] connecting...",
+    "[debug] [vite] connected.",
+    "[log] KnotMaze P4 v0.4.0 94404dd2 2026-11-05 08:21 | dpr 1.5 | gpu WebKit WebGL",
+    "[log] KnotMaze: seed 37, 1010 nodes, 1441 edges, 85 strands."
+   ]
+  },
+  {
+   "rowId": "flip4",
+   "source": "geometric",
+   "stand": "fat11",
+   "link": "11&am=instant&snd=none&fw=0&phw=0&tw=0.72&cr=4.5",
+   "script": "drag3",
+   "jiRanked": 104,
+   "jiUsed": 104,
+   "centreRanked": [
+    8.696,
+    3.324
+   ],
+   "centreLive": [
+    8.651327768961588,
+    3.3912107149759927
+   ],
+   "centreDist": 0.08070246857149654,
+   "centreSearched": false,
+   "recRanked": 13606,
+   "recLive": 13606,
+   "nj": 178,
+   "rankedStep": 1,
+   "observedStep": 14,
+   "reproducedAtRankedStep": false,
+   "usedStep": 14,
+   "headline": {
+    "kind": "cover",
+    "idx": 1,
+    "geo": 1744.2348258449972,
+    "before": 0,
+    "after": 1
+   },
+   "values19B": {
+    "before": 0,
+    "after": 1
+   },
+   "valuesObserved": {
+    "before": 0,
+    "after": 1,
+    "heldAfter": 0,
+    "heldFlippedDuringPause": false,
+    "trace": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1,
+     1
+    ],
+    "heldTrace": [
+     0,
+     1,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1,
+     1
+    ]
+   },
+   "clip": {
+    "x": 504,
+    "y": 8,
+    "width": 260,
+    "height": 260
+   },
+   "ctxLost": 0,
+   "flipPx": 6800,
+   "heldPx": 3239,
+   "excessPx": 3561,
+   "files": {
+    "before": "flip4_before.png",
+    "after": "flip4_after.png",
+    "held": "flip4_held.png"
+   },
+   "holdMethod": "paused stand-in (drag paused at the before sample, mouse down, one 140 ms step interval); no joinery choice can be held from outside rebuildFillets",
+   "logTail": [
+    "[debug] [vite] connecting...",
+    "[debug] [vite] connected.",
+    "[log] KnotMaze P4 v0.4.0 94404dd2 2026-11-05 08:21 | dpr 1.5 | gpu WebKit WebGL",
+    "[log] KnotMaze: seed 37, 1010 nodes, 1441 edges, 85 strands."
+   ]
+  },
+  {
+   "rowId": "flip5",
+   "source": "geometric",
+   "stand": "fat11",
+   "link": "11&am=instant&snd=none&fw=0&phw=0&tw=0.72&cr=4.5",
+   "script": "drag3",
+   "jiRanked": 104,
+   "jiUsed": 104,
+   "centreRanked": [
+    8.711,
+    3.3
+   ],
+   "centreLive": [
+    8.651327768961588,
+    3.3912107149759927
+   ],
+   "centreDist": 0.10899619114232145,
+   "centreSearched": false,
+   "recRanked": 13606,
+   "recLive": 13606,
+   "nj": 178,
+   "rankedStep": 4,
+   "observedStep": 14,
+   "reproducedAtRankedStep": false,
+   "usedStep": 14,
+   "headline": {
+    "kind": "cover",
+    "idx": 1,
+    "geo": 1744.2348258449972,
+    "before": 1,
+    "after": 0
+   },
+   "values19B": {
+    "before": 1,
+    "after": 0
+   },
+   "valuesObserved": {
+    "before": 0,
+    "after": 1,
+    "heldAfter": 0,
+    "heldFlippedDuringPause": false,
+    "trace": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1,
+     1
+    ],
+    "heldTrace": [
+     0,
+     1,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     1,
+     1
+    ]
+   },
+   "clip": {
+    "x": 504,
+    "y": 8,
+    "width": 260,
+    "height": 260
+   },
+   "ctxLost": 0,
+   "flipPx": 6778,
+   "heldPx": 3239,
+   "excessPx": 3539,
+   "files": {
+    "before": "flip5_before.png",
+    "after": "flip5_after.png",
+    "held": "flip5_held.png"
+   },
+   "holdMethod": "paused stand-in (held shot immediately after the before shot, drag paused at the before sample, mouse down); no joinery choice can be held from outside rebuildFillets",
+   "stepTiming": "exact 19B step timing (140 ms move dwell; held shot immediately after the before shot)",
+   "retryOf": "subset re-shoot (K1186_EXACT=1)",
+   "logTail": [
+    "[debug] [vite] connecting...",
+    "[debug] [vite] connected.",
+    "[log] KnotMaze P4 v0.4.0 94404dd2 2026-11-05 08:30 | dpr 1.5 | gpu WebKit WebGL",
+    "[log] KnotMaze: seed 37, 1010 nodes, 1441 edges, 85 strands."
+   ]
+  }
+ ]
+}
