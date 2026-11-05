@@ -1,0 +1,145 @@
+{
+ "targets": [
+  {
+   "stand": "four",
+   "ji": 28,
+   "usedJi": 28,
+   "replaced": null,
+   "log": [],
+   "center": [
+    24.578250885009766,
+    2.8866220315297446
+   ],
+   "record": 2206,
+   "arms": 3,
+   "scale": 89.99963479806267,
+   "diffControl": {
+    "px": 0,
+    "exact": 0,
+    "W": 300,
+    "H": 300
+   },
+   "diffOnOff": {
+    "px": 664,
+    "exact": 1003,
+    "W": 300,
+    "H": 300
+   },
+   "tag": "four_ji28",
+   "clip": {
+    "x": 913,
+    "y": 23,
+    "width": 200,
+    "height": 200
+   },
+   "ctxLost": 0,
+   "stamp": "P4 v0.4.0 576dbd62+ 2026-11-05 05:00 | sim 5.0s / wall 57.2s | settle lag 19.4s | asleep"
+  },
+  {
+   "stand": "four",
+   "ji": 147,
+   "usedJi": 147,
+   "replaced": null,
+   "log": [],
+   "center": [
+    25.88448429107666,
+    1.3619499802589417
+   ],
+   "record": 11394,
+   "arms": 4,
+   "scale": 89.99963479806267,
+   "diffControl": {
+    "px": 0,
+    "exact": 0,
+    "W": 300,
+    "H": 300
+   },
+   "diffOnOff": {
+    "px": 4604,
+    "exact": 5395,
+    "W": 300,
+    "H": 300
+   },
+   "tag": "four_ji147",
+   "clip": {
+    "x": 944,
+    "y": 0,
+    "width": 200,
+    "height": 200
+   },
+   "ctxLost": 0,
+   "stamp": "P4 v0.4.0 576dbd62+ 2026-11-05 05:00 | sim 5.0s / wall 49.6s | settle lag 17.2s | asleep"
+  },
+  {
+   "stand": "four",
+   "ji": 149,
+   "usedJi": 149,
+   "replaced": null,
+   "log": [],
+   "center": [
+    22.427570978800457,
+    5.832747618357341
+   ],
+   "record": 11573,
+   "arms": 3,
+   "scale": 89.99963479806267,
+   "diffControl": {
+    "px": 0,
+    "exact": 0,
+    "W": 300,
+    "H": 300
+   },
+   "diffOnOff": {
+    "px": 554,
+    "exact": 570,
+    "W": 300,
+    "H": 300
+   },
+   "tag": "four_ji149",
+   "clip": {
+    "x": 863,
+    "y": 90,
+    "width": 200,
+    "height": 200
+   },
+   "ctxLost": 0,
+   "stamp": "P4 v0.4.0 576dbd62+ 2026-11-05 05:00 | sim 5.0s / wall 49.8s | settle lag 17.4s | asleep"
+  },
+  {
+   "stand": "cross",
+   "ji": 33,
+   "usedJi": 33,
+   "replaced": null,
+   "log": [],
+   "center": [
+    1.7914319435755413,
+    19.68517557779948
+   ],
+   "record": 2591,
+   "arms": 3,
+   "scale": 89.99963479806259,
+   "diffControl": {
+    "px": 0,
+    "exact": 0,
+    "W": 300,
+    "H": 300
+   },
+   "diffOnOff": {
+    "px": 1725,
+    "exact": 2444,
+    "W": 300,
+    "H": 300
+   },
+   "tag": "cross_ji33",
+   "clip": {
+    "x": 383,
+    "y": 413,
+    "width": 200,
+    "height": 200
+   },
+   "ctxLost": 0,
+   "stamp": "P4 v0.4.0 576dbd62+ 2026-11-05 05:00 | sim 5.0s / wall 41.9s | settle lag 17.7s | asleep"
+  }
+ ],
+ "layout": "sheet.png rows: off / control (2nd off) / on; columns in TARGETS order (four ji28, four ji147, four ji149, cross ji33); each cell a 200 CSS px crop upscaled 2x"
+}
