@@ -1,0 +1,8 @@
+cyc_e210 S4 (72 rows): c215 max 248.7 mean 208.7; c227 max 221 mean 221; c220 max 157 mean 157; c222 max 98 mean 98; c241 max 90 mean 90; c244 max 84 mean 84
+   cols 15..60 max |dL|: 0 4 4 0 0 40 0 0 3 4 0 0 6 0 0 3 3 0 3 3 0 0 3 3 0 3 3 0 3 0 0 3 0 4 2 0 18 0 50 0 0 4 0 3 1 0
+cyc_e210 S4b (72 rows): c215 max 248.7 mean 208.7; c227 max 221 mean 221; c220 max 157 mean 157; c222 max 98 mean 98; c241 max 90 mean 90; c244 max 84 mean 84
+   cols 15..60 max |dL|: 0 4 4 0 0 43 0 0 5 7 0 0 12 0 0 4 5 0 4 5 0 0 5 4 0 4 4 0 5 0 0 4 0 5 2 0 5 0 4 0 0 4 0 3 1 0
+loop_e102 S4 (72 rows): c252 max 255 mean 255; c12 max 255 mean 255; c14 max 250 mean 250; c5 max 234 mean 234; c242 max 200.2 mean 161.1; c246 max 192 mean 192
+   cols 15..60 max |dL|: 0 112 136 3 4 4 4 4 4 9 6 5 6 3 7 2 7 6 0 5 5 0 7 0 9 2 6 3 0 8 2 3 6 3 0 7 3 1 7 3 0 6 3 5 2 3
+loop_e102 S4b (72 rows): c252 max 255 mean 255; c12 max 255 mean 255; c14 max 250 mean 250; c5 max 234 mean 234; c242 max 200.2 mean 161.1; c246 max 192 mean 192
+   cols 15..60 max |dL|: 0 112 136 3 4 4 4 4 4 9 6 5 6 3 7 2 7 6 0 5 5 0 7 0 9 2 6 3 0 8 2 3 6 3 0 7 3 1 7 3 0 6 3 5 2 3

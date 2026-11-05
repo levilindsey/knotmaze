@@ -1,0 +1,160 @@
+{
+ "stand": "cross",
+ "base": {
+  "head": "node_116",
+  "pulses": [
+   {
+    "edge": 150,
+    "two": false,
+    "key": "[61,0,4,false,false,0,true,false,0,false]"
+   },
+   {
+    "edge": 198,
+    "two": false,
+    "key": "[71,30,16,false,false,0,false,false,0,false]"
+   },
+   {
+    "edge": 199,
+    "two": false,
+    "key": "[71,30,46,true,false,0,false,false,0,false]"
+   },
+   {
+    "edge": 21,
+    "two": false,
+    "key": "[16,0,2,false,false,2.075,false,false,0,false]"
+   },
+   {
+    "edge": 151,
+    "two": false,
+    "key": "[61,4,12,false,false,2.075,false,false,0,false]"
+   }
+  ],
+  "bands": [
+   {
+    "vertex": "mnode_48",
+    "aEdge": 150,
+    "bEdge": 21,
+    "a": {
+     "chain": 61,
+     "ctrl": 4,
+     "dir": -1
+    },
+    "b": {
+     "chain": 16,
+     "ctrl": 0,
+     "dir": 1
+    },
+    "distJ": 2.075,
+    "inward": false,
+    "slot": 0,
+    "shared": false,
+    "fallback": false,
+    "used": 2
+   },
+   {
+    "vertex": "mnode_48",
+    "aEdge": 150,
+    "bEdge": 151,
+    "a": {
+     "chain": 61,
+     "ctrl": 4,
+     "dir": -1
+    },
+    "b": {
+     "chain": 61,
+     "ctrl": 4,
+     "dir": 1
+    },
+    "distJ": 2.075,
+    "inward": false,
+    "slot": 1,
+    "shared": false,
+    "fallback": false,
+    "used": 2
+   }
+  ],
+  "errs": []
+ },
+ "s4": {
+  "head": "node_116",
+  "pulses": [
+   {
+    "edge": 150,
+    "two": false,
+    "key": "[61,0,4,false,false,0,true,false,0,false]"
+   },
+   {
+    "edge": 198,
+    "two": false,
+    "key": "[71,30,16,false,false,0,false,false,0,false]"
+   },
+   {
+    "edge": 199,
+    "two": false,
+    "key": "[71,30,46,true,false,0,false,false,0,false]"
+   },
+   {
+    "edge": 21,
+    "two": false,
+    "key": "[16,0,2,false,false,2.075,false,false,0,false]"
+   },
+   {
+    "edge": 151,
+    "two": false,
+    "key": "[61,4,12,false,false,2.075,false,false,0,false]"
+   }
+  ],
+  "bands": [
+   {
+    "vertex": "mnode_48",
+    "aEdge": 150,
+    "bEdge": 21,
+    "a": {
+     "chain": 61,
+     "ctrl": 4,
+     "dir": -1
+    },
+    "b": {
+     "chain": 16,
+     "ctrl": 0,
+     "dir": 1
+    },
+    "distJ": 2.075,
+    "inward": false,
+    "gR": 0,
+    "inwardR": false,
+    "slot": 0,
+    "shared": false,
+    "fallback": false,
+    "used": 2
+   },
+   {
+    "vertex": "mnode_48",
+    "aEdge": 150,
+    "bEdge": 151,
+    "a": {
+     "chain": 61,
+     "ctrl": 4,
+     "dir": -1
+    },
+    "b": {
+     "chain": 61,
+     "ctrl": 4,
+     "dir": 1
+    },
+    "distJ": 2.075,
+    "inward": false,
+    "gR": 0,
+    "inwardR": false,
+    "slot": 1,
+    "shared": false,
+    "fallback": false,
+    "used": 2
+   }
+  ],
+  "errs": []
+ },
+ "twoEdges": [],
+ "bandDiff": [],
+ "declDiff": []
+}

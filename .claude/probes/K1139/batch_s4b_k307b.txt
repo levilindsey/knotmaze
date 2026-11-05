@@ -1,0 +1,9 @@
+# K1139 S4b: K307 cold compiles, second round (BAAB, then ABBA): S4 (0aaa0dee, 5630) against S4b (51345934, 5631)
+node --max-old-space-size=8192 k307/trace_intro.mjs http://127.0.0.1:5630 s4b-s4-e "?k111&am=instant&fw=0&snd=none&phw=0" --max 12 --trace none
+node --max-old-space-size=8192 k307/trace_intro.mjs http://127.0.0.1:5631 s4b-mine-c "?k111&am=instant&fw=0&snd=none&phw=0" --max 12 --trace none
+node --max-old-space-size=8192 k307/trace_intro.mjs http://127.0.0.1:5631 s4b-mine-d "?k111&am=instant&fw=0&snd=none&phw=0" --max 12 --trace none
+node --max-old-space-size=8192 k307/trace_intro.mjs http://127.0.0.1:5630 s4b-s4-f "?k111&am=instant&fw=0&snd=none&phw=0" --max 12 --trace none
+node --max-old-space-size=8192 k307/trace_intro.mjs http://127.0.0.1:5631 s4b-mine-e "?k111&am=instant&fw=0&snd=none&phw=0" --max 12 --trace none
+node --max-old-space-size=8192 k307/trace_intro.mjs http://127.0.0.1:5630 s4b-s4-g "?k111&am=instant&fw=0&snd=none&phw=0" --max 12 --trace none
+node --max-old-space-size=8192 k307/trace_intro.mjs http://127.0.0.1:5630 s4b-s4-h "?k111&am=instant&fw=0&snd=none&phw=0" --max 12 --trace none
+node --max-old-space-size=8192 k307/trace_intro.mjs http://127.0.0.1:5631 s4b-mine-f "?k111&am=instant&fw=0&snd=none&phw=0" --max 12 --trace none

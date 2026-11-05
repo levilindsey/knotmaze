@@ -1,0 +1,27 @@
+control cross t0 S4/S4: 0 px differ, max 0/255
+control cross t1 S4/S4: 0 px differ, max 0/255
+fork: heads node_12/node_12; two-ended e-; decl differs on e-; bands differ at -; page errors 0/0
+  fork t0: 0 px differ (max 0/255), 0 outside T (max 0), 0 outside D; 2550x1425
+  fork t1: 0 px differ (max 0/255), 0 outside T (max 0), 0 outside D; 2550x1425
+cross: heads node_116/node_116; two-ended e-; decl differs on e-; bands differ at -; page errors 0/0
+  cross t0: 0 px differ (max 0/255), 0 outside T (max 0), 0 outside D; 2550x1425
+  cross t1: 0 px differ (max 0/255), 0 outside T (max 0), 0 outside D; 2550x1425
+src: heads mnode_48/mnode_48; two-ended e-; decl differs on e-; bands differ at -; page errors 0/0
+  src t0: 0 px differ (max 0/255), 0 outside T (max 0), 0 outside D; 2550x1425
+  src t1: 0 px differ (max 0/255), 0 outside T (max 0), 0 outside D; 2550x1425
+four: heads node_378/node_378; two-ended e-; decl differs on e-; bands differ at -; page errors 0/0
+  four t0: 0 px differ (max 0/255), 0 outside T (max 0), 0 outside D; 2550x1425
+  four t1: 0 px differ (max 0/255), 0 outside T (max 0), 0 outside D; 2550x1425
+x4: heads node_382/node_382; two-ended e-; decl differs on e-; bands differ at -; page errors 0/0
+  x4 t0: 0 px differ (max 0/255), 0 outside T (max 0), 0 outside D; 2550x1425
+  x4 t1: 0 px differ (max 0/255), 0 outside T (max 0), 0 outside D; 2550x1425
+cyc: heads node_221/node_221; two-ended e210; decl differs on e-; bands differ at -; page errors 0/0
+  cyc t0: 20 px differ (max 9/255), 0 outside T (max 0), 0 outside D; 2550x1425
+  cyc t1: 351 px differ (max 61/255), 0 outside T (max 0), 0 outside D; 2550x1425
+loop: heads node_635/node_635; two-ended e102; decl differs on e-; bands differ at -; page errors 0/0
+  loop t0: 0 px differ (max 0/255), 0 outside T (max 0), 0 outside D; 2550x1425
+  loop t1: 0 px differ (max 0/255), 0 outside T (max 0), 0 outside D; 2550x1425
+preloop: heads mnode_77/mnode_77; two-ended e102; decl differs on e-; bands differ at -; page errors 0/0
+  preloop t0: 0 px differ (max 0/255), 0 outside T (max 0), 0 outside D; 2550x1425
+  preloop t1: 0 px differ (max 0/255), 0 outside T (max 0), 0 outside D; 2550x1425
+A/B PASS (0 px outside the two-ended arms and their fans)

@@ -1,0 +1,394 @@
+lock taken after 0 min: K1139-S1 | 2026-11-04T21:53:42-08:00 | K1139 S4b K307 round 2
+>> node --max-old-space-size=8192 k307/trace_intro.mjs http://127.0.0.1:5630 s4b-s4-e "?k111&am=instant&fw=0&snd=none&phw=0" --max 12 --trace none  (21:53:42)
+== s4b-s4-e load1 P4 v0.4.0 0aaa0dee 2026-11-05 05:21 2400x1350 d3d11 | ANGLE (AMD, AMD Radeon RX 6800 XT (0x000073BF) Direct3D11 vs_5_0 ps_5_0, D3D11) | parallel true
+   ls0 [] daily {"n":null,"today":24,"saved":false,"badge":"free","moves":0} | firstVisible 6.953s presettle 0ms  loader false
+   frame 6.953s cb 341 gl 265 (status 255 query 0 draw 0 upload 4 sync 0) rev 0 budget
+   frame 7.284s cb 243 gl 65 (status 56 query 0 draw 0 upload 8 sync 0) rev 0 budget
+   frame 0.759s cb 142 gl 94 (status 88 query 0 draw 0 upload 0 sync 0) rev 0 off
+   frame 0.906s cb 100 gl 98 (status 98 query 0 draw 0 upload 0 sync 0) rev 0 off
+   prog#0 section-rgb-fragment vs b62a7b5e fs 718a64fc(59029) frame -0.001s link@0.498 status 4.9 ms query 0 firstDraw@null null ms draws 0 polls 326 done@6.918
+   prog#1 junction-field-fragment vs 241ba373 fs 9e074835(40167) frame -0.001s link@0.499 status 2.8 ms query 0 firstDraw@null null ms draws 0 polls 1 done@6.924
+   prog#2 arm-strip-fragment vs 6fb0f531 fs 99c06229(34315) frame -0.001s link@0.499 status 3.2 ms query 0 firstDraw@null null ms draws 0 polls 1 done@6.927
+   prog#3 pluck-blur-fragment vs ca4ed1f2 fs 0e16bbd5(5816) frame -0.001s link@0.499 status 0.9 ms query 0 firstDraw@null null ms draws 0 polls 1 done@6.93
+   prog#4 batch-fragment vs 62b7503a fs 8e0ed8e3(1820) frame 6.917s link@6.932 status 0.3 ms query 0.2 firstDraw@null null ms draws 0 polls 4 done@6.931
+   prog#5 bg-vellum-fragment vs c53894e7 fs b97832dd(2767) frame -0.001s link@0.499 status 0.6 ms query 0 firstDraw@null null ms draws 0 polls 1 done@6.932
+   prog#6 knot-marker-fragment vs c8e7335b fs bc2835b9(2192) frame -0.001s link@0.499 status 0.5 ms query 0 firstDraw@null null ms draws 0 polls 1 done@6.933
+   prog#7 pluck-ripple-fragment vs f6d9cf61 fs 458aefaf(1637) frame 6.917s link@6.934 status 0.3 ms query 0 firstDraw@null null ms draws 0 polls 2 done@6.933
+   prog#8 pixi-program-fragment vs 3aae20d1 fs d8daec26(419) frame 6.917s link@6.934 status 0.4 ms query 0 firstDraw@null null ms draws 0 polls 2 done@6.934
+   prog#9 bg-blit-fragment vs e9d0c5c3 fs af717a3f(468) frame -0.001s link@0.499 status 0.3 ms query 0 firstDraw@null null ms draws 0 polls 1 done@6.934
+   prog#10 ribbon-sdf-explore-fragment vs 9dcc6768 fs af2eea7b(75480) frame 6.953s link@7 status null ms query 0 firstDraw@null null ms draws 0 polls 100 done@null
+   prog#11 section-rgb-explore-fragment vs fe314948 fs 84c460b6(75452) frame 6.953s link@7 status null ms query 0 firstDraw@null null ms draws 0
+   prog#12 ribbon-sdf-fragment vs 7901a14a fs 1db0eedb(59053) frame 6.953s link@7.001 status null ms query 0 firstDraw@null null ms draws 0
+   prog#13 junction-field-explore-fragment vs a1720c51 fs 264bc3ca(49860) frame 6.953s link@7.001 status null ms query 0 firstDraw@null null ms draws 0
+   prog#14 arm-strip-explore-fragment vs c4626223 fs ebcde035(40324) frame 6.953s link@7.001 status null ms query 0 firstDraw@null null ms draws 0
+   prog#15 pluck-still-explore-fragment vs e555b29d fs 4a8832ad(29744) frame 6.953s link@7.002 status null ms query 0 firstDraw@null null ms draws 0
+   prog#16 pluck-still-fragment vs 98a3dbe7 fs a9c6efae(20574) frame 6.953s link@7.002 status null ms query 0 firstDraw@null null ms draws 0
+   prog#17 bg-vellum-x-fragment vs 68faed36 fs 9fcc5b2a(3132) frame 6.953s link@7.002 status null ms query 0 firstDraw@null null ms draws 0
+   prog#18 bg-paper-x-fragment vs 7cbccb6b fs 92b06f88(2993) frame 6.953s link@7.002 status null ms query 0 firstDraw@null null ms draws 0
+   prog#19 bg-contours-x-fragment vs 5462b992 fs 7422748c(2965) frame 6.953s link@7.002 status null ms query 0 firstDraw@null null ms draws 0
+   prog#20 bg-aurora-x-fragment vs 6ca81659 fs fc8a1378(2927) frame 6.953s link@7.002 status null ms query 0 firstDraw@null null ms draws 0
+   prog#21 bg-vellum-drift-fragment vs 163e3e55 fs f7145890(2874) frame 6.953s link@7.002 status null ms query 0 firstDraw@null null ms draws 0
+   prog#22 bg-silk-x-fragment vs 1a022810 fs 0a9e4250(2859) frame 6.953s link@7.002 status null ms query 0 firstDraw@null null ms draws 0
+   prog#23 bg-aurora-fragment vs a8aa3a58 fs c9e8e935(2806) frame 6.953s link@7.002 status null ms query 0 firstDraw@null null ms draws 0
+   prog#24 bg-mist-x-fragment vs df4026dc fs 9e727f97(2768) frame 6.953s link@7.002 status null ms query 0 firstDraw@null null ms draws 0
+   prog#25 bg-paper-fragment vs d8b5641a fs 8317e4ee(2737) frame 6.953s link@7.002 status null ms query 0 firstDraw@null null ms draws 0
+   prog#26 bg-contours-fragment vs 454c413b fs d9bf12a9(2721) frame 6.953s link@7.002 status null ms query 0 firstDraw@null null ms draws 0
+   prog#27 bg-wash-x-fragment vs 985bbc02 fs 4a3e4138(2682) frame 6.953s link@7.002 status null ms query 0 firstDraw@null null ms draws 0
+   prog#28 bg-silk-fragment vs 5ab970c9 fs 528e687a(2585) frame 6.953s link@7.002 status null ms query 0 firstDraw@null null ms draws 0
+   prog#29 bg-mist-fragment vs 459c07fd fs f5b54810(2524) frame 6.953s link@7.002 status null ms query 0 firstDraw@null null ms draws 0
+   prog#30 bg-wash-fragment vs b013168b fs 8e14044f(2438) frame 6.953s link@7.002 status null ms query 0 firstDraw@null null ms draws 0
+   prog#31 displacement-filter-fragment vs d691158e fs 9ccc3185(713) frame 6.953s link@7.002 status null ms query 0 firstDraw@null null ms draws 0
+   prog#32 bg-fog-fragment vs 5c4c1bf0 fs 80583207(868) frame 6.953s link@7.003 status null ms query 0 firstDraw@null null ms draws 0
+   prog#33 bg-vellum-fragment vs c53894e7 fs b97832dd(2767) frame 6.953s link@7.004 status 16.3 ms query 0.2 firstDraw@7.022 0 ms draws 1
+   prog#34 bg-blit-fragment vs e9d0c5c3 fs af717a3f(468) frame 6.953s link@7.032 status 31.8 ms query 0 firstDraw@7.066 0 ms draws 101
+   prog#35 batch-fragment vs 62b7503a fs 8e0ed8e3(1820) frame 6.953s link@7.083 status 17.3 ms query 0 firstDraw@7.127 0 ms draws 101
+   prog#36 section-rgb-fragment vs b62a7b5e fs 718a64fc(59029) frame 6.953s link@7.127 status 132.9 ms query 0 firstDraw@7.263 0 ms draws 9191
+   prog#37 pluck-blur-fragment vs ca4ed1f2 fs 0e16bbd5(5816) frame 6.953s link@7.276 status 8.5 ms query 0 firstDraw@7.286 0 ms draws 101
+   prog#38 knot-marker-fragment vs c8e7335b fs bc2835b9(2192) frame 6.953s link@7.287 status 2.6 ms query 0 firstDraw@7.29 0 ms draws 303
+   prog#39 pluck-ripple-fragment vs f6d9cf61 fs 458aefaf(1637) frame 6.953s link@7.293 status 1.7 ms query 0 firstDraw@7.295 0 ms draws 2
+   prog#40 arm-strip-fragment vs 6fb0f531 fs 99c06229(34315) frame 7.284s link@7.476 status 24.6 ms query 0.1 firstDraw@7.503 0 ms draws 100
+   prog#41 junction-field-fragment vs 241ba373 fs 9e074835(40167) frame 7.284s link@7.507 status 28.2 ms query 0 firstDraw@7.541 0 ms draws 200
+>> node --max-old-space-size=8192 k307/trace_intro.mjs http://127.0.0.1:5631 s4b-mine-c "?k111&am=instant&fw=0&snd=none&phw=0" --max 12 --trace none  (21:53:56)
+== s4b-mine-c load1 P4 v0.4.0 51345934 2026-11-05 05:30 2400x1350 d3d11 | ANGLE (AMD, AMD Radeon RX 6800 XT (0x000073BF) Direct3D11 vs_5_0 ps_5_0, D3D11) | parallel true
+   ls0 [] daily {"n":null,"today":24,"saved":false,"badge":"free","moves":0} | firstVisible 6.382s presettle 0ms  loader false
+   frame 6.382s cb 342 gl 258 (status 247 query 0 draw 0 upload 5 sync 0) rev 0 budget
+   frame 6.713s cb 232 gl 58 (status 49 query 0 draw 0 upload 8 sync 0) rev 0 budget
+   frame 0.751s cb 140 gl 95 (status 89 query 0 draw 0 upload 0 sync 0) rev 0 off
+   frame 6.952s cb 90 gl 5 (status 0 query 0 draw 0 upload 4 sync 0) rev 0 budget
+   prog#0 section-rgb-fragment vs b62a7b5e fs 718a64fc(59029) frame -0.001s link@0.499 status 4.9 ms query 0 firstDraw@null null ms draws 0 polls 296 done@6.346
+   prog#1 junction-field-fragment vs 241ba373 fs ffb3dae0(40412) frame -0.001s link@0.499 status 2.8 ms query 0 firstDraw@null null ms draws 0 polls 1 done@6.352
+   prog#2 arm-strip-fragment vs 6fb0f531 fs 99c06229(34315) frame -0.001s link@0.5 status 3.3 ms query 0 firstDraw@null null ms draws 0 polls 1 done@6.355
+   prog#3 pluck-blur-fragment vs ca4ed1f2 fs 0e16bbd5(5816) frame -0.001s link@0.5 status 0.9 ms query 0 firstDraw@null null ms draws 0 polls 1 done@6.358
+   prog#4 batch-fragment vs 62b7503a fs 8e0ed8e3(1820) frame 6.345s link@6.36 status 0.4 ms query 0 firstDraw@null null ms draws 0 polls 4 done@6.359
+   prog#5 bg-vellum-fragment vs c53894e7 fs b97832dd(2767) frame -0.001s link@0.5 status 0.6 ms query 0 firstDraw@null null ms draws 0 polls 1 done@6.36
+   prog#6 knot-marker-fragment vs c8e7335b fs bc2835b9(2192) frame -0.001s link@0.5 status 0.4 ms query 0 firstDraw@null null ms draws 0 polls 1 done@6.361
+   prog#7 pluck-ripple-fragment vs f6d9cf61 fs 458aefaf(1637) frame 6.345s link@6.362 status 0.4 ms query 0 firstDraw@null null ms draws 0 polls 2 done@6.361
+   prog#8 pixi-program-fragment vs 3aae20d1 fs d8daec26(419) frame 6.345s link@6.362 status 0.3 ms query 0 firstDraw@null null ms draws 0 polls 2 done@6.362
+   prog#9 bg-blit-fragment vs e9d0c5c3 fs af717a3f(468) frame -0.001s link@0.5 status 0.3 ms query 0 firstDraw@null null ms draws 0 polls 1 done@6.362
+   prog#10 ribbon-sdf-explore-fragment vs 9dcc6768 fs af2eea7b(75480) frame 6.382s link@6.436 status null ms query 0 firstDraw@null null ms draws 0 polls 125 done@null
+   prog#11 section-rgb-explore-fragment vs fe314948 fs 84c460b6(75452) frame 6.382s link@6.436 status null ms query 0 firstDraw@null null ms draws 0
+   prog#12 ribbon-sdf-fragment vs 7901a14a fs 1db0eedb(59053) frame 6.382s link@6.437 status null ms query 0 firstDraw@null null ms draws 0
+   prog#13 junction-field-explore-fragment vs a1720c51 fs afac7247(50105) frame 6.382s link@6.438 status null ms query 0 firstDraw@null null ms draws 0
+   prog#14 arm-strip-explore-fragment vs c4626223 fs ebcde035(40324) frame 6.382s link@6.438 status null ms query 0 firstDraw@null null ms draws 0
+   prog#15 pluck-still-explore-fragment vs e555b29d fs 4a8832ad(29744) frame 6.382s link@6.438 status null ms query 0 firstDraw@null null ms draws 0
+   prog#16 pluck-still-fragment vs 98a3dbe7 fs a9c6efae(20574) frame 6.382s link@6.438 status null ms query 0 firstDraw@null null ms draws 0
+   prog#17 bg-vellum-x-fragment vs 68faed36 fs 9fcc5b2a(3132) frame 6.382s link@6.438 status null ms query 0 firstDraw@null null ms draws 0
+   prog#18 bg-paper-x-fragment vs 7cbccb6b fs 92b06f88(2993) frame 6.382s link@6.438 status null ms query 0 firstDraw@null null ms draws 0
+   prog#19 bg-contours-x-fragment vs 5462b992 fs 7422748c(2965) frame 6.382s link@6.438 status null ms query 0 firstDraw@null null ms draws 0
+   prog#20 bg-aurora-x-fragment vs 6ca81659 fs fc8a1378(2927) frame 6.382s link@6.438 status null ms query 0 firstDraw@null null ms draws 0
+   prog#21 bg-vellum-drift-fragment vs 163e3e55 fs f7145890(2874) frame 6.382s link@6.439 status null ms query 0 firstDraw@null null ms draws 0
+   prog#22 bg-silk-x-fragment vs 1a022810 fs 0a9e4250(2859) frame 6.382s link@6.439 status null ms query 0 firstDraw@null null ms draws 0
+   prog#23 bg-aurora-fragment vs a8aa3a58 fs c9e8e935(2806) frame 6.382s link@6.439 status null ms query 0 firstDraw@null null ms draws 0
+   prog#24 bg-mist-x-fragment vs df4026dc fs 9e727f97(2768) frame 6.382s link@6.439 status null ms query 0 firstDraw@null null ms draws 0
+   prog#25 bg-paper-fragment vs d8b5641a fs 8317e4ee(2737) frame 6.382s link@6.439 status null ms query 0 firstDraw@null null ms draws 0
+   prog#26 bg-contours-fragment vs 454c413b fs d9bf12a9(2721) frame 6.382s link@6.439 status null ms query 0 firstDraw@null null ms draws 0
+   prog#27 bg-wash-x-fragment vs 985bbc02 fs 4a3e4138(2682) frame 6.382s link@6.439 status null ms query 0 firstDraw@null null ms draws 0
+   prog#28 bg-silk-fragment vs 5ab970c9 fs 528e687a(2585) frame 6.382s link@6.439 status null ms query 0 firstDraw@null null ms draws 0
+   prog#29 bg-mist-fragment vs 459c07fd fs f5b54810(2524) frame 6.382s link@6.439 status null ms query 0 firstDraw@null null ms draws 0
+   prog#30 bg-wash-fragment vs b013168b fs 8e14044f(2438) frame 6.382s link@6.439 status null ms query 0 firstDraw@null null ms draws 0
+   prog#31 displacement-filter-fragment vs d691158e fs 9ccc3185(713) frame 6.382s link@6.439 status null ms query 0 firstDraw@null null ms draws 0
+   prog#32 bg-fog-fragment vs 5c4c1bf0 fs 80583207(868) frame 6.382s link@6.439 status null ms query 0 firstDraw@null null ms draws 0
+   prog#33 bg-vellum-fragment vs c53894e7 fs b97832dd(2767) frame 6.382s link@6.441 status 18.6 ms query 0 firstDraw@6.462 0 ms draws 1
+   prog#34 bg-blit-fragment vs e9d0c5c3 fs af717a3f(468) frame 6.382s link@6.47 status 32.2 ms query 0 firstDraw@6.504 0 ms draws 126
+   prog#35 batch-fragment vs 62b7503a fs 8e0ed8e3(1820) frame 6.382s link@6.517 status 12.3 ms query 0 firstDraw@6.546 0 ms draws 126
+   prog#36 section-rgb-fragment vs b62a7b5e fs 718a64fc(59029) frame 6.382s link@6.547 status 145 ms query 0 firstDraw@6.694 0 ms draws 11466
+   prog#37 pluck-blur-fragment vs ca4ed1f2 fs 0e16bbd5(5816) frame 6.382s link@6.709 status 5.8 ms query 0.1 firstDraw@6.715 0 ms draws 126
+   prog#38 knot-marker-fragment vs c8e7335b fs bc2835b9(2192) frame 6.382s link@6.716 status 2.1 ms query 0 firstDraw@6.718 0 ms draws 378
+   prog#39 pluck-ripple-fragment vs f6d9cf61 fs 458aefaf(1637) frame 6.382s link@6.722 status 2 ms query 0 firstDraw@6.724 0 ms draws 2
+   prog#40 arm-strip-fragment vs 6fb0f531 fs 99c06229(34315) frame 6.713s link@6.898 status 23.2 ms query 0.2 firstDraw@6.925 0 ms draws 125
+   prog#41 junction-field-fragment vs 241ba373 fs ffb3dae0(40412) frame 6.713s link@6.929 status 21.4 ms query 0.1 firstDraw@6.956 0 ms draws 250
+>> node --max-old-space-size=8192 k307/trace_intro.mjs http://127.0.0.1:5631 s4b-mine-d "?k111&am=instant&fw=0&snd=none&phw=0" --max 12 --trace none  (21:54:09)
+== s4b-mine-d load1 P4 v0.4.0 51345934 2026-11-05 05:30 2400x1350 d3d11 | ANGLE (AMD, AMD Radeon RX 6800 XT (0x000073BF) Direct3D11 vs_5_0 ps_5_0, D3D11) | parallel true
+   ls0 [] daily {"n":null,"today":24,"saved":false,"badge":"free","moves":0} | firstVisible 6.865s presettle 0ms  loader false
+   frame 6.865s cb 356 gl 273 (status 260 query 0 draw 0 upload 5 sync 0) rev 0 budget
+   frame 7.215s cb 226 gl 63 (status 53 query 0 draw 0 upload 9 sync 0) rev 0 budget
+   frame 0.761s cb 144 gl 96 (status 90 query 0 draw 0 upload 0 sync 0) rev 0 off
+   frame 0.9s cb 100 gl 96 (status 96 query 0 draw 0 upload 0 sync 0) rev 0 off
+   prog#0 section-rgb-fragment vs b62a7b5e fs 718a64fc(59029) frame -0.001s link@0.498 status 5.3 ms query 0 firstDraw@null null ms draws 0 polls 321 done@6.812
+   prog#1 junction-field-fragment vs 241ba373 fs ffb3dae0(40412) frame -0.001s link@0.499 status 3.8 ms query 0 firstDraw@null null ms draws 0 polls 1 done@6.818
+   prog#2 arm-strip-fragment vs 6fb0f531 fs 99c06229(34315) frame -0.001s link@0.499 status 3.6 ms query 0 firstDraw@null null ms draws 0 polls 1 done@6.822
+   prog#3 pluck-blur-fragment vs ca4ed1f2 fs 0e16bbd5(5816) frame -0.001s link@0.499 status 0.9 ms query 0 firstDraw@null null ms draws 0 polls 1 done@6.826
+   prog#4 batch-fragment vs 62b7503a fs 8e0ed8e3(1820) frame 6.811s link@6.827 status 0.4 ms query 0 firstDraw@null null ms draws 0 polls 4 done@6.827
+   prog#5 bg-vellum-fragment vs c53894e7 fs b97832dd(2767) frame -0.001s link@0.499 status 0.6 ms query 0 firstDraw@null null ms draws 0 polls 1 done@6.828
+   prog#6 knot-marker-fragment vs c8e7335b fs bc2835b9(2192) frame -0.001s link@0.499 status 0.5 ms query 0 firstDraw@null null ms draws 0 polls 1 done@6.828
+   prog#7 pluck-ripple-fragment vs f6d9cf61 fs 458aefaf(1637) frame 6.811s link@6.831 status 1.5 ms query 0 firstDraw@null null ms draws 0 polls 3 done@6.829
+   prog#8 pixi-program-fragment vs 3aae20d1 fs d8daec26(419) frame 6.811s link@6.831 status 0.2 ms query 0 firstDraw@null null ms draws 0 polls 2 done@6.831
+   prog#9 bg-blit-fragment vs e9d0c5c3 fs af717a3f(468) frame -0.001s link@0.499 status 0.3 ms query 0 firstDraw@null null ms draws 0 polls 1 done@6.831
+   prog#10 ribbon-sdf-explore-fragment vs 9dcc6768 fs af2eea7b(75480) frame 6.865s link@6.922 status null ms query 0 firstDraw@null null ms draws 0 polls 107 done@null
+   prog#11 section-rgb-explore-fragment vs fe314948 fs 84c460b6(75452) frame 6.865s link@6.923 status null ms query 0 firstDraw@null null ms draws 0
+   prog#12 ribbon-sdf-fragment vs 7901a14a fs 1db0eedb(59053) frame 6.865s link@6.924 status null ms query 0 firstDraw@null null ms draws 0
+   prog#13 junction-field-explore-fragment vs a1720c51 fs afac7247(50105) frame 6.865s link@6.924 status null ms query 0 firstDraw@null null ms draws 0
+   prog#14 arm-strip-explore-fragment vs c4626223 fs ebcde035(40324) frame 6.865s link@6.925 status null ms query 0 firstDraw@null null ms draws 0
+   prog#15 pluck-still-explore-fragment vs e555b29d fs 4a8832ad(29744) frame 6.865s link@6.925 status null ms query 0 firstDraw@null null ms draws 0
+   prog#16 pluck-still-fragment vs 98a3dbe7 fs a9c6efae(20574) frame 6.865s link@6.925 status null ms query 0 firstDraw@null null ms draws 0
+   prog#17 bg-vellum-x-fragment vs 68faed36 fs 9fcc5b2a(3132) frame 6.865s link@6.925 status null ms query 0 firstDraw@null null ms draws 0
+   prog#18 bg-paper-x-fragment vs 7cbccb6b fs 92b06f88(2993) frame 6.865s link@6.925 status null ms query 0 firstDraw@null null ms draws 0
+   prog#19 bg-contours-x-fragment vs 5462b992 fs 7422748c(2965) frame 6.865s link@6.926 status null ms query 0 firstDraw@null null ms draws 0
+   prog#20 bg-aurora-x-fragment vs 6ca81659 fs fc8a1378(2927) frame 6.865s link@6.926 status null ms query 0 firstDraw@null null ms draws 0
+   prog#21 bg-vellum-drift-fragment vs 163e3e55 fs f7145890(2874) frame 6.865s link@6.926 status null ms query 0 firstDraw@null null ms draws 0
+   prog#22 bg-silk-x-fragment vs 1a022810 fs 0a9e4250(2859) frame 6.865s link@6.926 status null ms query 0 firstDraw@null null ms draws 0
+   prog#23 bg-aurora-fragment vs a8aa3a58 fs c9e8e935(2806) frame 6.865s link@6.926 status null ms query 0 firstDraw@null null ms draws 0
+   prog#24 bg-mist-x-fragment vs df4026dc fs 9e727f97(2768) frame 6.865s link@6.926 status null ms query 0 firstDraw@null null ms draws 0
+   prog#25 bg-paper-fragment vs d8b5641a fs 8317e4ee(2737) frame 6.865s link@6.926 status null ms query 0 firstDraw@null null ms draws 0
+   prog#26 bg-contours-fragment vs 454c413b fs d9bf12a9(2721) frame 6.865s link@6.926 status null ms query 0 firstDraw@null null ms draws 0
+   prog#27 bg-wash-x-fragment vs 985bbc02 fs 4a3e4138(2682) frame 6.865s link@6.926 status null ms query 0 firstDraw@null null ms draws 0
+   prog#28 bg-silk-fragment vs 5ab970c9 fs 528e687a(2585) frame 6.865s link@6.926 status null ms query 0 firstDraw@null null ms draws 0
+   prog#29 bg-mist-fragment vs 459c07fd fs f5b54810(2524) frame 6.865s link@6.926 status null ms query 0 firstDraw@null null ms draws 0
+   prog#30 bg-wash-fragment vs b013168b fs 8e14044f(2438) frame 6.865s link@6.926 status null ms query 0 firstDraw@null null ms draws 0
+   prog#31 displacement-filter-fragment vs d691158e fs 9ccc3185(713) frame 6.865s link@6.926 status null ms query 0 firstDraw@null null ms draws 0
+   prog#32 bg-fog-fragment vs 5c4c1bf0 fs 80583207(868) frame 6.865s link@6.926 status null ms query 0 firstDraw@null null ms draws 0
+   prog#33 bg-vellum-fragment vs c53894e7 fs b97832dd(2767) frame 6.865s link@6.928 status 15 ms query 0.1 firstDraw@6.945 0 ms draws 1
+   prog#34 bg-blit-fragment vs e9d0c5c3 fs af717a3f(468) frame 6.865s link@6.953 status 30 ms query 0.2 firstDraw@6.984 0 ms draws 108
+   prog#35 batch-fragment vs 62b7503a fs 8e0ed8e3(1820) frame 6.865s link@7 status 15.8 ms query 0 firstDraw@7.006 0 ms draws 108
+   prog#36 section-rgb-fragment vs b62a7b5e fs 718a64fc(59029) frame 6.865s link@7.007 status 183.5 ms query 0 firstDraw@7.193 0 ms draws 9828
+   prog#37 pluck-blur-fragment vs ca4ed1f2 fs 0e16bbd5(5816) frame 6.865s link@7.207 status 4.8 ms query 0 firstDraw@7.213 0 ms draws 108
+   prog#38 knot-marker-fragment vs c8e7335b fs bc2835b9(2192) frame 6.865s link@7.213 status 1.5 ms query 0 firstDraw@7.215 0 ms draws 324
+   prog#39 pluck-ripple-fragment vs f6d9cf61 fs 458aefaf(1637) frame 6.865s link@7.22 status 3.4 ms query 0 firstDraw@7.221 0 ms draws 2
+   prog#40 arm-strip-fragment vs 6fb0f531 fs 99c06229(34315) frame 7.215s link@7.388 status 23.5 ms query 0.1 firstDraw@7.414 0 ms draws 107
+   prog#41 junction-field-fragment vs 241ba373 fs ffb3dae0(40412) frame 7.215s link@7.418 status 26.7 ms query 0 firstDraw@7.451 0 ms draws 214
+>> node --max-old-space-size=8192 k307/trace_intro.mjs http://127.0.0.1:5630 s4b-s4-f "?k111&am=instant&fw=0&snd=none&phw=0" --max 12 --trace none  (21:54:22)
+== s4b-s4-f load1 P4 v0.4.0 0aaa0dee 2026-11-05 05:21 2400x1350 d3d11 | ANGLE (AMD, AMD Radeon RX 6800 XT (0x000073BF) Direct3D11 vs_5_0 ps_5_0, D3D11) | parallel true
+   ls0 [] daily {"n":null,"today":24,"saved":false,"badge":"free","moves":0} | firstVisible 7.034s presettle 0ms  loader false
+   frame 7.034s cb 370 gl 284 (status 273 query 1 draw 0 upload 4 sync 0) rev 0 budget
+   frame 7.402s cb 237 gl 57 (status 47 query 0 draw 0 upload 9 sync 0) rev 0 budget
+   frame 0.728s cb 138 gl 96 (status 90 query 0 draw 0 upload 0 sync 0) rev 0 off
+   frame 7.642s cb 88 gl 4 (status 0 query 0 draw 0 upload 3 sync 0) rev 0 budget
+   prog#0 section-rgb-fragment vs b62a7b5e fs 718a64fc(59029) frame -0.001s link@0.492 status 5.7 ms query 0 firstDraw@null null ms draws 0 polls 330 done@6.999
+   prog#1 junction-field-fragment vs 241ba373 fs 9e074835(40167) frame -0.001s link@0.492 status 3.2 ms query 0 firstDraw@null null ms draws 0 polls 1 done@7.006
+   prog#2 arm-strip-fragment vs 6fb0f531 fs 99c06229(34315) frame -0.001s link@0.492 status 4 ms query 0 firstDraw@null null ms draws 0 polls 1 done@7.009
+   prog#3 pluck-blur-fragment vs ca4ed1f2 fs 0e16bbd5(5816) frame -0.001s link@0.492 status 0.9 ms query 0 firstDraw@null null ms draws 0 polls 1 done@7.013
+   prog#4 batch-fragment vs 62b7503a fs 8e0ed8e3(1820) frame 6.998s link@7.015 status 0.6 ms query 0 firstDraw@null null ms draws 0 polls 4 done@7.014
+   prog#5 bg-vellum-fragment vs c53894e7 fs b97832dd(2767) frame -0.001s link@0.493 status 0.7 ms query 0 firstDraw@null null ms draws 0 polls 1 done@7.015
+   prog#6 knot-marker-fragment vs c8e7335b fs bc2835b9(2192) frame -0.001s link@0.493 status 0.6 ms query 0 firstDraw@null null ms draws 0 polls 1 done@7.016
+   prog#7 pluck-ripple-fragment vs f6d9cf61 fs 458aefaf(1637) frame 6.998s link@7.018 status 0.4 ms query 0 firstDraw@null null ms draws 0 polls 2 done@7.018
+   prog#8 pixi-program-fragment vs 3aae20d1 fs d8daec26(419) frame 6.998s link@7.019 status 0.3 ms query 0 firstDraw@null null ms draws 0 polls 2 done@7.018
+   prog#9 bg-blit-fragment vs e9d0c5c3 fs af717a3f(468) frame -0.001s link@0.493 status 0.4 ms query 0 firstDraw@null null ms draws 0 polls 1 done@7.019
+   prog#10 ribbon-sdf-explore-fragment vs 9dcc6768 fs af2eea7b(75480) frame 7.034s link@7.09 status null ms query 0 firstDraw@null null ms draws 0 polls 107 done@null
+   prog#11 section-rgb-explore-fragment vs fe314948 fs 84c460b6(75452) frame 7.034s link@7.09 status null ms query 0 firstDraw@null null ms draws 0
+   prog#12 ribbon-sdf-fragment vs 7901a14a fs 1db0eedb(59053) frame 7.034s link@7.091 status null ms query 0 firstDraw@null null ms draws 0
+   prog#13 junction-field-explore-fragment vs a1720c51 fs 264bc3ca(49860) frame 7.034s link@7.092 status null ms query 0 firstDraw@null null ms draws 0
+   prog#14 arm-strip-explore-fragment vs c4626223 fs ebcde035(40324) frame 7.034s link@7.092 status null ms query 0 firstDraw@null null ms draws 0
+   prog#15 pluck-still-explore-fragment vs e555b29d fs 4a8832ad(29744) frame 7.034s link@7.093 status null ms query 0 firstDraw@null null ms draws 0
+   prog#16 pluck-still-fragment vs 98a3dbe7 fs a9c6efae(20574) frame 7.034s link@7.093 status null ms query 0 firstDraw@null null ms draws 0
+   prog#17 bg-vellum-x-fragment vs 68faed36 fs 9fcc5b2a(3132) frame 7.034s link@7.093 status null ms query 0 firstDraw@null null ms draws 0
+   prog#18 bg-paper-x-fragment vs 7cbccb6b fs 92b06f88(2993) frame 7.034s link@7.093 status null ms query 0 firstDraw@null null ms draws 0
+   prog#19 bg-contours-x-fragment vs 5462b992 fs 7422748c(2965) frame 7.034s link@7.093 status null ms query 0 firstDraw@null null ms draws 0
+   prog#20 bg-aurora-x-fragment vs 6ca81659 fs fc8a1378(2927) frame 7.034s link@7.093 status null ms query 0 firstDraw@null null ms draws 0
+   prog#21 bg-vellum-drift-fragment vs 163e3e55 fs f7145890(2874) frame 7.034s link@7.093 status null ms query 0 firstDraw@null null ms draws 0
+   prog#22 bg-silk-x-fragment vs 1a022810 fs 0a9e4250(2859) frame 7.034s link@7.093 status null ms query 0 firstDraw@null null ms draws 0
+   prog#23 bg-aurora-fragment vs a8aa3a58 fs c9e8e935(2806) frame 7.034s link@7.093 status null ms query 0 firstDraw@null null ms draws 0
+   prog#24 bg-mist-x-fragment vs df4026dc fs 9e727f97(2768) frame 7.034s link@7.093 status null ms query 0 firstDraw@null null ms draws 0
+   prog#25 bg-paper-fragment vs d8b5641a fs 8317e4ee(2737) frame 7.034s link@7.093 status null ms query 0 firstDraw@null null ms draws 0
+   prog#26 bg-contours-fragment vs 454c413b fs d9bf12a9(2721) frame 7.034s link@7.093 status null ms query 0 firstDraw@null null ms draws 0
+   prog#27 bg-wash-x-fragment vs 985bbc02 fs 4a3e4138(2682) frame 7.034s link@7.093 status null ms query 0 firstDraw@null null ms draws 0
+   prog#28 bg-silk-fragment vs 5ab970c9 fs 528e687a(2585) frame 7.034s link@7.093 status null ms query 0 firstDraw@null null ms draws 0
+   prog#29 bg-mist-fragment vs 459c07fd fs f5b54810(2524) frame 7.034s link@7.094 status null ms query 0 firstDraw@null null ms draws 0
+   prog#30 bg-wash-fragment vs b013168b fs 8e14044f(2438) frame 7.034s link@7.094 status null ms query 0 firstDraw@null null ms draws 0
+   prog#31 displacement-filter-fragment vs d691158e fs 9ccc3185(713) frame 7.034s link@7.094 status null ms query 0 firstDraw@null null ms draws 0
+   prog#32 bg-fog-fragment vs 5c4c1bf0 fs 80583207(868) frame 7.034s link@7.094 status null ms query 0 firstDraw@null null ms draws 0
+   prog#33 bg-vellum-fragment vs c53894e7 fs b97832dd(2767) frame 7.034s link@7.095 status 16.4 ms query 0.2 firstDraw@7.114 0.1 ms draws 1
+   prog#34 bg-blit-fragment vs e9d0c5c3 fs af717a3f(468) frame 7.034s link@7.123 status 27.6 ms query 0 firstDraw@7.152 0 ms draws 108
+   prog#35 batch-fragment vs 62b7503a fs 8e0ed8e3(1820) frame 7.034s link@7.17 status 17.6 ms query 0 firstDraw@7.175 0 ms draws 108
+   prog#36 section-rgb-fragment vs b62a7b5e fs 718a64fc(59029) frame 7.034s link@7.175 status 194.3 ms query 0.1 firstDraw@7.377 0 ms draws 9828
+   prog#37 pluck-blur-fragment vs ca4ed1f2 fs 0e16bbd5(5816) frame 7.034s link@7.389 status 6.6 ms query 0.1 firstDraw@7.397 0 ms draws 108
+   prog#38 knot-marker-fragment vs c8e7335b fs bc2835b9(2192) frame 7.034s link@7.397 status 1.8 ms query 0.1 firstDraw@7.4 0 ms draws 324
+   prog#39 pluck-ripple-fragment vs f6d9cf61 fs 458aefaf(1637) frame 7.034s link@7.404 status 1.7 ms query 0 firstDraw@7.405 0.1 ms draws 2
+   prog#40 arm-strip-fragment vs 6fb0f531 fs 99c06229(34315) frame 7.402s link@7.59 status 16.1 ms query 0 firstDraw@7.609 0 ms draws 107
+   prog#41 junction-field-fragment vs 241ba373 fs 9e074835(40167) frame 7.402s link@7.613 status 27.6 ms query 0.1 firstDraw@7.647 0 ms draws 214
+>> node --max-old-space-size=8192 k307/trace_intro.mjs http://127.0.0.1:5631 s4b-mine-e "?k111&am=instant&fw=0&snd=none&phw=0" --max 12 --trace none  (21:54:36)
+== s4b-mine-e load1 P4 v0.4.0 51345934 2026-11-05 05:30 2400x1350 d3d11 | ANGLE (AMD, AMD Radeon RX 6800 XT (0x000073BF) Direct3D11 vs_5_0 ps_5_0, D3D11) | parallel true
+   ls0 [] daily {"n":null,"today":24,"saved":false,"badge":"free","moves":0} | firstVisible 7.154s presettle 0ms  loader false
+   frame 7.154s cb 365 gl 276 (status 265 query 0 draw 0 upload 4 sync 0) rev 0 budget
+   frame 7.522s cb 256 gl 57 (status 46 query 0 draw 0 upload 10 sync 0) rev 0 budget
+   frame 0.765s cb 145 gl 97 (status 92 query 0 draw 0 upload 1 sync 0) rev 0 off
+   frame 0.922s cb 102 gl 100 (status 100 query 0 draw 0 upload 0 sync 0) rev 0 off
+   prog#0 section-rgb-fragment vs b62a7b5e fs 718a64fc(59029) frame -0.001s link@0.508 status 5.2 ms query 0 firstDraw@null null ms draws 0 polls 335 done@7.101
+   prog#1 junction-field-fragment vs 241ba373 fs ffb3dae0(40412) frame -0.001s link@0.509 status 3.1 ms query 0 firstDraw@null null ms draws 0 polls 1 done@7.107
+   prog#2 arm-strip-fragment vs 6fb0f531 fs 99c06229(34315) frame -0.001s link@0.51 status 4 ms query 0 firstDraw@null null ms draws 0 polls 1 done@7.111
+   prog#3 pluck-blur-fragment vs ca4ed1f2 fs 0e16bbd5(5816) frame -0.001s link@0.51 status 0.9 ms query 0 firstDraw@null null ms draws 0 polls 1 done@7.115
+   prog#4 batch-fragment vs 62b7503a fs 8e0ed8e3(1820) frame 7.1s link@7.117 status 0.4 ms query 0.1 firstDraw@null null ms draws 0 polls 4 done@7.116
+   prog#5 bg-vellum-fragment vs c53894e7 fs b97832dd(2767) frame -0.001s link@0.51 status 0.8 ms query 0 firstDraw@null null ms draws 0 polls 1 done@7.117
+   prog#6 knot-marker-fragment vs c8e7335b fs bc2835b9(2192) frame -0.001s link@0.51 status 0.5 ms query 0 firstDraw@null null ms draws 0 polls 1 done@7.118
+   prog#7 pluck-ripple-fragment vs f6d9cf61 fs 458aefaf(1637) frame 7.1s link@7.12 status 0.3 ms query 0 firstDraw@null null ms draws 0 polls 3 done@7.12
+   prog#8 pixi-program-fragment vs 3aae20d1 fs d8daec26(419) frame 7.1s link@7.121 status 0.4 ms query 0.1 firstDraw@null null ms draws 0 polls 2 done@7.12
+   prog#9 bg-blit-fragment vs e9d0c5c3 fs af717a3f(468) frame -0.001s link@0.51 status 0.4 ms query 0 firstDraw@null null ms draws 0 polls 1 done@7.121
+   prog#10 ribbon-sdf-explore-fragment vs 9dcc6768 fs af2eea7b(75480) frame 7.154s link@7.21 status null ms query 0 firstDraw@null null ms draws 0 polls 99 done@null
+   prog#11 section-rgb-explore-fragment vs fe314948 fs 84c460b6(75452) frame 7.154s link@7.211 status null ms query 0 firstDraw@null null ms draws 0
+   prog#12 ribbon-sdf-fragment vs 7901a14a fs 1db0eedb(59053) frame 7.154s link@7.212 status null ms query 0 firstDraw@null null ms draws 0
+   prog#13 junction-field-explore-fragment vs a1720c51 fs afac7247(50105) frame 7.154s link@7.213 status null ms query 0 firstDraw@null null ms draws 0
+   prog#14 arm-strip-explore-fragment vs c4626223 fs ebcde035(40324) frame 7.154s link@7.213 status null ms query 0 firstDraw@null null ms draws 0
+   prog#15 pluck-still-explore-fragment vs e555b29d fs 4a8832ad(29744) frame 7.154s link@7.213 status null ms query 0 firstDraw@null null ms draws 0
+   prog#16 pluck-still-fragment vs 98a3dbe7 fs a9c6efae(20574) frame 7.154s link@7.213 status null ms query 0 firstDraw@null null ms draws 0
+   prog#17 bg-vellum-x-fragment vs 68faed36 fs 9fcc5b2a(3132) frame 7.154s link@7.214 status null ms query 0 firstDraw@null null ms draws 0
+   prog#18 bg-paper-x-fragment vs 7cbccb6b fs 92b06f88(2993) frame 7.154s link@7.214 status null ms query 0 firstDraw@null null ms draws 0
+   prog#19 bg-contours-x-fragment vs 5462b992 fs 7422748c(2965) frame 7.154s link@7.214 status null ms query 0 firstDraw@null null ms draws 0
+   prog#20 bg-aurora-x-fragment vs 6ca81659 fs fc8a1378(2927) frame 7.154s link@7.214 status null ms query 0 firstDraw@null null ms draws 0
+   prog#21 bg-vellum-drift-fragment vs 163e3e55 fs f7145890(2874) frame 7.154s link@7.214 status null ms query 0 firstDraw@null null ms draws 0
+   prog#22 bg-silk-x-fragment vs 1a022810 fs 0a9e4250(2859) frame 7.154s link@7.214 status null ms query 0 firstDraw@null null ms draws 0
+   prog#23 bg-aurora-fragment vs a8aa3a58 fs c9e8e935(2806) frame 7.154s link@7.214 status null ms query 0 firstDraw@null null ms draws 0
+   prog#24 bg-mist-x-fragment vs df4026dc fs 9e727f97(2768) frame 7.154s link@7.214 status null ms query 0 firstDraw@null null ms draws 0
+   prog#25 bg-paper-fragment vs d8b5641a fs 8317e4ee(2737) frame 7.154s link@7.214 status null ms query 0 firstDraw@null null ms draws 0
+   prog#26 bg-contours-fragment vs 454c413b fs d9bf12a9(2721) frame 7.154s link@7.214 status null ms query 0 firstDraw@null null ms draws 0
+   prog#27 bg-wash-x-fragment vs 985bbc02 fs 4a3e4138(2682) frame 7.154s link@7.214 status null ms query 0 firstDraw@null null ms draws 0
+   prog#28 bg-silk-fragment vs 5ab970c9 fs 528e687a(2585) frame 7.154s link@7.214 status null ms query 0 firstDraw@null null ms draws 0
+   prog#29 bg-mist-fragment vs 459c07fd fs f5b54810(2524) frame 7.154s link@7.214 status null ms query 0 firstDraw@null null ms draws 0
+   prog#30 bg-wash-fragment vs b013168b fs 8e14044f(2438) frame 7.154s link@7.214 status null ms query 0 firstDraw@null null ms draws 0
+   prog#31 displacement-filter-fragment vs d691158e fs 9ccc3185(713) frame 7.154s link@7.214 status null ms query 0 firstDraw@null null ms draws 0
+   prog#32 bg-fog-fragment vs 5c4c1bf0 fs 80583207(868) frame 7.154s link@7.214 status null ms query 0 firstDraw@null null ms draws 0
+   prog#33 bg-vellum-fragment vs c53894e7 fs b97832dd(2767) frame 7.154s link@7.216 status 15.2 ms query 0 firstDraw@7.234 0.1 ms draws 1
+   prog#34 bg-blit-fragment vs e9d0c5c3 fs af717a3f(468) frame 7.154s link@7.243 status 33.5 ms query 0 firstDraw@7.278 0 ms draws 100
+   prog#35 batch-fragment vs 62b7503a fs 8e0ed8e3(1820) frame 7.154s link@7.291 status 12.8 ms query 0 firstDraw@7.307 0.1 ms draws 100
+   prog#36 section-rgb-fragment vs b62a7b5e fs 718a64fc(59029) frame 7.154s link@7.308 status 177.5 ms query 0 firstDraw@7.489 0 ms draws 9100
+   prog#37 pluck-blur-fragment vs ca4ed1f2 fs 0e16bbd5(5816) frame 7.154s link@7.504 status 4.6 ms query 0.1 firstDraw@7.511 0 ms draws 100
+   prog#38 knot-marker-fragment vs c8e7335b fs bc2835b9(2192) frame 7.154s link@7.511 status 1.7 ms query 0 firstDraw@7.513 0 ms draws 300
+   prog#39 pluck-ripple-fragment vs f6d9cf61 fs 458aefaf(1637) frame 7.154s link@7.518 status 2.9 ms query 0 firstDraw@7.519 0 ms draws 2
+   prog#40 arm-strip-fragment vs 6fb0f531 fs 99c06229(34315) frame 7.522s link@7.722 status 19.1 ms query 0.1 firstDraw@7.744 0 ms draws 99
+   prog#41 junction-field-fragment vs 241ba373 fs ffb3dae0(40412) frame 7.522s link@7.75 status 23.2 ms query 0 firstDraw@7.78 0 ms draws 198
+>> node --max-old-space-size=8192 k307/trace_intro.mjs http://127.0.0.1:5630 s4b-s4-g "?k111&am=instant&fw=0&snd=none&phw=0" --max 12 --trace none  (21:54:50)
+== s4b-s4-g load1 P4 v0.4.0 0aaa0dee 2026-11-05 05:21 2400x1350 d3d11 | ANGLE (AMD, AMD Radeon RX 6800 XT (0x000073BF) Direct3D11 vs_5_0 ps_5_0, D3D11) | parallel true
+   ls0 [] daily {"n":null,"today":24,"saved":false,"badge":"free","moves":0} | firstVisible 6.401s presettle 0ms  loader false
+   frame 6.401s cb 341 gl 259 (status 248 query 1 draw 0 upload 5 sync 0) rev 0 budget
+   frame 6.733s cb 232 gl 65 (status 56 query 0 draw 0 upload 8 sync 0) rev 0 budget
+   frame 0.763s cb 147 gl 99 (status 93 query 0 draw 0 upload 1 sync 0) rev 0 off
+   frame 0.916s cb 103 gl 99 (status 99 query 0 draw 0 upload 0 sync 0) rev 0 off
+   prog#0 section-rgb-fragment vs b62a7b5e fs 718a64fc(59029) frame -0.001s link@0.52 status 4.9 ms query 0 firstDraw@null null ms draws 0 polls 293 done@6.366
+   prog#1 junction-field-fragment vs 241ba373 fs 9e074835(40167) frame -0.001s link@0.521 status 2.8 ms query 0 firstDraw@null null ms draws 0 polls 1 done@6.371
+   prog#2 arm-strip-fragment vs 6fb0f531 fs 99c06229(34315) frame -0.001s link@0.521 status 3.1 ms query 0 firstDraw@null null ms draws 0 polls 1 done@6.374
+   prog#3 pluck-blur-fragment vs ca4ed1f2 fs 0e16bbd5(5816) frame -0.001s link@0.521 status 0.7 ms query 0 firstDraw@null null ms draws 0 polls 1 done@6.378
+   prog#4 batch-fragment vs 62b7503a fs 8e0ed8e3(1820) frame 6.364s link@6.379 status 0.3 ms query 0.1 firstDraw@null null ms draws 0 polls 4 done@6.378
+   prog#5 bg-vellum-fragment vs c53894e7 fs b97832dd(2767) frame -0.001s link@0.521 status 0.6 ms query 0 firstDraw@null null ms draws 0 polls 1 done@6.379
+   prog#6 knot-marker-fragment vs c8e7335b fs bc2835b9(2192) frame -0.001s link@0.521 status 0.4 ms query 0 firstDraw@null null ms draws 0 polls 1 done@6.38
+   prog#7 pluck-ripple-fragment vs f6d9cf61 fs 458aefaf(1637) frame 6.364s link@6.381 status 0.3 ms query 0 firstDraw@null null ms draws 0 polls 2 done@6.38
+   prog#8 pixi-program-fragment vs 3aae20d1 fs d8daec26(419) frame 6.364s link@6.381 status 0.5 ms query 0 firstDraw@null null ms draws 0 polls 2 done@6.381
+   prog#9 bg-blit-fragment vs e9d0c5c3 fs af717a3f(468) frame -0.001s link@0.521 status 0.3 ms query 0 firstDraw@null null ms draws 0 polls 1 done@6.382
+   prog#10 ribbon-sdf-explore-fragment vs 9dcc6768 fs af2eea7b(75480) frame 6.401s link@6.453 status null ms query 0 firstDraw@null null ms draws 0 polls 119 done@null
+   prog#11 section-rgb-explore-fragment vs fe314948 fs 84c460b6(75452) frame 6.401s link@6.454 status null ms query 0 firstDraw@null null ms draws 0
+   prog#12 ribbon-sdf-fragment vs 7901a14a fs 1db0eedb(59053) frame 6.401s link@6.454 status null ms query 0 firstDraw@null null ms draws 0
+   prog#13 junction-field-explore-fragment vs a1720c51 fs 264bc3ca(49860) frame 6.401s link@6.454 status null ms query 0 firstDraw@null null ms draws 0
+   prog#14 arm-strip-explore-fragment vs c4626223 fs ebcde035(40324) frame 6.401s link@6.455 status null ms query 0 firstDraw@null null ms draws 0
+   prog#15 pluck-still-explore-fragment vs e555b29d fs 4a8832ad(29744) frame 6.401s link@6.455 status null ms query 0 firstDraw@null null ms draws 0
+   prog#16 pluck-still-fragment vs 98a3dbe7 fs a9c6efae(20574) frame 6.401s link@6.455 status null ms query 0 firstDraw@null null ms draws 0
+   prog#17 bg-vellum-x-fragment vs 68faed36 fs 9fcc5b2a(3132) frame 6.401s link@6.455 status null ms query 0 firstDraw@null null ms draws 0
+   prog#18 bg-paper-x-fragment vs 7cbccb6b fs 92b06f88(2993) frame 6.401s link@6.455 status null ms query 0 firstDraw@null null ms draws 0
+   prog#19 bg-contours-x-fragment vs 5462b992 fs 7422748c(2965) frame 6.401s link@6.455 status null ms query 0 firstDraw@null null ms draws 0
+   prog#20 bg-aurora-x-fragment vs 6ca81659 fs fc8a1378(2927) frame 6.401s link@6.455 status null ms query 0 firstDraw@null null ms draws 0
+   prog#21 bg-vellum-drift-fragment vs 163e3e55 fs f7145890(2874) frame 6.401s link@6.455 status null ms query 0 firstDraw@null null ms draws 0
+   prog#22 bg-silk-x-fragment vs 1a022810 fs 0a9e4250(2859) frame 6.401s link@6.455 status null ms query 0 firstDraw@null null ms draws 0
+   prog#23 bg-aurora-fragment vs a8aa3a58 fs c9e8e935(2806) frame 6.401s link@6.455 status null ms query 0 firstDraw@null null ms draws 0
+   prog#24 bg-mist-x-fragment vs df4026dc fs 9e727f97(2768) frame 6.401s link@6.455 status null ms query 0 firstDraw@null null ms draws 0
+   prog#25 bg-paper-fragment vs d8b5641a fs 8317e4ee(2737) frame 6.401s link@6.455 status null ms query 0 firstDraw@null null ms draws 0
+   prog#26 bg-contours-fragment vs 454c413b fs d9bf12a9(2721) frame 6.401s link@6.455 status null ms query 0 firstDraw@null null ms draws 0
+   prog#27 bg-wash-x-fragment vs 985bbc02 fs 4a3e4138(2682) frame 6.401s link@6.455 status null ms query 0 firstDraw@null null ms draws 0
+   prog#28 bg-silk-fragment vs 5ab970c9 fs 528e687a(2585) frame 6.401s link@6.455 status null ms query 0 firstDraw@null null ms draws 0
+   prog#29 bg-mist-fragment vs 459c07fd fs f5b54810(2524) frame 6.401s link@6.455 status null ms query 0 firstDraw@null null ms draws 0
+   prog#30 bg-wash-fragment vs b013168b fs 8e14044f(2438) frame 6.401s link@6.455 status null ms query 0 firstDraw@null null ms draws 0
+   prog#31 displacement-filter-fragment vs d691158e fs 9ccc3185(713) frame 6.401s link@6.455 status null ms query 0 firstDraw@null null ms draws 0
+   prog#32 bg-fog-fragment vs 5c4c1bf0 fs 80583207(868) frame 6.401s link@6.456 status null ms query 0 firstDraw@null null ms draws 0
+   prog#33 bg-vellum-fragment vs c53894e7 fs b97832dd(2767) frame 6.401s link@6.457 status 16.2 ms query 0.2 firstDraw@6.476 0.1 ms draws 1
+   prog#34 bg-blit-fragment vs e9d0c5c3 fs af717a3f(468) frame 6.401s link@6.485 status 32.9 ms query 0.1 firstDraw@6.52 0.1 ms draws 120
+   prog#35 batch-fragment vs 62b7503a fs 8e0ed8e3(1820) frame 6.401s link@6.531 status 11.1 ms query 0 firstDraw@6.539 0 ms draws 120
+   prog#36 section-rgb-fragment vs b62a7b5e fs 718a64fc(59029) frame 6.401s link@6.54 status 169 ms query 0.1 firstDraw@6.711 0 ms draws 10920
+   prog#37 pluck-blur-fragment vs ca4ed1f2 fs 0e16bbd5(5816) frame 6.401s link@6.725 status 6.1 ms query 0 firstDraw@6.733 0 ms draws 120
+   prog#38 knot-marker-fragment vs c8e7335b fs bc2835b9(2192) frame 6.401s link@6.733 status 2.6 ms query 0 firstDraw@6.736 0 ms draws 360
+   prog#39 pluck-ripple-fragment vs f6d9cf61 fs 458aefaf(1637) frame 6.401s link@6.74 status 1.7 ms query 0.1 firstDraw@6.741 0.1 ms draws 2
+   prog#40 arm-strip-fragment vs 6fb0f531 fs 99c06229(34315) frame 6.733s link@6.91 status 24.4 ms query 0 firstDraw@6.937 0 ms draws 119
+   prog#41 junction-field-fragment vs 241ba373 fs 9e074835(40167) frame 6.733s link@6.941 status 28.1 ms query 0 firstDraw@6.976 0 ms draws 238
+>> node --max-old-space-size=8192 k307/trace_intro.mjs http://127.0.0.1:5630 s4b-s4-h "?k111&am=instant&fw=0&snd=none&phw=0" --max 12 --trace none  (21:55:03)
+== s4b-s4-h load1 P4 v0.4.0 0aaa0dee 2026-11-05 05:21 2400x1350 d3d11 | ANGLE (AMD, AMD Radeon RX 6800 XT (0x000073BF) Direct3D11 vs_5_0 ps_5_0, D3D11) | parallel true
+   ls0 [] daily {"n":null,"today":24,"saved":false,"badge":"free","moves":0} | firstVisible 6.396s presettle 0ms  loader false
+   frame 6.396s cb 350 gl 269 (status 258 query 0 draw 0 upload 5 sync 0) rev 0 budget
+   frame 6.747s cb 243 gl 64 (status 54 query 0 draw 0 upload 8 sync 0) rev 0 budget
+   frame 0.752s cb 141 gl 98 (status 89 query 0 draw 0 upload 0 sync 0) rev 0 off
+   frame 6.986s cb 91 gl 4 (status 0 query 0 draw 0 upload 3 sync 0) rev 0 budget
+   prog#0 section-rgb-fragment vs b62a7b5e fs 718a64fc(59029) frame -0.001s link@0.499 status 5.6 ms query 0 firstDraw@null null ms draws 0 polls 295 done@6.361
+   prog#1 junction-field-fragment vs 241ba373 fs 9e074835(40167) frame -0.001s link@0.499 status 3 ms query 0 firstDraw@null null ms draws 0 polls 1 done@6.367
+   prog#2 arm-strip-fragment vs 6fb0f531 fs 99c06229(34315) frame -0.001s link@0.5 status 3.1 ms query 0 firstDraw@null null ms draws 0 polls 1 done@6.37
+   prog#3 pluck-blur-fragment vs ca4ed1f2 fs 0e16bbd5(5816) frame -0.001s link@0.5 status 0.8 ms query 0 firstDraw@null null ms draws 0 polls 1 done@6.373
+   prog#4 batch-fragment vs 62b7503a fs 8e0ed8e3(1820) frame 6.36s link@6.375 status 0.4 ms query 0.1 firstDraw@null null ms draws 0 polls 4 done@6.374
+   prog#5 bg-vellum-fragment vs c53894e7 fs b97832dd(2767) frame -0.001s link@0.5 status 0.7 ms query 0 firstDraw@null null ms draws 0 polls 1 done@6.375
+   prog#6 knot-marker-fragment vs c8e7335b fs bc2835b9(2192) frame -0.001s link@0.5 status 0.5 ms query 0 firstDraw@null null ms draws 0 polls 1 done@6.376
+   prog#7 pluck-ripple-fragment vs f6d9cf61 fs 458aefaf(1637) frame 6.36s link@6.377 status 0.3 ms query 0 firstDraw@null null ms draws 0 polls 2 done@6.376
+   prog#8 pixi-program-fragment vs 3aae20d1 fs d8daec26(419) frame 6.36s link@6.377 status 0.3 ms query 0 firstDraw@null null ms draws 0 polls 2 done@6.377
+   prog#9 bg-blit-fragment vs e9d0c5c3 fs af717a3f(468) frame -0.001s link@0.5 status 0.3 ms query 0 firstDraw@null null ms draws 0 polls 1 done@6.377
+   prog#10 ribbon-sdf-explore-fragment vs 9dcc6768 fs af2eea7b(75480) frame 6.396s link@6.448 status null ms query 0 firstDraw@null null ms draws 0 polls 115 done@null
+   prog#11 section-rgb-explore-fragment vs fe314948 fs 84c460b6(75452) frame 6.396s link@6.449 status null ms query 0 firstDraw@null null ms draws 0
+   prog#12 ribbon-sdf-fragment vs 7901a14a fs 1db0eedb(59053) frame 6.396s link@6.449 status null ms query 0 firstDraw@null null ms draws 0
+   prog#13 junction-field-explore-fragment vs a1720c51 fs 264bc3ca(49860) frame 6.396s link@6.45 status null ms query 0 firstDraw@null null ms draws 0
+   prog#14 arm-strip-explore-fragment vs c4626223 fs ebcde035(40324) frame 6.396s link@6.45 status null ms query 0 firstDraw@null null ms draws 0
+   prog#15 pluck-still-explore-fragment vs e555b29d fs 4a8832ad(29744) frame 6.396s link@6.45 status null ms query 0 firstDraw@null null ms draws 0
+   prog#16 pluck-still-fragment vs 98a3dbe7 fs a9c6efae(20574) frame 6.396s link@6.45 status null ms query 0 firstDraw@null null ms draws 0
+   prog#17 bg-vellum-x-fragment vs 68faed36 fs 9fcc5b2a(3132) frame 6.396s link@6.45 status null ms query 0 firstDraw@null null ms draws 0
+   prog#18 bg-paper-x-fragment vs 7cbccb6b fs 92b06f88(2993) frame 6.396s link@6.45 status null ms query 0 firstDraw@null null ms draws 0
+   prog#19 bg-contours-x-fragment vs 5462b992 fs 7422748c(2965) frame 6.396s link@6.451 status null ms query 0 firstDraw@null null ms draws 0
+   prog#20 bg-aurora-x-fragment vs 6ca81659 fs fc8a1378(2927) frame 6.396s link@6.451 status null ms query 0 firstDraw@null null ms draws 0
+   prog#21 bg-vellum-drift-fragment vs 163e3e55 fs f7145890(2874) frame 6.396s link@6.451 status null ms query 0 firstDraw@null null ms draws 0
+   prog#22 bg-silk-x-fragment vs 1a022810 fs 0a9e4250(2859) frame 6.396s link@6.451 status null ms query 0 firstDraw@null null ms draws 0
+   prog#23 bg-aurora-fragment vs a8aa3a58 fs c9e8e935(2806) frame 6.396s link@6.451 status null ms query 0 firstDraw@null null ms draws 0
+   prog#24 bg-mist-x-fragment vs df4026dc fs 9e727f97(2768) frame 6.396s link@6.451 status null ms query 0 firstDraw@null null ms draws 0
+   prog#25 bg-paper-fragment vs d8b5641a fs 8317e4ee(2737) frame 6.396s link@6.451 status null ms query 0 firstDraw@null null ms draws 0
+   prog#26 bg-contours-fragment vs 454c413b fs d9bf12a9(2721) frame 6.396s link@6.451 status null ms query 0 firstDraw@null null ms draws 0
+   prog#27 bg-wash-x-fragment vs 985bbc02 fs 4a3e4138(2682) frame 6.396s link@6.451 status null ms query 0 firstDraw@null null ms draws 0
+   prog#28 bg-silk-fragment vs 5ab970c9 fs 528e687a(2585) frame 6.396s link@6.451 status null ms query 0 firstDraw@null null ms draws 0
+   prog#29 bg-mist-fragment vs 459c07fd fs f5b54810(2524) frame 6.396s link@6.451 status null ms query 0 firstDraw@null null ms draws 0
+   prog#30 bg-wash-fragment vs b013168b fs 8e14044f(2438) frame 6.396s link@6.451 status null ms query 0 firstDraw@null null ms draws 0
+   prog#31 displacement-filter-fragment vs d691158e fs 9ccc3185(713) frame 6.396s link@6.451 status null ms query 0 firstDraw@null null ms draws 0
+   prog#32 bg-fog-fragment vs 5c4c1bf0 fs 80583207(868) frame 6.396s link@6.451 status null ms query 0 firstDraw@null null ms draws 0
+   prog#33 bg-vellum-fragment vs c53894e7 fs b97832dd(2767) frame 6.396s link@6.452 status 14.9 ms query 0.2 firstDraw@6.47 0 ms draws 1
+   prog#34 bg-blit-fragment vs e9d0c5c3 fs af717a3f(468) frame 6.396s link@6.48 status 34.5 ms query 0.1 firstDraw@6.516 0 ms draws 116
+   prog#35 batch-fragment vs 62b7503a fs 8e0ed8e3(1820) frame 6.396s link@6.53 status 13.7 ms query 0 firstDraw@6.541 0 ms draws 116
+   prog#36 section-rgb-fragment vs b62a7b5e fs 718a64fc(59029) frame 6.396s link@6.542 status 172.2 ms query 0 firstDraw@6.716 0 ms draws 10556
+   prog#37 pluck-blur-fragment vs ca4ed1f2 fs 0e16bbd5(5816) frame 6.396s link@6.73 status 7.2 ms query 0 firstDraw@6.738 0 ms draws 116
+   prog#38 knot-marker-fragment vs c8e7335b fs bc2835b9(2192) frame 6.396s link@6.739 status 1.8 ms query 0 firstDraw@6.742 0 ms draws 348
+   prog#39 pluck-ripple-fragment vs f6d9cf61 fs 458aefaf(1637) frame 6.396s link@6.745 status 1.9 ms query 0 firstDraw@6.746 0 ms draws 2
+   prog#40 arm-strip-fragment vs 6fb0f531 fs 99c06229(34315) frame 6.747s link@6.926 status 25.1 ms query 0 firstDraw@6.954 0 ms draws 115
+   prog#41 junction-field-fragment vs 241ba373 fs 9e074835(40167) frame 6.747s link@6.958 status 25.9 ms query 0.2 firstDraw@6.99 0 ms draws 230
+>> node --max-old-space-size=8192 k307/trace_intro.mjs http://127.0.0.1:5631 s4b-mine-f "?k111&am=instant&fw=0&snd=none&phw=0" --max 12 --trace none  (21:55:17)
+== s4b-mine-f load1 P4 v0.4.0 51345934 2026-11-05 05:30 2400x1350 d3d11 | ANGLE (AMD, AMD Radeon RX 6800 XT (0x000073BF) Direct3D11 vs_5_0 ps_5_0, D3D11) | parallel true
+   ls0 [] daily {"n":null,"today":24,"saved":false,"badge":"free","moves":0} | firstVisible 6.482s presettle 0ms  loader false
+   frame 6.482s cb 349 gl 272 (status 261 query 0 draw 0 upload 4 sync 0) rev 0 budget
+   frame 6.832s cb 246 gl 64 (status 54 query 0 draw 0 upload 9 sync 0) rev 0 budget
+   frame 0.754s cb 140 gl 96 (status 89 query 0 draw 0 upload 0 sync 0) rev 0 off
+   frame 0.888s cb 98 gl 96 (status 96 query 0 draw 0 upload 0 sync 0) rev 0 off
+   prog#0 section-rgb-fragment vs b62a7b5e fs 718a64fc(59029) frame -0.001s link@0.499 status 5 ms query 0 firstDraw@null null ms draws 0 polls 299 done@6.447
+   prog#1 junction-field-fragment vs 241ba373 fs ffb3dae0(40412) frame -0.001s link@0.499 status 2.8 ms query 0 firstDraw@null null ms draws 0 polls 1 done@6.452
+   prog#2 arm-strip-fragment vs 6fb0f531 fs 99c06229(34315) frame -0.001s link@0.499 status 3.2 ms query 0 firstDraw@null null ms draws 0 polls 1 done@6.455
+   prog#3 pluck-blur-fragment vs ca4ed1f2 fs 0e16bbd5(5816) frame -0.001s link@0.499 status 0.8 ms query 0 firstDraw@null null ms draws 0 polls 1 done@6.459
+   prog#4 batch-fragment vs 62b7503a fs 8e0ed8e3(1820) frame 6.446s link@6.46 status 0.4 ms query 0.1 firstDraw@null null ms draws 0 polls 4 done@6.46
+   prog#5 bg-vellum-fragment vs c53894e7 fs b97832dd(2767) frame -0.001s link@0.5 status 0.7 ms query 0 firstDraw@null null ms draws 0 polls 1 done@6.461
+   prog#6 knot-marker-fragment vs c8e7335b fs bc2835b9(2192) frame -0.001s link@0.5 status 0.3 ms query 0 firstDraw@null null ms draws 0 polls 1 done@6.462
+   prog#7 pluck-ripple-fragment vs f6d9cf61 fs 458aefaf(1637) frame 6.446s link@6.462 status 0.4 ms query 0 firstDraw@null null ms draws 0 polls 2 done@6.462
+   prog#8 pixi-program-fragment vs 3aae20d1 fs d8daec26(419) frame 6.446s link@6.463 status 0.4 ms query 0 firstDraw@null null ms draws 0 polls 2 done@6.463
+   prog#9 bg-blit-fragment vs e9d0c5c3 fs af717a3f(468) frame -0.001s link@0.5 status 0.4 ms query 0 firstDraw@null null ms draws 0 polls 1 done@6.463
+   prog#10 ribbon-sdf-explore-fragment vs 9dcc6768 fs af2eea7b(75480) frame 6.482s link@6.531 status null ms query 0 firstDraw@null null ms draws 0 polls 115 done@null
+   prog#11 section-rgb-explore-fragment vs fe314948 fs 84c460b6(75452) frame 6.482s link@6.531 status null ms query 0 firstDraw@null null ms draws 0
+   prog#12 ribbon-sdf-fragment vs 7901a14a fs 1db0eedb(59053) frame 6.482s link@6.532 status null ms query 0 firstDraw@null null ms draws 0
+   prog#13 junction-field-explore-fragment vs a1720c51 fs afac7247(50105) frame 6.482s link@6.532 status null ms query 0 firstDraw@null null ms draws 0
+   prog#14 arm-strip-explore-fragment vs c4626223 fs ebcde035(40324) frame 6.482s link@6.533 status null ms query 0 firstDraw@null null ms draws 0
+   prog#15 pluck-still-explore-fragment vs e555b29d fs 4a8832ad(29744) frame 6.482s link@6.533 status null ms query 0 firstDraw@null null ms draws 0
+   prog#16 pluck-still-fragment vs 98a3dbe7 fs a9c6efae(20574) frame 6.482s link@6.533 status null ms query 0 firstDraw@null null ms draws 0
+   prog#17 bg-vellum-x-fragment vs 68faed36 fs 9fcc5b2a(3132) frame 6.482s link@6.533 status null ms query 0 firstDraw@null null ms draws 0
+   prog#18 bg-paper-x-fragment vs 7cbccb6b fs 92b06f88(2993) frame 6.482s link@6.533 status null ms query 0 firstDraw@null null ms draws 0
+   prog#19 bg-contours-x-fragment vs 5462b992 fs 7422748c(2965) frame 6.482s link@6.533 status null ms query 0 firstDraw@null null ms draws 0
+   prog#20 bg-aurora-x-fragment vs 6ca81659 fs fc8a1378(2927) frame 6.482s link@6.533 status null ms query 0 firstDraw@null null ms draws 0
+   prog#21 bg-vellum-drift-fragment vs 163e3e55 fs f7145890(2874) frame 6.482s link@6.533 status null ms query 0 firstDraw@null null ms draws 0
+   prog#22 bg-silk-x-fragment vs 1a022810 fs 0a9e4250(2859) frame 6.482s link@6.533 status null ms query 0 firstDraw@null null ms draws 0
+   prog#23 bg-aurora-fragment vs a8aa3a58 fs c9e8e935(2806) frame 6.482s link@6.534 status null ms query 0 firstDraw@null null ms draws 0
+   prog#24 bg-mist-x-fragment vs df4026dc fs 9e727f97(2768) frame 6.482s link@6.534 status null ms query 0 firstDraw@null null ms draws 0
+   prog#25 bg-paper-fragment vs d8b5641a fs 8317e4ee(2737) frame 6.482s link@6.534 status null ms query 0 firstDraw@null null ms draws 0
+   prog#26 bg-contours-fragment vs 454c413b fs d9bf12a9(2721) frame 6.482s link@6.534 status null ms query 0 firstDraw@null null ms draws 0
+   prog#27 bg-wash-x-fragment vs 985bbc02 fs 4a3e4138(2682) frame 6.482s link@6.534 status null ms query 0 firstDraw@null null ms draws 0
+   prog#28 bg-silk-fragment vs 5ab970c9 fs 528e687a(2585) frame 6.482s link@6.534 status null ms query 0 firstDraw@null null ms draws 0
+   prog#29 bg-mist-fragment vs 459c07fd fs f5b54810(2524) frame 6.482s link@6.534 status null ms query 0 firstDraw@null null ms draws 0
+   prog#30 bg-wash-fragment vs b013168b fs 8e14044f(2438) frame 6.482s link@6.534 status null ms query 0 firstDraw@null null ms draws 0
+   prog#31 displacement-filter-fragment vs d691158e fs 9ccc3185(713) frame 6.482s link@6.534 status null ms query 0 firstDraw@null null ms draws 0
+   prog#32 bg-fog-fragment vs 5c4c1bf0 fs 80583207(868) frame 6.482s link@6.534 status null ms query 0 firstDraw@null null ms draws 0
+   prog#33 bg-vellum-fragment vs c53894e7 fs b97832dd(2767) frame 6.482s link@6.535 status 17.9 ms query 0 firstDraw@6.556 0 ms draws 1
+   prog#34 bg-blit-fragment vs e9d0c5c3 fs af717a3f(468) frame 6.482s link@6.565 status 30.6 ms query 0 firstDraw@6.597 0 ms draws 116
+   prog#35 batch-fragment vs 62b7503a fs 8e0ed8e3(1820) frame 6.482s link@6.609 status 11.2 ms query 0.1 firstDraw@6.615 0 ms draws 116
+   prog#36 section-rgb-fragment vs b62a7b5e fs 718a64fc(59029) frame 6.482s link@6.616 status 187.3 ms query 0.2 firstDraw@6.805 0 ms draws 10556
+   prog#37 pluck-blur-fragment vs ca4ed1f2 fs 0e16bbd5(5816) frame 6.482s link@6.819 status 4.7 ms query 0 firstDraw@6.825 0 ms draws 116
+   prog#38 knot-marker-fragment vs c8e7335b fs bc2835b9(2192) frame 6.482s link@6.825 status 1.5 ms query 0 firstDraw@6.827 0 ms draws 348
+   prog#39 pluck-ripple-fragment vs f6d9cf61 fs 458aefaf(1637) frame 6.482s link@6.831 status 1.7 ms query 0 firstDraw@6.832 0 ms draws 2
+   prog#40 arm-strip-fragment vs 6fb0f531 fs 99c06229(34315) frame 6.832s link@7.016 status 25.2 ms query 0.1 firstDraw@7.044 0 ms draws 115
+   prog#41 junction-field-fragment vs 241ba373 fs ffb3dae0(40412) frame 6.832s link@7.048 status 25.5 ms query 0 firstDraw@7.08 0 ms draws 230
+lock released (21:55:30)
