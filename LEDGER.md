@@ -509,12 +509,12 @@ Next free ID: K1186.
 - **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate correctly across
   junctions"). S1, S2 done (a4dc218a, 16246c90). Answers: the light splits at a fork (A), runs toward you behind
   you, straight through your junction with no dim moment. S3a-S6 next. Full text: `docs/ledger_notes.md`.
-  - owner: claude agent a70924906f47e96b0 (K1139 stage 2, launched 2026-11-04 about 13:16, 2 h cap), coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
-  - branch: `worktree-agent-a70924906f47e96b0`, worktree `.claude/worktrees/agent-a70924906f47e96b0` (master at acdc2f42 plus the S3b-fix branch cherry-picked, so its copies carry new SHAs; the old worktree `.claude/worktrees/agent-abc94fe39cb25940c` stays as it is); last commit: `c3ec166f`
-  - evidence: .claude/probes/K1139/ on both branches (diag_an.mjs, wedge.mjs, taujump.mjs, imgdiff.mjs, run_locked.ps1, batch_fix_*.txt); out/doc/s3b_fix1_*.png; the stage's dumps under .claude/probes/K1139/out/s2/ in the new worktree (untracked); diagnosis and residuals in `docs/ledger_notes.md`
-  - next: the agent runs Stage 2: a pivot param per band, no winner across bands, a continuous shared/drawing yield, a ramped crotch fill; T stands at 5.54/255 at cross (Claude's look at S3b's 2x crops of t4 and t5). Then Claude looks at its sheets and merges it or briefs the next stage; the __k1139diag hook goes before any merge
-  - brief: Stage 2 at the end of `docs/design/K1139_s3b_fix.md` (c3ec166f on the old branch; on the agent's branch after its cherry-pick)
-  - env: the brief's section 7 (the node_modules junction), then Resume step 2 (ports 5620-5639)
+  - owner: claude agent a8280f4d14ebd8ad1 (K1139 stage 3, launched 2026-11-04 about 15:01, 2 h cap), coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
+  - branch: `worktree-agent-a8280f4d14ebd8ad1`, worktree `.claude/worktrees/agent-a8280f4d14ebd8ad1` (master at c4a9dd60 plus Stage 2's branch `worktree-agent-a70924906f47e96b0` cherry-picked, so its copies carry new SHAs; Stage 2's worktree stays as it is); last commit: `f97d5aa3`
+  - evidence: .claude/probes/K1139/ (tracked: diag_s3b.mjs, diag_an.mjs, tauan.mjs, wedge.mjs, nbhd.mjs, run_locked.ps1, batch_st2_*.txt); Stage 2's dumps under out/s2/ in its worktree, Stage 3's under out/s3/ in the new one (untracked); Stage 2's numbers in its handoff in the brief
+  - next: the agent runs Stage 3: same-band seams counted above T times the band's exact compression (no line-arc-line turn), ji 28's crotch ramp-out at 2.5 and 3.0, section 5 in full, section 6's sheets with 2x crops of the worst ramps. Then Claude looks at the sheets, rules on the turn, and merges or briefs the next stage; the __k1139diag hook goes before any merge
+  - brief: Stage 3 at the end of `docs/design/K1139_s3b_fix.md` (f97d5aa3 on Stage 2's branch; on the agent's branch after its cherry-pick), after Stage 2 and its handoff
+  - env: the brief's section 7 (the node_modules junction); the server `npx vite --config .claude/probes/K1139/vite.private-cache.config.ts --port 5620 --strictPort --host 127.0.0.1` (ports 5620-5639); dumps through `run_locked.ps1` (Stage 2's handoff, env)
 - **K1184** · Muse batch 17 (`docs/design/K1184_muse_batch17.md`, drafted by run A): runs B-G, plus runs H
   and I (K1179 S1d and S1e), added at Claude's review and run first.
   - owner: nobody since 2026-11-04 14:58 (runs B-G queued as Muse chain runs 17B-17G, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
