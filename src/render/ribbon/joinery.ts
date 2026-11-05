@@ -103,6 +103,15 @@ import type { RibbonRenderer, RouteJArm } from "../ribbon_renderer";
 // them leaves any far-reaching patch floating in the background. The
 // user's cuspRadius slider multiplies the reach (0 disables the fillets;
 // the center/tip seal discs stay regardless).
+// K1139 S3b-fix DIAG (temporary): what cpuJunctionField's pulse section saw.
+interface K1139Diag {
+  base: number[] | null;
+  gold: number[] | null;
+  bands: number[][] | null;
+  win: number;
+  drawn: number[] | null;
+  out: number[] | null;
+}
 export const FILLET_REACH_PER_HALF = 1.25; // * fillHalf, along each arm.
 const FILLET_MAX_WEDGE = 2.6; // Radians.
 const FILLET_CORNER_LIM = 2.2; // * edge half-width: skip distant corners.
@@ -555,6 +564,16 @@ export class Joinery {
         out[3] = lo ? p3 + (o3 - p3) * fz : o3 + (p3 - o3) * fz;
       }
     }
+    // K1139 S3b-fix DIAG (temporary): the pulse section's inputs per pixel.
+    const DG = (globalThis as unknown as { __k1139diag?: K1139Diag }).__k1139diag;
+    if (DG) {
+      DG.base = Array.from(out);
+      DG.gold = null;
+      DG.bands = [];
+      DG.win = -1;
+      DG.drawn = null;
+      DG.out = null;
+    }
     if ((!routed && !banded) || dbg === 3 || dbg === 4) return;
     // K81 ROUTE BANDS, oldest first (FIELD_GLSL junctionField): the nearest
     // point of each band's centerline polyline and its tau; a one-pixel
@@ -610,6 +629,7 @@ export class Joinery {
     // a shared one); a shared band's gold block above already drew it.
     const U = knotUniformValues();
     const KB = PAINT_CONST.K_BAND;
+    if (DG) DG.gold = Array.from(out);
     let pb = base + 1;
     const npp = Math.min(np, MAX_ROUTES);
     let bDist = 1e20;
@@ -618,6 +638,7 @@ export class Joinery {
     let bCov = 0;
     let bR0 = -1;
     let bR1 = -1;
+    let bIdx = -1;
     for (let r = 0; r < npp; r++) {
       const r0 = at(pb);
       const r1 = at(pb + 1);
@@ -645,6 +666,26 @@ export class Joinery {
         q0 = q1;
       }
       const cov = Math.max(0, Math.min(1, (reach - Math.sqrt(best)) / pxW));
+      if (DG && DG.bands) {
+        const fl = J[r1 + 1];
+        const vv = kPulseBandV(U, J[r1], tau, fl % 2 === 1, fl >= 2);
+        const qq = kPulseCrest(U, J[r1] + tau, fl % 2 === 1, fl >= 2, 1, 0);
+        const ffa = KB * qq;
+        const ff = ffa >= 0.999 ? 0 : Math.max(0, Math.min(1, (KB * vv - ffa) / (1 - ffa)));
+        const ta = new Float32Array(4);
+        const tb = new Float32Array(4);
+        const mm = J[r0 + 1];
+        let ss = Math.max(0, Math.min(1, (tau + mm) / (2 * mm)));
+        ss = ss * ss * (3 - 2 * ss);
+        armPaint(rec + 2 + Math.round(J[r0 + 2]) * stride, -tau + shift, true, true, ta);
+        armPaint(rec + 2 + Math.round(J[r0 + 3]) * stride, tau + shift, true, true, tb);
+        const pq = [0, 1, 2].map((c) => ta[c] + (tb[c] - ta[c]) * ss);
+        armPaint(rec + 2 + Math.round(J[r0 + 2]) * stride, -tau + shift, true, false, ta);
+        armPaint(rec + 2 + Math.round(J[r0 + 3]) * stride, tau + shift, true, false, tb);
+        const pc = [0, 1, 2].map((c) => ta[c] + (tb[c] - ta[c]) * ss);
+        DG.bands.push([r, Math.sqrt(best), tau, shift, cov, J[r1 + 2], J[r1], fl, J[r0 + 2], J[r0 + 3], mm,
+          vv, qq, ff, ...pq, ...pc]);
+      }
       if (cov > 0) {
         const dnow = Math.sqrt(best);
         const take =
@@ -658,10 +699,12 @@ export class Joinery {
           bCov = cov;
           bR0 = r0;
           bR1 = r1;
+          bIdx = r;
         }
       }
       pb += 2 + nv;
     }
+    if (DG) DG.win = bIdx;
     if (bR0 >= 0 && J[bR1 + 2] < 0.5) {
       const r0 = bR0;
       const r1 = bR1;
@@ -682,13 +725,16 @@ export class Joinery {
       const fa = KB * qv;
       const f = fa >= 0.999 ? 0 : Math.max(0, Math.min(1, (KB * v - fa) / (1 - fa)));
       const tgt = U.uKHlPulse;
+      const pq = DG ? Array.from(mA) : null;
       if (exA) {
         for (let c = 0; c < 3; c++) mA[c] += ((tgt ? tgt[c] : 1) * mA[3] - mA[c]) * f;
       } else {
         for (let c = 0; c < nc; c++) mA[c] += ((tgt ? tgt[c] : 1) - mA[c]) * f;
       }
+      if (DG && pq) DG.drawn = [v, qv, fa, f, ...pq.slice(0, 3), mA[0], mA[1], mA[2]];
       for (let c = 0; c < nc; c++) out[c] = out[c] + (mA[c] - out[c]) * cov;
     }
+    if (DG) DG.out = Array.from(out);
   }
   // Section RGB at a world ARC along a chain into out[0..2] - the ribbon's
   // own color there (its vertex shader's section at the two bracketing

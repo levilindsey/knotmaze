@@ -186,3 +186,31 @@ points, e79); the rule chosen and why; the tables for S3b against the
 fix (seams, wedges, P8 per band, P1-P5, P10, the A/B); the sheet paths;
 the commits; and at the end a `Ledger items` list and K1139's handle
 fields (owner, branch, last commit, evidence, next, brief).
+
+## Handoff (WIP, 2026-11-04 11:20)
+
+State: diagnosis in progress (4.1); no shader change yet.
+
+- Harness: `.claude/probes/K1139/diag_s3b.mjs <stand> <outDir> [frames]`
+  dumps, per banded record and phase, the CPU twin over every device
+  pixel of the record's box (per band: dist, tau, v, cov, f, the quiet
+  and composed A->B blends; then base, gold, out, the winner) and the
+  GPU frames of a 640x420 CSS clip (normal, webs off, dbg 5, dbg 5 webs
+  off). It needs the temporary `__k1139diag` hook in
+  `src/render/ribbon/joinery.ts` (cpuJunctionField), to be removed with
+  the fix. `diag_an.mjs <dumpDir> [outDir]` reads the dumps offline:
+  band switches, fan pixels no band covers, and the brief's GPU seams
+  count. Batches: `batch_fix_diag.txt`, `batch_fix_diag2.txt` (paths
+  are relative to the probe dir for run_locked.ps1).
+- Banded records (meta.json): fork has none (its head gets no band).
+  Fork siblings, both drawing: cross ji 33 (mnode_48, e150 -> e21 /
+  e151), x4 ji 28 (mnode_27, e135 -> e18 / e136), x4 ji 147 (node_378,
+  e176 -> e135 / e175; e134 the cycle arm has no band), four ji 28.
+  Shared against drawing: x4 ji 125 (node_714), x4 ji 149 (mnode_171),
+  src ji 155 (node_116). x4 ji 108 (node_386) has one band, e177 ->
+  e178; e79 is lit with no band. No record mixes inward and outward
+  bands.
+- The cross wedge (s3b_seams_cross.png, frames 3-4) sits 0.3-0.6 world
+  left of mnode_48, between the two branch arms (e21 up-left, e151
+  down-left), past the split: hypothesis, outside both bands, so the
+  quiet base shows beside whitened arms. Being tested with diag_an.
