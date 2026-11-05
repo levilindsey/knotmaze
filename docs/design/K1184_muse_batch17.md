@@ -58,15 +58,19 @@ first.
 No two runs touch one file ("How to work", rule 3). Read the
 whole brief before your first command.
 
-Claude added Run H (K1179 S1d, below, before Run B) on 2026-11-04,
-after reading Run L's S1c record. It runs first and alone, as chain
-run 17H, while Claude reviews runs B to G against the code; those
-are queued only after that review, which records its amendments
-here.
-
-Run I (K1179 S1e, after Run H) was added the same day, after Claude
-read Run H's record (7cefb993). It runs second and alone, as chain
-run 17I, before runs B to G.
+Claude added two runs on 2026-11-04 and ran them first and alone,
+before runs B to G: Run H (K1179 S1d) after reading Run L's S1c
+record, as chain run 17H, and Run I (K1179 S1e) after reading Run
+H's (7cefb993), as chain run 17I. Claude then reviewed runs B to G
+against the code and amended them in place: Run F restarts through
+the panel's Reset path (the win banner has no restart button) and
+clears the confetti as restartSolve's first statement; Run G's
+dog-ear stays behind `:root[data-dogear]`, which only its probe
+sets, until Claude judges the sheet; Run C's audit names all seven
+sites; Run D's test graph has a fire-safe arm; Run E fixes the
+snare cut only and states its write set; Run B's quote and bounds
+are exact; and each new guard is shown to fail first. Runs B to G
+run in that order, as chain runs 17B to 17G.
 
 ## How to work
 
@@ -400,8 +404,8 @@ starts no server; the range is unused).
 
 > **K1183** · No `.claude/rules/` file covers `src/render/field/`
 > (form B and the field scene's lore lives only in design docs):
-> write `render-field.md` with narrow paths and add the
-> lore-index row.
+> write `render-field.md` with narrow `paths:` and add its
+> `docs/lore_index.md` row (K1179 review).
 
 Nothing in `docs/lore_index.md` covers the field today: the
 render area pairs `src/render/**` with `render.md` and its topic
@@ -411,7 +415,10 @@ grammar lives only in design docs, handoffs and code headers:
 the scene format is version 1 and a required-field change bumps
 `SCENE_VERSION` (scene.ts's header); form B is a pure function
 of the frame, evaluated in float64 on the CPU, and nothing in
-the app imports it (form_b.ts's header); the oracle owns its
+the app imports it (form_b.ts's header; only the folder's own
+`label_b.ts` and `label_b_verdict.ts` do), while the rest of
+the folder is imported (`oracle`, `geom` and `scene_export*`
+by `src/render/label/` and `probe_hooks.ts`); the oracle owns its
 exposed outline with exact distances and shares no code with
 the app's renderer (oracle.ts's header); the checks are pure
 TS over that geometry (checks.ts's header); the label pass
@@ -431,19 +438,28 @@ them leaves open.
 and no CLAUDE.md, is edited.
 
 1. **Before census.** A plain `node` census in a new
-   `.claude/probes/K1183/census.mjs` (`git add -f`): walk
-   `src/render/field/` and `test/render/field/`, and report
+   `.claude/probes/K1183/census.mjs` (`git add -f`), copying
+   the matcher from batch 16's `.claude/probes/K999/census.mjs`
+   (it exists; its header states the glob rule; it reads one
+   rules file's `paths:`, this one reads every
+   `.claude/rules/*.md`) - do not write a new glob reader.
+   Walk `src/render/field/` and `test/render/field/`, and report
    which rules files attach to each file (today: `render.md`
    only, via `src/render/**`) plus the count of files the field
    topic file attaches to (today 0). Run it on the unmodified
    tree; its whole output goes in the report.
 2. **Write the file.** Create `.claude/rules/render-field.md`
    with narrow paths `src/render/field/**` and
-   `test/render/field/**`, distilling only binding rules for
-   the built code, each with its design-doc or code source:
-   the scene format and its version rule, form B as a pure
-   float64 function of the frame that nothing in the app
-   imports, the oracle's exposed outline and checks, the
+   `test/render/field/**`, under 150 lines (it attaches on
+   every read of 17 sources and their tests), distilling
+   only binding rules for the built code, each with its
+   design-doc or code source: the scene format and its
+   version rule, form B as a pure float64 function of the
+   frame that nothing outside the folder imports (form B
+   only: `oracle`, `geom` and `scene_export*` are imported
+   by `src/render/label/` and `probe_hooks.ts`; do not write
+   that the folder is unimported), the oracle's exposed
+   outline and checks, the
    label pass's modes and targets, and where the field's
    scenes and gates come from. If a claim has no source in
    the docs or headers, leave it out and name it in the
@@ -467,7 +483,7 @@ and no CLAUDE.md, is edited.
 - `render-field.md` exists, its paths attach only over
   `src/render/field/**` and `test/render/field/**`, and the
   report traces every claim in it to a design doc or code
-  header.
+  header. The file is under 150 lines.
 - The after census shows the field files covered by the new
   file (before 0), it attaches nothing outside its two
   paths, and `node scripts/lore_index_check.mjs` exits 0.
@@ -489,8 +505,8 @@ only; unused otherwise).
 
 ### Read first
 
-- `docs/design/K137_s3a.md`'s Residuals (the item's source,
-  piece 4 on its list) and batch 14's Run D in
+- `docs/design/K137_s3a.md`'s Residuals (the item's source;
+  residual (b), line 517, is this piece) and batch 14's Run D in
   `docs/design/K1161_muse_batch14.md` (the same item's piece
   (c), the pattern for the optional-predicate fix and its
   source-scan pin).
@@ -531,6 +547,12 @@ miss and the accepted-run counts stay with the item.
 
 ### Tasks
 
+**Write set:** `src/game/fire.ts`,
+`src/render/fabric_maze_renderer.ts` (the `drawFire`
+burnt-spans loop only: Task 3 leaves `update()`, lines
+4171-4230, the K1139 pulse block, alone) and
+`test/game/fire.test.ts`. Nothing else.
+
 1. **Before table (pure, unmodified source).** In
    `test/game/fire.test.ts`'s fixture style (`RUNS`: S-A 2,
    A-B 1, a second A-B 1, B-C 4, A-X 4; fire rate 0.5, hold
@@ -545,18 +567,25 @@ miss and the accepted-run counts stay with the item.
    Signature order and naming follow `fireTrapped`'s; callers
    that pass no predicate get today's answers, exactly.
 3. **Fix (renderer half).** In `drawFire`'s burnt-spans loop
-   (and its smolder loop, which reads the same states), pass
-   the controller's `broken`: `runBurnAt(..., (e) =>
-   controller.broken(e))` in the file's own style. Audit
-   every other `runBurnAt` call site (`fabric_controller.ts`'s
-   three, `drawFire`'s pulse gate included) and list in the
-   report which now pass the predicate and which already
-   exclude broken runs before asking; leave the excluding
-   sites untouched.
+   (line 2640; the smolder loop at 2685 reads `choices()`,
+   which already drops broken runs: leave it untouched),
+   pass the controller's `broken`: `runBurnAt(..., (r) =>
+   controller.broken(r))` in the file's own style (`e` is the
+   loop's own edge object there, so the arrow's parameter is
+   named `r`). Audit every other `runBurnAt` call site -
+   `fabric_controller.ts` 546, 590 and 1261, and the
+   renderer's `targetAt` 1515, smolder loop 2685 and pulse
+   gate in `update()` 4183 - and list each in the report as
+   passing the predicate or already excluding broken runs
+   before asking; only 2640 passes it, and the excluding
+   sites stay untouched. Say in the report whether a broken
+   run's ribbon is drawn at all; if so, give a before/after
+   crop of its burnt span.
 4. **Pin the wiring.** In `test/game/fire.test.ts`, in the
    panel_rect manner (read the file, assert the call): the
    burnt-spans loop passes the controller's broken predicate
-   to `runBurnAt`.
+   to `runBurnAt`. Rule 9: in a scratch change drop the
+   predicate from that call, show the pin fails, then undo it.
 5. `npm test`.
 
 ### Done and close
@@ -590,8 +619,10 @@ only; unused otherwise).
 ### Read first
 
 - `docs/design/K137_s2.md`'s Handoff, "Residuals" (the item's
-  source; the aids' own words) and its design section 4 (the
-  decided calls: hints point to the exit ignoring the minotaur).
+  source; the aids' own words), its section 3 "Hints and a
+  compass (4.28)" (lines 52-63; the decided call: hints point
+  to the exit ignoring the minotaur) and the Design section's
+  Hints bullet (lines 94-98).
 - `src/game/hints.ts` (read for this draft): its header carries
   that call - the aids ignore the minotaur and the fire.
 - `src/game/fabric_controller.ts`'s `goodArm()` and
@@ -631,20 +662,36 @@ the saved attempts and the shared mint all stay with the item.
 
 ### Tasks
 
+**Write set:** `src/game/fabric_controller.ts` (`goodArm`,
+`shortestRoute` and `goodArm`'s comment), `src/game/hints.ts`
+(its header comment only) and `test/game/hints.test.ts`.
+`test/game/fire.test.ts` is Run C's: read only here. Nothing
+else.
+
 1. **Before table (pure, unmodified source).** A hand graph
    in `test/game/hints.test.ts` (copy `fire.test.ts`'s
    `graph()` helper shape; lengths on the runs): S-H 2,
-   H-A 1, A-X 1, H-B 4, B-X 4, S-A 1, fire rate 0.5, hold 0.
+   H-A 1, A-X 4, H-B 3, B-X 3, S-A 1, fire rate 0.5, hold 0.
    The player taps S-H and stands at H. Record today's
    answers: `goodArm()` names the H-A run, `tapEdge` on it
    answers "smolder", and `shortestRoute()` starts on it.
-   (Check the arithmetic when writing it: the fire reaches A
-   at 2 through S-A, H at 4, B at 12, so H-A is smoldering
-   from H at clock 2, while H-B arrives at 6, well inside 12.)
+   (Check the arithmetic when writing it: the fire reaches
+   A at 2 through S-A, H at 4, and X and B at 10. At H, L=2:
+   H-A arrives at 3, after the fire's 2, so it smolders;
+   H-B arrives at 5 and B-X at 8, both inside 10, so a
+   fire-safe route exists. H-A-X (5) beats H-B-X (6), which
+   is why today's `goodArm()` names H-A.)
 2. **Fix.** In `goodArm()` and `shortestRoute()`, extend the
    shared `live` meaning by the fire: when a fire is on, a
-   run that is smoldering from the current head (the
-   `smoldering(eid)` read, the tap's own test) is not live.
+   run touching the current head that is smoldering (the
+   `smoldering(eid)` read, the tap's own test) is not live,
+   so `live` reads: not broken, not burnt, and not (fire on,
+   run touches the head, `smoldering(eid)`). Apply the read
+   to head runs only: `smoldering(eid)`
+   (`fabric_controller.ts:1305-1309`) tests `armSafe` from
+   the head, and `armFar` (`fire.ts:82-85`) returns the
+   run's `va` for a run that does not touch the head, so on
+   a run away from the head it would mean nothing.
    That is the whole fix: the distances are recomputed
    without such runs, so the route the aids name is one the
    first tap will take. A state with no fire-safe first run
@@ -653,11 +700,18 @@ the saved attempts and the shared mint all stay with the item.
    path (`ruleGoodArm`) is untouched - rules with fire is a
    separate question, left with the item - as are the
    minotaur and spool behaviours (deliberate, by the design).
+   The fix makes two comments false; edit them in the same
+   commit and nothing else in those places: `src/game/hints.ts`
+   lines 3-4 ("They ignore the minotaur and the fire: ...")
+   to say they ignore the minotaur but not the fire, and
+   `goodArm`'s comment (`fabric_controller.ts:532-536`) to
+   add that a run smoldering from the head is skipped too,
+   so "a refused arm can still be the good one" holds for
+   the spool only.
 3. **Tests.** In the same hand graph after the fix:
    `goodArm()` names the H-B run, its tap advances,
    `shortestRoute()` starts on it, and the hint's first drawn
-   span sits on it (`hintRoute()`). A state where every arm
-   from the head is smoldering names -1. No-fire cases in the
+   span sits on it (`hintRoute()`). No-fire cases in the
    file read exactly as today, and fire's optimal-route case
    in its own file still escapes.
 4. `npm test`.
@@ -666,9 +720,10 @@ the saved attempts and the shared mint all stay with the item.
 
 **Done when:**
 
-- With the fire on, the aids never name a run whose tap
-  answers "smolder" while a fire-safe route to the exit
-  exists, and name nothing when none does.
+- With the fire on, the aids never name a head arm whose tap
+  answers "smolder" while another arm from the head is safe;
+  with none safe the game is already lost and they name
+  nothing, as today.
 - No-fire answers in `test/game/hints.test.ts` unchanged;
   the new smolder cases land as above.
 - `npm test` passes.
@@ -707,9 +762,11 @@ only; unused otherwise).
   and the awake branch saves and restores the follower's
   trail cursor (`x.at`) around the step.
 - `test/game/snares.test.ts` (read for this draft: the line
-  graph and `play` helper, the sleeping-minotaur pattern from
-  `test/game/monsters.test.ts`'s follower cases - read only,
-  Run E does not edit it).
+  graph and `play` helper). Run E ADDS one describe at its
+  end and edits nothing existing. `test/game/monsters.test.ts`
+  (its follower cases: the sleeping-minotaur pattern) is
+  read only: copy its local `seedWithDelay` (lines 90-92)
+  and import `followDelay` from `src/game/monsters`.
 
 ### What is there today
 
@@ -737,6 +794,10 @@ all stay with the item.
 
 ### Tasks
 
+**Write set:** `src/game/minotaur_turns.ts` and
+`test/game/snares.test.ts` (one describe added at its end).
+`test/game/monsters.test.ts` is read only. Nothing else.
+
 1. **Before case (pure, unmodified source).** In
    `test/game/snares.test.ts`'s line graph (S-A-B-C-D-X,
    each run 2), with the minotaur asleep (`sleep: 100`),
@@ -748,12 +809,17 @@ all stay with the item.
    at B, the snare still set (unsprung), its phase awake.
 2. **Fix.** In the waiting-to-awake branch of the extras'
    turn loop, run the same machinery the awake branch runs:
-   save the trail cursor, `followStep`, then `cutAtSnare`;
-   on a cut, spring the snare and restore the follower's
-   pre-step state, exactly as the awake branch does. A mud
-   cut on that step is the same shape;
-   take it or leave it read this way - say which, in the
-   report, so the item's new text can say so.
+   before `followStep`, take `before` (`cloneMino(x.state)`
+   when there are snares, else null, as the awake branch
+   does) and `at0 = x.at`; after it, under the same
+   `x.phase === "awake"` guard, `cutAtSnare`; on a cut,
+   spring the snare and restore the follower's pre-step
+   state (`x.at = at0`), exactly as the awake branch does
+   (1428-1439). Snare only: leave the mud cut out (in the
+   awake branch only the snare cut restores `x.at`; the mud
+   cut does not). The report lists "a waiting follower's
+   first step skips the mud cut" under Ledger items, so the
+   item's new text can say so.
 3. **Tests.** After the fix: the follower is held at A, the
    snare reads holding with it as holder, it stands at A
    through the hold turns, and it walks on along the trail
@@ -808,6 +874,10 @@ After the run, update K1184's handle:
 - `.claude/probes/K657/banner.mjs` (the standing way to finish
   seed 7 with `__knotTurnMove` and read `#maze-banner`; rule
   11: the new probe's stand copies its source).
+- `.claude/probes/K336/banners/lib.mjs`, lines 95-113 (how a
+  probe presses the panel's Reset path button, the restart
+  after a win; path 8 presses it while the winning move is
+  in flight).
 
 ### What is there today
 
@@ -818,8 +888,9 @@ After the run, update K1184's handle:
 > below 10 fps.
 
 A win throws the confetti; its rain alone lives 5.5-6.2 s.
-Restarting the solve in that window (the banner's button, a
-catch's carry restart, a clock change) starts a fresh maze
+Restarting the solve in that window (the panel's Reset path
+button - the win banner has no restart button - a catch's
+carry restart, a clock change) starts a fresh maze
 under the old celebration, which keeps falling over a solve
 it does not belong to. The layer can already drop everything
 - a scene rebuild and the amount setting at 0 both call it -
@@ -831,27 +902,58 @@ the rain's fall time stay with the item.
 
 Use ports 5680-5689.
 
+**Exception (`.claude/rules/`):** this run edits
+`.claude/rules/render-confetti.md` lines 83-91 only: the
+sentence saying `restartSolve` (Play again) does not clear
+the pieces, and the path-8 sentence (Reset path pressed
+during the winning move: the pieces fall over the restarted
+maze), rewritten to say `restartSolve` now clears them and
+path 8 shows none (K647, the missing banner, stays open).
+The file's "(Play again)" names no button in the game (a win
+is restarted from the panel's Reset path): drop it from the
+rewritten sentence. Nothing else under `.claude/rules/`, and
+no CLAUDE.md, is edited.
+
+**Write set:** `src/main.ts`, new
+`test/app/restart_confetti.test.ts`, new
+`.claude/probes/K188/restart.mjs`, and the Exception's
+lines. Nothing else.
+
 1. **Before table (headed probe, unmodified tree).** A new
    `.claude/probes/K188/restart.mjs` (`git add -f`), copying
    K657's banner probe's stand under rule 11 (base URL and
    output name change; the private vite cache and Chrome
-   profile die with the run): finish seed 7, wait two frames,
-   record `__knotConfetti()`'s alive counts, click
-   `#maze-banner`'s primary button (the restart), wait two
-   frames, record the counts again. Today: pieces are still
-   alive and falling after the restart.
-2. **Fix.** In `src/main.ts`'s `restartSolve`, drop the
-   pieces with the banners: call the confetti's `clear()` as
-   the restart begins, so both the plain and carry paths
-   start clean. No other caller changes; a later win must
-   throw again.
+   profile die with the run): finish seed 7, wait until
+   `__knotConfetti().stats.bursts` is 1 (the burst follows
+   the winning move's animation, so a fixed two-frame wait
+   can read 0), record `__knotConfetti()`'s alive counts,
+   press the panel's Reset path button (the win banner has
+   no restart button; find it as
+   `.claude/probes/K336/banners/lib.mjs:103-105` does: the
+   `button` whose `textContent.trim()` is "Reset path"),
+   wait two frames, record the counts again. Today: pieces
+   are still alive and falling after the restart.
+2. **Fix.** In `src/main.ts`, add `confetti.clear();` as the
+   first statement of `restartSolve` (the arrow function at
+   line 2367; `confetti` is the layer at line 443), so the
+   plain and carry paths and every caller start clean; the
+   scene rebuild's own call (`scene.ts:329`) stays. No other
+   caller changes; a later win must throw again.
 3. **After table + pin.** The probe again: within two frames
    of the restart every pool reads 0 and `active` reads
    false, and finishing the new solve throws again (bursts
-   goes up). A wiring pin in a new
+   goes up). Also press Reset path while the winning move is
+   in flight (path 8; `lib.mjs:95-113` shows the timing):
+   K186 measured 101-139 pieces still alive 5 s on, now 0.
+   K647 stays open; the report gives its new text (Close
+   lines). A wiring pin in a new
    `test/app/restart_confetti.test.ts`, in the panel_rect
-   manner (read `src/main.ts`, assert `restartSolve` clears
-   the confetti), so the call cannot quietly fall out.
+   manner: read `src/main.ts`, slice `restartSolve`'s body
+   (from `const restartSolve` to its closing `};`) and match
+   `/confetti\.clear\(\)/` inside the slice, so a clear
+   elsewhere in the file cannot satisfy it. Rule 9: delete
+   the call in a scratch change, show the pin fails, then
+   undo it.
 4. `npm test`.
 
 ### Done and close
@@ -861,14 +963,20 @@ Use ports 5680-5689.
 - After a restart, no confetti piece survives a frame; a
   later win throws as today.
 - The before/after probe tables show it (alive after a win,
-  0 after the restart) and `npm test` passes.
+  0 after the restart, and 0 after a Reset path pressed
+  during the winning move) and `npm test` passes.
 
 **Close lines:**
 
 This close rewrites K188's text: the report must give it
 with the piece recorded ("a solve restart drops the pieces
 since <sha8>") and the covered spray and the rain's fall
-time kept, for Claude to apply by hand. Then:
+time kept, for Claude to apply by hand. It also rewrites
+K647's, and the report gives that too: "Path 8 (K336):
+Reset path during the winning move records the result,
+shows no banner and, since <sha8>, no confetti. Rec: show
+the banner, since the result counts.
+`docs/design/K336_cannons.md` Handoff." Then:
 
 After the run, update K1184's handle:
 `node C:\Users\lsl\Repositories\claude-config\tools\ledger.mjs handle K1184 --last-commit <sha8> --next "Run F done; Claude reviews it"`
@@ -929,40 +1037,74 @@ rules stand).
 
 Use ports 5690-5699.
 
+**Write set:** `src/ui/daily_link.ts`, `src/ui/tweakpane_panel.ts`,
+`test/ui/daily_link.test.ts` (tests added only), new
+`.claude/probes/K292/dogear.mjs` and `.claude/probes/K292/sheet/`.
+`test/ui/panel_rows.test.ts` and `.claude/rules/` are read only.
+
 1. **Before table (pure counts).** From the tables alone
    (Node, unmodified tree): the params (`PARAM_DEFAULTS`'
    keys), minus `DAILY_EXEMPT_KEYS`, are the rows to mark;
    list both sets' counts and the exempt keys in the report.
    That list is the expectation the DOM census below must
    match, less the params `panel_rows.test.ts` says have
-   no row (they cannot carry a mark; name them too).
+   no row (they cannot carry a mark; name them too). Its
+   `EXEMPT` and `VIEW_ROWS` are local, unexported consts:
+   copy them into the probe; do not export or edit that
+   test. Seed and Daily are not param rows (hand-built
+   outside `row()`, `tweakpane_panel.ts:1247` and `:1296`;
+   `seed` is not in `PARAM_DEFAULTS`, `url_state.ts:1057`):
+   they stay unmarked; name them in the report for Claude's
+   call.
 2. **The mark (pure).** A helper in `src/ui/daily_link.ts`,
    beside the exempt set it reads (a name in that file's
    style, e.g. `isDesignParam`): a key that is a param and
    not exempt. Tests in `test/ui/daily_link.test.ts`: a
    design key marks, an exempt key does not, a non-param
    key does not (one of each, named), and the marked set
-   over all param keys equals task 1's table.
-3. **The mark (panel).** In `tweakpane_panel.ts`, rows for a
-   design key gain a class from that helper next to where
-   `kp-row` is added, and the styling block gains a subtle
-   top-right triangle on that class (CSS only, theme-neutral
-   - no new colour). Add the key line at the panel's top,
-   beside the version line: words to the effect of "the
-   corner mark: this setting is in the link". Touch no row's
-   label, value, place or fold.
+   over all param keys equals task 1's table. Add tests only:
+   the file holds the golden dailies, and no pinned value
+   moves.
+3. **The mark (panel).** In `tweakpane_panel.ts`'s `row()`
+   (line 924), next to where `kp-row` is added (line 940), a
+   row gains the class `kp-design` and a `data-kp-key`
+   attribute holding its param key, when that helper passes
+   the key and the row is a design row: `obj === p` (`const
+   p`, line 1022), or one of `panel_rows.test.ts`'s
+   `VIEW_ROWS` (its `viewKey` mapped to its param `key`).
+   The styling block gains a subtle top-right triangle on
+   that class (CSS only, theme-neutral - no new colour).
+   Check which pseudo-elements the help marks and search
+   hints already use (`gameplay-panel.md` lines 516-522 and
+   693-697) and draw the triangle with one that is free on
+   that element. Add the key line at the panel's top, beside
+   the version line: words to the effect of "the corner
+   mark: this setting is in the link". Touch no row's label,
+   value, place or fold. Gate the triangle's CSS and the key
+   line on `:root[data-dogear]`, an attribute only the probe
+   sets (task 4 sets it before shooting): without it the
+   panel is pixel-identical to today. No new param (the
+   codec and link pins must not move). Claude flips the
+   default after judging the sheet.
 4. **After census + sheet (desktop probe).** A new
-   `.claude/probes/K292/dogear.mjs` (`git add -f`): open the
-   panel at desktop width, count `.kp-design` rows in the
-   DOM against task 1's set (open the folders - a hidden row
+   `.claude/probes/K292/dogear.mjs` (`git add -f`): set
+   `document.documentElement.dataset.dogear = ""` first (the
+   gate), open the panel at desktop width, and compare KEY
+   SETS, not counts: the `data-kp-key` values of the
+   `.kp-design` rows in the DOM against task 1's set,
+   listing both differences (open the folders - a hidden row
    is still in the DOM; if a row is not built until its
-   folder opens, say so and open them), and shoot the panel:
-   the top with its key, one folder where marked and
-   unmarked rows sit side by side, full height and a crop,
-   at desktop and phone widths (for scaling only; no phone
-   is used). Save under `.claude/probes/K292/sheet/`. Stop
-   at the sheet - the report carries the census and the
-   sheet, and Claude judges.
+   folder opens, say so and open them). Rule 9 for that
+   census: in a scratch change drop one key from the
+   marking, show the census names it, then undo it. Then
+   shoot the panel: the top with its key, one folder where
+   marked and unmarked rows sit side by side, one row with a
+   help mark (the mark and the triangle must not collide),
+   full height and a crop, at desktop and phone widths (for
+   scaling only; no phone is used). Save under
+   `.claude/probes/K292/sheet/`. Stop at the sheet - the
+   report carries the census and the sheet, and Claude
+   judges.
 5. `npm test`. The probe and the sheet ride with the work
    commit (the probe folder via `git add -f`).
 
@@ -976,6 +1118,9 @@ Use ports 5690-5699.
   the counted table.
 - The sheet exists under `.claude/probes/K292/sheet/` with
   a full panel and a crop.
+- Without the `data-dogear` attribute the panel looks as it
+  does today: the triangle and the key line are gated, and
+  no param was added.
 - `npm test` passes.
 
 **Close lines:**
@@ -1009,12 +1154,12 @@ candidate; it waits on Levi and Claude's brief):**
 **Step (2), residuals numbered above K1178 (K1179 is In
 progress, not a candidate here; K1183 is Run B):**
 
-- K1181 (`laptop-windows` in this checkout is an unregistered
-  worktree) - skipped by Run A itself (the laptop's own
-  checkout), not read further.
-- K1182 (S1c's fill can rim one chain's samples with another's
-  depth) - skipped by Run A with the K1179 geometry review;
-  its file, `src/render/ribbon/rim_curve.ts`, is in the
+- K1181 (the laptop's checkout still has the pre-rewrite
+  history, K1164) - skipped by Run A itself (the laptop's
+  own checkout), not read further.
+- K1182 (the fill rim meets the flank tips with a tangent
+  break, G0 only) - skipped by Run A with the K1179 geometry
+  review; its file, `src/render/ribbon/rim_curve.ts`, is in the
   `src/render/ribbon/` lane no run may touch this batch
   besides.
 

@@ -517,10 +517,10 @@ Next free ID: K1186.
   - env: the brief's section 7 (the node_modules junction), then Resume step 2 (ports 5620-5639)
 - **K1184** · Muse batch 17 (`docs/design/K1184_muse_batch17.md`, drafted by run A): runs B-G, plus runs H
   and I (K1179 S1d and S1e), added at Claude's review and run first.
-  - owner: nobody since 2026-11-04 14:16 (run I queued as Muse chain run 17I, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
+  - owner: nobody since 2026-11-04 14:58 (runs B-G queued as Muse chain runs 17B-17G, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
   - branch: mainline; last commit: `b6174b00`
   - evidence: `docs/design/K1184_muse_batch17.md`; the chain in `.claude/probes/K1053/` (queue.txt, chain.log)
-  - next: Run I done; Claude applies the review of runs B-G and queues them
+  - next: chain runs 17B-17G in order (Run G stops at its look sheet); Claude reviews each run as it lands, applies the item texts its report gives and looks at Run G's sheet
   - brief: `docs/design/K1184_muse_batch17.md`
 
 ## Next, in order
