@@ -767,9 +767,9 @@ Every other item below waits on the trigger it names.
 - **K1180** · Form B: let a round's feet run past an arm's root onto the neighbouring arm, so no null band is
   left there (row 15's class: j124, r 1.967h, 0.274h after K1163's softer gate, ab7cad9a). K1179's spike ended
   with no rebuild, so this goes ahead on form B (review section 4).
-- **K1186** · Fill look: hold junction pieces' per-frame choices (fillet layer vote, armReach clamp) while the
-  knot moves, fading them on change, same picture at rest (K1179 review 5c). Counted (19B, f657ac15): drags flip
-  about 1/s, drawn ink median 0, worst 4314 px. Next, Muse crops the worst flips and Claude judges whether they pop, before any fix. Notes: `docs/ledger_notes.md`.
+- **K1186** · Fill look: hold the fillet layer vote while the knot moves, fading on change (K1179 review 5c).
+  20D's crops (`.claude/probes/K1186/out20d/`) carry 140 ms of drag each; armReach binds, it can't jump.
+  Next: same-state A/B of each vote flip's own ink (probe-only override); Claude judges. Notes: ledger_notes.
 - **K1196** · K1139 S4's frame bench timed only the start head's one-ended pulses at rest
   (`out/s4cyc/bench_rest.json` on S4's branch, 7.15 vs 7.10 ms): time two-ended pulses on loops and cycles with
   a harness that plays moves onto them (numeric, a Muse candidate)
