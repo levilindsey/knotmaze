@@ -2365,6 +2365,7 @@ async function main(): Promise<void> {
   // the next move). THE level restart: a caller follows it with
   // updateHud(). `carry` keeps the minotaur's tallies (restartChase).
   const restartSolve = (carry = false): void => {
+    confetti.clear();
     // K114: the fuse relit under the params on screen (a clock change may
     // have turned the fire on or off, or moved its speed or delay).
     if (scene.fabricController) scene.fabricController.fire = fireOf(scene.fabricController.walk);

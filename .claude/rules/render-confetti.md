@@ -81,14 +81,13 @@ only with the files it is about; `render.md` lists the area's other files.
   that restores a solved attempt (pendingWin), and Reset path pressed
   while the winning move is in flight. A rebuild clears the pieces, and
   so does turning `cf` off or reduced motion on (K186); restartSolve
-  (Play again) does not, so pieces in the air finish their fall. K186
+  clears them too, so a restart drops pieces in the air. K186
   (2026-10-20) walked every path in the page
   (`.claude/probes/K336/banners/`, results.md): each banner throws one
   burst; a plain reload after an official finish shows no banner and
   throws nothing, by design; Reset path pressed during the winning move
   throws and records the result, but the restarted maze shows no banner
-  and the pieces fall over it (101-139 still alive 5 s on: a call for
-  Levi).
+  and no confetti (K647, the missing banner, stays open).
 - INPUT. All four containers sit above the world root (the rain topmost;
   K336's streamers and cannons just below it) with eventMode none; the banner and HUD are DOM over the canvas. The
   page probe checks a banner hit-test over the confetti and a ctrl+wheel
