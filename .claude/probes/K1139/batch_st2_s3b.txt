@@ -1,0 +1,3 @@
+# K1139 Stage 2: S3b re-dump on this worktree's base (master + the S3b-fix branch)
+node diag_s3b.mjs cross out\s2\s3b\cross 8
+node diag_s3b.mjs x4 out\s2\s3b\x4 8

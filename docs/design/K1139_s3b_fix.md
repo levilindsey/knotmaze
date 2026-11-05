@@ -558,3 +558,165 @@ Section 7's, and: your worktree is your own; never write into the main
 checkout (Muse runs there) or this branch's old worktree
 (`.claude/worktrees/agent-abc94fe39cb25940c`); never push; no
 subagents; no edits to `LEDGER.md` or `docs/ledger_notes.md`.
+
+### Stage 2 handoff
+
+Stopped 2026-11-04 at about 14:50, before the 15:15 cap, after (a) to
+(d) and the hook removal. Section 5 and section 6 did not fit. Agent
+a70924906f47e96b0 worked on branch `worktree-agent-a70924906f47e96b0`
+(`.claude/worktrees/agent-a70924906f47e96b0`).
+
+The commits:
+- 38784fca: (a), the pivot param;
+- 9d8edfe4: (a) measured;
+- 8ec4c30d: (b) and (c);
+- c4f5b9d2: (d), the crotch fill. This is the last commit with the
+  `__k1139diag` hook.
+- b40392d7: the hook removal. This handoff follows it.
+
+**The rule as built.** The GLSL is junction_field.ts's band loop. Its
+CPU twin is cpuJunctionField in joinery.ts.
+- **(a)** Tau is read from a pivot P (`pulsePivot`). P is the meet of
+  the normals at the band's two L-ends (the ends of its straight legs at
+  the corner). It sits in a 4-texel band header: R2 is P as (X, Y, w),
+  R3 is the side line (a, b, c). A straight-through band takes the
+  parallel limit, w near 0.
+- **(b)** No winner. kFanPulseV is the max over bands of crest x cover.
+  Each drawing band mixes its own material in by its weight, in block
+  order. The whitening, the max over drawing bands of f x weight, is
+  applied once, to the composite.
+- **(c)** A drawing band's weight is its cover x (1 - smoothstep(0,
+  3 px, d_draw - d_shared)). It is 1 on a tie and 0 once a shared band's
+  gold is 3 px nearer.
+- **(d)** The crotch fill. For two drawing bands that share an arm, the
+  fill is wW = max(wW, smoothstep(0, reach^2, -sd_r sd_s fl) x (1 -
+  smoothstep(0.52, 1.56, d_r + d_s - 2 reach)) x min(f_r y_r, f_s y_s)),
+  where:
+  - sd is a band's distance, signed by the cross product at its
+    nearest-foot segment;
+  - fl is +1 or -1 by the shared arm's direction;
+  - each f is the band's whitening at its own tau, without the cover;
+  - y is (c)'s yield.
+
+**Measured.** All dumps ran under the perf lock, 8 phases each. Seams
+are diag_an.mjs's GPU count (dbg 5's G against T, 5.54/255 at cross).
+Wedges are wedge.mjs's dim-valley pixels between lit siblings, as GPU /
+twin.
+
+| | S3b | (a) | (b)+(c) | (d) |
+|---|---|---|---|---|
+| cross ji 33, seams | 908 | 3626 | 1954 | 1954 |
+| x4 ji 28, seams | 1929 | 4047 | 3405 | 3405 |
+| x4 ji 108, seams | 0 | 0 | 0 | 0 |
+| x4 ji 125, seams | 439 | 1631 | 445 | 445 |
+| x4 ji 147, seams | 489 | 3120 | 935 | 935 |
+| x4 ji 149, seams | 4802 | 6117 | 3990 | 3990 |
+| cross, wedges | 3370 / 9922 | | 3505 / 9829 | 2363 / 8670 |
+| ji 28, wedges | 16130 / 6049 | | 15505 / 6714 | 15301 / 6451 |
+| ji 147, wedges | 3078 / 3369 | | 3579 / 4846 | 2591 / 3814 |
+
+The seams by class, at (b) and again at (d):
+
+| | same-band | fork siblings | shared/drawing |
+|---|---|---|---|
+| cross | 1833 | 121 | |
+| ji 28 | 3309 | 96 | |
+| ji 125 | 445 | | |
+| ji 147 | 930 | 5 | |
+| ji 149 | 3787 | | 203 |
+
+**What passed.**
+- (b) took cross's fork-sibling seams from 1282 at (a) to 121. Band
+  switches per record fell from 9.1k-9.9k to 1.8k-2.9k.
+- (c) took the shared/drawing seams to 0 at ji 125 (from 165) and to
+  203 at ji 149 (from 631).
+- Tau is continuous across every same-band seam pair: tauan.mjs finds
+  no jump (ratio at most 1.05).
+- (d) cut the GPU wedges by 33% at cross and 28% at ji 147. The seams
+  stayed unchanged, as they should: (d) does not touch kFanPulseV.
+- `npm test` passes after the hook removal, typecheck included: 213
+  test files (2 skipped) and 2839 tests (9 skipped).
+- k320: JUNCTION_FRAG went 37,050 (S3b) -> 39,137 (a) -> 39,238 (b, c)
+  -> 40,097 (d); the budget is now 40_150. junction-field and its
+  explore variant compile cold once.
+
+**What failed.**
+- **Seams are still above S3b** at cross (1954 against 908), ji 28 and
+  ji 147. Nearly all are same-band compression ramps. The pivot
+  compresses tau toward P, and max |grad tau| reaches 2.61 (cross),
+  2.34 (ji 28), 2.65 (ji 147) and 2.39 (ji 149) against the 1.56 that T
+  allows. There, T cannot be met by construction. S2.2's fallback for a
+  sharp band, a line-arc-line turn of radius at least 1.5 reach, was not
+  built.
+  - This is a design question for Levi or the coordinator: build the
+    turn, or let T scale with the local compression inside a sharp band.
+  - ji 125's 445 are such ramps: compression 1.56-1.78 and GPU steps of
+    6-7 against T 5.54.
+- **ji 28's wedges barely moved** (15505 -> 15301). At its wedge pixels
+  the crotch gap d1 + d2 - 2 reach runs mostly 1.2-2, and 3089 px lie
+  past 2, beyond (d)'s ramp-out at 1.56. By comparison, cross's runs
+  0-1.0 and ji 147's 0.1-0.4 and 0.7-1.5.
+  - The untested knobs: a wider ramp-out, or the gap in px.
+  - Its GPU wedges are still 2.4x the twin's. This is S2.4's residual,
+    not attributed.
+- **The cross t5 ghost** at (122, 121) is a 138/255 step at band 1's AA
+  edge. The max moved the discontinuity onto a sibling's edge. The
+  GPU's edge sits about 1 px ahead of the twin's (inferred: a half-pixel
+  offset).
+
+**Deviations from S2.2.**
+1. P is the meet of the L-ends' normals, not of ends taken as far as the
+   band runs.
+2. `arcTrueTau` spreads a steep run's tau over the turn's arc.
+3. The CPU checks P at least 1.25 fh from the polyline and the angle
+   from P monotone over kA..kB only, not the whole polyline. It adds two
+   checks of its own: the sweep under 175 degrees, and the outer bisector
+   1.25 fh clear of the polyline. A band that fails any of them gets mode
+   0, the nearest foot (`pulsePivot`'s header in junction_routes.ts).
+4. There is no line-arc-line turn.
+5. A (c) tie keeps drawing, as S3b's tie rule did.
+6. The whitening goes onto the composite once.
+7. (d) takes its sign from the nearest-foot cross product and pairs
+   only bands that share an arm. kFanPulseV is unchanged. The edges
+   0.52 / 1.56 are tentative.
+8. At fa >= 0.999 the cut is gone. f = (K cr - fa) / max(1 - fa, 1e-3)
+   is continuous there: a kink, not a step. It was not measured on these
+   stands.
+
+**Risks, not measured.**
+- (d)'s sign flips on the extension line beyond a band's end, where the
+  nearest foot changes leg.
+- At a 4-arm junction, an unlit third arm inside the crotch is whitened.
+- ji 28's wide crotch is only partly filled.
+
+**Not run, for time.**
+- P8, and its worst points: cross e21 19, x4 e175 15, x4 e135 59.
+- P1-P5 and P10.
+- The A/B against master (0 px outside banded records).
+- Section 6's sheets.
+
+S2.4's e79 (node_386) and e134 (node_378) are unchanged (S4's).
+
+**The dumps** are in `.claude/probes/K1139/out/s2/{s3b,a1,b,d}/{cross,x4}`
+(untracked). Each holds meta.json, `t<k>_{n,w,d,dw}.png` and
+`r<ji>_t<k>.{u8,f32}`. Their batches are `batch_st2_{s3b,a1,b,d}.txt`.
+
+**To resume.**
+1. For new dumps, work on c4f5b9d2's joinery.ts, which has the hook
+   that `diag_s3b.mjs` reads (`git show c4f5b9d2:src/render/ribbon/joinery.ts`).
+2. Set up env: section 7's node_modules junction, then from the
+   worktree `npx vite --config
+   .claude/probes/K1139/vite.private-cache.config.ts --port 5620
+   --strictPort --host 127.0.0.1`.
+3. To dump: `pwsh -File .claude/probes/K1139/run_locked.ps1 -Batch
+   <batch> -What "<what>"`. Its lines are `node diag_s3b.mjs <stand>
+   <outDir> 8`.
+4. Offline, from that folder:
+   - `node diag_an.mjs <dir> [outDir|-] [phases] [ji,...]`;
+   - `node tauan.mjs <dir> [phases] [ji]`;
+   - `node wedge.mjs <dir> [phases] [ji,...]`;
+   - `node nbhd.mjs <dir> <ji> <k> <X> <Y> [r]`.
+5. Next steps:
+   - the compression decision;
+   - ji 28's crotch;
+   - then section 5 (P8, P1-P5, P10, the A/B) and section 6's sheets.
