@@ -538,7 +538,7 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
       vec4 q = jAt(sPb[s]);
       float fl = abs(r0.z - q.z) < 0.5 || abs(r0.w - q.w) < 0.5 ? 1.0 : abs(r0.z - q.w) < 0.5 || abs(r0.w - q.z) < 0.5 ? -1.0 : 0.0;
       float ys = sF[s] * (1.0 - smoothstep(0.0, 3.0 * pxW, sDist[s] - dShared));
-      wW = max(wW, smoothstep(0.0, reach * reach, -sSd[r] * sSd[s] * fl) * (1.0 - smoothstep(0.52, 1.56, sDist[r] + sDist[s] - 2.0 * reach)) * min(sF[r] * yr, ys));
+      wW = max(wW, smoothstep(0.0, reach * reach, -sSd[r] * sSd[s] * fl) * (1.0 - smoothstep(0.52, 2.5, sDist[r] + sDist[s] - 2.0 * reach)) * min(sF[r] * yr, ys));
     }
   }
   c = mix(c, uKHlPulse.rgb, wW);

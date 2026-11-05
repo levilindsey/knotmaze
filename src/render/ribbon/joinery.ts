@@ -828,7 +828,7 @@ export class Joinery {
           : Math.abs(ra - qb) < 0.5 || Math.abs(rb - qa) < 0.5 ? -1 : 0;
         const yq = PULSE_F[q] * (1 - pulseSmooth(0, 3 * pxW, PULSE_DIST[q] - dShared));
         wW = Math.max(wW, pulseSmooth(0, reach * reach, -PULSE_SD[r] * PULSE_SD[q] * fl)
-          * (1 - pulseSmooth(0.52, 1.56, PULSE_DIST[r] + PULSE_DIST[q] - 2 * reach)) * Math.min(yr, yq));
+          * (1 - pulseSmooth(0.52, 2.5, PULSE_DIST[r] + PULSE_DIST[q] - 2 * reach)) * Math.min(yr, yq));
       }
     }
     if (wW > 0) {
