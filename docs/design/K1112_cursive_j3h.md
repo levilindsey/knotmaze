@@ -133,3 +133,117 @@ stop; after one, re-read this brief and `git log`. This stage is c only.
   distance and the same look. Trials are in the trace dir's work31\try* and
   work31\census\v_*.
 - Step 4 running: work31\dbg\checks_k1112c.ps1.
+- Step 4 done 19:14 and step 5 done 19:21 (see the Handoff).
+
+## Handoff
+
+2026-11-04 19:24: the stage is done inside the cap (started 18:14:24,
+cap 20:14:24). The work is in the main checkout's
+`.claude/probes/K863/trace/` (untracked): `work31/` (ports, builds,
+trials, censuses, solves, logs, crops), `out31/` (the template, the
+sheets, `png/`), the tools `work31/dbg/*_k1112c.*` and the record in
+`NOTES.md` `## K1112 c` (the choice and the checks, with the rerun
+commands).
+
+What moved (v7.1 against v7.0):
+- **c's exit port** (variant Pc10 of `mk_ports_k1112c.py`): one record
+  for c, a merge at c's end node within [0, 10] u back from the end
+  (maxfev 8000), the stretch of a, d, h, i and n. Every join out of c is
+  solved from it, and none reads a J2 preset. In v7.0 every one did
+  (cnct.lop_c_h, cnct.mod_c_n, cnct.ful_c_e and the low groups).
+- **c's template is unchanged.** c's drawn end already sits on the
+  font's exit path: 4.85 u along it, 0.09 u off, at 2.1 deg. Two other
+  things were tried:
+  - moving the end out along the font's exit, as a designer would
+    place the node (14 u and 20 u, `mk_template_k1112c.py`, one cubic,
+    P1 kept G2);
+  - stretches of 2, 5 and 10 u.
+  Both gave the same census and the same look, within 0.3 u of font
+  distance. So v7.1 is the port alone, one candidate.
+- b, v, w, a, q and e are as v7.0 has them. bodies.json and
+  join_params.json are byte-identical to v7.0's, and so is every
+  untouched piece.
+
+The numbers (`work31/census_cmp_v70_v71.txt`,
+`work31/census_sum_v70_v71.txt`; J3g's words and pairs plus ca..cz,
+595 pieces):
+- All pieces: hooks 37 -> 37, spikes 69 -> 62, rough FAIL 128 -> 123,
+  undesigned seams 12 -> 16, over budget 321 -> 332.
+- The 31 joins out of c: hooks 0 -> 0, spikes 7 -> 0, rough FAIL 5 -> 0
+  (ca, cc, cd, cg and coffee's co), seams 0 -> 4, over budget 14 -> 25.
+- **The seam gate fails, by 4.**
+  - The four: ci, cr and cs (180 deg) and cy (G1, with a curvature
+    step of 0.0088 /u). Each attaches at 0 u, the bound of the right
+    letter's cusp window.
+  - v7.0's low exits already have this class: hi, er and es in the
+    census words; in a probe, ai, ar, as, nr, ns, hi, hr, di, dr, er,
+    es, ii and ir.
+  - Every port trial adds the same four. Only two things would remove
+    them: a per-pair bound, which the brief rules out, or a change to
+    i's, r's, s's and y's cusp entries for every low exit.
+- Font distance for c (the 26 pairs): dmax mean 7.76 -> 11.02 u, dmean
+  mean 1.94 -> 4.00 u.
+  - The largest are still the fused bowls: ca, cc, cd, cg and cq,
+    27.4-27.9 u, the same as in v7.0.
+  - Then ce 19.24, cx 14.19, cn 13.44, cv 12.79, cp 11.57, ck 10.78
+    and cj 10.43.
+  - Nearer the font than v7.0: cr 9.04 -> 3.40, cs 5.30 -> 2.75.
+- Locality: PASS.
+  - All 1857 untouched pieces of the 385 words are byte-identical.
+  - The 32 joins out of c moved (up to 34.2 u, ct), and so did 24 of
+    the 30 right-letter stroke 0s.
+  - 33 of c's 59 strokes moved, up to 10.0 u: c is cut where the join
+    leaves it.
+- Solves: 26 of 26 at status 0, max nfev 2604 of 8000. The side test
+  passes on all 9 cusp entries (lowest cw -0.0143 u; tolerance -0.05).
+- Determinism: a second build is byte-identical in 25 of 33 files,
+  bodies.json, join_params.json and the template included. The other 8
+  are logs that hold their own paths, and Inkscape stderr. The words
+  sheet, redrawn, is byte-identical.
+- Guard: ALL CLEAN on out31 and on the upload copies.
+
+The sheets (`out31/`; PNGs in `out31/png/`; on Drive `K863/` under the
+same names):
+- `c_v71.svg`: font | v7.0 | v7.1, c alone and ca..cz.
+- `cursive_v71_words.svg`: the census words with a join out of c
+  (cursive, quick brown fox, ice jet even, coffee, which), font | v7.0 |
+  v7.1.
+- PNGs (48 dpi): `out31/png/c_v71.png` and
+  `out31/png/cursive_v71_words.png`. The crops read:
+  `work31/sheets/png/zoom_c71_0..2.png`, `zoom_w71a_0.png` and
+  `zoom_w71b_0.png` (`work31/dbg/strip_k1112c.py`).
+- Drive `K863/` (rclone, 19:15; `rclone check`: 0 differences):
+  c_v71.svg and cursive_v71_words.svg.
+
+How it looks:
+- c alone is as in v7.0.
+- Into b, f, h, i, l, o, r, s and y, the solved joins rise diagonally,
+  as the presets did.
+- Into the fused bowls (a, c, d, g, q), they run flat along the
+  baseline and turn up sharply into the bowl. The presets rose along
+  the font.
+- Into j, n, p, t, u, v, w and x, they leave c flat and turn up later
+  and steeper than the font.
+- ce crosses into an e eye lower than the font's.
+- ck is an S: it flattens where it crosses k's stem.
+- No hooks or kinks.
+
+What is left:
+- Levi's look at v7.1's c joins:
+  - the flat-then-steep joins into the fused bowls and into j, n, p,
+    t, u, v, w and x;
+  - ce's lower eye;
+  - ck's S.
+- The port-cusp seams. ci, cr, cs and cy join ai, ar, as, nr, ns, hi,
+  hr, di, dr, er, es, ii and ir at the bound of i's, r's, s's and y's
+  cusp windows. That needs one stage for the cusp entries of every low
+  exit; for example, a lower bound of about 2 u on the retrace window,
+  which J3e's fr and fs pins set per pair.
+- 14 of the 26 joins leave c at the 10 u bound of its stretch.
+  Stretches of 2 and 5 u looked the same.
+- Older, unchanged:
+  - c's lead-in is rough FAIL in every c-initial word (facet 0.0098);
+  - er and es reach MAXFEV at 3000 in v7.0.
+
+Next: Levi looks at v7.1 (the questions above), then the cusp-entry
+stage, then K1112's next exit, g.
