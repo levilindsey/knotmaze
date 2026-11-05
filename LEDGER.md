@@ -528,9 +528,9 @@ Next free ID: K1210.
   (review 854823fa), one at a time through the chain, ports 5820-5879; B done (8b7a2b4a, S3f5); judged:
   C 5e0d5914 off (K1202), D a0f1d634 on (K1203), E 080d4b49 closed (K1186)
   - owner: the chain in `.claude/probes/K1053/` (queue.txt, chain.log): batch 21's runs B to G, fresh Muse sessions, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
-  - branch: mainline; last commit: `080d4b49`
+  - branch: mainline; last commit: `8e0c5a1c`
   - evidence: `docs/design/K1204_muse_batch21.md` (runs B to G), `docs/design/K1204_muse_batch21_run_a.md`; the chain in `.claude/probes/K1053/` (queue.txt, chain.log)
-  - next: Run E judged (080d4b49: a flip draws 0 px, closed, K1186); Run F (K1201) next, then G, one at a time through the chain; Claude judges each under a hold, fills its slot in K1208's Run A brief and files its findings
+  - next: Run F done; Claude reviews it, Run G next
   - brief: `docs/design/K1204_muse_batch21.md`
 - **K1208** · Muse batch 22 (after K1204's batch 21): Run A drafts its brief from
   `docs/design/K1208_muse_batch22_run_a.md` after 21G, through the chain (queued as 22A); Claude reviews the
