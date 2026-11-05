@@ -58,6 +58,12 @@ first.
 No two runs touch one file ("How to work", rule 3). Read the
 whole brief before your first command.
 
+Claude added Run H (K1179 S1d, below, before Run B) on 2026-11-04,
+after reading Run L's S1c record. It runs first and alone, as chain
+run 17H, while Claude reviews runs B to G against the code; those
+are queued only after that review, which records its amendments
+here.
+
 ## How to work
 
 Batch 16's "How to work" applies unchanged: read it in
@@ -71,6 +77,156 @@ than one at a time. Batch 17 uses ports 5640-5699; each run
 below names its own range. After each run, update K1184's
 handle (the next run in B, C, D, E, F, G order, or, after G,
 that all the runs are in and Claude reviews and closes K1184).
+
+## Run H - K1179 S1d: a round pinned at V, in closed form, offline
+
+Read first: `docs/design/K1179_s1c.md` (all of it: Run L's record,
+which this run builds on); Run L's section in
+`docs/design/K1178_muse_batch16.md` (its decisions and criteria,
+which stand except where this section changes them); section 7 of
+`docs/design/K1179_geometry_review.md`; in
+`src/render/field/form_b.ts`, `solveCorner` (the comment at about
+line 870 states the rule: θ from the arms' chords at 2h, r0, the ball
+grown along V's branch and stopped by the margin, steep and cap gates
+over 32 nodes); and Run L's probes, `.claude/probes/K1179/s1c/`
+(`lib_s1c.ts` the exact outline, `closed.ts`, `s1c_cost.ts`).
+
+The ledger says (In progress):
+
+> **K1179** · Thread geometry (Levi 11-04: rethink how thread bodies, junction rounds and gaps are built, maybe
+> as a skin on the thread centres). Review (`docs/design/K1179_geometry_review.md`): keep threads and physics,
+> one per-pixel outline rule for both looks, no simulated skin. S1, S1b, S1c: K1178 Runs I, K, L (all fail).
+
+What Run L found (8df07b54): V is exact everywhere (max ΔV = 0 on
+47,109 corners). Criterion 2 passes exactly on the exact outline, and
+criterion 3 in substance. Criterion 1v fails on master's rule itself:
+63 scene corners, where the margin band lets the ball finish up to
+0.029h past another part of its arm (median jump 7.3°, worst 73.4° at
+muse_hash j63). Master's answer at 17.8% of scene corners is its
+stepped tracking, not a branch-independent rule. The cost misses by
+31-78x: a median of 58 µs a corner, 69% of it the walk along the
+branch.
+
+Claude's read of that record (the rethink Run L asked for):
+
+1. The cost is the ball's search, not its arithmetic. Any rule that
+   follows the medial branch, node by node or piece pair by piece
+   pair, pays Run L's cost. The budget allows about 2 µs a corner
+   (0.75 ms over the 385 corners of `g41_def_tw42`), so the rule must
+   be closed form at each corner, from what the frame already has.
+2. The branch question goes away with the branch. V and θ are exact
+   and need no tracking. A round defined from them alone is
+   independent of any sheet or step size by construction.
+3. Feet need no search either. For straight arms, form B's round
+   touches each edge at L = r0·cot(θ/2) from V, which works out to
+   (cr/3)·min(1.5h, 2h·cot(θ/2)) times the style. A round that puts
+   its feet there and meets each edge with the edge's own tangent is
+   G1 by construction, on straight arms and curved ones.
+4. The crease is gated by what can be seen. A meet with a tangent
+   jump over 1° counts in 1v only where the fill runs at least 0.5
+   device px (dpr 2) past the edge it crosses; report the raw count
+   beside it. Run L put all but one class-d corner under that.
+5. The GPU question waits. A closed-form outline can be drawn as one
+   mesh per junction on today's mesh machine, so a per-pixel distance
+   field is no longer the only route. The phone check (S2) comes only
+   after a rule passes here.
+
+The rule under test, per corner form B makes (the same cyclically
+adjacent arm pairs; style, cr and h as form B has them):
+
+- V and θ exactly as `solveCorner` computes them.
+- L = style·(cr/3)·min(1.5h, 2h·cot(θ/2)).
+- The gates, form B's own, evaluated once at the points L from V
+  along each edge instead of over 32 nodes of the branch, and not
+  iterated: g = the cap gate ss(slack/0.5h) on the smaller of the two
+  arms' slack, times the steep gate ss((den/den(V) − 0.3)/0.4) with
+  den = 1 + n_a·n_b from the edges' normals there.
+- The feet F_a and F_b at arc length L·g from V, along each arm's
+  edge on the exact outline (offset segments and vertex arcs, as
+  `lib_s1c.ts` traces it).
+- The round: the rational quadratic from F_a to F_b whose control
+  point C is where the edges' tangent lines at the feet meet, with
+  weight w = cos(φ/2), φ the turn between the two tangents. On
+  straight arms that is exactly form B's circle. Where the tangent
+  lines do not meet on the fill side, or C lies farther than 4h from
+  V, use the cubic with handles along the tangents of length
+  0.55·|F_a F_b|; count those corners.
+- The fill: the region bounded by the round and the two edges from
+  each foot back to V.
+
+Two variants, both measured:
+
+- (i) the rule above;
+- (ii) the rule with a margin gate: for every other piece within
+  h + L (other arms' tubes, and arms a and b beyond their feet), the
+  margin m is the least distance from the round's points at t = 0.25,
+  0.5 and 0.75 to that piece's centreline, less h. Scale L·g by
+  ss(1 + min(0, m)/0.05h), form B's margin gate, evaluated once on
+  variant (i)'s round and not iterated.
+
+Tasks, in order (Node only, through `npx.cmd vite-node`; no GPU,
+browser, server or phone, so no port: runs B-G hold 5640-5699).
+Write only new files under `.claude/probes/K1179/s1d/` and
+`docs/design/K1179_s1d.md`. Import Run L's probes, or copy one into
+`s1d/` to change it; leave its files and outputs as they are. Change
+nothing in `src/` or `test/`.
+
+1. The rule, deterministic and cold every frame: no warm start, no
+   tracking, no Newton, no bisection. State the most work a corner can
+   take: segments walked, pieces tested.
+2. The criteria, three columns: master's form B on the exact outline
+   (Run L's column, re-run, not copied), variant (i) and variant (ii),
+   on Run L's inputs (the 12 scenes, every distinct frame of the 4
+   recordings, the four sweeps):
+   - 1v: the visible count of read item 4 and the raw count, per
+     class (Run K's a-e, plus any new class, named), with Run L's 1v
+     (b) and (c) clauses unchanged;
+   - 2: the tangent jump and the position gap at every foot;
+   - 3: as Run L measured it (edge points, round points, and the
+     sweeps against form B's rates: gate699 0.1270, tee 0.1480, ring
+     0.1737, the synthetic sweep 0.0508);
+   - no concave turning anywhere along a round, and Run I's
+     small-round clause (no round under 0.25h of its rule where the
+     rule gives at least 1h, null bands listed);
+   - the fallback cubic's count.
+3. Agreement with form B's look, per corner: the largest distance
+   between each variant's fill boundary and form B's on the exact
+   outline, between the outer of the two solves' feet, in device px at
+   dpr 2. Give p50, p95 and the maximum, and list every corner over
+   1 device px with its θ, its arms' curvature at the feet and what
+   gated it.
+4. Cost, under the perf lock as Run L took it: p95 a frame at most
+   0.75 ms on the desktop, cold, over every distinct frame of the 4
+   recordings, counting everything a frame needs to make its rounds
+   beyond the sampled centrelines it already has. Time the parts (V
+   and θ, the feet, the round, the cap gate, the margin gate). Give
+   the cost per corner with its p50 and p99 and the scene medians.
+   Also report, not gated, what tessellating every round to 0.1
+   device px chord error would add a frame.
+5. SVG plots under `.claude/probes/K1179/s1d/out/`, drawn as Run L's
+   (centred on the corner, 4h across, form B beside each variant):
+   Run L's four sites, and per variant the worst agreement corner,
+   the worst visible 1v failure and the worst criterion 3 failure.
+   No pngjs.
+6. Stop when the tables are done. A variant passes when 1v (visible),
+   2 and 3 hold, no round turns concave and its cost is in budget;
+   agreement is reported for Claude's look, not gated.
+
+Done:
+
+- `docs/design/K1179_s1d.md`: the rule as built, the tables per
+  criterion (three columns), the agreement, the cost split, a verdict
+  per variant (pass or fail, and by how much), and what comes next: on
+  a pass, which variant and why; on a fail, what failed and where.
+- The probe code force-added and pushed with the doc (a docs and
+  probes push, so no deploy runs).
+- `npm test` passes.
+
+Report: the verdicts, the agreement, the cost, the doc's path and the
+commit. Then update K1179's handle:
+`ledger.mjs handle K1179 --owner "nobody since <yyyy-mm-dd hh:mm> (S1d done in Muse batch 17 run H)" --last-commit <sha8> --next "S1d done (<pass or fail per variant>); Claude reviews it and looks at the plots"`
+and K1184's:
+`ledger.mjs handle K1184 --last-commit <sha8> --next "Run H done; Claude reviews runs B-G and queues them"`.
 
 ## Run B - K1183: the field's own rules file
 
