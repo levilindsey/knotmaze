@@ -74,7 +74,11 @@ export interface PulseItem {
 // distance, (dA + dB + span) / 2 (0 on a one-ended arm), and inwardR
 // the other end's direction, so the band's far side reads the arm's own
 // field (kPulseV2): the nearer end's train, faded at the ridge. aEdge is
-// a tree arm, always one-ended.
+// a tree arm, always one-ended. K1203: the B arm's end-window kind
+// rides along (bSpan its drawn span, bCont, bTwo, and bFar, whether the
+// band sits at its far end): a two-ended or cont child carries window 1
+// all along it, and only a one-ended, non-cont child at its near end
+// carries a window that can fall at its free far end (kPulseBandV).
 export interface PulseBandSpec {
   vertex: string;
   aEdge: number;
@@ -84,6 +88,10 @@ export interface PulseBandSpec {
   bAtA: boolean;
   gR: number;
   inwardR: boolean;
+  bSpan: number;
+  bCont: boolean;
+  bTwo: boolean;
+  bFar: boolean;
 }
 
 const q3 = (x: number): number => Math.round(x * 1000) / 1000;
@@ -255,7 +263,21 @@ export function pulseTree(
     gR = 0,
     inwardR = false
   ): void => {
-    bands.push({ vertex, aEdge: parentEdge.get(vertex)!, bEdge: eid, distJ, inward, bAtA, gR, inwardR });
+    const child = items.find((i) => i.edge === eid)!;
+    bands.push({
+      vertex,
+      aEdge: parentEdge.get(vertex)!,
+      bEdge: eid,
+      distJ,
+      inward,
+      bAtA,
+      gR,
+      inwardR,
+      bSpan: child.span,
+      bCont: child.cont,
+      bTwo: child.two,
+      bFar: child.near !== vertex,
+    });
   };
   for (const it of items) {
     if (it.near === head || it.parent < 0 || !treeEdges.has(it.edge)) continue;

@@ -1561,7 +1561,9 @@ export function kPulseV2(
 // side reads that arm's own field, kPulseV2's: past the ridge the other
 // end's train (2 gR - g), and the crests faded over PULSE_RIDGE_FADE
 // either side of it (|gA - gB| / 2 = |g - gR|). The head-side arm is a
-// tree arm, always one-ended. bumpScale 0 is the quiet field.
+// tree arm, always one-ended. bumpScale 0 is the quiet field. K1203:
+// childSpan (pulse_path's band kind) makes the child side honour a
+// one-ended, non-cont child's own end window; default 0 is window 1.
 export function kPulseBandV(
   U: KUniforms,
   distJ: number,
@@ -1570,7 +1572,8 @@ export function kPulseBandV(
   hovered = false,
   gR = 0,
   inwardR = false,
-  bumpScale = 1
+  bumpScale = 1,
+  childSpan = 0
 ): number {
   let g = distJ + tau;
   let inw = inward;
@@ -1582,7 +1585,16 @@ export function kPulseBandV(
       inw = inwardR;
     }
   }
-  return kPulseCrest(U, g, inw, hovered, 1, bK);
+  // K1203: childSpan > 0 names a one-ended, non-cont child arm's drawn
+  // span (0, the default, is today's window 1: a two-ended or cont
+  // child, and the head side at tau <= 0): on the child side the band
+  // then honours that arm's own end window, falling over
+  // PULSE_END_WINDOW at its free far end as its ribbon's kPulseV does.
+  const endWin =
+    tau > 0 && childSpan > 0
+      ? Math.min(1, Math.max(0, (childSpan - tau) / PAINT_CONST.PULSE_END_WINDOW))
+      : 1;
+  return kPulseCrest(U, g, inw, hovered, endWin, bK);
 }
 
 // Paint state at a point: the gold ramp amount p (the thread's own paint),

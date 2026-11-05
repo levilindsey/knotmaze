@@ -41,7 +41,14 @@ import {
   type KUniforms,
 } from "../../src/render/paint_math";
 import { PULSE_CREST_GLSL } from "../../src/render/paint_glsl";
-import { JUNCTION_FRAG, pulseBandCover, pulseCoverRamp, setPulseCoverRamp } from "../../src/render/junction_field";
+import {
+  JUNCTION_FRAG,
+  pulseBandCover,
+  pulseBandEndWindow,
+  pulseCoverRamp,
+  setPulseBandEndWindow,
+  setPulseCoverRamp,
+} from "../../src/render/junction_field";
 import { TRAIL_FADE_FRAC, trailFade, trailSpans, type TrailPiece } from "../../src/render/trail_paint";
 import { randomChain } from "./fixtures/chains";
 import {
@@ -1742,6 +1749,137 @@ describe("pulse band cover ramp (K1202)", () => {
     const ci = jy.indexOf("const dnow = Math.sqrt(best);", bi);
     expect(ci).toBeGreaterThanOrEqual(0);
     expect(jy.slice(ci, jy.indexOf("PULSE_COV", ci))).toContain("pulseBandCover(dnow, fillHalf, pxW, strip)");
+  });
+});
+
+// K1203: a pulse band honours its child arm's end window. Before table
+// (task 1, on Run C's tree 5e0d5914; S4b's table and the fresh dump at
+// .claude/probes/K1203/out/table_before.txt): x4 mnode_27 e135->e18
+// reads 0.0170 at tau 1.010; its child e18 is one-ended, non-cont (span
+// 1.359, band at its near end, distJ 6.811), so its ribbon's end window
+// at tau 1.010 is (1.359 - 1.010) / 0.45 = 0.776 while the band read
+// window 1. The switch (pulseBandEndWindow, default off, riding
+// uJParams.w) passes the child's span to kPulseBandV (childSpan) and
+// the GLSL loop reads the same span from the record's R3.w.
+describe("pulse band end window (K1203)", () => {
+  afterEach(() => {
+    setPulseBandEndWindow(false);
+  });
+  const CLOCKS = [100, 100.31, 100.77, 101.2];
+  const SPAN = 1.3590532541275024; // x4 e18's drawn span (before dump).
+
+  it("switch defaults off (today's picture)", () => {
+    expect(pulseBandEndWindow).toBe(false);
+  });
+
+  it("window defaulted (switch off) is window 1 exactly, S3a's and S4b's shape", () => {
+    setPulseBandEndWindow(false);
+    for (const clock of CLOCKS) {
+      const U = uniforms({ clock, pulseBorn: 0, spacing: 2.5 });
+      for (const inward of [false, true]) {
+        for (const tau of [-0.55, -0.2, 0, 0.2, 0.55, 1.01, 1.359]) {
+          expect(kPulseBandV(U, 6.811, tau, inward)).toBe(
+            kPulseCrest(U, 6.811 + tau, inward, false, 1)
+          );
+          expect(kPulseBandV(U, 6.811, tau, inward, false, 0, false, 1, 0)).toBe(
+            kPulseBandV(U, 6.811, tau, inward)
+          );
+        }
+      }
+    }
+  });
+
+  it("with the window passed, the band equals the child's kPulseV over the last PULSE_END_WINDOW, to 1e-9", () => {
+    for (const clock of CLOCKS) {
+      const U = uniforms({ clock, pulseBorn: 0, spacing: 2.5 });
+      for (const inward of [false, true]) {
+        for (const hovered of [false, true]) {
+          for (let i = 0; i <= 40; i++) {
+            const tau = SPAN - PAINT_CONST.PULSE_END_WINDOW + (PAINT_CONST.PULSE_END_WINDOW * i) / 40;
+            const band = kPulseBandV(U, 6.811, tau, inward, hovered, 0, false, 1, SPAN);
+            const ribbon = kPulseV(U, tau, SPAN, inward, hovered, 6.811, false);
+            expect(Math.abs(band - ribbon)).toBeLessThanOrEqual(1e-9);
+          }
+          // At and past the far end both read the faded value (0 past it).
+          for (const tau of [SPAN, SPAN + 0.2]) {
+            const band = kPulseBandV(U, 6.811, tau, inward, hovered, 0, false, 1, SPAN);
+            const ribbon = kPulseV(U, tau, SPAN, inward, hovered, 6.811, false);
+            expect(Math.abs(band - ribbon)).toBeLessThanOrEqual(1e-9);
+          }
+          // The head side and tau 0 read as today (window 1).
+          for (const tau of [-0.55, -0.2, 0]) {
+            expect(kPulseBandV(U, 6.811, tau, inward, hovered, 0, false, 1, SPAN)).toBe(
+              kPulseBandV(U, 6.811, tau, inward, hovered)
+            );
+          }
+        }
+        // Quiet (bumpScale 0): the floor alone, windowed the same way.
+        for (let i = 0; i <= 10; i++) {
+          const tau = SPAN - PAINT_CONST.PULSE_END_WINDOW + (PAINT_CONST.PULSE_END_WINDOW * i) / 10;
+          const endWin = Math.min(1, Math.max(0, (SPAN - tau) / PAINT_CONST.PULSE_END_WINDOW));
+          expect(kPulseBandV(U, 6.811, tau, inward, false, 0, false, 0, SPAN)).toBe(
+            kPulseCrest(U, 6.811 + tau, inward, false, endWin, 0)
+          );
+        }
+      }
+    }
+    // The windowed band at mnode_27's tau 1.010 is the ribbon there;
+    // today's band (window 1) departs from it by the table's step size.
+    let worstToday = 0;
+    for (let k = 0; k < 64; k++) {
+      const U = uniforms({ clock: 100 + (k / 64) * (2.5 / 1.6), pulseBorn: 0, spacing: 2.5 });
+      const ribbon = kPulseV(U, 1.01, SPAN, false, false, 6.811, false);
+      expect(Math.abs(kPulseBandV(U, 6.811, 1.01, false, false, 0, false, 1, SPAN) - ribbon)).toBeLessThanOrEqual(1e-9);
+      worstToday = Math.max(worstToday, Math.abs(kPulseBandV(U, 6.811, 1.01, false) - ribbon));
+    }
+    expect(worstToday).toBeGreaterThan(0.01);
+  });
+
+  it("reads window 1 for a cont and a two-ended child (childSpan 0)", () => {
+    for (const clock of CLOCKS) {
+      const U = uniforms({ clock, pulseBorn: 0, spacing: 2.5 });
+      for (const tau of [0.2, 0.9, 1.3]) {
+        // A cont child's ribbon carries window 1 (kPulseV cont): the
+        // band with no span passed is that field at distJ + tau.
+        expect(kPulseBandV(U, 6.811, tau, false, false, 0, false, 1, 0)).toBe(
+          kPulseV(U, tau, SPAN, false, false, 6.811, true)
+        );
+      }
+      // A two-ended child (gR > 0, span 0): S4b's field, unwindowed.
+      const [dA, dB, span] = [0, 1.386, 2.746];
+      const gR = (dA + dB + span) / 2;
+      for (let i = 1; i <= 20; i++) {
+        const t = Math.min(span, (span * i) / 20);
+        expect(kPulseBandV(U, dB, t, false, false, gR, false, 1, 0)).toBeCloseTo(
+          kPulseV2(U, span - t, span, dA, dB, false, false, false),
+          12
+        );
+      }
+    }
+  });
+
+  it("GLSL, CPU twins and the record carry the same PULSE_END_WINDOW term (one twin alone cannot pass)", () => {
+    const gi = JUNCTION_FRAG.indexOf("float endWin = ");
+    expect(gi).toBeGreaterThanOrEqual(0);
+    const glsl = JUNCTION_FRAG.slice(gi, JUNCTION_FRAG.indexOf("float cr = ", gi));
+    expect(glsl).toContain(
+      "uJParams.w > 0.5 && r3.w > 0.0 && tau > 0.0 ? clamp((r3.w - tau) / PULSE_END_WINDOW, 0.0, 1.0) : 1.0"
+    );
+    const pm = readFileSync(new URL("../../src/render/paint_math.ts", import.meta.url), "utf8");
+    const ki = pm.indexOf("export function kPulseBandV");
+    expect(ki).toBeGreaterThanOrEqual(0);
+    const cpu = pm.slice(ki, pm.indexOf("export function ", ki + 10));
+    expect(cpu).toContain("(childSpan - tau) / PAINT_CONST.PULSE_END_WINDOW");
+    expect(cpu).toContain("tau > 0 && childSpan > 0");
+    const jf = readFileSync(new URL("../../src/render/junction_field.ts", import.meta.url), "utf8");
+    expect(jf.slice(jf.indexOf("export function setFieldParams"))).toContain(
+      "u.uJParams[3] = pulseBandEndWindow ? 1 : 0;"
+    );
+    const jy = readFileSync(new URL("../../src/render/ribbon/joinery.ts", import.meta.url), "utf8");
+    expect(jy).toContain("b.pb.bTwo || b.pb.bCont || b.pb.bFar ? 0 : b.pb.bSpan");
+    const ci = jy.indexOf("const cs = pulseBandEndWindow");
+    expect(ci).toBeGreaterThanOrEqual(0);
+    expect(jy.slice(ci, jy.indexOf("PULSE_F", ci))).toContain("J[r3 + 3]");
   });
 });
 

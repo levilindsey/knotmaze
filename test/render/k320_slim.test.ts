@@ -152,7 +152,11 @@ describe("K320 stage 1: char budgets", () => {
     // (uJParams.z ? the strip ramp : today's reach, in the fan's pulse
     // loop) adds 86 to the junction field (40,388 -> 40,474 measured
     // here); budget follows the measurement.
-    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(40_474);
+    // K1203 (2026-11-05): the pulse bands' end-window branch
+    // (uJParams.w and the record's R3.w span against PULSE_END_WINDOW,
+    // in the fan's pulse loop) adds 127 to the junction field
+    // (40,474 -> 40,601 measured here); budget follows the measurement.
+    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(40_601);
     // K799: uKPath joins KNOT_UNIFORMS_GLSL, which the still pluck
     // includes (+18 here).
     expect(PLUCK_STILL_FRAG.length).toBeLessThanOrEqual(20_550);

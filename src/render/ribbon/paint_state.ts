@@ -105,7 +105,8 @@ function paintRangesEqual(
 // drawn distance distJ, its direction (inward = the light runs toward
 // you there) and whether either of its arms is hovered. S4b: gR and
 // inwardR, its far-side arm's ridge and other end's direction when that
-// arm is lit from both ends (gR 0: one-ended; PulseBandSpec).
+// arm is lit from both ends (gR 0: one-ended; PulseBandSpec). K1203:
+// bSpan/bCont/bTwo/bFar carry the B arm's end-window kind the same way.
 export interface PulseBandDecl {
   route: PaintRoute;
   distJ: number;
@@ -113,6 +114,10 @@ export interface PulseBandDecl {
   hovered: boolean;
   gR: number;
   inwardR: boolean;
+  bSpan: number;
+  bCont: boolean;
+  bTwo: boolean;
+  bFar: boolean;
 }
 // A pulse band resolved against the static junction arms (ResolvedRoute's
 // shape plus its light), grouped per junction in pulseByJn.
@@ -124,6 +129,10 @@ export interface ResolvedPulseBand {
   hovered: boolean;
   gR: number;
   inwardR: boolean;
+  bSpan: number;
+  bCont: boolean;
+  bTwo: boolean;
+  bFar: boolean;
 }
 
 export class PaintState {
@@ -773,6 +782,10 @@ export class PaintState {
         hovered: p.hovered,
         gR: p.gR,
         inwardR: p.inwardR,
+        bSpan: p.bSpan,
+        bCont: p.bCont,
+        bTwo: p.bTwo,
+        bFar: p.bFar,
       };
       const list = perJn.get(ji);
       if (list) list.push(band);

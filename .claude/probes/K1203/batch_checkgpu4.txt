@@ -1,0 +1,2 @@
+$env:K1139_HOST = "http://127.0.0.1:5840"
+node check_gpu4.mjs > out/check_gpu4.txt 2>&1

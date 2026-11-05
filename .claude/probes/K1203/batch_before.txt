@@ -1,0 +1,3 @@
+$env:K1139_HOST = "http://127.0.0.1:5840"
+node dump_cyc.mjs out/dump x4 > out/dump_x4_log.txt 2>&1
+node table_cyc.mjs out/dump/x4.json > out/table_before.txt 2>&1

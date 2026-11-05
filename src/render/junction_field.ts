@@ -150,8 +150,9 @@ export function recordData(): FloatRows {
 }
 
 // Field parameters (live: thread width and cuspRadius are sliders).
-// uJParams = (fillHalf, profN, pulseCoverRamp, 0) - .z is K1202's
-// cover ramp switch (below), .w is free (.zw carried the over-fills'
+// uJParams = (fillHalf, profN, pulseCoverRamp, pulseBandEndWindow) -
+// .z is K1202's cover ramp switch and .w K1203's end-window switch
+// (below; .zw carried the over-fills'
 // joint radii; uJParams2 = (FIELD_PROF_DR, FIELD_BLEND_MIN, 0, 0).
 let FIELD_UNIFORMS: UniformGroup | null = null;
 function fieldUniforms(): UniformGroup {
@@ -178,6 +179,22 @@ export function setPulseCoverRamp(on: boolean): void {
   pulseCoverRamp = on;
 }
 
+// K1203: the end-window switch. Default off is today's picture (a
+// pulse band reads its crest with end window 1 all along its child
+// arm); on, the band honours a one-ended, non-cont child's own end
+// window over PULSE_END_WINDOW at its free far end, from the span in
+// its record's R3.w (0: window 1, as today), as kPulseBandV's
+// childSpan does on the CPU side. It rides to the shader as
+// uJParams.w, written by setFieldParams on the same rebuild;
+// cpuJunctionField reads this flag itself, so one switch moves both
+// twins. Claude flips the default after judging the sheet
+// (.claude/probes/K1203/). Independent of pulseCoverRamp: neither
+// flag moves the other's term.
+export let pulseBandEndWindow = false;
+export function setPulseBandEndWindow(on: boolean): void {
+  pulseBandEndWindow = on;
+}
+
 // One pulse band's cover at centreline distance dnow (the CPU twin of
 // the pulse loop's cov in junctionField below): today (flag off) it
 // ramps over pxW down from the fragment kind's reach; with the ramp
@@ -198,6 +215,7 @@ export function setFieldParams(fillHalf: number, profN: number): void {
   u.uJParams[0] = fillHalf;
   u.uJParams[1] = profN;
   u.uJParams[2] = pulseCoverRamp ? 1 : 0;
+  u.uJParams[3] = pulseBandEndWindow ? 1 : 0;
 }
 
 // ---------------------------------------------------------------------------
@@ -558,9 +576,10 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
         inw = r2.w < 0.0;
       }
     }
-    float cr = kPulseCrestK(g, inw, hov, 1.0, bk);
+    float endWin = uJParams.w > 0.5 && r3.w > 0.0 && tau > 0.0 ? clamp((r3.w - tau) / PULSE_END_WINDOW, 0.0, 1.0) : 1.0;
+    float cr = kPulseCrestK(g, inw, hov, endWin, bk);
     kFanPulseV = max(kFanPulseV, cr * cov);
-    float fa = K_BAND * kPulseCrestQuiet(g, inw, hov, 1.0);
+    float fa = K_BAND * kPulseCrestQuiet(g, inw, hov, endWin);
     if (r1.z >= 0.5) dShared = min(dShared, dnow);
     sTau[r] = tau;
     sShift[r] = shift;

@@ -1,0 +1,2 @@
+$env:K1139_HOST = "http://127.0.0.1:5840"
+node sheet.mjs > out/sheet_log.txt 2>&1

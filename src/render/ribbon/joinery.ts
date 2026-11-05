@@ -76,6 +76,7 @@ import {
   junctionShader,
   junctionShaderExplore,
   pulseBandCover,
+  pulseBandEndWindow,
   recordData,
   setFieldParams,
 } from "../junction_field";
@@ -738,8 +739,10 @@ export class Joinery {
       const fl0 = J[r1 + 1];
       // S4b: R2.w, armB's signed ridge (the GLSL band loop's twin).
       const gw = J[r2 + 3];
-      const fb0 = KB * kPulseBandV(U, J[r1], tau, fl0 % 2 === 1, fl0 >= 2, Math.abs(gw), gw < 0);
-      const fa0 = KB * kPulseBandV(U, J[r1], tau, fl0 % 2 === 1, fl0 >= 2, Math.abs(gw), gw < 0, 0);
+      // K1203: R3.w under the switch is the child's span (0 = window 1).
+      const cs = pulseBandEndWindow && J[r3 + 3] > 0 ? J[r3 + 3] : 0;
+      const fb0 = KB * kPulseBandV(U, J[r1], tau, fl0 % 2 === 1, fl0 >= 2, Math.abs(gw), gw < 0, 1, cs);
+      const fa0 = KB * kPulseBandV(U, J[r1], tau, fl0 % 2 === 1, fl0 >= 2, Math.abs(gw), gw < 0, 0, cs);
       PULSE_F[r] = J[r1 + 2] < 0.5 ? Math.max(0, Math.min(1, (fb0 - fa0) / Math.max(1 - fa0, 1e-3))) : 0;
       PULSE_SD[r] = side < 0 ? -dnow : dnow;
       pb += 4 + nv;
@@ -1180,7 +1183,8 @@ export class Joinery {
       // draws nothing). Empty when the record's distinct pairs would
       // pass MAX_ROUTES: no pulse band there (option B, plan 2.2). S4b:
       // gR and inwardR, the B arm's ridge and other end's direction
-      // when it is lit from both ends (gR 0: one-ended).
+      // when it is lit from both ends (gR 0: one-ended). K1203: bSpan,
+      // bCont, bTwo and bFar, the B arm's end-window kind.
       pulseBands: Array<{
         ia: number;
         ib: number;
@@ -1192,6 +1196,10 @@ export class Joinery {
         shared: boolean;
         gR: number;
         inwardR: boolean;
+        bSpan: number;
+        bCont: boolean;
+        bTwo: boolean;
+        bFar: boolean;
       }>;
     }
     // Radial profile of one arm around its joint (JArm.pth/ps): walk the
@@ -1543,6 +1551,10 @@ export class Joinery {
             shared,
             gR: p.gR,
             inwardR: p.inwardR,
+            bSpan: p.bSpan,
+            bCont: p.bCont,
+            bTwo: p.bTwo,
+            bFar: p.bFar,
           });
         }
         if (pairs.size <= MAX_ROUTES) rec.pulseBands = bands;
@@ -2139,7 +2151,10 @@ export class Joinery {
             D2[o + 12] = b.pv.a;
             D2[o + 13] = b.pv.b;
             D2[o + 14] = b.pv.c;
-            D2[o + 15] = 0;
+            // K1203: R3.w, the child arm's end-window span (its drawn
+            // span when a one-ended, non-cont child sits at its near
+            // end here; 0 = window 1, as before K1203).
+            D2[o + 15] = b.pb.bTwo || b.pb.bCont || b.pb.bFar ? 0 : b.pb.bSpan;
             for (let k = 0; k < b.nv; k++) {
               D2[o + 16 + k * 4] = b.line[k * 3];
               D2[o + 17 + k * 4] = b.line[k * 3 + 1];

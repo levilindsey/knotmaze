@@ -259,7 +259,7 @@ describe("pulseTree bands (K1139 S3a, T10)", () => {
       [0, 4, false],
     ]);
     expect(at("K")).toEqual([
-      { vertex: "K", aEdge: 4, bEdge: 5, distJ: 3.5, inward: false, bAtA: true, gR: 0, inwardR: false },
+      { vertex: "K", aEdge: 4, bEdge: 5, distJ: 3.5, inward: false, bAtA: true, gR: 0, inwardR: false, bSpan: 0.7, bCont: false, bTwo: false, bFar: false },
     ]);
     // distJ is where the parent arm ended (its dist0 + span), quantized.
     for (const b of at("J")) expect(b.distJ).toBeCloseTo(2.2, 9);
@@ -284,7 +284,7 @@ describe("pulseTree bands (K1139 S3a, T10)", () => {
     ]);
     // One junction further back the same rule: e4 bands into e1.
     expect(at("Q")).toEqual([
-      { vertex: "Q", aEdge: 1, bEdge: 4, distJ: 2, inward: true, bAtA: true, gR: 0, inwardR: false },
+      { vertex: "Q", aEdge: 1, bEdge: 4, distJ: 2, inward: true, bAtA: true, gR: 0, inwardR: false, bSpan: 1, bCont: false, bTwo: false, bFar: false },
     ]);
     expect(at("H")).toEqual([]);
   });

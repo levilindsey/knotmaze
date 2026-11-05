@@ -4136,6 +4136,10 @@ export class FabricMazeRenderer {
               (this.hoverRoute?.includes(s.bEdge) ?? false),
             gR: s.gR,
             inwardR: s.inwardR,
+            bSpan: s.bSpan,
+            bCont: s.bCont,
+            bTwo: s.bTwo,
+            bFar: s.bFar,
           });
         }
         out.push({
