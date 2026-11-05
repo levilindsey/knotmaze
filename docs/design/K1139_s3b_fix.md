@@ -1241,3 +1241,312 @@ milestone, broken or not.
      `docs/ledger_notes.md`.
    - Never write into the main checkout (Muse runs there) or into the
      other worktrees.
+
+### Stage 4 handoff
+
+Agent a8280f4d14ebd8ad1, 2026-11-04, 16:39:31 to about 18:05: the stage
+is done, inside the 2 h cap. **Stage 4 changes no source**: `src/` is
+6b847b4c's (`git diff 6b847b4c -- src` is empty). No attribution proved
+a defect, so 4.2's rule left nothing to land. The `__k1139diag` hook
+went back in for the dumps (57ab3bfd, e7dc5fda's version; 55990189 adds
+DG_K / DG_KB) and out again (5da9f69c). Servers stopped, master's
+preview worktree removed junction first, no perf lock held.
+Evidence: `.claude/probes/K1139/` (scripts tracked; `out/s4/` tracked
+with -f except the dumps in `out/s4/d/`, untracked; `out/s3/` as Stage
+3 left it).
+
+Stage 4's commits, oldest first:
+- d2247ebd: `run_locked.ps1` resets `$global:LASTEXITCODE` before each
+  batch line, so a `$env:` line no longer reports the previous native
+  command's code as "!! exit" (`batch_s4_selftest.txt`).
+- 57ab3bfd: WIP, e7dc5fda's hook back.
+- 55990189: WIP, the strip twin (`diag_s4.mjs` dumps strip = true as
+  `.s.*` beside strip = false) and the triangle capture
+  (`r<ji>.tri.bin`: every fillet triangle in page px with its aLook and
+  aRec); `cover_lib.mjs`, `cover_s4.mjs`, `kindmap_s4.mjs`.
+- f674f39b: WIP, task 1 (`p8_s4.mjs`, `out/s4/p8/`).
+- f60bf231: WIP, task 2's wedge census (`wedge_s4.mjs`).
+- fb98e4c3: WIP, tasks 2, 3 and 5 (`diag_an.mjs` and `crotch_fill.mjs`
+  under `K1139_COVER=1`, `px_s4.mjs`; `out/s4/seams/`, `out/s4/wedge/`).
+- 846005e8: tasks 4 and 6 and the sheets (`front_s4.mjs`,
+  `rule_s4.mjs`, `part_s4.mjs`, `turnside_s4.mjs`, `sheets_s4.mjs`;
+  `out/s4/front/`, `out/s4/look/`, `out/s4/sheets/`).
+- 5da9f69c: the hook out (`joinery.ts` back to 6b847b4c).
+- Then this handoff's.
+
+**The cover model** (`cover_lib.mjs`, task 2's answer: the twin draws
+the strips exactly; nothing is masked as a strip ring). What the GPU's
+4x MSAA samples show at a fan pixel, from the captured triangles: per
+sample the LAST covering fillet primitive in draw order wins (D3D11's
+standard 4x positions; the fit picks orientation 1, the pattern
+mirrored in y, for ji 28, 33, 147, 149 and 155, and 0 for ji 108 and
+125). A fan triangle whose aLook at the
+pixel centre exceeds 1.001 writes no sample there. Each sample shows
+this record's fan twin (strip = false), its cover strip's twin
+(strip = true) or the webs-off frame. Pixels with another record's
+sample are masked and counted. Not modelled: gk (a foreign over
+thread's silhouette discard) and the fill rule's exact-edge tie-break.
+
+**Task 1, P8 against the max over bands** (`out/s4/p8/*.txt`). P8 is
+the worst |debug-5 G - model| on a band's centreline px (dnow <= 0.5
+px) inside the fan's foot, in 255 levels; pass at <= 4. "own" is
+`fan.mjs`'s model (255 cr cov of the band itself), "max" is rule (b)'s
+max over bands in the fan-only twin, "composite" the cover model.
+
+| stand, record, band | centreline px | own | max | composite |
+|---|---|---|---|---|
+| cross ji 33 b0 e150>e21 | 406 | 125.3 | 85.4 FAIL | 1.0 PASS |
+| cross ji 33 b1 e150>e151 | 329 | 20.8 | 20.8 FAIL | 1.0 PASS |
+| four ji 28 b0 e135>e18 | 540 | 90.8 | 77.7 FAIL | 1.0 PASS |
+| four ji 28 b1 e135>e136 | 400 | 31.2 | 31.2 FAIL | 1.0 PASS |
+| src ji 155 b0 e150>e198 | 581 | 141.7 | 89.7 FAIL | 1.0 PASS |
+| src ji 155 b1 e150>e199 shared | 840 | 69.7 | 69.7 FAIL | 1.0 PASS |
+| x4 ji 28 b0 e135>e18 | 574 | 73.8 | 69.1 FAIL | 1.0 PASS |
+| x4 ji 28 b1 e135>e136 | 385 | 22.9 | 22.9 FAIL | 1.0 PASS |
+| x4 ji 108 b0 e177>e178 | 0 | 0.0 | 0.0 PASS | 0.0 PASS |
+| x4 ji 125 b0 e140>e95 shared | 120 | 2.2 | 0.6 PASS | 1.0 PASS |
+| x4 ji 125 b1 e140>e139 | 120 | 2.1 | 0.6 PASS | 1.0 PASS |
+| x4 ji 147 b0 e176>e135 | 86 | 25.5 | 0.6 PASS | 1.0 PASS |
+| x4 ji 147 b1 e176>e175 | 159 | 15.3 | 0.6 PASS | 1.0 PASS |
+| x4 ji 149 b0 e180>e140 shared | 904 | 131.3 | 131.3 FAIL | 1.0 PASS |
+| x4 ji 149 b1 e180>e141 | 795 | 25.6 | 25.6 FAIL | 1.0 PASS |
+
+Observed:
+- Against the max alone, 10 of 15 bands fail. Against the composite,
+  all 15 pass (worst 1.0).
+- 120 px are over 4 against the max:
+  - 72 carry another record's sample (68 of them x4 ji 28 b0);
+  - 48 are cover-strip px. On all 48 the strip twin's G is within 4 of
+    the GPU, and its argmax band has more cov than in the fan twin.
+- Per pixel, the files list the argmax band, rule (a)'s mode, distJ,
+  tau, the sample kinds and whether the ray changes segment. In all:
+  - rule (a)'s mode is 1 (ray hit) on 72 px and 2 (end line) on 48
+    (all x4 ji 28 b0);
+  - the ray changes segment at 34 of the 120.
+- No over-4 px is a fan pixel the composite misses.
+
+Inferred: Stage 3's P8 rise came from the strips and the neighbours'
+samples, which its fan-only model did not draw, not from rule (b)'s fan.
+**Not a blocker.**
+
+**Task 2, the strips in the twin** (`out/s4/wedge/`, `out/s4/seams/`).
+GPU-only wedges, fan-only scoring then the composite:
+
+| record | candidate px | masked | GPU-only, fan-only | composite | luma GPU - model (mean), fan-only -> composite |
+|---|---|---|---|---|---|
+| cross ji 33 | 37334 | 18461 | 215 | 12 | -6.0 -> -0.6 |
+| x4 ji 28 | 38425 | 25421 | 8915 | 6 | -16.3 -> -0.5 |
+| four ji 28 | 35863 | 22913 | 9646 | 11 | -16.3 -> -0.5 |
+| x4 ji 147 | 19971 | 5784 | 52 | 52 | -0.5 -> -0.5 |
+
+- ji 147's 52 stay (p10 -0.7, p90 -0.1; 40 beyond strip reach on
+  4-fan-sample px), as do the composite's 12 / 6 / 11. Inferred: the
+  GPU sits under 1 luma darker than the model, across the census's
+  2/255 line (threshold flips, not a structure).
+- `diag_an.mjs` with `K1139_COVER=0` reproduces Stage 3's seam classes
+  exactly. With `K1139_COVER=1`, jump:gpu drops to 0 everywhere. Those
+  steps either become jump:twin (the composite steps there too) or are
+  masked as another record's pixels:
+
+  | record | jump:gpu | jump:twin | jump:zero |
+  |---|---|---|---|
+  | cross ji 33 | 296 -> 0 | 540 -> 793 | 70 -> 47 |
+  | x4 ji 28 | 447 -> 0 | 237 -> 499 | 90 -> 39 |
+  | x4 ji 147 | 87 -> 0 | 49 -> 26 | 8 -> 8 |
+  | x4 ji 149 | 297 -> 0 | 1 -> 298 | 56 -> 56 |
+  | four ji 28 | 303 -> 0 | 452 -> 738 | 67 -> 26 |
+
+**Not a blocker.**
+
+**Task 3, ji 28's darker bare fan.** Observed:
+- All 6055 beyond-reach GPU-only wedges (x4) have another record's
+  primitive on all 4 samples, aRec 2129 every time (24220 samples).
+- four: 6494 px; 6493 of them all-2129 (25972 samples), plus 1 fan px.
+- aRec 2129 is not one of the dumped records.
+- So none of the four inputs differs: the GPU's pixel there is not ji
+  28's. The composite masks it.
+- Offline's +113 fill px (`crotch_fill.mjs`, `crotch_x4_28.txt`): all
+  113 px the far edge at 3.0 adds over 1.56 sit under another record's
+  4 samples. The fill change on ji 28's own fan and strip samples is 0.
+  This matches the GPU's 0 px.
+- No twin bug, no shader bug, no fill rule.
+
+Inferred: a neighbouring junction's fan, drawn later, overlaps ji 28's
+foot. Not checked: which junction. **Not a blocker.**
+
+**Task 4, the fork front's arc at cross ji 33, t4-t5**
+(`out/s4/front/`).
+
+The rule (`rule_ji33_t4.txt`, `rule_ji33_t5.txt`), observed:
+- Band 0 covers both sides of the arc: cov 255, f 27-89, cr 0.12-0.38.
+- Band 1 carries the crest: f 135-208, cr 0.57-0.88.
+- Band 1's cov goes 0 -> 255 as e (px inside its reach) crosses 0:
+  - t4: e -1.39 -> 0.01 (cov 4) -> 1.41;
+  - t5: e -0.61 -> 0.80 (cov 204).
+- The winner flips b0 -> b1. The twin's luma steps 177 -> 214 (t4) and
+  192 -> 224 (t5); the GPU matches.
+- Tau is mode 1 and continuous there.
+
+So the arc is band 1's reach AA edge under rule (b): its offset curve at
+reach around its cubic turn.
+
+Edge widths (10-90% rise along the normal, image px at 1x, luma; fan
+window 624..744 x 746..866 page device px, W 3, contrast >= 12):
+
+| row | t4 min / p10 / med | t5 min / p10 / med |
+|---|---|---|
+| before S3b | 3.42 / 4.14 / 4.68 | 2.58 / 4.04 / 4.62 |
+| S3b | 0.94 / 1.04 / 3.18 (the chevron 0.94-1.62) | 0.94 / 1.10 / 3.08 (fronts 1.00-2.08) |
+| the fix | 1.16 / 1.28 / 1.88 (the arc 1.18-2.20, slope 39.7-46.6/px, contrast 35-42) | 0.98 / 1.30 / 3.06 (the arc 1.14-1.50, slope 56-63/px, contrast 48-52) |
+
+At the fix's arc points (`ji33_arc_points.txt`):
+- before S3b: contrast 9.4-13.7 (t4) / 11.9-18.4 (t5), rise 4.96-5.04 /
+  4.58-5.04;
+- S3b: contrast 7.5-8.1 / 10.4-10.8, rise 4.70-5.00 / about 4.85;
+- the fix: contrast 35-41 / 48.5-51.9, rise 1.18-2.20 / 1.16-1.32.
+
+ji 147's fronts (`ji147_t0t7.txt`) rise in:
+- 0.60-1.00 px before S3b;
+- 0.88-1.04 in S3b (master);
+- 0.88-0.90 in the fix.
+
+Verdict: the arc (1.14-2.20 px) is no crisper than master's fronts (ji
+147's 0.88-1.04, S3b's own chevron at ji 33, 0.94-1.62), so by 4.2's
+test **it is not a defect and does not block a merge**. Observed: it is
+a new, higher-contrast edge at that place, where both other rows ramp
+over about 5 px. A look call for Levi (sheets `t4_*`).
+
+**Task 5, jump:gpu at cross t7**, box (115-120, 78-83)
+(`out/s4/seams/t5_cross_t7_box.txt`). Observed:
+- Record 2668's fan primitive (drawn after ji 33's 2591) covers the
+  box's left part. There the GPU's G is 0 on every px whose 4 samples
+  are all 2668.
+- Along 2668's edge, it takes 1-3 samples. There the GPU equals (fan
+  samples x the fan twin's G) / 4, e.g. 2 x 79.7 / 4 -> 40 and
+  1 x 72.7 / 4 -> 18.
+
+So the jump is the neighbouring record's MSAA primitive edge, not ji
+33's fill. Inferred, not checked: 2668 is ji 34's fan. **Not a blocker.**
+
+**Task 6, ji 149's partition corner.** The code:
+- Before S3b, the yellow/teal arc is K81's gold band edge around its
+  cubic turn. In 7474d09b that is `junction_field.ts`'s ROUTES loop,
+  about lines 284-330 (reach at 311). Its curve comes from
+  `joinery.ts` cornerCubic (2280-2284), then `junction_routes.ts`
+  routeCubic (:604).
+- The straight edge is drawn by:
+  - S3b: its nearest-band rule (df30a7f3 `junction_field.ts` about
+    394-402: each px takes its nearest band's crest);
+  - the fix: rule (c)'s yield (`junction_field.ts:406`,
+    `joinery.ts:646`).
+
+Observed at the fix's t0 (`part_ji149_t0.txt`):
+- Along X 108, b0's (the gold's) e is 1.03 at Y 141 and 0.03 at Y 142
+  (cov 9). The GPU is yellow (236,204,67) through Y 142 and teal from
+  Y 143. So the horizontal edge is the gold band's own reach edge.
+- Along Y 120, b1's weight (1 - smoothstep(0, 3 pxW, D_draw -
+  D_shared)) runs:
+  - 0 at D - Dsh 3.95 px (X 134);
+  - 0.07 at 2.53;
+  - 0.70 at 1.10;
+  - 1.0 from -0.33 (X 137).
+
+  The GPU equals the twin all along: (236,205,68) -> (230,208,91) ->
+  (178,209,174) -> (163,211,205).
+- So the slanted edge is where D_draw - D_shared = 1.5 px (weight 0.5),
+  beside the bisector of the two centerlines and straight where both
+  are straight.
+
+The corner is where that edge meets the gold's reach edge: **the fill,
+not K81's designed corner.** Inferred (S3b has no twin): S3b's
+nearest-band rule puts the same edge at the bisector, and the rows look
+alike. In master since S3b; **not a blocker**; a look call
+(`t6_ji149_x4_n.png`).
+
+**The notch** (ji 149, t4 and t6; `part_ji149_t4_notch.txt`,
+`turnside_ji149_t4.txt`). Observed at the fix's t4:
+- Along X 170, b1's cov is 0 for Y 119-138, with e at its minimum
+  (-3.49) at Y 129. Cov is 55 at Y 118 and 189 at Y 140.
+- Along Y 128: b1 covers through X 165, then teal (122,192,183) runs X
+  167-172, and the fan ends at X 173.
+- Along Y 136: b1 reaches X 167 (X 168 cov 39), then teal runs X
+  169-173, and the fan ends at X 174.
+- The twin equals the GPU within 1 level.
+- `turnside_s4.mjs`: those px are on the INSIDE of b1's cubic turn
+  (segments 12-26), 27.39 px from its centerline against a reach of
+  23.90.
+
+Inferred:
+- No band covers the fan material inside the pulse band's turn there,
+  so it shows the untraveled base row. The pale crest at t4 and t6
+  makes it visible.
+- Rule (d) does not apply: it covers only two drawing bands that share
+  an arm.
+- Before S3b no pulse band was drawn, so there was no notch.
+
+In master since S3b; **not a blocker**; a look call.
+
+**Merge.** None of the findings blocks a merge. Three are look calls
+for Levi, each with its sheet:
+- task 4's arc (new in the fix);
+- task 6's straight edge and corner (in master since S3b);
+- the ji 149 notch (in master since S3b).
+
+**Proposals, not built** (fill rules are design choices, 4.2):
+1. Task 4: feather a drawing band's crest over a few px inside its
+   reach where another drawing band covers. The arc rises in 1.14-2.20
+   px at contrast 35-52 luma. The other rows ramp over 4.6-5.0 px
+   there, so a 3-4 px feather would match them.
+2. Task 6: let the gold band keep its K81 edge where its cov > 0, so
+   rule (c)'s yield acts only outside the gold's reach. Today the yield
+   ramps 0 -> 1 over D - Dsh 3.95 -> -0.33 px and puts the edge on the
+   bisector.
+3. The notch: cover the inside of a drawing band's turn up to the rim.
+   The gap is up to 3.5 px deep (e -3.49) and about 20 px long (Y
+   119-138 at X 170).
+
+**Sheets** (`.claude/probes/K1139/out/s4/sheets/`, 2x crops, rows top
+to bottom: before S3b, S3b, the fix):
+
+| file | size, grid | crop |
+|---|---|---|
+| `t3_ji28_x4_n.png` | 600x600, 3x3 | x4 ji 28, box (135,135), 64 CSS px, t2/t4/t6 |
+| `t4_ji33_cross_n.png` | 606x456, 3x4 | cross ji 33, box (120,118), 48 CSS px, t3-t6 |
+| `t4_ji33_cross_d.png` | 606x456, 3x4 | the same in debug view 5 |
+| `t5_ji33_cross_t7box_n.png` | 210x312, 3x2 | cross ji 33, box (118,81), 32 CSS px, t6/t7 |
+| `t5_ji33_cross_t7box_d.png` | 210x312, 3x2 | the same in debug view 5 |
+| `t6_ji149_x4_n.png` | 606x456, 3x4 | x4 ji 149, box (135,135), 48 CSS px, t0/t2/t4/t6 |
+
+`out/s4/look/` holds the locator crops (`loc_cross33_n.png`,
+`loc_cross33_d.png`, 4x) and the sample-kind map (`kinds_cross33.png`).
+
+The row sources:
+- **Before S3b** is the main checkout's `out/s3b/today`, build
+  7474d09b, read only. The brief's label "before (master c4a9dd60)"
+  cannot hold: c4a9dd60 carries S3b since df30a7f3, and
+  `git diff --stat df30a7f3 c4a9dd60` on `junction_field.ts`,
+  `joinery.ts`, `junction_routes.ts` and `ribbon_renderer.ts` is empty.
+- **S3b** (`out/s3b/s3b`) therefore stands for master's fan.
+- **The fix** is `out/s3/after` (stamp a072dc4c).
+
+**4.1's classifier.** The classes were used as they are. The
+attributions above rest on the jump classes and direct twin terms,
+which compare the GPU's step with the twin's and need no c. The ramp
+classes (threshold T max(1, c)) are the ones that depend on the missing
+arc-true tau rate and obliqueness. That is inferred, not checked.
+
+**Not examined:** `crotch_fill.mjs`'s "ji 147 unlit arm 1, 276 px"
+(`crotch_x4_147.txt`); which junctions aRec 2129 and 2668 are.
+
+**Env:**
+- Dev server: from the worktree, `npx vite --config
+  .claude/probes/K1139/vite.private-cache.config.ts --port 5620
+  --strictPort --host 127.0.0.1`.
+- Master's preview: `pwsh scripts/preview.ps1 -Port 5630 -Ref c4a9dd60
+  -Root C:\Users\lsl\AppData\Local\Temp\k1139s4pv`.
+- GPU probes: `.claude/probes/K1139/run_locked.ps1 -Batch`.
+- `diag_s4.mjs` needs the hook: `git checkout 55990189 --
+  src/render/ribbon/joinery.ts`, and take it out after.
+
+**Next:** Claude's ruling on Stage 4 (the merge), and Levi's three look
+calls with the sheets above.
