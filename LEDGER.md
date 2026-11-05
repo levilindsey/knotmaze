@@ -517,9 +517,9 @@ Next free ID: K1184.
 - **K1178** · Muse batch 16: run A drafts the brief (`docs/design/K1178_muse_batch16_run_a.md`), runs B-I from
   the draft (Claude added H and I after B), after 16J.
   - owner: nobody since 2026-11-04 10:54 (16I done; runs C-G queued as Muse chain runs 16C-16G, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `9de9006e`
+  - branch: mainline; last commit: `2a856876`
   - evidence: `docs/design/K1178_muse_batch16_run_a.md`; the chain in `.claude/probes/K1053/` (queue.txt, chain.log)
-  - next: Run I done; next Run C (K1175)
+  - next: Run C done; next Run D
   - brief: `docs/design/K1178_muse_batch16.md`
 - **K1179** · Thread geometry (Levi 11-04: rethink how thread bodies, junction rounds and gaps are built, maybe
   as a skin on the thread centres). Review (`docs/design/K1179_geometry_review.md`): keep threads and physics,
@@ -1689,9 +1689,6 @@ Every other item below waits on the trigger it names.
 - **K1174** · `run_locked.ps1` (the K1040 s3 kit) releases the perf lock in its `finally` but leaves node
   running, so a pipeline stopped early (`Select-Object -First n`) times unlocked; S3f did it twice, 2026-11-03
   20:34-20:36. Kill the child in the `finally` (`docs/design/K1040_s3f_draw.md`, Handoff, Commands).
-- **K1175** · Key hints can go stale under flow: the discs cache per vertex and stamp, and on a bisector run
-  the fresh map can disagree (K1170's probe: mnode_109's run 221 showed up, read left;
-  `.claude/probes/K332/out/after_k1170.json`). Check what a press of the shown key takes.
 - **K1177** · K907's `scripts/phone_pass/k539_g31.mjs` and `pixdiff_g31.mjs` are only parse-checked, never run
   on the phone: round 2026-10-30's brief (b581f620) left them out. The next K156 round runs each once.
 - **K1181** · The laptop's knotmaze checkout still has the pre-rewrite history (K1164): before its next use
@@ -2003,6 +2000,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1175** · key hints recompute while the flow is on, so a disc never names a stale key on a bisector run. Done in 2a856876 (2026-11-04).
 - **K1163** · Corner rounding's softer root gate (the root band scaled by the tip factor, Muse batch 16 Run H): the ten near-straight cusp corners now match S1f; row 15's corner goes on in K1180. Done in ab7cad9a (2026-11-04).
 - **K1166** · After the history rewrite (K1164), two things only you can do: send GitHub Support the drafted request so closed PR #1 stops serving the old commits, and reset the laptop's knotmaze copy before its next use. Dropped: Levi 11-04: “let's ignore this”: the Support request is not sent; the laptop reset is Residual K1181 now (2026-11-04).
 - **K701** · Section shader lengths rose again, limits now 47,750 / 64,150 characters (K324 s2: +85 each; `test/render/k320_slim.test.ts`). Dropped: a record, not open work: k320_slim.test.ts pins the section shader limits (57,430 and 73,850 today) (2026-11-04).
