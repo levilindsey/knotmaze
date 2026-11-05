@@ -1,0 +1,269 @@
+{
+ "seq": 5,
+ "round": 1,
+ "state": "loop",
+ "query": "1&am=instant&fw=0&snd=none&phw=0&pr=8",
+ "moves": [
+  185,
+  186,
+  187,
+  122,
+  50,
+  118,
+  117,
+  165,
+  60,
+  9,
+  178,
+  57,
+  101
+ ],
+ "decl": {
+  "head": "node_635",
+  "headArms": 3,
+  "choices": [
+   {
+    "edge": 101,
+    "far": "mnode_77",
+    "farDeadEnd": false
+   },
+   {
+    "edge": 102,
+    "far": "node_635",
+    "farDeadEnd": false
+   }
+  ],
+  "reach": 8,
+  "spacing": 2.5,
+  "pathEdges": [
+   185,
+   186,
+   187,
+   122,
+   50,
+   118,
+   117,
+   165,
+   60,
+   9,
+   178,
+   57,
+   101
+  ],
+  "pulses": [
+   {
+    "chain": 45,
+    "cJ": 8,
+    "cF": 0,
+    "inward": true,
+    "hovered": false,
+    "dist0": 0,
+    "cont": true,
+    "edge": 101,
+    "near": "node_635",
+    "far": "mnode_77",
+    "lattice": 4.637444119121137,
+    "world": 4.253499984741211,
+    "farEnd": false,
+    "farArms": 3
+   },
+   {
+    "chain": 45,
+    "cJ": 8,
+    "cF": 24,
+    "inward": false,
+    "hovered": false,
+    "dist0": 0,
+    "cont": true,
+    "edge": 102,
+    "near": "node_635",
+    "far": "node_635",
+    "lattice": 8.007669860932321,
+    "world": 7.670727729797363,
+    "farEnd": false,
+    "farArms": 3
+   },
+   {
+    "chain": 38,
+    "cJ": 40,
+    "cF": 0,
+    "inward": true,
+    "hovered": false,
+    "dist0": 4.253,
+    "cont": false,
+    "edge": 56,
+    "near": "mnode_77",
+    "far": "mdead0_b",
+    "lattice": 21.342672244862356,
+    "world": 20.07164764404297,
+    "farEnd": true,
+    "farArms": 1
+   },
+   {
+    "chain": 38,
+    "cJ": 40,
+    "cF": 42,
+    "inward": true,
+    "hovered": false,
+    "dist0": 4.253,
+    "cont": true,
+    "edge": 57,
+    "near": "mnode_77",
+    "far": "node_649",
+    "lattice": 0.7071067811865461,
+    "world": 0.9233226776123047,
+    "farEnd": false,
+    "farArms": 3
+   },
+   {
+    "chain": 38,
+    "cJ": 42,
+    "cF": 50,
+    "inward": true,
+    "hovered": false,
+    "dist0": 5.177,
+    "cont": false,
+    "edge": 58,
+    "near": "node_649",
+    "far": "mnode_19",
+    "lattice": 4.209298534247829,
+    "world": 3.9238815307617188,
+    "farEnd": false,
+    "farArms": 3
+   },
+   {
+    "chain": 60,
+    "cJ": 8,
+    "cF": 0,
+    "inward": true,
+    "hovered": false,
+    "dist0": 5.177,
+    "cont": false,
+    "edge": 178,
+    "near": "node_649",
+    "far": "node_765",
+    "lattice": 4.47213595499958,
+    "world": 4.145346641540527,
+    "farEnd": false,
+    "farArms": 3
+   }
+  ],
+  "headScreen": {
+   "x": 1141.7692027126163,
+   "y": 93.42627042598068
+  },
+  "view": {
+   "x": 413.4416811056538,
+   "y": 52.36774209859689,
+   "s": 21.904469002641086,
+   "zoom": 1,
+   "panX": 0,
+   "panY": 0,
+   "panel": {
+    "left": 1270,
+    "mazeRight": 1208.4394412863332,
+    "open": 1
+   },
+   "mazeRight": 1208.4394412863332,
+   "range": {
+    "loX": 0,
+    "hiX": 0,
+    "loY": 0,
+    "hiY": 0
+   },
+   "allow": {
+    "loX": 0,
+    "hiX": 0,
+    "loY": 0,
+    "hiY": 0
+   },
+   "panelT": 1
+  }
+ },
+ "pulses": [
+  {
+   "edge": 101,
+   "near": "node_635",
+   "far": "mnode_77",
+   "atA": false,
+   "span": 4.253499984741211,
+   "dist0": 0,
+   "cont": true,
+   "inward": true,
+   "parent": -1,
+   "two": false,
+   "dB": 0,
+   "inwardB": false
+  },
+  {
+   "edge": 102,
+   "near": "node_635",
+   "far": "node_635",
+   "atA": true,
+   "span": 7.670727729797363,
+   "dist0": 0,
+   "cont": true,
+   "inward": false,
+   "parent": -1,
+   "two": true,
+   "dB": 0,
+   "inwardB": false
+  },
+  {
+   "edge": 56,
+   "near": "mnode_77",
+   "far": "mdead0_b",
+   "atA": false,
+   "span": 20.07164764404297,
+   "dist0": 4.253,
+   "cont": false,
+   "inward": true,
+   "parent": 101,
+   "two": false,
+   "dB": 0,
+   "inwardB": false
+  },
+  {
+   "edge": 57,
+   "near": "mnode_77",
+   "far": "node_649",
+   "atA": true,
+   "span": 0.9233226776123047,
+   "dist0": 4.253,
+   "cont": true,
+   "inward": true,
+   "parent": 101,
+   "two": false,
+   "dB": 0,
+   "inwardB": false
+  },
+  {
+   "edge": 58,
+   "near": "node_649",
+   "far": "mnode_19",
+   "atA": true,
+   "span": 3.9238815307617188,
+   "dist0": 5.177,
+   "cont": false,
+   "inward": true,
+   "parent": 57,
+   "two": false,
+   "dB": 0,
+   "inwardB": false
+  },
+  {
+   "edge": 178,
+   "near": "node_649",
+   "far": "node_765",
+   "atA": false,
+   "span": 4.145346641540527,
+   "dist0": 5.177,
+   "cont": false,
+   "inward": true,
+   "parent": 57,
+   "two": false,
+   "dB": 0,
+   "inwardB": false
+  }
+ ]
+}

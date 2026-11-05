@@ -1,0 +1,86 @@
+{
+ "seq": 13,
+ "round": 3,
+ "state": "baseline",
+ "query": "k111&am=instant&fw=0&snd=none&phw=0",
+ "moves": [],
+ "decl": {
+  "head": "mentr_b",
+  "headArms": 1,
+  "choices": [
+   {
+    "edge": 0,
+    "far": "node_12",
+    "farDeadEnd": false
+   }
+  ],
+  "reach": 3,
+  "spacing": 2.5,
+  "pathEdges": [],
+  "pulses": [
+   {
+    "chain": 0,
+    "cJ": 0,
+    "cF": 32,
+    "inward": false,
+    "hovered": false,
+    "dist0": 0,
+    "cont": false,
+    "edge": 0,
+    "near": "mentr_b",
+    "far": "node_12",
+    "lattice": 18.28474985223588,
+    "world": 16.999042510986328,
+    "farEnd": false,
+    "farArms": 3
+   }
+  ],
+  "headScreen": {
+   "x": 407.41959820714357,
+   "y": 62.581770938172674
+  },
+  "view": {
+   "x": 414.21940900497543,
+   "y": 52.96538690192257,
+   "s": 21.888259778775943,
+   "zoom": 1,
+   "panX": 0,
+   "panY": 0,
+   "panel": {
+    "left": 1270,
+    "mazeRight": 1208.6288738626547,
+    "open": 1
+   },
+   "mazeRight": 1208.6288738626547,
+   "range": {
+    "loX": 0,
+    "hiX": 0,
+    "loY": 0,
+    "hiY": 0
+   },
+   "allow": {
+    "loX": 0,
+    "hiX": 0,
+    "loY": 0,
+    "hiY": 0
+   },
+   "panelT": 1
+  }
+ },
+ "pulses": [
+  {
+   "edge": 0,
+   "near": "mentr_b",
+   "far": "node_12",
+   "atA": true,
+   "span": 16.99925994873047,
+   "dist0": 0,
+   "cont": false,
+   "inward": false,
+   "parent": -1,
+   "two": false,
+   "dB": 0,
+   "inwardB": false
+  }
+ ]
+}

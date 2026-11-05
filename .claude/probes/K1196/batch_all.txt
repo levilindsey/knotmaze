@@ -1,0 +1,2 @@
+node bench.mjs out
+node summarize.mjs out

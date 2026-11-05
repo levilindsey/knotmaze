@@ -1,0 +1,6332 @@
+{
+ "when": "2026-11-05T09:50:49.118Z",
+ "host": "desktop 1600x900@2 angle=d3d11 (bench_frame size)",
+ "secRest": 5,
+ "movesPlay": 24,
+ "caps": {
+  "webgl2": true,
+  "renderer": "ANGLE (AMD, AMD Radeon RX 6800 XT (0x000073BF) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "vendor": "Google Inc. (AMD)",
+  "maxVaryingVectors": 30,
+  "maxVaryingComponents": 120,
+  "maxTextureSize": 16384,
+  "maxFragmentUniformVectors": 1024,
+  "maxTextureImageUnits": 16,
+  "precision": {
+   "vertexHighp": {
+    "rangeMin": 127,
+    "rangeMax": 127,
+    "precision": 23
+   },
+   "vertexMediump": {
+    "rangeMin": 127,
+    "rangeMax": 127,
+    "precision": 23
+   },
+   "fragmentHighp": {
+    "rangeMin": 127,
+    "rangeMax": 127,
+    "precision": 23
+   },
+   "fragmentMediump": {
+    "rangeMin": 127,
+    "rangeMax": 127,
+    "precision": 23
+   }
+  },
+  "timerQuery": true,
+  "colorBufferFloat": true,
+  "floatLinear": true,
+  "dpr": 2.0000000596046448,
+  "viewport": "1600x900",
+  "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/158.0.0.0 Safari/537.36"
+ },
+ "records": [
+  {
+   "seq": 0,
+   "round": -1,
+   "state": "baseline",
+   "query": "k111&am=instant&fw=0&snd=none&phw=0",
+   "moves": [],
+   "target": null,
+   "playCycle": [
+    0
+   ],
+   "head": "mentr_b",
+   "targetItem": null,
+   "twoEdges": [],
+   "stamp": "P4 v0.4.0 ad6e87b3 2026-11-05 09:24 | sim 5.0s / wall 72.4s | settle lag 17.5s | asleep",
+   "restMs": 1,
+   "rest": {
+    "frameMs": {
+     "n": 277,
+     "mean": 7.117,
+     "p50": 7.1,
+     "p90": 7.5,
+     "p95": 7.7,
+     "max": 11.3
+    },
+    "submitMs": {
+     "n": 277,
+     "mean": 0.325,
+     "p50": 0.3,
+     "p90": 0.5,
+     "p95": 0.5,
+     "max": 1
+    },
+    "finishMs": {
+     "n": 277,
+     "mean": 6.792,
+     "p50": 6.7,
+     "p90": 7.2,
+     "p95": 7.3,
+     "max": 10.3
+    },
+    "intervalMs": {
+     "n": 275,
+     "mean": 18.063,
+     "p50": 18,
+     "p90": 18.5,
+     "p95": 18.6,
+     "max": 19
+    },
+    "framesDrawn": 277,
+    "rafFrames": 277,
+    "drawsPerFrame": 100,
+    "updateMsPerCall": null,
+    "updateCalls": 0,
+    "perf": {
+     "state": "live",
+     "asleep": true
+    },
+    "contextLost": 0
+   },
+   "play": {
+    "frameMs": {
+     "n": 1969,
+     "mean": 6.864,
+     "p50": 6.8,
+     "p90": 7.2,
+     "p95": 7.4,
+     "max": 17.5
+    },
+    "submitMs": {
+     "n": 1969,
+     "mean": 0.295,
+     "p50": 0.3,
+     "p90": 0.4,
+     "p95": 0.4,
+     "max": 0.9
+    },
+    "finishMs": {
+     "n": 1969,
+     "mean": 6.569,
+     "p50": 6.5,
+     "p90": 6.9,
+     "p95": 7,
+     "max": 17.1
+    },
+    "intervalMs": {
+     "n": 1967,
+     "mean": 18.044,
+     "p50": 18,
+     "p90": 18.6,
+     "p95": 18.8,
+     "max": 28.1
+    },
+    "framesDrawn": 1969,
+    "rafFrames": 1969,
+    "drawsPerFrame": 99.1,
+    "updateMsPerCall": null,
+    "updateCalls": 0,
+    "perf": {
+     "state": "live",
+     "asleep": true
+    },
+    "contextLost": 0,
+    "windowSec": 35.538,
+    "playLog": [
+     {
+      "i": 0,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 1480
+     },
+     {
+      "i": 1,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 2935.7
+     },
+     {
+      "i": 2,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 4419.6
+     },
+     {
+      "i": 3,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 5893.5
+     },
+     {
+      "i": 4,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 7368.3
+     },
+     {
+      "i": 5,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 8840
+     },
+     {
+      "i": 6,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 10333.4
+     },
+     {
+      "i": 7,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 11804.2
+     },
+     {
+      "i": 8,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 13304.7
+     },
+     {
+      "i": 9,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 14761.2
+     },
+     {
+      "i": 10,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 16236.7
+     },
+     {
+      "i": 11,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 17713.2
+     },
+     {
+      "i": 12,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 19190.7
+     },
+     {
+      "i": 13,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 20652.1
+     },
+     {
+      "i": 14,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 22126.5
+     },
+     {
+      "i": 15,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 23611.1
+     },
+     {
+      "i": 16,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 25110.6
+     },
+     {
+      "i": 17,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 26565.2
+     },
+     {
+      "i": 18,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 28035.8
+     },
+     {
+      "i": 19,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 29501.8
+     },
+     {
+      "i": 20,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 30986.6
+     },
+     {
+      "i": 21,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 32471.1
+     },
+     {
+      "i": 22,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 33975.8
+     },
+     {
+      "i": 23,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 35461.7
+     }
+    ]
+   },
+   "after": {
+    "head": "mentr_b",
+    "twos": [],
+    "ctxLost": 0
+   },
+   "pageErrors": []
+  },
+  {
+   "seq": 1,
+   "round": -1,
+   "state": "baseline",
+   "query": "k111&am=instant&fw=0&snd=none&phw=0",
+   "moves": [],
+   "target": null,
+   "playCycle": [
+    0
+   ],
+   "head": "mentr_b",
+   "targetItem": null,
+   "twoEdges": [],
+   "stamp": "P4 v0.4.0 ad6e87b3 2026-11-05 09:24 | sim 5.0s / wall 63.8s | settle lag 14.3s | asleep",
+   "restMs": 1,
+   "rest": {
+    "frameMs": {
+     "n": 277,
+     "mean": 7,
+     "p50": 6.9,
+     "p90": 7.3,
+     "p95": 7.6,
+     "max": 8.4
+    },
+    "submitMs": {
+     "n": 277,
+     "mean": 0.328,
+     "p50": 0.3,
+     "p90": 0.4,
+     "p95": 0.5,
+     "max": 1
+    },
+    "finishMs": {
+     "n": 277,
+     "mean": 6.671,
+     "p50": 6.6,
+     "p90": 7,
+     "p95": 7.1,
+     "max": 7.6
+    },
+    "intervalMs": {
+     "n": 275,
+     "mean": 18.1,
+     "p50": 18,
+     "p90": 18.7,
+     "p95": 18.8,
+     "max": 19.3
+    },
+    "framesDrawn": 277,
+    "rafFrames": 277,
+    "drawsPerFrame": 100,
+    "updateMsPerCall": null,
+    "updateCalls": 0,
+    "perf": {
+     "state": "live",
+     "asleep": true
+    },
+    "contextLost": 0
+   },
+   "play": {
+    "frameMs": {
+     "n": 1961,
+     "mean": 6.918,
+     "p50": 6.9,
+     "p90": 7.3,
+     "p95": 7.4,
+     "max": 15.2
+    },
+    "submitMs": {
+     "n": 1961,
+     "mean": 0.295,
+     "p50": 0.3,
+     "p90": 0.4,
+     "p95": 0.4,
+     "max": 1.3
+    },
+    "finishMs": {
+     "n": 1961,
+     "mean": 6.623,
+     "p50": 6.6,
+     "p90": 6.9,
+     "p95": 7.1,
+     "max": 14.6
+    },
+    "intervalMs": {
+     "n": 1959,
+     "mean": 18.067,
+     "p50": 18,
+     "p90": 18.6,
+     "p95": 18.8,
+     "max": 49
+    },
+    "framesDrawn": 1961,
+    "rafFrames": 1961,
+    "drawsPerFrame": 99.1,
+    "updateMsPerCall": null,
+    "updateCalls": 0,
+    "perf": {
+     "state": "live",
+     "asleep": true
+    },
+    "contextLost": 0,
+    "windowSec": 35.443,
+    "playLog": [
+     {
+      "i": 0,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 1490.4
+     },
+     {
+      "i": 1,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 2984.9
+     },
+     {
+      "i": 2,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 4462.2
+     },
+     {
+      "i": 3,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 5915.9
+     },
+     {
+      "i": 4,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 7390.6
+     },
+     {
+      "i": 5,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 8876.6
+     },
+     {
+      "i": 6,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 10353.4
+     },
+     {
+      "i": 7,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 11817
+     },
+     {
+      "i": 8,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 13318.4
+     },
+     {
+      "i": 9,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 14791.8
+     },
+     {
+      "i": 10,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 16269.4
+     },
+     {
+      "i": 11,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 17737.9
+     },
+     {
+      "i": 12,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 19202.3
+     },
+     {
+      "i": 13,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 20657.1
+     },
+     {
+      "i": 14,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 22139.9
+     },
+     {
+      "i": 15,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 23604.4
+     },
+     {
+      "i": 16,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 25072.6
+     },
+     {
+      "i": 17,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 26548.5
+     },
+     {
+      "i": 18,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 28007.9
+     },
+     {
+      "i": 19,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 29477.3
+     },
+     {
+      "i": 20,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 30949.8
+     },
+     {
+      "i": 21,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 32404
+     },
+     {
+      "i": 22,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 33883.3
+     },
+     {
+      "i": 23,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 35366.9
+     }
+    ]
+   },
+   "after": {
+    "head": "mentr_b",
+    "twos": [],
+    "ctxLost": 0
+   },
+   "pageErrors": []
+  },
+  {
+   "seq": 2,
+   "round": 0,
+   "state": "baseline",
+   "query": "k111&am=instant&fw=0&snd=none&phw=0",
+   "moves": [],
+   "target": null,
+   "playCycle": [
+    0
+   ],
+   "head": "mentr_b",
+   "targetItem": null,
+   "twoEdges": [],
+   "stamp": "P4 v0.4.0 ad6e87b3 2026-11-05 09:24 | sim 5.0s / wall 63.3s | settle lag 14.0s | asleep",
+   "restMs": 1,
+   "rest": {
+    "frameMs": {
+     "n": 277,
+     "mean": 7.031,
+     "p50": 7,
+     "p90": 7.4,
+     "p95": 7.5,
+     "max": 8.6
+    },
+    "submitMs": {
+     "n": 277,
+     "mean": 0.331,
+     "p50": 0.3,
+     "p90": 0.4,
+     "p95": 0.4,
+     "max": 1
+    },
+    "finishMs": {
+     "n": 277,
+     "mean": 6.7,
+     "p50": 6.7,
+     "p90": 7,
+     "p95": 7.2,
+     "max": 7.6
+    },
+    "intervalMs": {
+     "n": 275,
+     "mean": 18.054,
+     "p50": 18,
+     "p90": 18.5,
+     "p95": 18.7,
+     "max": 18.8
+    },
+    "framesDrawn": 277,
+    "rafFrames": 277,
+    "drawsPerFrame": 100,
+    "updateMsPerCall": null,
+    "updateCalls": 0,
+    "perf": {
+     "state": "live",
+     "asleep": true
+    },
+    "contextLost": 0
+   },
+   "play": {
+    "frameMs": {
+     "n": 1961,
+     "mean": 6.958,
+     "p50": 6.9,
+     "p90": 7.4,
+     "p95": 7.5,
+     "max": 12.8
+    },
+    "submitMs": {
+     "n": 1961,
+     "mean": 0.31,
+     "p50": 0.3,
+     "p90": 0.4,
+     "p95": 0.4,
+     "max": 1
+    },
+    "finishMs": {
+     "n": 1961,
+     "mean": 6.648,
+     "p50": 6.6,
+     "p90": 7,
+     "p95": 7.2,
+     "max": 12
+    },
+    "intervalMs": {
+     "n": 1959,
+     "mean": 18.079,
+     "p50": 18,
+     "p90": 18.6,
+     "p95": 18.8,
+     "max": 28.2
+    },
+    "framesDrawn": 1961,
+    "rafFrames": 1961,
+    "drawsPerFrame": 99.1,
+    "updateMsPerCall": null,
+    "updateCalls": 0,
+    "perf": {
+     "state": "live",
+     "asleep": true
+    },
+    "contextLost": 0,
+    "windowSec": 35.462,
+    "playLog": [
+     {
+      "i": 0,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 1506.2
+     },
+     {
+      "i": 1,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 2974.7
+     },
+     {
+      "i": 2,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 4447
+     },
+     {
+      "i": 3,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 5943.5
+     },
+     {
+      "i": 4,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 7418
+     },
+     {
+      "i": 5,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 8885.6
+     },
+     {
+      "i": 6,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 10365.4
+     },
+     {
+      "i": 7,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 11825.3
+     },
+     {
+      "i": 8,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 13294.4
+     },
+     {
+      "i": 9,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 14765.8
+     },
+     {
+      "i": 10,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 16235.3
+     },
+     {
+      "i": 11,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 17697
+     },
+     {
+      "i": 12,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 19177.5
+     },
+     {
+      "i": 13,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 20645.9
+     },
+     {
+      "i": 14,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 22120
+     },
+     {
+      "i": 15,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 23602.1
+     },
+     {
+      "i": 16,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 25073.5
+     },
+     {
+      "i": 17,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 26555.6
+     },
+     {
+      "i": 18,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 28033.4
+     },
+     {
+      "i": 19,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 29491.7
+     },
+     {
+      "i": 20,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 30970.9
+     },
+     {
+      "i": 21,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 32433.3
+     },
+     {
+      "i": 22,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 33921
+     },
+     {
+      "i": 23,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 35389.1
+     }
+    ]
+   },
+   "after": {
+    "head": "mentr_b",
+    "twos": [],
+    "ctxLost": 0
+   },
+   "pageErrors": []
+  },
+  {
+   "seq": 3,
+   "round": 0,
+   "state": "cyc",
+   "query": "k111&am=instant&fw=0&snd=none&phw=0",
+   "moves": [
+    0,
+    246,
+    82,
+    83,
+    199,
+    150,
+    151,
+    38,
+    155,
+    211
+   ],
+   "target": 210,
+   "playCycle": [
+    210,
+    39
+   ],
+   "head": "node_221",
+   "targetItem": {
+    "edge": 210,
+    "near": "node_221",
+    "far": "node_218",
+    "atA": false,
+    "span": 2.74639892578125,
+    "dist0": 0,
+    "cont": true,
+    "inward": false,
+    "parent": -1,
+    "two": true,
+    "dB": 1.386,
+    "inwardB": false
+   },
+   "twoEdges": [
+    210
+   ],
+   "stamp": "P4 v0.4.0 ad6e87b3 2026-11-05 09:24 | sim 5.0s / wall 54.4s | settle lag 15.6s | asleep",
+   "restMs": 1,
+   "rest": {
+    "frameMs": {
+     "n": 277,
+     "mean": 7.521,
+     "p50": 7.4,
+     "p90": 7.9,
+     "p95": 8.1,
+     "max": 9.3
+    },
+    "submitMs": {
+     "n": 277,
+     "mean": 0.341,
+     "p50": 0.3,
+     "p90": 0.4,
+     "p95": 0.5,
+     "max": 0.8
+    },
+    "finishMs": {
+     "n": 277,
+     "mean": 7.18,
+     "p50": 7.1,
+     "p90": 7.6,
+     "p95": 7.7,
+     "max": 8.7
+    },
+    "intervalMs": {
+     "n": 275,
+     "mean": 18.079,
+     "p50": 18,
+     "p90": 18.6,
+     "p95": 18.8,
+     "max": 38.5
+    },
+    "framesDrawn": 277,
+    "rafFrames": 277,
+    "drawsPerFrame": 100,
+    "updateMsPerCall": null,
+    "updateCalls": 0,
+    "perf": {
+     "state": "live",
+     "asleep": true
+    },
+    "contextLost": 0
+   },
+   "play": {
+    "frameMs": {
+     "n": 319,
+     "mean": 7.207,
+     "p50": 7.1,
+     "p90": 7.7,
+     "p95": 7.9,
+     "max": 9.5
+    },
+    "submitMs": {
+     "n": 319,
+     "mean": 0.339,
+     "p50": 0.3,
+     "p90": 0.5,
+     "p95": 0.6,
+     "max": 0.9
+    },
+    "finishMs": {
+     "n": 319,
+     "mean": 6.868,
+     "p50": 6.8,
+     "p90": 7.2,
+     "p95": 7.4,
+     "max": 8.9
+    },
+    "intervalMs": {
+     "n": 317,
+     "mean": 18.11,
+     "p50": 18,
+     "p90": 19.4,
+     "p95": 22.7,
+     "max": 28.9
+    },
+    "framesDrawn": 319,
+    "rafFrames": 319,
+    "drawsPerFrame": 99.3,
+    "updateMsPerCall": null,
+    "updateCalls": 0,
+    "perf": {
+     "state": "live",
+     "asleep": true
+    },
+    "contextLost": 0,
+    "windowSec": 5.785,
+    "playLog": [
+     {
+      "i": 0,
+      "eid": 210,
+      "head0": "node_221",
+      "head1": "node_218",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 365
+     },
+     {
+      "i": 1,
+      "eid": 39,
+      "head0": "node_218",
+      "head1": "node_221",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 478.8
+     },
+     {
+      "i": 2,
+      "eid": 210,
+      "head0": "node_221",
+      "head1": "node_218",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 833.1
+     },
+     {
+      "i": 3,
+      "eid": 39,
+      "head0": "node_218",
+      "head1": "node_221",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 946.8
+     },
+     {
+      "i": 4,
+      "eid": 210,
+      "head0": "node_221",
+      "head1": "node_218",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 1312.9
+     },
+     {
+      "i": 5,
+      "eid": 39,
+      "head0": "node_218",
+      "head1": "node_221",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 1438.4
+     },
+     {
+      "i": 6,
+      "eid": 210,
+      "head0": "node_221",
+      "head1": "node_218",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 1819.4
+     },
+     {
+      "i": 7,
+      "eid": 39,
+      "head0": "node_218",
+      "head1": "node_221",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 1909.7
+     },
+     {
+      "i": 8,
+      "eid": 210,
+      "head0": "node_221",
+      "head1": "node_218",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 2269.6
+     },
+     {
+      "i": 9,
+      "eid": 39,
+      "head0": "node_218",
+      "head1": "node_221",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 2401.3
+     },
+     {
+      "i": 10,
+      "eid": 210,
+      "head0": "node_221",
+      "head1": "node_218",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 2764.5
+     },
+     {
+      "i": 11,
+      "eid": 39,
+      "head0": "node_218",
+      "head1": "node_221",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 2888.8
+     },
+     {
+      "i": 12,
+      "eid": 210,
+      "head0": "node_221",
+      "head1": "node_218",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 3249
+     },
+     {
+      "i": 13,
+      "eid": 39,
+      "head0": "node_218",
+      "head1": "node_221",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 3358.7
+     },
+     {
+      "i": 14,
+      "eid": 210,
+      "head0": "node_221",
+      "head1": "node_218",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 3718.5
+     },
+     {
+      "i": 15,
+      "eid": 39,
+      "head0": "node_218",
+      "head1": "node_221",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 3809.4
+     },
+     {
+      "i": 16,
+      "eid": 210,
+      "head0": "node_221",
+      "head1": "node_218",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 4170.8
+     },
+     {
+      "i": 17,
+      "eid": 39,
+      "head0": "node_218",
+      "head1": "node_221",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 4283.8
+     },
+     {
+      "i": 18,
+      "eid": 210,
+      "head0": "node_221",
+      "head1": "node_218",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 4641.2
+     },
+     {
+      "i": 19,
+      "eid": 39,
+      "head0": "node_218",
+      "head1": "node_221",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 4753.1
+     },
+     {
+      "i": 20,
+      "eid": 210,
+      "head0": "node_221",
+      "head1": "node_218",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 5114
+     },
+     {
+      "i": 21,
+      "eid": 39,
+      "head0": "node_218",
+      "head1": "node_221",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 5239.2
+     },
+     {
+      "i": 22,
+      "eid": 210,
+      "head0": "node_221",
+      "head1": "node_218",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 5596.5
+     },
+     {
+      "i": 23,
+      "eid": 39,
+      "head0": "node_218",
+      "head1": "node_221",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 5708.1
+     }
+    ]
+   },
+   "after": {
+    "head": "node_221",
+    "twos": [
+     210
+    ],
+    "ctxLost": 0
+   },
+   "pageErrors": []
+  },
+  {
+   "seq": 4,
+   "round": 0,
+   "state": "loop",
+   "query": "1&am=instant&fw=0&snd=none&phw=0&pr=8",
+   "moves": [
+    185,
+    186,
+    187,
+    122,
+    50,
+    118,
+    117,
+    165,
+    60,
+    9,
+    178,
+    57,
+    101
+   ],
+   "target": 102,
+   "playCycle": [
+    102
+   ],
+   "head": "node_635",
+   "targetItem": {
+    "edge": 102,
+    "near": "node_635",
+    "far": "node_635",
+    "atA": true,
+    "span": 7.670727729797363,
+    "dist0": 0,
+    "cont": true,
+    "inward": false,
+    "parent": -1,
+    "two": true,
+    "dB": 0,
+    "inwardB": false
+   },
+   "twoEdges": [
+    102
+   ],
+   "stamp": "P4 v0.4.0 ad6e87b3 2026-11-05 09:24 | sim 5.0s / wall 75.7s | settle lag 13.9s | asleep",
+   "restMs": 1,
+   "rest": {
+    "frameMs": {
+     "n": 277,
+     "mean": 7.879,
+     "p50": 7.7,
+     "p90": 8.5,
+     "p95": 8.6,
+     "max": 10
+    },
+    "submitMs": {
+     "n": 277,
+     "mean": 0.351,
+     "p50": 0.3,
+     "p90": 0.5,
+     "p95": 0.5,
+     "max": 1
+    },
+    "finishMs": {
+     "n": 277,
+     "mean": 7.529,
+     "p50": 7.4,
+     "p90": 8,
+     "p95": 8.2,
+     "max": 9
+    },
+    "intervalMs": {
+     "n": 275,
+     "mean": 18.067,
+     "p50": 18,
+     "p90": 18.6,
+     "p95": 18.7,
+     "max": 21.6
+    },
+    "framesDrawn": 277,
+    "rafFrames": 277,
+    "drawsPerFrame": 95,
+    "updateMsPerCall": null,
+    "updateCalls": 0,
+    "perf": {
+     "state": "live",
+     "asleep": true
+    },
+    "contextLost": 0
+   },
+   "play": {
+    "frameMs": {
+     "n": 1348,
+     "mean": 7.235,
+     "p50": 7.2,
+     "p90": 7.7,
+     "p95": 7.9,
+     "max": 11
+    },
+    "submitMs": {
+     "n": 1348,
+     "mean": 0.3,
+     "p50": 0.3,
+     "p90": 0.4,
+     "p95": 0.4,
+     "max": 0.8
+    },
+    "finishMs": {
+     "n": 1348,
+     "mean": 6.935,
+     "p50": 6.9,
+     "p90": 7.4,
+     "p95": 7.5,
+     "max": 10.3
+    },
+    "intervalMs": {
+     "n": 1346,
+     "mean": 18.13,
+     "p50": 18.1,
+     "p90": 18.7,
+     "p95": 18.9,
+     "max": 31.7
+    },
+    "framesDrawn": 1348,
+    "rafFrames": 1348,
+    "drawsPerFrame": 94.1,
+    "updateMsPerCall": null,
+    "updateCalls": 0,
+    "perf": {
+     "state": "live",
+     "asleep": true
+    },
+    "contextLost": 0,
+    "windowSec": 24.448,
+    "playLog": [
+     {
+      "i": 0,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 1015.8
+     },
+     {
+      "i": 1,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 2024.9
+     },
+     {
+      "i": 2,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 3042.9
+     },
+     {
+      "i": 3,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 4062.1
+     },
+     {
+      "i": 4,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 5073.7
+     },
+     {
+      "i": 5,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 6092.9
+     },
+     {
+      "i": 6,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 7104
+     },
+     {
+      "i": 7,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 8114.6
+     },
+     {
+      "i": 8,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 9127.8
+     },
+     {
+      "i": 9,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 10138.5
+     },
+     {
+      "i": 10,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 11180.1
+     },
+     {
+      "i": 11,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 12190.6
+     },
+     {
+      "i": 12,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 13209.5
+     },
+     {
+      "i": 13,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 14248.1
+     },
+     {
+      "i": 14,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 15255.3
+     },
+     {
+      "i": 15,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 16261.7
+     },
+     {
+      "i": 16,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 17255.5
+     },
+     {
+      "i": 17,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 18272.3
+     },
+     {
+      "i": 18,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 19284.2
+     },
+     {
+      "i": 19,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 20307.4
+     },
+     {
+      "i": 20,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 21310.8
+     },
+     {
+      "i": 21,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 22356.7
+     },
+     {
+      "i": 22,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 23363.5
+     },
+     {
+      "i": 23,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 24374.4
+     }
+    ]
+   },
+   "after": {
+    "head": "node_635",
+    "twos": [
+     102
+    ],
+    "ctxLost": 0
+   },
+   "pageErrors": []
+  },
+  {
+   "seq": 5,
+   "round": 1,
+   "state": "loop",
+   "query": "1&am=instant&fw=0&snd=none&phw=0&pr=8",
+   "moves": [
+    185,
+    186,
+    187,
+    122,
+    50,
+    118,
+    117,
+    165,
+    60,
+    9,
+    178,
+    57,
+    101
+   ],
+   "target": 102,
+   "playCycle": [
+    102
+   ],
+   "head": "node_635",
+   "targetItem": {
+    "edge": 102,
+    "near": "node_635",
+    "far": "node_635",
+    "atA": true,
+    "span": 7.670727729797363,
+    "dist0": 0,
+    "cont": true,
+    "inward": false,
+    "parent": -1,
+    "two": true,
+    "dB": 0,
+    "inwardB": false
+   },
+   "twoEdges": [
+    102
+   ],
+   "stamp": "P4 v0.4.0 ad6e87b3 2026-11-05 09:24 | sim 5.0s / wall 76.4s | settle lag 14.6s | asleep",
+   "restMs": 1,
+   "rest": {
+    "frameMs": {
+     "n": 275,
+     "mean": 7.932,
+     "p50": 7.8,
+     "p90": 8.4,
+     "p95": 8.5,
+     "max": 10.7
+    },
+    "submitMs": {
+     "n": 275,
+     "mean": 0.335,
+     "p50": 0.3,
+     "p90": 0.5,
+     "p95": 0.5,
+     "max": 0.9
+    },
+    "finishMs": {
+     "n": 275,
+     "mean": 7.598,
+     "p50": 7.5,
+     "p90": 8,
+     "p95": 8.2,
+     "max": 9.8
+    },
+    "intervalMs": {
+     "n": 273,
+     "mean": 18.168,
+     "p50": 18.1,
+     "p90": 18.7,
+     "p95": 18.8,
+     "max": 19.1
+    },
+    "framesDrawn": 275,
+    "rafFrames": 275,
+    "drawsPerFrame": 95,
+    "updateMsPerCall": null,
+    "updateCalls": 0,
+    "perf": {
+     "state": "live",
+     "asleep": true
+    },
+    "contextLost": 0
+   },
+   "play": {
+    "frameMs": {
+     "n": 1340,
+     "mean": 7.237,
+     "p50": 7.2,
+     "p90": 7.7,
+     "p95": 7.8,
+     "max": 9.5
+    },
+    "submitMs": {
+     "n": 1340,
+     "mean": 0.301,
+     "p50": 0.3,
+     "p90": 0.4,
+     "p95": 0.4,
+     "max": 1.3
+    },
+    "finishMs": {
+     "n": 1340,
+     "mean": 6.936,
+     "p50": 6.9,
+     "p90": 7.3,
+     "p95": 7.5,
+     "max": 9
+    },
+    "intervalMs": {
+     "n": 1338,
+     "mean": 18.167,
+     "p50": 18.1,
+     "p90": 18.7,
+     "p95": 19,
+     "max": 27.9
+    },
+    "framesDrawn": 1340,
+    "rafFrames": 1340,
+    "drawsPerFrame": 94.1,
+    "updateMsPerCall": null,
+    "updateCalls": 0,
+    "perf": {
+     "state": "live",
+     "asleep": true
+    },
+    "contextLost": 0,
+    "windowSec": 24.352,
+    "playLog": [
+     {
+      "i": 0,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 1013.4
+     },
+     {
+      "i": 1,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 2031.9
+     },
+     {
+      "i": 2,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 3045
+     },
+     {
+      "i": 3,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 4044.1
+     },
+     {
+      "i": 4,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 5046.8
+     },
+     {
+      "i": 5,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 6055.7
+     },
+     {
+      "i": 6,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 7055.9
+     },
+     {
+      "i": 7,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 8075.5
+     },
+     {
+      "i": 8,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 9089.6
+     },
+     {
+      "i": 9,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 10096.2
+     },
+     {
+      "i": 10,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 11110.1
+     },
+     {
+      "i": 11,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 12121.9
+     },
+     {
+      "i": 12,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 13141.2
+     },
+     {
+      "i": 13,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 14136.2
+     },
+     {
+      "i": 14,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 15147
+     },
+     {
+      "i": 15,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 16158.2
+     },
+     {
+      "i": 16,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 17154.9
+     },
+     {
+      "i": 17,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 18156.2
+     },
+     {
+      "i": 18,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 19169.7
+     },
+     {
+      "i": 19,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 20224.2
+     },
+     {
+      "i": 20,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 21233.2
+     },
+     {
+      "i": 21,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 22232.3
+     },
+     {
+      "i": 22,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 23259.8
+     },
+     {
+      "i": 23,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 24277.3
+     }
+    ]
+   },
+   "after": {
+    "head": "node_635",
+    "twos": [
+     102
+    ],
+    "ctxLost": 0
+   },
+   "pageErrors": []
+  },
+  {
+   "seq": 6,
+   "round": 1,
+   "state": "cyc",
+   "query": "k111&am=instant&fw=0&snd=none&phw=0",
+   "moves": [
+    0,
+    246,
+    82,
+    83,
+    199,
+    150,
+    151,
+    38,
+    155,
+    211
+   ],
+   "target": 210,
+   "playCycle": [
+    210,
+    39
+   ],
+   "head": "node_221",
+   "targetItem": {
+    "edge": 210,
+    "near": "node_221",
+    "far": "node_218",
+    "atA": false,
+    "span": 2.74639892578125,
+    "dist0": 0,
+    "cont": true,
+    "inward": false,
+    "parent": -1,
+    "two": true,
+    "dB": 1.386,
+    "inwardB": false
+   },
+   "twoEdges": [
+    210
+   ],
+   "stamp": "P4 v0.4.0 ad6e87b3 2026-11-05 09:24 | sim 5.0s / wall 53.5s | settle lag 14.4s | asleep",
+   "restMs": 1,
+   "rest": {
+    "frameMs": {
+     "n": 277,
+     "mean": 7.671,
+     "p50": 7.6,
+     "p90": 8,
+     "p95": 8.2,
+     "max": 9.7
+    },
+    "submitMs": {
+     "n": 277,
+     "mean": 0.4,
+     "p50": 0.4,
+     "p90": 0.5,
+     "p95": 0.6,
+     "max": 1.1
+    },
+    "finishMs": {
+     "n": 277,
+     "mean": 7.271,
+     "p50": 7.2,
+     "p90": 7.6,
+     "p95": 7.8,
+     "max": 8.6
+    },
+    "intervalMs": {
+     "n": 275,
+     "mean": 18.091,
+     "p50": 18,
+     "p90": 18.6,
+     "p95": 18.8,
+     "max": 19.4
+    },
+    "framesDrawn": 277,
+    "rafFrames": 277,
+    "drawsPerFrame": 100,
+    "updateMsPerCall": null,
+    "updateCalls": 0,
+    "perf": {
+     "state": "live",
+     "asleep": true
+    },
+    "contextLost": 0
+   },
+   "play": {
+    "frameMs": {
+     "n": 318,
+     "mean": 7.544,
+     "p50": 7.5,
+     "p90": 8.1,
+     "p95": 8.3,
+     "max": 9.6
+    },
+    "submitMs": {
+     "n": 318,
+     "mean": 0.44,
+     "p50": 0.4,
+     "p90": 0.6,
+     "p95": 0.8,
+     "max": 1.2
+    },
+    "finishMs": {
+     "n": 318,
+     "mean": 7.104,
+     "p50": 7.1,
+     "p90": 7.5,
+     "p95": 7.7,
+     "max": 9
+    },
+    "intervalMs": {
+     "n": 316,
+     "mean": 18.259,
+     "p50": 18.2,
+     "p90": 20,
+     "p95": 23.7,
+     "max": 30
+    },
+    "framesDrawn": 318,
+    "rafFrames": 318,
+    "drawsPerFrame": 99.3,
+    "updateMsPerCall": null,
+    "updateCalls": 0,
+    "perf": {
+     "state": "live",
+     "asleep": true
+    },
+    "contextLost": 0,
+    "windowSec": 5.815,
+    "playLog": [
+     {
+      "i": 0,
+      "eid": 210,
+      "head0": "node_221",
+      "head1": "node_218",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 366.5
+     },
+     {
+      "i": 1,
+      "eid": 39,
+      "head0": "node_218",
+      "head1": "node_221",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 458.9
+     },
+     {
+      "i": 2,
+      "eid": 210,
+      "head0": "node_221",
+      "head1": "node_218",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 819.5
+     },
+     {
+      "i": 3,
+      "eid": 39,
+      "head0": "node_218",
+      "head1": "node_221",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 915.2
+     },
+     {
+      "i": 4,
+      "eid": 210,
+      "head0": "node_221",
+      "head1": "node_218",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 1280.2
+     },
+     {
+      "i": 5,
+      "eid": 39,
+      "head0": "node_218",
+      "head1": "node_221",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 1420.7
+     },
+     {
+      "i": 6,
+      "eid": 210,
+      "head0": "node_221",
+      "head1": "node_218",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 1818.8
+     },
+     {
+      "i": 7,
+      "eid": 39,
+      "head0": "node_218",
+      "head1": "node_221",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 1912.6
+     },
+     {
+      "i": 8,
+      "eid": 210,
+      "head0": "node_221",
+      "head1": "node_218",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 2294.2
+     },
+     {
+      "i": 9,
+      "eid": 39,
+      "head0": "node_218",
+      "head1": "node_221",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 2421
+     },
+     {
+      "i": 10,
+      "eid": 210,
+      "head0": "node_221",
+      "head1": "node_218",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 2787.2
+     },
+     {
+      "i": 11,
+      "eid": 39,
+      "head0": "node_218",
+      "head1": "node_221",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 2926.7
+     },
+     {
+      "i": 12,
+      "eid": 210,
+      "head0": "node_221",
+      "head1": "node_218",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 3293.7
+     },
+     {
+      "i": 13,
+      "eid": 39,
+      "head0": "node_218",
+      "head1": "node_221",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 3385
+     },
+     {
+      "i": 14,
+      "eid": 210,
+      "head0": "node_221",
+      "head1": "node_218",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 3756.6
+     },
+     {
+      "i": 15,
+      "eid": 39,
+      "head0": "node_218",
+      "head1": "node_221",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 3857.5
+     },
+     {
+      "i": 16,
+      "eid": 210,
+      "head0": "node_221",
+      "head1": "node_218",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 4226.7
+     },
+     {
+      "i": 17,
+      "eid": 39,
+      "head0": "node_218",
+      "head1": "node_221",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 4319.3
+     },
+     {
+      "i": 18,
+      "eid": 210,
+      "head0": "node_221",
+      "head1": "node_218",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 4699.2
+     },
+     {
+      "i": 19,
+      "eid": 39,
+      "head0": "node_218",
+      "head1": "node_221",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 4826.4
+     },
+     {
+      "i": 20,
+      "eid": 210,
+      "head0": "node_221",
+      "head1": "node_218",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 5191.8
+     },
+     {
+      "i": 21,
+      "eid": 39,
+      "head0": "node_218",
+      "head1": "node_221",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 5283.8
+     },
+     {
+      "i": 22,
+      "eid": 210,
+      "head0": "node_221",
+      "head1": "node_218",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 5647.9
+     },
+     {
+      "i": 23,
+      "eid": 39,
+      "head0": "node_218",
+      "head1": "node_221",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 5742
+     }
+    ]
+   },
+   "after": {
+    "head": "node_221",
+    "twos": [
+     210
+    ],
+    "ctxLost": 0
+   },
+   "pageErrors": []
+  },
+  {
+   "seq": 7,
+   "round": 1,
+   "state": "baseline",
+   "query": "k111&am=instant&fw=0&snd=none&phw=0",
+   "moves": [],
+   "target": null,
+   "playCycle": [
+    0
+   ],
+   "head": "mentr_b",
+   "targetItem": null,
+   "twoEdges": [],
+   "stamp": "P4 v0.4.0 ad6e87b3 2026-11-05 09:24 | sim 5.0s / wall 64.3s | settle lag 14.9s | asleep",
+   "restMs": 1,
+   "rest": {
+    "frameMs": {
+     "n": 276,
+     "mean": 7.248,
+     "p50": 7.2,
+     "p90": 7.7,
+     "p95": 7.9,
+     "max": 8.5
+    },
+    "submitMs": {
+     "n": 276,
+     "mean": 0.39,
+     "p50": 0.4,
+     "p90": 0.5,
+     "p95": 0.6,
+     "max": 0.9
+    },
+    "finishMs": {
+     "n": 276,
+     "mean": 6.858,
+     "p50": 6.8,
+     "p90": 7.2,
+     "p95": 7.4,
+     "max": 7.9
+    },
+    "intervalMs": {
+     "n": 274,
+     "mean": 18.069,
+     "p50": 18,
+     "p90": 18.6,
+     "p95": 18.7,
+     "max": 19.4
+    },
+    "framesDrawn": 276,
+    "rafFrames": 276,
+    "drawsPerFrame": 100,
+    "updateMsPerCall": null,
+    "updateCalls": 0,
+    "perf": {
+     "state": "live",
+     "asleep": true
+    },
+    "contextLost": 0
+   },
+   "play": {
+    "frameMs": {
+     "n": 1955,
+     "mean": 7.071,
+     "p50": 7,
+     "p90": 7.5,
+     "p95": 7.7,
+     "max": 15.1
+    },
+    "submitMs": {
+     "n": 1955,
+     "mean": 0.351,
+     "p50": 0.3,
+     "p90": 0.5,
+     "p95": 0.5,
+     "max": 1.1
+    },
+    "finishMs": {
+     "n": 1955,
+     "mean": 6.721,
+     "p50": 6.7,
+     "p90": 7.1,
+     "p95": 7.3,
+     "max": 14
+    },
+    "intervalMs": {
+     "n": 1953,
+     "mean": 18.114,
+     "p50": 18.1,
+     "p90": 18.7,
+     "p95": 18.9,
+     "max": 54.9
+    },
+    "framesDrawn": 1955,
+    "rafFrames": 1955,
+    "drawsPerFrame": 99.1,
+    "updateMsPerCall": null,
+    "updateCalls": 0,
+    "perf": {
+     "state": "live",
+     "asleep": true
+    },
+    "contextLost": 0,
+    "windowSec": 35.425,
+    "playLog": [
+     {
+      "i": 0,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 1471.7
+     },
+     {
+      "i": 1,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 2940.4
+     },
+     {
+      "i": 2,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 4406.9
+     },
+     {
+      "i": 3,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 5873.3
+     },
+     {
+      "i": 4,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 7344.1
+     },
+     {
+      "i": 5,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 8833.9
+     },
+     {
+      "i": 6,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 10310
+     },
+     {
+      "i": 7,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 11767.4
+     },
+     {
+      "i": 8,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 13247.9
+     },
+     {
+      "i": 9,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 14714.2
+     },
+     {
+      "i": 10,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 16200.3
+     },
+     {
+      "i": 11,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 17667.2
+     },
+     {
+      "i": 12,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 19144
+     },
+     {
+      "i": 13,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 20616.1
+     },
+     {
+      "i": 14,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 22097.5
+     },
+     {
+      "i": 15,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 23563.9
+     },
+     {
+      "i": 16,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 25028
+     },
+     {
+      "i": 17,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 26512
+     },
+     {
+      "i": 18,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 27978.1
+     },
+     {
+      "i": 19,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 29454.1
+     },
+     {
+      "i": 20,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 30917.3
+     },
+     {
+      "i": 21,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 32408
+     },
+     {
+      "i": 22,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 33884.6
+     },
+     {
+      "i": 23,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 35349.8
+     }
+    ]
+   },
+   "after": {
+    "head": "mentr_b",
+    "twos": [],
+    "ctxLost": 0
+   },
+   "pageErrors": []
+  },
+  {
+   "seq": 8,
+   "round": 2,
+   "state": "baseline",
+   "query": "k111&am=instant&fw=0&snd=none&phw=0",
+   "moves": [],
+   "target": null,
+   "playCycle": [
+    0
+   ],
+   "head": "mentr_b",
+   "targetItem": null,
+   "twoEdges": [],
+   "stamp": "P4 v0.4.0 ad6e87b3 2026-11-05 09:24 | sim 5.0s / wall 64.0s | settle lag 14.6s | asleep",
+   "restMs": 2,
+   "rest": {
+    "frameMs": {
+     "n": 277,
+     "mean": 7.1,
+     "p50": 7.1,
+     "p90": 7.4,
+     "p95": 7.6,
+     "max": 8
+    },
+    "submitMs": {
+     "n": 277,
+     "mean": 0.38,
+     "p50": 0.4,
+     "p90": 0.5,
+     "p95": 0.5,
+     "max": 1.1
+    },
+    "finishMs": {
+     "n": 277,
+     "mean": 6.721,
+     "p50": 6.7,
+     "p90": 7,
+     "p95": 7.2,
+     "max": 7.6
+    },
+    "intervalMs": {
+     "n": 275,
+     "mean": 18.062,
+     "p50": 18,
+     "p90": 18.6,
+     "p95": 18.7,
+     "max": 19.3
+    },
+    "framesDrawn": 277,
+    "rafFrames": 277,
+    "drawsPerFrame": 100,
+    "updateMsPerCall": null,
+    "updateCalls": 0,
+    "perf": {
+     "state": "live",
+     "asleep": true
+    },
+    "contextLost": 0
+   },
+   "play": {
+    "frameMs": {
+     "n": 1958,
+     "mean": 7.024,
+     "p50": 7,
+     "p90": 7.4,
+     "p95": 7.5,
+     "max": 12.5
+    },
+    "submitMs": {
+     "n": 1958,
+     "mean": 0.337,
+     "p50": 0.3,
+     "p90": 0.4,
+     "p95": 0.5,
+     "max": 1
+    },
+    "finishMs": {
+     "n": 1958,
+     "mean": 6.687,
+     "p50": 6.7,
+     "p90": 7,
+     "p95": 7.2,
+     "max": 11.8
+    },
+    "intervalMs": {
+     "n": 1956,
+     "mean": 18.1,
+     "p50": 18,
+     "p90": 18.7,
+     "p95": 18.9,
+     "max": 33.5
+    },
+    "framesDrawn": 1958,
+    "rafFrames": 1958,
+    "drawsPerFrame": 99.1,
+    "updateMsPerCall": null,
+    "updateCalls": 0,
+    "perf": {
+     "state": "live",
+     "asleep": true
+    },
+    "contextLost": 0,
+    "windowSec": 35.451,
+    "playLog": [
+     {
+      "i": 0,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 1478.5
+     },
+     {
+      "i": 1,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 2977.3
+     },
+     {
+      "i": 2,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 4431.3
+     },
+     {
+      "i": 3,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 5909.9
+     },
+     {
+      "i": 4,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 7400.7
+     },
+     {
+      "i": 5,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 8866.9
+     },
+     {
+      "i": 6,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 10341.8
+     },
+     {
+      "i": 7,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 11804.4
+     },
+     {
+      "i": 8,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 13278.3
+     },
+     {
+      "i": 9,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 14757.7
+     },
+     {
+      "i": 10,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 16216.8
+     },
+     {
+      "i": 11,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 17690.6
+     },
+     {
+      "i": 12,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 19157.4
+     },
+     {
+      "i": 13,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 20641.5
+     },
+     {
+      "i": 14,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 22136
+     },
+     {
+      "i": 15,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 23599.7
+     },
+     {
+      "i": 16,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 25081.8
+     },
+     {
+      "i": 17,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 26544.5
+     },
+     {
+      "i": 18,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 28007.7
+     },
+     {
+      "i": 19,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 29478
+     },
+     {
+      "i": 20,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 30958.1
+     },
+     {
+      "i": 21,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 32440.4
+     },
+     {
+      "i": 22,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 33902.9
+     },
+     {
+      "i": 23,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 35367.3
+     }
+    ]
+   },
+   "after": {
+    "head": "mentr_b",
+    "twos": [],
+    "ctxLost": 0
+   },
+   "pageErrors": []
+  },
+  {
+   "seq": 9,
+   "round": 2,
+   "state": "cyc",
+   "query": "k111&am=instant&fw=0&snd=none&phw=0",
+   "moves": [
+    0,
+    246,
+    82,
+    83,
+    199,
+    150,
+    151,
+    38,
+    155,
+    211
+   ],
+   "target": 210,
+   "playCycle": [
+    210,
+    39
+   ],
+   "head": "node_221",
+   "targetItem": {
+    "edge": 210,
+    "near": "node_221",
+    "far": "node_218",
+    "atA": false,
+    "span": 2.74639892578125,
+    "dist0": 0,
+    "cont": true,
+    "inward": false,
+    "parent": -1,
+    "two": true,
+    "dB": 1.386,
+    "inwardB": false
+   },
+   "twoEdges": [
+    210
+   ],
+   "stamp": "P4 v0.4.0 ad6e87b3 2026-11-05 09:24 | sim 5.0s / wall 53.2s | settle lag 14.3s | asleep",
+   "restMs": 2,
+   "rest": {
+    "frameMs": {
+     "n": 277,
+     "mean": 7.64,
+     "p50": 7.6,
+     "p90": 8,
+     "p95": 8.2,
+     "max": 9.2
+    },
+    "submitMs": {
+     "n": 277,
+     "mean": 0.366,
+     "p50": 0.4,
+     "p90": 0.5,
+     "p95": 0.5,
+     "max": 1.1
+    },
+    "finishMs": {
+     "n": 277,
+     "mean": 7.274,
+     "p50": 7.2,
+     "p90": 7.6,
+     "p95": 7.8,
+     "max": 8.2
+    },
+    "intervalMs": {
+     "n": 275,
+     "mean": 18.018,
+     "p50": 17.9,
+     "p90": 18.6,
+     "p95": 18.8,
+     "max": 32.7
+    },
+    "framesDrawn": 277,
+    "rafFrames": 277,
+    "drawsPerFrame": 100,
+    "updateMsPerCall": null,
+    "updateCalls": 0,
+    "perf": {
+     "state": "live",
+     "asleep": true
+    },
+    "contextLost": 0
+   },
+   "play": {
+    "frameMs": {
+     "n": 319,
+     "mean": 7.403,
+     "p50": 7.3,
+     "p90": 7.9,
+     "p95": 8.1,
+     "max": 11.3
+    },
+    "submitMs": {
+     "n": 319,
+     "mean": 0.375,
+     "p50": 0.3,
+     "p90": 0.6,
+     "p95": 0.7,
+     "max": 1
+    },
+    "finishMs": {
+     "n": 319,
+     "mean": 7.028,
+     "p50": 7,
+     "p90": 7.4,
+     "p95": 7.5,
+     "max": 10.4
+    },
+    "intervalMs": {
+     "n": 317,
+     "mean": 18.119,
+     "p50": 18.1,
+     "p90": 19.7,
+     "p95": 23.8,
+     "max": 29.1
+    },
+    "framesDrawn": 319,
+    "rafFrames": 319,
+    "drawsPerFrame": 99.3,
+    "updateMsPerCall": null,
+    "updateCalls": 0,
+    "perf": {
+     "state": "live",
+     "asleep": true
+    },
+    "contextLost": 0,
+    "windowSec": 5.79,
+    "playLog": [
+     {
+      "i": 0,
+      "eid": 210,
+      "head0": "node_221",
+      "head1": "node_218",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 367.4
+     },
+     {
+      "i": 1,
+      "eid": 39,
+      "head0": "node_218",
+      "head1": "node_221",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 472.5
+     },
+     {
+      "i": 2,
+      "eid": 210,
+      "head0": "node_221",
+      "head1": "node_218",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 832.8
+     },
+     {
+      "i": 3,
+      "eid": 39,
+      "head0": "node_218",
+      "head1": "node_221",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 946.5
+     },
+     {
+      "i": 4,
+      "eid": 210,
+      "head0": "node_221",
+      "head1": "node_218",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 1305.5
+     },
+     {
+      "i": 5,
+      "eid": 39,
+      "head0": "node_218",
+      "head1": "node_221",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 1404
+     },
+     {
+      "i": 6,
+      "eid": 210,
+      "head0": "node_221",
+      "head1": "node_218",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 1766.4
+     },
+     {
+      "i": 7,
+      "eid": 39,
+      "head0": "node_218",
+      "head1": "node_221",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 1904.6
+     },
+     {
+      "i": 8,
+      "eid": 210,
+      "head0": "node_221",
+      "head1": "node_218",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 2266.8
+     },
+     {
+      "i": 9,
+      "eid": 39,
+      "head0": "node_218",
+      "head1": "node_221",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 2379.2
+     },
+     {
+      "i": 10,
+      "eid": 210,
+      "head0": "node_221",
+      "head1": "node_218",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 2741.3
+     },
+     {
+      "i": 11,
+      "eid": 39,
+      "head0": "node_218",
+      "head1": "node_221",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 2852.4
+     },
+     {
+      "i": 12,
+      "eid": 210,
+      "head0": "node_221",
+      "head1": "node_218",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 3216.2
+     },
+     {
+      "i": 13,
+      "eid": 39,
+      "head0": "node_218",
+      "head1": "node_221",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 3326.1
+     },
+     {
+      "i": 14,
+      "eid": 210,
+      "head0": "node_221",
+      "head1": "node_218",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 3702.3
+     },
+     {
+      "i": 15,
+      "eid": 39,
+      "head0": "node_218",
+      "head1": "node_221",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 3830
+     },
+     {
+      "i": 16,
+      "eid": 210,
+      "head0": "node_221",
+      "head1": "node_218",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 4191.6
+     },
+     {
+      "i": 17,
+      "eid": 39,
+      "head0": "node_218",
+      "head1": "node_221",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 4293
+     },
+     {
+      "i": 18,
+      "eid": 210,
+      "head0": "node_221",
+      "head1": "node_218",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 4658.2
+     },
+     {
+      "i": 19,
+      "eid": 39,
+      "head0": "node_218",
+      "head1": "node_221",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 4747.2
+     },
+     {
+      "i": 20,
+      "eid": 210,
+      "head0": "node_221",
+      "head1": "node_218",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 5111.2
+     },
+     {
+      "i": 21,
+      "eid": 39,
+      "head0": "node_218",
+      "head1": "node_221",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 5226.6
+     },
+     {
+      "i": 22,
+      "eid": 210,
+      "head0": "node_221",
+      "head1": "node_218",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 5590.7
+     },
+     {
+      "i": 23,
+      "eid": 39,
+      "head0": "node_218",
+      "head1": "node_221",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 5713.9
+     }
+    ]
+   },
+   "after": {
+    "head": "node_221",
+    "twos": [
+     210
+    ],
+    "ctxLost": 0
+   },
+   "pageErrors": []
+  },
+  {
+   "seq": 10,
+   "round": 2,
+   "state": "loop",
+   "query": "1&am=instant&fw=0&snd=none&phw=0&pr=8",
+   "moves": [
+    185,
+    186,
+    187,
+    122,
+    50,
+    118,
+    117,
+    165,
+    60,
+    9,
+    178,
+    57,
+    101
+   ],
+   "target": 102,
+   "playCycle": [
+    102
+   ],
+   "head": "node_635",
+   "targetItem": {
+    "edge": 102,
+    "near": "node_635",
+    "far": "node_635",
+    "atA": true,
+    "span": 7.670727729797363,
+    "dist0": 0,
+    "cont": true,
+    "inward": false,
+    "parent": -1,
+    "two": true,
+    "dB": 0,
+    "inwardB": false
+   },
+   "twoEdges": [
+    102
+   ],
+   "stamp": "P4 v0.4.0 ad6e87b3 2026-11-05 09:24 | sim 5.0s / wall 75.7s | settle lag 14.1s | asleep",
+   "restMs": 1,
+   "rest": {
+    "frameMs": {
+     "n": 277,
+     "mean": 7.955,
+     "p50": 7.9,
+     "p90": 8.3,
+     "p95": 8.6,
+     "max": 10
+    },
+    "submitMs": {
+     "n": 277,
+     "mean": 0.346,
+     "p50": 0.3,
+     "p90": 0.5,
+     "p95": 0.5,
+     "max": 0.7
+    },
+    "finishMs": {
+     "n": 277,
+     "mean": 7.609,
+     "p50": 7.5,
+     "p90": 7.9,
+     "p95": 8.3,
+     "max": 9.4
+    },
+    "intervalMs": {
+     "n": 275,
+     "mean": 18.072,
+     "p50": 18,
+     "p90": 18.6,
+     "p95": 18.7,
+     "max": 19.2
+    },
+    "framesDrawn": 277,
+    "rafFrames": 277,
+    "drawsPerFrame": 95,
+    "updateMsPerCall": null,
+    "updateCalls": 0,
+    "perf": {
+     "state": "live",
+     "asleep": true
+    },
+    "contextLost": 0
+   },
+   "play": {
+    "frameMs": {
+     "n": 1356,
+     "mean": 7.304,
+     "p50": 7.3,
+     "p90": 7.7,
+     "p95": 7.9,
+     "max": 9.5
+    },
+    "submitMs": {
+     "n": 1356,
+     "mean": 0.306,
+     "p50": 0.3,
+     "p90": 0.4,
+     "p95": 0.5,
+     "max": 0.9
+    },
+    "finishMs": {
+     "n": 1356,
+     "mean": 6.998,
+     "p50": 6.9,
+     "p90": 7.4,
+     "p95": 7.5,
+     "max": 8.9
+    },
+    "intervalMs": {
+     "n": 1354,
+     "mean": 18.102,
+     "p50": 18.1,
+     "p90": 18.7,
+     "p95": 18.9,
+     "max": 32.2
+    },
+    "framesDrawn": 1356,
+    "rafFrames": 1356,
+    "drawsPerFrame": 94.1,
+    "updateMsPerCall": null,
+    "updateCalls": 0,
+    "perf": {
+     "state": "live",
+     "asleep": true
+    },
+    "contextLost": 0,
+    "windowSec": 24.555,
+    "playLog": [
+     {
+      "i": 0,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 1014.5
+     },
+     {
+      "i": 1,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 2054.2
+     },
+     {
+      "i": 2,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 3069.7
+     },
+     {
+      "i": 3,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 4085.1
+     },
+     {
+      "i": 4,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 5095.8
+     },
+     {
+      "i": 5,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 6130.5
+     },
+     {
+      "i": 6,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 7164
+     },
+     {
+      "i": 7,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 8173.6
+     },
+     {
+      "i": 8,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 9189.8
+     },
+     {
+      "i": 9,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 10197.1
+     },
+     {
+      "i": 10,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 11212.4
+     },
+     {
+      "i": 11,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 12250.2
+     },
+     {
+      "i": 12,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 13260.8
+     },
+     {
+      "i": 13,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 14268.5
+     },
+     {
+      "i": 14,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 15281.8
+     },
+     {
+      "i": 15,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 16300.7
+     },
+     {
+      "i": 16,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 17334.6
+     },
+     {
+      "i": 17,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 18378
+     },
+     {
+      "i": 18,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 19391.1
+     },
+     {
+      "i": 19,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 20409.1
+     },
+     {
+      "i": 20,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 21444.9
+     },
+     {
+      "i": 21,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 22459
+     },
+     {
+      "i": 22,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 23462.3
+     },
+     {
+      "i": 23,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 24476.3
+     }
+    ]
+   },
+   "after": {
+    "head": "node_635",
+    "twos": [
+     102
+    ],
+    "ctxLost": 0
+   },
+   "pageErrors": []
+  },
+  {
+   "seq": 11,
+   "round": 3,
+   "state": "loop",
+   "query": "1&am=instant&fw=0&snd=none&phw=0&pr=8",
+   "moves": [
+    185,
+    186,
+    187,
+    122,
+    50,
+    118,
+    117,
+    165,
+    60,
+    9,
+    178,
+    57,
+    101
+   ],
+   "target": 102,
+   "playCycle": [
+    102
+   ],
+   "head": "node_635",
+   "targetItem": {
+    "edge": 102,
+    "near": "node_635",
+    "far": "node_635",
+    "atA": true,
+    "span": 7.670727729797363,
+    "dist0": 0,
+    "cont": true,
+    "inward": false,
+    "parent": -1,
+    "two": true,
+    "dB": 0,
+    "inwardB": false
+   },
+   "twoEdges": [
+    102
+   ],
+   "stamp": "P4 v0.4.0 ad6e87b3 2026-11-05 09:24 | sim 5.0s / wall 75.8s | settle lag 14.1s | asleep",
+   "restMs": 1,
+   "rest": {
+    "frameMs": {
+     "n": 276,
+     "mean": 7.957,
+     "p50": 7.9,
+     "p90": 8.4,
+     "p95": 8.7,
+     "max": 10
+    },
+    "submitMs": {
+     "n": 276,
+     "mean": 0.355,
+     "p50": 0.3,
+     "p90": 0.5,
+     "p95": 0.5,
+     "max": 0.9
+    },
+    "finishMs": {
+     "n": 276,
+     "mean": 7.603,
+     "p50": 7.5,
+     "p90": 8,
+     "p95": 8.2,
+     "max": 9.1
+    },
+    "intervalMs": {
+     "n": 274,
+     "mean": 18.152,
+     "p50": 18.1,
+     "p90": 18.7,
+     "p95": 18.8,
+     "max": 28.2
+    },
+    "framesDrawn": 276,
+    "rafFrames": 276,
+    "drawsPerFrame": 95,
+    "updateMsPerCall": null,
+    "updateCalls": 0,
+    "perf": {
+     "state": "live",
+     "asleep": true
+    },
+    "contextLost": 0
+   },
+   "play": {
+    "frameMs": {
+     "n": 1349,
+     "mean": 7.215,
+     "p50": 7.2,
+     "p90": 7.6,
+     "p95": 7.8,
+     "max": 10.3
+    },
+    "submitMs": {
+     "n": 1349,
+     "mean": 0.307,
+     "p50": 0.3,
+     "p90": 0.4,
+     "p95": 0.4,
+     "max": 0.9
+    },
+    "finishMs": {
+     "n": 1349,
+     "mean": 6.908,
+     "p50": 6.9,
+     "p90": 7.3,
+     "p95": 7.4,
+     "max": 9.7
+    },
+    "intervalMs": {
+     "n": 1347,
+     "mean": 18.176,
+     "p50": 18.1,
+     "p90": 18.8,
+     "p95": 19,
+     "max": 29.5
+    },
+    "framesDrawn": 1349,
+    "rafFrames": 1349,
+    "drawsPerFrame": 94.1,
+    "updateMsPerCall": null,
+    "updateCalls": 0,
+    "perf": {
+     "state": "live",
+     "asleep": true
+    },
+    "contextLost": 0,
+    "windowSec": 24.526,
+    "playLog": [
+     {
+      "i": 0,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 1017.3
+     },
+     {
+      "i": 1,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 2059.6
+     },
+     {
+      "i": 2,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 3104.9
+     },
+     {
+      "i": 3,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 4129.8
+     },
+     {
+      "i": 4,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 5142.3
+     },
+     {
+      "i": 5,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 6160.1
+     },
+     {
+      "i": 6,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 7169.5
+     },
+     {
+      "i": 7,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 8223.3
+     },
+     {
+      "i": 8,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 9229.8
+     },
+     {
+      "i": 9,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 10237.9
+     },
+     {
+      "i": 10,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 11251.6
+     },
+     {
+      "i": 11,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 12250.8
+     },
+     {
+      "i": 12,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 13261.4
+     },
+     {
+      "i": 13,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 14301.3
+     },
+     {
+      "i": 14,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 15315.4
+     },
+     {
+      "i": 15,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 16327.1
+     },
+     {
+      "i": 16,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 17366.2
+     },
+     {
+      "i": 17,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 18379.8
+     },
+     {
+      "i": 18,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 19395.7
+     },
+     {
+      "i": 19,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 20406.7
+     },
+     {
+      "i": 20,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 21419.6
+     },
+     {
+      "i": 21,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 22426.8
+     },
+     {
+      "i": 22,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 23431.8
+     },
+     {
+      "i": 23,
+      "eid": 102,
+      "head0": "node_635",
+      "head1": "node_635",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       102
+      ],
+      "twoAfter": [
+       102
+      ],
+      "atMs": 24444.7
+     }
+    ]
+   },
+   "after": {
+    "head": "node_635",
+    "twos": [
+     102
+    ],
+    "ctxLost": 0
+   },
+   "pageErrors": []
+  },
+  {
+   "seq": 12,
+   "round": 3,
+   "state": "cyc",
+   "query": "k111&am=instant&fw=0&snd=none&phw=0",
+   "moves": [
+    0,
+    246,
+    82,
+    83,
+    199,
+    150,
+    151,
+    38,
+    155,
+    211
+   ],
+   "target": 210,
+   "playCycle": [
+    210,
+    39
+   ],
+   "head": "node_221",
+   "targetItem": {
+    "edge": 210,
+    "near": "node_221",
+    "far": "node_218",
+    "atA": false,
+    "span": 2.74639892578125,
+    "dist0": 0,
+    "cont": true,
+    "inward": false,
+    "parent": -1,
+    "two": true,
+    "dB": 1.386,
+    "inwardB": false
+   },
+   "twoEdges": [
+    210
+   ],
+   "stamp": "P4 v0.4.0 ad6e87b3 2026-11-05 09:24 | sim 5.0s / wall 53.5s | settle lag 14.6s | asleep",
+   "restMs": 2,
+   "rest": {
+    "frameMs": {
+     "n": 276,
+     "mean": 7.49,
+     "p50": 7.4,
+     "p90": 7.9,
+     "p95": 8.1,
+     "max": 9.7
+    },
+    "submitMs": {
+     "n": 276,
+     "mean": 0.343,
+     "p50": 0.3,
+     "p90": 0.4,
+     "p95": 0.5,
+     "max": 0.9
+    },
+    "finishMs": {
+     "n": 276,
+     "mean": 7.147,
+     "p50": 7.1,
+     "p90": 7.5,
+     "p95": 7.6,
+     "max": 9
+    },
+    "intervalMs": {
+     "n": 274,
+     "mean": 18.134,
+     "p50": 17.9,
+     "p90": 18.6,
+     "p95": 18.7,
+     "max": 53.9
+    },
+    "framesDrawn": 276,
+    "rafFrames": 276,
+    "drawsPerFrame": 100,
+    "updateMsPerCall": null,
+    "updateCalls": 0,
+    "perf": {
+     "state": "live",
+     "asleep": true
+    },
+    "contextLost": 0
+   },
+   "play": {
+    "frameMs": {
+     "n": 319,
+     "mean": 7.216,
+     "p50": 7.1,
+     "p90": 7.7,
+     "p95": 7.9,
+     "max": 9.6
+    },
+    "submitMs": {
+     "n": 319,
+     "mean": 0.334,
+     "p50": 0.3,
+     "p90": 0.5,
+     "p95": 0.6,
+     "max": 0.9
+    },
+    "finishMs": {
+     "n": 319,
+     "mean": 6.882,
+     "p50": 6.8,
+     "p90": 7.3,
+     "p95": 7.4,
+     "max": 8.7
+    },
+    "intervalMs": {
+     "n": 317,
+     "mean": 18.085,
+     "p50": 18,
+     "p90": 19.5,
+     "p95": 23.1,
+     "max": 30.5
+    },
+    "framesDrawn": 319,
+    "rafFrames": 319,
+    "drawsPerFrame": 99.3,
+    "updateMsPerCall": null,
+    "updateCalls": 0,
+    "perf": {
+     "state": "live",
+     "asleep": true
+    },
+    "contextLost": 0,
+    "windowSec": 5.777,
+    "playLog": [
+     {
+      "i": 0,
+      "eid": 210,
+      "head0": "node_221",
+      "head1": "node_218",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 367.3
+     },
+     {
+      "i": 1,
+      "eid": 39,
+      "head0": "node_218",
+      "head1": "node_221",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 470.7
+     },
+     {
+      "i": 2,
+      "eid": 210,
+      "head0": "node_221",
+      "head1": "node_218",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 855.9
+     },
+     {
+      "i": 3,
+      "eid": 39,
+      "head0": "node_218",
+      "head1": "node_221",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 998.4
+     },
+     {
+      "i": 4,
+      "eid": 210,
+      "head0": "node_221",
+      "head1": "node_218",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 1358.7
+     },
+     {
+      "i": 5,
+      "eid": 39,
+      "head0": "node_218",
+      "head1": "node_221",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 1484
+     },
+     {
+      "i": 6,
+      "eid": 210,
+      "head0": "node_221",
+      "head1": "node_218",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 1842.7
+     },
+     {
+      "i": 7,
+      "eid": 39,
+      "head0": "node_218",
+      "head1": "node_221",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 1954.3
+     },
+     {
+      "i": 8,
+      "eid": 210,
+      "head0": "node_221",
+      "head1": "node_218",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 2313.7
+     },
+     {
+      "i": 9,
+      "eid": 39,
+      "head0": "node_218",
+      "head1": "node_221",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 2444.4
+     },
+     {
+      "i": 10,
+      "eid": 210,
+      "head0": "node_221",
+      "head1": "node_218",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 2802.8
+     },
+     {
+      "i": 11,
+      "eid": 39,
+      "head0": "node_218",
+      "head1": "node_221",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 2888.2
+     },
+     {
+      "i": 12,
+      "eid": 210,
+      "head0": "node_221",
+      "head1": "node_218",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 3254.8
+     },
+     {
+      "i": 13,
+      "eid": 39,
+      "head0": "node_218",
+      "head1": "node_221",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 3347.4
+     },
+     {
+      "i": 14,
+      "eid": 210,
+      "head0": "node_221",
+      "head1": "node_218",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 3708.1
+     },
+     {
+      "i": 15,
+      "eid": 39,
+      "head0": "node_218",
+      "head1": "node_221",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 3819.8
+     },
+     {
+      "i": 16,
+      "eid": 210,
+      "head0": "node_221",
+      "head1": "node_218",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 4177.6
+     },
+     {
+      "i": 17,
+      "eid": 39,
+      "head0": "node_218",
+      "head1": "node_221",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 4289.1
+     },
+     {
+      "i": 18,
+      "eid": 210,
+      "head0": "node_221",
+      "head1": "node_218",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 4646.7
+     },
+     {
+      "i": 19,
+      "eid": 39,
+      "head0": "node_218",
+      "head1": "node_221",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 4759.1
+     },
+     {
+      "i": 20,
+      "eid": 210,
+      "head0": "node_221",
+      "head1": "node_218",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 5118.2
+     },
+     {
+      "i": 21,
+      "eid": 39,
+      "head0": "node_218",
+      "head1": "node_221",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 5232.2
+     },
+     {
+      "i": 22,
+      "eid": 210,
+      "head0": "node_221",
+      "head1": "node_218",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 5590.6
+     },
+     {
+      "i": 23,
+      "eid": 39,
+      "head0": "node_218",
+      "head1": "node_221",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [
+       210
+      ],
+      "twoAfter": [
+       210
+      ],
+      "atMs": 5702.1
+     }
+    ]
+   },
+   "after": {
+    "head": "node_221",
+    "twos": [
+     210
+    ],
+    "ctxLost": 0
+   },
+   "pageErrors": []
+  },
+  {
+   "seq": 13,
+   "round": 3,
+   "state": "baseline",
+   "query": "k111&am=instant&fw=0&snd=none&phw=0",
+   "moves": [],
+   "target": null,
+   "playCycle": [
+    0
+   ],
+   "head": "mentr_b",
+   "targetItem": null,
+   "twoEdges": [],
+   "stamp": "P4 v0.4.0 ad6e87b3 2026-11-05 09:24 | sim 5.0s / wall 63.3s | settle lag 14.0s | asleep",
+   "restMs": 1,
+   "rest": {
+    "frameMs": {
+     "n": 278,
+     "mean": 7.037,
+     "p50": 7,
+     "p90": 7.3,
+     "p95": 7.5,
+     "max": 8.3
+    },
+    "submitMs": {
+     "n": 278,
+     "mean": 0.312,
+     "p50": 0.3,
+     "p90": 0.4,
+     "p95": 0.4,
+     "max": 1
+    },
+    "finishMs": {
+     "n": 278,
+     "mean": 6.726,
+     "p50": 6.7,
+     "p90": 7,
+     "p95": 7.2,
+     "max": 7.6
+    },
+    "intervalMs": {
+     "n": 276,
+     "mean": 17.999,
+     "p50": 17.9,
+     "p90": 18.6,
+     "p95": 18.7,
+     "max": 19.1
+    },
+    "framesDrawn": 278,
+    "rafFrames": 278,
+    "drawsPerFrame": 100,
+    "updateMsPerCall": null,
+    "updateCalls": 0,
+    "perf": {
+     "state": "live",
+     "asleep": true
+    },
+    "contextLost": 0
+   },
+   "play": {
+    "frameMs": {
+     "n": 1960,
+     "mean": 6.912,
+     "p50": 6.9,
+     "p90": 7.3,
+     "p95": 7.4,
+     "max": 11.5
+    },
+    "submitMs": {
+     "n": 1960,
+     "mean": 0.297,
+     "p50": 0.3,
+     "p90": 0.4,
+     "p95": 0.4,
+     "max": 1
+    },
+    "finishMs": {
+     "n": 1960,
+     "mean": 6.615,
+     "p50": 6.6,
+     "p90": 6.9,
+     "p95": 7.1,
+     "max": 10.5
+    },
+    "intervalMs": {
+     "n": 1958,
+     "mean": 18.062,
+     "p50": 18,
+     "p90": 18.6,
+     "p95": 18.8,
+     "max": 29.3
+    },
+    "framesDrawn": 1960,
+    "rafFrames": 1960,
+    "drawsPerFrame": 99.1,
+    "updateMsPerCall": null,
+    "updateCalls": 0,
+    "perf": {
+     "state": "live",
+     "asleep": true
+    },
+    "contextLost": 0,
+    "windowSec": 35.411,
+    "playLog": [
+     {
+      "i": 0,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 1480.3
+     },
+     {
+      "i": 1,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 2942.3
+     },
+     {
+      "i": 2,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 4423.5
+     },
+     {
+      "i": 3,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 5897.6
+     },
+     {
+      "i": 4,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 7369.7
+     },
+     {
+      "i": 5,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 8829.5
+     },
+     {
+      "i": 6,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 10330.9
+     },
+     {
+      "i": 7,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 11789.9
+     },
+     {
+      "i": 8,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 13260.5
+     },
+     {
+      "i": 9,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 14714.4
+     },
+     {
+      "i": 10,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 16201.9
+     },
+     {
+      "i": 11,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 17677.3
+     },
+     {
+      "i": 12,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 19164.9
+     },
+     {
+      "i": 13,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 20624.2
+     },
+     {
+      "i": 14,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 22093.1
+     },
+     {
+      "i": 15,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 23554.7
+     },
+     {
+      "i": 16,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 25038.1
+     },
+     {
+      "i": 17,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 26499.4
+     },
+     {
+      "i": 18,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 27965.4
+     },
+     {
+      "i": 19,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 29437.3
+     },
+     {
+      "i": 20,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 30924
+     },
+     {
+      "i": 21,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 32384.2
+     },
+     {
+      "i": 22,
+      "eid": 0,
+      "head0": "mentr_b",
+      "head1": "node_12",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 33868.3
+     },
+     {
+      "i": 23,
+      "eid": 0,
+      "head0": "node_12",
+      "head1": "mentr_b",
+      "ok": true,
+      "sawAnim": true,
+      "twoBefore": [],
+      "twoAfter": [],
+      "atMs": 35335.2
+     }
+    ]
+   },
+   "after": {
+    "head": "mentr_b",
+    "twos": [],
+    "ctxLost": 0
+   },
+   "pageErrors": []
+  }
+ ]
+}
