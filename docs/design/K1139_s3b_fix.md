@@ -720,3 +720,110 @@ S2.4's e79 (node_386) and e134 (node_378) are unchanged (S4's).
    - the compression decision;
    - ji 28's crotch;
    - then section 5 (P8, P1-P5, P10, the A/B) and section 6's sheets.
+
+## Stage 3 (2026-11-04): the compression ruling, ji 28's crotch, the checks and the sheets
+
+A new agent runs this stage in a fresh worktree from master, with
+branch `worktree-agent-a70924906f47e96b0` cherry-picked onto it
+(`git cherry-pick master..worktree-agent-a70924906f47e96b0`; if a pick
+conflicts, stop and report instead of resolving by guesswork).
+Sections 1-8 and Stage 2's S2.1-S2.5 hold except where this section
+says otherwise. Read 5, 6, 7, Stage 2 and its handoff first.
+
+### S3.1 The compression ruling (Claude, 2026-11-04)
+
+**Let T scale with the local compression; do not build the
+line-arc-line turn.** The turn would not meet T either: on an arc of
+radius R, tau's gradient at distance d inside the centreline is
+R / (R - d), which is 3 at the band's inner edge for S2.2's minimum
+R = 1.5 reach, steeper than the pivot's measured 2.34-2.65. Meeting
+1.56 would need R of about 2.8 reach, which a sharp joint's
+`capA`/`capB` cannot fit and which moves the band off the joint. A
+crest that runs round a bend compresses on its inner side, and the
+pivot keeps tau continuous there (tauan: ratio at most 1.05 across
+every same-band seam pair). T was calibrated on S3b's
+discontinuities (S2.1), and it still holds for them.
+
+The seam count from now on:
+- A same-band step is a seam when it exceeds T x c, where c is the
+  band's compression at that pixel, R_P / (R_P - d), with d the
+  pixel's distance from the centreline toward P. c is 1 for a
+  straight-through band and for a mode-0 band. Take c from the
+  band's header (R2's P) in the twin, so it is exact; never fit it
+  from the dumps.
+- Same-band steps above T but at most T x c are compression ramps.
+  Count them apart, per stand, with the largest c met.
+- Fork-sibling and shared/drawing steps get no allowance: above T is
+  a seam, as before.
+- Per stand, give how many bands fell back to mode 0 (deviation 3)
+  and their seams. A mode-0 band keeps the leg flip, and it is the
+  one place a turn could still be needed.
+- The look decides whether this ruling is right. S3.3's sheets show
+  the worst ramps at 2x. If one reads as a crease, say where, and
+  Claude rules on the turn after the look.
+
+### S3.2 ji 28's crotch
+
+(d)'s ramp-out ends at 1.56. ji 28's crotch gap runs mostly 1.2-2,
+with 3089 px past 2. Try the far edge at 2.5 and at 3.0, in today's
+units.
+- Measure the wedges (GPU / twin) at ji 28, cross and ji 147.
+- Check that the seam counts do not move.
+- Check that no unlit arm inside a crotch whitens (the handoff's
+  risk, at a 4-arm junction).
+- Keep the best edge that removes ji 28's dim valley without
+  whitening an unlit arm, or keep 1.56 and say why.
+- Measure the fa >= 0.999 kink (deviation 8) on these stands.
+
+### S3.3 The checks and the sheets
+
+- **Section 5 in full:**
+  - P8 and its worst points (cross e21 19, x4 e175 15, x4 e135 59,
+    against 4/255): say whether Stages 2-3 moved them;
+  - P1-P5 and P10;
+  - the A/B against master: 0 px outside banded records;
+  - `npm test`, the pins and k320.
+- **Section 6's sheets, plus 2x crops of:**
+  - the worst compression ramp per stand (cross, ji 28, ji 125,
+    ji 147, ji 149), each labelled with its c;
+  - the cross t5 ghost at (122, 121), with the sibling's edge it sits
+    on;
+  - ji 28's crotch at 1.56 and at the kept far edge;
+  - a fork's shared arrival front (S2.2 (b): a chevron or a smear is
+    a finding).
+- **The half-pixel suspicion.** The GPU's edge sits about 1 px ahead
+  of the twin's at cross t5. Measure the offset, sub-pixel, on one
+  straight band edge, GPU against twin. Say whether it explains the
+  ghost or ji 28's 2.4x wedges.
+- **Record, not chase:** e79 and e134 (S4's); the cold compile of
+  junction-field and its explore variant, timed if section 5's k320
+  check already times it.
+
+### S3.4 Order of work and stop
+
+Times run from your `Get-Date` at the start. Commit WIP at every
+milestone, broken or not.
+1. **Setup, 15 min.**
+   - Do the cherry-pick, section 7's node_modules junction, and a
+     server on 5620-5639.
+   - Put c4f5b9d2's `__k1139diag` hook back in a WIP commit for the
+     dumps. Remove it again before the end, as Stage 2 did.
+   - Fresh dumps of (d) from a copy of `batch_st2_d.txt`, with out
+     dirs under your worktree's `.claude/probes/K1139/out/s3/`
+     (untracked). Stage 2's dumps stay readable in the old worktree,
+     for comparison only.
+2. **S3.1 by 45 min:** the classifier in `diag_an.mjs`, then the
+   counts on (d).
+3. **S3.2 by 1 h 15.**
+4. **S3.3:** section 5, then the sheets, under
+   `.claude/probes/K1139/out/s3/sheets/`.
+5. **The stop:** done or 2 h, whichever comes first.
+   - Neither a compaction nor context size is a stop. After one,
+     re-read this section and `git log`.
+   - Commit WIP, append `### Stage 3 handoff` at the end of this
+     section, commit, and report as section 8 says, with env among
+     the handle fields.
+   - Never push. No subagents. No edits to `LEDGER.md` or
+     `docs/ledger_notes.md`.
+   - Never write into the main checkout (Muse runs there) or into
+     the old worktrees.
