@@ -2636,14 +2636,16 @@ export class FabricMazeRenderer {
       return;
     }
     const lit = L <= fire.delay;
-    // K1187: the anim run's unswept stretch is still drawn (syncBroken
-    // keeps it until the dot arrives), so the anim run reads its burn
-    // without the broken predicate and keeps only the part the dot has
-    // not swept yet; every other run reads exactly as today.
-    const animEdge = a ? a.e.id : -1;
-    const swept: BurntSpan | null = a
-      ? { chain: a.e.chain, b0: Math.min(a.from, a.cur), b1: Math.max(a.from, a.cur) }
-      : null;
+    // K1187: a BROKEN anim run's unswept stretch is still drawn (syncBroken
+    // keeps it until the dot arrives), so that run reads its burn without
+    // the broken predicate and keeps only the part the dot has not swept
+    // yet. Every other run reads as before, an unbroken anim run included:
+    // its swept stretch is still drawn, so the burn behind the dot shows.
+    const animEdge = a && controller.broken(a.e.id) ? a.e.id : -1;
+    const swept: BurntSpan | null =
+      a && animEdge >= 0
+        ? { chain: a.e.chain, b0: Math.min(a.from, a.cur), b1: Math.max(a.from, a.cur) }
+        : null;
     for (let eid = 0; eid < this.walk.edges.length; eid++) {
       const e = this.walk.edges[eid];
       const isAnim = eid === animEdge;

@@ -388,10 +388,13 @@ describe("the fire model (K114)", () => {
     );
   });
 
-  it("K1187: drawFire's burnt-spans loop cuts the anim run's spans by the swept interval", () => {
-    // A source scan in the same manner: the anim run reads its burn with
-    // no broken predicate, each pushed span is cut by the swept interval
-    // (cutBurntSpan), and no front stands at the dot (a.cur).
+  it("K1187: drawFire's burnt-spans loop cuts a broken anim run's spans by the swept interval", () => {
+    // A source scan in the same manner: only a BROKEN anim run (syncBroken
+    // hides its swept stretch) reads its burn with no broken predicate,
+    // each pushed span is cut by the swept interval (cutBurntSpan), and no
+    // front stands at the dot (a.cur). An unbroken anim run's swept stretch
+    // is drawn, so it reads as every other run: the burn behind the dot
+    // shows during the move (the default game, fragile runs off).
     const src = readFileSync(
       fileURLToPath(new URL("../../src/render/fabric_maze_renderer.ts", import.meta.url)),
       "utf8"
@@ -401,6 +404,8 @@ describe("the fire model (K114)", () => {
     expect(start).toBeGreaterThanOrEqual(0);
     expect(end).toBeGreaterThan(start);
     const slice = src.slice(start, end);
+    expect(slice).toContain("const animEdge = a && controller.broken(a.e.id) ? a.e.id : -1;");
+    expect(slice).toContain("a && animEdge >= 0");
     expect(slice).toContain("runBurnAt(this.walk, fire, eid, L)");
     expect(slice).toContain("cutBurntSpan(span, swept)");
     expect(slice).toContain("fc === a.cur");
