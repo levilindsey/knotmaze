@@ -94,6 +94,15 @@
 // that wore this field is gone with the over-fills: no thread is copied
 // over the webs any more.)
 
+// K1202 COVER RAMP (pulseCoverRamp, default off): off is today's picture
+// (a pulse band's cover ramps over pxW down from its fragment kind's
+// reach - fan fh + 0.5 pxW, cover strip fh + 1.5 pxW); on, every pulse
+// band's cover follows the CPU twin's strip ramp (fh + 1.5 pxW, over
+// 2 pxW) whatever fragment draws it, so another band's cover edge crossing
+// a centreline inside a fan softens as the twin's does (cyc e210,
+// .claude/probes/K1202/). Claude flips the default after judging the
+// kymograph sheet; the CPU twin (cpuJunctionField) reads the same flag.
+
 import { Buffer, BufferUsage, GlProgram, Shader, Texture, UniformGroup } from "pixi.js";
 import type { MeshGeometry } from "pixi.js";
 import { GAP_FRAG_LIB_FAN, defaultGapTexture } from "./gap_mask";
@@ -141,7 +150,8 @@ export function recordData(): FloatRows {
 }
 
 // Field parameters (live: thread width and cuspRadius are sliders).
-// uJParams = (fillHalf, profN, 0, 0) - .zw carried the over-fills'
+// uJParams = (fillHalf, profN, pulseCoverRamp, 0) - .z is K1202's
+// cover ramp switch (below), .w is free (.zw carried the over-fills'
 // joint radii; uJParams2 = (FIELD_PROF_DR, FIELD_BLEND_MIN, 0, 0).
 let FIELD_UNIFORMS: UniformGroup | null = null;
 function fieldUniforms(): UniformGroup {
@@ -156,10 +166,38 @@ function fieldUniforms(): UniformGroup {
   }
   return FIELD_UNIFORMS;
 }
+// K1202: the cover ramp switch (header note above). Default off is
+// today's picture; setPulseCoverRamp(true) selects the twin's strip
+// ramp for every pulse band's cover. It rides to the shader as
+// uJParams.z, written by setFieldParams on the rebuild joinery.ts
+// already makes; cpuJunctionField reads this flag itself, so one
+// switch moves both twins. Claude flips the default after judging
+// the sheet (.claude/probes/K1202/).
+export let pulseCoverRamp = false;
+export function setPulseCoverRamp(on: boolean): void {
+  pulseCoverRamp = on;
+}
+
+// One pulse band's cover at centreline distance dnow (the CPU twin of
+// the pulse loop's cov in junctionField below): today (flag off) it
+// ramps over pxW down from the fragment kind's reach; with the ramp
+// on it follows the strip ramp (fh + (ROUTE_BAND_PAD + 1) pxW, over
+// 2 pxW) for fan and strip fragments alike. Twice the width: along a
+// centreline crossing the edge shallowly, dnow moves ~0.4 pxW per
+// screenshot column, so a pxW ramp sampled at pixel centres collapses
+// to a one-column cut (20C); 2 pxW spreads it over the twin's columns.
+export function pulseBandCover(dnow: number, fillHalf: number, pxW: number, strip: boolean): number {
+  const reach = fillHalf + (strip ? ROUTE_BAND_PAD + 1 : 0.5) * pxW;
+  return pulseCoverRamp
+    ? Math.max(0, Math.min(1, (fillHalf + (ROUTE_BAND_PAD + 1) * pxW - dnow) / (2 * pxW)))
+    : Math.max(0, Math.min(1, (reach - dnow) / pxW));
+}
+
 export function setFieldParams(fillHalf: number, profN: number): void {
   const u = fieldUniforms().uniforms as { uJParams: Float32Array };
   u.uJParams[0] = fillHalf;
   u.uJParams[1] = profN;
+  u.uJParams[2] = pulseCoverRamp ? 1 : 0;
 }
 
 // ---------------------------------------------------------------------------
@@ -507,7 +545,7 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
       }
     }
     float dnow = sqrt(best);
-    float cov = clamp((reach - dnow) / pxW, 0.0, 1.0);
+    float cov = uJParams.z > 0.5 ? clamp((uJParams.x + ${(ROUTE_BAND_PAD + 1).toFixed(3)} * pxW - dnow) / (2.0 * pxW), 0.0, 1.0) : clamp((reach - dnow) / pxW, 0.0, 1.0);
     bool inw = r1.y == 1.0 || r1.y == 3.0;
     bool hov = r1.y > 1.5;
     float g = r1.x + tau;

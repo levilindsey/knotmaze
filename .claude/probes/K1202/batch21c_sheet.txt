@@ -1,0 +1,6 @@
+$env:K1139_HOST = "http://127.0.0.1:5830"
+node sheet21c.mjs > out21c/sheet21c_log.txt 2>&1
+node dump_cyc.mjs out21c/dump_after cyc
+node table_cyc.mjs out/dump/cyc.json > out21c/table_before.txt
+node table_cyc.mjs out21c/dump/cyc.json > out21c/table_21c.txt
+node table_cyc.mjs out21c/dump_after/cyc.json > out21c/table_after.txt

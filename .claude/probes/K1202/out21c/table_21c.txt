@@ -1,0 +1,14 @@
+out21c/dump/cyc.json: head node_221, reach 3, spacing 2.5, 4 pulse item(s)
+  P6a declared once: pass (4 edges)
+  e210 TWO node_221->node_218: W 2.746 dA 0.000 (out) dB 1.386 (out) ridge at d 2.066 (dG 2.066)
+    gR 2.066: xR at A 2.066 (joint ridge factor 1.000), at B 0.680 (1.000)
+    end A at node_221: no declared arm ends there (the head)
+    end B at node_218 from e39 (out cont): P2 step -0.0001  P1 max |dv| 0.0001
+    ridge: max |dv| across it 0.0000; largest change per 0.01 world on Q 0.0316 at d 1.58 (a one-ended arm from A: 0.0213)
+    P5 longest unlit stretch with light on both sides: 0.135 world (one-ended from A: 0.730; want <= 0.1)
+    P3 speed: A 1.600-1.600, B none world/s (want 1.6)
+    P4 width: A 0.721-0.722, B none world (one-ended NaN; crests at least 0.75 from the ridge and the ends)
+    P6b crest maxima/expected at 8 times: 1/1 1/1 1/1 2/2 2/2 2/2 2/0 1/1
+  BAND EXTENT (fillHalf 0.260; band - ribbon over 64 times; STEP over 1e-3):
+    band node_218 e39->e209 distJ 1.386 out (near end; R2.w 0.000): B fan (0, 1.083] 0.0000 at tau 0.000; to tauHi 1.343 0.0000 at 0.000; A [-1.386, 0) 0.0001 at -0.860
+    band node_218 e39->e210 distJ 1.386 out (far end TWO gR 2.066; R2.w 2.066): B fan (0, 1.212] 0.0000 at tau 1.170; to tauHi 1.472 0.0000 at 1.170; A [-1.386, 0) 0.0001 at -0.860

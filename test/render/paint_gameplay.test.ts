@@ -41,6 +41,7 @@ import {
   type KUniforms,
 } from "../../src/render/paint_math";
 import { PULSE_CREST_GLSL } from "../../src/render/paint_glsl";
+import { JUNCTION_FRAG, pulseBandCover, pulseCoverRamp, setPulseCoverRamp } from "../../src/render/junction_field";
 import { TRAIL_FADE_FRAC, trailFade, trailSpans, type TrailPiece } from "../../src/render/trail_paint";
 import { randomChain } from "./fixtures/chains";
 import {
@@ -1628,6 +1629,119 @@ describe("kPulseCrest head carry (K1139 S5)", () => {
     const tick = src.slice(src.indexOf("tickPaintPalette"), src.indexOf("tickWebFade"));
     expect(tick).toContain("pulseHeadPass ? modS(clock * PAINT_CONST.PULSE_SPEED)");
     expect(tick).toContain("pulseHeadPass && this.paintPulses.some((p) => p.inward && (p.dist0 ?? 0) === 0) ? 1 : 0");
+  });
+});
+
+// K1202: the other band's cover edge in node_218's fan (cyc e210's
+// kymograph step at columns 20 to 21, 41.2 luma / 29 of 72 rows on
+// master, 20C: 40.3 / 34). Before table (task 1, unmodified source;
+// attrib.mjs strip twin, pxW = 1/34.83 world at view s 23.22, DSF 1.5):
+// the twin's strip cover at columns 16-23 (dnow from attrib.txt) ramps
+// 1, 1, 0.78, 0.39, 0, 0, 0, 0 while the GPU's effective cover (debug-5
+// G / twin cr, px5_cyc) holds ~0.95 through column 20 and cuts at
+// 20-21. The switch (pulseCoverRamp, default off) makes each pulse
+// band's cover follow the twin's strip ramp (its reach, twice its
+// width - a pxW ramp at pixel centres is one column) in both twins.
+describe("pulse band cover ramp (K1202)", () => {
+  afterEach(() => {
+    setPulseCoverRamp(false);
+  });
+  const FH = 0.26;
+  const PXW = 1 / 34.83;
+  // [column, dnow] of e210's centreline against the e39->e209 band
+  // (attrib.mjs, out21c/attrib_before.txt; dnow rounded to 0.001).
+  const COLS: Array<[number, number]> = [
+    [16, 0.259],
+    [17, 0.27],
+    [18, 0.281],
+    [19, 0.292],
+    [20, 0.303],
+    [21, 0.314],
+    [22, 0.325],
+    [23, 0.337],
+  ];
+  const clamp01 = (x: number): number => Math.max(0, Math.min(1, x));
+  const todayCov = (d: number, strip: boolean): number =>
+    clamp01((FH + (strip ? 1.5 : 0.5) * PXW - d) / PXW);
+  const twinCov = (d: number): number => clamp01((FH + 1.5 * PXW - d) / PXW);
+  // Flag on: the strip ramp's reach at twice its width (see
+  // pulseBandCover: a pxW ramp sampled at pixel centres is one column).
+  const rampCov = (d: number): number => clamp01((FH + 1.5 * PXW - d) / (2 * PXW));
+
+  it("switch defaults off (today's picture)", () => {
+    expect(pulseCoverRamp).toBe(false);
+  });
+
+  it("flag off reproduces today's cover at columns 16-23 exactly, fan and strip", () => {
+    setPulseCoverRamp(false);
+    for (const [, d] of COLS) {
+      for (const strip of [false, true]) {
+        expect(pulseBandCover(d, FH, PXW, strip)).toBe(todayCov(d, strip));
+      }
+    }
+  });
+
+  it("flag on gives the strip ramp (twin reach, 2 pxW wide) at columns 16-23, to 1e-9", () => {
+    setPulseCoverRamp(true);
+    for (const [, d] of COLS) {
+      for (const strip of [false, true]) {
+        expect(Math.abs(pulseBandCover(d, FH, PXW, strip) - rampCov(d))).toBeLessThanOrEqual(1e-9);
+      }
+    }
+    const R = FH + 1.5 * PXW;
+    expect(pulseBandCover(R - 2 * PXW, FH, PXW, false)).toBeCloseTo(1, 9);
+    expect(pulseBandCover(R - PXW, FH, PXW, false)).toBeCloseTo(0.5, 9);
+    expect(pulseBandCover(R - 2 * PXW - 0.01, FH, PXW, false)).toBe(1);
+    expect(pulseBandCover(R, FH, PXW, false)).toBe(0);
+    expect(pulseBandCover(R + 0.01, FH, PXW, true)).toBe(0);
+    expect(pulseBandCover(R - 0.5 * PXW, FH, PXW, false)).toBeCloseTo(0.25, 9);
+    expect(rampCov(0.281)).toBeLessThan(twinCov(0.281));
+    // attrib's printed ramp at the two ramp columns (2 dp there).
+    expect(pulseBandCover(0.281, FH, PXW, false)).toBeCloseTo(0.38, 1);
+    expect(pulseBandCover(0.292, FH, PXW, false)).toBeCloseTo(0.19, 1);
+  });
+
+  it("crest untouched: BAND EXTENT (band = ribbon) holds under both settings", () => {
+    // cyc e210 at node_218: dB 1.386, span 2.746, ridge gR 2.066
+    // (20C's table: band vs ribbon 0.0000 over the fan's extent).
+    const gR = (0 + 1.386 + 2.746) / 2;
+    for (const on of [false, true]) {
+      setPulseCoverRamp(on);
+      for (const clock of [100, 100.31, 100.77]) {
+        const U = uniforms({ clock, pulseBorn: 0, spacing: 2.5 });
+        for (let i = 1; i <= 40; i++) {
+          const tau = (1.4 * i) / 40;
+          expect(kPulseBandV(U, 1.386, tau, false, false, gR, false)).toBeCloseTo(
+            kPulseV2(U, 2.746 - tau, 2.746, 0, 1.386, false, false, false),
+            9
+          );
+        }
+      }
+    }
+  });
+
+  it("GLSL and CPU twins carry the same ramp branch (one twin alone cannot pass)", () => {
+    const gi = JUNCTION_FRAG.indexOf("float dnow = sqrt(best);");
+    expect(gi).toBeGreaterThanOrEqual(0);
+    const glsl = JUNCTION_FRAG.slice(gi, JUNCTION_FRAG.indexOf("kFanPulseV", gi));
+    expect(glsl).toContain(
+      "uJParams.z > 0.5 ? clamp((uJParams.x + 1.500 * pxW - dnow) / (2.0 * pxW), 0.0, 1.0) : clamp((reach - dnow) / pxW, 0.0, 1.0)"
+    );
+    const jf = readFileSync(new URL("../../src/render/junction_field.ts", import.meta.url), "utf8");
+    const hi = jf.indexOf("export function pulseBandCover");
+    expect(hi).toBeGreaterThanOrEqual(0);
+    const helper = jf.slice(hi, jf.indexOf("export function setFieldParams", hi));
+    expect(helper).toContain("pulseCoverRamp");
+    expect(helper).toContain("(fillHalf + (ROUTE_BAND_PAD + 1) * pxW - dnow) / (2 * pxW)");
+    expect(helper).toContain("(reach - dnow) / pxW");
+    expect(jf.slice(jf.indexOf("export function setFieldParams"))).toContain(
+      "u.uJParams[2] = pulseCoverRamp ? 1 : 0;"
+    );
+    const jy = readFileSync(new URL("../../src/render/ribbon/joinery.ts", import.meta.url), "utf8");
+    const bi = jy.indexOf("PULSE BANDS");
+    const ci = jy.indexOf("const dnow = Math.sqrt(best);", bi);
+    expect(ci).toBeGreaterThanOrEqual(0);
+    expect(jy.slice(ci, jy.indexOf("PULSE_COV", ci))).toContain("pulseBandCover(dnow, fillHalf, pxW, strip)");
   });
 });
 

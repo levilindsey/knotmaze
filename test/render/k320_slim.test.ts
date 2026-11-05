@@ -148,7 +148,11 @@ describe("K320 stage 1: char budgets", () => {
     // K1139 S4b (2026-11-04): the band ridge fade (a two-ended B arm's
     // ridge in R2.w; the band loop reads kPulseV2's field past the
     // joint) adds 245 (40,097 -> 40,342), measured here.
-    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(40_388);
+    // K1202 (2026-11-05): the pulse bands' cover-ramp branch
+    // (uJParams.z ? the strip ramp : today's reach, in the fan's pulse
+    // loop) adds 86 to the junction field (40,388 -> 40,474 measured
+    // here); budget follows the measurement.
+    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(40_474);
     // K799: uKPath joins KNOT_UNIFORMS_GLSL, which the still pluck
     // includes (+18 here).
     expect(PLUCK_STILL_FRAG.length).toBeLessThanOrEqual(20_550);

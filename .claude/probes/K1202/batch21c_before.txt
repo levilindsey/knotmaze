@@ -1,0 +1,7 @@
+$env:K1139_HOST = "http://127.0.0.1:5830"
+$env:K1139_SHEETS_OUT = "out21c/sheets"
+node dump_cyc.mjs out21c/dump cyc
+node sheets_cyc.mjs http://127.0.0.1:5830 http://127.0.0.1:5830 cyc
+node kymo_steps.mjs out21c/sheets/cyc_e210_kymo.png > out21c/kymo_steps_before.txt
+node attrib.mjs > out21c/attrib_before.txt
+node band_twin2.mjs > out21c/band_twin2_before.txt

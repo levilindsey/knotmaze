@@ -75,6 +75,7 @@ import {
   ROUTE_BAND_PAD,
   junctionShader,
   junctionShaderExplore,
+  pulseBandCover,
   recordData,
   setFieldParams,
 } from "../junction_field";
@@ -727,7 +728,7 @@ export class Joinery {
         }
       }
       const dnow = Math.sqrt(best);
-      const cov = Math.max(0, Math.min(1, (reach - dnow) / pxW));
+      const cov = pulseBandCover(dnow, fillHalf, pxW, strip);
       if (J[r1 + 2] >= 0.5) dShared = Math.min(dShared, dnow);
       PULSE_TAU[r] = tau;
       PULSE_SHIFT[r] = shift;
