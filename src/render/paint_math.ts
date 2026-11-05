@@ -311,6 +311,9 @@ export interface KUniforms {
   uKSect: Float32Array; // (blendDist, ease, glowLen, glowFade) the hover glow's (K298)
   uKPaint: Float32Array; // (on, refBase, itemBase, hover)
   uKPulse: Float32Array; // (travelIn, travelOut, spacing, fadeIn)
+  // K1139 S5: (headCarry, -, -, -): 1 exactly when a crest carries
+  // through your own junction (see pulseHeadPass below); absent = 0.
+  uKHead?: Float32Array;
   uKReach: Float32Array; // (reach, fade, rim, rimAt) pulse trains (K75), hover glow (K145)
   uKGold: Float32Array; // (gold rgb, rimScale) rimScale: kRimScale (K111 stage 4)
   // K76 thread reveal (on, look, breath, threadWidth): read only by the
@@ -1469,6 +1472,15 @@ export function kReachWin(U: KUniforms, d: number): number {
 // kPulseBandV is this at a band point (dG = distJ + tau). Extracted
 // without moving a value: test/render/paint_gameplay.test.ts pins
 // kPulseV, and the S3b fan shader's twin must call the same shape.
+// K1139 S5: pulseHeadPass selects the straight-through head (lead 0
+// and, where a crest carries through your own junction, no CREST_RAMP
+// dip - the tick writes that carry as uKHead); it defaults to today's
+// picture (off), and Claude flips the default after judging the
+// q3_head sheet in .claude/probes/K1139/out/s5/.
+export let pulseHeadPass = false;
+export function setPulseHeadPass(on: boolean): void {
+  pulseHeadPass = on;
+}
 export function kPulseCrest(
   U: KUniforms,
   dG: number,
@@ -1484,7 +1496,7 @@ export function kPulseCrest(
   const ph = raw - s * Math.floor(raw / s);
   const dist = Math.min(ph, s - ph);
   const dC = Math.max(0, dG - (ph <= s - ph ? ph : ph - s));
-  const bump = Math.max(0, 1 - dist / C.CREST_WIDTH) * Math.min(1, dC / C.CREST_RAMP) * bumpScale;
+  const bump = Math.max(0, 1 - dist / C.CREST_WIDTH) * (U.uKHead && U.uKHead[0] > 0.5 ? 1 : Math.min(1, dC / C.CREST_RAMP)) * bumpScale;
   const floor =
     (C.PULSE_FLOOR + C.PULSE_CORE_BOOST * Math.max(0, 1 - dG / C.PULSE_CORE_RADIUS)) *
     Math.max(0, 1 - dG / C.PULSE_FLOOR_REACH);

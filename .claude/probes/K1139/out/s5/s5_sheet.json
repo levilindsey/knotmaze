@@ -1,0 +1,148 @@
+{
+ "stand": {
+  "q": "k111&am=instant&fw=0&snd=none&phw=0",
+  "moves": [
+   0,
+   246,
+   82,
+   83,
+   199
+  ],
+  "head": "node_116"
+ },
+ "scale": 59.9998492975238,
+ "period": 1.5625,
+ "spacing": 2.5,
+ "arrivalAtHead": [
+  {
+   "chain": 71,
+   "cJ": 30,
+   "cF": 46,
+   "inward": true,
+   "hovered": false,
+   "dist0": 0,
+   "cont": false,
+   "edge": 199,
+   "near": "node_116",
+   "far": "mnode_95",
+   "lattice": 8.714776642118863,
+   "world": 8.166509628295898,
+   "farEnd": false,
+   "farArms": 3
+  }
+ ],
+ "passInfo": [
+  {
+   "pass": "off1",
+   "on": false,
+   "flag": false,
+   "uKPulse": [
+    0,
+    0.47999998927116394,
+    2.5,
+    1
+   ],
+   "uKHead": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "head": {
+    "x": 516.6050445189081,
+    "y": 479.2276310965394
+   }
+  },
+  {
+   "pass": "off2",
+   "on": false,
+   "flag": false,
+   "uKPulse": [
+    2.1875,
+    0.16750000417232513,
+    2.5,
+    1
+   ],
+   "uKHead": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "head": {
+    "x": 516.6050445189081,
+    "y": 479.2276310965394
+   }
+  },
+  {
+   "pass": "on",
+   "on": true,
+   "flag": true,
+   "uKPulse": [
+    2.1875,
+    2.1875,
+    2.5,
+    1
+   ],
+   "uKHead": [
+    1,
+    0,
+    0,
+    0
+   ],
+   "head": {
+    "x": 516.6050445189081,
+    "y": 479.2276310965394
+   }
+  }
+ ],
+ "ctxLost": 0,
+ "diffs": [
+  {
+   "k": 0,
+   "controlMAD": 0,
+   "onVsOffMAD": 3.335
+  },
+  {
+   "k": 1,
+   "controlMAD": 0,
+   "onVsOffMAD": 2.981
+  },
+  {
+   "k": 2,
+   "controlMAD": 0,
+   "onVsOffMAD": 4.096
+  },
+  {
+   "k": 3,
+   "controlMAD": 0,
+   "onVsOffMAD": 5.279
+  },
+  {
+   "k": 4,
+   "controlMAD": 0,
+   "onVsOffMAD": 3.805
+  },
+  {
+   "k": 5,
+   "controlMAD": 0,
+   "onVsOffMAD": 2.321
+  },
+  {
+   "k": 6,
+   "controlMAD": 0,
+   "onVsOffMAD": 1.773
+  },
+  {
+   "k": 7,
+   "controlMAD": 0,
+   "onVsOffMAD": 1.604
+  }
+ ],
+ "log": [
+  "[debug] [vite] connecting...",
+  "[debug] [vite] connected.",
+  "[log] KnotMaze P4 v0.4.0 0f461ed2+ 2026-11-05 07:05 | dpr 1.5 | gpu WebKit WebGL",
+  "[log] KnotMaze: seed 934453, 1027 nodes, 1470 edges, 91 strands."
+ ]
+}

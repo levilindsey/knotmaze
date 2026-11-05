@@ -67,6 +67,8 @@ export function knotUniforms(): UniformGroup {
       uKSect: v4(),
       uKPaint: v4(),
       uKPulse: v4(0, 0, 2.5, 1),
+      // K1139 S5: (headCarry, -, -, -), written each tick by tickPaintPalette.
+      uKHead: v4(),
       // No reach limit until a renderer writes one (finite: the shaders
       // subtract the fade from it).
       uKReach: v4(1e6, 1, 0, 0),

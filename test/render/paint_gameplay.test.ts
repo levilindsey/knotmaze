@@ -5,7 +5,8 @@
 // K75: a pulse brightens the thread's OWN paint (the retired pass picked a
 // band family per pulse arm, which drew gold crests over a fading trail).
 
-import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
+import { afterEach, describe, expect, it } from "vitest";
 import {
   ITEM_FLAG,
   PAINT_CONST,
@@ -23,6 +24,8 @@ import {
   kPaintAt,
   kPulseBandV,
   kPulseCrest,
+  pulseHeadPass,
+  setPulseHeadPass,
   kPulseV,
   kPulseV2,
   kReachWin,
@@ -37,6 +40,7 @@ import {
   type KPaintState,
   type KUniforms,
 } from "../../src/render/paint_math";
+import { PULSE_CREST_GLSL } from "../../src/render/paint_glsl";
 import { TRAIL_FADE_FRAC, trailFade, trailSpans, type TrailPiece } from "../../src/render/trail_paint";
 import { randomChain } from "./fixtures/chains";
 import {
@@ -1536,6 +1540,92 @@ describe("kPulseBandV on a two-ended arm (K1139 S4b)", () => {
     expect(worstS3a).toBeGreaterThan(0.1);
   });
 });
+// K1139 S5: at your own junction the switch (pulseHeadPass, default
+// off = today's picture) takes the lead and, where a crest carries
+// through (uKHead 1, written by the tick only when the flag is on and
+// an arrival exists), the CREST_RAMP dip. Before table (task 1, on
+// unmodified source): the outward crest leads the inward one by
+// PULSE_OUT_LEAD x PULSE_SPEED = 0.48 world, and at a crest peak the
+// bump factor (crest-width term 1 there) reads min(1, dG / 0.5):
+// dG 0 -> 0, 0.1 -> 0.2, 0.25 -> 0.5, 0.5 -> 1.
+describe("kPulseCrest head carry (K1139 S5)", () => {
+  afterEach(() => {
+    setPulseHeadPass(false);
+  });
+  const floorAt = (dG: number): number =>
+    (PAINT_CONST.PULSE_FLOOR + PAINT_CONST.PULSE_CORE_BOOST * Math.max(0, 1 - dG / PAINT_CONST.PULSE_CORE_RADIUS)) *
+    Math.max(0, 1 - dG / PAINT_CONST.PULSE_FLOOR_REACH);
+  // A head arm's uniforms with the travels set by hand; headCarry
+  // undefined leaves uKHead absent (= 0, the uKTele? precedent).
+  const headU = (travelIn: number, travelOut: number, headCarry?: number): KUniforms => {
+    const U = uniforms({ clock: 100, pulseBorn: 0, spacing: 2.5 });
+    U.uKPulse[0] = travelIn;
+    U.uKPulse[1] = travelOut;
+    if (headCarry !== undefined) U.uKHead = new Float32Array([headCarry, 0, 0, 0]);
+    return U;
+  };
+  // The bump factor at a crest peak (crest-width term 1): endWin 0.4
+  // keeps (floor + bump x 0.9) x endWin under the min(1, -) cap, so
+  // the factor comes back out of kPulseCrest exactly.
+  const bumpFactorAtPeak = (U: KUniforms, dG: number, inward: boolean): number =>
+    (kPulseCrest(U, dG, inward, false, 0.4) / 0.4 - floorAt(dG)) / 0.9;
+
+  it("flag off reproduces the before table (lead 0.48 world, ramp dip 0 at the head)", () => {
+    expect(pulseHeadPass).toBe(false);
+    const U0 = uniforms({ clock: 100, pulseBorn: 0, spacing: 2.5 });
+    expect(U0.uKPulse[1] - U0.uKPulse[0]).toBeCloseTo(0.48, 6);
+    expect(PAINT_CONST.PULSE_OUT_LEAD * PAINT_CONST.PULSE_SPEED).toBeCloseTo(0.48, 12);
+    for (const [dG, ramp] of [[0, 0], [0.1, 0.2], [0.25, 0.5], [0.5, 1]] as const) {
+      // The outward crest's peak at dG: travelOut = dG (raw = 0).
+      expect(bumpFactorAtPeak(headU(0, dG), dG, false)).toBeCloseTo(ramp, 6);
+      expect(bumpFactorAtPeak(headU(0, dG, 0), dG, false)).toBeCloseTo(ramp, 6);
+    }
+  });
+
+  it("flag on with head-carry 1: no dip at the head, outward crest in phase with the inward one", () => {
+    setPulseHeadPass(true);
+    expect(pulseHeadPass).toBe(true);
+    for (const dG of [0, 0.1, 0.25, 0.5]) {
+      expect(bumpFactorAtPeak(headU(0, dG, 1), dG, false)).toBeCloseTo(1, 6);
+    }
+    // The tick's lead 0 (travelOut reduced exactly as travelIn) over
+    // one period's clocks: at the head the two directions read alike.
+    const spacing = 2.5;
+    for (let k = 0; k < 16; k++) {
+      const travel = (k * spacing) / 16;
+      const U = headU(travel, travel, 1);
+      expect(Math.abs(kPulseCrest(U, 0, true, false, 1) - kPulseCrest(U, 0, false, false, 1))).toBeLessThanOrEqual(1e-9);
+      expect(Math.abs(kPulseCrest(U, 0, true, false, 0.4) - kPulseCrest(U, 0, false, false, 0.4))).toBeLessThanOrEqual(1e-9);
+    }
+  });
+
+  it("flag on with head-carry 0 (no arrival) equals today's values exactly", () => {
+    setPulseHeadPass(true);
+    for (const travel of [0, 0.31, 1.1, 2.49]) {
+      for (const dG of [0, 0.1, 0.25, 0.5, 1.3]) {
+        for (const inward of [false, true]) {
+          expect(kPulseCrest(headU(travel, travel + 0.48, 0), dG, inward, false, 1)).toBe(
+            kPulseCrest(headU(travel, travel + 0.48), dG, inward, false, 1)
+          );
+        }
+      }
+    }
+  });
+
+  it("the GLSL twin carries the same head-carry branch (a branch in only one twin cannot pass)", () => {
+    const i = PULSE_CREST_GLSL.indexOf("kPulseCrestK");
+    expect(i).toBeGreaterThanOrEqual(0);
+    const slice = PULSE_CREST_GLSL.slice(i, PULSE_CREST_GLSL.indexOf("kPulseCrest(", i));
+    expect(slice).toContain("uKHead.x > 0.5 ? 1.0 : min(1.0, dC / CREST_RAMP)");
+    // The tick (paint_state.ts) writes the carry and the lead 0 only
+    // under the flag, from an inward arm at dist0 0.
+    const src = readFileSync(new URL("../../src/render/ribbon/paint_state.ts", import.meta.url), "utf8");
+    const tick = src.slice(src.indexOf("tickPaintPalette"), src.indexOf("tickWebFade"));
+    expect(tick).toContain("pulseHeadPass ? modS(clock * PAINT_CONST.PULSE_SPEED)");
+    expect(tick).toContain("pulseHeadPass && this.paintPulses.some((p) => p.inward && (p.dist0 ?? 0) === 0) ? 1 : 0");
+  });
+});
+
 // The mirror's smoothstep on [0, 1] (3x^2 - 2x^3, clamped).
 function smoothstep(x: number): number {
   const t = Math.min(1, Math.max(0, x));

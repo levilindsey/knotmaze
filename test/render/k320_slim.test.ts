@@ -118,7 +118,13 @@ describe("K320 stage 1: char budgets", () => {
     // (33,695 -> 34,256), measured here; the junction field (40,097) and
     // the still pluck (20,507) keep their text.
     expect(SECTION_FRAG.length).toBeLessThanOrEqual(59_050);
-    expect(SECTION_EXPLORE_FRAG.length).toBeLessThanOrEqual(75_450);
+    // K1139 S5 (2026-11-05): the head-carry uniform (uKHead, in the
+    // shared KNOT_UNIFORMS_GLSL) and its CREST_RAMP branch in
+    // kPulseCrestK bring the section-explore fragment to 75,456 and
+    // the junction field (below) to 40,388, measured here; their
+    // budgets follow the measurement. The section (59,041), strip
+    // (34,296) and still pluck (20,528) stay inside theirs.
+    expect(SECTION_EXPLORE_FRAG.length).toBeLessThanOrEqual(75_456);
     expect(STRIP_FRAG.length).toBeLessThanOrEqual(34_300);
     // K797b/K798 fillets (2026-10-21): the fan look gate and stroke
     // (junction_field.ts) add 755 (26,600 -> 27,355 here).
@@ -142,7 +148,7 @@ describe("K320 stage 1: char budgets", () => {
     // K1139 S4b (2026-11-04): the band ridge fade (a two-ended B arm's
     // ridge in R2.w; the band loop reads kPulseV2's field past the
     // joint) adds 245 (40,097 -> 40,342), measured here.
-    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(40_350);
+    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(40_388);
     // K799: uKPath joins KNOT_UNIFORMS_GLSL, which the still pluck
     // includes (+18 here).
     expect(PLUCK_STILL_FRAG.length).toBeLessThanOrEqual(20_550);

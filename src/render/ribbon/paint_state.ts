@@ -69,6 +69,7 @@ import {
   kRimAcross,
   kRimOver,
   kRimScale,
+  pulseHeadPass,
   kShadeFx,
   kTeleOver,
   knotSection,
@@ -925,7 +926,8 @@ export class PaintState {
     const spacing = Math.max(0.5, this.pulseSpacing);
     const modS = (x: number): number => x - spacing * Math.floor(x / spacing);
     U.uKPulse[0] = modS(clock * PAINT_CONST.PULSE_SPEED);
-    U.uKPulse[1] = modS((clock + PAINT_CONST.PULSE_OUT_LEAD) * PAINT_CONST.PULSE_SPEED);
+    U.uKPulse[1] = pulseHeadPass ? modS(clock * PAINT_CONST.PULSE_SPEED) : modS((clock + PAINT_CONST.PULSE_OUT_LEAD) * PAINT_CONST.PULSE_SPEED);
+    if (U.uKHead) U.uKHead[0] = pulseHeadPass && this.paintPulses.some((p) => p.inward && (p.dist0 ?? 0) === 0) ? 1 : 0;
     U.uKPulse[2] = spacing;
     const fi = Math.min(1, Math.max(0, (clock - this.pulseBorn) / PAINT_CONST.PULSE_FADE_IN));
     U.uKPulse[3] = fi * fi * (3 - 2 * fi);

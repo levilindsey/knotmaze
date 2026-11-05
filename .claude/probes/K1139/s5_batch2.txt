@@ -1,0 +1,7 @@
+# K1139 S5 (20B) K307 second round: two more interleaved pairs,
+# base first this time. Measured lines s5-mine-d/e, s5-base-d/e join
+# a..c in the report's table.
+node --max-old-space-size=8192 k307/trace_intro.mjs http://127.0.0.1:5761 s5-base-d "?k111&am=instant&fw=0&snd=none&phw=0" --max 12 --trace none
+node --max-old-space-size=8192 k307/trace_intro.mjs http://127.0.0.1:5760 s5-mine-d "?k111&am=instant&fw=0&snd=none&phw=0" --max 12 --trace none
+node --max-old-space-size=8192 k307/trace_intro.mjs http://127.0.0.1:5761 s5-base-e "?k111&am=instant&fw=0&snd=none&phw=0" --max 12 --trace none
+node --max-old-space-size=8192 k307/trace_intro.mjs http://127.0.0.1:5760 s5-mine-e "?k111&am=instant&fw=0&snd=none&phw=0" --max 12 --trace none

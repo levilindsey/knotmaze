@@ -1,0 +1,14 @@
+# K1139 S5 (20B): the q3_head sheet on mine (5760), then K307 cold
+# compiles interleaved mine (5760, this tree) vs base (5761, 0f461ed2).
+# The two warm lines warm each dev server's transforms; excluded from
+# the table. Measured lines: s5-mine-a..c and s5-base-a..c.
+$env:K1139_HOST = 'http://127.0.0.1:5760'
+node s5_sheet.mjs
+node --max-old-space-size=8192 k307/trace_intro.mjs http://127.0.0.1:5760 s5-warm-mine "?k111&am=instant&fw=0&snd=none&phw=0" --max 12 --trace none
+node --max-old-space-size=8192 k307/trace_intro.mjs http://127.0.0.1:5761 s5-warm-base "?k111&am=instant&fw=0&snd=none&phw=0" --max 12 --trace none
+node --max-old-space-size=8192 k307/trace_intro.mjs http://127.0.0.1:5760 s5-mine-a "?k111&am=instant&fw=0&snd=none&phw=0" --max 12 --trace none
+node --max-old-space-size=8192 k307/trace_intro.mjs http://127.0.0.1:5761 s5-base-a "?k111&am=instant&fw=0&snd=none&phw=0" --max 12 --trace none
+node --max-old-space-size=8192 k307/trace_intro.mjs http://127.0.0.1:5760 s5-mine-b "?k111&am=instant&fw=0&snd=none&phw=0" --max 12 --trace none
+node --max-old-space-size=8192 k307/trace_intro.mjs http://127.0.0.1:5761 s5-base-b "?k111&am=instant&fw=0&snd=none&phw=0" --max 12 --trace none
+node --max-old-space-size=8192 k307/trace_intro.mjs http://127.0.0.1:5760 s5-mine-c "?k111&am=instant&fw=0&snd=none&phw=0" --max 12 --trace none
+node --max-old-space-size=8192 k307/trace_intro.mjs http://127.0.0.1:5761 s5-base-c "?k111&am=instant&fw=0&snd=none&phw=0" --max 12 --trace none

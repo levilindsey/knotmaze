@@ -56,6 +56,8 @@ const S = PAINT_CONST.K_ROW_SHIFT;
 //                                            the clamp stays ordered; K298)
 //   uKPaint = (on, refBase, itemBase, hover) gameplay paint (KPAINT)
 //   uKPulse = (travelIn, travelOut, spacing, fadeIn)  pulse clocks
+//   uKHead  = (headCarry, -, -, -)  K1139 S5: 1 when a crest carries
+//             through your own junction (no CREST_RAMP dip there)
 //   uKReach = (reach, fade, rim, rimAt)      pulse trains' reach (world arc
 //                                            from the junction) and the
 //                                            fade over its end (K75); the
@@ -77,6 +79,7 @@ uniform vec4 uKGamut;
 uniform vec4 uKSect;
 uniform vec4 uKPaint;
 uniform vec4 uKPulse;
+uniform vec4 uKHead;
 uniform vec4 uKReach;
 uniform vec4 uKGold;
 uniform vec4 uKLook;
@@ -811,7 +814,7 @@ highp float kPulseCrestK(highp float dG, bool inward, bool hovered, highp float 
   highp float ph = raw - s * floor(raw / s);
   highp float dist = min(ph, s - ph);
   highp float dC = max(0.0, dG - (ph <= s - ph ? ph : ph - s));
-  highp float bump = max(0.0, 1.0 - dist / CREST_WIDTH) * min(1.0, dC / CREST_RAMP) * bumpK;
+  highp float bump = max(0.0, 1.0 - dist / CREST_WIDTH) * (uKHead.x > 0.5 ? 1.0 : min(1.0, dC / CREST_RAMP)) * bumpK;
   highp float fl = (PULSE_FLOOR + PULSE_CORE_BOOST * max(0.0, 1.0 - dG / PULSE_CORE_RADIUS)) *
     max(0.0, 1.0 - dG / PULSE_FLOOR_REACH);
   return min(1.0, (fl + bump * 0.9) * endWin) * uKPulse.w * kReachWin(dG);
