@@ -112,9 +112,14 @@ describe("K320 stage 1: char budgets", () => {
     // kPaintAt's quiet mode bring the pair to 58,440 / 74,855 and the
     // strips to 33,695 (the same core; chainMaterial reads the mode
     // float), measured here.
-    expect(SECTION_FRAG.length).toBeLessThanOrEqual(58_450);
-    expect(SECTION_EXPLORE_FRAG.length).toBeLessThanOrEqual(74_900);
-    expect(STRIP_FRAG.length).toBeLessThanOrEqual(33_700);
+    // K1139 S4 (2026-11-04): the two-ended pulse (kPulseV2 and the TWO
+    // dispatch in kPaintAt, the paint core only) adds 561 to the pair
+    // (58,440 -> 59,001 and 74,855 -> 75,416) and to the strips
+    // (33,695 -> 34,256), measured here; the junction field (40,097) and
+    // the still pluck (20,507) keep their text.
+    expect(SECTION_FRAG.length).toBeLessThanOrEqual(59_050);
+    expect(SECTION_EXPLORE_FRAG.length).toBeLessThanOrEqual(75_450);
+    expect(STRIP_FRAG.length).toBeLessThanOrEqual(34_300);
     // K797b/K798 fillets (2026-10-21): the fan look gate and stroke
     // (junction_field.ts) add 755 (26,600 -> 27,355 here).
     // K815: the fans' flank coordinate (aFlank + the fanEdge block) adds

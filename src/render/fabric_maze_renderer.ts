@@ -4116,7 +4116,7 @@ export class FabricMazeRenderer {
     const feed: PulseBandDecl[] = [];
     for (const [vertex, specs] of byVertex) {
       const routes = specs.map((s) =>
-        pulseBandRoute(this.walk.edges[s.aEdge], this.walk.edges[s.bEdge], vertex)
+        pulseBandRoute(this.walk.edges[s.aEdge], this.walk.edges[s.bEdge], vertex, s.bAtA)
       );
       const alloc = assignPulseSlots(existing.get(vertex) ?? [], routes);
       specs.forEach((s, i) => {
@@ -4239,7 +4239,11 @@ export class FabricMazeRenderer {
             f.near === o.near &&
             f.cont === o.cont &&
             f.inward === o.inward &&
+            f.two === o.two &&
+            f.inwardB === o.inwardB &&
+            f.atA === o.atA &&
             Math.abs(f.dist0 - o.dist0) <= 1e-3 &&
+            Math.abs(f.dB - o.dB) <= 1e-3 &&
             Math.abs(f.span - o.span) <= 1e-3
           );
         });
@@ -4274,12 +4278,28 @@ export class FabricMazeRenderer {
             hovered,
             dist0: item?.dist0 ?? 0,
             cont: item?.cont ?? false,
+            // K1139 S4: a cycle arm lit from its far end too.
+            two: item?.two ?? false,
+            dB: item?.dB ?? 0,
+            inwardB: item?.inwardB ?? false,
           });
         };
         if (e.va === e.vb) {
-          // A self-loop run returns to the branch point: pulse both ends.
-          arm(e.ctrlA, e.ctrlB);
-          arm(e.ctrlB, e.ctrlA);
+          // K1139 S4: a self-loop run returns to the branch point: one arm
+          // lit from both ends (master declared one arm per end, and the
+          // two trains overlapped along the whole loop).
+          pulses.push({
+            chain: e.chain,
+            cJunction: e.ctrlA,
+            cFar: e.ctrlB,
+            inward,
+            hovered,
+            dist0: 0,
+            cont: true,
+            two: true,
+            dB: 0,
+            inwardB: inward,
+          });
         } else if (e.va === controller.head) {
           arm(e.ctrlA, e.ctrlB);
         } else {
@@ -4303,6 +4323,9 @@ export class FabricMazeRenderer {
             item.edge === this.hoverEdge || (this.hoverRoute?.includes(item.edge) ?? false),
           dist0: item.dist0,
           cont: item.cont,
+          two: item.two,
+          dB: item.dB,
+          inwardB: item.inwardB,
         });
       }
     }

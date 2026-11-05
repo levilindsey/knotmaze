@@ -6,7 +6,14 @@
 // band family per pulse arm, which drew gold crests over a fading trail).
 
 import { describe, expect, it } from "vitest";
-import { ITEM_FLAG, PAINT_CONST, PAINT_ITEM, PAINT_ITEM_TELE } from "../../src/render/paint_const";
+import {
+  ITEM_FLAG,
+  PAINT_CONST,
+  PAINT_ITEM,
+  PAINT_ITEM_TELE,
+  PULSE_FLAG,
+  PULSE_RIDGE_FADE,
+} from "../../src/render/paint_const";
 import {
   MAX_KNOTS,
   kArcOfCtrl,
@@ -15,7 +22,9 @@ import {
   kComposePaint,
   kPaintAt,
   kPulseBandV,
+  kPulseCrest,
   kPulseV,
+  kPulseV2,
   kReachWin,
   kRimAcross,
   kRimOver,
@@ -1299,6 +1308,144 @@ describe("kPulseBandV (K1139 S3a)", () => {
           12
         );
       }
+    }
+  });
+});
+
+// K1139 S4 (T6, T7): an arm lit from both ends (a cycle's closing arm, a
+// self-loop) reads the nearer end's field, dG = min(dA + d, dB + span - d),
+// each side in its own end's direction. Away from the ridge (gA = gB) each
+// side is exactly its end's one-ended field with the light carrying on
+// (cont); the crest trains fade to the floor over PULSE_RIDGE_FADE either
+// side of it, so the field is continuous there at every clock and every
+// pair of directions. The one-ended kPulseV is untouched (the G2.3 pins
+// above still hold it to the frozen pre_g23 pass).
+describe("kPulseV2 (K1139 S4)", () => {
+  // [dA, dB, span]: T6's triangle arm, cyc's head arm e210, a self-loop
+  // beyond the head (dB = dA), a self-loop at the head, a long arm.
+  const CASES: Array<[number, number, number]> = [
+    [1.1, 1.4, 0.9],
+    [0, 1.386, 2.746],
+    [1.2, 1.2, 2.8],
+    [0, 0, 2],
+    [0.3, 2.9, 4.4],
+  ];
+  const CLOCKS = [100, 100.31, 100.77, 101.2, 103.05];
+  const DIRS: Array<[boolean, boolean]> = [
+    [false, false],
+    [true, false],
+    [false, true],
+    [true, true],
+  ];
+
+  it("is each end's own field away from the ridge, and the floor alone at it", () => {
+    for (const clock of CLOCKS) {
+      const U = uniforms({ clock, pulseBorn: 0, spacing: 2.5 });
+      for (const [dA, dB, span] of CASES) {
+        const dR = (dB + span - dA) / 2;
+        for (const [inwA, inwB] of DIRS) {
+          for (let i = 0; i <= 400; i++) {
+            // min: (span * 400) / 400 can round past span, outside the arm.
+            const d = Math.min(span, (span * i) / 400);
+            const v = kPulseV2(U, d, span, dA, dB, inwA, inwB, false);
+            if (d <= dR - PULSE_RIDGE_FADE - 1e-9) {
+              expect(v).toBeCloseTo(kPulseV(U, d, span, inwA, false, dA, true), 12);
+            } else if (d >= dR + PULSE_RIDGE_FADE + 1e-9) {
+              expect(v).toBeCloseTo(kPulseV(U, span - d, span, inwB, false, dB, true), 12);
+            }
+            // Quiet (bumpScale 0): the floor at the nearer distance.
+            expect(kPulseV2(U, d, span, dA, dB, inwA, inwB, false, 0)).toBeCloseTo(
+              kPulseCrest(U, Math.min(dA + d, dB + span - d), inwA, false, 1, 0),
+              12
+            );
+          }
+          // At the ridge both ends' directions read the same floor.
+          const gR = dA + dR;
+          const atR = kPulseV2(U, dR, span, dA, dB, inwA, inwB, false);
+          expect(atR).toBeCloseTo(kPulseCrest(U, gR, inwA, false, 1, 0), 9);
+          expect(atR).toBeCloseTo(kPulseCrest(U, gR, inwB, false, 1, 0), 9);
+          // Outside the arm, nothing.
+          expect(kPulseV2(U, -1e-6, span, dA, dB, inwA, inwB, false)).toBe(0);
+          expect(kPulseV2(U, span + 1e-6, span, dA, dB, inwA, inwB, false)).toBe(0);
+        }
+      }
+    }
+  });
+
+  it("is continuous across the ridge, trains and hover alike", () => {
+    const STEP = 1e-4;
+    for (const clock of CLOCKS) {
+      const U = uniforms({ clock, pulseBorn: 0, spacing: 2.5 });
+      U.uKReach[0] = 3;
+      U.uKReach[1] = Math.min(PAINT_CONST.PULSE_REACH_FADE, 0.5 * 3);
+      for (const [dA, dB, span] of CASES) {
+        for (const [inwA, inwB] of DIRS) {
+          for (const hovered of [false, true]) {
+            let prev = kPulseV2(U, 0, span, dA, dB, inwA, inwB, hovered);
+            let worst = 0;
+            for (let d = STEP; d <= span; d += STEP) {
+              const v = kPulseV2(U, d, span, dA, dB, inwA, inwB, hovered);
+              worst = Math.max(worst, Math.abs(v - prev));
+              prev = v;
+            }
+            // The field's steepest honest slope (crest flank, ramp, ridge
+            // fade, core, reach fade) is under 10 per world unit: a step
+            // stays under 1e-3, where a seam between two unfaded trains
+            // reads ~0.1 and more.
+            expect(worst).toBeLessThan(1e-3);
+          }
+        }
+      }
+    }
+  });
+
+  it("is what kPaintAt reads from a TWO item (dA in T0.w, dB in T1.w, the far end's direction in the flags)", () => {
+    const U = uniforms({ clock: 100.31, pulseBorn: 0, spacing: 2.5 });
+    const r = rng(1139);
+    const ch = randomChain(r, 60, false);
+    const pulses: OldPulse[] = [
+      { cJunction: 10, cFar: 30, inward: false, onPath: false, hovered: false },
+    ];
+    const D = scene(ch.controlArcLengths, ch.totalLength, ch.count, false, [], [], pulses, U);
+    const itemBase = Math.round(U.uKPaint[2]);
+    const c = kChain(D, 0);
+    const aJ = kArcOfCtrl(D, c, 10);
+    const aF = kArcOfCtrl(D, c, 30);
+    const span = aF - aJ;
+    const st: KPaintState = { p: 0, band: false, v: 0, rim: 0, tele: 0 };
+    for (const [dA, inwB] of [
+      [0.4, false],
+      [1.3, true],
+    ] as Array<[number, boolean]>) {
+      // The far end sits 0.7 past the near one, so the ridge lies
+      // mid-arm, inside the reach.
+      const dB = dA + 0.7;
+      D.paint[itemBase * 4 + 3] = Math.fround(dA);
+      D.paint[itemBase * 4 + 5] = PULSE_FLAG.TWO | (inwB ? PULSE_FLAG.INWARD_B : 0);
+      D.paint[itemBase * 4 + 7] = Math.fround(dB);
+      let lit = 0;
+      for (let i = 1; i < 40; i++) {
+        const arc = aJ + (span * i) / 40;
+        const got = kPaintAt(D, U, c, 11, arc, 0.02, st);
+        const want = kPulseV2(U, arc - aJ, span, Math.fround(dA), Math.fround(dB), false, inwB, false);
+        if (want > PAINT_CONST.PULSE_MIN_V) {
+          lit++;
+          expect(got.band).toBe(true);
+          expect(got.v).toBeCloseTo(want, 12);
+        } else {
+          expect(got.band).toBe(false);
+        }
+        // Quiet: the floor alone.
+        const q = kPaintAt(D, U, c, 11, arc, 0.02, st, true);
+        const wantQ = kPulseV2(U, arc - aJ, span, Math.fround(dA), Math.fround(dB), false, inwB, false, 0);
+        if (wantQ > PAINT_CONST.PULSE_MIN_V) expect(q.v).toBeCloseTo(wantQ, 12);
+      }
+      expect(lit).toBeGreaterThan(4);
+      // Without the TWO flag the same item is the one-ended arm, bit for bit.
+      D.paint[itemBase * 4 + 5] = 0;
+      const arc = aJ + 0.37;
+      const one = kPaintAt(D, U, c, 11, arc, 0.02, st);
+      expect(one.v).toBe(kPulseV(U, arc - aJ, span, false, false, Math.fround(dA), false));
     }
   });
 });

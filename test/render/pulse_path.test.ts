@@ -1,12 +1,12 @@
 import { describe, it, expect } from "vitest";
 import type { WalkEdge, WalkGraph, WalkVertex } from "../../src/core/walk_graph";
 import { pulsePath, pulseTree } from "../../src/render/pulse_path";
-import { kPulseCrest, kPulseV, kPulseV2, type KUniforms } from "../../src/render/paint_math";
 
 // K1139 S2 (plan 4.1): the pure lit-tree model on small invented graphs.
-// S4: T6 (an arm lit from both ends: the two-ended form, its ridge and
-// the field's continuity there, on the CPU mirror) and T7 (self-loops:
-// one item per loop).
+// S4: T6 (an arm lit from both ends is one two-ended item) and T7
+// (self-loops: one item per loop). The two-ended field itself (kPulseV2:
+// the nearer end wins, continuous at the ridge) is pinned on the CPU
+// mirror in paint_gameplay.test.ts.
 
 // A hand-built walk graph from runs [va, vb, lattice length] (the
 // route_plan.test.ts helper's shape).
