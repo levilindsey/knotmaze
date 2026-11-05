@@ -517,9 +517,9 @@ Next free ID: K1184.
 - **K1178** · Muse batch 16: run A drafts the brief (`docs/design/K1178_muse_batch16_run_a.md`), runs B-I and K from
   the draft (Claude added H and I after B, K after I), after 16J.
   - owner: nobody since 2026-11-04 11:23 (16C done; runs K and D-G queued as Muse chain runs 16K and 16D-16G, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `2b302a3f`
+  - branch: mainline; last commit: `1a02e2b8`
   - evidence: `docs/design/K1178_muse_batch16_run_a.md`; the chain in `.claude/probes/K1053/` (queue.txt, chain.log)
-  - next: Run D done; next Run E
+  - next: Run E done; next Run F
   - brief: `docs/design/K1178_muse_batch16.md`
 - **K1179** · Thread geometry (Levi 11-04: rethink how thread bodies, junction rounds and gaps are built, maybe
   as a skin on the thread centres). Review (`docs/design/K1179_geometry_review.md`): keep threads and physics,
@@ -1063,9 +1063,6 @@ Every other item below waits on the trigger it names.
 - **K176** · K80's entrance-tail trap: after losing a player on the
   entrance tail, the minotaur pauses at that tail's junction and catches
   them about 3 s later (`.claude/probes/K80/rt/results.md`).
-- **K178** · Since K122 the private-cache vite wrappers of K19-K20, K79, K99 and K104 fail with
-  ERR_MODULE_NOT_FOUND; K80's (`.claude/probes/K80/rt/vite.private-cache.config.ts`, which loads the
-  config with `loadConfigFromFile`) works (`.claude/rules/probes.md`).
 - **K181** · K104's residuals: the phone's "can't tell" share stays high in fabric and dense (26%,
   41%); sound-only and hide-zone taps show only through a cue; G1's soft edge shows the under ribbon
   at 80-90 degrees. `docs/design/K104.md` ("Stage 1b handoff", "Stage 1c handoff").
@@ -1997,6 +1994,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K178** · K79, K99 and K104 private-cache wrappers load the config with loadConfigFromFile, as K1139's tracked copy does. Done in 1a02e2b8 (2026-11-04).
 - **K999** · probes.md's paths narrowed to the probe scripts; K863's trace and data reads no longer carry it. Done in 2b302a3f (2026-11-04).
 - **K1175** · key hints recompute while the flow is on, so a disc never names a stale key on a bisector run. Done in 2a856876 (2026-11-04).
 - **K1163** · Corner rounding's softer root gate (the root band scaled by the tip factor, Muse batch 16 Run H): the ten near-straight cusp corners now match S1f; row 15's corner goes on in K1180. Done in ab7cad9a (2026-11-04).
