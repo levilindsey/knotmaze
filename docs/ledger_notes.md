@@ -3694,3 +3694,11 @@ c's exit under the one join rule: J3h's port (v7.1) with J3i's cusp-entry rule (
 - ij has no port solve: 71 of the 72 low-exit pairs into a cusp window solve.
 - Untried: Plc1m (B = 1 u with maxfev 8000); Plc1 (B = 1 u, the old cap) left 5 solves at MAXFEV.
 - The 6 undesigned seams left are q's word-end exits.
+
+## K1191 (2026-11-04, Run D's findings)
+
+Muse batch 19 Run D (d740e698) examined Stage 4's three leftovers; summaries and raw tables in `.claude/probes/K1191/` (task2_records.md, task3_unlit_arm.md, task4_wedges52.md). No code changed, and none of the three blocks K1139's merge.
+- Records 2129 and 2668 are ji 27 (centre 25.342, 3.850) and ji 34 (1.026, 18.831): neighbouring fans drawn later over ji 28's foot and over the cross t7 box, as the cover model has it. The live anchors (ji 28 rb 2206, ji 33 rb 2591) match exactly on both stands.
+- ji 147's unlit arm 1: no pulse band declares it (its bands are 0>3 and 0>2), and rule (d)'s side factor is 0 at all 276 px, so the crotch fill cannot reach it; its fan is the uniform quiet base (luma 148), not a dark base. The bright GPU colours there at bright phases are not explained by the cover model (candidate: its unmodelled gk discard); recorded, not attributed.
+- ji 147's 52 wedges are threshold flips: the GPU sits 0.11-1.00 luma under the float model at all 52 (51 are fan x4, with no other record), and at a census line of T = 1 none stays GPU-only.
+- Stage 4's `out/s4/d/` dumps were read as they were: nothing retaken, the `__k1139diag` hook not checked out.

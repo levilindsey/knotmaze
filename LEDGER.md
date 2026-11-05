@@ -522,8 +522,9 @@ Next free ID: K1199.
   - brief: `docs/design/K1139_s4b_ridge_fade.md` (on S4b's branch) and S4's Handoff in `docs/design/K1139_s4_cycles.md`; the plan `docs/design/K1139_pulse_junctions.md` section 5
   - env: the server `npx vite --config .claude/probes/K1139/vite.private-cache.config.ts --port 5620 --strictPort --host 127.0.0.1` from a worktree (ports 5620-5639; the node_modules junction: `docs/design/K1139_s3b_fix.md` section 7); GPU probes through `.claude/probes/K1139/run_locked.ps1 -Batch`
 - **K1192** · Muse batch 19 (`docs/design/K1192_muse_batch19.md`, drafted by run A): junction work first
-  (K1186's flip count, K1182's G1 rim, K1191's examinations), then batch 18's follow-ups
-  - owner: nobody since 2026-11-04 20:08 (runs 19C-19E queued in the Muse chain, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
+  (K1186's flip count, K1182's G1 rim, K1191's examinations), then batch 18's follow-ups; Claude added Run F
+  (what cuts K1182's stepped corners)
+  - owner: nobody since 2026-11-04 20:08 (runs 19E and 19F queued in the Muse chain, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
   - branch: mainline; last commit: `d740e698`
   - evidence: docs/design/K1192_muse_batch19.md; the chain in .claude/probes/K1053/ (queue.txt, chain.log)
   - next: Run D done; Claude reviews it, Run E next
@@ -1687,9 +1688,9 @@ Every other item below waits on the trigger it names.
 - **K1182** · The fill rim meets the flank tips with a tangent break (G0: `src/render/ribbon/rim_curve.ts`'s
   quadratic). 19C's biarc (ed14f2c9, flag `rimCurveBiarc`, left off) is G1, but on its sheet the gaps at four
   ji147 and cross ji33 grow sharp stepped corners (`.claude/probes/K1182/sheet/`): find what cuts them first.
-- **K1191** · K1139 Stage 4 leftovers (handoff in `docs/design/K1139_s3b_fix.md`): ji 147's 52 GPU wedges; the
-  full model's 12/6/11 threshold flips; no arc-true tau rate or obliqueness in the classifier; unexamined: ji
-  147's unlit arm 1, records 2129 and 2668's overlapping fans
+- **K1191** · K1139 Stage 4 leftovers (`docs/design/K1139_s3b_fix.md`): the full model's 12/6/11 threshold
+  flips; no arc-true tau rate or obliqueness in the classifier; ji 147 arm 1's bright GPU colours, unexplained
+  (candidate gk). Batch 19 Run D examined the rest: none blocks K1139's merge (`.claude/probes/K1191/`)
 - **K1193** · Cursive c (v7.1, J3h): 14 of the 26 c joins sit at the 10 u bound of c's exit port
   (`docs/design/K1112_cursive_j3h.md`, Handoff)
 - **K1194** · Cursive v7.0: c's lead-in is rough FAIL in c-initial words (facet 0.0098), and the er and es

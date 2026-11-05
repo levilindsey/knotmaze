@@ -8,10 +8,11 @@ afterwards and closes K1192.
 
 This was a drafting run (Run A,
 `docs/design/K1192_muse_batch19_run_a.md`), so the batch's runs are
-B to G in the drafting brief. Four runs fit (B to E below); F and
-G are not commissioned, and their port ranges (5740-5749 and
-5750-5759) stay unused. The chain tags are 19B to 19E, one run at
-a time. Batch 19 uses ports 5700-5759, one range per run.
+B to G in the drafting brief. Four runs fit (B to E below), and
+Claude added Run F (K1182's examination, ports 5740-5749) after
+judging Run C's sheet; G is not commissioned, and its port range
+(5750-5759) stays unused. The chain tags are 19B to 19F, one run
+at a time. Batch 19 uses ports 5700-5759, one range per run.
 
 Runs came from the candidates in Run A's order:
 
@@ -36,7 +37,7 @@ Runs came from the candidates in Run A's order:
   rest of Residuals was not read again (Run A directs it).
 
 No item ends outright: Run B only counts, Run C stops at its look
-sheet, Run D only examines, and Run E takes one piece of K782 and
+sheet, Runs D and F only examine, and Run E takes one piece of K782 and
 leaves the rest. Their close lines give any rewritten item text in
 their reports, for Claude to apply (`ledger.mjs` has no command
 that rewrites an item's text, so a rewriting close says so, as the
@@ -49,7 +50,7 @@ Run C changes what the player sees, so its change stays behind a
 switch that defaults to today's picture (the golden pins and
 fixtures unmoved), it shoots a look sheet with the switch off and
 on, and it stops there: Claude judges the sheet and flips the
-default. Runs B and D change no `src/` at all. Run E changes what
+default. Runs B, D and F change no `src/` at all. Run E changes what
 the game does only by removing a wrong answer (a follower crossing
 mud on its first step without paying the mud turn); it gates on
 unit tests, not a look (batch 18's Runs B and C are the shape).
@@ -65,10 +66,10 @@ Batch 18's "How to work" applies unchanged: read it in
 process in `docs/design/K1050_muse_week.md`) before anything
 else. Read K1192 wherever it, or a page it sends you to, says
 K1189, K1184, K1178, K1169 or K1131; the chain tags are 19B to
-19E, and Claude starts them one at a time. Batch 19 uses ports
+19F, and Claude starts them one at a time. Batch 19 uses ports
 5700-5759; each run below names its own range. After each run,
-update K1192's handle (the next run in B, C, D, E order, or,
-after E, that all the runs are in and Claude reviews and closes
+update K1192's handle (the next run in B, C, D, E, F order, or,
+after F, that all the runs are in and Claude reviews and closes
 K1192).
 
 GPU probes and timings hold the machine's perf lock (each
@@ -724,12 +725,259 @@ the late lure clear, clk=beat and the glyph kept, in both
 line, gaining this piece), for Claude to apply by hand. Then:
 
 After the run, update K1192's handle:
-`node C:\Users\lsl\Repositories\claude-config\tools\ledger.mjs handle K1192 --last-commit <sha8> --next "Run E done; all batch 19 runs are in, Claude reviews and closes K1192"`
+`node C:\Users\lsl\Repositories\claude-config\tools\ledger.mjs handle K1192 --last-commit <sha8> --next "Run E done; Run F next"`
+
+## Run F - K1182: what cuts the biarc rim's gaps into stepped corners
+
+**Chain tag:** 19F · **Suggested ports:** 5740-5749 (the probe's
+Vite dev server takes one port in this range).
+
+Claude added this run after judging Run C's sheet. Run C
+(`ed14f2c9`) put a biarc fill rim behind the `rimCurveBiarc` flag
+in `src/render/ribbon/rim_curve.ts`; its tests show it G1 at both
+flank tips and at its joint. On its sheet, though, the flag on
+grows sharp, stepped corners in the gaps between arms at four
+ji147 and cross ji33: ji147's gap gains a square notch, and the
+notch above its route band fills in; ji33's round gap turns
+angular. ji28 and ji149 barely change. The flag stays off.
+
+This run only examines: it finds which layer draws those corners
+and why, with numbers, and stops. No `src/` or `test/` change, no
+flip, no fix: Claude picks the fix from the report.
+
+### Read first
+
+- `src/render/ribbon/rim_curve.ts` (whole, 321 lines): the flag,
+  `biarcPoints`, and the fallback quadratic. The quadratic is
+  sampled at q = i/n for i = 1..n-1, so the flag-off rim's middle
+  point P4 (n = 8) gives the corner back: C = 2 P4 - (A + B)/2,
+  with A and B the two tips.
+- Run C's commit message (`git show -s ed14f2c9`): how the biarc
+  is built (the joint on the G1 locus nearest the quadratic's
+  midpoint; each tip's heading along its tangent line, toward that
+  midpoint; arc-length samples, the two tip steps at 0.65x the
+  mean step).
+- `src/render/ribbon/joinery.ts` about 2380-2585 (read only): the
+  wedge. `flank()` samples each flank from 0.12 to 1.0 of the
+  arm's reach, offset to the wedge-facing edge, and returns the
+  tip's outward tangent (`tanA`, `tanB`); the corner is the edge
+  lines' clamped intersection. The perimeter runs A's flank inner
+  to outer, the rim's n - 1 = 7 interior points
+  (`FILLET_BEZIER_STEPS = 8`), then B's flank outer to inner.
+  `flankArr` is uniform along the rim (1 - 2 i/n), with the tips
+  at +-(1 - 2/n) (K854). `rims[k]` (the rim with both tips) feeds
+  K81's route bands through `rimsOf` (about 2313-2337): each
+  band's turn is fitted inside the rim (`routeRim` and `turnFits`,
+  about 2620-2665, bisecting the turn's start `d`), and the field
+  shader draws the band from the record, not from geometry of its
+  own. `armWinL`/`armWinR` cut the
+  ribbons' own border out to the tip less 0.05 (K849, K854). The
+  fan is `emitFan(rec, jx, jy, rim, flankArr)`: its apex is the
+  junction centre, not the corner.
+- `src/render/ribbon/joinery.ts` about 1715-1750 (`emitFan`: the
+  band straddles the rim, `rimOff = fillHalf * 0.97`, `bandOut`)
+  and `src/render/ribbon_mesh.ts` `TriFanMesh.pushFan` (about
+  790-920): triangles (apex, rim[i], rim[i+1]); the band's inner
+  ring is inset perpendicular to the rim by a 3-point central
+  difference, its side picked per vertex toward the apex, and the
+  outer ring is outset by `bandOut`.
+- `src/render/junction_field.ts`, only the lines that read
+  `aFlank`/`vFlank` (the border look's flank fade; read only).
+- `.claude/probes/K1182/` (Run C's kit): `sheet.mjs` (stands,
+  targets, and `setFlag`, which imports
+  `/src/render/ribbon/rim_curve.ts` in the page, calls the setter,
+  then `rebuildFillets(true)` and `tickPaint(0)`), `lib.mjs`,
+  `png.mjs`, `run_locked.ps1`, the private-cache Vite config, and
+  `sheet/` (`meta.json` gives each target's centre, record and
+  on-off diff).
+- `.claude/rules/probes.md`: the probe habits (full design links,
+  `phw=0`, pinned clocks, headed real-time Chrome, the perf lock).
+
+**The K1139 lane is read only.** A Claude agent works there:
+`joinery.ts`, `junction_field.ts`, `junction_routes.ts`,
+`arm_strip.ts`, `ribbon_mesh.ts`, `paint_math.ts`,
+`paint_glsl.ts`, `pulse_path.ts`, `fabric_maze_renderer.ts`,
+`ribbon_renderer.ts`, `src/render/ribbon/` (`rim_curve.ts`
+included this time), `src/app/probe_hooks.ts`, their tests,
+`test/render/fixtures/` and `.claude/probes/K1139/`. Every
+what-if below runs in the page, through a wrapper the probe
+installs; if a measurement needs a change to any `src/` file,
+stop and report what it would change.
+
+### What is there today
+
+> **K1182** · The fill rim meets the flank tips with a tangent
+> break (G0: `src/render/ribbon/rim_curve.ts`'s quadratic). 19C's
+> biarc (ed14f2c9, flag `rimCurveBiarc`, left off) is G1, but on
+> its sheet the gaps at four ji147 and cross ji33 grow sharp
+> stepped corners (`.claude/probes/K1182/sheet/`): find what cuts
+> them first.
+
+The quadratic leaves each tip toward the corner, at an angle to
+the flank. The biarc leaves each tip back along the flank's own
+tangent line, which is the outline's direction there: walking the
+gap's edge inward along arm A, the rim carries on smoothly. The
+fan's perimeter, though, runs OUT along A's flank to the tip, so
+with the biarc it turns back by nearly 180 degrees at the tip and
+retraces the flank line before it curves across the gap. Five
+things read the rim's points, and any of them could turn that
+into a stepped corner. These are the hypotheses the tables test:
+
+- **H1, fan folds.** The fan's apex is the junction centre. Where
+  the rim, seen from the centre, runs backwards, triangles fold.
+  The lore says an over-covering fan never leaves holes, but
+  folded triangles draw straight edges.
+- **H2, corridor exit.** The biarc leaves the corridor the
+  quadratic traces (the triangle tip A, corner, tip B).
+- **H3, the arcs.** Unequal radii: a tight arc spends one or two
+  of the 8 steps and reads as a polygon corner, or turns tighter
+  than the band is wide, so the band's offset ring folds.
+- **H4, the flank coordinate.** `flankArr` is uniform in index,
+  but the biarc samples by arc length, so the border look's flank
+  fade (keyed on |vFlank|) moves along the rim.
+- **H5, the route band.** K81's band at ji147 fits its turn inside
+  `rims[k]`, so a different rim moves where the band turns.
+- **H6, the band rings.** `pushFan`'s 3-point normal at a tip,
+  where the perimeter turns back on itself, and at the first rim
+  points; its side is picked per vertex toward the apex.
+
+Not fed by the rim, but drawn beside it: the ribbons' border
+windows (`armWin`, out to the tip less 0.05) and the gap mask.
+
+### Tasks
+
+Use ports 5740-5749. The probes take the perf lock
+(`run_locked.ps1 -Batch`); a Claude agent holds it too, so wait
+inside that one command.
+
+**Write set:** new files under `.claude/probes/K1182/` only
+(`git add -f`): the examination probe (for example `exam.mjs`),
+its batch file, and its output under
+`.claude/probes/K1182/exam/`. Run C's `sheet.mjs` and `sheet/`
+stay as they are. No `src/` or `test/` change.
+
+1. **Capture the real rims (desktop probe).** Use `sheet.mjs`'s
+   stands, links, moves and targets, copied verbatim (rule 11),
+   at the same pinned state: flag off, then flag on. In the page,
+   wrap `TriFanMesh.prototype.pushFan` (reach an instance as
+   `window.__knotRenderer().filletMesh`; both fan meshes share the
+   prototype) around one `rebuildFillets(true)`, then restore the
+   original. For each call whose `rec` equals a target's
+   `fieldProbe.record(ji)` and whose `flank` is not null (a
+   wedge), record the apex, `rim`, `flank`, `bandIn`, `bandOut`,
+   and the vertices the call wrote (`vertexData` from its first
+   vertex to its last: apex, rim ring, inner ring, outer ring).
+   Record each target's `fieldProbe.routes(ji)` too (four ji147
+   has a band): each route's arms, `d` and `m`. Save the captures
+   as JSON, per target, flag off and on.
+   A wedge is rounded when 7 rim points sit between its two tip
+   vertices (the flank values mark the tips). Report each
+   target's wedge count, how many are rounded, and on which the
+   biarc fired (points that differ from the quadratic's).
+
+2. **The geometry table (pure, from the captures).** For every
+   rounded wedge of the four targets, flag off and flag on:
+   - **H1:** the fan triangles (apex, p_i, p_i+1) whose signed
+     area has the minority sign, over the whole perimeter and over
+     the rim from tip to tip; and the largest backward angular
+     step, seen from the apex.
+   - **H2:** the largest distance of a rim point outside the
+     triangle tip A, corner, tip B; and the largest distance
+     between the on and off rims. Take the corner from the
+     flag-off quadratic (Read first's formula). Check it
+     reproduces every flag-off rim point to 1e-6; if it does not,
+     name the wedge as the cubic branch and skip this column.
+   - **H3:** both radii (fit a circle to each arc's samples, or
+     rebuild them by Run C's construction), their ratio, the
+     smaller radius against `bandIn` and `bandOut`, and the
+     largest turn between consecutive segments, the tips included
+     (the flank's last segment into the rim's first).
+   - **H6:** the perimeter's turn at each tip vertex; the band
+     quads whose orientation flips (inner: inner_i, rim_i,
+     rim_i+1, inner_i+1; outer likewise); inner or outer ring
+     points on the wrong side of the rim; and the largest angle
+     between consecutive inset normals.
+   - **H4:** the flank values against the rim's normalized arc
+     length from tip A, and their largest difference.
+   - **H5** (targets with a route): which wedge's rim each band's
+     turn is fitted in, and its `d` and `m`, off against on.
+
+   Name each column's unit (world units or degrees). ji28 and
+   ji149 barely change, so they are the controls: a hypothesis
+   that fires as much there does not explain ji147 and ji33.
+
+3. **Pixel attribution (desktop probe, same pinned state).** Run
+   C's on-off diffs are 664 / 4604 / 554 / 1725 px (four ji28,
+   ji147, ji149, cross ji33; `sheet/meta.json`). Take a
+   same-build off/off control pair first (0 px). Then run each
+   what-if below, one at a time. Each wraps `pushFan` in the page
+   (or replaces it with a copy whose change you name), matching
+   wedges by `rec` and their order in the rebuild; never edit
+   `src/`.
+   - **A (H6), flag on:** the band rings rebuilt with normals from
+     the rim's own tangent (a wider stencil, or the arc's analytic
+     tangent).
+   - **B (H4), flag on:** `flank` replaced by values uniform in
+     arc length.
+   - **C (H5):** flag off, each wedge's fan given its captured
+     flag-on rim (the band turns as today, the wedge is the
+     biarc's); then flag on, each wedge given its flag-off rim
+     (the band turns in the biarc, the wedge is today's).
+     `emitFan` sets the record's reach (`rec.rMax`) from the rim
+     before `pushFan` sees it: say whether a swapped rim reaches
+     past it.
+   - **D (H1, H3 against H6):** the band dropped
+     (`bandIn = bandOut = 0`), flag off and flag on: corners that
+     stay come from the fill's shape or the route, corners that
+     go came from the band.
+
+   For each what-if and target, count the changed pixels against
+   flag off and against flag on (exact and over 8, as Run C
+   counts), and state the share of Run C's on-off diff it returns
+   to flag off. The what-if that returns most of the diff at
+   ji147 and ji33 names the layer that cuts the corners.
+
+4. **The sheets.** Under `.claude/probes/K1182/exam/`:
+   - One sheet: rows off / on, then each what-if's rows, columns
+     the four targets, 2x crops at Run C's clips.
+   - An overlay per target, off and on: a 4x crop with the
+     captured rim drawn over it (off blue, on red), its points as
+     dots, the inner and outer band rings as thin lines, and the
+     apex marked. Map world to screen as `sheet.mjs`'s `screenOf`
+     does.
+
+### Done and close
+
+**Done when:**
+
+- The captures exist for the four targets, flag off and on, with
+  the wedge counts (task 1).
+- The table covers every rounded wedge of the four targets, flag
+  off and on, all six columns, with units (task 2).
+- The what-if counts, the control pair and both sheets exist
+  (tasks 3 and 4).
+- The report names the hypothesis (or hypotheses) the numbers
+  support at ji147 and ji33, the what-if that returns the most of
+  the diff, and what each other hypothesis measured.
+- `git status` shows no change outside `.claude/probes/K1182/`.
+
+**Close lines:**
+
+K1182 stays open. The report gives the item's new text for Claude
+to apply (no `ledger.mjs` command rewrites an item's text): today's
+text with its last clause, "find what cuts them first", replaced
+by what this run found and the evidence path, in at most three
+lines.
+
+After the run, update K1192's handle:
+`node C:\Users\lsl\Repositories\claude-config\tools\ledger.mjs handle K1192 --last-commit <sha8> --next "Run F done; Claude reviews it, picks K1182's fix, and closes K1192"`
 
 ## Left out on purpose
 
 Drafting order, with what was read and skipped. Runs B to E
 above are the fits; everything named here was read and left.
+(Run F is not a draft: Claude added it after judging Run C's
+sheet.)
 
 **Step (1), junction work (all three named pieces taken):**
 nothing in the step was skipped. K1186 is taken as its first
