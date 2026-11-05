@@ -143,7 +143,7 @@ of the build before S3b.
   `s3b_seams_*.png`, rows before S3b, S3b, fix (`crop.mjs`, then
   `sheet.mjs`).
 - Track the sheets with `git add -f`. No sheet for Levi: Claude shows
-  him.
+  them.
 
 ## 7. Setup and limits
 
@@ -418,3 +418,143 @@ through run_locked.ps1 like fix1.
    against the 37,100 ceiling: fit or raise to a measured length with
    a dated comment), and remove the `__k1139diag` hook (joinery.ts, the
    K1139Diag interface and the DG block) with the fix.
+
+## Stage 2 (2026-11-04): a pulse rule continuous by construction
+
+A new agent runs this stage in a fresh worktree from master, with this
+branch cherry-picked onto it. Sections 1-8 hold except where this
+section says otherwise: read 1, 3, 5, 6, 7 and the Handoff first.
+
+### S2.1 What is settled
+
+- **T stands as section 5 defines it** (the arm's steepest step +
+  2/255: 5.54/255 at cross). Claude looked at S3b's 2x crops of cross
+  t4 and t5: every step above T sits on a crease that reads in the GPU
+  render (the leg-flip crease up-left of mnode_48; at t4 the whitened
+  band's sharp left edge), and the area below T reads smooth.
+- **The rule this stage builds to.** Every quantity the fan's colour
+  depends on is continuous in the pixel's position wherever its weight
+  in the colour is above 0: each band's tau, shift, material read (the
+  A-to-B smoothstep), crest, whitening and cover; the weights across
+  bands; the crotch fill; the base; and `kFanPulseV` (debug 5, which
+  the seam count reads). These break it (measured in S3b and fix1):
+  - a nearest foot on a polyline: it jumps on every vertex's inner
+    side (by about 2 dist tan(theta_i/2)), and it flips between the
+    legs where the turn's radius (about d tan(alpha/2), `routeCorner`)
+    is smaller than the reach, so the medial axis enters the band
+    (class (a));
+  - a winner across bands: S3b's nearest band (class (b)) and its
+    shared/drawing tie (class (c));
+  - a binary side test (fix1's H1, which was also false);
+  - far feet: fix1's rays, where a second leg's foot carried its own
+    vertex jumps wherever its weight was above 0;
+  - a cut inside a formula: check S3b's whitening `f` at
+    `fa >= 0.999`, which steps unless `fb` equals `fa` there.
+- **The looks to keep:** Levi's "A, it splits" and "Straight through,
+  no dim moment"; no dark wedge between two lit siblings (Claude's
+  look); nothing changes outside banded records (the A/B's 0 px).
+
+### S2.2 The design
+
+**(a) One band: a pivot param.** Keep the cover from the true distance
+(it is continuous). Replace the band's nearest-foot tau and shift:
+- P is where the band's two end normals meet, on the turn's inner
+  side. tau(p) is the centreline's tau where the ray from P through p
+  meets the polyline: find the segment with cross-product sector tests
+  (no atan), then interpolate tau and shift by
+  u = cross(p-P, v_k - P) / cross(p-P, v_k - v_(k+1)). Beyond an end
+  ray, project onto that end segment's line, extended along its arm
+  (never the nearest foot over the whole polyline): on the end ray both
+  give the end's tau, since P lies on that end's normal.
+- It is singular only at P and needs the polyline star-shaped from P
+  (each ray meets it once). The CPU checks both when it builds the band
+  (P at least the reach from the polyline; the angle from P monotone
+  along it), and the rule says what a band that fails either gets.
+- Its cost is compression: tau's gradient grows toward P by
+  R_P / (R_P - reach), R_P being P's distance from the centreline (3.4
+  at alpha = 90 degrees and 13 at 45 when the ends sit where the two
+  arms' ribbons part). On the centreline it equals today's tau, so P8
+  should not move. Measure the steepest crest step inside every band
+  against T first. P moves out as the ends move along the arm
+  stretches, so take them as far as the band runs. If a sharp band
+  still steps above T, give it a line-arc-line turn of radius at least
+  1.5 reach, distance and foot in closed form: no pivot and no leg
+  flip, but it moves the band, so it must still cover the joint and
+  its tangent length R cot(alpha/2) must fit inside `capA`/`capB`.
+- Straight-through bands: the end normals are nearly parallel and P
+  runs off; take the parallel-projection limit there, continuous
+  across the switch between the two.
+
+**(b) Several bands: no winner.** Material: each drawing band mixes in
+by its own cover, in a fixed order. Whitening: the max over drawing
+bands of whitening x cover; `kFanPulseV`: the max over all bands,
+shared ones included, of crest x cover. On a fork's shared arrival
+stretch both siblings cover the same pixels, and each pivot param
+tilts its crest toward its own P: look at that front on the sheets (a
+chevron or a smear is a finding). Look too for the ghost the S3b
+comment warns about: in the lens past the split, the sibling's
+at-joint value painted across this band.
+
+**(c) Shared against drawing (x4 ji 125, ji 149).** First find where
+the seams sit: at the switch, or inside the gold blocks. A drawing band
+yields to a shared band's gold by a continuous weight (a ramp in
+d_shared - d_draw a few px wide, say), never by a nearest test; check
+its edge on the sheets. The gold blocks read their crest through the
+same nearest-foot tau: if seams sit inside them, the pivot param
+applies there too, in banded records only unless the A/B shows no
+pixel moving elsewhere.
+
+**(d) The crotch between two lit siblings** (cross, 0.3-0.6 world left
+of mnode_48, between e21 and e151; x4 ji 28 and ji 147). Fill it from
+the siblings' own whitening, never bare quiet base: the fill meets
+each band's AA edge without a dim valley and fades continuously where
+the crotch borders an unlit arm. The crotch lies on the outer side of
+both siblings' turns (inferred: check), so each sibling's tau extends
+into it. A candidate: f = max(f1, f2, w min(f1x, f2x)), with fNx band
+N's whitening at its tau without the cover and w a continuous crotch
+weight (from the two bands' signed distances, not a binary side test).
+An angular-sector fill mix(f1, f2, t) steps where the sector's edge
+crosses a band's partial cover unless it ramps to match.
+
+### S2.3 Order of work
+
+Times run from your `Get-Date` at the start. Commit WIP at every
+milestone, broken or not.
+1. **Setup, 15 min.** The cherry-pick (the launch prompt), the
+   node_modules junction (section 7), a server on 5620-5639, and an S3b
+   re-dump (Resume steps 2-4) from copies of `batch_fix_diag2.txt` with
+   out dirs under `.claude/probes/K1139/out/s2/` in your worktree
+   (untracked; never a scratchpad, which dies with its session).
+2. **(a), by 1 h.** GLSL and the CPU twin; cross's seams by class
+   (`diag_an.mjs`) and the worst crest step inside each band. If
+   cross's class (a) is not 0 (or every remaining pixel named and
+   explained) by 1 h, go to step 5 with the numbers.
+3. **(b), (c), (d), by 1 h 30.** Seams and wedges on cross and x4.
+4. **The rest:** section 5 (P8, P1-P5, P10, the A/B, `npm test`, the
+   pins, k320), section 6's sheets, and the removal of the
+   `__k1139diag` hook (joinery.ts, the K1139Diag interface, the DG
+   block; git keeps it for a later stage's dumps).
+5. **The stop:** done or 2 h, whichever comes first. Neither a
+   compaction nor context size is a stop: after one, re-read this
+   section and `git log`. Commit WIP, append `### Stage 2 handoff` at
+   the end of this section (what passed, the numbers, what is left,
+   where the dumps are, how to resume), commit, and report as section
+   8 says, with env among the handle fields.
+
+### S2.4 Residuals to record, not chase
+
+- x4 ji 28's GPU wedges were 2.7x the CPU twin's (cover strips in the
+  footprint mask? not checked): the first suspect if (d) leaves wedges
+  only on the GPU.
+- e79 (node_386) and e134 (node_378) are lit with no band: S4's
+  (pulseTree declares bands only to tree children).
+- The P8 worst points (cross e21 19, x4 e175 15, x4 e135 59 against
+  4/255): measure them on the fix and say whether this stage moved
+  them.
+
+### S2.5 Limits
+
+Section 7's, and: your worktree is your own; never write into the main
+checkout (Muse runs there) or this branch's old worktree
+(`.claude/worktrees/agent-abc94fe39cb25940c`); never push; no
+subagents; no edits to `LEDGER.md` or `docs/ledger_notes.md`.
