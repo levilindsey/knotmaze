@@ -518,9 +518,9 @@ Next free ID: K1184.
 - **K1178** · Muse batch 16: run A drafts the brief (`docs/design/K1178_muse_batch16_run_a.md`), runs B-I, K and L
   from the draft (Claude added H and I after B, K after I, L after K), after 16J.
   - owner: nobody since 2026-11-04 12:30 (16L done; runs F and G queued as Muse chain runs 16F and 16G, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `8df07b54`
+  - branch: mainline; last commit: `072b5ae5`
   - evidence: `docs/design/K1178_muse_batch16_run_a.md`; the chain in `.claude/probes/K1053/` (queue.txt, chain.log)
-  - next: Run L done (8df07b54, fail); next Run F (K484, the sheet's history entries), then Run G (K648)
+  - next: Run F done; next Run G
   - brief: `docs/design/K1178_muse_batch16.md`
 - **K1179** · Thread geometry (Levi 11-04: rethink how thread bodies, junction rounds and gaps are built, maybe
   as a skin on the thread centres). Review (`docs/design/K1179_geometry_review.md`): keep threads and physics,
