@@ -1,0 +1,6 @@
+step rows (>10 luma at 20->21): 13:13 14:19 15:24 16:30 17:36 18:36 19:37 20:38 21:39 22:39 23:40 24:41 25:36 26:26 27:16 28:10 29:11 30:12 61:13 62:19 63:24 64:30 65:36 66:36 67:37 68:38 69:39 70:39 71:40; picked 13, 24, 71
+clip {"x":386,"y":615,"width":156,"height":155}, ppw 23.22, head node_221; kymo col 0 at 110,139, col 17 at 105,134, col 21 at 103,133 (device px in the clip)
+row 13 control off/off: 0 px, max 0/255
+row 13: off vs on 182 px, max 50/255 -> out21c\claude_frames\row13_off_on_diff.png
+row 24: off vs on 186 px, max 47/255 -> out21c\claude_frames\row24_off_on_diff.png
+row 71: off vs on 189 px, max 53/255 -> out21c\claude_frames\row71_off_on_diff.png
