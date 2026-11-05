@@ -19,7 +19,9 @@ const ARM = { cyc: 210, loop: 102, preloop: 102 };
 const DSF = 1.5, G = 6, S = 2, MASK_R = 1.35, PULSE_SPEED = 1.6, KROWS = 72;
 const [BASE, S4, ONLYARG] = process.argv.slice(2);
 const ONLY = ONLYARG ? ONLYARG.split(",") : ["cyc", "loop"];
-const OUT = "out/s4cyc/sheets";
+// S4b: K1139_SHEETS_OUT picks the folder (S4b ran S4 above S4b into
+// out/s4b/sheets), so a rerun does not overwrite S4's tracked sheets.
+const OUT = process.env.K1139_SHEETS_OUT || "out/s4cyc/sheets";
 mkdirSync(OUT, { recursive: true });
 
 async function openBrowser() {
