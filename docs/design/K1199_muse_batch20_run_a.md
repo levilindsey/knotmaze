@@ -24,13 +24,13 @@ work is always my main priority". So batch 20 leads with junction and
 cursive work that a run can decide by numbers.
 
 No Claude agent will be running when batch 20's runs start. K1139's
-Stage 4 and its follow-up S4b (the band ridge fade) are on a branch
-today, `worktree-agent-a90af0fe8b4cf82a5` (S4b's branch, which holds
-S4's commits); Claude merges them to master before it queues any run
-of this batch. Read their briefs and Handoffs there with
-`git show worktree-agent-a90af0fe8b4cf82a5:<path>`
-(`docs/design/K1139_s4_cycles.md`, `docs/design/K1139_s4b_ridge_fade.md`),
-and write each run against master as it will be after that merge.
+Stage 4 (pulses on loops and cycles) and its follow-up S4b (the band
+ridge fade) merged to master at 36aed2d5: their briefs and Handoffs are
+`docs/design/K1139_s4_cycles.md` and
+`docs/design/K1139_s4b_ridge_fade.md`. S4b's leftovers are K1201 (the
+joint step), K1202 (a step on cyc e210's kymograph) and K1203 (the
+band's end window); K1200 (the dark stretch where two trains meet on a
+loop) waits on Levi.
 
 ## Run A · draft batch 20's brief (no run)
 
@@ -49,21 +49,52 @@ batch 19's Run C did it with `rimCurveBiarc` in
 off and on, and stops there: Claude judges looks and flips the
 default. Take candidates in this order, and stop at six runs that fit:
 
-1. Junction work (Levi's priority), one bounded stage each:
+1. Junction work (Levi's priority), one bounded stage each, in this
+   order:
    - K1139 S5, your own junction: section 5 of
-     `docs/design/K1139_pulse_junctions.md` (Levi answered Q3
-     "straight through, without the dim moment", section 6). Behind a
-     switch: `PULSE_OUT_LEAD` 0 and no `CREST_RAMP` dip where a crest
-     carries through the head (an arrival exists), the dip kept where
-     a crest is born. CPU twin and GLSL together, with a test pinning
-     them equal; the `pre_g23` fixtures stay frozen while the switch
-     is off. The look sheet re-shoots `q3_head` (the plan's section
-     4.3 and the K1139 kit's sheet scripts) off and on.
+     `docs/design/K1139_pulse_junctions.md` (Levi answered Q3 "straight
+     through, without the dim moment", section 6). Behind a switch:
+     `PULSE_OUT_LEAD` 0 and no `CREST_RAMP` dip where a crest carries
+     through the head (an arrival exists), the dip kept where a crest is
+     born. CPU twin and GLSL together, with a test pinning them equal;
+     the `pre_g23` fixtures stay frozen while the switch is off. The
+     look sheet re-shoots `q3_head` (the plan's section 4.3 and the
+     K1139 kit's sheet scripts) off and on. If the shader text outgrows
+     a budget in `test/render/k320_slim.test.ts`, raise that budget to
+     the measured length with a comment, as S4 and S4b did, and run a
+     K307 cold compile against the run's base under the perf lock
+     (`.claude/probes/K307/`, as S4b ran it in
+     `.claude/probes/K1139/batch_s4b_k307b.txt`): the run's mean must
+     sit inside the base's spread.
+   - K1182 (small: fold it into another run): remove 19C's biarc rim,
+     its `rimCurveBiarc` flag and their tests
+     (`src/render/ribbon/rim_curve.ts`, `test/render/`), and say in the
+     file's header, beside K859's Hermite, why it stays out: on Run C's
+     and Run F's crops the quadratic reads smooth and the biarc grows
+     stepped notches at all four targets (Claude's judgment). The
+     flank's tangent points away from the corner on at least one side of
+     every wedge (K859's count, 392 of 392), so a G1 rim leaves the
+     corridor, the triangle tipA-corner-tipB, or turns on a tight arc
+     (Run F, commit 3ddaec22, `.claude/probes/K1182/exam/`). The probes
+     under `.claude/probes/K1182/` stay as they are (they need a
+     checkout from before the removal). The flag was off, so the golden
+     snapshots and every pin stay unchanged.
+   - K1202: attribute the step at columns 20 to 21 of cyc e210's
+     kymograph, the same on S4 and S4b (K1202's text;
+     `.claude/probes/K1139/out/s4b/crops/kymo_steps.txt`, untracked in
+     the main checkout). Probes only; a fix is a later stage behind a
+     switch.
    - K1186, its next step: crop the five worst drawn flips that 19B
      counted (`.claude/probes/K1186/`, f657ac15; K1186's text and its
      `docs/ledger_notes.md` entry), 3x, the frame before and after
      each flip and the same frames with the choice held, on a sheet
      for Claude to judge. Probes only.
+   - K1201: reproduce S4b's joint step on screen (a stand, or K299-style
+     paint injection on cyc e210 with its ridge near and before the
+     joint) and on the GPU, and measure how often play meets it (a sweep
+     of head positions): S4b's Handoff and
+     `.claude/probes/K1139/ridge_joint.ts`. Probes only; the fix, its
+     option (b) behind a switch, is a later stage.
    - K1196: time two-ended pulses on loops and cycles at rest and
      while moves play onto them, against master's start-head pulses
      (S4's `bench_rest.json` is the one-ended baseline), under the
@@ -74,16 +105,16 @@ default. Take candidates in this order, and stop at six runs that fit:
      gk discard). Model the candidate and say whether it explains
      them, or "not found" with what was ruled out. Probes only, in
      `.claude/probes/K1191/`.
-   - Not K1182: its fix waits on batch 19's Run F and Claude's pick.
-2. Cursive work: c's v7.2 leftovers in K1198 and K1193, the pieces
-   that do not depend on K1197 (Levi's call on how c joins into a, d,
-   g, o, q and k): ij's missing port solve, ci over its budget, and
-   the untried Plc1m (`docs/design/K1112_cursive_j3i.md` Handoff,
-   `docs/ledger_notes.md` `## K1198`). One run, a table against v7.2
-   and v7.2b. The kit is untracked under `.claude/probes/K863/trace/`:
-   the run copies what it changes into `.claude/probes/K1198/` and
-   changes nothing under `.claude/probes/K863/`. Say why if no piece
-   is independent of K1197.
+2. Cursive work: c's v7.2 leftovers in K1198 and K1193, the pieces that
+   do not depend on K1197 (Levi's call on how c joins into a, d, g, o, q
+   and k): ij's missing port solve, ci over its budget, and the untried
+   Plc1m (`docs/design/K1112_cursive_j3i.md` Handoff,
+   `docs/ledger_notes.md` `## K1198`). One run, a table against v7.2 and
+   v7.2b. The kit is untracked under `.claude/probes/K863/trace/`: the
+   run copies what it changes into `.claude/probes/K1198/` and changes
+   nothing under `.claude/probes/K863/`. Say why if no piece is
+   independent of K1197. Keep one of the six runs for it when such a
+   piece exists, even though item 1 alone could fill all six.
 3. Claude's picks from batch 19's reviews: the next bounded piece of
    K782 (after 19E) and of K711 (their ledger texts and
    `docs/ledger_notes.md` say what is left). Take a piece only if it

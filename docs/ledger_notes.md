@@ -3622,6 +3622,17 @@ your own junction it goes straight through, with no dim moment. The fix for S3b 
 branch `worktree-agent-a8280f4d14ebd8ad1`, its worktree kept) merged at 71eedb94 on 2026-11-04; its record is Stage
 4's handoff there. Its three look calls are K1190, its leftovers K1191.
 
+S4 and S4b (2026-11-04, Claude agents; merged at 36aed2d5). S4 (`docs/design/K1139_s4_cycles.md`) lights loops and
+cycles: a two-ended arm runs trains from both ends that meet in phase at the ridge and fade over 0.5 world
+(`PULSE_RIDGE_FADE`), and bands are appended for non-tree arms and self-loops. S4b
+(`docs/design/K1139_s4b_ridge_fade.md`) gives those bands the ribbon's ridge fade (R2.w carries the arm's ridge):
+node_218's band on cyc e210 reads 0 past the ridge, where S4 read 0.986. Locality: 0 px outside the touched arms on
+all 8 stands. Shader text: junction field 40,342 of 40,350, section 59,001 of 59,050 (the k320_slim budgets raised
+to the measured lengths). K307 cold compile, 12 interleaved runs: S4b 6.709 s mean against S4's 6.545 (U 12, within
+noise and inside the base's 6.52-6.75 s spread). The rest bench (start head, one-ended pulses): 7.15 against 7.10
+ms; two-ended timing is K1196. Left over: the dark stretch where two trains meet on a loop (K1200, Levi's look), the
+joint step (K1201), a step on cyc e210's kymograph (K1202) and the band's end window (K1203).
+
 ## K1162
 
 Found by the six ask-card agents on 2026-11-03 (their cards are in `docs/asks/`); not re-checked by Claude:

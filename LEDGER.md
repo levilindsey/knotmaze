@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1200.
+Next free ID: K1204.
 
 ## Waiting on Levi
 
@@ -314,6 +314,9 @@ Next free ID: K1200.
 - **K1197** · Cursive: c's joins by the one rule (v7.2, J3i): the joins into a, d, g, o and q run flat and turn
   up late where the font rises in one curve, and ck bends in an S; rise like the font, or fine as is? Card
   `docs/asks/K1197.md`; sheets `.claude/probes/K863/trace/out32/png/`.
+- **K1200** · Light on loops (K1139 S4): pulses entering a loop from both ends meet halfway and fade out in
+  pairs, so the far side of a long loop goes dark for a moment (about twice the usual gap): fine as is, or
+  should they pass through each other? Card: `docs/asks/K1200.md`
 
 ## In progress
 
@@ -512,23 +515,15 @@ Next free ID: K1200.
   - next: Pixel batch (coordinator): s3f4_gate.ps1 -SkipDesktop fills out/split_s3f4.md + out/phone_table_s3f4.md; read it by the Handoff's rule (pass-that-draws -> attachments/stores, instancing -> ftentvvid's draw, vertex side -> cheaper vertices, fragment side -> fewer covered pixels)
   - brief: `docs/design/K1040_s3f4_bound.md`
   - env: the phone through `.claude/probes/K1040/s3/phone_batch.ps1` (run_phone.ps1: both locks, then K1142's ready check), `phone_time.mjs` serving on 5403; desktop timing through `run_locked.ps1`, never piped through `Select-Object -First` (K1174)
-- **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate
-  correctly across junctions"). S1 to S3b landed (the fix 71eedb94; the Pixel check waits for the
-  phone); Levi's looks K1190, leftovers K1191. S4 to S6 next. Notes: `docs/ledger_notes.md`.
-  - owner: nobody since 2026-11-04 22:36 (merged; agent `a90af0fe8b4cf82a5` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `36aed2d5`
-  - evidence: `.claude/probes/K1139/` on S4's branch (tracked: `*_cyc.mjs`, `out/s4cyc/` sheets, table, bench and `pixel_batch_plan.md`, `k307/`); S4's numbers in the Handoff of `docs/design/K1139_s4_cycles.md`
-  - next: Levi's look on loops; the Pixel batch when the phone is awake; S5 in Muse batch 20 (K1199)
-  - brief: `docs/design/K1139_s4b_ridge_fade.md` (on S4b's branch) and S4's Handoff in `docs/design/K1139_s4_cycles.md`; the plan `docs/design/K1139_pulse_junctions.md` section 5
+- **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate correctly
+  across junctions"). S1 to S4b landed (S4b 88e1039d; the Pixel check waits for the phone); Levi's looks K1190
+  and K1200, leftovers K1191 and K1201-K1203. S5 (Muse batch 20) and S6 next. Notes: `docs/ledger_notes.md`.
+  - owner: nobody since 2026-11-04 22:41 (S4b's agent stopped done at 22:06 and both stages merged; S5 goes to Muse batch 20, K1199, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
+  - branch: mainline (S4 and S4b merged at 36aed2d5; the worktrees `.claude/worktrees/agent-a90af0fe8b4cf82a5` (S4b), `agent-a023a39925efe4816` (S4) and `agent-a8280f4d14ebd8ad1` (the S3b fix) kept); last commit: `36aed2d5`
+  - evidence: `.claude/probes/K1139/` (tracked: `*_cyc.mjs`, `ridge_joint.ts`, `out/s4cyc/` sheets, table, bench and `pixel_batch_plan.md`, `k307/`; untracked: `out/s4b/` crops, sheets and A/B); the numbers in the Handoffs of `docs/design/K1139_s4_cycles.md` and `docs/design/K1139_s4b_ridge_fade.md`
+  - next: Levi's look K1200 (`docs/asks/K1200.md`); the Pixel batch for S3b's fix, S4 and S4b when the phone is awake (`out/s3b/pixel_batch_plan.md`, `out/s4cyc/pixel_batch_plan.md`, built from 36aed2d5 or later, under the K1040 phone wrappers); S5 (Levi: straight through, no dim moment) in Muse batch 20 (K1199); K1201-K1203; K1190's fixes once Levi answers
+  - brief: the plan `docs/design/K1139_pulse_junctions.md` section 5 (S5); S4b's Handoff in `docs/design/K1139_s4b_ridge_fade.md`
   - env: the server `npx vite --config .claude/probes/K1139/vite.private-cache.config.ts --port 5620 --strictPort --host 127.0.0.1` from a worktree (ports 5620-5639; the node_modules junction: `docs/design/K1139_s3b_fix.md` section 7); GPU probes through `.claude/probes/K1139/run_locked.ps1 -Batch`
-- **K1192** · Muse batch 19 (`docs/design/K1192_muse_batch19.md`, drafted by run A): junction work first
-  (K1186's flip count, K1182's G1 rim, K1191's examinations), then batch 18's follow-ups; Claude added Run F
-  (what cuts K1182's stepped corners)
-  - owner: nobody since 2026-11-04 20:08 (runs 19E and 19F queued in the Muse chain, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `3ddaec22`
-  - evidence: docs/design/K1192_muse_batch19.md; the chain in .claude/probes/K1053/ (queue.txt, chain.log)
-  - next: Run F done; Claude reviews it, picks K1182's fix, and closes K1192
-  - brief: `docs/design/K1192_muse_batch19.md`
 - **K1199** · Muse batch 20 (`docs/design/K1199_muse_batch20.md`, drafted by run A): junction and cursive work
   first (K1139 S5, K1186's crops, K1196's timing, K1191's gk, c's v7.2 leftovers), then batch 19's follow-ups
   - owner: nobody since 2026-11-04 22:00 (run 20A queued in the Muse chain after 19F, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
@@ -555,6 +550,15 @@ Binding for every stage:
   new, and pause running agents with their WIP committed.
 
 Running agents are listed under In progress, each with its own next step.
+- **K1182** · Remove 19C's biarc rim and its flag `rimCurveBiarc` (`src/render/ribbon/rim_curve.ts`), saying
+  why in the header: the quadratic reads smooth on Run C's and Run F's crops and the biarc grows stepped
+  notches at all four targets (Run F 3ddaec22: a G1 rim leaves the corridor or turns tight). Muse batch 20.
+- **K1202** · A step at columns 20 to 21 of cyc e210's kymograph (up to 43 luma), the same before and after
+  K1139 S4b, unattributed (a guess: two bands meeting in node_218's fan); attribute it with probes
+  (`.claude/probes/K1139/out/s4b/crops/kymo_steps.txt`, untracked)
+- **K1201** · S4b's joint step (K1139): where a two-ended arm's ridge lies near or before its joint, the light
+  steps there by 0.18 to 0.90 (`ridge_joint.ts`, synthetic; no stand shows it). Reproduce it on screen and on
+  the GPU, measure how often play meets it, then fix (b) behind a switch (S4b's Handoff)
 - **K875** · K868 S1b, master's side: on Muse's link master registers only 58-80% with the oracle at
   j49/j123 and #6 finds every band end off (18/18, 19/19; cause untested: gaps or a reveal/fog state);
   its sdf and strip silhouettes differ in width; joinery.ts:1469-1471's comment is stale. s1b_oracle.md.
@@ -1692,9 +1696,6 @@ Every other item below waits on the trigger it names.
 - **K1181** · The laptop's knotmaze checkout still has the pre-rewrite history (K1164): before its next use
   there, fetch, then reset to origin/master (after saving any local work); never pull, which would merge the
   old history back (Levi 11-04 dropped K1166).
-- **K1182** · The fill rim meets the flank tips with a tangent break (G0: `src/render/ribbon/rim_curve.ts`'s
-  quadratic). 19C's biarc (ed14f2c9, flag `rimCurveBiarc`, left off) is G1, but on its sheet the gaps at four
-  ji147 and cross ji33 grow sharp stepped corners (`.claude/probes/K1182/sheet/`): find what cuts them first.
 - **K1191** · K1139 Stage 4 leftovers (`docs/design/K1139_s3b_fix.md`): the full model's 12/6/11 threshold
   flips; no arc-true tau rate or obliqueness in the classifier; ji 147 arm 1's bright GPU colours, unexplained
   (candidate gk). Batch 19 Run D examined the rest: none blocks K1139's merge (`.claude/probes/K1191/`)
@@ -1708,6 +1709,8 @@ Every other item below waits on the trigger it names.
 - **K1198** · Cursive c's v7.2 leftovers (J3i): ci 3.79 u from the font, over its 2.5 u budget (v7.1 1.20);
   cr, cs, cy, er and es further from the font; attaches moved up to 3 u; ij unsolved; Plc1m untried
   (`docs/ledger_notes.md` `## K1198`; `docs/design/K1112_cursive_j3i.md` Handoff).
+- **K1203** · A pulse band ignores its child arm's end window (x4 mnode_27 e135 to e18 reads 0.0170, before S4b
+  too), and `table_cyc.mjs`'s BAND EXTENT stops at the arm's length (K1139 S4b's Handoff)
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2012,6 +2015,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1192** · Muse batch 19 (`docs/design/K1192_muse_batch19.md`): K1186's flip count, K1182's biarc and Run F's look at its corners, K1191's examinations, K782's waiting follower. Done in 3ddaec22 (2026-11-04).
 - **K1189** · Muse batch 18: K292 corner marks (38116577), K782 toast (8ba8dc69), K711 chase tap (ee46522e), K1187 burn (0a776aa0, scoped by 222452e3), K1188 preview.ps1 (f5035e0d). Done in f5035e0d (2026-11-04).
 - **K1188** · scripts/preview.ps1 reproduced and fixed: a -Root whose -Ref worktree files pass 260 chars is refused before creating anything (git 2.33: GIT_DIR too big); a killed -Ref server's temp worktree is cleaned by the next run under the same -Root, junction unlinked first, live siblings untouched (Claude read the cleanup: src-* under that root only, any doubt kept). Done in f5035e0d (2026-11-04).
 - **K1187** · Fire with breaking runs: a broken anim run's unswept stretch draws its burn again (Muse batch 18 run D; Claude scoped the cut to a broken run in 222452e3). Done in 0a776aa0 (2026-11-04).
