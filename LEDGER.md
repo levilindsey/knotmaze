@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1186.
+Next free ID: K1188.
 
 ## Waiting on Levi
 
@@ -133,8 +133,8 @@ Next free ID: K1186.
 - **K636** · K324 s1's two calls (`docs/design/K324_s1.md`, Handoff): (a) hunt pace 0.9 of yours
   restores the greedy player's catches, the fleers within 4-5 points; rec keep (revert: `git revert
   ce95d40`); (b) five panel labels cut to 23 characters; rec keep.
-- **K647** · Path 8 (K336): Reset path during the winning move throws the confetti and records the
-  result, but shows no banner. Rec: show the banner, since the result counts.
+- **K647** · Path 8 (K336): Reset path during the winning move records the result, shows no banner
+  and, since 4b17c554, no confetti. Rec: show the banner, since the result counts.
   `docs/design/K336_cannons.md` Handoff.
 - **K655** · K137's slack default: shipped 1 in [0, 1] (greedy makes strict par 30%, careful 89%);
   the brief's half-of-greedy target needs 3 in [0, 4] (48% / 100%). Rec: 3 in [0, 4].
@@ -308,6 +308,9 @@ Next free ID: K1186.
 - **K1172** · Walker modes, Levi's brainstorm (2026-11-03): guide it, program it, a flock, stop them (and a tower
   defense), steer it live, bend and tilt. Which family first? (`docs/design/K1172_walker_modes.md`; full text:
   `docs/ledger_notes.md`)
+- **K292** · Panel dog-ears (Levi 10-14): design rows carry a top-right triangle and a key line,
+  built behind a gate only the probe sets (06a41d1d); Levi judges the sheet (`docs/asks/K292.md`);
+  on yes, flip the gate and mark the Seed row too. K57 settles edge cases; leads to K297.
 
 ## In progress
 
@@ -515,13 +518,6 @@ Next free ID: K1186.
   - next: the agent runs Stage 3: same-band seams counted above T times the band's exact compression (no line-arc-line turn), ji 28's crotch ramp-out at 2.5 and 3.0, section 5 in full, section 6's sheets with 2x crops of the worst ramps. Then Claude looks at the sheets, rules on the turn, and merges or briefs the next stage; the __k1139diag hook goes before any merge
   - brief: Stage 3 at the end of `docs/design/K1139_s3b_fix.md` (f97d5aa3 on Stage 2's branch; on the agent's branch after its cherry-pick), after Stage 2 and its handoff
   - env: the brief's section 7 (the node_modules junction); the server `npx vite --config .claude/probes/K1139/vite.private-cache.config.ts --port 5620 --strictPort --host 127.0.0.1` (ports 5620-5639); dumps through `run_locked.ps1` (Stage 2's handoff, env)
-- **K1184** · Muse batch 17 (`docs/design/K1184_muse_batch17.md`, drafted by run A): runs B-G, plus runs H
-  and I (K1179 S1d and S1e), added at Claude's review and run first.
-  - owner: nobody since 2026-11-04 14:58 (runs B-G queued as Muse chain runs 17B-17G, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `06a41d1d`
-  - evidence: `docs/design/K1184_muse_batch17.md`; the chain in `.claude/probes/K1053/` (queue.txt, chain.log)
-  - next: Run G done; Claude reviews the batch and closes K1184
-  - brief: `docs/design/K1184_muse_batch17.md`
 
 ## Next, in order
 
@@ -605,9 +601,6 @@ Every other item below waits on the trigger it names.
 - **K10** · Phone benchmark after every stage (Pixel 11; baseline 2026-10-11: 30 fps at rest, 51
   with `fw=0`; K79 stage A 60). Rerun `scripts/preview.ps1` per ref, `scripts/phone.ps1 -Ports ...`,
   `.claude/probes/K10/phone_bench.mjs`; numbers `.claude/probes/K10/bench_*.txt`.
-- **K292** · Mark the panel's maze rows with a subtle top-right dog-ear triangle (Levi 10-14), a key
-  at the panel's top; personal settings (`DAILY_EXEMPT_KEYS`, localStorage prefs) unmarked; sheet
-  for Levi first. After K298; replaces K84's section; K57 settles edge cases; leads to K297.
 - **K265** · High contrast's own highlight (K111 s5; Levi 10-14): white rim on both edges, hard
   inner edge; looks 1-3 go (`hcl`, `__knotHcLook`). After K298; never beside K299, K76 2c, K268 s2.
   `docs/design/K111.md` ("Levi's pick", "For stage 5"); looks `.claude/probes/K111/stage4/sheet/`.
@@ -755,6 +748,9 @@ Every other item below waits on the trigger it names.
 - **K1180** · Form B: let a round's feet run past an arm's root onto the neighbouring arm, so no null band is
   left there (row 15's class: j124, r 1.967h, 0.274h after K1163's softer gate, ab7cad9a). K1179's spike ended
   with no rebuild, so this goes ahead on form B (review section 4).
+- **K1186** · Fill look: hold junction pieces' per-frame choices (fillet layer vote, armReach clamp) while the
+  knot moves and fade them on change, same picture at rest; first count which flip on scripted drags and sweeps
+  and the ink each moves (K1179 review 5c). Muse; Claude judges the look.
 
 ## Residuals (known, not fixed)
 
@@ -1059,9 +1055,9 @@ Every other item below waits on the trigger it names.
 - **K181** · K104's residuals: the phone's "can't tell" share stays high in fabric and dense (26%,
   41%); sound-only and hide-zone taps show only through a cue; G1's soft edge shows the under ribbon
   at 80-90 degrees. `docs/design/K104.md` ("Stage 1b handoff", "Stage 1c handoff").
-- **K188** · K140's residuals (`docs/design/K140.md`, "Stage 1 handoff"): `restartSolve()` leaves
-  pieces in the air; the open desktop panel covers the spray when the exit is at the lower right;
-  the rain takes 5.5-6.2 s to fall out, longer below 10 fps.
+- **K188** · K140's residuals (`docs/design/K140.md`, "Stage 1 handoff"): a solve restart drops the
+  pieces since 4b17c554; the open desktop panel covers the spray when the exit is at the lower
+  right; the rain takes 5.5-6.2 s to fall out, longer below 10 fps.
 - **K189** · Fabric at defaults never rests: while music mode's auto plucks ring (the default
   sound) every frame draws; with sound off, the flow and choice pulses still draw at K6-3's
   30 fps cadence. K140's 10 ms of JS a frame predates K6-3: measure on the phone first (K156).
@@ -1421,10 +1417,9 @@ Every other item below waits on the trigger it names.
 - **K700** · K324 s2 GPU census skips the non-riding lead and the hunt strength (the CPU parity test
   covers both); a ride filter in tapAndFind would add them
   (`.claude/probes/K324/census/census_tele.mjs`)
-- **K711** · K137-b edges (K137_s3a.md Residuals b, d-f): runBurnAt may draw a burnt broken run as
-  burning; refire is O(V^2) per breaking move; __knotChaseTap ignores broken runs; broken-run counts
-  need main.ts to report every accepted run (safeArms and fireTrapped count broken arms gone since
-  c7e6329a)
+- **K711** · K137-b edges (K137_s3a.md Residuals d-f; b fixed in e5e75477): refire is O(V^2) per
+  breaking move; __knotChaseTap ignores broken runs; broken-run counts need main.ts to report every
+  accepted run (safeArms and fireTrapped count broken arms gone since c7e6329a)
 - **K712** · Lives (K137 s3a): hearts are in neither Undo nor saved attempts, and default 3 when
   switched on is tooltip advice only (a toggle or a 0-to-3 snap would make it real; K137_s3a.md
   Residuals g). First half checked bfa3a639: no Undo or saved attempt can hold hearts today.
@@ -1446,11 +1441,9 @@ Every other item below waits on the trigger it names.
   snore and fabric read silent under snd=none in a desktop browser (7274aae4's message).
 - **K734** · K643: a hairline seam inside the i fork junction at xh 3, in the build at adc6535b,
   cause unknown (docs/design/K643.md Handoff)
-- **K737** · K137 s2 (K137_s2.md Handoff): with fragile runs or collapse the spool can leave no
-  legal move at its limit (Undo or restart gets out); a lit hint hides the minotaur warning up to 2
-  s; the path-display row does nothing under the spool; hints and the compass ignore the fire; a
-  catch restart keeps hints used and chalk; the aids are off in walker modes; saved attempts keep no
-  chalk or hints used (store version); the compass shares the hint mint
+- **K737** · K137 s2 residuals (K137_s2.md Handoff; list in docs/ledger_notes.md): the spool can
+  dead-end at its limit under fragile runs or collapse; a lit hint hides the minotaur warning up to
+  2 s; five small aid gaps (path row, catch restart, walkers, saved attempts, compass mint)
 - **K740** · Toast placement gaps (K698 Handoff): the panel and the phone settings sheet are not
   avoided; the aids group is found by its class, not the indicators avoid list; No hints left is
   unreachable by tap (Hint disables at 0). A showing toast re-places when a control appears or
@@ -1504,11 +1497,9 @@ Every other item below waits on the trigger it names.
 - **K781** · K138 s3 one-way chevrons: a placeholder design, each its own mesh and draw call (116 at
   seed 7, ow 0.4; not timed), unchecked under the fog and the thread reveal. With the color rule
   leaving no solvable draw (seed 1, alternate, 0.4) nothing is one-way and the HUD row reads 0
-- **K782** · K137 s4 lure and snare residuals (docs/design/K137_s4.md Handoff): the Snared toast
-  fires before the monster reaches the snare; an armed tool lights any run on hover; a live switch
-  to travel by length keeps snares that never spring, rings drawn; the follower first step skips the
-  snare check; under length a lure clears one hop late (read, untested); untested under clk=beat;
-  the ring is a stand-in for a glyph
+- **K782** · K137 s4 lure and snare residuals (K137_s4.md Handoff; list in docs/ledger_notes.md):
+  the Snared toast fires early; a live switch to travel by length keeps dead snares drawn; a waiting
+  follower's first step skips the mud cut; plus hover, a late lure clear, clk=beat, the glyph
 - **K791** · Locks and keys (K138 s4 slice 2, unmerged): ky 2 with the alternate color rule bites on
   only 41 of 50 seeds, taking up to 32 draws; the lock dim covers only a stretch at each end of a
   lock run, not the whole run; the census trap check skips clocked configs (turnstiles)
@@ -1682,6 +1673,9 @@ Every other item below waits on the trigger it names.
   old history back (Levi 11-04 dropped K1166).
 - **K1182** · The fill rim meets the flank tips with a tangent break (G0 only:
   `src/render/ribbon/rim_curve.ts`, a quadratic); a biarc would make it G1 (K1179 review sections 2-3).
+- **K1187** · Fire with breaking runs: a run that breaks behind the moving dot keeps its unswept stretch until
+  the dot arrives (fabric_maze_renderer.ts syncBroken); since e5e75477 (K711 b) that stretch draws unburnt even
+  where the fire reached it. Rare.
 
 ## Approved, to schedule (2026-10-11)
 
@@ -1986,6 +1980,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1184** · Muse batch 17 (runs B-G: K1183 rules file, K711 b, K737 fire piece, K782 follower, K188 restart, K292 dog-ears gated for the look) reviewed by Claude. Done in 06a41d1d (2026-11-04).
 - **K1183** · .claude/rules/render-field.md covers src/render/field/ and test/render/field/ with narrow paths, distilling only the binding form B and field-scene grammar from the design docs and code headers; no open K1179 question settled. Done in 9ebf6ace (2026-11-04).
 - **K1179** · Thread geometry (Levi 11-04: rethink how thread bodies, junction rounds and gaps are built, maybe as a skin on the thread centres): reviewed (`docs/design/K1179_geometry_review.md`), no simulated skin; its one-rule outline failed the spike five times (S1-S1e, `docs/design/K1179_s1e.md`), so no rebuild. Done in b6174b00 (2026-11-04).
 - **K1178** · Muse batch 16 (runs A-L, `docs/design/K1178_muse_batch16.md`), each through the chain's gate; the open leftovers stay on their own items (K484, K648, K1179). Done in 20453e7c (2026-11-04).

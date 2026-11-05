@@ -3646,3 +3646,25 @@ One Rules dropdown for Fragile runs and Collapse: off, crack, snap, collapse, co
 ## K1172
 
 Walker modes, Levi's brainstorm (2026-11-03, five messages): guide it, program it (board-game command cards), a flock (Lemmings-like; under snap its par is a max flow), stop them (several walkers, a third knob for K707; and a tower defense, four twists, the coordinator's pick the one you play by moving the knot), steer it live, bend and tilt. Which family first? (`docs/design/K1172_walker_modes.md`)
+
+## K737 (2026-11-04, shortened at batch 17's close)
+
+- **K737** · K137 s2 (K137_s2.md Handoff): with fragile runs or collapse the
+  spool can leave no legal move at its limit (Undo or restart gets out); a
+  lit hint hides the minotaur warning up to 2 s; the path-display row does
+  nothing under the spool; a catch restart keeps hints used and chalk; the
+  aids are off in walker modes; saved attempts keep no chalk or hints used
+  (store version); the compass shares the hint mint. Fixed since: hints and
+  the compass no longer name a run the fire refuses (03b559cf, batch 17 run
+  D).
+
+## K782 (2026-11-04, shortened at batch 17's close)
+
+- **K782** · K137 s4 lure and snare residuals (docs/design/K137_s4.md
+  Handoff): the Snared toast fires before the monster reaches the snare; an
+  armed tool lights any run on hover; a live switch to travel by length
+  keeps snares that never spring, rings drawn; under length a lure clears
+  one hop late (read, untested); untested under clk=beat; the ring is a
+  stand-in for a glyph; a waiting follower's first step still skips the mud
+  cut. Fixed since: the follower's first step is snare-checked (4b1886c7,
+  batch 17 run E).
