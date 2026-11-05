@@ -182,5 +182,10 @@ cusp-entry rule only.
   `it_words*`, `it_hit_1`, `it_fruit_2`): smooth, no hook or kink.
 - Record: NOTES.md `## K1112 cusp` (rerun commands; copy in
   `work32/NOTES_k1112cusp.md`).
-- Next: Levi picks v7.2 or v7.2b from the sheets; then land the chosen
-  variant as the ports (under v7.2 the fr/fs pins may go).
+- Next (2026-11-05): Claude picked v7.2 over v7.2b by the checks
+  (`docs/asks/K1197.md`). Muse batch 20's Run G (c3ab0a46,
+  `.claude/probes/K1198/SUMMARY.md`) then measured Plc1m (B = 1 u):
+  nearer the font than v7.2 on ci (2.31 u, inside its budget), cr, cs,
+  cy, er and es. Plc1m replaces v7.2 if its sheet reads as well (K1198,
+  Muse batch 21, K1204). Land the chosen variant as the ports once Levi
+  answers K1197 (the fr/fs pins may go where they change nothing).
