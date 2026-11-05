@@ -1,0 +1,2 @@
+$env:K1139_HOST = "http://127.0.0.1:5720"
+node ../K1191/records_live.mjs > ../K1191/records_live.txt 2>&1

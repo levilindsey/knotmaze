@@ -1,0 +1,24 @@
+﻿dump .claude/probes/K1139/out/s4/d/x4 host ji 28 rb 2206 centre 24.578,2.887 box {"x":1312,"y":131,"w":270,"h":270}
+  aRec 2129: triangles 401 (fan 401, strip 0), fan centroid world 25.266,3.808
+  aRec 2206: triangles 330 (fan 330, strip 0), fan centroid world 24.722,2.987
+  aRec 2206.25: triangles 56 (fan 0, strip 56), fan centroid world NaN,NaN
+  aRec 11394: triangles 218 (fan 218, strip 0), fan centroid world 25.638,1.671
+  aRec 11394.25: triangles 62 (fan 0, strip 62), fan centroid world NaN,NaN
+  target 2129 in ji 28's box: 5815 px, 22875 samples, box-x 125..269, box-y 164..269 (orientation 1)
+  target 2668 in ji 28's box: 0 px, 0 samples, box-x 1000000000..-1, box-y 1000000000..-1 (orientation 1)
+dump .claude/probes/K1139/out/s4/d/four host ji 28 rb 2206 centre 24.578,2.887 box {"x":1312,"y":131,"w":270,"h":270}
+  aRec 2129: triangles 401 (fan 401, strip 0), fan centroid world 25.266,3.808
+  aRec 2206: triangles 330 (fan 330, strip 0), fan centroid world 24.722,2.987
+  aRec 2206.25: triangles 56 (fan 0, strip 56), fan centroid world NaN,NaN
+  aRec 11394: triangles 218 (fan 218, strip 0), fan centroid world 25.638,1.671
+  aRec 11394.25: triangles 50 (fan 0, strip 50), fan centroid world NaN,NaN
+  target 2129 in ji 28's box: 5815 px, 22875 samples, box-x 125..269, box-y 164..269 (orientation 1)
+dump .claude/probes/K1139/out/s4/d/cross host ji 33 rb 2591 centre 1.791,19.685 box {"x":549,"y":671,"w":270,"h":270}
+  aRec 2591: triangles 420 (fan 420, strip 0), fan centroid world 1.682,19.700
+  aRec 2591.25: triangles 50 (fan 0, strip 50), fan centroid world NaN,NaN
+  aRec 2668: triangles 419 (fan 419, strip 0), fan centroid world 1.080,18.880
+  aRec 5286: triangles 228 (fan 228, strip 0), fan centroid world 2.624,20.946
+  aRec 12035: triangles 251 (fan 251, strip 0), fan centroid world 3.065,18.480
+  aRec 12035.25: triangles 36 (fan 0, strip 36), fan centroid world NaN,NaN
+  target 2668 in ji 33's box: 7256 px, 28630 samples, box-x 0..133, box-y 0..114 (orientation 1)
+  target 2129 in ji 33's box: 0 px, 0 samples, box-x 1000000000..-1, box-y 1000000000..-1 (orientation 1)
