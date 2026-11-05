@@ -94,6 +94,13 @@ for (const file of process.argv.slice(2)) {
     const W = p.world, dA = p.dist0, dB = +r.dB, inwA = p.inward, inwB = !!r.inwardB;
     const dR = Math.min(W, Math.max(0, (dB + W - dA) / 2));
     console.log(`  e${p.edge} TWO ${p.near}->${p.far}: W ${W.toFixed(3)} dA ${dA.toFixed(3)} (${inwA ? "in" : "out"}) dB ${dB.toFixed(3)} (${inwB ? "in" : "out"}) ridge at d ${dR.toFixed(3)} (dG ${(dA + dR).toFixed(3)})`);
+    // S4b: the ridge's distance from each end (xR = gR - d_end) and the
+    // ridge factor the arm's own crest carries at that joint, which a
+    // one-ended parent does not (item 3: under 1 when xR < 0.5); and the
+    // rare ends where the ridge falls outside the arm (item 4).
+    const gR = (dA + dB + W) / 2;
+    const kF = (xr) => Math.min(1, Math.abs(xr) / C.PULSE_RIDGE_FADE);
+    console.log(`    gR ${gR.toFixed(3)}: xR at A ${(gR - dA).toFixed(3)} (joint ridge factor ${kF(gR - dA).toFixed(3)}), at B ${(gR - dB).toFixed(3)} (${kF(gR - dB).toFixed(3)})${gR < dA ? "  RARE: dB + W < dA (lit from B at d = 0)" : ""}${gR < dB ? "  RARE: dA + W < dB (lit from A at d = W)" : ""}`);
     // P1/P2 at each end.
     for (const [end, vtx, dEnd, dQ] of [["A", p.near, dA, 0], ["B", p.far, dB, W]]) {
       const par = P.filter((q) => q !== p && q.far === vtx && q.edge !== p.edge);
@@ -179,4 +186,76 @@ for (const file of process.argv.slice(2)) {
     console.log(`    P4 width: A ${fmt(w4.filter((x) => x.side === "A").map((x) => x.w))}, B ${fmt(w4.filter((x) => x.side === "B").map((x) => x.w))} world (one-ended ${ref.toFixed(3)}; crests at least 0.75 from the ridge and the ends)`);
     console.log(`    P6b crest maxima/expected at 8 times: ${p6.join(" ")}`);
   }
+  bandExtent(j, P, raw, sp, reach, period);
+}
+
+// S4b: BAND EXTENT, P1 over the fan's whole extent. Each pulse band
+// against the ribbon of the arm it runs along, over the band's record as
+// the fans read it (dump_cyc.mjs `ext`: the centerline's tau range and
+// R2.w). B side (tau > 0): the band's arm bEdge at d = tau (a near band)
+// or W - tau (a far band: B is the arm's far end). A side (tau < 0): the
+// parent arm aEdge at d = q.world + tau. The band is S4b's kPulseBandV
+// (the ridge fade past gR) when R2.w carries a ridge, else S4's crest
+// (one-ended). Max over 64 clock times of |band - ribbon|, over the fan
+// (B: tau in (0, tauHi - fillHalf]: the web's reach) and the whole record
+// (out to tauHi, the cover strip's end); STEP over 1e-3.
+function bandV(U, distJ, tau, inward, gR, inwR) {
+  let g = distJ + tau, inw = inward, bk = 1;
+  if (tau > 0 && gR > 0) {
+    bk = Math.min(1, Math.abs(g - gR) / C.PULSE_RIDGE_FADE);
+    if (g > gR) { g = 2 * gR - g; inw = inwR; }
+  }
+  return crest(U, g, inw, 1, bk);
+}
+function ribbonOf(P, raw, edge) {
+  const p = P.find((q) => q.edge === edge);
+  if (!p) return null;
+  const r = raw.find((q) => q.chain === p.chain && q.cJunction === p.cJ && q.cFar === p.cF) || {};
+  const W = p.world;
+  const v = r.two
+    ? (U, d) => v2(U, d, W, p.dist0, +r.dB, p.inward, !!r.inwardB)
+    : (U, d) => pulseV(U, d, W, p.inward, p.dist0 || 0, p.cont);
+  return { p, r, W, v };
+}
+function bandExtent(j, P, raw, sp, reach, period) {
+  const ext = j.ext;
+  if (!ext || !ext.bands) { console.log("  BAND EXTENT: this dump has no ext (dump it with S4b's dump_cyc.mjs)"); return; }
+  if (ext.err) { console.log(`  BAND EXTENT: ${ext.err}`); return; }
+  const fh = ext.fillHalf;
+  console.log(`  BAND EXTENT (fillHalf ${fh.toFixed(3)}; band - ribbon over 64 times; STEP over 1e-3):`);
+  j.bands.forEach((b, i) => {
+    const x = ext.bands[i];
+    const tag = `    band ${b.vertex} e${b.aEdge}->e${b.bEdge} distJ ${b.distJ.toFixed(3)} ${b.inward ? "in" : "out"}`;
+    if (!x) { console.log(`${tag}: no record found`); return; }
+    const B = ribbonOf(P, raw, b.bEdge), A = ribbonOf(P, raw, b.aEdge);
+    if (!B) { console.log(`${tag}: arm e${b.bEdge} not declared`); return; }
+    // Which end of B the band sits at: the vertex, then (a self-loop)
+    // the band's B ctrl against the arm's two end ctrls.
+    const ends = [];
+    if (B.p.near === b.vertex && b.b.ctrl === B.p.cJ) ends.push("near");
+    if (B.p.far === b.vertex && b.b.ctrl === B.p.cF) ends.push("far");
+    if (ends.length !== 1) { console.log(`${tag}: B end ambiguous (${ends.join("/") || "none"})`); return; }
+    const far = ends[0] === "far";
+    const gR = Math.abs(x.r2w), inwR = x.r2w < 0;
+    const dOf = (tau) => (far ? B.W - tau : tau);
+    let fan = 0, fanAt = 0, all = 0, allAt = 0, aSide = 0, aAt = 0;
+    for (let k = 0; k < 64; k++) {
+      const U = uniforms(100 + (k / 64) * period, sp, reach);
+      for (let tau = 0.005; tau <= x.tauHi + 1e-9; tau += 0.005) {
+        const dv = Math.abs(bandV(U, b.distJ, tau, b.inward, gR, inwR) - B.v(U, dOf(tau)));
+        if (dv > all) { all = dv; allAt = tau; }
+        if (tau <= x.tauHi - fh + 1e-9 && dv > fan) { fan = dv; fanAt = tau; }
+      }
+      if (A) {
+        const dA = (tau) => (A.p.far === b.vertex ? A.W + tau : -tau);
+        for (let tau = -0.005; tau >= x.tauLo - 1e-9; tau -= 0.005) {
+          const dv = Math.abs(bandV(U, b.distJ, tau, b.inward, gR, inwR) - A.v(U, dA(tau)));
+          if (dv > aSide) { aSide = dv; aAt = tau; }
+        }
+      }
+    }
+    const two = B.r.two ? ` TWO gR ${((B.p.dist0 + +B.r.dB + B.W) / 2).toFixed(3)}` : "";
+    const st = (v) => (v > 1e-3 ? " STEP" : "");
+    console.log(`${tag} (${far ? "far" : "near"} end${two}; R2.w ${x.r2w.toFixed(3)}): B fan (0, ${(x.tauHi - fh).toFixed(3)}] ${fan.toFixed(4)} at tau ${fanAt.toFixed(3)}${st(fan)}; to tauHi ${x.tauHi.toFixed(3)} ${all.toFixed(4)} at ${allAt.toFixed(3)}${st(all)}; A [${x.tauLo.toFixed(3)}, 0) ${A ? aSide.toFixed(4) + " at " + aAt.toFixed(3) + st(aSide) : "(no arm)"}`);
+  });
 }
