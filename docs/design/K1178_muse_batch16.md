@@ -6,8 +6,8 @@ and closed. Each run is a fresh Muse agent that reads this brief,
 does its run's tasks, and stops. Claude reviews each run on master
 afterwards and closes K1178. Run A was the drafting run
 (`docs/design/K1178_muse_batch16_run_a.md`), so the runs here are B
-to I, in the order B, H, I, C, D, E, F, G (Claude added H and I
-after Run B). Chain run 16J (K1097 S3f4,
+to I and K, in the order B, H, I, C, K, D, E, F, G (Claude added H
+and I after Run B, and K after Run I). Chain run 16J (K1097 S3f4,
 `docs/design/K1040_s3f4_bound.md`) ran before them; no run below
 touches its lane except Run H (see below).
 
@@ -58,7 +58,9 @@ were folded in at review, in the same commit, so Run D's diff
 stays the frontmatter and the index row. After Run B, Claude added
 Runs H (K1163, the softer root gate, from Levi's 11-04 answer) and
 I (K1179 S1, the fill-outline spike, from the geometry review,
-`docs/design/K1179_geometry_review.md`); they run before C.
+`docs/design/K1179_geometry_review.md`); they run before C. After
+Run I, Claude added Run K (K1179 S1b, a lean corner solve on the
+true outline, from Claude's review of the spike); it runs after C.
 
 ## How to work
 
@@ -79,7 +81,7 @@ wherever a dependency moves. Batch 16 uses ports 5550-5619; each
 run below names its range.
 
 After each run, update K1178's handle, naming the next run in the
-order B, H, I, C, D, E, F, G:
+order B, H, I, C, K, D, E, F, G:
 `ledger.mjs handle K1178 --last-commit <sha8> --next "Run <X> done; next Run <Y>"`
 (after Run G: `--next "Run G done; batch 16 complete, Claude reviews and closes K1178"`).
 
@@ -582,6 +584,167 @@ press outcomes), and the probe edit.
 
 Close: `ledger.mjs done K1175 --commit <sha8> --what "key hints recompute while the flow is on, so a disc never names a stale key on a bisector run"`.
 Suggested ports: 5560-5569.
+
+## Run K · K1179 S1b: a lean corner solve on the true outline, offline
+
+Read first: `docs/design/K1179_spike.md` (all of it: Run I's
+record, which this run builds on); sections 6 and 7 of
+`docs/design/K1179_geometry_review.md`, and its last line (if
+criteria 1-3 cannot hold at the same time, or the CPU solve is over
+budget, the direction needs rethinking before any rebuild); Run I's
+section above (its criteria, which this run corrects below);
+`src/render/field/form_b.ts` from `armWindow` to the end of
+`solveCorner` (about lines 782-1137), and `inFill` (about line
+1188); F5 in `docs/design/K1040_junction_field.md` (its prototype
+solved the corners in closed form, at straight arms); and Run I's
+probes, `.claude/probes/K1179/*.ts`, with its plots in `out/`.
+
+The ledger says (In progress):
+
+> **K1179** · Thread geometry (Levi 11-04: rethink how thread bodies, junction rounds and gaps are built, maybe
+> as a skin on the thread centres). Review (`docs/design/K1179_geometry_review.md`): keep threads and physics,
+> one per-pixel outline rule for both looks, no simulated skin. S1 spike: K1178 Run I (fail); S1b: K1178 Run K.
+
+What Run I found (9de9006e). Criterion 1 failed (695 exposed
+rounds read κ < −0.01/h; 16 small rounds lie outside every null
+band). Criterion 2 failed (116 feet; the worst gap 1.95 device px,
+the worst tangent jump 8.9°). Criterion 3 failed as written but
+held in substance (point 3 below). Criterion 4 failed by 40-90x a
+frame: master's form B is an exact offline reference (feet tracked
+in h/32 windows for up to 4,096 steps, Newton for up to 60
+iterations, 32 integration nodes, a candidate grid). On `def` it
+spends about 31 µs a corner on V and the spans and 47 µs on the
+ball.
+
+Claude's reading of that record, to test, not to trust:
+
+1. Some of criteria 1-2's failures are the measurement. Run I
+   buried boundary samples only inside tubes, not under a round's
+   fill, so the arm edge from a foot to V can count as exposed (the
+   back-step spurs at the feet in the worst-site plots may be
+   this). And criterion 1's window, foot ± 0.1h, counts the bare
+   arm edge's own concave curvature: an arm bending toward the
+   corner, a concave polyline vertex, a fold.
+2. Some are real. Form B's margin gate,
+   w = ss(1 + min(0, mA, mB)/0.05h), lets the ball keep growing
+   until another part of its arm comes up to 0.05h nearer q than
+   the tracked foot. The ball then crosses that part's tube, and
+   the union has a concave corner where the circle crosses the
+   tube's edge, away from the tracked foot.
+3. Criterion 3's edge-point failures are the rotation term the
+   skeleton definition left out (an edge point moves with its
+   centre point plus h times the turn of its normal). The gate699
+   sweep's gate, 0.125, sat below form B's own ordinary rate,
+   0.1270 (K1114's).
+
+The rule change to test, for point 2: the margin band moved to
+[0, 0.05h], w_margin = ss(0, 1, min(mA, mB)/0.05h), so the ball
+stops by the time another part of its arm is as near q as its
+foot. Then every point of both arm windows is at least h + r from
+q (the basin by its definition, the rest by the margin), so each
+tangent point is at least h from all of them: it lies on the drawn
+outline, and the round meets the tube there tangentially. The
+argument covers the corner's own two arms only. Other arms and
+chains are counted, not assumed.
+
+Tasks, in order (Node only, through `npx.cmd vite-node`; no GPU,
+browser, server or phone; ports 5610-5619 only if something needs
+one). Write only new files under `.claude/probes/K1179/s1b/` and
+`docs/design/K1179_s1b.md`. Import Run I's probes, or copy one into
+`s1b/` to change it; leave Run I's files and outputs as they are.
+Change nothing in `src/` or `test/`.
+
+1. The measurement, corrected. The exposed boundary is the
+   boundary of the union of the tubes (half-width h) and the
+   rounds' fills, a fill as `inFill` defines it. Re-measure Run
+   I's form B (same settings) with it, and sort criteria 1-2's
+   failures into classes: (a) Run I's measurement only (buried
+   under a round's fill); (b) the bare tube's own (a concave
+   vertex, bend or fold that is there without the round); (c) the
+   ball across another part of its own arms (a margin below 0 at
+   q); (d) the ball across another arm's or chain's tube; (e)
+   anything else, named. Counts per class and scene, and the worst
+   site of each class.
+2. The rule change. A probe copy (or subclass) of form B with the
+   margin band at [0, 0.05h], as above: this is the reference for
+   tasks 3-4. Criteria 1-2 per class again. What it costs the
+   rounds: the corners whose r moves by more than 0.01h, the
+   distribution of Δr/h, and the largest per scene. And ω's range
+   under the new band (it may be 1 everywhere; say so).
+3. The lean solve: task 2's rule at a cost a frame can afford.
+   - Inputs: the arm polylines within their windows, as form B
+     builds them, with h, θ, style and the gate constants.
+     Outputs: form B's Corner fields (V, q, r0, r, the feet, t_a,
+     t_b, ω, room).
+   - Bounded work, with its maximum per corner stated: no
+     candidate grid, no 4,096-step foot tracking, no 60-iteration
+     Newton. A suggestion, not a requirement: the distance to a
+     polyline is piecewise (each segment's offset line, a circle
+     about each vertex), so a point at ρ from both arms is where
+     two such pieces meet (line-line, line-circle, circle-circle),
+     in closed form, and V's branch passes through a sequence of
+     piece pairs that can be walked exactly.
+   - Deterministic. If it warm-starts from the previous frame, a
+     cold and a warm solve agree within 1e-9h.
+   - Agreement with task 2's reference, per corner, on the 12
+     scenes and every distinct frame of the 4 recordings: V, q,
+     the feet and r within 0.01h (give the maximum in device px at
+     dpr 2 as well). List every corner outside it, with its cause.
+4. The criteria on the lean solve's outline. Each table has three
+   columns: Run I's form B (before), task 2's reference, the lean
+   solve.
+   1. No concave cusp, corrected: κ ≥ −0.01/h on the exposed
+      outline from foot to foot; within 0.1h past each foot, κ no
+      more than 0.01/h below the bare tube edge's κ at the same
+      point (Run I's form counted the arm's own curvature). Run
+      I's small-round clause stands, with the null bands listed.
+   2. G1 where pieces meet, unchanged: a tangent jump of at most
+      1° and a gap of at most 0.05 device px at every exposed foot
+      and hand-off. List a foot buried under another arm's tube
+      apart.
+   3. Stable in motion, corrected: an edge point (arm, s, side)
+      may move as far as its centre point plus h times the turn of
+      its normal, plus 1 device px (Run I's form left the turn
+      out); round points as in Run I. The sweeps: ink steps no
+      higher than form B's ordinary rates, which Run I reproduced:
+      gate699 0.1270 (Run I's gate of 0.125 sat below that rate),
+      tee 0.1480, ring 0.1737, the synthetic sweep 0.0508.
+   4. Cost, unchanged: p95 a frame at most 0.75 ms on the desktop,
+      under the perf lock (`$env:TEMP\claude-perf.lock`), over
+      every distinct frame of the 4 recordings. It counts
+      everything a frame needs to solve its corners beyond what
+      today's renderer already has each frame (the sampled
+      centrelines). Time each part (V, the spans, the ball, the
+      gates). Also give the scene medians, the cost per corner,
+      and, per recording, the share of corners a frame whose
+      inputs moved (for a later incremental solve).
+5. The 16 small rounds outside every null band (the spike's list,
+   criterion 1): the margin and steep factors at each, and whether
+   it is a null band or a lost round.
+6. Stop if criteria 1-3 can't hold together: that is a result.
+   Name the conflict and where it is.
+7. SVG plots under `.claude/probes/K1179/s1b/out/` of Run I's six
+   worst sites and the worst site of each class, before and after:
+   each centred on its corner, 4h across, with the bare tube edges
+   in grey, the drawn outline in black, the ball's circle dashed,
+   and V, q and the feet marked. No pngjs. The z4 crops against
+   today's fill are still Claude's, later.
+
+Done:
+
+- `docs/design/K1179_s1b.md`: the classes, the rule change and
+  what it costs the rounds, the agreement table, a table per
+  criterion (before, reference, lean), the cost split, a verdict
+  (pass, fail or stop), and what S2 should check.
+- The probe code force-added and pushed with the doc (a docs and
+  probes push, so no deploy runs).
+- `npm test` passes.
+
+Report: the verdicts, the classes, the agreement, the cost, the
+doc's path and the commit. Then update K1179's handle (S2, the
+phone GPU check, is not in this run):
+`ledger.mjs handle K1179 --owner "nobody since <yyyy-mm-dd hh:mm> (S1b done in Muse batch 16 run K)" --last-commit <sha8> --evidence "docs/design/K1179_geometry_review.md; docs/design/K1179_spike.md; docs/design/K1179_s1b.md; .claude/probes/K1179/" --next "S1b done (<pass, fail or stop>); Claude reviews, then S2 (the phone GPU check, 4 ms at 2x, after K1097's Pixel batch) or a rethink"`
+Suggested ports: 5610-5619 (only if needed).
 
 ## Run D · K999: `probes.md` rides every probe read
 
