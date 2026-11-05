@@ -366,6 +366,17 @@ describe("K710: contact without broken runs", () => {
     expect(sim.catches).toBe(0);
   });
 
+  it("a blocked run reads reject from tap and records no input", () => {
+    const sim = new MinotaurChase(G1, P({ playerPace: 10, wake: 1000 }), 1);
+    sim.place("player", "A");
+    sim.g.block(1);
+    expect(sim.tap(1)).toBe("reject");
+    expect(sim.inputs).toEqual([]);
+    expect(run(sim, 10)).toEqual([]);
+    expect(sim.player.edge).toBe(-1);
+    expect(sim.g.ids[sim.player.vertex]).toBe("A");
+  });
+
   it("the sword's touch does not land through a blocked run", () => {
     const sim = new MinotaurChase(G1, frozen, 1);
     sim.g.block(1);
@@ -420,6 +431,34 @@ describe("MinotaurChase: the player", () => {
     expect(out[out.length - 1]).toEqual({ kind: "arrive", vertex: "S" });
     expect(sim.tick - t0).toBeGreaterThanOrEqual(CHASE_HZ / 2);
     expect(sim.inputs.map((i) => i.edge)).toEqual([0, 0]);
+  });
+
+  it("a run blocked while queued is never departed onto", () => {
+    const sim = new MinotaurChase(G1, quiet, 1);
+    expect(sim.tap(0)).toBe("queued");
+    run(sim, 1);
+    expect(sim.tap(1)).toBe("queued");
+    sim.g.block(1);
+    const out = run(sim, CHASE_HZ);
+    expect(out).toContainEqual({ kind: "arrive", vertex: "A" });
+    expect(out.filter((e) => e.kind === "depart")).toEqual([]);
+    expect(sim.player.edge).toBe(-1);
+    expect(sim.g.ids[sim.player.vertex]).toBe("A");
+    expect(sim.tap(5)).toBe("queued");
+    expect(run(sim, 1)).toEqual([{ kind: "depart", edge: 5 }]);
+  });
+
+  it("replays a chase whose taps touch only unblocked runs as today", () => {
+    const live = new MinotaurChase(G1, quiet, 1);
+    expect(live.tap(0)).toBe("queued");
+    runUntil(live, "arrive", CHASE_HZ);
+    expect(live.tap(5)).toBe("queued");
+    run(live, 30);
+    const again = replayChase(G1, quiet, 1, live.inputs, live.tick);
+    expect(again.tick).toBe(live.tick);
+    expect(again.player).toEqual(live.player);
+    expect(again.mino).toEqual(live.mino);
+    expect(again.inputs).toEqual(live.inputs);
   });
 
   it("reaching the exit ends the chase", () => {

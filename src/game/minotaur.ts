@@ -1019,7 +1019,8 @@ export class MinotaurChase {
       !Number.isInteger(edge) ||
       edge < 0 ||
       edge >= this.g.len.length ||
-      (this.g.ea[edge] !== v && this.g.eb[edge] !== v)
+      (this.g.ea[edge] !== v && this.g.eb[edge] !== v) ||
+      this.g.blocked[edge]
     ) {
       return "reject";
     }
@@ -1190,6 +1191,7 @@ export class MinotaurChase {
         if (this.queued < 0 || this.finished) return;
         const eid = this.queued;
         this.queued = -1;
+        if (g.blocked[eid]) return;
         const v = p.vertex;
         if (g.ea[eid] === v) {
           p.edge = eid;
