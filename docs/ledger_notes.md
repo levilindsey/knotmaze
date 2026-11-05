@@ -3684,3 +3684,13 @@ Muse batch 19 run B (19B, f657ac15) counted the flips, probes only, in `.claude/
 - Limits: seed3's ji2 drag barely moved its crop; the reach bounds were recomputed from the live `underWindows`, not checked against drawn flank lengths.
 
 Claude's reading: the drawn median sits under the control's noise floor (whole-knot motion of 4484 and 8641 px per step), so the case for the hold-and-fade fix rests on whether the few large flips pop at their junction. Crop the five worst drawn flips (before and after, 3x) and judge them before briefing the fix.
+
+## K1198 (2026-11-04, the full numbers)
+
+c's exit under the one join rule: J3h's port (v7.1) with J3i's cusp-entry rule (v7.2 = Plc2m, B = 2 u; v7.2b = Plc3m, B = 3 u). Sources: `docs/design/K1112_cursive_j3i.md` Handoff and `.claude/probes/K863/trace/work32/NOTES_k1112cusp.md`.
+- Over budget: ci 1.20 -> 3.79 u from the font (v7.2b 4.99) against its 2.5 u budget; the census's over-budget count 399 -> 400.
+- Font distance (dmax, v7.1 -> v7.2 / v7.2b). Further: ci 1.20 -> 3.79 / 4.99, cr 3.40 -> 6.02 / 8.25, cs 2.75 -> 5.43 / 6.89, cy 2.52 -> 3.46 / 3.97, er 7.54 -> 10.07 / 11.71, es 5.91 -> 7.63 / 8.52; c's mean 11.02 -> 11.36 / 11.57. Nearer: ai 9.83 -> 8.61 / 8.14, ar 15.68 -> 14.39 / 13.72, ei 13.17 -> 9.43 / 10.41, ni 9.03 -> 7.47.
+- Interior solves the new window re-parametrizes move their attach by up to 3 u at nearly the same distance (ct 34.95 -> 32.90 u, et 35.95 -> 33.36, np 7.88 -> 10.30, ej 20.00 -> 16.85).
+- ij has no port solve: 71 of the 72 low-exit pairs into a cusp window solve.
+- Untried: Plc1m (B = 1 u with maxfev 8000); Plc1 (B = 1 u, the old cap) left 5 solves at MAXFEV.
+- The 6 undesigned seams left are q's word-end exits.

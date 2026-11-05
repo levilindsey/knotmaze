@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1197.
+Next free ID: K1199.
 
 ## Waiting on Levi
 
@@ -311,6 +311,9 @@ Next free ID: K1197.
 - **K1190** · K1139 Stage 4's look calls (card `docs/asks/K1190.md`; sheets t4, t6 in
   `.claude/probes/K1139/out/s4/sheets/`): soften the sharp fronts (ji 33, ji 149); smooth ji 33's
   straight edges; ji 149's gold edge round again; fill the notch. Rec: all four (2 causes to find)
+- **K1197** · Cursive: c's joins by the one rule (v7.2, J3i): the joins into a, d, g, o and q run flat and turn
+  up late where the font rises in one curve, and ck bends in an S; rise like the font, or fine as is? Card
+  `docs/asks/K1197.md`; sheets `.claude/probes/K863/trace/out32/png/`.
 
 ## In progress
 
@@ -326,11 +329,11 @@ Next free ID: K1197.
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
   Levi to edit instead of drawing all 26 (Levi, 2026-10-26). Muse's prototype parked at abc135e7.
-  - owner: claude agent a2d2f19ad8f0a41d7 of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (J3i: K1112's cusp-entry rule for every low exit, v7.2; launched 2026-11-04 about 19:35, stops by about 21:35)
-  - branch: `worktree-agent-a2d2f19ad8f0a41d7` (`.claude/worktrees/agent-a2d2f19ad8f0a41d7`); J3h's worktree `.claude/worktrees/agent-a3b2dcbad71e5cbd8` kept (merged at d5d0a2c7); last commit: `2da6e2a1`
-  - evidence: `.claude/probes/K863/trace/` (J3i: `work32/`, `out32/`, `work32/dbg/*_k1112cusp.*`, NOTES `## K1112 cusp`; J3h: `work31/`, `out31/`, `work31/dbg/*_k1112c.*`, NOTES `## K1112 c`; J3g: `work30/`, `out30/`, NOTES `## K1119`); Drive `K863/` (v7.0: `*_v70.svg`; v7.1: `c_v71.svg`, `cursive_v71_words.svg`); Levi's template `out25/cursive_template.svg`; the full file list in `docs/ledger_notes.md` `## K863`
-  - next: J3i runs (v7.1, c's exit port, failed the seam gate by 4); then Claude looks at its sheets and merges it; Levi looks at c's v7.2 sheet and the cusp sheet; K1119's look in its own stage; then the next exit, g
-  - brief: `docs/design/K1112_cursive_j3i.md` (on J3i's branch); J3h's Handoff in `docs/design/K1112_cursive_j3h.md`
+  - owner: nobody since 2026-11-04 21:02: J3i (claude agent a2d2f19ad8f0a41d7 of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c) finished its stage; waiting on Levi's look (K1197)
+  - branch: mainline for the brief; J3i's branch `worktree-agent-a2d2f19ad8f0a41d7` (`.claude/worktrees/agent-a2d2f19ad8f0a41d7`, kept) also holds unmerged copies of its probe files; J3h's worktree `.claude/worktrees/agent-a3b2dcbad71e5cbd8` kept (merged at d5d0a2c7); last commit: `9e699429` (J3i's branch tip)
+  - evidence: `.claude/probes/K863/trace/` (J3i: `work32/`, `out32/` with `png/c_font_cmp_v72.png` and `png/c_spots_v72.png`, `work32/dbg/*_k1112cusp.*`, NOTES `## K1112 cusp`; J3h: `work31/`, `out31/`, `work31/dbg/*_k1112c.*`, NOTES `## K1112 c`; J3g: `work30/`, `out30/`, NOTES `## K1119`); Drive `K863/` (v7.0: `*_v70.svg`; v7.1: `c_v71.svg`, `cursive_v71_words.svg`; v7.2: `c_v72.svg`, `cusp_v72.svg`, `cursive_v72_words.svg`); Levi's template `out25/cursive_template.svg`; the full file list in `docs/ledger_notes.md` `## K863`
+  - next: Levi's look (K1197); then a stage lands v7.2 (Plc2m, `work32/ports_k1112cusp.json`) as the kit's ports, deletes the fr and fs pins (no-ops under v7.2) and refits where c's exit leaves c if Levi asks (K1198 lists the leftovers); K1119's look in its own stage; then the next exit, g
+  - brief: `docs/design/K1112_cursive_j3i.md` (Handoff); J3h's Handoff in `docs/design/K1112_cursive_j3h.md`
 - **K114** · Gameplay round 2, designed in
   `docs/design/K80_gameplay_additions.md` section R: burn race, cut
   verb, beat rider, spider, Pluck Hero MVP. Levi took the recs (calls
@@ -1681,8 +1684,9 @@ Every other item below waits on the trigger it names.
 - **K1181** · The laptop's knotmaze checkout still has the pre-rewrite history (K1164): before its next use
   there, fetch, then reset to origin/master (after saving any local work); never pull, which would merge the
   old history back (Levi 11-04 dropped K1166).
-- **K1182** · The fill rim meets the flank tips with a tangent break (G0 only:
-  `src/render/ribbon/rim_curve.ts`, a quadratic); a biarc would make it G1 (K1179 review sections 2-3).
+- **K1182** · The fill rim meets the flank tips with a tangent break (G0: `src/render/ribbon/rim_curve.ts`'s
+  quadratic). 19C's biarc (ed14f2c9, flag `rimCurveBiarc`, left off) is G1, but on its sheet the gaps at four
+  ji147 and cross ji33 grow sharp stepped corners (`.claude/probes/K1182/sheet/`): find what cuts them first.
 - **K1191** · K1139 Stage 4 leftovers (handoff in `docs/design/K1139_s3b_fix.md`): ji 147's 52 GPU wedges; the
   full model's 12/6/11 threshold flips; no arc-true tau rate or obliqueness in the classifier; unexamined: ji
   147's unlit arm 1, records 2129 and 2668's overlapping fans
@@ -1693,6 +1697,9 @@ Every other item below waits on the trigger it names.
 - **K1195** · `scripts/preview.ps1` (K1188, f5035e0d): a src-* folder that `git worktree remove` half-deletes
   (a file held open) loses its `.git`, so the fallback keeps it and later -Ref runs of that sha under that
   -Root are refused as a live run until it is cleared by hand
+- **K1198** · Cursive c's v7.2 leftovers (J3i): ci 3.79 u from the font, over its 2.5 u budget (v7.1 1.20);
+  cr, cs, cy, er and es further from the font; attaches moved up to 3 u; ij unsolved; Plc1m untried
+  (`docs/ledger_notes.md` `## K1198`; `docs/design/K1112_cursive_j3i.md` Handoff).
 
 ## Approved, to schedule (2026-10-11)
 
