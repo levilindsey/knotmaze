@@ -526,9 +526,9 @@ Next free ID: K1185.
 - **K1184** · Muse batch 17: run A drafts the brief (`docs/design/K1184_muse_batch17_run_a.md`), then runs B-G
   from the draft after Claude's review.
   - owner: nobody since 2026-11-04 13:25 (run A queued as Muse chain run 17A, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `9269405e`
+  - branch: mainline; last commit: `2febd57d`
   - evidence: `docs/design/K1184_muse_batch17_run_a.md`; the chain in `.claude/probes/K1053/` (queue.txt, chain.log)
-  - next: Muse chain run 17A drafts `docs/design/K1184_muse_batch17.md` (runs B-G); Claude reviews it and queues 17B-17G
+  - next: Run A done; Claude reviews the draft
   - brief: `docs/design/K1184_muse_batch17_run_a.md`
 
 ## Next, in order
