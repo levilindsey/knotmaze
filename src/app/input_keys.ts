@@ -271,7 +271,12 @@ export function createKeyInput(deps: KeyInputDeps, scene: SceneRef) {
   // K332: the hints at the player's junction - nothing until the first
   // direction press, then hintMap over its departures, each with its
   // reach point and angle. Cached on the vertex and the solve stamp:
-  // recomputed only when they change.
+  // recomputed only when they change. K1175: while the flow is on the
+  // drawn runs keep moving (keyPointAt reads them through the flow
+  // field), so a run near a cardinal bisector can cross it under a
+  // cached disc; then the cache is not served and the departures and
+  // hints are recomputed on every call (once a frame, a handful of
+  // arms). With the flow off the cache stands exactly as before.
   const keyHints = (): KeyHint[] => {
     if (!keyHintsSeen) return [];
     const v = keyVertex();
@@ -283,7 +288,9 @@ export function createKeyInput(deps: KeyInputDeps, scene: SceneRef) {
     const headR = scene.fabric?.markerRadius() ?? 0;
     const dist =
       headR > 0 ? hintArcDistance(headR, headR * CHEVRON_SCALE) : KEY_REACH;
+    const flowOn = (scene.renderer?.flowStrength ?? 0) > 0;
     if (
+      !flowOn &&
       hintCacheVertex === v &&
       hintCacheStamp !== null &&
       sameStamp(hintCacheStamp, stamp) &&
@@ -300,10 +307,12 @@ export function createKeyInput(deps: KeyInputDeps, scene: SceneRef) {
       if (!pt) continue;
       out.push({ ...h, x: pt.x, y: pt.y, held: pt.held, angle: Math.atan2(vec[1], vec[0]) });
     }
-    hintCacheVertex = v;
-    hintCacheStamp = stamp;
-    hintCacheHeadR = headR;
-    hintCache = out;
+    if (!flowOn) {
+      hintCacheVertex = v;
+      hintCacheStamp = stamp;
+      hintCacheHeadR = headR;
+      hintCache = out;
+    }
     return out;
   };
   // Keys play only a maze on screen and still open: not in knot mode,

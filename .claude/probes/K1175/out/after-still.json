@@ -1,0 +1,662 @@
+{
+ "label": "after-still",
+ "base": "http://127.0.0.1:5560/",
+ "link": "?7&am=instant&snd=none&fw=0",
+ "extra": "&fw=0",
+ "samples": [
+  {
+   "tMs": 1,
+   "vertex": "mnode_109",
+   "shown": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "expected": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "differ": false
+  },
+  {
+   "tMs": 265,
+   "vertex": "mnode_109",
+   "shown": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "expected": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "differ": false
+  },
+  {
+   "tMs": 532,
+   "vertex": "mnode_109",
+   "shown": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "expected": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "differ": false
+  },
+  {
+   "tMs": 784,
+   "vertex": "mnode_109",
+   "shown": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "expected": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "differ": false
+  },
+  {
+   "tMs": 1051,
+   "vertex": "mnode_109",
+   "shown": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "expected": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "differ": false
+  },
+  {
+   "tMs": 1316,
+   "vertex": "mnode_109",
+   "shown": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "expected": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "differ": false
+  },
+  {
+   "tMs": 1582,
+   "vertex": "mnode_109",
+   "shown": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "expected": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "differ": false
+  },
+  {
+   "tMs": 1847,
+   "vertex": "mnode_109",
+   "shown": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "expected": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "differ": false
+  },
+  {
+   "tMs": 2114,
+   "vertex": "mnode_109",
+   "shown": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "expected": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "differ": false
+  },
+  {
+   "tMs": 2366,
+   "vertex": "mnode_109",
+   "shown": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "expected": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "differ": false
+  },
+  {
+   "tMs": 2632,
+   "vertex": "mnode_109",
+   "shown": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "expected": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "differ": false
+  },
+  {
+   "tMs": 2897,
+   "vertex": "mnode_109",
+   "shown": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "expected": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "differ": false
+  },
+  {
+   "tMs": 3149,
+   "vertex": "mnode_109",
+   "shown": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "expected": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "differ": false
+  },
+  {
+   "tMs": 3413,
+   "vertex": "mnode_109",
+   "shown": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "expected": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "differ": false
+  },
+  {
+   "tMs": 3679,
+   "vertex": "mnode_109",
+   "shown": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "expected": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "differ": false
+  },
+  {
+   "tMs": 3945,
+   "vertex": "mnode_109",
+   "shown": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "expected": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "differ": false
+  },
+  {
+   "tMs": 4198,
+   "vertex": "mnode_109",
+   "shown": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "expected": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "differ": false
+  },
+  {
+   "tMs": 4453,
+   "vertex": "mnode_109",
+   "shown": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "expected": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "differ": false
+  },
+  {
+   "tMs": 4719,
+   "vertex": "mnode_109",
+   "shown": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "expected": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "differ": false
+  },
+  {
+   "tMs": 4986,
+   "vertex": "mnode_109",
+   "shown": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "expected": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "differ": false
+  },
+  {
+   "tMs": 5255,
+   "vertex": "mnode_109",
+   "shown": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "expected": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "differ": false
+  },
+  {
+   "tMs": 5520,
+   "vertex": "mnode_109",
+   "shown": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "expected": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "differ": false
+  },
+  {
+   "tMs": 5786,
+   "vertex": "mnode_109",
+   "shown": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "expected": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "differ": false
+  },
+  {
+   "tMs": 6039,
+   "vertex": "mnode_109",
+   "shown": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "expected": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "differ": false
+  },
+  {
+   "tMs": 6304,
+   "vertex": "mnode_109",
+   "shown": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "expected": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "differ": false
+  },
+  {
+   "tMs": 6556,
+   "vertex": "mnode_109",
+   "shown": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "expected": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "differ": false
+  },
+  {
+   "tMs": 6810,
+   "vertex": "mnode_109",
+   "shown": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "expected": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "differ": false
+  },
+  {
+   "tMs": 7063,
+   "vertex": "mnode_109",
+   "shown": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "expected": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "differ": false
+  },
+  {
+   "tMs": 7315,
+   "vertex": "mnode_109",
+   "shown": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "expected": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "differ": false
+  },
+  {
+   "tMs": 7581,
+   "vertex": "mnode_109",
+   "shown": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "expected": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "differ": false
+  },
+  {
+   "tMs": 7848,
+   "vertex": "mnode_109",
+   "shown": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "expected": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "differ": false
+  },
+  {
+   "tMs": 8114,
+   "vertex": "mnode_109",
+   "shown": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "expected": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "differ": false
+  },
+  {
+   "tMs": 8365,
+   "vertex": "mnode_109",
+   "shown": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "expected": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "differ": false
+  },
+  {
+   "tMs": 8618,
+   "vertex": "mnode_109",
+   "shown": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "expected": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "differ": false
+  },
+  {
+   "tMs": 8870,
+   "vertex": "mnode_109",
+   "shown": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "expected": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "differ": false
+  },
+  {
+   "tMs": 9135,
+   "vertex": "mnode_109",
+   "shown": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "expected": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "differ": false
+  },
+  {
+   "tMs": 9401,
+   "vertex": "mnode_109",
+   "shown": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "expected": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "differ": false
+  },
+  {
+   "tMs": 9666,
+   "vertex": "mnode_109",
+   "shown": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "expected": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "differ": false
+  },
+  {
+   "tMs": 9919,
+   "vertex": "mnode_109",
+   "shown": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "expected": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "differ": false
+  },
+  {
+   "tMs": 10186,
+   "vertex": "mnode_109",
+   "shown": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "expected": [
+    "0:down:key",
+    "220:right:key",
+    "221:up:key"
+   ],
+   "differ": false
+  }
+ ],
+ "presses": [
+  {
+   "kind": "shown cardinal at a disagreeing instant",
+   "caught": false
+  },
+  {
+   "kind": "truth press",
+   "n": 0,
+   "vertex": "mnode_109",
+   "shown": {
+    "edge": 0,
+    "dir": "down",
+    "chord": false
+   },
+   "took": 0,
+   "tookShownRun": true
+  },
+  {
+   "kind": "truth press",
+   "n": 1,
+   "vertex": "mnode_109",
+   "shown": {
+    "edge": 220,
+    "dir": "right",
+    "chord": false
+   },
+   "took": 220,
+   "tookShownRun": true
+  },
+  {
+   "kind": "truth press",
+   "n": 2,
+   "vertex": "mnode_109",
+   "shown": {
+    "edge": 221,
+    "dir": "up",
+    "chord": false
+   },
+   "took": 221,
+   "tookShownRun": true
+  }
+ ],
+ "stamp": "P4 v0.4.0 0f77f6c3 2026-11-04 18:56 | sim 5.0s / wall 18.9s | lag 3.7s | asleep",
+ "entrance": "mentr_b",
+ "firstPress": {
+  "kind": "unhinted cardinal",
+  "dir": "up"
+ },
+ "walkedEdge": 0,
+ "junction": "mnode_109",
+ "flowStrength": 0,
+ "sampleCount": 40,
+ "disagreements": 0,
+ "disagreeRuns": []
+}

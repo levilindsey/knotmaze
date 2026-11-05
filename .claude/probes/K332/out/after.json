@@ -1,0 +1,581 @@
+{
+ "mode": "after",
+ "base": "http://127.0.0.1:5560/",
+ "link": "?7&am=instant&snd=none",
+ "junctions": [
+  {
+   "vertex": "mentr_b",
+   "live": true,
+   "press": {
+    "up": {
+     "edge": -1,
+     "stop": "none"
+    },
+    "down": {
+     "edge": -1,
+     "stop": "none"
+    },
+    "left": {
+     "edge": -1,
+     "stop": "none"
+    },
+    "right": {
+     "edge": 0,
+     "err": 0.22651891322614673
+    }
+   },
+   "chord": {
+    "upRight": {
+     "edge": 0,
+     "err": 1.0119170766235952
+    },
+    "downRight": {
+     "edge": 0,
+     "err": 0.558879250171301
+    },
+    "downLeft": {
+     "edge": -1,
+     "stop": "none"
+    },
+    "upLeft": {
+     "edge": -1,
+     "stop": "none"
+    }
+   },
+   "departures": [
+    {
+     "edge": 0,
+     "dx": 0.9744541035227152,
+     "dy": 0.22458673186041422
+    }
+   ],
+   "runs": [
+    {
+     "edge": 0,
+     "cardinals": [
+      "right"
+     ],
+     "chords": [
+      "upRight",
+      "downRight"
+     ],
+     "none": false
+    }
+   ],
+   "hintSurface": true,
+   "hints": [
+    {
+     "x": 0.5893748998641968,
+     "y": 0.6461125612258911,
+     "r": 0.28600000000000003,
+     "dir": "right",
+     "edge": 0,
+     "chord": false,
+     "held": false
+    }
+   ],
+   "markerRadius": 0.52,
+   "solved": false,
+   "animating": false,
+   "head": "mentr_b"
+  },
+  {
+   "vertex": "mnode_109",
+   "live": true,
+   "press": {
+    "up": {
+     "edge": 221,
+     "err": 0.8215570049796119
+    },
+    "down": {
+     "edge": 0,
+     "err": 0.5473837766207288,
+     "tied": true
+    },
+    "left": {
+     "edge": 221,
+     "err": 0.749239321815285
+    },
+    "right": {
+     "edge": 220,
+     "err": 0.8073958310733801
+    }
+   },
+   "chord": {
+    "upRight": {
+     "edge": -1,
+     "stop": "none"
+    },
+    "downRight": {
+     "edge": 220,
+     "err": 0.02199766767593176
+    },
+    "downLeft": {
+     "edge": 0,
+     "err": 0.23801438677671874
+    },
+    "upLeft": {
+     "edge": 221,
+     "err": 0.03615884158216652
+    }
+   },
+   "departures": [
+    {
+     "edge": 0,
+     "dx": -0.5204550480910566,
+     "dy": 0.853889069444349
+    },
+    {
+     "edge": 220,
+     "dx": 0.6913822589902994,
+     "dy": 0.7224891500593421
+    },
+    {
+     "edge": 221,
+     "dx": -0.732207164869392,
+     "dy": -0.681081983107707
+    }
+   ],
+   "runs": [
+    {
+     "edge": 0,
+     "cardinals": [
+      "down"
+     ],
+     "chords": [
+      "downLeft"
+     ],
+     "none": false
+    },
+    {
+     "edge": 220,
+     "cardinals": [
+      "right"
+     ],
+     "chords": [
+      "downRight"
+     ],
+     "none": false
+    },
+    {
+     "edge": 221,
+     "cardinals": [
+      "up",
+      "left"
+     ],
+     "chords": [
+      "upLeft"
+     ],
+     "none": false
+    }
+   ],
+   "hintSurface": true,
+   "hints": [
+    {
+     "x": 1.3354029655456543,
+     "y": 5.258276462554932,
+     "r": 0.28600000000000003,
+     "dir": "down",
+     "edge": 0,
+     "chord": false,
+     "held": false
+    },
+    {
+     "x": 2.334557294845581,
+     "y": 5.124468803405762,
+     "r": 0.28600000000000003,
+     "dir": "right",
+     "edge": 220,
+     "chord": false,
+     "held": false
+    },
+    {
+     "x": 1.0226635932922363,
+     "y": 3.839169979095459,
+     "r": 0.28600000000000003,
+     "dir": "left",
+     "edge": 221,
+     "chord": false,
+     "held": false
+    }
+   ],
+   "markerRadius": 0.52,
+   "solved": false,
+   "animating": false,
+   "head": "mnode_109"
+  },
+  {
+   "vertex": "node_259",
+   "live": true,
+   "press": {
+    "up": {
+     "edge": 220,
+     "err": 0.34731906678960495
+    },
+    "down": {
+     "edge": 203,
+     "err": 1.1180755934539863
+    },
+    "left": {
+     "edge": 202,
+     "err": 0.7657052658214126
+    },
+    "right": {
+     "edge": 203,
+     "err": 0.4527207333409102
+    }
+   },
+   "chord": {
+    "upRight": {
+     "edge": 220,
+     "err": 0.43807909660784267
+    },
+    "downRight": {
+     "edge": 203,
+     "err": 0.33267743005653755
+    },
+    "downLeft": {
+     "edge": -1,
+     "stop": "none"
+    },
+    "upLeft": {
+     "edge": 202,
+     "err": 0.019692897576027036
+    }
+   },
+   "departures": [
+    {
+     "edge": 202,
+     "dx": -0.7208937553942049,
+     "dy": -0.6930455926081923
+    },
+    {
+     "edge": 203,
+     "dx": 0.8992603458536846,
+     "dy": 0.43741379765059035
+    },
+    {
+     "edge": 220,
+     "dx": 0.3403781826978202,
+     "dy": -0.9402886220428968
+    }
+   ],
+   "runs": [
+    {
+     "edge": 202,
+     "cardinals": [
+      "left"
+     ],
+     "chords": [
+      "upLeft"
+     ],
+     "none": false
+    },
+    {
+     "edge": 203,
+     "cardinals": [
+      "down",
+      "right"
+     ],
+     "chords": [
+      "downRight"
+     ],
+     "none": false
+    },
+    {
+     "edge": 220,
+     "cardinals": [
+      "up"
+     ],
+     "chords": [
+      "upRight"
+     ],
+     "none": false
+    }
+   ],
+   "hintSurface": true,
+   "hints": [
+    {
+     "x": 4.079301834106445,
+     "y": 9.434754371643066,
+     "r": 0.28600000000000003,
+     "dir": "left",
+     "edge": 202,
+     "chord": false,
+     "held": false
+    },
+    {
+     "x": 5.479030132293701,
+     "y": 10.529417037963867,
+     "r": 0.28600000000000003,
+     "dir": "right",
+     "edge": 203,
+     "chord": false,
+     "held": false
+    },
+    {
+     "x": 4.954887390136719,
+     "y": 9.208409309387207,
+     "r": 0.28600000000000003,
+     "dir": "up",
+     "edge": 220,
+     "chord": false,
+     "held": false
+    }
+   ],
+   "markerRadius": 0.52,
+   "solved": false,
+   "animating": false,
+   "head": "node_259"
+  },
+  {
+   "vertex": "mnode_125",
+   "live": true,
+   "press": {
+    "up": {
+     "edge": 203,
+     "err": 0.9845541061662246
+    },
+    "down": {
+     "edge": 173,
+     "err": 0.47223876072688487
+    },
+    "left": {
+     "edge": 203,
+     "err": 0.5862422206286722
+    },
+    "right": {
+     "edge": 204,
+     "err": 0.758205669418634
+    }
+   },
+   "chord": {
+    "upRight": {
+     "edge": -1,
+     "stop": "none"
+    },
+    "downRight": {
+     "edge": 204,
+     "err": 0.027192493978809712
+    },
+    "downLeft": {
+     "edge": 173,
+     "err": 0.31315940267056264
+    },
+    "upLeft": {
+     "edge": 203,
+     "err": 0.19915594276877613
+    }
+   },
+   "departures": [
+    {
+     "edge": 173,
+     "dx": -0.45488115683688113,
+     "dy": 0.890552150721529
+    },
+    {
+     "edge": 203,
+     "dx": -0.8330254893440671,
+     "dy": -0.5532346103626178
+    },
+    {
+     "edge": 204,
+     "dx": 0.7260709960459464,
+     "dy": 0.687619741354804
+    }
+   ],
+   "runs": [
+    {
+     "edge": 173,
+     "cardinals": [
+      "down"
+     ],
+     "chords": [
+      "downLeft"
+     ],
+     "none": false
+    },
+    {
+     "edge": 203,
+     "cardinals": [
+      "up",
+      "left"
+     ],
+     "chords": [
+      "upLeft"
+     ],
+     "none": false
+    },
+    {
+     "edge": 204,
+     "cardinals": [
+      "right"
+     ],
+     "chords": [
+      "downRight"
+     ],
+     "none": false
+    }
+   ],
+   "hintSurface": true,
+   "hints": [
+    {
+     "x": 5.105851650238037,
+     "y": 11.396522521972656,
+     "r": 0.28600000000000003,
+     "dir": "down",
+     "edge": 173,
+     "chord": false,
+     "held": false
+    },
+    {
+     "x": 4.756131649017334,
+     "y": 10.136772155761719,
+     "r": 0.28600000000000003,
+     "dir": "left",
+     "edge": 203,
+     "chord": false,
+     "held": false
+    },
+    {
+     "x": 6.152472019195557,
+     "y": 11.223361015319824,
+     "r": 0.28600000000000003,
+     "dir": "right",
+     "edge": 204,
+     "chord": false,
+     "held": false
+    }
+   ],
+   "markerRadius": 0.52,
+   "solved": false,
+   "animating": false,
+   "head": "mnode_125"
+  }
+ ],
+ "notes": [],
+ "stamp": "P4 v0.4.0 0f77f6c3 2026-11-04 18:56 | sim 5.0s / wall 15.4s | lag 3.8s | asleep",
+ "entrance": "mentr_b",
+ "firstPress": {
+  "kind": "unhinted cardinal",
+  "dir": "up"
+ },
+ "movedTo": 0,
+ "chordJunctionNote": "hook [0:down:key, 220:right:key, 221:left:key], shown [0:down:key, 220:right:key, 221:left:key]",
+ "chordTest": {
+  "at": "mnode_109",
+  "dir": "down",
+  "edge": 0,
+  "took": 0,
+  "chordHinted": false
+ },
+ "solved": true,
+ "checks": [
+  {
+   "ok": true,
+   "what": "maze live",
+   "detail": ""
+  },
+  {
+   "ok": true,
+   "what": "after: no disc before the first direction press",
+   "detail": "hints=[]"
+  },
+  {
+   "ok": true,
+   "what": "entrance after first press: shown hints equal the hook picks under hintMap rules",
+   "detail": "expected [0:right:key], shown [0:right:key]"
+  },
+  {
+   "ok": true,
+   "what": "entrance after first press: hint radius is markerRadius * 0.55",
+   "detail": "r=0.28600000000000003, base=0.52"
+  },
+  {
+   "ok": true,
+   "what": "junction 0 (mentr_b): shown hints equal the hook picks under hintMap rules",
+   "detail": "expected [0:right:key], shown [0:right:key]"
+  },
+  {
+   "ok": true,
+   "what": "junction 0 (mentr_b): hint radius is markerRadius * 0.55",
+   "detail": "r=0.28600000000000003, base=0.52"
+  },
+  {
+   "ok": true,
+   "what": "junction 1 (mnode_109): shown hints equal the hook picks under hintMap rules",
+   "detail": "expected [0:down:key, 220:right:key, 221:left:key], shown [0:down:key, 220:right:key, 221:left:key]"
+  },
+  {
+   "ok": true,
+   "what": "junction 1 (mnode_109): hint radius is markerRadius * 0.55",
+   "detail": "r=0.28600000000000003,0.28600000000000003,0.28600000000000003, base=0.52"
+  },
+  {
+   "ok": true,
+   "what": "junction 2 (node_259): shown hints equal the hook picks under hintMap rules",
+   "detail": "expected [202:left:key, 203:right:key, 220:up:key], shown [202:left:key, 203:right:key, 220:up:key]"
+  },
+  {
+   "ok": true,
+   "what": "junction 2 (node_259): hint radius is markerRadius * 0.55",
+   "detail": "r=0.28600000000000003,0.28600000000000003,0.28600000000000003, base=0.52"
+  },
+  {
+   "ok": true,
+   "what": "junction 3 (mnode_125): shown hints equal the hook picks under hintMap rules",
+   "detail": "expected [173:down:key, 203:left:key, 204:right:key], shown [173:down:key, 203:left:key, 204:right:key]"
+  },
+  {
+   "ok": true,
+   "what": "junction 3 (mnode_125): hint radius is markerRadius * 0.55",
+   "detail": "r=0.28600000000000003,0.28600000000000003,0.28600000000000003, base=0.52"
+  },
+  {
+   "ok": true,
+   "what": "after: no disc while the dot travels",
+   "detail": "animSamples sawAnim=true, maxHints=0"
+  },
+  {
+   "ok": true,
+   "what": "after: returned to the entrance",
+   "detail": ""
+  },
+  {
+   "ok": true,
+   "what": "entrance for key truth: shown hints equal the hook picks under hintMap rules",
+   "detail": "expected [0:right:key], shown [0:right:key]"
+  },
+  {
+   "ok": true,
+   "what": "entrance for key truth: hint radius is markerRadius * 0.55",
+   "detail": "r=0.28600000000000003, base=0.52"
+  },
+  {
+   "ok": true,
+   "what": "after: pressing right takes its hinted run",
+   "detail": "hint edge=0, took=0, taps 8->9"
+  },
+  {
+   "ok": true,
+   "what": "chord junction revisit: shown hints equal the hook picks under hintMap rules",
+   "detail": "expected [0:down:key, 220:right:key, 221:left:key], shown [0:down:key, 220:right:key, 221:left:key]"
+  },
+  {
+   "ok": true,
+   "what": "chord junction revisit: hint radius is markerRadius * 0.55",
+   "detail": "r=0.28600000000000003,0.28600000000000003,0.28600000000000003, base=0.52"
+  },
+  {
+   "ok": true,
+   "what": "after: pressing down at the chord junction takes its hinted run (no chord hinted under K1170)",
+   "detail": "hint edge=0, took=0, taps 11->12"
+  },
+  {
+   "ok": true,
+   "what": "after: no disc once the solve is over",
+   "detail": "solved=true, hints=[]"
+  }
+ ],
+ "logs": []
+}
