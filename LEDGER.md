@@ -521,9 +521,9 @@ Next free ID: K1197.
 - **K1192** · Muse batch 19 (`docs/design/K1192_muse_batch19.md`, drafted by run A): junction work first
   (K1186's flip count, K1182's G1 rim, K1191's examinations), then batch 18's follow-ups
   - owner: nobody since 2026-11-04 20:08 (runs 19C-19E queued in the Muse chain, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `f657ac15`
+  - branch: mainline; last commit: `ed14f2c9`
   - evidence: docs/design/K1192_muse_batch19.md; the chain in .claude/probes/K1053/ (queue.txt, chain.log)
-  - next: Run B done and reviewed (K1186's text applied); Run C next: Claude judges its sheet and flips the rim default; then D and E; Claude applies their item texts and closes K1192 after E
+  - next: Run C done; Claude reviews it and judges the sheet, Run D next
   - brief: `docs/design/K1192_muse_batch19.md`
 
 ## Next, in order
