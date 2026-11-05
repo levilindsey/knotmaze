@@ -1,5 +1,16 @@
 # K1139 S3b Pixel batch — plan (dry run, Run B task 7)
 
+> **Before running this (Claude, 2026-11-04).** Build what merges from
+> the fix branch (`worktree-agent-a8280f4d14ebd8ad1`), not S3b, and
+> master at its merge base. Don't start `scripts/phone.ps1` by hand:
+> the phone runs under the K1040 wrappers
+> (`.claude/probes/K1040/s3/run_phone.ps1` holds the phone and perf
+> locks and waits for the ready check), so the commands below need
+> adapting to them. The fix's Stage 3 report asked for two changes here
+> (the twin's cover strips; P8 against the max over bands). Both are
+> desktop comparisons, not phone ones, so they became tasks 1 and 2 of
+> that brief's Stage 4.
+
 Written 2026-11-04 by Muse batch 16 Run B. NOT run: no phone was
 touched. The coordinator runs this later, batched with S4 (plan
 section 5: S3b's phone half). Gates, from the plan's S3b entry:

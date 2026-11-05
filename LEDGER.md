@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1188.
+Next free ID: K1189.
 
 ## Waiting on Levi
 
@@ -512,12 +512,12 @@ Next free ID: K1188.
 - **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate correctly across
   junctions"). S1, S2 done (a4dc218a, 16246c90). Answers: the light splits at a fork (A), runs toward you behind
   you, straight through your junction with no dim moment. S3a-S6 next. Full text: `docs/ledger_notes.md`.
-  - owner: claude agent a8280f4d14ebd8ad1 (K1139 stage 3, launched 2026-11-04 about 15:01, 2 h cap), coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
-  - branch: `worktree-agent-a8280f4d14ebd8ad1`, worktree `.claude/worktrees/agent-a8280f4d14ebd8ad1` (master at c4a9dd60 plus Stage 2's branch `worktree-agent-a70924906f47e96b0` cherry-picked, so its copies carry new SHAs; Stage 2's worktree stays as it is); last commit: `f97d5aa3`
-  - evidence: .claude/probes/K1139/ (tracked: diag_s3b.mjs, diag_an.mjs, tauan.mjs, wedge.mjs, nbhd.mjs, run_locked.ps1, batch_st2_*.txt); Stage 2's dumps under out/s2/ in its worktree, Stage 3's under out/s3/ in the new one (untracked); Stage 2's numbers in its handoff in the brief
-  - next: the agent runs Stage 3: same-band seams counted above T times the band's exact compression (no line-arc-line turn), ji 28's crotch ramp-out at 2.5 and 3.0, section 5 in full, section 6's sheets with 2x crops of the worst ramps. Then Claude looks at the sheets, rules on the turn, and merges or briefs the next stage; the __k1139diag hook goes before any merge
-  - brief: Stage 3 at the end of `docs/design/K1139_s3b_fix.md` (f97d5aa3 on Stage 2's branch; on the agent's branch after its cherry-pick), after Stage 2 and its handoff
-  - env: the brief's section 7 (the node_modules junction); the server `npx vite --config .claude/probes/K1139/vite.private-cache.config.ts --port 5620 --strictPort --host 127.0.0.1` (ports 5620-5639); dumps through `run_locked.ps1` (Stage 2's handoff, env)
+  - owner: claude agent a01f07292c48d6db9 (K1139 fix stage 4, launched 2026-11-04 about 16:39, 2 h cap), coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
+  - branch: `worktree-agent-a8280f4d14ebd8ad1`, worktree `.claude/worktrees/agent-a8280f4d14ebd8ad1` (Stage 3's; master at c4a9dd60 plus Stage 2's branch cherry-picked; Stage 4 runs on it too, no rebase); last commit: `6b847b4c`
+  - evidence: .claude/probes/K1139/ on the branch (tracked: diag_s3b.mjs, diag_an.mjs, halfpx.mjs, wedge_strip.mjs, p8max.mjs, crotch_fill.mjs, sheets_s3.mjs, run_locked.ps1, batch_st3_checks.txt; sheets in out/s3/sheets/); Stage 3's dumps under out/s3/ (untracked); Stage 3's numbers in its handoff in the brief
+  - next: the agent runs Stage 4: P8 against the max over bands, the twin's cover strips, ji 28's darker bare fan, the fork front's crisp arc, jump:gpu at cross t7, ji 149's partition corner, 2x sheets of each. Then Claude reads the handoff and merges (the __k1139diag hook out first) or briefs a fill rule; the Pixel batch (`out/s3b/pixel_batch_plan.md`, its note) builds what merges
+  - brief: Stage 4 at the end of `docs/design/K1139_s3b_fix.md` on the branch (6b847b4c), after Stage 3 and its handoff
+  - env: the brief's section 7 (the node_modules junction); the server `npx vite --config .claude/probes/K1139/vite.private-cache.config.ts --port 5620 --strictPort --host 127.0.0.1` from the worktree (ports 5620-5639); master's preview `pwsh scripts/preview.ps1 -Port 5630 -Ref c4a9dd60 -Root $env:TEMP\k1139s4pv`; GPU probes through `run_locked.ps1 -Batch`
 
 ## Next, in order
 
@@ -751,6 +751,9 @@ Every other item below waits on the trigger it names.
 - **K1186** · Fill look: hold junction pieces' per-frame choices (fillet layer vote, armReach clamp) while the
   knot moves and fade them on change, same picture at rest; first count which flip on scripted drags and sweeps
   and the ink each moves (K1179 review 5c). Muse; Claude judges the look.
+- **K1188** · `scripts/preview.ps1` (K1139 Stage 3, not reproduced): fails under a long `-Root`; a `-Ref`
+  server killed outright skips the `finally`, so its temp worktree stays registered with a `node_modules`
+  junction inside, which `git worktree remove --force` may follow. Muse.
 
 ## Residuals (known, not fixed)
 
