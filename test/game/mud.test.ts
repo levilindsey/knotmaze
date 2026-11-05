@@ -8,8 +8,11 @@ import { buildWalkGraph } from "../../src/core/walk_graph";
 import type { WalkGraph } from "../../src/core/walk_graph";
 import { FabricMazeController } from "../../src/game/fabric_controller";
 import { fewestRoute, mudOf, placeMud } from "../../src/game/mud";
-import { runsToExit } from "../../src/core/walk_graph";
+import { runsToExit, walkDistances } from "../../src/core/walk_graph";
+import type { WalkEdge, WalkVertex } from "../../src/core/walk_graph";
 import { mudCost } from "../../src/game/mud";
+import { DEFAULT_TURN_MINO, turnConfig, TurnMinotaur, turnSeed } from "../../src/game/minotaur_turns";
+import type { TurnMinoParams } from "../../src/game/minotaur_turns";
 
 function walkFor(seed: number): WalkGraph {
   const g = generateLatticeKnotwork({
@@ -22,6 +25,57 @@ function walkFor(seed: number): WalkGraph {
   const hueGroup = applyMazePlan(g, plan);
   applyMazeCuts(g, plan, hueGroup);
   return buildWalkGraph(g)!;
+}
+
+// S - A - B - C - D - X: runs 0 S-A, 1 A-B, 2 B-C, 3 C-D, 4 D-X (the
+// line of snares.test.ts; a follower at A walks it behind you).
+function lineGraph(): WalkGraph {
+  const vertices = new Map<string, WalkVertex>();
+  const edges: WalkEdge[] = [];
+  const at = (id: string): WalkVertex => {
+    let v = vertices.get(id);
+    if (!v) {
+      v = { id, isEnd: false, chain: 0, ctrl: 0, edges: [] };
+      vertices.set(id, v);
+    }
+    return v;
+  };
+  const runs: Array<[string, string]> = [["S", "A"], ["A", "B"], ["B", "C"], ["C", "D"], ["D", "X"]];
+  runs.forEach(([va, vb], id) => {
+    edges.push({ id, va, vb, chain: id, ctrlA: 0, ctrlB: 2, length: 2 });
+    at(va).edges.push(id);
+    if (vb !== va) at(vb).edges.push(id);
+  });
+  for (const v of vertices.values()) v.isEnd = v.edges.length === 1;
+  const distToExit = walkDistances(vertices, edges, "X");
+  return { vertices, edges, start: "S", exit: "X", optimalLength: distToExit.get("S")!, distToExit };
+}
+
+// A sleeping minotaur; the follower appears one move after you leave A
+// and never takes a shortcut, so its steps are the trail's, in order.
+const FOLLOWER_ONLY: TurnMinoParams = {
+  ...DEFAULT_TURN_MINO,
+  model: "hunter",
+  accuracy: 1,
+  pause: 0,
+  sleep: 100000,
+  followDelayMin: 1,
+  followDelayMax: 1,
+  followShortcut: 0,
+};
+
+function followerAtA(mud: ReadonlySet<number>): TurnMinotaur {
+  const t = new TurnMinotaur(lineGraph(), turnConfig(FOLLOWER_ONLY), turnSeed(5));
+  const v = (n: string): number => t.g.index.get(n)!;
+  t.setMonsters([{ kind: "follower", home: v("A") }], 5);
+  t.mud = mud;
+  return t;
+}
+
+function play(t: TurnMinotaur, edge: number): string {
+  const r = t.turn(edge);
+  t.setProgress(1);
+  return r;
 }
 
 describe("K137 s5 muddy runs", () => {
@@ -169,5 +223,60 @@ describe("K137 s5 muddy monsters", () => {
     expect(mud.mino.dir).toBe(plain.mino.dir);
     if (plain.mino.dir > 0) expect(mud.mino.pos).toBeLessThan(plain.mino.pos);
     else expect(mud.mino.pos).toBeGreaterThan(plain.mino.pos);
+  });
+
+  it("a waiting follower's first step over mud pays the mud turn (K782)", () => {
+    const t = followerAtA(new Set([1])); // A-B is muddy.
+    const v = (n: string): number => t.g.index.get(n)!;
+    expect(play(t, 0)).toBe("moved"); // S -> A; passing does not wake it.
+    expect(t.extras[0].phase).toBe("asleep");
+    expect(play(t, 1)).toBe("moved"); // A -> B; the follower sets off.
+    expect(t.extras[0].phase).toBe("waiting");
+    expect(play(t, 2)).toBe("moved"); // B -> C; its first step crosses A-B.
+    expect(t.extras[0].phase).toBe("awake");
+    expect(t.extras[0].state.v).toBe(v("B")); // It crosses, to the far end.
+    expect(t.extras[0].lastPath).toEqual([[1, v("B")]]);
+    expect(t.extras[0].state.mudWait).toBe(true); // And owes the mud turn.
+    expect(play(t, 3)).toBe("moved"); // C -> D; it spends the turn in the mud.
+    expect(t.extras[0].state.v).toBe(v("B"));
+    expect(t.extras[0].lastPath).toEqual([]);
+    expect(t.extras[0].state.mudWait).toBe(false);
+    expect(play(t, -1)).toBe("moved"); // It walks on along the trail.
+    expect(t.extras[0].state.v).toBe(v("C"));
+    expect(t.extras[0].lastPath).toEqual([[2, v("C")]]);
+  });
+
+  it("an awake follower pays the mud the same way (K782)", () => {
+    const t = followerAtA(new Set([2])); // B-C is muddy.
+    const v = (n: string): number => t.g.index.get(n)!;
+    expect(play(t, 0)).toBe("moved"); // S -> A.
+    expect(play(t, 1)).toBe("moved"); // A -> B; the follower sets off.
+    expect(play(t, 2)).toBe("moved"); // B -> C; it wakes over clean A-B.
+    expect(t.extras[0].state.v).toBe(v("B"));
+    expect(t.extras[0].state.mudWait).toBeFalsy();
+    expect(play(t, 3)).toBe("moved"); // C -> D; awake, it crosses B-C's mud.
+    expect(t.extras[0].state.v).toBe(v("C"));
+    expect(t.extras[0].lastPath).toEqual([[2, v("C")]]);
+    expect(t.extras[0].state.mudWait).toBe(true);
+    expect(play(t, -1)).toBe("moved"); // It spends the next turn in the mud.
+    expect(t.extras[0].state.v).toBe(v("C"));
+    expect(t.extras[0].lastPath).toEqual([]);
+    expect(t.extras[0].state.mudWait).toBe(false);
+  });
+
+  it("a snare on the muddy run cuts a waiting follower's first step first (K782)", () => {
+    const t = followerAtA(new Set([1])); // A-B is muddy.
+    const v = (n: string): number => t.g.index.get(n)!;
+    expect(play(t, 0)).toBe("moved"); // S -> A.
+    expect(play(t, 1)).toBe("moved"); // A -> B; the follower sets off.
+    expect(t.extras[0].phase).toBe("waiting");
+    expect(t.setSnare(1)).toBe(true); // A-B, laid from B.
+    expect(play(t, 2)).toBe("moved"); // B -> C; its first step meets the snare.
+    expect(t.extras[0].phase).toBe("awake");
+    expect(t.extras[0].state.v).toBe(v("A")); // Cut at the near end: no step.
+    expect(t.extras[0].lastPath).toEqual([]);
+    expect(t.extras[0].state.mudWait).toBeFalsy(); // No mud cut on a snare cut.
+    expect(t.snares[0].phase).toBe("holding");
+    expect(t.snares[0].holder).toBe(0);
   });
 });
