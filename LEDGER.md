@@ -517,9 +517,9 @@ Next free ID: K1184.
 - **K1178** · Muse batch 16: run A drafts the brief (`docs/design/K1178_muse_batch16_run_a.md`), runs B-I from
   the draft (Claude added H and I after B), after 16J.
   - owner: nobody since 2026-11-04 09:58 (16B done; runs H, I, then C-G queued as Muse chain runs 16H, 16I, 16C-16G, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `8211a12e`
+  - branch: mainline; last commit: `ab7cad9a`
   - evidence: `docs/design/K1178_muse_batch16_run_a.md`; the chain in `.claude/probes/K1053/` (queue.txt, chain.log)
-  - next: Run B done; next Run H
+  - next: Run H done; next Run I
   - brief: `docs/design/K1178_muse_batch16.md`
 - **K1179** · Thread geometry (Levi 11-04: rethink how thread bodies, junction rounds and gaps are built, maybe
   as a skin on the thread centres). Review (`docs/design/K1179_geometry_review.md`): keep threads and physics,
@@ -532,10 +532,10 @@ Next free ID: K1184.
 - **K1163** · Corner rounding (K1114, 8b436272): the root-gate guard leaves ten near-straight corners up to 1
   px tight, some with a concave cusp, in the border look (`tlk=border`). Levi 11-04, “Smoother is better”: the
   softer guard (band scaled by the tip, K1179 review section 4) is K1178 Run H.
-  - owner: nobody since 2026-11-04 09:58 (queued as Muse chain run 16H, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `8b436272`
-  - evidence: `docs/design/K1179_geometry_review.md` section 4; `.claude/probes/K1040/s1/out/s1i/`
-  - next: Run H (Muse chain run 16H), then Claude looks at its sheet and asks Levi with the rows
+  - owner: nobody since 2026-11-04 10:29 (Run H done in Muse batch 16)
+  - branch: mainline; last commit: `ab7cad9a`
+  - evidence: .claude/probes/K1040/s1/out/k1163/; docs/design/K1179_geometry_review.md section 4
+  - next: Claude looks at the sheet (.claude/probes/K1040/s1/out/k1163/sheet.png), then asks Levi with the rows
   - brief: `docs/design/K1178_muse_batch16.md` (Run H)
 
 ## Next, in order
