@@ -966,6 +966,19 @@ export class CrossingGaps {
     const cs = this.clearScratch;
     clearScales(jRoomNeg, silNeg, cutNeg, cs, 0);
     clearScales(jRoomPos, silPos, cutPos, cs, 2);
+    // K1218 S3, THE JOINT'S WINDOW CAP (perp): two arms of one fused joint
+    // that cross just before it run on into the joint side by side, so past
+    // the all-lanes exit the under arm RE-ENTERS the over arm's casing band
+    // as they converge, and the eye-wall limit kept the window open fade /
+    // sin past that exit: a dark casing lobe on the under arm inside the
+    // joint's own clearance, beyond the web's flank (loop ji 12's small
+    // triangle, 7474d09b's too). Once every lane is out, the window ends at
+    // the room; the window-end ramp dissolves the fade left there. A window
+    // never ends before its all-lanes exit, so no casing is chopped.
+    if (perp) {
+      winNeg = Math.min(winNeg, Math.max(jRoomNeg, allNeg + GAP_EXIT_PAD));
+      winPos = Math.min(winPos, Math.max(jRoomPos, allPos + GAP_EXIT_PAD));
+    }
 
     sampling.sampleAt(underSamples, underCenter, sc4, 0);
     this.r.gaps.writeSlot(slot, {
