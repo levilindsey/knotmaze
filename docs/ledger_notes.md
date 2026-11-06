@@ -3989,3 +3989,15 @@ in "ip" joins from one side with no crossing, right of the font's; the lead e an
 show no knee or notch at 2-3x; the o-to-k join runs along the top, far from the font's lower
 diagonal (ok 34.77 u), and k's two strokes part where the font's nearly coincide; the connector
 into e after o comes in higher than the font's (oe 12.69 u).
+
+## K1211 (2026-11-05, S3 reviewed)
+
+S3 (`docs/design/K1211_s3_lit_edge_web.md`, its Handoff; b15816f6 and fe2aef12, merged at 66752e75) fixed the lit edge's dark line (in mode 0 the pulse bands now go under the walked gold; pin `test/render/gold_edge.test.ts`) and spot 4, the web's bite at x4 ji 149 (a drawing band lights the web inside its turn; pin `test/render/web_light.test.ts`, 15 tests). K320 42,174 to 42,888; no other pin moved. Checks against c0a72eb8 (before S1 and S2): edge dips 0 at x4 and cross, 1 at loop (ji 88, in master and S2 too); (c) 47,884 px at x4 within 4.22 fh, 83 at cross, 24,891 at loop within 3.63 fh; the no-pulse, pure, fan-bands-off and webs-off controls 0 px; nub 0; sharpest corner 98 degrees.
+
+Claude viewed S3's sheets at full size (`.claude/probes/K1211/out3/sheets/` in S3's kept worktree): the 1-px darker line along the lit arc shows in S2's column and is gone in the branch's; the ")" teal sliver at x4 ji 149's right rim is gone; at rest the columns match. Spot 1's sharp curved light boundary below the gold remains, and spot 2's wedges: S4's (`docs/design/K1211_s4_soft_light.md`).
+
+Filed: K1221 (S3's leftovers). The (b) jumps S2 raised (the largest jump between moments: x4 ji 125 27.1 to 39.5, x4 ji 149 20.2 to 33.7, loop ji 88 27.9 to 43.2) go into S4's checks rather than a new item, since S4 rewrites the light they measure.
+
+## K1214 (2026-11-05, 22M reviewed)
+
+Run M (22M, 04ff7cad; `.claude/probes/K1214/SUMMARY.md`) re-timed 22E's stand on a quiet desktop, ABBA x4 under the perf lock, control spread 0.20 ms: K1139 S3+S4 (1fe793f5 to 71eedb94) p50 +1.00, p95 +1.13, p99 +1.43; S5 (36aed2d5 to fbc1b212) +0.07; master 734c55b9 (K1211 S2 in) against fbc1b212 -0.22. 22E's S5 step was its load's. Every CPU measure is flat or down across the builds (submit time, the JS phases, the CDP profile: joinery 42 to 32 ms over the window); what grows is the GPU stall (first draw to the readPixels return), 6.15 to 6.82 ms on pair 1, and hiding the junction fans removes most of it (+0.67/+0.60 to +0.18/+0.21). So the fan's fragment shader (`junction_field.ts`) carries about two thirds to three quarters of the step, on every frame (hence p50 too). Desktop frames stay near 8 ms at p95. Next: re-time after K1211 S4, which rewrites the fan's light (its brief asks what it adds per fan fragment), and watch the phone's frames in K1097's Pixel pass; a fix only if the phone's tail moves.
