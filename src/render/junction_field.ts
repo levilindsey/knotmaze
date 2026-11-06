@@ -314,14 +314,16 @@ vec3 junctionBase(int rec, vec2 p, vec4 hd, bool untrav) {
 // centerline polyline (and that point's tau); so does every pixel inside the
 // turn, between the band's two arms (K1219: no untraveled notch), each side
 // of the corner's middle by its own nearest point, the two blended across
-// the medial axis. In a web the band edge is a
+// the medial axis. The band edge is a
 // ROUTE_BAND_RAMP-pixel smoothstep CENTERED on the thread half-width, so the
-// band is the thread's width. On a cover strip the band stays
-// solid ROUTE_BAND_PAD pixels past the half-width before its ramp: the
-// strip's own edge is the ribbon's MSAA edge (4x samples sit within 0.4 px
-// of the pixel center, where this runs), and the pad keeps the untraveled
-// material out of it. The probe views (uKBase.z 3 / 4) show the base alone.
-vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
+// band is the thread's width. Where it runs along a cover strip's own edge
+// (across = distance from the strip's midline, K1218 S4) it stays solid
+// ROUTE_BAND_PAD px past the half-width: that edge is the ribbon's MSAA edge
+// (4x samples sit within 0.4 px of the pixel center, where this runs), and
+// the pad keeps the untraveled material out of it. A band edge crossing a
+// strip ramps as in a web. The probe views (uKBase.z 3 / 4) show the base
+// alone.
+vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip, float across) {
   vec4 hd = jAt(rec);
   int nr = int(j1.w + 0.5);
   bool routed = nr > 0 && hd.z > 0.5;
@@ -370,7 +372,8 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
     }
     bool nearA = bA.x <= bB.x;
     float bd = sqrt(nearA ? bA.x : bB.x);
-    float cov = strip ? clamp((reach - bd) / pxW, 0.0, 1.0) : 1.0 - smoothstep(uJParams.x - rw, uJParams.x + rw, bd);
+    float cov = 1.0 - smoothstep(uJParams.x - rw, uJParams.x + rw, bd);
+    if (strip) cov = max(cov, (1.0 - smoothstep(0.5 * pxW, 1.5 * pxW, abs(bd - across))) * clamp((reach - bd) / pxW, 0.0, 1.0));
     // K1219: inside the turn (between the band's two arms, under pi apart).
     ivec2 rk = ivec2(r0.zw + 0.5);
     bool inT = r0.w > -0.5 && jbS < TAU * 0.5 && (ivec2(jbA, jbB) == rk || ivec2(jbB, jbA) == rk);
@@ -463,6 +466,8 @@ ${GAP_FRAG_LIB_FAN}
 void main(void) {
   vec2 gfw = fwidth(vPos);
   float pxW = max(max(gfw.x, gfw.y), 1e-5);
+  // K1218 S4: vLook per world unit (a strip's across rate).
+  float lookG = length(vec2(dFdx(vLook), dFdy(vLook))) / pxW;
   int rec = int(vRec + 0.5);
   // A cover strip's aRec carries STRIP_REC_TAG.
   bool strip = fract(vRec) > ${(STRIP_REC_TAG / 2).toFixed(3)};
@@ -543,7 +548,7 @@ void main(void) {
     lookA = mix(fillOn, 1.0, fanEdge);
   }
   if (aM <= 0.002) discard;
-  vec3 rgb = junctionField(rec, vPos, pxW, j1, strip);
+  vec3 rgb = junctionField(rec, vPos, pxW, j1, strip, abs(vLook - 0.5) / max(lookG, 1e-6));
   if (uKLook.x > 0.5 || lookIntro) {
     vec3 stroke = mix(mix(rgb * 0.30, vec3(0.09, 0.085, 0.08), 0.5), uKBorder.rgb, uKBorder.w);
     rgb = uKLook.x > 0.5 && uKLook.x < 1.5
@@ -590,8 +595,8 @@ export const FIELD_EXPLORE_EDITS: ReadonlyArray<readonly [string, string]> = [
   ],
   ["  vec3 cA = vec3(0.0);\n  vec3 cB = vec3(0.0);", "  vec4 cA = vec4(0.0);\n  vec4 cB = vec4(0.0);"],
   [
-    "vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {",
-    "vec4 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {",
+    "vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip, float across) {",
+    "vec4 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip, float across) {",
   ],
   [
     "  vec3 c = junctionBase(rec, p, hd, routed && fz < 0.5);",
@@ -604,8 +609,8 @@ export const FIELD_EXPLORE_EDITS: ReadonlyArray<readonly [string, string]> = [
   ["      vec3 bm = vec3(0.0);", "      vec4 bm = vec4(0.0);"],
   ["        vec3 sm = armPaint(", "        vec4 sm = armPaint("],
   [
-    "  vec3 rgb = junctionField(rec, vPos, pxW, j1, strip);",
-    "  vec4 exC = junctionField(rec, vPos, pxW, j1, strip);",
+    "  vec3 rgb = junctionField(rec, vPos, pxW, j1, strip, abs(vLook - 0.5) / max(lookG, 1e-6));",
+    "  vec4 exC = junctionField(rec, vPos, pxW, j1, strip, abs(vLook - 0.5) / max(lookG, 1e-6));",
   ],
   [
     "  if (uKLook.x > 0.5 || lookIntro) {\n    vec3 stroke = mix(mix(rgb * 0.30, vec3(0.09, 0.085, 0.08), 0.5), uKBorder.rgb, uKBorder.w);\n    rgb = uKLook.x > 0.5 && uKLook.x < 1.5\n      ? stroke\n      : mix(rgb, stroke, lookEdge * 0.9);\n  }",

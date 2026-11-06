@@ -236,7 +236,8 @@ export class Joinery {
       y: number,
       out: Float32Array,
       px?: number,
-      strip?: boolean
+      strip?: boolean,
+      across?: number
     ) => boolean;
     arms: (ji: number) => unknown[];
     routes: (ji: number) => unknown[];
@@ -370,7 +371,9 @@ export class Joinery {
   // which antialias the paint over their own step): FIELD_GLSL
   // junctionField, K81 route bands included. px = world units per pixel
   // (the shader's pxW, floored the same way); strip = the pixel belongs to
-  // a cover strip (the band's solid pad).
+  // a cover strip (the band's solid pad), across = its distance from the
+  // strip's midline (K1218 S4: the pad holds only where the band runs
+  // along the strip's edge; -1 = unknown, padded everywhere).
   // Under the thread reveal (K268 stage 2) the color is premultiplied and
   // out[3] is its alpha (the strips'); with the reveal off out[3] is 0.
   private cpuJunctionField(
@@ -379,7 +382,8 @@ export class Joinery {
     y: number,
     out: Float32Array,
     px = 0,
-    strip = false
+    strip = false,
+    across = -1
   ): void {
     const J = recordData().data;
     const at = (i: number): number => i * 4;
@@ -543,7 +547,8 @@ export class Joinery {
     // K81 ROUTE BANDS, oldest first (FIELD_GLSL junctionField): the nearest
     // point of each band's centerline polyline and its tau; a
     // ROUTE_BAND_RAMP-pixel smoothstep centered on the half-width (a cover
-    // strip: solid ROUTE_BAND_PAD pixels further, then a one-pixel ramp).
+    // strip where the band runs along its edge: solid ROUTE_BAND_PAD pixels
+    // further, then a one-pixel ramp).
     const pxW = Math.max(px, 1e-5);
     const reach = fillHalf + (ROUTE_BAND_PAD + 1) * pxW;
     const rw = (ROUTE_BAND_RAMP / 2) * pxW;
@@ -594,13 +599,18 @@ export class Joinery {
       }
       const nearA = bAd <= bBd;
       const bd = Math.sqrt(nearA ? bAd : bBd);
-      let cov: number;
+      // GLSL smoothstep(hw - rw, hw + rw, bd), exactly.
+      const t = Math.max(0, Math.min(1, (bd - (fillHalf - rw)) / (2 * rw)));
+      let cov = 1 - t * t * (3 - 2 * t);
       if (strip) {
-        cov = Math.max(0, Math.min(1, (reach - bd) / pxW));
-      } else {
-        // GLSL smoothstep(hw - rw, hw + rw, bd), exactly.
-        const t = Math.max(0, Math.min(1, (bd - (fillHalf - rw)) / (2 * rw)));
-        cov = 1 - t * t * (3 - 2 * t);
+        // K1218 S4: the pad where the band runs along the strip's own edge
+        // (|bd - across| under a pixel); across < 0 (unknown) pads everywhere.
+        let pw = 1;
+        if (across >= 0) {
+          const u = Math.max(0, Math.min(1, (Math.abs(bd - across) - 0.5 * pxW) / pxW));
+          pw = 1 - u * u * (3 - 2 * u);
+        }
+        cov = Math.max(cov, pw * Math.max(0, Math.min(1, (reach - bd) / pxW)));
       }
       const two = J[r0 + 3] > -0.5;
       const inArm = Math.round(J[r0 + 2]);
@@ -1281,10 +1291,10 @@ export class Joinery {
     // the joint, the blend keeps FIELD_BLEND_MIN of the wedge angle,
     // centered. PROBE HOOK: the CPU reference over THIS rebuild's records.
     this.fieldProbe = {
-      at: (ji, x, y, out, px = 0, strip = false) => {
+      at: (ji, x, y, out, px = 0, strip = false, across = -1) => {
         const rec = recs[ji];
         if (!rec || rec.rb < 0) return false;
-        this.cpuJunctionField(rec.rb, x, y, out, px, strip);
+        this.cpuJunctionField(rec.rb, x, y, out, px, strip, across);
         return true;
       },
       arms: (ji) => recs[ji]?.arms ?? [],
