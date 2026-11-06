@@ -3868,3 +3868,9 @@ Claude's crops of `.claude/probes/K863/trace/out33/png/corners_v68.png` (font, v
 ## K1208 (2026-11-05, Run E's gate)
 
 Run E (22E) started at 10:47:42. Its agent went idle at 10:59:31 saying it would report once its timing completes: the ABBA bench it started at 10:53:49 under the perf lock was still running. The chain's gate counted any commit since the run started, so J3j's merge and Claude's ledger push let 22E pass at 11:00:35, and Run F started at 11:00:42. Fixed in `.claude/probes/K1053/chain.ps1` (untracked): after a run, a commit since its start must name the run's tag (Muse's commits end "(Muse batch 22 Run E, 22E)"). The running chain keeps the old gate until its next start. E's timings are taken under load (K1211 S1's previews and shoots, Run F); its report must say so.
+
+## K1191 (2026-11-05, Run F)
+
+The item's text before: K1139 Stage 4 leftovers (`docs/design/K1139_s3b_fix.md`): the full model's 12/6/11 threshold flips; no arc-true tau rate or obliqueness in the classifier; ji 147 arm 1's bright GPU colours, unexplained (candidate gk). Batch 19 Run D examined the rest: none blocks K1139's merge (`.claude/probes/K1191/`)
+
+Run F (Muse batch 22, 22F; 4c7867da, its ledger update 4ef96746; `.claude/probes/K1191/gk147.mjs`, `gk147.txt` and `gk147.md`) modelled gk at ji 147 arm 1's bright pixel-phases from K1139 Stage 4's x4 dump; npm test green (217 files, 2896 tests). The report's proposed text for the item: "ji 147 arm 1's bright GPU colours: not found in `4c7867da` (gk modelled at the 276 px-phases from Stage 4's x4 dump, `.claude/probes/K1191/gk147.mjs`/`gk147.md`: binary discard under the foot/debug/for readings reaches 0-10 of 36 at the bright phases, a fitted per-pixel keep 30-31; the dump holds no gap-slot centreline, strength or per-sample under-colour)." So gk as recorded does not make the colours, and a fuller model needs data the dump does not hold. K1211's rework of the junction light may change what this models.

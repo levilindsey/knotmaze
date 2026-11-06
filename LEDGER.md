@@ -519,10 +519,10 @@ Next free ID: K1214.
   - env: the passes' builds first and never while Muse runs: `scripts/preview.ps1 -Ref <sha> -Root <out>\builds -BuildOnly` for each sha (`pixel_passes.ps1` stops before the phone lock when one is missing); probe server `npx vite --config .claude/probes/K1139/vite.private-cache.config.ts --port 5620 --strictPort --host 127.0.0.1` from a worktree (ports 5620-5639); GPU probes through `.claude/probes/K1139/run_locked.ps1 -Batch`
 - **K1208** · Muse batch 22 (after K1204's batch 21): runs B to H through the chain, from
   `docs/design/K1208_muse_batch22.md` (ports 5880-5949)
-  - owner: the chain in `.claude/probes/K1053/` (queue.txt, chain.log): Run F (22F) since 11:00, a fresh Muse session; coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
-  - branch: mainline; last commit: `4c7867da`
-  - evidence: the chain in .claude/probes/K1053/ (queue.txt, chain.log); each run's probe folder (B: K1203, H: K1210, C: K1186, E: K1196, F: K1191, all under .claude/probes/)
-  - next: Run F done; Claude reviews it; all runs are in (Run G held)
+  - owner: the chain in `.claude/probes/K1053/` (queue.txt, chain.log): Run G (22G) next, a fresh Muse session; coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
+  - branch: mainline; last commit: `4ef96746`
+  - evidence: the chain in .claude/probes/K1053/ (queue.txt, chain.log); each run's probe folder under .claude/probes/ (B K1203, H K1210, C K1186, E K1196, F K1191, G K1198)
+  - next: G (K1198: ij on v6.8, then the six pins) queued; F reviewed (4c7867da, K1191); E's agent idle while its ABBA bench times: Claude sends its finish when the bench ends and no run is going; D held for K1211; Run I (K1209's re-apply) after K1211 S1 merges
   - brief: `docs/design/K1208_muse_batch22.md`
 
 ## Next, in order
@@ -1691,8 +1691,8 @@ Every other item below waits on the trigger it names.
   there, fetch, then reset to origin/master (after saving any local work); never pull, which would merge the
   old history back (Levi 11-04 dropped K1166).
 - **K1191** · K1139 Stage 4 leftovers (`docs/design/K1139_s3b_fix.md`): the full model's 12/6/11 threshold
-  flips; no arc-true tau rate or obliqueness in the classifier; ji 147 arm 1's bright GPU colours, unexplained
-  (candidate gk). Batch 19 Run D examined the rest: none blocks K1139's merge (`.claude/probes/K1191/`)
+  flips; no arc-true tau rate or obliqueness in the classifier; ji 147 arm 1's bright GPU colours (gk as
+  recorded doesn't make them: 22F, 4c7867da, `.claude/probes/K1191/gk147.md`). 19D: the rest blocks no merge.
 - **K1193** · Cursive c (v7.1, J3h): 14 of the 26 c joins sit at the 10 u bound of c's exit port
   (`docs/design/K1112_cursive_j3h.md`, Handoff)
 - **K1194** · Cursive v7.0: c's lead-in is rough FAIL in c-initial words (facet 0.0098), and the er and es
@@ -1702,7 +1702,7 @@ Every other item below waits on the trigger it names.
   -Root are refused as a live run until it is cleared by hand
 - **K1198** · Cursive ij: the font's ligature draws no j; show i and j on v6.8 in a stage of its own. J3i's
   corner rule (Plc1m, Plc2m) not taken: v6.8's corners already match the font's points (2026-11-05 crops);
-  batch 22's Run G dropped. 21G's notes: `.claude/probes/K1198/SUMMARY_21G.md` (e43b2cfc).
+  batch 22's Run G (22G) is that stage. 21G's notes: `.claude/probes/K1198/SUMMARY_21G.md` (e43b2cfc).
 - **K1205** · A warm Pixel draws fabric at rest at 30 fps: at thermal status 1 (skin 39-40 C) 0 moves read p50
   33.1 (builds 36aed2d5 and fbc1b212) while 7 moves held 16.7; cool, 0 moves holds 16.7 (K1139's passes
   `.claude/probes/rounds/2026-11-05-k1139s5`, `-s5b`). Cause untested (notes)

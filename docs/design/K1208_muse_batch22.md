@@ -25,7 +25,11 @@ that day:
 - **Run G held.** Levi rejected the joins Plc1m sits on (K1119:
   v6.8 kept on every sheet; K1197: c's old joins kept), so Run G
   is not queued. Its section stays for the record; do not run it.
-
+- **Run G redrafted** (later on 2026-11-05): K863's J3j rebuilt the
+  approved version, v6.8, and Claude found that J3i's corner rule
+  (Plc1m, Plc2m) adds nothing visible on it (K1198's notes). Run G
+  now shows i and j in ij on v6.8, drops Plc1m, and checks the six
+  join pins K1112 may delete. It runs after Run F (tag `22G`).
 Runs came from the candidates in Run A's order:
 
 - (1) Junction work (Levi, 2026-11-04: "perfecting all junction
@@ -88,7 +92,7 @@ batch 8's ten rules and the shared process in
 `docs/design/K1050_muse_week.md`) before anything else. Read
 K1208 wherever it, or a page it sends you to, says K1204, K1199,
 K1192, K1189, K1184, K1178, K1169 or K1131; the chain tags are
-22B to 22H (22G held), and Claude starts them one at a time. Batch
+22B to 22H (22D held; 22G redrafted), and Claude starts them one at a time. Batch
 22 uses ports 5880-5949; each run below names its own range. After
 each run, update K1208's handle (the next run in B, H, C, D, E, F
 order, or, after F, that all the runs are in and Claude reviews
@@ -111,8 +115,7 @@ $env:TEMP\knotmaze-previews -BuildOnly`. If node_modules looks
 broken, repair it with `npm install` (never `npm ci`) and say
 so in the report.
 
-No Claude agent will be running when batch 22's runs start.
-Claude runs the phone passes; no run touches the phone.
+Claude agents may run beside a run, each in its own worktree (a run's section names any whose files it shares); never touch their worktrees or files. Claude runs the phone passes; no run touches the phone.
 
 ## Run B - K1207: settle the two pulse switches (cover ramp out, end window the only path)
 
@@ -927,148 +930,130 @@ apply by hand. Then:
 After the run, update K1208's handle:
 `node C:\Users\lsl\Repositories\claude-config\tools\ledger.mjs handle K1208 --last-commit <sha8> --next "Run F done; Claude reviews it; all runs are in (Run G held)"`
 
-## Run G - K1198's next piece: only the ligature lookups emptied, under Plc1m
+## Run G - K1198: i and j in ij on the approved base (v6.8), only the ligature lookups emptied
 
-**Held (Claude, 2026-11-05):** not queued. Plc1m sits on v7.2's c
-joins and v7.0's b, v and w exits, and Levi rejected both (K1197,
-K1119). K863's next stage restores the approved joins first; this
-run is redrafted against them later.
+**Redrafted (Claude, 2026-11-05).** The first draft ran under
+Plc1m, which sat on v7.2's c joins and v7.0's b, v and w exits;
+Levi rejected both (K1197, K1119) and kept v6.8, which K863's J3j
+rebuilt as the kit's current build (`work33/`). Claude's crops
+found J3i's corner rule adds nothing visible on v6.8, so this run
+drops Plc1m: it shows i and j in ij on v6.8 and changes nothing
+else, then checks the six join pins.
 
-**Chain tag:** 22G · **Suggested ports:** 5930-5939 (unused:
-this run renders no page, starts no server and takes no
-lock).
+**Chain tag:** 22G · **Ports:** 5930-5939 (unused: this run
+renders no page, starts no server and takes no lock).
 
-This run is the cursive run (Run A holds one of the six for
-it). Work is in `.claude/probes/K1198/` from 21G's copies; the
-K863 kit stays as it is (landing Plc1m waits on K1197). It
-keeps `calt` and empties only the font's ligature-substitution
-lookups, censuses the result under Plc1m, and sheets ij and
-fr/fs for Claude's look. Probes only; nothing lands.
+Work in `.claude/probes/K1198/` (`git add -f`). Nothing under
+`.claude/probes/K863/` changes: a Claude stage agent (K863 J3k)
+works there now in its own `work34/`, `out34/` and one NOTES.md
+entry; never touch them. Probes only; nothing lands in `src/`.
 
 ### Read first
 
-- The ledger's K1198 (quoted below) and
-  `docs/ledger_notes.md`'s `## K1198` judgment of Run G: of the
-  676 lowercase pairs only ij ligates (`ij.jmc`, GSUB lookup 26,
-  filed under `calt`); ij's join solves through the ports (side
-  0.0010 u under Plc1m), but `calt` also makes every font
-  connector, so shaping with `calt` off everywhere leaves all
-  334 font distances nan and moves all 234 census strings
-  (`.claude/probes/K1198/gates_21g.txt`). The narrower rule
-  below is the next piece.
-- `.claude/probes/K1198/SUMMARY_21G.md` (21G, whole): how 21G
-  worked (its own folder, `K926_FINAL_E=shear`, `K1009_PINS`
-  cleared except the pin test, at most 4 processes), Plc1m's
-  sheets, the four distances and the fr/fs pin numbers this run
-  sheets from (`.claude/probes/K1198/distances_21g.txt` and
-  `pins_21g.txt`: fr 6.34 u with its pins, 5.30 u without; fs
-  9.36 u with, 9.38 u without).
-- `.claude/probes/K1198/ligature_21g.txt` (the list): ij splits
-  only with `calt` off (`i.mod` + `j.jmc`); `liga`, `clig`,
-  `dlig`, `hlig`, `rlig`, `ccmp` and `ss02` off each leave the
-  ligature, and the font has no `liga` feature.
-- 20G's bench in `.claude/probes/K1198/` (c3ab0a46, the one
-  21G gated against):
-  `census_Plc1m.json` and `census_Plc1m.txt` (Plc1m, `calt` on:
-  718 pieces, 333 joins, hooks 50, spikes 77, rough 147, seams
-  6, over budget 399, in `gates_21g.txt`), and
-  `ports_k1112cusp.json` (Plc1m's ports, the variant this run
-  censuses under).
+- The ledger's K1198 and every `## K1198` entry in
+  `docs/ledger_notes.md` (the newest: the corner rule not taken).
+- `docs/design/K863_trace.md`, "Judging a look" (binding: the
+  eye picks; checks only rule a candidate out).
+- `docs/design/K863_cursive_j3j.md`'s Handoff, and only the
+  `## K863 base` entry of the kit's NOTES.md (find it with
+  Select-String; the file is large): how v6.8 is built, its tools
+  (`work33/dbg/*_k863j.*`) and its rerun (`pwsh -NoProfile -File
+  work33\dbg\checks_k863j.ps1 [step ...]`, from
+  `.claude/probes/K863/trace/`).
+- `.claude/probes/K1198/SUMMARY_21G.md` (whole) and
+  `ligature_21g.txt`: of the 676 lowercase pairs only ij ligates
+  (`ij.jmc`, GSUB lookup 26, filed under `calt`); `calt` off splits
+  ij into `i.mod` + `j.jmc` but unmakes every font connector (all
+  334 font distances nan, all 234 census strings moved,
+  `gates_21g.txt`); 21G's font-path note and its pin test.
+- K1212 in the ledger: the kit's census faults (g2 reads
+  `angle_deg` where the census writes `ang_deg`; rowsame keys rows
+  by word number; the word lists repeat ids). Compare censuses
+  with J3j's `same_k863j.py`, which works around the last two, and
+  say wherever a fault touches a number you report.
 
 ### What is there today
 
-> **K1198** · Cursive v7.2's leftovers (J3i). 21G (e43b2cfc; notes, `.claude/probes/K1198/SUMMARY_21G.md`):
-> Plc1m reads as well as v7.2 and replaces it (lands with K863 after K1197). ij's join solves through
-> the ports; calt off drops every font connector. Batch 22: only the ligature lookup off, fr/fs pins' look
-
-Plc1m is judged the variant K863 lands, and ij's hidden join
-solves cleanly through its ports. The one open step is a
-shaping rule that exposes ij without unmaking the other 333
-joins' connectors: empty the ligature lookups, keep the rest
-of `calt`.
+v6.8 shapes ij as the font's ligature `ij.jmc`, and the hand
+draws no j there (J3j's Handoff). The bench is J3j's census of
+J3i's word list on v6.8 (`census_v68x` in `work33/`: 718 rows, 713
+ids, `calt` on). K1112 (re-scoped 2026-11-05) deletes one of the
+six pins (og, oe, fo, fv, fr, fs) only when the join without it
+draws v6.8's.
 
 ### Tasks
 
-Work is in `.claude/probes/K1198/`: work from 21G's copies
-there, and copy there anything else this run changes; nothing
-under `.claude/probes/K863/` changes. 21G's font-path note
-stands: a copied file that reads the kit's font by its absolute
-path may need that path read as the kit's JMJ Cursive face -
-say it if so; do not rebuild kit state into the kit.
-
-Ports 5930-5939 (no browser; unused). Use at most 4 workers on
-this machine, `python -I`, with `K926_FINAL_E=shear` set and
-`K1009_PINS` unset (the default pins) before every solver call,
-as 21G did (the pin sheet aside).
+Copy into `.claude/probes/K1198/` (names ending `_22g`) every file
+this run changes, and run from those copies; read the kit's inputs
+in place. At most 4 Python processes, and at most 2 while
+`$env:TEMP\claude-perf.lock` exists (another run may be timing);
+`python -I` with the kit's venv; `K926_FINAL_E=shear` set and
+`K1009_PINS` unset before every solver call, as J3j did (the pin
+builds of task 5 aside).
 
 1. **The rule.** Keep `calt` and empty every GSUB
-   ligature-substitution lookup (lookup type 4, found by its
-   type, never by name, number or pair; an Extension lookup,
-   type 7, counts by the type its subtables wrap) in memory with
-   fontTools, so shaping ligates nothing while every connector
-   `calt` makes still shapes. If that cannot be done cleanly
-   (the lookups cannot be emptied without touching another
-   lookup's subtables), re-shape only the clusters that ligate
-   instead, and say which and why in the report. No per-pair
-   data ships in either form.
-2. **The census.** Census the corpus under Plc1m
-   (`ports_k1112cusp.json`) with the rule applied, against 20G's
-   bench (`census_Plc1m.json`, `calt` on). Gates: every census
-   string but ij shapes glyph for glyph as on the bench and
-   every join but ij keeps its font distance and geometry; ij's
-   join solves through the ports (status 0, side at least
-   -0.05 u) and, if the font now draws its own i-to-j connector,
-   its font distance is measured. Run the census twice; the
-   two runs hash the same. If the rule moves more than ij, list
-   what moved and stop there (do not tune past it).
-3. **The sheets.** For Claude's look, under
-   `.claude/probes/K1198/`: ij three ways (the font's ligature,
-   the font's unligated ij if it draws one, the solved join),
-   and fr, fs and their words with and without the fr/fs pins
-   under Plc1m (`pins_21g.txt` holds 21G's numbers: fr attaches
-   at 2.00 u with its pins and 1.00 u without, fs the same).
-   Each sheet labels its hand and its pin setting; a join a
-   hand cannot draw says so in its cell.
-4. **Gates table.** One table: 20G's bench against this run's
-   (pieces, joins, hooks, spikes, rough, seams, over budget,
-   side, and the first row where the run diverges from its
-   bench), with task 2's glyph-for-glyph result beside it.
+   ligature-substitution lookup (type 4, found by its type, never
+   by name, number or pair; an Extension lookup, type 7, counts by
+   the type its subtables wrap) in memory with fontTools, so
+   shaping ligates nothing while every connector `calt` makes
+   still shapes. If that cannot be done cleanly, re-shape only the
+   clusters that ligate instead, and say which and why. No
+   per-pair data in either form.
+2. **The build.** Rebuild v6.8 with the rule (v6.8's template and
+   ports, `work28/ports_k990e.json` variant M, as J3j's build) into
+   `.claude/probes/K1198/v68_22g/`.
+3. **The census.** Census J3i's word list on the rebuild against
+   the bench. Gates: every string without ij shapes glyph for
+   glyph as on the bench, and every piece of those words is
+   identical (`same_k863j.py`: 0 differences); in ij's words only
+   i's exit, the i-to-j join and j's pieces may move. ij's join
+   solves through the ports (status 0, side at least -0.05 u); if
+   the font now draws its own i-to-j connector, measure its font
+   distance. Run the census twice: the two runs hash the same. If
+   the rule moves anything else, list what moved and stop there
+   (do not tune past it).
+4. **The ij sheet** (`.claude/probes/K1198/out_22g/`, SVG and PNG
+   at J3i's `Png` dpi, every column labelled): ij alone and each
+   word of the list that holds it, as the font's ligature, the
+   font's unligated ij (if it draws one), v6.8 today and v6.8 with
+   the rule. A cell a hand cannot draw says so.
+5. **The pins (last; the stop rule may cut it).** For each of the
+   six pins, build v6.8 without it (SUMMARY_21G.md's pin test
+   shows how to switch one off) and sheet the pair and two words
+   that hold it: font, v6.8 (with the pin), without the pin. One
+   table: each join's gap, angle, dk and font distance with and
+   without its pin.
+6. **Gates table.** The bench against the rebuild (pieces, joins,
+   hooks, spikes, rough, seams, over budget, side, and the first
+   row where the rebuild diverges), with task 3's glyph-for-glyph
+   result beside it.
 
 ### Done and close
 
 **Done when:**
 
 - The rule is stated (lookups emptied by type, or the
-  cluster-only fallback with its reason), with no per-pair
-  data in it.
-- The census under Plc1m reads glyph for glyph as the bench on
-  every string but ij, every join but ij keeps its distance and
-  geometry, and ij solves through the ports (status 0, side at
-  least -0.05 u; its font distance measured if the font draws
-  the connector) - or what moved past ij is listed, and the run
-  stops there.
+  cluster-only fallback with its reason), with no per-pair data.
+- The rebuild matches the bench glyph for glyph and piece for
+  piece outside ij's words, and ij solves through the ports
+  (status 0, side at least -0.05 u; its font distance measured if
+  the font draws the connector), or what moved past ij is listed
+  and the run stopped there.
 - The two census runs hash the same.
-- The ij sheet (three ways) and the fr/fs sheets (with and
-  without the pins) exist under `.claude/probes/K1198/`.
-- Nothing under `.claude/probes/K863/` changed (any file the
-  run changed is copied to `.claude/probes/K1198/` first).
+- The ij sheet exists under `.claude/probes/K1198/out_22g/`, and
+  the pin sheets and table if task 5 ran.
+- Nothing under `.claude/probes/K863/` changed.
 
 **Close lines:**
 
-This close rewrites K1198's text (`ledger.mjs` has no command
-for it): the report must give the item's new text, with the
-piece recorded ("only the ligature lookups emptied in <sha8>
-(<by type | cluster fallback, reason>): census under Plc1m
-glyph for glyph but ij (<moved list, or none>), ij solved
-through the ports (status 0, side <value>, font distance
-<value | no font connector>); sheets at
-`.claude/probes/K1198/` (<sheets>); fr/fs pins <numbers> for
-Claude's look") and the decisions kept - Plc1m lands with K863
-after K1197, and ij lands only as this run's solved shape - for
-Claude to apply by hand. Then:
+The report gives K1198's new text for Claude to apply (the item
+keeps three lines): what the rule is and its commit, what moved
+(ij's words only, or the list), ij's status, side and font
+distance, the sheets' folder, and the pins' numbers if task 5 ran.
+Claude looks at the sheets; nothing is judged in the run. Then:
 
 After the run, update K1208's handle:
-`node C:\Users\lsl\Repositories\claude-config\tools\ledger.mjs handle K1208 --last-commit <sha8> --next "Run G done; Claude reviews it, all batch 22 runs are in"`
+`node C:\Users\lsl\Repositories\claude-config\tools\ledger.mjs handle K1208 --last-commit <sha8> --next "Run G done; Claude reviews it"`
 
 ## Run H - K1210: fire and collapse across junctions, against the pulse
 
