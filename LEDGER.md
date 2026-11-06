@@ -509,13 +509,13 @@ Next free ID: K1221.
   - next: K1211 first: the light inside junctions (Levi 2026-11-05: one seamless unit; the bands may go); then Levi's look K1200 (`docs/asks/K1200.md`), K1201 (its fix (b), Run 22D, held for K1211), S6 (plan section 5) after K1140's Glimpse picks. The next pulse step's Pixel pass watches fabric 7 moves' frames over 25 ms (+14 and +15 in the fix's and S5's passes, floor 13)
   - brief: the plan `docs/design/K1139_pulse_junctions.md` section 5 (S6); S5 was Muse batch 20's Run B (`docs/design/K1199_muse_batch20.md`)
   - env: the passes' builds first and never while Muse runs: `scripts/preview.ps1 -Ref <sha> -Root <out>\builds -BuildOnly` for each sha (`pixel_passes.ps1` stops before the phone lock when one is missing); probe server `npx vite --config .claude/probes/K1139/vite.private-cache.config.ts --port 5620 --strictPort --host 127.0.0.1` from a worktree (ports 5620-5639); GPU probes through `.claude/probes/K1139/run_locked.ps1 -Batch`
-- **K1208** · Muse batch 22 (after K1204's batch 21): runs B to M through the chain, from
+- **K1208** · Muse batch 22 (after K1204's batch 21): runs B to N through the chain, from
   `docs/design/K1208_muse_batch22.md` and the later runs' own briefs (ports 5880-5999)
-  - owner: the chain in `.claude/probes/K1053/` (queue.txt, chain.log): Run L (22L) since 14:08, then M (22M), fresh Muse sessions; coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
+  - owner: the chain in `.claude/probes/K1053/` (queue.txt, chain.log): Run L (22L) since 14:08, then M (22M) and N (22N), fresh Muse sessions; coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
   - branch: mainline; last commit: `0f63e3d5`
   - evidence: the chain in .claude/probes/K1053/ (queue.txt, chain.log); each run's probe folder under .claude/probes/ (B K1203, H K1210, C and I K1186, E K1196, F K1191, G K1198)
-  - next: L (cursive residuals on v6.8), then M (the frame tail in play; released, K1211 S2 landed in a84225d3); D held for K1211; K reviewed (K744, K734, K15, K218 done; K678 dropped; K424 stays; K1220 filed)
-  - brief: `docs/design/K1208_muse_batch22.md`; I to M: K1209_reapply_run_i.md, K647_reset_win_card.md, K1208_run_k_junction_residuals.md, K1208_run_l_cursive_residuals.md, K1214_profile_run_m.md (docs/design/)
+  - next: L (cursive residuals on v6.8), then M (the frame tail in play), then N (K1220: what draws the text forks' disc and steps); D held for K1211; K reviewed (K744, K734, K15, K218 done; K678 dropped; K424 stays; K1220 filed)
+  - brief: `docs/design/K1208_muse_batch22.md`; I to N: K1209_reapply_run_i.md, K647_reset_win_card.md, K1208_run_k_junction_residuals.md, K1208_run_l_cursive_residuals.md, K1214_profile_run_m.md, K1220_run_n_text_forks.md (docs/design/)
 
 ## Next, in order
 
