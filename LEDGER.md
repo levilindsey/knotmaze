@@ -746,7 +746,7 @@ Every other item below waits on the trigger it names.
   re-time after K1211 S4 rewrites the fan's light, and the phone in K1097's pass. `.claude/probes/K1214/`
 - **K1220** · Text forks: a disc with a round edge inside, steps where the arms' straight cuts meet it
   (22N, 655eb6a9): glyph arms under 0.15 world get no field record, so a host-axis disc draws the fork.
-  Next: a Claude fix stage after K1211 S4 (the same files); notes. `.claude/probes/K1220/run_n/`
+  Next: S1 once K1211 S4 merges (the same files), `docs/design/K1220_s1_text_forks.md`; notes.
 
 ## Residuals (known, not fixed)
 
