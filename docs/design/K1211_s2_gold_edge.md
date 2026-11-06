@@ -192,7 +192,7 @@ junctions; the T and the four are a second mechanism, the crossing-gap mask.**
 
 Tools: `run_shots2.ps1` is S2's copy of S1's `run_shots.ps1` (owner `K1211-S2`, the same lock
 rule) that runs `shoot2.mjs` jobs (and `smoke2.mjs`, `checks2.mjs`, `crops2.mjs`, `hcat.mjs`,
-all untracked in `.claude/probes/K1211/`).
+committed in `.claude/probes/K1211/`; the shots in `out2/` stay untracked).
 
 SHAs after the Run I rebase (below): Task 1 is f53811ff (30e07f21 before), Task 0's notes
 28e231d4, Task 2's fix ab46d41a, its tests 1341eeac.
