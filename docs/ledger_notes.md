@@ -3930,3 +3930,33 @@ Closed: the kit draws ij now. K863's next stage adopts the unligated font copy i
 ## K1112 (2026-11-05, 22G's six pins)
 
 Run G (K1198's notes) drew the six hand-set pins og, oe, fo, fv, fr, fs without their pins: every join moves, so by this item's rule each pin stays. Without them og, oe and fr come closer to the font, fo and fv move away and fs is unchanged; a port that draws v6.8's join is what would make a pin removable, and none does yet.
+
+## K1213 (2026-11-05, J3k's candidates; card filed)
+
+The item before the card: "Cursive v6.8 (K863 work33): the six q$ word-final tails are undesigned seams (dk
+10.6/u in J3j's census); p and s end with no tail; the i and j dots are drawn as ticks.
+`docs/design/K863_cursive_j3j.md` Handoff."
+
+J3k (merged 0136f455; Handoff in `docs/design/K863_cursive_j3k.md`, evidence in
+`.claude/probes/K863/trace/work34/` and `out34/png/`) drew one candidate per spot. None moves a piece
+outside its spot over the 232 test words (`local_k863k`).
+
+| Candidate | Pieces | At the spot, against v6.8 |
+|---|---|---|
+| S1: s cut at the curl | 14 | ends 2.93 u from the skeleton's end (v6.8 runs 77.41 u past it) |
+| S2: s cut at the font's end | 14 | ends 0.19 u from it |
+| P1: p's bowl closed into the stem | 13 | ends 0.26 u from the skeleton (v6.8 runs 82 u past) |
+| Q1: q's tail refit | 6 | exit dk 10.6 to smooth; hooks 1 to 0; distance max/mean 1.06/0.75 to 1.17/0.84 u; badness 270 to 44-84 |
+| D1: round dot | 41 in 38 words | overlap with the font's dot 0.570 to 0.805; ink outside 23 to 0 |
+| D2: the font's oval dot | 41 | overlap 0.967-0.970; ink outside 5-6 u2; uncovered 5 u2 |
+
+ALL = S2+P1+Q1+D2: 74 pieces in 68 words. J3k leaned S2 (or S1), P1, Q1 and D2.
+
+For the stage that adopts the picks (not items yet):
+- Q1 has a slight S within about 1.5 u of q's exit: facet 0.030 against the limit 0.0053 (v6.8: 1.233);
+  it can't be seen at 5x.
+- q's tail is shorter and lower than the font's in both v6.8 and Q1 (34.42 to 33.08 u).
+
+Card: `docs/asks/K1213.md`. Its picture, `.claude/probes/K863/trace/work34/look/card_k1213.png`, stacks
+J3k's crops (crop_spot_s_boxes, crop_spot_p_ap, crop_dots_it_3x, crop_spot_q_oq); `card_k1213.py` beside
+it rebuilds it.

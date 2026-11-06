@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1216.
+Next free ID: K1217.
 
 ## Waiting on Levi
 
@@ -291,6 +291,9 @@ Next free ID: K1216.
 - **K1172** · Walker modes, Levi's brainstorm (2026-11-03): guide it, program it, a flock, stop them (and a tower
   defense), steer it live, bend and tilt. Which family first? (`docs/design/K1172_walker_modes.md`; full text:
   `docs/ledger_notes.md`)
+- **K1213** · Cursive v6.8: word-final s and p run on in a flat tongue, the i and j dots are dashes, the q
+  tail steps at 5x; J3k's S2, P1, D2 and Q1 follow the font, each local. Card `docs/asks/K1213.md`;
+  `docs/design/K863_cursive_j3k.md` Handoff.
 
 ## In progress
 
@@ -314,7 +317,7 @@ Next free ID: K1216.
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
   Levi to edit instead of drawing all 26 (Levi, 2026-10-26). Muse's prototype parked at abc135e7.
-  - owner: nobody since 2026-11-05 12:43 (merged)
+  - owner: nobody since 2026-11-05 12:43: J3k finished and merged (0136f455); waits on Levi's card K1213
   - branch: mainline; last commit: `0136f455`
   - evidence: .claude/probes/K863/trace/work34/ and out34/ (J3k, copies on its branch); the base: work33/ and out33/png/ (v6.8)
   - next: Levi's card K1213 (word-final s and p, the i and j dots, the q tail: S2, P1, D2, Q1 or keep v6.8); then the template adopts the picks in the next stage
@@ -508,10 +511,10 @@ Next free ID: K1216.
   - env: the passes' builds first and never while Muse runs: `scripts/preview.ps1 -Ref <sha> -Root <out>\builds -BuildOnly` for each sha (`pixel_passes.ps1` stops before the phone lock when one is missing); probe server `npx vite --config .claude/probes/K1139/vite.private-cache.config.ts --port 5620 --strictPort --host 127.0.0.1` from a worktree (ports 5620-5639); GPU probes through `.claude/probes/K1139/run_locked.ps1 -Batch`
 - **K1208** · Muse batch 22 (after K1204's batch 21): runs B to M through the chain, from
   `docs/design/K1208_muse_batch22.md` and the later runs' own briefs (ports 5880-5999)
-  - owner: the chain in `.claude/probes/K1053/` (queue.txt, chain.log): Run J (22J) since 12:34, then K (22K), fresh Muse sessions; coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
+  - owner: the chain in `.claude/probes/K1053/` (queue.txt, chain.log): Run J (22J) since 12:34, then K (22K) and L (22L), fresh Muse sessions; coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
   - branch: mainline; last commit: `cb5a7301`
   - evidence: the chain in .claude/probes/K1053/ (queue.txt, chain.log); each run's probe folder under .claude/probes/ (B K1203, H K1210, C and I K1186, E K1196, F K1191, G K1198)
-  - next: J (K647: the card after Reset path) then K (six junction residuals on master); L held until J3k lands; M held until K1211 S2 lands; D held for K1211; I reviewed (K1209 closed)
+  - next: J (K647: the card after Reset path), then K (six junction residuals on master), then L (cursive residuals on v6.8, released when J3k landed); M held until K1211 S2 lands; D held for K1211; I reviewed (K1209 closed)
   - brief: `docs/design/K1208_muse_batch22.md`; I to M: K1209_reapply_run_i.md, K647_reset_win_card.md, K1208_run_k_junction_residuals.md, K1208_run_l_cursive_residuals.md, K1214_profile_run_m.md (docs/design/)
 
 ## Next, in order
@@ -756,12 +759,6 @@ Every other item below waits on the trigger it names.
 
 ## Residuals (known, not fixed)
 
-- **K1213** · Cursive v6.8 (K863 work33): the six q$ word-final tails are undesigned seams (dk 10.6/u in J3j's
-  census); p and s end with no tail; the i and j dots are drawn as ticks. `docs/design/K863_cursive_j3j.md`
-  Handoff.
-- **K1212** · K863's trace kit: SU.g2 reads `angle_deg` but the census writes `ang_deg`, so g2 never checks
-  the angle; rowsame keys rows by word number (same_k863j.py works around it); the word lists repeat ids (v68x
-  718 rows / 713 ids, J3e 349 / 347). `docs/design/K863_cursive_j3j.md` Handoff.
 - **K1130** · K309 inject probes: a run's first normal screenshot can come back dark and nearly blank (round 2026-11-02 rimSeam, 3848 bytes against 628314; round 2026-11-03 handoff step 3b). Take a throwaway first shot, or shoot each state twice and diff the repeat, before believing a pair.
 - **K1048** · K1040's probe gaps (`docs/design/K1040_s1c_handoff_pops.md` F5; `K1040_s1d_corner.md` F1, Handoff 5):
   q5holes skips a hole with a partly OWN rim; q4's g41 crop holds no ink on the g41 rings; the free ends' oracle
@@ -1981,9 +1978,13 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K1185** · V-pinned rounds, if K1179's outline is revisited: S1e's failure is the probe point on a curved
   arm, off the medial axis, so a successor needs a new rule (a medial correction to q_k, or feet by centreline
   arc), costed only in a rebuild (`docs/design/K1179_s1e.md`, What comes next).
+- **K1216** · K863's census: a per-row p95, or one that leaves the candidate's spot out, so the census itself
+  checks a change's locality (J3k; `local_k863k` does it per piece today). `docs/design/K863_cursive_j3k.md`
+  Handoff.
 
 ## Done
 
+- **K1212** · K863's trace kit: g2 reads the angle, census rows keyed by id, word lists each id once (J3k). Done in 0136f455 (2026-11-05).
 - **K1209** · Retire the fillet layer vote (one fan layer; K1186), Muse Run I (22I): no pin moved; 0 px but the accepted fat11 ji104 drag3 (23/14 px). Done in cb5a7301 (2026-11-05).
 - **K1145** · Cursive x5 (`R_DX=22 R_A1=-15 R_L1=10`): a steeper b, v and w exit (about -22 deg), if Levi wants v7.0's exits further down (K1119's Handoff). Dropped: superseded: Levi kept v6.8's joins (K1119) and its c (K1197), so v6.9 to v7.2 are not used (2026-11-05).
 - **K1193** · Cursive c (v7.1, J3h): 14 of the 26 c joins sit at the 10 u bound of c's exit port (`docs/design/K1112_cursive_j3h.md`, Handoff). Dropped: superseded: Levi kept v6.8's joins (K1119) and its c (K1197), so v6.9 to v7.2 are not used (2026-11-05).
