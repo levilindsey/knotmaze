@@ -83,16 +83,29 @@ def curve(c, n=300):
     return P, sp, k, s
 
 
-def _key(fx, fT, ymin):
-    v = [*fx[0], *fx[1], fx[2] * 1e3, *fT[0], *fT[1], fT[2] * 1e3, -1e9 if ymin is None else ymin]
+def _key(fx, fT, ymin, yw=None):
+    # the two frames with the word's x offset taken out (a word only shifts its letters in x), rounded: the fit runs
+    # on the frames read back from this key, so its prm is a function of the key alone, wherever the letter sits; a
+    # ymin weight other than the default (1e2) adds a 12th slot, so the keys without one stay as they were
+    v = [0.0, fx[0][1], *fx[1], fx[2] * 1e3, fT[0][0] - fx[0][0], fT[0][1], *fT[1], fT[2] * 1e3,
+         -1e9 if ymin is None else ymin] + ([] if yw is None else [yw])
     return ",".join(f"{float(a):.5f}" for a in v)
 
 
-def fit_prm(fx, fT, ymin=None, n=300):
-    """The fairest connector prm from frame fx to frame fT (module docstring)."""
-    key = _key(fx, fT, ymin)
+def _frames(key):
+    v = [float(a) for a in key.split(",")]
+    fx = (np.array(v[0:2]), np.array(v[2:4]), v[4] / 1e3)
+    fT = (np.array(v[5:7]), np.array(v[7:9]), v[9] / 1e3)
+    return fx, fT, (None if v[10] < -1e8 else v[10]), (v[11] if len(v) > 11 else 1e2)
+
+
+def fit_prm(fx, fT, ymin=None, n=300, yw=None):
+    """The fairest connector prm from frame fx to frame fT (module docstring); yw weighs the ymin target (default
+    1e2, a soft pull; a fin form's "ymin_w" raises it where the target must hold)."""
+    key = _key(fx, fT, ymin, yw)
     if key in _CACHE:
         return [float(v) for v in _CACHE[key]]
+    fx, fT, ymin, yw = _frames(key)
     max_sc = int(fx[2] < -1e-6) + int(fT[2] < -1e-6)
 
     def cost(x):
@@ -113,7 +126,7 @@ def fit_prm(fx, fT, ymin=None, n=300):
         if sp.min() < 0.02 * S:
             pen += 1e4
         if ymin is not None:
-            pen += 1e2 * ((float(P[:, 1].min()) - ymin) / 10.0) ** 2
+            pen += yw * ((float(P[:, 1].min()) - ymin) / 10.0) ** 2
         return E + pen
 
     best = None
@@ -181,7 +194,8 @@ def fin_tail(bz, f, x0):
     if "prm" in f:
         prm = [float(v) for v in f["prm"]]
     else:
-        prm = fit_prm(fx, fT, None if f.get("ymin") is None else float(f["ymin"]))
+        prm = fit_prm(fx, fT, None if f.get("ymin") is None else float(f["ymin"]),
+                      yw=None if f.get("ymin_w") is None else float(f["ymin_w"]))
     c = L.connector(fx, fT, tuple(prm))
     return cut, dict(ch=None, coeffs=c, gen=L.sample_c(c, 200), fX=fx, fT=fT, form="k863m fin", start=kind,
                      prm=prm)

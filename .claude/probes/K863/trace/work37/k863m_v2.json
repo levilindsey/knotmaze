@@ -1,0 +1,14 @@
+{
+ "fin": {
+  "b": {"stroke": 0, "cut": [-3, 1.0], "start": {"angle": -22.5, "k": 0.0}, "end": [675.6, 494.2], "angle": 30.0, "k": 0.0},
+  "v": {"stroke": 0, "cut": [-3, 1.0], "start": {"angle": -22.5, "k": 0.0}, "end": [663.8, 494.4], "angle": 30.0, "k": 0.0},
+  "w": {"stroke": 0, "cut": [-3, 1.0], "start": {"angle": -22.5, "k": 0.0}, "end": [949.3, 494.0], "angle": 30.0, "k": 0.0},
+  "o": {"stroke": 0, "cut": [-1, 1.0], "retrace": {"cubic": -3, "u": 10.04}, "end": [560.0, 526.0], "angle": 25.0, "k": 0.0},
+  "f": {"stroke": 0, "cut": [-2, 1.0], "start": {"rev": 0.0, "k": 0.0}, "end": [444.55, 150.67], "angle": 40.0, "k": 0.0, "ymin": 0.0, "ymin_w": 1e4}
+ },
+ "exit": {
+  "b": {"low_entry": "ehkrs", "high": {"cut": [-3, 1.0], "start": {"angle": -22.5, "k": 0.0}}, "low": {"cut": [-2, 1.0], "retrace": {"cubic": -4, "u": 12.0}}},
+  "v": {"low_entry": "ehkrs", "high": {"cut": [-3, 1.0], "start": {"angle": -22.5, "k": 0.0}}, "low": {"cut": [-2, 1.0], "retrace": {"cubic": -4, "u": 12.0}}},
+  "w": {"low_entry": "ehkrs", "high": {"cut": [-3, 1.0], "start": {"angle": -22.5, "k": 0.0}}, "low": {"cut": [-2, 1.0], "retrace": {"cubic": -4, "u": 12.0}}}
+ }
+}
