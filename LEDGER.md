@@ -511,10 +511,10 @@ Next free ID: K1222.
   - env: the passes' builds first and never while Muse runs: `scripts/preview.ps1 -Ref <sha> -Root <out>\builds -BuildOnly` for each sha (`pixel_passes.ps1` stops before the phone lock when one is missing); probe server `npx vite --config .claude/probes/K1139/vite.private-cache.config.ts --port 5620 --strictPort --host 127.0.0.1` from a worktree (ports 5620-5639); GPU probes through `.claude/probes/K1139/run_locked.ps1 -Batch`
 - **K1208** · Muse batch 22 (after K1204's batch 21): runs B to P through the chain, from
   `docs/design/K1208_muse_batch22.md` and the later runs' own briefs (ports 5880-5999)
-  - owner: the chain in `.claude/probes/K1053/` (queue.txt, chain.log): Run O (22O) since 15:30, then P (22P), fresh Muse sessions; coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
-  - branch: mainline; last commit: `655eb6a9`
-  - evidence: the chain in .claude/probes/K1053/ (queue.txt, chain.log); each run's probe folder under .claude/probes/ (B K1203, H K1210, C and I K1186, E K1196, F K1191, G K1198, M K1214, N K1220)
-  - next: O (K1218, K1219: the gap mask inside junctions), then P (K1112: m and u exits on one port each); D held for K1211; M and N reviewed (K1214, K1220)
+  - owner: the chain in `.claude/probes/K1053/` (queue.txt, chain.log): Run P (22P) since 16:04, the last queued, a fresh Muse session; coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
+  - branch: mainline; last commit: `f9f625a5`
+  - evidence: the chain in .claude/probes/K1053/ (queue.txt, chain.log); each run's probe folder under .claude/probes/ (B K1203, H K1210, C and I K1186, E K1196, F K1191, G K1198, M K1214, N K1220, O K1218)
+  - next: P (K1112: m and u exits on one port each); then 22Q on: K1214's re-time after K1211 S4, K1112's next letters after P; D held for K1211; M, N and O reviewed (K1214, K1220, K1218)
   - brief: `docs/design/K1208_muse_batch22.md`; I to P: K1209_reapply_run_i.md, K647_reset_win_card.md, K1208_run_k_junction_residuals.md, K1208_run_l_cursive_residuals.md, K1214_profile_run_m.md, K1220_run_n_text_forks.md, K1218_run_o_mask_in_junctions.md, K1112_run_p_ports_m_u.md (docs/design/)
 
 ## Next, in order
@@ -1652,12 +1652,12 @@ Every other item below waits on the trigger it names.
 - **K1217** · Reset path during the winning move (K647, adee40a6) stops the clock at the press, up to one
   move's travel before the arrival a live finish records, so a press can shave that off a daily's time (22J's
   report). Fix: record the arrival's time.
-- **K1218** · The gold zigzags at the junction T and four (loop ji 89, 12, 88): the crossing-gap mask shows a
-  crossing ribbon's own paint, split gold/untraveled across it (gone with the mask off; K1211 S2,
-  `docs/design/K1211_s2_gold_edge.md` Handoff).
-- **K1219** · Loop ji 12's small dark triangle (a crossing gap: in the pure colours shot too, gone with the
-  mask off) and x4 ji 149's small teal notch where the gold meets the dark crossing, both on master (K1211
-  S2's Handoff).
+- **K1218** · Gold zigzags in the T and the four (loop ji 89, 12, 88; 22O, f9f625a5): a crossing next to the
+  joint masks the fan inside its over thread's tube, so that ribbon's straight gold cut at the joint and its
+  crest show through (`walked_gold.ts:172`). Next: S1, `docs/design/K1218_s1_gap_in_junctions.md`; notes.
+- **K1219** · Loop ji 12's dark triangle: slot 28's casing fade on ch5's gold (22O; `gap_mask.ts:802`, K1218
+  S1's). x4 ji 149's teal notch: not the mask, the fan's untraveled web past the gold band's round edge
+  (`junction_field.ts:358`): after K1211 S4, in its file; notes `## K1218 (2026-11-05, 22O reviewed)`.
 - **K1221** · K1211 S3's leftovers (66752e75): the web light takes the turn's inside from a sign that can flip
   on a near-straight band (a flicker, untested); loop ji 88's lit edge dips 4.9 luma at k0 (in master too); x4
   ji 125 bumps 4.6 at k7. `docs/design/K1211_s3_lit_edge_web.md` ## Handoff
