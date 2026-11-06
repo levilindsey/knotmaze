@@ -1,0 +1,16 @@
+# K1196 22E: S4 own cost (base aa1156ae vs head 36aed2d5) + frame-tail watch.
+# Servers (vite preview of the BuildOnly builds) already run on 5910-5914.
+$env:K1139_HOST = "http://127.0.0.1:5910"
+$env:K1196_BASE = "1"
+node bench22e.mjs out22e_base
+Remove-Item Env:K1196_BASE
+$env:K1139_HOST = "http://127.0.0.1:5911"
+node bench22e.mjs out22e_head
+$env:K1196_HOST_BASE = "http://127.0.0.1:5912"
+$env:K1196_HOST_HEAD = "http://127.0.0.1:5913"
+$env:K1196_PAIR = "1fe793f5-71eedb94"
+node tail22e.mjs out22e_tail1
+$env:K1196_HOST_BASE = "http://127.0.0.1:5911"
+$env:K1196_HOST_HEAD = "http://127.0.0.1:5914"
+$env:K1196_PAIR = "36aed2d5-fbc1b212"
+node tail22e.mjs out22e_tail2

@@ -1,0 +1,4 @@
+# K1196 22E third build (95fcf3b7, S4 alone), triggered by task 2's
+# 0.2 ms rule (baseline head-base over 0.2). Server already on 5915.
+$env:K1139_HOST = "http://127.0.0.1:5915"
+node bench22e.mjs out22e_s4

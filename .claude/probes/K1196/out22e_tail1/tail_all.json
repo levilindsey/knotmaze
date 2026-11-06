@@ -1,0 +1,787 @@
+{
+ "when": "2026-11-05T19:30:33.800Z",
+ "query": "b.J&am=instant&fw=0&snd=none&phw=0",
+ "pair": "1fe793f5-71eedb94",
+ "records": [
+  {
+   "seq": 0,
+   "round": -1,
+   "build": "pairbase",
+   "host": "http://127.0.0.1:5912",
+   "stamp": "P4 v0.4.0 1fe793f5 2026-11-05 18:49 | sim 5.0s / wall 38.4s | settle lag 20.1s | asleep",
+   "tail": {
+    "n": 229,
+    "mean": 7.821,
+    "p50": 7,
+    "p95": 10.5,
+    "p99": 11.3,
+    "max": 17.3,
+    "over2x": 1
+   },
+   "windowSec": 4.169,
+   "playLog": [
+    {
+     "i": 0,
+     "eid": 0,
+     "head1": "node_16",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 1783.8
+    },
+    {
+     "i": 1,
+     "eid": 149,
+     "head1": "node_159",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 2348.1
+    },
+    {
+     "i": 2,
+     "eid": 150,
+     "head1": "mnode_98",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 2814.6
+    },
+    {
+     "i": 3,
+     "eid": 151,
+     "head1": "mnode_10",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 3094.1
+    },
+    {
+     "i": 4,
+     "eid": 152,
+     "head1": "mnode_152",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 3435.2
+    },
+    {
+     "i": 5,
+     "eid": 64,
+     "head1": "mnode_158",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 4019.1
+    },
+    {
+     "i": 6,
+     "eid": 63,
+     "head1": "node_176",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 4089.6
+    }
+   ],
+   "contextLost": 0,
+   "error": null,
+   "pageErrors": []
+  },
+  {
+   "seq": 1,
+   "round": -1,
+   "build": "pairbase",
+   "host": "http://127.0.0.1:5912",
+   "stamp": "P4 v0.4.0 1fe793f5 2026-11-05 18:49 | sim 5.0s / wall 33.6s | settle lag 21.8s | asleep",
+   "tail": {
+    "n": 230,
+    "mean": 7.379,
+    "p50": 7.1,
+    "p95": 10,
+    "p99": 12.1,
+    "max": 13.7,
+    "over2x": 0
+   },
+   "windowSec": 4.199,
+   "playLog": [
+    {
+     "i": 0,
+     "eid": 0,
+     "head1": "node_16",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 1795.8
+    },
+    {
+     "i": 1,
+     "eid": 149,
+     "head1": "node_159",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 2347.4
+    },
+    {
+     "i": 2,
+     "eid": 150,
+     "head1": "mnode_98",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 2819.9
+    },
+    {
+     "i": 3,
+     "eid": 151,
+     "head1": "mnode_10",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 3114.9
+    },
+    {
+     "i": 4,
+     "eid": 152,
+     "head1": "mnode_152",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 3468.9
+    },
+    {
+     "i": 5,
+     "eid": 64,
+     "head1": "mnode_158",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 4044.7
+    },
+    {
+     "i": 6,
+     "eid": 63,
+     "head1": "node_176",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 4119.6
+    }
+   ],
+   "contextLost": 0,
+   "error": null,
+   "pageErrors": []
+  },
+  {
+   "seq": 2,
+   "round": 0,
+   "build": "pairbase",
+   "host": "http://127.0.0.1:5912",
+   "stamp": "P4 v0.4.0 1fe793f5 2026-11-05 18:49 | sim 5.0s / wall 30.4s | settle lag 17.5s | asleep",
+   "tail": {
+    "n": 231,
+    "mean": 7.891,
+    "p50": 7.3,
+    "p95": 12.6,
+    "p99": 13.2,
+    "max": 15.1,
+    "over2x": 1
+   },
+   "windowSec": 4.196,
+   "playLog": [
+    {
+     "i": 0,
+     "eid": 0,
+     "head1": "node_16",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 1773.8
+    },
+    {
+     "i": 1,
+     "eid": 149,
+     "head1": "node_159",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 2337.9
+    },
+    {
+     "i": 2,
+     "eid": 150,
+     "head1": "mnode_98",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 2805.9
+    },
+    {
+     "i": 3,
+     "eid": 151,
+     "head1": "mnode_10",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 3082
+    },
+    {
+     "i": 4,
+     "eid": 152,
+     "head1": "mnode_152",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 3425.1
+    },
+    {
+     "i": 5,
+     "eid": 64,
+     "head1": "mnode_158",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 4034.4
+    },
+    {
+     "i": 6,
+     "eid": 63,
+     "head1": "node_176",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 4127.3
+    }
+   ],
+   "contextLost": 0,
+   "error": null,
+   "pageErrors": []
+  },
+  {
+   "seq": 3,
+   "round": 0,
+   "build": "pairhead",
+   "host": "http://127.0.0.1:5913",
+   "stamp": "P4 v0.4.0 71eedb94 2026-11-05 18:50 | sim 5.0s / wall 33.0s | settle lag 19.3s | asleep",
+   "tail": {
+    "n": 231,
+    "mean": 9.635,
+    "p50": 8.1,
+    "p95": 14.1,
+    "p99": 15.5,
+    "max": 18.8,
+    "over2x": 1
+   },
+   "windowSec": 4.209,
+   "playLog": [
+    {
+     "i": 0,
+     "eid": 0,
+     "head1": "node_16",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 1810.2
+    },
+    {
+     "i": 1,
+     "eid": 149,
+     "head1": "node_159",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 2360.5
+    },
+    {
+     "i": 2,
+     "eid": 150,
+     "head1": "mnode_98",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 2842.1
+    },
+    {
+     "i": 3,
+     "eid": 151,
+     "head1": "mnode_10",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 3115.4
+    },
+    {
+     "i": 4,
+     "eid": 152,
+     "head1": "mnode_152",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 3453.4
+    },
+    {
+     "i": 5,
+     "eid": 64,
+     "head1": "mnode_158",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 4041.2
+    },
+    {
+     "i": 6,
+     "eid": 63,
+     "head1": "node_176",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 4139.9
+    }
+   ],
+   "contextLost": 0,
+   "error": null,
+   "pageErrors": []
+  },
+  {
+   "seq": 4,
+   "round": 1,
+   "build": "pairhead",
+   "host": "http://127.0.0.1:5913",
+   "stamp": "P4 v0.4.0 71eedb94 2026-11-05 18:50 | sim 5.0s / wall 32.3s | settle lag 19.5s | asleep",
+   "tail": {
+    "n": 230,
+    "mean": 8.38,
+    "p50": 8.1,
+    "p95": 10.7,
+    "p99": 12.3,
+    "max": 19.8,
+    "over2x": 1
+   },
+   "windowSec": 4.246,
+   "playLog": [
+    {
+     "i": 0,
+     "eid": 0,
+     "head1": "node_16",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 1824.9
+    },
+    {
+     "i": 1,
+     "eid": 149,
+     "head1": "node_159",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 2378.6
+    },
+    {
+     "i": 2,
+     "eid": 150,
+     "head1": "mnode_98",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 2882.7
+    },
+    {
+     "i": 3,
+     "eid": 151,
+     "head1": "mnode_10",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 3172.4
+    },
+    {
+     "i": 4,
+     "eid": 152,
+     "head1": "mnode_152",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 3512.6
+    },
+    {
+     "i": 5,
+     "eid": 64,
+     "head1": "mnode_158",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 4095.6
+    },
+    {
+     "i": 6,
+     "eid": 63,
+     "head1": "node_176",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 4170.4
+    }
+   ],
+   "contextLost": 0,
+   "error": null,
+   "pageErrors": []
+  },
+  {
+   "seq": 5,
+   "round": 1,
+   "build": "pairbase",
+   "host": "http://127.0.0.1:5912",
+   "stamp": "P4 v0.4.0 1fe793f5 2026-11-05 18:49 | sim 5.0s / wall 31.2s | settle lag 18.9s | asleep",
+   "tail": {
+    "n": 228,
+    "mean": 7.162,
+    "p50": 6.7,
+    "p95": 10.3,
+    "p99": 11.6,
+    "max": 12.9,
+    "over2x": 0
+   },
+   "windowSec": 4.173,
+   "playLog": [
+    {
+     "i": 0,
+     "eid": 0,
+     "head1": "node_16",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 1781.2
+    },
+    {
+     "i": 1,
+     "eid": 149,
+     "head1": "node_159",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 2346.1
+    },
+    {
+     "i": 2,
+     "eid": 150,
+     "head1": "mnode_98",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 2820.7
+    },
+    {
+     "i": 3,
+     "eid": 151,
+     "head1": "mnode_10",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 3088.3
+    },
+    {
+     "i": 4,
+     "eid": 152,
+     "head1": "mnode_152",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 3438.3
+    },
+    {
+     "i": 5,
+     "eid": 64,
+     "head1": "mnode_158",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 4019.6
+    },
+    {
+     "i": 6,
+     "eid": 63,
+     "head1": "node_176",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 4093.2
+    }
+   ],
+   "contextLost": 0,
+   "error": null,
+   "pageErrors": []
+  },
+  {
+   "seq": 6,
+   "round": 2,
+   "build": "pairbase",
+   "host": "http://127.0.0.1:5912",
+   "stamp": "P4 v0.4.0 1fe793f5 2026-11-05 18:49 | sim 5.0s / wall 30.4s | settle lag 18.0s | asleep",
+   "tail": {
+    "n": 231,
+    "mean": 7.222,
+    "p50": 6.8,
+    "p95": 10.3,
+    "p99": 12,
+    "max": 14.7,
+    "over2x": 1
+   },
+   "windowSec": 4.227,
+   "playLog": [
+    {
+     "i": 0,
+     "eid": 0,
+     "head1": "node_16",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 1779.7
+    },
+    {
+     "i": 1,
+     "eid": 149,
+     "head1": "node_159",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 2347.6
+    },
+    {
+     "i": 2,
+     "eid": 150,
+     "head1": "mnode_98",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 2820.3
+    },
+    {
+     "i": 3,
+     "eid": 151,
+     "head1": "mnode_10",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 3124
+    },
+    {
+     "i": 4,
+     "eid": 152,
+     "head1": "mnode_152",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 3489.9
+    },
+    {
+     "i": 5,
+     "eid": 64,
+     "head1": "mnode_158",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 4072.9
+    },
+    {
+     "i": 6,
+     "eid": 63,
+     "head1": "node_176",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 4148
+    }
+   ],
+   "contextLost": 0,
+   "error": null,
+   "pageErrors": []
+  },
+  {
+   "seq": 7,
+   "round": 2,
+   "build": "pairhead",
+   "host": "http://127.0.0.1:5913",
+   "stamp": "P4 v0.4.0 71eedb94 2026-11-05 18:50 | sim 5.0s / wall 32.4s | settle lag 20.1s | asleep",
+   "tail": {
+    "n": 233,
+    "mean": 8.207,
+    "p50": 7.5,
+    "p95": 12.5,
+    "p99": 15.5,
+    "max": 15.8,
+    "over2x": 4
+   },
+   "windowSec": 4.269,
+   "playLog": [
+    {
+     "i": 0,
+     "eid": 0,
+     "head1": "node_16",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 1784.5
+    },
+    {
+     "i": 1,
+     "eid": 149,
+     "head1": "node_159",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 2354.8
+    },
+    {
+     "i": 2,
+     "eid": 150,
+     "head1": "mnode_98",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 2854.8
+    },
+    {
+     "i": 3,
+     "eid": 151,
+     "head1": "mnode_10",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 3140.5
+    },
+    {
+     "i": 4,
+     "eid": 152,
+     "head1": "mnode_152",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 3500.1
+    },
+    {
+     "i": 5,
+     "eid": 64,
+     "head1": "mnode_158",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 4118.1
+    },
+    {
+     "i": 6,
+     "eid": 63,
+     "head1": "node_176",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 4188.6
+    }
+   ],
+   "contextLost": 0,
+   "error": null,
+   "pageErrors": []
+  },
+  {
+   "seq": 8,
+   "round": 3,
+   "build": "pairhead",
+   "host": "http://127.0.0.1:5913",
+   "stamp": "P4 v0.4.0 71eedb94 2026-11-05 18:50 | sim 5.0s / wall 34.1s | settle lag 22.4s | asleep",
+   "tail": {
+    "n": 227,
+    "mean": 8.265,
+    "p50": 8,
+    "p95": 10.7,
+    "p99": 12.6,
+    "max": 13.8,
+    "over2x": 0
+   },
+   "windowSec": 4.168,
+   "playLog": [
+    {
+     "i": 0,
+     "eid": 0,
+     "head1": "node_16",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 1772.4
+    },
+    {
+     "i": 1,
+     "eid": 149,
+     "head1": "node_159",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 2336.9
+    },
+    {
+     "i": 2,
+     "eid": 150,
+     "head1": "mnode_98",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 2818.2
+    },
+    {
+     "i": 3,
+     "eid": 151,
+     "head1": "mnode_10",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 3109
+    },
+    {
+     "i": 4,
+     "eid": 152,
+     "head1": "mnode_152",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 3439
+    },
+    {
+     "i": 5,
+     "eid": 64,
+     "head1": "mnode_158",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 4014.7
+    },
+    {
+     "i": 6,
+     "eid": 63,
+     "head1": "node_176",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 4091.4
+    }
+   ],
+   "contextLost": 0,
+   "error": null,
+   "pageErrors": []
+  },
+  {
+   "seq": 9,
+   "round": 3,
+   "build": "pairbase",
+   "host": "http://127.0.0.1:5912",
+   "stamp": "P4 v0.4.0 1fe793f5 2026-11-05 18:49 | sim 5.0s / wall 31.9s | settle lag 19.7s | asleep",
+   "tail": {
+    "n": 230,
+    "mean": 7.068,
+    "p50": 6.8,
+    "p95": 8.5,
+    "p99": 11.6,
+    "max": 14.4,
+    "over2x": 1
+   },
+   "windowSec": 4.207,
+   "playLog": [
+    {
+     "i": 0,
+     "eid": 0,
+     "head1": "node_16",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 1773.8
+    },
+    {
+     "i": 1,
+     "eid": 149,
+     "head1": "node_159",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 2367.3
+    },
+    {
+     "i": 2,
+     "eid": 150,
+     "head1": "mnode_98",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 2860.6
+    },
+    {
+     "i": 3,
+     "eid": 151,
+     "head1": "mnode_10",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 3121.2
+    },
+    {
+     "i": 4,
+     "eid": 152,
+     "head1": "mnode_152",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 3467.6
+    },
+    {
+     "i": 5,
+     "eid": 64,
+     "head1": "mnode_158",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 4051
+    },
+    {
+     "i": 6,
+     "eid": 63,
+     "head1": "node_176",
+     "ok": true,
+     "sawAnim": true,
+     "atMs": 4124.7
+    }
+   ],
+   "contextLost": 0,
+   "error": null,
+   "pageErrors": []
+  }
+ ]
+}
