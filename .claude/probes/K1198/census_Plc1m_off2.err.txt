@@ -1,0 +1,2 @@
+C:\Users\lsl\Repositories\knotmaze\.claude\probes\K1198\census_21g_off.py:11: SyntaxWarning: invalid escape sequence '\d'
+  """K1009b (J3b, v6.4) copy of B3's census (work23/dbg/census_k1019.py, untouched), made by mk_census_k1009b.py:

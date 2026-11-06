@@ -1,0 +1,17 @@
+K1198 Run G (21G) gates: 20G bench (Plc1m, calt on) against Run G (calt off everywhere; Plc1m and v7.2), plus determinism (off vs off2).
+  bench Plc1m on: {'pieces': 718, 'hooks': 50, 'over': 399, 'seams': 6, 'spikes': 77, 'rough': 147}; joins 333, joins with non-finite dmax 0; sha txt d21e9b0a3a057b95 json 0836358a76b79c5a
+  Plc1m off: {'pieces': 719, 'hooks': 49, 'over': 193, 'seams': 6, 'spikes': 76, 'rough': 147}; joins 334, joins with non-finite dmax 334; sha txt 73287907e1a0d9b8 json 894cb964bde8b949
+  Plc1m off2: {'pieces': 719, 'hooks': 49, 'over': 193, 'seams': 6, 'spikes': 76, 'rough': 147}; joins 334, joins with non-finite dmax 334; sha txt 73287907e1a0d9b8 json 894cb964bde8b949
+  v7.2 off: {'pieces': 719, 'hooks': 49, 'over': 193, 'seams': 6, 'spikes': 76, 'rough': 147}; joins 334, joins with non-finite dmax 334; sha txt ddf350f61f3168d2 json 51a9727d7ed42f2f
+  ij join bench Plc1m on: none (ij rows: ['w220:ij:tail0i'])
+  ij join Plc1m off: w220:ij:J0-1ij dmax nan kind port-cusp solve {'status': 0, 'nfev': 716, 'maxfev': 8000, 'kL_u': None, 'th_deg': None, 'kR_u': None, 's_u': 3.200903922978436, 'from_end_u': 1.5855022184041445e-08, 'stretch_solved_u': [1.0, 20.0], 'ymin_u': 1.072371713865415, 'crossings': 0, 'after_high': False} seams [{'seam': 'exit i (port at 0.00 u from the end)', 'gap_u': 6.85112070754664e-15, 'ang_deg': 0.0, 'dk_u': 1.2287624621502385e-16, 'k_piece_u': 0.056225669977706554, 'k_body_u': 0.05622566997770643}, {'seam': 'entry j (port at 3.20 u, retrace, port-cusp)', 'gap_u': 2.4289639188416265e-13, 'ang_deg': 0.0, 'dk_u': 5.673991369340807e-16, 'k_piece_u': -0.018853020972536504, 'k_body_u': -0.018853020972537073, 'designed': False}]
+  ij join v7.2 off: w220:ij:J0-1ij dmax nan kind port-cusp solve {'status': 0, 'nfev': 713, 'maxfev': 8000, 'kL_u': None, 'th_deg': None, 'kR_u': None, 's_u': 3.9717299957739964, 'from_end_u': 2.8405765135630645e-06, 'stretch_solved_u': [2.0, 20.0], 'ymin_u': 1.0723709914548123, 'crossings': 0, 'after_high': False} seams [{'seam': 'exit i (port at 0.00 u from the end)', 'gap_u': 0.0, 'ang_deg': 0.0, 'dk_u': 1.4456028966473393e-17, 'k_piece_u': 0.05622567463699478, 'k_body_u': 0.056225674636994794}, {'seam': 'entry j (port at 3.97 u, retrace, port-cusp)', 'gap_u': 5.990249992491995e-13, 'ang_deg': 0.0, 'dk_u': 5.178872377239093e-15, 'k_piece_u': -0.017605970884537404, 'k_body_u': -0.017605970884542584, 'designed': False}]
+  ij join bench v7.2 on: none (ij rows: ['w220:ij:tail0i'])
+  first divergence bench Plc1m -> Plc1m off: w100:bu:J0-1bu (only in second)
+  first divergence bench v7.2 -> v7.2 off: w100:bu:J0-1bu (only in second)
+  first divergence Plc1m off -> Plc1m off2: None (identical gated fields)
+  first gated divergence by (word,pair) bench Plc1m -> Plc1m off: ('after', 'af', 'join') w79:after:J0-2af dmax 6.323563310409368 -> nan (no font connector to measure against, calt off)
+  first gated divergence by (word,pair) bench v7.2 -> v7.2 off: ('after', 'af', 'join') w79:after:J0-2af dmax 6.323563310409368 -> nan (no font connector to measure against, calt off)
+  side screen Plc1m calt-off (72 cusp pairs + ij): solved 72, min side -0.0153 (ij 0.0010023816471306545), below -0.05 u: {}
+  side screen v7.2 calt-off (72 cusp pairs + ij): solved 72, min side -0.0141 (ij 0.001438133091334618), below -0.05 u: {}
+  shaping screen (census strings): moved 234, steady 0; steady list: []

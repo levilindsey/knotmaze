@@ -1,0 +1,13 @@
+K1198 Run G (21G) fr/fs pins under Plc1m (work31/base, ports Plc1m). On: file pins; off: K1009_PINS {"fr":{},"fs":{}}.
+ pins on: effective pins fr={'entry_port': {'kind': 'cusp', 'node': 'start', 'stretch_u': [2, 20], 'hints': {'after_high_band_y_u': [65, 75]}}} fs={'entry_port': {'kind': 'cusp', 'node': 'start', 'stretch_u': [2, 20]}}
+  on fr in 'fr': hash b17b35bf21000606 dist 6.3361 u prm [0.85792, 1.118081, 0.545271, -0.002221] attach s_u 2.0000 status 0 nfev 5664 side 0.013988905000356192 J 0.000110378
+  on fs in 'fs': hash 5158330ef0078be1 dist 9.3645 u prm [0.88144, 1.167251, -0.131793, -0.220124] attach s_u 2.0000 status 0 nfev 2709 side 0.009295505240985923 J 9.94894e-05
+ pins off: effective pins fr={} fs={}
+  off fr in 'fr': hash ee2960079d95e100 dist 5.3033 u prm [0.517176, 1.276369, 2.822242, -0.122837] attach s_u 1.0000 status 0 nfev 2582 side 0.002044211114187453 J 0.000103972
+  off fs in 'fs': hash 180a47a845e63513 dist 9.3783 u prm [0.873959, 1.210867, -0.245258, -0.228971] attach s_u 1.0000 status 0 nfev 4188 side -0.0008780308357054522 J 9.69304e-05
+  probe on fr: status 0 nfev 5664 s_u 2.0000 in [2.0, 20.0] side 0.013988905000356192 J 0.000110378 note ['BOUND']
+  probe on fs: status 0 nfev 2709 s_u 2.0000 in [2.0, 20.0] side 0.009295505240985923 J 9.94894e-05 note ['BOUND']
+  probe off fr: status 0 nfev 2582 s_u 1.0000 in [1.0, 20.0] side 0.002044211114187453 J 0.000103972 note ['BOUND']
+  probe off fs: status 0 nfev 4188 s_u 1.0000 in [1.0, 20.0] side -0.0008780308357054522 J 9.69304e-05 note ['BOUND']
+  census on w70:fs:J0-2fs: dmax 9.3721 u
+  census on w69:fr:J0-2fr: dmax 6.3400 u

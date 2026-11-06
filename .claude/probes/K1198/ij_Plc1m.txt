@@ -1,0 +1,13 @@
+K1198 Run G (21G) hidden-join sheet: calt off everywhere for generated columns; font column shaped normally (ij = ij.jmc ligature). Red solved, blue preset.
+ij Plc1m ij solved: hash b7f3c5c5137c3f6f attach s_u 3.2009 exit_from_end 0.0000 status 0 nfev 716 side 0.0010023816471306545 dist nan shaping_off [('i.mod', 0), ('j.jmc', 1)]
+ij v7.2 ij solved: hash 4f5155d5b8327eda attach s_u 3.9717 exit_from_end 0.0000 status 0 nfev 713 side 0.001438133091334618 dist nan shaping_off [('i.mod', 0), ('j.jmc', 1)]
+ij font shaping (normal): [('ij.jmc', 0)]
+ii Plc1m ii solved: hash cb6572db4d87b1be attach s_u 1.0000 exit_from_end 0.0000 status 0 nfev 638 side 0.006207730485209177 dist nan shaping_off [('i.mod', 0), ('i.mod', 1)]
+ii v7.2 ii solved: hash ae3794b2c2a3942d attach s_u 2.0000 exit_from_end 0.0000 status 0 nfev 1808 side 0.005727435672854811 dist nan shaping_off [('i.mod', 0), ('i.mod', 1)]
+ii font shaping (normal): [('i.mod.ini', 0), ('cnct.mod_n_n', 0), ('i.mod.fin', 1)]
+aj Plc1m aj solved: hash c7f03e66c7b282fc attach s_u 3.1189 exit_from_end 0.0000 status 0 nfev 715 side 0.001600011948997122 dist nan shaping_off [('a.mod', 0), ('j.jmc', 1)]
+aj v7.2 aj solved: hash 0524e2f77afb514e attach s_u 3.1187 exit_from_end 0.0000 status 0 nfev 1064 side 0.001599640143649612 dist nan shaping_off [('a.mod', 0), ('j.jmc', 1)]
+aj font shaping (normal): [('a.mod.ini', 0), ('cnct.mod_n_n', 0), ('j.jmc.fin', 1)]
+ji Plc1m ji preset k962 group low-cusp; dist nan shaping_off [('j.jmc', 0), ('i.mod', 1)]
+ji v7.2 ji preset k962 group low-cusp; dist nan shaping_off [('j.jmc', 0), ('i.mod', 1)]
+ji font shaping (normal): [('j.jmc.ini', 0), ('cnct.jmc_g_n', 0), ('i.mod.fin', 1)]

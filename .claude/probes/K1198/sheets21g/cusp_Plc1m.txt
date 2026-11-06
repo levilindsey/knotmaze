@@ -1,0 +1,431 @@
+K1198 Run G (21G) Plc1m cusp sheet: low exits into cusp windows, font v7.1 v7.2 Plc1m
+builds: v7.1 = C:\Users\lsl\Repositories\knotmaze\.claude\probes\K863\trace\work31/base (ports, Pc10, C:\Users\lsl\Repositories\knotmaze\.claude\probes\K863\trace\work31/ports_k1112c.json); v7.2 = C:\Users\lsl\Repositories\knotmaze\.claude\probes\K863\trace\work32/base (ports, Plc2m, C:\Users\lsl\Repositories\knotmaze\.claude\probes\K863\trace\work32/ports_k1112cusp.json); Plc1m = C:\Users\lsl\Repositories\knotmaze\.claude\probes\K863\trace\work31/base (ports, Plc1m, C:\Users\lsl\Repositories\knotmaze\.claude\probes\K1198\ports_k1112cusp.json)
+
+ai                     v7.1  ai solved: exit 0.00 u from a's end, entry cusp at 0.00 u (retrace True); J 0.000279 (conn 0.00015, L 0.00013, R 0) Js 0.00182 conn 157 u window 187 u pen 0 kmax 0.062/u speed 0.77 cross 0 (allowed 0) side 0.01 ymin 1.0 u; dist to font 9.83 u (own ends), 9.83 u (entry frame); status 0 nfev 1250/3000
+ai                     v7.2  ai solved: exit 0.00 u from a's end, entry cusp at 2.00 u (retrace True); J 0.000291 (conn 0.00016, L 0.00013, R 0) Js 0.00184 conn 155 u window 185 u pen 0 kmax 0.062/u speed 0.86 cross 0 (allowed 0) side 0.01 ymin 1.0 u; dist to font 8.61 u (own ends), 8.61 u (entry frame); status 0 nfev 754/8000
+ai                     Plc1m ai solved: exit 0.00 u from a's end, entry cusp at 1.00 u (retrace True); J 0.000285 (conn 0.00015, L 0.00013, R 0) Js 0.00183 conn 156 u window 186 u pen 0 kmax 0.062/u speed 0.83 cross 0 (allowed 0) side 0.01 ymin 1.0 u; dist to font 9.18 u (own ends), 9.18 u (entry frame); status 0 nfev 2994/8000
+aj                     v7.1  aj solved: exit 0.00 u from a's end, entry cusp at 3.03 u (retrace True); J 0.000338 (conn 0.00021, L 0.00013, R 7.2e-08) Js 0.00212 conn 155 u window 185 u pen 0 kmax 0.062/u speed 0.89 cross 0 (allowed 0) side 0.00 ymin 1.0 u; dist to font 6.43 u (own ends), 6.43 u (entry frame); status 0 nfev 856/3000
+aj                     v7.2  aj solved: exit 0.00 u from a's end, entry cusp at 3.03 u (retrace True); J 0.000338 (conn 0.00021, L 0.00013, R 7.3e-08) Js 0.00212 conn 155 u window 185 u pen 0 kmax 0.062/u speed 0.89 cross 0 (allowed 0) side 0.00 ymin 1.0 u; dist to font 6.43 u (own ends), 6.43 u (entry frame); status 0 nfev 577/8000
+aj                     Plc1m aj solved: exit 0.00 u from a's end, entry cusp at 3.03 u (retrace True); J 0.000338 (conn 0.00021, L 0.00013, R 7.4e-08) Js 0.00212 conn 155 u window 185 u pen 0 kmax 0.062/u speed 0.89 cross 0 (allowed 0) side 0.00 ymin 1.0 u; dist to font 6.43 u (own ends), 6.43 u (entry frame); status 0 nfev 1246/8000
+ap                     v7.1  ap solved: exit 0.00 u from a's end, entry cusp at 10.32 u (retrace True); J 0.000545 (conn 0.00028, L 0.00013, R 0.00013) Js 0.00354 conn 149 u window 186 u pen 0 kmax 0.062/u speed 0.87 cross 0 (allowed 0) side 0.00 ymin 1.0 u; dist to font 5.28 u (own ends), 10.19 u (entry frame); status 0 nfev 621/3000
+ap                     v7.2  ap solved: exit 0.00 u from a's end, entry cusp at 10.60 u (retrace True); J 0.000545 (conn 0.00028, L 0.00013, R 0.00014) Js 0.00354 conn 149 u window 186 u pen 0 kmax 0.062/u speed 0.87 cross 0 (allowed 0) side 0.00 ymin 1.0 u; dist to font 5.30 u (own ends), 10.46 u (entry frame); status 0 nfev 414/8000
+ap                     Plc1m ap solved: exit 0.00 u from a's end, entry cusp at 10.32 u (retrace True); J 0.000545 (conn 0.00028, L 0.00013, R 0.00013) Js 0.00354 conn 149 u window 186 u pen 0 kmax 0.062/u speed 0.87 cross 0 (allowed 0) side 0.00 ymin 1.0 u; dist to font 5.28 u (own ends), 10.19 u (entry frame); status 0 nfev 1151/8000
+ar                     v7.1  ar solved: exit 0.00 u from a's end, entry cusp at 0.00 u (retrace True); J 0.000319 (conn 0.00019, L 0.00013, R 0) Js 0.00236 conn 165 u window 195 u pen 0 kmax 0.062/u speed 0.89 cross 0 (allowed 0) side 0.01 ymin 1.0 u; dist to font 15.67 u (own ends), 15.67 u (entry frame); status 0 nfev 1918/3000
+ar                     v7.2  ar solved: exit 0.00 u from a's end, entry cusp at 2.00 u (retrace True); J 0.000344 (conn 0.00021, L 0.00013, R 0) Js 0.00249 conn 163 u window 193 u pen 0 kmax 0.062/u speed 0.89 cross 0 (allowed 0) side 0.01 ymin 1.0 u; dist to font 14.40 u (own ends), 14.40 u (entry frame); status 0 nfev 2719/8000
+ar                     Plc1m ar solved: exit 0.00 u from a's end, entry cusp at 1.00 u (retrace True); J 0.00033 (conn 0.0002, L 0.00013, R 0) Js 0.00241 conn 164 u window 194 u pen 0 kmax 0.062/u speed 0.89 cross 0 (allowed 0) side 0.01 ymin 1.0 u; dist to font 15.04 u (own ends), 15.04 u (entry frame); status 0 nfev 1904/8000
+as                     v7.1  as solved: exit 0.00 u from a's end, entry cusp at 0.00 u (retrace True); J 0.000308 (conn 0.00018, L 0.00013, R 0) Js 0.00244 conn 169 u window 199 u pen 0 kmax 0.062/u speed 0.90 cross 0 (allowed 0) side 0.01 ymin 1.0 u; dist to font 15.25 u (own ends), 15.25 u (entry frame); status 0 nfev 2226/3000
+as                     v7.2  as solved: exit 0.00 u from a's end, entry cusp at 2.00 u (retrace True); J 0.000321 (conn 0.00019, L 0.00013, R 0) Js 0.00248 conn 168 u window 198 u pen 0 kmax 0.062/u speed 0.91 cross 0 (allowed 0) side 0.01 ymin 1.0 u; dist to font 14.17 u (own ends), 14.18 u (entry frame); status 0 nfev 1829/8000
+as                     Plc1m as solved: exit 0.00 u from a's end, entry cusp at 1.00 u (retrace True); J 0.000314 (conn 0.00018, L 0.00013, R 0) Js 0.00246 conn 168 u window 198 u pen 0 kmax 0.062/u speed 0.91 cross 0 (allowed 0) side 0.01 ymin 1.0 u; dist to font 14.72 u (own ends), 14.72 u (entry frame); status 0 nfev 4075/8000
+at                     v7.1  at solved: exit 0.18 u from a's end, entry cusp at 34.70 u (retrace True); J 0.000444 (conn 0.00013, L 0.00013, R 0.00019) Js 0.00611 conn 178 u window 240 u pen 0 kmax 0.062/u speed 0.45 cross 0 (allowed 0) side 0.00 ymin 1.0 u; dist to font 18.25 u (own ends), 33.95 u (entry frame); status 0 nfev 643/3000
+at                     v7.2  at solved: exit 0.00 u from a's end, entry cusp at 34.70 u (retrace True); J 0.000444 (conn 0.00013, L 0.00013, R 0.00019) Js 0.00611 conn 178 u window 240 u pen 0 kmax 0.062/u speed 0.45 cross 0 (allowed 0) side 0.00 ymin 1.0 u; dist to font 18.25 u (own ends), 33.95 u (entry frame); status 0 nfev 1432/8000
+at                     Plc1m at solved: exit 0.31 u from a's end, entry cusp at 34.70 u (retrace True); J 0.000444 (conn 0.00013, L 0.00013, R 0.00019) Js 0.00611 conn 178 u window 240 u pen 0 kmax 0.063/u speed 0.45 cross 0 (allowed 0) side 0.00 ymin 1.0 u; dist to font 18.25 u (own ends), 33.95 u (entry frame); status 0 nfev 910/8000
+au                     v7.1  au solved: exit 0.00 u from a's end, entry cusp at 3.15 u (retrace True); J 0.000299 (conn 0.00017, L 0.00013, R 1.5e-07) Js 0.00188 conn 154 u window 185 u pen 0 kmax 0.062/u speed 0.87 cross 0 (allowed 0) side 0.00 ymin 1.0 u; dist to font 7.93 u (own ends), 7.93 u (entry frame); status 0 nfev 1272/3000
+au                     v7.2  au solved: exit 0.00 u from a's end, entry cusp at 3.15 u (retrace True); J 0.000299 (conn 0.00017, L 0.00013, R 1.5e-07) Js 0.00188 conn 154 u window 185 u pen 0 kmax 0.062/u speed 0.87 cross 0 (allowed 0) side 0.00 ymin 1.0 u; dist to font 7.93 u (own ends), 7.93 u (entry frame); status 0 nfev 943/8000
+au                     Plc1m au solved: exit 0.00 u from a's end, entry cusp at 3.15 u (retrace True); J 0.000299 (conn 0.00017, L 0.00013, R 1.5e-07) Js 0.00188 conn 154 u window 185 u pen 0 kmax 0.062/u speed 0.87 cross 0 (allowed 0) side 0.00 ymin 1.0 u; dist to font 7.93 u (own ends), 7.93 u (entry frame); status 0 nfev 1125/8000
+aw                     v7.1  aw solved: exit 0.00 u from a's end, entry cusp at 10.01 u (retrace True); J 0.000522 (conn 0.00027, L 0.00013, R 0.00012) Js 0.00338 conn 149 u window 186 u pen 0 kmax 0.062/u speed 0.86 cross 0 (allowed 0) side 0.00 ymin 1.0 u; dist to font 6.56 u (own ends), 9.91 u (entry frame); status 0 nfev 1039/3000
+aw                     v7.2  aw solved: exit 0.00 u from a's end, entry cusp at 10.01 u (retrace True); J 0.000522 (conn 0.00027, L 0.00013, R 0.00012) Js 0.00338 conn 149 u window 186 u pen 0 kmax 0.062/u speed 0.86 cross 0 (allowed 0) side 0.00 ymin 1.0 u; dist to font 6.56 u (own ends), 9.91 u (entry frame); status 0 nfev 971/8000
+aw                     Plc1m aw solved: exit 0.00 u from a's end, entry cusp at 9.82 u (retrace True); J 0.000522 (conn 0.00027, L 0.00013, R 0.00012) Js 0.00338 conn 149 u window 186 u pen 0 kmax 0.062/u speed 0.86 cross 0 (allowed 0) side 0.00 ymin 1.0 u; dist to font 6.54 u (own ends), 9.73 u (entry frame); status 0 nfev 1344/8000
+ay                     v7.1  ay solved: exit 0.00 u from a's end, entry cusp at 3.00 u (retrace True); J 0.000297 (conn 0.00016, L 0.00013, R 7e-16) Js 0.00186 conn 154 u window 184 u pen 0 kmax 0.062/u speed 0.91 cross 0 (allowed 0) side 0.00 ymin 1.0 u; dist to font 8.52 u (own ends), 8.52 u (entry frame); status 0 nfev 850/3000
+ay                     v7.2  ay solved: exit 0.00 u from a's end, entry cusp at 3.00 u (retrace True); J 0.000297 (conn 0.00016, L 0.00013, R 0) Js 0.00186 conn 154 u window 184 u pen 0 kmax 0.062/u speed 0.91 cross 0 (allowed 0) side 0.00 ymin 1.0 u; dist to font 8.52 u (own ends), 8.52 u (entry frame); status 0 nfev 1038/8000
+ay                     Plc1m ay solved: exit 0.00 u from a's end, entry cusp at 3.00 u (retrace True); J 0.000297 (conn 0.00016, L 0.00013, R 0) Js 0.00186 conn 154 u window 184 u pen 0 kmax 0.062/u speed 0.91 cross 0 (allowed 0) side 0.00 ymin 1.0 u; dist to font 8.52 u (own ends), 8.52 u (entry frame); status 0 nfev 937/8000
+ci                     v7.1  ci solved: exit 7.19 u from c's end, entry cusp at 0.00 u (retrace True); J 7.4e-06 (conn 5e-06, L 2.4e-06, R 0) Js 6.95e-05 conn 188 u window 211 u pen 0 kmax 0.022/u speed 0.65 cross 0 (allowed 0) side 0.00 ymin 0.0 u; dist to font 1.10 u (own ends), 7.27 u (entry frame); status 0 nfev 1071/8000
+ci                     v7.2  ci solved: exit 0.00 u from c's end, entry cusp at 2.00 u (retrace True); J 1.01e-05 (conn 6.3e-06, L 3.8e-06, R 0) Js 9.4e-05 conn 180 u window 210 u pen 0 kmax 0.019/u speed 0.82 cross 0 (allowed 0) side 0.01 ymin 0.1 u; dist to font 3.76 u (own ends), 3.76 u (entry frame); status 0 nfev 2067/8000
+ci                     Plc1m ci solved: exit 0.00 u from c's end, entry cusp at 1.00 u (retrace True); J 8.47e-06 (conn 4.6e-06, L 3.8e-06, R 0) Js 7.91e-05 conn 181 u window 211 u pen 0 kmax 0.019/u speed 0.71 cross 0 (allowed 0) side 0.00 ymin 0.1 u; dist to font 2.26 u (own ends), 2.26 u (entry frame); status 0 nfev 568/8000
+cj                     v7.1  cj solved: exit 10.00 u from c's end, entry cusp at 14.51 u (retrace True); J 3.23e-05 (conn 1.5e-05, L 1.8e-06, R 1.5e-05) Js 0.000313 conn 182 u window 213 u pen 0 kmax 0.024/u speed 0.84 cross 0 (allowed 0) side 0.00 ymin 0.0 u; dist to font 10.45 u (own ends), 14.49 u (entry frame); status 0 nfev 911/8000
+cj                     v7.2  cj solved: exit 10.00 u from c's end, entry cusp at 15.01 u (retrace True); J 3.23e-05 (conn 1.5e-05, L 1.8e-06, R 1.6e-05) Js 0.000313 conn 181 u window 213 u pen 0 kmax 0.024/u speed 0.84 cross 0 (allowed 0) side 0.00 ymin 0.0 u; dist to font 10.48 u (own ends), 14.98 u (entry frame); status 0 nfev 585/8000
+cj                     Plc1m cj solved: exit 10.00 u from c's end, entry cusp at 14.06 u (retrace True); J 3.23e-05 (conn 1.5e-05, L 1.8e-06, R 1.5e-05) Js 0.000313 conn 182 u window 213 u pen 0 kmax 0.024/u speed 0.84 cross 0 (allowed 0) side 0.00 ymin 0.0 u; dist to font 10.43 u (own ends), 14.04 u (entry frame); status 0 nfev 1420/8000
+cp                     v7.1  cp solved: exit 0.00 u from c's end, entry cusp at 15.32 u (retrace True); J 0.000216 (conn 5.1e-05, L 3.8e-06, R 0.00016) Js 0.00213 conn 172 u window 215 u pen 0 kmax 0.023/u speed 0.83 cross 0 (allowed 0) side 0.00 ymin 0.1 u; dist to font 11.57 u (own ends), 15.01 u (entry frame); status 0 nfev 1277/8000
+cp                     v7.2  cp solved: exit 0.00 u from c's end, entry cusp at 15.32 u (retrace True); J 0.000216 (conn 5.1e-05, L 3.8e-06, R 0.00016) Js 0.00213 conn 172 u window 215 u pen 0 kmax 0.023/u speed 0.83 cross 0 (allowed 0) side 0.00 ymin 0.1 u; dist to font 11.57 u (own ends), 15.01 u (entry frame); status 0 nfev 1797/8000
+cp                     Plc1m cp solved: exit 0.00 u from c's end, entry cusp at 15.32 u (retrace True); J 0.000216 (conn 5.1e-05, L 3.8e-06, R 0.00016) Js 0.00213 conn 172 u window 215 u pen 0 kmax 0.023/u speed 0.83 cross 0 (allowed 0) side 0.00 ymin 0.1 u; dist to font 11.57 u (own ends), 15.01 u (entry frame); status 0 nfev 1456/8000
+cr                     v7.1  cr solved: exit 10.00 u from c's end, entry cusp at 0.00 u (retrace True); J 2.76e-05 (conn 2.6e-05, L 1.8e-06, R 0) Js 0.000288 conn 199 u window 219 u pen 0 kmax 0.024/u speed 0.76 cross 0 (allowed 0) side 0.01 ymin 0.0 u; dist to font 3.42 u (own ends), 9.96 u (entry frame); status 0 nfev 715/8000
+cr                     v7.2  cr solved: exit 10.00 u from c's end, entry cusp at 2.00 u (retrace True); J 3.95e-05 (conn 3.8e-05, L 1.8e-06, R 0) Js 0.000414 conn 199 u window 219 u pen 0 kmax 0.027/u speed 0.81 cross 0 (allowed 0) side 0.01 ymin 0.0 u; dist to font 6.02 u (own ends), 9.96 u (entry frame); status 0 nfev 761/8000
+cr                     Plc1m cr solved: exit 10.00 u from c's end, entry cusp at 1.00 u (retrace True); J 3.28e-05 (conn 3.1e-05, L 1.8e-06, R 0) Js 0.000343 conn 199 u window 219 u pen 0 kmax 0.025/u speed 0.79 cross 0 (allowed 0) side 0.01 ymin 0.0 u; dist to font 4.03 u (own ends), 9.96 u (entry frame); status 0 nfev 909/8000
+cs                     v7.1  cs solved: exit 9.76 u from c's end, entry cusp at 0.00 u (retrace True); J 2.36e-05 (conn 2.2e-05, L 1.8e-06, R 0) Js 0.000272 conn 206 u window 226 u pen 0 kmax 0.024/u speed 0.78 cross 0 (allowed 0) side 0.01 ymin 0.0 u; dist to font 2.73 u (own ends), 9.75 u (entry frame); status 0 nfev 1238/8000
+cs                     v7.2  cs solved: exit 10.00 u from c's end, entry cusp at 2.00 u (retrace True); J 2.96e-05 (conn 2.8e-05, L 1.8e-06, R 0) Js 0.000338 conn 205 u window 225 u pen 0 kmax 0.024/u speed 0.81 cross 0 (allowed 0) side 0.01 ymin 0.0 u; dist to font 5.44 u (own ends), 9.98 u (entry frame); status 0 nfev 898/8000
+cs                     Plc1m cs solved: exit 9.99 u from c's end, entry cusp at 1.00 u (retrace True); J 2.64e-05 (conn 2.5e-05, L 1.8e-06, R 0) Js 0.000302 conn 205 u window 225 u pen 0 kmax 0.024/u speed 0.79 cross 0 (allowed 0) side 0.01 ymin 0.0 u; dist to font 4.04 u (own ends), 9.98 u (entry frame); status 0 nfev 1016/8000
+ct                     v7.1  ct solved: exit 10.00 u from c's end, entry cusp at 34.95 u (retrace True); J 0.000195 (conn 7.5e-06, L 1.8e-06, R 0.00019) Js 0.00346 conn 209 u window 261 u pen 0 kmax 0.024/u speed 0.80 cross 0 (allowed 0) side 0.00 ymin 0.0 u; dist to font 9.03 u (own ends), 34.20 u (entry frame); status 0 nfev 919/8000
+ct                     v7.2  ct solved: exit 10.00 u from c's end, entry cusp at 32.90 u (retrace True); J 0.000194 (conn 7.4e-06, L 1.8e-06, R 0.00019) Js 0.00346 conn 211 u window 261 u pen 0 kmax 0.024/u speed 0.78 cross 0 (allowed 0) side -0.00 ymin 0.0 u; dist to font 8.87 u (own ends), 32.16 u (entry frame); status 0 nfev 1910/8000
+ct                     Plc1m ct solved: exit 10.00 u from c's end, entry cusp at 34.95 u (retrace True); J 0.000195 (conn 7.5e-06, L 1.8e-06, R 0.00019) Js 0.00346 conn 209 u window 261 u pen 0 kmax 0.024/u speed 0.80 cross 0 (allowed 0) side 0.00 ymin 0.0 u; dist to font 9.03 u (own ends), 34.20 u (entry frame); status 0 nfev 893/8000
+cu                     v7.1  cu solved: exit 1.68 u from c's end, entry cusp at 4.34 u (retrace True); J 1.29e-05 (conn 8.6e-06, L 3.5e-06, R 7.5e-07) Js 0.00012 conn 181 u window 211 u pen 0 kmax 0.020/u speed 0.86 cross 0 (allowed 0) side 0.00 ymin 0.0 u; dist to font 5.74 u (own ends), 5.74 u (entry frame); status 0 nfev 902/8000
+cu                     v7.2  cu solved: exit 2.54 u from c's end, entry cusp at 4.34 u (retrace True); J 1.29e-05 (conn 8.8e-06, L 3.3e-06, R 7.5e-07) Js 0.00012 conn 182 u window 211 u pen 0 kmax 0.020/u speed 0.85 cross 0 (allowed 0) side 0.00 ymin 0.0 u; dist to font 5.76 u (own ends), 5.76 u (entry frame); status 0 nfev 807/8000
+cu                     Plc1m cu solved: exit 1.68 u from c's end, entry cusp at 4.34 u (retrace True); J 1.29e-05 (conn 8.6e-06, L 3.5e-06, R 7.5e-07) Js 0.00012 conn 181 u window 211 u pen 0 kmax 0.020/u speed 0.86 cross 0 (allowed 0) side 0.00 ymin 0.0 u; dist to font 5.74 u (own ends), 5.74 u (entry frame); status 0 nfev 591/8000
+cw                     v7.1  cw solved: exit 2.96 u from c's end, entry cusp at 8.63 u (retrace True); J 0.000203 (conn 9.5e-05, L 3.3e-06, R 0.0001) Js 0.00194 conn 180 u window 213 u pen 0 kmax 0.034/u speed 0.68 cross 0 (allowed 0) side -0.01 ymin 0.0 u; dist to font 9.14 u (own ends), 9.14 u (entry frame); status 0 nfev 579/8000
+cw                     v7.2  cw solved: exit 2.76 u from c's end, entry cusp at 8.72 u (retrace True); J 0.000202 (conn 9.4e-05, L 3.3e-06, R 0.0001) Js 0.00195 conn 180 u window 213 u pen 0 kmax 0.034/u speed 0.60 cross 0 (allowed 0) side -0.01 ymin 0.0 u; dist to font 9.26 u (own ends), 9.26 u (entry frame); status 0 nfev 1401/8000
+cw                     Plc1m cw solved: exit 3.47 u from c's end, entry cusp at 8.71 u (retrace True); J 0.000203 (conn 9.5e-05, L 3.2e-06, R 0.0001) Js 0.00194 conn 180 u window 212 u pen 0 kmax 0.034/u speed 0.69 cross 0 (allowed 0) side -0.01 ymin 0.0 u; dist to font 9.15 u (own ends), 9.15 u (entry frame); status 0 nfev 1848/8000
+cy                     v7.1  cy solved: exit 0.00 u from c's end, entry cusp at 0.00 u (retrace True); J 1.24e-05 (conn 8.6e-06, L 3.8e-06, R 0) Js 0.000119 conn 182 u window 212 u pen 0 kmax 0.019/u speed 0.82 cross 0 (allowed 0) side 0.00 ymin 0.1 u; dist to font 2.48 u (own ends), 2.48 u (entry frame); status 0 nfev 1461/8000
+cy                     v7.2  cy solved: exit 0.00 u from c's end, entry cusp at 2.00 u (retrace True); J 1.37e-05 (conn 9.9e-06, L 3.8e-06, R 0) Js 0.000128 conn 181 u window 211 u pen 0 kmax 0.019/u speed 0.85 cross 0 (allowed 0) side 0.00 ymin 0.1 u; dist to font 3.42 u (own ends), 3.42 u (entry frame); status 0 nfev 658/8000
+cy                     Plc1m cy solved: exit 0.00 u from c's end, entry cusp at 1.00 u (retrace True); J 1.3e-05 (conn 9.2e-06, L 3.8e-06, R 0) Js 0.000123 conn 181 u window 211 u pen 0 kmax 0.019/u speed 0.83 cross 0 (allowed 0) side 0.00 ymin 0.1 u; dist to font 2.93 u (own ends), 2.93 u (entry frame); status 0 nfev 1634/8000
+di                     v7.1  di solved: exit 0.00 u from d's end, entry cusp at 0.00 u (retrace True); J 0.000235 (conn 0.00013, L 0.0001, R 0) Js 0.00154 conn 157 u window 187 u pen 0 kmax 0.059/u speed 0.78 cross 0 (allowed 0) side 0.01 ymin 0.9 u; dist to font 9.81 u (own ends), 9.81 u (entry frame); status 0 nfev 1179/3000
+di                     v7.2  di solved: exit 0.00 u from d's end, entry cusp at 2.00 u (retrace True); J 0.000246 (conn 0.00014, L 0.0001, R 0) Js 0.00157 conn 155 u window 185 u pen 0 kmax 0.059/u speed 0.86 cross 0 (allowed 0) side 0.01 ymin 0.9 u; dist to font 8.50 u (own ends), 8.50 u (entry frame); status 0 nfev 4103/8000
+di                     Plc1m di solved: exit 0.00 u from d's end, entry cusp at 1.00 u (retrace True); J 0.00024 (conn 0.00014, L 0.0001, R 0) Js 0.00155 conn 156 u window 186 u pen 0 kmax 0.059/u speed 0.84 cross 0 (allowed 0) side 0.01 ymin 0.9 u; dist to font 9.09 u (own ends), 9.09 u (entry frame); status 0 nfev 2305/8000
+dj                     v7.1  dj solved: exit 0.00 u from d's end, entry cusp at 3.16 u (retrace True); J 0.000291 (conn 0.00019, L 0.0001, R 4.5e-07) Js 0.00185 conn 155 u window 185 u pen 0 kmax 0.059/u speed 0.89 cross 0 (allowed 0) side 0.00 ymin 0.9 u; dist to font 6.31 u (own ends), 6.31 u (entry frame); status 0 nfev 829/3000
+dj                     v7.2  dj solved: exit 0.00 u from d's end, entry cusp at 3.16 u (retrace True); J 0.000291 (conn 0.00019, L 0.0001, R 4.5e-07) Js 0.00185 conn 155 u window 185 u pen 0 kmax 0.059/u speed 0.89 cross 0 (allowed 0) side 0.00 ymin 0.9 u; dist to font 6.31 u (own ends), 6.31 u (entry frame); status 0 nfev 1087/8000
+dj                     Plc1m dj solved: exit 0.00 u from d's end, entry cusp at 3.16 u (retrace True); J 0.000291 (conn 0.00019, L 0.0001, R 4.5e-07) Js 0.00185 conn 155 u window 185 u pen 0 kmax 0.059/u speed 0.89 cross 0 (allowed 0) side 0.00 ymin 0.9 u; dist to font 6.31 u (own ends), 6.31 u (entry frame); status 0 nfev 1254/8000
+dp                     v7.1  dp solved: exit 0.00 u from d's end, entry cusp at 10.33 u (retrace True); J 0.000497 (conn 0.00026, L 0.0001, R 0.00013) Js 0.00325 conn 150 u window 187 u pen 0 kmax 0.059/u speed 0.87 cross 0 (allowed 0) side 0.00 ymin 0.9 u; dist to font 5.52 u (own ends), 10.19 u (entry frame); status 0 nfev 924/3000
+dp                     v7.2  dp solved: exit 0.01 u from d's end, entry cusp at 10.11 u (retrace True); J 0.000497 (conn 0.00026, L 0.0001, R 0.00013) Js 0.00325 conn 150 u window 187 u pen 0 kmax 0.059/u speed 0.87 cross 0 (allowed 0) side 0.00 ymin 0.9 u; dist to font 5.51 u (own ends), 9.98 u (entry frame); status 0 nfev 1000/8000
+dp                     Plc1m dp solved: exit 0.00 u from d's end, entry cusp at 10.89 u (retrace True); J 0.000497 (conn 0.00026, L 0.0001, R 0.00014) Js 0.00325 conn 149 u window 187 u pen 0 kmax 0.059/u speed 0.87 cross 0 (allowed 0) side 0.00 ymin 0.9 u; dist to font 5.57 u (own ends), 10.74 u (entry frame); status 0 nfev 998/8000
+dr                     v7.1  dr solved: exit 0.00 u from d's end, entry cusp at 0.00 u (retrace True); J 0.000273 (conn 0.00017, L 0.0001, R 0) Js 0.00204 conn 165 u window 195 u pen 0 kmax 0.059/u speed 0.90 cross 0 (allowed 0) side 0.01 ymin 0.9 u; dist to font 15.49 u (own ends), 15.49 u (entry frame); status 0 nfev 2278/3000
+dr                     v7.2  dr solved: exit 0.00 u from d's end, entry cusp at 2.00 u (retrace True); J 0.000298 (conn 0.00019, L 0.0001, R 0) Js 0.00217 conn 164 u window 194 u pen 0 kmax 0.059/u speed 0.89 cross 0 (allowed 0) side 0.01 ymin 0.9 u; dist to font 14.21 u (own ends), 14.21 u (entry frame); status 0 nfev 2216/8000
+dr                     Plc1m dr solved: exit 0.00 u from d's end, entry cusp at 1.00 u (retrace True); J 0.000284 (conn 0.00018, L 0.0001, R 0) Js 0.00209 conn 165 u window 195 u pen 0 kmax 0.059/u speed 0.89 cross 0 (allowed 0) side 0.01 ymin 0.9 u; dist to font 14.86 u (own ends), 14.86 u (entry frame); status 0 nfev 876/8000
+ds                     v7.1  ds solved: exit 0.00 u from d's end, entry cusp at 0.00 u (retrace True); J 0.000263 (conn 0.00016, L 0.0001, R 0) Js 0.0021 conn 170 u window 200 u pen 0 kmax 0.059/u speed 0.91 cross 0 (allowed 0) side 0.01 ymin 0.9 u; dist to font 15.07 u (own ends), 15.08 u (entry frame); status 0 nfev 2627/3000
+ds                     v7.2  ds solved: exit 0.00 u from d's end, entry cusp at 2.00 u (retrace True); J 0.000276 (conn 0.00017, L 0.0001, R 0) Js 0.00214 conn 168 u window 198 u pen 0 kmax 0.059/u speed 0.91 cross 0 (allowed 0) side 0.01 ymin 0.9 u; dist to font 13.99 u (own ends), 14.00 u (entry frame); status 0 nfev 2833/8000
+ds                     Plc1m ds solved: exit 0.00 u from d's end, entry cusp at 1.00 u (retrace True); J 0.000269 (conn 0.00016, L 0.0001, R 0) Js 0.00211 conn 169 u window 199 u pen 0 kmax 0.059/u speed 0.91 cross 0 (allowed 0) side 0.01 ymin 0.9 u; dist to font 14.55 u (own ends), 14.55 u (entry frame); status 0 nfev 692/8000
+dt                     v7.1  dt solved: exit 0.00 u from d's end, entry cusp at 34.69 u (retrace True); J 0.000402 (conn 0.00011, L 0.0001, R 0.00019) Js 0.00556 conn 178 u window 240 u pen 0 kmax 0.059/u speed 0.45 cross 0 (allowed 0) side 0.00 ymin 0.9 u; dist to font 18.03 u (own ends), 33.94 u (entry frame); status 0 nfev 1104/3000
+dt                     v7.2  dt solved: exit 0.00 u from d's end, entry cusp at 34.69 u (retrace True); J 0.000402 (conn 0.00011, L 0.0001, R 0.00019) Js 0.00556 conn 178 u window 240 u pen 0 kmax 0.059/u speed 0.45 cross 0 (allowed 0) side 0.00 ymin 0.9 u; dist to font 18.03 u (own ends), 33.94 u (entry frame); status 0 nfev 844/8000
+dt                     Plc1m dt solved: exit 0.00 u from d's end, entry cusp at 34.69 u (retrace True); J 0.000402 (conn 0.00011, L 0.0001, R 0.00019) Js 0.00556 conn 178 u window 240 u pen 0 kmax 0.059/u speed 0.45 cross 0 (allowed 0) side 0.00 ymin 0.9 u; dist to font 18.03 u (own ends), 33.94 u (entry frame); status 0 nfev 1696/8000
+du                     v7.1  du solved: exit 0.00 u from d's end, entry cusp at 3.16 u (retrace True); J 0.000254 (conn 0.00015, L 0.0001, R 1.6e-07) Js 0.00161 conn 155 u window 185 u pen 0 kmax 0.059/u speed 0.88 cross 0 (allowed 0) side 0.00 ymin 0.9 u; dist to font 7.82 u (own ends), 7.82 u (entry frame); status 0 nfev 605/3000
+du                     v7.2  du solved: exit 0.00 u from d's end, entry cusp at 3.16 u (retrace True); J 0.000254 (conn 0.00015, L 0.0001, R 1.6e-07) Js 0.00161 conn 155 u window 185 u pen 0 kmax 0.059/u speed 0.88 cross 0 (allowed 0) side 0.00 ymin 0.9 u; dist to font 7.82 u (own ends), 7.82 u (entry frame); status 0 nfev 1482/8000
+du                     Plc1m du solved: exit 0.00 u from d's end, entry cusp at 3.16 u (retrace True); J 0.000254 (conn 0.00015, L 0.0001, R 1.6e-07) Js 0.00161 conn 155 u window 185 u pen 0 kmax 0.059/u speed 0.88 cross 0 (allowed 0) side 0.00 ymin 0.9 u; dist to font 7.82 u (own ends), 7.82 u (entry frame); status 0 nfev 1320/8000
+dw                     v7.1  dw solved: exit 0.00 u from d's end, entry cusp at 10.04 u (retrace True); J 0.000474 (conn 0.00025, L 0.0001, R 0.00012) Js 0.00309 conn 150 u window 187 u pen 0 kmax 0.059/u speed 0.86 cross 0 (allowed 0) side 0.00 ymin 0.9 u; dist to font 6.82 u (own ends), 9.94 u (entry frame); status 0 nfev 632/3000
+dw                     v7.2  dw solved: exit 0.00 u from d's end, entry cusp at 10.04 u (retrace True); J 0.000474 (conn 0.00025, L 0.0001, R 0.00012) Js 0.00309 conn 150 u window 187 u pen 0 kmax 0.059/u speed 0.86 cross 0 (allowed 0) side 0.00 ymin 0.9 u; dist to font 6.82 u (own ends), 9.94 u (entry frame); status 0 nfev 913/8000
+dw                     Plc1m dw solved: exit 0.00 u from d's end, entry cusp at 10.04 u (retrace True); J 0.000474 (conn 0.00025, L 0.0001, R 0.00012) Js 0.00309 conn 150 u window 187 u pen 0 kmax 0.059/u speed 0.86 cross 0 (allowed 0) side 0.00 ymin 0.9 u; dist to font 6.82 u (own ends), 9.94 u (entry frame); status 0 nfev 749/8000
+dy                     v7.1  dy solved: exit 0.00 u from d's end, entry cusp at 3.00 u (retrace True); J 0.000252 (conn 0.00015, L 0.0001, R 1e-16) Js 0.00158 conn 155 u window 185 u pen 0 kmax 0.059/u speed 0.91 cross 0 (allowed 0) side 0.00 ymin 0.9 u; dist to font 8.39 u (own ends), 8.39 u (entry frame); status 0 nfev 1826/3000
+dy                     v7.2  dy solved: exit 0.00 u from d's end, entry cusp at 3.00 u (retrace True); J 0.000252 (conn 0.00015, L 0.0001, R 2e-15) Js 0.00158 conn 155 u window 185 u pen 0 kmax 0.059/u speed 0.91 cross 0 (allowed 0) side 0.00 ymin 0.9 u; dist to font 8.39 u (own ends), 8.39 u (entry frame); status 0 nfev 1533/8000
+dy                     Plc1m dy solved: exit 0.00 u from d's end, entry cusp at 3.00 u (retrace True); J 0.000252 (conn 0.00015, L 0.0001, R 0) Js 0.00158 conn 155 u window 185 u pen 0 kmax 0.059/u speed 0.91 cross 0 (allowed 0) side 0.00 ymin 0.9 u; dist to font 8.39 u (own ends), 8.39 u (entry frame); status 0 nfev 1048/8000
+ei                     v7.1  ei solved: exit 5.00 u from e's end, entry cusp at 9.15 u (retrace True); J 2.48e-05 (conn 2.1e-05, L 1.9e-06, R 2.2e-06) Js 0.000348 conn 215 u window 241 u pen 5.1e-07 kmax 0.030/u speed 0.54 cross 0 (allowed 0) side 0.00 ymin -2.0 u; dist to font 13.18 u (own ends), 13.17 u (entry frame); status 0 nfev 1593/3000
+ei                     v7.2  ei solved: exit 5.00 u from e's end, entry cusp at 2.00 u (retrace True); J 1.86e-05 (conn 1.7e-05, L 1.9e-06, R 0) Js 0.000257 conn 220 u window 240 u pen 3.8e-07 kmax 0.030/u speed 0.55 cross 0 (allowed 0) side 0.00 ymin -2.0 u; dist to font 9.41 u (own ends), 9.41 u (entry frame); status 0 nfev 3029/8000
+ei                     Plc1m ei solved: exit 5.00 u from e's end, entry cusp at 1.00 u (retrace True); J 1.77e-05 (conn 1.6e-05, L 1.9e-06, R 0) Js 0.000246 conn 220 u window 240 u pen 3.4e-07 kmax 0.030/u speed 0.56 cross 0 (allowed 0) side 0.01 ymin -2.0 u; dist to font 8.61 u (own ends), 8.61 u (entry frame); status 0 nfev 4679/8000
+ej                     v7.1  ej solved: exit 5.00 u from e's end, entry cusp at 20.00 u (retrace True); J 3.83e-05 (conn 2e-05, L 1.9e-06, R 1.7e-05) Js 0.000545 conn 205 u window 242 u pen 4.9e-07 kmax 0.030/u speed 0.55 cross 0 (allowed 0) side 0.00 ymin -2.0 u; dist to font 14.38 u (own ends), 19.96 u (entry frame); status 0 nfev 2174/3000
+ej                     v7.2  ej solved: exit 5.00 u from e's end, entry cusp at 16.85 u (retrace True); J 3.84e-05 (conn 2e-05, L 1.9e-06, R 1.6e-05) Js 0.000546 conn 208 u window 242 u pen 4.7e-07 kmax 0.030/u speed 0.55 cross 0 (allowed 0) side 0.00 ymin -2.0 u; dist to font 14.39 u (own ends), 16.82 u (entry frame); status 0 nfev 1803/8000
+ej                     Plc1m ej solved: exit 5.00 u from e's end, entry cusp at 19.69 u (retrace True); J 3.83e-05 (conn 2e-05, L 1.9e-06, R 1.7e-05) Js 0.000545 conn 206 u window 242 u pen 5.3e-07 kmax 0.030/u speed 0.55 cross 0 (allowed 0) side 0.00 ymin -2.0 u; dist to font 14.37 u (own ends), 19.65 u (entry frame); status 0 nfev 1360/8000
+ep                     v7.1  ep solved: exit 4.99 u from e's end, entry cusp at 16.78 u (retrace True); J 0.000217 (conn 5e-05, L 1.9e-06, R 0.00017) Js 0.00317 conn 211 u window 245 u pen 5.7e-10 kmax 0.030/u speed 0.55 cross 0 (allowed 0) side 0.00 ymin -2.0 u; dist to font 15.49 u (own ends), 16.41 u (entry frame); status 0 nfev 1135/3000
+ep                     v7.2  ep solved: exit 4.47 u from e's end, entry cusp at 18.06 u (retrace True); J 0.000216 (conn 4.7e-05, L 2e-06, R 0.00017) Js 0.00317 conn 209 u window 245 u pen 1.6e-08 kmax 0.031/u speed 0.54 cross 0 (allowed 0) side 0.00 ymin -2.0 u; dist to font 15.70 u (own ends), 17.63 u (entry frame); status 0 nfev 3085/8000
+ep                     Plc1m ep solved: exit 5.00 u from e's end, entry cusp at 18.06 u (retrace True); J 0.000216 (conn 4.7e-05, L 1.9e-06, R 0.00017) Js 0.00317 conn 210 u window 245 u pen 3e-08 kmax 0.031/u speed 0.55 cross 0 (allowed 0) side 0.00 ymin -2.0 u; dist to font 15.69 u (own ends), 17.63 u (entry frame); status 0 nfev 1590/8000
+er                     v7.1  er solved: exit 5.00 u from e's end, entry cusp at 0.00 u (retrace True); J 3.46e-05 (conn 3.3e-05, L 1.9e-06, R 0) Js 0.000547 conn 231 u window 251 u pen 5.7e-07 kmax 0.030/u speed 0.55 cross 0 (allowed 0) side 0.00 ymin -2.0 u; dist to font 7.54 u (own ends), 7.54 u (entry frame); status 1 nfev 3000/3000
+er                     v7.2  er solved: exit 5.00 u from e's end, entry cusp at 2.00 u (retrace True); J 4.59e-05 (conn 4.4e-05, L 1.9e-06, R 0) Js 0.000725 conn 231 u window 251 u pen 6.3e-07 kmax 0.030/u speed 0.57 cross 0 (allowed 0) side 0.00 ymin -2.0 u; dist to font 10.08 u (own ends), 10.07 u (entry frame); status 0 nfev 1168/8000
+er                     Plc1m er solved: exit 5.00 u from e's end, entry cusp at 1.00 u (retrace True); J 3.95e-05 (conn 3.8e-05, L 1.9e-06, R 0) Js 0.000624 conn 231 u window 251 u pen 6e-07 kmax 0.030/u speed 0.56 cross 0 (allowed 0) side 0.00 ymin -2.0 u; dist to font 8.72 u (own ends), 8.72 u (entry frame); status 0 nfev 903/8000
+es                     v7.1  es solved: exit 5.00 u from e's end, entry cusp at 0.00 u (retrace True); J 3.08e-05 (conn 2.9e-05, L 1.9e-06, R 0) Js 0.000514 conn 235 u window 255 u pen 6.5e-07 kmax 0.030/u speed 0.53 cross 0 (allowed 0) side 0.00 ymin -2.0 u; dist to font 5.90 u (own ends), 5.89 u (entry frame); status 1 nfev 3000/3000
+es                     v7.2  es solved: exit 5.00 u from e's end, entry cusp at 2.00 u (retrace True); J 3.63e-05 (conn 3.4e-05, L 1.9e-06, R 0) Js 0.000599 conn 235 u window 255 u pen 6.8e-07 kmax 0.030/u speed 0.54 cross 0 (allowed 0) side 0.00 ymin -2.0 u; dist to font 7.63 u (own ends), 7.63 u (entry frame); status 0 nfev 2208/8000
+es                     Plc1m es solved: exit 4.86 u from e's end, entry cusp at 1.53 u (retrace True); J 3.49e-05 (conn 3.3e-05, L 1.9e-06, R 0) Js 0.000578 conn 235 u window 255 u pen 7.7e-07 kmax 0.030/u speed 0.54 cross 0 (allowed 0) side 0.00 ymin -2.0 u; dist to font 7.30 u (own ends), 7.29 u (entry frame); status 0 nfev 1748/8000
+et                     v7.1  et solved: exit 5.00 u from e's end, entry cusp at 35.95 u (retrace True); J 0.000209 (conn 2.2e-05, L 1.9e-06, R 0.00019) Js 0.00514 conn 238 u window 291 u pen 0 kmax 0.033/u speed 0.72 cross 0 (allowed 0) side 0.00 ymin -1.8 u; dist to font 2.20 u (own ends), 35.19 u (entry frame); status 0 nfev 1405/3000
+et                     v7.2  et solved: exit 5.00 u from e's end, entry cusp at 33.36 u (retrace True); J 0.000209 (conn 2.2e-05, L 1.9e-06, R 0.00019) Js 0.00514 conn 241 u window 291 u pen 0 kmax 0.033/u speed 0.72 cross 0 (allowed 0) side -0.01 ymin -1.8 u; dist to font 2.27 u (own ends), 32.62 u (entry frame); status 0 nfev 2582/8000
+et                     Plc1m et solved: exit 5.00 u from e's end, entry cusp at 33.36 u (retrace True); J 0.000209 (conn 2.2e-05, L 1.9e-06, R 0.00019) Js 0.00514 conn 241 u window 291 u pen 0 kmax 0.033/u speed 0.72 cross 0 (allowed 0) side -0.01 ymin -1.8 u; dist to font 2.27 u (own ends), 32.62 u (entry frame); status 0 nfev 3008/8000
+eu                     v7.1  eu solved: exit 5.00 u from e's end, entry cusp at 6.58 u (retrace True); J 2.06e-05 (conn 1.8e-05, L 1.9e-06, R 9.7e-07) Js 0.000287 conn 217 u window 240 u pen 4.3e-07 kmax 0.030/u speed 0.55 cross 0 (allowed 0) side 0.00 ymin -2.0 u; dist to font 11.01 u (own ends), 11.01 u (entry frame); status 1 nfev 3000/3000
+eu                     v7.2  eu solved: exit 5.00 u from e's end, entry cusp at 6.58 u (retrace True); J 2.06e-05 (conn 1.8e-05, L 1.9e-06, R 9.7e-07) Js 0.000287 conn 217 u window 240 u pen 4.4e-07 kmax 0.030/u speed 0.55 cross 0 (allowed 0) side 0.00 ymin -2.0 u; dist to font 11.00 u (own ends), 11.00 u (entry frame); status 0 nfev 1592/8000
+eu                     Plc1m eu solved: exit 5.00 u from e's end, entry cusp at 5.61 u (retrace True); J 2.06e-05 (conn 1.8e-05, L 1.9e-06, R 9.3e-07) Js 0.000287 conn 218 u window 240 u pen 4.4e-07 kmax 0.030/u speed 0.54 cross 0 (allowed 0) side 0.00 ymin -2.0 u; dist to font 10.90 u (own ends), 10.90 u (entry frame); status 0 nfev 3165/8000
+ew                     v7.1  ew solved: exit 0.12 u from e's end, entry cusp at 9.75 u (retrace True); J 0.000214 (conn 9.7e-05, L 2.9e-06, R 0.00011) Js 0.00302 conn 210 u window 241 u pen 6e-08 kmax 0.033/u speed 0.62 cross 0 (allowed 0) side -0.02 ymin -2.0 u; dist to font 11.67 u (own ends), 11.67 u (entry frame); status 0 nfev 1954/3000
+ew                     v7.2  ew solved: exit 1.78 u from e's end, entry cusp at 9.72 u (retrace True); J 0.000214 (conn 9.7e-05, L 2.5e-06, R 0.00011) Js 0.00301 conn 212 u window 242 u pen 9.7e-12 kmax 0.033/u speed 0.67 cross 0 (allowed 0) side -0.00 ymin -2.0 u; dist to font 12.01 u (own ends), 12.01 u (entry frame); status 0 nfev 1211/8000
+ew                     Plc1m ew solved: exit 4.04 u from e's end, entry cusp at 9.72 u (retrace True); J 0.000214 (conn 9.7e-05, L 2e-06, R 0.00011) Js 0.00301 conn 214 u window 241 u pen 0 kmax 0.033/u speed 0.67 cross 0 (allowed 0) side -0.00 ymin -1.8 u; dist to font 11.96 u (own ends), 11.96 u (entry frame); status 0 nfev 2471/8000
+ey                     v7.1  ey solved: exit 4.86 u from e's end, entry cusp at 1.84 u (retrace True); J 2.14e-05 (conn 2e-05, L 1.9e-06, R 0) Js 0.000301 conn 221 u window 241 u pen 4.7e-07 kmax 0.030/u speed 0.54 cross 0 (allowed 0) side 0.00 ymin -2.0 u; dist to font 10.74 u (own ends), 10.75 u (entry frame); status 0 nfev 2477/3000
+ey                     v7.2  ey solved: exit 5.00 u from e's end, entry cusp at 2.00 u (retrace True); J 2.14e-05 (conn 2e-05, L 1.9e-06, R 0) Js 0.000298 conn 221 u window 241 u pen 4.1e-07 kmax 0.030/u speed 0.55 cross 0 (allowed 0) side 0.00 ymin -2.0 u; dist to font 9.68 u (own ends), 9.68 u (entry frame); status 0 nfev 1776/8000
+ey                     Plc1m ey solved: exit 5.00 u from e's end, entry cusp at 3.16 u (retrace True); J 2.2e-05 (conn 2e-05, L 1.9e-06, R 1.7e-08) Js 0.000304 conn 220 u window 240 u pen 4.2e-07 kmax 0.030/u speed 0.55 cross 0 (allowed 0) side 0.00 ymin -2.0 u; dist to font 10.22 u (own ends), 10.22 u (entry frame); status 0 nfev 1354/8000
+fi                     v7.1  fi solved: exit 1.99 u from f's end, entry cusp at 3.00 u (retrace True); J 8.54e-05 (conn 1.2e-05, L 7.4e-05, R 0) Js 0.000546 conn 166 u window 186 u pen 0 kmax 0.034/u speed 0.58 cross 0 (allowed 0) side 0.00 ymin 15.4 u; dist to font 12.68 u (own ends), 12.68 u (entry frame); status 0 nfev 1342/8000
+fi                     v7.2  fi solved: exit 2.00 u from f's end, entry cusp at 3.00 u (retrace True); J 8.51e-05 (conn 1.2e-05, L 7.4e-05, R 3.5e-17) Js 0.000545 conn 166 u window 186 u pen 0 kmax 0.034/u speed 0.62 cross 0 (allowed 0) side 0.00 ymin 15.4 u; dist to font 12.68 u (own ends), 12.68 u (entry frame); status 0 nfev 2400/8000
+fi                     Plc1m fi solved: exit 2.00 u from f's end, entry cusp at 12.79 u (retrace True); J 8.84e-05 (conn 1.2e-05, L 7.4e-05, R 2.6e-06) Js 0.000579 conn 157 u window 187 u pen 0 kmax 0.034/u speed 0.77 cross 0 (allowed 0) side 0.00 ymin 15.2 u; dist to font 12.61 u (own ends), 12.78 u (entry frame); status 0 nfev 1794/8000
+fj                     v7.1  fj solved: exit 2.00 u from f's end, entry cusp at 17.91 u (retrace True); J 0.000102 (conn 1.2e-05, L 7.4e-05, R 1.7e-05) Js 0.00067 conn 153 u window 188 u pen 0 kmax 0.034/u speed 0.74 cross 0 (allowed 0) side -0.00 ymin 15.2 u; dist to font 12.60 u (own ends), 17.88 u (entry frame); status 0 nfev 2386/8000
+fj                     v7.2  fj solved: exit 2.00 u from f's end, entry cusp at 17.91 u (retrace True); J 0.000102 (conn 1.2e-05, L 7.4e-05, R 1.7e-05) Js 0.00067 conn 153 u window 188 u pen 0 kmax 0.034/u speed 0.74 cross 0 (allowed 0) side -0.00 ymin 15.2 u; dist to font 12.60 u (own ends), 17.87 u (entry frame); status 0 nfev 1228/8000
+fj                     Plc1m fj solved: exit 2.00 u from f's end, entry cusp at 19.36 u (retrace True); J 0.000102 (conn 1.1e-05, L 7.4e-05, R 1.7e-05) Js 0.000671 conn 151 u window 188 u pen 0 kmax 0.034/u speed 0.47 cross 0 (allowed 0) side 0.00 ymin 15.2 u; dist to font 12.60 u (own ends), 19.32 u (entry frame); status 0 nfev 1557/8000
+fp                     v7.1  fp solved: exit 2.00 u from f's end, entry cusp at 16.78 u (retrace True); J 0.000284 (conn 4.5e-05, L 7.4e-05, R 0.00017) Js 0.0019 conn 155 u window 189 u pen 0 kmax 0.035/u speed 0.81 cross 0 (allowed 0) side 0.00 ymin 15.7 u; dist to font 12.82 u (own ends), 16.41 u (entry frame); status 0 nfev 1590/8000
+fp                     v7.2  fp solved: exit 2.00 u from f's end, entry cusp at 18.06 u (retrace True); J 0.000283 (conn 4.2e-05, L 7.4e-05, R 0.00017) Js 0.0019 conn 154 u window 189 u pen 0 kmax 0.035/u speed 0.48 cross 0 (allowed 0) side 0.00 ymin 15.7 u; dist to font 12.82 u (own ends), 17.63 u (entry frame); status 0 nfev 3148/8000
+fp                     Plc1m fp solved: exit 2.00 u from f's end, entry cusp at 16.78 u (retrace True); J 0.000284 (conn 4.5e-05, L 7.4e-05, R 0.00017) Js 0.0019 conn 155 u window 189 u pen 0 kmax 0.035/u speed 0.48 cross 0 (allowed 0) side 0.00 ymin 15.7 u; dist to font 12.83 u (own ends), 16.41 u (entry frame); status 0 nfev 993/8000
+fr                     v7.1  fr solved: exit 2.00 u from f's end, entry cusp at 2.00 u (retrace True); J 0.00011 (conn 3.7e-05, L 7.4e-05, R 0) Js 0.000884 conn 180 u window 200 u pen 0 kmax 0.034/u speed 0.71 cross 0 (allowed 0) side 0.01 ymin 14.9 u; dist to font 6.34 u (own ends), 6.34 u (entry frame); status 0 nfev 5664/8000
+fr                     v7.2  fr solved: exit 2.00 u from f's end, entry cusp at 2.00 u (retrace True); J 0.00011 (conn 3.7e-05, L 7.4e-05, R 0) Js 0.000884 conn 180 u window 200 u pen 0 kmax 0.034/u speed 0.71 cross 0 (allowed 0) side 0.01 ymin 14.9 u; dist to font 6.34 u (own ends), 6.34 u (entry frame); status 0 nfev 5664/8000
+fr                     Plc1m fr solved: exit 2.00 u from f's end, entry cusp at 2.00 u (retrace True); J 0.00011 (conn 3.7e-05, L 7.4e-05, R 0) Js 0.000884 conn 180 u window 200 u pen 0 kmax 0.034/u speed 0.71 cross 0 (allowed 0) side 0.01 ymin 14.9 u; dist to font 6.34 u (own ends), 6.34 u (entry frame); status 0 nfev 5664/8000
+fs                     v7.1  fs solved: exit 2.00 u from f's end, entry cusp at 2.00 u (retrace True); J 9.95e-05 (conn 2.6e-05, L 7.4e-05, R 0) Js 0.0008 conn 180 u window 200 u pen 0 kmax 0.034/u speed 0.75 cross 0 (allowed 0) side 0.01 ymin 15.1 u; dist to font 9.36 u (own ends), 9.36 u (entry frame); status 0 nfev 2709/8000
+fs                     v7.2  fs solved: exit 2.00 u from f's end, entry cusp at 2.00 u (retrace True); J 9.95e-05 (conn 2.6e-05, L 7.4e-05, R 0) Js 0.0008 conn 180 u window 200 u pen 0 kmax 0.034/u speed 0.75 cross 0 (allowed 0) side 0.01 ymin 15.1 u; dist to font 9.36 u (own ends), 9.36 u (entry frame); status 0 nfev 2709/8000
+fs                     Plc1m fs solved: exit 2.00 u from f's end, entry cusp at 2.00 u (retrace True); J 9.95e-05 (conn 2.6e-05, L 7.4e-05, R 0) Js 0.0008 conn 180 u window 200 u pen 0 kmax 0.034/u speed 0.75 cross 0 (allowed 0) side 0.01 ymin 15.1 u; dist to font 9.36 u (own ends), 9.36 u (entry frame); status 0 nfev 2709/8000
+ft                     v7.1  ft solved: exit 2.00 u from f's end, entry cusp at 35.95 u (retrace True); J 0.000279 (conn 2e-05, L 7.4e-05, R 0.00019) Js 0.00372 conn 184 u window 237 u pen 0 kmax 0.037/u speed 0.79 cross 0 (allowed 0) side 0.00 ymin 16.4 u; dist to font 13.25 u (own ends), 35.19 u (entry frame); status 0 nfev 1968/8000
+ft                     v7.2  ft solved: exit 2.00 u from f's end, entry cusp at 34.03 u (retrace True); J 0.000279 (conn 2e-05, L 7.4e-05, R 0.00019) Js 0.00372 conn 186 u window 237 u pen 0 kmax 0.037/u speed 0.79 cross 0 (allowed 0) side -0.00 ymin 16.3 u; dist to font 13.24 u (own ends), 33.29 u (entry frame); status 0 nfev 1529/8000
+ft                     Plc1m ft solved: exit 2.00 u from f's end, entry cusp at 34.03 u (retrace True); J 0.000279 (conn 2e-05, L 7.4e-05, R 0.00019) Js 0.00372 conn 186 u window 237 u pen 0 kmax 0.037/u speed 0.79 cross 0 (allowed 0) side -0.00 ymin 16.3 u; dist to font 13.24 u (own ends), 33.28 u (entry frame); status 0 nfev 1475/8000
+fu                     v7.1  fu solved: exit 2.00 u from f's end, entry cusp at 5.78 u (retrace True); J 8.58e-05 (conn 1.1e-05, L 7.4e-05, R 9.4e-07) Js 0.000556 conn 164 u window 186 u pen 0 kmax 0.034/u speed 0.72 cross 0 (allowed 0) side 0.00 ymin 15.4 u; dist to font 12.66 u (own ends), 12.66 u (entry frame); status 0 nfev 903/8000
+fu                     v7.2  fu solved: exit 2.00 u from f's end, entry cusp at 5.78 u (retrace True); J 8.58e-05 (conn 1.1e-05, L 7.4e-05, R 9.4e-07) Js 0.000556 conn 164 u window 186 u pen 0 kmax 0.034/u speed 0.72 cross 0 (allowed 0) side 0.00 ymin 15.4 u; dist to font 12.66 u (own ends), 12.66 u (entry frame); status 0 nfev 885/8000
+fu                     Plc1m fu solved: exit 2.00 u from f's end, entry cusp at 5.78 u (retrace True); J 8.58e-05 (conn 1.1e-05, L 7.4e-05, R 9.4e-07) Js 0.000556 conn 164 u window 186 u pen 0 kmax 0.034/u speed 0.72 cross 0 (allowed 0) side 0.00 ymin 15.4 u; dist to font 12.66 u (own ends), 12.66 u (entry frame); status 0 nfev 1595/8000
+fw                     v7.1  fw solved: exit 2.00 u from f's end, entry cusp at 9.01 u (retrace True); J 0.000279 (conn 9.7e-05, L 7.4e-05, R 0.00011) Js 0.00179 conn 160 u window 186 u pen 0 kmax 0.036/u speed 0.44 cross 0 (allowed 0) side -0.01 ymin 16.1 u; dist to font 12.96 u (own ends), 12.96 u (entry frame); status 0 nfev 1413/8000
+fw                     v7.2  fw solved: exit 2.00 u from f's end, entry cusp at 9.42 u (retrace True); J 0.000279 (conn 9.4e-05, L 7.4e-05, R 0.00011) Js 0.00179 conn 159 u window 186 u pen 0 kmax 0.036/u speed 0.44 cross 0 (allowed 0) side -0.01 ymin 16.1 u; dist to font 12.95 u (own ends), 12.95 u (entry frame); status 0 nfev 1804/8000
+fw                     Plc1m fw solved: exit 2.00 u from f's end, entry cusp at 9.22 u (retrace True); J 0.00028 (conn 9.6e-05, L 7.4e-05, R 0.00011) Js 0.00179 conn 160 u window 186 u pen 0 kmax 0.037/u speed 0.50 cross 0 (allowed 0) side -0.01 ymin 16.1 u; dist to font 12.97 u (own ends), 12.97 u (entry frame); status 0 nfev 2204/8000
+fy                     v7.1  fy solved: exit 2.00 u from f's end, entry cusp at 3.00 u (retrace True); J 8.74e-05 (conn 1.4e-05, L 7.4e-05, R 0) Js 0.00056 conn 166 u window 186 u pen 0 kmax 0.034/u speed 0.65 cross 0 (allowed 0) side 0.00 ymin 15.4 u; dist to font 12.68 u (own ends), 12.68 u (entry frame); status 0 nfev 1978/8000
+fy                     v7.2  fy solved: exit 1.98 u from f's end, entry cusp at 3.00 u (retrace True); J 8.83e-05 (conn 1.4e-05, L 7.4e-05, R 0) Js 0.000564 conn 166 u window 186 u pen 0 kmax 0.034/u speed 0.48 cross 0 (allowed 0) side 0.00 ymin 15.5 u; dist to font 12.71 u (own ends), 12.71 u (entry frame); status 0 nfev 1829/8000
+fy                     Plc1m fy solved: exit 2.00 u from f's end, entry cusp at 3.00 u (retrace True); J 8.74e-05 (conn 1.4e-05, L 7.4e-05, R 5.9e-18) Js 0.00056 conn 166 u window 186 u pen 0 kmax 0.034/u speed 0.65 cross 0 (allowed 0) side 0.00 ymin 15.4 u; dist to font 12.68 u (own ends), 12.68 u (entry frame); status 0 nfev 4933/8000
+hi                     v7.1  hi solved: exit 0.00 u from h's end, entry cusp at 0.00 u (retrace True); J 0.000284 (conn 0.00013, L 0.00015, R 0) Js 0.00185 conn 157 u window 187 u pen 0 kmax 0.059/u speed 0.78 cross 0 (allowed 0) side 0.01 ymin 1.0 u; dist to font 9.96 u (own ends), 9.96 u (entry frame); status 0 nfev 1076/3000
+hi                     v7.2  hi solved: exit 0.00 u from h's end, entry cusp at 2.00 u (retrace True); J 0.000296 (conn 0.00014, L 0.00015, R 0) Js 0.00187 conn 155 u window 185 u pen 0 kmax 0.059/u speed 0.86 cross 0 (allowed 0) side 0.01 ymin 1.0 u; dist to font 8.72 u (own ends), 8.72 u (entry frame); status 0 nfev 2862/8000
+hi                     Plc1m hi solved: exit 0.00 u from h's end, entry cusp at 1.00 u (retrace True); J 0.00029 (conn 0.00014, L 0.00015, R 0) Js 0.00186 conn 156 u window 186 u pen 0 kmax 0.059/u speed 0.84 cross 0 (allowed 0) side 0.01 ymin 1.0 u; dist to font 9.29 u (own ends), 9.29 u (entry frame); status 0 nfev 758/8000
+hj                     v7.1  hj solved: exit 0.00 u from h's end, entry cusp at 3.00 u (retrace True); J 0.000341 (conn 0.00019, L 0.00015, R 5.7e-13) Js 0.00214 conn 154 u window 184 u pen 0 kmax 0.059/u speed 0.89 cross 0 (allowed 0) side 0.00 ymin 1.0 u; dist to font 6.58 u (own ends), 6.58 u (entry frame); status 0 nfev 894/3000
+hj                     v7.2  hj solved: exit 0.00 u from h's end, entry cusp at 3.00 u (retrace True); J 0.000341 (conn 0.00019, L 0.00015, R 1.1e-13) Js 0.00214 conn 154 u window 184 u pen 0 kmax 0.059/u speed 0.89 cross 0 (allowed 0) side 0.00 ymin 1.0 u; dist to font 6.58 u (own ends), 6.58 u (entry frame); status 0 nfev 1323/8000
+hj                     Plc1m hj solved: exit 0.00 u from h's end, entry cusp at 3.00 u (retrace True); J 0.000341 (conn 0.00019, L 0.00015, R 6.3e-13) Js 0.00214 conn 154 u window 184 u pen 0 kmax 0.059/u speed 0.89 cross 0 (allowed 0) side 0.00 ymin 1.0 u; dist to font 6.58 u (own ends), 6.58 u (entry frame); status 0 nfev 1339/8000
+hp                     v7.1  hp solved: exit 0.00 u from h's end, entry cusp at 10.31 u (retrace True); J 0.000548 (conn 0.00026, L 0.00015, R 0.00013) Js 0.00355 conn 149 u window 186 u pen 0 kmax 0.059/u speed 0.87 cross 0 (allowed 0) side 0.00 ymin 1.0 u; dist to font 5.31 u (own ends), 10.18 u (entry frame); status 0 nfev 629/3000
+hp                     v7.2  hp solved: exit 0.00 u from h's end, entry cusp at 10.31 u (retrace True); J 0.000548 (conn 0.00026, L 0.00015, R 0.00013) Js 0.00355 conn 149 u window 186 u pen 0 kmax 0.059/u speed 0.87 cross 0 (allowed 0) side 0.00 ymin 1.0 u; dist to font 5.32 u (own ends), 10.18 u (entry frame); status 0 nfev 554/8000
+hp                     Plc1m hp solved: exit 0.00 u from h's end, entry cusp at 10.59 u (retrace True); J 0.000548 (conn 0.00026, L 0.00015, R 0.00013) Js 0.00355 conn 149 u window 186 u pen 0 kmax 0.059/u speed 0.87 cross 0 (allowed 0) side 0.00 ymin 1.0 u; dist to font 5.34 u (own ends), 10.44 u (entry frame); status 0 nfev 842/8000
+hr                     v7.1  hr solved: exit 0.00 u from h's end, entry cusp at 0.00 u (retrace True); J 0.000323 (conn 0.00017, L 0.00015, R 0) Js 0.00239 conn 165 u window 195 u pen 0 kmax 0.059/u speed 0.90 cross 0 (allowed 0) side 0.01 ymin 1.0 u; dist to font 15.79 u (own ends), 15.79 u (entry frame); status 0 nfev 2082/3000
+hr                     v7.2  hr solved: exit 0.00 u from h's end, entry cusp at 2.00 u (retrace True); J 0.000348 (conn 0.0002, L 0.00015, R 0) Js 0.00251 conn 163 u window 193 u pen 0 kmax 0.059/u speed 0.89 cross 0 (allowed 0) side 0.01 ymin 1.0 u; dist to font 14.52 u (own ends), 14.52 u (entry frame); status 0 nfev 1164/8000
+hr                     Plc1m hr solved: exit 0.00 u from h's end, entry cusp at 1.00 u (retrace True); J 0.000334 (conn 0.00018, L 0.00015, R 0) Js 0.00244 conn 164 u window 194 u pen 0 kmax 0.059/u speed 0.90 cross 0 (allowed 0) side 0.01 ymin 1.0 u; dist to font 15.16 u (own ends), 15.16 u (entry frame); status 0 nfev 2767/8000
+hs                     v7.1  hs solved: exit 0.00 u from h's end, entry cusp at 0.00 u (retrace True); J 0.000312 (conn 0.00016, L 0.00015, R 0) Js 0.00247 conn 169 u window 199 u pen 0 kmax 0.059/u speed 0.91 cross 0 (allowed 0) side 0.01 ymin 1.0 u; dist to font 15.29 u (own ends), 15.29 u (entry frame); status 1 nfev 3000/3000
+hs                     v7.2  hs solved: exit 0.00 u from h's end, entry cusp at 2.00 u (retrace True); J 0.000326 (conn 0.00017, L 0.00015, R 0) Js 0.00251 conn 167 u window 197 u pen 0 kmax 0.059/u speed 0.92 cross 0 (allowed 0) side 0.01 ymin 1.0 u; dist to font 14.26 u (own ends), 14.25 u (entry frame); status 0 nfev 3109/8000
+hs                     Plc1m hs solved: exit 0.00 u from h's end, entry cusp at 1.00 u (retrace True); J 0.000318 (conn 0.00017, L 0.00015, R 0) Js 0.00249 conn 168 u window 198 u pen 0 kmax 0.059/u speed 0.92 cross 0 (allowed 0) side 0.01 ymin 1.0 u; dist to font 14.78 u (own ends), 14.79 u (entry frame); status 0 nfev 4188/8000
+ht                     v7.1  ht solved: exit 0.21 u from h's end, entry cusp at 34.70 u (retrace True); J 0.000452 (conn 0.00012, L 0.00015, R 0.00019) Js 0.0062 conn 178 u window 239 u pen 0 kmax 0.060/u speed 0.45 cross 0 (allowed 0) side 0.00 ymin 1.0 u; dist to font 17.97 u (own ends), 33.95 u (entry frame); status 0 nfev 976/3000
+ht                     v7.2  ht solved: exit 0.00 u from h's end, entry cusp at 34.70 u (retrace True); J 0.000452 (conn 0.00011, L 0.00015, R 0.00019) Js 0.0062 conn 178 u window 239 u pen 0 kmax 0.059/u speed 0.45 cross 0 (allowed 0) side 0.00 ymin 1.0 u; dist to font 17.98 u (own ends), 33.95 u (entry frame); status 0 nfev 1799/8000
+ht                     Plc1m ht solved: exit 0.00 u from h's end, entry cusp at 34.70 u (retrace True); J 0.000452 (conn 0.00011, L 0.00015, R 0.00019) Js 0.0062 conn 178 u window 239 u pen 0 kmax 0.059/u speed 0.45 cross 0 (allowed 0) side 0.00 ymin 1.0 u; dist to font 17.98 u (own ends), 33.95 u (entry frame); status 0 nfev 1466/8000
+hu                     v7.1  hu solved: exit 0.00 u from h's end, entry cusp at 3.14 u (retrace True); J 0.000304 (conn 0.00015, L 0.00015, R 1.4e-07) Js 0.00191 conn 154 u window 185 u pen 0 kmax 0.059/u speed 0.88 cross 0 (allowed 0) side 0.00 ymin 1.0 u; dist to font 8.05 u (own ends), 8.05 u (entry frame); status 0 nfev 1123/3000
+hu                     v7.2  hu solved: exit 0.00 u from h's end, entry cusp at 3.14 u (retrace True); J 0.000304 (conn 0.00015, L 0.00015, R 1.4e-07) Js 0.00191 conn 154 u window 185 u pen 0 kmax 0.059/u speed 0.88 cross 0 (allowed 0) side 0.00 ymin 1.0 u; dist to font 8.05 u (own ends), 8.05 u (entry frame); status 0 nfev 717/8000
+hu                     Plc1m hu solved: exit 0.00 u from h's end, entry cusp at 3.14 u (retrace True); J 0.000304 (conn 0.00015, L 0.00015, R 1.4e-07) Js 0.00191 conn 154 u window 185 u pen 0 kmax 0.059/u speed 0.88 cross 0 (allowed 0) side 0.00 ymin 1.0 u; dist to font 8.05 u (own ends), 8.05 u (entry frame); status 0 nfev 1358/8000
+hw                     v7.1  hw solved: exit 0.00 u from h's end, entry cusp at 9.62 u (retrace True); J 0.000525 (conn 0.00026, L 0.00015, R 0.00011) Js 0.00339 conn 150 u window 186 u pen 0 kmax 0.059/u speed 0.86 cross 0 (allowed 0) side 0.00 ymin 1.0 u; dist to font 6.55 u (own ends), 9.53 u (entry frame); status 0 nfev 892/3000
+hw                     v7.2  hw solved: exit 0.00 u from h's end, entry cusp at 9.62 u (retrace True); J 0.000525 (conn 0.00026, L 0.00015, R 0.00011) Js 0.00339 conn 150 u window 186 u pen 0 kmax 0.059/u speed 0.86 cross 0 (allowed 0) side 0.00 ymin 1.0 u; dist to font 6.55 u (own ends), 9.53 u (entry frame); status 0 nfev 1270/8000
+hw                     Plc1m hw solved: exit 0.00 u from h's end, entry cusp at 9.42 u (retrace True); J 0.000525 (conn 0.00026, L 0.00015, R 0.00011) Js 0.00339 conn 150 u window 186 u pen 0 kmax 0.059/u speed 0.86 cross 0 (allowed 0) side 0.00 ymin 1.0 u; dist to font 6.53 u (own ends), 9.34 u (entry frame); status 0 nfev 1268/8000
+hy                     v7.1  hy solved: exit 0.00 u from h's end, entry cusp at 3.00 u (retrace True); J 0.000302 (conn 0.00015, L 0.00015, R 0) Js 0.00188 conn 154 u window 184 u pen 0 kmax 0.059/u speed 0.92 cross 0 (allowed 0) side 0.00 ymin 1.0 u; dist to font 8.61 u (own ends), 8.61 u (entry frame); status 0 nfev 1319/3000
+hy                     v7.2  hy solved: exit 0.00 u from h's end, entry cusp at 3.00 u (retrace True); J 0.000302 (conn 0.00015, L 0.00015, R 0) Js 0.00188 conn 154 u window 184 u pen 0 kmax 0.059/u speed 0.92 cross 0 (allowed 0) side 0.00 ymin 1.0 u; dist to font 8.61 u (own ends), 8.61 u (entry frame); status 0 nfev 549/8000
+hy                     Plc1m hy solved: exit 0.00 u from h's end, entry cusp at 3.00 u (retrace True); J 0.000302 (conn 0.00015, L 0.00015, R 0) Js 0.00188 conn 154 u window 184 u pen 0 kmax 0.059/u speed 0.92 cross 0 (allowed 0) side 0.00 ymin 1.0 u; dist to font 8.61 u (own ends), 8.61 u (entry frame); status 0 nfev 1730/8000
+ii                     v7.1  ii solved: exit 0.00 u from i's end, entry cusp at 0.00 u (retrace True); J 0.000258 (conn 0.00012, L 0.00014, R 0) Js 0.00167 conn 156 u window 186 u pen 0 kmax 0.056/u speed 0.79 cross 0 (allowed 0) side 0.01 ymin 1.1 u; dist to font 9.37 u (own ends), 9.37 u (entry frame); status 0 nfev 2826/3000
+ii                     v7.2  ii solved: exit 0.00 u from i's end, entry cusp at 2.00 u (retrace True); J 0.000269 (conn 0.00013, L 0.00014, R 0) Js 0.00169 conn 154 u window 184 u pen 0 kmax 0.056/u speed 0.87 cross 0 (allowed 0) side 0.01 ymin 1.1 u; dist to font 8.11 u (own ends), 8.11 u (entry frame); status 0 nfev 1994/8000
+ii                     Plc1m ii solved: exit 0.00 u from i's end, entry cusp at 1.00 u (retrace True); J 0.000263 (conn 0.00012, L 0.00014, R 0) Js 0.00168 conn 155 u window 185 u pen 0 kmax 0.056/u speed 0.85 cross 0 (allowed 0) side 0.01 ymin 1.1 u; dist to font 8.70 u (own ends), 8.70 u (entry frame); status 0 nfev 2886/8000
+ip                     v7.1  ip solved: exit 1.50 u from i's end, entry cusp at 10.61 u (retrace True); J 0.000517 (conn 0.00024, L 0.00014, R 0.00014) Js 0.00334 conn 150 u window 186 u pen 0 kmax 0.059/u speed 0.85 cross 0 (allowed 0) side 0.00 ymin 0.8 u; dist to font 5.76 u (own ends), 10.47 u (entry frame); status 0 nfev 437/3000
+ip                     v7.2  ip solved: exit 1.49 u from i's end, entry cusp at 10.33 u (retrace True); J 0.000517 (conn 0.00025, L 0.00014, R 0.00013) Js 0.00334 conn 150 u window 186 u pen 0 kmax 0.059/u speed 0.85 cross 0 (allowed 0) side 0.00 ymin 0.8 u; dist to font 5.74 u (own ends), 10.19 u (entry frame); status 0 nfev 448/8000
+ip                     Plc1m ip solved: exit 1.49 u from i's end, entry cusp at 10.33 u (retrace True); J 0.000517 (conn 0.00025, L 0.00014, R 0.00013) Js 0.00334 conn 150 u window 186 u pen 0 kmax 0.059/u speed 0.85 cross 0 (allowed 0) side 0.00 ymin 0.8 u; dist to font 5.74 u (own ends), 10.19 u (entry frame); status 0 nfev 523/8000
+ir                     v7.1  ir solved: exit 0.00 u from i's end, entry cusp at 0.00 u (retrace True); J 0.000296 (conn 0.00015, L 0.00014, R 0) Js 0.00218 conn 165 u window 195 u pen 0 kmax 0.056/u speed 0.90 cross 0 (allowed 0) side 0.01 ymin 1.1 u; dist to font 15.13 u (own ends), 15.13 u (entry frame); status 0 nfev 2068/3000
+ir                     v7.2  ir solved: exit 0.00 u from i's end, entry cusp at 2.00 u (retrace True); J 0.00032 (conn 0.00018, L 0.00014, R 0) Js 0.0023 conn 163 u window 193 u pen 0 kmax 0.056/u speed 0.90 cross 0 (allowed 0) side 0.01 ymin 1.1 u; dist to font 13.88 u (own ends), 13.88 u (entry frame); status 0 nfev 2480/8000
+ir                     Plc1m ir solved: exit 0.00 u from i's end, entry cusp at 1.00 u (retrace True); J 0.000306 (conn 0.00016, L 0.00014, R 0) Js 0.00223 conn 164 u window 194 u pen 0 kmax 0.056/u speed 0.90 cross 0 (allowed 0) side 0.01 ymin 1.1 u; dist to font 14.51 u (own ends), 14.51 u (entry frame); status 0 nfev 1781/8000
+is                     v7.1  is solved: exit 0.00 u from i's end, entry cusp at 0.00 u (retrace True); J 0.000285 (conn 0.00014, L 0.00014, R 0) Js 0.00225 conn 169 u window 199 u pen 0 kmax 0.056/u speed 0.92 cross 0 (allowed 0) side 0.01 ymin 1.1 u; dist to font 14.65 u (own ends), 14.65 u (entry frame); status 0 nfev 2248/3000
+is                     v7.2  is solved: exit 0.00 u from i's end, entry cusp at 2.00 u (retrace True); J 0.000298 (conn 0.00016, L 0.00014, R 0) Js 0.00228 conn 167 u window 197 u pen 0 kmax 0.056/u speed 0.92 cross 0 (allowed 0) side 0.01 ymin 1.1 u; dist to font 13.60 u (own ends), 13.60 u (entry frame); status 0 nfev 616/8000
+is                     Plc1m is solved: exit 0.00 u from i's end, entry cusp at 1.00 u (retrace True); J 0.000291 (conn 0.00015, L 0.00014, R 0) Js 0.00226 conn 168 u window 198 u pen 0 kmax 0.056/u speed 0.92 cross 0 (allowed 0) side 0.01 ymin 1.1 u; dist to font 14.13 u (own ends), 14.13 u (entry frame); status 0 nfev 1128/8000
+it                     v7.1  it solved: exit 0.00 u from i's end, entry cusp at 34.52 u (retrace True); J 0.000438 (conn 0.00011, L 0.00014, R 0.00019) Js 0.00595 conn 177 u window 239 u pen 0 kmax 0.056/u speed 0.57 cross 0 (allowed 0) side 0.00 ymin 1.1 u; dist to font 15.95 u (own ends), 33.77 u (entry frame); status 0 nfev 755/3000
+it                     v7.2  it solved: exit 0.00 u from i's end, entry cusp at 34.52 u (retrace True); J 0.000438 (conn 0.00011, L 0.00014, R 0.00019) Js 0.00595 conn 177 u window 239 u pen 0 kmax 0.056/u speed 0.57 cross 0 (allowed 0) side 0.00 ymin 1.1 u; dist to font 15.95 u (own ends), 33.77 u (entry frame); status 0 nfev 1510/8000
+it                     Plc1m it solved: exit 10.00 u from i's end, entry cusp at 34.90 u (retrace True); J 0.000425 (conn 0.00013, L 0.00011, R 0.00019) Js 0.0058 conn 187 u window 239 u pen 0 kmax 0.074/u speed 0.53 cross 0 (allowed 0) side 0.00 ymin 0.5 u; dist to font 14.96 u (own ends), 34.14 u (entry frame); status 0 nfev 2119/8000
+iu                     v7.1  iu solved: exit 0.00 u from i's end, entry cusp at 3.15 u (retrace True); J 0.000277 (conn 0.00013, L 0.00014, R 1.5e-07) Js 0.00173 conn 154 u window 184 u pen 0 kmax 0.056/u speed 0.88 cross 0 (allowed 0) side 0.00 ymin 1.1 u; dist to font 7.44 u (own ends), 7.44 u (entry frame); status 0 nfev 972/3000
+iu                     v7.2  iu solved: exit 0.00 u from i's end, entry cusp at 3.15 u (retrace True); J 0.000277 (conn 0.00013, L 0.00014, R 1.4e-07) Js 0.00173 conn 154 u window 184 u pen 0 kmax 0.056/u speed 0.88 cross 0 (allowed 0) side 0.00 ymin 1.1 u; dist to font 7.44 u (own ends), 7.44 u (entry frame); status 0 nfev 751/8000
+iu                     Plc1m iu solved: exit 0.00 u from i's end, entry cusp at 3.15 u (retrace True); J 0.000277 (conn 0.00013, L 0.00014, R 1.4e-07) Js 0.00173 conn 154 u window 184 u pen 0 kmax 0.056/u speed 0.88 cross 0 (allowed 0) side 0.00 ymin 1.1 u; dist to font 7.44 u (own ends), 7.44 u (entry frame); status 0 nfev 1073/8000
+iw                     v7.1  iw solved: exit 1.59 u from i's end, entry cusp at 10.03 u (retrace True); J 0.000493 (conn 0.00024, L 0.00014, R 0.00012) Js 0.00318 conn 151 u window 186 u pen 0 kmax 0.059/u speed 0.84 cross 0 (allowed 0) side 0.00 ymin 0.7 u; dist to font 7.04 u (own ends), 9.93 u (entry frame); status 0 nfev 492/3000
+iw                     v7.2  iw solved: exit 1.59 u from i's end, entry cusp at 10.03 u (retrace True); J 0.000493 (conn 0.00024, L 0.00014, R 0.00012) Js 0.00318 conn 151 u window 186 u pen 0 kmax 0.059/u speed 0.84 cross 0 (allowed 0) side 0.00 ymin 0.7 u; dist to font 7.04 u (own ends), 9.93 u (entry frame); status 0 nfev 787/8000
+iw                     Plc1m iw solved: exit 1.59 u from i's end, entry cusp at 10.03 u (retrace True); J 0.000493 (conn 0.00024, L 0.00014, R 0.00012) Js 0.00318 conn 151 u window 186 u pen 0 kmax 0.059/u speed 0.84 cross 0 (allowed 0) side 0.00 ymin 0.7 u; dist to font 7.04 u (own ends), 9.93 u (entry frame); status 0 nfev 491/8000
+iy                     v7.1  iy solved: exit 0.00 u from i's end, entry cusp at 3.00 u (retrace True); J 0.000275 (conn 0.00013, L 0.00014, R 5.9e-16) Js 0.0017 conn 154 u window 184 u pen 0 kmax 0.056/u speed 0.92 cross 0 (allowed 0) side 0.00 ymin 1.1 u; dist to font 8.00 u (own ends), 8.00 u (entry frame); status 0 nfev 1281/3000
+iy                     v7.2  iy solved: exit 0.00 u from i's end, entry cusp at 3.00 u (retrace True); J 0.000275 (conn 0.00013, L 0.00014, R 0) Js 0.0017 conn 154 u window 184 u pen 0 kmax 0.056/u speed 0.92 cross 0 (allowed 0) side 0.00 ymin 1.1 u; dist to font 8.00 u (own ends), 8.00 u (entry frame); status 0 nfev 883/8000
+iy                     Plc1m iy solved: exit 0.00 u from i's end, entry cusp at 3.00 u (retrace True); J 0.000275 (conn 0.00013, L 0.00014, R 0) Js 0.0017 conn 154 u window 184 u pen 0 kmax 0.056/u speed 0.92 cross 0 (allowed 0) side 0.00 ymin 1.1 u; dist to font 8.00 u (own ends), 8.00 u (entry frame); status 0 nfev 1790/8000
+ni                     v7.1  ni solved: exit 0.92 u from n's end, entry cusp at 0.42 u (retrace True); J 0.000373 (conn 0.00014, L 0.00024, R 0) Js 0.00241 conn 157 u window 186 u pen 0 kmax 0.060/u speed 0.79 cross 0 (allowed 0) side 0.01 ymin 0.8 u; dist to font 9.03 u (own ends), 9.03 u (entry frame); status 0 nfev 777/3000
+ni                     v7.2  ni solved: exit 1.24 u from n's end, entry cusp at 3.00 u (retrace True); J 0.000387 (conn 0.00015, L 0.00024, R 0) Js 0.00241 conn 155 u window 184 u pen 0 kmax 0.061/u speed 0.85 cross 0 (allowed 0) side 0.01 ymin 0.8 u; dist to font 7.42 u (own ends), 7.42 u (entry frame); status 0 nfev 1726/8000
+ni                     Plc1m ni solved: exit 1.24 u from n's end, entry cusp at 3.00 u (retrace True); J 0.000387 (conn 0.00015, L 0.00024, R 0) Js 0.00241 conn 155 u window 184 u pen 0 kmax 0.061/u speed 0.85 cross 0 (allowed 0) side 0.01 ymin 0.8 u; dist to font 7.42 u (own ends), 7.42 u (entry frame); status 0 nfev 1269/8000
+nj                     v7.1  nj solved: exit 1.61 u from n's end, entry cusp at 3.00 u (retrace True); J 0.000427 (conn 0.00019, L 0.00024, R 7e-14) Js 0.00269 conn 156 u window 185 u pen 0 kmax 0.061/u speed 0.86 cross 0 (allowed 0) side 0.00 ymin 0.7 u; dist to font 5.53 u (own ends), 5.53 u (entry frame); status 0 nfev 665/3000
+nj                     v7.2  nj solved: exit 1.61 u from n's end, entry cusp at 3.00 u (retrace True); J 0.000427 (conn 0.00019, L 0.00024, R 5.2e-13) Js 0.00269 conn 156 u window 185 u pen 0 kmax 0.061/u speed 0.86 cross 0 (allowed 0) side 0.00 ymin 0.7 u; dist to font 5.53 u (own ends), 5.53 u (entry frame); status 0 nfev 575/8000
+nj                     Plc1m nj solved: exit 1.61 u from n's end, entry cusp at 3.00 u (retrace True); J 0.000427 (conn 0.00019, L 0.00024, R 8.9e-13) Js 0.00269 conn 156 u window 185 u pen 0 kmax 0.061/u speed 0.86 cross 0 (allowed 0) side 0.00 ymin 0.7 u; dist to font 5.53 u (own ends), 5.53 u (entry frame); status 0 nfev 613/8000
+np                     v7.1  np solved: exit 2.23 u from n's end, entry cusp at 7.88 u (retrace True); J 0.000631 (conn 0.0003, L 0.00023, R 0.0001) Js 0.0041 conn 154 u window 187 u pen 0 kmax 0.062/u speed 0.82 cross 0 (allowed 0) side -0.00 ymin 0.6 u; dist to font 5.32 u (own ends), 7.81 u (entry frame); status 0 nfev 701/3000
+np                     v7.2  np solved: exit 2.22 u from n's end, entry cusp at 10.30 u (retrace True); J 0.000631 (conn 0.00026, L 0.00023, R 0.00013) Js 0.0041 conn 152 u window 187 u pen 0 kmax 0.062/u speed 0.83 cross 0 (allowed 0) side 0.00 ymin 0.6 u; dist to font 5.41 u (own ends), 10.17 u (entry frame); status 0 nfev 414/8000
+np                     Plc1m np solved: exit 2.22 u from n's end, entry cusp at 9.47 u (retrace True); J 0.000631 (conn 0.00027, L 0.00023, R 0.00012) Js 0.0041 conn 152 u window 187 u pen 0 kmax 0.062/u speed 0.83 cross 0 (allowed 0) side 0.00 ymin 0.6 u; dist to font 5.37 u (own ends), 9.36 u (entry frame); status 0 nfev 416/8000
+nr                     v7.1  nr solved: exit 0.94 u from n's end, entry cusp at 0.00 u (retrace True); J 0.000409 (conn 0.00017, L 0.00024, R 0) Js 0.00303 conn 166 u window 195 u pen 0 kmax 0.060/u speed 0.89 cross 0 (allowed 0) side 0.01 ymin 0.8 u; dist to font 15.16 u (own ends), 15.16 u (entry frame); status 0 nfev 1237/3000
+nr                     v7.2  nr solved: exit 1.23 u from n's end, entry cusp at 2.00 u (retrace True); J 0.000434 (conn 0.0002, L 0.00024, R 0) Js 0.00314 conn 165 u window 193 u pen 0 kmax 0.061/u speed 0.87 cross 0 (allowed 0) side 0.01 ymin 0.8 u; dist to font 13.70 u (own ends), 13.70 u (entry frame); status 0 nfev 1503/8000
+nr                     Plc1m nr solved: exit 1.13 u from n's end, entry cusp at 1.00 u (retrace True); J 0.00042 (conn 0.00018, L 0.00024, R 0) Js 0.00308 conn 165 u window 194 u pen 0 kmax 0.060/u speed 0.88 cross 0 (allowed 0) side 0.01 ymin 0.8 u; dist to font 14.40 u (own ends), 14.40 u (entry frame); status 0 nfev 1069/8000
+ns                     v7.1  ns solved: exit 1.11 u from n's end, entry cusp at 0.00 u (retrace True); J 0.000399 (conn 0.00016, L 0.00024, R 0) Js 0.00316 conn 171 u window 199 u pen 0 kmax 0.060/u speed 0.90 cross 0 (allowed 0) side 0.01 ymin 0.8 u; dist to font 14.37 u (own ends), 14.37 u (entry frame); status 0 nfev 530/3000
+ns                     v7.2  ns solved: exit 1.21 u from n's end, entry cusp at 2.00 u (retrace True); J 0.000412 (conn 0.00017, L 0.00024, R 0) Js 0.00317 conn 169 u window 198 u pen 0 kmax 0.060/u speed 0.90 cross 0 (allowed 0) side 0.01 ymin 0.8 u; dist to font 13.27 u (own ends), 13.27 u (entry frame); status 0 nfev 707/8000
+ns                     Plc1m ns solved: exit 1.16 u from n's end, entry cusp at 1.00 u (retrace True); J 0.000405 (conn 0.00017, L 0.00024, R 0) Js 0.00316 conn 170 u window 198 u pen 0 kmax 0.060/u speed 0.90 cross 0 (allowed 0) side 0.01 ymin 0.8 u; dist to font 13.84 u (own ends), 13.84 u (entry frame); status 0 nfev 489/8000
+nt                     v7.1  nt solved: exit 5.52 u from n's end, entry cusp at 34.87 u (retrace True); J 0.000536 (conn 0.00013, L 0.00022, R 0.00019) Js 0.00735 conn 183 u window 239 u pen 0 kmax 0.069/u speed 0.50 cross 0 (allowed 0) side 0.00 ymin 0.5 u; dist to font 16.31 u (own ends), 34.11 u (entry frame); status 0 nfev 1036/3000
+nt                     v7.2  nt solved: exit 5.82 u from n's end, entry cusp at 34.87 u (retrace True); J 0.000536 (conn 0.00013, L 0.00022, R 0.00019) Js 0.00735 conn 183 u window 239 u pen 0 kmax 0.069/u speed 0.50 cross 0 (allowed 0) side 0.00 ymin 0.5 u; dist to font 16.28 u (own ends), 34.12 u (entry frame); status 0 nfev 975/8000
+nt                     Plc1m nt solved: exit 5.52 u from n's end, entry cusp at 34.87 u (retrace True); J 0.000536 (conn 0.00013, L 0.00022, R 0.00019) Js 0.00735 conn 183 u window 239 u pen 0 kmax 0.069/u speed 0.50 cross 0 (allowed 0) side 0.00 ymin 0.5 u; dist to font 16.31 u (own ends), 34.11 u (entry frame); status 0 nfev 853/8000
+nu                     v7.1  nu solved: exit 1.27 u from n's end, entry cusp at 3.15 u (retrace True); J 0.00039 (conn 0.00015, L 0.00024, R 1.5e-07) Js 0.00245 conn 156 u window 185 u pen 0 kmax 0.061/u speed 0.85 cross 0 (allowed 0) side 0.00 ymin 0.7 u; dist to font 7.18 u (own ends), 7.18 u (entry frame); status 0 nfev 481/3000
+nu                     v7.2  nu solved: exit 1.27 u from n's end, entry cusp at 3.15 u (retrace True); J 0.00039 (conn 0.00015, L 0.00024, R 1.5e-07) Js 0.00245 conn 156 u window 185 u pen 0 kmax 0.061/u speed 0.85 cross 0 (allowed 0) side 0.00 ymin 0.7 u; dist to font 7.18 u (own ends), 7.18 u (entry frame); status 0 nfev 430/8000
+nu                     Plc1m nu solved: exit 1.27 u from n's end, entry cusp at 3.15 u (retrace True); J 0.00039 (conn 0.00015, L 0.00024, R 1.5e-07) Js 0.00245 conn 156 u window 185 u pen 0 kmax 0.061/u speed 0.85 cross 0 (allowed 0) side 0.00 ymin 0.7 u; dist to font 7.18 u (own ends), 7.18 u (entry frame); status 0 nfev 736/8000
+nw                     v7.1  nw solved: exit 2.26 u from n's end, entry cusp at 9.78 u (retrace True); J 0.000608 (conn 0.00026, L 0.00023, R 0.00012) Js 0.00394 conn 152 u window 186 u pen 0 kmax 0.062/u speed 0.82 cross 0 (allowed 0) side 0.00 ymin 0.6 u; dist to font 6.65 u (own ends), 9.69 u (entry frame); status 0 nfev 494/3000
+nw                     v7.2  nw solved: exit 2.26 u from n's end, entry cusp at 9.02 u (retrace True); J 0.000608 (conn 0.00027, L 0.00023, R 0.00011) Js 0.00394 conn 153 u window 186 u pen 0 kmax 0.062/u speed 0.82 cross 0 (allowed 0) side 0.00 ymin 0.6 u; dist to font 6.57 u (own ends), 8.94 u (entry frame); status 0 nfev 526/8000
+nw                     Plc1m nw solved: exit 2.26 u from n's end, entry cusp at 9.59 u (retrace True); J 0.000608 (conn 0.00026, L 0.00023, R 0.00011) Js 0.00394 conn 152 u window 186 u pen 0 kmax 0.062/u speed 0.82 cross 0 (allowed 0) side 0.00 ymin 0.6 u; dist to font 6.62 u (own ends), 9.51 u (entry frame); status 0 nfev 392/8000
+ny                     v7.1  ny solved: exit 1.23 u from n's end, entry cusp at 3.00 u (retrace True); J 0.000388 (conn 0.00015, L 0.00024, R 0) Js 0.00242 conn 155 u window 184 u pen 0 kmax 0.061/u speed 0.90 cross 0 (allowed 0) side 0.00 ymin 0.8 u; dist to font 7.79 u (own ends), 7.79 u (entry frame); status 0 nfev 719/3000
+ny                     v7.2  ny solved: exit 1.23 u from n's end, entry cusp at 3.00 u (retrace True); J 0.000388 (conn 0.00015, L 0.00024, R 0) Js 0.00242 conn 155 u window 184 u pen 0 kmax 0.061/u speed 0.90 cross 0 (allowed 0) side 0.00 ymin 0.8 u; dist to font 7.79 u (own ends), 7.79 u (entry frame); status 0 nfev 1074/8000
+ny                     Plc1m ny solved: exit 1.23 u from n's end, entry cusp at 3.00 u (retrace True); J 0.000388 (conn 0.00015, L 0.00024, R 0) Js 0.00242 conn 155 u window 184 u pen 0 kmax 0.061/u speed 0.90 cross 0 (allowed 0) side 0.00 ymin 0.8 u; dist to font 7.79 u (own ends), 7.79 u (entry frame); status 0 nfev 777/8000
+
+solves:
+ai dx 635.0 fu: nfev 1250, J 0.0002793, pen 0
+ai dx 635.0 fu: nfev 754, J 0.0002912, pen 0
+ai dx 635.0 fu: nfev 2994, J 0.0002851, pen 0
+aj dx 634.2 fu: nfev 856, J 0.0003376, pen 0
+aj dx 634.2 fu: nfev 577, J 0.0003376, pen 0
+aj dx 634.2 fu: nfev 1246, J 0.0003376, pen 0
+ap dx 636.2 fu: nfev 621, J 0.0005451, pen 0
+ap dx 636.2 fu: nfev 414, J 0.000545, pen 0
+ap dx 636.2 fu: nfev 1151, J 0.0005451, pen 0
+ar dx 658.5 fu: nfev 1918, J 0.0003187, pen 0
+ar dx 658.5 fu: nfev 2719, J 0.0003437, pen 0
+ar dx 658.5 fu: nfev 1904, J 0.0003299, pen 0
+as dx 634.2 fu: nfev 2226, J 0.0003076, pen 0
+as dx 634.2 fu: nfev 1829, J 0.0003212, pen 0
+as dx 634.2 fu: nfev 4075, J 0.000314, pen 0
+at dx 632.2 fu: nfev 643, J 0.0004439, pen 0
+at dx 632.2 fu: nfev 1432, J 0.0004439, pen 0
+at dx 632.2 fu: nfev 910, J 0.0004439, pen 0
+au dx 635.5 fu: nfev 1272, J 0.0002994, pen 0
+au dx 635.5 fu: nfev 943, J 0.0002994, pen 0
+au dx 635.5 fu: nfev 1125, J 0.0002994, pen 0
+aw dx 634.2 fu: nfev 1039, J 0.0005221, pen 0
+aw dx 634.2 fu: nfev 971, J 0.0005221, pen 0
+aw dx 634.2 fu: nfev 1344, J 0.0005222, pen 0
+ay dx 634.8 fu: nfev 850, J 0.0002974, pen 0
+ay dx 634.8 fu: nfev 1038, J 0.0002974, pen 0
+ay dx 634.8 fu: nfev 937, J 0.0002974, pen 0
+ci dx 535.5 fu: nfev 1071, J 7.398e-06, pen 0
+ci dx 535.5 fu: nfev 2067, J 1.011e-05, pen 0
+ci dx 535.5 fu: nfev 568, J 8.469e-06, pen 0
+cj dx 534.8 fu: nfev 911, J 3.232e-05, pen 0
+cj dx 534.8 fu: nfev 585, J 3.231e-05, pen 0
+cj dx 534.8 fu: nfev 1420, J 3.232e-05, pen 0
+cp dx 536.8 fu: nfev 1277, J 0.0002156, pen 0
+cp dx 536.8 fu: nfev 1797, J 0.0002156, pen 0
+cp dx 536.8 fu: nfev 1456, J 0.0002156, pen 0
+cr dx 534.0 fu: nfev 715, J 2.759e-05, pen 0
+cr dx 534.0 fu: nfev 761, J 3.953e-05, pen 0
+cr dx 534.0 fu: nfev 909, J 3.284e-05, pen 0
+cs dx 534.8 fu: nfev 1238, J 2.361e-05, pen 0
+cs dx 534.8 fu: nfev 898, J 2.963e-05, pen 0
+cs dx 534.8 fu: nfev 1016, J 2.642e-05, pen 0
+ct dx 532.8 fu: nfev 919, J 0.0001945, pen 0
+ct dx 532.8 fu: nfev 1910, J 0.0001944, pen 0
+ct dx 532.8 fu: nfev 893, J 0.0001945, pen 0
+cu dx 536.0 fu: nfev 902, J 1.286e-05, pen 0
+cu dx 536.0 fu: nfev 807, J 1.286e-05, pen 0
+cu dx 536.0 fu: nfev 591, J 1.286e-05, pen 0
+cw dx 534.8 fu: nfev 579, J 0.0002026, pen 0
+cw dx 534.8 fu: nfev 1401, J 0.0002023, pen 0
+cw dx 534.8 fu: nfev 1848, J 0.0002028, pen 0
+cy dx 535.2 fu: nfev 1461, J 1.241e-05, pen 0
+cy dx 535.2 fu: nfev 658, J 1.369e-05, pen 0
+cy dx 535.2 fu: nfev 1634, J 1.303e-05, pen 0
+di dx 642.0 fu: nfev 1179, J 0.0002347, pen 0
+di dx 642.0 fu: nfev 4103, J 0.0002461, pen 0
+di dx 642.0 fu: nfev 2305, J 0.0002403, pen 0
+dj dx 641.2 fu: nfev 829, J 0.0002911, pen 0
+dj dx 641.2 fu: nfev 1087, J 0.0002911, pen 0
+dj dx 641.2 fu: nfev 1254, J 0.0002911, pen 0
+dp dx 643.2 fu: nfev 924, J 0.000497, pen 0
+dp dx 643.2 fu: nfev 1000, J 0.0004971, pen 0
+dp dx 643.2 fu: nfev 998, J 0.0004968, pen 0
+dr dx 665.5 fu: nfev 2278, J 0.0002733, pen 0
+dr dx 665.5 fu: nfev 2216, J 0.0002976, pen 0
+dr dx 665.5 fu: nfev 876, J 0.0002842, pen 0
+ds dx 641.2 fu: nfev 2627, J 0.0002625, pen 0
+ds dx 641.2 fu: nfev 2833, J 0.0002757, pen 0
+ds dx 641.2 fu: nfev 692, J 0.0002688, pen 0
+dt dx 639.2 fu: nfev 1104, J 0.0004022, pen 0
+dt dx 639.2 fu: nfev 844, J 0.0004022, pen 0
+dt dx 639.2 fu: nfev 1696, J 0.0004022, pen 0
+du dx 642.5 fu: nfev 605, J 0.000254, pen 0
+du dx 642.5 fu: nfev 1482, J 0.000254, pen 0
+du dx 642.5 fu: nfev 1320, J 0.000254, pen 0
+dw dx 641.2 fu: nfev 632, J 0.0004738, pen 0
+dw dx 641.2 fu: nfev 913, J 0.0004738, pen 0
+dw dx 641.2 fu: nfev 749, J 0.0004738, pen 0
+dy dx 641.8 fu: nfev 1826, J 0.0002523, pen 0
+dy dx 641.8 fu: nfev 1533, J 0.0002523, pen 0
+dy dx 641.8 fu: nfev 1048, J 0.0002523, pen 0
+ei dx 434.2 fu: nfev 1593, J 2.476e-05, pen 5.12e-07
+ei dx 434.2 fu: nfev 3029, J 1.858e-05, pen 3.79e-07
+ei dx 434.2 fu: nfev 4679, J 1.77e-05, pen 3.4e-07
+ej dx 433.5 fu: nfev 2174, J 3.833e-05, pen 4.95e-07
+ej dx 433.5 fu: nfev 1803, J 3.836e-05, pen 4.73e-07
+ej dx 433.5 fu: nfev 1360, J 3.833e-05, pen 5.26e-07
+ep dx 435.5 fu: nfev 1135, J 0.0002167, pen 5.73e-10
+ep dx 435.5 fu: nfev 3085, J 0.0002162, pen 1.63e-08
+ep dx 435.5 fu: nfev 1590, J 0.000216, pen 3.02e-08
+er dx 444.8 fu: nfev 3000, J 3.461e-05, pen 5.72e-07
+er dx 444.8 fu: nfev 1168, J 4.589e-05, pen 6.28e-07
+er dx 444.8 fu: nfev 903, J 3.952e-05, pen 5.97e-07
+es dx 433.5 fu: nfev 3000, J 3.081e-05, pen 6.52e-07
+es dx 433.5 fu: nfev 2208, J 3.629e-05, pen 6.8e-07
+es dx 433.5 fu: nfev 1748, J 3.491e-05, pen 7.7e-07
+et dx 431.5 fu: nfev 1405, J 0.000209, pen 0
+et dx 431.5 fu: nfev 2582, J 0.0002086, pen 0
+et dx 431.5 fu: nfev 3008, J 0.0002086, pen 0
+eu dx 434.8 fu: nfev 3000, J 2.065e-05, pen 4.29e-07
+eu dx 434.8 fu: nfev 1592, J 2.065e-05, pen 4.39e-07
+eu dx 434.8 fu: nfev 3165, J 2.064e-05, pen 4.37e-07
+ew dx 433.5 fu: nfev 1954, J 0.0002144, pen 5.98e-08
+ew dx 433.5 fu: nfev 1211, J 0.0002137, pen 9.72e-12
+ew dx 433.5 fu: nfev 2471, J 0.0002139, pen 0
+ey dx 434.0 fu: nfev 2477, J 2.142e-05, pen 4.7e-07
+ey dx 434.0 fu: nfev 1776, J 2.143e-05, pen 4.09e-07
+ey dx 434.0 fu: nfev 1354, J 2.203e-05, pen 4.17e-07
+fi dx 438.2 fu: nfev 1342, J 8.537e-05, pen 0
+fi dx 438.2 fu: nfev 2400, J 8.512e-05, pen 0
+fi dx 438.2 fu: nfev 1794, J 8.842e-05, pen 0
+fj dx 437.5 fu: nfev 2386, J 0.0001017, pen 0
+fj dx 437.5 fu: nfev 1228, J 0.0001017, pen 0
+fj dx 437.5 fu: nfev 1557, J 0.0001015, pen 0
+fp dx 439.5 fu: nfev 1590, J 0.0002837, pen 0
+fp dx 439.5 fu: nfev 3148, J 0.0002834, pen 0
+fp dx 439.5 fu: nfev 993, J 0.0002838, pen 0
+fr dx 473.8 fu: nfev 5664, J 0.0001104, pen 0
+fr dx 473.8 fu: nfev 5664, J 0.0001104, pen 0
+fr dx 473.8 fu: nfev 5664, J 0.0001104, pen 0
+fs dx 437.5 fu: nfev 2709, J 9.949e-05, pen 0
+fs dx 437.5 fu: nfev 2709, J 9.949e-05, pen 0
+fs dx 437.5 fu: nfev 2709, J 9.949e-05, pen 0
+ft dx 435.5 fu: nfev 1968, J 0.000279, pen 0
+ft dx 435.5 fu: nfev 1529, J 0.0002788, pen 0
+ft dx 435.5 fu: nfev 1475, J 0.0002788, pen 0
+fu dx 438.8 fu: nfev 903, J 8.58e-05, pen 0
+fu dx 438.8 fu: nfev 885, J 8.58e-05, pen 0
+fu dx 438.8 fu: nfev 1595, J 8.58e-05, pen 0
+fw dx 437.5 fu: nfev 1413, J 0.0002789, pen 0
+fw dx 437.5 fu: nfev 1804, J 0.0002789, pen 0
+fw dx 437.5 fu: nfev 2204, J 0.0002796, pen 0
+fy dx 438.0 fu: nfev 1978, J 8.741e-05, pen 0
+fy dx 438.0 fu: nfev 1829, J 8.835e-05, pen 0
+fy dx 438.0 fu: nfev 4933, J 8.741e-05, pen 0
+hi dx 676.8 fu: nfev 1076, J 0.0002842, pen 0
+hi dx 676.8 fu: nfev 2862, J 0.0002958, pen 0
+hi dx 676.8 fu: nfev 758, J 0.0002899, pen 0
+hj dx 676.0 fu: nfev 894, J 0.0003415, pen 0
+hj dx 676.0 fu: nfev 1323, J 0.0003415, pen 0
+hj dx 676.0 fu: nfev 1339, J 0.0003415, pen 0
+hp dx 678.0 fu: nfev 629, J 0.0005482, pen 0
+hp dx 678.0 fu: nfev 554, J 0.0005482, pen 0
+hp dx 678.0 fu: nfev 842, J 0.0005481, pen 0
+hr dx 700.2 fu: nfev 2082, J 0.000323, pen 0
+hr dx 700.2 fu: nfev 1164, J 0.0003477, pen 0
+hr dx 700.2 fu: nfev 2767, J 0.0003341, pen 0
+hs dx 676.0 fu: nfev 3000, J 0.0003121, pen 0
+hs dx 676.0 fu: nfev 3109, J 0.0003255, pen 0
+hs dx 676.0 fu: nfev 4188, J 0.0003184, pen 0
+ht dx 674.0 fu: nfev 976, J 0.0004519, pen 0
+ht dx 674.0 fu: nfev 1799, J 0.0004518, pen 0
+ht dx 674.0 fu: nfev 1466, J 0.0004518, pen 0
+hu dx 677.2 fu: nfev 1123, J 0.0003039, pen 0
+hu dx 677.2 fu: nfev 717, J 0.0003039, pen 0
+hu dx 677.2 fu: nfev 1358, J 0.0003039, pen 0
+hw dx 676.0 fu: nfev 892, J 0.0005253, pen 0
+hw dx 676.0 fu: nfev 1270, J 0.0005253, pen 0
+hw dx 676.0 fu: nfev 1268, J 0.0005254, pen 0
+hy dx 676.5 fu: nfev 1319, J 0.000302, pen 0
+hy dx 676.5 fu: nfev 549, J 0.000302, pen 0
+hy dx 676.5 fu: nfev 1730, J 0.000302, pen 0
+ii dx 324.8 fu: nfev 2826, J 0.000258, pen 0
+ii dx 324.8 fu: nfev 1994, J 0.000269, pen 0
+ii dx 324.8 fu: nfev 2886, J 0.0002634, pen 0
+ip dx 326.0 fu: nfev 437, J 0.0005167, pen 0
+ip dx 326.0 fu: nfev 448, J 0.0005168, pen 0
+ip dx 326.0 fu: nfev 523, J 0.0005168, pen 0
+ir dx 348.2 fu: nfev 2068, J 0.0002958, pen 0
+ir dx 348.2 fu: nfev 2480, J 0.0003197, pen 0
+ir dx 348.2 fu: nfev 1781, J 0.0003065, pen 0
+is dx 324.0 fu: nfev 2248, J 0.0002853, pen 0
+is dx 324.0 fu: nfev 616, J 0.0002982, pen 0
+is dx 324.0 fu: nfev 1128, J 0.0002914, pen 0
+it dx 322.0 fu: nfev 755, J 0.0004376, pen 0
+it dx 322.0 fu: nfev 1510, J 0.0004376, pen 0
+it dx 322.0 fu: nfev 2119, J 0.0004246, pen 0
+iu dx 325.2 fu: nfev 972, J 0.0002767, pen 0
+iu dx 325.2 fu: nfev 751, J 0.0002767, pen 0
+iu dx 325.2 fu: nfev 1073, J 0.0002767, pen 0
+iw dx 324.0 fu: nfev 492, J 0.0004935, pen 0
+iw dx 324.0 fu: nfev 787, J 0.0004935, pen 0
+iw dx 324.0 fu: nfev 491, J 0.0004935, pen 0
+iy dx 324.5 fu: nfev 1281, J 0.0002751, pen 0
+iy dx 324.5 fu: nfev 883, J 0.0002751, pen 0
+iy dx 324.5 fu: nfev 1790, J 0.0002751, pen 0
+ni dx 673.0 fu: nfev 777, J 0.0003729, pen 0
+ni dx 673.0 fu: nfev 1726, J 0.0003871, pen 0
+ni dx 673.0 fu: nfev 1269, J 0.0003871, pen 0
+nj dx 672.2 fu: nfev 665, J 0.0004266, pen 0
+nj dx 672.2 fu: nfev 575, J 0.0004266, pen 0
+nj dx 672.2 fu: nfev 613, J 0.0004267, pen 0
+np dx 674.2 fu: nfev 701, J 0.0006313, pen 0
+np dx 674.2 fu: nfev 414, J 0.0006311, pen 0
+np dx 674.2 fu: nfev 416, J 0.0006312, pen 0
+nr dx 696.5 fu: nfev 1237, J 0.0004093, pen 0
+nr dx 696.5 fu: nfev 1503, J 0.0004336, pen 0
+nr dx 696.5 fu: nfev 1069, J 0.0004202, pen 0
+ns dx 672.2 fu: nfev 530, J 0.0003986, pen 0
+ns dx 672.2 fu: nfev 707, J 0.0004117, pen 0
+ns dx 672.2 fu: nfev 489, J 0.0004048, pen 0
+nt dx 670.2 fu: nfev 1036, J 0.0005356, pen 0
+nt dx 670.2 fu: nfev 975, J 0.0005356, pen 0
+nt dx 670.2 fu: nfev 853, J 0.0005356, pen 0
+nu dx 673.5 fu: nfev 481, J 0.0003898, pen 0
+nu dx 673.5 fu: nfev 430, J 0.0003898, pen 0
+nu dx 673.5 fu: nfev 736, J 0.0003898, pen 0
+nw dx 672.2 fu: nfev 494, J 0.0006081, pen 0
+nw dx 672.2 fu: nfev 526, J 0.0006084, pen 0
+nw dx 672.2 fu: nfev 392, J 0.0006082, pen 0
+ny dx 672.8 fu: nfev 719, J 0.000388, pen 0
+ny dx 672.8 fu: nfev 1074, J 0.000388, pen 0
+ny dx 672.8 fu: nfev 777, J 0.000388, pen 0

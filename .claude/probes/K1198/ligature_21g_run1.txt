@@ -1,0 +1,14 @@
+K1198 Run G (21G) ligature list: Playwrite US Trad, shaped as words through trace_k879.shape(font, text, 100, k886lib.feats_for(text)) (the gen_k1027 path).
+pairs tried: 676 (26x26 ordered lowercase); ligated (one letter glyph for two letters): 1
+  ij -> ['ij.jmc'] (shaping [('ij.jmc', 0)]; feats_for {}; splitter: calt; feats_for itself made it: False)
+    off liga: [('ij.jmc', 0)] split=False
+    off clig: [('ij.jmc', 0)] split=False
+    off dlig: [('ij.jmc', 0)] split=False
+    off hlig: [('ij.jmc', 0)] split=False
+    off rlig: [('ij.jmc', 0)] split=False
+    off calt: [('i.mod', 0), ('j.jmc', 1)] split=True
+    off ccmp: [('ij.jmc', 0)] split=False
+    off ss02: [('ij.jmc', 0)] split=False
+corpus strings short of glyphs: 2
+  [checks $cw] 'ij': 2 letters -> 1 glyphs [('ij.jmc', 0)]; listed pairs inside: ['ij']; longer ligature: False
+  [census rows] 'ij': 2 letters -> 1 glyphs [('ij.jmc', 0)]; listed pairs inside: ['ij']; longer ligature: False
