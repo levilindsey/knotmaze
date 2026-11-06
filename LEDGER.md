@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1211.
+Next free ID: K1212.
 
 ## Waiting on Levi
 
@@ -300,15 +300,14 @@ Next free ID: K1211.
 - **K1172** · Walker modes, Levi's brainstorm (2026-11-03): guide it, program it, a flock, stop them (and a tower
   defense), steer it live, bend and tilt. Which family first? (`docs/design/K1172_walker_modes.md`; full text:
   `docs/ledger_notes.md`)
-- **K1190** · K1139 Stage 4's look calls (card `docs/asks/K1190.md`; sheets t4, t6 in
-  `.claude/probes/K1139/out/s4/sheets/`): soften the sharp fronts (ji 33, ji 149); smooth ji 33's
-  straight edges; ji 149's gold edge round again; fill the notch. Rec: all four (2 causes to find; notes)
 - **K1200** · Light on loops (K1139 S4): pulses entering a loop from both ends meet halfway and fade out in
   pairs, so the far side of a long loop goes dark for a moment (about twice the usual gap): fine as is, or
   should they pass through each other? Card: `docs/asks/K1200.md`
 
 ## In progress
 
+- **K1211** · One seamless light inside each junction, no line or edge in it (Levi 2026-11-05; notes). Pulses
+  and the gold path first, then fire and collapse (K1210). S1: two looks behind a switch, with sheets.
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
   float64 reference. Plan S1-S8, about 15 h (F7); supersedes K868 and K992. S1 to S1f merged (S1f: fb348a78); S3 (K1097) merged short of its gate; S1g merged (ca273d04); S3b (K1097) merged (587b7e80, 2026-11-02): 0 DEFECT, the Pixel's 2 ms missed 5-20x.
@@ -506,11 +505,11 @@ Next free ID: K1211.
   - env: the phone through `.claude/probes/K1040/s3/phone_batch.ps1` (run_phone.ps1: both locks, then K1142's ready check), `phone_time.mjs` serving on 5403; desktop timing through `run_locked.ps1`, never piped through `Select-Object -First` (K1174)
 - **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate correctly
   across junctions"). S1 to S5 landed (S5 on since fbc1b212); S3b-S5 held the Pixel's frames (render +2%).
-  Levi's looks K1190 and K1200, leftovers K1191 and K1201; S6 next. Notes: `docs/ledger_notes.md`.
+  Levi's look K1200, leftovers K1191 and K1201; K1211 (seamless junctions) first, then S6 (notes).
   - owner: claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (coordinator)
   - branch: mainline (the worktrees `.claude/worktrees/agent-a90af0fe8b4cf82a5` (S4b), `agent-a023a39925efe4816` (S4) and `agent-a8280f4d14ebd8ad1` (the S3b fix) kept); last commit: `fbc1b212`
   - evidence: `.claude/probes/K1139/` (tracked: `*_cyc.mjs`, `ridge_joint.ts`, `s5_sheet.mjs`, `pixel_passes.ps1`, `s5_cool_rerun.ps1`, `out/s4cyc/` sheets, table, bench and `pixel_batch_plan.md` (its Result: S4/S4b on the Pixel), `out/s3b/pixel_batch_plan.md` (its Result: S3b, its fix and S5 on the Pixel), `out/s5/` (20B's q3_head sheet, `s5_sheet.json`), `k307/`; untracked: `out/s4b/`, the round outputs `.claude/probes/rounds/2026-11-04-k1139s4/` and `2026-11-05-k1139s3b`, `-k1139fix`, `-k1139s5`, `-k1139s5b`); the Handoffs of `docs/design/K1139_s4_cycles.md` and `docs/design/K1139_s4b_ridge_fade.md`
-  - next: Levi's look K1200 (`docs/asks/K1200.md`); K1201 (Muse batch 21's Run F, K1204); K1207 in Muse batch 22 (K1208): Run D's band end window becomes the only path (K1203 judged on 2026-11-05) and Run C's cover-ramp switch goes (K1202 closed 2026-11-05: a wider cover ramp changed nothing visible); S6 (plan section 5) after K1140's Glimpse picks; K1190's fixes once Levi answers. The next pulse step's Pixel pass watches fabric 7 moves' frames over 25 ms (+14 and +15 in the fix's and S5's passes, floor 13)
+  - next: K1211 first: the light inside junctions (Levi 2026-11-05: one seamless unit; the bands may go); then Levi's look K1200 (`docs/asks/K1200.md`), K1201 (its fix (b), Run 22D, held for K1211), S6 (plan section 5) after K1140's Glimpse picks. The next pulse step's Pixel pass watches fabric 7 moves' frames over 25 ms (+14 and +15 in the fix's and S5's passes, floor 13)
   - brief: the plan `docs/design/K1139_pulse_junctions.md` section 5 (S6); S5 was Muse batch 20's Run B (`docs/design/K1199_muse_batch20.md`)
   - env: the passes' builds first and never while Muse runs: `scripts/preview.ps1 -Ref <sha> -Root <out>\builds -BuildOnly` for each sha (`pixel_passes.ps1` stops before the phone lock when one is missing); probe server `npx vite --config .claude/probes/K1139/vite.private-cache.config.ts --port 5620 --strictPort --host 127.0.0.1` from a worktree (ports 5620-5639); GPU probes through `.claude/probes/K1139/run_locked.ps1 -Batch`
 - **K1208** · Muse batch 22 (after K1204's batch 21): Run A drafts its brief from
@@ -519,7 +518,7 @@ Next free ID: K1211.
   - owner: the chain in `.claude/probes/K1053/` (queue.txt, chain.log): batch 22's Run A (22A) after batch 21's 21G, a fresh Muse session, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
   - branch: mainline; last commit: `f8907012`
   - evidence: the chain in .claude/probes/K1053/ (queue.txt, chain.log); each run's probe folder (B: .claude/probes/K1203/, H: .claude/probes/K1210/)
-  - next: B reviewed, K1207 closed; Run H running since 09:50 (22H), then C, D, E, F; G held; Claude reviews each run as it lands
+  - next: Run H running since 09:50 (22H; its bar, like the pulse, void since K1211: data only), then C, E, F; D held for K1211 (its queue line commented out), G held; Claude reviews each run as it lands
   - brief: `docs/design/K1208_muse_batch22.md`
 
 ## Next, in order
@@ -542,7 +541,7 @@ Binding for every stage:
 Running agents are listed under In progress, each with its own next step.
 - **K1201** · S4b's joint step (K1139): a two-ended arm's ridge near its joint (xR < 0.5) steps the light.
   21F (8e0c5a1c): play meets it in every daily of a week, 2-6 arm-ends each, steps up to 0.77 after the reach
-  window (CPU, lattice spans; notes). Next: fix (b), the band crossfade, in batch 22 behind a switch (K1208).
+  window (CPU, lattice spans; notes). Fix (b), the band crossfade (Run 22D), held: K1211 may retire the bands.
 - **K875** · K868 S1b, master's side: on Muse's link master registers only 58-80% with the oracle at
   j49/j123 and #6 finds every band end off (18/18, 19/19; cause untested: gaps or a reveal/fog state);
   its sdf and strip silhouettes differ in width; joinery.ts:1469-1471's comment is stale. s1b_oracle.md.
@@ -762,7 +761,7 @@ Every other item below waits on the trigger it names.
   routing, filletTopMesh, `voteOverride` and its test; a moved pin is re-frozen and named.
 - **K1210** · Fire and collapse across junctions. Levi, 2026-11-05: "I also want to make sure that fire and
   segment collapsing effects also correctly transition across segments--similar to the highlights". Batch 22
-  Run H measures both against the pulse (`docs/design/K1208_muse_batch22.md`); a fix follows.
+  Run H measures both (`docs/design/K1208_muse_batch22.md`); the fix follows K1211's look, not the pulse's.
 
 ## Residuals (known, not fixed)
 
@@ -2003,6 +2002,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1190** · K1139 Stage 4's look calls (card `docs/asks/K1190.md`; sheets t4, t6 in `.claude/probes/K1139/out/s4/sheets/`): soften the sharp fronts (ji 33, ji 149); smooth ji 33's straight edges; ji 149's gold edge round again; fill the notch. Dropped: superseded by K1211 (Levi 2026-11-05: the light inside a junction must read as one seamless unit) (2026-11-05).
 - **K1207** · In Muse batch 22 (K1208): remove Run C's switch (`setPulseCoverRamp`, 5e0d5914, off by K1202) and make Run D's end window (`setPulseBandEndWindow`, a0f1d634, on by K1203) the only path, re-freezing the pins it moves; it also says whether 21D's twin point is a fan pixel (K1203's notes). Done in 0af054cc (2026-11-05).
 - **K1197** · Cursive c joins: Levi kept the old hand-set joins. Done in f7be8548 (2026-11-05).
 - **K1119** · Cursive v7.0: Levi chose v6.8 on every sheet. Done in f7be8548 (2026-11-05).

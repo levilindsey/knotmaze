@@ -3792,3 +3792,21 @@ Run G (Muse batch 21, 21G; e43b2cfc; `.claude/probes/K1198/SUMMARY_21G.md`), pro
 - Determinism: the calt-off census ran twice with the same hashes (txt 73287907e1a0d9b8, json 894cb964bde8b949); the ligature list ran twice byte-identical.
 - Run G's first calt-off censuses died at the end (StopIteration: the e-variant medial glyphs exist only with calt on); it shaped the variant rows normally (`census_21g_off.py`) and reran them.
 - Next (item 2 of `docs/design/K1208_muse_batch22_run_a.md`): keep calt and empty only the font's ligature-substitution lookups (by lookup type, no per-pair data), or re-shape only the clusters that ligate; census under Plc1m with every join but ij unchanged and ij solved through the ports; sheets of ij and of fr/fs with and without the pins for Claude's look.
+
+## K1211 (2026-11-05, Levi's call)
+
+Levi, 2026-11-05 (verbatim): "To be clear, the pictures I've been seeing of highlights over
+junctions are bad. There are clear lines/edges of the highlight within the interior of the
+junction. These seem to be artifacts of how the original threads are constructed before the
+threads were fused and/or the rounding was applied. These junctions need to appear as though they
+are one whole fused seamless unit." Then: "I believe we addressed this problem previously for
+blending segment colors across junctions?"
+
+The pictures were K1190's sheets (K1139 S4); this item supersedes K1190. Section colors meet
+seamlessly because every arm ramps to one converged junction color (src/core/section_colors.ts,
+the blending contract). The gold path (K81's route bands) and the pulses (K1139's pulse bands)
+instead draw a thread-wide band with a one-pixel edge through the web. S1
+(docs/design/K1211_seamless_junction_light.md) builds A (one light per junction, the colors'
+rule) and B (a soft field that keeps the turn) behind a switch, with sheets for Levi. Held
+meanwhile: K1201's fix (b), Muse Run 22D. Run 22H (K1210) is data only: its bar was "like the
+pulse".
