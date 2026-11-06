@@ -1,0 +1,116 @@
+{
+ "q": "7&txt=ai&am=instant&snd=none&fw=0&phw=0#glyphs2",
+ "info": {
+  "recs": [
+   {
+    "ji": 0,
+    "wx": 0.931036134560903,
+    "wy": 2.9470154444376626,
+    "sx": 357.54325926303864,
+    "sy": 556.4135092566721,
+    "arms": 3
+   },
+   {
+    "ji": 1,
+    "wx": 3.0007972717285156,
+    "wy": 3.244368394215902,
+    "sx": 543.8217616081238,
+    "sy": 583.1752747367136,
+    "arms": 3
+   },
+   {
+    "ji": 2,
+    "wx": 5.579054117202759,
+    "wy": 2.692128300666809,
+    "sx": 775.8648777008057,
+    "sy": 533.4736663172953,
+    "arms": 4
+   }
+  ],
+  "view": {
+   "x": 273.7500071525574,
+   "y": 291.18211925728247,
+   "s": 90,
+   "zoom": 1,
+   "panX": 0,
+   "panY": 0,
+   "panel": {
+    "left": 1270,
+    "mazeRight": 1052.2322421913148,
+    "open": 1
+   },
+   "mazeRight": 1052.2322421913148,
+   "range": {
+    "loX": 0,
+    "hiX": 0,
+    "loY": 0,
+    "hiY": 0
+   },
+   "allow": {
+    "loX": 0,
+    "hiX": 0,
+    "loY": 0,
+    "hiY": 0
+   },
+   "panelT": 1
+  },
+  "stamp": "P4 v0.4.0 79014b00 2026-11-05 21:12"
+ },
+ "rows": [
+  {
+   "ji": 0,
+   "webs": true,
+   "sharp": 0,
+   "maxStep": 1.7,
+   "bestRun": 0,
+   "bestVRun": 0,
+   "fhPx": 70.2
+  },
+  {
+   "ji": 0,
+   "webs": false,
+   "sharp": 33,
+   "maxStep": 10.1,
+   "bestRun": 2,
+   "bestVRun": 2,
+   "fhPx": 70.2
+  },
+  {
+   "ji": 1,
+   "webs": true,
+   "sharp": 0,
+   "maxStep": 1,
+   "bestRun": 0,
+   "bestVRun": 0,
+   "fhPx": 70.2
+  },
+  {
+   "ji": 1,
+   "webs": false,
+   "sharp": 0,
+   "maxStep": 2,
+   "bestRun": 0,
+   "bestVRun": 0,
+   "fhPx": 70.2
+  },
+  {
+   "ji": 2,
+   "webs": true,
+   "sharp": 0,
+   "maxStep": 2.2,
+   "bestRun": 0,
+   "bestVRun": 0,
+   "fhPx": 70.2
+  },
+  {
+   "ji": 2,
+   "webs": false,
+   "sharp": 0,
+   "maxStep": 2.2,
+   "bestRun": 0,
+   "bestVRun": 0,
+   "fhPx": 70.2
+  }
+ ],
+ "ctxLost": 0
+}

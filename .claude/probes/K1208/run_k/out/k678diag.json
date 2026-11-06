@@ -1,0 +1,16 @@
+[
+ {
+  "mode": "fabric",
+  "fills": 93,
+  "joinsTotal": 0,
+  "maxJoins": 0,
+  "junctions": 181
+ },
+ {
+  "mode": "knot",
+  "fills": 13,
+  "joinsTotal": 0,
+  "maxJoins": 0,
+  "junctions": 0
+ }
+]

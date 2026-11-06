@@ -1,0 +1,5320 @@
+{
+ "q": "2gozcj&xp=threads&snd=none&fw=0&am=instant&phw=0",
+ "build": "P4 v0.4.0 79014b00 2026-11-05 21:12",
+ "walkLog": [
+  {
+   "m": 0,
+   "head": "mentr_b",
+   "edge": 33,
+   "far": "mnode_11",
+   "ok": true
+  },
+  {
+   "m": 1,
+   "head": "mnode_11",
+   "edge": 186,
+   "far": "node_12",
+   "ok": true
+  },
+  {
+   "m": 2,
+   "head": "node_12",
+   "edge": 185,
+   "far": "node_522",
+   "ok": true
+  },
+  {
+   "m": 3,
+   "head": "node_522",
+   "edge": 103,
+   "far": "node_147",
+   "ok": true
+  },
+  {
+   "m": 4,
+   "head": "node_147",
+   "edge": 80,
+   "far": "mnode_66",
+   "ok": true
+  },
+  {
+   "m": 5,
+   "head": "mnode_66",
+   "edge": 81,
+   "far": "mnode_84",
+   "ok": true
+  },
+  {
+   "m": 6,
+   "head": "mnode_84",
+   "edge": 82,
+   "far": "node_153",
+   "ok": true
+  },
+  {
+   "m": 7,
+   "head": "node_153",
+   "edge": 236,
+   "far": "node_513",
+   "ok": true
+  },
+  {
+   "m": 8,
+   "head": "node_513",
+   "edge": 235,
+   "far": "node_723",
+   "ok": true
+  },
+  {
+   "m": 9,
+   "head": "node_723",
+   "edge": 234,
+   "far": "mnode_150",
+   "ok": true
+  },
+  {
+   "m": 10,
+   "head": "mnode_150",
+   "edge": 233,
+   "far": "node_735",
+   "ok": true
+  },
+  {
+   "m": 11,
+   "head": "node_735",
+   "edge": 217,
+   "far": "mnode_0",
+   "ok": true
+  }
+ ],
+ "state": {
+  "hiddenCount": 171,
+  "junctionCount": 183,
+  "rows": [
+   {
+    "jn": 0,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 0,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 91,
+      "slot": 56,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 91,
+      "slot": 56,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 1,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 0,
+      "slot": 64,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 0,
+      "slot": 64,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 52,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 2,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 0,
+      "slot": 90,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 87,
+      "slot": 82,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 87,
+      "slot": 82,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 3,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 1,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 89,
+      "slot": 4,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 89,
+      "slot": 4,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 4,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 1,
+      "slot": 12,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 90,
+      "slot": 8,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 90,
+      "slot": 8,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 5,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 2,
+      "slot": 0,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 2,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 50,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 6,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 2,
+      "slot": 8,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 2,
+      "slot": 8,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 9,
+      "slot": 2,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 7,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 2,
+      "slot": 26,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 2,
+      "slot": 26,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 81,
+      "slot": 16,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 8,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 3,
+      "slot": 44,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 5,
+      "slot": 4,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 5,
+      "slot": 4,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 9,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 4,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 73,
+      "slot": 110,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 73,
+      "slot": 110,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 10,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 4,
+      "slot": 10,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 91,
+      "slot": 8,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 91,
+      "slot": 8,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 11,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 5,
+      "slot": 26,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 5,
+      "slot": 26,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 35,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 12,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 6,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 36,
+      "slot": 12,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 36,
+      "slot": 12,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 13,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 6,
+      "slot": 12,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 66,
+      "slot": 28,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 66,
+      "slot": 28,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 14,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 7,
+      "slot": 46,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 32,
+      "slot": 14,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 32,
+      "slot": 14,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 15,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 8,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 87,
+      "slot": 44,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 87,
+      "slot": 44,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 16,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 8,
+      "slot": 14,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 8,
+      "slot": 14,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 30,
+      "slot": 32,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 17,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 9,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 70,
+      "slot": 76,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 70,
+      "slot": 76,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 18,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 10,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 73,
+      "slot": 48,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 73,
+      "slot": 48,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 19,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 10,
+      "slot": 2,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 73,
+      "slot": 72,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 73,
+      "slot": 72,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 20,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 11,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 44,
+      "slot": 26,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 44,
+      "slot": 26,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 21,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 11,
+      "slot": 2,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 73,
+      "slot": 222,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 73,
+      "slot": 222,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 22,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 12,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 59,
+      "slot": 8,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 59,
+      "slot": 8,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 23,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 12,
+      "slot": 2,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 73,
+      "slot": 164,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 73,
+      "slot": 164,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 24,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 13,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 54,
+      "slot": 98,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 54,
+      "slot": 98,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 25,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 13,
+      "slot": 2,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 54,
+      "slot": 112,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 54,
+      "slot": 112,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 26,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 14,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 54,
+      "slot": 134,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 54,
+      "slot": 134,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 27,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 14,
+      "slot": 2,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 66,
+      "slot": 4,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 66,
+      "slot": 4,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 28,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 15,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 88,
+      "slot": 4,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 88,
+      "slot": 4,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 29,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 15,
+      "slot": 2,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 66,
+      "slot": 34,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 66,
+      "slot": 34,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 30,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 16,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 55,
+      "slot": 20,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 55,
+      "slot": 20,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 31,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 16,
+      "slot": 2,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 55,
+      "slot": 84,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 55,
+      "slot": 84,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 32,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 17,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 54,
+      "slot": 60,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 54,
+      "slot": 60,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 33,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 17,
+      "slot": 2,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 92,
+      "slot": 4,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 92,
+      "slot": 4,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 34,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 18,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 54,
+      "slot": 24,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 54,
+      "slot": 24,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 35,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 18,
+      "slot": 2,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 92,
+      "slot": 26,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 92,
+      "slot": 26,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 36,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 19,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 63,
+      "slot": 8,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 63,
+      "slot": 8,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 37,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 19,
+      "slot": 2,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 54,
+      "slot": 124,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 54,
+      "slot": 124,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 38,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 20,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 33,
+      "slot": 184,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 33,
+      "slot": 184,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 39,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 20,
+      "slot": 2,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 33,
+      "slot": 96,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 33,
+      "slot": 96,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 40,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 21,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 69,
+      "slot": 4,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 69,
+      "slot": 4,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 41,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 21,
+      "slot": 2,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 69,
+      "slot": 30,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 69,
+      "slot": 30,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 42,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 22,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 55,
+      "slot": 14,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 55,
+      "slot": 14,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 43,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 22,
+      "slot": 2,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 55,
+      "slot": 90,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 55,
+      "slot": 90,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 44,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 23,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 73,
+      "slot": 4,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 73,
+      "slot": 4,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 45,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 23,
+      "slot": 2,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 73,
+      "slot": 120,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 73,
+      "slot": 120,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 46,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 24,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 70,
+      "slot": 60,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 70,
+      "slot": 60,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 47,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 24,
+      "slot": 2,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 70,
+      "slot": 84,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 70,
+      "slot": 84,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 48,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 25,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 33,
+      "slot": 74,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 33,
+      "slot": 74,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 49,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 25,
+      "slot": 2,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 33,
+      "slot": 114,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 33,
+      "slot": 114,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 50,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 26,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 86,
+      "slot": 26,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 86,
+      "slot": 26,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 51,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 26,
+      "slot": 2,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 86,
+      "slot": 40,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 86,
+      "slot": 40,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 52,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 27,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 33,
+      "slot": 166,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 33,
+      "slot": 166,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 53,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 27,
+      "slot": 16,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 33,
+      "slot": 122,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 33,
+      "slot": 122,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 55,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 29,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 70,
+      "slot": 40,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 70,
+      "slot": 40,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 56,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 29,
+      "slot": 20,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 42,
+      "slot": 14,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 42,
+      "slot": 14,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 57,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 30,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 54,
+      "slot": 86,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 54,
+      "slot": 86,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 58,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 30,
+      "slot": 4,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 30,
+      "slot": 4,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 82,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 59,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 30,
+      "slot": 20,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 30,
+      "slot": 20,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 87,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 60,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 31,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 87,
+      "slot": 22,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 87,
+      "slot": 22,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 61,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 31,
+      "slot": 6,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 87,
+      "slot": 28,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 87,
+      "slot": 28,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 62,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 32,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 37,
+      "slot": 48,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 37,
+      "slot": 48,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 63,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 32,
+      "slot": 20,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 32,
+      "slot": 20,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 87,
+      "slot": 114,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 64,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 32,
+      "slot": 22,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 32,
+      "slot": 22,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 67,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 65,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 32,
+      "slot": 26,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 33,
+      "slot": 146,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 33,
+      "slot": 146,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 66,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 33,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 90,
+      "slot": 24,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 90,
+      "slot": 24,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 67,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 33,
+      "slot": 12,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 33,
+      "slot": 12,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 50,
+      "slot": 8,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 68,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 33,
+      "slot": 46,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 33,
+      "slot": 46,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 54,
+      "slot": 144,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 69,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 33,
+      "slot": 60,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 33,
+      "slot": 60,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 67,
+      "slot": 18,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 70,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 33,
+      "slot": 80,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 33,
+      "slot": 80,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 77,
+      "slot": 2,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 71,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 33,
+      "slot": 108,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 33,
+      "slot": 108,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 77,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 72,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 33,
+      "slot": 168,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 33,
+      "slot": 168,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 46,
+      "slot": 30,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 73,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 33,
+      "slot": 196,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 76,
+      "slot": 38,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 76,
+      "slot": 38,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 74,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 34,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 46,
+      "slot": 6,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 46,
+      "slot": 6,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 75,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 34,
+      "slot": 4,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 34,
+      "slot": 4,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 76,
+      "slot": 42,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 76,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 34,
+      "slot": 6,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 34,
+      "slot": 6,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 42,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 77,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 34,
+      "slot": 12,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 34,
+      "slot": 12,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 46,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 78,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 34,
+      "slot": 18,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 34,
+      "slot": 18,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 39,
+      "slot": 6,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 79,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 34,
+      "slot": 20,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 34,
+      "slot": 20,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 76,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 80,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 34,
+      "slot": 28,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 91,
+      "slot": 88,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 91,
+      "slot": 88,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 81,
+    "cand": true,
+    "arms": [
+     {
+      "chain": 35,
+      "slot": 14,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 76,
+      "slot": 10,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 76,
+      "slot": 10,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0.0912,
+      "vis1": 0.3131
+     }
+    ]
+   },
+   {
+    "jn": 82,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 36,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 61,
+      "slot": 20,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 61,
+      "slot": 20,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 83,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 36,
+      "slot": 4,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 36,
+      "slot": 4,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 61,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 84,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 36,
+      "slot": 6,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 36,
+      "slot": 6,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 60,
+      "slot": 16,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 85,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 36,
+      "slot": 18,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 36,
+      "slot": 18,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 51,
+      "slot": 16,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 86,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 36,
+      "slot": 28,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 36,
+      "slot": 28,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 78,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 87,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 36,
+      "slot": 54,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 73,
+      "slot": 192,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 73,
+      "slot": 192,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 88,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 37,
+      "slot": 56,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 73,
+      "slot": 14,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 73,
+      "slot": 14,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 89,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 38,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 90,
+      "slot": 52,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 90,
+      "slot": 52,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 90,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 38,
+      "slot": 14,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 38,
+      "slot": 14,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 63,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 91,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 38,
+      "slot": 16,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 38,
+      "slot": 16,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 85,
+      "slot": 20,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 92,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 38,
+      "slot": 20,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 38,
+      "slot": 20,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 41,
+      "slot": 10,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 93,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 38,
+      "slot": 30,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 38,
+      "slot": 30,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 85,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 94,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 38,
+      "slot": 32,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 38,
+      "slot": 32,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 70,
+      "slot": 118,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 97,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 40,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 85,
+      "slot": 8,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 85,
+      "slot": 8,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 102,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 42,
+      "slot": 18,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 42,
+      "slot": 18,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 70,
+      "slot": 34,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 70,
+      "slot": 34,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 103,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 42,
+      "slot": 20,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 70,
+      "slot": 14,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 70,
+      "slot": 14,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 104,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 43,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 83,
+      "slot": 2,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 83,
+      "slot": 2,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 105,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 43,
+      "slot": 6,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 87,
+      "slot": 46,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 87,
+      "slot": 46,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 106,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 44,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 54,
+      "slot": 8,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 54,
+      "slot": 8,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 107,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 44,
+      "slot": 8,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 44,
+      "slot": 8,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 90,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 108,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 44,
+      "slot": 18,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 44,
+      "slot": 18,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 65,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 109,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 44,
+      "slot": 20,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 44,
+      "slot": 20,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 58,
+      "slot": 50,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 110,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 44,
+      "slot": 38,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 44,
+      "slot": 38,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 66,
+      "slot": 48,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 111,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 44,
+      "slot": 54,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 44,
+      "slot": 54,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 58,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 112,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 44,
+      "slot": 56,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 44,
+      "slot": 56,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 57,
+      "slot": 10,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 113,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 44,
+      "slot": 68,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 44,
+      "slot": 68,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 53,
+      "slot": 30,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 114,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 44,
+      "slot": 86,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 44,
+      "slot": 86,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 61,
+      "slot": 24,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 115,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 44,
+      "slot": 94,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 73,
+      "slot": 134,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 73,
+      "slot": 134,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 116,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 45,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 73,
+      "slot": 34,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 73,
+      "slot": 34,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 117,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 45,
+      "slot": 8,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 45,
+      "slot": 8,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 51,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 118,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 45,
+      "slot": 26,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 55,
+      "slot": 8,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 55,
+      "slot": 8,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 120,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 47,
+      "slot": 30,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 55,
+      "slot": 30,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 55,
+      "slot": 30,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 122,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 48,
+      "slot": 24,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 48,
+      "slot": 24,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 81,
+      "slot": 8,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 81,
+      "slot": 8,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 123,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 48,
+      "slot": 28,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 54,
+      "slot": 10,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 54,
+      "slot": 10,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 124,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 49,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 54,
+      "slot": 90,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 54,
+      "slot": 90,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 125,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 49,
+      "slot": 12,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 55,
+      "slot": 62,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 55,
+      "slot": 62,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 126,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 52,
+      "slot": 12,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 90,
+      "slot": 46,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 90,
+      "slot": 46,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 127,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 53,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 73,
+      "slot": 12,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 73,
+      "slot": 12,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 128,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 53,
+      "slot": 14,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 53,
+      "slot": 14,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 73,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 129,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 54,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 81,
+      "slot": 2,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 81,
+      "slot": 2,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 130,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 54,
+      "slot": 40,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 54,
+      "slot": 40,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 71,
+      "slot": 14,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 131,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 54,
+      "slot": 54,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 54,
+      "slot": 54,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 88,
+      "slot": 24,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 132,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 54,
+      "slot": 84,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 54,
+      "slot": 84,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 68,
+      "slot": 6,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 133,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 54,
+      "slot": 92,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 54,
+      "slot": 92,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 63,
+      "slot": 14,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 134,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 55,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 90,
+      "slot": 44,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 90,
+      "slot": 44,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 135,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 55,
+      "slot": 42,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 55,
+      "slot": 42,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 68,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 136,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 55,
+      "slot": 58,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 55,
+      "slot": 58,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 89,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 137,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 55,
+      "slot": 60,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 55,
+      "slot": 60,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 79,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 138,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 55,
+      "slot": 76,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 55,
+      "slot": 76,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 74,
+      "slot": 8,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 139,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 55,
+      "slot": 108,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 83,
+      "slot": 30,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 83,
+      "slot": 30,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 141,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 57,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 66,
+      "slot": 40,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 66,
+      "slot": 40,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 142,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 58,
+      "slot": 22,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 58,
+      "slot": 22,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 64,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 143,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 59,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 73,
+      "slot": 158,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 73,
+      "slot": 158,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 144,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 60,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 91,
+      "slot": 26,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 91,
+      "slot": 26,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 145,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 60,
+      "slot": 2,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 60,
+      "slot": 2,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 69,
+      "slot": 34,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 69,
+      "slot": 34,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 146,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 60,
+      "slot": 4,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 60,
+      "slot": 4,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 69,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 147,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 60,
+      "slot": 6,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 60,
+      "slot": 6,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 83,
+      "slot": 42,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 148,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 62,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 73,
+      "slot": 146,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 73,
+      "slot": 146,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 149,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 62,
+      "slot": 4,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 62,
+      "slot": 4,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 73,
+      "slot": 104,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 73,
+      "slot": 104,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 150,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 62,
+      "slot": 6,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 73,
+      "slot": 130,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 73,
+      "slot": 130,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 151,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 64,
+      "slot": 4,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 64,
+      "slot": 4,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 92,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 152,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 64,
+      "slot": 8,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 66,
+      "slot": 42,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 66,
+      "slot": 42,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 153,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 65,
+      "slot": 8,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 92,
+      "slot": 48,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 92,
+      "slot": 48,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 154,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 66,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 90,
+      "slot": 40,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 90,
+      "slot": 40,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 155,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 66,
+      "slot": 30,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 66,
+      "slot": 30,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 74,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 156,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 67,
+      "slot": 8,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 67,
+      "slot": 8,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 90,
+      "slot": 60,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 157,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 69,
+      "slot": 12,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 69,
+      "slot": 12,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 73,
+      "slot": 30,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 73,
+      "slot": 30,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 158,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 69,
+      "slot": 24,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 69,
+      "slot": 24,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 78,
+      "slot": 2,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 159,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 69,
+      "slot": 38,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 69,
+      "slot": 38,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 87,
+      "slot": 38,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 87,
+      "slot": 38,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 160,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 69,
+      "slot": 44,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 83,
+      "slot": 8,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 83,
+      "slot": 8,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 161,
+    "cand": true,
+    "arms": [
+     {
+      "chain": 70,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 84,
+      "slot": 32,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0.5,
+      "vis1": 1
+     },
+     {
+      "chain": 84,
+      "slot": 32,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 162,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 70,
+      "slot": 24,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 70,
+      "slot": 24,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 75,
+      "slot": 12,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 163,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 70,
+      "slot": 96,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 70,
+      "slot": 96,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 86,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 164,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 70,
+      "slot": 114,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 70,
+      "slot": 114,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 84,
+      "slot": 42,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 165,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 71,
+      "slot": 10,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0.0555
+     },
+     {
+      "chain": 71,
+      "slot": 10,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 89,
+      "slot": 12,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 166,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 72,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 92,
+      "slot": 46,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 92,
+      "slot": 46,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 167,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 72,
+      "slot": 8,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 92,
+      "slot": 34,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 92,
+      "slot": 34,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 168,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 73,
+      "slot": 58,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 73,
+      "slot": 58,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 92,
+      "slot": 70,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 169,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 73,
+      "slot": 152,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 73,
+      "slot": 152,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 91,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 170,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 73,
+      "slot": 184,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 73,
+      "slot": 184,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 88,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 171,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 73,
+      "slot": 186,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 73,
+      "slot": 186,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 79,
+      "slot": 10,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 172,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 73,
+      "slot": 238,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 92,
+      "slot": 42,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 92,
+      "slot": 42,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 173,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 75,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 86,
+      "slot": 12,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 86,
+      "slot": 12,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 174,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 75,
+      "slot": 6,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 75,
+      "slot": 6,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 86,
+      "slot": 14,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 86,
+      "slot": 14,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 176,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 80,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 90,
+      "slot": 20,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 90,
+      "slot": 20,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 177,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 80,
+      "slot": 14,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 81,
+      "slot": 4,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 81,
+      "slot": 4,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 178,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 81,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 90,
+      "slot": 6,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 90,
+      "slot": 6,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 179,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 82,
+      "slot": 22,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 90,
+      "slot": 26,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 90,
+      "slot": 26,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 180,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 83,
+      "slot": 0,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 87,
+      "slot": 50,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 87,
+      "slot": 50,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   },
+   {
+    "jn": 182,
+    "cand": false,
+    "arms": [
+     {
+      "chain": 86,
+      "slot": 10,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 86,
+      "slot": 10,
+      "dir": 1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     },
+     {
+      "chain": 91,
+      "slot": 104,
+      "dir": -1,
+      "vis": 0,
+      "vis05": 0,
+      "vis1": 0
+     }
+    ]
+   }
+  ],
+  "named": [
+   {
+    "jn": 87,
+    "hidden": true,
+    "pt": {
+     "sx": 464.2109333297775,
+     "sy": 708.9986044977177
+    }
+   },
+   {
+    "jn": 160,
+    "hidden": true,
+    "pt": {
+     "sx": 837.2332995060168,
+     "sy": 1391.3064914674935
+    }
+   }
+  ],
+  "candPts": [
+   {
+    "jn": 81,
+    "pt": {
+     "sx": 1218.2530732954795,
+     "sy": 678.0335186733085
+    }
+   },
+   {
+    "jn": 161,
+    "pt": {
+     "sx": 1042.5242664398463,
+     "sy": 166.04434713828567
+    }
+   }
+  ],
+  "head": "mnode_0"
+ },
+ "stamp": "P4 v0.4.0 79014b00 2026-11-05 21:12 | sim 5.0s / wall 34.6s | settle lag 15.2s | asleep",
+ "ctxLost": 0,
+ "cropJn": 81
+}

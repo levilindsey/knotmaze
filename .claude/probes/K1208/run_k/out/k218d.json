@@ -1,0 +1,109 @@
+[
+ {
+  "seed": "2",
+  "rows": [
+   {
+    "cap": {
+     "chain": 60,
+     "ctrl": 60,
+     "radius": 0.312,
+     "p": 0.8998123067514143
+    },
+    "maxDelta": 0,
+    "deltaAt": 0,
+    "edgeStep": 0.0239
+   },
+   {
+    "cap": {
+     "chain": 91,
+     "ctrl": 0,
+     "radius": 0.312,
+     "p": 0.8998123067514143
+    },
+    "maxDelta": 0,
+    "deltaAt": 0,
+    "edgeStep": 0
+   }
+  ]
+ },
+ {
+  "seed": "3",
+  "rows": [
+   {
+    "cap": {
+     "chain": 30,
+     "ctrl": 10,
+     "radius": 0.312,
+     "p": 1
+    },
+    "maxDelta": 0,
+    "deltaAt": 0,
+    "edgeStep": 0
+   },
+   {
+    "cap": {
+     "chain": 60,
+     "ctrl": 6,
+     "radius": 0.312,
+     "p": 1
+    },
+    "maxDelta": 0,
+    "deltaAt": 0,
+    "edgeStep": 0
+   },
+   {
+    "cap": {
+     "chain": 50,
+     "ctrl": 38,
+     "radius": 0.312,
+     "p": 0.38052787726373144
+    },
+    "maxDelta": 0,
+    "deltaAt": 0,
+    "edgeStep": 0.0575
+   },
+   {
+    "cap": {
+     "chain": 60,
+     "ctrl": 0,
+     "radius": 0.312,
+     "p": 0.38052787726373144
+    },
+    "maxDelta": 0,
+    "deltaAt": 0,
+    "edgeStep": 0.024
+   }
+  ]
+ },
+ {
+  "seed": "4",
+  "rows": []
+ },
+ {
+  "seed": "5",
+  "rows": [
+   {
+    "cap": {
+     "chain": 21,
+     "ctrl": 2,
+     "radius": 0.312,
+     "p": 1
+    },
+    "maxDelta": 0,
+    "deltaAt": 0,
+    "edgeStep": 0
+   },
+   {
+    "cap": {
+     "chain": 45,
+     "ctrl": 174,
+     "radius": 0.312,
+     "p": 1
+    },
+    "maxDelta": 0,
+    "deltaAt": 0,
+    "edgeStep": 0
+   }
+  ]
+ }
+]

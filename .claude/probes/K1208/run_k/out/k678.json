@@ -1,0 +1,712 @@
+{
+ "nSeeds": 50,
+ "mode": "fabric rest, settle-through count",
+ "tot": {
+  "calls": 35288,
+  "join": 0,
+  "arc": 0,
+  "fallback": 0
+ },
+ "perSeed": [
+  {
+   "seed": 1,
+   "during": {
+    "calls": 0,
+    "join": 0,
+    "arc": 0,
+    "fallback": 0,
+    "firstHit": null,
+    "patched": true
+   },
+   "joinsSettled": 0,
+   "err": null,
+   "ctxLost": 0
+  },
+  {
+   "seed": 2,
+   "during": {
+    "calls": 0,
+    "join": 0,
+    "arc": 0,
+    "fallback": 0,
+    "firstHit": null,
+    "patched": true
+   },
+   "joinsSettled": 0,
+   "err": null,
+   "ctxLost": 0
+  },
+  {
+   "seed": 3,
+   "during": {
+    "calls": 0,
+    "join": 0,
+    "arc": 0,
+    "fallback": 0,
+    "firstHit": null,
+    "patched": true
+   },
+   "joinsSettled": 0,
+   "err": null,
+   "ctxLost": 0
+  },
+  {
+   "seed": 4,
+   "during": {
+    "calls": 0,
+    "join": 0,
+    "arc": 0,
+    "fallback": 0,
+    "firstHit": null,
+    "patched": true
+   },
+   "joinsSettled": 2,
+   "err": null,
+   "ctxLost": 0
+  },
+  {
+   "seed": 5,
+   "during": {
+    "calls": 0,
+    "join": 0,
+    "arc": 0,
+    "fallback": 0,
+    "firstHit": null,
+    "patched": true
+   },
+   "joinsSettled": 0,
+   "err": null,
+   "ctxLost": 0
+  },
+  {
+   "seed": 6,
+   "during": {
+    "calls": 0,
+    "join": 0,
+    "arc": 0,
+    "fallback": 0,
+    "firstHit": null,
+    "patched": true
+   },
+   "joinsSettled": 0,
+   "err": null,
+   "ctxLost": 0
+  },
+  {
+   "seed": 7,
+   "during": {
+    "calls": 0,
+    "join": 0,
+    "arc": 0,
+    "fallback": 0,
+    "firstHit": null,
+    "patched": true
+   },
+   "joinsSettled": 2,
+   "err": null,
+   "ctxLost": 0
+  },
+  {
+   "seed": 8,
+   "during": {
+    "calls": 15048,
+    "join": 0,
+    "arc": 0,
+    "fallback": 0,
+    "firstHit": null,
+    "patched": true
+   },
+   "joinsSettled": 0,
+   "err": null,
+   "ctxLost": 0
+  },
+  {
+   "seed": 9,
+   "during": {
+    "calls": 0,
+    "join": 0,
+    "arc": 0,
+    "fallback": 0,
+    "firstHit": null,
+    "patched": true
+   },
+   "joinsSettled": 0,
+   "err": null,
+   "ctxLost": 0
+  },
+  {
+   "seed": 10,
+   "during": {
+    "calls": 3715,
+    "join": 0,
+    "arc": 0,
+    "fallback": 0,
+    "firstHit": null,
+    "patched": true
+   },
+   "joinsSettled": 0,
+   "err": null,
+   "ctxLost": 0
+  },
+  {
+   "seed": 11,
+   "during": {
+    "calls": 0,
+    "join": 0,
+    "arc": 0,
+    "fallback": 0,
+    "firstHit": null,
+    "patched": true
+   },
+   "joinsSettled": 0,
+   "err": null,
+   "ctxLost": 0
+  },
+  {
+   "seed": 12,
+   "during": {
+    "calls": 0,
+    "join": 0,
+    "arc": 0,
+    "fallback": 0,
+    "firstHit": null,
+    "patched": true
+   },
+   "joinsSettled": 0,
+   "err": null,
+   "ctxLost": 0
+  },
+  {
+   "seed": 13,
+   "during": {
+    "calls": 0,
+    "join": 0,
+    "arc": 0,
+    "fallback": 0,
+    "firstHit": null,
+    "patched": true
+   },
+   "joinsSettled": 0,
+   "err": null,
+   "ctxLost": 0
+  },
+  {
+   "seed": 14,
+   "during": {
+    "calls": 0,
+    "join": 0,
+    "arc": 0,
+    "fallback": 0,
+    "firstHit": null,
+    "patched": true
+   },
+   "joinsSettled": 0,
+   "err": null,
+   "ctxLost": 0
+  },
+  {
+   "seed": 15,
+   "during": {
+    "calls": 0,
+    "join": 0,
+    "arc": 0,
+    "fallback": 0,
+    "firstHit": null,
+    "patched": true
+   },
+   "joinsSettled": 0,
+   "err": null,
+   "ctxLost": 0
+  },
+  {
+   "seed": 16,
+   "during": {
+    "calls": 0,
+    "join": 0,
+    "arc": 0,
+    "fallback": 0,
+    "firstHit": null,
+    "patched": true
+   },
+   "joinsSettled": 0,
+   "err": null,
+   "ctxLost": 0
+  },
+  {
+   "seed": 17,
+   "during": {
+    "calls": 0,
+    "join": 0,
+    "arc": 0,
+    "fallback": 0,
+    "firstHit": null,
+    "patched": true
+   },
+   "joinsSettled": 0,
+   "err": null,
+   "ctxLost": 0
+  },
+  {
+   "seed": 18,
+   "during": {
+    "calls": 0,
+    "join": 0,
+    "arc": 0,
+    "fallback": 0,
+    "firstHit": null,
+    "patched": true
+   },
+   "joinsSettled": 0,
+   "err": null,
+   "ctxLost": 0
+  },
+  {
+   "seed": 19,
+   "during": {
+    "calls": 0,
+    "join": 0,
+    "arc": 0,
+    "fallback": 0,
+    "firstHit": null,
+    "patched": true
+   },
+   "joinsSettled": 0,
+   "err": null,
+   "ctxLost": 0
+  },
+  {
+   "seed": 20,
+   "during": {
+    "calls": 0,
+    "join": 0,
+    "arc": 0,
+    "fallback": 0,
+    "firstHit": null,
+    "patched": true
+   },
+   "joinsSettled": 0,
+   "err": null,
+   "ctxLost": 0
+  },
+  {
+   "seed": 21,
+   "during": {
+    "calls": 0,
+    "join": 0,
+    "arc": 0,
+    "fallback": 0,
+    "firstHit": null,
+    "patched": true
+   },
+   "joinsSettled": 0,
+   "err": null,
+   "ctxLost": 0
+  },
+  {
+   "seed": 22,
+   "during": {
+    "calls": 0,
+    "join": 0,
+    "arc": 0,
+    "fallback": 0,
+    "firstHit": null,
+    "patched": true
+   },
+   "joinsSettled": 0,
+   "err": null,
+   "ctxLost": 0
+  },
+  {
+   "seed": 23,
+   "during": {
+    "calls": 0,
+    "join": 0,
+    "arc": 0,
+    "fallback": 0,
+    "firstHit": null,
+    "patched": true
+   },
+   "joinsSettled": 0,
+   "err": null,
+   "ctxLost": 0
+  },
+  {
+   "seed": 24,
+   "during": {
+    "calls": 0,
+    "join": 0,
+    "arc": 0,
+    "fallback": 0,
+    "firstHit": null,
+    "patched": true
+   },
+   "joinsSettled": 0,
+   "err": null,
+   "ctxLost": 0
+  },
+  {
+   "seed": 25,
+   "during": {
+    "calls": 0,
+    "join": 0,
+    "arc": 0,
+    "fallback": 0,
+    "firstHit": null,
+    "patched": true
+   },
+   "joinsSettled": 0,
+   "err": null,
+   "ctxLost": 0
+  },
+  {
+   "seed": 26,
+   "during": {
+    "calls": 11057,
+    "join": 0,
+    "arc": 0,
+    "fallback": 0,
+    "firstHit": null,
+    "patched": true
+   },
+   "joinsSettled": 0,
+   "err": null,
+   "ctxLost": 0
+  },
+  {
+   "seed": 27,
+   "during": {
+    "calls": 0,
+    "join": 0,
+    "arc": 0,
+    "fallback": 0,
+    "firstHit": null,
+    "patched": true
+   },
+   "joinsSettled": 0,
+   "err": null,
+   "ctxLost": 0
+  },
+  {
+   "seed": 28,
+   "during": {
+    "calls": 0,
+    "join": 0,
+    "arc": 0,
+    "fallback": 0,
+    "firstHit": null,
+    "patched": true
+   },
+   "joinsSettled": 0,
+   "err": null,
+   "ctxLost": 0
+  },
+  {
+   "seed": 29,
+   "during": {
+    "calls": 0,
+    "join": 0,
+    "arc": 0,
+    "fallback": 0,
+    "firstHit": null,
+    "patched": true
+   },
+   "joinsSettled": 0,
+   "err": null,
+   "ctxLost": 0
+  },
+  {
+   "seed": 30,
+   "during": {
+    "calls": 0,
+    "join": 0,
+    "arc": 0,
+    "fallback": 0,
+    "firstHit": null,
+    "patched": true
+   },
+   "joinsSettled": 0,
+   "err": null,
+   "ctxLost": 0
+  },
+  {
+   "seed": 31,
+   "during": {
+    "calls": 5468,
+    "join": 0,
+    "arc": 0,
+    "fallback": 0,
+    "firstHit": null,
+    "patched": true
+   },
+   "joinsSettled": 0,
+   "err": null,
+   "ctxLost": 0
+  },
+  {
+   "seed": 32,
+   "during": {
+    "calls": 0,
+    "join": 0,
+    "arc": 0,
+    "fallback": 0,
+    "firstHit": null,
+    "patched": true
+   },
+   "joinsSettled": 0,
+   "err": null,
+   "ctxLost": 0
+  },
+  {
+   "seed": 33,
+   "during": {
+    "calls": 0,
+    "join": 0,
+    "arc": 0,
+    "fallback": 0,
+    "firstHit": null,
+    "patched": true
+   },
+   "joinsSettled": 0,
+   "err": null,
+   "ctxLost": 0
+  },
+  {
+   "seed": 34,
+   "during": {
+    "calls": 0,
+    "join": 0,
+    "arc": 0,
+    "fallback": 0,
+    "firstHit": null,
+    "patched": true
+   },
+   "joinsSettled": 1,
+   "err": null,
+   "ctxLost": 0
+  },
+  {
+   "seed": 35,
+   "during": {
+    "calls": 0,
+    "join": 0,
+    "arc": 0,
+    "fallback": 0,
+    "firstHit": null,
+    "patched": true
+   },
+   "joinsSettled": 0,
+   "err": null,
+   "ctxLost": 0
+  },
+  {
+   "seed": 36,
+   "during": {
+    "calls": 0,
+    "join": 0,
+    "arc": 0,
+    "fallback": 0,
+    "firstHit": null,
+    "patched": true
+   },
+   "joinsSettled": 0,
+   "err": null,
+   "ctxLost": 0
+  },
+  {
+   "seed": 37,
+   "during": {
+    "calls": 0,
+    "join": 0,
+    "arc": 0,
+    "fallback": 0,
+    "firstHit": null,
+    "patched": true
+   },
+   "joinsSettled": 1,
+   "err": null,
+   "ctxLost": 0
+  },
+  {
+   "seed": 38,
+   "during": {
+    "calls": 0,
+    "join": 0,
+    "arc": 0,
+    "fallback": 0,
+    "firstHit": null,
+    "patched": true
+   },
+   "joinsSettled": 0,
+   "err": null,
+   "ctxLost": 0
+  },
+  {
+   "seed": 39,
+   "during": {
+    "calls": 0,
+    "join": 0,
+    "arc": 0,
+    "fallback": 0,
+    "firstHit": null,
+    "patched": true
+   },
+   "joinsSettled": 1,
+   "err": null,
+   "ctxLost": 0
+  },
+  {
+   "seed": 40,
+   "during": {
+    "calls": 0,
+    "join": 0,
+    "arc": 0,
+    "fallback": 0,
+    "firstHit": null,
+    "patched": true
+   },
+   "joinsSettled": 0,
+   "err": null,
+   "ctxLost": 0
+  },
+  {
+   "seed": 41,
+   "during": {
+    "calls": 0,
+    "join": 0,
+    "arc": 0,
+    "fallback": 0,
+    "firstHit": null,
+    "patched": true
+   },
+   "joinsSettled": 0,
+   "err": null,
+   "ctxLost": 0
+  },
+  {
+   "seed": 42,
+   "during": {
+    "calls": 0,
+    "join": 0,
+    "arc": 0,
+    "fallback": 0,
+    "firstHit": null,
+    "patched": true
+   },
+   "joinsSettled": 0,
+   "err": null,
+   "ctxLost": 0
+  },
+  {
+   "seed": 43,
+   "during": {
+    "calls": 0,
+    "join": 0,
+    "arc": 0,
+    "fallback": 0,
+    "firstHit": null,
+    "patched": true
+   },
+   "joinsSettled": 0,
+   "err": null,
+   "ctxLost": 0
+  },
+  {
+   "seed": 44,
+   "during": {
+    "calls": 0,
+    "join": 0,
+    "arc": 0,
+    "fallback": 0,
+    "firstHit": null,
+    "patched": true
+   },
+   "joinsSettled": 0,
+   "err": null,
+   "ctxLost": 0
+  },
+  {
+   "seed": 45,
+   "during": {
+    "calls": 0,
+    "join": 0,
+    "arc": 0,
+    "fallback": 0,
+    "firstHit": null,
+    "patched": true
+   },
+   "joinsSettled": 0,
+   "err": null,
+   "ctxLost": 0
+  },
+  {
+   "seed": 46,
+   "during": {
+    "calls": 0,
+    "join": 0,
+    "arc": 0,
+    "fallback": 0,
+    "firstHit": null,
+    "patched": true
+   },
+   "joinsSettled": 0,
+   "err": null,
+   "ctxLost": 0
+  },
+  {
+   "seed": 47,
+   "during": {
+    "calls": 0,
+    "join": 0,
+    "arc": 0,
+    "fallback": 0,
+    "firstHit": null,
+    "patched": true
+   },
+   "joinsSettled": 0,
+   "err": null,
+   "ctxLost": 0
+  },
+  {
+   "seed": 48,
+   "during": {
+    "calls": 0,
+    "join": 0,
+    "arc": 0,
+    "fallback": 0,
+    "firstHit": null,
+    "patched": true
+   },
+   "joinsSettled": 0,
+   "err": null,
+   "ctxLost": 0
+  },
+  {
+   "seed": 49,
+   "during": {
+    "calls": 0,
+    "join": 0,
+    "arc": 0,
+    "fallback": 0,
+    "firstHit": null,
+    "patched": true
+   },
+   "joinsSettled": 0,
+   "err": null,
+   "ctxLost": 0
+  },
+  {
+   "seed": 50,
+   "during": {
+    "calls": 0,
+    "join": 0,
+    "arc": 0,
+    "fallback": 0,
+    "firstHit": null,
+    "patched": true
+   },
+   "joinsSettled": 0,
+   "err": null,
+   "ctxLost": 0
+  }
+ ]
+}

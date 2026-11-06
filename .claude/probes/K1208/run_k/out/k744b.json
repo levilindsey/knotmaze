@@ -1,0 +1,106 @@
+[
+ {
+  "rule": "alternate",
+  "q": "7&am=instant&fw=0&snd=none&phw=0&cru=alternate",
+  "fhPx": 23.4,
+  "on": [
+   {
+    "v": "mnode_109",
+    "island": 19,
+    "dark": 15,
+    "total": 2915,
+    "maxJump": 98
+   },
+   {
+    "v": "node_259",
+    "island": 38,
+    "dark": 32,
+    "total": 2906,
+    "maxJump": 242
+   },
+   {
+    "v": "mnode_125",
+    "island": 30,
+    "dark": 32,
+    "total": 2914,
+    "maxJump": 163
+   }
+  ],
+  "off": [
+   {
+    "v": "mnode_109",
+    "island": 20,
+    "dark": 16,
+    "total": 2915,
+    "maxJump": 98
+   },
+   {
+    "v": "node_259",
+    "island": 61,
+    "dark": 63,
+    "total": 2906,
+    "maxJump": 242
+   },
+   {
+    "v": "mnode_125",
+    "island": 50,
+    "dark": 50,
+    "total": 2914,
+    "maxJump": 163
+   }
+  ],
+  "stamp": "P4 v0.4.0 79014b00 2026-11-05 21:12 | sim 5.0s / wall 34.8s | settle lag 17.1s | asleep"
+ },
+ {
+  "rule": "cycle",
+  "q": "7&am=instant&fw=0&snd=none&phw=0&cru=cycle",
+  "fhPx": 23.4,
+  "on": [
+   {
+    "v": "mnode_109",
+    "island": 5,
+    "dark": 3,
+    "total": 2915,
+    "maxJump": 78
+   },
+   {
+    "v": "node_259",
+    "island": 2,
+    "dark": 0,
+    "total": 2906,
+    "maxJump": 88
+   },
+   {
+    "v": "mnode_156",
+    "island": 15,
+    "dark": 14,
+    "total": 2908,
+    "maxJump": 76
+   }
+  ],
+  "off": [
+   {
+    "v": "mnode_109",
+    "island": 6,
+    "dark": 3,
+    "total": 2915,
+    "maxJump": 78
+   },
+   {
+    "v": "node_259",
+    "island": 41,
+    "dark": 53,
+    "total": 2906,
+    "maxJump": 106
+   },
+   {
+    "v": "mnode_156",
+    "island": 27,
+    "dark": 29,
+    "total": 2908,
+    "maxJump": 147
+   }
+  ],
+  "stamp": "P4 v0.4.0 79014b00 2026-11-05 21:12 | sim 5.0s / wall 27.2s | settle lag 14.9s | asleep"
+ }
+]
