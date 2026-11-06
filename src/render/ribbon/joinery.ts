@@ -854,6 +854,21 @@ export class Joinery {
     const a = sampling.normArc(arc, c.total, c.closed);
     kFxColor(D, U, c, kCtrlOfArc(D, c, a), a / c.arcPer, out, this.ignScratch);
   }
+  // K1220 S2: the ctrl a joint's reveal gate reads on one arm. A glyph arm:
+  // `reach` of arc out along it (at most to its end), so its fans wait for
+  // the reveal to draw the stretch they cover. Any other arm: 0.8 ctrl out.
+  private gateCtrlOf(a: { chain: number; slot: number; dir: number }, reach: number): number {
+    const near = a.slot + a.dir * 0.8;
+    if (!(this.r.style.glyph && this.r.style.glyph[a.chain])) return near;
+    const samples = this.r.chainSamples[a.chain];
+    const D = kData();
+    const c = kChain(D, a.chain);
+    if (!samples || !(c.total > 0)) return near;
+    const closed = this.r.ps.chainBreakAfter[a.chain] < 0;
+    const arc0 = sampling.paintArcAt(samples, a.slot, closed);
+    const toEnd = closed ? Infinity : a.dir > 0 ? samples.totalLength - arc0 : arc0;
+    return kCtrlOfArc(D, c, sampling.normArc(arc0 + a.dir * Math.min(reach, toEnd), c.total, c.closed));
+  }
   // Mean ctrl per world arc along a junction arm over its first `d` of arc
   // (the fan shader's ctrl search seed slope; 0 when degenerate).
   private armCtrlSlope(
@@ -1344,9 +1359,13 @@ export class Joinery {
         });
       }
       arms.sort((p, q) => p.ang - q.ang);
+      // K1220 S2: a glyph arm's gate point sits at the fans' reach along it
+      // (fieldReach, at most its end). 0.8 ctrl lies within 0.15 of J on a
+      // glyph, so the gate opened while the reveal had drawn almost none of
+      // the arms and the fans floated over them; every other arm as before.
       const j1 = this.r.jointGate(
         "j" + recs.length,
-        jn.arms.map((a) => [a.chain, a.slot + a.dir * 0.8] as [number, number])
+        jn.arms.map((a) => [a.chain, this.gateCtrlOf(a, fieldReach)] as [number, number])
       );
       let mask = this.jointMaskPool[recs.length];
       if (!mask) {
