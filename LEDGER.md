@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1232.
+Next free ID: K1235.
 
 ## Waiting on Levi
 
@@ -510,10 +510,10 @@ Next free ID: K1232.
 - **K1220** · Text forks: a disc with a round edge inside, steps where the arms' straight cuts meet it
   (22N, 655eb6a9): glyph arms under 0.15 world get no field record, so a host-axis disc draws the fork.
   S2 runs on master's fused junctions (`docs/design/K1220_s2_text_forks.md`); S1's WIP 25a5c501 is a lead; notes.
-  - owner: agent `a568a7f4f11c55549` of claude session c18e2f02-e64f-41ba-9af0-2dbd583358e2 (opus, started 2026-11-06 06:03, 2 h cap ~08:03)
-  - branch: `worktree-agent-a568a7f4f11c55549`, worktree `.claude/worktrees/agent-a568a7f4f11c55549`; last commit: `e4075024`
-  - evidence: .claude/probes/K1220/s2/ in its worktree; Run N's .claude/probes/K1220/run_n/ (SUMMARY.md, out/ in the main checkout); S1's WIP 25a5c501 on worktree-agent-a887c979ca2299b92
-  - next: S2 runs to its Done; then Claude views its sheets at full size against master, merges the branch and shows Levi
+  - owner: nobody since 2026-11-06 07:55: S2 merged (2f6353b1); S3 not briefed yet
+  - branch: mainline; last commit: `2f6353b1`
+  - evidence: .claude/probes/K1220/s2/ (census.mjs, shoot.mjs, sheets_all.ps1, absdiff_all.ps1, geom.mjs, crop.mjs); its sheets and diffs only in the kept worktree .claude/worktrees/agent-a568a7f4f11c55549/.claude/probes/K1220/s2/out/
+  - next: Levi looks at S2's sheets (the a's L and R in ai at xh 3, the a's L at xh 2: master's disc, notch and ledge are one piece now; sent 2026-11-06). S3: the i's root forks (10 of 30, in i, ai, ia, ii) keep their notch and ledge because taperHideJn hides their joints: un-hide the record's fans at a tapered i fork, or bridge the root's width step; then the 1 px jog at the a's right attachment in ia at xh 2, and the reveal's bare-ribbon moment before the gate opens (a at xh 3, 40%)
   - brief: `docs/design/K1220_s2_text_forks.md`
 
 ## Next, in order
@@ -1681,6 +1681,13 @@ Every other item below waits on the trigger it names.
   S5's handoff).
 - **K1230** · K1218 S5's swept arcs grow JUNCTION_FRAG from 32,884 to 34,759 B (on its branch); the junction
   shader's and its explore variant's cold compiles (K307's warm-up links both) are not timed.
+- **K1232** · Text joints keep the settled paint during the trace reveal: K1220 S2's fans and master's discs
+  alike show a darker band under the trace's bright tint (ai at 20%); inferred from the sheets, not traced
+  (K1220 S2's handoff, `docs/design/K1220_s2_text_forks.md`)
+- **K1233** · A dark V at the crotch's end on the casing band at the a's J in ai: a gap-mask slot, the one
+  K580 s5 left unidentified, not the fork's material (K1220 S2's handoff)
+- **K1234** · A stepped colour edge near the i's root, on master and K1220 S2 alike; likely the root's paint
+  (K620), not attributed (K1220 S2's handoff)
 
 ## Approved, to schedule (2026-10-11)
 
