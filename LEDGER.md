@@ -314,10 +314,10 @@ Next free ID: K1216.
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
   Levi to edit instead of drawing all 26 (Levi, 2026-10-26). Muse's prototype parked at abc135e7.
-  - owner: J3k stage agent of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-05 11:11 (cap about 13:11)
-  - branch: worktree-agent-aaac8bfa2dd91edbb at .claude/worktrees/agent-aaac8bfa2dd91edbb (J3j's agent-af77097804c041b8b kept; J3i's worktree-agent-a2d2f19ad8f0a41d7 holds v7.2, unmerged); last commit: `08f527ab`
+  - owner: nobody since 2026-11-05 12:43 (merged)
+  - branch: mainline; last commit: `0136f455`
   - evidence: .claude/probes/K863/trace/work34/ and out34/ (J3k, copies on its branch); the base: work33/ and out33/png/ (v6.8)
-  - next: J3k: the kit fixes (K1212), then candidates beside v6.8 for word-final s, the i and j dots, word-final p and q's tail (K1213); Claude views every crop, then writes the card
+  - next: Levi's card K1213 (word-final s and p, the i and j dots, the q tail: S2, P1, D2, Q1 or keep v6.8); then the template adopts the picks in the next stage
   - brief: docs/design/K863_cursive_j3k.md (K863_trace.md's Judging a look binds it)
 - **K114** · Gameplay round 2, designed in
   `docs/design/K80_gameplay_additions.md` section R: burn race, cut
