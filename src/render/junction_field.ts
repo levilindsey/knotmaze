@@ -103,10 +103,12 @@ export const FIELD_PROF_ARC = 0.08;
 export const FIELD_BLEND_MIN = 0.5;
 // K1218 S6: sweptArc hands over to the projection where a sweep reaches into
 // its bend's focus, from FIELD_FOLD_LO of the way there to FIELD_FOLD_HI (the
-// share s kappa of a sweep of length s at curvature kappa, + on the concave
-// side): the swept map compresses the arc as 1 / (1 - s kappa) there.
-export const FIELD_FOLD_LO = 0.45;
-export const FIELD_FOLD_HI = 0.8;
+// share s kappa of a sweep of length s, + on the concave side): the swept map
+// compresses the arc as 1 / (1 - s kappa) there. kappa is read at the pixel's
+// own radius, not at the sweep's foot: the foot races along a compressed arc,
+// and a share read there stepped within 2 px (cross ji 80's line).
+export const FIELD_FOLD_LO = 0.1;
+export const FIELD_FOLD_HI = 0.9;
 // Arms per junction the shader scans (its loop bound). The fabric's fused
 // junctions carry 3 (splice) or 4 (merge) arms.
 export const MAX_ARMS = 12;
@@ -244,6 +246,7 @@ float sweptArc(int ab, vec2 e, float rp) {
   float best = 1e9;
   float arc = proj;
   float fold = 0.0;
+  float kr = 0.0;
   if (g == 0 && dot(e, tb) < 0.0) {
     best = rho;
     arc = b.z;
@@ -277,17 +280,19 @@ float sweptArc(int ab, vec2 e, float rp) {
         if (l < best) {
           best = l;
           arc = mix(b.z, c.z, u);
-          fold = sign(jCross(dd, q - u * dd)) * l * mix(kb, kc, u);
+          fold = sign(jCross(dd, q - u * dd)) * l;
         }
       }
     }
+    float fr = rho - float(g) * uJParams2.x;
+    if (fr >= 0.0 && fr < uJParams2.x) kr = mix(kb, kc, fr / uJParams2.x);
     b = c;
     c = d;
     tb = tc;
     kb = kc;
     g++;
   }
-  float w = 1.0 - (1.0 - smoothstep(uJParams.x, 2.0 * uJParams.x, best)) * (1.0 - smoothstep(${FIELD_FOLD_LO.toFixed(3)}, ${FIELD_FOLD_HI.toFixed(3)}, fold));
+  float w = 1.0 - (1.0 - smoothstep(uJParams.x, 2.0 * uJParams.x, best)) * (1.0 - smoothstep(${FIELD_FOLD_LO.toFixed(3)}, ${FIELD_FOLD_HI.toFixed(3)}, fold * kr));
   return mix(arc, proj, w);
 }
 

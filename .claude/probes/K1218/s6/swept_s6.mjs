@@ -82,6 +82,9 @@ export async function run({ page, toWorld, args }) {
         uw = 0;
       }
       const cands = [];
+      // kappa at the pixel's own radius (vertex rho / DR, lerped): smooth in space.
+      const gr = Math.trunc(rho / DR), fr = rho / DR - gr;
+      let kr = 0, sideW = 0;
       for (let k = 0; k < 40 && g < g1; k++, g++) {
         const dd = [c[0] - b[0], c[1] - b[1]];
         let tc = N(dd[0], dd[1]);
@@ -115,9 +118,11 @@ export async function run({ page, toWorld, args }) {
               gw = g;
               uw = u;
               fold = side * l * (kb + (kc - kb) * u);
+              sideW = side;
             }
           }
         }
+        if (g === gr) kr = kb + (kc - kb) * fr;
         b = c;
         c = d;
         tb = tc;
@@ -130,7 +135,7 @@ export async function run({ page, toWorld, args }) {
       const wFold = wf * wf * (3 - 2 * wf);
       const wt = 1 - (1 - w * w * (3 - 2 * w)) * (1 - wFold);
       const fin = arc + (proj - arc) * wt;
-      return { gw, uw, best, arc, proj, fin, cands, fold, wFold };
+      return { gw, uw, best, arc, proj, fin, cands, fold, wFold, wd: w * w * (3 - 2 * w), kr, sideW };
     };
     const TAU = Math.PI * 2;
     const rows = pts.map(([x, y]) => {
@@ -185,6 +190,39 @@ export async function run({ page, toWorld, args }) {
     return { url: urls[urls.length - 1] ?? "(bare)", rows, profs, fh, DR, jx, jy, rec, n, armIdx: arms.map((a) => a.i), chains: arms.map((a) => a.chain) };
   }, ji, pts, chainSel);
   console.log(`module ${R.url}`);
+  // VARIANTS=f:0.45:0.8,r:0.3:0.8 ... : f = the fold at the foot (today), r = side * l *
+  // kappa at the pixel's radius. Prints, per variant and row, the max final-arc d/dx
+  // (x1000 per px) and its x, then the row's median; no grids.
+  if (process.env.VARIANTS) {
+    const sm = (t) => { t = t < 0 ? 0 : t > 1 ? 1 : t; return t * t * (3 - 2 * t); };
+    R.armIdx.forEach((ai, k) => {
+      for (const spec of process.env.VARIANTS.split(",")) {
+        const [src, lo, hi] = spec.split(":");
+        const LO = Number(lo), HI = Number(hi);
+        const fin = (v) => {
+          const F = src === "r" ? v.sideW * v.best * v.kr : v.fold;
+          const wt = 1 - (1 - v.wd) * (1 - sm((F - LO) / (HI - LO)));
+          return v.arc + (v.proj - v.arc) * wt;
+        };
+        let s = `arm ${ai} ${spec.padEnd(12)}`, gmax = 0;
+        ys.forEach((y, iy) => {
+          let m = -1e9, mx = 0;
+          const ds = [];
+          xs.forEach((x, ix) => {
+            if (ix === 0) return;
+            const d = (fin(R.rows[iy * xs.length + ix][k]) - fin(R.rows[iy * xs.length + ix - 1][k])) * 1000;
+            ds.push(d);
+            if (d > m) { m = d; mx = x; }
+          });
+          ds.sort((p, q) => p - q);
+          gmax = Math.max(gmax, m);
+          s += ` ${y}:${m.toFixed(0)}@${mx}/${ds[ds.length >> 1].toFixed(0)}`;
+        });
+        console.log(`${s}  max ${gmax.toFixed(1)}`);
+      }
+    });
+    return null;
+  }
   console.log(`ji ${ji} rec ${R.rec} nArms ${R.n} fh ${R.fh} DR ${R.DR} centre ${R.jx.toFixed(4)},${R.jy.toFixed(4)}; arms shown ${R.armIdx.join(",")} (chains ${R.chains.join(",")})`);
   for (const p of R.profs) {
     console.log(`arm ${p.i} chain ${p.chain} profile:`);

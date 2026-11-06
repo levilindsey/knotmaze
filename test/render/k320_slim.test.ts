@@ -211,8 +211,9 @@ describe("K320 stage 1: char budgets", () => {
     // arm's start, +320 (34,759 -> 35,079 measured here); budget follows.
     // K1218 S6 (2026-11-06): sweptArc hands over to the projection toward a
     // bend's focus (per-vertex curvature, the fold s kappa, FIELD_FOLD_LO..HI),
-    // +430 (35,079 -> 35,509 measured here); budget follows.
-    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(35_509);
+    // +430 (35,079 -> 35,509 measured here); then kappa read at the pixel's
+    // radius, not the sweep's foot, +126 (-> 35,635); budget follows.
+    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(35_635);
     // K799: uKPath joins KNOT_UNIFORMS_GLSL, which the still pluck
     // includes (+18 here).
     expect(PLUCK_STILL_FRAG.length).toBeLessThanOrEqual(20_550);

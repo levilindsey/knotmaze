@@ -470,10 +470,13 @@ export class Joinery {
     // curvature, both + on the concave side): cross ji 80's vertical line,
     // on the inside of arm B's right turn, where two segments swept a pixel
     // each. kappa is per vertex (the turn over the two segments' mean
-    // length; 0 at the joint, where the joint sweep meets it), lerped along
-    // the segment, so it is continuous across vertex normals (a per-segment
-    // ratio steps there), and the arc hands over to the projection from
-    // s kappa = FIELD_FOLD_LO to FIELD_FOLD_HI.
+    // length; 0 at the joint, where the joint sweep meets it), lerped by the
+    // PIXEL's radius (rho / DR, the segment it lies beside), and the arc
+    // hands over to the projection from s kappa = FIELD_FOLD_LO to
+    // FIELD_FOLD_HI. Read at the sweep's foot instead, kappa raced along
+    // the compressed arc and the share fell 0.83 -> 0.49 within 2 px: the
+    // hand-over itself stepped there (d/dx 81 against 15-17 around it; by
+    // the pixel's radius 30, .claude/probes/K1218/s6/swept_s6.mjs).
     const pt =(ab: number, g: number, o: Float64Array, k: number): void => {
       const t = at(ab + 2 + g);
       o[k] = g * FIELD_PROF_DR * Math.cos(J[t]);
@@ -508,6 +511,7 @@ export class Joinery {
       let best = 1e9;
       let arc = proj;
       let fold = 0;
+      let kr = 0;
       if (g === 0 && ex * sw[12] + ey * sw[13] < 0) {
         best = rho;
         arc = sw[5];
@@ -551,10 +555,12 @@ export class Joinery {
             if (l < best) {
               best = l;
               arc = sw[5] + (sw[8] - sw[5]) * u;
-              fold = Math.sign(ddx * ly - ddy * lx) * l * (kb + (kc - kb) * u);
+              fold = Math.sign(ddx * ly - ddy * lx) * l;
             }
           }
         }
+        const fr = rho - g * FIELD_PROF_DR;
+        if (fr >= 0 && fr < FIELD_PROF_DR) kr = kb + (kc - kb) * (fr / FIELD_PROF_DR);
         sw.copyWithin(3, 6, 12);
         sw[12] = sw[14];
         sw[13] = sw[15];
@@ -562,7 +568,7 @@ export class Joinery {
       }
       let w = (best - fillHalf) / fillHalf;
       w = w < 0 ? 0 : w > 1 ? 1 : w;
-      let wf = (fold - FIELD_FOLD_LO) / (FIELD_FOLD_HI - FIELD_FOLD_LO);
+      let wf = (fold * kr - FIELD_FOLD_LO) / (FIELD_FOLD_HI - FIELD_FOLD_LO);
       wf = wf < 0 ? 0 : wf > 1 ? 1 : wf;
       const wt = 1 - (1 - w * w * (3 - 2 * w)) * (1 - wf * wf * (3 - 2 * wf));
       return arc + (proj - arc) * wt;
