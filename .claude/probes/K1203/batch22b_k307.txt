@@ -1,0 +1,8 @@
+node --max-old-space-size=8192 ../K307/trace_intro.mjs http://127.0.0.1:5881 22b-base-a "?k111&am=instant&fw=0&snd=none&phw=0" --max 12 --trace none
+node --max-old-space-size=8192 ../K307/trace_intro.mjs http://127.0.0.1:5882 22b-edit-a "?k111&am=instant&fw=0&snd=none&phw=0" --max 12 --trace none
+node --max-old-space-size=8192 ../K307/trace_intro.mjs http://127.0.0.1:5882 22b-edit-b "?k111&am=instant&fw=0&snd=none&phw=0" --max 12 --trace none
+node --max-old-space-size=8192 ../K307/trace_intro.mjs http://127.0.0.1:5881 22b-base-b "?k111&am=instant&fw=0&snd=none&phw=0" --max 12 --trace none
+node --max-old-space-size=8192 ../K307/trace_intro.mjs http://127.0.0.1:5881 22b-base-c "?k111&am=instant&fw=0&snd=none&phw=0" --max 12 --trace none
+node --max-old-space-size=8192 ../K307/trace_intro.mjs http://127.0.0.1:5882 22b-edit-c "?k111&am=instant&fw=0&snd=none&phw=0" --max 12 --trace none
+node --max-old-space-size=8192 ../K307/trace_intro.mjs http://127.0.0.1:5882 22b-edit-d "?k111&am=instant&fw=0&snd=none&phw=0" --max 12 --trace none
+node --max-old-space-size=8192 ../K307/trace_intro.mjs http://127.0.0.1:5881 22b-base-d "?k111&am=instant&fw=0&snd=none&phw=0" --max 12 --trace none

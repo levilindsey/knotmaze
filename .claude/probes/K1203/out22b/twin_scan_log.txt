@@ -1,0 +1,11 @@
+pinned t 100.1367 point (25.153, 3.592) vs GPU fan-only (134, 190, 174)
+flag off ji 27 centre (25.34, 3.85): rgb (136, 192, 174) maxdiff 2.2
+flag on  ji 27 centre (25.34, 3.85): rgb (136, 192, 174) maxdiff 2.2
+flag on  ji 28 centre (24.58, 2.89): rgb (132, 207, 159) maxdiff 17
+flag off ji 28 centre (24.58, 2.89): rgb (134, 208, 160) maxdiff 17.6
+flag off ji 146 centre (23.86, 5.42): rgb (122, 178, 202) maxdiff 28
+flag on  ji 146 centre (23.86, 5.42): rgb (122, 178, 202) maxdiff 28
+flag off ji 147 centre (25.88, 1.36): rgb (122, 176, 205) maxdiff 31
+flag on  ji 147 centre (25.88, 1.36): rgb (122, 176, 205) maxdiff 31
+flag off ji 93 centre (27.45, 3.55): rgb (122, 205, 134) maxdiff 40.3
+flag on  ji 93 centre (27.45, 3.55): rgb (122, 205, 134) maxdiff 40.3

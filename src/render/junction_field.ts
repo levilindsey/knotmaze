@@ -94,14 +94,13 @@
 // that wore this field is gone with the over-fills: no thread is copied
 // over the webs any more.)
 
-// K1202 COVER RAMP (pulseCoverRamp, default off): off is today's picture
-// (a pulse band's cover ramps over pxW down from its fragment kind's
-// reach - fan fh + 0.5 pxW, cover strip fh + 1.5 pxW); on, every pulse
-// band's cover follows the CPU twin's strip ramp (fh + 1.5 pxW, over
-// 2 pxW) whatever fragment draws it, so another band's cover edge crossing
-// a centreline inside a fan softens as the twin's does (cyc e210,
-// .claude/probes/K1202/). Claude flips the default after judging the
-// kymograph sheet; the CPU twin (cpuJunctionField) reads the same flag.
+// K1207: K1202's cover-ramp switch is gone (Claude's K1202 judgment:
+// the wider ramp spread the step over two pixels and changed nothing
+// visible at 1x), so a pulse band's cover ramps over pxW down from its
+// fragment kind's reach (fan fh + 0.5 pxW, cover strip fh + 1.5 pxW),
+// as the CPU twin's pulseBandCover computes it. K1203's end window is
+// the only path (below): a band honours its child arm's end window
+// from the record's R3.w, as kPulseBandV's childSpan does.
 
 import { Buffer, BufferUsage, GlProgram, Shader, Texture, UniformGroup } from "pixi.js";
 import type { MeshGeometry } from "pixi.js";
@@ -150,10 +149,10 @@ export function recordData(): FloatRows {
 }
 
 // Field parameters (live: thread width and cuspRadius are sliders).
-// uJParams = (fillHalf, profN, pulseCoverRamp, pulseBandEndWindow) -
-// .z is K1202's cover ramp switch and .w K1203's end-window switch
-// (below; .zw carried the over-fills'
-// joint radii; uJParams2 = (FIELD_PROF_DR, FIELD_BLEND_MIN, 0, 0).
+// uJParams = (fillHalf, profN, 0, 0) -
+// .z and .w are free again (K1207: they carried K1202's cover-ramp
+// and K1203's end-window switches, both settled; before them .zw
+// carried the over-fills' joint radii); uJParams2 = (FIELD_PROF_DR, FIELD_BLEND_MIN, 0, 0).
 let FIELD_UNIFORMS: UniformGroup | null = null;
 function fieldUniforms(): UniformGroup {
   if (!FIELD_UNIFORMS) {
@@ -167,55 +166,30 @@ function fieldUniforms(): UniformGroup {
   }
   return FIELD_UNIFORMS;
 }
-// K1202: the cover ramp switch (header note above). Default off is
-// today's picture; setPulseCoverRamp(true) selects the twin's strip
-// ramp for every pulse band's cover. It rides to the shader as
-// uJParams.z, written by setFieldParams on the rebuild joinery.ts
-// already makes; cpuJunctionField reads this flag itself, so one
-// switch moves both twins. Claude flips the default after judging
-// the sheet (.claude/probes/K1202/).
-export let pulseCoverRamp = false;
-export function setPulseCoverRamp(on: boolean): void {
-  pulseCoverRamp = on;
-}
-
-// K1203: the end-window switch. Default off is today's picture (a
-// pulse band reads its crest with end window 1 all along its child
-// arm); on, the band honours a one-ended, non-cont child's own end
-// window over PULSE_END_WINDOW at its free far end, from the span in
-// its record's R3.w (0: window 1, as today), as kPulseBandV's
-// childSpan does on the CPU side. It rides to the shader as
-// uJParams.w, written by setFieldParams on the same rebuild;
-// cpuJunctionField reads this flag itself, so one switch moves both
-// twins. Claude flips the default after judging the sheet
-// (.claude/probes/K1203/). Independent of pulseCoverRamp: neither
-// flag moves the other's term.
-export let pulseBandEndWindow = false;
-export function setPulseBandEndWindow(on: boolean): void {
-  pulseBandEndWindow = on;
-}
+// K1203's end window, the only path (K1207): a pulse band honours a
+// one-ended, non-cont child's own end window over PULSE_END_WINDOW at
+// its free far end, from the span in its record's R3.w (0: window 1),
+// as kPulseBandV's childSpan does on the CPU side; cpuJunctionField
+// passes that span unconditionally, so both twins read the window
+// with no switch (Claude's K1203 judgment: the switch on).
 
 // One pulse band's cover at centreline distance dnow (the CPU twin of
-// the pulse loop's cov in junctionField below): today (flag off) it
-// ramps over pxW down from the fragment kind's reach; with the ramp
-// on it follows the strip ramp (fh + (ROUTE_BAND_PAD + 1) pxW, over
-// 2 pxW) for fan and strip fragments alike. Twice the width: along a
-// centreline crossing the edge shallowly, dnow moves ~0.4 pxW per
-// screenshot column, so a pxW ramp sampled at pixel centres collapses
-// to a one-column cut (20C); 2 pxW spreads it over the twin's columns.
+// the pulse loop's cov in junctionField below): it ramps over pxW down
+// from the fragment kind's reach (fan fh + 0.5 pxW, cover strip
+// fh + (ROUTE_BAND_PAD + 1) pxW), the off path of K1202's removed
+// cover-ramp switch, kept bit for bit.
 export function pulseBandCover(dnow: number, fillHalf: number, pxW: number, strip: boolean): number {
   const reach = fillHalf + (strip ? ROUTE_BAND_PAD + 1 : 0.5) * pxW;
-  return pulseCoverRamp
-    ? Math.max(0, Math.min(1, (fillHalf + (ROUTE_BAND_PAD + 1) * pxW - dnow) / (2 * pxW)))
-    : Math.max(0, Math.min(1, (reach - dnow) / pxW));
+  return Math.max(0, Math.min(1, (reach - dnow) / pxW));
 }
 
 export function setFieldParams(fillHalf: number, profN: number): void {
   const u = fieldUniforms().uniforms as { uJParams: Float32Array };
   u.uJParams[0] = fillHalf;
   u.uJParams[1] = profN;
-  u.uJParams[2] = pulseCoverRamp ? 1 : 0;
-  u.uJParams[3] = pulseBandEndWindow ? 1 : 0;
+  // .z and .w are free (0) since K1207 settled the two switches.
+  u.uJParams[2] = 0;
+  u.uJParams[3] = 0;
 }
 
 // ---------------------------------------------------------------------------
@@ -563,7 +537,7 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
       }
     }
     float dnow = sqrt(best);
-    float cov = uJParams.z > 0.5 ? clamp((uJParams.x + ${(ROUTE_BAND_PAD + 1).toFixed(3)} * pxW - dnow) / (2.0 * pxW), 0.0, 1.0) : clamp((reach - dnow) / pxW, 0.0, 1.0);
+    float cov = clamp((reach - dnow) / pxW, 0.0, 1.0);
     bool inw = r1.y == 1.0 || r1.y == 3.0;
     bool hov = r1.y > 1.5;
     float g = r1.x + tau;
@@ -576,7 +550,7 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
         inw = r2.w < 0.0;
       }
     }
-    float endWin = uJParams.w > 0.5 && r3.w > 0.0 && tau > 0.0 ? clamp((r3.w - tau) / PULSE_END_WINDOW, 0.0, 1.0) : 1.0;
+    float endWin = r3.w > 0.0 && tau > 0.0 ? clamp((r3.w - tau) / PULSE_END_WINDOW, 0.0, 1.0) : 1.0;
     float cr = kPulseCrestK(g, inw, hov, endWin, bk);
     kFanPulseV = max(kFanPulseV, cr * cov);
     float fa = K_BAND * kPulseCrestQuiet(g, inw, hov, endWin);

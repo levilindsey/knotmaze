@@ -156,7 +156,12 @@ describe("K320 stage 1: char budgets", () => {
     // (uJParams.w and the record's R3.w span against PULSE_END_WINDOW,
     // in the fan's pulse loop) adds 127 to the junction field
     // (40,474 -> 40,601 measured here); budget follows the measurement.
-    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(40_601);
+    // K1207 (2026-11-05): the cover-ramp branch (86, above) and the
+    // two flag branches' share come out (the ramp's ternary and the
+    // end window's uJParams.w term; the window itself stays, read
+    // unconditionally from R3.w), 106 in all (40,601 -> 40,495
+    // measured here); budget follows the measurement.
+    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(40_495);
     // K799: uKPath joins KNOT_UNIFORMS_GLSL, which the still pluck
     // includes (+18 here).
     expect(PLUCK_STILL_FRAG.length).toBeLessThanOrEqual(20_550);

@@ -1,0 +1,2 @@
+$env:K1139_HOST = "http://127.0.0.1:5880"
+node twin_scan22b.mjs > out22b/twin_scan_log.txt 2>&1

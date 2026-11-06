@@ -76,7 +76,6 @@ import {
   junctionShader,
   junctionShaderExplore,
   pulseBandCover,
-  pulseBandEndWindow,
   recordData,
   setFieldParams,
 } from "../junction_field";
@@ -755,8 +754,9 @@ export class Joinery {
       const fl0 = J[r1 + 1];
       // S4b: R2.w, armB's signed ridge (the GLSL band loop's twin).
       const gw = J[r2 + 3];
-      // K1203: R3.w under the switch is the child's span (0 = window 1).
-      const cs = pulseBandEndWindow && J[r3 + 3] > 0 ? J[r3 + 3] : 0;
+      // K1203/K1207: R3.w is the child's span (0 = window 1), read
+      // unconditionally (the end window is the only path).
+      const cs = J[r3 + 3] > 0 ? J[r3 + 3] : 0;
       const fb0 = KB * kPulseBandV(U, J[r1], tau, fl0 % 2 === 1, fl0 >= 2, Math.abs(gw), gw < 0, 1, cs);
       const fa0 = KB * kPulseBandV(U, J[r1], tau, fl0 % 2 === 1, fl0 >= 2, Math.abs(gw), gw < 0, 0, cs);
       PULSE_F[r] = J[r1 + 2] < 0.5 ? Math.max(0, Math.min(1, (fb0 - fa0) / Math.max(1 - fa0, 1e-3))) : 0;

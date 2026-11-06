@@ -1,0 +1,26 @@
+x4: head node_382, 14 pulse(s), 11 band(s)
+  e176 node_382->node_378 dist0 0.000 world 4.793 lat 5.064 out cont
+  e177 node_382->node_386 dist0 0.000 world 4.725 lat 5.064 out cont
+  e180 node_382->mnode_171 dist0 0.000 world 3.211 lat 3.536 in cont
+  e140 mnode_171->node_714 dist0 3.211 world 2.686 lat 2.943 in cont
+  e141 mnode_171->mnode_151 dist0 3.211 world 10.319 lat 10.836 in
+  e134 node_378->mnode_26 dist0 4.793 world 13.730 lat 13.894 out
+  e135 node_378->mnode_27 dist0 4.793 world 2.018 lat 2.121 out cont
+  e175 node_378->mnode_78 dist0 4.793 world 3.820 lat 4.045 out
+  e79 node_386->node_389 dist0 4.725 world 4.752 lat 5.179 out
+  e178 node_386->node_389 dist0 4.725 world 3.349 lat 3.650 out
+  e95 node_714->mnode_154 dist0 5.897 world 8.266 lat 8.600 in
+  e139 node_714->mnode_137 dist0 5.897 world 6.383 lat 6.593 in
+  e18 mnode_27->mnode_26 dist0 6.811 world 1.359 lat 1.414 out
+  e136 mnode_27->mnode_167 dist0 6.811 world 8.495 lat 8.485 out
+  band mnode_171: e180 -> e140 distJ 3.211 in slot 0 tau -1.363..1.307 R2.w 0.000
+  band mnode_171: e180 -> e141 distJ 3.211 in slot 1 tau -1.363..1.278 R2.w 0.000
+  band node_378: e176 -> e135 distJ 4.793 out slot 0 tau -1.361..1.361 R2.w 0.000
+  band node_378: e176 -> e175 distJ 4.793 out slot 1 tau -1.361..1.399 R2.w 0.000
+  band node_378: e176 -> e134 distJ 4.793 out slot 2 tau -1.361..1.430 R2.w 0.000
+  band node_386: e177 -> e178 distJ 4.725 out slot 0 tau -1.329..1.380 R2.w 0.000
+  band node_386: e177 -> e79 distJ 4.725 out slot 1 tau -1.329..1.454 R2.w 0.000
+  band node_714: e140 -> e95 distJ 5.897 in slot 0 tau -1.431..1.439 R2.w 0.000
+  band node_714: e140 -> e139 distJ 5.897 in slot 1 tau -1.431..1.384 R2.w 0.000
+  band mnode_27: e135 -> e18 distJ 6.811 out slot 0 tau -1.278..1.343 R2.w 0.000
+  band mnode_27: e135 -> e136 distJ 6.811 out slot 1 tau -1.278..1.277 R2.w 0.000

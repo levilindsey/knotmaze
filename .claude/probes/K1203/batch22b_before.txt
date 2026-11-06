@@ -1,0 +1,5 @@
+$env:K1139_HOST = "http://127.0.0.1:5880"
+node dump_cyc.mjs out22b/dump x4 > out22b/dump_x4_log.txt 2>&1
+node sheet22b.mjs > out22b/sheet_log.txt 2>&1
+node twin22b.mjs > out22b/twin_log.txt 2>&1
+node check_field.mjs > out22b/check_field.txt 2>&1
