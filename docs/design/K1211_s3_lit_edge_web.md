@@ -148,3 +148,9 @@ Then give `Ledger items` and K1211's handle fields (owner, branch, last commit, 
 (The stage agent appends here.)
 
 Start: 2026-11-05 13:47:41 -08:00 (`Get-Date`). Cap: 15:47:41.
+
+WIP note (14:58): tasks 1 and 2 are in 75bafefb and 4ed0db10. Task 3's checks are done for x4
+and cross (outputs in `.claude/probes/K1211/out3/checks_<stand>.txt`); loop, the bite's after
+shot and the explore smoke are next, then the sheets. The builds: master = c0a72eb8 (K1209 in,
+S1 and S2 out), so master vs branch is S1 + S2 + S3; S2's shots (`out2/s2b`, cfe50075) predate
+K1209, so S2 vs branch is S3 + K1209.
