@@ -77,6 +77,8 @@ import {
   junctionShader,
   junctionShaderExplore,
   pulseBandCover,
+  pulseGlowFall,
+  pulseRouteWeight,
   recordData,
   setFieldParams,
 } from "../junction_field";
@@ -117,6 +119,9 @@ const PULSE_SD = new Float64Array(MAX_ROUTES);
 const PULSE_F = new Float64Array(MAX_ROUTES);
 // K1211 S3: > 0 on the inside of each band's turn (the shader's sIn).
 const PULSE_IN = new Float64Array(MAX_ROUTES);
+// K1211 S4: each band's whitening, a shared one's too (the shader's sG),
+// for the soft field.
+const PULSE_G = new Float64Array(MAX_ROUTES);
 // K1211 S3: the colour before the gold blocks and after them (the shader's
 // c0 and cg), for drawing the pulse bands under the gold.
 const GOLD_C0 = new Float32Array(4);
@@ -521,6 +526,8 @@ export class Joinery {
       if (t <= 0) onlyA = true;
       else if (t >= 1) onlyB = true;
     }
+    // K1211 S4: the blend weight the soft field's route weight reads (jbT).
+    const jbT = onlyB ? 1 : t;
     const baseField = (untravSide: boolean): void => {
       if (!onlyB) {
         armPaint(abA, profArc(abA, relA < Math.PI / 2 ? rho * Math.cos(relA) : 0), false, untravSide, mA);
@@ -759,7 +766,8 @@ export class Joinery {
       const cs = J[r3 + 3] > 0 ? J[r3 + 3] : 0;
       const fb0 = KB * kPulseBandV(U, J[r1], tau, fl0 % 2 === 1, fl0 >= 2, Math.abs(gw), gw < 0, 1, cs);
       const fa0 = KB * kPulseBandV(U, J[r1], tau, fl0 % 2 === 1, fl0 >= 2, Math.abs(gw), gw < 0, 0, cs);
-      PULSE_F[r] = J[r1 + 2] < 0.5 ? Math.max(0, Math.min(1, (fb0 - fa0) / Math.max(1 - fa0, 1e-3))) : 0;
+      PULSE_G[r] = Math.max(0, Math.min(1, (fb0 - fa0) / Math.max(1 - fa0, 1e-3)));
+      PULSE_F[r] = J[r1 + 2] < 0.5 ? PULSE_G[r] : 0;
       PULSE_SD[r] = side < 0 ? -dnow : dnow;
       // K1211 S3: side x the turn (the cross of the first leg and the chord).
       const v1 = at(pb + 5);
@@ -767,6 +775,9 @@ export class Joinery {
       pb += 4 + nv;
     }
     let wW = 0;
+    // K1211 S4: the soft field and its band mask (the shader's gl and rm).
+    let gl = 0;
+    let rm = 0;
     for (let r = 0; r < npp; r++) {
       const cw = PULSE_COV[r] * drawBandYield(PULSE_DIST[r], dShared, pxW);
       // K1211 S3: the web between a drawing band's two arms, on the
@@ -776,6 +787,8 @@ export class Joinery {
       if (bandLightsWeb(ia, ib, bA, bB, PULSE_IN[r])) {
         wW = Math.max(wW, PULSE_F[r] * drawBandYield(PULSE_DIST[r], dShared, pxW));
       }
+      gl = Math.max(gl, PULSE_G[r] * pulseGlowFall(PULSE_DIST[r], reach, fillHalf));
+      rm |= bB >= 0 ? (1 << bA) | (1 << bB) : 1 << bA;
       if (!(cw > 0)) continue;
       const r0 = PULSE_R0[r];
       const tau = PULSE_TAU[r];
@@ -804,6 +817,7 @@ export class Joinery {
           * (1 - pulseSmooth(0.52, 1.56, PULSE_DIST[r] + PULSE_DIST[q] - 2 * reach)) * Math.min(yr, yq));
       }
     }
+    wW = Math.max(wW, gl * pulseRouteWeight(((rm >> ia) & 1) === 1, ((rm >> ib) & 1) === 1, jbT));
     if (wW > 0) {
       const tgt = U.uKHlPulse;
       if (exA) {
