@@ -3972,3 +3972,20 @@ crop at full size against its item:
   ramp a few device px wide passes. Filed as K1220, with K836 (c)'s pale discs at the a's L and R.
 - K424: present; Run K named the joint gate (`exploreJointShown`, explore_gaps.ts). Stays.
 - K15: gone, closed. K218: gone at 7 stands, closed. K678: unreachable, dropped.
+
+## K863 (2026-11-05, Run L reviewed)
+
+Run L (22L, 734c55b9) re-measured 30 cursive leftovers on the approved v6.8:
+`.claude/probes/K863/audit_22l/SUMMARY.md` has each item's then and now, 18 crops and the kit
+gaps. Claude viewed 7 crops (be, f, ip, b, lead e, k's X, oe) and filed:
+- Done: K990 (J3e's corner exit, 636bd685).
+- Dropped: K987 and K938 (gone), K927 and K912 (superseded by the per-pair port solves), K948 (oe
+  solved anew with no hook; be, we and ve keep the presets Levi kept, K1112).
+- Re-worded with v6.8's numbers: K903, K937, K947, K949, K986, K991, K998, K1006, K1014, K1044.
+- Unchanged text, v6.8's numbers in SUMMARY.md: K913, K951, K961, K977, K978, K982, K989, K997,
+  K1021, K1035, K1036, K1090, K1116, K1194.
+The crops: f no longer curls into its exit, and its swoop runs higher than the font's; the p entry
+in "ip" joins from one side with no crossing, right of the font's; the lead e and the b's bowl
+show no knee or notch at 2-3x; the o-to-k join runs along the top, far from the font's lower
+diagonal (ok 34.77 u), and k's two strokes part where the font's nearly coincide; the connector
+into e after o comes in higher than the font's (oe 12.69 u).

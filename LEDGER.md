@@ -511,10 +511,10 @@ Next free ID: K1221.
   - env: the passes' builds first and never while Muse runs: `scripts/preview.ps1 -Ref <sha> -Root <out>\builds -BuildOnly` for each sha (`pixel_passes.ps1` stops before the phone lock when one is missing); probe server `npx vite --config .claude/probes/K1139/vite.private-cache.config.ts --port 5620 --strictPort --host 127.0.0.1` from a worktree (ports 5620-5639); GPU probes through `.claude/probes/K1139/run_locked.ps1 -Batch`
 - **K1208** · Muse batch 22 (after K1204's batch 21): runs B to O through the chain, from
   `docs/design/K1208_muse_batch22.md` and the later runs' own briefs (ports 5880-5999)
-  - owner: the chain in `.claude/probes/K1053/` (queue.txt, chain.log): Run L (22L) since 14:08, then M (22M), N (22N) and O (22O), fresh Muse sessions; coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
-  - branch: mainline; last commit: `0f63e3d5`
+  - owner: the chain in `.claude/probes/K1053/` (queue.txt, chain.log): Run M (22M) since 14:30, then N (22N) and O (22O), fresh Muse sessions; coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
+  - branch: mainline; last commit: `734c55b9`
   - evidence: the chain in .claude/probes/K1053/ (queue.txt, chain.log); each run's probe folder under .claude/probes/ (B K1203, H K1210, C and I K1186, E K1196, F K1191, G K1198)
-  - next: L (cursive residuals on v6.8), then M (the frame tail in play), N (K1220: the text forks' disc and steps) and O (K1218, K1219: the gap mask inside junctions); D held for K1211; K reviewed (K424 stays; K1220 filed)
+  - next: M (the frame tail in play), then N (K1220: the text forks' disc and steps) and O (K1218, K1219: the gap mask inside junctions); D held for K1211; L reviewed (K990 done; K912, K927, K938, K948, K987 dropped)
   - brief: `docs/design/K1208_muse_batch22.md`; I to O: K1209_reapply_run_i.md, K647_reset_win_card.md, K1208_run_k_junction_residuals.md, K1208_run_l_cursive_residuals.md, K1214_profile_run_m.md, K1220_run_n_text_forks.md, K1218_run_o_mask_in_junctions.md (docs/design/)
 
 ## Next, in order
@@ -665,9 +665,6 @@ Every other item below waits on the trigger it names.
   patch_items.mjs (`docs/design/K777.md` Handoff).
 - **K890** · Move the K863 tracer into tracked `scripts/` (trace_k879.py, review_k879.py, K886's
   join_k886.py, the venv's requirements), without the chart or its crops, once K886 lands.
-- **K912** · Cursive generator follow-ups from K902: o and b exits per class (ok 10.9, or 6.5 u);
-  f's exit walk; `--high-exit` by rerun; per-left split overfit. v5 (K904) fixed h's and k's after-o
-  entries, og, oq, ng and nq. `docs/design/K902_cursive_frames.md` ## Results.
 - **K919** · K525's TELE paint item costs the phone +11.0 ms on dense (+2.8 max-fabric, +3.1 knot;
   T1 `9d23dab1`, round 2026-10-27c): try a K905-style compile-out (no TELE item on pages that draw
   no telegraph; an analogy, unverified) and measure it. `docs/design/K156.md` round 27c.
@@ -677,40 +674,34 @@ Every other item below waits on the trigger it names.
 - **K935** · K922's follow-ups (endSnap is unconditional since K934): the 23 crossing-cut free ends; the 9 span-end
   triples the walk never starts; d2-d4's fill-outline and z-tie cuts; probe fixes (fe_mech R = 2W, K915's `h.ts`
   FULL_DIR). `K922_junction_extent.md` ## Handoff.
-- **K937** · Cursive: fit the connector into o (`cnct.mod_n_o`) on its own at the 86 u junction. J2 kept one set for
-  ma la ug no ho do po ro (to io mo ng too) and chose smoothness: ho 2.85, no 2.89, do 2.76, ro 2.89 u (were 1.78-2.00),
-  inside 3.0; an o-only set may win the distance back. `K962_cursive_joins.md` ## Handoff (K937).
+- **K937** · Cursive joins into o on v6.8 (22L): the per-pair port solves give ho 6.10, no 4.79, do 5.97 u off
+  the font, past the 3.0 budget (J2's one `cnct.mod_n_o` set: 2.76-2.89); ro 2.89 (J2's preset), to 2.97,
+  io 4.58, mo 2.46, ng 5.73; judge each by eye against v6.8 (K1112). `.claude/probes/K863/audit_22l/`.
 - **K941** · K924's follow-ups: trace F, the fill's paper edge at muse_hash #5's 9 sites (corner prims at
   (4.2, 12.1) and (11.9, 15.75)); attribute the 2 unattributed missing stretches; check that group ink's 106
   broken lines are S's; N's 7 extra (open-chain starts) go to the extent walk. `K924_label_artifacts.md` ## Handoff.
 - **K961** · Cursive v5.8: 8 of 30 body strokes have more than 12 nodes (m 21, k 18, h 16, w 16, y 15, p 14, a 13,
   n 13; f is down to 12): k and p are at the fewest any candidate has, fewer-node h and n peak above their caps, m, y
   and w fall outside the 10% peak window, and a's 13th node holds its bowl top. `work16/fewnode/` in K863's probes.
-- **K948** · Cursive: the e after o, b, v and w (be, we, ve, oe; Drive `K863/e_joins_v54.svg`) turns from its level
-  crossbar up into the eye's back in a short span, an elbow; B1's b, v and w exits leave 3-9° steeper than the font's.
-  Re-choose e's after_o start (`k962.evar.o`) with `ful_b_e|e`, `ful_o_e|e`, or redesign it. K962/K990 handoffs.
-- **K949** · Cursive joins still off the font: fe 18.8 u (v5.8 15.34), bk 7.85 (check the reference cut near k's loop
-  entry), ee 6.9, br 5.18 after J2 (its new set made a deeper V), y's final tail 3.55 after J2. fe, bk and ee are not
-  in J2's census words (K998). `K926_cursive_e.md`, `K962_cursive_joins.md` ## Handoff.
+- **K949** · Cursive joins still off the font on v6.8 (22L): fe 13.62 u, bk 7.31 (check the reference cut near
+  k's loop entry), ee 8.29 in coffee (3.22 as a pair), br 5.18, y's final tail 3.55; fe, bk, ee censused now.
+  `K926_cursive_e.md`, `K962_cursive_joins.md` ## Handoff; `.claude/probes/K863/audit_22l/SUMMARY.md`.
 - **K1009** · Cursive J3: letters declare ports and each join is solved per pair, replacing the join presets (Levi,
   2026-10-28: "more flexible and procedural and less preconfigured"). J3a built the ports and o's three exits (v6.1,
   `b59a72b2`); J3b solved o's exit B on all 26 joins and ot at the crossbar (v6.4, `7c382e05`); J3c gave o b0's joins,
   all converged, with og from v6.4 and ot's tangent entry (v6.6, `6079b195`; looks K1089, residuals K1090); the rest, K1014.
-- **K990** · Cursive bodies, Levi's v5.8 review (2026-10-28): B1 (v6.0) gave a its top corner (its flat top is K1004), k
-  the sharper leg and p the shorter end. Left: f still ends its lower loop in a curl below the crossing, not a cusp into
-  its exit (fe 22.55 u, ff 16.55, fo 9.07 off the font); J3. `K990_cursive_bodies.md` ## Handoff.
-- **K991** · Cursive entries (Levi, v5.8 review, 2026-10-28): cusp entries (t, p; also i j r s u w y) meet the stem
-  from one side at its tangent, never crossing it (h's entry and b's, K995, done in B1). J2 left them at 143-172°,
-  crossing ~20 u lower: `K962_cursive_joins.md` ## Handoff, note 2.
-- **K1006** · Cursive leads and tails: knees in e, f and l (0.0373, 0.0397, 0.0343 at t 0.14, 0.54, 0.15), h's hump
-  (0.0053 at t 0.38), k's lead wiggling at the stem (v5.9 too); tail0q's exit not G2, a 151° hook (v6.4 and v6.5, B4's
-  report). J3c, with K991. `K990_cursive_bodies.md` ## Handoff; crops come from `work20/dbg/post_k990.ps1`.
+- **K991** · Cursive entries (Levi, v5.8 review, 2026-10-28): cusp entries (t, p; also i j r s u w y) meet
+  the stem from one side at its tangent, never crossing it. On v6.8 (22L) none crosses (sides 0.00-0.61 u),
+  but they arrive at 142.7-179.2°, not tangent. `.claude/probes/K863/audit_22l/SUMMARY.md`.
+- **K1006** · Cursive leads and tails on v6.8 (22L): the knees fell to e 0.0152, f 0.0153, l 0.0097 (were
+  0.034-0.040), h 0.0017, k 0.0103, with no hook; tail0q's exit keeps its 151° hook (dk 10.57, facet 1.233
+  fails), which K1213's Q1 redraws. `K990_cursive_bodies.md` ## Handoff; `.claude/probes/K863/audit_22l/`.
 - **K997** · Cursive joins: the take rule (`joinfit_k962`, `freeze_k962`) should read the census's peak away from the
   seam, with the hook as its own term. J2 took fo and tail t for losing J1's hooks though that peak rose (fo 0.114 to
   0.146, tail t 0.044 to 0.169); t's tail shows a red burst in v5.9. `K962_cursive_joins.md` ## Handoff.
-- **K998** · Cursive census coverage: add words holding fe, bk, ee (K949), na, nq (K946) and the pairs that share a
-  re-chosen set (to io mo ng); then explain or re-choose the pieces over budget: ot 6.56 u, tail t 6.53, lead f 6.46
-  (unexplained), oe 5.29, br 5.18, fo 4.64, lead h, tail y, lead s, lead l, ur, et. `K962_cursive_joins.md` ## Handoff.
+- **K998** · Cursive census coverage on v6.8 (22L): fe, bk and ee are in the words now; add na, nq, to, io, mo
+  and ng (as pairs 6.20, 5.29, 2.97, 4.58, 2.46, 5.73 u); then explain or re-choose the pieces over budget: ot
+  15.98-17.35, oe 12.69, fo 7.79, tail t 6.53-6.87, lead f 6.46, br 5.18. `.claude/probes/K863/audit_22l/`.
 - **K943** · K868: draw the over thread's line where two threads of one junction cross (about 110 spots; both inks
   fuse them now; Drive `K868/sheets/K943_crossing_in_junction.png`), behind a flag for Levi to compare. The oracle
   needs simLab to split a crossing's two passes (K940 step 5, `S/`); the app needs 1-2 label bits (S3). Under extent part this is label ink's largest class (#16 50/8, missing 41/16; K934).
@@ -806,12 +797,9 @@ Every other item below waits on the trigger it names.
   from a 4.3 fu arm (v5.8's jump weight removed it; nothing guards it). `fewnode_k969.py`; K969's handoff.
 - **K951** · Cursive v5.4's residual: b, f, p, v, o, s and w end without a final tail, as the font's do (v5.5
   fixed the titles and the rerun order). `.claude/probes/K863/trace/NOTES.md` ## v5.4.
-- **K947** · Cursive v5.3's residuals: f's frames sharing a node, `bodies.json` at 4.5 MB, the ot crossing
-  (v5.5 cleared pp and mp and tightened the ceilings; o's closing hook is K959). `K930_cursive_smooth.md`
-  ## Handoff.
-- **K938** · Cursive v5.2's residuals: zo reads 142 u at every height (likely the wrong reference connector,
-  unchecked); five new crossings into o (the font crosses there too). Its eye flags are K960's.
-  `K925_cursive_v52.md` ## Handoff.
+- **K947** · Cursive v5.3's residuals on v6.8 (22L): f's after_o and after_b frames still share a node
+  (s 787.2 fu); `bodies.json` is 3.0 MB (was 4.5); the ot crossing is gone. `K930_cursive_smooth.md`
+  ## Handoff; `.claude/probes/K863/audit_22l/SUMMARY.md`.
 - **K936** · K922's residuals: what holds an arm 7h+ under "part"; d1's crescent stub; #5's band (a spike under
   depth, a notch and an end under the extent); g41_user_tw64's free ends 20 to 23; #14's crossing whose passes
   never overlap. `K922_junction_extent.md` ## Handoff.
@@ -1526,9 +1514,9 @@ Every other item below waits on the trigger it names.
 - **K899** · K883 oracle checks still failing: #14's crossing 15 on muse_hash (the S1a export holds
   the passes apart), #16 on 9 scenes (at most 65 samples), 1-2 failed corner solves a scene,
   j_pair_cross #2 and muse_hash #2 (26.75 px / 86.6 deg). `docs/design/K883_oracle_borders.md`.
-- **K903** · Cursive v3: k's X traced at 61.3 deg (the font's passes: 3.2 deg); coverage 4.3 u in f;
-  p.jmc's stem kink unmeasured; no join recalibration on edited bodies. v4 (K902) moved the b, e and
-  z X's into bodies and rewrote the review notes. `.claude/probes/K863/trace/NOTES.md`.
+- **K903** · Cursive v3: k's X traced at 61.3 deg (the font's passes: 3.2 deg), unchanged on v6.8 (22L);
+  coverage 4.3 u in f; p's stem has no kink now. v4 (K902) moved the b, e and z X's into bodies.
+  `.claude/probes/K863/trace/NOTES.md`; `.claude/probes/K863/audit_22l/SUMMARY.md`.
 - **K908** · Max-fabric's frozen cell draws a different frame run to run (base vs base 2587 px; K905's
   master vs master: desktop 2080, phone 1093 px), so its pixel diffs need another control.
   `docs/design/K156.md`, round 2026-10-27b handoff.
@@ -1540,13 +1528,12 @@ Every other item below waits on the trigger it names.
   runs v4's commands; `--guides centreline` unrun. `.claude/probes/K863/trace/NOTES.md` ## v4.
 - **K920** · K620's `df8b80c3` costs the phone +5.2 ms on max-fabric (about 2 ms of K905's gap;
   round 2026-10-27c). `docs/design/K156.md` round 27c.
-- **K927** · Cursive fits stop at nfev 600 for 16 of 26 letters (since v5.2 q does and a no longer
-  does); in v5.1 a and q ended 5.0 and 4.0 u off the trace. `K916_cursive_v51.md` Handoff, Open 5.
 - **K985** · K868 S3a5's leftovers: a chain's point count changes between recorded frames (cause unverified); knot
   mode and the settle were never recorded (the GPU stages' checks must cover both); the 8x zoom is assumed (S3a6
   checks it). `K868_s3a5_incremental.md` 11.6, 11.9, 11.10.
-- **K986** · Cursive: rough fails n after K944's n edit (facet 0.0056 > 0.0053, peak 14.67 at 166 u), the same with
-  and without K981, so the fork is not the cause. Untraced. `K980_cursive_local.md` ## Handoff.
+- **K986** · Cursive: rough fails word-final n tails on v6.8 (22L, facet 0.0078); the stock n body passes
+  (facet 0.0008; K944's edited build was not rerun). Untraced. `K980_cursive_local.md` ## Handoff;
+  `.claude/probes/K863/audit_22l/SUMMARY.md`.
 - **K989** · Cursive: frames with a bk (after_o with s: b f h k l x z; s_fused: a c d g o q) still go through K944's
   node alignment, not a rule on the drawn curve (h's node add moved them 1e-4 u); edits are emulated, never made in
   the GUI. `K980_cursive_local.md` ## Handoff.
@@ -1556,9 +1543,9 @@ Every other item below waits on the trigger it names.
 - **K1008** · K868 label's GPU path: a fill-program compile failure skips the fills silently (the `gf` guard in
   `label_pass.ts`), both fill programs compile, the GPU tube program has no K320 budget, and G7's GL error shows
   only on muse (unexplained). `K868_s3a8a_fills.md` ## Handoff, Residuals.
-- **K1014** · Cursive J3a's leftovers for J3b: 0 u cusp entries (hi×2, er, es, ow×2), on and en jumping between two
-  minima (6.43/5.25 u), 12 maxfev solves, b f h k l e's after-high entries pinned at bounds, ea/et ~2 u below the
-  baseline, ne/he at the 30 u bound, no words/template writers, no port sensitivity. `K1009_cursive_ports.md`.
+- **K1014** · Cursive J3a's leftovers on v6.8 (22L): 0 u cusp entries (hi er es ai ar as nr ns di dr ii ir);
+  er, es and ee stop at maxfev 3000 as pairs; 36 census rows at a floor; ea and et 2.1 and 1.8 u below the
+  baseline; ne and he at the 30 u bound. `K1009_cursive_ports.md`; `.claude/probes/K863/audit_22l/`.
 - **K1021** · Cursive B2's measures, reported: g's and q's corners sit 1.96 and 1.89 u above a's (each at its own
   stem top); the new tops run 9.2-9.3 u off the font (a's 8.0); q's junction stretch 0.31 to 0.92 u (within 3.0);
   og's dmax 19.91 to 20.74 u (rough before and after). `K1012_cursive_gq_corner.md` ## Handoff.
@@ -1585,9 +1572,9 @@ Every other item below waits on the trigger it names.
 - **K1043** · K868's label band can flip a long run on one edge decision under eps: at muse_flow@w0 t14 one label
   pixel, 6.0e-4 px inside chain 58's edge (eps 1e-3), decides 33 band pixels. S3a8b6's oracle limits: a hairpin tighter
   than h reads as a fold; fills carry no margins. Input to K1040. `K868_s3a8b6_oracle.md` Q17, ## Handoff, on `k868-s3a`.
-- **K1044** · Cursive v6.5's leftovers (B4): a's largest |dk/ds| (8.51e-4 /u²) sits above g's 7.07e-4 mark where the held
-  bowl starts; fa and fq moved 0.67 / 2.39 u, and no census word holds them; oa and oq dip 4.4 / 3.4 u deeper, the attach
-  on its bound (34.3 / 34.6 u from the corner). For J3c. `K1029_cursive_b4.md` ## Handoff; NOTES `## K1029` N2c, N3c, N4b.
+- **K1044** · Cursive v6.5's leftovers on v6.8 (22L): a's largest |dk/ds| 8.4e-4 /u² at the hand-over (g's
+  0.8e-4); fa 9.52 and fq 9.60 u off the font, censused now; oa and oq attach 38.21 and 35.71 u from the
+  corner, lowest 18.8 and 20.4 u below the x-height. `K1029_cursive_b4.md`; `.claude/probes/K863/audit_22l/`.
 - **K1058** · Removing a worktree can empty the main checkout's node_modules: each `.claude/worktrees/*`
   links node_modules by junction, and `git worktree remove --force` deletes through it (2026-10-29 20:18,
   remover unknown). The worktrees sit inside the checkout, so Node finds packages upward: try no junction.
@@ -1955,8 +1942,6 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K921** · Phone A/B of shader variants of one commit: shader text alone moved a cell by about 10
   ms either way (T1, T2 and S2 in round 2026-10-27c), so a probe that A/Bs variants could find a
   cheaper program for every link. `docs/design/K156.md` round 27c.
-- **K987** · Cursive: a G2 rule at a smooth node's retrace follower. K981's is G1 only: n's curvature jump grows with
-  the drag (2.70e-2 1/fu at s1; K944 1.50e-2), node 6 gains one (1.63e-4), n has 4 kinks (K944: 3). `K980_cursive_local.md`.
 - **K1076** · K814 stage 5 (optional): fold SHAPE_FNS (src/core/shapes.ts, line 68) into the SHAPE_REGISTRY
   entries (src/core/shape_injection.ts, line 158), so a pre-defined shape is added in one spot.
 - **K1106** · A build check that every `dist/assets/` file name carries a content hash: `public/_headers`
@@ -1976,6 +1961,12 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K990** · Cursive f ends its lower loop in a corner into its exit, no curl (J3e, v6.8; 22L measured it, 734c55b9). Done in 636bd685 (2026-11-05).
+- **K948** · Cursive: the e after o, b, v and w (an elbow). Dropped: superseded on v6.8 (22L, 734c55b9): oe solved anew with no hook (its 12.69 u is K998's); be, we, ve keep the presets Levi kept (K1112) (2026-11-05).
+- **K938** · Cursive v5.2: zo at 142 u, five crossings into o. Dropped: gone on v6.8 (22L, 734c55b9): zo 2.96 u; ob, of, oh, ok and ol cross a body once each, as allowed (2026-11-05).
+- **K912** · Cursive o and b exits per class, f's exit walk, per-left sets (K902). Dropped: superseded: v6.8 solves each join per pair from its port, no per-left sets or exit walk (22L, 734c55b9); ok's distance is K1090's (2026-11-05).
+- **K927** · Cursive fits stopping at nfev 600. Dropped: superseded: v6.8's bodies come from the few-node writer, with no trace fit (a 0.40, q 0.42 u off the trace; 22L, 734c55b9) (2026-11-05).
+- **K987** · Cursive: a G2 rule at a smooth node's retrace follower (n's kinks). Dropped: gone on v6.8: 22L (734c55b9) found n's smooth nodes at 0 deg turns and 0 jumps, 0 internal kinks in 713 census rows (2026-11-05).
 - **K678** · A K81 cover strip with fewer than 9 pairs of room drops a round join arc (falls back to the sample pair); no A/B scene reaches it (`RibbonMesh.coverPairs`, the joinery.ts cover loop; K580 s3). Dropped: unreachable today: cover strips exist only at routed fabric junctions, which carry no round join, and text scenes have joins but no routes (Run K, 22K: 50 seeds, 35,288 calls, 0 fallbacks) (2026-11-05).
 - **K218** · Trail-mode junction caps' flat p step: gone at 7 stands, routed junctions skip the caps (Run K, 22K). Done in 0f63e3d5 (2026-11-05).
 - **K15** · A joint's fan ahead of its arm during a reveal: gone, the fan follows the joint gate's knotFanAlpha (Run K, 22K). Done in 0f63e3d5 (2026-11-05).
