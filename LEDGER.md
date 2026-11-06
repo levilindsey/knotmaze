@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1212.
+Next free ID: K1214.
 
 ## Waiting on Levi
 
@@ -325,11 +325,11 @@ Next free ID: K1212.
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
   Levi to edit instead of drawing all 26 (Levi, 2026-10-26). Muse's prototype parked at abc135e7.
-  - owner: claude agent af77097804c041b8b (J3j) of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-05 09:24
-  - branch: worktree-agent-af77097804c041b8b (.claude/worktrees/agent-af77097804c041b8b); J3i's worktree-agent-a2d2f19ad8f0a41d7 holds v7.2, unmerged; last commit: 8b03b038 (J3j's brief)
-  - evidence: .claude/probes/K863/trace/ (work28 = v6.8; J3j writes work33 and out33)
-  - next: J3j rebuilds v6.8 as the base, identical to work28, with an account of v6.9-v7.2's changes and reference sheets; Claude reviews them by eye; then Plc1m and the ij work are re-judged on it (K1198); 22G and the c refit held
-  - brief: docs/design/K863_cursive_j3j.md (K863_trace.md's Judging a look binds it)
+  - owner: nobody since 2026-11-05 10:48: J3j done and merged (f5424660); the next stage is not briefed yet
+  - branch: mainline (J3j's worktree .claude/worktrees/agent-af77097804c041b8b kept; J3i's worktree-agent-a2d2f19ad8f0a41d7 holds v7.2, unmerged); last commit: `f5424660`
+  - evidence: .claude/probes/K863/trace/work33/ (v6.8 rebuilt, identical to work28) and out33/png/ (sheets: approved = v6.8 beside v6.9 to v7.2)
+  - next: Claude plans the next stage on work33 (v6.8): what K1112's one-rule plan still owes now that Levi kept v6.8's joins; fix K1212's g2 key first; then K1198's re-judgment (22G held)
+  - brief: docs/design/K863_cursive_j3j.md (its Handoff; K863_trace.md's Judging a look binds it)
 - **K114** · Gameplay round 2, designed in
   `docs/design/K80_gameplay_additions.md` section R: burn race, cut
   verb, beat rider, spider, Pluck Hero MVP. Levi took the recs (calls
@@ -517,13 +517,12 @@ Next free ID: K1212.
   - next: K1211 first: the light inside junctions (Levi 2026-11-05: one seamless unit; the bands may go); then Levi's look K1200 (`docs/asks/K1200.md`), K1201 (its fix (b), Run 22D, held for K1211), S6 (plan section 5) after K1140's Glimpse picks. The next pulse step's Pixel pass watches fabric 7 moves' frames over 25 ms (+14 and +15 in the fix's and S5's passes, floor 13)
   - brief: the plan `docs/design/K1139_pulse_junctions.md` section 5 (S6); S5 was Muse batch 20's Run B (`docs/design/K1199_muse_batch20.md`)
   - env: the passes' builds first and never while Muse runs: `scripts/preview.ps1 -Ref <sha> -Root <out>\builds -BuildOnly` for each sha (`pixel_passes.ps1` stops before the phone lock when one is missing); probe server `npx vite --config .claude/probes/K1139/vite.private-cache.config.ts --port 5620 --strictPort --host 127.0.0.1` from a worktree (ports 5620-5639); GPU probes through `.claude/probes/K1139/run_locked.ps1 -Batch`
-- **K1208** · Muse batch 22 (after K1204's batch 21): Run A drafts its brief from
-  `docs/design/K1208_muse_batch22_run_a.md` after 21G, through the chain (queued as 22A); Claude reviews the
-  draft and queues runs B to G (ports 5880-5939)
-  - owner: the chain in `.claude/probes/K1053/` (queue.txt, chain.log): Run C (22C) since 10:27, a fresh Muse session; coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
+- **K1208** · Muse batch 22 (after K1204's batch 21): runs B to H through the chain, from
+  `docs/design/K1208_muse_batch22.md` (ports 5880-5949)
+  - owner: the chain in `.claude/probes/K1053/` (queue.txt, chain.log): Run E (22E) since 10:47, a fresh Muse session; coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
   - branch: mainline; last commit: `2d68f787`
-  - evidence: the chain in .claude/probes/K1053/ (queue.txt, chain.log); each run's probe folder (B: .claude/probes/K1203/, H: .claude/probes/K1210/)
-  - next: Run C stopped at task 4 (fat11 ji104 23/14 px; retirement in wip22c.patch, unpushed); Claude reviews it (Run D held for K1211, then E, F)
+  - evidence: the chain in .claude/probes/K1053/ (queue.txt, chain.log); each run's probe folder (B: .claude/probes/K1203/, H: .claude/probes/K1210/, C: .claude/probes/K1186/)
+  - next: E running (K1196 S4's cost ABBA), then F (K1191); C reviewed (K1209 accepted; its re-apply waits for K1211 S1); D held for K1211; G held for K863's next stage
   - brief: `docs/design/K1208_muse_batch22.md`
 
 ## Next, in order
@@ -761,15 +760,21 @@ Every other item below waits on the trigger it names.
 - **K1196** · Two-ended pulses (K1139 S4) on the desktop, 20F (345a189f, `.claude/probes/K1196/out/`): frame
   p50 at rest 7.50 (cyc e210), 7.82 (loop e102), start head 7.07; in play 7.25, 7.22, 6.95 (spread 0.2, 0.1).
   Other stands, so not S4's own cost: next, those stands on S4's base and head (ABBA), the Pixel if it costs
-- **K1209** · Retire the fillet layer vote (21E: a flip only reorders fans, 0 px; K1186): one fan layer, once
-  joinery.ts's "kept for the junction-shader merge" is checked. Removes the vote loop, layerFor, the fm
-  routing, filletTopMesh, `voteOverride` and its test; a moved pin is re-frozen and named.
+- **K1209** · Retire the fillet layer vote (one fan layer; K1186): Run C (2d68f787) has it green and 0 px
+  but fat11 ji104 drag3 (23/14 px), where the base's stair-step at a fan boundary goes smooth: accepted.
+  Lands after K1211 S1 merges: a Muse run re-applies `.claude/probes/K1186/wip22c.patch` (notes).
 - **K1210** · Fire and collapse across junctions, like the highlights (Levi 2026-11-05; notes).
   Run H (d31f08c6; `.claude/probes/K1210/`): both break up inside the fused shape at 3 and 4 arms: fire in
   straight wedges with spikes, collapse as a bite or a ragged cut. The fix follows K1211's pick.
 
 ## Residuals (known, not fixed)
 
+- **K1213** · Cursive v6.8 (K863 work33): the six q$ word-final tails are undesigned seams (dk 10.6/u in J3j's
+  census); p and s end with no tail; the i and j dots are drawn as ticks. `docs/design/K863_cursive_j3j.md`
+  Handoff.
+- **K1212** · K863's trace kit: SU.g2 reads `angle_deg` but the census writes `ang_deg`, so g2 never checks
+  the angle; rowsame keys rows by word number (same_k863j.py works around it); the word lists repeat ids (v68x
+  718 rows / 713 ids, J3e 349 / 347). `docs/design/K863_cursive_j3j.md` Handoff.
 - **K1130** · K309 inject probes: a run's first normal screenshot can come back dark and nearly blank (round 2026-11-02 rimSeam, 3848 bytes against 628314; round 2026-11-03 handoff step 3b). Take a throwaway first shot, or shoot each state twice and diff the repeat, before believing a pair.
 - **K1048** · K1040's probe gaps (`docs/design/K1040_s1c_handoff_pops.md` F5; `K1040_s1d_corner.md` F1, Handoff 5):
   q5holes skips a hole with a partly OWN rim; q4's g41 crop holds no ink on the g41 rings; the free ends' oracle

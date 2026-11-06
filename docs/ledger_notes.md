@@ -3832,3 +3832,23 @@ same sheets show the band edges and radial bars K1211 is about.
 
 Next: K1211 S1 picks the light's rule inside a junction; fire's burn edge and ember band and the
 collapse's cut then follow the same rule through the fused shape, as a stage after Levi's pick.
+
+## K1209 (2026-11-05, Run C reviewed)
+
+The item's text before Run C: Retire the fillet layer vote (21E: a flip only reorders fans, 0 px; K1186): one fan layer, once joinery.ts's "kept for the junction-shader merge" is checked. Removes the vote loop, layerFor, the fm routing, filletTopMesh, `voteOverride` and its test; a moved pin is re-frozen and named.
+
+Run C (Muse batch 22, 22C; 2d68f787; `.claude/probes/K1186/`: ab22c.mjs, batch22c.txt, wip22c.patch; out22c/ untracked): task 1 found nothing that still needs two fan layers. The retired tree (joinery.ts, ribbon_renderer.ts, explore_gaps.ts, paint_state.ts, scripts/phone_pass/walk.mjs; test/render/vote_override.test.ts deleted): tsc clean, npm test green (216 files). Task 4, base (Run B's 0af054cc) against retired: controls 0 px; seed3 all 6 flip states 0 px; fat11 26 of 28 states 0 px; ji104 drag3 f20 23 px (max 35) and f28 14 px (max 24), in the rightmost columns at a fan boundary. The run stopped there, as its brief said, and did not push the retirement.
+
+Claude's review by eye (out22c/fat11_f20_ji104_crop.png and fat11_f28_ji104_crop.png, base left, retired right, 3x): the base draws a stair-step boundary between the salmon and purple areas at the fan boundary; the retired fan runs smooth there. Accepted: it removes an edge inside the junction, which is what K1211 asks for.
+
+Landing: after K1211 S1 merges (its switch at 0 must stay 0 px against master, and S1 edits joinery.ts and junction_field.ts too), a Muse run re-applies wip22c.patch onto that master, keeps S1's code where the two meet, reruns task 4's stands (expect 0 px but the accepted ji104 change), re-freezes and names any moved pin, and pushes.
+
+## K863 (2026-11-05, J3j merged)
+
+J3j (stage agent of claude session 7301c55b, 09:22 to 10:48; merged as f5424660 after a rebase onto efabc2ce; the brief's Handoff is the record) rebuilt v6.8 as `.claude/probes/K863/trace/work33/`: the template is byte-identical to J3e's; every SVG, PNG and JSON equals work28/base; the census compared 349 pieces with 0 differences, the det rerun too. c against v7.0: 101 of 110 raw pieces equal; the 9 that differ are the joins bc, vc, wc, cb, cv, cw (the last three numeric only) and c's stroke after bc, vc and wc; every join out of c is v7.0's, which are K1197's old joins.
+
+The account (234 words, 1356 pieces per version): J3f (v6.8 to v6.9) moved 301, 29 unlisted, largest 88.2 u (wl); J3g (to v7.0) 244, 16 unlisted, largest 30 u; J3h (to v7.1) 78, all listed, largest 34.2 u (ct); J3i (to v7.2) 180, all listed, largest 7.18 u. All 45 unlisted pieces come from b's, v's and w's new bodies as the second letter of a pair. Cusp corners: v6.8 has 19 among its 25 undesigned seams (the other 6 are the q$ tails, K1213), every one an entry into r, s or i, the largest 0.0462/u (nr, dr, er); v7.1 has 23, v7.2 none.
+
+Sheets (`.claude/probes/K863/trace/out33/png/`, tracked): b_v68, v_v68, w_v68, aq_joins_v68 and e_after_bvw_v68 (font, approved = v6.8, v6.9, v7.0); c_v68 (font, approved, v7.1, v7.2); cusp_v68 and corners_v68 (font, approved, v7.2) with two crops; cursive_v68_words. Claude's check by eye (the tops of b_v68 and c_v68 at full size): the approved column is v6.8. b's joins are blue U sags lying on the font's join where v6.9's run near-straight and v7.0's hump and then bend into an S; c's approved joins are smooth rising arcs along the font's, where v7.1's run along the baseline and v7.2's add a dip.
+
+The rebase needed `-c core.autocrlf=false`: work33's and out33's `.gitattributes` (`* -text`, added by the stage's fourth commit) made the earlier commits' CRLF checkouts look like local changes, and agent_merge.ps1's rebase stopped at the fifth commit.
