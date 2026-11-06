@@ -215,7 +215,11 @@ float profArc(int ab, float rp) {
 // pulse cores; a traveled/untraveled pair stepped sharply inside the
 // blend instead of ramping) - the palette-order lore, field edition.
 // untrav (K81, a routed record): every arm's UNTRAVELED row - the route
-// bands put the gold back along the path itself.
+// bands put the gold back along the path itself. K1219: it leaves the two
+// bracketing arms and their span in jbA / jbB / jbS for the route bands.
+int jbA = -1;
+int jbB = -1;
+float jbS = 0.0;
 vec3 junctionBase(int rec, vec2 p, vec4 hd, bool untrav) {
   int n = int(hd.z + 0.5);
   vec2 e = p - hd.xy;
@@ -254,6 +258,9 @@ vec3 junctionBase(int rec, vec2 p, vec4 hd, bool untrav) {
     if (ra < relA) { relA = ra; ia = i; }
     if (rb < relB) { relB = rb; ib = i; }
   }
+  jbA = ia;
+  jbB = ib;
+  jbS = relA + relB;
   int abA = rec + 2 + ia * stride;
   int abB = rec + 2 + ib * stride;
   // Probe views (uKBase.z 3 / 4): one bracketing arm's material alone.
@@ -298,7 +305,9 @@ vec3 junctionBase(int rec, vec2 p, vec4 hd, bool untrav) {
 // two bases blended by it), then each K81 route band through this
 // junction composed over it, oldest first (a revisit's newer pass wins
 // where two cross). A band pixel takes its nearest point on the band's
-// centerline polyline (and that point's tau). In a web the band edge is a
+// centerline polyline (and that point's tau); so does a pixel inside the
+// turn, between the band's two arms (K1219: the inner fillet is the band's,
+// so the gold leaves no untraveled notch there). In a web the band edge is a
 // one-pixel ramp CENTERED on the thread half-width, like a ribbon's MSAA
 // edge, so the band is the thread's width. On a cover strip the band stays
 // solid ROUTE_BAND_PAD pixels past the half-width before its ramp: the
@@ -343,6 +352,10 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
       q0 = q1;
     }
     float cov = clamp((reach - sqrt(best)) / pxW, 0.0, 1.0);
+    // K1219: inside the turn (the pixel between the band's own two arms,
+    // under pi apart) the web wears the band out to its fillet edge.
+    ivec2 rk = ivec2(r0.zw + 0.5);
+    if (r0.w > -0.5 && jbS < TAU * 0.5 && (ivec2(jbA, jbB) == rk || ivec2(jbB, jbA) == rk)) cov = 1.0;
     if (cov > 0.0) {
       vec3 bm = armPaint(rec + 2 + int(r0.z + 0.5) * stride, -tau, true, false);
       if (r0.w > -0.5) {

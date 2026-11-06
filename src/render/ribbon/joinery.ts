@@ -567,7 +567,9 @@ export class Joinery {
         }
         q0 = q1;
       }
-      const cov = Math.max(0, Math.min(1, (reach - Math.sqrt(best)) / pxW));
+      let cov = Math.max(0, Math.min(1, (reach - Math.sqrt(best)) / pxW));
+      // K1219 (FIELD_GLSL): inside the turn the web wears the band.
+      if (J[r0 + 3] > -0.5 && innerTurn(ia, ib, relA + relB, Math.round(J[r0 + 2]), Math.round(J[r0 + 3]))) cov = 1;
       if (cov > 0) {
         armPaint(rec + 2 + Math.round(J[r0 + 2]) * stride, -tau, true, false, mA);
         if (J[r0 + 3] > -0.5) {
@@ -2279,4 +2281,13 @@ export function overTubeReachesArm(
   const lo = along - (arm.dir > 0 ? neg : pos);
   const hi = along + (arm.dir > 0 ? pos : neg);
   return hi > -fillHalf && lo < fanReach + fillHalf;
+}
+
+// K1219 (FIELD_GLSL junctionField, the route loop): whether a web pixel
+// bracketed by arms ia / ib (span = the angle between them, the pixel
+// inside it) lies inside a route band's turn - the bracketing pair is the
+// band's own arrival / departure pair and less than pi apart. There the
+// web wears the band out to its fillet edge.
+export function innerTurn(ia: number, ib: number, span: number, inArm: number, outArm: number): boolean {
+  return span < Math.PI && ((ia === inArm && ib === outArm) || (ia === outArm && ib === inArm));
 }
