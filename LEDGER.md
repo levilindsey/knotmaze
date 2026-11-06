@@ -517,10 +517,10 @@ Next free ID: K1211.
   `docs/design/K1208_muse_batch22_run_a.md` after 21G, through the chain (queued as 22A); Claude reviews the
   draft and queues runs B to G (ports 5880-5939)
   - owner: the chain in `.claude/probes/K1053/` (queue.txt, chain.log): batch 22's Run A (22A) after batch 21's 21G, a fresh Muse session, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
-  - branch: mainline; last commit: `0af054cc`
-  - evidence: `docs/design/K1208_muse_batch22_run_a.md` (Run A's brief, every slot filled); the chain in `.claude/probes/K1053/` (queue.txt, chain.log)
-  - next: Run B done; Claude reviews it, Run H next
-  - brief: `docs/design/K1208_muse_batch22_run_a.md`
+  - branch: mainline; last commit: `f8907012`
+  - evidence: the chain in .claude/probes/K1053/ (queue.txt, chain.log); each run's probe folder (B: .claude/probes/K1203/, H: .claude/probes/K1210/)
+  - next: B reviewed, K1207 closed; Run H running since 09:50 (22H), then C, D, E, F; G held; Claude reviews each run as it lands
+  - brief: `docs/design/K1208_muse_batch22.md`
 
 ## Next, in order
 
@@ -757,9 +757,6 @@ Every other item below waits on the trigger it names.
 - **K1196** · Two-ended pulses (K1139 S4) on the desktop, 20F (345a189f, `.claude/probes/K1196/out/`): frame
   p50 at rest 7.50 (cyc e210), 7.82 (loop e102), start head 7.07; in play 7.25, 7.22, 6.95 (spread 0.2, 0.1).
   Other stands, so not S4's own cost: next, those stands on S4's base and head (ABBA), the Pixel if it costs
-- **K1207** · In Muse batch 22 (K1208): remove Run C's switch (`setPulseCoverRamp`, 5e0d5914, off by K1202)
-  and make Run D's end window (`setPulseBandEndWindow`, a0f1d634, on by K1203) the only path, re-freezing
-  the pins it moves; it also says whether 21D's twin point is a fan pixel (K1203's notes)
 - **K1209** · Retire the fillet layer vote (21E: a flip only reorders fans, 0 px; K1186): one fan layer, once
   joinery.ts's "kept for the junction-shader merge" is checked. Removes the vote loop, layerFor, the fm
   routing, filletTopMesh, `voteOverride` and its test; a moved pin is re-frozen and named.
@@ -2006,6 +2003,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1207** · In Muse batch 22 (K1208): remove Run C's switch (`setPulseCoverRamp`, 5e0d5914, off by K1202) and make Run D's end window (`setPulseBandEndWindow`, a0f1d634, on by K1203) the only path, re-freezing the pins it moves; it also says whether 21D's twin point is a fan pixel (K1203's notes). Done in 0af054cc (2026-11-05).
 - **K1197** · Cursive c joins: Levi kept the old hand-set joins. Done in f7be8548 (2026-11-05).
 - **K1119** · Cursive v7.0: Levi chose v6.8 on every sheet. Done in f7be8548 (2026-11-05).
 - **K1204** · Muse batch 21 (Runs B to G) ran through the chain, and Claude judged each run. Done in e43b2cfc (2026-11-05).
