@@ -521,9 +521,9 @@ Next free ID: K1212.
   `docs/design/K1208_muse_batch22_run_a.md` after 21G, through the chain (queued as 22A); Claude reviews the
   draft and queues runs B to G (ports 5880-5939)
   - owner: the chain in `.claude/probes/K1053/` (queue.txt, chain.log): batch 22's Run A (22A) after batch 21's 21G, a fresh Muse session, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
-  - branch: mainline; last commit: `f8907012`
+  - branch: mainline; last commit: `d31f08c6`
   - evidence: the chain in .claude/probes/K1053/ (queue.txt, chain.log); each run's probe folder (B: .claude/probes/K1203/, H: .claude/probes/K1210/)
-  - next: Run H running since 09:50 (22H; its bar, like the pulse, void since K1211: data only), then C, E, F; D held for K1211 (its queue line commented out), G held; Claude reviews each run as it lands
+  - next: Run H done; Claude reviews it, Run C next
   - brief: `docs/design/K1208_muse_batch22.md`
 
 ## Next, in order
