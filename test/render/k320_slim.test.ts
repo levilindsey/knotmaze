@@ -161,7 +161,11 @@ describe("K320 stage 1: char budgets", () => {
     // end window's uJParams.w term; the window itself stays, read
     // unconditionally from R3.w), 106 in all (40,601 -> 40,495
     // measured here); budget follows the measurement.
-    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(40_495);
+    // K1211 S1 (2026-11-05, branch only): the junction light switch's two
+    // looks (jLightEase / jLightSoft / jLightAllow, jLightA, junctionBase's
+    // bracket globals and the look flags) add 3,263 (40,495 -> 43,758
+    // measured here); the pick (S2) drops the loser and the switch.
+    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(43_758);
     // K799: uKPath joins KNOT_UNIFORMS_GLSL, which the still pluck
     // includes (+18 here).
     expect(PLUCK_STILL_FRAG.length).toBeLessThanOrEqual(20_550);

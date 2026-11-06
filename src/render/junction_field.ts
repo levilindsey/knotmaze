@@ -182,12 +182,18 @@ export function lightAllowance(own: boolean, s: number, fillHalf: number, ease: 
 }
 // Look A's level: the arms' lights (composed minus base row at the joint)
 // averaged with weights |L|^2 - a soft max that ignores dark arms and is
-// continuous as the lights change. Into out (its length is the channels).
-export function lightLevel(lights: ReadonlyArray<ArrayLike<number>>, out: Float32Array | number[]): void {
+// continuous as the lights change. Into out (its length is the channels);
+// count: how many of lights to read (all by default).
+export function lightLevel(
+  lights: ReadonlyArray<ArrayLike<number>>,
+  out: Float32Array | number[],
+  count = lights.length
+): void {
   const nc = out.length;
   let sw = 0;
   for (let c = 0; c < nc; c++) out[c] = 0;
-  for (const L of lights) {
+  for (let i = 0; i < count; i++) {
+    const L = lights[i];
     const w = L[0] * L[0] + L[1] * L[1] + L[2] * L[2];
     sw += w;
     for (let c = 0; c < nc; c++) out[c] += w * L[c];
@@ -499,11 +505,14 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
   bool lookOn = uJParams.z > 0.5 && (routed || banded) && hd.z > 0.5 && !(uKBase.z > 2.5 && uKBase.z < 4.5);
   bool lookA = lookOn && uJParams.z < 1.5;
   bool lookB = lookOn && uJParams.z > 1.5;
-  if (lookA && fz < 0.5) c = jLightA(rec, hd);
+  // Look A replaces the side the bands drew over (a pulse-banded record's
+  // both sides: its quiet rows always exist, and a crest must not show
+  // as a pinwheel in the composed blend).
+  if (lookA && (fz < 0.5 || banded)) c = jLightA(rec, hd);
   if (routed && fz > 0.0 && fz < 1.0) {
     // K169: a web fading in blends its two bases (c is the side below 0.5).
     vec3 o = junctionBase(rec, p, hd, fz >= 0.5);
-    if (lookA && fz >= 0.5) o = jLightA(rec, hd);
+    if (lookA && (fz >= 0.5 || banded)) o = jLightA(rec, hd);
     c = fz < 0.5 ? mix(c, o, fz) : mix(o, c, fz);
   }
   if (lookA) return c;
