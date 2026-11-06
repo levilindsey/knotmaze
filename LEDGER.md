@@ -520,9 +520,9 @@ Next free ID: K1214.
 - **K1208** · Muse batch 22 (after K1204's batch 21): runs B to H through the chain, from
   `docs/design/K1208_muse_batch22.md` (ports 5880-5949)
   - owner: the chain in `.claude/probes/K1053/` (queue.txt, chain.log): Run F (22F) since 11:00, a fresh Muse session; coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
-  - branch: mainline; last commit: `2d68f787`
+  - branch: mainline; last commit: `4c7867da`
   - evidence: the chain in .claude/probes/K1053/ (queue.txt, chain.log); each run's probe folder (B: K1203, H: K1210, C: K1186, E: K1196, F: K1191, all under .claude/probes/)
-  - next: F running (K1191); E's agent went idle with its ABBA bench still timing and passed its gate on other sessions' commits (notes): Claude sends E its finish when the bench ends; C reviewed (K1209's re-apply after K1211 S1); D held for K1211; G dropped (K1198)
+  - next: Run F done; Claude reviews it; all runs are in (Run G held)
   - brief: `docs/design/K1208_muse_batch22.md`
 
 ## Next, in order
