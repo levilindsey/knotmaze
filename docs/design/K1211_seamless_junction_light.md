@@ -118,7 +118,7 @@ geometry later: keep the light's rule independent of how the web is built where 
   `git log`.
 - Report: what you built, the sheet paths, your verdict, and a `Ledger items` list.
 
-## Handoff (S1, 2026-11-05, Claude agent a775d9bee91f23536; draft while the shots wait on the perf lock)
+## Handoff (S1, 2026-11-05, Claude agent a775d9bee91f23536)
 
 ### What was built, and where
 
@@ -154,7 +154,162 @@ geometry later: keep the light's rule independent of how the web is built where 
   pulse phases, webs off, the gold at rest, colors only, background; `meta.json` with the
   records, their arms and routes and the world-to-screen affine), `analyze.mjs` (`zero`,
   `checks`, `sheets`, `grad`, `gold`, `wide`), `lib.mjs`, `png.mjs`, `sheet.mjs`,
-  `vite.private-cache.config.ts`. Outputs stay untracked in `out/`.
+  `vite.private-cache.config.ts`, `run_shots.ps1` (every stand on both builds, under the perf
+  lock), `run_analyze.ps1` (every offline step). Outputs stay untracked in `out/`.
+
+### Shots: one settled state, every clock pinned
+
+- Builds: the branch at 607bee12 (its `src/` and `test/` are HEAD's; later commits hold only
+  probe tools and this brief) and master at eb476bc5, both `vite preview` builds (5962, 5961).
+- Stands (`shoot.mjs`): **cross**, `?k111&am=instant&fw=0&snd=none&phw=0` after five moves,
+  sheets on ji 33 (the pulse fork of K1190's spots 1 and 2); **x4**, the same link with `&pr=8`
+  after nine moves, sheets on ji 149 (spots 1, 3 and 4); **loop**,
+  `?1&am=instant&fw=0&snd=none&phw=0&pr=8` after thirteen moves, sheets on ji 113 (the head's
+  junction, half under its marker).
+- Headed off-screen Chrome (d3d11), 1700x950 at dsf 1.5, continuous loop, zoomed to 90 device
+  px per world unit (fh = 23 px), a bit-exact view wait (K431), then the PIN (advanceClocks
+  off, paintClock 100, pulseBorn 0, the background pinned, the DOM hidden) and 24 pulse phases
+  over one period per look, under the perf lock. Every stand: exact view, no drift, no context
+  loss, asleep.
+
+### The zero check
+
+- Look 0 on the branch against master: **0 px** on all 55 files of each stand (cross, x4,
+  loop).
+- Switched back to 0 after A and B: **0 px** against the first look-0 shot, on every stand.
+
+### Checks (they only reject)
+
+- **(a) Steps inside the web.** The light is the shot minus the colours-only shot, in 8-bit
+  levels; each cell is the worst frame's excess of the web's largest step over the arms'
+  largest / the web's p99.5 step.
+
+  | web | today | A | B |
+  |---|---|---|---|
+  | cross 33 | 29 / 25 | 26 / 24 | 26 / 24 |
+  | cross 34 | 74 / 16 | 28 / 5 | 21 / 6 |
+  | cross 155 | 84 / 12 | 9 / 12 | 9 / 12 |
+  | x4 147 | 107 / 64 | 106 / 30 | 106 / 38 |
+  | x4 146 | 109 / 30 | 18 / 7 | 109 / 17 |
+  | x4 28 | 100 / 31 | 12 / 9 | 16 / 9 |
+  | loop 113 | 73 / 12 | 18 / 12 | 23 / 12 |
+  | loop 88 | 138 / 72 | 113 / 50 | 113 / 52 |
+
+  The other webs in the clips read the same on all three looks. Every look fails (a) on most
+  frames, today included, because the arms' own largest step is 0-1 level, so (a) rejects
+  nothing here. A and B lower the worst step at most lit webs; what stays high (x4 147, loop
+  88, and B at x4 146) is what neither look reaches: the traveled partition and the webs
+  (below). ji 149 is not in the table: its web does not fit inside the x4 clip.
+- **(b) No jump.** The light centroid's largest frame-to-frame step in the web, against the
+  crest's own 9.4 px a frame (today / A / B): cross 33 6.8 / 5.9 / 6.9; cross 155 13.2 on all
+  three; x4 147 11.6 / 11.7 / 11.6; x4 146 14.8 / 7.6 / 14.8; x4 28 8.3 / 9.0 / 7.9; loop 113
+  8.4 on all three. Every step over 9.4 px is today's too (the centroid hopping between two
+  pulses), so neither look adds a jump. (b)'s frame count (the web's largest frame-to-frame
+  change against the arms') fails today wherever the arms carry no pulse, so it rejects
+  nothing either.
+- **(c) Local.** 0 changed px outside the zones (8 fh around each web) on every stand and
+  look; the furthest change is 3.7-4.3 fh from a web's centre (cross A 3.98, B 3.72; x4
+  4.25; loop 4.10-4.19). Changed px against today (the whole frame at phase 0 / the gold at
+  rest / colours only): cross A 23102 / 20854 / 14561, B 12127 / 11429 / 7869; x4 A 45407 /
+  38252 / 16935, B 19556 / 18242 / 7263; loop A 35558 / 34479 / 13901, B 16447 / 16134 /
+  4863. The colours-only shot changes because it keeps `paintTraveled`, the walked gold,
+  which both looks treat as light.
+
+### Where each line inside the light comes from (today)
+
+From the edge maps (`*_edgemap_3x.png`: the shot, its step map, the light's step map, webs
+off, its step map; rings at fanR, the fan's reach and the box):
+
+- **Band edge (K1190 spot 1).** The crescent across the fork at cross ji 33 (k 17) and the
+  curve at the gold's corner at x4 ji 149: in the light's step map, and still there with the
+  webs off. The band's cover in the fan draws them.
+- **Band-to-base wedge (spot 2).** Straight radial bars in the light at cross ji 33 (k 20),
+  and a comb of radial rays under that curve at x4 ji 149: the light steps from one wedge of
+  the fan to the next, webs on or off. Not isolated further (an arm's wedge, or a triangle of
+  the fan).
+- **The traveled partition (spot 3).** The straight Y at the centre of x4 ji 149: in the
+  shot, the light's step map, the webs-off map and the colours-only shot. It is where the
+  fan's arm domains meet: the walked gold (`paintTraveled`, the routed arms of K127) is lit on
+  one side only, and the pulse band follows the same partition. Not the bands.
+- **Fillet layers (spot 4).** The ")" at the right edge of the light at x4 ji 149: in the
+  shot and the light's step map, gone with the webs off. The web over that edge does not carry
+  the pulse light.
+- **Cover strip end, paint caps, fan-to-ribbon seam.** Faint steps across each arm near the
+  box ring (fanR + 2 fh) show in every column, today included; candidates are the cover
+  strip's end and the fan-to-ribbon seam. I could not see them in the 3x crops. No other line
+  sits on a ring.
+
+### Verdict, spot by spot
+
+My own view of every 3x crop of cross and x4, the native-3x zoom and the 1x sheets, against
+K1190's top row (before K1139's change) and the colours' seam. Note the names: Levi's K1139
+answer "A" is the light that splits along the paths; this stage's look A is the fused one.
+
+K1190's four spots:
+
+1. **Sharp curved fronts** (cross ji 33, x4 ji 149). Today: there (a crisp crescent at cross
+   k 17; the curve from the gold's corner down to the dark gap at x4). Look A: gone at cross
+   ji 33, where the light fuses softly across the fork; at x4 ji 149 gone only because the gold
+   floods the junction (spot 3). Look B: softened, not gone: the edge still reads at 3x.
+2. **Straight edges** (the paler straight-sided wedge, cross ji 33). Today: there (a sawtooth
+   notch at the light's top left and radial bars, k 20). A: gone. B: weaker; a faint notch and
+   wedge remain. The colours-only shot has a straight-sided light-blue diamond in this fork
+   too: the colours' own, not the light's.
+3. **The gold's edge at x4 ji 149** (straight, with a corner). Today: there, and in the
+   colours-only shot. A: covered, not fixed: the gold floods the junction and the start of
+   the off-route teal arm, which is K1139's C (rejected) and the nub K81 removed. B:
+   unchanged. Neither look can fix it in this stage: the traveled partition draws it, and
+   neither look moves that partition. It needs the walked gold to follow the route band's
+   round corner, as before K1139.
+4. **The bite at the right edge** (x4 ji 149). Today: there. A: under the flood. B:
+   unchanged. Neither look can fix it in this stage: the web draws it (gone with the webs
+   off), and neither look touches the webs.
+
+The moments (arriving, at the joint, leaving; `*_moments_1x.png` and the 3x crops):
+
+- **cross ji 33.** A reads as one fused light, but it lights the whole fork (close to the
+  rejected C) and adds a crisp straight line across an arm about 2 fh out (clearest at k 17).
+  B keeps the split Levi chose and softens its edges; spots 1 and 2 are weaker but visible.
+- **x4 ji 149.** A floods it gold: not acceptable. B is close to today.
+- **loop ji 113** (1x only). The head marker covers half the junction; the three looks are
+  hard to tell apart at 1x. I did not view its 3x crops.
+- **Wide views.** Nothing changes away from the junctions (check (c)); in x4's wide view, A's
+  gold around the head reads as a fat bright blob.
+
+The gold at rest (`*_gold_3x.png`: today | A | B | colours-only):
+
+- **Straight (cross ji 113) and sharp (x4 ji 102, loop ji 13).** Today is clean: a round edge
+  where the gold meets the off-route arm, as in colours-only. A and B both push a soft gold
+  nub about 1 fh into the off-route arm (A more). A regression on both.
+- **T (loop ji 89) and four (loop ji 12).** Today has hard straight zigzags between the gold
+  and the other arms, in colours-only too (the traveled partition). A and B soften part of
+  them and add the nub; the straight sides stay.
+- **T at x4 ji 125.** Today's gold is broken: a teal strip with a straight edge separates the
+  incoming and the outgoing gold, in colours-only too. A joins it (with the nub below it); B
+  keeps the strip.
+
+**Overall: neither look should ship as it is.** A fuses the light but floods the gold (C, and
+K81's nub) and adds a line; B keeps the turn and softens the fronts, but leaves spots 3 and 4
+and nubs the gold at rest. Spots 3 and 4, and the gold's zigzags and break, are not drawn by
+the bands at all: the next stage has to work in the traveled partition and the webs.
+
+### Sheets
+
+All in `.claude/probes/K1211/out/sheets/` (untracked; `run_analyze.ps1` rebuilds them from
+`out/b607/` and `out/eb476/`):
+
+- K1190's spots side by side: `zoom_cross33_x4149_native3x.png` (rows cross k 17, cross k 20,
+  x4 k 13, x4 k 16; columns today | A | B | colours-only).
+- Moments: `cross_ji33_moments_1x.png`, `x4_ji149_moments_1x.png`, `loop_ji113_moments_1x.png`
+  (rows arriving, at the joint, leaving; columns today | A | B | colours-only) and the 3x
+  crops `cross_ji33_k17/k20/k23_3x.png`, `x4_ji149_k10/k13/k16_3x.png`,
+  `loop_ji113_k12/k15/k18_3x.png`.
+- Edge maps: `cross_ji33_edgemap_3x.png`, `x4_ji149_edgemap_3x.png`,
+  `loop_ji113_edgemap_3x.png`.
+- The gold at rest: `cross_gold_1x.png` / `_3x.png` (straight), `x4_gold_*` (sharp, T),
+  `loop_gold_*` (sharp, T, four).
+- Wide views: `cross_wide.png`, `x4_wide.png`, `loop_wide.png` (today | A / B | colours-only,
+  half size).
 
 ### Cost
 
@@ -183,3 +338,27 @@ geometry later: keep the light's rule independent of how the web is built where 
   (a fire front) keeps its turn with a soft lateral falloff, let into the other arms only near
   the joint.
 - No fire or collapse code was touched.
+
+### Open questions, and what is missing
+
+- **Waiting on Levi:** which way to take the light, B's split with soft edges or A's one fused
+  light, knowing that both nub the gold at rest and A floods it. Ask with
+  `zoom_cross33_x4149_native3x.png` and `x4_gold_3x.png`.
+- **Spot 3, and the gold's zigzags and break:** make the fan's traveled partition (K127)
+  follow the route band's round corner instead of the arms' wedges. Not built.
+- **Spot 4:** carry the junction light into the webs, or run the fan's light under the web's
+  edge. Not built.
+- **A per route, not per junction:** a level taken from the routed arms only would keep the
+  split and keep the gold on its path. Not tried.
+- **A's line about 2 fh out** (cross ji 33). Inferred from the code, not tested: `coverCap`
+  can end an arm's cover strip before the 2 fh ramp does, and the arm then jumps from the
+  ramp's value to its own light.
+- **The references:** the colours-only shot keeps `paintTraveled`, so it is not colours only;
+  a pure one clears traveled too. Checks (a) and (b) reject nothing on these stands, since
+  today fails both: (a) needs a threshold set on the colours' own seam.
+- **Not covered:** explore mode (the junction-field-explore program); the loop's 3x crops and
+  edge map (made, not viewed); K1190's `t4_ji33_cross_n_c34_3x.png`; gold kinds the stands
+  lack (a straight at x4 and the loop; a T, sharp or four at cross; a four at x4). The x4 and
+  loop crops run past their clips' edges: re-centre the clips on ji 149 and ji 113 next time.
+- **If a look ships:** delete the other look's shader text (both junction programs compile
+  the 3,263 characters cold), and for A, compute LJ once per record on the CPU.
