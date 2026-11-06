@@ -418,6 +418,7 @@ in vec4 aMaskId;
 out vec2 vPos;
 flat out float vRec;
 out float vLook;
+centroid out float vLookC;
 out float vFlank;
 flat out vec4 vMaskId;
 out vec4 vColor;
@@ -428,6 +429,7 @@ void main(void) {
   vPos = aPosition;
   vRec = aRec;
   vLook = aLook;
+  vLookC = aLook;
   vFlank = aFlank;
   vMaskId = aMaskId;
   vColor = uColor * uWorldColorAlpha;
@@ -443,6 +445,7 @@ ${FIELD_GLSL}
 in vec2 vPos;
 flat in float vRec;
 in float vLook;
+centroid in float vLookC;
 in float vFlank;
 flat in vec4 vMaskId;
 in vec4 vColor;
@@ -486,7 +489,12 @@ void main(void) {
   // thread edge -> fillet corner -> thread edge, hollow inside.
   bool borderLook = uKLook.x > 0.5 && uKLook.x < 1.5;
   // K854: the fans' outer rim ring (vLook 2) is border look only.
-  if (!borderLook && !strip && vLook > 1.001) discard;
+  // K1218 S3: tested on a CENTROID copy. vLook at the pixel centre
+  // runs past 1 wherever the centre lies beyond the rim, so the inside
+  // triangle's fragment of every edge pixel was dropped with its
+  // samples (and the ring's kept where the centre lay inside): MSAA
+  // never reached a fan's rim, a one-pixel staircase against a gap.
+  if (!borderLook && !strip && vLookC > 1.001) discard;
   float fanEdge = strip
     ? (borderLook ? 0.0 : lookEdge)
     : max(lookEdge, borderLook ? 0.0 : flankEdge);
