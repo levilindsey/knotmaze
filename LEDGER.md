@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1223.
+Next free ID: K1225.
 
 ## Waiting on Levi
 
@@ -301,10 +301,10 @@ Next free ID: K1223.
   and the gold path first, then fire and collapse (K1210). S2 a84225d3, S3 66752e75 merged; S4 (42e2a7cc,
   unmerged): look B out, a soft field. S5 never ran (its session ended). S6, Levi's reset: one agent, the
   top row of K1190's sheets as its goal, every technical call its own, no numeric gate.
-  - owner: agent `a057b2be255c4a410` of claude session c18e2f02-e64f-41ba-9af0-2dbd583358e2 (opus, started 2026-11-05 18:44, 2 h cap ~20:44)
-  - branch: `worktree-agent-a057b2be255c4a410`, worktree `.claude/worktrees/agent-a057b2be255c4a410`; last commit: `8156d730`
+  - owner: nobody since 2026-11-05 19:54 (merged; agent `a057b2be255c4a410` of claude session c18e2f02-e64f-41ba-9af0-2dbd583358e2)
+  - branch: mainline; last commit: `13aab452`
   - evidence: .claude/probes/K1211/out6/ in its worktree (per spot: 7474d09b | master | branch); K1190's sheets in .claude/probes/K1139/out/s4/sheets/
-  - next: S6 runs to its Done; then Claude views its sheets at full size against the top row and shows Levi
+  - next: Levi sees S6's sheets (.claude/probes/K1211/out6/sheets/: rows 7474d09b, master before S6, S6, then at rest); the edges 7474d09b also draws go with K1218 S2
   - brief: `docs/design/K1211_s6_one_glow.md`
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
@@ -510,28 +510,21 @@ Next free ID: K1223.
   - next: K1211 first: the light inside junctions (Levi 2026-11-05: one seamless unit; the bands may go); then Levi's look K1200 (`docs/asks/K1200.md`), K1201 (its fix (b), Run 22D, held for K1211), S6 (plan section 5) after K1140's Glimpse picks. The next pulse step's Pixel pass watches fabric 7 moves' frames over 25 ms (+14 and +15 in the fix's and S5's passes, floor 13)
   - brief: the plan `docs/design/K1139_pulse_junctions.md` section 5 (S6); S5 was Muse batch 20's Run B (`docs/design/K1199_muse_batch20.md`)
   - env: the passes' builds first and never while Muse runs: `scripts/preview.ps1 -Ref <sha> -Root <out>\builds -BuildOnly` for each sha (`pixel_passes.ps1` stops before the phone lock when one is missing); probe server `npx vite --config .claude/probes/K1139/vite.private-cache.config.ts --port 5620 --strictPort --host 127.0.0.1` from a worktree (ports 5620-5639); GPU probes through `.claude/probes/K1139/run_locked.ps1 -Batch`
-- **K1208** · Muse batch 22 (after K1204's batch 21): runs B to P through the chain, from
-  `docs/design/K1208_muse_batch22.md` and the later runs' own briefs (ports 5880-5999)
-  - owner: nobody since 2026-11-05 18:36: the chain ran its queue out (Run P passed its gate at 27d103d1)
-  - branch: mainline; last commit: `27d103d1`
-  - evidence: the chain in .claude/probes/K1053/ (queue.txt, chain.log); each run's probe folder under .claude/probes/ (B K1203, H K1210, C and I K1186, E K1196, F K1191, G K1198, M K1214, N K1220, O K1218)
-  - next: fix runs only (How to work, 2026-11-05), outside junction files while K1211 S6 runs; D held for K1211; Claude views Run P's K1112 m and u sheets, then Levi
-  - brief: `docs/design/K1208_muse_batch22.md`; I to P: K1209_reapply_run_i.md, K647_reset_win_card.md, K1208_run_k_junction_residuals.md, K1208_run_l_cursive_residuals.md, K1214_profile_run_m.md, K1220_run_n_text_forks.md, K1218_run_o_mask_in_junctions.md, K1112_run_p_ports_m_u.md (docs/design/)
 - **K1218** · Gold zigzags in the T and the four (loop ji 89, 12, 88; 22O, f9f625a5): a crossing next to the
   joint masks the fan inside its over thread's tube, so that ribbon's straight gold cut at the joint and its
-  crest show through (`walked_gold.ts:172`). Next: S1, `docs/design/K1218_s1_gap_in_junctions.md`; notes.
-  - owner: nobody since 2026-11-05 18:44 (agent `ab5152230ff5f1d62` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (opus, started 2026-11-05 16:13, 2 h cap ~18:13); since 2026-11-05 17:12: session 7301c55b ended, and its agent with it; WIP bcbf5dec; waits until K1211 S6 ends (both touch junction files))
-  - branch: `worktree-agent-ab5152230ff5f1d62`, worktree `.claude/worktrees/agent-ab5152230ff5f1d62`; last commit: `bcbf5dec`
-  - evidence: .claude/probes/K1218/ (run_o/: Run O's tools, crops and SUMMARY; s1/ in the worktree)
-  - next: S1 from its brief: the census of slots inside junction footprints, lead (a) at jointMask, the triangle
-  - brief: `docs/design/K1218_s1_gap_in_junctions.md`
+  crest show through (`walked_gold.ts:172`). Next: S2, with K1219 and the edges 7474d09b also draws (`docs/design/K1218_s2_fused_junctions.md`); notes.
+  - owner: agent `aa8d805a64db795dd` of claude session c18e2f02-e64f-41ba-9af0-2dbd583358e2 (opus, started 2026-11-05 19:53, 2 h cap ~21:53)
+  - branch: `worktree-agent-aa8d805a64db795dd`, worktree `.claude/worktrees/agent-aa8d805a64db795dd`; last commit: `13aab452`
+  - evidence: .claude/probes/K1218/s2/ in its worktree; S6's sheets in .claude/probes/K1211/out6/sheets/
+  - next: S2 runs to its Done; then Claude views its sheets at full size against the top row and master, and shows Levi
+  - brief: `docs/design/K1218_s2_fused_junctions.md`
 - **K1220** · Text forks: a disc with a round edge inside, steps where the arms' straight cuts meet it
   (22N, 655eb6a9): glyph arms under 0.15 world get no field record, so a host-axis disc draws the fork.
-  Next: S1 alongside K1211 S5 (other code), `docs/design/K1220_s1_text_forks.md`; notes.
-  - owner: nobody since 2026-11-05 18:44 (agent `a887c979ca2299b92` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (opus, started 2026-11-05 16:53, 2 h cap ~18:53); since 2026-11-05 17:12: session 7301c55b ended, and its agent with it; WIP 25a5c501; waits until K1211 S6 ends (both touch junction files))
+  Next: S2 after K1218 S2, one junction agent at a time (S1's brief: `docs/design/K1220_s1_text_forks.md`); notes.
+  - owner: nobody since 2026-11-05 17:12 (session 7301c55b ended, and its agent with it; WIP 25a5c501); waits for K1218 S2 (both touch junction files)
   - branch: `worktree-agent-a887c979ca2299b92`, worktree `.claude/worktrees/agent-a887c979ca2299b92`; last commit: `25a5c501`
   - evidence: .claude/probes/K1220/ (run_n/, Run N's; s1/ in S1's worktree)
-  - next: S1's tasks 1-5 per its brief (census and bar; real records for text forks; checks; sheets; Handoff)
+  - next: S2 once K1218 S2 merges: a one-page brief, the look as its goal, S1's WIP 25a5c501 a lead
   - brief: `docs/design/K1220_s1_text_forks.md`
 
 ## Next, in order
@@ -554,7 +547,7 @@ Binding for every stage:
 Running agents are listed under In progress, each with its own next step.
 - **K1201** · S4b's joint step (K1139): a two-ended arm's ridge near its joint (xR < 0.5) steps the light.
   21F (8e0c5a1c): play meets it in every daily of a week, 2-6 arm-ends each, steps up to 0.77 after the reach
-  window (CPU, lattice spans; notes). Fix (b), the band crossfade (Run 22D), held: K1211 may retire the bands.
+  window (CPU, lattice spans; notes). Fix (b) crossfaded the pulse bands K1211 S6 removed (13aab452): K1218 S2 looks for the step by eye.
 - **K875** · K868 S1b, master's side: on Muse's link master registers only 58-80% with the oracle at
   j49/j123 and #6 finds every band end off (18/18, 19/19; cause untested: gaps or a reveal/fog state);
   its sdf and strip silhouettes differ in width; joinery.ts:1469-1471's comment is stale. s1b_oracle.md.
@@ -739,7 +732,7 @@ Every other item below waits on the trigger it names.
   docs/design/K156.md round 2026-10-30 handoff.
 - **K1112** · Cursive: one join rule for every pair, re-scoped 2026-11-05: b, v, w and c keep v6.8's presets
   (K1119, K1197); the other exits are ported letter by letter, and a preset goes only when its port draws
-  v6.8's join, judged by eye (`K863_trace.md`; notes). m and u: Run P, `K1112_run_p_ports_m_u.md`.
+  v6.8's join, judged by eye (`K863_trace.md`; notes). m and u keep v6.8's presets: Run P's ports failed its gate on every pair (27d103d1).
 - **K1149** · Beat dots: dots at the beat points inside multi-beat runs, along threads and at junctions, that
   pop with a ring when the dot eats them; the dropdown and the pulse and ring at the dot are done (split from
   K804). Builds toward K805.
@@ -757,10 +750,14 @@ Every other item below waits on the trigger it names.
   with no rebuild, so this goes ahead on form B (review section 4).
 - **K1210** · Fire and collapse across junctions, like the highlights (Levi 2026-11-05; notes).
   Run H (d31f08c6; `.claude/probes/K1210/`): both break up inside the fused shape at 3 and 4 arms: fire in
-  straight wedges with spikes, collapse as a bite or a ragged cut. The fix follows K1211's pick.
+  straight wedges with spikes, collapse as a bite or a ragged cut. The fix follows K1211's pick, S6's one glow (13aab452): a junction stage after K1218 S2 and K1220.
 - **K1214** · K1139's cost in play (22M, 04ff7cad; desktop, fabric 7 moves): S3+S4 add p95 +1.13 ms
   (spread 0.20), S5 and master nothing; the fan's fragment shader carries 2/3-3/4 (GPU 6.15→6.82 ms). Next:
   re-time after K1211's S5 rewrites the fan's light, and the phone in K1097's pass. `.claude/probes/K1214/`
+- **K1223** · Quiet path, dead since K1211 S6 (13aab452): kPaintAt's quiet arg and kPulseCrestQuiet
+  (`paint_glsl.ts`), the quiet flag (`paint_math.ts`), mode 2 in `arm_strip.ts` and joinery's writeStripRow,
+  the quiet tests in `paint_gameplay.test.ts`. A Muse fix run after the junction stages: it moves K320's
+  section and strip pins, 0 px on a re-shoot.
 
 ## Residuals (known, not fixed)
 
@@ -1666,15 +1663,15 @@ Every other item below waits on the trigger it names.
 - **K1217** · Reset path during the winning move (K647, adee40a6) stops the clock at the press, up to one
   move's travel before the arrival a live finish records, so a press can shave that off a daily's time (22J's
   report). Fix: record the arrival's time.
-- **K1219** · Loop ji 12's dark triangle: slot 28's casing fade on ch5's gold (22O; `gap_mask.ts:802`, K1218
-  S1's). x4 ji 149's teal notch: not the mask, the fan's untraveled web past the gold band's round edge
-  (`junction_field.ts:358`): after K1211 S5, in its file; notes `## K1218 (2026-11-05, 22O reviewed)`.
 - **K1221** · K1211 S3's leftovers (66752e75): the web light takes the turn's inside from a sign that can flip
   on a near-straight band (a flicker, untested); loop ji 88's lit edge dips 4.9 luma at k0 (in master too); x4
   ji 125 bumps 4.6 at k7. `docs/design/K1211_s3_lit_edge_web.md` ## Handoff
 - **K1222** · K1211 S4's leftovers (42e2a7cc, unmerged): an off-route arm near the joint centre takes up to
   0.31 of the pulse colour (junctionBase's min-width blend); the sharp fork's step off the gold edge grew
   0.098 to 0.135 (model). S5 reports both. `docs/design/K1211_s4_soft_light.md` ## Handoff
+- **K1224** · Pulse timing against 7474d09b: about 1/8 period later at cross ji 33, and loop ji 113 shows 6
+  pulses where 7474d09b shows 7 (S4 and S5's arm pulse-tree changes for Levi's K1139 looks; K1211 S6's
+  sheets).
 
 ## Approved, to schedule (2026-10-11)
 
@@ -1978,6 +1975,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1208** · Muse batch 22: runs B to P through the chain; Run D dropped, since K1211 S6 removed the pulse bands it crossfaded. Done in 27d103d1 (2026-11-05).
+- **K1219** · Loop ji 12's dark triangle: slot 28's casing fade on ch5's gold (22O; `gap_mask.ts:802`, K1218 S1's). x4 ji 149's teal notch: not the mask, the fan's untraveled web past the gold band's round edge (`junction_field.ts:358`): after K1211 S5, in its file; notes `## K1218 (2026-11-05, 22O reviewed)`. Dropped: folded into K1218 S2 (docs/design/K1218_s2_fused_junctions.md) (2026-11-05).
 - **K990** · Cursive f ends its lower loop in a corner into its exit, no curl (J3e, v6.8; 22L measured it, 734c55b9). Done in 636bd685 (2026-11-05).
 - **K948** · Cursive: the e after o, b, v and w (an elbow). Dropped: superseded on v6.8 (22L, 734c55b9): oe solved anew with no hook (its 12.69 u is K998's); be, we, ve keep the presets Levi kept (K1112) (2026-11-05).
 - **K938** · Cursive v5.2: zo at 142 u, five crossings into o. Dropped: gone on v6.8 (22L, 734c55b9): zo 2.96 u; ob, of, oh, ok and ol cross a body once each, as allowed (2026-11-05).
