@@ -90,7 +90,7 @@ sheets' paths, with the two or three to show Levi first; the pins you moved; any
 a crop showed; the rebase; your last SHA. Commit messages carry the record. End with
 `Ledger items` and K1218's handle fields (owner, branch, last commit, evidence, next).
 
-## Handoff (S5 agent, stopped 2026-11-06 03:00, inside the 2 h cap)
+## Handoff (S5 agent, stopped 2026-11-06 03:05, inside the 2 h cap)
 
 Landed on the branch `worktree-agent-aad78f17014e89727`: f56af96c (a web paints each arm at the
 arc its ribbon gives the pixel: `sweptArc` in `junction_field.ts`, mirrored in
@@ -151,7 +151,18 @@ Viewed, every listed junction with a sheet (`seamscan_s5.mjs` gives the steps):
 - ji 80 (cross and x4; the same design there): the branch ADDS a vertical line in the green ramp
   at offset (84-85, 29-35) of the 96 px window on the junction (centre about device 2052, 236):
   a 7-level step between neighbouring pixels against <= 2 on master and 7474d09b, at every t and
-  at rest. A sweptArc regression, cause not found.
+  at rest. A sweptArc regression. Probed at 02:55 (`blend_s5.mjs` 80 over device 2082-2095 x
+  212-226, `out/ji80/run.log`): both arms there are chain 58 (ji 80's arms: chain 58 at -1.890 and
+  0.433 rad, chain 36 at 2.594); arm A's arc is smooth, arm B's jumps 0.08-0.11 (row 212: 52.310 to
+  52.208) along the line, where luma steps 2.6. The jump sits on the line rp = 5 DR of the chain 58
+  arm at 0.433 rad: rp / FIELD_PROF_DR = 4.90-5.14 at the six boundary pixels of rows 212-219
+  (whole-pixel boundaries, +-0.08), while the other arms' rp / DR runs 1.73 to 0.61 and -8.5 to
+  -7.5 along it. There `g = trunc(rp / DR) - 3` steps from 1 to 2 and the window drops segment 1.
+  Inferred, not tested: on the inside of chain 58's turn through the junction, arm B's nearest
+  root lies more than 3 segments behind the projection's, so the window's lookback cuts it off.
+  Test: a lookback reaching segment 0 near the centre (for example g from trunc(max(rp - fillHalf,
+  0) / DR)), then reshoot ji 80. Cross 155's 19-segment window (spot 1) may have widened only the
+  forward reach; not checked.
 - ji 115 (cross and x4): the branch REMOVES a horizontal line at offset (86, 54): 5 levels in
   7474d09b and master, 2 on the branch.
 - cross 54, cross 34, loop 47, loop 80, loop 57, x4 65, x4 59: no difference I can see between
@@ -175,7 +186,7 @@ branch t3-t6, then master and branch at rest; zoom 4). Show Levi first: `out/zoo
 `seam_s5`, `ribbons_s5`, `bend_s5`), `nomark_s5`, `diff_s5`, `zoom_s5`, `edge_s5`, `seamscan_s5`,
 `png.mjs`, `lib.mjs`, `vite.private-cache.config.ts`.
 
-Next: (1) ji 80's line and cross 155's streak (`blend_s5.mjs` over each, as at 155: a root
-switching segments, or the handover); (2) the u-clamp at g == 0 for cross 33's crease, then
+Next: (1) ji 80's line: the lookback test above; cross 155's streak: `blend_s5.mjs` with the
+same rp / DR check on its jump (a root switching segments, or the handover); (2) the u-clamp at g == 0 for cross 33's crease, then
 reshoot; (3) item 5's attribution; (4) cross 51's inner turn in `ribbon_mesh.ts`; (5) item 3's
 eye edges.
