@@ -128,7 +128,7 @@ evidence, next).
 
 (The stage agent appends here.)
 
-J3j, stage agent of coordinator session 7301c55b, 09:22:19 to 10:52 on 2026-11-05 (cap 11:22:19).
+J3j, stage agent of coordinator session 7301c55b, 09:22:19 to 10:48 on 2026-11-05 (cap 11:22:19).
 Every task is done; nothing was changed in any join. The full record is the kit's NOTES.md entry
 `## K863 base` (a copy is `work33/NOTES_k863j.md` on this branch); the tools are `work33/dbg/*_k863j.*`,
 and `pwsh -NoProfile -File work33\dbg\checks_k863j.ps1 [step ...]` reruns everything from the trace

@@ -132,4 +132,4 @@ What the crops show (every crop viewed, one paragraph each in `work33/crops_view
 - ij draws no j (K1198, held); p and s end with no tail; the i and j dots are ticks where the font's are round.
 - K1119's e sheet has no v6.8 column.
 
-Written 10:46; the stage ran 09:22:19 to 10:52, inside its cap (11:22:19).
+Written 10:46; the stage ran 09:22:19 to 10:48, inside its cap (11:22:19).
