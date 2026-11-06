@@ -300,11 +300,11 @@ Next free ID: K1223.
 - **K1211** · One seamless light inside each junction, no line or edge in it (Levi 2026-11-05; notes). Pulses
   and the gold path first, then fire and collapse (K1210). S2 a84225d3, S3 66752e75 merged; S4 (42e2a7cc,
   unmerged): look B out, a soft field, still 1.6-8x the bar. S5: one tau at the joint, the gold's edge blend.
-  - owner: claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (coordinator), launching S5's stage agent; S4's agent stopped at the cause at 16:43
-  - branch: worktree-agent-a222ff792a21132ec (.claude/worktrees/agent-a222ff792a21132ec), S4's, unmerged and kept; last commit: `42e2a7cc`
-  - evidence: .claude/probes/K1211/ (S1's to S4's tools; S4's out4/ref untracked in its worktree); test/render/soft_light.test.ts on S4's branch; K1190's sheets: .claude/probes/K1139/out/s4/sheets/t6_ji149_x4_n.png, t4_ji33_cross_n.png
-  - next: S5 per its brief: S4's commits cherry-picked, one tau near the joint, the gold's light blended at its tube's edge, then S4's checks and sheets; then K1219's notch, K1214's re-time, K1210, 22D
-  - brief: `docs/design/K1211_s5_shared_tau.md` (S4's: `K1211_s4_soft_light.md`, Handoff on its branch; S3's: `K1211_s3_lit_edge_web.md`; S2's: `K1211_s2_gold_edge.md`; S1's: `K1211_seamless_junction_light.md`)
+  - owner: agent `ad43222916dc55569` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (opus, started 2026-11-05 16:53, 2 h cap ~18:53)
+  - branch: `worktree-agent-ad43222916dc55569`, worktree `.claude/worktrees/agent-ad43222916dc55569`; last commit: `2b11df8e`
+  - evidence: .claude/probes/K1211/ (S1's to S4's tools; out5/ in S5's worktree); K1190's sheets: .claude/probes/K1139/out/s4/sheets/t6_ji149_x4_n.png, t4_ji33_cross_n.png
+  - next: S5's tasks 1-6 per its brief (S4 cherry-picked; one tau near the joint; the gold's edge blend; the model's bar; checks; sheets; Handoff); then K1219's notch, K1214's re-time, K1210, 22D
+  - brief: `docs/design/K1211_s5_shared_tau.md` (S4's: `K1211_s4_soft_light.md`, Handoff on its branch 42e2a7cc, kept; S3's: `K1211_s3_lit_edge_web.md`; S2's: `K1211_s2_gold_edge.md`; S1's: `K1211_seamless_junction_light.md`)
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
   float64 reference. Plan S1-S8, about 15 h (F7); supersedes K868 and K992. S1 to S1f merged (S1f: fb348a78); S3 (K1097) merged short of its gate; S1g merged (ca273d04); S3b (K1097) merged (587b7e80, 2026-11-02): 0 DEFECT, the Pixel's 2 ms missed 5-20x.
@@ -524,6 +524,14 @@ Next free ID: K1223.
   - evidence: .claude/probes/K1218/ (run_o/: Run O's tools, crops and SUMMARY; s1/ in the worktree)
   - next: S1 from its brief: the census of slots inside junction footprints, lead (a) at jointMask, the triangle
   - brief: `docs/design/K1218_s1_gap_in_junctions.md`
+- **K1220** · Text forks: a disc with a round edge inside, steps where the arms' straight cuts meet it
+  (22N, 655eb6a9): glyph arms under 0.15 world get no field record, so a host-axis disc draws the fork.
+  Next: S1 alongside K1211 S5 (other code), `docs/design/K1220_s1_text_forks.md`; notes.
+  - owner: agent `a887c979ca2299b92` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (opus, started 2026-11-05 16:53, 2 h cap ~18:53)
+  - branch: `worktree-agent-a887c979ca2299b92`, worktree `.claude/worktrees/agent-a887c979ca2299b92`; last commit: `cd868eec`
+  - evidence: .claude/probes/K1220/ (run_n/, Run N's; s1/ in S1's worktree)
+  - next: S1's tasks 1-5 per its brief (census and bar; real records for text forks; checks; sheets; Handoff)
+  - brief: `docs/design/K1220_s1_text_forks.md`
 
 ## Next, in order
 
@@ -752,9 +760,6 @@ Every other item below waits on the trigger it names.
 - **K1214** · K1139's cost in play (22M, 04ff7cad; desktop, fabric 7 moves): S3+S4 add p95 +1.13 ms
   (spread 0.20), S5 and master nothing; the fan's fragment shader carries 2/3-3/4 (GPU 6.15→6.82 ms). Next:
   re-time after K1211's S5 rewrites the fan's light, and the phone in K1097's pass. `.claude/probes/K1214/`
-- **K1220** · Text forks: a disc with a round edge inside, steps where the arms' straight cuts meet it
-  (22N, 655eb6a9): glyph arms under 0.15 world get no field record, so a host-axis disc draws the fork.
-  Next: S1 alongside K1211 S5 (other code), `docs/design/K1220_s1_text_forks.md`; notes.
 
 ## Residuals (known, not fixed)
 
