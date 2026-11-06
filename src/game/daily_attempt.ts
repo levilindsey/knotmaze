@@ -266,7 +266,13 @@ export function restoreAttempt(
   return "ok";
 }
 
-// What the Reset path button does. Inside a daily's unfinished attempt -
+// What the Reset path button does. First (K647): a winning move whose dot
+// is still travelling (pendingWin) is already won, so the press finishes it
+// the way the dot's arrival would - the result card shows, its burst plays,
+// the result is recorded once - and the maze is neither restarted nor
+// backtracked under the card. That beats every answer below, the daily
+// backtrack and the real-time restart included: there is no chase left to
+// escape and no attempt left to protect. Inside a daily's unfinished attempt -
 // the one that will be official - it never restarts the attempt: it is
 // backtracking to the entrance (FabricMazeController.retreatToStart),
 // the clock running on; memory-trail mode has no way back, so there it
@@ -275,9 +281,11 @@ export function restoreAttempt(
 // has. The real-time minotaur mode (K80) always restarts: a free walk back
 // to the entrance would be an escape from the chase (no undo there, Levi's
 // call 4).
-export type ResetPathAction = "backtrack" | "refuse" | "restart";
+export type ResetPathAction = "win" | "backtrack" | "refuse" | "restart";
 
 export function resetPathAction(s: {
+  // A winning move has landed and its dot is still travelling (K647).
+  pendingWin?: boolean;
   // The solve on screen is the daily's own unfinished attempt.
   dailyAttempt: boolean;
   // That daily already has its official result (this is a replay).
@@ -288,6 +296,7 @@ export function resetPathAction(s: {
   // K146: the attempt began after its day (practice, never scored).
   practice?: boolean;
 }): ResetPathAction {
+  if (s.pendingWin) return "win";
   if (s.realtime || !s.dailyAttempt || s.official || s.practice || s.solved) {
     return "restart";
   }

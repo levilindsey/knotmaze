@@ -85,9 +85,10 @@ only with the files it is about; `render.md` lists the area's other files.
   (2026-10-20) walked every path in the page
   (`.claude/probes/K336/banners/`, results.md): each banner throws one
   burst; a plain reload after an official finish shows no banner and
-  throws nothing, by design; Reset path pressed during the winning move
-  throws and records the result, but the restarted maze shows no banner
-  and no confetti (K647, the missing banner, stays open).
+  throws nothing, by design; since K647 (2026-11-05) Reset path pressed during the winning move
+  finishes it as the dot's arrival would (`resetPathAction`'s `win`):
+  the card shows, one burst plays, the result is recorded once, and the
+  maze is neither restarted nor backtracked under the card.
 - INPUT. All four containers sit above the world root (the rain topmost;
   K336's streamers and cannons just below it) with eventMode none; the banner and HUD are DOM over the canvas. The
   page probe checks a banner hit-test over the confetti and a ctrl+wheel

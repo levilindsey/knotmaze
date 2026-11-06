@@ -316,18 +316,13 @@ export function wirePanel(deps: PanelWiringDeps, scene: SceneRef): PanelWiring {
       deps.wake();
     },
     onResetPath: () => {
-      // A winning move whose dot is still on its way counts: finish it.
-      if (deps.pendingWin && scene.fabricController) {
-        deps.pendingWin = false;
-        scene.fabric?.cancelMove();
-        deps.showFabricWin();
-      }
       // K47 (game/daily_attempt.ts resetPathAction): inside a daily's
       // attempt - the one that will be official - Reset path is
       // backtracking to the entrance: every run retracted like a tap would
       // (logged, on the backtrack meter), the clock running on. It never
       // restarts the attempt.
       const action = resetPathAction({
+        pendingWin: deps.pendingWin,
         dailyAttempt: deps.dailyAttemptLive(),
         official: deps.dailyN !== null && deps.dailyStore.hasOfficial(deps.dailyN),
         solved: scene.fabricController?.solved ?? false,
@@ -342,6 +337,17 @@ export function wirePanel(deps: PanelWiringDeps, scene: SceneRef): PanelWiring {
         // K146: so does a practice run (a past daily, not scored).
         practice: deps.attemptLate(),
       });
+      if (action === "win") {
+        // K647: finish the pending win the way the dot's arrival would.
+        // showFabricWin records the result, shows the card and throws its
+        // burst; the maze stays as the win left it (no restart, no
+        // backtrack under the card). pendingWin clears first, so the
+        // result is recorded once and the frame loop does not show it again.
+        deps.pendingWin = false;
+        scene.fabric?.cancelMove();
+        deps.showFabricWin();
+        return;
+      }
       if (action === "refuse") {
         showToast("recentPath mode has no way back: keep exploring.");
         return;

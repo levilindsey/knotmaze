@@ -174,6 +174,38 @@ describe("the Reset path rule (K47)", () => {
     expect(resetPathAction({ ...practice, trailMode: true })).toBe("restart");
   });
 
+  it("a press that finishes a pending win shows its card instead (K647)", () => {
+    const base = { dailyAttempt: true, official: false, solved: true, trailMode: false };
+    // The win is already won (its dot still travelling): every other answer
+    // the rule could give - backtrack in a daily attempt, refuse on a memory
+    // trail, restart anywhere else - loses to finishing it, so the result
+    // card shows and the maze stays as the win left it.
+    expect(resetPathAction({ ...base, pendingWin: true })).toBe("win");
+    expect(resetPathAction({ ...base, trailMode: true, pendingWin: true })).toBe("win");
+    expect(
+      resetPathAction({
+        dailyAttempt: false,
+        official: false,
+        solved: true,
+        trailMode: false,
+        pendingWin: true,
+      })
+    ).toBe("win");
+    expect(resetPathAction({ ...base, realtime: true, pendingWin: true })).toBe("win");
+    expect(resetPathAction({ ...base, practice: true, pendingWin: true })).toBe("win");
+    // No pending win: today's answers stand.
+    expect(resetPathAction({ ...base, pendingWin: false })).toBe("restart"); // solved
+    expect(
+      resetPathAction({
+        dailyAttempt: true,
+        official: false,
+        solved: false,
+        trailMode: false,
+        pendingWin: false,
+      })
+    ).toBe("backtrack");
+  });
+
   it("as backtracking it keeps the attempt: a replay of its taps agrees", () => {
     const walk = walkFor(5);
     const c = new FabricMazeController(walk);
