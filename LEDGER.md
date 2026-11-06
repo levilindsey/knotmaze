@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1217.
+Next free ID: K1218.
 
 ## Waiting on Levi
 
@@ -511,10 +511,10 @@ Next free ID: K1217.
   - env: the passes' builds first and never while Muse runs: `scripts/preview.ps1 -Ref <sha> -Root <out>\builds -BuildOnly` for each sha (`pixel_passes.ps1` stops before the phone lock when one is missing); probe server `npx vite --config .claude/probes/K1139/vite.private-cache.config.ts --port 5620 --strictPort --host 127.0.0.1` from a worktree (ports 5620-5639); GPU probes through `.claude/probes/K1139/run_locked.ps1 -Batch`
 - **K1208** · Muse batch 22 (after K1204's batch 21): runs B to M through the chain, from
   `docs/design/K1208_muse_batch22.md` and the later runs' own briefs (ports 5880-5999)
-  - owner: the chain in `.claude/probes/K1053/` (queue.txt, chain.log): Run J (22J) since 12:34, then K (22K) and L (22L), fresh Muse sessions; coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
-  - branch: mainline; last commit: `cb5a7301`
+  - owner: the chain in `.claude/probes/K1053/` (queue.txt, chain.log): Run K (22K) since 13:07, then L (22L), fresh Muse sessions; coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
+  - branch: mainline; last commit: `f3ed2129`
   - evidence: the chain in .claude/probes/K1053/ (queue.txt, chain.log); each run's probe folder under .claude/probes/ (B K1203, H K1210, C and I K1186, E K1196, F K1191, G K1198)
-  - next: J (K647: the card after Reset path), then K (six junction residuals on master), then L (cursive residuals on v6.8, released when J3k landed); M held until K1211 S2 lands; D held for K1211; I reviewed (K1209 closed)
+  - next: K (six junction residuals on master), then L (cursive residuals on v6.8); M held until K1211 S2 lands; D held for K1211; J reviewed (K647 done in adee40a6)
   - brief: `docs/design/K1208_muse_batch22.md`; I to M: K1209_reapply_run_i.md, K647_reset_win_card.md, K1208_run_k_junction_residuals.md, K1208_run_l_cursive_residuals.md, K1214_profile_run_m.md (docs/design/)
 
 ## Next, in order
@@ -1676,6 +1676,9 @@ Every other item below waits on the trigger it names.
 - **K1215** · Run I's first ab22c run (22I): the retired page lost its backdrop from fat11 f13 on, threads
   pixel-identical; two reruns clean, the flaked files overwritten. Cause unknown; if an A/B shows it again,
   keep the run (`.claude/probes/K1186/batch22i.txt`).
+- **K1217** · Reset path during the winning move (K647, adee40a6) stops the clock at the press, up to one
+  move's travel before the arrival a live finish records, so a press can shave that off a daily's time (22J's
+  report). Fix: record the arrival's time.
 
 ## Approved, to schedule (2026-10-11)
 
