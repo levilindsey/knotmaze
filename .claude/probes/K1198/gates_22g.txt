@@ -1,0 +1,16 @@
+K1198 22G gates: bench v6.8 (work33/census_v68x) against the rebuild (v68_22g/census_22g, ligatures emptied, ports M)
+gate                                          bench                rebuild
+pieces                                          718                    719
+joins                                           333                    334
+hooks (pieces with)                              93                     92
+spikes (pieces with)                            133                    132
+rough FAIL                                      189                    188
+undesigned seams not G2                          25                     25
+over budget                                     347                    347
+solved joins / status not 0                 159 / 5                160 / 5
+side, ij join side_min_u      no ij join (ligature)    0.0016 u (status 0)
+first divergent row (bench order): w220:ij:tail0i (word 'ij')
+ij join font distance (font's cnct.mod_n_n): 5.9863 u, cls cnct.mod_n_n
+glyph for glyph (shape_gate_22g.txt): strings without ij moved: 0 []; strings with ij moved: 1 ['ij']; pairs still ligating under the emptied font: 0 []
+pieces (same_22g.txt, same_k863j.py): census rows: 713 in A, 714 in B, 712 in both: 712 equal, 0 differ; only in A 1, only in B 2
+same_22g differing/only pieces: 3; outside the word ij: 0 []

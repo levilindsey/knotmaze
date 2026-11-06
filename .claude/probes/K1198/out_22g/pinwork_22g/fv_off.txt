@@ -1,0 +1,22 @@
+K962 join census of v6.8 (M) pin fv off (22G) (4 pieces; bodies C:\Users\lsl\Repositories\knotmaze\.claude\probes\K1198\v68_22g\base\bodies.json, params C:\Users\lsl\Repositories\knotmaze\.claude\probes\K1198\v68_22g\base\join_params.json, generator gen_k1027)
+K1019: a solved (port) join's dmax is measured against the font's connector cut at the join's own ends; the census_k1012 number (cut at the build's entry frame) follows each such row as 'dist at the frame'
+budget 2.5 u (3.0 u fused); G2 seam: gap < 0.01 u, angle < 0.05 deg, dk < 0.0005 /u; hook: a turn over 20 deg within 0.5 u; spike: |k| > 3.0 x the word's p95 (combs sheet sampling); peak |dk/ds| in 1/u^2 (ratio to rough's 200/Mfu^2 = 3.47e-03/u^2); rough: rough_k969 limits
+
+pieces 4: joins 1, leads 1, virtual leads 0, tails 0, variants 2
+hooks (near-cusps inside a piece): 0 pieces: 
+connectors with a0 or a1 at the 0.02 floor: 0: 
+over the budget: 4: J0-2fv(fv) 9.92, lead0f(fv) 6.46, after_o((e after_o)) 3.55, after_g((e after_g)) 2.87
+seams not G2 (undesigned): 0: 
+designed corners (cusp entries): 0: 
+comb spikes: 0: 
+internal kinks: 0; rough FAIL: 0: 
+peak |dk/ds| top 15 (excl. hooks): after_o((e after_o)) 0.0249, lead0f(fv) 0.0153, after_g((e after_g)) 0.0141, J0-2fv(fv) 0.0044
+designed body corners (Levi's asks; not kinks): 11: a node 6 180deg, a start = node 6 (shared point), 106deg between the arrival there and the start, f node 9 168deg, g node 6 178deg, g start = node 6 (shared point), 105deg between the arrival there and the start, k node 9 180deg, k node 15 100deg, o node 7 180deg, o start = node 5 (shared point), 0deg between the arrival there and the start, q node 4 180deg, q start = node 4 (shared point), 109deg between the arrival there and the start [o's top cusp (K976), a's top corner (K990), k's leg meets the stem (K990), f's cusp (K990), g's top corner (K1012), q's top corner (K1012)]
+other body corners over 20 deg (retrace cusps): 15: b node 9 180deg, d node 5 180deg, h node 7 180deg, m node 4 180deg, m node 12 180deg, n node 4 180deg, p node 4 180deg, p node 10 180deg, s node 3 180deg, u node 7 180deg, v node 8 180deg, w node 7 180deg, w node 13 180deg, y node 6 180deg, z node 2 148deg
+
+ranked, worst first (prm* = a0 or a1 at the 0.02 floor; hooks: turn deg @ u from start/end):
+  #  badness  piece                                        type    kind     dmax  dmean  bud     peak  ratio  spk    k/p95 hook rough     len  seams (gap u / angle deg / dk 1/u); hooks; prm
+  1     74.3  w1:fv:J0-2fv                                 join    port-merge   9.92   3.61  2.5   0.0044    1.3    0      1.4    0 ok      169.7  exit f (port at 2.00 u from the end): 0/0/2.2e-17; entry v (port at 3.70 u, port-merge): 1.36e-13/0/6.4e-16; prm 1.64,0.578,-7.33,-0.347 solved; dist at the frame 9.92 u (K1019); B3's own-ends dist 9.92 u; solve status 0 nfev 2053
+  2     40.1  w1:fv:lead0f                                 lead    smooth   6.46   1.93  2.5   0.0153    4.4    0      0.8    0 ok       99.3  entry f (entry, smooth): 2.46e-14/0/3.2e-18
+  3     11.2  variant:e:after_o                            variant smooth   3.55   1.85  2.5   0.0249    7.2    0      1.5    0 ok       69.8  J (body): 2.63e-13/0/1.2e-14; prm 0.493,0.496,0.464,0.105 evar
+  4      4.1  variant:e:after_g                            variant smooth   2.87   1.24  2.5   0.0141    4.1    0      0.8    0 ok       65.8  J (body): 1.59e-13/0/5.8e-17; prm 0.535,0.517,0.13,0.0756 evar

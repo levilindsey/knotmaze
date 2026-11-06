@@ -1,0 +1,5 @@
+K1198 22G ij check: words holding ij in J3i's list: ['ij'] (v6.8 base C:\Users\lsl\Repositories\knotmaze\.claude\probes\K1198\v68_22g\base, ports C:\Users\lsl\Repositories\knotmaze\.claude\probes\K863\trace\work28\ports_k990e.json variant M)
+ stock (v6.8 today) 'ij': letters [('i', 'ij.jmc')] shaping [('ij.jmc', 0)]
+ stock (v6.8 today) 'ij': no join
+ nolig (22G rule) 'ij': letters [('i', 'i.mod.ini'), ('j', 'j.jmc.fin')] shaping [('i.mod.ini', 0), ('cnct.mod_n_n', 0), ('j.jmc.fin', 1)]
+ nolig (22G rule) 'ij' ij SOLVED cls cnct.mod_n_n status 0 side 0.001577601630288068 attach s_u 3.0404 nfev 409 dist 5.986302619997801

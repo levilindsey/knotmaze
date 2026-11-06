@@ -1,0 +1,43 @@
+K1198 22G six pins on v6.8 (work28/ports_k990e.json M, v68_22g/base, stock font): with pin vs K1009_PINS {"<pair>":{}}; seams gap u/angle deg/dk 1/u, font distance dmax u
+ pin og: sheet words ['og', 'jumps over the lazy dog'] (holders in bench: ['og', 'jumps over the lazy dog'])
+  og on in 'og': dmax 7.1796 u kind port-fused src solved | exit o (port at 4.00 u from the end): 0/180/0.03668; entry g (port at 50.48 u, retrace, port-fused): 4.385e-13/0/3.488e-16
+  og on in 'og': dmax 7.1437 u kind port-fused src solved | exit o (port at 4.00 u from the end): 0/180/0.03667; entry g (port at 50.48 u, retrace, port-fused): 1.525e-13/0/7.589e-17
+  og on in 'jumps over the lazy dog': dmax 7.1796 u kind port-fused src solved | exit o (port at 4.00 u from the end): 0/180/0.03668; entry g (port at 50.48 u, retrace, port-fused): 4.385e-13/0/3.488e-16
+  og on in 'jumps over the lazy dog': dmax 7.1437 u kind port-fused src solved | exit o (port at 4.00 u from the end): 0/180/0.03667; entry g (port at 50.48 u, retrace, port-fused): 1.525e-13/0/7.589e-17
+  og off in 'og': dmax 5.2891 u kind port-fused src solved | exit o (port at 2.00 u from the end): 0/0/3.993e-14; entry g (port at 50.48 u, retrace, port-fused): 4.366e-13/0/3.831e-16
+  og off in 'og': dmax 5.2758 u kind port-fused src solved | exit o (port at 2.00 u from the end): 1.929e-14/0/2.602e-16; entry g (port at 50.48 u, retrace, port-fused): 1.22e-13/0/3.253e-17
+  og off in 'jumps over the lazy dog': dmax 5.2891 u kind port-fused src solved | exit o (port at 2.00 u from the end): 0/0/3.993e-14; entry g (port at 50.48 u, retrace, port-fused): 4.366e-13/0/3.831e-16
+  og off in 'jumps over the lazy dog': dmax 5.2758 u kind port-fused src solved | exit o (port at 2.00 u from the end): 1.929e-14/0/2.602e-16; entry g (port at 50.48 u, retrace, port-fused): 1.22e-13/0/3.253e-17
+ pin og: sheet C:\Users\lsl\Repositories\knotmaze\.claude\probes\K1198\out_22g\pins_og_22g.svg
+ pin oe: sheet words ['oe', 'be we shoe maze huge bye'] (holders in bench: ['oe', 'be we shoe maze huge bye'])
+  oe on in 'oe': dmax 12.7377 u kind port-merge src solved | exit o (port at 2.00 u from the end): 1.364e-14/0/2.497e-15; entry e (port at 90.00 u, port-merge): 2.2e-13/0/1.268e-13
+  oe on in 'oe': dmax 12.6862 u kind port-merge src solved | exit o (port at 2.00 u from the end): 0/0/1.06e-14; entry e (port at 90.00 u, port-merge): 1.637e-13/0/1.524e-14
+  oe on in 'be we shoe maze huge bye': dmax 12.7377 u kind port-merge src solved | exit o (port at 2.00 u from the end): 1.364e-14/0/2.497e-15; entry e (port at 90.00 u, port-merge): 2.2e-13/0/1.268e-13
+  oe on in 'be we shoe maze huge bye': dmax 12.6862 u kind port-merge src solved | exit o (port at 2.00 u from the end): 0/0/1.06e-14; entry e (port at 90.00 u, port-merge): 1.637e-13/0/1.524e-14
+  oe off in 'oe': dmax 5.3087 u kind port-merge src solved | exit o (port at 2.00 u from the end): 0/0/2.244e-15; entry e (port at 90.00 u, port-merge): 1.166e-13/0/6.473e-15
+  oe off in 'oe': dmax 4.9567 u kind port-merge src solved | exit o (port at 0.01 u from the end): 1.364e-14/0/1.493e-15; entry e (port at 90.00 u, port-merge): 2.728e-14/0/6.481e-14
+  oe off in 'be we shoe maze huge bye': dmax 5.3087 u kind port-merge src solved | exit o (port at 2.00 u from the end): 0/0/2.244e-15; entry e (port at 90.00 u, port-merge): 1.166e-13/0/6.473e-15
+  oe off in 'be we shoe maze huge bye': dmax 4.9567 u kind port-merge src solved | exit o (port at 0.01 u from the end): 1.364e-14/0/1.493e-15; entry e (port at 90.00 u, port-merge): 2.728e-14/0/6.481e-14
+ pin oe: sheet C:\Users\lsl\Repositories\knotmaze\.claude\probes\K1198\out_22g\pins_oe_22g.svg
+ pin fo: sheet words ['fo', 'quick brown fox'] (holders in bench: ['fo', 'quick brown fox'])
+  fo on in 'fo': dmax 7.7974 u kind port-fused src solved | exit f (port at 6.92 u from the end): 2.183e-13/0/3.386e-15; entry o (port at 102.49 u, retrace, port-fused): 1.091e-13/0/2.638e-16
+  fo on in 'fo': dmax 7.7938 u kind port-fused src solved | exit f (port at 6.92 u from the end): 6.821e-15/0/7.228e-18; entry o (port at 102.49 u, retrace, port-fused): 1.125e-13/0/1.319e-16
+  fo on in 'quick brown fox': dmax 7.7974 u kind port-fused src solved | exit f (port at 6.92 u from the end): 2.183e-13/0/3.386e-15; entry o (port at 102.49 u, retrace, port-fused): 1.091e-13/0/2.638e-16
+  fo on in 'quick brown fox': dmax 7.7938 u kind port-fused src solved | exit f (port at 6.92 u from the end): 6.821e-15/0/7.228e-18; entry o (port at 102.49 u, retrace, port-fused): 1.125e-13/0/1.319e-16
+  fo off in 'fo': dmax 9.8506 u kind port-fused src solved | exit f (port at 1.99 u from the end): 6.821e-15/0/1.012e-16; entry o (port at 102.49 u, retrace, port-fused): 6.101e-14/0/4.518e-17
+  fo off in 'fo': dmax 9.8379 u kind port-fused src solved | exit f (port at 2.00 u from the end): 2.183e-13/0/2.233e-15; entry o (port at 102.49 u, retrace, port-fused): 2.728e-14/0/3.542e-16
+  fo off in 'quick brown fox': dmax 9.8506 u kind port-fused src solved | exit f (port at 1.99 u from the end): 6.821e-15/0/1.012e-16; entry o (port at 102.49 u, retrace, port-fused): 6.101e-14/0/4.518e-17
+  fo off in 'quick brown fox': dmax 9.8379 u kind port-fused src solved | exit f (port at 2.00 u from the end): 2.183e-13/0/2.233e-15; entry o (port at 102.49 u, retrace, port-fused): 2.728e-14/0/3.542e-16
+ pin fo: sheet C:\Users\lsl\Repositories\knotmaze\.claude\probes\K1198\out_22g\pins_fo_22g.svg
+ pin fv: sheet words ['fv'] (holders in bench: ['fv'])
+  fv on in 'fv': dmax 6.5867 u kind port-merge src solved | exit f (port at 5.39 u from the end): 0/0/1.735e-16; entry v (port at 0.00 u, port-merge): 1.125e-13/0/4.481e-16
+  fv off in 'fv': dmax 9.9168 u kind port-merge src solved | exit f (port at 2.00 u from the end): 0/0/2.168e-17; entry v (port at 3.70 u, port-merge): 1.364e-13/0/6.361e-16
+ pin fv: sheet C:\Users\lsl\Repositories\knotmaze\.claude\probes\K1198\out_22g\pins_fv_22g.svg
+ pin fr: sheet words ['fr'] (holders in bench: ['fr'])
+  fr on in 'fr': dmax 6.3400 u kind port-cusp src solved | exit f (port at 2.00 u from the end): 6.821e-15/0/2.168e-17; entry r (port at 2.00 u, retrace, port-cusp): 1.364e-13/0/1.717e-14
+  fr off in 'fr': dmax 4.2343 u kind port-cusp src solved | exit f (port at 2.00 u from the end): 3.411e-15/0/2.168e-17; entry r (port at 0.00 u, retrace, port-cusp): 3.843e-08/180/0.0462
+ pin fr: sheet C:\Users\lsl\Repositories\knotmaze\.claude\probes\K1198\out_22g\pins_fr_22g.svg
+ pin fs: sheet words ['fs'] (holders in bench: ['fs'])
+  fs on in 'fs': dmax 9.3721 u kind port-cusp src solved | exit f (port at 2.00 u from the end): 6.821e-15/0/8.674e-17; entry s (port at 2.00 u, retrace, port-cusp): 7.717e-14/0/2.106e-14
+  fs off in 'fs': dmax 9.3991 u kind port-cusp src solved | exit f (port at 2.00 u from the end): 0/0/9.396e-17; entry s (port at 0.00 u, retrace, port-cusp): 5.07e-10/180/0.04357
+ pin fs: sheet C:\Users\lsl\Repositories\knotmaze\.claude\probes\K1198\out_22g\pins_fs_22g.svg

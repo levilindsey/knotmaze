@@ -1,0 +1,6 @@
+K1198 22G shape gate: 234 bench strings (work33/census_v68x.json word order), stock vs ligature-emptied font, wght 100 feats_for
+ MOVED 'ij': stock [('ij.jmc', 0, 0, 0, 616)]
+ MOVED 'ij': nolig [('i.mod.ini', 0, 0, 0, 300), ('cnct.mod_n_n', 0, 300, 0, 0), ('j.jmc.fin', 1, 300, 0, 316)]
+strings without ij moved: 0 []
+strings with ij moved: 1 ['ij']
+pairs still ligating under the emptied font: 0 []

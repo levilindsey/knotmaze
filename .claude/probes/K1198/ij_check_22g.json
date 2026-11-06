@@ -1,0 +1,38 @@
+{
+ "ij": {
+  "stock (v6.8 today)": {
+   "letters": [
+    [
+     "i",
+     "ij.jmc"
+    ]
+   ],
+   "joins": []
+  },
+  "nolig (22G rule)": {
+   "letters": [
+    [
+     "i",
+     "i.mod.ini"
+    ],
+    [
+     "j",
+     "j.jmc.fin"
+    ]
+   ],
+   "joins": [
+    {
+     "pair": "ij",
+     "cls": "cnct.mod_n_n",
+     "src": "solved",
+     "dist_u": 5.986302619997801,
+     "solved": true,
+     "status": 0,
+     "side_min_u": 0.001577601630288068,
+     "entry_s_u": 3.040421987353593,
+     "nfev": 409
+    }
+   ]
+  }
+ }
+}

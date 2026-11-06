@@ -1,0 +1,5 @@
+K1198 22G ij sheet: rows ['ij']; columns font ligature | font unligated | v6.8 today | v6.8 with the rule (ports M). Red solved, blue preset.
+ij font stock shaping: [('ij.jmc', 0)]
+ij font nolig shaping: [('i.mod.ini', 0), ('cnct.mod_n_n', 0), ('j.jmc.fin', 1)]
+ij today: no join (letters [('i', 'ij.jmc')])
+ij rule ij solved: hash 596bd4be61e102f7 attach s_u 3.0404 status 0 side 0.001577601630288068 dist 5.986302619997801 cls cnct.mod_n_n

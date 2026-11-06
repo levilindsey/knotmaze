@@ -1,0 +1,5 @@
+K863 J3j: work33\census_v68x.json vs C:\Users\lsl\Repositories\knotmaze\.claude\probes\K1198\v68_22g\census_22g.json
+census rows: 713 in A, 714 in B, 712 in both: 712 equal, 0 differ; only in A 1, only in B 2
+  only in A: ij:tail0i
+  only in B: ij:J0-2ij
+  only in B: ij:tail0j
