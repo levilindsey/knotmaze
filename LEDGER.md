@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1225.
+Next free ID: K1227.
 
 ## Waiting on Levi
 
@@ -291,6 +291,8 @@ Next free ID: K1225.
 - **K1172** · Walker modes, Levi's brainstorm (2026-11-03): guide it, program it, a flock, stop them (and a tower
   defense), steer it live, bend and tilt. Which family first? (`docs/design/K1172_walker_modes.md`; full text:
   `docs/ledger_notes.md`)
+- **K1225** · Cursive word-end tails: s and p as J3l or J3lc, and the new b, v, w, o and f tails
+  (`docs/asks/K1225.md`; K863 J3l, 6c4ae88b)
 
 ## In progress
 
@@ -315,10 +317,10 @@ Next free ID: K1225.
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
   Levi to edit instead of drawing all 26 (Levi, 2026-10-26). Muse's prototype parked at abc135e7.
-  - owner: agent `a2df5ff9479dad4a1` of claude session c18e2f02-e64f-41ba-9af0-2dbd583358e2 (opus, started 2026-11-05 20:01, 2 h cap ~22:01)
-  - branch: `worktree-agent-a2df5ff9479dad4a1`, worktree `.claude/worktrees/agent-a2df5ff9479dad4a1`; last commit: `817bc47f`
+  - owner: nobody since 2026-11-05 21:19 (merged; agent `a2df5ff9479dad4a1` of claude session c18e2f02-e64f-41ba-9af0-2dbd583358e2)
+  - branch: mainline; last commit: `6c4ae88b`
   - evidence: .claude/probes/K863/trace/work36/ and out36/ (main checkout, untracked); the base: work33/ (v6.8) and work34/cand/ (D2, Q1)
-  - next: J3l runs to its Done; then Claude views its sheets at full size and shows Levi
+  - next: Levi picks on card K1225; then the pick (`work36/cand/J3L` or `J3LC` join_params) becomes the kit's current build
   - brief: `docs/design/K863_cursive_j3l.md`
 - **K114** · Gameplay round 2, designed in
   `docs/design/K80_gameplay_additions.md` section R: burn race, cut
@@ -1669,6 +1671,10 @@ Every other item below waits on the trigger it names.
 - **K1224** · Pulse timing against 7474d09b: about 1/8 period later at cross ji 33, and loop ji 113 shows 6
   pulses where 7474d09b shows 7 (S4 and S5's arm pulse-tree changes for Levi's K1139 looks; K1211 S6's
   sheets).
+- **K1226** · K863 J3l's leftovers: l's word-end stub is short and steep (fix in l's tail form; add l to the
+  locality spots); o's tail lifts little; f's tail ends below the tie stroke; z's tail-start kink and q's body
+  kink near the baseline are v6.8's; Q1s's facet 0.006 vs the 0.0053 bar; fiji's ij keeps v6.8's dots (K1198)
+  (`work36/NOTES_k863l.md`)
 
 ## Approved, to schedule (2026-10-11)
 
