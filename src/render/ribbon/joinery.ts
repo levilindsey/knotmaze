@@ -154,6 +154,17 @@ const COVER_STRIP_PTS = 32;
 // bridge's sides into the backdrop or a neighbor's gap.
 const TIP_DISC_SCALE = 1.06;
 const TIP_DISC_SIDE = 0.995;
+// K1220 S2: GLYPH ARM PROBE, in half-widths along the arm's own arc. A
+// junction arm's direction is read from one sample out along it, and the
+// records loop drops an arm whose sample lies within 0.15 world of the
+// joint. A maze arm reads 0.8 ctrl out (about 0.8 world); a glyph's
+// controls sit 0.1-0.25 world apart, so 0.8 ctrl landed 0.06-0.21 world
+// out and no visible text fork kept two arms (census, a, i, ai, ia, aa,
+// ii at xh 2 and 3): each fell back to the host chain's AXIS disc, which
+// blends no arm, and drew no wedge, so the arms' straight cuts showed (the
+// round edge, notch and ledge inside the stroke, K1220 Run N). Two
+// half-widths clears the seal disc and stays inside a glyph's bends.
+const GLYPH_ARM_PROBE = 2;
 // Unit-circle rim of a disc fan (closed: the first point repeats).
 const DISC_COS = new Float64Array(DISC_SEGS + 1);
 const DISC_SIN = new Float64Array(DISC_SEGS + 1);
@@ -1276,9 +1287,16 @@ export class Joinery {
         const samples = this.r.chainSamples[a.chain];
         if (!samples) continue;
         const closedA = this.r.ps.chainBreakAfter[a.chain] < 0;
+        const arc0 = sampling.paintArcAt(samples, a.slot, closedA);
+        const total = samples.totalLength;
+        // K1220 S2: a glyph arm reads its direction GLYPH_ARM_PROBE
+        // half-widths out along its own arc (see the constant); every
+        // other arm 0.8 ctrl out, as before.
         sampling.sampleAtSafe(
           samples,
-          sampling.paintArcAt(samples, a.slot + a.dir * 0.8, closedA),
+          this.r.style.glyph && this.r.style.glyph[a.chain]
+            ? sampling.normArc(arc0 + a.dir * GLYPH_ARM_PROBE * fillHalf, total, closedA)
+            : sampling.paintArcAt(samples, a.slot + a.dir * 0.8, closedA),
           closedA,
           this.r.sampleScratch,
           0
@@ -1289,8 +1307,6 @@ export class Joinery {
         if (len < 0.15) continue;
         dx /= len;
         dy /= len;
-        const arc0 = sampling.paintArcAt(samples, a.slot, closedA);
-        const total = samples.totalLength;
         const nextCtrl = this.r.armNextJointCtrl(recs.length, a);
         let nextJ = Infinity;
         if (nextCtrl !== null) {
