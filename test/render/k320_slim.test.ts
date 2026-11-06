@@ -180,8 +180,11 @@ describe("K320 stage 1: char budgets", () => {
     // K1211 S4 (2026-11-05): look B and the light switch come out
     // (jLightEase / jLightSoft / jLightAllow, junctionBase's jbT / jbSA /
     // jbSB and its uJParams.z block, the lookB flag and its tests), 1,492
-    // in all (42,888 -> 41,396 measured here); budget follows.
-    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(41_396);
+    // in all (42,888 -> 41,396 measured here); budget follows. Task 3: the
+    // soft field (junctionBase's jbT and jbIa again, sG, the blend's gN / gD
+    // and the band mask rm), +727 (41,396 -> 42,123 measured here); budget
+    // follows.
+    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(42_123);
     // K799: uKPath joins KNOT_UNIFORMS_GLSL, which the still pluck
     // includes (+18 here).
     expect(PLUCK_STILL_FRAG.length).toBeLessThanOrEqual(20_550);

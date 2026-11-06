@@ -78,6 +78,7 @@ import {
   junctionShaderExplore,
   pulseBandCover,
   pulseGlowFall,
+  pulseGlowWeight,
   pulseRouteWeight,
   recordData,
   setFieldParams,
@@ -775,8 +776,10 @@ export class Joinery {
       pb += 4 + nv;
     }
     let wW = 0;
-    // K1211 S4: the soft field and its band mask (the shader's gl and rm).
-    let gl = 0;
+    // K1211 S4: the soft field, a blend of the bands' falls, and its band
+    // mask (the shader's gN, gD and rm).
+    let gN = 0;
+    let gD = 0;
     let rm = 0;
     for (let r = 0; r < npp; r++) {
       const cw = PULSE_COV[r] * drawBandYield(PULSE_DIST[r], dShared, pxW);
@@ -787,7 +790,9 @@ export class Joinery {
       if (bandLightsWeb(ia, ib, bA, bB, PULSE_IN[r])) {
         wW = Math.max(wW, PULSE_F[r] * drawBandYield(PULSE_DIST[r], dShared, pxW));
       }
-      gl = Math.max(gl, PULSE_G[r] * pulseGlowFall(PULSE_DIST[r], reach, fillHalf));
+      const gk = pulseGlowWeight(PULSE_DIST[r], reach, fillHalf, pxW);
+      gN += gk * pulseGlowFall(PULSE_DIST[r], reach, fillHalf) * PULSE_G[r];
+      gD += gk;
       rm |= bB >= 0 ? (1 << bA) | (1 << bB) : 1 << bA;
       if (!(cw > 0)) continue;
       const r0 = PULSE_R0[r];
@@ -817,6 +822,7 @@ export class Joinery {
           * (1 - pulseSmooth(0.52, 1.56, PULSE_DIST[r] + PULSE_DIST[q] - 2 * reach)) * Math.min(yr, yq));
       }
     }
+    const gl = gN / Math.max(gD, 1e-12);
     wW = Math.max(wW, gl * pulseRouteWeight(((rm >> ia) & 1) === 1, ((rm >> ib) & 1) === 1, jbT));
     if (wW > 0) {
       const tgt = U.uKHlPulse;

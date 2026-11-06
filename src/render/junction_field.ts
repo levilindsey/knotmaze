@@ -222,8 +222,15 @@ export function bandLightsWeb(ia: number, ib: number, bA: number, bB: number, tu
 // weight): the pulse's light in a fan is one continuous field. Each band,
 // a shared one too, lights its tube at its whitening (sG) as before, and
 // past the tube that light falls off over PULSE_GLOW_W fill half-widths, a
-// smoothstep, so it leaves the tube with no step and no kink; the field is
-// the brightest band's. It fills the crotch between two lit children and
+// smoothstep, so it leaves the tube with no step and no kink. Where two
+// bands' falls overlap the field is their blend, not the brighter one: each
+// band weighs pulseGlowWeight, its fall over the square of its distance past
+// its own tube (plus a quarter pixel squared), so at a tube's edge that
+// band's own light rules and between tubes the blend runs smoothly from one
+// to the other. (The brighter of two read a sibling's crest onto a child's
+// footprint: a straight band's halo at the joint lit the perpendicular
+// child near the joint, a 0.7 step at that child's tube edge in the model.)
+// It fills the crotch between two lit children and
 // softens a tube's edge into the web, where the cover's one-pixel ramp
 // drew a curved front (cross ji 33's arc, x4 ji 149's edge down to the
 // gap). The route weight keeps it off the arms no band names: 1 on a named
@@ -235,6 +242,11 @@ export const PULSE_GLOW_W = 2.5;
 export function pulseGlowFall(d: number, reach: number, fillHalf: number): number {
   const t = Math.max(0, Math.min(1, (d - reach) / (PULSE_GLOW_W * fillHalf)));
   return 1 - t * t * (3 - 2 * t);
+}
+
+export function pulseGlowWeight(d: number, reach: number, fillHalf: number, px: number): number {
+  const e = Math.max(0, d - reach);
+  return pulseGlowFall(d, reach, fillHalf) / (e * e + 0.25 * px * px);
 }
 
 export function pulseRouteWeight(namedA: boolean, namedB: boolean, t: number): number {
@@ -646,8 +658,10 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
     pb += 4 + nv;
   }
   float wW = 0.0;
-  // K1211 S4: the soft field, its band mask (pulseGlowFall, pulseRouteWeight).
-  float gl = 0.0;
+  // K1211 S4: the soft field, a blend of the bands' falls, and its band mask
+  // (pulseGlowFall, pulseGlowWeight, pulseRouteWeight).
+  float gN = 0.0;
+  float gD = 0.0;
   int rm = 0;
   for (int r = 0; r < ${MAX_ROUTES}; r++) {
     if (r >= np) break;
@@ -665,7 +679,11 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
     int bA = int(r0.z + 0.5);
     int bB = r0.w > -0.5 ? int(r0.w + 0.5) : -1;
     if (sIn[r] > 0.0 && ((jbIa == bA && jbIb == bB) || (jbIa == bB && jbIb == bA))) wW = max(wW, sF[r] * yr);
-    gl = max(gl, sG[r] * (1.0 - smoothstep(reach, reach + ${PULSE_GLOW_W.toFixed(2)} * uJParams.x, sDist[r])));
+    float gf = 1.0 - smoothstep(reach, reach + ${PULSE_GLOW_W.toFixed(2)} * uJParams.x, sDist[r]);
+    float ge = max(sDist[r] - reach, 0.0);
+    float gk = gf / (ge * ge + 0.25 * pxW * pxW);
+    gN += gk * gf * sG[r];
+    gD += gk;
     rm |= bB >= 0 ? (1 << bA) | (1 << bB) : 1 << bA;
     for (int s = 0; s < ${MAX_ROUTES}; s++) {
       if (s >= np) break;
@@ -676,6 +694,7 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
       wW = max(wW, smoothstep(0.0, reach * reach, -sSd[r] * sSd[s] * fl) * (1.0 - smoothstep(0.52, 1.56, sDist[r] + sDist[s] - 2.0 * reach)) * min(sF[r] * yr, ys));
     }
   }
+  float gl = gN / max(gD, 1e-12);
   wW = max(wW, gl * (float((rm >> jbIa) & 1) * (1.0 - jbT) + float((rm >> jbIb) & 1) * jbT));
   c = mix(c, uKHlPulse.rgb, wW);
   if (gT < 1.0) c = cg + gT * (c - c0);
