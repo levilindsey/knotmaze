@@ -187,6 +187,63 @@ float candOn(vec2 p, int off, int n, int nseg, bool closed, vec4 c1, int j, out 
   if (closed && s >= c1.x + c1.y) s -= c1.y;
   return distance(p, f);
 }
+// Whether label word wd names A's surface (its code; an own surface: chain
+// ci within sigma of s_A, plus the word's s step).
+bool names(uint wd, int code, int ci, float sA, bool closed, float len, float s0) {
+  if (int((wd >> 19) & 255u) != code) return false;
+  if (code != 0) return true;
+  if (int(wd & 255u) - 1 != ci) return false;
+  float ws = s0 + float((wd >> 8) & 2047u) / 2047.0 * len;
+  return abs(dS(ws, sA, closed, len)) <= uSig + len / 2047.0;
+}
+// The distance from p to the label's top T when T is an own surface: its
+// chain's centreline within sigma (plus the word's s step) of the word's s,
+// A's own stretch skipped. -1 for a group's surface or a fill, whose alpha
+// is a max over pieces this does not see (the fragment stays hidden).
+float topDist(uint wd, vec2 p, int ci, float sA) {
+  if (int((wd >> 19) & 255u) != 0 || ((wd >> 27) & 1u) != 0u) return -1.0;
+  int c = int(wd & 255u) - 1;
+  vec4 d0 = fetch(uChain, 2 * c);
+  vec4 d1 = fetch(uChain, 2 * c + 1);
+  int off = int(d0.x);
+  int n = int(d0.y);
+  int nseg = int(d0.z);
+  bool cl = d0.w > 0.5;
+  float s0 = d1.x;
+  float len = d1.y;
+  float ws = s0 + float((wd >> 8) & 2047u) / 2047.0 * len;
+  float w = uSig + len / 2047.0;
+  float a = ws - w;
+  if (cl) a = s0 + mod(a - s0, len);
+  else a = max(a, s0);
+  int lo = 0;
+  int hi = n - 1;
+  for (int it = 0; it < 32; it++) {
+    if (lo >= hi) break;
+    int mid = (lo + hi + 1) / 2;
+    if (fetch(uPts, off + mid).z <= a) lo = mid;
+    else hi = mid - 1;
+  }
+  float best = 1e30;
+  int j = lo;
+  float run = 0.0;
+  vec4 Pa = fetch(uPts, off + j);
+  for (int q = 0; q < 512; q++) {
+    if (j >= nseg) break;
+    int jb = (j + 1 == n) ? 0 : j + 1;
+    vec4 Pb = fetch(uPts, off + jb);
+    if (c != ci || abs(dS(Pa.z, sA, cl, len)) > uSig) {
+      float t = clamp(segT(p, Pa.xy, Pb.xy), 0.0, 1.0);
+      best = min(best, distance(p, mix(Pa.xy, Pb.xy, t)));
+    }
+    run += distance(Pa.xy, Pb.xy);
+    if (run > 2.0 * w) break;
+    Pa = Pb;
+    j = jb;
+    if (!cl && j == 0) break;
+  }
+  return best;
+}
 void main() {
   vec2 p = worldAt();
   int ci = vInst.x;
@@ -334,23 +391,42 @@ void main() {
     if (e.x <= sA) code = int(e.y);
     else break;
   }
-  // The label: A's surface on top here (or paper).
+  // The label: the top surface T here (or paper). Form B composites the
+  // surfaces over each other in key order, so A's band shows where nothing
+  // covers this pixel, on A's own surface, under T where T's alpha is below
+  // 1 (T's outer AA rim, d_T > h - aa: lay 1), and as A's rim over T when A
+  // is on top just inside its own edge (lay 2). In lays 1 and 2 the
+  // fragment composites T's band with its own, so MAX against T's own
+  // fragment keeps form B's sum.
   vec2 nX = (p - fX) / dX;
-  ivec2 tx = ivec2(gl_FragCoord.xy);
-  if (!(dX < uH)) {
-    vec2 qp = fX + (uH - 1.5 * uAa) * nX;
-    vec2 dev = vec2(uM0.x * qp.x + uM0.z * qp.y + uM1.x, uM0.y * qp.x + uM0.w * qp.y + uM1.y);
-    tx = ivec2(floor(dev.x), floor(uView.y - dev.y));
-  }
   ivec2 ts = textureSize(uLabel, 0);
-  tx = clamp(tx, ivec2(0), ts - 1);
-  uint wd = texelFetch(uLabel, tx, 0).r;
-  if (wd != 0u) {
-    if (int((wd >> 19) & 255u) != code) discard;
-    if (code == 0) {
-      if (int(wd & 255u) - 1 != ci) discard;
-      float ws = c1.x + float((wd >> 8) & 2047u) / 2047.0 * len;
-      if (abs(dS(ws, sA, closed, len)) > uSig + len / 2047.0) discard;
+  uint wd = texelFetch(uLabel, clamp(ivec2(gl_FragCoord.xy), ivec2(0), ts - 1), 0).r;
+  int lay = 0;
+  float dT = -1.0;
+  if (wd != 0u && !names(wd, code, ci, sA, closed, len, c1.x)) {
+    if (!(dX < uH)) {
+      vec2 qp = fX + (uH - 1.5 * uAa) * nX;
+      vec2 dev = vec2(uM0.x * qp.x + uM0.z * qp.y + uM1.x, uM0.y * qp.x + uM0.w * qp.y + uM1.y);
+      ivec2 tq = clamp(ivec2(floor(dev.x), floor(uView.y - dev.y)), ivec2(0), ts - 1);
+      uint wq = texelFetch(uLabel, tq, 0).r;
+      if (wq == 0u || names(wq, code, ci, sA, closed, len, c1.x)) lay = 2;
+    }
+    dT = topDist(wd, p, ci, sA);
+    if (lay == 0) {
+      if (!(dT > uH - uAa)) discard;
+      lay = 1;
+    }
+  } else if (wd == 0u && !(dX < uH)) {
+    // Paper here, on A's rim: a second surface's rim can overlap it (a gap
+    // under 1 px between two threads). The pixel 1 px past here names it;
+    // form B's over of two rims is their union (lay 3).
+    vec2 qo = p + 2.0 * uAa * nX;
+    vec2 dev = vec2(uM0.x * qo.x + uM0.z * qo.y + uM1.x, uM0.y * qo.x + uM0.w * qo.y + uM1.y);
+    ivec2 to = clamp(ivec2(floor(dev.x), floor(uView.y - dev.y)), ivec2(0), ts - 1);
+    uint wo = texelFetch(uLabel, to, 0).r;
+    if (wo != 0u && !names(wo, code, ci, sA, closed, len, c1.x)) {
+      dT = topDist(wo, p, ci, sA);
+      if (dT >= 0.0 && dT < uH + uAa) lay = 3;
     }
   }
   // The burial: the group's other pieces within R, winW at f.
@@ -411,6 +487,15 @@ void main() {
     }
   }
   float v = (1.0 - bur) * w0 * band2(uH - dX);
+  if (lay == 1) {
+    float DT = uH - dT;
+    v = band2(DT) + (1.0 - ss(-uAa, uAa, DT)) * v;
+  } else if (lay == 2 && dT >= 0.0) {
+    v += (1.0 - selfW * ss(-uAa, uAa, uH - dX)) * band2(uH - dT);
+  } else if (lay == 3) {
+    float b = band2(uH - dT);
+    v = v + b - v * b;
+  }
   if (!(v > 0.0)) discard;
   oInk = vec4(v, v, v, 1.0);
 }
