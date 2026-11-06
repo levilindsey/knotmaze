@@ -41,7 +41,10 @@ only with the files it is about; `render.md` lists the area's other files.
   shader: `routed = nRoutes > 0 && hd.z > 0.5`; outside every band it
   shows the arms' UNTRAVELED paint (pulses, hover and glow stay, no
   gold); inside a band, the band's arms' COMPOSED paint, A -> B blended
-  over tau in [-m, m], with a one-pixel ramp at thread half-width. It
+  over tau in [-m, m]; its edge is a ROUTE_BAND_RAMP (2.5 px)
+  smoothstep centred on thread half-width (K1218 S4: a one-pixel ramp
+  read as a staircase of pixel blocks where gold meets an arm's
+  colour). It
   reads the composed rows, so the band follows K93's and trail mode's
   fades with no clock of its own. COVER STRIPS (ribbon_renderer.ts): one
   per routed arm, out to min(want, coverCap), redraw the arm's ribbon
@@ -50,7 +53,7 @@ only with the files it is about; `render.md` lists the area's other files.
   (ribbon_mesh.ts) tags strip records `rec + STRIP_REC_TAG` (0.25), so
   NOTHING ELSE may push a fractional record into the fillet mesh. Caps
   are dropped at routed junctions. The CPU mirror is `cpuJunctionField(
-  rec, x, y, out, px, strip)` (reached by `fieldProbe.at`; `fieldProbe.
+  rec, x, y, out, px, strip, across)` (reached by `fieldProbe.at`; `fieldProbe.
   routes(ji)` lists a record's bands): a GLSL change is mirrored in the
   same commit.
 - WIRING. `setPaint`'s 4th argument is `routes`; fabric_maze_renderer
@@ -81,7 +84,11 @@ only with the files it is about; `render.md` lists the area's other files.
   amendment is to fill outside the bands with the composed rows when
   every arm of the web is traveled. (5) Caps dropped. (6) Composed rows,
   no clock of its own. (7) The corner geometry above. (8) Width: thread
-  width in webs, cover strips pad 0.5 px.
+  width in webs; on a cover strip the band stays solid ROUTE_BAND_PAD
+  (0.5 px) past half-width only where it runs along the strip's own
+  edge (K1218 S4: `across`, the distance from the strip's midline by
+  vLook's derivative; within 0.5-1.5 px of the band distance), and a
+  band edge crossing a strip ramps as in a web.
 - MEASURED. SMOKE: no shader compile or link error; the console's 404s
   are favicon.ico, and the three "Attribute aUV is not present in the
   shader" warnings are K83's (marker_mesh.ts declares `in vec2 aUV;` and
