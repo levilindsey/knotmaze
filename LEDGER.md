@@ -325,11 +325,11 @@ Next free ID: K1214.
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
   Levi to edit instead of drawing all 26 (Levi, 2026-10-26). Muse's prototype parked at abc135e7.
-  - owner: nobody since 2026-11-05 10:48: J3j done and merged (f5424660); the next stage is not briefed yet
-  - branch: mainline (J3j's worktree .claude/worktrees/agent-af77097804c041b8b kept; J3i's worktree-agent-a2d2f19ad8f0a41d7 holds v7.2, unmerged); last commit: `f5424660`
-  - evidence: .claude/probes/K863/trace/work33/ (v6.8 rebuilt, identical to work28) and out33/png/ (sheets: approved = v6.8 beside v6.9 to v7.2)
-  - next: Claude plans the next stage on work33 (v6.8): what K1112's one-rule plan still owes now that Levi kept v6.8's joins; fix K1212's g2 key first; then K1198's re-judgment (22G held)
-  - brief: docs/design/K863_cursive_j3j.md (its Handoff; K863_trace.md's Judging a look binds it)
+  - owner: J3k stage agent of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-05 11:11 (cap about 13:11)
+  - branch: worktree-agent-aaac8bfa2dd91edbb at .claude/worktrees/agent-aaac8bfa2dd91edbb (J3j's agent-af77097804c041b8b kept; J3i's worktree-agent-a2d2f19ad8f0a41d7 holds v7.2, unmerged); last commit: `08f527ab`
+  - evidence: .claude/probes/K863/trace/work34/ and out34/ (J3k, copies on its branch); the base: work33/ and out33/png/ (v6.8)
+  - next: J3k: the kit fixes (K1212), then candidates beside v6.8 for word-final s, the i and j dots, word-final p and q's tail (K1213); Claude views every crop, then writes the card
+  - brief: docs/design/K863_cursive_j3k.md (K863_trace.md's Judging a look binds it)
 - **K114** · Gameplay round 2, designed in
   `docs/design/K80_gameplay_additions.md` section R: burn race, cut
   verb, beat rider, spider, Pluck Hero MVP. Levi took the recs (calls
@@ -519,10 +519,10 @@ Next free ID: K1214.
   - env: the passes' builds first and never while Muse runs: `scripts/preview.ps1 -Ref <sha> -Root <out>\builds -BuildOnly` for each sha (`pixel_passes.ps1` stops before the phone lock when one is missing); probe server `npx vite --config .claude/probes/K1139/vite.private-cache.config.ts --port 5620 --strictPort --host 127.0.0.1` from a worktree (ports 5620-5639); GPU probes through `.claude/probes/K1139/run_locked.ps1 -Batch`
 - **K1208** · Muse batch 22 (after K1204's batch 21): runs B to H through the chain, from
   `docs/design/K1208_muse_batch22.md` (ports 5880-5949)
-  - owner: the chain in `.claude/probes/K1053/` (queue.txt, chain.log): Run E (22E) since 10:47, a fresh Muse session; coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
+  - owner: the chain in `.claude/probes/K1053/` (queue.txt, chain.log): Run F (22F) since 11:00, a fresh Muse session; coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
   - branch: mainline; last commit: `2d68f787`
-  - evidence: the chain in .claude/probes/K1053/ (queue.txt, chain.log); each run's probe folder (B: .claude/probes/K1203/, H: .claude/probes/K1210/, C: .claude/probes/K1186/)
-  - next: E running (K1196 S4's cost ABBA), then F (K1191); C reviewed (K1209 accepted; its re-apply waits for K1211 S1); D held for K1211; G held for K863's next stage
+  - evidence: the chain in .claude/probes/K1053/ (queue.txt, chain.log); each run's probe folder (B: K1203, H: K1210, C: K1186, E: K1196, F: K1191, all under .claude/probes/)
+  - next: F running (K1191); E's agent went idle with its ABBA bench still timing and passed its gate on other sessions' commits (notes): Claude sends E its finish when the bench ends; C reviewed (K1209's re-apply after K1211 S1); D held for K1211; G dropped (K1198)
   - brief: `docs/design/K1208_muse_batch22.md`
 
 ## Next, in order
@@ -737,11 +737,9 @@ Every other item below waits on the trigger it names.
   45.0/45.3 fps, 119-122 of ~360 frames over 25 ms, none over 50, against 8fe3d20's 60.1/60.3, two runs a
   build in both orders, thermal status 0). Trim the piece counts or per-piece cost, or accept it.
   docs/design/K156.md round 2026-10-30 handoff.
-- **K1112** · Cursive: one join rule for every pair (the answer to Levi's step-back question of 2026-11-02,
-  `K863_trace.md` "Levi's calls"): port the exits J3 has not (b c g j k l m p q r s t u v w x y z), letter by
-  letter, b, v and w first; then delete J2's presets (join_params `cnct.*`) and the six pins (og, oe, fo, fv,
-  fr, fs). No per-pair data: a fix goes into a letter's body or ports. Gates: the census's smoothness and
-  locality; font distance reported per letter; Levi judges one sheet per letter.
+- **K1112** · Cursive: one join rule for every pair, re-scoped 2026-11-05: b, v, w and c keep v6.8's presets
+  (Levi kept them: K1119, K1197); the other exits are ported letter by letter, each judged by eye against
+  v6.8, and a preset goes only when its port draws v6.8's join (`K863_trace.md` "Judging a look"; notes).
 - **K1149** · Beat dots: dots at the beat points inside multi-beat runs, along threads and at junctions, that
   pop with a ring when the dot eats them; the dropdown and the pulse and ring at the dot are done (split from
   K804). Builds toward K805.
@@ -1702,9 +1700,9 @@ Every other item below waits on the trigger it names.
 - **K1195** · `scripts/preview.ps1` (K1188, f5035e0d): a src-* folder that `git worktree remove` half-deletes
   (a file held open) loses its `.git`, so the fallback keeps it and later -Ref runs of that sha under that
   -Root are refused as a live run until it is cleared by hand
-- **K1198** · Cursive v7.2's leftovers (J3i), held 2026-11-05: Plc1m and the ij work were built on v7.2,
-  whose b, v, w and c joins Levi rejected (K1119, K1197); re-judge them on the approved base once K863's
-  next stage restores it. 21G's notes: `.claude/probes/K1198/SUMMARY_21G.md` (e43b2cfc).
+- **K1198** · Cursive ij: the font's ligature draws no j; show i and j on v6.8 in a stage of its own. J3i's
+  corner rule (Plc1m, Plc2m) not taken: v6.8's corners already match the font's points (2026-11-05 crops);
+  batch 22's Run G dropped. 21G's notes: `.claude/probes/K1198/SUMMARY_21G.md` (e43b2cfc).
 - **K1205** · A warm Pixel draws fabric at rest at 30 fps: at thermal status 1 (skin 39-40 C) 0 moves read p50
   33.1 (builds 36aed2d5 and fbc1b212) while 7 moves held 16.7; cool, 0 moves holds 16.7 (K1139's passes
   `.claude/probes/rounds/2026-11-05-k1139s5`, `-s5b`). Cause untested (notes)

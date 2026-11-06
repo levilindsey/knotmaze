@@ -3852,3 +3852,19 @@ The account (234 words, 1356 pieces per version): J3f (v6.8 to v6.9) moved 301, 
 Sheets (`.claude/probes/K863/trace/out33/png/`, tracked): b_v68, v_v68, w_v68, aq_joins_v68 and e_after_bvw_v68 (font, approved = v6.8, v6.9, v7.0); c_v68 (font, approved, v7.1, v7.2); cusp_v68 and corners_v68 (font, approved, v7.2) with two crops; cursive_v68_words. Claude's check by eye (the tops of b_v68 and c_v68 at full size): the approved column is v6.8. b's joins are blue U sags lying on the font's join where v6.9's run near-straight and v7.0's hump and then bend into an S; c's approved joins are smooth rising arcs along the font's, where v7.1's run along the baseline and v7.2's add a dip.
 
 The rebase needed `-c core.autocrlf=false`: work33's and out33's `.gitattributes` (`* -text`, added by the stage's fourth commit) made the earlier commits' CRLF checkouts look like local changes, and agent_merge.ps1's rebase stopped at the fifth commit.
+
+## K1112 (2026-11-05, re-scoped)
+
+The item's text before: Cursive: one join rule for every pair (the answer to Levi's step-back question of 2026-11-02, `K863_trace.md` "Levi's calls"): port the exits J3 has not (b c g j k l m p q r s t u v w x y z), letter by letter, b, v and w first; then delete J2's presets (join_params `cnct.*`) and the six pins (og, oe, fo, fv, fr, fs). No per-pair data: a fix goes into a letter's body or ports. Gates: the census's smoothness and locality; font distance reported per letter; Levi judges one sheet per letter.
+
+Why: Levi on K1119's sheets (2026-11-05): "the v6.8 versions are WAY better in all cases. The others are grossly incorrect and unsmooth"; on K1197: "the old one is better". The rule's ports of b's, v's and w's exits (J3f, J3g) and of c's (J3h) were what Levi rejected, so those presets stay. The other exits may still be ported, one letter at a time, each judged by eye against v6.8 (the approved base, K863's J3j); a preset or pin is deleted only when the rule's port draws v6.8's join.
+
+## K1198 (2026-11-05, the corner rule not taken)
+
+The item's text before: Cursive v7.2's leftovers (J3i), held 2026-11-05: Plc1m and the ij work were built on v7.2, whose b, v, w and c joins Levi rejected (K1119, K1197); re-judge them on the approved base once K863's next stage restores it. 21G's notes: `.claude/probes/K1198/SUMMARY_21G.md` (e43b2cfc).
+
+Claude's crops of `.claude/probes/K863/trace/out33/png/corners_v68.png` (font, v6.8, v7.2; nr, dr, er and ds at 2x, the tops of r and s at 5x): v6.8's entry corners at the tops of r and s are sharp points the font draws too, and v7.2's smoothed ones can't be told from them at either zoom. Plc1m and Plc2m add nothing visible on the approved base, so they are not taken. ij is still open: the font's ligature draws no j; it gets a stage of its own on v6.8. Batch 22's Run G (Plc1m's census and ij, both on v7.2) is dropped; a redraft would do ij on v6.8 only.
+
+## K1208 (2026-11-05, Run E's gate)
+
+Run E (22E) started at 10:47:42. Its agent went idle at 10:59:31 saying it would report once its timing completes: the ABBA bench it started at 10:53:49 under the perf lock was still running. The chain's gate counted any commit since the run started, so J3j's merge and Claude's ledger push let 22E pass at 11:00:35, and Run F started at 11:00:42. Fixed in `.claude/probes/K1053/chain.ps1` (untracked): after a run, a commit since its start must name the run's tag (Muse's commits end "(Muse batch 22 Run E, 22E)"). The running chain keeps the old gate until its next start. E's timings are taken under load (K1211 S1's previews and shoots, Run F); its report must say so.
