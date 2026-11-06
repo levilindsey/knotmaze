@@ -300,10 +300,10 @@ Next free ID: K1222.
 - **K1211** · One seamless light inside each junction, no line or edge in it (Levi 2026-11-05; notes). Pulses
   and the gold path first, then fire and collapse (K1210). Levi, on K1190's card: "All four" (notes). S2
   (a84225d3): the gold's round edge. S3 (66752e75): the lit edge's line, the web's bite. S4: the soft front.
-  - owner: claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (coordinator), launching S4's stage agent
-  - branch: mainline; last commit: `66752e75`
+  - owner: agent a222ff792a21132ec of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (S4, since 2026-11-05 15:18)
+  - branch: worktree-agent-a222ff792a21132ec (.claude/worktrees/agent-a222ff792a21132ec); last commit: `21907ef5`
   - evidence: .claude/probes/K1211/ (S1's, S2's and S3's tools; out/, out2/ and out3/ untracked, out2/ and out3/ in S2's and S3's kept worktrees); K1190's sheets: .claude/probes/K1139/out/s4/sheets/t6_ji149_x4_n.png, t4_ji33_cross_n.png
-  - next: S4 from its brief: look B out, then the soft front and no wedges (spots 1-2); then K1218's and K1219's fixes, K1210
+  - next: S4's tasks 1-6 per its brief (look B out, the reference numbers, the soft field, checks, sheets, Handoff); then K1218's and K1219's fixes, K1210
   - brief: `docs/design/K1211_s4_soft_light.md` (S3's: `K1211_s3_lit_edge_web.md`; S2's: `K1211_s2_gold_edge.md`; S1's: `K1211_seamless_junction_light.md`)
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
