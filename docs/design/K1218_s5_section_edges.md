@@ -89,3 +89,93 @@ Short, in plain words: what you built; per spot, what you see against the top ro
 sheets' paths, with the two or three to show Levi first; the pins you moved; anything out of scope
 a crop showed; the rebase; your last SHA. Commit messages carry the record. End with
 `Ledger items` and K1218's handle fields (owner, branch, last commit, evidence, next).
+
+## Handoff (S5 agent, stopped 2026-11-06 03:00, inside the 2 h cap)
+
+Landed on the branch `worktree-agent-aad78f17014e89727`: f56af96c (a web paints each arm at the
+arc its ribbon gives the pixel: `sweptArc` in `junction_field.ts`, mirrored in
+`ribbon/joinery.ts`; it finds, within 7 segments of the projected arc, the centreline point whose
+normal passes through the pixel, the nearest root by lateral distance, and hands back to the
+projection between `uJParams.x` and twice that from the centreline), a7cb287d (its pins), then
+probe tools only. `npm test` green on 2723523b (217 files, 2879 tests), which sits on origin/master
+ceff3b43 (fetched again at 02:50: unchanged).
+
+Rows: 7474d09b = K1211's `out6/r7474`; master = S4's `out/b2` (stamp e8cb5264+, S4's final code);
+branch = `out/b`.
+
+**The branch is not a clean win yet.** It removes cross 33's seam and ji 115's line, and adds a
+line at ji 80 and a streak at cross 155 (below). Merge after those two go, or with Levi's look at
+`cross_80.png` beside `c33_seam.png`.
+
+Spots:
+1. Staircases. loop ji 113 is smooth on the branch at every t (nomark shots; on the sheet the
+   marker covers its centre). cross ji 155: the branch ADDS a light streak at device x 777-789,
+   y 679-682, t2-t5, not on master. Every pixel there blends chains 61 and 71 and arm B's arc jumps
+   17.2 to 17.07; a second mechanism bounds its right edge, not found (the fold weight and a
+   19-segment window each changed 0 px). It lies under the marker's rings (inferred).
+2. cross ji 33's pulse seam: gone at t0, t5 and t6 (|gpu - nofan| <= 1-2 luma, `out/seam/c33.log`;
+   `out/zoom/c33_seam.png` shows the step in 7474d09b and master, not on the branch). A softer
+   crease is left at x 652-674, y 804-814, +-5-7 luma. Inferred cause: sweptArc's no-root fallback
+   at the first segment. Not built: at g == 0, clamp u < 0 to 0 (l = |q|, arc = b.z).
+3. loop ji 123 and x4 ji 101: no change from master. Their eye edges step pixel by pixel in every
+   row: not addressed. loop 123 has a soft corner and a violet sliver along the band, x4 101 a
+   violet fringe along the gold/blue edge, in every row. x4 101's junction is off frame (CSS
+   -25.4, 278.4), so its sheet is cut at @60,0 and its left strip is magenta.
+4. cross ji 51's hairline at (1019,1136) is ONE ribbon, chain 61, and the drawing is at fault.
+   `ribbons_s5.mjs`: every pixel of 1015-1023 x 1132-1140 is nearest chain 61; the next chain (25)
+   is 12-23 px outside its edge. The spur's pixels lie inside chain 61's half-width (23.4 px):
+   (1017,1136) edge -2.0 px, luma 66; (1016,1136) -3.0, 101; (1015,1135) -4.1, 136; the ribbon reads
+   170 there, the backdrop 27-28. `bend_s5.mjs`: chain 61 turns about 40 degrees left on screen
+   over samples 532-533 (-20.6, -19.5; R 19-21 px against the 23.4 px half-width) and the apex is
+   on the inside of that turn. The green and teal "ribbons" are chain 61's two runs either side of
+   the junction. Inferred, not tested: the ribbon mesh's concave-side clamp (render-ribbon.md
+   P3.34) leaves a notch 3-4 px deep at the inner corner. Same in every row (S4: unchanged with
+   fans, strips and mask off). The fix is in `ribbon_mesh.ts`, render-wide; not attempted.
+5. A band leaving a cover strip: the branch matches master within 0.03 px. Master against
+   7474d09b: at loop ji 122 master's strip edge (blue 120) sits 1.0-1.2 px inside for x <= 828
+   (x 780: 274.95 vs 273.78; 800: 282.03 vs 281.00; 820: 281.40 vs 280.32) and matches from x 830
+   (277.21 vs 277.26), at t3-t6 and at rest; from the slopes at 828-830, master kinks about
+   0.4-0.5 px inward of the ribbon edge's line and 7474d09b about 0.5 px outward. x4 ji 149: master
+   1.0-1.35 px inside at x 1230-1275 (t3/t4), a 0.4 px kink at x 1274. The ramp is centred on the
+   half-width in the code, so a half-ramp offset is not the cause; not attributed.
+
+near_s2 at rest, master against branch (junctions at max 9 or more; all others <= 8):
+
+| Stand | Changed px | Groups | Far max | Junctions (ji: max) |
+|---|---|---|---|---|
+| x4 | 189,374 | 74 | 7 | 65: 15, 115: 13, 59: 13, 80: 11 |
+| loop | 116,449 | 56 | 9 | 47: 16, 80: 16, 57: 10, 64: 9, 106: 9 |
+| cross | 129,708 | 59 | 8 | 51: 16, 115: 13, 54: 12, 80: 11, 34: 9, 65: 9 |
+
+Viewed, every listed junction with a sheet (`seamscan_s5.mjs` gives the steps):
+- ji 80 (cross and x4; the same design there): the branch ADDS a vertical line in the green ramp
+  at offset (84-85, 29-35) of the 96 px window on the junction (centre about device 2052, 236):
+  a 7-level step between neighbouring pixels against <= 2 on master and 7474d09b, at every t and
+  at rest. A sweptArc regression, cause not found.
+- ji 115 (cross and x4): the branch REMOVES a horizontal line at offset (86, 54): 5 levels in
+  7474d09b and master, 2 on the branch.
+- cross 54, cross 34, loop 47, loop 80, loop 57, x4 65, x4 59: no difference I can see between
+  master and the branch. The gap edges that step in 7474d09b's row (cross 54, cross 80) are smooth
+  on both.
+- No sheet: cross 65, loop 64, loop 106.
+
+Out of scope seen: cross 155's grey-teal web sliver against the backdrop is MSAA (cross 112's
+class). K307: the junction shader's text grew, so it and its explore variant compile cold once per
+player; not timed.
+
+Pins moved (a7cb287d): `test/render/k320_slim.test.ts` JUNCTION_FRAG budget 32,884 to 34,759;
+`test/render/paint_ring_lap.test.ts` ROUNDED_QUOTIENTS gained `junction_field.ts: int(rp /
+uJParams2.x)`.
+
+Sheets: `.claude/probes/K1218/s5/out/sheets/<stand>_<ji>.png` (rows: 7474d09b t3-t6, master t3-t6,
+branch t3-t6, then master and branch at rest; zoom 4). Show Levi first: `out/zoom/c33_seam.png`,
+`sheets/cross_80.png` (the new line: row 3 and the last cell), `sheets/cross_115.png`, then
+`sheets/loop_122.png` for the band edge. Tools (headers give usage): `run_shots_s5.ps1`,
+`shoot_s5.mjs`, `locked_s5.ps1`, `live_s5.mjs` and its modules (`arcs_s5`, `arcs2_s5`, `blend_s5`,
+`seam_s5`, `ribbons_s5`, `bend_s5`), `nomark_s5`, `diff_s5`, `zoom_s5`, `edge_s5`, `seamscan_s5`,
+`png.mjs`, `lib.mjs`, `vite.private-cache.config.ts`.
+
+Next: (1) ji 80's line and cross 155's streak (`blend_s5.mjs` over each, as at 155: a root
+switching segments, or the handover); (2) the u-clamp at g == 0 for cross 33's crease, then
+reshoot; (3) item 5's attribution; (4) cross 51's inner turn in `ribbon_mesh.ts`; (5) item 3's
+eye edges.
