@@ -190,7 +190,11 @@ describe("K320 stage 1: char budgets", () => {
     // view 5): the fan draws K81's gold bands over the base blend, as at
     // 7474d09b, 11,513 less (42,123 -> 30,610 measured here); budget
     // follows.
-    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(30_610);
+    // K1218 S2 (2026-11-05): K1219's inner turn (junctionBase's jbA / jbB /
+    // jbS, the route loop's inT) and its medial-axis blend (each side of
+    // the corner's nearest point, wB), +1,470 (30,610 -> 32,080 measured
+    // here); budget follows.
+    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(32_080);
     // K799: uKPath joins KNOT_UNIFORMS_GLSL, which the still pluck
     // includes (+18 here).
     expect(PLUCK_STILL_FRAG.length).toBeLessThanOrEqual(20_550);

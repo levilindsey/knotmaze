@@ -305,9 +305,10 @@ vec3 junctionBase(int rec, vec2 p, vec4 hd, bool untrav) {
 // two bases blended by it), then each K81 route band through this
 // junction composed over it, oldest first (a revisit's newer pass wins
 // where two cross). A band pixel takes its nearest point on the band's
-// centerline polyline (and that point's tau); so does a pixel inside the
-// turn, between the band's two arms (K1219: the inner fillet is the band's,
-// so the gold leaves no untraveled notch there). In a web the band edge is a
+// centerline polyline (and that point's tau); so does every pixel inside the
+// turn, between the band's two arms (K1219: no untraveled notch), each side
+// of the corner's middle by its own nearest point, the two blended across
+// the medial axis. In a web the band edge is a
 // one-pixel ramp CENTERED on the thread half-width, like a ribbon's MSAA
 // edge, so the band is the thread's width. On a cover strip the band stays
 // solid ROUTE_BAND_PAD pixels past the half-width before its ramp: the
@@ -333,8 +334,9 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
     if (r >= nr) break;
     vec4 r0 = jAt(base);
     int nv = int(r0.x + 0.5);
-    float best = 1e20;
-    float tau = 0.0;
+    // The nearest point on each side of tau 0 (squared distance, tau).
+    vec2 bA = vec2(1e20, 0.0);
+    vec2 bB = vec2(1e20, 0.0);
     vec4 q0 = jAt(base + 1);
     for (int k = 0; k < ${MAX_ROUTE_VERTS - 1}; k++) {
       if (k + 1 >= nv) break;
@@ -343,27 +345,46 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
       vec2 w = p - q0.xy;
       float l2 = dot(d, d);
       float u = l2 > 1e-12 ? clamp(dot(w, d) / l2, 0.0, 1.0) : 0.0;
-      vec2 off = w - d * u;
-      float dd = dot(off, off);
-      if (dd < best) {
-        best = dd;
-        tau = mix(q0.z, q1.z, u);
+      float dz = q1.z - q0.z;
+      float uz = dz > 1e-9 ? clamp(-q0.z / dz, 0.0, 1.0) : step(q0.z, 0.0);
+      if (q0.z <= 0.0) {
+        float ua = min(u, uz);
+        vec2 oa = w - d * ua;
+        float da = dot(oa, oa);
+        if (da < bA.x) bA = vec2(da, mix(q0.z, q1.z, ua));
+      }
+      if (q1.z >= 0.0) {
+        float ub = max(u, uz);
+        vec2 ob = w - d * ub;
+        float db = dot(ob, ob);
+        if (db < bB.x) bB = vec2(db, mix(q0.z, q1.z, ub));
       }
       q0 = q1;
     }
-    float cov = clamp((reach - sqrt(best)) / pxW, 0.0, 1.0);
-    // K1219: inside the turn (the pixel between the band's own two arms,
-    // under pi apart) the web wears the band out to its fillet edge.
+    bool nearA = bA.x <= bB.x;
+    float cov = clamp((reach - sqrt(nearA ? bA.x : bB.x)) / pxW, 0.0, 1.0);
+    // K1219: inside the turn (between the band's two arms, under pi apart).
     ivec2 rk = ivec2(r0.zw + 0.5);
-    if (r0.w > -0.5 && jbS < TAU * 0.5 && (ivec2(jbA, jbB) == rk || ivec2(jbB, jbA) == rk)) cov = 1.0;
+    bool inT = r0.w > -0.5 && jbS < TAU * 0.5 && (ivec2(jbA, jbB) == rk || ivec2(jbB, jbA) == rk);
+    if (inT) cov = 1.0;
     if (cov > 0.0) {
-      vec3 bm = armPaint(rec + 2 + int(r0.z + 0.5) * stride, -tau, true, false);
-      if (r0.w > -0.5) {
-        bm = mix(
-          bm,
-          armPaint(rec + 2 + int(r0.w + 0.5) * stride, tau, true, false),
-          smoothstep(-r0.y, r0.y, tau)
-        );
+      float wB = nearA ? 0.0 : 1.0;
+      if (inT) {
+        float da = sqrt(bA.x);
+        float db = sqrt(bB.x);
+        float s = max(0.5 * min(da, db), 1e-6);
+        wB = smoothstep(-s, s, da - db);
+      }
+      vec3 bm = vec3(0.0);
+      for (int sd = 0; sd < 2; sd++) {
+        float ws = sd == 0 ? 1.0 - wB : wB;
+        if (ws <= 0.0) continue;
+        float tau = sd == 0 ? bA.y : bB.y;
+        vec3 sm = armPaint(rec + 2 + rk.x * stride, -tau, true, false);
+        if (r0.w > -0.5) {
+          sm = mix(sm, armPaint(rec + 2 + rk.y * stride, tau, true, false), smoothstep(-r0.y, r0.y, tau));
+        }
+        bm += ws * sm;
       }
       c = mix(c, bm, cov);
     }
@@ -564,7 +585,8 @@ export const FIELD_EXPLORE_EDITS: ReadonlyArray<readonly [string, string]> = [
     "    vec3 o = junctionBase(rec, p, hd, fz >= 0.5);",
     "    vec4 o = junctionBase(rec, p, hd, fz >= 0.5);",
   ],
-  ["      vec3 bm = armPaint(", "      vec4 bm = armPaint("],
+  ["      vec3 bm = vec3(0.0);", "      vec4 bm = vec4(0.0);"],
+  ["        vec3 sm = armPaint(", "        vec4 sm = armPaint("],
   [
     "  vec3 rgb = junctionField(rec, vPos, pxW, j1, strip);",
     "  vec4 exC = junctionField(rec, vPos, pxW, j1, strip);",

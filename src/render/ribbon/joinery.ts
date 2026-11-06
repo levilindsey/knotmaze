@@ -29,6 +29,7 @@
 //   fieldProfPool, fieldProfLen        864-867   radial profiles
 //   filletKey                          871       the rebuild key
 //   fieldMbScratch                     872-873   field composition scratch
+//   fieldMcScratch                     (K1219)   a band's second side
 //   routeScratch                       874-875   corner frames
 //   fieldProbe                         876-908   the probe hook
 //   fieldLastArm                       909       fieldProbe's arms
@@ -172,6 +173,8 @@ export class Joinery {
   filletRebuildCount = 0;
   // Scratch for the junction-field composition (rebuildFillets).
   private fieldMbScratch = new Float32Array(4);
+  // K1219: a route band's second side inside the turn (cpuJunctionField).
+  private fieldMcScratch = new Float32Array(4);
   // K81: the band corner's two arm frames (rebuildFillets cornerCubic).
   private routeScratch = new Float64Array(8);
   // The section color field: piecewise-linear rgb(ctrl) per chain from
@@ -542,13 +545,17 @@ export class Joinery {
     // pixels further first).
     const pxW = Math.max(px, 1e-5);
     const reach = fillHalf + (strip ? ROUTE_BAND_PAD + 1 : 0.5) * pxW;
+    const mC = this.fieldMcScratch;
     let base = Math.round(J[hd + 3]);
     const nrr = Math.min(nr, MAX_ROUTES);
     for (let r = 0; r < nrr; r++) {
       const r0 = at(base);
       const nv = Math.round(J[r0]);
-      let best = 1e20;
-      let tau = 0;
+      // The nearest point on each side of the corner's middle (tau 0).
+      let bAd = 1e20;
+      let bAt = 0;
+      let bBd = 1e20;
+      let bBt = 0;
       let q0 = at(base + 1);
       for (let k = 0; k < MAX_ROUTE_VERTS - 1 && k + 1 < nv; k++) {
         const q1 = at(base + 2 + k);
@@ -558,27 +565,64 @@ export class Joinery {
         const wy = y - J[q0 + 1];
         const l2 = dx * dx + dy * dy;
         const u = l2 > 1e-12 ? Math.max(0, Math.min(1, (wx * dx + wy * dy) / l2)) : 0;
-        const ox = wx - dx * u;
-        const oy = wy - dy * u;
-        const dd = ox * ox + oy * oy;
-        if (dd < best) {
-          best = dd;
-          tau = J[q0 + 2] + (J[q1 + 2] - J[q0 + 2]) * u;
+        const z0 = J[q0 + 2];
+        const dz = J[q1 + 2] - z0;
+        const uz = dz > 1e-9 ? Math.max(0, Math.min(1, -z0 / dz)) : z0 <= 0 ? 1 : 0;
+        if (z0 <= 0) {
+          const ua = Math.min(u, uz);
+          const ox = wx - dx * ua;
+          const oy = wy - dy * ua;
+          const da = ox * ox + oy * oy;
+          if (da < bAd) {
+            bAd = da;
+            bAt = z0 + dz * ua;
+          }
+        }
+        if (J[q1 + 2] >= 0) {
+          const ub = Math.max(u, uz);
+          const ox = wx - dx * ub;
+          const oy = wy - dy * ub;
+          const db = ox * ox + oy * oy;
+          if (db < bBd) {
+            bBd = db;
+            bBt = z0 + dz * ub;
+          }
         }
         q0 = q1;
       }
-      let cov = Math.max(0, Math.min(1, (reach - Math.sqrt(best)) / pxW));
-      // K1219 (FIELD_GLSL): inside the turn the web wears the band.
-      if (J[r0 + 3] > -0.5 && innerTurn(ia, ib, relA + relB, Math.round(J[r0 + 2]), Math.round(J[r0 + 3]))) cov = 1;
+      const nearA = bAd <= bBd;
+      let cov = Math.max(0, Math.min(1, (reach - Math.sqrt(nearA ? bAd : bBd)) / pxW));
+      const two = J[r0 + 3] > -0.5;
+      const inArm = Math.round(J[r0 + 2]);
+      const outArm = Math.round(J[r0 + 3]);
+      // K1219 (FIELD_GLSL): inside the turn the web wears the band, its two
+      // sides blended across the medial axis.
+      const inT = two && innerTurn(ia, ib, relA + relB, inArm, outArm);
+      if (inT) cov = 1;
       if (cov > 0) {
-        armPaint(rec + 2 + Math.round(J[r0 + 2]) * stride, -tau, true, false, mA);
-        if (J[r0 + 3] > -0.5) {
-          armPaint(rec + 2 + Math.round(J[r0 + 3]) * stride, tau, true, false, mB);
-          const m = J[r0 + 1];
-          let s = Math.max(0, Math.min(1, (tau + m) / (2 * m)));
-          s = s * s * (3 - 2 * s);
-          for (let c = 0; c < nc; c++) mA[c] = mA[c] + (mB[c] - mA[c]) * s;
+        let wB = nearA ? 0 : 1;
+        if (inT) {
+          const da = Math.sqrt(bAd);
+          const db = Math.sqrt(bBd);
+          const s = Math.max(0.5 * Math.min(da, db), 1e-6);
+          const h = Math.max(0, Math.min(1, (da - db + s) / (2 * s)));
+          wB = h * h * (3 - 2 * h);
         }
+        for (let sd = 0; sd < 2; sd++) {
+          const ws = sd === 0 ? 1 - wB : wB;
+          if (ws <= 0) continue;
+          const t = sd === 0 ? bAt : bBt;
+          const dst = sd === 1 && wB < 1 ? mC : mA;
+          armPaint(rec + 2 + inArm * stride, -t, true, false, dst);
+          if (two) {
+            armPaint(rec + 2 + outArm * stride, t, true, false, mB);
+            const m = J[r0 + 1];
+            let s = Math.max(0, Math.min(1, (t + m) / (2 * m)));
+            s = s * s * (3 - 2 * s);
+            for (let c = 0; c < nc; c++) dst[c] = dst[c] + (mB[c] - dst[c]) * s;
+          }
+        }
+        if (wB > 0 && wB < 1) for (let c = 0; c < nc; c++) mA[c] = mA[c] * (1 - wB) + mC[c] * wB;
         for (let c = 0; c < nc; c++) out[c] = out[c] + (mA[c] - out[c]) * cov;
       }
       base += 1 + nv;
@@ -2285,9 +2329,9 @@ export function overTubeReachesArm(
 
 // K1219 (FIELD_GLSL junctionField, the route loop): whether a web pixel
 // bracketed by arms ia / ib (span = the angle between them, the pixel
-// inside it) lies inside a route band's turn - the bracketing pair is the
-// band's own arrival / departure pair and less than pi apart. There the
-// web wears the band out to its fillet edge.
+// inside it) lies inside a route band's turn - the band has two arms, the
+// bracketing pair is its arrival / departure pair, less than pi apart.
+// There the web wears the band out to its fillet edge.
 export function innerTurn(ia: number, ib: number, span: number, inArm: number, outArm: number): boolean {
-  return span < Math.PI && ((ia === inArm && ib === outArm) || (ia === outArm && ib === inArm));
+  return outArm >= 0 && span < Math.PI && ((ia === inArm && ib === outArm) || (ia === outArm && ib === inArm));
 }
