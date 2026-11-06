@@ -17,7 +17,6 @@ import type { ConfettiLayer } from "../render/confetti";
 import type { LossFxLayer } from "../render/loss_fx";
 import { confettiPlanFor } from "../render/confetti_model";
 import { EXPLORE_LOOKS } from "../render/explore_glsl";
-import { junctionLight, setJunctionLight } from "../render/junction_field";
 import type { FabricMazeRenderer } from "../render/fabric_maze_renderer";
 import type { PluckRipple } from "../render/pluck_model";
 import type { PluckRipples } from "../render/pluck_ripple";
@@ -455,17 +454,6 @@ export function installProbeHooks(ctx: ProbeCtx): void {
       F.tickExplore = () => tick(0);
     }
     return true;
-  };
-  // K1211 S1: the junction light switch (junction_field.ts
-  // setJunctionLight: 0 today, 2 look B; S2 removed look A, so 1 reads as
-  // 0). Sets it, rebuilds the fillets (look B lengthens the cover strips)
-  // and returns the mode now worn; with no argument it only reads it.
-  (window as unknown as Record<string, unknown>).__knotJunctionLight = (n?: number) => {
-    if (typeof n === "number") {
-      setJunctionLight(n);
-      ctx.scene.renderer?.rebuildFillets(true);
-    }
-    return junctionLight();
   };
   // K80 real-time chase diagnostics (null outside the real-time mode): the
   // chase's state, with the minotaur's SCREEN point while fabric draws it.

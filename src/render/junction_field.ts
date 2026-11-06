@@ -138,46 +138,6 @@ export const ROUTE_BAND_PAD = 0.5;
 // int(vRec + 0.5) (exact in float32 below 2^21 records).
 export const STRIP_REC_TAG = 0.25;
 
-// K1211 S1: THE JUNCTION LIGHT SWITCH (probe hook __knotJunctionLight),
-// uJParams.z: 0 = today's bands, 2 = look B (the bands kept, their
-// sideways falloff soft over LIGHT_SOFT_FH half-widths and let into the
-// arms off the band only over the first LIGHT_RAMP_FH half-widths of arc;
-// it lengthens a lit record's cover strips to LIGHT_STRIP_FH so the ramps
-// end inside what the junction pass draws). S2 removed look A (value 1,
-// one light per junction through the angular blend): 1 falls back to 0,
-// and B keeps 2 so S1's records stay valid.
-export const LIGHT_B = 2;
-export const LIGHT_RAMP_FH = 2.0;
-export const LIGHT_SOFT_FH = 1.5;
-export const LIGHT_STRIP_FH = LIGHT_RAMP_FH + 0.25;
-let JUNCTION_LIGHT = 0;
-export function junctionLight(): number {
-  return JUNCTION_LIGHT;
-}
-export function setJunctionLight(mode: number): void {
-  JUNCTION_LIGHT = Math.round(mode) === LIGHT_B ? LIGHT_B : 0;
-  const u = fieldUniforms().uniforms as { uJParams: Float32Array };
-  u.uJParams[2] = JUNCTION_LIGHT;
-}
-// The ramps' ease, junctionBlend's (paint kEase with uKSect.y = ease) on
-// u clamped to [0, 1]: 0 at the joint, 1 at the ramp's end.
-export function lightEase(u: number, ease: number): number {
-  const x = u < 0 ? 0 : u > 1 ? 1 : u;
-  return x + (x * x * (3 - 2 * x) - x) * ease;
-}
-// Look B's band cover at centreline distance d: solid to the half-width,
-// then a smoothstep down to 0 over LIGHT_SOFT_FH more half-widths.
-export function lightSoftCover(d: number, fillHalf: number): number {
-  const w = LIGHT_SOFT_FH * fillHalf;
-  let x = (d - fillHalf) / w;
-  x = x < 0 ? 0 : x > 1 ? 1 : x;
-  return 1 - x * x * (3 - 2 * x);
-}
-// Look B's allowance for one bracketing arm at arc s from the joint: 1 on
-// the band's own arms, else eased out over LIGHT_RAMP_FH half-widths.
-export function lightAllowance(own: boolean, s: number, fillHalf: number, ease: number): number {
-  return own ? 1 : 1 - lightEase(s / (LIGHT_RAMP_FH * fillHalf), ease);
-}
 // Texel row widths of the two data textures (linear index -> (i % W, i / W),
 // done in GLSL as a mask and a shift - both widths are 2^ROW_SHIFT; the
 // FloatRows class and its row uploader live in float_rows.ts).
@@ -193,7 +153,8 @@ export function recordData(): FloatRows {
 // uJParams = (fillHalf, profN, 0, 0) -
 // .z and .w are free again (K1207: they carried K1202's cover-ramp
 // and K1203's end-window switches, both settled; before them .zw
-// carried the over-fills' joint radii); uJParams2 = (FIELD_PROF_DR, FIELD_BLEND_MIN, 0, 0).
+// carried the over-fills' joint radii; K1211 S1-S3's light switch, .z,
+// went in S4); uJParams2 = (FIELD_PROF_DR, FIELD_BLEND_MIN, 0, 0).
 let FIELD_UNIFORMS: UniformGroup | null = null;
 function fieldUniforms(): UniformGroup {
   if (!FIELD_UNIFORMS) {
@@ -232,15 +193,15 @@ export function pulseBandCover(dnow: number, fillHalf: number, pxW: number, stri
 // the bisector to the shared band or painted over it on a tie. Its band
 // still went OVER the gold, so the gold's one-pixel edge kept a share of
 // the unlit base under a lit pulse (a dark line). K1211 S3 draws the bands
-// UNDER the gold in mode 0 instead (junctionField's c0 / cg / gT; twin
+// UNDER the gold instead (junctionField's c0 / cg / gT; twin
 // cpuJunctionField): the gold's visible weight is its own cover, and the
-// yield is K1139's ramp alone again, in both modes.
+// yield is K1139's ramp alone again.
 export function drawBandYield(dDraw: number, dShared: number, pxW: number): number {
   const t = Math.max(0, Math.min(1, (dDraw - dShared) / (3 * pxW)));
   return 1 - t * t * (3 - 2 * t);
 }
 
-// K1211 S3 (mode 0; the CPU twin of junctionField's sIn and its web test):
+// K1211 S3 (the CPU twin of junctionField's sIn and its web test):
 // a drawing pulse band lights the web off its tube, at its whitening times
 // its yield, where p lies between the band's two arms (junctionBase's
 // bracketing arms ia and ib are the band's pair, in either order) and on
@@ -248,21 +209,21 @@ export function drawBandYield(dDraw: number, dShared: number, pxW: number): numb
 // p's nearest band segment; the turn is the cross of the band's first leg
 // (v0 -> v1) and its chord (v0 -> vLast). Without it the web sliver inside
 // the turn kept the base's quiet rows past the tube's edge (x4 ji 149's
-// bite). A one-arm band (bB -1) never matches; look B keeps its own light.
+// bite). A one-arm band (bB -1) never matches.
 export function bandTurnSide(side: number, v0x: number, v0y: number, v1x: number, v1y: number, qx: number, qy: number): number {
   return side * ((v1x - v0x) * (qy - v0y) - (v1y - v0y) * (qx - v0x));
 }
 
-export function bandLightsWeb(ia: number, ib: number, bA: number, bB: number, turn: number, lookB: boolean): boolean {
-  return !lookB && turn > 0 && ((ia === bA && ib === bB) || (ia === bB && ib === bA));
+export function bandLightsWeb(ia: number, ib: number, bA: number, bB: number, turn: number): boolean {
+  return turn > 0 && ((ia === bA && ib === bB) || (ia === bB && ib === bA));
 }
 
 export function setFieldParams(fillHalf: number, profN: number): void {
   const u = fieldUniforms().uniforms as { uJParams: Float32Array };
   u.uJParams[0] = fillHalf;
   u.uJParams[1] = profN;
-  // .z: K1211's light switch (0 = today); .w is free (0).
-  u.uJParams[2] = JUNCTION_LIGHT;
+  // .z and .w are free (0): K1211 S4 removed S1's light switch (.z).
+  u.uJParams[2] = 0;
   u.uJParams[3] = 0;
 }
 
@@ -290,28 +251,9 @@ ${PULSE_CREST_GLSL}
 // junctionField sets it; a pixel under no band keeps 0.
 float kFanPulseV = 0.0;
 
-// K1211 S1 (uJParams.z 2, look B): what junctionBase leaves for it - the
-// bracketing arms, the blend weight and each arm's arc at p. Written
-// only while the look is on (the arms always: K1211 S3's web light).
+// K1211 S3: junctionBase's bracketing arms at p (the web light's test).
 int jbIa = 0;
 int jbIb = 0;
-float jbT = 0.0;
-float jbSA = 0.0;
-float jbSB = 0.0;
-// lightEase / lightSoftCover / lightAllowance (TS twins above).
-float jLightEase(float u) {
-  float x = clamp(u, 0.0, 1.0);
-  return x + (x * x * (3.0 - 2.0 * x) - x) * uKSect.y;
-}
-float jLightSoft(float d) {
-  float x = clamp((d - uJParams.x) / (${LIGHT_SOFT_FH.toFixed(3)} * uJParams.x), 0.0, 1.0);
-  return 1.0 - x * x * (3.0 - 2.0 * x);
-}
-float jLightAllow(int ia0, int ib0) {
-  float aA = jbIa == ia0 || jbIa == ib0 ? 1.0 : 1.0 - jLightEase(jbSA / (${LIGHT_RAMP_FH.toFixed(3)} * uJParams.x));
-  float aB = jbIb == ia0 || jbIb == ib0 ? 1.0 : 1.0 - jLightEase(jbSB / (${LIGHT_RAMP_FH.toFixed(3)} * uJParams.x));
-  return mix(aA, aB, jbT);
-}
 
 const float TAU = 6.283185307179586;
 const float HALF_PI = 1.5707963267948966;
@@ -421,11 +363,6 @@ vec3 junctionBase(int rec, vec2 p, vec4 hd, bool untrav) {
   }
   jbIa = ia;
   jbIb = ib;
-  if (uJParams.z > 0.5) {
-    jbT = onlyA ? 0.0 : onlyB ? 1.0 : t;
-    jbSA = profArc(abA, relA < HALF_PI ? rho * cos(relA) : 0.0);
-    jbSB = profArc(abB, relB < HALF_PI ? rho * cos(relB) : 0.0);
-  }
   vec3 cA = vec3(0.0);
   vec3 cB = vec3(0.0);
   if (!onlyB) {
@@ -473,8 +410,6 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
   }
   bool banded = np > 0;
   vec3 c = junctionBase(rec, p, hd, (routed || banded) && fz < 0.5);
-  // K1211: look B applies to lit records with arms, outside debug 3 / 4.
-  bool lookB = uJParams.z > 1.5 && (routed || banded) && hd.z > 0.5 && !(uKBase.z > 2.5 && uKBase.z < 4.5);
   if (routed && fz > 0.0 && fz < 1.0) {
     // K169: a web fading in blends its two bases (c is the side below 0.5).
     vec3 o = junctionBase(rec, p, hd, fz >= 0.5);
@@ -484,9 +419,9 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
   int base = base0;
   int stride = 2 + int(uJParams.y + 0.5);
   float reach = uJParams.x + (strip ? ${(ROUTE_BAND_PAD + 1).toFixed(3)} : 0.5) * pxW;
-  // K1211 S3: mode 0 draws the bands UNDER the gold. The gold maps x to
+  // K1211 S3: the bands draw UNDER the gold. The gold maps x to
   // gT x + K (gT = the product of 1 - cov), so gold over the bands' u is
-  // cg + gT (u - c0): c0 before the gold, cg after. Look B keeps gT 1.
+  // cg + gT (u - c0): c0 before the gold, cg after.
   vec3 c0 = c;
   float gT = 1.0;
   for (int r = 0; r < ${MAX_ROUTES}; r++) {
@@ -514,9 +449,7 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
       q0 = q1;
     }
     float cov = clamp((reach - sqrt(best)) / pxW, 0.0, 1.0);
-    // K1211 look B: the soft cover, let into the arms off the band.
-    if (lookB) cov = jLightSoft(sqrt(best)) * jLightAllow(int(r0.z + 0.5), r0.w > -0.5 ? int(r0.w + 0.5) : -1);
-    if (!lookB) gT *= 1.0 - cov;
+    gT *= 1.0 - cov;
     if (cov > 0.0) {
       // A banded record's verts carry the strip-arc shift (their tau is
       // arc-true, K1139 S3b): the arms are sampled where the ribbon has
@@ -655,7 +588,6 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
     }
     float dnow = sqrt(best);
     float cov = clamp((reach - dnow) / pxW, 0.0, 1.0);
-    if (lookB) cov = jLightSoft(dnow) * jLightAllow(int(r0.z + 0.5), r0.w > -0.5 ? int(r0.w + 0.5) : -1);
     bool inw = r1.y == 1.0 || r1.y == 3.0;
     bool hov = r1.y > 1.5;
     float g = r1.x + tau;
@@ -701,7 +633,7 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
     // K1211 S3: the web inside its turn wears its light too (bandLightsWeb).
     int bA = int(r0.z + 0.5);
     int bB = r0.w > -0.5 ? int(r0.w + 0.5) : -1;
-    if (!lookB && sIn[r] > 0.0 && ((jbIa == bA && jbIb == bB) || (jbIa == bB && jbIb == bA))) wW = max(wW, sF[r] * yr);
+    if (sIn[r] > 0.0 && ((jbIa == bA && jbIb == bB) || (jbIa == bB && jbIb == bA))) wW = max(wW, sF[r] * yr);
     for (int s = 0; s < ${MAX_ROUTES}; s++) {
       if (s >= np) break;
       if (s <= r) continue;

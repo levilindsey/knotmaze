@@ -177,7 +177,11 @@ describe("K320 stage 1: char budgets", () => {
     // budget follows the measurement. Task 2: a drawing band lights the
     // web inside its turn (sIn, jbIa/jbIb in every mode, the web test),
     // +494 (42,394 -> 42,888 measured here); budget follows.
-    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(42_888);
+    // K1211 S4 (2026-11-05): look B and the light switch come out
+    // (jLightEase / jLightSoft / jLightAllow, junctionBase's jbT / jbSA /
+    // jbSB and its uJParams.z block, the lookB flag and its tests), 1,492
+    // in all (42,888 -> 41,396 measured here); budget follows.
+    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(41_396);
     // K799: uKPath joins KNOT_UNIFORMS_GLSL, which the still pluck
     // includes (+18 here).
     expect(PLUCK_STILL_FRAG.length).toBeLessThanOrEqual(20_550);

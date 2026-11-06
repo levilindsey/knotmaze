@@ -5,7 +5,7 @@
 // from arm 1 and splits, its shared band riding the gold back along arm 0
 // and its drawing band turning into arm 2. Between arms 1 and 2, inside the
 // drawing band's turn, the web reaches past the band's tube (its reach, the
-// fill half-width plus half a pixel). In mode 0 a banded record's base is
+// fill half-width plus half a pixel). A banded record's base is
 // the arms' quiet rows (no crest), so the light stopped at the tube's edge
 // and the sliver beyond it kept the quiet colour: a ")" cut out of the light
 // at the junction's rim. The fix (junctionField's sIn and its web test, twin
@@ -122,7 +122,7 @@ function whitening(p: Pt, st: Stand): { before: number; after: number; dDraw: nu
     const yd = drawBandYield(d, dShared, PX);
     const cw = pulseBandCover(d, FH, PX, false) * yd;
     const v0 = pl[0], v1 = pl[1], q = pl[pl.length - 1];
-    const on = bandLightsWeb(ia, ib, a, b, bandTurnSide(side, v0[0], v0[1], v1[0], v1[1], q[0], q[1]), false);
+    const on = bandLightsWeb(ia, ib, a, b, bandTurnSide(side, v0[0], v0[1], v1[0], v1[1], q[0], q[1]));
     before = Math.max(before, cw);
     after = Math.max(after, cw, on ? yd : 0);
     dDraw.push(d);
@@ -189,26 +189,26 @@ describe("K1211 S3 task 2: the web carries a drawing pulse band's light (the bit
     });
   }
 
-  it("a one-arm band (the head's, bB -1) and look B never light the web", () => {
-    expect(bandLightsWeb(1, 2, 1, -1, 5, false)).toBe(false);
-    expect(bandLightsWeb(2, 1, 1, -1, 5, false)).toBe(false);
-    expect(bandLightsWeb(1, 2, 1, 2, 5, true)).toBe(false);
-    expect(bandLightsWeb(2, 1, 1, 2, 5, false)).toBe(true);
-    expect(bandLightsWeb(1, 2, 1, 2, -5, false)).toBe(false);
-    expect(bandLightsWeb(1, 2, 1, 2, 0, false)).toBe(false);
+  it("a one-arm band (the head's, bB -1) never lights the web", () => {
+    expect(bandLightsWeb(1, 2, 1, -1, 5)).toBe(false);
+    expect(bandLightsWeb(2, 1, 1, -1, 5)).toBe(false);
+    expect(bandLightsWeb(1, 2, 1, 2, 5)).toBe(true);
+    expect(bandLightsWeb(2, 1, 1, 2, 5)).toBe(true);
+    expect(bandLightsWeb(1, 2, 1, 2, -5)).toBe(false);
+    expect(bandLightsWeb(1, 2, 1, 2, 0)).toBe(false);
   });
 
-  it("the shader and its CPU twin run the same rule (mode 0 only)", () => {
+  it("the shader and its CPU twin run the same rule", () => {
     // The shader: the turn per band, then the web test in the draw loop;
-    // junctionBase leaves its bracketing arms in every mode.
-    expect(JUNCTION_FRAG).toContain("  jbIa = ia;\n  jbIb = ib;\n  if (uJParams.z > 0.5) {\n    jbT = ");
+    // junctionBase leaves its bracketing arms.
+    expect(JUNCTION_FRAG).toContain("  jbIa = ia;\n  jbIb = ib;\n  vec3 cA = vec3(0.0);\n");
     expect(JUNCTION_FRAG).toContain("float sIn[4];");
     expect(JUNCTION_FRAG).toContain(
       "    vec2 v1 = jAt(pb + 5).xy - v0.xy;\n    sIn[r] = side * (v1.x * (q0.y - v0.y) - v1.y * (q0.x - v0.x));\n",
     );
     const web =
       "    int bA = int(r0.z + 0.5);\n    int bB = r0.w > -0.5 ? int(r0.w + 0.5) : -1;\n" +
-      "    if (!lookB && sIn[r] > 0.0 && ((jbIa == bA && jbIb == bB) || (jbIa == bB && jbIb == bA))) wW = max(wW, sF[r] * yr);\n";
+      "    if (sIn[r] > 0.0 && ((jbIa == bA && jbIb == bB) || (jbIa == bB && jbIb == bA))) wW = max(wW, sF[r] * yr);\n";
     expect(JUNCTION_FRAG).toContain(web);
     // The explore variant carries it unchanged.
     expect(withExploreField(JUNCTION_FRAG)).toContain(web);
@@ -217,7 +217,7 @@ describe("K1211 S3 task 2: the web carries a drawing pulse band's light (the bit
     expect(jy).toContain("const v1 = at(pb + 5);\n      PULSE_IN[r] = bandTurnSide(side, J[v0], J[v0 + 1], J[v1], J[v1 + 1], J[q0], J[q0 + 1]);");
     expect(jy).toContain("const bB = J[PULSE_R0[r] + 3] > -0.5 ? Math.round(J[PULSE_R0[r] + 3]) : -1;");
     expect(jy).toContain(
-      "if (bandLightsWeb(ia, ib, bA, bB, PULSE_IN[r], lookB)) {\n        wW = Math.max(wW, PULSE_F[r] * drawBandYield(PULSE_DIST[r], dShared, pxW));\n      }",
+      "if (bandLightsWeb(ia, ib, bA, bB, PULSE_IN[r])) {\n        wW = Math.max(wW, PULSE_F[r] * drawBandYield(PULSE_DIST[r], dShared, pxW));\n      }",
     );
     // bandTurnSide is the shader's expression: side x cross(v1 - v0, q - v0).
     expect(bandTurnSide(2, 1, 1, 4, 1, 1, 5)).toBe(2 * (3 * 4 - 0 * 0));

@@ -260,9 +260,9 @@ describe("K1211 S2 and S3: the walked gold's edge where a drawing pulse band mee
     expect(drawBandYield(6.5, 5, PX)).toBeCloseTo(0.5, 12);
   });
 
-  it("the shader and its CPU twin run the same rule (mode 0 only; look B unchanged)", () => {
+  it("the shader and its CPU twin run the same rule", () => {
     expect(JUNCTION_FRAG).toContain("  vec3 c0 = c;\n  float gT = 1.0;\n");
-    expect(JUNCTION_FRAG).toContain("if (!lookB) gT *= 1.0 - cov;");
+    expect(JUNCTION_FRAG).toContain("    gT *= 1.0 - cov;\n");
     expect(JUNCTION_FRAG).toContain("  vec3 cg = c;\n  if (gT < 1.0) c = c0;\n");
     expect(JUNCTION_FRAG).toContain("float yr = 1.0 - smoothstep(0.0, 3.0 * pxW, sDist[r] - dShared);");
     expect(JUNCTION_FRAG).toContain(
@@ -277,7 +277,7 @@ describe("K1211 S2 and S3: the walked gold's edge where a drawing pulse band mee
     expect(FIELD_EXPLORE_EDITS.some(([a]) => a === "  vec3 c0 = c;")).toBe(true);
     const jy = readFileSync(new URL("../../src/render/ribbon/joinery.ts", import.meta.url), "utf8").replace(/\r\n/g, "\n");
     expect(jy).toContain("for (let c = 0; c < 4; c++) GOLD_C0[c] = out[c];");
-    expect(jy).toContain("if (!lookB) gT *= 1 - cov;");
+    expect(jy).toContain("      gT *= 1 - cov;\n");
     expect(jy).toContain("GOLD_CG[c] = out[c];\n        out[c] = GOLD_C0[c];");
     expect(jy).toContain("const cw = PULSE_COV[r] * drawBandYield(PULSE_DIST[r], dShared, pxW);");
     expect(jy).toContain("const yr = PULSE_F[r] * drawBandYield(PULSE_DIST[r], dShared, pxW);");

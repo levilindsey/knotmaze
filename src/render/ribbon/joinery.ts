@@ -67,7 +67,6 @@ import {
   FIELD_BLEND_MIN,
   FIELD_PROF_ARC,
   FIELD_PROF_DR,
-  LIGHT_STRIP_FH,
   MAX_ARMS,
   MAX_ROUTES,
   MAX_ROUTE_VERTS,
@@ -75,11 +74,8 @@ import {
   bandLightsWeb,
   bandTurnSide,
   drawBandYield,
-  junctionLight,
   junctionShader,
   junctionShaderExplore,
-  lightAllowance,
-  lightSoftCover,
   pulseBandCover,
   recordData,
   setFieldParams,
@@ -525,20 +521,6 @@ export class Joinery {
       if (t <= 0) onlyA = true;
       else if (t >= 1) onlyB = true;
     }
-    // K1211 S1 (FIELD_GLSL's jb globals): look B's blend weight and each
-    // bracketing arm's arc at p.
-    const mode = junctionLight();
-    const jbT = onlyA ? 0 : onlyB ? 1 : t;
-    const jbSA = mode > 0 ? profArc(abA, relA < Math.PI / 2 ? rho * Math.cos(relA) : 0) : 0;
-    const jbSB = mode > 0 ? profArc(abB, relB < Math.PI / 2 ? rho * Math.cos(relB) : 0) : 0;
-    const ease = mode > 0 ? knotUniformValues().uKSect[1] : 0;
-    // Look B (FIELD_GLSL jLightAllow): a band's allowance at p - 1 on its
-    // own arms, eased out over the ramp on the others - by the blend weight.
-    const allow = (a0: number, b0: number): number => {
-      const aA = lightAllowance(ia === a0 || ia === b0, jbSA, fillHalf, ease);
-      const aB = lightAllowance(ib === a0 || ib === b0, jbSB, fillHalf, ease);
-      return aA + (aB - aA) * jbT;
-    };
     const baseField = (untravSide: boolean): void => {
       if (!onlyB) {
         armPaint(abA, profArc(abA, relA < Math.PI / 2 ? rho * Math.cos(relA) : 0), false, untravSide, mA);
@@ -568,8 +550,6 @@ export class Joinery {
     }
     const banded = np > 0;
     baseField((routed || banded) && fz < 0.5);
-    // K1211: look B applies to lit records with arms, outside debug 3 / 4.
-    const lookB = mode === 2 && (routed || banded) && n > 0 && dbg !== 3 && dbg !== 4;
     if (routed && fz > 0 && fz < 1) {
       // K169, mid-fade (FIELD_GLSL junctionField): the other side's base,
       // blended by the level. (lastArms then lists that second pass's arms.)
@@ -601,9 +581,9 @@ export class Joinery {
     const reach = fillHalf + (strip ? ROUTE_BAND_PAD + 1 : 0.5) * pxW;
     let base = base0;
     const nrr = Math.min(nr, MAX_ROUTES);
-    // K1211 S3 (FIELD_GLSL junctionField): mode 0 draws the pulse bands
+    // K1211 S3 (FIELD_GLSL junctionField): the pulse bands draw
     // UNDER the gold. The gold blocks map a colour x to gT x + K (gT = the
-    // product of 1 - cover, look B keeps it 1), so the gold over the bands'
+    // product of 1 - cover), so the gold over the bands'
     // colour u is cg + gT (u - c0), c0 the colour before the gold and cg
     // after it: exact for any number of blocks.
     let gT = 1;
@@ -633,13 +613,8 @@ export class Joinery {
         }
         q0 = q1;
       }
-      let cov = Math.max(0, Math.min(1, (reach - Math.sqrt(best)) / pxW));
-      if (lookB) {
-        cov =
-          lightSoftCover(Math.sqrt(best), fillHalf) *
-          allow(Math.round(J[r0 + 2]), J[r0 + 3] > -0.5 ? Math.round(J[r0 + 3]) : -1);
-      }
-      if (!lookB) gT *= 1 - cov;
+      const cov = Math.max(0, Math.min(1, (reach - Math.sqrt(best)) / pxW));
+      gT *= 1 - cov;
       if (cov > 0) {
         armPaint(rec + 2 + Math.round(J[r0 + 2]) * stride, -tau + shift, true, false, mA);
         if (J[r0 + 3] > -0.5) {
@@ -770,14 +745,10 @@ export class Joinery {
       }
       const dnow = Math.sqrt(best);
       const cov = pulseBandCover(dnow, fillHalf, pxW, strip);
-      // K1211 look B: the soft cover, let into off-band arms near the joint.
-      const covL = lookB
-        ? lightSoftCover(dnow, fillHalf) * allow(Math.round(J[r0 + 2]), J[r0 + 3] > -0.5 ? Math.round(J[r0 + 3]) : -1)
-        : cov;
       if (J[r1 + 2] >= 0.5) dShared = Math.min(dShared, dnow);
       PULSE_TAU[r] = tau;
       PULSE_SHIFT[r] = shift;
-      PULSE_COV[r] = J[r1 + 2] < 0.5 ? covL : 0;
+      PULSE_COV[r] = J[r1 + 2] < 0.5 ? cov : 0;
       PULSE_DIST[r] = dnow;
       PULSE_R0[r] = r0;
       const fl0 = J[r1 + 1];
@@ -798,11 +769,11 @@ export class Joinery {
     let wW = 0;
     for (let r = 0; r < npp; r++) {
       const cw = PULSE_COV[r] * drawBandYield(PULSE_DIST[r], dShared, pxW);
-      // K1211 S3 (mode 0): the web between a drawing band's two arms, on the
+      // K1211 S3: the web between a drawing band's two arms, on the
       // inside of its turn, wears its whitening off the tube too.
       const bA = Math.round(J[PULSE_R0[r] + 2]);
       const bB = J[PULSE_R0[r] + 3] > -0.5 ? Math.round(J[PULSE_R0[r] + 3]) : -1;
-      if (bandLightsWeb(ia, ib, bA, bB, PULSE_IN[r], lookB)) {
+      if (bandLightsWeb(ia, ib, bA, bB, PULSE_IN[r])) {
         wW = Math.max(wW, PULSE_F[r] * drawBandYield(PULSE_DIST[r], dShared, pxW));
       }
       if (!(cw > 0)) continue;
@@ -2633,12 +2604,10 @@ export class Joinery {
         const X = arms[i];
         // A band's arm is covered a half-width past its turn; every other
         // arm past the farthest turn (a band's edge can cross its start).
-        const want0 =
+        const want =
           dArm[i] >= 0
             ? Math.max(dArm[i] + 0.5 * fillHalf, 1.5 * fillHalf)
             : Math.max(1.25 * fillHalf, dMax + fillHalf);
-        // K1211: a look's ramps end inside what the junction pass draws.
-        const want = junctionLight() > 0 ? Math.max(want0, LIGHT_STRIP_FH * fillHalf) : want0;
         const R = Math.min(want, coverCap(X));
         if (!(R > 0)) continue;
         const samples = this.r.chainSamples[X.chain];
