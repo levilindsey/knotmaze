@@ -516,9 +516,6 @@ Next free ID: K1214.
 
 ## Next, in order
 
-- **K647** · Path 8 (K336): Reset path during the winning move records the result but shows no card. Levi
-  2026-11-05: "Show the card", with its burst, as the other eight paths do. Muse batch 22 Run J (22J),
-  `docs/design/K647_reset_win_card.md`.
 Binding for every stage:
 - It merges after desktop verification. The phone checks each merge
   round in one scripted pass (K152); small UI items get unit tests and a
@@ -535,6 +532,9 @@ Binding for every stage:
   new, and pause running agents with their WIP committed.
 
 Running agents are listed under In progress, each with its own next step.
+- **K647** · Path 8 (K336): Reset path during the winning move records the result but shows no card. Levi
+  2026-11-05: "Show the card", with its burst, as the other eight paths do. Muse batch 22 Run J (22J),
+  `docs/design/K647_reset_win_card.md`.
 - **K1201** · S4b's joint step (K1139): a two-ended arm's ridge near its joint (xR < 0.5) steps the light.
   21F (8e0c5a1c): play meets it in every daily of a week, 2-6 arm-ends each, steps up to 0.77 after the reach
   window (CPU, lattice spans; notes). Fix (b), the band crossfade (Run 22D), held: K1211 may retire the bands.
