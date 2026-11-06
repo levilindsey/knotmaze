@@ -1,6 +1,7 @@
 // K1218 S5 (a live_s5.mjs module): one chain's drawn centreline near a device
 // point: per sample, its device position, its distance to the point, the
-// signed turn there (degrees; + = left in device px) and the radius that turn
+// signed turn there (degrees; device y points down, so - = a left turn on
+// screen) and the radius that turn
 // implies (chord / turn), against the half-width.
 //   node live_s5.mjs <stand> <outDir> bend_s5.mjs <chain> <x,y> [span=8]
 export async function run({ page, toWorld, toDevice, args }) {
