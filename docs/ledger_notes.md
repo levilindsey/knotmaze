@@ -3899,3 +3899,34 @@ S1 (stage agent of claude session 7301c55b, 10:05 to about 12:05; branch `worktr
 Where K1190's spots come from: 1, the band's cover in the fan; 2, the light stepping between fan wedges; 3, the traveled partition where the fan's arm domains meet (the walked gold, `paintTraveled` on K127's routed arms, is lit on one side only, and the pulse band follows the partition); 4, the web, which doesn't carry the pulse's light (the bite goes with the webs off). At rest A and B both push a gold nub about 1 fh into the off-route arm. The T (loop ji 89) and the four (loop ji 12) show straight zigzags in its colours-only shots, which keep the traveled gold; x4 ji 125's gold is broken by a teal strip, and loop ji 12 has a small dark triangle, both on master too.
 
 Claude's verdict: neither look ships, and Levi gets no A-or-B card. A lights the whole fork, against K1139's "it splits", floods the gold and nubs; B nubs too; and the switch costs K320 budget. Plan: S2 (`docs/design/K1211_s2_gold_edge.md`) makes the walked gold end in one round edge in every junction kind, with no nub, in the default mode; it removes A and calibrates the checks. S3, after Run I (K1209) lands, makes the webs carry the light (spot 4), gives the pulse B's soft front or the colours' own rule per route (spots 1 and 2), and checks A's line about 2 fh out (`coverCap`). Then K1210 (fire and collapse).
+
+## K1196 (2026-11-05, 22E reviewed)
+
+The item's text before it closed: Two-ended pulses (K1139 S4) on the desktop, 20F (345a189f, `.claude/probes/K1196/out/`): frame p50 at rest 7.50 (cyc e210), 7.82 (loop e102), start head 7.07; in play 7.25, 7.22, 6.95 (spread 0.2, 0.1). Other stands, so not S4's own cost: next, those stands on S4's base and head (ABBA), the Pixel if it costs.
+
+Run E (Muse batch 22, 22E; 34d1e863; `.claude/probes/K1196/out22e/SUMMARY.md`) timed S4's base and head on 20F's stands. Head minus base, frame p50 (ms): at rest baseline +0.22, cyc +0.05, loop -0.02; in play +0.18, +0.03, -0.10. Control spreads: base 0.00, head 0.20. S4 alone (95fcf3b7): +0.05 at the baseline stand, +0.15 at rest at cyc and loop, +0.04 to +0.10 in play; S4b's span about 0 in play.
+
+Claude's review: the builds were timed one after another (base 10:54-11:09, head 11:09-11:25, S4 alone 11:37-11:52), the ABBA running over stands rather than builds, while Run F (11:00-11:16), J3k (from about 11:11) and Run G (from 11:24) loaded the machine. The baseline stand, which S4 does not touch, moved +0.22: that is the drift between sessions, and S4's own numbers sit inside it. Verdict: S4 costs nothing measurable on the desktop, at rest or in play; no Pixel run. The tail watch E ran beside it was interleaved and shows a real signal: K1214.
+
+## K1214 (2026-11-05, filed from 22E's tail watch)
+
+Run E's tail watch (stand `b.J&am=instant&fw=0&snd=none&phw=0`, fabric 7 moves, ABBA within each pair; ms):
+
+- 1fe793f5 to 71eedb94 (K1139 Stages 3 and 4: junction_field.ts, junction_routes.ts, joinery.ts, +503/-107): base p95 10.43, p99 12.10, max 15.1, 3 frames over twice the median; head 12.00, 13.98, 19.8, 6; control spread 0.50; head p50 6.90 to 7.93.
+- 36aed2d5 to fbc1b212 (K1139 S5: b05e7a5a and fbc1b212): base p95 8.45, p99 9.28, max 19.6, 1 frame; head 10.03, 11.38, 18.4, 2; spread 1.30.
+
+Both pairs ran under J3k's and Run G's load, so the absolute numbers are high, but the order was interleaved and both p95 steps (+1.57, +1.58) exceed the spreads. K1139's handle already has its next Pixel pass watch fabric 7 moves' frames over 25 ms (+14 and +15 in the fix's and S5's passes, floor 13). Next: name the piece that costs (the per-frame CPU of route records and joinery, or the fan shader's new text) in a probes-only profiling run, a Muse candidate, after K1211 S2 lands, since S2 edits the same code.
+
+## K1198 (2026-11-05, 22G reviewed)
+
+Run G (Muse batch 22, 22G; 5f5025de; scripts and outputs in `.claude/probes/K1198/`, sheets in `out_22g/`) showed i and j on v6.8: the trace kit's font copy has its type-4 (ligature) lookups emptied by type, calt kept, so shaping gives i.mod.ini, cnct.mod_n_n, j.jmc.fin where the stock font gave the ij.jmc ligature. Only ij moved: 712 pieces equal, 0 differ. ij's rule solved: status 0, attach s_u 3.04 u, font distance 5.99 u, class cnct.mod_n_n.
+
+Claude viewed ij_22g.png at full size (font ligature | font unligated | v6.8 today: i only, no j, no join | v6.8 with the rule): the last draws i, a join and j with its descender loop, close to the font's unligated form. The dots are drawn as ticks (K1213).
+
+The six hand-set pins (pins_22g.txt; font distance dmax in u, with the pin / without): og 7.18 / 5.29 (with the pin o's exit port sits 4.00 u from the end, seam angle 180 degrees; without, 2.00 u, angle 0), oe 12.74 / 5.31 (port-merge 4.96), fo 7.80 / 9.85, fv 6.59 / 9.92, fr 6.34 / 4.23, fs 9.37 / 9.40. Every join moves without its pin, so they stay: K1112's rule removes a preset only when its port draws v6.8's join, and v6.8 with its pins is the look Levi approved (K1119); distance to the font is not the bar. Viewed: fr's two v6.8 columns are nearly identical; oe's join from o's top into e differs slightly.
+
+Closed: the kit draws ij now. K863's next stage adopts the unligated font copy in the kit and the app's cursive.
+
+## K1112 (2026-11-05, 22G's six pins)
+
+Run G (K1198's notes) drew the six hand-set pins og, oe, fo, fv, fr, fs without their pins: every join moves, so by this item's rule each pin stays. Without them og, oe and fr come closer to the font, fo and fv move away and fs is unchanged; a port that draws v6.8's join is what would make a pin removable, and none does yet.

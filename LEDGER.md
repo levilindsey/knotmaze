@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1214.
+Next free ID: K1215.
 
 ## Waiting on Levi
 
@@ -508,10 +508,10 @@ Next free ID: K1214.
   - env: the passes' builds first and never while Muse runs: `scripts/preview.ps1 -Ref <sha> -Root <out>\builds -BuildOnly` for each sha (`pixel_passes.ps1` stops before the phone lock when one is missing); probe server `npx vite --config .claude/probes/K1139/vite.private-cache.config.ts --port 5620 --strictPort --host 127.0.0.1` from a worktree (ports 5620-5639); GPU probes through `.claude/probes/K1139/run_locked.ps1 -Batch`
 - **K1208** · Muse batch 22 (after K1204's batch 21): runs B to H through the chain, from
   `docs/design/K1208_muse_batch22.md` (ports 5880-5949)
-  - owner: the chain in `.claude/probes/K1053/` (queue.txt, chain.log): Run I (22I) next, then J (22J), fresh Muse sessions; coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
+  - owner: the chain in `.claude/probes/K1053/` (queue.txt, chain.log): Run I (22I) since 12:03, then J (22J), fresh Muse sessions; coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
   - branch: mainline; last commit: `5f5025de`
-  - evidence: the chain in .claude/probes/K1053/ (queue.txt, chain.log); each run's probe folder under .claude/probes/ (B K1203, H K1210, C K1186, E K1196, F K1191, G K1198)
-  - next: I (K1209: the layer vote retired on master) then J (K647: the card after Reset path); Claude reviews E (K1196 S4 cost, 34d1e863) and G (K1198 ij on v6.8, 5f5025de); D held for K1211
+  - evidence: the chain in .claude/probes/K1053/ (queue.txt, chain.log); each run's probe folder under .claude/probes/ (B K1203, H K1210, C and I K1186, E K1196, F K1191, G K1198)
+  - next: I (K1209: the layer vote retired on master) then J (K647: the card after Reset path); D held for K1211; E and G reviewed (K1196 and K1198 closed, K1214 filed)
   - brief: `docs/design/K1208_muse_batch22.md`
 
 ## Next, in order
@@ -747,15 +747,15 @@ Every other item below waits on the trigger it names.
 - **K1180** · Form B: let a round's feet run past an arm's root onto the neighbouring arm, so no null band is
   left there (row 15's class: j124, r 1.967h, 0.274h after K1163's softer gate, ab7cad9a). K1179's spike ended
   with no rebuild, so this goes ahead on form B (review section 4).
-- **K1196** · Two-ended pulses (K1139 S4) on the desktop, 20F (345a189f, `.claude/probes/K1196/out/`): frame
-  p50 at rest 7.50 (cyc e210), 7.82 (loop e102), start head 7.07; in play 7.25, 7.22, 6.95 (spread 0.2, 0.1).
-  Other stands, so not S4's own cost: next, those stands on S4's base and head (ABBA), the Pixel if it costs
 - **K1209** · Retire the fillet layer vote (one fan layer; K1186): Run C (2d68f787) has it green and 0 px
   but fat11 ji104 drag3 (23/14 px), where the base's stair-step at a fan boundary goes smooth: accepted.
   Muse Run I (22I) re-applies `.claude/probes/K1186/wip22c.patch` on master (`K1209_reapply_run_i.md`).
 - **K1210** · Fire and collapse across junctions, like the highlights (Levi 2026-11-05; notes).
   Run H (d31f08c6; `.claude/probes/K1210/`): both break up inside the fused shape at 3 and 4 arms: fire in
   straight wedges with spikes, collapse as a bite or a ragged cut. The fix follows K1211's pick.
+- **K1214** · K1139's cost in play (22E, desktop, ABBA under load): fabric 7 moves' frame p50 6.90→7.93 ms and
+  p95 10.43→12.00 over S3+S4 (1fe793f5→71eedb94, spread 0.50); S5 p95 8.45→10.03 (spread 1.30). Next: a
+  profile naming the piece that costs, after K1211 S2 lands (`.claude/probes/K1196/out22e/`; notes).
 
 ## Residuals (known, not fixed)
 
@@ -1692,9 +1692,6 @@ Every other item below waits on the trigger it names.
 - **K1195** · `scripts/preview.ps1` (K1188, f5035e0d): a src-* folder that `git worktree remove` half-deletes
   (a file held open) loses its `.git`, so the fallback keeps it and later -Ref runs of that sha under that
   -Root are refused as a live run until it is cleared by hand
-- **K1198** · Cursive ij: the font's ligature draws no j; show i and j on v6.8 in a stage of its own. J3i's
-  corner rule (Plc1m, Plc2m) not taken: v6.8's corners already match the font's points (2026-11-05 crops);
-  batch 22's Run G (22G) is that stage. 21G's notes: `.claude/probes/K1198/SUMMARY_21G.md` (e43b2cfc).
 - **K1205** · A warm Pixel draws fabric at rest at 30 fps: at thermal status 1 (skin 39-40 C) 0 moves read p50
   33.1 (builds 36aed2d5 and fbc1b212) while 7 moves held 16.7; cool, 0 moves holds 16.7 (K1139's passes
   `.claude/probes/rounds/2026-11-05-k1139s5`, `-s5b`). Cause untested (notes)
@@ -2002,6 +1999,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1198** · Cursive ij: i and j on v6.8 (22G: the font's type-4 ligature lookups emptied, calt kept; only ij moved, 712 pieces equal); the six pins stay, each moves without it; the kit adopts it in K863's next stage (notes). Done in 5f5025de (2026-11-05).
+- **K1196** · Two-ended pulses (K1139 S4) cost nothing measurable on the desktop (22E: head-base within the +0.22 ms drift between builds timed one after another; S4 alone +0.15 at rest, ~0 in play), so no Pixel run; the frame-tail watch is K1214 (notes). Done in 34d1e863 (2026-11-05).
 - **K1001** · Corners where two threads split: Levi kept K830's rule (broad gaps round, narrow points sharp), so a split stays sharp. Done in 73186e5c (2026-11-05).
 - **K1126** · High contrast shows the ring ripple whatever ripple was picked (K368); Levi 2026-11-05: "It reads well". Done in 89836d3b (2026-11-05).
 - **K1200** · Light on loops (K1139 S4): pulses entering a loop from both ends meet halfway and fade out in pairs; Levi 2026-11-05: "Fine as is". Done in 4ac52bb0 (2026-11-05).
