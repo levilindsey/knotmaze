@@ -1,0 +1,173 @@
+K863 J3j: the account of every piece v6.9, v7.0, v7.1 and v7.2 changed against v6.8 (work33/account/*.json, 234 words: J3i's census words; they equal the words of work32/census_v72.json). A piece moved when its raw coefficients differ by at least 0.0001 u after resampling; under that it is numeric only. Census fields: dist_max_u (the font distance), hooks, rough, before->after, from v6.8 work33/census_v68x.json, v6.9 work29/census_v69.json, v7.0 work31/census_v70.json, v7.1 work32/census_v71.json, v7.2 work32/census_v72.json ('-': not in that census; strokes have none).
+the cusp rule's pairs (v7.2's ports): 72
+
+(0) what each stage changed in the data (raw JSON per key)
+  J3f (v6.8 -> v6.9): bodies ['b', 'v', 'w']; join params []; ports ['a', 'b', 'e', 'g', 'i', 'j', 'm', 'n', 'p', 'q', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']; other port keys ['path', 'variant']; pieces in one version only: 0
+  J3g (v6.9 -> v7.0): bodies ['b', 'v', 'w']; join params []; ports ['a', 'e', 'q']; other port keys ['path', 'variant']; pieces in one version only: 0
+  J3h (v7.0 -> v7.1): bodies []; join params []; ports ['c']; other port keys ['path', 'variant']; pieces in one version only: 0
+  J3i (v7.1 -> v7.2): bodies []; join params []; ports ['i', 'j', 'p', 'r', 's', 't', 'u', 'w', 'y']; other port keys ['path', 'variant']; pieces in one version only: 0
+
+(1) per stage: pieces compared, moved (>= 1e-4 u), numeric only; by cause: pieces, the largest move
+  J3f (v6.8 -> v6.9): 1356 pieces, 301 moved, 81 numeric only; listed cause: b's, v's and w's exits, every join out of them (the six into a and q, e's entry after them)
+    listed   b, v or w's exit stroke                                        97, largest 17.6 u (ice jet even:L14vs0)
+    listed   join out of b, v or w                                          78, largest 88.2 u (wl:J0-2wl)
+    listed   join out of b, v or w into a or q                               8, largest 21.1 u (wq:J0-2wq)
+    listed   join out of b, v or w into e                                   11, largest 47.1 u (woven:J4-6ve)
+    listed   the stroke after a join out of b, v or w (its entry)           78, largest 88.2 u (wl:L2ls0)
+    UNLISTED join into b                                                     2, largest 0.0273 u (fb:J0-2fb)
+    UNLISTED join into v                                                     3, largest 0.0103 u (ice jet even:J12-14ev)
+    UNLISTED join into w                                                     6, largest 0.332 u (ew:J0-2ew)
+    UNLISTED stroke of b (in cb)                                             1, largest 14.3 u (cb:L2bs0)
+    UNLISTED stroke of b (in fb)                                             1, largest 14.3 u (fb:L2bs0)
+    UNLISTED stroke of b (in ob)                                             1, largest 14.3 u (ob:L2bs0)
+    UNLISTED stroke of e (lead, out ew)                                      1, largest 0.332 u (ew:L0es0)
+    UNLISTED stroke of f (lead, out fw)                                      1, largest 0.000384 u (fw:L0fs0)
+    UNLISTED stroke of v (in cv)                                             1, largest 15.7 u (cv:L2vs0)
+    UNLISTED stroke of v (in fv)                                             1, largest 15.7 u (fv:L2vs0)
+    UNLISTED stroke of v (in ov)                                             1, largest 15.7 u (ov:L2vs0)
+    UNLISTED stroke of w (in aw)                                             1, largest 14.4 u (aw:L2ws0)
+    UNLISTED stroke of w (in cw)                                             1, largest 14.4 u (cw:L2ws0)
+    UNLISTED stroke of w (in dw)                                             1, largest 14.4 u (dw:L2ws0)
+    UNLISTED stroke of w (in ew)                                             1, largest 14.4 u (ew:L2ws0)
+    UNLISTED stroke of w (in fw)                                             1, largest 14.4 u (fw:L2ws0)
+    UNLISTED stroke of w (in hw)                                             1, largest 14.4 u (hw:L2ws0)
+    UNLISTED stroke of w (in iw)                                             1, largest 14.4 u (iw:L2ws0)
+    UNLISTED stroke of w (in nw)                                             1, largest 14.4 u (nw:L2ws0)
+    UNLISTED stroke of w (in ow)                                             2, largest 14.4 u (bow:L4ws0)
+    UNLISTED numeric join into b                                                     2, largest 2.58e-07 u (cb:J0-2cb)
+    UNLISTED numeric join into v                                                     6, largest 2.52e-05 u (ov:J0-2ov)
+    UNLISTED numeric join into w                                                     6, largest 4.68e-06 u (cw:J0-2cw)
+    UNLISTED numeric lead into b                                                    32, largest 2.58e-07 u (quick brown fox:lead1b)
+    UNLISTED numeric lead into v                                                    26, largest 4.07e-07 u (vg:lead0v)
+    UNLISTED numeric stroke of a (in la, out aw)                                     1, largest 1.1e-05 u (lawgiver:L2as0)
+    UNLISTED numeric stroke of e (lead, out ev)                                      1, largest 4.27e-05 u (ice jet even:L12es0)
+    UNLISTED numeric stroke of f (lead, out fb)                                      1, largest 1.21e-05 u (fb:L0fs0)
+    UNLISTED numeric stroke of f (lead, out fv)                                      1, largest 5.32e-08 u (fv:L0fs0)
+    UNLISTED numeric stroke of h (lead, out hw)                                      1, largest 1.62e-06 u (hw:L0hs0)
+    UNLISTED numeric stroke of o (in ro, out ow)                                     1, largest 1.84e-08 u (quick brown fox:L14os0)
+    UNLISTED numeric stroke of o (out ob, vlead)                                     1, largest 2.61e-08 u (ob:L0os0)
+    UNLISTED numeric stroke of o (out ov, vlead)                                     2, largest 4.8e-08 u (jumps over the lazy dog:L10os0)
+  J3g (v6.9 -> v7.0): 1356 pieces, 244 moved, 33 numeric only; listed cause: b's, v's and w's exits, every join out of them (the six into a and q, e's entry after them)
+    listed   b, v or w's exit stroke                                        97, largest 21.3 u (br:L0bs0)
+    listed   join out of b, v or w                                          78, largest 21.5 u (quick brown fox:J10-12br)
+    listed   join out of b, v or w into a or q                               8, largest 20.4 u (bad:J0-2ba)
+    listed   join out of b, v or w into e                                   11, largest 30 u (wave:J4-6ve)
+    listed   the stroke after a join out of b, v or w (its entry)           34, largest 29.9 u (ve:L2es0)
+    listed   numeric the stroke after a join out of b, v or w (its entry)           33, largest 6.41e-05 u (bk:L2ks0)
+    UNLISTED stroke of b (in cb)                                             1, largest 21.2 u (cb:L2bs0)
+    UNLISTED stroke of b (in fb)                                             1, largest 21.2 u (fb:L2bs0)
+    UNLISTED stroke of b (in ob)                                             1, largest 21.1 u (ob:L2bs0)
+    UNLISTED stroke of v (in cv)                                             1, largest 20.5 u (cv:L2vs0)
+    UNLISTED stroke of v (in fv)                                             1, largest 20.5 u (fv:L2vs0)
+    UNLISTED stroke of v (in ov)                                             1, largest 20.5 u (ov:L2vs0)
+    UNLISTED stroke of w (in aw)                                             1, largest 20.5 u (aw:L2ws0)
+    UNLISTED stroke of w (in cw)                                             1, largest 20.5 u (cw:L2ws0)
+    UNLISTED stroke of w (in dw)                                             1, largest 20.5 u (dw:L2ws0)
+    UNLISTED stroke of w (in ew)                                             1, largest 20.5 u (ew:L2ws0)
+    UNLISTED stroke of w (in fw)                                             1, largest 20.5 u (fw:L2ws0)
+    UNLISTED stroke of w (in hw)                                             1, largest 20.5 u (hw:L2ws0)
+    UNLISTED stroke of w (in iw)                                             1, largest 20.5 u (iw:L2ws0)
+    UNLISTED stroke of w (in nw)                                             1, largest 20.5 u (nw:L2ws0)
+    UNLISTED stroke of w (in ow)                                             2, largest 20.5 u (bow:L4ws0)
+  J3h (v7.0 -> v7.1): 1356 pieces, 78 moved, 8 numeric only; listed cause: c's exit port; the joins out of c stopped reading J2's presets
+    listed   c's exit stroke                                                28, largest 9.98 u (cc:L0cs0)
+    listed   join out of c                                                  31, largest 34.2 u (ct:J0-2ct)
+    listed   the stroke after a join out of c (its entry)                   19, largest 34.2 u (ct:L2ts0)
+    listed   numeric c's exit stroke                                                 3, largest 1.63e-05 u (cp:L0cs0)
+    listed   numeric the stroke after a join out of c (its entry)                    5, largest 2.17e-06 u (cy:L2ys0)
+  J3i (v7.1 -> v7.2): 1356 pieces, 180 moved, 68 numeric only; listed cause: one rule for the cusp entries (a low exit enters i j p r s t u w y up the upstroke)
+    listed   the cusp letter's stroke after a rule join (its entry)         66, largest 7.15 u (ei:L2is0)
+    listed   the cusp rule's join (a low exit into i j p r s t u w y)       82, largest 7.18 u (ci:J0-2ci)
+    listed   the exit stroke a rule join cuts                               32, largest 7.18 u (ci:L0cs0)
+    listed   numeric the cusp letter's stroke after a rule join (its entry)         17, largest 8.91e-05 u (it:L2ts0)
+    listed   numeric the cusp rule's join (a low exit into i j p r s t u w y)        1, largest 9.34e-05 u (aj:J0-2aj)
+    listed   numeric the exit stroke a rule join cuts                               50, largest 9.68e-05 u (after:L2fs0)
+
+(2) FIRST FINDING: the pieces moved for a cause not listed in the brief (>= 1e-4 u), by stage and cause, largest first
+  45 pieces
+  J3f | join into b: 2 pieces; per pair: fb 1, ob 1
+  J3f | join into v: 3 pieces; per pair: ev 1, fv 1, ov 1
+  J3f | join into w: 6 pieces; per pair: ow 2, aw 1, ew 1, fw 1, hw 1
+  J3f | stroke of b (in cb): 1 pieces; per pair: cb 1
+  J3f | stroke of b (in fb): 1 pieces; per pair: fb 1
+  J3f | stroke of b (in ob): 1 pieces; per pair: ob 1
+  J3f | stroke of e (lead, out ew): 1 pieces; per pair: ew 1
+  J3f | stroke of f (lead, out fw): 1 pieces; per pair: fw 1
+  J3f | stroke of v (in cv): 1 pieces; per pair: cv 1
+  J3f | stroke of v (in fv): 1 pieces; per pair: fv 1
+  J3f | stroke of v (in ov): 1 pieces; per pair: ov 1
+  J3f | stroke of w (in aw): 1 pieces; per pair: aw 1
+  J3f | stroke of w (in cw): 1 pieces; per pair: cw 1
+  J3f | stroke of w (in dw): 1 pieces; per pair: dw 1
+  J3f | stroke of w (in ew): 1 pieces; per pair: ew 1
+  J3f | stroke of w (in fw): 1 pieces; per pair: fw 1
+  J3f | stroke of w (in hw): 1 pieces; per pair: hw 1
+  J3f | stroke of w (in iw): 1 pieces; per pair: iw 1
+  J3f | stroke of w (in nw): 1 pieces; per pair: nw 1
+  J3f | stroke of w (in ow): 2 pieces; per pair: ow 2
+  J3g | stroke of b (in cb): 1 pieces; per pair: cb 1
+  J3g | stroke of b (in fb): 1 pieces; per pair: fb 1
+  J3g | stroke of b (in ob): 1 pieces; per pair: ob 1
+  J3g | stroke of v (in cv): 1 pieces; per pair: cv 1
+  J3g | stroke of v (in fv): 1 pieces; per pair: fv 1
+  J3g | stroke of v (in ov): 1 pieces; per pair: ov 1
+  J3g | stroke of w (in aw): 1 pieces; per pair: aw 1
+  J3g | stroke of w (in cw): 1 pieces; per pair: cw 1
+  J3g | stroke of w (in dw): 1 pieces; per pair: dw 1
+  J3g | stroke of w (in ew): 1 pieces; per pair: ew 1
+  J3g | stroke of w (in fw): 1 pieces; per pair: fw 1
+  J3g | stroke of w (in hw): 1 pieces; per pair: hw 1
+  J3g | stroke of w (in iw): 1 pieces; per pair: iw 1
+  J3g | stroke of w (in nw): 1 pieces; per pair: nw 1
+  J3g | stroke of w (in ow): 2 pieces; per pair: ow 2
+
+(3) the pieces moved for a listed cause, by stage and cause, with counts per letter pair
+  J3f | b, v or w's exit stroke: 97 pieces; per pair: bo 3, ba 2, be 2, br 2, by 2, iv+ve 2, ov+ve 2, wa 2, we 2, wh 2, wo 2, av+ve 1, aw+wg 1, bb 1, bc 1, bd 1, bf 1, bg 1, bg+ub 1, bh 1, bi 1, bj 1, bk 1, bl 1, bm 1, bn 1, bp 1, bq 1, bs 1, bt 1, bu 1, bv 1, bw 1, bx 1, bz 1, ev+ve 1, ow+wn 1, va 1, vb 1, vc 1, vd 1, ve 1, vf 1, vg 1, vh 1, vi 1, vj 1, vk 1, vl 1, vm 1, vn 1, vo 1, vp 1, vq 1, vr 1, vs 1, vt 1, vu 1, vv 1, vw 1, vx 1, vy 1, vz 1, wb 1, wc 1, wd 1, wf 1, wg 1, wi 1, wj 1, wk 1, wl 1, wm 1, wn 1, wp 1, wq 1, wr 1, ws 1, wt 1, wu 1, wv 1, ww 1, wx 1, wy 1, wz 1
+  J3f | join out of b, v or w: 78 pieces; per pair: bo 3, bg 2, br 2, by 2, wg 2, wh 2, wn 2, wo 2, bb 1, bc 1, bd 1, bf 1, bh 1, bi 1, bj 1, bk 1, bl 1, bm 1, bn 1, bp 1, bs 1, bt 1, bu 1, bv 1, bw 1, bx 1, bz 1, vb 1, vc 1, vd 1, vf 1, vg 1, vh 1, vi 1, vj 1, vk 1, vl 1, vm 1, vn 1, vo 1, vp 1, vr 1, vs 1, vt 1, vu 1, vv 1, vw 1, vx 1, vy 1, vz 1, wb 1, wc 1, wd 1, wf 1, wi 1, wj 1, wk 1, wl 1, wm 1, wp 1, wr 1, ws 1, wt 1, wu 1, wv 1, ww 1, wx 1, wy 1, wz 1
+  J3f | join out of b, v or w into a or q: 8 pieces; per pair: ba 2, wa 2, bq 1, va 1, vq 1, wq 1
+  J3f | join out of b, v or w into e: 11 pieces; per pair: ve 7, be 2, we 2
+  J3f | the stroke after a join out of b, v or w (its entry): 78 pieces; per pair: ve 3, be 2, en+ve 2, er+ve 2, we 2, wn 2, ad+ba 1, av+wa 1, ba 1, bb 1, bc 1, bd 1, bf 1, bg 1, bg+gr 1, bh 1, bk 1, bl 1, bm 1, bn 1, bo 1, bo+ow 1, bo+ox 1, bq 1, br 1, br+ro 1, bt 1, bv 1, bw 1, bx 1, bz 1, gi+wg 1, hi+wh 1, ov+wo 1, va 1, vb 1, vc 1, vd 1, vf 1, vg 1, vh 1, vk 1, vl 1, vm 1, vn 1, vo 1, vq 1, vr 1, vt 1, vv 1, vw 1, vx 1, vz 1, wa 1, wb 1, wc 1, wd 1, wf 1, wg 1, wh 1, wk 1, wl 1, wm 1, wo 1, wq 1, wr 1, wt 1, wv 1, ww 1, wx 1, wz 1
+  J3g | b, v or w's exit stroke: 97 pieces; per pair: bo 3, ba 2, be 2, br 2, by 2, iv+ve 2, ov+ve 2, wa 2, we 2, wh 2, wo 2, av+ve 1, aw+wg 1, bb 1, bc 1, bd 1, bf 1, bg 1, bg+ub 1, bh 1, bi 1, bj 1, bk 1, bl 1, bm 1, bn 1, bp 1, bq 1, bs 1, bt 1, bu 1, bv 1, bw 1, bx 1, bz 1, ev+ve 1, ow+wn 1, va 1, vb 1, vc 1, vd 1, ve 1, vf 1, vg 1, vh 1, vi 1, vj 1, vk 1, vl 1, vm 1, vn 1, vo 1, vp 1, vq 1, vr 1, vs 1, vt 1, vu 1, vv 1, vw 1, vx 1, vy 1, vz 1, wb 1, wc 1, wd 1, wf 1, wg 1, wi 1, wj 1, wk 1, wl 1, wm 1, wn 1, wp 1, wq 1, wr 1, ws 1, wt 1, wu 1, wv 1, ww 1, wx 1, wy 1, wz 1
+  J3g | join out of b, v or w: 78 pieces; per pair: bo 3, bg 2, br 2, by 2, wg 2, wh 2, wn 2, wo 2, bb 1, bc 1, bd 1, bf 1, bh 1, bi 1, bj 1, bk 1, bl 1, bm 1, bn 1, bp 1, bs 1, bt 1, bu 1, bv 1, bw 1, bx 1, bz 1, vb 1, vc 1, vd 1, vf 1, vg 1, vh 1, vi 1, vj 1, vk 1, vl 1, vm 1, vn 1, vo 1, vp 1, vr 1, vs 1, vt 1, vu 1, vv 1, vw 1, vx 1, vy 1, vz 1, wb 1, wc 1, wd 1, wf 1, wi 1, wj 1, wk 1, wl 1, wm 1, wp 1, wr 1, ws 1, wt 1, wu 1, wv 1, ww 1, wx 1, wy 1, wz 1
+  J3g | join out of b, v or w into a or q: 8 pieces; per pair: ba 2, wa 2, bq 1, va 1, vq 1, wq 1
+  J3g | join out of b, v or w into e: 11 pieces; per pair: ve 7, be 2, we 2
+  J3g | the stroke after a join out of b, v or w (its entry): 34 pieces; per pair: ve 3, be 2, en+ve 2, er+ve 2, we 2, bb 1, bd 1, bo 1, bo+ow 1, bo+ox 1, br 1, br+ro 1, bv 1, bw 1, bz 1, ov+wo 1, vb 1, vd 1, vo 1, vr 1, vv 1, vw 1, wb 1, wo 1, wr 1, wv 1, ww 1, wz 1
+  J3h | c's exit stroke: 28 pieces; per pair: co 2, cu 2, ca 1, cb 1, cc 1, cd 1, ce 1, ce+ic 1, cf 1, cg 1, ch 1, ch+ic 1, ci 1, cj 1, ck 1, ck+ic 1, cl 1, cm 1, cq 1, cr 1, cs 1, ct 1, cw 1, cx 1, cy 1, cz 1
+  J3h | join out of c: 31 pieces; per pair: ce 2, ch 2, ck 2, co 2, cu 2, ca 1, cb 1, cc 1, cd 1, cf 1, cg 1, ci 1, cj 1, cl 1, cm 1, cn 1, cp 1, cq 1, cr 1, cs 1, ct 1, cv 1, cw 1, cx 1, cy 1, cz 1
+  J3h | the stroke after a join out of c (its entry): 19 pieces; per pair: ce 2, ch 2, ck 2, cb 1, cf 1, cj 1, cl 1, cm 1, cp 1, ct 1, cu 1, cu+ur 1, cv 1, cw 1, cx 1, cz 1
+  J3i | the cusp letter's stroke after a rule join (its entry): 66 pieces; per pair: er 4, at 2, es 2, et 2, ai 1, ap 1, ar 1, as 1, au 1, aw+wg 1, ci 1, cj 1, cr 1, cs 1, ct 1, cu+ur 1, cw 1, cy 1, di 1, dj 1, dp 1, dr 1, ds 1, dt 1, du 1, ei 1, ej 1, ep 1, ew 1, ey 1, fj 1, fp 1, ft 1, ft+te 1, fu 1, fw 1, hi 1, hi+ic 1, hi+ip 1, hp 1, hr 1, hs 1, ht 1, hu 1, hu+ug 1, hw 1, ii 1, im+ni 1, ip 1, ip+pp 1, ir 1, is 1, iu 1, iw 1, ni 1, np 1, nr 1, ns 1, nt 1, nw 1
+  J3i | the cusp rule's join (a low exit into i j p r s t u w y): 82 pieces; per pair: er 4, hi 3, at 2, aw 2, cu 2, es 2, et 2, ft 2, hu 2, ip 2, ni 2, ai 1, ap 1, ar 1, as 1, au 1, ay 1, ci 1, cj 1, cp 1, cr 1, cs 1, ct 1, cw 1, cy 1, di 1, dj 1, dp 1, dr 1, ds 1, dt 1, du 1, dw 1, dy 1, ei 1, ej 1, ep 1, eu 1, ew 1, ey 1, fi 1, fj 1, fp 1, fu 1, fw 1, fy 1, hj 1, hp 1, hr 1, hs 1, ht 1, hw 1, hy 1, ii 1, ir 1, is 1, it 1, iu 1, iw 1, iy 1, nj 1, np 1, nr 1, ns 1, nt 1, nu 1, nw 1, ny 1
+  J3i | the exit stroke a rule join cuts: 32 pieces; per pair: cu 2, as 1, at 1, at+oa 1, ci 1, cs 1, cw 1, cy 1, di 1, dp 1, ei 1, ep 1, eu 1, ew 1, ey 1, fi 1, fw 1, fy 1, ht 1, ii 1, in+ni 1, ip 1, ir 1, iw 1, ni 1, nj 1, np 1, nr 1, ns 1, nt 1, nw 1
+
+(4) numeric-only differences (< 1e-4 u), by stage and cause
+  J3f | join into b: 2 pieces; per pair: cb 1, ub 1
+  J3f | join into v: 6 pieces; per pair: iv 2, ov 2, av 1, cv 1
+  J3f | join into w: 6 pieces; per pair: aw 1, cw 1, dw 1, iw 1, nw 1, ow 1
+  J3f | lead into b: 32 pieces; per pair: ^b 32
+  J3f | lead into v: 26 pieces; per pair: ^v 26
+  J3f | stroke of a (in la, out aw): 1 pieces; per pair: aw+la 1
+  J3f | stroke of e (lead, out ev): 1 pieces; per pair: ev 1
+  J3f | stroke of f (lead, out fb): 1 pieces; per pair: fb 1
+  J3f | stroke of f (lead, out fv): 1 pieces; per pair: fv 1
+  J3f | stroke of h (lead, out hw): 1 pieces; per pair: hw 1
+  J3f | stroke of o (in ro, out ow): 1 pieces; per pair: ow+ro 1
+  J3f | stroke of o (out ob, vlead): 1 pieces; per pair: ob 1
+  J3f | stroke of o (out ov, vlead): 2 pieces; per pair: ov 2
+  J3g | the stroke after a join out of b, v or w (its entry): 33 pieces; per pair: wn 2, bc 1, bf 1, bg 1, bg+gr 1, bh 1, bk 1, bl 1, bm 1, bn 1, bx 1, gi+wg 1, hi+wh 1, vc 1, vf 1, vg 1, vh 1, vk 1, vl 1, vm 1, vn 1, vx 1, vz 1, wc 1, wd 1, wf 1, wg 1, wh 1, wk 1, wl 1, wm 1, wx 1
+  J3h | c's exit stroke: 3 pieces; per pair: cc 1, cp 1, cv 1
+  J3h | the stroke after a join out of c (its entry): 5 pieces; per pair: cg 1, cn 1, co 1, co+of 1, cy 1
+  J3i | the cusp letter's stroke after a rule join (its entry): 17 pieces; per pair: aj 1, aw 1, ay 1, cp 1, cu 1, dw 1, dy 1, eu 1, fi 1, fy 1, hj 1, hy 1, it 1, iy 1, nj 1, nu 1, ny 1
+  J3i | the cusp rule's join (a low exit into i j p r s t u w y): 1 pieces; per pair: aj 1
+  J3i | the exit stroke a rule join cuts: 50 pieces; per pair: er+ve 2, hi 2, hu 2, af+ft 1, ai 1, aj 1, ap 1, ar 1, au 1, aw 1, aw+la 1, ay 1, cj 1, cp 1, cr 1, ct 1, dj 1, dr 1, ds 1, dt 1, du 1, dw 1, dy 1, ej 1, er 1, er+te 1, es 1, es+xe 1, et 1, et+je 1, fj 1, fp 1, ft 1, fu 1, hi+wh 1, hj 1, hp 1, hr 1, hs 1, hw 1, hy 1, is 1, it 1, iu 1, iy 1, nu 1, ny 1
+
+(5) per letter: moved pieces (>= 1e-4 u) that hold the letter (a join or lead or tail by its pair, a stroke by its own letter), per stage; listed / unlisted
+  J3f: a 10/1, b 71/5, c 6/0, d 6/0, e 22/3, f 6/4, g 10/0, h 8/1, i 3/0, j 3/0, k 6/0, l 6/0, m 6/0, n 8/0, o 12/4, p 3/0, q 6/0, r 8/0, s 3/0, t 6/0, u 3/0, v 69/6, w 69/16, x 6/0, y 4/0, z 6/0
+  J3g: a 5/0, b 71/3, c 3/0, d 5/0, e 22/0, f 3/0, g 5/0, h 4/0, i 3/0, j 3/0, k 3/0, l 3/0, m 3/0, n 4/0, o 12/0, p 3/0, q 3/0, r 8/0, s 3/0, t 3/0, u 3/0, v 69/3, w 69/10, x 3/0, y 4/0, z 5/0
+  J3h: a 1/0, b 2/0, c 59/0, d 1/0, e 4/0, f 2/0, g 1/0, h 4/0, i 1/0, j 2/0, k 4/0, l 2/0, m 2/0, n 1/0, o 2/0, p 2/0, q 1/0, r 1/0, s 1/0, t 2/0, u 4/0, v 2/0, w 2/0, x 2/0, y 1/0, z 2/0
+  J3i: a 13/0, c 16/0, d 11/0, e 19/0, f 11/0, h 13/0, i 33/0, j 10/0, n 18/0, p 17/0, r 20/0, s 16/0, t 21/0, u 17/0, w 16/0, y 10/0
+
+(6) each later version against v6.8 directly (raw coefficients; moved >= 1e-4 u), by type
+  v6.8 -> v6.9: 301 pieces differ (join 108, stroke 193); largest 88.2 u (wl:J0-2wl)
+  v6.8 -> v7.0: 301 pieces differ (join 108, stroke 193); largest 88.2 u (vl:L2ls0)
+  v6.8 -> v7.1: 376 pieces differ (join 139, stroke 237); largest 88.2 u (vl:L2ls0)
+  v6.8 -> v7.2: 524 pieces differ (join 207, stroke 317); largest 88.2 u (vl:L2ls0)

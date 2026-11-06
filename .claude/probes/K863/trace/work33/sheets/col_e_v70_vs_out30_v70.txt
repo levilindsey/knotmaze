@@ -1,0 +1,10 @@
+K863 J3j: column 3 of out33\e_after_bvw_v68.svg against column 2 of out30\e_after_bvw_v70.svg
+rows: 8 in A, 8 in B, 8 in both: 8 draw the same, 0 differ; only in A 0, only in B 0
+  same: be: largest coordinate difference 0.01 u
+  same: ve: largest coordinate difference 0.01 u
+  same: we: largest coordinate difference 0.01 u
+  same: oe: largest coordinate difference 0.01 u
+  same: be we shoe maze huge bye: largest coordinate difference 0.01 u
+  same: woven: largest coordinate difference 0.01 u
+  same: ice jet even: largest coordinate difference 0.01 u
+  same: jumps over the lazy dog: largest coordinate difference 0.01 u

@@ -1,0 +1,135 @@
+K863 J3j: w alone and joined to every letter: the font, the approved version (v6.8, J3e's build rebuilt in work33), v6.9 and v7.0 (red solved joins, blue preset joins; the font pale under each)
+builds: approved (v6.8) = C:\Users\lsl\Repositories\knotmaze\.claude\probes\K863\trace\work33\base (ports, M, C:\Users\lsl\Repositories\knotmaze\.claude\probes\K863\trace\work28\ports_k990e.json); v6.9 = C:\Users\lsl\Repositories\knotmaze\.claude\probes\K863\trace\work29\base (ports, P, C:\Users\lsl\Repositories\knotmaze\.claude\probes\K863\trace\work29\ports_k1113.json); v7.0 = C:\Users\lsl\Repositories\knotmaze\.claude\probes\K863\trace\work30\base (ports, Pae90, C:\Users\lsl\Repositories\knotmaze\.claude\probes\K863\trace\work30\ports_k1119.json)
+
+wa                     approved (v6.8) wa preset k962 class cnct.ful_b_o; dist to font 7.67 u
+wa                     v6.9  wa solved: exit 2.00 u from w's end, entry fused at 72.38 u (retrace True); J 0.314 (conn 0.0027, L 0.31, R 2.5e-07) Js 1.63 conn 84 u window 173 u pen 0 kmax 0.080/u speed 0.33 cross 0 (allowed 0) side - ymin 103.5 u; dist to font 13.67 u (own ends), 13.67 u (entry frame); status 0 nfev 1340/8000
+wa                     v7.0  wa solved: exit 2.00 u from w's end, entry fused at 72.38 u (retrace True); J 0.00166 (conn 0.00081, L 0.00085, R 2.5e-07) Js 0.00654 conn 69 u window 158 u pen 1.5e-09 kmax 0.068/u speed 0.91 cross 0 (allowed 0) side - ymin 99.3 u; dist to font 7.91 u (own ends), 7.91 u (entry frame); status 0 nfev 356/8000
+wb                     approved (v6.8) wb preset class|R cnct.ful_b_f|b; dist to font 2.94 u
+wb                     v6.9  wb solved: exit 0.00 u from w's end, entry merge at 100.00 u (retrace False); J 0.314 (conn 0.0032, L 0.31, R 3.6e-06) Js 1.4 conn 123 u window 165 u pen 0 kmax 0.093/u speed 0.43 cross 1 (allowed 1) side - ymin 118.6 u; dist to font 35.73 u (own ends), 85.92 u (entry frame); status 0 nfev 814/8000
+wb                     v7.0  wb solved: exit 2.00 u from w's end, entry merge at 100.00 u (retrace False); J 0.00118 (conn 0.00032, L 0.00085, R 3.6e-06) Js 0.00442 conn 115 u window 155 u pen 0 kmax 0.068/u speed 0.71 cross 1 (allowed 1) side - ymin 104.8 u; dist to font 23.57 u (own ends), 85.92 u (entry frame); status 0 nfev 780/8000
+wc                     approved (v6.8) wc preset k962 class cnct.ful_b_o; dist to font 1.60 u
+wc                     v6.9  wc solved: exit 0.00 u from w's end, entry fused at 33.42 u (retrace True); J 0.311 (conn 0.0001, L 0.31, R 2.6e-06) Js 1.33 conn 110 u window 162 u pen 0 kmax 0.025/u speed 0.55 cross 0 (allowed 0) side - ymin 118.6 u; dist to font 17.44 u (own ends), 30.97 u (entry frame); status 0 nfev 883/8000
+wc                     v7.0  wc solved: exit 2.00 u from w's end, entry fused at 33.42 u (retrace True); J 0.00111 (conn 0.00026, L 0.00085, R 2.6e-06) Js 0.00369 conn 99 u window 149 u pen 0 kmax 0.068/u speed 0.88 cross 0 (allowed 0) side - ymin 104.8 u; dist to font 9.21 u (own ends), 30.97 u (entry frame); status 0 nfev 5028/8000
+wd                     approved (v6.8) wd preset k962 class cnct.ful_b_o; dist to font 2.60 u
+wd                     v6.9  wd solved: exit 0.00 u from w's end, entry fused at 34.50 u (retrace True); J 0.311 (conn 8.4e-05, L 0.31, R 1.2e-06) Js 1.4 conn 112 u window 165 u pen 0 kmax 0.018/u speed 0.49 cross 0 (allowed 0) side - ymin 118.5 u; dist to font 17.17 u (own ends), 32.77 u (entry frame); status 0 nfev 964/8000
+wd                     v7.0  wd solved: exit 2.00 u from w's end, entry fused at 34.50 u (retrace True); J 0.0011 (conn 0.00025, L 0.00085, R 1.2e-06) Js 0.00387 conn 100 u window 152 u pen 0 kmax 0.068/u speed 0.87 cross 0 (allowed 0) side - ymin 104.8 u; dist to font 8.95 u (own ends), 32.77 u (entry frame); status 0 nfev 5182/8000
+we                     approved (v6.8) we preset class|R cnct.ful_b_e|e; dist to font 2.01 u
+we                     v6.9  we solved: exit 2.00 u from w's end, entry merge at 60.00 u (retrace False); J 0.32 (conn 0.0093, L 0.31, R 2.1e-06) Js 1.15 conn 113 u window 153 u pen 0 kmax 0.154/u speed 0.39 cross 1 (allowed 1) side - ymin 59.8 u; dist to font 29.91 u (own ends), 45.76 u (entry frame); status 0 nfev 804/8000
+we                     v7.0  we solved: exit 2.00 u from w's end, entry merge at 90.00 u (retrace False); J 0.00165 (conn 0.00076, L 0.00085, R 3.5e-05) Js 0.0058 conn 112 u window 152 u pen 0 kmax 0.068/u speed 0.75 cross 1 (allowed 1) side - ymin 71.6 u; dist to font 41.54 u (own ends), 70.41 u (entry frame); status 0 nfev 2868/8000
+wf                     approved (v6.8) wf preset class|R cnct.ful_b_f|f; dist to font 1.90 u
+wf                     v6.9  wf solved: exit 0.00 u from w's end, entry merge at 100.00 u (retrace False); J 0.314 (conn 0.0033, L 0.31, R 1.4e-08) Js 1.37 conn 121 u window 163 u pen 0 kmax 0.095/u speed 0.43 cross 1 (allowed 1) side - ymin 118.6 u; dist to font 35.63 u (own ends), 87.76 u (entry frame); status 0 nfev 550/8000
+wf                     v7.0  wf solved: exit 2.00 u from w's end, entry merge at 100.00 u (retrace False); J 0.00118 (conn 0.00033, L 0.00085, R 1.4e-08) Js 0.00432 conn 114 u window 154 u pen 0 kmax 0.068/u speed 0.72 cross 1 (allowed 1) side - ymin 104.8 u; dist to font 23.36 u (own ends), 87.76 u (entry frame); status 0 nfev 793/8000
+wg                     approved (v6.8) wg preset k962 class cnct.ful_b_o; dist to font 6.24 u
+wg                     v6.9  wg solved: exit 0.00 u from w's end, entry fused at 50.48 u (retrace True); J 0.312 (conn 0.00068, L 0.31, R 2e-07) Js 1.54 conn 101 u window 170 u pen 4.1e-12 kmax 0.036/u speed 0.30 cross 0 (allowed 0) side - ymin 115.2 u; dist to font 15.78 u (own ends), 24.76 u (entry frame); status 0 nfev 1681/8000
+wg                     v7.0  wg solved: exit 2.00 u from w's end, entry fused at 50.48 u (retrace True); J 0.00119 (conn 0.00033, L 0.00085, R 2e-07) Js 0.00452 conn 89 u window 156 u pen 0 kmax 0.068/u speed 0.94 cross 0 (allowed 0) side - ymin 104.8 u; dist to font 5.91 u (own ends), 24.76 u (entry frame); status 0 nfev 3327/8000
+wh                     approved (v6.8) wh preset class|R cnct.lop_b_h|h; dist to font 2.77 u
+wh                     v6.9  wh solved: exit 2.00 u from w's end, entry merge at 100.00 u (retrace False); J 0.314 (conn 0.0031, L 0.31, R 7.7e-08) Js 1.71 conn 136 u window 176 u pen 0 kmax 0.078/u speed 0.41 cross 1 (allowed 1) side - ymin 119.0 u; dist to font 56.17 u (own ends), 80.87 u (entry frame); status 0 nfev 1021/8000
+wh                     v7.0  wh solved: exit 2.00 u from w's end, entry merge at 100.00 u (retrace False); J 0.00108 (conn 0.00023, L 0.00085, R 7.7e-08) Js 0.00525 conn 129 u window 169 u pen 0 kmax 0.068/u speed 0.68 cross 1 (allowed 1) side - ymin 104.9 u; dist to font 38.56 u (own ends), 80.87 u (entry frame); status 0 nfev 540/8000
+wi                     approved (v6.8) wi preset class cnct.ful_b_n; dist to font 1.48 u
+wi                     v6.9  wi solved: exit 0.78 u from w's end, entry corner at 0.00 u (retrace False); J 0.312 (conn 0.00088, L 0.31, R 0) Js 0.285 conn 76 u window 97 u pen 0 kmax 0.089/u speed 0.53 cross 0 (allowed 0) side 1.05 ymin 118.6 u; dist to font 15.43 u (own ends), 15.43 u (entry frame); status 0 nfev 1504/8000; corner at 30.00 deg, kR 0.0888/u
+wi                     v7.0  wi solved: exit 2.00 u from w's end, entry corner at 0.00 u (retrace False); J 0.00109 (conn 0.00024, L 0.00085, R 0) Js 0.00066 conn 65 u window 85 u pen 0 kmax 0.068/u speed 0.63 cross 0 (allowed 0) side 0.96 ymin 104.8 u; dist to font 4.30 u (own ends), 4.30 u (entry frame); status 0 nfev 6425/8000; corner at 30.00 deg, kR 0.0164/u
+wj                     approved (v6.8) wj preset class cnct.ful_b_n; dist to font 1.48 u
+wj                     v6.9  wj solved: exit 0.62 u from w's end, entry corner at 0.00 u (retrace False); J 0.312 (conn 0.00087, L 0.31, R 0) Js 0.285 conn 76 u window 97 u pen 0 kmax 0.090/u speed 0.53 cross 0 (allowed 0) side 0.97 ymin 118.6 u; dist to font 15.40 u (own ends), 15.40 u (entry frame); status 0 nfev 1381/8000; corner at 30.00 deg, kR 0.0891/u
+wj                     v7.0  wj solved: exit 2.00 u from w's end, entry corner at 0.00 u (retrace False); J 0.00109 (conn 0.00024, L 0.00085, R 0) Js 0.000662 conn 65 u window 85 u pen 0 kmax 0.068/u speed 0.64 cross 0 (allowed 0) side 0.89 ymin 104.8 u; dist to font 4.25 u (own ends), 4.25 u (entry frame); status 0 nfev 1487/8000; corner at 30.01 deg, kR 0.0165/u
+wk                     approved (v6.8) wk preset class|R cnct.lop_b_h|k; dist to font 7.53 u
+wk                     v6.9  wk solved: exit 0.00 u from w's end, entry merge at 100.00 u (retrace False); J 0.314 (conn 0.0025, L 0.31, R 4.9e-08) Js 1.56 conn 129 u window 171 u pen 0 kmax 0.078/u speed 0.43 cross 1 (allowed 1) side - ymin 118.8 u; dist to font 55.44 u (own ends), 73.01 u (entry frame); status 0 nfev 466/8000
+wk                     v7.0  wk solved: exit 2.00 u from w's end, entry merge at 100.00 u (retrace False); J 0.00109 (conn 0.00024, L 0.00085, R 4.9e-08) Js 0.00471 conn 123 u window 163 u pen 0 kmax 0.068/u speed 0.69 cross 1 (allowed 1) side - ymin 104.9 u; dist to font 38.49 u (own ends), 73.01 u (entry frame); status 0 nfev 972/8000
+wl                     approved (v6.8) wl preset class cnct.ful_b_f; dist to font 3.46 u
+wl                     v6.9  wl solved: exit 0.00 u from w's end, entry merge at 100.00 u (retrace False); J 0.314 (conn 0.0033, L 0.31, R 1.6e-07) Js 1.37 conn 121 u window 163 u pen 0 kmax 0.095/u speed 0.44 cross 1 (allowed 1) side - ymin 118.6 u; dist to font 35.74 u (own ends), 87.47 u (entry frame); status 0 nfev 994/8000
+wl                     v7.0  wl solved: exit 2.00 u from w's end, entry merge at 100.00 u (retrace False); J 0.00118 (conn 0.00033, L 0.00085, R 1.6e-07) Js 0.00432 conn 114 u window 154 u pen 0 kmax 0.068/u speed 0.71 cross 1 (allowed 1) side - ymin 104.8 u; dist to font 23.40 u (own ends), 87.47 u (entry frame); status 0 nfev 802/8000
+wm                     approved (v6.8) wm preset k962 class cnct.cnt_b_n; dist to font 1.21 u
+wm                     v6.9  wm solved: exit 0.00 u from w's end, entry merge at 1.60 u (retrace False); J 0.313 (conn 0.0016, L 0.31, R 8.5e-05) Js 0.357 conn 63 u window 105 u pen 0 kmax 0.076/u speed 0.54 cross 0 (allowed 0) side - ymin 118.3 u; dist to font 14.77 u (own ends), 14.77 u (entry frame); status 0 nfev 1780/8000
+wm                     v7.0  wm solved: exit 2.00 u from w's end, entry merge at 1.60 u (retrace False); J 0.00156 (conn 0.00062, L 0.00085, R 8.5e-05) Js 0.00123 conn 52 u window 92 u pen 0 kmax 0.076/u speed 0.77 cross 0 (allowed 0) side - ymin 104.8 u; dist to font 1.95 u (own ends), 2.71 u (entry frame); status 0 nfev 526/8000
+wn                     approved (v6.8) wn preset k962 class cnct.cnt_b_n; dist to font 1.13 u
+wn                     v6.9  wn solved: exit 0.00 u from w's end, entry merge at 3.20 u (retrace False); J 0.313 (conn 0.0016, L 0.31, R 0.00011) Js 0.364 conn 63 u window 105 u pen 0 kmax 0.077/u speed 0.55 cross 0 (allowed 0) side - ymin 118.3 u; dist to font 14.80 u (own ends), 14.80 u (entry frame); status 0 nfev 883/8000
+wn                     v7.0  wn solved: exit 2.00 u from w's end, entry merge at 3.20 u (retrace False); J 0.00159 (conn 0.00063, L 0.00085, R 0.00011) Js 0.00128 conn 53 u window 93 u pen 0 kmax 0.077/u speed 0.77 cross 0 (allowed 0) side - ymin 104.8 u; dist to font 1.95 u (own ends), 3.18 u (entry frame); status 0 nfev 1000/8000
+wo                     approved (v6.8) wo preset k962 class cnct.ful_b_o; dist to font 1.58 u
+wo                     v6.9  wo solved: exit 0.00 u from w's end, entry fused at 32.57 u (retrace True); J 0.311 (conn 0.00012, L 0.31, R 5e-06) Js 1.29 conn 109 u window 161 u pen 0 kmax 0.027/u speed 0.55 cross 0 (allowed 0) side - ymin 118.6 u; dist to font 17.53 u (own ends), 30.12 u (entry frame); status 0 nfev 948/8000
+wo                     v7.0  wo solved: exit 2.00 u from w's end, entry fused at 20.57 u (retrace True); J 0.00107 (conn 0.00022, L 0.00085, R 4.5e-06) Js 0.0035 conn 111 u window 148 u pen 0 kmax 0.068/u speed 0.62 cross 0 (allowed 0) side - ymin 104.8 u; dist to font 11.35 u (own ends), 41.01 u (entry frame); status 0 nfev 2332/8000
+wp                     approved (v6.8) wp preset class|R cnct.ful_b_n|p; dist to font 1.91 u
+wp                     v6.9  wp solved: exit 1.85 u from w's end, entry corner at 0.00 u (retrace False); J 0.312 (conn 0.00097, L 0.31, R 0) Js 0.306 conn 79 u window 99 u pen 0 kmax 0.090/u speed 0.52 cross 0 (allowed 0) side 0.21 ymin 118.6 u; dist to font 15.31 u (own ends), 15.31 u (entry frame); status 0 nfev 1822/8000; corner at 30.00 deg, kR 0.0897/u
+wp                     v7.0  wp solved: exit 2.00 u from w's end, entry corner at 0.00 u (retrace False); J 0.0011 (conn 0.00025, L 0.00085, R 0) Js 0.000718 conn 67 u window 87 u pen 0 kmax 0.068/u speed 0.63 cross 0 (allowed 0) side 0.10 ymin 104.8 u; dist to font 3.93 u (own ends), 3.93 u (entry frame); status 0 nfev 2198/8000; corner at 30.00 deg, kR 0.0182/u
+wq                     approved (v6.8) wq preset class|R cnct.ful_b_o|q; dist to font 10.16 u
+wq                     v6.9  wq solved: exit 2.00 u from w's end, entry fused at 74.03 u (retrace True); J 0.314 (conn 0.0031, L 0.31, R 5.9e-09) Js 1.72 conn 85 u window 176 u pen 0 kmax 0.086/u speed 0.34 cross 0 (allowed 0) side - ymin 101.7 u; dist to font 13.57 u (own ends), 13.57 u (entry frame); status 0 nfev 805/8000
+wq                     v7.0  wq solved: exit 2.00 u from w's end, entry fused at 74.03 u (retrace True); J 0.00206 (conn 0.0012, L 0.00085, R 5.9e-09) Js 0.00901 conn 73 u window 164 u pen 0.00013 kmax 0.068/u speed 0.85 cross 0 (allowed 0) side - ymin 93.0 u; dist to font 12.18 u (own ends), 12.19 u (entry frame); status 0 nfev 414/8000
+wr                     approved (v6.8) wr preset class|R cnct.ful_b_r|r; dist to font 4.75 u
+wr                     v6.9  wr solved: exit 2.00 u from w's end, entry cusp at 3.00 u (retrace True); J 0.314 (conn 0.0029, L 0.31, R 0) Js 0.651 conn 108 u window 128 u pen 0.13 kmax 0.109/u speed 0.43 cross 0 (allowed 0) side 0.02 ymin 86.5 u; dist to font 24.23 u (own ends), 24.23 u (entry frame); status 0 nfev 5580/8000
+wr                     v7.0  wr solved: exit 2.00 u from w's end, entry cusp at 6.72 u (retrace True); J 0.0111 (conn 0.01, L 0.00085, R 5.3e-05) Js 0.0219 conn 102 u window 125 u pen 0.0015 kmax 0.173/u speed 0.48 cross 0 (allowed 0) side 0.03 ymin 76.2 u; dist to font 26.02 u (own ends), 26.02 u (entry frame); status 0 nfev 1519/8000
+ws                     approved (v6.8) ws preset class cnct.ful_b_s; dist to font 5.77 u
+ws                     v6.9  ws solved: exit 2.00 u from w's end, entry corner at 0.00 u (retrace False); J 0.312 (conn 0.0009, L 0.31, R 0) Js 0.433 conn 92 u window 112 u pen 0 kmax 0.077/u speed 0.48 cross 0 (allowed 0) side 0.59 ymin 118.8 u; dist to font 52.30 u (own ends), 52.30 u (entry frame); status 0 nfev 1602/8000; corner at 30.00 deg, kR 0.0762/u
+ws                     v7.0  ws solved: exit 2.00 u from w's end, entry corner at 0.00 u (retrace False); J 0.00108 (conn 0.00022, L 0.00085, R 0) Js 0.00107 conn 80 u window 100 u pen 0 kmax 0.068/u speed 0.60 cross 0 (allowed 0) side 0.56 ymin 104.8 u; dist to font 38.79 u (own ends), 38.79 u (entry frame); status 0 nfev 4332/8000; corner at 30.00 deg, kR 0.0160/u
+wt                     approved (v6.8) wt preset class|R cnct.ful_b_t|t; dist to font 2.92 u
+wt                     v6.9  wt solved: exit 0.93 u from w's end, entry cusp at 55.70 u (retrace True); J 0.318 (conn 0.007, L 0.31, R 0.00019) Js 1.14 conn 79 u window 153 u pen 0 kmax 0.138/u speed 0.35 cross 0 (allowed 0) side 0.03 ymin 115.4 u; dist to font 13.99 u (own ends), 54.92 u (entry frame); status 0 nfev 830/8000
+wt                     v7.0  wt solved: exit 2.00 u from w's end, entry cusp at 55.70 u (retrace True); J 0.00204 (conn 0.001, L 0.00085, R 0.00019) Js 0.00589 conn 70 u window 142 u pen 7.9e-09 kmax 0.068/u speed 0.61 cross 0 (allowed 0) side 0.01 ymin 104.7 u; dist to font 13.41 u (own ends), 54.92 u (entry frame); status 0 nfev 1681/8000
+wu                     approved (v6.8) wu preset class cnct.ful_b_n; dist to font 1.48 u
+wu                     v6.9  wu solved: exit 0.31 u from w's end, entry corner at 0.00 u (retrace False); J 0.312 (conn 0.00084, L 0.31, R 0) Js 0.293 conn 76 u window 98 u pen 0 kmax 0.089/u speed 0.52 cross 0 (allowed 0) side 1.02 ymin 118.6 u; dist to font 15.42 u (own ends), 15.42 u (entry frame); status 0 nfev 2092/8000; corner at 30.00 deg, kR 0.0884/u
+wu                     v7.0  wu solved: exit 2.00 u from w's end, entry corner at 0.00 u (retrace False); J 0.00109 (conn 0.00024, L 0.00085, R 0) Js 0.000682 conn 65 u window 85 u pen 0 kmax 0.068/u speed 0.63 cross 0 (allowed 0) side 0.96 ymin 104.8 u; dist to font 4.24 u (own ends), 4.25 u (entry frame); status 0 nfev 3497/8000; corner at 30.00 deg, kR 0.0167/u
+wv                     approved (v6.8) wv preset k962 class cnct.cnt_b_n; dist to font 1.21 u
+wv                     v6.9  wv solved: exit 0.00 u from w's end, entry merge at 3.50 u (retrace False); J 0.313 (conn 0.0018, L 0.31, R 0.0002) Js 0.367 conn 63 u window 105 u pen 0 kmax 0.083/u speed 0.54 cross 0 (allowed 0) side - ymin 118.3 u; dist to font 14.79 u (own ends), 14.79 u (entry frame); status 0 nfev 841/8000
+wv                     v7.0  wv solved: exit 2.00 u from w's end, entry merge at 3.50 u (retrace False); J 0.00177 (conn 0.00072, L 0.00085, R 0.0002) Js 0.00144 conn 53 u window 93 u pen 0 kmax 0.083/u speed 0.79 cross 0 (allowed 0) side - ymin 104.8 u; dist to font 1.95 u (own ends), 3.44 u (entry frame); status 0 nfev 1354/8000
+ww                     approved (v6.8) ww preset class cnct.ful_b_n; dist to font 1.62 u
+ww                     v6.9  ww solved: exit 0.00 u from w's end, entry corner at 0.00 u (retrace False); J 0.312 (conn 0.00083, L 0.31, R 0) Js 0.294 conn 76 u window 98 u pen 0 kmax 0.090/u speed 0.51 cross 0 (allowed 0) side 0.47 ymin 118.6 u; dist to font 15.35 u (own ends), 15.35 u (entry frame); status 0 nfev 3058/8000; corner at 30.00 deg, kR 0.0891/u
+ww                     v7.0  ww solved: exit 2.00 u from w's end, entry corner at 0.00 u (retrace False); J 0.0011 (conn 0.00024, L 0.00085, R 0) Js 0.000684 conn 65 u window 85 u pen 0 kmax 0.068/u speed 0.63 cross 0 (allowed 0) side 0.39 ymin 104.8 u; dist to font 4.14 u (own ends), 4.14 u (entry frame); status 0 nfev 2874/8000; corner at 30.00 deg, kR 0.0171/u
+wx                     approved (v6.8) wx preset class cnct.ful_b_x; dist to font 1.06 u
+wx                     v6.9  wx solved: exit 0.00 u from w's end, entry merge at 3.50 u (retrace False); J 0.313 (conn 0.0015, L 0.31, R 0.00025) Js 0.491 conn 74 u window 116 u pen 0 kmax 0.073/u speed 0.48 cross 0 (allowed 0) side - ymin 118.2 u; dist to font 22.65 u (own ends), 22.65 u (entry frame); status 0 nfev 3412/8000
+wx                     v7.0  wx solved: exit 2.00 u from w's end, entry merge at 3.50 u (retrace False); J 0.00181 (conn 0.00071, L 0.00085, R 0.00025) Js 0.00202 conn 64 u window 104 u pen 0 kmax 0.073/u speed 0.92 cross 0 (allowed 0) side - ymin 104.8 u; dist to font 9.43 u (own ends), 9.43 u (entry frame); status 0 nfev 634/8000
+wy                     approved (v6.8) wy preset class cnct.ful_b_n; dist to font 1.48 u
+wy                     v6.9  wy solved: exit 0.47 u from w's end, entry corner at 0.00 u (retrace False); J 0.312 (conn 0.00085, L 0.31, R 0) Js 0.291 conn 76 u window 98 u pen 0 kmax 0.089/u speed 0.52 cross 0 (allowed 0) side 0.86 ymin 118.6 u; dist to font 15.42 u (own ends), 15.42 u (entry frame); status 0 nfev 2051/8000; corner at 30.00 deg, kR 0.0885/u
+wy                     v7.0  wy solved: exit 2.00 u from w's end, entry corner at 0.00 u (retrace False); J 0.00109 (conn 0.00024, L 0.00085, R 0) Js 0.000679 conn 65 u window 85 u pen 0 kmax 0.068/u speed 0.63 cross 0 (allowed 0) side 0.79 ymin 104.8 u; dist to font 4.25 u (own ends), 4.25 u (entry frame); status 0 nfev 5081/8000; corner at 30.00 deg, kR 0.0166/u
+wz                     approved (v6.8) wz preset class cnct.cnt_b_z; dist to font 2.16 u
+wz                     v6.9  wz solved: exit 0.00 u from w's end, entry merge at 3.50 u (retrace False); J 0.311 (conn 0.00029, L 0.31, R 8.3e-06) Js 0.651 conn 86 u window 128 u pen 0 kmax 0.032/u speed 0.47 cross 0 (allowed 0) side - ymin 118.5 u; dist to font 21.90 u (own ends), 21.90 u (entry frame); status 0 nfev 3162/8000
+wz                     v7.0  wz solved: exit 2.00 u from w's end, entry merge at 3.50 u (retrace False); J 0.00115 (conn 0.00029, L 0.00085, R 8.3e-06) Js 0.00174 conn 75 u window 115 u pen 0 kmax 0.068/u speed 0.90 cross 0 (allowed 0) side - ymin 104.8 u; dist to font 9.05 u (own ends), 9.05 u (entry frame); status 0 nfev 1179/8000
+
+solves:
+wa dx 888.8 fu: nfev 1340, J 0.3137, pen 0
+wa dx 888.8 fu: nfev 356, J 0.001661, pen 1.45e-09
+wb dx 915.8 fu: nfev 814, J 0.3142, pen 0
+wb dx 915.8 fu: nfev 780, J 0.001177, pen 0
+wc dx 888.5 fu: nfev 883, J 0.3112, pen 0
+wc dx 888.5 fu: nfev 5028, J 0.001114, pen 0
+wd dx 889.0 fu: nfev 964, J 0.3111, pen 0
+wd dx 889.0 fu: nfev 5182, J 0.001105, pen 0
+we dx 913.5 fu: nfev 804, J 0.3203, pen 0
+we dx 913.5 fu: nfev 2868, J 0.001645, pen 0
+wf dx 913.0 fu: nfev 550, J 0.3143, pen 0
+wf dx 913.0 fu: nfev 793, J 0.001181, pen 0
+wg dx 888.5 fu: nfev 1681, J 0.3117, pen 4.05e-12
+wg dx 888.5 fu: nfev 3327, J 0.001188, pen 0
+wh dx 913.5 fu: nfev 1021, J 0.314, pen 0
+wh dx 913.5 fu: nfev 540, J 0.001079, pen 0
+wi dx 889.0 fu: nfev 1504, J 0.3119, pen 0
+wi dx 889.0 fu: nfev 6425, J 0.001091, pen 0
+wj dx 888.2 fu: nfev 1381, J 0.3119, pen 0
+wj dx 888.2 fu: nfev 1487, J 0.001092, pen 0
+wk dx 914.0 fu: nfev 466, J 0.3135, pen 0
+wk dx 914.0 fu: nfev 972, J 0.001091, pen 0
+wl dx 911.0 fu: nfev 994, J 0.3144, pen 0
+wl dx 911.0 fu: nfev 802, J 0.00118, pen 0
+wm dx 913.5 fu: nfev 1780, J 0.3128, pen 0
+wm dx 913.5 fu: nfev 526, J 0.001562, pen 0
+wn dx 913.5 fu: nfev 883, J 0.3128, pen 0
+wn dx 913.5 fu: nfev 1000, J 0.00159, pen 0
+wo dx 888.0 fu: nfev 948, J 0.3112, pen 0
+wo dx 888.0 fu: nfev 2332, J 0.001073, pen 0
+wp dx 890.2 fu: nfev 1822, J 0.3119, pen 0
+wp dx 890.2 fu: nfev 2198, J 0.001102, pen 0
+wq dx 889.2 fu: nfev 805, J 0.314, pen 0
+wq dx 889.2 fu: nfev 414, J 0.002055, pen 0.000129
+wr dx 887.5 fu: nfev 5580, J 0.3138, pen 0.131
+wr dx 887.5 fu: nfev 1519, J 0.01113, pen 0.00146
+ws dx 888.2 fu: nfev 1602, J 0.3118, pen 0
+ws dx 888.2 fu: nfev 4332, J 0.001078, pen 0
+wt dx 888.5 fu: nfev 830, J 0.3182, pen 0
+wt dx 888.5 fu: nfev 1681, J 0.002042, pen 7.88e-09
+wu dx 889.5 fu: nfev 2092, J 0.3119, pen 0
+wu dx 889.5 fu: nfev 3497, J 0.001093, pen 0
+wv dx 913.5 fu: nfev 841, J 0.3131, pen 0
+wv dx 913.5 fu: nfev 1354, J 0.00177, pen 0
+ww dx 888.2 fu: nfev 3058, J 0.3119, pen 0
+ww dx 888.2 fu: nfev 2874, J 0.001096, pen 0
+wx dx 888.0 fu: nfev 3412, J 0.3128, pen 0
+wx dx 888.0 fu: nfev 634, J 0.001814, pen 0
+wy dx 888.8 fu: nfev 2051, J 0.3119, pen 0
+wy dx 888.8 fu: nfev 5081, J 0.001093, pen 0
+wz dx 887.5 fu: nfev 3162, J 0.3114, pen 0
+wz dx 887.5 fu: nfev 1179, J 0.00115, pen 0

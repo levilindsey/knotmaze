@@ -1,0 +1,4 @@
+
+(inkscape.com:27232): Gdk-CRITICAL **: 10:15:41.730: gdk_monitor_get_geometry: assertion 'GDK_IS_MONITOR (monitor)' failed
+
+(org.inkscape.Inkscape:27232): Gdk-CRITICAL **: 10:15:41.820: _gdk_win32_monitor_get_pixel_structure: assertion 'monitor != NULL' failed

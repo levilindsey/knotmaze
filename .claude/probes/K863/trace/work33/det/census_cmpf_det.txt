@@ -1,0 +1,350 @@
+v6.8 (M) vs v6.8 (M)
+piece                      dmax A   dmax B   hk A  hk B  spk A spk B  rgh A rgh B  sm A sm B
+vq:J0-2vq                   10.15    10.15      2     2     32    32  FAIL FAIL     0    0
+wq:J0-2wq                   10.15    10.15      2     2     33    33  FAIL FAIL     0    0
+bq:J0-2bq                    9.96     9.96      2     2     29    29  FAIL FAIL     0    0
+fl:tail0l                    8.91     8.91      2     2     53    53  short short     0    0
+ol:tail0l                    8.91     8.91      2     2     54    54  short short     0    0
+os:J0-2os                   36.17    36.17      0     0      0     0    ok   ok     0    0
+cursive:J10-12ve             3.16     3.16      2     2     28    28  FAIL FAIL     0    0
+oh:J0-2oh                   34.81    34.81      0     0      0     0    ok   ok     0    0
+ok:J0-2ok                   34.77    34.77      0     0      0     0    ok   ok     0    0
+oz:tail0z                    1.72     1.72      2     2     62    62  FAIL FAIL     0    0
+fz:tail0z                    1.72     1.72      2     2     55    55  FAIL FAIL     0    0
+fq:tail0q                    1.06     1.06      1     1      9     9  FAIL FAIL     1    1
+vq:tail0q                    1.06     1.06      1     1      9     9  FAIL FAIL     1    1
+oq:tail0q                    1.06     1.06      1     1     10    10  FAIL FAIL     1    1
+bq:tail0q                    1.06     1.06      1     1      9     9  FAIL FAIL     1    1
+wq:tail0q                    1.06     1.06      1     1      9     9  FAIL FAIL     1    1
+quick brown fox:J10-12br     5.18     5.18      1     1     61    61  FAIL FAIL     0    0
+be we shoe maze huge bye:J0-2be     3.47     3.47      1     1     27    27  FAIL FAIL     0    0
+woven:J4-6ve                 3.14     3.14      1     1     24    24  FAIL FAIL     0    0
+ice jet even:J14-16ve        3.14     3.14      1     1     26    26  FAIL FAIL     0    0
+lawgiver:J10-12ve            3.14     3.14      1     1     25    25  FAIL FAIL     0    0
+jumps over the lazy dog:J12-14ve     3.14     3.14      1     1     26    26  FAIL FAIL     0    0
+which:J0-2wh                 2.77     2.77      1     1      8     8  FAIL FAIL     0    0
+be we shoe maze huge bye:J4-6we     2.01     2.01      1     1     27    27  FAIL FAIL     0    0
+oh:tail0h                    1.07     1.07      1     1     14    14  FAIL FAIL     0    0
+fh:tail0h                    1.07     1.07      1     1     13    13  FAIL FAIL     0    0
+which:tail0h                 1.07     1.07      1     1     13    13  FAIL FAIL     0    0
+fu:tail0u                    1.16     1.16      1     1     23    23  FAIL FAIL     0    0
+ou:tail0u                    1.16     1.16      1     1     24    24  FAIL FAIL     0    0
+oi:tail0i                    1.62     1.62      1     1     26    26  FAIL FAIL     0    0
+fi:tail0i                    1.62     1.62      1     1     20    20  FAIL FAIL     0    0
+hippo:J0-2hi                 9.98     9.98      0     0      0     0    ok   ok     1    1
+ot:tail0t                    6.87     6.87      0     0     21    21  FAIL FAIL     0    0
+it:tail0t                    6.53     6.53      0     0     18    18  FAIL FAIL     0    0
+nt:tail0t                    6.53     6.53      0     0     17    17  FAIL FAIL     0    0
+at:tail0t                    6.53     6.53      0     0     19    19  FAIL FAIL     0    0
+et:tail0t                    6.53     6.53      0     0     20    20  FAIL FAIL     0    0
+ft:tail0t                    6.53     6.53      0     0     19    19  FAIL FAIL     0    0
+oat:tail0t                   6.53     6.53      0     0     21    21  FAIL FAIL     0    0
+ice jet even:tail1t          6.53     6.53      0     0     20    20  FAIL FAIL     0    0
+oat:J2-4at                  18.32    18.32      0     0      0     0    ok   ok     0    0
+at:J0-2at                   18.26    18.26      0     0      0     0    ok   ok     0    0
+knotmaze:J4-6ot             17.35    17.35      0     0      0     0    ok   ok     0    0
+lawgiver:J12-14er            6.59     6.59      0     0      0     0    ok   ok     1    1
+after:J6-8er                 6.59     6.59      0     0      0     0    ok   ok     1    1
+jumps over the lazy dog:J14-16er     6.59     6.59      0     0      0     0    ok   ok     1    1
+coffee:J0-2co                6.72     6.72      0     0      4     4  FAIL FAIL     0    0
+nt:J0-2nt                   16.31    16.31      0     0      0     0    ok   ok     0    0
+ot:J0-2ot                   15.98    15.98      0     0      0     0    ok   ok     0    0
+it:J0-2it                   15.95    15.95      0     0      0     0    ok   ok     0    0
+fa:tail0a                    0.74     0.74      0     0     14    14  FAIL FAIL     0    0
+va:tail0a                    0.74     0.74      0     0     12    12  FAIL FAIL     0    0
+wa:tail0a                    0.74     0.74      0     0     14    14  FAIL FAIL     0    0
+ba:tail0a                    0.74     0.74      0     0     14    14  FAIL FAIL     0    0
+oa:tail0a                    0.74     0.74      0     0     45    45  FAIL FAIL     0    0
+which:J2-4hi                 9.94     9.94      0     0      0     0    ok   ok     1    1
+oz:J0-2oz                   14.60    14.60      0     0      0     0    ok   ok     0    0
+fe:J0-2fe                   13.62    13.62      0     0      0     0    ok   ok     0    0
+coffee:J6-8fe               13.59    13.59      0     0      0     0    ok   ok     0    0
+ft:J0-2ft                   13.24    13.24      0     0      0     0    ok   ok     0    0
+subgroup:J6-8gr             13.21    13.21      0     0      0     0    ok   ok     0    0
+after:J2-4ft                13.21    13.21      0     0      0     0    ok   ok     0    0
+fw:J0-2fw                   12.96    12.96      0     0      0     0    ok   ok     0    0
+fp:J0-2fp                   12.82    12.82      0     0      0     0    ok   ok     0    0
+be we shoe maze huge bye:J12-14oe    12.74    12.74      0     0      0     0    ok   ok     0    0
+fy:J0-2fy                   12.68    12.68      0     0      0     0    ok   ok     0    0
+oe:J0-2oe                   12.69    12.69      0     0      0     0    ok   ok     0    0
+fi:J0-2fi                   12.68    12.68      0     0      0     0    ok   ok     0    0
+fu:J0-2fu                   12.64    12.64      0     0      0     0    ok   ok     0    0
+fj:J0-2fj                   12.63    12.63      0     0      0     0    ok   ok     0    0
+quick brown fox:J22-24ox    12.29    12.29      0     0      0     0    ok   ok     0    0
+boxes:J2-4ox                12.28    12.28      0     0      0     0    ok   ok     0    0
+ox:J0-2ox                   12.27    12.27      0     0      0     0    ok   ok     0    0
+fz:J0-2fz                   11.46    11.46      0     0      0     0    ok   ok     0    0
+fx:J0-2fx                   11.36    11.36      0     0      0     0    ok   ok     0    0
+or:J0-2or                   10.58    10.58      0     0      0     0    ok   ok     0    0
+fn:J0-2fn                   10.29    10.29      0     0      0     0    ok   ok     0    0
+jumps over the lazy dog:J26-28az     9.93     9.93      0     0      0     0    ok   ok     0    0
+be we shoe maze huge bye:J18-20az     9.93     9.93      0     0      0     0    ok   ok     0    0
+knotmaze:J10-12az            9.93     9.93      0     0      0     0    ok   ok     0    0
+boxes:J6-8es                 4.87     4.87      0     0      0     0    ok   ok     1    1
+woven:J6-8en                 9.41     9.41      0     0      0     0    ok   ok     0    0
+ice jet even:J16-18en        9.41     9.41      0     0      0     0    ok   ok     0    0
+fs:J0-2fs                    9.37     9.37      0     0      0     0    ok   ok     0    0
+fq:J0-2fq                    9.60     9.60      0     0      0     0    ok   ok     0    0
+fg:J0-2fg                    9.55     9.55      0     0      0     0    ok   ok     0    0
+fd:J0-2fd                    9.52     9.52      0     0      0     0    ok   ok     0    0
+fa:J0-2fa                    9.52     9.52      0     0      0     0    ok   ok     0    0
+fc:J0-2fc                    9.34     9.34      0     0      0     0    ok   ok     0    0
+minimum:J4-6ni               8.78     8.78      0     0      0     0    ok   ok     0    0
+ice jet even:J12-14ev        8.40     8.40      0     0      0     0    ok   ok     0    0
+jumps over the lazy dog:J20-22he     8.35     8.35      0     0      0     0    ok   ok     0    0
+coffee:J8-10ee               8.29     8.29      0     0      0     0    ok   ok     0    0
+ice jet even:J0-2ic          8.77     8.77      0     0      0     0    ok   ok     0    0
+which:J4-6ic                 8.75     8.75      0     0      0     0    ok   ok     0    0
+quick brown fox:J4-6ic       8.75     8.75      0     0      0     0    ok   ok     0    0
+be we shoe maze huge bye:J24-26hu     8.08     8.08      0     0      0     0    ok   ok     0    0
+people:J2-4eo                8.15     8.15      0     0      0     0    ok   ok     0    0
+quick brown fox:J20-22fo     7.80     7.80      0     0      0     0    ok   ok     0    0
+fo:J0-2fo                    7.79     7.79      0     0      0     0    ok   ok     0    0
+wa:J0-2wa                    7.67     7.67      0     0      0     0    ok   ok     0    0
+ba:J0-2ba                    7.61     7.61      0     0      0     0    ok   ok     0    0
+bad:J0-2ba                   7.59     7.59      0     0      0     0    ok   ok     0    0
+va:J0-2va                    7.56     7.56      0     0      0     0    ok   ok     0    0
+oq:J0-2oq                    7.27     7.27      0     0      0     0    ok   ok     0    0
+jumps over the lazy dog:J34-36og     7.18     7.18      0     0      0     0    ok   ok     0    0
+fk:J0-2fk                    6.66     6.66      0     0      0     0    ok   ok     0    0
+og:J0-2og                    7.14     7.14      0     0      0     0    ok   ok     0    0
+lawgiver:J2-4aw              6.63     6.63      0     0      0     0    ok   ok     0    0
+fh:J0-2fh                    6.60     6.60      0     0      0     0    ok   ok     0    0
+fv:J0-2fv                    6.59     6.59      0     0      0     0    ok   ok     0    0
+fa:lead0f                    6.46     6.46      0     0      0     0    ok   ok     0    0
+fb:lead0f                    6.46     6.46      0     0      0     0    ok   ok     0    0
+fc:lead0f                    6.46     6.46      0     0      0     0    ok   ok     0    0
+fd:lead0f                    6.46     6.46      0     0      0     0    ok   ok     0    0
+fe:lead0f                    6.46     6.46      0     0      0     0    ok   ok     0    0
+ff:lead0f                    6.46     6.46      0     0      0     0    ok   ok     0    0
+fg:lead0f                    6.46     6.46      0     0      0     0    ok   ok     0    0
+fh:lead0f                    6.46     6.46      0     0      0     0    ok   ok     0    0
+fi:lead0f                    6.46     6.46      0     0      0     0    ok   ok     0    0
+fj:lead0f                    6.46     6.46      0     0      0     0    ok   ok     0    0
+fk:lead0f                    6.46     6.46      0     0      0     0    ok   ok     0    0
+fl:lead0f                    6.46     6.46      0     0      0     0    ok   ok     0    0
+fm:lead0f                    6.46     6.46      0     0      0     0    ok   ok     0    0
+fn:lead0f                    6.46     6.46      0     0      0     0    ok   ok     0    0
+fo:lead0f                    6.46     6.46      0     0      0     0    ok   ok     0    0
+fp:lead0f                    6.46     6.46      0     0      0     0    ok   ok     0    0
+fq:lead0f                    6.46     6.46      0     0      0     0    ok   ok     0    0
+fr:lead0f                    6.46     6.46      0     0      0     0    ok   ok     0    0
+fs:lead0f                    6.46     6.46      0     0      0     0    ok   ok     0    0
+ft:lead0f                    6.46     6.46      0     0      0     0    ok   ok     0    0
+fu:lead0f                    6.46     6.46      0     0      0     0    ok   ok     0    0
+fv:lead0f                    6.46     6.46      0     0      0     0    ok   ok     0    0
+fw:lead0f                    6.46     6.46      0     0      0     0    ok   ok     0    0
+fx:lead0f                    6.46     6.46      0     0      0     0    ok   ok     0    0
+fy:lead0f                    6.46     6.46      0     0      0     0    ok   ok     0    0
+fz:lead0f                    6.46     6.46      0     0      0     0    ok   ok     0    0
+quick brown fox:lead2f       6.46     6.46      0     0      0     0    ok   ok     0    0
+fm:J0-2fm                    6.41     6.41      0     0      0     0    ok   ok     0    0
+fr:J0-2fr                    6.34     6.34      0     0      0     0    ok   ok     0    0
+after:J0-2af                 6.32     6.32      0     0      0     0    ok   ok     0    0
+bad:J2-4ad                   6.60     6.60      0     0      0     0    ok   ok     0    0
+and:J2-4nd                   6.35     6.35      0     0      0     0    ok   ok     0    0
+lawgiver:J4-6wg              6.27     6.27      0     0      0     0    ok   ok     0    0
+oa:J0-2oa                    6.21     6.21      0     0      0     0    ok   ok     0    0
+subgroup:J4-6bg              6.17     6.17      0     0      0     0    ok   ok     0    0
+vg:J0-2vg                    6.16     6.16      0     0      0     0    ok   ok     0    0
+be we shoe maze huge bye:J10-12ho     6.10     6.10      0     0      0     0    ok   ok     0    0
+oat:J0-2oa                   6.09     6.09      0     0      0     0    ok   ok     0    0
+oe:tail0e                    3.39     3.39      0     0      0     0  FAIL FAIL     0    0
+be we shoe maze huge bye:tail0e     3.39     3.39      0     0      0     0  FAIL FAIL     0    0
+be we shoe maze huge bye:tail2e     3.39     3.39      0     0      0     0  FAIL FAIL     0    0
+be we shoe maze huge bye:tail1e     3.39     3.39      0     0      0     0  FAIL FAIL     0    0
+cursive:tail0e               3.39     3.39      0     0      0     0  FAIL FAIL     0    0
+jumps over the lazy dog:J32-34do     5.97     5.97      0     0      0     0    ok   ok     0    0
+hippo:J2-4ip                 5.44     5.44      0     0      0     0    ok   ok     0    0
+minimum:J6-8im               4.97     4.97      0     0      0     0    ok   ok     0    0
+cursive:lead0c                nan      nan      0     0      0     0  FAIL FAIL     0    0
+coffee:lead0c                 nan      nan      0     0      0     0  FAIL FAIL     0    0
+jumps over the lazy dog:J6-8ps     4.66     4.66      0     0      0     0    ok   ok     0    0
+be we shoe maze huge bye:tail4e     1.60     1.60      0     0      0     0  FAIL FAIL     0    0
+coffee:tail0e                1.48     1.48      0     0      0     0  FAIL FAIL     0    0
+ice jet even:tail0e          1.60     1.60      0     0      0     0  FAIL FAIL     0    0
+people:tail0e                1.48     1.48      0     0      0     0  FAIL FAIL     0    0
+be we shoe maze huge bye:tail5e     1.60     1.60      0     0      0     0  FAIL FAIL     0    0
+fe:tail0e                    1.48     1.48      0     0      0     0  FAIL FAIL     0    0
+knotmaze:tail0e              1.60     1.60      0     0      0     0  FAIL FAIL     0    0
+be we shoe maze huge bye:tail3e     1.60     1.60      0     0      0     0  FAIL FAIL     0    0
+jumps over the lazy dog:tail1e     1.48     1.48      0     0      0     0  FAIL FAIL     0    0
+jumps over the lazy dog:lead2d      nan      nan      0     0      0     0  FAIL FAIL     0    0
+woven:tail0n                 1.33     1.33      0     0      0     0  FAIL FAIL     0    0
+quick brown fox:tail1n       1.59     1.59      0     0      0     0  FAIL FAIL     0    0
+ice jet even:tail2n          1.33     1.33      0     0      0     0  FAIL FAIL     0    0
+fn:tail0n                    1.59     1.59      0     0      0     0  FAIL FAIL     0    0
+on:tail0n                    1.59     1.59      0     0      0     0  FAIL FAIL     0    0
+ok:tail0k                    2.36     2.36      0     0      0     0  FAIL FAIL     0    0
+fk:tail0k                    2.36     2.36      0     0      0     0  FAIL FAIL     0    0
+quick brown fox:tail0k       2.36     2.36      0     0      0     0  FAIL FAIL     0    0
+knotmaze:J2-4no              4.79     4.79      0     0      0     0    ok   ok     0    0
+coffee:J2-4of                3.92     3.92      0     0      0     0    ok   ok     0    0
+ob:J0-2ob                    3.86     3.86      0     0      0     0    ok   ok     0    0
+people:J6-8pl                3.82     3.82      0     0      0     0    ok   ok     0    0
+of:J0-2of                    3.83     3.83      0     0      0     0    ok   ok     0    0
+ol:J0-2ol                    3.82     3.82      0     0      0     0    ok   ok     0    0
+fl:J0-2fl                    3.75     3.75      0     0      0     0    ok   ok     0    0
+ff:J0-2ff                    3.75     3.75      0     0      0     0    ok   ok     0    0
+fb:J0-2fb                    3.73     3.73      0     0      0     0    ok   ok     0    0
+coffee:J4-6ff                3.72     3.72      0     0      0     0    ok   ok     0    0
+e:after_o                    3.55     3.55      0     0      0     0    ok   ok     0    0
+jumps over the lazy dog:tail2y     3.55     3.55      0     0      0     0    ok   ok     0    0
+oy:tail0y                    3.55     3.55      0     0      0     0    ok   ok     0    0
+fy:tail0y                    3.55     3.55      0     0      0     0    ok   ok     0    0
+puppy:tail0y                 3.55     3.55      0     0      0     0    ok   ok     0    0
+hippo:J4-6pp                 3.49     3.49      0     0      0     0    ok   ok     0    0
+puppy:J4-6pp                 3.49     3.49      0     0      0     0    ok   ok     0    0
+puppy:J6-8py                 3.49     3.49      0     0      0     0    ok   ok     0    0
+hippo:lead0h                 3.50     3.50      0     0      0     0    ok   ok     0    0
+be we shoe maze huge bye:lead3h     3.50     3.50      0     0      0     0    ok   ok     0    0
+puppy:J0-2pu                 3.43     3.43      0     0      0     0    ok   ok     0    0
+lawgiver:J8-10iv             3.34     3.34      0     0      0     0    ok   ok     0    0
+cursive:J8-10iv              3.34     3.34      0     0      0     0    ok   ok     0    0
+lawgiver:J6-8gi              3.33     3.33      0     0      0     0    ok   ok     0    0
+subgroup:lead0s              3.28     3.28      0     0      0     0    ok   ok     0    0
+be we shoe maze huge bye:lead1s     3.28     3.28      0     0      0     0    ok   ok     0    0
+cursive:J2-4ur               3.16     3.16      0     0      0     0    ok   ok     0    0
+bow:lead0b                   3.20     3.20      0     0      0     0    ok   ok     0    0
+boxes:lead0b                 3.20     3.20      0     0      0     0    ok   ok     0    0
+be we shoe maze huge bye:lead0b     3.20     3.20      0     0      0     0    ok   ok     0    0
+bad:lead0b                   3.20     3.20      0     0      0     0    ok   ok     0    0
+ba:lead0b                    3.20     3.20      0     0      0     0    ok   ok     0    0
+bq:lead0b                    3.20     3.20      0     0      0     0    ok   ok     0    0
+quick brown fox:lead1b       3.20     3.20      0     0      0     0    ok   ok     0    0
+be we shoe maze huge bye:lead4b     3.20     3.20      0     0      0     0    ok   ok     0    0
+lawgiver:lead0l              3.16     3.16      0     0      0     0    ok   ok     0    0
+jumps over the lazy dog:lead1l     3.16     3.16      0     0      0     0    ok   ok     0    0
+minimum:J2-4in               3.14     3.14      0     0      0     0    ok   ok     0    0
+people:J0-2pe                3.13     3.13      0     0      0     0    ok   ok     0    0
+hippo:J6-8po                 3.49     3.49      0     0      0     0    ok   ok     0    0
+woven:J2-4ov                 2.95     2.95      0     0      0     0    ok   ok     0    0
+jumps over the lazy dog:J10-12ov     2.91     2.91      0     0      0     0    ok   ok     0    0
+ov:J0-2ov                    2.91     2.91      0     0      0     0    ok   ok     0    0
+e:after_g                    2.87     2.87      0     0      0     0    ok   ok     0    0
+on:J0-2on                    2.78     2.78      0     0      0     0    ok   ok     0    0
+people:J4-6op                2.72     2.72      0     0      0     0    ok   ok     0    0
+op:J0-2op                    2.66     2.66      0     0      0     0    ok   ok     0    0
+ice jet even:J8-10et         2.60     2.60      0     0      0     0    ok   ok     0    0
+om:J0-2om                    2.58     2.58      0     0      0     0    ok   ok     0    0
+subgroup:J10-12ou            2.59     2.59      0     0      0     0    ok   ok     0    0
+oi:J0-2oi                    2.56     2.56      0     0      0     0    ok   ok     0    0
+bow:J2-4ow                   2.56     2.56      0     0      0     0    ok   ok     0    0
+quick brown fox:J16-18wn     1.16     1.16      0     0      0     0    ok   ok     0    0
+quick brown fox:J14-16ow     2.55     2.55      0     0      0     0    ok   ok     0    0
+be we shoe maze huge bye:J34-36ye     1.71     1.71      0     0      0     0    ok   ok     0    0
+ice jet even:J6-8je          1.71     1.71      0     0      0     0    ok   ok     0    0
+and:lead0a                    nan      nan      0     0      0     0    ok   ok     0    0
+at:lead0a                     nan      nan      0     0      0     0    ok   ok     0    0
+after:lead0a                  nan      nan      0     0      0     0    ok   ok     0    0
+quick brown fox:J0-2qu       2.38     2.38      0     0      0     0    ok   ok     0    0
+be we shoe maze huge bye:J26-28ug     2.86     2.86      0     0      0     0    ok   ok     0    0
+be we shoe maze huge bye:J28-30ge     1.72     1.72      0     0      0     0    ok   ok     0    0
+be we shoe maze huge bye:J16-18ma     2.91     2.91      0     0      0     0    ok   ok     0    0
+knotmaze:J8-10ma             2.93     2.93      0     0      0     0    ok   ok     0    0
+jumps over the lazy dog:J24-26la     2.60     2.60      0     0      0     0    ok   ok     0    0
+lawgiver:J0-2la              2.60     2.60      0     0      0     0    ok   ok     0    0
+et:lead0e                    1.20     1.20      0     0      0     0    ok   ok     0    0
+ice jet even:lead0e          1.20     1.20      0     0      0     0    ok   ok     0    0
+oj:J0-2oj                    2.54     2.54      0     0      0     0    ok   ok     0    0
+ou:J0-2ou                    2.53     2.53      0     0      0     0    ok   ok     0    0
+cursive:J4-6rs               2.32     2.32      0     0      0     0    ok   ok     0    0
+vg:lead0v                    0.18     0.18      0     0      0     0    ok   ok     0    0
+va:lead0v                    0.18     0.18      0     0      0     0    ok   ok     0    0
+vq:lead0v                    0.18     0.18      0     0      0     0    ok   ok     0    0
+be we shoe maze huge bye:lead2m     0.18     0.18      0     0      0     0    ok   ok     0    0
+minimum:lead0m               0.18     0.18      0     0      0     0    ok   ok     0    0
+subgroup:J2-4ub              0.37     0.37      0     0      0     0    ok   ok     0    0
+woven:J0-2wo                 1.58     1.58      0     0      0     0    ok   ok     0    0
+oy:J0-2oy                    2.53     2.53      0     0      0     0    ok   ok     0    0
+boxes:J4-6xe                 1.99     1.99      0     0      0     0    ok   ok     0    0
+ice jet even:J2-4ce          1.20     1.20      0     0      0     0    ok   ok     0    0
+after:J4-6te                 1.89     1.89      0     0      0     0    ok   ok     0    0
+people:J8-10le               1.95     1.95      0     0      0     0    ok   ok     0    0
+bow:J0-2bo                   1.03     1.03      0     0      0     0    ok   ok     0    0
+boxes:J0-2bo                 1.03     1.03      0     0      0     0    ok   ok     0    0
+fc:tail0c                    0.49     0.49      0     0      0     0    ok   ok     0    0
+oc:tail0c                    0.49     0.49      0     0      0     0    ok   ok     0    0
+nt:lead0n                    0.20     0.20      0     0      0     0    ok   ok     0    0
+knotmaze:lead0k              1.10     1.10      0     0      0     0    ok   ok     0    0
+oat:lead0o                    nan      nan      0     0      0     0    ok   ok     0    0
+oa:lead0o                     nan      nan      0     0      0     0    ok   ok     0    0
+ob:lead0o                     nan      nan      0     0      0     0    ok   ok     0    0
+oc:lead0o                     nan      nan      0     0      0     0    ok   ok     0    0
+od:lead0o                     nan      nan      0     0      0     0    ok   ok     0    0
+oe:lead0o                     nan      nan      0     0      0     0    ok   ok     0    0
+of:lead0o                     nan      nan      0     0      0     0    ok   ok     0    0
+og:lead0o                     nan      nan      0     0      0     0    ok   ok     0    0
+oh:lead0o                     nan      nan      0     0      0     0    ok   ok     0    0
+oi:lead0o                     nan      nan      0     0      0     0    ok   ok     0    0
+oj:lead0o                     nan      nan      0     0      0     0    ok   ok     0    0
+ok:lead0o                     nan      nan      0     0      0     0    ok   ok     0    0
+ol:lead0o                     nan      nan      0     0      0     0    ok   ok     0    0
+om:lead0o                     nan      nan      0     0      0     0    ok   ok     0    0
+on:lead0o                     nan      nan      0     0      0     0    ok   ok     0    0
+oo:lead0o                     nan      nan      0     0      0     0    ok   ok     0    0
+op:lead0o                     nan      nan      0     0      0     0    ok   ok     0    0
+oq:lead0o                     nan      nan      0     0      0     0    ok   ok     0    0
+or:lead0o                     nan      nan      0     0      0     0    ok   ok     0    0
+os:lead0o                     nan      nan      0     0      0     0    ok   ok     0    0
+ot:lead0o                     nan      nan      0     0      0     0    ok   ok     0    0
+ou:lead0o                     nan      nan      0     0      0     0    ok   ok     0    0
+ov:lead0o                     nan      nan      0     0      0     0    ok   ok     0    0
+ow:lead0o                     nan      nan      0     0      0     0    ok   ok     0    0
+ox:lead0o                     nan      nan      0     0      0     0    ok   ok     0    0
+oy:lead0o                     nan      nan      0     0      0     0    ok   ok     0    0
+oz:lead0o                     nan      nan      0     0      0     0    ok   ok     0    0
+jumps over the lazy dog:lead0o      nan      nan      0     0      0     0    ok   ok     0    0
+fm:tail0m                    1.26     1.26      0     0      0     0    ok   ok     0    0
+om:tail0m                    1.26     1.26      0     0      0     0    ok   ok     0    0
+minimum:tail0m               1.20     1.20      0     0      0     0    ok   ok     0    0
+fd:tail0d                    1.76     1.76      0     0      0     0    ok   ok     0    0
+and:tail0d                   1.76     1.76      0     0      0     0    ok   ok     0    0
+od:tail0d                    1.76     1.76      0     0      0     0    ok   ok     0    0
+bad:tail0d                   1.76     1.76      0     0      0     0    ok   ok     0    0
+after:tail0r                 2.38     2.38      0     0      0     0    ok   ok     0    0
+lawgiver:tail0r              2.38     2.38      0     0      0     0    ok   ok     0    0
+fr:tail0r                    2.38     2.38      0     0      0     0    ok   ok     0    0
+or:tail0r                    2.38     2.38      0     0      0     0    ok   ok     0    0
+jumps over the lazy dog:tail0r     2.38     2.38      0     0      0     0    ok   ok     0    0
+quick brown fox:lead0q        nan      nan      0     0      0     0    ok   ok     0    0
+knotmaze:J12-14ze            2.28     2.28      0     0      0     0    ok   ok     0    0
+be we shoe maze huge bye:J20-22ze     2.28     2.28      0     0      0     0    ok   ok     0    0
+jumps over the lazy dog:J28-30zy     1.43     1.43      0     0      0     0    ok   ok     0    0
+quick brown fox:J12-14ro     2.89     2.89      0     0      0     0    ok   ok     0    0
+subgroup:J8-10ro             2.89     2.89      0     0      0     0    ok   ok     0    0
+minimum:J8-10mu              1.88     1.88      0     0      0     0    ok   ok     0    0
+jumps over the lazy dog:J4-6mp     1.90     1.90      0     0      0     0    ok   ok     0    0
+puppy:J2-4up                 2.02     2.02      0     0      0     0    ok   ok     0    0
+minimum:J0-2mi               1.86     1.86      0     0      0     0    ok   ok     0    0
+subgroup:J12-14up            2.07     2.07      0     0      0     0    ok   ok     0    0
+quick brown fox:J2-4ui       2.04     2.04      0     0      0     0    ok   ok     0    0
+be we shoe maze huge bye:J32-34by     1.16     1.16      0     0      0     0    ok   ok     0    0
+quick brown fox:J6-8ck       1.00     1.00      0     0      0     0    ok   ok     0    0
+ox:tail0x                    0.25     0.25      0     0      0     0    ok   ok     0    0
+quick brown fox:tail2x       0.25     0.25      0     0      0     0    ok   ok     0    0
+fx:tail0x                    0.25     0.25      0     0      0     0    ok   ok     0    0
+cursive:J6-8si               1.97     1.97      0     0      0     0    ok   ok     0    0
+jumps over the lazy dog:J2-4um     0.73     0.73      0     0      0     0    ok   ok     0    0
+minimum:J10-12um             0.76     0.76      0     0      0     0    ok   ok     0    0
+cursive:J0-2cu               1.87     1.87      0     0      0     0    ok   ok     0    0
+knotmaze:J6-8tm              0.76     0.76      0     0      0     0    ok   ok     0    0
+subgroup:J0-2su              2.10     2.10      0     0      0     0    ok   ok     0    0
+jumps over the lazy dog:J18-20th     0.61     0.61      0     0      0     0    ok   ok     0    0
+knotmaze:J0-2kn              1.02     1.02      0     0      0     0    ok   ok     0    0
+and:J0-2an                   2.50     2.50      0     0      0     0    ok   ok     0    0
+be we shoe maze huge bye:J8-10sh     0.54     0.54      0     0      0     0    ok   ok     0    0
+ow:J0-2ow                    2.50     2.50      0     0      0     0    ok   ok     0    0
+jumps over the lazy dog:J0-2ju     1.84     1.84      0     0      0     0    ok   ok     0    0
+fj:tail0j                    2.19     2.19      0     0      0     0    ok   ok     0    0
+oj:tail0j                    2.19     2.19      0     0      0     0    ok   ok     0    0
+which:J6-8ch                 1.37     1.37      0     0      0     0    ok   ok     0    0
+og:tail0g                    2.30     2.30      0     0      0     0    ok   ok     0    0
+vg:tail0g                    2.30     2.30      0     0      0     0    ok   ok     0    0
+fg:tail0g                    2.30     2.30      0     0      0     0    ok   ok     0    0
+jumps over the lazy dog:tail3g     2.30     2.30      0     0      0     0    ok   ok     0    0
+oc:J0-2oc                    2.89     2.89      0     0      0     0    ok   ok     0    0
+od:J0-2od                    2.73     2.73      0     0      0     0    ok   ok     0    0
+oo:J0-2oo                    2.15     2.15      0     0      0     0    ok   ok     0    0
+et:J0-2et                    2.26     2.26      0     0      0     0    ok   ok     0    0
+counts (pieces with): pieces 349 -> 349, hooks 28 -> 28, spikes 42 -> 42, rough 65 -> 65, seams 11 -> 11, over 197 -> 197

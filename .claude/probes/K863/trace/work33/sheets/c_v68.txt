@@ -1,0 +1,118 @@
+K863 J3j: c alone and joined to every letter: the font, the approved version (v6.8: J2's hand-set joins out of c), v7.1 and v7.2 (red solved joins, blue preset joins; the font pale under each)
+builds: approved (v6.8) = C:\Users\lsl\Repositories\knotmaze\.claude\probes\K863\trace\work33\base (ports, M, C:\Users\lsl\Repositories\knotmaze\.claude\probes\K863\trace\work28\ports_k990e.json); v7.1 = C:\Users\lsl\Repositories\knotmaze\.claude\probes\K863\trace\work31\base (ports, Pc10, C:\Users\lsl\Repositories\knotmaze\.claude\probes\K863\trace\work31\ports_k1112c.json); v7.2 = C:\Users\lsl\Repositories\knotmaze\.claude\probes\K863\trace\work32\base (ports, Plc2m, C:\Users\lsl\Repositories\knotmaze\.claude\probes\K863\trace\work32\ports_k1112cusp.json)
+
+ca                     approved (v6.8) ca preset group low-fused; dist to font 7.39 u
+ca                     v7.1  ca solved: exit 10.00 u from c's end, entry fused at 134.33 u (retrace True); J 5.44e-05 (conn 5.2e-05, L 1.8e-06, R 2.7e-07) Js 0.00118 conn 128 u window 279 u pen 0 kmax 0.024/u speed 0.82 cross 0 (allowed 0) side - ymin -0.1 u; dist to font 27.64 u (own ends), 27.73 u (entry frame); status 0 nfev 729/8000
+ca                     v7.2  ca solved: exit 10.00 u from c's end, entry fused at 134.33 u (retrace True); J 5.44e-05 (conn 5.2e-05, L 1.8e-06, R 2.7e-07) Js 0.00118 conn 128 u window 279 u pen 0 kmax 0.024/u speed 0.82 cross 0 (allowed 0) side - ymin -0.1 u; dist to font 27.64 u (own ends), 27.73 u (entry frame); status 0 nfev 729/8000
+cb                     approved (v6.8) cb preset group low-smooth; dist to font 1.77 u
+cb                     v7.1  cb solved: exit 10.00 u from c's end, entry merge at 16.50 u (retrace False); J 9.08e-06 (conn 7.3e-06, L 1.8e-06, R 1.1e-08) Js 6.22e-05 conn 146 u window 190 u pen 0 kmax 0.024/u speed 0.56 cross 0 (allowed 0) side - ymin 0.0 u; dist to font 1.70 u (own ends), 16.51 u (entry frame); status 0 nfev 1143/8000
+cb                     v7.2  cb solved: exit 10.00 u from c's end, entry merge at 16.50 u (retrace False); J 9.08e-06 (conn 7.3e-06, L 1.8e-06, R 1.1e-08) Js 6.22e-05 conn 146 u window 190 u pen 0 kmax 0.024/u speed 0.56 cross 0 (allowed 0) side - ymin 0.0 u; dist to font 1.70 u (own ends), 16.51 u (entry frame); status 0 nfev 1143/8000
+cc                     approved (v6.8) cc preset group low-fused; dist to font 7.42 u
+cc                     v7.1  cc solved: exit 10.00 u from c's end, entry fused at 133.42 u (retrace True); J 7.87e-05 (conn 7e-05, L 1.8e-06, R 6.5e-06) Js 0.00175 conn 131 u window 281 u pen 0 kmax 0.024/u speed 0.78 cross 0 (allowed 0) side - ymin -0.1 u; dist to font 27.58 u (own ends), 27.62 u (entry frame); status 0 nfev 316/8000
+cc                     v7.2  cc solved: exit 10.00 u from c's end, entry fused at 133.42 u (retrace True); J 7.87e-05 (conn 7e-05, L 1.8e-06, R 6.5e-06) Js 0.00175 conn 131 u window 281 u pen 0 kmax 0.024/u speed 0.78 cross 0 (allowed 0) side - ymin -0.1 u; dist to font 27.58 u (own ends), 27.62 u (entry frame); status 0 nfev 316/8000
+cd                     approved (v6.8) cd preset group low-fused; dist to font 7.36 u
+cd                     v7.1  cd solved: exit 10.00 u from c's end, entry fused at 134.50 u (retrace True); J 5.24e-05 (conn 4.8e-05, L 1.8e-06, R 2.6e-06) Js 0.00114 conn 128 u window 279 u pen 0 kmax 0.024/u speed 0.83 cross 0 (allowed 0) side - ymin -0.1 u; dist to font 27.72 u (own ends), 27.76 u (entry frame); status 0 nfev 701/8000
+cd                     v7.2  cd solved: exit 10.00 u from c's end, entry fused at 134.50 u (retrace True); J 5.24e-05 (conn 4.8e-05, L 1.8e-06, R 2.6e-06) Js 0.00114 conn 128 u window 279 u pen 0 kmax 0.024/u speed 0.83 cross 0 (allowed 0) side - ymin -0.1 u; dist to font 27.72 u (own ends), 27.76 u (entry frame); status 0 nfev 701/8000
+ce                     approved (v6.8) ce preset k962 class|R cnct.ful_c_e|e; dist to font 1.20 u
+ce                     v7.1  ce solved: exit 10.00 u from c's end, entry merge at 30.00 u (retrace False); J 1.5e-05 (conn 1.3e-05, L 1.8e-06, R 1.1e-07) Js 7.41e-05 conn 130 u window 170 u pen 0 kmax 0.024/u speed 0.85 cross 1 (allowed 1) side - ymin -0.0 u; dist to font 19.22 u (own ends), 26.31 u (entry frame); status 0 nfev 1763/8000
+ce                     v7.2  ce solved: exit 10.00 u from c's end, entry merge at 30.00 u (retrace False); J 1.5e-05 (conn 1.3e-05, L 1.8e-06, R 1.1e-07) Js 7.41e-05 conn 130 u window 170 u pen 0 kmax 0.024/u speed 0.85 cross 1 (allowed 1) side - ymin -0.0 u; dist to font 19.22 u (own ends), 26.31 u (entry frame); status 0 nfev 1763/8000
+cf                     approved (v6.8) cf preset group low-smooth; dist to font 1.51 u
+cf                     v7.1  cf solved: exit 9.76 u from c's end, entry merge at 17.79 u (retrace False); J 9e-06 (conn 7.2e-06, L 1.8e-06, R 2.1e-09) Js 6.04e-05 conn 146 u window 189 u pen 0 kmax 0.024/u speed 0.55 cross 0 (allowed 0) side - ymin 0.0 u; dist to font 1.37 u (own ends), 17.69 u (entry frame); status 0 nfev 1831/8000
+cf                     v7.2  cf solved: exit 9.76 u from c's end, entry merge at 17.79 u (retrace False); J 9e-06 (conn 7.2e-06, L 1.8e-06, R 2.1e-09) Js 6.04e-05 conn 146 u window 189 u pen 0 kmax 0.024/u speed 0.55 cross 0 (allowed 0) side - ymin 0.0 u; dist to font 1.37 u (own ends), 17.69 u (entry frame); status 0 nfev 1831/8000
+cg                     approved (v6.8) cg preset group low-fused; dist to font 7.07 u
+cg                     v7.1  cg solved: exit 10.00 u from c's end, entry fused at 137.08 u (retrace True); J 4.97e-05 (conn 4.7e-05, L 1.8e-06, R 4.1e-07) Js 0.0011 conn 127 u window 281 u pen 0 kmax 0.024/u speed 0.83 cross 0 (allowed 0) side - ymin -0.1 u; dist to font 27.86 u (own ends), 27.94 u (entry frame); status 0 nfev 710/8000
+cg                     v7.2  cg solved: exit 10.00 u from c's end, entry fused at 137.08 u (retrace True); J 4.97e-05 (conn 4.7e-05, L 1.8e-06, R 4.1e-07) Js 0.0011 conn 127 u window 281 u pen 0 kmax 0.024/u speed 0.83 cross 0 (allowed 0) side - ymin -0.1 u; dist to font 27.86 u (own ends), 27.94 u (entry frame); status 0 nfev 710/8000
+ch                     approved (v6.8) ch preset class cnct.lop_c_h; dist to font 1.19 u
+ch                     v7.1  ch solved: exit 9.76 u from c's end, entry merge at 17.16 u (retrace False); J 8.3e-06 (conn 5.8e-06, L 1.8e-06, R 6.3e-07) Js 7.61e-05 conn 166 u window 209 u pen 0 kmax 0.024/u speed 0.72 cross 0 (allowed 0) side - ymin 0.0 u; dist to font 2.39 u (own ends), 17.17 u (entry frame); status 0 nfev 2604/8000
+ch                     v7.2  ch solved: exit 9.76 u from c's end, entry merge at 17.16 u (retrace False); J 8.3e-06 (conn 5.8e-06, L 1.8e-06, R 6.3e-07) Js 7.61e-05 conn 166 u window 209 u pen 0 kmax 0.024/u speed 0.72 cross 0 (allowed 0) side - ymin 0.0 u; dist to font 2.39 u (own ends), 17.17 u (entry frame); status 0 nfev 2604/8000
+ci                     approved (v6.8) ci preset k962 class cnct.mod_c_n; dist to font 1.20 u
+ci                     v7.1  ci solved: exit 7.19 u from c's end, entry cusp at 0.00 u (retrace True); J 7.4e-06 (conn 5e-06, L 2.4e-06, R 0) Js 6.95e-05 conn 188 u window 211 u pen 0 kmax 0.022/u speed 0.65 cross 0 (allowed 0) side 0.00 ymin 0.0 u; dist to font 1.10 u (own ends), 7.27 u (entry frame); status 0 nfev 1071/8000
+ci                     v7.2  ci solved: exit 0.00 u from c's end, entry cusp at 2.00 u (retrace True); J 1.01e-05 (conn 6.3e-06, L 3.8e-06, R 0) Js 9.4e-05 conn 180 u window 210 u pen 0 kmax 0.019/u speed 0.82 cross 0 (allowed 0) side 0.01 ymin 0.1 u; dist to font 3.76 u (own ends), 3.76 u (entry frame); status 0 nfev 2067/8000
+cj                     approved (v6.8) cj preset k962 class cnct.mod_c_n; dist to font 1.10 u
+cj                     v7.1  cj solved: exit 10.00 u from c's end, entry cusp at 14.51 u (retrace True); J 3.23e-05 (conn 1.5e-05, L 1.8e-06, R 1.5e-05) Js 0.000313 conn 182 u window 213 u pen 0 kmax 0.024/u speed 0.84 cross 0 (allowed 0) side 0.00 ymin 0.0 u; dist to font 10.45 u (own ends), 14.49 u (entry frame); status 0 nfev 911/8000
+cj                     v7.2  cj solved: exit 10.00 u from c's end, entry cusp at 15.01 u (retrace True); J 3.23e-05 (conn 1.5e-05, L 1.8e-06, R 1.6e-05) Js 0.000313 conn 181 u window 213 u pen 0 kmax 0.024/u speed 0.84 cross 0 (allowed 0) side 0.00 ymin 0.0 u; dist to font 10.48 u (own ends), 14.98 u (entry frame); status 0 nfev 585/8000
+ck                     approved (v6.8) ck preset class cnct.lop_c_h; dist to font 1.00 u
+ck                     v7.1  ck solved: exit 10.00 u from c's end, entry merge at 15.87 u (retrace False); J 0.000132 (conn 4.4e-05, L 1.8e-06, R 8.7e-05) Js 0.00108 conn 157 u window 201 u pen 0 kmax 0.024/u speed 0.98 cross 0 (allowed 0) side - ymin 0.1 u; dist to font 10.79 u (own ends), 16.09 u (entry frame); status 0 nfev 2029/8000
+ck                     v7.2  ck solved: exit 10.00 u from c's end, entry merge at 15.87 u (retrace False); J 0.000132 (conn 4.4e-05, L 1.8e-06, R 8.7e-05) Js 0.00108 conn 157 u window 201 u pen 0 kmax 0.024/u speed 0.98 cross 0 (allowed 0) side - ymin 0.1 u; dist to font 10.79 u (own ends), 16.09 u (entry frame); status 0 nfev 2029/8000
+cl                     approved (v6.8) cl preset group low-smooth; dist to font 1.22 u
+cl                     v7.1  cl solved: exit 6.32 u from c's end, entry merge at 18.12 u (retrace False); J 8.89e-06 (conn 6.3e-06, L 2.6e-06, R 1.2e-11) Js 5.96e-05 conn 143 u window 189 u pen 0 kmax 0.022/u speed 0.72 cross 0 (allowed 0) side - ymin 0.0 u; dist to font 0.89 u (own ends), 18.00 u (entry frame); status 0 nfev 720/8000
+cl                     v7.2  cl solved: exit 6.32 u from c's end, entry merge at 18.12 u (retrace False); J 8.89e-06 (conn 6.3e-06, L 2.6e-06, R 1.2e-11) Js 5.96e-05 conn 143 u window 189 u pen 0 kmax 0.022/u speed 0.72 cross 0 (allowed 0) side - ymin 0.0 u; dist to font 0.89 u (own ends), 18.00 u (entry frame); status 0 nfev 720/8000
+cm                     approved (v6.8) cm preset group low-smooth; dist to font 2.36 u
+cm                     v7.1  cm solved: exit 10.00 u from c's end, entry merge at 10.00 u (retrace False); J 0.000306 (conn 0.00016, L 1.8e-06, R 0.00015) Js 0.00461 conn 207 u window 247 u pen 0 kmax 0.083/u speed 0.46 cross 0 (allowed 0) side - ymin 0.0 u; dist to font 4.49 u (own ends), 9.88 u (entry frame); status 0 nfev 1257/8000
+cm                     v7.2  cm solved: exit 10.00 u from c's end, entry merge at 10.00 u (retrace False); J 0.000306 (conn 0.00016, L 1.8e-06, R 0.00015) Js 0.00461 conn 207 u window 247 u pen 0 kmax 0.083/u speed 0.46 cross 0 (allowed 0) side - ymin 0.0 u; dist to font 4.49 u (own ends), 9.88 u (entry frame); status 0 nfev 1257/8000
+cn                     approved (v6.8) cn preset group low-smooth; dist to font 3.45 u
+cn                     v7.1  cn solved: exit 0.00 u from c's end, entry merge at 0.00 u (retrace False); J 0.000372 (conn 0.00016, L 3.8e-06, R 0.00021) Js 0.00567 conn 188 u window 248 u pen 0 kmax 0.068/u speed 0.51 cross 0 (allowed 0) side - ymin 0.1 u; dist to font 13.44 u (own ends), 13.44 u (entry frame); status 0 nfev 615/8000
+cn                     v7.2  cn solved: exit 0.00 u from c's end, entry merge at 0.00 u (retrace False); J 0.000372 (conn 0.00016, L 3.8e-06, R 0.00021) Js 0.00567 conn 188 u window 248 u pen 0 kmax 0.068/u speed 0.51 cross 0 (allowed 0) side - ymin 0.1 u; dist to font 13.44 u (own ends), 13.44 u (entry frame); status 0 nfev 615/8000
+co                     approved (v6.8) co preset group low-fused; dist to font 6.67 u
+co                     v7.1  co solved: exit 10.00 u from c's end, entry fused at 102.49 u (retrace True); J 2.77e-05 (conn 1.5e-05, L 1.8e-06, R 1.1e-05) Js 0.000542 conn 150 u window 269 u pen 0 kmax 0.024/u speed 0.82 cross 0 (allowed 0) side - ymin 0.0 u; dist to font 6.06 u (own ends), 9.92 u (entry frame); status 0 nfev 456/8000
+co                     v7.2  co solved: exit 10.00 u from c's end, entry fused at 102.49 u (retrace True); J 2.77e-05 (conn 1.5e-05, L 1.8e-06, R 1.1e-05) Js 0.000542 conn 150 u window 269 u pen 0 kmax 0.024/u speed 0.82 cross 0 (allowed 0) side - ymin 0.0 u; dist to font 6.06 u (own ends), 9.92 u (entry frame); status 0 nfev 456/8000
+cp                     approved (v6.8) cp preset k962 class cnct.mod_c_n; dist to font 2.11 u
+cp                     v7.1  cp solved: exit 0.00 u from c's end, entry cusp at 15.32 u (retrace True); J 0.000216 (conn 5.1e-05, L 3.8e-06, R 0.00016) Js 0.00213 conn 172 u window 215 u pen 0 kmax 0.023/u speed 0.83 cross 0 (allowed 0) side 0.00 ymin 0.1 u; dist to font 11.57 u (own ends), 15.01 u (entry frame); status 0 nfev 1277/8000
+cp                     v7.2  cp solved: exit 0.00 u from c's end, entry cusp at 15.32 u (retrace True); J 0.000216 (conn 5.1e-05, L 3.8e-06, R 0.00016) Js 0.00213 conn 172 u window 215 u pen 0 kmax 0.023/u speed 0.83 cross 0 (allowed 0) side 0.00 ymin 0.1 u; dist to font 11.57 u (own ends), 15.01 u (entry frame); status 0 nfev 1797/8000
+cq                     approved (v6.8) cq preset group low-fused; dist to font 7.75 u
+cq                     v7.1  cq solved: exit 10.00 u from c's end, entry fused at 134.61 u (retrace True); J 4.49e-05 (conn 4.3e-05, L 1.8e-06, R 8e-08) Js 0.000967 conn 127 u window 278 u pen 0 kmax 0.024/u speed 0.85 cross 0 (allowed 0) side - ymin -0.1 u; dist to font 27.37 u (own ends), 27.48 u (entry frame); status 0 nfev 688/8000
+cq                     v7.2  cq solved: exit 10.00 u from c's end, entry fused at 134.61 u (retrace True); J 4.49e-05 (conn 4.3e-05, L 1.8e-06, R 8e-08) Js 0.000967 conn 127 u window 278 u pen 0 kmax 0.024/u speed 0.85 cross 0 (allowed 0) side - ymin -0.1 u; dist to font 27.37 u (own ends), 27.48 u (entry frame); status 0 nfev 688/8000
+cr                     approved (v6.8) cr preset k962 group low-cusp; dist to font 9.04 u
+cr                     v7.1  cr solved: exit 10.00 u from c's end, entry cusp at 0.00 u (retrace True); J 2.76e-05 (conn 2.6e-05, L 1.8e-06, R 0) Js 0.000288 conn 199 u window 219 u pen 0 kmax 0.024/u speed 0.76 cross 0 (allowed 0) side 0.01 ymin 0.0 u; dist to font 3.42 u (own ends), 9.96 u (entry frame); status 0 nfev 715/8000
+cr                     v7.2  cr solved: exit 10.00 u from c's end, entry cusp at 2.00 u (retrace True); J 3.95e-05 (conn 3.8e-05, L 1.8e-06, R 0) Js 0.000414 conn 199 u window 219 u pen 0 kmax 0.027/u speed 0.81 cross 0 (allowed 0) side 0.01 ymin 0.0 u; dist to font 6.02 u (own ends), 9.96 u (entry frame); status 0 nfev 761/8000
+cs                     approved (v6.8) cs preset k962 group low-cusp; dist to font 5.30 u
+cs                     v7.1  cs solved: exit 9.76 u from c's end, entry cusp at 0.00 u (retrace True); J 2.36e-05 (conn 2.2e-05, L 1.8e-06, R 0) Js 0.000272 conn 206 u window 226 u pen 0 kmax 0.024/u speed 0.78 cross 0 (allowed 0) side 0.01 ymin 0.0 u; dist to font 2.73 u (own ends), 9.75 u (entry frame); status 0 nfev 1238/8000
+cs                     v7.2  cs solved: exit 10.00 u from c's end, entry cusp at 2.00 u (retrace True); J 2.96e-05 (conn 2.8e-05, L 1.8e-06, R 0) Js 0.000338 conn 205 u window 225 u pen 0 kmax 0.024/u speed 0.81 cross 0 (allowed 0) side 0.01 ymin 0.0 u; dist to font 5.44 u (own ends), 9.98 u (entry frame); status 0 nfev 898/8000
+ct                     approved (v6.8) ct preset k962 group low-cusp; dist to font 3.52 u
+ct                     v7.1  ct solved: exit 10.00 u from c's end, entry cusp at 34.95 u (retrace True); J 0.000195 (conn 7.5e-06, L 1.8e-06, R 0.00019) Js 0.00346 conn 209 u window 261 u pen 0 kmax 0.024/u speed 0.80 cross 0 (allowed 0) side 0.00 ymin 0.0 u; dist to font 9.03 u (own ends), 34.20 u (entry frame); status 0 nfev 919/8000
+ct                     v7.2  ct solved: exit 10.00 u from c's end, entry cusp at 32.90 u (retrace True); J 0.000194 (conn 7.4e-06, L 1.8e-06, R 0.00019) Js 0.00346 conn 211 u window 261 u pen 0 kmax 0.024/u speed 0.78 cross 0 (allowed 0) side -0.00 ymin 0.0 u; dist to font 8.87 u (own ends), 32.16 u (entry frame); status 0 nfev 1910/8000
+cu                     approved (v6.8) cu preset k962 class cnct.mod_c_n; dist to font 1.79 u
+cu                     v7.1  cu solved: exit 1.68 u from c's end, entry cusp at 4.34 u (retrace True); J 1.29e-05 (conn 8.6e-06, L 3.5e-06, R 7.5e-07) Js 0.00012 conn 181 u window 211 u pen 0 kmax 0.020/u speed 0.86 cross 0 (allowed 0) side 0.00 ymin 0.0 u; dist to font 5.74 u (own ends), 5.74 u (entry frame); status 0 nfev 902/8000
+cu                     v7.2  cu solved: exit 2.54 u from c's end, entry cusp at 4.34 u (retrace True); J 1.29e-05 (conn 8.8e-06, L 3.3e-06, R 7.5e-07) Js 0.00012 conn 182 u window 211 u pen 0 kmax 0.020/u speed 0.85 cross 0 (allowed 0) side 0.00 ymin 0.0 u; dist to font 5.76 u (own ends), 5.76 u (entry frame); status 0 nfev 807/8000
+cv                     approved (v6.8) cv preset group low-smooth; dist to font 3.86 u
+cv                     v7.1  cv solved: exit 0.00 u from c's end, entry merge at 2.44 u (retrace False); J 0.000535 (conn 0.00021, L 3.8e-06, R 0.00032) Js 0.0081 conn 190 u window 247 u pen 0 kmax 0.078/u speed 0.47 cross 0 (allowed 0) side - ymin 0.1 u; dist to font 12.79 u (own ends), 12.79 u (entry frame); status 0 nfev 1624/8000
+cv                     v7.2  cv solved: exit 0.00 u from c's end, entry merge at 2.44 u (retrace False); J 0.000535 (conn 0.00021, L 3.8e-06, R 0.00032) Js 0.0081 conn 190 u window 247 u pen 0 kmax 0.078/u speed 0.47 cross 0 (allowed 0) side - ymin 0.1 u; dist to font 12.79 u (own ends), 12.79 u (entry frame); status 0 nfev 1624/8000
+cw                     approved (v6.8) cw preset k962 class cnct.mod_c_n; dist to font 2.09 u
+cw                     v7.1  cw solved: exit 2.96 u from c's end, entry cusp at 8.63 u (retrace True); J 0.000203 (conn 9.5e-05, L 3.3e-06, R 0.0001) Js 0.00194 conn 180 u window 213 u pen 0 kmax 0.034/u speed 0.68 cross 0 (allowed 0) side -0.01 ymin 0.0 u; dist to font 9.14 u (own ends), 9.14 u (entry frame); status 0 nfev 579/8000
+cw                     v7.2  cw solved: exit 2.76 u from c's end, entry cusp at 8.72 u (retrace True); J 0.000202 (conn 9.4e-05, L 3.3e-06, R 0.0001) Js 0.00195 conn 180 u window 213 u pen 0 kmax 0.034/u speed 0.60 cross 0 (allowed 0) side -0.01 ymin 0.0 u; dist to font 9.26 u (own ends), 9.26 u (entry frame); status 0 nfev 1401/8000
+cx                     approved (v6.8) cx preset group low-smooth; dist to font 6.89 u
+cx                     v7.1  cx solved: exit 2.76 u from c's end, entry merge at 3.52 u (retrace False); J 0.000429 (conn 0.00016, L 3.3e-06, R 0.00027) Js 0.00597 conn 187 u window 240 u pen 0 kmax 0.073/u speed 0.48 cross 0 (allowed 0) side - ymin 0.0 u; dist to font 14.16 u (own ends), 14.16 u (entry frame); status 0 nfev 792/8000
+cx                     v7.2  cx solved: exit 2.76 u from c's end, entry merge at 3.52 u (retrace False); J 0.000429 (conn 0.00016, L 3.3e-06, R 0.00027) Js 0.00597 conn 187 u window 240 u pen 0 kmax 0.073/u speed 0.48 cross 0 (allowed 0) side - ymin 0.0 u; dist to font 14.16 u (own ends), 14.16 u (entry frame); status 0 nfev 792/8000
+cy                     approved (v6.8) cy preset k962 class cnct.mod_c_n; dist to font 1.42 u
+cy                     v7.1  cy solved: exit 0.00 u from c's end, entry cusp at 0.00 u (retrace True); J 1.24e-05 (conn 8.6e-06, L 3.8e-06, R 0) Js 0.000119 conn 182 u window 212 u pen 0 kmax 0.019/u speed 0.82 cross 0 (allowed 0) side 0.00 ymin 0.1 u; dist to font 2.48 u (own ends), 2.48 u (entry frame); status 0 nfev 1461/8000
+cy                     v7.2  cy solved: exit 0.00 u from c's end, entry cusp at 2.00 u (retrace True); J 1.37e-05 (conn 9.9e-06, L 3.8e-06, R 0) Js 0.000128 conn 181 u window 211 u pen 0 kmax 0.019/u speed 0.85 cross 0 (allowed 0) side 0.00 ymin 0.1 u; dist to font 3.42 u (own ends), 3.42 u (entry frame); status 0 nfev 658/8000
+cz                     approved (v6.8) cz preset group low-smooth; dist to font 3.74 u
+cz                     v7.1  cz solved: exit 10.00 u from c's end, entry merge at 9.47 u (retrace False); J 2.9e-05 (conn 2.4e-05, L 1.8e-06, R 3.7e-06) Js 0.000429 conn 205 u window 245 u pen 0 kmax 0.037/u speed 0.73 cross 0 (allowed 0) side - ymin 0.0 u; dist to font 5.07 u (own ends), 10.00 u (entry frame); status 0 nfev 585/8000
+cz                     v7.2  cz solved: exit 10.00 u from c's end, entry merge at 9.47 u (retrace False); J 2.9e-05 (conn 2.4e-05, L 1.8e-06, R 3.7e-06) Js 0.000429 conn 205 u window 245 u pen 0 kmax 0.037/u speed 0.73 cross 0 (allowed 0) side - ymin 0.0 u; dist to font 5.07 u (own ends), 10.00 u (entry frame); status 0 nfev 585/8000
+
+solves:
+ca dx 535.2 fu: nfev 729, J 5.436e-05, pen 0
+cb dx 537.2 fu: nfev 1143, J 9.084e-06, pen 0
+cc dx 535.0 fu: nfev 316, J 7.871e-05, pen 0
+cd dx 535.5 fu: nfev 701, J 5.245e-05, pen 0
+ce dx 535.0 fu: nfev 1763, J 1.501e-05, pen 0
+cf dx 534.5 fu: nfev 1831, J 9.002e-06, pen 0
+cg dx 535.0 fu: nfev 710, J 4.967e-05, pen 0
+ch dx 535.0 fu: nfev 2604, J 8.3e-06, pen 0
+ci dx 535.5 fu: nfev 1071, J 7.398e-06, pen 0
+ci dx 535.5 fu: nfev 2067, J 1.011e-05, pen 0
+cj dx 534.8 fu: nfev 911, J 3.232e-05, pen 0
+cj dx 534.8 fu: nfev 585, J 3.231e-05, pen 0
+ck dx 535.5 fu: nfev 2029, J 0.0001324, pen 0
+cl dx 532.5 fu: nfev 720, J 8.886e-06, pen 0
+cm dx 660.0 fu: nfev 1257, J 0.0003056, pen 0
+cn dx 660.0 fu: nfev 615, J 0.0003724, pen 0
+co dx 534.5 fu: nfev 456, J 2.77e-05, pen 0
+cp dx 536.8 fu: nfev 1277, J 0.0002156, pen 0
+cp dx 536.8 fu: nfev 1797, J 0.0002156, pen 0
+cq dx 535.8 fu: nfev 688, J 4.492e-05, pen 0
+cr dx 534.0 fu: nfev 715, J 2.759e-05, pen 0
+cr dx 534.0 fu: nfev 761, J 3.953e-05, pen 0
+cs dx 534.8 fu: nfev 1238, J 2.361e-05, pen 0
+cs dx 534.8 fu: nfev 898, J 2.963e-05, pen 0
+ct dx 532.8 fu: nfev 919, J 0.0001945, pen 0
+ct dx 532.8 fu: nfev 1910, J 0.0001944, pen 0
+cu dx 536.0 fu: nfev 902, J 1.286e-05, pen 0
+cu dx 536.0 fu: nfev 807, J 1.286e-05, pen 0
+cv dx 660.0 fu: nfev 1624, J 0.0005354, pen 0
+cw dx 534.8 fu: nfev 579, J 0.0002026, pen 0
+cw dx 534.8 fu: nfev 1401, J 0.0002023, pen 0
+cx dx 552.5 fu: nfev 792, J 0.0004292, pen 0
+cy dx 535.2 fu: nfev 1461, J 1.241e-05, pen 0
+cy dx 535.2 fu: nfev 658, J 1.369e-05, pen 0
+cz dx 534.0 fu: nfev 585, J 2.903e-05, pen 0

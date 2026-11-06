@@ -1,0 +1,13 @@
+K863 J3j: work33\census_v68x.json vs work31\census_v70.json, the pieces whose pair holds c
+census rows: 73 in A, 73 in B, 73 in both: 53 equal, 20 differ; only in A 0, only in B 0
+account dumps work33\account\v6.8.json vs work33\account\v7.0.json: 110 pieces in both, 101 with equal raw coefficients, 9 differ
+  differ: bc:J0-2bc: badness,dist_max_b3_u,dist_max_frame_u,dist_max_u,dist_mean_b3_u,dist_mean_frame_u,dist_mean_u,dist_words_u,extra,facet,int_dk_max,kind,kmax_p95,len_u,peak_at_u,peak_dkds_u,peak_ratio,prm,ref_info,seams,solve,src,which,wobble
+  differ: bc:tail0c: kmax_p95
+  differ: cb:J0-2cb: badness,dist_max_u,dist_mean_u,dist_words_u,facet,int_dk_max,kmax_p95,len_u,peak_dkds_u,peak_ratio,seams,wobble
+  differ: cb:lead0c: kmax_p95
+  differ: cursive:J0-2cu: kmax_p95
+  differ: cursive:lead0c: kmax_p95
+  differ: cv:J0-2cv: badness,dist_max_u,dist_mean_u,dist_words_u,facet,int_dk_max,kmax_p95,len_u,peak_dkds_u,peak_ratio,seams,wobble
+  differ: cv:lead0c: kmax_p95
+  differ: cw:J0-2cw: badness,dist_max_u,dist_mean_u,dist_words_u,facet,int_dk_max,kmax_p95,len_u,peak_dkds_u,peak_ratio,seams,wobble
+  differ: cw:lead0c: kmax_p95

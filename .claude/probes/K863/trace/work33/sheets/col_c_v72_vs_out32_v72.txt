@@ -1,0 +1,29 @@
+K863 J3j: column 3 of out33\c_v68.svg against column 2 of out32\c_v72.svg
+rows: 27 in A, 27 in B, 27 in both: 27 draw the same, 0 differ; only in A 0, only in B 0
+  same: c: largest coordinate difference 0.01 u
+  same: ca: largest coordinate difference 0.01 u
+  same: cb: largest coordinate difference 0.01 u
+  same: cc: largest coordinate difference 0.01 u
+  same: cd: largest coordinate difference 0.01 u
+  same: ce: largest coordinate difference 0.01 u
+  same: cf: largest coordinate difference 0.01 u
+  same: cg: largest coordinate difference 0.01 u
+  same: ch: largest coordinate difference 0.01 u
+  same: ci: largest coordinate difference 0.01 u
+  same: cj: largest coordinate difference 0.01 u
+  same: ck: largest coordinate difference 0.01 u
+  same: cl: largest coordinate difference 0.01 u
+  same: cm: largest coordinate difference 0.01 u
+  same: cn: largest coordinate difference 0.01 u
+  same: co: largest coordinate difference 0.01 u
+  same: cp: largest coordinate difference 0.01 u
+  same: cq: largest coordinate difference 0.01 u
+  same: cr: largest coordinate difference 0.01 u
+  same: cs: largest coordinate difference 0.01 u
+  same: ct: largest coordinate difference 0.01 u
+  same: cu: largest coordinate difference 0.01 u
+  same: cv: largest coordinate difference 0.01 u
+  same: cw: largest coordinate difference 0.01 u
+  same: cx: largest coordinate difference 0.01 u
+  same: cy: largest coordinate difference 0.01 u
+  same: cz: largest coordinate difference 0.01 u

@@ -1,0 +1,13 @@
+K863 J3j: work33\census_v68x.json vs work30\census_v70.json, the pieces whose pair holds c
+census rows: 73 in A, 20 in B, 20 in both: 6 equal, 14 differ; only in A 53, only in B 0
+account dumps work33\account\v6.8.json vs work33\account\v7.0.json: 110 pieces in both, 101 with equal raw coefficients, 9 differ
+  differ: bc:J0-2bc: badness,dist_max_b3_u,dist_max_frame_u,dist_max_u,dist_mean_b3_u,dist_mean_frame_u,dist_mean_u,dist_words_u,extra,facet,int_dk_max,kind,kmax_p95,len_u,peak_at_u,peak_dkds_u,peak_ratio,prm,ref_info,seams,solve,src,which,wobble
+  differ: bc:tail0c: kmax_p95
+  differ: cursive:J0-2cu: kmax_p95
+  differ: cursive:lead0c: kmax_p95
+  differ: ice jet even:J0-2ic: kmax_p95
+  differ: ice jet even:J2-4ce: kmax_p95
+  differ: quick brown fox:J4-6ic: kmax_p95
+  differ: quick brown fox:J6-8ck: kmax_p95
+  differ: vc:J0-2vc: badness,dist_max_b3_u,dist_max_frame_u,dist_max_u,dist_mean_b3_u,dist_mean_frame_u,dist_mean_u,dist_words_u,extra,facet,int_dk_max,kind,kmax_p95,len_u,peak_at_u,peak_dkds_u,peak_ratio,prm,ref_info,seams,solve,src,which,wobble
+  differ: vc:tail0c: kmax_p95

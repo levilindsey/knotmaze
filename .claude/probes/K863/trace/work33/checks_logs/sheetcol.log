@@ -1,0 +1,68 @@
+K863 J3j: column 1 of out33\b_v68.svg against column 1 of out30\b_v70.svg
+rows: 27 in A, 27 in B, 27 in both: 27 draw the same, 0 differ; only in A 0, only in B 0
+K863 J3j: column 1 of out33\v_v68.svg against column 1 of out30\v_v70.svg
+rows: 27 in A, 27 in B, 27 in both: 27 draw the same, 0 differ; only in A 0, only in B 0
+K863 J3j: column 1 of out33\w_v68.svg against column 1 of out30\w_v70.svg
+rows: 27 in A, 27 in B, 27 in both: 27 draw the same, 0 differ; only in A 0, only in B 0
+K863 J3j: column 2 of out33\b_v68.svg against column 3 of out30\b_v70.svg
+rows: 27 in A, 27 in B, 27 in both: 27 draw the same, 0 differ; only in A 0, only in B 0
+K863 J3j: column 2 of out33\v_v68.svg against column 3 of out30\v_v70.svg
+rows: 27 in A, 27 in B, 27 in both: 27 draw the same, 0 differ; only in A 0, only in B 0
+K863 J3j: column 2 of out33\w_v68.svg against column 3 of out30\w_v70.svg
+rows: 27 in A, 27 in B, 27 in both: 27 draw the same, 0 differ; only in A 0, only in B 0
+K863 J3j: column 3 of out33\b_v68.svg against column 2 of out30\b_v70.svg
+rows: 27 in A, 27 in B, 27 in both: 27 draw the same, 0 differ; only in A 0, only in B 0
+K863 J3j: column 3 of out33\v_v68.svg against column 2 of out30\v_v70.svg
+rows: 27 in A, 27 in B, 27 in both: 27 draw the same, 0 differ; only in A 0, only in B 0
+K863 J3j: column 3 of out33\w_v68.svg against column 2 of out30\w_v70.svg
+rows: 27 in A, 27 in B, 27 in both: 27 draw the same, 0 differ; only in A 0, only in B 0
+K863 J3j: column 0 of out33\b_v68.svg against column 0 of out30\b_v70.svg
+rows: 27 in A, 27 in B, 27 in both: 27 draw the same, 0 differ; only in A 0, only in B 0
+K863 J3j: column 1 of out33\aq_joins_v68.svg against column 3 of out28\aq_joins_v68.svg
+rows: 10 in A, 10 in B, 10 in both: 10 draw the same, 0 differ; only in A 0, only in B 0
+K863 J3j: column 1 of out33\aq_joins_v68.svg against column 1 of out30\aq_joins_v70.svg
+rows: 10 in A, 10 in B, 10 in both: 10 draw the same, 0 differ; only in A 0, only in B 0
+K863 J3j: column 2 of out33\aq_joins_v68.svg against column 2 of out30\aq_joins_v70.svg
+rows: 10 in A, 10 in B, 10 in both: 10 draw the same, 0 differ; only in A 0, only in B 0
+K863 J3j: column 3 of out33\aq_joins_v68.svg against column 3 of out30\aq_joins_v70.svg
+rows: 10 in A, 10 in B, 10 in both: 10 draw the same, 0 differ; only in A 0, only in B 0
+K863 J3j: column 2 of out33\e_after_bvw_v68.svg against column 1 of out30\e_after_bvw_v70.svg
+rows: 8 in A, 8 in B, 8 in both: 8 draw the same, 0 differ; only in A 0, only in B 0
+K863 J3j: column 3 of out33\e_after_bvw_v68.svg against column 2 of out30\e_after_bvw_v70.svg
+rows: 8 in A, 8 in B, 8 in both: 8 draw the same, 0 differ; only in A 0, only in B 0
+K863 J3j: column 1 of out33\c_v68.svg against column 1 of out32\c_v72.svg
+rows: 27 in A, 27 in B, 27 in both: 24 draw the same, 3 differ; only in A 0, only in B 0
+  differ: cb: element 2 differs (68 vs 62 numbers)
+  differ: cv: element 2 differs (62 vs 56 numbers)
+  differ: cw: element 2 differs (92 vs 86 numbers)
+K863 J3j: column 1 of out33\c_v68.svg against column 1 of out31\c_v71.svg
+rows: 27 in A, 27 in B, 27 in both: 24 draw the same, 3 differ; only in A 0, only in B 0
+  differ: cb: element 2 differs (68 vs 62 numbers)
+  differ: cv: element 2 differs (62 vs 56 numbers)
+  differ: cw: element 2 differs (92 vs 86 numbers)
+K863 J3j: column 2 of out33\c_v68.svg against column 2 of out31\c_v71.svg
+rows: 27 in A, 27 in B, 27 in both: 27 draw the same, 0 differ; only in A 0, only in B 0
+K863 J3j: column 3 of out33\c_v68.svg against column 2 of out32\c_v72.svg
+rows: 27 in A, 27 in B, 27 in both: 27 draw the same, 0 differ; only in A 0, only in B 0
+K863 J3j: column 1 of out33\cusp_v68.svg against column 1 of out32\cusp_v72.svg
+rows: 72 in A, 72 in B, 72 in both: 56 draw the same, 16 differ; only in A 0, only in B 0
+  differ: aw: element 2 differs (98 vs 92 numbers)
+  differ: ci: element 4 differs (32 vs 14 numbers)
+  differ: cj: element 2 differs (44 vs 50 numbers)
+  differ: cp: element 2 differs (80 vs 86 numbers)
+  differ: cr: element 3 differs (32 vs 32 numbers)
+  differ: cs: element 3 differs (26 vs 32 numbers)
+  differ: ct: element 2 differs (32 vs 50 numbers)
+  differ: cu: element 2 differs (68 vs 74 numbers)
+  differ: cw: element 3 differs (32 vs 32 numbers)
+  differ: cy: element 2 differs (86 vs 92 numbers)
+  differ: dw: element 2 differs (98 vs 92 numbers)
+  differ: ew: element 2 differs (98 vs 92 numbers)
+K863 J3j: column 2 of out33\cusp_v68.svg against column 2 of out32\cusp_v72.svg
+rows: 72 in A, 72 in B, 72 in both: 72 draw the same, 0 differ; only in A 0, only in B 0
+K863 J3j: column 1 of out33\cursive_v68_words.svg against column 2 of out28\cursive_v68_words.svg
+rows: 21 in A, 3 in B, 2 in both: 2 draw the same, 0 differ; only in A 19, only in B 1
+K863 J3j: column 1 of out33\cursive_v68_words.svg against column 1 of out29\cursive_v69_words.svg
+rows: 21 in A, 10 in B, 10 in both: 10 draw the same, 0 differ; only in A 11, only in B 0
+K863 J3j: column 1 of out33\e_after_bvw_v68.svg against column 1 of out29\cursive_v69_words.svg
+rows: 8 in A, 10 in B, 3 in both: 3 draw the same, 0 differ; only in A 5, only in B 7

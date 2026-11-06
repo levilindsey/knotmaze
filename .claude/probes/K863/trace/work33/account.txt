@@ -1,0 +1,995 @@
+K863 J3j: the account of every piece v6.9, v7.0, v7.1 and v7.2 changed against v6.8 (work33/account/*.json, 234 words: J3i's census words; they equal the words of work32/census_v72.json). A piece moved when its raw coefficients differ by at least 0.0001 u after resampling; under that it is numeric only. Census fields: dist_max_u (the font distance), hooks, rough, before->after, from v6.8 work33/census_v68x.json, v6.9 work29/census_v69.json, v7.0 work31/census_v70.json, v7.1 work32/census_v71.json, v7.2 work32/census_v72.json ('-': not in that census; strokes have none).
+the cusp rule's pairs (v7.2's ports): 72
+
+(0) what each stage changed in the data (raw JSON per key)
+  J3f (v6.8 -> v6.9): bodies ['b', 'v', 'w']; join params []; ports ['a', 'b', 'e', 'g', 'i', 'j', 'm', 'n', 'p', 'q', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']; other port keys ['path', 'variant']; pieces in one version only: 0
+  J3g (v6.9 -> v7.0): bodies ['b', 'v', 'w']; join params []; ports ['a', 'e', 'q']; other port keys ['path', 'variant']; pieces in one version only: 0
+  J3h (v7.0 -> v7.1): bodies []; join params []; ports ['c']; other port keys ['path', 'variant']; pieces in one version only: 0
+  J3i (v7.1 -> v7.2): bodies []; join params []; ports ['i', 'j', 'p', 'r', 's', 't', 'u', 'w', 'y']; other port keys ['path', 'variant']; pieces in one version only: 0
+
+(1) per stage: pieces compared, moved (>= 1e-4 u), numeric only; by cause: pieces, the largest move
+  J3f (v6.8 -> v6.9): 1356 pieces, 301 moved, 81 numeric only; listed cause: b's, v's and w's exits, every join out of them (the six into a and q, e's entry after them)
+    listed   b, v or w's exit stroke                                        97, largest 17.6 u (ice jet even:L14vs0)
+    listed   join out of b, v or w                                          78, largest 88.2 u (wl:J0-2wl)
+    listed   join out of b, v or w into a or q                               8, largest 21.1 u (wq:J0-2wq)
+    listed   join out of b, v or w into e                                   11, largest 47.1 u (woven:J4-6ve)
+    listed   the stroke after a join out of b, v or w (its entry)           78, largest 88.2 u (wl:L2ls0)
+    UNLISTED join into b                                                     2, largest 0.0273 u (fb:J0-2fb)
+    UNLISTED join into v                                                     3, largest 0.0103 u (ice jet even:J12-14ev)
+    UNLISTED join into w                                                     6, largest 0.332 u (ew:J0-2ew)
+    UNLISTED stroke of b (in cb)                                             1, largest 14.3 u (cb:L2bs0)
+    UNLISTED stroke of b (in fb)                                             1, largest 14.3 u (fb:L2bs0)
+    UNLISTED stroke of b (in ob)                                             1, largest 14.3 u (ob:L2bs0)
+    UNLISTED stroke of e (lead, out ew)                                      1, largest 0.332 u (ew:L0es0)
+    UNLISTED stroke of f (lead, out fw)                                      1, largest 0.000384 u (fw:L0fs0)
+    UNLISTED stroke of v (in cv)                                             1, largest 15.7 u (cv:L2vs0)
+    UNLISTED stroke of v (in fv)                                             1, largest 15.7 u (fv:L2vs0)
+    UNLISTED stroke of v (in ov)                                             1, largest 15.7 u (ov:L2vs0)
+    UNLISTED stroke of w (in aw)                                             1, largest 14.4 u (aw:L2ws0)
+    UNLISTED stroke of w (in cw)                                             1, largest 14.4 u (cw:L2ws0)
+    UNLISTED stroke of w (in dw)                                             1, largest 14.4 u (dw:L2ws0)
+    UNLISTED stroke of w (in ew)                                             1, largest 14.4 u (ew:L2ws0)
+    UNLISTED stroke of w (in fw)                                             1, largest 14.4 u (fw:L2ws0)
+    UNLISTED stroke of w (in hw)                                             1, largest 14.4 u (hw:L2ws0)
+    UNLISTED stroke of w (in iw)                                             1, largest 14.4 u (iw:L2ws0)
+    UNLISTED stroke of w (in nw)                                             1, largest 14.4 u (nw:L2ws0)
+    UNLISTED stroke of w (in ow)                                             2, largest 14.4 u (bow:L4ws0)
+    UNLISTED numeric join into b                                                     2, largest 2.58e-07 u (cb:J0-2cb)
+    UNLISTED numeric join into v                                                     6, largest 2.52e-05 u (ov:J0-2ov)
+    UNLISTED numeric join into w                                                     6, largest 4.68e-06 u (cw:J0-2cw)
+    UNLISTED numeric lead into b                                                    32, largest 2.58e-07 u (quick brown fox:lead1b)
+    UNLISTED numeric lead into v                                                    26, largest 4.07e-07 u (vg:lead0v)
+    UNLISTED numeric stroke of a (in la, out aw)                                     1, largest 1.1e-05 u (lawgiver:L2as0)
+    UNLISTED numeric stroke of e (lead, out ev)                                      1, largest 4.27e-05 u (ice jet even:L12es0)
+    UNLISTED numeric stroke of f (lead, out fb)                                      1, largest 1.21e-05 u (fb:L0fs0)
+    UNLISTED numeric stroke of f (lead, out fv)                                      1, largest 5.32e-08 u (fv:L0fs0)
+    UNLISTED numeric stroke of h (lead, out hw)                                      1, largest 1.62e-06 u (hw:L0hs0)
+    UNLISTED numeric stroke of o (in ro, out ow)                                     1, largest 1.84e-08 u (quick brown fox:L14os0)
+    UNLISTED numeric stroke of o (out ob, vlead)                                     1, largest 2.61e-08 u (ob:L0os0)
+    UNLISTED numeric stroke of o (out ov, vlead)                                     2, largest 4.8e-08 u (jumps over the lazy dog:L10os0)
+  J3g (v6.9 -> v7.0): 1356 pieces, 244 moved, 33 numeric only; listed cause: b's, v's and w's exits, every join out of them (the six into a and q, e's entry after them)
+    listed   b, v or w's exit stroke                                        97, largest 21.3 u (br:L0bs0)
+    listed   join out of b, v or w                                          78, largest 21.5 u (quick brown fox:J10-12br)
+    listed   join out of b, v or w into a or q                               8, largest 20.4 u (bad:J0-2ba)
+    listed   join out of b, v or w into e                                   11, largest 30 u (wave:J4-6ve)
+    listed   the stroke after a join out of b, v or w (its entry)           34, largest 29.9 u (ve:L2es0)
+    listed   numeric the stroke after a join out of b, v or w (its entry)           33, largest 6.41e-05 u (bk:L2ks0)
+    UNLISTED stroke of b (in cb)                                             1, largest 21.2 u (cb:L2bs0)
+    UNLISTED stroke of b (in fb)                                             1, largest 21.2 u (fb:L2bs0)
+    UNLISTED stroke of b (in ob)                                             1, largest 21.1 u (ob:L2bs0)
+    UNLISTED stroke of v (in cv)                                             1, largest 20.5 u (cv:L2vs0)
+    UNLISTED stroke of v (in fv)                                             1, largest 20.5 u (fv:L2vs0)
+    UNLISTED stroke of v (in ov)                                             1, largest 20.5 u (ov:L2vs0)
+    UNLISTED stroke of w (in aw)                                             1, largest 20.5 u (aw:L2ws0)
+    UNLISTED stroke of w (in cw)                                             1, largest 20.5 u (cw:L2ws0)
+    UNLISTED stroke of w (in dw)                                             1, largest 20.5 u (dw:L2ws0)
+    UNLISTED stroke of w (in ew)                                             1, largest 20.5 u (ew:L2ws0)
+    UNLISTED stroke of w (in fw)                                             1, largest 20.5 u (fw:L2ws0)
+    UNLISTED stroke of w (in hw)                                             1, largest 20.5 u (hw:L2ws0)
+    UNLISTED stroke of w (in iw)                                             1, largest 20.5 u (iw:L2ws0)
+    UNLISTED stroke of w (in nw)                                             1, largest 20.5 u (nw:L2ws0)
+    UNLISTED stroke of w (in ow)                                             2, largest 20.5 u (bow:L4ws0)
+  J3h (v7.0 -> v7.1): 1356 pieces, 78 moved, 8 numeric only; listed cause: c's exit port; the joins out of c stopped reading J2's presets
+    listed   c's exit stroke                                                28, largest 9.98 u (cc:L0cs0)
+    listed   join out of c                                                  31, largest 34.2 u (ct:J0-2ct)
+    listed   the stroke after a join out of c (its entry)                   19, largest 34.2 u (ct:L2ts0)
+    listed   numeric c's exit stroke                                                 3, largest 1.63e-05 u (cp:L0cs0)
+    listed   numeric the stroke after a join out of c (its entry)                    5, largest 2.17e-06 u (cy:L2ys0)
+  J3i (v7.1 -> v7.2): 1356 pieces, 180 moved, 68 numeric only; listed cause: one rule for the cusp entries (a low exit enters i j p r s t u w y up the upstroke)
+    listed   the cusp letter's stroke after a rule join (its entry)         66, largest 7.15 u (ei:L2is0)
+    listed   the cusp rule's join (a low exit into i j p r s t u w y)       82, largest 7.18 u (ci:J0-2ci)
+    listed   the exit stroke a rule join cuts                               32, largest 7.18 u (ci:L0cs0)
+    listed   numeric the cusp letter's stroke after a rule join (its entry)         17, largest 8.91e-05 u (it:L2ts0)
+    listed   numeric the cusp rule's join (a low exit into i j p r s t u w y)        1, largest 9.34e-05 u (aj:J0-2aj)
+    listed   numeric the exit stroke a rule join cuts                               50, largest 9.68e-05 u (after:L2fs0)
+
+(2) FIRST FINDING: the pieces moved for a cause not listed in the brief (>= 1e-4 u), by stage and cause, largest first
+  45 pieces
+  J3f | join into b: 2 pieces; per pair: fb 1, ob 1
+      fb          0.027 u  fb:J0-2fb                                join    dmax 3.73->3.73 hooks 0->0 rough ok->ok  [changed in this stage: b]
+      ob          0.004 u  ob:J0-2ob                                join    dmax 3.86->3.86 hooks 0->0 rough ok->ok  [changed in this stage: b]
+  J3f | join into v: 3 pieces; per pair: ev 1, fv 1, ov 1
+      ev          0.010 u  ice jet even:J12-14ev                    join    dmax 8.40->8.41 hooks 0->0 rough ok->ok  [changed in this stage: e, v]
+      ov          0.003 u  woven:J2-4ov                             join    dmax 2.95->2.95 hooks 0->0 rough ok->ok  [changed in this stage: v]
+      fv          0.001 u  fv:J0-2fv                                join    dmax 6.59->6.59 hooks 0->0 rough ok->ok  [changed in this stage: v]
+  J3f | join into w: 6 pieces; per pair: ow 2, aw 1, ew 1, fw 1, hw 1
+      ew          0.332 u  ew:J0-2ew                                join    dmax 11.60->- hooks 0->- rough ok->-  [changed in this stage: e, w]
+      fw          0.040 u  fw:J0-2fw                                join    dmax 12.96->12.96 hooks 0->0 rough ok->ok  [changed in this stage: w]
+      ow          0.006 u  bow:J2-4ow                               join    dmax 2.56->2.55 hooks 0->0 rough ok->ok  [changed in this stage: w]
+      ow          0.002 u  quick brown fox:J14-16ow                 join    dmax 2.55->2.55 hooks 0->0 rough ok->ok  [changed in this stage: w]
+      aw          0.002 u  lawgiver:J2-4aw                          join    dmax 6.63->6.63 hooks 0->0 rough ok->ok  [changed in this stage: a, w]
+      hw          0.001 u  hw:J0-2hw                                join    dmax 6.55->- hooks 0->- rough ok->-  [changed in this stage: w]
+  J3f | stroke of b (in cb): 1 pieces; per pair: cb 1
+      cb         14.342 u  cb:L2bs0                                 stroke  start 0.000 end 14.263 u  [changed in this stage: b]
+  J3f | stroke of b (in fb): 1 pieces; per pair: fb 1
+      fb         14.342 u  fb:L2bs0                                 stroke  start 0.000 end 14.263 u  [changed in this stage: b]
+  J3f | stroke of b (in ob): 1 pieces; per pair: ob 1
+      ob         14.267 u  ob:L2bs0                                 stroke  start 0.000 end 14.263 u  [changed in this stage: b]
+  J3f | stroke of e (lead, out ew): 1 pieces; per pair: ew 1
+      ew          0.332 u  ew:L0es0                                 stroke  start 0.000 end 0.332 u  [changed in this stage: e]
+  J3f | stroke of f (lead, out fw): 1 pieces; per pair: fw 1
+      fw          0.000 u  fw:L0fs0                                 stroke  start 0.000 end 0.000 u  [no body or port of its letters changed]
+  J3f | stroke of v (in cv): 1 pieces; per pair: cv 1
+      cv         15.720 u  cv:L2vs0                                 stroke  start 0.000 end 14.765 u  [changed in this stage: v]
+  J3f | stroke of v (in fv): 1 pieces; per pair: fv 1
+      fv         15.720 u  fv:L2vs0                                 stroke  start 0.000 end 14.765 u  [changed in this stage: v]
+  J3f | stroke of v (in ov): 1 pieces; per pair: ov 1
+      ov         15.680 u  ov:L2vs0                                 stroke  start 0.000 end 14.765 u  [changed in this stage: v]
+  J3f | stroke of w (in aw): 1 pieces; per pair: aw 1
+      aw         14.370 u  aw:L2ws0                                 stroke  start 0.000 end 14.255 u  [changed in this stage: w]
+  J3f | stroke of w (in cw): 1 pieces; per pair: cw 1
+      cw         14.368 u  cw:L2ws0                                 stroke  start 0.000 end 14.255 u  [changed in this stage: w]
+  J3f | stroke of w (in dw): 1 pieces; per pair: dw 1
+      dw         14.370 u  dw:L2ws0                                 stroke  start 0.000 end 14.255 u  [changed in this stage: w]
+  J3f | stroke of w (in ew): 1 pieces; per pair: ew 1
+      ew         14.368 u  ew:L2ws0                                 stroke  start 0.042 end 14.255 u  [changed in this stage: w]
+  J3f | stroke of w (in fw): 1 pieces; per pair: fw 1
+      fw         14.368 u  fw:L2ws0                                 stroke  start 0.040 end 14.255 u  [changed in this stage: w]
+  J3f | stroke of w (in hw): 1 pieces; per pair: hw 1
+      hw         14.370 u  hw:L2ws0                                 stroke  start 0.000 end 14.255 u  [changed in this stage: w]
+  J3f | stroke of w (in iw): 1 pieces; per pair: iw 1
+      iw         14.370 u  iw:L2ws0                                 stroke  start 0.000 end 14.255 u  [changed in this stage: w]
+  J3f | stroke of w (in nw): 1 pieces; per pair: nw 1
+      nw         14.370 u  nw:L2ws0                                 stroke  start 0.000 end 14.255 u  [changed in this stage: w]
+  J3f | stroke of w (in ow): 2 pieces; per pair: ow 2
+      ow         14.368 u  bow:L4ws0                                stroke  start 0.000 end 14.255 u  [changed in this stage: w]
+      ow         14.368 u  ow:L2ws0                                 stroke  start 0.000 end 14.255 u  [changed in this stage: w]
+  J3g | stroke of b (in cb): 1 pieces; per pair: cb 1
+      cb         21.236 u  cb:L2bs0                                 stroke  start 0.000 end 20.518 u  [changed in this stage: b]
+  J3g | stroke of b (in fb): 1 pieces; per pair: fb 1
+      fb         21.220 u  fb:L2bs0                                 stroke  start 0.000 end 20.518 u  [changed in this stage: b]
+  J3g | stroke of b (in ob): 1 pieces; per pair: ob 1
+      ob         21.068 u  ob:L2bs0                                 stroke  start 0.000 end 20.518 u  [changed in this stage: b]
+  J3g | stroke of v (in cv): 1 pieces; per pair: cv 1
+      cv         20.518 u  cv:L2vs0                                 stroke  start 0.000 end 20.518 u  [changed in this stage: v]
+  J3g | stroke of v (in fv): 1 pieces; per pair: fv 1
+      fv         20.518 u  fv:L2vs0                                 stroke  start 0.000 end 20.518 u  [changed in this stage: v]
+  J3g | stroke of v (in ov): 1 pieces; per pair: ov 1
+      ov         20.518 u  ov:L2vs0                                 stroke  start 0.000 end 20.518 u  [changed in this stage: v]
+  J3g | stroke of w (in aw): 1 pieces; per pair: aw 1
+      aw         20.518 u  aw:L2ws0                                 stroke  start 0.000 end 20.518 u  [changed in this stage: w]
+  J3g | stroke of w (in cw): 1 pieces; per pair: cw 1
+      cw         20.518 u  cw:L2ws0                                 stroke  start 0.000 end 20.518 u  [changed in this stage: w]
+  J3g | stroke of w (in dw): 1 pieces; per pair: dw 1
+      dw         20.518 u  dw:L2ws0                                 stroke  start 0.000 end 20.518 u  [changed in this stage: w]
+  J3g | stroke of w (in ew): 1 pieces; per pair: ew 1
+      ew         20.518 u  ew:L2ws0                                 stroke  start 0.000 end 20.518 u  [changed in this stage: w]
+  J3g | stroke of w (in fw): 1 pieces; per pair: fw 1
+      fw         20.518 u  fw:L2ws0                                 stroke  start 0.000 end 20.518 u  [changed in this stage: w]
+  J3g | stroke of w (in hw): 1 pieces; per pair: hw 1
+      hw         20.518 u  hw:L2ws0                                 stroke  start 0.000 end 20.518 u  [changed in this stage: w]
+  J3g | stroke of w (in iw): 1 pieces; per pair: iw 1
+      iw         20.518 u  iw:L2ws0                                 stroke  start 0.000 end 20.518 u  [changed in this stage: w]
+  J3g | stroke of w (in nw): 1 pieces; per pair: nw 1
+      nw         20.518 u  nw:L2ws0                                 stroke  start 0.000 end 20.518 u  [changed in this stage: w]
+  J3g | stroke of w (in ow): 2 pieces; per pair: ow 2
+      ow         20.518 u  bow:L4ws0                                stroke  start 0.000 end 20.518 u  [changed in this stage: w]
+      ow         20.518 u  ow:L2ws0                                 stroke  start 0.000 end 20.518 u  [changed in this stage: w]
+
+(3) the pieces moved for a listed cause, by stage and cause, with counts per letter pair
+  J3f | b, v or w's exit stroke: 97 pieces; per pair: bo 3, ba 2, be 2, br 2, by 2, iv+ve 2, ov+ve 2, wa 2, we 2, wh 2, wo 2, av+ve 1, aw+wg 1, bb 1, bc 1, bd 1, bf 1, bg 1, bg+ub 1, bh 1, bi 1, bj 1, bk 1, bl 1, bm 1, bn 1, bp 1, bq 1, bs 1, bt 1, bu 1, bv 1, bw 1, bx 1, bz 1, ev+ve 1, ow+wn 1, va 1, vb 1, vc 1, vd 1, ve 1, vf 1, vg 1, vh 1, vi 1, vj 1, vk 1, vl 1, vm 1, vn 1, vo 1, vp 1, vq 1, vr 1, vs 1, vt 1, vu 1, vv 1, vw 1, vx 1, vy 1, vz 1, wb 1, wc 1, wd 1, wf 1, wg 1, wi 1, wj 1, wk 1, wl 1, wm 1, wn 1, wp 1, wq 1, wr 1, ws 1, wt 1, wu 1, wv 1, ww 1, wx 1, wy 1, wz 1
+      ev+ve      17.583 u  ice jet even:L14vs0                      stroke  start 0.000 end 15.270 u
+      vc         17.583 u  vc:L0vs0                                 stroke  start 0.000 end 15.270 u
+      vm         17.583 u  vm:L0vs0                                 stroke  start 0.000 end 15.270 u
+      vn         17.583 u  vn:L0vs0                                 stroke  start 0.000 end 15.270 u
+      vx         17.583 u  vx:L0vs0                                 stroke  start 0.000 end 15.270 u
+      iv+ve      17.583 u  lawgiver:L10vs0                          stroke  start 0.000 end 15.270 u
+      vb         17.583 u  vb:L0vs0                                 stroke  start 0.000 end 15.270 u
+      av+ve      17.583 u  wave:L4vs0                               stroke  start 0.000 end 15.270 u
+      iv+ve      17.583 u  cursive:L10vs0                           stroke  start 0.000 end 15.270 u
+      vi         17.583 u  vi:L0vs0                                 stroke  start 0.000 end 15.270 u
+      vf         17.583 u  vf:L0vs0                                 stroke  start 0.000 end 15.270 u
+      ve         17.583 u  ve:L0vs0                                 stroke  start 0.000 end 15.270 u
+      vl         17.583 u  vl:L0vs0                                 stroke  start 0.000 end 15.270 u
+      vw         17.583 u  vw:L0vs0                                 stroke  start 0.000 end 15.270 u
+      vk         17.583 u  vk:L0vs0                                 stroke  start 0.000 end 15.270 u
+      vq         17.583 u  vq:L0vs0                                 stroke  start 0.000 end 15.270 u
+      vy         17.583 u  vy:L0vs0                                 stroke  start 0.000 end 15.270 u
+      vs         17.583 u  vs:L0vs0                                 stroke  start 0.000 end 15.270 u
+      vr         17.583 u  vr:L0vs0                                 stroke  start 0.000 end 15.270 u
+      vj         17.583 u  vj:L0vs0                                 stroke  start 0.000 end 15.270 u
+      vh         17.583 u  vh:L0vs0                                 stroke  start 0.000 end 15.270 u
+      vt         17.583 u  vt:L0vs0                                 stroke  start 0.000 end 15.270 u
+      vp         17.583 u  vp:L0vs0                                 stroke  start 0.000 end 15.270 u
+      vu         17.583 u  vu:L0vs0                                 stroke  start 0.000 end 15.270 u
+      vv         17.583 u  vv:L0vs0                                 stroke  start 0.000 end 15.270 u
+      vz         17.581 u  vz:L0vs0                                 stroke  start 0.000 end 15.269 u
+      ov+ve      17.539 u  woven:L4vs0                              stroke  start 0.000 end 15.270 u
+      ov+ve      17.539 u  jumps over the lazy dog:L12vs0           stroke  start 0.000 end 15.270 u
+      vd         17.449 u  vd:L0vs0                                 stroke  start 0.000 end 15.228 u
+      va         16.446 u  va:L0vs0                                 stroke  start 0.000 end 14.939 u
+      we         16.296 u  we:L0ws0                                 stroke  start 0.000 end 14.638 u
+      wq         16.296 u  wq:L0ws0                                 stroke  start 0.000 end 14.638 u
+      we         16.296 u  be we shoe maze huge bye:L4ws0           stroke  start 0.000 end 14.638 u
+      wa         16.296 u  wa:L0ws0                                 stroke  start 0.000 end 14.638 u
+      wh         16.296 u  wh:L0ws0                                 stroke  start 0.000 end 14.638 u
+      wh         16.296 u  which:L0ws0                              stroke  start 0.000 end 14.638 u
+      wr         16.296 u  wr:L0ws0                                 stroke  start 0.000 end 14.638 u
+      wa         16.296 u  wave:L0ws0                               stroke  start 0.000 end 14.638 u
+      ws         16.296 u  ws:L0ws0                                 stroke  start 0.000 end 14.638 u
+      ba         16.275 u  bad:L0bs0                                stroke  start 0.000 end 14.799 u
+      be         16.275 u  be we shoe maze huge bye:L0bs0           stroke  start 0.000 end 14.799 u
+      be         16.275 u  be:L0bs0                                 stroke  start 0.000 end 14.799 u
+      bh         16.275 u  bh:L0bs0                                 stroke  start 0.000 end 14.799 u
+      bq         16.275 u  bq:L0bs0                                 stroke  start 0.000 end 14.799 u
+      ba         16.275 u  ba:L0bs0                                 stroke  start 0.000 end 14.799 u
+      br         16.275 u  br:L0bs0                                 stroke  start 0.000 end 14.799 u
+      br         16.275 u  quick brown fox:L10bs0                   stroke  start 0.000 end 14.799 u
+      wp         16.149 u  wp:L0ws0                                 stroke  start 0.000 end 14.599 u
+      vg         15.720 u  vg:L0vs0                                 stroke  start 0.000 end 14.765 u
+      vo         15.720 u  vo:L0vs0                                 stroke  start 0.000 end 14.765 u
+      bt         15.548 u  bt:L0bs0                                 stroke  start 0.000 end 14.561 u
+      wt         15.267 u  wt:L0ws0                                 stroke  start 0.000 end 14.397 u
+      wi         15.118 u  wi:L0ws0                                 stroke  start 0.000 end 14.369 u
+      wj         14.968 u  wj:L0ws0                                 stroke  start 0.000 end 14.343 u
+      bg         14.945 u  bg:L0bs0                                 stroke  start 0.000 end 14.396 u
+      bg+ub      14.945 u  subgroup:L4bs0                           stroke  start 0.000 end 14.396 u
+      wy         14.819 u  wy:L0ws0                                 stroke  start 0.000 end 14.318 u
+      bd         14.717 u  bd:L0bs0                                 stroke  start 0.000 end 14.341 u
+      bc         14.683 u  bc:L0bs0                                 stroke  start 0.000 end 14.334 u
+      wu         14.669 u  wu:L0ws0                                 stroke  start 0.000 end 14.295 u
+      bo         14.644 u  bo:L0bs0                                 stroke  start 0.000 end 14.325 u
+      bo         14.644 u  bow:L0bs0                                stroke  start 0.000 end 14.325 u
+      bo         14.644 u  boxes:L0bs0                              stroke  start 0.000 end 14.325 u
+      bz         14.629 u  bz:L0bs0                                 stroke  start 0.000 end 14.322 u
+      bp         14.433 u  bp:L0bs0                                 stroke  start 0.000 end 14.281 u
+      bw         14.379 u  bw:L0bs0                                 stroke  start 0.000 end 14.270 u
+      aw+wg      14.370 u  lawgiver:L4ws0                           stroke  start 0.002 end 14.255 u
+      wg         14.369 u  wg:L0ws0                                 stroke  start 0.000 end 14.255 u
+      wm         14.369 u  wm:L0ws0                                 stroke  start 0.000 end 14.255 u
+      wx         14.368 u  wx:L0ws0                                 stroke  start 0.000 end 14.255 u
+      wz         14.368 u  wz:L0ws0                                 stroke  start 0.000 end 14.255 u
+      wb         14.368 u  wb:L0ws0                                 stroke  start 0.000 end 14.255 u
+      wd         14.368 u  wd:L0ws0                                 stroke  start 0.000 end 14.255 u
+      wo         14.368 u  woven:L0ws0                              stroke  start 0.000 end 14.255 u
+      wo         14.368 u  wo:L0ws0                                 stroke  start 0.000 end 14.255 u
+      wl         14.368 u  wl:L0ws0                                 stroke  start 0.000 end 14.255 u
+      wn         14.368 u  wn:L0ws0                                 stroke  start 0.000 end 14.255 u
+      ow+wn      14.368 u  quick brown fox:L16ws0                   stroke  start 0.000 end 14.255 u
+      wv         14.368 u  wv:L0ws0                                 stroke  start 0.000 end 14.255 u
+      wc         14.368 u  wc:L0ws0                                 stroke  start 0.000 end 14.255 u
+      wf         14.368 u  wf:L0ws0                                 stroke  start 0.000 end 14.255 u
+      wk         14.368 u  wk:L0ws0                                 stroke  start 0.000 end 14.255 u
+      ww         14.368 u  ww:L0ws0                                 stroke  start 0.000 end 14.255 u
+      bj         14.363 u  bj:L0bs0                                 stroke  start 0.000 end 14.267 u
+      bi         14.352 u  bi:L0bs0                                 stroke  start 0.000 end 14.265 u
+      bu         14.351 u  bu:L0bs0                                 stroke  start 0.000 end 14.264 u
+      by         14.351 u  by:L0bs0                                 stroke  start 0.000 end 14.264 u
+      by         14.350 u  be we shoe maze huge bye:L32bs0          stroke  start 0.000 end 14.264 u
+      bx         14.342 u  bx:L0bs0                                 stroke  start 0.000 end 14.263 u
+      bs         14.342 u  bs:L0bs0                                 stroke  start 0.000 end 14.263 u
+      bm         14.342 u  bm:L0bs0                                 stroke  start 0.000 end 14.263 u
+      bk         14.342 u  bk:L0bs0                                 stroke  start 0.000 end 14.263 u
+      bl         14.342 u  bl:L0bs0                                 stroke  start 0.000 end 14.263 u
+      bf         14.342 u  bf:L0bs0                                 stroke  start 0.000 end 14.263 u
+      bv         14.342 u  bv:L0bs0                                 stroke  start 0.000 end 14.263 u
+      bn         14.342 u  bn:L0bs0                                 stroke  start 0.000 end 14.263 u
+      bb         14.342 u  bb:L0bs0                                 stroke  start 0.000 end 14.263 u
+  J3f | join out of b, v or w: 78 pieces; per pair: bo 3, bg 2, br 2, by 2, wg 2, wh 2, wn 2, wo 2, bb 1, bc 1, bd 1, bf 1, bh 1, bi 1, bj 1, bk 1, bl 1, bm 1, bn 1, bp 1, bs 1, bt 1, bu 1, bv 1, bw 1, bx 1, bz 1, vb 1, vc 1, vd 1, vf 1, vg 1, vh 1, vi 1, vj 1, vk 1, vl 1, vm 1, vn 1, vo 1, vp 1, vr 1, vs 1, vt 1, vu 1, vv 1, vw 1, vx 1, vy 1, vz 1, wb 1, wc 1, wd 1, wf 1, wi 1, wj 1, wk 1, wl 1, wm 1, wp 1, wr 1, ws 1, wt 1, wu 1, wv 1, ww 1, wx 1, wy 1, wz 1
+      wl         88.221 u  wl:J0-2wl                                join    dmax 3.45->35.74 hooks 2->0 rough FAIL->ok
+      bl         88.221 u  bl:J0-2bl                                join    dmax 2.63->36.04 hooks 2->0 rough FAIL->FAIL
+      vl         88.221 u  vl:J0-2vl                                join    dmax 3.28->33.92 hooks 1->0 rough FAIL->ok
+      bf         88.162 u  bf:J0-2bf                                join    dmax 2.58->35.93 hooks 1->0 rough FAIL->FAIL
+      vf         88.162 u  vf:J0-2vf                                join    dmax 2.08->33.82 hooks 1->0 rough FAIL->ok
+      wf         88.162 u  wf:J0-2wf                                join    dmax 1.83->35.63 hooks 1->0 rough FAIL->ok
+      wb         86.297 u  wb:J0-2wb                                join    dmax 2.94->35.73 hooks 2->0 rough FAIL->ok
+      bb         86.297 u  bb:J0-2bb                                join    dmax 2.52->35.99 hooks 3->0 rough FAIL->FAIL
+      vb         86.297 u  vb:J0-2vb                                join    dmax 2.94->33.95 hooks 2->0 rough FAIL->ok
+      bh         80.855 u  bh:J0-2bh                                join    dmax 2.70->56.79 hooks 1->0 rough FAIL->FAIL
+      wh         80.855 u  wh:J0-2wh                                join    dmax 2.77->56.17 hooks 1->0 rough FAIL->ok
+      wh         80.855 u  which:J0-2wh                             join    dmax 2.77->56.17 hooks 1->0 rough FAIL->ok
+      vh         80.855 u  vh:J0-2vh                                join    dmax 2.60->55.51 hooks 1->0 rough FAIL->ok
+      bk         73.491 u  bk:J0-2bk                                join    dmax 7.31->56.05 hooks 1->0 rough FAIL->FAIL
+      wk         72.544 u  wk:J0-2wk                                join    dmax 7.56->55.45 hooks 1->0 rough FAIL->ok
+      vk         71.630 u  vk:J0-2vk                                join    dmax 7.34->54.75 hooks 1->0 rough FAIL->ok
+      ws         57.833 u  ws:J0-2ws                                join    dmax 5.77->52.30 hooks 1->0 rough FAIL->ok
+      vs         56.632 u  vs:J0-2vs                                join    dmax 4.82->52.06 hooks 2->0 rough FAIL->ok
+      bs         56.285 u  bs:J0-2bs                                join    dmax 4.83->52.50 hooks 1->0 rough FAIL->ok
+      vt         54.917 u  vt:J0-2vt                                join    dmax 2.89->13.91 hooks 0->0 rough ok->FAIL
+      wt         54.917 u  wt:J0-2wt                                join    dmax 2.93->13.99 hooks 0->0 rough ok->FAIL
+      bt         54.917 u  bt:J0-2bt                                join    dmax 2.83->14.48 hooks 0->0 rough ok->FAIL
+      wd         31.120 u  wd:J0-2wd                                join    dmax 2.76->17.17 hooks 0->0 rough ok->ok
+      bd         31.120 u  bd:J0-2bd                                join    dmax 2.58->17.40 hooks 0->0 rough ok->ok
+      vd         30.992 u  vd:J0-2vd                                join    dmax 2.58->16.44 hooks 0->0 rough ok->ok
+      bo         30.874 u  bo:J0-2bo                                join    dmax 1.01->17.79 hooks 0->0 rough ok->ok
+      bo         30.872 u  bow:J0-2bo                               join    dmax 1.03->17.79 hooks 0->0 rough ok->ok
+      bo         30.872 u  boxes:J0-2bo                             join    dmax 1.03->17.79 hooks 0->0 rough ok->ok
+      vo         30.461 u  vo:J0-2vo                                join    dmax 1.61->16.74 hooks 0->0 rough ok->ok
+      wc         30.127 u  wc:J0-2wc                                join    dmax 1.61->17.44 hooks 0->0 rough ok->ok
+      bc         30.127 u  bc:J0-2bc                                join    dmax 1.15->17.70 hooks 0->0 rough ok->ok
+      vc         30.127 u  vc:J0-2vc                                join    dmax 1.76->16.81 hooks 0->0 rough ok->ok
+      br         29.710 u  quick brown fox:J10-12br                 join    dmax 5.18->27.93 hooks 1->0 rough FAIL->ok
+      br         29.520 u  br:J0-2br                                join    dmax 5.18->27.85 hooks 1->0 rough FAIL->ok
+      wo         29.318 u  woven:J0-2wo                             join    dmax 1.58->17.52 hooks 0->0 rough ok->ok
+      wo         29.317 u  wo:J0-2wo                                join    dmax 1.58->17.53 hooks 0->0 rough ok->ok
+      wr         28.117 u  wr:J0-2wr                                join    dmax 4.75->24.23 hooks 1->0 rough FAIL->FAIL
+      vr         26.419 u  vr:J0-2vr                                join    dmax 4.76->22.37 hooks 1->0 rough FAIL->FAIL
+      bg         24.031 u  subgroup:J4-6bg                          join    dmax 6.17->16.04 hooks 0->0 rough ok->ok
+      bg         24.031 u  bg:J0-2bg                                join    dmax 6.17->16.04 hooks 0->0 rough ok->ok
+      wg         24.031 u  wg:J0-2wg                                join    dmax 6.27->15.79 hooks 0->0 rough ok->ok
+      vg         24.031 u  vg:J0-2vg                                join    dmax 6.16->15.17 hooks 0->0 rough ok->ok
+      wg         24.031 u  lawgiver:J4-6wg                          join    dmax 6.27->15.79 hooks 0->0 rough ok->ok
+      wz         23.101 u  wz:J0-2wz                                join    dmax 2.16->21.90 hooks 1->0 rough FAIL->ok
+      wx         22.764 u  wx:J0-2wx                                join    dmax 1.06->22.65 hooks 1->0 rough FAIL->ok
+      bz         22.478 u  bz:J0-2bz                                join    dmax 2.15->22.16 hooks 1->0 rough FAIL->ok
+      bx         22.279 u  bx:J0-2bx                                join    dmax 1.10->23.03 hooks 1->0 rough FAIL->ok
+      vz         22.074 u  vz:J0-2vz                                join    dmax 1.98->21.27 hooks 1->0 rough FAIL->ok
+      vx         21.826 u  vx:J0-2vx                                join    dmax 0.79->21.99 hooks 1->0 rough FAIL->ok
+      bp         15.926 u  bp:J0-2bp                                join    dmax 1.46->15.50 hooks 0->0 rough FAIL->ok
+      bu         15.892 u  bu:J0-2bu                                join    dmax 1.28->15.66 hooks 0->0 rough ok->ok
+      by         15.887 u  by:J0-2by                                join    dmax 1.22->15.66 hooks 0->0 rough ok->ok
+      by         15.886 u  be we shoe maze huge bye:J32-34by        join    dmax 1.16->15.66 hooks 0->0 rough ok->ok
+      bw         15.877 u  bw:J0-2bw                                join    dmax 1.53->15.60 hooks 0->0 rough ok->ok
+      bi         15.866 u  bi:J0-2bi                                join    dmax 1.12->15.65 hooks 0->0 rough ok->ok
+      bj         15.860 u  bj:J0-2bj                                join    dmax 1.11->15.63 hooks 0->0 rough ok->ok
+      vy         15.570 u  vy:J0-2vy                                join    dmax 1.39->15.29 hooks 0->0 rough ok->ok
+      vi         15.570 u  vi:J0-2vi                                join    dmax 1.49->15.30 hooks 0->0 rough ok->ok
+      vj         15.569 u  vj:J0-2vj                                join    dmax 1.42->15.28 hooks 0->0 rough ok->ok
+      vu         15.569 u  vu:J0-2vu                                join    dmax 1.39->15.31 hooks 0->0 rough ok->ok
+      vw         15.569 u  vw:J0-2vw                                join    dmax 1.50->15.24 hooks 0->0 rough ok->ok
+      vp         15.540 u  vp:J0-2vp                                join    dmax 2.24->15.14 hooks 0->0 rough FAIL->ok
+      vm         15.511 u  vm:J0-2vm                                join    dmax 1.14->14.74 hooks 0->0 rough FAIL->ok
+      vn         15.490 u  vn:J0-2vn                                join    dmax 1.08->14.77 hooks 0->0 rough ok->ok
+      vv         15.487 u  vv:J0-2vv                                join    dmax 1.10->14.77 hooks 0->0 rough ok->ok
+      wy         15.346 u  wy:J0-2wy                                join    dmax 1.49->15.42 hooks 0->0 rough ok->ok
+      wu         15.345 u  wu:J0-2wu                                join    dmax 1.49->15.42 hooks 0->0 rough ok->ok
+      wi         15.344 u  wi:J0-2wi                                join    dmax 1.49->15.43 hooks 0->0 rough ok->ok
+      wj         15.334 u  wj:J0-2wj                                join    dmax 1.49->15.40 hooks 0->0 rough ok->ok
+      ww         15.334 u  ww:J0-2ww                                join    dmax 1.60->15.35 hooks 0->0 rough ok->ok
+      wp         15.331 u  wp:J0-2wp                                join    dmax 1.98->15.31 hooks 0->0 rough FAIL->ok
+      bn         15.244 u  bn:J0-2bn                                join    dmax 1.84->15.10 hooks 0->0 rough ok->ok
+      bv         15.241 u  bv:J0-2bv                                join    dmax 1.93->15.10 hooks 0->0 rough ok->ok
+      bm         15.219 u  bm:J0-2bm                                join    dmax 1.56->15.07 hooks 0->0 rough ok->ok
+      wn         14.779 u  quick brown fox:J16-18wn                 join    dmax 1.16->14.81 hooks 0->0 rough ok->ok
+      wn         14.778 u  wn:J0-2wn                                join    dmax 1.16->14.80 hooks 0->0 rough ok->ok
+      wm         14.778 u  wm:J0-2wm                                join    dmax 1.20->14.77 hooks 0->0 rough ok->ok
+      wv         14.776 u  wv:J0-2wv                                join    dmax 1.24->14.80 hooks 0->0 rough ok->ok
+  J3f | join out of b, v or w into a or q: 8 pieces; per pair: ba 2, wa 2, bq 1, va 1, vq 1, wq 1
+      wq         21.072 u  wq:J0-2wq                                join    dmax 10.15->13.59 hooks 2->0 rough FAIL->FAIL
+      vq         21.035 u  vq:J0-2vq                                join    dmax 10.15->13.54 hooks 2->0 rough FAIL->ok
+      bq         20.732 u  bq:J0-2bq                                join    dmax 9.96->13.74 hooks 2->0 rough FAIL->FAIL
+      ba         15.192 u  ba:J0-2ba                                join    dmax 7.61->13.85 hooks 0->0 rough ok->FAIL
+      ba         15.192 u  bad:J0-2ba                               join    dmax 7.59->13.85 hooks 0->0 rough ok->FAIL
+      va         15.115 u  va:J0-2va                                join    dmax 7.56->13.70 hooks 0->0 rough ok->ok
+      wa         14.956 u  wa:J0-2wa                                join    dmax 7.67->13.69 hooks 0->0 rough ok->FAIL
+      wa         14.956 u  wave:J0-2wa                              join    dmax 7.65->13.69 hooks 0->0 rough ok->FAIL
+  J3f | join out of b, v or w into e: 11 pieces; per pair: ve 7, be 2, we 2
+      ve         47.141 u  woven:J4-6ve                             join    dmax 3.14->32.01 hooks 1->0 rough FAIL->FAIL
+      ve         47.141 u  ice jet even:J14-16ve                    join    dmax 3.14->32.01 hooks 1->0 rough FAIL->FAIL
+      ve         47.141 u  jumps over the lazy dog:J12-14ve         join    dmax 3.14->32.01 hooks 1->0 rough FAIL->FAIL
+      ve         47.141 u  lawgiver:J10-12ve                        join    dmax 3.14->32.01 hooks 1->0 rough FAIL->FAIL
+      be         45.877 u  be we shoe maze huge bye:J0-2be          join    dmax 3.47->30.30 hooks 1->0 rough FAIL->FAIL
+      be         45.877 u  be:J0-2be                                join    dmax 3.47->30.30 hooks 1->0 rough FAIL->FAIL
+      ve         45.877 u  ve:J0-2ve                                join    dmax 3.10->29.65 hooks 2->0 rough FAIL->FAIL
+      ve         45.877 u  cursive:J10-12ve                         join    dmax 3.16->29.67 hooks 2->0 rough FAIL->FAIL
+      ve         45.877 u  wave:J4-6ve                              join    dmax 3.16->29.67 hooks 2->0 rough FAIL->FAIL
+      we         45.877 u  be we shoe maze huge bye:J4-6we          join    dmax 2.01->29.91 hooks 1->0 rough FAIL->FAIL
+      we         45.877 u  we:J0-2we                                join    dmax 2.01->29.91 hooks 1->0 rough FAIL->FAIL
+  J3f | the stroke after a join out of b, v or w (its entry): 78 pieces; per pair: ve 3, be 2, en+ve 2, er+ve 2, we 2, wn 2, ad+ba 1, av+wa 1, ba 1, bb 1, bc 1, bd 1, bf 1, bg 1, bg+gr 1, bh 1, bk 1, bl 1, bm 1, bn 1, bo 1, bo+ow 1, bo+ox 1, bq 1, br 1, br+ro 1, bt 1, bv 1, bw 1, bx 1, bz 1, gi+wg 1, hi+wh 1, ov+wo 1, va 1, vb 1, vc 1, vd 1, vf 1, vg 1, vh 1, vk 1, vl 1, vm 1, vn 1, vo 1, vq 1, vr 1, vt 1, vv 1, vw 1, vx 1, vz 1, wa 1, wb 1, wc 1, wd 1, wf 1, wg 1, wh 1, wk 1, wl 1, wm 1, wo 1, wq 1, wr 1, wt 1, wv 1, ww 1, wx 1, wz 1
+      wl         88.221 u  wl:L2ls0                                 stroke  start 88.221 end 0.000 u
+      bl         88.221 u  bl:L2ls0                                 stroke  start 88.221 end 0.000 u
+      vl         88.221 u  vl:L2ls0                                 stroke  start 88.221 end 0.000 u
+      bf         88.162 u  bf:L2fs0                                 stroke  start 88.162 end 0.000 u
+      vf         88.162 u  vf:L2fs0                                 stroke  start 88.162 end 0.000 u
+      wf         88.162 u  wf:L2fs0                                 stroke  start 88.162 end 0.000 u
+      wb         86.297 u  wb:L2bs0                                 stroke  start 86.297 end 14.263 u
+      bb         86.297 u  bb:L2bs0                                 stroke  start 86.297 end 14.263 u
+      vb         86.297 u  vb:L2bs0                                 stroke  start 86.297 end 14.263 u
+      bh         80.855 u  bh:L2hs0                                 stroke  start 80.855 end 0.000 u
+      wh         80.855 u  wh:L2hs0                                 stroke  start 80.855 end 0.000 u
+      hi+wh      80.855 u  which:L2hs0                              stroke  start 80.855 end 0.000 u
+      vh         80.855 u  vh:L2hs0                                 stroke  start 80.855 end 0.000 u
+      wk         71.630 u  wk:L2ks0                                 stroke  start 71.630 end 0.000 u
+      bk         71.630 u  bk:L2ks0                                 stroke  start 71.630 end 0.000 u
+      vk         71.630 u  vk:L2ks0                                 stroke  start 71.630 end 0.000 u
+      bt         54.917 u  bt:L2ts0                                 stroke  start 54.917 end 0.000 u
+      vt         54.917 u  vt:L2ts0                                 stroke  start 54.917 end 0.000 u
+      wt         54.917 u  wt:L2ts0                                 stroke  start 54.917 end 0.000 u
+      en+ve      47.141 u  ice jet even:L16es0                      stroke  start 47.141 end 0.000 u
+      er+ve      47.141 u  jumps over the lazy dog:L14es0           stroke  start 47.141 end 0.000 u
+      er+ve      47.141 u  lawgiver:L12es0                          stroke  start 47.141 end 0.000 u
+      en+ve      47.141 u  woven:L6es0                              stroke  start 47.141 end 0.000 u
+      be         45.877 u  be we shoe maze huge bye:L2es0           stroke  start 45.877 end 0.000 u
+      be         45.877 u  be:L2es0                                 stroke  start 45.877 end 0.000 u
+      ve         45.877 u  ve:L2es0                                 stroke  start 45.877 end 0.000 u
+      ve         45.877 u  cursive:L12es0                           stroke  start 45.877 end 0.000 u
+      ve         45.877 u  wave:L6es0                               stroke  start 45.877 end 0.000 u
+      we         45.877 u  be we shoe maze huge bye:L6es0           stroke  start 45.877 end 0.000 u
+      we         45.877 u  we:L2es0                                 stroke  start 45.877 end 0.000 u
+      wd         31.120 u  wd:L2ds0                                 stroke  start 31.120 end 0.000 u
+      bd         31.120 u  bd:L2ds0                                 stroke  start 31.120 end 0.000 u
+      vd         30.992 u  vd:L2ds0                                 stroke  start 30.992 end 0.000 u
+      bo         30.874 u  bo:L2os0                                 stroke  start 30.874 end 0.000 u
+      bo+ow      30.872 u  bow:L2os0                                stroke  start 30.872 end 0.000 u
+      bo+ox      30.872 u  boxes:L2os0                              stroke  start 30.872 end 0.000 u
+      vo         30.461 u  vo:L2os0                                 stroke  start 30.461 end 0.000 u
+      wc         30.127 u  wc:L2cs0                                 stroke  start 30.127 end 0.000 u
+      bc         30.127 u  bc:L2cs0                                 stroke  start 30.127 end 0.000 u
+      vc         30.127 u  vc:L2cs0                                 stroke  start 30.127 end 0.000 u
+      ov+wo      29.318 u  woven:L2os0                              stroke  start 29.318 end 0.000 u
+      wo         29.317 u  wo:L2os0                                 stroke  start 29.317 end 0.000 u
+      bg+gr      24.031 u  subgroup:L6gs0                           stroke  start 24.031 end 0.000 u
+      bg         24.031 u  bg:L2gs0                                 stroke  start 24.031 end 0.000 u
+      wg         24.031 u  wg:L2gs0                                 stroke  start 24.031 end 0.000 u
+      vg         24.031 u  vg:L2gs0                                 stroke  start 24.031 end 0.000 u
+      gi+wg      24.031 u  lawgiver:L6gs0                           stroke  start 24.031 end 0.000 u
+      bv         15.484 u  bv:L2vs0                                 stroke  start 3.490 end 14.765 u
+      vv         15.484 u  vv:L2vs0                                 stroke  start 3.490 end 14.765 u
+      wv         15.484 u  wv:L2vs0                                 stroke  start 3.490 end 14.765 u
+      vw         14.368 u  vw:L2ws0                                 stroke  start 0.000 end 14.255 u
+      ww         14.368 u  ww:L2ws0                                 stroke  start 0.000 end 14.255 u
+      bw         14.368 u  bw:L2ws0                                 stroke  start 0.000 end 14.255 u
+      vz          3.499 u  vz:L2zs0                                 stroke  start 3.499 end 0.000 u
+      wz          3.499 u  wz:L2zs0                                 stroke  start 3.499 end 0.000 u
+      bz          3.499 u  bz:L2zs0                                 stroke  start 3.499 end 0.000 u
+      vx          3.491 u  vx:L2xs0                                 stroke  start 3.491 end 0.000 u
+      wx          3.491 u  wx:L2xs0                                 stroke  start 3.491 end 0.000 u
+      bx          3.491 u  bx:L2xs0                                 stroke  start 3.491 end 0.000 u
+      wn          3.193 u  wn:L2ns0                                 stroke  start 3.193 end 0.000 u
+      bn          3.193 u  bn:L2ns0                                 stroke  start 3.193 end 0.000 u
+      wn          3.193 u  quick brown fox:L18ns0                   stroke  start 3.193 end 0.000 u
+      vn          3.193 u  vn:L2ns0                                 stroke  start 3.193 end 0.000 u
+      vr          3.001 u  vr:L2rs0                                 stroke  start 3.001 end 0.000 u
+      br          3.000 u  br:L2rs0                                 stroke  start 3.000 end 0.000 u
+      br+ro       3.000 u  quick brown fox:L12rs0                   stroke  start 3.000 end 0.000 u
+      wr          3.000 u  wr:L2rs0                                 stroke  start 3.000 end 0.000 u
+      bm          1.599 u  bm:L2ms0                                 stroke  start 1.599 end 0.000 u
+      wm          1.599 u  wm:L2ms0                                 stroke  start 1.599 end 0.000 u
+      vm          1.599 u  vm:L2ms0                                 stroke  start 1.599 end 0.000 u
+      ba          0.001 u  ba:L2as0                                 stroke  start 0.001 end 0.000 u
+      ad+ba       0.001 u  bad:L2as0                                stroke  start 0.001 end 0.000 u
+      va          0.001 u  va:L2as0                                 stroke  start 0.001 end 0.000 u
+      wa          0.001 u  wa:L2as0                                 stroke  start 0.001 end 0.000 u
+      av+wa       0.001 u  wave:L2as0                               stroke  start 0.001 end 0.000 u
+      wq          0.001 u  wq:L2qs0                                 stroke  start 0.001 end 0.000 u
+      bq          0.001 u  bq:L2qs0                                 stroke  start 0.001 end 0.000 u
+      vq          0.001 u  vq:L2qs0                                 stroke  start 0.001 end 0.000 u
+  J3g | b, v or w's exit stroke: 97 pieces; per pair: bo 3, ba 2, be 2, br 2, by 2, iv+ve 2, ov+ve 2, wa 2, we 2, wh 2, wo 2, av+ve 1, aw+wg 1, bb 1, bc 1, bd 1, bf 1, bg 1, bg+ub 1, bh 1, bi 1, bj 1, bk 1, bl 1, bm 1, bn 1, bp 1, bq 1, bs 1, bt 1, bu 1, bv 1, bw 1, bx 1, bz 1, ev+ve 1, ow+wn 1, va 1, vb 1, vc 1, vd 1, ve 1, vf 1, vg 1, vh 1, vi 1, vj 1, vk 1, vl 1, vm 1, vn 1, vo 1, vp 1, vq 1, vr 1, vs 1, vt 1, vu 1, vv 1, vw 1, vx 1, vy 1, vz 1, wb 1, wc 1, wd 1, wf 1, wg 1, wi 1, wj 1, wk 1, wl 1, wm 1, wn 1, wp 1, wq 1, wr 1, ws 1, wt 1, wu 1, wv 1, ww 1, wx 1, wy 1, wz 1
+      br         21.290 u  br:L0bs0                                 stroke  start 0.000 end 20.425 u
+      ba         21.290 u  bad:L0bs0                                stroke  start 0.000 end 20.425 u
+      be         21.290 u  be we shoe maze huge bye:L0bs0           stroke  start 0.000 end 20.425 u
+      be         21.290 u  be:L0bs0                                 stroke  start 0.000 end 20.425 u
+      bh         21.290 u  bh:L0bs0                                 stroke  start 0.000 end 20.425 u
+      bq         21.290 u  bq:L0bs0                                 stroke  start 0.000 end 20.425 u
+      ba         21.290 u  ba:L0bs0                                 stroke  start 0.000 end 20.425 u
+      br         21.290 u  quick brown fox:L10bs0                   stroke  start 0.000 end 20.425 u
+      bt         20.579 u  bt:L0bs0                                 stroke  start 0.000 end 19.799 u
+      we         20.418 u  we:L0ws0                                 stroke  start 0.000 end 20.418 u
+      we         20.418 u  be we shoe maze huge bye:L4ws0           stroke  start 0.000 end 20.418 u
+      wq         20.418 u  wq:L0ws0                                 stroke  start 0.000 end 20.418 u
+      wa         20.418 u  wa:L0ws0                                 stroke  start 0.000 end 20.418 u
+      wh         20.418 u  wh:L0ws0                                 stroke  start 0.000 end 20.418 u
+      wh         20.418 u  which:L0ws0                              stroke  start 0.000 end 20.418 u
+      wr         20.418 u  wr:L0ws0                                 stroke  start 0.000 end 20.418 u
+      wa         20.418 u  wave:L0ws0                               stroke  start 0.000 end 20.418 u
+      ws         20.418 u  ws:L0ws0                                 stroke  start 0.000 end 20.418 u
+      ev+ve      20.395 u  ice jet even:L14vs0                      stroke  start 0.000 end 20.395 u
+      ov+ve      20.395 u  jumps over the lazy dog:L12vs0           stroke  start 0.000 end 20.395 u
+      ov+ve      20.395 u  woven:L4vs0                              stroke  start 0.000 end 20.395 u
+      iv+ve      20.395 u  lawgiver:L10vs0                          stroke  start 0.000 end 20.395 u
+      vm         20.395 u  vm:L0vs0                                 stroke  start 0.000 end 20.395 u
+      vw         20.395 u  vw:L0vs0                                 stroke  start 0.000 end 20.395 u
+      vn         20.395 u  vn:L0vs0                                 stroke  start 0.000 end 20.395 u
+      vb         20.395 u  vb:L0vs0                                 stroke  start 0.000 end 20.395 u
+      vx         20.395 u  vx:L0vs0                                 stroke  start 0.000 end 20.395 u
+      vc         20.395 u  vc:L0vs0                                 stroke  start 0.000 end 20.395 u
+      iv+ve      20.395 u  cursive:L10vs0                           stroke  start 0.000 end 20.395 u
+      av+ve      20.395 u  wave:L4vs0                               stroke  start 0.000 end 20.395 u
+      vi         20.395 u  vi:L0vs0                                 stroke  start 0.000 end 20.395 u
+      vf         20.395 u  vf:L0vs0                                 stroke  start 0.000 end 20.395 u
+      ve         20.395 u  ve:L0vs0                                 stroke  start 0.000 end 20.395 u
+      vl         20.395 u  vl:L0vs0                                 stroke  start 0.000 end 20.395 u
+      vk         20.395 u  vk:L0vs0                                 stroke  start 0.000 end 20.395 u
+      vr         20.395 u  vr:L0vs0                                 stroke  start 0.000 end 20.395 u
+      vq         20.395 u  vq:L0vs0                                 stroke  start 0.000 end 20.395 u
+      vy         20.395 u  vy:L0vs0                                 stroke  start 0.000 end 20.395 u
+      vs         20.395 u  vs:L0vs0                                 stroke  start 0.000 end 20.395 u
+      vj         20.395 u  vj:L0vs0                                 stroke  start 0.000 end 20.395 u
+      vh         20.395 u  vh:L0vs0                                 stroke  start 0.000 end 20.395 u
+      vt         20.395 u  vt:L0vs0                                 stroke  start 0.000 end 20.395 u
+      vp         20.395 u  vp:L0vs0                                 stroke  start 0.000 end 20.395 u
+      vu         20.395 u  vu:L0vs0                                 stroke  start 0.000 end 20.395 u
+      vv         20.395 u  vv:L0vs0                                 stroke  start 0.000 end 20.395 u
+      vz         20.393 u  vz:L0vs0                                 stroke  start 0.000 end 20.393 u
+      wp         20.292 u  wp:L0ws0                                 stroke  start 0.000 end 20.292 u
+      vd         20.279 u  vd:L0vs0                                 stroke  start 0.000 end 20.279 u
+      bg         19.989 u  bg:L0bs0                                 stroke  start 0.000 end 19.289 u
+      bg+ub      19.989 u  subgroup:L4bs0                           stroke  start 0.000 end 19.289 u
+      bd         19.765 u  bd:L0bs0                                 stroke  start 0.000 end 19.099 u
+      bc         19.732 u  bc:L0bs0                                 stroke  start 0.000 end 19.071 u
+      bo         19.694 u  bo:L0bs0                                 stroke  start 0.000 end 19.039 u
+      bo         19.694 u  bow:L0bs0                                stroke  start 0.000 end 19.039 u
+      bo         19.694 u  boxes:L0bs0                              stroke  start 0.000 end 19.039 u
+      bz         19.680 u  bz:L0bs0                                 stroke  start 0.000 end 19.027 u
+      wt         19.541 u  wt:L0ws0                                 stroke  start 0.000 end 19.541 u
+      bp         19.487 u  bp:L0bs0                                 stroke  start 0.000 end 18.866 u
+      bw         19.435 u  bw:L0bs0                                 stroke  start 0.000 end 18.822 u
+      bj         19.419 u  bj:L0bs0                                 stroke  start 0.000 end 18.808 u
+      wi         19.417 u  wi:L0ws0                                 stroke  start 0.000 end 19.417 u
+      va         19.416 u  va:L0vs0                                 stroke  start 0.000 end 19.416 u
+      bi         19.408 u  bi:L0bs0                                 stroke  start 0.000 end 18.799 u
+      bu         19.407 u  bu:L0bs0                                 stroke  start 0.000 end 18.799 u
+      by         19.407 u  by:L0bs0                                 stroke  start 0.000 end 18.798 u
+      by         19.406 u  be we shoe maze huge bye:L32bs0          stroke  start 0.000 end 18.798 u
+      bx         19.398 u  bx:L0bs0                                 stroke  start 0.000 end 18.791 u
+      bs         19.398 u  bs:L0bs0                                 stroke  start 0.000 end 18.791 u
+      bv         19.398 u  bv:L0bs0                                 stroke  start 0.000 end 18.791 u
+      bm         19.398 u  bm:L0bs0                                 stroke  start 0.000 end 18.791 u
+      bk         19.398 u  bk:L0bs0                                 stroke  start 0.000 end 18.791 u
+      bl         19.398 u  bl:L0bs0                                 stroke  start 0.000 end 18.791 u
+      bf         19.398 u  bf:L0bs0                                 stroke  start 0.000 end 18.791 u
+      bn         19.398 u  bn:L0bs0                                 stroke  start 0.000 end 18.791 u
+      bb         19.398 u  bb:L0bs0                                 stroke  start 0.000 end 18.791 u
+      wj         19.292 u  wj:L0ws0                                 stroke  start 0.000 end 19.292 u
+      wy         19.167 u  wy:L0ws0                                 stroke  start 0.000 end 19.167 u
+      wu         19.043 u  wu:L0ws0                                 stroke  start 0.000 end 19.043 u
+      vo         18.799 u  vo:L0vs0                                 stroke  start 0.000 end 18.799 u
+      vg         18.799 u  vg:L0vs0                                 stroke  start 0.000 end 18.799 u
+      wg         18.796 u  wg:L0ws0                                 stroke  start 0.000 end 18.796 u
+      wm         18.796 u  wm:L0ws0                                 stroke  start 0.000 end 18.796 u
+      wd         18.796 u  wd:L0ws0                                 stroke  start 0.000 end 18.796 u
+      wx         18.796 u  wx:L0ws0                                 stroke  start 0.000 end 18.796 u
+      aw+wg      18.796 u  lawgiver:L4ws0                           stroke  start 0.000 end 18.796 u
+      wz         18.796 u  wz:L0ws0                                 stroke  start 0.000 end 18.796 u
+      wo         18.796 u  woven:L0ws0                              stroke  start 0.000 end 18.796 u
+      wn         18.796 u  wn:L0ws0                                 stroke  start 0.000 end 18.796 u
+      wb         18.796 u  wb:L0ws0                                 stroke  start 0.000 end 18.796 u
+      wl         18.796 u  wl:L0ws0                                 stroke  start 0.000 end 18.796 u
+      wo         18.796 u  wo:L0ws0                                 stroke  start 0.000 end 18.796 u
+      wv         18.796 u  wv:L0ws0                                 stroke  start 0.000 end 18.796 u
+      wk         18.796 u  wk:L0ws0                                 stroke  start 0.000 end 18.796 u
+      ow+wn      18.796 u  quick brown fox:L16ws0                   stroke  start 0.000 end 18.796 u
+      wf         18.796 u  wf:L0ws0                                 stroke  start 0.000 end 18.796 u
+      wc         18.796 u  wc:L0ws0                                 stroke  start 0.000 end 18.796 u
+      ww         18.796 u  ww:L0ws0                                 stroke  start 0.000 end 18.796 u
+  J3g | join out of b, v or w: 78 pieces; per pair: bo 3, bg 2, br 2, by 2, wg 2, wh 2, wn 2, wo 2, bb 1, bc 1, bd 1, bf 1, bh 1, bi 1, bj 1, bk 1, bl 1, bm 1, bn 1, bp 1, bs 1, bt 1, bu 1, bv 1, bw 1, bx 1, bz 1, vb 1, vc 1, vd 1, vf 1, vg 1, vh 1, vi 1, vj 1, vk 1, vl 1, vm 1, vn 1, vo 1, vp 1, vr 1, vs 1, vt 1, vu 1, vv 1, vw 1, vx 1, vy 1, vz 1, wb 1, wc 1, wd 1, wf 1, wi 1, wj 1, wk 1, wl 1, wm 1, wp 1, wr 1, ws 1, wt 1, wu 1, wv 1, ww 1, wx 1, wy 1, wz 1
+      br         21.508 u  quick brown fox:J10-12br                 join    dmax 27.93->26.38 hooks 0->0 rough ok->FAIL
+      br         21.491 u  br:J0-2br                                join    dmax 27.85->26.33 hooks 0->0 rough ok->FAIL
+      bh         20.575 u  bh:J0-2bh                                join    dmax 56.79->38.57 hooks 0->0 rough FAIL->ok
+      wh         20.443 u  wh:J0-2wh                                join    dmax 56.17->38.56 hooks 0->0 rough ok->ok
+      wh         20.443 u  which:J0-2wh                             join    dmax 56.17->38.56 hooks 0->0 rough ok->ok
+      vh         20.443 u  vh:J0-2vh                                join    dmax 55.51->38.60 hooks 0->0 rough ok->ok
+      wr         20.432 u  wr:J0-2wr                                join    dmax 24.23->26.02 hooks 0->0 rough FAIL->FAIL
+      vk         20.428 u  vk:J0-2vk                                join    dmax 54.75->38.53 hooks 0->0 rough ok->ok
+      ws         20.418 u  ws:J0-2ws                                join    dmax 52.30->38.79 hooks 0->0 rough ok->ok
+      vl         20.412 u  vl:J0-2vl                                join    dmax 33.92->23.23 hooks 0->0 rough ok->ok
+      vb         20.411 u  vb:J0-2vb                                join    dmax 33.95->23.38 hooks 0->0 rough ok->ok
+      vf         20.411 u  vf:J0-2vf                                join    dmax 33.82->23.19 hooks 0->0 rough ok->ok
+      vr         20.399 u  vr:J0-2vr                                join    dmax 22.37->26.03 hooks 0->0 rough FAIL->FAIL
+      vm         20.395 u  vm:J0-2vm                                join    dmax 14.74->2.06 hooks 0->0 rough ok->ok
+      vw         20.395 u  vw:J0-2vw                                join    dmax 15.24->4.07 hooks 0->0 rough ok->ok
+      vn         20.395 u  vn:J0-2vn                                join    dmax 14.77->2.06 hooks 0->0 rough ok->ok
+      vx         20.395 u  vx:J0-2vx                                join    dmax 21.99->9.47 hooks 0->0 rough ok->ok
+      vc         20.395 u  vc:J0-2vc                                join    dmax 16.81->9.00 hooks 0->0 rough ok->ok
+      vi         20.395 u  vi:J0-2vi                                join    dmax 15.30->4.25 hooks 0->0 rough ok->ok
+      vy         20.395 u  vy:J0-2vy                                join    dmax 15.29->4.19 hooks 0->0 rough ok->ok
+      vs         20.395 u  vs:J0-2vs                                join    dmax 52.06->38.76 hooks 0->0 rough ok->ok
+      vj         20.395 u  vj:J0-2vj                                join    dmax 15.28->4.20 hooks 0->0 rough ok->ok
+      vt         20.395 u  vt:J0-2vt                                join    dmax 13.91->13.24 hooks 0->0 rough FAIL->ok
+      vp         20.395 u  vp:J0-2vp                                join    dmax 15.14->3.86 hooks 0->0 rough ok->ok
+      vu         20.395 u  vu:J0-2vu                                join    dmax 15.31->4.19 hooks 0->0 rough ok->ok
+      vv         20.395 u  vv:J0-2vv                                join    dmax 14.77->2.06 hooks 0->0 rough ok->ok
+      vz         20.393 u  vz:J0-2vz                                join    dmax 21.27->9.05 hooks 0->0 rough ok->ok
+      wp         20.292 u  wp:J0-2wp                                join    dmax 15.31->3.93 hooks 0->0 rough ok->ok
+      vd         20.279 u  vd:J0-2vd                                join    dmax 16.44->8.72 hooks 0->0 rough ok->ok
+      bt         19.799 u  bt:J0-2bt                                join    dmax 14.48->13.23 hooks 0->0 rough FAIL->ok
+      wt         19.541 u  wt:J0-2wt                                join    dmax 13.99->13.41 hooks 0->0 rough FAIL->ok
+      wi         19.417 u  wi:J0-2wi                                join    dmax 15.43->4.31 hooks 0->0 rough ok->ok
+      bo         19.333 u  bow:J0-2bo                               join    dmax 17.79->12.25 hooks 0->0 rough ok->ok
+      bo         19.333 u  boxes:J0-2bo                             join    dmax 17.79->12.25 hooks 0->0 rough ok->ok
+      bo         19.333 u  bo:J0-2bo                                join    dmax 17.79->12.26 hooks 0->0 rough ok->ok
+      wj         19.292 u  wj:J0-2wj                                join    dmax 15.40->4.27 hooks 0->0 rough ok->ok
+      bg         19.289 u  bg:J0-2bg                                join    dmax 16.04->6.18 hooks 0->0 rough ok->ok
+      bg         19.289 u  subgroup:J4-6bg                          join    dmax 16.04->6.20 hooks 0->0 rough ok->ok
+      bk         19.280 u  bk:J0-2bk                                join    dmax 56.05->38.51 hooks 0->0 rough FAIL->ok
+      wy         19.167 u  wy:J0-2wy                                join    dmax 15.42->4.26 hooks 0->0 rough ok->ok
+      wo         19.124 u  woven:J0-2wo                             join    dmax 17.52->11.69 hooks 0->0 rough ok->ok
+      bd         19.099 u  bd:J0-2bd                                join    dmax 17.40->9.30 hooks 0->0 rough ok->ok
+      bc         19.071 u  bc:J0-2bc                                join    dmax 17.70->9.56 hooks 0->0 rough ok->ok
+      wo         19.044 u  wo:J0-2wo                                join    dmax 17.53->11.35 hooks 0->0 rough ok->ok
+      wu         19.043 u  wu:J0-2wu                                join    dmax 15.42->4.25 hooks 0->0 rough ok->ok
+      bz         19.027 u  bz:J0-2bz                                join    dmax 22.16->9.14 hooks 0->0 rough ok->ok
+      vo         18.980 u  vo:J0-2vo                                join    dmax 16.74->11.45 hooks 0->0 rough ok->ok
+      wk         18.947 u  wk:J0-2wk                                join    dmax 55.45->38.49 hooks 0->0 rough ok->ok
+      bp         18.866 u  bp:J0-2bp                                join    dmax 15.50->4.09 hooks 0->0 rough ok->ok
+      bl         18.865 u  bl:J0-2bl                                join    dmax 36.04->23.68 hooks 0->0 rough FAIL->ok
+      bb         18.864 u  bb:J0-2bb                                join    dmax 35.99->23.85 hooks 0->0 rough FAIL->ok
+      bf         18.863 u  bf:J0-2bf                                join    dmax 35.93->23.65 hooks 0->0 rough FAIL->ok
+      wl         18.843 u  wl:J0-2wl                                join    dmax 35.74->23.40 hooks 0->0 rough ok->ok
+      wb         18.842 u  wb:J0-2wb                                join    dmax 35.73->23.57 hooks 0->0 rough ok->ok
+      wf         18.842 u  wf:J0-2wf                                join    dmax 35.63->23.36 hooks 0->0 rough ok->ok
+      bw         18.822 u  bw:J0-2bw                                join    dmax 15.60->4.30 hooks 0->0 rough ok->ok
+      bj         18.808 u  bj:J0-2bj                                join    dmax 15.63->4.41 hooks 0->0 rough ok->ok
+      bi         18.799 u  bi:J0-2bi                                join    dmax 15.65->4.45 hooks 0->0 rough ok->ok
+      vg         18.799 u  vg:J0-2vg                                join    dmax 15.17->5.75 hooks 0->0 rough ok->ok
+      bu         18.799 u  bu:J0-2bu                                join    dmax 15.66->4.41 hooks 0->0 rough ok->ok
+      by         18.798 u  by:J0-2by                                join    dmax 15.66->4.41 hooks 0->0 rough ok->ok
+      by         18.798 u  be we shoe maze huge bye:J32-34by        join    dmax 15.66->4.42 hooks 0->0 rough ok->ok
+      wg         18.796 u  wg:J0-2wg                                join    dmax 15.79->5.91 hooks 0->0 rough ok->ok
+      wd         18.796 u  wd:J0-2wd                                join    dmax 17.17->8.95 hooks 0->0 rough ok->ok
+      wc         18.796 u  wc:J0-2wc                                join    dmax 17.44->9.21 hooks 0->0 rough ok->ok
+      wm         18.796 u  wm:J0-2wm                                join    dmax 14.77->1.95 hooks 0->0 rough ok->ok
+      wx         18.796 u  wx:J0-2wx                                join    dmax 22.65->9.43 hooks 0->0 rough ok->ok
+      wg         18.796 u  lawgiver:J4-6wg                          join    dmax 15.79->5.89 hooks 0->0 rough ok->ok
+      wz         18.796 u  wz:J0-2wz                                join    dmax 21.90->9.07 hooks 0->0 rough ok->ok
+      wn         18.796 u  wn:J0-2wn                                join    dmax 14.80->1.95 hooks 0->0 rough ok->ok
+      wv         18.796 u  wv:J0-2wv                                join    dmax 14.80->1.95 hooks 0->0 rough ok->ok
+      wn         18.796 u  quick brown fox:J16-18wn                 join    dmax 14.81->1.95 hooks 0->0 rough ok->ok
+      ww         18.796 u  ww:J0-2ww                                join    dmax 15.35->4.15 hooks 0->0 rough ok->ok
+      bx         18.791 u  bx:J0-2bx                                join    dmax 23.03->9.50 hooks 0->0 rough ok->ok
+      bs         18.791 u  bs:J0-2bs                                join    dmax 52.50->38.86 hooks 0->0 rough ok->ok
+      bv         18.791 u  bv:J0-2bv                                join    dmax 15.10->1.98 hooks 0->0 rough ok->ok
+      bm         18.791 u  bm:J0-2bm                                join    dmax 15.07->1.98 hooks 0->0 rough ok->ok
+      bn         18.791 u  bn:J0-2bn                                join    dmax 15.10->1.98 hooks 0->0 rough ok->ok
+  J3g | join out of b, v or w into a or q: 8 pieces; per pair: ba 2, wa 2, bq 1, va 1, vq 1, wq 1
+      ba         20.425 u  bad:J0-2ba                               join    dmax 13.85->7.80 hooks 0->0 rough FAIL->FAIL
+      bq         20.425 u  bq:J0-2bq                                join    dmax 13.74->12.13 hooks 0->0 rough FAIL->FAIL
+      ba         20.425 u  ba:J0-2ba                                join    dmax 13.85->7.82 hooks 0->0 rough FAIL->FAIL
+      wq         20.418 u  wq:J0-2wq                                join    dmax 13.59->12.19 hooks 0->0 rough FAIL->FAIL
+      wa         20.418 u  wa:J0-2wa                                join    dmax 13.69->7.92 hooks 0->0 rough FAIL->FAIL
+      wa         20.418 u  wave:J0-2wa                              join    dmax 13.69->7.89 hooks 0->0 rough FAIL->ok
+      vq         20.395 u  vq:J0-2vq                                join    dmax 13.54->12.12 hooks 0->0 rough ok->FAIL
+      va         19.416 u  va:J0-2va                                join    dmax 13.70->7.82 hooks 0->0 rough ok->ok
+  J3g | join out of b, v or w into e: 11 pieces; per pair: ve 7, be 2, we 2
+      ve         29.997 u  wave:J4-6ve                              join    dmax 29.67->40.83 hooks 0->0 rough FAIL->ok
+      ve         29.997 u  cursive:J10-12ve                         join    dmax 29.67->40.83 hooks 0->0 rough FAIL->ok
+      ve         29.997 u  ve:J0-2ve                                join    dmax 29.65->40.81 hooks 0->0 rough FAIL->ok
+      we         29.913 u  we:J0-2we                                join    dmax 29.91->41.54 hooks 0->0 rough FAIL->ok
+      we         29.913 u  be we shoe maze huge bye:J4-6we          join    dmax 29.91->41.54 hooks 0->0 rough FAIL->ok
+      be         29.902 u  be we shoe maze huge bye:J0-2be          join    dmax 30.30->41.96 hooks 0->0 rough FAIL->ok
+      be         29.902 u  be:J0-2be                                join    dmax 30.30->41.96 hooks 0->0 rough FAIL->ok
+      ve         29.880 u  ice jet even:J14-16ve                    join    dmax 32.01->43.23 hooks 0->0 rough FAIL->ok
+      ve         29.880 u  jumps over the lazy dog:J12-14ve         join    dmax 32.01->43.23 hooks 0->0 rough FAIL->ok
+      ve         29.880 u  lawgiver:J10-12ve                        join    dmax 32.01->43.23 hooks 0->0 rough FAIL->ok
+      ve         29.880 u  woven:J4-6ve                             join    dmax 32.01->43.23 hooks 0->0 rough FAIL->ok
+  J3g | the stroke after a join out of b, v or w (its entry): 34 pieces; per pair: ve 3, be 2, en+ve 2, er+ve 2, we 2, bb 1, bd 1, bo 1, bo+ow 1, bo+ox 1, br 1, br+ro 1, bv 1, bw 1, bz 1, ov+wo 1, vb 1, vd 1, vo 1, vr 1, vv 1, vw 1, wb 1, wo 1, wr 1, wv 1, ww 1, wz 1
+      ve         29.893 u  ve:L2es0                                 stroke  start 29.893 end 0.000 u
+      we         29.893 u  we:L2es0                                 stroke  start 29.893 end 0.000 u
+      we         29.893 u  be we shoe maze huge bye:L6es0           stroke  start 29.893 end 0.000 u
+      ve         29.893 u  cursive:L12es0                           stroke  start 29.893 end 0.000 u
+      ve         29.893 u  wave:L6es0                               stroke  start 29.893 end 0.000 u
+      be         29.893 u  be we shoe maze huge bye:L2es0           stroke  start 29.893 end 0.000 u
+      be         29.893 u  be:L2es0                                 stroke  start 29.893 end 0.000 u
+      er+ve      29.820 u  lawgiver:L12es0                          stroke  start 29.820 end 0.000 u
+      en+ve      29.820 u  woven:L6es0                              stroke  start 29.820 end 0.000 u
+      en+ve      29.820 u  ice jet even:L16es0                      stroke  start 29.820 end 0.000 u
+      er+ve      29.820 u  jumps over the lazy dog:L14es0           stroke  start 29.820 end 0.000 u
+      wb         21.068 u  wb:L2bs0                                 stroke  start 0.000 end 20.518 u
+      vb         21.068 u  vb:L2bs0                                 stroke  start 0.000 end 20.518 u
+      bb         21.068 u  bb:L2bs0                                 stroke  start 0.000 end 20.518 u
+      bw         20.518 u  bw:L2ws0                                 stroke  start 0.000 end 20.518 u
+      vw         20.518 u  vw:L2ws0                                 stroke  start 0.000 end 20.518 u
+      ww         20.518 u  ww:L2ws0                                 stroke  start 0.000 end 20.518 u
+      bv         20.518 u  bv:L2vs0                                 stroke  start 0.000 end 20.518 u
+      vv         20.518 u  vv:L2vs0                                 stroke  start 0.000 end 20.518 u
+      wv         20.518 u  wv:L2vs0                                 stroke  start 0.000 end 20.518 u
+      ov+wo      14.231 u  woven:L2os0                              stroke  start 14.231 end 0.000 u
+      vo         13.029 u  vo:L2os0                                 stroke  start 13.029 end 0.000 u
+      bo+ow      12.593 u  bow:L2os0                                stroke  start 12.593 end 0.000 u
+      bo+ox      12.593 u  boxes:L2os0                              stroke  start 12.593 end 0.000 u
+      bo         12.591 u  bo:L2os0                                 stroke  start 12.591 end 0.000 u
+      wo         11.945 u  wo:L2os0                                 stroke  start 11.945 end 0.000 u
+      vr          3.740 u  vr:L2rs0                                 stroke  start 3.740 end 0.000 u
+      br          3.722 u  br:L2rs0                                 stroke  start 3.722 end 0.000 u
+      wr          3.719 u  wr:L2rs0                                 stroke  start 3.719 end 0.000 u
+      br+ro       3.709 u  quick brown fox:L12rs0                   stroke  start 3.709 end 0.000 u
+      vd          0.133 u  vd:L2ds0                                 stroke  start 0.133 end 0.000 u
+      bz          0.002 u  bz:L2zs0                                 stroke  start 0.002 end 0.000 u
+      wz          0.001 u  wz:L2zs0                                 stroke  start 0.001 end 0.000 u
+      bd          0.000 u  bd:L2ds0                                 stroke  start 0.000 end 0.000 u
+  J3h | c's exit stroke: 28 pieces; per pair: co 2, cu 2, ca 1, cb 1, cc 1, cd 1, ce 1, ce+ic 1, cf 1, cg 1, ch 1, ch+ic 1, ci 1, cj 1, ck 1, ck+ic 1, cl 1, cm 1, cq 1, cr 1, cs 1, ct 1, cw 1, cx 1, cy 1, cz 1
+      cc          9.981 u  cc:L0cs0                                 stroke  start 0.000 end 9.981 u
+      cz          9.981 u  cz:L0cs0                                 stroke  start 0.000 end 9.981 u
+      co          9.981 u  co:L0cs0                                 stroke  start 0.000 end 9.981 u
+      cg          9.981 u  cg:L0cs0                                 stroke  start 0.000 end 9.981 u
+      ce          9.981 u  ce:L0cs0                                 stroke  start 0.000 end 9.981 u
+      ce+ic       9.981 u  ice jet even:L2cs0                       stroke  start 0.000 end 9.981 u
+      ct          9.981 u  ct:L0cs0                                 stroke  start 0.000 end 9.981 u
+      cd          9.981 u  cd:L0cs0                                 stroke  start 0.000 end 9.981 u
+      ca          9.981 u  ca:L0cs0                                 stroke  start 0.000 end 9.981 u
+      co          9.981 u  coffee:L0cs0                             stroke  start 0.000 end 9.981 u
+      ck          9.981 u  ck:L0cs0                                 stroke  start 0.000 end 9.981 u
+      ck+ic       9.981 u  quick brown fox:L6cs0                    stroke  start 0.000 end 9.981 u
+      cq          9.981 u  cq:L0cs0                                 stroke  start 0.000 end 9.981 u
+      cj          9.981 u  cj:L0cs0                                 stroke  start 0.000 end 9.981 u
+      cr          9.981 u  cr:L0cs0                                 stroke  start 0.000 end 9.981 u
+      cm          9.981 u  cm:L0cs0                                 stroke  start 0.000 end 9.981 u
+      cb          9.981 u  cb:L0cs0                                 stroke  start 0.000 end 9.981 u
+      cf          9.745 u  cf:L0cs0                                 stroke  start 0.000 end 9.745 u
+      ch+ic       9.745 u  which:L6cs0                              stroke  start 0.000 end 9.745 u
+      ch          9.745 u  ch:L0cs0                                 stroke  start 0.000 end 9.745 u
+      cs          9.745 u  cs:L0cs0                                 stroke  start 0.000 end 9.745 u
+      ci          7.181 u  ci:L0cs0                                 stroke  start 0.000 end 7.181 u
+      cl          6.311 u  cl:L0cs0                                 stroke  start 0.000 end 6.311 u
+      cw          2.961 u  cw:L0cs0                                 stroke  start 0.000 end 2.961 u
+      cx          2.764 u  cx:L0cs0                                 stroke  start 0.000 end 2.764 u
+      cu          1.680 u  cu:L0cs0                                 stroke  start 0.000 end 1.680 u
+      cu          1.593 u  cursive:L0cs0                            stroke  start 0.000 end 1.593 u
+      cy          0.000 u  cy:L0cs0                                 stroke  start 0.000 end 0.000 u
+  J3h | join out of c: 31 pieces; per pair: ce 2, ch 2, ck 2, co 2, cu 2, ca 1, cb 1, cc 1, cd 1, cf 1, cg 1, ci 1, cj 1, cl 1, cm 1, cn 1, cp 1, cq 1, cr 1, cs 1, ct 1, cv 1, cw 1, cx 1, cy 1, cz 1
+      ct         34.195 u  ct:J0-2ct                                join    dmax 3.69->9.03 hooks 0->0 rough ok->ok
+      ce         25.831 u  ce:J0-2ce                                join    dmax 1.20->19.24 hooks 0->0 rough ok->ok
+      ce         25.831 u  ice jet even:J2-4ce                      join    dmax 1.20->19.24 hooks 0->0 rough ok->ok
+      cl         18.118 u  cl:J0-2cl                                join    dmax 1.31->1.00 hooks 0->0 rough ok->ok
+      cf         17.789 u  cf:J0-2cf                                join    dmax 1.56->1.41 hooks 0->0 rough ok->ok
+      ch         17.161 u  which:J6-8ch                             join    dmax 1.37->2.39 hooks 0->0 rough ok->ok
+      ch         17.161 u  ch:J0-2ch                                join    dmax 1.37->2.39 hooks 0->0 rough ok->ok
+      cj         16.618 u  cj:J0-2cj                                join    dmax 1.09->10.43 hooks 0->0 rough ok->ok
+      cb         16.499 u  cb:J0-2cb                                join    dmax 1.79->1.75 hooks 0->0 rough ok->ok
+      ck         15.849 u  ck:J0-2ck                                join    dmax 1.00->10.78 hooks 0->0 rough ok->ok
+      ck         15.849 u  quick brown fox:J6-8ck                   join    dmax 1.00->10.78 hooks 0->0 rough ok->ok
+      cp         15.006 u  cp:J0-2cp                                join    dmax 2.10->11.57 hooks 0->0 rough ok->ok
+      cc         12.139 u  cc:J0-2cc                                join    dmax 27.62->27.58 hooks 0->0 rough FAIL->ok
+      cw         11.497 u  cw:J0-2cw                                join    dmax 2.06->9.14 hooks 0->0 rough ok->ok
+      cr         10.992 u  cr:J0-2cr                                join    dmax 9.04->3.40 hooks 0->0 rough ok->ok
+      cn         10.206 u  cn:J0-2cn                                join    dmax 3.54->13.44 hooks 0->0 rough ok->ok
+      cz          9.981 u  cz:J0-2cz                                join    dmax 3.76->5.06 hooks 0->0 rough ok->ok
+      co          9.981 u  co:J0-2co                                join    dmax 6.67->6.07 hooks 0->0 rough ok->ok
+      cg          9.981 u  cg:J0-2cg                                join    dmax 27.94->27.86 hooks 0->0 rough FAIL->ok
+      cd          9.981 u  cd:J0-2cd                                join    dmax 27.76->27.72 hooks 0->0 rough FAIL->ok
+      ca          9.981 u  ca:J0-2ca                                join    dmax 27.73->27.64 hooks 0->0 rough FAIL->ok
+      co          9.981 u  coffee:J0-2co                            join    dmax 6.72->6.14 hooks 0->0 rough FAIL->ok
+      cq          9.981 u  cq:J0-2cq                                join    dmax 27.48->27.37 hooks 0->0 rough ok->ok
+      cm          9.981 u  cm:J0-2cm                                join    dmax 2.37->4.47 hooks 0->0 rough ok->ok
+      cs          9.745 u  cs:J0-2cs                                join    dmax 5.30->2.75 hooks 0->0 rough ok->ok
+      cv          9.179 u  cv:J0-2cv                                join    dmax 3.95->12.79 hooks 0->0 rough ok->ok
+      cx          8.397 u  cx:J0-2cx                                join    dmax 6.90->14.19 hooks 0->0 rough ok->ok
+      cu          7.454 u  cu:J0-2cu                                join    dmax 1.84->5.76 hooks 0->0 rough ok->ok
+      cu          7.450 u  cursive:J0-2cu                           join    dmax 1.87->5.60 hooks 0->0 rough ok->ok
+      ci          7.181 u  ci:J0-2ci                                join    dmax 1.28->1.20 hooks 0->0 rough ok->ok
+      cy          2.782 u  cy:J0-2cy                                join    dmax 1.44->2.52 hooks 0->0 rough ok->ok
+  J3h | the stroke after a join out of c (its entry): 19 pieces; per pair: ce 2, ch 2, ck 2, cb 1, cf 1, cj 1, cl 1, cm 1, cp 1, ct 1, cu 1, cu+ur 1, cv 1, cw 1, cx 1, cz 1
+      ct         34.195 u  ct:L2ts0                                 stroke  start 34.195 end 0.000 u
+      ce         25.831 u  ce:L2es0                                 stroke  start 25.831 end 0.000 u
+      ce         25.831 u  ice jet even:L4es0                       stroke  start 25.831 end 0.000 u
+      cl         18.118 u  cl:L2ls0                                 stroke  start 18.118 end 0.000 u
+      cf         17.789 u  cf:L2fs0                                 stroke  start 17.789 end 0.000 u
+      ch         17.161 u  which:L8hs0                              stroke  start 17.161 end 0.000 u
+      ch         17.161 u  ch:L2hs0                                 stroke  start 17.161 end 0.000 u
+      cb         16.499 u  cb:L2bs0                                 stroke  start 16.499 end 0.000 u
+      ck         15.849 u  ck:L2ks0                                 stroke  start 15.849 end 0.000 u
+      ck         15.849 u  quick brown fox:L8ks0                    stroke  start 15.849 end 0.000 u
+      cp         15.006 u  cp:L2ps0                                 stroke  start 15.006 end 0.000 u
+      cj         14.490 u  cj:L2js0                                 stroke  start 14.490 end 0.000 u
+      cm          9.734 u  cm:L2ms0                                 stroke  start 9.734 end 0.000 u
+      cz          9.434 u  cz:L2zs0                                 stroke  start 9.434 end 0.000 u
+      cw          8.566 u  cw:L2ws0                                 stroke  start 8.566 end 0.000 u
+      cu+ur       4.539 u  cursive:L2us0                            stroke  start 4.539 end 0.000 u
+      cu          4.342 u  cu:L2us0                                 stroke  start 4.342 end 0.000 u
+      cx          3.509 u  cx:L2xs0                                 stroke  start 3.509 end 0.000 u
+      cv          2.438 u  cv:L2vs0                                 stroke  start 2.438 end 0.000 u
+  J3i | the cusp letter's stroke after a rule join (its entry): 66 pieces; per pair: er 4, at 2, es 2, et 2, ai 1, ap 1, ar 1, as 1, au 1, aw+wg 1, ci 1, cj 1, cr 1, cs 1, ct 1, cu+ur 1, cw 1, cy 1, di 1, dj 1, dp 1, dr 1, ds 1, dt 1, du 1, ei 1, ej 1, ep 1, ew 1, ey 1, fj 1, fp 1, ft 1, ft+te 1, fu 1, fw 1, hi 1, hi+ic 1, hi+ip 1, hp 1, hr 1, hs 1, ht 1, hu 1, hu+ug 1, hw 1, ii 1, im+ni 1, ip 1, ip+pp 1, ir 1, is 1, iu 1, iw 1, ni 1, np 1, nr 1, ns 1, nt 1, nw 1
+      ei          7.152 u  ei:L2is0                                 stroke  start 7.152 end 0.000 u
+      ej          3.147 u  ej:L2js0                                 stroke  start 3.147 end 0.000 u
+      et          2.587 u  et:L2ts0                                 stroke  start 2.587 end 0.000 u
+      ni          2.581 u  ni:L2is0                                 stroke  start 2.581 end 0.000 u
+      im+ni       2.517 u  minimum:L6is0                            stroke  start 2.517 end 0.000 u
+      np          2.420 u  np:L2ps0                                 stroke  start 2.420 end 0.000 u
+      et          2.357 u  ice jet even:L10ts0                      stroke  start 2.357 end 0.000 u
+      ct          2.051 u  ct:L2ts0                                 stroke  start 2.051 end 0.000 u
+      cy          2.001 u  cy:L2ys0                                 stroke  start 2.001 end 0.000 u
+      hr          2.000 u  hr:L2rs0                                 stroke  start 2.000 end 0.000 u
+      dr          2.000 u  dr:L2rs0                                 stroke  start 2.000 end 0.000 u
+      er          2.000 u  after:L8rs0                              stroke  start 2.000 end 0.000 u
+      er          2.000 u  jumps over the lazy dog:L16rs0           stroke  start 2.000 end 0.000 u
+      er          2.000 u  lawgiver:L14rs0                          stroke  start 2.000 end 0.000 u
+      cr          2.000 u  cr:L2rs0                                 stroke  start 2.000 end 0.000 u
+      nr          2.000 u  nr:L2rs0                                 stroke  start 2.000 end 0.000 u
+      ir          2.000 u  ir:L2rs0                                 stroke  start 2.000 end 0.000 u
+      ar          2.000 u  ar:L2rs0                                 stroke  start 2.000 end 0.000 u
+      er          2.000 u  er:L2rs0                                 stroke  start 2.000 end 0.000 u
+      hi+ic       2.000 u  which:L4is0                              stroke  start 2.000 end 0.000 u
+      hi          2.000 u  hi:L2is0                                 stroke  start 2.000 end 0.000 u
+      ii          2.000 u  ii:L2is0                                 stroke  start 2.000 end 0.000 u
+      hi+ip       2.000 u  hippo:L2is0                              stroke  start 2.000 end 0.008 u
+      ci          2.000 u  ci:L2is0                                 stroke  start 2.000 end 0.000 u
+      di          2.000 u  di:L2is0                                 stroke  start 2.000 end 0.000 u
+      cs          2.000 u  cs:L2ss0                                 stroke  start 2.000 end 0.000 u
+      ds          2.000 u  ds:L2ss0                                 stroke  start 2.000 end 0.000 u
+      as          2.000 u  as:L2ss0                                 stroke  start 2.000 end 0.000 u
+      is          2.000 u  is:L2ss0                                 stroke  start 2.000 end 0.000 u
+      es          2.000 u  es:L2ss0                                 stroke  start 2.000 end 0.000 u
+      es          2.000 u  boxes:L8ss0                              stroke  start 2.000 end 0.000 u
+      ns          2.000 u  ns:L2ss0                                 stroke  start 2.000 end 0.000 u
+      hs          2.000 u  hs:L2ss0                                 stroke  start 2.000 end 0.000 u
+      ai          2.000 u  ai:L2is0                                 stroke  start 2.000 end 0.000 u
+      ft+te       1.979 u  after:L4ts0                              stroke  start 1.979 end 0.000 u
+      ft          1.914 u  ft:L2ts0                                 stroke  start 1.914 end 0.000 u
+      ep          1.271 u  ep:L2ps0                                 stroke  start 1.271 end 0.000 u
+      fp          1.271 u  fp:L2ps0                                 stroke  start 1.271 end 0.000 u
+      nw          0.761 u  nw:L2ws0                                 stroke  start 0.761 end 0.000 u
+      cj          0.492 u  cj:L2js0                                 stroke  start 0.492 end 0.000 u
+      fw          0.409 u  fw:L2ws0                                 stroke  start 0.409 end 0.000 u
+      aw+wg       0.366 u  lawgiver:L4ws0                           stroke  start 0.366 end 0.000 u
+      ip          0.285 u  ip:L2ps0                                 stroke  start 0.285 end 0.000 u
+      ip+pp       0.280 u  hippo:L4ps0                              stroke  start 0.280 end 0.000 u
+      ap          0.275 u  ap:L2ps0                                 stroke  start 0.275 end 0.000 u
+      dp          0.217 u  dp:L2ps0                                 stroke  start 0.217 end 0.000 u
+      cu+ur       0.196 u  cursive:L2us0                            stroke  start 0.196 end 0.000 u
+      ey          0.163 u  ey:L2ys0                                 stroke  start 0.163 end 0.000 u
+      hu+ug       0.122 u  be we shoe maze huge bye:L26us0          stroke  start 0.122 end 0.000 u
+      cw          0.090 u  cw:L2ws0                                 stroke  start 0.090 end 0.000 u
+      ew          0.026 u  ew:L2ws0                                 stroke  start 0.026 end 0.000 u
+      fu          0.005 u  fu:L2us0                                 stroke  start 0.005 end 0.000 u
+      at          0.005 u  oat:L4ts0                                stroke  start 0.005 end 0.000 u
+      nt          0.002 u  nt:L2ts0                                 stroke  start 0.002 end 0.000 u
+      at          0.002 u  at:L2ts0                                 stroke  start 0.002 end 0.000 u
+      ht          0.001 u  ht:L2ts0                                 stroke  start 0.001 end 0.000 u
+      fj          0.001 u  fj:L2js0                                 stroke  start 0.001 end 0.000 u
+      dj          0.001 u  dj:L2js0                                 stroke  start 0.001 end 0.000 u
+      hw          0.001 u  hw:L2ws0                                 stroke  start 0.001 end 0.000 u
+      au          0.000 u  au:L2us0                                 stroke  start 0.000 end 0.000 u
+      du          0.000 u  du:L2us0                                 stroke  start 0.000 end 0.000 u
+      hu          0.000 u  hu:L2us0                                 stroke  start 0.000 end 0.000 u
+      dt          0.000 u  dt:L2ts0                                 stroke  start 0.000 end 0.000 u
+      iu          0.000 u  iu:L2us0                                 stroke  start 0.000 end 0.000 u
+      iw          0.000 u  iw:L2ws0                                 stroke  start 0.000 end 0.000 u
+      hp          0.000 u  hp:L2ps0                                 stroke  start 0.000 end 0.000 u
+  J3i | the cusp rule's join (a low exit into i j p r s t u w y): 82 pieces; per pair: er 4, hi 3, at 2, aw 2, cu 2, es 2, et 2, ft 2, hu 2, ip 2, ni 2, ai 1, ap 1, ar 1, as 1, au 1, ay 1, ci 1, cj 1, cp 1, cr 1, cs 1, ct 1, cw 1, cy 1, di 1, dj 1, dp 1, dr 1, ds 1, dt 1, du 1, dw 1, dy 1, ei 1, ej 1, ep 1, eu 1, ew 1, ey 1, fi 1, fj 1, fp 1, fu 1, fw 1, fy 1, hj 1, hp 1, hr 1, hs 1, ht 1, hw 1, hy 1, ii 1, ir 1, is 1, it 1, iu 1, iw 1, iy 1, nj 1, np 1, nr 1, ns 1, nt 1, nu 1, nw 1, ny 1
+      ci          7.181 u  ci:J0-2ci                                join    dmax 1.20->3.79 hooks 0->0 rough ok->ok
+      ei          7.152 u  ei:J0-2ei                                join    dmax 13.17->9.43 hooks 0->0 rough ok->ok
+      cr          4.098 u  cr:J0-2cr                                join    dmax 3.40->6.02 hooks 0->0 rough ok->ok
+      er          3.708 u  jumps over the lazy dog:J14-16er         join    dmax 6.59->9.24 hooks 0->0 rough ok->ok
+      er          3.708 u  lawgiver:J12-14er                        join    dmax 6.59->9.24 hooks 0->0 rough ok->ok
+      er          3.708 u  after:J6-8er                             join    dmax 6.59->9.24 hooks 0->0 rough ok->ok
+      er          3.686 u  er:J0-2er                                join    dmax 7.54->10.07 hooks 0->0 rough ok->ok
+      ej          3.147 u  ej:J0-2ej                                join    dmax 14.37->14.38 hooks 0->0 rough ok->ok
+      cs          3.131 u  cs:J0-2cs                                join    dmax 2.75->5.43 hooks 0->0 rough ok->ok
+      es          2.936 u  boxes:J6-8es                             join    dmax 4.87->6.71 hooks 0->0 rough ok->ok
+      dr          2.922 u  dr:J0-2dr                                join    dmax 15.50->14.21 hooks 0->0 rough ok->ok
+      es          2.921 u  es:J0-2es                                join    dmax 5.91->7.63 hooks 0->0 rough ok->ok
+      ir          2.897 u  ir:J0-2ir                                join    dmax 15.14->13.88 hooks 0->0 rough ok->ok
+      ni          2.879 u  ni:J0-2ni                                join    dmax 9.03->7.47 hooks 0->0 rough ok->ok
+      hr          2.874 u  hr:J0-2hr                                join    dmax 15.79->14.52 hooks 0->0 rough ok->ok
+      nr          2.869 u  nr:J0-2nr                                join    dmax 15.17->13.70 hooks 0->0 rough ok->ok
+      ar          2.854 u  ar:J0-2ar                                join    dmax 15.68->14.39 hooks 0->0 rough ok->ok
+      ni          2.792 u  minimum:J4-6ni                           join    dmax 8.78->7.21 hooks 0->0 rough ok->ok
+      et          2.587 u  et:J0-2et                                join    dmax 2.26->2.30 hooks 0->0 rough ok->ok
+      di          2.452 u  di:J0-2di                                join    dmax 9.81->8.50 hooks 0->0 rough ok->ok
+      ii          2.424 u  ii:J0-2ii                                join    dmax 9.37->8.11 hooks 0->0 rough ok->ok
+      np          2.420 u  np:J0-2np                                join    dmax 5.32->5.41 hooks 0->0 rough ok->ok
+      hi          2.380 u  hi:J0-2hi                                join    dmax 9.96->8.72 hooks 0->0 rough ok->ok
+      hi          2.376 u  hippo:J0-2hi                             join    dmax 9.98->8.74 hooks 0->0 rough ok->ok
+      hi          2.371 u  which:J2-4hi                             join    dmax 9.94->8.71 hooks 0->0 rough ok->ok
+      et          2.357 u  ice jet even:J8-10et                     join    dmax 2.60->2.82 hooks 0->0 rough ok->ok
+      ai          2.344 u  ai:J0-2ai                                join    dmax 9.83->8.61 hooks 0->0 rough ok->ok
+      ds          2.302 u  ds:J0-2ds                                join    dmax 15.07->13.99 hooks 0->0 rough ok->ok
+      as          2.286 u  as:J0-2as                                join    dmax 15.25->14.18 hooks 0->0 rough ok->ok
+      is          2.285 u  is:J0-2is                                join    dmax 14.65->13.60 hooks 0->0 rough ok->ok
+      hs          2.269 u  hs:J0-2hs                                join    dmax 15.29->14.26 hooks 0->0 rough ok->ok
+      ns          2.255 u  ns:J0-2ns                                join    dmax 14.37->13.28 hooks 0->0 rough ok->ok
+      ct          2.051 u  ct:J0-2ct                                join    dmax 9.03->8.87 hooks 0->0 rough ok->ok
+      cy          2.001 u  cy:J0-2cy                                join    dmax 2.52->3.46 hooks 0->0 rough ok->ok
+      ft          1.979 u  after:J2-4ft                             join    dmax 13.21->13.22 hooks 0->0 rough ok->ok
+      ft          1.914 u  ft:J0-2ft                                join    dmax 13.24->13.23 hooks 0->0 rough ok->ok
+      ew          1.656 u  ew:J0-2ew                                join    dmax 11.67->12.01 hooks 0->0 rough ok->ok
+      ep          1.271 u  ep:J0-2ep                                join    dmax 15.49->15.69 hooks 0->0 rough ok->ok
+      fp          1.271 u  fp:J0-2fp                                join    dmax 12.82->12.82 hooks 0->0 rough ok->ok
+      ey          1.241 u  ey:J0-2ey                                join    dmax 10.75->9.69 hooks 0->0 rough ok->ok
+      cu          0.861 u  cu:J0-2cu                                join    dmax 5.76->5.78 hooks 0->0 rough ok->ok
+      cu          0.803 u  cursive:J0-2cu                           join    dmax 5.60->5.61 hooks 0->0 rough ok->ok
+      nw          0.761 u  nw:J0-2nw                                join    dmax 6.65->6.57 hooks 0->0 rough ok->ok
+      cw          0.511 u  cw:J0-2cw                                join    dmax 9.14->9.26 hooks 0->0 rough ok->ok
+      cj          0.492 u  cj:J0-2cj                                join    dmax 10.43->10.45 hooks 0->0 rough ok->ok
+      fw          0.409 u  fw:J0-2fw                                join    dmax 12.96->12.95 hooks 0->0 rough ok->ok
+      aw          0.366 u  lawgiver:J2-4aw                          join    dmax 6.63->6.58 hooks 0->0 rough ok->ok
+      nt          0.301 u  nt:J0-2nt                                join    dmax 16.31->16.28 hooks 0->0 rough ok->ok
+      ip          0.285 u  ip:J0-2ip                                join    dmax 5.76->5.74 hooks 0->0 rough ok->ok
+      ip          0.280 u  hippo:J2-4ip                             join    dmax 5.44->5.42 hooks 0->0 rough ok->ok
+      ap          0.275 u  ap:J0-2ap                                join    dmax 5.28->5.30 hooks 0->0 rough ok->ok
+      fy          0.264 u  fy:J0-2fy                                join    dmax 12.68->12.70 hooks 0->0 rough ok->ok
+      dp          0.217 u  dp:J0-2dp                                join    dmax 5.53->5.51 hooks 0->0 rough ok->ok
+      ht          0.211 u  ht:J0-2ht                                join    dmax 17.97->17.98 hooks 0->0 rough ok->ok
+      at          0.176 u  at:J0-2at                                join    dmax 18.26->18.25 hooks 0->0 rough ok->ok
+      hu          0.122 u  be we shoe maze huge bye:J24-26hu        join    dmax 8.08->8.08 hooks 0->0 rough ok->ok
+      at          0.113 u  oat:J2-4at                               join    dmax 18.32->18.33 hooks 0->0 rough ok->ok
+      fi          0.044 u  fi:J0-2fi                                join    dmax 12.68->12.67 hooks 0->0 rough ok->ok
+      eu          0.016 u  eu:J0-2eu                                join    dmax 11.00->10.99 hooks 0->0 rough ok->ok
+      hj          0.009 u  hj:J0-2hj                                join    dmax 6.59->6.58 hooks 0->0 rough ok->ok
+      fu          0.006 u  fu:J0-2fu                                join    dmax 12.64->12.64 hooks 0->0 rough ok->ok
+      ay          0.006 u  ay:J0-2ay                                join    dmax 8.52->8.52 hooks 0->0 rough ok->ok
+      cp          0.005 u  cp:J0-2cp                                join    dmax 11.57->11.57 hooks 0->0 rough ok->ok
+      hy          0.004 u  hy:J0-2hy                                join    dmax 8.61->8.61 hooks 0->0 rough ok->ok
+      dw          0.002 u  dw:J0-2dw                                join    dmax 6.82->6.82 hooks 0->0 rough ok->ok
+      hp          0.001 u  hp:J0-2hp                                join    dmax 5.32->5.32 hooks 0->0 rough ok->ok
+      hu          0.001 u  hu:J0-2hu                                join    dmax 8.05->8.05 hooks 0->0 rough ok->ok
+      nj          0.001 u  nj:J0-2nj                                join    dmax 5.53->5.53 hooks 0->0 rough ok->ok
+      fj          0.001 u  fj:J0-2fj                                join    dmax 12.63->12.63 hooks 0->0 rough ok->ok
+      du          0.001 u  du:J0-2du                                join    dmax 7.82->7.82 hooks 0->0 rough ok->ok
+      hw          0.001 u  hw:J0-2hw                                join    dmax 6.55->6.55 hooks 0->0 rough ok->ok
+      aw          0.001 u  aw:J0-2aw                                join    dmax 6.56->6.56 hooks 0->0 rough ok->ok
+      dj          0.001 u  dj:J0-2dj                                join    dmax 6.32->6.32 hooks 0->0 rough ok->ok
+      au          0.000 u  au:J0-2au                                join    dmax 7.93->7.93 hooks 0->0 rough ok->ok
+      dy          0.000 u  dy:J0-2dy                                join    dmax 8.38->8.38 hooks 0->0 rough ok->ok
+      iw          0.000 u  iw:J0-2iw                                join    dmax 7.04->7.04 hooks 0->0 rough ok->ok
+      dt          0.000 u  dt:J0-2dt                                join    dmax 18.03->18.03 hooks 0->0 rough ok->ok
+      ny          0.000 u  ny:J0-2ny                                join    dmax 7.79->7.79 hooks 0->0 rough ok->ok
+      iy          0.000 u  iy:J0-2iy                                join    dmax 8.00->8.00 hooks 0->0 rough ok->ok
+      iu          0.000 u  iu:J0-2iu                                join    dmax 7.44->7.44 hooks 0->0 rough ok->ok
+      it          0.000 u  it:J0-2it                                join    dmax 15.95->15.95 hooks 0->0 rough ok->ok
+      nu          0.000 u  nu:J0-2nu                                join    dmax 7.18->7.18 hooks 0->0 rough ok->ok
+  J3i | the exit stroke a rule join cuts: 32 pieces; per pair: cu 2, as 1, at 1, at+oa 1, ci 1, cs 1, cw 1, cy 1, di 1, dp 1, ei 1, ep 1, eu 1, ew 1, ey 1, fi 1, fw 1, fy 1, ht 1, ii 1, in+ni 1, ip 1, ir 1, iw 1, ni 1, nj 1, np 1, nr 1, ns 1, nt 1, nw 1
+      ci          7.181 u  ci:L0cs0                                 stroke  start 0.000 end 7.181 u
+      ew          1.656 u  ew:L0es0                                 stroke  start 0.000 end 1.656 u
+      cu          0.861 u  cu:L0cs0                                 stroke  start 0.000 end 0.861 u
+      cu          0.803 u  cursive:L0cs0                            stroke  start 0.000 end 0.803 u
+      ep          0.521 u  ep:L0es0                                 stroke  start 0.000 end 0.521 u
+      ni          0.315 u  ni:L0ns0                                 stroke  start 0.000 end 0.315 u
+      in+ni       0.305 u  minimum:L4ns0                            stroke  start 0.000 end 0.305 u
+      nt          0.301 u  nt:L0ns0                                 stroke  start 0.000 end 0.301 u
+      nr          0.290 u  nr:L0ns0                                 stroke  start 0.000 end 0.290 u
+      cs          0.238 u  cs:L0cs0                                 stroke  start 0.000 end 0.238 u
+      ht          0.211 u  ht:L0hs0                                 stroke  start 0.000 end 0.211 u
+      cw          0.202 u  cw:L0cs0                                 stroke  start 0.000 end 0.202 u
+      at          0.176 u  at:L0as0                                 stroke  start 0.000 end 0.176 u
+      ey          0.142 u  ey:L0es0                                 stroke  start 0.000 end 0.142 u
+      at+oa       0.113 u  oat:L2as0                                stroke  start 0.000 end 0.113 u
+      ns          0.107 u  ns:L0ns0                                 stroke  start 0.000 end 0.107 u
+      fy          0.020 u  fy:L0fs0                                 stroke  start 0.000 end 0.020 u
+      dp          0.015 u  dp:L0ds0                                 stroke  start 0.000 end 0.015 u
+      ip          0.008 u  ip:L0is0                                 stroke  start 0.000 end 0.008 u
+      fi          0.007 u  fi:L0fs0                                 stroke  start 0.000 end 0.007 u
+      np          0.006 u  np:L0ns0                                 stroke  start 0.000 end 0.006 u
+      nw          0.006 u  nw:L0ns0                                 stroke  start 0.000 end 0.006 u
+      cy          0.002 u  cy:L0cs0                                 stroke  start 0.000 end 0.002 u
+      fw          0.001 u  fw:L0fs0                                 stroke  start 0.000 end 0.001 u
+      eu          0.001 u  eu:L0es0                                 stroke  start 0.000 end 0.001 u
+      di          0.001 u  di:L0ds0                                 stroke  start 0.000 end 0.001 u
+      nj          0.001 u  nj:L0ns0                                 stroke  start 0.000 end 0.001 u
+      ii          0.000 u  ii:L0is0                                 stroke  start 0.000 end 0.000 u
+      ir          0.000 u  ir:L0is0                                 stroke  start 0.000 end 0.000 u
+      iw          0.000 u  iw:L0is0                                 stroke  start 0.000 end 0.000 u
+      ei          0.000 u  ei:L0es0                                 stroke  start 0.000 end 0.000 u
+      as          0.000 u  as:L0as0                                 stroke  start 0.000 end 0.000 u
+
+(4) numeric-only differences (< 1e-4 u), by stage and cause
+  J3f | join into b: 2 pieces; per pair: cb 1, ub 1
+      cb:J0-2cb 2.6e-07, subgroup:J2-4ub 2.6e-07
+  J3f | join into v: 6 pieces; per pair: iv 2, ov 2, av 1, cv 1
+      ov:J0-2ov 2.5e-05, jumps over the lazy dog:J10-12ov 2.5e-05, wave:J2-4av 2.2e-06, cursive:J8-10iv 2.2e-06, lawgiver:J8-10iv 2.2e-06, cv:J0-2cv 1.3e-06
+  J3f | join into w: 6 pieces; per pair: aw 1, cw 1, dw 1, iw 1, nw 1, ow 1
+      cw:J0-2cw 4.7e-06, dw:J0-2dw 3.7e-06, aw:J0-2aw 3.6e-06, iw:J0-2iw 3.6e-06, nw:J0-2nw 3.4e-06, ow:J0-2ow 4.9e-07
+  J3f | lead into b: 32 pieces; per pair: ^b 32
+      quick brown fox:lead1b 2.6e-07, be we shoe maze huge bye:lead4b 2.6e-07, bow:lead0b 2.6e-07, boxes:lead0b 2.6e-07, be we shoe maze huge bye:lead0b 2.6e-07, bad:lead0b 2.6e-07, ba:lead0b 2.6e-07, bb:lead0b 2.6e-07, bc:lead0b 2.6e-07, bd:lead0b 2.6e-07, be:lead0b 2.6e-07, bf:lead0b 2.6e-07, bg:lead0b 2.6e-07, bh:lead0b 2.6e-07, bi:lead0b 2.6e-07, bj:lead0b 2.6e-07, bk:lead0b 2.6e-07, bl:lead0b 2.6e-07, bm:lead0b 2.6e-07, bn:lead0b 2.6e-07, bo:lead0b 2.6e-07, bp:lead0b 2.6e-07, bq:lead0b 2.6e-07, br:lead0b 2.6e-07, bs:lead0b 2.6e-07, bt:lead0b 2.6e-07, bu:lead0b 2.6e-07, bv:lead0b 2.6e-07, bw:lead0b 2.6e-07, bx:lead0b 2.6e-07, by:lead0b 2.6e-07, bz:lead0b 2.6e-07
+  J3f | lead into v: 26 pieces; per pair: ^v 26
+      vg:lead0v 4.1e-07, va:lead0v 4.1e-07, vb:lead0v 4.1e-07, vc:lead0v 4.1e-07, vd:lead0v 4.1e-07, ve:lead0v 4.1e-07, vf:lead0v 4.1e-07, vh:lead0v 4.1e-07, vi:lead0v 4.1e-07, vj:lead0v 4.1e-07, vk:lead0v 4.1e-07, vl:lead0v 4.1e-07, vm:lead0v 4.1e-07, vn:lead0v 4.1e-07, vo:lead0v 4.1e-07, vp:lead0v 4.1e-07, vq:lead0v 4.1e-07, vr:lead0v 4.1e-07, vs:lead0v 4.1e-07, vt:lead0v 4.1e-07, vu:lead0v 4.1e-07, vv:lead0v 4.1e-07, vw:lead0v 4.1e-07, vx:lead0v 4.1e-07, vy:lead0v 4.1e-07, vz:lead0v 4.1e-07
+  J3f | stroke of a (in la, out aw): 1 pieces; per pair: aw+la 1
+      lawgiver:L2as0 1.1e-05
+  J3f | stroke of e (lead, out ev): 1 pieces; per pair: ev 1
+      ice jet even:L12es0 4.3e-05
+  J3f | stroke of f (lead, out fb): 1 pieces; per pair: fb 1
+      fb:L0fs0 1.2e-05
+  J3f | stroke of f (lead, out fv): 1 pieces; per pair: fv 1
+      fv:L0fs0 5.3e-08
+  J3f | stroke of h (lead, out hw): 1 pieces; per pair: hw 1
+      hw:L0hs0 1.6e-06
+  J3f | stroke of o (in ro, out ow): 1 pieces; per pair: ow+ro 1
+      quick brown fox:L14os0 1.8e-08
+  J3f | stroke of o (out ob, vlead): 1 pieces; per pair: ob 1
+      ob:L0os0 2.6e-08
+  J3f | stroke of o (out ov, vlead): 2 pieces; per pair: ov 2
+      jumps over the lazy dog:L10os0 4.8e-08, ov:L0os0 4.8e-08
+  J3g | the stroke after a join out of b, v or w (its entry): 33 pieces; per pair: wn 2, bc 1, bf 1, bg 1, bg+gr 1, bh 1, bk 1, bl 1, bm 1, bn 1, bx 1, gi+wg 1, hi+wh 1, vc 1, vf 1, vg 1, vh 1, vk 1, vl 1, vm 1, vn 1, vx 1, vz 1, wc 1, wd 1, wf 1, wg 1, wh 1, wk 1, wl 1, wm 1, wx 1
+      bk:L2ks0 6.4e-05, vg:L2gs0 2.8e-05, lawgiver:L6gs0 1.9e-05, wc:L2cs0 4.2e-06, bc:L2cs0 2e-06, vx:L2xs0 1.8e-06, vk:L2ks0 5.6e-07, vm:L2ms0 4.8e-07, wd:L2ds0 3.1e-07, vc:L2cs0 1.4e-07, wg:L2gs0 1.1e-07, bm:L2ms0 1e-07, vn:L2ns0 6.6e-08, quick brown fox:L18ns0 2.7e-08, bg:L2gs0 2.6e-08, vz:L2zs0 1.6e-08, bn:L2ns0 1.3e-08, bx:L2xs0 1.2e-08, vh:L2hs0 1.2e-08, wm:L2ms0 6.3e-09, wx:L2xs0 5e-09, wn:L2ns0 1.1e-09, which:L2hs0 2e-10, wh:L2hs0 2e-10, vl:L2ls0 1.2e-10, bf:L2fs0 6.8e-11, subgroup:L6gs0 4.2e-11, vf:L2fs0 2.4e-11, bl:L2ls0 1.8e-11, wf:L2fs0 1.4e-11, wk:L2ks0 1.4e-11, bh:L2hs0 1.2e-11, wl:L2ls0 1.1e-11
+  J3h | c's exit stroke: 3 pieces; per pair: cc 1, cp 1, cv 1
+      cp:L0cs0 1.6e-05, cv:L0cs0 1.1e-06, cc:L2cs0 3.1e-14
+  J3h | the stroke after a join out of c (its entry): 5 pieces; per pair: cg 1, cn 1, co 1, co+of 1, cy 1
+      cy:L2ys0 2.2e-06, cn:L2ns0 2.9e-07, cg:L2gs0 7.7e-14, coffee:L2os0 5.6e-14, co:L2os0 3.1e-14
+  J3i | the cusp letter's stroke after a rule join (its entry): 17 pieces; per pair: aj 1, aw 1, ay 1, cp 1, cu 1, dw 1, dy 1, eu 1, fi 1, fy 1, hj 1, hy 1, it 1, iy 1, nj 1, nu 1, ny 1
+      it:L2ts0 8.9e-05, dw:L2ws0 7.4e-05, aj:L2js0 7.4e-05, aw:L2ws0 5.2e-05, nu:L2us0 2.3e-05, eu:L2us0 1.1e-05, cp:L2ps0 2.7e-06, cu:L2us0 8.6e-07, hj:L2js0 1.7e-07, nj:L2js0 1.6e-07, hy:L2ys0 4.6e-08, fy:L2ys0 2.6e-08, dy:L2ys0 1.9e-08, iy:L2ys0 8.9e-09, ny:L2ys0 7.6e-09, ay:L2ys0 7e-09, fi:L2is0 1.7e-09
+  J3i | the cusp rule's join (a low exit into i j p r s t u w y): 1 pieces; per pair: aj 1
+      aj:J0-2aj 9.3e-05
+  J3i | the exit stroke a rule join cuts: 50 pieces; per pair: er+ve 2, hi 2, hu 2, af+ft 1, ai 1, aj 1, ap 1, ar 1, au 1, aw 1, aw+la 1, ay 1, cj 1, cp 1, cr 1, ct 1, dj 1, dr 1, ds 1, dt 1, du 1, dw 1, dy 1, ej 1, er 1, er+te 1, es 1, es+xe 1, et 1, et+je 1, fj 1, fp 1, ft 1, fu 1, hi+wh 1, hj 1, hp 1, hr 1, hs 1, hw 1, hy 1, is 1, it 1, iu 1, iy 1, nu 1, ny 1
+      after:L2fs0 9.7e-05, es:L0es0 9.3e-05, hy:L0hs0 7.2e-05, nu:L0ns0 5.6e-05, ft:L0fs0 4e-05, er:L0es0 4e-05, after:L6es0 2.8e-05, jumps over the lazy dog:L14es0 2.8e-05, lawgiver:L12es0 2.8e-05, ds:L0ds0 2.7e-05, hippo:L0hs0 2.5e-05, dr:L0ds0 2.5e-05, cp:L0cs0 1.6e-05, hs:L0hs0 1.6e-05, hi:L0hs0 1.2e-05, boxes:L6es0 1.2e-05, lawgiver:L2as0 1.1e-05, dt:L0ds0 1e-05, ar:L0as0 9.4e-06, hj:L0hs0 8.3e-06, hr:L0hs0 6.7e-06, ny:L0ns0 6e-06, hp:L0hs0 4e-06, cr:L0cs0 1.4e-06, which:L2hs0 1.3e-06, fu:L0fs0 1.2e-06, dy:L0ds0 8.5e-07, cj:L0cs0 8.3e-07, dw:L0ds0 7.1e-07, be we shoe maze huge bye:L24hs0 4.3e-07, hu:L0hs0 3.4e-07, du:L0ds0 3.1e-07, aw:L0as0 2.4e-07, iu:L0is0 2e-07, ct:L0cs0 1.3e-07, iy:L0is0 1.1e-07, hw:L0hs0 5.8e-08, it:L0is0 5.7e-08, ay:L0as0 5.5e-08, is:L0is0 3.1e-08, ej:L0es0 2.5e-08, aj:L0as0 1.9e-08, au:L0as0 7.2e-09, ice jet even:L8es0 5.1e-09, ap:L0as0 4.3e-09, ai:L0as0 9e-10, et:L0es0 6.2e-10, dj:L0ds0 3.4e-10, fj:L0fs0 3e-10, fp:L0fs0 1.7e-10
+
+(5) per letter: moved pieces (>= 1e-4 u) that hold the letter (a join or lead or tail by its pair, a stroke by its own letter), per stage; listed / unlisted
+  J3f: a 10/1, b 71/5, c 6/0, d 6/0, e 22/3, f 6/4, g 10/0, h 8/1, i 3/0, j 3/0, k 6/0, l 6/0, m 6/0, n 8/0, o 12/4, p 3/0, q 6/0, r 8/0, s 3/0, t 6/0, u 3/0, v 69/6, w 69/16, x 6/0, y 4/0, z 6/0
+  J3g: a 5/0, b 71/3, c 3/0, d 5/0, e 22/0, f 3/0, g 5/0, h 4/0, i 3/0, j 3/0, k 3/0, l 3/0, m 3/0, n 4/0, o 12/0, p 3/0, q 3/0, r 8/0, s 3/0, t 3/0, u 3/0, v 69/3, w 69/10, x 3/0, y 4/0, z 5/0
+  J3h: a 1/0, b 2/0, c 59/0, d 1/0, e 4/0, f 2/0, g 1/0, h 4/0, i 1/0, j 2/0, k 4/0, l 2/0, m 2/0, n 1/0, o 2/0, p 2/0, q 1/0, r 1/0, s 1/0, t 2/0, u 4/0, v 2/0, w 2/0, x 2/0, y 1/0, z 2/0
+  J3i: a 13/0, c 16/0, d 11/0, e 19/0, f 11/0, h 13/0, i 33/0, j 10/0, n 18/0, p 17/0, r 20/0, s 16/0, t 21/0, u 17/0, w 16/0, y 10/0
+
+(6) each later version against v6.8 directly (raw coefficients; moved >= 1e-4 u), by type
+  v6.8 -> v6.9: 301 pieces differ (join 108, stroke 193); largest 88.2 u (wl:J0-2wl)
+  v6.8 -> v7.0: 301 pieces differ (join 108, stroke 193); largest 88.2 u (vl:L2ls0)
+  v6.8 -> v7.1: 376 pieces differ (join 139, stroke 237); largest 88.2 u (vl:L2ls0)
+  v6.8 -> v7.2: 524 pieces differ (join 207, stroke 317); largest 88.2 u (vl:L2ls0)

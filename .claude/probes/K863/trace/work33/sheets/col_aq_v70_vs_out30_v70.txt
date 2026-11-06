@@ -1,0 +1,12 @@
+K863 J3j: column 3 of out33\aq_joins_v68.svg against column 3 of out30\aq_joins_v70.svg
+rows: 10 in A, 10 in B, 10 in both: 10 draw the same, 0 differ; only in A 0, only in B 0
+  same: ba: largest coordinate difference 0 u
+  same: va: largest coordinate difference 0 u
+  same: wa: largest coordinate difference 0 u
+  same: bq: largest coordinate difference 0 u
+  same: vq: largest coordinate difference 0 u
+  same: wq: largest coordinate difference 0 u
+  same: oa: largest coordinate difference 0 u
+  same: oq: largest coordinate difference 0 u
+  same: bad: largest coordinate difference 0 u
+  same: wave: largest coordinate difference 0 u

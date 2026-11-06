@@ -1,0 +1,24 @@
+K863 J3j: column 1 of out33\cursive_v68_words.svg against column 2 of out28\cursive_v68_words.svg
+rows: 21 in A, 3 in B, 2 in both: 2 draw the same, 0 differ; only in A 19, only in B 1
+  same: quick brown fox: largest coordinate difference 0.01 u
+  same: coffee: largest coordinate difference 0.01 u
+  only in A: minimum
+  only in A: bow
+  only in A: woven
+  only in A: boxes
+  only in A: people
+  only in A: hippo
+  only in A: puppy
+  only in A: and
+  only in A: knotmaze
+  only in A: cursive
+  only in A: jumps over the lazy dog
+  only in A: be we shoe maze huge bye
+  only in A: ice jet even
+  only in A: which
+  only in A: oat
+  only in A: bad
+  only in A: subgroup
+  only in A: lawgiver
+  only in A: vg
+  only in B: after

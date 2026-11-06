@@ -1,0 +1,23 @@
+K863 J3j: column 1 of out33\cursive_v68_words.svg against column 1 of out29\cursive_v69_words.svg
+rows: 21 in A, 10 in B, 10 in both: 10 draw the same, 0 differ; only in A 11, only in B 0
+  same: bow: largest coordinate difference 0.01 u
+  same: woven: largest coordinate difference 0.01 u
+  same: boxes: largest coordinate difference 0.01 u
+  same: cursive: largest coordinate difference 0.01 u
+  same: quick brown fox: largest coordinate difference 0.01 u
+  same: jumps over the lazy dog: largest coordinate difference 0.01 u
+  same: be we shoe maze huge bye: largest coordinate difference 4.55e-13 u
+  same: which: largest coordinate difference 0.01 u
+  same: subgroup: largest coordinate difference 0.01 u
+  same: lawgiver: largest coordinate difference 0.01 u
+  only in A: minimum
+  only in A: people
+  only in A: hippo
+  only in A: puppy
+  only in A: and
+  only in A: knotmaze
+  only in A: ice jet even
+  only in A: coffee
+  only in A: oat
+  only in A: bad
+  only in A: vg
