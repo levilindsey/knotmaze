@@ -1983,6 +1983,140 @@ export class Joinery {
       );
     };
 
+    // K1220 S2: A GLYPH FORK'S WIDTH STEP. A glyph's flare (the a's
+    // bodyFlares) starts AT its fork, so one arm's ribbon edge steps from
+    // 1.0 to about 1.5 fill half-widths between two samples 0.4 fh from
+    // the joint. Across a wide side that step is the notch (a chain's own
+    // two arms) or the ledge (the spur's side) Levi named. The bridge fans
+    // the step shut in the junction field: from the narrow arm's edge 2 fh
+    // out to the wide arm's edge 1 fh out, a Hermite curve tangent to both
+    // edges. No centreline or width moves (K1119): only the fork is filled.
+    const glyphOf = this.r.style.glyph;
+    const wmAt = (arm: JArm, s: number): number => {
+      const wl = this.r.widthLast[arm.chain];
+      if (!wl) return 1;
+      const smp = this.r.chainSamples[arm.chain]!;
+      const total = smp.totalLength;
+      const arc = sampling.normArc(arm.arc0 + arm.dir * s, arm.total, arm.closed);
+      let i0: number;
+      let i1: number;
+      let frac: number;
+      if (smp.closed) {
+        const f = ((((arc % total) + total) % total) / total) * smp.count;
+        i0 = Math.floor(f) % smp.count;
+        i1 = (i0 + 1) % smp.count;
+        frac = f - Math.floor(f);
+      } else {
+        const f = (Math.max(0, Math.min(total, arc)) / total) * (smp.count - 1);
+        i0 = Math.max(0, Math.min(smp.count - 2, Math.floor(f)));
+        i1 = i0 + 1;
+        frac = f - i0;
+      }
+      return wl[i0] + (wl[i1] - wl[i0]) * frac;
+    };
+    // The arm's centre at s (out[0..1]) and its edge on one side at its own
+    // drawn half-width (out[2..3]); the side is A's left (the wedge side).
+    const edgeAt = (arm: JArm, s: number, left: boolean, out: number[]): void => {
+      const samples = this.r.chainSamples[arm.chain]!;
+      const sc = this.r.sampleScratch;
+      sampling.sampleAtSafe(samples, sampling.normArc(arm.arc0 + arm.dir * s, arm.total, arm.closed), arm.closed, sc, 0);
+      const px = sc[0];
+      const py = sc[1];
+      sampling.sampleAtSafe(samples, sampling.normArc(arm.arc0 + arm.dir * (s + 0.08), arm.total, arm.closed), arm.closed, sc, 0);
+      let tx = sc[0] - px;
+      let ty = sc[1] - py;
+      const tl = Math.hypot(tx, ty);
+      if (tl > 1e-6) {
+        tx /= tl;
+        ty /= tl;
+      } else {
+        tx = arm.dx;
+        ty = arm.dy;
+      }
+      const off = (left ? 1 : -1) * fillHalf * wmAt(arm, s);
+      out[0] = px;
+      out[1] = py;
+      out[2] = px - ty * off;
+      out[3] = py + tx * off;
+    };
+    const BRIDGE_STEPS = 12;
+    const bridgeE0: number[] = [0, 0, 0, 0];
+    const bridgeE1: number[] = [0, 0, 0, 0];
+    // The bridge's rim (A's centre, A's edge, the curve, B's edge, B's
+    // centre) and its flank coordinate, or null where the pair has no step
+    // or the rim would not be star-shaped from the joint.
+    const glyphBridge = (
+      rec: JRec,
+      A: JArm,
+      B: JArm
+    ): { rim: number[]; flank: number[] } | null => {
+      const wA = wmAt(A, fillHalf * 0.5);
+      const wB = wmAt(B, fillHalf * 0.5);
+      if (Math.abs(wA - wB) <= 0.04) return null;
+      const reachOf = (arm: JArm, d: number): number =>
+        Math.max(fillHalf * 0.5, Math.min(d, armReach(arm), 0.9 * arm.domain));
+      const dA = reachOf(A, wA > wB ? fillHalf : 2 * fillHalf);
+      const dB = reachOf(B, wB > wA ? fillHalf : 2 * fillHalf);
+      const dd = Math.min(0.06, dA * 0.25, dB * 0.25);
+      // Each edge's outward tangent, from its points dd either side.
+      edgeAt(A, dA + dd, true, bridgeE0);
+      edgeAt(A, dA - dd, true, bridgeE1);
+      let tax = bridgeE0[2] - bridgeE1[2];
+      let tay = bridgeE0[3] - bridgeE1[3];
+      edgeAt(B, dB + dd, false, bridgeE0);
+      edgeAt(B, dB - dd, false, bridgeE1);
+      let tbx = bridgeE0[2] - bridgeE1[2];
+      let tby = bridgeE0[3] - bridgeE1[3];
+      const la = Math.hypot(tax, tay);
+      const lb = Math.hypot(tbx, tby);
+      if (la < 1e-9 || lb < 1e-9) return null;
+      tax /= la;
+      tay /= la;
+      tbx /= lb;
+      tby /= lb;
+      edgeAt(A, dA, true, bridgeE0);
+      edgeAt(B, dB, false, bridgeE1);
+      const p0x = bridgeE0[2];
+      const p0y = bridgeE0[3];
+      const p1x = bridgeE1[2];
+      const p1y = bridgeE1[3];
+      const mag = Math.hypot(p1x - p0x, p1y - p0y);
+      // From A's edge heading in along it, to B's edge heading out along it.
+      const m0x = -tax * mag;
+      const m0y = -tay * mag;
+      const m1x = tbx * mag;
+      const m1y = tby * mag;
+      const rim: number[] = [bridgeE0[0], bridgeE0[1], p0x, p0y];
+      const flank: number[] = [1, 1 - 2 / BRIDGE_STEPS];
+      for (let i = 1; i < BRIDGE_STEPS; i++) {
+        const t = i / BRIDGE_STEPS;
+        const t2 = t * t;
+        const t3 = t2 * t;
+        const h00 = 2 * t3 - 3 * t2 + 1;
+        const h10 = t3 - 2 * t2 + t;
+        const h01 = -2 * t3 + 3 * t2;
+        const h11 = t3 - t2;
+        rim.push(
+          h00 * p0x + h10 * m0x + h01 * p1x + h11 * m1x,
+          h00 * p0y + h10 * m0y + h01 * p1y + h11 * m1y
+        );
+        flank.push(1 - 2 * t);
+      }
+      rim.push(p1x, p1y, bridgeE1[0], bridgeE1[1]);
+      flank.push(-(1 - 2 / BRIDGE_STEPS), -1);
+      // Star-shaped from the joint, or the fan would paint past the rim.
+      let sgn = 0;
+      for (let i = 0; i + 3 < rim.length; i += 2) {
+        const cr =
+          (rim[i] - rec.jx) * (rim[i + 3] - rec.jy) -
+          (rim[i + 1] - rec.jy) * (rim[i + 2] - rec.jx);
+        if (Math.abs(cr) < 1e-9) continue;
+        if (sgn === 0) sgn = Math.sign(cr);
+        else if (Math.sign(cr) !== sgn) return null;
+      }
+      return { rim, flank };
+    };
+
     // K81 ROUTE GEOMETRY. COVER CAP: how far along an arm its ribbon may be
     // re-emitted as a cover strip - short of its nearest under-gap (a fan
     // takes only a foreign over thread's silhouette, not the casing), within
@@ -2173,6 +2307,15 @@ export class Joinery {
         // wedge between DIFFERENT chains is a real corner of the outline:
         // skipping it left both facing edges uncut, so the through
         // thread's border ran across the joining arm's mouth (K857).
+        if (
+          gap > FILLET_MAX_WEDGE &&
+          glyphOf &&
+          (glyphOf[A.chain] || glyphOf[B.chain])
+        ) {
+          // K1220 S2: a glyph fork's width step, bridged.
+          const br = glyphBridge(rec, A, B);
+          if (br) emitFan(rec, jx, jy, br.rim, br.flank);
+        }
         if (gap > FILLET_MAX_WEDGE && A.chain === B.chain) continue;
 
         // A's wedge-facing edge is its LEFT edge; B's is its RIGHT edge.
