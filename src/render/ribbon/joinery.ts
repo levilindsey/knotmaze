@@ -2054,17 +2054,27 @@ export class Joinery {
       const wB = wmAt(B, fillHalf * 0.5);
       if (Math.abs(wA - wB) <= 0.04) return null;
       const reachOf = (arm: JArm, d: number): number =>
-        Math.max(fillHalf * 0.5, Math.min(d, armReach(arm), 0.9 * arm.domain));
-      const dA = reachOf(A, wA > wB ? fillHalf : 2 * fillHalf);
-      const dB = reachOf(B, wB > wA ? fillHalf : 2 * fillHalf);
+        Math.max(fillHalf * 0.3, Math.min(d, armReach(arm), 0.9 * arm.domain));
+      // The wide arm's point sits just past its step (where its width
+      // first reaches its near peak), so the curve leaves its edge before
+      // the step's cut and covers it; the narrow arm's point 2 fh out.
+      const stepEnd = (arm: JArm): number => {
+        let wMax = 0;
+        for (let j = 0; j <= 15; j++) wMax = Math.max(wMax, wmAt(arm, fillHalf * 0.1 * j));
+        let j = 0;
+        while (j < 15 && wmAt(arm, fillHalf * 0.1 * j) < wMax - 0.02) j++;
+        return fillHalf * (0.1 * j + 0.15);
+      };
+      const dA = reachOf(A, wA > wB ? stepEnd(A) : 2 * fillHalf);
+      const dB = reachOf(B, wB > wA ? stepEnd(B) : 2 * fillHalf);
       const dd = Math.min(0.06, dA * 0.25, dB * 0.25);
-      // Each edge's outward tangent, from its points dd either side.
+      // Each edge's outward tangent, one-sided outward (never across a step).
       edgeAt(A, dA + dd, true, bridgeE0);
-      edgeAt(A, dA - dd, true, bridgeE1);
+      edgeAt(A, dA, true, bridgeE1);
       let tax = bridgeE0[2] - bridgeE1[2];
       let tay = bridgeE0[3] - bridgeE1[3];
       edgeAt(B, dB + dd, false, bridgeE0);
-      edgeAt(B, dB - dd, false, bridgeE1);
+      edgeAt(B, dB, false, bridgeE1);
       let tbx = bridgeE0[2] - bridgeE1[2];
       let tby = bridgeE0[3] - bridgeE1[3];
       const la = Math.hypot(tax, tay);
