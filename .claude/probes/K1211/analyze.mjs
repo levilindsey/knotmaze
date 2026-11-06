@@ -139,14 +139,17 @@ function cmdChecks(dir) {
       for (const [name, X] of [["raw", i16(I)], ["light", sub(I, C)]]) {
         const s = steps(X, W, H, mask);
         let arms = 0;
-        const web = {};
+        const web = {}, hA = new Uint32Array(512), hW = {};
         for (let p = 0; p < W * H; p++) {
           if (!mask[p]) continue;
           const j = R.webOf[p];
-          if (j >= 0) { if (!(s[p] <= (web[j] ?? -1))) web[j] = s[p]; }
-          else if (!R.zone[p] && s[p] > arms) arms = s[p];
+          if (j >= 0) { if (!(s[p] <= (web[j] ?? -1))) web[j] = s[p]; (hW[j] ??= new Uint32Array(512))[Math.min(511, s[p])]++; }
+          else if (!R.zone[p]) { if (s[p] > arms) arms = s[p]; hA[Math.min(511, s[p])]++; }
         }
-        row[name] = { arms, web };
+        const pct = (h, q) => { let n = 0; for (const v of h) n += v; let acc = 0; for (let i = 0; i < h.length; i++) { acc += h[i]; if (acc >= q * n) return i; } return 0; };
+        const webP = {};
+        for (const j of Object.keys(hW)) webP[j] = pct(hW[j], 0.995);
+        row[name] = { arms, web, armsP995: pct(hA, 0.995), webP995: webP };
       }
       rows.push(row);
     }
@@ -154,15 +157,17 @@ function cmdChecks(dir) {
     const sum = {};
     for (const j of out.webs) {
       for (const name of ["raw", "light"]) {
-        let worst = 0, fail = 0, wmax = 0, amin = 1e9;
+        let worst = 0, fail = 0, wmax = 0, amin = 1e9, wp = 0, ap = 1e9;
         for (const row of rows) {
           const w = row[name].web[j] ?? 0, a = row[name].arms;
           if (w > a) fail++;
           worst = Math.max(worst, w - a);
           wmax = Math.max(wmax, w);
           amin = Math.min(amin, a);
+          wp = Math.max(wp, row[name].webP995[j] ?? 0);
+          ap = Math.min(ap, row[name].armsP995);
         }
-        sum[`${j}:${name}`] = { fail, worstExcess: worst, webMax: wmax, armsMinOverFrames: amin };
+        sum[`${j}:${name}`] = { fail, worstExcess: worst, webMax: wmax, armsMinOverFrames: amin, webP995Max: wp, armsP995Min: ap };
       }
     }
     out.a[L] = { sum, rows };
@@ -186,13 +191,42 @@ function cmdChecks(dir) {
       }
       fr.push({ k, arms, web });
     }
+    // the crest's position: the light-weighted centroid inside each web disc
+    // (light = |shot - colours-only|), frame to frame, while the web is lit
+    // (both frames above 25% of the brightest frame's energy)
+    const C = existsSync(join(dir, `c${L}.png`)) ? load(join(dir, `c${L}.png`)) : C0;
+    const cen = {};
+    for (const j of out.webs) {
+      const rec = M.recs.find((r) => r.ji === j), [cx, cy] = centre(M, rec, false);
+      const per = imgs.map((I) => {
+        let e = 0, sx = 0, sy = 0;
+        for (let y = Math.max(0, Math.floor(cy - g.rWeb)); y < Math.min(H, cy + g.rWeb); y++)
+          for (let x = Math.max(0, Math.floor(cx - g.rWeb)); x < Math.min(W, cx + g.rWeb); x++) {
+            const p = y * W + x;
+            if (!mask[p] || R.webOf[p] !== j) continue;
+            const i = p * 3;
+            const v = Math.max(Math.abs(I.data[i] - C.data[i]), Math.abs(I.data[i + 1] - C.data[i + 1]), Math.abs(I.data[i + 2] - C.data[i + 2]));
+            e += v; sx += v * x; sy += v * y;
+          }
+        return { e, x: e ? sx / e : cx, y: e ? sy / e : cy };
+      });
+      const eMax = Math.max(...per.map((q) => q.e));
+      let jump = 0, kj = -1;
+      for (let k = 0; k < nf; k++) {
+        const a = per[k], b = per[(k + 1) % nf];
+        if (a.e < 0.25 * eMax || b.e < 0.25 * eMax) continue;
+        const d = Math.hypot(b.x - a.x, b.y - a.y);
+        if (d > jump) { jump = d; kj = k; }
+      }
+      cen[j] = { maxStepPx: jump, atK: kj, crestStepPx: ((M.spacing / nf) * g.pxw), energy: per.map((q) => Math.round(q.e)) };
+    }
     const sum = {};
     for (const j of out.webs) {
       let fail = 0, wmax = 0, amax = 0;
       for (const f of fr) { const w = f.web[j] ?? 0; if (w > f.arms + 4) fail++; wmax = Math.max(wmax, w); amax = Math.max(amax, f.arms); }
-      sum[j] = { fail, webMax: wmax, armsMax: amax };
+      sum[j] = { fail, webMax: wmax, armsMax: amax, centroidMaxStepPx: cen[j].maxStepPx, centroidAtK: cen[j].atK, crestStepPx: cen[j].crestStepPx };
     }
-    out.b[L] = { sum, frames: fr };
+    out.b[L] = { sum, frames: fr, centroid: cen };
   }
   // (c) looks 1 and 2 against look 0: changed px by distance from the nearest record centre
   if (M.hasHook) {
@@ -228,8 +262,8 @@ function cmdChecks(dir) {
   // print
   console.log(`checks ${M.stand}: fh ${g.fh.toFixed(3)} fanR ${g.fanR.toFixed(3)} px/world ${g.pxw.toFixed(1)} web r ${g.rWeb.toFixed(0)} px zone r ${g.rZone.toFixed(0)} px; webs in clip ${out.webs.join(",")}`);
   for (const L of looks) {
-    for (const [key, v] of Object.entries(out.a[L].sum)) console.log(`  (a) look ${L} web ${key}: frames failing ${v.fail}/${nf}, worst excess ${v.worstExcess}, web max ${v.webMax}, arms min ${v.armsMinOverFrames}`);
-    for (const [j, v] of Object.entries(out.b[L].sum)) console.log(`  (b) look ${L} web ${j}: frames failing ${v.fail}/${nf}, web max ${v.webMax}, arms max ${v.armsMax}`);
+    for (const [key, v] of Object.entries(out.a[L].sum)) console.log(`  (a) look ${L} web ${key}: frames failing ${v.fail}/${nf}, worst excess ${v.worstExcess}, web max ${v.webMax}, arms min ${v.armsMinOverFrames}; p99.5 web max ${v.webP995Max}, arms min ${v.armsP995Min}`);
+    for (const [j, v] of Object.entries(out.b[L].sum)) console.log(`  (b) look ${L} web ${j}: frames failing ${v.fail}/${nf}, web max ${v.webMax}, arms max ${v.armsMax}; light centroid's largest frame step ${v.centroidMaxStepPx.toFixed(1)} px at k ${v.centroidAtK} (the crest moves ${v.crestStepPx.toFixed(1)} px a frame)`);
   }
   if (M.hasHook) {
     for (const L of [1, 2]) {
