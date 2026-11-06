@@ -277,9 +277,6 @@ Next free ID: K1214.
   doc Findings filed).
 - **K1080** · On the phone, zoom in and out and tap threads and junction choices: do the tap targets feel
   right? They now stay the same finger size at every zoom (K331, 20b66f6e).
-- **K1126** · With High contrast on, a plucked thread now shows the ring ripple whatever ripple you picked
-  (unless it is off). Does it read well on the light threads over black? Pictures: .claude/probes/K368/shots/
-  (K368, 89836d3b)
 - **K1127** · On a narrow phone, the hidden-runs line in the corner panel now wraps in whole phrases (no lone
   'them', no dot at a line's end). Does it read well? Pictures: .claude/probes/K1100/out/k1127/stills/ (360x740 and 320x640, stats off and on; K1100, 22b5ebab)
 - **K1150** · Under the beat, a new Beat indicator choice: the pulse you have today, a crisp ring that spreads
@@ -300,9 +297,6 @@ Next free ID: K1214.
 - **K1172** · Walker modes, Levi's brainstorm (2026-11-03): guide it, program it, a flock, stop them (and a tower
   defense), steer it live, bend and tilt. Which family first? (`docs/design/K1172_walker_modes.md`; full text:
   `docs/ledger_notes.md`)
-- **K1200** · Light on loops (K1139 S4): pulses entering a loop from both ends meet halfway and fade out in
-  pairs, so the far side of a long loop goes dark for a moment (about twice the usual gap): fine as is, or
-  should they pass through each other? Card: `docs/asks/K1200.md`
 
 ## In progress
 
@@ -2011,6 +2005,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1126** · High contrast shows the ring ripple whatever ripple was picked (K368); Levi 2026-11-05: "It reads well". Done in 89836d3b (2026-11-05).
+- **K1200** · Light on loops (K1139 S4): pulses entering a loop from both ends meet halfway and fade out in pairs; Levi 2026-11-05: "Fine as is". Done in 4ac52bb0 (2026-11-05).
 - **K1190** · K1139 Stage 4's look calls (card `docs/asks/K1190.md`; sheets t4, t6 in `.claude/probes/K1139/out/s4/sheets/`): soften the sharp fronts (ji 33, ji 149); smooth ji 33's straight edges; ji 149's gold edge round again; fill the notch. Dropped: superseded by K1211 (Levi 2026-11-05: the light inside a junction must read as one seamless unit) (2026-11-05).
 - **K1207** · In Muse batch 22 (K1208): remove Run C's switch (`setPulseCoverRamp`, 5e0d5914, off by K1202) and make Run D's end window (`setPulseBandEndWindow`, a0f1d634, on by K1203) the only path, re-freezing the pins it moves; it also says whether 21D's twin point is a fan pixel (K1203's notes). Done in 0af054cc (2026-11-05).
 - **K1197** · Cursive c joins: Levi kept the old hand-set joins. Done in f7be8548 (2026-11-05).
