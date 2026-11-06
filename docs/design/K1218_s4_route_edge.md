@@ -102,8 +102,11 @@ loop ji 122). Clean in both builds: x4 (372,240); the fold tip at loop ji 122. L
 the head marker's own; with the markers hidden the band ends smoothly (out/nomark/l113_sheet.png).
 Left, in every build (7474d09b, master, branch):
 - cross ji 33, t5/t6: the web's pulse reads 5-8 levels above the ribbon's along the fan's edge
-  (647,830)-(660,821). Hiding the fans removes it (761 px, max 184); strips and mask do not. The
-  cause (the web's pulse arc against the ribbon's) is inferred, not tested.
+  (647,830)-(660,821). Hiding the fans removes it (761 px, max 184); strips and mask do not. With
+  no pulse (np.png) that window is flat (luma 168-170), and at t0 and t6 the same seam (4-10
+  levels) shows in master and the branch alike (out/b1, out/b2 cross; `lumawin_s4.mjs 644 819 18
+  13`): the step is in the web's pulse term. Which part of it (the arc the web maps a fragment to,
+  the pulse's width there) is inferred, not tested.
 - cross ji 112's lip at (1086,195): the web rim's near-level apex against the backdrop, drawn at
   MSAA 4x coverage levels (no analytic ramp on a fan's outer rim). A rim of 8 to 32 chords moved
   6 px and left it (d5329d1e). Fix: an analytic edge ramp on the web's rim.
