@@ -3810,3 +3810,25 @@ instead draw a thread-wide band with a one-pixel edge through the web. S1
 rule) and B (a soft field that keeps the turn) behind a switch, with sheets for Levi. Held
 meanwhile: K1201's fix (b), Muse Run 22D. Run 22H (K1210) is data only: its bar was "like the
 pulse".
+
+## K1210 (2026-11-05)
+
+Levi, 2026-11-05 (verbatim): "I also want to make sure that fire and segment collapsing effects also
+correctly transition across segments--similar to the highlights".
+
+Run H (Muse batch 22, d31f08c6; `.claude/probes/K1210/SUMMARY.md` and `STANDS.md`; sheets
+`out/sheet_S3_fire.png`, `sheet_S3_collapse.png`, `sheet_S4_fire.png`, `sheet_S4_collapse.png`; frames
+untracked): stands S3 = node_218 (3 arms), S4 = node_378 (4 arms). Pops (a fan pixel changing by more
+than 32 luma in one frame): fire 9 and 13, collapse 22 and 23, the pulse 0 at both. The jump at S4 is
+like the pulse's; lag has no pulse reference.
+
+Claude by eye (2x crops of the sheets, 2026-11-05): fire at 3 arms burns the fused shape away in straight
+radial wedges with ember lines along them, and small dark spikes stick out at the fan's corners (L113.5,
+L113.9); at 4 arms a thread-wide ember block crosses the fused shape, a spike sits on its left corner,
+and the two new fronts meet in a stair-stepped notch (L101.6, L102.1). Collapse at 3 arms leaves the rest
+of the junction with a concave bite and a hard straight side (D-0.40 to D+0.37); at 4 arms, a ragged
+stair-stepped cut with stray yellow specks and a feathered tuft (D+0.37 to D+1.20). The pulses on the
+same sheets show the band edges and radial bars K1211 is about.
+
+Next: K1211 S1 picks the light's rule inside a junction; fire's burn edge and ember band and the
+collapse's cut then follow the same rule through the fused shape, as a stage after Levi's pick.

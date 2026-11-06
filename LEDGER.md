@@ -520,10 +520,10 @@ Next free ID: K1212.
 - **K1208** · Muse batch 22 (after K1204's batch 21): Run A drafts its brief from
   `docs/design/K1208_muse_batch22_run_a.md` after 21G, through the chain (queued as 22A); Claude reviews the
   draft and queues runs B to G (ports 5880-5939)
-  - owner: the chain in `.claude/probes/K1053/` (queue.txt, chain.log): batch 22's Run A (22A) after batch 21's 21G, a fresh Muse session, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
+  - owner: the chain in `.claude/probes/K1053/` (queue.txt, chain.log): Run C (22C) since 10:27, a fresh Muse session; coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
   - branch: mainline; last commit: `d31f08c6`
   - evidence: the chain in .claude/probes/K1053/ (queue.txt, chain.log); each run's probe folder (B: .claude/probes/K1203/, H: .claude/probes/K1210/)
-  - next: Run H done; Claude reviews it, Run C next
+  - next: Run C (K1209, retire the fillet vote) running since 10:27; then E, F; D held for K1211 (its queue line commented out), G held; Claude reviews each run as it lands
   - brief: `docs/design/K1208_muse_batch22.md`
 
 ## Next, in order
@@ -764,9 +764,9 @@ Every other item below waits on the trigger it names.
 - **K1209** · Retire the fillet layer vote (21E: a flip only reorders fans, 0 px; K1186): one fan layer, once
   joinery.ts's "kept for the junction-shader merge" is checked. Removes the vote loop, layerFor, the fm
   routing, filletTopMesh, `voteOverride` and its test; a moved pin is re-frozen and named.
-- **K1210** · Fire and collapse across junctions. Levi, 2026-11-05: "I also want to make sure that fire and
-  segment collapsing effects also correctly transition across segments--similar to the highlights". Batch 22
-  Run H measures both (`docs/design/K1208_muse_batch22.md`); the fix follows K1211's look, not the pulse's.
+- **K1210** · Fire and collapse across junctions, like the highlights (Levi 2026-11-05; notes).
+  Run H (d31f08c6; `.claude/probes/K1210/`): both break up inside the fused shape at 3 and 4 arms: fire in
+  straight wedges with spikes, collapse as a bite or a ragged cut. The fix follows K1211's pick.
 
 ## Residuals (known, not fixed)
 
