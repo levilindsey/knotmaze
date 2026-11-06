@@ -1,0 +1,2 @@
+$env:K1210_FX = "pulse"
+node cross.mjs all
