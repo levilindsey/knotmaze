@@ -85,3 +85,119 @@ Short, in plain words: what you built; per fork, what you see against master; th
 with the two or three to show Levi first; the pins you moved; anything out of scope a crop showed;
 the rebase; your last SHA. Commit messages carry the record. End with `Ledger items` and K1220's
 handle fields (owner, branch, last commit, evidence, next).
+
+## Handoff (K1220 S2, 2026-11-06)
+
+**What it is.** On master, a visible text fork wrote no junction-field record. The records loop
+drops an arm whose probe, 0.8 ctrl out, lies within 0.15 of J, and every glyph arm's probe does.
+So each fork fell back to host-axis discs in the host chain's axis paint: the different-colour
+disc. The a's flare step (`bodyFlares`, width 1.0 -> 1.48 at 0.41 fh from J) met those discs as
+the notch and the ledge.
+
+Four changes, all in `src/render/ribbon/joinery.ts`, all at glyph forks only:
+
+1. `GLYPH_ARM_PROBE = 2` (9b9bcd24). A glyph arm reads its direction 2 fill half-widths along its
+   arc. Every text fork now writes a full record, so it gets the field's blend, its wedges and
+   K830's corners (`cornerRoundShare` is unchanged).
+2. The glyph bridge (ae1ecfd4, 81377f0d). It applies at a glyph pair whose gap exceeds
+   FILLET_MAX_WEDGE and whose arms step in width. A Hermite fillet in field material, with
+   one-sided tangents, runs from the narrow arm's edge at 2 fh to the wide arm's edge just past its
+   step. It fills the notch and the ledge without moving either stroke.
+3. Covered flank points (cf2a7a10). At a glyph pair, a wedge flank point that the other arm's
+   ribbon covers moves to that arm's true edge plus 0.05 fh. This removes the pale sliver of the
+   spur's band in the narrow crotch.
+4. The reveal gate (a9bc7061). A glyph arm's gate point (the record's J1) now sits fieldReach of
+   arc out along the arm, at most at its end. It used to sit at 0.8 ctrl, which on a glyph lies
+   within 0.15 of J. The record's fans reach about 4.7 fh along every arm, so they now wait until
+   the reveal has drawn that far.
+
+No glyph centreline, width or join moves. The maze junctions are untouched (see the diffs below).
+No pin moved: `npm test` is green as-is after the rebase onto 73e0071d (217 files and 2879 tests
+passed, 9 skipped).
+
+**The look I picked**, where the calls leave it open: the field record's blend with K830's
+corners at every text fork, the bridge across the a's flare step, and covered flank points at the
+arm's edge.
+
+**Census (Done 1).** Tool: `.claude/probes/K1220/s2/census.mjs`. Words a, i, ai, ia, aa and ii at
+xh 3 and xh 2: 30 text forks.
+
+| | records | arms per record | at the 20 visible a forks |
+|---|---|---|---|
+| master | 4 (the i forks at xh 3 in i, ia, ii) | 2 of 4 | none |
+| mine | 30 / 30 | every arm | all 20 |
+
+- The 10 i forks are hidden by `taperHideJn` on both builds: the tapered root draws them, with no
+  fans. So the i fork in "ai" reads the same on both.
+- Run N's "ai xh3 ji0 (i fork)" is in fact the a's L. The fork indices in "ai" are: ji 0 = the
+  a's L, ji 1 = the a's R, ji 2 = the i fork. In "ia" they run the other way: ji 0 = the i fork,
+  ji 1 = the a's L, ji 2 = the a's R.
+
+**Sheets (Done 2)**, in `.claude/probes/K1220/s2/out/sheets/`.
+- Each sheet has two rows, master then mine, at zoom 4.
+- `sheets_all.ps1` builds them from `shoot.mjs`'s shots. The shots ran in real time, headed,
+  under the perf lock, with `phw=0` and `fw=0`, and each served build was checked by its mark.
+- `<word>_<xh>_ji<n>_A.png`, for a and ai: rest, nofans, the fork's pluck at 0.1 s, and the flow
+  at t 2.5 and t 4.1.
+- `_B.png`, for a and ai: the trace reveal at 20 / 40 / 60 / 80%.
+- `_R.png`, for i, ia, aa and ii: rest and nofans.
+- Show Levi first: `ai_xh3_ji0_A.png`, `ai_xh3_ji1_A.png`, `ai_xh2_ji0_A.png`.
+- On mine, every a attachment reads as one piece: no disc, no notch, no ledge. nofans is identical
+  on the two builds.
+- The i forks are the same on both builds, notch and ledge included (see Flaws left).
+
+**Whole-frame diffs at rest (Done 3)**, from `absdiff_all.ps1`, written to `out/diff/`.
+- On the text stands, every changed pixel lies within 5 fh of a text fork, and none lies beyond.
+- The record's field reaches max(1.25 cr, 2) fh + 0.25 along each arm, about 4.7 fh. At a 3 fh
+  radius, 1457-4970 px sat just past it.
+
+| stand | changed px, xh 3 | changed px, xh 2 |
+|---|---|---|
+| a | 43213 | 41712 |
+| ai | 42813 | 41799 |
+| ia | 40682 | 41293 |
+| aa | 82162 | 82869 |
+| i, ii | 0 (the forks are taper-hidden) | 0 |
+| maze x4, cross, loop | 0 | |
+
+**The reveal (the `_B` sheets).** In the first B sheets, every joint piece (master's discs and
+mine's fans alike) showed over strokes the held reveal had not drawn. That was a probe artifact:
+the FX clock, which the joint gate reads, kept the load wait's wall time. `shoot.mjs` now pins it
+for each frame through the renderer's `revealPin` (de39f155).
+
+Re-shot, fix 4 holds: mine's fans never show over undrawn strokes. Two looks remain:
+- Between the strokes meeting and the gate opening, mine shows the bare ribbons. On "a" at xh 3
+  this is the 40% frame: the notch, and a straight seam where the bowl meets the stem. Master shows
+  its disc and the notch there. From 60% the fork is fused.
+- On "ai", at the a's L at 20% (xh 3 and xh 2), the gate is open while the just-drawn strokes still
+  wear the trace's bright tint. The fans show the settled paint instead: a darker band across the fork.
+  Master's disc shows the same darker band. Inferred from the sheets, not attributed: the joint
+  pieces' paint does not follow the trace's tint on either build.
+
+**Flaws left.**
+- The i forks: 10 of the 30, the i's fork in i, ai, ia and ii (ji 2 in "ai";
+  `ai_xh3_ji2_A.png`). They still show a notch on the left edge and a ledge on the right, on both
+  builds. `taperHideJn` hides their joint pieces (the tapered root draws the joint), so mine's
+  record is never drawn there.
+  - To make them one piece, draw the joint there: un-hide the record's fans at a tapered i fork
+    (mine writes the record), or bridge the root's width step as fix 2 does for the a.
+  - Not built: I read this crop at the end of the stage.
+- ai at xh 3, the a's L: a soft bend of about 12 degrees where the stem's right edge meets the
+  spur's. It is K830's corner between two arms of different widths. Removing it means moving the
+  corner rule or a stroke, which the calls keep.
+- The crotch-end dark V on the casing band at the a's J in "ai". It is the gap mask's slot there
+  (K580 s5's unidentified slot), not the fork's material, and it lies past the fans. I did not
+  attribute it in this stage's time.
+- ia at xh 2, the a's R (ji 2): a jog of about 1 frame px in the far-side edge at the flare step.
+  It shows at xh 2 only.
+- The reveal's two looks above: the bare-ribbon moment before the gate opens, and the fans' settled
+  paint under the trace's tint.
+
+**Next.**
+1. Levi looks at the sheets.
+2. The i forks' notch and ledge (the first flaw above), which still stand against the goal.
+3. The crotch-end V: identify the gap-mask slot at the a's J in "ai" (K580 s5). Then either give
+   the fans the casing mask there, or end the crotch wedge's edge on the band's edge.
+4. The reveal: fade the fans in from the gate, or gate them per arm, and give the joint pieces the
+   trace's tint.
+5. The xh 2 jog.
