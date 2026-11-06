@@ -139,8 +139,25 @@ evidence, next).
 Task 1 done in 30e07f21 (look A, its twin and `lightLevel` gone; JUNCTION_FRAG 43,758 -> 42,030;
 master 40,495).
 
-**Task 0 (in progress): where the edge went straight.** Found in the code; NOT yet confirmed on
-a shot (the master shots wait on the perf lock).
+**Task 0: where the edge went straight. CONFIRMED on master's shots (13:05) for the split
+junctions; the T and the four are a second mechanism, the crossing-gap mask.**
+
+- Shots: `.claude/probes/K1211/out2/s2m/<stand>/` (master a371d164 on 5961, shoot2.mjs), crops
+  `out2/t0/confirmA.png` (rows x4 ji 149, cross ji 113, x4 ji 125; columns live, no bands,
+  pure colours), `confirmB.png` (loop ji 89, loop ji 12, x4 ji 102) and `attrib12_89.png`
+  (loop ji 12 then 89; columns no bands, no light, webs hidden, gap mask off).
+- x4 ji 149 and x4 ji 125: live has the straight edge with a corner (149) and the break (125);
+  with no pulse bands declared the gold ends in one round edge at both. The bands' cut, below,
+  is the cause there. Cross ji 113 and x4 ji 102 are the same with or without bands.
+- Loop ji 89 (T) and loop ji 12 (four): the zigzags are the SAME with no bands and with no light
+  at all, and with the webs hidden; with the crossing-gap mask off (`maskEnabled = false`) they
+  are gone and the gold is one round band. So the gap mask draws them: the fan is hidden inside
+  a crossing over thread's silhouette there, and what shows through is that ribbon's own paint,
+  split gold/untraveled straight across the ribbon at the joint (inferred from the crops; the
+  slot is not identified). Not the bands, and not the traveled partition.
+- Loop ji 12's small dark triangle: in the pure colours shot too (traveled cleared, light off),
+  bigger with the webs hidden, gone with the mask off. A crossing gap, not the gold's own edge:
+  not fixed here (Task 3's rule).
 
 - The commit: K1139 S3b, df30a7f3 (2026-11-04, "the fan shader"), drew the pulse bands through
   the junction fans and gave a fan pixel to its NEAREST band. K1139 S2's bec420f7 turned that
@@ -170,7 +187,8 @@ a shot (the master shots wait on the perf lock).
   probe's own declarations stick, and shoots the live declaration (L0) against the same state
   with no pulse bands (nb) on master a371d164 (preview on 5961). Expected if this is right: nb
   shows the round edge at cross ji 113 and x4 ji 149, no teal strip at x4 ji 125, no zigzags at
-  loop ji 89 and 12.
+  loop ji 89 and 12. Result: as expected at 149, 113 and 125; not at 89 and 12 (the gap mask,
+  above).
 
 Tools: `run_shots2.ps1` is S2's copy of S1's `run_shots.ps1` (owner `K1211-S2`, the same lock
 rule) that runs `shoot2.mjs` jobs.

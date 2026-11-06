@@ -72,6 +72,7 @@ import {
   MAX_ROUTES,
   MAX_ROUTE_VERTS,
   ROUTE_BAND_PAD,
+  drawBandYield,
   junctionLight,
   junctionShader,
   junctionShaderExplore,
@@ -592,6 +593,9 @@ export class Joinery {
     const reach = fillHalf + (strip ? ROUTE_BAND_PAD + 1 : 0.5) * pxW;
     let base = base0;
     const nrr = Math.min(nr, MAX_ROUTES);
+    // K1211 S2: the walked gold's cover (the max over gold blocks, look 0),
+    // which the drawing pulse bands yield to below (drawBandYield).
+    let gCov = 0;
     for (let r = 0; r < nrr; r++) {
       const r0 = at(base);
       const nv = Math.round(J[r0]);
@@ -623,6 +627,7 @@ export class Joinery {
           lightSoftCover(Math.sqrt(best), fillHalf) *
           allow(Math.round(J[r0 + 2]), J[r0 + 3] > -0.5 ? Math.round(J[r0 + 3]) : -1);
       }
+      if (!lookB) gCov = Math.max(gCov, cov);
       if (cov > 0) {
         armPaint(rec + 2 + Math.round(J[r0 + 2]) * stride, -tau + shift, true, false, mA);
         if (J[r0 + 3] > -0.5) {
@@ -771,7 +776,7 @@ export class Joinery {
     }
     let wW = 0;
     for (let r = 0; r < npp; r++) {
-      const cw = PULSE_COV[r] * (1 - pulseSmooth(0, 3 * pxW, PULSE_DIST[r] - dShared));
+      const cw = PULSE_COV[r] * drawBandYield(PULSE_DIST[r], dShared, pxW, gCov);
       if (!(cw > 0)) continue;
       const r0 = PULSE_R0[r];
       const tau = PULSE_TAU[r];
@@ -789,7 +794,7 @@ export class Joinery {
     for (let r = 0; r < npp; r++) {
       const ra = J[PULSE_R0[r] + 2];
       const rb = J[PULSE_R0[r] + 3];
-      const yr = PULSE_F[r] * (1 - pulseSmooth(0, 3 * pxW, PULSE_DIST[r] - dShared));
+      const yr = PULSE_F[r] * drawBandYield(PULSE_DIST[r], dShared, pxW, gCov);
       for (let q = r + 1; q < npp; q++) {
         const qa = J[PULSE_R0[q] + 2];
         const qb = J[PULSE_R0[q] + 3];

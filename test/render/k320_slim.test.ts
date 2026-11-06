@@ -168,7 +168,10 @@ describe("K320 stage 1: char budgets", () => {
     // K1211 S2 (branch only): look A (jLightA, its JCOL type and explore
     // edit, the two arm-block globals, the look A flags) comes out, 1,728
     // in all (43,758 -> 42,030 measured here); look B and the switch stay.
-    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(42_030);
+    // K1211 S2's fix (branch only): the drawing pulse bands yield to the
+    // walked gold's cover (gC, look 0), +144 (42,030 -> 42,174 measured
+    // here); budget follows the measurement.
+    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(42_174);
     // K799: uKPath joins KNOT_UNIFORMS_GLSL, which the still pluck
     // includes (+18 here).
     expect(PLUCK_STILL_FRAG.length).toBeLessThanOrEqual(20_550);

@@ -224,6 +224,19 @@ export function pulseBandCover(dnow: number, fillHalf: number, pxW: number, stri
   return Math.max(0, Math.min(1, (reach - dnow) / pxW));
 }
 
+// K1211 S2: a drawing pulse band's yield at a fan pixel (the CPU twin of
+// junctionField's yr): K1139 S2's ramp to the shared bands (1 on a tie,
+// 0 once a shared band is 3 px nearer) times what the walked gold leaves,
+// 1 - goldCover, the max of the gold blocks' own covers. A drawing band
+// paints its arms' untraveled rows, so before this it cut the gold's
+// round tube along the bisector to the shared band (a straight edge with
+// a corner) and, on the shared arm's centreline (a tie), over the gold.
+// Look B passes goldCover 0 (its rule is S1's, unchanged).
+export function drawBandYield(dDraw: number, dShared: number, pxW: number, goldCover: number): number {
+  const t = Math.max(0, Math.min(1, (dDraw - dShared) / (3 * pxW)));
+  return (1 - t * t * (3 - 2 * t)) * (1 - goldCover);
+}
+
 export function setFieldParams(fillHalf: number, profN: number): void {
   const u = fieldUniforms().uniforms as { uJParams: Float32Array };
   u.uJParams[0] = fillHalf;
@@ -451,6 +464,7 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
   int base = base0;
   int stride = 2 + int(uJParams.y + 0.5);
   float reach = uJParams.x + (strip ? ${(ROUTE_BAND_PAD + 1).toFixed(3)} : 0.5) * pxW;
+  float gC = 0.0;
   for (int r = 0; r < ${MAX_ROUTES}; r++) {
     if (r >= nr) break;
     vec4 r0 = jAt(base);
@@ -478,6 +492,8 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
     float cov = clamp((reach - sqrt(best)) / pxW, 0.0, 1.0);
     // K1211 look B: the soft cover, let into the arms off the band.
     if (lookB) cov = jLightSoft(sqrt(best)) * jLightAllow(int(r0.z + 0.5), r0.w > -0.5 ? int(r0.w + 0.5) : -1);
+    // K1211 S2: the walked gold's cover, which the drawing bands yield to.
+    if (!lookB) gC = max(gC, cov);
     if (cov > 0.0) {
       // A banded record's verts carry the strip-arc shift (their tau is
       // arc-true, K1139 S3b): the arms are sampled where the ribbon has
@@ -643,7 +659,7 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
   float wW = 0.0;
   for (int r = 0; r < ${MAX_ROUTES}; r++) {
     if (r >= np) break;
-    float yr = 1.0 - smoothstep(0.0, 3.0 * pxW, sDist[r] - dShared);
+    float yr = (1.0 - smoothstep(0.0, 3.0 * pxW, sDist[r] - dShared)) * (1.0 - gC);
     float cw = sCov[r] * yr;
     vec4 r0 = jAt(sPb[r]);
     if (cw > 0.0) {
