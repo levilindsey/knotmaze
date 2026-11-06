@@ -291,9 +291,6 @@ Next free ID: K1225.
 - **K1172** · Walker modes, Levi's brainstorm (2026-11-03): guide it, program it, a flock, stop them (and a tower
   defense), steer it live, bend and tilt. Which family first? (`docs/design/K1172_walker_modes.md`; full text:
   `docs/ledger_notes.md`)
-- **K1213** · Cursive v6.8: word-final s and p run on in a flat tongue, the i and j dots are dashes, the q
-  tail steps at 5x; J3k's S2, P1, D2 and Q1 follow the font, each local. Card `docs/asks/K1213.md`;
-  `docs/design/K863_cursive_j3k.md` Handoff.
 
 ## In progress
 
@@ -318,11 +315,11 @@ Next free ID: K1225.
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
   Levi to edit instead of drawing all 26 (Levi, 2026-10-26). Muse's prototype parked at abc135e7.
-  - owner: nobody since 2026-11-05 12:43: J3k finished and merged (0136f455); waits on Levi's card K1213
-  - branch: mainline; last commit: `0136f455`
-  - evidence: .claude/probes/K863/trace/work34/ and out34/ (J3k, copies on its branch); the base: work33/ and out33/png/ (v6.8)
-  - next: Levi's card K1213 (word-final s and p, the i and j dots, the q tail: S2, P1, D2, Q1 or keep v6.8); then the template adopts the picks in the next stage
-  - brief: docs/design/K863_cursive_j3k.md (K863_trace.md's Judging a look binds it)
+  - owner: agent `a2df5ff9479dad4a1` of claude session c18e2f02-e64f-41ba-9af0-2dbd583358e2 (opus, started 2026-11-05 20:01, 2 h cap ~22:01)
+  - branch: `worktree-agent-a2df5ff9479dad4a1`, worktree `.claude/worktrees/agent-a2df5ff9479dad4a1`; last commit: `817bc47f`
+  - evidence: .claude/probes/K863/trace/work36/ and out36/ (main checkout, untracked); the base: work33/ (v6.8) and work34/cand/ (D2, Q1)
+  - next: J3l runs to its Done; then Claude views its sheets at full size and shows Levi
+  - brief: `docs/design/K863_cursive_j3l.md`
 - **K114** · Gameplay round 2, designed in
   `docs/design/K80_gameplay_additions.md` section R: burn race, cut
   verb, beat rider, spider, Pluck Hero MVP. Levi took the recs (calls
@@ -1975,6 +1972,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1213** · Cursive v6.8: word-final s and p run on in a flat tongue, the i and j dots are dashes, the q tail steps at 5x; J3k's S2, P1, D2 and Q1 follow the font, each local. Dropped: Levi answered 2026-11-05: "all word-end letters should have a tail, but both the s and p tails are currently bad. Tails should match the curvature they pass by and swoop up more. D2 for [the dots] is good. ... Q1 is good." K863 J3l builds it (docs/design/K863_cursive_j3l.md) (2026-11-05).
 - **K1208** · Muse batch 22: runs B to P through the chain; Run D dropped, since K1211 S6 removed the pulse bands it crossfaded. Done in 27d103d1 (2026-11-05).
 - **K1219** · Loop ji 12's dark triangle: slot 28's casing fade on ch5's gold (22O; `gap_mask.ts:802`, K1218 S1's). x4 ji 149's teal notch: not the mask, the fan's untraveled web past the gold band's round edge (`junction_field.ts:358`): after K1211 S5, in its file; notes `## K1218 (2026-11-05, 22O reviewed)`. Dropped: folded into K1218 S2 (docs/design/K1218_s2_fused_junctions.md) (2026-11-05).
 - **K990** · Cursive f ends its lower loop in a corner into its exit, no curl (J3e, v6.8; 22L measured it, 734c55b9). Done in 636bd685 (2026-11-05).
