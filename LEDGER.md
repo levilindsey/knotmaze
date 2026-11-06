@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1231.
+Next free ID: K1232.
 
 ## Waiting on Levi
 
@@ -510,13 +510,13 @@ Next free ID: K1231.
   - brief: the plan `docs/design/K1139_pulse_junctions.md` section 5 (S6); S5 was Muse batch 20's Run B (`docs/design/K1199_muse_batch20.md`)
   - env: the passes' builds first and never while Muse runs: `scripts/preview.ps1 -Ref <sha> -Root <out>\builds -BuildOnly` for each sha (`pixel_passes.ps1` stops before the phone lock when one is missing); probe server `npx vite --config .claude/probes/K1139/vite.private-cache.config.ts --port 5620 --strictPort --host 127.0.0.1` from a worktree (ports 5620-5639); GPU probes through `.claude/probes/K1139/run_locked.ps1 -Batch`
 - **K1218** · Every junction one fused unit (Levi, window 84). S2 (5a12c51f) fused the gold, S3 (e8cb5264) smoothed
-  the gap edges, S4 (73be7c90) the gold path's edge against an arm's colour. S5's swept arcs (fc991f51, unmerged) add
-  lines at ji 80 and cross ji 155; S6 clears them, then cross ji 33's crease and the eye edges (`docs/design/K1218_s6_swept_arcs.md`); notes.
-  - owner: agent `ae639b326ea18b921` of claude session c18e2f02-e64f-41ba-9af0-2dbd583358e2 (opus, started 2026-11-06 03:04, 2 h cap ~05:04)
-  - branch: `worktree-agent-ae639b326ea18b921`, worktree `.claude/worktrees/agent-ae639b326ea18b921`; last commit: `fc991f51`
-  - evidence: .claude/probes/K1218/s6/ in its worktree; S5's branch worktree-agent-aad78f17014e89727 (fc991f51, its out/ in that worktree) and its handoff in docs/design/K1218_s5_section_edges.md there
-  - next: S6 runs to its Done; then Claude views its sheets at full size against master and shows Levi
-  - brief: `docs/design/K1218_s6_swept_arcs.md`
+  the gap edges, S4 (73be7c90) the gold path's edge against an arm's colour. S5 and S6's swept arcs (626a5a21, unmerged)
+  smooth ji 80, ji 115 and many of master's steps but add a streak at cross ji 155 and a crease at cross ji 33; S7 removes them and checks every junction against master (`docs/design/K1218_s7_tied_roots.md`); notes.
+  - owner: agent `adaf91b43018b8a1a` of claude session c18e2f02-e64f-41ba-9af0-2dbd583358e2 (opus, started 2026-11-06 04:39, 2 h cap ~06:39)
+  - branch: `worktree-agent-adaf91b43018b8a1a`, worktree `.claude/worktrees/agent-adaf91b43018b8a1a`; last commit: `626a5a21`
+  - evidence: .claude/probes/K1218/s7/ in its worktree; S6's branch worktree-agent-ae639b326ea18b921 (626a5a21: S5 and S6's swept arcs), its out/ in that worktree and its handoff in docs/design/K1218_s6_swept_arcs.md there
+  - next: S7 runs to its Done; then Claude views its sheets at full size against master, merges the branch and shows Levi
+  - brief: `docs/design/K1218_s7_tied_roots.md`
 - **K1220** · Text forks: a disc with a round edge inside, steps where the arms' straight cuts meet it
   (22N, 655eb6a9): glyph arms under 0.15 world get no field record, so a host-axis disc draws the fork.
   Next: S2 after K1218 S2, one junction agent at a time (S1's brief: `docs/design/K1220_s1_text_forks.md`); notes.
@@ -761,6 +761,10 @@ Every other item below waits on the trigger it names.
   inside of a 40° left turn (radius 19-21 px, under its 23.4 px half-width), in every build; likely
   `ribbon_mesh.ts`'s concave-side clamp (untested), and a fix touches every ribbon (K1218 S5's handoff,
   `docs/design/K1218_s5_section_edges.md`).
+- **K1231** · Dark edges inside junctions step at MSAA coverage levels: loop ji 123's and x4 ji 101's eye
+  edges, and cross ji 65's, loop ji 64's and 106's dark edges, alike in 7474d09b, master and K1218 S6's
+  branch; and x4 ji 101's violet sliver at the eye's upper left, in all three. Unattributed (K1218 S6's
+  handoff, `docs/design/K1218_s6_swept_arcs.md`, sheets in its worktree's `s6/out/sheets/`).
 
 ## Residuals (known, not fixed)
 
