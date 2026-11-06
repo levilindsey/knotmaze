@@ -127,3 +127,47 @@ evidence, next).
 ## Handoff
 
 (The stage agent appends here.)
+
+J3j, stage agent of coordinator session 7301c55b, 09:22:19 to 10:52 on 2026-11-05 (cap 11:22:19).
+Every task is done; nothing was changed in any join. The full record is the kit's NOTES.md entry
+`## K863 base` (a copy is `work33/NOTES_k863j.md` on this branch); the tools are `work33/dbg/*_k863j.*`,
+and `pwsh -NoProfile -File work33\dbg\checks_k863j.ps1 [step ...]` reruns everything from the trace
+folder (steps tools, template, build, ctx, base, census, cmp, det, account, c, cusp, probe, sheets,
+png, sheetcol, crops, guard).
+
+- Build, identity, det: `work33/base` rebuilds v6.8 from `out28/cursive_template.svg` (byte-identical,
+  8F72C6A8F11D8F4C) and `work28/ports_k990e.json` M. Against `work28/base`, bodies.json,
+  join_params.json and every SVG and PNG are byte-identical (11 logs differ in paths and times only);
+  the census: 349 pieces compared, 0 differences (cmpf's totals equal; rowsame 349 equal). J3i's word
+  list on v6.8 (census_v68x) against J3e's census: 347 in both, 0 differences; against work29's: 519,
+  0. The det rerun: 25 files byte-identical, 8 logs differ as in J3e's det, its census 349 equal, 0
+  differ.
+- c against v7.0: 110 c pieces in the dumps, 101 equal raw coefficients, 9 differ: the joins bc, vc,
+  wc (b's, v's and w's exits), cb, cv, cw (numeric only, under 1e-4 u) and c's stroke after bc, vc,
+  wc. Census: 20 compared on K1119's words, 14 differ (bc, vc, wc, 11 in kmax_p95 only); 73 on J3h's,
+  20 differ (those six joins, 14 in kmax_p95 only). Every join out of c is v7.0's, K1197's old joins.
+- The account (`work33/account.txt`; 234 words, 1356 pieces a version; moved = 1e-4 u or more):
+  J3f 301 moved (exits 97, joins out of b/v/w 78, into a/q 8, into e 11, stroke after 78; 29
+  unlisted), largest 88.2 u (wl); J3g 244 (97, 78, 8, 11, 34; 16 unlisted); J3h 78, all listed (c's
+  exit 28, joins out of c 31, stroke after 19); J3i 180, all listed (cusp entries 66, rule joins 82,
+  cut exits 32). The 45 unlisted pieces all come from b's, v's and w's new bodies as the SECOND letter
+  of a pair (the joins into b, v and w, the strokes after them, e's lead out of ew and f's out of fw;
+  up to 21.2 u). Per-letter counts and each version against v6.8 are in the NOTES entry.
+- Cusp corners on the base (`work33/cusp_corners.txt`): 19 (of 25 undesigned seams; the other 6 are
+  the q$ tails), every one an entry into r, s or i on its port that retraces the join; the largest dk
+  0.0462 /u at nr, dr and er (after, lawgiver, jumps over the lazy dog), then ds and as (0.0436). v7.1
+  has 23, v7.2 none. Drawn on `out33/corners_v68.svg` (font, approved, v7.2): approved and v7.2 draw
+  them alike, a sharp point the font has too.
+- Sheets (`out33/*.svg`, PNGs in `out33/png/`, crops in `work33/sheets/png/` and `out33/png/`; the
+  guard clean on all 10): b, v, w, aq_joins, e_after_bvw (font, approved, v6.9, v7.0), c (font,
+  approved, v7.1, v7.2), cusp and corners (font, approved, v7.2), cursive_v68_words (font, approved).
+  Every crop was viewed (`work33/crops_viewed.txt`, one paragraph each). Sheetcol confirms the
+  approved column is v6.8 on K1119's b, v and w sheets (27/27 each) and aq (10/10), and the blue (old)
+  joins on K1197's c sheets (approved = out32's v7.0 column on 24 of 27 c rows; the 3 others are cb,
+  cv, cw, whose second letter is v6.8's). K1119's e sheet has no v6.8 column (approved = out29's v6.8
+  on the 3 rows both hold).
+- Left as found: the unlisted body cause above; SU.g2 reads `angle_deg`, the census writes `ang_deg`;
+  rowsame keys rows by word number; duplicate word-list ids (v68x 718 rows, 713 ids; J3e's 349, 347);
+  the 6 q$ tail seams; ij draws no j (K1198, held); p and s end with no tail; the dots are ticks.
+- Next: the next stage changes joins, judged against these sheets (approved = v6.8 beside v6.9 to
+  v7.2).
