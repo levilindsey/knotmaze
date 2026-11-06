@@ -535,9 +535,6 @@ Binding for every stage:
   new, and pause running agents with their WIP committed.
 
 Running agents are listed under In progress, each with its own next step.
-- **K647** · Path 8 (K336): Reset path during the winning move records the result but shows no card. Levi
-  2026-11-05: "Show the card", with its burst, as the other eight paths do. Muse batch 22 Run J (22J),
-  `docs/design/K647_reset_win_card.md`.
 - **K1201** · S4b's joint step (K1139): a two-ended arm's ridge near its joint (xR < 0.5) steps the light.
   21F (8e0c5a1c): play meets it in every daily of a week, 2-6 arm-ends each, steps up to 0.77 after the reach
   window (CPU, lattice spans; notes). Fix (b), the band crossfade (Run 22D), held: K1211 may retire the bands.
@@ -1984,6 +1981,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K647** · Path 8 (K336): Reset path during the winning move records the result but shows no card. Done in adee40a6 (2026-11-05).
 - **K1212** · K863's trace kit: g2 reads the angle, census rows keyed by id, word lists each id once (J3k). Done in 0136f455 (2026-11-05).
 - **K1209** · Retire the fillet layer vote (one fan layer; K1186), Muse Run I (22I): no pin moved; 0 px but the accepted fat11 ji104 drag3 (23/14 px). Done in cb5a7301 (2026-11-05).
 - **K1145** · Cursive x5 (`R_DX=22 R_A1=-15 R_L1=10`): a steeper b, v and w exit (about -22 deg), if Levi wants v7.0's exits further down (K1119's Handoff). Dropped: superseded: Levi kept v6.8's joins (K1119) and its c (K1197), so v6.9 to v7.2 are not used (2026-11-05).
