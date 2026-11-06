@@ -528,9 +528,9 @@ Next free ID: K1210.
   `docs/design/K1208_muse_batch22_run_a.md` after 21G, through the chain (queued as 22A); Claude reviews the
   draft and queues runs B to G (ports 5880-5939)
   - owner: the chain in `.claude/probes/K1053/` (queue.txt, chain.log): batch 22's Run A (22A) after batch 21's 21G, a fresh Muse session, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
-  - branch: mainline; last commit: `112cf083`
+  - branch: mainline; last commit: `8e956398`
   - evidence: `docs/design/K1208_muse_batch22_run_a.md` (Run A's brief, every slot filled); the chain in `.claude/probes/K1053/` (queue.txt, chain.log)
-  - next: 22A drafts `docs/design/K1208_muse_batch22.md` through the chain (the queue empties after it); Claude reviews the draft, then queues 22B to 22G and restarts the chain
+  - next: Run A done; Claude reviews the draft
   - brief: `docs/design/K1208_muse_batch22_run_a.md`
 
 ## Next, in order
