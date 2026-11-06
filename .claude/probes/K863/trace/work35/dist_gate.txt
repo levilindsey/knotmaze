@@ -1,0 +1,325 @@
+reference v6.8: 65 joins out of mu in 60 words
+
+Pm10 against v6.8: 65 joins, 0 missing
+  ma: largest 9.7901 u in 'be we shoe maze huge bye' join #5 at arc 0.00 u (Pm10->v6.8, piece Pm10), mean 3.0998 u; mean of largests 9.7901 u over 3 words
+  mb: largest 9.7901 u in 'mb' join #0 at arc 0.00 u (Pm10->v6.8, piece Pm10), mean 0.7914 u; mean of largests 9.7901 u over 1 words
+  mc: largest 10.6596 u in 'mc' join #0 at arc 61.81 u (Pm10->v6.8, piece Pm10), mean 6.0536 u; mean of largests 10.6596 u over 1 words
+  md: largest 9.7901 u in 'md' join #0 at arc 0.00 u (Pm10->v6.8, piece Pm10), mean 4.7600 u; mean of largests 9.7901 u over 1 words
+  me: largest 29.9893 u in 'me' join #0 at arc 104.45 u (Pm10->v6.8, piece Pm10), mean 3.9877 u; mean of largests 29.9893 u over 1 words
+  mf: largest 17.7949 u in 'mf' join #0 at arc 117.37 u (Pm10->v6.8, piece Pm10), mean 2.2817 u; mean of largests 17.7949 u over 1 words
+  mg: largest 9.7901 u in 'mg' join #0 at arc 0.00 u (Pm10->v6.8, piece Pm10), mean 3.1395 u; mean of largests 9.7901 u over 1 words
+  mh: largest 17.1607 u in 'mh' join #0 at arc 144.10 u (Pm10->v6.8, piece Pm10), mean 1.5512 u; mean of largests 17.1607 u over 1 words
+  mi: largest 8.9045 u in 'minimum' join #0 at arc 69.49 u (v6.8->Pm10, piece v6.8), mean 4.2066 u; mean of largests 8.9031 u over 2 words
+  mj: largest 3.6487 u in 'mj' join #0 at arc 158.25 u (v6.8->Pm10, piece v6.8), mean 1.8223 u; mean of largests 3.6487 u over 1 words
+  mk: largest 15.8492 u in 'mk' join #0 at arc 136.73 u (Pm10->v6.8, piece Pm10), mean 5.2805 u; mean of largests 15.8492 u over 1 words
+  ml: largest 18.1176 u in 'ml' join #0 at arc 117.80 u (Pm10->v6.8, piece Pm10), mean 2.3370 u; mean of largests 18.1176 u over 1 words
+  mm: largest 9.7340 u in 'mm' join #0 at arc 177.51 u (Pm10->v6.8, piece Pm10), mean 2.3603 u; mean of largests 9.7340 u over 1 words
+  mn: largest 3.1199 u in 'mn' join #0 at arc 105.84 u (Pm10->v6.8, piece Pm10), mean 1.0438 u; mean of largests 3.1199 u over 1 words
+  mo: largest 4.6438 u in 'mo' join #0 at arc 0.00 u (Pm10->v6.8, piece Pm10), mean 1.3723 u; mean of largests 4.6438 u over 1 words
+  mp: largest 10.7594 u in 'jumps over the lazy dog' join #2 at arc 158.77 u (v6.8->Pm10, piece v6.8), mean 1.6156 u; mean of largests 10.6237 u over 2 words
+  mq: largest 9.7901 u in 'mq' join #0 at arc 0.00 u (Pm10->v6.8, piece Pm10), mean 3.0016 u; mean of largests 9.7901 u over 1 words
+  mr: largest 17.3513 u in 'mr' join #0 at arc 71.44 u (Pm10->v6.8, piece Pm10), mean 7.7080 u; mean of largests 17.3513 u over 1 words
+  ms: largest 15.1984 u in 'ms' join #0 at arc 74.10 u (Pm10->v6.8, piece Pm10), mean 6.9388 u; mean of largests 15.1984 u over 1 words
+  mt: largest 34.1486 u in 'mt' join #0 at arc 214.09 u (v6.8->Pm10, piece v6.8), mean 6.9554 u; mean of largests 34.1486 u over 1 words
+  mu: largest 5.7047 u in 'mu' join #0 at arc 63.25 u (v6.8->Pm10, piece v6.8), mean 2.2603 u; mean of largests 5.6939 u over 2 words
+  mv: largest 2.9536 u in 'mv' join #0 at arc 107.07 u (Pm10->v6.8, piece Pm10), mean 0.9143 u; mean of largests 2.9536 u over 1 words
+  mw: largest 9.9368 u in 'mw' join #0 at arc 158.66 u (v6.8->Pm10, piece v6.8), mean 2.0483 u; mean of largests 9.9368 u over 1 words
+  mx: largest 3.3628 u in 'mx' join #0 at arc 52.57 u (v6.8->Pm10, piece v6.8), mean 1.5373 u; mean of largests 3.3628 u over 1 words
+  my: largest 6.8387 u in 'my' join #0 at arc 66.60 u (Pm10->v6.8, piece Pm10), mean 2.9244 u; mean of largests 6.8387 u over 1 words
+  mz: largest 9.7901 u in 'mz' join #0 at arc 0.00 u (Pm10->v6.8, piece Pm10), mean 2.5307 u; mean of largests 9.7901 u over 1 words
+  ua: largest 0.0000 u in 'ua' join #0 at arc 0.00 u (Pm10->v6.8, piece Pm10), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  ub: largest 0.0000 u in 'subgroup' join #1 at arc 0.00 u (Pm10->v6.8, piece Pm10), mean 0.0000 u; mean of largests 0.0000 u over 2 words
+  uc: largest 0.0000 u in 'uc' join #0 at arc 0.00 u (Pm10->v6.8, piece Pm10), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  ud: largest 0.0000 u in 'ud' join #0 at arc 0.00 u (Pm10->v6.8, piece Pm10), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  ue: largest 0.0000 u in 'ue' join #0 at arc 0.00 u (Pm10->v6.8, piece Pm10), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  uf: largest 0.0000 u in 'uf' join #0 at arc 0.00 u (Pm10->v6.8, piece Pm10), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  ug: largest 0.0000 u in 'be we shoe maze huge bye' join #9 at arc 0.00 u (Pm10->v6.8, piece Pm10), mean 0.0000 u; mean of largests 0.0000 u over 2 words
+  uh: largest 0.0000 u in 'uh' join #0 at arc 0.00 u (Pm10->v6.8, piece Pm10), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  ui: largest 0.0000 u in 'quick brown fox' join #1 at arc 0.00 u (Pm10->v6.8, piece Pm10), mean 0.0000 u; mean of largests 0.0000 u over 2 words
+  uj: largest 0.0000 u in 'uj' join #0 at arc 0.00 u (Pm10->v6.8, piece Pm10), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  uk: largest 0.0000 u in 'uk' join #0 at arc 0.00 u (Pm10->v6.8, piece Pm10), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  ul: largest 0.0000 u in 'ul' join #0 at arc 0.00 u (Pm10->v6.8, piece Pm10), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  um: largest 0.0000 u in 'jumps over the lazy dog' join #1 at arc 0.00 u (Pm10->v6.8, piece Pm10), mean 0.0000 u; mean of largests 0.0000 u over 3 words
+  un: largest 0.0000 u in 'un' join #0 at arc 0.00 u (Pm10->v6.8, piece Pm10), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  uo: largest 0.0000 u in 'uo' join #0 at arc 0.00 u (Pm10->v6.8, piece Pm10), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  up: largest 0.0000 u in 'puppy' join #1 at arc 0.00 u (Pm10->v6.8, piece Pm10), mean 0.0000 u; mean of largests 0.0000 u over 3 words
+  uq: largest 0.0000 u in 'uq' join #0 at arc 0.00 u (Pm10->v6.8, piece Pm10), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  ur: largest 0.0000 u in 'cursive' join #1 at arc 0.00 u (Pm10->v6.8, piece Pm10), mean 0.0000 u; mean of largests 0.0000 u over 2 words
+  us: largest 0.0000 u in 'us' join #0 at arc 0.00 u (Pm10->v6.8, piece Pm10), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  ut: largest 0.0000 u in 'ut' join #0 at arc 0.00 u (Pm10->v6.8, piece Pm10), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  uu: largest 0.0000 u in 'uu' join #0 at arc 0.00 u (Pm10->v6.8, piece Pm10), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  uv: largest 0.0000 u in 'uv' join #0 at arc 0.00 u (Pm10->v6.8, piece Pm10), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  uw: largest 0.0000 u in 'uw' join #0 at arc 0.00 u (Pm10->v6.8, piece Pm10), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  ux: largest 0.0000 u in 'ux' join #0 at arc 0.00 u (Pm10->v6.8, piece Pm10), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  uy: largest 0.0000 u in 'uy' join #0 at arc 0.00 u (Pm10->v6.8, piece Pm10), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  uz: largest 0.0000 u in 'uz' join #0 at arc 0.00 u (Pm10->v6.8, piece Pm10), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+
+Pu10 against v6.8: 65 joins, 0 missing
+  ma: largest 0.0000 u in 'be we shoe maze huge bye' join #5 at arc 0.00 u (Pu10->v6.8, piece Pu10), mean 0.0000 u; mean of largests 0.0000 u over 3 words
+  mb: largest 0.0000 u in 'mb' join #0 at arc 0.00 u (Pu10->v6.8, piece Pu10), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  mc: largest 0.0000 u in 'mc' join #0 at arc 0.00 u (Pu10->v6.8, piece Pu10), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  md: largest 0.0000 u in 'md' join #0 at arc 0.00 u (Pu10->v6.8, piece Pu10), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  me: largest 0.0000 u in 'me' join #0 at arc 0.00 u (Pu10->v6.8, piece Pu10), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  mf: largest 0.0000 u in 'mf' join #0 at arc 0.00 u (Pu10->v6.8, piece Pu10), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  mg: largest 0.0000 u in 'mg' join #0 at arc 0.00 u (Pu10->v6.8, piece Pu10), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  mh: largest 0.0000 u in 'mh' join #0 at arc 0.00 u (Pu10->v6.8, piece Pu10), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  mi: largest 0.0000 u in 'mi' join #0 at arc 0.00 u (Pu10->v6.8, piece Pu10), mean 0.0000 u; mean of largests 0.0000 u over 2 words
+  mj: largest 0.0000 u in 'mj' join #0 at arc 0.00 u (Pu10->v6.8, piece Pu10), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  mk: largest 0.0000 u in 'mk' join #0 at arc 0.00 u (Pu10->v6.8, piece Pu10), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  ml: largest 0.0000 u in 'ml' join #0 at arc 0.00 u (Pu10->v6.8, piece Pu10), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  mm: largest 0.0000 u in 'mm' join #0 at arc 0.00 u (Pu10->v6.8, piece Pu10), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  mn: largest 0.0000 u in 'mn' join #0 at arc 0.00 u (Pu10->v6.8, piece Pu10), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  mo: largest 0.0000 u in 'mo' join #0 at arc 0.00 u (Pu10->v6.8, piece Pu10), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  mp: largest 0.0000 u in 'jumps over the lazy dog' join #2 at arc 0.00 u (Pu10->v6.8, piece Pu10), mean 0.0000 u; mean of largests 0.0000 u over 2 words
+  mq: largest 0.0000 u in 'mq' join #0 at arc 0.00 u (Pu10->v6.8, piece Pu10), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  mr: largest 0.0000 u in 'mr' join #0 at arc 0.00 u (Pu10->v6.8, piece Pu10), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  ms: largest 0.0000 u in 'ms' join #0 at arc 0.00 u (Pu10->v6.8, piece Pu10), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  mt: largest 0.0000 u in 'mt' join #0 at arc 0.00 u (Pu10->v6.8, piece Pu10), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  mu: largest 0.0000 u in 'minimum' join #4 at arc 0.00 u (Pu10->v6.8, piece Pu10), mean 0.0000 u; mean of largests 0.0000 u over 2 words
+  mv: largest 0.0000 u in 'mv' join #0 at arc 0.00 u (Pu10->v6.8, piece Pu10), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  mw: largest 0.0000 u in 'mw' join #0 at arc 0.00 u (Pu10->v6.8, piece Pu10), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  mx: largest 0.0000 u in 'mx' join #0 at arc 0.00 u (Pu10->v6.8, piece Pu10), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  my: largest 0.0000 u in 'my' join #0 at arc 0.00 u (Pu10->v6.8, piece Pu10), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  mz: largest 0.0000 u in 'mz' join #0 at arc 0.00 u (Pu10->v6.8, piece Pu10), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  ua: largest 9.8068 u in 'ua' join #0 at arc 0.00 u (Pu10->v6.8, piece Pu10), mean 3.1361 u; mean of largests 9.8068 u over 1 words
+  ub: largest 16.4990 u in 'ub' join #0 at arc 118.83 u (Pu10->v6.8, piece Pu10), mean 1.5003 u; mean of largests 13.0918 u over 2 words
+  uc: largest 10.2791 u in 'uc' join #0 at arc 61.99 u (Pu10->v6.8, piece Pu10), mean 5.6784 u; mean of largests 10.2791 u over 1 words
+  ud: largest 9.8068 u in 'ud' join #0 at arc 0.00 u (Pu10->v6.8, piece Pu10), mean 4.7436 u; mean of largests 9.8068 u over 1 words
+  ue: largest 29.9893 u in 'ue' join #0 at arc 103.02 u (Pu10->v6.8, piece Pu10), mean 4.2729 u; mean of largests 29.9893 u over 1 words
+  uf: largest 9.8068 u in 'uf' join #0 at arc 0.00 u (Pu10->v6.8, piece Pu10), mean 0.6693 u; mean of largests 9.8068 u over 1 words
+  ug: largest 9.8068 u in 'ug' join #0 at arc 0.00 u (Pu10->v6.8, piece Pu10), mean 3.0713 u; mean of largests 9.8068 u over 2 words
+  uh: largest 17.1607 u in 'uh' join #0 at arc 132.32 u (Pu10->v6.8, piece Pu10), mean 4.1598 u; mean of largests 17.1607 u over 1 words
+  ui: largest 9.4942 u in 'quick brown fox' join #1 at arc 67.17 u (Pu10->v6.8, piece Pu10), mean 4.3473 u; mean of largests 9.4842 u over 2 words
+  uj: largest 5.4369 u in 'uj' join #0 at arc 53.24 u (Pu10->v6.8, piece Pu10), mean 2.4414 u; mean of largests 5.4369 u over 1 words
+  uk: largest 12.6047 u in 'uk' join #0 at arc 66.83 u (Pu10->v6.8, piece Pu10), mean 6.1835 u; mean of largests 12.6047 u over 1 words
+  ul: largest 18.1176 u in 'ul' join #0 at arc 116.79 u (Pu10->v6.8, piece Pu10), mean 2.5294 u; mean of largests 18.1176 u over 1 words
+  um: largest 9.7340 u in 'um' join #0 at arc 172.14 u (Pu10->v6.8, piece Pu10), mean 2.2318 u; mean of largests 9.7340 u over 3 words
+  un: largest 2.4293 u in 'un' join #0 at arc 103.59 u (v6.8->Pu10, piece v6.8), mean 1.0904 u; mean of largests 2.4293 u over 1 words
+  uo: largest 4.9704 u in 'uo' join #0 at arc 48.67 u (Pu10->v6.8, piece Pu10), mean 2.2947 u; mean of largests 4.9704 u over 1 words
+  up: largest 10.1841 u in 'puppy' join #1 at arc 157.67 u (v6.8->Pu10, piece v6.8), mean 2.2053 u; mean of largests 10.1840 u over 3 words
+  uq: largest 9.8068 u in 'uq' join #0 at arc 0.00 u (Pu10->v6.8, piece Pu10), mean 3.1531 u; mean of largests 9.8068 u over 1 words
+  ur: largest 17.0975 u in 'cursive' join #1 at arc 68.50 u (Pu10->v6.8, piece Pu10), mean 7.4483 u; mean of largests 17.0838 u over 2 words
+  us: largest 16.1956 u in 'us' join #0 at arc 70.45 u (Pu10->v6.8, piece Pu10), mean 7.3696 u; mean of largests 16.1956 u over 1 words
+  ut: largest 33.5342 u in 'ut' join #0 at arc 212.52 u (v6.8->Pu10, piece v6.8), mean 7.4942 u; mean of largests 33.5342 u over 1 words
+  uu: largest 6.9374 u in 'uu' join #0 at arc 60.32 u (Pu10->v6.8, piece Pu10), mean 2.7306 u; mean of largests 6.9374 u over 1 words
+  uv: largest 2.5221 u in 'uv' join #0 at arc 103.68 u (v6.8->Pu10, piece v6.8), mean 1.1273 u; mean of largests 2.5221 u over 1 words
+  uw: largest 7.5250 u in 'uw' join #0 at arc 157.32 u (v6.8->Pu10, piece v6.8), mean 2.2816 u; mean of largests 7.5250 u over 1 words
+  ux: largest 5.0231 u in 'ux' join #0 at arc 51.52 u (Pu10->v6.8, piece Pu10), mean 1.9883 u; mean of largests 5.0231 u over 1 words
+  uy: largest 7.8925 u in 'uy' join #0 at arc 63.20 u (v6.8->Pu10, piece v6.8), mean 3.4981 u; mean of largests 7.8925 u over 1 words
+  uz: largest 9.5469 u in 'uz' join #0 at arc 65.47 u (v6.8->Pu10, piece v6.8), mean 4.5074 u; mean of largests 9.5469 u over 1 words
+
+Pmu10 against v6.8: 65 joins, 0 missing
+  ma: largest 9.7901 u in 'be we shoe maze huge bye' join #5 at arc 0.00 u (Pmu10->v6.8, piece Pmu10), mean 3.0998 u; mean of largests 9.7901 u over 3 words
+  mb: largest 9.7901 u in 'mb' join #0 at arc 0.00 u (Pmu10->v6.8, piece Pmu10), mean 0.7914 u; mean of largests 9.7901 u over 1 words
+  mc: largest 10.6596 u in 'mc' join #0 at arc 61.81 u (Pmu10->v6.8, piece Pmu10), mean 6.0536 u; mean of largests 10.6596 u over 1 words
+  md: largest 9.7901 u in 'md' join #0 at arc 0.00 u (Pmu10->v6.8, piece Pmu10), mean 4.7600 u; mean of largests 9.7901 u over 1 words
+  me: largest 29.9893 u in 'me' join #0 at arc 104.45 u (Pmu10->v6.8, piece Pmu10), mean 3.9877 u; mean of largests 29.9893 u over 1 words
+  mf: largest 17.7949 u in 'mf' join #0 at arc 117.37 u (Pmu10->v6.8, piece Pmu10), mean 2.2817 u; mean of largests 17.7949 u over 1 words
+  mg: largest 9.7901 u in 'mg' join #0 at arc 0.00 u (Pmu10->v6.8, piece Pmu10), mean 3.1395 u; mean of largests 9.7901 u over 1 words
+  mh: largest 17.1607 u in 'mh' join #0 at arc 144.10 u (Pmu10->v6.8, piece Pmu10), mean 1.5512 u; mean of largests 17.1607 u over 1 words
+  mi: largest 8.9045 u in 'minimum' join #0 at arc 69.49 u (v6.8->Pmu10, piece v6.8), mean 4.2066 u; mean of largests 8.9031 u over 2 words
+  mj: largest 3.6487 u in 'mj' join #0 at arc 158.25 u (v6.8->Pmu10, piece v6.8), mean 1.8223 u; mean of largests 3.6487 u over 1 words
+  mk: largest 15.8492 u in 'mk' join #0 at arc 136.73 u (Pmu10->v6.8, piece Pmu10), mean 5.2805 u; mean of largests 15.8492 u over 1 words
+  ml: largest 18.1176 u in 'ml' join #0 at arc 117.80 u (Pmu10->v6.8, piece Pmu10), mean 2.3370 u; mean of largests 18.1176 u over 1 words
+  mm: largest 9.7340 u in 'mm' join #0 at arc 177.51 u (Pmu10->v6.8, piece Pmu10), mean 2.3603 u; mean of largests 9.7340 u over 1 words
+  mn: largest 3.1199 u in 'mn' join #0 at arc 105.84 u (Pmu10->v6.8, piece Pmu10), mean 1.0438 u; mean of largests 3.1199 u over 1 words
+  mo: largest 4.6438 u in 'mo' join #0 at arc 0.00 u (Pmu10->v6.8, piece Pmu10), mean 1.3723 u; mean of largests 4.6438 u over 1 words
+  mp: largest 10.7594 u in 'jumps over the lazy dog' join #2 at arc 158.77 u (v6.8->Pmu10, piece v6.8), mean 1.6156 u; mean of largests 10.6237 u over 2 words
+  mq: largest 9.7901 u in 'mq' join #0 at arc 0.00 u (Pmu10->v6.8, piece Pmu10), mean 3.0016 u; mean of largests 9.7901 u over 1 words
+  mr: largest 17.3513 u in 'mr' join #0 at arc 71.44 u (Pmu10->v6.8, piece Pmu10), mean 7.7080 u; mean of largests 17.3513 u over 1 words
+  ms: largest 15.1984 u in 'ms' join #0 at arc 74.10 u (Pmu10->v6.8, piece Pmu10), mean 6.9388 u; mean of largests 15.1984 u over 1 words
+  mt: largest 34.1486 u in 'mt' join #0 at arc 214.09 u (v6.8->Pmu10, piece v6.8), mean 6.9554 u; mean of largests 34.1486 u over 1 words
+  mu: largest 5.7047 u in 'mu' join #0 at arc 63.25 u (v6.8->Pmu10, piece v6.8), mean 2.2603 u; mean of largests 5.6939 u over 2 words
+  mv: largest 2.9536 u in 'mv' join #0 at arc 107.07 u (Pmu10->v6.8, piece Pmu10), mean 0.9143 u; mean of largests 2.9536 u over 1 words
+  mw: largest 9.9368 u in 'mw' join #0 at arc 158.66 u (v6.8->Pmu10, piece v6.8), mean 2.0483 u; mean of largests 9.9368 u over 1 words
+  mx: largest 3.3628 u in 'mx' join #0 at arc 52.57 u (v6.8->Pmu10, piece v6.8), mean 1.5373 u; mean of largests 3.3628 u over 1 words
+  my: largest 6.8387 u in 'my' join #0 at arc 66.60 u (Pmu10->v6.8, piece Pmu10), mean 2.9244 u; mean of largests 6.8387 u over 1 words
+  mz: largest 9.7901 u in 'mz' join #0 at arc 0.00 u (Pmu10->v6.8, piece Pmu10), mean 2.5307 u; mean of largests 9.7901 u over 1 words
+  ua: largest 9.8068 u in 'ua' join #0 at arc 0.00 u (Pmu10->v6.8, piece Pmu10), mean 3.1361 u; mean of largests 9.8068 u over 1 words
+  ub: largest 16.4990 u in 'ub' join #0 at arc 118.83 u (Pmu10->v6.8, piece Pmu10), mean 1.5003 u; mean of largests 13.0918 u over 2 words
+  uc: largest 10.2791 u in 'uc' join #0 at arc 61.99 u (Pmu10->v6.8, piece Pmu10), mean 5.6784 u; mean of largests 10.2791 u over 1 words
+  ud: largest 9.8068 u in 'ud' join #0 at arc 0.00 u (Pmu10->v6.8, piece Pmu10), mean 4.7436 u; mean of largests 9.8068 u over 1 words
+  ue: largest 29.9893 u in 'ue' join #0 at arc 103.02 u (Pmu10->v6.8, piece Pmu10), mean 4.2729 u; mean of largests 29.9893 u over 1 words
+  uf: largest 9.8068 u in 'uf' join #0 at arc 0.00 u (Pmu10->v6.8, piece Pmu10), mean 0.6693 u; mean of largests 9.8068 u over 1 words
+  ug: largest 9.8068 u in 'ug' join #0 at arc 0.00 u (Pmu10->v6.8, piece Pmu10), mean 3.0713 u; mean of largests 9.8068 u over 2 words
+  uh: largest 17.1607 u in 'uh' join #0 at arc 132.32 u (Pmu10->v6.8, piece Pmu10), mean 4.1598 u; mean of largests 17.1607 u over 1 words
+  ui: largest 9.4942 u in 'quick brown fox' join #1 at arc 67.17 u (Pmu10->v6.8, piece Pmu10), mean 4.3473 u; mean of largests 9.4842 u over 2 words
+  uj: largest 5.4369 u in 'uj' join #0 at arc 53.24 u (Pmu10->v6.8, piece Pmu10), mean 2.4414 u; mean of largests 5.4369 u over 1 words
+  uk: largest 12.6047 u in 'uk' join #0 at arc 66.83 u (Pmu10->v6.8, piece Pmu10), mean 6.1835 u; mean of largests 12.6047 u over 1 words
+  ul: largest 18.1176 u in 'ul' join #0 at arc 116.79 u (Pmu10->v6.8, piece Pmu10), mean 2.5294 u; mean of largests 18.1176 u over 1 words
+  um: largest 9.7340 u in 'um' join #0 at arc 172.14 u (Pmu10->v6.8, piece Pmu10), mean 2.2318 u; mean of largests 9.7340 u over 3 words
+  un: largest 2.4293 u in 'un' join #0 at arc 103.59 u (v6.8->Pmu10, piece v6.8), mean 1.0904 u; mean of largests 2.4293 u over 1 words
+  uo: largest 4.9704 u in 'uo' join #0 at arc 48.67 u (Pmu10->v6.8, piece Pmu10), mean 2.2947 u; mean of largests 4.9704 u over 1 words
+  up: largest 10.1841 u in 'puppy' join #1 at arc 157.67 u (v6.8->Pmu10, piece v6.8), mean 2.2053 u; mean of largests 10.1840 u over 3 words
+  uq: largest 9.8068 u in 'uq' join #0 at arc 0.00 u (Pmu10->v6.8, piece Pmu10), mean 3.1531 u; mean of largests 9.8068 u over 1 words
+  ur: largest 17.0975 u in 'cursive' join #1 at arc 68.50 u (Pmu10->v6.8, piece Pmu10), mean 7.4483 u; mean of largests 17.0838 u over 2 words
+  us: largest 16.1956 u in 'us' join #0 at arc 70.45 u (Pmu10->v6.8, piece Pmu10), mean 7.3696 u; mean of largests 16.1956 u over 1 words
+  ut: largest 33.5342 u in 'ut' join #0 at arc 212.52 u (v6.8->Pmu10, piece v6.8), mean 7.4942 u; mean of largests 33.5342 u over 1 words
+  uu: largest 6.9374 u in 'uu' join #0 at arc 60.32 u (Pmu10->v6.8, piece Pmu10), mean 2.7306 u; mean of largests 6.9374 u over 1 words
+  uv: largest 2.5221 u in 'uv' join #0 at arc 103.68 u (v6.8->Pmu10, piece v6.8), mean 1.1273 u; mean of largests 2.5221 u over 1 words
+  uw: largest 7.5250 u in 'uw' join #0 at arc 157.32 u (v6.8->Pmu10, piece v6.8), mean 2.2816 u; mean of largests 7.5250 u over 1 words
+  ux: largest 5.0231 u in 'ux' join #0 at arc 51.52 u (Pmu10->v6.8, piece Pmu10), mean 1.9883 u; mean of largests 5.0231 u over 1 words
+  uy: largest 7.8925 u in 'uy' join #0 at arc 63.20 u (v6.8->Pmu10, piece v6.8), mean 3.4981 u; mean of largests 7.8925 u over 1 words
+  uz: largest 9.5469 u in 'uz' join #0 at arc 65.47 u (v6.8->Pmu10, piece v6.8), mean 4.5074 u; mean of largests 9.5469 u over 1 words
+
+Pm2 against v6.8: 65 joins, 0 missing
+  ma: largest 2.9574 u in 'ma' join #0 at arc 63.64 u (Pm2->v6.8, piece Pm2), mean 1.0458 u; mean of largests 2.9433 u over 3 words
+  mb: largest 16.4990 u in 'mb' join #0 at arc 113.96 u (Pm2->v6.8, piece Pm2), mean 3.3058 u; mean of largests 16.4990 u over 1 words
+  mc: largest 8.0334 u in 'mc' join #0 at arc 61.35 u (Pm2->v6.8, piece Pm2), mean 3.8749 u; mean of largests 8.0334 u over 1 words
+  md: largest 6.0867 u in 'md' join #0 at arc 61.23 u (Pm2->v6.8, piece Pm2), mean 2.6134 u; mean of largests 6.0867 u over 1 words
+  me: largest 29.9893 u in 'me' join #0 at arc 96.08 u (Pm2->v6.8, piece Pm2), mean 6.4195 u; mean of largests 29.9893 u over 1 words
+  mf: largest 17.7949 u in 'mf' join #0 at arc 113.94 u (Pm2->v6.8, piece Pm2), mean 3.4271 u; mean of largests 17.7949 u over 1 words
+  mg: largest 2.8659 u in 'mg' join #0 at arc 63.66 u (Pm2->v6.8, piece Pm2), mean 1.0148 u; mean of largests 2.8659 u over 1 words
+  mh: largest 17.1607 u in 'mh' join #0 at arc 135.37 u (Pm2->v6.8, piece Pm2), mean 3.4523 u; mean of largests 17.1607 u over 1 words
+  mi: largest 8.9739 u in 'mi' join #0 at arc 69.79 u (v6.8->Pm2, piece v6.8), mean 4.2408 u; mean of largests 8.9737 u over 2 words
+  mj: largest 4.5065 u in 'mj' join #0 at arc 158.25 u (v6.8->Pm2, piece v6.8), mean 1.9758 u; mean of largests 4.5065 u over 1 words
+  mk: largest 15.8492 u in 'mk' join #0 at arc 128.79 u (Pm2->v6.8, piece Pm2), mean 6.1679 u; mean of largests 15.8492 u over 1 words
+  ml: largest 18.1176 u in 'ml' join #0 at arc 114.44 u (Pm2->v6.8, piece Pm2), mean 3.4613 u; mean of largests 18.1176 u over 1 words
+  mm: largest 9.7340 u in 'mm' join #0 at arc 172.82 u (Pm2->v6.8, piece Pm2), mean 2.1350 u; mean of largests 9.7340 u over 1 words
+  mn: largest 2.8669 u in 'mn' join #0 at arc 103.76 u (v6.8->Pm2, piece v6.8), mean 0.8973 u; mean of largests 2.8669 u over 1 words
+  mo: largest 4.5877 u in 'mo' join #0 at arc 52.62 u (Pm2->v6.8, piece Pm2), mean 2.1872 u; mean of largests 4.5877 u over 1 words
+  mp: largest 10.7682 u in 'jumps over the lazy dog' join #2 at arc 158.77 u (v6.8->Pm2, piece v6.8), mean 1.7920 u; mean of largests 10.7671 u over 2 words
+  mq: largest 2.5633 u in 'mq' join #0 at arc 61.40 u (Pm2->v6.8, piece Pm2), mean 0.9156 u; mean of largests 2.5633 u over 1 words
+  mr: largest 17.2292 u in 'mr' join #0 at arc 71.44 u (Pm2->v6.8, piece Pm2), mean 7.6459 u; mean of largests 17.2292 u over 1 words
+  ms: largest 15.2737 u in 'ms' join #0 at arc 74.52 u (v6.8->Pm2, piece v6.8), mean 6.9672 u; mean of largests 15.2737 u over 1 words
+  mt: largest 34.0559 u in 'mt' join #0 at arc 214.09 u (v6.8->Pm2, piece v6.8), mean 8.1047 u; mean of largests 34.0559 u over 1 words
+  mu: largest 5.6266 u in 'mu' join #0 at arc 63.85 u (Pm2->v6.8, piece Pm2), mean 2.2150 u; mean of largests 5.6148 u over 2 words
+  mv: largest 2.8731 u in 'mv' join #0 at arc 104.39 u (v6.8->Pm2, piece v6.8), mean 0.9087 u; mean of largests 2.8731 u over 1 words
+  mw: largest 10.3223 u in 'mw' join #0 at arc 158.66 u (v6.8->Pm2, piece v6.8), mean 2.0990 u; mean of largests 10.3223 u over 1 words
+  mx: largest 3.5624 u in 'mx' join #0 at arc 53.44 u (v6.8->Pm2, piece v6.8), mean 1.5870 u; mean of largests 3.5624 u over 1 words
+  my: largest 8.3776 u in 'my' join #0 at arc 63.77 u (Pm2->v6.8, piece Pm2), mean 3.5835 u; mean of largests 8.3776 u over 1 words
+  mz: largest 10.0527 u in 'mz' join #0 at arc 67.98 u (v6.8->Pm2, piece v6.8), mean 4.7809 u; mean of largests 10.0527 u over 1 words
+  ua: largest 0.0000 u in 'ua' join #0 at arc 0.00 u (Pm2->v6.8, piece Pm2), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  ub: largest 0.0000 u in 'subgroup' join #1 at arc 0.00 u (Pm2->v6.8, piece Pm2), mean 0.0000 u; mean of largests 0.0000 u over 2 words
+  uc: largest 0.0000 u in 'uc' join #0 at arc 0.00 u (Pm2->v6.8, piece Pm2), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  ud: largest 0.0000 u in 'ud' join #0 at arc 0.00 u (Pm2->v6.8, piece Pm2), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  ue: largest 0.0000 u in 'ue' join #0 at arc 0.00 u (Pm2->v6.8, piece Pm2), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  uf: largest 0.0000 u in 'uf' join #0 at arc 0.00 u (Pm2->v6.8, piece Pm2), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  ug: largest 0.0000 u in 'be we shoe maze huge bye' join #9 at arc 0.00 u (Pm2->v6.8, piece Pm2), mean 0.0000 u; mean of largests 0.0000 u over 2 words
+  uh: largest 0.0000 u in 'uh' join #0 at arc 0.00 u (Pm2->v6.8, piece Pm2), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  ui: largest 0.0000 u in 'quick brown fox' join #1 at arc 0.00 u (Pm2->v6.8, piece Pm2), mean 0.0000 u; mean of largests 0.0000 u over 2 words
+  uj: largest 0.0000 u in 'uj' join #0 at arc 0.00 u (Pm2->v6.8, piece Pm2), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  uk: largest 0.0000 u in 'uk' join #0 at arc 0.00 u (Pm2->v6.8, piece Pm2), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  ul: largest 0.0000 u in 'ul' join #0 at arc 0.00 u (Pm2->v6.8, piece Pm2), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  um: largest 0.0000 u in 'jumps over the lazy dog' join #1 at arc 0.00 u (Pm2->v6.8, piece Pm2), mean 0.0000 u; mean of largests 0.0000 u over 3 words
+  un: largest 0.0000 u in 'un' join #0 at arc 0.00 u (Pm2->v6.8, piece Pm2), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  uo: largest 0.0000 u in 'uo' join #0 at arc 0.00 u (Pm2->v6.8, piece Pm2), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  up: largest 0.0000 u in 'puppy' join #1 at arc 0.00 u (Pm2->v6.8, piece Pm2), mean 0.0000 u; mean of largests 0.0000 u over 3 words
+  uq: largest 0.0000 u in 'uq' join #0 at arc 0.00 u (Pm2->v6.8, piece Pm2), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  ur: largest 0.0000 u in 'cursive' join #1 at arc 0.00 u (Pm2->v6.8, piece Pm2), mean 0.0000 u; mean of largests 0.0000 u over 2 words
+  us: largest 0.0000 u in 'us' join #0 at arc 0.00 u (Pm2->v6.8, piece Pm2), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  ut: largest 0.0000 u in 'ut' join #0 at arc 0.00 u (Pm2->v6.8, piece Pm2), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  uu: largest 0.0000 u in 'uu' join #0 at arc 0.00 u (Pm2->v6.8, piece Pm2), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  uv: largest 0.0000 u in 'uv' join #0 at arc 0.00 u (Pm2->v6.8, piece Pm2), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  uw: largest 0.0000 u in 'uw' join #0 at arc 0.00 u (Pm2->v6.8, piece Pm2), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  ux: largest 0.0000 u in 'ux' join #0 at arc 0.00 u (Pm2->v6.8, piece Pm2), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  uy: largest 0.0000 u in 'uy' join #0 at arc 0.00 u (Pm2->v6.8, piece Pm2), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  uz: largest 0.0000 u in 'uz' join #0 at arc 0.00 u (Pm2->v6.8, piece Pm2), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+
+Pu2 against v6.8: 65 joins, 0 missing
+  ma: largest 0.0000 u in 'be we shoe maze huge bye' join #5 at arc 0.00 u (Pu2->v6.8, piece Pu2), mean 0.0000 u; mean of largests 0.0000 u over 3 words
+  mb: largest 0.0000 u in 'mb' join #0 at arc 0.00 u (Pu2->v6.8, piece Pu2), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  mc: largest 0.0000 u in 'mc' join #0 at arc 0.00 u (Pu2->v6.8, piece Pu2), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  md: largest 0.0000 u in 'md' join #0 at arc 0.00 u (Pu2->v6.8, piece Pu2), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  me: largest 0.0000 u in 'me' join #0 at arc 0.00 u (Pu2->v6.8, piece Pu2), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  mf: largest 0.0000 u in 'mf' join #0 at arc 0.00 u (Pu2->v6.8, piece Pu2), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  mg: largest 0.0000 u in 'mg' join #0 at arc 0.00 u (Pu2->v6.8, piece Pu2), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  mh: largest 0.0000 u in 'mh' join #0 at arc 0.00 u (Pu2->v6.8, piece Pu2), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  mi: largest 0.0000 u in 'mi' join #0 at arc 0.00 u (Pu2->v6.8, piece Pu2), mean 0.0000 u; mean of largests 0.0000 u over 2 words
+  mj: largest 0.0000 u in 'mj' join #0 at arc 0.00 u (Pu2->v6.8, piece Pu2), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  mk: largest 0.0000 u in 'mk' join #0 at arc 0.00 u (Pu2->v6.8, piece Pu2), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  ml: largest 0.0000 u in 'ml' join #0 at arc 0.00 u (Pu2->v6.8, piece Pu2), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  mm: largest 0.0000 u in 'mm' join #0 at arc 0.00 u (Pu2->v6.8, piece Pu2), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  mn: largest 0.0000 u in 'mn' join #0 at arc 0.00 u (Pu2->v6.8, piece Pu2), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  mo: largest 0.0000 u in 'mo' join #0 at arc 0.00 u (Pu2->v6.8, piece Pu2), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  mp: largest 0.0000 u in 'jumps over the lazy dog' join #2 at arc 0.00 u (Pu2->v6.8, piece Pu2), mean 0.0000 u; mean of largests 0.0000 u over 2 words
+  mq: largest 0.0000 u in 'mq' join #0 at arc 0.00 u (Pu2->v6.8, piece Pu2), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  mr: largest 0.0000 u in 'mr' join #0 at arc 0.00 u (Pu2->v6.8, piece Pu2), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  ms: largest 0.0000 u in 'ms' join #0 at arc 0.00 u (Pu2->v6.8, piece Pu2), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  mt: largest 0.0000 u in 'mt' join #0 at arc 0.00 u (Pu2->v6.8, piece Pu2), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  mu: largest 0.0000 u in 'minimum' join #4 at arc 0.00 u (Pu2->v6.8, piece Pu2), mean 0.0000 u; mean of largests 0.0000 u over 2 words
+  mv: largest 0.0000 u in 'mv' join #0 at arc 0.00 u (Pu2->v6.8, piece Pu2), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  mw: largest 0.0000 u in 'mw' join #0 at arc 0.00 u (Pu2->v6.8, piece Pu2), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  mx: largest 0.0000 u in 'mx' join #0 at arc 0.00 u (Pu2->v6.8, piece Pu2), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  my: largest 0.0000 u in 'my' join #0 at arc 0.00 u (Pu2->v6.8, piece Pu2), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  mz: largest 0.0000 u in 'mz' join #0 at arc 0.00 u (Pu2->v6.8, piece Pu2), mean 0.0000 u; mean of largests 0.0000 u over 1 words
+  ua: largest 3.1569 u in 'ua' join #0 at arc 62.32 u (Pu2->v6.8, piece Pu2), mean 1.1301 u; mean of largests 3.1569 u over 1 words
+  ub: largest 16.4990 u in 'ub' join #0 at arc 112.76 u (Pu2->v6.8, piece Pu2), mean 3.2634 u; mean of largests 16.4990 u over 2 words
+  uc: largest 7.9156 u in 'uc' join #0 at arc 60.47 u (Pu2->v6.8, piece Pu2), mean 3.6799 u; mean of largests 7.9156 u over 1 words
+  ud: largest 6.2918 u in 'ud' join #0 at arc 60.22 u (Pu2->v6.8, piece Pu2), mean 2.6753 u; mean of largests 6.2918 u over 1 words
+  ue: largest 29.9837 u in 'ue' join #0 at arc 94.92 u (Pu2->v6.8, piece Pu2), mean 6.6780 u; mean of largests 29.9837 u over 1 words
+  uf: largest 17.7949 u in 'uf' join #0 at arc 112.73 u (Pu2->v6.8, piece Pu2), mean 3.4759 u; mean of largests 17.7949 u over 1 words
+  ug: largest 3.1125 u in 'be we shoe maze huge bye' join #9 at arc 62.39 u (Pu2->v6.8, piece Pu2), mean 1.1164 u; mean of largests 3.0868 u over 2 words
+  uh: largest 17.1607 u in 'uh' join #0 at arc 132.33 u (Pu2->v6.8, piece Pu2), mean 4.1888 u; mean of largests 17.1607 u over 1 words
+  ui: largest 9.5686 u in 'quick brown fox' join #1 at arc 67.19 u (Pu2->v6.8, piece Pu2), mean 4.3947 u; mean of largests 9.5583 u over 2 words
+  uj: largest 5.3969 u in 'uj' join #0 at arc 53.26 u (Pu2->v6.8, piece Pu2), mean 2.4426 u; mean of largests 5.3969 u over 1 words
+  uk: largest 15.8492 u in 'uk' join #0 at arc 126.64 u (Pu2->v6.8, piece Pu2), mean 6.1909 u; mean of largests 15.8492 u over 1 words
+  ul: largest 18.1176 u in 'ul' join #0 at arc 113.25 u (Pu2->v6.8, piece Pu2), mean 3.4979 u; mean of largests 18.1176 u over 1 words
+  um: largest 9.7340 u in 'minimum' join #5 at arc 171.88 u (Pu2->v6.8, piece Pu2), mean 2.4143 u; mean of largests 9.7340 u over 3 words
+  un: largest 2.4399 u in 'un' join #0 at arc 104.44 u (v6.8->Pu2, piece v6.8), mean 1.0874 u; mean of largests 2.4399 u over 1 words
+  uo: largest 4.9581 u in 'uo' join #0 at arc 48.67 u (Pu2->v6.8, piece Pu2), mean 2.2881 u; mean of largests 4.9581 u over 1 words
+  up: largest 10.7395 u in 'up' join #0 at arc 157.74 u (v6.8->Pu2, piece v6.8), mean 2.2554 u; mean of largests 10.5583 u over 3 words
+  uq: largest 2.9712 u in 'uq' join #0 at arc 60.87 u (Pu2->v6.8, piece Pu2), mean 1.0748 u; mean of largests 2.9712 u over 1 words
+  ur: largest 17.0835 u in 'cursive' join #1 at arc 68.16 u (Pu2->v6.8, piece Pu2), mean 7.4320 u; mean of largests 17.0680 u over 2 words
+  us: largest 16.2665 u in 'us' join #0 at arc 70.48 u (Pu2->v6.8, piece Pu2), mean 7.3949 u; mean of largests 16.2665 u over 1 words
+  ut: largest 33.9365 u in 'ut' join #0 at arc 212.52 u (v6.8->Pu2, piece v6.8), mean 7.7935 u; mean of largests 33.9365 u over 1 words
+  uu: largest 6.9525 u in 'uu' join #0 at arc 60.32 u (Pu2->v6.8, piece Pu2), mean 2.7287 u; mean of largests 6.9525 u over 1 words
+  uv: largest 2.5317 u in 'uv' join #0 at arc 103.68 u (v6.8->Pu2, piece v6.8), mean 1.1284 u; mean of largests 2.5317 u over 1 words
+  uw: largest 9.9439 u in 'uw' join #0 at arc 157.32 u (v6.8->Pu2, piece v6.8), mean 2.4204 u; mean of largests 9.9439 u over 1 words
+  ux: largest 5.0292 u in 'ux' join #0 at arc 51.51 u (Pu2->v6.8, piece Pu2), mean 1.9903 u; mean of largests 5.0292 u over 1 words
+  uy: largest 7.9120 u in 'uy' join #0 at arc 63.20 u (v6.8->Pu2, piece v6.8), mean 3.5009 u; mean of largests 7.9120 u over 1 words
+  uz: largest 10.0303 u in 'uz' join #0 at arc 66.61 u (v6.8->Pu2, piece v6.8), mean 4.7748 u; mean of largests 10.0303 u over 1 words
+
+Pmu2_2 against v6.8: 65 joins, 0 missing
+  ma: largest 2.9574 u in 'ma' join #0 at arc 63.64 u (Pmu2_2->v6.8, piece Pmu2_2), mean 1.0458 u; mean of largests 2.9433 u over 3 words
+  mb: largest 16.4990 u in 'mb' join #0 at arc 113.96 u (Pmu2_2->v6.8, piece Pmu2_2), mean 3.3058 u; mean of largests 16.4990 u over 1 words
+  mc: largest 8.0334 u in 'mc' join #0 at arc 61.35 u (Pmu2_2->v6.8, piece Pmu2_2), mean 3.8749 u; mean of largests 8.0334 u over 1 words
+  md: largest 6.0867 u in 'md' join #0 at arc 61.23 u (Pmu2_2->v6.8, piece Pmu2_2), mean 2.6134 u; mean of largests 6.0867 u over 1 words
+  me: largest 29.9893 u in 'me' join #0 at arc 96.08 u (Pmu2_2->v6.8, piece Pmu2_2), mean 6.4195 u; mean of largests 29.9893 u over 1 words
+  mf: largest 17.7949 u in 'mf' join #0 at arc 113.94 u (Pmu2_2->v6.8, piece Pmu2_2), mean 3.4271 u; mean of largests 17.7949 u over 1 words
+  mg: largest 2.8659 u in 'mg' join #0 at arc 63.66 u (Pmu2_2->v6.8, piece Pmu2_2), mean 1.0148 u; mean of largests 2.8659 u over 1 words
+  mh: largest 17.1607 u in 'mh' join #0 at arc 135.37 u (Pmu2_2->v6.8, piece Pmu2_2), mean 3.4523 u; mean of largests 17.1607 u over 1 words
+  mi: largest 8.9739 u in 'mi' join #0 at arc 69.79 u (v6.8->Pmu2_2, piece v6.8), mean 4.2408 u; mean of largests 8.9737 u over 2 words
+  mj: largest 4.5065 u in 'mj' join #0 at arc 158.25 u (v6.8->Pmu2_2, piece v6.8), mean 1.9758 u; mean of largests 4.5065 u over 1 words
+  mk: largest 15.8492 u in 'mk' join #0 at arc 128.79 u (Pmu2_2->v6.8, piece Pmu2_2), mean 6.1679 u; mean of largests 15.8492 u over 1 words
+  ml: largest 18.1176 u in 'ml' join #0 at arc 114.44 u (Pmu2_2->v6.8, piece Pmu2_2), mean 3.4613 u; mean of largests 18.1176 u over 1 words
+  mm: largest 9.7340 u in 'mm' join #0 at arc 172.82 u (Pmu2_2->v6.8, piece Pmu2_2), mean 2.1350 u; mean of largests 9.7340 u over 1 words
+  mn: largest 2.8669 u in 'mn' join #0 at arc 103.76 u (v6.8->Pmu2_2, piece v6.8), mean 0.8973 u; mean of largests 2.8669 u over 1 words
+  mo: largest 4.5877 u in 'mo' join #0 at arc 52.62 u (Pmu2_2->v6.8, piece Pmu2_2), mean 2.1872 u; mean of largests 4.5877 u over 1 words
+  mp: largest 10.7682 u in 'jumps over the lazy dog' join #2 at arc 158.77 u (v6.8->Pmu2_2, piece v6.8), mean 1.7920 u; mean of largests 10.7671 u over 2 words
+  mq: largest 2.5633 u in 'mq' join #0 at arc 61.40 u (Pmu2_2->v6.8, piece Pmu2_2), mean 0.9156 u; mean of largests 2.5633 u over 1 words
+  mr: largest 17.2292 u in 'mr' join #0 at arc 71.44 u (Pmu2_2->v6.8, piece Pmu2_2), mean 7.6459 u; mean of largests 17.2292 u over 1 words
+  ms: largest 15.2737 u in 'ms' join #0 at arc 74.52 u (v6.8->Pmu2_2, piece v6.8), mean 6.9672 u; mean of largests 15.2737 u over 1 words
+  mt: largest 34.0559 u in 'mt' join #0 at arc 214.09 u (v6.8->Pmu2_2, piece v6.8), mean 8.1047 u; mean of largests 34.0559 u over 1 words
+  mu: largest 5.6266 u in 'mu' join #0 at arc 63.85 u (Pmu2_2->v6.8, piece Pmu2_2), mean 2.2150 u; mean of largests 5.6148 u over 2 words
+  mv: largest 2.8731 u in 'mv' join #0 at arc 104.39 u (v6.8->Pmu2_2, piece v6.8), mean 0.9087 u; mean of largests 2.8731 u over 1 words
+  mw: largest 10.3223 u in 'mw' join #0 at arc 158.66 u (v6.8->Pmu2_2, piece v6.8), mean 2.0990 u; mean of largests 10.3223 u over 1 words
+  mx: largest 3.5624 u in 'mx' join #0 at arc 53.44 u (v6.8->Pmu2_2, piece v6.8), mean 1.5870 u; mean of largests 3.5624 u over 1 words
+  my: largest 8.3776 u in 'my' join #0 at arc 63.77 u (Pmu2_2->v6.8, piece Pmu2_2), mean 3.5835 u; mean of largests 8.3776 u over 1 words
+  mz: largest 10.0527 u in 'mz' join #0 at arc 67.98 u (v6.8->Pmu2_2, piece v6.8), mean 4.7809 u; mean of largests 10.0527 u over 1 words
+  ua: largest 3.1569 u in 'ua' join #0 at arc 62.32 u (Pmu2_2->v6.8, piece Pmu2_2), mean 1.1301 u; mean of largests 3.1569 u over 1 words
+  ub: largest 16.4990 u in 'ub' join #0 at arc 112.76 u (Pmu2_2->v6.8, piece Pmu2_2), mean 3.2634 u; mean of largests 16.4990 u over 2 words
+  uc: largest 7.9156 u in 'uc' join #0 at arc 60.47 u (Pmu2_2->v6.8, piece Pmu2_2), mean 3.6799 u; mean of largests 7.9156 u over 1 words
+  ud: largest 6.2918 u in 'ud' join #0 at arc 60.22 u (Pmu2_2->v6.8, piece Pmu2_2), mean 2.6753 u; mean of largests 6.2918 u over 1 words
+  ue: largest 29.9837 u in 'ue' join #0 at arc 94.92 u (Pmu2_2->v6.8, piece Pmu2_2), mean 6.6780 u; mean of largests 29.9837 u over 1 words
+  uf: largest 17.7949 u in 'uf' join #0 at arc 112.73 u (Pmu2_2->v6.8, piece Pmu2_2), mean 3.4759 u; mean of largests 17.7949 u over 1 words
+  ug: largest 3.1125 u in 'be we shoe maze huge bye' join #9 at arc 62.39 u (Pmu2_2->v6.8, piece Pmu2_2), mean 1.1164 u; mean of largests 3.0868 u over 2 words
+  uh: largest 17.1607 u in 'uh' join #0 at arc 132.33 u (Pmu2_2->v6.8, piece Pmu2_2), mean 4.1888 u; mean of largests 17.1607 u over 1 words
+  ui: largest 9.5686 u in 'quick brown fox' join #1 at arc 67.19 u (Pmu2_2->v6.8, piece Pmu2_2), mean 4.3947 u; mean of largests 9.5583 u over 2 words
+  uj: largest 5.3969 u in 'uj' join #0 at arc 53.26 u (Pmu2_2->v6.8, piece Pmu2_2), mean 2.4426 u; mean of largests 5.3969 u over 1 words
+  uk: largest 15.8492 u in 'uk' join #0 at arc 126.64 u (Pmu2_2->v6.8, piece Pmu2_2), mean 6.1909 u; mean of largests 15.8492 u over 1 words
+  ul: largest 18.1176 u in 'ul' join #0 at arc 113.25 u (Pmu2_2->v6.8, piece Pmu2_2), mean 3.4979 u; mean of largests 18.1176 u over 1 words
+  um: largest 9.7340 u in 'minimum' join #5 at arc 171.88 u (Pmu2_2->v6.8, piece Pmu2_2), mean 2.4143 u; mean of largests 9.7340 u over 3 words
+  un: largest 2.4399 u in 'un' join #0 at arc 104.44 u (v6.8->Pmu2_2, piece v6.8), mean 1.0874 u; mean of largests 2.4399 u over 1 words
+  uo: largest 4.9581 u in 'uo' join #0 at arc 48.67 u (Pmu2_2->v6.8, piece Pmu2_2), mean 2.2881 u; mean of largests 4.9581 u over 1 words
+  up: largest 10.7395 u in 'up' join #0 at arc 157.74 u (v6.8->Pmu2_2, piece v6.8), mean 2.2554 u; mean of largests 10.5583 u over 3 words
+  uq: largest 2.9712 u in 'uq' join #0 at arc 60.87 u (Pmu2_2->v6.8, piece Pmu2_2), mean 1.0748 u; mean of largests 2.9712 u over 1 words
+  ur: largest 17.0835 u in 'cursive' join #1 at arc 68.16 u (Pmu2_2->v6.8, piece Pmu2_2), mean 7.4320 u; mean of largests 17.0680 u over 2 words
+  us: largest 16.2665 u in 'us' join #0 at arc 70.48 u (Pmu2_2->v6.8, piece Pmu2_2), mean 7.3949 u; mean of largests 16.2665 u over 1 words
+  ut: largest 33.9365 u in 'ut' join #0 at arc 212.52 u (v6.8->Pmu2_2, piece v6.8), mean 7.7935 u; mean of largests 33.9365 u over 1 words
+  uu: largest 6.9525 u in 'uu' join #0 at arc 60.32 u (Pmu2_2->v6.8, piece Pmu2_2), mean 2.7287 u; mean of largests 6.9525 u over 1 words
+  uv: largest 2.5317 u in 'uv' join #0 at arc 103.68 u (v6.8->Pmu2_2, piece v6.8), mean 1.1284 u; mean of largests 2.5317 u over 1 words
+  uw: largest 9.9439 u in 'uw' join #0 at arc 157.32 u (v6.8->Pmu2_2, piece v6.8), mean 2.4204 u; mean of largests 9.9439 u over 1 words
+  ux: largest 5.0292 u in 'ux' join #0 at arc 51.51 u (Pmu2_2->v6.8, piece Pmu2_2), mean 1.9903 u; mean of largests 5.0292 u over 1 words
+  uy: largest 7.9120 u in 'uy' join #0 at arc 63.20 u (v6.8->Pmu2_2, piece v6.8), mean 3.5009 u; mean of largests 7.9120 u over 1 words
+  uz: largest 10.0303 u in 'uz' join #0 at arc 66.61 u (v6.8->Pmu2_2, piece v6.8), mean 4.7748 u; mean of largests 10.0303 u over 1 words

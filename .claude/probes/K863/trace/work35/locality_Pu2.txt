@@ -1,0 +1,110 @@
+K1112 Run P locality: v6.8 (work34/base, M) against Pu2 (same bodies, work35 ports)
+
+(1) the pieces, 284 words, 1582 pieces
+  untouched (not m/u, a join out of m/u, its tails or the stroke 0 after m/u): 1348 pieces, 0 not byte-identical PASS
+  touching m/u, by kind: pieces, moved, the largest move
+    join out of m                        31 pieces,    0 moved
+    join out of u                        34 pieces,   34 moved, largest 33.937 u (ut|join ut #0)
+    stroke 0 after m                     28 pieces,    0 moved
+    stroke 0 after u                     30 pieces,   24 moved, largest 33.937 u (ut|letter 1 t s0)
+    stroke of m                          40 pieces,    3 moved, largest 9.734 u (minimum|letter 6 m s0)
+    stroke of u                          48 pieces,   32 moved, largest 3.158 u (uu|letter 1 u s0)
+    tail m                                9 pieces,    0 moved
+    tail u                               14 pieces,    0 moved
+
+  every moved piece touching m/u (move in u, max distance after resampling)
+    join out of u                        33.937  ut|join ut #0
+    join out of u                        29.984  ue|join ue #0
+    join out of u                        18.118  ul|join ul #0
+    join out of u                        17.795  uf|join uf #0
+    join out of u                        17.161  uh|join uh #0
+    join out of u                        17.084  cursive|join ur #1
+    join out of u                        17.052  ur|join ur #0
+    join out of u                        16.499  ub|join ub #0
+    join out of u                        16.499  subgroup|join ub #1
+    join out of u                        16.265  us|join us #0
+    join out of u                        15.849  uk|join uk #0
+    join out of u                        10.739  up|join up #0
+    join out of u                        10.739  uz|join uz #0
+    join out of u                        10.468  puppy|join up #1
+    join out of u                        10.467  subgroup|join up #6
+    join out of u                         9.944  uw|join uw #0
+    join out of u                         9.868  um|join um #0
+    join out of u                         9.734  minimum|join um #5
+    join out of u                         9.734  jumps over the lazy dog|join um #1
+    join out of u                         9.569  quick brown fox|join ui #1
+    join out of u                         9.548  ui|join ui #0
+    join out of u                         7.975  uy|join uy #0
+    join out of u                         7.920  uc|join uc #0
+    join out of u                         7.020  uu|join uu #0
+    join out of u                         6.291  ud|join ud #0
+    join out of u                         5.432  uj|join uj #0
+    join out of u                         5.084  ux|join ux #0
+    join out of u                         4.971  uo|join uo #0
+    join out of u                         3.171  ua|join ua #0
+    join out of u                         3.128  be we shoe maze huge bye|join ug #9
+    join out of u                         3.078  ug|join ug #0
+    join out of u                         2.997  uq|join uq #0
+    join out of u                         2.529  uv|join uv #0
+    join out of u                         2.436  un|join un #0
+    stroke 0 after u                     33.937  ut|letter 1 t s0
+    stroke 0 after u                     29.984  ue|letter 1 e s0
+    stroke 0 after u                     18.118  ul|letter 1 l s0
+    stroke 0 after u                     17.795  uf|letter 1 f s0
+    stroke 0 after u                     17.161  uh|letter 1 h s0
+    stroke 0 after u                     16.499  ub|letter 1 b s0
+    stroke 0 after u                     16.499  subgroup|letter 2 b s0
+    stroke 0 after u                     15.849  uk|letter 1 k s0
+    stroke 0 after u                     10.739  up|letter 1 p s0
+    stroke 0 after u                     10.468  puppy|letter 2 p s0
+    stroke 0 after u                     10.467  subgroup|letter 7 p s0
+    stroke 0 after u                      9.944  uw|letter 1 w s0
+    stroke 0 after u                      6.238  uz|letter 1 z s0
+    stroke 0 after u                      3.191  uj|letter 1 j s0
+    stroke 0 after u                      3.000  uy|letter 1 y s0
+    stroke 0 after u                      1.200  ux|letter 1 x s0
+    stroke 0 after u                      0.000  us|letter 1 s s0
+    stroke 0 after u                      0.000  un|letter 1 n s0
+    stroke 0 after u                      0.000  quick brown fox|letter 2 i s0
+    stroke 0 after u                      0.000  ui|letter 1 i s0
+    stroke 0 after u                      0.000  be we shoe maze huge bye|letter 14 g s0
+    stroke 0 after u                      0.000  uo|letter 1 o s0
+    stroke 0 after u                      0.000  uc|letter 1 c s0
+    stroke 0 after u                      0.000  ug|letter 1 g s0
+    stroke of m                           9.734  minimum|letter 6 m s0
+    stroke of m                           9.734  jumps over the lazy dog|letter 2 m s0
+    stroke of m                           9.734  um|letter 1 m s0
+    stroke of u                           3.158  uu|letter 1 u s0
+    stroke of u                           1.999  minimum|letter 5 u s0
+    stroke of u                           1.999  subgroup|letter 1 u s0
+    stroke of u                           1.999  be we shoe maze huge bye|letter 13 u s0
+    stroke of u                           1.999  ub|letter 0 u s0
+    stroke of u                           1.999  uq|letter 0 u s0
+    stroke of u                           1.999  uc|letter 0 u s0
+    stroke of u                           1.999  ug|letter 0 u s0
+    stroke of u                           1.999  ud|letter 0 u s0
+    stroke of u                           1.999  jumps over the lazy dog|letter 1 u s0
+    stroke of u                           1.999  ua|letter 0 u s0
+    stroke of u                           1.999  ue|letter 0 u s0
+    stroke of u                           1.999  ul|letter 0 u s0
+    stroke of u                           1.999  um|letter 0 u s0
+    stroke of u                           1.992  uf|letter 0 u s0
+    stroke of u                           1.029  uk|letter 0 u s0
+    stroke of u                           0.957  uo|letter 0 u s0
+    stroke of u                           0.000  ui|letter 0 u s0
+    stroke of u                           0.000  ut|letter 0 u s0
+    stroke of u                           0.000  un|letter 0 u s0
+    stroke of u                           0.000  uv|letter 0 u s0
+    stroke of u                           0.000  uy|letter 0 u s0
+    stroke of u                           0.000  up|letter 0 u s0
+    stroke of u                           0.000  quick brown fox|letter 1 u s0
+    stroke of u                           0.000  us|letter 0 u s0
+    stroke of u                           0.000  uw|letter 0 u s0
+    stroke of u                           0.000  cursive|letter 1 u s0
+    stroke of u                           0.000  puppy|letter 1 u s0
+    stroke of u                           0.000  subgroup|letter 6 u s0
+    stroke of u                           0.000  uj|letter 0 u s0
+    stroke of u                           0.000  ur|letter 0 u s0
+    stroke of u                           0.000  uh|letter 0 u s0
+
+summary: untouched pieces PASS

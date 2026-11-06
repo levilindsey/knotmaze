@@ -1,0 +1,29 @@
+reference v7.0: 26 joins out of c in 26 words
+
+v7.1 against v7.0: 26 joins, 0 missing
+  ca: largest 9.9813 u in 'ca' join #0 at arc 0.00 u (v7.1->v7.0, piece v7.1), mean 4.4535 u; mean of largests 9.9813 u over 1 words
+  cb: largest 16.4990 u in 'cb' join #0 at arc 146.43 u (v7.1->v7.0, piece v7.1), mean 1.0578 u; mean of largests 16.4990 u over 1 words
+  cc: largest 11.8987 u in 'cc' join #0 at arc 84.99 u (v7.1->v7.0, piece v7.1), mean 6.0076 u; mean of largests 11.8987 u over 1 words
+  cd: largest 9.9813 u in 'cd' join #0 at arc 0.00 u (v7.1->v7.0, piece v7.1), mean 4.4741 u; mean of largests 9.9813 u over 1 words
+  ce: largest 25.8310 u in 'ce' join #0 at arc 130.31 u (v7.1->v7.0, piece v7.1), mean 6.7372 u; mean of largests 25.8310 u over 1 words
+  cf: largest 17.7888 u in 'cf' join #0 at arc 146.12 u (v7.1->v7.0, piece v7.1), mean 1.1502 u; mean of largests 17.7888 u over 1 words
+  cg: largest 9.9813 u in 'cg' join #0 at arc 0.00 u (v7.1->v7.0, piece v7.1), mean 4.2760 u; mean of largests 9.9813 u over 1 words
+  ch: largest 17.1607 u in 'ch' join #0 at arc 166.22 u (v7.1->v7.0, piece v7.1), mean 1.2906 u; mean of largests 17.1607 u over 1 words
+  ci: largest 7.1811 u in 'ci' join #0 at arc 0.00 u (v7.1->v7.0, piece v7.1), mean 0.6477 u; mean of largests 7.1811 u over 1 words
+  cj: largest 14.4900 u in 'cj' join #0 at arc 180.65 u (v7.0->v7.1, piece v7.0), mean 5.5493 u; mean of largests 14.4900 u over 1 words
+  ck: largest 15.8492 u in 'ck' join #0 at arc 157.23 u (v7.1->v7.0, piece v7.1), mean 5.7137 u; mean of largests 15.8492 u over 1 words
+  cl: largest 18.1176 u in 'cl' join #0 at arc 143.05 u (v7.1->v7.0, piece v7.1), mean 0.9535 u; mean of largests 18.1176 u over 1 words
+  cm: largest 9.9813 u in 'cm' join #0 at arc 0.00 u (v7.1->v7.0, piece v7.1), mean 1.3045 u; mean of largests 9.9813 u over 1 words
+  cn: largest 10.1767 u in 'cn' join #0 at arc 118.43 u (v7.1->v7.0, piece v7.1), mean 4.4882 u; mean of largests 10.1767 u over 1 words
+  co: largest 9.9813 u in 'co' join #0 at arc 0.00 u (v7.1->v7.0, piece v7.1), mean 0.8222 u; mean of largests 9.9813 u over 1 words
+  cp: largest 15.0063 u in 'cp' join #0 at arc 181.53 u (v7.0->v7.1, piece v7.0), mean 5.3933 u; mean of largests 15.0063 u over 1 words
+  cq: largest 9.9813 u in 'cq' join #0 at arc 0.00 u (v7.1->v7.0, piece v7.1), mean 3.7229 u; mean of largests 9.9813 u over 1 words
+  cr: largest 10.0163 u in 'cr' join #0 at arc 130.27 u (v7.1->v7.0, piece v7.1), mean 4.7545 u; mean of largests 10.0163 u over 1 words
+  cs: largest 9.7449 u in 'cs' join #0 at arc 0.00 u (v7.1->v7.0, piece v7.1), mean 3.1984 u; mean of largests 9.7449 u over 1 words
+  ct: largest 34.1954 u in 'ct' join #0 at arc 238.76 u (v7.0->v7.1, piece v7.0), mean 6.9505 u; mean of largests 34.1954 u over 1 words
+  cu: largest 6.6332 u in 'cu' join #0 at arc 104.68 u (v7.0->v7.1, piece v7.0), mean 3.0414 u; mean of largests 6.6332 u over 1 words
+  cv: largest 9.1457 u in 'cv' join #0 at arc 120.29 u (v7.1->v7.0, piece v7.1), mean 4.0451 u; mean of largests 9.1457 u over 1 words
+  cw: largest 9.7201 u in 'cw' join #0 at arc 117.09 u (v7.1->v7.0, piece v7.1), mean 4.4777 u; mean of largests 9.7201 u over 1 words
+  cx: largest 8.3982 u in 'cx' join #0 at arc 113.83 u (v7.1->v7.0, piece v7.1), mean 3.8212 u; mean of largests 8.3982 u over 1 words
+  cy: largest 2.7726 u in 'cy' join #0 at arc 91.30 u (v7.1->v7.0, piece v7.1), mean 1.2210 u; mean of largests 2.7726 u over 1 words
+  cz: largest 9.9813 u in 'cz' join #0 at arc 0.00 u (v7.1->v7.0, piece v7.1), mean 0.9055 u; mean of largests 9.9813 u over 1 words

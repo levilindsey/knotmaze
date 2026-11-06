@@ -1,0 +1,8096 @@
+{
+ "about": "K1009 (J3a, v6.1) ports, keyed by letter. entry/exit: kind (merge | fused | cusp), node (start = the first stroke's first node, end = the end of the stroke that ends at the letter's exit, fused = the body's fused junction (bk, bt) of bodies.json), stretch_u = arc-length range from that node (u; for an exit, measured back from the end), hints. Loaded by tools/gen_k1009.py (load_ports); variants override o's exit for o's B and C templates. pins: per pair, for sheets only (exit_u / entry_u). | K1009b (J3b, v6.4): copy of work21/ports_k1009.json with variants D (o's cusp exit; corners after o into i j p s u w y and at t's crossbar, level) and Dt (the same, t's crossbar by the cusp entry, tangent). Made by work24/dbg/mk_ports_k1009b.py. | K1009c (J3c, v6.6): copy of work24/ports_k1009b.json with variant K (b0's joins out of o with their faults fixed: maxfev 8000, m n v x z attach at the arch top, corners [30, 40] deg into i j p s u w y, ot's tangent entry with the side_clear hint, og as v6.4 draws it by the pin og.exit_port) and Kc (K without the side_clear hint). Made by work26/dbg/mk_ports_k1009c.py. | K1027 (J3d, v6.7): copy of work26/ports_k1009c.json with variant L (= K) and the exit_port pins of ba va wa bq vq wq (b, v, w have no exit port). Made by work27/dbg/mk_ports_k1027.py. | K990e (J3e, v6.8): copy of work27/ports_k1027.json with variant M = L plus f's exit port (merge at f's end, stretch [0, 2] u, maxfev 8000); pins added: fo, fr, fs, fv; J3d's pins ba, va, wa, bq, vq, wq dropped (K1102, Levi: v6.6's joins for those six). Written by work28/dbg/mk_ports_k990e.py. | K1112 Run P (22P): copy of work28/ports_k990e.json with variants Pm10, Pu10, Pmu10, Pm2, Pu2, Pmu2_2: each M plus m's exit (n's record) and/or u's exit (i's record), a merge at the end node, stretch [0, 10] u (a named second candidate changes only that letter's stretch). Made by work35/dbg/mk_ports_k1112p.py.",
+ "units": "u (template units, x-height 120 u)",
+ "letters": {
+  "a": {
+   "entry": {
+    "kind": "fused",
+    "node": "fused",
+    "y_u": 60,
+    "after_high_stretch_u": [
+     0,
+     100
+    ]
+   },
+   "exit": {
+    "kind": "merge",
+    "node": "end",
+    "stretch_u": [
+     0,
+     10
+    ]
+   }
+  },
+  "b": {
+   "entry": {
+    "kind": "merge",
+    "node": "start",
+    "stretch_u": [
+     0,
+     20
+    ],
+    "after_high_stretch_u": [
+     0,
+     100
+    ],
+    "hints": {
+     "after_high_allow_cross_R": 1
+    }
+   }
+  },
+  "c": {
+   "entry": {
+    "kind": "fused",
+    "node": "fused",
+    "y_u": 60,
+    "after_high_stretch_u": [
+     0,
+     100
+    ]
+   }
+  },
+  "d": {
+   "entry": {
+    "kind": "fused",
+    "node": "fused",
+    "y_u": 60,
+    "after_high_stretch_u": [
+     0,
+     100
+    ]
+   },
+   "exit": {
+    "kind": "merge",
+    "node": "end",
+    "stretch_u": [
+     0,
+     10
+    ]
+   }
+  },
+  "e": {
+   "entry": {
+    "kind": "merge",
+    "node": "start",
+    "stretch_u": [
+     0,
+     30
+    ],
+    "after_high_stretch_u": [
+     0,
+     90
+    ],
+    "hints": {
+     "allow_cross_R": 1
+    }
+   },
+   "exit": {
+    "kind": "merge",
+    "node": "end",
+    "stretch_u": [
+     0,
+     5
+    ]
+   }
+  },
+  "f": {
+   "entry": {
+    "kind": "merge",
+    "node": "start",
+    "stretch_u": [
+     0,
+     20
+    ],
+    "after_high_stretch_u": [
+     0,
+     100
+    ],
+    "hints": {
+     "after_high_allow_cross_R": 1
+    }
+   }
+  },
+  "g": {
+   "entry": {
+    "kind": "fused",
+    "node": "fused",
+    "y_u": 60,
+    "after_high_stretch_u": [
+     0,
+     100
+    ]
+   }
+  },
+  "h": {
+   "entry": {
+    "kind": "merge",
+    "node": "start",
+    "stretch_u": [
+     0,
+     20
+    ],
+    "after_high_stretch_u": [
+     0,
+     100
+    ],
+    "hints": {
+     "after_high_allow_cross_R": 1
+    }
+   },
+   "exit": {
+    "kind": "merge",
+    "node": "end",
+    "stretch_u": [
+     0,
+     10
+    ]
+   }
+  },
+  "i": {
+   "entry": {
+    "kind": "cusp",
+    "node": "start",
+    "stretch_u": [
+     0,
+     20
+    ]
+   },
+   "exit": {
+    "kind": "merge",
+    "node": "end",
+    "stretch_u": [
+     0,
+     10
+    ]
+   }
+  },
+  "j": {
+   "entry": {
+    "kind": "cusp",
+    "node": "start",
+    "stretch_u": [
+     0,
+     20
+    ]
+   }
+  },
+  "k": {
+   "entry": {
+    "kind": "merge",
+    "node": "start",
+    "stretch_u": [
+     0,
+     20
+    ],
+    "after_high_stretch_u": [
+     0,
+     100
+    ],
+    "hints": {
+     "after_high_allow_cross_R": 1
+    }
+   }
+  },
+  "l": {
+   "entry": {
+    "kind": "merge",
+    "node": "start",
+    "stretch_u": [
+     0,
+     20
+    ],
+    "after_high_stretch_u": [
+     0,
+     100
+    ],
+    "hints": {
+     "after_high_allow_cross_R": 1
+    }
+   }
+  },
+  "m": {
+   "entry": {
+    "kind": "merge",
+    "node": "start",
+    "stretch_u": [
+     0,
+     10
+    ]
+   }
+  },
+  "n": {
+   "entry": {
+    "kind": "merge",
+    "node": "start",
+    "stretch_u": [
+     0,
+     10
+    ]
+   },
+   "exit": {
+    "kind": "merge",
+    "node": "end",
+    "stretch_u": [
+     0,
+     10
+    ]
+   }
+  },
+  "o": {
+   "entry": {
+    "kind": "fused",
+    "node": "fused",
+    "y_u": 86,
+    "after_high_stretch_u": [
+     0,
+     100
+    ]
+   },
+   "exit": {
+    "kind": "merge",
+    "node": "end",
+    "stretch_u": [
+     0,
+     4
+    ]
+   }
+  },
+  "p": {
+   "entry": {
+    "kind": "cusp",
+    "node": "start",
+    "stretch_u": [
+     0,
+     20
+    ]
+   }
+  },
+  "q": {
+   "entry": {
+    "kind": "fused",
+    "node": "fused",
+    "y_u": 60,
+    "after_high_stretch_u": [
+     0,
+     100
+    ]
+   }
+  },
+  "r": {
+   "entry": {
+    "kind": "cusp",
+    "node": "start",
+    "stretch_u": [
+     0,
+     20
+    ],
+    "hints": {
+     "after_high_band_y_u": [
+      65,
+      75
+     ]
+    }
+   }
+  },
+  "s": {
+   "entry": {
+    "kind": "cusp",
+    "node": "start",
+    "stretch_u": [
+     0,
+     20
+    ]
+   }
+  },
+  "t": {
+   "entry": {
+    "kind": "cusp",
+    "node": "start",
+    "stretch_u": [
+     0,
+     55.7
+    ]
+   }
+  },
+  "u": {
+   "entry": {
+    "kind": "cusp",
+    "node": "start",
+    "stretch_u": [
+     0,
+     20
+    ]
+   }
+  },
+  "v": {
+   "entry": {
+    "kind": "merge",
+    "node": "start",
+    "stretch_u": [
+     0,
+     10
+    ]
+   }
+  },
+  "w": {
+   "entry": {
+    "kind": "cusp",
+    "node": "start",
+    "stretch_u": [
+     0,
+     20
+    ]
+   }
+  },
+  "x": {
+   "entry": {
+    "kind": "merge",
+    "node": "start",
+    "stretch_u": [
+     0,
+     10
+    ]
+   }
+  },
+  "y": {
+   "entry": {
+    "kind": "cusp",
+    "node": "start",
+    "stretch_u": [
+     0,
+     20
+    ]
+   }
+  },
+  "z": {
+   "entry": {
+    "kind": "merge",
+    "node": "start",
+    "stretch_u": [
+     0,
+     10
+    ]
+   }
+  }
+ },
+ "variants": {
+  "A": {},
+  "B": {
+   "o": {
+    "exit": {
+     "kind": "merge",
+     "node": "end",
+     "stretch_u": [
+      0,
+      2
+     ]
+    }
+   }
+  },
+  "C": {
+   "o": {
+    "exit": {
+     "kind": "merge",
+     "node": "end",
+     "stretch_u": [
+      0,
+      5
+     ]
+    }
+   }
+  },
+  "D": {
+   "o": {
+    "exit": {
+     "kind": "cusp_exit",
+     "node": "end",
+     "within_u": 12,
+     "over_u": 4,
+     "band_u": 0.5
+    }
+   },
+   "i": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       0,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "j": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       0,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "p": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       0,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "s": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       0,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "u": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       0,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "w": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       0,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "y": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       0,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "t": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      55.7
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       55.7,
+       55.7
+      ],
+      "angle_deg": [
+       0,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   }
+  },
+  "E": {
+   "o": {
+    "exit": {
+     "kind": "cusp_exit",
+     "node": "end",
+     "within_u": 12,
+     "over_u": 4,
+     "band_u": 0.5
+    }
+   },
+   "i": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "j": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "p": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "s": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "u": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "w": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "y": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "t": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      55.7
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       55.7,
+       55.7
+      ],
+      "angle_deg": [
+       0,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   }
+  },
+  "F": {
+   "o": {
+    "exit": {
+     "kind": "cusp_exit",
+     "node": "end",
+     "within_u": 12,
+     "over_u": 4,
+     "band_u": 0.5,
+     "maxfev": 8000
+    }
+   },
+   "i": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "j": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "p": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "s": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "u": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "w": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "y": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "t": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      55.7
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       55.7,
+       55.7
+      ],
+      "angle_deg": [
+       0,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "m": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       1.6
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "n": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.2
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "v": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "x": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "z": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "b": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high_stretch_u": [
+      0,
+      100
+     ],
+     "hints": {
+      "after_high_allow_cross_R": 1
+     },
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       160
+      ],
+      "hints": {
+       "allow_cross_R": 1
+      },
+      "after": "o"
+     }
+    }
+   },
+   "f": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high_stretch_u": [
+      0,
+      100
+     ],
+     "hints": {
+      "after_high_allow_cross_R": 1
+     },
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       160
+      ],
+      "hints": {
+       "allow_cross_R": 1
+      },
+      "after": "o"
+     }
+    }
+   },
+   "h": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high_stretch_u": [
+      0,
+      100
+     ],
+     "hints": {
+      "after_high_allow_cross_R": 1
+     },
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       160
+      ],
+      "hints": {
+       "allow_cross_R": 1
+      },
+      "after": "o"
+     }
+    }
+   },
+   "k": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high_stretch_u": [
+      0,
+      100
+     ],
+     "hints": {
+      "after_high_allow_cross_R": 1
+     },
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       160
+      ],
+      "hints": {
+       "allow_cross_R": 1
+      },
+      "after": "o"
+     }
+    }
+   },
+   "l": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high_stretch_u": [
+      0,
+      100
+     ],
+     "hints": {
+      "after_high_allow_cross_R": 1
+     },
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       160
+      ],
+      "hints": {
+       "allow_cross_R": 1
+      },
+      "after": "o"
+     }
+    }
+   },
+   "e": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      30
+     ],
+     "after_high_stretch_u": [
+      0,
+      90
+     ],
+     "hints": {
+      "allow_cross_R": 1
+     },
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       120
+      ],
+      "hints": {
+       "allow_cross_R": 1
+      },
+      "after": "o"
+     }
+    }
+   },
+   "g": {
+    "entry": {
+     "kind": "fused",
+     "node": "fused",
+     "y_u": 60,
+     "after_high_stretch_u": [
+      0,
+      100
+     ],
+     "after_high": {
+      "kind": "fused",
+      "node": "fused",
+      "y_u": 60,
+      "after_high_stretch_u": [
+       72.1,
+       87.1
+      ],
+      "after": "o"
+     }
+    }
+   }
+  },
+  "Ft": {
+   "o": {
+    "exit": {
+     "kind": "cusp_exit",
+     "node": "end",
+     "within_u": 12,
+     "over_u": 4,
+     "band_u": 0.5,
+     "maxfev": 8000
+    }
+   },
+   "i": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "j": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "p": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "s": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "u": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "w": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "y": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "t": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      55.7
+     ],
+     "after_high": {
+      "kind": "cusp",
+      "node": "start",
+      "stretch_u": [
+       55.7,
+       55.7
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "m": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       1.6
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "n": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.2
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "v": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "x": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "z": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "b": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high_stretch_u": [
+      0,
+      100
+     ],
+     "hints": {
+      "after_high_allow_cross_R": 1
+     },
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       160
+      ],
+      "hints": {
+       "allow_cross_R": 1
+      },
+      "after": "o"
+     }
+    }
+   },
+   "f": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high_stretch_u": [
+      0,
+      100
+     ],
+     "hints": {
+      "after_high_allow_cross_R": 1
+     },
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       160
+      ],
+      "hints": {
+       "allow_cross_R": 1
+      },
+      "after": "o"
+     }
+    }
+   },
+   "h": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high_stretch_u": [
+      0,
+      100
+     ],
+     "hints": {
+      "after_high_allow_cross_R": 1
+     },
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       160
+      ],
+      "hints": {
+       "allow_cross_R": 1
+      },
+      "after": "o"
+     }
+    }
+   },
+   "k": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high_stretch_u": [
+      0,
+      100
+     ],
+     "hints": {
+      "after_high_allow_cross_R": 1
+     },
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       160
+      ],
+      "hints": {
+       "allow_cross_R": 1
+      },
+      "after": "o"
+     }
+    }
+   },
+   "l": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high_stretch_u": [
+      0,
+      100
+     ],
+     "hints": {
+      "after_high_allow_cross_R": 1
+     },
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       160
+      ],
+      "hints": {
+       "allow_cross_R": 1
+      },
+      "after": "o"
+     }
+    }
+   },
+   "e": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      30
+     ],
+     "after_high_stretch_u": [
+      0,
+      90
+     ],
+     "hints": {
+      "allow_cross_R": 1
+     },
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       120
+      ],
+      "hints": {
+       "allow_cross_R": 1
+      },
+      "after": "o"
+     }
+    }
+   },
+   "g": {
+    "entry": {
+     "kind": "fused",
+     "node": "fused",
+     "y_u": 60,
+     "after_high_stretch_u": [
+      0,
+      100
+     ],
+     "after_high": {
+      "kind": "fused",
+      "node": "fused",
+      "y_u": 60,
+      "after_high_stretch_u": [
+       72.1,
+       87.1
+      ],
+      "after": "o"
+     }
+    }
+   }
+  },
+  "G": {
+   "o": {
+    "exit": {
+     "kind": "cusp_exit",
+     "node": "end",
+     "within_u": 12,
+     "over_u": 4,
+     "band_u": 0.5,
+     "maxfev": 8000
+    },
+    "entry": {
+     "kind": "fused",
+     "node": "fused",
+     "y_u": 86,
+     "after_high_stretch_u": [
+      0,
+      100
+     ],
+     "after_high": {
+      "kind": "fused",
+      "node": "fused",
+      "y_u": 86,
+      "after_high_stretch_u": [
+       52.49,
+       62.49
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "i": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "j": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "p": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "s": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "u": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "w": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "y": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "t": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      55.7
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       55.7,
+       55.7
+      ],
+      "angle_deg": [
+       0,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "m": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       1.6
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "n": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.2
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "v": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "x": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "z": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "g": {
+    "entry": {
+     "kind": "fused",
+     "node": "fused",
+     "y_u": 60,
+     "after_high_stretch_u": [
+      0,
+      100
+     ],
+     "after_high": {
+      "kind": "fused",
+      "node": "fused",
+      "y_u": 60,
+      "after_high_stretch_u": [
+       72.1,
+       87.1
+      ],
+      "after": "o"
+     }
+    }
+   }
+  },
+  "Gt": {
+   "o": {
+    "exit": {
+     "kind": "cusp_exit",
+     "node": "end",
+     "within_u": 12,
+     "over_u": 4,
+     "band_u": 0.5,
+     "maxfev": 8000
+    },
+    "entry": {
+     "kind": "fused",
+     "node": "fused",
+     "y_u": 86,
+     "after_high_stretch_u": [
+      0,
+      100
+     ],
+     "after_high": {
+      "kind": "fused",
+      "node": "fused",
+      "y_u": 86,
+      "after_high_stretch_u": [
+       52.49,
+       62.49
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "i": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "j": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "p": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "s": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "u": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "w": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "y": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "t": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      55.7
+     ],
+     "after_high": {
+      "kind": "cusp",
+      "node": "start",
+      "stretch_u": [
+       55.7,
+       55.7
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "m": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       1.6
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "n": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.2
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "v": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "x": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "z": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "g": {
+    "entry": {
+     "kind": "fused",
+     "node": "fused",
+     "y_u": 60,
+     "after_high_stretch_u": [
+      0,
+      100
+     ],
+     "after_high": {
+      "kind": "fused",
+      "node": "fused",
+      "y_u": 60,
+      "after_high_stretch_u": [
+       72.1,
+       87.1
+      ],
+      "after": "o"
+     }
+    }
+   }
+  },
+  "H": {
+   "o": {
+    "exit": {
+     "kind": "cusp_exit",
+     "node": "end",
+     "within_u": 12,
+     "over_u": 4,
+     "band_u": 0.5,
+     "maxfev": 8000
+    },
+    "entry": {
+     "kind": "fused",
+     "node": "fused",
+     "y_u": 86,
+     "after_high_stretch_u": [
+      0,
+      100
+     ],
+     "after_high": {
+      "kind": "fused",
+      "node": "fused",
+      "y_u": 86,
+      "after_high_stretch_u": [
+       30.49,
+       45.49
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "i": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "j": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "p": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "s": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "u": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "w": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "y": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "t": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      55.7
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       55.7,
+       55.7
+      ],
+      "angle_deg": [
+       0,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "m": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       1.6
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "n": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.2
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "v": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "x": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "z": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "g": {
+    "entry": {
+     "kind": "fused",
+     "node": "fused",
+     "y_u": 60,
+     "after_high_stretch_u": [
+      0,
+      100
+     ],
+     "after_high": {
+      "kind": "fused",
+      "node": "fused",
+      "y_u": 60,
+      "after_high_stretch_u": [
+       71.6,
+       86.6
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "c": {
+    "entry": {
+     "kind": "fused",
+     "node": "fused",
+     "y_u": 60,
+     "after_high_stretch_u": [
+      0,
+      100
+     ],
+     "after_high": {
+      "kind": "fused",
+      "node": "fused",
+      "y_u": 60,
+      "after_high_stretch_u": [
+       60.9,
+       75.9
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "d": {
+    "entry": {
+     "kind": "fused",
+     "node": "fused",
+     "y_u": 60,
+     "after_high_stretch_u": [
+      0,
+      100
+     ],
+     "after_high": {
+      "kind": "fused",
+      "node": "fused",
+      "y_u": 60,
+      "after_high_stretch_u": [
+       64.0,
+       79.0
+      ],
+      "after": "o"
+     }
+    }
+   }
+  },
+  "Ht": {
+   "o": {
+    "exit": {
+     "kind": "cusp_exit",
+     "node": "end",
+     "within_u": 12,
+     "over_u": 4,
+     "band_u": 0.5,
+     "maxfev": 8000
+    },
+    "entry": {
+     "kind": "fused",
+     "node": "fused",
+     "y_u": 86,
+     "after_high_stretch_u": [
+      0,
+      100
+     ],
+     "after_high": {
+      "kind": "fused",
+      "node": "fused",
+      "y_u": 86,
+      "after_high_stretch_u": [
+       30.49,
+       45.49
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "i": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "j": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "p": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "s": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "u": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "w": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "y": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "t": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      55.7
+     ],
+     "after_high": {
+      "kind": "cusp",
+      "node": "start",
+      "stretch_u": [
+       55.7,
+       55.7
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "m": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       1.6
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "n": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.2
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "v": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "x": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "z": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "g": {
+    "entry": {
+     "kind": "fused",
+     "node": "fused",
+     "y_u": 60,
+     "after_high_stretch_u": [
+      0,
+      100
+     ],
+     "after_high": {
+      "kind": "fused",
+      "node": "fused",
+      "y_u": 60,
+      "after_high_stretch_u": [
+       71.6,
+       86.6
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "c": {
+    "entry": {
+     "kind": "fused",
+     "node": "fused",
+     "y_u": 60,
+     "after_high_stretch_u": [
+      0,
+      100
+     ],
+     "after_high": {
+      "kind": "fused",
+      "node": "fused",
+      "y_u": 60,
+      "after_high_stretch_u": [
+       60.9,
+       75.9
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "d": {
+    "entry": {
+     "kind": "fused",
+     "node": "fused",
+     "y_u": 60,
+     "after_high_stretch_u": [
+      0,
+      100
+     ],
+     "after_high": {
+      "kind": "fused",
+      "node": "fused",
+      "y_u": 60,
+      "after_high_stretch_u": [
+       64.0,
+       79.0
+      ],
+      "after": "o"
+     }
+    }
+   }
+  },
+  "Dt": {
+   "o": {
+    "exit": {
+     "kind": "cusp_exit",
+     "node": "end",
+     "within_u": 12,
+     "over_u": 4,
+     "band_u": 0.5
+    }
+   },
+   "i": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       0,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "j": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       0,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "p": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       0,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "s": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       0,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "u": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       0,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "w": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       0,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "y": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       0,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "t": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      55.7
+     ],
+     "after_high": {
+      "kind": "cusp",
+      "node": "start",
+      "stretch_u": [
+       55.7,
+       55.7
+      ],
+      "after": "o"
+     }
+    }
+   }
+  },
+  "Ke5": {
+   "o": {
+    "exit": {
+     "kind": "merge",
+     "node": "end",
+     "stretch_u": [
+      0,
+      2
+     ],
+     "maxfev": 8000
+    }
+   },
+   "i": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "j": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "p": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "s": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "u": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "w": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "y": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "m": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       1.6
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "n": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.2
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "v": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "x": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "z": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "t": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      55.7
+     ],
+     "after_high": {
+      "kind": "cusp",
+      "node": "start",
+      "stretch_u": [
+       55.7,
+       55.7
+      ],
+      "after": "o",
+      "hints": {
+       "side_clear": [
+        0.002,
+        0.3
+       ]
+      }
+     }
+    }
+   },
+   "g": {
+    "entry": {
+     "kind": "fused",
+     "node": "fused",
+     "y_u": 60,
+     "after_high_stretch_u": [
+      0,
+      100
+     ],
+     "after_high": {
+      "kind": "fused",
+      "node": "fused",
+      "y_u": 60,
+      "after_high_stretch_u": [
+       71.6,
+       86.6
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "e": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      30
+     ],
+     "after_high_stretch_u": [
+      0,
+      90
+     ],
+     "hints": {
+      "allow_cross_R": 1
+     },
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       30
+      ],
+      "hints": {
+       "allow_cross_R": 1,
+       "w_cross": 5
+      },
+      "after_high_stretch_u": [
+       0,
+       90
+      ],
+      "after": "o"
+     }
+    }
+   }
+  },
+  "Ke20": {
+   "o": {
+    "exit": {
+     "kind": "merge",
+     "node": "end",
+     "stretch_u": [
+      0,
+      2
+     ],
+     "maxfev": 8000
+    }
+   },
+   "i": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "j": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "p": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "s": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "u": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "w": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "y": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "m": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       1.6
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "n": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.2
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "v": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "x": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "z": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "t": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      55.7
+     ],
+     "after_high": {
+      "kind": "cusp",
+      "node": "start",
+      "stretch_u": [
+       55.7,
+       55.7
+      ],
+      "after": "o",
+      "hints": {
+       "side_clear": [
+        0.002,
+        0.3
+       ]
+      }
+     }
+    }
+   },
+   "g": {
+    "entry": {
+     "kind": "fused",
+     "node": "fused",
+     "y_u": 60,
+     "after_high_stretch_u": [
+      0,
+      100
+     ],
+     "after_high": {
+      "kind": "fused",
+      "node": "fused",
+      "y_u": 60,
+      "after_high_stretch_u": [
+       71.6,
+       86.6
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "e": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      30
+     ],
+     "after_high_stretch_u": [
+      0,
+      90
+     ],
+     "hints": {
+      "allow_cross_R": 1
+     },
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       30
+      ],
+      "hints": {
+       "allow_cross_R": 1,
+       "w_cross": 20
+      },
+      "after_high_stretch_u": [
+       0,
+       90
+      ],
+      "after": "o"
+     }
+    }
+   }
+  },
+  "Ke100": {
+   "o": {
+    "exit": {
+     "kind": "merge",
+     "node": "end",
+     "stretch_u": [
+      0,
+      2
+     ],
+     "maxfev": 8000
+    }
+   },
+   "i": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "j": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "p": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "s": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "u": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "w": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "y": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "m": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       1.6
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "n": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.2
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "v": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "x": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "z": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "t": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      55.7
+     ],
+     "after_high": {
+      "kind": "cusp",
+      "node": "start",
+      "stretch_u": [
+       55.7,
+       55.7
+      ],
+      "after": "o",
+      "hints": {
+       "side_clear": [
+        0.002,
+        0.3
+       ]
+      }
+     }
+    }
+   },
+   "g": {
+    "entry": {
+     "kind": "fused",
+     "node": "fused",
+     "y_u": 60,
+     "after_high_stretch_u": [
+      0,
+      100
+     ],
+     "after_high": {
+      "kind": "fused",
+      "node": "fused",
+      "y_u": 60,
+      "after_high_stretch_u": [
+       71.6,
+       86.6
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "e": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      30
+     ],
+     "after_high_stretch_u": [
+      0,
+      90
+     ],
+     "hints": {
+      "allow_cross_R": 1
+     },
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       30
+      ],
+      "hints": {
+       "allow_cross_R": 1,
+       "w_cross": 100
+      },
+      "after_high_stretch_u": [
+       0,
+       90
+      ],
+      "after": "o"
+     }
+    }
+   }
+  },
+  "Ke1000": {
+   "o": {
+    "exit": {
+     "kind": "merge",
+     "node": "end",
+     "stretch_u": [
+      0,
+      2
+     ],
+     "maxfev": 8000
+    }
+   },
+   "i": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "j": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "p": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "s": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "u": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "w": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "y": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "m": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       1.6
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "n": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.2
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "v": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "x": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "z": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "t": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      55.7
+     ],
+     "after_high": {
+      "kind": "cusp",
+      "node": "start",
+      "stretch_u": [
+       55.7,
+       55.7
+      ],
+      "after": "o",
+      "hints": {
+       "side_clear": [
+        0.002,
+        0.3
+       ]
+      }
+     }
+    }
+   },
+   "g": {
+    "entry": {
+     "kind": "fused",
+     "node": "fused",
+     "y_u": 60,
+     "after_high_stretch_u": [
+      0,
+      100
+     ],
+     "after_high": {
+      "kind": "fused",
+      "node": "fused",
+      "y_u": 60,
+      "after_high_stretch_u": [
+       71.6,
+       86.6
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "e": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      30
+     ],
+     "after_high_stretch_u": [
+      0,
+      90
+     ],
+     "hints": {
+      "allow_cross_R": 1
+     },
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       30
+      ],
+      "hints": {
+       "allow_cross_R": 1,
+       "w_cross": 1000
+      },
+      "after_high_stretch_u": [
+       0,
+       90
+      ],
+      "after": "o"
+     }
+    }
+   }
+  },
+  "K": {
+   "o": {
+    "exit": {
+     "kind": "merge",
+     "node": "end",
+     "stretch_u": [
+      0,
+      2
+     ],
+     "maxfev": 8000
+    }
+   },
+   "i": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "j": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "p": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "s": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "u": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "w": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "y": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "m": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       1.6
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "n": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.2
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "v": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "x": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "z": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "t": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      55.7
+     ],
+     "after_high": {
+      "kind": "cusp",
+      "node": "start",
+      "stretch_u": [
+       55.7,
+       55.7
+      ],
+      "after": "o",
+      "hints": {
+       "side_clear": [
+        0.002,
+        0.3
+       ]
+      }
+     }
+    }
+   },
+   "g": {
+    "entry": {
+     "kind": "fused",
+     "node": "fused",
+     "y_u": 60,
+     "after_high_stretch_u": [
+      0,
+      100
+     ],
+     "after_high": {
+      "kind": "fused",
+      "node": "fused",
+      "y_u": 60,
+      "after_high_stretch_u": [
+       71.6,
+       86.6
+      ],
+      "after": "o"
+     }
+    }
+   }
+  },
+  "Kc": {
+   "o": {
+    "exit": {
+     "kind": "merge",
+     "node": "end",
+     "stretch_u": [
+      0,
+      2
+     ],
+     "maxfev": 8000
+    }
+   },
+   "i": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "j": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "p": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "s": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "u": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "w": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "y": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "m": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       1.6
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "n": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.2
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "v": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "x": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "z": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "t": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      55.7
+     ],
+     "after_high": {
+      "kind": "cusp",
+      "node": "start",
+      "stretch_u": [
+       55.7,
+       55.7
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "g": {
+    "entry": {
+     "kind": "fused",
+     "node": "fused",
+     "y_u": 60,
+     "after_high_stretch_u": [
+      0,
+      100
+     ],
+     "after_high": {
+      "kind": "fused",
+      "node": "fused",
+      "y_u": 60,
+      "after_high_stretch_u": [
+       71.6,
+       86.6
+      ],
+      "after": "o"
+     }
+    }
+   }
+  },
+  "L": {
+   "o": {
+    "exit": {
+     "kind": "merge",
+     "node": "end",
+     "stretch_u": [
+      0,
+      2
+     ],
+     "maxfev": 8000
+    }
+   },
+   "i": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "j": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "p": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "s": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "u": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "w": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "y": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "m": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       1.6
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "n": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.2
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "v": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "x": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "z": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "t": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      55.7
+     ],
+     "after_high": {
+      "kind": "cusp",
+      "node": "start",
+      "stretch_u": [
+       55.7,
+       55.7
+      ],
+      "after": "o",
+      "hints": {
+       "side_clear": [
+        0.002,
+        0.3
+       ]
+      }
+     }
+    }
+   },
+   "g": {
+    "entry": {
+     "kind": "fused",
+     "node": "fused",
+     "y_u": 60,
+     "after_high_stretch_u": [
+      0,
+      100
+     ],
+     "after_high": {
+      "kind": "fused",
+      "node": "fused",
+      "y_u": 60,
+      "after_high_stretch_u": [
+       71.6,
+       86.6
+      ],
+      "after": "o"
+     }
+    }
+   }
+  },
+  "M": {
+   "o": {
+    "exit": {
+     "kind": "merge",
+     "node": "end",
+     "stretch_u": [
+      0,
+      2
+     ],
+     "maxfev": 8000
+    }
+   },
+   "i": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "j": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "p": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "s": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "u": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "w": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "y": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "m": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       1.6
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "n": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.2
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "v": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "x": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "z": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "t": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      55.7
+     ],
+     "after_high": {
+      "kind": "cusp",
+      "node": "start",
+      "stretch_u": [
+       55.7,
+       55.7
+      ],
+      "after": "o",
+      "hints": {
+       "side_clear": [
+        0.002,
+        0.3
+       ]
+      }
+     }
+    }
+   },
+   "g": {
+    "entry": {
+     "kind": "fused",
+     "node": "fused",
+     "y_u": 60,
+     "after_high_stretch_u": [
+      0,
+      100
+     ],
+     "after_high": {
+      "kind": "fused",
+      "node": "fused",
+      "y_u": 60,
+      "after_high_stretch_u": [
+       71.6,
+       86.6
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "f": {
+    "exit": {
+     "kind": "merge",
+     "node": "end",
+     "stretch_u": [
+      0,
+      2
+     ],
+     "maxfev": 8000
+    }
+   }
+  },
+  "Pm10": {
+   "o": {
+    "exit": {
+     "kind": "merge",
+     "node": "end",
+     "stretch_u": [
+      0,
+      2
+     ],
+     "maxfev": 8000
+    }
+   },
+   "i": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "j": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "p": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "s": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "u": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "w": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "y": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "m": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       1.6
+      ],
+      "after": "o"
+     }
+    },
+    "exit": {
+     "kind": "merge",
+     "node": "end",
+     "stretch_u": [
+      0,
+      10
+     ]
+    }
+   },
+   "n": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.2
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "v": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "x": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "z": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "t": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      55.7
+     ],
+     "after_high": {
+      "kind": "cusp",
+      "node": "start",
+      "stretch_u": [
+       55.7,
+       55.7
+      ],
+      "after": "o",
+      "hints": {
+       "side_clear": [
+        0.002,
+        0.3
+       ]
+      }
+     }
+    }
+   },
+   "g": {
+    "entry": {
+     "kind": "fused",
+     "node": "fused",
+     "y_u": 60,
+     "after_high_stretch_u": [
+      0,
+      100
+     ],
+     "after_high": {
+      "kind": "fused",
+      "node": "fused",
+      "y_u": 60,
+      "after_high_stretch_u": [
+       71.6,
+       86.6
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "f": {
+    "exit": {
+     "kind": "merge",
+     "node": "end",
+     "stretch_u": [
+      0,
+      2
+     ],
+     "maxfev": 8000
+    }
+   }
+  },
+  "Pu10": {
+   "o": {
+    "exit": {
+     "kind": "merge",
+     "node": "end",
+     "stretch_u": [
+      0,
+      2
+     ],
+     "maxfev": 8000
+    }
+   },
+   "i": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "j": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "p": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "s": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "u": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    },
+    "exit": {
+     "kind": "merge",
+     "node": "end",
+     "stretch_u": [
+      0,
+      10
+     ]
+    }
+   },
+   "w": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "y": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "m": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       1.6
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "n": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.2
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "v": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "x": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "z": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "t": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      55.7
+     ],
+     "after_high": {
+      "kind": "cusp",
+      "node": "start",
+      "stretch_u": [
+       55.7,
+       55.7
+      ],
+      "after": "o",
+      "hints": {
+       "side_clear": [
+        0.002,
+        0.3
+       ]
+      }
+     }
+    }
+   },
+   "g": {
+    "entry": {
+     "kind": "fused",
+     "node": "fused",
+     "y_u": 60,
+     "after_high_stretch_u": [
+      0,
+      100
+     ],
+     "after_high": {
+      "kind": "fused",
+      "node": "fused",
+      "y_u": 60,
+      "after_high_stretch_u": [
+       71.6,
+       86.6
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "f": {
+    "exit": {
+     "kind": "merge",
+     "node": "end",
+     "stretch_u": [
+      0,
+      2
+     ],
+     "maxfev": 8000
+    }
+   }
+  },
+  "Pmu10": {
+   "o": {
+    "exit": {
+     "kind": "merge",
+     "node": "end",
+     "stretch_u": [
+      0,
+      2
+     ],
+     "maxfev": 8000
+    }
+   },
+   "i": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "j": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "p": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "s": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "u": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    },
+    "exit": {
+     "kind": "merge",
+     "node": "end",
+     "stretch_u": [
+      0,
+      10
+     ]
+    }
+   },
+   "w": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "y": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "m": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       1.6
+      ],
+      "after": "o"
+     }
+    },
+    "exit": {
+     "kind": "merge",
+     "node": "end",
+     "stretch_u": [
+      0,
+      10
+     ]
+    }
+   },
+   "n": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.2
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "v": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "x": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "z": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "t": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      55.7
+     ],
+     "after_high": {
+      "kind": "cusp",
+      "node": "start",
+      "stretch_u": [
+       55.7,
+       55.7
+      ],
+      "after": "o",
+      "hints": {
+       "side_clear": [
+        0.002,
+        0.3
+       ]
+      }
+     }
+    }
+   },
+   "g": {
+    "entry": {
+     "kind": "fused",
+     "node": "fused",
+     "y_u": 60,
+     "after_high_stretch_u": [
+      0,
+      100
+     ],
+     "after_high": {
+      "kind": "fused",
+      "node": "fused",
+      "y_u": 60,
+      "after_high_stretch_u": [
+       71.6,
+       86.6
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "f": {
+    "exit": {
+     "kind": "merge",
+     "node": "end",
+     "stretch_u": [
+      0,
+      2
+     ],
+     "maxfev": 8000
+    }
+   }
+  },
+  "Pm2": {
+   "o": {
+    "exit": {
+     "kind": "merge",
+     "node": "end",
+     "stretch_u": [
+      0,
+      2
+     ],
+     "maxfev": 8000
+    }
+   },
+   "i": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "j": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "p": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "s": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "u": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "w": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "y": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "m": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       1.6
+      ],
+      "after": "o"
+     }
+    },
+    "exit": {
+     "kind": "merge",
+     "node": "end",
+     "stretch_u": [
+      0,
+      2.0
+     ]
+    }
+   },
+   "n": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.2
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "v": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "x": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "z": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "t": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      55.7
+     ],
+     "after_high": {
+      "kind": "cusp",
+      "node": "start",
+      "stretch_u": [
+       55.7,
+       55.7
+      ],
+      "after": "o",
+      "hints": {
+       "side_clear": [
+        0.002,
+        0.3
+       ]
+      }
+     }
+    }
+   },
+   "g": {
+    "entry": {
+     "kind": "fused",
+     "node": "fused",
+     "y_u": 60,
+     "after_high_stretch_u": [
+      0,
+      100
+     ],
+     "after_high": {
+      "kind": "fused",
+      "node": "fused",
+      "y_u": 60,
+      "after_high_stretch_u": [
+       71.6,
+       86.6
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "f": {
+    "exit": {
+     "kind": "merge",
+     "node": "end",
+     "stretch_u": [
+      0,
+      2
+     ],
+     "maxfev": 8000
+    }
+   }
+  },
+  "Pu2": {
+   "o": {
+    "exit": {
+     "kind": "merge",
+     "node": "end",
+     "stretch_u": [
+      0,
+      2
+     ],
+     "maxfev": 8000
+    }
+   },
+   "i": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "j": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "p": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "s": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "u": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    },
+    "exit": {
+     "kind": "merge",
+     "node": "end",
+     "stretch_u": [
+      0,
+      2.0
+     ]
+    }
+   },
+   "w": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "y": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "m": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       1.6
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "n": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.2
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "v": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "x": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "z": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "t": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      55.7
+     ],
+     "after_high": {
+      "kind": "cusp",
+      "node": "start",
+      "stretch_u": [
+       55.7,
+       55.7
+      ],
+      "after": "o",
+      "hints": {
+       "side_clear": [
+        0.002,
+        0.3
+       ]
+      }
+     }
+    }
+   },
+   "g": {
+    "entry": {
+     "kind": "fused",
+     "node": "fused",
+     "y_u": 60,
+     "after_high_stretch_u": [
+      0,
+      100
+     ],
+     "after_high": {
+      "kind": "fused",
+      "node": "fused",
+      "y_u": 60,
+      "after_high_stretch_u": [
+       71.6,
+       86.6
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "f": {
+    "exit": {
+     "kind": "merge",
+     "node": "end",
+     "stretch_u": [
+      0,
+      2
+     ],
+     "maxfev": 8000
+    }
+   }
+  },
+  "Pmu2_2": {
+   "o": {
+    "exit": {
+     "kind": "merge",
+     "node": "end",
+     "stretch_u": [
+      0,
+      2
+     ],
+     "maxfev": 8000
+    }
+   },
+   "i": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "j": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "p": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "s": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "u": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    },
+    "exit": {
+     "kind": "merge",
+     "node": "end",
+     "stretch_u": [
+      0,
+      2.0
+     ]
+    }
+   },
+   "w": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "y": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      20
+     ],
+     "after_high": {
+      "kind": "corner",
+      "node": "start",
+      "stretch_u": [
+       0,
+       0
+      ],
+      "angle_deg": [
+       30,
+       40
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "m": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       1.6
+      ],
+      "after": "o"
+     }
+    },
+    "exit": {
+     "kind": "merge",
+     "node": "end",
+     "stretch_u": [
+      0,
+      2.0
+     ]
+    }
+   },
+   "n": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.2
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "v": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "x": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "z": {
+    "entry": {
+     "kind": "merge",
+     "node": "start",
+     "stretch_u": [
+      0,
+      10
+     ],
+     "after_high": {
+      "kind": "merge",
+      "node": "start",
+      "stretch_u": [
+       0,
+       3.5
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "t": {
+    "entry": {
+     "kind": "cusp",
+     "node": "start",
+     "stretch_u": [
+      0,
+      55.7
+     ],
+     "after_high": {
+      "kind": "cusp",
+      "node": "start",
+      "stretch_u": [
+       55.7,
+       55.7
+      ],
+      "after": "o",
+      "hints": {
+       "side_clear": [
+        0.002,
+        0.3
+       ]
+      }
+     }
+    }
+   },
+   "g": {
+    "entry": {
+     "kind": "fused",
+     "node": "fused",
+     "y_u": 60,
+     "after_high_stretch_u": [
+      0,
+      100
+     ],
+     "after_high": {
+      "kind": "fused",
+      "node": "fused",
+      "y_u": 60,
+      "after_high_stretch_u": [
+       71.6,
+       86.6
+      ],
+      "after": "o"
+     }
+    }
+   },
+   "f": {
+    "exit": {
+     "kind": "merge",
+     "node": "end",
+     "stretch_u": [
+      0,
+      2
+     ],
+     "maxfev": 8000
+    }
+   }
+  }
+ },
+ "pins": {
+  "og": {
+   "exit_port": {
+    "kind": "cusp_exit",
+    "node": "end",
+    "within_u": 12,
+    "over_u": 4,
+    "band_u": 0.5,
+    "maxfev": 8000
+   }
+  },
+  "oe": {
+   "xl_skip_u": 45
+  },
+  "fo": {
+   "exit_port": {
+    "kind": "merge",
+    "node": "end",
+    "stretch_u": [
+     0,
+     12
+    ],
+    "maxfev": 8000
+   }
+  },
+  "fv": {
+   "exit_port": {
+    "kind": "merge",
+    "node": "end",
+    "stretch_u": [
+     0,
+     6
+    ],
+    "maxfev": 8000
+   }
+  },
+  "fr": {
+   "entry_port": {
+    "kind": "cusp",
+    "node": "start",
+    "stretch_u": [
+     2,
+     20
+    ],
+    "hints": {
+     "after_high_band_y_u": [
+      65,
+      75
+     ]
+    }
+   }
+  },
+  "fs": {
+   "entry_port": {
+    "kind": "cusp",
+    "node": "start",
+    "stretch_u": [
+     2,
+     20
+    ]
+   }
+  }
+ }
+}

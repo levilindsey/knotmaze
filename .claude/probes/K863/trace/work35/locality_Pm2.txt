@@ -1,0 +1,104 @@
+K1112 Run P locality: v6.8 (work34/base, M) against Pm2 (same bodies, work35 ports)
+
+(1) the pieces, 284 words, 1582 pieces
+  untouched (not m/u, a join out of m/u, its tails or the stroke 0 after m/u): 1348 pieces, 0 not byte-identical PASS
+  touching m/u, by kind: pieces, moved, the largest move
+    join out of m                        31 pieces,   31 moved, largest 34.056 u (mt|join mt #0)
+    join out of u                        34 pieces,    0 moved
+    stroke 0 after m                     28 pieces,   22 moved, largest 34.056 u (mt|letter 1 t s0)
+    stroke 0 after u                     30 pieces,    0 moved
+    stroke of m                          40 pieces,   32 moved, largest 9.734 u (mm|letter 1 m s0)
+    stroke of u                          48 pieces,    2 moved, largest 3.341 u (minimum|letter 5 u s0)
+    tail m                                9 pieces,    0 moved
+    tail u                               14 pieces,    0 moved
+
+  every moved piece touching m/u (move in u, max distance after resampling)
+    join out of m                        34.056  mt|join mt #0
+    join out of m                        29.989  me|join me #0
+    join out of m                        18.118  ml|join ml #0
+    join out of m                        17.795  mf|join mf #0
+    join out of m                        17.227  mr|join mr #0
+    join out of m                        17.161  mh|join mh #0
+    join out of m                        16.499  mb|join mb #0
+    join out of m                        15.849  mk|join mk #0
+    join out of m                        15.276  ms|join ms #0
+    join out of m                        10.768  jumps over the lazy dog|join mp #2
+    join out of m                        10.766  mp|join mp #0
+    join out of m                        10.672  mz|join mz #0
+    join out of m                        10.322  mw|join mw #0
+    join out of m                         9.734  mm|join mm #0
+    join out of m                         8.976  mi|join mi #0
+    join out of m                         8.974  minimum|join mi #0
+    join out of m                         8.430  my|join my #0
+    join out of m                         8.038  mc|join mc #0
+    join out of m                         6.089  md|join md #0
+    join out of m                         5.982  mu|join mu #0
+    join out of m                         5.959  minimum|join mu #4
+    join out of m                         4.821  mj|join mj #0
+    join out of m                         4.689  mo|join mo #0
+    join out of m                         3.617  mx|join mx #0
+    join out of m                         2.972  ma|join ma #0
+    join out of m                         2.964  mn|join mn #0
+    join out of m                         2.964  mv|join mv #0
+    join out of m                         2.962  be we shoe maze huge bye|join ma #5
+    join out of m                         2.943  knotmaze|join ma #4
+    join out of m                         2.884  mg|join mg #0
+    join out of m                         2.596  mq|join mq #0
+    stroke 0 after m                     34.056  mt|letter 1 t s0
+    stroke 0 after m                     29.989  me|letter 1 e s0
+    stroke 0 after m                     18.118  ml|letter 1 l s0
+    stroke 0 after m                     17.795  mf|letter 1 f s0
+    stroke 0 after m                     17.161  mh|letter 1 h s0
+    stroke 0 after m                     16.499  mb|letter 1 b s0
+    stroke 0 after m                     15.849  mk|letter 1 k s0
+    stroke 0 after m                     10.768  jumps over the lazy dog|letter 3 p s0
+    stroke 0 after m                     10.766  mp|letter 1 p s0
+    stroke 0 after m                     10.322  mw|letter 1 w s0
+    stroke 0 after m                      8.177  mz|letter 1 z s0
+    stroke 0 after m                      4.506  mj|letter 1 j s0
+    stroke 0 after m                      3.000  my|letter 1 y s0
+    stroke 0 after m                      1.217  mx|letter 1 x s0
+    stroke 0 after m                      0.000  mn|letter 1 n s0
+    stroke 0 after m                      0.000  ms|letter 1 s s0
+    stroke 0 after m                      0.000  minimum|letter 1 i s0
+    stroke 0 after m                      0.000  mi|letter 1 i s0
+    stroke 0 after m                      0.000  mv|letter 1 v s0
+    stroke 0 after m                      0.000  md|letter 1 d s0
+    stroke 0 after m                      0.000  mc|letter 1 c s0
+    stroke 0 after m                      0.000  mg|letter 1 g s0
+    stroke of m                           9.734  mm|letter 1 m s0
+    stroke of m                           1.999  knotmaze|letter 4 m s0
+    stroke of m                           1.999  mz|letter 0 m s0
+    stroke of m                           1.999  mh|letter 0 m s0
+    stroke of m                           1.999  mc|letter 0 m s0
+    stroke of m                           1.999  ma|letter 0 m s0
+    stroke of m                           1.999  mq|letter 0 m s0
+    stroke of m                           1.999  mw|letter 0 m s0
+    stroke of m                           1.999  me|letter 0 m s0
+    stroke of m                           1.999  mo|letter 0 m s0
+    stroke of m                           1.999  mt|letter 0 m s0
+    stroke of m                           1.999  be we shoe maze huge bye|letter 8 m s0
+    stroke of m                           1.999  md|letter 0 m s0
+    stroke of m                           1.999  mk|letter 0 m s0
+    stroke of m                           1.999  mg|letter 0 m s0
+    stroke of m                           1.999  mp|letter 0 m s0
+    stroke of m                           1.999  mj|letter 0 m s0
+    stroke of m                           1.999  jumps over the lazy dog|letter 2 m s0
+    stroke of m                           1.999  mn|letter 0 m s0
+    stroke of m                           1.999  mv|letter 0 m s0
+    stroke of m                           1.999  mm|letter 0 m s0
+    stroke of m                           1.999  mx|letter 0 m s0
+    stroke of m                           1.999  mb|letter 0 m s0
+    stroke of m                           1.996  mf|letter 0 m s0
+    stroke of m                           1.992  ml|letter 0 m s0
+    stroke of m                           1.594  mu|letter 0 m s0
+    stroke of m                           1.585  minimum|letter 4 m s0
+    stroke of m                           1.234  mr|letter 0 m s0
+    stroke of m                           1.138  ms|letter 0 m s0
+    stroke of m                           0.810  mi|letter 0 m s0
+    stroke of m                           0.807  minimum|letter 0 m s0
+    stroke of m                           0.002  my|letter 0 m s0
+    stroke of u                           3.341  minimum|letter 5 u s0
+    stroke of u                           3.337  mu|letter 1 u s0
+
+summary: untouched pieces PASS
