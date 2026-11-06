@@ -1264,18 +1264,23 @@ export class Joinery {
     // renders that arm's material, and cutting the joint's disc along it
     // exposed raw tucked tips. Listed slots get the junction-fan id
     // -(slot + 2): the foreign over thread's silhouette only.
+    // K1218: "within reach" is the over TUBE's stretch (the SAMP range the
+    // fan mask walks), not just the over pass. A crossing 1.3-1.6 world
+    // out whose over arm runs through the joint cut the fan along that
+    // arm, and the over ribbon's own paint showed inside the fused piece:
+    // its straight gold cut and crest (loop ji 89, 12, 88).
     const ownArm = (rec: JRec, slot: number): boolean => {
       const oc = this.r.slotOverChain[slot];
       if (oc < 0) return false;
       const oa = this.r.slotOverArc[slot];
+      // The tube's reach either side of the pass: the SAMP range the shader
+      // walks (polyRange; none when the slot holds no points: the pass).
+      const [t0, t1, tn] = this.r.gaps.polyRange(slot);
+      const neg = tn > 0 ? Math.max(0, oa - t0) : 0;
+      const pos = tn > 0 ? Math.max(0, t1 - oa) : 0;
       for (const a of rec.arms) {
         if (a.chain !== oc) continue;
-        let along = (oa - a.arc0) * a.dir;
-        if (a.closed) {
-          along = ((along % a.total) + a.total) % a.total;
-          if (along > a.total / 2) along -= a.total;
-        }
-        if (along > -fillHalf && along < fanReach + fillHalf) return true;
+        if (overTubeReachesArm(oa, neg, pos, a, fanReach, fillHalf)) return true;
       }
       return false;
     };
@@ -2250,4 +2255,28 @@ export class Joinery {
     setFanMask(null);
     finish();
   }
+}
+
+// K1218: whether a crossing's over TUBE (its SAMP stretch, oa - neg ..
+// oa + pos along the over chain) runs into a junction's fan along one of
+// its arms: from fillHalf behind the joint out to the fan's reach plus
+// fillHalf. jointMask leaves such a slot out of the joint's fan mask (the
+// fan already renders that arm's material). The arm's arc0 is the joint,
+// dir points out along the arm; a closed chain wraps.
+export function overTubeReachesArm(
+  oa: number,
+  neg: number,
+  pos: number,
+  arm: { arc0: number; dir: number; closed: boolean; total: number },
+  fanReach: number,
+  fillHalf: number
+): boolean {
+  let along = (oa - arm.arc0) * arm.dir;
+  if (arm.closed) {
+    along = ((along % arm.total) + arm.total) % arm.total;
+    if (along > arm.total / 2) along -= arm.total;
+  }
+  const lo = along - (arm.dir > 0 ? neg : pos);
+  const hi = along + (arm.dir > 0 ? pos : neg);
+  return hi > -fillHalf && lo < fanReach + fillHalf;
 }
