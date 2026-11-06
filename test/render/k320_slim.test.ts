@@ -206,7 +206,10 @@ describe("K320 stage 1: char budgets", () => {
     // it (sweptArc: the normal-swept map over the arm's profile polyline,
     // handed to the radial projection one to two half-widths out), +1,875
     // (32,884 -> 34,759 measured here); budget follows.
-    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(34_759);
+    // K1218 S6 (2026-11-06): sweptArc searches every segment a sweep under
+    // two half-widths reaches (rho +- 2 fh) and takes the joint behind the
+    // arm's start, +320 (34,759 -> 35,079 measured here); budget follows.
+    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(35_079);
     // K799: uKPath joins KNOT_UNIFORMS_GLSL, which the still pluck
     // includes (+18 here).
     expect(PLUCK_STILL_FRAG.length).toBeLessThanOrEqual(20_550);

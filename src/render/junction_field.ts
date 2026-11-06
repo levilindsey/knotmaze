@@ -214,13 +214,17 @@ vec3 profPt(int ab, int g) {
 }
 float jCross(vec2 a, vec2 b) { return a.x * b.y - a.y * b.x; }
 // K1218 S5: the arc the RIBBON gives e: the normal-swept map over the
-// profile polyline near rp (nearest sweep wins), handed to the projection
-// from one half-width out to two and off every sweep.
+// profile polyline (nearest sweep wins), handed to the projection from one
+// half-width out to two and off every sweep. K1218 S6: every segment a
+// sweep under two half-widths reaches (rho +- 2 fh), and behind the arm's
+// start the joint itself (the cpu mirror says why).
 float sweptArc(int ab, vec2 e, float rp) {
   float proj = profArc(ab, rp);
   int last = int(uJParams.y + 0.5) - 1;
-  int g = clamp(int(rp / uJParams2.x) - 3, 0, last - 1);
-  int g1 = min(g + 7, last);
+  float rho = length(e);
+  float reach = 2.0 * uJParams.x;
+  int g = clamp(int((rho - reach) / uJParams2.x), 0, last - 1);
+  int g1 = clamp(int((rho + reach) / uJParams2.x) + 2, 1, last);
   vec3 a = profPt(ab, max(g - 1, 0));
   vec3 b = profPt(ab, g);
   vec3 c = profPt(ab, g + 1);
@@ -228,7 +232,11 @@ float sweptArc(int ab, vec2 e, float rp) {
   if (g > 0) tb = normalize(tb + normalize(b.xy - a.xy));
   float best = 1e9;
   float arc = proj;
-  for (int k = 0; k < 7; k++) {
+  if (g == 0 && dot(e, tb) < 0.0) {
+    best = rho;
+    arc = b.z;
+  }
+  for (int k = 0; k < 40; k++) {
     if (g >= g1) break;
     vec2 dd = c.xy - b.xy;
     vec2 tc = normalize(dd);

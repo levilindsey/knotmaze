@@ -456,8 +456,15 @@ export class Joinery {
     // ~0.15 world where an arm bends: across a pulse's gradient, a seam at
     // the fan's edge (cross ji 33). From one half-width out to two the arc
     // hands over to the projection (a bend's normals cross out there), and
-    // the projection stands off every sweep (behind the joint).
-    const pt = (ab: number, g: number, o: Float64Array, k: number): void => {
+    // the projection stands off every sweep. K1218 S6: the search holds
+    // every segment a sweep shorter than two half-widths can land on (its
+    // foot within rho +- 2 fillHalf of the centre; segment g lies between
+    // radius g DR and (g + 1) DR), so the window moving changes nothing
+    // (S5's seven segments from rp dropped a near sweep: cross ji 80's
+    // line); behind the joint's normal (g == 0) the joint is the sweep, at
+    // distance rho, so the arc meets the u = 0 sweep there instead of
+    // jumping to the projection (cross ji 33's crease).
+    const pt =(ab: number, g: number, o: Float64Array, k: number): void => {
       const t = at(ab + 2 + g);
       o[k] = g * FIELD_PROF_DR * Math.cos(J[t]);
       o[k + 1] = g * FIELD_PROF_DR * Math.sin(J[t]);
@@ -471,8 +478,10 @@ export class Joinery {
     const sw = new Float64Array(16);
     const sweptArc = (ab: number, rp: number): number => {
       const proj = profArc(ab, rp);
-      let g = Math.min(Math.max(Math.trunc(rp / FIELD_PROF_DR) - 3, 0), last - 1);
-      const g1 = Math.min(g + 7, last);
+      const rho = Math.sqrt(ex * ex + ey * ey);
+      const reach = 2 * fillHalf;
+      let g = Math.min(Math.max(Math.trunc((rho - reach) / FIELD_PROF_DR), 0), last - 1);
+      const g1 = Math.min(Math.max(Math.trunc((rho + reach) / FIELD_PROF_DR) + 2, 1), last);
       // sw: a 0-2, b 3-5, c 6-8, d 9-11, tb 12-13, tc 14-15.
       pt(ab, Math.max(g - 1, 0), sw, 0);
       pt(ab, g, sw, 3);
@@ -484,7 +493,11 @@ export class Joinery {
       }
       let best = 1e9;
       let arc = proj;
-      for (let k = 0; k < 7 && g < g1; k++, g++) {
+      if (g === 0 && ex * sw[12] + ey * sw[13] < 0) {
+        best = rho;
+        arc = sw[5];
+      }
+      for (let k = 0; k < 40 && g < g1; k++, g++) {
         const ddx = sw[6] - sw[3];
         const ddy = sw[7] - sw[4];
         nrm(ddx, ddy, sw, 14);
