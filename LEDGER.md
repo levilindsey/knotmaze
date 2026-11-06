@@ -509,13 +509,13 @@ Next free ID: K1221.
   - next: K1211 first: the light inside junctions (Levi 2026-11-05: one seamless unit; the bands may go); then Levi's look K1200 (`docs/asks/K1200.md`), K1201 (its fix (b), Run 22D, held for K1211), S6 (plan section 5) after K1140's Glimpse picks. The next pulse step's Pixel pass watches fabric 7 moves' frames over 25 ms (+14 and +15 in the fix's and S5's passes, floor 13)
   - brief: the plan `docs/design/K1139_pulse_junctions.md` section 5 (S6); S5 was Muse batch 20's Run B (`docs/design/K1199_muse_batch20.md`)
   - env: the passes' builds first and never while Muse runs: `scripts/preview.ps1 -Ref <sha> -Root <out>\builds -BuildOnly` for each sha (`pixel_passes.ps1` stops before the phone lock when one is missing); probe server `npx vite --config .claude/probes/K1139/vite.private-cache.config.ts --port 5620 --strictPort --host 127.0.0.1` from a worktree (ports 5620-5639); GPU probes through `.claude/probes/K1139/run_locked.ps1 -Batch`
-- **K1208** · Muse batch 22 (after K1204's batch 21): runs B to O through the chain, from
+- **K1208** · Muse batch 22 (after K1204's batch 21): runs B to P through the chain, from
   `docs/design/K1208_muse_batch22.md` and the later runs' own briefs (ports 5880-5999)
-  - owner: the chain in `.claude/probes/K1053/` (queue.txt, chain.log): Run M (22M) since 14:30, then N (22N) and O (22O), fresh Muse sessions; coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
+  - owner: the chain in `.claude/probes/K1053/` (queue.txt, chain.log): Run M (22M) since 14:30, then N (22N), O (22O) and P (22P), fresh Muse sessions; coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
   - branch: mainline; last commit: `734c55b9`
   - evidence: the chain in .claude/probes/K1053/ (queue.txt, chain.log); each run's probe folder under .claude/probes/ (B K1203, H K1210, C and I K1186, E K1196, F K1191, G K1198)
-  - next: M (the frame tail in play), then N (K1220: the text forks' disc and steps) and O (K1218, K1219: the gap mask inside junctions); D held for K1211; L reviewed (K990 done; K912, K927, K938, K948, K987 dropped)
-  - brief: `docs/design/K1208_muse_batch22.md`; I to O: K1209_reapply_run_i.md, K647_reset_win_card.md, K1208_run_k_junction_residuals.md, K1208_run_l_cursive_residuals.md, K1214_profile_run_m.md, K1220_run_n_text_forks.md, K1218_run_o_mask_in_junctions.md (docs/design/)
+  - next: M (the frame tail in play), then N (K1220: the text forks' disc and steps), O (K1218, K1219: the gap mask inside junctions) and P (K1112: m and u exits on one port each); D held for K1211
+  - brief: `docs/design/K1208_muse_batch22.md`; I to P: K1209_reapply_run_i.md, K647_reset_win_card.md, K1208_run_k_junction_residuals.md, K1208_run_l_cursive_residuals.md, K1214_profile_run_m.md, K1220_run_n_text_forks.md, K1218_run_o_mask_in_junctions.md, K1112_run_p_ports_m_u.md (docs/design/)
 
 ## Next, in order
 
@@ -721,8 +721,8 @@ Every other item below waits on the trigger it names.
   build in both orders, thermal status 0). Trim the piece counts or per-piece cost, or accept it.
   docs/design/K156.md round 2026-10-30 handoff.
 - **K1112** · Cursive: one join rule for every pair, re-scoped 2026-11-05: b, v, w and c keep v6.8's presets
-  (Levi kept them: K1119, K1197); the other exits are ported letter by letter, each judged by eye against
-  v6.8, and a preset goes only when its port draws v6.8's join (`K863_trace.md` "Judging a look"; notes).
+  (K1119, K1197); the other exits are ported letter by letter, and a preset goes only when its port draws
+  v6.8's join, judged by eye (`K863_trace.md`; notes). m and u: Run P, `K1112_run_p_ports_m_u.md`.
 - **K1149** · Beat dots: dots at the beat points inside multi-beat runs, along threads and at junctions, that
   pop with a ring when the dot eats them; the dropdown and the pulse and ring at the dot are done (split from
   K804). Builds toward K805.
