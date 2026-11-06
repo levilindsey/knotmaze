@@ -1,0 +1,33 @@
+K930 roughness check of B1: nodes <= 30, band (floor 0.02/u) <= 0.72, wobble <= 0.016/u, facet <= 0.0053/u per piece of >= 30 u; peak |dk/ds| (and p90) over 200 /Mfu^2, 4 u off ends and cusps
+PASS: 0 of 30 strokes over a limit; nodes median 10 max 21; band max 0.60; wobble max 0.0155 1/u
+
+  a s1: nodes   12  band 0.25  wobble 0.0068  facet 0.0007  peak   1.18 (p90  0.30) at   469 u  ok
+  b s1: nodes   12  band 0.19  wobble 0.0039  facet 0.0006  peak   1.91 (p90  0.52) at   664 u  ok
+  c s1: nodes    3  band 0.06  wobble 0.0012  facet 0.0001  peak   0.13 (p90  0.12) at   212 u  ok
+  d s1: nodes   11  band 0.23  wobble 0.0045  facet 0.0005  peak   1.07 (p90  0.23) at   722 u  ok
+  e s1: nodes    4  band 0.12  wobble 0.0026  facet 0.0004  peak   0.46 (p90  0.37) at    87 u  ok
+  f s1: nodes   11  band 0.24  wobble 0.0048  facet 0.0012  peak   4.91 (p90  0.47) at   753 u  ok
+  g s1: nodes   10  band 0.08  wobble 0.0016  facet 0.0002  peak   0.45 (p90  0.21) at   268 u  ok
+  h s1: nodes   16  band 0.22  wobble 0.0055  facet 0.0008  peak   1.37 (p90  0.54) at   736 u  ok
+  i s1: nodes    5  band 0.23  wobble 0.0063  facet 0.0007  peak   0.92 (p90  0.75) at   117 u  ok
+  i s2: nodes    5  band 0.00  wobble 0.0000  facet 0.0000  peak   0.00 (p90  0.00) at    10 u  ok
+  j s1: nodes    8  band 0.12  wobble 0.0024  facet 0.0003  peak   0.65 (p90  0.31) at   258 u  ok
+  j s2: nodes    5  band 0.00  wobble 0.0000  facet 0.0000  peak   0.00 (p90  0.00) at     8 u  ok
+  k s1: nodes   18  band 0.32  wobble 0.0064  facet 0.0011  peak   1.91 (p90  0.53) at     4 u  ok
+  l s1: nodes    9  band 0.14  wobble 0.0028  facet 0.0004  peak   0.75 (p90  0.36) at   125 u  ok
+  m s1: nodes   21  band 0.23  wobble 0.0065  facet 0.0006  peak   1.07 (p90  0.47) at   708 u  ok
+  n s1: nodes   13  band 0.26  wobble 0.0075  facet 0.0008  peak   1.37 (p90  0.71) at    30 u  ok
+  o s1: nodes    9  band 0.19  wobble 0.0039  facet 0.0011  peak   2.13 (p90  0.19) at   353 u  ok
+  p s1: nodes   14  band 0.35  wobble 0.0070  facet 0.0037  peak   1.40 (p90  0.27) at     6 u  ok
+  q s1: nodes   11  band 0.60  wobble 0.0121  facet 0.0020  peak   3.14 (p90  0.60) at   760 u  ok
+  r s1: nodes    7  band 0.42  wobble 0.0155  facet 0.0021  peak   2.88 (p90  1.49) at    28 u  ok
+  s s1: nodes    7  band 0.47  wobble 0.0095  facet 0.0010  peak   1.11 (p90  0.53) at   269 u  ok
+  t s1: nodes    6  band 0.45  wobble 0.0092  facet 0.0047  peak   1.23 (p90  0.50) at    16 u  ok
+  t s2: nodes    2  band 0.07  wobble 0.0014  facet 0.0002  peak   0.26 (p90  0.25) at    63 u  ok
+  u s1: nodes   12  band 0.23  wobble 0.0061  facet 0.0006  peak   0.84 (p90  0.45) at   410 u  ok
+  v s1: nodes   11  band 0.30  wobble 0.0077  facet 0.0012  peak   1.86 (p90  0.98) at   317 u  ok
+  w s1: nodes   16  band 0.37  wobble 0.0074  facet 0.0033  peak   2.10 (p90  0.66) at   120 u  ok
+  x s1: nodes    2  band 0.30  wobble 0.0085  facet 0.0016  peak   1.40 (p90  1.25) at   138 u  ok
+  x s2: nodes    2  band 0.04  wobble 0.0008  facet 0.0003  peak   0.17 (p90  0.00) at     4 u  ok
+  y s1: nodes   15  band 0.14  wobble 0.0027  facet 0.0002  peak   0.42 (p90  0.27) at    94 u  ok
+  z s1: nodes    8  band 0.15  wobble 0.0030  facet 0.0003  peak   0.46 (p90  0.33) at   184 u  ok

@@ -1,0 +1,261 @@
+bodies and frames from C:\Users\lsl\Repositories\knotmaze\.claude\probes\K863\trace\work33\base\bodies.json
+--split fair applies to --from-svg only (bodies_k925 --split fair fairs the direct run's bodies)
+SVG word sheet: C:\Users\lsl\Repositories\knotmaze\.claude\probes\K863\trace\work33\base\out\words_k962.svg (no chart)
+
+minimum:
+  mi  cnct.mod_n_n                   1.79 u  after_n  set: k962 class cnct.mod_n_n           
+  in  cnct.cnt_n_n                   0.47 u  after_n  set: class cnct.cnt_n_n                
+  ni  cnct.mod_n_n                   2.09 u  after_n  set: k962 class cnct.mod_n_n           
+  im  cnct.cnt_n_n                   0.64 u  after_n  set: class cnct.cnt_n_n                
+  mu  cnct.mod_n_n                   1.83 u  after_n  set: k962 class cnct.mod_n_n           
+  um  cnct.cnt_n_n                   0.69 u  after_n  set: class cnct.cnt_n_n                
+  lead-in into m (generated, per-letter set)
+  tail after m (generated, per-letter set)
+
+bow:
+  bo  cnct.ful_b_o                   1.01 u  after_b  set: k962 class cnct.ful_b_o           
+  ow  cnct.mod_o_n                  17.39 u  after_o  set: k962 class cnct.mod_o_n             <- #1 generator change
+  lead-in into b (generated, per-letter set)
+  no tail after w (no free end of the font's .fin leaves along the exit tangent)
+
+woven:
+  wo  cnct.ful_b_o                   1.58 u  after_b  set: k962 class cnct.ful_b_o           
+  ov  cnct.cnt_o_n                  21.13 u  after_n  set: class cnct.cnt_o_n                  variant v=v.cnt.med  <- #2 body variant (v=v.cnt.med)
+  ve  cnct.ful_b_e                   3.14 u  after_b  set: class|R cnct.ful_b_e|e              variant v=v.cnt.med, e=e.ful.med_o_
+  en  cnct.cnt_e_n                   1.10 u  after_n  set: class cnct.cnt_e_n                  variant e=e.ful.med_o_
+  no lead-in into w (the font's .ini starts at the entry)
+  tail after n (generated, per-letter set)
+
+boxes:
+  bo  cnct.ful_b_o                   1.01 u  after_b  set: k962 class cnct.ful_b_o           
+  ox  cnct.ful_o_x                  27.80 u  after_o  set: k962 class|R cnct.ful_o_x|x         <- #3 generator change
+  xe  cnct.ful_n_e                   1.98 u  after_n  set: k962 class cnct.ful_n_e           
+  es  cnct.ful_e_s                   1.68 u  after_n  set: k962 class|R cnct.ful_e_s|s       
+  lead-in into b (generated, per-letter set)
+  no tail after s (no free end of the font's .fin leaves along the exit tangent)
+
+people:
+  pe  cnct.ful_n_e                   3.13 u  after_n  set: k962 class cnct.ful_n_e           
+  eo  cnct.ful_e_o                   1.26 u  after_n  set: k962 class cnct.ful_e_o           
+  op  cnct.mod_o_n                  17.39 u  after_o  set: k962 class cnct.mod_o_n             <- #4 generator change
+  pl  cnct.ful_n_f                   3.82 u  after_n  set: k962 class cnct.ful_n_f           
+  le  cnct.ful_n_e                   1.95 u  after_n  set: k962 class cnct.ful_n_e           
+  no lead-in into p (the font's .ini starts at the entry)
+  tail after e (generated, per-letter set)
+
+hippo:
+  hi  cnct.mod_n_n                   2.08 u  after_n  set: k962 class cnct.mod_n_n           
+  ip  cnct.mod_n_n                   2.01 u  after_n  set: k962 class cnct.mod_n_n           
+  pp  cnct.mod_n_n                   3.49 u  after_n  set: k962 class cnct.mod_n_n           
+  po  cnct.mod_n_o                   3.49 u  after_n  set: k962 class cnct.mod_n_o           
+  lead-in into h (generated, per-letter set)
+  no tail after o (no free end of the font's .fin leaves along the exit tangent)
+
+puppy:
+  pu  cnct.mod_n_n                   3.43 u  after_n  set: k962 class cnct.mod_n_n           
+  up  cnct.mod_n_n                   2.00 u  after_n  set: k962 class cnct.mod_n_n           
+  pp  cnct.mod_n_n                   3.49 u  after_n  set: k962 class cnct.mod_n_n           
+  py  cnct.mod_n_n                   3.49 u  after_n  set: k962 class cnct.mod_n_n           
+  no lead-in into p (the font's .ini starts at the entry)
+  tail after y (generated, per-letter set)
+
+and:
+  an  cnct.cnt_n_n                   0.46 u  after_n  set: class cnct.cnt_n_n                
+  nd  cnct.mod_n_o                   2.88 u  after_n  set: k962 class|R cnct.mod_n_o|d       
+  lead-in into a (from a virtual n's low exit into the fused junction: cnct.mod_n_o, set k962 class cnct.mod_n_o)
+  tail after d (generated, per-letter set)
+
+knotmaze:
+  kn  cnct.cnt_n_n                   0.97 u  after_n  set: class cnct.cnt_n_n                
+  no  cnct.mod_n_o                   2.89 u  after_n  set: k962 class cnct.mod_n_o           
+  ot  cnct.mod_o_t                  17.84 u  after_n  set: class cnct.mod_o_t                  variant t=t.mod.med_o_  <- #5 body variant (t=t.mod.med_o_)
+  tm  cnct.cnt_n_n                   0.73 u  after_n  set: class cnct.cnt_n_n                  variant t=t.mod.med_o_
+  ma  cnct.mod_n_o                   2.93 u  after_n  set: k962 class cnct.mod_n_o           
+  az  cnct.cnt_n_z                   0.67 u  after_n  set: k962 class cnct.cnt_n_z           
+  ze  cnct.ful_z_e                   2.25 u  after_g  set: k962 class|R cnct.ful_z_e|e         variant e=e.ful.fin_g_
+  lead-in into k (generated, per-letter set)
+  tail after e (generated, per-letter set)
+
+cursive:
+  cu  cnct.mod_c_n                   1.60 u  after_n  set: k962 class cnct.mod_c_n           
+  ur  cnct.ful_n_r                   3.12 u  after_n  set: k962 class|R cnct.ful_n_r|r       
+  rs  cnct.ful_n_s                   2.20 u  after_n  set: k962 class cnct.ful_n_s           
+  si  cnct.mod_n_n                   1.95 u  after_n  set: k962 class cnct.mod_n_n           
+  iv  cnct.cnt_n_n                   0.64 u  after_n  set: class cnct.cnt_n_n                
+  ve  cnct.ful_b_e                   3.13 u  after_b  set: class|R cnct.ful_b_e|e              variant e=e.ful.fin_o_
+  lead-in into c (from a virtual n's low exit into the fused junction: cnct.mod_n_o, set k962 class|R cnct.mod_n_o|c)
+  tail after e (generated, per-letter set)
+
+quick brown fox:
+  qu  cnct.mod_n_n                   2.40 u  after_n  set: k962 class cnct.mod_n_n           
+  ui  cnct.mod_n_n                   2.03 u  after_n  set: k962 class cnct.mod_n_n           
+  ic  cnct.mod_n_o                   2.90 u  after_n  set: k962 class|R cnct.mod_n_o|c       
+  ck  cnct.lop_c_h                   1.00 u  after_n  set: class cnct.lop_c_h                
+  br  cnct.ful_b_r                   5.16 u  after_b  set: class|R cnct.ful_b_r|r              <- #6 generator change
+  ro  cnct.mod_n_o                   2.90 u  after_n  set: k962 class cnct.mod_n_o           
+  ow  cnct.mod_o_n                  17.39 u  after_o  set: k962 class cnct.mod_o_n             <- #7 generator change
+  wn  cnct.cnt_b_n                   1.12 u  after_n  set: k962 class cnct.cnt_b_n             variant n=n.cnt.fin
+  fo  cnct.mrr_f_o                  14.36 u  after_n  set: k962 class|R cnct.mrr_f_o|o         <- #8 generator change
+  ox  cnct.ful_o_x                  27.80 u  after_o  set: k962 class|R cnct.ful_o_x|x         <- #9 generator change
+  lead-in into q (from a virtual n's low exit into the fused junction: cnct.mod_n_o, set k962 class|R cnct.mod_n_o|q)
+  lead-in into b (generated, per-letter set)
+  lead-in into f (generated, per-letter set)
+  tail after k (generated, per-letter set)
+  tail after n (generated, per-letter set)
+  tail after x (generated, per-letter set)
+
+jumps over the lazy dog:
+  ju  cnct.jmc_g_n                   1.75 u  after_n  set: k962 class cnct.jmc_g_n           
+  um  cnct.cnt_n_n                   0.63 u  after_n  set: class cnct.cnt_n_n                
+  mp  cnct.mod_n_n                   1.94 u  after_n  set: k962 class cnct.mod_n_n           
+  ps  cnct.ful_n_s                   4.66 u  after_n  set: k962 class cnct.ful_n_s             <- #10 generator change
+  ov  cnct.cnt_o_n                  21.25 u  after_n  set: class cnct.cnt_o_n                  variant v=v.cnt.med  <- #11 body variant (v=v.cnt.med)
+  ve  cnct.ful_b_e                   3.14 u  after_b  set: class|R cnct.ful_b_e|e              variant v=v.cnt.med, e=e.ful.med_o_
+  er  cnct.ful_e_r                   1.84 u  after_n  set: k962 class cnct.ful_e_r             variant e=e.ful.med_o_
+  th  cnct.lop_n_h                   0.56 u  after_n  set: class cnct.lop_n_h                
+  he  cnct.ful_n_e                   2.03 u  after_n  set: k962 class cnct.ful_n_e           
+  la  cnct.mod_n_o                   2.60 u  after_n  set: k962 class cnct.mod_n_o           
+  az  cnct.cnt_n_z                   0.67 u  after_n  set: k962 class cnct.cnt_n_z           
+  zy  cnct.ful_z_n                   1.37 u  after_n  set: k962 class cnct.ful_z_n           
+  do  cnct.mod_n_o                   2.76 u  after_n  set: k962 class cnct.mod_n_o           
+  og  cnct.mod_o_o                  18.20 u  after_o  set: k962 class cnct.mod_o_o             <- #12 generator change
+  lead-in into o (from a virtual n's low exit into the fused junction: cnct.mod_n_o, set k962 class cnct.mod_n_o)
+  lead-in into l (generated, per-letter set)
+  lead-in into d (from a virtual n's low exit into the fused junction: cnct.mod_n_o, set k962 class|R cnct.mod_n_o|d)
+  no lead-in into j (the font's .ini starts at the entry)
+  no lead-in into t (the font's .ini starts at the entry)
+  tail after r (generated, per-letter set)
+  tail after e (generated, per-letter set)
+  tail after y (generated, per-letter set)
+  tail after g (generated, per-letter set)
+  no tail after s (no free end of the font's .fin leaves along the exit tangent)
+
+be we shoe maze huge bye:
+  be  cnct.ful_b_e                   3.47 u  after_b  set: class|R cnct.ful_b_e|e              variant e=e.ful.fin_o_
+  we  cnct.ful_b_e                   2.01 u  after_b  set: class|R cnct.ful_b_e|e              variant e=e.ful.fin_o_
+  sh  cnct.lop_n_h                   0.40 u  after_n  set: class cnct.lop_n_h                
+  ho  cnct.mod_n_o                   2.85 u  after_n  set: k962 class cnct.mod_n_o           
+  oe  cnct.ful_o_e                  29.46 u  after_o  set: class|R cnct.ful_o_e|e              variant e=e.ful.fin_o_  <- #13 body variant (e=e.ful.fin_o_)
+  ma  cnct.mod_n_o                   2.92 u  after_n  set: k962 class cnct.mod_n_o           
+  az  cnct.cnt_n_z                   0.67 u  after_n  set: k962 class cnct.cnt_n_z           
+  ze  cnct.ful_z_e                   2.25 u  after_g  set: k962 class|R cnct.ful_z_e|e         variant e=e.ful.fin_g_
+  hu  cnct.mod_n_n                   2.21 u  after_n  set: k962 class cnct.mod_n_n           
+  ug  cnct.mod_n_o                   2.87 u  after_n  set: k962 class cnct.mod_n_o           
+  ge  cnct.ful_g_e                   1.69 u  after_g  set: k962 class|R cnct.ful_g_e|e         variant e=e.ful.fin_g_
+  by  cnct.ful_b_n                   1.16 u  after_b  set: class cnct.ful_b_n                
+  ye  cnct.ful_g_e                   1.68 u  after_g  set: k962 class|R cnct.ful_g_e|e         variant e=e.ful.fin_g_
+  lead-in into b (generated, per-letter set)
+  lead-in into s (generated, per-letter set)
+  lead-in into m (generated, per-letter set)
+  lead-in into h (generated, per-letter set)
+  lead-in into b (generated, per-letter set)
+  no lead-in into w (the font's .ini starts at the entry)
+  tail after e (generated, per-letter set)
+  tail after e (generated, per-letter set)
+  tail after e (generated, per-letter set)
+  tail after e (generated, per-letter set)
+  tail after e (generated, per-letter set)
+  tail after e (generated, per-letter set)
+
+ice jet even:
+  ic  cnct.mod_n_o                   2.90 u  after_n  set: k962 class|R cnct.mod_n_o|c       
+  ce  cnct.ful_c_e                   1.20 u  after_g  set: k962 class|R cnct.ful_c_e|e         variant e=e.ful.fin_g_
+  je  cnct.ful_g_e                   1.68 u  after_g  set: k962 class|R cnct.ful_g_e|e         variant e=e.ful.med_g_
+  et  cnct.ful_e_t                   3.06 u  after_n  set: k962 group low-cusp                 variant e=e.ful.med_g_
+  ev  cnct.cnt_e_n                   2.40 u  after_n  set: class cnct.cnt_e_n                
+  ve  cnct.ful_b_e                   3.14 u  after_b  set: class|R cnct.ful_b_e|e              variant e=e.ful.med_o_
+  en  cnct.cnt_e_n                   1.10 u  after_n  set: class cnct.cnt_e_n                  variant e=e.ful.med_o_
+  lead-in into e (generated, per-letter set)
+  no lead-in into i (the font's .ini starts at the entry)
+  no lead-in into j (the font's .ini starts at the entry)
+  tail after e (generated, per-letter set)
+  tail after t (generated, per-letter set)
+  tail after n (generated, per-letter set)
+
+SUMMARY
+CHECK joins in the test words (every connector, lead-in and tail, both ends): max gap 5.46e-12 fu, max tangent angle 1.21e-06 deg, max curvature jump 6.62e-12 1/fu
+pairs over 4.0 u (13):
+  #1 bow: ow cnct.mod_o_n 17.4 u (after_o) -> generator change
+  #2 woven: ov cnct.cnt_o_n 21.1 u (after_n) -> body variant (v=v.cnt.med)
+  #3 boxes: ox cnct.ful_o_x 27.8 u (after_o) -> generator change
+  #4 people: op cnct.mod_o_n 17.4 u (after_o) -> generator change
+  #5 knotmaze: ot cnct.mod_o_t 17.8 u (after_n) -> body variant (t=t.mod.med_o_)
+  #6 quick brown fox: br cnct.ful_b_r 5.2 u (after_b) -> generator change
+  #7 quick brown fox: ow cnct.mod_o_n 17.4 u (after_o) -> generator change
+  #8 quick brown fox: fo cnct.mrr_f_o 14.4 u (after_n) -> generator change
+  #9 quick brown fox: ox cnct.ful_o_x 27.8 u (after_o) -> generator change
+  #10 jumps over the lazy dog: ps cnct.ful_n_s 4.7 u (after_n) -> generator change
+  #11 jumps over the lazy dog: ov cnct.cnt_o_n 21.2 u (after_n) -> body variant (v=v.cnt.med)
+  #12 jumps over the lazy dog: og cnct.mod_o_o 18.2 u (after_o) -> generator change
+  #13 be we shoe maze huge bye: oe cnct.ful_o_e 29.5 u (after_o) -> body variant (e=e.ful.fin_o_)
+coverage, the font's connector classes in the test words (exit class _ entry class: pairs):
+  b_e   be ve we
+  b_n   by wn
+  b_o   bo wo
+  b_r   br
+  c_e   ce
+  c_h   ck
+  c_n   cu
+  e_n   en ev
+  e_o   eo
+  e_r   er
+  e_s   es
+  e_t   et
+  f_o   fo
+  g_e   ge je ye
+  g_n   ju
+  n_e   he le pe xe
+  n_f   pl
+  n_h   sh th
+  n_n   an hi hu im in ip iv kn mi mp mu ni pp pu py qu si tm ui um up
+  n_o   do ho ic la ma nd no po ro ug
+  n_r   ur
+  n_s   ps rs
+  n_z   az
+  o_e   oe
+  o_n   op ov ow
+  o_o   og
+  o_t   ot
+  o_x   ox
+  z_e   ze
+  z_n   zy
+  matrix (rows exit class, columns entry class; count of pairs):   e   f   h   n   o   r   s   t   x   z
+      b   3   0   0   2   2   1   0   0   0   0
+      c   1   0   1   1   0   0   0   0   0   0
+      e   0   0   0   2   1   1   1   1   0   0
+      f   0   0   0   0   1   0   0   0   0   0
+      g   3   0   0   1   0   0   0   0   0   0
+      n   4   1   2  21  10   1   2   0   0   1
+      o   1   0   0   3   1   0   0   1   1   0
+      z   1   0   0   1   0   0   0   0   0   0
+coverage, the model's exit kind -> entry kind: high->cusp 5 (br by op ot ow); high->fused 3 (bo og wo); high->smooth 7 (be oe ov ox ve we wn); low->cusp 23 (cu er es et hi hu ip ju mi mp mu ni ...); low->fused 12 (do eo fo ho ic la ma nd no po ro ug); low->smooth 23 (an az ce ck en ev ge he im in iv je ...)
+CHECK crossings between a generated connector (join, lead-in, tail; 10% trimmed at each end) and a body in the test words: 28
+  minimum: mu crosses u's body at 7 deg (retrace overlap, < 20 deg); font: no
+  bow: ow crosses o's body at 30 deg; font: no
+  woven: ov crosses o's body at 14 deg (retrace overlap, < 20 deg); font: no
+  boxes: ox crosses o's body at 58 deg; font: no
+  people: op crosses o's body at 29 deg; font: no
+  hippo: ip crosses p's body at 17 deg (retrace overlap, < 20 deg); font: yes
+  hippo: pp crosses p's body at 17 deg (retrace overlap, < 20 deg); font: yes
+  hippo: po crosses o's body at 8 deg (retrace overlap, < 20 deg); font: yes
+  puppy: pu crosses u's body at 7 deg (retrace overlap, < 20 deg); font: no
+  puppy: up crosses p's body at 17 deg (retrace overlap, < 20 deg); font: yes
+  puppy: pp crosses p's body at 17 deg (retrace overlap, < 20 deg); font: yes
+  knotmaze: no crosses o's body at 6 deg (retrace overlap, < 20 deg); font: yes
+  knotmaze: ot crosses t's body at 31 deg; font: yes
+  quick brown fox: qu crosses u's body at 7 deg (retrace overlap, < 20 deg); font: no
+  quick brown fox: ro crosses o's body at 6 deg (retrace overlap, < 20 deg); font: yes
+  quick brown fox: ow crosses o's body at 30 deg; font: no
+  quick brown fox: ox crosses o's body at 58 deg; font: no
+  jumps over the lazy dog: ju crosses u's body at 7 deg (retrace overlap, < 20 deg); font: no
+  jumps over the lazy dog: mp crosses p's body at 17 deg (retrace overlap, < 20 deg); font: yes
+  jumps over the lazy dog: ov crosses o's body at 15 deg (retrace overlap, < 20 deg); font: no
+  jumps over the lazy dog: zy crosses y's body at 3 deg (retrace overlap, < 20 deg); font: yes
+  jumps over the lazy dog: do crosses o's body at 6 deg (retrace overlap, < 20 deg); font: yes
+  jumps over the lazy dog: lead o crosses o's body at 6 deg (retrace overlap, < 20 deg); font: n/a (part of the .ini/.fin glyph)
+  be we shoe maze huge bye: ho crosses o's body at 6 deg (retrace overlap, < 20 deg); font: yes
+  be we shoe maze huge bye: oe crosses o's body at 55 deg; font: yes
+  be we shoe maze huge bye: hu crosses u's body at 7 deg (retrace overlap, < 20 deg); font: no
+  ice jet even: et crosses t's body at 6 deg (retrace overlap, < 20 deg); font: yes
+  ice jet even: et crosses t's body at 65 deg; font: yes
+wrote C:\Users\lsl\Repositories\knotmaze\.claude\probes\K863\trace\work33\base\dbg\words.png (1818 x 9832 px)

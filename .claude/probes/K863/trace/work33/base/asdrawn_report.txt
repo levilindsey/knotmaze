@@ -1,0 +1,232 @@
+K980 as-drawn read (asdrawn_k980: K944 + K981, cusp arrivals kept): C:\Users\lsl\Repositories\knotmaze\.claude\probes\K863\trace\out33\cursive_template.svg
+  map work20\template_map_k990.json; base bodies work16\fewnode\bodies.json
+reference layers (not read): 121 changed, 0 removed, 0 added
+  REFERENCE EDIT (not read): context context-a-fused-stretch at context/g[0]/path[0] changed
+  REFERENCE EDIT (not read): context context-a-in at context/g[0]/path[1] changed
+  REFERENCE EDIT (not read): context context-a-out at context/g[0]/path[2] changed
+  REFERENCE EDIT (not read): context context-b-in at context/g[1]/path[0] changed
+  REFERENCE EDIT (not read): context context-b-out at context/g[1]/path[1] changed
+  REFERENCE EDIT (not read): context context-c-in at context/g[2]/path[1] changed
+  REFERENCE EDIT (not read): context context-c-out at context/g[2]/path[2] changed
+  REFERENCE EDIT (not read): context context-d-in at context/g[3]/path[1] changed
+  REFERENCE EDIT (not read): context context-e-in at context/g[4]/path[0] changed
+  REFERENCE EDIT (not read): context context-e-out at context/g[4]/path[1] changed
+  REFERENCE EDIT (not read): context context-f-in at context/g[5]/path[0] changed
+  REFERENCE EDIT (not read): context context-f-out at context/g[5]/path[1] changed
+  REFERENCE EDIT (not read): context context-g-fused-stretch at context/g[6]/path[0] changed
+  REFERENCE EDIT (not read): context context-g-in at context/g[6]/path[1] changed
+  REFERENCE EDIT (not read): context context-g-out at context/g[6]/path[2] changed
+  REFERENCE EDIT (not read): context context-h-in at context/g[7]/path[0] changed
+  REFERENCE EDIT (not read): context context-h-out at context/g[7]/path[1] changed
+  REFERENCE EDIT (not read): context context-i-in at context/g[8]/path[0] changed
+  REFERENCE EDIT (not read): context context-j-in at context/g[9]/path[0] changed
+  REFERENCE EDIT (not read): context context-k-in at context/g[10]/path[0] changed
+  REFERENCE EDIT (not read): context context-k-out at context/g[10]/path[1] changed
+  REFERENCE EDIT (not read): context context-l-in at context/g[11]/path[0] changed
+  REFERENCE EDIT (not read): context context-m-in at context/g[12]/path[0] changed
+  REFERENCE EDIT (not read): context context-m-out at context/g[12]/path[1] changed
+  REFERENCE EDIT (not read): context context-n-in at context/g[13]/path[0] changed
+  REFERENCE EDIT (not read): context context-o-fused-stretch at context/g[14]/path[0] changed
+  REFERENCE EDIT (not read): context context-o-in at context/g[14]/path[1] changed
+  REFERENCE EDIT (not read): context context-o-out at context/g[14]/path[2] changed
+  REFERENCE EDIT (not read): context context-p-in at context/g[15]/path[0] changed
+  REFERENCE EDIT (not read): context context-p-out at context/g[15]/path[1] changed
+  REFERENCE EDIT (not read): context context-q-in at context/g[16]/path[1] changed
+  REFERENCE EDIT (not read): context context-q-out at context/g[16]/path[2] changed
+  REFERENCE EDIT (not read): context context-r-in at context/g[17]/path[0] changed
+  REFERENCE EDIT (not read): context context-r-out at context/g[17]/path[1] changed
+  REFERENCE EDIT (not read): context context-s-in at context/g[18]/path[0] changed
+  REFERENCE EDIT (not read): context context-s-out at context/g[18]/path[1] changed
+  REFERENCE EDIT (not read): context context-u-in at context/g[20]/path[0] changed
+  REFERENCE EDIT (not read): context context-u-out at context/g[20]/path[1] changed
+  REFERENCE EDIT (not read): context context-v-out at context/g[21]/path[1] changed
+  REFERENCE EDIT (not read): context context-w-in at context/g[22]/path[0] changed
+  REFERENCE EDIT (not read): context context-w-out at context/g[22]/path[1] changed
+  REFERENCE EDIT (not read): context context-x-in at context/g[23]/path[0] changed
+  REFERENCE EDIT (not read): context context-y-in at context/g[24]/path[0] changed
+  REFERENCE EDIT (not read): context context-y-out at context/g[24]/path[1] changed
+  REFERENCE EDIT (not read): context context-z-in at context/g[25]/path[0] changed
+  REFERENCE EDIT (not read): context context-z-out at context/g[25]/path[1] changed
+  REFERENCE EDIT (not read): context context-word-and-body-1 at context/g[26]/path[0] changed
+  REFERENCE EDIT (not read): context context-word-and-body-2 at context/g[26]/path[1] changed
+  REFERENCE EDIT (not read): context context-word-and-body-3 at context/g[26]/path[2] changed
+  REFERENCE EDIT (not read): context context-word-and-join-1 at context/g[26]/path[3] changed
+  REFERENCE EDIT (not read): context context-word-and-join-2 at context/g[26]/path[4] changed
+  REFERENCE EDIT (not read): context context-word-and-lead-1 at context/g[26]/path[5] changed
+  REFERENCE EDIT (not read): context context-word-and-tail-1 at context/g[26]/path[6] changed
+  REFERENCE EDIT (not read): context context-font-variants-1 at context/g[27]/path[0] changed
+  REFERENCE EDIT (not read): context context-font-variants-2 at context/g[27]/path[1] changed
+  REFERENCE EDIT (not read): context context-font-variants-3 at context/g[27]/path[2] changed
+  REFERENCE EDIT (not read): context context-font-variants-4 at context/g[27]/path[3] changed
+  REFERENCE EDIT (not read): context context-font-variants-5 at context/g[27]/path[4] changed
+  REFERENCE EDIT (not read): context context-font-variants-6 at context/g[27]/path[5] changed
+  REFERENCE EDIT (not read): context context-font-variants-7 at context/g[27]/path[6] changed
+  REFERENCE EDIT (not read): context context-font-variants-8 at context/g[27]/path[7] changed
+  REFERENCE EDIT (not read): context context-font-variants-9 at context/g[27]/path[8] changed
+  REFERENCE EDIT (not read): context context-font-variants-10 at context/g[27]/path[9] changed
+  REFERENCE EDIT (not read): context context-font-variants-11 at context/g[27]/path[10] changed
+  REFERENCE EDIT (not read): context context-font-variants-12 at context/g[27]/path[11] changed
+  REFERENCE EDIT (not read): context context-font-variants-13 at context/g[27]/path[12] changed
+  REFERENCE EDIT (not read): joins join-a-entry-dot at joins/g[0]/circle[0] changed
+  REFERENCE EDIT (not read): joins join-a-entry at joins/g[0]/path[0] changed
+  REFERENCE EDIT (not read): joins join-a-exit at joins/g[0]/path[1] changed
+  REFERENCE EDIT (not read): joins join-a-entry-after-o-dot at joins/g[0]/circle[2] changed
+  REFERENCE EDIT (not read): joins join-a-entry-after-o at joins/g[0]/path[2] changed
+  REFERENCE EDIT (not read): joins join-a-entry-after-b-dot at joins/g[0]/circle[3] changed
+  REFERENCE EDIT (not read): joins join-a-entry-after-b at joins/g[0]/path[3] changed
+  REFERENCE EDIT (not read): joins join-a-entry-ring at joins/g[0]/circle[4] changed
+  REFERENCE EDIT (not read): joins join-a-entry-after-o-ring at joins/g[0]/circle[5] changed
+  REFERENCE EDIT (not read): joins join-a-entry-after-b-ring at joins/g[0]/circle[6] changed
+  REFERENCE EDIT (not read): joins join-b-entry at joins/g[1]/path[0] changed
+  REFERENCE EDIT (not read): joins join-c-entry-after-b-dot at joins/g[2]/circle[3] changed
+  REFERENCE EDIT (not read): joins join-c-entry-after-b at joins/g[2]/path[3] changed
+  REFERENCE EDIT (not read): joins join-c-entry-after-b-ring at joins/g[2]/circle[6] changed
+  REFERENCE EDIT (not read): joins join-e-entry at joins/g[4]/path[0] changed
+  REFERENCE EDIT (not read): joins join-f-entry at joins/g[5]/path[0] changed
+  REFERENCE EDIT (not read): joins join-f-exit-dot at joins/g[5]/circle[1] changed
+  REFERENCE EDIT (not read): joins join-f-exit at joins/g[5]/path[1] changed
+  REFERENCE EDIT (not read): joins join-g-entry-after-o-dot at joins/g[6]/circle[2] changed
+  REFERENCE EDIT (not read): joins join-g-entry-after-o at joins/g[6]/path[2] changed
+  REFERENCE EDIT (not read): joins join-g-entry-after-b-dot at joins/g[6]/circle[3] changed
+  REFERENCE EDIT (not read): joins join-g-entry-after-b at joins/g[6]/path[3] changed
+  REFERENCE EDIT (not read): joins join-g-entry-after-o-ring at joins/g[6]/circle[5] changed
+  REFERENCE EDIT (not read): joins join-g-entry-after-b-ring at joins/g[6]/circle[6] changed
+  REFERENCE EDIT (not read): joins join-h-entry at joins/g[7]/path[0] changed
+  REFERENCE EDIT (not read): joins join-i-entry-after-b at joins/g[8]/path[3] changed
+  REFERENCE EDIT (not read): joins join-j-entry-after-o at joins/g[9]/path[2] changed
+  REFERENCE EDIT (not read): joins join-k-entry at joins/g[10]/path[0] changed
+  REFERENCE EDIT (not read): joins join-k-exit at joins/g[10]/path[1] changed
+  REFERENCE EDIT (not read): joins join-k-entry-after-o-dot at joins/g[10]/circle[2] changed
+  REFERENCE EDIT (not read): joins join-k-entry-after-o at joins/g[10]/path[2] changed
+  REFERENCE EDIT (not read): joins join-k-entry-after-b-dot at joins/g[10]/circle[3] changed
+  REFERENCE EDIT (not read): joins join-k-entry-after-b at joins/g[10]/path[3] changed
+  REFERENCE EDIT (not read): joins join-k-entry-after-o-ring at joins/g[10]/circle[4] changed
+  REFERENCE EDIT (not read): joins join-k-entry-after-b-ring at joins/g[10]/circle[5] changed
+  REFERENCE EDIT (not read): joins join-n-entry at joins/g[13]/path[0] changed
+  REFERENCE EDIT (not read): joins join-o-entry-dot at joins/g[14]/circle[0] changed
+  REFERENCE EDIT (not read): joins join-o-entry at joins/g[14]/path[0] changed
+  REFERENCE EDIT (not read): joins join-o-exit-dot at joins/g[14]/circle[1] changed
+  REFERENCE EDIT (not read): joins join-o-exit at joins/g[14]/path[1] changed
+  REFERENCE EDIT (not read): joins join-o-entry-ring at joins/g[14]/circle[4] changed
+  REFERENCE EDIT (not read): joins join-p-entry-dot at joins/g[15]/circle[0] changed
+  REFERENCE EDIT (not read): joins join-p-entry at joins/g[15]/path[0] changed
+  REFERENCE EDIT (not read): joins join-p-exit-dot at joins/g[15]/circle[1] changed
+  REFERENCE EDIT (not read): joins join-p-exit at joins/g[15]/path[1] changed
+  REFERENCE EDIT (not read): joins join-q-entry-after-b-dot at joins/g[16]/circle[3] changed
+  REFERENCE EDIT (not read): joins join-q-entry-after-b at joins/g[16]/path[3] changed
+  REFERENCE EDIT (not read): joins join-q-entry-after-b-ring at joins/g[16]/circle[6] changed
+  REFERENCE EDIT (not read): joins join-s-entry at joins/g[18]/path[0] changed
+  REFERENCE EDIT (not read): joins join-t-entry at joins/g[19]/path[0] changed
+  REFERENCE EDIT (not read): joins join-u-entry at joins/g[20]/path[0] changed
+  REFERENCE EDIT (not read): joins join-w-entry at joins/g[22]/path[0] changed
+  REFERENCE EDIT (not read): joins join-x-entry at joins/g[23]/path[0] changed
+  REFERENCE EDIT (not read): joins join-x-exit at joins/g[23]/path[1] changed
+  REFERENCE EDIT (not read): joins join-z-entry at joins/g[25]/path[0] changed
+a: stroke(s) 1 edited; points on stroke 1 re-derived
+  a fused entry junction: re-derived, moved 0.000 u
+  a smooth exit: re-derived, moved 0.000 u
+  a after_o frame: re-derived, moved 7.461 u  (> 0.5 u)
+    a after_o check: the drawn stroke's nearest point to the old place is 5.643 u from it (bk 0, t 0.4112); the carried frame lands 4.749 u from that point, +4.750 u of arc
+  a after_b frame: re-derived, moved 7.385 u  (> 0.5 u)
+    a after_b check: the drawn stroke's nearest point to the old place is 5.593 u from it (bk 0, t 0.4463); the carried frame lands 4.691 u from that point, +4.691 u of arc
+  a corner 0: re-derived, moved 10.697 u  (> 0.5 u)
+  a cusp 0: re-derived, moved 0.422 u
+  a cusp 1: re-derived, moved 0.000 u
+  a split a@352: re-derived, moved 1.527 u  (> 0.5 u)
+  a split a@1659: re-derived, moved 1.540 u  (> 0.5 u)
+  a split a@2325: re-derived, moved 0.000 u
+  a split a@2839: re-derived, moved 0.000 u
+f: stroke(s) 1 edited; points on stroke 1 re-derived
+  f smooth entry: re-derived, moved 0.000 u
+  f smooth exit: re-derived, moved 20.317 u  (> 0.5 u)
+  f after_o frame: re-derived, moved 0.000 u
+    f after_o check: the drawn stroke's nearest point to the old place is 0.000 u from it (bk 0, t 0.8916); the carried frame lands 0.000 u from that point, +0.000 u of arc
+  f after_b frame: re-derived, moved 0.000 u
+    f after_b check: the drawn stroke's nearest point to the old place is 0.000 u from it (bk 0, t 0.8916); the carried frame lands 0.000 u from that point, +0.000 u of arc
+  f split f@473: re-derived, moved 0.000 u
+  f split f@490: re-derived, moved 0.000 u
+  f split f@2138: re-derived, moved 0.000 u
+  f split f@2154: re-derived, moved 0.000 u
+  f crossing 0: re-derived, moved 0.000 u
+g: stroke(s) 1 edited; points on stroke 1 re-derived
+  g alignment (K1019): written and drawn node counts match, but node pairs lie up to 78.99 u apart (> 25 u): aligned by the DP, written -> drawn 0->0, 3->3, 4->4, 5->5, 6->6, 7->7, 8->8, 9->9
+  g fused entry junction: re-derived, moved 0.000 u
+  g smooth exit: re-derived, moved 0.000 u
+  g after_o frame: re-derived, moved 6.370 u  (> 0.5 u)
+    g after_o check: the drawn stroke's nearest point to the old place is 3.403 u from it (bk 0, t 0.6135); the carried frame lands 5.296 u from that point, +5.296 u of arc
+  g after_b frame: re-derived, moved 6.276 u  (> 0.5 u)
+    g after_b check: the drawn stroke's nearest point to the old place is 3.380 u from it (bk 0, t 0.6754); the carried frame lands 5.199 u from that point, +5.199 u of arc
+  g corner 0: re-derived, moved 13.315 u  (> 0.5 u)
+  g cusp 0: re-derived, moved 1.289 u  (> 0.5 u)
+  g cusp 1: re-derived, moved 0.000 u
+  g split g@445: re-derived, moved 3.261 u  (> 0.5 u)
+  g split g@1577: re-derived, moved 3.224 u  (> 0.5 u)
+  g split g@2332: re-derived, moved 0.000 u
+  g split g@2873: re-derived, moved 0.000 u
+  g crossing 0: re-derived, moved 0.000 u
+k: stroke(s) 1 edited; points on stroke 1 re-derived
+  k smooth entry: re-derived, moved 0.000 u
+  k smooth exit: re-derived, moved 0.000 u
+  k after_o frame: re-derived, moved 0.000 u
+    k after_o check: the drawn stroke's nearest point to the old place is 0.000 u from it (bk 1, t 0.0107); the carried frame lands 0.000 u from that point, +0.000 u of arc
+  k after_b frame: re-derived, moved 0.000 u
+    k after_b check: the drawn stroke's nearest point to the old place is 0.000 u from it (bk 1, t 0.0699); the carried frame lands 0.000 u from that point, +0.000 u of arc
+  k cusp 0: re-derived, moved 0.000 u
+  k split k@2136: re-derived, moved 0.000 u
+  k split k@2766: re-derived, moved 0.000 u
+  k crossing 0: re-derived, moved 0.000 u
+o: stroke(s) 1 edited; points on stroke 1 re-derived
+  o fused entry junction: re-derived, moved 0.000 u
+  o smooth exit: re-derived, moved 35.600 u  (> 0.5 u)
+  o after_o frame: re-derived, moved 0.000 u
+    o after_o check: the drawn stroke's nearest point to the old place is 0.000 u from it (bk 0, t 0.3341); the carried frame lands 0.000 u from that point, -0.000 u of arc
+  o after_b frame: re-derived, moved 0.000 u
+    o after_b check: the drawn stroke's nearest point to the old place is 0.000 u from it (bk 0, t 0.3630); the carried frame lands 0.000 u from that point, -0.000 u of arc
+  o cusp 0: re-derived, moved 0.000 u
+  o split o@372: re-derived, moved 0.000 u
+  o split o@1512: re-derived, moved 0.000 u
+p: stroke(s) 1 edited; points on stroke 1 re-derived
+  p cusp entry: the point follows the drawn start; the fitted arrival T and k kept (K980)
+  p cusp entry: re-derived, moved 0.000 u
+  p smooth exit: re-derived, moved 9.657 u  (> 0.5 u)
+  p cusp 0: re-derived, moved 0.000 u
+  p cusp 1: re-derived, moved 0.000 u
+  p cusp 2: re-derived, moved 0.000 u
+  p split p@619: re-derived, moved 0.000 u
+  p split p@767: re-derived, moved 0.000 u
+  p split p@980: re-derived, moved 0.000 u
+  p split p@2550: re-derived, moved 0.000 u
+  p split p@3562: re-derived, moved 0.281 u
+  p split p@4083: re-derived, moved 0.000 u
+q: stroke(s) 1 edited; points on stroke 1 re-derived
+  q fused entry junction: re-derived, moved 0.000 u
+  q smooth exit: re-derived, moved 0.000 u
+  q after_o frame: re-derived, moved 8.372 u  (> 0.5 u)
+    q after_o check: the drawn stroke's nearest point to the old place is 6.498 u from it (bk 0, t 0.4509); the carried frame lands 5.137 u from that point, +5.137 u of arc
+  q after_b frame: re-derived, moved 8.555 u  (> 0.5 u)
+    q after_b check: the drawn stroke's nearest point to the old place is 6.752 u from it (bk 0, t 0.4856); the carried frame lands 5.106 u from that point, +5.107 u of arc
+  q corner 0: re-derived, moved 12.640 u  (> 0.5 u)
+  q cusp 0: re-derived, moved 1.018 u  (> 0.5 u)
+  q cusp 1: re-derived, moved 0.000 u
+  q split q@355: re-derived, moved 2.931 u  (> 0.5 u)
+  q split q@1668: re-derived, moved 2.944 u  (> 0.5 u)
+  q split q@2340: re-derived, moved 0.000 u
+  q split q@2868: re-derived, moved 0.000 u
+
+KINKS (reported, never fixed): per stroke, each node turning > 0.5 deg or whose curvature jumps above the floor (1.00e-04 1/fu); 'by design' = a cusp over 90 deg or a body corner; nodetype = the path's sodipodi:nodetypes letter at that node (c corner, s smooth, z symmetric, a auto)
+  a s1 node 6 at (557.6, 501.3) fu: turn +180.00 deg, dk 7.43e-04 1/fu, nodetype c  [by design]
+  f s1 node 8 at (192.6, 4.5) fu: turn +0.00 deg, dk 1.39e-02 1/fu, nodetype s  KINK
+  f s1 node 9 at (176.7, 271.5) fu: turn -167.59 deg, dk 2.25e-04 1/fu, nodetype c  [by design]
+  g s1 node 6 at (561.3, 509.5) fu: turn +177.95 deg, dk 2.71e-04 1/fu, nodetype c  [by design]
+  k s1 node 9 at (64.5, -6.9) fu: turn +180.00 deg, dk 4.42e-03 1/fu, nodetype c  [by design]
+  k s1 node 15 at (172.3, 208.6) fu: turn +100.00 deg, dk 2.40e-04 1/fu, nodetype c  [by design]
+  o s1 node 7 at (373.8, 507.3) fu: turn +180.00 deg, dk 1.27e-02 1/fu, nodetype c  [by design]
+  p s1 node 4 at (-89.0, -499.6) fu: turn +180.00 deg, dk 6.31e-04 1/fu, nodetype c  [by design]
+  p s1 node 10 at (93.9, 41.4) fu: turn +180.00 deg, dk 5.57e-04 1/fu, nodetype c  [by design]
+  q s1 node 4 at (563.9, 509.2) fu: turn +179.66 deg, dk 3.08e-03 1/fu, nodetype c  [by design]
+
+SUMMARY: letters with an edited stroke: a(s1) f(s1) g(s1) k(s1) o(s1) p(s1) q(s1)
+  untouched strokes: largest difference from the map's written nodes 0.00e+00 u
+  re-derived points that moved > 0.5 u: ['a after_o frame 7.46 u', 'a after_b frame 7.38 u', 'a corner 0 10.70 u', 'a split a@352 1.53 u', 'a split a@1659 1.54 u', 'f smooth exit 20.32 u', 'g after_o frame 6.37 u', 'g after_b frame 6.28 u', 'g corner 0 13.32 u', 'g cusp 0 1.29 u', 'g split g@445 3.26 u', 'g split g@1577 3.22 u', 'o smooth exit 35.60 u', 'p smooth exit 9.66 u', 'q after_o frame 8.37 u', 'q after_b frame 8.56 u', 'q corner 0 12.64 u', 'q cusp 0 1.02 u', 'q split q@355 2.93 u', 'q split q@1668 2.94 u']
+  retraced stretches: none touched
+  kinks outside the design's cusps and corners: 1

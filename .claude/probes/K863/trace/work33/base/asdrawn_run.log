@@ -1,0 +1,6 @@
+
+SUMMARY: letters with an edited stroke: a(s1) f(s1) g(s1) k(s1) o(s1) p(s1) q(s1)
+  untouched strokes: largest difference from the map's written nodes 0.00e+00 u
+  re-derived points that moved > 0.5 u: ['a after_o frame 7.46 u', 'a after_b frame 7.38 u', 'a corner 0 10.70 u', 'a split a@352 1.53 u', 'a split a@1659 1.54 u', 'f smooth exit 20.32 u', 'g after_o frame 6.37 u', 'g after_b frame 6.28 u', 'g corner 0 13.32 u', 'g cusp 0 1.29 u', 'g split g@445 3.26 u', 'g split g@1577 3.22 u', 'o smooth exit 35.60 u', 'p smooth exit 9.66 u', 'q after_o frame 8.37 u', 'q after_b frame 8.56 u', 'q corner 0 12.64 u', 'q cusp 0 1.02 u', 'q split q@355 2.93 u', 'q split q@1668 2.94 u']
+  retraced stretches: none touched
+  kinks outside the design's cusps and corners: 1

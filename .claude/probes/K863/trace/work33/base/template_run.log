@@ -1,0 +1,15 @@
+guides (outline; fu; template u = fu x 0.24, x-height 120 u): ascender 1019 fu = 244.6 u, descender -519 fu = -124.6 u
+  x-height  500 fu (OS/2 sxHeight 500); outline tops of n m u v w x z: 519 519 519 519 519 519 519
+  ascender  outline tops b d h k l: 1019 1015 1019 1019 1019  median 1019 fu = 244.6 u;  centreline tops 1003 1001 1002 1003 998
+  descender outline bottoms g j p q y: -519 -519 -515 -517 -519  median -519 fu = -124.6 u;  centreline bottoms -504 -500 -500 -500 -502
+  (OS/2: sxHeight 500, sCapHeight 1000, typo ascender 1428 / descender -504; those two are line metrics, not letter heights: the guides use the letters' outline extremes, as sxHeight does for x)
+K944 --layout: cells 414 x 462 u, page 2214 x 3490 u, origins from the map
+cells 414 x 462 u (5 columns, 7 rows), page 2214 x 3490 u; content max width 361.2 u, top 244.6 u, bottom 124.6 u
+K944 splice: C:\Users\lsl\Repositories\knotmaze\.claude\probes\K863\trace\out33\cursive_template.svg with layers guides, context, joins rebuilt; the Letters layer and everything else kept byte for byte
+CHECK cells: every body, its context connectors and its ticks inside its cell (and below its label band):
+  smallest clearance 26.4 u (m), word 'and' 30.3 u; outside: none
+CHECK layers (id: label): {'guides': 'Guides', 'context': 'Context - reference', 'letters': 'Letters - draw here', 'joins': 'Joins - reference'}
+CHECK paths: 192 paths in Letters/Joins/Context, 0 not open+stroked+unfilled
+CHECK ids: 570 ids, 0 duplicates; letter groups 26, letter paths 31, join ticks 122
+CHECK pen order: strokes written per letter = bodies.json order (main stroke first, dots/crosses last): i2 j2 t2 x2
+CHECK round trip (template -> read_template; entry, exit and 44 high-entry frames): bodies within 0.000 u, frame points 0.0000 u, tangents 0.0000 deg, curvature 1.38e-08 1/fu

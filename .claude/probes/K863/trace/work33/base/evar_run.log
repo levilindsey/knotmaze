@@ -1,0 +1,9 @@
+objective: --target v58
+the font's e after each letter: a:n b:o c:g d:n e:n f:n g:g h:n i:n j:g k:n l:n m:n n:n o:o p:n q:n r:n s:n t:n u:n v:o w:o x:n y:g z:g
+variant o: the body sits +31.0 fu from the glyph origin (--shift adv)
+variant o (e.ful.med_o_): skeleton dx +31.00 (err 19.8); entry stroke start (70.0,252.0) tangent -1.4 deg; C on the left side at (85.9,237.2) (s 908 of 1053); top end s 552.6
+  frozen (K962; no fit, from 359.53, 0.49251, 0.49567, 0.46431, 0.10514, 0.0051683; target the font): s_J 359.528 (J at (344.6,355.2)), prm (0.4925, 0.4957, 0.4643, 0.1051), k_C +0.005168; cost 22.47193 fu (fit 22.47193, pull 0.00000; at the start 22.47193), 0 evaluations; start curve 4 cubics; variant vs the font's glyph 5.21 u Hausdorff (at the start 5.21 u; the standard body vs it: 30.72 u)
+variant g: the body sits +0.0 fu from the glyph origin (--shift adv)
+variant g (e.ful.med_g_): skeleton dx +0.00 (err 20.6); entry stroke start (84.0,145.5) tangent 34.0 deg; C on the left side at (82.8,159.9) (s 986 of 1053); top end s 548.3
+  frozen (K962; no fit, from 301.14, 0.53501, 0.51674, 0.12975, 0.075621, -0.0051803; target the font): s_J 301.137 (J at (313.3,306.0)), prm (0.5350, 0.5167, 0.1298, 0.0756), k_C -0.005180; cost 17.97942 fu (fit 17.97942, pull 0.00000; at the start 17.97942), 0 evaluations; start curve 3 cubics; variant vs the font's glyph 3.47 u Hausdorff (at the start 3.47 u; the standard body vs it: 11.00 u)
+written C:\Users\lsl\Repositories\knotmaze\.claude\probes\K863\trace\work33\base\bodies.json

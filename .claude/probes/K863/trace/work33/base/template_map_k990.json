@@ -1,0 +1,12140 @@
+{
+"scale_u_per_fu": 0.24,
+"xheight_u": 120.0,
+"ascender_u": 244.56,
+"descender_u": -124.56,
+"cells": {
+"a": {
+"origin_x": 158.74809375874545,
+"baseline_y": 470.56000007601233,
+"written_vs_bodies_u": 5.297165444062557e-07,
+"x0": 40.0,
+"y0": 160.0,
+"w": 414.0,
+"h": 462.0
+},
+"b": {
+"origin_x": 600.0880935714931,
+"baseline_y": 470.56000004894395,
+"written_vs_bodies_u": 5.730013299398706e-07,
+"x0": 470.0,
+"y0": 160.0,
+"w": 414.0,
+"h": 462.0
+},
+"c": {
+"origin_x": 1027.5680936407541,
+"baseline_y": 470.55999987420665,
+"written_vs_bodies_u": 6.054573873370828e-07,
+"x0": 900.0,
+"y0": 160.0,
+"w": 414.0,
+"h": 462.0
+},
+"d": {
+"origin_x": 1448.0280936713586,
+"baseline_y": 470.5600000237757,
+"written_vs_bodies_u": 5.003032583772438e-07,
+"x0": 1330.0,
+"y0": 160.0,
+"w": 414.0,
+"h": 462.0
+},
+"e": {
+"origin_x": 1898.6680937037415,
+"baseline_y": 470.5600001122006,
+"written_vs_bodies_u": 5.17690011747618e-07,
+"x0": 1760.0,
+"y0": 160.0,
+"w": 414.0,
+"h": 462.0
+},
+"f": {
+"origin_x": 182.20809372887317,
+"baseline_y": 948.5599999676425,
+"written_vs_bodies_u": 5.244440899332403e-07,
+"x0": 40.0,
+"y0": 638.0,
+"w": 414.0,
+"h": 462.0
+},
+"g": {
+"origin_x": 587.8480937135957,
+"baseline_y": 948.5599999078645,
+"written_vs_bodies_u": 5.141334895597538e-07,
+"x0": 470.0,
+"y0": 638.0,
+"w": 414.0,
+"h": 462.0
+},
+"h": {
+"origin_x": 1013.8280937367949,
+"baseline_y": 948.5600000336077,
+"written_vs_bodies_u": 4.786299996339949e-07,
+"x0": 900.0,
+"y0": 638.0,
+"w": 414.0,
+"h": 462.0
+},
+"i": {
+"origin_x": 1485.948093796894,
+"baseline_y": 948.5600000239259,
+"written_vs_bodies_u": 5.943941232544603e-07,
+"x0": 1330.0,
+"y0": 638.0,
+"w": 414.0,
+"h": 462.0
+},
+"j": {
+"origin_x": 1928.6974220070902,
+"baseline_y": 948.5599999851481,
+"written_vs_bodies_u": 4.946358558299835e-07,
+"x0": 1760.0,
+"y0": 638.0,
+"w": 414.0,
+"h": 462.0
+},
+"k": {
+"origin_x": 167.26809368484388,
+"baseline_y": 1426.560000066985,
+"written_vs_bodies_u": 5.471524673339445e-07,
+"x0": 40.0,
+"y0": 1116.0,
+"w": 414.0,
+"h": 462.0
+},
+"l": {
+"origin_x": 617.6680937153219,
+"baseline_y": 1426.5600000184777,
+"written_vs_bodies_u": 5.066494850325398e-07,
+"x0": 470.0,
+"y0": 1116.0,
+"w": 414.0,
+"h": 462.0
+},
+"m": {
+"origin_x": 988.2680937343408,
+"baseline_y": 1426.559999969047,
+"written_vs_bodies_u": 5.282497568259714e-07,
+"x0": 900.0,
+"y0": 1116.0,
+"w": 414.0,
+"h": 462.0
+},
+"n": {
+"origin_x": 1456.4280937117273,
+"baseline_y": 1426.560000113626,
+"written_vs_bodies_u": 5.414262886915822e-07,
+"x0": 1330.0,
+"y0": 1116.0,
+"w": 414.0,
+"h": 462.0
+},
+"o": {
+"origin_x": 1894.6480936117532,
+"baseline_y": 1426.5600000505713,
+"written_vs_bodies_u": 5.769036306446651e-07,
+"x0": 1760.0,
+"y0": 1116.0,
+"w": 414.0,
+"h": 462.0
+},
+"p": {
+"origin_x": 159.46809366450364,
+"baseline_y": 1904.5599999821134,
+"written_vs_bodies_u": 5.009462711313972e-07,
+"x0": 40.0,
+"y0": 1594.0,
+"w": 414.0,
+"h": 462.0
+},
+"q": {
+"origin_x": 587.1880936436705,
+"baseline_y": 1904.5599999125488,
+"written_vs_bodies_u": 5.866006631549681e-07,
+"x0": 470.0,
+"y0": 1594.0,
+"w": 414.0,
+"h": 462.0
+},
+"r": {
+"origin_x": 1029.7880936432073,
+"baseline_y": 1904.5599999981994,
+"written_vs_bodies_u": 5.100780526845483e-07,
+"x0": 900.0,
+"y0": 1594.0,
+"w": 414.0,
+"h": 462.0
+},
+"s": {
+"origin_x": 1458.9480937235196,
+"baseline_y": 1904.5600000840798,
+"written_vs_bodies_u": 4.89992771690595e-07,
+"x0": 1330.0,
+"y0": 1594.0,
+"w": 414.0,
+"h": 462.0
+},
+"t": {
+"origin_x": 1908.3880936623282,
+"baseline_y": 1904.5600000387149,
+"written_vs_bodies_u": 5.191163836570922e-07,
+"x0": 1760.0,
+"y0": 1594.0,
+"w": 414.0,
+"h": 462.0
+},
+"u": {
+"origin_x": 154.42809359023934,
+"baseline_y": 2382.5600000357513,
+"written_vs_bodies_u": 5.242532097327057e-07,
+"x0": 40.0,
+"y0": 2072.0,
+"w": 414.0,
+"h": 462.0
+},
+"v": {
+"origin_x": 613.2880937852459,
+"baseline_y": 2382.560000002001,
+"written_vs_bodies_u": 5.695399067917606e-07,
+"x0": 470.0,
+"y0": 2072.0,
+"w": 414.0,
+"h": 462.0
+},
+"w": {
+"origin_x": 997.2080936391293,
+"baseline_y": 2382.5599999888536,
+"written_vs_bodies_u": 5.488993792823749e-07,
+"x0": 900.0,
+"y0": 2072.0,
+"w": 414.0,
+"h": 462.0
+},
+"x": {
+"origin_x": 1452.588093940012,
+"baseline_y": 2382.56000001948,
+"written_vs_bodies_u": 4.797375368070789e-07,
+"x0": 1330.0,
+"y0": 2072.0,
+"w": 414.0,
+"h": 462.0
+},
+"y": {
+"origin_x": 1874.2480937102603,
+"baseline_y": 2382.5600000384793,
+"written_vs_bodies_u": 5.151823643245734e-07,
+"x0": 1760.0,
+"y0": 2072.0,
+"w": 414.0,
+"h": 462.0
+},
+"z": {
+"origin_x": 179.68809358534216,
+"baseline_y": 2860.5600000598215,
+"written_vs_bodies_u": 5.538951199923758e-07,
+"x0": 40.0,
+"y0": 2550.0,
+"w": 414.0,
+"h": 462.0
+}
+},
+"word_and": {
+"origin_x": 1088.6034133780054,
+"baseline_y": 2860.56
+},
+"k944": {
+"note": "K944 as-drawn map: cells at full precision, strokes as written (u), retraced stretches, the rule for each unmarked point, reference-layer fingerprints",
+"same_u": 0.0001
+},
+"layout": {
+"page_w": "2214",
+"page_h": "3490",
+"viewBox": "0 0 2214 3490",
+"boxes": {
+"a": {
+"x0": 40.0,
+"y0": 160.0,
+"w": 414.0,
+"h": 462.0
+},
+"b": {
+"x0": 470.0,
+"y0": 160.0,
+"w": 414.0,
+"h": 462.0
+},
+"c": {
+"x0": 900.0,
+"y0": 160.0,
+"w": 414.0,
+"h": 462.0
+},
+"d": {
+"x0": 1330.0,
+"y0": 160.0,
+"w": 414.0,
+"h": 462.0
+},
+"e": {
+"x0": 1760.0,
+"y0": 160.0,
+"w": 414.0,
+"h": 462.0
+},
+"f": {
+"x0": 40.0,
+"y0": 638.0,
+"w": 414.0,
+"h": 462.0
+},
+"g": {
+"x0": 470.0,
+"y0": 638.0,
+"w": 414.0,
+"h": 462.0
+},
+"h": {
+"x0": 900.0,
+"y0": 638.0,
+"w": 414.0,
+"h": 462.0
+},
+"i": {
+"x0": 1330.0,
+"y0": 638.0,
+"w": 414.0,
+"h": 462.0
+},
+"j": {
+"x0": 1760.0,
+"y0": 638.0,
+"w": 414.0,
+"h": 462.0
+},
+"k": {
+"x0": 40.0,
+"y0": 1116.0,
+"w": 414.0,
+"h": 462.0
+},
+"l": {
+"x0": 470.0,
+"y0": 1116.0,
+"w": 414.0,
+"h": 462.0
+},
+"m": {
+"x0": 900.0,
+"y0": 1116.0,
+"w": 414.0,
+"h": 462.0
+},
+"n": {
+"x0": 1330.0,
+"y0": 1116.0,
+"w": 414.0,
+"h": 462.0
+},
+"o": {
+"x0": 1760.0,
+"y0": 1116.0,
+"w": 414.0,
+"h": 462.0
+},
+"p": {
+"x0": 40.0,
+"y0": 1594.0,
+"w": 414.0,
+"h": 462.0
+},
+"q": {
+"x0": 470.0,
+"y0": 1594.0,
+"w": 414.0,
+"h": 462.0
+},
+"r": {
+"x0": 900.0,
+"y0": 1594.0,
+"w": 414.0,
+"h": 462.0
+},
+"s": {
+"x0": 1330.0,
+"y0": 1594.0,
+"w": 414.0,
+"h": 462.0
+},
+"t": {
+"x0": 1760.0,
+"y0": 1594.0,
+"w": 414.0,
+"h": 462.0
+},
+"u": {
+"x0": 40.0,
+"y0": 2072.0,
+"w": 414.0,
+"h": 462.0
+},
+"v": {
+"x0": 470.0,
+"y0": 2072.0,
+"w": 414.0,
+"h": 462.0
+},
+"w": {
+"x0": 900.0,
+"y0": 2072.0,
+"w": 414.0,
+"h": 462.0
+},
+"x": {
+"x0": 1330.0,
+"y0": 2072.0,
+"w": 414.0,
+"h": 462.0
+},
+"y": {
+"x0": 1760.0,
+"y0": 2072.0,
+"w": 414.0,
+"h": 462.0
+},
+"z": {
+"x0": 40.0,
+"y0": 2550.0,
+"w": 414.0,
+"h": 462.0
+},
+"word-and": {
+"x0": 470.0,
+"y0": 2550.0,
+"w": 1704.0,
+"h": 462.0
+},
+"font-variants": {
+"x0": 40.0,
+"y0": 3028.0,
+"w": 2134.0,
+"h": 462.0
+}
+}
+},
+"letters": {
+"a": {
+"strokes": [
+{
+"id": "letter-a-s1",
+"sub": 0,
+"beziers_u": [
+[
+[
+292.229559,
+350.002872
+],
+[
+290.889579,
+353.363635
+],
+[
+289.515811,
+356.801716
+],
+[
+288.22972,
+360.019321
+]
+],
+[
+[
+288.22972,
+360.019321
+],
+[
+264.996935,
+349.90891
+],
+[
+233.600338,
+339.859087
+],
+[
+204.141662,
+374.240337
+]
+],
+[
+[
+204.141662,
+374.240337
+],
+[
+186.63378,
+394.673804
+],
+[
+175.722442,
+423.901106
+],
+[
+177.662974,
+443.459558
+]
+],
+[
+[
+177.662974,
+443.459558
+],
+[
+179.950658,
+466.516917
+],
+[
+200.094531,
+476.083652
+],
+[
+218.824149,
+465.983708
+]
+],
+[
+[
+218.824149,
+465.983708
+],
+[
+229.665906,
+460.137291
+],
+[
+239.344344,
+448.07285
+],
+[
+256.229071,
+425.004036
+]
+],
+[
+[
+256.229071,
+425.004036
+],
+[
+272.61942,
+402.610667
+],
+[
+275.776551,
+397.205331
+],
+[
+283.257495,
+376.498744
+]
+],
+[
+[
+283.257495,
+376.498744
+],
+[
+285.877514,
+369.246764
+],
+[
+290.351121,
+356.455358
+],
+[
+292.575269,
+350.244772
+]
+],
+[
+[
+292.575269,
+350.244772
+],
+[
+290.351121,
+356.455358
+],
+[
+285.877514,
+369.246764
+],
+[
+283.257495,
+376.498744
+]
+],
+[
+[
+283.257495,
+376.498744
+],
+[
+280.841375,
+383.186348
+],
+[
+277.776024,
+391.323271
+],
+[
+274.66859,
+402.197036
+]
+],
+[
+[
+274.66859,
+402.197036
+],
+[
+271.911763,
+411.843932
+],
+[
+270.941679,
+417.276714
+],
+[
+266.531535,
+428.036163
+]
+],
+[
+[
+266.531535,
+428.036163
+],
+[
+261.754093,
+439.691711
+],
+[
+257.552197,
+446.345049
+],
+[
+256.918072,
+453.392399
+]
+],
+[
+[
+256.918072,
+453.392399
+],
+[
+255.939884,
+464.263504
+],
+[
+263.848676,
+471.657062
+],
+[
+273.417424,
+469.544028
+]
+]
+],
+"nodes": 13,
+"shared": [
+{
+"fork_in": 6,
+"cusp": 7,
+"fork_out": 8
+}
+],
+"pass_note": "pen order = document order; within a retraced stretch pass 1 runs fork_in -> cusp, pass 2 cusp -> fork_out (pass 1 reversed)"
+}
+],
+"points": [
+{
+"name": "entry",
+"stroke": 0,
+"bk": 2,
+"bt": 0.518724251400941,
+"pt": [
+101.44276175048435,
+249.9999999979215
+],
+"rule": "fused junction: where the drawn stroke crosses y = 250 fu (60 u) nearest the old junction carried by the edit (within 40 fu of arc); frame (pt, T, k) taken there, T and k negated (the pen arrives backwards)"
+},
+{
+"name": "exit",
+"stroke": 0,
+"bk": 11,
+"bt": 1.0,
+"pt": [
+477.78887470709736,
+4.233217806031728
+],
+"rule": "smooth exit: the drawn stroke's end; frame taken there"
+},
+{
+"name": "after_o",
+"stroke": 0,
+"bk": 1,
+"bt": 0.7253463981890915,
+"pt": [
+291.2317912620054,
+481.3034552089545
+],
+"rule": "fused high-entry frame (K959 soft): the nearest drawn point to the old place carried by the edit; frame taken there, T and k negated"
+},
+{
+"name": "after_b",
+"stroke": 0,
+"bk": 1,
+"bt": 0.7745817496884342,
+"pt": [
+272.8951954877027,
+472.1054074277648
+],
+"rule": "fused high-entry frame (K959 soft): the nearest drawn point to the old place carried by the edit; frame taken there, T and k negated"
+},
+{
+"name": "corner0",
+"stroke": 0,
+"joint": 1,
+"pt": [
+539.5067750820629,
+460.58616279886184
+],
+"rule": "stem-top V corner (K939): the drawn joint nearest the old corner carried by the edit"
+},
+{
+"name": "cusp0",
+"stroke": 0,
+"pt": [
+556.172770390085,
+502.3213676653371
+],
+"rule": "cusp: the drawn node nearest the old cusp carried by the edit"
+},
+{
+"name": "cusp1",
+"stroke": 0,
+"pt": [
+557.6132307374307,
+501.31345151688345
+],
+"rule": "cusp: the drawn node nearest the old cusp carried by the edit"
+},
+{
+"name": "split a@352",
+"stroke": 0,
+"pt": [
+83.15018876085243,
+210.20880832955388
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "split a@1659",
+"stroke": 0,
+"pt": [
+84.143523489961,
+210.46264472330685
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "split a@2325",
+"stroke": 0,
+"pt": [
+465.59183550678245,
+262.27238839358193
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "split a@2839",
+"stroke": 0,
+"pt": [
+467.91663064148173,
+262.8924428676061
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+}
+]
+},
+"b": {
+"strokes": [
+{
+"id": "letter-b-s1",
+"sub": 0,
+"beziers_u": [
+[
+[
+635.367626,
+410.265208
+],
+[
+663.775957,
+380.035422
+],
+[
+693.334271,
+338.679869
+],
+[
+702.968108,
+323.196742
+]
+],
+[
+[
+702.968108,
+323.196742
+],
+[
+712.678468,
+307.590631
+],
+[
+724.025384,
+283.106821
+],
+[
+726.690531,
+276.986025
+]
+],
+[
+[
+726.690531,
+276.986025
+],
+[
+746.691293,
+231.052135
+],
+[
+714.585063,
+216.052451
+],
+[
+697.294126,
+243.450279
+]
+],
+[
+[
+697.294126,
+243.450279
+],
+[
+687.865889,
+258.389507
+],
+[
+677.541442,
+294.334043
+],
+[
+669.373037,
+319.676901
+]
+],
+[
+[
+669.373037,
+319.676901
+],
+[
+666.655415,
+328.108449
+],
+[
+647.762807,
+386.29058
+],
+[
+645.456625,
+393.264755
+]
+],
+[
+[
+645.456625,
+393.264755
+],
+[
+636.070552,
+421.64938
+],
+[
+618.075331,
+458.699703
+],
+[
+645.18289,
+469.686835
+]
+],
+[
+[
+645.18289,
+469.686835
+],
+[
+674.199113,
+481.44758
+],
+[
+701.112847,
+441.547631
+],
+[
+709.024197,
+428.988163
+]
+],
+[
+[
+709.024197,
+428.988163
+],
+[
+736.292484,
+385.699068
+],
+[
+727.184431,
+366.582227
+],
+[
+723.592188,
+352.455467
+]
+],
+[
+[
+723.592188,
+352.455467
+],
+[
+723.291022,
+351.271107
+],
+[
+723.022152,
+350.096368
+],
+[
+722.633423,
+348.351414
+]
+],
+[
+[
+722.633423,
+348.351414
+],
+[
+723.022152,
+350.096368
+],
+[
+723.291022,
+351.271107
+],
+[
+723.592188,
+352.455467
+]
+],
+[
+[
+723.592188,
+352.455467
+],
+[
+724.942407,
+357.7653
+],
+[
+726.878723,
+363.020477
+],
+[
+733.259116,
+365.598499
+]
+]
+],
+"nodes": 12,
+"shared": [
+{
+"fork_in": 8,
+"cusp": 9,
+"fork_out": 10
+}
+],
+"pass_note": "pen order = document order; within a retraced stretch pass 1 runs fork_in -> cusp, pass 2 cusp -> fork_out (pass 1 reversed)"
+}
+],
+"points": [
+{
+"name": "entry",
+"stroke": 0,
+"bk": 0,
+"bt": 0.0,
+"pt": [
+146.99805248670668,
+251.22830102001512
+],
+"rule": "smooth entry: the drawn stroke's start; frame taken there"
+},
+{
+"name": "exit",
+"stroke": 0,
+"bk": 10,
+"bt": 1.0,
+"pt": [
+554.879260019254,
+437.3395882018071
+],
+"rule": "smooth exit: the drawn stroke's end; frame taken there"
+},
+{
+"name": "after_o",
+"stroke": 0,
+"bk": 2,
+"bt": 0.19945334962479283,
+"pt": [
+553.6766254829683,
+905.3174288276342
+],
+"rule": "smooth high-entry frame (K959 soft): the nearest drawn point to the old place carried by the edit; frame taken there"
+},
+{
+"name": "after_b",
+"stroke": 0,
+"bk": 2,
+"bt": 0.19945334962479283,
+"pt": [
+553.6766254829683,
+905.3174288276342
+],
+"rule": "smooth high-entry frame (K959 soft): the nearest drawn point to the old place carried by the edit; frame taken there"
+},
+{
+"name": "cusp0",
+"stroke": 0,
+"pt": [
+510.6055413372725,
+509.20244323079015
+],
+"rule": "cusp: the drawn node nearest the old cusp carried by the edit"
+},
+{
+"name": "split b@3079",
+"stroke": 0,
+"pt": [
+536.1123387588678,
+431.426744454745
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "split b@3244",
+"stroke": 0,
+"pt": [
+535.0495196707576,
+433.98817360325614
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "crossing0",
+"stroke": 0,
+"pt": [
+175.06721660022473,
+282.06850458944376
+],
+"rule": "loop crossing (a record, read by no build step): where the drawn stroke crosses itself (t, x: where stroke 1 crosses the extra stroke), the crossing nearest the old one carried by the edit, keeping the record's offset from the written body's crossing"
+}
+]
+},
+"c": {
+"strokes": [
+{
+"id": "letter-c-s1",
+"sub": 0,
+"beziers_u": [
+[
+[
+1150.512015,
+364.728255
+],
+[
+1117.318666,
+326.689265
+],
+[
+1062.596078,
+364.313333
+],
+[
+1051.537275,
+412.598821
+]
+],
+[
+[
+1051.537275,
+412.598821
+],
+[
+1043.71783,
+446.740462
+],
+[
+1061.071614,
+471.615718
+],
+[
+1090.842,
+470.50795
+]
+]
+],
+"nodes": 3,
+"shared": [],
+"pass_note": "pen order = document order; within a retraced stretch pass 1 runs fork_in -> cusp, pass 2 cusp -> fork_out (pass 1 reversed)"
+}
+],
+"points": [
+{
+"name": "entry",
+"stroke": 0,
+"bk": 0,
+"bt": 0.9858799442854499,
+"pt": [
+101.93152810516105,
+249.99999999318726
+],
+"rule": "fused junction: where the drawn stroke crosses y = 250 fu (60 u) nearest the old junction carried by the edit (within 40 fu of arc); frame (pt, T, k) taken there, T and k negated (the pen arrives backwards)"
+},
+{
+"name": "exit",
+"stroke": 0,
+"bk": 1,
+"bt": 1.0,
+"pt": [
+263.6412780555106,
+0.21687310279653027
+],
+"rule": "smooth exit: the drawn stroke's end; frame taken there"
+},
+{
+"name": "after_o",
+"stroke": 0,
+"bk": 0,
+"bt": 0.462900337221416,
+"pt": [
+289.47939724842405,
+485.2727720896841
+],
+"rule": "fused high-entry frame (K959 soft): the nearest drawn point to the old place carried by the edit; frame taken there, T and k negated"
+},
+{
+"name": "after_b",
+"stroke": 0,
+"bk": 0,
+"bt": 0.5015268404074062,
+"pt": [
+270.75071129044153,
+475.7080723954835
+],
+"rule": "fused high-entry frame (K959 soft): the nearest drawn point to the old place carried by the edit; frame taken there, T and k negated"
+},
+{
+"name": "cusp0",
+"stroke": 0,
+"pt": [
+512.2663374087365,
+440.9656038108334
+],
+"rule": "cusp: the drawn node nearest the old cusp carried by the edit"
+},
+{
+"name": "split c@443",
+"stroke": 0,
+"pt": [
+119.66444388495282,
+299.80805454228164
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "split c@1451",
+"stroke": 0,
+"pt": [
+119.88520005125243,
+297.6594083854322
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+}
+]
+},
+"d": {
+"strokes": [
+{
+"id": "letter-d-s1",
+"sub": 0,
+"beziers_u": [
+[
+[
+1576.846974,
+359.734158
+],
+[
+1508.321864,
+322.105421
+],
+[
+1462.80814,
+405.339875
+],
+[
+1467.033086,
+443.922365
+]
+],
+[
+[
+1467.033086,
+443.922365
+],
+[
+1469.028151,
+462.14143
+],
+[
+1482.295057,
+472.056452
+],
+[
+1497.516538,
+469.663569
+]
+],
+[
+[
+1497.516538,
+469.663569
+],
+[
+1512.728425,
+467.272195
+],
+[
+1523.92423,
+453.526653
+],
+[
+1532.601286,
+442.332054
+]
+],
+[
+[
+1532.601286,
+442.332054
+],
+[
+1562.074201,
+404.307931
+],
+[
+1568.522939,
+387.928383
+],
+[
+1572.720855,
+376.228966
+]
+],
+[
+[
+1572.720855,
+376.228966
+],
+[
+1584.517881,
+343.35115
+],
+[
+1606.059275,
+270.737303
+],
+[
+1620.875261,
+230.333921
+]
+],
+[
+[
+1620.875261,
+230.333921
+],
+[
+1606.059275,
+270.737303
+],
+[
+1584.517881,
+343.35115
+],
+[
+1572.720855,
+376.228966
+]
+],
+[
+[
+1572.720855,
+376.228966
+],
+[
+1569.436002,
+385.383712
+],
+[
+1568.075207,
+388.200912
+],
+[
+1564.01084,
+402.184301
+]
+],
+[
+[
+1564.01084,
+402.184301
+],
+[
+1560.654725,
+413.730959
+],
+[
+1559.746636,
+418.126594
+],
+[
+1555.510557,
+428.198827
+]
+],
+[
+[
+1555.510557,
+428.198827
+],
+[
+1550.842171,
+439.298971
+],
+[
+1546.615588,
+446.632412
+],
+[
+1546.360698,
+453.98956
+]
+],
+[
+[
+1546.360698,
+453.98956
+],
+[
+1545.990829,
+464.665488
+],
+[
+1554.103589,
+471.941615
+],
+[
+1563.862471,
+469.697386
+]
+]
+],
+"nodes": 11,
+"shared": [
+{
+"fork_in": 4,
+"cusp": 5,
+"fork_out": 6
+}
+],
+"pass_note": "pen order = document order; within a retraced stretch pass 1 runs fork_in -> cusp, pass 2 cusp -> fork_out (pass 1 reversed)"
+}
+],
+"points": [
+{
+"name": "entry",
+"stroke": 0,
+"bk": 0,
+"bt": 0.7589753471486845,
+"pt": [
+101.01750658320705,
+249.9999999895873
+],
+"rule": "fused junction: where the drawn stroke crosses y = 250 fu (60 u) nearest the old junction carried by the edit (within 40 fu of arc); frame (pt, T, k) taken there, T and k negated (the pen arrives backwards)"
+},
+{
+"name": "exit",
+"stroke": 0,
+"bk": 9,
+"bt": 1.0,
+"pt": [
+482.6432373920931,
+3.5942243642407288
+],
+"rule": "smooth exit: the drawn stroke's end; frame taken there"
+},
+{
+"name": "after_o",
+"stroke": 0,
+"bk": 0,
+"bt": 0.32490063913882994,
+"pt": [
+292.6302321499014,
+478.7672914301257
+],
+"rule": "fused high-entry frame (K959 soft): the nearest drawn point to the old place carried by the edit; frame taken there, T and k negated"
+},
+{
+"name": "after_b",
+"stroke": 0,
+"bk": 0,
+"bt": 0.35422660526185024,
+"pt": [
+274.3697641492366,
+469.4722732943334
+],
+"rule": "fused high-entry frame (K959 soft): the nearest drawn point to the old place carried by the edit; frame taken there, T and k negated"
+},
+{
+"name": "cusp0",
+"stroke": 0,
+"pt": [
+536.7453356870794,
+461.7743432602162
+],
+"rule": "cusp: the drawn node nearest the old cusp carried by the edit"
+},
+{
+"name": "cusp1",
+"stroke": 0,
+"pt": [
+720.1965289049597,
+1000.9419952596519
+],
+"rule": "cusp: the drawn node nearest the old cusp carried by the edit"
+},
+{
+"name": "split d@444",
+"stroke": 0,
+"pt": [
+122.19727615336065,
+298.9070714334019
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "split d@1463",
+"stroke": 0,
+"pt": [
+121.58951889893956,
+296.2270631304959
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "split d@2222",
+"stroke": 0,
+"pt": [
+466.30392286663937,
+262.78866356735705
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "split d@3786",
+"stroke": 0,
+"pt": [
+468.30863759731335,
+262.560712771245
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+}
+]
+},
+"e": {
+"strokes": [
+{
+"id": "letter-e-s1",
+"sub": 0,
+"beziers_u": [
+[
+[
+1919.662658,
+444.51946
+],
+[
+1942.14831,
+429.55172
+],
+[
+1973.689831,
+403.86491
+],
+[
+1982.322798,
+383.214664
+]
+],
+[
+[
+1982.322798,
+383.214664
+],
+[
+1988.164983,
+369.240029
+],
+[
+1984.231649,
+355.859857
+],
+[
+1972.112131,
+351.141834
+]
+],
+[
+[
+1972.112131,
+351.141834
+],
+[
+1940.339037,
+338.772844
+],
+[
+1907.844319,
+407.561193
+],
+[
+1921.600979,
+448.003694
+]
+]
+],
+"nodes": 4,
+"shared": [],
+"pass_note": "pen order = document order; within a retraced stretch pass 1 runs fork_in -> cusp, pass 2 cusp -> fork_out (pass 1 reversed)"
+}
+],
+"points": [
+{
+"name": "entry",
+"stroke": 0,
+"bk": 0,
+"bt": 0.0,
+"pt": [
+87.47735171634643,
+108.50224958975552
+],
+"rule": "smooth entry: the drawn stroke's start; frame taken there"
+},
+{
+"name": "exit",
+"stroke": 0,
+"bk": 2,
+"bt": 1.0,
+"pt": [
+95.55369062100002,
+93.98460900752978
+],
+"rule": "smooth exit: the drawn stroke's end; frame taken there"
+},
+{
+"name": "crossing0",
+"stroke": 0,
+"pt": [
+90.480672095897,
+110.83432691932116
+],
+"rule": "loop crossing (a record, read by no build step): where the drawn stroke crosses itself (t, x: where stroke 1 crosses the extra stroke), the crossing nearest the old one carried by the edit, keeping the record's offset from the written body's crossing"
+}
+]
+},
+"f": {
+"strokes": [
+{
+"id": "letter-f-s1",
+"sub": 0,
+"beziers_u": [
+[
+[
+216.905349,
+888.813865
+],
+[
+264.457177,
+837.72973
+],
+[
+326.592184,
+748.206292
+],
+[
+314.112764,
+718.661409
+]
+],
+[
+[
+314.112764,
+718.661409
+],
+[
+309.530848,
+707.813776
+],
+[
+294.034967,
+703.025967
+],
+[
+282.433433,
+718.076638
+]
+],
+[
+[
+282.433433,
+718.076638
+],
+[
+274.500328,
+728.368255
+],
+[
+267.141752,
+749.552884
+],
+[
+259.052926,
+774.346784
+]
+],
+[
+[
+259.052926,
+774.346784
+],
+[
+252.213176,
+795.312011
+],
+[
+235.503044,
+847.512181
+],
+[
+228.22545,
+869.845547
+]
+],
+[
+[
+228.22545,
+869.845547
+],
+[
+216.981042,
+904.352212
+],
+[
+205.180282,
+938.36903
+],
+[
+184.658168,
+1003.41067
+]
+],
+[
+[
+184.658168,
+1003.41067
+],
+[
+173.468074,
+1038.875927
+],
+[
+169.710266,
+1051.791797
+],
+[
+176.150146,
+1061.230934
+]
+],
+[
+[
+176.150146,
+1061.230934
+],
+[
+184.558003,
+1073.554598
+],
+[
+212.197746,
+1082.662366
+],
+[
+224.229144,
+997.455295
+]
+],
+[
+[
+224.229144,
+997.455295
+],
+[
+228.131653,
+969.817498
+],
+[
+225.31343,
+968.223698
+],
+[
+228.424737,
+947.482568
+]
+],
+[
+[
+228.424737,
+947.482568
+],
+[
+230.067058,
+936.534245
+],
+[
+231.589128,
+932.066386
+],
+[
+228.651245,
+922.785859
+]
+],
+[
+[
+228.651245,
+922.785859
+],
+[
+227.205986,
+918.220405
+],
+[
+225.271733,
+914.355081
+],
+[
+225.510688,
+910.516945
+]
+],
+[
+[
+225.510688,
+910.516945
+],
+[
+225.885948,
+904.48944
+],
+[
+231.377638,
+902.435454
+],
+[
+234.328413,
+904.971643
+]
+]
+],
+"nodes": 12,
+"shared": [],
+"pass_note": "pen order = document order; within a retraced stretch pass 1 runs fork_in -> cusp, pass 2 cusp -> fork_out (pass 1 reversed)"
+}
+],
+"points": [
+{
+"name": "entry",
+"stroke": 0,
+"bk": 0,
+"bt": 0.0,
+"pt": [
+144.57189753994487,
+248.94223069553962
+],
+"rule": "smooth entry: the drawn stroke's start; frame taken there"
+},
+{
+"name": "exit",
+"stroke": 0,
+"bk": 10,
+"bt": 1.0,
+"pt": [
+217.16799590777734,
+181.61815580010037
+],
+"rule": "smooth exit: the drawn stroke's end; frame taken there"
+},
+{
+"name": "after_o",
+"stroke": 0,
+"bk": 0,
+"bt": 0.8915574788292588,
+"pt": [
+556.0248828274108,
+909.5680438683536
+],
+"rule": "smooth high-entry frame (K959 soft): the nearest drawn point to the old place carried by the edit; frame taken there"
+},
+{
+"name": "after_b",
+"stroke": 0,
+"bk": 0,
+"bt": 0.8915574788292588,
+"pt": [
+556.0248828274108,
+909.5680438683536
+],
+"rule": "smooth high-entry frame (K959 soft): the nearest drawn point to the old place carried by the edit; frame taken there"
+},
+{
+"name": "split f@473",
+"stroke": 0,
+"pt": [
+173.19575175148537,
+280.25542645481477
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "split f@490",
+"stroke": 0,
+"pt": [
+184.5953419469613,
+293.41346840746183
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "split f@2138",
+"stroke": 0,
+"pt": [
+182.1724579662112,
+295.0767829583309
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "split f@2154",
+"stroke": 0,
+"pt": [
+175.92817787849393,
+280.41940616821734
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "crossing0",
+"stroke": 0,
+"pt": [
+177.90032826399144,
+285.5218711582941
+],
+"rule": "loop crossing (a record, read by no build step): where the drawn stroke crosses itself (t, x: where stroke 1 crosses the extra stroke), the crossing nearest the old one carried by the edit, keeping the record's offset from the written body's crossing"
+}
+]
+},
+"g": {
+"strokes": [
+{
+"id": "letter-g-s1",
+"sub": 0,
+"beziers_u": [
+[
+[
+723.44405,
+827.209591
+],
+[
+721.24263,
+831.048847
+],
+[
+719.083632,
+834.817847
+],
+[
+717.034349,
+838.395757
+]
+],
+[
+[
+717.034349,
+838.395757
+],
+[
+696.585525,
+829.219013
+],
+[
+677.626871,
+827.329058
+],
+[
+664.003908,
+831.298367
+]
+],
+[
+[
+664.003908,
+831.298367
+],
+[
+626.497992,
+842.22643
+],
+[
+592.830356,
+908.231987
+],
+[
+611.444294,
+935.301541
+]
+],
+[
+[
+611.444294,
+935.301541
+],
+[
+620.262228,
+948.125133
+],
+[
+645.830217,
+959.507037
+],
+[
+677.36707,
+915.649831
+]
+],
+[
+[
+677.36707,
+915.649831
+],
+[
+681.125038,
+910.423755
+],
+[
+695.613647,
+889.608453
+],
+[
+703.592069,
+874.132715
+]
+],
+[
+[
+703.592069,
+874.132715
+],
+[
+711.301308,
+859.179111
+],
+[
+718.361962,
+838.678826
+],
+[
+722.552957,
+826.277718
+]
+],
+[
+[
+722.552957,
+826.277718
+],
+[
+700.273937,
+885.181478
+],
+[
+665.481029,
+1004.400757
+],
+[
+652.716194,
+1034.832733
+]
+],
+[
+[
+652.716194,
+1034.832733
+],
+[
+626.470958,
+1097.402629
+],
+[
+576.43225,
+1063.364871
+],
+[
+600.645726,
+1026.337833
+]
+],
+[
+[
+600.645726,
+1026.337833
+],
+[
+615.080556,
+1004.264216
+],
+[
+659.770217,
+975.216204
+],
+[
+684.912473,
+956.111877
+]
+]
+],
+"nodes": 10,
+"shared": [],
+"pass_note": "pen order = document order; within a retraced stretch pass 1 runs fork_in -> cusp, pass 2 cusp -> fork_out (pass 1 reversed)"
+}
+],
+"points": [
+{
+"name": "entry",
+"stroke": 0,
+"bk": 2,
+"bt": 0.5877615187584535,
+"pt": [
+99.31912887388123,
+249.99999999143583
+],
+"rule": "fused junction: where the drawn stroke crosses y = 250 fu (60 u) nearest the old junction carried by the edit (within 40 fu of arc); frame (pt, T, k) taken there, T and k negated (the pen arrives backwards)"
+},
+{
+"name": "exit",
+"stroke": 0,
+"bk": 8,
+"bt": 1.0,
+"pt": [
+404.4349133661169,
+-31.46615462068732
+],
+"rule": "smooth exit: the drawn stroke's end; frame taken there"
+},
+{
+"name": "after_o",
+"stroke": 0,
+"bk": 2,
+"bt": 0.0537103458794046,
+"pt": [
+292.30487976843347,
+479.32786034303336
+],
+"rule": "fused high-entry frame (K959 soft): the nearest drawn point to the old place carried by the edit; frame taken there, T and k negated"
+},
+{
+"name": "after_b",
+"stroke": 0,
+"bk": 2,
+"bt": 0.09331457581750768,
+"pt": [
+274.14957306159414,
+470.1666683684912
+],
+"rule": "fused high-entry frame (K959 soft): the nearest drawn point to the old place carried by the edit; frame taken there, T and k negated"
+},
+{
+"name": "corner0",
+"stroke": 0,
+"joint": 1,
+"pt": [
+538.2760630819619,
+459.01768092499134
+],
+"rule": "stem-top V corner (K939): the drawn joint nearest the old corner carried by the edit"
+},
+{
+"name": "cusp0",
+"stroke": 0,
+"pt": [
+564.9831517463845,
+505.6267028704079
+],
+"rule": "cusp: the drawn node nearest the old cusp carried by the edit"
+},
+{
+"name": "cusp1",
+"stroke": 0,
+"pt": [
+561.2702630897029,
+509.5095096366431
+],
+"rule": "cusp: the drawn node nearest the old cusp carried by the edit"
+},
+{
+"name": "split g@445",
+"stroke": 0,
+"pt": [
+121.81113644186769,
+299.24346927992804
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "split g@1577",
+"stroke": 0,
+"pt": [
+121.70231625066714,
+296.51555988404925
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "split g@2332",
+"stroke": 0,
+"pt": [
+464.8452877894201,
+257.8496727730562
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "split g@2873",
+"stroke": 0,
+"pt": [
+466.48787646468685,
+258.15359629525767
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "crossing0",
+"stroke": 0,
+"pt": [
+376.05388589391606,
+-48.15171217536397
+],
+"rule": "loop crossing (a record, read by no build step): where the drawn stroke crosses itself (t, x: where stroke 1 crosses the extra stroke), the crossing nearest the old one carried by the edit, keeping the record's offset from the written body's crossing"
+}
+]
+},
+"h": {
+"strokes": [
+{
+"id": "letter-h-s1",
+"sub": 0,
+"beziers_u": [
+[
+[
+1055.306632,
+864.410551
+],
+[
+1075.771652,
+839.109669
+],
+[
+1092.659068,
+827.067615
+],
+[
+1122.78526,
+778.481232
+]
+],
+[
+[
+1122.78526,
+778.481232
+],
+[
+1145.132697,
+742.440131
+],
+[
+1153.715331,
+720.238118
+],
+[
+1137.216742,
+710.717209
+]
+],
+[
+[
+1137.216742,
+710.717209
+],
+[
+1124.047003,
+703.117294
+],
+[
+1113.608679,
+714.396063
+],
+[
+1109.423745,
+720.896063
+]
+],
+[
+[
+1109.423745,
+720.896063
+],
+[
+1101.478383,
+733.236723
+],
+[
+1092.260616,
+765.338252
+],
+[
+1083.345578,
+792.886511
+]
+],
+[
+[
+1083.345578,
+792.886511
+],
+[
+1077.767916,
+810.121981
+],
+[
+1064.461934,
+849.822513
+],
+[
+1059.528059,
+865.689044
+]
+],
+[
+[
+1059.528059,
+865.689044
+],
+[
+1052.343773,
+888.792525
+],
+[
+1048.659849,
+907.189598
+],
+[
+1040.171116,
+928.398134
+]
+],
+[
+[
+1040.171116,
+928.398134
+],
+[
+1036.79242,
+936.839581
+],
+[
+1034.112845,
+942.077951
+],
+[
+1029.451295,
+950.226823
+]
+],
+[
+[
+1029.451295,
+950.226823
+],
+[
+1034.112845,
+942.077951
+],
+[
+1036.79242,
+936.839581
+],
+[
+1040.171116,
+928.398134
+]
+],
+[
+[
+1040.171116,
+928.398134
+],
+[
+1042.50818,
+922.559135
+],
+[
+1060.196825,
+877.668422
+],
+[
+1095.39987,
+845.157332
+]
+],
+[
+[
+1095.39987,
+845.157332
+],
+[
+1102.377849,
+838.712954
+],
+[
+1118.433224,
+825.007282
+],
+[
+1133.48271,
+828.23813
+]
+],
+[
+[
+1133.48271,
+828.23813
+],
+[
+1142.237696,
+830.117664
+],
+[
+1149.674829,
+837.519172
+],
+[
+1149.561872,
+849.744981
+]
+],
+[
+[
+1149.561872,
+849.744981
+],
+[
+1149.466339,
+860.084888
+],
+[
+1143.996589,
+871.035973
+],
+[
+1137.181599,
+890.28718
+]
+],
+[
+[
+1137.181599,
+890.28718
+],
+[
+1134.847085,
+896.881795
+],
+[
+1134.436419,
+898.569912
+],
+[
+1130.617354,
+907.022389
+]
+],
+[
+[
+1130.617354,
+907.022389
+],
+[
+1126.563233,
+915.9951
+],
+[
+1124.528741,
+919.619812
+],
+[
+1123.146734,
+923.408952
+]
+],
+[
+[
+1123.146734,
+923.408952
+],
+[
+1117.082517,
+940.035617
+],
+[
+1127.031339,
+950.369521
+],
+[
+1138.507483,
+947.522702
+]
+]
+],
+"nodes": 16,
+"shared": [
+{
+"fork_in": 6,
+"cusp": 7,
+"fork_out": 8
+}
+],
+"pass_note": "pen order = document order; within a retraced stretch pass 1 runs fork_in -> cusp, pass 2 cusp -> fork_out (pass 1 reversed)"
+}
+],
+"points": [
+{
+"name": "entry",
+"stroke": 0,
+"bk": 0,
+"bt": 0.0,
+"pt": [
+172.82724207962315,
+350.6227041905858
+],
+"rule": "smooth entry: the drawn stroke's start; frame taken there"
+},
+{
+"name": "exit",
+"stroke": 0,
+"bk": 14,
+"bt": 1.0,
+"pt": [
+519.4974534030761,
+4.322075791000934
+],
+"rule": "smooth exit: the drawn stroke's end; frame taken there"
+},
+{
+"name": "after_o",
+"stroke": 0,
+"bk": 0,
+"bt": 0.19344177738227453,
+"pt": [
+221.1458956659543,
+407.1011193700647
+],
+"rule": "smooth high-entry frame (K959 soft): the nearest drawn point to the old place carried by the edit; frame taken there"
+},
+{
+"name": "after_b",
+"stroke": 0,
+"bk": 0,
+"bt": 0.2066930438705109,
+"pt": [
+224.4101548565439,
+410.74352169385406
+],
+"rule": "smooth high-entry frame (K959 soft): the nearest drawn point to the old place carried by the edit; frame taken there"
+},
+{
+"name": "cusp0",
+"stroke": 0,
+"pt": [
+65.09667157265984,
+-6.94509470359116
+],
+"rule": "cusp: the drawn node nearest the old cusp carried by the edit"
+},
+{
+"name": "split h@2205",
+"stroke": 0,
+"pt": [
+156.38228161483974,
+207.96731189420086
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "split h@2679",
+"stroke": 0,
+"pt": [
+158.1340288873585,
+208.1847210304137
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "crossing0",
+"stroke": 0,
+"pt": [
+205.26360143119663,
+388.9905392511481
+],
+"rule": "loop crossing (a record, read by no build step): where the drawn stroke crosses itself (t, x: where stroke 1 crosses the extra stroke), the crossing nearest the old one carried by the edit, keeping the record's offset from the written body's crossing"
+}
+]
+},
+"i": {
+"strokes": [
+{
+"id": "letter-i-s1",
+"sub": 0,
+"beziers_u": [
+[
+[
+1544.909744,
+826.3724
+],
+[
+1542.116505,
+831.969531
+],
+[
+1538.399323,
+839.237354
+],
+[
+1532.570986,
+859.077617
+]
+],
+[
+[
+1532.570986,
+859.077617
+],
+[
+1528.906654,
+871.55138
+],
+[
+1526.280339,
+882.62052
+],
+[
+1522.917809,
+892.730648
+]
+],
+[
+[
+1522.917809,
+892.730648
+],
+[
+1517.272896,
+909.703217
+],
+[
+1511.936844,
+916.80592
+],
+[
+1509.532142,
+925.097055
+]
+],
+[
+[
+1509.532142,
+925.097055
+],
+[
+1504.681047,
+941.823068
+],
+[
+1515.523174,
+950.408912
+],
+[
+1526.599559,
+947.487628
+]
+]
+],
+"nodes": 5,
+"shared": [],
+"pass_note": "pen order = document order; within a retraced stretch pass 1 runs fork_in -> cusp, pass 2 cusp -> fork_out (pass 1 reversed)"
+},
+{
+"id": "letter-i-s2",
+"sub": 0,
+"beziers_u": [
+[
+[
+1566.214467,
+766.882768
+],
+[
+1565.100077,
+767.808613
+],
+[
+1564.002787,
+768.750594
+],
+[
+1562.923061,
+769.707935
+]
+],
+[
+[
+1562.923061,
+769.707935
+],
+[
+1561.843335,
+770.665276
+],
+[
+1560.781175,
+771.637979
+],
+[
+1559.73533,
+772.626946
+]
+],
+[
+[
+1559.73533,
+772.626946
+],
+[
+1558.689484,
+773.615914
+],
+[
+1557.659954,
+774.621147
+],
+[
+1556.644641,
+775.644873
+]
+],
+[
+[
+1556.644641,
+775.644873
+],
+[
+1555.629328,
+776.6686
+],
+[
+1554.628232,
+777.71082
+],
+[
+1553.641198,
+778.772244
+]
+]
+],
+"nodes": 5,
+"shared": [],
+"pass_note": "pen order = document order; within a retraced stretch pass 1 runs fork_in -> cusp, pass 2 cusp -> fork_out (pass 1 reversed)"
+}
+],
+"points": [
+{
+"name": "entry",
+"stroke": 0,
+"bk": 0,
+"bt": 0.0,
+"pt": [
+245.67354577581855,
+509.11499936303267
+],
+"rule": "cusp entry: the drawn stroke's start; frame taken there"
+},
+{
+"name": "exit",
+"stroke": 0,
+"bk": 3,
+"bt": 1.0,
+"pt": [
+169.38110620860067,
+4.4682154913344645
+],
+"rule": "smooth exit: the drawn stroke's end; frame taken there"
+},
+{
+"name": "cusp0",
+"stroke": 0,
+"pt": [
+245.67354577581855,
+509.11499936303267
+],
+"rule": "cusp: the drawn node nearest the old cusp carried by the edit"
+},
+{
+"name": "split i@624",
+"stroke": 0,
+"pt": [
+219.643983149948,
+450.7826920169818
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "split i@752",
+"stroke": 0,
+"pt": [
+222.31526979374817,
+449.5395077376697
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+}
+]
+},
+"j": {
+"strokes": [
+{
+"id": "letter-j-s1",
+"sub": 0,
+"beziers_u": [
+[
+[
+1987.948173,
+826.456899
+],
+[
+1981.165058,
+837.924716
+],
+[
+1977.561148,
+856.920043
+],
+[
+1967.334199,
+887.413599
+]
+],
+[
+[
+1967.334199,
+887.413599
+],
+[
+1964.649146,
+895.419585
+],
+[
+1958.381434,
+913.539289
+],
+[
+1943.643271,
+958.788947
+]
+],
+[
+[
+1943.643271,
+958.788947
+],
+[
+1934.315026,
+987.428876
+],
+[
+1926.472483,
+1011.957486
+],
+[
+1919.492684,
+1029.992902
+]
+],
+[
+[
+1919.492684,
+1029.992902
+],
+[
+1914.863301,
+1041.95497
+],
+[
+1907.013367,
+1060.363042
+],
+[
+1894.632269,
+1066.421689
+]
+],
+[
+[
+1894.632269,
+1066.421689
+],
+[
+1877.654132,
+1074.729883
+],
+[
+1854.073125,
+1058.877155
+],
+[
+1872.288498,
+1028.2563
+]
+],
+[
+[
+1872.288498,
+1028.2563
+],
+[
+1879.114053,
+1016.782238
+],
+[
+1894.595213,
+998.549585
+],
+[
+1909.361248,
+985.707973
+]
+],
+[
+[
+1909.361248,
+985.707973
+],
+[
+1921.936741,
+974.771415
+],
+[
+1935.207747,
+966.689066
+],
+[
+1950.169012,
+955.394795
+]
+]
+],
+"nodes": 8,
+"shared": [],
+"pass_note": "pen order = document order; within a retraced stretch pass 1 runs fork_in -> cusp, pass 2 cusp -> fork_out (pass 1 reversed)"
+},
+{
+"id": "letter-j-s2",
+"sub": 0,
+"beziers_u": [
+[
+[
+2008.889376,
+766.905444
+],
+[
+2007.753045,
+767.843733
+],
+[
+2006.62682,
+768.792814
+],
+[
+2005.510892,
+769.752451
+]
+],
+[
+[
+2005.510892,
+769.752451
+],
+[
+2004.394964,
+770.712087
+],
+[
+2003.289333,
+771.682278
+],
+[
+2002.193376,
+772.66352
+]
+],
+[
+[
+2002.193376,
+772.66352
+],
+[
+2001.09742,
+773.644762
+],
+[
+2000.011138,
+774.637055
+],
+[
+1998.934656,
+775.640287
+]
+],
+[
+[
+1998.934656,
+775.640287
+],
+[
+1997.858175,
+776.643518
+],
+[
+1996.791493,
+777.657689
+],
+[
+1995.734941,
+778.682505
+]
+]
+],
+"nodes": 5,
+"shared": [],
+"pass_note": "pen order = document order; within a retraced stretch pass 1 runs fork_in -> cusp, pass 2 cusp -> fork_out (pass 1 reversed)"
+}
+],
+"points": [
+{
+"name": "entry",
+"stroke": 0,
+"bk": 0,
+"bt": 0.0,
+"pt": [
+246.87812577291638,
+508.76292235153005
+],
+"rule": "cusp entry: the drawn stroke's start; frame taken there"
+},
+{
+"name": "exit",
+"stroke": 0,
+"bk": 6,
+"bt": 1.0,
+"pt": [
+89.4649589610584,
+-28.478313031316265
+],
+"rule": "smooth exit: the drawn stroke's end; frame taken there"
+},
+{
+"name": "cusp0",
+"stroke": 0,
+"pt": [
+246.87812577291638,
+508.76292235153005
+],
+"rule": "cusp: the drawn node nearest the old cusp carried by the edit"
+},
+{
+"name": "split j@638",
+"stroke": 0,
+"pt": [
+226.81588475140668,
+461.865345914225
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "split j@743",
+"stroke": 0,
+"pt": [
+226.55844666218994,
+458.98264769260646
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "crossing0",
+"stroke": 0,
+"pt": [
+59.71917474800714,
+-47.619751972258484
+],
+"rule": "loop crossing (a record, read by no build step): where the drawn stroke crosses itself (t, x: where stroke 1 crosses the extra stroke), the crossing nearest the old one carried by the edit, keeping the record's offset from the written body's crossing"
+}
+]
+},
+"k": {
+"strokes": [
+{
+"id": "letter-k-s1",
+"sub": 0,
+"beziers_u": [
+[
+[
+204.581584,
+1348.59703
+],
+[
+209.855611,
+1343.968781
+],
+[
+216.854144,
+1341.885077
+],
+[
+224.376221,
+1330.9404
+]
+],
+[
+[
+224.376221,
+1330.9404
+],
+[
+228.698048,
+1324.652111
+],
+[
+229.558038,
+1320.727186
+],
+[
+239.051943,
+1308.607796
+]
+],
+[
+[
+239.051943,
+1308.607796
+],
+[
+247.32692,
+1298.044422
+],
+[
+258.251438,
+1286.246554
+],
+[
+271.649264,
+1266.090092
+]
+],
+[
+[
+271.649264,
+1266.090092
+],
+[
+320.067114,
+1193.247485
+],
+[
+290.901362,
+1176.559084
+],
+[
+272.217006,
+1190.044232
+]
+],
+[
+[
+272.217006,
+1190.044232
+],
+[
+255.32877,
+1202.233057
+],
+[
+246.762889,
+1239.246877
+],
+[
+231.365867,
+1288.154303
+]
+],
+[
+[
+231.365867,
+1288.154303
+],
+[
+218.290662,
+1329.68666
+],
+[
+217.629551,
+1324.715803
+],
+[
+214.338889,
+1335.527416
+]
+],
+[
+[
+214.338889,
+1335.527416
+],
+[
+211.832664,
+1343.761729
+],
+[
+209.937619,
+1354.13134
+],
+[
+207.298093,
+1363.000153
+]
+],
+[
+[
+207.298093,
+1363.000153
+],
+[
+204.906654,
+1371.035395
+],
+[
+202.666325,
+1375.27763
+],
+[
+198.199902,
+1389.906319
+]
+],
+[
+[
+198.199902,
+1389.906319
+],
+[
+193.348869,
+1405.79471
+],
+[
+191.730888,
+1414.745496
+],
+[
+182.750665,
+1428.211879
+]
+],
+[
+[
+182.750665,
+1428.211879
+],
+[
+191.730888,
+1414.745496
+],
+[
+193.348869,
+1405.79471
+],
+[
+198.199902,
+1389.906319
+]
+],
+[
+[
+198.199902,
+1389.906319
+],
+[
+207.223844,
+1360.350576
+],
+[
+210.790545,
+1361.304215
+],
+[
+227.135278,
+1342.49512
+]
+],
+[
+[
+227.135278,
+1342.49512
+],
+[
+237.923195,
+1330.080665
+],
+[
+253.248889,
+1310.24078
+],
+[
+269.879687,
+1307.044635
+]
+],
+[
+[
+269.879687,
+1307.044635
+],
+[
+288.00631,
+1303.561019
+],
+[
+298.620967,
+1321.591394
+],
+[
+285.3998,
+1339.286158
+]
+],
+[
+[
+285.3998,
+1339.286158
+],
+[
+276.966823,
+1350.57257
+],
+[
+257.465508,
+1363.557345
+],
+[
+241.63348,
+1367.272837
+]
+],
+[
+[
+241.63348,
+1367.272837
+],
+[
+231.863443,
+1369.565689
+],
+[
+220.365118,
+1369.062145
+],
+[
+215.838183,
+1375.662542
+]
+],
+[
+[
+215.838183,
+1375.662542
+],
+[
+210.260059,
+1383.7956
+],
+[
+220.268357,
+1395.422478
+],
+[
+226.364044,
+1402.535112
+]
+],
+[
+[
+226.364044,
+1402.535112
+],
+[
+238.039043,
+1416.157857
+],
+[
+250.245522,
+1430.588231
+],
+[
+265.5853,
+1425.532872
+]
+]
+],
+"nodes": 18,
+"shared": [
+{
+"fork_in": 8,
+"cusp": 9,
+"fork_out": 10
+}
+],
+"pass_note": "pen order = document order; within a retraced stretch pass 1 runs fork_in -> cusp, pass 2 cusp -> fork_out (pass 1 reversed)"
+}
+],
+"points": [
+{
+"name": "entry",
+"stroke": 0,
+"bk": 0,
+"bt": 0.0,
+"pt": [
+155.47287609002828,
+324.84571023660015
+],
+"rule": "smooth entry: the drawn stroke's start; frame taken there"
+},
+{
+"name": "exit",
+"stroke": 0,
+"bk": 16,
+"bt": 1.0,
+"pt": [
+409.6550264548874,
+4.27969871800431
+],
+"rule": "smooth exit: the drawn stroke's end; frame taken there"
+},
+{
+"name": "after_o",
+"stroke": 0,
+"bk": 1,
+"bt": 0.010664323713831468,
+"pt": [
+238.52178832176378,
+399.24994635656986
+],
+"rule": "smooth high-entry frame (K959 soft): the nearest drawn point to the old place carried by the edit; frame taken there"
+},
+{
+"name": "after_b",
+"stroke": 0,
+"bk": 1,
+"bt": 0.06990082779955326,
+"pt": [
+241.53254889959064,
+403.78013477074177
+],
+"rule": "smooth high-entry frame (K959 soft): the nearest drawn point to the old place carried by the edit; frame taken there"
+},
+{
+"name": "cusp0",
+"stroke": 0,
+"pt": [
+64.51071200441558,
+-6.882829122732204
+],
+"rule": "cusp: the drawn node nearest the old cusp carried by the edit"
+},
+{
+"name": "split k@2136",
+"stroke": 0,
+"pt": [
+178.23826961200044,
+283.07001736187215
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "split k@2766",
+"stroke": 0,
+"pt": [
+179.27680823697227,
+281.07547538270865
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "crossing0",
+"stroke": 0,
+"pt": [
+180.73717688663058,
+336.30016468126155
+],
+"rule": "loop crossing (a record, read by no build step): where the drawn stroke crosses itself (t, x: where stroke 1 crosses the extra stroke), the crossing nearest the old one carried by the edit, keeping the record's offset from the written body's crossing"
+}
+]
+},
+"l": {
+"strokes": [
+{
+"id": "letter-l-s1",
+"sub": 0,
+"beziers_u": [
+[
+[
+652.757243,
+1366.423652
+],
+[
+700.697038,
+1315.264174
+],
+[
+725.783728,
+1269.666264
+],
+[
+727.509769,
+1266.527188
+]
+],
+[
+[
+727.509769,
+1266.527188
+],
+[
+746.985443,
+1231.107611
+],
+[
+750.588338,
+1221.22174
+],
+[
+751.740746,
+1214.181233
+]
+],
+[
+[
+751.740746,
+1214.181233
+],
+[
+756.457916,
+1185.36221
+],
+[
+724.772421,
+1175.773596
+],
+[
+710.818745,
+1204.401522
+]
+],
+[
+[
+710.818745,
+1204.401522
+],
+[
+706.274571,
+1213.724533
+],
+[
+702.803711,
+1228.75678
+],
+[
+697.558749,
+1244.903045
+]
+],
+[
+[
+697.558749,
+1244.903045
+],
+[
+693.361263,
+1257.824727
+],
+[
+680.647521,
+1294.178761
+],
+[
+671.896787,
+1323.281142
+]
+],
+[
+[
+671.896787,
+1323.281142
+],
+[
+670.37771,
+1328.333146
+],
+[
+666.311363,
+1342.03527
+],
+[
+662.459993,
+1353.089596
+]
+],
+[
+[
+662.459993,
+1353.089596
+],
+[
+658.574443,
+1364.242027
+],
+[
+653.826932,
+1375.801515
+],
+[
+651.562498,
+1382.402818
+]
+],
+[
+[
+651.562498,
+1382.402818
+],
+[
+638.918787,
+1419.261907
+],
+[
+659.451517,
+1430.503364
+],
+[
+674.817583,
+1425.64451
+]
+]
+],
+"nodes": 9,
+"shared": [],
+"pass_note": "pen order = document order; within a retraced stretch pass 1 runs fork_in -> cusp, pass 2 cusp -> fork_out (pass 1 reversed)"
+}
+],
+"points": [
+{
+"name": "entry",
+"stroke": 0,
+"bk": 0,
+"bt": 0.0,
+"pt": [
+146.2047872942674,
+250.568118181637
+],
+"rule": "smooth entry: the drawn stroke's start; frame taken there"
+},
+{
+"name": "exit",
+"stroke": 0,
+"bk": 7,
+"bt": 1.0,
+"pt": [
+238.12287139608543,
+3.814540371649588
+],
+"rule": "smooth exit: the drawn stroke's end; frame taken there"
+},
+{
+"name": "after_o",
+"stroke": 0,
+"bk": 2,
+"bt": 0.07319865691339078,
+"pt": [
+560.6025601074938,
+909.9614590238898
+],
+"rule": "smooth high-entry frame (K959 soft): the nearest drawn point to the old place carried by the edit; frame taken there"
+},
+{
+"name": "after_b",
+"stroke": 0,
+"bk": 2,
+"bt": 0.07319865691339078,
+"pt": [
+560.6025601074938,
+909.9614590238898
+],
+"rule": "smooth high-entry frame (K959 soft): the nearest drawn point to the old place carried by the edit; frame taken there"
+},
+{
+"name": "crossing0",
+"stroke": 0,
+"pt": [
+178.2886946120552,
+285.6506348735591
+],
+"rule": "loop crossing (a record, read by no build step): where the drawn stroke crosses itself (t, x: where stroke 1 crosses the extra stroke), the crossing nearest the old one carried by the edit, keeping the record's offset from the written body's crossing"
+}
+]
+},
+"m": {
+"strokes": [
+{
+"id": "letter-m-s1",
+"sub": 0,
+"beziers_u": [
+[
+[
+1027.533116,
+1306.927436
+],
+[
+1036.248623,
+1305.773986
+],
+[
+1044.422479,
+1313.302556
+],
+[
+1041.22149,
+1326.251706
+]
+],
+[
+[
+1041.22149,
+1326.251706
+],
+[
+1039.36584,
+1333.758478
+],
+[
+1034.223904,
+1340.916959
+],
+[
+1029.897523,
+1352.032338
+]
+],
+[
+[
+1029.897523,
+1352.032338
+],
+[
+1022.941729,
+1369.903227
+],
+[
+1023.731103,
+1383.519567
+],
+[
+1014.440646,
+1406.060348
+]
+],
+[
+[
+1014.440646,
+1406.060348
+],
+[
+1010.955846,
+1414.515271
+],
+[
+1007.600104,
+1420.471847
+],
+[
+1002.895364,
+1428.18016
+]
+],
+[
+[
+1002.895364,
+1428.18016
+],
+[
+1007.600104,
+1420.471847
+],
+[
+1010.955846,
+1414.515271
+],
+[
+1014.440646,
+1406.060348
+]
+],
+[
+[
+1014.440646,
+1406.060348
+],
+[
+1021.300474,
+1389.416832
+],
+[
+1024.174471,
+1373.976129
+],
+[
+1059.961994,
+1331.76376
+]
+],
+[
+[
+1059.961994,
+1331.76376
+],
+[
+1068.225132,
+1322.017162
+],
+[
+1077.567176,
+1311.640416
+],
+[
+1088.318161,
+1307.467479
+]
+],
+[
+[
+1088.318161,
+1307.467479
+],
+[
+1107.897904,
+1299.867707
+],
+[
+1127.572054,
+1314.621857
+],
+[
+1117.359048,
+1344.783709
+]
+],
+[
+[
+1117.359048,
+1344.783709
+],
+[
+1115.300114,
+1350.864311
+],
+[
+1111.750669,
+1358.385727
+],
+[
+1106.161624,
+1374.068655
+]
+],
+[
+[
+1106.161624,
+1374.068655
+],
+[
+1104.382837,
+1379.059953
+],
+[
+1102.587663,
+1384.34422
+],
+[
+1100.985421,
+1388.862974
+]
+],
+[
+[
+1100.985421,
+1388.862974
+],
+[
+1098.815814,
+1394.981851
+],
+[
+1096.879914,
+1400.035668
+],
+[
+1095.538927,
+1403.55937
+]
+],
+[
+[
+1095.538927,
+1403.55937
+],
+[
+1093.43036,
+1409.100038
+],
+[
+1087.772426,
+1424.049268
+],
+[
+1086.415096,
+1427.616048
+]
+],
+[
+[
+1086.415096,
+1427.616048
+],
+[
+1087.772426,
+1424.049268
+],
+[
+1093.43036,
+1409.100038
+],
+[
+1095.538927,
+1403.55937
+]
+],
+[
+[
+1095.538927,
+1403.55937
+],
+[
+1104.188979,
+1380.829692
+],
+[
+1107.310672,
+1374.005471
+],
+[
+1131.262095,
+1343.687586
+]
+],
+[
+[
+1131.262095,
+1343.687586
+],
+[
+1148.466141,
+1321.910579
+],
+[
+1166.856026,
+1300.1147
+],
+[
+1186.036201,
+1306.960126
+]
+],
+[
+[
+1186.036201,
+1306.960126
+],
+[
+1196.459809,
+1310.680324
+],
+[
+1200.434957,
+1320.474848
+],
+[
+1199.538694,
+1330.978515
+]
+],
+[
+[
+1199.538694,
+1330.978515
+],
+[
+1198.685627,
+1340.975956
+],
+[
+1193.279567,
+1353.254489
+],
+[
+1187.196513,
+1369.171745
+]
+],
+[
+[
+1187.196513,
+1369.171745
+],
+[
+1185.526665,
+1373.54116
+],
+[
+1183.956558,
+1377.790296
+],
+[
+1180.412841,
+1385.320991
+]
+],
+[
+[
+1180.412841,
+1385.320991
+],
+[
+1177.379598,
+1391.766887
+],
+[
+1174.677445,
+1396.840625
+],
+[
+1173.080281,
+1401.257657
+]
+],
+[
+[
+1173.080281,
+1401.257657
+],
+[
+1166.76463,
+1418.723886
+],
+[
+1177.143318,
+1427.535917
+],
+[
+1187.468671,
+1425.602512
+]
+]
+],
+"nodes": 21,
+"shared": [
+{
+"fork_in": 3,
+"cusp": 4,
+"fork_out": 5
+},
+{
+"fork_in": 11,
+"cusp": 12,
+"fork_out": 13
+}
+],
+"pass_note": "pen order = document order; within a retraced stretch pass 1 runs fork_in -> cusp, pass 2 cusp -> fork_out (pass 1 reversed)"
+}
+],
+"points": [
+{
+"name": "entry",
+"stroke": 0,
+"bk": 0,
+"bt": 0.0,
+"pt": [
+163.60426089609194,
+498.46901476526546
+],
+"rule": "smooth entry: the drawn stroke's start; frame taken there"
+},
+{
+"name": "exit",
+"stroke": 0,
+"bk": 19,
+"bt": 1.0,
+"pt": [
+830.0024063655123,
+3.989532655989948
+],
+"rule": "smooth exit: the drawn stroke's end; frame taken there"
+},
+{
+"name": "cusp0",
+"stroke": 0,
+"pt": [
+60.946959178010815,
+-6.750667018401861
+],
+"rule": "cusp: the drawn node nearest the old cusp carried by the edit"
+},
+{
+"name": "cusp1",
+"stroke": 0,
+"pt": [
+408.94584054153455,
+-4.40020020142873
+],
+"rule": "cusp: the drawn node nearest the old cusp carried by the edit"
+},
+{
+"name": "split m@1025",
+"stroke": 0,
+"pt": [
+154.77755593934643,
+214.35444871596314
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "split m@1511",
+"stroke": 0,
+"pt": [
+155.54038666723986,
+213.21941228704358
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "split m@2289",
+"stroke": 0,
+"pt": [
+498.3904415671794,
+224.11407116482854
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "split m@2780",
+"stroke": 0,
+"pt": [
+499.788095071278,
+223.68922567234193
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+}
+]
+},
+"n": {
+"strokes": [
+{
+"id": "letter-n-s1",
+"sub": 0,
+"beziers_u": [
+[
+[
+1494.7459,
+1306.965931
+],
+[
+1504.15394,
+1304.760652
+],
+[
+1512.497167,
+1312.621202
+],
+[
+1509.496353,
+1325.168139
+]
+],
+[
+[
+1509.496353,
+1325.168139
+],
+[
+1507.74991,
+1332.470324
+],
+[
+1502.311204,
+1340.732265
+],
+[
+1498.374423,
+1351.352933
+]
+],
+[
+[
+1498.374423,
+1351.352933
+],
+[
+1493.048652,
+1365.720822
+],
+[
+1488.916655,
+1388.600437
+],
+[
+1482.942591,
+1405.977153
+]
+],
+[
+[
+1482.942591,
+1405.977153
+],
+[
+1480.090238,
+1414.27377
+],
+[
+1477.416774,
+1419.574158
+],
+[
+1471.052024,
+1428.174635
+]
+],
+[
+[
+1471.052024,
+1428.174635
+],
+[
+1477.416774,
+1419.574158
+],
+[
+1480.090238,
+1414.27377
+],
+[
+1482.942591,
+1405.977153
+]
+],
+[
+[
+1482.942591,
+1405.977153
+],
+[
+1486.973284,
+1394.253104
+],
+[
+1495.004881,
+1365.947575
+],
+[
+1532.073072,
+1327.937943
+]
+],
+[
+[
+1532.073072,
+1327.937943
+],
+[
+1538.875173,
+1320.963085
+],
+[
+1557.731824,
+1302.303339
+],
+[
+1575.278019,
+1306.294817
+]
+],
+[
+[
+1575.278019,
+1306.294817
+],
+[
+1583.728464,
+1308.217157
+],
+[
+1591.238249,
+1315.248596
+],
+[
+1591.127282,
+1327.747533
+]
+],
+[
+[
+1591.127282,
+1327.747533
+],
+[
+1591.03204,
+1338.475411
+],
+[
+1585.359359,
+1349.102812
+],
+[
+1578.888278,
+1368.316398
+]
+],
+[
+[
+1578.888278,
+1368.316398
+],
+[
+1577.85956,
+1371.370811
+],
+[
+1575.478961,
+1378.59624
+],
+[
+1572.663638,
+1385.112212
+]
+],
+[
+[
+1572.663638,
+1385.112212
+],
+[
+1570.156269,
+1390.915437
+],
+[
+1566.987844,
+1396.88784
+],
+[
+1565.230328,
+1401.436941
+]
+],
+[
+[
+1565.230328,
+1401.436941
+],
+[
+1558.037038,
+1420.055837
+],
+[
+1569.286434,
+1428.271785
+],
+[
+1579.9741,
+1425.542811
+]
+]
+],
+"nodes": 13,
+"shared": [
+{
+"fork_in": 3,
+"cusp": 4,
+"fork_out": 5
+}
+],
+"pass_note": "pen order = document order; within a retraced stretch pass 1 runs fork_in -> cusp, pass 2 cusp -> fork_out (pass 1 reversed)"
+}
+],
+"points": [
+{
+"name": "entry",
+"stroke": 0,
+"bk": 0,
+"bt": 0.0,
+"pt": [
+159.65752623675377,
+498.3086226282924
+],
+"rule": "smooth entry: the drawn stroke's start; frame taken there"
+},
+{
+"name": "exit",
+"stroke": 0,
+"bk": 11,
+"bt": 1.0,
+"pt": [
+514.775026338196,
+4.238288729498176
+],
+"rule": "smooth exit: the drawn stroke's end; frame taken there"
+},
+{
+"name": "cusp0",
+"stroke": 0,
+"pt": [
+60.933038914486595,
+-6.727643706515426
+],
+"rule": "cusp: the drawn node nearest the old cusp carried by the edit"
+},
+{
+"name": "split n@1027",
+"stroke": 0,
+"pt": [
+154.3162108863794,
+212.3630300030275
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "split n@1510",
+"stroke": 0,
+"pt": [
+154.907595973702,
+212.35739776522965
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+}
+]
+},
+"o": {
+"strokes": [
+{
+"id": "letter-o-s1",
+"sub": 0,
+"beziers_u": [
+[
+[
+2015.705236,
+1320.69152
+],
+[
+1968.702552,
+1266.152859
+],
+[
+1893.181766,
+1365.755662
+],
+[
+1924.434088,
+1412.944775
+]
+],
+[
+[
+1924.434088,
+1412.944775
+],
+[
+1944.438402,
+1443.150078
+],
+[
+1989.030714,
+1422.952278
+],
+[
+2006.354073,
+1392.855289
+]
+],
+[
+[
+2006.354073,
+1392.855289
+],
+[
+2012.988794,
+1381.328361
+],
+[
+2022.215669,
+1356.896579
+],
+[
+2021.088721,
+1345.29676
+]
+],
+[
+[
+2021.088721,
+1345.29676
+],
+[
+2020.55791,
+1339.833054
+],
+[
+2017.554212,
+1335.406428
+],
+[
+2016.092893,
+1332.004954
+]
+],
+[
+[
+2016.092893,
+1332.004954
+],
+[
+2012.839854,
+1324.432935
+],
+[
+2016.701514,
+1320.710692
+],
+[
+2020.553617,
+1320.186118
+]
+]
+],
+"nodes": 6,
+"shared": [],
+"pass_note": "pen order = document order; within a retraced stretch pass 1 runs fork_in -> cusp, pass 2 cusp -> fork_out (pass 1 reversed)"
+}
+],
+"points": [
+{
+"name": "entry",
+"stroke": 0,
+"bk": 0,
+"bt": 0.5774864410874045,
+"pt": [
+154.79408633708053,
+357.9999999912159
+],
+"rule": "fused junction: where the drawn stroke crosses y = 358 fu (86 u) nearest the old junction carried by the edit (within 40 fu of arc); frame (pt, T, k) taken there, T and k negated (the pen arrives backwards)"
+},
+{
+"name": "exit",
+"stroke": 0,
+"bk": 4,
+"bt": 1.0,
+"pt": [
+524.6063477793442,
+443.22450903496383
+],
+"rule": "smooth exit: the drawn stroke's end; frame taken there"
+},
+{
+"name": "after_o",
+"stroke": 0,
+"bk": 0,
+"bt": 0.33413116972966295,
+"pt": [
+289.32172797299086,
+485.90080362700195
+],
+"rule": "fused high-entry frame (K959 soft): the nearest drawn point to the old place carried by the edit; frame taken there, T and k negated"
+},
+{
+"name": "after_b",
+"stroke": 0,
+"bk": 0,
+"bt": 0.3630170642035999,
+"pt": [
+271.1105400261096,
+475.8596456058224
+],
+"rule": "fused high-entry frame (K959 soft): the nearest drawn point to the old place carried by the edit; frame taken there, T and k negated"
+},
+{
+"name": "cusp0",
+"stroke": 0,
+"pt": [
+504.4047607126189,
+441.11866699404266
+],
+"rule": "cusp: the drawn node nearest the old cusp carried by the edit"
+},
+{
+"name": "split o@372",
+"stroke": 0,
+"pt": [
+94.4034026525923,
+227.70238219236705
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "split o@1512",
+"stroke": 0,
+"pt": [
+95.76156279357477,
+227.1500557699141
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+}
+]
+},
+"p": {
+"strokes": [
+{
+"id": "letter-p-s1",
+"sub": 0,
+"beziers_u": [
+[
+[
+220.519349,
+1782.823778
+],
+[
+218.253492,
+1784.176506
+],
+[
+212.048831,
+1787.534635
+],
+[
+208.431079,
+1804.590185
+]
+],
+[
+[
+208.431079,
+1804.590185
+],
+[
+207.333053,
+1809.766726
+],
+[
+206.723054,
+1815.027755
+],
+[
+202.660812,
+1829.438913
+]
+],
+[
+[
+202.660812,
+1829.438913
+],
+[
+196.82424,
+1850.144665
+],
+[
+190.487149,
+1866.23274
+],
+[
+186.3685,
+1877.767367
+]
+],
+[
+[
+186.3685,
+1877.767367
+],
+[
+175.962894,
+1906.909159
+],
+[
+150.593266,
+1988.551525
+],
+[
+138.106573,
+2024.462692
+]
+],
+[
+[
+138.106573,
+2024.462692
+],
+[
+150.593266,
+1988.551525
+],
+[
+175.962894,
+1906.909159
+],
+[
+186.3685,
+1877.767367
+]
+],
+[
+[
+186.3685,
+1877.767367
+],
+[
+191.795081,
+1862.569763
+],
+[
+197.104282,
+1850.581725
+],
+[
+222.27292,
+1817.486409
+]
+],
+[
+[
+222.27292,
+1817.486409
+],
+[
+233.760453,
+1802.380962
+],
+[
+241.291869,
+1793.520594
+],
+[
+251.677267,
+1788.213439
+]
+],
+[
+[
+251.677267,
+1788.213439
+],
+[
+270.726062,
+1778.479109
+],
+[
+282.896657,
+1789.120166
+],
+[
+287.616934,
+1797.396694
+]
+],
+[
+[
+287.616934,
+1797.396694
+],
+[
+305.239554,
+1828.296174
+],
+[
+267.433024,
+1911.128695
+],
+[
+208.870354,
+1903.593777
+]
+],
+[
+[
+208.870354,
+1903.593777
+],
+[
+198.904528,
+1902.311533
+],
+[
+190.829564,
+1898.732953
+],
+[
+181.997488,
+1894.619572
+]
+],
+[
+[
+181.997488,
+1894.619572
+],
+[
+190.829564,
+1898.732953
+],
+[
+198.904528,
+1902.311533
+],
+[
+208.870354,
+1903.593777
+]
+],
+[
+[
+208.870354,
+1903.593777
+],
+[
+220.08301,
+1905.036444
+],
+[
+229.297448,
+1903.007173
+],
+[
+241.113916,
+1903.3553
+]
+],
+[
+[
+241.113916,
+1903.3553
+],
+[
+253.261602,
+1903.713185
+],
+[
+263.258811,
+1906.439242
+],
+[
+272.294433,
+1903.921635
+]
+]
+],
+"nodes": 14,
+"shared": [
+{
+"fork_in": 3,
+"cusp": 4,
+"fork_out": 5
+},
+{
+"fork_in": 9,
+"cusp": 10,
+"fork_out": 11
+}
+],
+"pass_note": "pen order = document order; within a retraced stretch pass 1 runs fork_in -> cusp, pass 2 cusp -> fork_out (pass 1 reversed)"
+}
+],
+"points": [
+{
+"name": "entry",
+"stroke": 0,
+"bk": 0,
+"bt": 0.0,
+"pt": [
+254.38023490548483,
+507.2342566104405
+],
+"rule": "cusp entry: the drawn stroke's start; frame taken there"
+},
+{
+"name": "exit",
+"stroke": 0,
+"bk": 12,
+"bt": 1.0,
+"pt": [
+470.1097490982024,
+2.659852757950996
+],
+"rule": "smooth exit: the drawn stroke's end; frame taken there"
+},
+{
+"name": "cusp0",
+"stroke": 0,
+"pt": [
+254.38023490548483,
+507.2342566104405
+],
+"rule": "cusp: the drawn node nearest the old cusp carried by the edit"
+},
+{
+"name": "cusp1",
+"stroke": 0,
+"pt": [
+-89.00633587926991,
+-499.59454992129065
+],
+"rule": "cusp: the drawn node nearest the old cusp carried by the edit"
+},
+{
+"name": "cusp2",
+"stroke": 0,
+"pt": [
+93.87247617202303,
+41.418451094486386
+],
+"rule": "cusp: the drawn node nearest the old cusp carried by the edit"
+},
+{
+"name": "split p@619",
+"stroke": 0,
+"pt": [
+217.43448521779726,
+446.70062837199987
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "split p@767",
+"stroke": 0,
+"pt": [
+220.19659109130518,
+445.49764831292504
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "split p@980",
+"stroke": 0,
+"pt": [
+164.025672050442,
+241.75323411621986
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "split p@2550",
+"stroke": 0,
+"pt": [
+165.62344086359238,
+242.145781665015
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "split p@3562",
+"stroke": 0,
+"pt": [
+344.4476515175294,
+14.96239440423749
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "split p@4083",
+"stroke": 0,
+"pt": [
+346.22675008225195,
+16.468159365089264
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+}
+]
+},
+"q": {
+"strokes": [
+{
+"id": "letter-q-s1",
+"sub": 0,
+"beziers_u": [
+[
+[
+723.066124,
+1783.217894
+],
+[
+720.885548,
+1786.592294
+],
+[
+719.027729,
+1790.308997
+],
+[
+717.30101,
+1793.858374
+]
+],
+[
+[
+717.30101,
+1793.858374
+],
+[
+702.681256,
+1788.285799
+],
+[
+651.296724,
+1762.881772
+],
+[
+616.95824,
+1833.230558
+]
+],
+[
+[
+616.95824,
+1833.230558
+],
+[
+599.155871,
+1869.70203
+],
+[
+608.085527,
+1886.530452
+],
+[
+611.376152,
+1891.754598
+]
+],
+[
+[
+611.376152,
+1891.754598
+],
+[
+632.00539,
+1924.505261
+],
+[
+672.674478,
+1884.849642
+],
+[
+700.386667,
+1836.840853
+]
+],
+[
+[
+700.386667,
+1836.840853
+],
+[
+715.133849,
+1811.292733
+],
+[
+710.287956,
+1810.96563
+],
+[
+722.531684,
+1782.351326
+]
+],
+[
+[
+722.531684,
+1782.351326
+],
+[
+710.222856,
+1810.653035
+],
+[
+675.662577,
+1924.784836
+],
+[
+669.83958,
+1943.12693
+]
+],
+[
+[
+669.83958,
+1943.12693
+],
+[
+658.006008,
+1980.401979
+],
+[
+639.566204,
+2016.725993
+],
+[
+660.975367,
+2023.841328
+]
+],
+[
+[
+660.975367,
+2023.841328
+],
+[
+685.242573,
+2031.906534
+],
+[
+688.29506,
+1978.377495
+],
+[
+689.747935,
+1964.319607
+]
+],
+[
+[
+689.747935,
+1964.319607
+],
+[
+690.736467,
+1954.754666
+],
+[
+693.076827,
+1943.217084
+],
+[
+689.044265,
+1927.206393
+]
+],
+[
+[
+689.044265,
+1927.206393
+],
+[
+687.614418,
+1921.529398
+],
+[
+685.13233,
+1914.293412
+],
+[
+688.520834,
+1908.943147
+]
+],
+[
+[
+688.520834,
+1908.943147
+],
+[
+692.139666,
+1903.229207
+],
+[
+699.735212,
+1903.959353
+],
+[
+704.745969,
+1903.142844
+]
+]
+],
+"nodes": 12,
+"shared": [],
+"pass_note": "pen order = document order; within a retraced stretch pass 1 runs fork_in -> cusp, pass 2 cusp -> fork_out (pass 1 reversed)"
+}
+],
+"points": [
+{
+"name": "entry",
+"stroke": 0,
+"bk": 2,
+"bt": 0.10996071326307436,
+"pt": [
+103.4337615106931,
+249.99999998943343
+],
+"rule": "fused junction: where the drawn stroke crosses y = 250 fu (60 u) nearest the old junction carried by the edit (within 40 fu of arc); frame (pt, T, k) taken there, T and k negated (the pen arrives backwards)"
+},
+{
+"name": "exit",
+"stroke": 0,
+"bk": 10,
+"bt": 1.0,
+"pt": [
+489.8244803881123,
+5.904814901902599
+],
+"rule": "smooth exit: the drawn stroke's end; frame taken there"
+},
+{
+"name": "after_o",
+"stroke": 0,
+"bk": 1,
+"bt": 0.6464620299062879,
+"pt": [
+292.5163198246291,
+479.77355354626593
+],
+"rule": "fused high-entry frame (K959 soft): the nearest drawn point to the old place carried by the edit; frame taken there, T and k negated"
+},
+{
+"name": "after_b",
+"stroke": 0,
+"bk": 1,
+"bt": 0.68378049614893,
+"pt": [
+273.9903098917803,
+470.8203434972369
+],
+"rule": "fused high-entry frame (K959 soft): the nearest drawn point to the old place carried by the edit; frame taken there, T and k negated"
+},
+{
+"name": "corner0",
+"stroke": 0,
+"joint": 1,
+"pt": [
+542.1371514963213,
+461.25677336393824
+],
+"rule": "stem-top V corner (K939): the drawn joint nearest the old corner carried by the edit"
+},
+{
+"name": "cusp0",
+"stroke": 0,
+"pt": [
+566.158455554287,
+505.5921086421377
+],
+"rule": "cusp: the drawn node nearest the old cusp carried by the edit"
+},
+{
+"name": "cusp1",
+"stroke": 0,
+"pt": [
+563.9316268934804,
+509.2028097721146
+],
+"rule": "cusp: the drawn node nearest the old cusp carried by the edit"
+},
+{
+"name": "split q@355",
+"stroke": 0,
+"pt": [
+85.52218217946657,
+213.47606541347145
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "split q@1668",
+"stroke": 0,
+"pt": [
+87.32976751721365,
+213.71276787309046
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "split q@2340",
+"stroke": 0,
+"pt": [
+470.0075737419982,
+264.2900716331515
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "split q@2868",
+"stroke": 0,
+"pt": [
+471.6411607656933,
+264.4036957943343
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+}
+]
+},
+"r": {
+"strokes": [
+{
+"id": "letter-r-s1",
+"sub": 0,
+"beziers_u": [
+[
+[
+1087.574965,
+1775.366311
+],
+[
+1079.017165,
+1786.300678
+],
+[
+1082.422935,
+1792.787898
+],
+[
+1086.710625,
+1795.230345
+]
+],
+[
+[
+1086.710625,
+1795.230345
+],
+[
+1093.362378,
+1799.019462
+],
+[
+1102.528571,
+1793.297195
+],
+[
+1109.500476,
+1790.537833
+]
+],
+[
+[
+1109.500476,
+1790.537833
+],
+[
+1128.559951,
+1782.994417
+],
+[
+1143.670166,
+1792.66669
+],
+[
+1139.279552,
+1811.867018
+]
+],
+[
+[
+1139.279552,
+1811.867018
+],
+[
+1137.164503,
+1821.116212
+],
+[
+1128.675402,
+1840.661276
+],
+[
+1119.150758,
+1862.94243
+]
+],
+[
+[
+1119.150758,
+1862.94243
+],
+[
+1112.47209,
+1878.565944
+],
+[
+1109.419815,
+1885.860383
+],
+[
+1110.367733,
+1892.547634
+]
+],
+[
+[
+1110.367733,
+1892.547634
+],
+[
+1111.529928,
+1900.746546
+],
+[
+1118.449411,
+1906.228082
+],
+[
+1127.725731,
+1903.806283
+]
+]
+],
+"nodes": 7,
+"shared": [],
+"pass_note": "pen order = document order; within a retraced stretch pass 1 runs fork_in -> cusp, pass 2 cusp -> fork_out (pass 1 reversed)"
+}
+],
+"points": [
+{
+"name": "entry",
+"stroke": 0,
+"bk": 0,
+"bt": 0.0,
+"pt": [
+240.77862959020212,
+538.3070394034794
+],
+"rule": "cusp entry: the drawn stroke's start; frame taken there"
+},
+{
+"name": "exit",
+"stroke": 0,
+"bk": 5,
+"bt": 1.0,
+"pt": [
+408.0734870168332,
+3.140488668248988
+],
+"rule": "smooth exit: the drawn stroke's end; frame taken there"
+},
+{
+"name": "cusp0",
+"stroke": 0,
+"pt": [
+240.77862959020212,
+538.3070394034794
+],
+"rule": "cusp: the drawn node nearest the old cusp carried by the edit"
+},
+{
+"name": "split r@669",
+"stroke": 0,
+"pt": [
+213.83804426168356,
+462.37680736775684
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "split r@835",
+"stroke": 0,
+"pt": [
+214.2137117285488,
+462.44780467089225
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+}
+]
+},
+"s": {
+"strokes": [
+{
+"id": "letter-s-s1",
+"sub": 0,
+"beziers_u": [
+[
+[
+1532.397319,
+1777.235837
+],
+[
+1508.357352,
+1799.471203
+],
+[
+1533.231303,
+1824.194369
+],
+[
+1542.844309,
+1853.641192
+]
+],
+[
+[
+1542.844309,
+1853.641192
+],
+[
+1557.041194,
+1897.129474
+],
+[
+1523.747191,
+1907.404579
+],
+[
+1500.606374,
+1904.374048
+]
+],
+[
+[
+1500.606374,
+1904.374048
+],
+[
+1491.019869,
+1903.118596
+],
+[
+1482.92817,
+1899.547221
+],
+[
+1473.799593,
+1895.202158
+]
+],
+[
+[
+1473.799593,
+1895.202158
+],
+[
+1482.92817,
+1899.547221
+],
+[
+1491.019869,
+1903.118596
+],
+[
+1500.606374,
+1904.374048
+]
+],
+[
+[
+1500.606374,
+1904.374048
+],
+[
+1512.330342,
+1905.909424
+],
+[
+1518.511453,
+1902.962317
+],
+[
+1529.152001,
+1903.047351
+]
+],
+[
+[
+1529.152001,
+1903.047351
+],
+[
+1538.596612,
+1903.122827
+],
+[
+1546.071344,
+1905.543337
+],
+[
+1553.603948,
+1903.460118
+]
+]
+],
+"nodes": 7,
+"shared": [
+{
+"fork_in": 2,
+"cusp": 3,
+"fork_out": 4
+}
+],
+"pass_note": "pen order = document order; within a retraced stretch pass 1 runs fork_in -> cusp, pass 2 cusp -> fork_out (pass 1 reversed)"
+}
+],
+"points": [
+{
+"name": "entry",
+"stroke": 0,
+"bk": 0,
+"bt": 0.0,
+"pt": [
+306.03843640896,
+530.5173450034004
+],
+"rule": "cusp entry: the drawn stroke's start; frame taken there"
+},
+{
+"name": "exit",
+"stroke": 0,
+"bk": 5,
+"bt": 1.0,
+"pt": [
+394.3993947190667,
+4.582840381776407
+],
+"rule": "smooth exit: the drawn stroke's end; frame taken there"
+},
+{
+"name": "cusp0",
+"stroke": 0,
+"pt": [
+306.03843640896,
+530.5173450034004
+],
+"rule": "cusp: the drawn node nearest the old cusp carried by the edit"
+},
+{
+"name": "cusp1",
+"stroke": 0,
+"pt": [
+61.88124706653232,
+38.991009336760555
+],
+"rule": "cusp: the drawn node nearest the old cusp carried by the edit"
+},
+{
+"name": "split s@703",
+"stroke": 0,
+"pt": [
+270.78117339048487,
+486.4610470166751
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "split s@816",
+"stroke": 0,
+"pt": [
+273.52096596076814,
+485.37489355741207
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "split s@1322",
+"stroke": 0,
+"pt": [
+311.0574745900975,
+17.37170804014525
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "split s@1840",
+"stroke": 0,
+"pt": [
+310.95287500170525,
+17.782007512330125
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+}
+]
+},
+"t": {
+"strokes": [
+{
+"id": "letter-t-s1",
+"sub": 0,
+"beziers_u": [
+[
+[
+1987.918166,
+1731.125683
+],
+[
+1986.607226,
+1732.081277
+],
+[
+1982.518692,
+1734.881411
+],
+[
+1979.724476,
+1743.347937
+]
+],
+[
+[
+1979.724476,
+1743.347937
+],
+[
+1978.412804,
+1747.322331
+],
+[
+1977.48018,
+1752.261045
+],
+[
+1976.111953,
+1757.718586
+]
+],
+[
+[
+1976.111953,
+1757.718586
+],
+[
+1972.654126,
+1771.51105
+],
+[
+1969.797877,
+1775.120263
+],
+[
+1953.826403,
+1823.407053
+]
+],
+[
+[
+1953.826403,
+1823.407053
+],
+[
+1943.311438,
+1855.197101
+],
+[
+1940.748164,
+1865.125194
+],
+[
+1939.749386,
+1870.881495
+]
+],
+[
+[
+1939.749386,
+1870.881495
+],
+[
+1935.349227,
+1896.24113
+],
+[
+1949.674901,
+1907.711896
+],
+[
+1963.595239,
+1903.688646
+]
+]
+],
+"nodes": 6,
+"shared": [],
+"pass_note": "pen order = document order; within a retraced stretch pass 1 runs fork_in -> cusp, pass 2 cusp -> fork_out (pass 1 reversed)"
+},
+{
+"id": "letter-t-s2",
+"sub": 0,
+"beziers_u": [
+[
+[
+1935.105589,
+1790.363439
+],
+[
+1958.574338,
+1784.347915
+],
+[
+1984.204384,
+1792.866028
+],
+[
+2004.192711,
+1785.818268
+]
+]
+],
+"nodes": 2,
+"shared": [],
+"pass_note": "pen order = document order; within a retraced stretch pass 1 runs fork_in -> cusp, pass 2 cusp -> fork_out (pass 1 reversed)"
+}
+],
+"points": [
+{
+"name": "entry",
+"stroke": 0,
+"bk": 0,
+"bt": 0.0,
+"pt": [
+331.3753199657366,
+722.6429791094945
+],
+"rule": "cusp entry: the drawn stroke's start; frame taken there"
+},
+{
+"name": "exit",
+"stroke": 0,
+"bk": 4,
+"bt": 1.0,
+"pt": [
+230.02977323251287,
+3.630641389189178
+],
+"rule": "smooth exit: the drawn stroke's end; frame taken there"
+},
+{
+"name": "cusp0",
+"stroke": 0,
+"pt": [
+331.3753199657366,
+722.6429791094945
+],
+"rule": "cusp: the drawn node nearest the old cusp carried by the edit"
+},
+{
+"name": "split t@606",
+"stroke": 0,
+"pt": [
+216.4922926413269,
+424.79121310322023
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "split t@1251",
+"stroke": 0,
+"pt": [
+219.3093243895393,
+423.88099696404294
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "crossing0",
+"stroke": 0,
+"pt": [
+239.69584129721727,
+484.0000000000002
+],
+"rule": "loop crossing (a record, read by no build step): where the drawn stroke crosses itself (t, x: where stroke 1 crosses the extra stroke), the crossing nearest the old one carried by the edit, keeping the record's offset from the written body's crossing"
+}
+]
+},
+"u": {
+"strokes": [
+{
+"id": "letter-u-s1",
+"sub": 0,
+"beziers_u": [
+[
+[
+214.200195,
+2260.292348
+],
+[
+212.537891,
+2263.41055
+],
+[
+207.983325,
+2272.821046
+],
+[
+204.837569,
+2282.066169
+]
+],
+[
+[
+204.837569,
+2282.066169
+],
+[
+201.727593,
+2291.206139
+],
+[
+199.138666,
+2302.699885
+],
+[
+194.482519,
+2316.017007
+]
+],
+[
+[
+194.482519,
+2316.017007
+],
+[
+187.309484,
+2336.532721
+],
+[
+180.621595,
+2345.95616
+],
+[
+180.472137,
+2358.47393
+]
+],
+[
+[
+180.472137,
+2358.47393
+],
+[
+180.280964,
+2374.485531
+],
+[
+190.957619,
+2381.30833
+],
+[
+200.203529,
+2382.26664
+]
+],
+[
+[
+200.203529,
+2382.26664
+],
+[
+216.522783,
+2383.95808
+],
+[
+231.365838,
+2367.688797
+],
+[
+238.607802,
+2359.507666
+]
+],
+[
+[
+238.607802,
+2359.507666
+],
+[
+277.439476,
+2315.640141
+],
+[
+279.952607,
+2298.463303
+],
+[
+286.88736,
+2281.613966
+]
+],
+[
+[
+286.88736,
+2281.613966
+],
+[
+290.648865,
+2272.474655
+],
+[
+294.353323,
+2266.731088
+],
+[
+299.157563,
+2259.752351
+]
+],
+[
+[
+299.157563,
+2259.752351
+],
+[
+294.353323,
+2266.731088
+],
+[
+290.648865,
+2272.474655
+],
+[
+286.88736,
+2281.613966
+]
+],
+[
+[
+286.88736,
+2281.613966
+],
+[
+278.310665,
+2302.452721
+],
+[
+279.477208,
+2316.552116
+],
+[
+270.726208,
+2337.456408
+]
+],
+[
+[
+270.726208,
+2337.456408
+],
+[
+266.161073,
+2348.361555
+],
+[
+260.946423,
+2356.222895
+],
+[
+260.188629,
+2364.560478
+]
+],
+[
+[
+260.188629,
+2364.560478
+],
+[
+259.077257,
+2376.788272
+],
+[
+268.106078,
+2383.944637
+],
+[
+278.078883,
+2381.34042
+]
+]
+],
+"nodes": 12,
+"shared": [
+{
+"fork_in": 6,
+"cusp": 7,
+"fork_out": 8
+}
+],
+"pass_note": "pen order = document order; within a retraced stretch pass 1 runs fork_in -> cusp, pass 2 cusp -> fork_out (pass 1 reversed)"
+}
+],
+"points": [
+{
+"name": "entry",
+"stroke": 0,
+"bk": 0,
+"bt": 0.0,
+"pt": [
+249.05042306200477,
+509.44854826908744
+],
+"rule": "cusp entry: the drawn stroke's start; frame taken there"
+},
+{
+"name": "exit",
+"stroke": 0,
+"bk": 10,
+"bt": 1.0,
+"pt": [
+515.2116229771351,
+5.081581903745369
+],
+"rule": "smooth exit: the drawn stroke's end; frame taken there"
+},
+{
+"name": "cusp0",
+"stroke": 0,
+"pt": [
+249.05042306200477,
+509.44854826908744
+],
+"rule": "cusp: the drawn node nearest the old cusp carried by the edit"
+},
+{
+"name": "cusp1",
+"stroke": 0,
+"pt": [
+603.0394585343913,
+511.6985356788043
+],
+"rule": "cusp: the drawn node nearest the old cusp carried by the edit"
+},
+{
+"name": "split u@547",
+"stroke": 0,
+"pt": [
+188.42236487740558,
+374.1107956308423
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "split u@846",
+"stroke": 0,
+"pt": [
+189.75030395399952,
+372.13888989112723
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "split u@1724",
+"stroke": 0,
+"pt": [
+506.4785586980641,
+293.8330016187578
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "split u@2207",
+"stroke": 0,
+"pt": [
+508.1407569547751,
+293.37241728389034
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+}
+]
+},
+"v": {
+"strokes": [
+{
+"id": "letter-v-s1",
+"sub": 0,
+"beziers_u": [
+[
+[
+651.568715,
+2262.888585
+],
+[
+658.735068,
+2261.018063
+],
+[
+664.489221,
+2265.234512
+],
+[
+665.892922,
+2271.518068
+]
+],
+[
+[
+665.892922,
+2271.518068
+],
+[
+667.321343,
+2277.912288
+],
+[
+663.951389,
+2285.133971
+],
+[
+661.923306,
+2289.750528
+]
+],
+[
+[
+661.923306,
+2289.750528
+],
+[
+656.719642,
+2301.59571
+],
+[
+655.02483,
+2308.412176
+],
+[
+649.78407,
+2325.245118
+]
+],
+[
+[
+649.78407,
+2325.245118
+],
+[
+644.041512,
+2343.6898
+],
+[
+640.676145,
+2352.850775
+],
+[
+641.523361,
+2362.520467
+]
+],
+[
+[
+641.523361,
+2362.520467
+],
+[
+642.697866,
+2375.925681
+],
+[
+651.463892,
+2384.550649
+],
+[
+666.663898,
+2383.230585
+]
+],
+[
+[
+666.663898,
+2383.230585
+],
+[
+697.638849,
+2380.540526
+],
+[
+720.917038,
+2339.540275
+],
+[
+722.468673,
+2336.800564
+]
+],
+[
+[
+722.468673,
+2336.800564
+],
+[
+748.796336,
+2290.313988
+],
+[
+737.571085,
+2280.800316
+],
+[
+734.029814,
+2265.767686
+]
+],
+[
+[
+734.029814,
+2265.767686
+],
+[
+733.662138,
+2264.206909
+],
+[
+733.374263,
+2262.573772
+],
+[
+732.993945,
+2260.293087
+]
+],
+[
+[
+732.993945,
+2260.293087
+],
+[
+733.374263,
+2262.573772
+],
+[
+733.662138,
+2264.206909
+],
+[
+734.029814,
+2265.767686
+]
+],
+[
+[
+734.029814,
+2265.767686
+],
+[
+735.23624,
+2270.888944
+],
+[
+737.487933,
+2276.021113
+],
+[
+744.000547,
+2278.025845
+]
+]
+],
+"nodes": 11,
+"shared": [
+{
+"fork_in": 7,
+"cusp": 8,
+"fork_out": 9
+}
+],
+"pass_note": "pen order = document order; within a retraced stretch pass 1 runs fork_in -> cusp, pass 2 cusp -> fork_out (pass 1 reversed)"
+}
+],
+"points": [
+{
+"name": "entry",
+"stroke": 0,
+"bk": 0,
+"bt": 0.0,
+"pt": [
+159.50258795256994,
+498.6308961525615
+],
+"rule": "smooth entry: the drawn stroke's start; frame taken there"
+},
+{
+"name": "exit",
+"stroke": 0,
+"bk": 9,
+"bt": 1.0,
+"pt": [
+544.635221183144,
+435.5589781120061
+],
+"rule": "smooth exit: the drawn stroke's end; frame taken there"
+},
+{
+"name": "cusp0",
+"stroke": 0,
+"pt": [
+498.77438105843294,
+509.4454732357657
+],
+"rule": "cusp: the drawn node nearest the old cusp carried by the edit"
+},
+{
+"name": "split v@1883",
+"stroke": 0,
+"pt": [
+526.9556328374258,
+434.3052370465865
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "split v@2044",
+"stroke": 0,
+"pt": [
+524.8315021436443,
+435.6839607028958
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+}
+]
+},
+"w": {
+"strokes": [
+{
+"id": "letter-w-s1",
+"sub": 0,
+"beziers_u": [
+[
+[
+1057.362005,
+2260.525706
+],
+[
+1055.799223,
+2261.873724
+],
+[
+1052.422535,
+2264.625672
+],
+[
+1049.734159,
+2273.411002
+]
+],
+[
+[
+1049.734159,
+2273.411002
+],
+[
+1048.535249,
+2277.328912
+],
+[
+1047.399857,
+2282.686522
+],
+[
+1045.912111,
+2288.010827
+]
+],
+[
+[
+1045.912111,
+2288.010827
+],
+[
+1044.665105,
+2292.473578
+],
+[
+1044.487857,
+2292.19859
+],
+[
+1036.625703,
+2316.776063
+]
+],
+[
+[
+1036.625703,
+2316.776063
+],
+[
+1023.439732,
+2357.996045
+],
+[
+1021.643856,
+2365.942069
+],
+[
+1027.37267,
+2374.633411
+]
+],
+[
+[
+1027.37267,
+2374.633411
+],
+[
+1039.721981,
+2393.36889
+],
+[
+1062.107668,
+2377.746464
+],
+[
+1064.96265,
+2375.72981
+]
+],
+[
+[
+1064.96265,
+2375.72981
+],
+[
+1093.537496,
+2355.545598
+],
+[
+1104.432747,
+2328.816897
+],
+[
+1110.172061,
+2312.926631
+]
+],
+[
+[
+1110.172061,
+2312.926631
+],
+[
+1119.943129,
+2285.873768
+],
+[
+1118.922908,
+2278.737486
+],
+[
+1129.969076,
+2261.64373
+]
+],
+[
+[
+1129.969076,
+2261.64373
+],
+[
+1118.922908,
+2278.737486
+],
+[
+1119.943129,
+2285.873768
+],
+[
+1110.172061,
+2312.926631
+]
+],
+[
+[
+1110.172061,
+2312.926631
+],
+[
+1101.874122,
+2335.900885
+],
+[
+1092.207613,
+2355.480421
+],
+[
+1097.933679,
+2369.863194
+]
+],
+[
+[
+1097.933679,
+2369.863194
+],
+[
+1102.831059,
+2382.16447
+],
+[
+1120.163077,
+2393.615554
+],
+[
+1147.521117,
+2370.14023
+]
+],
+[
+[
+1147.521117,
+2370.14023
+],
+[
+1168.701408,
+2351.965895
+],
+[
+1186.333302,
+2321.059003
+],
+[
+1189.661257,
+2300.108568
+]
+],
+[
+[
+1189.661257,
+2300.108568
+],
+[
+1192.043659,
+2285.110665
+],
+[
+1187.194694,
+2274.591473
+],
+[
+1185.901558,
+2265.071539
+]
+],
+[
+[
+1185.901558,
+2265.071539
+],
+[
+1185.731156,
+2263.817055
+],
+[
+1185.612319,
+2262.504977
+],
+[
+1185.450624,
+2260.410309
+]
+],
+[
+[
+1185.450624,
+2260.410309
+],
+[
+1185.612319,
+2262.504977
+],
+[
+1185.731156,
+2263.817055
+],
+[
+1185.901558,
+2265.071539
+]
+],
+[
+[
+1185.901558,
+2265.071539
+],
+[
+1186.491343,
+2269.413478
+],
+[
+1187.987924,
+2275.193612
+],
+[
+1194.575788,
+2277.661266
+]
+]
+],
+"nodes": 16,
+"shared": [
+{
+"fork_in": 6,
+"cusp": 7,
+"fork_out": 8
+},
+{
+"fork_in": 12,
+"cusp": 13,
+"fork_out": 14
+}
+],
+"pass_note": "pen order = document order; within a retraced stretch pass 1 runs fork_in -> cusp, pass 2 cusp -> fork_out (pass 1 reversed)"
+}
+],
+"points": [
+{
+"name": "entry",
+"stroke": 0,
+"bk": 0,
+"bt": 0.0,
+"pt": [
+250.64131459007103,
+508.4762158840915
+],
+"rule": "cusp entry: the drawn stroke's start; frame taken there"
+},
+{
+"name": "exit",
+"stroke": 0,
+"bk": 14,
+"bt": 1.0,
+"pt": [
+822.3653943540733,
+437.0780569907348
+],
+"rule": "smooth exit: the drawn stroke's end; frame taken there"
+},
+{
+"name": "cusp0",
+"stroke": 0,
+"pt": [
+250.64131459007103,
+508.4762158840915
+],
+"rule": "cusp: the drawn node nearest the old cusp carried by the edit"
+},
+{
+"name": "cusp1",
+"stroke": 0,
+"pt": [
+553.1707590165424,
+503.8177896822473
+],
+"rule": "cusp: the drawn node nearest the old cusp carried by the edit"
+},
+{
+"name": "cusp2",
+"stroke": 0,
+"pt": [
+784.343875835705,
+508.95704426714
+],
+"rule": "cusp: the drawn node nearest the old cusp carried by the edit"
+},
+{
+"name": "split w@618",
+"stroke": 0,
+"pt": [
+216.8161482381856,
+445.49207753468556
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "split w@764",
+"stroke": 0,
+"pt": [
+219.44817175480978,
+444.0662862033906
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "split w@1563",
+"stroke": 0,
+"pt": [
+417.2170718380951,
+161.1339367072029
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "split w@2307",
+"stroke": 0,
+"pt": [
+419.1579920600991,
+161.8683386212684
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "split w@3113",
+"stroke": 0,
+"pt": [
+802.6101490348509,
+444.76016044510396
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "split w@3250",
+"stroke": 0,
+"pt": [
+803.1549018222528,
+445.76734928636915
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+}
+]
+},
+"x": {
+"strokes": [
+{
+"id": "letter-x-s1",
+"sub": 0,
+"beziers_u": [
+[
+[
+1507.779397,
+2262.897556
+],
+[
+1546.303894,
+2252.945944
+],
+[
+1536.274732,
+2391.960126
+],
+[
+1574.468245,
+2381.702205
+]
+]
+],
+"nodes": 2,
+"shared": [],
+"pass_note": "pen order = document order; within a retraced stretch pass 1 runs fork_in -> cusp, pass 2 cusp -> fork_out (pass 1 reversed)"
+},
+{
+"id": "letter-x-s2",
+"sub": 0,
+"beziers_u": [
+[
+[
+1604.724277,
+2260.420447
+],
+[
+1593.939428,
+2269.885558
+],
+[
+1517.929524,
+2341.312014
+],
+[
+1473.032782,
+2383.052137
+]
+]
+],
+"nodes": 2,
+"shared": [],
+"pass_note": "pen order = document order; within a retraced stretch pass 1 runs fork_in -> cusp, pass 2 cusp -> fork_out (pass 1 reversed)"
+}
+],
+"points": [
+{
+"name": "entry",
+"stroke": 0,
+"bk": 0,
+"bt": 0.0,
+"pt": [
+229.9637639392059,
+498.59351691759747
+],
+"rule": "smooth entry: the drawn stroke's start; frame taken there"
+},
+{
+"name": "exit",
+"stroke": 0,
+"bk": 0,
+"bt": 1.0,
+"pt": [
+507.83396319472314,
+3.574147667802661
+],
+"rule": "smooth exit: the drawn stroke's end; frame taken there"
+},
+{
+"name": "after_o",
+"stroke": 0,
+"bk": 0,
+"bt": 0.0,
+"pt": [
+229.9637639392059,
+498.59351691759747
+],
+"rule": "smooth high-entry frame (K959 soft): the nearest drawn point to the old place carried by the edit; frame taken there"
+},
+{
+"name": "after_b",
+"stroke": 0,
+"bk": 0,
+"bt": 0.0,
+"pt": [
+229.9637639392059,
+498.59351691759747
+],
+"rule": "smooth high-entry frame (K959 soft): the nearest drawn point to the old place carried by the edit; frame taken there"
+},
+{
+"name": "crossing0",
+"stroke": 0,
+"pt": [
+365.4436387192883,
+259.1315945857002
+],
+"rule": "loop crossing (a record, read by no build step): where the drawn stroke crosses itself (t, x: where stroke 1 crosses the extra stroke), the crossing nearest the old one carried by the edit, keeping the record's offset from the written body's crossing"
+}
+]
+},
+"y": {
+"strokes": [
+{
+"id": "letter-y-s1",
+"sub": 0,
+"beziers_u": [
+[
+[
+1934.048578,
+2260.303607
+],
+[
+1920.317073,
+2280.40617
+],
+[
+1922.382317,
+2293.422983
+],
+[
+1913.551125,
+2317.845075
+]
+],
+[
+[
+1913.551125,
+2317.845075
+],
+[
+1907.460211,
+2334.689106
+],
+[
+1900.200934,
+2345.855344
+],
+[
+1900.127748,
+2358.448558
+]
+],
+[
+[
+1900.127748,
+2358.448558
+],
+[
+1900.045742,
+2372.559537
+],
+[
+1909.031062,
+2380.773263
+],
+[
+1919.324762,
+2382.19889
+]
+],
+[
+[
+1919.324762,
+2382.19889
+],
+[
+1937.021272,
+2384.64977
+],
+[
+1953.013994,
+2366.266843
+],
+[
+1963.142537,
+2354.003903
+]
+],
+[
+[
+1963.142537,
+2354.003903
+],
+[
+1994.733624,
+2315.755598
+],
+[
+2002.279896,
+2297.085837
+],
+[
+2007.568664,
+2283.27953
+]
+],
+[
+[
+2007.568664,
+2283.27953
+],
+[
+2010.212011,
+2276.379083
+],
+[
+2012.88179,
+2269.152401
+],
+[
+2016.114779,
+2260.386749
+]
+],
+[
+[
+2016.114779,
+2260.386749
+],
+[
+2012.88179,
+2269.152401
+],
+[
+2010.212011,
+2276.379083
+],
+[
+2007.568664,
+2283.27953
+]
+],
+[
+[
+2007.568664,
+2283.27953
+],
+[
+2005.148713,
+2289.596803
+],
+[
+2001.952984,
+2297.723645
+],
+[
+1998.719049,
+2307.673223
+]
+],
+[
+[
+1998.719049,
+2307.673223
+],
+[
+1996.097047,
+2315.740118
+],
+[
+1993.554039,
+2324.684902
+],
+[
+1991.296644,
+2332.541899
+]
+],
+[
+[
+1991.296644,
+2332.541899
+],
+[
+1981.293567,
+2367.358207
+],
+[
+1981.299102,
+2365.499198
+],
+[
+1975.790323,
+2382.069361
+]
+],
+[
+[
+1975.790323,
+2382.069361
+],
+[
+1965.798367,
+2412.124723
+],
+[
+1952.071014,
+2459.477275
+],
+[
+1940.775371,
+2479.673606
+]
+],
+[
+[
+1940.775371,
+2479.673606
+],
+[
+1915.162582,
+2525.468642
+],
+[
+1865.476071,
+2497.037067
+],
+[
+1898.446581,
+2455.763057
+]
+],
+[
+[
+1898.446581,
+2455.763057
+],
+[
+1906.624445,
+2445.525627
+],
+[
+1923.596904,
+2429.854521
+],
+[
+1939.023538,
+2418.238055
+]
+],
+[
+[
+1939.023538,
+2418.238055
+],
+[
+1951.626641,
+2408.747747
+],
+[
+1961.779697,
+2403.031669
+],
+[
+1978.501407,
+2390.168038
+]
+]
+],
+"nodes": 15,
+"shared": [
+{
+"fork_in": 5,
+"cusp": 6,
+"fork_out": 7
+}
+],
+"pass_note": "pen order = document order; within a retraced stretch pass 1 runs fork_in -> cusp, pass 2 cusp -> fork_out (pass 1 reversed)"
+}
+],
+"points": [
+{
+"name": "entry",
+"stroke": 0,
+"bk": 0,
+"bt": 0.0,
+"pt": [
+249.1686815865342,
+509.4016411973338
+],
+"rule": "cusp entry: the drawn stroke's start; frame taken there"
+},
+{
+"name": "exit",
+"stroke": 0,
+"bk": 13,
+"bt": 1.0,
+"pt": [
+434.3888061530465,
+-31.700156509420708
+],
+"rule": "smooth exit: the drawn stroke's end; frame taken there"
+},
+{
+"name": "cusp0",
+"stroke": 0,
+"pt": [
+249.1686815865342,
+509.4016411973338
+],
+"rule": "cusp: the drawn node nearest the old cusp carried by the edit"
+},
+{
+"name": "cusp1",
+"stroke": 0,
+"pt": [
+591.1111891602648,
+509.0552120805995
+],
+"rule": "cusp: the drawn node nearest the old cusp carried by the edit"
+},
+{
+"name": "split y@637",
+"stroke": 0,
+"pt": [
+227.2276471824965,
+460.9661745769074
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "split y@746",
+"stroke": 0,
+"pt": [
+227.0431377692625,
+458.44380857791873
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "split y@1715",
+"stroke": 0,
+"pt": [
+506.66497742150636,
+291.6290002580692
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "split y@2183",
+"stroke": 0,
+"pt": [
+507.96565896422277,
+290.132720948705
+],
+"rule": "overstroke split (the font's crotch point, no rule on the drawn curve): carried by the edit"
+},
+{
+"name": "crossing0",
+"stroke": 0,
+"pt": [
+405.5411979872879,
+-49.46899383327067
+],
+"rule": "loop crossing (a record, read by no build step): where the drawn stroke crosses itself (t, x: where stroke 1 crosses the extra stroke), the crossing nearest the old one carried by the edit, keeping the record's offset from the written body's crossing"
+}
+]
+},
+"z": {
+"strokes": [
+{
+"id": "letter-z-s1",
+"sub": 0,
+"beziers_u": [
+[
+[
+246.676427,
+2740.604155
+],
+[
+269.95361,
+2738.168645
+],
+[
+281.80624,
+2760.225715
+],
+[
+272.614296,
+2778.957737
+]
+],
+[
+[
+272.614296,
+2778.957737
+],
+[
+265.838467,
+2792.766022
+],
+[
+248.656086,
+2802.670908
+],
+[
+207.675601,
+2828.876987
+]
+],
+[
+[
+207.675601,
+2828.876987
+],
+[
+259.337315,
+2828.388223
+],
+[
+245.07206,
+2871.8681
+],
+[
+234.413726,
+2904.500483
+]
+],
+[
+[
+234.413726,
+2904.500483
+],
+[
+228.755956,
+2921.822753
+],
+[
+214.064018,
+2966.859889
+],
+[
+189.921002,
+2978.126493
+]
+],
+[
+[
+189.921002,
+2978.126493
+],
+[
+177.272628,
+2984.028996
+],
+[
+163.835613,
+2979.820198
+],
+[
+158.369868,
+2968.23997
+]
+],
+[
+[
+158.369868,
+2968.23997
+],
+[
+149.829783,
+2950.146162
+],
+[
+167.388889,
+2928.121705
+],
+[
+177.150913,
+2916.718205
+]
+],
+[
+[
+177.150913,
+2916.718205
+],
+[
+206.007216,
+2883.009743
+],
+[
+234.089454,
+2863.42408
+],
+[
+247.906709,
+2853.89746
+]
+]
+],
+"nodes": 8,
+"shared": [],
+"pass_note": "pen order = document order; within a retraced stretch pass 1 runs fork_in -> cusp, pass 2 cusp -> fork_out (pass 1 reversed)"
+}
+],
+"points": [
+{
+"name": "entry",
+"stroke": 0,
+"bk": 0,
+"bt": 0.0,
+"pt": [
+279.11805406275073,
+499.8160204777815
+],
+"rule": "smooth entry: the drawn stroke's start; frame taken there"
+},
+{
+"name": "exit",
+"stroke": 0,
+"bk": 6,
+"bt": 1.0,
+"pt": [
+284.2442291761516,
+27.76058325006394
+],
+"rule": "smooth exit: the drawn stroke's end; frame taken there"
+},
+{
+"name": "after_o",
+"stroke": 0,
+"bk": 0,
+"bt": 0.0,
+"pt": [
+279.11805406275073,
+499.8160204777815
+],
+"rule": "smooth high-entry frame (K959 soft): the nearest drawn point to the old place carried by the edit; frame taken there"
+},
+{
+"name": "after_b",
+"stroke": 0,
+"bk": 0,
+"bt": 0.0,
+"pt": [
+279.11805406275073,
+499.8160204777815
+],
+"rule": "smooth high-entry frame (K959 soft): the nearest drawn point to the old place carried by the edit; frame taken there"
+},
+{
+"name": "cusp0",
+"stroke": 0,
+"pt": [
+116.61461525428157,
+132.01255479207856
+],
+"rule": "cusp: the drawn node nearest the old cusp carried by the edit"
+},
+{
+"name": "crossing0",
+"stroke": 0,
+"pt": [
+265.8696427181258,
+14.445131981265012
+],
+"rule": "loop crossing (a record, read by no build step): where the drawn stroke crosses itself (t, x: where stroke 1 crosses the extra stroke), the crossing nearest the old one carried by the edit, keeping the record's offset from the written body's crossing"
+}
+]
+}
+},
+"refs": {
+"guides/rect[0]": {
+"layer": "guides",
+"fp": "41e96898a19ccecd",
+"name": "page-bg"
+},
+"guides/text[0]": {
+"layer": "guides",
+"fp": "3465e647a0570e49",
+"name": "header-1"
+},
+"guides/text[1]": {
+"layer": "guides",
+"fp": "c8fbfddfcef110d5",
+"name": "header-2"
+},
+"guides/text[2]": {
+"layer": "guides",
+"fp": "6f5a94cbc143730b",
+"name": "header-3"
+},
+"guides/g[0]": {
+"layer": "guides",
+"fp": "10566ef5dab0458b",
+"name": "guides-a"
+},
+"guides/g[0]/rect[0]": {
+"layer": "guides",
+"fp": "d8c972d3e5c83534",
+"name": ""
+},
+"guides/g[0]/path[0]": {
+"layer": "guides",
+"fp": "30605783296d16a7",
+"name": "guides-a-ascender"
+},
+"guides/g[0]/path[1]": {
+"layer": "guides",
+"fp": "658d1e5631073200",
+"name": "guides-a-xheight"
+},
+"guides/g[0]/path[2]": {
+"layer": "guides",
+"fp": "2041692478809f83",
+"name": "guides-a-baseline"
+},
+"guides/g[0]/path[3]": {
+"layer": "guides",
+"fp": "479b2377d14bf259",
+"name": "guides-a-descender"
+},
+"guides/g[0]/text[0]": {
+"layer": "guides",
+"fp": "8be6a238d4717e9d",
+"name": "label-a"
+},
+"guides/g[1]": {
+"layer": "guides",
+"fp": "10566ef5dab0458b",
+"name": "guides-b"
+},
+"guides/g[1]/rect[0]": {
+"layer": "guides",
+"fp": "da2485d2f2b48a02",
+"name": ""
+},
+"guides/g[1]/path[0]": {
+"layer": "guides",
+"fp": "3eea06f379591ef6",
+"name": "guides-b-ascender"
+},
+"guides/g[1]/path[1]": {
+"layer": "guides",
+"fp": "e8c358e7de3fbc5f",
+"name": "guides-b-xheight"
+},
+"guides/g[1]/path[2]": {
+"layer": "guides",
+"fp": "3b66585ed4e2216a",
+"name": "guides-b-baseline"
+},
+"guides/g[1]/path[3]": {
+"layer": "guides",
+"fp": "d8cf40c7ff8d2968",
+"name": "guides-b-descender"
+},
+"guides/g[1]/text[0]": {
+"layer": "guides",
+"fp": "372d819d18be8720",
+"name": "label-b"
+},
+"guides/g[2]": {
+"layer": "guides",
+"fp": "10566ef5dab0458b",
+"name": "guides-c"
+},
+"guides/g[2]/rect[0]": {
+"layer": "guides",
+"fp": "98142ff226585bb2",
+"name": ""
+},
+"guides/g[2]/path[0]": {
+"layer": "guides",
+"fp": "ccc7f0e857e589da",
+"name": "guides-c-ascender"
+},
+"guides/g[2]/path[1]": {
+"layer": "guides",
+"fp": "4cb34fee2628645f",
+"name": "guides-c-xheight"
+},
+"guides/g[2]/path[2]": {
+"layer": "guides",
+"fp": "8a6b7bd6f02aac6b",
+"name": "guides-c-baseline"
+},
+"guides/g[2]/path[3]": {
+"layer": "guides",
+"fp": "8bc436f8baa61b94",
+"name": "guides-c-descender"
+},
+"guides/g[2]/text[0]": {
+"layer": "guides",
+"fp": "be026e3303321eff",
+"name": "label-c"
+},
+"guides/g[3]": {
+"layer": "guides",
+"fp": "10566ef5dab0458b",
+"name": "guides-d"
+},
+"guides/g[3]/rect[0]": {
+"layer": "guides",
+"fp": "67f969f8da1e04c6",
+"name": ""
+},
+"guides/g[3]/path[0]": {
+"layer": "guides",
+"fp": "8d8ad6c2e072d835",
+"name": "guides-d-ascender"
+},
+"guides/g[3]/path[1]": {
+"layer": "guides",
+"fp": "3a6a9233279c3a84",
+"name": "guides-d-xheight"
+},
+"guides/g[3]/path[2]": {
+"layer": "guides",
+"fp": "941927c4bf409e75",
+"name": "guides-d-baseline"
+},
+"guides/g[3]/path[3]": {
+"layer": "guides",
+"fp": "60a2ca2909ef4051",
+"name": "guides-d-descender"
+},
+"guides/g[3]/text[0]": {
+"layer": "guides",
+"fp": "cec09f2504d33e51",
+"name": "label-d"
+},
+"guides/g[4]": {
+"layer": "guides",
+"fp": "10566ef5dab0458b",
+"name": "guides-e"
+},
+"guides/g[4]/rect[0]": {
+"layer": "guides",
+"fp": "296d74616aab61a0",
+"name": ""
+},
+"guides/g[4]/path[0]": {
+"layer": "guides",
+"fp": "15cd207f3c1b07ec",
+"name": "guides-e-ascender"
+},
+"guides/g[4]/path[1]": {
+"layer": "guides",
+"fp": "45644dd6cf418f8f",
+"name": "guides-e-xheight"
+},
+"guides/g[4]/path[2]": {
+"layer": "guides",
+"fp": "ab3fe2ad97ff5b51",
+"name": "guides-e-baseline"
+},
+"guides/g[4]/path[3]": {
+"layer": "guides",
+"fp": "91fc33ea02776d92",
+"name": "guides-e-descender"
+},
+"guides/g[4]/text[0]": {
+"layer": "guides",
+"fp": "79148f8289b1842e",
+"name": "label-e"
+},
+"guides/g[5]": {
+"layer": "guides",
+"fp": "10566ef5dab0458b",
+"name": "guides-f"
+},
+"guides/g[5]/rect[0]": {
+"layer": "guides",
+"fp": "e63a2e43dde5abdb",
+"name": ""
+},
+"guides/g[5]/path[0]": {
+"layer": "guides",
+"fp": "dbbb5c197d3a4b08",
+"name": "guides-f-ascender"
+},
+"guides/g[5]/path[1]": {
+"layer": "guides",
+"fp": "f96903c031885c36",
+"name": "guides-f-xheight"
+},
+"guides/g[5]/path[2]": {
+"layer": "guides",
+"fp": "31c72d862237509e",
+"name": "guides-f-baseline"
+},
+"guides/g[5]/path[3]": {
+"layer": "guides",
+"fp": "155182e03b776687",
+"name": "guides-f-descender"
+},
+"guides/g[5]/text[0]": {
+"layer": "guides",
+"fp": "90d93ecb0da7cd88",
+"name": "label-f"
+},
+"guides/g[6]": {
+"layer": "guides",
+"fp": "10566ef5dab0458b",
+"name": "guides-g"
+},
+"guides/g[6]/rect[0]": {
+"layer": "guides",
+"fp": "d0951947ace9bcc9",
+"name": ""
+},
+"guides/g[6]/path[0]": {
+"layer": "guides",
+"fp": "886846f7dbb531b0",
+"name": "guides-g-ascender"
+},
+"guides/g[6]/path[1]": {
+"layer": "guides",
+"fp": "d453a407f98cfd96",
+"name": "guides-g-xheight"
+},
+"guides/g[6]/path[2]": {
+"layer": "guides",
+"fp": "20f8f7e5ef910481",
+"name": "guides-g-baseline"
+},
+"guides/g[6]/path[3]": {
+"layer": "guides",
+"fp": "151d5d18adf7af63",
+"name": "guides-g-descender"
+},
+"guides/g[6]/text[0]": {
+"layer": "guides",
+"fp": "4991527c232cc9db",
+"name": "label-g"
+},
+"guides/g[7]": {
+"layer": "guides",
+"fp": "10566ef5dab0458b",
+"name": "guides-h"
+},
+"guides/g[7]/rect[0]": {
+"layer": "guides",
+"fp": "07b4a18d475b45c7",
+"name": ""
+},
+"guides/g[7]/path[0]": {
+"layer": "guides",
+"fp": "3154a8a23762e92f",
+"name": "guides-h-ascender"
+},
+"guides/g[7]/path[1]": {
+"layer": "guides",
+"fp": "9b01264a2ba23b52",
+"name": "guides-h-xheight"
+},
+"guides/g[7]/path[2]": {
+"layer": "guides",
+"fp": "ef3962b01cff7b25",
+"name": "guides-h-baseline"
+},
+"guides/g[7]/path[3]": {
+"layer": "guides",
+"fp": "857e998be25fbf77",
+"name": "guides-h-descender"
+},
+"guides/g[7]/text[0]": {
+"layer": "guides",
+"fp": "5c8d723c90e4c1b4",
+"name": "label-h"
+},
+"guides/g[8]": {
+"layer": "guides",
+"fp": "10566ef5dab0458b",
+"name": "guides-i"
+},
+"guides/g[8]/rect[0]": {
+"layer": "guides",
+"fp": "0a75c9a340e25bc2",
+"name": ""
+},
+"guides/g[8]/path[0]": {
+"layer": "guides",
+"fp": "04a6e67a4d2cdb9c",
+"name": "guides-i-ascender"
+},
+"guides/g[8]/path[1]": {
+"layer": "guides",
+"fp": "e2c36f279d00024c",
+"name": "guides-i-xheight"
+},
+"guides/g[8]/path[2]": {
+"layer": "guides",
+"fp": "a558cea9c58d956d",
+"name": "guides-i-baseline"
+},
+"guides/g[8]/path[3]": {
+"layer": "guides",
+"fp": "135758d00d7d133a",
+"name": "guides-i-descender"
+},
+"guides/g[8]/text[0]": {
+"layer": "guides",
+"fp": "394ad05ec2029b2f",
+"name": "label-i"
+},
+"guides/g[9]": {
+"layer": "guides",
+"fp": "10566ef5dab0458b",
+"name": "guides-j"
+},
+"guides/g[9]/rect[0]": {
+"layer": "guides",
+"fp": "8d26572be9856720",
+"name": ""
+},
+"guides/g[9]/path[0]": {
+"layer": "guides",
+"fp": "f1fcf61e2f056803",
+"name": "guides-j-ascender"
+},
+"guides/g[9]/path[1]": {
+"layer": "guides",
+"fp": "8e801174ecb547d3",
+"name": "guides-j-xheight"
+},
+"guides/g[9]/path[2]": {
+"layer": "guides",
+"fp": "fca2dfa304127605",
+"name": "guides-j-baseline"
+},
+"guides/g[9]/path[3]": {
+"layer": "guides",
+"fp": "e451588b1f6c1e96",
+"name": "guides-j-descender"
+},
+"guides/g[9]/text[0]": {
+"layer": "guides",
+"fp": "40ed2ab605c3b77f",
+"name": "label-j"
+},
+"guides/g[10]": {
+"layer": "guides",
+"fp": "10566ef5dab0458b",
+"name": "guides-k"
+},
+"guides/g[10]/rect[0]": {
+"layer": "guides",
+"fp": "c4f88aae71994cbc",
+"name": ""
+},
+"guides/g[10]/path[0]": {
+"layer": "guides",
+"fp": "82b26daa54255207",
+"name": "guides-k-ascender"
+},
+"guides/g[10]/path[1]": {
+"layer": "guides",
+"fp": "51e2978fc21f75cf",
+"name": "guides-k-xheight"
+},
+"guides/g[10]/path[2]": {
+"layer": "guides",
+"fp": "d59bf3fef2f1a51d",
+"name": "guides-k-baseline"
+},
+"guides/g[10]/path[3]": {
+"layer": "guides",
+"fp": "a48406f7db20581d",
+"name": "guides-k-descender"
+},
+"guides/g[10]/text[0]": {
+"layer": "guides",
+"fp": "b7ebf733cab57a5a",
+"name": "label-k"
+},
+"guides/g[11]": {
+"layer": "guides",
+"fp": "10566ef5dab0458b",
+"name": "guides-l"
+},
+"guides/g[11]/rect[0]": {
+"layer": "guides",
+"fp": "1f780b6b0838a84a",
+"name": ""
+},
+"guides/g[11]/path[0]": {
+"layer": "guides",
+"fp": "3e5baff81e45036d",
+"name": "guides-l-ascender"
+},
+"guides/g[11]/path[1]": {
+"layer": "guides",
+"fp": "19c828b6c15b6b52",
+"name": "guides-l-xheight"
+},
+"guides/g[11]/path[2]": {
+"layer": "guides",
+"fp": "73335988e5e67841",
+"name": "guides-l-baseline"
+},
+"guides/g[11]/path[3]": {
+"layer": "guides",
+"fp": "d11da8dbc84aa773",
+"name": "guides-l-descender"
+},
+"guides/g[11]/text[0]": {
+"layer": "guides",
+"fp": "daf9297460c30776",
+"name": "label-l"
+},
+"guides/g[12]": {
+"layer": "guides",
+"fp": "10566ef5dab0458b",
+"name": "guides-m"
+},
+"guides/g[12]/rect[0]": {
+"layer": "guides",
+"fp": "f109056bc3704236",
+"name": ""
+},
+"guides/g[12]/path[0]": {
+"layer": "guides",
+"fp": "0ec88027c1077011",
+"name": "guides-m-ascender"
+},
+"guides/g[12]/path[1]": {
+"layer": "guides",
+"fp": "188a7f12438a15ba",
+"name": "guides-m-xheight"
+},
+"guides/g[12]/path[2]": {
+"layer": "guides",
+"fp": "7c9e3668ee0d6577",
+"name": "guides-m-baseline"
+},
+"guides/g[12]/path[3]": {
+"layer": "guides",
+"fp": "130b823af99c3d74",
+"name": "guides-m-descender"
+},
+"guides/g[12]/text[0]": {
+"layer": "guides",
+"fp": "b3df7964a813c2ba",
+"name": "label-m"
+},
+"guides/g[13]": {
+"layer": "guides",
+"fp": "10566ef5dab0458b",
+"name": "guides-n"
+},
+"guides/g[13]/rect[0]": {
+"layer": "guides",
+"fp": "44bf482e3bb97e84",
+"name": ""
+},
+"guides/g[13]/path[0]": {
+"layer": "guides",
+"fp": "b0b5943fa011e2f8",
+"name": "guides-n-ascender"
+},
+"guides/g[13]/path[1]": {
+"layer": "guides",
+"fp": "1884cda47ec27794",
+"name": "guides-n-xheight"
+},
+"guides/g[13]/path[2]": {
+"layer": "guides",
+"fp": "5a4e524f6bf79fd8",
+"name": "guides-n-baseline"
+},
+"guides/g[13]/path[3]": {
+"layer": "guides",
+"fp": "7426465d8d9d0f21",
+"name": "guides-n-descender"
+},
+"guides/g[13]/text[0]": {
+"layer": "guides",
+"fp": "cbcbbd624b522d07",
+"name": "label-n"
+},
+"guides/g[14]": {
+"layer": "guides",
+"fp": "10566ef5dab0458b",
+"name": "guides-o"
+},
+"guides/g[14]/rect[0]": {
+"layer": "guides",
+"fp": "edbcc2c11bbb498f",
+"name": ""
+},
+"guides/g[14]/path[0]": {
+"layer": "guides",
+"fp": "a29576010c726b86",
+"name": "guides-o-ascender"
+},
+"guides/g[14]/path[1]": {
+"layer": "guides",
+"fp": "a2b09cf889854655",
+"name": "guides-o-xheight"
+},
+"guides/g[14]/path[2]": {
+"layer": "guides",
+"fp": "e4612cf8b110af23",
+"name": "guides-o-baseline"
+},
+"guides/g[14]/path[3]": {
+"layer": "guides",
+"fp": "8e9111a4ba62f8c4",
+"name": "guides-o-descender"
+},
+"guides/g[14]/text[0]": {
+"layer": "guides",
+"fp": "668e15af17b231cd",
+"name": "label-o"
+},
+"guides/g[15]": {
+"layer": "guides",
+"fp": "10566ef5dab0458b",
+"name": "guides-p"
+},
+"guides/g[15]/rect[0]": {
+"layer": "guides",
+"fp": "e8a23c037201db48",
+"name": ""
+},
+"guides/g[15]/path[0]": {
+"layer": "guides",
+"fp": "cad4dbe85437ffe9",
+"name": "guides-p-ascender"
+},
+"guides/g[15]/path[1]": {
+"layer": "guides",
+"fp": "afd4944498be6f3d",
+"name": "guides-p-xheight"
+},
+"guides/g[15]/path[2]": {
+"layer": "guides",
+"fp": "74665af62dd56217",
+"name": "guides-p-baseline"
+},
+"guides/g[15]/path[3]": {
+"layer": "guides",
+"fp": "c1784f2bf5ddf534",
+"name": "guides-p-descender"
+},
+"guides/g[15]/text[0]": {
+"layer": "guides",
+"fp": "720803faf53b8296",
+"name": "label-p"
+},
+"guides/g[16]": {
+"layer": "guides",
+"fp": "10566ef5dab0458b",
+"name": "guides-q"
+},
+"guides/g[16]/rect[0]": {
+"layer": "guides",
+"fp": "40b8a5af346aadd0",
+"name": ""
+},
+"guides/g[16]/path[0]": {
+"layer": "guides",
+"fp": "e6ceacb25b25c16a",
+"name": "guides-q-ascender"
+},
+"guides/g[16]/path[1]": {
+"layer": "guides",
+"fp": "022e6ead58910ebc",
+"name": "guides-q-xheight"
+},
+"guides/g[16]/path[2]": {
+"layer": "guides",
+"fp": "4ed0c74fa10f5a13",
+"name": "guides-q-baseline"
+},
+"guides/g[16]/path[3]": {
+"layer": "guides",
+"fp": "afeb3ee9461d4954",
+"name": "guides-q-descender"
+},
+"guides/g[16]/text[0]": {
+"layer": "guides",
+"fp": "3e02376f03d3d8a9",
+"name": "label-q"
+},
+"guides/g[17]": {
+"layer": "guides",
+"fp": "10566ef5dab0458b",
+"name": "guides-r"
+},
+"guides/g[17]/rect[0]": {
+"layer": "guides",
+"fp": "ffe5f90d970f3945",
+"name": ""
+},
+"guides/g[17]/path[0]": {
+"layer": "guides",
+"fp": "fc112de6ebd70720",
+"name": "guides-r-ascender"
+},
+"guides/g[17]/path[1]": {
+"layer": "guides",
+"fp": "0597c8fd3159b90a",
+"name": "guides-r-xheight"
+},
+"guides/g[17]/path[2]": {
+"layer": "guides",
+"fp": "04f3d2ae28b8ce07",
+"name": "guides-r-baseline"
+},
+"guides/g[17]/path[3]": {
+"layer": "guides",
+"fp": "f5184310ff5a894f",
+"name": "guides-r-descender"
+},
+"guides/g[17]/text[0]": {
+"layer": "guides",
+"fp": "746a32b9ed1b94bb",
+"name": "label-r"
+},
+"guides/g[18]": {
+"layer": "guides",
+"fp": "10566ef5dab0458b",
+"name": "guides-s"
+},
+"guides/g[18]/rect[0]": {
+"layer": "guides",
+"fp": "6e9975f6a87c001b",
+"name": ""
+},
+"guides/g[18]/path[0]": {
+"layer": "guides",
+"fp": "8c35bb296cc3feec",
+"name": "guides-s-ascender"
+},
+"guides/g[18]/path[1]": {
+"layer": "guides",
+"fp": "6c6b323af3890a3d",
+"name": "guides-s-xheight"
+},
+"guides/g[18]/path[2]": {
+"layer": "guides",
+"fp": "9d67f1dacb4c8aad",
+"name": "guides-s-baseline"
+},
+"guides/g[18]/path[3]": {
+"layer": "guides",
+"fp": "0752583d4b4061f1",
+"name": "guides-s-descender"
+},
+"guides/g[18]/text[0]": {
+"layer": "guides",
+"fp": "a758737f13728bd8",
+"name": "label-s"
+},
+"guides/g[19]": {
+"layer": "guides",
+"fp": "10566ef5dab0458b",
+"name": "guides-t"
+},
+"guides/g[19]/rect[0]": {
+"layer": "guides",
+"fp": "10bc030569b978df",
+"name": ""
+},
+"guides/g[19]/path[0]": {
+"layer": "guides",
+"fp": "370af8e501c31129",
+"name": "guides-t-ascender"
+},
+"guides/g[19]/path[1]": {
+"layer": "guides",
+"fp": "c87f24042b1cf695",
+"name": "guides-t-xheight"
+},
+"guides/g[19]/path[2]": {
+"layer": "guides",
+"fp": "356856845cec8ca1",
+"name": "guides-t-baseline"
+},
+"guides/g[19]/path[3]": {
+"layer": "guides",
+"fp": "ef1ee195170db3a7",
+"name": "guides-t-descender"
+},
+"guides/g[19]/text[0]": {
+"layer": "guides",
+"fp": "13cc106adfcd866d",
+"name": "label-t"
+},
+"guides/g[20]": {
+"layer": "guides",
+"fp": "10566ef5dab0458b",
+"name": "guides-u"
+},
+"guides/g[20]/rect[0]": {
+"layer": "guides",
+"fp": "7ad8163c04a535d1",
+"name": ""
+},
+"guides/g[20]/path[0]": {
+"layer": "guides",
+"fp": "7d9f55f00d40c1ff",
+"name": "guides-u-ascender"
+},
+"guides/g[20]/path[1]": {
+"layer": "guides",
+"fp": "b5cbc14a425308e1",
+"name": "guides-u-xheight"
+},
+"guides/g[20]/path[2]": {
+"layer": "guides",
+"fp": "42ff47202e262a54",
+"name": "guides-u-baseline"
+},
+"guides/g[20]/path[3]": {
+"layer": "guides",
+"fp": "7a86f94293a9e7d7",
+"name": "guides-u-descender"
+},
+"guides/g[20]/text[0]": {
+"layer": "guides",
+"fp": "e1d0ee8099f51f2c",
+"name": "label-u"
+},
+"guides/g[21]": {
+"layer": "guides",
+"fp": "10566ef5dab0458b",
+"name": "guides-v"
+},
+"guides/g[21]/rect[0]": {
+"layer": "guides",
+"fp": "1e9358030a998b90",
+"name": ""
+},
+"guides/g[21]/path[0]": {
+"layer": "guides",
+"fp": "68308374a8a91157",
+"name": "guides-v-ascender"
+},
+"guides/g[21]/path[1]": {
+"layer": "guides",
+"fp": "c005c2d46b1ab432",
+"name": "guides-v-xheight"
+},
+"guides/g[21]/path[2]": {
+"layer": "guides",
+"fp": "9f7370f5c84caed4",
+"name": "guides-v-baseline"
+},
+"guides/g[21]/path[3]": {
+"layer": "guides",
+"fp": "5553375ecfb37475",
+"name": "guides-v-descender"
+},
+"guides/g[21]/text[0]": {
+"layer": "guides",
+"fp": "d54d21246f2079e2",
+"name": "label-v"
+},
+"guides/g[22]": {
+"layer": "guides",
+"fp": "10566ef5dab0458b",
+"name": "guides-w"
+},
+"guides/g[22]/rect[0]": {
+"layer": "guides",
+"fp": "17c98eb9397c7c59",
+"name": ""
+},
+"guides/g[22]/path[0]": {
+"layer": "guides",
+"fp": "8e93f669a41d28c1",
+"name": "guides-w-ascender"
+},
+"guides/g[22]/path[1]": {
+"layer": "guides",
+"fp": "870c582a5adefa51",
+"name": "guides-w-xheight"
+},
+"guides/g[22]/path[2]": {
+"layer": "guides",
+"fp": "99f7c14b3a0c8610",
+"name": "guides-w-baseline"
+},
+"guides/g[22]/path[3]": {
+"layer": "guides",
+"fp": "261699012cda126d",
+"name": "guides-w-descender"
+},
+"guides/g[22]/text[0]": {
+"layer": "guides",
+"fp": "32a0e10e32943a05",
+"name": "label-w"
+},
+"guides/g[23]": {
+"layer": "guides",
+"fp": "10566ef5dab0458b",
+"name": "guides-x"
+},
+"guides/g[23]/rect[0]": {
+"layer": "guides",
+"fp": "8089be63d6b639a6",
+"name": ""
+},
+"guides/g[23]/path[0]": {
+"layer": "guides",
+"fp": "59a8e68a593eb9ca",
+"name": "guides-x-ascender"
+},
+"guides/g[23]/path[1]": {
+"layer": "guides",
+"fp": "5593aa7b78a7eb68",
+"name": "guides-x-xheight"
+},
+"guides/g[23]/path[2]": {
+"layer": "guides",
+"fp": "ac72e62042866400",
+"name": "guides-x-baseline"
+},
+"guides/g[23]/path[3]": {
+"layer": "guides",
+"fp": "fe82baa74a837c64",
+"name": "guides-x-descender"
+},
+"guides/g[23]/text[0]": {
+"layer": "guides",
+"fp": "b3dc2f875d66e3fb",
+"name": "label-x"
+},
+"guides/g[24]": {
+"layer": "guides",
+"fp": "10566ef5dab0458b",
+"name": "guides-y"
+},
+"guides/g[24]/rect[0]": {
+"layer": "guides",
+"fp": "5ae2a2404502d299",
+"name": ""
+},
+"guides/g[24]/path[0]": {
+"layer": "guides",
+"fp": "9ee1062334c3d9af",
+"name": "guides-y-ascender"
+},
+"guides/g[24]/path[1]": {
+"layer": "guides",
+"fp": "d9fbf6fe017f7ab7",
+"name": "guides-y-xheight"
+},
+"guides/g[24]/path[2]": {
+"layer": "guides",
+"fp": "c2770a1f489b26d2",
+"name": "guides-y-baseline"
+},
+"guides/g[24]/path[3]": {
+"layer": "guides",
+"fp": "1063b81ef7593f43",
+"name": "guides-y-descender"
+},
+"guides/g[24]/text[0]": {
+"layer": "guides",
+"fp": "bd4875f44a505bfb",
+"name": "label-y"
+},
+"guides/g[25]": {
+"layer": "guides",
+"fp": "10566ef5dab0458b",
+"name": "guides-z"
+},
+"guides/g[25]/rect[0]": {
+"layer": "guides",
+"fp": "e9fda97349a4c097",
+"name": ""
+},
+"guides/g[25]/path[0]": {
+"layer": "guides",
+"fp": "41c9e832567bd5b6",
+"name": "guides-z-ascender"
+},
+"guides/g[25]/path[1]": {
+"layer": "guides",
+"fp": "341cf633a367d0fa",
+"name": "guides-z-xheight"
+},
+"guides/g[25]/path[2]": {
+"layer": "guides",
+"fp": "28d1a1e8c841e400",
+"name": "guides-z-baseline"
+},
+"guides/g[25]/path[3]": {
+"layer": "guides",
+"fp": "b5a890b77b885fbb",
+"name": "guides-z-descender"
+},
+"guides/g[25]/text[0]": {
+"layer": "guides",
+"fp": "355a627d30f60d52",
+"name": "label-z"
+},
+"guides/g[26]": {
+"layer": "guides",
+"fp": "10566ef5dab0458b",
+"name": "guides-word-and"
+},
+"guides/g[26]/rect[0]": {
+"layer": "guides",
+"fp": "0598f7bff53b9555",
+"name": ""
+},
+"guides/g[26]/path[0]": {
+"layer": "guides",
+"fp": "fafede304c87a684",
+"name": "guides-word-and-ascender"
+},
+"guides/g[26]/path[1]": {
+"layer": "guides",
+"fp": "6a3a23bcb36de3b4",
+"name": "guides-word-and-xheight"
+},
+"guides/g[26]/path[2]": {
+"layer": "guides",
+"fp": "920b89ec20ef411d",
+"name": "guides-word-and-baseline"
+},
+"guides/g[26]/path[3]": {
+"layer": "guides",
+"fp": "b46760b4b78326aa",
+"name": "guides-word-and-descender"
+},
+"guides/g[26]/text[0]": {
+"layer": "guides",
+"fp": "908d927732f92923",
+"name": "label-word-and"
+},
+"guides/g[27]": {
+"layer": "guides",
+"fp": "10566ef5dab0458b",
+"name": "guides-font-variants"
+},
+"guides/g[27]/rect[0]": {
+"layer": "guides",
+"fp": "320c29efdb5d90d7",
+"name": ""
+},
+"guides/g[27]/path[0]": {
+"layer": "guides",
+"fp": "65e3e1aa9ae87495",
+"name": "guides-font-variants-ascender"
+},
+"guides/g[27]/path[1]": {
+"layer": "guides",
+"fp": "8d2df79f01fdb54b",
+"name": "guides-font-variants-xheight"
+},
+"guides/g[27]/path[2]": {
+"layer": "guides",
+"fp": "3644c6251a54a1ac",
+"name": "guides-font-variants-baseline"
+},
+"guides/g[27]/path[3]": {
+"layer": "guides",
+"fp": "22f0f33c2141375a",
+"name": "guides-font-variants-descender"
+},
+"guides/g[27]/text[0]": {
+"layer": "guides",
+"fp": "a206a831ed19a93c",
+"name": "label-font-variants"
+},
+"context/g[0]": {
+"layer": "context",
+"fp": "10566ef5dab0458b",
+"name": "context-a"
+},
+"context/g[0]/path[0]": {
+"layer": "context",
+"fp": "02f7c8ce5b8db467",
+"name": "context-a-fused-stretch"
+},
+"context/g[0]/path[1]": {
+"layer": "context",
+"fp": "dcf6508ea43ffb73",
+"name": "context-a-in"
+},
+"context/g[0]/path[2]": {
+"layer": "context",
+"fp": "38bf1dc2b8b46371",
+"name": "context-a-out"
+},
+"context/g[1]": {
+"layer": "context",
+"fp": "10566ef5dab0458b",
+"name": "context-b"
+},
+"context/g[1]/path[0]": {
+"layer": "context",
+"fp": "ad66609f6e7312da",
+"name": "context-b-in"
+},
+"context/g[1]/path[1]": {
+"layer": "context",
+"fp": "b1e8e1f3d349d468",
+"name": "context-b-out"
+},
+"context/g[2]": {
+"layer": "context",
+"fp": "10566ef5dab0458b",
+"name": "context-c"
+},
+"context/g[2]/path[0]": {
+"layer": "context",
+"fp": "2e7d4365d2b5f2d2",
+"name": "context-c-fused-stretch"
+},
+"context/g[2]/path[1]": {
+"layer": "context",
+"fp": "22b947c77b7956f8",
+"name": "context-c-in"
+},
+"context/g[2]/path[2]": {
+"layer": "context",
+"fp": "9b554509f1a15ef3",
+"name": "context-c-out"
+},
+"context/g[3]": {
+"layer": "context",
+"fp": "10566ef5dab0458b",
+"name": "context-d"
+},
+"context/g[3]/path[0]": {
+"layer": "context",
+"fp": "0235a2b211e04e4d",
+"name": "context-d-fused-stretch"
+},
+"context/g[3]/path[1]": {
+"layer": "context",
+"fp": "6570e6a5ca1d7f7a",
+"name": "context-d-in"
+},
+"context/g[3]/path[2]": {
+"layer": "context",
+"fp": "92e7f3b480ef36e1",
+"name": "context-d-out"
+},
+"context/g[4]": {
+"layer": "context",
+"fp": "10566ef5dab0458b",
+"name": "context-e"
+},
+"context/g[4]/path[0]": {
+"layer": "context",
+"fp": "d940c51af166fb58",
+"name": "context-e-in"
+},
+"context/g[4]/path[1]": {
+"layer": "context",
+"fp": "366f373f52a36c1b",
+"name": "context-e-out"
+},
+"context/g[5]": {
+"layer": "context",
+"fp": "10566ef5dab0458b",
+"name": "context-f"
+},
+"context/g[5]/path[0]": {
+"layer": "context",
+"fp": "6ea804fe5c2ab0c0",
+"name": "context-f-in"
+},
+"context/g[5]/path[1]": {
+"layer": "context",
+"fp": "d301aef137294773",
+"name": "context-f-out"
+},
+"context/g[6]": {
+"layer": "context",
+"fp": "10566ef5dab0458b",
+"name": "context-g"
+},
+"context/g[6]/path[0]": {
+"layer": "context",
+"fp": "01ea8ac64a85487b",
+"name": "context-g-fused-stretch"
+},
+"context/g[6]/path[1]": {
+"layer": "context",
+"fp": "108ef48c5c1fb0bf",
+"name": "context-g-in"
+},
+"context/g[6]/path[2]": {
+"layer": "context",
+"fp": "6f022cf4c95b5519",
+"name": "context-g-out"
+},
+"context/g[7]": {
+"layer": "context",
+"fp": "10566ef5dab0458b",
+"name": "context-h"
+},
+"context/g[7]/path[0]": {
+"layer": "context",
+"fp": "5ce46de06edc647a",
+"name": "context-h-in"
+},
+"context/g[7]/path[1]": {
+"layer": "context",
+"fp": "571bf78b6798bbe1",
+"name": "context-h-out"
+},
+"context/g[8]": {
+"layer": "context",
+"fp": "10566ef5dab0458b",
+"name": "context-i"
+},
+"context/g[8]/path[0]": {
+"layer": "context",
+"fp": "68a4db03fdcc3d01",
+"name": "context-i-in"
+},
+"context/g[8]/path[1]": {
+"layer": "context",
+"fp": "b94a3a5fe45ac6f7",
+"name": "context-i-out"
+},
+"context/g[9]": {
+"layer": "context",
+"fp": "10566ef5dab0458b",
+"name": "context-j"
+},
+"context/g[9]/path[0]": {
+"layer": "context",
+"fp": "e91aabfeb6e978d9",
+"name": "context-j-in"
+},
+"context/g[9]/path[1]": {
+"layer": "context",
+"fp": "6cad00099ecd5ece",
+"name": "context-j-out"
+},
+"context/g[10]": {
+"layer": "context",
+"fp": "10566ef5dab0458b",
+"name": "context-k"
+},
+"context/g[10]/path[0]": {
+"layer": "context",
+"fp": "26852b02aa728ac6",
+"name": "context-k-in"
+},
+"context/g[10]/path[1]": {
+"layer": "context",
+"fp": "ca8682407d37f817",
+"name": "context-k-out"
+},
+"context/g[11]": {
+"layer": "context",
+"fp": "10566ef5dab0458b",
+"name": "context-l"
+},
+"context/g[11]/path[0]": {
+"layer": "context",
+"fp": "9ad20a371e265831",
+"name": "context-l-in"
+},
+"context/g[11]/path[1]": {
+"layer": "context",
+"fp": "e71ec7959af18f27",
+"name": "context-l-out"
+},
+"context/g[12]": {
+"layer": "context",
+"fp": "10566ef5dab0458b",
+"name": "context-m"
+},
+"context/g[12]/path[0]": {
+"layer": "context",
+"fp": "ef77f56c8e3465c1",
+"name": "context-m-in"
+},
+"context/g[12]/path[1]": {
+"layer": "context",
+"fp": "12149dadbb40faec",
+"name": "context-m-out"
+},
+"context/g[13]": {
+"layer": "context",
+"fp": "10566ef5dab0458b",
+"name": "context-n"
+},
+"context/g[13]/path[0]": {
+"layer": "context",
+"fp": "6e2ce74a64c62902",
+"name": "context-n-in"
+},
+"context/g[13]/path[1]": {
+"layer": "context",
+"fp": "96e887fa2a572864",
+"name": "context-n-out"
+},
+"context/g[14]": {
+"layer": "context",
+"fp": "10566ef5dab0458b",
+"name": "context-o"
+},
+"context/g[14]/path[0]": {
+"layer": "context",
+"fp": "47b1079e2d9eab67",
+"name": "context-o-fused-stretch"
+},
+"context/g[14]/path[1]": {
+"layer": "context",
+"fp": "50611086bb120600",
+"name": "context-o-in"
+},
+"context/g[14]/path[2]": {
+"layer": "context",
+"fp": "3d3b1d22ee2b2db3",
+"name": "context-o-out"
+},
+"context/g[15]": {
+"layer": "context",
+"fp": "10566ef5dab0458b",
+"name": "context-p"
+},
+"context/g[15]/path[0]": {
+"layer": "context",
+"fp": "4b699ce7213cc345",
+"name": "context-p-in"
+},
+"context/g[15]/path[1]": {
+"layer": "context",
+"fp": "b5ffe7d8d0453acd",
+"name": "context-p-out"
+},
+"context/g[16]": {
+"layer": "context",
+"fp": "10566ef5dab0458b",
+"name": "context-q"
+},
+"context/g[16]/path[0]": {
+"layer": "context",
+"fp": "3db8b13d90f879c3",
+"name": "context-q-fused-stretch"
+},
+"context/g[16]/path[1]": {
+"layer": "context",
+"fp": "88759c1022b055b9",
+"name": "context-q-in"
+},
+"context/g[16]/path[2]": {
+"layer": "context",
+"fp": "cfdc6604c48a565c",
+"name": "context-q-out"
+},
+"context/g[17]": {
+"layer": "context",
+"fp": "10566ef5dab0458b",
+"name": "context-r"
+},
+"context/g[17]/path[0]": {
+"layer": "context",
+"fp": "9a3a320f2daca9f5",
+"name": "context-r-in"
+},
+"context/g[17]/path[1]": {
+"layer": "context",
+"fp": "684df8177eef7070",
+"name": "context-r-out"
+},
+"context/g[18]": {
+"layer": "context",
+"fp": "10566ef5dab0458b",
+"name": "context-s"
+},
+"context/g[18]/path[0]": {
+"layer": "context",
+"fp": "4d66e64bf86e81fa",
+"name": "context-s-in"
+},
+"context/g[18]/path[1]": {
+"layer": "context",
+"fp": "a7e770dce8a271da",
+"name": "context-s-out"
+},
+"context/g[19]": {
+"layer": "context",
+"fp": "10566ef5dab0458b",
+"name": "context-t"
+},
+"context/g[19]/path[0]": {
+"layer": "context",
+"fp": "cbfe3182265e51ae",
+"name": "context-t-in"
+},
+"context/g[19]/path[1]": {
+"layer": "context",
+"fp": "980165f069fcdec0",
+"name": "context-t-out"
+},
+"context/g[20]": {
+"layer": "context",
+"fp": "10566ef5dab0458b",
+"name": "context-u"
+},
+"context/g[20]/path[0]": {
+"layer": "context",
+"fp": "9f47fac42ee0544f",
+"name": "context-u-in"
+},
+"context/g[20]/path[1]": {
+"layer": "context",
+"fp": "7a987563301741c6",
+"name": "context-u-out"
+},
+"context/g[21]": {
+"layer": "context",
+"fp": "10566ef5dab0458b",
+"name": "context-v"
+},
+"context/g[21]/path[0]": {
+"layer": "context",
+"fp": "8a8da6df3084c185",
+"name": "context-v-in"
+},
+"context/g[21]/path[1]": {
+"layer": "context",
+"fp": "7a572c8b5d43b219",
+"name": "context-v-out"
+},
+"context/g[22]": {
+"layer": "context",
+"fp": "10566ef5dab0458b",
+"name": "context-w"
+},
+"context/g[22]/path[0]": {
+"layer": "context",
+"fp": "736412c924fb27ae",
+"name": "context-w-in"
+},
+"context/g[22]/path[1]": {
+"layer": "context",
+"fp": "e7b22cb281f47942",
+"name": "context-w-out"
+},
+"context/g[23]": {
+"layer": "context",
+"fp": "10566ef5dab0458b",
+"name": "context-x"
+},
+"context/g[23]/path[0]": {
+"layer": "context",
+"fp": "a3c5fc8994d39cb0",
+"name": "context-x-in"
+},
+"context/g[23]/path[1]": {
+"layer": "context",
+"fp": "a96b6223bff591f0",
+"name": "context-x-out"
+},
+"context/g[24]": {
+"layer": "context",
+"fp": "10566ef5dab0458b",
+"name": "context-y"
+},
+"context/g[24]/path[0]": {
+"layer": "context",
+"fp": "bc4b6333eefda39e",
+"name": "context-y-in"
+},
+"context/g[24]/path[1]": {
+"layer": "context",
+"fp": "54871ab164404741",
+"name": "context-y-out"
+},
+"context/g[25]": {
+"layer": "context",
+"fp": "10566ef5dab0458b",
+"name": "context-z"
+},
+"context/g[25]/path[0]": {
+"layer": "context",
+"fp": "d6bd01abbda74126",
+"name": "context-z-in"
+},
+"context/g[25]/path[1]": {
+"layer": "context",
+"fp": "a5f8d1490f906c7e",
+"name": "context-z-out"
+},
+"context/g[26]": {
+"layer": "context",
+"fp": "10566ef5dab0458b",
+"name": "context-word-and"
+},
+"context/g[26]/path[0]": {
+"layer": "context",
+"fp": "e5871d2dd05e77bb",
+"name": "context-word-and-body-1"
+},
+"context/g[26]/path[1]": {
+"layer": "context",
+"fp": "5bbaca02d5b78cd9",
+"name": "context-word-and-body-2"
+},
+"context/g[26]/path[2]": {
+"layer": "context",
+"fp": "7b229875e06fc732",
+"name": "context-word-and-body-3"
+},
+"context/g[26]/path[3]": {
+"layer": "context",
+"fp": "aa1e50cba8df0d53",
+"name": "context-word-and-join-1"
+},
+"context/g[26]/path[4]": {
+"layer": "context",
+"fp": "6570392679c1ab9a",
+"name": "context-word-and-join-2"
+},
+"context/g[26]/path[5]": {
+"layer": "context",
+"fp": "47913050d605745e",
+"name": "context-word-and-lead-1"
+},
+"context/g[26]/path[6]": {
+"layer": "context",
+"fp": "5433d9fbcaad5981",
+"name": "context-word-and-tail-1"
+},
+"context/g[27]": {
+"layer": "context",
+"fp": "10566ef5dab0458b",
+"name": "context-font-variants"
+},
+"context/g[27]/path[0]": {
+"layer": "context",
+"fp": "657981cf7d7c0ea9",
+"name": "context-font-variants-1"
+},
+"context/g[27]/path[1]": {
+"layer": "context",
+"fp": "c33e7d53d9c7efd0",
+"name": "context-font-variants-2"
+},
+"context/g[27]/path[2]": {
+"layer": "context",
+"fp": "eb2cfb4a1663265f",
+"name": "context-font-variants-3"
+},
+"context/g[27]/path[3]": {
+"layer": "context",
+"fp": "f204c846c759294e",
+"name": "context-font-variants-4"
+},
+"context/g[27]/path[4]": {
+"layer": "context",
+"fp": "73fa8b8615cf0fad",
+"name": "context-font-variants-5"
+},
+"context/g[27]/path[5]": {
+"layer": "context",
+"fp": "00c2245564fcf26d",
+"name": "context-font-variants-6"
+},
+"context/g[27]/path[6]": {
+"layer": "context",
+"fp": "6331740069923a87",
+"name": "context-font-variants-7"
+},
+"context/g[27]/path[7]": {
+"layer": "context",
+"fp": "fe5805ca43469a7f",
+"name": "context-font-variants-8"
+},
+"context/g[27]/path[8]": {
+"layer": "context",
+"fp": "f5b73ccbadd2d543",
+"name": "context-font-variants-9"
+},
+"context/g[27]/path[9]": {
+"layer": "context",
+"fp": "a0bf64f5521dcc0a",
+"name": "context-font-variants-10"
+},
+"context/g[27]/path[10]": {
+"layer": "context",
+"fp": "50d2e311f6666af6",
+"name": "context-font-variants-11"
+},
+"context/g[27]/path[11]": {
+"layer": "context",
+"fp": "a62ae92f830df13d",
+"name": "context-font-variants-12"
+},
+"context/g[27]/path[12]": {
+"layer": "context",
+"fp": "e9282da0d2cd974d",
+"name": "context-font-variants-13"
+},
+"joins/g[0]": {
+"layer": "joins",
+"fp": "10566ef5dab0458b",
+"name": "joins-a"
+},
+"joins/g[0]/circle[0]": {
+"layer": "joins",
+"fp": "3b7eecd2304405a8",
+"name": "join-a-entry-dot"
+},
+"joins/g[0]/path[0]": {
+"layer": "joins",
+"fp": "58c32f31cb99af90",
+"name": "join-a-entry"
+},
+"joins/g[0]/circle[1]": {
+"layer": "joins",
+"fp": "ef5485901ac1a2f2",
+"name": "join-a-exit-dot"
+},
+"joins/g[0]/path[1]": {
+"layer": "joins",
+"fp": "4bfa171b0e7d7e73",
+"name": "join-a-exit"
+},
+"joins/g[0]/circle[2]": {
+"layer": "joins",
+"fp": "3e24a0e21fcec0bc",
+"name": "join-a-entry-after-o-dot"
+},
+"joins/g[0]/path[2]": {
+"layer": "joins",
+"fp": "58cdb3983012f0ec",
+"name": "join-a-entry-after-o"
+},
+"joins/g[0]/circle[3]": {
+"layer": "joins",
+"fp": "a10ecf8ec31312c8",
+"name": "join-a-entry-after-b-dot"
+},
+"joins/g[0]/path[3]": {
+"layer": "joins",
+"fp": "72ca6e5a969e406b",
+"name": "join-a-entry-after-b"
+},
+"joins/g[0]/circle[4]": {
+"layer": "joins",
+"fp": "3fa8c329467c412a",
+"name": "join-a-entry-ring"
+},
+"joins/g[0]/circle[5]": {
+"layer": "joins",
+"fp": "24f0e8bf83114f58",
+"name": "join-a-entry-after-o-ring"
+},
+"joins/g[0]/circle[6]": {
+"layer": "joins",
+"fp": "18845735f9cbe477",
+"name": "join-a-entry-after-b-ring"
+},
+"joins/g[1]": {
+"layer": "joins",
+"fp": "10566ef5dab0458b",
+"name": "joins-b"
+},
+"joins/g[1]/circle[0]": {
+"layer": "joins",
+"fp": "e1a59b1773a9c3bb",
+"name": "join-b-entry-dot"
+},
+"joins/g[1]/path[0]": {
+"layer": "joins",
+"fp": "e248513ad654075e",
+"name": "join-b-entry"
+},
+"joins/g[1]/circle[1]": {
+"layer": "joins",
+"fp": "d6be5f34f96f553e",
+"name": "join-b-exit-dot"
+},
+"joins/g[1]/path[1]": {
+"layer": "joins",
+"fp": "0da4ba3d976721da",
+"name": "join-b-exit"
+},
+"joins/g[1]/circle[2]": {
+"layer": "joins",
+"fp": "11035b9d67138ad1",
+"name": "join-b-entry-after-o-dot"
+},
+"joins/g[1]/path[2]": {
+"layer": "joins",
+"fp": "28a6ad67699641bc",
+"name": "join-b-entry-after-o"
+},
+"joins/g[1]/circle[3]": {
+"layer": "joins",
+"fp": "56293a75de4586df",
+"name": "join-b-entry-after-o-ring"
+},
+"joins/g[2]": {
+"layer": "joins",
+"fp": "10566ef5dab0458b",
+"name": "joins-c"
+},
+"joins/g[2]/circle[0]": {
+"layer": "joins",
+"fp": "c69469ce6d5359db",
+"name": "join-c-entry-dot"
+},
+"joins/g[2]/path[0]": {
+"layer": "joins",
+"fp": "ad702952a15a554e",
+"name": "join-c-entry"
+},
+"joins/g[2]/circle[1]": {
+"layer": "joins",
+"fp": "e9b04941bb6d7049",
+"name": "join-c-exit-dot"
+},
+"joins/g[2]/path[1]": {
+"layer": "joins",
+"fp": "d8bcf80c05223335",
+"name": "join-c-exit"
+},
+"joins/g[2]/circle[2]": {
+"layer": "joins",
+"fp": "f30b55bbf5bf8bc6",
+"name": "join-c-entry-after-o-dot"
+},
+"joins/g[2]/path[2]": {
+"layer": "joins",
+"fp": "ae9b3d898200c3f5",
+"name": "join-c-entry-after-o"
+},
+"joins/g[2]/circle[3]": {
+"layer": "joins",
+"fp": "c38859e6ef420b47",
+"name": "join-c-entry-after-b-dot"
+},
+"joins/g[2]/path[3]": {
+"layer": "joins",
+"fp": "686a1f1d424ba704",
+"name": "join-c-entry-after-b"
+},
+"joins/g[2]/circle[4]": {
+"layer": "joins",
+"fp": "f000cf45cbc8d4aa",
+"name": "join-c-entry-ring"
+},
+"joins/g[2]/circle[5]": {
+"layer": "joins",
+"fp": "7ec549270d15d1b7",
+"name": "join-c-entry-after-o-ring"
+},
+"joins/g[2]/circle[6]": {
+"layer": "joins",
+"fp": "aba53971c7651a3a",
+"name": "join-c-entry-after-b-ring"
+},
+"joins/g[3]": {
+"layer": "joins",
+"fp": "10566ef5dab0458b",
+"name": "joins-d"
+},
+"joins/g[3]/circle[0]": {
+"layer": "joins",
+"fp": "ec47cfdc43860365",
+"name": "join-d-entry-dot"
+},
+"joins/g[3]/path[0]": {
+"layer": "joins",
+"fp": "13a15482ba46e337",
+"name": "join-d-entry"
+},
+"joins/g[3]/circle[1]": {
+"layer": "joins",
+"fp": "58c71b6711bcf98f",
+"name": "join-d-exit-dot"
+},
+"joins/g[3]/path[1]": {
+"layer": "joins",
+"fp": "eec5486e7401ca67",
+"name": "join-d-exit"
+},
+"joins/g[3]/circle[2]": {
+"layer": "joins",
+"fp": "17db0fbc83ebbd7f",
+"name": "join-d-entry-after-o-dot"
+},
+"joins/g[3]/path[2]": {
+"layer": "joins",
+"fp": "07ab0c138b0929b1",
+"name": "join-d-entry-after-o"
+},
+"joins/g[3]/circle[3]": {
+"layer": "joins",
+"fp": "bf0105cc72ba060f",
+"name": "join-d-entry-after-b-dot"
+},
+"joins/g[3]/path[3]": {
+"layer": "joins",
+"fp": "31b1b15a970c1130",
+"name": "join-d-entry-after-b"
+},
+"joins/g[3]/circle[4]": {
+"layer": "joins",
+"fp": "c7680f606e2dabaa",
+"name": "join-d-entry-ring"
+},
+"joins/g[3]/circle[5]": {
+"layer": "joins",
+"fp": "5c3a1769158d9f37",
+"name": "join-d-entry-after-o-ring"
+},
+"joins/g[3]/circle[6]": {
+"layer": "joins",
+"fp": "40e6b59e843fb328",
+"name": "join-d-entry-after-b-ring"
+},
+"joins/g[4]": {
+"layer": "joins",
+"fp": "10566ef5dab0458b",
+"name": "joins-e"
+},
+"joins/g[4]/circle[0]": {
+"layer": "joins",
+"fp": "54d546338b13d57f",
+"name": "join-e-entry-dot"
+},
+"joins/g[4]/path[0]": {
+"layer": "joins",
+"fp": "f02a60364b600952",
+"name": "join-e-entry"
+},
+"joins/g[4]/circle[1]": {
+"layer": "joins",
+"fp": "048a0c64b59f5f35",
+"name": "join-e-exit-dot"
+},
+"joins/g[4]/path[1]": {
+"layer": "joins",
+"fp": "d6d662f24d6c302f",
+"name": "join-e-exit"
+},
+"joins/g[5]": {
+"layer": "joins",
+"fp": "10566ef5dab0458b",
+"name": "joins-f"
+},
+"joins/g[5]/circle[0]": {
+"layer": "joins",
+"fp": "5fd2573de9f7b870",
+"name": "join-f-entry-dot"
+},
+"joins/g[5]/path[0]": {
+"layer": "joins",
+"fp": "3cddf406dfa9b291",
+"name": "join-f-entry"
+},
+"joins/g[5]/circle[1]": {
+"layer": "joins",
+"fp": "0602385b67ee5c97",
+"name": "join-f-exit-dot"
+},
+"joins/g[5]/path[1]": {
+"layer": "joins",
+"fp": "ae616052c6868cee",
+"name": "join-f-exit"
+},
+"joins/g[5]/circle[2]": {
+"layer": "joins",
+"fp": "a03caba0067bbdcf",
+"name": "join-f-entry-after-o-dot"
+},
+"joins/g[5]/path[2]": {
+"layer": "joins",
+"fp": "26ef000b35ffd631",
+"name": "join-f-entry-after-o"
+},
+"joins/g[5]/circle[3]": {
+"layer": "joins",
+"fp": "900ae0e48f9d2e06",
+"name": "join-f-entry-after-o-ring"
+},
+"joins/g[6]": {
+"layer": "joins",
+"fp": "10566ef5dab0458b",
+"name": "joins-g"
+},
+"joins/g[6]/circle[0]": {
+"layer": "joins",
+"fp": "c1ccc55404673e19",
+"name": "join-g-entry-dot"
+},
+"joins/g[6]/path[0]": {
+"layer": "joins",
+"fp": "988c44149d4e358e",
+"name": "join-g-entry"
+},
+"joins/g[6]/circle[1]": {
+"layer": "joins",
+"fp": "7659249437206e72",
+"name": "join-g-exit-dot"
+},
+"joins/g[6]/path[1]": {
+"layer": "joins",
+"fp": "ec6474bc8da061ad",
+"name": "join-g-exit"
+},
+"joins/g[6]/circle[2]": {
+"layer": "joins",
+"fp": "24b820ef12db5a03",
+"name": "join-g-entry-after-o-dot"
+},
+"joins/g[6]/path[2]": {
+"layer": "joins",
+"fp": "27fb8394b26e1fc8",
+"name": "join-g-entry-after-o"
+},
+"joins/g[6]/circle[3]": {
+"layer": "joins",
+"fp": "8fc30e2e846d474d",
+"name": "join-g-entry-after-b-dot"
+},
+"joins/g[6]/path[3]": {
+"layer": "joins",
+"fp": "dcd1a43359155d2d",
+"name": "join-g-entry-after-b"
+},
+"joins/g[6]/circle[4]": {
+"layer": "joins",
+"fp": "bdaac11efbf13d44",
+"name": "join-g-entry-ring"
+},
+"joins/g[6]/circle[5]": {
+"layer": "joins",
+"fp": "8628cf2c0b230ee9",
+"name": "join-g-entry-after-o-ring"
+},
+"joins/g[6]/circle[6]": {
+"layer": "joins",
+"fp": "299238ac9e3224f5",
+"name": "join-g-entry-after-b-ring"
+},
+"joins/g[7]": {
+"layer": "joins",
+"fp": "10566ef5dab0458b",
+"name": "joins-h"
+},
+"joins/g[7]/circle[0]": {
+"layer": "joins",
+"fp": "7b709c3e96a9e9ca",
+"name": "join-h-entry-dot"
+},
+"joins/g[7]/path[0]": {
+"layer": "joins",
+"fp": "98fa03d3edae8999",
+"name": "join-h-entry"
+},
+"joins/g[7]/circle[1]": {
+"layer": "joins",
+"fp": "8ba58d16b98bd833",
+"name": "join-h-exit-dot"
+},
+"joins/g[7]/path[1]": {
+"layer": "joins",
+"fp": "21036943231be05c",
+"name": "join-h-exit"
+},
+"joins/g[7]/circle[2]": {
+"layer": "joins",
+"fp": "9a0af49f346b255f",
+"name": "join-h-entry-after-o-dot"
+},
+"joins/g[7]/path[2]": {
+"layer": "joins",
+"fp": "a65bcb7daa7d5e8a",
+"name": "join-h-entry-after-o"
+},
+"joins/g[7]/circle[3]": {
+"layer": "joins",
+"fp": "b4c657ce51390643",
+"name": "join-h-entry-after-b-dot"
+},
+"joins/g[7]/path[3]": {
+"layer": "joins",
+"fp": "dabe632388a5813f",
+"name": "join-h-entry-after-b"
+},
+"joins/g[7]/circle[4]": {
+"layer": "joins",
+"fp": "9ee6f3decc0e97e0",
+"name": "join-h-entry-after-o-ring"
+},
+"joins/g[7]/circle[5]": {
+"layer": "joins",
+"fp": "446a6f50cd7e5732",
+"name": "join-h-entry-after-b-ring"
+},
+"joins/g[8]": {
+"layer": "joins",
+"fp": "10566ef5dab0458b",
+"name": "joins-i"
+},
+"joins/g[8]/circle[0]": {
+"layer": "joins",
+"fp": "49d5a7feaa1d6917",
+"name": "join-i-entry-dot"
+},
+"joins/g[8]/path[0]": {
+"layer": "joins",
+"fp": "0c41a75983439205",
+"name": "join-i-entry"
+},
+"joins/g[8]/circle[1]": {
+"layer": "joins",
+"fp": "36e98bb42425032a",
+"name": "join-i-exit-dot"
+},
+"joins/g[8]/path[1]": {
+"layer": "joins",
+"fp": "10d71b5d86bdde72",
+"name": "join-i-exit"
+},
+"joins/g[8]/circle[2]": {
+"layer": "joins",
+"fp": "c705f06cec446d12",
+"name": "join-i-entry-after-o-dot"
+},
+"joins/g[8]/path[2]": {
+"layer": "joins",
+"fp": "b1afd0b7ce0715a0",
+"name": "join-i-entry-after-o"
+},
+"joins/g[8]/circle[3]": {
+"layer": "joins",
+"fp": "0848231b449f0567",
+"name": "join-i-entry-after-b-dot"
+},
+"joins/g[8]/path[3]": {
+"layer": "joins",
+"fp": "dab8506fdbec932c",
+"name": "join-i-entry-after-b"
+},
+"joins/g[8]/circle[4]": {
+"layer": "joins",
+"fp": "6abcc5c0bb3b29fb",
+"name": "join-i-entry-after-o-ring"
+},
+"joins/g[8]/circle[5]": {
+"layer": "joins",
+"fp": "11bc3994b5893236",
+"name": "join-i-entry-after-b-ring"
+},
+"joins/g[9]": {
+"layer": "joins",
+"fp": "10566ef5dab0458b",
+"name": "joins-j"
+},
+"joins/g[9]/circle[0]": {
+"layer": "joins",
+"fp": "297301418640bedd",
+"name": "join-j-entry-dot"
+},
+"joins/g[9]/path[0]": {
+"layer": "joins",
+"fp": "c74bf0806d89ce9d",
+"name": "join-j-entry"
+},
+"joins/g[9]/circle[1]": {
+"layer": "joins",
+"fp": "04699d9ea81e540f",
+"name": "join-j-exit-dot"
+},
+"joins/g[9]/path[1]": {
+"layer": "joins",
+"fp": "b6b297fbdb46e48d",
+"name": "join-j-exit"
+},
+"joins/g[9]/circle[2]": {
+"layer": "joins",
+"fp": "6ac9b7f89fe10e11",
+"name": "join-j-entry-after-o-dot"
+},
+"joins/g[9]/path[2]": {
+"layer": "joins",
+"fp": "bbfd6c7b46f8a9b4",
+"name": "join-j-entry-after-o"
+},
+"joins/g[9]/circle[3]": {
+"layer": "joins",
+"fp": "2a79fb15bc8751c0",
+"name": "join-j-entry-after-b-dot"
+},
+"joins/g[9]/path[3]": {
+"layer": "joins",
+"fp": "b7d6e1646001c3e5",
+"name": "join-j-entry-after-b"
+},
+"joins/g[9]/circle[4]": {
+"layer": "joins",
+"fp": "ea8653466b1ce166",
+"name": "join-j-entry-after-o-ring"
+},
+"joins/g[9]/circle[5]": {
+"layer": "joins",
+"fp": "e8778408c30185a9",
+"name": "join-j-entry-after-b-ring"
+},
+"joins/g[10]": {
+"layer": "joins",
+"fp": "10566ef5dab0458b",
+"name": "joins-k"
+},
+"joins/g[10]/circle[0]": {
+"layer": "joins",
+"fp": "68d69cf85d0804ad",
+"name": "join-k-entry-dot"
+},
+"joins/g[10]/path[0]": {
+"layer": "joins",
+"fp": "6c99b9d1570ea1e1",
+"name": "join-k-entry"
+},
+"joins/g[10]/circle[1]": {
+"layer": "joins",
+"fp": "83512a1bba29c9a4",
+"name": "join-k-exit-dot"
+},
+"joins/g[10]/path[1]": {
+"layer": "joins",
+"fp": "09e98295529364c1",
+"name": "join-k-exit"
+},
+"joins/g[10]/circle[2]": {
+"layer": "joins",
+"fp": "dd7cd2bb26099d99",
+"name": "join-k-entry-after-o-dot"
+},
+"joins/g[10]/path[2]": {
+"layer": "joins",
+"fp": "c41ec5da9216424f",
+"name": "join-k-entry-after-o"
+},
+"joins/g[10]/circle[3]": {
+"layer": "joins",
+"fp": "1293da222db2727b",
+"name": "join-k-entry-after-b-dot"
+},
+"joins/g[10]/path[3]": {
+"layer": "joins",
+"fp": "24116e135a189cb9",
+"name": "join-k-entry-after-b"
+},
+"joins/g[10]/circle[4]": {
+"layer": "joins",
+"fp": "2ab0faf8f43cd9a3",
+"name": "join-k-entry-after-o-ring"
+},
+"joins/g[10]/circle[5]": {
+"layer": "joins",
+"fp": "36de437580dd8bf1",
+"name": "join-k-entry-after-b-ring"
+},
+"joins/g[11]": {
+"layer": "joins",
+"fp": "10566ef5dab0458b",
+"name": "joins-l"
+},
+"joins/g[11]/circle[0]": {
+"layer": "joins",
+"fp": "7e3b9aef9547a1da",
+"name": "join-l-entry-dot"
+},
+"joins/g[11]/path[0]": {
+"layer": "joins",
+"fp": "86011c1526fcc5fa",
+"name": "join-l-entry"
+},
+"joins/g[11]/circle[1]": {
+"layer": "joins",
+"fp": "6282c1f8411ec411",
+"name": "join-l-exit-dot"
+},
+"joins/g[11]/path[1]": {
+"layer": "joins",
+"fp": "7cd9630d2102457b",
+"name": "join-l-exit"
+},
+"joins/g[11]/circle[2]": {
+"layer": "joins",
+"fp": "8dd36bc8f093133d",
+"name": "join-l-entry-after-o-dot"
+},
+"joins/g[11]/path[2]": {
+"layer": "joins",
+"fp": "fec508bf92a4c606",
+"name": "join-l-entry-after-o"
+},
+"joins/g[11]/circle[3]": {
+"layer": "joins",
+"fp": "03b838203e1cdb80",
+"name": "join-l-entry-after-o-ring"
+},
+"joins/g[12]": {
+"layer": "joins",
+"fp": "10566ef5dab0458b",
+"name": "joins-m"
+},
+"joins/g[12]/circle[0]": {
+"layer": "joins",
+"fp": "b43ddf47f11a5d24",
+"name": "join-m-entry-dot"
+},
+"joins/g[12]/path[0]": {
+"layer": "joins",
+"fp": "b0e631821e63afe0",
+"name": "join-m-entry"
+},
+"joins/g[12]/circle[1]": {
+"layer": "joins",
+"fp": "84a4be28c40e25b1",
+"name": "join-m-exit-dot"
+},
+"joins/g[12]/path[1]": {
+"layer": "joins",
+"fp": "24a14c8303641711",
+"name": "join-m-exit"
+},
+"joins/g[13]": {
+"layer": "joins",
+"fp": "10566ef5dab0458b",
+"name": "joins-n"
+},
+"joins/g[13]/circle[0]": {
+"layer": "joins",
+"fp": "4a94393f25132859",
+"name": "join-n-entry-dot"
+},
+"joins/g[13]/path[0]": {
+"layer": "joins",
+"fp": "739fef502336dd2f",
+"name": "join-n-entry"
+},
+"joins/g[13]/circle[1]": {
+"layer": "joins",
+"fp": "920794b551fa620c",
+"name": "join-n-exit-dot"
+},
+"joins/g[13]/path[1]": {
+"layer": "joins",
+"fp": "7db8a19f88e31fdd",
+"name": "join-n-exit"
+},
+"joins/g[14]": {
+"layer": "joins",
+"fp": "10566ef5dab0458b",
+"name": "joins-o"
+},
+"joins/g[14]/circle[0]": {
+"layer": "joins",
+"fp": "14497e1854540d90",
+"name": "join-o-entry-dot"
+},
+"joins/g[14]/path[0]": {
+"layer": "joins",
+"fp": "421f524264453ef7",
+"name": "join-o-entry"
+},
+"joins/g[14]/circle[1]": {
+"layer": "joins",
+"fp": "25f780b0c87047c4",
+"name": "join-o-exit-dot"
+},
+"joins/g[14]/path[1]": {
+"layer": "joins",
+"fp": "b1de2523a22304cd",
+"name": "join-o-exit"
+},
+"joins/g[14]/circle[2]": {
+"layer": "joins",
+"fp": "3c67739d3be331f7",
+"name": "join-o-entry-after-o-dot"
+},
+"joins/g[14]/path[2]": {
+"layer": "joins",
+"fp": "f1aa23ac2b70ab1d",
+"name": "join-o-entry-after-o"
+},
+"joins/g[14]/circle[3]": {
+"layer": "joins",
+"fp": "9c7fe8e14cfba4dc",
+"name": "join-o-entry-after-b-dot"
+},
+"joins/g[14]/path[3]": {
+"layer": "joins",
+"fp": "7ecded0e1b8e4b0f",
+"name": "join-o-entry-after-b"
+},
+"joins/g[14]/circle[4]": {
+"layer": "joins",
+"fp": "3915dda71c3cc409",
+"name": "join-o-entry-ring"
+},
+"joins/g[14]/circle[5]": {
+"layer": "joins",
+"fp": "577ff10eb8725cd2",
+"name": "join-o-entry-after-o-ring"
+},
+"joins/g[14]/circle[6]": {
+"layer": "joins",
+"fp": "858316b95421c793",
+"name": "join-o-entry-after-b-ring"
+},
+"joins/g[15]": {
+"layer": "joins",
+"fp": "10566ef5dab0458b",
+"name": "joins-p"
+},
+"joins/g[15]/circle[0]": {
+"layer": "joins",
+"fp": "759fedf2337a34ef",
+"name": "join-p-entry-dot"
+},
+"joins/g[15]/path[0]": {
+"layer": "joins",
+"fp": "57ba3ddbd42b94d8",
+"name": "join-p-entry"
+},
+"joins/g[15]/circle[1]": {
+"layer": "joins",
+"fp": "9e20feae86e6c58b",
+"name": "join-p-exit-dot"
+},
+"joins/g[15]/path[1]": {
+"layer": "joins",
+"fp": "5466697a09b04aad",
+"name": "join-p-exit"
+},
+"joins/g[15]/circle[2]": {
+"layer": "joins",
+"fp": "3ca6cf0aa29094ec",
+"name": "join-p-entry-after-o-dot"
+},
+"joins/g[15]/path[2]": {
+"layer": "joins",
+"fp": "9a2eea7a2626bb3a",
+"name": "join-p-entry-after-o"
+},
+"joins/g[15]/circle[3]": {
+"layer": "joins",
+"fp": "617c5ec02a65cd11",
+"name": "join-p-entry-after-b-dot"
+},
+"joins/g[15]/path[3]": {
+"layer": "joins",
+"fp": "71ce08e29f567789",
+"name": "join-p-entry-after-b"
+},
+"joins/g[15]/circle[4]": {
+"layer": "joins",
+"fp": "2ce291cd7889f687",
+"name": "join-p-entry-after-o-ring"
+},
+"joins/g[15]/circle[5]": {
+"layer": "joins",
+"fp": "7d0dad9c6a94b225",
+"name": "join-p-entry-after-b-ring"
+},
+"joins/g[16]": {
+"layer": "joins",
+"fp": "10566ef5dab0458b",
+"name": "joins-q"
+},
+"joins/g[16]/circle[0]": {
+"layer": "joins",
+"fp": "dc4b78a095d27932",
+"name": "join-q-entry-dot"
+},
+"joins/g[16]/path[0]": {
+"layer": "joins",
+"fp": "f596736213ff0e4d",
+"name": "join-q-entry"
+},
+"joins/g[16]/circle[1]": {
+"layer": "joins",
+"fp": "30cdd83534014ef6",
+"name": "join-q-exit-dot"
+},
+"joins/g[16]/path[1]": {
+"layer": "joins",
+"fp": "1b43a2491ff977f8",
+"name": "join-q-exit"
+},
+"joins/g[16]/circle[2]": {
+"layer": "joins",
+"fp": "450b380ba873f970",
+"name": "join-q-entry-after-o-dot"
+},
+"joins/g[16]/path[2]": {
+"layer": "joins",
+"fp": "691ee72c491421c0",
+"name": "join-q-entry-after-o"
+},
+"joins/g[16]/circle[3]": {
+"layer": "joins",
+"fp": "d652035c2edff472",
+"name": "join-q-entry-after-b-dot"
+},
+"joins/g[16]/path[3]": {
+"layer": "joins",
+"fp": "95c492cddf4e5925",
+"name": "join-q-entry-after-b"
+},
+"joins/g[16]/circle[4]": {
+"layer": "joins",
+"fp": "d970280adb1de27c",
+"name": "join-q-entry-ring"
+},
+"joins/g[16]/circle[5]": {
+"layer": "joins",
+"fp": "9f90254369647aea",
+"name": "join-q-entry-after-o-ring"
+},
+"joins/g[16]/circle[6]": {
+"layer": "joins",
+"fp": "201e6f7c1e19f4c6",
+"name": "join-q-entry-after-b-ring"
+},
+"joins/g[17]": {
+"layer": "joins",
+"fp": "10566ef5dab0458b",
+"name": "joins-r"
+},
+"joins/g[17]/circle[0]": {
+"layer": "joins",
+"fp": "c5726cd7febaa493",
+"name": "join-r-entry-dot"
+},
+"joins/g[17]/path[0]": {
+"layer": "joins",
+"fp": "bf6994de2a93de31",
+"name": "join-r-entry"
+},
+"joins/g[17]/circle[1]": {
+"layer": "joins",
+"fp": "dd4f801aa991d407",
+"name": "join-r-exit-dot"
+},
+"joins/g[17]/path[1]": {
+"layer": "joins",
+"fp": "b1ae10eb95569e07",
+"name": "join-r-exit"
+},
+"joins/g[17]/circle[2]": {
+"layer": "joins",
+"fp": "c161bb52e7767aa4",
+"name": "join-r-entry-after-o-dot"
+},
+"joins/g[17]/path[2]": {
+"layer": "joins",
+"fp": "21740c77b2d76910",
+"name": "join-r-entry-after-o"
+},
+"joins/g[17]/circle[3]": {
+"layer": "joins",
+"fp": "c580ea41ea17d14d",
+"name": "join-r-entry-after-o-ring"
+},
+"joins/g[18]": {
+"layer": "joins",
+"fp": "10566ef5dab0458b",
+"name": "joins-s"
+},
+"joins/g[18]/circle[0]": {
+"layer": "joins",
+"fp": "424a9b6eb8277e64",
+"name": "join-s-entry-dot"
+},
+"joins/g[18]/path[0]": {
+"layer": "joins",
+"fp": "fd965e8926b0153c",
+"name": "join-s-entry"
+},
+"joins/g[18]/circle[1]": {
+"layer": "joins",
+"fp": "32738ca1230894f3",
+"name": "join-s-exit-dot"
+},
+"joins/g[18]/path[1]": {
+"layer": "joins",
+"fp": "1a11182c3400328e",
+"name": "join-s-exit"
+},
+"joins/g[19]": {
+"layer": "joins",
+"fp": "10566ef5dab0458b",
+"name": "joins-t"
+},
+"joins/g[19]/circle[0]": {
+"layer": "joins",
+"fp": "418e230e16c21bf0",
+"name": "join-t-entry-dot"
+},
+"joins/g[19]/path[0]": {
+"layer": "joins",
+"fp": "01ce550d4f82acc0",
+"name": "join-t-entry"
+},
+"joins/g[19]/circle[1]": {
+"layer": "joins",
+"fp": "53f8b471b21f2dca",
+"name": "join-t-exit-dot"
+},
+"joins/g[19]/path[1]": {
+"layer": "joins",
+"fp": "1090721a1febe931",
+"name": "join-t-exit"
+},
+"joins/g[20]": {
+"layer": "joins",
+"fp": "10566ef5dab0458b",
+"name": "joins-u"
+},
+"joins/g[20]/circle[0]": {
+"layer": "joins",
+"fp": "5318f551f88011e4",
+"name": "join-u-entry-dot"
+},
+"joins/g[20]/path[0]": {
+"layer": "joins",
+"fp": "8f3e559b199a397f",
+"name": "join-u-entry"
+},
+"joins/g[20]/circle[1]": {
+"layer": "joins",
+"fp": "9d896f5b0cadb6d3",
+"name": "join-u-exit-dot"
+},
+"joins/g[20]/path[1]": {
+"layer": "joins",
+"fp": "31debb33e6f8eb67",
+"name": "join-u-exit"
+},
+"joins/g[20]/circle[2]": {
+"layer": "joins",
+"fp": "b866802271663da2",
+"name": "join-u-entry-after-o-dot"
+},
+"joins/g[20]/path[2]": {
+"layer": "joins",
+"fp": "a7bb9918d582aa7f",
+"name": "join-u-entry-after-o"
+},
+"joins/g[20]/circle[3]": {
+"layer": "joins",
+"fp": "3d8a6bf413e3d76b",
+"name": "join-u-entry-after-b-dot"
+},
+"joins/g[20]/path[3]": {
+"layer": "joins",
+"fp": "e60cd9e02d4e063a",
+"name": "join-u-entry-after-b"
+},
+"joins/g[20]/circle[4]": {
+"layer": "joins",
+"fp": "c94c31ff1625953f",
+"name": "join-u-entry-after-o-ring"
+},
+"joins/g[20]/circle[5]": {
+"layer": "joins",
+"fp": "bbf8c9fe66f0416e",
+"name": "join-u-entry-after-b-ring"
+},
+"joins/g[21]": {
+"layer": "joins",
+"fp": "10566ef5dab0458b",
+"name": "joins-v"
+},
+"joins/g[21]/circle[0]": {
+"layer": "joins",
+"fp": "7268f35af5d5d735",
+"name": "join-v-entry-dot"
+},
+"joins/g[21]/path[0]": {
+"layer": "joins",
+"fp": "03d43c17f1202dd4",
+"name": "join-v-entry"
+},
+"joins/g[21]/circle[1]": {
+"layer": "joins",
+"fp": "6398f7f0cc63f8e1",
+"name": "join-v-exit-dot"
+},
+"joins/g[21]/path[1]": {
+"layer": "joins",
+"fp": "90ff1bbe27783a21",
+"name": "join-v-exit"
+},
+"joins/g[22]": {
+"layer": "joins",
+"fp": "10566ef5dab0458b",
+"name": "joins-w"
+},
+"joins/g[22]/circle[0]": {
+"layer": "joins",
+"fp": "f96e7a44700b58df",
+"name": "join-w-entry-dot"
+},
+"joins/g[22]/path[0]": {
+"layer": "joins",
+"fp": "7a9654b1036db8ce",
+"name": "join-w-entry"
+},
+"joins/g[22]/circle[1]": {
+"layer": "joins",
+"fp": "b444a2b7d9af3887",
+"name": "join-w-exit-dot"
+},
+"joins/g[22]/path[1]": {
+"layer": "joins",
+"fp": "6303b3ab3b8e7c34",
+"name": "join-w-exit"
+},
+"joins/g[22]/circle[2]": {
+"layer": "joins",
+"fp": "86e77b9aefab0c29",
+"name": "join-w-entry-after-o-dot"
+},
+"joins/g[22]/path[2]": {
+"layer": "joins",
+"fp": "2b3adf0fe9ab4e57",
+"name": "join-w-entry-after-o"
+},
+"joins/g[22]/circle[3]": {
+"layer": "joins",
+"fp": "cce78c77dfe0252b",
+"name": "join-w-entry-after-b-dot"
+},
+"joins/g[22]/path[3]": {
+"layer": "joins",
+"fp": "4ddd4d6be6daefcf",
+"name": "join-w-entry-after-b"
+},
+"joins/g[22]/circle[4]": {
+"layer": "joins",
+"fp": "c03a1bb3f048c1a8",
+"name": "join-w-entry-after-o-ring"
+},
+"joins/g[22]/circle[5]": {
+"layer": "joins",
+"fp": "df0c3adc00e1ce5b",
+"name": "join-w-entry-after-b-ring"
+},
+"joins/g[23]": {
+"layer": "joins",
+"fp": "10566ef5dab0458b",
+"name": "joins-x"
+},
+"joins/g[23]/circle[0]": {
+"layer": "joins",
+"fp": "ad4c9710802a38df",
+"name": "join-x-entry-dot"
+},
+"joins/g[23]/path[0]": {
+"layer": "joins",
+"fp": "bc1686c9b1d2a8ba",
+"name": "join-x-entry"
+},
+"joins/g[23]/circle[1]": {
+"layer": "joins",
+"fp": "ae80dc1e04cf8dec",
+"name": "join-x-exit-dot"
+},
+"joins/g[23]/path[1]": {
+"layer": "joins",
+"fp": "17bd703fbc7dbe73",
+"name": "join-x-exit"
+},
+"joins/g[24]": {
+"layer": "joins",
+"fp": "10566ef5dab0458b",
+"name": "joins-y"
+},
+"joins/g[24]/circle[0]": {
+"layer": "joins",
+"fp": "b283849eac601d14",
+"name": "join-y-entry-dot"
+},
+"joins/g[24]/path[0]": {
+"layer": "joins",
+"fp": "bbd24b6d717eab68",
+"name": "join-y-entry"
+},
+"joins/g[24]/circle[1]": {
+"layer": "joins",
+"fp": "342186b4b99bb280",
+"name": "join-y-exit-dot"
+},
+"joins/g[24]/path[1]": {
+"layer": "joins",
+"fp": "b82666ded1b5d6dd",
+"name": "join-y-exit"
+},
+"joins/g[24]/circle[2]": {
+"layer": "joins",
+"fp": "6f041cdd75755f17",
+"name": "join-y-entry-after-o-dot"
+},
+"joins/g[24]/path[2]": {
+"layer": "joins",
+"fp": "d734226877b48c2b",
+"name": "join-y-entry-after-o"
+},
+"joins/g[24]/circle[3]": {
+"layer": "joins",
+"fp": "b5646c12ea7c086c",
+"name": "join-y-entry-after-b-dot"
+},
+"joins/g[24]/path[3]": {
+"layer": "joins",
+"fp": "5d0859b376151fab",
+"name": "join-y-entry-after-b"
+},
+"joins/g[24]/circle[4]": {
+"layer": "joins",
+"fp": "67fd49a532b3bc92",
+"name": "join-y-entry-after-o-ring"
+},
+"joins/g[24]/circle[5]": {
+"layer": "joins",
+"fp": "c058589eff5b6c81",
+"name": "join-y-entry-after-b-ring"
+},
+"joins/g[25]": {
+"layer": "joins",
+"fp": "10566ef5dab0458b",
+"name": "joins-z"
+},
+"joins/g[25]/circle[0]": {
+"layer": "joins",
+"fp": "11cd36d1f9e16172",
+"name": "join-z-entry-dot"
+},
+"joins/g[25]/path[0]": {
+"layer": "joins",
+"fp": "278311237428933c",
+"name": "join-z-entry"
+},
+"joins/g[25]/circle[1]": {
+"layer": "joins",
+"fp": "ad0824564cdbd2ca",
+"name": "join-z-exit-dot"
+},
+"joins/g[25]/path[1]": {
+"layer": "joins",
+"fp": "003b17c59cb8a498",
+"name": "join-z-exit"
+}
+},
+"k980": {
+"note": "K980: v5.8's shared values (work16/build), frozen; params_k980.py writes a build's join_params.json from them",
+"params": {
+"groups": {
+"high-cusp": [
+0.044765256656015454,
+2.074497228039716,
+1.5916703388863183,
+-4.369115873346452
+],
+"high-fused": [
+0.4368877137047306,
+0.5166582965664965,
+1.603772621331315,
+-1.603073573411228
+],
+"high-smooth": [
+0.02005222415111466,
+1.501228780449418,
+2.646776971346151,
+-9.432237887500964
+],
+"low-cusp": [
+0.7959592724042381,
+0.10959410578955858,
+4.544421132902839,
+1.5275218660521448
+],
+"low-fused": [
+0.9571224097648552,
+0.02023761337788664,
+5.201765490596124,
+0.23299649274962983
+],
+"low-smooth": [
+0.6851997155636013,
+0.5503465123162602,
+1.9798166785258045,
+-1.2613325605164047
+]
+},
+"global_prm": [
+0.6068852052182774,
+0.4691906972697977,
+2.3694858095749343,
+-1.3785424936661692
+],
+"classes": {
+"cnct.cnt_b_n": [
+0.6666196795489274,
+0.06628891604433162,
+2.8376697138063265,
+-6.39528973933116
+],
+"cnct.cnt_b_z": [
+0.020064032890339208,
+2.1425149012109292,
+-1.6475532600707916,
+0.16792490626114856
+],
+"cnct.cnt_e_n": [
+1.0315355270603228,
+0.47111481318965354,
+-0.0008277839488574798,
+-2.3974817145650182
+],
+"cnct.cnt_n_n": [
+0.7450811487841,
+0.5239166544113464,
+0.9041207976112813,
+0.0001979112270016516
+],
+"cnct.cnt_n_z": [
+0.3658287366774963,
+1.1064460044909323,
+2.710918769824307,
+-0.00013964379376786898
+],
+"cnct.cnt_o_n": [
+0.5,
+1.0,
+-1.5,
+-1.5
+],
+"cnct.cnt_o_z": [
+0.02124152491467124,
+2.3462499471748117,
+-4.392583912866678,
+12.635405173527417
+],
+"cnct.ful_b_e": [
+0.0215336489728438,
+0.021692748188490207,
+-1.8058622794605523,
+5.094001426297611
+],
+"cnct.ful_b_f": [
+0.021659274275689935,
+1.3583107115551156,
+-0.9629199609768819,
+-11.95096043995051
+],
+"cnct.ful_b_n": [
+0.5109333586782832,
+0.5659280939981364,
+2.0165685813456093,
+-0.9491704106019723
+],
+"cnct.ful_b_o": [
+0.4770838024789754,
+0.45600103568753414,
+-3.4309606491189166,
+-9.11534058176224
+],
+"cnct.ful_b_r": [
+0.07263786060552305,
+2.7469883407025466,
+-10.065202551228492,
+0.00014691832178153458
+],
+"cnct.ful_b_s": [
+0.020087881305974775,
+2.555110831651719,
+-5.042363724588878,
+-1.4202546994029195
+],
+"cnct.ful_b_t": [
+0.765882993264301,
+0.6399268012139675,
+1.6094876467777397,
+-1.7024452805182
+],
+"cnct.ful_b_x": [
+0.02002352850843246,
+1.6597342683427936,
+-2.230309934130984,
+-0.9893737277690708
+],
+"cnct.ful_e_o": [
+0.9613831818289449,
+0.020089374659804635,
+4.847536131493657,
+0.24550987282988856
+],
+"cnct.ful_e_r": [
+0.04715880680136153,
+0.35834373056624313,
+14.743163112299538,
+5.091689008428434
+],
+"cnct.ful_e_s": [
+0.8246153805548524,
+0.9823603026945293,
+-0.00012392476866459582,
+0.000315193249840326
+],
+"cnct.ful_n_e": [
+0.027927675929667037,
+1.6403413574290835,
+1.735749438422234,
+-1.7123801142673236
+],
+"cnct.ful_n_f": [
+0.4042641731715064,
+1.1310226083435102,
+2.7311982394015173,
+1.1102818626389315
+],
+"cnct.ful_n_r": [
+0.05923237990643811,
+0.02301244314870591,
+12.111374743877597,
+-3.8222893724569023
+],
+"cnct.ful_n_s": [
+0.1582348878316846,
+0.1471795913892136,
+8.764548756218968,
+-2.5048206975815672
+],
+"cnct.ful_n_x": [
+0.3753615559785455,
+0.6899741159580848,
+2.2710464229279648,
+-1.3631833165186638
+],
+"cnct.ful_o_e": [
+0.021449692201018777,
+0.020885291058919505,
+2.1726979046577495,
+5.250602011157998
+],
+"cnct.ful_o_f": [
+0.025943340742184236,
+1.3691398712243683,
+1.6181288895044585,
+-9.800939435267463
+],
+"cnct.ful_o_r": [
+0.05063824983243659,
+2.225631932722883,
+-14.518336282525723,
+9.434332860267056e-05
+],
+"cnct.ful_o_s": [
+0.020007058669940472,
+2.286087959073164,
+-5.027009821472674,
+-0.5801437797069227
+],
+"cnct.ful_o_x": [
+0.021442480775812803,
+1.879386799079919,
+-6.274794259933785,
+6.78744918178873
+],
+"cnct.ful_z_n": [
+1.4946000922941247,
+0.09400617697705414,
+-1.7699460405857004,
+2.4001782811825967
+],
+"cnct.jmc_g_n": [
+0.5068403458305364,
+0.10624639712546757,
+7.077387441429983,
+-3.6283943298918446
+],
+"cnct.lop_b_h": [
+0.041240041438951935,
+2.4780995174865286,
+-3.5047119832444062,
+-4.133529493175841
+],
+"cnct.lop_c_h": [
+0.6617061141620639,
+0.49897333828086865,
+1.058603470314885,
+0.00019623415002822876
+],
+"cnct.lop_n_h": [
+0.5029890843086433,
+0.5819329384902858,
+1.9791321184732786,
+-1.5956158750048592
+],
+"cnct.lop_o_h": [
+0.021859570441100047,
+2.987985345787412,
+-4.321012658885795,
+-0.21221399136884345
+],
+"cnct.mod_c_n": [
+1.3339874644062277,
+0.10598223771804427,
+-0.0006120097182233282,
+-0.0008949245316931527
+],
+"cnct.mod_n_n": [
+0.3593491138152594,
+0.11304355054011328,
+3.7074817446923416,
+-0.0031228974759509157
+],
+"cnct.mod_n_o": [
+0.4718002841347049,
+0.020000646995489656,
+6.148375268996235,
+0.6532230318015912
+],
+"cnct.mod_n_t": [
+0.24966880747359926,
+0.021210613596725554,
+3.862899254080554,
+-5.982253070189715
+],
+"cnct.mod_o_n": [
+0.044765,
+2.074497,
+1.59167,
+-4.369116
+],
+"cnct.mod_o_o": [
+0.1606850134149826,
+0.42723502655448264,
+-1.9224350108812063,
+-8.594170093288696
+],
+"cnct.mod_o_t": [
+0.5,
+0.5,
+-1.5,
+-1.5
+],
+"cnct.mrr_f_o": [
+0.13484527945237246,
+2.9997234677685833,
+-9.87351152339033,
+-13.004905250115614
+],
+"cnct.ful_b_f|b": [
+0.020000167331988394,
+1.3689421761912648,
+-3.4903489199816633,
+-12.65248688188591
+],
+"cnct.ful_b_f|f": [
+0.0200867336936427,
+1.2102799520837857,
+-2.009063446766877,
+-13.124747594281516
+],
+"cnct.ful_b_n|p": [
+0.7636497299221056,
+0.020058196519475747,
+3.421093688821381,
+-1.1203931080028404
+],
+"cnct.ful_b_o|q": [
+0.24287343428710606,
+0.4157458004917741,
+-7.779330779784008,
+-14.067136481551778
+],
+"cnct.ful_b_r|r": [
+0.04783361264648424,
+2.865466947155762,
+-12.0503836783661,
+0.00015674781188964844
+],
+"cnct.ful_b_t|t": [
+0.024842862432395786,
+0.3163880751671395,
+2.6427588135938977,
+-10.040410893675944
+],
+"cnct.ful_e_s|s": [
+0.824615,
+0.98236,
+-0.000124,
+0.00033075000000000004
+],
+"cnct.ful_n_r|r": [
+0.05942735129469359,
+0.02000652746516482,
+12.111119385898142,
+-3.8616958689142713
+],
+"cnct.ful_o_f|l": [
+0.02239329926932849,
+1.4303923957791473,
+2.79656062194879,
+-8.981202335668577
+],
+"cnct.ful_o_r|r": [
+0.050638,
+2.225632,
+-14.518336,
+9.4e-05
+],
+"cnct.ful_o_s|s": [
+0.020007,
+2.286088,
+-5.02701,
+-0.580144
+],
+"cnct.ful_o_x|x": [
+0.021442,
+1.879387,
+-6.274794,
+6.787449
+],
+"cnct.lop_b_h|h": [
+0.023578899967915568,
+1.5571334497640312,
+0.2835100543344885,
+-14.902090437793937
+],
+"cnct.lop_b_h|k": [
+0.21516922576806263,
+0.9480612441657387,
+-12.173472740545709,
+-14.99808996586778
+],
+"cnct.mod_n_o|c": [
+0.37802369922936263,
+0.032026768487635485,
+7.8814782129314445,
+5.5613388367915375
+],
+"cnct.mod_n_o|d": [
+0.026131590091755877,
+0.17108503000381728,
+10.326015681160388,
+7.991421360413717
+],
+"cnct.mod_n_o|q": [
+0.9925393230164237,
+0.02023195618882083,
+4.862485032712018,
+0.2367211974702711
+],
+"cnct.mod_n_t|t": [
+0.24485960049508457,
+0.022576875806957768,
+3.7141951140636627,
+-5.9558746313402064
+],
+"cnct.mrr_f_o|o": [
+0.04060964402345779,
+2.709729295698807,
+-9.844582745937572,
+-13.51998673443586
+],
+"cnct.ful_b_e|L=v": [
+0.02153696237897873,
+0.02168974163103104,
+-1.885936659660244,
+5.095998374068403
+],
+"cnct.lop_b_h|k|L=b": [
+0.09467156936300994,
+0.9599184324763259,
+-13.677294931222775,
+-14.990101456005759
+],
+"cnct.ful_b_e|e": [
+0.020000773769536573,
+0.03469489132266265,
+-2.573008520224517,
+-12.159230563460628
+],
+"cnct.ful_c_e|e": [
+1.2573478430175262,
+0.18518582897116093,
+-1.41152007983134,
+2.0684751002561055
+],
+"cnct.ful_g_e|e": [
+1.0,
+0.1,
+2.734375e-05,
+9.765625e-05
+],
+"cnct.ful_o_e|e": [
+0.020000989101361367,
+0.406801373410865,
+-2.8308645435245783,
+-2.1369051632507894
+],
+"cnct.ful_z_e|e": [
+0.020014296577294415,
+0.5675554259692791,
+-2.347883948521382,
+-1.8170035791414099
+]
+},
+"pair_class": {
+"an": "cnct.cnt_n_n",
+"az": "cnct.cnt_n_z",
+"ba": "cnct.ful_b_o",
+"bb": "cnct.ful_b_f",
+"bc": "cnct.ful_b_o",
+"bd": "cnct.ful_b_o",
+"be": "cnct.ful_b_e",
+"bf": "cnct.ful_b_f",
+"bg": "cnct.ful_b_o",
+"bh": "cnct.lop_b_h",
+"bi": "cnct.ful_b_n",
+"bj": "cnct.ful_b_n",
+"bk": "cnct.lop_b_h",
+"bl": "cnct.ful_b_f",
+"bm": "cnct.cnt_b_n",
+"bn": "cnct.cnt_b_n",
+"bo": "cnct.ful_b_o",
+"bp": "cnct.ful_b_n",
+"bq": "cnct.ful_b_o",
+"br": "cnct.ful_b_r",
+"bs": "cnct.ful_b_s",
+"bt": "cnct.ful_b_t",
+"bu": "cnct.ful_b_n",
+"bv": "cnct.cnt_b_n",
+"bw": "cnct.ful_b_n",
+"bx": "cnct.ful_b_x",
+"by": "cnct.ful_b_n",
+"bz": "cnct.cnt_b_z",
+"ck": "cnct.lop_c_h",
+"cu": "cnct.mod_c_n",
+"do": "cnct.mod_n_o",
+"en": "cnct.cnt_e_n",
+"eo": "cnct.ful_e_o",
+"er": "cnct.ful_e_r",
+"es": "cnct.ful_e_s",
+"fo": "cnct.mrr_f_o",
+"he": "cnct.ful_n_e",
+"hi": "cnct.mod_n_n",
+"ic": "cnct.mod_n_o",
+"im": "cnct.cnt_n_n",
+"in": "cnct.cnt_n_n",
+"ip": "cnct.mod_n_n",
+"iv": "cnct.cnt_n_n",
+"ju": "cnct.jmc_g_n",
+"kn": "cnct.cnt_n_n",
+"la": "cnct.mod_n_o",
+"le": "cnct.ful_n_e",
+"ma": "cnct.mod_n_o",
+"mi": "cnct.mod_n_n",
+"mp": "cnct.mod_n_n",
+"mu": "cnct.mod_n_n",
+"na": "cnct.mod_n_o",
+"nb": "cnct.ful_n_f",
+"nc": "cnct.mod_n_o",
+"nd": "cnct.mod_n_o",
+"ne": "cnct.ful_n_e",
+"nf": "cnct.ful_n_f",
+"ng": "cnct.mod_n_o",
+"nh": "cnct.lop_n_h",
+"ni": "cnct.mod_n_n",
+"nj": "cnct.mod_n_n",
+"nk": "cnct.lop_n_h",
+"nl": "cnct.ful_n_f",
+"nm": "cnct.cnt_n_n",
+"nn": "cnct.cnt_n_n",
+"no": "cnct.mod_n_o",
+"np": "cnct.mod_n_n",
+"nq": "cnct.mod_n_o",
+"nr": "cnct.ful_n_r",
+"ns": "cnct.ful_n_s",
+"nt": "cnct.mod_n_t",
+"nu": "cnct.mod_n_n",
+"nv": "cnct.cnt_n_n",
+"nw": "cnct.mod_n_n",
+"nx": "cnct.ful_n_x",
+"ny": "cnct.mod_n_n",
+"nz": "cnct.cnt_n_z",
+"oa": "cnct.mod_o_o",
+"ob": "cnct.ful_o_f",
+"oc": "cnct.mod_o_o",
+"od": "cnct.mod_o_o",
+"oe": "cnct.ful_o_e",
+"of": "cnct.ful_o_f",
+"og": "cnct.mod_o_o",
+"oh": "cnct.lop_o_h",
+"oi": "cnct.mod_o_n",
+"oj": "cnct.mod_o_n",
+"ok": "cnct.lop_o_h",
+"ol": "cnct.ful_o_f",
+"om": "cnct.cnt_o_n",
+"on": "cnct.cnt_o_n",
+"oo": "cnct.mod_o_o",
+"op": "cnct.mod_o_n",
+"oq": "cnct.mod_o_o",
+"or": "cnct.ful_o_r",
+"os": "cnct.ful_o_s",
+"ot": "cnct.mod_o_t",
+"ou": "cnct.mod_o_n",
+"ov": "cnct.cnt_o_n",
+"ow": "cnct.mod_o_n",
+"ox": "cnct.ful_o_x",
+"oy": "cnct.mod_o_n",
+"oz": "cnct.cnt_o_z",
+"pe": "cnct.ful_n_e",
+"pl": "cnct.ful_n_f",
+"po": "cnct.mod_n_o",
+"pp": "cnct.mod_n_n",
+"ps": "cnct.ful_n_s",
+"pu": "cnct.mod_n_n",
+"py": "cnct.mod_n_n",
+"qu": "cnct.mod_n_n",
+"ro": "cnct.mod_n_o",
+"rs": "cnct.ful_n_s",
+"si": "cnct.mod_n_n",
+"th": "cnct.lop_n_h",
+"tm": "cnct.cnt_n_n",
+"ui": "cnct.mod_n_n",
+"um": "cnct.cnt_n_n",
+"up": "cnct.mod_n_n",
+"ur": "cnct.ful_n_r",
+"ve": "cnct.ful_b_e",
+"wn": "cnct.cnt_b_n",
+"wo": "cnct.ful_b_o",
+"xe": "cnct.ful_n_e",
+"ze": "cnct.ful_z_e",
+"zy": "cnct.ful_z_n"
+},
+"lead": {
+"cusp": {
+"offset": [
+-318.06858576591833,
+-3.0
+],
+"angle": 25.362330087649454,
+"prm": [
+1.0,
+1.0,
+0.0,
+0.0
+]
+},
+"smooth": {
+"offset": [
+-148.47951049760587,
+152.5
+],
+"angle": 38.03670051527769,
+"prm": [
+1.0,
+1.0,
+0.0,
+0.0
+]
+}
+},
+"tail": {
+"desc": {
+"offset": [
+162.07044050659272,
+105.21487472047477
+],
+"angle": 35.0823223034673,
+"prm": [
+1.0,
+1.0,
+0.0,
+0.0
+]
+},
+"low": {
+"offset": [
+103.96735572862521,
+94.68340501256671
+],
+"angle": 52.551173666918494,
+"prm": [
+0.41307388822324104,
+0.5056806138046238,
+-1.611750500560641,
+1.6290558243184023
+]
+}
+},
+"lead_letter": {
+"a": {
+"none": true
+},
+"b": {
+"offset": [
+-308.28050912529875,
+-3.5
+],
+"angle": 32.08400656059374,
+"prm": [
+0.7205923302425403,
+1.1554216487395617,
+14.903815829900847,
+-11.824498729447766
+]
+},
+"c": {
+"none": true
+},
+"d": {
+"none": true
+},
+"e": {
+"offset": [
+-269.10714758995573,
+-2.5
+],
+"angle": 21.551225620829392,
+"prm": [
+0.38912023618552266,
+1.4675353968952964,
+-2.332404028407044,
+-3.605913310128666
+]
+},
+"f": {
+"offset": [
+-141.4715503272709,
+-3.5
+],
+"angle": 32.471577651861814,
+"prm": [
+2.9939469583607083,
+0.3962169153636487,
+1.8482593120686759,
+0.3974630216340623
+]
+},
+"g": {
+"none": true
+},
+"h": {
+"offset": [
+-245.72667217151024,
+-4.0
+],
+"angle": 30.374909472058597,
+"prm": [
+1.5830780494420567,
+0.5040146650396432,
+-3.7399774946392165e-06,
+1.4896358192867507
+]
+},
+"i": {
+"none": true
+},
+"j": {
+"none": true
+},
+"k": {
+"offset": [
+-245.3907124137241,
+-4.0
+],
+"angle": 30.35821791323722,
+"prm": [
+0.02236710794784392,
+1.0589779075823182,
+-2.388213011014125,
+-2.4457372928246492
+]
+},
+"l": {
+"offset": [
+-304.6358832413171,
+-3.5
+],
+"angle": 32.20649928371075,
+"prm": [
+2.2649980137339085,
+0.565051735452451,
+1.5781944383778532,
+-0.8684720920125264
+]
+},
+"m": {
+"offset": [
+-42.94696123247375,
+376.0
+],
+"angle": 52.09035991375542,
+"prm": [
+0.9938350927395057,
+1.0167481280119754,
+1.5625875044769233,
+-9.167881214010725e-05
+]
+},
+"n": {
+"offset": [
+-41.93304154763615,
+376.0
+],
+"angle": 52.1051202895193,
+"prm": [
+0.7478809678099342,
+0.785124280639024,
+1.5027340777101674,
+-1.5057529363683906
+]
+},
+"o": {
+"none": true
+},
+"p": {
+"none": true
+},
+"q": {
+"none": true
+},
+"r": {
+"offset": [
+-394.69592450609764,
+-2.5
+],
+"angle": 21.233724032222614,
+"prm": [
+1.100841874582199,
+0.3924511733545597,
+0.00010379948429217429,
+1.598724277119478
+]
+},
+"s": {
+"offset": [
+-241.44124702573902,
+-3.5
+],
+"angle": 29.490936143076294,
+"prm": [
+1.025794375522266,
+0.7560616945171054,
+-0.00015767981519411195,
+1.5472282663657109
+]
+},
+"t": {
+"none": true
+},
+"u": {
+"none": true
+},
+"v": {
+"offset": [
+-99.35649076902618,
+376.0
+],
+"angle": 52.09738215315703,
+"prm": [
+0.9607618982663096,
+0.7532017414212065,
+1.5958184631228307,
+-1.4596881605616396
+]
+},
+"w": {
+"none": true
+},
+"x": {
+"none": true
+},
+"y": {
+"none": true
+},
+"z": {
+"offset": [
+214.05386344215398,
+418.0
+],
+"angle": 45.02770629405357,
+"prm": [
+1.0295936119119564,
+0.5094729553441582,
+1.5339909470865845,
+-1.4611162249148626
+]
+}
+},
+"tail_letter": {
+"a": {
+"offset": [
+105.46112529290264,
+91.26678219396827
+],
+"angle": 27.467685081683854,
+"prm": [
+0.47906745399271833,
+0.23349648304092566,
+-0.0015779488050419682,
+2.2029202434094084
+]
+},
+"b": {
+"none": true
+},
+"c": {
+"offset": [
+192.3587219444894,
+123.28312689720347
+],
+"angle": 57.843199626679706,
+"prm": [
+0.7502428816958178,
+0.46500697582282835,
+1.7045785916729796,
+0.0006159129803358873
+]
+},
+"d": {
+"offset": [
+95.85676260790689,
+95.40577563575927
+],
+"angle": 58.601279046874176,
+"prm": [
+0.020054251914368187,
+0.5560844844883785,
+-2.244077898419808,
+1.6444096577157754
+]
+},
+"e": {
+"offset": [
+351.78345779682604,
+3.1288366537940675
+],
+"angle": 44.075778673388,
+"prm": [
+0.22803072010499295,
+1.7782662744312783,
+0.0010814103948844087,
+-1.4541717014686906
+]
+},
+"f": {
+"none": true
+},
+"g": {
+"offset": [
+165.06508663388308,
+105.46615462068732
+],
+"angle": 32.29344750334975,
+"prm": [
+1.0,
+1.0,
+0.0,
+0.0
+]
+},
+"h": {
+"offset": [
+98.96254659692397,
+98.67792420899906
+],
+"angle": 73.78494635839066,
+"prm": [
+0.02000068962447262,
+0.6854690503723764,
+-1.6840703089042444,
+1.6353492908640992
+]
+},
+"i": {
+"offset": [
+92.34399144764933,
+93.53178450866554
+],
+"angle": 55.32983027504655,
+"prm": [
+0.08934936523437448,
+0.5284385681152343,
+-2.030838775634768,
+1.7201087951660177
+]
+},
+"j": {
+"offset": [
+161.78504103894159,
+103.47831303131626
+],
+"angle": 36.092377534064696,
+"prm": [
+1.0,
+1.0,
+0.0,
+0.0
+]
+},
+"k": {
+"offset": [
+94.78941798955708,
+85.72030128199569
+],
+"angle": 41.324138299489256,
+"prm": [
+0.020001452518079006,
+0.02010989656839529,
+-2.9915893661394133,
+3.3276603272102214
+]
+},
+"l": {
+"offset": [
+36.55760197669565,
+94.18545962835042
+],
+"angle": 55.588824029685746,
+"prm": [
+0.020001452518079006,
+0.02010989656839529,
+-2.9915893661394133,
+3.3276603272102214
+]
+},
+"m": {
+"offset": [
+101.47759363448768,
+95.01046734401005
+],
+"angle": 57.68924542021795,
+"prm": [
+0.020002969530075125,
+1.2814426977428859,
+-2.1204570193492596,
+1.3804417026099234
+]
+},
+"n": {
+"offset": [
+100.20497366180405,
+98.76171127050182
+],
+"angle": 73.78494635838831,
+"prm": [
+0.2624023437499998,
+0.5411499023437498,
+-1.8072875976562512,
+1.5699829101562512
+]
+},
+"o": {
+"none": true
+},
+"p": {
+"none": true
+},
+"q": {
+"offset": [
+121.9255196118877,
+59.0951850980974
+],
+"angle": 41.03489074418923,
+"prm": [
+0.021464322939409766,
+1.5952601022513992,
+-4.484153714354944,
+-1.431804579340016
+]
+},
+"r": {
+"offset": [
+92.92651298316679,
+94.85951133175101
+],
+"angle": 51.455138683521405,
+"prm": [
+0.020000004257291933,
+0.02053423804534735,
+-2.9953471605461104,
+3.1345950302688093
+]
+},
+"s": {
+"none": true
+},
+"t": {
+"offset": [
+67.9980045452649,
+105.86935861081082
+],
+"angle": 55.85101314296801,
+"prm": [
+0.020001452518079006,
+0.02010989656839529,
+-2.9915893661394133,
+3.3276603272102214
+]
+},
+"u": {
+"offset": [
+90.53980559429351,
+89.91841809625463
+],
+"angle": 55.779826981433416,
+"prm": [
+0.020000608259739455,
+0.5322150778375825,
+-1.4931899657270704,
+1.7069921307277487
+]
+},
+"v": {
+"none": true
+},
+"w": {
+"none": true
+},
+"x": {
+"offset": [
+97.35198721850003,
+79.42585233219734
+],
+"angle": 53.04318408326411,
+"prm": [
+1.0,
+1.0,
+0.0,
+0.0
+]
+},
+"y": {
+"offset": [
+159.36119384695348,
+106.70015650942071
+],
+"angle": 36.86114187298746,
+"prm": [
+1.0,
+1.0,
+0.0,
+0.0
+]
+},
+"z": {
+"offset": [
+170.75577082384842,
+115.23941674993605
+],
+"angle": 29.68945687194487,
+"prm": [
+1.2088982365387,
+2.999997718535307,
+-1.8163304608823103,
+-4.870849249004876
+]
+}
+},
+"ini": {
+"a": {
+"glyph": "a.mod.ini",
+"dx": -12.5,
+"dist_u": 0.0
+},
+"b": {
+"glyph": "b.lop.ini",
+"dx": 0.5,
+"dist_u": 3.0919486058414836
+},
+"c": {
+"glyph": "c.mod.ini",
+"dx": -13.0,
+"dist_u": 0.0
+},
+"d": {
+"glyph": "d.mod.ini",
+"dx": -13.5,
+"dist_u": 0.0
+},
+"e": {
+"glyph": "e.ful.ini",
+"dx": 10.25,
+"dist_u": 1.208944599801849
+},
+"f": {
+"glyph": "f.mrr.ini",
+"dx": 0.25,
+"dist_u": 6.752478395750305
+},
+"g": {
+"glyph": "g.jmc.ini",
+"dx": -13.0,
+"dist_u": 0.0
+},
+"h": {
+"glyph": "h.lop.ini",
+"dx": -0.25,
+"dist_u": 3.6545941738089316
+},
+"i": {
+"glyph": "i.mod.ini",
+"dx": -24.25,
+"dist_u": 0.0
+},
+"j": {
+"glyph": "j.jmc.ini",
+"dx": -0.25,
+"dist_u": 0.0
+},
+"k": {
+"glyph": "k.lop.ini",
+"dx": 0.0,
+"dist_u": 1.4668867617125445
+},
+"l": {
+"glyph": "l.lop.ini",
+"dx": 0.25,
+"dist_u": 3.2893922083355385
+},
+"m": {
+"glyph": "m.cnt.ini",
+"dx": -0.5,
+"dist_u": 0.1452429595125487
+},
+"n": {
+"glyph": "n.cnt.ini",
+"dx": -1.5,
+"dist_u": 0.2034618963029165
+},
+"o": {
+"glyph": "o.mod.ini",
+"dx": -13.5,
+"dist_u": 0.0
+},
+"p": {
+"glyph": "p.jmc.ini",
+"dx": -18.75,
+"dist_u": 0.0
+},
+"q": {
+"glyph": "q.mrr.ini",
+"dx": -11.5,
+"dist_u": 0.0
+},
+"r": {
+"glyph": "r.ful.ini",
+"dx": -1.0,
+"dist_u": 2.7454635038678057
+},
+"s": {
+"glyph": "s.ful.ini",
+"dx": 0.0,
+"dist_u": 3.326984192142116
+},
+"t": {
+"glyph": "t.mod.ini",
+"dx": -0.25,
+"dist_u": 0.0
+},
+"u": {
+"glyph": "u.mod.ini",
+"dx": -23.75,
+"dist_u": 0.0
+},
+"v": {
+"glyph": "v.cnt.ini",
+"dx": -0.25,
+"dist_u": 0.17465150173561536
+},
+"w": {
+"glyph": "w.ful.ini",
+"dx": -25.5,
+"dist_u": 0.0
+},
+"x": {
+"glyph": "x.ful.ini",
+"dx": -0.5,
+"dist_u": 0.0
+},
+"y": {
+"glyph": "y.jmc.ini",
+"dx": -25.0,
+"dist_u": 0.0
+},
+"z": {
+"glyph": "z.cnt.ini",
+"dx": -0.25,
+"dist_u": 0.3772883088790731
+}
+},
+"fin": {
+"a": {
+"glyph": "a.mod.fin",
+"dx": 0.25,
+"dist_u": 0.7158398572720243,
+"cls": "low"
+},
+"b": {
+"glyph": "b.lop.fin",
+"dx": 2.25,
+"dist_u": 0.0,
+"cls": "high"
+},
+"c": {
+"glyph": "c.mod.fin",
+"dx": 0.0,
+"dist_u": 0.4274795068689936,
+"cls": "low"
+},
+"d": {
+"glyph": "d.mod.fin",
+"dx": 0.5,
+"dist_u": 1.444771592728278,
+"cls": "low"
+},
+"e": {
+"glyph": "e.ful.fin",
+"dx": -1.25,
+"dist_u": 0.0,
+"cls": "low"
+},
+"f": {
+"glyph": "f.mrr.fin",
+"dx": -0.5,
+"dist_u": 0.0,
+"cls": "low"
+},
+"g": {
+"glyph": "g.jmc.fin",
+"dx": 0.0,
+"dist_u": 2.2978299843658587,
+"cls": "desc"
+},
+"h": {
+"glyph": "h.lop.fin",
+"dx": 0.0,
+"dist_u": 1.0687922106162604,
+"cls": "low"
+},
+"i": {
+"glyph": "i.mod.fin",
+"dx": 0.5,
+"dist_u": 1.6172255921554832,
+"cls": "low"
+},
+"j": {
+"glyph": "j.jmc.fin",
+"dx": -0.25,
+"dist_u": 2.193752149556024,
+"cls": "desc"
+},
+"k": {
+"glyph": "k.lop.fin",
+"dx": 0.5,
+"dist_u": 2.069541932288555,
+"cls": "low"
+},
+"l": {
+"glyph": "l.lop.fin",
+"dx": -2.5,
+"dist_u": 8.910132591850244,
+"cls": "low"
+},
+"m": {
+"glyph": "m.cnt.fin_n_",
+"dx": -0.5,
+"dist_u": 0.9934521895494898,
+"cls": "low"
+},
+"n": {
+"glyph": "n.cnt.fin_n_",
+"dx": -1.5,
+"dist_u": 1.0252586372311383,
+"cls": "low"
+},
+"o": {
+"glyph": "o.mod.fin",
+"dx": -0.5,
+"dist_u": 0.0,
+"cls": "high"
+},
+"p": {
+"glyph": "p.jmc.fin",
+"dx": 1.75,
+"dist_u": 0.0,
+"cls": "low"
+},
+"q": {
+"glyph": "q.mrr.fin",
+"dx": 0.75,
+"dist_u": 1.057607963821677,
+"cls": "low"
+},
+"r": {
+"glyph": "r.ful.fin",
+"dx": -1.0,
+"dist_u": 1.9849289074671896,
+"cls": "low"
+},
+"s": {
+"glyph": "s.ful.fin",
+"dx": -0.25,
+"dist_u": 0.0,
+"cls": "low"
+},
+"t": {
+"glyph": "t.mod.fin",
+"dx": -2.25,
+"dist_u": 6.334160275886665,
+"cls": "low"
+},
+"u": {
+"glyph": "u.mod.fin",
+"dx": 1.0,
+"dist_u": 1.1606402211525022,
+"cls": "low"
+},
+"v": {
+"glyph": "v.cnt.fin_n_",
+"dx": -0.5,
+"dist_u": 0.0,
+"cls": "high"
+},
+"w": {
+"glyph": "w.ful.fin",
+"dx": -0.25,
+"dist_u": 0.0,
+"cls": "high"
+},
+"x": {
+"glyph": "x.ful.fin",
+"dx": -0.5,
+"dist_u": 0.24353176444707872,
+"cls": "low"
+},
+"y": {
+"glyph": "y.jmc.fin",
+"dx": 0.25,
+"dist_u": 3.5498438964041004,
+"cls": "desc"
+},
+"z": {
+"glyph": "z.cnt.fin",
+"dx": -1.0,
+"dist_u": 1.8221238664228863,
+"cls": "low"
+}
+}
+},
+"vlead_exit": {
+"pt": [
+514.775026338196,
+4.238288729498176
+],
+"T": [
+0.9689131711039537,
+0.2474010243739514
+],
+"k": 0.01412784576143305,
+"kind": "smooth",
+"junction": [
+491.82153259077296,
+0.6071338550073915
+],
+"s_junction": 2557.0807521012944,
+"s_cut": 2580.419672661624,
+"walk": {
+"far_s": 2577.4666818501796,
+"walked_fu": 2.952990811444579,
+"dj": 1.4802979185086445,
+"reached": true
+}
+},
+"tail_e": {
+"long": {
+"offset": [
+351.78345779682604,
+3.1288366537940675
+],
+"angle": 44.075778673388,
+"prm": [
+0.22803072010499295,
+1.7782662744312783,
+0.0010814103948844087,
+-1.4541717014686906
+]
+},
+"short": {
+"offset": [
+278.37408446187123,
+-54.03618180577344
+],
+"angle": 32.69414941554824,
+"prm": [
+0.3049857877253111,
+1.6911463460446372,
+-1.7281419838251582,
+0.0006207260218805487
+]
+}
+},
+"tail_e_mode": "long",
+"evar_start": {
+"o": [
+359.8271021236005,
+0.5,
+0.5,
+0.0,
+0.0,
+0.0038309765360452644
+],
+"g": [
+299.86168169888043,
+0.5,
+0.5,
+0.0,
+0.0,
+-0.005319726356637312
+]
+},
+"evar_target": {
+"o": [
+[
+[
+85.89291178484572,
+237.23153196417783
+],
+[
+96.77171594193118,
+236.95641264559305
+],
+[
+113.24238086902156,
+237.22061540077422
+],
+[
+156.89844500883504,
+251.45753022098248
+]
+],
+[
+[
+156.89844500883504,
+251.45753022098248
+],
+[
+178.05687369171775,
+258.3576196546732
+],
+[
+202.0147594961021,
+267.3703063346391
+],
+[
+225.01410974848272,
+277.03974389328107
+]
+],
+[
+[
+225.01410974848272,
+277.03974389328107
+],
+[
+290.28522244494957,
+304.4811690499
+],
+[
+316.367172647743,
+323.98173585849764
+],
+[
+321.37252147212405,
+327.82602972643303
+]
+],
+[
+[
+321.37252147212405,
+327.82602972643303
+],
+[
+336.3041570760548,
+339.2940806464477
+],
+[
+340.9421006982243,
+347.58464130997874
+],
+[
+344.65657289799424,
+355.2787431294411
+]
+],
+[
+[
+344.6565728979943,
+355.2787431294412
+],
+[
+346.0606381802774,
+358.18710282687755
+],
+[
+347.36384070342626,
+361.0746288768882
+],
+[
+348.5612673647344,
+363.93889955409867
+]
+],
+[
+[
+348.5612673647344,
+363.93889955409867
+],
+[
+372.9037073081054,
+422.1665465528586
+],
+[
+356.5148157744303,
+477.91726272830357
+],
+[
+306.0168218668662,
+497.5756934977404
+]
+],
+[
+[
+306.0168218668662,
+497.5756934977404
+],
+[
+173.62892910724185,
+549.1131511894384
+],
+[
+38.23427144333555,
+262.4950312173094
+],
+[
+95.55369062100002,
+93.98460900752978
+]
+]
+],
+"g": [
+[
+[
+82.83836763297951,
+159.905311045644
+],
+[
+103.03091206889599,
+173.50534542181285
+],
+[
+130.55312646518516,
+186.33985194409945
+],
+[
+184.23148720144863,
+216.30413255050235
+]
+],
+[
+[
+184.23148720144863,
+216.30413255050235
+],
+[
+195.1431628695338,
+222.39523718037378
+],
+[
+206.55945454611776,
+228.8725286729148
+],
+[
+217.83998902529757,
+235.455120858241
+]
+],
+[
+[
+217.83998902529757,
+235.455120858241
+],
+[
+290.34027034844354,
+277.76160785604424
+],
+[
+303.07314488139184,
+292.81358920097557
+],
+[
+312.44192722118487,
+304.8835643860783
+]
+],
+[
+[
+312.44192722118567,
+304.88356438607843
+],
+[
+328.1476388936853,
+325.11752257574364
+],
+[
+340.65825140010065,
+345.0347130845096
+],
+[
+348.5612673647344,
+363.93889955409867
+]
+],
+[
+[
+348.5612673647344,
+363.93889955409867
+],
+[
+372.9037073081054,
+422.1665465528586
+],
+[
+356.5148157744303,
+477.91726272830357
+],
+[
+306.0168218668662,
+497.5756934977404
+]
+],
+[
+[
+306.0168218668662,
+497.5756934977404
+],
+[
+173.62892910724185,
+549.1131511894384
+],
+[
+38.23427144333555,
+262.4950312173094
+],
+[
+95.55369062100002,
+93.98460900752978
+]
+]
+]
+}
+},
+"k990": {
+"note": "K990: starts as J2's k962 settings (work19/template_map_k962.json); the sets the body edits move are re-chosen by work20/dbg/joinfit_k990.py + freeze_k990.py. K962: frozen settings (chosen once by work19/dbg/joinfit_k962.py and freeze_k962.py; never fitted at build time). prm per calibrated set, lead and tail per letter, evar per e variant (J's arc length before the e stroke's highest point, u; C's curvature, 1/u). K990 B1: re-chosen and taken (take_k990.py): lead:b, lead:h, prm:class cnct.ful_n_e, prm:class cnct.ful_n_s, prm:class|R cnct.mrr_f_o|o, prm:cnct.ful_n_f, prm:cnct.ful_o_f, prm:cnct.ful_o_x|x, prm:cnct.mod_o_n, prm:cnct.mod_o_o, prm:low-smooth. K990 B1 look review (10:20): low-smooth kept at J2's set BY LOOK (take_k990.py --keep prm:low-smooth): rule B's set brought ff/fe toward the font (16.55 -> 7.72, 22.55 -> 11.00 u) but put visible knees in ff, fe and the unedited ee (peak 0.0057 -> 0.0230, rough ok -> FAIL); J2's set leaves them smooth arcs above the font.",
+"prm": {
+"cnct.mrr_f_o|o": [
+0.5998912011340699,
+2.6698394788034645,
+-4.089244385500446,
+-14.99999990639273
+],
+"cnct.mod_n_o|d": [
+1.3370305606065034,
+0.3712877548975048,
+2.970695599736806,
+0.25735404718054344
+],
+"cnct.ful_z_e|e": [
+0.6239609169497669,
+0.7433773324006221,
+-1.920421505747488,
+-0.06586706495258804
+],
+"cnct.mod_n_o|c": [
+0.5090220534322021,
+0.3377302698333374,
+0.28233957895301304,
+1.708454959115861
+],
+"cnct.mod_n_o": [
+0.4888848834057815,
+0.6037301040622626,
+4.428389989753698,
+4.318273342691924
+],
+"cnct.mod_n_n": [
+0.35125659113518953,
+0.42562764730316044,
+2.5171603932214666,
+0.9953634717072682
+],
+"cnct.ful_n_r|r": [
+0.3113603461101147,
+0.31188365470750673,
+9.532605868974176,
+-0.7196847352046055
+],
+"cnct.ful_n_e": [
+0.6678726512800803,
+1.6830965763440395,
+-0.778111777471596,
+-2.2862323196178567
+],
+"cnct.mod_n_o|q": [
+1.2026009887301954,
+0.4026319784486371,
+4.585811910029976,
+0.07065712409342763
+],
+"cnct.ful_z_n": [
+0.4543499404664556,
+0.6213908046818961,
+-1.7624968133080763,
+3.2852945689820627
+],
+"cnct.ful_e_o": [
+0.9157960198667194,
+0.3823293155111626,
+2.806221505523556,
+-4.46963684142514
+],
+"cnct.ful_g_e|e": [
+0.7788949668126577,
+0.48248536955487575,
+10.3569167038663,
+0.5188812275085025
+],
+"cnct.ful_e_r": [
+0.5013317184492511,
+0.6982155181838698,
+6.838664034458478,
+5.244413590808319
+],
+"low-cusp": [
+0.6818311411649505,
+0.4251972031048048,
+3.1336457386829153,
+-3.2652302497486847
+],
+"cnct.ful_n_s": [
+0.314754499608108,
+1.0306157266364933,
+0.5924332890881827,
+0.4147216629199401
+],
+"cnct.cnt_b_n": [
+1.5382890387938812,
+0.683713270128621,
+-0.06355212433586269,
+0.9042860180666983
+],
+"cnct.mod_c_n": [
+1.1162848578778768,
+0.3541280641042185,
+0.012412152292106871,
+1.6831685488817545
+],
+"cnct.jmc_g_n": [
+0.4158806673456241,
+0.3142227012209986,
+5.857506181292626,
+-2.149868772606154
+],
+"cnct.ful_c_e|e": [
+1.7042360031491341,
+0.449775396796327,
+-2.1963496552778476,
+0.8415495692322982
+],
+"cnct.ful_e_s|s": [
+0.49175472614709237,
+0.8114073718725213,
+5.060791446635045,
+2.884818722466684
+],
+"cnct.ful_b_o": [
+0.6021688836820788,
+0.7142744559320098,
+0.10791439560136135,
+-0.5354998511907161
+],
+"cnct.cnt_n_z": [
+0.5553074059646674,
+1.142724582658122,
+2.124090097078403,
+0.5898816895024155
+],
+"cnct.ful_n_f": [
+0.4359564034478637,
+1.136977504465127,
+2.816644803507329,
+1.0323232054998925
+],
+"cnct.ful_o_f": [
+0.4014534650341406,
+1.3869791208908646,
+0.4813667437670608,
+-9.056086193479183
+],
+"cnct.ful_o_x|x": [
+0.3584459655936535,
+1.9893949612568014,
+-0.015766748418946673,
+-3.852466450025863
+],
+"cnct.mod_o_n": [
+0.30626393287389087,
+1.8635012934627395,
+2.399498697100434,
+-4.695584348620921
+],
+"cnct.mod_o_o": [
+0.6828213248613024,
+0.8603860542480846,
+0.12340000303133952,
+0.5273275636483499
+]
+},
+"lead": {
+"k": [
+0.4414592801064987,
+1.0383937054157868,
+-1.5791506049169062,
+-7.0088762636124295
+],
+"b": [
+0.7222629894741606,
+0.4330087984241356,
+2.373948368817845,
+-4.364800929436953
+],
+"f": [
+1.834847194790072,
+1.795617092277646,
+0.650496881918802,
+2.419411468295262
+],
+"l": [
+0.4326177510194783,
+0.9969567712885055,
+0.27792085896631935,
+-11.058832347652068
+],
+"e": [
+0.5508756598163472,
+1.44417905278616,
+-1.2366504016034106,
+-3.2327488328272436
+],
+"h": [
+0.45432592011218603,
+0.7437217234873035,
+5.229755013183413,
+-2.105435543589211
+]
+},
+"tail": {
+"k": [
+1.0241396445699191,
+0.7531607849408214,
+-2.1190502859731786,
+-2.6200692247966897
+],
+"r": [
+1.0320291505561496,
+0.5717934428952797,
+-2.2824132076966115,
+-4.1091739887713485
+],
+"t": [
+0.36973386954853515,
+1.2625132652385083,
+-1.125694566836855,
+1.8129590208000441
+],
+"m": [
+1.0593573395076803,
+0.9457846121854898,
+-2.2516605471953866,
+1.767836487267727
+],
+"d": [
+1.1384373206287293,
+0.8507147672966558,
+-2.8312058391815675,
+1.054201447994913
+],
+"n": [
+1.6821303999079142,
+1.1473021420892984,
+-6.397260969014049,
+1.2316866968430813
+]
+},
+"evar": {
+"o": {
+"sJ_before_top_u": 48.04678025932995,
+"prm": [
+0.49251144540506164,
+0.4956701252122909,
+0.46430941073702575,
+0.10513788752106301
+],
+"kC_u": 0.02153475997363574
+},
+"g": {
+"sJ_before_top_u": 62.06069319911408,
+"prm": [
+0.5350131691981462,
+0.5167366585125984,
+0.1297514857024176,
+0.07562097336294331
+],
+"kC_u": -0.021584430755412623
+}
+},
+"s_top_j1_fu": 559.7233633977609
+}
+}

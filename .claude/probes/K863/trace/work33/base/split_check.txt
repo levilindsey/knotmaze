@@ -1,0 +1,123 @@
+K925 eye check (K970: every letter each label has): J2, B1. Per split and pass: max |dk/ds| in the window (+-30 u) over one fixed scale for every letter and build, 200 /Mfu^2 (v5's median over the alphabet of its letters' p90 |dk/ds| away from splits, cusps and the ends, 197.5, rounded; flag > 3); in brackets K916's ratio, over the letter's own p90 (a cusp inflated it: a 1524, 619). Extra sign changes as K916. Per cusp: the passes' separation over the 10 u before it, the hook (max |k| within 4 u / the letter's p90 |k|), and per side on the body its approach: max |dk/ds| from 4 to 30 u off the cusp over the same scale (flag > 3) and the visible lobes' signs out to 70 u, away from the cusp.
+alphabet medians of the letters' p90 |dk/ds| (/Mfu^2): J2 108.7, B1 96.9
+J2: split passes 52, over 3: 0 (K916's own scale: 3), with extra sign changes 16; cusp sides 53, over 3: 0
+B1: split passes 53, over 3: 0 (K916's own scale: 2), with extra sign changes 16; cusp sides 50, over 3: 0
+J2 over 3: none
+B1 over 3: none
+J2, flags the new scale adds: none | drops: p@619 (107 u) pass 1 8.98 -> 2.16; p@3562 (4 u) pass 2 3.01 -> 0.72; r@669 (111 u) pass 1 3.05 -> 2.88
+B1, flags the new scale adds: none | drops: p@619 (107 u) pass 1 8.98 -> 2.16; r@669 (111 u) pass 1 3.05 -> 2.88
+
+
+a split a@352 y 50 u pass 1: J2 0.33 (1.37; extra 0) | B1 0.41 (2.09; extra 0)
+a split a@2325 y 63 u pass 1: J2 0.15 (0.63; extra 0) | B1 0.15 (0.78; extra 0)
+a split a@2325 y 63 u pass 2: J2 0.32 (1.31; extra 1) | B1 0.32 (1.62; extra 1)
+a cusp (556,502) y 121 u: J2 hook 0.00, end, after 0.53 + | B1 hook 0.23, end, after 0.02 +
+a cusp (558,501) y 120 u: J2 hook 0.04, sep 0.04 u, before 0.09 +; after 0.19 0 | B1 hook 0.23, end, after 0.02 +
+a: p90 |dk/ds| J2 48.41, B1 39.03 /Mfu^2; p90 |k| J2 6.48, B1 6.44 /kfu
+b split b@3079 y 104 u pass 1: J2 1.03 (2.18; extra 0) | B1 1.03 (2.18; extra 0)
+b cusp (511,509) y 122 u: J2 hook 0.34, sep 0.34 u, before 1.03 +; after 1.91 + | B1 hook 0.34, sep 0.34 u, before 1.03 +; after 1.91 +
+b: p90 |dk/ds| J2 94.64, B1 94.64 /Mfu^2; p90 |k| J2 8.64, B1 8.64 /kfu
+c split c@443 y 72 u pass 1: J2 0.09 (0.70; extra 0) | B1 0.09 (0.70; extra 0)
+c cusp (512,441) y 106 u: J2 hook 0.68, end, after 0.12 + | B1 hook 0.68, end, after 0.12 +
+c: p90 |dk/ds| J2 25.26, B1 25.26 /Mfu^2; p90 |k| J2 6.67, B1 6.67 /kfu
+d split d@444 y 72 u pass 1: J2 0.08 (0.72; extra 0) | B1 0.08 (0.72; extra 0)
+d split d@2222 y 63 u pass 1: J2 0.20 (1.70; extra 0) | B1 0.20 (1.70; extra 0)
+d split d@2222 y 63 u pass 2: J2 0.29 (2.49; extra 2) | B1 0.29 (2.49; extra 2)
+d cusp (537,462) y 111 u: J2 hook 0.39, end, after 0.06 + | B1 hook 0.39, end, after 0.06 +
+d cusp (720,1001) y 240 u: J2 hook 0.06, sep 0.14 u, before 0.02 0; after 0.13 0 | B1 hook 0.06, sep 0.14 u, before 0.02 0; after 0.13 0
+d: p90 |dk/ds| J2 23.45, B1 23.45 /Mfu^2; p90 |k| J2 6.85, B1 6.85 /kfu
+e: p90 |dk/ds| J2 73.45, B1 73.45 /Mfu^2; p90 |k| J2 11.12, B1 11.12 /kfu
+f split f@473 y 67 u pass 1: J2 0.01 (0.01; extra 0) | B1 0.01 (0.01; extra 0)
+f split f@473 y 67 u pass 2: J2 0.01 (0.01; extra 0) | B1 0.01 (0.02; extra 0)
+f split f@473 y 67 u pass 3: J2 - | B1 0.19 (0.32; extra 0)
+f split f@490 y 70 u pass 1: J2 0.01 (0.01; extra 0) | B1 0.01 (0.01; extra 0)
+f split f@490 y 70 u pass 2: J2 0.01 (0.01; extra 0) | B1 0.01 (0.02; extra 0)
+f: p90 |dk/ds| J2 154.38, B1 117.97 /Mfu^2; p90 |k| J2 13.46, B1 12.78 /kfu
+g split g@445 y 72 u pass 1: J2 0.10 (0.40; extra 0) | B1 0.13 (0.53; extra 0)
+g split g@2332 y 62 u pass 1: J2 0.15 (0.61; extra 0) | B1 0.15 (0.61; extra 0)
+g split g@2332 y 62 u pass 2: J2 0.00 (0.01; extra 0) | B1 0.00 (0.01; extra 0)
+g cusp (565,506) y 121 u: J2 hook 0.00, end, after 1.13 + | B1 hook 0.16, end, after 0.02 +
+g cusp (561,509) y 122 u: J2 hook 0.03, sep 0.26 u, before 0.03 +; after 0.04 0 | B1 hook 0.16, end, after 0.02 +
+g: p90 |dk/ds| J2 50.69, B1 49.45 /Mfu^2; p90 |k| J2 9.23, B1 9.24 /kfu
+h split h@2205 y 50 u pass 1: J2 0.04 (0.06; extra 0) | B1 0.04 (0.06; extra 0)
+h split h@2205 y 50 u pass 2: J2 0.26 (0.39; extra 0) | B1 0.26 (0.39; extra 0)
+h cusp (65,-7) y -2 u: J2 hook 0.07, sep 0.14 u, before 0.15 -; after 1.36 +- | B1 hook 0.07, sep 0.14 u, before 0.15 -; after 1.36 +-
+h: p90 |dk/ds| J2 134.14, B1 134.14 /Mfu^2; p90 |k| J2 12.31, B1 12.31 /kfu
+i split i@624 y 108 u pass 1: J2 0.64 (0.74; extra 1) | B1 0.64 (0.74; extra 1)
+i cusp (246,509) y 122 u: J2 hook 0.09, end, after 0.30 + | B1 hook 0.09, end, after 0.30 +
+i: p90 |dk/ds| J2 172.55, B1 172.55 /Mfu^2; p90 |k| J2 18.20, B1 18.20 /kfu
+j split j@638 y 111 u pass 1: J2 0.51 (1.56; extra 0) | B1 0.51 (1.56; extra 0)
+j cusp (247,509) y 122 u: J2 hook 0.50, end, after 0.46 + | B1 hook 0.50, end, after 0.46 +
+j: p90 |dk/ds| J2 66.01, B1 66.01 /Mfu^2; p90 |k| J2 11.11, B1 11.11 /kfu
+k split k@2136 y 68 u pass 1: J2 1.62 (1.84; extra 2) | B1 1.62 (2.71; extra 2)
+k split k@2136 y 68 u pass 2: J2 0.54 (0.62; extra 0) | B1 0.54 (0.91; extra 0)
+k cusp (65,-7) y -2 u: J2 hook 0.19, sep 0.07 u, before 0.24 -; after 0.24 +- | B1 hook 0.22, sep 0.07 u, before 0.24 -; after 0.24 +-
+k: p90 |dk/ds| J2 175.58, B1 119.29 /Mfu^2; p90 |k| J2 13.37, B1 11.82 /kfu
+l: p90 |dk/ds| J2 73.40, B1 73.40 /Mfu^2; p90 |k| J2 11.07, B1 11.07 /kfu
+m split m@1025 y 51 u pass 1: J2 0.19 (0.33; extra 2) | B1 0.19 (0.33; extra 2)
+m split m@1025 y 51 u pass 2: J2 0.28 (0.47; extra 0) | B1 0.28 (0.47; extra 0)
+m split m@2289 y 54 u pass 1: J2 0.74 (1.25; extra 0) | B1 0.74 (1.25; extra 0)
+m split m@2289 y 54 u pass 2: J2 0.14 (0.23; extra 0) | B1 0.14 (0.23; extra 0)
+m cusp (61,-7) y -2 u: J2 hook 0.06, sep 0.14 u, before 0.15 -; after 0.28 +- | B1 hook 0.06, sep 0.14 u, before 0.15 -; after 0.28 +-
+m cusp (409,-4) y -1 u: J2 hook 0.01, sep 0.12 u, before 0.17 0; after 0.08 - | B1 hook 0.01, sep 0.12 u, before 0.17 0; after 0.08 -
+m: p90 |dk/ds| J2 118.57, B1 118.57 /Mfu^2; p90 |k| J2 14.02, B1 14.02 /kfu
+n split n@1027 y 51 u pass 1: J2 0.30 (0.41; extra 2) | B1 0.30 (0.41; extra 2)
+n split n@1027 y 51 u pass 2: J2 0.63 (0.86; extra 0) | B1 0.63 (0.86; extra 0)
+n cusp (61,-7) y -2 u: J2 hook 0.12, sep 0.07 u, before 0.34 -; after 0.88 +- | B1 hook 0.12, sep 0.07 u, before 0.34 -; after 0.88 +-
+n: p90 |dk/ds| J2 146.67, B1 146.67 /Mfu^2; p90 |k| J2 17.72, B1 17.72 /kfu
+o split o@372 y 55 u pass 1: J2 0.11 (0.08; extra 0) | B1 0.11 (0.33; extra 0)
+o cusp (504,441) y 106 u: J2 hook 0.57, end, after 0.15 + | B1 hook 0.63, end, after 0.15 +
+o: p90 |dk/ds| J2 274.63, B1 65.23 /Mfu^2; p90 |k| J2 7.31, B1 6.61 /kfu
+p split p@619 y 107 u pass 1: J2 2.16 (8.98*; extra 1) | B1 2.16 (8.98*; extra 1)
+p split p@980 y 58 u pass 1: J2 0.09 (0.37; extra 1) | B1 0.09 (0.37; extra 1)
+p split p@980 y 58 u pass 2: J2 0.17 (0.73; extra 0) | B1 0.17 (0.73; extra 0)
+p split p@3562 y 4 u pass 1: J2 0.05 (0.22; extra 0) | B1 0.05 (0.22; extra 0)
+p split p@3562 y 4 u pass 2: J2 0.72 (3.01*; extra 2) | B1 0.63 (2.64; extra 2)
+p cusp (254,507) y 122 u: J2 hook 1.87, end, after 1.41 +- | B1 hook 1.87, end, after 1.41 +-
+p cusp (-89,-499) y -120 u: J2 hook 0.04, sep 0.12 u, before 0.02 0; after 0.07 0 | B1 hook 0.04, sep 0.12 u, before 0.02 0; after 0.07 0
+p cusp (94,41) y 10 u: J2 hook 0.11, sep 0.20 u, before 0.23 -; after 0.23 +- | B1 hook 0.11, sep 0.20 u, before 0.23 -; after 0.23 +-
+p: p90 |dk/ds| J2 48.08, B1 48.07 /Mfu^2; p90 |k| J2 8.48, B1 8.48 /kfu
+q split q@355 y 51 u pass 1: J2 0.25 (0.18; extra 0) | B1 0.15 (0.10; extra 0)
+q split q@2340 y 63 u pass 1: J2 0.29 (0.20; extra 0) | B1 0.29 (0.20; extra 0)
+q split q@2340 y 63 u pass 2: J2 0.01 (0.01; extra 0) | B1 0.01 (0.01; extra 0)
+q cusp (566,506) y 121 u: J2 hook 0.28, end, after 0.99 ++ | B1 hook 0.13, end, after 0.01 +
+q cusp (564,509) y 122 u: J2 hook 0.09, sep 0.17 u, before 0.43 -+; after 0.16 + | B1 hook 0.13, end, after 0.01 +
+q: p90 |dk/ds| J2 285.92, B1 290.61 /Mfu^2; p90 |k| J2 14.88, B1 15.13 /kfu
+r split r@669 y 111 u pass 1: J2 2.88 (3.05*; extra 1) | B1 2.88 (3.05*; extra 1)
+r cusp (241,538) y 129 u: J2 hook 0.43, end, after 2.88 +- | B1 hook 0.43, end, after 2.88 +-
+r: p90 |dk/ds| J2 188.99, B1 188.99 /Mfu^2; p90 |k| J2 17.58, B1 17.58 /kfu
+s split s@703 y 117 u pass 1: J2 0.45 (0.76; extra 1) | B1 0.45 (0.76; extra 1)
+s split s@1322 y 4 u pass 1: J2 0.29 (0.49; extra 0) | B1 0.29 (0.49; extra 0)
+s split s@1322 y 4 u pass 2: J2 1.11 (1.88; extra 2) | B1 1.11 (1.88; extra 2)
+s cusp (306,531) y 127 u: J2 hook 0.74, end, after 0.45 + | B1 hook 0.74, end, after 0.45 +
+s cusp (62,39) y 9 u: J2 hook 0.11, sep 0.17 u, before 0.22 -; after 0.22 +- | B1 hook 0.11, sep 0.17 u, before 0.22 -; after 0.22 +-
+s: p90 |dk/ds| J2 118.30, B1 118.30 /Mfu^2; p90 |k| J2 8.55, B1 8.55 /kfu
+t split t@606 y 102 u pass 1: J2 0.12 (0.24; extra 0) | B1 0.12 (0.24; extra 0)
+t cusp (331,723) y 173 u: J2 hook 1.06, end, after 1.22 +- | B1 hook 1.06, end, after 1.22 +-
+t: p90 |dk/ds| J2 99.11, B1 99.11 /Mfu^2; p90 |k| J2 13.89, B1 13.89 /kfu
+u split u@547 y 90 u pass 1: J2 0.28 (0.63; extra 0) | B1 0.28 (0.63; extra 0)
+u split u@1724 y 71 u pass 1: J2 0.31 (0.71; extra 0) | B1 0.31 (0.71; extra 0)
+u split u@1724 y 71 u pass 2: J2 0.20 (0.46; extra 2) | B1 0.20 (0.46; extra 2)
+u cusp (249,509) y 122 u: J2 hook 0.19, end, after 0.28 +- | B1 hook 0.19, end, after 0.28 +-
+u cusp (603,512) y 123 u: J2 hook 0.07, sep 0.09 u, before 0.31 -+; after 0.24 +- | B1 hook 0.07, sep 0.09 u, before 0.31 -+; after 0.24 +-
+u: p90 |dk/ds| J2 88.49, B1 88.49 /Mfu^2; p90 |k| J2 17.20, B1 17.20 /kfu
+v split v@1883 y 104 u pass 1: J2 1.51 (2.13; extra 1) | B1 1.51 (2.13; extra 1)
+v cusp (499,509) y 122 u: J2 hook 0.32, sep 0.25 u, before 1.48 -+; after 1.86 + | B1 hook 0.32, sep 0.25 u, before 1.48 -+; after 1.86 +
+v: p90 |dk/ds| J2 141.74, B1 141.74 /Mfu^2; p90 |k| J2 12.83, B1 12.83 /kfu
+w split w@618 y 107 u pass 1: J2 1.73 (2.41; extra 1) | B1 1.73 (2.41; extra 1)
+w split w@1563 y 39 u pass 1: J2 0.10 (0.14; extra 0) | B1 0.10 (0.14; extra 0)
+w split w@1563 y 39 u pass 2: J2 0.55 (0.77; extra 0) | B1 0.55 (0.77; extra 0)
+w split w@3113 y 107 u pass 1: J2 2.13 (2.97; extra 0) | B1 2.13 (2.97; extra 0)
+w cusp (251,508) y 122 u: J2 hook 1.14, end, after 1.38 +- | B1 hook 1.14, end, after 1.38 +-
+w cusp (553,504) y 121 u: J2 hook 0.19, sep 0.17 u, before 0.29 -+; after 0.29 + | B1 hook 0.19, sep 0.17 u, before 0.29 -+; after 0.29 +
+w cusp (784,509) y 122 u: J2 hook 0.40, sep 0.30 u, before 1.17 -+; after 2.13 + | B1 hook 0.40, sep 0.30 u, before 1.17 -+; after 2.13 +
+w: p90 |dk/ds| J2 143.17, B1 143.17 /Mfu^2; p90 |k| J2 12.45, B1 12.45 /kfu
+x: p90 |dk/ds| J2 215.70, B1 215.70 /Mfu^2; p90 |k| J2 15.29, B1 15.29 /kfu
+y split y@637 y 111 u pass 1: J2 0.24 (0.69; extra 1) | B1 0.24 (0.69; extra 1)
+y split y@1715 y 70 u pass 1: J2 0.24 (0.69; extra 0) | B1 0.24 (0.69; extra 0)
+y split y@1715 y 70 u pass 2: J2 0.14 (0.39; extra 0) | B1 0.14 (0.39; extra 0)
+y cusp (249,509) y 122 u: J2 hook 0.25, end, after 0.24 +- | B1 hook 0.25, end, after 0.24 +-
+y cusp (591,509) y 122 u: J2 hook 0.00, sep 0.01 u, before 0.25 +; after 0.15 0 | B1 hook 0.00, sep 0.01 u, before 0.25 +; after 0.15 0
+y: p90 |dk/ds| J2 69.39, B1 69.39 /Mfu^2; p90 |k| J2 10.69, B1 10.69 /kfu
+z cusp (117,132) y 32 u: J2 hook 0.25, sep 6.04 u, before 0.02 -; after 0.76 - | B1 hook 0.25, sep 6.04 u, before 0.02 -; after 0.76 -
+z: p90 |dk/ds| J2 67.75, B1 67.75 /Mfu^2; p90 |k| J2 9.96, B1 9.96 /kfu

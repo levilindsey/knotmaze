@@ -1,0 +1,14 @@
+minimum  J2  149 nodes   B1  149 nodes   comb scale 316 u^2
+bow      J2   49 nodes   B1   50 nodes   comb scale 387 u^2
+woven    J2   83 nodes   B1   88 nodes   comb scale 342 u^2
+boxes    J2   59 nodes   B1   60 nodes   comb scale 393 u^2
+people   J2   84 nodes   B1   86 nodes   comb scale 477 u^2
+hippo    J2   90 nodes   B1   92 nodes   comb scale 490 u^2
+puppy    J2   99 nodes   B1   98 nodes   comb scale 515 u^2
+and      J2   61 nodes   B1   58 nodes   comb scale 369 u^2
+knotmaze J2  143 nodes   B1  142 nodes   comb scale 384 u^2
+cursive  J2  101 nodes   B1  102 nodes   comb scale 347 u^2
+quick brown fox J2  225 nodes   B1  223 nodes   comb scale 334 u^2
+jumps over the lazy dog J2  316 nodes   B1  320 nodes   comb scale 434 u^2
+be we shoe maze huge bye J2  348 nodes   B1  343 nodes   comb scale 428 u^2
+ice jet even J2  144 nodes   B1  144 nodes   comb scale 410 u^2

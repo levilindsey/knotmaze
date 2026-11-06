@@ -1,0 +1,8 @@
+K925 eye check (K970: every letter each label has): J2, B1. Per split and pass: max |dk/ds| in the window (+-30 u) over one fixed scale for every letter and build, 200 /Mfu^2 (v5's median over the alphabet of its letters' p90 |dk/ds| away from splits, cusps and the ends, 197.5, rounded; flag > 3); in brackets K916's ratio, over the letter's own p90 (a cusp inflated it: a 1524, 619). Extra sign changes as K916. Per cusp: the passes' separation over the 10 u before it, the hook (max |k| within 4 u / the letter's p90 |k|), and per side on the body its approach: max |dk/ds| from 4 to 30 u off the cusp over the same scale (flag > 3) and the visible lobes' signs out to 70 u, away from the cusp.
+alphabet medians of the letters' p90 |dk/ds| (/Mfu^2): J2 108.7, B1 96.9
+J2: split passes 52, over 3: 0 (K916's own scale: 3), with extra sign changes 16; cusp sides 53, over 3: 0
+B1: split passes 53, over 3: 0 (K916's own scale: 2), with extra sign changes 16; cusp sides 50, over 3: 0
+J2 over 3: none
+B1 over 3: none
+J2, flags the new scale adds: none | drops: p@619 (107 u) pass 1 8.98 -> 2.16; p@3562 (4 u) pass 2 3.01 -> 0.72; r@669 (111 u) pass 1 3.05 -> 2.88
+B1, flags the new scale adds: none | drops: p@619 (107 u) pass 1 8.98 -> 2.16; r@669 (111 u) pass 1 3.05 -> 2.88

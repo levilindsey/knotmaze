@@ -1,0 +1,10 @@
+mode: ports (ports work21\ports_k1009.json, variant B); reader: C:\Users\lsl\Repositories\knotmaze\.claude\probes\K863\trace\work23\dbg\asdrawn_k1019.py; template: C:\Users\lsl\Repositories\knotmaze\.claude\probes\K863\trace\out33\cursive_template.svg; tail: long; map: work20\template_map_k990.json; base bodies: work16\fewnode\bodies.json; work: C:\Users\lsl\Repositories\knotmaze\.claude\probes\K863\trace\work33\det\base
+writers: words words_k962, template template_k962; fallback: words_k1009 -> words_k962 (writer missing), template_k1009 -> template_k962 (writer missing)
+as drawn exit 0 3 s
+evar (frozen) exit 0 2 s
+params (frozen) exit 0 0 s
+reference layers exit 0 14 s
+refs: 538 reference elements -> C:\Users\lsl\Repositories\knotmaze\.claude\probes\K863\trace\work33\det\base\template_map_k990.json
+inkscape (template) exit 0
+nodes exit 0 0 s
+words exit 0 57 s
