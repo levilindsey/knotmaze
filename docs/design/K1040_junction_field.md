@@ -23,8 +23,8 @@ step as a WebGL2 prototype (S3). The work since went another way:
   stages 1-7 and K1000 patched the pops one class at a time, and every
   census found new ones (K1041 lists the switches K992 left; K1043 a
   33-pixel label band run decided by one pixel under eps). Patching does
-  not converge, and none of it has reached Levi in motion (K1001 waits on
-  that).
+  not converge, and none of it has reached Levi in motion (K1001 waited on
+  that until Levi kept K830's corner rule on 2026-11-05).
 
 The redesign returns to K868's own plan: the label, the borders and the
 corners are a per-pixel function of the frame, evaluated on the GPU,
@@ -45,9 +45,9 @@ code.
   scene moved it, except where a topology change fades over a stated
   width.
 - The corner's cap is a pure function of the frame, continuous and
-  monotone (K992). Stage 1's b16 arch does not land. Sharp or round
-  where two threads split waits on Levi's look in motion (K1001); sharp
-  or round per corner is K830's (`crs`, builder pins; §2 goal 4).
+  monotone (K992). Stage 1's b16 arch does not land. Sharp or round per
+  corner is K830's (`crs`, builder pins; §2 goal 4), and Levi kept that
+  rule on 2026-11-05 (K1001): a split, a narrow point, stays sharp.
 - The overlap gate's width (0.05h) is a look call: keep it a parameter.
 - New looks stay behind a flag until Levi accepts them on screen.
   Pre-launch there is no back-compat (CLAUDE.md).
@@ -215,8 +215,8 @@ Stage agent, claude session bf876705 (agent a377492c). Times are
 | 4 | Missing borders are wrong (an arm that loses its side, a group that swallows a passing thread) | K874/K883 sheet B, K909 B2, K910 | "groups" only within junction spans; "cut" at d − (L + h) on a crossing; exposure is per surface |
 | 5 | G1 rolling-ball corners, not a mitre or a smooth-min blob | K881 sheet E; K868 §3.7 | "fillet": term 3, the arc of radius r centred at h + r from both centrelines, plus its tangent points |
 | 6 | The `cr` slider: r(θ) = (cr/3)·min(2h, 1.5h·tan(θ/2)) | K874/K883 sheet C; sheet F approved (K915, K922) | "radius": the same r(θ), then "fit" shrinks it continuously by the room on the arms |
-| 7 | Sharp or round per corner: `crs`, builder pins win | Levi 10-22; K830 (a89f8203); K868 §2 goal 4 | per-corner input bit, topology-fixed (F3 D7) |
-| 8 | Sharp point where two threads split | K1001: waiting on Levi; b16's arch does not land (K1040 brief) | "fit": r → 0 continuously as the room → 0; the arch is not built; the look stays behind the flag until Levi sees it in motion |
+| 7 | Sharp or round per corner: `crs`, builder pins win | Levi 10-22, kept 11-05 (K1001); K830 (a89f8203); K868 §2 goal 4 | per-corner input bit, topology-fixed (F3 D7) |
+| 8 | Sharp point where two threads split | K1001: Levi 11-05 kept K830's rule (narrow points sharp); b16's arch does not land (K1040 brief) | "fit": r → 0 continuously as the room → 0; the arch is not built; the look stays behind the flag until Levi sees it in motion |
 | 9 | Dead ends: closed hollow caps | Levi 10-22 and 10-25; K868 §3.6 | a dead end is the tube's own semicircular cap, part of its member's outline |
 | 10 | END arms tuck into the through thread | K868 §3.6; K915, K922 (binding) | "end": the END arm extends to c′ on the through's centreline and is capped there; that cap is always buried |
 | 11 | Arms keep the thread width and line up | Levi 10-25 | every member is a chain tube of the same h; the arms are the chains themselves |
@@ -574,7 +574,7 @@ F6 done 22:21. Each verdict is against F2's definition as F7 builds it:
 | Item | What it is | Verdict |
 |---|---|---|
 | K1000 | V's folds and the live/unsolved flips pop (class 1) | **Carried.** A corner is a closed form of the frame (F2 step 4). There is no march, so no live or unsolved state. V is an exposed endpoint whose weight fades with ω (F3 D5, D6). Closes when S4 lands and its census shows no corner pops outside ω's fade. |
-| K1001 | Sharp or round where two threads split; Levi has not seen it in motion | **Still needed:** it is Levi's look call. F2 draws the sharp point: fit takes r to 0 continuously (F1 row 8). A round variant would put a floor on r, which is a new look. Only the route changes: Levi sees it behind S4's flag, not with `lbp`. |
+| K1001 | Sharp or round where two threads split | **Decided** (Levi, 2026-11-05): keep K830's rule, broad gaps round and narrow points sharp. F2 draws the sharp point: fit takes r to 0 continuously (F1 row 8). There is no floor on r (a round variant would be a new look). Levi sees it in motion behind S4's flag with the rest of form B, not with `lbp`. |
 | K1007 (S3a8c) | Window range records, the crossing rows' hypot near test, the p95 spread | **Moot.** All three belong to the FieldModel's per-frame CPU build, which leaves the frame. Its p95 lesson becomes part of S5's gate: no allocation per frame, p95 reported. |
 | K1010 (S3a8d) | The GPU finds the switch lines | **Moot.** Form B has no switch lines. A depth switch is F3 D4's fade, designed in S1 and drawn in S4. |
 | K1015 | passReach steps by h/8, so the reach moves in steps | **Moot.** There is no walk. Depth is depth.ts's closed-form hats per sample, and a cap is a minimum over a fixed candidate set (F3 D3). |
@@ -754,7 +754,7 @@ Gate:
 - check #13 on the Pixel.
 
 Levi's first look in motion is here: behind the flag, on the desktop and the Pixel. The look questions are asked here, each with crops beside the current look:
-- K1001's split corners (sharp, as F2 draws them);
+- the corners, K830's rule (K1001, kept 2026-11-05): splits sharp, as F2 draws them;
 - the fade widths (foldw = σ, capw = h, zt = 0.1·amp, ovw = 0.05h), wherever a fade shows.
 
 Reuses junction_field.ts's record textures as the pattern for the corner table.
@@ -898,7 +898,7 @@ ledger with F6's verdicts.
     never silent.
   - S4b: K1000, K1041, K1043, K972 and K973 (F6); K955 and K956, free
     ends and band ends; K1002, a corner ball against other threads; K1003,
-    a V apex's hairline fan (master shows it too). K1001 is Levi's look in
+    a V apex's hairline fan (master shows it too). K1001's corners (K830's rule, kept) show in
     motion there.
   - S6: K985 (F6, with S3); K993, the census's blind spots. S6's brief
     takes K1037's lessons (F6).

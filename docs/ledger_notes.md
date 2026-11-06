@@ -3883,3 +3883,11 @@ Levi answered K1190's card (asked 2026-11-04; `docs/asks/K1190.md`, deleted in e
 3. The gold path's edge. `t6_ji149_x4_n.png`: round in the top row, a straight line with a corner in the middle and bottom rows.
 4. A small bite. `t6_ji149_x4_n.png`, the two right columns of the middle and bottom rows: a small bite missing from the light at the right edge.
 K1211's looks must fix all four. Claude checks each by name in S1's crops (today, A, B, the colors alone) before the look card, and the card shows them.
+
+## K1001 (2026-11-05, Levi's answer)
+
+The item's text before: Corners, sharp or round: where two threads split, the corner is a sharp point (K1040 F1 row 8: r goes to 0 as the room closes); stage 1's b16 rounded it into a small arch (not landed). Levi sees it in motion at K1040 S4b, behind its flag; there is nothing to look at before then. Levi disliked losing rounding at K1114 (2026-11-03): lean round.
+
+Levi, 2026-11-05 (verbatim): "a while back I said that ideally, in general, some corners between adjacent threads should be rounded while some should be sharp. I think you had a good heuristic for determining when to do one vs the other. Let's keep that."
+
+The earlier words are Levi's of 2026-10-22 (`docs/design/K868_field_border.md`, its 10-22 corners quote). The heuristic is K830's (a89f8203; `## K830` above): round or sharp per corner, builder pins first (`Node.cornerPin`, the glyph spur root and landing pins, carried by `ParticleSystem.fusedJunctionPins`), then the `crs` share's ranking from construction geometry, broad gaps rounding first and narrow points staying sharp, addressed by directed arm pair so settling cannot flip a corner. K1040's form B carries it as each corner's style bit (F1 row 7; F2's r0). At the default share (1) every corner is styled round and the radius does the rest: it grows with the gap's angle and shrinks with the room on the arms, so a split's crotch, a narrow point, closes to the sharp point F2 draws (F1 row 8). So there is no floor on r and b16's arch is not built (the card's "Sharp needs no change"). Levi still sees the corners in motion behind S4b's flag with the rest of form B. K1049 (the inner corner of one thread's bend through a junction, not a corner between two threads) stays open for S4b: this rule does not decide it.

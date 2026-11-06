@@ -133,9 +133,6 @@ Next free ID: K1214.
 - **K636** · K324 s1's two calls (`docs/design/K324_s1.md`, Handoff): (a) hunt pace 0.9 of yours
   restores the greedy player's catches, the fleers within 4-5 points; rec keep (revert: `git revert
   ce95d40`); (b) five panel labels cut to 23 characters; rec keep.
-- **K647** · Path 8 (K336): Reset path during the winning move records the result, shows no banner
-  and, since 4b17c554, no confetti. Rec: show the banner, since the result counts.
-  `docs/design/K336_cannons.md` Handoff.
 - **K655** · K137's slack default: shipped 1 in [0, 1] (greedy makes strict par 30%, careful 89%);
   the brief's half-of-greedy target needs 3 in [0, 4] (48% / 100%). Rec: 3 in [0, 4].
   `docs/design/K137_s1.md` Handoff.
@@ -522,6 +519,9 @@ Next free ID: K1214.
 
 ## Next, in order
 
+- **K647** · Path 8 (K336): Reset path during the winning move records the result but shows no card. Levi
+  2026-11-05: "Show the card", with its burst, as the other eight paths do. Muse batch 22 Run J (22J),
+  `docs/design/K647_reset_win_card.md`.
 Binding for every stage:
 - It merges after desktop verification. The phone checks each merge
   round in one scripted pass (K152); small UI items get unit tests and a
