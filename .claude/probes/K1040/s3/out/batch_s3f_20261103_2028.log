@@ -1,5 +1,0 @@
-20:28:35 run (ready check: no touch for 120 s): --fit 411x753 --label s3fnew --b2b --mode tentv --lean --state host
-20:28:38   20:28:38 phone state check: ready=False awake=False locked=True top=?
-20:28:38   20:28:38 phone not ready: the screen is off
-20:28:38   phone not ready: stopping
-20:28:38 STOP: run_phone exit 2

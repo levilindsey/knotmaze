@@ -1,7 +1,0 @@
-site 1106,1411 -> (9.37430, 19.52944); h 0.2100 sigma 0.6597 K 4.310344827586206 aa 0.00736 W 0.0798
-candidates: c30 s 45.158 d 0.1935; c11 s -0.152 d 0.2103
-pieces fade 0:
-  c30 s 45.158 d 0.1935 z -0.0926 key -0.1375 g 27 ramp 0.504 surf 27 selfW 1.000 alts 
-  c11 s -0.152 d 0.2103 z 0.0000 key -0.0488 g 27 ramp 1.000 surf 27 selfW 1.000 alts 
-evalPoint top 27 chain 11 s -0.1523 key -0.0488 ink 1.000 fade 0 nSurf 1 dkey Infinity
-labelAt: {"word":15062815,"key":-0.13753609177047021,"chain":30,"s":45.1575903999657,"code":28,"fill":false}
