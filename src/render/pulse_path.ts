@@ -13,10 +13,11 @@
 // tree reaches through the arrival run - the light runs inward, toward
 // you, so the flow runs one way everywhere (Levi's Q2).
 //
-// S3 added the junction bands; S4 the arms lit from both ends (a cycle
-// arm whose far end the tree reaches by another way, a self-loop: one
-// item each, two-ended) and the bands into every lit arm. Not here: your
-// own junction's lead and dip (S5).
+// S4 added the arms lit from both ends (a cycle arm whose far end the
+// tree reaches by another way, a self-loop: one item each, two-ended).
+// S3's junction band specs went in K1211 S6 (the fan lights from its
+// arms' strips again, as before S3b). Not here: your own junction's
+// lead and dip (S5).
 
 import type { WalkGraph } from "../core/walk_graph";
 
@@ -54,51 +55,10 @@ export interface PulseItem {
   inwardB: boolean;
 }
 
-// K1139 S3a: one pulse band through a lit junction (plan 2.2, T10): the
-// crest leaves the head-side arm `aEdge` and runs on along the far-side
-// arm `bEdge`, on the K81 curve between them (junction_routes.ts turns
-// this into arms and slots). One band per tree child, so a 3-arm
-// junction holds 2 and a 4-arm junction 3. Ahead of you the head-side
-// arm is the tree parent (the light arrives by it and splits into each
-// child); behind you it is the arrival-side arm (each back arm's light
-// gathers into the arm toward you), so the geometry is the same and
-// `inward` alone says which way the crest travels. `distJ` is the
-// junction's drawn distance from you (the child's dist0, quantized as
-// the items are): the band's crest reads dG = distJ + tau, tau signed
-// along the band, negative on the aEdge side. Your own junction gets no
-// band (its hand-off is S5's). S4: every lit arm gets its band, not just
-// the tree children: a cycle arm at each lit end (the far end's band
-// from that end's own parent, its distJ the item's dB) and a self-loop
-// at each lit end. `bAtA` names bEdge's end at the vertex (a loop has
-// both there). S4b: on a two-ended bEdge, gR is its ridge's drawn
-// distance, (dA + dB + span) / 2 (0 on a one-ended arm), and inwardR
-// the other end's direction, so the band's far side reads the arm's own
-// field (kPulseV2): the nearer end's train, faded at the ridge. aEdge is
-// a tree arm, always one-ended. K1203: the B arm's end-window kind
-// rides along (bSpan its drawn span, bCont, bTwo, and bFar, whether the
-// band sits at its far end): a two-ended or cont child carries window 1
-// all along it, and only a one-ended, non-cont child at its near end
-// carries a window that can fall at its free far end (kPulseBandV).
-export interface PulseBandSpec {
-  vertex: string;
-  aEdge: number;
-  bEdge: number;
-  distJ: number;
-  inward: boolean;
-  bAtA: boolean;
-  gR: number;
-  inwardR: boolean;
-  bSpan: number;
-  bCont: boolean;
-  bTwo: boolean;
-  bFar: boolean;
-}
-
 const q3 = (x: number): number => Math.round(x * 1000) / 1000;
 
 // The lit tree from `head` (your junction) out to `reach`: its pulse
-// items in Dijkstra order (your arms first) and, per lit junction the
-// light passes through, its pulse band specs (S3a). `arrival` is the
+// items in Dijkstra order (your arms first). `arrival` is the
 // walk edge you came by (-1 before the first move): it and everything
 // the tree reaches through it are inward. `spanOf(eid)` is an edge's
 // live drawn length. `gate(eid, atA)` may veto a beyond-head arm and
@@ -114,10 +74,9 @@ export function pulseTree(
   spanOf: (eid: number) => number,
   gate?: (eid: number, atA: boolean) => boolean,
   blocked?: (eid: number) => boolean
-): { items: PulseItem[]; bands: PulseBandSpec[] } {
+): { items: PulseItem[] } {
   const items: PulseItem[] = [];
-  const bands: PulseBandSpec[] = [];
-  if (!walk.vertices.has(head)) return { items, bands };
+  if (!walk.vertices.has(head)) return { items };
 
   // Dijkstra over lattice lengths, with litArms' deterministic scan and
   // tie-breaking (smallest distance, then smallest vertex id; a strict
@@ -245,61 +204,10 @@ export function pulseTree(
     }
   }
 
-  // S3a bands: one per tree child at every lit junction past your own.
-  // A tree child is an item whose edge is its far vertex's parent edge.
-  // The head-side arm is the child's tree parent, ahead of you and
-  // behind you alike (see PulseBandSpec). S4 appends the rest after
-  // them (so a junction's tree-child bands keep their slots): each
-  // non-tree arm and self-loop end at its near junction, and a
-  // two-ended arm's far end, from that end's own parent. S4b: a
-  // two-ended arm's bands carry its ridge and the other end's direction.
-  const treeEdges = new Set(parentEdge.values());
-  const band = (
-    vertex: string,
-    eid: number,
-    distJ: number,
-    inward: boolean,
-    bAtA: boolean,
-    gR = 0,
-    inwardR = false
-  ): void => {
-    const child = items.find((i) => i.edge === eid)!;
-    bands.push({
-      vertex,
-      aEdge: parentEdge.get(vertex)!,
-      bEdge: eid,
-      distJ,
-      inward,
-      bAtA,
-      gR,
-      inwardR,
-      bSpan: child.span,
-      bCont: child.cont,
-      bTwo: child.two,
-      bFar: child.near !== vertex,
-    });
-  };
-  for (const it of items) {
-    if (it.near === head || it.parent < 0 || !treeEdges.has(it.edge)) continue;
-    const e = walk.edges[it.edge];
-    if (e.va === e.vb) continue;
-    band(it.near, it.edge, it.dist0, it.inward, it.atA);
-  }
-  for (const it of items) {
-    const e = walk.edges[it.edge];
-    const loop = e.va === e.vb;
-    const gR = it.two ? (it.dist0 + it.dB + it.span) / 2 : 0;
-    if (it.near !== head && (loop || !treeEdges.has(it.edge))) {
-      band(it.near, it.edge, it.dist0, it.inward, it.atA, gR, it.inwardB);
-      if (loop && it.two) band(it.near, it.edge, it.dist0, it.inward, false, gR, it.inwardB);
-    }
-    if (it.two && !loop) band(it.far, it.edge, it.dB, it.inwardB, !it.atA, gR, it.inward);
-  }
-  return { items, bands };
+  return { items };
 }
 
-// The lit tree's pulse items alone (S2's entry point; pulseTree also
-// returns the band specs).
+// The lit tree's pulse items alone (S2's entry point).
 export function pulsePath(
   walk: WalkGraph,
   head: string,

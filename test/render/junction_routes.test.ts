@@ -1,13 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
-  arcTrueTau,
-  assignPulseSlots,
-  bandPairKey,
   edgeArm,
   legRoutes,
   pathLegs,
   pickRoutes,
-  pulseBandRoute,
   routeCorner,
   routeCubic,
   traveledRoutes,
@@ -354,170 +350,11 @@ describe("routeCubic", () => {
   });
 });
 
-describe("pulse bands (K1139 S3a, T10)", () => {
-  it("turns a band spec into the two arms' route at its vertex", () => {
-    // At J1: e0's B end (in from S) into e1's B end (on to J2).
-    expect(pulseBandRoute(E[0], E[1], "J1")).toEqual(
-      route(0, 10, -1, [1, 30, -1])
-    );
-  });
-
-  it("keys an arm pair in either order as one band", () => {
-    const fwd = route(0, 10, -1, [1, 30, -1]);
-    const rev = route(1, 30, -1, [0, 10, -1]);
-    expect(bandPairKey(rev)).toBe(bandPairKey(fwd));
-    expect(bandPairKey(route(0, 10, -1))).not.toBe(bandPairKey(fwd));
-  });
-
-  it("gives pulse bands the free slots when the record is empty", () => {
-    const p = [route(0, 10, -1, [1, 30, -1]), route(0, 10, -1, [5, 12, 1])];
-    const a = assignPulseSlots([], p);
-    expect(a.fallback).toBe(false);
-    expect(a.used).toBe(2);
-    expect(a.slots.map((s) => [s.slot, s.shared])).toEqual([
-      [0, false],
-      [1, false],
-    ]);
-  });
-
-  it("shares the gold band's slot on the same arm pair (either order)", () => {
-    const gold = route(1, 30, -1, [0, 10, -1]); // The same pair, reversed.
-    const p = [route(0, 10, -1, [1, 30, -1]), route(0, 10, -1, [5, 12, 1])];
-    const a = assignPulseSlots([gold], p);
-    expect(a.fallback).toBe(false);
-    expect(a.used).toBe(2);
-    expect(a.slots.map((s) => [s.slot, s.shared])).toEqual([
-      [0, true],
-      [1, false],
-    ]);
-  });
-
-  it("behind you on a 4-arm junction: 3 bands, the gold sharing one", () => {
-    // The path took e0 -> e1 here; the pulse also bands e0 -> e2, e0 -> e5.
-    const gold = route(0, 10, -1, [1, 30, -1]);
-    const p = [
-      route(0, 10, -1, [1, 30, -1]),
-      route(0, 10, -1, [1, 20, 1]),
-      route(0, 10, -1, [5, 12, 1]),
-    ];
-    const a = assignPulseSlots([gold], p);
-    expect(a.fallback).toBe(false);
-    expect(a.used).toBe(3);
-    expect(a.slots.filter((s) => s.shared).length).toBe(1);
-    expect(Math.max(...a.slots.map((s) => s.slot))).toBeLessThan(4);
-  });
-
-  it("falls back to option B, saying so, when the pairs exceed the slots", () => {
-    const existing = [
-      route(0, 10, -1, [1, 30, -1]),
-      route(1, 20, 1, [2, 3, 1]),
-      route(2, 9, -1, [4, 0, 1]),
-    ];
-    const p = [route(0, 10, -1, [5, 12, 1]), route(1, 30, -1, [5, 12, 1])];
-    const a = assignPulseSlots(existing, p);
-    expect(a.fallback).toBe(true);
-    expect(a.slots).toEqual([]);
-    expect(a.used).toBe(3); // The existing bands keep their slots.
-  });
-
-  it("counts a repeated existing pass once, and never shares a one-arm band", () => {
-    const gold = route(0, 10, -1, [1, 30, -1]);
-    const a = assignPulseSlots([gold, route(1, 30, -1, [0, 10, -1])], []);
-    expect(a.used).toBe(1);
-    const one = assignPulseSlots([route(2, 9, -1)], [route(0, 10, -1, [1, 30, -1])]);
-    expect(one.slots[0].shared).toBe(false);
-    expect(one.used).toBe(2);
-  });
-
-  it("keeps every slot within MAX_BAND_SLOTS at a full 4-arm junction", () => {
-    const p = [
-      route(0, 10, -1, [1, 30, -1]),
-      route(0, 10, -1, [1, 20, 1]),
-      route(0, 10, -1, [5, 12, 1]),
-    ];
-    const a = assignPulseSlots([route(4, 8, -1, [5, 12, 1])], p);
-    expect(a.used).toBeLessThanOrEqual(4);
-    for (const s of a.slots) expect(s.slot).toBeLessThan(4);
-  });
-
-});
-
-describe("arcTrueTau (K1139 S3b)", () => {
-  // A 90-degree band as joinery builds it: arm A in along +x from arc
-  // 1.1 to the turn start d, the corner cubic, arm B out along +y.
-  const buildBand = (): number[] => {
-    const d = 0.5;
-    const pts: number[] = [];
-    for (const s of [1.1, 1.0, 0.9, 0.8, 0.7, 0.6]) pts.push(s, 0, -s);
-    routeCubic(d, 0, 1, 0, 0, d, 0, 1, d, 14, pts);
-    for (const s of [0.6, 0.7, 0.8, 0.9, 1.0, 1.1]) pts.push(0, s, s);
-    return pts;
-  };
-  const chords = (pts: number[]): number[] => {
-    const out = [0];
-    for (let i = 1; i < pts.length / 3; i++) {
-      out.push(out[i - 1] + Math.hypot(pts[i * 3] - pts[(i - 1) * 3], pts[i * 3 + 1] - pts[(i - 1) * 3 + 1]));
-    }
-    return out;
-  };
-
-  it("rescales the turn's tau in proportion to its arc at 90 degrees, meeting the arms at +-d", () => {
-    const pts = buildBand();
-    const before = [...pts];
-    const cum = chords(pts);
-    const shifts = arcTrueTau(pts, 0.5);
-    const n = pts.length / 3;
-    const cs = 6, ce = 20; // 6 arm points, then routeCubic's 15, then 6 out
-    const cornerArc = cum[ce] - cum[cs];
-    // The corner's true arc runs 0.7-0.85 of its tau span 2d (the ratio
-    // routeCubic's pin reads); the rescale absorbs it: inside the turn
-    // every tau step is the same multiple of its arc step, so a crest
-    // phased by distJ + tau no longer bunches in the Bezier parameter.
-    expect(cornerArc / (2 * 0.5)).toBeGreaterThan(0.7);
-    expect(cornerArc / (2 * 0.5)).toBeLessThan(0.85);
-    const ratio = (2 * 0.5) / cornerArc;
-    for (let i = cs + 1; i <= ce; i++) {
-      expect(pts[i * 3 + 2] - pts[(i - 1) * 3 + 2]).toBeCloseTo(ratio * (cum[i] - cum[i - 1]), 9);
-      expect(pts[i * 3 + 2]).toBeGreaterThan(pts[(i - 1) * 3 + 2]);
-    }
-    // The ends still meet the arms at +-d, and the arm stretches keep
-    // tau = -+arc (shift 0): sibling bands over one arm carry the same
-    // crest there, and the geometry is routeCubic's, only tau moved.
-    expect(pts[cs * 3 + 2]).toBeCloseTo(-0.5, 9);
-    expect(pts[ce * 3 + 2]).toBeCloseTo(0.5, 9);
-    for (let i = 0; i < n; i++) {
-      expect(pts[i * 3]).toBeCloseTo(before[i * 3], 9);
-      expect(pts[i * 3 + 1]).toBeCloseTo(before[i * 3 + 1], 9);
-      if (i < cs || i > ce) {
-        expect(pts[i * 3 + 2]).toBeCloseTo(before[i * 3 + 2], 9);
-        expect(shifts[i]).toBeCloseTo(0, 9);
-      } else {
-        // |tau| + shift is the tau routeCubic wrote: the strip arc a
-        // shader samples for this point is unchanged.
-        expect(Math.abs(pts[i * 3 + 2]) + shifts[i]).toBeCloseTo(Math.abs(before[i * 3 + 2]), 9);
-      }
-    }
-    expect(shifts[cs]).toBeCloseTo(0, 9);
-    expect(shifts[ce]).toBeCloseTo(0, 9);
-  });
-
-  it("leaves a straight band's tau alone (arc == tau there)", () => {
-    const pts: number[] = [];
-    for (let s = 1.0; s > 0.05; s -= 0.1) pts.push(s, 0, -s);
-    pts.push(0, 0, 0);
-    for (let s = 0.1; s <= 1.0; s += 0.1) pts.push(-s, 0, s);
-    const before = [...pts];
-    const shifts = arcTrueTau(pts, 1.0);
-    for (let i = 0; i < pts.length; i++) expect(pts[i]).toBeCloseTo(before[i], 9);
-    for (const s of shifts) expect(s).toBeCloseTo(0, 9);
-  });
-});
-
-describe("pulse bands (K1139 S3a, T10)", () => {
+describe("a right-angle route's corner (K1139 S3a, T10)", () => {
   it("draws its corner with routeCorner/routeCubic, tau -d..+d", () => {
-    // A right-angle band: the cubic's arc runs long against its tau span
-    // (about 0.79 at 90 deg), the ratio S3b's tau rescale must absorb so
-    // the crest's band speed stays within P3's 10 percent.
+    // A right-angle band: the cubic's arc runs about 0.79 of its tau
+    // span at 90 deg (gold bands read routeCubic's tau as is; S3b's
+    // arc-true rescale for the pulse bands left with them in K1211 S6).
     const d = routeCorner(Math.PI / 2, 0.5, 0.3, 10, 10).d;
     const out: number[] = [];
     routeCubic(0.5, 0, 1, 0, 0, 0.5, 0, 1, d, 64, out);

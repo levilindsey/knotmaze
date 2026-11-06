@@ -22,7 +22,6 @@ import {
   kChain,
   kComposePaint,
   kPaintAt,
-  kPulseBandV,
   kPulseCrest,
   pulseHeadPass,
   setPulseHeadPass,
@@ -1286,36 +1285,6 @@ describe("G2.3 paint mirror vs the retired per-sample pass", () => {
   });
 });
 
-// K1139 S3a: the band crest is the arm crest at dG = distJ + tau: at a
-// band's ends it equals the two arms' own values there (the parent arm
-// carrying through, the child at its junction end), at every clock.
-describe("kPulseBandV (K1139 S3a)", () => {
-  it("meets both arms at the band's ends, inward and outward", () => {
-    for (const clock of [100, 100.31, 100.77, 101.2]) {
-      const U = uniforms({ clock, pulseBorn: 0, spacing: 2.5 });
-      for (const inward of [false, true]) {
-        const distJ = 2.2;
-        const parentSpan = 2.07;
-        for (const tau of [-0.55, -0.2, 0, 0.2, 0.55]) {
-          expect(kPulseBandV(U, distJ, tau, inward)).toBeCloseTo(
-            kPulseV(U, parentSpan + tau, parentSpan + 1.1, inward, false, distJ - parentSpan, true),
-            12
-          );
-        }
-        // The ends exactly: 0.55 along each arm from the joint.
-        expect(kPulseBandV(U, distJ, -0.55, inward)).toBeCloseTo(
-          kPulseV(U, parentSpan - 0.55, parentSpan, inward, false, distJ - parentSpan, true),
-          12
-        );
-        expect(kPulseBandV(U, distJ, 0.55, inward)).toBeCloseTo(
-          kPulseV(U, 0.55, 1.1, inward, false, distJ, true),
-          12
-        );
-      }
-    }
-  });
-});
-
 // K1139 S4 (T6, T7): an arm lit from both ends (a cycle's closing arm, a
 // self-loop) reads the nearer end's field, dG = min(dA + d, dB + span - d),
 // each side in its own end's direction. Away from the ridge (gA = gB) each
@@ -1454,92 +1423,6 @@ describe("kPulseV2 (K1139 S4)", () => {
   });
 });
 
-// K1139 S4b: a band into an arm lit from both ends reads that arm's own
-// field past the joint (kPulseV2), the ridge fade included, so the band
-// meets the ribbon at the band's reach and wherever the ridge falls
-// inside it. The near end's band (own gA: distJ dA, tau d) and the far
-// end's (own gB: distJ dB, tau span - d) alike, each told the other
-// end's direction; gR 0 is S3a's band exactly, and the head-side arm
-// (tau <= 0) never reads gR.
-describe("kPulseBandV on a two-ended arm (K1139 S4b)", () => {
-  // [dA, dB, span]: cyc e210 (its ridge 0.68 from node_218, the B end),
-  // T6's triangle arm (the ridge 0.6 / 0.3 from its ends: inside either
-  // band), a self-loop beyond the head, a long arm, and dB + span < dA
-  // (the ridge before the A end: the whole arm reads B's train).
-  const CASES: Array<[number, number, number]> = [
-    [0, 1.386, 2.746],
-    [1.1, 1.4, 0.9],
-    [1.2, 1.2, 2.8],
-    [0.3, 2.9, 4.4],
-    [2.0, 1.0, 0.8],
-  ];
-  const CLOCKS = [100, 100.31, 100.77, 101.2, 103.05];
-  const DIRS: Array<[boolean, boolean]> = [
-    [false, false],
-    [true, false],
-    [false, true],
-    [true, true],
-  ];
-
-  it("equals the ribbon's kPulseV2 along both ends' bands, crest, quiet and hover", () => {
-    for (const clock of CLOCKS) {
-      const U = uniforms({ clock, pulseBorn: 0, spacing: 2.5 });
-      for (const [dA, dB, span] of CASES) {
-        const gR = (dA + dB + span) / 2;
-        for (const [inwA, inwB] of DIRS) {
-          for (let i = 1; i <= 200; i++) {
-            // (span * 200) / 200 can round past span, where kPulseV2 is 0.
-            const t = Math.min(span, (span * i) / 200);
-            for (const hov of [false, true]) {
-              // The A end's band at tau = t, the B end's at tau = t.
-              expect(kPulseBandV(U, dA, t, inwA, hov, gR, inwB)).toBeCloseTo(
-                kPulseV2(U, t, span, dA, dB, inwA, inwB, hov),
-                12
-              );
-              expect(kPulseBandV(U, dB, t, inwB, hov, gR, inwA)).toBeCloseTo(
-                kPulseV2(U, span - t, span, dA, dB, inwA, inwB, hov),
-                12
-              );
-            }
-            expect(kPulseBandV(U, dA, t, inwA, false, gR, inwB, 0)).toBeCloseTo(
-              kPulseV2(U, t, span, dA, dB, inwA, inwB, false, 0),
-              12
-            );
-            expect(kPulseBandV(U, dB, t, inwB, false, gR, inwA, 0)).toBeCloseTo(
-              kPulseV2(U, span - t, span, dA, dB, inwA, inwB, false, 0),
-              12
-            );
-          }
-          // The head-side arm never reads gR; gR 0 is S3a's band.
-          for (const t of [-0.55, -0.2, 0]) {
-            expect(kPulseBandV(U, dA, t, inwA, false, gR, inwB)).toBe(kPulseBandV(U, dA, t, inwA));
-          }
-          for (const t of [0.2, 0.55]) {
-            expect(kPulseBandV(U, dA, t, inwA, false, 0, !inwA)).toBe(kPulseCrest(U, dA + t, inwA, false, 1));
-          }
-        }
-      }
-    }
-  });
-
-  it("pins cyc e210's step: at node_218's band reach the band is the ribbon, S3a's was not", () => {
-    // e210: dA 0 (node_221), dB 1.386 (node_218), span 2.746, both ends
-    // outward. node_218's band runs in from the B end; its reach ~0.57.
-    const [dA, dB, span] = [0, 1.386, 2.746];
-    const gR = (dA + dB + span) / 2;
-    const tau = 0.57;
-    expect(Math.min(1, Math.abs(dB + tau - gR) / PULSE_RIDGE_FADE)).toBeCloseTo(0.22, 2);
-    let worstS3a = 0;
-    for (let k = 0; k < 100; k++) {
-      const U = uniforms({ clock: 100 + k * 0.05, pulseBorn: 0, spacing: 2.5 });
-      const ribbon = kPulseV2(U, span - tau, span, dA, dB, false, false, false);
-      expect(kPulseBandV(U, dB, tau, false, false, gR, false)).toBeCloseTo(ribbon, 12);
-      worstS3a = Math.max(worstS3a, kPulseBandV(U, dB, tau, false) - ribbon);
-    }
-    // One-ended, the band drew the full crest there: the step S4 saw.
-    expect(worstS3a).toBeGreaterThan(0.1);
-  });
-});
 // K1139 S5: at your own junction the switch (pulseHeadPass, default
 // on; off = the pre-S5 picture) takes the lead and, where a crest carries
 // through (uKHead 1, written by the tick only when the flag is on and

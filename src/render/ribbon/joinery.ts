@@ -2155,7 +2155,7 @@ export class Joinery {
       // Per arm: the largest turn start of a band on it (-1: no band).
       const dArm = new Float64Array(n).fill(-1);
       let dMax = 0;
-      // One band's corner (gold routes and pulse bands alike, K1139 S3b).
+      // One band's corner (K81's gold routes and K138's turnstile pairs).
       const cornerOf = (r: { ia: number; ib: number; d: number; m: number }): void => {
         if (r.ib < 0) {
           // The head: a one-arm band in to the joint center.

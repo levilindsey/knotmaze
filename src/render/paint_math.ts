@@ -1465,13 +1465,12 @@ export function kReachWin(U: KUniforms, d: number): number {
 // K480 stage 2: a branched arm carries dist0 (arc from the head to its
 // junction) and cont (the light carries past its far end); phase, floor
 // and the reach window read dist0 + d, and a cont arm has no end fade.
-// K1139 S3a: the one crest field every pulse reads, on an arm and on a
-// junction band alike: brightness at global distance dG (drawn arc from
-// you along the lit tree) with the caller's end window (1 on a band and
-// at a carrying arm's junction end). kPulseV is this at an arm point;
-// kPulseBandV is this at a band point (dG = distJ + tau). Extracted
-// without moving a value: test/render/paint_gameplay.test.ts pins
-// kPulseV, and the S3b fan shader's twin must call the same shape.
+// K1139 S3a: the one crest field every pulse reads: brightness at
+// global distance dG (drawn arc from you along the lit tree) with the
+// caller's end window (1 at a carrying arm's junction end). kPulseV is
+// this at an arm point (S3's junction bands read it at distJ + tau
+// until K1211 S6 took them out of the fan). Extracted without moving a
+// value: test/render/paint_gameplay.test.ts pins kPulseV.
 // K1139 S5: pulseHeadPass selects the straight-through head (lead 0
 // and, where a crest carries through your own junction, no CREST_RAMP
 // dip - the tick writes that carry as uKHead). On by default since
@@ -1546,55 +1545,6 @@ export function kPulseV2(
   const gB = dB + span - d;
   const rK = Math.min(1, (Math.abs(gA - gB) * 0.5) / PULSE_RIDGE_FADE) * bumpScale;
   return gA <= gB ? kPulseCrest(U, gA, inwA, hovered, 1, rK) : kPulseCrest(U, gB, inwB, hovered, 1, rK);
-}
-
-// K1139 S3a: the crest on a pulse band through a junction fan, at signed
-// band arc tau from the joint (negative on the head-side arm, positive
-// on the far-side arm; pulse_path.ts PulseBandSpec). The band carries
-// no end window: at tau's ends it meets the arms where their own value
-// has window 1 (the parent arm carries through, the child's window at
-// its junction end), so the field is continuous across the fan by
-// construction. S3b: the fan shader calls this function's GLSL twin
-// (PULSE_CREST_GLSL kPulseCrest) on the band at distJ + tau.
-// S4b: when the far-side arm is lit from both ends (gR > 0, its ridge's
-// drawn distance; inwardR its other end's direction), the band's far
-// side reads that arm's own field, kPulseV2's: past the ridge the other
-// end's train (2 gR - g), and the crests faded over PULSE_RIDGE_FADE
-// either side of it (|gA - gB| / 2 = |g - gR|). The head-side arm is a
-// tree arm, always one-ended. bumpScale 0 is the quiet field. K1203:
-// childSpan (pulse_path's band kind) makes the child side honour a
-// one-ended, non-cont child's own end window; default 0 is window 1.
-export function kPulseBandV(
-  U: KUniforms,
-  distJ: number,
-  tau: number,
-  inward: boolean,
-  hovered = false,
-  gR = 0,
-  inwardR = false,
-  bumpScale = 1,
-  childSpan = 0
-): number {
-  let g = distJ + tau;
-  let inw = inward;
-  let bK = bumpScale;
-  if (tau > 0 && gR > 0) {
-    bK *= Math.min(1, Math.abs(g - gR) / PULSE_RIDGE_FADE);
-    if (g > gR) {
-      g = 2 * gR - g;
-      inw = inwardR;
-    }
-  }
-  // K1203: childSpan > 0 names a one-ended, non-cont child arm's drawn
-  // span (0, the default, is today's window 1: a two-ended or cont
-  // child, and the head side at tau <= 0): on the child side the band
-  // then honours that arm's own end window, falling over
-  // PULSE_END_WINDOW at its free far end as its ribbon's kPulseV does.
-  const endWin =
-    tau > 0 && childSpan > 0
-      ? Math.min(1, Math.max(0, (childSpan - tau) / PAINT_CONST.PULSE_END_WINDOW))
-      : 1;
-  return kPulseCrest(U, g, inw, hovered, endWin, bK);
 }
 
 // Paint state at a point: the gold ramp amount p (the thread's own paint),
