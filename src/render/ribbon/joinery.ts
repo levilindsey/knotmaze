@@ -447,6 +447,80 @@ export class Joinery {
       const t = at(ab + 2 + i);
       return J[t + 1] + (J[t + 3] - J[t + 1]) * (xg - i);
     };
+    // K1218 S5: FIELD_GLSL's sweptArc - the arc the RIBBON gives the point:
+    // the normal-swept map over the arm's profile polyline, handing over to
+    // the projection from one half-width out to two (see the shader).
+    const pt = (ab: number, g: number, o: Float64Array, k: number): void => {
+      const t = at(ab + 2 + g);
+      o[k] = g * FIELD_PROF_DR * Math.cos(J[t]);
+      o[k + 1] = g * FIELD_PROF_DR * Math.sin(J[t]);
+      o[k + 2] = J[t + 1];
+    };
+    const nrm = (x: number, y: number, o: Float64Array, k: number): void => {
+      const l = Math.sqrt(x * x + y * y);
+      o[k] = x / l;
+      o[k + 1] = y / l;
+    };
+    const sw = new Float64Array(16);
+    const sweptArc = (ab: number, rp: number): number => {
+      const proj = profArc(ab, rp);
+      let g = Math.min(Math.max(Math.trunc(rp / FIELD_PROF_DR) - 3, 0), last - 1);
+      const g1 = Math.min(g + 7, last);
+      // sw: a 0-2, b 3-5, c 6-8, d 9-11, tb 12-13, tc 14-15.
+      pt(ab, Math.max(g - 1, 0), sw, 0);
+      pt(ab, g, sw, 3);
+      pt(ab, g + 1, sw, 6);
+      nrm(sw[6] - sw[3], sw[7] - sw[4], sw, 12);
+      if (g > 0) {
+        nrm(sw[3] - sw[0], sw[4] - sw[1], sw, 14);
+        nrm(sw[12] + sw[14], sw[13] + sw[15], sw, 12);
+      }
+      let best = 1e9;
+      let arc = proj;
+      for (let k = 0; k < 7 && g < g1; k++, g++) {
+        const ddx = sw[6] - sw[3];
+        const ddy = sw[7] - sw[4];
+        nrm(ddx, ddy, sw, 14);
+        sw[9] = sw[6];
+        sw[10] = sw[7];
+        sw[11] = sw[8];
+        if (g + 2 <= last) {
+          pt(ab, g + 2, sw, 9);
+          const ox = sw[14];
+          const oy = sw[15];
+          nrm(sw[9] - sw[6], sw[10] - sw[7], sw, 14);
+          nrm(ox + sw[14], oy + sw[15], sw, 14);
+        }
+        const n0x = -sw[13];
+        const n0y = sw[12];
+        const dnx = -sw[15] - n0x;
+        const dny = sw[14] - n0y;
+        const qx = ex - sw[3];
+        const qy = ey - sw[4];
+        const qa = -(ddx * dny - ddy * dnx);
+        const qb = qx * dny - qy * dnx - (ddx * n0y - ddy * n0x);
+        const qc = qx * n0y - qy * n0x;
+        const disc = qb * qb - 4 * qa * qc;
+        if (disc >= 0) {
+          const h = -0.5 * (qb + (qb < 0 ? -Math.sqrt(disc) : Math.sqrt(disc)));
+          for (let r = 0; r < 2; r++) {
+            const u = r === 0 ? (Math.abs(qa) > 1e-12 ? h / qa : -1) : Math.abs(h) > 1e-12 ? qc / h : -1;
+            if (!(u >= 0 && u <= 1)) continue;
+            const l = Math.hypot(qx - u * ddx, qy - u * ddy);
+            if (l < best) {
+              best = l;
+              arc = sw[5] + (sw[8] - sw[5]) * u;
+            }
+          }
+        }
+        sw.copyWithin(3, 6, 12);
+        sw[12] = sw[14];
+        sw[13] = sw[15];
+      }
+      let w = (best - fillHalf) / fillHalf;
+      w = w < 0 ? 0 : w > 1 ? 1 : w;
+      return arc + (proj - arc) * w * w * (3 - 2 * w);
+    };
     const rho = Math.sqrt(ex * ex + ey * ey);
     const phi = Math.atan2(ey, ex);
     const gx = rho / FIELD_PROF_DR;
@@ -505,12 +579,12 @@ export class Joinery {
     }
     const baseField = (untravSide: boolean): void => {
       if (!onlyB) {
-        armPaint(abA, profArc(abA, relA < Math.PI / 2 ? rho * Math.cos(relA) : 0), false, untravSide, mA);
+        armPaint(abA, sweptArc(abA, relA < Math.PI / 2 ? rho * Math.cos(relA) : 0), false, untravSide, mA);
       }
       if (onlyA) {
         compose(mA);
       } else {
-        armPaint(abB, profArc(abB, relB < Math.PI / 2 ? rho * Math.cos(relB) : 0), false, untravSide, mB);
+        armPaint(abB, sweptArc(abB, relB < Math.PI / 2 ? rho * Math.cos(relB) : 0), false, untravSide, mB);
         if (onlyB) {
           compose(mB);
         } else {

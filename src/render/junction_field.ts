@@ -208,6 +208,69 @@ float profArc(int ab, float rp) {
   vec4 t = jAt(ab + 2 + i);
   return mix(t.y, t.w, x - float(i));
 }
+// Profile point g of arm ab, from the joint, and its arc.
+vec3 profPt(int ab, int g) {
+  vec4 t = jAt(ab + 2 + g);
+  return vec3(float(g) * uJParams2.x * vec2(cos(t.x), sin(t.x)), t.y);
+}
+float jCross(vec2 a, vec2 b) { return a.x * b.y - a.y * b.x; }
+// K1218 S5: the arc the RIBBON gives point e (from the joint) on arm ab:
+// the normal-swept map over the arm's profile polyline (vertex normals
+// average the two segments), as the ribbon's cross-sections sweep its arc
+// across the thread. The radial projection (profArc at rp = rho cos rel)
+// missed it by up to ~0.15 world where an arm bends, a seam across a
+// pulse's gradient at a fan's edge. The nearest sweep among the segments
+// around rp wins; from one half-width out to two it hands over to the
+// projection (a bend's normals cross out there), which also stands off
+// every sweep (behind the joint).
+float sweptArc(int ab, vec2 e, float rp) {
+  float proj = profArc(ab, rp);
+  int last = int(uJParams.y + 0.5) - 1;
+  int g = clamp(int(rp / uJParams2.x) - 3, 0, last - 1);
+  int g1 = min(g + 7, last);
+  vec3 a = profPt(ab, max(g - 1, 0));
+  vec3 b = profPt(ab, g);
+  vec3 c = profPt(ab, g + 1);
+  vec2 tb = normalize(c.xy - b.xy);
+  if (g > 0) tb = normalize(tb + normalize(b.xy - a.xy));
+  float best = 1e9;
+  float arc = proj;
+  for (int k = 0; k < 7; k++) {
+    if (g >= g1) break;
+    vec2 dd = c.xy - b.xy;
+    vec2 tc = normalize(dd);
+    vec3 d = c;
+    if (g + 2 <= last) {
+      d = profPt(ab, g + 2);
+      tc = normalize(tc + normalize(d.xy - c.xy));
+    }
+    vec2 n0 = vec2(-tb.y, tb.x);
+    vec2 dn = vec2(-tc.y, tc.x) - n0;
+    vec2 q = e - b.xy;
+    float qa = -jCross(dd, dn);
+    float qb = jCross(q, dn) - jCross(dd, n0);
+    float qc = jCross(q, n0);
+    float disc = qb * qb - 4.0 * qa * qc;
+    if (disc >= 0.0) {
+      float h = -0.5 * (qb + (qb < 0.0 ? -sqrt(disc) : sqrt(disc)));
+      vec2 us = vec2(abs(qa) > 1e-12 ? h / qa : -1.0, abs(h) > 1e-12 ? qc / h : -1.0);
+      for (int r = 0; r < 2; r++) {
+        float u = r == 0 ? us.x : us.y;
+        if (u < 0.0 || u > 1.0) continue;
+        float l = length(q - u * dd);
+        if (l < best) {
+          best = l;
+          arc = mix(b.z, c.z, u);
+        }
+      }
+    }
+    b = c;
+    c = d;
+    tb = tc;
+    g++;
+  }
+  return mix(arc, proj, smoothstep(uJParams.x, 2.0 * uJParams.x, best));
+}
 
 
 // The composed junction-field color at world point p for the record at
@@ -296,10 +359,10 @@ vec3 junctionBase(int rec, vec2 p, vec4 hd, bool untrav) {
   vec3 cA = vec3(0.0);
   vec3 cB = vec3(0.0);
   if (!onlyB) {
-    cA = armPaint(abA, profArc(abA, relA < HALF_PI ? rho * cos(relA) : 0.0), false, untrav);
+    cA = armPaint(abA, sweptArc(abA, e, relA < HALF_PI ? rho * cos(relA) : 0.0), false, untrav);
     if (onlyA) return cA;
   }
-  cB = armPaint(abB, profArc(abB, relB < HALF_PI ? rho * cos(relB) : 0.0), false, untrav);
+  cB = armPaint(abB, sweptArc(abB, e, relB < HALF_PI ? rho * cos(relB) : 0.0), false, untrav);
   if (onlyB) return cB;
   return mix(cA, cB, t);
 }
