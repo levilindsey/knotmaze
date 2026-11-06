@@ -2361,11 +2361,7 @@ export class Joinery {
         // the silhouette on a curve's outside and crotch GAPS opened on
         // its inside (user report at cr=1.25). The outer rim stays a
         // corner-controlled bezier between the two flanks' real tips.
-        const flank = (
-          arm: JArm,
-          left: boolean,
-          out: number[]
-        ): [number, number] => {
+        const fpOf = (arm: JArm): Float64Array => {
           // The centerline points + outward tangents are shared by the
           // arm's two wedges (only the offset side differs).
           let fp = arm.flankPts;
@@ -2423,11 +2419,66 @@ export class Joinery {
             }
             arm.flankPts = fp;
           }
+          return fp;
+        };
+        // K1220 S2: at a text fork, a flank point that the OTHER arm's
+        // ribbon covers sits just past its own arm's edge (at the arm's
+        // width), not 0.97 fh in. In a narrow crotch the two strokes
+        // overlap, the fan's field there wears the other arm's colour,
+        // and the arm's own outer band showed between the fan and the
+        // other ribbon as a thin line of its colour. Outline points
+        // (covered by nothing) keep the inset.
+        const glyphPair = !!glyphOf && !!(glyphOf[A.chain] || glyphOf[B.chain]);
+        const coveredBy = (other: JArm, qx: number, qy: number): boolean => {
+          const op = fpOf(other);
+          const npo = op.length / 4;
+          const reachO = armReach(other);
+          let ax = rec.jx;
+          let ay = rec.jy;
+          for (let j = 0; j < npo; j++) {
+            const bx = op[j * 4];
+            const by = op[j * 4 + 1];
+            const ex = bx - ax;
+            const ey = by - ay;
+            const el = ex * ex + ey * ey;
+            let u = el > 1e-12 ? ((qx - ax) * ex + (qy - ay) * ey) / el : 0;
+            u = Math.max(0, Math.min(1, u));
+            const dx = qx - (ax + ex * u);
+            const dy = qy - (ay + ey * u);
+            const sO = (0.12 + (0.88 * j) / Math.max(1, npo - 1)) * reachO;
+            const lim = fillHalf * 0.95 * wmAt(other, sO);
+            if (dx * dx + dy * dy < lim * lim) return true;
+            ax = bx;
+            ay = by;
+          }
+          return false;
+        };
+        const flank = (
+          arm: JArm,
+          left: boolean,
+          out: number[],
+          other: JArm | null
+        ): [number, number] => {
+          const fp = fpOf(arm);
           const sgn = left ? w : -w;
-          for (let e = 0; e < fp.length / 4; e++) {
+          const npf = fp.length / 4;
+          const reachF = other ? armReach(arm) : 0;
+          for (let e = 0; e < npf; e++) {
             const px = fp[e * 4];
             const py = fp[e * 4 + 1];
-            out.push(px - fp[e * 4 + 3] * sgn, py + fp[e * 4 + 2] * sgn);
+            let ox = px - fp[e * 4 + 3] * sgn;
+            let oy = py + fp[e * 4 + 2] * sgn;
+            if (other) {
+              const sArc = (0.12 + (0.88 * e) / Math.max(1, npf - 1)) * reachF;
+              const off = (left ? 1 : -1) * fillHalf * (wmAt(arm, sArc) + 0.05);
+              const qx = px - fp[e * 4 + 3] * off;
+              const qy = py + fp[e * 4 + 2] * off;
+              if (coveredBy(other, qx, qy)) {
+                ox = qx;
+                oy = qy;
+              }
+            }
+            out.push(ox, oy);
           }
           // K846: the tip's outward tangent (the rim's end tangent).
           const le = fp.length / 4 - 1;
@@ -2435,8 +2486,8 @@ export class Joinery {
         };
         const edgeA: number[] = [];
         const edgeB: number[] = [];
-        const tanA = flank(A, true, edgeA);
-        const tanB = flank(B, false, edgeB);
+        const tanA = flank(A, true, edgeA, glyphPair ? B : null);
+        const tanB = flank(B, false, edgeB, glyphPair ? A : null);
 
         // Perimeter: A's flank inner->outer, bezier rim to B's outer tip
         // (control = corner), B's flank outer->inner. Every pixel
