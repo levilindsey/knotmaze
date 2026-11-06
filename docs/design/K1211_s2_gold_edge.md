@@ -191,4 +191,114 @@ junctions; the T and the four are a second mechanism, the crossing-gap mask.**
   above).
 
 Tools: `run_shots2.ps1` is S2's copy of S1's `run_shots.ps1` (owner `K1211-S2`, the same lock
-rule) that runs `shoot2.mjs` jobs.
+rule) that runs `shoot2.mjs` jobs (and `smoke2.mjs`, `checks2.mjs`, `crops2.mjs`, `hcat.mjs`,
+all untracked in `.claude/probes/K1211/`).
+
+SHAs after the Run I rebase (below): Task 1 is f53811ff (30e07f21 before), Task 0's notes
+28e231d4, Task 2's fix ab46d41a, its tests 1341eeac.
+
+**Task 2 done: the drawing bands yield to the gold** (mode 0). The fan's gold loop keeps its
+cover, `gC` (the max over the gold blocks; look B leaves it 0), and a drawing pulse band's weight
+is multiplied by `1 - gC`: `drawBandYield(dDraw, dShared, pxW, goldCover)` in
+`src/render/junction_field.ts`, the shader's `float yr = (...) * (1.0 - gC);`. Under the gold the
+bands no longer paint the untraveled rows, so the gold's edge is its own tube's, a level set of
+the distance to the route (round), inside its one-pixel ramp. Off the gold the weight is K1139's
+bit for bit, so the split, its wedges and the crotch keep; look B is unchanged.
+- Why shader text and not CPU data: the cut is the band loop's own write over the gold's cover at
+  the same pixel, so the fix has to read that cover there; no route record, arm strip or traveled
+  mask can carry a per-pixel cover.
+- K320: JUNCTION_FRAG 42,030 -> 42,174 (+144). Master is 40,495; the rest of the stage's margin
+  over master is look B's text (S1's, kept for S3).
+- CPU twin: `cpuJunctionField` (`src/render/ribbon/joinery.ts`) keeps `gCov` and calls the same
+  `drawBandYield` in both the band loop and the crotch fill.
+- Tests: `test/render/gold_edge.test.ts` pins the edge at a straight, a sharp, a T and a four.
+  The gold's 0.5 level lies within REACH - 0.85 .. REACH - 0.45 px of the route over more than 100
+  crossings of a 0.25 px grid; K1139's rule cut it below REACH - fh/2. The file also pins K1139's
+  weight off the gold bit for bit, drawBandYield's values, and the shader and twin lines.
+- The one pin moved: `test/render/k320_slim.test.ts`, the JUNCTION_FRAG bound 42_030 -> 42_174
+  (the gold's edge's own text). `npm test` green before the rebase and after it (below).
+
+**Task 3: the checks** (`checks2.mjs`; master a371d164 shots in `out2/s2m/<stand>/`, the branch
+before the rebase in `out2/s2b/<stand>/`; 8 pulse phases each, every clock pinned).
+- Controls: np, pure, nb_t0, nb_t3 and w0_t0 differ by 0 px master vs branch at all three stands
+  (the fix acts only where a drawing band meets the gold). nomask differs (x4 5,271 px, loop
+  4,657 px): it carries the live bands, as expected.
+- (c), the locality against master, L0 over 8 phases:
+
+  | stand | px differ | outside every 8 fh zone | furthest | by nearest record |
+  |---|---|---|---|---|
+  | cross | 0 | 0 | - | - |
+  | x4 | 42,237 | 0 | 4.22 fh | ji 125 21,429; ji 149 20,722; ji 146 86 |
+  | loop | 22,556 | 0 | 3.63 fh | ji 88 21,902; ji 89 654 |
+
+- Nub: gold past master's edge along each off-route arm's corridor (|lateral| <= fh, out to the
+  web radius). The reference is master's L0 over the phases or master's no-band round tube, plus
+  1 px. Result: 0 px at cross 113 and 33, x4 102, 125, 149 and 146, loop 12, 13, 88 and 89, every
+  phase. At 149 the branch reaches 0.32 fh into the arm, the same as master's no-band tube.
+- Corner: the Moore contour of the gold inside 0.85 web radius, chord 0.3 fh, sharpest turn. The
+  bound is 109 deg, set on master's clean edges (113: 90 deg, 102: 109 deg). Both maxima come from
+  other features than the gold's edge, so the check is coarse. Master -> branch:
+
+  | ji | master | branch |
+  |---|---|---|
+  | x4 125 | <= 122 deg (the break, phases 1-4: 114-122) | <= 98 |
+  | x4 149 | 131 deg at k4 | <= 98 |
+  | loop 88 | 126 and 139 deg | <= 98 |
+  | loop 89 | 146 deg at k5 | 146 deg at k5, the same pixels (the gap mask's zigzag) |
+  | loop 12 | 86 | 86 |
+  | loop 13 | 73 | 73 |
+
+- (a) calibrated on the pure reference, and (b): NOT re-run in S2 (time). The pure reference is
+  shot (`pure.png` in every stand folder), so (a) can be calibrated on it next; S1's
+  `analyze.mjs` still holds (a) and (b) as S1 ran them.
+- Re-centred clips: `crops2.mjs` centres every crop on its record's screen centre (S1's open
+  question); the sheets below use it.
+- Loop ji 12's triangle: Task 0's note (a crossing gap, in the pure shot too, gone with the mask
+  off; crop `out2/t0/attrib12_89.png`). Not the gold's edge, so not fixed.
+- Explore shot: with Run I's smoke, below.
+
+**Task 4: the sheets**, in `.claude/probes/K1211/out2/t4/`. Columns: master | branch mode 0 |
+branch B (mode 2) | branch pure colours. Crops are 200 device px at zoom 2, centred on the
+record. I viewed each one at full size:
+- `rest_straight_sharp.png` (cross 113, x4 102, loop 13; rest): branch = master at all three.
+  113 is a straight gold band with clean sides; B bulges gold toward the off-route arm. 102 and 13
+  have a round outer edge, and the inner side runs as a wedge to a point (master too); B pushes
+  gold into the off-route arm (the nub).
+- `rest_T.png` (loop 89, x4 125). 89: branch = master, and the gap mask's zigzag and step stay.
+  125: master's break (a white-teal strip across the gold) is gone, and the branch shows one gold
+  with a smooth edge. B keeps the break.
+- `rest_four.png` (loop 12, loop 88). 12: branch = master, and the zigzag notch and the small dark
+  triangle stay. 88 (found by (c)): master's diagonal cut is gone; the gap mask's zigzag at its
+  bottom stays in both.
+- `rest_149.png` and `rest_149_k1190.png` (x4 149, then the same beside K1190's sheet): master
+  has the straight edge with a corner. The branch is one round arc, as in K1190's top row. B's
+  straight cut is unchanged. A small teal notch where the gold meets the dark crossing shows in
+  every column, master's included.
+- `pulse_149.png` (x4 149 at phases k2, k4, k6): master is cut in each row. The branch's gold ends
+  in the round edge, and the lit band starts at it. B is cut.
+- `edge149_zoom.png` (k6, 64 px at zoom 6; branch | branch with no bands | master): the branch's
+  round edge follows the no-band arc. It carries a thin darker line, one device px, where the lit
+  band meets the lit gold (the first residual below). Master shows the straight cut.
+- `pulse_33.png` (cross 33 at phases k4, k6, k0): there is no gold in this junction, so branch =
+  master (0 px by (c)). The pulse's straight edge against the blue arm and the small zigzag at k0
+  are spots 1 and 2 (S3). B draws a softer light.
+- K1190's spot 3 against the top row: the branch's 149 has the top row's round edge, at rest and
+  at the three pulse phases, apart from the lit edge's dark line.
+
+**Residuals (not fixed):**
+- **The lit edge's dark line.** At x4 149 k6, the edge pixel at device (1262, 532) reads
+  194,224,212. The lit gold beside it is 251,243,211, the lit band 221,239,236, and the no-band
+  edge pixel 237,241,221.
+  - Why: the band composites OVER the gold at cov x yr x (1 - gC). An edge pixel therefore keeps
+    a gC (1 - gC) x cov x yr share of the UNLIT base where gold belongs: 25% at gC 0.5. At rest
+    the band's paint is close to the base, so the line does not show.
+  - Fix: composite the bands UNDER the gold. The gold loop is a chain of mixes, so let gT be the
+    product of (1 - cov) over the gold blocks, c0 the colour before the gold, and u the bands and
+    their whitening over c0 at their raw weights. Then final = c_gold + gT (u - c0), which is
+    exact for any number of blocks. Look B keeps the bands on top (u over c, gT 1).
+  - Cost: the shader (c0, u, gT, and the whitening's order against the gold's own light), the
+    twin, gold_edge's model, and a K320 re-pin. Not started.
+- The gap mask's zigzags at the T and the four (loop 89, 12, 88): the crossing-gap mask shows a
+  crossing ribbon's own paint, split gold/untraveled across the ribbon (Task 0's note).
+- Loop ji 12's dark triangle (a crossing gap) and 149's small teal notch, both on master.
+- Look B still cuts and nubs (S3's to decide).
