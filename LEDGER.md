@@ -23,9 +23,6 @@ Next free ID: K1214.
 
 ## Waiting on Levi
 
-- **K1001** · Corners, sharp or round: where two threads split, the corner is a sharp point (K1040 F1 row 8: r goes to 0
-  as the room closes); stage 1's b16 rounded it into a small arch (not landed). Levi sees it in motion at K1040 S4b,
-  behind its flag; there is nothing to look at before then. Levi disliked losing rounding at K1114 (2026-11-03): lean round.
 - **K867** · Plain-HTTP links (no AudioWorklet) fall back to the legacy synth, which played out of
   tune. Muse's in-tune voice is parked at 5ae5a1d1, awaiting Levi's timbre verdict (cherry-pick or
   drop); its 5319 server stopped with Muse, so re-serve it with `scripts/preview.ps1` (ledger_notes).
@@ -511,10 +508,10 @@ Next free ID: K1214.
   - env: the passes' builds first and never while Muse runs: `scripts/preview.ps1 -Ref <sha> -Root <out>\builds -BuildOnly` for each sha (`pixel_passes.ps1` stops before the phone lock when one is missing); probe server `npx vite --config .claude/probes/K1139/vite.private-cache.config.ts --port 5620 --strictPort --host 127.0.0.1` from a worktree (ports 5620-5639); GPU probes through `.claude/probes/K1139/run_locked.ps1 -Batch`
 - **K1208** · Muse batch 22 (after K1204's batch 21): runs B to H through the chain, from
   `docs/design/K1208_muse_batch22.md` (ports 5880-5949)
-  - owner: the chain in `.claude/probes/K1053/` (queue.txt, chain.log): Run G (22G) next, a fresh Muse session; coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
+  - owner: the chain in `.claude/probes/K1053/` (queue.txt, chain.log): Run G (22G) since 11:24, then J (22J), fresh Muse sessions; coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
   - branch: mainline; last commit: `4ef96746`
   - evidence: the chain in .claude/probes/K1053/ (queue.txt, chain.log); each run's probe folder under .claude/probes/ (B K1203, H K1210, C K1186, E K1196, F K1191, G K1198)
-  - next: G (K1198: ij on v6.8, then the six pins) queued; F reviewed (4c7867da, K1191); E's agent idle while its ABBA bench times: Claude sends its finish when the bench ends and no run is going; D held for K1211; Run I (K1209's re-apply) after K1211 S1 merges
+  - next: G (K1198: ij on v6.8, then the six pins) running, then J (K647: the card after Reset path) queued; E's bench is on its third build (the perf lock names 22E): Claude sends its finish when the lock is free and no run is going; D held for K1211; Run I (K1209's re-apply) after K1211 S1 merges, ahead of J if J has not started
   - brief: `docs/design/K1208_muse_batch22.md`
 
 ## Next, in order
@@ -2005,6 +2002,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1001** · Corners where two threads split: Levi kept K830's rule (broad gaps round, narrow points sharp), so a split stays sharp. Done in 73186e5c (2026-11-05).
 - **K1126** · High contrast shows the ring ripple whatever ripple was picked (K368); Levi 2026-11-05: "It reads well". Done in 89836d3b (2026-11-05).
 - **K1200** · Light on loops (K1139 S4): pulses entering a loop from both ends meet halfway and fade out in pairs; Levi 2026-11-05: "Fine as is". Done in 4ac52bb0 (2026-11-05).
 - **K1190** · K1139 Stage 4's look calls (card `docs/asks/K1190.md`; sheets t4, t6 in `.claude/probes/K1139/out/s4/sheets/`): soften the sharp fronts (ji 33, ji 149); smooth ji 33's straight edges; ji 149's gold edge round again; fill the notch. Dropped: superseded by K1211 (Levi 2026-11-05: the light inside a junction must read as one seamless unit) (2026-11-05).
