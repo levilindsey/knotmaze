@@ -3,8 +3,8 @@
 # pipeline, compared file by file with work33\base; its census on the two word lists with each repeat REMOVED (the first
 # occurrence kept: "of" in $cwE, "of" and "vg" in $cwI), compared row by row with J3j's by the id without its word
 # number (rowsame_k863k.py), and J3i's cusp-corner check with g2 reading the census's ang_deg (pairs_k863k.py).
-# Later steps: the candidates (cand), their census and locality (cens_c, local), the sheets, PNGs, crops, guard.
-# Steps: tools, template, build, ctx, base, census, cmp, g2, cand, cens_c, local, sheets, sheets_ink, png, crops, guard.
+# Later steps: the candidates (cand), their locality and census (local, cens_c), the sheets, PNGs, crops, guard.
+# Steps: tools, template, build, ctx, base, census, cmp, g2, cand, local, cens_c, sheets, sheets_ink, png, crops, guard.
 # Logs in work34\checks_logs. Run: pwsh -NoProfile -File work34\dbg\checks_k863k.ps1 [step ...] (no step = all, in
 # order). At most 2 Python processes while $env:TEMP\claude-perf.lock exists, 4 otherwise.
 param([Parameter(ValueFromRemainingArguments = $true)][string[]]$Only)

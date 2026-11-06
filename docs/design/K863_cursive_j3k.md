@@ -124,3 +124,33 @@ handle fields (owner, branch, last commit, evidence, next).
 ## Handoff
 
 (The stage agent appends here.)
+
+### J3k stage agent (2026-11-05, 11:09:27 to 12:41)
+
+All eight tasks are done. The record is the NOTES entry `## K863 v6.8 leftovers` in the trace dir's
+NOTES.md (its copy: `work34/NOTES_k863k.md`); `work34/dbg/checks_k863k.ps1` reruns every step.
+
+- The kit: v6.8 rebuilt as `work34/base`, its 16 SVG, PNG and JSON files byte-identical to work33's,
+  the template too; rows by id 347 and 713 equal, 0 differ. Repeats removed, first kept: J3e's list
+  85 -> 84 words, J3i's 234 -> 232. g2 reads ang_deg: 0 seams fail on the angle alone (the 9 entries
+  at 180 deg, nr, dr, er x3, ds, as, ii and hi, already fail on dk).
+- The candidates (`work34/cand/<name>/`, `cand/forms.txt`): S1 and S2, word-final s cut at the curl
+  and at the font's end; P1, p's bowl closed with no run-out; Q1, q's tail refit with no step; D1, a
+  round dot; D2, the font's oval dot; ALL = S2+P1+Q1+D2.
+- Locality over 232 words: 0 pieces outside the spot move, for every candidate. Census by id: 0 rows
+  differ outside the spot beyond kmax_p95 (word_p95 ties a word's rows; counted apart as p95 only).
+- At the spots: s ends 0.19 u (S2) and 2.93 u (S1) from the skeleton's end, v6.8 77.41 u past it;
+  P1 ends 0.26 u from the skeleton, v6.8 runs on 16.28 u off it; Q1's exit seam dk 10.6 -> under
+  1e-14 (G2), font distance max/mean 1.06/0.75 -> 1.17/0.84 u, hooks 1 -> 0, badness 270 -> 44-84;
+  dot IoU against the font's dot: v6.8 0.570, D1 0.805, D2 0.967-0.970.
+- Sheets (font | approved (v6.8) | candidates): out34/spot_s.svg, spot_p.svg, spot_q.svg,
+  spot_dots.svg (inked) and cursive_k863k_words.svg (inked; font | v6.8 | ALL); PNGs in out34/png;
+  every crop viewed is in work34/look, listed in the NOTES entry.
+- Leans: S2 (S1 as the option, ending about 3 u further round the curl); P1; Q1, a quiet
+  improvement seen only at 5x; D2, which fills the font's oval where v6.8's slanted dash pokes out.
+
+Left as found: Q1's slight S within about 1.5 u of its exit (facet 0.030 against 0.0053; a refit
+holding the direction monotone or penalising the facet is untried); q's tail is shorter and lower
+than the font's in v6.8 and Q1; the 9 port-cusp seams at 180 deg (v6.8's corners, out of scope).
+
+Next: the coordinator views the sheets and picks what goes on Levi's card.

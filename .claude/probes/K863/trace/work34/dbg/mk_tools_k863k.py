@@ -11,10 +11,12 @@ untouched):
   census_k863k.py  <- work27/dbg/census_k1027.py (J3d's): J3d's folder on the import path after its own, so --gen
                       gen_k1027 (the default, J3d's) and --gen gen_k863k (J3k's, work34/dbg) both import; nothing else
   sheet_k863k.py   <- work27/dbg/sheet_k1027.py (J3d's): draws with gen_k863k (gen_k1027 plus the word-end forms a
-                      join_params file names under "k863k"; a file without them draws as gen_k1027)
+                      join_params file names under "k863k"; a file without them draws as gen_k1027); --ink <pen u>
+                      draws each build's ink at the pen's width, translucent under its centrelines
   area_k863k.ps1   <- work33/dbg/area_k863j.ps1 (J3j's) writing work34/sheets/png
   wtcopy_k863k.ps1 <- work33/dbg/wtcopy_k863j.ps1 (J3j's) for work34 and out34
-checks_k863k.ps1, gen_k863k.py, local_k863k.py and look_k863k.py are written for J3k (no earlier tool to port).
+Written for J3k (no earlier tool to port): checks_k863k.ps1, gen_k863k.py, cand_k863k.py, qfit_k863k.py, qtail_k863k.py,
+dots_k863k.py, local_k863k.py, censcmp_k863k.py, look_k863k.py and crop_k863k.py.
 Run from the trace folder: venv\Scripts\python.exe -I work34\dbg\mk_tools_k863k.py
 """
 import os
