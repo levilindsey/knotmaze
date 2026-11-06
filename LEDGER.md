@@ -521,9 +521,9 @@ Next free ID: K1212.
   `docs/design/K1208_muse_batch22_run_a.md` after 21G, through the chain (queued as 22A); Claude reviews the
   draft and queues runs B to G (ports 5880-5939)
   - owner: the chain in `.claude/probes/K1053/` (queue.txt, chain.log): Run C (22C) since 10:27, a fresh Muse session; coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
-  - branch: mainline; last commit: `d31f08c6`
+  - branch: mainline; last commit: `2d68f787`
   - evidence: the chain in .claude/probes/K1053/ (queue.txt, chain.log); each run's probe folder (B: .claude/probes/K1203/, H: .claude/probes/K1210/)
-  - next: Run C (K1209, retire the fillet vote) running since 10:27; then E, F; D held for K1211 (its queue line commented out), G held; Claude reviews each run as it lands
+  - next: Run C stopped at task 4 (fat11 ji104 23/14 px; retirement in wip22c.patch, unpushed); Claude reviews it, Run D next
   - brief: `docs/design/K1208_muse_batch22.md`
 
 ## Next, in order
