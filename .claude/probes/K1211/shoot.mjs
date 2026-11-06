@@ -15,7 +15,7 @@
 //   meta.json       clip, scale, fh, records (centre, arms, routes), stamp
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { openBrowser, openPage, waitAsleep, viewStill, moveEdge, PIN, setState, sleep, frames, stampText, HOST } from "./lib.mjs";
+import { openBrowser, openPage, waitAsleep, viewStill, viewExact, moveEdge, PIN, setState, sleep, frames, stampText, HOST } from "./lib.mjs";
 
 const Q = "k111&am=instant&fw=0&snd=none&phw=0";
 const STANDS = {
@@ -69,6 +69,7 @@ try {
   await sleep(400);
   await viewStill(page);
   await waitAsleep(page, 20000);
+  const exact = await viewExact(page);
   await page.evaluate(PIN);
   await sleep(200);
   fpt = await focusPt();
@@ -165,9 +166,11 @@ try {
   await page.evaluate(() => { window.__knotRenderer().root.renderable = true; });
   const ctxLost = await page.evaluate(() => window.__ctxLost);
   const stamp = await stampText(page);
-  const meta = { stand: STAND, host: HOST, q: st.q, moves: st.moves, clip, scale, dsf: 1.5, nf, period, hasHook, lookRead, ...geo, fpt, stamp, ctxLost, secs: (Date.now() - t0) / 1000, log };
+  const viewEnd = await page.evaluate(() => window.__knotView());
+  const meta = { stand: STAND, host: HOST, q: st.q, moves: st.moves, clip, scale, dsf: 1.5, nf, period, hasHook, lookRead, ...geo, exact, viewEnd, fpt, stamp, ctxLost, secs: (Date.now() - t0) / 1000, log };
   writeFileSync(join(OUT, "meta.json"), JSON.stringify(meta, null, 1));
-  console.log(`${STAND} @ ${HOST}: hook ${hasHook} looks ${JSON.stringify(lookRead)} clip ${JSON.stringify(clip)} scale ${scale.toFixed(1)} fh ${geo.fh.toFixed(4)} recs ${geo.recs.length} ctxLost ${ctxLost} ${((Date.now() - t0) / 1000).toFixed(0)} s stamp ${stamp}`);
+  const drift = JSON.stringify([geo.view.x, geo.view.y, geo.view.s]) !== JSON.stringify([viewEnd.x, viewEnd.y, viewEnd.s]);
+  console.log(`${STAND} @ ${HOST}: exact ${exact} drift ${drift} hook ${hasHook} looks ${JSON.stringify(lookRead)} clip ${JSON.stringify(clip)} scale ${scale.toFixed(1)} fh ${geo.fh.toFixed(4)} recs ${geo.recs.length} ctxLost ${ctxLost} ${((Date.now() - t0) / 1000).toFixed(0)} s stamp ${stamp}`);
 } finally {
   await browser.close();
 }

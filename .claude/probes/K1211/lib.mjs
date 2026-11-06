@@ -77,6 +77,21 @@ export async function viewStill(page, timeout = 8000) {
   return false;
 }
 
+// K431: a three-decimal viewStill is not pixel-still (a spring's tail creeps
+// ~1e-5 a shot). Wait for a BIT-EXACT view, 10 equal full-precision polls,
+// with frames forced between polls so the spring advances.
+export async function viewExact(page, timeout = 20000) {
+  let last = "", n = 0;
+  for (const t0 = Date.now(); Date.now() - t0 < timeout; ) {
+    await frames(page, 2);
+    const v = await page.evaluate(() => { const v = window.__knotView(); return JSON.stringify([v.x, v.y, v.s]); });
+    n = v === last ? n + 1 : 0;
+    last = v;
+    if (n >= 10) return true;
+  }
+  return false;
+}
+
 export const frames = (page, n) => page.evaluate((n) => new Promise((res) => { let k = 0; const f = () => (++k >= n ? res() : requestAnimationFrame(f)); requestAnimationFrame(f); }), n);
 
 export const PIN = () => {
