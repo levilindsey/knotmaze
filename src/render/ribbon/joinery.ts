@@ -448,8 +448,15 @@ export class Joinery {
       return J[t + 1] + (J[t + 3] - J[t + 1]) * (xg - i);
     };
     // K1218 S5: FIELD_GLSL's sweptArc - the arc the RIBBON gives the point:
-    // the normal-swept map over the arm's profile polyline, handing over to
-    // the projection from one half-width out to two (see the shader).
+    // the normal-swept map over the arm's profile polyline (points g DR
+    // (cos pth, sin pth), vertex normals averaging the two segments), as the
+    // ribbon's cross-sections sweep its arc across the thread; the segments
+    // around rp are searched and the nearest sweep wins. The radial
+    // projection alone (profArc at rp = rho cos rel) missed it by up to
+    // ~0.15 world where an arm bends: across a pulse's gradient, a seam at
+    // the fan's edge (cross ji 33). From one half-width out to two the arc
+    // hands over to the projection (a bend's normals cross out there), and
+    // the projection stands off every sweep (behind the joint).
     const pt = (ab: number, g: number, o: Float64Array, k: number): void => {
       const t = at(ab + 2 + g);
       o[k] = g * FIELD_PROF_DR * Math.cos(J[t]);

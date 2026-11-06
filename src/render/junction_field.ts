@@ -208,21 +208,14 @@ float profArc(int ab, float rp) {
   vec4 t = jAt(ab + 2 + i);
   return mix(t.y, t.w, x - float(i));
 }
-// Profile point g of arm ab, from the joint, and its arc.
 vec3 profPt(int ab, int g) {
   vec4 t = jAt(ab + 2 + g);
   return vec3(float(g) * uJParams2.x * vec2(cos(t.x), sin(t.x)), t.y);
 }
 float jCross(vec2 a, vec2 b) { return a.x * b.y - a.y * b.x; }
-// K1218 S5: the arc the RIBBON gives point e (from the joint) on arm ab:
-// the normal-swept map over the arm's profile polyline (vertex normals
-// average the two segments), as the ribbon's cross-sections sweep its arc
-// across the thread. The radial projection (profArc at rp = rho cos rel)
-// missed it by up to ~0.15 world where an arm bends, a seam across a
-// pulse's gradient at a fan's edge. The nearest sweep among the segments
-// around rp wins; from one half-width out to two it hands over to the
-// projection (a bend's normals cross out there), which also stands off
-// every sweep (behind the joint).
+// K1218 S5: the arc the RIBBON gives e: the normal-swept map over the
+// profile polyline near rp (nearest sweep wins), handed to the projection
+// from one half-width out to two and off every sweep.
 float sweptArc(int ab, vec2 e, float rp) {
   float proj = profArc(ab, rp);
   int last = int(uJParams.y + 0.5) - 1;

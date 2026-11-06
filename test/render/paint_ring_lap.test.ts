@@ -329,6 +329,7 @@ const ROUNDED_QUOTIENTS: Record<string, [number, string]> = {
   "explore_glsl.ts: floor((0.5 * (c0 + c1) - x) / nf + 0.5)": [2, "nearest lap (kExploreAt, K290's kCharAt): ambiguous only at the antipode"],
   "explore_glsl.ts: floor((T0.y - x) / nf + 0.5)": [1, "nearest lap to a fire front (K290 3b's kCharAt): ambiguous only at the antipode, where every front term is 0"],
   "junction_field.ts: floor(ra / TAU)": [1, "an angle wrap for comparisons: TAU instead of 0 is the same direction"],
+  "junction_field.ts: int(rp / uJParams2.x)": [1, "sweptArc's search window start (K1218 S5): one short or long shifts its seven profile segments by one, still covering the few beside the point"],
   // K832: the flat-cap bit of the SDF vertex's cap code (cap + fused<<2,
   // a small integer 0-7, exact in fp32): mod by 2.0 is exact here, no
   // rounded quotient is involved.

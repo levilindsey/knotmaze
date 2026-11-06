@@ -202,7 +202,11 @@ describe("K320 stage 1: char budgets", () => {
     // cover strip (the strip's pad holds only where the band runs along the
     // strip's edge: lookG, across), +433 (32,451 -> 32,884 measured here);
     // budget follows.
-    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(32_884);
+    // K1218 S5 (2026-11-06): a web maps a pixel to the arc its ribbon gives
+    // it (sweptArc: the normal-swept map over the arm's profile polyline,
+    // handed to the radial projection one to two half-widths out), +1,875
+    // (32,884 -> 34,759 measured here); budget follows.
+    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(34_759);
     // K799: uKPath joins KNOT_UNIFORMS_GLSL, which the still pluck
     // includes (+18 here).
     expect(PLUCK_STILL_FRAG.length).toBeLessThanOrEqual(20_550);
