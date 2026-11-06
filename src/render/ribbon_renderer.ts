@@ -107,7 +107,6 @@ import {
 import { ExploreGaps } from "./ribbon/explore_gaps";
 import { RevealFx } from "./ribbon/reveal_fx";
 import { PaintState } from "./ribbon/paint_state";
-import type { PulseBandDecl, ResolvedPulseBand } from "./ribbon/paint_state";
 import { PluckHostPart } from "./ribbon/pluck_host";
 import { SdfPass } from "./ribbon/ribbon_sdf";
 import { StripPass } from "./ribbon/strip_pass";
@@ -556,10 +555,9 @@ export class RibbonRenderer {
     pulses: PulseArm[],
     caps: PaintCap[],
     routes: PaintRoute[] = [],
-    traveled: PaintRoute[] = [],
-    pulseBands: PulseBandDecl[] = []
+    traveled: PaintRoute[] = []
   ): void {
-    this.paintState.setPaint(spans, pulses, caps, routes, traveled, pulseBands);
+    this.paintState.setPaint(spans, pulses, caps, routes, traveled);
   }
   setRim(rim: PaintRim | null): void {
     this.paintState.setRim(rim);
@@ -803,8 +801,6 @@ export class RibbonRenderer {
   // lookup that resolves them ("chain:slot:dir" -> junctionArms index;
   // built lazily, junctionArms never changes).
   /** @internal ribbon */ routesByJn = new Map<number, ResolvedRoute[]>();
-  // K1139 S3b: the pulse bands resolved per junction (paint_state).
-  /** @internal ribbon */ pulseByJn = new Map<number, ResolvedPulseBand[]>();
   /** @internal ribbon */ armJunction: Map<string, number> | null = null;
   // Junction joinery: arms per fused junction (built once), per-chain
   // fused-terminal flags for the tuck, and palette pixel rows for CPU-side

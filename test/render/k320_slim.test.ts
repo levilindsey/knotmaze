@@ -184,7 +184,13 @@ describe("K320 stage 1: char budgets", () => {
     // soft field (junctionBase's jbT and jbIa again, sG, the blend's gN / gD
     // and the band mask rm), +727 (41,396 -> 42,123 measured here); budget
     // follows.
-    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(42_123);
+    // K1211 S6 (2026-11-05): the fan's pulse bands come out (K1139 S3b's
+    // pulse blocks and quiet base, S3's gold-over-bands composite, S4's
+    // soft field, the web light, the yield, PULSE_CREST_GLSL and debug
+    // view 5): the fan draws K81's gold bands over the base blend, as at
+    // 7474d09b, 11,513 less (42,123 -> 30,610 measured here); budget
+    // follows.
+    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(30_610);
     // K799: uKPath joins KNOT_UNIFORMS_GLSL, which the still pluck
     // includes (+18 here).
     expect(PLUCK_STILL_FRAG.length).toBeLessThanOrEqual(20_550);

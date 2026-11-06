@@ -432,11 +432,6 @@ export function installProbeHooks(ctx: ProbeCtx): void {
     ctx.scene.fabric
       ? ctx.scene.fabric.pulseProbe().map((i) => ({ ...i }))
       : [];
-  // K1139 S3a: the pulse bands (pulse_path.ts specs through
-  // junction_routes.ts slots): per band the junction, its arms, the
-  // slot it shares with the gold bands, and the junction's distance.
-  (window as unknown as Record<string, unknown>).__knotPulseBands = () =>
-    ctx.scene.fabric ? ctx.scene.fabric.pulseBandsProbe() : [];
   (window as unknown as Record<string, unknown>).__knotPinClocks = (t: number) => {
     const r = ctx.scene.renderer;
     if (!r) return false;
