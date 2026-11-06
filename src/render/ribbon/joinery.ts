@@ -71,6 +71,7 @@ import {
   MAX_ROUTES,
   MAX_ROUTE_VERTS,
   ROUTE_BAND_PAD,
+  ROUTE_BAND_RAMP,
   junctionShader,
   junctionShaderExplore,
   recordData,
@@ -540,11 +541,12 @@ export class Joinery {
     }
     if (!routed || dbg === 3 || dbg === 4) return;
     // K81 ROUTE BANDS, oldest first (FIELD_GLSL junctionField): the nearest
-    // point of each band's centerline polyline and its tau; a one-pixel
-    // ramp centered on the half-width (a cover strip: solid ROUTE_BAND_PAD
-    // pixels further first).
+    // point of each band's centerline polyline and its tau; a
+    // ROUTE_BAND_RAMP-pixel smoothstep centered on the half-width (a cover
+    // strip: solid ROUTE_BAND_PAD pixels further, then a one-pixel ramp).
     const pxW = Math.max(px, 1e-5);
-    const reach = fillHalf + (strip ? ROUTE_BAND_PAD + 1 : 0.5) * pxW;
+    const reach = fillHalf + (ROUTE_BAND_PAD + 1) * pxW;
+    const rw = (ROUTE_BAND_RAMP / 2) * pxW;
     const mC = this.fieldMcScratch;
     let base = Math.round(J[hd + 3]);
     const nrr = Math.min(nr, MAX_ROUTES);
@@ -591,7 +593,15 @@ export class Joinery {
         q0 = q1;
       }
       const nearA = bAd <= bBd;
-      let cov = Math.max(0, Math.min(1, (reach - Math.sqrt(nearA ? bAd : bBd)) / pxW));
+      const bd = Math.sqrt(nearA ? bAd : bBd);
+      let cov: number;
+      if (strip) {
+        cov = Math.max(0, Math.min(1, (reach - bd) / pxW));
+      } else {
+        // GLSL smoothstep(hw - rw, hw + rw, bd), exactly.
+        const t = Math.max(0, Math.min(1, (bd - (fillHalf - rw)) / (2 * rw)));
+        cov = 1 - t * t * (3 - 2 * t);
+      }
       const two = J[r0 + 3] > -0.5;
       const inArm = Math.round(J[r0 + 2]);
       const outArm = Math.round(J[r0 + 3]);

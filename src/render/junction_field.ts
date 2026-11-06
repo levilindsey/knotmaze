@@ -113,6 +113,12 @@ export const MAX_ROUTE_VERTS = 64;
 // only (junctionField): a strip's own edge is the ribbon's MSAA edge, and
 // the pad keeps the untraveled material out of it.
 export const ROUTE_BAND_PAD = 0.5;
+// A band's edge in a WEB, in pixels (junctionField): a smoothstep this wide,
+// centred on the thread half-width, so the band stays the thread's width.
+// K1218 S4: gold and an arm's own color are close in luminance, and a
+// one-pixel ramp's middle tones read as a staircase of pixel blocks along a
+// round edge (x4 ji 149); a ramp this wide reads as a ribbon's smooth edge.
+export const ROUTE_BAND_RAMP = 2.5;
 // Added to a cover strip's aRec (TriFanMesh.pushStrip): the fragment tells a
 // strip from a fan by fract(vRec) and still finds the record at
 // int(vRec + 0.5) (exact in float32 below 2^21 records).
@@ -309,8 +315,8 @@ vec3 junctionBase(int rec, vec2 p, vec4 hd, bool untrav) {
 // turn, between the band's two arms (K1219: no untraveled notch), each side
 // of the corner's middle by its own nearest point, the two blended across
 // the medial axis. In a web the band edge is a
-// one-pixel ramp CENTERED on the thread half-width, like a ribbon's MSAA
-// edge, so the band is the thread's width. On a cover strip the band stays
+// ROUTE_BAND_RAMP-pixel smoothstep CENTERED on the thread half-width, so the
+// band is the thread's width. On a cover strip the band stays
 // solid ROUTE_BAND_PAD pixels past the half-width before its ramp: the
 // strip's own edge is the ribbon's MSAA edge (4x samples sit within 0.4 px
 // of the pixel center, where this runs), and the pad keeps the untraveled
@@ -329,7 +335,8 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
   if (!routed || (uKBase.z > 2.5 && uKBase.z < 4.5)) return c;
   int base = int(hd.w + 0.5);
   int stride = 2 + int(uJParams.y + 0.5);
-  float reach = uJParams.x + (strip ? ${(ROUTE_BAND_PAD + 1).toFixed(3)} : 0.5) * pxW;
+  float reach = uJParams.x + ${(ROUTE_BAND_PAD + 1).toFixed(3)} * pxW;
+  float rw = ${(ROUTE_BAND_RAMP / 2).toFixed(3)} * pxW;
   for (int r = 0; r < ${MAX_ROUTES}; r++) {
     if (r >= nr) break;
     vec4 r0 = jAt(base);
@@ -362,7 +369,8 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
       q0 = q1;
     }
     bool nearA = bA.x <= bB.x;
-    float cov = clamp((reach - sqrt(nearA ? bA.x : bB.x)) / pxW, 0.0, 1.0);
+    float bd = sqrt(nearA ? bA.x : bB.x);
+    float cov = strip ? clamp((reach - bd) / pxW, 0.0, 1.0) : 1.0 - smoothstep(uJParams.x - rw, uJParams.x + rw, bd);
     // K1219: inside the turn (between the band's two arms, under pi apart).
     ivec2 rk = ivec2(r0.zw + 0.5);
     bool inT = r0.w > -0.5 && jbS < TAU * 0.5 && (ivec2(jbA, jbB) == rk || ivec2(jbB, jbA) == rk);
