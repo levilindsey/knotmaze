@@ -5,7 +5,7 @@
 # work28\ports_k990e.json variant M (J3e's; read in place, never copied). Later versions, read in place: v6.9 work29\base
 # ports work29\ports_k1113.json P; v7.0 work30\base work30\ports_k1119.json Pae90; v7.1 work31\base
 # work31\ports_k1112c.json Pc10; v7.2 work32\base work32\ports_k1112cusp.json Plc2m.
-# Steps: tools, template, build, ctx, base, census, cmp, det, account, c, cusp, probe, guard, sheets, png, sheetcol, crops.
+# Steps: tools, template, build, ctx, base, census, cmp, det, account, c, cusp, probe, sheets, png, sheetcol, crops, guard.
 # Logs in work33\checks_logs. tools = mk_tools_k863j.py (J3i's pairs, probe, area and wtcopy tools ported);
 # account_k863j.py, same_k863j.py and sheetcol_k863j.py are J3j's own.
 # Run: pwsh -NoProfile -File work33\dbg\checks_k863j.ps1 [step ...] (no step = all, in order). At most 4 Python processes.
@@ -131,7 +131,6 @@ Step "cusp" {
 }
 # J3i's probe (every rule pair solved) on v6.8
 Step "probe" { & pwsh -NoProfile -File work33\dbg\probe_k863j.ps1 }
-Step "guard" { & $py -I work20\dbg\check_out_k990.py out33 }
 # three sheets at a time (room for one more Python process beside them)
 Step "sheets" {
   @((Sheet "out33\b_v68.svg" ($bt -replace '%s', 'b') "b,$bp" @($v68, $v69, $v70) "work33\sheets\b_v68"),
@@ -168,7 +167,8 @@ Step "sheetcol" {
 }
 # crops to view at 96 dpi (J3h's strip tool, untouched): every row of every sheet, 9 or 10 rows an image, the left
 # part of each cell; the long rows (test words, e's words, the corners' words) in their approved column only (it draws
-# over the font's pale copy), whole; the corner sheet's crops in out33\png (the deliverable crop sheet)
+# over the font's pale copy), whole; the corner sheet's crops in out33\png (the deliverable crop sheet); nr's and
+# ds's corners (the largest r and s) at 2x, approved above v7.2 (work33\dbg\zoom_corners_k863j.py)
 Step "crops" {
   New-Item -ItemType Directory -Force work33\sheets\png | Out-Null
   $st = "work31\dbg\strip_k1112c.py"; $sp = "work33\sheets\png"; $n4 = "names=font,approved,v6.9,v7.0"
@@ -183,5 +183,8 @@ Step "crops" {
   @((Py "crop_words" @($st, "out33\cursive_v68_words.svg", "$sp\words_v68", ('"' + $words + '"'), "width=3220", "rows=7", "cols=1", "names=approved")),
     (Py "crop_corners" @($st, "out33\corners_v68.svg", "out33\png\corners_v68_crop", ('"' + $cnw + '"'), "width=1100", "rows=10", "names=font,approved,v7.2")),
     (Py "crop_cornerw" @($st, "out33\corners_v68.svg", "$sp\corners_v68_words", ('"' + $cnw + '"'), "width=3040", "rows=10", "cols=1", "names=approved"))) | Wait-Process
+  & $py -I work33\dbg\zoom_corners_k863j.py out33\png\corners_v68_crop_0.png "$sp\corners_v68_zoom_nr_ds.png"
   Get-ChildItem $sp, out33\png -Filter *.png | ForEach-Object { "$($_.Name) $($_.Length) bytes" }
 }
+# guard last, once out33 holds every sheet: J3e's check of Levi's chart rule on each SVG
+Step "guard" { & $py -I work20\dbg\check_out_k990.py out33 }
