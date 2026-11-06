@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1210.
+Next free ID: K1211.
 
 ## Waiting on Levi
 
@@ -297,23 +297,12 @@ Next free ID: K1210.
   Retrace encore, Echo (Simon by pitch; needs K1139's route pulse), Beacons (K80 4.17 plus route beacons),
   memory hints (`hints.ts`: the next 3-4 runs, then fade). Rec: Glimpse first, with Shuffle as its hard
   setting. Levi's picks pending.
-- **K1119** · Cursive J3g (v7.0), Levi's answers to v6.9 (2026-11-03): b, v and w exit between v6.8 and
-  v6.9, closer to v6.8 ("still exit somewhat downward and with a swoosh"); the six a/q joins get v6.6's dip
-  back ("We need that dip"); the e after them decided by the checks. One sheet per letter for Levi.
-  - owner: nobody since 2026-11-03 08:47 (merged; agent `adcba68466fb7684f` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `6d7dc73f`
-  - evidence: .claude/probes/K863/trace/ (work30/, out30/, NOTES ## K1119)
-  - next: Levi looks at the v7.0 sheets (b/v/w exits, the a/q dip, be/ve/we: v7.0 or e60, the br dip), then the c stage (K1112's next letter)
-  - brief: docs/design/K1119_cursive_j3g.md (its Handoff); J3f's in docs/design/K1113_cursive_j3f.md
 - **K1172** · Walker modes, Levi's brainstorm (2026-11-03): guide it, program it, a flock, stop them (and a tower
   defense), steer it live, bend and tilt. Which family first? (`docs/design/K1172_walker_modes.md`; full text:
   `docs/ledger_notes.md`)
 - **K1190** · K1139 Stage 4's look calls (card `docs/asks/K1190.md`; sheets t4, t6 in
   `.claude/probes/K1139/out/s4/sheets/`): soften the sharp fronts (ji 33, ji 149); smooth ji 33's
   straight edges; ji 149's gold edge round again; fill the notch. Rec: all four (2 causes to find; notes)
-- **K1197** · Cursive: c's joins by the one rule (v7.2, J3i): the joins into a, d, g, o and q run flat and turn
-  up late where the font rises in one curve, and ck bends in an S; rise like the font, or fine as is? Card
-  `docs/asks/K1197.md`; sheets `.claude/probes/K863/trace/out32/png/`.
 - **K1200** · Light on loops (K1139 S4): pulses entering a loop from both ends meet halfway and fade out in
   pairs, so the far side of a long loop goes dark for a moment (about twice the usual gap): fine as is, or
   should they pass through each other? Card: `docs/asks/K1200.md`
@@ -332,11 +321,11 @@ Next free ID: K1210.
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
   Levi to edit instead of drawing all 26 (Levi, 2026-10-26). Muse's prototype parked at abc135e7.
-  - owner: nobody since 2026-11-04 21:02: J3i (claude agent a2d2f19ad8f0a41d7 of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c) finished its stage; waiting on Levi's look (K1197)
+  - owner: nobody since 2026-11-05 09:05: paused on Levi's answers (K1119: v6.8 on every sheet; K1197: c's old joins)
   - branch: mainline for the brief; J3i's branch `worktree-agent-a2d2f19ad8f0a41d7` (`.claude/worktrees/agent-a2d2f19ad8f0a41d7`, kept) also holds unmerged copies of its probe files; J3h's worktree `.claude/worktrees/agent-a3b2dcbad71e5cbd8` kept (merged at d5d0a2c7); last commit: `9e699429` (J3i's branch tip)
   - evidence: `.claude/probes/K863/trace/` (J3i: `work32/`, `out32/` with `png/c_font_cmp_v72.png` and `png/c_spots_v72.png`, `work32/dbg/*_k1112cusp.*`, NOTES `## K1112 cusp`; J3h: `work31/`, `out31/`, `work31/dbg/*_k1112c.*`, NOTES `## K1112 c`; J3g: `work30/`, `out30/`, NOTES `## K1119`); Drive `K863/` (v7.0: `*_v70.svg`; v7.1: `c_v71.svg`, `cursive_v71_words.svg`; v7.2: `c_v72.svg`, `cusp_v72.svg`, `cursive_v72_words.svg`); Levi's template `out25/cursive_template.svg`; the full file list in `docs/ledger_notes.md` `## K863`
-  - next: Levi's look (K1197); then a stage lands Plc1m (K1198's notes: 21G's judgment; `.claude/probes/K1198/ports_k1112cusp.json`) as the kit's ports, keeps or drops the fr and fs pins by K1198's look (not no-ops under Plc1m), takes K1198's ligature rule if batch 22 passes it, and refits where c's exit leaves c if Levi asks; K1119's look in its own stage; then the next exit, g
-  - brief: `docs/design/K1112_cursive_j3i.md` (Handoff); J3h's Handoff in `docs/design/K1112_cursive_j3h.md`
+  - next: a Claude stage restores v6.8 (K1119's sheets) and c's old hand-set joins as the kit's base, judged by K863_trace.md's Judging a look; then Plc1m and the ij work re-judged on it (K1198); the rule replaces a hand-set join only where it matches by eye; 22G and the c refit held
+  - brief: K863_trace.md's Judging a look binds it; the base stage's brief is the next to write (docs/design/)
 - **K114** · Gameplay round 2, designed in
   `docs/design/K80_gameplay_additions.md` section R: burn race, cut
   verb, beat rider, spider, Pluck Hero MVP. Levi took the recs (calls
@@ -774,6 +763,9 @@ Every other item below waits on the trigger it names.
 - **K1209** · Retire the fillet layer vote (21E: a flip only reorders fans, 0 px; K1186): one fan layer, once
   joinery.ts's "kept for the junction-shader merge" is checked. Removes the vote loop, layerFor, the fm
   routing, filletTopMesh, `voteOverride` and its test; a moved pin is re-frozen and named.
+- **K1210** · Fire and collapse across junctions. Levi, 2026-11-05: "I also want to make sure that fire and
+  segment collapsing effects also correctly transition across segments--similar to the highlights". Batch 22
+  Run H measures both against the pulse (`docs/design/K1208_muse_batch22.md`); a fix follows.
 
 ## Residuals (known, not fixed)
 
@@ -1704,9 +1696,9 @@ Every other item below waits on the trigger it names.
 - **K1195** · `scripts/preview.ps1` (K1188, f5035e0d): a src-* folder that `git worktree remove` half-deletes
   (a file held open) loses its `.git`, so the fallback keeps it and later -Ref runs of that sha under that
   -Root are refused as a live run until it is cleared by hand
-- **K1198** · Cursive v7.2's leftovers (J3i). 21G (e43b2cfc; notes, `.claude/probes/K1198/SUMMARY_21G.md`):
-  Plc1m reads as well as v7.2 and replaces it (lands with K863 after K1197). ij's join solves through
-  the ports; calt off drops every font connector. Batch 22: only the ligature lookup off, fr/fs pins' look
+- **K1198** · Cursive v7.2's leftovers (J3i), held 2026-11-05: Plc1m and the ij work were built on v7.2,
+  whose b, v, w and c joins Levi rejected (K1119, K1197); re-judge them on the approved base once K863's
+  next stage restores it. 21G's notes: `.claude/probes/K1198/SUMMARY_21G.md` (e43b2cfc).
 - **K1205** · A warm Pixel draws fabric at rest at 30 fps: at thermal status 1 (skin 39-40 C) 0 moves read p50
   33.1 (builds 36aed2d5 and fbc1b212) while 7 moves held 16.7; cool, 0 moves holds 16.7 (K1139's passes
   `.claude/probes/rounds/2026-11-05-k1139s5`, `-s5b`). Cause untested (notes)
@@ -2014,6 +2006,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1197** · Cursive c joins: Levi kept the old hand-set joins. Done in f7be8548 (2026-11-05).
+- **K1119** · Cursive v7.0: Levi chose v6.8 on every sheet. Done in f7be8548 (2026-11-05).
 - **K1204** · Muse batch 21 (Runs B to G) ran through the chain, and Claude judged each run. Done in e43b2cfc (2026-11-05).
 - **K1186** · Fill look: no hold-and-fade, a layer-vote flip draws 0 px (21E). Done in 080d4b49 (2026-11-05).
 - **K1206** · Batch 22's Run A brief (`docs/design/K1208_muse_batch22_run_a.md`) has its draft check every path it cites, quote each number from the file that holds it, and list the paths in its report. Done in 76f3dbc6 (2026-11-05).
