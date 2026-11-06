@@ -509,14 +509,14 @@ Next free ID: K1227.
   - next: K1211 first: the light inside junctions (Levi 2026-11-05: one seamless unit; the bands may go); then Levi's look K1200 (`docs/asks/K1200.md`), K1201 (its fix (b), Run 22D, held for K1211), S6 (plan section 5) after K1140's Glimpse picks. The next pulse step's Pixel pass watches fabric 7 moves' frames over 25 ms (+14 and +15 in the fix's and S5's passes, floor 13)
   - brief: the plan `docs/design/K1139_pulse_junctions.md` section 5 (S6); S5 was Muse batch 20's Run B (`docs/design/K1199_muse_batch20.md`)
   - env: the passes' builds first and never while Muse runs: `scripts/preview.ps1 -Ref <sha> -Root <out>\builds -BuildOnly` for each sha (`pixel_passes.ps1` stops before the phone lock when one is missing); probe server `npx vite --config .claude/probes/K1139/vite.private-cache.config.ts --port 5620 --strictPort --host 127.0.0.1` from a worktree (ports 5620-5639); GPU probes through `.claude/probes/K1139/run_locked.ps1 -Batch`
-- **K1218** · Gold zigzags in the T and the four (loop ji 89, 12, 88; 22O, f9f625a5): a crossing next to the
-  joint masks the fan inside its over thread's tube, so that ribbon's straight gold cut at the joint and its
-  crest show through (`walked_gold.ts:172`). Next: S2, with K1219 and the edges 7474d09b also draws (`docs/design/K1218_s2_fused_junctions.md`); notes.
-  - owner: agent `aa8d805a64db795dd` of claude session c18e2f02-e64f-41ba-9af0-2dbd583358e2 (opus, started 2026-11-05 19:53, 2 h cap ~21:53)
-  - branch: `worktree-agent-aa8d805a64db795dd`, worktree `.claude/worktrees/agent-aa8d805a64db795dd`; last commit: `13aab452`
-  - evidence: .claude/probes/K1218/s2/ in its worktree; S6's sheets in .claude/probes/K1211/out6/sheets/
-  - next: S2 runs to its Done; then Claude views its sheets at full size against the top row and master, and shows Levi
-  - brief: `docs/design/K1218_s2_fused_junctions.md`
+- **K1218** · Every junction one fused unit (Levi, window 84). S2 (5a12c51f) took out the gold zigzags at loop ji 89, 12,
+  88 and 13 and the slivers past the gold's round edge, K1219's notch included (fb504294, 05dfe41e). S3: the gap
+  edges' staircase, the nubs, loop ji 113's short edge, loop ji 12's triangle (`docs/design/K1218_s3_junction_outline.md`); notes.
+  - owner: agent `aee662ad7eee48c67` of claude session c18e2f02-e64f-41ba-9af0-2dbd583358e2 (opus, started 2026-11-05 21:42, 2 h cap ~23:42)
+  - branch: `worktree-agent-aee662ad7eee48c67`, worktree `.claude/worktrees/agent-aee662ad7eee48c67`; last commit: `5a12c51f`
+  - evidence: .claude/probes/K1218/s3/ in its worktree; S2's tools in .claude/probes/K1218/s2/ (tracked) and its shots and sheets in the main checkout's .claude/probes/K1218/s2/out/
+  - next: S3 runs to its Done (the gap edges' staircase, the nubs, loop ji 113's short edge, loop ji 12's triangle, cross ji 33's lines); then Claude views its sheets at full size against the top row and master, and shows Levi
+  - brief: `docs/design/K1218_s3_junction_outline.md`
 - **K1220** · Text forks: a disc with a round edge inside, steps where the arms' straight cuts meet it
   (22N, 655eb6a9): glyph arms under 0.15 world get no field record, so a host-axis disc draws the fork.
   Next: S2 after K1218 S2, one junction agent at a time (S1's brief: `docs/design/K1220_s1_text_forks.md`); notes.
@@ -546,7 +546,7 @@ Binding for every stage:
 Running agents are listed under In progress, each with its own next step.
 - **K1201** · S4b's joint step (K1139): a two-ended arm's ridge near its joint (xR < 0.5) steps the light.
   21F (8e0c5a1c): play meets it in every daily of a week, 2-6 arm-ends each, steps up to 0.77 after the reach
-  window (CPU, lattice spans; notes). Fix (b) crossfaded the pulse bands K1211 S6 removed (13aab452): K1218 S2 looks for the step by eye.
+  window (CPU, lattice spans; notes). Fix (b) crossfaded the pulse bands K1211 S6 removed (13aab452); K1218 S2's crops at its eight spots show no step (5a12c51f).
 - **K875** · K868 S1b, master's side: on Muse's link master registers only 58-80% with the oracle at
   j49/j123 and #6 finds every band end off (18/18, 19/19; cause untested: gaps or a reveal/fog state);
   its sdf and strip silhouettes differ in width; joinery.ts:1469-1471's comment is stale. s1b_oracle.md.
