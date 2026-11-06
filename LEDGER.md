@@ -291,8 +291,6 @@ Next free ID: K1232.
 - **K1172** · Walker modes, Levi's brainstorm (2026-11-03): guide it, program it, a flock, stop them (and a tower
   defense), steer it live, bend and tilt. Which family first? (`docs/design/K1172_walker_modes.md`; full text:
   `docs/ledger_notes.md`)
-- **K1225** · Cursive word-end tails: s and p as J3l or J3lc, and the new b, v, w, o and f tails
-  (`docs/asks/K1225.md`; K863 J3l, 6c4ae88b)
 
 ## In progress
 
@@ -317,11 +315,11 @@ Next free ID: K1232.
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
   Levi to edit instead of drawing all 26 (Levi, 2026-10-26). Muse's prototype parked at abc135e7.
-  - owner: nobody since 2026-11-05 21:19 (merged; agent `a2df5ff9479dad4a1` of claude session c18e2f02-e64f-41ba-9af0-2dbd583358e2)
-  - branch: mainline; last commit: `6c4ae88b`
-  - evidence: .claude/probes/K863/trace/work36/ and out36/ (main checkout, untracked); the base: work33/ (v6.8) and work34/cand/ (D2, Q1)
-  - next: Levi picks on card K1225; then the pick (`work36/cand/J3L` or `J3LC` join_params) becomes the kit's current build
-  - brief: `docs/design/K863_cursive_j3l.md`
+  - owner: agent `a48ef22ec84a4a83c` of claude session c18e2f02-e64f-41ba-9af0-2dbd583358e2 (opus, started 2026-11-06 07:10, 2 h cap ~09:10)
+  - branch: `worktree-agent-a48ef22ec84a4a83c`, worktree `.claude/worktrees/agent-a48ef22ec84a4a83c`; last commit: `7ff7294a`
+  - evidence: .claude/probes/K863/trace/work37/ and out37/ (main checkout, untracked); the base: work36/cand/J3L (J3l, 6c4ae88b)
+  - next: J3m runs to its Done (b, v and w turn out of their cusp; o's and f's word-end tails; J3L in as the kit's build); Claude views its sheets and crops, merges its tool commits, files Levi's card
+  - brief: `docs/design/K863_cursive_j3m.md`
 - **K114** · Gameplay round 2, designed in
   `docs/design/K80_gameplay_additions.md` section R: burn race, cut
   verb, beat rider, spider, Pluck Hero MVP. Levi took the recs (calls
@@ -494,10 +492,10 @@ Next free ID: K1232.
 - **K1097** · K1040 S3, the label pass (F7 of `docs/design/K1040_junction_field.md`): the depth-tested label on
   the GPU, gated by oracle30's verdicts on the 12 scenes (0 DEFECT closes K1033), the recordings' pops and the
   Pixel's 2 ms.
-  - owner: nobody since 2026-11-06 06:59: the S3f5 Pixel batch ran (5ace293a let the phone tools take the USB link when adb lists the phone twice); the next stage is not briefed yet
+  - owner: nobody since 2026-11-06 06:59: the S3f5 Pixel batch ran (5ace293a let the phone tools take the USB link when adb lists the phone twice); the next stage waits for S4a's merge (~08:45)
   - branch: mainline; last commit: `5ace293a`
   - evidence: .claude/probes/K1040/s3/ (s3f5_gate.ps1, s3f4_gate.ps1, split.mjs, vert_count.ts; S3f5 on the Pixel 2026-11-06: out/split_s3f5.md, out/phone_table_s3f5.md, out/batch_s3f5_20261106_0651.log; S3f5 desktop: out/split_s3f5_desktop.md, out/check_s3f5chk_summary.md, out/ab_s3f5ab_summary.md; S3f4: out/split_s3f4.md, out/phone_table_s3f4.md, out/split_s3f4_desktop.md; earlier splits out/split_s3f2.md, out/split_s3d2.md)
-  - next: S3f5 on the Pixel: the gate fails on all 12 scenes (4.1 to 9.7 ms against 2). The median scene is the fixed cost ~2.2 ms (an empty full-size pass; d24, depth invalidate and depth texture move it +0.0 to +0.3) + the drawing ~2.6 (vertex side 1.1, fragment side 0.9; fetch and spflat save 0.0 and +0.2) + the upload ~1.3 (0.6 to 2.8, main thread). No S3f5 variant is adopted. Next: Claude briefs one stage (Muse) on the structural levers, after S4a merges: where the pass sits in the frame, one pass for the label and the band, and the upload's rows and formats, with a Pixel batch per lever. Levi was asked on 11-06 whether the phone can stay ready for a few hours so the stage can time each lever as it goes
+  - next: S3f5 on the Pixel: the gate fails on all 12 scenes (4.1 to 9.7 ms against 2). The median scene is the fixed cost ~2.2 ms (an empty full-size pass; d24, depth invalidate and depth texture move it +0.0 to +0.3) + the drawing ~2.6 (vertex side 1.1, fragment side 0.9; fetch and spflat save 0.0 and +0.2) + the upload ~1.3 (0.6 to 2.8, main thread). No S3f5 variant is adopted. Next: after S4a merges, Claude briefs one Muse stage on the structural levers (where the pass sits in the frame, one pass for the label and the band, the upload's rows and formats), each lever timed live on the Pixel. Levi said yes (2026-11-06) to leaving the phone on its charger, unlocked on the home screen, for a few hours later today: Claude tells him when to set it up
   - brief: Run B of `docs/design/K1204_muse_batch21.md` (S3f5); `docs/design/K1040_s3f4_bound.md` (its Handoff ends with the Pixel's reading)
   - env: the phone through `.claude/probes/K1040/s3/phone_batch.ps1` (run_phone.ps1: both locks, then K1142's ready check), `phone_time.mjs` serving on 5403; desktop timing through `run_locked.ps1`, never piped through `Select-Object -First` (K1174)
 - **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate correctly
@@ -721,8 +719,8 @@ Every other item below waits on the trigger it names.
   45.0/45.3 fps, 119-122 of ~360 frames over 25 ms, none over 50, against 8fe3d20's 60.1/60.3, two runs a
   build in both orders, thermal status 0). Trim the piece counts or per-piece cost, or accept it.
   docs/design/K156.md round 2026-10-30 handoff.
-- **K1112** · Cursive: one join rule for every pair, re-scoped 2026-11-05: b, v, w and c keep v6.8's presets
-  (K1119, K1197); the other exits are ported letter by letter, and a preset goes only when its port draws
+- **K1112** · Cursive: one join rule for every pair, re-scoped 2026-11-05: c keeps v6.8's presets (K1197), and b, v and w theirs until
+  K863 J3m reshapes their exits (Levi's K1225 answer, 2026-11-06); the other exits are ported letter by letter, and a preset goes only when its port draws
   v6.8's join, judged by eye (`K863_trace.md`; notes). m and u keep v6.8's presets: Run P's ports failed its gate on every pair (27d103d1).
 - **K1149** · Beat dots: dots at the beat points inside multi-beat runs, along threads and at junctions, that
   pop with a ring when the dot eats them; the dropdown and the pulse and ring at the dot are done (split from
@@ -1986,6 +1984,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1225** · Cursive word-end tails: s and p as J3l or J3lc, and the new b, v, w, o and f tails (`docs/asks/K1225.md`; K863 J3l, 6c4ae88b). Dropped: Levi answered 2026-11-06: J3l for s and p; b, v and w should turn out of their cusp about ESE and swoop up (at a word's end and into high-entry letters; into low-entry ones the sharp cusp stays, the swoop starts later); o's tail hugs the o about 10 deg further; f's tail reaches the baseline and leaves along its pre-cusp stroke, to fuse into a spur. K863 J3m builds it (docs/design/K863_cursive_j3m.md) (2026-11-06).
 - **K1218** · Every junction one fused unit (Levi, window 84): S2 fused the gold, S3 smoothed the gap edges, S4 the gold path's edge, and S5-S7's swept arcs (a web paints each arm at its own ribbon's arc) took out the lines, creases and staircases inside the junctions; K1227-K1231 hold what is left. Done in e4075024 (2026-11-06).
 - **K1213** · Cursive v6.8: word-final s and p run on in a flat tongue, the i and j dots are dashes, the q tail steps at 5x; J3k's S2, P1, D2 and Q1 follow the font, each local. Dropped: Levi answered 2026-11-05: "all word-end letters should have a tail, but both the s and p tails are currently bad. Tails should match the curvature they pass by and swoop up more. D2 for [the dots] is good. ... Q1 is good." K863 J3l builds it (docs/design/K863_cursive_j3l.md) (2026-11-05).
 - **K1208** · Muse batch 22: runs B to P through the chain; Run D dropped, since K1211 S6 removed the pulse bands it crossfaded. Done in 27d103d1 (2026-11-05).
