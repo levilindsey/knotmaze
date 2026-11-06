@@ -1,0 +1,15 @@
+# K1214 22M: E's tail stand again on each pair + master vs fbc1b212, ABBA.
+# Servers (vite preview of the BuildOnly builds) already run on 5990-5994:
+# 5990=1fe793f5 5991=71eedb94 5992=36aed2d5 5993=fbc1b212 5994=734c55b9 (master)
+$env:K1196_HOST_BASE = "http://127.0.0.1:5990"
+$env:K1196_HOST_HEAD = "http://127.0.0.1:5991"
+$env:K1196_PAIR = "1fe793f5-71eedb94"
+node tail22m.mjs out_tail1
+$env:K1196_HOST_BASE = "http://127.0.0.1:5992"
+$env:K1196_HOST_HEAD = "http://127.0.0.1:5993"
+$env:K1196_PAIR = "36aed2d5-fbc1b212"
+node tail22m.mjs out_tail2
+$env:K1196_HOST_BASE = "http://127.0.0.1:5993"
+$env:K1196_HOST_HEAD = "http://127.0.0.1:5994"
+$env:K1196_PAIR = "fbc1b212-734c55b9"
+node tail22m.mjs out_tail3

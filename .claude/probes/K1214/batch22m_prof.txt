@@ -1,0 +1,16 @@
+# K1214 22M: per-frame phase split on each preview build (5990-5994 as in batch22m_tail.txt).
+$env:K1214_HOST = "http://127.0.0.1:5990"
+$env:K1214_LABEL = "1fe793f5"
+node prof22m.mjs out_prof_1fe793f5
+$env:K1214_HOST = "http://127.0.0.1:5991"
+$env:K1214_LABEL = "71eedb94"
+node prof22m.mjs out_prof_71eedb94
+$env:K1214_HOST = "http://127.0.0.1:5992"
+$env:K1214_LABEL = "36aed2d5"
+node prof22m.mjs out_prof_36aed2d5
+$env:K1214_HOST = "http://127.0.0.1:5993"
+$env:K1214_LABEL = "fbc1b212"
+node prof22m.mjs out_prof_fbc1b212
+$env:K1214_HOST = "http://127.0.0.1:5994"
+$env:K1214_LABEL = "734c55b9-master"
+node prof22m.mjs out_prof_master

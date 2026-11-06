@@ -1,0 +1,15 @@
+# K1214 22M: fan-hidden (nofans) windows; the "all" rows are batch22m_prof.txt's.
+$env:K1214_VARIANT = "nofans"
+$env:K1214_HOST = "http://127.0.0.1:5990"
+$env:K1214_LABEL = "1fe793f5-nofans"
+node gpu22m.mjs out_gpu_1fe793f5_nofans
+$env:K1214_HOST = "http://127.0.0.1:5991"
+$env:K1214_LABEL = "71eedb94-nofans"
+node gpu22m.mjs out_gpu_71eedb94_nofans
+$env:K1214_HOST = "http://127.0.0.1:5993"
+$env:K1214_LABEL = "fbc1b212-nofans"
+node gpu22m.mjs out_gpu_fbc1b212_nofans
+$env:K1214_HOST = "http://127.0.0.1:5994"
+$env:K1214_LABEL = "734c55b9-master-nofans"
+node gpu22m.mjs out_gpu_master_nofans
+Remove-Item Env:K1214_VARIANT

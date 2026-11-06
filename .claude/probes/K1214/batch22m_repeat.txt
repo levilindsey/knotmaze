@@ -1,0 +1,15 @@
+# K1214 22M repeat: pair 1 all + nofans once more (prof batches were single loads).
+$env:K1214_HOST = "http://127.0.0.1:5991"
+$env:K1214_LABEL = "71eedb94-r2"
+node prof22m.mjs out_prof_71eedb94_r2
+$env:K1214_HOST = "http://127.0.0.1:5990"
+$env:K1214_LABEL = "1fe793f5-r2"
+node prof22m.mjs out_prof_1fe793f5_r2
+$env:K1214_VARIANT = "nofans"
+$env:K1214_HOST = "http://127.0.0.1:5991"
+$env:K1214_LABEL = "71eedb94-nofans-r2"
+node gpu22m.mjs out_gpu_71eedb94_nofans_r2
+$env:K1214_HOST = "http://127.0.0.1:5990"
+$env:K1214_LABEL = "1fe793f5-nofans-r2"
+node gpu22m.mjs out_gpu_1fe793f5_nofans_r2
+Remove-Item Env:K1214_VARIANT

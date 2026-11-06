@@ -1,0 +1,2 @@
+# K1214 22M: CDP Profiler per build (dev worktrees, port 5995; see run_cdp.ps1).
+pwsh -NoProfile -File run_cdp.ps1
