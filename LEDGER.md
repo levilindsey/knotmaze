@@ -298,13 +298,13 @@ Next free ID: K1220.
 ## In progress
 
 - **K1211** · One seamless light inside each junction, no line or edge in it (Levi 2026-11-05; notes). Pulses
-  and the gold path first, then fire and collapse (K1210). Levi, on K1190's card: "All four" (notes). S1
-  (0ea697e8, unmerged): neither look ships. S2: the gold's round edge; S3: the webs' light, B's soft pulse.
-  - owner: agent `a39ebdc1635ca98dc` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (opus, started 2026-11-05 12:11, 2 h cap ~14:11)
-  - branch: `worktree-agent-a39ebdc1635ca98dc`, worktree `.claude/worktrees/agent-a39ebdc1635ca98dc`, with S1's branch `worktree-agent-a775d9bee91f23536` merged in (S1's worktree kept); last commit: 0ea697e8 (S1's)
-  - evidence: .claude/probes/K1211/ (S1's tools; out/ untracked); the pictures Levi saw: .claude/probes/K1139/out/s4/sheets/t4_ji33_cross_n_c34_3x.png, t6_ji149_x4_n_c34_2x.png
-  - next: S2 makes the walked gold end in one round edge in every junction kind (no nub, look A removed, checks calibrated); Claude views its sheets spot by spot against K1190's top row, then a card; S3 after Run I (K1209): the webs' light, B's soft pulse; then K1210
-  - brief: `docs/design/K1211_s2_gold_edge.md` (S1's: `K1211_seamless_junction_light.md`)
+  and the gold path first, then fire and collapse (K1210). Levi, on K1190's card: "All four" (notes). S2
+  (fba755ea): the gold's round edge. S3: the lit edge's line, the web's bite; S4: the soft front, no wedges.
+  - owner: agent `a48fddd224c96d898` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (opus, started 2026-11-05 13:49, 2 h cap ~15:49)
+  - branch: `worktree-agent-a48fddd224c96d898`, worktree `.claude/worktrees/agent-a48fddd224c96d898`, with S2's branch `worktree-agent-a39ebdc1635ca98dc` merged in (S2's worktree kept); last commit: fba755ea (S2's, not yet on master)
+  - evidence: .claude/probes/K1211/ (S1's and S2's tools; out/ and out2/ untracked, out2/ in S2's worktree); K1190's sheets: .claude/probes/K1139/out/s4/sheets/t6_ji149_x4_n.png, t4_ji33_cross_n.png
+  - next: merge S2 (fba755ea) into master once Run K passes its gate; S3: the lit edge's dark line, the web's bite (spot 4); S4: the soft front and no wedges (spots 1-2), look B removed; then K1218, K1210
+  - brief: `docs/design/K1211_s3_lit_edge_web.md` (S2's: `K1211_s2_gold_edge.md`; S1's: `K1211_seamless_junction_light.md`)
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
   float64 reference. Plan S1-S8, about 15 h (F7); supersedes K868 and K992. S1 to S1f merged (S1f: fb348a78); S3 (K1097) merged short of its gate; S1g merged (ca273d04); S3b (K1097) merged (587b7e80, 2026-11-02): 0 DEFECT, the Pixel's 2 ms missed 5-20x.
