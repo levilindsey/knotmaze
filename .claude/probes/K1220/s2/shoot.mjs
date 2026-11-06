@@ -84,6 +84,35 @@ async function load(page, url, { hold = false } = {}) {
   return asleep;
 }
 
+// REVEAL: the trace sequence with no particle effect (ap=trace&afx=none:
+// the effects animate on wall time) at 0.2 / 0.4 / 0.6 / 0.8 of the plan.
+// The renderer's revealPin pins the animator's t AND the FX clock at that
+// instant: the fans' and discs' joint gates read the FX clock, and pinAll
+// alone left it at the load wait's wall time, so every joint piece showed
+// over strokes the held reveal had not drawn yet (both builds).
+async function shootReveal(page, st, host, mark, famDir) {
+  const revUrl = `${st.base}&ap=trace&afx=none&fw=0#${st.xh.hash}`;
+  const rasleep = await load(page, revUrl, { hold: true });
+  await pinAll(page);
+  const rd = famDir("reveal");
+  let rinf = null;
+  for (const fr of [0.2, 0.4, 0.6, 0.8]) {
+    const pinned = await page.evaluate((fr) => {
+      window.__revealHold = fr;
+      const r = window.__knotRenderer(), rv = window.__knotReveal && window.__knotReveal();
+      const ok = !!(rv && r.revealPin && r.revealPin(fr * rv.duration));
+      r.update(); r.rebuildFillets(true);
+      return ok;
+    }, fr);
+    if (!pinned) console.log(`   reveal ${fr}: revealPin failed`);
+    await frames(page, 8); await sleep(300);
+    if (!rinf) { rinf = await info(page); writeMeta(rd, { host: host.url, mark, url: revUrl, asleep: rasleep, ...rinf }); }
+    await shotTo(page, rd, `reveal_${Math.round(fr * 100)}`);
+  }
+  const rev = await page.evaluate(() => window.__knotReveal && window.__knotReveal());
+  console.log(`   reveal ${JSON.stringify(rev)}`);
+}
+
 const pinAll = (page) => page.evaluate(() => {
   const pin = new Function("return (" + window.__k1220pin + ")")();
   pin();
@@ -148,6 +177,8 @@ try {
     for (const st of stands) {
       const t0 = Date.now();
       const famDir = (fam) => { const d = join(OUT, host.label, fam ? `${st.id}_${fam}` : st.id); mkdirSync(d, { recursive: true }); return d; };
+      // SET "reveal": only the reveal family (text stands).
+      if (SET === "reveal") { if (st.word) await shootReveal(page, st, host, mark, famDir); console.log(`${host.label} ${st.id}: reveal ${((Date.now() - t0) / 1000).toFixed(0)}s`); continue; }
       // REST (and nofans; for text stands the pluck on the rest page).
       const restUrl = st.word ? `${st.base}&am=instant&fw=0#${st.xh.hash}` : st.base;
       const asleep = await load(page, restUrl);
@@ -200,22 +231,7 @@ try {
           if (!finf) { finf = await info(page); writeMeta(fd, { host: host.url, mark, url: flowUrl, asleep: fasleep, ...finf }); }
           await shotTo(page, fd, k);
         }
-        // REVEAL: the trace sequence with no particle effect (ap=trace&afx=none:
-        // the effects animate on wall time), its clock held at 0.2 / 0.4 /
-        // 0.6 / 0.8 of the plan.
-        const revUrl = `${st.base}&ap=trace&afx=none&fw=0#${st.xh.hash}`;
-        const rasleep = await load(page, revUrl, { hold: true });
-        await pinAll(page);
-        const rd = famDir("reveal");
-        let rinf = null;
-        for (const fr of [0.2, 0.4, 0.6, 0.8]) {
-          await page.evaluate((fr) => { window.__revealHold = fr; }, fr);
-          await frames(page, 8); await sleep(300);
-          if (!rinf) { rinf = await info(page); writeMeta(rd, { host: host.url, mark, url: revUrl, asleep: rasleep, ...rinf }); }
-          await shotTo(page, rd, `reveal_${Math.round(fr * 100)}`);
-        }
-        const rev = await page.evaluate(() => window.__knotReveal && window.__knotReveal());
-        console.log(`   reveal ${JSON.stringify(rev)}`);
+        await shootReveal(page, st, host, mark, famDir);
       }
       const ctxLost = await page.evaluate(() => window.__ctxLost || 0);
       const line = `${host.label} ${st.id}: asleep=${asleep} s=${inf.view.s.toFixed(1)} recs=${inf.recs.length} text=${inf.recs.filter((r) => r.glyph).map((r) => `ji${r.ji}(rb${r.rb},${r.recArms}/${r.nArms}${r.hidden ? ",hid" : ""})`).join(" ")} ctxLost=${ctxLost} ${((Date.now() - t0) / 1000).toFixed(0)}s ${inf.stamp}`;
