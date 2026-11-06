@@ -223,8 +223,9 @@ state (they start from this run's commit).
    exactly, so every pin reproduces bit for bit. Make the
    window the only path: delete `setPulseBandEndWindow` and
    `pulseBandEndWindow`; the GLSL reads the record's R3.w span
-   unconditionally (`endWin` from `(r3.w - tau) /
-   PULSE_END_WINDOW` on the child side, 1 where R3.w is 0), the
+   unconditionally (today's `endWin` expression with only its
+   `uJParams.w > 0.5 &&` term dropped: `r3.w > 0.0 && tau > 0.0 ?
+   clamp((r3.w - tau) / PULSE_END_WINDOW, 0.0, 1.0) : 1.0`), the
    CPU twin and `kPulseBandV` read the same window without a
    flag, and `uJParams.z` / `uJParams.w` go back to free (write
    0, and say so in `setFieldParams`' comment). With the ramp
@@ -336,8 +337,8 @@ draws the fan, and 21E measured that change at 0 px.
 
 ### Tasks
 
-Use ports 5890-5899. No timing; no perf lock unless a sheet is
-shot. Start from Run B's commit; say its sha in the report.
+Use ports 5890-5899. No timing; task 4's shots take the perf
+lock. Start from Run B's commit; say its sha in the report.
 
 **Write set:** `src/render/ribbon/joinery.ts` (the vote loop,
 `layerFor`, the `fm` routing, `filletTopMesh`, `filletTopLayer`,
@@ -348,7 +349,9 @@ shot. Start from Run B's commit; say its sha in the report.
 `src/render/ribbon/paint_state.ts` (the top layer's readers
 only), `scripts/phone_pass/walk.mjs` (its layer toggle only, if
 it names the top layer), `test/render/vote_override.test.ts`
-(deleted), and any pin a fan overlap moves. Nothing else; Runs
+(deleted), any pin a fan overlap moves, and new probe files
+under `.claude/probes/K1186/` (`git add -f`) beside 21E's for
+task 4. Nothing else; Runs
 B, D, E, F and G touch none of these files except as Run D's
 section states (it starts from this run's commit).
 
@@ -369,18 +372,35 @@ section states (it starts from this run's commit).
    (their creation, their `begin` / `commit` and their layer),
    the renderer's top-layer container and accessors, and the
    readers in `explore_gaps.ts`, `paint_state.ts` and
-   `walk.mjs` that name them. `gapNearOf` stays. The root's two
-   empty containers stay (probes toggle by their historic child
-   indices; say so in the layer comment that replaces
+   `walk.mjs` that name them. `gapNearOf` stays. The root keeps
+   five children before the plucks layer: the top fillet layer's
+   slot (index 3) becomes an empty `Container` like slots 2 and
+   4, because probes toggle the root's children by their
+   historic indices (`.claude/probes/g1/attr_census.mjs` hides
+   `k[1]` and `k[3]`; the renderer's layer comment lists 0 to
+   4). Say so in that comment and in the one that replaces
    TWO-LAYER JOINERY, which now records the one-layer rule and
-   21E's 0 px).
+   21E's 0 px.
 3. **Pins.** Delete `test/render/vote_override.test.ts`. Run
    `npm test`: a pin may move only where fans overlap (two fans
    that drew on different layers now draw in push order on one);
    re-freeze each one that moves and name each in the commit.
    A pin moving outside a fan overlap is a stop (batch 8 rule
    2): report it, do not re-freeze past it.
-4. `npm test`.
+4. **Same pixels (desktop probe), before the retirement is
+   committed.** CPU pins cannot see draw order, so measure it:
+   build Run B's commit and the retired tree (`scripts/preview.ps1
+   -Ref <sha> -Root $env:TEMP\knotmaze-previews -BuildOnly` for
+   the base; the tree as the working build), serve each on a port
+   in range, and shoot 21E's stands (`.claude/probes/K1186/ab21e.mjs`,
+   links, moves and pinned clocks copied verbatim, rule 11) on
+   both builds, the same pinned state, a same-build control pair
+   first, under the perf lock (`.claude/probes/K1186/run_locked.ps1
+   -Batch`). State the changed pixels per stand. 21E measured
+   every forced vote at 0 px, so any changed pixel is a stop
+   (batch 8 rule 2): crop it, name the stand, and do not push the
+   retirement.
+5. `npm test`.
 
 ### Done and close
 
@@ -392,6 +412,8 @@ section states (it starts from this run's commit).
   fan draws on the one bottom layer.
 - `npm test` passes; every moved pin is a fan overlap, re-frozen
   and named in the commit (or none moved, said so).
+- Task 4's base-against-retired shots read 0 changed pixels at
+  every stand, beside a control pair at 0.
 
 **Close lines:**
 
@@ -722,11 +744,13 @@ stand links verbatim (rule 11); where a copy must change (its
 build, its port, the base-build stop), the copy's header names
 the change.
 
-1. **The builds.** Make both builds with
+1. **The builds.** Make every build with
    `scripts/preview.ps1 -Ref <sha> -Root
    $env:TEMP\knotmaze-previews -BuildOnly`: `aa1156ae` (S4's
-   base) and `36aed2d5` (S4 and S4b). Say both shas in the
-   report. If a build fails, name it and its error and stop
+   base) and `36aed2d5` (S4 and S4b) for task 2, and `1fe793f5`,
+   `71eedb94` and `fbc1b212` for task 3's watch (`36aed2d5`
+   serves both). Say every sha in the report. If a build fails,
+   name it and its error and stop
    (batch 8 rule 2); do not substitute another base.
 2. **S4's own cost.** Time the three stands (baseline, cyc,
    loop) on each build with 20F's `bench.mjs` (rest then play,
@@ -795,8 +819,9 @@ Probes only, in `.claude/probes/K1191/`.
 - The ledger's K1191 (quoted below) and
   `.claude/probes/K1191/task3_unlit_arm.md` (batch 19 Run D,
   whole): ji 147's arm 1 (chain 58 slot 68 dir -1) is in no
-  pulse band, its 276 fan-footprint pixels sit at the fan's rim
-  (0.67 to 0.97 world out), the fan twin paints its quiet base
+  pulse band, its fan-footprint pixels (36, 36, 36, 32, 32, 32,
+  36 and 36 in phases 0 to 7, 276 summed over the phases) sit at
+  the fan's rim (0.67 to 0.97 world out), the fan twin paints its quiet base
   there (luma 144.2 to 150.6, mean 148.0) and debug-5 G reads 0,
   yet at the pulse's bright phases the GPU shows ribbon-bright
   colours (up to luma 218) where the model shows the base. The
@@ -841,8 +866,9 @@ beside them and says so). Nothing in `src/`, `test/` or
 `scripts/` changes; Runs B, C, D, E and G touch none of these
 files.
 
-1. **The model.** Add `gk` to the copied cover model: at each of
-   arm 1's 276 rim pixels and each of the 8 phases, the foreign
+1. **The model.** Add `gk` to the copied cover model: at arm 1's
+   rim pixels in each of the 8 phases (the counts above, 276
+   pixel-phases in all), the foreign
    over threads whose silhouettes cross the pixel (from the same
    dump 19D read), their discard's effect on the composite, and
    the modelled colour with `gk` applied. State the rule `gk`
@@ -850,11 +876,13 @@ files.
    leaves the rule underdetermined, name the readings tried.
 2. **The verdict.** Compare the `gk` model against the GPU's
    samples at the same pixels and phases (19D's sampling shape):
-   per phase, how many of the 276 read within 2 luma of the GPU
-   with `gk`, against without it (19D's row: 4, 5, 9, 26, 26, 26,
-   13, 7 of 36 per phase matched the composite). `gk` explains
-   the brightness only if the bright phases' counts rise to
-   their pixels' counts; anything less is "not found", with the
+   per phase, how many of that phase's pixels read within 2 luma
+   of the GPU with `gk`, against without it (19D's composite row:
+   4, 5, 9, 26, 26, 26, 13 and 7, of 36, 36, 36, 32, 32, 32, 36
+   and 36). `gk` explains the brightness only if the bright
+   phases' counts (t0 to t2, t6 and t7, where 19D's "neither"
+   row reads 32, 31, 24, 20 and 29) rise to their pixels'
+   counts; anything less is "not found", with the
    per-phase table and what was ruled out (the readings of task
    1, and any input that still differs).
 3. `npm test` (once, reported green; as a probe-only run's base
@@ -868,8 +896,8 @@ files.
   from the header (and its readings named, if it tried more
   than one).
 - The per-phase table reads with and without `gk` at the same
-  276 pixels, and the verdict is one of the two the section
-  above names.
+  276 pixel-phases, and the verdict is one of the two the
+  section above names.
 - No file outside the write set changed, and `npm test` passes.
 
 **Close lines:**
@@ -920,7 +948,8 @@ fr/fs for Claude's look. Probes only; nothing lands.
   only with `calt` off (`i.mod` + `j.jmc`); `liga`, `clig`,
   `dlig`, `hlig`, `rlig`, `ccmp` and `ss02` off each leave the
   ligature, and the font has no `liga` feature.
-- 21G's benches in `.claude/probes/K1198/`:
+- 20G's bench in `.claude/probes/K1198/` (c3ab0a46, the one
+  21G gated against):
   `census_Plc1m.json` and `census_Plc1m.txt` (Plc1m, `calt` on:
   718 pieces, 333 joins, hooks 50, spikes 77, rough 147, seams
   6, over budget 399, in `gates_21g.txt`), and
@@ -955,7 +984,8 @@ as 21G did (the pin sheet aside).
 
 1. **The rule.** Keep `calt` and empty every GSUB
    ligature-substitution lookup (lookup type 4, found by its
-   type, never by name, number or pair) in memory with
+   type, never by name, number or pair; an Extension lookup,
+   type 7, counts by the type its subtables wrap) in memory with
    fontTools, so shaping ligates nothing while every connector
    `calt` makes still shapes. If that cannot be done cleanly
    (the lookups cannot be emptied without touching another
