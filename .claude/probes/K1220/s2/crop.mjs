@@ -1,29 +1,26 @@
-// K1208 Run K: screenshot-buffer helpers - decode, nearest-neighbour 3x
-// upscale (the brief's crop), and small colour statistics. Uses png.mjs.
+// K1220 S2: a nearest-scaled crop of a PNG, for looking at a few pixels.
+//   node crop.mjs <in.png> <x> <y> <w> <h> <zoom> <out.png> [<in2.png> ...]
+// With more inputs after <out.png>, the same crop of each sits side by side.
+import { readFileSync, writeFileSync } from "node:fs";
 import { decodePNG, encodePNG, toRGB } from "./png.mjs";
 
-export function upscale3(buf) {
-  const img = toRGB(decodePNG(buf));
-  const { W, H, data } = img;
-  const out = Buffer.alloc(W * 3 * H * 3 * 3);
-  for (let y = 0; y < H * 3; y++) {
-    const sy = (y / 3) | 0;
-    for (let x = 0; x < W * 3; x++) {
-      const sx = (x / 3) | 0;
-      const si = (sy * W + sx) * 3, di = (y * W * 3 + x) * 3;
-      out[di] = data[si]; out[di + 1] = data[si + 1]; out[di + 2] = data[si + 2];
+const [, , IN, X, Y, W, H, Z, OUT, ...more] = process.argv;
+const x0 = Number(X), y0 = Number(Y), w = Number(W), h = Number(H), z = Number(Z), G = 6;
+const ins = [IN, ...more].map((p) => toRGB(decodePNG(readFileSync(p))));
+const SW = ins.length * w * z + (ins.length - 1) * G, SH = h * z;
+const data = Buffer.alloc(SW * SH * 3, 40);
+ins.forEach((im, k) => {
+  const ox = k * (w * z + G);
+  for (let y = 0; y < SH; y++) {
+    const sy = y0 + Math.floor(y / z);
+    for (let x = 0; x < w * z; x++) {
+      const sx = x0 + Math.floor(x / z);
+      const o = (y * SW + ox + x) * 3;
+      if (sx < 0 || sy < 0 || sx >= im.W || sy >= im.H) { data[o] = 255; data[o + 1] = 0; data[o + 2] = 255; continue; }
+      const s = (sy * im.W + sx) * 3;
+      data[o] = im.data[s]; data[o + 1] = im.data[s + 1]; data[o + 2] = im.data[s + 2];
     }
   }
-  return encodePNG({ W: W * 3, H: H * 3, data: out });
-}
-
-export function decode(buf) {
-  return toRGB(decodePNG(buf));
-}
-
-export const luma = (d, i) => 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2];
-export const dist = (d, i, c) => Math.hypot(d[i] - c[0], d[i + 1] - c[1], d[i + 2] - c[2]);
-export const pxAt = (img, x, y) => {
-  const i = ((y | 0) * img.W + (x | 0)) * 3;
-  return [img.data[i], img.data[i + 1], img.data[i + 2]];
-};
+});
+writeFileSync(OUT, encodePNG({ W: SW, H: SH, data }));
+console.log(`${OUT}: ${SW}x${SH}`);
