@@ -137,6 +137,64 @@ export const ROUTE_BAND_PAD = 0.5;
 // strip from a fan by fract(vRec) and still finds the record at
 // int(vRec + 0.5) (exact in float32 below 2^21 records).
 export const STRIP_REC_TAG = 0.25;
+
+// K1211 S1: THE JUNCTION LIGHT SWITCH (probe hook __knotJunctionLight),
+// uJParams.z: 0 = today's bands (byte-identical), 1 = look A (one light
+// per junction, the colors' rule: every arm's light eases into the
+// junction's one level near its joint, shown through the angular blend,
+// no band), 2 = look B (the bands kept, their sideways falloff soft over
+// LIGHT_SOFT_FH half-widths and let into the arms off the band only over
+// the first LIGHT_RAMP_FH half-widths of arc). Both looks lengthen a lit
+// record's cover strips to LIGHT_STRIP_FH so the ramps end inside what
+// the junction pass draws.
+export const JUNCTION_LIGHTS = 3;
+export const LIGHT_RAMP_FH = 2.0;
+export const LIGHT_SOFT_FH = 1.5;
+export const LIGHT_STRIP_FH = LIGHT_RAMP_FH + 0.25;
+let JUNCTION_LIGHT = 0;
+export function junctionLight(): number {
+  return JUNCTION_LIGHT;
+}
+export function setJunctionLight(mode: number): void {
+  const m = Math.round(mode);
+  JUNCTION_LIGHT = m >= 1 && m < JUNCTION_LIGHTS ? m : 0;
+  const u = fieldUniforms().uniforms as { uJParams: Float32Array };
+  u.uJParams[2] = JUNCTION_LIGHT;
+}
+// The ramps' ease, junctionBlend's (paint kEase with uKSect.y = ease) on
+// u clamped to [0, 1]: 0 at the joint, 1 at the ramp's end.
+export function lightEase(u: number, ease: number): number {
+  const x = u < 0 ? 0 : u > 1 ? 1 : u;
+  return x + (x * x * (3 - 2 * x) - x) * ease;
+}
+// Look B's band cover at centreline distance d: solid to the half-width,
+// then a smoothstep down to 0 over LIGHT_SOFT_FH more half-widths.
+export function lightSoftCover(d: number, fillHalf: number): number {
+  const w = LIGHT_SOFT_FH * fillHalf;
+  let x = (d - fillHalf) / w;
+  x = x < 0 ? 0 : x > 1 ? 1 : x;
+  return 1 - x * x * (3 - 2 * x);
+}
+// Look B's allowance for one bracketing arm at arc s from the joint: 1 on
+// the band's own arms, else eased out over LIGHT_RAMP_FH half-widths.
+export function lightAllowance(own: boolean, s: number, fillHalf: number, ease: number): number {
+  return own ? 1 : 1 - lightEase(s / (LIGHT_RAMP_FH * fillHalf), ease);
+}
+// Look A's level: the arms' lights (composed minus base row at the joint)
+// averaged with weights |L|^2 - a soft max that ignores dark arms and is
+// continuous as the lights change. Into out (its length is the channels).
+export function lightLevel(lights: ReadonlyArray<ArrayLike<number>>, out: Float32Array | number[]): void {
+  const nc = out.length;
+  let sw = 0;
+  for (let c = 0; c < nc; c++) out[c] = 0;
+  for (const L of lights) {
+    const w = L[0] * L[0] + L[1] * L[1] + L[2] * L[2];
+    sw += w;
+    for (let c = 0; c < nc; c++) out[c] += w * L[c];
+  }
+  const k = 1 / Math.max(sw, 1e-6);
+  for (let c = 0; c < nc; c++) out[c] *= k;
+}
 // Texel row widths of the two data textures (linear index -> (i % W, i / W),
 // done in GLSL as a mask and a shift - both widths are 2^ROW_SHIFT; the
 // FloatRows class and its row uploader live in float_rows.ts).
@@ -187,8 +245,8 @@ export function setFieldParams(fillHalf: number, profN: number): void {
   const u = fieldUniforms().uniforms as { uJParams: Float32Array };
   u.uJParams[0] = fillHalf;
   u.uJParams[1] = profN;
-  // .z and .w are free (0) since K1207 settled the two switches.
-  u.uJParams[2] = 0;
+  // .z: K1211's light switch (0 = today); .w is free (0).
+  u.uJParams[2] = JUNCTION_LIGHT;
   u.uJParams[3] = 0;
 }
 
@@ -215,6 +273,31 @@ ${PULSE_CREST_GLSL}
 // JUNCTION_FRAG.
 // junctionField sets it; a pixel under no band keeps 0.
 float kFanPulseV = 0.0;
+
+// K1211 S1 (uJParams.z 1 / 2, the looks): what junctionBase leaves for
+// them - the bracketing arms (index, block), the blend weight and each
+// arm's arc at p. Written only while a look is on.
+int jbIa = 0;
+int jbIb = 0;
+int jbAbA = 0;
+int jbAbB = 0;
+float jbT = 0.0;
+float jbSA = 0.0;
+float jbSB = 0.0;
+// lightEase / lightSoftCover / lightAllowance (TS twins above).
+float jLightEase(float u) {
+  float x = clamp(u, 0.0, 1.0);
+  return x + (x * x * (3.0 - 2.0 * x) - x) * uKSect.y;
+}
+float jLightSoft(float d) {
+  float x = clamp((d - uJParams.x) / (${LIGHT_SOFT_FH.toFixed(3)} * uJParams.x), 0.0, 1.0);
+  return 1.0 - x * x * (3.0 - 2.0 * x);
+}
+float jLightAllow(int ia0, int ib0) {
+  float aA = jbIa == ia0 || jbIa == ib0 ? 1.0 : 1.0 - jLightEase(jbSA / (${LIGHT_RAMP_FH.toFixed(3)} * uJParams.x));
+  float aB = jbIb == ia0 || jbIb == ib0 ? 1.0 : 1.0 - jLightEase(jbSB / (${LIGHT_RAMP_FH.toFixed(3)} * uJParams.x));
+  return mix(aA, aB, jbT);
+}
 
 const float TAU = 6.283185307179586;
 const float HALF_PI = 1.5707963267948966;
@@ -322,6 +405,15 @@ vec3 junctionBase(int rec, vec2 p, vec4 hd, bool untrav) {
     if (t <= 0.0) onlyA = true;
     else if (t >= 1.0) onlyB = true;
   }
+  if (uJParams.z > 0.5) {
+    jbIa = ia;
+    jbIb = ib;
+    jbAbA = abA;
+    jbAbB = abB;
+    jbT = onlyA ? 0.0 : onlyB ? 1.0 : t;
+    jbSA = profArc(abA, relA < HALF_PI ? rho * cos(relA) : 0.0);
+    jbSB = profArc(abB, relB < HALF_PI ? rho * cos(relB) : 0.0);
+  }
   vec3 cA = vec3(0.0);
   vec3 cB = vec3(0.0);
   if (!onlyB) {
@@ -331,6 +423,40 @@ vec3 junctionBase(int rec, vec2 p, vec4 hd, bool untrav) {
   cB = armPaint(abB, profArc(abB, relB < HALF_PI ? rho * cos(relB) : 0.0), false, untrav);
   if (onlyB) return cB;
   return mix(cA, cB, t);
+}
+
+// K1211 look A (uJParams.z 1, after junctionBase set the jb globals): the
+// junction's one level LJ - each arm's light (composed minus base row at
+// its joint texel) averaged with weights |L|^2 (lightLevel's soft max) -
+// and each bracketing arm shown as base + mix(LJ, its own light,
+// ease(s / ramp)), blended by junctionBase's t. No band.
+#define JCOL vec3
+JCOL jLightA(int rec, vec4 hd) {
+  int n = int(hd.z + 0.5);
+  int stride = 2 + int(uJParams.y + 0.5);
+  JCOL lj = JCOL(0.0);
+  float sw = 0.0;
+  for (int i = 0; i < ${MAX_ARMS}; i++) {
+    if (i >= n) break;
+    int ab = rec + 2 + i * stride;
+    JCOL l = armPaint(ab, 0.0, true, false) - armPaint(ab, 0.0, true, true);
+    float w = dot(l.rgb, l.rgb);
+    lj += w * l;
+    sw += w;
+  }
+  lj /= max(sw, 1e-6);
+  float ramp = ${LIGHT_RAMP_FH.toFixed(3)} * uJParams.x;
+  JCOL fA = JCOL(0.0);
+  JCOL fB = JCOL(0.0);
+  if (jbT < 1.0) {
+    JCOL bA = armPaint(jbAbA, jbSA, false, true);
+    fA = bA + mix(lj, armPaint(jbAbA, jbSA, false, false) - bA, jLightEase(jbSA / ramp));
+  }
+  if (jbT > 0.0) {
+    JCOL bB = armPaint(jbAbB, jbSB, false, true);
+    fB = bB + mix(lj, armPaint(jbAbB, jbSB, false, false) - bB, jLightEase(jbSB / ramp));
+  }
+  return clamp(mix(fA, fB, jbT), 0.0, 1.0);
 }
 
 // The junction pass's color at p (pxW: world units per pixel; strip: the
@@ -369,11 +495,18 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
   }
   bool banded = np > 0;
   vec3 c = junctionBase(rec, p, hd, (routed || banded) && fz < 0.5);
+  // K1211: the looks apply to lit records with arms, outside debug 3 / 4.
+  bool lookOn = uJParams.z > 0.5 && (routed || banded) && hd.z > 0.5 && !(uKBase.z > 2.5 && uKBase.z < 4.5);
+  bool lookA = lookOn && uJParams.z < 1.5;
+  bool lookB = lookOn && uJParams.z > 1.5;
+  if (lookA && fz < 0.5) c = jLightA(rec, hd);
   if (routed && fz > 0.0 && fz < 1.0) {
     // K169: a web fading in blends its two bases (c is the side below 0.5).
     vec3 o = junctionBase(rec, p, hd, fz >= 0.5);
+    if (lookA && fz >= 0.5) o = jLightA(rec, hd);
     c = fz < 0.5 ? mix(c, o, fz) : mix(o, c, fz);
   }
+  if (lookA) return c;
   if ((!routed && !banded) || (uKBase.z > 2.5 && uKBase.z < 4.5)) return c;
   int base = base0;
   int stride = 2 + int(uJParams.y + 0.5);
@@ -403,6 +536,8 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
       q0 = q1;
     }
     float cov = clamp((reach - sqrt(best)) / pxW, 0.0, 1.0);
+    // K1211 look B: the soft cover, let into the arms off the band.
+    if (lookB) cov = jLightSoft(sqrt(best)) * jLightAllow(int(r0.z + 0.5), r0.w > -0.5 ? int(r0.w + 0.5) : -1);
     if (cov > 0.0) {
       // A banded record's verts carry the strip-arc shift (their tau is
       // arc-true, K1139 S3b): the arms are sampled where the ribbon has
@@ -538,6 +673,7 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
     }
     float dnow = sqrt(best);
     float cov = clamp((reach - dnow) / pxW, 0.0, 1.0);
+    if (lookB) cov = jLightSoft(dnow) * jLightAllow(int(r0.z + 0.5), r0.w > -0.5 ? int(r0.w + 0.5) : -1);
     bool inw = r1.y == 1.0 || r1.y == 3.0;
     bool hov = r1.y > 1.5;
     float g = r1.x + tau;
@@ -777,6 +913,8 @@ export const FIELD_EXPLORE_EDITS: ReadonlyArray<readonly [string, string]> = [
     "    return stripAtP(int(hx.y + 0.5), (dot(e, ax.yz) + hx.w) * hx.z);",
   ],
   ["  vec3 cA = vec3(0.0);\n  vec3 cB = vec3(0.0);", "  vec4 cA = vec4(0.0);\n  vec4 cB = vec4(0.0);"],
+  // K1211 look A's color type.
+  ["#define JCOL vec3", "#define JCOL vec4"],
   [
     "vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {",
     "vec4 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {",
