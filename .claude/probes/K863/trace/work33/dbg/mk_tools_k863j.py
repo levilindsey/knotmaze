@@ -4,7 +4,8 @@ r"""K863 J3j (base = v6.8): writes J3j's ports of J3i's tools into work33/dbg (t
   probe_k863j.ps1  <- work32/dbg/probe_k1112cusp.ps1, retargeted: build v68 (work33/base, work28/ports_k990e.json M,
                       the default) writing work33/probe
   area_k863j.ps1   <- work31/dbg/area_k1112c.ps1 writing work33/sheets/png
-checks_k863j.ps1 and account_k863j.py are written for J3j (no earlier tool to port).
+  wtcopy_k863j.ps1 <- work32/dbg/wtcopy_k1112cusp.ps1 for work33 and out33 (the worktree copies; the account's dumps left out)
+checks_k863j.ps1, account_k863j.py, same_k863j.py and sheetcol_k863j.py are written for J3j (no earlier tool to port).
 J3e's steps (template, build, ctx, census_v68) need no port: checks_k863j.ps1 runs J3e's tools in place
 (work23/dbg/build_k1019.ps1, work27/dbg/ctx_template_k1027.py, work27/dbg/census_k1027.py), as J3e's checks did.
 Run from the trace folder: venv\Scripts\python.exe -I work33\dbg\mk_tools_k863j.py
@@ -96,7 +97,30 @@ def area():
     wr("area_k863j.ps1", s)
 
 
+def wtcopy():
+    s = rd(os.path.join("work32", "dbg", "wtcopy_k1112cusp.ps1"))
+    s = sub(s, "work32\\dbg\\wtcopy_k1112cusp.ps1", "work33\\dbg\\wtcopy_k863j.ps1")
+    s = sub(s, "is work32/NOTES_k1112cusp.md), the big sheet SVGs (out32/*.svg but the template, on Drive K863/; their PNGs go), the\n"
+               "# Drive copies (work32/upload) and the builds (work32/base, work32/det/base: checks_k1112cusp.ps1 remakes them).",
+            "is work33/NOTES_k863j.md), the big sheet SVGs (out33/*.svg but the template; their PNGs go), the account's\n"
+            "# dumps (work33/account: its account step remakes them) and the builds (work33/base, work33/det/base:\n"
+            "# checks_k863j.ps1 remakes them).")
+    s = sub(s, '$files += Get-ChildItem "$T\\work32" -File', '$files += Get-ChildItem "$T\\work33" -File')
+    s = sub(s, "foreach ($sub in 'dbg', 'probe', 'checks_logs', 'sheets', 'det\\solves_D') {\n"
+               "    if (Test-Path \"$T\\work32\\$sub\") { $files += Get-ChildItem \"$T\\work32\\$sub\" -File -Recurse }",
+            "foreach ($sub in 'dbg', 'probe', 'checks_logs', 'sheets') {\n"
+            "    if (Test-Path \"$T\\work33\\$sub\") { $files += Get-ChildItem \"$T\\work33\\$sub\" -File -Recurse }")
+    s = sub(s, '$files += Get-ChildItem "$T\\work32\\det" -File | Where-Object { $_.Extension -ne \'.svg\' }',
+            'if (Test-Path "$T\\work33\\det") { $files += Get-ChildItem "$T\\work33\\det" -File | Where-Object { $_.Extension -ne \'.svg\' } }')
+    s = sub(s, '$files += Get-ChildItem "$T\\out32\\png" -File -Recurse', '$files += Get-ChildItem "$T\\out33\\png" -File -Recurse')
+    s = sub(s, '$files += Get-Item "$T\\out32\\cursive_template.svg"', '$files += Get-Item "$T\\out33\\cursive_template.svg"')
+    s = ("# K863 J3j: copy of work32\\dbg\\wtcopy_k1112cusp.ps1 (J3i's, untouched) by work33\\dbg\\mk_tools_k863j.py, for\n"
+         "# work33 and out33 (the account's dumps left out too). J3i's header:\n" + s)
+    wr("wtcopy_k863j.ps1", s)
+
+
 if __name__ == "__main__":
     pairs()
     probe()
     area()
+    wtcopy()

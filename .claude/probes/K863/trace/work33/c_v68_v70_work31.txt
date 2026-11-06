@@ -20,3 +20,13 @@ census rows: 73 in A, 73 in B, 73 in both: 53 equal, 20 differ; only in A 0, onl
   differ: wc:tail0c: kmax_p95
   differ: which:J4-6ic: kmax_p95
   differ: which:J6-8ch: kmax_p95
+account dumps work33\account\v6.8.json vs work33\account\v7.0.json: 110 pieces in both, 101 with equal raw coefficients, 9 differ
+  differ: bc:J0-2bc (join)
+  differ: bc:L2cs0 (stroke)
+  differ: cb:J0-2cb (join)
+  differ: cv:J0-2cv (join)
+  differ: cw:J0-2cw (join)
+  differ: vc:J0-2vc (join)
+  differ: vc:L2cs0 (stroke)
+  differ: wc:J0-2wc (join)
+  differ: wc:L2cs0 (stroke)

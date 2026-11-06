@@ -5,9 +5,9 @@
 # work28\ports_k990e.json variant M (J3e's; read in place, never copied). Later versions, read in place: v6.9 work29\base
 # ports work29\ports_k1113.json P; v7.0 work30\base work30\ports_k1119.json Pae90; v7.1 work31\base
 # work31\ports_k1112c.json Pc10; v7.2 work32\base work32\ports_k1112cusp.json Plc2m.
-# Steps: tools, template, build, ctx, base, census, cmp, det, account, c, cusp, probe, guard, sheets, png. Logs in
-# work33\checks_logs. tools = mk_tools_k863j.py (J3i's pairs, probe and area tools ported); account_k863j.py and
-# same_k863j.py are J3j's own.
+# Steps: tools, template, build, ctx, base, census, cmp, det, account, c, cusp, probe, guard, sheets, png, sheetcol, crops.
+# Logs in work33\checks_logs. tools = mk_tools_k863j.py (J3i's pairs, probe, area and wtcopy tools ported);
+# account_k863j.py, same_k863j.py and sheetcol_k863j.py are J3j's own.
 # Run: pwsh -NoProfile -File work33\dbg\checks_k863j.ps1 [step ...] (no step = all, in order). At most 4 Python processes.
 param([Parameter(ValueFromRemainingArguments = $true)][string[]]$Only)
 $Only = @(@($Only) | ForEach-Object { "$_" -split ',' } | Where-Object { $_ })
@@ -146,3 +146,42 @@ Step "sheets" {
   Get-ChildItem out33\*.svg | ForEach-Object { "$($_.Name) $($_.Length) bytes" }
 }
 Step "png" { foreach ($s in "b_v68", "v_v68", "w_v68", "aq_joins_v68", "e_after_bvw_v68", "c_v68", "cusp_v68", "cursive_v68_words", "corners_v68") { Png "out33\$s.svg" } }
+# each column against the earlier sheets that drew the same version (sheetcol_k863j.py, cell by cell, one at a time):
+# the approved column against J3e's and J3g's v6.8 (K1119's sheets) and against v7.0 (K1197's old c joins)
+Step "sheetcol" {
+  $sc = @(
+    @("b_v68", 1, "out30\b_v70", 1, "b_v68_vs_out30_v68"), @("v_v68", 1, "out30\v_v70", 1, "v_v68_vs_out30_v68"),
+    @("w_v68", 1, "out30\w_v70", 1, "w_v68_vs_out30_v68"), @("b_v68", 2, "out30\b_v70", 3, "b_v69_vs_out30_v69"),
+    @("v_v68", 2, "out30\v_v70", 3, "v_v69_vs_out30_v69"), @("w_v68", 2, "out30\w_v70", 3, "w_v69_vs_out30_v69"),
+    @("b_v68", 3, "out30\b_v70", 2, "b_v70_vs_out30_v70"), @("v_v68", 3, "out30\v_v70", 2, "v_v70_vs_out30_v70"),
+    @("w_v68", 3, "out30\w_v70", 2, "w_v70_vs_out30_v70"), @("b_v68", 0, "out30\b_v70", 0, "b_font_vs_out30_font"),
+    @("aq_joins_v68", 1, "out28\aq_joins_v68", 3, "aq_v68_vs_out28_v68"), @("aq_joins_v68", 1, "out30\aq_joins_v70", 1, "aq_v68_vs_out30_v66"),
+    @("aq_joins_v68", 2, "out30\aq_joins_v70", 2, "aq_v69_vs_out30_v69"), @("aq_joins_v68", 3, "out30\aq_joins_v70", 3, "aq_v70_vs_out30_v70"),
+    @("e_after_bvw_v68", 2, "out30\e_after_bvw_v70", 1, "e_v69_vs_out30_v69"), @("e_after_bvw_v68", 3, "out30\e_after_bvw_v70", 2, "e_v70_vs_out30_v70"),
+    @("c_v68", 1, "out32\c_v72", 1, "c_v68_vs_out32_v70"), @("c_v68", 1, "out31\c_v71", 1, "c_v68_vs_out31_v70"),
+    @("c_v68", 2, "out31\c_v71", 2, "c_v71_vs_out31_v71"), @("c_v68", 3, "out32\c_v72", 2, "c_v72_vs_out32_v72"),
+    @("cusp_v68", 1, "out32\cusp_v72", 1, "cusp_v68_vs_out32_v71"), @("cusp_v68", 2, "out32\cusp_v72", 2, "cusp_v72_vs_out32_v72"),
+    @("cursive_v68_words", 1, "out28\cursive_v68_words", 2, "words_v68_vs_out28_v68"),
+    @("cursive_v68_words", 1, "out29\cursive_v69_words", 1, "words_v68_vs_out29_v68"),
+    @("e_after_bvw_v68", 1, "out29\cursive_v69_words", 1, "e_v68_vs_out29_words_v68"))
+  foreach ($c in $sc) { & $py -I work33\dbg\sheetcol_k863j.py "out33\$($c[0]).svg" $c[1] "$($c[2]).svg" $c[3] "work33\sheets\col_$($c[4]).txt" }
+}
+# crops to view at 96 dpi (J3h's strip tool, untouched): every row of every sheet, 9 or 10 rows an image, the left
+# part of each cell; the long rows (test words, e's words, the corners' words) in their approved column only (it draws
+# over the font's pale copy), whole; the corner sheet's crops in out33\png (the deliverable crop sheet)
+Step "crops" {
+  New-Item -ItemType Directory -Force work33\sheets\png | Out-Null
+  $st = "work31\dbg\strip_k1112c.py"; $sp = "work33\sheets\png"; $n4 = "names=font,approved,v6.9,v7.0"
+  @((Py "crop_b" @($st, "out33\b_v68.svg", "$sp\b_v68", "b,$bp", "width=460", "rows=9", $n4)),
+    (Py "crop_v" @($st, "out33\v_v68.svg", "$sp\v_v68", "v,$vp", "width=410", "rows=9", $n4)),
+    (Py "crop_w" @($st, "out33\w_v68.svg", "$sp\w_v68", "w,$wp", "width=460", "rows=9", $n4)),
+    (Py "crop_c" @($st, "out33\c_v68.svg", "$sp\c_v68", "c,$cp", "width=460", "rows=9", "names=font,approved,v7.1,v7.2"))) | Wait-Process
+  @((Py "crop_aq" @($st, "out33\aq_joins_v68.svg", "$sp\aq_joins_v68", $aqw, "width=670", "rows=10", $n4)),
+    (Py "crop_e" @($st, "out33\e_after_bvw_v68.svg", "$sp\e_after_bvw_v68", ('"' + $ew + '"'), "width=460", "rows=4", $n4)),
+    (Py "crop_ew" @($st, "out33\e_after_bvw_v68.svg", "$sp\e_after_bvw_v68_words", ('"' + $ew + '"'), "width=3220", "rows=4", "cols=1", "names=approved")),
+    (Py "crop_cusp" @($st, "out33\cusp_v68.svg", "$sp\cusp_v68", $lowcusp, "width=455", "rows=9", "names=font,approved,v7.2"))) | Wait-Process
+  @((Py "crop_words" @($st, "out33\cursive_v68_words.svg", "$sp\words_v68", ('"' + $words + '"'), "width=3220", "rows=7", "cols=1", "names=approved")),
+    (Py "crop_corners" @($st, "out33\corners_v68.svg", "out33\png\corners_v68_crop", ('"' + $cnw + '"'), "width=1100", "rows=10", "names=font,approved,v7.2")),
+    (Py "crop_cornerw" @($st, "out33\corners_v68.svg", "$sp\corners_v68_words", ('"' + $cnw + '"'), "width=3040", "rows=10", "cols=1", "names=approved"))) | Wait-Process
+  Get-ChildItem $sp, out33\png -Filter *.png | ForEach-Object { "$($_.Name) $($_.Length) bytes" }
+}
