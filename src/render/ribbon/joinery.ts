@@ -117,6 +117,10 @@ const PULSE_R0 = new Int32Array(MAX_ROUTES);
 // whitening at its own tau without the cover (0 for a shared band).
 const PULSE_SD = new Float64Array(MAX_ROUTES);
 const PULSE_F = new Float64Array(MAX_ROUTES);
+// K1211 S3: the colour before the gold blocks and after them (the shader's
+// c0 and cg), for drawing the pulse bands under the gold.
+const GOLD_C0 = new Float32Array(4);
+const GOLD_CG = new Float32Array(4);
 const pulseSmooth = (e0: number, e1: number, v: number): number => {
   const t = Math.max(0, Math.min(1, (v - e0) / (e1 - e0)));
   return t * t * (3 - 2 * t);
@@ -593,9 +597,13 @@ export class Joinery {
     const reach = fillHalf + (strip ? ROUTE_BAND_PAD + 1 : 0.5) * pxW;
     let base = base0;
     const nrr = Math.min(nr, MAX_ROUTES);
-    // K1211 S2: the walked gold's cover (the max over gold blocks, look 0),
-    // which the drawing pulse bands yield to below (drawBandYield).
-    let gCov = 0;
+    // K1211 S3 (FIELD_GLSL junctionField): mode 0 draws the pulse bands
+    // UNDER the gold. The gold blocks map a colour x to gT x + K (gT = the
+    // product of 1 - cover, look B keeps it 1), so the gold over the bands'
+    // colour u is cg + gT (u - c0), c0 the colour before the gold and cg
+    // after it: exact for any number of blocks.
+    let gT = 1;
+    for (let c = 0; c < 4; c++) GOLD_C0[c] = out[c];
     for (let r = 0; r < nrr; r++) {
       const r0 = at(base);
       const nv = Math.round(J[r0]);
@@ -627,7 +635,7 @@ export class Joinery {
           lightSoftCover(Math.sqrt(best), fillHalf) *
           allow(Math.round(J[r0 + 2]), J[r0 + 3] > -0.5 ? Math.round(J[r0 + 3]) : -1);
       }
-      if (!lookB) gCov = Math.max(gCov, cov);
+      if (!lookB) gT *= 1 - cov;
       if (cov > 0) {
         armPaint(rec + 2 + Math.round(J[r0 + 2]) * stride, -tau + shift, true, false, mA);
         if (J[r0 + 3] > -0.5) {
@@ -640,6 +648,12 @@ export class Joinery {
         for (let c = 0; c < nc; c++) out[c] = out[c] + (mA[c] - out[c]) * cov;
       }
       base += 1 + nv;
+    }
+    if (gT < 1) {
+      for (let c = 0; c < 4; c++) {
+        GOLD_CG[c] = out[c];
+        out[c] = GOLD_C0[c];
+      }
     }
     // K1139 S3b PULSE BANDS (FIELD_GLSL junctionField's twin loop): the
     // crest at dG = distJ + tau over the arms' quiet material, whitened
@@ -776,7 +790,7 @@ export class Joinery {
     }
     let wW = 0;
     for (let r = 0; r < npp; r++) {
-      const cw = PULSE_COV[r] * drawBandYield(PULSE_DIST[r], dShared, pxW, gCov);
+      const cw = PULSE_COV[r] * drawBandYield(PULSE_DIST[r], dShared, pxW);
       if (!(cw > 0)) continue;
       const r0 = PULSE_R0[r];
       const tau = PULSE_TAU[r];
@@ -794,7 +808,7 @@ export class Joinery {
     for (let r = 0; r < npp; r++) {
       const ra = J[PULSE_R0[r] + 2];
       const rb = J[PULSE_R0[r] + 3];
-      const yr = PULSE_F[r] * drawBandYield(PULSE_DIST[r], dShared, pxW, gCov);
+      const yr = PULSE_F[r] * drawBandYield(PULSE_DIST[r], dShared, pxW);
       for (let q = r + 1; q < npp; q++) {
         const qa = J[PULSE_R0[q] + 2];
         const qb = J[PULSE_R0[q] + 3];
@@ -812,6 +826,10 @@ export class Joinery {
       } else {
         for (let c = 0; c < nc; c++) out[c] += ((tgt ? tgt[c] : 1) - out[c]) * wW;
       }
+    }
+    // K1211 S3: the gold over the bands (cg + gT (u - c0)).
+    if (gT < 1) {
+      for (let c = 0; c < nc; c++) out[c] = GOLD_CG[c] + gT * (out[c] - GOLD_C0[c]);
     }
   }
   // Section RGB at a world ARC along a chain into out[0..2] - the ribbon's

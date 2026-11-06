@@ -146,3 +146,5 @@ Then give `Ledger items` and K1211's handle fields (owner, branch, last commit, 
 ## Handoff
 
 (The stage agent appends here.)
+
+Start: 2026-11-05 13:47:41 -08:00 (`Get-Date`). Cap: 15:47:41.

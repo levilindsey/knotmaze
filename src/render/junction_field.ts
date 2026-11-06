@@ -224,17 +224,20 @@ export function pulseBandCover(dnow: number, fillHalf: number, pxW: number, stri
   return Math.max(0, Math.min(1, (reach - dnow) / pxW));
 }
 
-// K1211 S2: a drawing pulse band's yield at a fan pixel (the CPU twin of
-// junctionField's yr): K1139 S2's ramp to the shared bands (1 on a tie,
-// 0 once a shared band is 3 px nearer) times what the walked gold leaves,
-// 1 - goldCover, the max of the gold blocks' own covers. A drawing band
-// paints its arms' untraveled rows, so before this it cut the gold's
-// round tube along the bisector to the shared band (a straight edge with
-// a corner) and, on the shared arm's centreline (a tie), over the gold.
-// Look B passes goldCover 0 (its rule is S1's, unchanged).
-export function drawBandYield(dDraw: number, dShared: number, pxW: number, goldCover: number): number {
+// A drawing pulse band's yield at a fan pixel (the CPU twin of
+// junctionField's yr): K1139 S2's ramp to the shared bands, 1 on a tie and
+// 0 once a shared band is 3 px nearer.
+// K1211 S2 multiplied it by 1 - the gold's cover, so a drawing band (its
+// arms' untraveled rows) no longer cut the walked gold's round tube along
+// the bisector to the shared band or painted over it on a tie. Its band
+// still went OVER the gold, so the gold's one-pixel edge kept a share of
+// the unlit base under a lit pulse (a dark line). K1211 S3 draws the bands
+// UNDER the gold in mode 0 instead (junctionField's c0 / cg / gT; twin
+// cpuJunctionField): the gold's visible weight is its own cover, and the
+// yield is K1139's ramp alone again, in both modes.
+export function drawBandYield(dDraw: number, dShared: number, pxW: number): number {
   const t = Math.max(0, Math.min(1, (dDraw - dShared) / (3 * pxW)));
-  return (1 - t * t * (3 - 2 * t)) * (1 - goldCover);
+  return 1 - t * t * (3 - 2 * t);
 }
 
 export function setFieldParams(fillHalf: number, profN: number): void {
@@ -464,7 +467,11 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
   int base = base0;
   int stride = 2 + int(uJParams.y + 0.5);
   float reach = uJParams.x + (strip ? ${(ROUTE_BAND_PAD + 1).toFixed(3)} : 0.5) * pxW;
-  float gC = 0.0;
+  // K1211 S3: mode 0 draws the bands UNDER the gold. The gold maps x to
+  // gT x + K (gT = the product of 1 - cov), so gold over the bands' u is
+  // cg + gT (u - c0): c0 before the gold, cg after. Look B keeps gT 1.
+  vec3 c0 = c;
+  float gT = 1.0;
   for (int r = 0; r < ${MAX_ROUTES}; r++) {
     if (r >= nr) break;
     vec4 r0 = jAt(base);
@@ -492,8 +499,7 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
     float cov = clamp((reach - sqrt(best)) / pxW, 0.0, 1.0);
     // K1211 look B: the soft cover, let into the arms off the band.
     if (lookB) cov = jLightSoft(sqrt(best)) * jLightAllow(int(r0.z + 0.5), r0.w > -0.5 ? int(r0.w + 0.5) : -1);
-    // K1211 S2: the walked gold's cover, which the drawing bands yield to.
-    if (!lookB) gC = max(gC, cov);
+    if (!lookB) gT *= 1.0 - cov;
     if (cov > 0.0) {
       // A banded record's verts carry the strip-arc shift (their tau is
       // arc-true, K1139 S3b): the arms are sampled where the ribbon has
@@ -510,6 +516,8 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
     }
     base += 1 + nv;
   }
+  vec3 cg = c;
+  if (gT < 1.0) c = c0;
   // K1139 S3b: the pulse bands. Each block is R0 = (nVerts, m, armA,
   // armB), R1 = (distJ, flags, shared, code) - flags = inward + 2 *
   // hovered, shared = its pair already has a gold block above, code =
@@ -659,7 +667,7 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
   float wW = 0.0;
   for (int r = 0; r < ${MAX_ROUTES}; r++) {
     if (r >= np) break;
-    float yr = (1.0 - smoothstep(0.0, 3.0 * pxW, sDist[r] - dShared)) * (1.0 - gC);
+    float yr = 1.0 - smoothstep(0.0, 3.0 * pxW, sDist[r] - dShared);
     float cw = sCov[r] * yr;
     vec4 r0 = jAt(sPb[r]);
     if (cw > 0.0) {
@@ -679,6 +687,7 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
     }
   }
   c = mix(c, uKHlPulse.rgb, wW);
+  if (gT < 1.0) c = cg + gT * (c - c0);
   return c;
 }
 `;
@@ -881,7 +890,9 @@ export const FIELD_EXPLORE_EDITS: ReadonlyArray<readonly [string, string]> = [
     "    vec3 o = junctionBase(rec, p, hd, fz >= 0.5);",
     "    vec4 o = junctionBase(rec, p, hd, fz >= 0.5);",
   ],
+  ["  vec3 c0 = c;", "  vec4 c0 = c;"],
   ["      vec3 bm = armPaint(", "      vec4 bm = armPaint("],
+  ["  vec3 cg = c;", "  vec4 cg = c;"],
   ["      vec3 pm = armPaint(", "      vec4 pm = armPaint("],
   ["  c = mix(c, uKHlPulse.rgb, wW);", "  c.rgb = mix(c.rgb, uKHlPulse.rgb * c.a, wW);"],
   [
