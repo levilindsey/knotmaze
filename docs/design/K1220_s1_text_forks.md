@@ -1,14 +1,14 @@
 # K1220 S1: a text fork reads as one fused piece, with no disc edge and no step at the arms' cuts
 
 Ledger: K1220 (the text forks' disc and steps). Stage agent: Claude Opus in its own worktree,
-started by the coordinator session after K1211 S4 merges; cap 2 h; ports 5970-5979.
+started by the coordinator while K1211 S5 and K1218 S1 run in other code; cap 2 h; ports
+5970-5979.
 
 ## Start
 
-Your worktree starts from master, which holds K1211 S4 (the pulse's soft light; its brief
-`docs/design/K1211_s4_soft_light.md` and its Handoff) and Run N's record (655eb6a9). If it lacks
-this brief, `git fetch -q origin` and `git merge --ff-only origin/master`. For `node_modules`,
-make a junction to the main checkout's: `New-Item -ItemType Junction -Path node_modules -Target
+Your worktree starts from master, which holds Run N's record (655eb6a9). If it lacks this brief,
+`git fetch -q origin` and `git merge --ff-only origin/master`. For `node_modules`, make a junction
+to the main checkout's: `New-Item -ItemType Junction -Path node_modules -Target
 C:\Users\lsl\Repositories\knotmaze\node_modules`.
 
 ## Why
@@ -32,7 +32,7 @@ Run N (22N, `.claude/probes/K1220/run_n/SUMMARY.md`) found the cause:
   these forks, so K830's corner rule never reaches a text crotch: 2-4 corners at r ~1.0 fh, where
   the maze has none.
 
-The line numbers are 02805d13's; S4 may have moved some. N's task 4 lists the means (read it
+The line numbers are 02805d13's. N's task 4 lists the means (read it
 whole). In short: give text forks real field records (retune the 0.15 drop for glyph scale, so
 they take the maze's composed blend, arm strips and wedges), or teach the AXIS disc to blend the
 fork's arms and cover the cuts' corners another way (grow or recentre the disc, draw wedges, or
@@ -63,8 +63,7 @@ everything away from a text fork stay as on master.
 - The headers of `src/render/ribbon/joinery.ts`, `src/render/junction_field.ts`,
   `src/render/arm_strip.ts` and `src/render/ribbon_mesh.ts`; then the code at N's locations.
 - `docs/ledger_notes.md`, the entries `## K1220` and `## K830` (Select-String
-  `^## K1220|^## K830`; read each to the next `## `), and K1211 S4's Handoff for what it changed
-  in `junction_field.ts`.
+  `^## K1220|^## K830`; read each to the next `## `).
 
 ## Tasks
 
@@ -109,11 +108,23 @@ Do these in order. If the cap comes first, the Handoff says what is left.
    crop yourself at full size and say, per fork, what you see against master. Pick nothing.
 5. **Handoff**, appended below.
 
+## K1211 S5 and K1218 S1 in parallel
+
+Each runs in its own worktree. K1211 S5 rewrites the pulse's light inside the fan:
+`junction_field.ts`'s `junctionField` and junctionBase's light terms, the pulse inputs near the
+top of `joinery.ts` and the twin's pulse code, and `test/render/k320_slim.test.ts`. K1218 S1
+works in the crossing-gap mask (`gap_mask.ts`, `ribbon/crossing_gaps.ts`) and `joinery.ts`'s
+`jointMask`. Keep your edits to the text forks' path: the arm drop, the record writer, the AXIS
+disc and its lookup, and the code they call.
+
+At your end, `git fetch -q origin`, rebase onto `origin/master`, then run `npm test` again. Where
+only a pin's number conflicts (`k320_slim`, a fan vertex count), take master's side, re-run the
+pin, and re-freeze it to what your change gives; name it. If the rebase needs more than that,
+don't do it: say what it would take.
+
 ## Muse in the main checkout
 
-Muse runs in the main checkout on master during your stage and may push. At your end,
-`git fetch -q origin` and rebase onto `origin/master`; then run `npm test` again. If the rebase
-needs more than resolving conflict lines, don't do it; say what it would take.
+Muse runs in the main checkout on master during your stage and may push.
 
 ## Out of scope
 

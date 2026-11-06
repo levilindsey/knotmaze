@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1222.
+Next free ID: K1223.
 
 ## Waiting on Levi
 
@@ -298,13 +298,13 @@ Next free ID: K1222.
 ## In progress
 
 - **K1211** · One seamless light inside each junction, no line or edge in it (Levi 2026-11-05; notes). Pulses
-  and the gold path first, then fire and collapse (K1210). Levi, on K1190's card: "All four" (notes). S2
-  (a84225d3): the gold's round edge. S3 (66752e75): the lit edge's line, the web's bite. S4: the soft front.
-  - owner: agent a222ff792a21132ec of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (S4, since 2026-11-05 15:18)
-  - branch: worktree-agent-a222ff792a21132ec (.claude/worktrees/agent-a222ff792a21132ec); last commit: `21907ef5`
-  - evidence: .claude/probes/K1211/ (S1's, S2's and S3's tools; out/, out2/ and out3/ untracked, out2/ and out3/ in S2's and S3's kept worktrees); K1190's sheets: .claude/probes/K1139/out/s4/sheets/t6_ji149_x4_n.png, t4_ji33_cross_n.png
-  - next: S4's tasks 1-6 per its brief (look B out, the reference numbers, the soft field, checks, sheets, Handoff); then K1218's and K1219's fixes, K1210
-  - brief: `docs/design/K1211_s4_soft_light.md` (S3's: `K1211_s3_lit_edge_web.md`; S2's: `K1211_s2_gold_edge.md`; S1's: `K1211_seamless_junction_light.md`)
+  and the gold path first, then fire and collapse (K1210). S2 a84225d3, S3 66752e75 merged; S4 (42e2a7cc,
+  unmerged): look B out, a soft field, still 1.6-8x the bar. S5: one tau at the joint, the gold's edge blend.
+  - owner: claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (coordinator), launching S5's stage agent; S4's agent stopped at the cause at 16:43
+  - branch: worktree-agent-a222ff792a21132ec (.claude/worktrees/agent-a222ff792a21132ec), S4's, unmerged and kept; last commit: `42e2a7cc`
+  - evidence: .claude/probes/K1211/ (S1's to S4's tools; S4's out4/ref untracked in its worktree); test/render/soft_light.test.ts on S4's branch; K1190's sheets: .claude/probes/K1139/out/s4/sheets/t6_ji149_x4_n.png, t4_ji33_cross_n.png
+  - next: S5 per its brief: S4's commits cherry-picked, one tau near the joint, the gold's light blended at its tube's edge, then S4's checks and sheets; then K1219's notch, K1214's re-time, K1210, 22D
+  - brief: `docs/design/K1211_s5_shared_tau.md` (S4's: `K1211_s4_soft_light.md`, Handoff on its branch; S3's: `K1211_s3_lit_edge_web.md`; S2's: `K1211_s2_gold_edge.md`; S1's: `K1211_seamless_junction_light.md`)
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
   float64 reference. Plan S1-S8, about 15 h (F7); supersedes K868 and K992. S1 to S1f merged (S1f: fb348a78); S3 (K1097) merged short of its gate; S1g merged (ca273d04); S3b (K1097) merged (587b7e80, 2026-11-02): 0 DEFECT, the Pixel's 2 ms missed 5-20x.
@@ -514,7 +514,7 @@ Next free ID: K1222.
   - owner: the chain in `.claude/probes/K1053/` (queue.txt, chain.log): Run P (22P) since 16:04, the last queued, a fresh Muse session; coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
   - branch: mainline; last commit: `f9f625a5`
   - evidence: the chain in .claude/probes/K1053/ (queue.txt, chain.log); each run's probe folder under .claude/probes/ (B K1203, H K1210, C and I K1186, E K1196, F K1191, G K1198, M K1214, N K1220, O K1218)
-  - next: P (K1112: m and u exits on one port each); then 22Q on: K1214's re-time after K1211 S4, K1112's next letters after P; D held for K1211; M, N and O reviewed (K1214, K1220, K1218)
+  - next: P (K1112: m and u exits on one port each); then 22Q on: K1112's next letters after P, K1214's re-time after K1211 S5; D held for K1211; M, N and O reviewed (K1214, K1220, K1218)
   - brief: `docs/design/K1208_muse_batch22.md`; I to P: K1209_reapply_run_i.md, K647_reset_win_card.md, K1208_run_k_junction_residuals.md, K1208_run_l_cursive_residuals.md, K1214_profile_run_m.md, K1220_run_n_text_forks.md, K1218_run_o_mask_in_junctions.md, K1112_run_p_ports_m_u.md (docs/design/)
 - **K1218** · Gold zigzags in the T and the four (loop ji 89, 12, 88; 22O, f9f625a5): a crossing next to the
   joint masks the fan inside its over thread's tube, so that ribbon's straight gold cut at the joint and its
@@ -751,10 +751,10 @@ Every other item below waits on the trigger it names.
   straight wedges with spikes, collapse as a bite or a ragged cut. The fix follows K1211's pick.
 - **K1214** · K1139's cost in play (22M, 04ff7cad; desktop, fabric 7 moves): S3+S4 add p95 +1.13 ms
   (spread 0.20), S5 and master nothing; the fan's fragment shader carries 2/3-3/4 (GPU 6.15→6.82 ms). Next:
-  re-time after K1211 S4 rewrites the fan's light, and the phone in K1097's pass. `.claude/probes/K1214/`
+  re-time after K1211's S5 rewrites the fan's light, and the phone in K1097's pass. `.claude/probes/K1214/`
 - **K1220** · Text forks: a disc with a round edge inside, steps where the arms' straight cuts meet it
   (22N, 655eb6a9): glyph arms under 0.15 world get no field record, so a host-axis disc draws the fork.
-  Next: S1 once K1211 S4 merges (the same files), `docs/design/K1220_s1_text_forks.md`; notes.
+  Next: S1 alongside K1211 S5 (other code), `docs/design/K1220_s1_text_forks.md`; notes.
 
 ## Residuals (known, not fixed)
 
@@ -1662,10 +1662,13 @@ Every other item below waits on the trigger it names.
   report). Fix: record the arrival's time.
 - **K1219** · Loop ji 12's dark triangle: slot 28's casing fade on ch5's gold (22O; `gap_mask.ts:802`, K1218
   S1's). x4 ji 149's teal notch: not the mask, the fan's untraveled web past the gold band's round edge
-  (`junction_field.ts:358`): after K1211 S4, in its file; notes `## K1218 (2026-11-05, 22O reviewed)`.
+  (`junction_field.ts:358`): after K1211 S5, in its file; notes `## K1218 (2026-11-05, 22O reviewed)`.
 - **K1221** · K1211 S3's leftovers (66752e75): the web light takes the turn's inside from a sign that can flip
   on a near-straight band (a flicker, untested); loop ji 88's lit edge dips 4.9 luma at k0 (in master too); x4
   ji 125 bumps 4.6 at k7. `docs/design/K1211_s3_lit_edge_web.md` ## Handoff
+- **K1222** · K1211 S4's leftovers (42e2a7cc, unmerged): an off-route arm near the joint centre takes up to
+  0.31 of the pulse colour (junctionBase's min-width blend); the sharp fork's step off the gold edge grew
+  0.098 to 0.135 (model). S5 reports both. `docs/design/K1211_s4_soft_light.md` ## Handoff
 
 ## Approved, to schedule (2026-10-11)
 
