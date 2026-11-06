@@ -183,3 +183,152 @@ Then give `Ledger items` and K1211's handle fields (owner, branch, last commit, 
 ## Handoff
 
 (The stage agent appends here.)
+
+### S4 (2026-11-05, stage agent a222ff792a21132ec)
+
+Started 15:18. It stops in task 3 at the stop rule: what's left needs a change to how K81's route
+band is built. Tasks 4 and 5 did not run. Branch `worktree-agent-a222ff792a21132ec`:
+- 55330f3: task 1.
+- 47a5ec8: the S4 probe tools.
+- f9d08de and c6831fa: task 3.
+- Then this Handoff.
+
+**Task 1, look B out (55330f3).** Switch 2 and everything only it used are gone.
+- Shader: jLightEase, jLightSoft, jLightAllow, junctionBase's uJParams.z block and junctionField's
+  lookB.
+- Twin: S1's block, lookB, covL and the cover strips' lengthening. `want` is master's rule again.
+- The switch: JUNCTION_LIGHT, setJunctionLight, the `__knotJunctionLight` hook, its constants and
+  `junction_light.test.ts`.
+
+uJParams .z and .w are 0 again. `npm test` is green with no pin moved. K320: JUNCTION_FRAG
+42,888 -> 41,396 (-1,492). The explore variant is 51,081.
+
+**Task 2, the reference numbers.** These are master's light on the desktop GPU, from S3's step3 in
+`checks4.mjs`, in `.claude/probes/K1211/out4/ref/<stand>/step3_L0.json`.
+
+The bar is the largest step over 3 device px along a plain arm's crest, away from every junction,
+in 8-bit levels: cross 15 (p99.9 12), x4 8 (7), loop 15 (12).
+
+Inside each lit junction, the largest step over its 8 moments. r is the distance from the joint
+in fill half-widths, the angle is in degrees.
+
+| spot | largest | x bar | r | angle |
+|---|---|---|---|---|
+| cross ji 33 | 36 | 2.4 | 1.18 | 65 |
+| x4 ji 149 | 111 | 13.9 | 1.17 | 114 |
+| x4 ji 125 | 111 | 13.9 | 2.51 | 174 |
+| loop ji 89 (T) | 124 | 8.3 | 1.35 | -164 |
+| loop ji 88 | 101 | 6.7 | 1.91 and 4.0 | 169 and -169 |
+| loop ji 113 | 35 | 2.3 | 2.04 | -88 |
+| loop ji 13 | 6 | 0.4 | 4.73 | -77 |
+| loop ji 12 (four) | 0 | 0 | - | - |
+
+Where each one sits:
+- Near the joint, r 1.2 to 1.4: cross ji 33, x4 ji 149 and loop ji 89. Cross ji 33 and x4 ji 149
+  are where a band's light ends in one pixel at its tube's edge: cross ji 33's crescent, and x4
+  ji 149's edge down to the unlit crotch. Loop ji 89's place in its fan was not attributed.
+- Out along an arm, r 1.9 to 4.7: x4 ji 125, loop ji 88, 113 and 13. Not attributed. S1's
+  cover-strip line sits 2 fh out, but it was not checked against these.
+
+**Task 3, the fix (c6831fa; f9d08de was a first cut).** The light inside the fan is one
+continuous field, in mode 0. The shader (`junction_field.ts`'s junctionField) and the twin
+(`joinery.ts`'s cpuJunctionField) are in step.
+- **Each band's fall.** Every pulse band, a shared one too, lends the web its whitening (sG, the
+  light it draws on its own tube) at its nearest foot. Past its reach (fill half-width plus half a
+  pixel) that light falls off by a smoothstep over PULSE_GLOW_W (2.5) fill half-widths
+  (`pulseGlowFall`).
+- **The blend.** Where falls overlap, the field is their blend. Each band weighs its fall over the
+  square of its distance past its tube, plus a quarter pixel squared (`pulseGlowWeight`), so at a
+  tube's edge that band's own light rules.
+- **Named arms only.** The field counts 1 on the footprint of an arm some band names and 0 on the
+  others, carried across a wedge by junctionBase's blend weight t (`pulseRouteWeight`; the
+  shader's band mask rm and jbT).
+- **Never darker.** The light is the larger of master's and the field's.
+
+f9d08de took the brighter of the bands' halos instead. A straight band's halo lit the
+perpendicular child near the joint (a 0.7 step at that child's tube edge in the model), and two
+lit children disagreed. The blend replaced it.
+
+What it adds per fan fragment:
+- No texture read, no loop pass (it rides the pulse loop that already runs per band) and no
+  branch (the band mask's choice is a select).
+- Per band: a smoothstep, a max, one division, three multiply-adds and an or of shifted bits.
+- Once after the loop: one division, two shifts and ands, two int-to-float conversions and a max.
+- State: one float array (sG, MAX_ROUTES 4), three scalars (gN, gD, rm) and the global jbT.
+
+K320: JUNCTION_FRAG 41,396 -> 42,123 (+727). The explore variant is 51,081 -> 51,808. Both texts
+compile cold once.
+
+**The model's numbers** (`test/render/soft_light.test.ts`). The model runs the twin's terms on
+web_light.test.ts's bands, with fh 12 px. Light is 0 to 1 of the way to the pulse colour. The
+bar is 0.085 per px: the crest's own slope along a plain arm.
+
+Largest step per px across the lit fork, master -> branch:
+
+| stand | off the gold tube's edge | on it |
+|---|---|---|
+| x4 ji 149's shape | 0.777 -> 0.273 | 0.861 -> 0.688 |
+| T fork | 0.500 -> 0.308 | 0.745 -> 0.408 |
+| sharp fork | 0.098 -> 0.135 | 0.969 -> 0.320 |
+| four, one child lit | 0.501 -> 0.308 | 0.501 -> 0.496 |
+| four, two children lit | 0.501 -> 0.369 | 0.713 -> 0.496 |
+
+- Every stand's largest step falls. None grows on the gold edge. Off it, only the sharp fork's
+  grows (0.098 -> 0.135).
+- **The bar is not met anywhere.** The largest step after is 1.6x to 8x the bar.
+- Two lit children at the same distance from the joint agree within 0.05 wherever both points
+  lie off the other bands' tubes.
+- Where junctionBase gives an off-route arm its own material alone, its light is no higher than
+  master's. Nearer the centre, junctionBase's min-width blend still mixes in a named neighbour
+  (t strictly between 0 and 1), and the field follows it there. That leaves a ramp of up to 0.31
+  of the pulse colour (T through 0.308, four with one child 0.302). It is a residual.
+
+**Why it stops at the cause.** The brief says: "If the fix needs a change to how K81's route band
+or the fan is built, stop at the cause." The field adds light under master's, and two steps stay
+above it:
+1. **K81's composite on the gold tube.** On that tube, K81's route-band composite paints the gold
+   band's own crest at its own tau over everything beneath (`c = cg + gT*(c - c0)`). Off the
+   tube, the whitening shows. The step at the tube's edge is the difference between the two, and
+   the field can only narrow it from the off side.
+2. **Two taus near the joint.** Two bands that share an arm read different taus at one point near
+   the joint. A turning band takes its tau from the pivot ray, a straight band by projection (a T
+   fork at (-14, 14) px: 1.4 against -14). Their crests sit at different places, so their lights
+   differ there. Any blend between them crosses that difference in the pixels between their
+   tubes.
+
+What it would take:
+- One tau for every band near the joint, for instance the arc distance from the joint along the
+  arm nearest the point, the same for every band. The crest can be read at any tau
+  (g = r1.x + tau).
+- A composite that blends the gold band's crest into the field at the tube's edge, instead of
+  painting over it.
+
+Both change how K81's route band is built and drawn. They need the coordinator's call, and the
+look is Levi's.
+
+**Pins.** Only K320 moved (`k320_slim.test.ts`, budget 42,123: the field's text). No pixel pin
+moved: `npm test` was green before the rebase (219 files, 2945 tests, 5 expected fails). The 5
+expected fails are `soft_light.test.ts`'s bar, one per stand: an `it.fails` that turns red once
+the bar holds.
+
+**What is left.**
+- Task 4 did not run: the step, K1139, nub, corner, edge, locality and (a)/(b) checks, and the
+  explore shot.
+- Task 5 did not run: the sheets.
+- So the GPU's after-numbers and the look are unmeasured; only the model's numbers exist.
+- The tools are committed in `.claude/probes/K1211/`: shoot4.mjs, run_shots4.ps1, checks4.mjs
+  (with step3), crops4.mjs, hcat4.mjs, s4_ids.ts and smoke4.mjs. The references are in
+  `out4/ref/`.
+- Next: a call on the shared tau and the gold composite's edge (above). Then a stage that builds
+  it and runs tasks 4 and 5.
+
+**K1210: does the field serve fire and collapse fronts?** Not alone. Inferred, not built and not
+measured:
+- The field takes each band's light at its nearest foot and blends the bands by distance. It
+  knows nothing of the pulse beyond sG.
+- So a front could use it wherever the front's value is a function of arc along each band, as a
+  fire's burnt edge and a collapse front are.
+- They would meet the same two limits. Near the joint the bands' taus disagree, so a front would
+  reach two bands that share an arm at different moments, and the blend would show a step where
+  they meet. On the gold tube, K81's composite paints over it.
+- So the shared tau above would serve all three fronts.
