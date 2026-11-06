@@ -1,0 +1,758 @@
+====================================================================================================
+22L measures on v6.8 (work34/base, kit-fixed rebuild; censuses work34/census_v68*.json)
+census_v68: 347 rows label=v6.8 (M); census_v68x: 713 rows
+
+## K903 (v3: k X 61.3 deg vs font 3.2; coverage 4.3 u in f; p stem kink unmeasured)
+  k: body_x=1 fid=0.675 u cov=2.748 u crossings=[{'pt': [180.73717688663058, 336.30016468126155], 'where': 'body', 'traced_angle': 61.33783841105112, 'font_angle': 3.1752204904731403}]
+  f: body_x=1 fid=0.391 u cov=4.309 u crossings=[{'pt': [177.90032826399144, 285.5218711582941], 'where': 'body', 'traced_angle': 23.470059215473974, 'font_angle': 23.341471195065466}]
+  p: body_x=0 fid=0.389 u cov=1.874 u crossings=None
+
+## K912 (v4: ok 10.9, or 6.5 u; f's exit walk; per-left split)
+  [v68x] w32:ok:J0-2ok type=join kind=port-merge dmax=34.77 dmean=10.10 bud=2.5 peak=0.001196 spk=0 hooks=0 rough=ok facet=0.0001322 len=176.5 prm=[1.141 1.682 -0.7315 5.483] at_floor=[] src=solved
+      seam exit o (port at 2.00 u from the end): gap=1.36e-14 ang=0 dk=2.118e-14 designed=None
+      seam entry k (port at 100.00 u, port-merge): gap=3.05e-13 ang=0 dk=7.472e-16 designed=False
+  [v68x] w39:or:J0-2or type=join kind=port-cusp dmax=10.58 dmean=3.82 bud=2.5 peak=0.006742 spk=0 hooks=0 rough=ok facet=0.001706 len=151.6 prm=[1.085 1.271 2.862 -11.17] at_floor=[] src=solved
+      seam exit o (port at 0.66 u from the end): gap=2.73e-14 ang=0 dk=6.433e-16 designed=None
+      seam entry r (port at 3.00 u, retrace, port-cusp): gap=3.05e-13 ang=0 dk=1.147e-14 designed=False
+  [v68x] w11:quick brown fox:J20-22fo type=join kind=port-fused dmax=7.80 dmean=3.85 bud=3.0 peak=0.001637 spk=0 hooks=0 rough=ok facet=0.0001107 len=135.3 prm=[2.628 0.9508 -12.22 -2.745] at_floor=[] src=solved
+      seam exit f (port at 6.92 u from the end): gap=2.18e-13 ang=0 dk=3.386e-15 designed=None
+      seam entry o (port at 102.49 u, retrace, port-fused): gap=1.09e-13 ang=0 dk=2.638e-16 designed=False
+  [v68x] w66:fo:J0-2fo type=join kind=port-fused dmax=7.79 dmean=3.83 bud=3.0 peak=0.001637 spk=0 hooks=0 rough=ok facet=0.0001108 len=135.3 prm=[2.64 0.9302 -12.32 -2.898] at_floor=[] src=solved
+      seam exit f (port at 6.92 u from the end): gap=6.82e-15 ang=0 dk=7.228e-18 designed=None
+      seam entry o (port at 102.49 u, retrace, port-fused): gap=1.12e-13 ang=0 dk=1.319e-16 designed=False
+  [v68x] w96:br:J0-2br type=join kind=cusp dmax=5.18 dmean=1.82 bud=2.5 peak=0.1358 spk=49 hooks=1 rough=FAIL facet=0.02803 len=136.3 prm=[0.04783 2.865 -12.05 0.0001567] at_floor=[] src=class|R cnct.ful_b_r|r
+      seam exit b: gap=0 ang=0 dk=4.788e-14 designed=None
+      seam entry r (after_b, cusp): gap=2.39e-07 ang=165.4 dk=0.07461 designed=True
+  [v68x] w11:quick brown fox:J10-12br type=join kind=cusp dmax=5.18 dmean=1.83 bud=2.5 peak=0.1356 spk=61 hooks=1 rough=FAIL facet=0.02796 len=136.9 prm=[0.04783 2.865 -12.05 0.0001567] at_floor=[] src=class|R cnct.ful_b_r|r
+      seam exit b: gap=0 ang=0 dk=4.131e-13 designed=None
+      seam entry r (after_b, cusp): gap=2.39e-07 ang=165.4 dk=0.07461 designed=True
+
+## K913 (v4: a fused junction at font's 47.5 u; frame in kink 30.2 vs 52.6 deg; d after-o frame 36.3)
+  a: entry kind=fused entry_pt_y=60.00 u (rule y_u=60.0) font_junction_y=47.78 u
+  c: entry kind=fused entry_pt_y=60.00 u (rule y_u=60.0) font_junction_y=57.09 u
+  d: entry kind=fused entry_pt_y=60.00 u (rule y_u=60.0) font_junction_y=54.16 u
+  g: entry kind=fused entry_pt_y=60.00 u (rule y_u=60.0) font_junction_y=53.45 u
+  q: entry kind=fused entry_pt_y=60.00 u (rule y_u=60.0) font_junction_y=48.08 u
+  o: entry kind=fused entry_pt_y=85.92 u (rule y_u=85.92) font_junction_y=51.49 u
+  d after_o frame: {"pt": [292.6302321499014, 478.7672914301257], "T": [0.907871160963079, 0.41924927560050845], "k": -0.003798858308123778, "kind": "fused", "s_fused": 254.4860840329958, "bk": 0, "bt": 0.32490063913882994}
+  a entry fit T={'T': [0.2811687981759898, 0.9596583282253478], 'k': 0.0015018543020743, 'G': 10.0, 'res': 0.15735811268999306}
+
+## K927 (v5.1: fits stop at nfev 600 for 16/26 letters; a 5.0, q 4.0 u off trace)
+  a: fewnode tol=0.8 dev_u=None strokes_n=1 n_bez_in=[108]
+  b: fewnode tol=1.2 dev_u=None strokes_n=1 n_bez_in=[141]
+  c: fewnode tol=1.0 dev_u=None strokes_n=1 n_bez_in=[45]
+  d: fewnode tol=0.8 dev_u=None strokes_n=1 n_bez_in=[157]
+  e: fewnode tol=0.6 dev_u=None strokes_n=1 n_bez_in=[53]
+  f: fewnode tol=1.2 dev_u=None strokes_n=1 n_bez_in=[168]
+  g: fewnode tol=1.6 dev_u=None strokes_n=1 n_bez_in=[172]
+  h: fewnode tol=0.8 dev_u=None strokes_n=1 n_bez_in=[161]
+  i: fewnode tol=0.6 dev_u=None strokes_n=2 n_bez_in=[29, None]
+  j: fewnode tol=1.2 dev_u=None strokes_n=2 n_bez_in=[90, None]
+  k: fewnode tol=1.2 dev_u=None strokes_n=1 n_bez_in=[176]
+  l: fewnode tol=0.8 dev_u=None strokes_n=1 n_bez_in=[105]
+  m: fewnode tol=0.6 dev_u=None strokes_n=1 n_bez_in=[156]
+  n: fewnode tol=1.0 dev_u=None strokes_n=1 n_bez_in=[94]
+  o: fewnode tol=1.4 dev_u=None strokes_n=1 n_bez_in=[75]
+  p: fewnode tol=1.0 dev_u=None strokes_n=1 n_bez_in=[176]
+  q: fewnode tol=1.6 dev_u=None strokes_n=1 n_bez_in=[165]
+  r: fewnode tol=1.2 dev_u=None strokes_n=1 n_bez_in=[43]
+  s: fewnode tol=1.2 dev_u=None strokes_n=1 n_bez_in=[59]
+  t: fewnode tol=1.6 dev_u=None strokes_n=2 n_bez_in=[41, 15]
+  u: fewnode tol=0.6 dev_u=None strokes_n=1 n_bez_in=[93]
+  v: fewnode tol=0.8 dev_u=None strokes_n=1 n_bez_in=[69]
+  w: fewnode tol=1.2 dev_u=None strokes_n=1 n_bez_in=[131]
+  x: fewnode tol=1.2 dev_u=None strokes_n=2 n_bez_in=[32, 37]
+  y: fewnode tol=0.6 dev_u=None strokes_n=1 n_bez_in=[155]
+  z: fewnode tol=1.4 dev_u=None strokes_n=1 n_bez_in=[109]
+  (v6.8 bodies come from the template through the few-node writer; no per-letter
+   trace fit with an nfev 600 cap exists in this pipeline. Solve nfev: see sheets.)
+
+## K937 (J2 mod_n_o set: ho 2.85, no 2.89, do 2.76, ro 2.89 u, inside 3.0)
+  [v68x] w13:be we shoe maze huge bye:J10-12ho type=join kind=port-fused dmax=6.10 dmean=3.08 bud=3.0 peak=0.003665 spk=0 hooks=0 rough=ok facet=0.0005796 len=114.2 prm=[1.029 0.9505 -0.8399 -1.394] at_floor=[] src=solved
+      seam exit h (port at 0.00 u from the end): gap=0 ang=0 dk=4.698e-16 designed=None
+      seam entry o (port at 102.49 u, retrace, port-fused): gap=1.36e-13 ang=0 dk=2.801e-16 designed=False
+  [v68x] w9:knotmaze:J2-4no type=join kind=port-fused dmax=4.79 dmean=2.61 bud=3.0 peak=0.003716 spk=0 hooks=0 rough=ok facet=0.0005675 len=117.9 prm=[1.084 0.9147 -1.115 -1.644] at_floor=[] src=solved
+      seam exit n (port at 3.47 u from the end): gap=5.46e-14 ang=0 dk=1.952e-16 designed=None
+      seam entry o (port at 102.49 u, retrace, port-fused): gap=1.36e-13 ang=0 dk=7.77e-17 designed=False
+  [v68x] w12:jumps over the lazy dog:J32-34do type=join kind=port-fused dmax=5.97 dmean=3.01 bud=3.0 peak=0.003624 spk=0 hooks=0 rough=ok facet=0.0005712 len=114.8 prm=[1.032 0.95 -0.848 -1.403] at_floor=[] src=solved
+      seam exit d (port at 0.00 u from the end): gap=4.26e-16 ang=0 dk=2.32e-15 designed=None
+      seam entry o (port at 102.49 u, retrace, port-fused): gap=4.44e-13 ang=0 dk=1.867e-15 designed=False
+  [v68x] w11:quick brown fox:J12-14ro type=join kind=fused dmax=2.89 dmean=0.65 bud=3.0 peak=0.007983 spk=0 hooks=0 rough=ok facet=0.001805 len=116.1 prm=[0.4889 0.6037 4.428 4.318] at_floor=[] src=k962 class cnct.mod_n_o
+      seam exit r: gap=0 ang=0 dk=6.144e-16 designed=None
+      seam entry o (after_n, fused junction): gap=1.36e-13 ang=0 dk=3.957e-16 designed=False
+  [v68x] w19:subgroup:J8-10ro type=join kind=fused dmax=2.89 dmean=0.65 bud=3.0 peak=0.007983 spk=0 hooks=0 rough=ok facet=0.001805 len=116.1 prm=[0.4889 0.6037 4.428 4.318] at_floor=[] src=k962 class cnct.mod_n_o
+      seam exit r: gap=0 ang=0 dk=4.77e-16 designed=None
+      seam entry o (after_n, fused junction): gap=8.19e-14 ang=0 dk=7.427e-16 designed=False
+  [v68x] w13:be we shoe maze huge bye:J16-18ma type=join kind=fused dmax=2.91 dmean=0.84 bud=3.0 peak=0.01631 spk=0 hooks=0 rough=ok facet=0.003964 len=88.0 prm=[0.4889 0.6037 4.428 4.318] at_floor=[] src=k962 class cnct.mod_n_o
+      seam exit m: gap=0 ang=0 dk=1.626e-15 designed=None
+      seam entry a (after_n, fused junction): gap=3.41e-14 ang=0 dk=1.18e-14 designed=False
+  [v68x] w9:knotmaze:J8-10ma type=join kind=fused dmax=2.93 dmean=0.84 bud=3.0 peak=0.01627 spk=0 hooks=0 rough=ok facet=0.003913 len=88.0 prm=[0.4889 0.6037 4.428 4.318] at_floor=[] src=k962 class cnct.mod_n_o
+      seam exit m: gap=0 ang=0 dk=9.469e-16 designed=None
+      seam entry a (after_n, fused junction): gap=1.43e-13 ang=0 dk=9.637e-15 designed=False
+  [v68x] w12:jumps over the lazy dog:J24-26la type=join kind=fused dmax=2.60 dmean=0.71 bud=3.0 peak=0.01533 spk=0 hooks=0 rough=ok facet=0.003572 len=86.9 prm=[0.4889 0.6037 4.428 4.318] at_floor=[] src=k962 class cnct.mod_n_o
+      seam exit l: gap=0 ang=0 dk=7.228e-16 designed=None
+      seam entry a (after_n, fused junction): gap=3.41e-14 ang=0 dk=1.419e-14 designed=False
+  [v68x] w20:lawgiver:J0-2la type=join kind=fused dmax=2.60 dmean=0.71 bud=3.0 peak=0.01533 spk=0 hooks=0 rough=ok facet=0.003572 len=86.9 prm=[0.4889 0.6037 4.428 4.318] at_floor=[] src=k962 class cnct.mod_n_o
+      seam exit l: gap=0 ang=0 dk=2.891e-17 designed=None
+      seam entry a (after_n, fused junction): gap=1.49e-13 ang=0 dk=3.198e-16 designed=False
+  [v68x] w13:be we shoe maze huge bye:J26-28ug type=join kind=fused dmax=2.86 dmean=1.58 bud=3.0 peak=0.0173 spk=0 hooks=0 rough=ok facet=0.004261 len=86.5 prm=[0.4889 0.6037 4.428 4.318] at_floor=[] src=k962 class cnct.mod_n_o
+      seam exit u: gap=0 ang=0 dk=3.816e-15 designed=None
+      seam entry g (after_n, fused junction): gap=4.37e-13 ang=0 dk=3.179e-14 designed=False
+  [v68x] w6:hippo:J6-8po type=join kind=fused dmax=3.49 dmean=0.86 bud=3.0 peak=0.00784 spk=0 hooks=0 rough=ok facet=0.001833 len=126.6 prm=[0.4889 0.6037 4.428 4.318] at_floor=[] src=k962 class cnct.mod_n_o
+      seam exit p: gap=0 ang=0 dk=5.782e-16 designed=None
+      seam entry o (after_n, fused junction): gap=1.12e-13 ang=0 dk=1.72e-15 designed=False
+  [v68x] pair to: ABSENT from census
+  [v68x] pair io: ABSENT from census
+  [v68x] pair mo: ABSENT from census
+  [v68x] pair ng: ABSENT from census
+  [v68x] pair ao: ABSENT from census
+  [v68x] pair qo: ABSENT from census
+  [v68x] w5:people:J2-4eo type=join kind=port-fused dmax=8.15 dmean=3.06 bud=3.0 peak=0.001334 spk=0 hooks=0 rough=ok facet=0.0001244 len=180.3 prm=[0.8457 1.676 1.356 -0.6644] at_floor=[] src=solved
+      seam exit e (port at 5.00 u from the end): gap=2.81e-14 ang=0 dk=7.409e-16 designed=None
+      seam entry o (port at 102.49 u, retrace, port-fused): gap=1.83e-13 ang=0 dk=9.035e-17 designed=False
+  [v68x] w171:co:J0-2co type=join kind=fused dmax=6.67 dmean=2.95 bud=3.0 peak=0.6428 spk=5 hooks=0 rough=ok facet=0.0002969 len=140.4 prm=[0.9571 0.02024 5.202 0.233] at_floor=[1] src=group low-fused
+      seam exit c: gap=0 ang=0 dk=1.084e-17 designed=None
+      seam entry o (after_n, fused junction): gap=1.59e-13 ang=0 dk=2.062e-13 designed=False
+  [v68x] w15:coffee:J0-2co type=join kind=fused dmax=6.72 dmean=2.97 bud=3.0 peak=0.1187 spk=4 hooks=0 rough=FAIL facet=0.01953 len=140.5 prm=[0.9571 0.02024 5.202 0.233] at_floor=[1] src=group low-fused
+      seam exit c: gap=0 ang=0 dk=1.807e-17 designed=None
+      seam entry o (after_n, fused junction): gap=2.59e-13 ang=0 dk=9.485e-13 designed=False
+
+## K938 (v5.2: zo 142 u at every height; five new crossings into o)
+  [v68x] pair zo: ABSENT from census
+  [v68x] w6:hippo:J6-8po type=join kind=fused dmax=3.49 dmean=0.86 bud=3.0 peak=0.00784 spk=0 hooks=0 rough=ok facet=0.001833 len=126.6 prm=[0.4889 0.6037 4.428 4.318] at_floor=[] src=k962 class cnct.mod_n_o
+      seam exit p: gap=0 ang=0 dk=5.782e-16 designed=None
+      seam entry o (after_n, fused junction): gap=1.12e-13 ang=0 dk=1.72e-15 designed=False
+  [v68x] w9:knotmaze:J2-4no type=join kind=port-fused dmax=4.79 dmean=2.61 bud=3.0 peak=0.003716 spk=0 hooks=0 rough=ok facet=0.0005675 len=117.9 prm=[1.084 0.9147 -1.115 -1.644] at_floor=[] src=solved
+      seam exit n (port at 3.47 u from the end): gap=5.46e-14 ang=0 dk=1.952e-16 designed=None
+      seam entry o (port at 102.49 u, retrace, port-fused): gap=1.36e-13 ang=0 dk=7.77e-17 designed=False
+  [v68x] w11:quick brown fox:J12-14ro type=join kind=fused dmax=2.89 dmean=0.65 bud=3.0 peak=0.007983 spk=0 hooks=0 rough=ok facet=0.001805 len=116.1 prm=[0.4889 0.6037 4.428 4.318] at_floor=[] src=k962 class cnct.mod_n_o
+      seam exit r: gap=0 ang=0 dk=6.144e-16 designed=None
+      seam entry o (after_n, fused junction): gap=1.36e-13 ang=0 dk=3.957e-16 designed=False
+  [v68x] w19:subgroup:J8-10ro type=join kind=fused dmax=2.89 dmean=0.65 bud=3.0 peak=0.007983 spk=0 hooks=0 rough=ok facet=0.001805 len=116.1 prm=[0.4889 0.6037 4.428 4.318] at_floor=[] src=k962 class cnct.mod_n_o
+      seam exit r: gap=0 ang=0 dk=4.77e-16 designed=None
+      seam entry o (after_n, fused junction): gap=8.19e-14 ang=0 dk=7.427e-16 designed=False
+  [v68x] w12:jumps over the lazy dog:J32-34do type=join kind=port-fused dmax=5.97 dmean=3.01 bud=3.0 peak=0.003624 spk=0 hooks=0 rough=ok facet=0.0005712 len=114.8 prm=[1.032 0.95 -0.848 -1.403] at_floor=[] src=solved
+      seam exit d (port at 0.00 u from the end): gap=4.26e-16 ang=0 dk=2.32e-15 designed=None
+      seam entry o (port at 102.49 u, retrace, port-fused): gap=4.44e-13 ang=0 dk=1.867e-15 designed=False
+  [v68x] w5:people:J2-4eo type=join kind=port-fused dmax=8.15 dmean=3.06 bud=3.0 peak=0.001334 spk=0 hooks=0 rough=ok facet=0.0001244 len=180.3 prm=[0.8457 1.676 1.356 -0.6644] at_floor=[] src=solved
+      seam exit e (port at 5.00 u from the end): gap=2.81e-14 ang=0 dk=7.409e-16 designed=None
+      seam entry o (port at 102.49 u, retrace, port-fused): gap=1.83e-13 ang=0 dk=9.035e-17 designed=False
+  crossings into o on the sheet: see sheets_o.txt (solve crossings per pair)
+
+## K947 (v5.3: f's frames share a node; bodies.json 4.5 MB; ot crossing)
+  bodies.json bytes=2976427
+  f after_o={"left": "o", "conn": ["cnct.ful_o_f"], "body_glyph": "f.mrr.med", "same_body": true, "adv": 538.0, "font_conn": [[-136.88000000000002, 459.5], [-136.1405217473706, 458.8723474790137], [-135.39313592179332, 458.2637855278838], [-134.63442641217904, 457.68256136833185], [-133.86592564201192, 457.1249
+  f after_b={"left": "b", "conn": ["cnct.ful_b_f"], "body_glyph": "f.mrr.med", "same_body": true, "adv": 538.0, "font_conn": [[-113.52000000000001, 454.5], [-113.41985933047086, 453.54171614242307], [-113.25329139474483, 452.61094735941623], [-112.96849698839031, 451.72914958397524], [-112.54426348596667, 450.9
+  [v68x] w9:knotmaze:J4-6ot type=join kind=port-cusp dmax=17.35 dmean=9.62 bud=2.5 peak=0.01209 spk=0 hooks=0 rough=ok facet=0.001097 len=124.8 prm=[1.514 0.4072 -0.5285 -1.574] at_floor=[] src=solved
+      seam exit o (port at 0.27 u from the end): gap=5.46e-14 ang=0 dk=1.391e-15 designed=None
+      seam entry t (port at 55.70 u, retrace, port-cusp): gap=2.19e-13 ang=0 dk=1.598e-14 designed=False
+  [v68x] w41:ot:J0-2ot type=join kind=port-cusp dmax=15.98 dmean=8.35 bud=2.5 peak=0.01237 spk=0 hooks=0 rough=ok facet=0.001345 len=122.7 prm=[1.358 0.4815 -0.8693 -1.028] at_floor=[] src=solved
+      seam exit o (port at 0.00 u from the end): gap=1.36e-14 ang=0 dk=1.449e-15 designed=None
+      seam entry t (port at 55.70 u, retrace, port-cusp): gap=2.06e-13 ang=0 dk=2.405e-15 designed=False
+  [v68x] w6:hippo:J4-6pp type=join kind=cusp dmax=3.49 dmean=1.25 bud=2.5 peak=0.01117 spk=0 hooks=0 rough=ok facet=0.001311 len=168.5 prm=[0.3513 0.4256 2.517 0.9954] at_floor=[] src=k962 class cnct.mod_n_n
+      seam exit p: gap=0 ang=0 dk=1.952e-16 designed=None
+      seam entry p (after_n, cusp): gap=6.82e-14 ang=159 dk=0.006919 designed=True
+  [v68x] w7:puppy:J4-6pp type=join kind=cusp dmax=3.49 dmean=1.25 bud=2.5 peak=0.01117 spk=0 hooks=0 rough=ok facet=0.001311 len=168.5 prm=[0.3513 0.4256 2.517 0.9954] at_floor=[] src=k962 class cnct.mod_n_n
+      seam exit p: gap=0 ang=0 dk=3.433e-16 designed=None
+      seam entry p (after_n, cusp): gap=6.82e-14 ang=159 dk=0.006919 designed=True
+  [v68x] w12:jumps over the lazy dog:J4-6mp type=join kind=cusp dmax=1.90 dmean=1.40 bud=2.5 peak=0.007505 spk=0 hooks=0 rough=ok facet=0.0009966 len=158.8 prm=[0.3513 0.4256 2.517 0.9954] at_floor=[] src=k962 class cnct.mod_n_n
+      seam exit m: gap=0 ang=0 dk=3.108e-16 designed=None
+      seam entry p (after_n, cusp): gap=1.29e-13 ang=159 dk=0.006919 designed=True
+
+## K948 (e after o,b,v,w elbow; b,v,w exits leave 3-9 deg steeper than font's)
+  [v68x] w13:be we shoe maze huge bye:J0-2be type=join kind=smooth dmax=3.47 dmean=0.94 bud=2.5 peak=0.06504 spk=27 hooks=1 rough=FAIL facet=0.07862 len=70.6 prm=[0.02 0.03469 -2.573 -12.16] at_floor=[0] src=class|R cnct.ful_b_e|e
+      seam exit b: gap=0 ang=0 dk=2.114e-12 designed=None
+      seam entry e (after_b, smooth): gap=1.65e-13 ang=0 dk=9.777e-12 designed=False
+  [v68x] w83:be:J0-2be type=join kind=smooth dmax=3.47 dmean=0.94 bud=2.5 peak=0.06504 spk=24 hooks=1 rough=FAIL facet=0.07862 len=70.6 prm=[0.02 0.03469 -2.573 -12.16] at_floor=[0] src=class|R cnct.ful_b_e|e
+      seam exit b: gap=0 ang=0 dk=2.114e-12 designed=None
+      seam entry e (after_b, smooth): gap=1.65e-13 ang=0 dk=9.777e-12 designed=False
+  [v68x] w13:be we shoe maze huge bye:J4-6we type=join kind=smooth dmax=2.01 dmean=0.92 bud=2.5 peak=0.07838 spk=27 hooks=1 rough=FAIL facet=0.07837 len=71.7 prm=[0.02 0.03469 -2.573 -12.16] at_floor=[0] src=class|R cnct.ful_b_e|e
+      seam exit w: gap=0 ang=0 dk=1.092e-12 designed=None
+      seam entry e (after_b, smooth): gap=1.32e-13 ang=0 dk=1.956e-11 designed=False
+  [v68x] w134:we:J0-2we type=join kind=smooth dmax=2.01 dmean=0.92 bud=2.5 peak=0.07838 spk=25 hooks=1 rough=FAIL facet=0.07837 len=71.7 prm=[0.02 0.03469 -2.573 -12.16] at_floor=[0] src=class|R cnct.ful_b_e|e
+      seam exit w: gap=0 ang=0 dk=9.583e-14 designed=None
+      seam entry e (after_b, smooth): gap=2.14e-13 ang=0 dk=2.192e-11 designed=False
+  [v68x] w156:wave:J4-6ve type=join kind=smooth dmax=3.16 dmean=0.89 bud=2.5 peak=0.08096 spk=29 hooks=2 rough=FAIL facet=0.07389 len=70.4 prm=[0.02 0.03469 -2.573 -12.16] at_floor=[0] src=class|R cnct.ful_b_e|e
+      seam exit v: gap=0 ang=0 dk=2.255e-13 designed=None
+      seam entry e (after_b, smooth): gap=1.43e-13 ang=0 dk=1.62e-11 designed=False
+  [v68x] w10:cursive:J10-12ve type=join kind=smooth dmax=3.16 dmean=0.89 bud=2.5 peak=0.08096 spk=28 hooks=2 rough=FAIL facet=0.07389 len=70.4 prm=[0.02 0.03469 -2.573 -12.16] at_floor=[0] src=class|R cnct.ful_b_e|e
+      seam exit v: gap=0 ang=0 dk=1.6e-13 designed=None
+      seam entry e (after_b, smooth): gap=1.43e-13 ang=0 dk=3.341e-11 designed=False
+  [v68x] w109:ve:J0-2ve type=join kind=smooth dmax=3.10 dmean=0.89 bud=2.5 peak=0.08106 spk=27 hooks=2 rough=FAIL facet=0.07398 len=70.5 prm=[0.02 0.03469 -2.573 -12.16] at_floor=[0] src=class|R cnct.ful_b_e|e
+      seam exit v: gap=0 ang=0 dk=4.838e-14 designed=None
+      seam entry e (after_b, smooth): gap=6.44e-14 ang=0 dk=1.591e-11 designed=False
+  [v68x] w3:woven:J4-6ve type=join kind=smooth dmax=3.14 dmean=1.20 bud=2.5 peak=0.08103 spk=24 hooks=1 rough=FAIL facet=0.07837 len=73.6 prm=[0.02 0.03469 -2.573 -12.16] at_floor=[0] src=class|R cnct.ful_b_e|e
+      seam exit v: gap=0 ang=0 dk=1.608e-12 designed=None
+      seam entry e (after_b, smooth): gap=8.87e-14 ang=0 dk=1.158e-11 designed=False
+  [v68x] w14:ice jet even:J14-16ve type=join kind=smooth dmax=3.14 dmean=1.20 bud=2.5 peak=0.08103 spk=26 hooks=1 rough=FAIL facet=0.07837 len=73.6 prm=[0.02 0.03469 -2.573 -12.16] at_floor=[0] src=class|R cnct.ful_b_e|e
+      seam exit v: gap=0 ang=0 dk=1.36e-12 designed=None
+      seam entry e (after_b, smooth): gap=8.87e-14 ang=0 dk=1.153e-11 designed=False
+  [v68x] w20:lawgiver:J10-12ve type=join kind=smooth dmax=3.14 dmean=1.20 bud=2.5 peak=0.08103 spk=25 hooks=1 rough=FAIL facet=0.07837 len=73.6 prm=[0.02 0.03469 -2.573 -12.16] at_floor=[0] src=class|R cnct.ful_b_e|e
+      seam exit v: gap=0 ang=0 dk=2.4e-12 designed=None
+      seam entry e (after_b, smooth): gap=2.36e-13 ang=0 dk=9.062e-12 designed=False
+  [v68x] w12:jumps over the lazy dog:J12-14ve type=join kind=smooth dmax=3.14 dmean=1.20 bud=2.5 peak=0.08103 spk=26 hooks=1 rough=FAIL facet=0.07837 len=73.6 prm=[0.02 0.03469 -2.573 -12.16] at_floor=[0] src=class|R cnct.ful_b_e|e
+      seam exit v: gap=0 ang=0 dk=4.059e-12 designed=None
+      seam entry e (after_b, smooth): gap=8.87e-14 ang=0 dk=4.23e-12 designed=False
+  [v68x] w13:be we shoe maze huge bye:J12-14oe type=join kind=port-merge dmax=12.74 dmean=4.87 bud=2.5 peak=0.001487 spk=0 hooks=0 rough=ok facet=7.384e-05 len=175.9 prm=[0.908 1.603 0.3791 4.2] at_floor=[] src=solved
+      seam exit o (port at 2.00 u from the end): gap=1.36e-14 ang=0 dk=2.497e-15 designed=None
+      seam entry e (port at 90.00 u, port-merge): gap=2.2e-13 ang=0 dk=1.268e-13 designed=False
+  [v68x] w26:oe:J0-2oe type=join kind=port-merge dmax=12.69 dmean=4.77 bud=2.5 peak=0.001488 spk=0 hooks=0 rough=ok facet=7.39e-05 len=176.0 prm=[0.9069 1.602 0.383 4.191] at_floor=[] src=solved
+      seam exit o (port at 2.00 u from the end): gap=0 ang=0 dk=1.06e-14 designed=None
+      seam entry e (port at 90.00 u, port-merge): gap=1.64e-13 ang=0 dk=1.524e-14 designed=False
+  [v68x] w56:fe:J0-2fe type=join kind=port-merge dmax=13.62 dmean=5.57 bud=2.5 peak=0.004336 spk=0 hooks=0 rough=ok facet=5.376e-05 len=101.8 prm=[1.003 1.382 -0.4365 0.7677] at_floor=[] src=solved
+      seam exit f (port at 2.00 u from the end): gap=7.63e-15 ang=0 dk=0 designed=None
+      seam entry e (port at 30.00 u, port-merge): gap=5.46e-14 ang=0 dk=1.446e-17 designed=False
+  [v68x] w15:coffee:J6-8fe type=join kind=port-merge dmax=13.59 dmean=5.28 bud=2.5 peak=0.004336 spk=0 hooks=0 rough=ok facet=5.376e-05 len=102.2 prm=[0.9927 1.347 -0.4086 0.4207] at_floor=[] src=solved
+      seam exit f (port at 2.00 u from the end): gap=5.47e-14 ang=0 dk=5.349e-16 designed=None
+      seam entry e (port at 30.00 u, port-merge): gap=6.82e-15 ang=8.538e-07 dk=1.536e-17 designed=False
+  b exit angle=-22.00 deg (font about -12.5 to -14.5)
+  v exit angle=-17.11 deg (font about -12.5 to -14.5)
+  w exit angle=-20.53 deg (font about -12.5 to -14.5)
+
+## K949 (fe 18.8 / v5.8 15.34, bk 7.85, ee 6.9, br 5.18, y tail 3.55 u)
+  [v68x] w56:fe:J0-2fe type=join kind=port-merge dmax=13.62 dmean=5.57 bud=2.5 peak=0.004336 spk=0 hooks=0 rough=ok facet=5.376e-05 len=101.8 prm=[1.003 1.382 -0.4365 0.7677] at_floor=[] src=solved
+      seam exit f (port at 2.00 u from the end): gap=7.63e-15 ang=0 dk=0 designed=None
+      seam entry e (port at 30.00 u, port-merge): gap=5.46e-14 ang=0 dk=1.446e-17 designed=False
+  [v68x] w15:coffee:J6-8fe type=join kind=port-merge dmax=13.59 dmean=5.28 bud=2.5 peak=0.004336 spk=0 hooks=0 rough=ok facet=5.376e-05 len=102.2 prm=[0.9927 1.347 -0.4086 0.4207] at_floor=[] src=solved
+      seam exit f (port at 2.00 u from the end): gap=5.47e-14 ang=0 dk=5.349e-16 designed=None
+      seam entry e (port at 30.00 u, port-merge): gap=6.82e-15 ang=8.538e-07 dk=1.536e-17 designed=False
+  [v68x] w89:bk:J0-2bk type=join kind=smooth dmax=7.31 dmean=4.45 bud=2.5 peak=0.04835 spk=48 hooks=1 rough=FAIL facet=0.01303 len=117.4 prm=[0.09467 0.9599 -13.68 -14.99] at_floor=[] src=class|R|L cnct.lop_b_h|k|L=b
+      seam exit b: gap=0 ang=0 dk=5.735e-14 designed=None
+      seam entry k (after_b, smooth): gap=4.83e-13 ang=0 dk=2.707e-15 designed=False
+  [v68x] w15:coffee:J8-10ee type=join kind=port-merge dmax=8.29 dmean=1.59 bud=2.5 peak=0.001303 spk=0 hooks=0 rough=ok facet=0.0001692 len=131.5 prm=[0.8047 1.218 5.761 5.825] at_floor=[] src=solved
+      seam exit e (port at 5.00 u from the end): gap=0 ang=0 dk=1.359e-15 designed=None
+      seam entry e (port at 4.79 u, port-merge): gap=3.71e-13 ang=0 dk=2.158e-15 designed=False
+  [v68x] w96:br:J0-2br type=join kind=cusp dmax=5.18 dmean=1.82 bud=2.5 peak=0.1358 spk=49 hooks=1 rough=FAIL facet=0.02803 len=136.3 prm=[0.04783 2.865 -12.05 0.0001567] at_floor=[] src=class|R cnct.ful_b_r|r
+      seam exit b: gap=0 ang=0 dk=4.788e-14 designed=None
+      seam entry r (after_b, cusp): gap=2.39e-07 ang=165.4 dk=0.07461 designed=True
+  [v68x] w11:quick brown fox:J10-12br type=join kind=cusp dmax=5.18 dmean=1.83 bud=2.5 peak=0.1356 spk=61 hooks=1 rough=FAIL facet=0.02796 len=136.9 prm=[0.04783 2.865 -12.05 0.0001567] at_floor=[] src=class|R cnct.ful_b_r|r
+      seam exit b: gap=0 ang=0 dk=4.131e-13 designed=None
+      seam entry r (after_b, cusp): gap=2.39e-07 ang=165.4 dk=0.07461 designed=True
+
+## K951 (v5.4: b,f,p,v,o,s,w end without a final tail, as the font's do)
+  tail rows in v68x: 180; sample ids: ['w90:bl:tail0l', 'w63:fl:tail0l', 'w33:ol:tail0l', 'w168:cl:tail0l', 'w115:vl:tail0l']
+    w90:bl:tail0l type=tail kind= dmax=8.91 dmean=2.68 bud=2.5 peak=0.04051 spk=53 hooks=2 rough=short facet=nan len=24.4 prm=[-] at_floor=[] src=tail
+    w63:fl:tail0l type=tail kind= dmax=8.91 dmean=2.68 bud=2.5 peak=0.04051 spk=53 hooks=2 rough=short facet=nan len=24.4 prm=[-] at_floor=[] src=tail
+    w33:ol:tail0l type=tail kind= dmax=8.91 dmean=2.68 bud=2.5 peak=0.04051 spk=54 hooks=2 rough=short facet=nan len=24.4 prm=[-] at_floor=[] src=tail
+    w168:cl:tail0l type=tail kind= dmax=8.91 dmean=2.68 bud=2.5 peak=0.04051 spk=54 hooks=2 rough=short facet=nan len=24.4 prm=[-] at_floor=[] src=tail
+    w115:vl:tail0l type=tail kind= dmax=8.91 dmean=2.68 bud=2.5 peak=0.04051 spk=53 hooks=2 rough=short facet=nan len=24.4 prm=[-] at_floor=[] src=tail
+    w141:wl:tail0l type=tail kind= dmax=8.91 dmean=2.68 bud=2.5 peak=0.04051 spk=53 hooks=2 rough=short facet=nan len=24.4 prm=[-] at_floor=[] src=tail
+    w129:vz:tail0z type=tail kind= dmax=1.72 dmean=0.68 bud=2.5 peak=0.03394 spk=55 hooks=2 rough=FAIL facet=0.8217 len=55.3 prm=[-] at_floor=[] src=tail
+    w47:oz:tail0z type=tail kind= dmax=1.72 dmean=0.68 bud=2.5 peak=0.03394 spk=62 hooks=2 rough=FAIL facet=0.8217 len=55.3 prm=[-] at_floor=[] src=tail
+    w104:bz:tail0z type=tail kind= dmax=1.72 dmean=0.68 bud=2.5 peak=0.03394 spk=58 hooks=2 rough=FAIL facet=0.8217 len=55.3 prm=[-] at_floor=[] src=tail
+    w77:fz:tail0z type=tail kind= dmax=1.72 dmean=0.68 bud=2.5 peak=0.03394 spk=55 hooks=2 rough=FAIL facet=0.8217 len=55.3 prm=[-] at_floor=[] src=tail
+    w182:cz:tail0z type=tail kind= dmax=1.72 dmean=0.68 bud=2.5 peak=0.03394 spk=62 hooks=2 rough=FAIL facet=0.8217 len=55.3 prm=[-] at_floor=[] src=tail
+    w155:wz:tail0z type=tail kind= dmax=1.72 dmean=0.68 bud=2.5 peak=0.03394 spk=59 hooks=2 rough=FAIL facet=0.8217 len=55.3 prm=[-] at_floor=[] src=tail
+    w173:cq:tail0q type=tail kind= dmax=1.06 dmean=0.75 bud=2.5 peak=0.01089 spk=9 hooks=1 rough=FAIL facet=1.233 len=33.7 prm=[-] at_floor=[] src=tail
+    w68:fq:tail0q type=tail kind= dmax=1.06 dmean=0.75 bud=2.5 peak=0.01089 spk=9 hooks=1 rough=FAIL facet=1.233 len=33.7 prm=[-] at_floor=[] src=tail
+    w120:vq:tail0q type=tail kind= dmax=1.06 dmean=0.75 bud=2.5 peak=0.01089 spk=9 hooks=1 rough=FAIL facet=1.233 len=33.7 prm=[-] at_floor=[] src=tail
+    w38:oq:tail0q type=tail kind= dmax=1.06 dmean=0.75 bud=2.5 peak=0.01089 spk=10 hooks=1 rough=FAIL facet=1.233 len=33.7 prm=[-] at_floor=[] src=tail
+    w95:bq:tail0q type=tail kind= dmax=1.06 dmean=0.75 bud=2.5 peak=0.01089 spk=9 hooks=1 rough=FAIL facet=1.233 len=33.7 prm=[-] at_floor=[] src=tail
+    w146:wq:tail0q type=tail kind= dmax=1.06 dmean=0.75 bud=2.5 peak=0.01089 spk=9 hooks=1 rough=FAIL facet=1.233 len=33.7 prm=[-] at_floor=[] src=tail
+    w218:ij:tail0i type=tail kind= dmax=2.67 dmean=1.97 bud=2.5 peak=0.02338 spk=20 hooks=1 rough=FAIL facet=0.01888 len=31.6 prm=[-] at_floor=[] src=tail
+    w86:bh:tail0h type=tail kind= dmax=1.07 dmean=0.57 bud=2.5 peak=0.05791 spk=13 hooks=1 rough=FAIL facet=0.02532 len=33.9 prm=[-] at_floor=[] src=tail
+    w111:vh:tail0h type=tail kind= dmax=1.07 dmean=0.57 bud=2.5 peak=0.05791 spk=13 hooks=1 rough=FAIL facet=0.02532 len=33.9 prm=[-] at_floor=[] src=tail
+    w29:oh:tail0h type=tail kind= dmax=1.07 dmean=0.57 bud=2.5 peak=0.05791 spk=14 hooks=1 rough=FAIL facet=0.02532 len=33.9 prm=[-] at_floor=[] src=tail
+    w137:wh:tail0h type=tail kind= dmax=1.07 dmean=0.57 bud=2.5 peak=0.05791 spk=13 hooks=1 rough=FAIL facet=0.02532 len=33.9 prm=[-] at_floor=[] src=tail
+    w59:fh:tail0h type=tail kind= dmax=1.07 dmean=0.57 bud=2.5 peak=0.05791 spk=13 hooks=1 rough=FAIL facet=0.02532 len=33.9 prm=[-] at_floor=[] src=tail
+    w16:which:tail0h type=tail kind= dmax=1.07 dmean=0.57 bud=2.5 peak=0.05791 spk=13 hooks=1 rough=FAIL facet=0.02532 len=33.9 prm=[-] at_floor=[] src=tail
+    w164:ch:tail0h type=tail kind= dmax=1.07 dmean=0.57 bud=2.5 peak=0.05791 spk=13 hooks=1 rough=FAIL facet=0.02532 len=33.9 prm=[-] at_floor=[] src=tail
+    w205:eu:tail0u type=tail kind= dmax=1.16 dmean=0.63 bud=2.5 peak=0.02578 spk=24 hooks=1 rough=FAIL facet=0.0236 len=30.7 prm=[-] at_floor=[] src=tail
+    w72:fu:tail0u type=tail kind= dmax=1.16 dmean=0.63 bud=2.5 peak=0.02578 spk=23 hooks=1 rough=FAIL facet=0.0236 len=30.7 prm=[-] at_floor=[] src=tail
+    w214:hu:tail0u type=tail kind= dmax=1.16 dmean=0.63 bud=2.5 peak=0.02578 spk=23 hooks=1 rough=FAIL facet=0.0236 len=30.7 prm=[-] at_floor=[] src=tail
+    w42:ou:tail0u type=tail kind= dmax=1.16 dmean=0.63 bud=2.5 peak=0.02578 spk=24 hooks=1 rough=FAIL facet=0.0236 len=30.7 prm=[-] at_floor=[] src=tail
+    w188:au:tail0u type=tail kind= dmax=1.16 dmean=0.63 bud=2.5 peak=0.02578 spk=24 hooks=1 rough=FAIL facet=0.0236 len=30.7 prm=[-] at_floor=[] src=tail
+    w124:vu:tail0u type=tail kind= dmax=1.16 dmean=0.63 bud=2.5 peak=0.02578 spk=22 hooks=1 rough=FAIL facet=0.0236 len=30.7 prm=[-] at_floor=[] src=tail
+    w197:du:tail0u type=tail kind= dmax=1.16 dmean=0.63 bud=2.5 peak=0.02578 spk=24 hooks=1 rough=FAIL facet=0.0236 len=30.7 prm=[-] at_floor=[] src=tail
+    w99:bu:tail0u type=tail kind= dmax=1.16 dmean=0.63 bud=2.5 peak=0.02578 spk=23 hooks=1 rough=FAIL facet=0.0236 len=30.7 prm=[-] at_floor=[] src=tail
+    w150:wu:tail0u type=tail kind= dmax=1.16 dmean=0.63 bud=2.5 peak=0.02578 spk=23 hooks=1 rough=FAIL facet=0.0236 len=30.7 prm=[-] at_floor=[] src=tail
+    w230:nu:tail0u type=tail kind= dmax=1.16 dmean=0.63 bud=2.5 peak=0.02578 spk=22 hooks=1 rough=FAIL facet=0.0236 len=30.7 prm=[-] at_floor=[] src=tail
+    w177:cu:tail0u type=tail kind= dmax=1.16 dmean=0.63 bud=2.5 peak=0.02578 spk=24 hooks=1 rough=FAIL facet=0.0236 len=30.7 prm=[-] at_floor=[] src=tail
+    w222:iu:tail0u type=tail kind= dmax=1.16 dmean=0.63 bud=2.5 peak=0.02578 spk=23 hooks=1 rough=FAIL facet=0.0236 len=30.7 prm=[-] at_floor=[] src=tail
+    w112:vi:tail0i type=tail kind= dmax=1.62 dmean=0.66 bud=2.5 peak=0.02338 spk=20 hooks=1 rough=FAIL facet=0.01888 len=31.6 prm=[-] at_floor=[] src=tail
+    w217:ii:tail0i type=tail kind= dmax=1.62 dmean=0.66 bud=2.5 peak=0.02338 spk=20 hooks=1 rough=FAIL facet=0.01888 len=31.6 prm=[-] at_floor=[] src=tail
+    ... (140 more tail rows; full list in census_v68x.txt)
+  k863k fin forms in v6.8 join_params: False
+
+## K961 (v5.8: 8 of 30 body strokes over 12 nodes: m21 k18 h16 w16 y15 p14 a13 n13)
+  a: fewnode nodes=13 cubics_total=11 strokes=1
+  b: fewnode nodes=12 cubics_total=11 strokes=1
+  c: fewnode nodes=3 cubics_total=2 strokes=1
+  d: fewnode nodes=11 cubics_total=10 strokes=1
+  e: fewnode nodes=4 cubics_total=3 strokes=1
+  f: fewnode nodes=12 cubics_total=10 strokes=1
+  g: fewnode nodes=10 cubics_total=9 strokes=1
+  h: fewnode nodes=16 cubics_total=15 strokes=1
+  i: fewnode nodes=5 cubics_total=8 strokes=2
+  j: fewnode nodes=8 cubics_total=11 strokes=2
+  k: fewnode nodes=18 cubics_total=17 strokes=1
+  l: fewnode nodes=9 cubics_total=8 strokes=1
+  m: fewnode nodes=21 cubics_total=20 strokes=1
+  n: fewnode nodes=13 cubics_total=12 strokes=1
+  o: fewnode nodes=6 cubics_total=8 strokes=1
+  p: fewnode nodes=14 cubics_total=13 strokes=1
+  q: fewnode nodes=12 cubics_total=10 strokes=1
+  r: fewnode nodes=7 cubics_total=6 strokes=1
+  s: fewnode nodes=7 cubics_total=6 strokes=1
+  t: fewnode nodes=6 cubics_total=6 strokes=2
+  u: fewnode nodes=12 cubics_total=11 strokes=1
+  v: fewnode nodes=11 cubics_total=10 strokes=1
+  w: fewnode nodes=16 cubics_total=15 strokes=1
+  x: fewnode nodes=2 cubics_total=2 strokes=2
+  y: fewnode nodes=15 cubics_total=14 strokes=1
+  z: fewnode nodes=8 cubics_total=7 strokes=1
+  letters with fewnode nodes > 12: ['a', 'h', 'k', 'm', 'n', 'p', 'w', 'y']
+
+## K977 (v5.8: b notch 1.77->0.46, z notch 0.43->0.25 still show; b comb steps unmeasured;
+         k peak 2.71 (its fair's own); f hook three nodes about 13 u apart)
+  b: nodes=12 pieces:
+    piece len=2706 fu nodes(s_fu, kind, dk?)=[[0.0, 'end', 0.00263], [459.9, 'add', 0.00651], [676.5, 'add', 0.00941], [1014.8, 'add', 0.02233], [1353.1, 'add', -0.00113], [1675.5, 'add', -0.00407], [2029.6, 'add', 0.03202], [2367.9, 'add', 0.00456], [2706.2, 'end', -0.01291]]
+    piece len=18 fu nodes(s_fu, kind, dk?)=[[0.0, 'end', -0.01291], [17.6, 'end', -0.00146]]
+    piece len=71 fu nodes(s_fu, kind, dk?)=[[0.0, 'end', 0.01291], [71.0, 'end', 0.05838]]
+  z: nodes=8 pieces:
+    piece len=583 fu nodes(s_fu, kind, dk?)=[[0.0, 'end', -0.0282], [239.6, 'add', -0.03117], [583.1, 'end', 0.00026]]
+    piece len=1582 fu nodes(s_fu, kind, dk?)=[[0.0, 'end', -0.01083], [424.7, 'add', 3e-05], [791.0, 'add', -0.0325], [945.4, 'add', -0.0421], [1186.5, 'add', -0.00291], [1582.0, 'end', -0.00044]]
+  k: nodes=18 pieces:
+    piece len=1787 fu nodes(s_fu, kind, dk?)=[[0.0, 'end', -0.0413], [111.7, 'add', 0.01734], [223.4, 'add', -0.0049], [446.8, 'add', 0.00292], [893.6, 'add', 0.03842], [1340.4, 'add', -0.00075], [1550.4, 'add', 0.01086], [1668.8, 'add', -0.00889], [1787.3, 'end', 0.00258]]
+    piece len=173 fu nodes(s_fu, kind, dk?)=[[0.0, 'end', 0.00258], [173.1, 'end', -0.00921]]
+    piece len=1345 fu nodes(s_fu, kind, dk?)=[[0.0, 'end', -0.00258], [235.3, 'add', 0.00356], [470.6, 'add', -0.03857], [672.3, 'add', -0.02636], [891.8, 'add', -0.02064], [1008.5, 'add', 0.10165], [1140.7, 'add', -0.00025], [1344.7, 'end', 0.04479]]
+  f: nodes=12 pieces:
+    piece len=3345 fu nodes(s_fu, kind, dk?)=[[0.0, 'end', 0.00212], [836.3, 'add', 0.05967], [999.7, 'add', 0.02805], [1254.4, 'add', 0.00042], [1672.5, 'add', -0.00034], [2257.9, 'add', 0.00015], [2508.8, 'add', 0.05302], [2926.9, 'add', 0.00258], [3136.0, 'add', -0.00458], [3240.5, 'add', 0.0197], [3292.8, 'add', -0.09786], [3345.1, 'end', -0.22622]]
+  [v68x] w80:bb:J0-2bb type=join kind=smooth dmax=2.52 dmean=1.29 bud=2.5 peak=0.1041 spk=37 hooks=3 rough=FAIL facet=0.05082 len=233.5 prm=[0.02 1.369 -3.49 -12.65] at_floor=[0] src=class|R cnct.ful_b_f|b
+      seam exit b: gap=0 ang=0 dk=6.322e-13 designed=None
+      seam entry b (after_o, smooth): gap=8.75e-13 ang=0 dk=1.843e-16 designed=False
+  (notch depth / comb steps need the sampled curve: see bodies_sample.py output)
+
+## K986 (K944 n edit: rough FAIL facet 0.0056 > 0.0053, peak 14.67 at 166 u)
+K930 roughness check of B1: nodes <= 30, band (floor 0.02/u) <= 0.72, wobble <= 0.016/u, facet <= 0.0053/u per piece of >= 30 u; peak |dk/ds| (and p90) over 200 /Mfu^2, 4 u off ends and cusps
+PASS: 0 of 30 strokes over a limit; nodes median 10 max 21; band max 0.60; wobble max 0.0155 1/u
+
+  a s1: nodes   12  band 0.25  wobble 0.0068  facet 0.0007  peak   1.18 (p90  0.30) at   469 u  ok
+  b s1: nodes   12  band 0.19  wobble 0.0039  facet 0.0006  peak   1.91 (p90  0.52) at   664 u  ok
+  c s1: nodes    3  band 0.06  wobble 0.0012  facet 0.0001  peak   0.13 (p90  0.12) at   212 u  ok
+  d s1: nodes   11  band 0.23  wobble 0.0045  facet 0.0005  peak   1.07 (p90  0.23) at   722 u  ok
+  e s1: nodes    4  band 0.12  wobble 0.0026  facet 0.0004  peak   0.46 (p90  0.37) at    87 u  ok
+  f s1: nodes   11  band 0.24  wobble 0.0048  facet 0.0012  peak   4.91 (p90  0.47) at   753 u  ok
+  g s1: nodes   10  band 0.08  wobble 0.0016  facet 0.0002  peak   0.45 (p90  0.21) at   268 u  ok
+  h s1: nodes   16  band 0.22  wobble 0.0055  facet 0.0008  peak   1.37 (p90  0.54) at   736 u  ok
+  i s1: nodes    5  band 0.23  wobble 0.0063  facet 0.0007  peak   0.92 (p90  0.75) at   117 u  ok
+  i s2: nodes    5  band 0.00  wobble 0.0000  facet 0.0000  peak   0.00 (p90  0.00) at    10 u  ok
+  j s1: nodes    8  band 0.12  wobble 0.0024  facet 0.0003  peak   0.65 (p90  0.31) at   258 u  ok
+  j s2: nodes    5  band 0.00  wobble 0.0000  facet 0.0000  peak   0.00 (p90  0.00) at     8 u  ok
+  k s1: nodes   18  band 0.32  wobble 0.0064  facet 0.0011  peak   1.91 (p90  0.53) at     4 u  ok
+  l s1: nodes    9  band 0.14  wobble 0.0028  facet 0.0004  peak   0.75 (p90  0.36) at   125 u  ok
+  m s1: nodes   21  band 0.23  wobble 0.0065  facet 0.0006  peak   1.07 (p90  0.47) at   708 u  ok
+  n s1: nodes   13  band 0.26  wobble 0.0075  facet 0.0008  peak   1.37 (p90  0.71) at    30 u  ok
+  o s1: nodes    9  band 0.19  wobble 0.0039  facet 0.0011  peak   2.13 (p90  0.19) at   353 u  ok
+  p s1: nodes   14  band 0.
+  w3:woven:tail0n type=tail kind= dmax=1.33 dmean=0.79 bud=2.5 peak=0.01303 spk=0 hooks=0 rough=FAIL facet=0.00785 len=34.9 prm=[-] at_floor=[] src=tail
+  w11:quick brown fox:tail1n type=tail kind= dmax=1.59 dmean=0.99 bud=2.5 peak=0.01303 spk=0 hooks=0 rough=FAIL facet=0.00785 len=34.9 prm=[-] at_floor=[] src=tail
+  w117:vn:tail0n type=tail kind= dmax=1.59 dmean=0.99 bud=2.5 peak=0.01303 spk=0 hooks=0 rough=FAIL facet=0.00785 len=34.9 prm=[-] at_floor=[] src=tail
+  w170:cn:tail0n type=tail kind= dmax=1.59 dmean=0.99 bud=2.5 peak=0.01303 spk=0 hooks=0 rough=FAIL facet=0.00785 len=34.9 prm=[-] at_floor=[] src=tail
+  w92:bn:tail0n type=tail kind= dmax=1.59 dmean=0.99 bud=2.5 peak=0.01303 spk=0 hooks=0 rough=FAIL facet=0.00785 len=34.9 prm=[-] at_floor=[] src=tail
+  w14:ice jet even:tail2n type=tail kind= dmax=1.33 dmean=0.79 bud=2.5 peak=0.01303 spk=0 hooks=0 rough=FAIL facet=0.00785 len=34.9 prm=[-] at_floor=[] src=tail
+  w65:fn:tail0n type=tail kind= dmax=1.59 dmean=0.99 bud=2.5 peak=0.01303 spk=0 hooks=0 rough=FAIL facet=0.00785 len=34.9 prm=[-] at_floor=[] src=tail
+  w143:wn:tail0n type=tail kind= dmax=1.59 dmean=0.99 bud=2.5 peak=0.01303 spk=0 hooks=0 rough=FAIL facet=0.00785 len=34.9 prm=[-] at_floor=[] src=tail
+  w35:on:tail0n type=tail kind= dmax=1.59 dmean=0.99 bud=2.5 peak=0.01303 spk=0 hooks=0 rough=FAIL facet=0.00785 len=34.9 prm=[-] at_floor=[] src=tail
+  w48:nt:lead0n type=lead kind=smooth dmax=0.20 dmean=0.06 bud=2.5 peak=0.01039 spk=0 hooks=0 rough=ok facet=0.00155 len=45.4 prm=[-] at_floor=[] src=lead
+  w225:ni:lead0n type=lead kind=smooth dmax=0.20 dmean=0.06 bud=2.5 peak=0.01039 spk=0 hooks=0 rough=ok facet=0.00155 len=45.4 prm=[-] at_floor=[] src=lead
+  w226:nj:lead0n type=lead kind=smooth dmax=0.20 dmean=0.06 bud=2.5 peak=0.01039 spk=0 hooks=0 rough=ok facet=0.00155 len=45.4 prm=[-] at_floor=[] src=lead
+  w227:np:lead0n type=lead kind=smooth dmax=0.20 dmean=0.06 bud=2.5 peak=0.01039 spk=0 hooks=0 rough=ok facet=0.00155 len=45.4 prm=[-] at_floor=[] src=lead
+  w228:nr:lead0n type=lead kind=smooth dmax=0.20 dmean=0.06 bud=2.5 peak=0.01039 spk=0 hooks=0 rough=ok facet=0.00155 len=45.4 prm=[-] at_floor=[] src=lead
+  w229:ns:lead0n type=lead kind=smooth dmax=0.20 dmean=0.06 bud=2.5 peak=0.01039 spk=0 hooks=0 rough=ok facet=0.00155 len=45.4 prm=[-] at_floor=[] src=lead
+  w230:nu:lead0n type=lead kind=smooth dmax=0.20 dmean=0.06 bud=2.5 peak=0.01039 spk=0 hooks=0 rough=ok facet=0.00155 len=45.4 prm=[-] at_floor=[] src=lead
+  w231:nw:lead0n type=lead kind=smooth dmax=0.20 dmean=0.06 bud=2.5 peak=0.01039 spk=0 hooks=0 rough=ok facet=0.00155 len=45.4 prm=[-] at_floor=[] src=lead
+  w232:ny:lead0n type=lead kind=smooth dmax=0.20 dmean=0.06 bud=2.5 peak=0.01039 spk=0 hooks=0 rough=ok facet=0.00155 len=45.4 prm=[-] at_floor=[] src=lead
+
+## K990 (B1/v6.0 left: f ends in a curl below the crossing, not a cusp into its exit;
+         fe 22.55, ff 16.55, fo 9.07 u off the font)
+  [v68x] w56:fe:J0-2fe type=join kind=port-merge dmax=13.62 dmean=5.57 bud=2.5 peak=0.004336 spk=0 hooks=0 rough=ok facet=5.376e-05 len=101.8 prm=[1.003 1.382 -0.4365 0.7677] at_floor=[] src=solved
+      seam exit f (port at 2.00 u from the end): gap=7.63e-15 ang=0 dk=0 designed=None
+      seam entry e (port at 30.00 u, port-merge): gap=5.46e-14 ang=0 dk=1.446e-17 designed=False
+  [v68x] w15:coffee:J6-8fe type=join kind=port-merge dmax=13.59 dmean=5.28 bud=2.5 peak=0.004336 spk=0 hooks=0 rough=ok facet=5.376e-05 len=102.2 prm=[0.9927 1.347 -0.4086 0.4207] at_floor=[] src=solved
+      seam exit f (port at 2.00 u from the end): gap=5.47e-14 ang=0 dk=5.349e-16 designed=None
+      seam entry e (port at 30.00 u, port-merge): gap=6.82e-15 ang=8.538e-07 dk=1.536e-17 designed=False
+  [v68x] w57:ff:J0-2ff type=join kind=port-merge dmax=3.75 dmean=1.15 bud=2.5 peak=0.004355 spk=0 hooks=0 rough=ok facet=8.825e-05 len=118.5 prm=[1.347 1.221 -2.418 0.3359] at_floor=[] src=solved
+      seam exit f (port at 2.00 u from the end): gap=3.41e-15 ang=0 dk=1.518e-16 designed=None
+      seam entry f (port at 17.80 u, port-merge): gap=1.07e-13 ang=0 dk=1.64e-16 designed=False
+  [v68x] w15:coffee:J4-6ff type=join kind=port-merge dmax=3.72 dmean=1.12 bud=2.5 peak=0.004355 spk=0 hooks=0 rough=ok facet=8.709e-05 len=118.7 prm=[1.344 1.222 -2.395 0.3464] at_floor=[] src=solved
+      seam exit f (port at 2.00 u from the end): gap=5.46e-14 ang=0 dk=7.228e-18 designed=None
+      seam entry f (port at 17.80 u, port-merge): gap=2.2e-13 ang=0 dk=7.648e-16 designed=False
+  [v68x] w11:quick brown fox:J20-22fo type=join kind=port-fused dmax=7.80 dmean=3.85 bud=3.0 peak=0.001637 spk=0 hooks=0 rough=ok facet=0.0001107 len=135.3 prm=[2.628 0.9508 -12.22 -2.745] at_floor=[] src=solved
+      seam exit f (port at 6.92 u from the end): gap=2.18e-13 ang=0 dk=3.386e-15 designed=None
+      seam entry o (port at 102.49 u, retrace, port-fused): gap=1.09e-13 ang=0 dk=2.638e-16 designed=False
+  [v68x] w66:fo:J0-2fo type=join kind=port-fused dmax=7.79 dmean=3.83 bud=3.0 peak=0.001637 spk=0 hooks=0 rough=ok facet=0.0001108 len=135.3 prm=[2.64 0.9302 -12.32 -2.898] at_floor=[] src=solved
+      seam exit f (port at 6.92 u from the end): gap=6.82e-15 ang=0 dk=7.228e-18 designed=None
+      seam entry o (port at 102.49 u, retrace, port-fused): gap=1.12e-13 ang=0 dk=1.319e-16 designed=False
+  f corners=None fewnode nodes=12
+
+## K991 (J2 left cusp entries at 143-172 deg, crossing about 20 u lower)
+  designed (cusp/corner) seams in v68x: 74
+  designed seam: w122:vs:J0-2vs pair=vs seam=entry s (after_o, cusp) gap=7.61e-07 ang=171.6 dk=0.06201 designed=True
+  designed seam: w40:os:J0-2os pair=os seam=entry s (port at 0.00 u, port-corner) gap=3.86e-14 ang=177.2 dk=0.01242 designed=True
+  designed seam: w148:ws:J0-2ws pair=ws seam=entry s (after_o, cusp) gap=7.61e-07 ang=171.6 dk=0.06201 designed=True
+  designed seam: w96:br:J0-2br pair=br seam=entry r (after_b, cusp) gap=2.39e-07 ang=165.4 dk=0.07461 designed=True
+  designed seam: w11:quick brown fox:J10-12br pair=br seam=entry r (after_b, cusp) gap=2.39e-07 ang=165.4 dk=0.07461 designed=True
+  designed seam: w147:wr:J0-2wr pair=wr seam=entry r (after_b, cusp) gap=2.39e-07 ang=165.4 dk=0.07461 designed=True
+  designed seam: w97:bs:J0-2bs pair=bs seam=entry s (after_o, cusp) gap=7.61e-07 ang=171.6 dk=0.06201 designed=True
+  designed seam: w121:vr:J0-2vr pair=vr seam=entry r (after_b, cusp) gap=2.39e-07 ang=165.4 dk=0.07461 designed=True
+  designed seam: w94:bp:J0-2bp pair=bp seam=entry p (after_b, cusp) gap=1.11e-06 ang=158.5 dk=0.09211 designed=True
+  designed seam: w145:wp:J0-2wp pair=wp seam=entry p (after_b, cusp) gap=1.11e-06 ang=158.5 dk=0.09211 designed=True
+  designed seam: w119:vp:J0-2vp pair=vp seam=entry p (after_b, cusp) gap=1.11e-06 ang=158.5 dk=0.09211 designed=True
+  designed seam: w19:subgroup:J6-8gr pair=gr seam=entry r (after_n, cusp) gap=2.39e-07 ang=165.4 dk=0.07461 designed=True
+  designed seam: w149:wt:J0-2wt pair=wt seam=entry t (after_n, cusp) gap=4.95e-06 ang=142.7 dk=0.03867 designed=True
+  designed seam: w123:vt:J0-2vt pair=vt seam=entry t (after_n, cusp) gap=4.95e-06 ang=142.7 dk=0.03867 designed=True
+  designed seam: w98:bt:J0-2bt pair=bt seam=entry t (after_n, cusp) gap=4.95e-06 ang=142.7 dk=0.03867 designed=True
+  designed seam: w174:cr:J0-2cr pair=cr seam=entry r (after_n, cusp) gap=2.39e-07 ang=165.4 dk=0.07461 designed=True
+  designed seam: w12:jumps over the lazy dog:J34-36og pair=og seam=exit o (port at 4.00 u from the end) gap=0 ang=180 dk=0.03668 designed=True
+  designed seam: w28:og:J0-2og pair=og seam=exit o (port at 4.00 u from the end) gap=0 ang=180 dk=0.03667 designed=True
+  designed seam: w175:cs:J0-2cs pair=cs seam=entry s (after_n, cusp) gap=7.61e-07 ang=171.6 dk=0.06201 designed=True
+  designed seam: w12:jumps over the lazy dog:J6-8ps pair=ps seam=entry s (after_n, cusp) gap=7.61e-07 ang=171.6 dk=0.06201 designed=True
+  designed seam: w176:ct:J0-2ct pair=ct seam=entry t (after_n, cusp) gap=4.95e-06 ang=142.7 dk=0.03867 designed=True
+  designed seam: w6:hippo:J4-6pp pair=pp seam=entry p (after_n, cusp) gap=6.82e-14 ang=159 dk=0.006919 designed=True
+  designed seam: w7:puppy:J4-6pp pair=pp seam=entry p (after_n, cusp) gap=6.82e-14 ang=159 dk=0.006919 designed=True
+  designed seam: w7:puppy:J6-8py pair=py seam=entry y (after_n, cusp) gap=1.13e-06 ang=166.2 dk=0.07144 designed=True
+  designed seam: w7:puppy:J0-2pu pair=pu seam=entry u (after_n, cusp) gap=3.92e-07 ang=172.3 dk=0.02613 designed=True
+  designed seam: w20:lawgiver:J6-8gi pair=gi seam=entry i (after_n, cusp) gap=5.79e-07 ang=172.3 dk=0.03605 designed=True
+  designed seam: w19:subgroup:lead0s pair=^s seam=entry s (entry, cusp) gap=7.61e-07 ang=171.6 dk=0.06201 designed=True
+  designed seam: w13:be we shoe maze huge bye:lead1s pair=^s seam=entry s (entry, cusp) gap=7.61e-07 ang=171.6 dk=0.06201 designed=True
+  designed seam: w10:cursive:J2-4ur pair=ur seam=entry r (after_n, cusp) gap=2.39e-07 ang=165.4 dk=0.07461 designed=True
+  designed seam: w5:people:J4-6op pair=op seam=entry p (port at 0.00 u, port-corner) gap=5.62e-14 ang=174.6 dk=0.04015 designed=True
+  designed seam: w37:op:J0-2op pair=op seam=entry p (port at 0.00 u, port-corner) gap=1.36e-14 ang=174.6 dk=0.04008 designed=True
+  designed seam: w19:subgroup:J10-12ou pair=ou seam=entry u (port at 0.00 u, port-corner) gap=2.73e-14 ang=158.1 dk=0.008222 designed=True
+  designed seam: w30:oi:J0-2oi pair=oi seam=entry i (port at 0.00 u, port-corner) gap=2.73e-14 ang=156.5 dk=0.0151 designed=True
+  designed seam: w2:bow:J2-4ow pair=ow seam=entry w (port at 0.00 u, port-corner) gap=5.46e-14 ang=179.2 dk=0.03265 designed=True
+  designed seam: w11:quick brown fox:J14-16ow pair=ow seam=entry w (port at 0.00 u, port-corner) gap=1.36e-14 ang=179.2 dk=0.03264 designed=True
+  designed seam: w11:quick brown fox:J0-2qu pair=qu seam=entry u (after_n, cusp) gap=3.92e-07 ang=172.3 dk=0.02613 designed=True
+  designed seam: w31:oj:J0-2oj pair=oj seam=entry j (port at 0.00 u, port-corner) gap=1.36e-14 ang=160.6 dk=0.01095 designed=True
+  designed seam: w166:cj:J0-2cj pair=cj seam=entry j (after_n, cusp) gap=9.42e-07 ang=168.5 dk=0.07991 designed=True
+  designed seam: w42:ou:J0-2ou pair=ou seam=entry u (port at 0.00 u, port-corner) gap=2.73e-14 ang=158.1 dk=0.008289 designed=True
+  designed seam: w181:cy:J0-2cy pair=cy seam=entry y (after_n, cusp) gap=1.13e-06 ang=166.2 dk=0.07144 designed=True
+  designed seam: w10:cursive:J4-6rs pair=rs seam=entry s (after_n, cusp) gap=7.61e-07 ang=171.6 dk=0.06201 designed=True
+  designed seam: w46:oy:J0-2oy pair=oy seam=entry y (port at 0.00 u, port-corner) gap=3.05e-14 ang=164.3 dk=0.00334 designed=True
+  designed seam: w152:ww:J0-2ww pair=ww seam=entry w (after_b, cusp) gap=4.41e-06 ang=168.5 dk=0.08271 designed=True
+  designed seam: w150:wu:J0-2wu pair=wu seam=entry u (after_b, cusp) gap=3.92e-07 ang=170.4 dk=0.04189 designed=True
+  designed seam: w154:wy:J0-2wy pair=wy seam=entry y (after_b, cusp) gap=1.13e-06 ang=176.7 dk=0.05348 designed=True
+  designed seam: w139:wj:J0-2wj pair=wj seam=entry j (after_b, cusp) gap=9.42e-07 ang=172.9 dk=0.03899 designed=True
+  designed seam: w138:wi:J0-2wi pair=wi seam=entry i (after_b, cusp) gap=5.79e-07 ang=168.8 dk=0.06504 designed=True
+  designed seam: w126:vw:J0-2vw pair=vw seam=entry w (after_b, cusp) gap=4.41e-06 ang=168.5 dk=0.08271 designed=True
+  designed seam: w124:vu:J0-2vu pair=vu seam=entry u (after_b, cusp) gap=3.92e-07 ang=170.4 dk=0.04189 designed=True
+  designed seam: w128:vy:J0-2vy pair=vy seam=entry y (after_b, cusp) gap=1.13e-06 ang=176.7 dk=0.05348 designed=True
+  designed seam: w113:vj:J0-2vj pair=vj seam=entry j (after_b, cusp) gap=9.42e-07 ang=172.9 dk=0.03899 designed=True
+  designed seam: w112:vi:J0-2vi pair=vi seam=entry i (after_b, cusp) gap=5.79e-07 ang=168.8 dk=0.06504 designed=True
+  designed seam: w12:jumps over the lazy dog:J28-30zy pair=zy seam=entry y (after_n, cusp) gap=1.13e-06 ang=166.2 dk=0.07144 designed=True
+  designed seam: w1:minimum:J8-10mu pair=mu seam=entry u (after_n, cusp) gap=3.92e-07 ang=172.3 dk=0.02613 designed=True
+  designed seam: w165:ci:J0-2ci pair=ci seam=entry i (after_n, cusp) gap=5.79e-07 ang=172.3 dk=0.03605 designed=True
+  designed seam: w12:jumps over the lazy dog:J4-6mp pair=mp seam=entry p (after_n, cusp) gap=1.29e-13 ang=159 dk=0.006919 designed=True
+  designed seam: w7:puppy:J2-4up pair=up seam=entry p (after_n, cusp) gap=3.82e-13 ang=159 dk=0.006919 designed=True
+  designed seam: w1:minimum:J0-2mi pair=mi seam=entry i (after_n, cusp) gap=5.79e-07 ang=172.3 dk=0.03605 designed=True
+  designed seam: w172:cp:J0-2cp pair=cp seam=entry p (after_n, cusp) gap=1.26e-13 ang=159 dk=0.006919 designed=True
+  designed seam: w19:subgroup:J12-14up pair=up seam=entry p (after_n, cusp) gap=3.14e-13 ang=159 dk=0.006919 designed=True
+  designed seam: w11:quick brown fox:J2-4ui pair=ui seam=entry i (after_n, cusp) gap=5.79e-07 ang=172.3 dk=0.03605 designed=True
+  designed seam: w101:bw:J0-2bw pair=bw seam=entry w (after_b, cusp) gap=4.41e-06 ang=168.5 dk=0.08271 designed=True
+  designed seam: w99:bu:J0-2bu pair=bu seam=entry u (after_b, cusp) gap=3.92e-07 ang=170.4 dk=0.04189 designed=True
+  designed seam: w103:by:J0-2by pair=by seam=entry y (after_b, cusp) gap=1.13e-06 ang=176.7 dk=0.05348 designed=True
+  designed seam: w13:be we shoe maze huge bye:J32-34by pair=by seam=entry y (after_b, cusp) gap=1.13e-06 ang=176.7 dk=0.05348 designed=True
+  designed seam: w88:bj:J0-2bj pair=bj seam=entry j (after_b, cusp) gap=9.42e-07 ang=172.9 dk=0.03899 designed=True
+  designed seam: w87:bi:J0-2bi pair=bi seam=entry i (after_b, cusp) gap=5.79e-07 ang=168.8 dk=0.06504 designed=True
+  designed seam: w10:cursive:J6-8si pair=si seam=entry i (after_n, cusp) gap=5.79e-07 ang=172.3 dk=0.03605 designed=True
+  designed seam: w177:cu:J0-2cu pair=cu seam=entry u (after_n, cusp) gap=3.92e-07 ang=172.3 dk=0.02613 designed=True
+  designed seam: w179:cw:J0-2cw pair=cw seam=entry w (after_n, cusp) gap=4.41e-06 ang=150.9 dk=0.0141 designed=True
+  designed seam: w10:cursive:J0-2cu pair=cu seam=entry u (after_n, cusp) gap=3.92e-07 ang=172.3 dk=0.02613 designed=True
+  designed seam: w19:subgroup:J0-2su pair=su seam=entry u (after_n, cusp) gap=3.92e-07 ang=172.3 dk=0.02613 designed=True
+  designed seam: w44:ow:J0-2ow pair=ow seam=entry w (port at 0.00 u, port-corner) gap=5.46e-14 ang=179.2 dk=0.03262 designed=True
+  designed seam: w12:jumps over the lazy dog:J0-2ju pair=ju seam=entry u (after_n, cusp) gap=3.92e-07 ang=172.3 dk=0.02613 designed=True
+  designed seam: total 74
+  side margins / crossings: see sheets_cusp.txt (sheet reports)
+
+## K998 (census coverage: add fe, bk, ee, na, nq, to, io, mo, ng; over-budget list)
+  pair fe in v68x census: True
+  pair bk in v68x census: True
+  pair ee in v68x census: True
+  pair na in v68x census: False
+  pair nq in v68x census: False
+  pair to in v68x census: False
+  pair io in v68x census: False
+  pair mo in v68x census: False
+  pair ng in v68x census: False
+  [v68x] w9:knotmaze:J4-6ot type=join kind=port-cusp dmax=17.35 dmean=9.62 bud=2.5 peak=0.01209 spk=0 hooks=0 rough=ok facet=0.001097 len=124.8 prm=[1.514 0.4072 -0.5285 -1.574] at_floor=[] src=solved
+      seam exit o (port at 0.27 u from the end): gap=5.46e-14 ang=0 dk=1.391e-15 designed=None
+      seam entry t (port at 55.70 u, retrace, port-cusp): gap=2.19e-13 ang=0 dk=1.598e-14 designed=False
+  [v68x] w41:ot:J0-2ot type=join kind=port-cusp dmax=15.98 dmean=8.35 bud=2.5 peak=0.01237 spk=0 hooks=0 rough=ok facet=0.001345 len=122.7 prm=[1.358 0.4815 -0.8693 -1.028] at_floor=[] src=solved
+      seam exit o (port at 0.00 u from the end): gap=1.36e-14 ang=0 dk=1.449e-15 designed=None
+      seam entry t (port at 55.70 u, retrace, port-cusp): gap=2.06e-13 ang=0 dk=2.405e-15 designed=False
+  [v68x] w13:be we shoe maze huge bye:J12-14oe type=join kind=port-merge dmax=12.74 dmean=4.87 bud=2.5 peak=0.001487 spk=0 hooks=0 rough=ok facet=7.384e-05 len=175.9 prm=[0.908 1.603 0.3791 4.2] at_floor=[] src=solved
+      seam exit o (port at 2.00 u from the end): gap=1.36e-14 ang=0 dk=2.497e-15 designed=None
+      seam entry e (port at 90.00 u, port-merge): gap=2.2e-13 ang=0 dk=1.268e-13 designed=False
+  [v68x] w26:oe:J0-2oe type=join kind=port-merge dmax=12.69 dmean=4.77 bud=2.5 peak=0.001488 spk=0 hooks=0 rough=ok facet=7.39e-05 len=176.0 prm=[0.9069 1.602 0.383 4.191] at_floor=[] src=solved
+      seam exit o (port at 2.00 u from the end): gap=0 ang=0 dk=1.06e-14 designed=None
+      seam entry e (port at 90.00 u, port-merge): gap=1.64e-13 ang=0 dk=1.524e-14 designed=False
+  [v68x] w96:br:J0-2br type=join kind=cusp dmax=5.18 dmean=1.82 bud=2.5 peak=0.1358 spk=49 hooks=1 rough=FAIL facet=0.02803 len=136.3 prm=[0.04783 2.865 -12.05 0.0001567] at_floor=[] src=class|R cnct.ful_b_r|r
+      seam exit b: gap=0 ang=0 dk=4.788e-14 designed=None
+      seam entry r (after_b, cusp): gap=2.39e-07 ang=165.4 dk=0.07461 designed=True
+  [v68x] w11:quick brown fox:J10-12br type=join kind=cusp dmax=5.18 dmean=1.83 bud=2.5 peak=0.1356 spk=61 hooks=1 rough=FAIL facet=0.02796 len=136.9 prm=[0.04783 2.865 -12.05 0.0001567] at_floor=[] src=class|R cnct.ful_b_r|r
+      seam exit b: gap=0 ang=0 dk=4.131e-13 designed=None
+      seam entry r (after_b, cusp): gap=2.39e-07 ang=165.4 dk=0.07461 designed=True
+  [v68x] w11:quick brown fox:J20-22fo type=join kind=port-fused dmax=7.80 dmean=3.85 bud=3.0 peak=0.001637 spk=0 hooks=0 rough=ok facet=0.0001107 len=135.3 prm=[2.628 0.9508 -12.22 -2.745] at_floor=[] src=solved
+      seam exit f (port at 6.92 u from the end): gap=2.18e-13 ang=0 dk=3.386e-15 designed=None
+      seam entry o (port at 102.49 u, retrace, port-fused): gap=1.09e-13 ang=0 dk=2.638e-16 designed=False
+  [v68x] w66:fo:J0-2fo type=join kind=port-fused dmax=7.79 dmean=3.83 bud=3.0 peak=0.001637 spk=0 hooks=0 rough=ok facet=0.0001108 len=135.3 prm=[2.64 0.9302 -12.32 -2.898] at_floor=[] src=solved
+      seam exit f (port at 6.92 u from the end): gap=6.82e-15 ang=0 dk=7.228e-18 designed=None
+      seam entry o (port at 102.49 u, retrace, port-fused): gap=1.12e-13 ang=0 dk=1.319e-16 designed=False
+  w41:ot:tail0t type=tail kind= dmax=6.87 dmean=4.09 bud=2.5 peak=0.1685 spk=21 hooks=0 rough=FAIL facet=0.05094 len=30.5 prm=[-] at_floor=[] src=tail
+
+## K1006 (knees in e,f,l leads 0.0373/0.0397/0.0343; h hump 0.0053; tail0q exit not G2, 151 deg hook)
+  lead e: w51:et:lead0e type=lead kind=smooth dmax=1.20 dmean=0.61 bud=2.5 peak=0.01515 spk=0 hooks=0 rough=ok facet=0.004378 len=71.8 prm=[-] at_floor=[] src=lead
+  lead f: w52:fa:lead0f type=lead kind=smooth dmax=6.46 dmean=1.93 bud=2.5 peak=0.01529 spk=0 hooks=0 rough=ok facet=0.003308 len=99.3 prm=[-] at_floor=[] src=lead
+  lead l: w20:lawgiver:lead0l type=lead kind=smooth dmax=3.16 dmean=0.54 bud=2.5 peak=0.009709 spk=0 hooks=0 rough=ok facet=0.002707 len=100.3 prm=[-] at_floor=[] src=lead
+  lead h: w6:hippo:lead0h type=lead kind=smooth dmax=3.50 dmean=1.09 bud=2.5 peak=0.001735 spk=0 hooks=0 rough=ok facet=0.0001704 len=121.2 prm=[-] at_floor=[] src=lead
+  lead k: w9:knotmaze:lead0k type=lead kind=smooth dmax=1.10 dmean=0.60 bud=2.5 peak=0.01032 spk=0 hooks=0 rough=ok facet=0.002804 len=114.8 prm=[-] at_floor=[] src=lead
+  lead c: w157:ca:lead0c type=vlead kind=fused dmax=nan dmean=nan bud=3.0 peak=0.06204 spk=6 hooks=0 rough=FAIL facet=0.009836 len=86.4 prm=[-] at_floor=[] src=cnct.mod_n_o, set k962 class|R cnct.mod_n_o|c
+  w173:cq:tail0q type=tail kind= dmax=1.06 dmean=0.75 bud=2.5 peak=0.01089 spk=9 hooks=1 rough=FAIL facet=1.233 len=33.7 prm=[-] at_floor=[] src=tail
+      seam exit q: gap=0 ang=0 dk=10.57
+
+## K1014 (J3a leftovers: 0 u cusp entries hi x2, er, es, ow x2; 12 maxfev solves; bounds)
+  undesigned >90deg seam: w194:dr:J0-2dr pair=dr seam=entry r (port at 0.00 u, retrace, port-cusp) gap=1.75e-09 ang=180 dk=0.0462 designed=False
+  undesigned >90deg seam: w187:as:J0-2as pair=as seam=entry s (port at 0.00 u, retrace, port-cusp) gap=1.88e-08 ang=180 dk=0.04357 designed=False
+  undesigned >90deg seam: w228:nr:J0-2nr pair=nr seam=entry r (port at 0.00 u, retrace, port-cusp) gap=1.65e-08 ang=180 dk=0.0462 designed=False
+  undesigned >90deg seam: w195:ds:J0-2ds pair=ds seam=entry s (port at 0.00 u, retrace, port-cusp) gap=5.53e-08 ang=180 dk=0.04357 designed=False
+  undesigned >90deg seam: w6:hippo:J0-2hi pair=hi seam=entry i (port at 0.00 u, retrace, port-cusp) gap=1.85e-08 ang=180 dk=0.00275 designed=False
+  undesigned >90deg seam: w217:ii:J0-2ii pair=ii seam=entry i (port at 0.00 u, retrace, port-cusp) gap=1.43e-09 ang=180 dk=0.00275 designed=False
+  undesigned >90deg seam: w20:lawgiver:J12-14er pair=er seam=entry r (port at 0.00 u, retrace, port-cusp) gap=4.77e-13 ang=180 dk=0.0462 designed=False
+  undesigned >90deg seam: w78:after:J6-8er pair=er seam=entry r (port at 0.00 u, retrace, port-cusp) gap=5.78e-13 ang=180 dk=0.0462 designed=False
+  undesigned >90deg seam: w12:jumps over the lazy dog:J14-16er pair=er seam=entry r (port at 0.00 u, retrace, port-cusp) gap=4.77e-13 ang=180 dk=0.0462 designed=False
+  undesigned >90deg seam: total 9
+  at_floor rows in v68x: 36
+  [v68x] pair ea: ABSENT from census
+  [v68x] w14:ice jet even:J8-10et type=join kind=port-cusp dmax=2.60 dmean=1.65 bud=2.5 peak=0.000655 spk=0 hooks=0 rough=ok facet=8.168e-05 len=242.5 prm=[1.766 2.057 -10.23 2.036] at_floor=[] src=solved
+      seam exit e (port at 5.00 u from the end): gap=5.55e-14 ang=0 dk=1.091e-15 designed=None
+      seam entry t (port at 33.24 u, retrace, port-cusp): gap=5.62e-13 ang=0 dk=2.205e-14 designed=False
+  [v68x] w51:et:J0-2et type=join kind=port-cusp dmax=2.26 dmean=1.14 bud=2.5 peak=0.0006728 spk=0 hooks=0 rough=ok facet=8.411e-05 len=237.9 prm=[1.774 1.957 -10.27 0.6999] at_floor=[] src=solved
+      seam exit e (port at 5.00 u from the end): gap=3.41e-15 ang=0 dk=1.301e-16 designed=None
+      seam entry t (port at 35.95 u, retrace, port-cusp): gap=4.67e-13 ang=0 dk=1.451e-15 designed=False
+  [v68x] pair ne: ABSENT from census
+  [v68x] w12:jumps over the lazy dog:J20-22he type=join kind=port-merge dmax=8.35 dmean=1.30 bud=2.5 peak=0.005263 spk=0 hooks=0 rough=ok facet=0.0008329 len=103.6 prm=[1.15 0.6526 -1.609 -4.408] at_floor=[] src=solved
+      seam exit h (port at 10.00 u from the end): gap=4.26e-16 ang=0 dk=1.677e-15 designed=None
+      seam entry e (port at 30.00 u, port-merge): gap=3.55e-13 ang=8.538e-07 dk=1.521e-14 designed=False
+  solve status / nfev / bounds: see sheets_o.txt, sheets_cusp.txt reports
+
+## K1021 (B2: g,q corners 1.96/1.89 u above a's; new tops 9.2-9.3 u off font (a 8.0); og dmax 20.74)
+  a: corner pt=[557.613230171894, 501.313450316718] y=120.315 u, +0.00 u vs a, turn=180.0 deg
+  g: corner pt=[561.270263693351, 509.5095079494352] y=122.282 u, +1.97 u vs a, turn=178.0 deg
+  q: corner pt=[563.9316264847064, 509.20280796895366] y=122.209 u, +1.89 u vs a, turn=179.7 deg
+  a: entry kind=fused junction=[76.2892759082983, 204.77949131950476] s_junction=342.81146935349557
+  g: entry kind=fused junction=[99.16827203792681, 267.72960783388277] s_junction=404.5591372754918
+  q: entry kind=fused junction=[77.95045277975031, 207.74231205568483] s_junction=345.7150454562456
+  [v68x] w12:jumps over the lazy dog:J34-36og type=join kind=port-fused dmax=7.18 dmean=2.94 bud=3.0 peak=0.0009623 spk=0 hooks=0 rough=ok facet=0.0001156 len=143.1 prm=[1.535 0.8058 -3.011 -0.07382] at_floor=[] src=solved
+      seam exit o (port at 4.00 u from the end): gap=0 ang=180 dk=0.03668 designed=True
+      seam entry g (port at 50.48 u, retrace, port-fused): gap=4.38e-13 ang=0 dk=3.488e-16 designed=False
+  [v68x] w28:og:J0-2og type=join kind=port-fused dmax=7.14 dmean=2.93 bud=3.0 peak=0.0009577 spk=0 hooks=0 rough=ok facet=0.000115 len=143.2 prm=[1.535 0.8058 -3.011 -0.0736] at_floor=[] src=solved
+      seam exit o (port at 4.00 u from the end): gap=0 ang=180 dk=0.03667 designed=True
+      seam entry g (port at 50.48 u, retrace, port-fused): gap=1.53e-13 ang=0 dk=7.589e-17 designed=False
+
+## K1035 (J3b leftovers: oi switches two minima 13.71 u; corners at 30 deg low end; oe crossed once)
+  [v68x] w30:oi:J0-2oi type=join kind=port-corner dmax=2.56 dmean=0.84 bud=2.5 peak=0.001307 spk=0 hooks=0 rough=ok facet=0.0001761 len=118.1 prm=[0.6968 1.622 0.4921 1.901] at_floor=[] src=solved
+      seam exit o (port at 2.00 u from the end): gap=0 ang=0 dk=6.881e-15 designed=None
+      seam entry i (port at 0.00 u, port-corner): gap=2.73e-14 ang=156.5 dk=0.0151 designed=True
+  [v68x] w31:oj:J0-2oj type=join kind=port-corner dmax=2.54 dmean=0.84 bud=2.5 peak=0.001305 spk=0 hooks=0 rough=ok facet=0.0001757 len=118.3 prm=[0.6867 1.625 0.5293 1.899] at_floor=[] src=solved
+      seam exit o (port at 2.00 u from the end): gap=0 ang=0 dk=1.343e-14 designed=None
+      seam entry j (port at 0.00 u, port-corner): gap=1.36e-14 ang=160.6 dk=0.01095 designed=True
+  [v68x] w40:os:J0-2os type=join kind=port-corner dmax=36.17 dmean=15.23 bud=2.5 peak=0.001298 spk=0 hooks=0 rough=ok facet=0.0001646 len=134.0 prm=[0.6013 1.777 0.7342 2.109] at_floor=[] src=solved
+      seam exit o (port at 2.00 u from the end): gap=0 ang=0 dk=1.035e-14 designed=None
+      seam entry s (port at 0.00 u, port-corner): gap=3.86e-14 ang=177.2 dk=0.01242 designed=True
+  [v68x] w19:subgroup:J10-12ou type=join kind=port-corner dmax=2.59 dmean=0.82 bud=2.5 peak=0.001305 spk=0 hooks=0 rough=ok facet=0.0001754 len=118.8 prm=[0.6839 1.63 0.535 1.903] at_floor=[] src=solved
+      seam exit o (port at 2.00 u from the end): gap=0 ang=0 dk=1.533e-14 designed=None
+      seam entry u (port at 0.00 u, port-corner): gap=2.73e-14 ang=158.1 dk=0.008222 designed=True
+  [v68x] w42:ou:J0-2ou type=join kind=port-corner dmax=2.53 dmean=0.81 bud=2.5 peak=0.001303 spk=0 hooks=0 rough=ok facet=0.0001747 len=119.2 prm=[0.6832 1.632 0.5356 1.907] at_floor=[] src=solved
+      seam exit o (port at 2.00 u from the end): gap=1.36e-14 ang=0 dk=2.06e-15 designed=None
+      seam entry u (port at 0.00 u, port-corner): gap=2.73e-14 ang=158.1 dk=0.008289 designed=True
+  [v68x] w2:bow:J2-4ow type=join kind=port-corner dmax=2.56 dmean=0.81 bud=2.5 peak=0.001298 spk=0 hooks=0 rough=ok facet=0.000174 len=119.1 prm=[0.6919 1.631 0.4983 1.953] at_floor=[] src=solved
+      seam exit o (port at 2.00 u from the end): gap=1.36e-14 ang=0 dk=7.264e-16 designed=None
+      seam entry w (port at 0.00 u, port-corner): gap=5.46e-14 ang=179.2 dk=0.03265 designed=True
+  [v68x] w11:quick brown fox:J14-16ow type=join kind=port-corner dmax=2.55 dmean=0.82 bud=2.5 peak=0.001298 spk=0 hooks=0 rough=ok facet=0.0001739 len=119.2 prm=[0.685 1.629 0.532 1.909] at_floor=[] src=solved
+      seam exit o (port at 2.00 u from the end): gap=0 ang=0 dk=1.868e-15 designed=None
+      seam entry w (port at 0.00 u, port-corner): gap=1.36e-14 ang=179.2 dk=0.03264 designed=True
+  [v68x] w44:ow:J0-2ow type=join kind=port-corner dmax=2.50 dmean=0.80 bud=2.5 peak=0.001297 spk=0 hooks=0 rough=ok facet=0.0001738 len=119.2 prm=[0.6885 1.633 0.5123 1.949] at_floor=[] src=solved
+      seam exit o (port at 2.00 u from the end): gap=1.36e-14 ang=0 dk=8.468e-15 designed=None
+      seam entry w (port at 0.00 u, port-corner): gap=5.46e-14 ang=179.2 dk=0.03262 designed=True
+  [v68x] w46:oy:J0-2oy type=join kind=port-corner dmax=2.53 dmean=0.81 bud=2.5 peak=0.001304 spk=0 hooks=0 rough=ok facet=0.0001752 len=119.0 prm=[0.6833 1.631 0.5363 1.905] at_floor=[] src=solved
+      seam exit o (port at 2.00 u from the end): gap=1.93e-14 ang=0 dk=7.156e-16 designed=None
+      seam entry y (port at 0.00 u, port-corner): gap=3.05e-14 ang=164.3 dk=0.00334 designed=True
+  [v68x] w5:people:J4-6op type=join kind=port-corner dmax=2.72 dmean=0.80 bud=2.5 peak=0.001337 spk=0 hooks=0 rough=ok facet=0.0001803 len=119.4 prm=[0.6665 1.591 0.5889 1.415] at_floor=[] src=solved
+      seam exit o (port at 2.00 u from the end): gap=5.46e-14 ang=0 dk=1.279e-14 designed=None
+      seam entry p (port at 0.00 u, port-corner): gap=5.62e-14 ang=174.6 dk=0.04015 designed=True
+  [v68x] w37:op:J0-2op type=join kind=port-corner dmax=2.66 dmean=0.75 bud=2.5 peak=0.001334 spk=0 hooks=0 rough=ok facet=0.0001794 len=119.9 prm=[0.6686 1.583 0.5861 1.357] at_floor=[] src=solved
+      seam exit o (port at 2.00 u from the end): gap=0 ang=0 dk=7.72e-15 designed=None
+      seam entry p (port at 0.00 u, port-corner): gap=1.36e-14 ang=174.6 dk=0.04008 designed=True
+  [v68x] w13:be we shoe maze huge bye:J12-14oe type=join kind=port-merge dmax=12.74 dmean=4.87 bud=2.5 peak=0.001487 spk=0 hooks=0 rough=ok facet=7.384e-05 len=175.9 prm=[0.908 1.603 0.3791 4.2] at_floor=[] src=solved
+      seam exit o (port at 2.00 u from the end): gap=1.36e-14 ang=0 dk=2.497e-15 designed=None
+      seam entry e (port at 90.00 u, port-merge): gap=2.2e-13 ang=0 dk=1.268e-13 designed=False
+  [v68x] w26:oe:J0-2oe type=join kind=port-merge dmax=12.69 dmean=4.77 bud=2.5 peak=0.001488 spk=0 hooks=0 rough=ok facet=7.39e-05 len=176.0 prm=[0.9069 1.602 0.383 4.191] at_floor=[] src=solved
+      seam exit o (port at 2.00 u from the end): gap=0 ang=0 dk=1.06e-14 designed=None
+      seam entry e (port at 90.00 u, port-merge): gap=1.64e-13 ang=0 dk=1.524e-14 designed=False
+  [v68x] w23:ob:J0-2ob type=join kind=port-merge dmax=3.86 dmean=1.99 bud=2.5 peak=0.001021 spk=0 hooks=0 rough=ok facet=0.0001148 len=179.1 prm=[1.302 1.082 -1.005 2.092] at_floor=[] src=solved
+      seam exit o (port at 2.00 u from the end): gap=1.93e-14 ang=0 dk=7.676e-15 designed=None
+      seam entry b (port at 100.00 u, port-merge): gap=1.93e-13 ang=0 dk=5.828e-16 designed=False
+  [v68x] w15:coffee:J2-4of type=join kind=port-merge dmax=3.92 dmean=1.88 bud=2.5 peak=0.001013 spk=0 hooks=0 rough=ok facet=0.0001154 len=178.0 prm=[1.316 1.062 -1.005 1.879] at_floor=[] src=solved
+      seam exit o (port at 2.00 u from the end): gap=1.36e-14 ang=0 dk=1.491e-14 designed=None
+      seam entry f (port at 100.00 u, port-merge): gap=2.44e-13 ang=0 dk=2.643e-17 designed=False
+  [v68x] w27:of:J0-2of type=join kind=port-merge dmax=3.83 dmean=1.83 bud=2.5 peak=0.001013 spk=0 hooks=0 rough=ok facet=0.0001154 len=178.0 prm=[1.316 1.062 -1.005 1.879] at_floor=[] src=solved
+      seam exit o (port at 2.00 u from the end): gap=1.36e-14 ang=0 dk=1.499e-14 designed=None
+      seam entry f (port at 100.00 u, port-merge): gap=2.57e-13 ang=0 dk=9.329e-17 designed=False
+  [v68x] w29:oh:J0-2oh type=join kind=port-merge dmax=34.81 dmean=10.60 bud=2.5 peak=0.001191 spk=0 hooks=0 rough=ok facet=0.0001285 len=184.1 prm=[1.133 1.512 -0.7457 3.836] at_floor=[] src=solved
+      seam exit o (port at 2.00 u from the end): gap=1.36e-14 ang=0 dk=2.192e-14 designed=None
+      seam entry h (port at 100.00 u, port-merge): gap=2.94e-13 ang=0 dk=3.334e-16 designed=False
+  [v68x] w32:ok:J0-2ok type=join kind=port-merge dmax=34.77 dmean=10.10 bud=2.5 peak=0.001196 spk=0 hooks=0 rough=ok facet=0.0001322 len=176.5 prm=[1.141 1.682 -0.7315 5.483] at_floor=[] src=solved
+      seam exit o (port at 2.00 u from the end): gap=1.36e-14 ang=0 dk=2.118e-14 designed=None
+      seam entry k (port at 100.00 u, port-merge): gap=3.05e-13 ang=0 dk=7.472e-16 designed=False
+  [v68x] w33:ol:J0-2ol type=join kind=port-merge dmax=3.82 dmean=1.96 bud=2.5 peak=0.001015 spk=0 hooks=0 rough=ok facet=0.0001155 len=178.2 prm=[1.317 1.075 -1.011 1.969] at_floor=[] src=solved
+      seam exit o (port at 2.00 u from the end): gap=1.36e-14 ang=0 dk=4.214e-15 designed=None
+      seam entry l (port at 100.00 u, port-merge): gap=1.59e-13 ang=0 dk=1.491e-16 designed=False
+  corner arrival angles / attach bounds / crossings: see sheets_o.txt
+
+## K1044 (v6.5: a largest |dk/ds| 8.51e-4 above g's 7.07e-4; fa, fq in no census word; oa/oq dip)
+  [v68x] w52:fa:J0-2fa type=join kind=port-fused dmax=9.52 dmean=3.84 bud=3.0 peak=0.004343 spk=0 hooks=0 rough=ok facet=0.0002363 len=97.6 prm=[0.7702 1.434 3.104 0.2004] at_floor=[] src=solved
+      seam exit f (port at 2.00 u from the end): gap=7.63e-15 ang=0 dk=9.396e-17 designed=None
+      seam entry a (port at 134.33 u, retrace, port-fused): gap=2.81e-14 ang=1.207e-06 dk=7.655e-11 designed=False
+  [v68x] w68:fq:J0-2fq type=join kind=port-fused dmax=9.60 dmean=3.45 bud=3.0 peak=0.004346 spk=0 hooks=0 rough=ok facet=0.0001949 len=96.7 prm=[1.251 1.284 -0.1955 0.2361] at_floor=[] src=solved
+      seam exit f (port at 2.00 u from the end): gap=3.41e-15 ang=0 dk=1.518e-16 designed=None
+      seam entry q (port at 134.61 u, retrace, port-fused): gap=5.46e-14 ang=8.538e-07 dk=3.177e-09 designed=False
+  [v68x] w22:oa:J0-2oa type=join kind=port-fused dmax=6.21 dmean=2.19 bud=3.0 peak=0.001205 spk=0 hooks=0 rough=ok facet=0.0001482 len=154.0 prm=[1.052 0.9411 -0.4645 -0.2502] at_floor=[] src=solved
+      seam exit o (port at 2.00 u from the end): gap=1.36e-14 ang=0 dk=1.561e-15 designed=None
+      seam entry a (port at 38.21 u, retrace, port-fused): gap=1.79e-13 ang=0 dk=6.144e-17 designed=False
+  [v68x] w17:oat:J0-2oa type=join kind=port-fused dmax=6.09 dmean=2.10 bud=3.0 peak=0.00122 spk=0 hooks=0 rough=ok facet=0.0001485 len=155.3 prm=[0.9512 1.147 -0.2938 0.39] at_floor=[] src=solved
+      seam exit o (port at 2.00 u from the end): gap=1.36e-14 ang=0 dk=9.071e-16 designed=None
+      seam entry a (port at 36.70 u, retrace, port-fused): gap=3.05e-14 ang=0 dk=3.795e-17 designed=False
+  [v68x] w38:oq:J0-2oq type=join kind=port-fused dmax=7.27 dmean=2.99 bud=3.0 peak=0.001191 spk=0 hooks=0 rough=ok facet=0.0001439 len=158.7 prm=[1.075 0.9214 -0.5632 -0.2657] at_floor=[] src=solved
+      seam exit o (port at 1.36 u from the end): gap=1.36e-14 ang=0 dk=4.12e-16 designed=None
+      seam entry q (port at 35.71 u, retrace, port-fused): gap=1.79e-13 ang=0 dk=2.168e-17 designed=False
+  [v68x] w79:ba:J0-2ba type=join kind=fused dmax=7.61 dmean=3.30 bud=3.0 peak=0.01475 spk=0 hooks=0 rough=ok facet=0.002813 len=79.9 prm=[0.6022 0.7143 0.1079 -0.5355] at_floor=[] src=k962 class cnct.ful_b_o
+      seam exit b: gap=0 ang=0 dk=2.111e-15 designed=None
+      seam entry a (after_b, fused junction): gap=1.36e-13 ang=0 dk=2.223e-16 designed=False
+  [v68x] w18:bad:J0-2ba type=join kind=fused dmax=7.59 dmean=3.29 bud=3.0 peak=0.01477 spk=0 hooks=0 rough=ok facet=0.002823 len=79.8 prm=[0.6022 0.7143 0.1079 -0.5355] at_floor=[] src=k962 class cnct.ful_b_o
+      seam exit b: gap=0 ang=0 dk=3.441e-15 designed=None
+      seam entry a (after_b, fused junction): gap=9.84e-14 ang=0 dk=3.524e-16 designed=False
+  [v68x] w105:va:J0-2va type=join kind=fused dmax=7.56 dmean=3.58 bud=3.0 peak=0.01527 spk=0 hooks=0 rough=ok facet=0.002953 len=79.9 prm=[0.6022 0.7143 0.1079 -0.5355] at_floor=[] src=k962 class cnct.ful_b_o
+      seam exit v: gap=0 ang=0 dk=4.192e-16 designed=None
+      seam entry a (after_b, fused junction): gap=1.12e-13 ang=0 dk=6.035e-16 designed=False
+  [v68x] w130:wa:J0-2wa type=join kind=fused dmax=7.67 dmean=3.73 bud=3.0 peak=0.01476 spk=0 hooks=0 rough=ok facet=0.002877 len=81.6 prm=[0.6022 0.7143 0.1079 -0.5355] at_floor=[] src=k962 class cnct.ful_b_o
+      seam exit w: gap=0 ang=0 dk=4.192e-16 designed=None
+      seam entry a (after_b, fused junction): gap=1.1e-13 ang=0 dk=7.029e-16 designed=False
+  [v68x] w156:wave:J0-2wa type=join kind=fused dmax=7.65 dmean=3.72 bud=3.0 peak=0.01477 spk=0 hooks=0 rough=ok facet=0.002888 len=81.5 prm=[0.6022 0.7143 0.1079 -0.5355] at_floor=[] src=k962 class cnct.ful_b_o
+      seam exit w: gap=0 ang=0 dk=1.373e-15 designed=None
+      seam entry a (after_b, fused junction): gap=1.36e-14 ang=0 dk=1.417e-15 designed=False
+  [v68x] w95:bq:J0-2bq type=join kind=fused dmax=9.96 dmean=5.06 bud=3.0 peak=0.07976 spk=29 hooks=2 rough=FAIL facet=0.1293 len=87.3 prm=[0.2429 0.4157 -7.779 -14.07] at_floor=[] src=class|R cnct.ful_b_o|q
+      seam exit b: gap=0 ang=0 dk=1.722e-14 designed=None
+      seam entry q (after_b, fused junction): gap=1.64e-13 ang=0 dk=8.034e-15 designed=False
+  [v68x] w120:vq:J0-2vq type=join kind=fused dmax=10.15 dmean=5.66 bud=3.0 peak=0.1012 spk=32 hooks=2 rough=FAIL facet=0.09659 len=88.1 prm=[0.2429 0.4157 -7.779 -14.07] at_floor=[] src=class|R cnct.ful_b_o|q
+      seam exit v: gap=0 ang=0 dk=6.154e-14 designed=None
+      seam entry q (after_b, fused junction): gap=2.73e-13 ang=0 dk=9.035e-18 designed=False
+  [v68x] w146:wq:J0-2wq type=join kind=fused dmax=10.15 dmean=5.60 bud=3.0 peak=0.0789 spk=33 hooks=2 rough=FAIL facet=0.1166 len=89.4 prm=[0.2429 0.4157 -7.779 -14.07] at_floor=[] src=class|R cnct.ful_b_o|q
+      seam exit w: gap=0 ang=0 dk=1.087e-13 designed=None
+      seam entry q (after_b, fused junction): gap=4.37e-13 ang=0 dk=1.744e-14 designed=False
+  body |dk/ds| peaks (a vs g): from bodies sampling, see bodies_sample.py output
+
+## K1090 (v6.6 o joins: oi oj os ou ow oy corners at +40 deg bound; op side -0.05;
+         ob oh ok ol at [0,100] end, oe at [0,90], oc od lower; os,oh,ok 34.8-36.2 u)
+  [v68x] w24:oc:J0-2oc type=join kind=port-fused dmax=2.89 dmean=1.69 bud=3.0 peak=0.001332 spk=0 hooks=0 rough=ok facet=0.0001864 len=151.6 prm=[1.111 0.7917 -0.2628 -0.604] at_floor=[] src=solved
+      seam exit o (port at 2.00 u from the end): gap=1.36e-14 ang=0 dk=2.797e-15 designed=None
+      seam entry c (port at 33.42 u, retrace, port-fused): gap=3.86e-14 ang=0 dk=2.241e-16 designed=False
+  [v68x] w25:od:J0-2od type=join kind=port-fused dmax=2.73 dmean=1.37 bud=3.0 peak=0.001311 spk=0 hooks=0 rough=ok facet=0.0001661 len=153.1 prm=[0.9535 1.097 -0.2465 0.5451] at_floor=[] src=solved
+      seam exit o (port at 2.00 u from the end): gap=1.93e-14 ang=0 dk=6.072e-16 designed=None
+      seam entry d (port at 34.50 u, retrace, port-fused): gap=1.26e-13 ang=0 dk=6.614e-16 designed=False
+  (oi..oy, ob..ol rows under K1035 above; bounds/side/corners in sheets_o.txt)
+
+## K1116 (v6.8: fm 6.41, fn 10.29, fv 6.59, fz 11.46 u vs v6.7 presets 3.23/3.17/3.15/10.09;
+         attaches on a bound; fe at 2.00 u bound; fr/fs 2 u entry bound; fj/fw side slightly negative)
+  [v68x] w64:fm:J0-2fm type=join kind=port-merge dmax=6.41 dmean=2.95 bud=2.5 peak=0.004365 spk=0 hooks=0 rough=ok facet=0.0002928 len=178.0 prm=[1.51 0.7385 -5.108 0.502] at_floor=[] src=solved
+      seam exit f (port at 2.00 u from the end): gap=0 ang=0 dk=3.614e-17 designed=None
+      seam entry m (port at 10.00 u, port-merge): gap=3.57e-13 ang=0 dk=1.2e-15 designed=False
+  [v68x] w65:fn:J0-2fn type=join kind=port-merge dmax=10.29 dmean=3.82 bud=2.5 peak=0.00437 spk=0 hooks=0 rough=ok facet=0.0004199 len=167.2 prm=[1.565 0.5705 -5.605 -0.9784] at_floor=[] src=solved
+      seam exit f (port at 2.00 u from the end): gap=0 ang=0 dk=0 designed=None
+      seam entry n (port at 0.00 u, port-merge): gap=1.23e-13 ang=0 dk=9.396e-16 designed=False
+  [v68x] w73:fv:J0-2fv type=join kind=port-merge dmax=6.59 dmean=2.75 bud=2.5 peak=0.004562 spk=0 hooks=0 rough=ok facet=0.0005218 len=169.7 prm=[0.7795 1.253 -1.78 1.19] at_floor=[] src=solved
+      seam exit f (port at 5.39 u from the end): gap=0 ang=0 dk=1.735e-16 designed=None
+      seam entry v (port at 0.00 u, port-merge): gap=1.12e-13 ang=0 dk=4.481e-16 designed=False
+  [v68x] w77:fz:J0-2fz type=join kind=port-merge dmax=11.46 dmean=5.37 bud=2.5 peak=0.004357 spk=0 hooks=0 rough=ok facet=0.0001347 len=185.7 prm=[1.338 1.063 -3.578 0.5396] at_floor=[] src=solved
+      seam exit f (port at 2.00 u from the end): gap=3.41e-15 ang=0 dk=3.614e-17 designed=None
+      seam entry z (port at 10.00 u, port-merge): gap=4.4e-13 ang=0 dk=3.831e-16 designed=False
+  [v68x] w56:fe:J0-2fe type=join kind=port-merge dmax=13.62 dmean=5.57 bud=2.5 peak=0.004336 spk=0 hooks=0 rough=ok facet=5.376e-05 len=101.8 prm=[1.003 1.382 -0.4365 0.7677] at_floor=[] src=solved
+      seam exit f (port at 2.00 u from the end): gap=7.63e-15 ang=0 dk=0 designed=None
+      seam entry e (port at 30.00 u, port-merge): gap=5.46e-14 ang=0 dk=1.446e-17 designed=False
+  [v68x] w15:coffee:J6-8fe type=join kind=port-merge dmax=13.59 dmean=5.28 bud=2.5 peak=0.004336 spk=0 hooks=0 rough=ok facet=5.376e-05 len=102.2 prm=[0.9927 1.347 -0.4086 0.4207] at_floor=[] src=solved
+      seam exit f (port at 2.00 u from the end): gap=5.47e-14 ang=0 dk=5.349e-16 designed=None
+      seam entry e (port at 30.00 u, port-merge): gap=6.82e-15 ang=8.538e-07 dk=1.536e-17 designed=False
+  [v68x] w69:fr:J0-2fr type=join kind=port-cusp dmax=6.34 dmean=3.37 bud=2.5 peak=0.004347 spk=0 hooks=0 rough=ok facet=0.0001489 len=180.1 prm=[0.8579 1.118 0.5453 -0.002221] at_floor=[] src=solved
+      seam exit f (port at 2.00 u from the end): gap=6.82e-15 ang=0 dk=2.168e-17 designed=None
+      seam entry r (port at 2.00 u, retrace, port-cusp): gap=1.36e-13 ang=0 dk=1.717e-14 designed=False
+  [v68x] w70:fs:J0-2fs type=join kind=port-cusp dmax=9.37 dmean=3.69 bud=2.5 peak=0.004347 spk=0 hooks=0 rough=ok facet=0.0001061 len=180.3 prm=[0.8814 1.167 -0.1318 -0.2201] at_floor=[] src=solved
+      seam exit f (port at 2.00 u from the end): gap=6.82e-15 ang=0 dk=8.674e-17 designed=None
+      seam entry s (port at 2.00 u, retrace, port-cusp): gap=7.72e-14 ang=0 dk=2.106e-14 designed=False
+  [v68x] w61:fj:J0-2fj type=join kind=port-cusp dmax=12.63 dmean=7.52 bud=2.5 peak=0.004349 spk=0 hooks=0 rough=ok facet=6.633e-05 len=152.6 prm=[1.219 0.9041 -1.019 -0.8677] at_floor=[] src=solved
+      seam exit f (port at 2.00 u from the end): gap=7.63e-15 ang=0 dk=1.084e-16 designed=None
+      seam entry j (port at 17.91 u, retrace, port-cusp): gap=1.69e-13 ang=0 dk=3.397e-16 designed=False
+  [v68x] w74:fw:J0-2fw type=join kind=port-cusp dmax=12.96 dmean=6.06 bud=2.5 peak=0.004359 spk=0 hooks=0 rough=ok facet=0.0003782 len=159.8 prm=[0.527 0.886 4.19 -0.7137] at_floor=[] src=solved
+      seam exit f (port at 2.00 u from the end): gap=7.63e-15 ang=0 dk=0 designed=None
+      seam entry w (port at 9.05 u, retrace, port-cusp): gap=1.36e-14 ang=0 dk=8.818e-16 designed=False
+  [v68x] w95:bq:J0-2bq type=join kind=fused dmax=9.96 dmean=5.06 bud=3.0 peak=0.07976 spk=29 hooks=2 rough=FAIL facet=0.1293 len=87.3 prm=[0.2429 0.4157 -7.779 -14.07] at_floor=[] src=class|R cnct.ful_b_o|q
+      seam exit b: gap=0 ang=0 dk=1.722e-14 designed=None
+      seam entry q (after_b, fused junction): gap=1.64e-13 ang=0 dk=8.034e-15 designed=False
+  [v68x] w120:vq:J0-2vq type=join kind=fused dmax=10.15 dmean=5.66 bud=3.0 peak=0.1012 spk=32 hooks=2 rough=FAIL facet=0.09659 len=88.1 prm=[0.2429 0.4157 -7.779 -14.07] at_floor=[] src=class|R cnct.ful_b_o|q
+      seam exit v: gap=0 ang=0 dk=6.154e-14 designed=None
+      seam entry q (after_b, fused junction): gap=2.73e-13 ang=0 dk=9.035e-18 designed=False
+  [v68x] w146:wq:J0-2wq type=join kind=fused dmax=10.15 dmean=5.60 bud=3.0 peak=0.0789 spk=33 hooks=2 rough=FAIL facet=0.1166 len=89.4 prm=[0.2429 0.4157 -7.779 -14.07] at_floor=[] src=class|R cnct.ful_b_o|q
+      seam exit w: gap=0 ang=0 dk=1.087e-13 designed=None
+      seam entry q (after_b, fused junction): gap=4.37e-13 ang=0 dk=1.744e-14 designed=False
+  ports pins: {"og": {"exit_port": {"kind": "cusp_exit", "node": "end", "within_u": 12, "over_u": 4, "band_u": 0.5, "maxfev": 8000}}, "oe": {"xl_skip_u": 45}, "fo": {"exit_port": {"kind": "merge", "node": "end", "stretch_u": [0, 12], "maxfev": 8000}}, "fv": {"exit_port": {"kind": "merge", "node": "end", "stretch_u": [0, 6], "maxfev": 8000}}, "fr": {"entry_port": {"kind": "cusp", "node": "start", "stretch_u": [2, 20], "hints": {"after_high_band_y_u": [65, 75]}}}, "fs": {"entry_port": {"kind": "cusp", "node": "start", "stretch_u": [2, 20]}}}
+  ports variants: ['A', 'B', 'C', 'D', 'E', 'F', 'Ft', 'G', 'Gt', 'H', 'Ht', 'Dt', 'Ke5', 'Ke20', 'Ke100', 'Ke1000', 'K', 'Kc', 'L', 'M']
+
+## K1194 (v7.0: c lead-in rough FAIL facet 0.0098; er, es solves stop at MAXFEV 3000)
+  lead c: w157:ca:lead0c type=vlead kind=fused dmax=nan dmean=nan bud=3.0 peak=0.06204 spk=6 hooks=0 rough=FAIL facet=0.009836 len=86.4 prm=[-] at_floor=[] src=cnct.mod_n_o, set k962 class|R cnct.mod_n_o|c
+  [v68x] w20:lawgiver:J12-14er type=join kind=port-cusp dmax=6.59 dmean=2.60 bud=2.5 peak=0.001508 spk=0 hooks=0 rough=ok facet=0.0001411 len=232.6 prm=[0.7083 1.353 2.407 0.02914] at_floor=[] src=solved
+      seam exit e (port at 5.00 u from the end): gap=1.09e-13 ang=0 dk=6.035e-16 designed=None
+      seam entry r (port at 0.00 u, retrace, port-cusp): gap=4.77e-13 ang=180 dk=0.0462 designed=False
+  [v68x] w78:after:J6-8er type=join kind=port-cusp dmax=6.59 dmean=2.60 bud=2.5 peak=0.001508 spk=0 hooks=0 rough=ok facet=0.0001411 len=232.6 prm=[0.7083 1.353 2.407 0.02914] at_floor=[] src=solved
+      seam exit e (port at 5.00 u from the end): gap=5.46e-14 ang=0 dk=8.023e-16 designed=None
+      seam entry r (port at 0.00 u, retrace, port-cusp): gap=5.78e-13 ang=180 dk=0.0462 designed=False
+  [v68x] w12:jumps over the lazy dog:J14-16er type=join kind=port-cusp dmax=6.59 dmean=2.60 bud=2.5 peak=0.001508 spk=0 hooks=0 rough=ok facet=0.0001411 len=232.6 prm=[0.7083 1.353 2.407 0.02914] at_floor=[] src=solved
+      seam exit e (port at 5.00 u from the end): gap=2.18e-13 ang=0 dk=7.192e-16 designed=None
+      seam entry r (port at 0.00 u, retrace, port-cusp): gap=4.77e-13 ang=180 dk=0.0462 designed=False
+  [v68x] w203:er:J0-2er type=join kind=port-cusp dmax=7.54 dmean=2.50 bud=2.5 peak=0.001148 spk=0 hooks=0 rough=ok facet=0.0001345 len=231.0 prm=[0.7228 1.382 2.301 0.09707] at_floor=[] src=solved
+      seam exit e (port at 5.00 u from the end): gap=3.41e-15 ang=0 dk=7.951e-17 designed=None
+      seam entry r (port at 0.00 u, retrace, port-cusp): gap=7.09e-13 ang=0 dk=0.0231 designed=False
+  [v68x] w204:es:J0-2es type=join kind=port-cusp dmax=5.91 dmean=2.01 bud=2.5 peak=0.001463 spk=0 hooks=0 rough=ok facet=0.0001289 len=235.5 prm=[0.6791 1.393 1.768 -0.2572] at_floor=[] src=solved
+      seam exit e (port at 5.00 u from the end): gap=6.82e-15 ang=0 dk=0 designed=None
+      seam entry s (port at 0.00 u, retrace, port-cusp): gap=2.94e-13 ang=8.538e-07 dk=0.0256 designed=False
+  [v68x] w4:boxes:J6-8es type=join kind=port-cusp dmax=4.87 dmean=2.09 bud=2.5 peak=0.001519 spk=0 hooks=0 rough=ok facet=0.0001321 len=237.1 prm=[0.6618 1.365 1.892 -0.4321] at_floor=[] src=solved
+      seam exit e (port at 5.00 u from the end): gap=0 ang=0 dk=8.89e-16 designed=None
+      seam entry s (port at 0.00 u, retrace, port-cusp): gap=2.33e-13 ang=8.538e-07 dk=0.006047 designed=False
+  er/es solve status in v6.8: see sheets_cusp.txt (preset joins have no solve)
+
+## Census totals on v6.8 (v68x, 713 rows)
+  hooks pieces=93 spike pieces=133 rough FAIL=189 over budget=345
+  undesigned seams not G2: 25
+    w173:cq:tail0q seam=exit q gap=0 ang=0 dk=10.57
+    w68:fq:tail0q seam=exit q gap=0 ang=0 dk=10.57
+    w120:vq:tail0q seam=exit q gap=0 ang=0 dk=10.57
+    w38:oq:tail0q seam=exit q gap=0 ang=0 dk=10.57
+    w95:bq:tail0q seam=exit q gap=0 ang=0 dk=10.57
+    w146:wq:tail0q seam=exit q gap=0 ang=0 dk=10.57
+    w194:dr:J0-2dr seam=entry r (port at 0.00 u, retrace, port-cusp) gap=1.75e-09 ang=180 dk=0.0462
+    w187:as:J0-2as seam=entry s (port at 0.00 u, retrace, port-cusp) gap=1.88e-08 ang=180 dk=0.04357
+    w228:nr:J0-2nr seam=entry r (port at 0.00 u, retrace, port-cusp) gap=1.65e-08 ang=180 dk=0.0462
+    w195:ds:J0-2ds seam=entry s (port at 0.00 u, retrace, port-cusp) gap=5.53e-08 ang=180 dk=0.04357
+    w211:hr:J0-2hr seam=entry r (port at 0.00 u, retrace, port-cusp) gap=1.99e-13 ang=6.558e-06 dk=0.0231
+    w186:ar:J0-2ar seam=entry r (port at 0.00 u, retrace, port-cusp) gap=3.49e-13 ang=1.028e-05 dk=0.0231
+    w220:ir:J0-2ir seam=entry r (port at 0.00 u, retrace, port-cusp) gap=3.18e-13 ang=7.778e-06 dk=0.0231
+    w6:hippo:J0-2hi seam=entry i (port at 0.00 u, retrace, port-cusp) gap=1.85e-08 ang=180 dk=0.00275
+    w221:is:J0-2is seam=entry s (port at 0.00 u, retrace, port-cusp) gap=1.36e-13 ang=1.207e-06 dk=0.003557
+    w217:ii:J0-2ii seam=entry i (port at 0.00 u, retrace, port-cusp) gap=1.43e-09 ang=180 dk=0.00275
+    w20:lawgiver:J12-14er seam=entry r (port at 0.00 u, retrace, port-cusp) gap=4.77e-13 ang=180 dk=0.0462
+    w78:after:J6-8er seam=entry r (port at 0.00 u, retrace, port-cusp) gap=5.78e-13 ang=180 dk=0.0462
+    w12:jumps over the lazy dog:J14-16er seam=entry r (port at 0.00 u, retrace, port-cusp) gap=4.77e-13 ang=180 dk=0.0462
+    w208:hi:J0-2hi seam=entry i (port at 0.00 u, retrace, port-cusp) gap=2.32e-13 ang=1.708e-06 dk=0.001375
+    w16:which:J2-4hi seam=entry i (port at 0.00 u, retrace, port-cusp) gap=3.14e-13 ang=0 dk=0.01767
+    w191:di:J0-2di seam=entry i (port at 0.00 u, retrace, port-cusp) gap=2.08e-13 ang=1.479e-06 dk=0.001375
+    w203:er:J0-2er seam=entry r (port at 0.00 u, retrace, port-cusp) gap=7.09e-13 ang=0 dk=0.0231
+    w204:es:J0-2es seam=entry s (port at 0.00 u, retrace, port-cusp) gap=2.94e-13 ang=8.538e-07 dk=0.0256
+    w4:boxes:J6-8es seam=entry s (port at 0.00 u, retrace, port-cusp) gap=2.33e-13 ang=8.538e-07 dk=0.006047

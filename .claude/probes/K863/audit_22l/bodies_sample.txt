@@ -1,0 +1,121 @@
+p: cubics=13 len=829.5 u peak|dk/ds|=0.008617 /u^2 at 747 u (excl 4 u ends); node turns/jumps:
+    node at    25.6 u: turn=  +0.00 deg  k +0.0118 -> +0.0118 /u  jump=+0.0000
+    node at    51.2 u: turn=  +0.00 deg  k -0.0025 -> -0.0025 /u  jump=+0.0000
+    node at   102.2 u: turn=  +0.00 deg  k +0.0025 -> +0.0025 /u  jump=+0.0000
+    node at   256.6 u: turn=-180.00 deg  k -0.0013 -> +0.0013 /u  jump=+0.0026
+    node at   411.1 u: turn=  -0.00 deg  k -0.0025 -> -0.0025 /u  jump=-0.0000
+    node at   481.5 u: turn=  -0.00 deg  k -0.0012 -> -0.0012 /u  jump=+0.0000
+    node at   523.4 u: turn=  -0.00 deg  k -0.0219 -> -0.0219 /u  jump=+0.0000
+    node at   564.9 u: turn=  +0.00 deg  k -0.0389 -> -0.0389 /u  jump=+0.0000
+    node at   718.8 u: turn=  +0.00 deg  k -0.0166 -> -0.0166 /u  jump=-0.0000
+    node at   747.2 u: turn=-180.00 deg  k -0.0012 -> +0.0012 /u  jump=+0.0023
+    node at   775.7 u: turn=  -0.00 deg  k +0.0166 -> +0.0166 /u  jump=-0.0000
+    node at   808.0 u: turn=  +0.00 deg  k -0.0110 -> -0.0110 /u  jump=-0.0000
+
+b: cubics=11 len=675.8 u peak|dk/ds|=0.05594 /u^2 at 655 u (excl 4 u ends); node turns/jumps:
+    node at   110.4 u: turn=  +0.00 deg  k +0.0065 -> +0.0065 /u  jump=-0.0000
+    node at   162.3 u: turn=  -0.00 deg  k +0.0094 -> +0.0094 /u  jump=-0.0000
+    node at   244.1 u: turn=  +0.00 deg  k +0.0223 -> +0.0223 /u  jump=+0.0000
+    node at   325.5 u: turn=  +0.00 deg  k -0.0011 -> -0.0011 /u  jump=+0.0000
+    node at   402.8 u: turn=  +0.00 deg  k -0.0041 -> -0.0041 /u  jump=-0.0000
+    node at   487.5 u: turn=  +0.00 deg  k +0.0320 -> +0.0320 /u  jump=+0.0000
+    node at   569.4 u: turn=  +0.00 deg  k +0.0046 -> +0.0046 /u  jump=+0.0000
+    node at   650.4 u: turn=  +0.00 deg  k -0.0129 -> -0.0129 /u  jump=-0.0000
+    node at   654.7 u: turn=-180.00 deg  k -0.0015 -> +0.0015 /u  jump=+0.0029
+    node at   658.9 u: turn=  -0.00 deg  k +0.0129 -> +0.0129 /u  jump=-0.0000
+
+z: cubics=7 len=519.1 u peak|dk/ds|=0.008051 /u^2 at 140 u (excl 4 u ends); node turns/jumps:
+    node at    57.4 u: turn=  +0.00 deg  k -0.0312 -> -0.0312 /u  jump=+0.0000
+    node at   140.1 u: turn=+147.94 deg  k +0.0003 -> -0.0108 /u  jump=-0.0111
+    node at   241.7 u: turn=  +0.00 deg  k +0.0000 -> +0.0000 /u  jump=-0.0000
+    node at   329.7 u: turn=  +0.00 deg  k -0.0325 -> -0.0325 /u  jump=-0.0000
+    node at   366.6 u: turn=  +0.00 deg  k -0.0421 -> -0.0421 /u  jump=-0.0000
+    node at   424.5 u: turn=  +0.00 deg  k -0.0029 -> -0.0029 /u  jump=+0.0000
+
+n: cubics=12 len=451.7 u peak|dk/ds|=0.03713 /u^2 at 139 u (excl 4 u ends); node turns/jumps:
+    node at    28.7 u: turn=  +0.00 deg  k -0.0398 -> -0.0398 /u  jump=+0.0000
+    node at    57.1 u: turn=  +0.00 deg  k +0.0116 -> +0.0116 /u  jump=+0.0000
+    node at   113.9 u: turn=  +0.00 deg  k -0.0070 -> -0.0070 /u  jump=-0.0000
+    node at   139.2 u: turn=-180.00 deg  k -0.0058 -> +0.0058 /u  jump=+0.0117
+    node at   164.5 u: turn=  +0.00 deg  k +0.0070 -> +0.0070 /u  jump=+0.0000
+    node at   257.7 u: turn=  +0.00 deg  k -0.0033 -> -0.0033 /u  jump=-0.0000
+    node at   308.0 u: turn=  +0.00 deg  k -0.0461 -> -0.0461 /u  jump=+0.0000
+    node at   337.0 u: turn=  +0.00 deg  k -0.0323 -> -0.0323 /u  jump=+0.0000
+    node at   379.6 u: turn=  -0.00 deg  k +0.0032 -> +0.0032 /u  jump=+0.0000
+    node at   397.5 u: turn=  +0.00 deg  k -0.0090 -> -0.0090 /u  jump=+0.0000
+    node at   415.4 u: turn=  +0.00 deg  k +0.0225 -> +0.0225 /u  jump=+0.0000
+
+k: cubics=17 len=840.1 u peak|dk/ds|=0.03845 /u^2 at 470 u (excl 4 u ends); node turns/jumps:
+    node at    26.7 u: turn=  -0.00 deg  k +0.0173 -> +0.0173 /u  jump=-0.0000
+    node at    53.5 u: turn=  -0.00 deg  k -0.0049 -> -0.0049 /u  jump=+0.0000
+    node at   107.1 u: turn=  +0.00 deg  k +0.0029 -> +0.0029 /u  jump=+0.0000
+    node at   214.2 u: turn=  -0.00 deg  k +0.0384 -> +0.0384 /u  jump=+0.0000
+    node at   321.7 u: turn=  -0.00 deg  k -0.0007 -> -0.0007 /u  jump=-0.0000
+    node at   372.1 u: turn=  +0.00 deg  k +0.0109 -> +0.0109 /u  jump=-0.0000
+    node at   400.5 u: turn=  +0.00 deg  k -0.0089 -> -0.0089 /u  jump=-0.0000
+    node at   428.9 u: turn=  +0.00 deg  k +0.0026 -> +0.0026 /u  jump=-0.0000
+    node at   470.4 u: turn=-180.00 deg  k -0.0092 -> +0.0092 /u  jump=+0.0184
+    node at   511.9 u: turn=  -0.00 deg  k -0.0026 -> -0.0026 /u  jump=-0.0000
+    node at   568.3 u: turn=  -0.00 deg  k +0.0036 -> +0.0036 /u  jump=+0.0000
+    node at   624.8 u: turn=  -0.00 deg  k -0.0386 -> -0.0386 /u  jump=+0.0000
+    node at   673.2 u: turn=  +0.00 deg  k -0.0264 -> -0.0264 /u  jump=-0.0000
+    node at   726.0 u: turn=  +0.00 deg  k -0.0206 -> -0.0206 /u  jump=-0.0000
+    node at   760.4 u: turn=+100.00 deg  k +0.0020 -> +0.0010 /u  jump=-0.0010
+    node at   791.9 u: turn=  -0.00 deg  k -0.0003 -> -0.0003 /u  jump=-0.0000
+
+a: cubics=11 len=500.7 u peak|dk/ds|=0.01501 /u^2 at 364 u (excl 4 u ends); node turns/jumps:
+    node at   134.3 u: turn=  +0.00 deg  k +0.0111 -> +0.0111 /u  jump=-0.0000
+    node at   167.9 u: turn=  -0.00 deg  k +0.0237 -> +0.0237 /u  jump=-0.0000
+    node at   224.8 u: turn=  +0.00 deg  k +0.0265 -> +0.0265 /u  jump=-0.0000
+    node at   280.6 u: turn=  +0.00 deg  k +0.0006 -> +0.0006 /u  jump=+0.0000
+    node at   336.5 u: turn=  +0.00 deg  k +0.0016 -> +0.0016 /u  jump=+0.0000
+    node at   364.3 u: turn=-180.00 deg  k -0.0015 -> +0.0015 /u  jump=+0.0031
+    node at   392.2 u: turn=  -0.00 deg  k -0.0016 -> -0.0016 /u  jump=+0.0000
+    node at   419.3 u: turn=  +0.00 deg  k +0.0037 -> +0.0037 /u  jump=-0.0000
+    node at   446.4 u: turn=  +0.00 deg  k -0.0057 -> -0.0057 /u  jump=-0.0000
+    node at   473.6 u: turn=  +0.00 deg  k +0.0478 -> +0.0478 /u  jump=-0.0000
+
+g: cubics=9 len=807.6 u peak|dk/ds|=0.0046 /u^2 at 368 u (excl 4 u ends); node turns/jumps:
+    node at    89.1 u: turn=  -0.00 deg  k +0.0111 -> +0.0111 /u  jump=+0.0000
+    node at   137.1 u: turn=  -0.00 deg  k +0.0094 -> +0.0094 /u  jump=+0.0000
+    node at   185.5 u: turn=  -0.00 deg  k +0.0402 -> +0.0402 /u  jump=+0.0000
+    node at   267.2 u: turn=  +0.00 deg  k +0.0063 -> +0.0063 /u  jump=-0.0000
+    node at   316.3 u: turn=  +0.00 deg  k +0.0073 -> +0.0073 /u  jump=-0.0000
+    node at   367.8 u: turn=+177.95 deg  k +0.0005 -> +0.0016 /u  jump=+0.0011
+    node at   587.8 u: turn=  +0.00 deg  k -0.0086 -> -0.0086 /u  jump=-0.0000
+    node at   697.9 u: turn=  -0.00 deg  k -0.0206 -> -0.0206 /u  jump=-0.0000
+
+f: cubics=10 len=860.9 u peak|dk/ds|=0.09214 /u^2 at 752 u (excl 4 u ends); node turns/jumps:
+    node at   200.7 u: turn=  +0.00 deg  k +0.0597 -> +0.0597 /u  jump=+0.0000
+    node at   239.8 u: turn=  -0.00 deg  k +0.0281 -> +0.0281 /u  jump=+0.0000
+    node at   300.9 u: turn=  -0.00 deg  k +0.0004 -> +0.0004 /u  jump=+0.0000
+    node at   401.3 u: turn=  +0.00 deg  k -0.0003 -> -0.0003 /u  jump=+0.0000
+    node at   541.8 u: turn=  -0.00 deg  k +0.0001 -> +0.0001 /u  jump=-0.0000
+    node at   601.8 u: turn=  -0.00 deg  k +0.0530 -> +0.0530 /u  jump=-0.0000
+    node at   702.4 u: turn=  -0.00 deg  k +0.0026 -> +0.0026 /u  jump=-0.0000
+    node at   752.6 u: turn=  +0.00 deg  k -0.0046 -> +0.0532 /u  jump=+0.0578
+    node at   816.9 u: turn=-167.59 deg  k +0.0013 -> +0.0023 /u  jump=+0.0009
+
+q: cubics=10 len=771.9 u peak|dk/ds|=0.01386 /u^2 at 366 u (excl 4 u ends); node turns/jumps:
+    node at   134.6 u: turn=  +0.00 deg  k +0.0105 -> +0.0105 /u  jump=-0.0000
+    node at   184.0 u: turn=  -0.00 deg  k +0.0247 -> +0.0247 /u  jump=+0.0000
+    node at   307.5 u: turn=  -0.00 deg  k +0.0033 -> +0.0033 /u  jump=-0.0000
+    node at   366.5 u: turn=+179.66 deg  k -0.0032 -> +0.0097 /u  jump=+0.0128
+    node at   535.7 u: turn=  +0.00 deg  k -0.0029 -> -0.0029 /u  jump=+0.0000
+    node at   623.6 u: turn=  -0.00 deg  k +0.0528 -> +0.0528 /u  jump=-0.0000
+    node at   697.8 u: turn=  -0.00 deg  k -0.0082 -> -0.0082 /u  jump=-0.0000
+    node at   735.2 u: turn=  +0.00 deg  k +0.0124 -> +0.0124 /u  jump=-0.0000
+    node at   754.0 u: turn=  -0.00 deg  k -0.0992 -> -0.0992 /u  jump=+0.0000
+
+f fewnode pieces (s in fu; spacing in u = fu*0.24):
+  len=3345 fu nodes=[0.0, 836.3, 999.7, 1254.4, 1672.5, 2257.9, 2508.8, 2926.9, 3136.0, 3240.5, 3292.8, 3345.1] spacings_u=[200.71, 39.22, 61.13, 100.34, 140.5, 60.22, 100.34, 50.18, 25.08, 12.55, 12.55]
+
+## a/g/q tops: peak |dk/ds| from the corner to the bowl's leftmost point (K1044's segment)
+  a: corner at s=0.0 u, leftmost at s=163.2 u, peak |dk/ds| on the segment=0.0008377 /u^2 at 163 u; font distance of corner pt: see sheets
+  g: corner at s=0.0 u, leftmost at s=136.8 u, peak |dk/ds| on the segment=7.636e-05 /u^2 at 137 u; font distance of corner pt: see sheets
+  q: corner at s=0.0 u, leftmost at s=161.9 u, peak |dk/ds| on the segment=0.0005047 /u^2 at 158 u; font distance of corner pt: see sheets
+
+## a/g/q tops against the font (K1021: new tops 9.2-9.3 u off the font, a's 8.0)
+  a: glyph a.mod.med, top segment 249 samples, font distance max=7.89 u mean=1.65 u
+  g: glyph g.jmc.med, top segment 249 samples, font distance max=9.19 u mean=1.93 u
+  q: glyph q.mrr.med, top segment 249 samples, font distance max=9.03 u mean=2.29 u

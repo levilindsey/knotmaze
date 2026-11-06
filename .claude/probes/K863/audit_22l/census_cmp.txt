@@ -1,0 +1,34 @@
+compared 97 rows shared with v68x, field diffs=0
+only in fresh check:
+  do:J0-2do type=join kind=port-fused dmax=5.9948887418653545 dmean=3.021404801944887
+  do:lead0d type=vlead kind=fused dmax=nan dmean=nan
+  ea:J0-2ea type=join kind=port-fused dmax=27.901820556436594 dmean=7.74971438866533
+  ea:lead0e type=lead kind=smooth dmax=1.195623109007818 dmean=0.6079209708587572
+  ea:tail0a type=tail kind= dmax=0.735771216295497 dmean=0.3506926813259686
+  eo:J0-2eo type=join kind=port-fused dmax=8.639881077683643 dmean=3.5745979240097525
+  eo:lead0e type=lead kind=smooth dmax=1.195623109007818 dmean=0.6079209708587572
+  ho:J0-2ho type=join kind=port-fused dmax=6.159541665012835 dmean=3.1103223079394597
+  ho:lead0h type=lead kind=smooth dmax=3.504120212800791 dmean=1.0908830220155252
+  io:J0-2io type=join kind=port-fused dmax=4.576365908049438 dmean=2.4373079263938084
+  mo:J0-2mo type=join kind=fused dmax=2.4635972872507375 dmean=0.5833778031472628
+  mo:lead0m type=lead kind=smooth dmax=0.17618402366144978 dmean=0.0718894440761814
+  na:J0-2na type=join kind=port-fused dmax=6.19889651543372 dmean=3.4586998970787834
+  na:lead0n type=lead kind=smooth dmax=0.19771762705065252 dmean=0.062322053818500235
+  na:tail0a type=tail kind= dmax=0.735771216295882 dmean=0.35069268133629405
+  ne:J0-2ne type=join kind=port-merge dmax=7.897920309130708 dmean=2.5396820223657786
+  ne:lead0n type=lead kind=smooth dmax=0.19771762705065252 dmean=0.062322053818500235
+  ne:tail0e type=tail kind= dmax=1.481439354882703 dmean=0.7438106555272649
+  ng:J0-2ng type=join kind=port-fused dmax=5.734552310150695 dmean=3.5751152930241403
+  ng:lead0n type=lead kind=smooth dmax=0.19771762705065252 dmean=0.062322053818500235
+  ng:tail0g type=tail kind= dmax=2.2978299794968757 dmean=0.29035157056035166
+  no:J0-2no type=join kind=port-fused dmax=4.820900128458846 dmean=2.741385611186198
+  no:lead0n type=lead kind=smooth dmax=0.19771762705065252 dmean=0.062322053818500235
+  nq:J0-2nq type=join kind=port-fused dmax=5.290990009978728 dmean=2.898187778365713
+  nq:lead0n type=lead kind=smooth dmax=0.19771762705065252 dmean=0.062322053818500235
+  nq:tail0q type=tail kind= dmax=1.0583418940340596 dmean=0.7526081838977378
+  po:J0-2po type=join kind=fused dmax=3.4277190661647308 dmean=0.8619731305888053
+  ro:J0-2ro type=join kind=fused dmax=2.9241517818574803 dmean=0.6814163744801632
+  ro:lead0r type=lead kind=cusp dmax=3.2462043135393195 dmean=1.5274697345920676
+  to:J0-2to type=join kind=fused dmax=2.9684129597696916 dmean=0.691410089876723
+  zo:J0-2zo type=join kind=fused dmax=2.9591128172371928 dmean=1.9810459735064343
+  zo:lead0z type=lead kind=smooth dmax=0.3766603953540052 dmean=0.19967934139693616

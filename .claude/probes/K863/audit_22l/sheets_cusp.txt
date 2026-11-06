@@ -1,0 +1,57 @@
+22L: cusp and corner entries on v6.8 (font | approved v6.8)
+builds: approved (v6.8) = C:\Users\lsl\Repositories\knotmaze\.claude\probes\K863\trace\work34\base (ports, M, C:\Users\lsl\Repositories\knotmaze\.claude\probes\K863\trace\work28\ports_k990e.json)
+
+hi                     approved (v6.8) hi solved: exit 0.00 u from h's end, entry cusp at 0.00 u (retrace True); J 0.000284 (conn 0.00013, L 0.00015, R 0) Js 0.00185 conn 157 u window 187 u pen 0 kmax 0.059/u speed 0.78 cross 0 (allowed 0) side 0.01 ymin 1.0 u; dist to font 9.96 u (own ends), 9.96 u (entry frame); status 0 nfev 1076/3000
+er                     approved (v6.8) er solved: exit 5.00 u from e's end, entry cusp at 0.00 u (retrace True); J 3.46e-05 (conn 3.3e-05, L 1.9e-06, R 0) Js 0.000547 conn 231 u window 251 u pen 5.7e-07 kmax 0.030/u speed 0.55 cross 0 (allowed 0) side 0.00 ymin -2.0 u; dist to font 7.54 u (own ends), 7.54 u (entry frame); status 1 nfev 3000/3000
+es                     approved (v6.8) es solved: exit 5.00 u from e's end, entry cusp at 0.00 u (retrace True); J 3.08e-05 (conn 2.9e-05, L 1.9e-06, R 0) Js 0.000514 conn 235 u window 255 u pen 6.5e-07 kmax 0.030/u speed 0.53 cross 0 (allowed 0) side 0.00 ymin -2.0 u; dist to font 5.90 u (own ends), 5.89 u (entry frame); status 1 nfev 3000/3000
+ow                     approved (v6.8) ow solved: exit 2.00 u from o's end, entry corner at 0.00 u (retrace False); J 3.44e-05 (conn 3.4e-05, L 2e-13, R 0) Js 5.84e-05 conn 119 u window 119 u pen 0 kmax 0.027/u speed 0.65 cross 0 (allowed 0) side 0.06 ymin 105.0 u; dist to font 2.50 u (own ends), 19.43 u (entry frame); status 0 nfev 3198/8000; corner at 40.00 deg, kR 0.0136/u
+ai                     approved (v6.8) ai solved: exit 0.00 u from a's end, entry cusp at 0.00 u (retrace True); J 0.000279 (conn 0.00015, L 0.00013, R 0) Js 0.00182 conn 157 u window 187 u pen 0 kmax 0.062/u speed 0.77 cross 0 (allowed 0) side 0.01 ymin 1.0 u; dist to font 9.83 u (own ends), 9.83 u (entry frame); status 0 nfev 1250/3000
+ar                     approved (v6.8) ar solved: exit 0.00 u from a's end, entry cusp at 0.00 u (retrace True); J 0.000319 (conn 0.00019, L 0.00013, R 0) Js 0.00236 conn 165 u window 195 u pen 0 kmax 0.062/u speed 0.89 cross 0 (allowed 0) side 0.01 ymin 1.0 u; dist to font 15.67 u (own ends), 15.67 u (entry frame); status 0 nfev 1918/3000
+as                     approved (v6.8) as solved: exit 0.00 u from a's end, entry cusp at 0.00 u (retrace True); J 0.000308 (conn 0.00018, L 0.00013, R 0) Js 0.00244 conn 169 u window 199 u pen 0 kmax 0.062/u speed 0.90 cross 0 (allowed 0) side 0.01 ymin 1.0 u; dist to font 15.25 u (own ends), 15.25 u (entry frame); status 0 nfev 2226/3000
+nr                     approved (v6.8) nr solved: exit 0.94 u from n's end, entry cusp at 0.00 u (retrace True); J 0.000409 (conn 0.00017, L 0.00024, R 0) Js 0.00303 conn 166 u window 195 u pen 0 kmax 0.060/u speed 0.89 cross 0 (allowed 0) side 0.01 ymin 0.8 u; dist to font 15.16 u (own ends), 15.16 u (entry frame); status 0 nfev 1237/3000
+ns                     approved (v6.8) ns solved: exit 1.11 u from n's end, entry cusp at 0.00 u (retrace True); J 0.000399 (conn 0.00016, L 0.00024, R 0) Js 0.00316 conn 171 u window 199 u pen 0 kmax 0.060/u speed 0.90 cross 0 (allowed 0) side 0.01 ymin 0.8 u; dist to font 14.37 u (own ends), 14.37 u (entry frame); status 0 nfev 530/3000
+di                     approved (v6.8) di solved: exit 0.00 u from d's end, entry cusp at 0.00 u (retrace True); J 0.000235 (conn 0.00013, L 0.0001, R 0) Js 0.00154 conn 157 u window 187 u pen 0 kmax 0.059/u speed 0.78 cross 0 (allowed 0) side 0.01 ymin 0.9 u; dist to font 9.81 u (own ends), 9.81 u (entry frame); status 0 nfev 1179/3000
+dr                     approved (v6.8) dr solved: exit 0.00 u from d's end, entry cusp at 0.00 u (retrace True); J 0.000273 (conn 0.00017, L 0.0001, R 0) Js 0.00204 conn 165 u window 195 u pen 0 kmax 0.059/u speed 0.90 cross 0 (allowed 0) side 0.01 ymin 0.9 u; dist to font 15.49 u (own ends), 15.49 u (entry frame); status 0 nfev 2278/3000
+ii                     approved (v6.8) ii solved: exit 0.00 u from i's end, entry cusp at 0.00 u (retrace True); J 0.000258 (conn 0.00012, L 0.00014, R 0) Js 0.00167 conn 156 u window 186 u pen 0 kmax 0.056/u speed 0.79 cross 0 (allowed 0) side 0.01 ymin 1.1 u; dist to font 9.37 u (own ends), 9.37 u (entry frame); status 0 nfev 2826/3000
+ir                     approved (v6.8) ir solved: exit 0.00 u from i's end, entry cusp at 0.00 u (retrace True); J 0.000296 (conn 0.00015, L 0.00014, R 0) Js 0.00218 conn 165 u window 195 u pen 0 kmax 0.056/u speed 0.90 cross 0 (allowed 0) side 0.01 ymin 1.1 u; dist to font 15.13 u (own ends), 15.13 u (entry frame); status 0 nfev 2068/3000
+ip                     approved (v6.8) ip solved: exit 1.50 u from i's end, entry cusp at 10.61 u (retrace True); J 0.000517 (conn 0.00024, L 0.00014, R 0.00014) Js 0.00334 conn 150 u window 186 u pen 0 kmax 0.059/u speed 0.85 cross 0 (allowed 0) side 0.00 ymin 0.8 u; dist to font 5.76 u (own ends), 10.47 u (entry frame); status 0 nfev 437/3000
+up                     approved (v6.8) up preset k962 class cnct.mod_n_n; dist to font 1.95 u
+mp                     approved (v6.8) mp preset k962 class cnct.mod_n_n; dist to font 2.17 u
+ot                     approved (v6.8) ot solved: exit 0.00 u from o's end, entry cusp at 55.70 u (retrace True); J 0.000673 (conn 0.00048, L 8.5e-08, R 0.00019) Js 0.00376 conn 123 u window 177 u pen 8.9e-08 kmax 0.042/u speed 0.43 cross 0 (allowed 0) side 0.02 ymin 100.5 u; dist to font 15.98 u (own ends), 54.92 u (entry frame); status 0 nfev 537/8000
+et                     approved (v6.8) et solved: exit 5.00 u from e's end, entry cusp at 35.95 u (retrace True); J 0.000209 (conn 2.2e-05, L 1.9e-06, R 0.00019) Js 0.00514 conn 238 u window 291 u pen 0 kmax 0.033/u speed 0.72 cross 0 (allowed 0) side 0.00 ymin -1.8 u; dist to font 2.20 u (own ends), 35.19 u (entry frame); status 0 nfev 1405/3000
+at                     approved (v6.8) at solved: exit 0.18 u from a's end, entry cusp at 34.70 u (retrace True); J 0.000444 (conn 0.00013, L 0.00013, R 0.00019) Js 0.00611 conn 178 u window 240 u pen 0 kmax 0.062/u speed 0.45 cross 0 (allowed 0) side 0.00 ymin 1.0 u; dist to font 18.25 u (own ends), 33.95 u (entry frame); status 0 nfev 643/3000
+it                     approved (v6.8) it solved: exit 0.00 u from i's end, entry cusp at 34.52 u (retrace True); J 0.000438 (conn 0.00011, L 0.00014, R 0.00019) Js 0.00595 conn 177 u window 239 u pen 0 kmax 0.056/u speed 0.57 cross 0 (allowed 0) side 0.00 ymin 1.1 u; dist to font 15.95 u (own ends), 33.77 u (entry frame); status 0 nfev 755/3000
+nt                     approved (v6.8) nt solved: exit 5.52 u from n's end, entry cusp at 34.87 u (retrace True); J 0.000536 (conn 0.00013, L 0.00022, R 0.00019) Js 0.00735 conn 183 u window 239 u pen 0 kmax 0.069/u speed 0.50 cross 0 (allowed 0) side 0.00 ymin 0.5 u; dist to font 16.31 u (own ends), 34.11 u (entry frame); status 0 nfev 1036/3000
+oi                     approved (v6.8) oi solved: exit 2.00 u from o's end, entry corner at 0.00 u (retrace False); J 3.48e-05 (conn 3.5e-05, L 2.9e-12, R 0) Js 5.74e-05 conn 118 u window 118 u pen 0 kmax 0.027/u speed 0.66 cross 0 (allowed 0) side 0.61 ymin 105.3 u; dist to font 2.54 u (own ends), 19.43 u (entry frame); status 0 nfev 2557/8000; corner at 40.00 deg, kR 0.0137/u
+oj                     approved (v6.8) oj solved: exit 2.00 u from o's end, entry corner at 0.00 u (retrace False); J 3.47e-05 (conn 3.5e-05, L 5.6e-16, R 0) Js 5.74e-05 conn 118 u window 118 u pen 0 kmax 0.027/u speed 0.65 cross 0 (allowed 0) side 0.54 ymin 105.3 u; dist to font 2.54 u (own ends), 19.43 u (entry frame); status 0 nfev 5427/8000; corner at 40.00 deg, kR 0.0137/u
+os                     approved (v6.8) os solved: exit 2.00 u from o's end, entry corner at 0.00 u (retrace False); J 3.4e-05 (conn 3.4e-05, L 4.6e-16, R 0) Js 8.19e-05 conn 134 u window 134 u pen 0 kmax 0.027/u speed 0.57 cross 0 (allowed 0) side 0.14 ymin 104.8 u; dist to font 36.16 u (own ends), 37.49 u (entry frame); status 0 nfev 2654/8000; corner at 40.00 deg, kR 0.0094/u
+ou                     approved (v6.8) ou solved: exit 2.00 u from o's end, entry corner at 0.00 u (retrace False); J 3.46e-05 (conn 3.5e-05, L 8.9e-16, R 0) Js 5.85e-05 conn 119 u window 119 u pen 0 kmax 0.027/u speed 0.65 cross 0 (allowed 0) side 0.60 ymin 105.2 u; dist to font 2.52 u (own ends), 19.43 u (entry frame); status 0 nfev 1849/8000; corner at 40.00 deg, kR 0.0135/u
+oy                     approved (v6.8) oy solved: exit 2.00 u from o's end, entry corner at 0.00 u (retrace False); J 3.46e-05 (conn 3.5e-05, L 4.1e-15, R 0) Js 5.83e-05 conn 119 u window 119 u pen 0 kmax 0.027/u speed 0.65 cross 0 (allowed 0) side 0.44 ymin 105.2 u; dist to font 2.53 u (own ends), 19.43 u (entry frame); status 0 nfev 6125/8000; corner at 40.00 deg, kR 0.0135/u
+op                     approved (v6.8) op solved: exit 2.00 u from o's end, entry corner at 0.00 u (retrace False); J 3.49e-05 (conn 3.5e-05, L 1.4e-15, R 0) Js 6.02e-05 conn 120 u window 120 u pen 4.3e-13 kmax 0.027/u speed 0.64 cross 0 (allowed 0) side -0.05 ymin 105.6 u; dist to font 2.65 u (own ends), 19.43 u (entry frame); status 0 nfev 3244/8000; corner at 36.22 deg, kR 0.0116/u
+
+solves:
+hi dx 676.8 fu: nfev 1076, J 0.0002842, pen 0
+er dx 444.8 fu: nfev 3000, J 3.461e-05, pen 5.72e-07
+es dx 433.5 fu: nfev 3000, J 3.081e-05, pen 6.52e-07
+ow dx 601.2 fu: nfev 3198, J 3.441e-05, pen 0
+ai dx 635.0 fu: nfev 1250, J 0.0002793, pen 0
+ar dx 658.5 fu: nfev 1918, J 0.0003187, pen 0
+as dx 634.2 fu: nfev 2226, J 0.0003076, pen 0
+nr dx 696.5 fu: nfev 1237, J 0.0004093, pen 0
+ns dx 672.2 fu: nfev 530, J 0.0003986, pen 0
+di dx 642.0 fu: nfev 1179, J 0.0002347, pen 0
+dr dx 665.5 fu: nfev 2278, J 0.0002733, pen 0
+ii dx 324.8 fu: nfev 2826, J 0.000258, pen 0
+ir dx 348.2 fu: nfev 2068, J 0.0002958, pen 0
+ip dx 326.0 fu: nfev 437, J 0.0005167, pen 0
+ot dx 601.5 fu: nfev 537, J 0.0006731, pen 8.87e-08
+et dx 431.5 fu: nfev 1405, J 0.000209, pen 0
+at dx 632.2 fu: nfev 643, J 0.0004439, pen 0
+it dx 322.0 fu: nfev 755, J 0.0004376, pen 0
+nt dx 670.2 fu: nfev 1036, J 0.0005356, pen 0
+oi dx 602.0 fu: nfev 2557, J 3.479e-05, pen 0
+oj dx 601.2 fu: nfev 5427, J 3.47e-05, pen 0
+os dx 601.2 fu: nfev 2654, J 3.399e-05, pen 0
+ou dx 602.5 fu: nfev 1849, J 3.457e-05, pen 0
+oy dx 601.8 fu: nfev 6125, J 3.461e-05, pen 0
+op dx 603.2 fu: nfev 3244, J 3.487e-05, pen 4.33e-13
