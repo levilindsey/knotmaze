@@ -1,0 +1,35 @@
+K863 J3k: p at a word's end: the font, the approved version (v6.8), P1 (cut where the bowl closes into the stem) (pale grey: the font; black: bodies; red: solved joins; blue: preset joins; orange: lead-ins and tails)
+builds: approved (v6.8) = C:\Users\lsl\Repositories\knotmaze\.claude\probes\K863\trace\work34\base (ports, M, C:\Users\lsl\Repositories\knotmaze\.claude\probes\K863\trace\work28\ports_k990e.json); P1 (bowl closed, no run-out) = C:\Users\lsl\Repositories\knotmaze\.claude\probes\K863\trace\work34\cbuild\P1 (ports, M, C:\Users\lsl\Repositories\knotmaze\.claude\probes\K863\trace\work28\ports_k990e.json)
+
+ap                     approved (v6.8) ap solved: exit 0.00 u from a's end, entry cusp at 10.32 u (retrace True); J 0.000545 (conn 0.00028, L 0.00013, R 0.00013) Js 0.00354 conn 149 u window 186 u pen 0 kmax 0.062/u speed 0.87 cross 0 (allowed 0) side 0.00 ymin 1.0 u; dist to font 5.28 u (own ends), 10.19 u (entry frame); status 0 nfev 621/3000
+ap                     P1 (bowl closed, no run-out) ap solved: exit 0.00 u from a's end, entry cusp at 10.32 u (retrace True); J 0.000545 (conn 0.00028, L 0.00013, R 0.00013) Js 0.00354 conn 149 u window 186 u pen 0 kmax 0.062/u speed 0.87 cross 0 (allowed 0) side 0.00 ymin 1.0 u; dist to font 5.28 u (own ends), 10.19 u (entry frame); status 0 nfev 621/3000
+op                     approved (v6.8) op solved: exit 2.00 u from o's end, entry corner at 0.00 u (retrace False); J 3.49e-05 (conn 3.5e-05, L 1.4e-15, R 0) Js 6.02e-05 conn 120 u window 120 u pen 4.3e-13 kmax 0.027/u speed 0.64 cross 0 (allowed 0) side -0.05 ymin 105.6 u; dist to font 2.65 u (own ends), 19.43 u (entry frame); status 0 nfev 3244/8000; corner at 36.22 deg, kR 0.0116/u
+op                     P1 (bowl closed, no run-out) op solved: exit 2.00 u from o's end, entry corner at 0.00 u (retrace False); J 3.49e-05 (conn 3.5e-05, L 1.4e-15, R 0) Js 6.02e-05 conn 120 u window 120 u pen 4.3e-13 kmax 0.027/u speed 0.64 cross 0 (allowed 0) side -0.05 ymin 105.6 u; dist to font 2.65 u (own ends), 19.43 u (entry frame); status 0 nfev 3244/8000; corner at 36.22 deg, kR 0.0116/u
+ep                     approved (v6.8) ep solved: exit 4.99 u from e's end, entry cusp at 16.78 u (retrace True); J 0.000217 (conn 5e-05, L 1.9e-06, R 0.00017) Js 0.00317 conn 211 u window 245 u pen 5.7e-10 kmax 0.030/u speed 0.55 cross 0 (allowed 0) side 0.00 ymin -2.0 u; dist to font 15.49 u (own ends), 16.41 u (entry frame); status 0 nfev 1135/3000
+ep                     P1 (bowl closed, no run-out) ep solved: exit 4.99 u from e's end, entry cusp at 16.78 u (retrace True); J 0.000217 (conn 5e-05, L 1.9e-06, R 0.00017) Js 0.00317 conn 211 u window 245 u pen 5.7e-10 kmax 0.030/u speed 0.55 cross 0 (allowed 0) side 0.00 ymin -2.0 u; dist to font 15.49 u (own ends), 16.41 u (entry frame); status 0 nfev 1135/3000
+ip                     approved (v6.8) ip solved: exit 1.50 u from i's end, entry cusp at 10.61 u (retrace True); J 0.000517 (conn 0.00024, L 0.00014, R 0.00014) Js 0.00334 conn 150 u window 186 u pen 0 kmax 0.059/u speed 0.85 cross 0 (allowed 0) side 0.00 ymin 0.8 u; dist to font 5.76 u (own ends), 10.47 u (entry frame); status 0 nfev 437/3000
+ip                     P1 (bowl closed, no run-out) ip solved: exit 1.50 u from i's end, entry cusp at 10.61 u (retrace True); J 0.000517 (conn 0.00024, L 0.00014, R 0.00014) Js 0.00334 conn 150 u window 186 u pen 0 kmax 0.059/u speed 0.85 cross 0 (allowed 0) side 0.00 ymin 0.8 u; dist to font 5.76 u (own ends), 10.47 u (entry frame); status 0 nfev 437/3000
+np                     approved (v6.8) np solved: exit 2.23 u from n's end, entry cusp at 7.88 u (retrace True); J 0.000631 (conn 0.0003, L 0.00023, R 0.0001) Js 0.0041 conn 154 u window 187 u pen 0 kmax 0.062/u speed 0.82 cross 0 (allowed 0) side -0.00 ymin 0.6 u; dist to font 5.32 u (own ends), 7.81 u (entry frame); status 0 nfev 701/3000
+np                     P1 (bowl closed, no run-out) np solved: exit 2.23 u from n's end, entry cusp at 7.88 u (retrace True); J 0.000631 (conn 0.0003, L 0.00023, R 0.0001) Js 0.0041 conn 154 u window 187 u pen 0 kmax 0.062/u speed 0.82 cross 0 (allowed 0) side -0.00 ymin 0.6 u; dist to font 5.32 u (own ends), 7.81 u (entry frame); status 0 nfev 701/3000
+subgroup               approved (v6.8) su preset k962 class cnct.mod_n_n; dist to font 2.06 u
+subgroup               approved (v6.8) ub preset k962 class cnct.ful_n_f; dist to font 0.41 u
+subgroup               approved (v6.8) bg preset k962 class cnct.ful_b_o; dist to font 6.15 u
+subgroup               approved (v6.8) gr preset k962 group low-cusp; dist to font 13.22 u
+subgroup               approved (v6.8) ro preset k962 class cnct.mod_n_o; dist to font 2.90 u
+subgroup               approved (v6.8) ou solved: exit 2.00 u from o's end, entry corner at 0.00 u (retrace False); J 3.47e-05 (conn 3.5e-05, L 3.7e-15, R 0) Js 5.81e-05 conn 119 u window 119 u pen 0 kmax 0.027/u speed 0.65 cross 0 (allowed 0) side 0.60 ymin 105.2 u; dist to font 2.58 u (own ends), 19.32 u (entry frame); status 0 nfev 4487/8000; corner at 40.00 deg, kR 0.0136/u
+subgroup               approved (v6.8) up preset k962 class cnct.mod_n_n; dist to font 2.10 u
+subgroup               P1 (bowl closed, no run-out) su preset k962 class cnct.mod_n_n; dist to font 2.06 u
+subgroup               P1 (bowl closed, no run-out) ub preset k962 class cnct.ful_n_f; dist to font 0.41 u
+subgroup               P1 (bowl closed, no run-out) bg preset k962 class cnct.ful_b_o; dist to font 6.15 u
+subgroup               P1 (bowl closed, no run-out) gr preset k962 group low-cusp; dist to font 13.22 u
+subgroup               P1 (bowl closed, no run-out) ro preset k962 class cnct.mod_n_o; dist to font 2.90 u
+subgroup               P1 (bowl closed, no run-out) ou solved: exit 2.00 u from o's end, entry corner at 0.00 u (retrace False); J 3.47e-05 (conn 3.5e-05, L 3.7e-15, R 0) Js 5.81e-05 conn 119 u window 119 u pen 0 kmax 0.027/u speed 0.65 cross 0 (allowed 0) side 0.60 ymin 105.2 u; dist to font 2.58 u (own ends), 19.32 u (entry frame); status 0 nfev 4487/8000; corner at 40.00 deg, kR 0.0136/u
+subgroup               P1 (bowl closed, no run-out) up preset k962 class cnct.mod_n_n; dist to font 2.10 u
+
+solves:
+ap dx 636.2 fu: nfev 621, J 0.0005451, pen 0
+op dx 603.2 fu: nfev 3244, J 3.487e-05, pen 4.33e-13
+ep dx 435.5 fu: nfev 1135, J 0.0002167, pen 5.73e-10
+ip dx 326.0 fu: nfev 437, J 0.0005167, pen 0
+np dx 674.2 fu: nfev 701, J 0.0006313, pen 0
+ou dx 601.0 fu: nfev 4487, J 3.467e-05, pen 0

@@ -1,0 +1,1 @@
+out34\spot_q.svg: 6 rows x 3 columns

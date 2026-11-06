@@ -95,3 +95,55 @@ Step "g2" {
   & $py -I work33\dbg\pairs_k863j.py work34\cusp_corners_j3j.txt v6.8=work34\census_v68x.json
   & $py -I work34\dbg\pairs_k863k.py work34\cusp_corners.txt v6.8=work34\census_v68x.json
 }
+# ---- tasks 2-7: the candidates ----
+function Sheet($svg, $title, $ws, [string[]]$cols, $rep) {
+  $a = @("work34\dbg\sheet_k863k.py", $svg, ('"' + $title + '"'), ('"' + $ws + '"'))
+  foreach ($c in $cols) { $a += @("--col", ('"' + $c + '"')) }
+  Py ("sheet_" + [IO.Path]::GetFileNameWithoutExtension($svg)) ($a + @("--report", "$rep.txt", "--sidecar", "${rep}_sidecar.json"))
+}
+$ports = "work28\ports_k990e.json"
+$cands = @("S1", "S2", "P1", "Q1", "D1", "D2", "ALL")
+$v68 = "approved (v6.8)=work34\base|ports|M|$ports"
+function Col($n, $label) { "$label=work34\cbuild\$n|ports|M|$ports" }
+# the candidates: q's refit (Q1 = the second fit: the first, a0 >= 0.15, hit its curvature cap), the forms (cand_k863k:
+# S1, S2, P1, Q1, D1, D2 and the union ALL = S2+P1+Q1+D2, the test-word column), and each one's build dir (v6.8's
+# bodies, byte for byte, and its join_params)
+Step "cand" {
+  & $py -I work34\dbg\qfit_k863k.py work34\base\bodies.json work34\base\join_params.json work34\cand\qfit_Q1.json 0.15 1.5
+  & $py -I work34\dbg\qfit_k863k.py work34\base\bodies.json work34\base\join_params.json work34\cand\qfit_Q1b.json 0.3 1.0
+  & $py -I work34\dbg\cand_k863k.py work34\base $ports M work34\cand\qfit_Q1b.json work34\cand "ALL=S2+P1+Q1+D2"
+  foreach ($n in $cands) {
+    New-Item -ItemType Directory -Force "work34\cbuild\$n" | Out-Null
+    Copy-Item work34\base\bodies.json "work34\cbuild\$n\bodies.json" -Force; Copy-Item "work34\cand\$n\join_params.json" "work34\cbuild\$n\join_params.json" -Force
+    Same "work34\base\bodies.json" "work34\cbuild\$n\bodies.json"
+  }
+}
+# locality: every piece of every word of J3i's list (which holds J3e's and the test words) for every candidate
+Step "local" { & $py -I work34\dbg\local_k863k.py work34\base $ports M work34\cand work34\local.txt work34\local.json ($cands -join ",") --words $cwI }
+# the census on each candidate's changed words (gen_k863k), v6.8 through gen_k863k on ALL's (must equal gen_k1027's
+# rows, every field), and the rows against v6.8's (censcmp_k863k)
+Step "cens_c" {
+  $lj = Get-Content work34\local.json -Raw | ConvertFrom-Json
+  $chg = @{}; foreach ($n in $cands) { $chg[$n] = @($lj.res.$n.changed_words) -join "," }
+  $jobs = @([scriptblock]::Create("Census 'work34\census_v68k' 'work34\base' '$ports' 'M' 'v6.8 through gen_k863k' '$($chg['ALL'])' 'gen_k863k'"))
+  foreach ($n in $cands) { $jobs += [scriptblock]::Create("Census 'work34\census_$n' 'work34\cbuild\$n' '$ports' 'M' '$n' '$($chg[$n])' 'gen_k863k'") }
+  Batch $jobs
+  $sp = @{ "S1" = ""; "S2" = ""; "P1" = ""; "Q1" = "@q"; "D1" = ""; "D2" = ""; "ALL" = "@q" }
+  & $py -I work34\dbg\censcmp_k863k.py work34\census_cmp.txt work34\census_v68x.json "v6.8k=work34\census_v68k.json" @($cands | ForEach-Object { "$_=work34\census_$_.json$($sp[$_])" })
+}
+$tl = " (pale grey: the font; black: bodies; red: solved joins; blue: preset joins; orange: lead-ins and tails)"
+Step "sheets" {
+  Batch @({ Sheet "out34\spot_s.svg" "K863 J3k: s at a word's end: the font, the approved version (v6.8), S1 (cut at the bottom curl's reversal), S2 (cut where the font's stroke ends)$tl" "boxes,is,jumps,as,ds,es,os" @($v68, (Col "S1" "S1 (cut at the curl)"), (Col "S2" "S2 (cut at the font's end)")) "work34\sheets\spot_s" },
+          { Sheet "out34\spot_p.svg" "K863 J3k: p at a word's end: the font, the approved version (v6.8), P1 (cut where the bowl closes into the stem)$tl" "ap,op,ep,ip,np,subgroup" @($v68, (Col "P1" "P1 (bowl closed, no run-out)")) "work34\sheets\spot_p" },
+          { Sheet "out34\spot_q.svg" "K863 J3k: q's tail at a word's end: the font, the approved version (v6.8), Q1 (the tail refit without the step)$tl" "oq,cq,fq,bq,vq,wq" @($v68, (Col "Q1" "Q1 (no step)")) "work34\sheets\spot_q" },
+          { Sheet "out34\spot_dots.svg" "K863 J3k: the dots of i and j: the font, the approved version (v6.8), D1 (a round dot inside the font's), D2 (the font dot's oval)$tl" "it,minimum,jet,ice jet even,which,hippo,oi,oj" @($v68, (Col "D1" "D1 (round)"), (Col "D2" "D2 (the font's oval)")) "work34\sheets\spot_dots" },
+          { Sheet "out34\cursive_k863k_words.svg" "K863 J3k: the test words: the font, the approved version (v6.8), ALL (S2 + P1 + Q1 + D2)$tl" $words @($v68, (Col "ALL" "ALL (S2+P1+Q1+D2)")) "work34\sheets\cursive_k863k_words" })
+}
+Step "png" { foreach ($s in "spot_s", "spot_p", "spot_q", "spot_dots", "cursive_k863k_words") { Png "out34\$s.svg" } }
+# nothing earlier moved: out33's template and work33's build against work34's copies (byte for byte)
+Step "guard" {
+  Same "out33\cursive_template.svg" "out34\cursive_template.svg"
+  $sp = @(Get-ChildItem work33\base -File -Recurse | Where-Object { $_.Name -match '\.(svg|png|json)$' } | ForEach-Object { $_.FullName.Substring("$T\work33\base\".Length) })
+  $bad = @($sp | Where-Object { (Get-FileHash "$T\work33\base\$_").Hash -ne (Get-FileHash "$T\work34\base\$_" -ErrorAction SilentlyContinue).Hash })
+  "work33\base against work34\base: $($sp.Count) SVG, PNG and JSON files, differing: $($bad.Count) $($bad -join ', ')"
+}

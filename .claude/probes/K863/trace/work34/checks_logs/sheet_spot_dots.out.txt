@@ -1,0 +1,1 @@
+out34\spot_dots.svg: 8 rows x 4 columns

@@ -1,0 +1,19 @@
+K863 J3k: q's tail at a word's end: the font, the approved version (v6.8), Q1 (the tail refit without the step) (pale grey: the font; black: bodies; red: solved joins; blue: preset joins; orange: lead-ins and tails)
+builds: approved (v6.8) = C:\Users\lsl\Repositories\knotmaze\.claude\probes\K863\trace\work34\base (ports, M, C:\Users\lsl\Repositories\knotmaze\.claude\probes\K863\trace\work28\ports_k990e.json); Q1 (no step) = C:\Users\lsl\Repositories\knotmaze\.claude\probes\K863\trace\work34\cbuild\Q1 (ports, M, C:\Users\lsl\Repositories\knotmaze\.claude\probes\K863\trace\work28\ports_k990e.json)
+
+oq                     approved (v6.8) oq solved: exit 1.36 u from o's end, entry fused at 35.71 u (retrace True); J 3.63e-05 (conn 3.6e-05, L 3.5e-08, R 5.8e-09) Js 0.000258 conn 159 u window 192 u pen 0 kmax 0.027/u speed 0.88 cross 0 (allowed 0) side - ymin 99.6 u; dist to font 7.31 u (own ends), 35.41 u (entry frame); status 0 nfev 2078/8000
+oq                     Q1 (no step) oq solved: exit 1.36 u from o's end, entry fused at 35.71 u (retrace True); J 3.63e-05 (conn 3.6e-05, L 3.5e-08, R 5.8e-09) Js 0.000258 conn 159 u window 192 u pen 0 kmax 0.027/u speed 0.88 cross 0 (allowed 0) side - ymin 99.6 u; dist to font 7.31 u (own ends), 35.41 u (entry frame); status 0 nfev 2078/8000
+cq                     approved (v6.8) cq preset group low-fused; dist to font 7.75 u
+cq                     Q1 (no step) cq preset group low-fused; dist to font 7.75 u
+fq                     approved (v6.8) fq solved: exit 2.00 u from f's end, entry fused at 134.61 u (retrace True); J 0.000107 (conn 3.4e-05, L 7.4e-05, R 8e-08) Js 0.00164 conn 97 u window 248 u pen 0 kmax 0.034/u speed 0.98 cross 0 (allowed 0) side - ymin 15.1 u; dist to font 9.58 u (own ends), 9.58 u (entry frame); status 0 nfev 757/8000
+fq                     Q1 (no step) fq solved: exit 2.00 u from f's end, entry fused at 134.61 u (retrace True); J 0.000107 (conn 3.4e-05, L 7.4e-05, R 8e-08) Js 0.00164 conn 97 u window 248 u pen 0 kmax 0.034/u speed 0.98 cross 0 (allowed 0) side - ymin 15.1 u; dist to font 9.58 u (own ends), 9.58 u (entry frame); status 0 nfev 757/8000
+bq                     approved (v6.8) bq preset class|R cnct.ful_b_o|q; dist to font 9.98 u
+bq                     Q1 (no step) bq preset class|R cnct.ful_b_o|q; dist to font 9.98 u
+vq                     approved (v6.8) vq preset class|R cnct.ful_b_o|q; dist to font 10.16 u
+vq                     Q1 (no step) vq preset class|R cnct.ful_b_o|q; dist to font 10.16 u
+wq                     approved (v6.8) wq preset class|R cnct.ful_b_o|q; dist to font 10.16 u
+wq                     Q1 (no step) wq preset class|R cnct.ful_b_o|q; dist to font 10.16 u
+
+solves:
+oq dx 602.2 fu: nfev 2078, J 3.634e-05, pen 0
+fq dx 438.5 fu: nfev 757, J 0.0001073, pen 0

@@ -1,0 +1,3668 @@
+{
+ "it | approved (v6.8)": [
+  {
+   "pair": "it",
+   "iL": 0,
+   "iR": 2,
+   "solved": true,
+   "exit": {
+    "letter": "i",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 3,
+    "t": 0.9999999982781045,
+    "from_end_u": 5.9005600405726e-08,
+    "stretch_from_end_u": [
+     0,
+     10
+    ]
+   },
+   "entry": {
+    "letter": "t",
+    "kind": "cusp",
+    "stroke": 0,
+    "k": 2,
+    "t": 0.11843129690721145,
+    "s_u": 34.52247008488701,
+    "retrace": true,
+    "stretch_u": [
+     0,
+     55.7
+    ]
+   },
+   "solve": {
+    "J": 0.000437614849519161,
+    "Js": 0.005949596142130844,
+    "window_len_u": 238.6703548522795,
+    "scale_len_u": 207.1478847673925,
+    "conn_len_u": 177.1478848263981,
+    "Jc": 0.00011042996223155252,
+    "JL": 0.00014189849923180244,
+    "JR": 0.00018528638805580602,
+    "pen": 0.0,
+    "kmax_u": 0.056225670048882015,
+    "speed_ratio": 0.5686688969846497,
+    "crossings": 0,
+    "crossings_allowed": 0,
+    "side_min_u": 0.00039441722509162057,
+    "clear_short_u": null,
+    "cross_parts": [
+     0,
+     0,
+     0
+    ],
+    "ymin_u": 1.072371702829833,
+    "prm": [
+     0.998564248789849,
+     0.5750630894236934,
+     -1.2515021280889647,
+     -4.241339805167259
+    ],
+    "nfev": 755,
+    "hints": {},
+    "window_u": 20.0,
+    "status": 0,
+    "maxfev": 3000,
+    "kL_u": null,
+    "th_deg": null,
+    "kR_u": null,
+    "over_band_u": null,
+    "over_dmax_u": null,
+    "after_high": false,
+    "stretch_solved_u": [
+     0.0,
+     55.7
+    ]
+   }
+  }
+ ],
+ "it | D1 (round)": [
+  {
+   "pair": "it",
+   "iL": 0,
+   "iR": 2,
+   "solved": true,
+   "exit": {
+    "letter": "i",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 3,
+    "t": 0.9999999982781045,
+    "from_end_u": 5.9005600405726e-08,
+    "stretch_from_end_u": [
+     0,
+     10
+    ]
+   },
+   "entry": {
+    "letter": "t",
+    "kind": "cusp",
+    "stroke": 0,
+    "k": 2,
+    "t": 0.11843129690721145,
+    "s_u": 34.52247008488701,
+    "retrace": true,
+    "stretch_u": [
+     0,
+     55.7
+    ]
+   },
+   "solve": {
+    "J": 0.000437614849519161,
+    "Js": 0.005949596142130844,
+    "window_len_u": 238.6703548522795,
+    "scale_len_u": 207.1478847673925,
+    "conn_len_u": 177.1478848263981,
+    "Jc": 0.00011042996223155252,
+    "JL": 0.00014189849923180244,
+    "JR": 0.00018528638805580602,
+    "pen": 0.0,
+    "kmax_u": 0.056225670048882015,
+    "speed_ratio": 0.5686688969846497,
+    "crossings": 0,
+    "crossings_allowed": 0,
+    "side_min_u": 0.00039441722509162057,
+    "clear_short_u": null,
+    "cross_parts": [
+     0,
+     0,
+     0
+    ],
+    "ymin_u": 1.072371702829833,
+    "prm": [
+     0.998564248789849,
+     0.5750630894236934,
+     -1.2515021280889647,
+     -4.241339805167259
+    ],
+    "nfev": 755,
+    "hints": {},
+    "window_u": 20.0,
+    "status": 0,
+    "maxfev": 3000,
+    "kL_u": null,
+    "th_deg": null,
+    "kR_u": null,
+    "over_band_u": null,
+    "over_dmax_u": null,
+    "after_high": false,
+    "stretch_solved_u": [
+     0.0,
+     55.7
+    ]
+   }
+  }
+ ],
+ "it | D2 (the font's oval)": [
+  {
+   "pair": "it",
+   "iL": 0,
+   "iR": 2,
+   "solved": true,
+   "exit": {
+    "letter": "i",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 3,
+    "t": 0.9999999982781045,
+    "from_end_u": 5.9005600405726e-08,
+    "stretch_from_end_u": [
+     0,
+     10
+    ]
+   },
+   "entry": {
+    "letter": "t",
+    "kind": "cusp",
+    "stroke": 0,
+    "k": 2,
+    "t": 0.11843129690721145,
+    "s_u": 34.52247008488701,
+    "retrace": true,
+    "stretch_u": [
+     0,
+     55.7
+    ]
+   },
+   "solve": {
+    "J": 0.000437614849519161,
+    "Js": 0.005949596142130844,
+    "window_len_u": 238.6703548522795,
+    "scale_len_u": 207.1478847673925,
+    "conn_len_u": 177.1478848263981,
+    "Jc": 0.00011042996223155252,
+    "JL": 0.00014189849923180244,
+    "JR": 0.00018528638805580602,
+    "pen": 0.0,
+    "kmax_u": 0.056225670048882015,
+    "speed_ratio": 0.5686688969846497,
+    "crossings": 0,
+    "crossings_allowed": 0,
+    "side_min_u": 0.00039441722509162057,
+    "clear_short_u": null,
+    "cross_parts": [
+     0,
+     0,
+     0
+    ],
+    "ymin_u": 1.072371702829833,
+    "prm": [
+     0.998564248789849,
+     0.5750630894236934,
+     -1.2515021280889647,
+     -4.241339805167259
+    ],
+    "nfev": 755,
+    "hints": {},
+    "window_u": 20.0,
+    "status": 0,
+    "maxfev": 3000,
+    "kL_u": null,
+    "th_deg": null,
+    "kR_u": null,
+    "over_band_u": null,
+    "over_dmax_u": null,
+    "after_high": false,
+    "stretch_solved_u": [
+     0.0,
+     55.7
+    ]
+   }
+  }
+ ],
+ "minimum | approved (v6.8)": [
+  {
+   "pair": "mi",
+   "iL": 0,
+   "iR": 2,
+   "solved": false,
+   "src": "k962 class cnct.mod_n_n"
+  },
+  {
+   "pair": "in",
+   "iL": 2,
+   "iR": 4,
+   "solved": true,
+   "exit": {
+    "letter": "i",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 3,
+    "t": 0.9513929126115187,
+    "from_end_u": 1.6486423507538177,
+    "stretch_from_end_u": [
+     0,
+     10
+    ]
+   },
+   "entry": {
+    "letter": "n",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 0,
+    "t": 0.0,
+    "s_u": 0.0,
+    "retrace": false,
+    "stretch_u": [
+     0,
+     10
+    ]
+   },
+   "solve": {
+    "J": 0.000657321193940357,
+    "Js": 0.006712129403458748,
+    "window_len_u": 216.95061974919264,
+    "scale_len_u": 216.95061974919264,
+    "conn_len_u": 158.59926209994646,
+    "Jc": 0.000311134945099115,
+    "JL": 0.00013719905613889763,
+    "JR": 0.00020898719270234448,
+    "pen": 0.0,
+    "kmax_u": 0.06823551523311011,
+    "speed_ratio": 0.8469491424943913,
+    "crossings": 0,
+    "crossings_allowed": 0,
+    "side_min_u": null,
+    "clear_short_u": null,
+    "cross_parts": [
+     0,
+     0,
+     0
+    ],
+    "ymin_u": 0.7275616210488828,
+    "prm": [
+     1.0504368313196528,
+     0.9521549193714736,
+     -1.1538065731013052,
+     1.3096493072498563
+    ],
+    "nfev": 1242,
+    "hints": {},
+    "window_u": 20.0,
+    "status": 0,
+    "maxfev": 3000,
+    "kL_u": null,
+    "th_deg": null,
+    "kR_u": null,
+    "over_band_u": null,
+    "over_dmax_u": null,
+    "after_high": false,
+    "stretch_solved_u": [
+     0.0,
+     10.0
+    ]
+   }
+  },
+  {
+   "pair": "ni",
+   "iL": 4,
+   "iR": 6,
+   "solved": true,
+   "exit": {
+    "letter": "n",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 11,
+    "t": 0.9720200315491512,
+    "from_end_u": 0.9207381566636741,
+    "stretch_from_end_u": [
+     0,
+     10
+    ]
+   },
+   "entry": {
+    "letter": "i",
+    "kind": "cusp",
+    "stroke": 0,
+    "k": 0,
+    "t": 0.025510227977724904,
+    "s_u": 0.4828141571894471,
+    "retrace": true,
+    "stretch_u": [
+     0,
+     20
+    ]
+   },
+   "solve": {
+    "J": 0.00037283908364799795,
+    "Js": 0.002396686849330211,
+    "window_len_u": 185.93591572424992,
+    "scale_len_u": 185.93591572424992,
+    "conn_len_u": 156.8566538809136,
+    "Jc": 0.0001349478311513553,
+    "JL": 0.00023789125249664268,
+    "JR": 0.0,
+    "pen": 0.0,
+    "kmax_u": 0.06006918570163123,
+    "speed_ratio": 0.7929603016365379,
+    "crossings": 0,
+    "crossings_allowed": 0,
+    "side_min_u": 0.006358177677592556,
+    "clear_short_u": null,
+    "cross_parts": [
+     0,
+     0,
+     0
+    ],
+    "ymin_u": 0.8138131927416772,
+    "prm": [
+     0.9887963879015238,
+     0.801066804592504,
+     -1.2360334589222575,
+     -3.6089288310989636
+    ],
+    "nfev": 913,
+    "hints": {},
+    "window_u": 20.0,
+    "status": 0,
+    "maxfev": 3000,
+    "kL_u": null,
+    "th_deg": null,
+    "kR_u": null,
+    "over_band_u": null,
+    "over_dmax_u": null,
+    "after_high": false,
+    "stretch_solved_u": [
+     0.0,
+     20.0
+    ]
+   }
+  },
+  {
+   "pair": "im",
+   "iL": 6,
+   "iR": 8,
+   "solved": true,
+   "exit": {
+    "letter": "i",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 3,
+    "t": 0.6886825306743509,
+    "from_end_u": 10.0,
+    "stretch_from_end_u": [
+     0,
+     10
+    ]
+   },
+   "entry": {
+    "letter": "m",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 0,
+    "t": 0.39507766849715925,
+    "s_u": 10.0,
+    "retrace": false,
+    "stretch_u": [
+     0,
+     10
+    ]
+   },
+   "solve": {
+    "J": 0.0005478828000919202,
+    "Js": 0.005886919327393214,
+    "window_len_u": 220.6650091679627,
+    "scale_len_u": 220.6650091679627,
+    "conn_len_u": 180.6650091679627,
+    "Jc": 0.0002916701282771357,
+    "JL": 0.00010985776984559549,
+    "JR": 0.00014635490196918905,
+    "pen": 0.0,
+    "kmax_u": 0.08309844406405036,
+    "speed_ratio": 0.5193536079683587,
+    "crossings": 0,
+    "crossings_allowed": 0,
+    "side_min_u": null,
+    "clear_short_u": null,
+    "cross_parts": [
+     0,
+     0,
+     0
+    ],
+    "ymin_u": 0.47747352777088625,
+    "prm": [
+     0.5614458556173758,
+     0.5805038595978471,
+     1.2637130392572815,
+     -0.8039278602644144
+    ],
+    "nfev": 785,
+    "hints": {},
+    "window_u": 20.0,
+    "status": 0,
+    "maxfev": 3000,
+    "kL_u": null,
+    "th_deg": null,
+    "kR_u": null,
+    "over_band_u": null,
+    "over_dmax_u": null,
+    "after_high": false,
+    "stretch_solved_u": [
+     0.0,
+     10.0
+    ]
+   }
+  },
+  {
+   "pair": "mu",
+   "iL": 8,
+   "iR": 10,
+   "solved": false,
+   "src": "k962 class cnct.mod_n_n"
+  },
+  {
+   "pair": "um",
+   "iL": 10,
+   "iR": 12,
+   "solved": false,
+   "src": "class cnct.cnt_n_n"
+  }
+ ],
+ "minimum | D1 (round)": [
+  {
+   "pair": "mi",
+   "iL": 0,
+   "iR": 2,
+   "solved": false,
+   "src": "k962 class cnct.mod_n_n"
+  },
+  {
+   "pair": "in",
+   "iL": 2,
+   "iR": 4,
+   "solved": true,
+   "exit": {
+    "letter": "i",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 3,
+    "t": 0.9513929126115187,
+    "from_end_u": 1.6486423507538177,
+    "stretch_from_end_u": [
+     0,
+     10
+    ]
+   },
+   "entry": {
+    "letter": "n",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 0,
+    "t": 0.0,
+    "s_u": 0.0,
+    "retrace": false,
+    "stretch_u": [
+     0,
+     10
+    ]
+   },
+   "solve": {
+    "J": 0.000657321193940357,
+    "Js": 0.006712129403458748,
+    "window_len_u": 216.95061974919264,
+    "scale_len_u": 216.95061974919264,
+    "conn_len_u": 158.59926209994646,
+    "Jc": 0.000311134945099115,
+    "JL": 0.00013719905613889763,
+    "JR": 0.00020898719270234448,
+    "pen": 0.0,
+    "kmax_u": 0.06823551523311011,
+    "speed_ratio": 0.8469491424943913,
+    "crossings": 0,
+    "crossings_allowed": 0,
+    "side_min_u": null,
+    "clear_short_u": null,
+    "cross_parts": [
+     0,
+     0,
+     0
+    ],
+    "ymin_u": 0.7275616210488828,
+    "prm": [
+     1.0504368313196528,
+     0.9521549193714736,
+     -1.1538065731013052,
+     1.3096493072498563
+    ],
+    "nfev": 1242,
+    "hints": {},
+    "window_u": 20.0,
+    "status": 0,
+    "maxfev": 3000,
+    "kL_u": null,
+    "th_deg": null,
+    "kR_u": null,
+    "over_band_u": null,
+    "over_dmax_u": null,
+    "after_high": false,
+    "stretch_solved_u": [
+     0.0,
+     10.0
+    ]
+   }
+  },
+  {
+   "pair": "ni",
+   "iL": 4,
+   "iR": 6,
+   "solved": true,
+   "exit": {
+    "letter": "n",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 11,
+    "t": 0.9720200315491512,
+    "from_end_u": 0.9207381566636741,
+    "stretch_from_end_u": [
+     0,
+     10
+    ]
+   },
+   "entry": {
+    "letter": "i",
+    "kind": "cusp",
+    "stroke": 0,
+    "k": 0,
+    "t": 0.025510227977724904,
+    "s_u": 0.4828141571894471,
+    "retrace": true,
+    "stretch_u": [
+     0,
+     20
+    ]
+   },
+   "solve": {
+    "J": 0.00037283908364799795,
+    "Js": 0.002396686849330211,
+    "window_len_u": 185.93591572424992,
+    "scale_len_u": 185.93591572424992,
+    "conn_len_u": 156.8566538809136,
+    "Jc": 0.0001349478311513553,
+    "JL": 0.00023789125249664268,
+    "JR": 0.0,
+    "pen": 0.0,
+    "kmax_u": 0.06006918570163123,
+    "speed_ratio": 0.7929603016365379,
+    "crossings": 0,
+    "crossings_allowed": 0,
+    "side_min_u": 0.006358177677592556,
+    "clear_short_u": null,
+    "cross_parts": [
+     0,
+     0,
+     0
+    ],
+    "ymin_u": 0.8138131927416772,
+    "prm": [
+     0.9887963879015238,
+     0.801066804592504,
+     -1.2360334589222575,
+     -3.6089288310989636
+    ],
+    "nfev": 913,
+    "hints": {},
+    "window_u": 20.0,
+    "status": 0,
+    "maxfev": 3000,
+    "kL_u": null,
+    "th_deg": null,
+    "kR_u": null,
+    "over_band_u": null,
+    "over_dmax_u": null,
+    "after_high": false,
+    "stretch_solved_u": [
+     0.0,
+     20.0
+    ]
+   }
+  },
+  {
+   "pair": "im",
+   "iL": 6,
+   "iR": 8,
+   "solved": true,
+   "exit": {
+    "letter": "i",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 3,
+    "t": 0.6886825306743509,
+    "from_end_u": 10.0,
+    "stretch_from_end_u": [
+     0,
+     10
+    ]
+   },
+   "entry": {
+    "letter": "m",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 0,
+    "t": 0.39507766849715925,
+    "s_u": 10.0,
+    "retrace": false,
+    "stretch_u": [
+     0,
+     10
+    ]
+   },
+   "solve": {
+    "J": 0.0005478828000919202,
+    "Js": 0.005886919327393214,
+    "window_len_u": 220.6650091679627,
+    "scale_len_u": 220.6650091679627,
+    "conn_len_u": 180.6650091679627,
+    "Jc": 0.0002916701282771357,
+    "JL": 0.00010985776984559549,
+    "JR": 0.00014635490196918905,
+    "pen": 0.0,
+    "kmax_u": 0.08309844406405036,
+    "speed_ratio": 0.5193536079683587,
+    "crossings": 0,
+    "crossings_allowed": 0,
+    "side_min_u": null,
+    "clear_short_u": null,
+    "cross_parts": [
+     0,
+     0,
+     0
+    ],
+    "ymin_u": 0.47747352777088625,
+    "prm": [
+     0.5614458556173758,
+     0.5805038595978471,
+     1.2637130392572815,
+     -0.8039278602644144
+    ],
+    "nfev": 785,
+    "hints": {},
+    "window_u": 20.0,
+    "status": 0,
+    "maxfev": 3000,
+    "kL_u": null,
+    "th_deg": null,
+    "kR_u": null,
+    "over_band_u": null,
+    "over_dmax_u": null,
+    "after_high": false,
+    "stretch_solved_u": [
+     0.0,
+     10.0
+    ]
+   }
+  },
+  {
+   "pair": "mu",
+   "iL": 8,
+   "iR": 10,
+   "solved": false,
+   "src": "k962 class cnct.mod_n_n"
+  },
+  {
+   "pair": "um",
+   "iL": 10,
+   "iR": 12,
+   "solved": false,
+   "src": "class cnct.cnt_n_n"
+  }
+ ],
+ "minimum | D2 (the font's oval)": [
+  {
+   "pair": "mi",
+   "iL": 0,
+   "iR": 2,
+   "solved": false,
+   "src": "k962 class cnct.mod_n_n"
+  },
+  {
+   "pair": "in",
+   "iL": 2,
+   "iR": 4,
+   "solved": true,
+   "exit": {
+    "letter": "i",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 3,
+    "t": 0.9513929126115187,
+    "from_end_u": 1.6486423507538177,
+    "stretch_from_end_u": [
+     0,
+     10
+    ]
+   },
+   "entry": {
+    "letter": "n",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 0,
+    "t": 0.0,
+    "s_u": 0.0,
+    "retrace": false,
+    "stretch_u": [
+     0,
+     10
+    ]
+   },
+   "solve": {
+    "J": 0.000657321193940357,
+    "Js": 0.006712129403458748,
+    "window_len_u": 216.95061974919264,
+    "scale_len_u": 216.95061974919264,
+    "conn_len_u": 158.59926209994646,
+    "Jc": 0.000311134945099115,
+    "JL": 0.00013719905613889763,
+    "JR": 0.00020898719270234448,
+    "pen": 0.0,
+    "kmax_u": 0.06823551523311011,
+    "speed_ratio": 0.8469491424943913,
+    "crossings": 0,
+    "crossings_allowed": 0,
+    "side_min_u": null,
+    "clear_short_u": null,
+    "cross_parts": [
+     0,
+     0,
+     0
+    ],
+    "ymin_u": 0.7275616210488828,
+    "prm": [
+     1.0504368313196528,
+     0.9521549193714736,
+     -1.1538065731013052,
+     1.3096493072498563
+    ],
+    "nfev": 1242,
+    "hints": {},
+    "window_u": 20.0,
+    "status": 0,
+    "maxfev": 3000,
+    "kL_u": null,
+    "th_deg": null,
+    "kR_u": null,
+    "over_band_u": null,
+    "over_dmax_u": null,
+    "after_high": false,
+    "stretch_solved_u": [
+     0.0,
+     10.0
+    ]
+   }
+  },
+  {
+   "pair": "ni",
+   "iL": 4,
+   "iR": 6,
+   "solved": true,
+   "exit": {
+    "letter": "n",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 11,
+    "t": 0.9720200315491512,
+    "from_end_u": 0.9207381566636741,
+    "stretch_from_end_u": [
+     0,
+     10
+    ]
+   },
+   "entry": {
+    "letter": "i",
+    "kind": "cusp",
+    "stroke": 0,
+    "k": 0,
+    "t": 0.025510227977724904,
+    "s_u": 0.4828141571894471,
+    "retrace": true,
+    "stretch_u": [
+     0,
+     20
+    ]
+   },
+   "solve": {
+    "J": 0.00037283908364799795,
+    "Js": 0.002396686849330211,
+    "window_len_u": 185.93591572424992,
+    "scale_len_u": 185.93591572424992,
+    "conn_len_u": 156.8566538809136,
+    "Jc": 0.0001349478311513553,
+    "JL": 0.00023789125249664268,
+    "JR": 0.0,
+    "pen": 0.0,
+    "kmax_u": 0.06006918570163123,
+    "speed_ratio": 0.7929603016365379,
+    "crossings": 0,
+    "crossings_allowed": 0,
+    "side_min_u": 0.006358177677592556,
+    "clear_short_u": null,
+    "cross_parts": [
+     0,
+     0,
+     0
+    ],
+    "ymin_u": 0.8138131927416772,
+    "prm": [
+     0.9887963879015238,
+     0.801066804592504,
+     -1.2360334589222575,
+     -3.6089288310989636
+    ],
+    "nfev": 913,
+    "hints": {},
+    "window_u": 20.0,
+    "status": 0,
+    "maxfev": 3000,
+    "kL_u": null,
+    "th_deg": null,
+    "kR_u": null,
+    "over_band_u": null,
+    "over_dmax_u": null,
+    "after_high": false,
+    "stretch_solved_u": [
+     0.0,
+     20.0
+    ]
+   }
+  },
+  {
+   "pair": "im",
+   "iL": 6,
+   "iR": 8,
+   "solved": true,
+   "exit": {
+    "letter": "i",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 3,
+    "t": 0.6886825306743509,
+    "from_end_u": 10.0,
+    "stretch_from_end_u": [
+     0,
+     10
+    ]
+   },
+   "entry": {
+    "letter": "m",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 0,
+    "t": 0.39507766849715925,
+    "s_u": 10.0,
+    "retrace": false,
+    "stretch_u": [
+     0,
+     10
+    ]
+   },
+   "solve": {
+    "J": 0.0005478828000919202,
+    "Js": 0.005886919327393214,
+    "window_len_u": 220.6650091679627,
+    "scale_len_u": 220.6650091679627,
+    "conn_len_u": 180.6650091679627,
+    "Jc": 0.0002916701282771357,
+    "JL": 0.00010985776984559549,
+    "JR": 0.00014635490196918905,
+    "pen": 0.0,
+    "kmax_u": 0.08309844406405036,
+    "speed_ratio": 0.5193536079683587,
+    "crossings": 0,
+    "crossings_allowed": 0,
+    "side_min_u": null,
+    "clear_short_u": null,
+    "cross_parts": [
+     0,
+     0,
+     0
+    ],
+    "ymin_u": 0.47747352777088625,
+    "prm": [
+     0.5614458556173758,
+     0.5805038595978471,
+     1.2637130392572815,
+     -0.8039278602644144
+    ],
+    "nfev": 785,
+    "hints": {},
+    "window_u": 20.0,
+    "status": 0,
+    "maxfev": 3000,
+    "kL_u": null,
+    "th_deg": null,
+    "kR_u": null,
+    "over_band_u": null,
+    "over_dmax_u": null,
+    "after_high": false,
+    "stretch_solved_u": [
+     0.0,
+     10.0
+    ]
+   }
+  },
+  {
+   "pair": "mu",
+   "iL": 8,
+   "iR": 10,
+   "solved": false,
+   "src": "k962 class cnct.mod_n_n"
+  },
+  {
+   "pair": "um",
+   "iL": 10,
+   "iR": 12,
+   "solved": false,
+   "src": "class cnct.cnt_n_n"
+  }
+ ],
+ "jet | approved (v6.8)": [
+  {
+   "pair": "je",
+   "iL": 0,
+   "iR": 2,
+   "solved": false,
+   "src": "k962 class|R cnct.ful_g_e|e"
+  },
+  {
+   "pair": "et",
+   "iL": 2,
+   "iR": 4,
+   "solved": true,
+   "exit": {
+    "letter": "e",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 2,
+    "t": 0.9614235890420473,
+    "from_end_u": 4.999999986290618,
+    "stretch_from_end_u": [
+     0,
+     5
+    ]
+   },
+   "entry": {
+    "letter": "t",
+    "kind": "cusp",
+    "stroke": 0,
+    "k": 2,
+    "t": 0.08501933498311687,
+    "s_u": 33.24174990797419,
+    "retrace": true,
+    "stretch_u": [
+     0,
+     55.7
+    ]
+   },
+   "solve": {
+    "J": 0.0002080758394059862,
+    "Js": 0.005222423761241424,
+    "window_len_u": 292.7858952967691,
+    "scale_len_u": 262.54414538879496,
+    "conn_len_u": 242.54414537508558,
+    "Jc": 2.1011514751483293e-05,
+    "JL": 1.8577103044110254e-06,
+    "JR": 0.0001852066143500919,
+    "pen": 0.0,
+    "kmax_u": 0.032505739935049925,
+    "speed_ratio": 0.7219173224417941,
+    "crossings": 0,
+    "crossings_allowed": 0,
+    "side_min_u": -0.006651408979252524,
+    "clear_short_u": null,
+    "cross_parts": [
+     0,
+     0,
+     0
+    ],
+    "ymin_u": -1.979306663548865,
+    "prm": [
+     1.7661618504226073,
+     2.056587517642904,
+     -10.225554951916497,
+     2.03648472895463
+    ],
+    "nfev": 2652,
+    "hints": {},
+    "window_u": 20.0,
+    "status": 0,
+    "maxfev": 3000,
+    "kL_u": null,
+    "th_deg": null,
+    "kR_u": null,
+    "over_band_u": null,
+    "over_dmax_u": null,
+    "after_high": false,
+    "stretch_solved_u": [
+     0.0,
+     55.7
+    ]
+   }
+  }
+ ],
+ "jet | D1 (round)": [
+  {
+   "pair": "je",
+   "iL": 0,
+   "iR": 2,
+   "solved": false,
+   "src": "k962 class|R cnct.ful_g_e|e"
+  },
+  {
+   "pair": "et",
+   "iL": 2,
+   "iR": 4,
+   "solved": true,
+   "exit": {
+    "letter": "e",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 2,
+    "t": 0.9614235890420473,
+    "from_end_u": 4.999999986290618,
+    "stretch_from_end_u": [
+     0,
+     5
+    ]
+   },
+   "entry": {
+    "letter": "t",
+    "kind": "cusp",
+    "stroke": 0,
+    "k": 2,
+    "t": 0.08501933498311687,
+    "s_u": 33.24174990797419,
+    "retrace": true,
+    "stretch_u": [
+     0,
+     55.7
+    ]
+   },
+   "solve": {
+    "J": 0.0002080758394059862,
+    "Js": 0.005222423761241424,
+    "window_len_u": 292.7858952967691,
+    "scale_len_u": 262.54414538879496,
+    "conn_len_u": 242.54414537508558,
+    "Jc": 2.1011514751483293e-05,
+    "JL": 1.8577103044110254e-06,
+    "JR": 0.0001852066143500919,
+    "pen": 0.0,
+    "kmax_u": 0.032505739935049925,
+    "speed_ratio": 0.7219173224417941,
+    "crossings": 0,
+    "crossings_allowed": 0,
+    "side_min_u": -0.006651408979252524,
+    "clear_short_u": null,
+    "cross_parts": [
+     0,
+     0,
+     0
+    ],
+    "ymin_u": -1.979306663548865,
+    "prm": [
+     1.7661618504226073,
+     2.056587517642904,
+     -10.225554951916497,
+     2.03648472895463
+    ],
+    "nfev": 2652,
+    "hints": {},
+    "window_u": 20.0,
+    "status": 0,
+    "maxfev": 3000,
+    "kL_u": null,
+    "th_deg": null,
+    "kR_u": null,
+    "over_band_u": null,
+    "over_dmax_u": null,
+    "after_high": false,
+    "stretch_solved_u": [
+     0.0,
+     55.7
+    ]
+   }
+  }
+ ],
+ "jet | D2 (the font's oval)": [
+  {
+   "pair": "je",
+   "iL": 0,
+   "iR": 2,
+   "solved": false,
+   "src": "k962 class|R cnct.ful_g_e|e"
+  },
+  {
+   "pair": "et",
+   "iL": 2,
+   "iR": 4,
+   "solved": true,
+   "exit": {
+    "letter": "e",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 2,
+    "t": 0.9614235890420473,
+    "from_end_u": 4.999999986290618,
+    "stretch_from_end_u": [
+     0,
+     5
+    ]
+   },
+   "entry": {
+    "letter": "t",
+    "kind": "cusp",
+    "stroke": 0,
+    "k": 2,
+    "t": 0.08501933498311687,
+    "s_u": 33.24174990797419,
+    "retrace": true,
+    "stretch_u": [
+     0,
+     55.7
+    ]
+   },
+   "solve": {
+    "J": 0.0002080758394059862,
+    "Js": 0.005222423761241424,
+    "window_len_u": 292.7858952967691,
+    "scale_len_u": 262.54414538879496,
+    "conn_len_u": 242.54414537508558,
+    "Jc": 2.1011514751483293e-05,
+    "JL": 1.8577103044110254e-06,
+    "JR": 0.0001852066143500919,
+    "pen": 0.0,
+    "kmax_u": 0.032505739935049925,
+    "speed_ratio": 0.7219173224417941,
+    "crossings": 0,
+    "crossings_allowed": 0,
+    "side_min_u": -0.006651408979252524,
+    "clear_short_u": null,
+    "cross_parts": [
+     0,
+     0,
+     0
+    ],
+    "ymin_u": -1.979306663548865,
+    "prm": [
+     1.7661618504226073,
+     2.056587517642904,
+     -10.225554951916497,
+     2.03648472895463
+    ],
+    "nfev": 2652,
+    "hints": {},
+    "window_u": 20.0,
+    "status": 0,
+    "maxfev": 3000,
+    "kL_u": null,
+    "th_deg": null,
+    "kR_u": null,
+    "over_band_u": null,
+    "over_dmax_u": null,
+    "after_high": false,
+    "stretch_solved_u": [
+     0.0,
+     55.7
+    ]
+   }
+  }
+ ],
+ "ice jet even | approved (v6.8)": [
+  {
+   "pair": "ic",
+   "iL": 0,
+   "iR": 2,
+   "solved": true,
+   "exit": {
+    "letter": "i",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 3,
+    "t": 0.6886825306743509,
+    "from_end_u": 10.0,
+    "stretch_from_end_u": [
+     0,
+     10
+    ]
+   },
+   "entry": {
+    "letter": "c",
+    "kind": "fused",
+    "stroke": 0,
+    "k": 0,
+    "t": 0.98587994428545,
+    "s_u": 133.41717258356113,
+    "retrace": true,
+    "stretch_u": [
+     133.41717258356113,
+     133.41717258356113
+    ]
+   },
+   "solve": {
+    "J": 0.00040356411929318175,
+    "Js": 0.006414841759447553,
+    "window_len_u": 251.43426782792378,
+    "scale_len_u": 121.01709524436265,
+    "conn_len_u": 101.01709524436265,
+    "Jc": 0.0002872536924315058,
+    "JL": 0.00010985776984559549,
+    "JR": 6.4526570160804935e-06,
+    "pen": 0.0,
+    "kmax_u": 0.07410337659990908,
+    "speed_ratio": 0.7408447787903214,
+    "crossings": 0,
+    "crossings_allowed": 0,
+    "side_min_u": null,
+    "clear_short_u": null,
+    "cross_parts": [
+     0,
+     0,
+     0
+    ],
+    "ymin_u": 0.422757673169757,
+    "prm": [
+     1.0914583073680735,
+     0.8100904596823004,
+     -0.4022459104096121,
+     -0.9457804762466215
+    ],
+    "nfev": 306,
+    "hints": {},
+    "window_u": 20.0,
+    "status": 0,
+    "maxfev": 3000,
+    "kL_u": null,
+    "th_deg": null,
+    "kR_u": null,
+    "over_band_u": null,
+    "over_dmax_u": null,
+    "after_high": false,
+    "stretch_solved_u": [
+     133.41717258356113,
+     133.41717258356113
+    ]
+   }
+  },
+  {
+   "pair": "ce",
+   "iL": 2,
+   "iR": 4,
+   "solved": false,
+   "src": "k962 class|R cnct.ful_c_e|e"
+  },
+  {
+   "pair": "je",
+   "iL": 6,
+   "iR": 8,
+   "solved": false,
+   "src": "k962 class|R cnct.ful_g_e|e"
+  },
+  {
+   "pair": "et",
+   "iL": 8,
+   "iR": 10,
+   "solved": true,
+   "exit": {
+    "letter": "e",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 2,
+    "t": 0.9614235890420473,
+    "from_end_u": 4.999999986290618,
+    "stretch_from_end_u": [
+     0,
+     5
+    ]
+   },
+   "entry": {
+    "letter": "t",
+    "kind": "cusp",
+    "stroke": 0,
+    "k": 2,
+    "t": 0.08501933498311687,
+    "s_u": 33.24174990797419,
+    "retrace": true,
+    "stretch_u": [
+     0,
+     55.7
+    ]
+   },
+   "solve": {
+    "J": 0.0002080758394059862,
+    "Js": 0.005222423761241424,
+    "window_len_u": 292.7858952967691,
+    "scale_len_u": 262.54414538879496,
+    "conn_len_u": 242.54414537508558,
+    "Jc": 2.1011514751483293e-05,
+    "JL": 1.8577103044110254e-06,
+    "JR": 0.0001852066143500919,
+    "pen": 0.0,
+    "kmax_u": 0.032505739935049925,
+    "speed_ratio": 0.7219173224417941,
+    "crossings": 0,
+    "crossings_allowed": 0,
+    "side_min_u": -0.006651408979252524,
+    "clear_short_u": null,
+    "cross_parts": [
+     0,
+     0,
+     0
+    ],
+    "ymin_u": -1.979306663548865,
+    "prm": [
+     1.7661618504226073,
+     2.056587517642904,
+     -10.225554951916497,
+     2.03648472895463
+    ],
+    "nfev": 2652,
+    "hints": {},
+    "window_u": 20.0,
+    "status": 0,
+    "maxfev": 3000,
+    "kL_u": null,
+    "th_deg": null,
+    "kR_u": null,
+    "over_band_u": null,
+    "over_dmax_u": null,
+    "after_high": false,
+    "stretch_solved_u": [
+     0.0,
+     55.7
+    ]
+   }
+  },
+  {
+   "pair": "ev",
+   "iL": 12,
+   "iR": 14,
+   "solved": true,
+   "exit": {
+    "letter": "e",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 2,
+    "t": 0.9614235890996199,
+    "from_end_u": 4.999999978754374,
+    "stretch_from_end_u": [
+     0,
+     5
+    ]
+   },
+   "entry": {
+    "letter": "v",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 0,
+    "t": 1.655176375672262e-08,
+    "s_u": 3.6628472677519546e-07,
+    "retrace": false,
+    "stretch_u": [
+     0,
+     10
+    ]
+   },
+   "solve": {
+    "J": 0.0006055275631883909,
+    "Js": 0.011447327988714623,
+    "window_len_u": 266.3933646765279,
+    "scale_len_u": 266.3933646765279,
+    "conn_len_u": 216.393365021567,
+    "Jc": 0.0002293554663482728,
+    "JL": 1.8577103057817687e-06,
+    "JR": 0.00037431438653433627,
+    "pen": 0.0,
+    "kmax_u": 0.06724329929558674,
+    "speed_ratio": 0.48948863913021884,
+    "crossings": 0,
+    "crossings_allowed": 0,
+    "side_min_u": null,
+    "clear_short_u": null,
+    "cross_parts": [
+     0,
+     0,
+     0
+    ],
+    "ymin_u": 2.9786197140458515,
+    "prm": [
+     0.5972307803267269,
+     0.9946137782139264,
+     1.5203427887130627,
+     0.07559776665042209
+    ],
+    "nfev": 2784,
+    "hints": {},
+    "window_u": 20.0,
+    "status": 0,
+    "maxfev": 3000,
+    "kL_u": null,
+    "th_deg": null,
+    "kR_u": null,
+    "over_band_u": null,
+    "over_dmax_u": null,
+    "after_high": false,
+    "stretch_solved_u": [
+     0.0,
+     10.0
+    ]
+   }
+  },
+  {
+   "pair": "ve",
+   "iL": 14,
+   "iR": 16,
+   "solved": false,
+   "src": "class|R cnct.ful_b_e|e"
+  },
+  {
+   "pair": "en",
+   "iL": 16,
+   "iR": 18,
+   "solved": true,
+   "exit": {
+    "letter": "e",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 2,
+    "t": 0.9614235897972008,
+    "from_end_u": 4.999999887441163,
+    "stretch_from_end_u": [
+     0,
+     5
+    ]
+   },
+   "entry": {
+    "letter": "n",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 0,
+    "t": 5.86978928515713e-05,
+    "s_u": 0.0016955825621677474,
+    "retrace": false,
+    "stretch_u": [
+     0,
+     10
+    ]
+   },
+   "solve": {
+    "J": 0.00042556386813357556,
+    "Js": 0.008511312612206,
+    "window_len_u": 271.4421363851682,
+    "scale_len_u": 271.4421363851682,
+    "conn_len_u": 221.44383185517157,
+    "Jc": 0.00021473418904708938,
+    "JL": 1.857710322390594e-06,
+    "JR": 0.00020897196876409562,
+    "pen": 0.0,
+    "kmax_u": 0.06824062830497184,
+    "speed_ratio": 0.5277156623080403,
+    "crossings": 0,
+    "crossings_allowed": 0,
+    "side_min_u": null,
+    "clear_short_u": null,
+    "cross_parts": [
+     0,
+     0,
+     0
+    ],
+    "ymin_u": 0.9634490438152885,
+    "prm": [
+     0.6524619750775991,
+     1.0325959477336333,
+     0.9352938047189615,
+     0.3752344033894103
+    ],
+    "nfev": 2069,
+    "hints": {},
+    "window_u": 20.0,
+    "status": 0,
+    "maxfev": 3000,
+    "kL_u": null,
+    "th_deg": null,
+    "kR_u": null,
+    "over_band_u": null,
+    "over_dmax_u": null,
+    "after_high": false,
+    "stretch_solved_u": [
+     0.0,
+     10.0
+    ]
+   }
+  }
+ ],
+ "ice jet even | D1 (round)": [
+  {
+   "pair": "ic",
+   "iL": 0,
+   "iR": 2,
+   "solved": true,
+   "exit": {
+    "letter": "i",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 3,
+    "t": 0.6886825306743509,
+    "from_end_u": 10.0,
+    "stretch_from_end_u": [
+     0,
+     10
+    ]
+   },
+   "entry": {
+    "letter": "c",
+    "kind": "fused",
+    "stroke": 0,
+    "k": 0,
+    "t": 0.98587994428545,
+    "s_u": 133.41717258356113,
+    "retrace": true,
+    "stretch_u": [
+     133.41717258356113,
+     133.41717258356113
+    ]
+   },
+   "solve": {
+    "J": 0.00040356411929318175,
+    "Js": 0.006414841759447553,
+    "window_len_u": 251.43426782792378,
+    "scale_len_u": 121.01709524436265,
+    "conn_len_u": 101.01709524436265,
+    "Jc": 0.0002872536924315058,
+    "JL": 0.00010985776984559549,
+    "JR": 6.4526570160804935e-06,
+    "pen": 0.0,
+    "kmax_u": 0.07410337659990908,
+    "speed_ratio": 0.7408447787903214,
+    "crossings": 0,
+    "crossings_allowed": 0,
+    "side_min_u": null,
+    "clear_short_u": null,
+    "cross_parts": [
+     0,
+     0,
+     0
+    ],
+    "ymin_u": 0.422757673169757,
+    "prm": [
+     1.0914583073680735,
+     0.8100904596823004,
+     -0.4022459104096121,
+     -0.9457804762466215
+    ],
+    "nfev": 306,
+    "hints": {},
+    "window_u": 20.0,
+    "status": 0,
+    "maxfev": 3000,
+    "kL_u": null,
+    "th_deg": null,
+    "kR_u": null,
+    "over_band_u": null,
+    "over_dmax_u": null,
+    "after_high": false,
+    "stretch_solved_u": [
+     133.41717258356113,
+     133.41717258356113
+    ]
+   }
+  },
+  {
+   "pair": "ce",
+   "iL": 2,
+   "iR": 4,
+   "solved": false,
+   "src": "k962 class|R cnct.ful_c_e|e"
+  },
+  {
+   "pair": "je",
+   "iL": 6,
+   "iR": 8,
+   "solved": false,
+   "src": "k962 class|R cnct.ful_g_e|e"
+  },
+  {
+   "pair": "et",
+   "iL": 8,
+   "iR": 10,
+   "solved": true,
+   "exit": {
+    "letter": "e",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 2,
+    "t": 0.9614235890420473,
+    "from_end_u": 4.999999986290618,
+    "stretch_from_end_u": [
+     0,
+     5
+    ]
+   },
+   "entry": {
+    "letter": "t",
+    "kind": "cusp",
+    "stroke": 0,
+    "k": 2,
+    "t": 0.08501933498311687,
+    "s_u": 33.24174990797419,
+    "retrace": true,
+    "stretch_u": [
+     0,
+     55.7
+    ]
+   },
+   "solve": {
+    "J": 0.0002080758394059862,
+    "Js": 0.005222423761241424,
+    "window_len_u": 292.7858952967691,
+    "scale_len_u": 262.54414538879496,
+    "conn_len_u": 242.54414537508558,
+    "Jc": 2.1011514751483293e-05,
+    "JL": 1.8577103044110254e-06,
+    "JR": 0.0001852066143500919,
+    "pen": 0.0,
+    "kmax_u": 0.032505739935049925,
+    "speed_ratio": 0.7219173224417941,
+    "crossings": 0,
+    "crossings_allowed": 0,
+    "side_min_u": -0.006651408979252524,
+    "clear_short_u": null,
+    "cross_parts": [
+     0,
+     0,
+     0
+    ],
+    "ymin_u": -1.979306663548865,
+    "prm": [
+     1.7661618504226073,
+     2.056587517642904,
+     -10.225554951916497,
+     2.03648472895463
+    ],
+    "nfev": 2652,
+    "hints": {},
+    "window_u": 20.0,
+    "status": 0,
+    "maxfev": 3000,
+    "kL_u": null,
+    "th_deg": null,
+    "kR_u": null,
+    "over_band_u": null,
+    "over_dmax_u": null,
+    "after_high": false,
+    "stretch_solved_u": [
+     0.0,
+     55.7
+    ]
+   }
+  },
+  {
+   "pair": "ev",
+   "iL": 12,
+   "iR": 14,
+   "solved": true,
+   "exit": {
+    "letter": "e",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 2,
+    "t": 0.9614235890996199,
+    "from_end_u": 4.999999978754374,
+    "stretch_from_end_u": [
+     0,
+     5
+    ]
+   },
+   "entry": {
+    "letter": "v",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 0,
+    "t": 1.655176375672262e-08,
+    "s_u": 3.6628472677519546e-07,
+    "retrace": false,
+    "stretch_u": [
+     0,
+     10
+    ]
+   },
+   "solve": {
+    "J": 0.0006055275631883909,
+    "Js": 0.011447327988714623,
+    "window_len_u": 266.3933646765279,
+    "scale_len_u": 266.3933646765279,
+    "conn_len_u": 216.393365021567,
+    "Jc": 0.0002293554663482728,
+    "JL": 1.8577103057817687e-06,
+    "JR": 0.00037431438653433627,
+    "pen": 0.0,
+    "kmax_u": 0.06724329929558674,
+    "speed_ratio": 0.48948863913021884,
+    "crossings": 0,
+    "crossings_allowed": 0,
+    "side_min_u": null,
+    "clear_short_u": null,
+    "cross_parts": [
+     0,
+     0,
+     0
+    ],
+    "ymin_u": 2.9786197140458515,
+    "prm": [
+     0.5972307803267269,
+     0.9946137782139264,
+     1.5203427887130627,
+     0.07559776665042209
+    ],
+    "nfev": 2784,
+    "hints": {},
+    "window_u": 20.0,
+    "status": 0,
+    "maxfev": 3000,
+    "kL_u": null,
+    "th_deg": null,
+    "kR_u": null,
+    "over_band_u": null,
+    "over_dmax_u": null,
+    "after_high": false,
+    "stretch_solved_u": [
+     0.0,
+     10.0
+    ]
+   }
+  },
+  {
+   "pair": "ve",
+   "iL": 14,
+   "iR": 16,
+   "solved": false,
+   "src": "class|R cnct.ful_b_e|e"
+  },
+  {
+   "pair": "en",
+   "iL": 16,
+   "iR": 18,
+   "solved": true,
+   "exit": {
+    "letter": "e",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 2,
+    "t": 0.9614235897972008,
+    "from_end_u": 4.999999887441163,
+    "stretch_from_end_u": [
+     0,
+     5
+    ]
+   },
+   "entry": {
+    "letter": "n",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 0,
+    "t": 5.86978928515713e-05,
+    "s_u": 0.0016955825621677474,
+    "retrace": false,
+    "stretch_u": [
+     0,
+     10
+    ]
+   },
+   "solve": {
+    "J": 0.00042556386813357556,
+    "Js": 0.008511312612206,
+    "window_len_u": 271.4421363851682,
+    "scale_len_u": 271.4421363851682,
+    "conn_len_u": 221.44383185517157,
+    "Jc": 0.00021473418904708938,
+    "JL": 1.857710322390594e-06,
+    "JR": 0.00020897196876409562,
+    "pen": 0.0,
+    "kmax_u": 0.06824062830497184,
+    "speed_ratio": 0.5277156623080403,
+    "crossings": 0,
+    "crossings_allowed": 0,
+    "side_min_u": null,
+    "clear_short_u": null,
+    "cross_parts": [
+     0,
+     0,
+     0
+    ],
+    "ymin_u": 0.9634490438152885,
+    "prm": [
+     0.6524619750775991,
+     1.0325959477336333,
+     0.9352938047189615,
+     0.3752344033894103
+    ],
+    "nfev": 2069,
+    "hints": {},
+    "window_u": 20.0,
+    "status": 0,
+    "maxfev": 3000,
+    "kL_u": null,
+    "th_deg": null,
+    "kR_u": null,
+    "over_band_u": null,
+    "over_dmax_u": null,
+    "after_high": false,
+    "stretch_solved_u": [
+     0.0,
+     10.0
+    ]
+   }
+  }
+ ],
+ "ice jet even | D2 (the font's oval)": [
+  {
+   "pair": "ic",
+   "iL": 0,
+   "iR": 2,
+   "solved": true,
+   "exit": {
+    "letter": "i",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 3,
+    "t": 0.6886825306743509,
+    "from_end_u": 10.0,
+    "stretch_from_end_u": [
+     0,
+     10
+    ]
+   },
+   "entry": {
+    "letter": "c",
+    "kind": "fused",
+    "stroke": 0,
+    "k": 0,
+    "t": 0.98587994428545,
+    "s_u": 133.41717258356113,
+    "retrace": true,
+    "stretch_u": [
+     133.41717258356113,
+     133.41717258356113
+    ]
+   },
+   "solve": {
+    "J": 0.00040356411929318175,
+    "Js": 0.006414841759447553,
+    "window_len_u": 251.43426782792378,
+    "scale_len_u": 121.01709524436265,
+    "conn_len_u": 101.01709524436265,
+    "Jc": 0.0002872536924315058,
+    "JL": 0.00010985776984559549,
+    "JR": 6.4526570160804935e-06,
+    "pen": 0.0,
+    "kmax_u": 0.07410337659990908,
+    "speed_ratio": 0.7408447787903214,
+    "crossings": 0,
+    "crossings_allowed": 0,
+    "side_min_u": null,
+    "clear_short_u": null,
+    "cross_parts": [
+     0,
+     0,
+     0
+    ],
+    "ymin_u": 0.422757673169757,
+    "prm": [
+     1.0914583073680735,
+     0.8100904596823004,
+     -0.4022459104096121,
+     -0.9457804762466215
+    ],
+    "nfev": 306,
+    "hints": {},
+    "window_u": 20.0,
+    "status": 0,
+    "maxfev": 3000,
+    "kL_u": null,
+    "th_deg": null,
+    "kR_u": null,
+    "over_band_u": null,
+    "over_dmax_u": null,
+    "after_high": false,
+    "stretch_solved_u": [
+     133.41717258356113,
+     133.41717258356113
+    ]
+   }
+  },
+  {
+   "pair": "ce",
+   "iL": 2,
+   "iR": 4,
+   "solved": false,
+   "src": "k962 class|R cnct.ful_c_e|e"
+  },
+  {
+   "pair": "je",
+   "iL": 6,
+   "iR": 8,
+   "solved": false,
+   "src": "k962 class|R cnct.ful_g_e|e"
+  },
+  {
+   "pair": "et",
+   "iL": 8,
+   "iR": 10,
+   "solved": true,
+   "exit": {
+    "letter": "e",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 2,
+    "t": 0.9614235890420473,
+    "from_end_u": 4.999999986290618,
+    "stretch_from_end_u": [
+     0,
+     5
+    ]
+   },
+   "entry": {
+    "letter": "t",
+    "kind": "cusp",
+    "stroke": 0,
+    "k": 2,
+    "t": 0.08501933498311687,
+    "s_u": 33.24174990797419,
+    "retrace": true,
+    "stretch_u": [
+     0,
+     55.7
+    ]
+   },
+   "solve": {
+    "J": 0.0002080758394059862,
+    "Js": 0.005222423761241424,
+    "window_len_u": 292.7858952967691,
+    "scale_len_u": 262.54414538879496,
+    "conn_len_u": 242.54414537508558,
+    "Jc": 2.1011514751483293e-05,
+    "JL": 1.8577103044110254e-06,
+    "JR": 0.0001852066143500919,
+    "pen": 0.0,
+    "kmax_u": 0.032505739935049925,
+    "speed_ratio": 0.7219173224417941,
+    "crossings": 0,
+    "crossings_allowed": 0,
+    "side_min_u": -0.006651408979252524,
+    "clear_short_u": null,
+    "cross_parts": [
+     0,
+     0,
+     0
+    ],
+    "ymin_u": -1.979306663548865,
+    "prm": [
+     1.7661618504226073,
+     2.056587517642904,
+     -10.225554951916497,
+     2.03648472895463
+    ],
+    "nfev": 2652,
+    "hints": {},
+    "window_u": 20.0,
+    "status": 0,
+    "maxfev": 3000,
+    "kL_u": null,
+    "th_deg": null,
+    "kR_u": null,
+    "over_band_u": null,
+    "over_dmax_u": null,
+    "after_high": false,
+    "stretch_solved_u": [
+     0.0,
+     55.7
+    ]
+   }
+  },
+  {
+   "pair": "ev",
+   "iL": 12,
+   "iR": 14,
+   "solved": true,
+   "exit": {
+    "letter": "e",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 2,
+    "t": 0.9614235890996199,
+    "from_end_u": 4.999999978754374,
+    "stretch_from_end_u": [
+     0,
+     5
+    ]
+   },
+   "entry": {
+    "letter": "v",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 0,
+    "t": 1.655176375672262e-08,
+    "s_u": 3.6628472677519546e-07,
+    "retrace": false,
+    "stretch_u": [
+     0,
+     10
+    ]
+   },
+   "solve": {
+    "J": 0.0006055275631883909,
+    "Js": 0.011447327988714623,
+    "window_len_u": 266.3933646765279,
+    "scale_len_u": 266.3933646765279,
+    "conn_len_u": 216.393365021567,
+    "Jc": 0.0002293554663482728,
+    "JL": 1.8577103057817687e-06,
+    "JR": 0.00037431438653433627,
+    "pen": 0.0,
+    "kmax_u": 0.06724329929558674,
+    "speed_ratio": 0.48948863913021884,
+    "crossings": 0,
+    "crossings_allowed": 0,
+    "side_min_u": null,
+    "clear_short_u": null,
+    "cross_parts": [
+     0,
+     0,
+     0
+    ],
+    "ymin_u": 2.9786197140458515,
+    "prm": [
+     0.5972307803267269,
+     0.9946137782139264,
+     1.5203427887130627,
+     0.07559776665042209
+    ],
+    "nfev": 2784,
+    "hints": {},
+    "window_u": 20.0,
+    "status": 0,
+    "maxfev": 3000,
+    "kL_u": null,
+    "th_deg": null,
+    "kR_u": null,
+    "over_band_u": null,
+    "over_dmax_u": null,
+    "after_high": false,
+    "stretch_solved_u": [
+     0.0,
+     10.0
+    ]
+   }
+  },
+  {
+   "pair": "ve",
+   "iL": 14,
+   "iR": 16,
+   "solved": false,
+   "src": "class|R cnct.ful_b_e|e"
+  },
+  {
+   "pair": "en",
+   "iL": 16,
+   "iR": 18,
+   "solved": true,
+   "exit": {
+    "letter": "e",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 2,
+    "t": 0.9614235897972008,
+    "from_end_u": 4.999999887441163,
+    "stretch_from_end_u": [
+     0,
+     5
+    ]
+   },
+   "entry": {
+    "letter": "n",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 0,
+    "t": 5.86978928515713e-05,
+    "s_u": 0.0016955825621677474,
+    "retrace": false,
+    "stretch_u": [
+     0,
+     10
+    ]
+   },
+   "solve": {
+    "J": 0.00042556386813357556,
+    "Js": 0.008511312612206,
+    "window_len_u": 271.4421363851682,
+    "scale_len_u": 271.4421363851682,
+    "conn_len_u": 221.44383185517157,
+    "Jc": 0.00021473418904708938,
+    "JL": 1.857710322390594e-06,
+    "JR": 0.00020897196876409562,
+    "pen": 0.0,
+    "kmax_u": 0.06824062830497184,
+    "speed_ratio": 0.5277156623080403,
+    "crossings": 0,
+    "crossings_allowed": 0,
+    "side_min_u": null,
+    "clear_short_u": null,
+    "cross_parts": [
+     0,
+     0,
+     0
+    ],
+    "ymin_u": 0.9634490438152885,
+    "prm": [
+     0.6524619750775991,
+     1.0325959477336333,
+     0.9352938047189615,
+     0.3752344033894103
+    ],
+    "nfev": 2069,
+    "hints": {},
+    "window_u": 20.0,
+    "status": 0,
+    "maxfev": 3000,
+    "kL_u": null,
+    "th_deg": null,
+    "kR_u": null,
+    "over_band_u": null,
+    "over_dmax_u": null,
+    "after_high": false,
+    "stretch_solved_u": [
+     0.0,
+     10.0
+    ]
+   }
+  }
+ ],
+ "which | approved (v6.8)": [
+  {
+   "pair": "wh",
+   "iL": 0,
+   "iR": 2,
+   "solved": false,
+   "src": "class|R cnct.lop_b_h|h"
+  },
+  {
+   "pair": "hi",
+   "iL": 2,
+   "iR": 4,
+   "solved": true,
+   "exit": {
+    "letter": "h",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 14,
+    "t": 0.9999999995956029,
+    "from_end_u": 1.4286797522800043e-08,
+    "stretch_from_end_u": [
+     0,
+     10
+    ]
+   },
+   "entry": {
+    "letter": "i",
+    "kind": "cusp",
+    "stroke": 0,
+    "k": 0,
+    "t": 7.981767762676477e-08,
+    "s_u": 1.5027663603679915e-06,
+    "retrace": true,
+    "stretch_u": [
+     0,
+     20
+    ]
+   },
+   "solve": {
+    "J": 0.00028404667631521773,
+    "Js": 0.0018420899983791648,
+    "window_len_u": 186.48348537976705,
+    "scale_len_u": 186.48348537976705,
+    "conn_len_u": 156.48348539405384,
+    "Jc": 0.00013248093002873125,
+    "JL": 0.00015156574628648648,
+    "JR": 0.0,
+    "pen": 0.0,
+    "kmax_u": 0.0592498927459019,
+    "speed_ratio": 0.7775456278548576,
+    "crossings": 0,
+    "crossings_allowed": 0,
+    "side_min_u": 0.006317008656056289,
+    "clear_short_u": null,
+    "cross_parts": [
+     0,
+     0,
+     0
+    ],
+    "ymin_u": 1.0372981863864887,
+    "prm": [
+     0.9854023790139252,
+     0.7846909112829983,
+     -1.199979170752533,
+     -3.7819562173506096
+    ],
+    "nfev": 2076,
+    "hints": {},
+    "window_u": 20.0,
+    "status": 0,
+    "maxfev": 3000,
+    "kL_u": null,
+    "th_deg": null,
+    "kR_u": null,
+    "over_band_u": null,
+    "over_dmax_u": null,
+    "after_high": false,
+    "stretch_solved_u": [
+     0.0,
+     20.0
+    ]
+   }
+  },
+  {
+   "pair": "ic",
+   "iL": 4,
+   "iR": 6,
+   "solved": true,
+   "exit": {
+    "letter": "i",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 3,
+    "t": 0.6886825306743509,
+    "from_end_u": 10.0,
+    "stretch_from_end_u": [
+     0,
+     10
+    ]
+   },
+   "entry": {
+    "letter": "c",
+    "kind": "fused",
+    "stroke": 0,
+    "k": 0,
+    "t": 0.98587994428545,
+    "s_u": 133.41717258356113,
+    "retrace": true,
+    "stretch_u": [
+     133.41717258356113,
+     133.41717258356113
+    ]
+   },
+   "solve": {
+    "J": 0.00040440077291780595,
+    "Js": 0.006439195140876962,
+    "window_len_u": 251.57831454378834,
+    "scale_len_u": 121.16114196022721,
+    "conn_len_u": 101.16114196022721,
+    "Jc": 0.00028809034605612995,
+    "JL": 0.00010985776984559549,
+    "JR": 6.4526570160804935e-06,
+    "pen": 0.0,
+    "kmax_u": 0.07410337659990905,
+    "speed_ratio": 0.7417903911857183,
+    "crossings": 0,
+    "crossings_allowed": 0,
+    "side_min_u": null,
+    "clear_short_u": null,
+    "cross_parts": [
+     0,
+     0,
+     0
+    ],
+    "ymin_u": 0.42248737395343183,
+    "prm": [
+     1.0899038668530319,
+     0.8110544120496987,
+     -0.40232132369536094,
+     -0.9526916575733123
+    ],
+    "nfev": 304,
+    "hints": {},
+    "window_u": 20.0,
+    "status": 0,
+    "maxfev": 3000,
+    "kL_u": null,
+    "th_deg": null,
+    "kR_u": null,
+    "over_band_u": null,
+    "over_dmax_u": null,
+    "after_high": false,
+    "stretch_solved_u": [
+     133.41717258356113,
+     133.41717258356113
+    ]
+   }
+  },
+  {
+   "pair": "ch",
+   "iL": 6,
+   "iR": 8,
+   "solved": false,
+   "src": "class cnct.lop_c_h"
+  }
+ ],
+ "which | D1 (round)": [
+  {
+   "pair": "wh",
+   "iL": 0,
+   "iR": 2,
+   "solved": false,
+   "src": "class|R cnct.lop_b_h|h"
+  },
+  {
+   "pair": "hi",
+   "iL": 2,
+   "iR": 4,
+   "solved": true,
+   "exit": {
+    "letter": "h",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 14,
+    "t": 0.9999999995956029,
+    "from_end_u": 1.4286797522800043e-08,
+    "stretch_from_end_u": [
+     0,
+     10
+    ]
+   },
+   "entry": {
+    "letter": "i",
+    "kind": "cusp",
+    "stroke": 0,
+    "k": 0,
+    "t": 7.981767762676477e-08,
+    "s_u": 1.5027663603679915e-06,
+    "retrace": true,
+    "stretch_u": [
+     0,
+     20
+    ]
+   },
+   "solve": {
+    "J": 0.00028404667631521773,
+    "Js": 0.0018420899983791648,
+    "window_len_u": 186.48348537976705,
+    "scale_len_u": 186.48348537976705,
+    "conn_len_u": 156.48348539405384,
+    "Jc": 0.00013248093002873125,
+    "JL": 0.00015156574628648648,
+    "JR": 0.0,
+    "pen": 0.0,
+    "kmax_u": 0.0592498927459019,
+    "speed_ratio": 0.7775456278548576,
+    "crossings": 0,
+    "crossings_allowed": 0,
+    "side_min_u": 0.006317008656056289,
+    "clear_short_u": null,
+    "cross_parts": [
+     0,
+     0,
+     0
+    ],
+    "ymin_u": 1.0372981863864887,
+    "prm": [
+     0.9854023790139252,
+     0.7846909112829983,
+     -1.199979170752533,
+     -3.7819562173506096
+    ],
+    "nfev": 2076,
+    "hints": {},
+    "window_u": 20.0,
+    "status": 0,
+    "maxfev": 3000,
+    "kL_u": null,
+    "th_deg": null,
+    "kR_u": null,
+    "over_band_u": null,
+    "over_dmax_u": null,
+    "after_high": false,
+    "stretch_solved_u": [
+     0.0,
+     20.0
+    ]
+   }
+  },
+  {
+   "pair": "ic",
+   "iL": 4,
+   "iR": 6,
+   "solved": true,
+   "exit": {
+    "letter": "i",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 3,
+    "t": 0.6886825306743509,
+    "from_end_u": 10.0,
+    "stretch_from_end_u": [
+     0,
+     10
+    ]
+   },
+   "entry": {
+    "letter": "c",
+    "kind": "fused",
+    "stroke": 0,
+    "k": 0,
+    "t": 0.98587994428545,
+    "s_u": 133.41717258356113,
+    "retrace": true,
+    "stretch_u": [
+     133.41717258356113,
+     133.41717258356113
+    ]
+   },
+   "solve": {
+    "J": 0.00040440077291780595,
+    "Js": 0.006439195140876962,
+    "window_len_u": 251.57831454378834,
+    "scale_len_u": 121.16114196022721,
+    "conn_len_u": 101.16114196022721,
+    "Jc": 0.00028809034605612995,
+    "JL": 0.00010985776984559549,
+    "JR": 6.4526570160804935e-06,
+    "pen": 0.0,
+    "kmax_u": 0.07410337659990905,
+    "speed_ratio": 0.7417903911857183,
+    "crossings": 0,
+    "crossings_allowed": 0,
+    "side_min_u": null,
+    "clear_short_u": null,
+    "cross_parts": [
+     0,
+     0,
+     0
+    ],
+    "ymin_u": 0.42248737395343183,
+    "prm": [
+     1.0899038668530319,
+     0.8110544120496987,
+     -0.40232132369536094,
+     -0.9526916575733123
+    ],
+    "nfev": 304,
+    "hints": {},
+    "window_u": 20.0,
+    "status": 0,
+    "maxfev": 3000,
+    "kL_u": null,
+    "th_deg": null,
+    "kR_u": null,
+    "over_band_u": null,
+    "over_dmax_u": null,
+    "after_high": false,
+    "stretch_solved_u": [
+     133.41717258356113,
+     133.41717258356113
+    ]
+   }
+  },
+  {
+   "pair": "ch",
+   "iL": 6,
+   "iR": 8,
+   "solved": false,
+   "src": "class cnct.lop_c_h"
+  }
+ ],
+ "which | D2 (the font's oval)": [
+  {
+   "pair": "wh",
+   "iL": 0,
+   "iR": 2,
+   "solved": false,
+   "src": "class|R cnct.lop_b_h|h"
+  },
+  {
+   "pair": "hi",
+   "iL": 2,
+   "iR": 4,
+   "solved": true,
+   "exit": {
+    "letter": "h",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 14,
+    "t": 0.9999999995956029,
+    "from_end_u": 1.4286797522800043e-08,
+    "stretch_from_end_u": [
+     0,
+     10
+    ]
+   },
+   "entry": {
+    "letter": "i",
+    "kind": "cusp",
+    "stroke": 0,
+    "k": 0,
+    "t": 7.981767762676477e-08,
+    "s_u": 1.5027663603679915e-06,
+    "retrace": true,
+    "stretch_u": [
+     0,
+     20
+    ]
+   },
+   "solve": {
+    "J": 0.00028404667631521773,
+    "Js": 0.0018420899983791648,
+    "window_len_u": 186.48348537976705,
+    "scale_len_u": 186.48348537976705,
+    "conn_len_u": 156.48348539405384,
+    "Jc": 0.00013248093002873125,
+    "JL": 0.00015156574628648648,
+    "JR": 0.0,
+    "pen": 0.0,
+    "kmax_u": 0.0592498927459019,
+    "speed_ratio": 0.7775456278548576,
+    "crossings": 0,
+    "crossings_allowed": 0,
+    "side_min_u": 0.006317008656056289,
+    "clear_short_u": null,
+    "cross_parts": [
+     0,
+     0,
+     0
+    ],
+    "ymin_u": 1.0372981863864887,
+    "prm": [
+     0.9854023790139252,
+     0.7846909112829983,
+     -1.199979170752533,
+     -3.7819562173506096
+    ],
+    "nfev": 2076,
+    "hints": {},
+    "window_u": 20.0,
+    "status": 0,
+    "maxfev": 3000,
+    "kL_u": null,
+    "th_deg": null,
+    "kR_u": null,
+    "over_band_u": null,
+    "over_dmax_u": null,
+    "after_high": false,
+    "stretch_solved_u": [
+     0.0,
+     20.0
+    ]
+   }
+  },
+  {
+   "pair": "ic",
+   "iL": 4,
+   "iR": 6,
+   "solved": true,
+   "exit": {
+    "letter": "i",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 3,
+    "t": 0.6886825306743509,
+    "from_end_u": 10.0,
+    "stretch_from_end_u": [
+     0,
+     10
+    ]
+   },
+   "entry": {
+    "letter": "c",
+    "kind": "fused",
+    "stroke": 0,
+    "k": 0,
+    "t": 0.98587994428545,
+    "s_u": 133.41717258356113,
+    "retrace": true,
+    "stretch_u": [
+     133.41717258356113,
+     133.41717258356113
+    ]
+   },
+   "solve": {
+    "J": 0.00040440077291780595,
+    "Js": 0.006439195140876962,
+    "window_len_u": 251.57831454378834,
+    "scale_len_u": 121.16114196022721,
+    "conn_len_u": 101.16114196022721,
+    "Jc": 0.00028809034605612995,
+    "JL": 0.00010985776984559549,
+    "JR": 6.4526570160804935e-06,
+    "pen": 0.0,
+    "kmax_u": 0.07410337659990905,
+    "speed_ratio": 0.7417903911857183,
+    "crossings": 0,
+    "crossings_allowed": 0,
+    "side_min_u": null,
+    "clear_short_u": null,
+    "cross_parts": [
+     0,
+     0,
+     0
+    ],
+    "ymin_u": 0.42248737395343183,
+    "prm": [
+     1.0899038668530319,
+     0.8110544120496987,
+     -0.40232132369536094,
+     -0.9526916575733123
+    ],
+    "nfev": 304,
+    "hints": {},
+    "window_u": 20.0,
+    "status": 0,
+    "maxfev": 3000,
+    "kL_u": null,
+    "th_deg": null,
+    "kR_u": null,
+    "over_band_u": null,
+    "over_dmax_u": null,
+    "after_high": false,
+    "stretch_solved_u": [
+     133.41717258356113,
+     133.41717258356113
+    ]
+   }
+  },
+  {
+   "pair": "ch",
+   "iL": 6,
+   "iR": 8,
+   "solved": false,
+   "src": "class cnct.lop_c_h"
+  }
+ ],
+ "hippo | approved (v6.8)": [
+  {
+   "pair": "hi",
+   "iL": 0,
+   "iR": 2,
+   "solved": true,
+   "exit": {
+    "letter": "h",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 14,
+    "t": 0.999999998075378,
+    "from_end_u": 6.7994278651895e-08,
+    "stretch_from_end_u": [
+     0,
+     10
+    ]
+   },
+   "entry": {
+    "letter": "i",
+    "kind": "cusp",
+    "stroke": 0,
+    "k": 0,
+    "t": 9.83926974469858e-10,
+    "s_u": 1.8524873214253286e-08,
+    "retrace": true,
+    "stretch_u": [
+     0,
+     20
+    ]
+   },
+   "solve": {
+    "J": 0.0002840987474826294,
+    "Js": 0.001843560671832685,
+    "window_len_u": 186.52170295809478,
+    "scale_len_u": 186.52170295809478,
+    "conn_len_u": 156.52170302608906,
+    "Jc": 0.00013253300155442838,
+    "JL": 0.00015156574592820103,
+    "JR": 0.0,
+    "pen": 0.0,
+    "kmax_u": 0.05924989288496188,
+    "speed_ratio": 0.7775729195454543,
+    "crossings": 0,
+    "crossings_allowed": 0,
+    "side_min_u": 0.006323121892488112,
+    "clear_short_u": null,
+    "cross_parts": [
+     0,
+     0,
+     0
+    ],
+    "ymin_u": 1.0372981734030742,
+    "prm": [
+     0.9852941835610716,
+     0.7847203861275301,
+     -1.199810492396075,
+     -3.7790573576755104
+    ],
+    "nfev": 1681,
+    "hints": {},
+    "window_u": 20.0,
+    "status": 0,
+    "maxfev": 3000,
+    "kL_u": null,
+    "th_deg": null,
+    "kR_u": null,
+    "over_band_u": null,
+    "over_dmax_u": null,
+    "after_high": false,
+    "stretch_solved_u": [
+     0.0,
+     20.0
+    ]
+   }
+  },
+  {
+   "pair": "ip",
+   "iL": 2,
+   "iR": 4,
+   "solved": true,
+   "exit": {
+    "letter": "i",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 3,
+    "t": 0.955860057284513,
+    "from_end_u": 1.4988835928696176,
+    "stretch_from_end_u": [
+     0,
+     10
+    ]
+   },
+   "entry": {
+    "letter": "p",
+    "kind": "cusp",
+    "stroke": 0,
+    "k": 0,
+    "t": 0.6292242822968164,
+    "s_u": 10.89147563888455,
+    "retrace": true,
+    "stretch_u": [
+     0,
+     20
+    ]
+   },
+   "solve": {
+    "J": 0.0005162400857110026,
+    "Js": 0.0033278455416046247,
+    "window_len_u": 186.1103298570841,
+    "scale_len_u": 178.21885421819957,
+    "conn_len_u": 149.71773781106918,
+    "Jc": 0.00024088674528292467,
+    "JL": 0.00013764650594819215,
+    "JR": 0.00013770683447988583,
+    "pen": 0.0,
+    "kmax_u": 0.0587495479634184,
+    "speed_ratio": 0.8511481836748854,
+    "crossings": 0,
+    "crossings_allowed": 0,
+    "side_min_u": 0.0011242274109097268,
+    "clear_short_u": null,
+    "cross_parts": [
+     0,
+     0,
+     0
+    ],
+    "ymin_u": 0.7525054208223534,
+    "prm": [
+     0.9722487726997597,
+     0.8711559684296915,
+     -0.9601524164342132,
+     -0.5832799779406995
+    ],
+    "nfev": 440,
+    "hints": {},
+    "window_u": 20.0,
+    "status": 0,
+    "maxfev": 3000,
+    "kL_u": null,
+    "th_deg": null,
+    "kR_u": null,
+    "over_band_u": null,
+    "over_dmax_u": null,
+    "after_high": false,
+    "stretch_solved_u": [
+     0.0,
+     20.0
+    ]
+   }
+  },
+  {
+   "pair": "pp",
+   "iL": 4,
+   "iR": 6,
+   "solved": false,
+   "src": "k962 class cnct.mod_n_n"
+  },
+  {
+   "pair": "po",
+   "iL": 6,
+   "iR": 8,
+   "solved": false,
+   "src": "k962 class cnct.mod_n_o"
+  }
+ ],
+ "hippo | D1 (round)": [
+  {
+   "pair": "hi",
+   "iL": 0,
+   "iR": 2,
+   "solved": true,
+   "exit": {
+    "letter": "h",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 14,
+    "t": 0.999999998075378,
+    "from_end_u": 6.7994278651895e-08,
+    "stretch_from_end_u": [
+     0,
+     10
+    ]
+   },
+   "entry": {
+    "letter": "i",
+    "kind": "cusp",
+    "stroke": 0,
+    "k": 0,
+    "t": 9.83926974469858e-10,
+    "s_u": 1.8524873214253286e-08,
+    "retrace": true,
+    "stretch_u": [
+     0,
+     20
+    ]
+   },
+   "solve": {
+    "J": 0.0002840987474826294,
+    "Js": 0.001843560671832685,
+    "window_len_u": 186.52170295809478,
+    "scale_len_u": 186.52170295809478,
+    "conn_len_u": 156.52170302608906,
+    "Jc": 0.00013253300155442838,
+    "JL": 0.00015156574592820103,
+    "JR": 0.0,
+    "pen": 0.0,
+    "kmax_u": 0.05924989288496188,
+    "speed_ratio": 0.7775729195454543,
+    "crossings": 0,
+    "crossings_allowed": 0,
+    "side_min_u": 0.006323121892488112,
+    "clear_short_u": null,
+    "cross_parts": [
+     0,
+     0,
+     0
+    ],
+    "ymin_u": 1.0372981734030742,
+    "prm": [
+     0.9852941835610716,
+     0.7847203861275301,
+     -1.199810492396075,
+     -3.7790573576755104
+    ],
+    "nfev": 1681,
+    "hints": {},
+    "window_u": 20.0,
+    "status": 0,
+    "maxfev": 3000,
+    "kL_u": null,
+    "th_deg": null,
+    "kR_u": null,
+    "over_band_u": null,
+    "over_dmax_u": null,
+    "after_high": false,
+    "stretch_solved_u": [
+     0.0,
+     20.0
+    ]
+   }
+  },
+  {
+   "pair": "ip",
+   "iL": 2,
+   "iR": 4,
+   "solved": true,
+   "exit": {
+    "letter": "i",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 3,
+    "t": 0.955860057284513,
+    "from_end_u": 1.4988835928696176,
+    "stretch_from_end_u": [
+     0,
+     10
+    ]
+   },
+   "entry": {
+    "letter": "p",
+    "kind": "cusp",
+    "stroke": 0,
+    "k": 0,
+    "t": 0.6292242822968164,
+    "s_u": 10.89147563888455,
+    "retrace": true,
+    "stretch_u": [
+     0,
+     20
+    ]
+   },
+   "solve": {
+    "J": 0.0005162400857110026,
+    "Js": 0.0033278455416046247,
+    "window_len_u": 186.1103298570841,
+    "scale_len_u": 178.21885421819957,
+    "conn_len_u": 149.71773781106918,
+    "Jc": 0.00024088674528292467,
+    "JL": 0.00013764650594819215,
+    "JR": 0.00013770683447988583,
+    "pen": 0.0,
+    "kmax_u": 0.0587495479634184,
+    "speed_ratio": 0.8511481836748854,
+    "crossings": 0,
+    "crossings_allowed": 0,
+    "side_min_u": 0.0011242274109097268,
+    "clear_short_u": null,
+    "cross_parts": [
+     0,
+     0,
+     0
+    ],
+    "ymin_u": 0.7525054208223534,
+    "prm": [
+     0.9722487726997597,
+     0.8711559684296915,
+     -0.9601524164342132,
+     -0.5832799779406995
+    ],
+    "nfev": 440,
+    "hints": {},
+    "window_u": 20.0,
+    "status": 0,
+    "maxfev": 3000,
+    "kL_u": null,
+    "th_deg": null,
+    "kR_u": null,
+    "over_band_u": null,
+    "over_dmax_u": null,
+    "after_high": false,
+    "stretch_solved_u": [
+     0.0,
+     20.0
+    ]
+   }
+  },
+  {
+   "pair": "pp",
+   "iL": 4,
+   "iR": 6,
+   "solved": false,
+   "src": "k962 class cnct.mod_n_n"
+  },
+  {
+   "pair": "po",
+   "iL": 6,
+   "iR": 8,
+   "solved": false,
+   "src": "k962 class cnct.mod_n_o"
+  }
+ ],
+ "hippo | D2 (the font's oval)": [
+  {
+   "pair": "hi",
+   "iL": 0,
+   "iR": 2,
+   "solved": true,
+   "exit": {
+    "letter": "h",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 14,
+    "t": 0.999999998075378,
+    "from_end_u": 6.7994278651895e-08,
+    "stretch_from_end_u": [
+     0,
+     10
+    ]
+   },
+   "entry": {
+    "letter": "i",
+    "kind": "cusp",
+    "stroke": 0,
+    "k": 0,
+    "t": 9.83926974469858e-10,
+    "s_u": 1.8524873214253286e-08,
+    "retrace": true,
+    "stretch_u": [
+     0,
+     20
+    ]
+   },
+   "solve": {
+    "J": 0.0002840987474826294,
+    "Js": 0.001843560671832685,
+    "window_len_u": 186.52170295809478,
+    "scale_len_u": 186.52170295809478,
+    "conn_len_u": 156.52170302608906,
+    "Jc": 0.00013253300155442838,
+    "JL": 0.00015156574592820103,
+    "JR": 0.0,
+    "pen": 0.0,
+    "kmax_u": 0.05924989288496188,
+    "speed_ratio": 0.7775729195454543,
+    "crossings": 0,
+    "crossings_allowed": 0,
+    "side_min_u": 0.006323121892488112,
+    "clear_short_u": null,
+    "cross_parts": [
+     0,
+     0,
+     0
+    ],
+    "ymin_u": 1.0372981734030742,
+    "prm": [
+     0.9852941835610716,
+     0.7847203861275301,
+     -1.199810492396075,
+     -3.7790573576755104
+    ],
+    "nfev": 1681,
+    "hints": {},
+    "window_u": 20.0,
+    "status": 0,
+    "maxfev": 3000,
+    "kL_u": null,
+    "th_deg": null,
+    "kR_u": null,
+    "over_band_u": null,
+    "over_dmax_u": null,
+    "after_high": false,
+    "stretch_solved_u": [
+     0.0,
+     20.0
+    ]
+   }
+  },
+  {
+   "pair": "ip",
+   "iL": 2,
+   "iR": 4,
+   "solved": true,
+   "exit": {
+    "letter": "i",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 3,
+    "t": 0.955860057284513,
+    "from_end_u": 1.4988835928696176,
+    "stretch_from_end_u": [
+     0,
+     10
+    ]
+   },
+   "entry": {
+    "letter": "p",
+    "kind": "cusp",
+    "stroke": 0,
+    "k": 0,
+    "t": 0.6292242822968164,
+    "s_u": 10.89147563888455,
+    "retrace": true,
+    "stretch_u": [
+     0,
+     20
+    ]
+   },
+   "solve": {
+    "J": 0.0005162400857110026,
+    "Js": 0.0033278455416046247,
+    "window_len_u": 186.1103298570841,
+    "scale_len_u": 178.21885421819957,
+    "conn_len_u": 149.71773781106918,
+    "Jc": 0.00024088674528292467,
+    "JL": 0.00013764650594819215,
+    "JR": 0.00013770683447988583,
+    "pen": 0.0,
+    "kmax_u": 0.0587495479634184,
+    "speed_ratio": 0.8511481836748854,
+    "crossings": 0,
+    "crossings_allowed": 0,
+    "side_min_u": 0.0011242274109097268,
+    "clear_short_u": null,
+    "cross_parts": [
+     0,
+     0,
+     0
+    ],
+    "ymin_u": 0.7525054208223534,
+    "prm": [
+     0.9722487726997597,
+     0.8711559684296915,
+     -0.9601524164342132,
+     -0.5832799779406995
+    ],
+    "nfev": 440,
+    "hints": {},
+    "window_u": 20.0,
+    "status": 0,
+    "maxfev": 3000,
+    "kL_u": null,
+    "th_deg": null,
+    "kR_u": null,
+    "over_band_u": null,
+    "over_dmax_u": null,
+    "after_high": false,
+    "stretch_solved_u": [
+     0.0,
+     20.0
+    ]
+   }
+  },
+  {
+   "pair": "pp",
+   "iL": 4,
+   "iR": 6,
+   "solved": false,
+   "src": "k962 class cnct.mod_n_n"
+  },
+  {
+   "pair": "po",
+   "iL": 6,
+   "iR": 8,
+   "solved": false,
+   "src": "k962 class cnct.mod_n_o"
+  }
+ ],
+ "oi | approved (v6.8)": [
+  {
+   "pair": "oi",
+   "iL": 0,
+   "iR": 2,
+   "solved": true,
+   "exit": {
+    "letter": "o",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 7,
+    "t": 0.5004492018776313,
+    "from_end_u": 1.999952434134741,
+    "stretch_from_end_u": [
+     0,
+     2
+    ]
+   },
+   "entry": {
+    "letter": "i",
+    "kind": "corner",
+    "stroke": 0,
+    "k": 0,
+    "t": 0.0,
+    "s_u": 0.0,
+    "retrace": false,
+    "stretch_u": [
+     0,
+     20
+    ]
+   },
+   "solve": {
+    "J": 3.478601278187072e-05,
+    "Js": 5.735928881938641e-05,
+    "window_len_u": 118.14074410974804,
+    "scale_len_u": 118.14074410974804,
+    "conn_len_u": 118.14069654388278,
+    "Jc": 3.478600988939052e-05,
+    "JL": 2.8924802006682904e-12,
+    "JR": 0.0,
+    "pen": 0.0,
+    "kmax_u": 0.02709127834957234,
+    "speed_ratio": 0.6584719261109288,
+    "crossings": 0,
+    "crossings_allowed": 0,
+    "side_min_u": 0.6129569841091814,
+    "clear_short_u": null,
+    "cross_parts": [
+     0,
+     0,
+     0
+    ],
+    "ymin_u": 105.32880284004786,
+    "prm": [
+     0.6967570660395335,
+     1.621534182233915,
+     0.49209609345415095,
+     1.9012252739648812
+    ],
+    "nfev": 2557,
+    "hints": {
+     "maxfev": 8000
+    },
+    "window_u": 20.0,
+    "status": 0,
+    "maxfev": 8000,
+    "kL_u": null,
+    "th_deg": 39.999999843920605,
+    "kR_u": 0.013729771952209278,
+    "over_band_u": null,
+    "over_dmax_u": null,
+    "after_high": true,
+    "stretch_solved_u": [
+     0.0,
+     0.0
+    ]
+   }
+  }
+ ],
+ "oi | D1 (round)": [
+  {
+   "pair": "oi",
+   "iL": 0,
+   "iR": 2,
+   "solved": true,
+   "exit": {
+    "letter": "o",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 7,
+    "t": 0.5004492018776313,
+    "from_end_u": 1.999952434134741,
+    "stretch_from_end_u": [
+     0,
+     2
+    ]
+   },
+   "entry": {
+    "letter": "i",
+    "kind": "corner",
+    "stroke": 0,
+    "k": 0,
+    "t": 0.0,
+    "s_u": 0.0,
+    "retrace": false,
+    "stretch_u": [
+     0,
+     20
+    ]
+   },
+   "solve": {
+    "J": 3.478601278187072e-05,
+    "Js": 5.735928881938641e-05,
+    "window_len_u": 118.14074410974804,
+    "scale_len_u": 118.14074410974804,
+    "conn_len_u": 118.14069654388278,
+    "Jc": 3.478600988939052e-05,
+    "JL": 2.8924802006682904e-12,
+    "JR": 0.0,
+    "pen": 0.0,
+    "kmax_u": 0.02709127834957234,
+    "speed_ratio": 0.6584719261109288,
+    "crossings": 0,
+    "crossings_allowed": 0,
+    "side_min_u": 0.6129569841091814,
+    "clear_short_u": null,
+    "cross_parts": [
+     0,
+     0,
+     0
+    ],
+    "ymin_u": 105.32880284004786,
+    "prm": [
+     0.6967570660395335,
+     1.621534182233915,
+     0.49209609345415095,
+     1.9012252739648812
+    ],
+    "nfev": 2557,
+    "hints": {
+     "maxfev": 8000
+    },
+    "window_u": 20.0,
+    "status": 0,
+    "maxfev": 8000,
+    "kL_u": null,
+    "th_deg": 39.999999843920605,
+    "kR_u": 0.013729771952209278,
+    "over_band_u": null,
+    "over_dmax_u": null,
+    "after_high": true,
+    "stretch_solved_u": [
+     0.0,
+     0.0
+    ]
+   }
+  }
+ ],
+ "oi | D2 (the font's oval)": [
+  {
+   "pair": "oi",
+   "iL": 0,
+   "iR": 2,
+   "solved": true,
+   "exit": {
+    "letter": "o",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 7,
+    "t": 0.5004492018776313,
+    "from_end_u": 1.999952434134741,
+    "stretch_from_end_u": [
+     0,
+     2
+    ]
+   },
+   "entry": {
+    "letter": "i",
+    "kind": "corner",
+    "stroke": 0,
+    "k": 0,
+    "t": 0.0,
+    "s_u": 0.0,
+    "retrace": false,
+    "stretch_u": [
+     0,
+     20
+    ]
+   },
+   "solve": {
+    "J": 3.478601278187072e-05,
+    "Js": 5.735928881938641e-05,
+    "window_len_u": 118.14074410974804,
+    "scale_len_u": 118.14074410974804,
+    "conn_len_u": 118.14069654388278,
+    "Jc": 3.478600988939052e-05,
+    "JL": 2.8924802006682904e-12,
+    "JR": 0.0,
+    "pen": 0.0,
+    "kmax_u": 0.02709127834957234,
+    "speed_ratio": 0.6584719261109288,
+    "crossings": 0,
+    "crossings_allowed": 0,
+    "side_min_u": 0.6129569841091814,
+    "clear_short_u": null,
+    "cross_parts": [
+     0,
+     0,
+     0
+    ],
+    "ymin_u": 105.32880284004786,
+    "prm": [
+     0.6967570660395335,
+     1.621534182233915,
+     0.49209609345415095,
+     1.9012252739648812
+    ],
+    "nfev": 2557,
+    "hints": {
+     "maxfev": 8000
+    },
+    "window_u": 20.0,
+    "status": 0,
+    "maxfev": 8000,
+    "kL_u": null,
+    "th_deg": 39.999999843920605,
+    "kR_u": 0.013729771952209278,
+    "over_band_u": null,
+    "over_dmax_u": null,
+    "after_high": true,
+    "stretch_solved_u": [
+     0.0,
+     0.0
+    ]
+   }
+  }
+ ],
+ "oj | approved (v6.8)": [
+  {
+   "pair": "oj",
+   "iL": 0,
+   "iR": 2,
+   "solved": true,
+   "exit": {
+    "letter": "o",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 7,
+    "t": 0.5004373086023117,
+    "from_end_u": 1.9999999907102506,
+    "stretch_from_end_u": [
+     0,
+     2
+    ]
+   },
+   "entry": {
+    "letter": "j",
+    "kind": "corner",
+    "stroke": 0,
+    "k": 0,
+    "t": 0.0,
+    "s_u": 0.0,
+    "retrace": false,
+    "stretch_u": [
+     0,
+     20
+    ]
+   },
+   "solve": {
+    "J": 3.469962662694797e-05,
+    "Js": 5.739603679878685e-05,
+    "window_len_u": 118.2639466206798,
+    "scale_len_u": 118.2639466206798,
+    "conn_len_u": 118.26394661139005,
+    "Jc": 3.4699626626383047e-05,
+    "JL": 5.649235419735721e-16,
+    "JR": 0.0,
+    "pen": 0.0,
+    "kmax_u": 0.027091266585336164,
+    "speed_ratio": 0.6489785932872739,
+    "crossings": 0,
+    "crossings_allowed": 0,
+    "side_min_u": 0.5385977038325489,
+    "clear_short_u": null,
+    "cross_parts": [
+     0,
+     0,
+     0
+    ],
+    "ymin_u": 105.25409884463923,
+    "prm": [
+     0.6867416438834507,
+     1.6250883733971566,
+     0.529332119706519,
+     1.8985395811816974
+    ],
+    "nfev": 5427,
+    "hints": {
+     "maxfev": 8000
+    },
+    "window_u": 20.0,
+    "status": 0,
+    "maxfev": 8000,
+    "kL_u": null,
+    "th_deg": 39.9999999815601,
+    "kR_u": 0.01371724797533563,
+    "over_band_u": null,
+    "over_dmax_u": null,
+    "after_high": true,
+    "stretch_solved_u": [
+     0.0,
+     0.0
+    ]
+   }
+  }
+ ],
+ "oj | D1 (round)": [
+  {
+   "pair": "oj",
+   "iL": 0,
+   "iR": 2,
+   "solved": true,
+   "exit": {
+    "letter": "o",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 7,
+    "t": 0.5004373086023117,
+    "from_end_u": 1.9999999907102506,
+    "stretch_from_end_u": [
+     0,
+     2
+    ]
+   },
+   "entry": {
+    "letter": "j",
+    "kind": "corner",
+    "stroke": 0,
+    "k": 0,
+    "t": 0.0,
+    "s_u": 0.0,
+    "retrace": false,
+    "stretch_u": [
+     0,
+     20
+    ]
+   },
+   "solve": {
+    "J": 3.469962662694797e-05,
+    "Js": 5.739603679878685e-05,
+    "window_len_u": 118.2639466206798,
+    "scale_len_u": 118.2639466206798,
+    "conn_len_u": 118.26394661139005,
+    "Jc": 3.4699626626383047e-05,
+    "JL": 5.649235419735721e-16,
+    "JR": 0.0,
+    "pen": 0.0,
+    "kmax_u": 0.027091266585336164,
+    "speed_ratio": 0.6489785932872739,
+    "crossings": 0,
+    "crossings_allowed": 0,
+    "side_min_u": 0.5385977038325489,
+    "clear_short_u": null,
+    "cross_parts": [
+     0,
+     0,
+     0
+    ],
+    "ymin_u": 105.25409884463923,
+    "prm": [
+     0.6867416438834507,
+     1.6250883733971566,
+     0.529332119706519,
+     1.8985395811816974
+    ],
+    "nfev": 5427,
+    "hints": {
+     "maxfev": 8000
+    },
+    "window_u": 20.0,
+    "status": 0,
+    "maxfev": 8000,
+    "kL_u": null,
+    "th_deg": 39.9999999815601,
+    "kR_u": 0.01371724797533563,
+    "over_band_u": null,
+    "over_dmax_u": null,
+    "after_high": true,
+    "stretch_solved_u": [
+     0.0,
+     0.0
+    ]
+   }
+  }
+ ],
+ "oj | D2 (the font's oval)": [
+  {
+   "pair": "oj",
+   "iL": 0,
+   "iR": 2,
+   "solved": true,
+   "exit": {
+    "letter": "o",
+    "kind": "merge",
+    "stroke": 0,
+    "k": 7,
+    "t": 0.5004373086023117,
+    "from_end_u": 1.9999999907102506,
+    "stretch_from_end_u": [
+     0,
+     2
+    ]
+   },
+   "entry": {
+    "letter": "j",
+    "kind": "corner",
+    "stroke": 0,
+    "k": 0,
+    "t": 0.0,
+    "s_u": 0.0,
+    "retrace": false,
+    "stretch_u": [
+     0,
+     20
+    ]
+   },
+   "solve": {
+    "J": 3.469962662694797e-05,
+    "Js": 5.739603679878685e-05,
+    "window_len_u": 118.2639466206798,
+    "scale_len_u": 118.2639466206798,
+    "conn_len_u": 118.26394661139005,
+    "Jc": 3.4699626626383047e-05,
+    "JL": 5.649235419735721e-16,
+    "JR": 0.0,
+    "pen": 0.0,
+    "kmax_u": 0.027091266585336164,
+    "speed_ratio": 0.6489785932872739,
+    "crossings": 0,
+    "crossings_allowed": 0,
+    "side_min_u": 0.5385977038325489,
+    "clear_short_u": null,
+    "cross_parts": [
+     0,
+     0,
+     0
+    ],
+    "ymin_u": 105.25409884463923,
+    "prm": [
+     0.6867416438834507,
+     1.6250883733971566,
+     0.529332119706519,
+     1.8985395811816974
+    ],
+    "nfev": 5427,
+    "hints": {
+     "maxfev": 8000
+    },
+    "window_u": 20.0,
+    "status": 0,
+    "maxfev": 8000,
+    "kL_u": null,
+    "th_deg": 39.9999999815601,
+    "kR_u": 0.01371724797533563,
+    "over_band_u": null,
+    "over_dmax_u": null,
+    "after_high": true,
+    "stretch_solved_u": [
+     0.0,
+     0.0
+    ]
+   }
+  }
+ ]
+}

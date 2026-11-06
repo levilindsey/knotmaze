@@ -11,12 +11,14 @@ stroke's end when negative: a port entry may trim the stroke's start) and parame
 frame (point, tangent, curvature: G2 by construction) to the end frame (end: body-local fu, so the letter's origin
 is added; level-relative angle; curvature k) as the G2 connector quintic with set prm. It is appended to the word's
 tails (ch = X), so the census measures it as a tail (its seam with the cut stroke, its hooks, rough, and its distance
-to the shaped glyph's skeleton).
+to the shaped glyph's skeleton). A fin form without "end" is a pure cut: the stroke ends at the cut, nothing is added
+(the census has no row for it: local_k863k.py measures it).
 dot: every X's dot stroke is replaced by a closed loop, the ellipse c + a cos u + b sin u (c body-local), as four
 cubics (the affine image of the 4-arc circle: curvature continuous at the joins), from u = start (deg).
 The forms apply after gen_k1027.assemble, to the letter's placed strokes: joins and leads are solved and drawn exactly
 as v6.8's (the join solver still sees the body's own dot and full stroke), so a form moves only its letter's pieces.
-A sheared letter (K926's final e) takes no form (the forms here are for s, p, i, j, which are never sheared)."""
+A sheared letter (K926's final e) takes no form (the forms here are for s, p, i, j, which are never sheared), and a
+letter shaped as part of another glyph (a ligature: ij, K1198, held) keeps v6.8's pieces."""
 import math
 import os
 import sys
@@ -44,6 +46,14 @@ def ellipse_loop(c, a, b, start_deg=0.0):
     return [[[float(v) for v in p] for p in bz] for bz in out]
 
 
+def fin_cut(bz, f):
+    """A fin form with no "end": the stroke cut at cubic k (negative: from the end), parameter t, and nothing added."""
+    k = int(f["cut"][0])
+    if k < 0:
+        k += len(bz)
+    return L.sub_path(bz, 0, 0.0, k, float(f["cut"][1]))
+
+
 def fin_tail(bz, f, x0):
     """(cut stroke, tail dict) for a fin form f on the placed stroke bz of a letter whose origin is x0."""
     k = int(f["cut"][0])
@@ -69,7 +79,8 @@ def assemble(font, B, P, text, with_ref=True, B_ref=None, ports=None):
     letters = []
     for lt in A["letters"]:
         X = lt["ch"]
-        if X in dots or (X in fins and lt["last"]):
+        own = str(A["shaping"][lt["i"]].get("name", "")).split(".")[0] == X   # not a ligature's (ij: K1198, held)
+        if own and (X in dots or (X in fins and lt["last"])):
             if lt["sheared"]:
                 raise ValueError(f"k863k: a form for the sheared {X} in {text!r}")
             lt = dict(lt)
@@ -84,9 +95,12 @@ def assemble(font, B, P, text, with_ref=True, B_ref=None, ports=None):
                     raise ValueError(f"k863k: a fin form for {X}, which has a tail of its own")
                 f = fins[X]
                 si = int(f.get("stroke", 0))
-                lt["strokes"][si], tl = fin_tail(lt["strokes"][si], f, lt["x"])
-                tl["ch"] = X
-                A["tails"].append(tl)
+                if "end" in f:
+                    lt["strokes"][si], tl = fin_tail(lt["strokes"][si], f, lt["x"])
+                    tl["ch"] = X
+                    A["tails"].append(tl)
+                else:
+                    lt["strokes"][si] = fin_cut(lt["strokes"][si], f)
         letters.append(lt)
     A["letters"] = letters
     return A
