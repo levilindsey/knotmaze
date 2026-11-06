@@ -69,6 +69,8 @@ import {
   FIELD_FOLD_LO,
   FIELD_PROF_ARC,
   FIELD_PROF_DR,
+  FIELD_ROOT_SEP,
+  FIELD_TIE_TAU,
   MAX_ARMS,
   MAX_ROUTES,
   MAX_ROUTE_VERTS,
@@ -469,14 +471,28 @@ export class Joinery {
     // 1 / (1 - s kappa) (s the sweep's signed length, kappa the polyline's
     // curvature, both + on the concave side): cross ji 80's vertical line,
     // on the inside of arm B's right turn, where two segments swept a pixel
-    // each. kappa is per vertex (the turn over the two segments' mean
-    // length; 0 at the joint, where the joint sweep meets it), lerped by the
-    // PIXEL's radius (rho / DR, the segment it lies beside), and the arc
-    // hands over to the projection from s kappa = FIELD_FOLD_LO to
-    // FIELD_FOLD_HI. Read at the sweep's foot instead, kappa raced along
-    // the compressed arc and the share fell 0.83 -> 0.49 within 2 px: the
-    // hand-over itself stepped there (d/dx 81 against 15-17 around it; by
-    // the pixel's radius 30, .claude/probes/K1218/s6/swept_s6.mjs).
+    // each. K1218 S7: the roots, in arc order (the joint's, then each
+    // segment's by u), alternate unfolded (the map's Jacobian
+    // -(qb + 2 qa u) > 0: a local nearest) and folded (a local farthest), and
+    // a pair is born and dies at one arc. S6 took the nearest; where two tie
+    // (the cut locus on a bend's concave side) the arc jumped between them:
+    // cross ji 155's streak, arm 0's kink at vertex 2 (buildProfile's
+    // straight inner ray), a jump of 0.06 arc between device rows 679 and
+    // 680. Now every unfolded root weighs exp((fh - l) / FIELD_TIE_TAU)
+    // times its maturity (smoothstep over FIELD_ROOT_SEP of the arc to its
+    // nearest folded neighbour, 0 where its pair is born) and a cut that
+    // fades it from 1.5 fh to 2 fh, before the window can drop it; the arc
+    // is their weighted mean, and it hands over to the projection by the
+    // weights' largest maturity (cov), by their mean sweep length from fh to
+    // 2 fh, and by the fan fold: each segment's interpolated normals turn
+    // by its turn, a pixel z = (its left distance to the segment's line) x
+    // (turn / length) of the way to their focus, and the fan there is
+    // |1 - z| as wide as the segment (inverted past the focus); inside it
+    // (within 0.5-1.5 fh of its edge, 1.5-2 fh of the segment) the share
+    // goes from z = FIELD_FOLD_LO to FIELD_FOLD_HI. S6's kappa at the
+    // pixel's radius missed ji 155's kink segment beside the pixel (a
+    // 0.04 -> 0.97 hand-over within one pixel at device column 791).
+    // Offline: .claude/probes/K1218/s7/tie_s7.mjs (VARIANT s6 | s7).
     const pt =(ab: number, g: number, o: Float64Array, k: number): void => {
       const t = at(ab + 2 + g);
       o[k] = g * FIELD_PROF_DR * Math.cos(J[t]);
@@ -489,6 +505,22 @@ export class Joinery {
       o[k + 1] = y / l;
     };
     const sw = new Float64Array(16);
+    // GLSL smoothstep(lo, hi, x).
+    const sst = (lo: number, hi: number, x: number): number => {
+      let t = (x - lo) / (hi - lo);
+      t = t < 0 ? 0 : t > 1 ? 1 : t;
+      return t * t * (3 - 2 * t);
+    };
+    // swAcc: acc = [sum w, sum w arc, sum w l, cov].
+    const acc = new Float64Array(4);
+    const swAcc = (l: number, a: number, sep: number): void => {
+      const wc = sst(0, FIELD_ROOT_SEP, sep) * (1 - sst(1.5 * fillHalf, 2 * fillHalf, l));
+      if (wc > acc[3]) acc[3] = wc;
+      const w = wc * Math.exp((fillHalf - l) * (1 / FIELD_TIE_TAU));
+      acc[0] += w;
+      acc[1] += w * a;
+      acc[2] += w * l;
+    };
     const sweptArc = (ab: number, rp: number): number => {
       const proj = profArc(ab, rp);
       const rho = Math.sqrt(ex * ex + ey * ey);
@@ -496,42 +528,36 @@ export class Joinery {
       let g = Math.min(Math.max(Math.trunc((rho - reach) / FIELD_PROF_DR), 0), last - 1);
       const g1 = Math.min(Math.max(Math.trunc((rho + reach) / FIELD_PROF_DR) + 2, 1), last);
       // sw: a 0-2, b 3-5, c 6-8, d 9-11, tb 12-13, tc 14-15.
-      pt(ab, Math.max(g - 1, 0), sw, 0);
       pt(ab, g, sw, 3);
       pt(ab, g + 1, sw, 6);
       nrm(sw[6] - sw[3], sw[7] - sw[4], sw, 12);
-      let kb = 0;
       if (g > 0) {
+        pt(ab, g - 1, sw, 0);
         nrm(sw[3] - sw[0], sw[4] - sw[1], sw, 14);
-        const la = Math.sqrt((sw[3] - sw[0]) ** 2 + (sw[4] - sw[1]) ** 2);
-        const lb = Math.sqrt((sw[6] - sw[3]) ** 2 + (sw[7] - sw[4]) ** 2);
-        kb = (2 * (sw[14] * sw[13] - sw[15] * sw[12])) / (la + lb);
         nrm(sw[12] + sw[14], sw[13] + sw[15], sw, 12);
       }
-      let best = 1e9;
-      let arc = proj;
-      let fold = 0;
-      let kr = 0;
-      if (g === 0 && ex * sw[12] + ey * sw[13] < 0) {
-        best = rho;
-        arc = sw[5];
-      }
+      acc.fill(0);
+      let fan = 0;
+      let lastFold = -1e9;
+      // The pending unfolded root: its sweep length, arc and separation.
+      let hasP = g === 0 && ex * sw[12] + ey * sw[13] < 0;
+      let pl = rho;
+      let pa = sw[5];
+      let ps = 1e9;
       for (let k = 0; k < 40 && g < g1; k++, g++) {
         const ddx = sw[6] - sw[3];
         const ddy = sw[7] - sw[4];
-        nrm(ddx, ddy, sw, 14);
+        const len = Math.sqrt(ddx * ddx + ddy * ddy);
+        sw[14] = ddx / len;
+        sw[15] = ddy / len;
         sw[9] = sw[6];
         sw[10] = sw[7];
         sw[11] = sw[8];
-        let kc = 0;
         if (g + 2 <= last) {
           pt(ab, g + 2, sw, 9);
           const ox = sw[14];
           const oy = sw[15];
           nrm(sw[9] - sw[6], sw[10] - sw[7], sw, 14);
-          const ld = Math.sqrt(ddx * ddx + ddy * ddy);
-          const le = Math.sqrt((sw[9] - sw[6]) ** 2 + (sw[10] - sw[7]) ** 2);
-          kc = (2 * (ox * sw[15] - oy * sw[14])) / (ld + le);
           nrm(ox + sw[14], oy + sw[15], sw, 14);
         }
         const n0x = -sw[13];
@@ -546,32 +572,53 @@ export class Joinery {
         const disc = qb * qb - 4 * qa * qc;
         if (disc >= 0) {
           const h = -0.5 * (qb + (qb < 0 ? -Math.sqrt(disc) : Math.sqrt(disc)));
+          let u0 = Math.abs(qa) > 1e-12 ? h / qa : -1;
+          let u1 = Math.abs(h) > 1e-12 ? qc / h : -1;
+          if (u1 < u0) {
+            const tu = u0;
+            u0 = u1;
+            u1 = tu;
+          }
           for (let r = 0; r < 2; r++) {
-            const u = r === 0 ? (Math.abs(qa) > 1e-12 ? h / qa : -1) : Math.abs(h) > 1e-12 ? qc / h : -1;
+            const u = r === 0 ? u0 : u1;
             if (!(u >= 0 && u <= 1)) continue;
-            const lx = qx - u * ddx;
-            const ly = qy - u * ddy;
-            const l = Math.hypot(lx, ly);
-            if (l < best) {
-              best = l;
-              arc = sw[5] + (sw[8] - sw[5]) * u;
-              fold = Math.sign(ddx * ly - ddy * lx) * l;
+            const ar = sw[5] + (sw[8] - sw[5]) * u;
+            if (qb + 2 * qa * u < 0) {
+              if (hasP) swAcc(pl, pa, ps);
+              const lx = qx - u * ddx;
+              const ly = qy - u * ddy;
+              pl = Math.sqrt(lx * lx + ly * ly);
+              pa = ar;
+              ps = Math.abs(ar - lastFold);
+              hasP = true;
+            } else {
+              if (hasP) swAcc(pl, pa, Math.min(ps, Math.abs(ar - pa)));
+              hasP = false;
+              lastFold = ar;
             }
           }
         }
-        const fr = rho - g * FIELD_PROF_DR;
-        if (fr >= 0 && fr < FIELD_PROF_DR) kr = kb + (kc - kb) * (fr / FIELD_PROF_DR);
+        const tx = ddx / len;
+        const ty = ddy / len;
+        const z = ((tx * qy - ty * qx) * (sw[12] * sw[15] - sw[13] * sw[14])) / len;
+        const sp = qx * tx + qy * ty;
+        const o = Math.abs(sp - 0.5 * len) - 0.5 * len * Math.abs(1 - z);
+        const sc = sp < 0 ? 0 : sp > len ? len : sp;
+        const fx = qx - sc * tx;
+        const fy = qy - sc * ty;
+        const fw =
+          sst(FIELD_FOLD_LO, FIELD_FOLD_HI, z) *
+          (1 - sst(0.5 * fillHalf, 1.5 * fillHalf, o)) *
+          (1 - sst(1.5 * fillHalf, reach, Math.sqrt(fx * fx + fy * fy)));
+        if (fw > fan) fan = fw;
         sw.copyWithin(3, 6, 12);
         sw[12] = sw[14];
         sw[13] = sw[15];
-        kb = kc;
       }
-      let w = (best - fillHalf) / fillHalf;
-      w = w < 0 ? 0 : w > 1 ? 1 : w;
-      let wf = (fold * kr - FIELD_FOLD_LO) / (FIELD_FOLD_HI - FIELD_FOLD_LO);
-      wf = wf < 0 ? 0 : wf > 1 ? 1 : wf;
-      const wt = 1 - (1 - w * w * (3 - 2 * w)) * (1 - wf * wf * (3 - 2 * wf));
-      return arc + (proj - arc) * wt;
+      if (hasP) swAcc(pl, pa, ps);
+      if (!(acc[0] > 0)) return proj;
+      const keep = acc[3] * (1 - sst(fillHalf, reach, acc[2] / acc[0])) * (1 - fan);
+      return proj + (acc[1] / acc[0] - proj) * keep;
     };
     const rho = Math.sqrt(ex * ex + ey * ey);
     const phi = Math.atan2(ey, ex);

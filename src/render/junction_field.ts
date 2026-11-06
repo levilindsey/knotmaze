@@ -101,14 +101,21 @@ import { fabricUniforms, sampSource } from "./fabric_sdf";
 export const FIELD_PROF_DR = 0.06;
 export const FIELD_PROF_ARC = 0.08;
 export const FIELD_BLEND_MIN = 0.5;
-// K1218 S6: sweptArc hands over to the projection where a sweep reaches into
-// its bend's focus, from FIELD_FOLD_LO of the way there to FIELD_FOLD_HI (the
-// share s kappa of a sweep of length s, + on the concave side): the swept map
-// compresses the arc as 1 / (1 - s kappa) there. kappa is read at the pixel's
-// own radius, not at the sweep's foot: the foot races along a compressed arc,
-// and a share read there stepped within 2 px (cross ji 80's line).
+// K1218 S6/S7: sweptArc hands over to the projection where a pixel sits in a
+// profile segment's fan toward its bend's focus, from FIELD_FOLD_LO of the way
+// there to FIELD_FOLD_HI (z = the pixel's distance to the segment's line times
+// the segment's turn over its length, + on the concave side): the swept map
+// compresses the arc as 1 / (1 - z) there. S6 read kappa at the pixel's
+// radius, which missed the fan of a segment beside it (cross ji 155's line).
 export const FIELD_FOLD_LO = 0.1;
 export const FIELD_FOLD_HI = 0.9;
+// K1218 S7: sweptArc's roots are weighed, not picked: a root of sweep length l
+// weighs exp((fh - l) / FIELD_TIE_TAU), so two tied roots (the cut locus on a
+// bend's concave side, cross ji 155's streak) meet at their mean instead of
+// jumping, and a root pair fades in from its birth over FIELD_ROOT_SEP of arc
+// between the pair (0 where a caustic makes or ends it).
+export const FIELD_TIE_TAU = 0.02;
+export const FIELD_ROOT_SEP = 0.1;
 // Arms per junction the shader scans (its loop bound). The fabric's fused
 // junctions carry 3 (splice) or 4 (merge) arms.
 export const MAX_ARMS = 12;
@@ -226,6 +233,13 @@ float jCross(vec2 a, vec2 b) { return a.x * b.y - a.y * b.x; }
 // half-width out to two and off every sweep. K1218 S6: every segment a
 // sweep under two half-widths reaches (rho +- 2 fh), and behind the arm's
 // start the joint itself, and off a bend's focus (the cpu mirror says why).
+// K1218 S7: every unfolded root weighs in, softly (swAcc), and the focus is
+// each segment's own fan.
+void swAcc(inout vec3 s, inout float cov, vec3 p) {
+  float w = smoothstep(0.0, ${FIELD_ROOT_SEP.toFixed(3)}, p.z) * (1.0 - smoothstep(1.5 * uJParams.x, 2.0 * uJParams.x, p.x));
+  cov = max(cov, w);
+  s += w * exp((uJParams.x - p.x) * ${(1 / FIELD_TIE_TAU).toFixed(1)}) * vec3(1.0, p.y, p.x);
+}
 float sweptArc(int ab, vec2 e, float rp) {
   float proj = profArc(ab, rp);
   int last = int(uJParams.y + 0.5) - 1;
@@ -233,35 +247,25 @@ float sweptArc(int ab, vec2 e, float rp) {
   float reach = 2.0 * uJParams.x;
   int g = clamp(int((rho - reach) / uJParams2.x), 0, last - 1);
   int g1 = clamp(int((rho + reach) / uJParams2.x) + 2, 1, last);
-  vec3 a = profPt(ab, max(g - 1, 0));
   vec3 b = profPt(ab, g);
   vec3 c = profPt(ab, g + 1);
-  vec2 ta = b.xy - a.xy;
   vec2 tb = normalize(c.xy - b.xy);
-  float kb = 0.0;
-  if (g > 0) {
-    kb = 2.0 * jCross(normalize(ta), tb) / (length(ta) + length(c.xy - b.xy));
-    tb = normalize(tb + normalize(ta));
-  }
-  float best = 1e9;
-  float arc = proj;
-  float fold = 0.0;
-  float kr = 0.0;
-  if (g == 0 && dot(e, tb) < 0.0) {
-    best = rho;
-    arc = b.z;
-  }
+  if (g > 0) tb = normalize(tb + normalize(b.xy - profPt(ab, g - 1).xy));
+  vec3 s = vec3(0.0);
+  float cov = 0.0;
+  float fanw = 0.0;
+  float lastFold = -1e9;
+  bool hasP = g == 0 && dot(e, tb) < 0.0;
+  vec3 pend = vec3(rho, b.z, 1e9);
   for (int k = 0; k < 40; k++) {
     if (g >= g1) break;
     vec2 dd = c.xy - b.xy;
-    vec2 tc = normalize(dd);
+    float len = length(dd);
+    vec2 tc = dd / len;
     vec3 d = c;
-    float kc = 0.0;
     if (g + 2 <= last) {
       d = profPt(ab, g + 2);
-      vec2 de = d.xy - c.xy;
-      kc = 2.0 * jCross(tc, normalize(de)) / (length(dd) + length(de));
-      tc = normalize(tc + normalize(de));
+      tc = normalize(tc + normalize(d.xy - c.xy));
     }
     vec2 n0 = vec2(-tb.y, tb.x);
     vec2 dn = vec2(-tc.y, tc.x) - n0;
@@ -273,27 +277,35 @@ float sweptArc(int ab, vec2 e, float rp) {
     if (disc >= 0.0) {
       float h = -0.5 * (qb + (qb < 0.0 ? -sqrt(disc) : sqrt(disc)));
       vec2 us = vec2(abs(qa) > 1e-12 ? h / qa : -1.0, abs(h) > 1e-12 ? qc / h : -1.0);
+      if (us.y < us.x) us = us.yx;
       for (int r = 0; r < 2; r++) {
         float u = r == 0 ? us.x : us.y;
         if (u < 0.0 || u > 1.0) continue;
-        float l = length(q - u * dd);
-        if (l < best) {
-          best = l;
-          arc = mix(b.z, c.z, u);
-          fold = sign(jCross(dd, q - u * dd)) * l;
+        float ar = mix(b.z, c.z, u);
+        if (qb + 2.0 * qa * u < 0.0) {
+          if (hasP) swAcc(s, cov, pend);
+          pend = vec3(length(q - u * dd), ar, abs(ar - lastFold));
+          hasP = true;
+        } else {
+          if (hasP) swAcc(s, cov, vec3(pend.xy, min(pend.z, abs(ar - pend.y))));
+          hasP = false;
+          lastFold = ar;
         }
       }
     }
-    float fr = rho - float(g) * uJParams2.x;
-    if (fr >= 0.0 && fr < uJParams2.x) kr = mix(kb, kc, fr / uJParams2.x);
+    vec2 t = dd / len;
+    float z = jCross(t, q) * jCross(tb, tc) / len;
+    float o = abs(dot(q, t) - 0.5 * len) - 0.5 * len * abs(1.0 - z);
+    float dist = length(q - clamp(dot(q, t), 0.0, len) * t);
+    fanw = max(fanw, smoothstep(${FIELD_FOLD_LO.toFixed(3)}, ${FIELD_FOLD_HI.toFixed(3)}, z) * (1.0 - smoothstep(0.5 * uJParams.x, 1.5 * uJParams.x, o)) * (1.0 - smoothstep(1.5 * uJParams.x, reach, dist)));
     b = c;
     c = d;
     tb = tc;
-    kb = kc;
     g++;
   }
-  float w = 1.0 - (1.0 - smoothstep(uJParams.x, 2.0 * uJParams.x, best)) * (1.0 - smoothstep(${FIELD_FOLD_LO.toFixed(3)}, ${FIELD_FOLD_HI.toFixed(3)}, fold * kr));
-  return mix(arc, proj, w);
+  if (hasP) swAcc(s, cov, pend);
+  if (!(s.x > 0.0)) return proj;
+  return mix(proj, s.y / s.x, cov * (1.0 - smoothstep(uJParams.x, reach, s.z / s.x)) * (1.0 - fanw));
 }
 
 
