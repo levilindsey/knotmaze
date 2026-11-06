@@ -15,7 +15,7 @@
 //     the arm-weighted arc jump map (white = jump >= 0.1) beside the arcs
 // Env: VARIANT (s6|soft), TAU, CEPS, CUT0, NAT, RSCAN (world radius of a scan).
 import { readFileSync, writeFileSync } from "node:fs";
-import { writePng } from "../s5/png.mjs";
+import { encodePNG } from "../s5/png.mjs";
 
 const [, , MODE, FILE, ...ARGS] = process.argv;
 const D = JSON.parse(readFileSync(FILE, "utf8"));
@@ -28,8 +28,14 @@ const stride = 2 + profN;
 const FLO = D.FLO;
 const FHI = D.FHI;
 const BMIN = D.BMIN;
-const VARIANT = process.env.VARIANT || "soft";
+const VARIANT = process.env.VARIANT || "s7";
 const TAU = Number(process.env.TAU || 0.02);
+const DA = Number(process.env.DA || 0.1);
+const FM0 = Number(process.env.FM0 || 0.5);
+const FM1 = Number(process.env.FM1 || 1.5);
+const FOLD = process.env.FOLD || "fan";
+const SD0 = Number(process.env.SD0 || 1e9);
+const SD1 = Number(process.env.SD1 || 2e9);
 const CEPS = Number(process.env.CEPS || 0.2);
 const CUT0 = Number(process.env.CUT0 || 1.5);
 const NAT = Number(process.env.NAT || 0.03);
@@ -86,7 +92,7 @@ function candidates(ab, ex, ey) {
     tb = N(tb[0] + t0[0], tb[1] + t0[1]);
   }
   const out = [];
-  let kr = 0;
+  let kr = 0, fan = 0;
   if (g === 0 && ex * tb[0] + ey * tb[1] < 0) out.push([rho, b[2], 0, 1, -1, 0]);
   for (let k = 0; k < 40 && g < g1; k++, g++) {
     const ddx = c[0] - b[0], ddy = c[1] - b[1];
@@ -109,6 +115,7 @@ function candidates(ab, ex, ey) {
     if (disc >= 0) {
       const h = -0.5 * (qb + (qb < 0 ? -Math.sqrt(disc) : Math.sqrt(disc)));
       const us = [Math.abs(qa) > 1e-12 ? h / qa : -1, Math.abs(h) > 1e-12 ? qc / h : -1];
+      if (us[1] < us[0]) us.reverse();
       for (const u of us) {
         if (!(u >= 0 && u <= 1)) continue;
         const lx = qx - u * ddx, ly = qy - u * ddy;
@@ -118,16 +125,33 @@ function candidates(ab, ex, ey) {
         out.push([l, b[2] + (c[2] - b[2]) * u, Math.sign(cross(ddx, ddy, lx, ly)) * l, cj, g, u]);
       }
     }
+    // The fan fold: segment g's interpolated normals turn by its angle; at
+    // left distance dl a pixel sits z = dl * kappa of the way to their focus,
+    // and the fan there is |dd| |1 - z| wide (inverted beyond the focus).
+    {
+      const len = Math.hypot(ddx, ddy);
+      const tx = ddx / len, ty = ddy / len;
+      const ks = cross(tb[0], tb[1], tc[0], tc[1]) / len;
+      const s = qx * tx + qy * ty;
+      const dl = cross(tx, ty, qx, qy);
+      const z = dl * ks;
+      const hw = 0.5 * len * Math.abs(1 - z);
+      const o = Math.abs(s - 0.5 * len);
+      const sc = Math.min(Math.max(s, 0), len);
+      const dist = Math.hypot(qx - sc * tx, qy - sc * ty);
+      const fw = smooth(FLO, FHI, z) * (1 - smooth(hw + FM0 * fh, hw + FM1 * fh, o)) * (1 - smooth(CUT0 * fh, 2 * fh, dist));
+      if (fw > fan) fan = fw;
+    }
     const fr = rho - g * DR;
     if (fr >= 0 && fr < DR) kr = kb + (kc - kb) * (fr / DR);
     b = c; c = d; tb = tc; kb = kc;
   }
-  return { out, kr, rho };
+  return { out, kr, rho, fan };
 }
 
 function swept(ab, ex, ey, rp, V = VARIANT) {
   const proj = profArc(ab, rp);
-  const { out, kr } = candidates(ab, ex, ey);
+  const { out, kr, fan } = candidates(ab, ex, ey);
   if (V === "s6") {
     let best = 1e9, arc = proj, fold = 0, win = null;
     for (const cd of out) if (cd[0] < best) { best = cd[0]; arc = cd[1]; fold = cd[2]; win = cd; }
@@ -136,25 +160,38 @@ function swept(ab, ex, ey, rp, V = VARIANT) {
     const wt = 1 - (1 - w) * (1 - wf);
     return { arc: arc + (proj - arc) * wt, proj, best, swept: arc, wt, win, n: out.length };
   }
-  // soft: every unfolded candidate weighs in by exp(-(l - lmin) / TAU), times
-  // smoothstep(0, CEPS, c) (0 where a root pair is born, so it enters
-  // continuously) and a cut from CUT0 fh to 2 fh (the search window holds
-  // every root nearer than 2 fh, so a root beyond never enters with weight).
-  let lmin = 1e9;
-  for (const cd of out) if (cd[0] < lmin) lmin = cd[0];
-  let sw = 0, sa = 0, sf = 0;
+  // s7: a soft nearest root. Candidates come in arc order (the joint, then
+  // each segment's roots by u); unfolded roots (c > 0) and folded ones
+  // alternate, and a root pair is born and dies at one arc. Each unfolded
+  // root weighs mu * cut * exp((fh - l) / TAU): mu = smoothstep(0, DA, the
+  // arc to its nearest folded neighbour) is 0 at its birth and death, cut
+  // fades it before the window (2 fh) can lose it. The arc is the weighted
+  // mean (continuous through a tie: tied roots weigh the same), and where
+  // the weighted roots' arcs spread (sd from SD0 to SD1) it hands over to
+  // the projection, so a tie between far-apart arcs never reads as a ramp.
+  let S = 0, Aa = 0, A2 = 0, L = 0, F = 0, K = 0;
+  let lastFold = -1e9, pend = null;
+  const acc = (cd, sep) => {
+    const mu = smooth(0, DA, sep);
+    const cut = 1 - smooth(CUT0 * fh, 2 * fh, cd[0]);
+    const w = mu * cut * Math.exp((fh - cd[0]) / TAU);
+    S += w; Aa += w * cd[1]; A2 += w * cd[1] * cd[1]; L += w * cd[0]; F += w * cd[2];
+    K = Math.max(K, mu * cut);
+  };
   for (const cd of out) {
-    const w = Math.exp(-(cd[0] - lmin) / TAU) * smooth(0, CEPS, cd[3]) * (1 - smooth(CUT0 * fh, 2 * fh, cd[0]));
-    sw += w; sa += w * cd[1]; sf += w * cd[2];
+    if (cd[3] > 0) { if (pend) acc(pend.cd, pend.sep); pend = { cd, sep: Math.abs(cd[1] - lastFold) }; }
+    else { if (pend) { acc(pend.cd, Math.min(pend.sep, Math.abs(cd[1] - pend.cd[1]))); pend = null; } lastFold = cd[1]; }
   }
-  const arc = sw > 0 ? sa / sw : proj;
-  const fold = sw > 0 ? sf / sw : 0;
-  const w = smooth(fh, 2 * fh, lmin);
-  const wf = smooth(FLO, FHI, fold * kr);
-  const wt = sw > 0 ? 1 - (1 - w) * (1 - wf) : 1;
-  return { arc: arc + (proj - arc) * wt, proj, best: lmin, swept: arc, wt, n: out.length, sw };
+  if (pend) acc(pend.cd, pend.sep);
+  if (!(S > 0)) return { arc: proj, proj, best: 1e9, swept: proj, wt: 1, n: out.length, sw: 0 };
+  const arc = Aa / S, ls = L / S, fs = F / S;
+  const sd = Math.sqrt(Math.max(0, A2 / S - arc * arc));
+  const wp = smooth(fh, 2 * fh, ls);
+  const wf = FOLD === "s6" ? smooth(FLO, FHI, fs * kr) : FOLD === "max" ? Math.max(fan, smooth(FLO, FHI, fs * kr)) : fan;
+  const ws = smooth(SD0, SD1, sd);
+  const keep = K * (1 - wp) * (1 - wf) * (1 - ws);
+  return { arc: proj + (arc - proj) * keep, proj, best: ls, swept: arc, wt: 1 - keep, n: out.length, sw: S, sd, K };
 }
-
 // junctionBase's bracketing: the arms around the pixel and the blend t.
 function bracket(rb, x, y) {
   const hd = at(rb);
@@ -250,7 +287,22 @@ function jumpMap(r, x0, y0, x1, y1, V) {
     if (x + 1 < W) { const m = cmp(px[k], px[k + 1]); jump[k] = Math.max(jump[k], m); jump[k + 1] = Math.max(jump[k + 1], m); }
     if (y + 1 < H) { const m = cmp(px[k], px[k + W]); jump[k] = Math.max(jump[k], m); jump[k + W] = Math.max(jump[k + W], m); }
   }
-  return { W, H, px, jump };
+  const d2 = new Float64Array(W * H);
+  const sec = (a, b, c) => {
+    let m = 0;
+    for (const p of b) {
+      const q = a.find((z) => z.i === p.i), r = c.find((z) => z.i === p.i);
+      if (!q || !r) continue;
+      m = Math.max(m, Math.min(p.w, q.w, r.w) * Math.abs(q.arc - 2 * p.arc + r.arc));
+    }
+    return m;
+  };
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const k = y * W + x;
+    if (x > 0 && x + 1 < W) d2[k] = Math.max(d2[k], sec(px[k - 1], px[k], px[k + 1]));
+    if (y > 0 && y + 1 < H) d2[k] = Math.max(d2[k], sec(px[k - W], px[k], px[k + W]));
+  }
+  return { W, H, px, jump, d2 };
 }
 
 if (MODE === "scan") {
@@ -266,7 +318,8 @@ if (MODE === "scan") {
     let [x0, y0, x1, y1] = box || [Math.floor(cx - R), Math.floor(cy - R), Math.ceil(cx + R), Math.ceil(cy + R)];
     x0 = Math.max(0, x0); y0 = Math.max(0, y0); x1 = Math.min(2549, x1); y1 = Math.min(1424, y1);
     if (x1 <= x0 || y1 <= y0) continue;
-    const { W, jump } = jumpMap(r, x0, y0, x1, y1, VARIANT);
+    const { W, jump, d2 } = jumpMap(r, x0, y0, x1, y1, VARIANT);
+    let m2 = 0, m2k = -1;
     let m = 0, mk = -1, cnt = 0;
     for (let k = 0; k < jump.length; k++) {
       if (box === null) {
@@ -275,12 +328,13 @@ if (MODE === "scan") {
       }
       if (jump[k] > 0.01) cnt++;
       if (jump[k] > m) { m = jump[k]; mk = k; }
+      if (d2[k] > m2) { m2 = d2[k]; m2k = k; }
     }
-    rows.push({ ji: r.ji, n, cx: Math.round(cx), cy: Math.round(cy), max: m, at: mk < 0 ? null : [x0 + (mk % W), y0 + Math.floor(mk / W)], cnt });
+    rows.push({ ji: r.ji, n, cx: Math.round(cx), cy: Math.round(cy), max: m, at: mk < 0 ? null : [x0 + (mk % W), y0 + Math.floor(mk / W)], cnt, d2: m2, d2at: m2k < 0 ? null : [x0 + (m2k % W), y0 + Math.floor(m2k / W)] });
   }
-  rows.sort((p, q) => q.max - p.max);
-  console.log(`variant ${VARIANT} TAU ${TAU} CEPS ${CEPS} CUT0 ${CUT0} NAT ${NAT}: ${rows.length} junctions, ${rows.filter((q) => q.max > 0.01).length} with a weighted jump > 0.01 beyond NAT`);
-  for (const q of rows.slice(0, Number(process.env.TOP || 30))) console.log(`ji ${String(q.ji).padStart(3)} n ${q.n} c ${q.cx},${q.cy} max ${q.max.toFixed(4)} at ${q.at} px>0.01 ${q.cnt}`);
+  rows.sort((p, q) => (process.env.SORT === "d2" ? q.d2 - p.d2 : q.max - p.max));
+  console.log(`variant ${VARIANT} TAU ${TAU} DA ${DA} SD ${SD0}-${SD1} CUT0 ${CUT0} NAT ${NAT}: ${rows.length} junctions, ${rows.filter((q) => q.max > 0.01).length} with a weighted jump > 0.01 beyond NAT`);
+  for (const q of rows.slice(0, Number(process.env.TOP || 30))) console.log(`ji ${String(q.ji).padStart(3)} n ${q.n} c ${q.cx},${q.cy} max ${q.max.toFixed(4)} at ${q.at} px>0.01 ${q.cnt} d2 ${q.d2.toFixed(4)} at ${q.d2at}`);
   if (process.env.OUTJSON) writeFileSync(process.env.OUTJSON, JSON.stringify(rows, null, 1));
 }
 
@@ -293,7 +347,7 @@ if (MODE === "png") {
   const { W, H, px, jump } = jumpMap(r, x0, y0, x1, y1, VARIANT);
   // Left: each pixel's blended arc as a stripe pattern (arc mod 0.1 -> gray), right: the jump map.
   const OW = W * Z * 2 + 4, OH = H * Z;
-  const img = new Uint8Array(OW * OH * 4).fill(255);
+  const img = Buffer.alloc(OW * OH * 3, 255);
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     const k = y * W + x;
     let s = 0, wsum = 0;
@@ -303,12 +357,12 @@ if (MODE === "png") {
     const g = Math.round(255 * (0.5 + 0.5 * Math.cos(f * TAU2)));
     const j = Math.min(1, jump[k] / 0.1);
     for (let yy = 0; yy < Z; yy++) for (let xx = 0; xx < Z; xx++) {
-      const o1 = ((y * Z + yy) * OW + x * Z + xx) * 4;
-      img[o1] = g; img[o1 + 1] = g; img[o1 + 2] = g; img[o1 + 3] = 255;
-      const o2 = ((y * Z + yy) * OW + W * Z + 4 + x * Z + xx) * 4;
-      img[o2] = Math.round(255 * j); img[o2 + 1] = Math.round(255 * j * 0.6); img[o2 + 2] = 40; img[o2 + 3] = 255;
+      const o1 = ((y * Z + yy) * OW + x * Z + xx) * 3;
+      img[o1] = g; img[o1 + 1] = g; img[o1 + 2] = g;
+      const o2 = ((y * Z + yy) * OW + W * Z + 4 + x * Z + xx) * 3;
+      img[o2] = Math.round(255 * j); img[o2 + 1] = Math.round(255 * j * 0.6); img[o2 + 2] = 40;
     }
   }
-  writePng(out, OW, OH, img);
+  writeFileSync(out, encodePNG({ W: OW, H: OH, data: img }));
   console.log(`wrote ${out} ${OW}x${OH}`);
 }
