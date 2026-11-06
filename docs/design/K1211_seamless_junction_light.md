@@ -117,3 +117,69 @@ geometry later: keep the light's rule independent of how the web is built where 
   Neither a compaction nor context size is a stop; after a compaction re-read this brief and
   `git log`.
 - Report: what you built, the sheet paths, your verdict, and a `Ledger items` list.
+
+## Handoff (S1, 2026-11-05, Claude agent a775d9bee91f23536; draft while the shots wait on the perf lock)
+
+### What was built, and where
+
+- **The switch.** `src/render/junction_field.ts`: `setJunctionLight(mode)` / `junctionLight()`
+  (`JUNCTION_LIGHTS`), carried by `uJParams.z`. 0 = today (the default), 1 = look A, 2 = look
+  B; it rounds first and falls back to 0 out of range. Probe hook
+  `window.__knotJunctionLight(n?)` (`src/app/probe_hooks.ts`) sets it, calls
+  `rebuildFillets(true)` and returns the mode worn. The looks apply only to lit records with
+  arms (routed or pulse-banded, `hd.z > 0`) and never in paint debug views 3 / 4.
+- **Look A, one light per junction** (`jLightA` in FIELD_GLSL; CPU twin `lightA` in
+  `src/render/ribbon/joinery.ts` `cpuJunctionField`). Per record, the level LJ is the
+  |L|^2-weighted mean over its arms of L_i = composed minus untraveled at the arm's joint texel
+  (`lightLevel`: a dark arm carries no weight, two equal lights average, the brighter
+  dominates). At a web pixel each bracketing arm shows untrav(s) + mix(LJ, L(s), ease(s / ramp))
+  with ramp = `LIGHT_RAMP_FH` (2.0) fh and ease = `lightEase` (junctionBlend's kEase: linear at
+  0, smoothstep at 1), and the two arms blend by junctionBase's own weight t, exactly as the
+  colors do. No band is drawn: the gold route bands and the pulse bands are skipped while A is
+  on. A routed web that is fully traveled (J1.z >= 0.5, no pulse band) keeps its composed rows.
+- **Look B, a soft field that keeps the turn** (`jLightSoft`, `jLightAllow` in FIELD_GLSL;
+  twin `allow` / `covL` in joinery.ts). The bands stay (gold and pulse), but a band's cover
+  becomes `lightSoftCover(d)` (solid to the half-width, then a smoothstep to 0 over
+  `LIGHT_SOFT_FH` (1.5) fh more) times `lightAllowance`: 1 on the band's own arms, and on the
+  other arms 1 - ease(s / ramp), blended by junctionBase's t. The light keeps the route's
+  turn, has no hard lateral edge, and enters an arm the route did not take only near the joint.
+- **Cover strips.** While a look is on, every routed arm's cover strip reaches at least
+  `LIGHT_STRIP_FH` (2.25) fh, still capped by `coverCap`, so the ramps end inside what the
+  junction pass draws (joinery.ts `want`).
+- **Tests.** `test/render/junction_light.test.ts` (the switch, lightEase, lightSoftCover,
+  lightAllowance, lightLevel, the shader copies by text); `test/render/k320_slim.test.ts`: the
+  junction program's budget 40,495 -> 43,758 (+3,263 characters).
+- **Probe tools** (`.claude/probes/K1211/`, tracked): `shoot.mjs <stand> <outDir> [nf]` (one
+  settled same-state page per stand, every clock pinned, `phw=0` and `fw=0`; every look, nf
+  pulse phases, webs off, the gold at rest, colors only, background; `meta.json` with the
+  records, their arms and routes and the world-to-screen affine), `analyze.mjs` (`zero`,
+  `checks`, `sheets`, `grad`, `gold`, `wide`), `lib.mjs`, `png.mjs`, `sheet.mjs`,
+  `vite.private-cache.config.ts`. Outputs stay untracked in `out/`.
+
+### Cost
+
+- **Shader text.** JUNCTION_FRAG grows 3,263 characters, and junction-field and
+  junction-field-explore (`#define JCOL vec4` there) both compile cold once for every player
+  (K307), mode 0 included: shipping one look should delete the other's text, and shipping
+  neither should revert all of it.
+- **Mode 0, per web pixel:** two uniform tests (`uJParams.z > 0.5`), no texel read.
+- **Look A, per web pixel:** 2n strip reads for LJ (n arms) plus four for the two bracketing
+  arms (composed and untraveled each) and the two profArc reads junctionBase already makes;
+  the band loops are skipped, which pays part of it back. LJ is the same for every pixel of a
+  record: if A ships, compute it once per record on the CPU into one texel.
+- **Look B, per web pixel:** per band, two eases and one smoothstep; no new texel read.
+- **Data:** no new texels. The cover strips are longer while a look is on (at most 2.25 fh per
+  routed arm), so the strip pass draws more fragments.
+
+### What carries over to fire and collapse (K1210)
+
+- The rule is the colors' BLENDING CONTRACT, applied to an effect: one converged value per
+  junction, each arm ramping to it over a fixed distance near its joint, eased like
+  junctionBlend, the arms then blended by junctionBase's own t. Look A is that rule written for
+  a light; the same three pieces (`lightLevel` at the joints, `lightEase` over a fixed ramp,
+  junctionBase's t) apply to any per-arm scalar an effect carries (the char amount, a collapse
+  width), with no band and no polygon edge inside the web.
+- Look B's piece is the travelling one: an effect that follows a route through the junction
+  (a fire front) keeps its turn with a soft lateral falloff, let into the other arms only near
+  the joint.
+- No fire or collapse code was touched.
