@@ -209,7 +209,10 @@ describe("K320 stage 1: char budgets", () => {
     // K1218 S6 (2026-11-06): sweptArc searches every segment a sweep under
     // two half-widths reaches (rho +- 2 fh) and takes the joint behind the
     // arm's start, +320 (34,759 -> 35,079 measured here); budget follows.
-    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(35_079);
+    // K1218 S6 (2026-11-06): sweptArc hands over to the projection toward a
+    // bend's focus (per-vertex curvature, the fold s kappa, FIELD_FOLD_LO..HI),
+    // +430 (35,079 -> 35,509 measured here); budget follows.
+    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(35_509);
     // K799: uKPath joins KNOT_UNIFORMS_GLSL, which the still pluck
     // includes (+18 here).
     expect(PLUCK_STILL_FRAG.length).toBeLessThanOrEqual(20_550);

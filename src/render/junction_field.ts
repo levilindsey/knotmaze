@@ -101,6 +101,12 @@ import { fabricUniforms, sampSource } from "./fabric_sdf";
 export const FIELD_PROF_DR = 0.06;
 export const FIELD_PROF_ARC = 0.08;
 export const FIELD_BLEND_MIN = 0.5;
+// K1218 S6: sweptArc hands over to the projection where a sweep reaches into
+// its bend's focus, from FIELD_FOLD_LO of the way there to FIELD_FOLD_HI (the
+// share s kappa of a sweep of length s at curvature kappa, + on the concave
+// side): the swept map compresses the arc as 1 / (1 - s kappa) there.
+export const FIELD_FOLD_LO = 0.45;
+export const FIELD_FOLD_HI = 0.8;
 // Arms per junction the shader scans (its loop bound). The fabric's fused
 // junctions carry 3 (splice) or 4 (merge) arms.
 export const MAX_ARMS = 12;
@@ -217,7 +223,7 @@ float jCross(vec2 a, vec2 b) { return a.x * b.y - a.y * b.x; }
 // profile polyline (nearest sweep wins), handed to the projection from one
 // half-width out to two and off every sweep. K1218 S6: every segment a
 // sweep under two half-widths reaches (rho +- 2 fh), and behind the arm's
-// start the joint itself (the cpu mirror says why).
+// start the joint itself, and off a bend's focus (the cpu mirror says why).
 float sweptArc(int ab, vec2 e, float rp) {
   float proj = profArc(ab, rp);
   int last = int(uJParams.y + 0.5) - 1;
@@ -228,10 +234,16 @@ float sweptArc(int ab, vec2 e, float rp) {
   vec3 a = profPt(ab, max(g - 1, 0));
   vec3 b = profPt(ab, g);
   vec3 c = profPt(ab, g + 1);
+  vec2 ta = b.xy - a.xy;
   vec2 tb = normalize(c.xy - b.xy);
-  if (g > 0) tb = normalize(tb + normalize(b.xy - a.xy));
+  float kb = 0.0;
+  if (g > 0) {
+    kb = 2.0 * jCross(normalize(ta), tb) / (length(ta) + length(c.xy - b.xy));
+    tb = normalize(tb + normalize(ta));
+  }
   float best = 1e9;
   float arc = proj;
+  float fold = 0.0;
   if (g == 0 && dot(e, tb) < 0.0) {
     best = rho;
     arc = b.z;
@@ -241,9 +253,12 @@ float sweptArc(int ab, vec2 e, float rp) {
     vec2 dd = c.xy - b.xy;
     vec2 tc = normalize(dd);
     vec3 d = c;
+    float kc = 0.0;
     if (g + 2 <= last) {
       d = profPt(ab, g + 2);
-      tc = normalize(tc + normalize(d.xy - c.xy));
+      vec2 de = d.xy - c.xy;
+      kc = 2.0 * jCross(tc, normalize(de)) / (length(dd) + length(de));
+      tc = normalize(tc + normalize(de));
     }
     vec2 n0 = vec2(-tb.y, tb.x);
     vec2 dn = vec2(-tc.y, tc.x) - n0;
@@ -262,15 +277,18 @@ float sweptArc(int ab, vec2 e, float rp) {
         if (l < best) {
           best = l;
           arc = mix(b.z, c.z, u);
+          fold = sign(jCross(dd, q - u * dd)) * l * mix(kb, kc, u);
         }
       }
     }
     b = c;
     c = d;
     tb = tc;
+    kb = kc;
     g++;
   }
-  return mix(arc, proj, smoothstep(uJParams.x, 2.0 * uJParams.x, best));
+  float w = 1.0 - (1.0 - smoothstep(uJParams.x, 2.0 * uJParams.x, best)) * (1.0 - smoothstep(${FIELD_FOLD_LO.toFixed(3)}, ${FIELD_FOLD_HI.toFixed(3)}, fold));
+  return mix(arc, proj, w);
 }
 
 

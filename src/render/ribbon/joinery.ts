@@ -65,6 +65,8 @@ import {
 import type { KExploreState } from "../paint_math";
 import {
   FIELD_BLEND_MIN,
+  FIELD_FOLD_HI,
+  FIELD_FOLD_LO,
   FIELD_PROF_ARC,
   FIELD_PROF_DR,
   MAX_ARMS,
@@ -459,11 +461,19 @@ export class Joinery {
     // the projection stands off every sweep. K1218 S6: the search holds
     // every segment a sweep shorter than two half-widths can land on (its
     // foot within rho +- 2 fillHalf of the centre; segment g lies between
-    // radius g DR and (g + 1) DR), so the window moving changes nothing
-    // (S5's seven segments from rp dropped a near sweep: cross ji 80's
-    // line); behind the joint's normal (g == 0) the joint is the sweep, at
+    // radius g DR and (g + 1) DR), so the window moving changes nothing;
+    // behind the joint's normal (g == 0) the joint is the sweep, at
     // distance rho, so the arc meets the u = 0 sweep there instead of
-    // jumping to the projection (cross ji 33's crease).
+    // jumping to the projection (cross ji 33's crease). Where a sweep
+    // reaches toward its bend's focus the map compresses the arc as
+    // 1 / (1 - s kappa) (s the sweep's signed length, kappa the polyline's
+    // curvature, both + on the concave side): cross ji 80's vertical line,
+    // on the inside of arm B's right turn, where two segments swept a pixel
+    // each. kappa is per vertex (the turn over the two segments' mean
+    // length; 0 at the joint, where the joint sweep meets it), lerped along
+    // the segment, so it is continuous across vertex normals (a per-segment
+    // ratio steps there), and the arc hands over to the projection from
+    // s kappa = FIELD_FOLD_LO to FIELD_FOLD_HI.
     const pt =(ab: number, g: number, o: Float64Array, k: number): void => {
       const t = at(ab + 2 + g);
       o[k] = g * FIELD_PROF_DR * Math.cos(J[t]);
@@ -487,12 +497,17 @@ export class Joinery {
       pt(ab, g, sw, 3);
       pt(ab, g + 1, sw, 6);
       nrm(sw[6] - sw[3], sw[7] - sw[4], sw, 12);
+      let kb = 0;
       if (g > 0) {
         nrm(sw[3] - sw[0], sw[4] - sw[1], sw, 14);
+        const la = Math.sqrt((sw[3] - sw[0]) ** 2 + (sw[4] - sw[1]) ** 2);
+        const lb = Math.sqrt((sw[6] - sw[3]) ** 2 + (sw[7] - sw[4]) ** 2);
+        kb = (2 * (sw[14] * sw[13] - sw[15] * sw[12])) / (la + lb);
         nrm(sw[12] + sw[14], sw[13] + sw[15], sw, 12);
       }
       let best = 1e9;
       let arc = proj;
+      let fold = 0;
       if (g === 0 && ex * sw[12] + ey * sw[13] < 0) {
         best = rho;
         arc = sw[5];
@@ -504,11 +519,15 @@ export class Joinery {
         sw[9] = sw[6];
         sw[10] = sw[7];
         sw[11] = sw[8];
+        let kc = 0;
         if (g + 2 <= last) {
           pt(ab, g + 2, sw, 9);
           const ox = sw[14];
           const oy = sw[15];
           nrm(sw[9] - sw[6], sw[10] - sw[7], sw, 14);
+          const ld = Math.sqrt(ddx * ddx + ddy * ddy);
+          const le = Math.sqrt((sw[9] - sw[6]) ** 2 + (sw[10] - sw[7]) ** 2);
+          kc = (2 * (ox * sw[15] - oy * sw[14])) / (ld + le);
           nrm(ox + sw[14], oy + sw[15], sw, 14);
         }
         const n0x = -sw[13];
@@ -526,20 +545,27 @@ export class Joinery {
           for (let r = 0; r < 2; r++) {
             const u = r === 0 ? (Math.abs(qa) > 1e-12 ? h / qa : -1) : Math.abs(h) > 1e-12 ? qc / h : -1;
             if (!(u >= 0 && u <= 1)) continue;
-            const l = Math.hypot(qx - u * ddx, qy - u * ddy);
+            const lx = qx - u * ddx;
+            const ly = qy - u * ddy;
+            const l = Math.hypot(lx, ly);
             if (l < best) {
               best = l;
               arc = sw[5] + (sw[8] - sw[5]) * u;
+              fold = Math.sign(ddx * ly - ddy * lx) * l * (kb + (kc - kb) * u);
             }
           }
         }
         sw.copyWithin(3, 6, 12);
         sw[12] = sw[14];
         sw[13] = sw[15];
+        kb = kc;
       }
       let w = (best - fillHalf) / fillHalf;
       w = w < 0 ? 0 : w > 1 ? 1 : w;
-      return arc + (proj - arc) * w * w * (3 - 2 * w);
+      let wf = (fold - FIELD_FOLD_LO) / (FIELD_FOLD_HI - FIELD_FOLD_LO);
+      wf = wf < 0 ? 0 : wf > 1 ? 1 : wf;
+      const wt = 1 - (1 - w * w * (3 - 2 * w)) * (1 - wf * wf * (3 - 2 * wf));
+      return arc + (proj - arc) * wt;
     };
     const rho = Math.sqrt(ex * ex + ey * ey);
     const phi = Math.atan2(ey, ex);
