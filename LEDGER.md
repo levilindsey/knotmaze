@@ -321,11 +321,11 @@ Next free ID: K1211.
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
   Levi to edit instead of drawing all 26 (Levi, 2026-10-26). Muse's prototype parked at abc135e7.
-  - owner: nobody since 2026-11-05 09:05: paused on Levi's answers (K1119: v6.8 on every sheet; K1197: c's old joins)
-  - branch: mainline for the brief; J3i's branch `worktree-agent-a2d2f19ad8f0a41d7` (`.claude/worktrees/agent-a2d2f19ad8f0a41d7`, kept) also holds unmerged copies of its probe files; J3h's worktree `.claude/worktrees/agent-a3b2dcbad71e5cbd8` kept (merged at d5d0a2c7); last commit: `9e699429` (J3i's branch tip)
-  - evidence: `.claude/probes/K863/trace/` (J3i: `work32/`, `out32/` with `png/c_font_cmp_v72.png` and `png/c_spots_v72.png`, `work32/dbg/*_k1112cusp.*`, NOTES `## K1112 cusp`; J3h: `work31/`, `out31/`, `work31/dbg/*_k1112c.*`, NOTES `## K1112 c`; J3g: `work30/`, `out30/`, NOTES `## K1119`); Drive `K863/` (v7.0: `*_v70.svg`; v7.1: `c_v71.svg`, `cursive_v71_words.svg`; v7.2: `c_v72.svg`, `cusp_v72.svg`, `cursive_v72_words.svg`); Levi's template `out25/cursive_template.svg`; the full file list in `docs/ledger_notes.md` `## K863`
-  - next: a Claude stage restores v6.8 (K1119's sheets) and c's old hand-set joins as the kit's base, judged by K863_trace.md's Judging a look; then Plc1m and the ij work re-judged on it (K1198); the rule replaces a hand-set join only where it matches by eye; 22G and the c refit held
-  - brief: K863_trace.md's Judging a look binds it; the base stage's brief is the next to write (docs/design/)
+  - owner: claude agent af77097804c041b8b (J3j) of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c, since 2026-11-05 09:24
+  - branch: worktree-agent-af77097804c041b8b (.claude/worktrees/agent-af77097804c041b8b); J3i's worktree-agent-a2d2f19ad8f0a41d7 holds v7.2, unmerged; last commit: 8b03b038 (J3j's brief)
+  - evidence: .claude/probes/K863/trace/ (work28 = v6.8; J3j writes work33 and out33)
+  - next: J3j rebuilds v6.8 as the base, identical to work28, with an account of v6.9-v7.2's changes and reference sheets; Claude reviews them by eye; then Plc1m and the ij work are re-judged on it (K1198); 22G and the c refit held
+  - brief: docs/design/K863_cursive_j3j.md (K863_trace.md's Judging a look binds it)
 - **K114** · Gameplay round 2, designed in
   `docs/design/K80_gameplay_additions.md` section R: burn race, cut
   verb, beat rider, spider, Pluck Hero MVP. Levi took the recs (calls
