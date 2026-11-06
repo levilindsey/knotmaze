@@ -308,11 +308,11 @@ Next free ID: K1232.
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
   float64 reference. Plan S1-S8, about 15 h (F7); supersedes K868 and K992. S1 to S1f merged (S1f: fb348a78); S3 (K1097) merged short of its gate; S1g merged (ca273d04); S3b (K1097) merged (587b7e80, 2026-11-02): 0 DEFECT, the Pixel's 2 ms missed 5-20x.
-  - owner: nobody since 2026-11-04 01:55 (S3 runs under K1097)
-  - branch: mainline; last commit: `c0df57e3`
-  - evidence: the design's F1-F7 (`docs/design/K1040_junction_field.md`); `.claude/probes/K1040/` (the timing prototype; the stages' driver in `s1/`, baselines in `s1/out/` (S1), `s1/out/s1b/` and `s1/out/s1c/`, S1d's runs in `s1/out/s1d/`, S1e's in `s1/out/s1e/` (gate `s1/run_s1e_gate.ps1`, table `s1/gate_table.ps1`; probes `b_rate.ts`, `bend_s1e.ts`, `attr_f4f5.ts`, `lcut_far.ts`, `attr_c2.ts`, `arms_c3.ts`; commands in its Handoff)); worktrees `k868-s3a` (oracle30, the recordings `.claude/probes/S3a/seq13/`) and `k992-corners` (the census kit), kept
-  - next: K1097 S3f4 (docs/design/K1040_s3f4_bound.md): what bounds the Pixel's label drawing, after S3f3's drawing levers all failed their census; S1i (K1114) merged in 8b436272 (its root-gate veto: K1163)
-  - brief: docs/design/K1040_s3f4_bound.md (S3f4); docs/design/K1040_s3f3_draw.md (S3f3); docs/design/K1040_s3f_draw.md (S3f); docs/design/K1040_s3e_lean.md (S3e's Handoff); docs/design/K1114_s1i_rounding.md (S1i)
+  - owner: agent `a938d2e1d4d9b45e3` of claude session c18e2f02-e64f-41ba-9af0-2dbd583358e2 (opus, started 2026-11-06 06:42, 2 h cap ~08:42)
+  - branch: `worktree-agent-a938d2e1d4d9b45e3`, worktree `.claude/worktrees/agent-a938d2e1d4d9b45e3`; last commit: `302ab066`
+  - evidence: .claude/probes/K1040/s4a/ in its worktree; the 12 scenes in the main checkout's .claude/probes/K868/scenes/; S3's tools .claude/probes/K1040/s3/
+  - next: S4a runs to its Done; Claude views its sheets (reference, GPU, difference), merges, then launches S4b (corners, ties, outer edge, the flag: Levi's first look)
+  - brief: `docs/design/K1040_s4a_band.md`
   - env: from the worktree, `npx vite --config .claude/probes/K1040/vite.private-cache.config.ts --port 5401 --strictPort --host 127.0.0.1`
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
