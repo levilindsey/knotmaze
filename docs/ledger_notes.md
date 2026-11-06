@@ -3874,3 +3874,12 @@ Run E (22E) started at 10:47:42. Its agent went idle at 10:59:31 saying it would
 The item's text before: K1139 Stage 4 leftovers (`docs/design/K1139_s3b_fix.md`): the full model's 12/6/11 threshold flips; no arc-true tau rate or obliqueness in the classifier; ji 147 arm 1's bright GPU colours, unexplained (candidate gk). Batch 19 Run D examined the rest: none blocks K1139's merge (`.claude/probes/K1191/`)
 
 Run F (Muse batch 22, 22F; 4c7867da, its ledger update 4ef96746; `.claude/probes/K1191/gk147.mjs`, `gk147.txt` and `gk147.md`) modelled gk at ji 147 arm 1's bright pixel-phases from K1139 Stage 4's x4 dump; npm test green (217 files, 2896 tests). The report's proposed text for the item: "ji 147 arm 1's bright GPU colours: not found in `4c7867da` (gk modelled at the 276 px-phases from Stage 4's x4 dump, `.claude/probes/K1191/gk147.mjs`/`gk147.md`: binary discard under the foot/debug/for readings reaches 0-10 of 36 at the bright phases, a fitted per-pixel keep 30-31; the dump holds no gap-slot centreline, strength or per-sample under-colour)." So gk as recorded does not make the colours, and a fuller model needs data the dump does not hold. K1211's rework of the junction light may change what this models.
+
+## K1211 (2026-11-05, Levi on K1190's card)
+
+Levi answered K1190's card (asked 2026-11-04; `docs/asks/K1190.md`, deleted in eb476bc5 when K1211 superseded K1190): "K1190: All four". The card's four spots, each judged against the sheets' top row (before K1139's change; `.claude/probes/K1139/out/s4/sheets/`):
+1. Sharp curved fronts. `t4_ji33_cross_n.png`, bottom row: where the light crosses the fork, its front is a hard curve. `t6_ji149_x4_n_c34_2x.png`, middle and bottom rows: the light stops at a sharp curve running from the gold path's corner down to the dark gap. Before the change both faded softly.
+2. Straight edges. `t4_ji33_cross_n.png`, bottom row, the two right columns: a paler wedge with straight sides at the top left of the light (the 3x crop shows it); the middle row has them too.
+3. The gold path's edge. `t6_ji149_x4_n.png`: round in the top row, a straight line with a corner in the middle and bottom rows.
+4. A small bite. `t6_ji149_x4_n.png`, the two right columns of the middle and bottom rows: a small bite missing from the light at the right edge.
+K1211's looks must fix all four. Claude checks each by name in S1's crops (today, A, B, the colors alone) before the look card, and the card shows them.

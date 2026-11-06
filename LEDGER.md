@@ -308,10 +308,11 @@ Next free ID: K1214.
 
 - **K1211** · One seamless light inside each junction, no line or edge in it (Levi 2026-11-05; notes). Pulses
   and the gold path first, then fire and collapse (K1210). S1: two looks behind a switch, with sheets.
+  Levi, on K1190's card: "All four": soft fronts, no straight wedge, a round gold edge, no bite (notes).
   - owner: agent `a775d9bee91f23536` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (opus, started 2026-11-05 10:05, 2 h cap ~12:05)
   - branch: `worktree-agent-a775d9bee91f23536`, worktree `.claude/worktrees/agent-a775d9bee91f23536`; last commit: `eb476bc5`
   - evidence: .claude/probes/K1211/ (out/ untracked); the pictures Levi saw: .claude/probes/K1139/out/s4/sheets/t4_ji33_cross_n_c34_3x.png, t6_ji149_x4_n_c34_2x.png
-  - next: S1 builds looks A and B behind a switch with sheets; Claude views the crops beside today and the colors, then a look card for Levi; fire and collapse (K1210) follow the pick
+  - next: S1 builds looks A and B behind a switch with sheets; Claude views the crops beside today and the colors, and K1190's four spots by name, then a look card for Levi; fire and collapse (K1210) follow the pick
   - brief: `docs/design/K1211_seamless_junction_light.md`
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
