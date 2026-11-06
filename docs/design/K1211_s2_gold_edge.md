@@ -302,3 +302,30 @@ record. I viewed each one at full size:
   crossing ribbon's own paint, split gold/untraveled across the ribbon (Task 0's note).
 - Loop ji 12's dark triangle (a crossing gap) and 149's small teal notch, both on master.
 - Look B still cuts and nubs (S3's to decide).
+
+**Run I: the rebase (13:27).** origin/master had moved to 79014b00: Run I is cb5a7301, and the
+rest is ledger, K863 and K647 commits. The rebase applied with no conflict, because git's
+three-way merge put S2's two joinery.ts changes (the gold cover in the fan's twin) in regions
+Run I did not touch. The one bottom fan mesh stands as Run I left it, and the layer vote stays
+retired (only comments name it). The code diff against origin/master is six files:
+`probe_hooks.ts`, `junction_field.ts`, `joinery.ts` and three tests. The rest is S1's probes and
+the two briefs. A fetch at 13:35 found origin/master still at 79014b00.
+- `npm test` on the rebased branch: 218 files and 2,916 tests passed (9 skipped), exit 0.
+- Switch smoke (`smoke2.mjs`, the dev server on 5962, under the perf lock, 13:35): the cross stand
+  (`?k111&am=instant&fw=0&snd=none&phw=0`, moves 0, 246, 82, 83, 199), live, at switch 0 then 2.
+  Both draw (drawn share 0.454 each; the two shots differ by 5,051 px, so the switch acts). There
+  is no console error and no lost context, and the page runs Run I's code: the renderer has
+  neither `filletTopLayer` nor `voteOverride` (`out2/smoke2/cross/smoke.json`, runI true). The
+  stamp reads cfe50075, the SHA the dev server read when it started (a define). The served
+  modules are the rebased ones: fetched from 5962 at 13:36, the four Run I files name neither
+  name (a371d164's had 22 hits), and `junction_field.ts` and `joinery.ts` carry S2's gold cover.
+- Explore shot (`&xp=threads`, moves 0, 246, 82; `out2/smoke/explore/`, 13:30, same build):
+  draws at both switches (drawn share 0.292), no console error, no lost context.
+
+**Next:** the lit edge's dark line, the first residual (composite the bands under the gold; the
+recipe is above). Then S3: the webs' light, the pulse's soft front and wedges, and look B's cut
+and nub. (a) can be calibrated on the pure reference there, and (b) re-run.
+
+Stopped at 13:38, with Tasks 0-5 and Run I done. The lit edge's dark line was not started: it
+needs about 40 minutes with a re-shot under the lock, which would have run past the cap
+(14:10:50).
