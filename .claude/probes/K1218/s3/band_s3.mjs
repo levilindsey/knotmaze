@@ -23,6 +23,17 @@ const f = (k) => {
 };
 const [ax, ay] = f(0), [bx, by] = f(1);
 const toDev = (x, y) => [P[0] + ax * (x - p[0]) + ay * (y - p[1]), P[1] + bx * (x - p[0]) + by * (y - p[1])];
+// ribbon_mesh.ts's offApexSide, line for line.
+function offApexSide(rim, a, b, apexX, apexY, qx, qy, reach) {
+  const ax = rim[a * 2], ay = rim[a * 2 + 1];
+  const dx = rim[b * 2] - ax, dy = rim[b * 2 + 1] - ay;
+  const dl = Math.sqrt(dx * dx + dy * dy);
+  if (dl < 1e-9) return false;
+  const sApex = (dx * (apexY - ay) - dy * (apexX - ax)) / dl;
+  if (Math.abs(sApex) <= reach) return false;
+  const sQ = (dx * (qy - ay) - dy * (qx - ax)) / dl;
+  return sApex * sQ < 0;
+}
 const bary = (pt, a, b, c) => {
   const d = (b[1] - c[1]) * (a[0] - c[0]) + (c[0] - b[0]) * (a[1] - c[1]);
   const l1 = ((b[1] - c[1]) * (pt[0] - c[0]) + (c[0] - b[0]) * (pt[1] - c[1])) / d;
@@ -44,7 +55,15 @@ for (const c of res.calls) {
       if (tl > 1e-9) { tx /= tl; ty /= tl; } else { tx = 1; ty = 0; }
       let nx = -ty, ny = tx;
       if (nx * (c.cx - px) + ny * (c.cy - py) < 0) { nx = -nx; ny = -ny; }
-      inn.push([px + nx * c.bIn, py + ny * c.bIn]);
+      // cd93a184's fold fallback (pushFan): an inset point off the apex side of
+      // an adjacent rim segment moves toward the apex instead. OLD=1 skips it.
+      let qx = px + nx * c.bIn, qy = py + ny * c.bIn;
+      if (!process.env.OLD && (offApexSide(rim, i0, i, c.cx, c.cy, qx, qy, c.bIn) || offApexSide(rim, i, i1, c.cx, c.cy, qx, qy, c.bIn))) {
+        const ax = c.cx - px, ay = c.cy - py, al = Math.sqrt(ax * ax + ay * ay);
+        const k = al > c.bIn ? c.bIn / al : 1;
+        qx = px + ax * k; qy = py + ay * k;
+      }
+      inn.push([qx, qy]);
       out.push([px - nx * c.bOut, py - ny * c.bOut]);
     }
     for (const v of inn) { V.push(v); look.push(0); }
