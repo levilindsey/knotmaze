@@ -299,12 +299,13 @@ Next free ID: K1223.
 
 - **K1211** · One seamless light inside each junction, no line or edge in it (Levi 2026-11-05; notes). Pulses
   and the gold path first, then fire and collapse (K1210). S2 a84225d3, S3 66752e75 merged; S4 (42e2a7cc,
-  unmerged): look B out, a soft field, still 1.6-8x the bar. S5: one tau at the joint, the gold's edge blend.
-  - owner: agent `ad43222916dc55569` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (opus, started 2026-11-05 16:53, 2 h cap ~18:53)
-  - branch: `worktree-agent-ad43222916dc55569`, worktree `.claude/worktrees/agent-ad43222916dc55569`; last commit: `2b11df8e`
-  - evidence: .claude/probes/K1211/ (S1's to S4's tools; out5/ in S5's worktree); K1190's sheets: .claude/probes/K1139/out/s4/sheets/t6_ji149_x4_n.png, t4_ji33_cross_n.png
-  - next: S5's tasks 1-6 per its brief (S4 cherry-picked; one tau near the joint; the gold's edge blend; the model's bar; checks; sheets; Handoff); then K1219's notch, K1214's re-time, K1210, 22D
-  - brief: `docs/design/K1211_s5_shared_tau.md` (S4's: `K1211_s4_soft_light.md`, Handoff on its branch 42e2a7cc, kept; S3's: `K1211_s3_lit_edge_web.md`; S2's: `K1211_s2_gold_edge.md`; S1's: `K1211_seamless_junction_light.md`)
+  unmerged): look B out, a soft field. S5 never ran (its session ended). S6, Levi's reset: one agent, the
+  top row of K1190's sheets as its goal, every technical call its own, no numeric gate.
+  - owner: agent `a057b2be255c4a410` of claude session c18e2f02-e64f-41ba-9af0-2dbd583358e2 (opus, started 2026-11-05 18:44, 2 h cap ~20:44)
+  - branch: `worktree-agent-a057b2be255c4a410`, worktree `.claude/worktrees/agent-a057b2be255c4a410`; last commit: `8156d730`
+  - evidence: .claude/probes/K1211/out6/ in its worktree (per spot: 7474d09b | master | branch); K1190's sheets in .claude/probes/K1139/out/s4/sheets/
+  - next: S6 runs to its Done; then Claude views its sheets at full size against the top row and shows Levi
+  - brief: `docs/design/K1211_s6_one_glow.md`
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
   float64 reference. Plan S1-S8, about 15 h (F7); supersedes K868 and K992. S1 to S1f merged (S1f: fb348a78); S3 (K1097) merged short of its gate; S1g merged (ca273d04); S3b (K1097) merged (587b7e80, 2026-11-02): 0 DEFECT, the Pixel's 2 ms missed 5-20x.
@@ -503,7 +504,7 @@ Next free ID: K1223.
 - **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate correctly
   across junctions"). S1 to S5 landed (S5 on since fbc1b212); S3b-S5 held the Pixel's frames (render +2%).
   Levi's look K1200, leftovers K1191 and K1201; K1211 (seamless junctions) first, then S6 (notes).
-  - owner: claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (coordinator)
+  - owner: claude session c18e2f02-e64f-41ba-9af0-2dbd583358e2 (coordinator)
   - branch: mainline (the worktrees `.claude/worktrees/agent-a90af0fe8b4cf82a5` (S4b), `agent-a023a39925efe4816` (S4) and `agent-a8280f4d14ebd8ad1` (the S3b fix) kept); last commit: `fbc1b212`
   - evidence: `.claude/probes/K1139/` (tracked: `*_cyc.mjs`, `ridge_joint.ts`, `s5_sheet.mjs`, `pixel_passes.ps1`, `s5_cool_rerun.ps1`, `out/s4cyc/` sheets, table, bench and `pixel_batch_plan.md` (its Result: S4/S4b on the Pixel), `out/s3b/pixel_batch_plan.md` (its Result: S3b, its fix and S5 on the Pixel), `out/s5/` (20B's q3_head sheet, `s5_sheet.json`), `k307/`; untracked: `out/s4b/`, the round outputs `.claude/probes/rounds/2026-11-04-k1139s4/` and `2026-11-05-k1139s3b`, `-k1139fix`, `-k1139s5`, `-k1139s5b`); the Handoffs of `docs/design/K1139_s4_cycles.md` and `docs/design/K1139_s4b_ridge_fade.md`
   - next: K1211 first: the light inside junctions (Levi 2026-11-05: one seamless unit; the bands may go); then Levi's look K1200 (`docs/asks/K1200.md`), K1201 (its fix (b), Run 22D, held for K1211), S6 (plan section 5) after K1140's Glimpse picks. The next pulse step's Pixel pass watches fabric 7 moves' frames over 25 ms (+14 and +15 in the fix's and S5's passes, floor 13)
@@ -511,24 +512,24 @@ Next free ID: K1223.
   - env: the passes' builds first and never while Muse runs: `scripts/preview.ps1 -Ref <sha> -Root <out>\builds -BuildOnly` for each sha (`pixel_passes.ps1` stops before the phone lock when one is missing); probe server `npx vite --config .claude/probes/K1139/vite.private-cache.config.ts --port 5620 --strictPort --host 127.0.0.1` from a worktree (ports 5620-5639); GPU probes through `.claude/probes/K1139/run_locked.ps1 -Batch`
 - **K1208** · Muse batch 22 (after K1204's batch 21): runs B to P through the chain, from
   `docs/design/K1208_muse_batch22.md` and the later runs' own briefs (ports 5880-5999)
-  - owner: the chain in `.claude/probes/K1053/` (queue.txt, chain.log): Run P (22P) since 16:04, the last queued, a fresh Muse session; coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
-  - branch: mainline; last commit: `f9f625a5`
+  - owner: nobody since 2026-11-05 18:36: the chain ran its queue out (Run P passed its gate at 27d103d1)
+  - branch: mainline; last commit: `27d103d1`
   - evidence: the chain in .claude/probes/K1053/ (queue.txt, chain.log); each run's probe folder under .claude/probes/ (B K1203, H K1210, C and I K1186, E K1196, F K1191, G K1198, M K1214, N K1220, O K1218)
-  - next: P (K1112: m and u exits on one port each); then 22Q on: K1112's next letters after P, K1214's re-time after K1211 S5; D held for K1211; M, N and O reviewed (K1214, K1220, K1218)
+  - next: fix runs only (How to work, 2026-11-05), outside junction files while K1211 S6 runs; D held for K1211; Claude views Run P's K1112 m and u sheets, then Levi
   - brief: `docs/design/K1208_muse_batch22.md`; I to P: K1209_reapply_run_i.md, K647_reset_win_card.md, K1208_run_k_junction_residuals.md, K1208_run_l_cursive_residuals.md, K1214_profile_run_m.md, K1220_run_n_text_forks.md, K1218_run_o_mask_in_junctions.md, K1112_run_p_ports_m_u.md (docs/design/)
 - **K1218** · Gold zigzags in the T and the four (loop ji 89, 12, 88; 22O, f9f625a5): a crossing next to the
   joint masks the fan inside its over thread's tube, so that ribbon's straight gold cut at the joint and its
   crest show through (`walked_gold.ts:172`). Next: S1, `docs/design/K1218_s1_gap_in_junctions.md`; notes.
-  - owner: agent `ab5152230ff5f1d62` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (opus, started 2026-11-05 16:13, 2 h cap ~18:13)
-  - branch: `worktree-agent-ab5152230ff5f1d62`, worktree `.claude/worktrees/agent-ab5152230ff5f1d62`; last commit: `f06632e6`
+  - owner: nobody since 2026-11-05 18:44 (agent `ab5152230ff5f1d62` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (opus, started 2026-11-05 16:13, 2 h cap ~18:13); since 2026-11-05 17:12: session 7301c55b ended, and its agent with it; WIP bcbf5dec; waits until K1211 S6 ends (both touch junction files))
+  - branch: `worktree-agent-ab5152230ff5f1d62`, worktree `.claude/worktrees/agent-ab5152230ff5f1d62`; last commit: `bcbf5dec`
   - evidence: .claude/probes/K1218/ (run_o/: Run O's tools, crops and SUMMARY; s1/ in the worktree)
   - next: S1 from its brief: the census of slots inside junction footprints, lead (a) at jointMask, the triangle
   - brief: `docs/design/K1218_s1_gap_in_junctions.md`
 - **K1220** · Text forks: a disc with a round edge inside, steps where the arms' straight cuts meet it
   (22N, 655eb6a9): glyph arms under 0.15 world get no field record, so a host-axis disc draws the fork.
   Next: S1 alongside K1211 S5 (other code), `docs/design/K1220_s1_text_forks.md`; notes.
-  - owner: agent `a887c979ca2299b92` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (opus, started 2026-11-05 16:53, 2 h cap ~18:53)
-  - branch: `worktree-agent-a887c979ca2299b92`, worktree `.claude/worktrees/agent-a887c979ca2299b92`; last commit: `cd868eec`
+  - owner: nobody since 2026-11-05 18:44 (agent `a887c979ca2299b92` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (opus, started 2026-11-05 16:53, 2 h cap ~18:53); since 2026-11-05 17:12: session 7301c55b ended, and its agent with it; WIP 25a5c501; waits until K1211 S6 ends (both touch junction files))
+  - branch: `worktree-agent-a887c979ca2299b92`, worktree `.claude/worktrees/agent-a887c979ca2299b92`; last commit: `25a5c501`
   - evidence: .claude/probes/K1220/ (run_n/, Run N's; s1/ in S1's worktree)
   - next: S1's tasks 1-5 per its brief (census and bar; real records for text forks; checks; sheets; Handoff)
   - brief: `docs/design/K1220_s1_text_forks.md`

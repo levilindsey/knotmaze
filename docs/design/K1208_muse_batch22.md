@@ -117,6 +117,8 @@ so in the report.
 
 Claude agents may run beside a run, each in its own worktree (a run's section names any whose files it shares); never touch their worktrees or files. Claude runs the phone passes; no run touches the phone.
 
+Fix runs only, and probe outputs stay out of git (Levi's reset, 2026-11-05). A run lands a fix with a numeric test that shows it; a run that would only investigate is not sent, and a run that cannot make its fix within its brief stops and reports instead of landing probe results. `.claude/` is ignored apart from `.claude/rules/`: never `git add -f` a probe's outputs (JSON, PNG, TXT tables, logs, sheets). A small probe script may be force-added when a later run reuses it; its numbers go in the commit message. Run P (27d103d1) committed 68 probe files, 36,877 lines.
+
 ## Run B - K1207: settle the two pulse switches (cover ramp out, end window the only path)
 
 **Chain tag:** 22B · **Suggested ports:** 5880-5889 (the
