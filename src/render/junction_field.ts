@@ -240,6 +240,23 @@ export function drawBandYield(dDraw: number, dShared: number, pxW: number): numb
   return 1 - t * t * (3 - 2 * t);
 }
 
+// K1211 S3 (mode 0; the CPU twin of junctionField's sIn and its web test):
+// a drawing pulse band lights the web off its tube, at its whitening times
+// its yield, where p lies between the band's two arms (junctionBase's
+// bracketing arms ia and ib are the band's pair, in either order) and on
+// the inside of its turn. `side` is cross(segment, p - segment start) at
+// p's nearest band segment; the turn is the cross of the band's first leg
+// (v0 -> v1) and its chord (v0 -> vLast). Without it the web sliver inside
+// the turn kept the base's quiet rows past the tube's edge (x4 ji 149's
+// bite). A one-arm band (bB -1) never matches; look B keeps its own light.
+export function bandTurnSide(side: number, v0x: number, v0y: number, v1x: number, v1y: number, qx: number, qy: number): number {
+  return side * ((v1x - v0x) * (qy - v0y) - (v1y - v0y) * (qx - v0x));
+}
+
+export function bandLightsWeb(ia: number, ib: number, bA: number, bB: number, turn: number, lookB: boolean): boolean {
+  return !lookB && turn > 0 && ((ia === bA && ib === bB) || (ia === bB && ib === bA));
+}
+
 export function setFieldParams(fillHalf: number, profN: number): void {
   const u = fieldUniforms().uniforms as { uJParams: Float32Array };
   u.uJParams[0] = fillHalf;
@@ -275,7 +292,7 @@ float kFanPulseV = 0.0;
 
 // K1211 S1 (uJParams.z 2, look B): what junctionBase leaves for it - the
 // bracketing arms, the blend weight and each arm's arc at p. Written
-// only while the look is on.
+// only while the look is on (the arms always: K1211 S3's web light).
 int jbIa = 0;
 int jbIb = 0;
 float jbT = 0.0;
@@ -402,9 +419,9 @@ vec3 junctionBase(int rec, vec2 p, vec4 hd, bool untrav) {
     if (t <= 0.0) onlyA = true;
     else if (t >= 1.0) onlyB = true;
   }
+  jbIa = ia;
+  jbIb = ib;
   if (uJParams.z > 0.5) {
-    jbIa = ia;
-    jbIb = ib;
     jbT = onlyA ? 0.0 : onlyB ? 1.0 : t;
     jbSA = profArc(abA, relA < HALF_PI ? rho * cos(relA) : 0.0);
     jbSB = profArc(abB, relB < HALF_PI ? rho * cos(relB) : 0.0);
@@ -553,6 +570,7 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
   float sDist[${MAX_ROUTES}];
   float sSd[${MAX_ROUTES}];
   float sF[${MAX_ROUTES}];
+  float sIn[${MAX_ROUTES}];
   int sPb[${MAX_ROUTES}];
   for (int r = 0; r < ${MAX_ROUTES}; r++) {
     if (r >= np) break;
@@ -661,6 +679,9 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
     sDist[r] = dnow;
     sSd[r] = side < 0.0 ? -dnow : dnow;
     sF[r] = r1.z < 0.5 ? clamp((K_BAND * cr - fa) / max(1.0 - fa, 1e-3), 0.0, 1.0) : 0.0;
+    // K1211 S3: > 0 inside the band's turn (bandTurnSide).
+    vec2 v1 = jAt(pb + 5).xy - v0.xy;
+    sIn[r] = side * (v1.x * (q0.y - v0.y) - v1.y * (q0.x - v0.x));
     sPb[r] = pb;
     pb += 4 + nv;
   }
@@ -677,6 +698,10 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
       wW = max(wW, sF[r] * cw);
       c = mix(c, pm, cw);
     }
+    // K1211 S3: the web inside its turn wears its light too (bandLightsWeb).
+    int bA = int(r0.z + 0.5);
+    int bB = r0.w > -0.5 ? int(r0.w + 0.5) : -1;
+    if (!lookB && sIn[r] > 0.0 && ((jbIa == bA && jbIb == bB) || (jbIa == bB && jbIb == bA))) wW = max(wW, sF[r] * yr);
     for (int s = 0; s < ${MAX_ROUTES}; s++) {
       if (s >= np) break;
       if (s <= r) continue;
