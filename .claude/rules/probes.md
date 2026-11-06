@@ -84,6 +84,9 @@ PROBE LORE (2026-10-11): **the session scratchpad is shared by every
 agent of the session** - another agent rebuilt `dist_before` under a
 running A/B (the "before" stamp silently became a different commit).
 Give every build/output a unique subdirectory and check the stamp's SHA.
+A DEV server's stamp is the SHA it started from (a Vite define): after a
+commit or rebase under it, check the served modules instead (K1211 S2's
+`.claude/probes/K1211/smoke2.mjs` fetches them).
 rebuildFillets is GATED now: timing loops must call it with `true`, and
 geometry injected into the fan meshes (the GPU census) survives only
 until the next update() - wait for sleep and use a fw=0 URL. A rAF-to-rAF

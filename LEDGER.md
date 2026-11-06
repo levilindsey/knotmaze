@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1218.
+Next free ID: K1220.
 
 ## Waiting on Levi
 
@@ -1679,6 +1679,12 @@ Every other item below waits on the trigger it names.
 - **K1217** · Reset path during the winning move (K647, adee40a6) stops the clock at the press, up to one
   move's travel before the arrival a live finish records, so a press can shave that off a daily's time (22J's
   report). Fix: record the arrival's time.
+- **K1218** · The gold zigzags at the junction T and four (loop ji 89, 12, 88): the crossing-gap mask shows a
+  crossing ribbon's own paint, split gold/untraveled across it (gone with the mask off; K1211 S2,
+  `docs/design/K1211_s2_gold_edge.md` Handoff).
+- **K1219** · Loop ji 12's small dark triangle (a crossing gap: in the pure colours shot too, gone with the
+  mask off) and x4 ji 149's small teal notch where the gold meets the dark crossing, both on master (K1211
+  S2's Handoff).
 
 ## Approved, to schedule (2026-10-11)
 
