@@ -165,7 +165,10 @@ describe("K320 stage 1: char budgets", () => {
     // looks (jLightEase / jLightSoft / jLightAllow, jLightA, junctionBase's
     // bracket globals and the look flags) add 3,263 (40,495 -> 43,758
     // measured here); the pick (S2) drops the loser and the switch.
-    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(43_758);
+    // K1211 S2 (branch only): look A (jLightA, its JCOL type and explore
+    // edit, the two arm-block globals, the look A flags) comes out, 1,728
+    // in all (43,758 -> 42,030 measured here); look B and the switch stay.
+    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(42_030);
     // K799: uKPath joins KNOT_UNIFORMS_GLSL, which the still pluck
     // includes (+18 here).
     expect(PLUCK_STILL_FRAG.length).toBeLessThanOrEqual(20_550);

@@ -457,9 +457,9 @@ export function installProbeHooks(ctx: ProbeCtx): void {
     return true;
   };
   // K1211 S1: the junction light switch (junction_field.ts
-  // setJunctionLight: 0 today, 1 look A, 2 look B). Sets it, rebuilds the
-  // fillets (a look lengthens the cover strips) and returns the mode now
-  // worn; with no argument it only reads it.
+  // setJunctionLight: 0 today, 2 look B; S2 removed look A, so 1 reads as
+  // 0). Sets it, rebuilds the fillets (look B lengthens the cover strips)
+  // and returns the mode now worn; with no argument it only reads it.
   (window as unknown as Record<string, unknown>).__knotJunctionLight = (n?: number) => {
     if (typeof n === "number") {
       setJunctionLight(n);

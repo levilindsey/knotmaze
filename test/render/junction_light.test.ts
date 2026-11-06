@@ -7,35 +7,35 @@ import {
   junctionLight,
   lightAllowance,
   lightEase,
-  lightLevel,
   lightSoftCover,
   setJunctionLight,
 } from "../../src/render/junction_field";
 
-// K1211 S1: the junction light switch and the pure pieces of its two looks.
-// Look A eases every arm's light into one level near its joint (lightEase,
-// lightLevel); look B keeps the bands with a soft sideways falloff
-// (lightSoftCover) let into the arms off the band only near the joint
-// (lightAllowance). The GLSL copies (jLightEase, jLightSoft, jLightAllow,
-// jLightA) are pinned against these by text below; the CPU twin
-// (joinery.ts cpuJunctionField) calls these functions directly.
+// K1211 S1: the junction light switch and the pure pieces of look B, which
+// keeps the bands with a soft sideways falloff (lightSoftCover) let into
+// the arms off the band only near the joint (lightAllowance, eased by
+// lightEase). The GLSL copies (jLightEase, jLightSoft, jLightAllow) are
+// pinned against these by text below; the CPU twin (joinery.ts
+// cpuJunctionField) calls these functions directly. S2 removed look A
+// (value 1): it falls back to 0, and B keeps 2.
 
 describe("the switch (K1211)", () => {
   afterEach(() => setJunctionLight(0));
 
-  it("defaults to 0 (today's look) and takes 1 and 2", () => {
+  it("defaults to 0 (today's look), takes 2, and 1 (look A, removed) falls back to 0", () => {
     expect(junctionLight()).toBe(0);
     setJunctionLight(2);
     expect(junctionLight()).toBe(2);
     setJunctionLight(1);
-    expect(junctionLight()).toBe(1);
+    expect(junctionLight()).toBe(0);
+    setJunctionLight(2);
     setJunctionLight(0);
     expect(junctionLight()).toBe(0);
   });
 
   it("rounds first, then falls back to 0 out of range", () => {
     setJunctionLight(1.4);
-    expect(junctionLight()).toBe(1);
+    expect(junctionLight()).toBe(0);
     setJunctionLight(1.6);
     expect(junctionLight()).toBe(2);
     setJunctionLight(2.6);
@@ -116,56 +116,13 @@ describe("lightAllowance (look B)", () => {
   });
 });
 
-describe("lightLevel (look A)", () => {
-  it("is the one light when only one arm is lit (dark arms carry no weight)", () => {
-    const out = new Float32Array(3);
-    lightLevel([[0.4, 0.3, -0.2], [0, 0, 0], [0, 0, 0]], out);
-    expect(out[0]).toBeCloseTo(0.4, 6);
-    expect(out[1]).toBeCloseTo(0.3, 6);
-    expect(out[2]).toBeCloseTo(-0.2, 6);
-  });
-
-  it("weights by |L|^2: the brighter light dominates, equal lights average", () => {
-    const out = [0, 0, 0];
-    lightLevel([[1, 0, 0], [0, 1, 0]], out);
-    expect(out[0]).toBeCloseTo(0.5, 12);
-    expect(out[1]).toBeCloseTo(0.5, 12);
-    lightLevel([[0.8, 0, 0], [0, 0.2, 0]], out);
-    // weights 0.64 and 0.04
-    expect(out[0]).toBeCloseTo((0.64 * 0.8) / 0.68, 12);
-    expect(out[1]).toBeCloseTo((0.04 * 0.2) / 0.68, 12);
-  });
-
-  it("is 0 when every arm is dark", () => {
-    const out = [9, 9, 9, 9];
-    lightLevel([[0, 0, 0, 0], [0, 0, 0, 0]], out);
-    expect(out).toEqual([0, 0, 0, 0]);
-  });
-
-  it("reads count lights only, and carries a 4th channel weighted by RGB", () => {
-    const out = new Float32Array(4);
-    lightLevel([[0, 0.5, 0, 0.25], [1, 1, 1, 1]], out, 1);
-    expect(Array.from(out)).toEqual([0, 0.5, 0, 0.25]);
-  });
-
-  it("moves continuously as one light fades in beside another", () => {
-    const out = [0, 0, 0];
-    let prev = -1;
-    for (let i = 0; i <= 50; i++) {
-      const a = i / 50;
-      lightLevel([[0.3, 0.3, 0], [0, 0, 0.6 * a]], out);
-      if (prev >= 0) expect(Math.abs(out[2] - prev)).toBeLessThan(0.05);
-      prev = out[2];
-    }
-  });
-});
-
 describe("the shader's copies (K1211)", () => {
-  it("carries the switch, the ease, the soft cover and the allowance", () => {
+  it("carries the switch, the ease, the soft cover and the allowance, and no look A", () => {
     expect(JUNCTION_FRAG).toContain("float jLightEase(");
     expect(JUNCTION_FRAG).toContain("float jLightSoft(");
     expect(JUNCTION_FRAG).toContain("float jLightAllow(");
-    expect(JUNCTION_FRAG).toContain("JCOL jLightA(");
+    expect(JUNCTION_FRAG).not.toContain("jLightA(");
+    expect(JUNCTION_FRAG).not.toContain("JCOL");
     expect(JUNCTION_FRAG).toContain("uJParams.z");
     expect(JUNCTION_FRAG).toContain(`(${LIGHT_SOFT_FH.toFixed(3)} * uJParams.x)`);
     expect(JUNCTION_FRAG).toContain(`${LIGHT_RAMP_FH.toFixed(3)} * uJParams.x`);

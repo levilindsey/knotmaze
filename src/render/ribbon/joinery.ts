@@ -67,7 +67,6 @@ import {
   FIELD_BLEND_MIN,
   FIELD_PROF_ARC,
   FIELD_PROF_DR,
-  LIGHT_RAMP_FH,
   LIGHT_STRIP_FH,
   MAX_ARMS,
   MAX_ROUTES,
@@ -77,8 +76,6 @@ import {
   junctionShader,
   junctionShaderExplore,
   lightAllowance,
-  lightEase,
-  lightLevel,
   lightSoftCover,
   pulseBandCover,
   recordData,
@@ -196,13 +193,6 @@ export class Joinery {
   filletRebuildCount = 0;
   // Scratch for the junction-field composition (rebuildFillets).
   private fieldMbScratch = new Float32Array(4);
-  // K1211 look A's scratch (cpuJunctionField lightA): each arm's light,
-  // the level (3 or 4 channels) and the two bracketing arms' colors.
-  private lightArms = Array.from({ length: MAX_ARMS }, () => new Float32Array(4));
-  private lightLj3 = new Float32Array(3);
-  private lightLj4 = new Float32Array(4);
-  private lightFa = new Float32Array(4);
-  private lightFb = new Float32Array(4);
   // K81: the band corner's two arm frames (rebuildFillets cornerCubic).
   private routeScratch = new Float64Array(8);
   // The section color field: piecewise-linear rgb(ctrl) per chain from
@@ -526,47 +516,13 @@ export class Joinery {
       if (t <= 0) onlyA = true;
       else if (t >= 1) onlyB = true;
     }
-    // K1211 S1 (FIELD_GLSL's jb globals): the looks' blend weight and each
+    // K1211 S1 (FIELD_GLSL's jb globals): look B's blend weight and each
     // bracketing arm's arc at p.
     const mode = junctionLight();
     const jbT = onlyA ? 0 : onlyB ? 1 : t;
     const jbSA = mode > 0 ? profArc(abA, relA < Math.PI / 2 ? rho * Math.cos(relA) : 0) : 0;
     const jbSB = mode > 0 ? profArc(abB, relB < Math.PI / 2 ? rho * Math.cos(relB) : 0) : 0;
     const ease = mode > 0 ? knotUniformValues().uKSect[1] : 0;
-    // Look A (FIELD_GLSL jLightA): the junction's one level, then each
-    // bracketing arm as base + mix(level, its own light, ease(s / ramp)).
-    const lightA = (): void => {
-      const L = this.lightArms;
-      const nArm = Math.min(n, MAX_ARMS);
-      for (let i = 0; i < nArm; i++) {
-        const ab = rec + 2 + i * stride;
-        armPaint(ab, 0, true, false, mA);
-        armPaint(ab, 0, true, true, mB);
-        for (let c = 0; c < 4; c++) L[i][c] = c < nc ? mA[c] - mB[c] : 0;
-      }
-      const lj = nc === 4 ? this.lightLj4 : this.lightLj3;
-      lightLevel(L, lj, nArm);
-      const ramp = LIGHT_RAMP_FH * fillHalf;
-      const fA = this.lightFa.fill(0);
-      const fB = this.lightFb.fill(0);
-      if (jbT < 1) {
-        armPaint(abA, jbSA, false, true, mA);
-        armPaint(abA, jbSA, false, false, mB);
-        const e = lightEase(jbSA / ramp, ease);
-        for (let c = 0; c < nc; c++) fA[c] = mA[c] + (lj[c] + (mB[c] - mA[c] - lj[c]) * e);
-      }
-      if (jbT > 0) {
-        armPaint(abB, jbSB, false, true, mA);
-        armPaint(abB, jbSB, false, false, mB);
-        const e = lightEase(jbSB / ramp, ease);
-        for (let c = 0; c < nc; c++) fB[c] = mA[c] + (lj[c] + (mB[c] - mA[c] - lj[c]) * e);
-      }
-      for (let c = 0; c < nc; c++) {
-        const v = fA[c] + (fB[c] - fA[c]) * jbT;
-        out[c] = v < 0 ? 0 : v > 1 ? 1 : v;
-      }
-      if (!exA) out[3] = 0;
-    };
     // Look B (FIELD_GLSL jLightAllow): a band's allowance at p - 1 on its
     // own arms, eased out over the ramp on the others - by the blend weight.
     const allow = (a0: number, b0: number): number => {
@@ -603,13 +559,8 @@ export class Joinery {
     }
     const banded = np > 0;
     baseField((routed || banded) && fz < 0.5);
-    // K1211: the looks apply to lit records with arms, outside debug 3 / 4;
-    // look A replaces the side the bands drew over (a pulse-banded
-    // record's both sides).
-    const lookOn = mode > 0 && (routed || banded) && n > 0 && dbg !== 3 && dbg !== 4;
-    const lookA = lookOn && mode === 1;
-    const lookB = lookOn && mode === 2;
-    if (lookA && (fz < 0.5 || banded)) lightA();
+    // K1211: look B applies to lit records with arms, outside debug 3 / 4.
+    const lookB = mode === 2 && (routed || banded) && n > 0 && dbg !== 3 && dbg !== 4;
     if (routed && fz > 0 && fz < 1) {
       // K169, mid-fade (FIELD_GLSL junctionField): the other side's base,
       // blended by the level. (lastArms then lists that second pass's arms.)
@@ -619,7 +570,6 @@ export class Joinery {
       const p3 = out[3];
       this.fieldLastArm.length = 0;
       baseField(fz >= 0.5);
-      if (lookA && (fz >= 0.5 || banded)) lightA();
       // The first pass was untraveled below 0.5 and composed from there on.
       const lo = fz < 0.5;
       const o0 = out[0];
@@ -633,7 +583,6 @@ export class Joinery {
         out[3] = lo ? p3 + (o3 - p3) * fz : o3 + (p3 - o3) * fz;
       }
     }
-    if (lookA) return;
     if ((!routed && !banded) || dbg === 3 || dbg === 4) return;
     // K81 ROUTE BANDS, oldest first (FIELD_GLSL junctionField): the nearest
     // point of each band's centerline polyline and its tau; a one-pixel
