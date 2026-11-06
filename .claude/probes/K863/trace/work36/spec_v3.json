@@ -1,0 +1,4 @@
+{
+ "s": {"word": "as", "cut": [-2, 0.0], "hug": {"cubic": -5, "tp": 0.62, "taper": 130}, "turn": 1, "clear": [400, 0]},
+ "p": {"word": "ap", "cut": [-2, 0.0], "hug": {"cubic": -5, "tp": 0.80, "taper": 140}, "turn": 1, "clear": [400, 0]}
+}

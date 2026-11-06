@@ -1,0 +1,21 @@
+{
+ "prm": [
+  0.24268888120207383,
+  1.2657764005404961,
+  1.7661557388677949,
+  -1.5688086461835336
+ ],
+ "prm_q1": [
+  0.30000000121417003,
+  1.138836178324008,
+  -2.782314835052653,
+  -5.032383567243723
+ ],
+ "text": [
+  "K863 J3l: q's word-end tail, Q1 smoothed (end frame kept: offset [121.9255196118877, 59.0951850980974], angle 41.03 deg; exit angle 9.26 deg, exit k 0.01206 /fu; direction >= the exit angle, k >= 0)",
+  "  Q1: prm [0.30000, 1.13884, -2.78231, -5.03238]; vs Q1: Hausdorff 0.02 u, mean 0.01 u, parts from Q1 by > 0.25 u over nowhere; direction 4.45..41.03 deg; k min -0.1846 /u, |k| max 0.1846 /u; min speed 24.34; length 33.08 u; census exit seam: gap 0.00e+00 u, angle 0 deg, dk 1.97e-15 /u",
+  "      at s (u) 0.0 0.8 2.0 4.5 8.6 14.2 20.8 27.4 33.1: dir 9.3 5.5 6.2 11.8 18.1 24.6 31.3 37.4 41.0; k /u 0.050 -0.129 0.048 0.032 0.023 0.019 0.017 0.015 0.000",
+  "  Q1s: prm [0.24269, 1.26578, 1.76616, -1.56881]; vs Q1: Hausdorff 0.18 u, mean 0.08 u, parts from Q1 by > 0.25 u over nowhere; direction 9.26..41.03 deg; k min 0.0000 /u, |k| max 0.0502 /u; min speed 32.88; length 33.08 u; census exit seam: gap 0.00e+00 u, angle 0 deg, dk 4.44e-15 /u",
+  "      at s (u) 0.0 1.4 3.9 7.3 11.6 16.6 22.0 27.6 33.1: dir 9.3 9.8 11.2 14.8 20.1 26.4 32.9 38.4 41.0; k /u 0.050 0.004 0.015 0.020 0.022 0.022 0.019 0.014 0.000"
+ ]
+}
