@@ -88,3 +88,30 @@ Short, in plain words: what you built; per spot, what you see against the top ro
 sheets' paths, with the two or three to show Levi first; the pins you moved; anything out of scope
 a crop showed; the rebase; your last SHA. Commit messages carry the record. End with
 `Ledger items` and K1218's handle fields (owner, branch, last commit, evidence, next).
+
+## Handoff (S4 agent, stopped 2026-11-06 01:05)
+
+Landed on the branch: 8063376b (a web's route band edge is a 2.5 px smoothstep, ROUTE_BAND_RAMP),
+46b03864 (on a cover strip the 0.5 px pad holds only along the strip's own edge; a band edge that
+crosses a strip ramps as in a web; the CPU mirror takes `across`; k320's JUNCTION_FRAG pin 32,451
+-> 32,884), then probes and lore only (5e1c0a2e, ba7587c3, d5329d1e). `npm test` green on d5329d1e,
+which sits on origin/master 9930e726.
+
+Spots. Fixed: the gold path's staircase where it meets an arm's colour (x4 ji 149, 125, 102, 37;
+loop ji 122). Clean in both builds: x4 (372,240); the fold tip at loop ji 122. Loop ji 113's edge is
+the head marker's own; with the markers hidden the band ends smoothly (out/nomark/l113_sheet.png).
+Left, in every build (7474d09b, master, branch):
+- cross ji 33, t5/t6: the web's pulse reads 5-8 levels above the ribbon's along the fan's edge
+  (647,830)-(660,821). Hiding the fans removes it (761 px, max 184); strips and mask do not. The
+  cause (the web's pulse arc against the ribbon's) is inferred, not tested.
+- cross ji 112's lip at (1086,195): the web rim's near-level apex against the backdrop, drawn at
+  MSAA 4x coverage levels (no analytic ramp on a fan's outer rim). A rim of 8 to 32 chords moved
+  6 px and left it (d5329d1e). Fix: an analytic edge ramp on the web's rim.
+- cross ji 51's hairline at (1019,1136): a gap between two ribbons, unchanged with fans, strips
+  and mask off; which two is not attributed.
+Seen, not investigated: section staircases at cross ji 155 and loop ji 113, loop ji 123's oval edge,
+x4 ji 101's edge at the frame's left; whether the ramp still shifts 1-2 px where a band leaves a strip.
+
+Sheets: `.claude/probes/K1218/s4/out/sheets/` (rows 7474d09b, master, branch at t3-t6; at rest,
+master and branch). Tools: `run_shots_s4.ps1` (shots under the perf lock), `sheets_s4.mjs`,
+`near_s2.mjs`, `attr_s4.mjs`, `nomark_s4.mjs`, `lumawin_s4.mjs` (headers give usage).
