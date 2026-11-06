@@ -506,13 +506,13 @@ Next free ID: K1215.
   - next: K1211 first: the light inside junctions (Levi 2026-11-05: one seamless unit; the bands may go); then Levi's look K1200 (`docs/asks/K1200.md`), K1201 (its fix (b), Run 22D, held for K1211), S6 (plan section 5) after K1140's Glimpse picks. The next pulse step's Pixel pass watches fabric 7 moves' frames over 25 ms (+14 and +15 in the fix's and S5's passes, floor 13)
   - brief: the plan `docs/design/K1139_pulse_junctions.md` section 5 (S6); S5 was Muse batch 20's Run B (`docs/design/K1199_muse_batch20.md`)
   - env: the passes' builds first and never while Muse runs: `scripts/preview.ps1 -Ref <sha> -Root <out>\builds -BuildOnly` for each sha (`pixel_passes.ps1` stops before the phone lock when one is missing); probe server `npx vite --config .claude/probes/K1139/vite.private-cache.config.ts --port 5620 --strictPort --host 127.0.0.1` from a worktree (ports 5620-5639); GPU probes through `.claude/probes/K1139/run_locked.ps1 -Batch`
-- **K1208** · Muse batch 22 (after K1204's batch 21): runs B to H through the chain, from
-  `docs/design/K1208_muse_batch22.md` (ports 5880-5949)
+- **K1208** · Muse batch 22 (after K1204's batch 21): runs B to M through the chain, from
+  `docs/design/K1208_muse_batch22.md` and the later runs' own briefs (ports 5880-5999)
   - owner: the chain in `.claude/probes/K1053/` (queue.txt, chain.log): Run I (22I) since 12:03, then J (22J), fresh Muse sessions; coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
   - branch: mainline; last commit: `5f5025de`
   - evidence: the chain in .claude/probes/K1053/ (queue.txt, chain.log); each run's probe folder under .claude/probes/ (B K1203, H K1210, C and I K1186, E K1196, F K1191, G K1198)
-  - next: I (K1209: the layer vote retired on master) then J (K647: the card after Reset path); D held for K1211; E and G reviewed (K1196 and K1198 closed, K1214 filed)
-  - brief: `docs/design/K1208_muse_batch22.md`
+  - next: I (K1209) then J (K647), then K (six junction residuals on master); L (cursive residuals on v6.8) held until J3k lands; M (K1214's profile) held until K1211 S2 lands; D held for K1211
+  - brief: `docs/design/K1208_muse_batch22.md`; I to M: K1209_reapply_run_i.md, K647_reset_win_card.md, K1208_run_k_junction_residuals.md, K1208_run_l_cursive_residuals.md, K1214_profile_run_m.md (docs/design/)
 
 ## Next, in order
 
@@ -1641,14 +1641,6 @@ Every other item below waits on the trigger it names.
 - **K1117** · Junctions S1g (form B's gates): the d-edge's span step at d = 0; the jj30 probe's 0.51 step; q4
   AA misses up to 0.84; S1f's r step of 0.0065; q5holes exits 1 in a worktree and misclassifies an eye whose
   rim is a chain's own surface; the rb05 tag clash (`K1040_s1g_gates.md` ## Handoff).
-- **K1120** · Cursive v6.9 joins out of b, v and w (J3f): into b, f, h, k and l a straight climb to the 100 u
-  attach limit, 53-57 u from the font (next: an entry rule after high exits); br, vr and wr meet r's cusp in a
-  V; be and we show small repeated spikes; e after b/v/w has its own rule, landing up to 60 u into e (keep it,
-  or fold it into K948's e-after-o rule, which moves oe) (`K1113_cursive_j3f.md` ## Handoff).
-- **K1121** · Cursive v6.9 gates (J3f): locality fails, 157 of 1448 untouched pieces moved by up to 0.33 u
-  (b's, v's and w's whole strokes were refitted; next: refit only the exit's stretch); seven rows newly fail
-  rough (bt, vt, wt, ba, wa, and the ba and wa in bad and wave); 41 of the 78 joins sit at a bound; b/v/w font
-  distance about 24 u (was about 3) (`K1113_cursive_j3f.md` ## Handoff).
 - **K1122** · Junction label pass (S3b): the scan's remaining cost (desktop muse_hash 2.08 of 3.87 ms; the
   Pixel about half of muse_hash's 41 ms) and the span walk, never timed alone; `buildLabelB`'s prep takes
   9-128 ms on the desktop and 11-104 ms on the Pixel (S5's `nbWindows`) (`K1040_s3b_label.md` ## Handoff).
@@ -1659,9 +1651,6 @@ Every other item below waits on the trigger it names.
 - **K1133** · Burn re-declare: fillet rebuilds on front-crossing frames, retraced with the flow on
   (K1137 Run B, K1077 stand): realtime 71/119 vs turn 59/119 (burn cross-check 0.56 vs 0.50 a frame); the
   12 without an update split uwRev 8, joint-key 4; a fix needs incremental fillets (joinery), not the declare.
-- **K1144** · Cursive v7.0's leftovers (K1119's Handoff in `docs/design/K1119_cursive_j3g.md`): br, vr and wr dip
-  into r as a tighter V (br newly fails roughness); five of six a/q joins fail it; q's low point is 0.4 u above
-  the band; be, ve and we sit 40.8-42.0 u from the font (Levi: the v7.0 or the e60 column).
 - **K1147** · K1142's guard protects a person, not another agent's pass: the `scripts/` phone runners never
   take the phone lock (`.claude/probes/agents/phone_lock_take.ps1`), and the watchdog arms only after the `am
   start`, a few unwatched seconds (arm it first; `docs/design/K1142_phone_guard.md`, Handoff).
@@ -1685,8 +1674,6 @@ Every other item below waits on the trigger it names.
 - **K1191** · K1139 Stage 4 leftovers (`docs/design/K1139_s3b_fix.md`): the full model's 12/6/11 threshold
   flips; no arc-true tau rate or obliqueness in the classifier; ji 147 arm 1's bright GPU colours (gk as
   recorded doesn't make them: 22F, 4c7867da, `.claude/probes/K1191/gk147.md`). 19D: the rest blocks no merge.
-- **K1193** · Cursive c (v7.1, J3h): 14 of the 26 c joins sit at the 10 u bound of c's exit port
-  (`docs/design/K1112_cursive_j3h.md`, Handoff)
 - **K1194** · Cursive v7.0: c's lead-in is rough FAIL in c-initial words (facet 0.0098), and the er and es
   solves stop at MAXFEV 3000 (`docs/design/K1112_cursive_j3h.md`, Handoff)
 - **K1195** · `scripts/preview.ps1` (K1188, f5035e0d): a src-* folder that `git worktree remove` half-deletes
@@ -1988,8 +1975,6 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   in browsers.
 - **K1136** · Phone A/A floor: fabric@0 reads loose (fps ±8.3, frames over 25 ms ±33) from one outlier rep; a
   later A/A may tighten it (`docs/design/K156.md`, Round 2026-11-03 handoff, Left over 2).
-- **K1145** · Cursive x5 (`R_DX=22 R_A1=-15 R_L1=10`): a steeper b, v and w exit (about -22 deg), if Levi
-  wants v7.0's exits further down (K1119's Handoff).
 - **K1157** · K1040 label pass, a lever for S5's live integration: x,y from K8's SAMP, at most a quarter of the
   moving upload (0.3 of the Pixel's 1.3 ms; needs both tent shaders rewritten and a vertex-to-sample map). S3f2
   dropped one texture: the bytes cost, not the calls (`docs/design/K1040_s3f2_levers.md`).
@@ -1999,6 +1984,11 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1145** · Cursive x5 (`R_DX=22 R_A1=-15 R_L1=10`): a steeper b, v and w exit (about -22 deg), if Levi wants v7.0's exits further down (K1119's Handoff). Dropped: superseded: Levi kept v6.8's joins (K1119) and its c (K1197), so v6.9 to v7.2 are not used (2026-11-05).
+- **K1193** · Cursive c (v7.1, J3h): 14 of the 26 c joins sit at the 10 u bound of c's exit port (`docs/design/K1112_cursive_j3h.md`, Handoff). Dropped: superseded: Levi kept v6.8's joins (K1119) and its c (K1197), so v6.9 to v7.2 are not used (2026-11-05).
+- **K1144** · Cursive v7.0's leftovers (K1119's Handoff in `docs/design/K1119_cursive_j3g.md`): br, vr and wr dip into r as a tighter V (br newly fails roughness); five of six a/q joins fail it; q's low point is 0.4 u above the band; be, ve and we sit 40.8-42.0 u from the font (Levi: the v7.0 or the e60 column). Dropped: superseded: Levi kept v6.8's joins (K1119) and its c (K1197), so v6.9 to v7.2 are not used (2026-11-05).
+- **K1121** · Cursive v6.9 gates (J3f): locality fails, 157 of 1448 untouched pieces moved by up to 0.33 u (b's, v's and w's whole strokes were refitted; next: refit only the exit's stretch); seven rows newly fail rough (bt, vt, wt, ba, wa, and the ba and wa in bad and wave); 41 of the 78 joins sit at a bound; b/v/w font distance about 24 u (was about 3) (`K1113_cursive_j3f.md` ## Handoff). Dropped: superseded: Levi kept v6.8's joins (K1119) and its c (K1197), so v6.9 to v7.2 are not used (2026-11-05).
+- **K1120** · Cursive v6.9 joins out of b, v and w (J3f): into b, f, h, k and l a straight climb to the 100 u attach limit, 53-57 u from the font (next: an entry rule after high exits); br, vr and wr meet r's cusp in a V; be and we show small repeated spikes; e after b/v/w has its own rule, landing up to 60 u into e (keep it, or fold it into K948's e-after-o rule, which moves oe) (`K1113_cursive_j3f.md` ## Handoff). Dropped: superseded: Levi kept v6.8's joins (K1119) and its c (K1197), so v6.9 to v7.2 are not used (2026-11-05).
 - **K1198** · Cursive ij: i and j on v6.8 (22G: the font's type-4 ligature lookups emptied, calt kept; only ij moved, 712 pieces equal); the six pins stay, each moves without it; the kit adopts it in K863's next stage (notes). Done in 5f5025de (2026-11-05).
 - **K1196** · Two-ended pulses (K1139 S4) cost nothing measurable on the desktop (22E: head-base within the +0.22 ms drift between builds timed one after another; S4 alone +0.15 at rest, ~0 in play), so no Pixel run; the frame-tail watch is K1214 (notes). Done in 34d1e863 (2026-11-05).
 - **K1001** · Corners where two threads split: Levi kept K830's rule (broad gaps round, narrow points sharp), so a split stays sharp. Done in 73186e5c (2026-11-05).
