@@ -2755,3 +2755,107 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 ## K1038 (Done 2026-10-28)
 
 - **K1038** · K992's F19 landing-bound residual. Dropped: moot, the march goes (K1040) (2026-10-28).
+
+## K1029 (Done 2026-10-29)
+
+- **K1029** · Cursive v6.5's a and q tops (B4): approved by Levi's look, with g's, 2026-10-29 (untracked `K863/trace/work25/base`, no commit).
+
+## K994 (Done 2026-10-29)
+
+- **K994** · audit clean: vitest ^4.1.12, @xmldom 0.8.15 (npm audit fix). Done in 5982aa16 (2026-10-29).
+
+## K788 (Done 2026-10-29)
+
+- **K788** · placement rejects trapping one-way draws (ruleHasTrap); census 42/50+44/50 -> 0/50. Done in f35f6725 (2026-10-29).
+
+## K743 (Done 2026-10-29)
+
+- **K743** · planRouteRuled plans ruled taps; renderer targetAt uses it; the real-time chase's tap does not yet (K1054). Done in 34c31872 (2026-10-29).
+
+## K762 (Done 2026-10-29)
+
+- **K762** · backtrack remembers retraced run; turnstile re-entry allowed. Done in ba8aaccc (2026-10-29).
+
+## K763 (Done 2026-10-29)
+
+- **K763** · hidden counter only when a hidden run was placed. Done in 6e27a088 (2026-10-29).
+
+## K747 (Done 2026-10-29)
+
+- **K747** · sword takenAt/slainAt count player moves (inputs.length). Done in bfa3a639 (2026-10-29).
+
+## K807 (Done 2026-10-29)
+
+- **K807** · nine constants to panel rows (follow, sword/sleeper rings, nearHops, routeWeight). Done in f641fc0a (2026-10-29).
+
+## K810 (Done 2026-10-29)
+
+- **K810** · shipped 44/44, Fuse 35, uFuzzy 31, fuzzysort 34 (.claude/probes/K810/results.md). Done in 5add2671 (2026-10-29).
+
+## K393 (Done 2026-10-29)
+
+- **K393** · Option B: probe:types groundwork shipped (92 errors/32 files), gates unchanged. Done in 9a8a6e7a (2026-10-29).
+
+## K1050 (Done 2026-10-29)
+
+- **K1050** · Muse batch 1 (8828b9e2..3f68b7c5), reviewed: K994, K788, K743/K762/K763, K747, K807, K810, K393, K414 and K932 landed; K783/K728 reopened (42a1e8ed measured other things); left K1052, K1054 (K743's chase tap), K1055 (K414's preload); batch 2 is K1053. Done in 3f68b7c5 (2026-10-29).
+
+## K414 (Done 2026-10-29)
+
+- **K414** · static worker preload dropped; phw=0 downloads no worker chunk, and default pages lost K7 s7's head start (back in K1055). Done in b6cd031d (2026-10-29).
+
+## K932 (Done 2026-10-29)
+
+- **K932** · bench_frame readPixels sync; K923 runner folded to scripts/k923 (.claude/probes/K932/results.md). Done in f7839f4e (2026-10-29).
+
+## K728 (Done 2026-10-29)
+
+- **K728** · real-time seeker measured: taken 99.9-100%, slew/banish 4.4-8.9% vs blind 0.2-0.7% (docs/design/K708.md). Done in 80d5c354 (2026-10-29).
+
+## K1052 (Done 2026-10-29)
+
+- **K1052** · test type errors fixed 92 -> 0 in 4 batches; tsconfig.tests.json folded into npm run typecheck. Done in ce1961e2 (2026-10-29).
+
+## K1054 (Done 2026-10-29)
+
+- **K1054** · no K138 rule can be on in a realtime chase (fabricRulesOf zeroes them outside classic; chase needs minotaur), so handleChaseTap needs no ruled twin; gate pinned in url_codec.test.ts. Done in df40887c (2026-10-29).
+
+## K1055 (Done 2026-10-29)
+
+- **K1055** · Worker preload back for worker pages: an inline head script modulepreloads the worker chunk unless phw=0 (hello about 26 ms sooner on first loads). Done in 1c8fe970 (2026-10-29).
+
+## K1059 (Done 2026-10-29)
+
+- **K1059** · K1055's request count. Dropped: decided by Claude: count network downloads. The worker fetch is served from the HTTP cache, so K1055's check holds (1c8fe970) (2026-10-29).
+
+## K783 (Done 2026-10-29)
+
+- **K783** · a chase starts with 2 lures and 1 snare (PARAM_DEFAULTS; sliders already existed); url_codec defaults pin 0/0 -> 2/1 only, page checks in .claude/probes/K783/ passed. Done in 3e42d9cf (2026-10-29).
+
+## K1057 (Done 2026-10-29)
+
+- **K1057** · scripts/run_node.mjs tracked (was .claude/probes/K708/run_node.mjs); rules recipes rewritten to it, no vite-node left in rules; burn_sim and par_census run through it. Done in 00a7bc0e (2026-10-29).
+
+## K1060 (Done 2026-10-29)
+
+- **K1060** · workerPreloadScript moved to src/loader/worker_preload.ts (default derived from PARAM_DEFAULTS.physicsWorker); test/loader/worker_preload.test.ts pins its decision against parseParams (probe forms, seeded writer links, overrides, other version, garbage). Done in 2a347a53 (2026-10-29).
+
+## K1061 (Done 2026-10-29)
+
+- **K1061** · run_node --config; last vite-node recipes pointed at it, panel/fold runs pass. Done in 7f802e12 (2026-10-29).
+
+## K396 (Done 2026-10-29)
+
+- **K396** · scripts/dev.ps1 LAN dev server, checks verified on 5531. Done in 179ecd64 (2026-10-29).
+
+## K1053 (Done 2026-10-29)
+
+- **K1053** · Muse batch 2, runs A-F, reviewed on master. Done in 9b9ea6be (2026-10-29).
+
+## K650 (Done 2026-10-29)
+
+- **K650** · the TELE census, GPU vs mirror with the riding lead (K324 s2). Done in 9cfe77af (2026-10-29).
+
+## K654 (Done 2026-10-29)
+
+- **K654** · the moving lead rides uKTeleAt, no texel rewrite (K324 s2). Done in 754f06a8 (2026-10-29).
