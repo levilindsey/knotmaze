@@ -93,3 +93,117 @@ Short, in plain words: what you built; per spot, what you see against the top ro
 sheets' paths, with the two or three to show Levi first; the pins you moved; anything out of scope
 a crop showed; the rebase; your last SHA. Commit messages carry the record. End with
 `Ledger items` and K1218's handle fields (owner, branch, last commit, evidence, next).
+
+## Handoff (S6, 2026-11-06, 03:04-04:31)
+
+**Built** (src; each commit changes the GLSL in `junction_field.ts` and its CPU mirror in
+`ribbon/joinery.ts` together):
+- `8b3aba9a`: sweptArc searches every segment a near sweep can reach, from
+  trunc((rho - 2fh) / DR) to trunc((rho + 2fh) / DR) + 2. S5 searched seven segments from
+  rp - 3 DR. Where an arm bends, a sweep shorter than two half-widths can land outside that
+  window, and the window stepping past it made ji 80's 7-level line. Behind the arm's first
+  sample (g 0, dot(e, tb) < 0) no sweep exists, and S5 jumped to the projection there. That
+  pixel now reads the joint (best = rho, arc = the joint's arc), which equals the u = 0 sweep
+  on the normal line.
+- `75d338e6`, `9019b404`: on a bend's concave side the normal sweep converges toward the bend's
+  focus, which squeezes the arc map into a line (ji 80's). There the arc hands over to the plain
+  projection. fold = the winner's signed distance, positive on the concave side. kappa is read at
+  the pixel's own radius, between the curvatures at the two segment ends. The weight is
+  w = 1 - (1 - smoothstep(fh, 2fh, |l|)) (1 - smoothstep(0.1, 0.9, fold kappa)), and the result
+  is mix(arc, proj, w).
+- Pins:
+  - K320's JUNCTION_FRAG budget (`test/render/k320_slim.test.ts`): master 32,884, S5 34,759,
+    then 35,079 -> 35,509 -> 35,635 here.
+  - K299's ROUNDED_QUOTIENTS (`test/render/paint_ring_lap.test.ts`) lists the window's two
+    bounds, `int((rho - reach) / uJParams2.x)` and `int((rho + reach) / uJParams2.x)`, each
+    with why one off is benign.
+  - The junction-field text changed, so that program compiles cold once for every player
+    (K307).
+- Tools in `.claude/probes/K1218/s6/` (each header gives its usage):
+  - `sheets_s6.ps1`: the sheets;
+  - `swept_s6.mjs`: the field's roots per pixel, read from the served module;
+  - `ramp_s6.mjs`: a window's largest luma second difference;
+  - `row_s6.mjs`, `windiff_s6.mjs`, `locked_s6.ps1`, `run_shots_s6.ps1`.
+- Outputs (untracked) are in `s6/out/`:
+  - `c/`: this branch's shots;
+  - `nomark_c/`: no-marker shots;
+  - `mvc/`: the whole-frame diff tables;
+  - `look/`: crops;
+  - `sheets/`.
+
+**Spots**
+1. **ji 80 (cross, x4): fixed.**
+   - S5's 7-level line (the search window stepping) is gone with 8b3aba9a. The focal
+     compression it then showed (arm B, row 222: the CPU field's d(arc)/dx peaks at 73 with
+     no hand-over, against 13-17 around it) reads 30 with the hand-over.
+   - GPU row y 230: the 2-levels-per-px jump at x 2087-2089 is gone. The worst luma second
+     difference reads master 3.2, 8b3aba9a (no hand-over) 2.7, this branch 2.1.
+   - Sheets `cross_80`, `x4_80`: the branch row is smooth. The 7474d09b and master rows show the
+     notch and crease below the purple apex (spot 5's ji 80 crease); the branch has neither.
+2. **Cross ji 155: not fixed. Cause measured, not removed.**
+   - The streak at (777-789, 679-682) shows only without markers (`nomark_c/`, crop
+     `look/c155_nomark.png`). It is on S5's branch and on this one, not on master.
+   - On this branch, at t2-t4 it covers 283-284 px over 2 levels (max 7), 112 px at t5 and 3 px
+     at rest. S5's branch read 263-267 px and 96.
+   - Mechanism (`swept_s6`, `out/swept155/col783.txt`): at x 783, arm 0 (chain 71) switches root.
+     It uses segment 3 (arc 0.172) at y 679, segment 0 (arc 0.021) at y 680, then the joint from
+     y 682.
+   - Row 680 has three near-tied roots at rho 0.311: segments 0, 2 and 3, with |l| 0.31-0.32,
+     all beyond fh.
+   - fold kappa reads 0.047-0.124 there, so the hand-over weight is 0. Inferred: kappa read at
+     the pixel's radius misses the bend next to the joint. That is the second cause.
+   - Untested fixes:
+     - kappa = max(kappa at rho, kappa at the winner's foot);
+     - blend the arcs of near-tied roots;
+     - hand over to the projection where the candidates' arcs disagree.
+3. **Cross ji 33: not fixed** (measured at the end).
+   - The zoom-4 sheet reads smooth, but the crease window (650-676, 802-816) measures the
+     leftover crease at t5 and t6 only. Largest luma second difference, x / y:
+
+     | Build | t5 | t6 |
+     |---|---|---|
+     | 7474d09b | 2.2 / 2.8 | 1.4 / 1.7 |
+     | master | 1.9 / 2.2 | 2.0 / 2.9 |
+     | branch | 3.2 / 4.5 | 4.9 / 5.6 |
+
+   - The branch's worst is at (656-659, 806-808). At rest and at t4, all three read about 1.4.
+   - Master against the branch in the window: 208-214 px over 0.5 levels, max 6-7.
+   - Crop: `look/c33_win.png`. Next: `swept_s6` at (657, 807); it is likely ji 155's root switch.
+4. **Loop ji 123, x4 ji 101: not fixed, not attributed.**
+   - The eye edges step identically in the 7474d09b, master and branch rows.
+   - x4 101's violet sliver at the eye's upper left is in all three builds. Inferred: not the
+     swept arcs, since 7474d09b and master show it too. Not attributed.
+5. **The others.**
+   - Sheets `cross_65`, `loop_64`, `loop_106`: no line on the branch that master lacks. Their dark
+     edges step identically in master and the branch.
+   - Kept looks: `cross_115` is smooth. `loop_113`'s corners are smooth; its centre is under the
+     marker.
+
+**Whole-frame diffs** (`s4/near_s2.mjs`, master against this branch, at rest and t3-t6; tables in
+`out/mvc/`):
+
+| Stand | Changed px | Groups |
+|---|---|---|
+| cross | 127.6-128.9k | 59 |
+| x4 | 186.6-195.4k | 74 |
+| loop | 114.9-115.7k | 56 |
+
+- Viewed: the largest change in each stand (x4 t3 ji 108 and ji 147, loop t6 ji 89, loop t3
+  ji 88, loop at rest ji 80 and ji 47). Each is a step, line or crease on master that the branch
+  smooths.
+- Not viewed one by one: about 50 more groups per stand, most 2.6-4.5k px with max 3-12.
+- Done item 2 therefore does not fully hold: ji 155's streak is branch-only, and ji 33's
+  crease is stronger on the branch than on master at t5 and t6.
+
+**Out of scope seen:** none. The magenta band or column on some sheets is the same in every
+row. Inferred: the sheet tool's fill outside the frame.
+
+**Rebase:** clean onto origin/master `e72e6768`. `npm test` is green: 217 files, 2879 tests.
+
+**Next (S7):**
+1. Cross 155's near-tied root switch.
+2. Cross 33's t5/t6 crease (re-measure it with `ramp_s6`).
+3. Spot 4's eye edges.
+4. The unviewed groups in `out/mvc/`.
+
+Sheets for Levi first: `sheets/cross_80.png`, `sheets/x4_80.png`, `look/c155_nomark.png`.
