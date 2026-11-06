@@ -488,10 +488,14 @@ export class Joinery {
     // by its turn, a pixel z = (its left distance to the segment's line) x
     // (turn / length) of the way to their focus, and the fan there is
     // |1 - z| as wide as the segment (inverted past the focus); inside it
-    // (within 0.5-1.5 fh of its edge, 1.5-2 fh of the segment) the share
-    // goes from z = FIELD_FOLD_LO to FIELD_FOLD_HI. S6's kappa at the
-    // pixel's radius missed ji 155's kink segment beside the pixel (a
-    // 0.04 -> 0.97 hand-over within one pixel at device column 791).
+    // (fading over 0.5 fh past its edge, and from 1.5 to 2 fh off the
+    // segment) the share goes from z = FIELD_FOLD_LO to FIELD_FOLD_HI.
+    // S6's kappa at the pixel's radius missed ji 155's kink segment beside
+    // the pixel (a 0.04 -> 0.97 hand-over within one pixel at device column
+    // 791). A margin of 0.5-1.5 fh let the fans of segments 0.1-0.16 along
+    // the curve, which bend twice as hard, fold cross ji 115's and ji 80's
+    // arcs over to the projection (wf 0.77-0.90 where the pixel's own
+    // segment gave 0.06-0.14), which lost S6's smoothing there.
     // Offline: .claude/probes/K1218/s7/tie_s7.mjs (VARIANT s6 | s7).
     const pt =(ab: number, g: number, o: Float64Array, k: number): void => {
       const t = at(ab + 2 + g);
@@ -608,7 +612,7 @@ export class Joinery {
         const fy = qy - sc * ty;
         const fw =
           sst(FIELD_FOLD_LO, FIELD_FOLD_HI, z) *
-          (1 - sst(0.5 * fillHalf, 1.5 * fillHalf, o)) *
+          (1 - sst(0, 0.5 * fillHalf, o)) *
           (1 - sst(1.5 * fillHalf, reach, Math.sqrt(fx * fx + fy * fy)));
         if (fw > fan) fan = fw;
         sw.copyWithin(3, 6, 12);

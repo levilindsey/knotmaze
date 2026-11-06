@@ -25,14 +25,16 @@ const DR = D.DR;
 const profN = D.profN;
 const last = profN - 1;
 const stride = 2 + profN;
-const FLO = D.FLO;
-const FHI = D.FHI;
+const FLO = Number(process.env.FLO || D.FLO);
+const FHI = Number(process.env.FHI || D.FHI);
 const BMIN = D.BMIN;
 const VARIANT = process.env.VARIANT || "s7";
 const TAU = Number(process.env.TAU || 0.02);
 const DA = Number(process.env.DA || 0.1);
-const FM0 = Number(process.env.FM0 || 0.5);
-const FM1 = Number(process.env.FM1 || 1.5);
+// The fan's along-segment fade past its edge, in fh (shipped: 0 -> 0.5; the
+// first cut, 140b257, had 0.5 -> 1.5).
+const FM0 = Number(process.env.FM0 || 0);
+const FM1 = Number(process.env.FM1 || 0.5);
 const FOLD = process.env.FOLD || "fan";
 const SD0 = Number(process.env.SD0 || 1e9);
 const SD1 = Number(process.env.SD1 || 2e9);
@@ -140,6 +142,7 @@ function candidates(ab, ex, ey) {
       const sc = Math.min(Math.max(s, 0), len);
       const dist = Math.hypot(qx - sc * tx, qy - sc * ty);
       const fw = smooth(FLO, FHI, z) * (1 - smooth(hw + FM0 * fh, hw + FM1 * fh, o)) * (1 - smooth(CUT0 * fh, 2 * fh, dist));
+      if (process.env.DEBUGFAN) console.log(`    seg ${g} len ${len.toFixed(3)} ks ${ks.toFixed(3)} dl ${dl.toFixed(3)} z ${z.toFixed(3)} o-hw ${(o - hw).toFixed(3)} dist ${dist.toFixed(3)} fw ${fw.toFixed(3)}`);
       if (fw > fan) fan = fw;
     }
     const fr = rho - g * DR;
@@ -190,7 +193,7 @@ function swept(ab, ex, ey, rp, V = VARIANT) {
   const wf = FOLD === "s6" ? smooth(FLO, FHI, fs * kr) : FOLD === "max" ? Math.max(fan, smooth(FLO, FHI, fs * kr)) : fan;
   const ws = smooth(SD0, SD1, sd);
   const keep = K * (1 - wp) * (1 - wf) * (1 - ws);
-  return { arc: proj + (arc - proj) * keep, proj, best: ls, swept: arc, wt: 1 - keep, n: out.length, sw: S, sd, K };
+  return { arc: proj + (arc - proj) * keep, proj, best: ls, swept: arc, wt: 1 - keep, n: out.length, sw: S, sd, K, wp, wf };
 }
 // junctionBase's bracketing: the arms around the pixel and the blend t.
 function bracket(rb, x, y) {
@@ -365,4 +368,32 @@ if (MODE === "png") {
   }
   writeFileSync(out, encodePNG({ W: OW, H: OH, data: img }));
   console.log(`wrote ${out} ${OW}x${OH}`);
+}
+
+// cmp: where two variants' arcs differ in a box (env VA, VB; default s6, s7).
+//   node tie_s7.mjs cmp <records.json> <ji> <x0,y0,x1,y1> [top=20]
+// Per pixel, per bracketing arm: |arcA - arcB| times the arm's share; the
+// top pixels print both variants' arc, swept, proj and B's factors.
+if (MODE === "cmp") {
+  const ji = Number(ARGS[0]);
+  const [x0, y0, x1, y1] = ARGS[1].split(",").map(Number);
+  const TOP = Number(ARGS[2] || 20);
+  const VA = process.env.VA || "s6", VB = process.env.VB || "s7";
+  const r = recOf(ji);
+  const rows = [];
+  let n1 = 0, n3 = 0, n10 = 0, tot = 0;
+  for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+    const a = pixelArms(r.rb, x, y, VA), b = pixelArms(r.rb, x, y, VB);
+    let m = 0, mi = null;
+    for (const p of a.res) { const q = b.res.find((z) => z.i === p.i); if (!q) continue; const d = p.w * Math.abs(p.arc - q.arc); if (d > m) { m = d; mi = [p, q]; } }
+    tot++;
+    if (m > 0.01) n1++; if (m > 0.03) n3++; if (m > 0.1) n10++;
+    if (mi) rows.push({ x, y, m, p: mi[0], q: mi[1], B: a.B });
+  }
+  rows.sort((u, v) => v.m - u.m);
+  console.log(`ji ${ji} ${VA} vs ${VB} over ${tot} px: share-weighted arc diff > 0.01 at ${n1}, > 0.03 at ${n3}, > 0.1 at ${n10}`);
+  for (const o of rows.slice(0, TOP)) {
+    const s = o.q.s, t = o.p.s;
+    console.log(`${o.x},${o.y} arm ${o.p.i} w ${o.p.w.toFixed(2)} d ${o.m.toFixed(4)} | ${VA} arc ${t.arc.toFixed(4)} sw ${t.swept.toFixed(4)} wt ${t.wt.toFixed(2)} best ${t.best.toFixed(3)} | ${VB} arc ${s.arc.toFixed(4)} sw ${s.swept.toFixed(4)} pj ${s.proj.toFixed(4)} K ${s.K !== undefined ? s.K.toFixed(2) : "-"} wp ${s.wp !== undefined ? s.wp.toFixed(2) : "-"} wf ${s.wf !== undefined ? s.wf.toFixed(2) : "-"} l ${s.best.toFixed(3)} n ${s.n}`);
+  }
 }

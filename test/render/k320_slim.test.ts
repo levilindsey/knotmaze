@@ -215,8 +215,9 @@ describe("K320 stage 1: char budgets", () => {
     // radius, not the sweep's foot, +126 (-> 35,635); budget follows.
     // K1218 S7 (2026-11-06): sweptArc weighs every unfolded root softly
     // (swAcc: FIELD_TIE_TAU, FIELD_ROOT_SEP) and folds by each segment's own
-    // fan, +603 (35,635 -> 36,238 measured here); budget follows.
-    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(36_238);
+    // fan, +603 (35,635 -> 36,238 measured here); then the fan's margin
+    // tightened to 0-0.5 fh past its edge, -13 (-> 36,225); budget follows.
+    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(36_225);
     // K799: uKPath joins KNOT_UNIFORMS_GLSL, which the still pluck
     // includes (+18 here).
     expect(PLUCK_STILL_FRAG.length).toBeLessThanOrEqual(20_550);

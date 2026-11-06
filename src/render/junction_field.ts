@@ -297,7 +297,7 @@ float sweptArc(int ab, vec2 e, float rp) {
     float z = jCross(t, q) * jCross(tb, tc) / len;
     float o = abs(dot(q, t) - 0.5 * len) - 0.5 * len * abs(1.0 - z);
     float dist = length(q - clamp(dot(q, t), 0.0, len) * t);
-    fanw = max(fanw, smoothstep(${FIELD_FOLD_LO.toFixed(3)}, ${FIELD_FOLD_HI.toFixed(3)}, z) * (1.0 - smoothstep(0.5 * uJParams.x, 1.5 * uJParams.x, o)) * (1.0 - smoothstep(1.5 * uJParams.x, reach, dist)));
+    fanw = max(fanw, smoothstep(${FIELD_FOLD_LO.toFixed(3)}, ${FIELD_FOLD_HI.toFixed(3)}, z) * (1.0 - smoothstep(0.0, 0.5 * uJParams.x, o)) * (1.0 - smoothstep(1.5 * uJParams.x, reach, dist)));
     b = c;
     c = d;
     tb = tc;
