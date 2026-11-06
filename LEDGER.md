@@ -508,10 +508,10 @@ Next free ID: K1214.
   - env: the passes' builds first and never while Muse runs: `scripts/preview.ps1 -Ref <sha> -Root <out>\builds -BuildOnly` for each sha (`pixel_passes.ps1` stops before the phone lock when one is missing); probe server `npx vite --config .claude/probes/K1139/vite.private-cache.config.ts --port 5620 --strictPort --host 127.0.0.1` from a worktree (ports 5620-5639); GPU probes through `.claude/probes/K1139/run_locked.ps1 -Batch`
 - **K1208** · Muse batch 22 (after K1204's batch 21): runs B to H through the chain, from
   `docs/design/K1208_muse_batch22.md` (ports 5880-5949)
-  - owner: the chain in `.claude/probes/K1053/` (queue.txt, chain.log): Run G (22G) since 11:24, then J (22J), fresh Muse sessions; coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
+  - owner: the chain in `.claude/probes/K1053/` (queue.txt, chain.log): Run I (22I) next, then J (22J), fresh Muse sessions; coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
   - branch: mainline; last commit: `5f5025de`
   - evidence: the chain in .claude/probes/K1053/ (queue.txt, chain.log); each run's probe folder under .claude/probes/ (B K1203, H K1210, C K1186, E K1196, F K1191, G K1198)
-  - next: Run G done; Claude reviews it
+  - next: I (K1209: the layer vote retired on master) then J (K647: the card after Reset path); Claude reviews E (K1196 S4 cost, 34d1e863) and G (K1198 ij on v6.8, 5f5025de); D held for K1211
   - brief: `docs/design/K1208_muse_batch22.md`
 
 ## Next, in order
@@ -752,7 +752,7 @@ Every other item below waits on the trigger it names.
   Other stands, so not S4's own cost: next, those stands on S4's base and head (ABBA), the Pixel if it costs
 - **K1209** · Retire the fillet layer vote (one fan layer; K1186): Run C (2d68f787) has it green and 0 px
   but fat11 ji104 drag3 (23/14 px), where the base's stair-step at a fan boundary goes smooth: accepted.
-  Lands after K1211 S1 merges: a Muse run re-applies `.claude/probes/K1186/wip22c.patch` (notes).
+  Muse Run I (22I) re-applies `.claude/probes/K1186/wip22c.patch` on master (`K1209_reapply_run_i.md`).
 - **K1210** · Fire and collapse across junctions, like the highlights (Levi 2026-11-05; notes).
   Run H (d31f08c6; `.claude/probes/K1210/`): both break up inside the fused shape at 3 and 4 arms: fire in
   straight wedges with spikes, collapse as a bite or a ragged cut. The fix follows K1211's pick.
