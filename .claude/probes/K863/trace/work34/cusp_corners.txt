@@ -1,0 +1,112 @@
+v6.8: pieces 713, hooks 93, spikes 133, rough 189, seams 25, over 345
+  undesigned seams (25): q$(cq), q$(fq), q$(vq), q$(oq), q$(bq), q$(wq), dr(dr), as(as), nr(nr), ds(ds), hr(hr), ar(ar), ir(ir), hi(hippo), is(is), ii(ii), er(lawgiver), er(after), er(jumps over the lazy dog), hi(hi), hi(which), di(di), er(er), es(es), es(boxes)
+
+the rule's pairs in their two-letter words: attach | font distance dmax u | flags, census by census
+pair                                          v6.8
+ai         0.00 u rt    9.83  port-cusp          -
+aj         3.03 u rt    6.43  port-cusp          -
+ap        10.32 u rt    5.28  port-cusp          -
+ar         0.00 u rt   15.68  port-cusp       seam
+as         0.00 u rt   15.25  port-cusp       seam
+at        34.70 u rt   18.26  port-cusp          -
+au         3.15 u rt    7.93  port-cusp          -
+aw        10.01 u rt    6.56  port-cusp          -
+ay         3.00 u rt    8.52  port-cusp          -
+ci           after_n    1.28       cusp          -
+cj           after_n    1.09       cusp          -
+cp           after_n    2.10       cusp          -
+cr           after_n    9.04       cusp          -
+cs           after_n    5.30       cusp          -
+ct           after_n    3.69       cusp          -
+cu           after_n    1.84       cusp          -
+cw           after_n    2.06       cusp          -
+cy           after_n    1.44       cusp          -
+di         0.00 u rt    9.81  port-cusp       seam
+dj         3.16 u rt    6.32  port-cusp          -
+dp        10.33 u rt    5.53  port-cusp          -
+dr         0.00 u rt   15.50  port-cusp       seam
+ds         0.00 u rt   15.07  port-cusp       seam
+dt        34.69 u rt   18.03  port-cusp          -
+du         3.16 u rt    7.82  port-cusp          -
+dw        10.04 u rt    6.82  port-cusp          -
+dy         3.00 u rt    8.38  port-cusp          -
+ei         9.15 u rt   13.17  port-cusp          -
+ej        20.00 u rt   14.37  port-cusp          -
+ep        16.78 u rt   15.49  port-cusp          -
+er         0.00 u rt    7.54  port-cusp       seam
+es         0.00 u rt    5.91  port-cusp       seam
+et        35.95 u rt    2.26  port-cusp          -
+eu         6.58 u rt   11.00  port-cusp          -
+ew         9.79 u rt   11.60  port-cusp          -
+ey         1.84 u rt   10.75  port-cusp          -
+fi         3.00 u rt   12.68  port-cusp          -
+fj        17.91 u rt   12.63  port-cusp          -
+fp        16.78 u rt   12.82  port-cusp          -
+fr         2.00 u rt    6.34  port-cusp          -
+fs         2.00 u rt    9.37  port-cusp          -
+ft        35.95 u rt   13.24  port-cusp          -
+fu         5.78 u rt   12.64  port-cusp          -
+fw         9.05 u rt   12.96  port-cusp          -
+fy         3.00 u rt   12.68  port-cusp          -
+hi         0.00 u rt    9.96  port-cusp       seam
+hj         3.00 u rt    6.59  port-cusp          -
+hp        10.31 u rt    5.32  port-cusp          -
+hr         0.00 u rt   15.79  port-cusp       seam
+hs         0.00 u rt   15.29  port-cusp          -
+ht        34.70 u rt   17.97  port-cusp          -
+hu         3.14 u rt    8.05  port-cusp          -
+hw         9.62 u rt    6.55  port-cusp          -
+hy         3.00 u rt    8.61  port-cusp          -
+ii         0.00 u rt    9.37  port-cusp       seam
+ij                                        (no row)
+ip        10.61 u rt    5.76  port-cusp          -
+ir         0.00 u rt   15.14  port-cusp       seam
+is         0.00 u rt   14.65  port-cusp       seam
+it        34.52 u rt   15.95  port-cusp          -
+iu         3.15 u rt    7.44  port-cusp          -
+iw        10.03 u rt    7.04  port-cusp          -
+iy         3.00 u rt    8.00  port-cusp          -
+ni         0.42 u rt    9.03  port-cusp          -
+nj         3.00 u rt    5.53  port-cusp          -
+np         7.88 u rt    5.32  port-cusp          -
+nr         0.00 u rt   15.17  port-cusp       seam
+ns         0.00 u rt   14.37  port-cusp          -
+nt        34.87 u rt   16.31  port-cusp          -
+nu         3.15 u rt    7.18  port-cusp          -
+nw         9.78 u rt    6.65  port-cusp          -
+ny         3.00 u rt    7.79  port-cusp          -
+
+K863 J3k (g2 reads the angle): every undesigned seam, per census (piece, where: gap u / angle deg / dk 1/u), largest dk first
+  v6.8: 25 undesigned seams, 19 at an entry into i j p r s t u w y
+    cusp corners (19):
+      nr   w228:nr:J0-2nr                       entry r (port at 0.00 u, retrace, port-cusp): gap 1.65e-08 u, angle 180 deg, dk 0.0462 /u
+      dr   w194:dr:J0-2dr                       entry r (port at 0.00 u, retrace, port-cusp): gap 1.75e-09 u, angle 180 deg, dk 0.0462 /u
+      er   w78:after:J6-8er                     entry r (port at 0.00 u, retrace, port-cusp): gap 5.78e-13 u, angle 180 deg, dk 0.0462 /u
+      er   w20:lawgiver:J12-14er                entry r (port at 0.00 u, retrace, port-cusp): gap 4.77e-13 u, angle 180 deg, dk 0.0462 /u
+      er   w12:jumps over the lazy dog:J14-16er entry r (port at 0.00 u, retrace, port-cusp): gap 4.77e-13 u, angle 180 deg, dk 0.0462 /u
+      ds   w195:ds:J0-2ds                       entry s (port at 0.00 u, retrace, port-cusp): gap 5.53e-08 u, angle 180 deg, dk 0.0436 /u
+      as   w187:as:J0-2as                       entry s (port at 0.00 u, retrace, port-cusp): gap 1.88e-08 u, angle 180 deg, dk 0.0436 /u
+      es   w204:es:J0-2es                       entry s (port at 0.00 u, retrace, port-cusp): gap 2.94e-13 u, angle 8.54e-07 deg, dk 0.0256 /u
+      er   w203:er:J0-2er                       entry r (port at 0.00 u, retrace, port-cusp): gap 7.09e-13 u, angle 0 deg, dk 0.0231 /u
+      ar   w186:ar:J0-2ar                       entry r (port at 0.00 u, retrace, port-cusp): gap 3.49e-13 u, angle 1.03e-05 deg, dk 0.0231 /u
+      hr   w211:hr:J0-2hr                       entry r (port at 0.00 u, retrace, port-cusp): gap 1.99e-13 u, angle 6.56e-06 deg, dk 0.0231 /u
+      ir   w220:ir:J0-2ir                       entry r (port at 0.00 u, retrace, port-cusp): gap 3.18e-13 u, angle 7.78e-06 deg, dk 0.0231 /u
+      hi   w16:which:J2-4hi                     entry i (port at 0.00 u, retrace, port-cusp): gap 3.14e-13 u, angle 0 deg, dk 0.0177 /u
+      es   w4:boxes:J6-8es                      entry s (port at 0.00 u, retrace, port-cusp): gap 2.33e-13 u, angle 8.54e-07 deg, dk 0.00605 /u
+      is   w221:is:J0-2is                       entry s (port at 0.00 u, retrace, port-cusp): gap 1.36e-13 u, angle 1.21e-06 deg, dk 0.00356 /u
+      ii   w217:ii:J0-2ii                       entry i (port at 0.00 u, retrace, port-cusp): gap 1.43e-09 u, angle 180 deg, dk 0.00275 /u
+      hi   w6:hippo:J0-2hi                      entry i (port at 0.00 u, retrace, port-cusp): gap 1.85e-08 u, angle 180 deg, dk 0.00275 /u
+      hi   w208:hi:J0-2hi                       entry i (port at 0.00 u, retrace, port-cusp): gap 2.32e-13 u, angle 1.71e-06 deg, dk 0.00137 /u
+      di   w191:di:J0-2di                       entry i (port at 0.00 u, retrace, port-cusp): gap 2.08e-13 u, angle 1.48e-06 deg, dk 0.00137 /u
+    the rest (6):
+      q$   w173:cq:tail0q                       exit q: gap 0 u, angle 0 deg, dk 10.6 /u
+      q$   w68:fq:tail0q                        exit q: gap 0 u, angle 0 deg, dk 10.6 /u
+      q$   w120:vq:tail0q                       exit q: gap 0 u, angle 0 deg, dk 10.6 /u
+      q$   w146:wq:tail0q                       exit q: gap 0 u, angle 0 deg, dk 10.6 /u
+      q$   w38:oq:tail0q                        exit q: gap 0 u, angle 0 deg, dk 10.6 /u
+      q$   w95:bq:tail0q                        exit q: gap 0 u, angle 0 deg, dk 10.6 /u
+
+K863 J3k (K1212): the seams g2 fails on the angle alone (not designed; gap < 0.01 u and dk < 5e-4 /u; angle >= 0.05 deg), per census, largest angle first
+  v6.8: 0 seams on 0 pieces fail on the angle alone (9 more undesigned seams have angle >= 0.05 deg and fail on gap or dk too)
+    by pair: 
+    by piece type and seam end: 

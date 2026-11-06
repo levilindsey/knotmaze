@@ -1,0 +1,69 @@
+v6.8: pieces 713, hooks 93, spikes 133, rough 189, seams 25, over 345
+  undesigned seams (25): q$(cq), q$(fq), q$(vq), q$(oq), q$(bq), q$(wq), dr(dr), as(as), nr(nr), ds(ds), hr(hr), ar(ar), ir(ir), hi(hippo), is(is), ii(ii), er(lawgiver), er(after), er(jumps over the lazy dog), hi(hi), hi(which), di(di), er(er), es(es), es(boxes)
+
+K863 J3j: every undesigned seam, per census (piece, where: gap u / angle deg / dk 1/u), largest dk first
+  v6.8: 25 undesigned seams, 19 at an entry into i j p r s t u w y
+    cusp corners (19):
+      nr   w228:nr:J0-2nr                       entry r (port at 0.00 u, retrace, port-cusp): gap 1.65e-08 u, angle 180 deg, dk 0.0462 /u
+      dr   w194:dr:J0-2dr                       entry r (port at 0.00 u, retrace, port-cusp): gap 1.75e-09 u, angle 180 deg, dk 0.0462 /u
+      er   w78:after:J6-8er                     entry r (port at 0.00 u, retrace, port-cusp): gap 5.78e-13 u, angle 180 deg, dk 0.0462 /u
+      er   w20:lawgiver:J12-14er                entry r (port at 0.00 u, retrace, port-cusp): gap 4.77e-13 u, angle 180 deg, dk 0.0462 /u
+      er   w12:jumps over the lazy dog:J14-16er entry r (port at 0.00 u, retrace, port-cusp): gap 4.77e-13 u, angle 180 deg, dk 0.0462 /u
+      ds   w195:ds:J0-2ds                       entry s (port at 0.00 u, retrace, port-cusp): gap 5.53e-08 u, angle 180 deg, dk 0.0436 /u
+      as   w187:as:J0-2as                       entry s (port at 0.00 u, retrace, port-cusp): gap 1.88e-08 u, angle 180 deg, dk 0.0436 /u
+      es   w204:es:J0-2es                       entry s (port at 0.00 u, retrace, port-cusp): gap 2.94e-13 u, angle 8.54e-07 deg, dk 0.0256 /u
+      er   w203:er:J0-2er                       entry r (port at 0.00 u, retrace, port-cusp): gap 7.09e-13 u, angle 0 deg, dk 0.0231 /u
+      ar   w186:ar:J0-2ar                       entry r (port at 0.00 u, retrace, port-cusp): gap 3.49e-13 u, angle 1.03e-05 deg, dk 0.0231 /u
+      hr   w211:hr:J0-2hr                       entry r (port at 0.00 u, retrace, port-cusp): gap 1.99e-13 u, angle 6.56e-06 deg, dk 0.0231 /u
+      ir   w220:ir:J0-2ir                       entry r (port at 0.00 u, retrace, port-cusp): gap 3.18e-13 u, angle 7.78e-06 deg, dk 0.0231 /u
+      hi   w16:which:J2-4hi                     entry i (port at 0.00 u, retrace, port-cusp): gap 3.14e-13 u, angle 0 deg, dk 0.0177 /u
+      es   w4:boxes:J6-8es                      entry s (port at 0.00 u, retrace, port-cusp): gap 2.33e-13 u, angle 8.54e-07 deg, dk 0.00605 /u
+      is   w221:is:J0-2is                       entry s (port at 0.00 u, retrace, port-cusp): gap 1.36e-13 u, angle 1.21e-06 deg, dk 0.00356 /u
+      ii   w217:ii:J0-2ii                       entry i (port at 0.00 u, retrace, port-cusp): gap 1.43e-09 u, angle 180 deg, dk 0.00275 /u
+      hi   w6:hippo:J0-2hi                      entry i (port at 0.00 u, retrace, port-cusp): gap 1.85e-08 u, angle 180 deg, dk 0.00275 /u
+      hi   w208:hi:J0-2hi                       entry i (port at 0.00 u, retrace, port-cusp): gap 2.32e-13 u, angle 1.71e-06 deg, dk 0.00137 /u
+      di   w191:di:J0-2di                       entry i (port at 0.00 u, retrace, port-cusp): gap 2.08e-13 u, angle 1.48e-06 deg, dk 0.00137 /u
+    the rest (6):
+      q$   w173:cq:tail0q                       exit q: gap 0 u, angle 0 deg, dk 10.6 /u
+      q$   w68:fq:tail0q                        exit q: gap 0 u, angle 0 deg, dk 10.6 /u
+      q$   w120:vq:tail0q                       exit q: gap 0 u, angle 0 deg, dk 10.6 /u
+      q$   w146:wq:tail0q                       exit q: gap 0 u, angle 0 deg, dk 10.6 /u
+      q$   w38:oq:tail0q                        exit q: gap 0 u, angle 0 deg, dk 10.6 /u
+      q$   w95:bq:tail0q                        exit q: gap 0 u, angle 0 deg, dk 10.6 /u
+v6.8: pieces 713, hooks 93, spikes 133, rough 189, seams 25, over 345
+  undesigned seams (25): q$(cq), q$(fq), q$(vq), q$(oq), q$(bq), q$(wq), dr(dr), as(as), nr(nr), ds(ds), hr(hr), ar(ar), ir(ir), hi(hippo), is(is), ii(ii), er(lawgiver), er(after), er(jumps over the lazy dog), hi(hi), hi(which), di(di), er(er), es(es), es(boxes)
+
+K863 J3k (g2 reads the angle): every undesigned seam, per census (piece, where: gap u / angle deg / dk 1/u), largest dk first
+  v6.8: 25 undesigned seams, 19 at an entry into i j p r s t u w y
+    cusp corners (19):
+      nr   w228:nr:J0-2nr                       entry r (port at 0.00 u, retrace, port-cusp): gap 1.65e-08 u, angle 180 deg, dk 0.0462 /u
+      dr   w194:dr:J0-2dr                       entry r (port at 0.00 u, retrace, port-cusp): gap 1.75e-09 u, angle 180 deg, dk 0.0462 /u
+      er   w78:after:J6-8er                     entry r (port at 0.00 u, retrace, port-cusp): gap 5.78e-13 u, angle 180 deg, dk 0.0462 /u
+      er   w20:lawgiver:J12-14er                entry r (port at 0.00 u, retrace, port-cusp): gap 4.77e-13 u, angle 180 deg, dk 0.0462 /u
+      er   w12:jumps over the lazy dog:J14-16er entry r (port at 0.00 u, retrace, port-cusp): gap 4.77e-13 u, angle 180 deg, dk 0.0462 /u
+      ds   w195:ds:J0-2ds                       entry s (port at 0.00 u, retrace, port-cusp): gap 5.53e-08 u, angle 180 deg, dk 0.0436 /u
+      as   w187:as:J0-2as                       entry s (port at 0.00 u, retrace, port-cusp): gap 1.88e-08 u, angle 180 deg, dk 0.0436 /u
+      es   w204:es:J0-2es                       entry s (port at 0.00 u, retrace, port-cusp): gap 2.94e-13 u, angle 8.54e-07 deg, dk 0.0256 /u
+      er   w203:er:J0-2er                       entry r (port at 0.00 u, retrace, port-cusp): gap 7.09e-13 u, angle 0 deg, dk 0.0231 /u
+      ar   w186:ar:J0-2ar                       entry r (port at 0.00 u, retrace, port-cusp): gap 3.49e-13 u, angle 1.03e-05 deg, dk 0.0231 /u
+      hr   w211:hr:J0-2hr                       entry r (port at 0.00 u, retrace, port-cusp): gap 1.99e-13 u, angle 6.56e-06 deg, dk 0.0231 /u
+      ir   w220:ir:J0-2ir                       entry r (port at 0.00 u, retrace, port-cusp): gap 3.18e-13 u, angle 7.78e-06 deg, dk 0.0231 /u
+      hi   w16:which:J2-4hi                     entry i (port at 0.00 u, retrace, port-cusp): gap 3.14e-13 u, angle 0 deg, dk 0.0177 /u
+      es   w4:boxes:J6-8es                      entry s (port at 0.00 u, retrace, port-cusp): gap 2.33e-13 u, angle 8.54e-07 deg, dk 0.00605 /u
+      is   w221:is:J0-2is                       entry s (port at 0.00 u, retrace, port-cusp): gap 1.36e-13 u, angle 1.21e-06 deg, dk 0.00356 /u
+      ii   w217:ii:J0-2ii                       entry i (port at 0.00 u, retrace, port-cusp): gap 1.43e-09 u, angle 180 deg, dk 0.00275 /u
+      hi   w6:hippo:J0-2hi                      entry i (port at 0.00 u, retrace, port-cusp): gap 1.85e-08 u, angle 180 deg, dk 0.00275 /u
+      hi   w208:hi:J0-2hi                       entry i (port at 0.00 u, retrace, port-cusp): gap 2.32e-13 u, angle 1.71e-06 deg, dk 0.00137 /u
+      di   w191:di:J0-2di                       entry i (port at 0.00 u, retrace, port-cusp): gap 2.08e-13 u, angle 1.48e-06 deg, dk 0.00137 /u
+    the rest (6):
+      q$   w173:cq:tail0q                       exit q: gap 0 u, angle 0 deg, dk 10.6 /u
+      q$   w68:fq:tail0q                        exit q: gap 0 u, angle 0 deg, dk 10.6 /u
+      q$   w120:vq:tail0q                       exit q: gap 0 u, angle 0 deg, dk 10.6 /u
+      q$   w146:wq:tail0q                       exit q: gap 0 u, angle 0 deg, dk 10.6 /u
+      q$   w38:oq:tail0q                        exit q: gap 0 u, angle 0 deg, dk 10.6 /u
+      q$   w95:bq:tail0q                        exit q: gap 0 u, angle 0 deg, dk 10.6 /u
+
+K863 J3k (K1212): the seams g2 fails on the angle alone (not designed; gap < 0.01 u and dk < 5e-4 /u; angle >= 0.05 deg), per census, largest angle first
+  v6.8: 0 seams on 0 pieces fail on the angle alone (9 more undesigned seams have angle >= 0.05 deg and fail on gap or dk too)
+    by pair: 
+    by piece type and seam end: 

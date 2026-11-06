@@ -1,0 +1,5 @@
+A = work28\census_v68.json
+B = work34\census_v68.json
+A: 349 rows, 347 ids, 2 ids repeated: of:J0-2of x2, of:lead0o x2
+B: 347 rows, 347 ids, 0 ids repeated
+ids: 347 equal, 0 differ, 0 only in B, 0 only in A; repeated copies: 2 equal to their first, 0 not

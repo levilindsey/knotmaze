@@ -1,0 +1,37 @@
+K863 J3k: the font's dots against the build's dot strokes (work34\base); fu, u = fu x 0.24
+'minimum' letter 2 i glyph i.mod.med at x 989.00, body origin 989.00 (dx 0.00); font dot contours 1
+  font dot: centroid (1296.0, 732.6) = glyph-local (307.0, 732.6), area 5769 fu^2, eq. diameter 85.7 fu = 20.57 u, extents x 1253.0..1339.0 y 690.0..775.0, half-axes 66.5 x 55.8 fu along (-0.711, -0.704)
+  build stroke 1: 4 cubics from (1323.4, 757.0) to (1271.1, 707.4), length 72.2 fu = 17.32 u, mean point (1296.7, 732.8), offset from the font dot's centroid (0.7, 0.2) fu
+'minimum' letter 6 i glyph i.mod.med at x 2085.00, body origin 2085.00 (dx 0.00); font dot contours 1
+  font dot: centroid (2392.0, 732.6) = glyph-local (307.0, 732.6), area 5769 fu^2, eq. diameter 85.7 fu = 20.57 u, extents x 2349.0..2435.0 y 690.0..775.0, half-axes 66.5 x 55.8 fu along (-0.711, -0.704)
+  build stroke 1: 4 cubics from (2419.4, 757.0) to (2367.1, 707.4), length 72.2 fu = 17.32 u, mean point (2392.7, 732.8), offset from the font dot's centroid (0.7, 0.2) fu
+'it' letter 0 i glyph i.mod.ini at x 0.00, body origin -24.25 (dx -24.25); font dot contours 1
+  font dot: centroid (282.0, 732.6) = glyph-local (282.0, 732.6), area 5769 fu^2, eq. diameter 85.7 fu = 20.57 u, extents x 239.0..325.0 y 690.0..775.0, half-axes 66.5 x 55.8 fu along (-0.711, -0.704)
+  build stroke 1: 4 cubics from (310.2, 757.0) to (257.8, 707.4), length 72.2 fu = 17.32 u, mean point (283.5, 732.8), offset from the font dot's centroid (1.5, 0.2) fu
+'oi' letter 2 i glyph i.mod.fin at x 588.00, body origin 588.50 (dx 0.50); font dot contours 1
+  font dot: centroid (894.9, 732.5) = glyph-local (306.9, 732.5), area 5778 fu^2, eq. diameter 85.8 fu = 20.59 u, extents x 852.0..938.0 y 690.0..775.0, half-axes 67.0 x 55.6 fu along (-0.716, -0.698)
+  build stroke 1: 4 cubics from (922.9, 757.0) to (870.6, 707.4), length 72.2 fu = 17.32 u, mean point (896.2, 732.8), offset from the font dot's centroid (1.3, 0.2) fu
+'bi' letter 2 i glyph i.mod.fin at x 614.00, body origin 614.50 (dx 0.50); font dot contours 1
+  font dot: centroid (920.9, 732.5) = glyph-local (306.9, 732.5), area 5778 fu^2, eq. diameter 85.8 fu = 20.59 u, extents x 878.0..964.0 y 690.0..775.0, half-axes 67.0 x 55.6 fu along (-0.716, -0.698)
+  build stroke 1: 4 cubics from (948.9, 757.0) to (896.6, 707.4), length 72.2 fu = 17.32 u, mean point (922.2, 732.8), offset from the font dot's centroid (1.3, 0.2) fu
+'ice jet even' letter 0 i glyph i.mod.ini at x 0.00, body origin -24.25 (dx -24.25); font dot contours 1
+  font dot: centroid (282.0, 732.6) = glyph-local (282.0, 732.6), area 5769 fu^2, eq. diameter 85.7 fu = 20.57 u, extents x 239.0..325.0 y 690.0..775.0, half-axes 66.5 x 55.8 fu along (-0.711, -0.704)
+  build stroke 1: 4 cubics from (310.2, 757.0) to (257.8, 707.4), length 72.2 fu = 17.32 u, mean point (283.5, 732.8), offset from the font dot's centroid (1.5, 0.2) fu
+'ice jet even' letter 6 j glyph j.jmc.ini at x 1579.00, body origin 1578.75 (dx -0.25); font dot contours 1
+  font dot: centroid (1884.8, 732.6) = glyph-local (305.8, 732.6), area 5801 fu^2, eq. diameter 85.9 fu = 20.63 u, extents x 1842.0..1928.0 y 690.0..775.0, half-axes 66.5 x 56.2 fu along (0.703, 0.711)
+  build stroke 1: 4 cubics from (1912.9, 756.9) to (1858.1, 707.8), length 73.6 fu = 17.66 u, mean point (1885.1, 732.7), offset from the font dot's centroid (0.3, 0.1) fu
+'jumps over the lazy dog' letter 0 j glyph j.jmc.ini at x 0.00, body origin -0.25 (dx -0.25); font dot contours 1
+  font dot: centroid (305.8, 732.6) = glyph-local (305.8, 732.6), area 5801 fu^2, eq. diameter 85.9 fu = 20.63 u, extents x 263.0..349.0 y 690.0..775.0, half-axes 66.5 x 56.2 fu along (0.703, 0.711)
+  build stroke 1: 4 cubics from (333.9, 756.9) to (279.1, 707.8), length 73.6 fu = 17.66 u, mean point (306.1, 732.7), offset from the font dot's centroid (0.3, 0.1) fu
+'oj' letter 2 j glyph j.jmc.fin at x 588.00, body origin 587.75 (dx -0.25); font dot contours 1
+  font dot: centroid (893.8, 732.6) = glyph-local (305.8, 732.6), area 5801 fu^2, eq. diameter 85.9 fu = 20.63 u, extents x 851.0..937.0 y 690.0..775.0, half-axes 66.5 x 56.2 fu along (0.703, 0.711)
+  build stroke 1: 4 cubics from (921.9, 756.9) to (867.1, 707.8), length 73.6 fu = 17.66 u, mean point (894.1, 732.7), offset from the font dot's centroid (0.3, 0.1) fu
+'bj' letter 2 j glyph j.jmc.fin at x 614.00, body origin 613.75 (dx -0.25); font dot contours 1
+  font dot: centroid (919.8, 732.6) = glyph-local (305.8, 732.6), area 5801 fu^2, eq. diameter 85.9 fu = 20.63 u, extents x 877.0..963.0 y 690.0..775.0, half-axes 66.5 x 56.2 fu along (0.703, 0.711)
+  build stroke 1: 4 cubics from (947.9, 756.9) to (893.1, 707.8), length 73.6 fu = 17.66 u, mean point (920.1, 732.7), offset from the font dot's centroid (0.3, 0.1) fu
+'lawgiver' letter 8 i glyph i.mod.med at x 2552.00, body origin 2552.00 (dx 0.00); font dot contours 1
+  font dot: centroid (2859.0, 732.6) = glyph-local (307.0, 732.6), area 5769 fu^2, eq. diameter 85.7 fu = 20.57 u, extents x 2816.0..2902.0 y 690.0..775.0, half-axes 66.5 x 55.8 fu along (-0.711, -0.704)
+  build stroke 1: 4 cubics from (2886.4, 757.0) to (2834.1, 707.4), length 72.2 fu = 17.32 u, mean point (2859.7, 732.8), offset from the font dot's centroid (0.7, 0.2) fu
+'ai' letter 2 i glyph i.mod.fin at x 622.00, body origin 622.50 (dx 0.50); font dot contours 1
+  font dot: centroid (928.9, 732.5) = glyph-local (306.9, 732.5), area 5778 fu^2, eq. diameter 85.8 fu = 20.59 u, extents x 886.0..972.0 y 690.0..775.0, half-axes 67.0 x 55.6 fu along (-0.716, -0.698)
+  build stroke 1: 4 cubics from (956.9, 757.0) to (904.6, 707.4), length 72.2 fu = 17.32 u, mean point (930.2, 732.8), offset from the font dot's centroid (1.3, 0.2) fu
