@@ -69,6 +69,8 @@ def main():
     ports_path = opt("--ports", os.path.join(T, "work21", "ports_k1009.json"))
     rep_path = opt("--report")
     side_path = opt("--sidecar")
+    ink = opt("--ink")       # J3k: the pen's width in u: each build's ink drawn translucent under its centrelines
+    ink = float(ink) if ink else None
     out_svg, title, cases = a[0], a[1], [c for c in a[2].split(",") if c]
     font = Font(os.path.join(T, "font", "PlaywriteUSTrad[wght].ttf"))
     builds = []
@@ -137,7 +139,9 @@ def main():
            f'<text x="{pad}" y="34" font-family="sans-serif" font-size="22">{title}</text>',
            f'<text x="{pad}" y="62" font-family="sans-serif" font-size="15" fill="#444">Columns: the font (wght 100), then '
            f'each build over a pale copy of the font. Black bodies, red solved joins, blue preset joins, orange lead-ins '
-           f'and tails. Units: 1 px = 1 u (x-height 120 u).</text>']
+           f'and tails. Units: 1 px = 1 u (x-height 120 u).'
+           + (f' Translucent grey under the centrelines: the ink at the pen\'s width ({ink:g} u).' if ink else '')
+           + '</text>']
     for ci, nm in enumerate(["font"] + [b["name"] for b in builds]):
         x = pad + lab + ci * (cw + gap)
         out.append(f'<text x="{x:.1f}" y="96" font-family="sans-serif" font-size="20" font-weight="bold">{nm}</text>')
@@ -161,6 +165,13 @@ def main():
             if ci == 0:
                 continue
             A = c["row"][ci - 1]
+            if ink:     # one group at uniform opacity, so the pen's overlaps (a dot's loop) read as one ink
+                ds = [bz_d(st, P) for lt in A["letters"] for st in lt["strokes"]]
+                ds += [bz_d([[list(map(float, q)) for q in b] for b in FN.conn_beziers(j["coeffs"])], P)
+                       for nm in ("joins", "leads", "tails") for j in A[nm]]
+                out.append('<g opacity="0.3">' + "".join(
+                    f'<path d="{d_}" fill="none" stroke="#000" stroke-width="{ink:.2f}" stroke-linecap="round" '
+                    f'stroke-linejoin="round"/>' for d_ in ds) + '</g>')
             for lt in A["letters"]:
                 for st in lt["strokes"]:
                     out.append(f'<path d="{bz_d(st, P)}" fill="none" stroke="#000" stroke-width="2.2" '

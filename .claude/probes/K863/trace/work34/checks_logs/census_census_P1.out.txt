@@ -1,0 +1,14 @@
+K962 join census of P1 (32 pieces; bodies work34\cbuild\P1\bodies.json, params work34\cbuild\P1\join_params.json, generator gen_k863k)
+K1019: a solved (port) join's dmax is measured against the font's connector cut at the join's own ends; the census_k1012 number (cut at the build's entry frame) follows each such row as 'dist at the frame'
+budget 2.5 u (3.0 u fused); G2 seam: gap < 0.01 u, angle < 0.05 deg, dk < 0.0005 /u; hook: a turn over 20 deg within 0.5 u; spike: |k| > 3.0 x the word's p95 (combs sheet sampling); peak |dk/ds| in 1/u^2 (ratio to rough's 200/Mfu^2 = 3.47e-03/u^2); rough: rough_k969 limits
+
+pieces 32: joins 19, leads 7, virtual leads 4, tails 0, variants 2
+hooks (near-cusps inside a piece): 0 pieces: 
+connectors with a0 or a1 at the 0.02 floor: 3: J0-2bp(bp) a1, J0-2wp(wp) a1, J0-2vp(vp) a1
+over the budget: 17: J0-2ep(ep) 15.49, J6-8gr(subgroup) 13.21, J0-2fp(fp) 12.82, lead0f(fp) 6.46, J4-6bg(subgroup) 6.17, J0-2ip(ip) 5.76, J0-2dp(dp) 5.53, J0-2np(np) 5.32, J0-2hp(hp) 5.32, J0-2ap(ap) 5.28, after_o((e after_o)) 3.55, lead0h(hp) 3.50, lead0s(subgroup) 3.28, lead0b(bp) 3.20, after_g((e after_g)) 2.87, J0-2op(op) 2.66, J10-12ou(subgroup) 2.59
+seams not G2 (undesigned): 0: 
+designed corners (cusp entries): 10: J0-2bp(bp) 159deg, J0-2wp(wp) 159deg, J0-2vp(vp) 159deg, J6-8gr(subgroup) 165deg, lead0s(subgroup) 172deg, J0-2op(op) 175deg, J10-12ou(subgroup) 158deg, J0-2cp(cp) 159deg, J12-14up(subgroup) 159deg, J0-2su(subgroup) 172deg
+comb spikes: 4: lead0c(cp) 19 k/p95 3.5, J0-2bp(bp) 10 k/p95 37.6, J0-2wp(wp) 17 k/p95 118.4, J0-2vp(vp) 17 k/p95 94.5
+internal kinks: 0; rough FAIL: 5: lead0c(cp) facet 0.0098 wob 0.0106, J0-2bp(bp) facet 0.0150 wob 0.0290, J0-2wp(wp) facet 0.0214 wob 0.0401, J0-2vp(vp) facet 0.0087 wob 0.0189, lead0d(dp) facet 0.0057 wob 0.0109
+peak |dk/ds| top 15 (excl. hooks): lead0c(cp) 0.0620, J0-2bp(bp) 0.0253, J0-2wp(wp) 0.0252, J0-2vp(vp) 0.0250, after_o((e after_o)) 0.0249, lead0d(dp) 0.0236, lead0a(ap) 0.0174, lead0f(fp) 0.0153, lead0e(ep) 0.0151, J4-6bg(subgroup) 0.0146, after_g((e after_g)) 0.0141, lead0v(vp) 0.0127, J2-4ub(subgroup) 0.0125, lead0n(np) 0.0104, lead0o(op) 0.0101
+designed body corners (Levi's asks; not kinks): 11: a node 6 180deg, a start = node 6 (shared point), 106deg between the arrival there and the start, f node 9 168deg, g node 6 178deg, g start = node 6 (shared point), 105deg between the arrival there and the start, k node 9 180deg, k node 15 100deg, o node 7 180deg, o start = node 5 (shared point), 0deg between the arrival there and the start, q node 4 180deg, q start = node 4 (shared point), 109deg between the arrival there and the start [o's top cusp (K976), a's top corner (K990), k's leg meets the stem (K990), f's cusp (K990), g's top corner (K1012), q's top corner (K1012)]

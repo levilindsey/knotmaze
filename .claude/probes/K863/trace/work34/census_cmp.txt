@@ -1,0 +1,96 @@
+K863 J3k: census rows against v6.8's (work34\census_v68x.json), by id without the word number
+
+v6.8k (work34\census_v68k.json): 234 rows in 70 words; outside the spot: 234 equal, 0 differ in the word's p95 only, 0 differ otherwise, 0 not in v6.8's census; in the spot: 0
+
+S1 (work34\census_S1.json): 50 rows in 16 words; outside the spot: 2 equal, 48 differ in the word's p95 only, 0 differ otherwise, 0 not in v6.8's census; in the spot: 0
+  p95 only: kmax_p95 moves by up to 9.9% (median 0.1%); spikes change in 1 rows
+    vs:J0-2vs: spikes 31 -> 29, kmax_p95 9133.3 -> 8229.4, badness 345.5 -> 345.5
+
+S2 (work34\census_S2.json): 50 rows in 16 words; outside the spot: 2 equal, 48 differ in the word's p95 only, 0 differ otherwise, 0 not in v6.8's census; in the spot: 0
+  p95 only: kmax_p95 moves by up to 10.3% (median 0.2%); spikes change in 1 rows
+    vs:J0-2vs: spikes 31 -> 29, kmax_p95 9133.3 -> 8193.1, badness 345.5 -> 345.5
+
+P1 (work34\census_P1.json): 32 rows in 15 words; outside the spot: 2 equal, 30 differ in the word's p95 only, 0 differ otherwise, 0 not in v6.8's census; in the spot: 0
+  p95 only: kmax_p95 moves by up to 4.4% (median 0.9%); spikes change in 1 rows
+    cp:lead0c: spikes 20 -> 19, kmax_p95 3.6 -> 3.5, badness 121.8 -> 121.8
+
+Q1 (work34\census_Q1.json): 19 rows in 8 words; outside the spot: 2 equal, 11 differ in the word's p95 only, 0 differ otherwise, 0 not in v6.8's census; in the spot: 6
+  p95 only: kmax_p95 moves by up to 0.9% (median 0.6%); spikes change in 0 rows
+  SPOT oq:tail0q
+    v6.8: exit q: gap 0.00e+00 u, angle 0 deg, dk 10.6 /u | font dist max 1.06 u mean 0.75 u | hooks 1 | rough FAIL (facet 1.233, wobble 1.832) | peak ratio 3.14 | len 33.74 u | badness 270.3
+    Q1: exit q: gap 0.00e+00 u, angle 0 deg, dk 5.07e-15 /u | font dist max 1.17 u mean 0.84 u | hooks 0 | rough FAIL (facet 0.030, wobble 0.004) | peak ratio 40.48 | len 33.08 u | badness 84.0
+  SPOT cq:tail0q
+    v6.8: exit q: gap 0.00e+00 u, angle 0 deg, dk 10.6 /u | font dist max 1.06 u mean 0.75 u | hooks 1 | rough FAIL (facet 1.233, wobble 1.832) | peak ratio 3.14 | len 33.74 u | badness 270.3
+    Q1: exit q: gap 0.00e+00 u, angle 0 deg, dk 4.08e-15 /u | font dist max 1.17 u mean 0.84 u | hooks 0 | rough FAIL (facet 0.030, wobble 0.004) | peak ratio 40.48 | len 33.08 u | badness 84.0
+  SPOT bq:tail0q
+    v6.8: exit q: gap 0.00e+00 u, angle 0 deg, dk 10.6 /u | font dist max 1.06 u mean 0.75 u | hooks 1 | rough FAIL (facet 1.233, wobble 1.832) | peak ratio 3.14 | len 33.74 u | badness 270.3
+    Q1: exit q: gap 0.00e+00 u, angle 0 deg, dk 9.11e-16 /u | font dist max 1.17 u mean 0.84 u | hooks 0 | rough FAIL (facet 0.030, wobble 0.004) | peak ratio 40.48 | len 33.08 u | badness 64.0
+  SPOT wq:tail0q
+    v6.8: exit q: gap 0.00e+00 u, angle 0 deg, dk 10.6 /u | font dist max 1.06 u mean 0.75 u | hooks 1 | rough FAIL (facet 1.233, wobble 1.832) | peak ratio 3.14 | len 33.74 u | badness 270.3
+    Q1: exit q: gap 0.00e+00 u, angle 0 deg, dk 6.89e-15 /u | font dist max 1.17 u mean 0.84 u | hooks 0 | rough FAIL (facet 0.030, wobble 0.004) | peak ratio 40.48 | len 33.08 u | badness 64.0
+  SPOT fq:tail0q
+    v6.8: exit q: gap 0.00e+00 u, angle 0 deg, dk 10.6 /u | font dist max 1.06 u mean 0.75 u | hooks 1 | rough FAIL (facet 1.233, wobble 1.832) | peak ratio 3.14 | len 33.74 u | badness 270.3
+    Q1: exit q: gap 0.00e+00 u, angle 0 deg, dk 4.42e-15 /u | font dist max 1.17 u mean 0.84 u | hooks 0 | rough FAIL (facet 0.030, wobble 0.004) | peak ratio 40.48 | len 33.08 u | badness 64.0
+  SPOT vq:tail0q
+    v6.8: exit q: gap 0.00e+00 u, angle 0 deg, dk 10.6 /u | font dist max 1.06 u mean 0.75 u | hooks 1 | rough FAIL (facet 1.233, wobble 1.832) | peak ratio 3.14 | len 33.74 u | badness 270.3
+    Q1: exit q: gap 0.00e+00 u, angle 0 deg, dk 8.57e-15 /u | font dist max 1.17 u mean 0.84 u | hooks 0 | rough FAIL (facet 0.030, wobble 0.004) | peak ratio 40.48 | len 33.08 u | badness 44.0
+
+D1 (work34\census_D1.json): 162 rows in 40 words; outside the spot: 2 equal, 160 differ in the word's p95 only, 0 differ otherwise, 0 not in v6.8's census; in the spot: 0
+  p95 only: kmax_p95 moves by up to 65.8% (median 8.4%); spikes change in 11 rows
+    cursive:J10-12ve: spikes 28 -> 27, kmax_p95 11389.2 -> 10709.8, badness 328.9 -> 328.9
+    ice jet even:J14-16ve: spikes 26 -> 24, kmax_p95 8932.3 -> 8120.3, badness 228.8 -> 228.8
+    lawgiver:J10-12ve: spikes 25 -> 24, kmax_p95 8421.4 -> 8172.7, badness 228.8 -> 228.8
+    iu:tail0u: spikes 23 -> 22, kmax_p95 53537.1 -> 47480.7, badness 220.7 -> 220.7
+    vi:tail0i: spikes 20 -> 19, kmax_p95 189.6 -> 68.7, badness 220.7 -> 220.7
+    ii:tail0i: spikes 20 -> 19, kmax_p95 196.1 -> 67.0, badness 220.7 -> 220.7
+    ei:tail0i: spikes 21 -> 20, kmax_p95 266.9 -> 187.4, badness 220.7 -> 220.7
+    oi:tail0i: spikes 26 -> 20, kmax_p95 302.9 -> 205.3, badness 220.7 -> 220.7
+    di:tail0i: spikes 21 -> 20, kmax_p95 254.6 -> 208.2, badness 220.7 -> 220.7
+    it:tail0t: spikes 18 -> 8, kmax_p95 6.5 -> 3.5, badness 165.2 -> 165.2
+    ice jet even:tail1t: spikes 20 -> 19, kmax_p95 7.4 -> 6.7, badness 165.2 -> 165.2
+
+D2 (work34\census_D2.json): 162 rows in 40 words; outside the spot: 2 equal, 160 differ in the word's p95 only, 0 differ otherwise, 0 not in v6.8's census; in the spot: 0
+  p95 only: kmax_p95 moves by up to 66.1% (median 11.2%); spikes change in 10 rows
+    cursive:J10-12ve: spikes 28 -> 27, kmax_p95 11389.2 -> 10516.0, badness 328.9 -> 328.9
+    ice jet even:J14-16ve: spikes 26 -> 23, kmax_p95 8932.3 -> 7852.9, badness 228.8 -> 228.8
+    lawgiver:J10-12ve: spikes 25 -> 24, kmax_p95 8421.4 -> 8084.9, badness 228.8 -> 228.8
+    iu:tail0u: spikes 23 -> 21, kmax_p95 53537.1 -> 37367.6, badness 220.7 -> 220.7
+    ii:tail0i: spikes 20 -> 19, kmax_p95 196.1 -> 66.5, badness 220.7 -> 220.7
+    ei:tail0i: spikes 21 -> 20, kmax_p95 266.9 -> 143.6, badness 220.7 -> 220.7
+    oi:tail0i: spikes 26 -> 20, kmax_p95 302.9 -> 192.9, badness 220.7 -> 220.7
+    di:tail0i: spikes 21 -> 20, kmax_p95 254.6 -> 201.4, badness 220.7 -> 220.7
+    it:tail0t: spikes 18 -> 9, kmax_p95 6.5 -> 3.7, badness 165.2 -> 165.2
+    ice jet even:tail1t: spikes 20 -> 18, kmax_p95 7.4 -> 6.5, badness 165.2 -> 165.2
+
+ALL (work34\census_ALL.json): 234 rows in 70 words; outside the spot: 2 equal, 226 differ in the word's p95 only, 0 differ otherwise, 0 not in v6.8's census; in the spot: 6
+  p95 only: kmax_p95 moves by up to 66.1% (median 7.4%); spikes change in 12 rows
+    vs:J0-2vs: spikes 31 -> 29, kmax_p95 9133.3 -> 8193.1, badness 345.5 -> 345.5
+    cursive:J10-12ve: spikes 28 -> 27, kmax_p95 11389.2 -> 10516.0, badness 328.9 -> 328.9
+    ice jet even:J14-16ve: spikes 26 -> 23, kmax_p95 8932.3 -> 7852.9, badness 228.8 -> 228.8
+    lawgiver:J10-12ve: spikes 25 -> 24, kmax_p95 8421.4 -> 8084.9, badness 228.8 -> 228.8
+    iu:tail0u: spikes 23 -> 21, kmax_p95 53537.1 -> 37367.6, badness 220.7 -> 220.7
+    ii:tail0i: spikes 20 -> 19, kmax_p95 196.1 -> 66.5, badness 220.7 -> 220.7
+    ei:tail0i: spikes 21 -> 20, kmax_p95 266.9 -> 143.6, badness 220.7 -> 220.7
+    oi:tail0i: spikes 26 -> 20, kmax_p95 302.9 -> 192.9, badness 220.7 -> 220.7
+    di:tail0i: spikes 21 -> 20, kmax_p95 254.6 -> 201.4, badness 220.7 -> 220.7
+    it:tail0t: spikes 18 -> 9, kmax_p95 6.5 -> 3.7, badness 165.2 -> 165.2
+    ice jet even:tail1t: spikes 20 -> 18, kmax_p95 7.4 -> 6.5, badness 165.2 -> 165.2
+    cp:lead0c: spikes 20 -> 19, kmax_p95 3.6 -> 3.5, badness 121.8 -> 121.8
+  SPOT oq:tail0q
+    v6.8: exit q: gap 0.00e+00 u, angle 0 deg, dk 10.6 /u | font dist max 1.06 u mean 0.75 u | hooks 1 | rough FAIL (facet 1.233, wobble 1.832) | peak ratio 3.14 | len 33.74 u | badness 270.3
+    ALL: exit q: gap 0.00e+00 u, angle 0 deg, dk 5.07e-15 /u | font dist max 1.17 u mean 0.84 u | hooks 0 | rough FAIL (facet 0.030, wobble 0.004) | peak ratio 40.48 | len 33.08 u | badness 84.0
+  SPOT cq:tail0q
+    v6.8: exit q: gap 0.00e+00 u, angle 0 deg, dk 10.6 /u | font dist max 1.06 u mean 0.75 u | hooks 1 | rough FAIL (facet 1.233, wobble 1.832) | peak ratio 3.14 | len 33.74 u | badness 270.3
+    ALL: exit q: gap 0.00e+00 u, angle 0 deg, dk 4.08e-15 /u | font dist max 1.17 u mean 0.84 u | hooks 0 | rough FAIL (facet 0.030, wobble 0.004) | peak ratio 40.48 | len 33.08 u | badness 84.0
+  SPOT bq:tail0q
+    v6.8: exit q: gap 0.00e+00 u, angle 0 deg, dk 10.6 /u | font dist max 1.06 u mean 0.75 u | hooks 1 | rough FAIL (facet 1.233, wobble 1.832) | peak ratio 3.14 | len 33.74 u | badness 270.3
+    ALL: exit q: gap 0.00e+00 u, angle 0 deg, dk 9.11e-16 /u | font dist max 1.17 u mean 0.84 u | hooks 0 | rough FAIL (facet 0.030, wobble 0.004) | peak ratio 40.48 | len 33.08 u | badness 64.0
+  SPOT wq:tail0q
+    v6.8: exit q: gap 0.00e+00 u, angle 0 deg, dk 10.6 /u | font dist max 1.06 u mean 0.75 u | hooks 1 | rough FAIL (facet 1.233, wobble 1.832) | peak ratio 3.14 | len 33.74 u | badness 270.3
+    ALL: exit q: gap 0.00e+00 u, angle 0 deg, dk 6.89e-15 /u | font dist max 1.17 u mean 0.84 u | hooks 0 | rough FAIL (facet 0.030, wobble 0.004) | peak ratio 40.48 | len 33.08 u | badness 64.0
+  SPOT fq:tail0q
+    v6.8: exit q: gap 0.00e+00 u, angle 0 deg, dk 10.6 /u | font dist max 1.06 u mean 0.75 u | hooks 1 | rough FAIL (facet 1.233, wobble 1.832) | peak ratio 3.14 | len 33.74 u | badness 270.3
+    ALL: exit q: gap 0.00e+00 u, angle 0 deg, dk 4.42e-15 /u | font dist max 1.17 u mean 0.84 u | hooks 0 | rough FAIL (facet 0.030, wobble 0.004) | peak ratio 40.48 | len 33.08 u | badness 64.0
+  SPOT vq:tail0q
+    v6.8: exit q: gap 0.00e+00 u, angle 0 deg, dk 10.6 /u | font dist max 1.06 u mean 0.75 u | hooks 1 | rough FAIL (facet 1.233, wobble 1.832) | peak ratio 3.14 | len 33.74 u | badness 270.3
+    ALL: exit q: gap 0.00e+00 u, angle 0 deg, dk 8.57e-15 /u | font dist max 1.17 u mean 0.84 u | hooks 0 | rough FAIL (facet 0.030, wobble 0.004) | peak ratio 40.48 | len 33.08 u | badness 44.0

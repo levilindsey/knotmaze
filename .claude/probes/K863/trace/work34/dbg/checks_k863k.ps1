@@ -4,7 +4,7 @@
 # occurrence kept: "of" in $cwE, "of" and "vg" in $cwI), compared row by row with J3j's by the id without its word
 # number (rowsame_k863k.py), and J3i's cusp-corner check with g2 reading the census's ang_deg (pairs_k863k.py).
 # Later steps: the candidates (cand), their census and locality (cens_c, local), the sheets, PNGs, crops, guard.
-# Steps: tools, template, build, ctx, base, census, cmp, g2, cand, cens_c, local, sheets, png, crops, guard.
+# Steps: tools, template, build, ctx, base, census, cmp, g2, cand, cens_c, local, sheets, sheets_ink, png, crops, guard.
 # Logs in work34\checks_logs. Run: pwsh -NoProfile -File work34\dbg\checks_k863k.ps1 [step ...] (no step = all, in
 # order). At most 2 Python processes while $env:TEMP\claude-perf.lock exists, 4 otherwise.
 param([Parameter(ValueFromRemainingArguments = $true)][string[]]$Only)
@@ -96,10 +96,10 @@ Step "g2" {
   & $py -I work34\dbg\pairs_k863k.py work34\cusp_corners.txt v6.8=work34\census_v68x.json
 }
 # ---- tasks 2-7: the candidates ----
-function Sheet($svg, $title, $ws, [string[]]$cols, $rep) {
+function Sheet($svg, $title, $ws, [string[]]$cols, $rep, [string[]]$extra = @()) {
   $a = @("work34\dbg\sheet_k863k.py", $svg, ('"' + $title + '"'), ('"' + $ws + '"'))
   foreach ($c in $cols) { $a += @("--col", ('"' + $c + '"')) }
-  Py ("sheet_" + [IO.Path]::GetFileNameWithoutExtension($svg)) ($a + @("--report", "$rep.txt", "--sidecar", "${rep}_sidecar.json"))
+  Py ("sheet_" + [IO.Path]::GetFileNameWithoutExtension($svg)) ($a + @("--report", "$rep.txt", "--sidecar", "${rep}_sidecar.json") + $extra)
 }
 $ports = "work28\ports_k990e.json"
 $cands = @("S1", "S2", "P1", "Q1", "D1", "D2", "ALL")
@@ -132,14 +132,69 @@ Step "cens_c" {
   & $py -I work34\dbg\censcmp_k863k.py work34\census_cmp.txt work34\census_v68x.json "v6.8k=work34\census_v68k.json" @($cands | ForEach-Object { "$_=work34\census_$_.json$($sp[$_])" })
 }
 $tl = " (pale grey: the font; black: bodies; red: solved joins; blue: preset joins; orange: lead-ins and tails)"
+$dotsSheet = { Sheet "out34\spot_dots.svg" "K863 J3k: the dots of i and j: the font, the approved version (v6.8), D1 (a round dot inside the font's), D2 (the font dot's oval)$tl" "it,minimum,jet,ice jet even,which,hippo,oi,oj" @($v68, (Col "D1" "D1 (round)"), (Col "D2" "D2 (the font's oval)")) "work34\sheets\spot_dots" @("--ink", "9.2") }
+$wordsSheet = { Sheet "out34\cursive_k863k_words.svg" "K863 J3k: the test words: the font, the approved version (v6.8), ALL (S2 + P1 + Q1 + D2)$tl" $words @($v68, (Col "ALL" "ALL (S2+P1+Q1+D2)")) "work34\sheets\cursive_k863k_words" @("--ink", "9.2") }
 Step "sheets" {
   Batch @({ Sheet "out34\spot_s.svg" "K863 J3k: s at a word's end: the font, the approved version (v6.8), S1 (cut at the bottom curl's reversal), S2 (cut where the font's stroke ends)$tl" "boxes,is,jumps,as,ds,es,os" @($v68, (Col "S1" "S1 (cut at the curl)"), (Col "S2" "S2 (cut at the font's end)")) "work34\sheets\spot_s" },
           { Sheet "out34\spot_p.svg" "K863 J3k: p at a word's end: the font, the approved version (v6.8), P1 (cut where the bowl closes into the stem)$tl" "ap,op,ep,ip,np,subgroup" @($v68, (Col "P1" "P1 (bowl closed, no run-out)")) "work34\sheets\spot_p" },
           { Sheet "out34\spot_q.svg" "K863 J3k: q's tail at a word's end: the font, the approved version (v6.8), Q1 (the tail refit without the step)$tl" "oq,cq,fq,bq,vq,wq" @($v68, (Col "Q1" "Q1 (no step)")) "work34\sheets\spot_q" },
-          { Sheet "out34\spot_dots.svg" "K863 J3k: the dots of i and j: the font, the approved version (v6.8), D1 (a round dot inside the font's), D2 (the font dot's oval)$tl" "it,minimum,jet,ice jet even,which,hippo,oi,oj" @($v68, (Col "D1" "D1 (round)"), (Col "D2" "D2 (the font's oval)")) "work34\sheets\spot_dots" },
-          { Sheet "out34\cursive_k863k_words.svg" "K863 J3k: the test words: the font, the approved version (v6.8), ALL (S2 + P1 + Q1 + D2)$tl" $words @($v68, (Col "ALL" "ALL (S2+P1+Q1+D2)")) "work34\sheets\cursive_k863k_words" })
+          $dotsSheet, $wordsSheet)
+}
+# the dots sheet and the test words, with each build's ink at the pen's width under its centrelines (a dot's loop is a
+# ring as a centreline; the pen fills it), and their PNGs at dpi 48 (out34\png) and 144 (work34\look, the crop source)
+Step "sheets_ink" {
+  Batch @($dotsSheet, $wordsSheet)
+  foreach ($s in "spot_dots", "cursive_k863k_words") {
+    Png "out34\$s.svg"
+    & "C:\Program Files\Inkscape\bin\inkscape.com" "out34\$s.svg" --export-type=png --export-dpi=144 --export-background=white --export-background-opacity=1 --export-filename="work34\look\${s}_144.png" 2> "$lg\png144_$s.stderr.txt"
+    "work34\look\${s}_144.png exit $LASTEXITCODE"
+  }
 }
 Step "png" { foreach ($s in "spot_s", "spot_p", "spot_q", "spot_dots", "cursive_k863k_words") { Png "out34\$s.svg" } }
+# what was viewed, all in work34\look: the loupes (look_k863k: one word's spot, each build on the font) and the crops
+# (crop_k863k: one box from every column of a loupe or a dpi-144 sheet, side by side, 2x-5x at the small spots). The
+# dpi-144 PNGs of spot_dots and the test words come from sheets_ink, so run it first.
+Step "crops" {
+  foreach ($s in "spot_s", "spot_p", "spot_q") {
+    & "C:\Program Files\Inkscape\bin\inkscape.com" "out34\$s.svg" --export-type=png --export-dpi=144 --export-background=white --export-background-opacity=1 --export-filename="work34\look\${s}_144.png" 2> "$lg\png144_$s.stderr.txt"
+    "work34\look\${s}_144.png exit $LASTEXITCODE"
+  }
+  function LCol($n, $d) { "--col"; "$n=$d|$ports|M" }
+  $loupes = @(
+    @("work34\look\v68_boxes_s.png", "boxes", "4", "1.0", "60", (LCol "v6.8" "work34\base")),
+    @("work34\look\v68_ap_p.png", "ap", "1", "0.8", "60", (LCol "v6.8" "work34\base")),
+    @("work34\look\v68_oq_q.png", "oq", "1", "0.8", "60", (LCol "v6.8" "work34\base")),
+    @("work34\look\cand_boxes_s.png", "boxes", "4", "1.3", "40", (LCol "v6.8" "work34\base"), (LCol "S1" "work34\cbuild\S1"), (LCol "S2" "work34\cbuild\S2"), "--box", "-40,440,-70,330"),
+    @("work34\look\cand_ap_p.png", "ap", "1", "0.9", "40", (LCol "v6.8" "work34\base"), (LCol "P1" "work34\cbuild\P1"), "--box", "-160,470,-120,560"),
+    @("work34\look\cand_oq_q.png", "oq", "1", "2.4", "40", (LCol "v6.8" "work34\base"), (LCol "Q1" "work34\cbuild\Q1"), "--box", "360,700,-70,170"),
+    @("work34\look\cand_it_i.png", "it", "0", "3.0", "40", (LCol "v6.8" "work34\base"), (LCol "D1" "work34\cbuild\D1"), (LCol "D2" "work34\cbuild\D2"), "--box", "170,420,620,840"),
+    @("work34\look\cand_jet_j.png", "jet", "0", "3.0", "40", (LCol "v6.8" "work34\base"), (LCol "D1" "work34\cbuild\D1"), (LCol "D2" "work34\cbuild\D2"), "--box", "190,440,620,840"))
+  foreach ($j in $loupes) { $a = @("-I", "work34\dbg\look_k863k.py") + ($j | ForEach-Object { $_ }); & $py @a }
+  $sN = "font,approved (v6.8),S1,S2"; $pN = "font,approved (v6.8),P1"; $qN = "font,approved (v6.8),Q1"
+  $dN = "font,v6.8,D1 (round),D2 (font's oval)"; $wN = "font,approved (v6.8),ALL (S2+P1+Q1+D2)"; $wS = "work34\look\cursive_k863k_words_144.png"
+  $crops = @(
+    @("work34\look\cand_boxes_s.png", "work34\look\crop_boxes_s_end.png", "40,300,400,500", "636", "2", "font,v6.8,S1,S2", "--per-row", "2"),
+    @("work34\look\cand_ap_p.png", "work34\look\crop_ap_p_end.png", "150,400,567,580", "579", "2", "font,v6.8,P1", "--per-row", "2"),
+    @("work34\look\cand_oq_q.png", "work34\look\crop_oq_q_exit.png", "262,385,372,455", "828", "5", "font,v6.8,Q1", "--per-row", "3"),
+    @("work34\look\spot_s_144.png", "work34\look\crop_spot_s_as.png", "540,2100,840,2346", "1303.95", "1", $sN, "--per-row", "4"),
+    @("work34\look\spot_s_144.png", "work34\look\crop_spot_s_boxes.png", "1170,330,1440,546", "1303.95", "1", $sN, "--per-row", "4"),
+    @("work34\look\spot_p_144.png", "work34\look\crop_spot_p_ap.png", "600,300,900,560", "1919.55", "1", $pN, "--per-row", "3"),
+    @("work34\look\spot_p_144.png", "work34\look\crop_spot_p_subgroup.png", "1890,3240,2220,3560", "1919.55", "1", $pN, "--per-row", "3"),
+    @("work34\look\spot_q_144.png", "work34\look\crop_spot_q_oq.png", "740,440,900,580", "604.4", "3", $qN),
+    @("work34\look\spot_dots_144.png", "work34\look\crop_dots_it_row.png", "330,120,930,600", "2033.2", "1", $dN),
+    @("work34\look\spot_dots_144.png", "work34\look\crop_dots_it_3x.png", "395,230,505,340", "2033.2", "3", $dN),
+    @("work34\look\spot_dots_144.png", "work34\look\crop_dots_minimum_row.png", "330,718,2000,1198", "2033.2", "0.5", $dN, "--per-row", "2"),
+    @("work34\look\spot_dots_144.png", "work34\look\crop_dots_jet_row.png", "330,1315,1000,1795", "2033.2", "1", $dN),
+    @($wS, "work34\look\crop_words_boxes.png", "345,1928,1645,2378", "4868.6", "0.5", $wN),
+    @($wS, "work34\look\crop_words_subgroup.png", "345,10892,2400,11342", "4868.6", "0.5", $wN, "--per-row", "1"),
+    @($wS, "work34\look\crop_words_jumps.png", "345,6708,5000,7158", "4868.6", "0.33", $wN, "--per-row", "1"),
+    @($wS, "work34\look\crop_words_minimum.png", "345,135,2000,585", "4868.6", "0.5", $wN, "--per-row", "1"),
+    @($wS, "work34\look\crop_words_icejeteven.png", "345,7904,3200,8354", "4868.6", "0.4", $wN, "--per-row", "1"),
+    @($wS, "work34\look\crop_words_minimum_dot_3x.png", "769,201,889,321", "4868.6", "3", $wN),
+    @($wS, "work34\look\crop_words_boxes_s_2x.png", "1230,2200,1450,2370", "4868.6", "2", $wN),
+    @($wS, "work34\look\crop_words_subgroup_p_2x.png", "1900,11150,2200,11340", "4868.6", "2", $wN))
+  foreach ($c in $crops) { & $py -I work34\dbg\crop_k863k.py @c }
+}
 # nothing earlier moved: out33's template and work33's build against work34's copies (byte for byte)
 Step "guard" {
   Same "out33\cursive_template.svg" "out34\cursive_template.svg"

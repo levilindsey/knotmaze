@@ -181,6 +181,26 @@ s = sub(s, "sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))\n",
         "sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))\n"
         "sys.path.insert(1, os.path.join(T, \"work27\", \"dbg\"))  # K863 J3k: gen_k1027 from J3d's folder\n")
 s = sub(s, "import gen_k1027 as G  # noqa: E402", "import gen_k863k as G  # noqa: E402  (K863 J3k)")
+# --ink <pen u>: each build's ink at the pen's width, translucent under its centrelines (a dot's loop reads as a ring
+# as a centreline; the pen fills it): the dots sheet and the test words
+s = sub(s, '    side_path = opt("--sidecar")\n',
+        '    side_path = opt("--sidecar")\n'
+        '    ink = opt("--ink")       # J3k: the pen\'s width in u: each build\'s ink drawn translucent under its centrelines\n'
+        '    ink = float(ink) if ink else None\n')
+s = sub(s, "           f'and tails. Units: 1 px = 1 u (x-height 120 u).</text>']",
+        "           f'and tails. Units: 1 px = 1 u (x-height 120 u).'\n"
+        "           + (f' Translucent grey under the centrelines: the ink at the pen\\'s width ({ink:g} u).' if ink else '')\n"
+        "           + '</text>']")
+s = sub(s, '            A = c["row"][ci - 1]\n            for lt in A["letters"]:',
+        '            A = c["row"][ci - 1]\n'
+        '            if ink:     # one group at uniform opacity, so the pen\'s overlaps (a dot\'s loop) read as one ink\n'
+        '                ds = [bz_d(st, P) for lt in A["letters"] for st in lt["strokes"]]\n'
+        '                ds += [bz_d([[list(map(float, q)) for q in b] for b in FN.conn_beziers(j["coeffs"])], P)\n'
+        '                       for nm in ("joins", "leads", "tails") for j in A[nm]]\n'
+        '                out.append(\'<g opacity="0.3">\' + "".join(\n'
+        '                    f\'<path d="{d_}" fill="none" stroke="#000" stroke-width="{ink:.2f}" stroke-linecap="round" \'\n'
+        '                    f\'stroke-linejoin="round"/>\' for d_ in ds) + \'</g>\')\n'
+        '            for lt in A["letters"]:')
 wr("sheet_k863k.py", s)
 
 # ---------------------------------------------------------------- area_k863k.ps1

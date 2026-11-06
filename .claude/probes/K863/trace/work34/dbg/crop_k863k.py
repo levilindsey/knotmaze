@@ -7,6 +7,8 @@ import sys
 
 from PIL import Image, ImageDraw, ImageFont
 
+Image.MAX_IMAGE_PIXELS = None   # our own renders: the words sheet at dpi 144 is 190 Mpx, over PIL's bomb limit
+
 
 def main():
     a = sys.argv[1:]

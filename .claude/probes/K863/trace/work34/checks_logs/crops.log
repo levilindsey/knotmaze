@@ -1,0 +1,32 @@
+work34\look\spot_s_144.png exit 0
+work34\look\spot_p_144.png exit 0
+work34\look\spot_q_144.png exit 0
+work34\look\v68_boxes_s.png (918, 705) box x 2320..2767 y -79..600 fu, glyph s.ful.fin at 2324.0
+work34\look\v68_ap_p.png (1296, 949) box x 457..1252 y -575..579 fu, glyph p.jmc.fin at 622.0
+work34\look\v68_oq_q.png (1110, 950) box x 593..1273 y -577..579 fu, glyph q.mrr.fin at 588.0
+work34\look\cand_boxes_s.png (2544, 546) box x 2284..2764 y -70..330 fu, glyph s.ful.fin at 2324.0
+work34\look\cand_ap_p.png (1737, 638) box x 462..1092 y -120..560 fu, glyph p.jmc.fin at 622.0
+work34\look\cand_oq_q.png (2484, 602) box x 948..1288 y -70..170 fu, glyph q.mrr.fin at 588.0
+work34\look\cand_it_i.png (3048, 686) box x 170..420 y 620..840 fu, glyph i.mod.ini at 0.0
+work34\look\cand_jet_j.png (3048, 686) box x 190..440 y 620..840 fu, glyph j.jmc.ini at 0.0
+work34\look\crop_boxes_s_end.png (1460, 860)
+work34\look\crop_ap_p_end.png (1688, 780)
+work34\look\crop_oq_q_exit.png (1680, 380)
+work34\look\crop_spot_s_as.png (1240, 276)
+work34\look\crop_spot_s_boxes.png (1120, 246)
+work34\look\crop_spot_p_ap.png (930, 290)
+work34\look\crop_spot_p_subgroup.png (1020, 350)
+work34\look\crop_spot_q_oq.png (1470, 450)
+work34\look\crop_spot_q_vq.png (1470, 450)
+work34\look\crop_dots_it_row.png (2440, 510)
+work34\look\crop_dots_it_3x.png (1360, 360)
+work34\look\crop_dots_minimum_row.png (1690, 540)
+work34\look\crop_dots_jet_row.png (2720, 510)
+work34\look\crop_words_boxes.png (1980, 255)
+work34\look\crop_words_subgroup.png (1037, 765)
+work34\look\crop_words_jumps.png (1546, 534)
+work34\look\crop_words_minimum.png (837, 765)
+work34\look\crop_words_icejeteven.png (1152, 630)
+work34\look\crop_words_minimum_dot_3x.png (1110, 390)
+work34\look\crop_words_boxes_s_2x.png (1350, 370)
+work34\look\crop_words_subgroup_p_2x.png (1830, 410)
