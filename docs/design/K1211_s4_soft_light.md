@@ -188,12 +188,12 @@ Then give `Ledger items` and K1211's handle fields (owner, branch, last commit, 
 
 Started 15:18. It stops in task 3 at the stop rule: what's left needs a change to how K81's route
 band is built. Tasks 4 and 5 did not run. Branch `worktree-agent-a222ff792a21132ec`:
-- 55330f3: task 1.
-- 47a5ec8: the S4 probe tools.
-- f9d08de and c6831fa: task 3.
+- b4596bf: task 1.
+- b76a3f0: the S4 probe tools.
+- 30e023c and 09bfee8: task 3.
 - Then this Handoff.
 
-**Task 1, look B out (55330f3).** Switch 2 and everything only it used are gone.
+**Task 1, look B out (b4596bf).** Switch 2 and everything only it used are gone.
 - Shader: jLightEase, jLightSoft, jLightAllow, junctionBase's uJParams.z block and junctionField's
   lookB.
 - Twin: S1's block, lookB, covL and the cover strips' lengthening. `want` is master's rule again.
@@ -230,7 +230,7 @@ Where each one sits:
 - Out along an arm, r 1.9 to 4.7: x4 ji 125, loop ji 88, 113 and 13. Not attributed. S1's
   cover-strip line sits 2 fh out, but it was not checked against these.
 
-**Task 3, the fix (c6831fa; f9d08de was a first cut).** The light inside the fan is one
+**Task 3, the fix (09bfee8; 30e023c was a first cut).** The light inside the fan is one
 continuous field, in mode 0. The shader (`junction_field.ts`'s junctionField) and the twin
 (`joinery.ts`'s cpuJunctionField) are in step.
 - **Each band's fall.** Every pulse band, a shared one too, lends the web its whitening (sG, the
@@ -245,7 +245,7 @@ continuous field, in mode 0. The shader (`junction_field.ts`'s junctionField) an
   shader's band mask rm and jbT).
 - **Never darker.** The light is the larger of master's and the field's.
 
-f9d08de took the brighter of the bands' halos instead. A straight band's halo lit the
+30e023c took the brighter of the bands' halos instead. A straight band's halo lit the
 perpendicular child near the joint (a 0.7 step at that child's tube edge in the model), and two
 lit children disagreed. The blend replaced it.
 
@@ -310,6 +310,17 @@ look is Levi's.
 moved: `npm test` was green before the rebase (219 files, 2945 tests, 5 expected fails). The 5
 expected fails are `soft_light.test.ts`'s bar, one per stand: an `it.fails` that turns red once
 the bar holds.
+
+**GPU smoke** (desktop, D3D11, under the perf lock, 16:35 to 16:38; `smoke4.mjs` into
+`.claude/probes/K1211/out4/smoke/x4` and `x4xp`). The x4 stand, plain and with `xp=threads`,
+walked its 9 moves. The served `junction_field.ts` held the field (`pulseGlowWeight`), and the
+stamp read c6831fa5 (09bfee8 before the rebase). Both pages drew (drawn share 0.454 and 0.359),
+with no console error and no lost context, so the changed junction-field program and its explore
+variant compile and link.
+The shots are at rest after the walk. That is a compile check, not a look.
+
+**Rebase.** It went onto origin/master 97e7a041 with no conflict: master's 7 new commits touch
+none of these files. `npm test` is green after it: 219 files, 2945 tests, 5 expected fails.
 
 **What is left.**
 - Task 4 did not run: the step, K1139, nub, corner, edge, locality and (a)/(b) checks, and the
