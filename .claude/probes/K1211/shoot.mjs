@@ -102,6 +102,7 @@ try {
     return {
       fh: r.style.threadWidth / 2, cusp: r.cuspRadius, spacing: r.pulseSpacing, reach: r.pulseReach,
       recs, view: window.__knotView(), head: k.head,
+      aff: { w0x: w0.x, w0y: w0.y, ax, ay, bx, by },
     };
   });
   const hasHook = await page.evaluate(() => typeof window.__knotJunctionLight === "function");
