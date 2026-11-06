@@ -203,7 +203,7 @@ geometry later: keep the light's rule independent of how the web is built where 
 - **(b) No jump.** The light centroid's largest frame-to-frame step in the web, against the
   crest's own 9.4 px a frame (today / A / B): cross 33 6.8 / 5.9 / 6.9; cross 155 13.2 on all
   three; x4 147 11.6 / 11.7 / 11.6; x4 146 14.8 / 7.6 / 14.8; x4 28 8.3 / 9.0 / 7.9; loop 113
-  8.4 on all three. Every step over 9.4 px is today's too (the centroid hopping between two
+  8.4 on all three; loop 88 7.5 / 7.0 / 7.6. Every step over 9.4 px is today's too (the centroid hopping between two
   pulses), so neither look adds a jump. (b)'s frame count (the web's largest frame-to-frame
   change against the arms') fails today wherever the arms carry no pulse, so it rejects
   nothing either.
@@ -234,10 +234,12 @@ off, its step map; rings at fanR, the fan's reach and the box):
 - **Fillet layers (spot 4).** The ")" at the right edge of the light at x4 ji 149: in the
   shot and the light's step map, gone with the webs off. The web over that edge does not carry
   the pulse light.
-- **Cover strip end, paint caps, fan-to-ribbon seam.** Faint steps across each arm near the
-  box ring (fanR + 2 fh) show in every column, today included; candidates are the cover
-  strip's end and the fan-to-ribbon seam. I could not see them in the 3x crops. No other line
-  sits on a ring.
+- **Cover strip end, paint caps, fan-to-ribbon seam.** None of today's lines. At cross ji 33
+  k 17 (checked again at full size), everything in the light's step map sits inside fanR: the
+  crescent, a short arc below it and the straight-sided edge of the lit region. Nothing sits
+  on the fan's reach or the box ring, where a strip's end or the seam would draw. The wide
+  soft bars across some arms in the shot's own step map are missing from the light's, so they
+  come from the ribbons, not the light. Look A adds a line at about 2 fh (below).
 
 ### Verdict, spot by spot
 
@@ -350,9 +352,13 @@ All in `.claude/probes/K1211/out/sheets/` (untracked; `run_analyze.ps1` rebuilds
   edge. Not built.
 - **A per route, not per junction:** a level taken from the routed arms only would keep the
   split and keep the gold on its path. Not tried.
-- **A's line about 2 fh out** (cross ji 33). Inferred from the code, not tested: `coverCap`
-  can end an arm's cover strip before the 2 fh ramp does, and the arm then jumps from the
-  ramp's value to its own light.
+- **A's line about 2 fh out** (cross ji 33). Inferred from the code, not tested. A lit
+  record asks for a cover strip of `LIGHT_STRIP_FH` (2.25 fh), but `joinery.ts` takes
+  `min(want, coverCap(X))`. `coverCap` is the least of three things: the gap near the arm
+  minus a pad, the arm's domain, and `footCap`. When the wedges are off, `footCap` is only
+  fh + the casing gap. So a strip can end before the 2 fh ramp does, and past its end the
+  arm jumps from the ramp's value to its own light. Test: print R against the ramp for each
+  arm of ji 33.
 - **The references:** the colours-only shot keeps `paintTraveled`, so it is not colours only;
   a pure one clears traveled too. Checks (a) and (b) reject nothing on these stands, since
   today fails both: (a) needs a threshold set on the colours' own seam.
