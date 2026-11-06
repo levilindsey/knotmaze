@@ -511,10 +511,10 @@ Next free ID: K1222.
   - env: the passes' builds first and never while Muse runs: `scripts/preview.ps1 -Ref <sha> -Root <out>\builds -BuildOnly` for each sha (`pixel_passes.ps1` stops before the phone lock when one is missing); probe server `npx vite --config .claude/probes/K1139/vite.private-cache.config.ts --port 5620 --strictPort --host 127.0.0.1` from a worktree (ports 5620-5639); GPU probes through `.claude/probes/K1139/run_locked.ps1 -Batch`
 - **K1208** · Muse batch 22 (after K1204's batch 21): runs B to P through the chain, from
   `docs/design/K1208_muse_batch22.md` and the later runs' own briefs (ports 5880-5999)
-  - owner: the chain in `.claude/probes/K1053/` (queue.txt, chain.log): Run N (22N) since 15:14, then O (22O) and P (22P), fresh Muse sessions; coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
-  - branch: mainline; last commit: `04ff7cad`
-  - evidence: the chain in .claude/probes/K1053/ (queue.txt, chain.log); each run's probe folder under .claude/probes/ (B K1203, H K1210, C and I K1186, E K1196, F K1191, G K1198, M K1214)
-  - next: N (K1220: the text forks' disc and steps), then O (K1218, K1219: the gap mask inside junctions) and P (K1112: m and u exits on one port each); D held for K1211; M reviewed (K1214)
+  - owner: the chain in `.claude/probes/K1053/` (queue.txt, chain.log): Run O (22O) since 15:30, then P (22P), fresh Muse sessions; coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
+  - branch: mainline; last commit: `655eb6a9`
+  - evidence: the chain in .claude/probes/K1053/ (queue.txt, chain.log); each run's probe folder under .claude/probes/ (B K1203, H K1210, C and I K1186, E K1196, F K1191, G K1198, M K1214, N K1220)
+  - next: O (K1218, K1219: the gap mask inside junctions), then P (K1112: m and u exits on one port each); D held for K1211; M and N reviewed (K1214, K1220)
   - brief: `docs/design/K1208_muse_batch22.md`; I to P: K1209_reapply_run_i.md, K647_reset_win_card.md, K1208_run_k_junction_residuals.md, K1208_run_l_cursive_residuals.md, K1214_profile_run_m.md, K1220_run_n_text_forks.md, K1218_run_o_mask_in_junctions.md, K1112_run_p_ports_m_u.md (docs/design/)
 
 ## Next, in order
@@ -744,9 +744,9 @@ Every other item below waits on the trigger it names.
 - **K1214** · K1139's cost in play (22M, 04ff7cad; desktop, fabric 7 moves): S3+S4 add p95 +1.13 ms
   (spread 0.20), S5 and master nothing; the fan's fragment shader carries 2/3-3/4 (GPU 6.15→6.82 ms). Next:
   re-time after K1211 S4 rewrites the fan's light, and the phone in K1097's pass. `.claude/probes/K1214/`
-- **K1220** · Text junctions: a pale disc shows its round edge inside the fork, and the outline steps where
-  the arms' straight cuts meet it (the i fork in "ai" at xh 3, real size; the a's L and R discs, K836 (c)),
-  against K1211's seamless goal. `.claude/probes/K1208/run_k/out/k734_on.png`
+- **K1220** · Text forks: a disc with a round edge inside, steps where the arms' straight cuts meet it
+  (22N, 655eb6a9): glyph arms under 0.15 world get no field record, so a host-axis disc draws the fork.
+  Next: a Claude fix stage after K1211 S4 (the same files); notes. `.claude/probes/K1220/run_n/`
 
 ## Residuals (known, not fixed)
 
