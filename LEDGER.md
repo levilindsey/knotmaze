@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1215.
+Next free ID: K1216.
 
 ## Waiting on Levi
 
@@ -508,10 +508,10 @@ Next free ID: K1215.
   - env: the passes' builds first and never while Muse runs: `scripts/preview.ps1 -Ref <sha> -Root <out>\builds -BuildOnly` for each sha (`pixel_passes.ps1` stops before the phone lock when one is missing); probe server `npx vite --config .claude/probes/K1139/vite.private-cache.config.ts --port 5620 --strictPort --host 127.0.0.1` from a worktree (ports 5620-5639); GPU probes through `.claude/probes/K1139/run_locked.ps1 -Batch`
 - **K1208** · Muse batch 22 (after K1204's batch 21): runs B to M through the chain, from
   `docs/design/K1208_muse_batch22.md` and the later runs' own briefs (ports 5880-5999)
-  - owner: the chain in `.claude/probes/K1053/` (queue.txt, chain.log): Run I (22I) since 12:03, then J (22J), fresh Muse sessions; coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
-  - branch: mainline; last commit: `5f5025de`
+  - owner: the chain in `.claude/probes/K1053/` (queue.txt, chain.log): Run J (22J) since 12:34, then K (22K), fresh Muse sessions; coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
+  - branch: mainline; last commit: `cb5a7301`
   - evidence: the chain in .claude/probes/K1053/ (queue.txt, chain.log); each run's probe folder under .claude/probes/ (B K1203, H K1210, C and I K1186, E K1196, F K1191, G K1198)
-  - next: I (K1209) then J (K647), then K (six junction residuals on master); L (cursive residuals on v6.8) held until J3k lands; M (K1214's profile) held until K1211 S2 lands; D held for K1211
+  - next: J (K647: the card after Reset path) then K (six junction residuals on master); L held until J3k lands; M held until K1211 S2 lands; D held for K1211; I reviewed (K1209 closed)
   - brief: `docs/design/K1208_muse_batch22.md`; I to M: K1209_reapply_run_i.md, K647_reset_win_card.md, K1208_run_k_junction_residuals.md, K1208_run_l_cursive_residuals.md, K1214_profile_run_m.md (docs/design/)
 
 ## Next, in order
@@ -747,9 +747,6 @@ Every other item below waits on the trigger it names.
 - **K1180** · Form B: let a round's feet run past an arm's root onto the neighbouring arm, so no null band is
   left there (row 15's class: j124, r 1.967h, 0.274h after K1163's softer gate, ab7cad9a). K1179's spike ended
   with no rebuild, so this goes ahead on form B (review section 4).
-- **K1209** · Retire the fillet layer vote (one fan layer; K1186): Run C (2d68f787) has it green and 0 px
-  but fat11 ji104 drag3 (23/14 px), where the base's stair-step at a fan boundary goes smooth: accepted.
-  Muse Run I (22I) re-applies `.claude/probes/K1186/wip22c.patch` on master (`K1209_reapply_run_i.md`).
 - **K1210** · Fire and collapse across junctions, like the highlights (Levi 2026-11-05; notes).
   Run H (d31f08c6; `.claude/probes/K1210/`): both break up inside the fused shape at 3 and 4 arms: fire in
   straight wedges with spikes, collapse as a bite or a ragged cut. The fix follows K1211's pick.
@@ -1682,6 +1679,9 @@ Every other item below waits on the trigger it names.
 - **K1205** · A warm Pixel draws fabric at rest at 30 fps: at thermal status 1 (skin 39-40 C) 0 moves read p50
   33.1 (builds 36aed2d5 and fbc1b212) while 7 moves held 16.7; cool, 0 moves holds 16.7 (K1139's passes
   `.claude/probes/rounds/2026-11-05-k1139s5`, `-s5b`). Cause untested (notes)
+- **K1215** · Run I's first ab22c run (22I): the retired page lost its backdrop from fat11 f13 on, threads
+  pixel-identical; two reruns clean, the flaked files overwritten. Cause unknown; if an A/B shows it again,
+  keep the run (`.claude/probes/K1186/batch22i.txt`).
 
 ## Approved, to schedule (2026-10-11)
 
@@ -1984,6 +1984,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1209** · Retire the fillet layer vote (one fan layer; K1186), Muse Run I (22I): no pin moved; 0 px but the accepted fat11 ji104 drag3 (23/14 px). Done in cb5a7301 (2026-11-05).
 - **K1145** · Cursive x5 (`R_DX=22 R_A1=-15 R_L1=10`): a steeper b, v and w exit (about -22 deg), if Levi wants v7.0's exits further down (K1119's Handoff). Dropped: superseded: Levi kept v6.8's joins (K1119) and its c (K1197), so v6.9 to v7.2 are not used (2026-11-05).
 - **K1193** · Cursive c (v7.1, J3h): 14 of the 26 c joins sit at the 10 u bound of c's exit port (`docs/design/K1112_cursive_j3h.md`, Handoff). Dropped: superseded: Levi kept v6.8's joins (K1119) and its c (K1197), so v6.9 to v7.2 are not used (2026-11-05).
 - **K1144** · Cursive v7.0's leftovers (K1119's Handoff in `docs/design/K1119_cursive_j3g.md`): br, vr and wr dip into r as a tighter V (br newly fails roughness); five of six a/q joins fail it; q's low point is 0.4 u above the band; be, ve and we sit 40.8-42.0 u from the font (Levi: the v7.0 or the e60 column). Dropped: superseded: Levi kept v6.8's joins (K1119) and its c (K1197), so v6.9 to v7.2 are not used (2026-11-05).
