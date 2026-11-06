@@ -2,7 +2,8 @@
 // Run it under the perf lock: run_locked.ps1 does.
 //   node s4a.mjs check [scene,...] [--scale 2]   check #12 + sheets (zoom 4:
 //       reference | GPU | difference) of junction sites and the worst spots
-//   node s4a.mjs time [scene,...] [--scale 2] [--frames 40] [--rounds 5]
+//   node s4a.mjs time [scene,...] [--scale 2] [--frames 40] [--rounds 5] [--fit 411x753]
+//   node s4a.mjs diag [scene,...] [--n 6] [--tol 8]   the last check's worst spots, pixel by pixel
 // Writes out/<mode>_<scene>.json, out/<mode>_summary.md, out/sheets/*.png.
 import puppeteer from "puppeteer-core";
 import { rolldown } from "rolldown";
@@ -29,7 +30,7 @@ const SCENE_DIR = "C:/Users/lsl/Repositories/knotmaze/.claude/probes/K868/scenes
 const args = process.argv.slice(2);
 const mode = args[0];
 if (mode !== "check" && mode !== "time" && mode !== "diag") {
-  console.error("usage: node s4a.mjs check|time [scene,...] [--scale s] [--frames n] [--rounds n] [--tag t]");
+  console.error("usage: node s4a.mjs check|time|diag [scene,...] [--scale s] [--frames n] [--rounds n] [--fit WxH] [--tag t] [--n n] [--tol t]");
   process.exit(2);
 }
 const val = (k, d) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : d; };
@@ -37,6 +38,8 @@ const pos = args.slice(1).filter((a, i, all) => !a.startsWith("--") && !(i > 0 &
 const scenes = pos.length ? pos[0].split(",") : SCENES;
 const scale = Number(val("--scale", 2)), frames = Number(val("--frames", 40)), rounds = Number(val("--rounds", 5));
 const tag = val("--tag", "");
+const fitArg = val("--fit", null);
+const fit = fitArg ? fitArg.split("x").map(Number) : undefined;
 const pre = tag ? `${mode}_${tag}` : mode;
 const outDir = join(here, "out");
 const sheetDir = join(outDir, "sheets");
@@ -137,7 +140,7 @@ try {
     scene.name = name;
     const t0 = Date.now();
     if (mode === "time") {
-      const r = await page.evaluate((s, o) => window.s4a.time(s, o), scene, { scale, frames, rounds });
+      const r = await page.evaluate((s, o) => window.s4a.time(s, o), scene, { scale, frames, rounds, fit });
       r.scene = name;
       writeFileSync(join(outDir, `${pre}_${name}.json`), JSON.stringify(r, null, 1));
       const line = `- ${name}: ${r.W}x${r.H}, render sync p50/p95 ms: label ${r.label.p50.toFixed(3)}/${r.label.p95.toFixed(3)}, label+band ${r.band.p50.toFixed(3)}/${r.band.p95.toFixed(3)} (band +${(r.band.p50 - r.label.p50).toFixed(3)}); strips ${r.strips}; prep label ${r.prepLabelMs.toFixed(2)} band ${r.prepBandMs.toFixed(2)} ms; lost ${r.lost}`;

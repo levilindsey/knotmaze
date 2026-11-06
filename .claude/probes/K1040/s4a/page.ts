@@ -33,6 +33,27 @@ function camera(scene: FieldScene, scale: number): { M: Affine; W: number; H: nu
   return { M: [a * scale, b * scale, c * scale, d * scale, e * scale, f * scale], W: Math.round(vw * scale), H: Math.round(vh * scale) };
 }
 
+// K923's fit, as s3's page.ts (timing only: form B and the tables keep the
+// scene's own aa): the chains' bbox plus h, times 1.04, centred on a
+// fit[0] x fit[1] CSS px canvas at the scale (the Pixel's 411x753).
+function fitCamera(scene: FieldScene, h: number, fit: [number, number], scale: number): { M: Affine; W: number; H: number } {
+  const W = Math.round(fit[0] * scale);
+  const H = Math.round(fit[1] * scale);
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const ch of scene.chains)
+    for (let i = 0; i + 1 < ch.pts.length; i += 2) {
+      const x = ch.pts[i], y = ch.pts[i + 1];
+      if (x < x0) x0 = x;
+      if (x > x1) x1 = x;
+      if (y < y0) y0 = y;
+      if (y > y1) y1 = y;
+    }
+  x0 -= h; y0 -= h; x1 += h; y1 += h;
+  const s = Math.min(W / ((x1 - x0) * 1.04), H / ((y1 - y0) * 1.04));
+  const M = [s, 0, 0, s, W / 2 - ((x0 + x1) / 2) * s, H / 2 - ((y0 + y1) / 2) * s] as unknown as Affine;
+  return { M, W, H };
+}
+
 interface Setup {
   scene: FieldScene;
   scale: number;
@@ -51,7 +72,7 @@ interface Setup {
 
 let cur: Setup | null = null;
 
-function setup(scene: FieldScene, scale: number): Setup {
+function setup(scene: FieldScene, scale: number, fit?: [number, number]): Setup {
   if (cur) {
     cur.label.dispose();
     cur.band.dispose();
@@ -64,7 +85,7 @@ function setup(scene: FieldScene, scale: number): Setup {
   const t1 = performance.now();
   const B = buildBandB(fb, T);
   const t2 = performance.now();
-  const { M, W, H } = camera(scene, scale);
+  const { M, W, H } = fit ? fitCamera(scene, fb.h, fit, scale) : camera(scene, scale);
   canvas.width = W;
   canvas.height = H;
   const label = new LabelBPass(gl);
@@ -360,11 +381,11 @@ function pct(a: number[], q: number): number {
 
 // Render sync (K923's b2b): draw + 1-px readbacks of L and the canvas, frames
 // back to back in one task after warm-up; arms interleaved per round.
-function time(scene: FieldScene, opts: { scale?: number; frames?: number; rounds?: number } = {}) {
+function time(scene: FieldScene, opts: { scale?: number; frames?: number; rounds?: number; fit?: [number, number] } = {}) {
   const scale = opts.scale ?? 2;
   const frames = opts.frames ?? 40;
   const rounds = opts.rounds ?? 5;
-  const S = setup(scene, scale);
+  const S = setup(scene, scale, opts.fit);
   for (let k = 0; k < 10; k++) {
     frame(S, true);
     syncBoth(S);
@@ -466,4 +487,4 @@ function diag(scene: FieldScene, opts: { scale?: number; spots: { u: number; v: 
   return out;
 }
 
-(window as unknown as { s4a: unknown }).s4a = { check, crops, junctionSites, time, diag };
+(window as unknown as { s4a: unknown }).s4a = { check, crops, junctionSites, time, diag, renderer };
