@@ -736,6 +736,27 @@ export class RibbonMesh {
 // of the joint being emitted (aMaskId, from maskIds at push time) - the
 // field shader masks fan pixels by those crossings' casings, so a web
 // beside a diving arm dives with it.
+
+/** K1218: true when the band's inner point q lies on the other side of
+ *  the rim segment a -> b's line from the apex (the band's inner side).
+ *  A degenerate segment (a rim end, a == b), or one whose line passes
+ *  within `reach` of the apex, has no reliable side and reads false. */
+function offApexSide(
+  rim: ArrayLike<number>, a: number, b: number,
+  apexX: number, apexY: number, qx: number, qy: number, reach: number,
+): boolean {
+  const ax = rim[a * 2];
+  const ay = rim[a * 2 + 1];
+  const dx = rim[b * 2] - ax;
+  const dy = rim[b * 2 + 1] - ay;
+  const dl = Math.sqrt(dx * dx + dy * dy);
+  if (dl < 1e-9) return false;
+  const sApex = (dx * (apexY - ay) - dy * (apexX - ax)) / dl;
+  if (Math.abs(sApex) <= reach) return false;
+  const sQ = (dx * (qy - ay) - dy * (qx - ax)) / dl;
+  return sApex * sQ < 0;
+}
+
 export class TriFanMesh {
   mesh: Mesh;
 
@@ -860,8 +881,32 @@ export class TriFanMesh {
         let nx = -ty;
         let ny = tx;
         if (nx * (apexX - px) + ny * (apexY - py) < 0) { nx = -nx; ny = -ny; }
-        vd[(apex + 1 + rimCount + i) * 2] = px + nx * bandIn;
-        vd[(apex + 1 + rimCount + i) * 2 + 1] = py + ny * bandIn;
+        let qx = px + nx * bandIn;
+        let qy = py + ny * bandIn;
+        // K1218: where the rim folds back sharply (a wedge flank's tip
+        // meeting its fillet curve), the central-difference tangent
+        // turns across both legs, and the perpendicular inset can land
+        // OUTSIDE the rim: the inner-rim band triangles then painted
+        // the fan's body past its outline (loop ji 122's shelf at the
+        // flank tip). An inset that leaves the apex side of either
+        // adjacent rim segment takes the inset toward the apex point
+        // instead, which lies on the apex side of both by construction.
+        // A segment whose line passes within bandIn of the apex has no
+        // reliable side and is not tested (K854's rim ends, where the
+        // apex direction runs along the flank).
+        if (
+          offApexSide(rim, i0, i, apexX, apexY, qx, qy, bandIn) ||
+          offApexSide(rim, i, i1, apexX, apexY, qx, qy, bandIn)
+        ) {
+          const ax = apexX - px;
+          const ay = apexY - py;
+          const al = Math.sqrt(ax * ax + ay * ay);
+          const k = al > bandIn ? bandIn / al : 1;
+          qx = px + ax * k;
+          qy = py + ay * k;
+        }
+        vd[(apex + 1 + rimCount + i) * 2] = qx;
+        vd[(apex + 1 + rimCount + i) * 2 + 1] = qy;
         if (outer) {
           vd[(apex + 1 + 2 * rimCount + i) * 2] = px - nx * bandOut;
           vd[(apex + 1 + 2 * rimCount + i) * 2 + 1] = py - ny * bandOut;
