@@ -32,7 +32,7 @@
 //   --quiet-s       the window in seconds; 0 = a state-only read (screen, lock, front), no input watch
 //   --timeout-min   how long to keep re-checking, from the start (default 0: one quiet window, no more patience)
 //   --progress      print a line when the state changes, on a touch and once a minute (a long wait); the callers stamp each line
-//   --serial        default: the one device `adb devices` lists in state "device" (none or several: exit 6)
+//   --serial        default: $env:ANDROID_SERIAL (adb's own variable), else the one device `adb devices` lists in state "device" (none or several: exit 6)
 //   --adb           default: the running adb server's own binary, $env:ADB, adb on PATH, the SDK, the winget platform-tools
 // Exit: 0 ready, 3 the phone's state (screen off, locked, an app or Chrome in front, gone), 4 touched (never quiet for the
 // window before the deadline), 5 no touchscreen found to watch, 6 no adb or no phone (none, or several without --serial).
@@ -268,7 +268,7 @@ export async function ensurePhoneReady(opts = {}) {
   const quietS = opts.quietS ?? QUIET_S;
   const adb = opts.adb || findAdb();
   if (!adb) throw new PhoneNotReady("phone not ready: no adb found (set $env:ADB)", EXIT.NO_PHONE);
-  let serial = opts.serial;
+  let serial = opts.serial || process.env.ANDROID_SERIAL;
   if (!serial) {
     const devs = parseDevices((await adbRun(adb, ["devices"])).out);
     if (devs.length !== 1) throw new PhoneNotReady(`phone not ready: ${devs.length ? "several phones connected; pass --serial" : "no phone connected"}`, EXIT.NO_PHONE);

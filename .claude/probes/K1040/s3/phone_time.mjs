@@ -9,7 +9,7 @@
 // The phone stays untouched: a getevent watch (-q, events only) stops the run
 // at the first input event (a person picked the phone up).
 // Never prints or writes the device serial or an address: the device is the
-// one online adb device (it refuses when there are several).
+// one online adb device, or $env:ANDROID_SERIAL's of several (it refuses otherwise).
 // Run it under both locks: run_phone.ps1 does.
 //   node phone_time.mjs [scene,...] [--scale 2] [--frames 60] [--port 5403]
 // Writes out/phone_time_<scene>.json and appends to out/phone_time_summary.md.
@@ -78,9 +78,12 @@ const log = (m) => console.log(`${hms()} ${maskStr(m)}`);
 const adb = (dev, ...a) =>
   execFileSync(ADB, dev ? ["-s", dev, ...a] : a, { encoding: "utf8", timeout: 30000, stdio: ["ignore", "pipe", "ignore"] });
 
-const online = dry ? ["<dry>"] : adb(null, "devices").split(/\r?\n/).filter((l) => /\tdevice$/.test(l)).map((l) => l.split("\t")[0]);
+// $env:ANDROID_SERIAL (adb's own variable) picks one of several: the phone over USB and wireless adb at once.
+const want = process.env.ANDROID_SERIAL;
+const listed = dry ? ["<dry>"] : adb(null, "devices").split(/\r?\n/).filter((l) => /\tdevice$/.test(l)).map((l) => l.split("\t")[0]);
+const online = want && !dry ? listed.filter((d) => d === want) : listed;
 if (online.length !== 1) {
-  log(`refusing: ${online.length} online adb devices (want exactly one)`);
+  log(`refusing: ${online.length} online adb devices (want exactly one${want ? "; ANDROID_SERIAL is not listed" : ""})`);
   process.exit(4);
 }
 const dev = online[0];
