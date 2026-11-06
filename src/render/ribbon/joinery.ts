@@ -9,7 +9,7 @@
 // and cpuJunctionField calls cpuStripAt through the renderer, so a probe's
 // patch of it still sees every call. Outside the bodies, `private` left
 // the methods and fields the facade calls or forwards (cpuStripAt,
-// colorAtArc, sectionAtArc; fusedTips, filletLayer, filletTopLayer,
+// colorAtArc, sectionAtArc; fusedTips, filletLayer,
 // fieldProfLen, fieldProbe, tipDiscScale are facade accessors onto these).
 // RibbonRenderer owns one Joinery (its `joinery`): tickPaintPalette calls
 // rebuildFillets through the facade delegation the probes patch, and
@@ -19,12 +19,11 @@
 // pushDisc returns its gate so the fallback's stadium can share it.
 //
 //   FILLET_REACH_PER_HALF .. DISC_SIN  372-432   joinery constants
-//   ERASE_WIDTH_PAD                    495-497   rebuildFillets' pad
 //   jointMaskPool, tipMaskScratch      557-559   fan mask scratch
 //   tipDiscScale                       586-588   fused-tip disc radius
 //   axisScratch                        713       axisAt's direction
 //   fusedTips                          731-743   tucked tips
-//   filletLayer, filletTopLayer        745-756   the two fan layers
+//   filletLayer                        745-756   the one fan layer
 //   acc4Scratch                        803       cpuJunctionField's cell
 //   ignScratch                         816-817   ignition scratch
 //   fieldProfPool, fieldProfLen        864-867   radial profiles
@@ -45,7 +44,6 @@
 //   rebuildFillets                     4593-6125 records, fans, strips
 
 import type { Container } from "pixi.js";
-import type { CrossingPass } from "../../physics/particle_system";
 import type { SplineSamples } from "../../geometry/spline_generator";
 import { TriFanMesh } from "../ribbon_mesh";
 import { kData, knotUniformValues } from "../paint_model";
@@ -83,7 +81,7 @@ import { arcTrueTau, pulsePivot, routeCorner, routeCubic, type PulsePivot } from
 import { STRIP_W, setStripRows, stripTable } from "../arm_strip";
 import { GAP_SLOTS } from "../gap_mask";
 import { rimCurvePoints } from "./rim_curve";
-import { CUT_BIAS, GATE_LEAD, JOINT_CLEAR_REACH_SCALE } from "./crossing_gaps";
+import { CUT_BIAS, GATE_LEAD } from "./crossing_gaps";
 import { EXPLORE_JOINT_MIN } from "./explore_gaps";
 import * as sampling from "./sampling";
 import { stadiumRim } from "./tip_stadium";
@@ -146,10 +144,6 @@ const FILLET_GAP_MIN_FRAC = 0.3;
 // section at each vertex's ctrl through the CURRENT arc table every frame,
 // so a joint always converges - the old per-sample cache needed re-bakes
 // past 0.1 ctrl of drift, ~30 per second under flow.)
-// Layer vote: an under-near arm only pins its joint to the punchable
-// bottom layer when its gap starts within this many fillHalfs (see
-// rebuildFillets armDives).
-const FILLET_DIVE_NEAR = 2.0;
 const DISC_SEGS = 16; // Rim segments on tip/junction seal discs.
 // K81 COVER STRIPS: at a routed junction every arm's ribbon is redrawn in
 // the junction pass (the field's untraveled base under the route bands)
@@ -179,21 +173,6 @@ for (let i = 0; i <= DISC_SEGS; i++) {
   DISC_COS[i] = Math.cos(th);
   DISC_SIN[i] = Math.sin(th);
 }
-// rebuildFillets' old erase-width pad: its comment is
-// JOINT_CLEAR_REACH_SCALE's, in ribbon/crossing_gaps.ts (K5 R2).
-const ERASE_WIDTH_PAD = 0.02;
-
-// K1186 (21E): one arm's forced layer vote for the same-state A/B
-// probe: `key` names the arm as the vote names it (the armKey shape,
-// chain:slot:dir) and (top, dives) is the pair rebuildFillets resolves
-// that arm to while the override is set. Probe-only; null (the
-// default) is today's vote, arm for arm.
-export interface VoteOverride {
-  key: string;
-  top: boolean;
-  dives: boolean;
-}
-
 export class Joinery {
   readonly r: RibbonRenderer;
   // Per junction: the gap slots masking its fans (pooled; rebuildFillets).
@@ -217,13 +196,16 @@ export class Joinery {
   // the first update. A cache entry of length 3 is a constant chain
   // color; otherwise it is 3 * sampleCount channel triplets.
   filletLayer: Container | null = null;
-  // TWO-LAYER JOINERY (pre-per-pixel-gaps; kept for the junction-shader
-  // merge): the per-wedge layer vote still sorts fans between this layer
-  // and the bottom one, but with no erase layer between them the choice
-  // no longer changes coverage - what used to depend on it (a diving
-  // arm's gap punching its web) is now the fan's own gap mask (see
-  // junction masks in rebuildFillets).
-  filletTopLayer: Container | null = null;
+  // ONE FAN LAYER (K1209, retiring the pre-per-pixel-gaps two-layer
+  // joinery): every fan draws on this one layer. The old per-arm layer
+  // vote only reordered fans between two layers with no erase layer
+  // between them, so it changed no coverage; 21E forced every vote
+  // both ways at captured states and measured 0 px (K1186). What used
+  // to depend on the layer (a diving arm's gap punching its web) is
+  // the fan's own gap mask (see junction masks in rebuildFillets).
+  // Nothing still needs two fan layers: the junction shader and its
+  // explore variant are one program for every fan (junction_field.ts),
+  // and G4-2 deletes the fans outright (docs/design/K5_K6_split.md).
   private acc4Scratch = new Float32Array(4);
   // Per-chain ignition scratch for the mask pass (sample ctrls).
   private ignScratch = { pRain: 0, alpha: 1 };
@@ -244,11 +226,6 @@ export class Joinery {
   // A fused tip's disc radius in half-widths (TIP_DISC_SCALE; public for
   // same-state probes).
   tipDiscScale = TIP_DISC_SCALE;
-  // K1186 (21E): the probe-only vote override (VoteOverride above).
-  // Unset (null) by default, so a rebuild's votes are today's; when
-  // set, rebuildFillets resolves the one named arm to the forced
-  // (top, dives) pair for that rebuild and no other arm's.
-  voteOverride: VoteOverride | null = null;
   private fieldLastArm: number[] = [];
   // ARM STRIPS (arm_strip.ts): rows written by the current rebuild, and
   // the CPU mirror's scratch (two quantized texels).
@@ -921,84 +898,11 @@ export class Joinery {
       this.r.filletMesh = new TriFanMesh(verts, idx);
       this.r.filletMesh.mesh.shader = this.r.explorePieces ? junctionShaderExplore() : junctionShader();
       this.filletLayer.addChild(this.r.filletMesh.mesh);
-      // The top mesh gets the same capacity: any junction can flip
-      // layers frame to frame as threads move.
-      this.r.filletTopMesh = new TriFanMesh(verts, idx);
-      this.r.filletTopMesh.mesh.shader = this.r.explorePieces ? junctionShaderExplore() : junctionShader();
-      this.filletTopLayer!.addChild(this.r.filletTopMesh.mesh);
     }
     const fmBottom = this.r.filletMesh;
-    const fmTop = this.r.filletTopMesh!;
     fmBottom.begin();
-    fmTop.begin();
-    // All pushes below route through `fm`; per-junction code points it at
-    // the voted layer and resets it to bottom afterward.
+    // All pushes below route through `fm`, the one fan mesh (K1209).
     let fm = fmBottom;
-
-    // LAYER VOTES (see filletTopLayer), PER-ARM: an arm is "over-near"
-    // when a nearby crossing on its chain side has the arm as the OVER
-    // pass (a foreign thread dives under it - that crossing's erase
-    // swath would clip the web beside the arm), "under-near" when the
-    // arm itself dives. Each WEDGE then picks its layer from its own
-    // two arms - the earlier per-junction binary let one diving arm
-    // force the whole joint punchable, and webs still clipped at
-    // crossing overpasses on the other arms.
-    const underNear = new Set<string>();
-    const overNear = new Set<string>();
-    const armKey = (chain: number, slot: number, dir: number): string =>
-      chain + ":" + slot + ":" + dir;
-    if (this.r.junctionArcCtrls.size > 0) {
-      const gapW = (this.r.style.casingWidth - this.r.style.threadWidth) / 2;
-      const jointReach = Math.max(
-        fillHalf * 1.1,
-        fillHalf *
-          FILLET_REACH_PER_HALF *
-          this.r.cuspRadius *
-          JOINT_CLEAR_REACH_SCALE
-      );
-      const voteReach =
-        jointReach + fillHalf + ERASE_WIDTH_PAD + gapW + this.r.fadeLength + 0.3;
-      // Joint arcs per chain, derived once per rebuild (every pass on a
-      // chain compares against the same list).
-      const jArcCache = new Map<number, Float64Array>();
-      const visit = (
-        pass: CrossingPass,
-        isOver: boolean
-      ): void => {
-        const list = this.r.junctionArcCtrls.get(pass.chain);
-        if (!list) return;
-        const samples = this.r.chainSamples[pass.chain];
-        if (!samples) return;
-        const closed = this.r.ps.chainBreakAfter[pass.chain] < 0;
-        const total = samples.totalLength;
-        const pArc = sampling.paintArcAt(samples, sampling.renderCtrl(pass), closed);
-        let jArcs = jArcCache.get(pass.chain);
-        if (!jArcs) {
-          jArcs = new Float64Array(list.length);
-          for (let i = 0; i < list.length; i++) {
-            jArcs[i] = sampling.paintArcAt(samples, list[i].ctrl, closed);
-          }
-          jArcCache.set(pass.chain, jArcs);
-        }
-        for (let i = 0; i < list.length; i++) {
-          const e = list[i];
-          const jArc = jArcs[i];
-          let d = pArc - jArc;
-          if (closed) {
-            d = ((d % total) + total) % total;
-            if (d > total / 2) d -= total;
-          }
-          if (Math.abs(d) >= voteReach || Math.abs(d) < 1e-4) continue;
-          const key = armKey(pass.chain, e.ctrl, d > 0 ? 1 : -1);
-          if (isOver) overNear.add(key);
-          else underNear.add(key);
-        }
-      };
-      for (const cr of this.r.ps.crossings) {
-        visit(cr.over, true);
-        visit(cr.under, false);
-      }
-    }
 
     // RECORDS for the GPU field (layout: junction_field.ts), appended as
     // junctions and tips are built and uploaded once at the end. ensure()
@@ -1162,9 +1066,6 @@ export class Joinery {
       // axis put curved arms' own edges outside their footprint).
       pth: Float32Array;
       ps: Float32Array;
-      // Layer flags (see LAYER VOTES), resolved once per rebuild.
-      top: boolean;
-      dives: boolean;
       // Flank centerline samples [x, y, tx, ty] per flank point, shared
       // by the arm's two wedges (left and right flanks differ only in the
       // offset side). null until first used.
@@ -1181,7 +1082,7 @@ export class Joinery {
       // revealed (half-drawn fillets over zero-width arms read as floating
       // scraps), fading in as its latest-ignited arm settles.
       j1: [number, number];
-      jn: number; // Index into junctionArms (for the layer vote).
+      jn: number; // Index into junctionArms.
       rb: number; // Record texel index (-1: < 2 arms, no field).
       mask: Float32Array; // Gap slots masking this joint's fans.
       // The farthest any of its fan vertices lies from (jx, jy): bounds the
@@ -1403,8 +1304,6 @@ export class Joinery {
           domain: Math.min(nextJ / 2, toEnd),
           pth: prof.pth,
           ps: prof.ps,
-          top: false,
-          dives: false,
           flankPts: null,
           toEnd,
         });
@@ -1597,37 +1496,6 @@ export class Joinery {
       }
       return near;
     };
-    // TOP: some nearby crossing has this arm as its OVER pass, and none
-    // has it diving. An arm DIVES AT THE JOINT only when its own gap
-    // starts within FILLET_DIVE_NEAR fillHalfs: a farther dive is kept out
-    // of the web by the reach clamp (armReach), so the joint may still
-    // ride the top layer. Counting every under-near arm as diving pinned
-    // "mixed" joints (one arm over-near, another diving ~1 world out) to
-    // the bottom layer, where the OVER crossing's under-thread erase
-    // punched their seal discs and wedges - the hairline cracks / dark
-    // bites at fat widths (crossings 23/43/62 at the cr=3 tw=0.58 repro).
-    // Resolved once per arm (the wedge loop asks per wedge).
-    for (const rec of recs) {
-      for (const a of rec.arms) {
-        const k = armKey(a.chain, a.slot, a.dir);
-        const under = underNear.has(k);
-        a.top = overNear.has(k) && !under;
-        a.dives = under && gapNearOf(a) < fillHalf * FILLET_DIVE_NEAR;
-        if (this.voteOverride !== null && this.voteOverride.key === k) {
-          a.top = this.voteOverride.top;
-          a.dives = this.voteOverride.dives;
-        }
-      }
-    }
-    const armTop = (a: JArm): boolean => a.top;
-    const armDives = (a: JArm): boolean => a.dives;
-    // Discs (seal + fused tips) stay junction-level: top only when some
-    // arm needs cover and none dives.
-    const layerFor = (rec: JRec): TriFanMesh =>
-      rec.arms.some(armTop) && !rec.arms.some(armDives)
-        ? fmTop
-        : fmBottom;
-
     // EDGE-AWARE BLEND (the field's model; FIELD_GLSL evaluates it): the
     // two bracketing arms (by their rays' angles AT THE POINT'S RADIUS -
     // curved arms) blend only across the GAP between their ribbon edges;
@@ -1746,10 +1614,8 @@ export class Joinery {
     const setFanMask = (ids: Float32Array | null): void => {
       if (ids) {
         fmBottom.maskIds.set(ids);
-        fmTop.maskIds.set(ids);
       } else {
         fmBottom.maskIds.fill(-1);
-        fmTop.maskIds.fill(-1);
       }
     };
     // Every junction fan (seal disc, fused-tip disc, wedge) goes through
@@ -1883,7 +1749,6 @@ export class Joinery {
       if (rec) {
         if (rec.j1[0] > fxNowJ + GATE_LEAD) continue;
         if ((hideJn && hideJn[rec.jn]) || (taperJn && taperJn[rec.jn])) continue;
-        fm = layerFor(rec);
         setFanMask(rec.mask);
         // CAP COVER (TIP_DISC_SCALE): the disc reaches the tucked cap's
         // corners without bulging past the bridge's sides - every rim
@@ -2191,7 +2056,6 @@ export class Joinery {
       tb.flush();
       setStripRows(this.stripRowsUsed);
       fmBottom.commit();
-      fmTop.commit();
       rd.markDirty(0, cursor);
       rd.flush();
     };
@@ -2373,9 +2237,7 @@ export class Joinery {
         rec.pulseBands.length = 0;
         continue;
       }
-      fm = layerFor(rec);
       setFanMask(rec.mask);
-      const jointTop = arms.some(armTop);
       const rims =
         drawWedges && rec.routes.length > 0
           ? new Array<number[] | null>(arms.length).fill(null)
@@ -2412,20 +2274,6 @@ export class Joinery {
         // skipping it left both facing edges uncut, so the through
         // thread's border ran across the joining arm's mouth (K857).
         if (gap > FILLET_MAX_WEDGE && A.chain === B.chain) continue;
-
-        // PER-WEDGE layer: this wedge rides above the erase stack iff a
-        // nearby foreign thread dives under ANY arm of this joint and
-        // neither of ITS arms dives itself. (Only its own arms was not
-        // enough: a joint parked beside a crossing's OVER pass has its
-        // other wedges - bridge vs the host's far side - sitting in that
-        // crossing's under-thread erase footprint; they stayed bottom and
-        // were punched - the dark notches/hairlines at cr=3, tw=0.58.)
-        fm =
-          (jointTop || armTop(A) || armTop(B)) &&
-          !armDives(A) &&
-          !armDives(B)
-            ? fmTop
-            : fmBottom;
 
         // A's wedge-facing edge is its LEFT edge; B's is its RIGHT edge.
         const o1x = jx - A.dy * w;
@@ -2715,7 +2563,6 @@ export class Joinery {
       for (const r of rec.routes) cornerOf(r);
       for (const r of rec.pulseBands) cornerOf(r);
       setFanMask(rec.mask);
-      const jointTop = arms.some(armTop);
       for (let i = 0; i < n; i++) {
         const X = arms[i];
         // A band's arm is covered a half-width past its turn; every other
@@ -2761,7 +2608,6 @@ export class Joinery {
           const r = Math.hypot(pts[q] - rec.jx, pts[q + 1] - rec.jy);
           if (r > rec.rMax) rec.rMax = r;
         }
-        fm = jointTop && !X.dives ? fmTop : fmBottom;
         fm.pushStrip(pts, rec.rb);
       }
       fm = fmBottom;

@@ -1,0 +1,15 @@
+$env:K1186_BASE = "http://127.0.0.1:5890"
+$env:K1209_RET = "http://127.0.0.1:5891"
+node ab22c.mjs out22i > out22i/ab22c_log.txt 2>&1
+# K1209 Run I (22I, Muse batch 22): Run C's retirement (wip22c.patch) re-applied on master 3bc42295.
+# Builds: pwsh scripts/preview.ps1 -Ref 3bc42295 -Root $env:TEMP\knotmaze-previews -BuildOnly (base, stamp 3bc42295)
+#   and pwsh scripts/preview.ps1 -Root $env:TEMP\knotmaze-previews -BuildOnly (applied tree, stamp 3bc42295+),
+#   served with npx vite preview on 5890 (base) and 5891 (retired). The three lines above are the batch
+#   run under the perf lock: pwsh -File run_locked.ps1 -Batch batch22i.txt
+# Numbers (final record, out22i/ab22c_log.txt; changed px, any channel over 8):
+#   seed3: control 0 px, retired control 0 px; 6 flip states, all 0 px.
+#   fat11: control 0 px, retired control 0 px; 27 flip states, all 0 px but ji104 drag3:
+#     f19 23 px (max 35) and f27 14 px (max 24), arm1 40:116:-1 [0,0]->[1,0] at the fan boundary -
+#     the change Claude accepted from Run C (its f20/f28; frame numbers shift with drag rebuild counts).
+# First out22i run flaked: the retired page lost its backdrop from fat11 f13 on (threads pixel-identical,
+#   diff red on backdrop only). A retry (out22i2/, untracked) and this final run both read clean above.

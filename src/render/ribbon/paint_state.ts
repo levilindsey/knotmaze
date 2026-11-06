@@ -805,7 +805,7 @@ export class PaintState {
     knotUniformValues().uKBase[2] = this.paintDebug;
     // K797b. K868 S3a: under label ink the border look's strokes draw in
     // their own passes: a zero stroke width (w below) turns off the
-    // ribbons' and the plucks' strokes, and hiding the two fan layers
+    // ribbons' and the plucks' strokes, and hiding the fan layer
     // the fans' rims (in the border look a fan draws its rim band and
     // nothing else), with no change to any shader text (K320's budgets,
     // K307's cold compiles). Edge-triggered, so flag off never touches
@@ -814,7 +814,6 @@ export class PaintState {
     if (labelInk !== this.labelInkOn) {
       this.labelInkOn = labelInk;
       if (this.r.filletLayer) this.r.filletLayer.visible = !labelInk;
-      if (this.r.filletTopLayer) this.r.filletTopLayer.visible = !labelInk;
     }
     knotUniformValues().uKLook![0] = this.threadLook;
     // K798: the border-at-a-time intros (mode, running) for the shader.

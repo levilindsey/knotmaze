@@ -494,7 +494,6 @@ export class ExploreGaps {
     this.r.plucks.setExplore(!!pieces);
     const fsh = pieces ? junctionShaderExplore() : junctionShader();
     if (this.r.filletMesh) this.r.filletMesh.mesh.shader = fsh;
-    if (this.r.filletTopMesh) this.r.filletTopMesh.mesh.shader = fsh;
     this.charredCache = charred;
     this.r.paintScene.setExploreFlags(pieces ? whole : null, charred);
     if (this.r.style.paletteMode) this.r.writePaintItems();

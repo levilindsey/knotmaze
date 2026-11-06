@@ -112,7 +112,7 @@ import { PluckHostPart } from "./ribbon/pluck_host";
 import { SdfPass } from "./ribbon/ribbon_sdf";
 import { StripPass } from "./ribbon/strip_pass";
 import type { ThreadPass } from "./ribbon/thread_pass";
-import { FILLET_REACH_PER_HALF, Joinery, type VoteOverride } from "./ribbon/joinery";
+import { FILLET_REACH_PER_HALF, Joinery } from "./ribbon/joinery";
 import {
   cornerWedgeKey,
   roundedCornerKeys,
@@ -772,14 +772,6 @@ export class RibbonRenderer {
   set skipJointPairs(v: boolean) {
     this.crossing.skipJointPairs = v;
   }
-  // K1186 (21E): the probe-only fillet vote override (joinery.ts);
-  // null = today's votes (A/B probes force one arm's vote both ways).
-  get voteOverride(): VoteOverride | null {
-    return this.joinery.voteOverride;
-  }
-  set voteOverride(v: VoteOverride | null) {
-    this.joinery.voteOverride = v;
-  }
   // Per-chain UNDER-GAP windows, rebuilt every update() from the live
   // crossing solve (emergent crossings included): flat triplets
   // [centerArc, extNeg, extPos] along the UNDER chain - where its
@@ -958,15 +950,6 @@ export class RibbonRenderer {
   set filletLayer(v: Joinery["filletLayer"]) {
     this.joinery.filletLayer = v;
   }
-  // filletTopLayer lives in ribbon/joinery.ts (K5 R5) with its comment;
-  // the probes read it here.
-  get filletTopLayer(): Joinery["filletTopLayer"] {
-    return this.joinery.filletTopLayer;
-  }
-  set filletTopLayer(v: Joinery["filletTopLayer"]) {
-    this.joinery.filletTopLayer = v;
-  }
-  /** @internal ribbon */ filletTopMesh: TriFanMesh | null = null;
   // MARKER DISC OCCLUDERS (start/exit dots): each owns a gap slot on its
   // thread whose "over polyline" is the disc center and whose margin is
   // CONCENTRIC - the thread is hidden inside radius (disc + gap).
@@ -1123,24 +1106,24 @@ export class RibbonRenderer {
 
     const baseLayer = new Container();
     const filletLayer = new Container();
-    const filletTopLayer = new Container();
     // Layer order: base ribbons (the gaps are cut INSIDE them, per pixel),
-    // then both fillet layers. The two empty containers keep the historic
-    // child indices (0 base, 1 bottom fillets, 2 erases, 3 top fillets,
-    // 4 over fills) that the probe scripts toggle - with per-pixel gaps
-    // there are no erase or over-fill meshes.
+    // then the one fillet layer (K1209: every fan draws on it). The three
+    // empty containers keep the historic child indices (0 base, 1 fillets,
+    // 2 erases, 3 top fillets, 4 over fills) that the probe scripts toggle
+    // by index (.claude/probes/g1/attr_census.mjs hides k[1] and k[3]) -
+    // with per-pixel gaps there are no erase or over-fill meshes, and
+    // slot 3 is empty since the top fillet layer retired (K1209).
     this.root.addChild(
       baseLayer,
       filletLayer,
       new Container(),
-      filletTopLayer,
+      new Container(),
       new Container()
     );
     // Render-only plucks draw ABOVE every ribbon, erase, fillet and fill
     // (rule 1 in pluck_overlay.ts); the lazily added reveal-tip glow and
     // appearance-FX containers still land on top of it.
     this.root.addChild(this.pluckHost.plucks.layer);
-    this.filletTopLayer = filletTopLayer;
     if (style.paletteMode) {
       this.filletLayer = filletLayer;
     }

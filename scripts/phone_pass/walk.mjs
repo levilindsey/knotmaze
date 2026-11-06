@@ -131,7 +131,7 @@ export function routedList() {
     list.push(j);
     byRb.set(rb, j);
   }
-  for (const fm of [r.filletMesh, r.filletTopMesh]) {
+  for (const fm of [r.filletMesh]) {
     if (!fm) continue;
     const V = fm.vertexData, Rc = fm.recData;
     for (let v = 0; v < fm.vUsed; v++) {
