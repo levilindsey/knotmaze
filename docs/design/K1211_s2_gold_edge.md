@@ -133,3 +133,44 @@ evidence, next).
 ## Handoff
 
 (The stage agent appends here.)
+
+### S2 stage agent, running notes (started 12:10:50 PT, cap 14:10:50)
+
+Task 1 done in 30e07f21 (look A, its twin and `lightLevel` gone; JUNCTION_FRAG 43,758 -> 42,030;
+master 40,495).
+
+**Task 0 (in progress): where the edge went straight.** Found in the code; NOT yet confirmed on
+a shot (the master shots wait on the perf lock).
+
+- The commit: K1139 S3b, df30a7f3 (2026-11-04, "the fan shader"), drew the pulse bands through
+  the junction fans and gave a fan pixel to its NEAREST band. K1139 S2's bec420f7 turned that
+  into today's rule: a drawing band's weight is its cover times its yield to the shared bands,
+  `1 - smoothstep(0, 3 px, d_draw - d_shared)`, so 1 on a tie.
+- The code: `junctionField` in `src/render/junction_field.ts`, the pulse draw loop
+  (`float yr = 1.0 - smoothstep(0.0, 3.0 * pxW, sDist[r] - dShared); float cw = sCov[r] * yr;`
+  then `pm = armPaint(..., true, true)`, the UNTRAVELED rows, and `c = mix(c, pm, cw)`), twin
+  `cpuJunctionField` in `src/render/ribbon/joinery.ts` (the `PULSE_COV[r] * (1 - pulseSmooth(...
+  PULSE_DIST[r] - dShared))` lines).
+- Why it draws the partition: at a junction the pulse splits at, the drawing band (Q, C) and
+  the gold pair (Q, P) share arm Q. The drawing band paints arm C's and arm Q's untraveled
+  colours wherever it is no farther than the shared band, after the gold loop has drawn the
+  gold's round cover. So the gold survives only on the shared band's side of the bisector
+  between the two bands: a straight edge, with a corner where the bisector meets the gold's
+  round edge. On arm Q's own centreline the two distances tie, the yield is 1, and Q's
+  untraveled colour is painted over the gold: the teal strip at x4 ji 125 (inferred, to check
+  on the shot). The bands are declared at rest too (the fabric's `computePulseBands().feed`,
+  re-declared every awake frame), so the cut shows without a pulse.
+- S1's "the traveled partition, not the bands" does not hold. `paintTraveled`
+  (`paint_state.ts` resolveRoutes) feeds only K127's covered set (`fullJn`, the record's J1.z):
+  a junction only partly traveled draws its base from the untraveled rows with no per-arm
+  split. And S1's colours-only and no-band shots were never declared: the fabric re-declares
+  the paint every awake frame (`fabric_maze_renderer.ts` update(): `setPaint(..., 
+  this.computePulseBands().feed)`), which is why S1's c shots equalled its g shots.
+- The confirming shot: `.claude/probes/K1211/shoot2.mjs` wraps the instance's `setPaint` so the
+  probe's own declarations stick, and shoots the live declaration (L0) against the same state
+  with no pulse bands (nb) on master a371d164 (preview on 5961). Expected if this is right: nb
+  shows the round edge at cross ji 113 and x4 ji 149, no teal strip at x4 ji 125, no zigzags at
+  loop ji 89 and 12.
+
+Tools: `run_shots2.ps1` is S2's copy of S1's `run_shots.ps1` (owner `K1211-S2`, the same lock
+rule) that runs `shoot2.mjs` jobs.
