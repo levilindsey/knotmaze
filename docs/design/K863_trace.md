@@ -282,3 +282,26 @@ Binding on every later cursive stage:
   3. The gates are smoothness (the census's hooks, spikes, rough and
      seams) and locality. Distance to the font is reported per letter,
      not chased per pair. Levi judges one sheet per letter.
+
+## Judging a look (2026-11-05, K1119 and K1197)
+
+Levi on K1119's v7.0 sheets, 2026-11-05: "the v6.8 versions are WAY better in all cases. The
+others are grossly incorrect and unsmooth"; on K1197: "the old one is better". v7.0 had gone to
+Levi as the candidate although its joins run far above the font's line in bb, bf and bh, kink
+where they leave b and wiggle in ba and be: it was judged against the step before (v6.9) and
+the request, and the checks rated it smooth. Binding on every later cursive stage and on
+whoever reviews one:
+
+- **The bar is the approved version.** Today: v6.8 on every K1119 sheet (b, v and w's joins,
+  the six a/q joins, e after b, v and w) and c's old hand-set joins. A candidate is judged join
+  by join at full size beside it and the font, and is the pick only if it clearly beats it.
+  Otherwise the card recommends the approved version, or says no pick when the reviewer
+  cannot tell.
+- **Every sheet and card carries it.** Each sheet shows the font, the approved version and the
+  candidates; each card offers "keep the approved version", even when a plan Levi chose
+  (K1112's one rule) would have to bend.
+- **Checks reject, never pick.** The census's smoothness and font distance can rule a
+  candidate out; a clean check never makes one smooth or the pick.
+- **A plan that costs looks goes to Levi.** Where the one rule cannot match an approved join
+  without per-pair data, the hand-set join stays, and the trade-off goes to Levi as a plain
+  question with pictures. J2's presets go (K1112) only for joins the rule matches by eye.
