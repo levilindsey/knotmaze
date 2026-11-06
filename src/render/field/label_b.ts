@@ -159,7 +159,7 @@ export function spanCode(spans: { lo: number; code: number }[], s: number): numb
 }
 
 /** An arm's foot window for inFill: s range (unwrapped) and segment walk. */
-function armWindowWalk(fb: FormB, ai: number, d1: number): [number, number, number, number] {
+export function armWindowWalk(fb: FormB, ai: number, d1: number): [number, number, number, number] {
   const a = fb.arms[ai];
   const p = fb.polys[a.pi];
   const [lo, hi] = fb.armWindow(ai, 0, d1);
@@ -208,7 +208,7 @@ function armWindowWalk(fb: FormB, ai: number, d1: number): [number, number, numb
  * |T_i+ - T_i-| >= s_j - s_k+1. The adjacent segments always pass (iii).
  * Straight stretches give +-1; a tight turn, more.
  */
-function nbWindows(p: Poly, h: number, foldR: number, out: Float32Array, off: number): void {
+export function nbWindows(p: Poly, h: number, foldR: number, out: Float32Array, off: number): void {
   const ns = p.nseg;
   const n = p.n;
   const tx = new Float64Array(ns);
