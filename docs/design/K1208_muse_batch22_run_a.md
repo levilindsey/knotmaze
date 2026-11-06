@@ -63,7 +63,21 @@ What batch 21 left (each run's findings are in its item's notes in
   in the seven dailies; 24 of their 32 ends are equal-length cycles
   with the ridge at the far joint, e.g. daily #25's node_216 on e251).
   Fix (b) is item 1's K1201 run.
-- 21G: (Claude fills this in after judging 21G.)
+- 21G: K1198's Plc1m sheets and ij without the ligature (e43b2cfc),
+  probes only (`.claude/probes/K1198/SUMMARY_21G.md`). Claude's judgment:
+  Plc1m reads as well as v7.2 on Run G's sheets and is nearer the font
+  on ci (2.31 u, inside its 2.5 u budget), cr, cs, cy, er, es and ei,
+  farther on ai and ar (the four-pair mean 10.08 u against 9.98,
+  `.claude/probes/K1198/distances_21g.txt`), so it replaces v7.2 as the
+  variant K863 lands once Levi answers K1197. Under Plc1m the fr and fs
+  pins are not no-ops: fr is 1.03 u nearer the font without them and fs
+  0.01 u farther (`.claude/probes/K1198/pins_21g.txt`). Of the 676
+  lowercase pairs only ij ligates (`ij.jmc`, GSUB lookup 26, filed under
+  calt). ij's join solves through the ports (side 0.0010 u under Plc1m),
+  but calt also makes every font connector, so shaping with calt off
+  everywhere leaves all 334 font distances nan and moves all 234 census
+  strings (`.claude/probes/K1198/gates_21g.txt`): nothing lands. Item 2
+  takes the narrower rule.
 
 No Claude agent will be running when batch 22's runs start. Claude
 runs the phone passes; no run touches the phone.
@@ -141,8 +155,21 @@ that fit:
      left out of batch 21 for room: model gk (a foreign over thread's
      silhouette discard) for ji 147 arm 1's bright GPU colours, or
      "not found" with what was ruled out. Probes only.
-2. Cursive work: K1198's next piece, by Claude's judgment of 21G
-   (K1198's notes). (Claude names the piece after judging 21G.) Keep one of the six runs for it.
+2. Cursive work: K1198's next piece, by Claude's judgment of 21G (K1198's notes): one run, probes
+   only, in `.claude/probes/K1198/`; the K863 kit stays as it is (landing Plc1m waits on K1197).
+   21G found ij's ligature in GSUB lookup 26, filed under calt, so calt off unmade every font
+   connector. The narrower rule keeps calt and empties every GSUB ligature-substitution lookup
+   (lookup type 4, found by its type, never by name, number or pair; in memory with fontTools),
+   or, if that cannot be done cleanly, re-shapes only the clusters that ligate: say which and
+   why. Census it under Plc1m (`.claude/probes/K1198/ports_k1112cusp.json`) against 20G's bench
+   (`.claude/probes/K1198/census_Plc1m.json`, calt on). Gates: every census string but ij shapes
+   glyph for glyph as on the bench and every join but ij keeps its font distance and geometry;
+   ij's join solves through the ports (status 0, side at least -0.05 u) and, if the font now
+   draws its own i-to-j connector, its font distance is measured; two runs hash the same. Sheets
+   for Claude's look: ij (the font's ligature, the font's unligated ij if it draws one, the
+   solved join) and fr, fs and their words with and without the fr/fs pins under Plc1m
+   (`.claude/probes/K1198/pins_21g.txt` has 21G's numbers). If the rule moves more than ij, list
+   what moved and stop there. Keep one of the six runs for it.
 3. Claude's pick from the Pixel passes: K1205's first step, described
    in batch 21's drafting brief (item 3) and left out of batch 21 for
    room. Probes only, in `.claude/probes/K1205/`, under the perf lock;

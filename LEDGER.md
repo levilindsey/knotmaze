@@ -335,7 +335,7 @@ Next free ID: K1210.
   - owner: nobody since 2026-11-04 21:02: J3i (claude agent a2d2f19ad8f0a41d7 of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c) finished its stage; waiting on Levi's look (K1197)
   - branch: mainline for the brief; J3i's branch `worktree-agent-a2d2f19ad8f0a41d7` (`.claude/worktrees/agent-a2d2f19ad8f0a41d7`, kept) also holds unmerged copies of its probe files; J3h's worktree `.claude/worktrees/agent-a3b2dcbad71e5cbd8` kept (merged at d5d0a2c7); last commit: `9e699429` (J3i's branch tip)
   - evidence: `.claude/probes/K863/trace/` (J3i: `work32/`, `out32/` with `png/c_font_cmp_v72.png` and `png/c_spots_v72.png`, `work32/dbg/*_k1112cusp.*`, NOTES `## K1112 cusp`; J3h: `work31/`, `out31/`, `work31/dbg/*_k1112c.*`, NOTES `## K1112 c`; J3g: `work30/`, `out30/`, NOTES `## K1119`); Drive `K863/` (v7.0: `*_v70.svg`; v7.1: `c_v71.svg`, `cursive_v71_words.svg`; v7.2: `c_v72.svg`, `cusp_v72.svg`, `cursive_v72_words.svg`); Levi's template `out25/cursive_template.svg`; the full file list in `docs/ledger_notes.md` `## K863`
-  - next: Levi's look (K1197); then a stage lands v7.2 (Plc2m, `work32/ports_k1112cusp.json`) as the kit's ports, deletes the fr and fs pins (no-ops under v7.2) and refits where c's exit leaves c if Levi asks (K1198 lists the leftovers); K1119's look in its own stage; then the next exit, g
+  - next: Levi's look (K1197); then a stage lands Plc1m (K1198's notes: 21G's judgment; `.claude/probes/K1198/ports_k1112cusp.json`) as the kit's ports, keeps or drops the fr and fs pins by K1198's look (not no-ops under Plc1m), takes K1198's ligature rule if batch 22 passes it, and refits where c's exit leaves c if Levi asks; K1119's look in its own stage; then the next exit, g
   - brief: `docs/design/K1112_cursive_j3i.md` (Handoff); J3h's Handoff in `docs/design/K1112_cursive_j3h.md`
 - **K114** · Gameplay round 2, designed in
   `docs/design/K80_gameplay_additions.md` section R: burn race, cut
@@ -524,14 +524,6 @@ Next free ID: K1210.
   - next: Levi's look K1200 (`docs/asks/K1200.md`); K1201 (Muse batch 21's Run F, K1204); K1207 in Muse batch 22 (K1208): Run D's band end window becomes the only path (K1203 judged on 2026-11-05) and Run C's cover-ramp switch goes (K1202 closed 2026-11-05: a wider cover ramp changed nothing visible); S6 (plan section 5) after K1140's Glimpse picks; K1190's fixes once Levi answers. The next pulse step's Pixel pass watches fabric 7 moves' frames over 25 ms (+14 and +15 in the fix's and S5's passes, floor 13)
   - brief: the plan `docs/design/K1139_pulse_junctions.md` section 5 (S6); S5 was Muse batch 20's Run B (`docs/design/K1199_muse_batch20.md`)
   - env: the passes' builds first and never while Muse runs: `scripts/preview.ps1 -Ref <sha> -Root <out>\builds -BuildOnly` for each sha (`pixel_passes.ps1` stops before the phone lock when one is missing); probe server `npx vite --config .claude/probes/K1139/vite.private-cache.config.ts --port 5620 --strictPort --host 127.0.0.1` from a worktree (ports 5620-5639); GPU probes through `.claude/probes/K1139/run_locked.ps1 -Batch`
-- **K1204** · Muse batch 21 (after K1199's batch 20): runs B to G from `docs/design/K1204_muse_batch21.md`
-  (review 854823fa), one at a time through the chain, ports 5820-5879; B done (8b7a2b4a, S3f5); judged:
-  C 5e0d5914 off (K1202), D a0f1d634 on (K1203), E 080d4b49 closed (K1186), F 8e0c5a1c fix (b) next (K1201)
-  - owner: the chain in `.claude/probes/K1053/` (queue.txt, chain.log): batch 21's runs B to G, fresh Muse sessions, coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
-  - branch: mainline; last commit: `e43b2cfc`
-  - evidence: `docs/design/K1204_muse_batch21.md` (runs B to G), `docs/design/K1204_muse_batch21_run_a.md`; the chain in `.claude/probes/K1053/` (queue.txt, chain.log)
-  - next: Run G done; Claude reviews it, all batch 21 runs are in
-  - brief: `docs/design/K1204_muse_batch21.md`
 - **K1208** · Muse batch 22 (after K1204's batch 21): Run A drafts its brief from
   `docs/design/K1208_muse_batch22_run_a.md` after 21G, through the chain (queued as 22A); Claude reviews the
   draft and queues runs B to G (ports 5880-5939)
@@ -1712,9 +1704,9 @@ Every other item below waits on the trigger it names.
 - **K1195** · `scripts/preview.ps1` (K1188, f5035e0d): a src-* folder that `git worktree remove` half-deletes
   (a file held open) loses its `.git`, so the fallback keeps it and later -Ref runs of that sha under that
   -Root are refused as a live run until it is cleared by hand
-- **K1198** · Cursive v7.2's leftovers (J3i), 20G (c3ab0a46; notes, `.claude/probes/K1198/SUMMARY.md`): Plc1m
-  (B = 1 u) clears the gates, ci 2.31 u from the font (budget 2.5), nearer than v7.2 on cr, cs, cy, er, es;
-  replaces v7.2 if its sheet reads as well (K1204). ij: the font ligates it (`ij.jmc`), so no join is built
+- **K1198** · Cursive v7.2's leftovers (J3i). 21G (e43b2cfc; notes, `.claude/probes/K1198/SUMMARY_21G.md`):
+  Plc1m reads as well as v7.2 and replaces it (lands with K863 after K1197). ij's join solves through
+  the ports; calt off drops every font connector. Batch 22: only the ligature lookup off, fr/fs pins' look
 - **K1205** · A warm Pixel draws fabric at rest at 30 fps: at thermal status 1 (skin 39-40 C) 0 moves read p50
   33.1 (builds 36aed2d5 and fbc1b212) while 7 moves held 16.7; cool, 0 moves holds 16.7 (K1139's passes
   `.claude/probes/rounds/2026-11-05-k1139s5`, `-s5b`). Cause untested (notes)
@@ -2022,6 +2014,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1204** · Muse batch 21 (Runs B to G) ran through the chain, and Claude judged each run. Done in e43b2cfc (2026-11-05).
 - **K1186** · Fill look: no hold-and-fade, a layer-vote flip draws 0 px (21E). Done in 080d4b49 (2026-11-05).
 - **K1206** · Batch 22's Run A brief (`docs/design/K1208_muse_batch22_run_a.md`) has its draft check every path it cites, quote each number from the file that holds it, and list the paths in its report. Done in 76f3dbc6 (2026-11-05).
 - **K1203** · A pulse band ignored its child arm's end window: Run D's fix (a0f1d634, behind a switch) judged on by a GPU positive control, its `table_cyc.mjs` copy reads BAND EXTENT past the arm (notes); K1207 makes the window the only path. Done in a0f1d634 (2026-11-05).
