@@ -1,0 +1,35 @@
+work33\base\asdrawn_report.txt vs work34\base\asdrawn_report.txt : DIFFER E6B0DCF4C557A09F
+work33\base\asdrawn_run.log vs work34\base\asdrawn_run.log : byte-identical 58EDF36A222BFED3
+work33\base\bodies_asdrawn.json vs work34\base\bodies_asdrawn.json : byte-identical 360DD42B9CCD7084
+work33\base\bodies.json vs work34\base\bodies.json : byte-identical E056F2193B846395
+work33\base\combs_run.log vs work34\base\combs_run.log : byte-identical 14BAD981A92CD023
+work33\base\evar_run.log vs work34\base\evar_run.log : DIFFER BF0F822C10AD6E6E
+work33\base\eye_run.log vs work34\base\eye_run.log : byte-identical F9195A3CF36AA930
+work33\base\join_params.json vs work34\base\join_params.json : byte-identical 9DF7CA3E7739EDC7
+work33\base\nodes_run.log vs work34\base\nodes_run.log : DIFFER 4AA1D69089CA1FD2
+work33\base\params_run.log vs work34\base\params_run.log : DIFFER 33A0F90667DEFEB4
+work33\base\review_run.log vs work34\base\review_run.log : DIFFER BFC24F9E0E4C4160
+work33\base\review.png vs work34\base\review.png : byte-identical D56BBD3CED773C3D
+work33\base\rough_check.txt vs work34\base\rough_check.txt : byte-identical 90AA117E903443E4
+work33\base\rough_run.log vs work34\base\rough_run.log : byte-identical 75390C4EFC9B8AEC
+work33\base\split_check.txt vs work34\base\split_check.txt : byte-identical E2728EAA2D6601A2
+work33\base\template_checks.txt vs work34\base\template_checks.txt : DIFFER A85B250882353DE9
+work33\base\template_map_k990.json vs work34\base\template_map_k990.json : byte-identical 1C14C7AEACF3DC31
+work33\base\template_map.json vs work34\base\template_map.json : byte-identical B3CF065D83DD72F8
+work33\base\template_run.log vs work34\base\template_run.log : DIFFER A85B250882353DE9
+work33\base\words_report.txt vs work34\base\words_report.txt : DIFFER 4D069155BFD6AE2F
+work33\base\words_run.log vs work34\base\words_run.log : DIFFER 9717A31253C0FF62
+work33\base\dbg\combs.png vs work34\base\dbg\combs.png : byte-identical FF98748C9497D84A
+work33\base\dbg\inkscape_combs_stderr.txt vs work34\base\dbg\inkscape_combs_stderr.txt : DIFFER DEF4141A27BCB605
+work33\base\dbg\inkscape_tpl_stderr.txt vs work34\base\dbg\inkscape_tpl_stderr.txt : DIFFER 4ABB5C62DA76D37B
+work33\base\dbg\template.png vs work34\base\dbg\template.png : byte-identical EA3FAB1D02615BCB
+work33\base\dbg\words.png vs work34\base\dbg\words.png : byte-identical 223F2D63947DE35F
+work33\base\dbg\evar\evar_g.png vs work34\base\dbg\evar\evar_g.png : byte-identical D8F52AA72E579B22
+work33\base\dbg\evar\evar_o.png vs work34\base\dbg\evar\evar_o.png : byte-identical 1F427AE39C749AF1
+work33\base\out\combs_k962.svg vs work34\base\out\combs_k962.svg : byte-identical 36B3F6082F6BE132
+work33\base\out\cursive_nodes.svg vs work34\base\out\cursive_nodes.svg : byte-identical 079A47A1A0557033
+work33\base\out\cursive_template.svg vs work34\base\out\cursive_template.svg : byte-identical 2315B304656AC7FB
+work33\base\out\split_combs.svg vs work34\base\out\split_combs.svg : byte-identical E6C093CA661AF704
+work33\base\out\words_k962.svg vs work34\base\out\words_k962.svg : byte-identical 7144DE65CA5CED03
+only in work34\base: 0 
+SVG, PNG and JSON files: 16, differing: 0 
