@@ -157,11 +157,20 @@ K1209, so S2 vs branch is S3 + K1209.
 
 ### Handoff (15:10): tasks 1-4 done
 
-**Commits.** 75bafefb (task 1), 4ed0db10 (task 2), 11646f59 (the probe tools, force-added under
-`.claude/probes/K1211/`: `checks3.mjs`, `crops3.mjs`, `hcat.mjs`, `shoot3.mjs`,
-`run_shots3.ps1`, `bite3.mjs`, `s3_ids.ts`), then this note. Shot and check output is untracked
-in `.claude/probes/K1211/out3/` (`m/` = master c0a72eb8, `b/` = the branch at 4ed0db10, per stand;
-`checks_<stand>.txt`; `bite/`, `bite_b/`; `smoke_xp/`; `sheets/`).
+**Commits** (after the rebase below): c1312c3a (task 1, was 75bafefb), 23eed143 (task 2, was
+4ed0db10), 4420fb96 (the probe tools, force-added under `.claude/probes/K1211/`: `checks3.mjs`,
+`crops3.mjs`, `hcat.mjs`, `shoot3.mjs`, `run_shots3.ps1`, `bite3.mjs`, `s3_ids.ts`; was
+11646f59), 5ed95c16 (this note), then the rebase note. Shot and check output is untracked in
+`.claude/probes/K1211/out3/` (`m/` = master c0a72eb8, `b/` = the branch at 4ed0db10, whose `src/`
+and `test/` equal 23eed143's, per stand; `checks_<stand>.txt`; `bite/`, `bite_b/`; `smoke_xp/`;
+`sheets/`; `npm_test_rebased.log`).
+
+**Rebase** (15:07): onto origin/master 804ab1ad, which has S2 merged (a997248c .. a84225d3).
+The S2 merge on this branch (b38e07ee) and 804ab1ad have the same `src/`, `test/`, S2 docs, this
+brief and `.claude/probes/K1211/`, so I replayed only S3's four commits
+(`git rebase --onto origin/master b38e07ee`): no conflicts, and the S2 commits drop out. The
+branch is S3's commits on top of origin/master, 0 behind. `npm test` after it: green (219
+files, 2941 tests passed, 9 skipped).
 
 **1. The dark line.** Cause (S2's): a drawing band was composited over the gold at
 cw (1 - gC), so a pixel on the gold's one-pixel edge ramp kept a share of the unlit base under a
