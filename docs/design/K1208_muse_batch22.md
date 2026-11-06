@@ -12,6 +12,20 @@ B to G in the drafting brief. Six runs fit (B to G below); the
 chain tags are `22B` to `22G`, one run at a time. Batch 22 uses
 ports 5880-5939, one range of ten per run.
 
+Claude changed the batch on 2026-11-05, after Levi's calls of
+that day:
+
+- **Run H added** (K1210, after Run G below): Levi asked "I also
+  want to make sure that fire and segment collapsing effects also
+  correctly transition across segments--similar to the
+  highlights". It runs second, after Run B, so the pulse it
+  measures against is Run B's; tag `22H`, ports 5940-5949. It
+  touches only its own probe folder, so Run C still starts from
+  Run B's work. The order is B, H, C, D, E, F.
+- **Run G held.** Levi rejected the joins Plc1m sits on (K1119:
+  v6.8 kept on every sheet; K1197: c's old joins kept), so Run G
+  is not queued. Its section stays for the record; do not run it.
+
 Runs came from the candidates in Run A's order:
 
 - (1) Junction work (Levi, 2026-11-04: "perfecting all junction
@@ -44,7 +58,7 @@ Runs B and C. Run B settles two switches Claude already judged
 (no new look to judge); Run C retires a vote that draws 0 px.
 Run D stops at its look sheet with the switch defaulting to
 today's picture: Claude judges the sheet and flips the default,
-and K1201 and K1139 stay open either way. Runs E, F and G change
+and K1201 and K1139 stay open either way. Runs E, F, G and H change
 no `src/` at all and end in tables, diffs or sheets. A run that
 stops keeps its item open (batch 8 rule 1). Close lines that
 rewrite an item's text give the new text in their reports, for
@@ -57,7 +71,7 @@ run or a measurement table below, and none needs Levi or a
 phone. Run D changes what the player sees only behind its
 switch; Runs B and C settle pictures Claude already judged (Run
 B's window becomes the only path; Run C's fans draw the same
-ink on one layer); Runs E, F and G change no picture at all.
+ink on one layer); Runs E, F, G and H change no picture at all.
 
 No two runs touch one file ("How to work", rule 3), except
 where a run below says it starts from the earlier run's commit:
@@ -74,10 +88,10 @@ batch 8's ten rules and the shared process in
 `docs/design/K1050_muse_week.md`) before anything else. Read
 K1208 wherever it, or a page it sends you to, says K1204, K1199,
 K1192, K1189, K1184, K1178, K1169 or K1131; the chain tags are
-22B to 22G, and Claude starts them one at a time. Batch 22 uses
-ports 5880-5939; each run below names its own range. After each
-run, update K1208's handle (the next run in B, C, D, E, F, G
-order, or, after G, that all the runs are in and Claude reviews
+22B to 22H (22G held), and Claude starts them one at a time. Batch
+22 uses ports 5880-5949; each run below names its own range. After
+each run, update K1208's handle (the next run in B, H, C, D, E, F
+order, or, after F, that all the runs are in and Claude reviews
 and closes K1208).
 
 GPU probes and timings hold the machine's perf lock (each
@@ -271,7 +285,7 @@ Claude to mark K1207 done once Run B is reviewed:
 Then:
 
 After the run, update K1208's handle:
-`node C:\Users\lsl\Repositories\claude-config\tools\ledger.mjs handle K1208 --last-commit <sha8> --next "Run B done; Claude reviews it, Run C next"`
+`node C:\Users\lsl\Repositories\claude-config\tools\ledger.mjs handle K1208 --last-commit <sha8> --next "Run B done; Claude reviews it, Run H next"`
 
 ## Run C - K1209: retire the fillet layer vote and its top layer
 
@@ -911,9 +925,14 @@ residual recorded ("ji 147 arm 1's bright GPU colours:
 apply by hand. Then:
 
 After the run, update K1208's handle:
-`node C:\Users\lsl\Repositories\claude-config\tools\ledger.mjs handle K1208 --last-commit <sha8> --next "Run F done; Claude reviews it, Run G next"`
+`node C:\Users\lsl\Repositories\claude-config\tools\ledger.mjs handle K1208 --last-commit <sha8> --next "Run F done; Claude reviews it; all runs are in (Run G held)"`
 
 ## Run G - K1198's next piece: only the ligature lookups emptied, under Plc1m
+
+**Held (Claude, 2026-11-05):** not queued. Plc1m sits on v7.2's c
+joins and v7.0's b, v and w exits, and Levi rejected both (K1197,
+K1119). K863's next stage restores the approved joins first; this
+run is redrafted against them later.
 
 **Chain tag:** 22G · **Suggested ports:** 5930-5939 (unused:
 this run renders no page, starts no server and takes no
@@ -1050,6 +1069,166 @@ Claude to apply by hand. Then:
 
 After the run, update K1208's handle:
 `node C:\Users\lsl\Repositories\claude-config\tools\ledger.mjs handle K1208 --last-commit <sha8> --next "Run G done; Claude reviews it, all batch 22 runs are in"`
+
+## Run H - K1210: fire and collapse across junctions, against the pulse
+
+**Chain tag:** 22H · **Suggested ports:** 5940-5949 (the
+probe's Vite dev server takes one port in this range).
+
+Claude added this run on 2026-11-05 for Levi's request (K1210).
+It runs second, after Run B, so the pulse it compares against is
+Run B's. This run changes no `src/`: it measures how the burn
+race's fire and collapse mode's collapsing runs pass through a
+junction, beside the pulse highlight at the same junctions, and
+ends in tables and sheets for Claude's look. Probes only, in
+`.claude/probes/K1210/`.
+
+### Read first
+
+- The ledger's K1210 (quoted below).
+- The baseline, the pulse at a junction: K1139's stands table and
+  helpers (`.claude/probes/K1139/stands_cyc.mjs`; `lib.mjs`: the
+  clock pin `setState`, `moveEdge`, the pulse dump), its kymograph
+  rows (`kymo_rows_cyc.mjs`, `sheets_cyc.mjs`), and K1201's
+  `kymo.mjs` and `joint_gpu.mjs` (the joint step on the GPU).
+  Levi's calls on the pulse at a junction (K1139): it splits, it
+  runs toward the player, and it goes straight through with no
+  dim moment.
+- The fire: `docs/design/K114_burn.md` ("The stages"); K290's
+  entry in `docs/design/G3G4_sdf_geometry.md` (the burn reverses
+  the shaped cut, makes the fans drop an arm and shrinks the
+  visibility); K290 stage 3c's desktop driver
+  `.claude/probes/K290/stage3c/desk_sheet.mjs` (a burn race's
+  link, its fire clock, finding fronts). In `src/`: `runBurnAt`
+  in `src/render/fabric_maze_renderer.ts` (and K1187's notes
+  beside it), the burnt arm's lobe in
+  `src/render/ribbon/explore_gaps.ts`, `kFireEmber` in
+  `src/render/arm_strip.ts`, the burn in
+  `src/render/ribbon/joinery.ts`, and the fans' arm material
+  (`src/render/junction_field.ts`, header).
+- The collapse: `src/game/collapse.ts` (K139: every run collapses
+  once crossed); the Fragile runs param (K1171:
+  `FragileRunsMode` in `src/ui/url_state.ts`, link values in
+  `.claude/probes/K1171/rules_probe.mjs`); K139's page driver
+  `.claude/probes/K139/page/k139_page.mjs` (reaching a collapse
+  with hooks only; its links predate K1171's one param). In
+  `src/`: how `fabric_maze_renderer.ts` draws a run as it breaks
+  and after (`syncBroken`, `brokenSpans`).
+- `.claude/rules/probes.md`: full design links, `phw=0`, pinned
+  clocks, headed real-time Chrome, the perf lock for GPU work.
+
+### What is there today
+
+> **K1210** · Fire and collapse across junctions. Levi, 2026-11-05: "I also want to make sure that fire and
+> segment collapsing effects also correctly transition across segments--similar to the highlights". Batch 22
+> Run H measures both against the pulse (`docs/design/K1208_muse_batch22.md`); a fix follows.
+
+The highlights are the pulse bands K1139 and K1201 tuned at
+junctions. Nobody has measured the fire or the collapse there:
+whether either one jumps, pops, lags or dims as it passes a
+junction's fan is the open question. This run answers it in
+numbers and pictures and fixes nothing.
+
+### Tasks
+
+Use ports 5940-5949. GPU frames take the perf lock (a copied
+`run_locked.ps1 -Batch` from the K1139 kit); never shoot frames
+or time without it.
+
+**Write set:** new scripts, tables and sheets under
+`.claude/probes/K1210/` only (`git add -f` the scripts, the
+tables, `STANDS.md`, `SUMMARY.md` and the sheets; raw frames stay
+untracked). Copy what you reuse from the K1139, K1201, K290, K139
+and K1171 kits into it; never edit those kits. Nothing in `src/`,
+`test/` or `scripts/` changes; no other run touches these files.
+
+1. **The stands.** Two junctions per effect, one with three arms
+   and one with four, with the whole junction in view: the fire
+   reaches the junction along one arm and goes on along the
+   others; for the collapse, a run that ends at the junction
+   collapses. Try K1139's stands first (`stands_cyc.mjs`: fork,
+   cross, four), with the burn race or the collapse switched on
+   in the same link, and check that the junction's node and arms
+   are the same as with the effect off (if the switch moves the
+   maze, measure the pulse on the effect's own link instead).
+   Where the effect does not reach those junctions, find others
+   and say why. Record every stand in `STANDS.md`: the full link,
+   the moves and the clock settings, verbatim, so a later run can
+   shoot the same frames.
+2. **Frames.** Per stand and effect, GPU frames of one crop
+   around the junction (its fan and about two lattice units of
+   each arm) while the effect crosses it: at least 24 frames at a
+   fixed step of the effect's own clock, from the front about one
+   lattice unit before the fan to one past it on every arm it
+   leaves by. Pin the clock where the kits pin it (`desk_sheet.mjs`
+   for the fire, K139's hooks for the collapse); if one cannot be
+   pinned, shoot in real time and record each frame's clock
+   reading. Then the pulse at the same junction: the same crop
+   and frame count across one pass of its band (K1139's
+   `setState`).
+3. **Kymographs.** For each stand and effect, and for the pulse:
+   GPU luma along the centreline of each arm the effect uses (the
+   arm in, the fan's centre, each arm out), one row per frame, in
+   `kymo_rows_cyc.mjs`'s layout. From each, the front per frame:
+   where luma crosses halfway between the two sides' levels (for
+   a collapse that fades rather than sweeps, the strip's and the
+   fan lobe's luma per frame instead; say which it is).
+4. **The measures,** per stand, effect and arm out, and the same
+   for the pulse at that junction:
+   - **Jump:** the front's largest one-frame advance inside the
+     fan's footprint, over its median one-frame advance on the
+     arms.
+   - **Pops:** frames in which more than 16 pixels of the fan's
+     footprint change by more than 32 luma at once.
+   - **Lag or lead:** frames from the front reaching the fan's
+     rim on the arm in to it leaving the rim on each arm out,
+     against the frames the arms' median speed predicts for that
+     distance (for a fade, the frames between the strip's and the
+     fan lobe's half-way points).
+   - **Dim or bright moment:** frames where the fan's mean luma
+     leaves the range of the two arms beside it.
+5. **Verdicts.** Per stand and effect, "like the pulse" when every
+   measure is within the pulse's at that junction: jump at most
+   the pulse's plus 0.5, no more pops than the pulse, lag within
+   one frame of the pulse's, and no dim or bright moment the
+   pulse lacks. Otherwise "differs", naming the measure, the arm
+   and the frames. These numbers only flag a junction for
+   Claude's look; they never call a look right.
+6. **Sheets.** One PNG per stand and effect: 8 to 12 frames of the
+   crop across the crossing at full size (nearest-neighbour 2x),
+   the kymograph beside them, and the pulse's frames and
+   kymograph at the same junction under them, each frame labelled
+   with its clock reading.
+7. **`SUMMARY.md`:** the stands, the measures' table, the
+   verdicts, any stand that could not be built and why, and the
+   perf-lock times.
+8. `npm test` (once, reported green; no test should change).
+
+### Done and close
+
+**Done when:**
+
+- Each effect has two stands (or the report says why it has
+  fewer), recorded verbatim in `STANDS.md`.
+- The measures' table covers each stand, effect and arm out
+  beside the pulse's at the same junction, and each stand has a
+  verdict.
+- Every stand has its sheet, and `SUMMARY.md` lists them.
+- No file outside the write set changed, and `npm test` passes.
+
+**Close lines:**
+
+K1210 stays open: Claude looks at every sheet, and a fix stage
+follows wherever a junction differs. This close rewrites K1210's
+text (`ledger.mjs` has no command for it): the report must give
+the item's new text, at most three lines of 110 characters,
+keeping Levi's request in short and recording the result ("Run H
+(<sha8>): fire <like the pulse at <n> of <m> junctions | differs
+at <stand>: <measure>>; collapse <the same>; sheets at
+`.claude/probes/K1210/`"), for Claude to apply by hand. Then:
+
+After the run, update K1208's handle:
+`node C:\Users\lsl\Repositories\claude-config\tools\ledger.mjs handle K1208 --last-commit <sha8> --next "Run H done; Claude reviews it, Run C next"`
 
 ## Left out on purpose
 
