@@ -3960,3 +3960,15 @@ For the stage that adopts the picks (not items yet):
 Card: `docs/asks/K1213.md`. Its picture, `.claude/probes/K863/trace/work34/look/card_k1213.png`, stacks
 J3k's crops (crop_spot_s_boxes, crop_spot_p_ap, crop_dots_it_3x, crop_spot_q_oq); `card_k1213.py` beside
 it rebuilds it.
+
+## K1208 (2026-11-05, Run K reviewed)
+
+Run K (22K, 0f63e3d5; `.claude/probes/K1208/run_k/SUMMARY.md`) shot master at 79014b00. Claude viewed each
+crop at full size against its item:
+- K744: no blip at K749's junctions, alternate and cycle (desktop; the phone was not re-shot). Closed.
+- K734: the hairline is gone, closed. At real size (the crop at 1/3, dsf 3) the i fork shows a pale disc
+  with a round edge and two steps in its outline where the arms' straight cuts meet the fan. Run K called it
+  "smooth gradient, faint wide rim shading only" from its 1-px step metric (0 steps above 6/255), which a
+  ramp a few device px wide passes. Filed as K1220, with K836 (c)'s pale discs at the a's L and R.
+- K424: present; Run K named the joint gate (`exploreJointShown`, explore_gaps.ts). Stays.
+- K15: gone, closed. K218: gone at 7 stands, closed. K678: unreachable, dropped.

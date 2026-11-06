@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1220.
+Next free ID: K1221.
 
 ## Waiting on Levi
 
@@ -299,9 +299,9 @@ Next free ID: K1220.
 
 - **K1211** · One seamless light inside each junction, no line or edge in it (Levi 2026-11-05; notes). Pulses
   and the gold path first, then fire and collapse (K1210). Levi, on K1190's card: "All four" (notes). S2
-  (fba755ea): the gold's round edge. S3: the lit edge's line, the web's bite; S4: the soft front, no wedges.
-  - owner: nobody since 2026-11-05 14:10 (merged; agent `a48fddd224c96d898` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c)
-  - branch: mainline; last commit: `a84225d3`
+  (a84225d3): the gold's round edge. S3: the lit edge's line, the web's bite; S4: the soft front, no wedges.
+  - owner: agent `a48fddd224c96d898` of claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c (opus, started 2026-11-05 13:49, 2 h cap ~15:49)
+  - branch: worktree-agent-a48fddd224c96d898, worktree `.claude/worktrees/agent-a48fddd224c96d898` (S2 merged in; S2 on master since a84225d3, its worktree kept); last commit: `75bafefb`
   - evidence: .claude/probes/K1211/ (S1's and S2's tools; out/ and out2/ untracked, out2/ in S2's worktree); K1190's sheets: .claude/probes/K1139/out/s4/sheets/t6_ji149_x4_n.png, t4_ji33_cross_n.png
   - next: S3 (running): the lit edge's dark line, the web's bite (spot 4); S4: the soft front and no wedges (spots 1-2), look B removed; then K1218, K1210
   - brief: `docs/design/K1211_s3_lit_edge_web.md` (S2's: `K1211_s2_gold_edge.md`; S1's: `K1211_seamless_junction_light.md`)
@@ -511,10 +511,10 @@ Next free ID: K1220.
   - env: the passes' builds first and never while Muse runs: `scripts/preview.ps1 -Ref <sha> -Root <out>\builds -BuildOnly` for each sha (`pixel_passes.ps1` stops before the phone lock when one is missing); probe server `npx vite --config .claude/probes/K1139/vite.private-cache.config.ts --port 5620 --strictPort --host 127.0.0.1` from a worktree (ports 5620-5639); GPU probes through `.claude/probes/K1139/run_locked.ps1 -Batch`
 - **K1208** · Muse batch 22 (after K1204's batch 21): runs B to M through the chain, from
   `docs/design/K1208_muse_batch22.md` and the later runs' own briefs (ports 5880-5999)
-  - owner: the chain in `.claude/probes/K1053/` (queue.txt, chain.log): Run K (22K) since 13:07, then L (22L), fresh Muse sessions; coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
-  - branch: mainline; last commit: `f3ed2129`
+  - owner: the chain in `.claude/probes/K1053/` (queue.txt, chain.log): Run L (22L) since 14:08, then M (22M), fresh Muse sessions; coordinated by claude session 7301c55b-f743-4e00-a519-883d9aaaaa7c
+  - branch: mainline; last commit: `0f63e3d5`
   - evidence: the chain in .claude/probes/K1053/ (queue.txt, chain.log); each run's probe folder under .claude/probes/ (B K1203, H K1210, C and I K1186, E K1196, F K1191, G K1198)
-  - next: K (six junction residuals on master), then L (cursive residuals on v6.8); M held until K1211 S2 lands; D held for K1211; J reviewed (K647 done in adee40a6)
+  - next: L (cursive residuals on v6.8), then M (the frame tail in play; released, K1211 S2 landed in a84225d3); D held for K1211; K reviewed (K744, K734, K15, K218 done; K678 dropped; K424 stays; K1220 filed)
   - brief: `docs/design/K1208_muse_batch22.md`; I to M: K1209_reapply_run_i.md, K647_reset_win_card.md, K1208_run_k_junction_residuals.md, K1208_run_l_cursive_residuals.md, K1214_profile_run_m.md (docs/design/)
 
 ## Next, in order
@@ -753,6 +753,9 @@ Every other item below waits on the trigger it names.
 - **K1214** · K1139's cost in play (22E, desktop, ABBA under load): fabric 7 moves' frame p50 6.90→7.93 ms and
   p95 10.43→12.00 over S3+S4 (1fe793f5→71eedb94, spread 0.50); S5 p95 8.45→10.03 (spread 1.30). Next: a
   profile naming the piece that costs, after K1211 S2 lands (`.claude/probes/K1196/out22e/`; notes).
+- **K1220** · Text junctions: a pale disc shows its round edge inside the fork, and the outline steps where
+  the arms' straight cuts meet it (the i fork in "ai" at xh 3, real size; the a's L and R discs, K836 (c)),
+  against K1211's seamless goal. `.claude/probes/K1208/run_k/out/k734_on.png`
 
 ## Residuals (known, not fixed)
 
@@ -824,7 +827,7 @@ Every other item below waits on the trigger it names.
 - **K877** · K868 oracle residuals: 1 of muse_hash's 342 corner solves fails (j58/1, no V: K883); #2
   fails acute r=0 corners by ε·cot θ (0.017, 0.027 px); 0.0038h of a −0.0061h clearance unattributed;
   inset match ±0.022h on polyline arms; kink's 1x #5/#9; long renders' vitest RPC timeout exits 1.
-- **K836 follow-ups** (Levi look needed, 2026-10-23): (a) the i stem still shows a step/flap at J and the K843 flare magnitudes (peak 6 GU, len 30/34 GU) are first guesses - tune by eye at xh2/xh3, incl. the flat dead-end cap. (b) In border mode the i tittle draws as a serrated ring with center speckles (aib still); the fill look is a clean disc. (c) Pale seam discs sit inside the a at L and R in the fill look - judge whether they read as junction pads or artifacts. Stills `.claude/probes/K836/`, `.claude/probes/K843/`.
+- **K836 follow-ups** (Levi look needed, 2026-10-23): (a) the i stem still shows a step/flap at J and the K843 flare magnitudes (peak 6 GU, len 30/34 GU) are first guesses - tune by eye at xh2/xh3, incl. the flat dead-end cap. (b) In border mode the i tittle draws as a serrated ring with center speckles (aib still); the fill look is a clean disc. (c) Pale seam discs: K1220 (stills `.claude/probes/K836/`, `.claude/probes/K843/`).
 - **K834 follow-up**: the stuck-on-loader report - the keep-loading flag is localStorage (`knotmaze.loaderStays`), so Chrome's clear-cache alone does not revert it (clear site data does); the K834 gating should keep the panel reachable under the permanent loader, but the real-phone panel-not-shown case (short landscape sheet) was never reproduced - retest on the phone.
 
 - **K413** · The phone lock (`.claude/probes/agents/phone_lock_take.ps1`) is one line, owner | time |
@@ -898,9 +901,6 @@ Every other item below waits on the trigger it names.
 - **K220** · Tooling: K75's `census_fan.mjs` misreads routed joints since K81 (`fieldProbe.at`
   without `px` and `strip`: 0.21 where the fans agree to 0.006). Use K169's `census_k81.mjs` or
   K93's `census_k81h.mjs` (`.claude/probes/K93/`); fix or retire it.
-- **K218** · In trail mode, a junction cap inside the fade holds a flat p
-  over its 0.31 radius, then steps at its edge (pre-existing, mostly
-  under the web; `docs/design/K93_K145.md`, Stage 1 handoff).
 - **K217** · K93's trail split is placed linearly in ctrl but the trail measures lattice length and
   the paint is linear in arc, so the fade start sits slightly off; a fading part under a pixel
   blends at the split (`docs/design/K93_K145.md`, Stage 1 handoff). Pre-existing.
@@ -953,9 +953,6 @@ Every other item below waits on the trigger it names.
 - **K14** · Latent seam-window wraps on open chains
   (applyTransversality's window, the slide/project windows,
   updatePassCover's +-12 slots): agent-measured, unfixed.
-- **K15** · During a reveal, a joint's fan can turn opaque while a fill beside it is still striped
-  (K4 fixes it by construction). May be moot: G1 (99443cb) deleted the over-fills. Re-check fan vs
-  base ribbon during a reveal.
 - **K16** · Settle is slow: 100-190 ms/frame at gs 18, 7 sim-s in 14 s on the phone (sleeps at ~5
   sim-s since K63). K279's wake check (`.claude/probes/K279/wake/`): every wake (drag, tap, bare)
   spirals to the 100 ms cap. K162 (4): do drags get K147's budget? K7's worker is the full fix.
@@ -1170,9 +1167,9 @@ Every other item below waits on the trigger it names.
 - **K422** · Two K120 probe checks fail on master too (K80 3a): keys.mjs realtime "a held key keeps
   adding inputs" (the seed-7 maze may have changed) and pad.mjs desktop "the stored choice shows it"
   (the pad hides under the open panel since K224, 918c929). `.claude/probes/K80/stage3/rerun/K120/`.
-- **K424** · Thread reveal: some junctions stay hidden while one of their arms turns visible 0.5-1
-  ctrl out, so their webs are missing beside thread about to show (junctions 87 and 160 on
-  `?2gozcj.MgaM`, K397 stage 1). `docs/design/K397.md`, Stage 1 handoff.
+- **K424** · Thread reveal: some junctions stay hidden while an arm turns visible 0.5-1 ctrl out, so
+  their webs are missing beside thread about to show (`docs/design/K397.md` Stage 1). Still on master
+  (22K): the joint gate (`exploreJointShown`) waits for every arm. `.claude/probes/K1208/run_k/SUMMARY.md`
 - **K425** · Probes editing `ribbon_renderer.ts`: `K290/stage3b/dump_variants.ts` + copies (K76 2d,
   K290 3a), `variant_build.ps1` (`g2/`, `K4/`), `K154_K169/edit_rr2.ps1`, `edit_rr3.ps1`. Repoint to
   `src/render/ribbon/ribbon_shader.ts` (R1's copy `.claude/probes/K5/R1/dump_variants.ts`); R2's gap files too (notes).
@@ -1391,9 +1388,6 @@ Every other item below waits on the trigger it names.
 - **K677** · aland only: a_x3_l cusp spike (0.075 LU) and a_x2_l square-step bites (0.089, 0.060),
   the same on master and K580 s4 (not a regression); K675 removed its 0.108 stem-foot thorn. Not
   investigated (`docs/design/K580_s4.md` real-render table).
-- **K678** · A K81 cover strip with fewer than 9 pairs of room drops a round join arc (falls back to
-  the sample pair); no A/B scene reaches it (`RibbonMesh.coverPairs`, the joinery.ts cover loop;
-  K580 s3).
 - **K679** · K653 fix (eb7e471) has no still pair, pixel A/B or test: nothing in test/ reaches
   syncMinotaur and the frozen-scene probe never shows the glow; a headed real-GPU real-chase probe
   at mfg=never would (`docs/design/K653_checks.md` Handoff).
@@ -1441,8 +1435,6 @@ Every other item below waits on the trigger it names.
   suspended context keeps the song on the wall clock and skips the 1.2 s lead-in, both unverified
   on iOS (docs/design/K720.md Handoff). The snore's offline decode landed with K343 (2b539fc8); the
   snore and fabric read silent under snd=none in a desktop browser (7274aae4's message).
-- **K734** · K643: a hairline seam inside the i fork junction at xh 3, in the build at adc6535b,
-  cause unknown (docs/design/K643.md Handoff)
 - **K737** · K137 s2 residuals (K137_s2.md Handoff; list in docs/ledger_notes.md): the spool can
   dead-end at its limit under fragile runs or collapse; a lit hint hides the minotaur warning up to
   2 s; five small aid gaps (path row, catch restart, walkers, saved attempts, compass mint)
@@ -1451,12 +1443,6 @@ Every other item below waits on the trigger it names.
   unreachable by tap (Hint disables at 0). A showing toast re-places when a control appears or
   leaves since 742078db.
   - K749: after a walked pickup on the real phone, all three sword toasts clear the pad
-- **K744** · K138 s1 page gaps: blips of other colors at some junctions under the rule colors (cause
-  unverified, maybe the junction webs); not page-checked: a backtrack undoing a slide, ice with
-  alternate, strict par lost under a rule, the share (`docs/design/K138_s1.md` Handoff)
-  - Real phone (K749): the patches show at real size at nearly every junction in both rules (dark
-    magenta among pink, dark teal among olive); a backtrack undoing a 3-run slide passed. Next:
-    trace each patch to its run, or hide the web meshes. `.claude/probes/K749/out/rules/`
 - **K750** · Lives on the phone (K749): one read gave hearts {left:3, of:3} beside catches 1 while
   the toast said 2 hearts left; a lagging hearts state or the probe read timing; the HUD hearts row
   after a catch was not checked (`.claude/probes/K749/notes.md`)
@@ -1990,6 +1976,11 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K678** · A K81 cover strip with fewer than 9 pairs of room drops a round join arc (falls back to the sample pair); no A/B scene reaches it (`RibbonMesh.coverPairs`, the joinery.ts cover loop; K580 s3). Dropped: unreachable today: cover strips exist only at routed fabric junctions, which carry no round join, and text scenes have joins but no routes (Run K, 22K: 50 seeds, 35,288 calls, 0 fallbacks) (2026-11-05).
+- **K218** · Trail-mode junction caps' flat p step: gone at 7 stands, routed junctions skip the caps (Run K, 22K). Done in 0f63e3d5 (2026-11-05).
+- **K15** · A joint's fan ahead of its arm during a reveal: gone, the fan follows the joint gate's knotFanAlpha (Run K, 22K). Done in 0f63e3d5 (2026-11-05).
+- **K734** · The hairline seam inside the i fork at xh 3: gone on master (Run K, 22K); the fork's pale disc and steps are K1220. Done in 0f63e3d5 (2026-11-05).
+- **K744** · Junction blips under the rule colors: gone on master at K749's junctions, alternate and cycle (desktop; Run K, 22K). Done in 0f63e3d5 (2026-11-05).
 - **K647** · Path 8 (K336): Reset path during the winning move records the result but shows no card. Done in adee40a6 (2026-11-05).
 - **K1212** · K863's trace kit: g2 reads the angle, census rows keyed by id, word lists each id once (J3k). Done in 0136f455 (2026-11-05).
 - **K1209** · Retire the fillet layer vote (one fan layer; K1186), Muse Run I (22I): no pin moved; 0 px but the accepted fat11 ji104 drag3 (23/14 px). Done in cb5a7301 (2026-11-05).
