@@ -1,0 +1,69 @@
+K863 J3j: work33\census_v68x.json vs work30\census_v70.json, the pieces whose pair holds c
+census rows: 73 in A, 20 in B, 20 in both: 6 equal, 14 differ; only in A 53, only in B 0
+  differ: bc:J0-2bc: badness,dist_max_b3_u,dist_max_frame_u,dist_max_u,dist_mean_b3_u,dist_mean_frame_u,dist_mean_u,dist_words_u,extra,facet,int_dk_max,kind,kmax_p95,len_u,peak_at_u,peak_dkds_u,peak_ratio,prm,ref_info,seams,solve,src,which,wobble
+  differ: bc:tail0c: kmax_p95
+  differ: cursive:J0-2cu: kmax_p95
+  differ: cursive:lead0c: kmax_p95
+  differ: ice jet even:J0-2ic: kmax_p95
+  differ: ice jet even:J2-4ce: kmax_p95
+  differ: quick brown fox:J4-6ic: kmax_p95
+  differ: quick brown fox:J6-8ck: kmax_p95
+  differ: vc:J0-2vc: badness,dist_max_b3_u,dist_max_frame_u,dist_max_u,dist_mean_b3_u,dist_mean_frame_u,dist_mean_u,dist_words_u,extra,facet,int_dk_max,kind,kmax_p95,len_u,peak_at_u,peak_dkds_u,peak_ratio,prm,ref_info,seams,solve,src,which,wobble
+  differ: vc:tail0c: kmax_p95
+  differ: wc:J0-2wc: badness,dist_max_b3_u,dist_max_frame_u,dist_max_u,dist_mean_b3_u,dist_mean_frame_u,dist_mean_u,dist_words_u,extra,facet,int_dk_max,kind,kmax_p95,len_u,peak_at_u,peak_dkds_u,peak_ratio,prm,ref_info,seams,solve,src,which,wobble
+  differ: wc:tail0c: kmax_p95
+  differ: which:J4-6ic: kmax_p95
+  differ: which:J6-8ch: kmax_p95
+  only in A: ca:J0-2ca
+  only in A: ca:lead0c
+  only in A: cb:J0-2cb
+  only in A: cb:lead0c
+  only in A: cc:J0-2cc
+  only in A: cc:lead0c
+  only in A: cc:tail0c
+  only in A: cd:J0-2cd
+  only in A: cd:lead0c
+  only in A: ce:J0-2ce
+  only in A: ce:lead0c
+  only in A: cf:J0-2cf
+  only in A: cf:lead0c
+  only in A: cg:J0-2cg
+  only in A: cg:lead0c
+  only in A: ch:J0-2ch
+  only in A: ch:lead0c
+  only in A: ci:J0-2ci
+  only in A: ci:lead0c
+  only in A: cj:J0-2cj
+  only in A: cj:lead0c
+  only in A: ck:J0-2ck
+  only in A: ck:lead0c
+  only in A: cl:J0-2cl
+  only in A: cl:lead0c
+  only in A: cm:J0-2cm
+  only in A: cm:lead0c
+  only in A: cn:J0-2cn
+  only in A: cn:lead0c
+  only in A: co:J0-2co
+  only in A: co:lead0c
+  only in A: cp:J0-2cp
+  only in A: cp:lead0c
+  only in A: cq:J0-2cq
+  only in A: cq:lead0c
+  only in A: cr:J0-2cr
+  only in A: cr:lead0c
+  only in A: cs:J0-2cs
+  only in A: cs:lead0c
+  only in A: ct:J0-2ct
+  only in A: ct:lead0c
+  only in A: cu:J0-2cu
+  only in A: cu:lead0c
+  only in A: cv:J0-2cv
+  only in A: cv:lead0c
+  only in A: cw:J0-2cw
+  only in A: cw:lead0c
+  only in A: cx:J0-2cx
+  only in A: cx:lead0c
+  only in A: cy:J0-2cy
+  only in A: cy:lead0c
+  only in A: cz:J0-2cz
+  only in A: cz:lead0c
