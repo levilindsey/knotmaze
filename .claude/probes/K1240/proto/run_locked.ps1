@@ -10,7 +10,7 @@ $worktree = (Resolve-Path (Join-Path $PSScriptRoot '..\..\..\..')).Path
 $top = (& git -C $worktree rev-parse --show-toplevel).Trim()
 if ((($top -replace '/', '\').ToLower()) -ne ($worktree.TrimEnd('\').ToLower())) { throw "toplevel $top is not $worktree" }
 $lock = Join-Path $env:TEMP 'claude-perf.lock'
-$owner = 'K1240-S1'
+$owner = 'K1240-S2'
 $deadline = (Get-Date).AddMinutes($MaxWaitMin)
 while (Test-Path $lock) {
   $age = ((Get-Date) - (Get-Item $lock).LastWriteTime).TotalMinutes

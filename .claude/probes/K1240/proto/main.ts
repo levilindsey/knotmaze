@@ -94,7 +94,7 @@ async function main(): Promise<void> {
     const ink = parseColor(scene.look.ink);
     const paper = parseColor(scene.look.paper);
     const ppd = scene.camera.pxPerUnit * 2;
-    let inOk = 0; let outOk = 0; let tot = 0;
+    let inOk = 0; let outOk = 0; let tot = 0; const misses: string[] = [];
     for (const p of table.pieces) {
       const np = p.pts.length / 2;
       for (let i = 0; i < np; i += 3) {
@@ -106,13 +106,13 @@ async function main(): Promise<void> {
         dx /= l; dy /= l;
         tot++;
         const inw = Math.min(table.W * 0.5, 1.2 / ppd);
-        if (nearCol(readAt(x + dx * inw, y + dy * inw), ink, 4)) inOk++;
+        const inPass = nearCol(readAt(x + dx * inw, y + dy * inw), ink, 4); if (inPass) inOk++;
         const outw = 1.6 / ppd;
         const oc = readAt(x - dx * outw, y - dy * outw);
-        if (!nearCol(oc, ink, 4) || nearCol(oc, paper, 4)) outOk++;
+        const outPass = !nearCol(oc, ink, 4) || nearCol(oc, paper, 4); if (outPass) outOk++; if ((!inPass || !outPass) && misses.length < 20) misses.push(p.kind + " ch" + p.chain + " at " + x.toFixed(1) + "," + y.toFixed(1) + " in=" + inPass + " out=" + outPass);
       }
     }
-    tests.borderBand = { inOk, outOk, total: tot };
+    tests.borderBand = { inOk, outOk, total: tot, misses };
     say(`TEST border band: inside ${inOk}/${tot}, outside-not-ink ${outOk}/${tot} ${inOk === tot && outOk === tot ? "PASS" : "CHECK"}`);
   }
   // Fill edge on the outline: just inside a piece point is fill, and the

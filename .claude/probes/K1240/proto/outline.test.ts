@@ -143,5 +143,98 @@ function loopArea(pts: number[]): number {
   ok(worst < 1e-9, `fill edges on outline: worst vertex distance ${worst}`);
 }
 
+// 5. A closed eye: two crossings of one pair; the eye's middle is paper.
+{
+  const t = buildOutline(scene({
+    chains: [
+      { id: 0, closed: false, pts: [0, 0, 10, 0] },
+      { id: 1, closed: false, pts: [3, -3, 3, 3, 7, 3, 7, -3] },
+    ],
+    crossings: [
+      { a: { chain: 0, s: 3 }, b: { chain: 1, s: 3 }, over: "a" },
+      { a: { chain: 0, s: 7 }, b: { chain: 1, s: 13 }, over: "b" },
+    ],
+    deadEnds: [{ chain: 0, s: 0 }, { chain: 0, s: 10 }, { chain: 1, s: 0 }, { chain: 1, s: 16 }],
+  }));
+  ok(t.cuts.length >= 4, `closed eye: cuts at both crossings (${t.cuts.length})`);
+  ok(t.diagnostics.some((d) => d.includes("eyes")), `closed eye: eye counted (${t.diagnostics.filter((d) => d.includes("eyes")).join("")})`);
+  const inAnyFace = (x: number, y: number): boolean => {
+    for (const f of t.faces) {
+      let inside = false;
+      const n = f.pts.length / 2;
+      for (let i = 0, j = n - 1; i < n; j = i++) {
+        const xi = f.pts[2 * i]; const yi = f.pts[2 * i + 1];
+        const xj = f.pts[2 * j]; const yj = f.pts[2 * j + 1];
+        if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
+      }
+      if (inside) return true;
+    }
+    return false;
+  };
+  ok(!inAnyFace(5, 1.5), "closed eye: the eye's middle is paper (no face covers it)");
+  ok(inAnyFace(5, 0), "closed eye: chain 0's middle is filled");
+}
+
+// 6. A Y junction: three end arms, three round corners, one polygon.
+{
+  const t = buildOutline(scene({
+    chains: [
+      { id: 0, closed: false, pts: [5, 5, 5, 0] },
+      { id: 1, closed: false, pts: [5, 5, 9, 8] },
+      { id: 2, closed: false, pts: [5, 5, 1, 8] },
+    ],
+    junctions: [{
+      id: "jY", c: [5, 5],
+      arms: [
+        { chain: 0, s: 0, dir: 1, kind: "end" },
+        { chain: 1, s: 0, dir: 1, kind: "end" },
+        { chain: 2, s: 0, dir: 1, kind: "end" },
+      ],
+      corners: [{ style: "round", pinned: false }, { style: "round", pinned: false }, { style: "round", pinned: false }],
+    }],
+    deadEnds: [{ chain: 0, s: 5 }, { chain: 1, s: 5 }, { chain: 2, s: 5 }],
+  }));
+  ok(t.corners.filter((c) => c.ok).length === 3, `Y: three corners solved (${t.corners.map((c) => `${c.ok}/${c.why ?? ""}`).join(" ")})`);
+  ok(t.pieces.filter((p) => p.kind === "arc").length === 3, `Y: three arc pieces (${t.pieces.filter((p) => p.kind === "arc").length})`);
+  const jFaces = t.faces.filter((f) => Math.hypot(f.sample[0] - 5, f.sample[1] - 5) < 0.1);
+  ok(jFaces.length === 1, `Y: one junction face at the centre (${jFaces.length})`);
+}
+
+// 7. A fold: a hairpin tighter than h builds without a self-crossing run.
+{
+  const t = buildOutline(scene({
+    chains: [{ id: 0, closed: false, pts: [0, 0, 5, 0, 5, 0.4, 0, 0.4] }],
+    deadEnds: [{ chain: 0, s: 0 }, { chain: 0, s: 10.4 }],
+  }));
+  ok(t.pieces.length > 0, `fold: pieces built (${t.pieces.length})`);
+  // No run piece crosses itself (segment pairs of one piece, non-adjacent).
+  let selfX = 0;
+  for (const p of t.pieces) {
+    if (p.kind !== "run") continue;
+    const n = p.pts.length / 2;
+    for (let i = 0; i + 1 < n; i++) for (let j = i + 2; j + 1 < n; j++) {
+      const ax = p.pts[2 * i]; const ay = p.pts[2 * i + 1]; const bx = p.pts[2 * i + 2]; const by = p.pts[2 * i + 3];
+      const cx = p.pts[2 * j]; const cy = p.pts[2 * j + 1]; const dx = p.pts[2 * j + 2]; const dy = p.pts[2 * j + 3];
+      const det = (bx - ax) * (dy - cy) - (by - ay) * (dx - cx);
+      if (Math.abs(det) < 1e-15) continue;
+      const tt = ((cx - ax) * (dy - cy) - (cy - ay) * (dx - cx)) / det;
+      const uu = ((cx - ax) * (by - ay) - (cy - ay) * (bx - ax)) / det;
+      if (tt > 1e-9 && tt < 1 - 1e-9 && uu > 1e-9 && uu < 1 - 1e-9) selfX++;
+    }
+  }
+  ok(selfX === 0, `fold: no run piece crosses itself (${selfX})`);
+}
+
+// 8. A dead end: a single open chain has two round caps.
+{
+  const t = buildOutline(scene({
+    chains: [{ id: 0, closed: false, pts: [0, 0, 6, 0] }],
+    deadEnds: [{ chain: 0, s: 0 }, { chain: 0, s: 6 }],
+  }));
+  const caps = t.pieces.filter((p) => p.kind === "cap");
+  ok(caps.length === 2, `dead end: two cap pieces (${caps.length})`);
+  ok(caps.every((p) => p.pts.length >= 6), "dead end: caps are arcs, not chords");
+}
+
 console.log(fails === 0 ? "ALL PASS" : `${fails} FAILURES`);
 process.exit(fails === 0 ? 0 : 1);

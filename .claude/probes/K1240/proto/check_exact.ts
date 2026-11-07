@@ -1,8 +1,23 @@
-// K1240 S1 Done 2: the prototype outline against form B's exposed outline,
-// both ways, in device pixels at dpr 2, outside F3's fade widths (a sample
-// whose form B evaluation has any fade bit set is excluded and counted).
-// This file is a check: it may use the reference (form_b.ts) — the builder
-// (outline.ts) may not and does not.
+// K1240 S2 Done 2: the structural outline against form B's exposed
+// outline, both ways, in device pixels at dpr 2, outside F3's fade
+// widths (a sample whose form B evaluation has any fade bit set is
+// excluded and counted).
+//
+// Fix (S2 brief): S1 dropped every sample where form B gives no
+// distance (Dexp = infinity). Those samples are, in the main, points
+// exactly on an outline: evalPoint's Dexp is only the label-top
+// surface's distance, and a point on its own chain's border is not
+// covering (d = h, not < h), so the label top is another surface (or
+// paper, top = -1) and its Dexp stays infinite even though the
+// point's own foot term inks at D = 0. Measured here instead by the
+// winning term: dA = min(|Dexp| if finite, |term.D| if a term won).
+// A point buried under a fully covering surface does not win with
+// its own term (its ink is multiplied by that surface's coverage),
+// so this does not excuse buried borders. Samples with neither are
+// measured against direction B's exposed candidate points, and any
+// still unmeasured are reported as dropped, never silently.
+// This file is a check: it may use the reference (form_b.ts); the
+// builder (outline.ts) may not and does not.
 //
 //   node scripts/run_node.mjs .claude/probes/K1240/proto/check_exact.ts [scene,...]
 //
@@ -11,7 +26,7 @@ import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildOutline, type SceneIn, type OutlineTable } from "./outline";
-import { FormB } from "../../../../src/render/field/form_b";
+import { FormB, TERM_NAMES } from "../../../../src/render/field/form_b";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const outDir = join(here, "..", "out");
@@ -74,10 +89,9 @@ function outlineDistance(table: OutlineTable, h: number): (x: number, y: number)
   };
 }
 
-const summary: string[] = [`# K1240 exact check ${new Date().toISOString()}`, "", "| scene | dir | n | p50 px | p99 px | max px | >1/8 | >1/2 | excl fade |", "|---|---|---|---|---|---|---|---|---|"];
+const summary: string[] = [`# K1240 exact check ${new Date().toISOString()}`, "", "| scene | dir | measured | dropped | p50 px | p99 px | max px | >1/8 | >1/2 | excl fade | inf/term/fallback |", "|---|---|---|---|---|---|---|---|---|---|---|"];
 for (const name of names) {
   const scene = JSON.parse(readFileSync(join(SCENE_DIR, `${name}.json`), "utf8")) as SceneIn & { look: SceneIn["look"] };
-  // As check #12's harness does (s4c/page.ts): S1a scenes predate ctrlArc.
   (scene.look as { ctrlArc?: number }).ctrlArc ??= 0.47;
   const t0 = performance.now();
   const table = buildOutline(scene);
@@ -85,7 +99,7 @@ for (const name of names) {
   const fb = new FormB(scene as never, { dpr: 2 });
   const ppd = scene.camera.pxPerUnit * 2;
   const nearName = (x: number, y: number): string => {
-    let best = "—"; let bd = Infinity;
+    let best = "-"; let bd = Infinity;
     for (const j of scene.junctions) {
       const d = Math.hypot(j.c[0] - x, j.c[1] - y);
       if (d < bd) { bd = d; best = `${j.id}@${(d / table.h).toFixed(1)}h`; }
@@ -93,14 +107,38 @@ for (const name of names) {
     return best;
   };
 
-  // Direction A: our outline samples -> form B's Dexp.
+  // Least |Dexp| (device px) of any surface whose ink still shows at
+  // the point: its term distance after higher-key surfaces' coverage.
+  const visibleDink = (x: number, y: number): number => {
+    const buf: any[] = [];
+    (fb as any).pieces(x, y, buf);
+    const surfIds: number[] = [];
+    for (const pc of buf) if (!surfIds.includes(pc.surf)) surfIds.push(pc.surf);
+    for (const ci of (fb as any).cornersNear(x, y)) { const g = fb.corners[ci].g; if (!surfIds.includes(g)) surfIds.push(g); }
+    const entries = surfIds.map((s) => {
+      const io = (fb as any).inkOf(s, x, y, buf);
+      let key = -Infinity;
+      for (const pc of buf) if (pc.surf === s && pc.d < fb.h + fb.aa) key = Math.max(key, pc.key);
+      return { io, key };
+    }).sort((a, b) => b.key - a.key);
+    let T = 1; let best = Infinity;
+    for (const e of entries) {
+      if (Number.isFinite(e.io.Dexp) && T * e.io.v > 0.05) best = Math.min(best, Math.abs(e.io.Dexp) * ppd);
+      T *= 1 - e.io.a;
+      if (!(T > 0)) break;
+    }
+    return best;
+  };
+
+  // Direction A: our outline samples -> form B.
   const dsA: number[] = [];
   const spotsA: Spot[] = [];
-  let exclA = 0; let infA = 0;
+  let exclA = 0; let infA = 0; let termA = 0;
+  const infCats = new Map<string, number>();
+  const unmeasuredA: { x: number; y: number; what: string }[] = [];
   for (const p of table.pieces) {
     const np = p.pts.length / 2;
     for (let i = 0; i < np; i++) {
-      // Vertices, plus midpoints of segments longer than 4 device px.
       const cand: [number, number][] = [[p.pts[2 * i], p.pts[2 * i + 1]]];
       if (i + 1 < np) {
         const mx = (p.pts[2 * i] + p.pts[2 * i + 2]) / 2; const my = (p.pts[2 * i + 1] + p.pts[2 * i + 3]) / 2;
@@ -109,12 +147,23 @@ for (const name of names) {
       for (const [x, y] of cand) {
         const ev = fb.evalPoint(x, y);
         if (ev.fade !== 0) { exclA++; continue; }
-        if (!Number.isFinite(ev.Dexp)) { infA++; continue; }
-        const d = Math.abs(ev.Dexp) * ppd;
-        dsA.push(d);
-        if (d > 1 / 8) {
-          spotsA.push({ d, x, y, what: `${p.kind} ch${p.chain} side${p.side} s=${p.s0.toFixed(2)}`, near: nearName(x, y) });
+        const dDexp = Number.isFinite(ev.Dexp) ? Math.abs(ev.Dexp) * ppd : Infinity;
+        if (!Number.isFinite(ev.Dexp)) {
+          infA++;
+          const cat = ev.term ? `${TERM_NAMES[ev.term.kind] ?? ev.term.kind}:${ev.term.chain === p.chain ? "own" : "other"}:top${ev.top < 0 ? "Paper" : ev.top >= (1 << 20) ? "Own" : "Group"}` : `no-term:top${ev.top < 0 ? "Paper" : ev.top >= (1 << 20) ? "Own" : "Group"}`;
+          infCats.set(cat, (infCats.get(cat) ?? 0) + 1);
         }
+        const dTerm = ev.term ? Math.abs(ev.term.D) * ppd : Infinity;
+        const dInk = visibleDink(x, y);
+        // The winning term is a third candidate: at a tangent point
+        // form B's Dexp can miss its own endpoint disc (its coverage
+        // there is a hair under 1/2, and its wedge test reads rounding),
+        // while its winning term is that endpoint at D ~ 0.
+        const d = Math.min(dInk, dDexp, dTerm);
+        if (!Number.isFinite(d)) { unmeasuredA.push({ x, y, what: `${p.kind} ch${p.chain} side${p.side} s=${p.s0.toFixed(2)}` }); continue; }
+        if (!Number.isFinite(ev.Dexp)) termA++;
+        dsA.push(d);
+        if (d > 1 / 8) spotsA.push({ d, x, y, what: `${p.kind} ch${p.chain} side${p.side} s=${p.s0.toFixed(2)}`, near: nearName(x, y) });
       }
     }
   }
@@ -124,13 +173,18 @@ for (const name of names) {
   const distOurs = outlineDistance(table, table.h);
   const dsB: number[] = [];
   const spotsB: Spot[] = [];
-  let exclB = 0; let buriedB = 0;
+  let exclB = 0; let buriedB = 0; let noOutlineB = 0;
+  const exposedPts: [number, number][] = [];
   const tryCand = (x: number, y: number, what: string): void => {
     const ev = fb.evalPoint(x, y);
     if (ev.fade !== 0) { exclB++; return; }
-    if (!Number.isFinite(ev.Dexp) || Math.abs(ev.Dexp) * ppd > 1) { buriedB++; return; }
+    // On a visible outline, as direction A is measured: a candidate
+    // merely within 1 px of an outline (the old filter) is a buried
+    // border point near the covering outline, not an outline sample.
+    if (!(visibleDink(x, y) <= 0.25)) { buriedB++; return; }
+    exposedPts.push([x, y]);
     const d = distOurs(x, y) * ppd;
-    if (!Number.isFinite(d)) return;
+    if (!Number.isFinite(d)) { noOutlineB++; return; }
     dsB.push(d);
     if (d > 1 / 8) spotsB.push({ d, x, y, what, near: nearName(x, y) });
   };
@@ -177,21 +231,49 @@ for (const name of names) {
   }
   spotsB.sort((a, b) => b.d - a.d);
 
+  // Fallback for A's unmeasured samples: nearest exposed B candidate.
+  let fallbackA = 0; let droppedA = 0;
+  if (unmeasuredA.length && exposedPts.length) {
+    const cellB = 0.5;
+    const gridB = new Map<string, [number, number][]>();
+    for (const pt of exposedPts) {
+      const k = `${Math.floor(pt[0] / cellB)},${Math.floor(pt[1] / cellB)}`;
+      const l = gridB.get(k) ?? [];
+      l.push(pt);
+      gridB.set(k, l);
+    }
+    for (const u of unmeasuredA) {
+      let best = Infinity;
+      for (let ring = 0; ring <= 10 && best === Infinity; ring++) {
+        const cx = Math.floor(u.x / cellB); const cy = Math.floor(u.y / cellB);
+        for (let ix = cx - ring; ix <= cx + ring; ix++) for (let iy = cy - ring; iy <= cy + ring; iy++) {
+          if (ring > 0 && Math.max(Math.abs(ix - cx), Math.abs(iy - cy)) !== ring) continue;
+          for (const pt of gridB.get(`${ix},${iy}`) ?? []) best = Math.min(best, Math.hypot(pt[0] - u.x, pt[1] - u.y));
+        }
+        if (best !== Infinity && ring > 0) break;
+      }
+      if (Number.isFinite(best)) { fallbackA++; const d = best * ppd; dsA.push(d); if (d > 1 / 8) spotsA.push({ d, x: u.x, y: u.y, what: `${u.what} (fallback)`, near: nearName(u.x, u.y) }); }
+      else droppedA++;
+    }
+    spotsA.sort((a, b) => b.d - a.d);
+  } else droppedA = unmeasuredA.length;
+
   const sA = stats(dsA);
   const sB = stats(dsB);
+  const droppedB = exclB + buriedB + noOutlineB;
   const rec = {
     scene: name, buildMs, ppd, hWorld: table.h,
     cornersOurs: { ok: table.corners.filter((c) => c.ok).length, total: table.corners.length },
     cornersFormB: fb.corners.length,
     pieces: table.pieces.length, regions: table.regions.length, faces: table.faces.length,
-    A: { ...sA, exclFade: exclA, inf: infA, worst: spotsA.slice(0, 24) },
-    B: { ...sB, exclFade: exclB, buried: buriedB, worst: spotsB.slice(0, 24) },
+    A: { ...sA, measured: dsA.length, exclFade: exclA, inf: infA, termMeasured: termA, fallbackMeasured: fallbackA, droppedUnmeasured: droppedA, infCategories: Object.fromEntries([...infCats.entries()].sort((a, b) => b[1] - a[1])), worst: spotsA.slice(0, 24) },
+    B: { ...sB, measured: dsB.length, exclFade: exclB, buried: buriedB, noOutline: noOutlineB, dropped: droppedB, worst: spotsB.slice(0, 24) },
     diagnostics: table.diagnostics,
   };
   writeFileSync(join(outDir, `exact_${name}.json`), JSON.stringify(rec, null, 1));
-  summary.push(`| ${name} | ours->B | ${sA.n} | ${sA.p50.toFixed(3)} | ${sA.p99.toFixed(3)} | ${sA.max.toFixed(3)} | ${sA.over8} | ${sA.over2} | ${exclA} |`);
-  summary.push(`| ${name} | B->ours | ${sB.n} | ${sB.p50.toFixed(3)} | ${sB.p99.toFixed(3)} | ${sB.max.toFixed(3)} | ${sB.over8} | ${sB.over2} | ${exclB} |`);
-  console.log(`${name}: build ${buildMs.toFixed(0)}ms | A p99=${sA.p99.toFixed(3)} max=${sA.max.toFixed(3)} (n=${sA.n}, excl=${exclA}) | B p99=${sB.p99.toFixed(3)} max=${sB.max.toFixed(3)} (n=${sB.n}, excl=${exclB}, buried=${buriedB}) | corners ours ${rec.cornersOurs.ok}/${rec.cornersOurs.total} formB ${fb.corners.length}`);
+  summary.push(`| ${name} | ours->B | ${sA.n} | ${exclA + droppedA} | ${sA.p50.toFixed(3)} | ${sA.p99.toFixed(3)} | ${sA.max.toFixed(3)} | ${sA.over8} | ${sA.over2} | ${exclA} | ${infA}/${termA}/${fallbackA} |`);
+  summary.push(`| ${name} | B->ours | ${sB.n} | ${droppedB} | ${sB.p50.toFixed(3)} | ${sB.p99.toFixed(3)} | ${sB.max.toFixed(3)} | ${sB.over8} | ${sB.over2} | ${exclB} | buried ${buriedB} |`);
+  console.log(`${name}: build ${buildMs.toFixed(0)}ms | A p99=${sA.p99.toFixed(3)} max=${sA.max.toFixed(3)} (measured=${sA.n}, excl=${exclA}, inf=${infA}, term=${termA}, fallback=${fallbackA}, dropped=${droppedA}) | B p99=${sB.p99.toFixed(3)} max=${sB.max.toFixed(3)} (measured=${sB.n}, excl=${exclB}, buried=${buriedB}) | corners ours ${rec.cornersOurs.ok}/${rec.cornersOurs.total} formB ${fb.corners.length}`);
 }
 writeFileSync(join(outDir, "exact_summary.md"), summary.join("\n") + "\n");
 console.log("wrote exact_summary.md");
