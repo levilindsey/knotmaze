@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1249.
+Next free ID: K1250.
 
 ## Waiting on Levi
 
@@ -522,12 +522,12 @@ Next free ID: K1249.
 - **K1240** · One outline for both looks and every junction consumer (Levi's sketch, 2026-11-06): offset-polyline borders,
   cuts and corner arcs in closed form from each frame; the border look strokes it, the filled look fills it. S1: a clean
   prototype beside the app, checked against form B and timed (Levi: "without all the tech debt"); notes.
-  - owner: agent `a9ed712e0723a6416` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (Opus 5.5, started 2026-11-07 12:11, 2 h cap ~14:11)
-  - branch: `wip/k1240-s3f`, worktree `.claude/worktrees/muse-k1240-s1`; last commit: `3f0a9f03`
-  - evidence: .claude/probes/K1240/proto/ (tracked builder and checks, s3_* to s3f_*, the s3f_claude_* checks and diagnostics, cmp_*.mjs); untracked in the main checkout: .claude/probes/K1240/s1_out/ to s3f_out/ (s3f_out/ holds both Claude runs' checks_final.txt and checks_final4.txt, logs, crops (capw5/), bench_final4a/b.json, sweep.json and page results, and muse/ Muse's partial run); the worktree writes .claude/probes/K1240/out/s3f/
-  - next: S3f round 3: the stub corners (user_tw42 j28 j29 j32 j61, ring j4 j5 j7 j16) paired from the diagram alone, then a window for the tight twist's nearest approach (fat and ring at 0.5h), then the still rows left (def B, g41_ring_tw42 A, g41_user_tw42 A); it stops at 2 h, at every Done, or at 96% of Claude's week. The second run (3f0a9f03, verified by Claude): frame() makes no choice (the layer choice and the twist walk are gone); Done 1 and 4 hold; still fails 3 rows, moved 7 at 0.1h and 6 of 6 at 0.5h (the brief's Handoff 2). Then K1247, S4, Levi's lane decision, continuity and the Pixel p95
+  - owner: nobody since 2026-11-07 13:06: S3f run 3 stopped at the coordinator's 13:00 wrap-up; Claude's week stands at 96% against Levi's 97% line, so nothing more starts until Muse's quota returns (2026-11-08 16:00 PT) or Claude's week resets (2026-11-09 11:00 PT)
+  - branch: mainline; last commit: `7e54021f`
+  - evidence: .claude/probes/K1240/proto/ (tracked builder and checks, s3_* to s3f_*, the s3f_claude_* checks and diagnostics, s3f_exact_s3dbase.ts, cmp_*.mjs); untracked in the main checkout: .claude/probes/K1240/s1_out/ to s3f_out/ (s3f_out/ holds the three Claude runs' checks_final*.txt (final6 the last) and logs, crops (capw5/), bench_final4a/b and bench_final6a/b.json, sweep.json, the consistent rows (move*c_, fresh0.5c_, s3dfresh*), Claude's re-run (cverify3_*), page results, and muse/ Muse's partial run); the worktree writes .claude/probes/K1240/out/s3f/
+  - next: S3f round 4 from Handoff 3 and the coordinator's decisions under it (the moved check on the consistent S'; one baseline, S3d's code through the same harness, on which Done 2 fails 5 still rows and Done 3 fails 6 at 0.1h and def B at 0.5h): def B's sharp end-arm corners (T j3 j1 j151), g41_ring_tw42 j12's reflex corner (a round join that meets the fillet continuously at pi), the unchecked stub corners (ring j4 j5 j7 j16, user_tw42 j29 j61), muse_default_tw at 0.1h. Run 3 (7e54021f, verified by Claude): a corner takes its sides from the diagram; Done 1 and 4 hold; on S3's gate the still check fails 2 rows. Then K1247, S4, Levi's lane decision, continuity and the Pixel p95
   - brief: `docs/design/K1240_s3f_fixed_pieces.md`
-  - env: from the worktree, vite on a copy of .claude/probes/K1040/vite.private-cache.config.ts, ports 5980-5989
+  - env: from the worktree, vite on a copy of .claude/probes/K1040/vite.private-cache.config.ts, ports 5980-5989; S3d's code for the baselines is proto/outline_s3d.ts (untracked), recreated by the one-line command in s3f_exact_s3dbase.ts's header
 
 ## Next, in order
 
@@ -2032,6 +2032,9 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K1243** · One tested probe toolkit in `scripts/probe/` (crop, sheets, compare, perf lock, scene loading,
   the form-B reference) that briefs point at, instead of per-run copies (master tracks seven `crop.mjs`;
   K1241); plus a sweep of worktrees whose items have closed (about 40 on disk, 2026-11-06).
+- **K1249** · Cursive in the app: one glyph source in src/ (J3M's alphabet as data, one join rule, Hershey only
+  for missing characters), with the K863 kit's checks as tracked tests. None of the 152 cursive commits since
+  10-25 touches src/. Proposed to Levi 2026-11-07; after K1236 (notes).
 
 ## Done
 

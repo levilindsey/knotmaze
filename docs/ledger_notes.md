@@ -4098,3 +4098,21 @@ S3e's frame() rebuilds the whole outline from positions every frame. Claude's re
 ## K1248 (2026-11-07, S3e's numbers)
 
 Claude's re-run on 72a27c50: structure(S) deep-equals structure(S') in all 15 cases and every junction is cyclic; moved = fresh exactly (maxEnd 0); rigid 4.809e-9; page tests within tolerance. Still 19/24 (5 A rows: muse_hash, muse_default_tw, g41_def_tw64, g41_ring_tw64, g41_user_tw64); moved 10/24 at 0.1h and 4/6 at 0.5h (def A and B, ring A, fat A). The piece list changes with the frame (`proto/s3e_claude_pieces.ts`): keys differ on 10 of 12 scenes at 0.1h; at 0.5h def 4373 -> 4330, ring 923 -> 854, fat 3436 -> 2828; about 30% of pieces are degenerate (def 1293 of 4373). Sweep to 0.5h: largest piece motion per step 15.38 (def), 4.27 (ring), 5.50 (fat), particles at most 0.010. S3f (`docs/design/K1240_s3f_fixed_pieces.md`) has structure() emit the piece list from the diagram.
+
+## K1249 (2026-11-07, the architecture answer)
+
+Claude's answer to Levi's tech-debt question (2026-11-07) proposed this item. It rests on a Sonnet
+survey of the main checkout, with its numbers re-checked by Claude.
+
+- **The app:** it still draws the Hershey letters (`src/core/text_graph.ts`, last changed
+  2026-10-22). The authored glyph set in `src/core/glyphs` sits behind `#glyphs2` and was last
+  changed 2026-10-24.
+- **The traced alphabet** (J3M) exists only in `.claude/probes/K863/trace`: 20,194 files, 6.2 GB.
+- **The commits:** since 2026-10-25, 152 commits name cursive, K863 or K1112, and none of them
+  touches `src/`.
+- **K863's next step** makes J3M the kit's build, not the app's.
+
+The proposal is one glyph source in `src/`. It holds the alphabet as data and one join rule, and
+keeps Hershey only for characters the alphabet lacks. The kit's checks (hooks, spikes, facets,
+locality, census) become tracked tests. It starts after Levi answers K1236. It is independent of
+K1240's outline.

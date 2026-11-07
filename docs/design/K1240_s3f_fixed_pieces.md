@@ -715,3 +715,42 @@ checkout's root:
   [scene,...]`.
 - One junction's arms, corners and nearby crossings: `node scripts/run_node.mjs
   .claude/probes/K1240/proto/s3f_claude_j.ts <scene> <ji,...>`.
+
+## The coordinator's decisions after Handoff 3 (2026-11-07)
+
+Claude re-ran Handoff 3 on 7e54021f, its rebased tip. The check log matches `checks_final6.txt`
+line for line, and the page tests are within tolerance. The consistent S' at 0.5h gives the table
+above. S3d's code through the harness gives S3d's def baseline (A 41, B 34), and npm test passes.
+These decisions settle Handoff 3's ledger items 1 and 4. The next run starts from them.
+
+1. **The moved check uses the consistent S'** (Handoff 3's option a).
+   - The app's physics re-projects every crossing each substep. So a stale S', whose passes land
+     up to 5h apart, is a scene the outline never receives.
+   - Option b would put a choice made from positions, the nearest intersection, back into frame().
+   - The next run makes `--consistent` the default of `s3f_exact.ts` and of the checks script.
+     It also drops the stale S'.
+2. **One baseline: S3d's code through the same harness** (`s3f_exact_s3dbase.ts`).
+   - It applies to the still rows and the moved ones alike. It is the best result measured, and it
+     re-runs on any S'. The tolerances are unchanged.
+   - Done 2 then fails 5 rows (over2, S3d → ours):
+     - muse_default_tw A 5 → 8
+     - def B 6 → 11
+     - user_tw42.lightpaper A 5 → 8
+     - g41_ring_tw42 A 3 → 6
+     - g41_user_tw42 A 5 → 8
+   - Done 3 fails 6 rows at 0.1h: muse_default_tw A 4 → 11 and B 20 → 25, def B 8 → 12,
+     user_tw42.lightpaper A 6 → 9, g41_ring_tw42 A 3 → 6 and g41_user_tw42 A 5 → 8. At 0.5h it
+     fails 1 row: def B 6 → 9.
+   - The next run points `s3f_claude_checks.ps1` at these rows.
+3. **f5a24dd8 stands.** Every real junction lists its arms counter-clockwise (reversed=0 in all 15
+   cases), and the T fixture now does too. Its assertions are unchanged.
+4. **The next run, in order:**
+   1. def B's sharp end-arm corners: the T junctions j3, j1 and j151, where form B fills the
+      crotch.
+   2. g41_ring_tw42 j12's reflex corner: a convex round join of radius h about the junction's
+      centre. Where a corner's sweep passes π, the round join and the fillet must meet
+      continuously, with no jump.
+   3. The unchecked stub corners: ring j4, j5, j7 and j16, and user_tw42.lightpaper j29 and j61.
+   4. muse_default_tw at 0.1h.
+
+   K1247, the cost stage, then starts from this frame().
