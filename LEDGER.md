@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1244.
+Next free ID: K1245.
 
 ## Waiting on Levi
 
@@ -293,6 +293,8 @@ Next free ID: K1244.
   `docs/ledger_notes.md`)
 - **K1236** · Cursive J3m: do b, v and w's new cusp exits, and o's and f's new word-end tails, read right?
   (`docs/asks/K1236.md`; K863 J3m, 5602f487)
+- **K1244** · Does a pulse now cross a junction as one soft glow, as at 7474d09b (K1211 S6, live)? Card
+  `docs/asks/K1244.md`; picture `.claude/probes/K1211/out6/card_glow.png`
 
 ## In progress
 
@@ -302,8 +304,8 @@ Next free ID: K1244.
   top row of K1190's sheets as its goal, every technical call its own, no numeric gate.
   - owner: nobody since 2026-11-05 19:54 (merged; agent `a057b2be255c4a410` of claude session c18e2f02-e64f-41ba-9af0-2dbd583358e2)
   - branch: mainline; last commit: `13aab452`
-  - evidence: .claude/probes/K1211/out6/ in its worktree (per spot: 7474d09b | master | branch); K1190's sheets in .claude/probes/K1139/out/s4/sheets/
-  - next: Levi sees S6's sheets (.claude/probes/K1211/out6/sheets/: rows 7474d09b, master before S6, S6, then at rest); the edges 7474d09b also draws go with K1218 S2
+  - evidence: .claude/probes/K1211/out6/ in the main checkout: sheets_today/ (per spot, rows 7474d09b, master before S6, S6, today f21bb496, then at rest), today/ shots, card_glow.png; K1190's sheets in .claude/probes/K1139/out/s4/sheets/
+  - next: Levi answers K1244 (docs/asks/K1244.md, sent 2026-11-06). On Keep it, pulses and the gold path are done and fire and collapse (K1210) are next. The edges 7474d09b also draws went to K1218 (Done e4075024); what is left of them is K1227-K1231's
   - brief: `docs/design/K1211_s6_one_glow.md`
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
@@ -745,8 +747,9 @@ Every other item below waits on the trigger it names.
 - **K1176** · Remove the merged, clean agent worktrees (50 on 11-03; 3 hold closed items' WIP, K372, K578 and
   K441's old briefs: ask Levi) after K1058, since a removal can empty node_modules. First copy `k868-s3a`'s
   `.claude/probes/S3a/` scripts to main (its seq13 recordings already are). Also delete the empty dirs that removed Muse
-  worktrees leave while Paseo holds them as its cwd (muse-k1220-s3, -k1040-s4a2, -k1228, -k1220-s4, -k1040-s4c, -k1239,
-  -k1040-s4d, -k1220-s5): after a Paseo restart with nothing running.
+  worktrees leave while Paseo holds them as its cwd (muse-k1220-s3, -k1040-s4a2, -k1228, -k1220-s4, -k1040-s4c,
+  -k1040-s4d, -k1220-s5; -k1239 still holds a whole tree, its orphan vite stopped 11-06): after a Paseo restart with
+  nothing running.
 - **K1180** · Form B: let a round's feet run past an arm's root onto the neighbouring arm, so no null band is
   left there (row 15's class: j124, r 1.967h, 0.274h after K1163's softer gate, ab7cad9a). K1179's spike ended
   with no rebuild, so this goes ahead on form B (review section 4).
