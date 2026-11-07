@@ -85,10 +85,12 @@ function loopArea(pts: number[]): number {
     ],
     junctions: [{
       id: "j0", c: [5, 0],
+      // S3f: listed by ascending angle, as the generator lists them; a
+      // corner faces the borders this order gives (0, pi/2, pi here).
       arms: [
-        { chain: 0, s: 5, dir: -1, kind: "through" },
-        { chain: 1, s: 0, dir: 1, kind: "end" },
         { chain: 0, s: 5, dir: 1, kind: "through" },
+        { chain: 1, s: 0, dir: 1, kind: "end" },
+        { chain: 0, s: 5, dir: -1, kind: "through" },
       ],
       corners: [{ style: "round", pinned: false }, { style: "round", pinned: false }, { style: "round", pinned: false }],
     }],
