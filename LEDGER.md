@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1246.
+Next free ID: K1248.
 
 ## Waiting on Levi
 
@@ -1720,6 +1720,18 @@ Every other item below waits on the trigger it names.
   performance (def median 396 ms vs 3 ms target); per-spot app sheets beside fbb/today look need a stable
   world-point camera; border-band outside misses on close parallel threads; eye depth-tie path exercised only
   by construction.
+- **K1246** · K1240 S3b Done 2: corner radius must follow the frame (gate recompute). S3b frame solves
+  cuts/V/tangents from the frame (cuts match fresh exactly, def max 0.0000), but r only scales by the frame
+  angle. Moved exact at 0.1h fails fresh tolerances on 10/12 scenes (def A over2 242 vs fresh 22; 132/386
+  corners |dq|>0.005 on def 0.1h). Fresh r is the builder's gate integral (margin/steep/cap/root over 32
+  growth nodes); recomputing per frame needs marginOf per node. Tried and reverted: direct Newton to q, wide
+  foot windows, endpoint-gate ratio correction. Evidence: .claude/probes/K1240/out/s3b/move0.1_exact_*.json vs
+  fresh0.1_exact_*.json; Handoff in docs/design/K1240_s3b_frame_follows.md.
+- **K1247** · K1240 S3b Done 3: frame median 12.9-15.0 ms on def (locked), target 3 ms. Locked bench via
+  run_locked_s3b.ps1 -Script s3b_bench.ts: def med 12.90/14.96 ms in two runs, p95 16-40 ms. Unlocked profile:
+  corners ~3.6, offsets ~2.2, setup ~1.4, crossingCuts ~1.2, regions ~0.9 ms. Corners are builder-fidelity
+  tracked growth; cheaper foot/radius schemes moved the exact p99 in every experiment. Evidence:
+  .claude/probes/K1240/out/s3b/s3_bench.json.
 
 ## Approved, to schedule (2026-10-11)
 
