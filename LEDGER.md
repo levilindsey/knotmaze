@@ -520,11 +520,11 @@ Next free ID: K1244.
 - **K1240** · One outline for both looks and every junction consumer (Levi's sketch, 2026-11-06): offset-polyline borders,
   cuts and corner arcs in closed form from each frame; the border look strokes it, the filled look fills it. S1: a clean
   prototype beside the app, checked against form B and timed (Levi: "without all the tech debt"); notes.
-  - owner: muse session 01a1b327-a2f8-7d11-9da3-310b6a569642 (Paseo 610a3e74), coordinated by claude session 09c7a672-a414-402a-97da-b3176839a2e5; started 2026-11-06 15:18, cap 2 h (~17:18)
-  - branch: detached worktree .claude/worktrees/muse-k1240-s1 (node_modules junctioned), pushes to master; last commit: `5994b8af`
-  - evidence: .claude/probes/K1240/proto/ (tracked source and tests), .claude/probes/K1240/out/ (untracked outputs)
-  - next: S1 to its Done; Claude checks its numbers against the primary records, views its sheets against K868's look and today's, removes the worktree, shows Levi. If S1 holds, Levi decides whether the seam lanes (K1040, K1220's forks, K1211's edges) start no new stages and consumers move onto the outline (K1242's notes). Then S2: continuity across frames on recorded drags, plucks and flow, and the Pixel's p95
-  - brief: `docs/design/K1240_s1_outline_proto.md`
+  - owner: muse session 01a1b389-374c-7663-aeeb-a0349249da93 (Paseo f4eddb16), coordinated by claude session 09c7a672-a414-402a-97da-b3176839a2e5; S2 started 2026-11-06 17:04, cap 2 h (~19:04)
+  - branch: detached worktree .claude/worktrees/muse-k1240-s1 (reused from S1, node_modules junctioned), pushes to master; last commit: `3ee999d5`
+  - evidence: .claude/probes/K1240/proto/ (tracked builder, tests, checks); .claude/probes/K1240/s1_out/ (S1 outputs, untracked: page_def_top.png, exact_*.json, bench.json, page_results.json); S2 writes .claude/probes/K1240/out/s2/ in the worktree
+  - next: S2 to its Done. Claude checks its numbers against the primary records (exact both ways with the Dexp=inf class measured, builder ms, page tests), views its sheets beside form B and today, shows Levi. S1 (fb17ee65) failed as built: a global split, face trace and sampled owners (the S2 brief, Why S2). If S2 holds, Levi decides whether the seam lanes (K1040, K1220 forks, K1211 edges) start no new stages and consumers move onto the outline (K1242 notes); then S3: continuity across frames on recorded drags, plucks and flow, and the Pixel p95
+  - brief: `docs/design/K1240_s2_structural_outline.md`
   - env: from the worktree, vite on a copy of .claude/probes/K1040/vite.private-cache.config.ts, ports 5980-5989
 
 ## Next, in order
