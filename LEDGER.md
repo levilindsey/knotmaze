@@ -522,11 +522,11 @@ Next free ID: K1246.
 - **K1240** · One outline for both looks and every junction consumer (Levi's sketch, 2026-11-06): offset-polyline borders,
   cuts and corner arcs in closed form from each frame; the border look strokes it, the filled look fills it. S1: a clean
   prototype beside the app, checked against form B and timed (Levi: "without all the tech debt"); notes.
-  - owner: muse session 01a1b389-374c-7663-aeeb-a0349249da93 (Paseo f4eddb16), coordinated by claude session 09c7a672-a414-402a-97da-b3176839a2e5; S2 started 2026-11-06 17:04, cap 2 h (~19:04)
-  - branch: detached worktree .claude/worktrees/muse-k1240-s1 (reused from S1, node_modules junctioned), pushes to master; last commit: `3ee999d5`
-  - evidence: .claude/probes/K1240/proto/ (tracked builder, tests, checks); .claude/probes/K1240/s1_out/ (S1 outputs, untracked: page_def_top.png, exact_*.json, bench.json, page_results.json); S2 writes .claude/probes/K1240/out/s2/ in the worktree
-  - next: S2 to its Done. Claude checks its numbers against the primary records (exact both ways with the Dexp=inf class measured, builder ms, page tests), views its sheets beside form B and today, shows Levi. S1 (fb17ee65) failed as built: a global split, face trace and sampled owners (the S2 brief, Why S2). If S2 holds, Levi decides whether the seam lanes (K1040, K1220 forks, K1211 edges) start no new stages and consumers move onto the outline (K1242 notes); then S3: continuity across frames on recorded drags, plucks and flow, and the Pixel p95
-  - brief: `docs/design/K1240_s2_structural_outline.md`
+  - owner: muse session 01a1b3c8-098a-7f63-8a0b-a6bdc10095f4 (Paseo 98c3f0fd), coordinated by claude session 09c7a672-a414-402a-97da-b3176839a2e5; S3 started 2026-11-06 18:13, cap 2 h (~20:13)
+  - branch: detached worktree .claude/worktrees/muse-k1240-s1 (reused since S1, node_modules junctioned), pushes to master; last commit: `3d29c94a`
+  - evidence: .claude/probes/K1240/proto/ (tracked builder, tests, checks, s2_sheets.ts); untracked: .claude/probes/K1240/s1_out/ (S1), .claude/probes/K1240/s2_out/ (S2: exact_*.json, exact_summary.md, bench.json, page_results.json, sheets/, Claude's overlays of S2 on form B and overlay.py); S3 writes .claude/probes/K1240/out/s3/ in the worktree
+  - next: S3 to its Done: structure once, frame per frame (closed form or bounded solves), the same output as S2, a moving-frame comparison, def frame median <= 3 ms. Claude checks its numbers against the primary records. S2 (36db0fb9) matches form B (ours-to-B p99 0.000 px on 10 of 12 scenes, B-to-ours 0.10-0.16 px; Claude's overlay of its nine def sheets: two specks at j34) but takes 74-2,945 ms per build (def 396), and stopped at 61 min with Done failing. Then S4: K1245's junction tails (L=0 arms, junction clusters). If S3 is cheap, Levi decides whether the seam lanes (K1040, K1220 forks, K1211 edges) start no new stages and consumers move onto the outline (K1242 notes); then continuity across frames on recorded drags, plucks and flow, and the Pixel p95
+  - brief: `docs/design/K1240_s3_outline_per_frame.md`
   - env: from the worktree, vite on a copy of .claude/probes/K1040/vite.private-cache.config.ts, ports 5980-5989
 
 ## Next, in order
