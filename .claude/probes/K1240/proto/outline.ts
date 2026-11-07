@@ -1696,6 +1696,8 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
   });
   const capCoverPi: Int16Array[] = capInfos.map((ci) => new Int16Array(Math.max(0, ci.arc.length - 1)).fill(-1));
   const capCoverS: Float32Array[] = capInfos.map((ci) => new Float32Array(Math.max(0, ci.arc.length - 1)));
+  const capCandPi: Int16Array[] = capInfos.map((ci) => new Int16Array(Math.max(0, ci.arc.length - 1) * 8).fill(-1));
+  const capCandS: Float32Array[] = capInfos.map((ci) => new Float32Array(Math.max(0, ci.arc.length - 1) * 8));
   for (let capIdx = 0; capIdx < capInfos.length; capIdx++) { const ci = capInfos[capIdx];
     const pi = ci.station.pi; let curStart = -1; let curEnd = -1;
     let cur: OutlinePiece | null = null;
@@ -1704,6 +1706,7 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
       const a = ci.arc[i]; const b = ci.arc[i + 1];
       const mx = (a.x + b.x) / 2; const my = (a.y + b.y) / 2;
       const covC = covering(mx, my, pi, ci.station.cS);
+      { const base8 = i * 8; let nC = 0; for (let w = 0; w < coverPickPi.length && nC < 8; w++) { capCandPi[capIdx][base8 + nC] = coverPickPi[w]; capCandS[capIdx][base8 + nC] = coverPickS[w]; nC++; } if (coverNearPi >= 0 && nC < 8 && !coverPickPi.includes(coverNearPi)) { capCandPi[capIdx][base8 + nC] = coverNearPi; capCandS[capIdx][base8 + nC] = coverNearS; } }
       if (covC) { if (coverPickPi.length > 0) { capCoverPi[capIdx][i] = coverPickPi[coverPickPi.length - 1]; capCoverS[capIdx][i] = coverPickS[coverPickS.length - 1]; } flush(); continue; }
       if (!cur) { curStart = i; cur = { kind: "cap", chain: pi, side: 0, s0: ci.station.cS, s1: ci.station.cS, pts: [a.x, a.y], cpts: [ci.cx, ci.cy], region: -1, corner: -1 }; }
       cur.pts.push(b.x, b.y);
@@ -1836,9 +1839,10 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
         const covPi2 = new Int16Array(nSeqSeg).fill(-1); const covS2 = new Float32Array(nSeqSeg);
         const covPi3 = new Int16Array(nSeqSeg).fill(-1); const covS3 = new Float32Array(nSeqSeg);
         const covPi4 = new Int16Array(nSeqSeg).fill(-1); const covS4 = new Float32Array(nSeqSeg);
+        const covByPi = new Int16Array(nSeqSeg).fill(-1); const covByS = new Float32Array(nSeqSeg);
         for (let j = 0; j < nSeqSeg; j++) {
           const fs = seqFull[j];
-          if (fs < ccB.pi.length) { covPi[j] = ccB.pi[fs]; covS[j] = ccB.s[fs]; covPi2[j] = ccB.pi2[fs]; covS2[j] = ccB.s2[fs]; covPi3[j] = ccB.pi3[fs]; covS3[j] = ccB.s3[fs]; covPi4[j] = ccB.pi4[fs]; covS4[j] = ccB.s4[fs]; }
+          if (fs < ccB.pi.length) { covPi[j] = ccB.pi[fs]; covS[j] = ccB.s[fs]; covPi2[j] = ccB.pi2[fs]; covS2[j] = ccB.s2[fs]; covPi3[j] = ccB.pi3[fs]; covS3[j] = ccB.s3[fs]; covPi4[j] = ccB.pi4[fs]; covS4[j] = ccB.s4[fs]; covByPi[j] = ccB.byPi[fs]; covByS[j] = ccB.byS[fs]; }
         }
         const fExp = new Uint8Array(Math.max(0, seqFull.length - 1));
         const fSegR = new Int32Array(Math.max(0, seqFull.length - 1));
@@ -1862,7 +1866,7 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
           kind: Uint8Array.from(P.kind), i1: Int32Array.from(P.i1), i2: Int32Array.from(P.i2), i3: Int32Array.from(P.i3), i4: Int32Array.from(P.i4),
           other: Int32Array.from(P.other), f: Float64Array.from(P.f), sOff: Float64Array.from(P.sOff), eye: Int32Array.from(P.eye), winS: Float64Array.from(P.win),
           baseSeq: Int32Array.from(baseSeq), seqPool: Int32Array.from(seqPool), seqFull: Int32Array.from(seqFull), idxOfFull, exposed: fExp, segRegion: fSegR, fullLen: B.pts.length, runs: Int32Array.from(runsArr),
-          coverPi: covPi, coverS: covS, coverPi2: covPi2, coverS2: covS2, coverPi3: covPi3, coverS3: covS3, coverPi4: covPi4, coverS4: covS4,
+          coverPi: covPi, coverS: covS, coverPi2: covPi2, coverS2: covS2, coverPi3: covPi3, coverS3: covS3, coverPi4: covPi4, coverS4: covS4, coverByPi: covByPi, coverByS: covByS,
         });
       });
     });
@@ -1908,6 +1912,16 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
         }
       });
     }
+    const capCands: { pi: Int16Array; k: Int32Array }[] = capInfos.map((ci, capIdx) => {
+      const nSeg = Math.max(0, ci.arc.length - 1);
+      const piA = new Int16Array(nSeg * 9).fill(-1); const kA = new Int32Array(nSeg * 9).fill(-1);
+      for (let i2 = 0; i2 < nSeg; i2++) {
+        const by = capCoverPi[capIdx][i2];
+        if (by >= 0 && by < polys.length) { piA[i2 * 9] = by; kA[i2 * 9] = segOfS(polys[by], capCoverS[capIdx][i2]).k; }
+        for (let w = 0; w < 8; w++) { const cp = capCandPi[capIdx][i2 * 8 + w]; if (cp < 0 || cp >= polys.length) continue; piA[i2 * 9 + 1 + w] = cp; kA[i2 * 9 + 1 + w] = segOfS(polys[cp], capCandS[capIdx][i2 * 8 + w]).k; }
+      }
+      return { pi: piA, k: kA };
+    });
     const capTransitions: { cap: number; pt: number; pi: number; k: number }[] = [];
     capInfos.forEach((ci, capIdx) => {
       const steps = ci.arc.length - 1;
@@ -1920,6 +1934,35 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
           if (cp < 0 || cp >= polys.length) continue;
           if (capTransitions.some((c) => c.cap === capIdx && c.pt === pt)) continue;
           capTransitions.push({ cap: capIdx, pt, pi: cp, k: segOfS(polys[cp], capCoverS[capIdx][seg]).k });
+        }
+      }
+    });
+    // Covered stretches inside intervals (not trimmed-only, not
+    // discarded): recorded so frame can re-test their middle segment
+    // against the recorded covering candidates on frame geometry.
+    const buried: { b: number; start: number; end: number; region: number; testSeg: number; testCorner: number }[] = [];
+    bordersOut.forEach((bs, b) => {
+      const pi = b >> 1; const bi = b & 1;
+      const byPi = coverCand[pi][bi].byPi;
+      const nSeg = bs.exposed.length;
+      let j = 0;
+      while (j < nSeg) {
+        if (bs.exposed[j] || bs.segRegion[j] < 0) { j++; continue; }
+        const a = j; const reg = bs.segRegion[j];
+        while (j < nSeg && !bs.exposed[j] && bs.segRegion[j] === reg) j++;
+        const mid = (a + j - 1) >> 1;
+        let testSeg = -1;
+        for (let d = 0; d <= j - a && testSeg < 0; d++) {
+          for (const cand of [mid + d, mid - d]) {
+            if (cand >= a && cand < j && byPi[bs.seqFull[cand]] >= 0) { testSeg = cand; break; }
+          }
+        }
+        if (testSeg >= 0) buried.push({ b, start: a, end: j, region: reg, testSeg, testCorner: -1 });
+        else {
+          let testCorner = -1;
+          if (pools[b].kind[bs.seqPool[a]] === 5) testCorner = pools[b].i1[bs.seqPool[a]];
+          else if (j < bs.seqPool.length && pools[b].kind[bs.seqPool[j]] === 5) testCorner = pools[b].i1[bs.seqPool[j]];
+          if (testCorner >= 0) buried.push({ b, start: a, end: j, region: reg, testSeg, testCorner });
         }
       }
     });
@@ -1942,6 +1985,8 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
       cuts: cuts.map((c, i) => ({ crossing: c.crossing, chain: c.chain, side: c.side, overChain: c.overChain, border: cutRefs[i].border, fullIdx: cutRefs[i].ref.idx })),
       transitions,
       capTransitions,
+      capCands,
+      buried,
       groupOfJ: groupOfJ.slice(),
       stats: { eyeCount, eyeTotal, eyeKept: eyeKeptTotal, eyeMaxKept, tieCutCount, kinkCount, crossInJunction, arcNearThread, segXTotal, segXKept, nonUniform, recMissing },
     };
@@ -1970,6 +2015,7 @@ export interface BorderStruct {
   baseSeq: Int32Array; seqPool: Int32Array; seqFull: Int32Array; idxOfFull: Int32Array;
   exposed: Uint8Array; segRegion: Int32Array; fullLen: number; runs: Int32Array;
   coverPi: Int16Array; coverS: Float32Array; coverPi2: Int16Array; coverS2: Float32Array; coverPi3: Int16Array; coverS3: Float32Array; coverPi4: Int16Array; coverS4: Float32Array;
+  coverByPi: Int16Array; coverByS: Float32Array;
 }
 export interface ArmStruct { ji: number; ei: number; pi: number; sR: number; dir: number; kind: string; L: number; g: number }
 export interface CornerStruct {
@@ -1998,6 +2044,8 @@ export interface OutlineStructure {
   cuts: CutStruct[];
   transitions: { b: number; j: number; pi: Int16Array; k: Int32Array }[];
   capTransitions: { cap: number; pt: number; pi: number; k: number }[];
+  capCands: { pi: Int16Array; k: Int32Array }[];
+  buried: { b: number; start: number; end: number; region: number; testSeg: number; testCorner: number }[];
   groupOfJ: number[];
   stats: { eyeCount: number; eyeTotal: number; eyeKept: number; eyeMaxKept: number; tieCutCount: number; kinkCount: number; crossInJunction: number; arcNearThread: number; segXTotal: number; segXKept: number; nonUniform: number; recMissing: number };
 }
@@ -2277,7 +2325,7 @@ export function frame(st: OutlineStructure, scene: SceneIn, profile?: Record<str
     const degen = (vx: number, vy: number): void => {
       // No position in this frame: the corner keeps structure's ok and
       // collapses to zero radius at V (never a switch, never missing).
-      fc.ok = cs.ok; fc.Vx = vx; fc.Vy = vy; fc.qx = vx; fc.qy = vy;
+      fc.ok = false; fc.Vx = vx; fc.Vy = vy; fc.qx = vx; fc.qy = vy;
       fc.tax = vx; fc.tay = vy; fc.tbx = vx; fc.tby = vy; fc.r = 0; fc.theta = cs.theta;
       if (A) { footWinFast(polys[A.pi], vx, vy, A.dir > 0 ? A.sR : A.sR - A.L, A.dir > 0 ? A.sR + A.L : A.sR, gFa); fc.fax = gFa.x; fc.fay = gFa.y; fc.sA = gFa.s; } else { fc.fax = vx; fc.fay = vy; fc.sA = cs.sA; }
       if (B) { footWinFast(polys[B.pi], vx, vy, B.dir > 0 ? B.sR : B.sR - B.L, B.dir > 0 ? B.sR + B.L : B.sR, gFb); fc.fbx = gFb.x; fc.fby = gFb.y; fc.sB = gFb.s; } else { fc.fbx = vx; fc.fby = vy; fc.sB = cs.sB; }
@@ -2285,7 +2333,6 @@ export function frame(st: OutlineStructure, scene: SceneIn, profile?: Record<str
       fc.dvA = fc.duA; fc.dvB = fc.duB;
     };
     if (!A || !B || !J) { degen(J ? J.c[0] : 0, J ? J.c[1] : 0); continue; }
-    if (!cs.ok) { degen(J.c[0], J.c[1]); fc.theta = cs.theta; continue; }
     let th = B.ang - A.ang;
     th = ((th % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
     fc.theta = th;
@@ -2296,6 +2343,17 @@ export function frame(st: OutlineStructure, scene: SceneIn, profile?: Record<str
     const vx0 = J.c[0] + (bx * h) / sn; const vy0 = J.c[1] + (by * h) / sn;
     const okV = A.L > 1e-9 && B.L > 1e-9 && solveVS2(A, B, h, vx0, vy0, h / Math.max(Math.tan(thC / 2), 1e-6), fFa, fFb);
     if (!okV) { degen(vx0, vy0); continue; }
+    {
+      // The builder's span and wedge predicates on this frame's feet:
+      // with no feasible V the corner degenerates and emits no arc.
+      const dVa = armDistF(A, fFa.s); const dVb = armDistF(B, fFb.s);
+      const tol = 1e-9 * h;
+      const crossAB = A.ux * B.uy - A.uy * B.ux;
+      const sgn = Math.sign(crossAB) || 1;
+      const crossA = A.ux * (sv.y - J.c[1]) - A.uy * (sv.x - J.c[0]);
+      const crossB = B.ux * (sv.y - J.c[1]) - B.uy * (sv.x - J.c[0]);
+      if (!(dVa > tol && dVa < A.L - tol && dVb > tol && dVb < B.L - tol) || !(crossA * sgn > 0 && crossB * sgn < 0)) { degen(sv.x, sv.y); continue; }
+    }
     let qx = sv.x; let qy = sv.y;
     Object.assign(qFa, fFa); Object.assign(qFb, fFb);
     let Vx = qx; let Vy = qy;
@@ -2804,12 +2862,183 @@ export function frame(st: OutlineStructure, scene: SceneIn, profile?: Record<str
   // once); only their positions (the SA/XY views) follow this frame.
   const pieces = rt.piecesOut;
   pieces.length = 0;
-  for (const u of rt.runUpd) {
-    const brt = rt.b[u.b];
-    u.piece.s0 = brt.SA[u.start];
-    u.piece.s1 = brt.SA[u.end];
+  // Stretch exposure on this frame's geometry: a run whose middle
+  // segment is covered here (by a candidate structure recorded) is
+  // not emitted; a recorded buried stretch whose middle segment is
+  // not covered here is emitted. At rest both reproduce structure.
+  const stretchFoot: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 };
+  const memberGroupF2 = (pi2: number, sv: number): number => {
+    let best = 0; let g = -1;
+    const p = polys[pi2];
+    for (const ai of rt.chainArms[pi2]) {
+      const a = rt.arms[ai];
+      let d = (sv - a.sR) * a.dir;
+      if (p.closed) d = ((d % p.len) + p.len) % p.len;
+      if (d < 0 || d > a.L) continue;
+      const tt = ssFB(0, h, a.L - d);
+      if (tt > best) { best = tt; g = a.g; }
+    }
+    return g;
+  };
+  const sAtP = (p2: Poly, i: number): number => {
+    if (p2.closed) { const n = p2.nseg; const q = ((i % n) + n) % n; return p2.s[q] + Math.floor(i / n) * p2.len; }
+    if (i < 0) return p2.s[0];
+    if (i >= p2.nseg) return p2.s0 + p2.len;
+    return p2.s[i];
+  };
+  const stretchCovered = (b: number, testSeg: number): boolean => {
+    const brt = rt.b[b]; const bs = st.borders[b];
+    const pi = b >> 1;
+    const ms = testSeg;
+    if (ms < 0 || ms >= bs.coverPi.length) return false;
+    const XY = brt.XY; const SA = brt.SA;
+    const nFull = Math.max(1, bs.seqFull[ms + 1] - bs.seqFull[ms]);
+    const ttQ = Math.min(0.5, 0.5 / nFull);
+    const mx = XY[2 * ms] + (XY[2 * ms + 2] - XY[2 * ms]) * ttQ; const my = XY[2 * ms + 1] + (XY[2 * ms + 3] - XY[2 * ms + 1]) * ttQ;
+    const ownS = SA[ms] + (SA[ms + 1] - SA[ms]) * ttQ;
+    const zOwn = depthAt(pi, ownS);
+    const gOwn = memberGroupF2(pi, ownS);
+
+    const candPi = [bs.coverByPi[ms], bs.coverPi[ms], bs.coverPi2[ms], bs.coverPi3[ms], bs.coverPi4[ms]];
+    const candS = [bs.coverByS[ms], bs.coverS[ms], bs.coverS2[ms], bs.coverS3[ms], bs.coverS4[ms]];
+    const sigma = Math.PI * h;
+    for (let w = 0; w < 5; w++) {
+      const cp = candPi[w];
+      if (cp < 0 || cp >= polys.length) continue;
+      const p2 = polys[cp];
+      if (!p2 || p2.nseg === 0) continue;
+      const k0 = segOfS(p2, candS[w]).k;
+      footWinFast(p2, mx, my, sAtP(p2, k0 - 28), sAtP(p2, k0 + 29), stretchFoot, -1, h);
+      if (!(stretchFoot.d < h)) continue;
+      if (cp === pi) {
+        const pOwn = polys[pi];
+        let dd = stretchFoot.s - ownS;
+        if (pOwn.closed) { dd = ((dd % pOwn.len) + pOwn.len) % pOwn.len; if (dd > pOwn.len / 2) dd -= pOwn.len; }
+        if (Math.abs(dd) <= sigma) continue;
+      }
+      if (gOwn >= 0 && memberGroupF2(cp, stretchFoot.s) === gOwn) return true;
+      if (depthAt(cp, stretchFoot.s) > zOwn + 1e-9) return true;
+    }
+    return false;
+  };
+  // Cap exposure on this frame's geometry: each arc segment is
+  // tested against the covering candidates structure recorded for
+  // it. At rest the verdicts reproduce the builder's cap runs.
+  {
+    const footC: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 };
+    const sigmaC = Math.PI * h;
+    const classified = rt.capClassified;
+    classified.length = 0;
+    for (let capIdx = 0; capIdx < st.caps.length; capIdx++) {
+      const cap = st.caps[capIdx];
+      const steps = cap.steps;
+      if (steps < 1) continue;
+      const arc = rt.capsXY[capIdx]; const carc = rt.capsCXY[capIdx];
+      const cand = st.capCands[capIdx];
+      const cS = st.stations[cap.station].cS;
+      const pOwnC = polys[cap.pi];
+      const ownSC = cap.atEnd ? pOwnC.s0 + pOwnC.len : pOwnC.s0;
+      const zOwn = depthAt(cap.pi, ownSC);
+      const gOwn = memberGroupF2(cap.pi, ownSC);
+      const pool = rt.capPool[capIdx];
+      let runStart = -1;
+      const flushC = (endPt: number): void => {
+        if (runStart < 0) return;
+        const piece = pool[runStart];
+        piece.pts = arc.subarray(2 * runStart, 2 * (endPt + 1)) as unknown as number[];
+        piece.cpts = carc.subarray(2 * runStart, 2 * (endPt + 1)) as unknown as number[];
+        piece.s0 = cS; piece.s1 = cS;
+        classified.push(piece);
+        runStart = -1;
+      };
+      for (let i = 0; i < steps; i++) {
+        const mx = (arc[2 * i] + arc[2 * i + 2]) / 2; const my = (arc[2 * i + 1] + arc[2 * i + 3]) / 2;
+        let covered = false;
+        for (let w = 0; w < 9 && !covered; w++) {
+          const cp = cand.pi[i * 9 + w];
+          if (cp < 0) continue;
+          const p2 = polys[cp];
+          if (!p2 || p2.nseg === 0) continue;
+          footWinFast(p2, mx, my, sAtP(p2, cand.k[i * 9 + w] - 28), sAtP(p2, cand.k[i * 9 + w] + 29), footC, -1, h);
+          if (!(footC.d < h)) continue;
+          if (cp === cap.pi) {
+            const pOwn = polys[cap.pi];
+            let dd = footC.s - ownSC;
+            if (pOwn.closed) { dd = ((dd % pOwn.len) + pOwn.len) % pOwn.len; if (dd > pOwn.len / 2) dd -= pOwn.len; }
+            if (Math.abs(dd) <= sigmaC) continue;
+          }
+          if (gOwn >= 0 && memberGroupF2(cp, footC.s) === gOwn) { covered = true; break; }
+          if (depthAt(cp, footC.s) > zOwn + 1e-9) covered = true;
+        }
+        if (covered) flushC(i); else if (runStart < 0) runStart = i;
+      }
+      flushC(steps);
+    }
+  }
+  // Corners structure rejected but this frame finds feasible: the
+  // runs on their arms trim to this frame's tangent feet.
+  const trimTo = new Map<number, number>();
+  for (let ci = 0; ci < st.corners.length; ci++) {
+    const cs = st.corners[ci]; const fc = rt.fCorners[ci];
+    if (cs.ok || !fc.ok) continue;
+    const pair: [number, number, number][] = [[arms[cs.aArm].pi * 2 + (cs.sideA === 1 ? 0 : 1), fc.sA, arms[cs.aArm].sR], [arms[cs.bArm].pi * 2 + (cs.sideB === 1 ? 0 : 1), fc.sB, arms[cs.bArm].sR]];
+    for (const [border, footS, rootS] of pair) {
+      const brt = rt.b[border]; const SA = brt.SA; const nP = SA.length;
+      let rootIdx = 0; let bdR = Infinity;
+      for (let j = 0; j < nP; j++) { const d = Math.abs(SA[j] - rootS); if (d < bdR) { bdR = d; rootIdx = j; } }
+      let jStar = rootIdx; let bd = Infinity;
+      const jLo = Math.max(0, rootIdx - 100); const jHi = Math.min(nP - 1, rootIdx + 100);
+      for (let j = jLo; j <= jHi; j++) { const d = Math.abs(SA[j] - footS); if (d < bd) { bd = d; jStar = j; } }
+      for (let ui = 0; ui < rt.runUpd.length; ui++) {
+        const u = rt.runUpd[ui];
+        if (u.b !== border || jStar < u.start || jStar > u.end) continue;
+        if (Math.abs(u.start - rootIdx) <= Math.abs(u.end - rootIdx)) trimTo.set(ui * 2, jStar); else trimTo.set(ui * 2 + 1, jStar);
+      }
+    }
+  }
+  for (let ui = 0; ui < rt.runUpd.length; ui++) {
+    const u = rt.runUpd[ui];
+    const brtU = rt.b[u.b];
+    let ns = u.start; let ne = u.end;
+    const tA2 = trimTo.get(ui * 2); if (tA2 !== undefined) ns = Math.max(ns, tA2);
+    const tB2 = trimTo.get(ui * 2 + 1); if (tB2 !== undefined) ne = Math.min(ne, tB2);
+    while (ns < ne && stretchCovered(u.b, ns)) ns++;
+    if (ns < ne) { while (ne > ns && stretchCovered(u.b, ne - 1)) ne--; }
+    if (ns >= ne) continue;
+    if (ns !== u.curStart || ne !== u.curEnd) {
+      u.curStart = ns; u.curEnd = ne;
+      u.piece.pts = brtU.XY.subarray(2 * ns, 2 * (ne + 1)) as unknown as number[];
+      u.piece.cpts = brtU.CXY.subarray(2 * ns, 2 * (ne + 1)) as unknown as number[];
+    }
+    u.piece.s0 = brtU.SA[ns];
+    u.piece.s1 = brtU.SA[ne];
     pieces.push(u.piece);
     if (u.piece.region >= 0 && regions[u.piece.region]) regions[u.piece.region].pieces.push(pieces.length - 1);
+  }
+  for (const bu of rt.buriedUpd) {
+    if (bu.testCorner >= 0 && rt.fCorners[bu.testCorner].ok) continue;
+    // Emit the longest sub-range of the stretch that this frame's
+    // geometry leaves uncovered (per-segment verdicts).
+    let bestStart = -1; let bestEnd = -1; let curStart = -1;
+    for (let seg = bu.start; seg < bu.end; seg++) {
+      const segCov = st.borders[bu.b].coverByPi[seg] >= 0 || (bu.testCorner >= 0 && !rt.fCorners[bu.testCorner].ok) ? stretchCovered(bu.b, seg) : true;
+      if (!segCov) {
+        if (curStart < 0) curStart = seg;
+        if (seg + 1 - curStart > bestEnd - bestStart) { bestStart = curStart; bestEnd = seg + 1; }
+      } else curStart = -1;
+    }
+    if (bestStart < 0) continue;
+    const brtB = rt.b[bu.b];
+    const ns = bestStart; const ne = bestEnd;
+    if (ns !== bu.curStart || ne !== bu.curEnd) {
+      bu.curStart = ns; bu.curEnd = ne;
+      bu.piece.pts = brtB.XY.subarray(2 * ns, 2 * (ne + 1)) as unknown as number[];
+      bu.piece.cpts = brtB.CXY.subarray(2 * ns, 2 * (ne + 1)) as unknown as number[];
+    }
+    bu.piece.s0 = brtB.SA[ns];
+    bu.piece.s1 = brtB.SA[ne];
+    pieces.push(bu.piece);
+    if (bu.piece.region >= 0 && regions[bu.piece.region]) regions[bu.piece.region].pieces.push(pieces.length - 1);
   }
   for (let ci = 0; ci < st.corners.length; ci++) {
     const cs = st.corners[ci]; const fc = rt.fCorners[ci];
@@ -2835,7 +3064,7 @@ export function frame(st: OutlineStructure, scene: SceneIn, profile?: Record<str
     const rid = piece.region;
     if (rid >= 0 && regions[rid]) regions[rid].pieces.push(pieces.length - 1);
   }
-  for (const p of rt.capPieces) pieces.push(p);
+  for (const p of rt.capClassified) pieces.push(p);
   mark("pieces");
   // Faces, cuts, corners.
   for (let fi = 0; fi < st.faces.length; fi++) {
@@ -2899,9 +3128,10 @@ interface Runtime {
   capsXY: Float64Array[]; capsCXY: Float64Array[]; capsC: Float64Array;
   regions: OutlineRegion[]; regionTpl: { ops: RegionOp[] }[]; regionBuf: Float64Array;
   piecesOut: OutlinePiece[];
-  runUpd: { piece: OutlinePiece; b: number; start: number; end: number }[];
+  runUpd: { piece: OutlinePiece; b: number; start: number; end: number; curStart: number; curEnd: number }[];
+  buriedUpd: { piece: OutlinePiece; b: number; start: number; end: number; testSeg: number; testCorner: number; curStart: number; curEnd: number }[];
   arcPieces: OutlinePiece[]; arcBuf: Float64Array[]; arcCBuf: Float64Array[];
-  capPieces: OutlinePiece[];
+  capPieces: OutlinePiece[]; capPool: OutlinePiece[][]; capClassified: OutlinePiece[];
   faces: OutlineFace[]; facesOut: OutlineFace[]; faceOrder: number[]; faceDepth: Float64Array;
   cornersT: OutlineCorner[]; cutsT: OutlineCut[];
   cutList: { b: number; id: number }[]; ptList: { b: number; j: number; id: number }[];
@@ -3368,12 +3598,16 @@ function buildRuntime(st: OutlineStructure, scene: SceneIn): Runtime {
       for (let ri = 0; ri < runs.length; ri += 3) {
         const start = runs[ri]; const end = runs[ri + 1]; const rid = runs[ri + 2];
         const piece: OutlinePiece = { kind: "run", chain: pi, side, s0: 0, s1: 0, pts: brt.XY.subarray(2 * start, 2 * (end + 1)) as unknown as number[], cpts: brt.CXY.subarray(2 * start, 2 * (end + 1)) as unknown as number[], region: rid, corner: -1 };
-        runUpd.push({ piece, b: bIdx, start, end });
+        runUpd.push({ piece, b: bIdx, start, end, curStart: start, curEnd: end });
       }
     }
   }
   const arcPieces: OutlinePiece[] = [];
   const arcBuf: Float64Array[] = []; const arcCBuf: Float64Array[] = [];
+  const buriedUpd: { piece: OutlinePiece; b: number; start: number; end: number; testSeg: number; testCorner: number; curStart: number; curEnd: number }[] = [];
+  for (const bu of st.buried) {
+    buriedUpd.push({ piece: { kind: "run", chain: bu.b >> 1, side: (bu.b & 1) === 0 ? 1 : -1, s0: 0, s1: 0, pts: b[bu.b].XY.subarray(2 * bu.start, 2 * (bu.end + 1)) as unknown as number[], cpts: b[bu.b].CXY.subarray(2 * bu.start, 2 * (bu.end + 1)) as unknown as number[], region: bu.region, corner: -1 }, b: bu.b, start: bu.start, end: bu.end, testSeg: bu.testSeg, testCorner: bu.testCorner, curStart: bu.start, curEnd: bu.end });
+  }
   st.corners.forEach((cs, ci) => {
     arcBuf.push(new Float64Array(2 * 33)); arcCBuf.push(new Float64Array(2 * 33));
     arcPieces.push({ kind: "arc", chain: cs.stored.aChain, side: 0, s0: 0, s1: 0, pts: [], cpts: [], region: junctionRid.get(cs.ji) ?? -1, corner: ci });
@@ -3385,6 +3619,7 @@ function buildRuntime(st: OutlineStructure, scene: SceneIn): Runtime {
       capPieces.push({ kind: "cap", chain: cap.pi, side: 0, s0: cS, s1: cS, pts: capsXY[capIdx].subarray(2 * run[0], 2 * run[1] + 2) as unknown as number[], cpts: capsCXY[capIdx].subarray(2 * run[0], 2 * run[1] + 2) as unknown as number[], region: -1, corner: -1 });
     }
   });
+  const capPool: OutlinePiece[][] = st.caps.map((cap) => Array.from({ length: Math.max(0, cap.steps) }, () => ({ kind: "cap" as PieceKind, chain: cap.pi, side: 0, s0: 0, s1: 0, pts: [], cpts: [], region: -1, corner: -1 })));
   const faces: OutlineFace[] = st.faces.map((f) => ({ ownerChain: f.owner, group: f.group, pts: [], sample: [0, 0], hole: false }));
   const facesOut: OutlineFace[] = faces.slice();
   const faceOrder = st.faces.map((_, i) => i);
@@ -3415,7 +3650,7 @@ function buildRuntime(st: OutlineStructure, scene: SceneIn): Runtime {
     rawPolys, polys, extPts: new Float64Array(2 * (maxPts + 2)), capPts, tan, idxOf,
     depthS, depthZ, depthN: new Int32Array(scene.chains.length),
     arms, fCorners, b, capsXY, capsCXY, capsC: new Float64Array(2 * Math.max(1, st.caps.length)),
-    regions, regionTpl, regionBuf, piecesOut, runUpd, arcPieces, arcBuf, arcCBuf, capPieces,
+    regions, regionTpl, regionBuf, piecesOut, runUpd, buriedUpd, arcPieces, arcBuf, arcCBuf, capPieces, capPool, capClassified: [],
     faces, facesOut, faceOrder, faceDepth: new Float64Array(st.faces.length),
 cornersT, cutsT, cutList, ptList, nodeState: new Float64Array(33 * 12), nodeK: new Int32Array(33 * 2),
     runPool: (() => { const pool: OutlinePiece[] = []; for (const bs of st.borders) for (let j = 0; j + 1 < bs.seqPool.length; j++) pool.push({ kind: "run", chain: 0, side: 1, s0: 0, s1: 0, pts: [], cpts: [], region: -1, corner: -1 }); return pool; })(),
