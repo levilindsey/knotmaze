@@ -876,7 +876,7 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
       // S3f (Levi's rule): no union-or-layered choice. Each facing border
       // ends at its own station, between the meet and its root, a
       // continuous fraction w of the way: w = clamp((z_self - z_other) /
-      // ztB, 0, 1) at the meet, where form B's depth key lets the upper
+      // zt, 0, 1) at the meet, where form B's depth key lets the upper
       // border run on over the lower tube. w = 0 (level, or the lower
       // arm) is the meet itself, the union's corner; w = 1 runs the
       // border on to the root, except that form B hides it where both
@@ -1194,16 +1194,9 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
     }
     return out;
   };
-  // K1240 S3f, a tight twist: where the two tubes never part between a
-  // crossing and the pair's next one, an under border never meets the
-  // over tube's far border. It runs on inside the over tube until form
-  // B's depth order flips there (key = z - d*zt/h, so the under border,
-  // d = h, is on top once zU - zt >= zO - dO*zt/h, apart from a shared
-  // junction group) or it leaves the tube. Walk the border from s0,
-  // where it meets the over tube's near border, into the tube, to the
-  // first point form B shows. Null when neither direction starts inside
-  // and hidden, or nothing shows within 20h.
-  const ztB = 0.1 * scene.look.depthAmp;
+  // K1240 S3f: each crossing's cuts, where the under chain's borders
+  // meet the over chain's near it, plus a synthesized cut where a tight
+  // twist's pair just misses (below).
   let twistFlips = 0;
   scene.crossings.forEach((x, xi) => {
     const cp = crossPt[xi];
