@@ -103,3 +103,94 @@ Binding (Levi):
 - No subagents.
 - Stop when Done holds or at 2 h, whichever comes first. Run `Get-Date` at the start and at each
   milestone. When you stop, commit your WIP, append the Handoff, push, and report.
+
+## Handoff (S1, 2026-11-06, started 15:18 PST, stopped at the 2 h cap)
+
+Built and pushed on master: the pure builder `.claude/probes/K1240/proto/outline.ts`
+(1451 lines, zero imports — nothing from the app renderer; a test fails if that
+changes), its synthetic tests `outline.test.ts` (ALL PASS: straight tube area/caps,
+crossing lens owned by the over chain, T-junction round corners, fill-edge vertices,
+import guard), the exact check `check_exact.ts`, the bench `bench.ts`, and the
+WebGL2 page (`index.html` + `main.ts` + `draw.ts`, 329 lines): one table drawn as
+border bands and as a stencil fill, with pixel tests on `window.__k1240`.
+
+### Numbers
+
+Exact vs form B, device px at dpr 2 (p50 is 0.000–0.014 px on every scene — the
+geometry agrees to the last bit almost everywhere; the tails do not):
+
+| scene | ours→B p99 | ours→B max | B→ours p99 | B→ours max |
+|---|---|---|---|---|
+| muse_hash | 4.518 | 15.42 | 36.36 | 64.52 |
+| muse_default_tw | 5.949 | 12.73 | 28.38 | 54.04 |
+| def | 3.334 | 8.93 | 32.39 | 58.17 |
+| fat | 4.330 | 4.99 | 6.94 | 13.16 |
+| ring | 4.869 | 13.17 | 45.98 | 63.26 |
+| user_tw42.lightpaper | 2.730 | 12.97 | 30.64 | 54.22 |
+| g41_def_tw42 | 3.064 | 9.38 | 28.68 | 55.52 |
+| g41_def_tw64 | 3.818 | 9.70 | 33.93 | 49.88 |
+| g41_ring_tw42 | 2.631 | 10.69 | 30.33 | 57.69 |
+| g41_ring_tw64 | 4.944 | 12.88 | 44.18 | 60.87 |
+| g41_user_tw42 | 2.593 | 12.97 | 30.45 | 61.34 |
+| g41_user_tw64 | 4.255 | 15.13 | 48.75 | 71.88 |
+
+The B→ours tail is mostly a check artefact: most of form B's raw border
+candidates are buried under other tubes in form B's own field (the check counts
+them anyway — e.g. g41_user_tw42: 21,060 of 21,459 candidates buried), so they
+have no exposed counterpart. The genuine ours→B tail sits at junctions and dense
+self-crossing eyes. Worst named spots in def: ours→B 8.93 px at (7.29, 12.07),
+runs ch88/ch91 beside j184 (~1.4h away); 8.72 px at (6.62, 20.83) beside j9.
+B→ours 58.17 px at (1.47, 7.03), chain 41 beside j107 (3.8h) — inside the buried
+class above. Corners solved: def 360/386 (form B 361), muse_hash 186/342 (form B
+192) — muse_hash is the worst corner scene; the rest match or beat form B.
+
+Page pixel tests (12 scenes, `out/page_results.json`): fill samples land on the
+owning chain's colour 93–96% (fat 1113/1291, def 1571/1684, ring 338/352);
+overlap ownership from cuts alone 100% on fat (428/428) but only ~57–63% on
+junction scenes (def 222/353, ring 72/87); border band inside 97%, outside-not-ink
+86–95%; fill edge on the stroke centre 89–92% (def 17670/19385). Draw GPU time at
+dpr 2 (10 synced draws, median): fill 1.4–11.2 ms, both 1.5–12.4 ms, border below
+timer resolution (<0.1 ms). Builder CPU (median/p95 under the perf lock): ring
+239/278 ms, user scenes 656–838 ms, def 2387/2680 ms, muse_hash 2422/2685 ms —
+seconds per build, nowhere near per-frame; the split/face-trace passes dominate.
+
+### What failed
+
+- Done 2's target (p99 ≤ 1/8 px, max ≤ 1/2 px) is not met in the tails, per the
+  table. The median outline is exact; junctions, terminals and kink eyes are not.
+- Done 3's pixel tests fail as listed. Root cause found, not fixed: the planar
+  face trace produces monster faces in dense areas (def face 546 is one simple
+  1007-edge loop; 66 faces have >200 edges). A big eye face takes the owner of
+  whatever tube passes near its sample, so whole eyes fill with one chain's
+  colour (visible as the yellow balloon in `out/page_def.png`). Overlap ownership
+  inherits the same defect. The stencil fill itself is exact for simple loops —
+  ear clipping was replaced by stencil fan + bbox quad per face for that reason.
+- Sheets: zoom-4 crops for def/ring junctions are in `out/sheets/` (not
+  committed; `out/` stays unadded). Show Levi first: `out/page_def.png` (the
+  balloon defect) and `out/sheets/def_junctions_border_sheet.png`. The side-by-side
+  against form B (`&fbb=1`) and today's looks was not produced; the exact check's
+  numbers stand in for it.
+- `outline.ts` had an encoding accident mid-run (PowerShell text round-trips
+  bloated comment lines to a 101 MB file; GitHub refused the push). Repaired to
+  pure ASCII via Node; never rewrite this file through PowerShell text IO again.
+
+### Commands
+
+- Builder tests: `node scripts/run_node.mjs .claude/probes/K1240/proto/outline.test.ts`
+- Exact check: `node scripts/run_node.mjs .claude/probes/K1240/proto/check_exact.ts [scene,...]`
+- Bench: `& .claude/probes/K1240/proto/run_locked.ps1 -Script bench.ts`
+- Page + tests: `& .claude/probes/K1240/proto/run_locked.ps1 -ScriptName run_page.mjs -RunArgs @('def,ring')`
+- Sheets: same with `-RunArgs @('def,ring','sheets')`, then `out/montage.ps1`.
+
+### For S2
+
+Per the brief: continuity across frames on recorded drags, plucks and flow, and
+the Pixel's p95. Before that pays off, S2 should also: (1) fix face tracing so
+dense areas subdivide into small faces (cap face edge count; investigate the
+half-edge turn rule at coincident vertices) — this unblocks fill and overlap
+ownership; (2) cut builder time from seconds toward frame budget (profile points
+at the split-candidate gather and `spliceAll`); (3) solve the 26–156 unsolved
+corners per scene (muse_hash worst); (4) re-run the exact check with form B's
+exposed outline only, dropping buried candidates, so the B→ours tail measures
+the real gap.
+
