@@ -1721,24 +1721,30 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
   const extractStructure = (): OutlineStructure => {
     const borderIdxOf = (pi: number, side: number): number => pi * 2 + (side === 1 ? 0 : 1);
     let recMissing = 0;
-    interface PoolB { map: Map<BPt, number>; kind: number[]; i1: number[]; i2: number[]; i3: number[]; i4: number[]; other: number[]; f: number[]; sOff: number[]; eye: number[] }
+    interface PoolB { map: Map<BPt, number>; kind: number[]; i1: number[]; i2: number[]; i3: number[]; i4: number[]; other: number[]; f: number[]; sOff: number[]; eye: number[]; win: number[] }
     const pools: PoolB[] = [];
-    for (let i = 0; i < polys.length * 2; i++) pools.push({ map: new Map(), kind: [], i1: [], i2: [], i3: [], i4: [], other: [], f: [], sOff: [], eye: [] });
+    for (let i = 0; i < polys.length * 2; i++) pools.push({ map: new Map(), kind: [], i1: [], i2: [], i3: [], i4: [], other: [], f: [], sOff: [], eye: [], win: [] });
+    const winOf = (a: BPt, b2: BPt, c: BPt, d: BPt): number => {
+      const ex = b2.x - a.x; const ey = b2.y - a.y; const fx = d.x - c.x; const fy = d.y - c.y;
+      const la = Math.hypot(ex, ey) || 1; const lb = Math.hypot(fx, fy) || 1;
+      const sinPhi = Math.min(1, Math.abs(ex * fy - ey * fx) / (la * lb));
+      return Math.min(14 * h, h / Math.max(sinPhi, 0.15) + 2 * h);
+    };
     const assign = (b: number, pt: BPt): number => {
       const P = pools[b];
       const ex = P.map.get(pt);
       if (ex !== undefined) return ex;
       const id = P.kind.length;
       P.map.set(pt, id);
-      P.kind.push(0); P.i1.push(0); P.i2.push(0); P.i3.push(0); P.i4.push(0); P.other.push(-1); P.f.push(0); P.sOff.push(0); P.eye.push(-1);
+      P.kind.push(0); P.i1.push(0); P.i2.push(0); P.i3.push(0); P.i4.push(0); P.other.push(-1); P.f.push(0); P.sOff.push(0); P.eye.push(-1); P.win.push(0);
       const rec = pt.rec;
       if (!rec) { P.kind[id] = 6; P.f[id] = pt.s; recMissing++; return id; }
       P.kind[id] = rec.k;
       if (rec.k === 0) { P.i1[id] = rec.v; P.i2[id] = rec.seg; P.sOff[id] = rec.sOff ?? 0; }
       else if (rec.k === 1) { P.i1[id] = rec.v; P.sOff[id] = rec.sOff ?? 0; }
       else if (rec.k === 2) { P.i1[id] = rec.v; P.f[id] = rec.u; P.sOff[id] = rec.sOff ?? 0; }
-      else if (rec.k === 3) { P.i1[id] = assign(b, rec.a); P.i2[id] = assign(b, rec.b); P.i3[id] = assign(b, rec.c); P.i4[id] = assign(b, rec.d); P.f[id] = rec.t; }
-      else if (rec.k === 4) { const ob = borderIdxOf(rec.otherPi, rec.otherSide); P.other[id] = ob; P.i1[id] = assign(b, rec.a); P.i2[id] = assign(b, rec.b); P.i3[id] = assign(ob, rec.c); P.i4[id] = assign(ob, rec.d); P.f[id] = rec.t; P.eye[id] = rec.eye; }
+      else if (rec.k === 3) { P.i1[id] = assign(b, rec.a); P.i2[id] = assign(b, rec.b); P.i3[id] = assign(b, rec.c); P.i4[id] = assign(b, rec.d); P.f[id] = rec.t; P.win[id] = winOf(rec.a, rec.b, rec.c, rec.d); }
+      else if (rec.k === 4) { const ob = borderIdxOf(rec.otherPi, rec.otherSide); P.other[id] = ob; P.i1[id] = assign(b, rec.a); P.i2[id] = assign(b, rec.b); P.i3[id] = assign(ob, rec.c); P.i4[id] = assign(ob, rec.d); P.f[id] = rec.t; P.eye[id] = rec.eye; P.win[id] = winOf(rec.a, rec.b, rec.c, rec.d); }
       else if (rec.k === 5) { P.i1[id] = rec.corner; P.i2[id] = rec.which; }
       else { P.f[id] = rec.s; }
       return id;
@@ -1793,7 +1799,7 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
         const P = pools[b];
         bordersOut.push({
           kind: Uint8Array.from(P.kind), i1: Int32Array.from(P.i1), i2: Int32Array.from(P.i2), i3: Int32Array.from(P.i3), i4: Int32Array.from(P.i4),
-          other: Int32Array.from(P.other), f: Float64Array.from(P.f), sOff: Float64Array.from(P.sOff), eye: Int32Array.from(P.eye),
+          other: Int32Array.from(P.other), f: Float64Array.from(P.f), sOff: Float64Array.from(P.sOff), eye: Int32Array.from(P.eye), winS: Float64Array.from(P.win),
           baseSeq: Int32Array.from(baseSeq), seqPool: Int32Array.from(seqPool), seqFull: Int32Array.from(seqFull), idxOfFull, exposed: fExp, segRegion: fSegR, fullLen: B.pts.length, runs: Int32Array.from(runsArr),
         });
       });
@@ -1817,7 +1823,7 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
       })),
       corners: cornerWork.map((cw, ci) => ({ ji: cw.ji, aArm: cw.aArm, bArm: cw.bArm, sideA: cw.sideA, sideB: cw.sideB, style: cw.style, ok: cw.ok, why: cw.why, theta: cw.theta, r: cw.r, sA: cw.sA, sB: cw.sB, vKa: cw.vKa ?? -1, vKb: cw.vKb ?? -1, qKa: cw.qKa ?? -1, qKb: cw.qKb ?? -1, vSa: cw.vSa ?? cw.sA, vSb: cw.vSb ?? cw.sB, stored: { ...corners[ci] } })),
       stations: stations.map((st) => ({ pi: st.pi, cS: st.cS, kind: st.kind, key: st.key, leftB: borderIdxOf(st.left.pi, st.left.side), leftFull: st.left.idx, rightB: borderIdxOf(st.right.pi, st.right.side), rightFull: st.right.idx })),
-      intervals: intervals.map((iv) => ({ pi: iv.pi, aSt: stations.indexOf(iv.A), bSt: stations.indexOf(iv.B), cMid: iv.cMid, discard: iv.discard, group: iv.region >= 0 ? regions[iv.region].group : -1 })),
+      intervals: intervals.map((iv) => ({ pi: iv.pi, aSt: stations.indexOf(iv.A), bSt: stations.indexOf(iv.B), cMid: iv.cMid, discard: iv.discard, group: iv.region >= 0 ? regions[iv.region].group : -1, rid: iv.region })),
       caps: capInfos.map((ci, i) => ({ pi: ci.station.pi, station: stations.indexOf(ci.station), atEnd: ci.atEnd, steps: ci.arc.length - 1, runs: capRuns[i].map((r) => [r[0], r[1]] as [number, number]) })),
       capByStation,
       faces: faceWorks.map((fw, i) => ({ rid: i, owner: fw.owner, group: fw.group, ...(faceByRid[i] ?? { kind: 0, pi: fw.owner, cMid: 0, ji: -1, armS: 0 }) })),
@@ -1846,6 +1852,7 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
 export interface BorderStruct {
   kind: Uint8Array; i1: Int32Array; i2: Int32Array; i3: Int32Array; i4: Int32Array;
   other: Int32Array; f: Float64Array; sOff: Float64Array; eye: Int32Array;
+  winS: Float64Array;
   baseSeq: Int32Array; seqPool: Int32Array; seqFull: Int32Array; idxOfFull: Int32Array;
   exposed: Uint8Array; segRegion: Int32Array; fullLen: number; runs: Int32Array;
 }
@@ -1856,7 +1863,7 @@ export interface CornerStruct {
   vKa: number; vKb: number; qKa: number; qKb: number; vSa: number; vSb: number; stored: OutlineCorner;
 }
 export interface StationStruct { pi: number; cS: number; kind: string; key: string; leftB: number; leftFull: number; rightB: number; rightFull: number }
-export interface IntervalStruct { pi: number; aSt: number; bSt: number; cMid: number; discard: boolean; group: number }
+export interface IntervalStruct { pi: number; aSt: number; bSt: number; cMid: number; discard: boolean; group: number; rid: number }
 export interface CapStruct { pi: number; station: number; atEnd: boolean; steps: number; runs: [number, number][] }
 export interface FaceStruct { rid: number; owner: number; group: number; kind: number; pi: number; cMid: number; ji: number; armS: number }
 export interface CutStruct { crossing: number; chain: number; side: number; overChain: number; border: number; fullIdx: number }
@@ -1886,156 +1893,129 @@ interface FCorner { ok: boolean; Vx: number; Vy: number; qx: number; qy: number;
 
 export function frame(st: OutlineStructure, scene: SceneIn, profile?: Record<string, number>): OutlineTable {
   const prof = profile;
-  const mark = (key: string, t: number): void => { if (prof) prof[key] = (prof[key] ?? 0) + (performance.now() - t); };
-  let tPhase = performance.now();
+  let tPhase = prof ? performance.now() : 0;
+  const mark = (key: string): void => { if (prof) { const now = performance.now(); prof[key] = (prof[key] ?? 0) + (now - tPhase); tPhase = now; } };
   const h = scene.look.halfWidth;
   const W = scene.look.band;
-  const idxOf = new Map<number, number>();
+  const rt = getRuntime(st, scene);
+  const polys = rt.polys;
+  // Polylines for this frame, written into the runtime's buffers.
+  const idxOf = rt.idxOf;
+  idxOf.clear();
   scene.chains.forEach((c, i) => idxOf.set(c.id, i));
-  const rawPolys: Poly[] = scene.chains.map((c, i) => makePoly(i, c.pts, c.closed));
-  const polys: Poly[] = scene.chains.map((c, i) => {
+  for (let i = 0; i < scene.chains.length; i++) fillPoly(rt.rawPolys[i], scene.chains[i].pts, scene.chains[i].closed, 0);
+  for (let i = 0; i < scene.chains.length; i++) {
+    const c = scene.chains[i];
     const spec = st.extSpec[i];
-    if (!spec || (!spec.start && !spec.end)) return rawPolys[i];
-    const pts = Array.from(c.pts);
-    let s0 = 0;
+    if (!spec || (!spec.start && !spec.end)) { copyPoly(rt.rawPolys[i], polys[i]); continue; }
+    const rp = rt.rawPolys[i];
     const cpOf = (sp: { throughPi: number; throughS: number; armS: number }): [number, number] => {
-      const term = pointAt(rawPolys[i], sp.armS);
-      const f = footInWindow(rawPolys[sp.throughPi], term.x, term.y, sp.throughS - 4 * h, sp.throughS + 4 * h);
+      const term = pointAt(rp, sp.armS);
+      const f = footInWindow(rt.rawPolys[sp.throughPi], term.x, term.y, sp.throughS - 4 * h, sp.throughS + 4 * h);
       return [f.x, f.y];
     };
-    if (spec.start) { const cp = cpOf(spec.start); const d = Math.hypot(pts[0] - cp[0], pts[1] - cp[1]); if (d > 1e-9) { pts.unshift(cp[0], cp[1]); s0 = -d; } }
-    if (spec.end) { const cp = cpOf(spec.end); const m = pts.length; const d = Math.hypot(pts[m - 2] - cp[0], pts[m - 1] - cp[1]); if (d > 1e-9) pts.push(cp[0], cp[1]); }
-    return makePoly(i, pts, c.closed, s0);
-  });
-  // Diagram depth (pinned hats), as in the builder.
+    const n0 = c.pts.length;
+    const extPts = rt.extPts;
+    let m = 0;
+    let s0 = 0;
+    if (spec.start) { const cp = cpOf(spec.start); const d = Math.hypot(c.pts[0] - cp[0], c.pts[1] - cp[1]); if (d > 1e-9) { extPts[m++] = cp[0]; extPts[m++] = cp[1]; s0 = -d; } }
+    for (let k = 0; k < n0; k++) extPts[m++] = c.pts[k];
+    if (spec.end) { const cp = cpOf(spec.end); const d = Math.hypot(c.pts[n0 - 2] - cp[0], c.pts[n0 - 1] - cp[1]); if (d > 1e-9) { extPts[m++] = cp[0]; extPts[m++] = cp[1]; } }
+    fillPoly(polys[i], extPts.subarray(0, m), c.closed, s0);
+  }
+  for (const p of polys) fillTangents(rt, p);
+  // Depth pins for this frame (sorted by s, in the runtime's buffers).
   const depthWin = scene.look.depthWindow * (scene.look.ctrlArc ?? 1);
-  const depthPins: { s: number; z: number }[][] = polys.map(() => []);
+  rt.depthN.fill(0);
   scene.crossings.forEach((x) => {
     const ia = idxOf.get(x.a.chain); const ib = idxOf.get(x.b.chain);
     if (ia === undefined || ib === undefined) return;
     const amp = scene.look.depthAmp;
-    depthPins[ia].push({ s: normS(polys[ia], x.a.s), z: x.over === "a" ? amp : -amp });
-    depthPins[ib].push({ s: normS(polys[ib], x.b.s), z: x.over === "b" ? amp : -amp });
+    addPin(rt, ia, normS(polys[ia], x.a.s), x.over === "a" ? amp : -amp);
+    addPin(rt, ib, normS(polys[ib], x.b.s), x.over === "b" ? amp : -amp);
   });
-  for (const l of depthPins) l.sort((a, b) => a.s - b.s);
-  const hatAt = (z: number, d: number, w: number): number => (w <= 1e-12 ? (d <= 0 ? z : 0) : d >= w ? 0 : z * (1 - d / w));
-  const depthAt = (pi: number, s: number): number => {
-    const P = depthPins[pi]; const n = P.length;
-    if (n === 0) return 0;
-    const p = polys[pi];
-    const u = normS(p, s);
-    let lo = -1; let hi = n;
-    while (hi - lo > 1) { const m = (lo + hi) >> 1; if (P[m].s <= u) lo = m; else hi = m; }
-    if (p.closed) {
-      const iL = lo < 0 ? n - 1 : lo;
-      const sL = lo < 0 ? P[iL].s - p.len : P[iL].s;
-      const iR = lo + 1 >= n ? 0 : lo + 1;
-      const sR = lo + 1 >= n ? P[iR].s + p.len : P[iR].s;
-      const w = Math.min(depthWin, sR - sL);
-      return hatAt(P[iL].z, u - sL, w) + hatAt(P[iR].z, sR - u, w);
-    }
-    if (lo < 0) return hatAt(P[0].z, P[0].s - u, depthWin);
-    if (lo + 1 >= n) return hatAt(P[n - 1].z, u - P[n - 1].s, depthWin);
-    const w = Math.min(depthWin, P[lo + 1].s - P[lo].s);
-    return hatAt(P[lo].z, u - P[lo].s, w) + hatAt(P[lo + 1].z, P[lo + 1].s - u, w);
-  };
-  const arms: FArm[] = st.arms.map((a) => {
+  const depthAt = (pi: number, s: number): number => depthAtRt(rt, pi, s, depthWin);
+  // Arm directions from this frame.
+  const arms = rt.arms;
+  const ptA = new Float64Array(4); const ptB = new Float64Array(4);
+  for (const a of arms) {
     const p = polys[a.pi];
     const sceneArm = scene.junctions[a.ji]?.arms[a.ei];
     const sB = a.kind === "end" && sceneArm ? normS(p, sceneArm.s) : a.sR;
-    const a0 = pointAt(p, sB);
+    pointAtInto(p, sB, ptA);
     let s1 = sB + a.dir * 2 * h;
     if (!p.closed) s1 = Math.min(Math.max(s1, p.s0), p.s0 + p.len);
-    const a1 = pointAt(p, s1);
-    let ux = a1.x - a0.x; let uy = a1.y - a0.y;
-    const ul = Math.hypot(ux, uy);
-    if (ul < 1e-12) { ux = a0.tx * a.dir; uy = a0.ty * a.dir; } else { ux /= ul; uy /= ul; }
-    return { ...a, ux, uy, ang: Math.atan2(uy, ux) };
-  });
-  const armDist = (arm: ArmStruct, s: number): number => {
+    pointAtInto(p, s1, ptB);
+    let ux = ptB[0] - ptA[0]; let uy = ptB[1] - ptA[1];
+    const ul = Math.sqrt(ux * ux + uy * uy);
+    if (ul < 1e-12) { ux = ptA[2] * a.dir; uy = ptA[3] * a.dir; } else { ux /= ul; uy /= ul; }
+    a.ux = ux; a.uy = uy; a.ang = Math.atan2(uy, ux);
+  }
+  const armDistF = (arm: FArm, s: number): number => {
     const p = polys[arm.pi];
     let d = (s - arm.sR) * arm.dir;
     if (p.closed) d = ((d % p.len) + p.len) % p.len;
     return d;
   };
-  void armDist;
-  mark("setup", tPhase); tPhase = performance.now();
-
-  // Corners: bounded Newton from V (K1040 F2), feet tracked locally
-  // around the segment structure() recorded; radius is structure's.
+  mark("setup");
+  // Corners: V and q solved from this frame; r follows this frame's angle.
+  const sv = { x: 0, y: 0 };
+  const gFa: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 };
+  const gFb: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 };
   const footNear = (arm: FArm, x: number, y: number, hintS: number, hintK: number, out: FFoot): void => {
+    // The builder's tracked foot (footT): search only h/32 of s around
+    // the current foot estimate, walking the window when the foot sits
+    // on its edge, so the foot cannot jump branch. Segments are found
+    // from the tracked segment index, not by binary search.
     const p = polys[arm.pi];
-    const winLo = arm.dir > 0 ? arm.sR : arm.sR - arm.L;
-    const winHi = arm.dir > 0 ? arm.sR + arm.L : arm.sR;
+    const winLoR = arm.dir > 0 ? arm.sR : arm.sR - arm.L;
+    const winHiR = arm.dir > 0 ? arm.sR + arm.L : arm.sR;
     const w = h / 32;
-    let sv = Math.min(Math.max(hintS, winLo), winHi);
-    let k = hintK >= 0 ? hintK : segOfS(p, sv).k;
-    for (let it = 0; it < 64; it++) {
+    let sv = hintS;
+    let k0 = hintK;
+    if (k0 < 0 || k0 >= p.nseg) k0 = segOfS(p, normS(p, sv)).k;
+    let shiftW = 0;
+    if (p.closed && p.len > 0) shiftW = Math.round((sv - (winLoR + winHiR) / 2) / p.len) * p.len;
+    const winLo = winLoR + shiftW; const winHi = winHiR + shiftW;
+    const segShift = p.closed && p.len > 0 ? Math.round((sv - p.s[k0]) / p.len) * p.len : 0;
+    for (let it = 0; it < 128; it++) {
       const lo = Math.max(winLo, sv - w);
       const hi = Math.min(winHi, sv + w);
-      let bd = Infinity; let bx = 0; let by = 0; let bs = sv; let bk = k;
+      let bd2 = Infinity; let bx = x; let by = y; let bs = sv; let bk = k0; let bu = sv;
       for (let dk = -2; dk <= 2; dk++) {
-        let kk = k + dk;
-        if (p.closed) { kk = ((kk % p.nseg) + p.nseg) % p.nseg; } else if (kk < 0 || kk >= p.nseg) continue;
-        let segS = p.s[kk];
-        if (p.closed) { while (segS < sv - p.len / 2) segS += p.len; while (segS > sv + p.len / 2) segS -= p.len; }
+        let kk = k0 + dk;
+        if (p.closed) kk = ((kk % p.nseg) + p.nseg) % p.nseg; else if (kk < 0 || kk >= p.nseg) continue;
+        let segS = p.s[kk] + segShift;
+        if (p.closed && p.len > 0) { if (segS < sv - p.len / 2) segS += p.len; else if (segS > sv + p.len / 2) segS -= p.len; }
         const segE = segS + p.segLen[kk];
         if (segE < lo || segS > hi) continue;
-        const b = kk + 1 === p.n ? 0 : kk + 1;
-        const ex = p.x[b] - p.x[kk]; const ey = p.y[b] - p.y[kk];
+        const kb = kk + 1 === p.n ? 0 : kk + 1;
+        const ex = p.x[kb] - p.x[kk]; const ey = p.y[kb] - p.y[kk];
+        const l = p.segLen[kk] || 1;
+        const ta = Math.min(1, Math.max(0, (Math.max(lo, segS) - segS) / l));
+        const tb = Math.min(1, Math.max(0, (Math.min(hi, segE) - segS) / l));
+        if (tb < ta) continue;
         const l2 = ex * ex + ey * ey;
         let t = l2 > 0 ? ((x - p.x[kk]) * ex + (y - p.y[kk]) * ey) / l2 : 0;
-        t = Math.min(1, Math.max(0, t));
-        let footS = segS + t * p.segLen[kk];
-        if (footS < lo) { t = p.segLen[kk] > 0 ? Math.min(1, Math.max(0, (lo - segS) / p.segLen[kk])) : 0; footS = segS + t * p.segLen[kk]; }
-        else if (footS > hi) { t = p.segLen[kk] > 0 ? Math.min(1, Math.max(0, (hi - segS) / p.segLen[kk])) : 0; footS = segS + t * p.segLen[kk]; }
+        t = Math.min(tb, Math.max(ta, t));
         const qx = p.x[kk] + ex * t; const qy = p.y[kk] + ey * t;
-        const d = Math.sqrt((x - qx) * (x - qx) + (y - qy) * (y - qy));
-        if (d < bd) { bd = d; bx = qx; by = qy; bs = p.s[kk] + t * p.segLen[kk]; bk = kk; out.u = footS; }
+        const d2 = (x - qx) * (x - qx) + (y - qy) * (y - qy);
+        if (d2 < bd2) { bd2 = d2; bx = qx; by = qy; bs = p.s[kk] + t * p.segLen[kk]; bk = kk; bu = segS + t * p.segLen[kk]; }
       }
-      if (!Number.isFinite(bd)) { k = segOfS(p, sv).k; continue; }
-      out.d = bd; out.x = bx; out.y = by; out.s = bs; out.k = bk;
-      const u = out.u;
-      out.u = u;
-      const edge = (u <= lo + 1e-9 * h && lo > winLo) || (u >= hi - 1e-9 * h && hi < winHi);
-      if (!edge || Math.abs(u - sv) <= 1e-12 * h) return;
-      sv = u; k = bk;
+      if (!Number.isFinite(bd2)) { footWinFast(p, x, y, winLoR, winHiR, out); out.u = out.s; return; }
+      out.d = Math.sqrt(bd2); out.x = bx; out.y = by; out.s = bs; out.k = bk; out.u = bu;
+      const edge = (bu <= lo + 1e-9 * h && lo > winLo) || (bu >= hi - 1e-9 * h && hi < winHi);
+      if (!edge || Math.abs(bu - sv) <= 1e-12 * h) return;
+      sv = bu; k0 = bk;
     }
   };
-  const solveEqF = (A: FArm, B: FArm, rho: number, sx: number, sy: number, hintA: number, hintKa: number, hintB: number, hintKb: number, limit = h, maxIt = 16, tolB = 1e-12): { x: number; y: number; fa: FFoot; fb: FFoot; ok: boolean } => {
-    let x = sx; let y = sy;
-    const fa: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 }; const fb: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 };
-    footNear(A, x, y, hintA, hintKa, fa); footNear(B, x, y, hintB, hintKb, fb);
-    for (let it = 0; it < maxIt; it++) {
-      const Fa = fa.d - rho; const Fb = fb.d - rho;
-      if (Math.abs(Fa) < tolB * Math.max(1, rho) && Math.abs(Fb) < tolB * Math.max(1, rho)) break;
-      if (!(fa.d > 1e-12 && fb.d > 1e-12)) break;
-      const gax = (x - fa.x) / fa.d; const gay = (y - fa.y) / fa.d;
-      const gbx = (x - fb.x) / fb.d; const gby = (y - fb.y) / fb.d;
-      const det = gax * gby - gay * gbx;
-      if (Math.abs(det) < 1e-12) break;
-      let dx = (-Fa * gby + Fb * gay) / det;
-      let dy = (-Fb * gax + Fa * gbx) / det;
-      const dl = Math.hypot(dx, dy);
-      if (dl > limit) { dx *= limit / dl; dy *= limit / dl; }
-      x += dx; y += dy;
-      footNear(A, x, y, fa.u, fa.k, fa); footNear(B, x, y, fb.u, fb.k, fb);
-    }
-    const ok = Math.max(Math.abs(fa.d - rho), Math.abs(fb.d - rho)) < 1e-9 * Math.max(1, rho);
-    return { x, y, fa, fb, ok };
-  };
-  const footArmF = (arm: FArm, x: number, y: number, estD?: number): FFoot & { u: number } => {
-    const p = polys[arm.pi];
-    let d0 = 0; let d1 = arm.L;
-    if (estD !== undefined && Number.isFinite(estD)) { d0 = Math.max(0, estD - 4 * h); d1 = Math.min(arm.L, estD + 4 * h); if (d1 - d0 < 1e-9) { d0 = 0; d1 = arm.L; } }
-    const lo = arm.dir > 0 ? arm.sR + d0 : arm.sR - d1;
-    const hi = arm.dir > 0 ? arm.sR + d1 : arm.sR - d0;
-    const f = footInWindow(p, x, y, lo, hi);
-    return { ...f, u: f.s };
-  };
-  const solveEqS2 = (A: FArm, B: FArm, rho: number, x0: number, y0: number, estD?: number): { x: number; y: number; fa: FFoot & { u: number }; fb: FFoot & { u: number }; ok: boolean } => {
+  const solveVS2 = (A: FArm, B: FArm, rho: number, x0: number, y0: number, estD: number, fa: FFoot, fb: FFoot): boolean => {
     let x = x0; let y = y0;
-    let fa = footArmF(A, x, y, estD); let fb = footArmF(B, x, y, estD);
+    // Feet start at the estimated foot distance along each arm and are
+    // tracked from there (the builder searches +-4h around it).
+    fa.u = A.sR + A.dir * estD; fa.k = segOfS(polys[A.pi], normS(polys[A.pi], fa.u)).k;
+    fb.u = B.sR + B.dir * estD; fb.k = segOfS(polys[B.pi], normS(polys[B.pi], fb.u)).k;
+    footNear(A, x, y, fa.u, fa.k, fa); footNear(B, x, y, fb.u, fb.k, fb);
     for (let it = 0; it < 40; it++) {
       const Fa = fa.d - rho; const Fb = fb.d - rho;
       if (Math.abs(Fa) < 1e-12 * Math.max(1, rho) && Math.abs(Fb) < 1e-12 * Math.max(1, rho)) break;
@@ -2049,509 +2029,905 @@ export function frame(st: OutlineStructure, scene: SceneIn, profile?: Record<str
       const dl = Math.hypot(dx, dy);
       if (dl > h) { dx *= h / dl; dy *= h / dl; }
       x += dx; y += dy;
-      fa = footArmF(A, x, y, estD); fb = footArmF(B, x, y, estD);
+      footNear(A, x, y, fa.u, fa.k, fa); footNear(B, x, y, fb.u, fb.k, fb);
     }
-    const ok = Math.abs(fa.d - rho) < 1e-9 * Math.max(h, rho) && Math.abs(fb.d - rho) < 1e-9 * Math.max(h, rho);
-    return { x, y, fa, fb, ok };
+    sv.x = x; sv.y = y;
+    return Math.abs(fa.d - rho) < 1e-9 * Math.max(h, rho) && Math.abs(fb.d - rho) < 1e-9 * Math.max(h, rho);
   };
-  const fCorners: FCorner[] = st.corners.map((cs) => {
+  const crF = scene.look.cuspRadius ?? 3;
+  const fFa: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 };
+  const fFb: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 };
+  const qFa: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 };
+  const qFb: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 };
+  for (let ci = 0; ci < st.corners.length; ci++) {
+    const cs = st.corners[ci];
+    const fc = rt.fCorners[ci];
     const A = arms[cs.aArm]; const B = arms[cs.bArm];
-    const stored = cs.stored;
-    const fallback = (): FCorner => {
-      const fa = A ? pointAt(polys[A.pi], cs.sA) : { x: stored.tax, y: stored.tay };
-      const fb = B ? pointAt(polys[B.pi], cs.sB) : { x: stored.tbx, y: stored.tby };
-      return { ok: cs.ok, Vx: stored.Vx, Vy: stored.Vy, qx: stored.qx, qy: stored.qy, tax: stored.tax, tay: stored.tay, tbx: stored.tbx, tby: stored.tby, sA: cs.sA, sB: cs.sB, fax: fa.x, fay: fa.y, fbx: fb.x, fby: fb.y, r: cs.r, theta: cs.theta };
-    };
-    if (!cs.ok || !A || !B) return fallback();
     const J = scene.junctions[cs.ji];
-    if (!J) return fallback();
+    const degen = (vx: number, vy: number): void => {
+      fc.ok = cs.ok; fc.Vx = vx; fc.Vy = vy; fc.qx = vx; fc.qy = vy;
+      fc.tax = vx; fc.tay = vy; fc.tbx = vx; fc.tby = vy; fc.r = 0; fc.theta = cs.theta;
+      if (A) { const f = pointAt(polys[A.pi], cs.sA); fc.fax = f.x; fc.fay = f.y; } else { fc.fax = vx; fc.fay = vy; }
+      if (B) { const f = pointAt(polys[B.pi], cs.sB); fc.fbx = f.x; fc.fby = f.y; } else { fc.fbx = vx; fc.fby = vy; }
+      fc.sA = cs.sA; fc.sB = cs.sB;
+    };
+    if (!cs.ok || !A || !B || !J) { degen(J ? J.c[0] : 0, J ? J.c[1] : 0); continue; }
     let th = B.ang - A.ang;
     th = ((th % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
-    // S2 only builds corners for th in (1e-6, pi-1e-6); if this frame's
-    // arms have rotated out of that range the corner is degenerate
-    // here, and the recorded geometry is the bounded answer.
-    if (!(th > 1e-6 && th < Math.PI - 1e-6)) return fallback();
+    fc.theta = th;
     let bx = A.ux + B.ux; let by = A.uy + B.uy;
     const bl = Math.hypot(bx, by) || 1; bx /= bl; by /= bl;
-    const sn = Math.sin(th / 2) || 1;
-    const V = solveEqS2(A, B, h, J.c[0] + (bx * h) / sn, J.c[1] + (by * h) / sn, h / Math.max(Math.tan(th / 2), 1e-6));
-    if (!V.ok) return fallback();
-    let Q = V;
-    if (cs.r > 1e-9) {
-      // Grow the ball from V to h+r along the tracked medial path,
-      // S2's advance() with its predictor and acceptance radius (the
-      // gates only set r, which structure() stored).
-      const crF = scene.look.cuspRadius ?? 3;
-      const r0 = cs.style * (crF / 3) * Math.min(2 * h, 1.5 * h * Math.tan(cs.theta / 2));
-      const dN = Math.max(r0 / 32, 1e-12);
-      type TKF = { x: number; y: number; fa: FFoot; fb: FFoot };
-      const advanceF = (from: TKF, rho0: number, rhoT: number, st0: number): { p: TKF; rho: number } => {
-        let p = from; let rc = rho0; let st = st0;
-        let guard = 0;
-        while (rhoT - rc > 1e-12 * rhoT && guard++ < 24) {
-          const rn = Math.min(rhoT, rc + st);
-          const dd = rn - rc;
-          let next: TKF | null = null;
-          if (p.fa.d > 1e-12 && p.fb.d > 1e-12) {
-            const nax = (p.x - p.fa.x) / p.fa.d; const nay = (p.y - p.fa.y) / p.fa.d;
-            const nbx = (p.x - p.fb.x) / p.fb.d; const nby = (p.y - p.fb.y) / p.fb.d;
-            const den = 1 + nax * nbx + nay * nby;
-            if (den > 1e-9) {
-              const ux = (nax + nbx) / den; const uy = (nay + nby) / den;
-              const gx = p.x + ux * dd; const gy = p.y + uy * dd;
-              const acc = Math.min(h, Math.max(0.5 * Math.hypot(ux, uy) * dd, 1e-3 * h));
-              const nn = solveEqF(A, B, rn, gx, gy, p.fa.u ?? p.fa.s, p.fa.k, p.fb.u ?? p.fb.s, p.fb.k, acc, 16, 1e-9);
-              if (nn.ok && Math.hypot(nn.x - gx, nn.y - gy) <= acc) next = nn as TKF;
-            }
-          }
-          if (next) { p = next; rc = rn; st = Math.min(st0, 2 * st); }
-          else { st /= 2; if (st < 1e-5 * h) break; }
-        }
-        return { p, rho: rhoT - rc <= 1e-12 * rhoT ? rhoT : rc };
-      };
-      let node: TKF = V as TKF;
+    const thC = Math.min(Math.max(th, 1e-3), Math.PI - 1e-3);
+    const sn = Math.sin(thC / 2) || 1;
+    const vx0 = J.c[0] + (bx * h) / sn; const vy0 = J.c[1] + (by * h) / sn;
+    const okV = solveVS2(A, B, h, vx0, vy0, h / Math.max(Math.tan(thC / 2), 1e-6), fFa, fFb);
+    if (!okV) { degen(vx0, vy0); continue; }
+    let qx = sv.x; let qy = sv.y;
+    Object.assign(qFa, fFa); Object.assign(qFb, fFb);
+    let Vx = qx; let Vy = qy;
+    let rReached = 0;
+    const r0Stored = cs.style * (crF / 3) * Math.min(2 * h, 1.5 * h * Math.tan(cs.theta / 2));
+    const r0Frame = cs.style * (crF / 3) * Math.min(2 * h, 1.5 * h * Math.tan(thC / 2));
+    let rTarget = r0Stored > 1e-12 ? cs.r * (r0Frame / r0Stored) : r0Frame;
+    if (!(rTarget > 0)) rTarget = 0;
+    rTarget = Math.min(rTarget, r0Frame);
+    // Tracked growth along V's medial branch, the builder's advance():
+    // predictor, acceptance radius, step halving/doubling. The step
+    // dN and r0 come from this frame's angle (r0Frame).
+    const growTo = (target: number): number => {
+      Object.assign(qFa, fFa); Object.assign(qFb, fFb);
+      qFa.u = A.sR + A.dir * armDistF(A, fFa.s);
+      qFb.u = B.sR + B.dir * armDistF(B, fFb.s);
+      qx = Vx; qy = Vy;
+      if (!(target > 1e-9)) return 0;
+      const dN = Math.max(r0Frame / 32, 1e-12);
+      const stepCap = Math.max(dN, target / 4);
       let rhoCur = h;
-      const kMax = Math.min(32, Math.floor(cs.r / dN));
-      let failed = false;
-      for (let k = 1; k <= kMax; k++) {
-        const adv = advanceF(node, rhoCur, h + k * dN, dN);
-        node = adv.p; rhoCur = adv.rho;
-        if (adv.rho < h + k * dN - 1e-12) { failed = true; break; }
-      }
-      if (!failed) {
-        const adv = advanceF(node, rhoCur, h + cs.r, dN);
-        node = adv.p;
-        if (adv.rho < h + cs.r - 1e-9 * Math.max(1, h + cs.r)) failed = true;
-      }
-      if (failed) return fallback();
-      Q = { ...node, ok: true };
-    }
-    const rho = h + (cs.r > 1e-9 ? cs.r : 0);
-    void rho;
-    const tax = cs.r > 1e-9 ? Q.fa.x + (h * (Q.x - Q.fa.x)) / (Q.fa.d || 1) : V.x;
-    const tay = cs.r > 1e-9 ? Q.fa.y + (h * (Q.y - Q.fa.y)) / (Q.fa.d || 1) : V.y;
-    const tbx = cs.r > 1e-9 ? Q.fb.x + (h * (Q.x - Q.fb.x)) / (Q.fb.d || 1) : V.x;
-    const tby = cs.r > 1e-9 ? Q.fb.y + (h * (Q.y - Q.fb.y)) / (Q.fb.d || 1) : V.y;
-    return { ok: true, Vx: V.x, Vy: V.y, qx: Q.x, qy: Q.y, tax, tay, tbx, tby, sA: Q.fa.s, sB: Q.fb.s, fax: Q.fa.x, fay: Q.fa.y, fbx: Q.fb.x, fby: Q.fb.y, r: cs.r, theta: th };
-  });
-  mark("corners", tPhase); tPhase = performance.now();
-
-  // Borders: evaluate each kept point from this frame's centrelines.
-  interface BState {
-    bs: BorderStruct; pi: number; side: number;
-    X: Float64Array; Y: Float64Array; S: Float64Array; FX: Float64Array; FY: Float64Array; done: Uint8Array;
-    baseReady: boolean; baseX: Float64Array; baseY: Float64Array; baseS: Float64Array;
-    XY: Float64Array; CXY: Float64Array; SA: Float64Array; posOfId: Int32Array;
-  }
-  const bStates: BState[] = st.borders.map((bs, b) => ({
-    bs, pi: b >> 1, side: (b & 1) === 0 ? 1 : -1,
-    X: new Float64Array(bs.kind.length), Y: new Float64Array(bs.kind.length), S: new Float64Array(bs.kind.length),
-    FX: new Float64Array(bs.kind.length), FY: new Float64Array(bs.kind.length), done: new Uint8Array(bs.kind.length),
-    baseReady: false, baseX: new Float64Array(0), baseY: new Float64Array(0), baseS: new Float64Array(0),
-    XY: new Float64Array(2 * bs.seqPool.length), CXY: new Float64Array(2 * bs.seqPool.length), SA: new Float64Array(bs.seqPool.length),
-    posOfId: (() => { const m = new Int32Array(bs.kind.length).fill(-1); bs.seqPool.forEach((id, j) => { m[id] = j; }); return m; })(),
-  }));
-  const polyTan = polys.map((p) => {
-    const tx = new Float64Array(Math.max(1, p.nseg)); const ty = new Float64Array(Math.max(1, p.nseg));
-    for (let k = 0; k < p.nseg; k++) { const b = k + 1 === p.n ? 0 : k + 1; const l = p.segLen[k] || 1; tx[k] = (p.x[b] - p.x[k]) / l; ty[k] = (p.y[b] - p.y[k]) / l; }
-    return { tx, ty };
-  });
-  const segTan = (p: Poly, k: number): [number, number] => { const b = k + 1 === p.n ? 0 : k + 1; const l = p.segLen[k] || 1; return [(p.x[b] - p.x[k]) / l, (p.y[b] - p.y[k]) / l]; };
-  const offFrame = (p: Poly, v: number, seg: number, sig: number): [number, number] => { const [tx, ty] = segTan(p, seg); return [p.x[v] + sig * h * -ty, p.y[v] + sig * h * tx]; };
-  const borderAtFromBase = (stt: BState, sIn: number): [number, number, number] => {
-    const p = polys[stt.pi];
-    let target = sIn;
-    if (p.closed) { target = normS(p, target); if (target < stt.baseS[0] - 1e-9) target += p.len; }
-    const baseS = stt.baseS;
-    let lo = 0; let hi = baseS.length - 1;
-    while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (baseS[mid] <= target) lo = mid; else hi = mid; }
-    const a = lo; const b = Math.min(baseS.length - 1, lo + 1);
-    const ds = baseS[b] - baseS[a];
-    const t = ds > 1e-12 ? Math.min(1, Math.max(0, (target - baseS[a]) / ds)) : 0;
-    return [stt.baseX[a] + (stt.baseX[b] - stt.baseX[a]) * t, stt.baseY[a] + (stt.baseY[b] - stt.baseY[a]) * t, target];
-  };
-  const ensureBase = (bi: number): void => {
-    const stt = bStates[bi];
-    if (stt.baseReady) return;
-    stt.baseReady = true;
-    const bs = stt.bs;
-    const n = bs.baseSeq.length;
-    stt.baseX = new Float64Array(n);
-    stt.baseY = new Float64Array(n);
-    stt.baseS = new Float64Array(n);
-    const p = polys[stt.pi];
-    const TT = polyTan[stt.pi];
-    const sig = stt.side;
-    const bKind = bs.kind; const bI1 = bs.i1; const bI2 = bs.i2; const bF = bs.f; const bSOff = bs.sOff;
-    for (let j = 0; j < n; j++) {
-      const id = bs.baseSeq[j];
-      if (!stt.done[id]) {
-        const kd = bKind[id];
-        if (kd === 0) {
-          const v = bI1[id]; const seg = bI2[id];
-          stt.X[id] = p.x[v] + sig * h * -TT.ty[seg]; stt.Y[id] = p.y[v] + sig * h * TT.tx[seg];
-          stt.S[id] = p.s[v] + bSOff[id]; stt.FX[id] = p.x[v]; stt.FY[id] = p.y[v];
-          stt.done[id] = 1;
-        } else if (kd === 1) {
-          const v = bI1[id];
-          const kPrev = v - 1 < 0 ? p.nseg - 1 : v - 1;
-          const kNext = v >= p.nseg ? 0 : v;
-          const tPx = TT.tx[kPrev]; const tPy = TT.ty[kPrev]; const tNx = TT.tx[kNext]; const tNy = TT.ty[kNext];
-          const Ax = p.x[v] + sig * h * -tPy; const Ay = p.y[v] + sig * h * tPx;
-          const Bx = p.x[v] + sig * h * -tNy; const By = p.y[v] + sig * h * tNx;
-          const det = tPx * tNy - tPy * tNx;
-          if (Math.abs(det) < 1e-300) { stt.X[id] = Bx; stt.Y[id] = By; } else { const t = ((Bx - Ax) * tNy - (By - Ay) * tNx) / det; stt.X[id] = Ax + tPx * t; stt.Y[id] = Ay + tPy * t; }
-          stt.S[id] = p.s[v] + bSOff[id]; stt.FX[id] = p.x[v]; stt.FY[id] = p.y[v];
-          stt.done[id] = 1;
-        } else if (kd === 2) {
-          const v = bI1[id];
-          const kPrev = v - 1 < 0 ? p.nseg - 1 : v - 1;
-          const kNext = v >= p.nseg ? 0 : v;
-          const Ax = p.x[v] + sig * h * -TT.ty[kPrev]; const Ay = p.y[v] + sig * h * TT.tx[kPrev];
-          const Bx = p.x[v] + sig * h * -TT.ty[kNext]; const By = p.y[v] + sig * h * TT.tx[kNext];
-          const a0 = Math.atan2(Ay - p.y[v], Ax - p.x[v]);
-          let da = Math.atan2(By - p.y[v], Bx - p.x[v]) - a0;
-          while (da > Math.PI) da -= 2 * Math.PI;
-          while (da < -Math.PI) da += 2 * Math.PI;
-          const a = a0 + da * bF[id];
-          stt.X[id] = p.x[v] + h * Math.cos(a); stt.Y[id] = p.y[v] + h * Math.sin(a);
-          stt.S[id] = p.s[v] + bSOff[id]; stt.FX[id] = p.x[v]; stt.FY[id] = p.y[v];
-          stt.done[id] = 1;
-        } else {
-          evalPt(bi, id);
+      let step = dN;
+      let guard = 0;
+      while (rhoCur < h + target - 1e-12 * (h + target) && guard++ < 128) {
+        const rhoT = Math.min(h + target, rhoCur + step);
+        const dd = rhoT - rhoCur;
+        let advanced = false;
+        if (qFa.d > 1e-12 && qFb.d > 1e-12) {
+          const nax = (qx - qFa.x) / qFa.d; const nay = (qy - qFa.y) / qFa.d;
+          const nbx = (qx - qFb.x) / qFb.d; const nby = (qy - qFb.y) / qFb.d;
+          const den = 1 + nax * nbx + nay * nby;
+          if (den > 1e-9) {
+            const ux = (nax + nbx) / den; const uy = (nay + nby) / den;
+            const gx = qx + ux * dd; const gy = qy + uy * dd;
+            const acc = Math.min(h, Math.max(0.5 * Math.hypot(ux, uy) * dd, 1e-3 * h));
+            const tFa = gFa; const tFb = gFb;
+            Object.assign(tFa, qFa); Object.assign(tFb, qFb);
+            let sx = gx; let sy = gy;
+            footNear(A, sx, sy, tFa.u, tFa.k, tFa); footNear(B, sx, sy, tFb.u, tFb.k, tFb);
+            for (let it = 0; it < 60; it++) {
+              const Fa = tFa.d - rhoT; const Fb = tFb.d - rhoT;
+              if (Math.abs(Fa) < 1e-12 * Math.max(1, rhoT) && Math.abs(Fb) < 1e-12 * Math.max(1, rhoT)) break;
+              if (!(tFa.d > 1e-12 && tFb.d > 1e-12)) break;
+              const gax = (sx - tFa.x) / tFa.d; const gay = (sy - tFa.y) / tFa.d;
+              const gbx = (sx - tFb.x) / tFb.d; const gby = (sy - tFb.y) / tFb.d;
+              const det = gax * gby - gay * gbx;
+              if (Math.abs(det) < 1e-12) break;
+              let dx = (-Fa * gby + Fb * gay) / det;
+              let dy = (-Fb * gax + Fa * gbx) / det;
+              const dl = Math.hypot(dx, dy);
+              if (dl > acc) { dx *= acc / dl; dy *= acc / dl; }
+              sx += dx; sy += dy;
+              footNear(A, sx, sy, tFa.u, tFa.k, tFa); footNear(B, sx, sy, tFb.u, tFb.k, tFb);
+            }
+            const sok = Math.max(Math.abs(tFa.d - rhoT), Math.abs(tFb.d - rhoT)) < 1e-9 * Math.max(1, rhoT);
+            if (sok && Math.hypot(sx - gx, sy - gy) <= acc) { qx = sx; qy = sy; Object.assign(qFa, tFa); Object.assign(qFb, tFb); rhoCur = rhoT; advanced = true; }
+          }
         }
+        if (advanced) step = Math.min(stepCap, 2 * step);
+        else { step /= 2; if (step < 1e-5 * h) break; }
       }
-      const posB = stt.posOfId[id];
-      if (posB >= 0 && bKind[id] <= 2) { stt.XY[2 * posB] = stt.X[id]; stt.XY[2 * posB + 1] = stt.Y[id]; stt.CXY[2 * posB] = stt.FX[id]; stt.CXY[2 * posB + 1] = stt.FY[id]; stt.SA[posB] = stt.S[id]; }
-      stt.baseX[j] = stt.X[id]; stt.baseY[j] = stt.Y[id]; stt.baseS[j] = stt.S[id];
+      return Math.max(0, rhoCur - h);
+    };
+    rReached = growTo(rTarget);
+    if (rReached <= 1e-9) { rReached = 0; qx = Vx; qy = Vy; Object.assign(qFa, fFa); Object.assign(qFb, fFb); }
+    fc.ok = true; fc.Vx = Vx; fc.Vy = Vy; fc.qx = qx; fc.qy = qy; fc.r = rReached;
+    fc.sA = qFa.s; fc.sB = qFb.s; fc.fax = qFa.x; fc.fay = qFa.y; fc.fbx = qFb.x; fc.fby = qFb.y;
+    if (rReached > 1e-9) {
+      fc.tax = qFa.x + (h * (qx - qFa.x)) / (qFa.d || 1); fc.tay = qFa.y + (h * (qy - qFa.y)) / (qFa.d || 1);
+      fc.tbx = qFb.x + (h * (qx - qFb.x)) / (qFb.d || 1); fc.tby = qFb.y + (h * (qy - qFb.y)) / (qFb.d || 1);
+    } else { fc.tax = Vx; fc.tay = Vy; fc.tbx = Vx; fc.tby = Vy; fc.sA = fFa.s; fc.sB = fFb.s; fc.fax = fFa.x; fc.fay = fFa.y; fc.fbx = fFb.x; fc.fby = fFb.y; }
+  }
+  mark("corners");
+  // Borders: base points from this frame's centrelines, then features.
+  for (let b = 0; b < rt.b.length; b++) {
+    const brt = rt.b[b]; const bs = brt.bs; const p = polys[brt.pi]; const sig = brt.side;
+    const TT = rt.tan[brt.pi];
+    const kind = bs.kind; const i1 = bs.i1; const i2 = bs.i2; const fArr = bs.f; const sOff = bs.sOff;
+    const X = brt.X; const Y = brt.Y; const S = brt.S; const FX = brt.FX; const FY = brt.FY; const done = brt.done;
+    done.fill(0);
+    const baseSeq = bs.baseSeq;
+    // One pool point, kinds 0-2, written to the base/seq views.
+    const evalBasic = (id: number): void => {
+      if (done[id]) return;
+      const kd = kind[id];
+      if (kd === 0) {
+        const v = i1[id]; const seg = i2[id];
+        X[id] = p.x[v] + sig * h * -TT.ty[seg]; Y[id] = p.y[v] + sig * h * TT.tx[seg];
+        S[id] = p.s[v] + sOff[id]; FX[id] = p.x[v]; FY[id] = p.y[v];
+      } else if (kd === 1) {
+        const v = i1[id];
+        const kPrev = v - 1 < 0 ? p.nseg - 1 : v - 1;
+        const kNext = v >= p.nseg ? 0 : v;
+        const tPx = TT.tx[kPrev]; const tPy = TT.ty[kPrev]; const tNx = TT.tx[kNext]; const tNy = TT.ty[kNext];
+        const Ax = p.x[v] + sig * h * -tPy; const Ay = p.y[v] + sig * h * tPx;
+        const Bx = p.x[v] + sig * h * -tNy; const By = p.y[v] + sig * h * tNx;
+        const det = tPx * tNy - tPy * tNx;
+        if (Math.abs(det) < 1e-300) { X[id] = Bx; Y[id] = By; } else { const t = ((Bx - Ax) * tNy - (By - Ay) * tNx) / det; X[id] = Ax + tPx * t; Y[id] = Ay + tPy * t; }
+        S[id] = p.s[v] + sOff[id]; FX[id] = p.x[v]; FY[id] = p.y[v];
+      } else if (kd === 2) {
+        const v = i1[id];
+        const kPrev = v - 1 < 0 ? p.nseg - 1 : v - 1;
+        const kNext = v >= p.nseg ? 0 : v;
+        const Ax = p.x[v] + sig * h * -TT.ty[kPrev]; const Ay = p.y[v] + sig * h * TT.tx[kPrev];
+        const Bx = p.x[v] + sig * h * -TT.ty[kNext]; const By = p.y[v] + sig * h * TT.tx[kNext];
+        const a0 = Math.atan2(Ay - p.y[v], Ax - p.x[v]);
+        let da = Math.atan2(By - p.y[v], Bx - p.x[v]) - a0;
+        while (da > Math.PI) da -= 2 * Math.PI;
+        while (da < -Math.PI) da += 2 * Math.PI;
+        const a = a0 + da * fArr[id];
+        X[id] = p.x[v] + h * Math.cos(a); Y[id] = p.y[v] + h * Math.sin(a);
+        S[id] = p.s[v] + sOff[id]; FX[id] = p.x[v]; FY[id] = p.y[v];
+      } else return;
+      done[id] = 1;
+      const bj = brt.basePos[id];
+      if (bj >= 0) brt.baseS[bj] = S[id];
+      const pos = brt.posOfId[id];
+      if (pos >= 0) { brt.XY[2 * pos] = X[id]; brt.XY[2 * pos + 1] = Y[id]; brt.CXY[2 * pos] = FX[id]; brt.CXY[2 * pos + 1] = FY[id]; brt.SA[pos] = S[id]; }
+    };
+    // Kind 3 (fold) points can reference fold points that a later fold
+    // cut dropped from the border, so they resolve recursively through
+    // the pool (the builder's evalPt did the same).
+    const subX = (id: number): number => { const bj = brt.basePos[id]; return bj >= 0 ? brt.XY[2 * brt.posOfId[id]] : X[id]; };
+    const subY = (id: number): number => { const bj = brt.basePos[id]; return bj >= 0 ? brt.XY[2 * brt.posOfId[id] + 1] : Y[id]; };
+    const subS = (id: number): number => { const bj = brt.basePos[id]; return bj >= 0 ? brt.baseS[bj] : S[id]; };
+    const subFX = (id: number): number => { const bj = brt.basePos[id]; return bj >= 0 ? brt.CXY[2 * brt.posOfId[id]] : FX[id]; };
+    const subFY = (id: number): number => { const bj = brt.basePos[id]; return bj >= 0 ? brt.CXY[2 * brt.posOfId[id] + 1] : FY[id]; };
+    const eval3 = (id: number): void => {
+      if (done[id]) return;
+      const a = i1[id]; const bb = i2[id]; const c = bs.i3[id]; const d = bs.i4[id];
+      evalAny(a); evalAny(bb); evalAny(c); evalAny(d);
+      const hit = segInt(subX(a), subY(a), subX(bb), subY(bb), subX(c), subY(c), subX(d), subY(d));
+      const t = hit ? hit.t : fArr[id];
+      X[id] = subX(a) + (subX(bb) - subX(a)) * t; Y[id] = subY(a) + (subY(bb) - subY(a)) * t;
+      S[id] = subS(a) + dS(p, subS(a), subS(bb)) * t;
+      FX[id] = subFX(a) + (subFX(bb) - subFX(a)) * t; FY[id] = subFY(a) + (subFY(bb) - subFY(a)) * t;
+      done[id] = 1;
+      const bj = brt.basePos[id];
+      if (bj >= 0) brt.baseS[bj] = S[id];
+      const pos = brt.posOfId[id];
+      if (pos >= 0) { brt.XY[2 * pos] = X[id]; brt.XY[2 * pos + 1] = Y[id]; brt.CXY[2 * pos] = FX[id]; brt.CXY[2 * pos + 1] = FY[id]; brt.SA[pos] = S[id]; }
+    };
+    const evalAny = (id: number): void => {
+      if (done[id]) return;
+      if (kind[id] === 3) eval3(id); else evalBasic(id);
+    };
+    for (let j = 0; j < baseSeq.length; j++) {
+      const id = baseSeq[j]; const kd = kind[id];
+      if (kd === 3 || done[id]) continue;
+      // Kinds 0-2 inlined (the frame's hot loop). Base points write
+      // only the base and sequence views; cold paths (fold recursion,
+      // cut fallbacks) read a base point through its base view.
+      let vx = 0; let vy = 0; let vs = 0; let vfx = 0; let vfy = 0;
+      if (kd === 0) {
+        const v = i1[id]; const seg = i2[id];
+        vx = p.x[v] + sig * h * -TT.ty[seg]; vy = p.y[v] + sig * h * TT.tx[seg];
+        vs = p.s[v] + sOff[id]; vfx = p.x[v]; vfy = p.y[v];
+      } else if (kd === 1) {
+        const v = i1[id];
+        const kPrev = v - 1 < 0 ? p.nseg - 1 : v - 1;
+        const kNext = v >= p.nseg ? 0 : v;
+        const tPx = TT.tx[kPrev]; const tPy = TT.ty[kPrev]; const tNx = TT.tx[kNext]; const tNy = TT.ty[kNext];
+        const Ax = p.x[v] + sig * h * -tPy; const Ay = p.y[v] + sig * h * tPx;
+        const Bx = p.x[v] + sig * h * -tNy; const By = p.y[v] + sig * h * tNx;
+        const det = tPx * tNy - tPy * tNx;
+        if (Math.abs(det) < 1e-300) { vx = Bx; vy = By; } else { const t = ((Bx - Ax) * tNy - (By - Ay) * tNx) / det; vx = Ax + tPx * t; vy = Ay + tPy * t; }
+        vs = p.s[v] + sOff[id]; vfx = p.x[v]; vfy = p.y[v];
+      } else if (kd === 2) {
+        const v = i1[id];
+        const kPrev = v - 1 < 0 ? p.nseg - 1 : v - 1;
+        const kNext = v >= p.nseg ? 0 : v;
+        const Ax = p.x[v] + sig * h * -TT.ty[kPrev]; const Ay = p.y[v] + sig * h * TT.tx[kPrev];
+        const Bx = p.x[v] + sig * h * -TT.ty[kNext]; const By = p.y[v] + sig * h * TT.tx[kNext];
+        const a0 = Math.atan2(Ay - p.y[v], Ax - p.x[v]);
+        let da = Math.atan2(By - p.y[v], Bx - p.x[v]) - a0;
+        while (da > Math.PI) da -= 2 * Math.PI;
+        while (da < -Math.PI) da += 2 * Math.PI;
+        const a = a0 + da * fArr[id];
+        vx = p.x[v] + h * Math.cos(a); vy = p.y[v] + h * Math.sin(a);
+        vs = p.s[v] + sOff[id]; vfx = p.x[v]; vfy = p.y[v];
+      } else continue;
+      done[id] = 1;
+      brt.baseS[j] = vs;
+      const pos = brt.posOfId[id];
+      if (pos >= 0) { brt.XY[2 * pos] = vx; brt.XY[2 * pos + 1] = vy; brt.CXY[2 * pos] = vfx; brt.CXY[2 * pos + 1] = vfy; brt.SA[pos] = vs; }
     }
-  };
-  const evalPt = (bi: number, id: number): void => {
-    const stt = bStates[bi];
-    if (stt.done[id]) return;
-    stt.done[id] = 1;
-    const bs = stt.bs;
-    const p = polys[stt.pi];
-    const sig = stt.side;
-    const kind = bs.kind[id];
-    let x = 0; let y = 0; let s = 0; let fx = 0; let fy = 0;
-    const TT = polyTan[stt.pi];
-    if (kind === 0) {
-      const v = bs.i1[id];
-      const seg = bs.i2[id];
-      x = p.x[v] + sig * h * -TT.ty[seg]; y = p.y[v] + sig * h * TT.tx[seg];
-      s = p.s[v] + bs.sOff[id]; fx = p.x[v]; fy = p.y[v];
-    } else if (kind === 1) {
-      const v = bs.i1[id];
-      const kPrev = v - 1 < 0 ? p.nseg - 1 : v - 1;
-      const kNext = v >= p.nseg ? 0 : v;
-      const tPx = TT.tx[kPrev]; const tPy = TT.ty[kPrev]; const tNx = TT.tx[kNext]; const tNy = TT.ty[kNext];
-      const Ax = p.x[v] + sig * h * -tPy; const Ay = p.y[v] + sig * h * tPx;
-      const Bx = p.x[v] + sig * h * -tNy; const By = p.y[v] + sig * h * tNx;
-      const det = tPx * tNy - tPy * tNx;
-      if (Math.abs(det) < 1e-300) { x = Bx; y = By; } else { const t = ((Bx - Ax) * tNy - (By - Ay) * tNx) / det; x = Ax + tPx * t; y = Ay + tPy * t; }
-      s = p.s[v] + bs.sOff[id]; fx = p.x[v]; fy = p.y[v];
-    } else if (kind === 2) {
-      const v = bs.i1[id];
-      const kPrev = v - 1 < 0 ? p.nseg - 1 : v - 1;
-      const kNext = v >= p.nseg ? 0 : v;
-      const Ax = p.x[v] + sig * h * -TT.ty[kPrev]; const Ay = p.y[v] + sig * h * TT.tx[kPrev];
-      const Bx = p.x[v] + sig * h * -TT.ty[kNext]; const By = p.y[v] + sig * h * TT.tx[kNext];
-      const A: [number, number] = [Ax, Ay]; const B: [number, number] = [Bx, By];
-      const a0 = Math.atan2(A[1] - p.y[v], A[0] - p.x[v]);
-      let da = Math.atan2(B[1] - p.y[v], B[0] - p.x[v]) - a0;
-      while (da > Math.PI) da -= 2 * Math.PI;
-      while (da < -Math.PI) da += 2 * Math.PI;
-      const a = a0 + da * bs.f[id];
-      x = p.x[v] + h * Math.cos(a); y = p.y[v] + h * Math.sin(a);
-      s = p.s[v] + bs.sOff[id]; fx = p.x[v]; fy = p.y[v];
-    } else if (kind === 3) {
-      const a = bs.i1[id]; const b = bs.i2[id]; const c = bs.i3[id]; const d = bs.i4[id];
-      evalPt(bi, a); evalPt(bi, b); evalPt(bi, c); evalPt(bi, d);
-      const hit = segInt(stt.X[a], stt.Y[a], stt.X[b], stt.Y[b], stt.X[c], stt.Y[c], stt.X[d], stt.Y[d]);
-      const t = hit ? hit.t : bs.f[id];
-      x = stt.X[a] + (stt.X[b] - stt.X[a]) * t; y = stt.Y[a] + (stt.Y[b] - stt.Y[a]) * t;
-      s = stt.S[a] + dS(p, stt.S[a], stt.S[b]) * t;
-      fx = stt.FX[a] + (stt.FX[b] - stt.FX[a]) * t; fy = stt.FY[a] + (stt.FY[b] - stt.FY[a]) * t;
-    } else if (kind === 4) {
-      const a = bs.i1[id]; const b = bs.i2[id]; const c = bs.i3[id]; const d = bs.i4[id];
-      evalPt(bi, a); evalPt(bi, b);
-      const os = bStates[bs.other[id]];
-      evalPt(bs.other[id], c); evalPt(bs.other[id], d);
-      const hit = segInt(stt.X[a], stt.Y[a], stt.X[b], stt.Y[b], os.X[c], os.Y[c], os.X[d], os.Y[d]);
-      const t = hit ? hit.t : bs.f[id];
-      x = stt.X[a] + (stt.X[b] - stt.X[a]) * t; y = stt.Y[a] + (stt.Y[b] - stt.Y[a]) * t;
-      s = stt.S[a] + (stt.S[b] - stt.S[a]) * t;
-      fx = stt.FX[a] + (stt.FX[b] - stt.FX[a]) * t; fy = stt.FY[a] + (stt.FY[b] - stt.FY[a]) * t;
-    } else if (kind === 5) {
-      const fc = fCorners[bs.i1[id]];
-      if (bs.i2[id] === 0) { x = fc.tax; y = fc.tay; fx = fc.fax; fy = fc.fay; s = fc.sA; }
-      else { x = fc.tbx; y = fc.tby; fx = fc.fbx; fy = fc.fby; s = fc.sB; }
-    } else {
-      ensureBase(bi);
-      const r = borderAtFromBase(stt, bs.f[id]);
-      x = r[0]; y = r[1]; s = r[2];
-      const foot = pointAt(p, s); fx = foot.x; fy = foot.y;
-    }
-    stt.X[id] = x; stt.Y[id] = y; stt.S[id] = s; stt.FX[id] = fx; stt.FY[id] = fy;
-    const pos = stt.posOfId[id];
-    if (pos >= 0) { stt.XY[2 * pos] = x; stt.XY[2 * pos + 1] = y; stt.CXY[2 * pos] = fx; stt.CXY[2 * pos + 1] = fy; stt.SA[pos] = s; }
-  };
-  for (let b = 0; b < bStates.length; b++) ensureBase(b);
-  mark("offsets", tPhase); tPhase = performance.now();
-  const evalCat = (cat: number): void => {
-    for (let b = 0; b < bStates.length; b++) {
-      const stt = bStates[b]; const bs = stt.bs;
-      for (let j = 0; j < bs.seqPool.length; j++) {
-        const id = bs.seqPool[j];
-        const kind = bs.kind[id];
-        const c = kind <= 3 || kind === 6 ? 0 : kind === 4 ? (bs.eye[id] >= 0 ? 2 : 1) : 3;
-        if (c === cat && !stt.done[id]) evalPt(b, id);
+    for (let j = 0; j < baseSeq.length; j++) { const id = baseSeq[j]; if (kind[id] === 3) eval3(id); }
+  }
+  mark("offsets");
+  // Crossing and eye cuts: search the recorded borders' intersection
+  // inside the feature's s window on both borders, from this frame.
+  for (const e of rt.cutList) {
+    if (rt.b[e.b].done[e.id]) continue;
+    evalCut(rt, e.b, e.id, h);
+  }
+  mark("crossingCuts");
+  // Corner tangent points and border-at points.
+  for (const e of rt.ptList) {
+    const b = e.b; const j = e.j; const id = e.id;
+    {
+      const brt = rt.b[b]; const bs = brt.bs; const p = polys[brt.pi];
+      if (brt.done[id]) continue;
+      const kd = bs.kind[id];
+      if (kd === 5) {
+        const fc = rt.fCorners[bs.i1[id]];
+        let x: number; let y: number; let fx: number; let fy: number; let s: number;
+        if (bs.i2[id] === 0) { x = fc.tax; y = fc.tay; fx = fc.fax; fy = fc.fay; s = fc.sA; } else { x = fc.tbx; y = fc.tby; fx = fc.fbx; fy = fc.fby; s = fc.sB; }
+        brt.X[id] = x; brt.Y[id] = y; brt.S[id] = s; brt.FX[id] = fx; brt.FY[id] = fy; brt.done[id] = 1;
+        brt.XY[2 * j] = x; brt.XY[2 * j + 1] = y; brt.CXY[2 * j] = fx; brt.CXY[2 * j + 1] = fy; brt.SA[j] = s;
+      } else if (kd === 6) {
+        const sIn = bs.f[id];
+        let target = sIn;
+        if (p.closed) { target = normS(p, target); if (target < brt.baseS[0] - 1e-9) target += p.len; }
+        const baseS = brt.baseS;
+        let lo = 0; let hi = baseS.length - 1;
+        while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (baseS[mid] <= target) lo = mid; else hi = mid; }
+        const a = lo; const bb = Math.min(baseS.length - 1, lo + 1);
+        const ds = baseS[bb] - baseS[a];
+        const t = ds > 1e-12 ? Math.min(1, Math.max(0, (target - baseS[a]) / ds)) : 0;
+        const pa = brt.baseSeqPos[a]; const pb = brt.baseSeqPos[bb];
+        const x = brt.XY[2 * pa] + (brt.XY[2 * pb] - brt.XY[2 * pa]) * t;
+        const y = brt.XY[2 * pa + 1] + (brt.XY[2 * pb + 1] - brt.XY[2 * pa + 1]) * t;
+        pointAtInto(p, target, ptA);
+        brt.X[id] = x; brt.Y[id] = y; brt.S[id] = target; brt.FX[id] = ptA[0]; brt.FY[id] = ptA[1]; brt.done[id] = 1;
+        brt.XY[2 * j] = x; brt.XY[2 * j + 1] = y; brt.CXY[2 * j] = ptA[0]; brt.CXY[2 * j + 1] = ptA[1]; brt.SA[j] = target;
+      } else if (kd === 3) {
+        const a = bs.i1[id]; const bb = bs.i2[id]; const c = bs.i3[id]; const d = bs.i4[id];
+        const hit = segInt(brt.X[a], brt.Y[a], brt.X[bb], brt.Y[bb], brt.X[c], brt.Y[c], brt.X[d], brt.Y[d]);
+        const t = hit ? hit.t : bs.f[id];
+        const x = brt.X[a] + (brt.X[bb] - brt.X[a]) * t; const y = brt.Y[a] + (brt.Y[bb] - brt.Y[a]) * t;
+        const s = brt.S[a] + dS(p, brt.S[a], brt.S[bb]) * t;
+        const fx = brt.FX[a] + (brt.FX[bb] - brt.FX[a]) * t; const fy = brt.FY[a] + (brt.FY[bb] - brt.FY[a]) * t;
+        brt.X[id] = x; brt.Y[id] = y; brt.S[id] = s; brt.FX[id] = fx; brt.FY[id] = fy; brt.done[id] = 1;
+        brt.XY[2 * j] = x; brt.XY[2 * j + 1] = y; brt.CXY[2 * j] = fx; brt.CXY[2 * j + 1] = fy; brt.SA[j] = s;
       }
     }
-  };
-  evalCat(0); mark("offsets", tPhase); tPhase = performance.now();
-  evalCat(1); mark("crossingCuts", tPhase); tPhase = performance.now();
-  evalCat(2); mark("eyes", tPhase); tPhase = performance.now();
-  evalCat(3); mark("cornersPts", tPhase); tPhase = performance.now();
-  mark("offsets", tPhase); tPhase = performance.now();
-
-  const stationPt = (b: number, full: number): [number, number] => {
-    const stt = bStates[b];
-    const fi = stt.bs.idxOfFull[full];
-    return fi >= 0 ? [stt.XY[2 * fi], stt.XY[2 * fi + 1]] : [0, 0];
-  };
-  const borderAtPoint = (pi: number, side: number, s: number): [number, number] => {
-    const b = pi * 2 + (side === 1 ? 0 : 1);
-    ensureBase(b);
-    const r = borderAtFromBase(bStates[b], s);
-    return [r[0], r[1]];
-  };
-
-  // Caps: arcs regenerated from this frame's cap station points.
-  const capsF = st.caps.map((cap) => {
+  }
+  mark("cornersPts");
+  // Caps regenerated from this frame's station points.
+  for (let capIdx = 0; capIdx < st.caps.length; capIdx++) {
+    const cap = st.caps[capIdx];
     const s = st.stations[cap.station];
-    const lp = stationPt(s.leftB, s.leftFull);
-    const rp = stationPt(s.rightB, s.rightFull);
+    const lb = rt.b[s.leftB]; const rb = rt.b[s.rightB];
+    const lfi = lb.bs.idxOfFull[s.leftFull]; const rfi = rb.bs.idxOfFull[s.rightFull];
+    const lpx = lb.XY[2 * lfi]; const lpy = lb.XY[2 * lfi + 1];
+    const rpx = rb.XY[2 * rfi]; const rpy = rb.XY[2 * rfi + 1];
     const p = polys[cap.pi];
-    const c = pointAt(p, s.cS);
+    pointAtInto(p, s.cS, ptA);
+    const cx0 = ptA[0]; const cy0 = ptA[1];
     const nbS = cap.atEnd ? s.cS - Math.min(1, p.len) : s.cS + Math.min(1, p.len);
-    const nb = pointAt(p, nbS);
-    let ox = c.x - nb.x; let oy = c.y - nb.y;
+    pointAtInto(p, nbS, ptB);
+    let ox = cx0 - ptB[0]; let oy = cy0 - ptB[1];
     const ol = Math.hypot(ox, oy) || 1; ox /= ol; oy /= ol;
-    const a0 = Math.atan2(lp[1] - c.y, lp[0] - c.x);
-    let da = Math.atan2(rp[1] - c.y, rp[0] - c.x) - a0;
+    const a0 = Math.atan2(lpy - cy0, lpx - cx0);
+    let da = Math.atan2(rpy - cy0, rpx - cx0) - a0;
     while (da > Math.PI) da -= 2 * Math.PI;
     while (da < -Math.PI) da += 2 * Math.PI;
     const midA = a0 + da / 2;
     if (Math.cos(midA) * ox + Math.sin(midA) * oy < 0) da = da > 0 ? da - 2 * Math.PI : da + 2 * Math.PI;
     const steps = Math.max(1, cap.steps);
-    const xy = new Float64Array(2 * (steps + 1));
+    const xy = rt.capsXY[capIdx]; const cxy = rt.capsCXY[capIdx];
     for (let i = 0; i <= steps; i++) {
-      if (i === 0) { xy[0] = lp[0]; xy[1] = lp[1]; }
-      else if (i === steps) { xy[2 * i] = rp[0]; xy[2 * i + 1] = rp[1]; }
-      else { const a = a0 + (da * i) / steps; xy[2 * i] = c.x + h * Math.cos(a); xy[2 * i + 1] = c.y + h * Math.sin(a); }
+      if (i === 0) { xy[0] = lpx; xy[1] = lpy; }
+      else if (i === steps) { xy[2 * i] = rpx; xy[2 * i + 1] = rpy; }
+      else { const a = a0 + (da * i) / steps; xy[2 * i] = cx0 + h * Math.cos(a); xy[2 * i + 1] = cy0 + h * Math.sin(a); }
+      cxy[2 * i] = cx0; cxy[2 * i + 1] = cy0;
     }
-    return { xy, cx: c.x, cy: c.y, steps };
-  });
-  mark("caps", tPhase); tPhase = performance.now();
-
-  // Regions from the stored interval/junction templates.
-  const regions: OutlineRegion[] = [];
-  const borderSeqIdx = (pi: number, side: number, fromIdx: number, toIdx: number, forward: boolean): number[] => {
-    const b = pi * 2 + (side === 1 ? 0 : 1);
-    const nPts = bStates[b].XY.length / 2;
-    const out: number[] = [];
-    if (nPts === 0) return out;
-    const from = Math.max(0, fromIdx); const to = Math.max(0, toIdx);
-    if (!polys[pi].closed) {
-      if (forward) { for (let i = from; i <= to && i < nPts; i++) out.push(i); }
-      else { for (let i = from; i >= to && i >= 0; i--) out.push(i); }
-      return out;
-    }
-    const mod = Math.max(1, nPts - 1);
-    let fi = ((from % mod) + mod) % mod;
-    const ti = ((to % mod) + mod) % mod;
-    if (forward) {
-      for (let guard = 0; guard <= mod; guard++) { out.push(fi); if (fi === ti) break; fi = (fi + 1) % mod; }
-    } else {
-      for (let guard = 0; guard <= mod; guard++) { out.push(fi); if (fi === ti) break; fi = (fi - 1 + mod) % mod; }
-    }
-    return out;
-  };
-  const dedupeFlat = (pts: number[]): number[] => {
-    const out: number[] = [];
-    for (let i = 0; i + 1 < pts.length; i += 2) {
-      const x = pts[i]; const y = pts[i + 1];
-      const n = out.length;
-      if (n >= 2 && Math.hypot(out[n - 2] - x, out[n - 1] - y) < 1e-12) continue;
-      out.push(x, y);
-    }
-    if (out.length > 2 && Math.hypot(out[0] - out[out.length - 2], out[1] - out[out.length - 1]) < 1e-12) { out.pop(); out.pop(); }
-    return out;
-  };
-  const pushPt = (seq: number[], x: number, y: number): void => {
-    const n = seq.length;
-    if (n >= 2) { const dx = seq[n - 2] - x; const dy = seq[n - 1] - y; if (dx * dx + dy * dy < 1e-24) return; }
-    seq.push(x, y);
-  };
-  const pushBorderPts = (seq: number[], pi: number, side: number, idxs: number[]): void => {
-    const b = pi * 2 + (side === 1 ? 0 : 1);
-    const XY = bStates[b].XY;
-    // Forward contiguous ranges go in as one push; the caller's
-    // finishPoly/join handling is unchanged because interior range
-    // points are distinct border points.
-    let runStart = -1;
-    let prev = -2;
-    const flushRun = (upto: number): void => {
-      if (runStart < 0) return;
-      const from = idxs[runStart];
-      for (let q = 2 * from; q < 2 * from + 2 * (upto - runStart); q++) seq.push(XY[q]);
-      runStart = -1;
+    rt.capsC[capIdx * 2] = cx0; rt.capsC[capIdx * 2 + 1] = cy0;
+  }
+  mark("caps");
+  // Regions into the shared buffer, from the stored templates.
+  const regions = rt.regions;
+  for (const r of regions) r.pieces.length = 0;
+  let cursor = 0;
+  for (let ri = 0; ri < regions.length; ri++) {
+    const region = regions[ri];
+    const tpl = rt.regionTpl[ri];
+    const start = cursor;
+    let lx = 0; let ly = 0; let have = false;
+    const wp = (x: number, y: number): void => {
+      if (have) { const dx = x - lx; const dy = y - ly; if (dx * dx + dy * dy < 1e-24) return; }
+      rt.regionBuf[2 * cursor] = x; rt.regionBuf[2 * cursor + 1] = y;
+      cursor++; lx = x; ly = y; have = true;
     };
-    for (let qi = 0; qi < idxs.length; qi++) {
-      const i = idxs[qi];
-      if (i === prev + 1 && runStart >= 0) { prev = i; continue; }
-      flushRun(qi);
-      if (qi + 1 < idxs.length && idxs[qi + 1] === i + 1) { runStart = qi; prev = i; }
-      else pushPt(seq, XY[2 * i], XY[2 * i + 1]);
-    }
-    flushRun(idxs.length);
-  };
-  const finishPoly = (seq: number[]): number[] => {
-    if (seq.length > 2) { const dx = seq[0] - seq[seq.length - 2]; const dy = seq[1] - seq[seq.length - 1]; if (dx * dx + dy * dy < 1e-24) { seq.pop(); seq.pop(); } }
-    return seq;
-  };
-  for (const iv of st.intervals) {
-    if (iv.discard) continue;
-    const A = st.stations[iv.aSt]; const B = st.stations[iv.bSt];
-    const aLeft = A ? bStates[A.leftB].bs.idxOfFull[A.leftFull] : -1;
-    const bLeft = B ? bStates[B.leftB].bs.idxOfFull[B.leftFull] : -1;
-    const bRight = B ? bStates[B.rightB].bs.idxOfFull[B.rightFull] : -1;
-    const aRight = A ? bStates[A.rightB].bs.idxOfFull[A.rightFull] : -1;
-    const seq: number[] = [];
-    pushBorderPts(seq, iv.pi, 1, borderSeqIdx(iv.pi, 1, aLeft, bLeft, true));
-    const capB = st.capByStation[iv.bSt];
-    if (capB >= 0 && B && B.kind.startsWith("cap")) { const arc = capsF[capB]; for (let i = 1; i < arc.steps; i++) pushPt(seq, arc.xy[2 * i], arc.xy[2 * i + 1]); }
-    pushBorderPts(seq, iv.pi, -1, borderSeqIdx(iv.pi, -1, bRight, aRight, false));
-    const capA = st.capByStation[iv.aSt];
-    if (capA >= 0 && A && A.kind.startsWith("cap")) { const arc = capsF[capA]; for (let i = arc.steps - 1; i >= 1; i--) pushPt(seq, arc.xy[2 * i], arc.xy[2 * i + 1]); }
-    const poly = finishPoly(seq);
-    if (poly.length < 6) continue;
-    const rid = regions.length;
-    regions.push({ id: rid, ownerChain: iv.pi, group: iv.group, pts: poly, pieces: [], hole: false });
-  }
-  const junctionRegion = new Map<number, number>();
-  const cornerByArmA = new Map<string, number>();
-  st.corners.forEach((cs, ci) => cornerByArmA.set(`${cs.ji}|${cs.aArm}`, ci));
-  scene.junctions.forEach((J, ji) => {
-    const list = st.armsOfJ[ji];
-    if (!list || list.length < 2) return;
-    const seq: number[] = [];
-    for (const ai of list) {
-      const armS = st.arms[ai];
-      const ap = st.armPts[ai];
-      const bp: [number, number] = ap.prevFull >= 0 ? stationPt(ap.prevB, ap.prevFull) : borderAtPoint(armS.pi, ap.nextFull >= 0 ? -ap.nextSide : 1, armS.sR);
-      const bn: [number, number] = ap.nextFull >= 0 ? stationPt(ap.nextB, ap.nextFull) : borderAtPoint(armS.pi, ap.prevFull >= 0 ? -ap.prevSide : -1, armS.sR);
-      pushPt(seq, bp[0], bp[1]); pushPt(seq, bn[0], bn[1]);
-      const ci = cornerByArmA.get(`${ji}|${ai}`) ?? -1;
-      if (ci >= 0 && st.corners[ci].ok && fCorners[ci].r > 1e-9) {
-        const fc = fCorners[ci];
-        const aA = Math.atan2(fc.tay - fc.qy, fc.tax - fc.qx);
-        let da = Math.atan2(fc.tby - fc.qy, fc.tbx - fc.qx) - aA;
-        while (da > Math.PI) da -= 2 * Math.PI;
-        while (da < -Math.PI) da += 2 * Math.PI;
-        const steps = Math.max(1, Math.ceil(Math.abs(da) / (Math.PI / 16)));
-        for (let sIdx = 1; sIdx < steps; sIdx++) { const a = aA + (da * sIdx) / steps; pushPt(seq, fc.qx + fc.r * Math.cos(a), fc.qy + fc.r * Math.sin(a)); }
+    for (const op of tpl.ops) {
+      if (op.t === 0) {
+        const XY = rt.b[op.b].XY;
+        let from = op.from;
+        if (have && op.count > 0) { const dx = XY[2 * from] - lx; const dy = XY[2 * from + 1] - ly; if (dx * dx + dy * dy < 1e-24) from++; }
+        const cnt = op.from + op.count - from;
+        if (cnt > 0) { rt.regionBuf.set(XY.subarray(2 * from, 2 * (from + cnt)), 2 * cursor); cursor += cnt; lx = rt.regionBuf[2 * cursor - 2]; ly = rt.regionBuf[2 * cursor - 1]; have = true; }
+      } else if (op.t === 6) {
+        const XY = rt.b[op.b].XY;
+        let cnt = op.count;
+        if (have && cnt > 0) { const dx = XY[2 * op.from] - lx; const dy = XY[2 * op.from + 1] - ly; if (dx * dx + dy * dy < 1e-24) cnt--; }
+        for (let k = 0; k < cnt; k++) { const i = op.from - (op.count - cnt) - k; rt.regionBuf[2 * cursor] = XY[2 * i]; rt.regionBuf[2 * cursor + 1] = XY[2 * i + 1]; cursor++; }
+        if (cnt > 0) { lx = rt.regionBuf[2 * cursor - 2]; ly = rt.regionBuf[2 * cursor - 1]; have = true; }
+      } else if (op.t === 1) {
+        const XY = rt.b[op.b].XY;
+        for (let k = 0; k < op.idx.length; k++) { const i = op.idx[k]; wp(XY[2 * i], XY[2 * i + 1]); }
+      } else if (op.t === 2) {
+        const xy = rt.capsXY[op.cap];
+        if (op.step > 0) { for (let i = op.from; i <= op.to; i++) wp(xy[2 * i], xy[2 * i + 1]); }
+        else { for (let i = op.from; i >= op.to; i--) wp(xy[2 * i], xy[2 * i + 1]); }
+      } else if (op.t === 3) {
+        const brt = rt.b[op.b]; const fi = brt.bs.idxOfFull[op.full];
+        wp(brt.XY[2 * fi], brt.XY[2 * fi + 1]);
+      } else if (op.t === 4) {
+        const pt = borderAtRuntime(rt, op.pi, op.side, op.s);
+        wp(pt[0], pt[1]);
+      } else {
+        const fc = rt.fCorners[op.corner];
+        if (fc.r > 1e-9) {
+          const aA = Math.atan2(fc.tay - fc.qy, fc.tax - fc.qx);
+          let da = Math.atan2(fc.tby - fc.qy, fc.tbx - fc.qx) - aA;
+          while (da > Math.PI) da -= 2 * Math.PI;
+          while (da < -Math.PI) da += 2 * Math.PI;
+          const steps = Math.max(1, Math.ceil(Math.abs(da) / (Math.PI / 16)));
+          for (let si = 1; si < steps; si++) { const a = aA + (da * si) / steps; wp(fc.qx + fc.r * Math.cos(a), fc.qy + fc.r * Math.sin(a)); }
+        }
       }
     }
-    const poly = finishPoly(seq);
-    if (poly.length < 6) return;
-    const rid = regions.length;
-    junctionRegion.set(ji, rid);
-    regions.push({ id: rid, ownerChain: st.arms[list[0]].pi, group: st.groupOfJ[ji], pts: poly, pieces: [], hole: false });
-  });
-  mark("regions", tPhase); tPhase = performance.now();
-
-  // Pieces: exposed runs (structure's recorded boundaries), corner
-  // arcs, cap runs.
-  const pieces: OutlinePiece[] = [];
-  for (let pi = 0; pi < polys.length; pi++) {
-    for (let bi = 0; bi < 2; bi++) {
-      const b = pi * 2 + bi;
-      const bs = st.borders[b];
-      const stt = bStates[b];
-      const side = bi === 0 ? 1 : -1;
-      const runs = bs.runs;
-      for (let ri = 0; ri < runs.length; ri += 3) {
-        const startPt = runs[ri]; const endPt = runs[ri + 1]; const rid = runs[ri + 2];
-        const piece: OutlinePiece = {
-          kind: "run", chain: pi, side, s0: stt.SA[startPt], s1: stt.SA[endPt],
-          pts: stt.XY.subarray(2 * startPt, 2 * (endPt + 1)) as unknown as number[],
-          cpts: stt.CXY.subarray(2 * startPt, 2 * (endPt + 1)) as unknown as number[],
-          region: rid, corner: -1,
-        };
-        pieces.push(piece);
-        if (rid >= 0 && regions[rid]) regions[rid].pieces.push(pieces.length - 1);
-      }
-    }
+    let len = cursor - start;
+    if (len > 1) { const dx = rt.regionBuf[2 * start] - rt.regionBuf[2 * (cursor - 1)]; const dy = rt.regionBuf[2 * start + 1] - rt.regionBuf[2 * cursor - 1]; if (dx * dx + dy * dy < 1e-24) { cursor--; len--; } }
+    region.pts = rt.regionBuf.subarray(2 * start, 2 * (start + len)) as unknown as number[];
   }
-  st.corners.forEach((cs, ci) => {
-    const fc = fCorners[ci];
-    if (!cs.ok || !(fc.r > 1e-9)) return;
+  mark("regions");
+  // Pieces: preallocated objects over the shared buffers.
+  const pieces = rt.piecesOut;
+  pieces.length = 0;
+  for (const u of rt.runUpd) {
+    const brt = rt.b[u.b];
+    u.piece.s0 = brt.SA[u.start]; u.piece.s1 = brt.SA[u.end];
+    pieces.push(u.piece);
+    const rid = u.piece.region;
+    if (rid >= 0 && regions[rid]) regions[rid].pieces.push(pieces.length - 1);
+  }
+  for (let ci = 0; ci < st.corners.length; ci++) {
+    const cs = st.corners[ci]; const fc = rt.fCorners[ci];
+    if (!cs.ok) continue;
+    // A corner whose radius reaches 0 in this frame still emits its
+    // arc piece, collapsed onto V (never a missing piece).
+    const piece = rt.arcPieces[ci];
     const aA = Math.atan2(fc.tay - fc.qy, fc.tax - fc.qx);
     let da = Math.atan2(fc.tby - fc.qy, fc.tbx - fc.qx) - aA;
     while (da > Math.PI) da -= 2 * Math.PI;
     while (da < -Math.PI) da += 2 * Math.PI;
-    const steps = Math.max(1, Math.ceil(Math.abs(da) / (Math.PI / 16)));
-    const pts = new Float64Array(2 * (steps + 1));
-    const cpts = new Float64Array(2 * (steps + 1));
-    for (let sIdx = 0; sIdx <= steps; sIdx++) {
-      const a = aA + (da * sIdx) / steps;
-      pts[2 * sIdx] = fc.qx + fc.r * Math.cos(a); pts[2 * sIdx + 1] = fc.qy + fc.r * Math.sin(a);
-      cpts[2 * sIdx] = fc.qx; cpts[2 * sIdx + 1] = fc.qy;
+    const steps = Math.min(32, Math.max(1, Math.ceil(Math.abs(da) / (Math.PI / 16))));
+    const buf = rt.arcBuf[ci]; const cbuf = rt.arcCBuf[ci];
+    for (let si = 0; si <= steps; si++) {
+      const a = aA + (da * si) / steps;
+      buf[2 * si] = fc.qx + fc.r * Math.cos(a); buf[2 * si + 1] = fc.qy + fc.r * Math.sin(a);
+      cbuf[2 * si] = fc.qx; cbuf[2 * si + 1] = fc.qy;
     }
-    const rid = junctionRegion.get(cs.ji) ?? -1;
-    const piece: OutlinePiece = { kind: "arc", chain: cs.stored.aChain, side: 0, s0: fc.sA, s1: fc.sB, pts: pts as unknown as number[], cpts: cpts as unknown as number[], region: rid, corner: ci };
+    piece.pts = buf.subarray(0, 2 * (steps + 1)) as unknown as number[];
+    piece.cpts = cbuf.subarray(0, 2 * (steps + 1)) as unknown as number[];
+    piece.s0 = fc.sA; piece.s1 = fc.sB;
     pieces.push(piece);
+    const rid = piece.region;
     if (rid >= 0 && regions[rid]) regions[rid].pieces.push(pieces.length - 1);
+  }
+  for (const p of rt.capPieces) pieces.push(p);
+  mark("pieces");
+  // Faces, cuts, corners.
+  for (let fi = 0; fi < st.faces.length; fi++) {
+    const f = st.faces[fi]; const face = rt.faces[fi];
+    const region = regions[f.rid];
+    face.pts = region ? region.pts : rt.emptyPts;
+    if (f.kind === 1) { face.sample[0] = scene.junctions[f.ji].c[0]; face.sample[1] = scene.junctions[f.ji].c[1]; }
+    else { pointAtInto(polys[f.pi], f.cMid, ptA); face.sample[0] = ptA[0]; face.sample[1] = ptA[1]; }
+    rt.faceDepth[fi] = depthAt(f.owner, f.kind === 1 ? f.armS : f.cMid);
+  }
+  rt.faceOrder.sort((a, b) => rt.faceDepth[a] - rt.faceDepth[b]);
+  for (let i = 0; i < rt.faceOrder.length; i++) rt.facesOut[i] = rt.faces[rt.faceOrder[i]];
+  for (let ci = 0; ci < st.cuts.length; ci++) {
+    const c = st.cuts[ci]; const out = rt.cutsT[ci]; const brt = rt.b[c.border];
+    const fi = brt.bs.idxOfFull[c.fullIdx];
+    out.s = fi >= 0 ? brt.SA[fi] : 0;
+    out.x = fi >= 0 ? brt.XY[2 * fi] : 0;
+    out.y = fi >= 0 ? brt.XY[2 * fi + 1] : 0;
+  }
+  let okCount = 0;
+  for (let ci = 0; ci < st.corners.length; ci++) {
+    const cs = st.corners[ci]; const out = rt.cornersT[ci]; const fc = rt.fCorners[ci];
+    out.ok = cs.ok; out.theta = fc.theta; out.r = fc.r;
+    out.Vx = fc.Vx; out.Vy = fc.Vy; out.qx = fc.qx; out.qy = fc.qy;
+    out.tax = fc.tax; out.tay = fc.tay; out.tbx = fc.tbx; out.tby = fc.tby;
+    if (cs.ok) okCount++;
+  }
+  rt.diag[2] = `chains ${polys.length}, pieces ${pieces.length}, regions ${regions.length}, faces ${rt.facesOut.length}, corners ${okCount}/${st.corners.length} ok, cuts ${st.cuts.length}, stations ${st.stations.length}`;
+  rt.table.h = h; rt.table.W = W;
+  mark("other");
+  return rt.table;
+}
+
+// ---------------------------------------------------------------------------
+// S3b runtime: buffers owned by the structure, reused by every frame.
+
+type RegionOp =
+  | { t: 0; b: number; from: number; count: number }
+  | { t: 1; b: number; idx: Int32Array }
+  | { t: 2; cap: number; from: number; to: number; step: number }
+  | { t: 3; b: number; full: number }
+  | { t: 4; pi: number; side: number; s: number }
+  | { t: 5; corner: number }
+  | { t: 6; b: number; from: number; count: number };
+
+interface BRun {
+  bs: BorderStruct; pi: number; side: number;
+  X: Float64Array; Y: Float64Array; S: Float64Array; FX: Float64Array; FY: Float64Array; done: Uint8Array;
+  baseS: Float64Array; basePos: Int32Array; baseSeqPos: Int32Array;
+  XY: Float64Array; CXY: Float64Array; SA: Float64Array; posOfId: Int32Array;
+}
+
+interface Runtime {
+  rawPolys: Poly[]; polys: Poly[]; extPts: Float64Array; capPts: Int32Array;
+  tan: { tx: Float64Array; ty: Float64Array }[];
+  idxOf: Map<number, number>;
+  depthS: Float64Array[]; depthZ: Float64Array[]; depthN: Int32Array;
+  arms: FArm[];
+  fCorners: FCorner[];
+  b: BRun[];
+  capsXY: Float64Array[]; capsCXY: Float64Array[]; capsC: Float64Array;
+  regions: OutlineRegion[]; regionTpl: { ops: RegionOp[] }[]; regionBuf: Float64Array;
+  piecesOut: OutlinePiece[];
+  runUpd: { piece: OutlinePiece; b: number; start: number; end: number }[];
+  arcPieces: OutlinePiece[]; arcBuf: Float64Array[]; arcCBuf: Float64Array[];
+  capPieces: OutlinePiece[];
+  faces: OutlineFace[]; facesOut: OutlineFace[]; faceOrder: number[]; faceDepth: Float64Array;
+  cornersT: OutlineCorner[]; cutsT: OutlineCut[];
+  cutList: { b: number; id: number }[]; ptList: { b: number; j: number; id: number }[];
+  diag: string[]; table: OutlineTable; emptyPts: number[];
+}
+
+function fillPoly(p: Poly, pts: ArrayLike<number>, closed: boolean, s0: number): void {
+  let n = 0;
+  const m = Math.floor(pts.length / 2);
+  for (let i = 0; i < m; i++) {
+    const x = pts[2 * i]; const y = pts[2 * i + 1];
+    if (n > 0 && Math.abs(x - p.x[n - 1]) + Math.abs(y - p.y[n - 1]) < 1e-12) continue;
+    p.x[n] = x; p.y[n] = y; n++;
+  }
+  if (closed && n > 2 && Math.abs(p.x[0] - p.x[n - 1]) + Math.abs(p.y[0] - p.y[n - 1]) < 1e-12) n--;
+  p.n = n; p.closed = closed;
+  p.nseg = closed ? n : Math.max(0, n - 1);
+  p.s0 = s0; p.len = 0;
+  if (n > 0) p.s[0] = s0;
+  for (let k = 0; k < p.nseg; k++) {
+    const b = k + 1 === n ? 0 : k + 1;
+    const dx = p.x[b] - p.x[k]; const dy = p.y[b] - p.y[k];
+    const l = Math.sqrt(dx * dx + dy * dy);
+    p.segLen[k] = l;
+    if (k + 1 < n) p.s[k + 1] = p.s[k] + l;
+  }
+  p.len = n > 0 ? p.s[n - 1] - s0 + (closed ? p.segLen[n - 1] : 0) : 0;
+}
+
+function copyPoly(src: Poly, dst: Poly): void {
+  dst.n = src.n; dst.closed = src.closed; dst.nseg = src.nseg; dst.len = src.len; dst.s0 = src.s0;
+  dst.x.set(src.x.subarray(0, src.n)); dst.y.set(src.y.subarray(0, src.n));
+  dst.s.set(src.s.subarray(0, src.n)); dst.segLen.set(src.segLen.subarray(0, Math.max(0, src.nseg)));
+}
+
+function fillTangents(rt: Runtime, p: Poly): void {
+  const TT = rt.tan[p.id];
+  for (let k = 0; k < p.nseg; k++) {
+    const b = k + 1 === p.n ? 0 : k + 1;
+    const l = p.segLen[k] || 1;
+    TT.tx[k] = (p.x[b] - p.x[k]) / l; TT.ty[k] = (p.y[b] - p.y[k]) / l;
+  }
+}
+
+function addPin(rt: Runtime, pi: number, s: number, z: number): void {
+  const S = rt.depthS[pi]; const Z = rt.depthZ[pi];
+  let n = rt.depthN[pi];
+  let i = n;
+  while (i > 0 && S[i - 1] > s) { S[i] = S[i - 1]; Z[i] = Z[i - 1]; i--; }
+  S[i] = s; Z[i] = z;
+  rt.depthN[pi] = n + 1;
+}
+
+function depthAtRt(rt: Runtime, pi: number, s: number, depthWin: number): number {
+  const P = rt.depthS[pi]; const Z = rt.depthZ[pi]; const n = rt.depthN[pi];
+  if (n === 0) return 0;
+  const p = rt.polys[pi];
+  const u = normS(p, s);
+  let lo = -1; let hi = n;
+  while (hi - lo > 1) { const m = (lo + hi) >> 1; if (P[m] <= u) lo = m; else hi = m; }
+  const hat = (z: number, d: number, w: number): number => (w <= 1e-12 ? (d <= 0 ? z : 0) : d >= w ? 0 : z * (1 - d / w));
+  if (p.closed) {
+    const iL = lo < 0 ? n - 1 : lo;
+    const sL = lo < 0 ? P[iL] - p.len : P[iL];
+    const iR = lo + 1 >= n ? 0 : lo + 1;
+    const sR = lo + 1 >= n ? P[iR] + p.len : P[iR];
+    const w = Math.min(depthWin, sR - sL);
+    return hat(Z[iL], u - sL, w) + hat(Z[iR], sR - u, w);
+  }
+  if (lo < 0) return hat(Z[0], P[0] - u, depthWin);
+  if (lo + 1 >= n) return hat(Z[n - 1], u - P[n - 1], depthWin);
+  const w = Math.min(depthWin, P[lo + 1] - P[lo]);
+  return hat(Z[lo], u - P[lo], w) + hat(Z[lo + 1], P[lo + 1] - u, w);
+}
+
+/** pointAt without allocation: out = [x, y, tx, ty]. */
+function pointAtInto(p: Poly, s: number, out: Float64Array): void {
+  const u = normS(p, s);
+  let k = 0; let t = 0;
+  if (p.n === 0) { out[0] = 0; out[1] = 0; out[2] = 1; out[3] = 0; return; }
+  if (u >= p.s[p.n - 1]) {
+    if (p.closed) { k = p.n - 1; t = Math.min(1, Math.max(0, (u - p.s[p.n - 1]) / (p.segLen[p.n - 1] || 1))); }
+    else { k = Math.max(0, p.nseg - 1); t = 1; }
+  } else {
+    let lo = 0; let hi = p.n - 1;
+    while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (p.s[mid] <= u) lo = mid; else hi = mid; }
+    k = lo; t = (u - p.s[lo]) / (p.segLen[lo] || 1);
+  }
+  const b = k + 1 === p.n ? 0 : k + 1;
+  const l = p.segLen[k] || 1;
+  out[0] = p.x[k] + (p.x[b] - p.x[k]) * t;
+  out[1] = p.y[k] + (p.y[b] - p.y[k]) * t;
+  out[2] = (p.x[b] - p.x[k]) / l;
+  out[3] = (p.y[b] - p.y[k]) / l;
+}
+
+/** footInWindow's candidate set, written into `out` (no allocation). */
+function footWinFast(p: Poly, px: number, py: number, lo: number, hi: number, out: FFoot): void {
+  let bd = Infinity; let bx = px; let by = py; let bs = lo; let bk = 0;
+  if (p.nseg === 0 || hi < lo) { out.d = bd; out.x = bx; out.y = by; out.s = bs; out.k = bk; out.u = bs; return; }
+  const nShift = p.closed ? 3 : 1;
+  for (let si = 0; si < nShift; si++) {
+    const sh = p.closed ? (si - 1) * p.len : 0;
+    let a = 0; let b = p.nseg;
+    while (a < b) { const m = (a + b) >> 1; if (p.s[m] + p.segLen[m] + sh >= lo) b = m; else a = m + 1; }
+    const k0 = a;
+    b = p.nseg;
+    while (a < b) { const m = (a + b) >> 1; if (p.s[m] + sh > hi) b = m; else a = m + 1; }
+    for (let k = k0; k < a; k++) {
+      const sa = p.s[k]; const sb = sa + p.segLen[k];
+      const aa = Math.max(lo, sa + sh); const bb = Math.min(hi, sb + sh);
+      if (bb < aa) continue;
+      const l = p.segLen[k] || 1;
+      const ta = Math.min(1, Math.max(0, (aa - sh - sa) / l));
+      const tb = Math.min(1, Math.max(0, (bb - sh - sa) / l));
+      const kb = k + 1 === p.n ? 0 : k + 1;
+      const ax = p.x[k] + (p.x[kb] - p.x[k]) * ta; const ay = p.y[k] + (p.y[kb] - p.y[k]) * ta;
+      const ex2 = p.x[k] + (p.x[kb] - p.x[k]) * tb - ax; const ey2 = p.y[k] + (p.y[kb] - p.y[k]) * tb - ay;
+      const l2 = ex2 * ex2 + ey2 * ey2;
+      let t = l2 > 0 ? ((px - ax) * ex2 + (py - ay) * ey2) / l2 : 0;
+      t = Math.min(1, Math.max(0, t));
+      const qx = ax + ex2 * t; const qy = ay + ey2 * t;
+      const ddx = px - qx; const ddy = py - qy;
+      const d = Math.sqrt(ddx * ddx + ddy * ddy);
+      if (d < bd) { const tt = ta + (tb - ta) * t; bd = d; bx = qx; by = qy; bs = sa + tt * p.segLen[k]; bk = k; }
+    }
+  }
+  out.d = bd; out.x = bx; out.y = by; out.s = bs; out.k = bk; out.u = bs;
+}
+
+function borderAtRuntime(rt: Runtime, pi: number, side: number, sIn: number): [number, number] {
+  const b = pi * 2 + (side === 1 ? 0 : 1);
+  const brt = rt.b[b]; const p = rt.polys[pi];
+  let target = sIn;
+  if (p.closed) { target = normS(p, target); if (target < brt.baseS[0] - 1e-9) target += p.len; }
+  const baseS = brt.baseS;
+  let lo = 0; let hi = baseS.length - 1;
+  while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (baseS[mid] <= target) lo = mid; else hi = mid; }
+  const a = lo; const bb = Math.min(baseS.length - 1, lo + 1);
+  const ds = baseS[bb] - baseS[a];
+  const t = ds > 1e-12 ? Math.min(1, Math.max(0, (target - baseS[a]) / ds)) : 0;
+  const pa = brt.baseSeqPos[a]; const pb = brt.baseSeqPos[bb];
+  return [brt.XY[2 * pa] + (brt.XY[2 * pb] - brt.XY[2 * pa]) * t, brt.XY[2 * pa + 1] + (brt.XY[2 * pb + 1] - brt.XY[2 * pa + 1]) * t];
+}
+
+/** Closest points of two segments: [t on ab, u on cd, distance squared]. */
+function segSegClosest(ax: number, ay: number, bx: number, by: number, cx: number, cy: number, dx: number, dy: number): [number, number, number] {
+  let bestT = 0; let bestU = 0; let bestD = Infinity;
+  const test = (t: number, u: number): void => {
+    const px = ax + (bx - ax) * t; const py = ay + (by - ay) * t;
+    const qx = cx + (dx - cx) * u; const qy = cy + (dy - cy) * u;
+    const d = (px - qx) * (px - qx) + (py - qy) * (py - qy);
+    if (d < bestD) { bestD = d; bestT = t; bestU = u; }
+  };
+  const proj = (px: number, py: number, ex: number, ey: number, fx: number, fy: number): number => {
+    const vx = fx - ex; const vy = fy - ey;
+    const l2 = vx * vx + vy * vy;
+    return l2 > 0 ? Math.min(1, Math.max(0, ((px - ex) * vx + (py - ey) * vy) / l2)) : 0;
+  };
+  test(0, proj(ax, ay, cx, cy, dx, dy));
+  test(1, proj(bx, by, cx, cy, dx, dy));
+  test(proj(cx, cy, ax, ay, bx, by), 0);
+  test(proj(dx, dy, ax, ay, bx, by), 1);
+  return [bestT, bestU, bestD];
+}
+
+/** Solve one crossing/eye cut inside its s window on both borders. */
+function evalCut(rt: Runtime, b: number, id: number, h: number): void {
+  const brt = rt.b[b]; const bs = brt.bs;
+  const ob = bs.other[id]; const ort = rt.b[ob]; const obs = ort.bs;
+  const a = bs.i1[id]; const bb = bs.i2[id]; const c = bs.i3[id]; const d = bs.i4[id];
+  const j = brt.posOfId[id];
+  const j0 = brt.basePos[a]; const j1 = ort.basePos[c];
+  let x = 0; let y = 0; let s = 0; let fx = 0; let fy = 0;
+  let solved = false;
+  if (j0 >= 0 && j1 >= 0) {
+    const nOwn = bs.baseSeq.length - 1; const nOther = obs.baseSeq.length - 1;
+    const winS = bs.winS[id] > 0 ? bs.winS[id] : 2.5 * h;
+    const seedSOwn = brt.baseS[j0]; const seedSOther = ort.baseS[j1];
+    const ubS = (arr: Float64Array, v: number, loI: number, hiI: number): number => { let a = loI; let b = hiI; while (a < b) { const m = (a + b) >> 1; if (arr[m] <= v) a = m + 1; else b = m; } return a; };
+    const diMax = Math.max(0, Math.min(nOwn - 1, ubS(brt.baseS, seedSOwn + winS, j0, brt.baseS.length) - 1) - j0);
+    const diMin = Math.max(0, j0 - ubS(brt.baseS, seedSOwn - winS - 1e-12, 0, j0));
+    const djMax = Math.max(0, Math.min(nOther - 1, ubS(ort.baseS, seedSOther + winS, j1, ort.baseS.length) - 1) - j1);
+    const djMin = Math.max(0, j1 - ubS(ort.baseS, seedSOther - winS - 1e-12, 0, j1));
+    const Rmax = Math.max(diMax, diMin, djMax, djMin);
+    const bp = brt.baseSeqPos; const op = ort.baseSeqPos;
+    const bXY = brt.XY; const oXY = ort.XY; const bC = brt.CXY;
+    outer: for (let R = 0; R <= Rmax; R++) {
+      for (let di = -R; di <= R; di++) {
+        if (di < -diMin || di > diMax) continue;
+        for (let dj = -R; dj <= R; dj++) {
+          if (Math.max(Math.abs(di), Math.abs(dj)) !== R) continue;
+          if (dj < -djMin || dj > djMax) continue;
+          const jo = j0 + di; const jo2 = j1 + dj;
+          const pa = bp[jo]; const pb = bp[jo + 1]; const pc = op[jo2]; const pd = op[jo2 + 1];
+          const ax = bXY[2 * pa]; const ay = bXY[2 * pa + 1];
+          const ex = bXY[2 * pb] - ax; const ey = bXY[2 * pb + 1] - ay;
+          const cx = oXY[2 * pc]; const cy = oXY[2 * pc + 1];
+          const fx2 = oXY[2 * pd] - cx; const fy2 = oXY[2 * pd + 1] - cy;
+          const det = ex * fy2 - ey * fx2;
+          if (Math.abs(det) < 1e-300) continue;
+          const gx = cx - ax; const gy = cy - ay;
+          const tt = (gx * fy2 - gy * fx2) / det;
+          const uu = (gx * ey - gy * ex) / det;
+          if (tt < -1e-9 || tt > 1 + 1e-9 || uu < -1e-9 || uu > 1 + 1e-9) continue;
+          const hitT = Math.min(1, Math.max(0, tt));
+          x = ax + ex * hitT;
+          y = ay + ey * hitT;
+          s = brt.baseS[jo] + (brt.baseS[jo + 1] - brt.baseS[jo]) * hitT;
+          fx = bC[2 * pa] + (bC[2 * pb] - bC[2 * pa]) * hitT;
+          fy = bC[2 * pa + 1] + (bC[2 * pb + 1] - bC[2 * pa + 1]) * hitT;
+          solved = true;
+          break outer;
+        }
+      }
+    }
+    if (!solved) {
+      // No intersection inside the window: the cut collapses to the
+      // closest approach of the two seed segments in this frame.
+      const pa = bp[j0]; const pb = bp[j0 + 1]; const pc = op[j1]; const pd = op[j1 + 1];
+      const cl = segSegClosest(bXY[2 * pa], bXY[2 * pa + 1], bXY[2 * pb], bXY[2 * pb + 1], oXY[2 * pc], oXY[2 * pc + 1], oXY[2 * pd], oXY[2 * pd + 1]);
+      const t = cl[0];
+      x = bXY[2 * pa] + (bXY[2 * pb] - bXY[2 * pa]) * t;
+      y = bXY[2 * pa + 1] + (bXY[2 * pb + 1] - bXY[2 * pa + 1]) * t;
+      s = brt.baseS[j0] + (brt.baseS[j0 + 1] - brt.baseS[j0]) * t;
+      fx = bC[2 * pa] + (bC[2 * pb] - bC[2 * pa]) * t;
+      fy = bC[2 * pa + 1] + (bC[2 * pb + 1] - bC[2 * pa + 1]) * t;
+    }
+  } else {
+    const pX = (r: BRun, id: number): number => { const q = r.basePos[id]; return q >= 0 ? r.XY[2 * r.posOfId[id]] : r.X[id]; };
+    const pY = (r: BRun, id: number): number => { const q = r.basePos[id]; return q >= 0 ? r.XY[2 * r.posOfId[id] + 1] : r.Y[id]; };
+    const pS = (r: BRun, id: number): number => { const q = r.basePos[id]; return q >= 0 ? r.baseS[q] : r.S[id]; };
+    const pFX = (r: BRun, id: number): number => { const q = r.basePos[id]; return q >= 0 ? r.CXY[2 * r.posOfId[id]] : r.FX[id]; };
+    const pFY = (r: BRun, id: number): number => { const q = r.basePos[id]; return q >= 0 ? r.CXY[2 * r.posOfId[id] + 1] : r.FY[id]; };
+    const ax = pX(brt, a); const ay = pY(brt, a); const bx2 = pX(brt, bb); const by2 = pY(brt, bb);
+    const cx = pX(ort, c); const cy = pY(ort, c); const dx2 = pX(ort, d); const dy2 = pY(ort, d);
+    const hit = segInt(ax, ay, bx2, by2, cx, cy, dx2, dy2);
+    if (hit) { x = ax + (bx2 - ax) * hit.t; y = ay + (by2 - ay) * hit.t; s = pS(brt, a) + (pS(brt, bb) - pS(brt, a)) * hit.t; fx = pFX(brt, a) + (pFX(brt, bb) - pFX(brt, a)) * hit.t; fy = pFY(brt, a) + (pFY(brt, bb) - pFY(brt, a)) * hit.t; }
+    else { const cl = segSegClosest(ax, ay, bx2, by2, cx, cy, dx2, dy2); const t = cl[0]; x = ax + (bx2 - ax) * t; y = ay + (by2 - ay) * t; s = pS(brt, a) + (pS(brt, bb) - pS(brt, a)) * t; fx = pFX(brt, a) + (pFX(brt, bb) - pFX(brt, a)) * t; fy = pFY(brt, a) + (pFY(brt, bb) - pFY(brt, a)) * t; }
+  }
+  brt.X[id] = x; brt.Y[id] = y; brt.S[id] = s; brt.FX[id] = fx; brt.FY[id] = fy; brt.done[id] = 1;
+  if (j >= 0) { brt.XY[2 * j] = x; brt.XY[2 * j + 1] = y; brt.CXY[2 * j] = fx; brt.CXY[2 * j + 1] = fy; brt.SA[j] = s; }
+  void h;
+}
+
+function borderSeqIdx(st: OutlineStructure, closed: boolean[], pi: number, side: number, fromIdx: number, toIdx: number, forward: boolean): number[] {
+  const b = pi * 2 + (side === 1 ? 0 : 1);
+  const nPts = st.borders[b].seqPool.length;
+  const out: number[] = [];
+  if (nPts === 0) return out;
+  const from = Math.max(0, fromIdx); const to = Math.max(0, toIdx);
+  if (!closed[pi]) {
+    if (forward) { for (let i = from; i <= to && i < nPts; i++) out.push(i); }
+    else { for (let i = from; i >= to && i >= 0; i--) out.push(i); }
+    return out;
+  }
+  const mod = Math.max(1, nPts - 1);
+  let fi = ((from % mod) + mod) % mod;
+  const ti = ((to % mod) + mod) % mod;
+  if (forward) {
+    for (let guard = 0; guard <= mod; guard++) { out.push(fi); if (fi === ti) break; fi = (fi + 1) % mod; }
+  } else {
+    for (let guard = 0; guard <= mod; guard++) { out.push(fi); if (fi === ti) break; fi = (fi - 1 + mod) % mod; }
+  }
+  return out;
+}
+
+function seqToOps(b: number, seq: number[], ops: RegionOp[]): void {
+  let i = 0;
+  let pending: number[] = [];
+  const flush = (): void => { if (pending.length) { ops.push({ t: 1, b, idx: Int32Array.from(pending) }); pending = []; } };
+  while (i < seq.length) {
+    if (i + 1 < seq.length && seq[i + 1] === seq[i] + 1) {
+      flush();
+      const from = seq[i];
+      let count = 1;
+      while (i + count < seq.length && seq[i + count] === from + count) count++;
+      ops.push({ t: 0, b, from, count });
+      i += count;
+    } else if (i + 1 < seq.length && seq[i + 1] === seq[i] - 1) {
+      flush();
+      const from = seq[i];
+      let count = 1;
+      while (i + count < seq.length && seq[i + count] === from - count) count++;
+      ops.push({ t: 6, b, from, count });
+      i += count;
+    } else { pending.push(seq[i]); i++; }
+  }
+  flush();
+}
+
+function getRuntime(st: OutlineStructure, scene: SceneIn): Runtime {
+  const holder = st as OutlineStructure & { __rt?: Runtime };
+  if (holder.__rt) {
+    let ok = true;
+    scene.chains.forEach((c, i) => { if (Math.ceil(c.pts.length / 2) + 2 > holder.__rt!.capPts[i]) ok = false; });
+    if (ok) return holder.__rt;
+  }
+  const rt = buildRuntime(st, scene);
+  holder.__rt = rt;
+  return rt;
+}
+
+function buildRuntime(st: OutlineStructure, scene: SceneIn): Runtime {
+  const closed = scene.chains.map((c) => c.closed);
+  const capPts = new Int32Array(scene.chains.length);
+  const mkPoly = (i: number, cap: number): Poly => ({ id: i, n: 0, closed: scene.chains[i].closed, nseg: 0, len: 0, s0: 0, x: new Float64Array(Math.max(1, cap)), y: new Float64Array(Math.max(1, cap)), s: new Float64Array(Math.max(1, cap)), segLen: new Float64Array(Math.max(1, cap)) });
+  const rawPolys: Poly[] = []; const polys: Poly[] = [];
+  let maxPts = 4;
+  scene.chains.forEach((c, i) => { const cap = Math.ceil(c.pts.length / 2) + 2; capPts[i] = cap; maxPts = Math.max(maxPts, cap); rawPolys.push(mkPoly(i, cap)); polys.push(mkPoly(i, cap)); });
+  const tan = scene.chains.map((c, i) => ({ tx: new Float64Array(Math.max(1, capPts[i])), ty: new Float64Array(Math.max(1, capPts[i])) }));
+  const idxOf = new Map<number, number>();
+  scene.chains.forEach((c, i) => idxOf.set(c.id, i));
+  const depthS: Float64Array[] = scene.chains.map(() => new Float64Array(4));
+  const depthZ: Float64Array[] = scene.chains.map(() => new Float64Array(4));
+  {
+    const counts = new Int32Array(scene.chains.length);
+    scene.crossings.forEach((x) => { const ia = idxOf.get(x.a.chain); const ib = idxOf.get(x.b.chain); if (ia !== undefined) counts[ia]++; if (ib !== undefined) counts[ib]++; });
+    scene.chains.forEach((c, i) => { depthS[i] = new Float64Array(counts[i] + 1); depthZ[i] = new Float64Array(counts[i] + 1); });
+  }
+  const arms: FArm[] = st.arms.map((a) => ({ ...a, ux: 0, uy: 0, ang: 0 }));
+  const fCorners: FCorner[] = st.corners.map(() => ({ ok: false, Vx: 0, Vy: 0, qx: 0, qy: 0, tax: 0, tay: 0, tbx: 0, tby: 0, sA: 0, sB: 0, fax: 0, fay: 0, fbx: 0, fby: 0, r: 0, theta: 0 }));
+  const b: BRun[] = st.borders.map((bs, bi) => {
+    const pool = bs.kind.length;
+    const posOfId = new Int32Array(pool).fill(-1);
+    bs.seqPool.forEach((id, j) => { posOfId[id] = j; });
+    const basePos = new Int32Array(pool).fill(-1);
+    bs.baseSeq.forEach((id, j) => { basePos[id] = j; });
+    const baseSeqPos = new Int32Array(bs.baseSeq.length);
+    bs.baseSeq.forEach((id, j) => { baseSeqPos[j] = posOfId[id]; });
+    return {
+      bs, pi: bi >> 1, side: (bi & 1) === 0 ? 1 : -1,
+      X: new Float64Array(pool), Y: new Float64Array(pool), S: new Float64Array(pool), FX: new Float64Array(pool), FY: new Float64Array(pool), done: new Uint8Array(pool),
+      baseS: new Float64Array(bs.baseSeq.length), basePos, baseSeqPos,
+      XY: new Float64Array(2 * bs.seqPool.length), CXY: new Float64Array(2 * bs.seqPool.length), SA: new Float64Array(bs.seqPool.length), posOfId,
+    };
   });
+  const capsXY = st.caps.map((cap) => new Float64Array(2 * (cap.steps + 1)));
+  const capsCXY = st.caps.map((cap) => new Float64Array(2 * (cap.steps + 1)));
+  const junctionRid = new Map<number, number>();
+  for (const f of st.faces) if (f.kind === 1) junctionRid.set(f.ji, f.rid);
+  const cornerByArmA = new Map<string, number>();
+  st.corners.forEach((cs, ci) => cornerByArmA.set(`${cs.ji}|${cs.aArm}`, ci));
+  const nRegions = st.faces.length;
+  const regions: OutlineRegion[] = [];
+  const regionTpl: { ops: RegionOp[] }[] = [];
+  for (let r = 0; r < nRegions; r++) { const f = st.faces.find((q) => q.rid === r); regions.push({ id: r, ownerChain: f ? f.owner : -1, group: f ? f.group : -1, pts: [], pieces: [], hole: false }); regionTpl.push({ ops: [] }); }
+  for (const iv of st.intervals) {
+    if (iv.discard || iv.rid < 0 || iv.rid >= nRegions) continue;
+    const A = st.stations[iv.aSt]; const B = st.stations[iv.bSt];
+    if (!A || !B) continue;
+    const ops: RegionOp[] = [];
+    const aLeft = st.borders[A.leftB].idxOfFull[A.leftFull];
+    const bLeft = st.borders[B.leftB].idxOfFull[B.leftFull];
+    const bRight = st.borders[B.rightB].idxOfFull[B.rightFull];
+    const aRight = st.borders[A.rightB].idxOfFull[A.rightFull];
+    seqToOps(iv.pi * 2, borderSeqIdx(st, closed, iv.pi, 1, aLeft, bLeft, true), ops);
+    const capB = st.capByStation[iv.bSt];
+    if (capB >= 0 && B.kind.startsWith("cap")) ops.push({ t: 2, cap: capB, from: 1, to: st.caps[capB].steps - 1, step: 1 });
+    seqToOps(iv.pi * 2 + 1, borderSeqIdx(st, closed, iv.pi, -1, bRight, aRight, false), ops);
+    const capA = st.capByStation[iv.aSt];
+    if (capA >= 0 && A.kind.startsWith("cap")) ops.push({ t: 2, cap: capA, from: st.caps[capA].steps - 1, to: 1, step: -1 });
+    regionTpl[iv.rid] = { ops };
+  }
+  scene.junctions.forEach((J, ji) => {
+    const rid = junctionRid.get(ji);
+    if (rid === undefined) return;
+    const list = st.armsOfJ[ji];
+    if (!list || list.length < 2) return;
+    const ops: RegionOp[] = [];
+    for (const ai of list) {
+      const arm = st.arms[ai]; const ap = st.armPts[ai];
+      if (ap.prevFull >= 0) ops.push({ t: 3, b: ap.prevB, full: ap.prevFull });
+      else ops.push({ t: 4, pi: arm.pi, side: ap.nextFull >= 0 ? -ap.nextSide : 1, s: arm.sR });
+      if (ap.nextFull >= 0) ops.push({ t: 3, b: ap.nextB, full: ap.nextFull });
+      else ops.push({ t: 4, pi: arm.pi, side: ap.prevFull >= 0 ? -ap.prevSide : -1, s: arm.sR });
+      const ci = cornerByArmA.get(`${ji}|${ai}`);
+      if (ci !== undefined) ops.push({ t: 5, corner: ci });
+    }
+    regionTpl[rid] = { ops };
+    void J;
+  });
+  let regionCap = 0;
+  for (const tpl of regionTpl) for (const op of tpl.ops) regionCap += op.t === 0 || op.t === 6 ? op.count : op.t === 1 ? op.idx.length : op.t === 2 ? Math.abs(op.to - op.from) + 1 : op.t === 5 ? 17 : 1;
+  const regionBuf = new Float64Array(2 * Math.max(16, regionCap));
+  const piecesOut: OutlinePiece[] = [];
+  const runUpd: Runtime["runUpd"] = [];
+  for (let pi = 0; pi < closed.length; pi++) {
+    for (let bi = 0; bi < 2; bi++) {
+      const bIdx = pi * 2 + bi; const bs = st.borders[bIdx]; const brt = b[bIdx];
+      const side = bi === 0 ? 1 : -1;
+      const runs = bs.runs;
+      for (let ri = 0; ri < runs.length; ri += 3) {
+        const start = runs[ri]; const end = runs[ri + 1]; const rid = runs[ri + 2];
+        const piece: OutlinePiece = { kind: "run", chain: pi, side, s0: 0, s1: 0, pts: brt.XY.subarray(2 * start, 2 * (end + 1)) as unknown as number[], cpts: brt.CXY.subarray(2 * start, 2 * (end + 1)) as unknown as number[], region: rid, corner: -1 };
+        runUpd.push({ piece, b: bIdx, start, end });
+      }
+    }
+  }
+  const arcPieces: OutlinePiece[] = [];
+  const arcBuf: Float64Array[] = []; const arcCBuf: Float64Array[] = [];
+  st.corners.forEach((cs, ci) => {
+    arcBuf.push(new Float64Array(2 * 33)); arcCBuf.push(new Float64Array(2 * 33));
+    arcPieces.push({ kind: "arc", chain: cs.stored.aChain, side: 0, s0: 0, s1: 0, pts: [], cpts: [], region: junctionRid.get(cs.ji) ?? -1, corner: ci });
+  });
+  const capPieces: OutlinePiece[] = [];
   st.caps.forEach((cap, capIdx) => {
-    const arc = capsF[capIdx];
     const cS = st.stations[cap.station].cS;
     for (const run of cap.runs) {
-      const pts = arc.xy.slice(2 * run[0], 2 * run[1] + 2);
-      const cpts = new Float64Array(pts.length);
-      for (let i = 0; i < pts.length; i += 2) { cpts[i] = arc.cx; cpts[i + 1] = arc.cy; }
-      pieces.push({ kind: "cap", chain: cap.pi, side: 0, s0: cS, s1: cS, pts: pts as unknown as number[], cpts: cpts as unknown as number[], region: -1, corner: -1 });
+      capPieces.push({ kind: "cap", chain: cap.pi, side: 0, s0: cS, s1: cS, pts: capsXY[capIdx].subarray(2 * run[0], 2 * run[1] + 2) as unknown as number[], cpts: capsCXY[capIdx].subarray(2 * run[0], 2 * run[1] + 2) as unknown as number[], region: -1, corner: -1 });
     }
   });
-  mark("pieces", tPhase); tPhase = performance.now();
-
-  const faceTmp = st.faces.map((f) => {
-    const region = regions[f.rid];
-    let sample: [number, number];
-    if (f.kind === 1) sample = [scene.junctions[f.ji].c[0], scene.junctions[f.ji].c[1]];
-    else { const a = pointAt(polys[f.pi], f.cMid); sample = [a.x, a.y]; }
-    return { ownerChain: f.owner, group: f.group, pts: region ? region.pts : [], sample, hole: false, depth: depthAt(f.owner, f.kind === 1 ? f.armS : f.cMid) };
+  const faces: OutlineFace[] = st.faces.map((f) => ({ ownerChain: f.owner, group: f.group, pts: [], sample: [0, 0], hole: false }));
+  const facesOut: OutlineFace[] = faces.slice();
+  const faceOrder = st.faces.map((_, i) => i);
+  const cutList: Runtime["cutList"] = [];
+  const ptList: Runtime["ptList"] = [];
+  st.borders.forEach((bs, bi) => {
+    bs.seqPool.forEach((id, j) => {
+      const kd = bs.kind[id];
+      if (kd === 4) cutList.push({ b: bi, id });
+      else if (kd === 5 || kd === 6) ptList.push({ b: bi, j, id });
+    });
   });
-  faceTmp.sort((a, b) => a.depth - b.depth);
-  const faces: OutlineFace[] = faceTmp.map((f) => ({ ownerChain: f.ownerChain, group: f.group, pts: f.pts, sample: f.sample, hole: f.hole }));
-  const cuts: OutlineCut[] = st.cuts.map((c) => {
-    const stt = bStates[c.border];
-    const fi = stt.bs.idxOfFull[c.fullIdx];
-    return { crossing: c.crossing, chain: c.chain, side: c.side, s: fi >= 0 ? stt.SA[fi] : 0, x: fi >= 0 ? stt.XY[2 * fi] : 0, y: fi >= 0 ? stt.XY[2 * fi + 1] : 0, overChain: c.overChain };
-  });
-  const cornerTable: OutlineCorner[] = st.corners.map((cs, ci) => {
-    if (!cs.ok) return { ...cs.stored };
-    const fc = fCorners[ci];
-    return { junction: cs.stored.junction, aChain: cs.stored.aChain, bChain: cs.stored.bChain, ok: true, style: cs.style, theta: fc.theta, r: fc.r, Vx: fc.Vx, Vy: fc.Vy, qx: fc.qx, qy: fc.qy, tax: fc.tax, tay: fc.tay, tbx: fc.tbx, tby: fc.tby };
-  });
-  const diagnostics: string[] = [
+  const cornersT: OutlineCorner[] = st.corners.map((cs) => ({ ...cs.stored }));
+  const cutsT: OutlineCut[] = st.cuts.map((c) => ({ crossing: c.crossing, chain: c.chain, side: c.side, s: 0, x: 0, y: 0, overChain: c.overChain }));
+  const diag: string[] = [
     `eyes ${st.stats.eyeCount} (border cuts ${st.stats.eyeKept}, depth-tie cuts ${st.stats.tieCutCount}), kink self-crossings ${st.stats.kinkCount}`,
     `crossings in a junction span ${st.stats.crossInJunction}, corner arcs near another thread ${st.stats.arcNearThread}`,
-    `chains ${polys.length}, pieces ${pieces.length}, regions ${regions.length}, faces ${faces.length}, corners ${cornerTable.filter((c) => c.ok).length}/${cornerTable.length} ok, cuts ${cuts.length}, stations ${st.stations.length}`,
+    "",
   ];
-  mark("other", tPhase);
-  return { h, W, pieces, regions, faces, corners: cornerTable, cuts, diagnostics };
+  const table: OutlineTable = { h: 0, W: 0, pieces: piecesOut, regions, faces: facesOut, corners: cornersT, cuts: cutsT, diagnostics: diag };
+  return {
+    rawPolys, polys, extPts: new Float64Array(2 * (maxPts + 2)), capPts, tan, idxOf,
+    depthS, depthZ, depthN: new Int32Array(scene.chains.length),
+    arms, fCorners, b, capsXY, capsCXY, capsC: new Float64Array(2 * Math.max(1, st.caps.length)),
+    regions, regionTpl, regionBuf, piecesOut, runUpd, arcPieces, arcBuf, arcCBuf, capPieces,
+    faces, facesOut, faceOrder, faceDepth: new Float64Array(st.faces.length),
+    cornersT, cutsT, cutList, ptList, diag, table, emptyPts: [],
+  };
 }
