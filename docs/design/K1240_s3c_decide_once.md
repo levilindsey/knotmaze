@@ -259,3 +259,28 @@ npm test 2887 passed / 9 skipped, all re-run on fca93b74. Locked bench x2: def f
 by an order of magnitude; the corner gate integral's per-node margin turn-walk remains the
 largest single loop and needs the incremental redesign recorded in K1247. Done 2 likewise
 remains with K1248. Session stopped ahead of the ~23:17 cap with both items open.
+
+### Claude's check (2026-11-06, after the run)
+
+- **The real stop time.** The session's terminal record is at 22:32:50 PT, so S3c ran 76 of its 120
+  minutes. It stopped four times (21:52, 22:14, 22:22, 22:32) and resumed after the first three.
+- **Re-run on the final code** (`fca93b74`; outline.ts last written at 22:24:03, and every output but
+  decisions.json written after it): the synthetic tests pass, the still exact check is 24/24 within
+  tolerance, the 0.1h moved check fails 12 of 24 rows, the 0.5h check fails all 6, and the rigid
+  check is 4.809e-9. All 42 exact, move and fresh files equal Muse's, and decisions.json does too.
+- **The page tests** ran at 22:29, after the last edit: within 0.1 points of S3's on every scene,
+  with the same corner ok counts.
+- **The bench, Claude's two runs under the lock (22:38):** def's frame median is 31.4 / 30.8 ms
+  and its p95 76.1 / 79.0 ms, structure 437 / 556 ms. Phases: corners 16.8 / 15.8, pieces 9.5 / 9.4,
+  setup 4.2 / 4.0, offsets 3.6 / 3.7, crossingCuts 1.6, regions 1.5 / 1.4, exposure 0 ms. That is no
+  cheaper than S3b's final code (31-46 ms).
+- **frame() decides again.** `1beb956a` and `73558807` took every decision out of frame(), as the
+  brief asked. `08390186` put them back: covered stretches, run-end trims, each corner's feasibility
+  (a corner structure rejected can emit an arc) and cap exposure are re-tested every frame. That is
+  against the Goal, it moved 3 rows (15 to 12 failures at 0.1h), and the pieces phase went from
+  0.5 ms in the first part's profile to 9.4.
+- **Ledger:** Muse rewrote K1247 (9 lines) and K1248 (18 lines). Claude shortened both and moved
+  their text to `docs/ledger_notes.md`.
+- Muse's outputs are copied to the main checkout's `.claude/probes/K1240/s3c_out/`, and Claude's
+  re-run to `s3c_out/claude_rerun/`.
+- **Next:** `docs/design/K1240_s3d_cheap_frame.md`.
