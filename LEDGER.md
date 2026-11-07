@@ -1725,7 +1725,8 @@ Every other item below waits on the trigger it names.
   and pruned corner foot searches, but def still reads frame med 42.5-44.2 ms / p95 81-118 ms locked
   on a loaded machine (first phase read 26.4-27.2 ms locked / 17.8 ms unlocked; corners 18.3-21.6 ms
   and pieces 7.9-10.3 ms now dominate — the 32-node gate integral plus the per-frame stretch/cap
-  candidate scans; final locked bench def med 39.0-41.0 ms / p95 110-112 ms). Needs the algorithmic cut: incremental gate evaluation across nodes or a spatial
+  candidate scans; final locked bench def med 37.5-37.7 ms / p95 87-111 ms after fca93b74's
+  depth-first verdicts). Needs the algorithmic cut: incremental gate evaluation across nodes or a spatial
   margin index, gated on still exact staying 24/24. Evidence: .claude/probes/K1240/out/s3c/bench_run{1,2}.json;
   Handoff in docs/design/K1240_s3c_decide_once.md.
 - **K1248** · K1240 moved-frame residual (S3b Done 2, carried through S3c): decide-once frame(structure(S), S')

@@ -246,3 +246,16 @@ row improved (still 12 failures). The experiment was reverted in full; the shipp
 still 24/24, moved 12 failures at 0.1h, 6/6 at 0.5h, rigid maxDiff 4.809e-9. Final locked bench
 x2 on the shipped code: def frame med 39.0 / 41.0 ms, p95 110 / 112 ms (corners 15.0-18.0 ms,
 pieces 7.9-10.3 ms, setup 4.0-4.8 ms). Done 2 and Done 3 remain failed, carried by K1248/K1247.
+
+### Handoff continuation 3 (same session, stopped 2026-11-06 22:33 -08:00)
+
+A small exact-preserving cost cut landed as fca93b74: covering verdicts in the cap/stretch
+candidate tests are group-match OR depth-above (pure, commutative), so the cheap depth test now
+runs first and the arm-loop group test only when depth does not already cover; memberGroupF2
+stops once its score saturates at 1. Verdicts are identical — still 24/24, moved unchanged
+(12 failures at 0.1h, 6/6 at 0.5h, rigid maxDiff 4.809e-9), page ALL WITHIN TOLERANCE,
+npm test 2887 passed / 9 skipped, all re-run on fca93b74. Locked bench x2: def frame med
+37.5 / 37.7 ms, p95 111 / 87 ms (corners 16.3-17.6 ms, pieces 9.1-10.0 ms). Done 3 still fails
+by an order of magnitude; the corner gate integral's per-node margin turn-walk remains the
+largest single loop and needs the incremental redesign recorded in K1247. Done 2 likewise
+remains with K1248. Session stopped ahead of the ~23:17 cap with both items open.
