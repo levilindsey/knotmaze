@@ -879,8 +879,12 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
       // ztB, 0, 1) at the meet, where form B's depth key lets the upper
       // border run on over the lower tube. w = 0 (level, or the lower
       // arm) is the meet itself, the union's corner; w = 1 runs the
-      // border on to the root. The same pieces every frame; only the two
-      // station points move.
+      // border on to the root, except that form B hides it where both
+      // arms are full members of the junction's group: each border stops
+      // at the nearer cap, the ramp's midpoint (min(L, Lcut - h/2)) as a
+      // fraction of each arm's meet distance, so the station sits at
+      // max(1 - w, rCap) of the meet's distance. The same pieces every
+      // frame; only the two station points move.
       const ci = cornerWork.length;
       const zt = 0.1 * scene.look.depthAmp;
       const zA = depthAt(A.pi, mt.sA); const zB = depthAt(B.pi, mt.sB);
@@ -902,10 +906,13 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
         const t = dss > 1e-12 ? Math.min(1, Math.max(0, (target - a.s) / dss)) : 0;
         return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t, s: sAt };
       };
-      const ea = eOf(A, cw.sideA, mt.sA, wA); const eb = eOf(B, cw.sideB, mt.sB, wB);
+      const capOf = (X: ArmInfo): number => Math.max(0, Number.isFinite(X.Lcut) ? Math.min(X.L, X.Lcut - 0.5 * h) : X.L);
+      const rCap = Math.min(1, Math.max(0, Math.min(mt.dA > 1e-12 ? capOf(A) / mt.dA : 1, mt.dB > 1e-12 ? capOf(B) / mt.dB : 1)));
+      const gA = Math.min(wA, 1 - rCap); const gB = Math.min(wB, 1 - rCap);
+      const ea = eOf(A, cw.sideA, mt.sA, gA); const eb = eOf(B, cw.sideB, mt.sB, gB);
       cw.Vx = mt.x; cw.Vy = mt.y; cw.qx = mt.x; cw.qy = mt.y; cw.r = 0; cw.meet = true;
-      cw.tax = ea.x; cw.tay = ea.y; cw.sA = ea.s; cw.dA = mt.dA * (1 - wA);
-      cw.tbx = eb.x; cw.tby = eb.y; cw.sB = eb.s; cw.dB = mt.dB * (1 - wB);
+      cw.tax = ea.x; cw.tay = ea.y; cw.sA = ea.s; cw.dA = mt.dA * (1 - gA);
+      cw.tbx = eb.x; cw.tby = eb.y; cw.sB = eb.s; cw.dB = mt.dB * (1 - gB);
       cw.refA = addPointAt(A.pi, cw.sideA, ea.x, ea.y, ea.s, { k: 5, corner: ci, which: 0 });
       cw.refB = addPointAt(B.pi, cw.sideB, eb.x, eb.y, eb.s, { k: 5, corner: ci, which: 1 });
       cw.refVA = cw.refA; cw.refVB = cw.refB;

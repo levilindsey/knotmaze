@@ -1,0 +1,27 @@
+diff --git a/.claude/probes/K1240/proto/outline.ts b/.claude/probes/K1240/proto/outline.ts
+index 3faddc70..1f1c2235 100644
+--- a/.claude/probes/K1240/proto/outline.ts
++++ b/.claude/probes/K1240/proto/outline.ts
+@@ -902,10 +902,19 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
+         const t = dss > 1e-12 ? Math.min(1, Math.max(0, (target - a.s) / dss)) : 0;
+         return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t, s: sAt };
+       };
+-      const ea = eOf(A, cw.sideA, mt.sA, wA); const eb = eOf(B, cw.sideB, mt.sB, wB);
++      const rOf = (X: ArmInfo, sideX: number, sMX: number, dMX: number, Y: ArmInfo, dMY: number): number => {
++        const own = dMX > 1e-12 ? X.L / dMX : 1;
++        const p0 = eOf(X, sideX, sMX, 1);
++        const dY0 = (p0.x - j.c[0]) * Y.ux + (p0.y - j.c[1]) * Y.uy;
++        const oth = dMY - dY0 > 1e-12 ? (Y.L - dY0) / (dMY - dY0) : 1;
++        return Math.min(1, Math.max(0, Math.min(own, oth)));
++      };
++      const rA = rOf(A, cw.sideA, mt.sA, mt.dA, B, mt.dB); const rB = rOf(B, cw.sideB, mt.sB, mt.dB, A, mt.dA);
++      const gA = Math.min(wA, 1 - rA); const gB = Math.min(wB, 1 - rB);
++      const ea = eOf(A, cw.sideA, mt.sA, gA); const eb = eOf(B, cw.sideB, mt.sB, gB);
+       cw.Vx = mt.x; cw.Vy = mt.y; cw.qx = mt.x; cw.qy = mt.y; cw.r = 0; cw.meet = true;
+-      cw.tax = ea.x; cw.tay = ea.y; cw.sA = ea.s; cw.dA = mt.dA * (1 - wA);
+-      cw.tbx = eb.x; cw.tby = eb.y; cw.sB = eb.s; cw.dB = mt.dB * (1 - wB);
++      cw.tax = ea.x; cw.tay = ea.y; cw.sA = ea.s; cw.dA = mt.dA * (1 - gA);
++      cw.tbx = eb.x; cw.tby = eb.y; cw.sB = eb.s; cw.dB = mt.dB * (1 - gB);
+       cw.refA = addPointAt(A.pi, cw.sideA, ea.x, ea.y, ea.s, { k: 5, corner: ci, which: 0 });
+       cw.refB = addPointAt(B.pi, cw.sideB, eb.x, eb.y, eb.s, { k: 5, corner: ci, which: 1 });
+       cw.refVA = cw.refA; cw.refVB = cw.refB;
