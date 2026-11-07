@@ -76,6 +76,8 @@ Checks:
   gen_k863m, J3L and J3M). In the spot: 97 joins (72 into a high letter, 25 into a low one) and 38 tails (b 6, f 6,
   o 7, v 6, w 13). Outside it no row changes its length, badness, font distance, seams or source; only kmax_p95
   (268 rows) and spikes (11 rows) move, both scaled by the word's p95 curvature, which a changed join moves.
+  The split is `work37/census_split.txt` (`censplit_k863m.ps1`, J3M's rows against J3L's); census_cmp.txt compares
+  each build with v6.8's rows, and its "spot" is J3k's (q's tails).
 - The changed joins: J3M's 97 read spikes 0, rough FAIL 0, hooks 0. J3L's (v6.8's presets) read up to 46 and 61
   spikes, 22 and 25 rough FAILs, 18 and 25 hooks (high, low), but those come from how a preset join is sampled, not
   from its ink: they are no measure of v6.8's look.
