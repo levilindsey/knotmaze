@@ -1210,6 +1210,7 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
   // meet the over chain's near it, plus a synthesized cut where a tight
   // twist's pair just misses (below).
   let twistFlips = 0;
+  const TWW = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.K1240_TWW ?? "half";
   scene.crossings.forEach((x, xi) => {
     const cp = crossPt[xi];
     if (!cp) return;
@@ -1220,10 +1221,35 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
     const cands: Cand[] = [];
     const uSegs = new Map<number, number[]>(); const oSegs = new Map<number, number[]>();
     for (const sd of [1, -1]) { uSegs.set(sd, segsNear(U, sd, cp.sUnder, R)); oSegs.set(sd, segsNear(O, sd, cp.sOver, R)); }
+    // S3f run 3: the near miss is sought only between this crossing and
+    // halfway to the pair's neighbouring crossings along each chain, so
+    // the nearest approach cannot jump to another twist's. Which crossing
+    // neighbours this one is the diagram's; only positions follow the frame.
+    const pairWin = (pi: number, s0: number): [number, number] => {
+      if (TWW === "off") return [-Infinity, Infinity];
+      let lo = -Infinity; let hi = Infinity;
+      crossPt.forEach((q) => {
+        if (!q || !((q.under === U && q.over === O) || (q.under === O && q.over === U))) return;
+        const ps: [number, number][] = [[q.under, q.sUnder], [q.over, q.sOver]];
+        for (const [qpi, qs] of ps) {
+          if (qpi !== pi) continue;
+          const d = dS(polys[pi], s0, qs);
+          if (d > 1e-9 && d < hi) hi = d;
+          if (d < -1e-9 && d > lo) lo = d;
+        }
+      });
+      return TWW === "full" ? [lo, hi] : [lo / 2, hi / 2];
+    };
+    const inWin = (pi: number, s0: number, w: [number, number], sa: number, sb: number): boolean => {
+      const da = dS(polys[pi], s0, sa); const db = dS(polys[pi], s0, sb);
+      return Math.max(da, db) > w[0] && Math.min(da, db) < w[1];
+    };
+    const uWinC = TWW === "cands" ? pairWin(U, cp.sUnder) : null; const oWinC = TWW === "cands" ? pairWin(O, cp.sOver) : null;
     for (const uSide of [1, -1]) for (const oSide of [1, -1]) {
       const BU = borders[U][bIdx(uSide)]; const BO = borders[O][bIdx(oSide)];
       for (const i of uSegs.get(uSide)!) for (const j of oSegs.get(oSide)!) {
         if (U === O && uSide === oSide && i === j) continue;
+        if (uWinC && (!inWin(U, cp.sUnder, uWinC, BU.pts[i].s, BU.pts[i + 1].s) || !inWin(O, cp.sOver, oWinC!, BO.pts[j].s, BO.pts[j + 1].s))) continue;
         const a = BU.pts[i]; const b = BU.pts[i + 1]; const c = BO.pts[j]; const d = BO.pts[j + 1];
         const hit = segInt(a.x, a.y, b.x, b.y, c.x, c.y, d.x, d.y);
         if (!hit) continue;
@@ -1242,19 +1268,25 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
     // crossing itself once they touch; no walk, no depth test). Only the
     // under chain's stations take it; the over chain's keep real cuts.
     const synth: Cand[] = [];
+    let uWin: [number, number] | null = null; let oWin: [number, number] = [-Infinity, Infinity];
     for (const uSide of [1, -1]) for (const oSide of [1, -1]) {
       if (cands.some((c) => c.uSide === uSide && c.oSide === oSide)) continue;
       let from: Cand | null = null;
       for (const c of cands) if (c.uSide === uSide && c.oSide === -oSide && (!from || c.dc < from.dc)) from = c;
       if (!from) continue;
+      if (!uWin) { uWin = pairWin(U, cp.sUnder); oWin = pairWin(O, cp.sOver); }
       let f: { x: number; y: number; s: number } | null = null;
       const BU = borders[U][bIdx(uSide)]; const BO = borders[O][bIdx(oSide)];
       let bd = Infinity; let bi = -1; let bt = 0;
-      for (const i of uSegs.get(uSide)!) for (const j of oSegs.get(oSide)!) {
-        if (U === O && uSide === oSide && i === j) continue;
-        const a = BU.pts[i]; const b = BU.pts[i + 1]; const c = BO.pts[j]; const d = BO.pts[j + 1];
-        const cl = segSegClosest(a.x, a.y, b.x, b.y, c.x, c.y, d.x, d.y);
-        if (cl[2] < bd) { bd = cl[2]; bi = i; bt = cl[0]; }
+      for (const i of uSegs.get(uSide)!) {
+        if (!inWin(U, cp.sUnder, uWin, BU.pts[i].s, BU.pts[i + 1].s)) continue;
+        for (const j of oSegs.get(oSide)!) {
+          if (U === O && uSide === oSide && i === j) continue;
+          if (!inWin(O, cp.sOver, oWin, BO.pts[j].s, BO.pts[j + 1].s)) continue;
+          const a = BU.pts[i]; const b = BU.pts[i + 1]; const c = BO.pts[j]; const d = BO.pts[j + 1];
+          const cl = segSegClosest(a.x, a.y, b.x, b.y, c.x, c.y, d.x, d.y);
+          if (cl[2] < bd) { bd = cl[2]; bi = i; bt = cl[0]; }
+        }
       }
       if (bi >= 0) {
         const a = BU.pts[bi]; const b = BU.pts[bi + 1];
