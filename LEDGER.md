@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1245.
+Next free ID: K1246.
 
 ## Waiting on Levi
 
@@ -1715,6 +1715,11 @@ Every other item below waits on the trigger it names.
   1000·200 × 260·200 × 3 = 31 GB, and node reached 15.5 GB at 16:10 on 2026-11-06. Commit memory fell to 2.2
   GB free and Claude Code reaped a background shell. Fix: validate the numbers and cap the output (the tracked
   copies under K1139/K1208/K1220 too).
+- **K1245** · K1240 S2 open work (see Handoff in docs/design/K1240_s2_structural_outline.md): L=0 junction
+  arms and junction clusters (muse_hash j155/j156, def j34, g41_user_tw64 j33/j71/j27); structural-builder
+  performance (def median 396 ms vs 3 ms target); per-spot app sheets beside fbb/today look need a stable
+  world-point camera; border-band outside misses on close parallel threads; eye depth-tie path exercised only
+  by construction.
 
 ## Approved, to schedule (2026-10-11)
 
