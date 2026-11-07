@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1236.
+Next free ID: K1238.
 
 ## Waiting on Levi
 
@@ -291,6 +291,8 @@ Next free ID: K1236.
 - **K1172** · Walker modes, Levi's brainstorm (2026-11-03): guide it, program it, a flock, stop them (and a tower
   defense), steer it live, bend and tilt. Which family first? (`docs/design/K1172_walker_modes.md`; full text:
   `docs/ledger_notes.md`)
+- **K1236** · Cursive J3m: do b, v and w's new cusp exits, and o's and f's new word-end tails, read right?
+  (`docs/asks/K1236.md`; K863 J3m, 5602f487)
 
 ## In progress
 
@@ -315,10 +317,10 @@ Next free ID: K1236.
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
   Levi to edit instead of drawing all 26 (Levi, 2026-10-26). Muse's prototype parked at abc135e7.
-  - owner: agent `a48ef22ec84a4a83c` of claude session c18e2f02-e64f-41ba-9af0-2dbd583358e2 (opus, started 2026-11-06 07:10, 2 h cap ~09:10)
-  - branch: `worktree-agent-a48ef22ec84a4a83c`, worktree `.claude/worktrees/agent-a48ef22ec84a4a83c`; last commit: `7ff7294a`
-  - evidence: .claude/probes/K863/trace/work37/ and out37/ (main checkout, untracked); the base: work36/cand/J3L (J3l, 6c4ae88b)
-  - next: J3m runs to its Done (b, v and w turn out of their cusp; o's and f's word-end tails; J3L in as the kit's build); Claude views its sheets and crops, merges its tool commits, files Levi's card
+  - owner: nobody since 2026-11-06 08:36: J3m is done; waiting on Levi's look (card K1236)
+  - branch: mainline (J3m merged, 5602f487; its worktree `.claude/worktrees/agent-a48ef22ec84a4a83c` kept for follow-ups); last commit: `5602f487`
+  - evidence: .claude/probes/K863/trace/work37/ (NOTES_k863m.md, cand/J3M, crops/card_*.png) and out37/png/ (main checkout, untracked); NOTES.md's "K863 J3m" entry
+  - next: Levi answers K1236; the next stage makes J3M the kit's build, or adjusts the high exit or o's tail as he says
   - brief: `docs/design/K863_cursive_j3m.md`
 - **K114** · Gameplay round 2, designed in
   `docs/design/K80_gameplay_additions.md` section R: burn race, cut
@@ -1691,6 +1693,9 @@ Every other item below waits on the trigger it names.
 - **K1235** · K1040's band pass (S4a, f294dc08): its CPU prep takes 14-162 ms per scene on top of the label's
   8-102 (S5's scope), and its tables copy the label pass's PTS/CHAIN/SPAN instead of sharing them (Handoff in
   docs/design/K1040_s4a_band.md)
+- **K1237** · K863 J3m's leftovers: o's word-end tail has a small notch where it parts from the o and fails
+  the census's rough check (J3L's tail did too); f's spur was viewed only at the sheets' 9.2 u pen
+  (`.claude/probes/K863/trace/work37/NOTES_k863m.md`)
 
 ## Approved, to schedule (2026-10-11)
 
