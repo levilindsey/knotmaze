@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1235.
+Next free ID: K1236.
 
 ## Waiting on Levi
 
@@ -305,12 +305,12 @@ Next free ID: K1235.
   - brief: `docs/design/K1211_s6_one_glow.md`
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
-  float64 reference. Plan S1-S8, about 15 h (F7); supersedes K868 and K992. S1 to S1f merged (S1f: fb348a78); S3 (K1097) merged short of its gate; S1g merged (ca273d04); S3b (K1097) merged (587b7e80, 2026-11-02): 0 DEFECT, the Pixel's 2 ms missed 5-20x.
-  - owner: agent `a938d2e1d4d9b45e3` of claude session c18e2f02-e64f-41ba-9af0-2dbd583358e2 (opus, started 2026-11-06 06:42, 2 h cap ~08:42)
-  - branch: `worktree-agent-a938d2e1d4d9b45e3`, worktree `.claude/worktrees/agent-a938d2e1d4d9b45e3`; last commit: `302ab066`
-  - evidence: .claude/probes/K1040/s4a/ in its worktree; the 12 scenes in the main checkout's .claude/probes/K868/scenes/; S3's tools .claude/probes/K1040/s3/
-  - next: S4a runs to its Done; Claude views its sheets (reference, GPU, difference), merges, then launches S4b (corners, ties, outer edge, the flag: Levi's first look)
-  - brief: `docs/design/K1040_s4a_band.md`
+  float64 reference. Plan S1-S8, about 15 h (F7); supersedes K868 and K992. S1 to S1f merged (S1f: fb348a78); S3 (K1097) merged short of its gate; S1g merged (ca273d04); S3b (K1097) merged (587b7e80, 2026-11-02): 0 DEFECT, the Pixel's 2 ms missed 5-20x. S4a merged (f294dc08, 2026-11-06) short of check #12: the band's tube edges, caps and foot on the GPU, unused by the app.
+  - owner: muse session 4d5b34d5 (Paseo), coordinated by claude session c18e2f02-e64f-41ba-9af0-2dbd583358e2; started 2026-11-06 08:18, cap 2 h (~10:18)
+  - branch: detached worktree .claude/worktrees/muse-k1040-s4a2 (node_modules junctioned), pushes to master; last commit: `c82ee0ad`
+  - evidence: src/render/field/band_b.ts, band_b_glsl.ts, band_b_pass.ts (S4a, on master); .claude/probes/K1040/s4a/ (tracked tools); S4a's out/ (check_summary.md, sheets/) in its kept worktree .claude/worktrees/agent-a938d2e1d4d9b45e3/.claude/probes/K1040/s4a/out/; the 12 scenes in the main checkout's .claude/probes/K868/scenes/
+  - next: S4a2 to its Done (check #12 within 1/32 px away from corners: R2 group surfaces, the burial endpoint terms, R3 END arms, R1 union, R4); Claude checks its table and push, then launches S4b (corners, ties, outer edge, the flag: Levi's first look; show him the reference's group-surface halos, S4a crop muse_hash_worst_1), then S4b's Pixel batch (check #13)
+  - brief: `docs/design/K1040_s4a2_band.md`
   - env: from the worktree, `npx vite --config .claude/probes/K1040/vite.private-cache.config.ts --port 5401 --strictPort --host 127.0.0.1`
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
@@ -1688,6 +1688,9 @@ Every other item below waits on the trigger it names.
   K580 s5 left unidentified, not the fork's material (K1220 S2's handoff)
 - **K1234** · A stepped colour edge near the i's root, on master and K1220 S2 alike; likely the root's paint
   (K620), not attributed (K1220 S2's handoff)
+- **K1235** · K1040's band pass (S4a, f294dc08): its CPU prep takes 14-162 ms per scene on top of the label's
+  8-102 (S5's scope), and its tables copy the label pass's PTS/CHAIN/SPAN instead of sharing them (Handoff in
+  docs/design/K1040_s4a_band.md)
 
 ## Approved, to schedule (2026-10-11)
 
