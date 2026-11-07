@@ -396,3 +396,26 @@ All in [.claude/probes/K1240/proto/outline.ts](/C:/Users/lsl/Repositories/knotma
   foot searches). Both need algorithmic cuts (e.g. incremental
   gate evaluation, spatial index for candidates), gated on
   still exact staying 24/24.
+
+### Claude's check (2026-11-06, after the run)
+
+- **The real stop time.** The session's last record is at 21:03:02 PT, so S3b ran 77 of its 120
+  minutes. It first stopped at 20:27, 41 minutes in, and Muse's goal reminder sent it back. "At the
+  2 h cap" above is wrong.
+- **Re-run on the committed code** (`4db4a713`; outline.ts last written at 20:54): the synthetic tests
+  pass, the still exact check is 24/24 within tolerance, the 0.1h moved check fails 19 of 24 rows, and
+  the rigid check is 4.809e-9. All equal the numbers above.
+- **The 0.5h ring and fat files above came from the first part's code** (written at 20:19). On the
+  final code, ring's moved ours->B p99 is 1.177 px against fresh's 0.005, with a max of 47 px. Fat
+  passes ours->B but not B->ours (16 points over 1/2 px against 3).
+- **The bench, on a quiet machine under the lock (21:07):** def's frame median is 46.1 ms and its p95
+  87.3 ms with all 12 scenes, then 31.4 and 81.3 with def alone. The final code is slower than S3
+  (26.9 and 59.5), so the 59.1 ms above is not mainly contention.
+- **It re-decides the structure every frame.** Exposure is reclassified per segment and each corner's
+  `ok` is re-tested, so a corner can switch between an arc and a collapsed one. The brief asked for
+  features named once.
+- **The page tests** equal S3's within 0.01 points on all 12 scenes. They ran at 20:57, after the last
+  edit.
+- Muse's outputs are copied to the main checkout's `.claude/probes/K1240/s3b_out/`, and Claude's
+  re-run of the 0.5h files and the bench to `s3b_out/claude_rerun/`.
+- **Next:** `docs/design/K1240_s3c_decide_once.md`.
