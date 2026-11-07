@@ -14,7 +14,7 @@ data changes (K1112): each form is a letter's word-end form or its exit by the n
 everywhere else (s, p, the D2 dots, q's Q1s; c, m and u keep v6.8's presets). Stage agent of coordinator session
 c18e2f02 (Claude session 01TnQvxftruF6gxzRe3bigQ6), started 07:10:10 on 2026-11-06, cap 09:10:10. Brief
 `docs/design/K863_cursive_j3m.md` (branch `worktree-agent-a48ef22ec84a4a83c`, which holds copies of the tools, both
-specs and this entry). Everything below is under this folder. Rerun everything:
+specs, the candidate's join_params and this entry). Everything below is under this folder. Rerun everything:
 `$env:K863M_SPEC = "work37\k863m_v2.json"; pwsh -NoProfile -File work37\dbg\checks_k863m.ps1 [step ...]` (steps
 cand, local, cens_c, sheets, words, png; no step = all, in order; logs in `work37\checks_logs`; `K926_FINAL_E=shear`,
 `K1009_PINS` cleared; without `K863M_SPEC` it builds v1). Its Batch is J3l's (at most 2 of the kit's Python jobs
