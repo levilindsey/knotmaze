@@ -2305,8 +2305,8 @@ export function frame(st: OutlineStructure, scene: SceneIn, profile?: Record<str
       // collapses to zero radius at V (never a switch, never missing).
       fc.ok = cs.ok; fc.Vx = vx; fc.Vy = vy; fc.qx = vx; fc.qy = vy;
       fc.tax = vx; fc.tay = vy; fc.tbx = vx; fc.tby = vy; fc.r = 0; fc.theta = cs.theta;
-      if (A) { footWinFast(polys[A.pi], vx, vy, A.dir > 0 ? A.sR : A.sR - A.L, A.dir > 0 ? A.sR + A.L : A.sR, gFa); fc.fax = gFa.x; fc.fay = gFa.y; fc.sA = gFa.s; } else { fc.fax = vx; fc.fay = vy; fc.sA = cs.sA; }
-      if (B) { footWinFast(polys[B.pi], vx, vy, B.dir > 0 ? B.sR : B.sR - B.L, B.dir > 0 ? B.sR + B.L : B.sR, gFb); fc.fbx = gFb.x; fc.fby = gFb.y; fc.sB = gFb.s; } else { fc.fbx = vx; fc.fby = vy; fc.sB = cs.sB; }
+      if (A) { const hA = A.sR + A.dir * armDistF(A, cs.vSa); footWinFast(polys[A.pi], vx, vy, A.dir > 0 ? A.sR : A.sR - A.L, A.dir > 0 ? A.sR + A.L : A.sR, gFa, -1, Infinity, hA - 2 * h, hA + 2 * h); fc.fax = gFa.x; fc.fay = gFa.y; fc.sA = gFa.s; } else { fc.fax = vx; fc.fay = vy; fc.sA = cs.sA; }
+      if (B) { const hB = B.sR + B.dir * armDistF(B, cs.vSb); footWinFast(polys[B.pi], vx, vy, B.dir > 0 ? B.sR : B.sR - B.L, B.dir > 0 ? B.sR + B.L : B.sR, gFb, -1, Infinity, hB - 2 * h, hB + 2 * h); fc.fbx = gFb.x; fc.fby = gFb.y; fc.sB = gFb.s; } else { fc.fbx = vx; fc.fby = vy; fc.sB = cs.sB; }
       fc.duA = A ? armDistF(A, fc.sA) : 0; fc.duB = B ? armDistF(B, fc.sB) : 0;
       fc.dvA = fc.duA; fc.dvB = fc.duB;
     };
@@ -2625,7 +2625,7 @@ export function frame(st: OutlineStructure, scene: SceneIn, profile?: Record<str
       } else continue;
       done[id] = 1;
       brt.baseS[j] = vs;
-      const pos = brt.posOfId[id];
+      const pos = brt.baseSeqPos[j];
       if (pos >= 0) { brt.XY[2 * pos] = vx; brt.XY[2 * pos + 1] = vy; brt.CXY[2 * pos] = vfx; brt.CXY[2 * pos + 1] = vfy; brt.SA[pos] = vs; }
     }
     for (let j = 0; j < baseSeq.length; j++) { const id = baseSeq[j]; if (kind[id] === 3) eval3(id); }
@@ -2706,7 +2706,7 @@ export function frame(st: OutlineStructure, scene: SceneIn, profile?: Record<str
         for (let di = -3; di <= 3; di++) {
           const ii = wrap(tr.j + di);
           if (!closedB && (ii < 0 || ii >= nP)) { ds[di + 3] = NaN; continue; }
-          footWinFast(p2, XY[2 * ii], XY[2 * ii + 1], loS, hiS, foot);
+          footWinFast(p2, XY[2 * ii], XY[2 * ii + 1], loS, hiS, foot, -1, Infinity, sAt(k0) - 2 * h, sAt(k0) + 2 * h);
           ds[di + 3] = foot.d;
         }
         for (let di = -3; di < 3; di++) {
