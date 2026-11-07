@@ -434,6 +434,8 @@ interface LoopVert {
   corner: number;
   /** Graph node id, or -1 for points inserted by a corner splice. */
   nd: number;
+  /** Atomic edge id this vertex starts, or -1 for inserted points. */
+  ae: number;
 }
 
 /** Point in polygon (ray cast), the loop as flat points. */
@@ -956,6 +958,7 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
       brk: nodeCross.has(tailNode),
       corner: -1,
       nd: tailNode,
+      ae: e.id,
     };
   });
 
@@ -1146,12 +1149,12 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
     const arcVerts: LoopVert[] = [];
     const mkT = (t: { x: number; y: number }, isA: boolean): LoopVert => ({
       x: t.x, y: t.y, s: isA ? cw.sA : cw.sB, chain: isA ? cw.aChain : cw.bChain,
-      side: isA ? cw.sideA : cw.sideB, kind: "tangent", brk: true, corner: corners.indexOf(cw), nd: -1,
+      side: isA ? cw.sideA : cw.sideB, kind: "tangent", brk: true, corner: corners.indexOf(cw), nd: -1, ae: -1,
     });
     arcVerts.push(mkT(fwdT, fwd.isA));
     for (let i = 1; i < steps; i++) {
       const a = aF + (da * i) / steps;
-      arcVerts.push({ x: cw.qx + cw.r * Math.cos(a), y: cw.qy + cw.r * Math.sin(a), s: cw.sA, chain: cw.aChain, side: 0, kind: "arc", brk: false, corner: corners.indexOf(cw), nd: -1 });
+      arcVerts.push({ x: cw.qx + cw.r * Math.cos(a), y: cw.qy + cw.r * Math.sin(a), s: cw.sA, chain: cw.aChain, side: 0, kind: "arc", brk: false, corner: corners.indexOf(cw), nd: -1, ae: -1 });
     }
     arcVerts.push(mkT(bwdT, bwd.isA));
     // New loop in order: backward tangent, arc (reversed), forward
