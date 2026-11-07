@@ -489,3 +489,229 @@ session 09c7a672-a414-402a-97da-b3176839a2e5. The agent worked on `wip/k1240-s3f
 ### Commands
 
 As in the first Handoff, with the `-Command` form for `-Skip`. The final run is tag `final4`.
+
+## Handoff 3 (Claude, third run, 2026-11-07)
+
+- **Run:** started 12:09:52. Measuring stopped at 13:00 for the coordinator's wrap-up, and this
+  handoff was committed at 13:06 (the 2 h cap was 14:09:52). outline.ts last changed at 12:32
+  (d1d4f6d3), and the re-run of every number below ran from about 12:41 to 12:58. Usage of the
+  week read 96% at 12:21 (the coordinator's reading; 96% no longer stops this run) and 96% at
+  12:59.
+- **Where:** `wip/k1240-s3f` in `.claude/worktrees/muse-k1240-s1`, on base 3f0a9f03 (Handoff 2,
+  merged). This run's commits are 7fcc9b39, f5a24dd8, 30d81dad (reverted by d1d4f6d3), d1d4f6d3,
+  908fc373 and this handoff's. outline.ts is 7fcc9b39's.
+- **Evidence:** every number below is on that outline.ts: `out/s3f/checks_final6.txt` (logs in
+  `logs_final6/`), `cmp_page_final6.txt`, `bench_final6{a,b}.json` and `sweep.json`. The runs on a
+  consistent S' (below) are `out/s3f/move{0.1,0.5}c_exact_*.json` and `fresh0.5c_exact_*.json`,
+  and S3d's code on the same scenes is `out/s3f/s3dfresh{0,0.1c,0.5c}_exact_*.json` (`0` is the
+  still S).
+
+### Dones
+
+1. **Fixed piece keys and order: holds.**
+   - Ordered piece keys are identical between S and S' at 0.1h on all 12 scenes, and at 0.5h on def,
+     ring and fat.
+   - structure(S) deep-equals structure(S'), every junction is cyclic, and none lists its arms
+     against the ccw order (reversed=0).
+2. **Still: fails** on 2 of the 24 rows (Handoff 2: 3). Every p99 is within 0.01.
+
+   | Row | over2 now | Handoff 2 | Baseline |
+   |---|---|---|---|
+   | def B | 11 | 11 | 6 |
+   | g41_ring_tw42 A | 6 | 9 | 4 |
+
+   g41_user_tw42 A (14 in Handoff 2) holds at 8 against 12. S2's synthetic tests pass after one
+   fixture change outside the brief's allowance (f5a24dd8, below). A rigid motion of def is exact to
+   4.809e-9 (the tolerance is 1e-6).
+3. **Moved: fails** against S3d's baselines, which were made on a stale S' (the next section).
+   - At 0.1h, 6 of 24 rows fail (Handoff 2: 7). g41_user_tw64 A (193) holds at 184 against 189.
+
+     | Row | over2 now | Handoff 2 | Baseline |
+     |---|---|---|---|
+     | muse_default_tw A | 11 | 11 | 5 |
+     | muse_default_tw B | 25 | 25 | 21 |
+     | def B | 14 | 14 | 7 |
+     | user_tw42.lightpaper A | 13 | 19 | 6 |
+     | g41_ring_tw42 A | 6 | 6 | 3 |
+     | g41_user_tw42 A | 12 | 18 | 5 |
+
+   - At 0.5h, all 6 rows fail, as in Handoff 2: def A 45 and B 43, ring A 253 (p99 3.865) and B 51,
+     fat A 1585 (p99 8.591) and B 161.
+   - On a consistent S', against S3d's code run there, 1 of the 6 rows fails at 0.5h (def B, 9
+     against 6) and 6 of the 24 at 0.1h: the next section.
+4. **Page tests: hold.** `cmp_s3f.mjs page` reports ALL WITHIN TOLERANCE. The one console 404 is
+   S3's baseline's too.
+5. **Reported.**
+   - **Frame time** under the lock: 120 timed frames per scene, two runs (`bench_final6a` /
+     `bench_final6b`). def's median is where Handoff 2's was (321.5 / 329.7 ms).
+
+     | Scene | Median (ms) | p95 (ms) | structure() (ms) |
+     |---|---|---|---|
+     | muse_hash | 487.0 / 510.0 | 632.6 / 661.0 | 3.0 / 3.0 |
+     | muse_default_tw | 299.8 / 304.1 | 427.9 / 428.4 | 3.6 / 3.4 |
+     | def | 321.9 / 325.0 | 467.4 / 454.5 | 4.7 / 3.6 |
+     | fat | 234.4 / 234.7 | 304.4 / 321.1 | 0.5 / 0.7 |
+     | ring | 58.9 / 58.6 | 126.5 / 131.4 | 0.6 / 0.6 |
+     | user_tw42.lightpaper | 117.7 / 115.0 | 177.9 / 216.5 | 1.6 / 1.2 |
+     | g41_def_tw42 | 281.2 / 275.0 | 404.5 / 404.4 | 3.7 / 3.3 |
+     | g41_def_tw64 | 396.2 / 393.5 | 517.3 / 534.1 | 4.2 / 3.9 |
+     | g41_ring_tw42 | 46.8 / 45.3 | 85.3 / 85.2 | 0.4 / 0.6 |
+     | g41_ring_tw64 | 63.5 / 62.8 | 112.1 / 110.6 | 0.5 / 0.5 |
+     | g41_user_tw42 | 116.6 / 116.9 | 193.1 / 173.8 | 1.1 / 1.2 |
+     | g41_user_tw64 | 178.0 / 181.4 | 254.2 / 261.3 | 1.0 / 1.1 |
+
+   - **def's phases**, run a / run b:
+
+     | Phase | Time (ms) |
+     |---|---|
+     | setupBorders | 21.8 / 20.2 |
+     | corners | 26.7 / 25.1 |
+     | cutsEyesExposure | 306.4 / 279.9 |
+     | regions | 29.0 / 25.9 |
+     | piecesCapsEtc | 14.1 / 13.6 |
+
+   - **The 20-step sweep.** All pieces matched at every step. The largest piece motion is 25 (def),
+     69 (ring; Handoff 2: 75) and 112 (fat) times the largest particle motion:
+
+     | Scene | Piece max | Where | Piece median | Particle max |
+     |---|---|---|---|---|
+     | def | 0.221 | step 19, run ch82 side1 | 0.143 | 0.0090 |
+     | ring | 0.688 | step 20, run ch3 side-1 | 0.142 | 0.0099 |
+     | fat | 0.998 | step 20, run ch2 side1 | 0.070 | 0.0089 |
+
+   - **Degenerate pieces**, S / S': every count is Handoff 2's.
+6. **A Handoff:** this one.
+
+### Why the moved check fails at 0.5h: its S' keeps the old s
+
+- `perturb` (s3f_exact.ts) moves every chain point by a smooth field of amplitude mult x h, but
+  it keeps every crossing's, arm's and dead end's s. frame() places a crossing at pointAt(chain, s)
+  on each pass, so on S' the two passes of one crossing land apart. The gap between them, over h
+  (`s3f_claude_drift.ts`):
+
+  | Scene (crossings) | S: p50 / max | 0.1h: p50 / max | 0.5h: p50 / p90 / max | Over 1h at 0.5h |
+  |---|---|---|---|---|
+  | def (353) | 0.071 / 0.240 | 0.132 / 0.548 | 0.510 / 1.540 / 2.913 | 70 |
+  | ring (87) | 0.045 / 0.391 | 0.273 / 0.579 | 1.364 / 2.499 / 3.143 | 61 |
+  | fat (428) | 0.074 / 0.272 | 0.384 / 0.901 | 2.042 / 3.324 / 5.211 | 327 |
+
+- The app never builds such a scene: physics re-projects every crossing onto the two threads'
+  intersection each substep. On the captured S the two passes sit p50 0.045-0.074h apart, at most
+  0.391h (the S column).
+- `--consistent` (908fc373) builds the S' the app would give. Each s is remapped to the same
+  segment and fraction of the moved chain, and each junction centre moves with the field.
+- `s3f_exact_s3dbase.ts` runs S3d's code (5290da82) through the same harness. On the stale S' it
+  reproduces S3d's baseline exactly (def at 0.5h: A 41, B 34, the same p99s).
+- Over2 at 0.5h, A / B. Every p99 on the consistent S' is within 0.01 of S3d's there.
+
+  | Scene | Ours, consistent S' | S3d, consistent S' | Ours, stale S' | S3d, stale S' (the baseline) |
+  |---|---|---|---|---|
+  | def | 10 / 9 | 13 / 6 | 45 / 43 | 41 / 34 |
+  | ring | 34 / 2 | 40 / 3 | 253 / 51 | 84 / 18 |
+  | fat | 0 / 0 | 1 / 5 | 1585 / 161 | 129 / 6 |
+
+- Against S3d's code on the same scenes, the rows that fail:
+
+  | Scenes | Failing | Rows: ours against S3d's over2 |
+  |---|---|---|
+  | Still, S | 5 of 24 | muse_default_tw A 8 / 5, def B 11 / 6, user_tw42.lightpaper A 8 / 5, g41_ring_tw42 A 6 / 3, g41_user_tw42 A 8 / 5 |
+  | Consistent S', 0.1h | 6 of 24 | the same five (11 / 4, 12 / 8, 9 / 6, 6 / 3, 8 / 5) and muse_default_tw B 25 / 20 |
+  | Consistent S', 0.5h | 1 of 6 | def B 9 / 6 |
+
+- So on a consistent S' the moved check measures what the still check does: our corners against
+  S3d's. The moved frame equals the fresh build row for row there (`move0.5c` against
+  `fresh0.5c`), as it should with structure the diagram.
+- The brief's still baseline, S3's code, is looser than S3d's code on three A rows:
+  muse_default_tw 12 (S3d 5), user_tw42.lightpaper 13 (5) and g41_user_tw42 12 (5). Ours holds
+  them at 8 against S3's numbers and is 3 over S3d's.
+
+### What each commit did
+
+- **7fcc9b39: a corner faces its arms' diagram sides.**
+  - A corner joins two arms that are adjacent in the junction's ccw listing, A then B. It now joins
+    A's border on side A.dir and B's on side -B.dir, fixed by the diagram. Before, the sign of a
+    cross product of the frame's arm directions picked the sides: a choice that followed the frame.
+  - A corner that sweeps more than pi from A to B (reflex) takes cornerFallback, why "reflex".
+  - Still: g41_user_tw42 A 14 -> 8 (holds), g41_ring_tw42 A 9 -> 6. At 0.1h: user_tw42.lightpaper
+    A 19 -> 13, g41_user_tw42 A 18 -> 12, g41_user_tw64 A 193 -> 184 (holds). The ring's largest
+    sweep motion went 0.745 -> 0.688. No 0.5h row moved.
+  - Goal 1 so far: g41_user_tw42, the scene of Handoff 2's stub crop (j28, j32), holds against
+    the brief's baseline. The rest of the stub list is Next 4.
+- **f5a24dd8: the T test lists its arms by ascending angle.**
+  - The generator lists every junction's arms by ascending angle (reversed=0 on all 12 scenes).
+    The T test's fixture listed pi, pi/2, 0, so both of its corners swept 3pi/2 and read reflex.
+  - Listed 0, pi/2, pi, each corner sweeps pi/2 and takes the sides the old rule gave it. The
+    assertions are unchanged.
+  - **Beyond the brief's allowance**, which lets a test change only where it counts pieces the old
+    way. It needs the coordinator's or Levi's OK.
+- **30d81dad, reverted by d1d4f6d3: a window on the twist's nearest approach** (goal 2). See
+  "Tried and reverted".
+- **908fc373: the moved check's S', measured.** `s3f_exact.ts --consistent` and
+  `s3f_claude_drift.ts` (above). The checks' default S' is unchanged, so every Done number above
+  compares with Handoff 2's.
+- **This handoff's commit** adds `s3f_exact_s3dbase.ts` (S3d's code through the same harness) and
+  `cmp_consistent.mjs` (the comparisons of the last section).
+
+### Tried and reverted
+
+- **The twist window (30d81dad), `K1240_TWW`:**
+  - `full` limits the nearest approach to the span between the pair's neighbouring crossings along
+    each chain, `half` to half of it, and `cands` is half that also keeps the real cuts as
+    candidates.
+  - `full` equals no window exactly: it never binds.
+  - `half` at 0.5h: fat A p99 8.59 -> 9.22 and ring A 3.87 -> 4.42 got worse; fat B 161 -> 132 and
+    ring B 51 -> 46 got better.
+  - `cands`: fat A p99 10.13, ring A 8.61, def A 45 -> 94 and fat B 58.
+  - No variant moved a still or 0.1h row. The 0.5h excess is not the near miss: it is the stale s
+    (above).
+
+### Corrections to Handoff 2
+
+- Its SHAs are the ones from before the merge. On master they are 94050aab (its 17245115),
+  5df27158 (a03d2f61), 500f65f2 (99b83db1), 9a5c5330 (028f32dd) and the handoff 3f0a9f03.
+- Its Next 4 ("ring and fat at 0.5h ... the cause is still unknown"): the cause is the check's
+  stale s, not the frame.
+
+### Next
+
+1. **Decide the moved check's S'** (for the coordinator or Levi):
+   - (a) Gate Done 3 on the consistent S', with S3d's code re-run there as the baseline
+     (`s3dfresh{0.1,0.5}c_*`, made this run). Done 3 then fails 1 of 6 rows at 0.5h (def B 9
+     against 6) and 6 of 24 at 0.1h, the rows where ours trails S3d's code on the still scenes
+     too.
+   - (b) Keep the stale S' and have frame() put each crossing at its two passes' intersection
+     nearest the old s. Where two passes cross more than once near s (the tight twists), "nearest"
+     is a choice that follows the frame.
+   - And whether Done 2's baseline should be S3d's code (`s3dfresh0_*`) rather than S3's: 5 rows
+     fail against it, 2 against S3's.
+2. **def B, still 11 against 6.** At T junctions j3, j1 and j151 an open chain's end arm (v0)
+   meets a through chain.
+   - One corner of the end arm is sharp: r = 0, and V = ta = tb at the meet. Form B fills that
+     crotch, and its worst pixels are there (10.2, 9.2 and 8.7 px; S3 had 4.4 px).
+   - The arm's other corner is round (r 0.29, 0.22 and 0.17).
+3. **g41_ring_tw42 A, still 6 against 4.** j12's corner a37-a38 sweeps 3.192 rad (183 degrees), so
+   it takes the reflex fallback, and our ink pokes 3.45 px out at its ta (9.756, 1.016). A reflex
+   corner wants a convex round join: an arc of radius h about the junction's centre.
+4. **The stub corners not yet checked one by one:** ring j4, j5, j7 and j16, and
+   user_tw42.lightpaper j29 and j61. They are candidates for the 3 A pixels by which
+   muse_default_tw, user_tw42.lightpaper and g41_user_tw42 trail S3d's code.
+5. **The 0.1h rows.** On the consistent S' they are the still rows against S3d's code, plus
+   muse_default_tw B (25 against 20; 27 against 26 still). On the stale S' they add the stale s.
+
+### Commands
+
+As in the first and second Handoffs; the final run is tag `final6`. New this run, from the
+checkout's root:
+- The consistent S': `node scripts/run_node.mjs .claude/probes/K1240/proto/s3f_exact.ts --move=0.5
+  [--fresh] --consistent def,ring,fat` writes `out/s3f/{move,fresh}0.5c_exact_*.json`. With
+  `--move=0.1` and no scene list, it runs all 12.
+- S3d's code: `s3f_exact_s3dbase.ts` with the same arguments writes `s3dfresh*` / `s3dmove*`;
+  `--move=0 --fresh` is the still scenes. It imports `proto/outline_s3d.ts`, S3d's outline.ts,
+  untracked; its header has the one-line Node command that recreates it from 5290da82.
+- `node .claude/probes/K1240/proto/cmp_consistent.mjs <0.1|0.5> [aPrefix] [bPrefix]` compares two
+  sets of exact rows by the checks' tolerance (default: `s3dfresh<m>c` against `move<m>c`). The
+  still rows against S3d's code: `... cmp_consistent.mjs 0.1 out/s3f/s3dfresh0_ out/s3f/`.
+- The pass gaps on S': `node scripts/run_node.mjs .claude/probes/K1240/proto/s3f_claude_drift.ts
+  [scene,...]`.
+- One junction's arms, corners and nearby crossings: `node scripts/run_node.mjs
+  .claude/probes/K1240/proto/s3f_claude_j.ts <scene> <ji,...>`.
