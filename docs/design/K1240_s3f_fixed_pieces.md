@@ -754,3 +754,11 @@ These decisions settle Handoff 3's ledger items 1 and 4. The next run starts fro
    4. muse_default_tw at 0.1h.
 
    K1247, the cost stage, then starts from this frame().
+5. **Revised the same day: K1247 runs before round 4.**
+   - Speed is the open risk: def's frame takes 322-325 ms against 3 ms, and Levi's lane decision
+     waits on it. Round 4's corners are local and mostly understood.
+   - frame() is buildOutlineFull re-run whole. S3d's runtime frame (frameRt: typed arrays, searches
+     started from the last frame's answer) took 12.4-13.2 ms, though it decided more up front.
+   - K1247's gate: today's frame() output within the checks' tolerances on every row, and def
+     ≤3 ms median / ≤6 ms p95 under the lock. Its brief is still to write. Round 4 follows, in the
+     order above.
