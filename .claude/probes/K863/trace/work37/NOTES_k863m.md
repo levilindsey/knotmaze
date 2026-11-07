@@ -17,7 +17,7 @@ c18e2f02 (Claude session 01TnQvxftruF6gxzRe3bigQ6), started 07:10:10 on 2026-11-
 specs, the candidate's join_params and this entry). Everything below is under this folder. Rerun everything:
 `$env:K863M_SPEC = "work37\k863m_v2.json"; pwsh -NoProfile -File work37\dbg\checks_k863m.ps1 [step ...]` (steps
 cand, local, cens_c, sheets, words, png; no step = all, in order; logs in `work37\checks_logs`; `K926_FINAL_E=shear`,
-`K1009_PINS` cleared; without `K863M_SPEC` it builds v1). Its Batch is J3l's (at most 2 of the kit's Python jobs
+`K1009_PINS` cleared; without `K863M_SPEC` it builds v2). Its Batch is J3l's (at most 2 of the kit's Python jobs
 machine-wide while `$env:TEMP\claude-perf.lock` exists, 4 otherwise).
 
 The entry classes (the next letter's; in v6.8 the join out of b dips to a lowest point of 57-74 u before it climbs

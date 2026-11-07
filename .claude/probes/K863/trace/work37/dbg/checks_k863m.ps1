@@ -1,5 +1,5 @@
 # K863 J3m checks, after work36\dbg\checks_k863l.ps1 (J3l's, untouched): the candidate (cand: J3L + the k863m forms of
-# $env:K863M_SPEC, default work37\k863m_v1.json), its locality against J3L over the 232 test words (local), the census
+# $env:K863M_SPEC, default work37\k863m_v2.json), its locality against J3L over the 232 test words (local), the census
 # of the changed words in J3L and J3m with v6.8's rows beside them (cens_c), the look sheets (font | v6.8 | J3l | J3m
 # [| the variant]) inked at the pen's width (sheets), the 232 test words' sheets (words) and their PNGs at 144 dpi
 # (3x; png). Logs in work37\checks_logs. Run: pwsh -NoProfile -File work37\dbg\checks_k863m.ps1 [step ...] (no step =
@@ -10,7 +10,7 @@ $Only = @(@($Only) | ForEach-Object { "$_" -split ',' } | Where-Object { $_ })
 $T = "C:\Users\lsl\Repositories\knotmaze\.claude\probes\K863\trace"; Set-Location $T; $py = "$T\venv\Scripts\python.exe"
 $env:K926_FINAL_E = "shear"; $env:K1009_PINS = $null
 $font = "font\PlaywriteUSTrad[wght].ttf"; $lg = "work37\checks_logs"; $ports = "work28\ports_k990e.json"
-$spec = if ($env:K863M_SPEC) { $env:K863M_SPEC } else { "work37\k863m_v1.json" }
+$spec = if ($env:K863M_SPEC) { $env:K863M_SPEC } else { "work37\k863m_v2.json" }
 $vspec = $env:K863M_VAR_SPEC   # optional: a variant spec, built as J3MV and drawn as a fifth column
 New-Item -ItemType Directory -Force $lg, work37\sheets, out37, out37\png | Out-Null
 $abc = "abcdefghijklmnopqrstuvwxyz".ToCharArray()
