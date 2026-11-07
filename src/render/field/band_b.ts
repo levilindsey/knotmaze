@@ -70,6 +70,8 @@ export interface BandBTables {
   lambda: number;
   /** 1 / K of form B's cone key (0 for the max form). K1040 S4a2. */
   invK: number;
+  /** K1040 S4c: form B zt (D4 tie half-width, z units). */
+  zt: number;
   delta: number;
   R: number;
 }
@@ -253,6 +255,7 @@ export function buildBandB(fb: FormB, T: LabelBTables): BandBTables {
     sigma: fb.sigma,
     lambda: fb.lambda,
     invK: fb.K === Infinity ? 0 : 1 / fb.K,
+    zt: fb.zt,
     delta: fb.delta,
     R,
   };

@@ -112,4 +112,8 @@ describe("band B tables: a group surface's arms (K1040 S4a2)", () => {
   it("the cone key's reciprocal rides the tables for the cap mix's order", () => {
     expect(B.invK).toBeCloseTo(1 / fb.K, 15);
   });
+
+  it("the tie width zt rides the tables for the D4 blend (K1040 S4c)", () => {
+    expect(B.zt).toBeCloseTo(fb.zt, 15);
+  });
 });

@@ -63,6 +63,7 @@ uniform float uPad;
 uniform float uInvK;
 uniform sampler2D uCrn;
 uniform float uCell;
+uniform float uZt;
 #define CRN_TEXELS ${CRN_TEXELS}
 vec4 fetch(sampler2D t, int i) {
   return texelFetch(t, ivec2(i % TEX_W, i / TEX_W), 0);
@@ -262,7 +263,8 @@ bool names(uint wd, int code, int ci, float sA, bool closed, float len, float s0
 // group's nearest (the members separate past the junction), so its chain's
 // distance is the surface's. -1 only for a fill (S4b's corners), whose
 // alpha is a max over pieces this does not see.
-float topDist(uint wd, vec2 p, int ci, float sA) {
+float topDistZ(uint wd, vec2 p, int ci, float sA, out float zOut) {
+  zOut = 0.0;
   if (((wd >> 27) & 1u) != 0u) return -1.0;
   int c = int(wd & 255u) - 1;
   vec4 d0 = fetch(uChain, 2 * c);
@@ -299,7 +301,8 @@ float topDist(uint wd, vec2 p, int ci, float sA) {
     vec4 Pb = fetch(uPts, off + jb);
     if (c != ci || abs(dS(Pa.z, sA, cl, len)) > uSig) {
       float t = clamp(segT(p, Pa.xy, Pb.xy), 0.0, 1.0);
-      best = min(best, distance(p, mix(Pa.xy, Pb.xy, t)));
+      float dd = distance(p, mix(Pa.xy, Pb.xy, t));
+      if (dd < best) { best = dd; zOut = mix(Pa.w, Pb.w, t); }
     }
     run += distance(Pa.xy, Pb.xy);
     if (run > 2.0 * w) break;
@@ -308,6 +311,17 @@ float topDist(uint wd, vec2 p, int ci, float sA) {
     if (!cl && j == 0) break;
   }
   return best;
+}
+float topDist(uint wd, vec2 p, int ci, float sA) { float z; return topDistZ(wd, p, ci, sA, z); }
+// K1040 S4c: the D4 tie blend of the two composite orders. ordT is T over A,
+// ordA is A over T; the order form B sorts first (by cone key) wins by
+// t = ss(-zt, zt, |keyT - keyA|), the swapped order by 1 - t.
+float tieBlend(float ordT, float ordA, float keyT, float keyA, bool hasKey) {
+  if (!hasKey || !(uZt > 0.0)) return ordT;
+  float gap = abs(keyT - keyA);
+  if (!(gap < uZt)) return keyT >= keyA ? ordT : ordA;
+  float t = ss(-uZt, uZt, gap);
+  return keyT >= keyA ? t * ordT + (1.0 - t) * ordA : t * ordA + (1.0 - t) * ordT;
 }
 float band(float D) {
   return 1.0 - ss(uW - uAa, uW + uAa, D);
@@ -406,6 +420,56 @@ float cornerBurial(int g, vec2 p, vec2 f, int ci, float s, bool closed, float le
   }
   return bur;
 }
+// K1040 S4c: the fold weight (form B pieces(): D2) of the piece at segment
+// bs of chain bj, at (bsS, bsD): a nearer kept piece of the same chain
+// within 2 sigma (a local minimum of the segment distances along the walk
+// from bs) fades it by ss(sigma, 2 sigma, ds).
+float segDpS(vec2 p, int off, int n, vec4 c1v, bool cl, int j, out float sOut) {
+  int jb = (j + 1 == n) ? 0 : j + 1;
+  vec4 A = fetch(uPts, off + j);
+  vec4 B = fetch(uPts, off + jb);
+  float tt = clamp(segT(p, A.xy, B.xy), 0.0, 1.0);
+  float sb = jb == 0 ? c1v.x + c1v.y : B.z;
+  sOut = A.z + tt * (sb - A.z);
+  if (cl && sOut >= c1v.x + c1v.y) sOut -= c1v.y;
+  return distance(p, mix(A.xy, B.xy, tt));
+}
+float foldSelfW(vec2 p, int bj, int bs, float bsS, float bsD) {
+  vec4 b0 = fetch(uChain, 2 * bj);
+  vec4 b1 = fetch(uChain, 2 * bj + 1);
+  int off = int(b0.x);
+  int n = int(b0.y);
+  int nseg = int(b0.z);
+  bool cl = b0.w > 0.5;
+  float len = b1.y;
+  float sw = 1.0;
+  for (int dir = 0; dir < 2; dir++) {
+    int j = bs;
+    float acc = 0.0;
+    float dummy;
+    float prev = segDpS(p, off, n, b1, cl, j, dummy);
+    for (int step = 0; step < 256; step++) {
+      int jn = dir == 0 ? j + 1 : j - 1;
+      if (cl) jn = jn >= nseg ? 0 : jn < 0 ? nseg - 1 : jn;
+      else if (jn < 0 || jn >= nseg) break;
+      float sN;
+      float dpN = segDpS(p, off, n, b1, cl, jn, sN);
+      int jn2 = dir == 0 ? jn + 1 : jn - 1;
+      float dpNext = 1e30;
+      if (cl) { jn2 = jn2 >= nseg ? 0 : jn2 < 0 ? nseg - 1 : jn2; float d2; dpNext = segDpS(p, off, n, b1, cl, jn2, d2); }
+      else if (jn2 >= 0 && jn2 < nseg) { float d2; dpNext = segDpS(p, off, n, b1, cl, jn2, d2); }
+      if (dpN < bsD && dpN <= prev && dpN <= dpNext) {
+        float ds = abs(dS(sN, bsS, cl, len));
+        if (ds < 2.0 * uSig) sw = min(sw, ss(uSig, 2.0 * uSig, ds));
+      }
+      acc += distance(fetch(uPts, off + j).xy, fetch(uPts, off + jn).xy);
+      prev = dpN;
+      j = jn;
+      if (acc > 2.0 * uSig) break;
+    }
+  }
+  return sw;
+}
 // K1040 S4b: group g's alpha at p (form B alphaOf): its pieces' outline AA
 // (each arm window's nearest segment, a member of g there) and its fills'.
 float alphaG(int g, vec2 p) {
@@ -430,6 +494,7 @@ float alphaG(int g, vec2 p) {
     vec4 Pa = fetch(uPts, boff + jj);
     float bestDp = 1e30;
     float bestSj = 0.0;
+    int bestSeg = -1;
     for (int qq = 0; qq < 4096; qq++) {
       if (qq >= cnt) break;
       int jb = (jj + 1 == bn) ? 0 : jj + 1;
@@ -438,6 +503,7 @@ float alphaG(int g, vec2 p) {
       float dp = distance(p, mix(Pa.xy, Pb.xy, t));
       if (dp < bestDp) {
         bestDp = dp;
+        bestSeg = jj;
         float sb = jb == 0 ? b1.x + b1.y : Pb.z;
         bestSj = Pa.z + t * (sb - Pa.z);
         if (bcl && bestSj >= b1.x + b1.y) bestSj -= b1.y;
@@ -449,7 +515,10 @@ float alphaG(int g, vec2 p) {
     int gB;
     float rB = memberRamp(bj, bestSj, bcl, b1.y, gB);
     if (gB != g || !(rB > 0.0)) continue;
-    aP = max(aP, ss(-uAa, uAa, uH - bestDp));
+    // K1040 S4c: form B's alphaOf takes A.selfW * ss(-aa, aa, h - A.d); the
+    // old read took the AA alone and over-inked the discs at a fold.
+    float swA = bestSeg >= 0 ? foldSelfW(p, bj, bestSeg, bestSj, bestDp) : 1.0;
+    aP = max(aP, swA * ss(-uAa, uAa, uH - bestDp));
   }
   if (aP >= 1.0) return 1.0;
   float aF = 0.0;
@@ -466,6 +535,14 @@ float alphaG(int g, vec2 p) {
     aF = max(aF, c2.z * ss(-uAa, uAa, dq - c0.z));
   }
   return max(aP, aF);
+}
+// K1040 S4c: a label word's surface coverage at p (form B alphaOf): a group
+// reads alphaG (pieces at their fold weight, fills at omega); an own surface
+// reads its naming piece's outline AA.
+float surfAlpha(uint wd, float dT, vec2 p) {
+  int code = int((wd >> 19) & 255u);
+  if (code > 0) return alphaG(code - 1, p);
+  return dT >= 0.0 ? ss(-uAa, uAa, uH - dT) : 1.0;
 }
 `;
 
@@ -492,6 +569,7 @@ void main() {
   // D1: this chain's candidates within R over NB2's window, by d.
   float cd[8];
   float cs[8];
+  float cz[8];
   int cj[8];
   int nc = 0;
   vec4 nb = fetch(uNb2, off + k);
@@ -512,12 +590,14 @@ void main() {
         if (cd[i - 1] > dq) {
           cd[i] = cd[i - 1];
           cs[i] = cs[i - 1];
+          cz[i] = cz[i - 1];
           cj[i] = cj[i - 1];
           at = i - 1;
         } else break;
       }
       cd[at] = dq;
       cs[at] = sq;
+      cz[at] = zq;
       cj[at] = j;
       if (nc < 8) nc++;
     }
@@ -540,7 +620,7 @@ void main() {
   int ia = ix < 0 ? -1 : (into[ix] < 0 ? ix : into[ix]);
   float sA = ia < 0 ? sX : cs[ia];
   float dA = ia < 0 ? dX : cd[ia];
-  float zA = zX;
+  float zA = ia < 0 ? zX : cz[ia];
   // D2: the fold (the farther of two kept pieces within 2 sigma fades).
   float selfW = 1.0;
   for (int m = 0; m < 8; m++) {
@@ -605,6 +685,8 @@ void main() {
   uint wd = texelFetch(uLabel, clamp(ivec2(gl_FragCoord.xy), ivec2(0), ts - 1), 0).r;
   int lay = 0;
   float dT = -1.0;
+  float aT = 1.0;
+  float zT = 0.0;
   if (wd != 0u && !names(wd, code, ci, sA, closed, len, c1.x)) {
     if (!(dX < uH)) {
       vec2 qp = fX + (uH - 1.5 * uAa) * nX;
@@ -613,9 +695,19 @@ void main() {
       uint wq = texelFetch(uLabel, tq, 0).r;
       if (wq == 0u || names(wq, code, ci, sA, closed, len, c1.x)) lay = 2;
     }
-    dT = topDist(wd, p, ci, sA);
+    dT = topDistZ(wd, p, ci, sA, zT);
+    aT = surfAlpha(wd, dT, p);
     if (lay == 0) {
-      if (!(dT > uH - uAa)) discard;
+      // K1040 S4c: form B shows A under T wherever T's coverage is below 1
+      // (a group covering by a fill at omega, a folded piece, the outer AA
+      // rim), not only inside the naming chain's AA rim; the old read
+      // discarded A there (muse_hash's near-corner zeros under a group).
+      // K1040 S4c: a tie within zt also rescues the fragment - form B
+      // blends in the swapped order, where A is on top, even where the
+      // top's coverage is 1 (muse_hash chain 71 at (1901, 1128): the
+      // sorted order gives 0, the swapped 1, the tie 0.42).
+      float gapK0 = abs((zT - dT * uInvK) - (zA - dA * uInvK));
+      if (!(dT > uH - uAa) && !(aT < 1.0) && !(dT >= 0.0 && uInvK > 0.0 && gapK0 < uZt)) discard;
       lay = 1;
     }
   } else if (wd == 0u) {
@@ -631,7 +723,8 @@ void main() {
     ivec2 ti = clamp(ivec2(floor(dev.x), floor(uView.y - dev.y)), ivec2(0), ts - 1);
     uint wi = texelFetch(uLabel, ti, 0).r;
     if (wi != 0u && !names(wi, code, ci, sA, closed, len, c1.x)) {
-      dT = topDist(wi, p, ci, sA);
+      dT = topDistZ(wi, p, ci, sA, zT);
+      aT = surfAlpha(wi, dT, p);
       if (dT >= 0.0 && dT < uH + uAa) lay = 3;
     }
     if (lay == 0) {
@@ -642,17 +735,20 @@ void main() {
       // both distances within 0.3 px of h, both normal probes paper).
       ivec2 pc = ivec2(gl_FragCoord.xy);
       float bestT = 1e30;
+      uint bestW = 0u;
       for (int q = 0; q < 4; q++) {
         ivec2 o = q == 0 ? ivec2(1, 0) : q == 1 ? ivec2(-1, 0) : q == 2 ? ivec2(0, 1) : ivec2(0, -1);
         uint wn = texelFetch(uLabel, clamp(pc + o, ivec2(0), ts - 1), 0).r;
         if (wn != 0u && !names(wn, code, ci, sA, closed, len, c1.x)) {
-          float dTn = topDist(wn, p, ci, sA);
-          if (dTn >= 0.0 && dTn < bestT) bestT = dTn;
+          float zTn;
+          float dTn = topDistZ(wn, p, ci, sA, zTn);
+          if (dTn >= 0.0 && dTn < bestT) { bestT = dTn; bestW = wn; zT = zTn; }
         }
       }
       if (bestT < uH + uAa) {
         lay = 3;
         dT = bestT;
+        aT = surfAlpha(bestW, dT, p);
       }
     }
   }
@@ -823,21 +919,109 @@ void main() {
   // configuration where it is the group's (exact at rA = 1, the corners'
   // case: the cap ramps end far out along the arms).
   float arcC = 0.0;
+  float burCapSave = bur;
+  float burCSave = 0.0;
   if (g >= 0) {
-    float burC = cornerBurial(g, p, fX + uH * nX, ci, sX, closed, len, arcC);
-    bur = max(bur, rA * burC);
+    burCSave = cornerBurial(g, p, fX + uH * nX, ci, sX, closed, len, arcC);
+    bur = max(bur, rA * burCSave);
   }
+  float vA0s = w0 * band2(uH - dX);
+  float arcCs = arcC;
   float v = (rA - bur + (1.0 - rA) * ownVis) * w0 * band2(uH - dX) + rA * beta * arcC;
-  if (lay == 1) {
-    float DT = uH - dT;
-    v = band2(DT) + (1.0 - ss(-uAa, uAa, DT)) * v;
+  if (g >= 0 && burCapSave > 0.0 && burCapSave >= 0.99 * min(rA, burR) && (burR < rA || rA < 1.0)) {
+    // K1040 S4c: where a ramp burier actually buries, form B's cap mix
+    // values the separate shares (A facing B as another surface) by
+    // their composite, not at full strength: v = minR (1 - wb) for the
+    // both-member share, then the group-alone and own shares, each
+    // composited in cone-key order with the D4 tie (muse_hash chain 42
+    // at (1430, 375): 0.52 x buried 1 + 0.48 x tie(1, 0) = 0.19).
+    float oDp = burBdp;
+    float oZ = burZ;
+    float oR = burR;
+    float aGrp = alphaG(g, p);
+    float vBsep = band2(uH - oDp);
+    float keyAsep = zA - dA * uInvK;
+    float keyBsep = oZ - oDp * uInvK;
+    float aBown = ss(-uAa, uAa, uH - oDp);
+    float ordA = vA0s + (1.0 - aGrp) * vBsep;
+    float ordB = vBsep + (1.0 - aBown) * vA0s;
+    float sepGrp = tieBlend(ordB, ordA, keyBsep, keyAsep, true);
+    float aAown = selfW * ss(-uAa, uAa, uH - dA);
+    float aB2 = oR > rA ? aGrp : aBown;
+    float ordA2 = vA0s + (1.0 - aAown) * vBsep;
+    float ordB2 = vBsep + (1.0 - aB2) * vA0s;
+    float sepOwn = tieBlend(ordB2, ordA2, keyBsep, keyAsep, true);
+    float minR = min(rA, oR);
+    float wbCap = minR > 0.0 ? clamp(burCapSave / minR, 0.0, 1.0) : 0.0;
+    float wGrp = max(0.0, rA - oR);
+    float wOwn = 1.0 - rA;
+    v = minR * (1.0 - max(wbCap, burCSave)) * vA0s + wGrp * sepGrp + wOwn * sepOwn + rA * beta * arcCs;
+  }
+  if (lay == 0 && wd != 0u) {
+    // K1040 S4c: the top's own fragment must also blend a tie - the
+    // runner-up's strip writes nothing where its band is empty (its piece
+    // covers p but its rim lies elsewhere), so no lay-1 fragment ever
+    // runs (muse_hash chains 24/6 at (544, 709): the two orders are 1 and
+    // 0, the tie 0.5). The neighbour scan finds the runner-up across the
+    // depth switch, as lay 3 does on paper.
+    float bestB = 1e30;
+    float zB = 0.0;
+    uint bestBW = 0u;
+    ivec2 pc0 = ivec2(gl_FragCoord.xy);
+    for (int q = 0; q < 4; q++) {
+      ivec2 oo = q == 0 ? ivec2(1, 0) : q == 1 ? ivec2(-1, 0) : q == 2 ? ivec2(0, 1) : ivec2(0, -1);
+      uint wn = texelFetch(uLabel, clamp(pc0 + oo, ivec2(0), ts - 1), 0).r;
+      if (wn == 0u || names(wn, code, ci, sA, closed, len, c1.x)) continue;
+      if (g >= 0 && int((wn >> 19) & 255u) == 0) {
+        int cw = int(wn & 255u) - 1;
+        if (cw >= 0) {
+          vec4 w1v = fetch(uChain, 2 * cw + 1);
+          bool clw = fetch(uChain, 2 * cw).w > 0.5;
+          float sW = w1v.x + float((wn >> 8) & 2047u) / 2047.0 * w1v.y;
+          if (clw && sW >= w1v.x + w1v.y) sW -= w1v.y;
+          int gW;
+          memberRamp(cw, sW, clw, w1v.y, gW);
+          if (gW == g) continue;
+        }
+      }
+      float zBn;
+      float dBn = topDistZ(wn, p, ci, sA, zBn);
+      if (dBn >= 0.0 && dBn < bestB) { bestB = dBn; zB = zBn; bestBW = wn; }
+    }
+    if (bestBW != 0u && bestB < uH + uAa && uInvK > 0.0) {
+      float keyB = zB - bestB * uInvK;
+      float keyA = zA - dA * uInvK;
+      if (abs(keyB - keyA) < uZt) {
+        float aA2 = g >= 0 ? alphaG(g, p) : selfW * ss(-uAa, uAa, uH - dA);
+        float aB = surfAlpha(bestBW, bestB, p);
+        float vB = band2(uH - bestB);
+        float ordA = v + (1.0 - aA2) * vB;
+        float ordB = vB + (1.0 - aB) * v;
+        v = tieBlend(ordB, ordA, keyB, keyA, true);
+      }
+    }
+  }
+  // K1040 S4c: the two-surface composite, with the D4 tie. ordT is T over
+  // A and ordA is A over T (T's ink approximated by its naming piece's rim,
+  // unburied, as the old lay 1; A's coverage is alphaOf of A's surface).
+  // Form B composites in cone-key order and, where the keys lie within zt,
+  // blends the two orders by ss(-zt, zt, gap) instead of taking one.
+  if (lay == 1 || lay == 3) {
+    float aA = g >= 0 ? alphaG(g, p) : selfW * ss(-uAa, uAa, uH - dA);
+    float vT = dT >= 0.0 ? band2(uH - dT) : 0.0;
+    float ordT = vT + (1.0 - aT) * v;
+    float ordA = v + (1.0 - aA) * vT;
+    float keyT = zT - dT * uInvK;
+    float keyA = zA - dA * uInvK;
+    v = dT >= 0.0 && uInvK > 0.0 && abs(keyT - keyA) < uZt ? tieBlend(ordT, ordA, keyT, keyA, true) : ordT;
   } else if (lay == 2 && dT >= 0.0) {
-    v += (1.0 - selfW * ss(-uAa, uAa, uH - dX)) * band2(uH - dT);
-  } else if (lay == 3) {
-    // T is on top at the inward probe: form B's over of the two rims
-    // (T's rim approximated unburied, as in lay 1).
-    float DT = uH - dT;
-    v = band2(DT) + (1.0 - ss(-uAa, uAa, DT)) * v;
+    float aA = g >= 0 ? alphaG(g, p) : selfW * ss(-uAa, uAa, uH - dA);
+    float vT = band2(uH - dT);
+    float ordT = vT + (1.0 - aT) * v;
+    float ordA = v + (1.0 - aA) * vT;
+    float keyT = zT - dT * uInvK;
+    float keyA = zA - dA * uInvK;
+    v = uInvK > 0.0 && abs(keyT - keyA) < uZt ? tieBlend(ordT, ordA, keyT, keyA, true) : ordA;
   }
   if (!(v > 0.0)) discard;
   oInk = vec4(v, v, v, 1.0);
@@ -886,15 +1070,35 @@ void main() {
   float bd = 0.0;
   if (om > 0.0) bd = om * band(min(distance(p, c1.xy), distance(p, c1.zw)));
   if (om < 1.0) bd = max(bd, (1.0 - om) * band(distance(p, c2.xy)));
-  if (bd > v) v = max(v, alphaG(g, p) * bd);
+  float aG = alphaG(g, p);
+  if (bd > v) v = max(v, aG * bd);
   if (!(v > 0.0)) discard;
   ivec2 ts = textureSize(uLabel, 0);
-  uint wd = texelFetch(uLabel, clamp(ivec2(gl_FragCoord.xy), ivec2(0), ts - 1), 0).r;
+  ivec2 pcC = clamp(ivec2(gl_FragCoord.xy), ivec2(0), ts - 1);
+  uint wd = texelFetch(uLabel, pcC, 0).r;
   if (wd != 0u && int((wd >> 19) & 255u) != g + 1) {
-    float dT = topDist(wd, p, -1, 0.0);
-    if (!(dT > uH - uAa)) discard;
-    float DT = uH - dT;
-    v = band2(DT) + (1.0 - ss(-uAa, uAa, DT)) * v;
+    // Lay 1, extended as the foot's (S4c): the corner terms also show under
+    // a top whose coverage is below 1, not only in its AA rim.
+    float zT;
+    float dT = topDistZ(wd, p, -1, 0.0, zT);
+    float aT = surfAlpha(wd, dT, p);
+    if (!(dT > uH - uAa) && !(aT < 1.0)) discard;
+    float vT = dT >= 0.0 ? band2(uH - dT) : 0.0;
+    v = vT + (1.0 - aT) * v;
+  } else if (wd != 0u) {
+    // K1040 S4c lay 2: the group is on top and the surface below shows
+    // through its coverage (the foot pass's lay 2); the neighbour scan
+    // finds that surface, as the foot's lay 3 does on paper.
+    float bestB = 1e30;
+    for (int q = 0; q < 4; q++) {
+      ivec2 oo = q == 0 ? ivec2(1, 0) : q == 1 ? ivec2(-1, 0) : q == 2 ? ivec2(0, 1) : ivec2(0, -1);
+      uint wn = texelFetch(uLabel, clamp(pcC + oo, ivec2(0), ts - 1), 0).r;
+      if (wn == 0u || int((wn >> 19) & 255u) == g + 1) continue;
+      // An own word of one of the group's member chains is the group there.
+      float dB = topDist(wn, p, -1, 0.0);
+      if (dB >= 0.0 && dB < bestB) bestB = dB;
+    }
+    if (bestB < uH + uAa) v += (1.0 - aG) * band2(uH - bestB);
   }
   oInk = vec4(v, v, v, 1.0);
 }

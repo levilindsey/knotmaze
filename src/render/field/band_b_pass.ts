@@ -42,7 +42,7 @@ function compile(gl: WebGL2RenderingContext, vs: string, fs: string): WebGLProgr
 }
 
 const TABS = ["uPts", "uChain", "uSpan", "uNb2", "uArm", "uCarm", "uAix", "uGrp", "uGw", "uCrn"] as const;
-const UNIS = ["uM0", "uM1", "uI0", "uI1", "uView", "uH", "uW", "uAa", "uSig", "uLam", "uDel", "uR", "uPad", "uLabel", "uInvK", "uCell"] as const;
+const UNIS = ["uM0", "uM1", "uI0", "uI1", "uView", "uH", "uW", "uAa", "uSig", "uLam", "uDel", "uR", "uPad", "uLabel", "uInvK", "uCell", "uZt"] as const;
 
 export class BandBPass {
   readonly gl: WebGL2RenderingContext;
@@ -145,6 +145,7 @@ export class BandBPass {
       gl.uniform1f(L[12], 2 / Math.max(ppd, 1e-9));
       gl.uniform1f(L[14], B.invK);
       gl.uniform1f(L[15], B.cell);
+      gl.uniform1f(L[16], B.zt);
     };
     gl.useProgram(this.pr);
     unis(this.loc);
