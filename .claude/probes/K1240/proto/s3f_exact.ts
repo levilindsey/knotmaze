@@ -40,15 +40,44 @@ const freshArg = process.argv.includes("--fresh");
 const moveMult = moveArg && moveArg.includes("=") ? Number(moveArg.split("=")[1]) : 0.1;
 const nameArg = process.argv.slice(2).find((a) => !a.startsWith("--"));
 const names = nameArg ? nameArg.split(",") : ALL;
+// --consistent (K1240 S3f run 3, opt-in; the gated rows never pass it): every
+// s also names the same material point on S', as the physics keeps a
+// binding on its intersection, and junction centres move with the field.
+// Without it a crossing's two pass points drift apart (fat at 0.5h: p50
+// 2.0h, max 5.2h; s3f_claude_drift.ts). Its files carry a "c" (move0.5c_).
+const consistentArg = process.argv.includes("--consistent");
 function perturb(scene: SceneIn, A: number): SceneIn {
   const sc = JSON.parse(JSON.stringify(scene)) as SceneIn;
+  const cumOf = (c: { closed: boolean; pts: number[] }): number[] => {
+    const p = c.pts; const n = p.length / 2; const segs = c.closed ? n : n - 1; const cum = [0];
+    for (let i = 0; i < segs; i++) { const j = (i + 1) % n; cum.push(cum[i] + Math.hypot(p[2 * j] - p[2 * i], p[2 * j + 1] - p[2 * i + 1])); }
+    return cum;
+  };
+  const before = new Map(sc.chains.map((c) => [c.id, cumOf(c)]));
+  const dxy = (x: number, y: number): [number, number] => [A * (0.7 * Math.sin(0.31 * y + 1.7) + 0.3 * Math.sin(0.83 * x + 0.4)), A * (0.7 * Math.cos(0.27 * x + 0.9) + 0.3 * Math.sin(0.71 * y + 2.3))];
   for (const c of sc.chains) {
     for (let i = 0; i + 1 < c.pts.length; i += 2) {
-      const x = c.pts[i]; const y = c.pts[i + 1];
-      c.pts[i] = x + A * (0.7 * Math.sin(0.31 * y + 1.7) + 0.3 * Math.sin(0.83 * x + 0.4));
-      c.pts[i + 1] = y + A * (0.7 * Math.cos(0.27 * x + 0.9) + 0.3 * Math.sin(0.71 * y + 2.3));
+      const x = c.pts[i]; const y = c.pts[i + 1]; const d = dxy(x, y);
+      c.pts[i] = x + d[0];
+      c.pts[i + 1] = y + d[1];
     }
   }
+  if (!consistentArg) return sc;
+  const after = new Map(sc.chains.map((c) => [c.id, cumOf(c)]));
+  const closedOf = new Map(sc.chains.map((c) => [c.id, c.closed]));
+  const remap = (chain: number, s: number): number => {
+    const o = before.get(chain); const p = after.get(chain);
+    if (!o || !p || o.length < 2) return s;
+    const L = o[o.length - 1]; let u = s;
+    if (closedOf.get(chain) && L > 0) u = ((u % L) + L) % L;
+    let i = 0; while (i + 2 < o.length && o[i + 1] < u) i++;
+    const t = o[i + 1] > o[i] ? (u - o[i]) / (o[i + 1] - o[i]) : 0;
+    return p[i] + (p[i + 1] - p[i]) * t;
+  };
+  const any = sc as unknown as { crossings?: { a: { chain: number; s: number }; b: { chain: number; s: number } }[]; junctions?: { c: number[]; arms: { chain: number; s: number }[] }[]; deadEnds?: { chain: number; s: number }[] };
+  for (const x of any.crossings ?? []) { x.a.s = remap(x.a.chain, x.a.s); x.b.s = remap(x.b.chain, x.b.s); }
+  for (const j of any.junctions ?? []) { const d = dxy(j.c[0], j.c[1]); j.c[0] += d[0]; j.c[1] += d[1]; for (const a of j.arms) a.s = remap(a.chain, a.s); }
+  for (const e of any.deadEnds ?? []) e.s = remap(e.chain, e.s);
   return sc;
 }
 
@@ -288,10 +317,10 @@ for (const name of names) {
     B: { ...sB, measured: dsB.length, exclFade: exclB, buried: buriedB, noOutline: noOutlineB, dropped: droppedB, worst: spotsB.slice(0, 24) },
     diagnostics: table.diagnostics,
   };
-  writeFileSync(join(outDir, `${moveArg ? `${freshArg ? "fresh" : "move"}${moveMult}_` : ""}exact_${name}.json`), JSON.stringify(rec, null, 1));
+  writeFileSync(join(outDir, `${moveArg ? `${freshArg ? "fresh" : "move"}${moveMult}${consistentArg ? "c" : ""}_` : ""}exact_${name}.json`), JSON.stringify(rec, null, 1));
   summary.push(`| ${name} | ours->B | ${sA.n} | ${exclA + droppedA} | ${sA.p50.toFixed(3)} | ${sA.p99.toFixed(3)} | ${sA.max.toFixed(3)} | ${sA.over8} | ${sA.over2} | ${exclA} | ${infA}/${termA}/${fallbackA} |`);
   summary.push(`| ${name} | B->ours | ${sB.n} | ${droppedB} | ${sB.p50.toFixed(3)} | ${sB.p99.toFixed(3)} | ${sB.max.toFixed(3)} | ${sB.over8} | ${sB.over2} | ${exclB} | buried ${buriedB} |`);
   console.log(`${name}: build ${buildMs.toFixed(0)}ms | A p99=${sA.p99.toFixed(3)} max=${sA.max.toFixed(3)} (measured=${sA.n}, excl=${exclA}, inf=${infA}, term=${termA}, fallback=${fallbackA}, dropped=${droppedA}) | B p99=${sB.p99.toFixed(3)} max=${sB.max.toFixed(3)} (measured=${sB.n}, excl=${exclB}, buried=${buriedB}) | corners ours ${rec.cornersOurs.ok}/${rec.cornersOurs.total} formB ${fb.corners.length}`);
 }
-writeFileSync(join(outDir, moveArg ? `${freshArg ? "fresh" : "move"}${moveMult}_exact_summary.md` : "exact_summary.md"), summary.join("\n") + "\n");
+writeFileSync(join(outDir, moveArg ? `${freshArg ? "fresh" : "move"}${moveMult}${consistentArg ? "c" : ""}_exact_summary.md` : "exact_summary.md"), summary.join("\n") + "\n");
 console.log("wrote exact_summary.md");
