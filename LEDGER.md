@@ -1724,8 +1724,8 @@ Every other item below waits on the trigger it names.
   S3c (decide-once, 1beb956a; frame re-evaluation, 08390186) removed per-frame exposure classification
   and pruned corner foot searches, but def still reads frame med 42.5-44.2 ms / p95 81-118 ms locked
   on a loaded machine (first phase read 26.4-27.2 ms locked / 17.8 ms unlocked; corners 18.3-21.6 ms
-  and pieces 10.2-11.3 ms now dominate — the 32-node gate integral plus the per-frame stretch/cap
-  candidate scans). Needs the algorithmic cut: incremental gate evaluation across nodes or a spatial
+  and pieces 7.9-10.3 ms now dominate — the 32-node gate integral plus the per-frame stretch/cap
+  candidate scans; final locked bench def med 39.0-41.0 ms / p95 110-112 ms). Needs the algorithmic cut: incremental gate evaluation across nodes or a spatial
   margin index, gated on still exact staying 24/24. Evidence: .claude/probes/K1240/out/s3c/bench_run{1,2}.json;
   Handoff in docs/design/K1240_s3c_decide_once.md.
 - **K1248** · K1240 moved-frame residual (S3b Done 2, carried through S3c): decide-once frame(structure(S), S')
@@ -1736,12 +1736,15 @@ Every other item below waits on the trigger it names.
   (def A 13->21, B 7->14; ring A 53->66; g41_user_tw64 A 189->211 with p99 delta 0.090). At 0.5h
   all 6 rows fail (def A 41->120, B 34->163). Decision differences are measured per scene in
   out/s3c/decisions.json (def at 0.1h: 161 exposure segments of ~77k, 5 corner ok flips, 12/182
-  cap runs; g41_user_tw64: 34 ok flips + 110 pair changes; ring: 25/51 pair changes). Remaining
-  cost concentrates in corner pair changes (arms pair differently in the fresh structure — frame
-  keeps structure's pairing) and exposure flips where structure recorded no covering candidate.
+  cap runs; g41_user_tw64: 34 ok flips + 110 pair changes; ring: 25/51 pair changes). The pair
+  changes are enumeration-order permutations, NOT adjacency changes: a tested frame-side
+  re-pairing (solve frame-adjacent pairs, suppress non-adjacent structure corners) fired 0-1
+  extra arcs at 0.1h on def/ring/g41_user_tw64/muse_hash and moved no row — reverted. Remaining
+  cost concentrates in exposure flips where structure recorded no covering candidate and in
+  borders whose point count changes (def: only 119/184 borders stable at 0.1h).
   Ideas: record degenerate (zero-length) pieces for fully covered caps/runs so a flip can expand
-  from a solved edge, re-pair corners per frame by arm angle, or accept fresh-structure rebuilds
-  when the decision-difference count is high. Evidence: .claude/probes/K1240/out/s3c/move*_exact_*.json
+  from a solved edge, or accept fresh-structure rebuilds when the decision-difference count is
+  high. Evidence: .claude/probes/K1240/out/s3c/move*_exact_*.json
   vs fresh*_exact_*.json; Handoff in docs/design/K1240_s3c_decide_once.md.
 
 ## Approved, to schedule (2026-10-11)

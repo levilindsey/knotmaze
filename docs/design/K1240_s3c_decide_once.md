@@ -227,7 +227,22 @@ bench x2 on the final code reads def frame med 44.2 / 42.5 ms, p95 118 / 81 ms (
 corners 18.3-21.6 ms and pieces 10.2-11.3 ms dominate — the added candidate scans cost more than
 they save in time, though they buy moved accuracy). Target remains ≤3 ms median / ≤6 ms p95.
 
-Next step for whoever picks this up: K1248 (moved) — re-pair corners per frame by arm angle or
-record zero-length pieces for fully covered stretches so flips can expand; K1247 (cost) — the
-corner gate integral needs incremental evaluation across its 32 nodes or a spatial margin index.
-Both are gated on still exact staying 24/24.
+Next step for whoever picks this up: K1248 (moved) — record zero-length pieces for fully covered
+stretches so flips can expand, or accept fresh-structure rebuilds when decision churn is high;
+K1247 (cost) — the corner gate integral needs incremental evaluation across its 32 nodes or a
+spatial margin index. Both are gated on still exact staying 24/24.
+
+### Handoff continuation 2 (same session, stopped 2026-11-06 22:24 -08:00)
+
+One hypothesis was tested and rejected after the continuation above. The decision report's
+corner pair changes suggested re-pairing corners per frame: the corner solver was extracted into
+a reusable function (bit-identical at rest), frame-adjacent pairs not in structure were solved
+into an extra pool, non-adjacent structure corners were suppressed, and runs were adjusted to
+the new tangent feet. Measured at 0.1h it fired 0 extra arcs on def, 0 on ring, 1 on
+g41_user_tw64 and 0 on muse_hash — arm adjacency essentially never changes at 0.1h, so the
+report's pair changes are enumeration-order permutations of the same adjacency, and no moved
+row improved (still 12 failures). The experiment was reverted in full; the shipped code remains
+08390186, and every number in the continuation above was re-verified on it after the revert:
+still 24/24, moved 12 failures at 0.1h, 6/6 at 0.5h, rigid maxDiff 4.809e-9. Final locked bench
+x2 on the shipped code: def frame med 39.0 / 41.0 ms, p95 110 / 112 ms (corners 15.0-18.0 ms,
+pieces 7.9-10.3 ms, setup 4.0-4.8 ms). Done 2 and Done 3 remain failed, carried by K1248/K1247.
