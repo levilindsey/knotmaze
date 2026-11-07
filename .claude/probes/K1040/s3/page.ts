@@ -709,6 +709,49 @@ function variantPass(v: string, host: LabelBHost | null = null): LabelBPass {
   return pass;
 }
 
+// K1040 S3g (the frame-order lever): what the app draws to the canvas in
+// a frame, modelled on this page so the pass's position in the frame can
+// be timed. The app (src/app/frame_loop.ts) runs labelFrame() before
+// app.render() and the cover composite after it; a "late" frame instead
+// draws the stage first, so switching to the label target stores the
+// canvas's tiles and the composite reloads them. canvasDraw is one
+// fullscreen stage pass at the pass's own size (the canvas resized to
+// it); canvasPresent is the frame boundary (a 1-px readback of the
+// default framebuffer: the canvas stored and clean, as after a
+// present). ftentvearly: pass, stage, composite, present. ftentvlate:
+// stage, pass, composite, present. Both use today's ftentv pass; the
+// timed window is ftentv's (upload, draw + sync), as every variant's.
+let canvasPr: WebGLProgram | null = null;
+let canvasURes: WebGLUniformLocation | null = null;
+const canvasPx = new Uint8Array(4);
+function canvasDraw(W: number, H: number): void {
+  if (canvas.width !== W || canvas.height !== H) { canvas.width = W; canvas.height = H; }
+  if (!canvasPr) {
+    const sh = (type: number, src: string) => { const s = gl.createShader(type)!; gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(`canvas shader: ${gl.getShaderInfoLog(s)}`); return s; };
+    canvasPr = gl.createProgram()!;
+    gl.attachShader(canvasPr, sh(gl.VERTEX_SHADER, "#version 300 es\nvoid main() {\n  vec2 p = vec2(float((gl_VertexID << 1) & 2), float(gl_VertexID & 2));\n  gl_Position = vec4(p * 2.0 - 1.0, 0.0, 1.0);\n}\n"));
+    gl.attachShader(canvasPr, sh(gl.FRAGMENT_SHADER, "#version 300 es\nprecision highp float;\nuniform vec2 uRes;\nout vec4 oC;\nvoid main() {\n  vec2 q = gl_FragCoord.xy / uRes;\n  oC = vec4(q.x, q.y, 0.5 + 0.5 * sin(40.0 * (q.x + q.y)), 1.0);\n}\n"));
+    gl.linkProgram(canvasPr);
+    if (!gl.getProgramParameter(canvasPr, gl.LINK_STATUS)) throw new Error(`canvas link: ${gl.getProgramInfoLog(canvasPr)}`);
+    canvasURes = gl.getUniformLocation(canvasPr, "uRes");
+  }
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  gl.viewport(0, 0, W, H);
+  gl.disable(gl.DEPTH_TEST);
+  gl.depthMask(false);
+  gl.disable(gl.BLEND);
+  gl.disable(gl.SCISSOR_TEST);
+  gl.disable(gl.CULL_FACE);
+  gl.colorMask(true, true, true, true);
+  gl.useProgram(canvasPr);
+  gl.uniform2f(canvasURes, W, H);
+  gl.bindVertexArray(null);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+}
+function canvasPresent(): void {
+  gl.bindFramebuffer(gl.READ_FRAMEBUFFER, null);
+  gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, canvasPx);
+}
 async function timeMany(scene: FieldScene, opts: { variants?: string[]; scale?: number; frames?: number; rounds?: number; fit?: [number, number] } = {}) {
   const scale = opts.scale ?? 2;
   const frames = opts.frames ?? 60;
@@ -722,7 +765,7 @@ async function timeMany(scene: FieldScene, opts: { variants?: string[]; scale?: 
   const dev = opts.fit ? fitCamera(scene, fb.h, opts.fit, scale) : camera(scene, scale);
   const { M, W, H } = coarse(dev.M, dev.W, dev.H, 1);
   const per = Math.ceil(frames / rounds);
-  const host = vs.some((v) => FNEW.includes(v)) ? await probeHost() : null;
+  const host = vs.some((v) => FNEW.includes(v) || v === "ftentvearly" || v === "ftentvlate") ? await probeHost() : null;
   const acc: Record<string, { up: number[]; sync: number[]; sent: number }> = {};
   for (const v of vs) acc[v] = { up: [], sync: [], sent: 0, calls: 0 };
   for (let r = 0; r < rounds; r++) {
@@ -738,7 +781,28 @@ async function timeMany(scene: FieldScene, opts: { variants?: string[]; scale?: 
         }
         continue;
       }
-      const pass = variantPass(v, host);
+      if (v === "ftentvearly" || v === "ftentvlate") {
+        // K1040 S3g: the frame-order pair on today's ftentv pass (above).
+        const pass = variantPass("ftentv", host);
+        if (pass.width !== W || pass.height !== H) pass.resize(W, H);
+        pass.upload(T);
+        const frame = (timed: boolean) => {
+          if (v === "ftentvlate") canvasDraw(W, H);
+          const u0 = performance.now();
+          if (timed) { pass.upload(T); acc[v].sent = pass.uploadBytes; acc[v].calls = pass.uploadCalls; }
+          const u1 = performance.now();
+          pass.draw(M);
+          pass.sync();
+          const u2 = performance.now();
+          canvasDraw(W, H);
+          canvasDraw(W, H);
+          canvasPresent();
+          if (timed) { acc[v].up.push(u1 - u0); acc[v].sync.push(u2 - u1); }
+        };
+        for (let k = 0; k < 5; k++) frame(false);
+        for (let k = 0; k < per; k++) frame(true);
+        continue;
+      }      const pass = variantPass(v, host);
       if (pass.width !== W || pass.height !== H) pass.resize(W, H);
       pass.upload(T);
       for (let k = 0; k < 5; k++) {
@@ -966,10 +1030,15 @@ async function check(scene: FieldScene, opts: { scale?: number } = {}) {
   const dev = camera(scene, scale);
   const { M, W, H } = dev;
   const draw = (v: string): Uint32Array => {
+    // K1040 S3g: ftentvearly is today's pass with the frame's canvas
+    // drawn after it; its label target must still read ftentv's word.
+    const early = v === "ftentvearly";
+    if (early) v = "ftentv";
     const pass = variantPass(v, null);
     if (pass.width !== W || pass.height !== H) pass.resize(W, H);
     pass.upload(T);
     pass.draw(M);
+    if (early) { canvasDraw(W, H); canvasPresent(); }
     const w = pass.read().word;
     pass.dispose();
     vpasses.delete(v);
@@ -989,7 +1058,7 @@ async function check(scene: FieldScene, opts: { scale?: number } = {}) {
   // half size (M and target halved) and nearest-upscaled for the count;
   // a smaller target cannot keep the label, so it is dropped, not timed.
   const wordDiff: Record<string, number> = {};
-  for (const v of ["ftentvd24", "ftentvdinv", "ftentvdtex", "ftentvnodepth", "ftentvfetch", "ftentvspflat", "ftentvnops", "ftentvclrd", "ftentvd16"]) {
+  for (const v of ["ftentvd24", "ftentvdinv", "ftentvdtex", "ftentvnodepth", "ftentvfetch", "ftentvspflat", "ftentvnops", "ftentvclrd", "ftentvd16", "ftentvearly"]) {
     const w = draw(v);
     let d = 0;
     for (let i = 0; i < base.length; i++) if (base[i] !== w[i]) d++;

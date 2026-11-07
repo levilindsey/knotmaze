@@ -259,6 +259,9 @@ const cols10 = [
   ["clrd gate", (g, u) => g("ftentvclrd") - g("ffloor") + u("ftentvclrd")],
   ["d16 - today", (g) => g("ftentvd16") - g("ftentv")],
   ["d16 gate", (g, u) => g("ftentvd16") - g("ffloor") + u("ftentvd16")],
+  ["early - today", (g) => g("ftentvearly") - g("ftentv")],
+  ["early gate", (g, u) => g("ftentvearly") - g("ffloor") + u("ftentvearly")],
+  ["late - early", (g) => g("ftentvlate") - g("ftentvearly")],
 ];
 const cols = set === "s3g" ? cols10 : set === "s3f5" ? cols9 : set === "s3f4" ? cols8 : set === "s3f2" ? cols7 : set === "s3f1" ? cols6 : set === "s3e3" ? cols5 : set === "s3e1" ? cols4 : set === "s3d3" ? cols3 : set === "s3d2" ? cols2 : cols1;
 const f1 = (x) => (Number.isFinite(x) ? x.toFixed(set.startsWith("s3e") || set.startsWith("s3f") ? 2 : 1) : "-");

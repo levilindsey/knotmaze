@@ -6,6 +6,11 @@
 #   ftentvclrd  the clears as one fullscreen draw: L and D invalidated
 #               at the bind, a triangle writes word 0 at depth 1
 #   ftentvd16   depth a DEPTH_COMPONENT16 renderbuffer
+#   ftentvearly the frame-order lever: today's pass before anything
+#               draws to the canvas in that frame (page.ts draws the
+#               app's canvas stage after the pass, then a present);
+#               ftentvlate is its control (the stage drawn before the
+#               pass, so the target switch stores the canvas's tiles)
 # Each kept lever's readback must equal ftentv's at 0 px on the 12
 # scenes (s3.mjs check, out/check_*_summary via the check runs) before
 # it is timed. The desktop part: the split page (timeMany: ftentv
@@ -38,7 +43,7 @@ $worktree = (Resolve-Path (Join-Path $s3 '..\..\..\..')).Path
 $outDir = Join-Path $s3 'out'
 function Say([string]$m) { "$(Get-Date -Format HH:mm:ss) $m" }
 
-$variants = 'ftentv,ftentvsetup,fempty,ffloor,ftentvnops,ftentvclrd,ftentvd16'
+$variants = 'ftentv,ftentvsetup,fempty,ffloor,ftentvnops,ftentvclrd,ftentvd16,ftentvearly,ftentvlate'
 $desktop = @(
   @('s3gd1', @('many', '--variants', $variants, '--tag', 's3gd1')),
   @('s3gd2', @('many', '--variants', $variants, '--tag', 's3gd2'))
