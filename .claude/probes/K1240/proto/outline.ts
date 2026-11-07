@@ -1696,8 +1696,6 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
   });
   const capCoverPi: Int16Array[] = capInfos.map((ci) => new Int16Array(Math.max(0, ci.arc.length - 1)).fill(-1));
   const capCoverS: Float32Array[] = capInfos.map((ci) => new Float32Array(Math.max(0, ci.arc.length - 1)));
-  const capCandPi: Int16Array[] = capInfos.map((ci) => new Int16Array(Math.max(0, ci.arc.length - 1) * 8).fill(-1));
-  const capCandS: Float32Array[] = capInfos.map((ci) => new Float32Array(Math.max(0, ci.arc.length - 1) * 8));
   for (let capIdx = 0; capIdx < capInfos.length; capIdx++) { const ci = capInfos[capIdx];
     const pi = ci.station.pi; let curStart = -1; let curEnd = -1;
     let cur: OutlinePiece | null = null;
@@ -1706,7 +1704,6 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
       const a = ci.arc[i]; const b = ci.arc[i + 1];
       const mx = (a.x + b.x) / 2; const my = (a.y + b.y) / 2;
       const covC = covering(mx, my, pi, ci.station.cS);
-      { const base8 = i * 8; let nC = 0; for (let w = 0; w < coverPickPi.length && nC < 8; w++) { capCandPi[capIdx][base8 + nC] = coverPickPi[w]; capCandS[capIdx][base8 + nC] = coverPickS[w]; nC++; } if (coverNearPi >= 0 && nC < 8 && !coverPickPi.includes(coverNearPi)) { capCandPi[capIdx][base8 + nC] = coverNearPi; capCandS[capIdx][base8 + nC] = coverNearS; } }
       if (covC) { if (coverPickPi.length > 0) { capCoverPi[capIdx][i] = coverPickPi[coverPickPi.length - 1]; capCoverS[capIdx][i] = coverPickS[coverPickS.length - 1]; } flush(); continue; }
       if (!cur) { curStart = i; cur = { kind: "cap", chain: pi, side: 0, s0: ci.station.cS, s1: ci.station.cS, pts: [a.x, a.y], cpts: [ci.cx, ci.cy], region: -1, corner: -1 }; }
       cur.pts.push(b.x, b.y);
@@ -1911,12 +1908,6 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
         }
       });
     }
-    const capCands: { pi: Int16Array; k: Int32Array }[] = capInfos.map((ci, capIdx) => {
-      const nSeg = Math.max(0, ci.arc.length - 1);
-      const piA = new Int16Array(nSeg * 8).fill(-1); const kA = new Int32Array(nSeg * 8).fill(-1);
-      for (let i2 = 0; i2 < nSeg; i2++) for (let w = 0; w < 8; w++) { const cp = capCandPi[capIdx][i2 * 8 + w]; if (cp < 0 || cp >= polys.length) continue; piA[i2 * 8 + w] = cp; kA[i2 * 8 + w] = segOfS(polys[cp], capCandS[capIdx][i2 * 8 + w]).k; }
-      return { pi: piA, k: kA };
-    });
     const capTransitions: { cap: number; pt: number; pi: number; k: number }[] = [];
     capInfos.forEach((ci, capIdx) => {
       const steps = ci.arc.length - 1;
@@ -1951,7 +1942,6 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
       cuts: cuts.map((c, i) => ({ crossing: c.crossing, chain: c.chain, side: c.side, overChain: c.overChain, border: cutRefs[i].border, fullIdx: cutRefs[i].ref.idx })),
       transitions,
       capTransitions,
-      capCands,
       groupOfJ: groupOfJ.slice(),
       stats: { eyeCount, eyeTotal, eyeKept: eyeKeptTotal, eyeMaxKept, tieCutCount, kinkCount, crossInJunction, arcNearThread, segXTotal, segXKept, nonUniform, recMissing },
     };
@@ -2008,7 +1998,6 @@ export interface OutlineStructure {
   cuts: CutStruct[];
   transitions: { b: number; j: number; pi: Int16Array; k: Int32Array }[];
   capTransitions: { cap: number; pt: number; pi: number; k: number }[];
-  capCands: { pi: Int16Array; k: Int32Array }[];
   groupOfJ: number[];
   stats: { eyeCount: number; eyeTotal: number; eyeKept: number; eyeMaxKept: number; tieCutCount: number; kinkCount: number; crossInJunction: number; arcNearThread: number; segXTotal: number; segXKept: number; nonUniform: number; recMissing: number };
 }
@@ -2915,7 +2904,6 @@ interface Runtime {
   capPieces: OutlinePiece[];
   faces: OutlineFace[]; facesOut: OutlineFace[]; faceOrder: number[]; faceDepth: Float64Array;
   cornersT: OutlineCorner[]; cutsT: OutlineCut[];
-  capPool: OutlinePiece[][]; capClassified: OutlinePiece[];
   cutList: { b: number; id: number }[]; ptList: { b: number; j: number; id: number }[];
   nodeState: Float64Array; nodeK: Int32Array;
   runPool: OutlinePiece[]; runOff: Int32Array; trimSR: Float64Array; trimDir: Float64Array; trimDEnd: Float64Array; trimOff: Int32Array;
@@ -3397,7 +3385,6 @@ function buildRuntime(st: OutlineStructure, scene: SceneIn): Runtime {
       capPieces.push({ kind: "cap", chain: cap.pi, side: 0, s0: cS, s1: cS, pts: capsXY[capIdx].subarray(2 * run[0], 2 * run[1] + 2) as unknown as number[], cpts: capsCXY[capIdx].subarray(2 * run[0], 2 * run[1] + 2) as unknown as number[], region: -1, corner: -1 });
     }
   });
-  const capPool: OutlinePiece[][] = st.caps.map((cap) => Array.from({ length: Math.max(0, cap.steps) }, () => ({ kind: "cap" as PieceKind, chain: cap.pi, side: 0, s0: 0, s1: 0, pts: [], cpts: [], region: -1, corner: -1 })));
   const faces: OutlineFace[] = st.faces.map((f) => ({ ownerChain: f.owner, group: f.group, pts: [], sample: [0, 0], hole: false }));
   const facesOut: OutlineFace[] = faces.slice();
   const faceOrder = st.faces.map((_, i) => i);
@@ -3430,7 +3417,7 @@ function buildRuntime(st: OutlineStructure, scene: SceneIn): Runtime {
     arms, fCorners, b, capsXY, capsCXY, capsC: new Float64Array(2 * Math.max(1, st.caps.length)),
     regions, regionTpl, regionBuf, piecesOut, runUpd, arcPieces, arcBuf, arcCBuf, capPieces,
     faces, facesOut, faceOrder, faceDepth: new Float64Array(st.faces.length),
-    capPool, capClassified: [], cornersT, cutsT, cutList, ptList, nodeState: new Float64Array(33 * 12), nodeK: new Int32Array(33 * 2),
+cornersT, cutsT, cutList, ptList, nodeState: new Float64Array(33 * 12), nodeK: new Int32Array(33 * 2),
     runPool: (() => { const pool: OutlinePiece[] = []; for (const bs of st.borders) for (let j = 0; j + 1 < bs.seqPool.length; j++) pool.push({ kind: "run", chain: 0, side: 1, s0: 0, s1: 0, pts: [], cpts: [], region: -1, corner: -1 }); return pool; })(),
     runOff: (() => { const o = new Int32Array(st.borders.length + 1); st.borders.forEach((bs, i) => { o[i + 1] = o[i] + Math.max(0, bs.seqPool.length - 1); }); return o; })(),
     trimSR: new Float64Array(2 * st.corners.length + 2), trimDir: new Float64Array(2 * st.corners.length + 2), trimDEnd: new Float64Array(2 * st.corners.length + 2), trimOff: new Int32Array(st.borders.length + 1),
