@@ -273,7 +273,11 @@ function wiggle(n: number, seed: number, kinkDeg: number): { pos: Float32Array; 
   const pos = new Float32Array(n * 2);
   for (let i = 0; i < n; i++) {
     const th = (2 * Math.PI * i) / n;
-    const rr = 3 + 0.4 * Math.sin(5 * th + seed) + 0.05 * rnd();
+    // No per-sample jitter: a jittered radius turns tighter than the
+    // half-width all over (R < h), which since K1228 is the fold
+    // collapse's territory, not this test's - these loops must stay
+    // non-folding so the bit-identity below pins round joins alone.
+    const rr = 3 + 0.4 * Math.sin(5 * th + seed);
     pos[i * 2] = rr * Math.cos(th);
     pos[i * 2 + 1] = rr * Math.sin(th);
   }
@@ -352,7 +356,7 @@ describe("round joins: below the threshold nothing moves", () => {
   it("any ribbon whose turns all stay under 90 deg is bit-identical, widthMul too", () => {
     const n = 240;
     for (let seed = 1; seed <= 6; seed++) {
-      const { pos, tan } = wiggle(n, seed, 88);
+      const { pos, tan } = wiggle(n, seed, 16); // 16 deg: R stays over h (see wiggle)
       expect(maxTurnDeg(pos, n)).toBeLessThan(90);
       const mulA = new Float32Array(n);
       const mulB = new Float32Array(n);

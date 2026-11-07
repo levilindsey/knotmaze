@@ -130,6 +130,35 @@ export class RoundJoins {
 // The strip's vertex computation, pure (no GPU), so tests can run it:
 // writes [lx, ly, rx, ry] per sample into out[0, 4n) and refills `joins`
 // with the round samples. See update() for the arguments.
+//
+// FOLD COLLAPSE (K1228): the concave clamp below caps the inner offset
+// at 0.95 R, so where a turn runs tighter than the half-width (R < h)
+// the strip thins into the turn and background shows inside the
+// half-width (cross ji 51: a 40 deg turn at R 0.85 h left pixels 2-4 px
+// inside chain 61's edge bare). Simply removing the cap folds the strip
+// (the P3.34 sawtooth: flipped triangles where the inner vertices run
+// past the centre of curvature in a changing order). Instead, a run of
+// consecutive folding samples (the cap binds, same inner side, no round
+// join, no lean; widthMul narrows the legs' offset lines with the strip)
+// has its inner vertices collapsed onto ONE point: P, where the inner
+// offset lines of the run's entering and leaving legs cross (each at its
+// own width from its leg). The
+// inner outline then runs along the entering line to P and out along
+// the leaving line - the two legs' own edges - the quads inside the run
+// become a fan about P (one triangle of each is degenerate), and the
+// full half-width is covered. A run is collapsed only when every strip
+// triangle it touches keeps the strip's winding (area >= 0, degenerate
+// allowed) and P stays within 4h of the run's samples; anything else
+// (a turn past ~160 deg in the run, near-parallel legs, a kink eye's
+// full loop) keeps the clamped vertices exactly as before. Scratch is
+// module-level and grow-only, so steady-state calls allocate nothing;
+// extrudeRibbon is never re-entered.
+let foldSide = new Int8Array(0); // per sample: +1 inner is left, -1 right, 0 no fold
+let foldLegA = new Float32Array(0); // per sample: normalized entering leg
+let foldLegB = new Float32Array(0); // per sample: normalized leaving leg
+let foldSaved = new Float32Array(0); // per sample: its pre-collapse inner vertex
+let foldMark = new Uint8Array(0); // per sample: foldSaved holds its vertex
+let foldDepth = new Float32Array(0); // per sample: 1 - innerCap / w when the cap binds
 export function extrudeRibbon(
   out: Float32Array,
   joins: RoundJoins,
@@ -143,6 +172,15 @@ export function extrudeRibbon(
   leanK: Float32Array | null = null
 ): void {
   joins.count = 0;
+  if (foldSide.length < n) {
+    foldSide = new Int8Array(n);
+    foldLegA = new Float32Array(n * 2);
+    foldLegB = new Float32Array(n * 2);
+    foldSaved = new Float32Array(n * 2);
+    foldMark = new Uint8Array(n);
+    foldDepth = new Float32Array(n);
+  }
+  let plain = true; // no lean: the fold collapse's strip (widthMul is handled)
   for (let i = 0; i < n; i++) {
     const s = (offset + i) * 2;
     const sPrev = (offset + ((i - 1 + n) % n)) * 2;
@@ -219,6 +257,18 @@ export function extrudeRibbon(
       wInner = Math.min(w, innerCap);
     }
     const cross = ax * by - ay * bx;
+    foldLegA[i * 2] = ax;
+    foldLegA[i * 2 + 1] = ay;
+    foldLegB[i * 2] = bx;
+    foldLegB[i * 2 + 1] = by;
+    // A folding sample (K1228): the cap binds, the turn is at most 60
+    // deg (a sharper single sample is a cusp on its way to a round
+    // join, whose hub keeps the capped vertex, and the 80-120 deg
+    // continuity sweep in ribbon_round.test.ts stays bit-exact there),
+    // and the inside is a definite side.
+    foldSide[i] =
+      innerCap < w && dot >= 0.5 && cross !== 0 ? (cross > 0 ? 1 : -1) : 0;
+    foldDepth[i] = innerCap < w ? Math.max(0, (w - innerCap) / w) : 0;
     let wLeft = cross > 0 ? wInner : w;
     let wRight = cross > 0 ? w : wInner;
     if (widthMul) {
@@ -249,6 +299,7 @@ export function extrudeRibbon(
     let oy = ny;
     if (leanK) {
       const k = leanK[i];
+      if (k > 0.001 || k < -0.001) plain = false;
       if (k > 0.001 || k < -0.001) {
         const c = Math.sqrt(Math.max(0, 1 - k * k));
         ox = nx * c + tangents[s] * k;
@@ -325,7 +376,263 @@ export function extrudeRibbon(
     out[i * 4 + 1] = ly;
     out[i * 4 + 2] = rx;
     out[i * 4 + 3] = ry;
+    // FOLD COLLAPSE (K1228): on the last sample every vertex is written.
+    if (i === n - 1 && plain) collapseFolds(out, positions, n, closed, halfWidth, offset, widthMul);
   }
+}
+
+// FOLD COLLAPSE (K1228, see the scratch above extrudeRibbon): collapse
+// each run of folding samples onto P, the crossing of its two legs'
+// inner offset lines, when the strip triangles it touches keep their
+// winding.
+function collapseFolds(
+  out: Float32Array,
+  positions: Float32Array,
+  n: number,
+  closed: boolean,
+  halfWidth: number,
+  offset: number,
+  widthMul: Float32Array | null
+): void {
+  if (n < 2) return;
+  let anyFold = false;
+  for (let i = 0; i < n && !anyFold; i++) anyFold = foldSide[i] !== 0;
+  if (!anyFold) return;
+  const runs: Array<[number, number]> = [];
+  for (let i = 0; i < n; ) {
+    if (foldSide[i] === 0) {
+      i++;
+      continue;
+    }
+    let j = i;
+    while (j + 1 < n && foldSide[j + 1] === foldSide[i]) j++;
+    runs.push([i, j]);
+    i = j + 1;
+  }
+  if (runs.length === 0) return;
+  // A closed chain's run may wrap the sample seam: merge the end runs
+  // (the merged run's indices run past n - 1 and wrap in the reads).
+  if (closed && runs.length > 1) {
+    const first = runs[0];
+    const last = runs[runs.length - 1];
+    if (first[0] === 0 && last[1] === n - 1 && foldSide[0] === foldSide[n - 1]) {
+      runs.splice(0, 1);
+      runs.splice(runs.length - 1, 1);
+      runs.push([last[0], first[1] + n]);
+    }
+  }
+  const at = (k: number): number => ((k % n) + n) % n;
+  const ctr = (k: number): number => (offset + at(k)) * 2;
+  // A collapsed run stands only if every strip triangle it touches
+  // (quads a-1 .. b) keeps the strip's winding (area >= 0, degenerate
+  // halves allowed) and every one of its samples keeps its centre
+  // covered by one of those triangles - a fan that reaches past a
+  // centre leaves the thread's middle bare, which winding cannot see.
+  // `skipLast` leaves the quad to the next sample unchecked while that
+  // sample is itself a folding sample whose own collapse is still to
+  // come (the shared quad passes only with both ends collapsed); the
+  // final sweep below rechecks every run with it off.
+  const inTri = (
+    cx: number, cy: number,
+    ax: number, ay: number, bx: number, by: number, qx: number, qy: number
+  ): boolean => {
+    const d = (by - qy) * (ax - qx) + (qx - bx) * (ay - qy);
+    if (Math.abs(d) < 1e-12) return false;
+    const u = ((cx - qx) * (by - qy) - (cy - qy) * (bx - qx)) / d;
+    const v = ((ax - qx) * (cy - qy) - (ay - qy) * (cx - qx)) / d;
+    return u >= -1e-9 && v >= -1e-9 && u + v <= 1 + 1e-9;
+  };
+  const stripOk = (a: number, b: number, skipLast: boolean): boolean => {
+    const qEnd = closed ? b : Math.min(b, n - 2);
+    for (let q = a - 1; q <= qEnd; q++) {
+      if (!closed && q < 0) continue;
+      if (skipLast && q === b) continue;
+      const i = at(q) * 4;
+      const j = at(q + 1) * 4;
+      if (
+        (out[i + 2] - out[i]) * (out[j + 1] - out[i + 1]) -
+          (out[i + 3] - out[i + 1]) * (out[j] - out[i]) <
+          -1e-9 ||
+        (out[j + 2] - out[i + 2]) * (out[j + 1] - out[i + 3]) -
+          (out[j + 3] - out[i + 3]) * (out[j] - out[i + 2]) <
+          -1e-9
+      )
+        return false;
+    }
+    for (let k = a; k <= b; k++) {
+      const c = ctr(k);
+      const cx = positions[c];
+      const cy = positions[c + 1];
+      let covered = false;
+      for (let q = a - 1; q <= qEnd && !covered; q++) {
+        if (!closed && q < 0) continue;
+        const i = at(q) * 4;
+        const j = at(q + 1) * 4;
+        covered =
+          inTri(cx, cy, out[i], out[i + 1], out[i + 2], out[i + 3], out[j], out[j + 1]) ||
+          inTri(cx, cy, out[i + 2], out[i + 3], out[j + 2], out[j + 3], out[j], out[j + 1]);
+      }
+      if (!covered) return false;
+    }
+    return true;
+  };
+  const restore = (a: number, b: number, slot: number): void => {
+    for (let k = a; k <= b; k++) {
+      const s = at(k);
+      const o = s * 4 + slot;
+      out[o] = foldSaved[s * 2];
+      out[o + 1] = foldSaved[s * 2 + 1];
+    }
+  };
+  const consumed = new Uint8Array(n); // samples an earlier run absorbed
+  const touched: Array<[number, number, number]> = [];
+  const done: Array<[number, number, number]> = [];
+  for (let [a, b] of runs) {
+    while (a <= b && consumed[at(a)]) a++;
+    if (a > b) continue;
+    const side = foldSide[at(a)];
+    const slot = side > 0 ? 0 : 2;
+    // Blend at the fold's onset (the round joins' continuity rule): a
+    // run's vertices slide from their clamped positions to P by a
+    // smoothstep of the deepest core sample's fold depth, so a turn
+    // tightening through R = h moves the outline continuously instead
+    // of popping the day the collapse first stands.
+    let depth = 0;
+    for (let k = a; k <= b; k++) depth = Math.max(depth, foldDepth[at(k)]);
+    const bu = Math.min(1, depth / 0.1);
+    const tRun = bu * bu * (3 - 2 * bu);
+    const innerProj = (k: number, ox: number, oy: number, ux: number, uy: number): number => {
+      const o = at(k) * 4 + slot;
+      return (out[o] - ox) * ux + (out[o + 1] - oy) * uy;
+    };
+    const plainSample = (k: number): boolean => {
+      const i = at(k);
+      if (foldSide[i] !== 0) return false;
+      const d =
+        foldLegA[i * 2] * foldLegB[i * 2] + foldLegA[i * 2 + 1] * foldLegB[i * 2 + 1];
+      if (d < ROUND_DOT_START) return false; // a round join's hub stays
+      const cr =
+        foldLegA[i * 2] * foldLegB[i * 2 + 1] - foldLegA[i * 2 + 1] * foldLegB[i * 2];
+      return Math.abs(cr) <= 1e-4 || (cr > 0 ? 1 : -1) === side;
+    };
+    // P and the run's span settle together: absorbing a sample past P
+    // (below) extends the run, which moves the leaving leg and so P.
+    // Iterate to a fixed point (a few rounds at most).
+    let px = Number.NaN;
+    let py = Number.NaN;
+    for (let iter = 0; iter < 6; iter++) {
+      const eax = foldLegA[at(a) * 2];
+      const eay = foldLegA[at(a) * 2 + 1];
+      const ebx = foldLegB[at(b) * 2];
+      const eby = foldLegB[at(b) * 2 + 1];
+      const den = eax * eby - eay * ebx; // cross(entering, leaving) = sin(total turn)
+      const dotEE = eax * ebx + eay * eby;
+      px = Number.NaN;
+      if (Math.abs(den) < 0.02 || dotEE < -0.94) break; // near-parallel, or past ~160 deg
+      // Inner normals (left of the leg when the inside is the left side).
+      const nix = -eay * side;
+      const niy = eax * side;
+      const nox = -eby * side;
+      const noy = ebx * side;
+      const ca = ctr(a);
+      const cb = ctr(b);
+      // The legs' inner offset lines, each at the anchor sample's
+      // own width (h * widthMul there: a reveal or pluck envelope
+      // narrows the strip, and its legs' edges narrow with it).
+      const dA = halfWidth * (widthMul ? widthMul[at(a)] : 1);
+      const dB = halfWidth * (widthMul ? widthMul[at(b)] : 1);
+      const ax = positions[ca] + nix * dA;
+      const ay = positions[ca + 1] + niy * dA;
+      const bx = positions[cb] + nox * dB;
+      const by = positions[cb + 1] + noy * dB;
+      const t = ((bx - ax) * eby - (by - ay) * ebx) / den;
+      const qx = ax + eax * t;
+      const qy = ay + eay * t;
+      if (!Number.isFinite(qx) || !Number.isFinite(qy)) break;
+      let near = true;
+      for (let k = a; k <= b && near; k++) {
+        const c = ctr(k);
+        const dx = qx - positions[c];
+        const dy = qy - positions[c + 1];
+        if (dx * dx + dy * dy > 16 * halfWidth * halfWidth) near = false;
+      }
+      if (!near) break;
+      px = qx;
+      py = qy;
+      const a0 = a;
+      const b0 = b;
+      // Absorb plain neighbours whose inner vertex already lies past P
+      // along its leg's offset line (the miter point of a sharp corner
+      // sits past the next sample's inner vertex when the spacing is
+      // under h tan(turn/2) - that reversal is the fold itself). Their
+      // inner vertices join the fan at P instead of crossing it.
+      const pOut = (px - bx) * ebx + (py - by) * eby;
+      while ((closed ? b + 1 < a + n : b < n - 1) && plainSample(b + 1) && innerProj(b + 1, bx, by, ebx, eby) <= pOut + 1e-9) b++;
+      const pIn = (px - ax) * eax + (py - ay) * eay;
+      while ((closed ? b + 1 < a + n : a > 0) && plainSample(a - 1) && innerProj(a - 1, ax, ay, eax, eay) >= pIn - 1e-9) a--;
+      // Absorb a following folding sample whose own miter vertex
+      // already lies behind P along the leaving leg (a split run's
+      // next piece starts there): it joins this fan, and its own run
+      // is consumed.
+      for (;;) {
+        if (!(closed ? b + 1 < a + n : b < n - 1)) break;
+        const k = at(b + 1);
+        if (foldSide[k] !== side || consumed[k]) break;
+        const d =
+          foldLegA[k * 2] * foldLegB[k * 2] + foldLegA[k * 2 + 1] * foldLegB[k * 2 + 1];
+        if (d < ROUND_DOT_START) break;
+        let tx = foldLegA[k * 2] + foldLegB[k * 2];
+        let ty = foldLegA[k * 2 + 1] + foldLegB[k * 2 + 1];
+        const tl = Math.hypot(tx, ty);
+        if (tl < 1e-9) break;
+        tx /= tl;
+        ty /= tl;
+        const wk = halfWidth / Math.sqrt(Math.max((1 + d) / 2, 0.25));
+        const c = ctr(b + 1);
+        const mx = positions[c] + -ty * side * wk;
+        const my = positions[c + 1] + tx * side * wk;
+        if ((mx - bx) * ebx + (my - by) * eby > pOut + 1e-9) break;
+        b++;
+        consumed[k] = 1;
+      }
+      if (a === a0 && b === b0) break;
+    }
+    if (!Number.isFinite(px)) continue;
+    for (let k = a; k <= b; k++) {
+      const s = at(k);
+      const o = s * 4 + slot;
+      if (!foldMark[s]) {
+        foldMark[s] = 1;
+        foldSaved[s * 2] = out[o];
+        foldSaved[s * 2 + 1] = out[o + 1];
+      }
+      out[o] = foldSaved[s * 2] + (px - foldSaved[s * 2]) * tRun;
+      out[o + 1] = foldSaved[s * 2 + 1] + (py - foldSaved[s * 2 + 1]) * tRun;
+    }
+    touched.push([a, b, slot]);
+    if (stripOk(a, b, (closed || b < n - 1) && foldSide[at(b + 1)] !== 0)) {
+      done.push([a, b, slot]);
+    } else {
+      restore(a, b, slot);
+    }
+  }
+  // Final sweep: with every run applied, recheck each run in full (the
+  // quad a split run shares with the next passes only with both ends
+  // collapsed). A run that fails now is restored, and the sweep repeats
+  // until what remains stands together.
+  let again = true;
+  while (again) {
+    again = false;
+    for (let d = done.length - 1; d >= 0; d--) {
+      const [a, b, slot] = done[d];
+      if (!stripOk(a, b, false)) {
+        restore(a, b, slot);
+        done.splice(d, 1);
+        again = true;
+      }
+    }
+  }
+  for (const [a, b] of touched) for (let k = a; k <= b; k++) foldMark[at(k)] = 0;
 }
 
 export class RibbonMesh {
