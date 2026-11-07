@@ -869,12 +869,10 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
     }
     return best;
   };
-  const cdbgCount = { meets: 0, differ: 0, ids: [] as string[] };
   const cornerFallback = (cw: CornerWork, A: ArmInfo, B: ArmInfo, th: number): void => {
     const j = scene.junctions[cw.ji];
     const mt = borderMeet(A, cw.sideA, B, cw.sideB);
-    const legacy = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.K1240_LEGACY ?? "";
-    if (mt && legacy === "") {
+    if (mt) {
       // S3f (Levi's rule): no union-or-layered choice. Each facing border
       // ends at its own station, between the meet and its root, a
       // continuous fraction w of the way: w = clamp((z_self - z_other) /
@@ -915,54 +913,7 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
       armPrevPt[cw.bArm] = cw.refB; armPrevSide[cw.bArm] = cw.sideB;
       return;
     }
-    // S3f (Levi's rule): which border the meet cuts is the diagram's,
-    // decided once: dg.armLayer, the pass each arm's chain makes at its
-    // first crossing past the root. Level arms are one surface there,
-    // and the meet cuts both borders (the union's corner). Otherwise it
-    // cuts the lower arm's border only (form B layers the two surfaces,
-    // so the upper border runs on over the lower tube, as at a
-    // crossing) and the upper arm's border ends where that arm joins the
-    // junction surface: d = min(L, meet) along it, continuous (the meet
-    // itself once the span reaches it). That point is the upper arm's
-    // station point. Nothing here reads this frame's depth or membership.
-    const la = dg!.armLayer[A.idx] ?? 0; const lb = dg!.armLayer[B.idx] ?? 0;
-    const rule = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.K1240_RULE ?? "";
-    const xA = dg!.armFirstX[A.idx] ?? -1; const xB = dg!.armFirstX[B.idx] ?? -1;
-    const union = rule === "2" ? !(xA >= 0 && xA === xB && la !== lb) : la === lb;
-    const cutA = !!mt && (union || la < lb); const cutB = !!mt && (union || lb < la);
-    const upA = !!mt && !union && la > lb; const upB = !!mt && !union && lb > la;
-    const cdbg = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.K1240_CDBG;
-    if (cdbg && mt) {
-      // Diagnostic only: the frame rule this replaced (S3f WIP, z and
-      // membership at the meet), to count where the two disagree.
-      const gA = memberGroup(A.pi, mt.sA); const gB = memberGroup(B.pi, mt.sB);
-      const zA = depthAt(A.pi, mt.sA); const zB = depthAt(B.pi, mt.sB);
-      const oU = (gA >= 0 && gA === gB) || Math.abs(zA - zB) <= 1e-9;
-      const oA = oU || zA < zB; const oB = oU || zB < zA;
-      cdbgCount.meets++;
-      if (oA !== cutA || oB !== cutB) { cdbgCount.differ++; cdbgCount.ids.push(`j${cw.ji}:${oU ? "U" : oA ? "a" : "b"}>${union ? "U" : cutA ? "a" : "b"}`); }
-    }
-    if (cdbg && cdbg.split(",").includes(String(cw.ji))) diagnostics.push(`cdbg j${cw.ji} a${cw.aArm}(ch${A.pi} side${cw.sideA} layer ${la}) b${cw.bArm}(ch${B.pi} side${cw.sideB} layer ${lb}) why ${cw.why}: ${mt ? `meet (${mt.x.toFixed(3)},${mt.y.toFixed(3)}) dA ${(mt.dA / h).toFixed(2)}h dB ${(mt.dB / h).toFixed(2)}h gA ${memberGroup(A.pi, mt.sA)} gB ${memberGroup(B.pi, mt.sB)} zA ${depthAt(A.pi, mt.sA).toFixed(4)} zB ${depthAt(B.pi, mt.sB).toFixed(4)}` : "no meet"} cutA ${cutA} cutB ${cutB} LA ${(A.L / h).toFixed(2)}h LB ${(B.L / h).toFixed(2)}h`);
-    const applyMeet = (): void => {
-      if (!mt) return;
-      const ci = cornerWork.length;
-      cw.Vx = mt.x; cw.Vy = mt.y; cw.qx = mt.x; cw.qy = mt.y; cw.r = 0; cw.meet = true;
-      if (cutA) {
-        cw.tax = mt.x; cw.tay = mt.y; cw.sA = mt.sA; cw.dA = mt.dA;
-        cw.refA = mkRef(A.pi, cw.sideA, mt.x, mt.y, mt.sA, { k: 5, corner: ci, which: 0 });
-        addEv(A.pi, cw.sideA, mt.segA, mt.tA, cw.refA);
-        cw.refVA = cw.refA;
-        armNextPt[cw.aArm] = cw.refA; armNextSide[cw.aArm] = cw.sideA;
-      }
-      if (cutB) {
-        cw.tbx = mt.x; cw.tby = mt.y; cw.sB = mt.sB; cw.dB = mt.dB;
-        cw.refB = mkRef(B.pi, cw.sideB, mt.x, mt.y, mt.sB, { k: 5, corner: ci, which: 1 });
-        addEv(B.pi, cw.sideB, mt.segB, mt.tB, cw.refB);
-        cw.refVB = cw.refB;
-        armPrevPt[cw.bArm] = cw.refB; armPrevSide[cw.bArm] = cw.sideB;
-      }
-    };
-    if (cutA && cutB) { applyMeet(); return; }
+    // No meet: the V at the junction, with both tangent points at the roots.
     let mx = A.ux + B.ux; let my = A.uy + B.uy;
     const ml = Math.sqrt(mx * mx + my * my);
     if (ml < 1e-9) { const ma = Math.atan2(A.uy, A.ux) + th / 2; mx = Math.cos(ma); my = Math.sin(ma); } else { mx /= ml; my /= ml; }
@@ -984,19 +935,11 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
       const t = ds > 1e-12 ? Math.min(1, Math.max(0, (target - a.s) / ds)) : 0;
       return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t, s: d > 0 ? sAt : arm.sR };
     };
-    const cv = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.K1240_CV ?? "";
-    const dA0 = upA && cv === "" ? Math.max(0, Math.min(A.L, mt!.dA)) : 0;
-    const dB0 = upB && cv === "" ? Math.max(0, Math.min(B.L, mt!.dB)) : 0;
-    const pa = bpOf(A, cw.sideA, dA0); const pb = bpOf(B, cw.sideB, dB0);
-    cw.tax = pa.x; cw.tay = pa.y; cw.tbx = pb.x; cw.tby = pb.y; cw.sA = pa.s; cw.sB = pb.s; cw.dA = dA0; cw.dB = dB0;
+    const pa = bpOf(A, cw.sideA, 0); const pb = bpOf(B, cw.sideB, 0);
+    cw.tax = pa.x; cw.tay = pa.y; cw.tbx = pb.x; cw.tby = pb.y; cw.sA = pa.s; cw.sB = pb.s; cw.dA = 0; cw.dB = 0;
     cw.refA = addPointAt(A.pi, cw.sideA, pa.x, pa.y, pa.s, { k: 5, corner: cornerWork.length, which: 0 });
     cw.refB = addPointAt(B.pi, cw.sideB, pb.x, pb.y, pb.s, { k: 5, corner: cornerWork.length, which: 1 });
     cw.refVA = cw.refA; cw.refVB = cw.refB;
-    if (cv !== "1") {
-      if (upA) { armNextPt[cw.aArm] = cw.refA; armNextSide[cw.aArm] = cw.sideA; }
-      if (upB) { armPrevPt[cw.bArm] = cw.refB; armPrevSide[cw.bArm] = cw.sideB; }
-    }
-    applyMeet();
   };
   for (const cp of cornerPairs) {
       const ji = cp.ji; const j = scene.junctions[ji];
@@ -1255,43 +1198,6 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
   // and hidden, or nothing shows within 20h.
   const ztB = 0.1 * scene.look.depthAmp;
   let twistFlips = 0;
-  const twistFlip = (U: number, uSide: number, O: number, s0: number, sO0: number): { x: number; y: number; s: number } | null => {
-    const pts = borders[U][bIdx(uSide)].pts; const n = pts.length;
-    const pU = polys[U]; const pO = polys[O];
-    if (n < 3) return null;
-    const m = pU.closed ? n - 1 : n;
-    let i0 = 0; let bd = Infinity;
-    for (let i = 0; i < m; i++) { const d = Math.abs(dS(pU, s0, pts[i].s)); if (d < bd) { bd = d; i0 = i; } }
-    const hidden = (q: BPt, sO: number): { g: number; sO: number } => {
-      const f = footInWindow(pO, q.x, q.y, sO - 3 * h, sO + 3 * h);
-      const gIn = h - f.d;
-      const gU = memberGroup(U, q.s); const gO = memberGroup(O, f.s);
-      const gHide = gU >= 0 && gU === gO ? Infinity : (depthAt(O, f.s) - f.d * ztB / h) - (depthAt(U, q.s) - ztB);
-      return { g: Math.min(gIn, gHide), sO: f.s };
-    };
-    for (const dir of [1, -1]) {
-      let gPrev = NaN; let sO = sO0; let prev: BPt | null = null; let walked = 0;
-      for (let k = 0; k < m && walked <= 20 * h; k++) {
-        let i = i0 + dir * k;
-        if (pU.closed) i = ((i % m) + m) % m; else if (i < 0 || i >= n) break;
-        const q = pts[i];
-        const off = dS(pU, s0, q.s) * dir;
-        if (off <= 1e-9) continue;
-        if (prev) walked += Math.hypot(q.x - prev.x, q.y - prev.y);
-        const r = hidden(q, sO); sO = r.sO;
-        if (Number.isNaN(gPrev)) {
-          if (!(r.g > 0)) break;
-          gPrev = r.g; prev = q; continue;
-        }
-        if (r.g <= 0 && prev) {
-          const t = gPrev / (gPrev - r.g);
-          return { x: prev.x + (q.x - prev.x) * t, y: prev.y + (q.y - prev.y) * t, s: prev.s + dS(pU, prev.s, q.s) * t };
-        }
-        gPrev = r.g; prev = q;
-      }
-    }
-    return null;
-  };
   scene.crossings.forEach((x, xi) => {
     const cp = crossPt[xi];
     if (!cp) return;
@@ -1323,7 +1229,6 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
     // the crossing's window (S3f, Levi's rule: continuous geometry, the
     // crossing itself once they touch; no walk, no depth test). Only the
     // under chain's stations take it; the over chain's keep real cuts.
-    const oldTwist = !!(globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.K1240_OLDTWIST;
     const synth: Cand[] = [];
     for (const uSide of [1, -1]) for (const oSide of [1, -1]) {
       if (cands.some((c) => c.uSide === uSide && c.oSide === oSide)) continue;
@@ -1331,20 +1236,17 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
       for (const c of cands) if (c.uSide === uSide && c.oSide === -oSide && (!from || c.dc < from.dc)) from = c;
       if (!from) continue;
       let f: { x: number; y: number; s: number } | null = null;
-      if (oldTwist) f = twistFlip(U, uSide, O, from.uRef.s, from.oRef.s);
-      else {
-        const BU = borders[U][bIdx(uSide)]; const BO = borders[O][bIdx(oSide)];
-        let bd = Infinity; let bi = -1; let bt = 0;
-        for (const i of uSegs.get(uSide)!) for (const j of oSegs.get(oSide)!) {
-          if (U === O && uSide === oSide && i === j) continue;
-          const a = BU.pts[i]; const b = BU.pts[i + 1]; const c = BO.pts[j]; const d = BO.pts[j + 1];
-          const cl = segSegClosest(a.x, a.y, b.x, b.y, c.x, c.y, d.x, d.y);
-          if (cl[2] < bd) { bd = cl[2]; bi = i; bt = cl[0]; }
-        }
-        if (bi >= 0) {
-          const a = BU.pts[bi]; const b = BU.pts[bi + 1];
-          f = { x: a.x + (b.x - a.x) * bt, y: a.y + (b.y - a.y) * bt, s: lerpS(pU, a.s, b.s, bt) };
-        }
+      const BU = borders[U][bIdx(uSide)]; const BO = borders[O][bIdx(oSide)];
+      let bd = Infinity; let bi = -1; let bt = 0;
+      for (const i of uSegs.get(uSide)!) for (const j of oSegs.get(oSide)!) {
+        if (U === O && uSide === oSide && i === j) continue;
+        const a = BU.pts[i]; const b = BU.pts[i + 1]; const c = BO.pts[j]; const d = BO.pts[j + 1];
+        const cl = segSegClosest(a.x, a.y, b.x, b.y, c.x, c.y, d.x, d.y);
+        if (cl[2] < bd) { bd = cl[2]; bi = i; bt = cl[0]; }
+      }
+      if (bi >= 0) {
+        const a = BU.pts[bi]; const b = BU.pts[bi + 1];
+        f = { x: a.x + (b.x - a.x) * bt, y: a.y + (b.y - a.y) * bt, s: lerpS(pU, a.s, b.s, bt) };
       }
       if (!f) continue;
       const uRef = addPointAt(U, uSide, f.x, f.y, f.s, { k: 6, s: f.s });
@@ -1388,7 +1290,6 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
     }
   });
   diagnostics.push(`twist cuts ${twistFlips}`);
-  if ((globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.K1240_CDBG) diagnostics.push(`cdbg fallback meets ${cdbgCount.meets}, frame rule differs at ${cdbgCount.differ}: ${cdbgCount.ids.join(" ")}`);
 
   // Eyes: crossings of one pair consecutive on both chains.
   let eyeCount = 0; let eyeCutCount = 0; let tieCutCount = 0; let kinkCount = 0;
@@ -2656,12 +2557,6 @@ export interface DiagramStructure {
   stationsD: DiagramStation[];
   intervalsD: DiagramInterval[];
   piecesD: DiagramPiece[];
-  /** Per arm, its layer at a failing corner's meet, decided once from
-   *  the diagram: the pass its chain makes at the first crossing past
-   *  the arm's root (+1 over, -1 under, 0 no crossing). */
-  armLayer: number[];
-  /** Per arm, the scene crossing index of that first crossing (-1 none). */
-  armFirstX: number[];
 }
 
 /** The diagram of a scene: chains and their point counts, crossings
@@ -2818,46 +2713,7 @@ export function diagramOf(scene: SceneIn): DiagramStructure {
   });
   corners.forEach((dc, ci) => { const a = arms[dc.aArm]; piecesD.push({ kind: "arc", chain: a ? a.pi : -1, side: 0, corner: ci, interval: -1, cap: -1 }); });
   caps.forEach((cp) => piecesD.push({ kind: "cap", chain: cp.pi, side: 0, corner: -1, interval: -1, cap: cp.capInfo ?? -1 }));
-  // S3f (Levi's rule): which border a failing corner's meet cuts is the
-  // diagram's. An arm's layer is the pass its chain makes at the first
-  // crossing past its root (pass order along the chain, from the
-  // scene's s data; wrapping on a closed chain): +1 over, -1 under, 0
-  // none. Level arms are one surface (the meet cuts both borders);
-  // otherwise it cuts the lower arm's border only.
-  const passesOf = new Map<number, { s: number; over: boolean; x: number }[]>();
-  scene.crossings.forEach((x, xi) => {
-    const ia = idxOf.get(x.a.chain); const ib = idxOf.get(x.b.chain);
-    if (ia === undefined || ib === undefined) return;
-    const la = passesOf.get(ia) ?? []; la.push({ s: x.a.s, over: x.over === "a", x: xi }); passesOf.set(ia, la);
-    const lb = passesOf.get(ib) ?? []; lb.push({ s: x.b.s, over: x.over === "b", x: xi }); passesOf.set(ib, lb);
-  });
-  // An arm whose run reaches another junction's root (rootsOf, above)
-  // before any crossing is flat (layer 0) at its own junction.
-  const ruleEnv = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.K1240_RULE ?? "";
-  const armFirst = arms.map((a) => {
-    const xa = scene.junctions[a.ji] && scene.junctions[a.ji].arms[a.ei];
-    const ps = passesOf.get(a.pi) ?? [];
-    if (!xa || ps.length === 0) return null;
-    const dir = a.kind === "end" ? (xa.s === 0 ? 1 : -1) : a.dir >= 0 ? 1 : -1;
-    const closed = !!scene.chains[a.pi]?.closed;
-    // Forward order from the root without the chain's length: past the
-    // root first, then (closed chains) the wrapped ones behind it.
-    const key = (s: number): number => { const d = (s - xa.s) * dir; return d > 0 ? d : closed ? 1e12 + d : Infinity; };
-    let best: { s: number; over: boolean; x: number } | null = null; let bd = Infinity;
-    for (const q of ps) { const k = key(q.s); if (k < bd) { bd = k; best = q; } }
-    if (best && ruleEnv !== "1") {
-      for (const r of rootsOf.get(a.pi) ?? []) {
-        if (r.ji === a.ji && Math.abs(r.s - xa.s) < 1e-9) continue;
-        if (key(r.s) < bd) return null;
-      }
-    }
-    return best;
-  });
-  const armLayer = armFirst.map((b) => (b ? (b.over ? 1 : -1) : 0));
-  const armFirstX = armFirst.map((b) => (b ? b.x : -1));
   return {
-    armLayer,
-    armFirstX,
     chainIds: scene.chains.map((c) => c.id),
     closed: scene.chains.map((c) => c.closed),
     nPts: scene.chains.map((c) => c.pts.length >> 1),
