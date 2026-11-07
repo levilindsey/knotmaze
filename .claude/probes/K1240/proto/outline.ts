@@ -1,3 +1,10 @@
+// K1240 S3: the outline per frame, cheap. `structure(scene)` runs S2's
+// structural builder once and records its decisions (which points and
+// pieces exist, which border segments are exposed, each corner's arms
+// and radius, each feature's segment window); `frame(structure, scene)`
+// recomputes positions only, from that frame's centrelines, with bounded
+// local solves and no cross-chain segment tests. `buildOutline` is the
+// split applied to one scene; `buildOutlineS2` is the original builder.
 // K1240 S2: the outline from the scene's own structure.
 // A FieldScene goes in and one outline table comes out. Pure TypeScript:
 // no imports at all, so nothing from the app renderer can leak in (a test
@@ -242,8 +249,23 @@ function segInt(ax: number, ay: number, bx: number, by: number, cx: number, cy: 
 // ---------------------------------------------------------------------------
 // Borders: the offset polyline of one side of one chain.
 
-interface BPt { x: number; y: number; s: number }
+interface BPt { x: number; y: number; s: number; rec?: BRec; ev?: unknown }
 interface Border { pi: number; side: number; pts: BPt[]; closed: boolean }
+
+/** How one border point is recomputed from a frame's centrelines.
+ *  0: centre vertex v offset along segment seg's normal;
+ *  1: miter at vertex v; 2: arc-fan point at vertex v, fraction u;
+ *  3: intersection of segments (a,b) and (c,d) of this border's pool;
+ *  4: intersection of own segment (a,b) with segment (c,d) of border
+ *     `other`; 5: corner tangent point; 6: border point at arc length s. */
+export type BRec =
+  | { k: 0; v: number; seg: number; sOff?: number }
+  | { k: 1; v: number; sOff?: number }
+  | { k: 2; v: number; u: number; sOff?: number }
+  | { k: 3; a: BPt; b: BPt; c: BPt; d: BPt; t: number }
+  | { k: 4; a: BPt; b: BPt; c: BPt; d: BPt; t: number; otherPi: number; otherSide: number; eye: number }
+  | { k: 5; corner: number; which: number }
+  | { k: 6; s: number };
 
 function offPoint(p: Poly, k: number, v: number, sig: number, h: number): [number, number] {
   const b = k + 1 === p.n ? 0 : k + 1;
@@ -254,10 +276,10 @@ function offPoint(p: Poly, k: number, v: number, sig: number, h: number): [numbe
 
 export function buildBorder(p: Poly, sig: number, h: number): BPt[] {
   const out: BPt[] = [];
-  const push = (x: number, y: number, s: number) => {
+  const push = (x: number, y: number, s: number, rec?: BRec) => {
     const q = out[out.length - 1];
     if (q && Math.abs(q.x - x) + Math.abs(q.y - y) < 1e-12) return;
-    out.push({ x, y, s });
+    out.push({ x, y, s, rec });
   };
   if (p.nseg === 0) return out;
   const arcStep = Math.PI / 16;
@@ -272,7 +294,7 @@ export function buildBorder(p: Poly, sig: number, h: number): BPt[] {
     const tPx = (p.x[bP] - p.x[kPrev]) / lP; const tPy = (p.y[bP] - p.y[kPrev]) / lP;
     const tNx = (p.x[bN] - p.x[kNext]) / lN; const tNy = (p.y[bN] - p.y[kNext]) / lN;
     const cross = tPx * tNy - tPy * tNx;
-    if (Math.abs(cross) < 1e-12) { push(bx, by, p.s[v]); return false; }
+    if (Math.abs(cross) < 1e-12) { push(bx, by, p.s[v], { k: 0, v, seg: kNext }); return false; }
     const joinSide = cross > 0 ? 1 : -1;
     if (sig === joinSide) {
       const det = cross;
@@ -280,8 +302,8 @@ export function buildBorder(p: Poly, sig: number, h: number): BPt[] {
       const t = (dx * tNy - dy * tNx) / det;
       const jx = ax + tPx * t; const jy = ay + tPy * t;
       const q = out[out.length - 1];
-      if (q && Math.abs(q.x - ax) + Math.abs(q.y - ay) < 1e-9) { q.x = jx; q.y = jy; }
-      else push(jx, jy, p.s[v]);
+      if (q && Math.abs(q.x - ax) + Math.abs(q.y - ay) < 1e-9) { q.x = jx; q.y = jy; q.rec = { k: 1, v }; }
+      else push(jx, jy, p.s[v], { k: 1, v });
       return true;
     }
     const a0 = Math.atan2(ay - p.y[v], ax - p.x[v]);
@@ -292,9 +314,9 @@ export function buildBorder(p: Poly, sig: number, h: number): BPt[] {
     const steps = Math.max(1, Math.ceil(Math.abs(da) / arcStep));
     for (let i = 1; i < steps; i++) {
       const a = a0 + (da * i) / steps;
-      push(p.x[v] + h * Math.cos(a), p.y[v] + h * Math.sin(a), p.s[v]);
+      push(p.x[v] + h * Math.cos(a), p.y[v] + h * Math.sin(a), p.s[v], { k: 2, v, u: i / steps });
     }
-    push(bx, by, p.s[v]);
+    push(bx, by, p.s[v], { k: 0, v, seg: kNext });
     return false;
   };
   if (p.closed) {
@@ -303,19 +325,19 @@ export function buildBorder(p: Poly, sig: number, h: number): BPt[] {
       const b = k + 1 === p.n ? 0 : k + 1;
       const [ax, ay] = offPoint(p, k, k, sig, h);
       const [bx, by] = offPoint(p, k, b, sig, h);
-      if (!joined) push(ax, ay, p.s[k]);
-      push(bx, by, p.s[b]);
+      if (!joined) push(ax, ay, p.s[k], { k: 0, v: k, seg: k });
+      push(bx, by, p.s[b], { k: 0, v: b, seg: k });
     }
     // Close the loop explicitly (s runs to s0+len) for linear handling.
     if (out.length > 1) {
       const f = out[0];
       const l = out[out.length - 1];
-      if (Math.hypot(f.x - l.x, f.y - l.y) > 1e-12) out.push({ x: f.x, y: f.y, s: p.s0 + p.len });
-      else l.s = p.s0 + p.len;
+      if (Math.hypot(f.x - l.x, f.y - l.y) > 1e-12) out.push({ x: f.x, y: f.y, s: p.s0 + p.len, rec: f.rec ? { ...f.rec, sOff: p.len } : undefined });
+      else { l.s = p.s0 + p.len; if (l.rec) l.rec = { ...l.rec, sOff: p.len }; }
     }
   } else {
     const [ax, ay] = offPoint(p, 0, 0, sig, h);
-    push(ax, ay, p.s[0]);
+    push(ax, ay, p.s[0], { k: 0, v: 0, seg: 0 });
     for (let k = 0; k < p.nseg; k++) {
       const b = k + 1;
       const [bx, by] = offPoint(p, k, b, sig, h);
@@ -323,9 +345,9 @@ export function buildBorder(p: Poly, sig: number, h: number): BPt[] {
       if (!joined) {
         const [sx, sy] = offPoint(p, k, k, sig, h);
         const q = out[out.length - 1];
-        if (!q || Math.abs(q.x - sx) + Math.abs(q.y - sy) >= 1e-9) push(sx, sy, p.s[k]);
+        if (!q || Math.abs(q.x - sx) + Math.abs(q.y - sy) >= 1e-9) push(sx, sy, p.s[k], { k: 0, v: k, seg: k });
       }
-      push(bx, by, p.s[b]);
+      push(bx, by, p.s[b], { k: 0, v: b, seg: k });
     }
   }
   return out;
@@ -376,7 +398,7 @@ function cutFolds(p: Poly, pts: BPt[], sig: number, h: number, diag: string[]): 
           const x = out[i].x + (out[i + 1].x - out[i].x) * hit.t;
           const y = out[i].y + (out[i + 1].y - out[i].y) * hit.t;
           const s = out[i].s + dS(p, out[i].s, out[i + 1].s) * hit.t;
-          out = [...out.slice(0, i + 1), { x, y, s }, ...out.slice(j)];
+          out = [...out.slice(0, i + 1), { x, y, s, rec: { k: 3, a: out[i], b: out[i + 1], c: out[j - 1], d: out[j], t: hit.t } as BRec }, ...out.slice(j)];
           diag.push(`fold ch${p.id} side${sig} at s=${sb.toFixed(2)}`);
           changed = true;
           break outer;
@@ -390,14 +412,15 @@ function cutFolds(p: Poly, pts: BPt[], sig: number, h: number, diag: string[]): 
 // ---------------------------------------------------------------------------
 // The builder.
 
-interface PtRef { pi: number; side: number; x: number; y: number; s: number; idx: number }
+interface PtRef { pi: number; side: number; x: number; y: number; s: number; idx: number; rec?: BRec }
 interface Ev { seg: number; t: number; ref: PtRef }
 interface ArmInfo { ji: number; ei: number; pi: number; sR: number; dir: number; kind: string; ux: number; uy: number; ang: number; L: number; Lcut: number; g: number; idx: number }
-interface CornerWork extends OutlineCorner { ji: number; aArm: number; bArm: number; sideA: number; sideB: number; sA: number; sB: number; dA: number; dB: number; refA: PtRef | null; refB: PtRef | null; refVA: PtRef | null; refVB: PtRef | null }
+interface CornerWork extends OutlineCorner { ji: number; aArm: number; bArm: number; sideA: number; sideB: number; sA: number; sB: number; dA: number; dB: number; refA: PtRef | null; refB: PtRef | null; refVA: PtRef | null; refVB: PtRef | null; vKa?: number; vKb?: number; qKa?: number; qKb?: number; vSa?: number; vSb?: number }
 interface Station { pi: number; cS: number; left: PtRef; right: PtRef; kind: string; key: string }
 
-export function buildOutline(scene: SceneIn): OutlineTable { return buildOutlineFull(scene).table; }
-export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: Record<string, unknown> } {
+export function buildOutline(scene: SceneIn): OutlineTable { return frame(structure(scene), scene); }
+export function buildOutlineS2(scene: SceneIn): OutlineTable { return buildOutlineFull(scene).table; }
+export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: Record<string, unknown>; structure: OutlineStructure } {
   const h = scene.look.halfWidth;
   const W = scene.look.band;
   const cr = scene.look.cuspRadius ?? 3;
@@ -408,6 +431,7 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
   const origLen: number[] = rawPolys.map((p) => p.len);
   // END arms extended straight to c' on the through's centreline.
   const exts: { start?: [number, number]; end?: [number, number] }[] = rawPolys.map(() => ({}));
+  const extSpec: { start?: { throughPi: number; throughS: number; armS: number }; end?: { throughPi: number; throughS: number; armS: number } }[] = rawPolys.map(() => ({}));
   for (const j of scene.junctions) {
     for (const arm of j.arms) {
       if (arm.kind !== "end") continue;
@@ -416,16 +440,16 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
       const p = rawPolys[pi];
       const term = pointAt(p, arm.s);
       let cp: [number, number] = [j.c[0], j.c[1]];
-      let best = Infinity;
+      let best = Infinity; let bestTi = -1; let bestTS = 0;
       for (const t of j.arms) {
         if (t.kind !== "through") continue;
         const ti = idxOf.get(t.chain);
         if (ti === undefined) continue;
         const f = footInWindow(rawPolys[ti], term.x, term.y, t.s - 4 * h, t.s + 4 * h);
-        if (f.d < best) { best = f.d; cp = [f.x, f.y]; }
+        if (f.d < best) { best = f.d; cp = [f.x, f.y]; bestTi = ti; bestTS = t.s; }
       }
-      if (Math.abs(arm.s - 0) < Math.abs(arm.s - p.len)) exts[pi].start = cp;
-      else exts[pi].end = cp;
+      if (Math.abs(arm.s - 0) < Math.abs(arm.s - p.len)) { exts[pi].start = cp; if (bestTi >= 0) extSpec[pi].start = { throughPi: bestTi, throughS: bestTS, armS: arm.s }; }
+      else { exts[pi].end = cp; if (bestTi >= 0) extSpec[pi].end = { throughPi: bestTi, throughS: bestTS, armS: arm.s }; }
     }
   }
   const polys: Poly[] = scene.chains.map((c, i) => {
@@ -668,15 +692,15 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
   const borders: Border[][] = borderRaw;
   // Events per border, applied in one rebuild so indices stay valid.
   const evs: Ev[][][] = borders.map((bs) => bs.map(() => []));
-  const mkRef = (pi: number, side: number, x: number, y: number, s: number): PtRef => ({ pi, side, x, y, s, idx: -1 });
+  const mkRef = (pi: number, side: number, x: number, y: number, s: number, rec?: BRec): PtRef => ({ pi, side, x, y, s, idx: -1, rec });
   const addEv = (pi: number, side: number, seg: number, t: number, ref: PtRef): void => {
     if (seg < 0) return;
     evs[pi][bIdx(side)].push({ seg, t: Math.min(1, Math.max(0, t)), ref });
   };
   // Locate a point known to lie on a border near foot s; add it.
-  const addPointAt = (pi: number, side: number, x: number, y: number, sFoot: number): PtRef => {
+  const addPointAt = (pi: number, side: number, x: number, y: number, sFoot: number, rec?: BRec): PtRef => {
     const B = borders[pi][bIdx(side)];
-    const ref = mkRef(pi, side, x, y, sFoot);
+    const ref = mkRef(pi, side, x, y, sFoot, rec ?? { k: 6, s: sFoot });
     const pts = B.pts;
     const p = polys[pi];
     let lo = 0; let hi = pts.length - 1;
@@ -916,15 +940,15 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
         sA = q.fa.s; sB = q.fb.s;
         dA = (q.fa.u - A.sR) * A.dir; dB = (q.fb.u - B.sR) * B.dir;
       }
-      cw.r = r;
+      cw.r = r; cw.vKa = V.fa.k; cw.vKb = V.fb.k; cw.qKa = q.fa.k; cw.qKb = q.fb.k; cw.vSa = V.fa.s; cw.vSb = V.fb.s;
       cw.tax = tax; cw.tay = tay; cw.tbx = tbx; cw.tby = tby;
       cw.sA = sA; cw.sB = sB; cw.dA = dA; cw.dB = dB;
       if (r > 1e-9) {
-        cw.refA = addPointAt(A.pi, sideA, tax, tay, sA);
-        cw.refB = addPointAt(B.pi, sideB, tbx, tby, sB);
+        cw.refA = addPointAt(A.pi, sideA, tax, tay, sA, { k: 5, corner: cornerWork.length, which: 0 });
+        cw.refB = addPointAt(B.pi, sideB, tbx, tby, sB, { k: 5, corner: cornerWork.length, which: 1 });
       } else {
-        cw.refA = addPointAt(A.pi, sideA, V.x, V.y, sA);
-        cw.refB = addPointAt(B.pi, sideB, V.x, V.y, sB);
+        cw.refA = addPointAt(A.pi, sideA, V.x, V.y, sA, { k: 5, corner: cornerWork.length, which: 0 });
+        cw.refB = addPointAt(B.pi, sideB, V.x, V.y, sB, { k: 5, corner: cornerWork.length, which: 1 });
       }
       cw.refVA = cw.refA; cw.refVB = cw.refB;
       armNextPt[ai] = cw.refA; armNextSide[ai] = sideA;
@@ -939,6 +963,7 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
   // Crossings: intersect the under's borders with the over's near each
   // crossing, starting from the crossing's s on each chain.
   const cuts: OutlineCut[] = [];
+  const cutRefs: { border: number; ref: PtRef }[] = [];
   const stations: Station[] = [];
   const stationByKey = new Map<string, Station>();
   const crossPairs: [Station, Station][] = [];
@@ -1004,8 +1029,8 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
         const hit = segInt(a.x, a.y, b.x, b.y, c.x, c.y, d.x, d.y);
         if (!hit) continue;
         const px = a.x + (b.x - a.x) * hit.t; const py = a.y + (b.y - a.y) * hit.t;
-        const uRef = mkRef(U, uSide, px, py, a.s + (b.s - a.s) * hit.t);
-        const oRef = mkRef(O, oSide, px, py, c.s + (d.s - c.s) * hit.u);
+        const uRef = mkRef(U, uSide, px, py, a.s + (b.s - a.s) * hit.t, { k: 4, a, b, c, d, t: hit.t, otherPi: O, otherSide: oSide, eye: -1 });
+        const oRef = mkRef(O, oSide, px, py, c.s + (d.s - c.s) * hit.u, { k: 4, a: c, b: d, c: a, d: b, t: hit.u, otherPi: U, otherSide: uSide, eye: -1 });
         addEv(U, uSide, i, hit.t, uRef);
         addEv(O, oSide, j, hit.u, oRef);
         cands.push({ uSide, oSide, x: px, y: py, uRef, oRef, dc: Math.hypot(px - cp.x, py - cp.y) });
@@ -1023,7 +1048,7 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
       const cS = cl.uRef.s + dS(pU, cl.uRef.s, crd.uRef.s) / 2;
       const st = addStation({ pi: U, cS: normS(pU, cS), left: cl.uRef, right: crd.uRef, kind: "cross", key: `x${xi}|${oSide}` });
       pairStations.push(st);
-      for (const c of [cl, crd]) cuts.push({ crossing: xi, chain: U, side: c.uSide, s: c.uRef.s, x: c.x, y: c.y, overChain: O });
+      for (const c of [cl, crd]) { cuts.push({ crossing: xi, chain: U, side: c.uSide, s: c.uRef.s, x: c.x, y: c.y, overChain: O }); cutRefs.push({ border: U * 2 + bIdx(c.uSide), ref: c.uRef }); }
     }
     if (pairStations.length === 2) crossPairs.push([pairStations[0], pairStations[1]]);
     // The over chain is also stationed where it enters and leaves the
@@ -1099,18 +1124,50 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
       let found = 0;
       for (const sa of [1, -1]) for (const sb of [1, -1]) {
         const BA = borders[e.pi][bIdx(sa)]; const BB = borders[e.qi][bIdx(sb)];
-        const segsA: number[] = []; const segsB: number[] = [];
         const segInArc = (p: Poly, ls: number, hs: number, s0: number, gap: number): boolean => inArc(p, ls, s0, gap) || inArc(p, hs, s0, gap) || (sDistToInterval(p, s0, ls, hs) === 0 && gap >= 0) || Math.abs(dS(p, s0 + gap / 2, ls + (hs - ls) / 2)) <= gap / 2 + Math.abs(hs - ls) / 2;
-        for (let i = 0; i + 1 < BA.pts.length; i++) { if (segInArc(pA, BA.pts[i].s, BA.pts[i + 1].s, e.sPi0, e.gapPi)) segsA.push(i); }
-        for (let i = 0; i + 1 < BB.pts.length; i++) { if (segInArc(pB, BB.pts[i].s, BB.pts[i + 1].s, e.sQi0, e.gapQi)) segsB.push(i); }
-        for (const i of segsA) for (const j of segsB) {
+        // segInArc implies the segment's s interval meets the arc's, so
+        // a binary-search slice (with shifts and a guard) is a superset;
+        // the exact predicate then decides, as before.
+        const sliceSegs = (pts: BPt[], p: Poly, s0: number, gap: number): number[] => {
+          const n = pts.length;
+          const out: number[] = [];
+          if (n < 2) return out;
+          const seen = new Set<number>();
+          const lb = (target: number): number => { let lo = 0; let hi = n; while (lo < hi) { const m = (lo + hi) >> 1; if (pts[m].s < target) lo = m + 1; else hi = m; } return lo; };
+          const shifts = p.closed ? [-p.len, 0, p.len] : [0];
+          for (const sh of shifts) {
+            const a = Math.max(0, lb(s0 - 1e-6 + sh) - 3);
+            const b = Math.min(n - 2, lb(s0 + gap + 1e-6 + sh) + 3);
+            for (let i = a; i <= b; i++) { if (!seen.has(i)) { seen.add(i); if (segInArc(p, pts[i].s, pts[i + 1].s, s0, gap)) out.push(i); } }
+          }
+          return out;
+        };
+        const segsA = sliceSegs(BA.pts, pA, e.sPi0, e.gapPi);
+        const segsB = sliceSegs(BB.pts, pB, e.sQi0, e.gapQi);
+        const cellE = Math.max(h, 0.05);
+        const gridB = new Map<string, number[]>();
+        for (const j of segsB) {
+          const c = BB.pts[j]; const d = BB.pts[j + 1];
+          const x0 = Math.floor(Math.min(c.x, d.x) / cellE); const x1 = Math.floor(Math.max(c.x, d.x) / cellE);
+          const y0 = Math.floor(Math.min(c.y, d.y) / cellE); const y1 = Math.floor(Math.max(c.y, d.y) / cellE);
+          for (let ix = x0; ix <= x1; ix++) for (let iy = y0; iy <= y1; iy++) { const k = ix + "," + iy; const l = gridB.get(k) ?? []; l.push(j); gridB.set(k, l); }
+        }
+        const candB = (a: BPt, b: BPt): number[] => {
+          const out: number[] = [];
+          const seenJ = new Set<number>();
+          const x0 = Math.floor(Math.min(a.x, b.x) / cellE); const x1 = Math.floor(Math.max(a.x, b.x) / cellE);
+          const y0 = Math.floor(Math.min(a.y, b.y) / cellE); const y1 = Math.floor(Math.max(a.y, b.y) / cellE);
+          for (let ix = x0; ix <= x1; ix++) for (let iy = y0; iy <= y1; iy++) for (const j of gridB.get(ix + "," + iy) ?? []) { if (!seenJ.has(j)) { seenJ.add(j); out.push(j); } }
+          return out;
+        };
+        for (const i of segsA) for (const j of candB(BA.pts[i], BA.pts[i + 1])) {
           if (e.pi === e.qi && sa === sb && i === j) continue;
           const a = BA.pts[i]; const b = BA.pts[i + 1]; const c = BB.pts[j]; const d = BB.pts[j + 1];
           const hit = segInt(a.x, a.y, b.x, b.y, c.x, c.y, d.x, d.y);
           if (!hit) continue;
           const px = a.x + (b.x - a.x) * hit.t; const py = a.y + (b.y - a.y) * hit.t;
-          addEv(e.pi, sa, i, hit.t, mkRef(e.pi, sa, px, py, a.s + (b.s - a.s) * hit.t));
-          addEv(e.qi, sb, j, hit.u, mkRef(e.qi, sb, px, py, c.s + (d.s - c.s) * hit.u));
+          addEv(e.pi, sa, i, hit.t, mkRef(e.pi, sa, px, py, a.s + (b.s - a.s) * hit.t, { k: 4, a, b, c, d, t: hit.t, otherPi: e.qi, otherSide: sb, eye: eyeCount - 1 }));
+          addEv(e.qi, sb, j, hit.u, mkRef(e.qi, sb, px, py, c.s + (d.s - c.s) * hit.u, { k: 4, a: c, b: d, c: a, d: b, t: hit.u, otherPi: e.pi, otherSide: sa, eye: eyeCount - 1 }));
           found++;
         }
       }
@@ -1184,6 +1241,7 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
   });
   interface CapInfo { station: Station; atEnd: boolean; cx: number; cy: number; arc: { x: number; y: number }[] }
   const capInfos: CapInfo[] = [];
+  const capRuns: [number, number][][] = [];
   polys.forEach((p, pi) => {
     if (p.closed) {
       const lp = borderPointAt(pi, 1, p.s0); const rp = borderPointAt(pi, -1, p.s0);
@@ -1216,12 +1274,13 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
         const a = a0 + (da * i) / steps;
         arc.push(i === 0 ? { x: lp.x, y: lp.y } : i === steps ? { x: rp.x, y: rp.y } : { x: c.x + h * Math.cos(a), y: c.y + h * Math.sin(a) });
       }
-      capInfos.push({ station: st, atEnd, cx: c.x, cy: c.y, arc });
+      capInfos.push({ station: st, atEnd, cx: c.x, cy: c.y, arc }); capRuns.push([]);
       // An END arm's root at this chain end makes this the junction cap.
       for (const arm of arms) if (arm.pi === pi && arm.kind === "end" && Math.abs(arm.sR - sEnd) < 1e-9) junctionCapKeys.add(st.key);
     }
   });
 
+  const basePtsSnap: BPt[][][] = borders.map((bs) => bs.map((B) => B.pts.slice()));
   // Apply every event in one rebuild per border; refs gain their index.
   borders.forEach((bs, pi) => {
     bs.forEach((B, bi) => {
@@ -1230,7 +1289,7 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
       const bySeg = new Map<number, Ev[]>();
       for (const e of list) { const l = bySeg.get(e.seg) ?? []; l.push(e); bySeg.set(e.seg, l); }
       const old = B.pts;
-      const out: BPt[] = [{ ...old[0] }];
+      const out: BPt[] = [old[0]];
       for (let i = 0; i + 1 < old.length; i++) {
         const segEvs = (bySeg.get(i) ?? []).slice().sort((a, b) => a.t - b.t);
         const pending: PtRef[] = [];
@@ -1239,11 +1298,11 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
           const last = out[out.length - 1];
           if (e.t <= 1e-9 || Math.hypot(e.ref.x - last.x, e.ref.y - last.y) < 1e-12) { e.ref.idx = out.length - 1; continue; }
           if (Math.hypot(e.ref.x - last.x, e.ref.y - last.y) < 1e-12) { e.ref.idx = out.length - 1; continue; }
-          out.push({ x: e.ref.x, y: e.ref.y, s: old[i].s + (old[i + 1].s - old[i].s) * e.t });
+          out.push({ x: e.ref.x, y: e.ref.y, s: old[i].s + (old[i + 1].s - old[i].s) * e.t, rec: e.ref.rec, ev: e.ref });
           e.ref.idx = out.length - 1;
           e.ref.s = out[out.length - 1].s;
         }
-        out.push({ ...old[i + 1] });
+        out.push(old[i + 1]);
         for (const r of pending) r.idx = out.length - 1;
       }
       // Events on a t~0 segment start were mapped above; refs that point
@@ -1596,17 +1655,17 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
     pieces.push(piece);
     if (rid >= 0) regions[rid].pieces.push(pieces.length - 1);
   });
-  for (const ci of capInfos) {
-    const pi = ci.station.pi;
+  for (let capIdx = 0; capIdx < capInfos.length; capIdx++) { const ci = capInfos[capIdx];
+    const pi = ci.station.pi; let curStart = -1; let curEnd = -1;
     let cur: OutlinePiece | null = null;
-    const flush = (): void => { if (cur && cur.pts.length >= 4) pieces.push(cur); cur = null; };
+    const flush = (): void => { if (cur && cur.pts.length >= 4) { pieces.push(cur); capRuns[capIdx].push([curStart, curEnd]); } cur = null; };
     for (let i = 0; i + 1 < ci.arc.length; i++) {
       const a = ci.arc[i]; const b = ci.arc[i + 1];
       const mx = (a.x + b.x) / 2; const my = (a.y + b.y) / 2;
       if (covering(mx, my, pi, ci.station.cS)) { flush(); continue; }
-      if (!cur) cur = { kind: "cap", chain: pi, side: 0, s0: ci.station.cS, s1: ci.station.cS, pts: [a.x, a.y], cpts: [ci.cx, ci.cy], region: -1, corner: -1 };
+      if (!cur) { curStart = i; cur = { kind: "cap", chain: pi, side: 0, s0: ci.station.cS, s1: ci.station.cS, pts: [a.x, a.y], cpts: [ci.cx, ci.cy], region: -1, corner: -1 }; }
       cur.pts.push(b.x, b.y);
-      cur.cpts.push(ci.cx, ci.cy);
+      cur.cpts.push(ci.cx, ci.cy); curEnd = i + 1;
     }
     flush();
   }
@@ -1651,8 +1710,117 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
   }
   diagnostics.push(`crossings in a junction span ${crossInJunction}, corner arcs near another thread ${arcNearThread}`);
   diagnostics.push(`chains ${nCh}, pieces ${pieces.length}, regions ${regions.length}, faces ${faces.length}, corners ${corners.filter((c) => c.ok).length}/${corners.length} ok, cuts ${cuts.length}, stations ${stations.length}`);
+    // S3: record this build's decisions as an OutlineStructure. Point
+  // recipes reference border points by object identity (the rebuild
+  // above keeps identity), so frame() can re-evaluate each kept point
+  // from a later frame's centrelines. Segment-intersection points
+  // (kind 4: crossing and eye cuts) that are neither referenced by a
+  // station/corner nor a transition of exposure or region are pruned:
+  // near-coincident facing borders in an eye cross at almost every
+  // sample, and those interior splits change no piece endpoint.
+  const extractStructure = (): OutlineStructure => {
+    const borderIdxOf = (pi: number, side: number): number => pi * 2 + (side === 1 ? 0 : 1);
+    let recMissing = 0;
+    interface PoolB { map: Map<BPt, number>; kind: number[]; i1: number[]; i2: number[]; i3: number[]; i4: number[]; other: number[]; f: number[]; sOff: number[]; eye: number[] }
+    const pools: PoolB[] = [];
+    for (let i = 0; i < polys.length * 2; i++) pools.push({ map: new Map(), kind: [], i1: [], i2: [], i3: [], i4: [], other: [], f: [], sOff: [], eye: [] });
+    const assign = (b: number, pt: BPt): number => {
+      const P = pools[b];
+      const ex = P.map.get(pt);
+      if (ex !== undefined) return ex;
+      const id = P.kind.length;
+      P.map.set(pt, id);
+      P.kind.push(0); P.i1.push(0); P.i2.push(0); P.i3.push(0); P.i4.push(0); P.other.push(-1); P.f.push(0); P.sOff.push(0); P.eye.push(-1);
+      const rec = pt.rec;
+      if (!rec) { P.kind[id] = 6; P.f[id] = pt.s; recMissing++; return id; }
+      P.kind[id] = rec.k;
+      if (rec.k === 0) { P.i1[id] = rec.v; P.i2[id] = rec.seg; P.sOff[id] = rec.sOff ?? 0; }
+      else if (rec.k === 1) { P.i1[id] = rec.v; P.sOff[id] = rec.sOff ?? 0; }
+      else if (rec.k === 2) { P.i1[id] = rec.v; P.f[id] = rec.u; P.sOff[id] = rec.sOff ?? 0; }
+      else if (rec.k === 3) { P.i1[id] = assign(b, rec.a); P.i2[id] = assign(b, rec.b); P.i3[id] = assign(b, rec.c); P.i4[id] = assign(b, rec.d); P.f[id] = rec.t; }
+      else if (rec.k === 4) { const ob = borderIdxOf(rec.otherPi, rec.otherSide); P.other[id] = ob; P.i1[id] = assign(b, rec.a); P.i2[id] = assign(b, rec.b); P.i3[id] = assign(ob, rec.c); P.i4[id] = assign(ob, rec.d); P.f[id] = rec.t; P.eye[id] = rec.eye; }
+      else if (rec.k === 5) { P.i1[id] = rec.corner; P.i2[id] = rec.which; }
+      else { P.f[id] = rec.s; }
+      return id;
+    };
+    const referenced: Set<number>[] = pools.map(() => new Set<number>());
+    const markRef = (r: PtRef | null): void => { if (r && r.idx >= 0) referenced[borderIdxOf(r.pi, r.side)].add(r.idx); };
+    stations.forEach((st) => { markRef(st.left); markRef(st.right); });
+    cornerWork.forEach((cw) => { markRef(cw.refA); markRef(cw.refB); });
+    arms.forEach((a, ai) => { markRef(armNextPt[ai]); markRef(armPrevPt[ai]); });
+    let segXTotal = 0; let segXKept = 0; let eyeTotal = 0; let eyeKeptTotal = 0; let nonUniform = 0;
+    const eyeKeptMap = new Map<number, number>();
+    const bordersOut: BorderStruct[] = [];
+    borders.forEach((bs, pi) => {
+      bs.forEach((B, bi) => {
+        const b = borderIdxOf(pi, B.side);
+        const fullPool = B.pts.map((pt) => assign(b, pt));
+        const baseSeq = basePtsSnap[pi][bi].map((pt) => assign(b, pt));
+        const exp = exposed[pi][bi];
+        const segR = segRegion[pi][bi];
+        const seqFull: number[] = []; const seqPool: number[] = [];
+        for (let m = 0; m < B.pts.length; m++) {
+          const pid = fullPool[m];
+          const kind = pools[b].kind[pid];
+          const eye = pools[b].eye[pid];
+          if (kind === 4) { segXTotal++; if (eye >= 0) eyeTotal++; }
+          let keep = true;
+          if (kind === 4 && m > 0 && m < B.pts.length - 1 && !referenced[b].has(m)) keep = exp[m - 1] !== exp[m] || segR[m - 1] !== segR[m];
+          if (keep) {
+            seqFull.push(m); seqPool.push(pid);
+            if (kind === 4) { segXKept++; if (eye >= 0) { eyeKeptTotal++; eyeKeptMap.set(eye, (eyeKeptMap.get(eye) ?? 0) + 1); } }
+          }
+        }
+        const idxOfFull = new Int32Array(B.pts.length).fill(-1);
+        seqFull.forEach((full, j) => { idxOfFull[full] = j; });
+        const fExp = new Uint8Array(Math.max(0, seqFull.length - 1));
+        const fSegR = new Int32Array(Math.max(0, seqFull.length - 1));
+        for (let j = 0; j + 1 < seqFull.length; j++) {
+          const fs = seqFull[j];
+          fExp[j] = exp[fs] ? 1 : 0;
+          fSegR[j] = segR[fs];
+          for (let f = fs + 1; f < seqFull[j + 1]; f++) if (exp[f] !== exp[fs] || segR[f] !== segR[fs]) nonUniform++;
+        }
+        const P = pools[b];
+        bordersOut.push({
+          kind: Uint8Array.from(P.kind), i1: Int32Array.from(P.i1), i2: Int32Array.from(P.i2), i3: Int32Array.from(P.i3), i4: Int32Array.from(P.i4),
+          other: Int32Array.from(P.other), f: Float64Array.from(P.f), sOff: Float64Array.from(P.sOff), eye: Int32Array.from(P.eye),
+          baseSeq: Int32Array.from(baseSeq), seqPool: Int32Array.from(seqPool), seqFull: Int32Array.from(seqFull), idxOfFull, exposed: fExp, segRegion: fSegR, fullLen: B.pts.length,
+        });
+      });
+    });
+    let eyeMaxKept = 0;
+    for (const v of eyeKeptMap.values()) eyeMaxKept = Math.max(eyeMaxKept, v);
+    const capByStation = new Int32Array(stations.length).fill(-1);
+    capInfos.forEach((ci, i) => { capByStation[stations.indexOf(ci.station)] = i; });
+    const faceByRid: { kind: number; pi: number; cMid: number; ji: number; armS: number }[] = [];
+    intervals.forEach((iv) => { if (iv.region >= 0) faceByRid[iv.region] = { kind: 0, pi: iv.pi, cMid: iv.cMid, ji: -1, armS: 0 }; });
+    junctionRegion.forEach((rid, ji) => { const list = armsOfJ[ji]; if (list.length) faceByRid[rid] = { kind: 1, pi: -1, cMid: 0, ji, armS: arms[list[0]].sR }; });
+    return {
+      chainIds: scene.chains.map((c) => c.id),
+      extSpec: extSpec.map((e) => ({ start: e.start ? { ...e.start } : undefined, end: e.end ? { ...e.end } : undefined })),
+      borders: bordersOut,
+      arms: arms.map((a) => ({ ji: a.ji, ei: a.ei, pi: a.pi, sR: a.sR, dir: a.dir, kind: a.kind, L: a.L, g: a.g })),
+      armsOfJ: armsOfJ.map((l) => l.slice()),
+      armPts: arms.map((a, ai) => ({
+        prevB: armPrevPt[ai] ? borderIdxOf(armPrevPt[ai]!.pi, armPrevPt[ai]!.side) : -1, prevFull: armPrevPt[ai] ? armPrevPt[ai]!.idx : -1, prevSide: armPrevSide[ai],
+        nextB: armNextPt[ai] ? borderIdxOf(armNextPt[ai]!.pi, armNextPt[ai]!.side) : -1, nextFull: armNextPt[ai] ? armNextPt[ai]!.idx : -1, nextSide: armNextSide[ai],
+      })),
+      corners: cornerWork.map((cw, ci) => ({ ji: cw.ji, aArm: cw.aArm, bArm: cw.bArm, sideA: cw.sideA, sideB: cw.sideB, style: cw.style, ok: cw.ok, why: cw.why, theta: cw.theta, r: cw.r, sA: cw.sA, sB: cw.sB, vKa: cw.vKa ?? -1, vKb: cw.vKb ?? -1, qKa: cw.qKa ?? -1, qKb: cw.qKb ?? -1, vSa: cw.vSa ?? cw.sA, vSb: cw.vSb ?? cw.sB, stored: { ...corners[ci] } })),
+      stations: stations.map((st) => ({ pi: st.pi, cS: st.cS, kind: st.kind, key: st.key, leftB: borderIdxOf(st.left.pi, st.left.side), leftFull: st.left.idx, rightB: borderIdxOf(st.right.pi, st.right.side), rightFull: st.right.idx })),
+      intervals: intervals.map((iv) => ({ pi: iv.pi, aSt: stations.indexOf(iv.A), bSt: stations.indexOf(iv.B), cMid: iv.cMid, discard: iv.discard, group: iv.region >= 0 ? regions[iv.region].group : -1 })),
+      caps: capInfos.map((ci, i) => ({ pi: ci.station.pi, station: stations.indexOf(ci.station), atEnd: ci.atEnd, steps: ci.arc.length - 1, runs: capRuns[i].map((r) => [r[0], r[1]] as [number, number]) })),
+      capByStation,
+      faces: faceWorks.map((fw, i) => ({ rid: i, owner: fw.owner, group: fw.group, ...(faceByRid[i] ?? { kind: 0, pi: fw.owner, cMid: 0, ji: -1, armS: 0 }) })),
+      cuts: cuts.map((c, i) => ({ crossing: c.crossing, chain: c.chain, side: c.side, overChain: c.overChain, border: cutRefs[i].border, fullIdx: cutRefs[i].ref.idx })),
+      groupOfJ: groupOfJ.slice(),
+      stats: { eyeCount, eyeTotal, eyeKept: eyeKeptTotal, eyeMaxKept, tieCutCount, kinkCount, crossInJunction, arcNearThread, segXTotal, segXKept, nonUniform, recMissing },
+    };
+  };
+
+  const structOut = extractStructure();
   const table: OutlineTable = { h, W, pieces, regions, faces, corners, cuts, diagnostics };
-  return { table, debug: { arms: arms.map((a) => ({ ji: a.ji, pi: a.pi, sR: a.sR, dir: a.dir, L: a.L, Lcut: a.Lcut, ang: a.ang })), groups: groupOfJ } };
+  return { table, debug: { arms: arms.map((a) => ({ ji: a.ji, pi: a.pi, sR: a.sR, dir: a.dir, L: a.L, Lcut: a.Lcut, ang: a.ang })), groups: groupOfJ }, structure: structOut };
 }
 
 
@@ -1661,3 +1829,714 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
 
 
 
+
+
+// ---------------------------------------------------------------------------
+// S3: structure (once per scene) and frame (positions only, per frame).
+
+export interface BorderStruct {
+  kind: Uint8Array; i1: Int32Array; i2: Int32Array; i3: Int32Array; i4: Int32Array;
+  other: Int32Array; f: Float64Array; sOff: Float64Array; eye: Int32Array;
+  baseSeq: Int32Array; seqPool: Int32Array; seqFull: Int32Array; idxOfFull: Int32Array;
+  exposed: Uint8Array; segRegion: Int32Array; fullLen: number;
+}
+export interface ArmStruct { ji: number; ei: number; pi: number; sR: number; dir: number; kind: string; L: number; g: number }
+export interface CornerStruct {
+  ji: number; aArm: number; bArm: number; sideA: number; sideB: number; style: number;
+  ok: boolean; why?: string; theta: number; r: number; sA: number; sB: number;
+  vKa: number; vKb: number; qKa: number; qKb: number; vSa: number; vSb: number; stored: OutlineCorner;
+}
+export interface StationStruct { pi: number; cS: number; kind: string; key: string; leftB: number; leftFull: number; rightB: number; rightFull: number }
+export interface IntervalStruct { pi: number; aSt: number; bSt: number; cMid: number; discard: boolean; group: number }
+export interface CapStruct { pi: number; station: number; atEnd: boolean; steps: number; runs: [number, number][] }
+export interface FaceStruct { rid: number; owner: number; group: number; kind: number; pi: number; cMid: number; ji: number; armS: number }
+export interface CutStruct { crossing: number; chain: number; side: number; overChain: number; border: number; fullIdx: number }
+export interface OutlineStructure {
+  chainIds: number[];
+  extSpec: { start?: { throughPi: number; throughS: number; armS: number }; end?: { throughPi: number; throughS: number; armS: number } }[];
+  borders: BorderStruct[];
+  arms: ArmStruct[];
+  armsOfJ: number[][];
+  armPts: { prevB: number; prevFull: number; prevSide: number; nextB: number; nextFull: number; nextSide: number }[];
+  corners: CornerStruct[];
+  stations: StationStruct[];
+  intervals: IntervalStruct[];
+  caps: CapStruct[];
+  capByStation: Int32Array;
+  faces: FaceStruct[];
+  cuts: CutStruct[];
+  groupOfJ: number[];
+  stats: { eyeCount: number; eyeTotal: number; eyeKept: number; eyeMaxKept: number; tieCutCount: number; kinkCount: number; crossInJunction: number; arcNearThread: number; segXTotal: number; segXKept: number; nonUniform: number; recMissing: number };
+}
+
+export function structure(scene: SceneIn): OutlineStructure { return buildOutlineFull(scene).structure; }
+
+interface FArm extends ArmStruct { ux: number; uy: number; ang: number }
+interface FFoot { d: number; x: number; y: number; s: number; k: number; u: number }
+interface FCorner { ok: boolean; Vx: number; Vy: number; qx: number; qy: number; tax: number; tay: number; tbx: number; tby: number; sA: number; sB: number; fax: number; fay: number; fbx: number; fby: number; r: number; theta: number }
+
+export function frame(st: OutlineStructure, scene: SceneIn, profile?: Record<string, number>): OutlineTable {
+  const prof = profile;
+  const mark = (key: string, t: number): void => { if (prof) prof[key] = (prof[key] ?? 0) + (performance.now() - t); };
+  let tPhase = performance.now();
+  const h = scene.look.halfWidth;
+  const W = scene.look.band;
+  const idxOf = new Map<number, number>();
+  scene.chains.forEach((c, i) => idxOf.set(c.id, i));
+  const rawPolys: Poly[] = scene.chains.map((c, i) => makePoly(i, c.pts, c.closed));
+  const polys: Poly[] = scene.chains.map((c, i) => {
+    const spec = st.extSpec[i];
+    if (!spec || (!spec.start && !spec.end)) return rawPolys[i];
+    const pts = Array.from(c.pts);
+    let s0 = 0;
+    const cpOf = (sp: { throughPi: number; throughS: number; armS: number }): [number, number] => {
+      const term = pointAt(rawPolys[i], sp.armS);
+      const f = footInWindow(rawPolys[sp.throughPi], term.x, term.y, sp.throughS - 4 * h, sp.throughS + 4 * h);
+      return [f.x, f.y];
+    };
+    if (spec.start) { const cp = cpOf(spec.start); const d = Math.hypot(pts[0] - cp[0], pts[1] - cp[1]); if (d > 1e-9) { pts.unshift(cp[0], cp[1]); s0 = -d; } }
+    if (spec.end) { const cp = cpOf(spec.end); const m = pts.length; const d = Math.hypot(pts[m - 2] - cp[0], pts[m - 1] - cp[1]); if (d > 1e-9) pts.push(cp[0], cp[1]); }
+    return makePoly(i, pts, c.closed, s0);
+  });
+  // Diagram depth (pinned hats), as in the builder.
+  const depthWin = scene.look.depthWindow * (scene.look.ctrlArc ?? 1);
+  const depthPins: { s: number; z: number }[][] = polys.map(() => []);
+  scene.crossings.forEach((x) => {
+    const ia = idxOf.get(x.a.chain); const ib = idxOf.get(x.b.chain);
+    if (ia === undefined || ib === undefined) return;
+    const amp = scene.look.depthAmp;
+    depthPins[ia].push({ s: normS(polys[ia], x.a.s), z: x.over === "a" ? amp : -amp });
+    depthPins[ib].push({ s: normS(polys[ib], x.b.s), z: x.over === "b" ? amp : -amp });
+  });
+  for (const l of depthPins) l.sort((a, b) => a.s - b.s);
+  const hatAt = (z: number, d: number, w: number): number => (w <= 1e-12 ? (d <= 0 ? z : 0) : d >= w ? 0 : z * (1 - d / w));
+  const depthAt = (pi: number, s: number): number => {
+    const P = depthPins[pi]; const n = P.length;
+    if (n === 0) return 0;
+    const p = polys[pi];
+    const u = normS(p, s);
+    let lo = -1; let hi = n;
+    while (hi - lo > 1) { const m = (lo + hi) >> 1; if (P[m].s <= u) lo = m; else hi = m; }
+    if (p.closed) {
+      const iL = lo < 0 ? n - 1 : lo;
+      const sL = lo < 0 ? P[iL].s - p.len : P[iL].s;
+      const iR = lo + 1 >= n ? 0 : lo + 1;
+      const sR = lo + 1 >= n ? P[iR].s + p.len : P[iR].s;
+      const w = Math.min(depthWin, sR - sL);
+      return hatAt(P[iL].z, u - sL, w) + hatAt(P[iR].z, sR - u, w);
+    }
+    if (lo < 0) return hatAt(P[0].z, P[0].s - u, depthWin);
+    if (lo + 1 >= n) return hatAt(P[n - 1].z, u - P[n - 1].s, depthWin);
+    const w = Math.min(depthWin, P[lo + 1].s - P[lo].s);
+    return hatAt(P[lo].z, u - P[lo].s, w) + hatAt(P[lo + 1].z, P[lo + 1].s - u, w);
+  };
+  const arms: FArm[] = st.arms.map((a) => {
+    const p = polys[a.pi];
+    const sceneArm = scene.junctions[a.ji]?.arms[a.ei];
+    const sB = a.kind === "end" && sceneArm ? normS(p, sceneArm.s) : a.sR;
+    const a0 = pointAt(p, sB);
+    let s1 = sB + a.dir * 2 * h;
+    if (!p.closed) s1 = Math.min(Math.max(s1, p.s0), p.s0 + p.len);
+    const a1 = pointAt(p, s1);
+    let ux = a1.x - a0.x; let uy = a1.y - a0.y;
+    const ul = Math.hypot(ux, uy);
+    if (ul < 1e-12) { ux = a0.tx * a.dir; uy = a0.ty * a.dir; } else { ux /= ul; uy /= ul; }
+    return { ...a, ux, uy, ang: Math.atan2(uy, ux) };
+  });
+  const armDist = (arm: ArmStruct, s: number): number => {
+    const p = polys[arm.pi];
+    let d = (s - arm.sR) * arm.dir;
+    if (p.closed) d = ((d % p.len) + p.len) % p.len;
+    return d;
+  };
+  void armDist;
+  mark("setup", tPhase); tPhase = performance.now();
+
+  // Corners: bounded Newton from V (K1040 F2), feet tracked locally
+  // around the segment structure() recorded; radius is structure's.
+  const footNear = (arm: FArm, x: number, y: number, hintS: number, hintK: number, out: FFoot): void => {
+    const p = polys[arm.pi];
+    const winLo = arm.dir > 0 ? arm.sR : arm.sR - arm.L;
+    const winHi = arm.dir > 0 ? arm.sR + arm.L : arm.sR;
+    const w = h / 32;
+    let sv = Math.min(Math.max(hintS, winLo), winHi);
+    let k = hintK >= 0 ? hintK : segOfS(p, sv).k;
+    for (let it = 0; it < 64; it++) {
+      const lo = Math.max(winLo, sv - w);
+      const hi = Math.min(winHi, sv + w);
+      let bd = Infinity; let bx = 0; let by = 0; let bs = sv; let bk = k;
+      for (let dk = -3; dk <= 3; dk++) {
+        let kk = k + dk;
+        if (p.closed) { kk = ((kk % p.nseg) + p.nseg) % p.nseg; } else if (kk < 0 || kk >= p.nseg) continue;
+        let segS = p.s[kk];
+        if (p.closed) { while (segS < sv - p.len / 2) segS += p.len; while (segS > sv + p.len / 2) segS -= p.len; }
+        const segE = segS + p.segLen[kk];
+        if (segE < lo || segS > hi) continue;
+        const b = kk + 1 === p.n ? 0 : kk + 1;
+        const ex = p.x[b] - p.x[kk]; const ey = p.y[b] - p.y[kk];
+        const l2 = ex * ex + ey * ey;
+        let t = l2 > 0 ? ((x - p.x[kk]) * ex + (y - p.y[kk]) * ey) / l2 : 0;
+        t = Math.min(1, Math.max(0, t));
+        let footS = segS + t * p.segLen[kk];
+        if (footS < lo) { t = p.segLen[kk] > 0 ? Math.min(1, Math.max(0, (lo - segS) / p.segLen[kk])) : 0; footS = segS + t * p.segLen[kk]; }
+        else if (footS > hi) { t = p.segLen[kk] > 0 ? Math.min(1, Math.max(0, (hi - segS) / p.segLen[kk])) : 0; footS = segS + t * p.segLen[kk]; }
+        const qx = p.x[kk] + ex * t; const qy = p.y[kk] + ey * t;
+        const d = Math.sqrt((x - qx) * (x - qx) + (y - qy) * (y - qy));
+        if (d < bd) { bd = d; bx = qx; by = qy; bs = p.s[kk] + t * p.segLen[kk]; bk = kk; out.u = footS; }
+      }
+      if (!Number.isFinite(bd)) { k = segOfS(p, sv).k; continue; }
+      out.d = bd; out.x = bx; out.y = by; out.s = bs; out.k = bk;
+      const u = out.u;
+      out.u = u;
+      const edge = (u <= lo + 1e-9 * h && lo > winLo) || (u >= hi - 1e-9 * h && hi < winHi);
+      if (!edge || Math.abs(u - sv) <= 1e-12 * h) return;
+      sv = u; k = bk;
+    }
+  };
+  const solveEqF = (A: FArm, B: FArm, rho: number, sx: number, sy: number, hintA: number, hintKa: number, hintB: number, hintKb: number, limit = h, maxIt = 16, tolB = 1e-12): { x: number; y: number; fa: FFoot; fb: FFoot; ok: boolean } => {
+    let x = sx; let y = sy;
+    const fa: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 }; const fb: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 };
+    footNear(A, x, y, hintA, hintKa, fa); footNear(B, x, y, hintB, hintKb, fb);
+    for (let it = 0; it < maxIt; it++) {
+      const Fa = fa.d - rho; const Fb = fb.d - rho;
+      if (Math.abs(Fa) < tolB * Math.max(1, rho) && Math.abs(Fb) < tolB * Math.max(1, rho)) break;
+      if (!(fa.d > 1e-12 && fb.d > 1e-12)) break;
+      const gax = (x - fa.x) / fa.d; const gay = (y - fa.y) / fa.d;
+      const gbx = (x - fb.x) / fb.d; const gby = (y - fb.y) / fb.d;
+      const det = gax * gby - gay * gbx;
+      if (Math.abs(det) < 1e-12) break;
+      let dx = (-Fa * gby + Fb * gay) / det;
+      let dy = (-Fb * gax + Fa * gbx) / det;
+      const dl = Math.hypot(dx, dy);
+      if (dl > limit) { dx *= limit / dl; dy *= limit / dl; }
+      x += dx; y += dy;
+      footNear(A, x, y, fa.u, fa.k, fa); footNear(B, x, y, fb.u, fb.k, fb);
+    }
+    const ok = Math.max(Math.abs(fa.d - rho), Math.abs(fb.d - rho)) < 1e-9 * Math.max(1, rho);
+    return { x, y, fa, fb, ok };
+  };
+  const footArmF = (arm: FArm, x: number, y: number, estD?: number): FFoot & { u: number } => {
+    const p = polys[arm.pi];
+    let d0 = 0; let d1 = arm.L;
+    if (estD !== undefined && Number.isFinite(estD)) { d0 = Math.max(0, estD - 4 * h); d1 = Math.min(arm.L, estD + 4 * h); if (d1 - d0 < 1e-9) { d0 = 0; d1 = arm.L; } }
+    const lo = arm.dir > 0 ? arm.sR + d0 : arm.sR - d1;
+    const hi = arm.dir > 0 ? arm.sR + d1 : arm.sR - d0;
+    const f = footInWindow(p, x, y, lo, hi);
+    return { ...f, u: f.s };
+  };
+  const solveEqS2 = (A: FArm, B: FArm, rho: number, x0: number, y0: number, estD?: number): { x: number; y: number; fa: FFoot & { u: number }; fb: FFoot & { u: number }; ok: boolean } => {
+    let x = x0; let y = y0;
+    let fa = footArmF(A, x, y, estD); let fb = footArmF(B, x, y, estD);
+    for (let it = 0; it < 40; it++) {
+      const Fa = fa.d - rho; const Fb = fb.d - rho;
+      if (Math.abs(Fa) < 1e-12 * Math.max(1, rho) && Math.abs(Fb) < 1e-12 * Math.max(1, rho)) break;
+      if (!(fa.d > 1e-12 && fb.d > 1e-12)) break;
+      const gax = (x - fa.x) / fa.d; const gay = (y - fa.y) / fa.d;
+      const gbx = (x - fb.x) / fb.d; const gby = (y - fb.y) / fb.d;
+      const det = gax * gby - gay * gbx;
+      if (Math.abs(det) < 1e-12) break;
+      let dx = (-Fa * gby + Fb * gay) / det;
+      let dy = (-Fb * gax + Fa * gbx) / det;
+      const dl = Math.hypot(dx, dy);
+      if (dl > h) { dx *= h / dl; dy *= h / dl; }
+      x += dx; y += dy;
+      fa = footArmF(A, x, y, estD); fb = footArmF(B, x, y, estD);
+    }
+    const ok = Math.abs(fa.d - rho) < 1e-9 * Math.max(h, rho) && Math.abs(fb.d - rho) < 1e-9 * Math.max(h, rho);
+    return { x, y, fa, fb, ok };
+  };
+  const fCorners: FCorner[] = st.corners.map((cs) => {
+    const A = arms[cs.aArm]; const B = arms[cs.bArm];
+    const stored = cs.stored;
+    const fallback = (): FCorner => {
+      const fa = A ? pointAt(polys[A.pi], cs.sA) : { x: stored.tax, y: stored.tay };
+      const fb = B ? pointAt(polys[B.pi], cs.sB) : { x: stored.tbx, y: stored.tby };
+      return { ok: cs.ok, Vx: stored.Vx, Vy: stored.Vy, qx: stored.qx, qy: stored.qy, tax: stored.tax, tay: stored.tay, tbx: stored.tbx, tby: stored.tby, sA: cs.sA, sB: cs.sB, fax: fa.x, fay: fa.y, fbx: fb.x, fby: fb.y, r: cs.r, theta: cs.theta };
+    };
+    if (!cs.ok || !A || !B) return fallback();
+    const J = scene.junctions[cs.ji];
+    if (!J) return fallback();
+    let th = B.ang - A.ang;
+    th = ((th % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+    // S2 only builds corners for th in (1e-6, pi-1e-6); if this frame's
+    // arms have rotated out of that range the corner is degenerate
+    // here, and the recorded geometry is the bounded answer.
+    if (!(th > 1e-6 && th < Math.PI - 1e-6)) return fallback();
+    let bx = A.ux + B.ux; let by = A.uy + B.uy;
+    const bl = Math.hypot(bx, by) || 1; bx /= bl; by /= bl;
+    const sn = Math.sin(th / 2) || 1;
+    const V = solveEqS2(A, B, h, J.c[0] + (bx * h) / sn, J.c[1] + (by * h) / sn, h / Math.max(Math.tan(th / 2), 1e-6));
+    if (!V.ok) return fallback();
+    let Q = V;
+    if (cs.r > 1e-9) {
+      // Grow the ball from V to h+r along the tracked medial path,
+      // S2's advance() with its predictor and acceptance radius (the
+      // gates only set r, which structure() stored).
+      const crF = scene.look.cuspRadius ?? 3;
+      const r0 = cs.style * (crF / 3) * Math.min(2 * h, 1.5 * h * Math.tan(cs.theta / 2));
+      const dN = Math.max(r0 / 32, 1e-12);
+      type TKF = { x: number; y: number; fa: FFoot; fb: FFoot };
+      const advanceF = (from: TKF, rho0: number, rhoT: number, st0: number): { p: TKF; rho: number } => {
+        let p = from; let rc = rho0; let st = st0;
+        let guard = 0;
+        while (rhoT - rc > 1e-12 * rhoT && guard++ < 24) {
+          const rn = Math.min(rhoT, rc + st);
+          const dd = rn - rc;
+          let next: TKF | null = null;
+          if (p.fa.d > 1e-12 && p.fb.d > 1e-12) {
+            const nax = (p.x - p.fa.x) / p.fa.d; const nay = (p.y - p.fa.y) / p.fa.d;
+            const nbx = (p.x - p.fb.x) / p.fb.d; const nby = (p.y - p.fb.y) / p.fb.d;
+            const den = 1 + nax * nbx + nay * nby;
+            if (den > 1e-9) {
+              const ux = (nax + nbx) / den; const uy = (nay + nby) / den;
+              const gx = p.x + ux * dd; const gy = p.y + uy * dd;
+              const acc = Math.min(h, Math.max(0.5 * Math.hypot(ux, uy) * dd, 1e-3 * h));
+              const nn = solveEqF(A, B, rn, gx, gy, p.fa.u ?? p.fa.s, p.fa.k, p.fb.u ?? p.fb.s, p.fb.k, acc, 60, 1e-12);
+              if (nn.ok && Math.hypot(nn.x - gx, nn.y - gy) <= acc) next = nn as TKF;
+            }
+          }
+          if (next) { p = next; rc = rn; st = Math.min(st0, 2 * st); }
+          else { st /= 2; if (st < 1e-5 * h) break; }
+        }
+        return { p, rho: rhoT - rc <= 1e-12 * rhoT ? rhoT : rc };
+      };
+      let node: TKF = V as TKF;
+      let rhoCur = h;
+      const kMax = Math.min(32, Math.floor(cs.r / dN));
+      let failed = false;
+      for (let k = 1; k <= kMax; k++) {
+        const adv = advanceF(node, rhoCur, h + k * dN, dN);
+        node = adv.p; rhoCur = adv.rho;
+        if (adv.rho < h + k * dN - 1e-12) { failed = true; break; }
+      }
+      if (!failed) {
+        const adv = advanceF(node, rhoCur, h + cs.r, dN);
+        node = adv.p;
+        if (adv.rho < h + cs.r - 1e-9 * Math.max(1, h + cs.r)) failed = true;
+      }
+      if (failed) return fallback();
+      Q = { ...node, ok: true };
+    }
+    const rho = h + (cs.r > 1e-9 ? cs.r : 0);
+    void rho;
+    const tax = cs.r > 1e-9 ? Q.fa.x + (h * (Q.x - Q.fa.x)) / (Q.fa.d || 1) : V.x;
+    const tay = cs.r > 1e-9 ? Q.fa.y + (h * (Q.y - Q.fa.y)) / (Q.fa.d || 1) : V.y;
+    const tbx = cs.r > 1e-9 ? Q.fb.x + (h * (Q.x - Q.fb.x)) / (Q.fb.d || 1) : V.x;
+    const tby = cs.r > 1e-9 ? Q.fb.y + (h * (Q.y - Q.fb.y)) / (Q.fb.d || 1) : V.y;
+    return { ok: true, Vx: V.x, Vy: V.y, qx: Q.x, qy: Q.y, tax, tay, tbx, tby, sA: Q.fa.s, sB: Q.fb.s, fax: Q.fa.x, fay: Q.fa.y, fbx: Q.fb.x, fby: Q.fb.y, r: cs.r, theta: th };
+  });
+  mark("corners", tPhase); tPhase = performance.now();
+
+  // Borders: evaluate each kept point from this frame's centrelines.
+  interface BState {
+    bs: BorderStruct; pi: number; side: number;
+    X: Float64Array; Y: Float64Array; S: Float64Array; FX: Float64Array; FY: Float64Array; done: Uint8Array;
+    baseReady: boolean; baseX: Float64Array; baseY: Float64Array; baseS: Float64Array;
+    XY: Float64Array; CXY: Float64Array; SA: Float64Array;
+  }
+  const bStates: BState[] = st.borders.map((bs, b) => ({
+    bs, pi: b >> 1, side: (b & 1) === 0 ? 1 : -1,
+    X: new Float64Array(bs.kind.length), Y: new Float64Array(bs.kind.length), S: new Float64Array(bs.kind.length),
+    FX: new Float64Array(bs.kind.length), FY: new Float64Array(bs.kind.length), done: new Uint8Array(bs.kind.length),
+    baseReady: false, baseX: new Float64Array(0), baseY: new Float64Array(0), baseS: new Float64Array(0),
+    XY: new Float64Array(2 * bs.seqPool.length), CXY: new Float64Array(2 * bs.seqPool.length), SA: new Float64Array(bs.seqPool.length),
+  }));
+  const polyTan = polys.map((p) => {
+    const tx = new Float64Array(Math.max(1, p.nseg)); const ty = new Float64Array(Math.max(1, p.nseg));
+    for (let k = 0; k < p.nseg; k++) { const b = k + 1 === p.n ? 0 : k + 1; const l = p.segLen[k] || 1; tx[k] = (p.x[b] - p.x[k]) / l; ty[k] = (p.y[b] - p.y[k]) / l; }
+    return { tx, ty };
+  });
+  const segTan = (p: Poly, k: number): [number, number] => { const b = k + 1 === p.n ? 0 : k + 1; const l = p.segLen[k] || 1; return [(p.x[b] - p.x[k]) / l, (p.y[b] - p.y[k]) / l]; };
+  const offFrame = (p: Poly, v: number, seg: number, sig: number): [number, number] => { const [tx, ty] = segTan(p, seg); return [p.x[v] + sig * h * -ty, p.y[v] + sig * h * tx]; };
+  const borderAtFromBase = (stt: BState, sIn: number): [number, number, number] => {
+    const p = polys[stt.pi];
+    let target = sIn;
+    if (p.closed) { target = normS(p, target); if (target < stt.baseS[0] - 1e-9) target += p.len; }
+    const baseS = stt.baseS;
+    let lo = 0; let hi = baseS.length - 1;
+    while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (baseS[mid] <= target) lo = mid; else hi = mid; }
+    const a = lo; const b = Math.min(baseS.length - 1, lo + 1);
+    const ds = baseS[b] - baseS[a];
+    const t = ds > 1e-12 ? Math.min(1, Math.max(0, (target - baseS[a]) / ds)) : 0;
+    return [stt.baseX[a] + (stt.baseX[b] - stt.baseX[a]) * t, stt.baseY[a] + (stt.baseY[b] - stt.baseY[a]) * t, target];
+  };
+  const ensureBase = (bi: number): void => {
+    const stt = bStates[bi];
+    if (stt.baseReady) return;
+    stt.baseReady = true;
+    const bs = stt.bs;
+    const n = bs.baseSeq.length;
+    stt.baseX = new Float64Array(n);
+    stt.baseY = new Float64Array(n);
+    stt.baseS = new Float64Array(n);
+    const p = polys[stt.pi];
+    const TT = polyTan[stt.pi];
+    const sig = stt.side;
+    const bKind = bs.kind; const bI1 = bs.i1; const bI2 = bs.i2; const bF = bs.f; const bSOff = bs.sOff;
+    for (let j = 0; j < n; j++) {
+      const id = bs.baseSeq[j];
+      if (!stt.done[id]) {
+        const kd = bKind[id];
+        if (kd === 0) {
+          const v = bI1[id]; const seg = bI2[id];
+          stt.X[id] = p.x[v] + sig * h * -TT.ty[seg]; stt.Y[id] = p.y[v] + sig * h * TT.tx[seg];
+          stt.S[id] = p.s[v] + bSOff[id]; stt.FX[id] = p.x[v]; stt.FY[id] = p.y[v];
+          stt.done[id] = 1;
+        } else if (kd === 1) {
+          const v = bI1[id];
+          const kPrev = v - 1 < 0 ? p.nseg - 1 : v - 1;
+          const kNext = v >= p.nseg ? 0 : v;
+          const tPx = TT.tx[kPrev]; const tPy = TT.ty[kPrev]; const tNx = TT.tx[kNext]; const tNy = TT.ty[kNext];
+          const Ax = p.x[v] + sig * h * -tPy; const Ay = p.y[v] + sig * h * tPx;
+          const Bx = p.x[v] + sig * h * -tNy; const By = p.y[v] + sig * h * tNx;
+          const det = tPx * tNy - tPy * tNx;
+          if (Math.abs(det) < 1e-300) { stt.X[id] = Bx; stt.Y[id] = By; } else { const t = ((Bx - Ax) * tNy - (By - Ay) * tNx) / det; stt.X[id] = Ax + tPx * t; stt.Y[id] = Ay + tPy * t; }
+          stt.S[id] = p.s[v] + bSOff[id]; stt.FX[id] = p.x[v]; stt.FY[id] = p.y[v];
+          stt.done[id] = 1;
+        } else if (kd === 2) {
+          const v = bI1[id];
+          const kPrev = v - 1 < 0 ? p.nseg - 1 : v - 1;
+          const kNext = v >= p.nseg ? 0 : v;
+          const Ax = p.x[v] + sig * h * -TT.ty[kPrev]; const Ay = p.y[v] + sig * h * TT.tx[kPrev];
+          const Bx = p.x[v] + sig * h * -TT.ty[kNext]; const By = p.y[v] + sig * h * TT.tx[kNext];
+          const a0 = Math.atan2(Ay - p.y[v], Ax - p.x[v]);
+          let da = Math.atan2(By - p.y[v], Bx - p.x[v]) - a0;
+          while (da > Math.PI) da -= 2 * Math.PI;
+          while (da < -Math.PI) da += 2 * Math.PI;
+          const a = a0 + da * bF[id];
+          stt.X[id] = p.x[v] + h * Math.cos(a); stt.Y[id] = p.y[v] + h * Math.sin(a);
+          stt.S[id] = p.s[v] + bSOff[id]; stt.FX[id] = p.x[v]; stt.FY[id] = p.y[v];
+          stt.done[id] = 1;
+        } else {
+          evalPt(bi, id);
+        }
+      }
+      stt.baseX[j] = stt.X[id]; stt.baseY[j] = stt.Y[id]; stt.baseS[j] = stt.S[id];
+    }
+  };
+  const evalPt = (bi: number, id: number): void => {
+    const stt = bStates[bi];
+    if (stt.done[id]) return;
+    stt.done[id] = 1;
+    const bs = stt.bs;
+    const p = polys[stt.pi];
+    const sig = stt.side;
+    const kind = bs.kind[id];
+    let x = 0; let y = 0; let s = 0; let fx = 0; let fy = 0;
+    const TT = polyTan[stt.pi];
+    if (kind === 0) {
+      const v = bs.i1[id];
+      const seg = bs.i2[id];
+      x = p.x[v] + sig * h * -TT.ty[seg]; y = p.y[v] + sig * h * TT.tx[seg];
+      s = p.s[v] + bs.sOff[id]; fx = p.x[v]; fy = p.y[v];
+    } else if (kind === 1) {
+      const v = bs.i1[id];
+      const kPrev = v - 1 < 0 ? p.nseg - 1 : v - 1;
+      const kNext = v >= p.nseg ? 0 : v;
+      const tPx = TT.tx[kPrev]; const tPy = TT.ty[kPrev]; const tNx = TT.tx[kNext]; const tNy = TT.ty[kNext];
+      const Ax = p.x[v] + sig * h * -tPy; const Ay = p.y[v] + sig * h * tPx;
+      const Bx = p.x[v] + sig * h * -tNy; const By = p.y[v] + sig * h * tNx;
+      const det = tPx * tNy - tPy * tNx;
+      if (Math.abs(det) < 1e-300) { x = Bx; y = By; } else { const t = ((Bx - Ax) * tNy - (By - Ay) * tNx) / det; x = Ax + tPx * t; y = Ay + tPy * t; }
+      s = p.s[v] + bs.sOff[id]; fx = p.x[v]; fy = p.y[v];
+    } else if (kind === 2) {
+      const v = bs.i1[id];
+      const kPrev = v - 1 < 0 ? p.nseg - 1 : v - 1;
+      const kNext = v >= p.nseg ? 0 : v;
+      const Ax = p.x[v] + sig * h * -TT.ty[kPrev]; const Ay = p.y[v] + sig * h * TT.tx[kPrev];
+      const Bx = p.x[v] + sig * h * -TT.ty[kNext]; const By = p.y[v] + sig * h * TT.tx[kNext];
+      const A: [number, number] = [Ax, Ay]; const B: [number, number] = [Bx, By];
+      const a0 = Math.atan2(A[1] - p.y[v], A[0] - p.x[v]);
+      let da = Math.atan2(B[1] - p.y[v], B[0] - p.x[v]) - a0;
+      while (da > Math.PI) da -= 2 * Math.PI;
+      while (da < -Math.PI) da += 2 * Math.PI;
+      const a = a0 + da * bs.f[id];
+      x = p.x[v] + h * Math.cos(a); y = p.y[v] + h * Math.sin(a);
+      s = p.s[v] + bs.sOff[id]; fx = p.x[v]; fy = p.y[v];
+    } else if (kind === 3) {
+      const a = bs.i1[id]; const b = bs.i2[id]; const c = bs.i3[id]; const d = bs.i4[id];
+      evalPt(bi, a); evalPt(bi, b); evalPt(bi, c); evalPt(bi, d);
+      const hit = segInt(stt.X[a], stt.Y[a], stt.X[b], stt.Y[b], stt.X[c], stt.Y[c], stt.X[d], stt.Y[d]);
+      const t = hit ? hit.t : bs.f[id];
+      x = stt.X[a] + (stt.X[b] - stt.X[a]) * t; y = stt.Y[a] + (stt.Y[b] - stt.Y[a]) * t;
+      s = stt.S[a] + dS(p, stt.S[a], stt.S[b]) * t;
+      fx = stt.FX[a] + (stt.FX[b] - stt.FX[a]) * t; fy = stt.FY[a] + (stt.FY[b] - stt.FY[a]) * t;
+    } else if (kind === 4) {
+      const a = bs.i1[id]; const b = bs.i2[id]; const c = bs.i3[id]; const d = bs.i4[id];
+      evalPt(bi, a); evalPt(bi, b);
+      const os = bStates[bs.other[id]];
+      evalPt(bs.other[id], c); evalPt(bs.other[id], d);
+      const hit = segInt(stt.X[a], stt.Y[a], stt.X[b], stt.Y[b], os.X[c], os.Y[c], os.X[d], os.Y[d]);
+      const t = hit ? hit.t : bs.f[id];
+      x = stt.X[a] + (stt.X[b] - stt.X[a]) * t; y = stt.Y[a] + (stt.Y[b] - stt.Y[a]) * t;
+      s = stt.S[a] + (stt.S[b] - stt.S[a]) * t;
+      fx = stt.FX[a] + (stt.FX[b] - stt.FX[a]) * t; fy = stt.FY[a] + (stt.FY[b] - stt.FY[a]) * t;
+    } else if (kind === 5) {
+      const fc = fCorners[bs.i1[id]];
+      if (bs.i2[id] === 0) { x = fc.tax; y = fc.tay; fx = fc.fax; fy = fc.fay; s = fc.sA; }
+      else { x = fc.tbx; y = fc.tby; fx = fc.fbx; fy = fc.fby; s = fc.sB; }
+    } else {
+      ensureBase(bi);
+      const r = borderAtFromBase(stt, bs.f[id]);
+      x = r[0]; y = r[1]; s = r[2];
+      const foot = pointAt(p, s); fx = foot.x; fy = foot.y;
+    }
+    stt.X[id] = x; stt.Y[id] = y; stt.S[id] = s; stt.FX[id] = fx; stt.FY[id] = fy;
+  };
+  for (let b = 0; b < bStates.length; b++) ensureBase(b);
+  mark("offsets", tPhase); tPhase = performance.now();
+  const evalCat = (cat: number): void => {
+    for (let b = 0; b < bStates.length; b++) {
+      const stt = bStates[b]; const bs = stt.bs;
+      for (let j = 0; j < bs.seqPool.length; j++) {
+        const id = bs.seqPool[j];
+        const kind = bs.kind[id];
+        const c = kind <= 3 || kind === 6 ? 0 : kind === 4 ? (bs.eye[id] >= 0 ? 2 : 1) : 3;
+        if (c === cat) evalPt(b, id);
+      }
+    }
+  };
+  evalCat(0); mark("offsets", tPhase); tPhase = performance.now();
+  evalCat(1); mark("crossingCuts", tPhase); tPhase = performance.now();
+  evalCat(2); mark("eyes", tPhase); tPhase = performance.now();
+  evalCat(3); mark("cornersPts", tPhase); tPhase = performance.now();
+  for (const stt of bStates) {
+    const bs = stt.bs;
+    for (let j = 0; j < bs.seqPool.length; j++) {
+      const id = bs.seqPool[j];
+      stt.XY[2 * j] = stt.X[id]; stt.XY[2 * j + 1] = stt.Y[id];
+      stt.CXY[2 * j] = stt.FX[id]; stt.CXY[2 * j + 1] = stt.FY[id];
+      stt.SA[j] = stt.S[id];
+    }
+  }
+  mark("offsets", tPhase); tPhase = performance.now();
+
+  const stationPt = (b: number, full: number): [number, number] => {
+    const stt = bStates[b];
+    const fi = stt.bs.idxOfFull[full];
+    return fi >= 0 ? [stt.XY[2 * fi], stt.XY[2 * fi + 1]] : [0, 0];
+  };
+  const borderAtPoint = (pi: number, side: number, s: number): [number, number] => {
+    const b = pi * 2 + (side === 1 ? 0 : 1);
+    ensureBase(b);
+    const r = borderAtFromBase(bStates[b], s);
+    return [r[0], r[1]];
+  };
+
+  // Caps: arcs regenerated from this frame's cap station points.
+  const capsF = st.caps.map((cap) => {
+    const s = st.stations[cap.station];
+    const lp = stationPt(s.leftB, s.leftFull);
+    const rp = stationPt(s.rightB, s.rightFull);
+    const p = polys[cap.pi];
+    const c = pointAt(p, s.cS);
+    const nbS = cap.atEnd ? s.cS - Math.min(1, p.len) : s.cS + Math.min(1, p.len);
+    const nb = pointAt(p, nbS);
+    let ox = c.x - nb.x; let oy = c.y - nb.y;
+    const ol = Math.hypot(ox, oy) || 1; ox /= ol; oy /= ol;
+    const a0 = Math.atan2(lp[1] - c.y, lp[0] - c.x);
+    let da = Math.atan2(rp[1] - c.y, rp[0] - c.x) - a0;
+    while (da > Math.PI) da -= 2 * Math.PI;
+    while (da < -Math.PI) da += 2 * Math.PI;
+    const midA = a0 + da / 2;
+    if (Math.cos(midA) * ox + Math.sin(midA) * oy < 0) da = da > 0 ? da - 2 * Math.PI : da + 2 * Math.PI;
+    const steps = Math.max(1, cap.steps);
+    const xy = new Float64Array(2 * (steps + 1));
+    for (let i = 0; i <= steps; i++) {
+      if (i === 0) { xy[0] = lp[0]; xy[1] = lp[1]; }
+      else if (i === steps) { xy[2 * i] = rp[0]; xy[2 * i + 1] = rp[1]; }
+      else { const a = a0 + (da * i) / steps; xy[2 * i] = c.x + h * Math.cos(a); xy[2 * i + 1] = c.y + h * Math.sin(a); }
+    }
+    return { xy, cx: c.x, cy: c.y, steps };
+  });
+  mark("caps", tPhase); tPhase = performance.now();
+
+  // Regions from the stored interval/junction templates.
+  const regions: OutlineRegion[] = [];
+  const borderSeqIdx = (pi: number, side: number, fromIdx: number, toIdx: number, forward: boolean): number[] => {
+    const b = pi * 2 + (side === 1 ? 0 : 1);
+    const nPts = bStates[b].XY.length / 2;
+    const out: number[] = [];
+    if (nPts === 0) return out;
+    const from = Math.max(0, fromIdx); const to = Math.max(0, toIdx);
+    if (!polys[pi].closed) {
+      if (forward) { for (let i = from; i <= to && i < nPts; i++) out.push(i); }
+      else { for (let i = from; i >= to && i >= 0; i--) out.push(i); }
+      return out;
+    }
+    const mod = Math.max(1, nPts - 1);
+    let fi = ((from % mod) + mod) % mod;
+    const ti = ((to % mod) + mod) % mod;
+    if (forward) {
+      for (let guard = 0; guard <= mod; guard++) { out.push(fi); if (fi === ti) break; fi = (fi + 1) % mod; }
+    } else {
+      for (let guard = 0; guard <= mod; guard++) { out.push(fi); if (fi === ti) break; fi = (fi - 1 + mod) % mod; }
+    }
+    return out;
+  };
+  const dedupeFlat = (pts: number[]): number[] => {
+    const out: number[] = [];
+    for (let i = 0; i + 1 < pts.length; i += 2) {
+      const x = pts[i]; const y = pts[i + 1];
+      const n = out.length;
+      if (n >= 2 && Math.hypot(out[n - 2] - x, out[n - 1] - y) < 1e-12) continue;
+      out.push(x, y);
+    }
+    if (out.length > 2 && Math.hypot(out[0] - out[out.length - 2], out[1] - out[out.length - 1]) < 1e-12) { out.pop(); out.pop(); }
+    return out;
+  };
+  const pushPt = (seq: number[], x: number, y: number): void => {
+    const n = seq.length;
+    if (n >= 2) { const dx = seq[n - 2] - x; const dy = seq[n - 1] - y; if (dx * dx + dy * dy < 1e-24) return; }
+    seq.push(x, y);
+  };
+  const pushBorderPts = (seq: number[], pi: number, side: number, idxs: number[]): void => {
+    const b = pi * 2 + (side === 1 ? 0 : 1);
+    const XY = bStates[b].XY;
+    for (const i of idxs) pushPt(seq, XY[2 * i], XY[2 * i + 1]);
+  };
+  const finishPoly = (seq: number[]): number[] => {
+    if (seq.length > 2) { const dx = seq[0] - seq[seq.length - 2]; const dy = seq[1] - seq[seq.length - 1]; if (dx * dx + dy * dy < 1e-24) { seq.pop(); seq.pop(); } }
+    return seq;
+  };
+  for (const iv of st.intervals) {
+    if (iv.discard) continue;
+    const A = st.stations[iv.aSt]; const B = st.stations[iv.bSt];
+    const aLeft = A ? bStates[A.leftB].bs.idxOfFull[A.leftFull] : -1;
+    const bLeft = B ? bStates[B.leftB].bs.idxOfFull[B.leftFull] : -1;
+    const bRight = B ? bStates[B.rightB].bs.idxOfFull[B.rightFull] : -1;
+    const aRight = A ? bStates[A.rightB].bs.idxOfFull[A.rightFull] : -1;
+    const seq: number[] = [];
+    pushBorderPts(seq, iv.pi, 1, borderSeqIdx(iv.pi, 1, aLeft, bLeft, true));
+    const capB = st.capByStation[iv.bSt];
+    if (capB >= 0 && B && B.kind.startsWith("cap")) { const arc = capsF[capB]; for (let i = 1; i < arc.steps; i++) pushPt(seq, arc.xy[2 * i], arc.xy[2 * i + 1]); }
+    pushBorderPts(seq, iv.pi, -1, borderSeqIdx(iv.pi, -1, bRight, aRight, false));
+    const capA = st.capByStation[iv.aSt];
+    if (capA >= 0 && A && A.kind.startsWith("cap")) { const arc = capsF[capA]; for (let i = arc.steps - 1; i >= 1; i--) pushPt(seq, arc.xy[2 * i], arc.xy[2 * i + 1]); }
+    const poly = finishPoly(seq);
+    if (poly.length < 6) continue;
+    const rid = regions.length;
+    regions.push({ id: rid, ownerChain: iv.pi, group: iv.group, pts: poly, pieces: [], hole: false });
+  }
+  const junctionRegion = new Map<number, number>();
+  const cornerByArmA = new Map<string, number>();
+  st.corners.forEach((cs, ci) => cornerByArmA.set(`${cs.ji}|${cs.aArm}`, ci));
+  scene.junctions.forEach((J, ji) => {
+    const list = st.armsOfJ[ji];
+    if (!list || list.length < 2) return;
+    const seq: number[] = [];
+    for (const ai of list) {
+      const armS = st.arms[ai];
+      const ap = st.armPts[ai];
+      const bp: [number, number] = ap.prevFull >= 0 ? stationPt(ap.prevB, ap.prevFull) : borderAtPoint(armS.pi, ap.nextFull >= 0 ? -ap.nextSide : 1, armS.sR);
+      const bn: [number, number] = ap.nextFull >= 0 ? stationPt(ap.nextB, ap.nextFull) : borderAtPoint(armS.pi, ap.prevFull >= 0 ? -ap.prevSide : -1, armS.sR);
+      pushPt(seq, bp[0], bp[1]); pushPt(seq, bn[0], bn[1]);
+      const ci = cornerByArmA.get(`${ji}|${ai}`) ?? -1;
+      if (ci >= 0 && st.corners[ci].ok && fCorners[ci].r > 1e-9) {
+        const fc = fCorners[ci];
+        const aA = Math.atan2(fc.tay - fc.qy, fc.tax - fc.qx);
+        let da = Math.atan2(fc.tby - fc.qy, fc.tbx - fc.qx) - aA;
+        while (da > Math.PI) da -= 2 * Math.PI;
+        while (da < -Math.PI) da += 2 * Math.PI;
+        const steps = Math.max(1, Math.ceil(Math.abs(da) / (Math.PI / 16)));
+        for (let sIdx = 1; sIdx < steps; sIdx++) { const a = aA + (da * sIdx) / steps; pushPt(seq, fc.qx + fc.r * Math.cos(a), fc.qy + fc.r * Math.sin(a)); }
+      }
+    }
+    const poly = finishPoly(seq);
+    if (poly.length < 6) return;
+    const rid = regions.length;
+    junctionRegion.set(ji, rid);
+    regions.push({ id: rid, ownerChain: st.arms[list[0]].pi, group: st.groupOfJ[ji], pts: poly, pieces: [], hole: false });
+  });
+  mark("regions", tPhase); tPhase = performance.now();
+
+  // Pieces: exposed runs (structure's flags), corner arcs, cap runs.
+  const pieces: OutlinePiece[] = [];
+  for (let pi = 0; pi < polys.length; pi++) {
+    for (let bi = 0; bi < 2; bi++) {
+      const b = pi * 2 + bi;
+      const bs = st.borders[b];
+      const stt = bStates[b];
+      const side = bi === 0 ? 1 : -1;
+      const nF = bs.seqPool.length;
+      let startPt = -1; let curRegion = -2; let endPt = -1;
+      const flush = (): void => {
+        if (startPt < 0) return;
+        const piece: OutlinePiece = {
+          kind: "run", chain: pi, side, s0: stt.SA[startPt], s1: stt.SA[endPt],
+          pts: stt.XY.slice(2 * startPt, 2 * (endPt + 1)) as unknown as number[],
+          cpts: stt.CXY.slice(2 * startPt, 2 * (endPt + 1)) as unknown as number[],
+          region: curRegion, corner: -1,
+        };
+        pieces.push(piece);
+        if (curRegion >= 0 && regions[curRegion]) regions[curRegion].pieces.push(pieces.length - 1);
+        startPt = -1;
+      };
+      for (let i = 0; i + 1 < nF; i++) {
+        if (!bs.exposed[i]) { flush(); continue; }
+        const rid = bs.segRegion[i];
+        if (startPt < 0 || rid !== curRegion) { flush(); startPt = i; curRegion = rid; }
+        endPt = i + 1;
+      }
+      flush();
+    }
+  }
+  st.corners.forEach((cs, ci) => {
+    const fc = fCorners[ci];
+    if (!cs.ok || !(fc.r > 1e-9)) return;
+    const aA = Math.atan2(fc.tay - fc.qy, fc.tax - fc.qx);
+    let da = Math.atan2(fc.tby - fc.qy, fc.tbx - fc.qx) - aA;
+    while (da > Math.PI) da -= 2 * Math.PI;
+    while (da < -Math.PI) da += 2 * Math.PI;
+    const steps = Math.max(1, Math.ceil(Math.abs(da) / (Math.PI / 16)));
+    const pts = new Float64Array(2 * (steps + 1));
+    const cpts = new Float64Array(2 * (steps + 1));
+    for (let sIdx = 0; sIdx <= steps; sIdx++) {
+      const a = aA + (da * sIdx) / steps;
+      pts[2 * sIdx] = fc.qx + fc.r * Math.cos(a); pts[2 * sIdx + 1] = fc.qy + fc.r * Math.sin(a);
+      cpts[2 * sIdx] = fc.qx; cpts[2 * sIdx + 1] = fc.qy;
+    }
+    const rid = junctionRegion.get(cs.ji) ?? -1;
+    const piece: OutlinePiece = { kind: "arc", chain: cs.stored.aChain, side: 0, s0: fc.sA, s1: fc.sB, pts: pts as unknown as number[], cpts: cpts as unknown as number[], region: rid, corner: ci };
+    pieces.push(piece);
+    if (rid >= 0 && regions[rid]) regions[rid].pieces.push(pieces.length - 1);
+  });
+  st.caps.forEach((cap, capIdx) => {
+    const arc = capsF[capIdx];
+    const cS = st.stations[cap.station].cS;
+    for (const run of cap.runs) {
+      const pts = arc.xy.slice(2 * run[0], 2 * run[1] + 2);
+      const cpts = new Float64Array(pts.length);
+      for (let i = 0; i < pts.length; i += 2) { cpts[i] = arc.cx; cpts[i + 1] = arc.cy; }
+      pieces.push({ kind: "cap", chain: cap.pi, side: 0, s0: cS, s1: cS, pts: pts as unknown as number[], cpts: cpts as unknown as number[], region: -1, corner: -1 });
+    }
+  });
+  mark("pieces", tPhase); tPhase = performance.now();
+
+  const faceTmp = st.faces.map((f) => {
+    const region = regions[f.rid];
+    let sample: [number, number];
+    if (f.kind === 1) sample = [scene.junctions[f.ji].c[0], scene.junctions[f.ji].c[1]];
+    else { const a = pointAt(polys[f.pi], f.cMid); sample = [a.x, a.y]; }
+    return { ownerChain: f.owner, group: f.group, pts: region ? region.pts : [], sample, hole: false, depth: depthAt(f.owner, f.kind === 1 ? f.armS : f.cMid) };
+  });
+  faceTmp.sort((a, b) => a.depth - b.depth);
+  const faces: OutlineFace[] = faceTmp.map((f) => ({ ownerChain: f.ownerChain, group: f.group, pts: f.pts, sample: f.sample, hole: f.hole }));
+  const cuts: OutlineCut[] = st.cuts.map((c) => {
+    const stt = bStates[c.border];
+    const fi = stt.bs.idxOfFull[c.fullIdx];
+    return { crossing: c.crossing, chain: c.chain, side: c.side, s: fi >= 0 ? stt.SA[fi] : 0, x: fi >= 0 ? stt.XY[2 * fi] : 0, y: fi >= 0 ? stt.XY[2 * fi + 1] : 0, overChain: c.overChain };
+  });
+  const cornerTable: OutlineCorner[] = st.corners.map((cs, ci) => {
+    if (!cs.ok) return { ...cs.stored };
+    const fc = fCorners[ci];
+    return { junction: cs.stored.junction, aChain: cs.stored.aChain, bChain: cs.stored.bChain, ok: true, style: cs.style, theta: fc.theta, r: fc.r, Vx: fc.Vx, Vy: fc.Vy, qx: fc.qx, qy: fc.qy, tax: fc.tax, tay: fc.tay, tbx: fc.tbx, tby: fc.tby };
+  });
+  const diagnostics: string[] = [
+    `eyes ${st.stats.eyeCount} (border cuts ${st.stats.eyeKept}, depth-tie cuts ${st.stats.tieCutCount}), kink self-crossings ${st.stats.kinkCount}`,
+    `crossings in a junction span ${st.stats.crossInJunction}, corner arcs near another thread ${st.stats.arcNearThread}`,
+    `chains ${polys.length}, pieces ${pieces.length}, regions ${regions.length}, faces ${faces.length}, corners ${cornerTable.filter((c) => c.ok).length}/${cornerTable.length} ok, cuts ${cuts.length}, stations ${st.stations.length}`,
+  ];
+  mark("other", tPhase);
+  return { h, W, pieces, regions, faces, corners: cornerTable, cuts, diagnostics };
+}
