@@ -1339,7 +1339,9 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
       while (da < -Math.PI) da += 2 * Math.PI;
       const midA = a0 + da / 2;
       if (Math.cos(midA) * ox + Math.sin(midA) * oy < 0) da = da > 0 ? da - 2 * Math.PI : da + 2 * Math.PI;
-      const steps = Math.max(2, Math.ceil(Math.abs(da) / (Math.PI / 12)));
+      // Step count snapped at integer boundaries: an arc spanning
+      // exactly pi must take the same step count in every frame.
+      const steps = Math.max(2, Math.ceil(Math.abs(da) / (Math.PI / 12) - 1e-9));
       const arc: { x: number; y: number }[] = [];
       for (let i = 0; i <= steps; i++) {
         const a = a0 + (da * i) / steps;
