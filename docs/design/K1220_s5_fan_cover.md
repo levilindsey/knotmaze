@@ -89,3 +89,81 @@ to tapered glyph forks; or clip the fans to the ribbons' footprints.
 
 Append a Handoff to this brief, in the last push: what you built, Done's tables, the sheets to show
 first, anything out of scope you saw, your last SHA. Commit messages carry the record.
+
+## Handoff (S5 run, 2026-11-06; NOT pushed - Done 1, 2 do not hold, and the partial terms fail)
+
+What I built (committed locally as d40fb956 on top of origin/master
+986836e8, plus a cleanup commit; kept as
+.claude/probes/K1220/s5/fix.patch, not pushed):
+
+- fanOnRibbon (junction_field.ts): in the plain look a fan fragment
+  at a tapered glyph fork discards where it lies on a ribbon -
+  within an arm's own half-width (its width profile) of its
+  centreline polyline (the radial profile's swept points), in front
+  of the joint on that arm - so the ribbon beneath shows exactly as
+  with the fans hidden. The border and intro looks, the thread
+  reveal and cover strips keep the field's paint.
+- Where the field still paints, junctionBase picks a covered
+  pixel's arm by that same distance (the later chain winning where
+  ribbons overlap), and a tapered root arm blends its two K620
+  side rows (the twin record's, at the signed offset now carried
+  in its width texels, with which side the C foot lies) by the
+  pixel's signed distance to its centreline. cpuJunctionField in
+  joinery.ts mirrors the choice. Shader budget: junction field
+  37,278 -> ~43,158 (test/render/k320_slim.test.ts).
+
+Done 1 (rest, paintmask.mjs, ink-gated geom mask, >4 levels;
+base / S4 / mine): i_xh3 7071/6253/20, i_xh2 10332/9273/109,
+ai_xh3 3782/3692/0, ai_xh2 5826/5639/1405, ia_xh3 7099/6041/38,
+ia_xh2 4896/5423/11, ii_xh3 ji0 7068/6241/14, ji1 3013/3071/16,
+ii_xh2 ji0 8686/8859/1, ji1 4221/4639/1. NOT met: ai_xh2 keeps
+1405 px on the body ribbon west of its J (the dark bite/gap band:
+the profile's width there claims the stem/root cover it, the
+meshes do not reach it), and 1-109 px at the other forks sit on
+the same west-bite dark gap line (e.g. i_xh3 (1146,1047)-
+(1151,1052)) and the crossing-gap arc spots (max diff 133-139
+at (1273,1092) i_xh3, (1051,1092) ii_xh3 ji0 - cropped in the
+sheets). Pluck and flow were shot (the states run) and are on
+the sheets; paintmask counts for them were not taken (rest
+geometry does not describe the flow frame).
+
+Done 2: bump (fan ink outside the 1 fh closing; base / S4 /
+mine): i_xh3 816/233/219, i_xh2 396/118/110, ai_xh3 789/217/205,
+ai_xh2 2625/2339/2332, ia_xh3 823/233/227, ia_xh2 25/113/106,
+ii_xh3 791/213/203 and 800/221/214, ii_xh2 0/0/0 both. NOT met,
+and ia_xh2 rises over the baseline (106 > 25), so the partial
+push terms fail. Tooth (tooth.mjs: baseline ink, mine
+background, baseline bump excluded): 628-1265 px at the forks
+measured (i_xh3 1254, ai_xh3 1265, ia_xh3 1243, i_xh2 628,
+ai_xh2 666) - the west bite band again: the clip discards the
+fan where the profile says a ribbon covers, the ribbon mesh is
+cut short of there, and a dark bite notch remains (visible on
+the sheets). Closing the last of Done 1 and Done 2 together
+needs the fan clip (and the field's coverage) to use the
+ribbons' true mesh footprint (the SDF tables / junction cut),
+not the centreline profile.
+
+Done 3: MET. Whole-frame diffs at rest vs the baseline: every
+changed pixel within 5 fh of an i fork; a xh3/xh2 0 px, aa xh2
+0, maze x4/cross/loop 0; aa xh3 7 px at an a fork (the same
+sub-8-level specks S3 named).
+
+Done 4: sheets built (.claude/probes/K1220/s5/out/sheets/,
+twenty, baseline over mine). Show first i_xh3_ji0_A.png (the
+baseline's pale teeth against the fused junction; a small dark
+bite sliver remains at the stem's west edge) and
+ai_xh2_ji2_A.png (the worst remaining fork).
+
+npm test: the first full run had 3 timeouts (paint_fx /
+paint_fire and one more) under concurrent browser load; run
+alone after the cap work it is GREEN (220 files, 2887 tests
+passed, 9 skipped) on the rebased tree (d40fb956 + cleanup).
+Still no push (Done 1/2 above), so no deploy was watched.
+
+Out of scope, seen and not touched: the dark gap arc west of
+the stem at the i forks (K1238's area, the residual Done 1
+spots above); the ai_xh2 bump cluster at the box's west edge
+is the neighbouring a fork's fan, as in S4.
+
+Last SHA: the local fix commit (see fix.patch in the probe
+folder); nothing was pushed to master.
