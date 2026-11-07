@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1248.
+Next free ID: K1249.
 
 ## Waiting on Levi
 
@@ -1720,18 +1720,20 @@ Every other item below waits on the trigger it names.
   performance (def median 396 ms vs 3 ms target); per-spot app sheets beside fbb/today look need a stable
   world-point camera; border-band outside misses on close parallel threads; eye depth-tie path exercised only
   by construction.
-- **K1246** · K1240 S3b Done 2: corner radius must follow the frame (gate recompute). S3b frame solves
-  cuts/V/tangents from the frame (cuts match fresh exactly, def max 0.0000), but r only scales by the frame
-  angle. Moved exact at 0.1h fails fresh tolerances on 10/12 scenes (def A over2 242 vs fresh 22; 132/386
-  corners |dq|>0.005 on def 0.1h). Fresh r is the builder's gate integral (margin/steep/cap/root over 32
-  growth nodes); recomputing per frame needs marginOf per node. Tried and reverted: direct Newton to q, wide
-  foot windows, endpoint-gate ratio correction. Evidence: .claude/probes/K1240/out/s3b/move0.1_exact_*.json vs
-  fresh0.1_exact_*.json; Handoff in docs/design/K1240_s3b_frame_follows.md.
-- **K1247** · K1240 S3b Done 3: frame median 12.9-15.0 ms on def (locked), target 3 ms. Locked bench via
-  run_locked_s3b.ps1 -Script s3b_bench.ts: def med 12.90/14.96 ms in two runs, p95 16-40 ms. Unlocked profile:
-  corners ~3.6, offsets ~2.2, setup ~1.4, crossingCuts ~1.2, regions ~0.9 ms. Corners are builder-fidelity
-  tracked growth; cheaper foot/radius schemes moved the exact p99 in every experiment. Evidence:
-  .claude/probes/K1240/out/s3b/s3_bench.json.
+- **K1247** · K1240 S3b Done 3: frame cost, target ≤3 ms median on def. After the K1246 fix (gate
+  integral + frame exposure, 4db4a713) the locked bench reads def frame med 59.1 ms (machine contended;
+  structure medians moved 444-573 ms between runs): corners 20.7, exposure 23.3, setup 4.5, offsets 3.2 ms.
+  Needs algorithmic cuts (incremental gate evaluation, spatial candidate index), gated on still exact
+  staying 24/24. Evidence: .claude/probes/K1240/out/s3b/s3_bench.json; Handoff continued in
+  docs/design/K1240_s3b_frame_follows.md.
+- **K1248** · K1240 S3b Done 2 residual: moved exposure/run partition. Frame exposure is reclassified per seq
+  segment (midpoint, build-recorded covering candidates, frame trim spans); corners/cuts/pieces geometry
+  follow fresh exactly, but moved 0.1h over2 still exceeds fresh on 19/24 rows (def A 35 vs 20, ring A 68 vs
+  53, g41_user_tw64 A 247 vs 209; p99 deltas ≈ 0). Builder classifies every full segment from a fresh grid;
+  slivers/boundary segments flip at seq resolution. At 0.5h worse (def A 234 vs 54). Ideas: sub-seq candidate
+  records at full resolution, or record covering grid candidates per segment. Evidence:
+  .claude/probes/K1240/out/s3b/move*_exact_*.json vs fresh*_exact_*.json; Handoff continued in
+  docs/design/K1240_s3b_frame_follows.md.
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2041,6 +2043,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1246** · Corner radius now follows the frame: V feet are the builder's global footArm (estD ± 4h) search and r is the 32-node gate integral recomputed per frame (margin/steep/slack/root). Moved def: 386 corners, 0 with |Δr|/|Δq| > 0.005 vs fresh (was 132); frame integral matches builder r bit-for-bit on the diagnosed corner. Residual moved over2 is exposure partition, filed separately. Done in 4db4a713 (2026-11-06).
 - **K1239** · K868's scene export checked against the old ink: accurate. On-screen anchored ends now get their caps. The field's crossings differ from the old ink by K868's design (no gaps), so IoU against the old ink was the wrong target; the one stroke the field drops went to K1040 S4d. Done in b5d9c9c5 (2026-11-06).
 - **K1228** · Cross ji 51's inner-turn notch: a run of folding samples collapses its inner vertices onto the legs' inner-offset crossing, so R < h turns cover the half-width (0 background px, 0 strip flips on cross, loop and x4; pinned by test/render/ribbon_inner.test.ts). Done in ffbd64f3 (2026-11-06).
 - **K1225** · Cursive word-end tails: s and p as J3l or J3lc, and the new b, v, w, o and f tails (`docs/asks/K1225.md`; K863 J3l, 6c4ae88b). Dropped: Levi answered 2026-11-06: J3l for s and p; b, v and w should turn out of their cusp about ESE and swoop up (at a word's end and into high-entry letters; into low-entry ones the sharp cusp stays, the swoop starts later); o's tail hugs the o about 10 deg further; f's tail reaches the baseline and leaves along its pre-cusp stroke, to fuse into a spur. K863 J3m builds it (docs/design/K863_cursive_j3m.md) (2026-11-06).
