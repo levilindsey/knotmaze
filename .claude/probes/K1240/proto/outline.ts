@@ -164,6 +164,13 @@ function dS(p: Poly, a: number, b: number): number {
   if (p.closed && p.len > 0) { d %= p.len; if (d > p.len / 2) d -= p.len; if (d < -p.len / 2) d += p.len; }
   return d;
 }
+// The s a fraction t along a border segment from s a to s b. A closed
+// border's last segment runs from s near len back to s0, so a plain
+// a + (b - a) t put a point there at a garbage s (fat's x0: 49.31 for a
+// point at 253.4), which ordered its crossing's entry after its exit.
+function lerpS(p: Poly, a: number, b: number, t: number): number {
+  return normS(p, a + dS(p, a, b) * t);
+}
 function segOfS(p: Poly, s: number): { k: number; t: number } {
   const u = normS(p, s);
   if (p.n === 0) return { k: 0, t: 0 };
@@ -851,7 +858,7 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
         const b0 = PB[k]; const b1 = PB[k + 1];
         const hit = segInt(a0.x, a0.y, a1.x, a1.y, b0.x, b0.y, b1.x, b1.y);
         if (!hit) continue;
-        const sAh = a0.s + (a1.s - a0.s) * hit.t; const sBh = b0.s + (b1.s - b0.s) * hit.u;
+        const sAh = lerpS(polys[A.pi], a0.s, a1.s, hit.t); const sBh = lerpS(polys[B.pi], b0.s, b1.s, hit.u);
         const dA = dSigned(A, sAh); const dB = dSigned(B, sBh);
         if (dA < lo || dA > hi || dB < lo || dB > hi) continue;
         if (dA + dB < bestD) {
@@ -1234,8 +1241,8 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
         const hit = segInt(a.x, a.y, b.x, b.y, c.x, c.y, d.x, d.y);
         if (!hit) continue;
         const px = a.x + (b.x - a.x) * hit.t; const py = a.y + (b.y - a.y) * hit.t;
-        const uRef = mkRef(U, uSide, px, py, a.s + (b.s - a.s) * hit.t, { k: 4, a, b, c, d, t: hit.t, otherPi: O, otherSide: oSide, eye: -1 });
-        const oRef = mkRef(O, oSide, px, py, c.s + (d.s - c.s) * hit.u, { k: 4, a: c, b: d, c: a, d: b, t: hit.u, otherPi: U, otherSide: uSide, eye: -1 });
+        const uRef = mkRef(U, uSide, px, py, lerpS(pU, a.s, b.s, hit.t), { k: 4, a, b, c, d, t: hit.t, otherPi: O, otherSide: oSide, eye: -1 });
+        const oRef = mkRef(O, oSide, px, py, lerpS(polys[O], c.s, d.s, hit.u), { k: 4, a: c, b: d, c: a, d: b, t: hit.u, otherPi: U, otherSide: uSide, eye: -1 });
         addEv(U, uSide, i, hit.t, uRef);
         addEv(O, oSide, j, hit.u, oRef);
         cands.push({ uSide, oSide, x: px, y: py, uRef, oRef, dc: Math.hypot(px - cp.x, py - cp.y) });
@@ -1271,6 +1278,8 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
       for (const c of [cl, crd]) { cuts.push({ crossing: xi, chain: U, side: c.uSide, s: c.uRef.s, x: c.x, y: c.y, overChain: O }); cutRefs.push({ border: U * 2 + bIdx(c.uSide), ref: c.uRef }); }
     }
     if (pairStations.length === 2) crossPairs.push([pairStations[0], pairStations[1]]);
+    const xdbg = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.K1240_XDBG;
+    if (xdbg && xdbg.split(",").includes(String(xi))) diagnostics.push(`xdbg ${xi} U${U} O${O} cp(${cp.x.toFixed(3)},${cp.y.toFixed(3)}) sU ${cp.sUnder.toFixed(3)} th ${cp.theta.toFixed(3)} R ${R.toFixed(3)}: ${[...cands, ...synth].map((c) => `u${c.uSide}o${c.oSide}(${c.x.toFixed(3)},${c.y.toFixed(3)}) s${c.uRef.s.toFixed(3)} dc${c.dc.toFixed(3)}${synth.includes(c) ? "*" : ""}`).join(" | ")}`);
     // The over chain is also stationed where it enters and leaves the
     // under's tube (the same four intersections, paired by the under's
     // side), so its strip is tiled at the crossing instead of
@@ -1387,8 +1396,8 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
           const hit = segInt(a.x, a.y, b.x, b.y, c.x, c.y, d.x, d.y);
           if (!hit) continue;
           const px = a.x + (b.x - a.x) * hit.t; const py = a.y + (b.y - a.y) * hit.t;
-          addEv(e.pi, sa, i, hit.t, mkRef(e.pi, sa, px, py, a.s + (b.s - a.s) * hit.t, { k: 4, a, b, c, d, t: hit.t, otherPi: e.qi, otherSide: sb, eye: eyeCount - 1 }));
-          addEv(e.qi, sb, j, hit.u, mkRef(e.qi, sb, px, py, c.s + (d.s - c.s) * hit.u, { k: 4, a: c, b: d, c: a, d: b, t: hit.u, otherPi: e.pi, otherSide: sa, eye: eyeCount - 1 }));
+          addEv(e.pi, sa, i, hit.t, mkRef(e.pi, sa, px, py, lerpS(polys[e.pi], a.s, b.s, hit.t), { k: 4, a, b, c, d, t: hit.t, otherPi: e.qi, otherSide: sb, eye: eyeCount - 1 }));
+          addEv(e.qi, sb, j, hit.u, mkRef(e.qi, sb, px, py, lerpS(polys[e.qi], c.s, d.s, hit.u), { k: 4, a: c, b: d, c: a, d: b, t: hit.u, otherPi: e.pi, otherSide: sa, eye: eyeCount - 1 }));
           found++;
         }
       }
@@ -1521,7 +1530,7 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
           const last = out[out.length - 1];
           if (e.t <= 1e-9 || Math.hypot(e.ref.x - last.x, e.ref.y - last.y) < 1e-12) { e.ref.idx = out.length - 1; continue; }
           if (Math.hypot(e.ref.x - last.x, e.ref.y - last.y) < 1e-12) { e.ref.idx = out.length - 1; continue; }
-          out.push({ x: e.ref.x, y: e.ref.y, s: old[i].s + (old[i + 1].s - old[i].s) * e.t, rec: e.ref.rec, ev: e.ref });
+          out.push({ x: e.ref.x, y: e.ref.y, s: lerpS(polys[pi], old[i].s, old[i + 1].s, e.t), rec: e.ref.rec, ev: e.ref });
           e.ref.idx = out.length - 1;
           e.ref.s = out[out.length - 1].s;
         }
