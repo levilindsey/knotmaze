@@ -1942,81 +1942,8 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
   });
   const capCoverPi: Int16Array[] = capInfos.map((ci) => new Int16Array(Math.max(0, ci.arc.length - 1)).fill(-1));
   const capCoverS: Float32Array[] = capInfos.map((ci) => new Float32Array(Math.max(0, ci.arc.length - 1)));
-  if (frameMode) {
-    // One cap piece per cap (the diagram's list): exposed arc points
-    // in order, covered arc points shrunk onto the nearest exposed
-    // arc point, a fully covered cap shrunk to one point on its
-    // covering tube's edge. Coverage within 1e-9 of the tube edge
-    // counts as exposed, so a knife-edge segment cannot flip the
-    // piece under a rigid motion.
-    for (let capIdx = 0; capIdx < capInfos.length; capIdx++) {
-      const ci = capInfos[capIdx];
-      const pi = ci.station.pi;
-      const nSeg = Math.max(0, ci.arc.length - 1);
-      const cov: boolean[] = [];
-      let collapsePt: { x: number; y: number } | null = null;
-      for (let i = 0; i < nSeg; i++) {
-        const a = ci.arc[i]; const b = ci.arc[i + 1];
-        const mx = (a.x + b.x) / 2; const my = (a.y + b.y) / 2;
-        let c = covering(mx, my, pi, ci.station.cS);
-        if (c && coverPickPi.length > 0) {
-          const cp = coverPickPi[coverPickPi.length - 1]; const cs2 = coverPickS[coverPickS.length - 1];
-          const f = pointAt(polys[cp], cs2);
-          const d = Math.hypot(mx - f.x, my - f.y);
-          if (d > h - 1e-9) c = false;
-          else if (!collapsePt) {
-            const dx = mx - f.x; const dy = my - f.y; const dl = Math.sqrt(dx * dx + dy * dy);
-            if (dl > 1e-12) collapsePt = { x: f.x + (h * dx) / dl, y: f.y + (h * dy) / dl };
-          }
-        }
-        cov.push(c);
-      }
-      const expPt: boolean[] = ci.arc.map((_, idx) => (idx > 0 && !cov[idx - 1]) || (idx < nSeg && !cov[idx]));
-      let pts: number[]; let cpts: number[];
-      if (!expPt.some((v) => v)) {
-        // Fully covered: shrink onto this chain's nearest exposed
-        // border segment midpoint (where the thread emerges).
-        const am = ci.arc[Math.floor(ci.arc.length / 2)];
-        let p = collapsePt ?? am;
-        let bd = Infinity;
-        for (const B of borders[pi]) {
-          const bi2 = B.side === 1 ? 0 : 1;
-          const expB = exposed[pi][bi2];
-          const ptsB = B.pts;
-          let lo = 0; let hi = ptsB.length - 1;
-          while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (ptsB[mid].s <= ci.station.cS) lo = mid; else hi = mid; }
-          for (let q = Math.max(0, lo - 96); q <= Math.min(ptsB.length - 1, lo + 96); q++) {
-            if (!(expB[Math.min(q, expB.length - 1)] || (q > 0 && expB[q - 1]))) continue;
-            const d = (ptsB[q].x - am.x) * (ptsB[q].x - am.x) + (ptsB[q].y - am.y) * (ptsB[q].y - am.y);
-            if (d < bd) { bd = d; p = { x: ptsB[q].x, y: ptsB[q].y }; }
-          }
-          // Diagram-fixed side first (side +1, borders[pi][0]): the
-          // collapse choice cannot flip between the chain's two
-          // borders when the scene rotates.
-          if (bd < Infinity) break;
-        }
-        pts = [p.x, p.y]; cpts = [ci.cx, ci.cy];
-      } else {
-        pts = []; cpts = [];
-        for (let idx = 0; idx < ci.arc.length; idx++) {
-          let src = idx;
-          if (!expPt[idx]) {
-            let best = -1; let bd = Infinity;
-            for (let q = 0; q < expPt.length; q++) if (expPt[q] && Math.abs(q - idx) < bd) { bd = Math.abs(q - idx); best = q; }
-            src = best >= 0 ? best : idx;
-          }
-          const pt = ci.arc[src];
-          const l = pts.length;
-          if (l >= 2 && pts[l - 2] === pt.x && pts[l - 1] === pt.y) continue;
-          pts.push(pt.x, pt.y); cpts.push(ci.cx, ci.cy);
-        }
-        if (pts.length < 2) { const p = ci.arc[0]; pts = [p.x, p.y]; cpts = [ci.cx, ci.cy]; }
-      }
-      pieces.push({ kind: "cap", chain: pi, side: 0, s0: ci.station.cS, s1: ci.station.cS, pts, cpts, region: -1, corner: -1 });
-    }
-  }
   for (let capIdx = 0; capIdx < capInfos.length; capIdx++) { const ci = capInfos[capIdx];
-    if (frameMode) break;
+    // Frame mode also uses these runs: the builder's own cap pieces.
     const pi = ci.station.pi; let curStart = -1; let curEnd = -1;
     let cur: OutlinePiece | null = null;
     const flush = (): void => { if (cur && cur.pts.length >= 4) { pieces.push(cur); capRuns[capIdx].push([curStart, curEnd]); } cur = null; };
