@@ -1,3 +1,6 @@
+// K1240 S3f: structure() emits the piece list from the diagram alone
+// (runs between diagram stations, one arc per corner, one cap per
+// open end); frame() computes points only for those pieces.
 // K1240 S3c: decide once, follow the frame, cheaply. `structure(scene)`
 // runs S2's structural builder once and decides everything discrete:
 // which pieces exist (runs bounded by cuts, corner tangent points and
@@ -1751,11 +1754,177 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
   // Pieces: exposed border runs, corner arcs, caps.
   const pieces: OutlinePiece[] = [];
   const footFlat = (pi: number, s: number): [number, number] => { const a = pointAt(polys[pi], s); return [a.x, a.y]; };
+  if (frameMode && dg) {
+    // S3f: points only for structure()'s pieces. A run's points are
+    // its border between its two end features; when the ends have
+    // passed each other the run is one point where they met (the
+    // ends' midpoint). No pass decides whether a border is covered.
+    const ivByKeys = new Map<string, Interval>();
+    for (const iv of intervals) ivByKeys.set(iv.A.key + ">" + iv.B.key, iv);
+    for (const dp of dg.piecesD) {
+      if (dp.kind === "run") {
+        const ivD = dg.intervalsD[dp.interval];
+        const keyA = dg.stationsD[ivD.aSt].key; const keyB = dg.stationsD[ivD.bSt].key;
+        const synthStation = (dgs: DiagramStation): Station => {
+          const p = polys[dgs.pi];
+          let sF = p.s0;
+          if (dgs.kind === "cross" || dgs.kind === "crossOver") { const cp = crossPt[dgs.crossing]; if (cp) sF = dgs.pi === cp.under ? cp.sUnder : cp.sOver; }
+          else if (dgs.kind === "junction") { const a = arms[dgs.arm]; if (a) sF = a.sR; }
+          else if (dgs.kind === "capEnd") sF = p.s0 + p.len;
+          const mk = (sideW: number): PtRef => {
+            const bp = borderPointAt(dgs.pi, sideW, sF);
+            const B = borders[dgs.pi][bIdx(sideW)];
+            let best = 0; let bd = Infinity;
+            for (let i = 0; i < B.pts.length; i++) { const d = Math.hypot(B.pts[i].x - bp.x, B.pts[i].y - bp.y); if (d < bd) { bd = d; best = i; } }
+            return { pi: dgs.pi, side: sideW, x: bp.x, y: bp.y, s: B.pts[best] ? B.pts[best].s : sF, idx: best };
+          };
+          return { pi: dgs.pi, cS: sF, left: mk(1), right: mk(-1), kind: dgs.kind, key: dgs.key };
+        };
+        let stA = stationByKey.get(keyA); if (!stA) stA = synthStation(dg.stationsD[ivD.aSt]);
+        let stB = stationByKey.get(keyB); if (!stB) stB = synthStation(dg.stationsD[ivD.bSt]);
+        const pi = dp.chain; const side = dp.side; const bi = bIdx(side);
+        let pts: number[] = []; let cpts: number[] = []; let s0 = 0; let s1 = 0; let rid = -1;
+        const biv = ivByKeys.get(keyA + ">" + keyB);
+        if (biv && biv.region >= 0) rid = biv.region;
+        if (!stA || !stB) {
+          const sKey = dg.stationsD[ivD.aSt].sKey;
+          const p = polys[pi];
+          const sFb = sKey <= -1e11 ? p.s0 : sKey >= 1e11 ? p.s0 + p.len : sKey;
+          const bp = borderPointAt(pi, side, sFb);
+          pts = [bp.x, bp.y]; const f = footFlat(pi, sFb); cpts = [f[0], f[1]]; s0 = sFb; s1 = sFb;
+        } else {
+          const fromRef = side === 1 ? stA.left : stA.right;
+          const toRef = side === 1 ? stB.left : stB.right;
+          const B = borders[pi][bi];
+          const fromPt = B.pts[Math.min(B.pts.length - 1, Math.max(0, fromRef.idx))];
+          const toPt = B.pts[Math.min(B.pts.length - 1, Math.max(0, toRef.idx))];
+          let seqPts: BPt[] = [];
+          let seqSegs: number[] = [];
+          const p = polys[pi];
+          let plen = 0;
+          let passed = !fromPt || !toPt;
+          if (ivD.aSt === ivD.bSt) {
+            seqPts = B.pts.slice();
+            for (let i = 1; i < seqPts.length; i++) plen += Math.hypot(seqPts[i].x - seqPts[i - 1].x, seqPts[i].y - seqPts[i - 1].y);
+          } else if (fromPt && toPt) {
+            const fwd = borderSeq(pi, side, fromRef.idx, toRef.idx, true);
+            const back = borderSeq(pi, side, fromRef.idx, toRef.idx, false);
+            const lenOf = (pts: BPt[]): number => { let L = 0; for (let i = 1; i < pts.length; i++) L += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y); return L; };
+            const plenF = lenOf(fwd.pts); const plenB = lenOf(back.pts);
+            let dF = toRef.s - fromRef.s;
+            if (p.closed && p.len > 0) dF = ((dF % p.len) + p.len) % p.len;
+            const dB = p.closed && p.len > 0 ? p.len - dF : -dF;
+            const pickBack = Math.abs(plenB - Math.abs(dB)) < Math.abs(plenF - Math.abs(dF));
+            seqPts = pickBack ? back.pts : fwd.pts; seqSegs = pickBack ? back.segs : fwd.segs; plen = pickBack ? plenB : plenF;
+            const dPick = Math.abs(pickBack ? dB : dF);
+            passed = seqPts.length < 2 || (plen > dPick + 4 * h && plen > 1.5 * dPick + 2 * h);
+          }
+          if (passed) {
+            const mx = fromPt && toPt ? (fromPt.x + toPt.x) / 2 : fromPt ? fromPt.x : toPt ? toPt.x : 0;
+            const my = fromPt && toPt ? (fromPt.y + toPt.y) / 2 : fromPt ? fromPt.y : toPt ? toPt.y : 0;
+            pts = [mx, my]; const f = footFlat(pi, fromRef.s); cpts = [f[0], f[1]]; s0 = fromRef.s; s1 = fromRef.s;
+          } else {
+            // Covered points shrink onto the nearest exposed
+            // vertex of this run; a fully covered run is one
+            // point on the covering outline. One piece throughout.
+            const exp = exposed[pi][bi];
+            const aligned = seqSegs.length === seqPts.length - 1;
+            const segExp: boolean[] = [];
+            for (let m = 0; m + 1 < seqPts.length; m++) segExp.push(aligned ? !!exp[seqSegs[m]] : true);
+            const pushRunPt = (pt: BPt): void => { pts.push(pt.x, pt.y); const f = footFlat(pi, pt.s); cpts.push(f[0], f[1]); };
+            let firstExp = -1; let lastExpEnd = -1;
+            for (let m = 0; m < segExp.length; m++) if (segExp[m]) { if (firstExp < 0) firstExp = m; lastExpEnd = m; }
+            if (firstExp < 0) {
+              const segIdx = aligned && seqSegs.length ? seqSegs[0] : -1;
+              if (segIdx >= 0 && collapseOk[pi][bi][segIdx]) { pts.push(collapseX[pi][bi][segIdx], collapseY[pi][bi][segIdx]); const f = footFlat(pi, seqPts[0].s); cpts.push(f[0], f[1]); s0 = seqPts[0].s; s1 = seqPts[0].s; }
+              else if (seqPts.length) {
+                let bx = seqPts[0].x; let by = seqPts[0].y; let bd = Infinity;
+                const expB = exposed[pi][bi]; const BP = borders[pi][bi].pts;
+                for (let q = 0; q < expB.length; q++) { if (!expB[q]) continue; const cx2 = (BP[q].x + BP[q + 1].x) / 2; const cy2 = (BP[q].y + BP[q + 1].y) / 2; const d = (cx2 - seqPts[0].x) * (cx2 - seqPts[0].x) + (cy2 - seqPts[0].y) * (cy2 - seqPts[0].y); if (d < bd) { bd = d; bx = cx2; by = cy2; } }
+                pts.push(bx, by); const f = footFlat(pi, seqPts[0].s); cpts.push(f[0], f[1]); s0 = seqPts[0].s; s1 = seqPts[0].s;
+              }
+            } else {
+              let gapPushed = false;
+              for (let m = 0; m < seqPts.length; m++) {
+                const segBefore = m > 0 ? segExp[m - 1] : false;
+                const segAfter = m < segExp.length ? segExp[m] : false;
+                if (segBefore || segAfter) { pushRunPt(seqPts[m]); gapPushed = false; continue; }
+                if (!gapPushed && aligned && m < seqSegs.length && collapseOk[pi][bi][seqSegs[m]]) {
+                  pts.push(collapseX[pi][bi][seqSegs[m]], collapseY[pi][bi][seqSegs[m]]);
+                  const f = footFlat(pi, seqPts[m].s); cpts.push(f[0], f[1]);
+                  gapPushed = true;
+                }
+              }
+              if (seqPts.length) { s0 = seqPts[0].s; s1 = seqPts[seqPts.length - 1].s; }
+            }
+                        if (rid < 0 && seqSegs.length) rid = segRegion[pi][bi][seqSegs[0]] ?? -1;
+          }
+        }
+        const piece: OutlinePiece = { kind: "run", chain: pi, side, s0, s1, pts, cpts, region: rid, corner: -1 };
+        pieces.push(piece);
+        if (rid >= 0 && regions[rid]) regions[rid].pieces.push(pieces.length - 1);
+      } else if (dp.kind === "arc") {
+        const cw = cornerWork[dp.corner];
+        if (!cw) continue;
+        const rid = junctionRegion.get(cw.ji) ?? -1;
+        let pts: number[] = []; let cpts: number[] = [];
+        if (cw.ok && cw.r > 1e-9) {
+          const aA = Math.atan2(cw.tay - cw.qy, cw.tax - cw.qx);
+          let da = Math.atan2(cw.tby - cw.qy, cw.tbx - cw.qx) - aA;
+          while (da > Math.PI) da -= 2 * Math.PI;
+          while (da < -Math.PI) da += 2 * Math.PI;
+          const steps = Math.max(1, Math.ceil(Math.abs(da) / (Math.PI / 16)));
+          for (let s = 0; s <= steps; s++) { const a = aA + (da * s) / steps; pts.push(cw.qx + cw.r * Math.cos(a), cw.qy + cw.r * Math.sin(a)); cpts.push(cw.qx, cw.qy); }
+        } else if (!cw.ok) {
+          let ax = cw.qx; let ay = cw.qy;
+          for (const nci of [dp.corner - 1, dp.corner + 1]) {
+            const nc = cornerWork[nci];
+            if (!nc || nc.ji !== cw.ji || !nc.ok || !(nc.r > 1e-9)) continue;
+            if (nc.aArm === cw.bArm) { ax = nc.tax; ay = nc.tay; break; }
+            if (nc.bArm === cw.aArm) { ax = nc.tbx; ay = nc.tby; break; }
+          }
+          pts = [ax, ay]; cpts = [cw.qx, cw.qy];
+        } else { pts = [cw.qx, cw.qy]; cpts = [cw.qx, cw.qy]; }
+        const piece: OutlinePiece = { kind: "arc", chain: cw.aChain, side: 0, s0: cw.sA, s1: cw.sB, pts, cpts, region: rid, corner: dp.corner };
+        pieces.push(piece);
+        if (rid >= 0 && regions[rid]) regions[rid].pieces.push(pieces.length - 1);
+      } else {
+        const ci = capInfos[dp.cap];
+        if (!ci) continue;
+        const pts: number[] = []; const cpts: number[] = [];
+        {
+          const segExpC: boolean[] = [];
+          for (let i = 0; i + 1 < ci.arc.length; i++) {
+            const mx = (ci.arc[i].x + ci.arc[i + 1].x) / 2; const my = (ci.arc[i].y + ci.arc[i + 1].y) / 2;
+            segExpC.push(!covering(mx, my, dp.chain, ci.station.cS));
+          }
+          const firstExpC = segExpC.indexOf(true);
+          if (firstExpC < 0) { pts.push(ci.arc[0].x, ci.arc[0].y); cpts.push(ci.cx, ci.cy); }
+          else {
+            let lastExpEndC = -1;
+            for (let m = 0; m < segExpC.length; m++) if (segExpC[m]) lastExpEndC = m;
+            const pushCapPt = (pt: { x: number; y: number }): void => {
+              pts.push(pt.x, pt.y); cpts.push(ci.cx, ci.cy);
+            };
+            for (let m = 0; m < ci.arc.length; m++) {
+              const segBefore = m > 0 ? segExpC[m - 1] : false;
+              const segAfter = m < segExpC.length ? segExpC[m] : false;
+              if (segBefore || segAfter) { pushCapPt(ci.arc[m]); continue; }
+              pushCapPt(ci.arc[m <= firstExpC ? firstExpC : lastExpEndC + 1]);
+            }
+          }
+        }
+        const piece: OutlinePiece = { kind: "cap", chain: dp.chain, side: 0, s0: ci.station.cS, s1: ci.station.cS, pts, cpts, region: -1, corner: -1 };
+        pieces.push(piece);
+      }
+    }
+  }
   borders.forEach((bs, pi) => {
     bs.forEach((B, bi) => {
       const side = bi === 0 ? 1 : -1;
       const exp = exposed[pi][bi];
-      if (frameMode) {
+      if (frameMode) { return; }
+      if (false) {
         // One piece per stretch of border between feature points
         // (cuts, corner tangents, station points, fold points): the
         // diagram's piece list for this border. Inside a stretch,
@@ -1887,6 +2056,7 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
     });
   });
   cornerWork.forEach((cw, ci) => {
+    if (frameMode) return;
     if (frameMode && (!cw.ok || !(cw.r > 1e-9))) {
       const rid = junctionRegion.get(cw.ji) ?? -1;
       // Collapse onto the nearest exposed border point of the two
@@ -1943,6 +2113,7 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
   const capCoverPi: Int16Array[] = capInfos.map((ci) => new Int16Array(Math.max(0, ci.arc.length - 1)).fill(-1));
   const capCoverS: Float32Array[] = capInfos.map((ci) => new Float32Array(Math.max(0, ci.arc.length - 1)));
   for (let capIdx = 0; capIdx < capInfos.length; capIdx++) { const ci = capInfos[capIdx];
+    if (frameMode) continue;
     // Frame mode also uses these runs: the builder's own cap pieces.
     const pi = ci.station.pi; let curStart = -1; let curEnd = -1;
     let cur: OutlinePiece | null = null;
@@ -2250,6 +2421,9 @@ export interface OutlineStructure {
   stats: { eyeCount: number; eyeTotal: number; eyeKept: number; eyeMaxKept: number; tieCutCount: number; kinkCount: number; crossInJunction: number; arcNearThread: number; segXTotal: number; segXKept: number; nonUniform: number; recMissing: number };
 }
 
+export interface DiagramStation { pi: number; key: string; kind: string; sKey: number; crossing: number; arm: number }
+export interface DiagramInterval { pi: number; aSt: number; bSt: number; discard: boolean }
+export interface DiagramPiece { kind: PieceKind; chain: number; side: number; corner: number; interval: number; cap: number }
 export interface DiagramStructure {
   chainIds: number[];
   closed: boolean[];
@@ -2259,7 +2433,10 @@ export interface DiagramStructure {
   armsOfJ: number[][];
   corners: { ji: number; aArm: number; bArm: number; style: number }[];
   groupOfJ: number[];
-  caps: { pi: number; atEnd: boolean }[];
+  caps: { pi: number; atEnd: boolean; capInfo?: number }[];
+  stationsD: DiagramStation[];
+  intervalsD: DiagramInterval[];
+  piecesD: DiagramPiece[];
 }
 
 /** The diagram of a scene: chains and their point counts, crossings
@@ -2333,7 +2510,80 @@ export function diagramOf(scene: SceneIn): DiagramStructure {
     return gidOf.get(r)!;
   });
   const caps: DiagramStructure["caps"] = [];
-  scene.chains.forEach((c, pi) => { if (!c.closed) { caps.push({ pi, atEnd: false }); caps.push({ pi, atEnd: true }); } });
+  const capInfoOf: number[] = [];
+  scene.chains.forEach((c, pi) => {
+    if (c.closed) return;
+    for (const atEnd of [false, true]) {
+      const infoIdx = capInfoOf.length; capInfoOf.push(infoIdx);
+      const joined = arms.some((a) => {
+        if (a.pi !== pi || a.kind !== "end") return false;
+        const xa = scene.junctions[a.ji] && scene.junctions[a.ji].arms[a.ei];
+        return xa ? (atEnd ? xa.s !== 0 : xa.s === 0) : false;
+      });
+      if (!joined) caps.push({ pi, atEnd, capInfo: infoIdx } as { pi: number; atEnd: boolean });
+    }
+  });
+  // S3f: the piece list is the diagram's. Stations are the diagram
+  // features that delimit runs (crossing cuts, junction arms, open
+  // ends, the closed seam) in the builder's key order; sKey orders
+  // them along their chain from the scene's own s data (which pass
+  // and root order, never a chain point coordinate).
+  const stationsD: DiagramStation[] = [];
+  scene.crossings.forEach((x, xi) => {
+    const aPi = idxOf.get(x.a.chain); const bPi = idxOf.get(x.b.chain);
+    if (aPi === undefined || bPi === undefined) return;
+    const underPi = x.over === "a" ? bPi : aPi;
+    const overPi = x.over === "a" ? aPi : bPi;
+    const sUnder = x.over === "a" ? x.b.s : x.a.s;
+    const sOver = x.over === "a" ? x.a.s : x.b.s;
+    for (const oSide of [1, -1]) stationsD.push({ pi: underPi, key: "x" + xi + "|" + oSide, kind: "cross", sKey: sUnder, crossing: xi, arm: -1 });
+    for (const uSide of [1, -1]) stationsD.push({ pi: overPi, key: "xo" + xi + "|" + uSide, kind: "crossOver", sKey: sOver, crossing: xi, arm: -1 });
+  });
+  arms.forEach((a, ai) => {
+    const j = scene.junctions[a.ji];
+    stationsD.push({ pi: a.pi, key: "j" + a.ji + "|a" + ai, kind: "junction", sKey: j && j.arms[a.ei] ? j.arms[a.ei].s : 0, crossing: -1, arm: ai });
+  });
+  scene.chains.forEach((c, pi) => {
+    if (c.closed) stationsD.push({ pi, key: "seam" + pi, kind: "seam", sKey: 0, crossing: -1, arm: -1 });
+    else {
+      stationsD.push({ pi, key: "cap" + pi + "|0", kind: "capStart", sKey: -1e12, crossing: -1, arm: -1 });
+      stationsD.push({ pi, key: "cap" + pi + "|1", kind: "capEnd", sKey: 1e12, crossing: -1, arm: -1 });
+    }
+  });
+  const intervalsD: DiagramInterval[] = [];
+  const perChainIntervals: number[][] = scene.chains.map(() => []);
+  scene.chains.forEach((c, pi) => {
+    const list = stationsD.map((s, i) => ({ s, i })).filter((q) => q.s.pi === pi).sort((a, b) => a.s.sKey - b.s.sKey).map((q) => q.i);
+    const m = list.length;
+    const isDiscard = (ia: number, ib: number): boolean => {
+      const A = stationsD[ia]; const B = stationsD[ib];
+      if (A.kind === "cross" && B.kind === "cross" && A.crossing >= 0 && A.crossing === B.crossing) return true;
+      if (A.kind === "junction" && B.kind === "junction") {
+        const a1 = arms[A.arm]; const a2 = arms[B.arm];
+        if (a1 && a2 && a1.ji === a2.ji && a1.kind === "through" && a2.kind === "through") {
+          const xa = scene.junctions[a1.ji] && scene.junctions[a1.ji].arms[a1.ei];
+          const xb = scene.junctions[a2.ji] && scene.junctions[a2.ji].arms[a2.ei];
+          if (xa && xb && xa.s === xb.s) return true;
+        }
+      }
+      const jst = A.kind === "junction" ? A : B.kind === "junction" ? B : null;
+      const cst = A.kind.startsWith("cap") ? A : B.kind.startsWith("cap") ? B : null;
+      if (jst && cst && jst.pi === cst.pi) { const ja = arms[jst.arm]; if (ja && ja.kind === "end") return true; }
+      return false;
+    };
+    if (c.closed) {
+      if (m === 1) { perChainIntervals[pi].push(intervalsD.length); intervalsD.push({ pi, aSt: list[0], bSt: list[0], discard: false }); }
+      else for (let k = 0; k < m; k++) { const ia = list[k]; const ib = list[(k + 1) % m]; perChainIntervals[pi].push(intervalsD.length); intervalsD.push({ pi, aSt: ia, bSt: ib, discard: isDiscard(ia, ib) }); }
+    } else {
+      for (let k = 0; k + 1 < m; k++) { const ia = list[k]; const ib = list[k + 1]; perChainIntervals[pi].push(intervalsD.length); intervalsD.push({ pi, aSt: ia, bSt: ib, discard: isDiscard(ia, ib) }); }
+    }
+  });
+  const piecesD: DiagramPiece[] = [];
+  scene.chains.forEach((c, pi) => {
+    for (const side of [1, -1]) for (const gi of perChainIntervals[pi]) { if (intervalsD[gi].discard) continue; piecesD.push({ kind: "run", chain: pi, side, corner: -1, interval: gi, cap: -1 }); }
+  });
+  corners.forEach((dc, ci) => { const a = arms[dc.aArm]; piecesD.push({ kind: "arc", chain: a ? a.pi : -1, side: 0, corner: ci, interval: -1, cap: -1 }); });
+  caps.forEach((cp) => piecesD.push({ kind: "cap", chain: cp.pi, side: 0, corner: -1, interval: -1, cap: cp.capInfo ?? -1 }));
   return {
     chainIds: scene.chains.map((c) => c.id),
     closed: scene.chains.map((c) => c.closed),
@@ -2342,7 +2592,7 @@ export function diagramOf(scene: SceneIn): DiagramStructure {
       const aPi = idxOf.get(x.a.chain); const bPi = idxOf.get(x.b.chain);
       return aPi === undefined || bPi === undefined ? [] : [{ aPi, bPi, over: x.over, emergent: !!x.emergent }];
     }),
-    arms, armsOfJ, corners, groupOfJ, caps,
+    arms, armsOfJ, corners, groupOfJ, caps, stationsD, intervalsD, piecesD,
   };
 }
 
