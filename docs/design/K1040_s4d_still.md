@@ -96,3 +96,138 @@ Fix whatever breaks K868's look. The way is yours.
 
 Append a Handoff to this brief, in the last push: what you built, Done's tables, the sheets to show
 first, anything out of scope you saw, and your last SHA. Commit messages carry the record.
+
+## Handoff (S4d, 2026-11-06)
+
+Muse run 01a1b300 (coordinator: Claude) ran 14:35-16:3x PST in
+`.claude/worktrees/muse-k1040-s4d`, under the perf lock through
+`.claude/probes/K1040/s4d/` (owner `K1040-S4d`; tools copied from S4c and
+K1239, plus a `freeends` mode in `s4a.mjs`/`page.ts`, `exits.ts` from
+K934, and the `scan*.ts` reference scans). Dev server (private-cache
+config, port 5942; 5941 was already held by another run's server) and
+browsers are stopped. **No `src/` change: Done 1 does not hold, so per
+Done 5 this push carries only the tools and this Handoff.** `npm test`
+green at the base and after the rebase: 220 files passed / 2 skipped,
+2887 tests passed / 9 skipped. The `fbb` flag stays off by default.
+
+### Done 1 - the dropped stroke: not reproduced on current master
+
+Claude's `spot_oldonly.png` could not be located in any shot set I can
+build: template matches (grey, band-mask and geometry-tube, at dpr 1.5
+and dpr 1, native and half scale) against K1239's `app_before`,
+`app_magenta` and `app_magenta_lbi` def shots all score <= 0.41, and
+the old-only band components of those shots, of my own `app_ab` shots
+(def/muse/user, current master 77347245, `phy=0&fw=0&phw=0`), of LBI,
+and of settled-physics screenshots are all edge slivers of the two
+known K1239 zones (junction flanks, crossing cuts) - no whole dropped
+segment anywhere. The spot's shots were K1239's build `bf8331e7` at a
+state I could not reconstruct (its panels' band width ~90 px matches
+neither dpr 1.5 (139 px) nor the s4a page).
+
+What I could test, I tested:
+
+- In form B, per-foot burial (D10) cannot bury a crossing pass's edge:
+  burial only counts pieces of the same surface, and on all 12 scenes
+  **no crossing has both passes in one group** (`scan3.ts`: 0 of 353 on
+  def, 0 on every other scene). Burial bites only inside a junction
+  union, where goal 3 wants it.
+- A whole-chain scan of the float64 reference (`scan4.ts`: band centre
+  inked >= 0.5 wherever foot and centre lie outside every other tube,
+  own chain's far passes included) finds **no missing run >= 0.5 world
+  on def**; the longest anywhere on def are 12 runs of 0.26-0.36 world,
+  all at junction mouths/corners. Run it on the other scenes before
+  trusting it there.
+- At the app_ab stand on current master, the one shallow-crossing
+  complex in the zoom (chains 6/61, crossings 71/72, with junction j61
+  and chain 24's fork between them) draws both borders of both passes
+  through the eye and the fork: sheet `out/sheets/done1_eye_fork.png`
+  (old | field | overlay). The overlay's red inside the eye is the old
+  look's filled tube where the field draws only edges - the K1239
+  correction's point, not a dropped stroke.
+
+So the lead is falsified for the reference as built, and the spot is
+either the pre-S4c build, the `lbi` label app (whose old-only
+components are the same slivers as fbb's on the same shots), or a
+settled geometry. Next step for whoever picks this up: re-shoot
+Claude's exact spot state first (the crop's pixel provenance), then
+`diag_bur.ts`/`diag_at.ts` at that point. **Done 1 not held; no fix.**
+
+### Done 2 - free ends on the GPU frames (new `s4a.mjs freeends`)
+
+The K910/K934 check (walk every side band; flood each run end's ink in
+a 0.8h disc, grid W/2; K934's runs count <= 1 is a free end) run on the
+GPU frame and on form B's reference probe of the same frame, geometry
+from the oracle model as in K934's `indep.ts`:
+
+| Scene | GPU | Ref | Differing spots |
+|---|---|---|---|
+| muse_hash | 40 | 39 | GPU-only chain 66 s 39.38 (32.18, 18.98) |
+| muse_default_tw | 11 | 10 | GPU-only chain 55 s -0.13 (16.64, 4.80) |
+| def | 8 | 7 | GPU-only chain 28 s -0.15 (7.65, 3.11) |
+| fat | 0 | 0 | - |
+| ring | 2 | 2 | - |
+| user_tw42.lightpaper | 10 | 10 | - |
+| g41_def_tw42 | 2 | 2 | - |
+| g41_def_tw64 | 10 | 11 | ref-only chain 83 s 2.88 (21.26, 10.84) |
+| g41_ring_tw42 | 0 | 0 | - |
+| g41_ring_tw64 | 5 | 5 | - |
+| g41_user_tw42 | 10 | 10 | - |
+| g41_user_tw64 | 22 | 20 | all matched within 0.4 world; 2 extra GPU ends are second walks of ref ends past the W merge |
+
+Every differing spot is cropped in `out/sheets/<scene>_crops_fe.png`
+(reference | GPU | diff at zoom 4): ref and GPU are visually identical;
+the difference is the flood's threshold on the reference's own
+partial-coverage smudge inside a junction (both GPU-only def and
+ref-only g41_def_tw64 crops show it). The two s ~ -0.14 GPU-only ends
+are at END-arm extensions (s0 < 0), inside the junction union - the
+cap-mix class S4c named, not a drawn cap. Sheet K's cases: muse_hash's
+free ends at K955's (4.78, 33.44) are present on **both** (chain 23
+s -0.18 and s 0.93, chain 43 s 44.6); at (3.07, 28.27) and at K973's
+def (26.225, 1.436) neither side has a free end. Dead/anchored ends:
+check 3 (cap Hausdorff) statuses are S4c's (fails only on muse_hash,
+on the reference too) - no new cap defect; in-view dead ends draw
+goal 5's caps on both. **Done 2 held up to the named threshold spots.**
+
+### Done 3 - no regression (no src change, measured anyway)
+
+Check #12 on the 12 scenes reproduces S4c's final table exactly
+(e.g. def away worst 0.328 / 5 over, near 1.484 / 215; muse_hash away
+1.224 / 31, near 2.602 / 519; g41_user_tw64 near worst 6.869). Checks
+1-9 and 11 (`s4a.mjs checks`): per-scene status lists identical to
+S4c's `checks_ckfinal_*` on every scene. Remaining over-1/32 spots are
+S4c's named class (the multi-piece cap mix; the reference's grey haze
+halos). `npm test` green; flag off by default; flag-off parity is
+S4c's (no src change here at all).
+
+### Done 4 - sheets (`out/sheets/`, old border look | field | overlay)
+
+- `done1_eye_fork.png` - Done 1's stand-in spot: the chains 6/61 eye
+  (crossings 71/72) with j61 and chain 24's fork (also the K1045
+  close-junction eye: j60/j61 1.35 apart, form B's dot in the wedge).
+- `bend_j61.png` - a through-pass bend (K1049): chain 61 bending
+  through j61, chain 24 forking off.
+- `j139_ball_vapex.png` - muse_hash j139 (17.18, 17.15): the K1002
+  corner ball against chains 46/84 and the K1003 V apex.
+- `<scene>_crops_fe.png` - the Done 2 differing free ends.
+- `*_junctions.png` / `*_worst.png` from the check run (reference |
+  GPU | diff, zoom 4).
+
+The named muse_hash eye (26.675, 1.096) and def eye (30.555, 17.488)
+sit outside the app_ab zoom's view, so they are in the check-run
+junction sheets instead of an app sheet. **Show first:**
+`done1_eye_fork.png` (the eye + fork complex, old beside field) and
+`j139_ball_vapex.png` (the ball/apex corner).
+
+### Out of scope, seen and not fixed
+
+- The multi-piece cap mix (S4c's remaining check #12 class) is also
+  what moves the free-end counts in Done 2.
+- A GL warning in the settled field screenshot
+  (`GL_INVALID_OPERATION: glDrawElements: Mismatch between texture
+  format and sampler type`) - one console line in
+  `out/settled_on.png`'s capture; provenance not traced.
+- The pop census and fades in motion (next stage), paint on the field
+  (S7), CPU prep speed (S5): untouched, as briefed.
+
+Last SHA: see the commit carrying this Handoff (tools + brief only;
+no `src/` change, so no deploy runs on this push).
