@@ -8,6 +8,7 @@
 // `am start` (an intent: no key or input event), drives window.s4a.time per
 // scene over CDP, then closes its own tab while Chrome is in front and removes
 // only what it added. A getevent watch stops the run at the first input event.
+// The device is the one online adb device, or $env:ANDROID_SERIAL's of several.
 // Never prints or writes the device serial or an address. Run it under both
 // locks: run_phone.ps1 does (phone_batch.ps1 runs a batch of it).
 //   node phone_time.mjs [scene,...] [--scale 2] [--frames 40] [--rounds 5]
@@ -62,9 +63,12 @@ if (dry) {
 }
 
 const { ensurePhoneReady, PhoneNotReady } = await import("../../../../scripts/phone_pass/phone_ready.mjs");
-const online = adb(null, "devices").split(/\r?\n/).filter((l) => /\tdevice$/.test(l)).map((l) => l.split("\t")[0]);
+// $env:ANDROID_SERIAL (adb's own variable) picks one of several: the phone over USB and wireless adb at once (5ace293a).
+const want = process.env.ANDROID_SERIAL;
+const listed = adb(null, "devices").split(/\r?\n/).filter((l) => /\tdevice$/.test(l)).map((l) => l.split("\t")[0]);
+const online = want ? listed.filter((d) => d === want) : listed;
 if (online.length !== 1) {
-  log(`refusing: ${online.length} online adb devices (want exactly one)`);
+  log(`refusing: ${online.length} online adb devices (want exactly one${want ? "; ANDROID_SERIAL is not listed" : ""})`);
   process.exit(4);
 }
 const dev = online[0];
