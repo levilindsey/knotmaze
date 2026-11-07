@@ -923,7 +923,7 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
     // No meet: the V at the junction, with both tangent points at the roots.
     let mx = A.ux + B.ux; let my = A.uy + B.uy;
     const ml = Math.sqrt(mx * mx + my * my);
-    if (ml < 1e-9) { const ma = Math.atan2(A.uy, A.ux) + th / 2; mx = Math.cos(ma); my = Math.sin(ma); } else { mx /= ml; my /= ml; }
+    if (ml < 1e-9 || th > Math.PI) { const ma = Math.atan2(A.uy, A.ux) + th / 2; mx = Math.cos(ma); my = Math.sin(ma); } else { mx /= ml; my /= ml; }
     const Vx = j.c[0] + mx * h; const Vy = j.c[1] + my * h;
     cw.Vx = Vx; cw.Vy = Vy; cw.qx = Vx; cw.qy = Vy; cw.r = 0;
     const bpOf = (arm: ArmInfo, side: number, d: number): { x: number; y: number; s: number } => {
@@ -947,6 +947,10 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
     cw.refA = addPointAt(A.pi, cw.sideA, pa.x, pa.y, pa.s, { k: 5, corner: cornerWork.length, which: 0 });
     cw.refB = addPointAt(B.pi, cw.sideB, pb.x, pb.y, pb.s, { k: 5, corner: cornerWork.length, which: 1 });
     cw.refVA = cw.refA; cw.refVB = cw.refB;
+    if (frameMode) {
+      armNextPt[cw.aArm] = cw.refA; armNextSide[cw.aArm] = cw.sideA;
+      armPrevPt[cw.bArm] = cw.refB; armPrevSide[cw.bArm] = cw.sideB;
+    }
   };
   for (const cp of cornerPairs) {
       const ji = cp.ji; const j = scene.junctions[ji];
@@ -956,8 +960,13 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
       let th = B.ang - A.ang;
       th = ((th % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
       const cross = A.ux * B.uy - A.uy * B.ux;
-      const sideA = (cross > 0 ? 1 : -1) * A.dir;
-      const sideB = (cross > 0 ? -1 : 1) * B.dir;
+      // S3f run 3: in frame mode the facing sides are the diagram's. The
+      // listed order is counter-clockwise, so a corner faces A's
+      // counter-clockwise side and B's clockwise side whatever this
+      // frame's sweep; the sign of cross flipped both past pi, onto the
+      // borders the junction's other corner already joins.
+      const sideA = frameMode ? A.dir : (cross > 0 ? 1 : -1) * A.dir;
+      const sideB = frameMode ? -B.dir : (cross > 0 ? -1 : 1) * B.dir;
       const cw: CornerWork = {
         junction: j.id, aChain: A.pi, bChain: B.pi, ok: false, style, theta: th, r: 0,
         Vx: NaN, Vy: NaN, qx: NaN, qy: NaN, tax: NaN, tay: NaN, tbx: NaN, tby: NaN,
@@ -966,6 +975,9 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
       const baseIdx = corners.length;
       void baseIdx;
       if (!(A.L > 1e-9 && B.L > 1e-9)) { cw.why = "arm span 0"; if (frameMode) cornerFallback(cw, A, B, th); corners.push(cw); cornerWork.push(cw); continue; }
+      // A reflex sweep: the facing borders part behind the roots, so the
+      // corner is their meet there (or the roots), never a fillet.
+      if (frameMode && th > Math.PI) { cw.why = "reflex"; cornerFallback(cw, A, B, th); corners.push(cw); cornerWork.push(cw); continue; }
       // A pair's wedge is the minor sweep between its arms (the
       // junction's other corners take the rest of the circle), so a
       // pair listed past pi still corners on its minor side; thC is
