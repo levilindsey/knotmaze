@@ -125,7 +125,12 @@ describe("K320 stage 1: char budgets", () => {
     // budgets follow the measurement. The section (59,041), strip
     // (34,296) and still pluck (20,528) stay inside theirs.
     expect(SECTION_EXPLORE_FRAG.length).toBeLessThanOrEqual(75_456);
-    expect(STRIP_FRAG.length).toBeLessThanOrEqual(34_300);
+    // K1220 S4 (2026-11-06): the root arm's per-side K620 paint in
+    // chainMaterial (the root table read, its two foot sections and the
+    // spur's, the ease blend; modes 3-8) adds 1,276 to the strips
+    // (34,296 -> 35,572 measured here); budget follows the measurement.
+    // One cold compile of arm-strip (and its explore variant) per player.
+    expect(STRIP_FRAG.length).toBeLessThanOrEqual(35_600);
     // K797b/K798 fillets (2026-10-21): the fan look gate and stroke
     // (junction_field.ts) add 755 (26,600 -> 27,355 here).
     // K815: the fans' flank coordinate (aFlank + the fanEdge block) adds
@@ -217,7 +222,12 @@ describe("K320 stage 1: char budgets", () => {
     // (swAcc: FIELD_TIE_TAU, FIELD_ROOT_SEP) and folds by each segment's own
     // fan, +603 (35,635 -> 36,238 measured here); then the fan's margin
     // tightened to 0-0.5 fh past its edge, -13 (-> 36,225); budget follows.
-    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(36_225);
+    // K1220 S4 (2026-11-06): the field blend reads each arm's width
+    // profile (two fetches, two half-widths) so a wide arm (a tapered
+    // root, a flared stem) keeps its own paint across its ribbon:
+    // junction-field 36,225 -> 36,792 measured here; budget follows.
+    // The common shader of every fan program, one cold compile each.
+    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(36_850);
     // K799: uKPath joins KNOT_UNIFORMS_GLSL, which the still pluck
     // includes (+18 here).
     expect(PLUCK_STILL_FRAG.length).toBeLessThanOrEqual(20_550);

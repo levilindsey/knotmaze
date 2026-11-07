@@ -26,7 +26,12 @@
 //                                       crest trains (floor and hover
 //                                       kept) - what a pulse-banded
 //                                       joint's base and band material
-//                                       wear, the fan drawing the crest
+//                                       wear, the fan drawing the crest;
+//                                       3/4/5 (K1220 S4) = a tapered root
+//                                       arm's K620 paint (C side / O side /
+//                                       centre; 6/7/8 untraveled), which
+//                                       chainMaterial evaluates from the
+//                                       root table instead of the section
 //   STRIP TEXTURE (RGBA8 render target, STRIP_RT_W wide): row r occupies
 //     texels [(r % STRIP_LINE) * STRIP_W, +STRIP_W) of line r / STRIP_LINE.
 //     Read with texelFetch + manual lerp (exact weights: the CPU mirror in
@@ -227,7 +232,36 @@ vec3 chainMaterial(int ch, highp float a, highp float seedIn, highp float mode) 
   highp float total = c.total;
   if (total <= 0.0 || c.count < 2) return knotSection(c, 0.0);
   highp float an = c.closed ? kWrap(a, total) : clamp(a, 0.0, total);
+  // K1220 S4: modes 3/4/5 are a tapered root arm's rows (3 = C side, 4 = O
+  // side, 5 = centre; 6/7/8 their untraveled forms): the texel wears the
+  // root's K620 paint on that side (paint_math kRootStripSection), so a
+  // fan over the root continues the ribbon beneath it per side. pm is the
+  // underlying paint mode (0 composed, 1 untraveled) the rest reads.
+  highp float pm = mode;
+  highp float covC = -1.0;
+  if (mode > 2.5) {
+    pm = mode > 5.5 ? 1.0 : 0.0;
+    covC = (mode < 3.5 || (mode > 5.5 && mode < 6.5)) ? 1.0 : (mode < 4.5 || (mode > 6.5 && mode < 7.5)) ? 0.0 : 0.5;
+  }
   vec3 m = kSectionAtArc(c, a, seed);
+  if (covC >= 0.0) {
+    int kt = int(kS(2 * ch + 1).w + 0.5) - 1;
+    if (kt >= 0) {
+      highp vec4 kh0 = kG(kt);
+      highp vec4 kh1 = kG(kt + 1);
+      if (a < kh1.x && kh1.x > 0.0) {
+        highp float u = clamp(a / kh1.x, 0.0, 1.0);
+        highp float f = u * (kh0.z - 1.0);
+        int i0 = min(int(kh0.z + 0.5) - 2, int(floor(f)));
+        vec4 ke = mix(kG(kt + 2 + 2 * i0), kG(kt + 4 + 2 * i0), f - float(i0));
+        KChain kb = kChain(int(kh0.x + 0.5));
+        vec3 sC = kSectionAtArc(kb, ke.x, -1.0);
+        vec3 sO = kSectionAtArc(kb, ke.y, -1.0);
+        vec3 sJ = kSectionAtArc(c, kh1.x, -1.0);
+        m = mix(mix(sO, sC, covC), sJ, kEase(u));
+      }
+    }
+  }
   highp float actrl = kCtrlOfArcNear(c, an, kSecK0);
   if (uKFx.w > 0.5 && uKFx.z < c.fxDone) {
     int st = int(uKFx.x + 0.5);
@@ -238,8 +272,8 @@ vec3 chainMaterial(int ch, highp float a, highp float seedIn, highp float mode) 
     }
   }
   if ((uKPaint.x > 0.5 && c.paintOn) || uKFx2.z > 0.5) {
-    highp vec4 st = kPaintAt(c, actrl, an, kStripPx, mode > 1.5);
-    if (mode > 0.5) st.x = 0.0;
+    highp vec4 st = kPaintAt(c, actrl, an, kStripPx, pm > 1.5);
+    if (pm > 0.5) st.x = 0.0;
     m = kComposePaintFlat(m, st, kGlow(c, actrl));
   }
   return m;

@@ -78,3 +78,73 @@ strip per side as K620 paints it, then drop the cap if nothing needs it).
 
 Append a Handoff to this brief, in the last push: what you built, Done's tables, the sheets to
 show first, anything out of scope you saw, your last SHA. Commit messages carry the record.
+
+## Handoff (S4 run, 2026-11-06; WIP — Done 1, 2 and 4 do not pass)
+
+What landed in this commit (all gated to tapered glyph forks — the
+i's forks — unless noted):
+
+- Per-side K620 root paint for fans (the brief's suggested way): a root
+  arm's strip rows now wear the root's own paint per side
+  (`kRootStripSection` in `src/render/paint_math.ts`, modes 3/4/5 in
+  `src/render/arm_strip.ts`'s `chainMaterial`, 6/7/8 untraveled; CPU
+  twin in `cpuChainMaterial`). The primary record's root row is the O
+  side; a twin record (a copy of the fork's record whose root row is
+  the C side) serves the root↔bodyC narrow wedge. S3's body-chain
+  strip hack is gone. Covered by `test/render/strip_root.test.ts`.
+- Width profiles: each arm record now carries a width profile after
+  its angle profile (`armStride` 2 + 2·profN), and the field blend's
+  half-width is per arm (`fh · wm`; real widths only at tapered glyph
+  forks, 1 elsewhere, so other junctions read exactly as before). A
+  wide arm (root, flared stem) now keeps its own paint across its
+  whole ribbon where the bracketing pair includes it.
+- Shader budgets followed the measurements (`test/render/k320_slim
+  .test.ts`): arm-strip 34,300 → 35,600 (root modes), junction-field
+  36,225 → 36,850 (width blend). One cold compile each per player.
+
+Done 1 (rest, `paintmask.mjs` in the s4 probe folder; geom-mask,
+>4 levels): NOT met. Master → mine per fork: i_xh3 8451→8339,
+i_xh2 10901→10787, ai_xh3 5032→5030, ai_xh2 6299→6294, ia_xh3
+8349→8332, ia_xh2 6407→6396, ii_xh3 ji0 8332→8331, ji1 4413→4412,
+ii_xh2 ji0 9001→8999, ji1 4785→4776 (max diff still ~190). The field
+at the root centreline did move to the ribbon's colour (probe: mine
+(0.714,0.478,0.707) vs master (0.733,0.478,0.727) at mid-root, ribbon
+≈ (0.71,0.48,0.71)); the residual is not the strip. What is left,
+diagnosed: the field chooses arms by ANGLE sector, not by which
+ribbon is on top. Within ~fh of J both blend half-widths saturate at
+π/2 and the CCW-previous arm wins outright (body paint over the root
+at its centreline 0.13 from J); farther out, the root's wide corners
+fall in the wide wedges' sectors (bodyC→stem, stem→bodyO), whose fans
+paint body/stem over the root there. Fans covering those pixels are
+the seal and the wide wedges; the narrow wedges' fans now continue
+the root where they bracket it. A fix needs the field (or the fan
+geometry at tapered forks) to respect ribbon coverage/draw order
+there — e.g. nearest-centreline assignment scoped to these forks, or
+fans that stop at the root's edge — not tried in the time left.
+Pluck and flow states were not measured (rest only).
+
+Done 2: NOT met. `paintmask` bump (fan ink outside the 1 fh closing):
+master → mine unchanged (i_xh3 816→816, ai_xh2 2625→2625, ii_xh2
+0→0 in this measure). The bump is the west wide wedge's rounded rim:
+its corner (the stem/bodyC edge lines' intersection) lies far NW, so
+the arc bulges past the closing above the dark bite. Not attempted;
+a scoped candidate is an arc-around-J rim (or a corner-distance
+clamp) at tapered glyph forks only.
+
+Done 3: not measured with the diff family (only the i words were
+shot, on both hosts). The changes are construction-scoped to tapered
+forks (no taper ⇒ no twin record, width profile 1, strip modes 0/1
+as before), and the suite's golden byte-identity guards stayed green
+(see below). A master-vs-mine diff shoot still owes.
+
+Done 4: sheets were not built or read. One crop was viewed
+(mine i_xh3 rest vs its nofans): the pale teeth are still there,
+consistent with the Done 1 table.
+
+`npm test` does pass (tsc + 219 files, 2885 tests). Copy of the
+probe tools: `.claude/probes/K1220/s4/` (locked marks "K1220 S4",
+ports 5980/5981; `paintmask.mjs`/`violmap.mjs`/`samplepx.mjs` and
+`batch_geom_mine.mjs` are new this run; `out/` and the master export
+are not committed). Time was up (2 h from 09:38 PT) with Done 1/2/4
+open, so this lands as WIP on purpose: the strip/width work is the
+substrate the sector fix needs, and it changes no other fork.

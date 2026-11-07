@@ -58,6 +58,7 @@ import {
   kFxColor,
   kGlow,
   kPaintAt,
+  kRootStripSection,
   kSectionAtArc,
   kWrap,
   knotSection,
@@ -308,6 +309,13 @@ export class Joinery {
     }
     const an = c.closed ? kWrap(a, total) : Math.max(0, Math.min(total, a));
     const c0 = kSectionAtArc(D, U, c, a, seed, out);
+    // K1220 S4: root strip modes (GLSL twin: arm_strip chainMaterial).
+    let pm = mode;
+    if (mode > 2.5) {
+      pm = mode > 5.5 ? 1 : 0;
+      const covC = mode < 3.5 || (mode > 5.5 && mode < 6.5) ? 1 : mode < 4.5 || (mode > 6.5 && mode < 7.5) ? 0 : 0.5;
+      kRootStripSection(D, U, ch, a, covC, out);
+    }
     const actrl = kCtrlOfArcNear(D, c, an, c0);
     if (U.uKFx[3] >= 0.5 && U.uKFx[2] < c.fxDone) {
       const st = Math.round(U.uKFx[0]);
@@ -317,8 +325,8 @@ export class Joinery {
     }
     if ((U.uKPaint[0] > 0.5 && c.paintOn) || U.uKFx2[2] > 0.5) {
       // mode: 0 composed, 1 untraveled, 2 quiet (K1139 S3b).
-      const st = kPaintAt(D, U, c, actrl, an, px, this.r.paintTmp, mode > 1.5);
-      if (mode > 0.5) st.p = 0;
+      const st = kPaintAt(D, U, c, actrl, an, px, this.r.paintTmp, pm > 1.5);
+      if (pm > 0.5) st.p = 0;
       kComposePaint(U, out, st, kGlow(D, U, c, actrl));
     }
     const E = U.uKExplore;
@@ -406,7 +414,7 @@ export class Joinery {
     const fillHalf = this.r.style.threadWidth / 2;
     const profN = this.fieldProfLen;
     const last = profN - 1;
-    const stride = 2 + profN;
+    const stride = 2 + 2 * profN;
     const hd = at(rec);
     const n = Math.round(J[hd + 2]);
     this.fieldLastArm.length = 0;
@@ -677,9 +685,15 @@ export class Joinery {
     let t = 0;
     if (!onlyA && !onlyB) {
       const span = relA + relB;
-      const hw = rho > fillHalf ? Math.asin(fillHalf / rho) : Math.PI / 2;
-      let lo = hw;
-      let hi = span - hw;
+      // K1220 S4: per-arm blend half-widths (GLSL twin: junctionBase).
+      const twA = at(abA + 2 + profN + gi);
+      const twB = at(abB + 2 + profN + gi);
+      const wmA = J[twA] + (J[twA + 1] - J[twA]) * gf;
+      const wmB = J[twB] + (J[twB + 1] - J[twB]) * gf;
+      const hwA = rho > fillHalf * wmA ? Math.asin(Math.min(1, (fillHalf * wmA) / rho)) : Math.PI / 2;
+      const hwB = rho > fillHalf * wmB ? Math.asin(Math.min(1, (fillHalf * wmB) / rho)) : Math.PI / 2;
+      let lo = hwA;
+      let hi = span - hwB;
       const minW = span * FIELD_BLEND_MIN;
       if (hi - lo < minW) {
         lo = (span - minW) * 0.5;
@@ -1137,6 +1151,9 @@ export class Joinery {
       // axis put curved arms' own edges outside their footprint).
       pth: Float32Array;
       ps: Float32Array;
+      // K1220 S4: the arm's ribbon width multiplier at the same grid
+      // (its half-width is fillHalf * pw[g] there), for the field blend.
+      pw: Float32Array;
       // Flank centerline samples [x, y, tx, ty] per flank point, shared
       // by the arm's two wedges (left and right flanks differ only in the
       // offset side). null until first used.
@@ -1188,14 +1205,33 @@ export class Joinery {
       toEnd: number,
       jx: number,
       jy: number,
-      ang0: number
-    ): { pth: Float32Array; ps: Float32Array } => {
+      ang0: number,
+      chain: number
+    ): { pth: Float32Array; ps: Float32Array; pw: Float32Array } => {
       // Pooled across rebuilds (this runs every paint tick).
-      while (this.fieldProfPool.length < profUsed + 2) {
+      while (this.fieldProfPool.length < profUsed + 3) {
         this.fieldProfPool.push(new Float32Array(profN));
       }
       const pth = this.fieldProfPool[profUsed++];
       const ps = this.fieldProfPool[profUsed++];
+      const pw = this.fieldProfPool[profUsed++];
+      // K1220 S4: the ribbon width multiplier along the arm (wmAt's math,
+      // on this arm's samples), for the width profile.
+      const wl = this.r.widthLast[chain];
+      const wmOf = (sArc: number): number => {
+        if (!wl) return 1;
+        const total0 = samples.totalLength;
+        const arc = sampling.normArc(arc0 + dir * sArc, total0, closed);
+        if (samples.closed) {
+          const f = ((((arc % total0) + total0) % total0) / total0) * samples.count;
+          const i0 = Math.floor(f) % samples.count;
+          const i1 = (i0 + 1) % samples.count;
+          return wl[i0] + (wl[i1] - wl[i0]) * (f - Math.floor(f));
+        }
+        const f = (Math.max(0, Math.min(total0, arc)) / total0) * (samples.count - 1);
+        const i0 = Math.max(0, Math.min(samples.count - 2, Math.floor(f)));
+        return wl[i0] + (wl[i0 + 1] - wl[i0]) * (f - i0);
+      };
       const total = samples.totalLength;
       const steps = Math.ceil((fieldReach * 1.4) / FIELD_PROF_ARC);
       let prevR = 0;
@@ -1227,6 +1263,7 @@ export class Joinery {
             const f = (g * FIELD_PROF_DR - prevR) / (r - prevR);
             pth[g] = prevTh + (th - prevTh) * f;
             ps[g] = prevS + (s - prevS) * f;
+            pw[g] = wmOf(ps[g]);
             g++;
           }
           prevR = r;
@@ -1238,11 +1275,15 @@ export class Joinery {
       for (; g < profN; g++) {
         pth[g] = prevTh;
         ps[g] = prevS + (g * FIELD_PROF_DR - prevR);
+        pw[g] = wmOf(ps[g]);
       }
-      return { pth, ps };
+      return { pth, ps, pw };
     };
 
     const recs: JRec[] = [];
+    // K1220 S4: a tapered glyph fork's twin record (its root arm's row is
+    // the C side's K620 paint; the primary's is the O side's), by primary.
+    const dupOf = new Map<JRec, { dup: JRec; rootIdx: number; cIdx: number; oIdx: number }>();
     // K846: the junction side-cut entries (samp_table's RANGE_JUNCTION)
     // for the wedges this rebuild draws, published by finish() for
     // CrossingGaps.assignGapIds to pack behind the gap windows.
@@ -1339,7 +1380,8 @@ export class Joinery {
           toEnd,
           jx,
           jy,
-          ang
+          ang,
+          a.chain
         );
         arms.push({
           ang,
@@ -1354,6 +1396,7 @@ export class Joinery {
           domain: Math.min(nextJ / 2, toEnd),
           pth: prof.pth,
           ps: prof.ps,
+          pw: prof.pw,
           flankPts: null,
           toEnd,
         });
@@ -1389,10 +1432,19 @@ export class Joinery {
     // angle order) its chain/arc header pair and its profile, one texel per
     // radius step carrying both ends of a lookup.
     setFieldParams(fillHalf, profN);
-    const armStride = 2 + profN;
+    // K1220 S4: per arm, after its angle profile, a width profile (the
+    // ribbon width multiplier at the same grid), so the stride grew.
+    const armStride = 2 + 2 * profN;
     this.r.recBaseByJn.clear();
     for (const rec of recs) {
       const n = Math.min(rec.arms.length, MAX_ARMS);
+      // K1220 S4: real width profiles only at a tapered glyph fork.
+      const useW = !!(
+        this.r.taperHideJn &&
+        this.r.taperHideJn[rec.jn] &&
+        this.r.style.glyph &&
+        rec.arms.some((a) => this.r.style.glyph![a.chain])
+      );
       if (n < 2) continue;
       rd.ensure(cursor + 2 + n * armStride);
       const D = rd.data;
@@ -1413,6 +1465,7 @@ export class Joinery {
         const ab = (cursor + 2 + i * armStride) * 4;
         const pth = a.pth;
         const ps = a.ps;
+        const pw = a.pw;
         D[ab] = a.chain;
         // The ctrl search SEED along the arm: its joint ctrl (.w of the next
         // texel) plus the arc offset times this mean ctrl-per-arc over the
@@ -1436,10 +1489,49 @@ export class Joinery {
           D[p + 2] = pth[g1];
           D[p + 3] = ps[g1];
         }
+        // K1220 S4: the width profile. Only a tapered glyph fork's arms
+        // carry real widths (the field blend then keeps a wide arm's own
+        // paint across its ribbon); every other arm writes 1 (fh) exactly
+        // as the blend read before.
+        for (let g = 0; g < profN; g++) {
+          const p = ab + 8 + (profN + g) * 4;
+          const g1 = g + 1 < profN ? g + 1 : g;
+          D[p] = useW ? pw[g] : 1;
+          D[p + 1] = useW ? pw[g1] : 1;
+          D[p + 2] = 0;
+          D[p + 3] = 0;
+        }
       }
       rec.rb = cursor;
       this.r.recBaseByJn.set(rec.jn, cursor);
       cursor += 2 + n * armStride;
+      // K1220 S4: twin record for a tapered glyph fork (the i's fork): a
+      // copy of the primary whose root arm's strip row (written in finish)
+      // is the C side's paint. The C-side narrow wedge's fan reads it, so
+      // each side of the root wears its own foot's paint (K620).
+      if (this.r.taperHideJn && this.r.taperHideJn[rec.jn] && this.r.style.glyph) {
+        let rootIdx = -1;
+        for (let i2 = 0; i2 < n; i2++) {
+          const a2 = rec.arms[i2];
+          const tp2 = this.r.style.taper?.[a2.chain];
+          if (tp2 && tp2.body !== undefined && a2.dir < 0 && a2.slot === 2 * tp2.joint) rootIdx = i2;
+        }
+        if (rootIdx >= 0) {
+          const bodyCh = this.r.style.taper![rec.arms[rootIdx].chain]!.body!;
+          const cIdx = rec.arms.findIndex((x) => x.chain === bodyCh && x.dir < 0);
+          const oIdx = rec.arms.findIndex((x) => x.chain === bodyCh && x.dir > 0);
+          if (cIdx >= 0 && oIdx >= 0) {
+            rd.ensure(cursor + 2 + n * armStride);
+            rd.data.copyWithin(cursor * 4, rec.rb * 4, (rec.rb + 2 + n * armStride) * 4);
+            const dup: JRec = {
+              jx: rec.jx, jy: rec.jy, arms: rec.arms, j1: rec.j1, jn: rec.jn,
+              rb: cursor, mask: rec.mask, rMax: 0, routes: rec.routes,
+            };
+            dupOf.set(rec, { dup, rootIdx, cIdx, oIdx });
+            cursor += 2 + n * armStride;
+          }
+        }
+      }
     }
     // K81 ROUTES: each record's resolved routes as indexes into its arms
     // (the first n, in angle order - what the record holds). A route whose
@@ -1891,31 +1983,24 @@ export class Joinery {
           );
           const step = sMax / (STRIP_W - 1);
           const slope = rd.data[ab + 1];
-          // K1220 S3: the root arm's strip is written from the body chain
-          // at the joint, scaled to the O foot's span (see glyphOf note).
-          let rChain = a.chain, rArc0 = a.arc0, rStep = a.dir * step, rSeed = a.slot, rSeedStep = a.dir * step * slope;
-          const tpA = this.r.style.taper?.[a.chain];
-          if (tpA && tpA.body !== undefined && tpA.footO && a.dir < 0 && a.slot === 2 * tpA.joint && a.arc0 > 1e-6) {
-            const bArm = rec.arms.find((x) => x.chain === tpA.body && x.dir > 0);
-            const bSmp = this.r.chainSamples[tpA.body];
-            if (bArm && bSmp) {
-              const bClosed = this.r.ps.chainBreakAfter[tpA.body] < 0;
-              const arcR = sampling.paintArcAt(bSmp, tpA.footO[0], bClosed);
-              const scale = (arcR - bArm.arc0) / a.arc0;
-              if (scale > 0.05 && scale < 20) { rChain = tpA.body; rArc0 = bArm.arc0; rStep = step * scale; rSeed = bArm.slot; rSeedStep = step * scale * slope; }
-            }
-          }
+          // K1220 S4: a tapered root arm's row wears the root's K620 paint
+          // for its record's side (arm_strip modes 3/4; the primary record
+          // is the O side, its twin in dupOf the C side), so the fans over
+          // the root read as the root ribbon reads on that side.
+          const info = dupOf.get(rec);
+          const rootMode = info && info.rootIdx === i ? 4 : 0;
           const row = this.writeStripRow(
-            rChain,
-            rArc0,
-            rStep,
+            a.chain,
+            a.arc0,
+            a.dir * step,
             step,
-            rSeed,
-            rSeedStep
+            a.slot,
+            a.dir * step * slope,
+            rootMode
           );
           // A routed record's arms also get their UNTRAVELED row (row + 1).
           if (untrav) {
-            this.writeStripRow(a.chain, a.arc0, a.dir * step, step, a.slot, a.dir * step * slope, 1);
+            this.writeStripRow(a.chain, a.arc0, a.dir * step, step, a.slot, a.dir * step * slope, rootMode ? rootMode + 3 : 1);
           }
           rd.data[ab + 2] = row;
           rd.data[ab + 3] = 1 / step;
@@ -1982,7 +2067,33 @@ export class Joinery {
         }
         const D = rd.data;
         D[rec.rb * 4 + 3] = routeBase;
+        // K1220 S4: the twin shares the primary's route blocks.
+        const dupR = dupOf.get(rec);
+        if (dupR) D[dupR.dup.rb * 4 + 3] = routeBase;
         D[rec.rb * 4 + 7] = nr;
+        if (dupR) D[dupR.dup.rb * 4 + 7] = nr;
+      }
+      // K1220 S4: the twin records' arm rows (their root row is the C side).
+      for (const [prec, info] of dupOf) {
+        const rec = info.dup;
+        if (rec.rb < 0) continue;
+        const n = Math.min(rec.arms.length, MAX_ARMS);
+        const routed = prec.routes.length > 0;
+        const untrav = routed && (!this.r.fullJn.has(prec.jn) || this.r.webFade.has(prec.jn));
+        for (let i = 0; i < n; i++) {
+          const a = rec.arms[i];
+          const ab = (rec.rb + 2 + i * armStride) * 4;
+          const sMax = Math.max(1e-4, Math.min(a.domain, routed ? bandEnd(rec, a) : profArcAt(a.ps, rec.rMax)));
+          const step = sMax / (STRIP_W - 1);
+          const slope = rd.data[ab + 1];
+          const rootMode = i === info.rootIdx ? 3 : 0;
+          const row = this.writeStripRow(a.chain, a.arc0, a.dir * step, step, a.slot, a.dir * step * slope, rootMode);
+          if (untrav) {
+            this.writeStripRow(a.chain, a.arc0, a.dir * step, step, a.slot, a.dir * step * slope, rootMode ? rootMode + 3 : 1);
+          }
+          rd.data[ab + 2] = row;
+          rd.data[ab + 3] = 1 / step;
+        }
       }
       this.r.junctionCutEntries = juncEntries; // K846
       const tb = stripTable();
@@ -2029,11 +2140,11 @@ export class Joinery {
     // out to the wide arm's edge 1 fh out, a Hermite curve tangent to both
     // edges. No centreline or width moves (K1119): only the fork is filled.
     const glyphOf = this.r.style.glyph;
-    // K1220 S3: a tapered root's ribbon wears the body strokes' paint
-    // (K620), not its spur chain's section, so in finish() the root arm's
-    // strip row comes from the body chain, scaled to the O foot's span:
-    // fans over the root then read as the root reads, not as a spike of
-    // the spur's section over the body arms.
+    // K1220 S4: a tapered root's ribbon wears K620's paint per side, so
+    // in finish() the root arm's strip rows wear it too (modes 3/4/5):
+    // the primary record's row is the O side's, its twin's the C side's.
+    // (S3 wrote the row from the body chain, one side for both.)
+    
 
     const wmAt = (arm: JArm, s: number): number => {
       const wl = this.r.widthLast[arm.chain];
@@ -2649,7 +2760,16 @@ export class Joinery {
         // contact is covered.)
         armWinL[k] = Math.max(armWinL[k], extW, armReach(A) - 0.05);
         armWinR[(k + 1) % arms.length] = Math.max(armWinR[(k + 1) % arms.length], extW, armReach(B) - 0.05);
-        emitFan(rec, jx, jy, rim, flankArr);
+        // K1220 S4: the root's C-side wedge reads the twin record (its
+        // root row is the C side's paint); every other fan the primary.
+        const infoW = dupOf.get(rec);
+        const fanRec =
+          infoW &&
+          ((k === infoW.cIdx && (k + 1) % arms.length === infoW.rootIdx) ||
+            (k === infoW.rootIdx && (k + 1) % arms.length === infoW.cIdx))
+            ? infoW.dup
+            : rec;
+        emitFan(fanRec, jx, jy, rim, flankArr);
       }
       // K846: this junction's side-cut entries, over each marked arm's
       // interior section. K849: WORLD arc - the junction's arc and the

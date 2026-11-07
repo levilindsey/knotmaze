@@ -1348,6 +1348,41 @@ export function kRootSection(
   }
 }
 
+// K1220 S4: a root strip texel's section (arm_strip's root modes): the
+// K620 root section at root arc `a` with the seam fully on one side -
+// covC 1 = C's foot, 0 = O's, 0.5 = the centerline - evaluated per texel
+// (kSectionAtArc at the feet, not the ribbon's Gouraud between samples).
+// False where chain `ch` has no root or `a` is at/past J (the spur's own
+// section there). GLSL twin: STRIP_FRAG's chainMaterial root branch.
+const ROOT_STRIP_T = new Float64Array(8);
+const ROOT_STRIP_C = new Float32Array(3);
+const ROOT_STRIP_O = new Float32Array(3);
+const ROOT_STRIP_J = new Float32Array(3);
+const ROOT_STRIP_R = {} as KChain;
+export function kRootStripSection(
+  D: KData,
+  U: KUniforms,
+  ch: number,
+  a: number,
+  covC: number,
+  out: Float32Array | number[]
+): boolean {
+  const r = kRootOf(D, ch);
+  if (!r || !(a < r.arcJ) || !(r.arcJ > 0)) return false;
+  kRootAt(D, r, a, ROOT_STRIP_T);
+  const b = kChain(D, r.body, ROOT_BODY);
+  kSectionAtArc(D, U, b, ROOT_STRIP_T[0], -1, ROOT_STRIP_C);
+  kSectionAtArc(D, U, b, ROOT_STRIP_T[1], -1, ROOT_STRIP_O);
+  const root = kChain(D, ch, ROOT_STRIP_R);
+  kSectionAtArc(D, U, root, r.arcJ, -1, ROOT_STRIP_J);
+  const w = kEase(U, Math.min(Math.max(a / r.arcJ, 0), 1));
+  for (let i = 0; i < 3; i++) {
+    const s = ROOT_STRIP_O[i] + (ROOT_STRIP_C[i] - ROOT_STRIP_O[i]) * covC;
+    out[i] = s + (ROOT_STRIP_J[i] - s) * w;
+  }
+  return true;
+}
+
 // A root fragment's color before the gameplay paint (SECTION_FRAG's `base`
 // and `aM`): kRootSection, then the ROOT chain's own FX at the fragment, as
 // on every other chain. The strokes' FX are not sampled at the feet (the

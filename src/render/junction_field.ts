@@ -339,7 +339,7 @@ vec3 junctionBase(int rec, vec2 p, vec4 hd, bool untrav) {
   float phi = atan(e.y, e.x);
   int profN = int(uJParams.y + 0.5);
   int last = profN - 1;
-  int stride = 2 + profN;
+  int stride = 2 + 2 * profN;
   float gx = rho / uJParams2.x;
   int gi;
   float gf;
@@ -378,9 +378,19 @@ vec3 junctionBase(int rec, vec2 p, vec4 hd, bool untrav) {
   if (!onlyA && !onlyB) {
     float fh = uJParams.x;
     float span = relA + relB;
-    float hw = rho > fh ? asin(fh / rho) : HALF_PI;
-    float lo = hw;
-    float hi = span - hw;
+    // K1220 S4: each arm's blend half-width is its own ribbon half-width
+  // (the width profile after its angle profile; 1 = fh on other arms), so
+  // a wide arm (a tapered root, a flared stem) keeps its own paint across
+  // its whole ribbon instead of blending to its neighbour at fh out.
+  vec4 twA = jAt(abA + 2 + profN + gi);
+  vec4 twB = jAt(abB + 2 + profN + gi);
+  float wmA = mix(twA.x, twA.y, gf);
+  float wmB = mix(twB.x, twB.y, gf);
+  float hwA = rho > fh * wmA ? asin(clamp(fh * wmA / rho, 0.0, 1.0)) : HALF_PI;
+  float hwB = rho > fh * wmB ? asin(clamp(fh * wmB / rho, 0.0, 1.0)) : HALF_PI;
+
+    float lo = hwA;
+    float hi = span - hwB;
     float minW = span * uJParams2.y;
     if (hi - lo < minW) {
       lo = (span - minW) * 0.5;
@@ -435,7 +445,7 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip, float across
   }
   if (!routed || (uKBase.z > 2.5 && uKBase.z < 4.5)) return c;
   int base = int(hd.w + 0.5);
-  int stride = 2 + int(uJParams.y + 0.5);
+  int stride = 2 + 2 * int(uJParams.y + 0.5);
   float reach = uJParams.x + ${(ROUTE_BAND_PAD + 1).toFixed(3)} * pxW;
   float rw = ${(ROUTE_BAND_RAMP / 2).toFixed(3)} * pxW;
   for (int r = 0; r < ${MAX_ROUTES}; r++) {
