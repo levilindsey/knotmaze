@@ -2876,7 +2876,7 @@ export function frame(st: OutlineStructure, scene: SceneIn, profile?: Record<str
       if (p.closed) d = ((d % p.len) + p.len) % p.len;
       if (d < 0 || d > a.L) continue;
       const tt = ssFB(0, h, a.L - d);
-      if (tt > best) { best = tt; g = a.g; }
+      if (tt > best) { best = tt; g = a.g; if (best >= 1) break; }
     }
     return g;
   };
@@ -2916,8 +2916,8 @@ export function frame(st: OutlineStructure, scene: SceneIn, profile?: Record<str
         if (pOwn.closed) { dd = ((dd % pOwn.len) + pOwn.len) % pOwn.len; if (dd > pOwn.len / 2) dd -= pOwn.len; }
         if (Math.abs(dd) <= sigma) continue;
       }
-      if (gOwn >= 0 && memberGroupF2(cp, stretchFoot.s) === gOwn) return true;
       if (depthAt(cp, stretchFoot.s) > zOwn + 1e-9) return true;
+      if (gOwn >= 0 && memberGroupF2(cp, stretchFoot.s) === gOwn) return true;
     }
     return false;
   };
@@ -2967,8 +2967,8 @@ export function frame(st: OutlineStructure, scene: SceneIn, profile?: Record<str
             if (pOwn.closed) { dd = ((dd % pOwn.len) + pOwn.len) % pOwn.len; if (dd > pOwn.len / 2) dd -= pOwn.len; }
             if (Math.abs(dd) <= sigmaC) continue;
           }
-          if (gOwn >= 0 && memberGroupF2(cp, footC.s) === gOwn) { covered = true; break; }
-          if (depthAt(cp, footC.s) > zOwn + 1e-9) covered = true;
+          if (depthAt(cp, footC.s) > zOwn + 1e-9) { covered = true; break; }
+          if (gOwn >= 0 && memberGroupF2(cp, footC.s) === gOwn) covered = true;
         }
         if (covered) flushC(i); else if (runStart < 0) runStart = i;
       }
