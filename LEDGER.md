@@ -512,10 +512,10 @@ Next free ID: K1244.
 - **K1220** · Text forks: a disc with a round edge inside, steps where the arms' straight cuts meet it
   (22N, 655eb6a9): glyph arms under 0.15 world get no field record, so a host-axis disc draws the fork.
   S2 runs on master's fused junctions (`docs/design/K1220_s2_text_forks.md`); S1's WIP 25a5c501 is a lead; notes.
-  - owner: muse session 01a1b31a-c83b-7ef1-b907-ce34d877ca3d (Paseo c1a4b659), coordinated by claude session c18e2f02-e64f-41ba-9af0-2dbd583358e2; started 2026-11-06 15:04, cap 2 h (~17:04)
-  - branch: detached worktree .claude/worktrees/muse-k1220-s6 (node_modules junctioned), pushes to master; S5's worktree muse-k1220-s5 kept (its unpushed commits d40fb956..dd1d4f59); last commit: `73ecbeb6`
-  - evidence: .claude/probes/K1220/s5/ (tracked tools; untracked out/ with 20 sheets and tables, s5_src.patch = S5's src change). S5's Handoff (docs/design/K1220_s5_fan_cover.md): at rest the teeth fell to near 0 at 9 forks, but the profile clip cuts dark slivers where the meshes are cut short (tooth 628-1265 px), and in pluck and flow the fans vanish (the unfused notch and step return; Claude viewed ai_xh2_ji2_A and i_xh3_ji0_A). S4 (291780c5 + 331f425d) stays on master: net better at 6 forks
-  - next: S6 to its Done (the fans fill only what no ribbon mesh draws, at rest, pluck and flow: no teeth, bump, notch or tooth; S3's fused outline kept); Claude views its sheets against window 84, removes the S5 and S6 worktrees, shows Levi. Then the 1 px jog in ia at xh 2 and the reveal's bare-ribbon moment (a at xh 3, 40%)
+  - owner: nobody since 2026-11-06 17:25: S6 (muse session 01a1b31a-c83b-7ef1-b907-ce34d877ca3d, Paseo c1a4b659) hit its cap unpushed; paused for K1240 S2's verdict and Levi's call on the seam lanes
+  - branch: worktree .claude/worktrees/muse-k1220-s6 kept, detached at 73ecbeb6 with S6's fix uncommitted (copy: .claude/probes/K1220/s6/fix.patch); S5's worktree removed (its change is s5/s5_src.patch); last commit: `a5f8192a`
+  - evidence: .claude/probes/K1220/s6/ (tracked tools; untracked fix.patch, out/sheets rebuilt from the final shots, statemask.txt). S6's Handoff and Claude's view end docs/design/K1220_s6_fan_footprint.md: the teeth are gone and the fans stay in pluck and flow, but dark seams show at the cut edges and the fill east of the stem is paler than the stem. S4 (291780c5 + 331f425d) stays on master
+  - next: When K1240 S2 reports and Levi decides: if the forks move onto the outline, close K1220 and fold its checks into K1240; if not, S6b from fix.patch (the fan paints the ribbons' rims and continues the stem's paint; Done 3's reshoot; then S6's Done 5). Then the 1 px jog in ia at xh 2 and the reveal's bare-ribbon moment (a at xh 3, 40%)
   - brief: `docs/design/K1220_s6_fan_footprint.md`
 - **K1240** · One outline for both looks and every junction consumer (Levi's sketch, 2026-11-06): offset-polyline borders,
   cuts and corner arcs in closed form from each frame; the border look strokes it, the filled look fills it. S1: a clean
@@ -746,7 +746,7 @@ Every other item below waits on the trigger it names.
   K441's old briefs: ask Levi) after K1058, since a removal can empty node_modules. First copy `k868-s3a`'s
   `.claude/probes/S3a/` scripts to main (its seq13 recordings already are). Also delete the empty dirs that removed Muse
   worktrees leave while Paseo holds them as its cwd (muse-k1220-s3, -k1040-s4a2, -k1228, -k1220-s4, -k1040-s4c, -k1239,
-  -k1040-s4d): after a Paseo restart with nothing running.
+  -k1040-s4d, -k1220-s5): after a Paseo restart with nothing running.
 - **K1180** · Form B: let a round's feet run past an arm's root onto the neighbouring arm, so no null band is
   left there (row 15's class: j124, r 1.967h, 0.274h after K1163's softer gate, ab7cad9a). K1179's spike ended
   with no rebuild, so this goes ahead on form B (review section 4).
