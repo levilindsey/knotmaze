@@ -76,7 +76,7 @@ Split `outline.ts` into two steps. Keep the table format.
 
 - Muse Spark session (coordinating session's worktree
   `muse-k1240-s1`, detached at `3d29c94a`), started Fri 2026-11-06
-  18:13 PT, lock first taken 19:15 PT, work stopped ~19:40 PT.
+  18:13 PT, lock first taken 19:15 PT, work stopped ~19:50 PT.
 - Files changed:
   `.claude/probes/K1240/proto/outline.ts` (the split: `structure()`,
   `frame()`, `buildOutlineS2`; S2's builder instrumented with point
@@ -100,12 +100,10 @@ Split `outline.ts` into two steps. Keep the table format.
 
 ### What failed
 
-- **Done 3's 3 ms target: missed.** def `frame` median **30.1 ms**,
-  p95 60.1 ms (locked runs measured 2026-11-06 19:15 and 19:28,
-  after a micro-optimization pass: zero-copy piece views, direct
-  final-array writes, faster region range pushes, narrower corner
-  foot scans - Done 1 re-verified identical after each). The target
-  is ~10x away.
+- **Done 3's 3 ms target: missed.** def `frame` median **26.9 ms**,
+  p95 59.5 ms (locked runs measured 2026-11-06 19:15, 19:28 and
+  19:34, after two micro-optimization passes - see Done 3). The
+  target is ~9x away.
 - Done 1's exact clause against **S2's Handoff table** is formally
   worse on max (see below): S2's own final code reproduces the same
   values on disk, so the split adds no regression, but Levi/Claude
@@ -157,11 +155,13 @@ Split `outline.ts` into two steps. Keep the table format.
 
 1. **`frame(structure(S), S)` vs `buildOutlineS2(S)`** (`s3_check.ts`,
    Node): same pieces and same regions on all 12 scenes. Largest
-   piece-endpoint difference (world units): muse_hash 3.6e-13,
-   muse_default_tw 2.7e-13, **def 2.1e-13**, fat 1.8e-15, ring
-   8.2e-14, user 8.3e-14, g41_def_tw42 1.8e-13, g41_def_tw64 1.4e-13,
-   g41_ring_tw42 7.0e-14, g41_ring_tw64 6.5e-14, g41_user_tw42
-   7.0e-14, g41_user_tw64 6.8e-14 — all far under 1e-6. (Two
+   piece-endpoint difference (world units, final code): muse_hash
+   3.5e-9, muse_default_tw 1.4e-9, **def 8.5e-10**, fat 1.8e-15,
+   ring 7.7e-10, user 6.7e-10, g41_def_tw42 6.8e-10, g41_def_tw64
+   1.4e-9, g41_ring_tw42 6.8e-10, g41_ring_tw64 1.1e-9,
+   g41_user_tw42 6.7e-10, g41_user_tw64 1.1e-9 — all ~300x under
+   1e-6 (an earlier build reached 3.6e-13 before the growth
+   tolerance trade noted in Done 3). (Two
    regressions caught and fixed on the way: a loosened growth/step
    budget moved corner feet, each time found by this check.)
    Synthetic tests in `proto/outline.test.ts` ALL PASS through the
@@ -201,9 +201,13 @@ Split `outline.ts` into two steps. Keep the table format.
    rebuilt junctions), as expected for 0.1h.
 3. **Timing** (`s3_bench.ts`, locked 19:15 and 19:28, median of 15
    frames after warm-up; structure median of 3): def frame **median
-   30.1 ms, p95 60.1 ms — target 3 ms missed by ~10x** (32.6 ms
-   before the final micro-optimization pass); def structure median
-   397 ms. All scenes (frame median/p95 ms, structure ms):
+   26.9 ms, p95 59.5 ms — target 3 ms missed by ~9x** (32.6 ms at
+   first measurement; micro-optimization passes since: zero-copy
+   piece views, final arrays written during point evaluation,
+   batched region range pushes, narrower corner foot scans,
+   structure-recorded run boundaries for pieces, growth Newton
+   tolerance 1e-9 — each gated by the Done 1 check below); def
+   structure median 418 ms. All scenes (frame median/p95 ms, structure ms):
    muse_hash 23.1/50.5, 508; muse_default_tw 37.6/65.9, 467; def
    32.6/60.9, 408; fat 13.4/16.9, 337; ring 5.4/7.3, 74;
    user 12.3/18.7, 209; g41_def_tw42 36.8/57.2, 318; g41_def_tw64
@@ -269,15 +273,16 @@ Split `outline.ts` into two steps. Keep the table format.
 
 ### Not done, and why
 
-- **3 ms def frame**: not reached (30.1 ms median locked). The remaining
+- **3 ms def frame**: not reached (26.9 ms median locked). The remaining
   cost is emitting the table itself (77k border points, 3053
   pieces, 1531 regions) plus 386 tracked corner growths per call in
-  JS. A micro-optimization pass (zero-copy piece views over the
-  border buffers, final arrays written during point evaluation,
-  batched region range pushes, narrower corner foot scans - each
-  gated by the Done 1 check staying at ~1e-13) bought 32.6 -> 30.1
-  ms locked (23-25 ms on the unlocked dev bench); nothing measured
-  suggests a safe 10x from here. Suggested next step for a future slice: emit pieces and
+  JS. The micro-optimization passes bought 32.6 -> 26.9 ms locked
+  (22.7 ms on the unlocked dev bench). Loosening the growth Newton
+  tolerance (1e-12 -> 1e-9, acceptance unchanged) traded Done 1
+  margin from ~1e-13 to ~3.5e-9 worst-case — still ~300x under the
+  1e-6 requirement. Nothing measured suggests a safe 9x from here:
+  the floor is emitting ~77k border points, 3053 pieces and 1531
+  region polygons per call in JS. Suggested next step for a future slice: emit pieces and
   regions as views over shared typed buffers (draw.ts already reads
   indexable arrays), and reduce corner growth by solving V and q in
   one tracked pass.
@@ -292,6 +297,6 @@ Split `outline.ts` into two steps. Keep the table format.
 - 19:15 — perf lock first taken (locked bench/exact/page runs,
   released between each); 19:25 — first push (`1d366de6`,
   `603f2d48` on origin/master, atop ledger commit `c5495332`).
-- ~19:40 — work stopped; this Handoff updated with the final
+- ~19:50 — work stopped; this Handoff updated with the final
   locked bench; final commit and push follow immediately.
 

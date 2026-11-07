@@ -1781,11 +1781,20 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
           fSegR[j] = segR[fs];
           for (let f = fs + 1; f < seqFull[j + 1]; f++) if (exp[f] !== exp[fs] || segR[f] !== segR[fs]) nonUniform++;
         }
+        const runsArr: number[] = [];
+        {
+          let rStart = -1; let rReg = 0;
+          for (let j = 0; j < fExp.length; j++) {
+            if (!fExp[j]) { if (rStart >= 0) { runsArr.push(rStart, j, rReg); rStart = -1; } continue; }
+            if (rStart < 0 || fSegR[j] !== rReg) { if (rStart >= 0) runsArr.push(rStart, j, rReg); rStart = j; rReg = fSegR[j]; }
+          }
+          if (rStart >= 0) runsArr.push(rStart, fExp.length, rReg);
+        }
         const P = pools[b];
         bordersOut.push({
           kind: Uint8Array.from(P.kind), i1: Int32Array.from(P.i1), i2: Int32Array.from(P.i2), i3: Int32Array.from(P.i3), i4: Int32Array.from(P.i4),
           other: Int32Array.from(P.other), f: Float64Array.from(P.f), sOff: Float64Array.from(P.sOff), eye: Int32Array.from(P.eye),
-          baseSeq: Int32Array.from(baseSeq), seqPool: Int32Array.from(seqPool), seqFull: Int32Array.from(seqFull), idxOfFull, exposed: fExp, segRegion: fSegR, fullLen: B.pts.length,
+          baseSeq: Int32Array.from(baseSeq), seqPool: Int32Array.from(seqPool), seqFull: Int32Array.from(seqFull), idxOfFull, exposed: fExp, segRegion: fSegR, fullLen: B.pts.length, runs: Int32Array.from(runsArr),
         });
       });
     });
@@ -1838,7 +1847,7 @@ export interface BorderStruct {
   kind: Uint8Array; i1: Int32Array; i2: Int32Array; i3: Int32Array; i4: Int32Array;
   other: Int32Array; f: Float64Array; sOff: Float64Array; eye: Int32Array;
   baseSeq: Int32Array; seqPool: Int32Array; seqFull: Int32Array; idxOfFull: Int32Array;
-  exposed: Uint8Array; segRegion: Int32Array; fullLen: number;
+  exposed: Uint8Array; segRegion: Int32Array; fullLen: number; runs: Int32Array;
 }
 export interface ArmStruct { ji: number; ei: number; pi: number; sR: number; dir: number; kind: string; L: number; g: number }
 export interface CornerStruct {
@@ -2091,7 +2100,7 @@ export function frame(st: OutlineStructure, scene: SceneIn, profile?: Record<str
               const ux = (nax + nbx) / den; const uy = (nay + nby) / den;
               const gx = p.x + ux * dd; const gy = p.y + uy * dd;
               const acc = Math.min(h, Math.max(0.5 * Math.hypot(ux, uy) * dd, 1e-3 * h));
-              const nn = solveEqF(A, B, rn, gx, gy, p.fa.u ?? p.fa.s, p.fa.k, p.fb.u ?? p.fb.s, p.fb.k, acc, 60, 1e-12);
+              const nn = solveEqF(A, B, rn, gx, gy, p.fa.u ?? p.fa.s, p.fa.k, p.fb.u ?? p.fb.s, p.fb.k, acc, 16, 1e-9);
               if (nn.ok && Math.hypot(nn.x - gx, nn.y - gy) <= acc) next = nn as TKF;
             }
           }
@@ -2464,7 +2473,8 @@ export function frame(st: OutlineStructure, scene: SceneIn, profile?: Record<str
   });
   mark("regions", tPhase); tPhase = performance.now();
 
-  // Pieces: exposed runs (structure's flags), corner arcs, cap runs.
+  // Pieces: exposed runs (structure's recorded boundaries), corner
+  // arcs, cap runs.
   const pieces: OutlinePiece[] = [];
   for (let pi = 0; pi < polys.length; pi++) {
     for (let bi = 0; bi < 2; bi++) {
@@ -2472,27 +2482,18 @@ export function frame(st: OutlineStructure, scene: SceneIn, profile?: Record<str
       const bs = st.borders[b];
       const stt = bStates[b];
       const side = bi === 0 ? 1 : -1;
-      const nF = bs.seqPool.length;
-      let startPt = -1; let curRegion = -2; let endPt = -1;
-      const flush = (): void => {
-        if (startPt < 0) return;
+      const runs = bs.runs;
+      for (let ri = 0; ri < runs.length; ri += 3) {
+        const startPt = runs[ri]; const endPt = runs[ri + 1]; const rid = runs[ri + 2];
         const piece: OutlinePiece = {
           kind: "run", chain: pi, side, s0: stt.SA[startPt], s1: stt.SA[endPt],
           pts: stt.XY.subarray(2 * startPt, 2 * (endPt + 1)) as unknown as number[],
           cpts: stt.CXY.subarray(2 * startPt, 2 * (endPt + 1)) as unknown as number[],
-          region: curRegion, corner: -1,
+          region: rid, corner: -1,
         };
         pieces.push(piece);
-        if (curRegion >= 0 && regions[curRegion]) regions[curRegion].pieces.push(pieces.length - 1);
-        startPt = -1;
-      };
-      for (let i = 0; i + 1 < nF; i++) {
-        if (!bs.exposed[i]) { flush(); continue; }
-        const rid = bs.segRegion[i];
-        if (startPt < 0 || rid !== curRegion) { flush(); startPt = i; curRegion = rid; }
-        endPt = i + 1;
+        if (rid >= 0 && regions[rid]) regions[rid].pieces.push(pieces.length - 1);
       }
-      flush();
     }
   }
   st.corners.forEach((cs, ci) => {
