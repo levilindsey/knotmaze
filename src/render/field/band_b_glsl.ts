@@ -734,7 +734,12 @@ void main() {
           float tp = clamp(segT(p, Pp0.xy, Pp1.xy), 0.0, 1.0);
           dpPrev = distance(p, mix(Pp0.xy, Pp1.xy, tp));
         }
-        if (bestSeg + 1 < bn || bcl) {
+        // K1040 S4b: an open chain has n - 1 segments (b0.z); its last
+        // segment has no next one. The old bound (n) read a segment from
+        // the last point back to the first, which can pass nearer p than
+        // B's piece and fail the test (def chain 9's end at (1176, 336):
+        // chain 1's rim drawn inside group 1's fill).
+        if (bestSeg + 1 < int(b0.z) || bcl) {
           int jn = (bestSeg + 1 == bn) ? 0 : bestSeg + 1;
           int jn2 = (jn + 1 == bn) ? 0 : jn + 1;
           vec4 Pn0 = fetch(uPts, boff + jn);
