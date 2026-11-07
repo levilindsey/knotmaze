@@ -1353,7 +1353,13 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
   const cbufPi = new Int32Array(256);
   const cbufD = new Float64Array(256);
   const cbufS = new Float64Array(256);
+  let coverPickPi: number[] = [];
+  let coverPickS: number[] = [];
+  let coverNearPi = -1;
+  let coverNearS = 0;
+  let coverNearD = Infinity;
   const covering = (x: number, y: number, ownPi: number, ownS: number): boolean => {
+    coverPickPi = []; coverPickS = []; coverNearPi = -1; coverNearS = 0;
     stampCur++;
     if (stampCur > 2000000000) { stamp.fill(0); stampCur = 1; }
     const cx = Math.floor(x / cell); const cy = Math.floor(y / cell);
@@ -1372,7 +1378,12 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
         let t = l2 > 0 ? ((x - p.x[e.k]) * ex + (y - p.y[e.k]) * ey) / l2 : 0;
         t = Math.min(1, Math.max(0, t));
         const d = Math.hypot(p.x[e.k] + ex * t - x, p.y[e.k] + ey * t - y);
-        if (d >= h) continue;
+        if (d >= h) {
+          if (d < 2.2 * h && !(e.pi === ownPi && Math.abs(dS(p, ownS, p.s[e.k] + t * p.segLen[e.k])) <= sigma)) {
+            if (coverNearPi < 0 || d < coverNearD) { coverNearPi = e.pi; coverNearS = p.s[e.k] + t * p.segLen[e.k]; coverNearD = d; }
+          }
+          continue;
+        }
         const s = p.s[e.k] + t * p.segLen[e.k];
         if (e.pi === ownPi && Math.abs(dS(p, ownS, s)) <= sigma) continue;
         if (cn < 256) { cbufPi[cn] = e.pi; cbufD[cn] = d; cbufS[cn] = s; cn++; }
@@ -1392,9 +1403,10 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
       if (dup) continue;
       pickedPi.push(pi2); pickedS.push(s2);
       const gOther = memberGroup(pi2, s2);
-      if (gOwn >= 0 && gOther === gOwn) return true;
-      if (depthAt(pi2, s2) > zOwn + 1e-9) return true;
+      if (gOwn >= 0 && gOther === gOwn) { coverPickPi = pickedPi.slice(); coverPickS = pickedS.slice(); return true; }
+      if (depthAt(pi2, s2) > zOwn + 1e-9) { coverPickPi = pickedPi.slice(); coverPickS = pickedS.slice(); return true; }
     }
+    coverPickPi = pickedPi.slice(); coverPickS = pickedS.slice();
     return false;
   };
   const trimByBorder = new Map<string, { sR: number; dir: number; dEnd: number; pi: number }[]>();
@@ -1416,15 +1428,28 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
     }
     return false;
   };
-  // Exposed flag per border segment.
+  // Exposed flag per border segment. The covering candidates (the
+  // chains whose tubes face this segment, nearest first) are recorded
+  // per segment: structure() stores them so frame() can re-evaluate
+  // exposure from the frame's own geometry (S3b).
+  const coverCand = borders.map((bs) => bs.map((B) => {
+    const n = Math.max(0, B.pts.length - 1);
+    return { pi: new Int16Array(n).fill(-1), s: new Float32Array(n), pi2: new Int16Array(n).fill(-1), s2: new Float32Array(n), pi3: new Int16Array(n).fill(-1), s3: new Float32Array(n), pi4: new Int16Array(n).fill(-1), s4: new Float32Array(n) };
+  }));
   const exposed: boolean[][][] = borders.map((bs, pi) => bs.map((B, bi) => {
     const side = bi === 0 ? 1 : -1;
     const out = new Array<boolean>(Math.max(0, B.pts.length - 1)).fill(false);
+    const cc = coverCand[pi][bi];
     for (let i = 0; i + 1 < B.pts.length; i++) {
       const a = B.pts[i]; const b = B.pts[i + 1];
       const midS = a.s + (b.s - a.s) / 2;
-      if (isTrimmed(pi, side, midS)) { out[i] = false; continue; }
-      out[i] = !covering((a.x + b.x) / 2, (a.y + b.y) / 2, pi, midS);
+      const cov = covering((a.x + b.x) / 2, (a.y + b.y) / 2, pi, midS);
+      if (coverPickPi.length > 0) { cc.pi[i] = coverPickPi[0]; cc.s[i] = coverPickS[0]; }
+      if (coverPickPi.length > 1) { cc.pi2[i] = coverPickPi[1]; cc.s2[i] = coverPickS[1]; }
+      if (coverPickPi.length > 2) { cc.pi3[i] = coverPickPi[2]; cc.s3[i] = coverPickS[2]; }
+      if (coverPickPi.length > 3) { cc.pi4[i] = coverPickPi[3]; cc.s4[i] = coverPickS[3]; }
+      else if (coverNearPi >= 0) { cc.pi4[i] = coverNearPi; cc.s4[i] = coverNearS; }
+      out[i] = !isTrimmed(pi, side, midS) && !cov;
     }
     return out;
   }));
@@ -1779,6 +1804,16 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
         }
         const idxOfFull = new Int32Array(B.pts.length).fill(-1);
         seqFull.forEach((full, j) => { idxOfFull[full] = j; });
+        const ccB = coverCand[pi][bi];
+        const nSeqSeg = Math.max(0, seqFull.length - 1);
+        const covPi = new Int16Array(nSeqSeg).fill(-1); const covS = new Float32Array(nSeqSeg);
+        const covPi2 = new Int16Array(nSeqSeg).fill(-1); const covS2 = new Float32Array(nSeqSeg);
+        const covPi3 = new Int16Array(nSeqSeg).fill(-1); const covS3 = new Float32Array(nSeqSeg);
+        const covPi4 = new Int16Array(nSeqSeg).fill(-1); const covS4 = new Float32Array(nSeqSeg);
+        for (let j = 0; j < nSeqSeg; j++) {
+          const fs = seqFull[j];
+          if (fs < ccB.pi.length) { covPi[j] = ccB.pi[fs]; covS[j] = ccB.s[fs]; covPi2[j] = ccB.pi2[fs]; covS2[j] = ccB.s2[fs]; covPi3[j] = ccB.pi3[fs]; covS3[j] = ccB.s3[fs]; covPi4[j] = ccB.pi4[fs]; covS4[j] = ccB.s4[fs]; }
+        }
         const fExp = new Uint8Array(Math.max(0, seqFull.length - 1));
         const fSegR = new Int32Array(Math.max(0, seqFull.length - 1));
         for (let j = 0; j + 1 < seqFull.length; j++) {
@@ -1801,6 +1836,7 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
           kind: Uint8Array.from(P.kind), i1: Int32Array.from(P.i1), i2: Int32Array.from(P.i2), i3: Int32Array.from(P.i3), i4: Int32Array.from(P.i4),
           other: Int32Array.from(P.other), f: Float64Array.from(P.f), sOff: Float64Array.from(P.sOff), eye: Int32Array.from(P.eye), winS: Float64Array.from(P.win),
           baseSeq: Int32Array.from(baseSeq), seqPool: Int32Array.from(seqPool), seqFull: Int32Array.from(seqFull), idxOfFull, exposed: fExp, segRegion: fSegR, fullLen: B.pts.length, runs: Int32Array.from(runsArr),
+          coverPi: covPi, coverS: covS, coverPi2: covPi2, coverS2: covS2, coverPi3: covPi3, coverS3: covS3, coverPi4: covPi4, coverS4: covS4,
         });
       });
     });
@@ -1855,6 +1891,7 @@ export interface BorderStruct {
   winS: Float64Array;
   baseSeq: Int32Array; seqPool: Int32Array; seqFull: Int32Array; idxOfFull: Int32Array;
   exposed: Uint8Array; segRegion: Int32Array; fullLen: number; runs: Int32Array;
+  coverPi: Int16Array; coverS: Float32Array; coverPi2: Int16Array; coverS2: Float32Array; coverPi3: Int16Array; coverS3: Float32Array; coverPi4: Int16Array; coverS4: Float32Array;
 }
 export interface ArmStruct { ji: number; ei: number; pi: number; sR: number; dir: number; kind: string; L: number; g: number }
 export interface CornerStruct {
@@ -1889,7 +1926,7 @@ export function structure(scene: SceneIn): OutlineStructure { return buildOutlin
 
 interface FArm extends ArmStruct { ux: number; uy: number; ang: number }
 interface FFoot { d: number; x: number; y: number; s: number; k: number; u: number }
-interface FCorner { ok: boolean; Vx: number; Vy: number; qx: number; qy: number; tax: number; tay: number; tbx: number; tby: number; sA: number; sB: number; fax: number; fay: number; fbx: number; fby: number; r: number; theta: number }
+interface FCorner { ok: boolean; Vx: number; Vy: number; qx: number; qy: number; tax: number; tay: number; tbx: number; tby: number; sA: number; sB: number; fax: number; fay: number; fbx: number; fby: number; r: number; theta: number; duA: number; duB: number; dvA: number; dvB: number }
 
 export function frame(st: OutlineStructure, scene: SceneIn, profile?: Record<string, number>): OutlineTable {
   const prof = profile;
@@ -1935,6 +1972,76 @@ export function frame(st: OutlineStructure, scene: SceneIn, profile?: Record<str
     addPin(rt, ib, normS(polys[ib], x.b.s), x.over === "b" ? amp : -amp);
   });
   const depthAt = (pi: number, s: number): number => depthAtRt(rt, pi, s, depthWin);
+  // Passes, arm roots and arm spans from this frame (the builder's
+  // span rule: next root, chain end, crossing cuts with their reach).
+  const ptP = new Float64Array(4); const ptQ = new Float64Array(4);
+  const ptR = new Float64Array(4); const ptS = new Float64Array(4);
+  rt.passN.fill(0);
+  scene.crossings.forEach((x) => {
+    const ia = idxOf.get(x.a.chain); const ib = idxOf.get(x.b.chain);
+    if (ia === undefined || ib === undefined) return;
+    const sa = normS(polys[ia], x.a.s); const sb = normS(polys[ib], x.b.s);
+    tanAtInto(polys[ia], sa, ptP); tanAtInto(polys[ib], sb, ptQ);
+    const theta = Math.acos(Math.min(1, Math.abs(ptP[0] * ptQ[0] + ptP[1] * ptQ[1])));
+    let n = rt.passN[ia];
+    rt.passS[ia][n] = sa; rt.passSq[ia][n] = sb; rt.passTheta[ia][n] = theta; rt.passQi[ia][n] = ib;
+    rt.passN[ia] = n + 1;
+    n = rt.passN[ib];
+    rt.passS[ib][n] = sb; rt.passSq[ib][n] = sa; rt.passTheta[ib][n] = theta; rt.passQi[ib][n] = ia;
+    rt.passN[ib] = n + 1;
+  });
+  const reachOfF = (pi: number, qi: number, s: number, sq: number, theta: number, dirA: number): number => {
+    const t = Math.tan(theta / 2);
+    let reach = t > 1e-12 ? h / t : Infinity;
+    const fl = 4 * h;
+    if (reach > fl) {
+      const pa = polys[pi]; const pq = polys[qi];
+      tanAtInto(pa, s, ptP); tanAtInto(pq, sq, ptQ);
+      const sb = -dirA * (ptP[0] * ptQ[0] + ptP[1] * ptQ[1]) >= 0 ? 1 : -1;
+      const aC = 2 * Math.sin(theta / 2); const T = 2 * h * Math.cos(theta / 2);
+      const eA = pa.closed ? pa.len / 2 : dirA > 0 ? s - pa.s0 : pa.s0 + pa.len - s;
+      let r = aC > 0 ? T / aC : Infinity;
+      let e = fl;
+      for (let k = 0; k < 2; k++) {
+        const ek = Math.max(1e-6, Math.min(e, eA));
+        pointAtInto(pa, s - dirA * ek, ptR); pointAtInto(pq, sq + sb * ek, ptS);
+        const gx = ptR[0] - ptS[0]; const gy = ptR[1] - ptS[1];
+        const g = Math.sqrt(gx * gx + gy * gy);
+        const kap = Math.max(0, (2 * (g - aC * ek)) / (ek * ek));
+        r = (2 * T) / (aC + Math.sqrt(aC * aC + 2 * kap * T));
+        e = Math.max(fl, r);
+      }
+      reach = Math.min(reach, Math.max(fl, r));
+    }
+    return reach;
+  };
+  for (const a of rt.arms) {
+    const p = polys[a.pi];
+    const sceneArm = scene.junctions[a.ji]?.arms[a.ei];
+    if (a.kind === "end") {
+      const atStart = sceneArm ? Math.abs(sceneArm.s) < Math.abs(sceneArm.s - rt.rawPolys[a.pi].len) : a.dir > 0;
+      a.dir = atStart ? 1 : -1;
+      a.sR = atStart ? p.s0 : p.s0 + p.len;
+    } else if (sceneArm) a.sR = normS(p, sceneArm.s);
+  }
+  for (let ai = 0; ai < rt.arms.length; ai++) {
+    const a = rt.arms[ai]; const p = polys[a.pi];
+    const delta = (sv: number): number => { let d = (sv - a.sR) * a.dir; if (p.closed) d = ((d % p.len) + p.len) % p.len; return d; };
+    let L = p.closed ? p.len : a.dir > 0 ? p.s0 + p.len - a.sR : a.sR - p.s0;
+    for (const qai of rt.chainArms[a.pi]) { const d = delta(rt.arms[qai].sR); if (d > 1e-9 && d < L) L = d; }
+    let Lcut = Infinity; let uB = Infinity;
+    const nP = rt.passN[a.pi];
+    for (let k = 0; k < nP; k++) {
+      const sv = rt.passS[a.pi][k];
+      const d = delta(sv);
+      const u = p.closed ? p.len - d : -d;
+      if (p.closed || d < -1e-12) { if (u >= 0 && u < uB) uB = u; }
+      if (d < -1e-12) continue;
+      Lcut = Math.min(Lcut, d - reachOfF(a.pi, rt.passQi[a.pi][k], sv, rt.passSq[a.pi][k], rt.passTheta[a.pi][k], a.dir) - h);
+    }
+    rt.armLroot[ai] = L; rt.armLcut[ai] = Lcut; rt.armUB[ai] = uB;
+    a.L = Math.max(0, Math.min(L, Lcut));
+  }
   // Arm directions from this frame.
   const arms = rt.arms;
   const ptA = new Float64Array(4); const ptB = new Float64Array(4);
@@ -1951,6 +2058,40 @@ export function frame(st: OutlineStructure, scene: SceneIn, profile?: Record<str
     if (ul < 1e-12) { ux = ptA[2] * a.dir; uy = ptA[3] * a.dir; } else { ux /= ul; uy /= ul; }
     a.ux = ux; a.uy = uy; a.ang = Math.atan2(uy, ux);
   }
+  // Arms with a pass behind the root: dEdgeTip span adjustment,
+  // from this frame's arm angles (the builder's pendArms pass).
+  for (let ji = 0; ji < rt.armsOfJSorted.length; ji++) {
+    const l = rt.armsOfJSorted[ji]; const src = st.armsOfJ[ji];
+    for (let i = 0; i < src.length; i++) l[i] = src[i];
+    l.length = src.length;
+    l.sort((x, y) => arms[x].ang - arms[y].ang);
+  }
+  for (let ai = 0; ai < arms.length; ai++) {
+    const uB = rt.armUB[ai];
+    if (!(uB < Infinity)) continue;
+    const A = arms[ai];
+    const list = rt.armsOfJSorted[A.ji];
+    const n = list.length;
+    if (n < 2) continue;
+    const at = list.indexOf(ai);
+    if (at < 0) continue;
+    const J = scene.junctions[A.ji];
+    if (!J) continue;
+    let gMax = 0;
+    const pairs: [number, number][] = [[list[(at + n - 1) % n], ai], [ai, list[(at + 1) % n]]];
+    for (const [aa, bb] of pairs) {
+      if (aa === bb) continue;
+      const xa = J.arms[arms[aa].ei]; const xb = J.arms[arms[bb].ei];
+      if (xa && xb && xa.chain === xb.chain && xa.kind === "through" && xb.kind === "through" && Math.abs(xa.s - xb.s) < 1e-6) continue;
+      let th = arms[bb].ang - arms[aa].ang;
+      th = ((th % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+      if (th < Math.PI) gMax = Math.max(gMax, Math.tan((Math.PI - th) / 4));
+    }
+    const k = gMax > 0 ? Math.min(4, Math.max(1, 1 / gMax)) : 4;
+    const c = k * uB;
+    if (c < rt.armLcut[ai]) rt.armLcut[ai] = c;
+    A.L = Math.max(0, Math.min(rt.armLroot[ai], rt.armLcut[ai]));
+  }
   const armDistF = (arm: FArm, s: number): number => {
     const p = polys[arm.pi];
     let d = (s - arm.sR) * arm.dir;
@@ -1962,6 +2103,7 @@ export function frame(st: OutlineStructure, scene: SceneIn, profile?: Record<str
   const sv = { x: 0, y: 0 };
   const gFa: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 };
   const gFb: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 };
+  const mFoot: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 };
   const footNear = (arm: FArm, x: number, y: number, hintS: number, hintK: number, out: FFoot): void => {
     // The builder's tracked foot (footT): search only h/32 of s around
     // the current foot estimate, walking the window when the foot sits
@@ -2011,11 +2153,20 @@ export function frame(st: OutlineStructure, scene: SceneIn, profile?: Record<str
   };
   const solveVS2 = (A: FArm, B: FArm, rho: number, x0: number, y0: number, estD: number, fa: FFoot, fb: FFoot): boolean => {
     let x = x0; let y = y0;
-    // Feet start at the estimated foot distance along each arm and are
-    // tracked from there (the builder searches +-4h around it).
-    fa.u = A.sR + A.dir * estD; fa.k = segOfS(polys[A.pi], normS(polys[A.pi], fa.u)).k;
-    fb.u = B.sR + B.dir * estD; fb.k = segOfS(polys[B.pi], normS(polys[B.pi], fb.u)).k;
-    footNear(A, x, y, fa.u, fa.k, fa); footNear(B, x, y, fb.u, fb.k, fb);
+    // The builder's V feet are the global nearest feet in the arm
+    // window estD +- 4h (footArm), not tracked feet: a tracked foot
+    // can sit on the wrong medial branch where the chain curves back.
+    const footArmF = (arm: FArm, fx: number, fy: number, out: FFoot): void => {
+      const p = polys[arm.pi];
+      let d0 = Math.max(0, estD - 4 * h); let d1 = Math.min(arm.L, estD + 4 * h);
+      if (d1 - d0 < 1e-9) { d0 = 0; d1 = arm.L; }
+      const lo = arm.dir > 0 ? arm.sR + d0 : arm.sR - d1;
+      const hi = arm.dir > 0 ? arm.sR + d1 : arm.sR - d0;
+      const f = footInWindow(p, fx, fy, lo, hi);
+      out.d = f.d; out.x = f.x; out.y = f.y; out.s = f.s; out.k = f.k;
+      out.u = arm.sR + arm.dir * armDistF(arm, f.s);
+    };
+    footArmF(A, x, y, fa); footArmF(B, x, y, fb);
     for (let it = 0; it < 40; it++) {
       const Fa = fa.d - rho; const Fb = fb.d - rho;
       if (Math.abs(Fa) < 1e-12 * Math.max(1, rho) && Math.abs(Fb) < 1e-12 * Math.max(1, rho)) break;
@@ -2029,7 +2180,7 @@ export function frame(st: OutlineStructure, scene: SceneIn, profile?: Record<str
       const dl = Math.hypot(dx, dy);
       if (dl > h) { dx *= h / dl; dy *= h / dl; }
       x += dx; y += dy;
-      footNear(A, x, y, fa.u, fa.k, fa); footNear(B, x, y, fb.u, fb.k, fb);
+      footArmF(A, x, y, fa); footArmF(B, x, y, fb);
     }
     sv.x = x; sv.y = y;
     return Math.abs(fa.d - rho) < 1e-9 * Math.max(h, rho) && Math.abs(fb.d - rho) < 1e-9 * Math.max(h, rho);
@@ -2045,13 +2196,13 @@ export function frame(st: OutlineStructure, scene: SceneIn, profile?: Record<str
     const A = arms[cs.aArm]; const B = arms[cs.bArm];
     const J = scene.junctions[cs.ji];
     const degen = (vx: number, vy: number): void => {
-      fc.ok = cs.ok; fc.Vx = vx; fc.Vy = vy; fc.qx = vx; fc.qy = vy;
+      fc.ok = false; fc.Vx = vx; fc.Vy = vy; fc.qx = vx; fc.qy = vy;
       fc.tax = vx; fc.tay = vy; fc.tbx = vx; fc.tby = vy; fc.r = 0; fc.theta = cs.theta;
       if (A) { const f = pointAt(polys[A.pi], cs.sA); fc.fax = f.x; fc.fay = f.y; } else { fc.fax = vx; fc.fay = vy; }
       if (B) { const f = pointAt(polys[B.pi], cs.sB); fc.fbx = f.x; fc.fby = f.y; } else { fc.fbx = vx; fc.fby = vy; }
       fc.sA = cs.sA; fc.sB = cs.sB;
     };
-    if (!cs.ok || !A || !B || !J) { degen(J ? J.c[0] : 0, J ? J.c[1] : 0); continue; }
+    if (!A || !B || !J) { degen(J ? J.c[0] : 0, J ? J.c[1] : 0); continue; }
     let th = B.ang - A.ang;
     th = ((th % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
     fc.theta = th;
@@ -2060,34 +2211,37 @@ export function frame(st: OutlineStructure, scene: SceneIn, profile?: Record<str
     const thC = Math.min(Math.max(th, 1e-3), Math.PI - 1e-3);
     const sn = Math.sin(thC / 2) || 1;
     const vx0 = J.c[0] + (bx * h) / sn; const vy0 = J.c[1] + (by * h) / sn;
-    const okV = solveVS2(A, B, h, vx0, vy0, h / Math.max(Math.tan(thC / 2), 1e-6), fFa, fFb);
+    const okV = A.L > 1e-9 && B.L > 1e-9 && solveVS2(A, B, h, vx0, vy0, h / Math.max(Math.tan(thC / 2), 1e-6), fFa, fFb);
     if (!okV) { degen(vx0, vy0); continue; }
+    {
+      // The builder's remaining ok predicates, from this frame:
+      // V's feet inside both spans, and V inside the wedge.
+      const dVa = armDistF(A, fFa.s); const dVb = armDistF(B, fFb.s);
+      const tol = 1e-9 * h;
+      const crossAB = A.ux * B.uy - A.uy * B.ux;
+      const sgn = Math.sign(crossAB) || 1;
+      const crossA = A.ux * (sv.y - J.c[1]) - A.uy * (sv.x - J.c[0]);
+      const crossB = B.ux * (sv.y - J.c[1]) - B.uy * (sv.x - J.c[0]);
+      if (!(dVa > tol && dVa < A.L - tol && dVb > tol && dVb < B.L - tol) || !(crossA * sgn > 0 && crossB * sgn < 0)) { degen(sv.x, sv.y); continue; }
+    }
     let qx = sv.x; let qy = sv.y;
     Object.assign(qFa, fFa); Object.assign(qFb, fFb);
     let Vx = qx; let Vy = qy;
     let rReached = 0;
     const r0Stored = cs.style * (crF / 3) * Math.min(2 * h, 1.5 * h * Math.tan(cs.theta / 2));
+    void r0Stored;
     const r0Frame = cs.style * (crF / 3) * Math.min(2 * h, 1.5 * h * Math.tan(thC / 2));
-    let rTarget = r0Stored > 1e-12 ? cs.r * (r0Frame / r0Stored) : r0Frame;
-    if (!(rTarget > 0)) rTarget = 0;
-    rTarget = Math.min(rTarget, r0Frame);
-    // Tracked growth along V's medial branch, the builder's advance():
-    // predictor, acceptance radius, step halving/doubling. The step
-    // dN and r0 come from this frame's angle (r0Frame).
-    const growTo = (target: number): number => {
-      Object.assign(qFa, fFa); Object.assign(qFb, fFb);
-      qFa.u = A.sR + A.dir * armDistF(A, fFa.s);
-      qFb.u = B.sR + B.dir * armDistF(B, fFb.s);
-      qx = Vx; qy = Vy;
-      if (!(target > 1e-9)) return 0;
+    // The radius is the builder's gate integral, recomputed from
+    // this frame: grow in dN steps to h + r0, record each node, and
+    // integrate the gates (margin, steep, slack, root) over it.
+    let rhoCur = h;
+    const advanceTo = (rhoT: number): void => {
       const dN = Math.max(r0Frame / 32, 1e-12);
-      const stepCap = Math.max(dN, target / 4);
-      let rhoCur = h;
       let step = dN;
       let guard = 0;
-      while (rhoCur < h + target - 1e-12 * (h + target) && guard++ < 128) {
-        const rhoT = Math.min(h + target, rhoCur + step);
-        const dd = rhoT - rhoCur;
+      while (rhoCur < rhoT - 1e-12 * rhoT && guard++ < 128) {
+        const rn = Math.min(rhoT, rhoCur + step);
+        const dd = rn - rhoCur;
         let advanced = false;
         if (qFa.d > 1e-12 && qFb.d > 1e-12) {
           const nax = (qx - qFa.x) / qFa.d; const nay = (qy - qFa.y) / qFa.d;
@@ -2102,8 +2256,8 @@ export function frame(st: OutlineStructure, scene: SceneIn, profile?: Record<str
             let sx = gx; let sy = gy;
             footNear(A, sx, sy, tFa.u, tFa.k, tFa); footNear(B, sx, sy, tFb.u, tFb.k, tFb);
             for (let it = 0; it < 60; it++) {
-              const Fa = tFa.d - rhoT; const Fb = tFb.d - rhoT;
-              if (Math.abs(Fa) < 1e-12 * Math.max(1, rhoT) && Math.abs(Fb) < 1e-12 * Math.max(1, rhoT)) break;
+              const Fa = tFa.d - rn; const Fb = tFb.d - rn;
+              if (Math.abs(Fa) < 1e-12 * Math.max(1, rn) && Math.abs(Fb) < 1e-12 * Math.max(1, rn)) break;
               if (!(tFa.d > 1e-12 && tFb.d > 1e-12)) break;
               const gax = (sx - tFa.x) / tFa.d; const gay = (sy - tFa.y) / tFa.d;
               const gbx = (sx - tFb.x) / tFb.d; const gby = (sy - tFb.y) / tFb.d;
@@ -2116,16 +2270,97 @@ export function frame(st: OutlineStructure, scene: SceneIn, profile?: Record<str
               sx += dx; sy += dy;
               footNear(A, sx, sy, tFa.u, tFa.k, tFa); footNear(B, sx, sy, tFb.u, tFb.k, tFb);
             }
-            const sok = Math.max(Math.abs(tFa.d - rhoT), Math.abs(tFb.d - rhoT)) < 1e-9 * Math.max(1, rhoT);
-            if (sok && Math.hypot(sx - gx, sy - gy) <= acc) { qx = sx; qy = sy; Object.assign(qFa, tFa); Object.assign(qFb, tFb); rhoCur = rhoT; advanced = true; }
+            const sok = Math.max(Math.abs(tFa.d - rn), Math.abs(tFb.d - rn)) < 1e-9 * Math.max(1, rn);
+            if (sok && Math.hypot(sx - gx, sy - gy) <= acc) { qx = sx; qy = sy; Object.assign(qFa, tFa); Object.assign(qFb, tFb); rhoCur = rn; advanced = true; }
           }
         }
-        if (advanced) step = Math.min(stepCap, 2 * step);
+        if (advanced) step = Math.min(dN, 2 * step);
         else { step /= 2; if (step < 1e-5 * h) break; }
       }
+    };
+    const rbEff = Math.max(0.5 * h * rootTipScale(th), 1e-9 * h);
+    const denV = 1 + ((Vx - fFa.x) * (Vx - fFb.x) + (Vy - fFa.y) * (Vy - fFb.y)) / ((fFa.d || 1) * (fFb.d || 1));
+    const marginOfF = (arm: FArm, x: number, y: number, sf: number, dc: number): number => {
+      const pl = polys[arm.pi];
+      const winLo = arm.dir > 0 ? arm.sR : arm.sR - arm.L;
+      const winHi = arm.dir > 0 ? arm.sR + arm.L : arm.sR;
+      const f0 = segOfS(pl, sf);
+      const base = sf - normS(pl, sf);
+      let hi = winHi;
+      let k = f0.k; let bk = base;
+      for (let it = 0; it <= pl.nseg; it++) {
+        const sv = bk + pl.s[k] + pl.segLen[k];
+        if (sv >= winHi) break;
+        let k2 = k + 1; let b2 = bk;
+        if (k2 >= pl.nseg) { if (!pl.closed) break; k2 = 0; b2 = bk + pl.len; }
+        const e = k2 + 1 === pl.n ? 0 : k2 + 1;
+        if ((pl.x[k2] - x) * (pl.x[e] - pl.x[k2]) + (pl.y[k2] - y) * (pl.y[e] - pl.y[k2]) < 0) { hi = sv; break; }
+        k = k2; bk = b2;
+      }
+      let lo = winLo;
+      k = f0.k; bk = base;
+      for (let it = 0; it <= pl.nseg; it++) {
+        const sv = bk + pl.s[k];
+        if (sv <= winLo) break;
+        let k2 = k - 1; let b2 = bk;
+        if (k2 < 0) { if (!pl.closed) break; k2 = pl.nseg - 1; b2 = bk - pl.len; }
+        if ((pl.x[k] - x) * (pl.x[k2] - pl.x[k]) + (pl.y[k] - y) * (pl.y[k2] - pl.y[k]) < 0) { lo = sv; break; }
+        k = k2; bk = b2;
+      }
+      let d2 = Infinity;
+      if (lo > winLo) { footWinFast(pl, x, y, winLo, lo, mFoot); d2 = mFoot.d; }
+      if (hi < winHi) { footWinFast(pl, x, y, hi, winHi, mFoot); if (mFoot.d < d2) d2 = mFoot.d; }
+      return d2 - dc;
+    };
+    const wOfF = (): number => {
+      const mA = marginOfF(A, qx, qy, qFa.u, qFa.d);
+      const mB = marginOfF(B, qx, qy, qFb.u, qFb.d);
+      const denQ = 1 + ((qx - qFa.x) * (qx - qFb.x) + (qy - qFa.y) * (qy - qFb.y)) / ((qFa.d || 1) * (qFb.d || 1));
+      const slack = Math.min(A.L - W - (qFa.u - A.sR) * A.dir, B.L - W - (qFb.u - B.sR) * B.dir);
+      const denRatio = Math.abs(denV) > 1e-12 ? denQ / denV : 0;
+      return ssFB(0, 1, 1 + Math.min(0, mA, mB) / (0.05 * h)) * ssFB(0, 1, (denRatio - 0.3) / 0.4) * ssFB(0, 1, slack / (0.5 * h)) * ssFB(0, 1, ((qFa.u - A.sR) * A.dir) / rbEff) * ssFB(0, 1, ((qFb.u - B.sR) * B.dir) / rbEff);
+    };
+    const growInteg = (): number => {
+      Object.assign(qFa, fFa); Object.assign(qFb, fFb);
+      qFa.u = A.sR + A.dir * armDistF(A, fFa.s);
+      qFb.u = B.sR + B.dir * armDistF(B, fFb.s);
+      qx = Vx; qy = Vy; rhoCur = h;
+      if (!(r0Frame > 1e-9)) return 0;
+      const dN = r0Frame / 32;
+      const NS = rt.nodeState; const NK = rt.nodeK;
+      const saveNode = (kk: number): void => {
+        const o = kk * 12;
+        NS[o] = qx; NS[o + 1] = qy; NS[o + 2] = qFa.d; NS[o + 3] = qFa.x; NS[o + 4] = qFa.y; NS[o + 5] = qFa.s; NS[o + 6] = qFa.u;
+        NS[o + 7] = qFb.d; NS[o + 8] = qFb.x; NS[o + 9] = qFb.y; NS[o + 10] = qFb.s; NS[o + 11] = qFb.u;
+        NK[2 * kk] = qFa.k; NK[2 * kk + 1] = qFb.k;
+      };
+      saveNode(0);
+      let sPrev = wOfF();
+      let integ = 0;
+      let nNodes = 1;
+      for (let kk = 1; kk <= 32; kk++) {
+        if (!(sPrev > 0)) break;
+        advanceTo(h + kk * dN);
+        if (rhoCur < h + kk * dN - 1e-9 * Math.max(1, h + kk * dN)) {
+          const sK = Math.min(sPrev, wOfF());
+          integ += 0.5 * (sPrev + sK) * Math.max(0, rhoCur - (h + (kk - 1) * dN));
+          break;
+        }
+        saveNode(kk); nNodes = kk + 1;
+        const sK = Math.min(sPrev, wOfF());
+        integ += 0.5 * (sPrev + sK) * dN;
+        sPrev = sK;
+      }
+      const k0 = Math.min(nNodes - 1, Math.floor(integ / dN));
+      const o = k0 * 12;
+      qx = NS[o]; qy = NS[o + 1];
+      qFa.d = NS[o + 2]; qFa.x = NS[o + 3]; qFa.y = NS[o + 4]; qFa.s = NS[o + 5]; qFa.u = NS[o + 6]; qFa.k = NK[2 * k0];
+      qFb.d = NS[o + 7]; qFb.x = NS[o + 8]; qFb.y = NS[o + 9]; qFb.s = NS[o + 10]; qFb.u = NS[o + 11]; qFb.k = NK[2 * k0 + 1];
+      rhoCur = h + k0 * dN;
+      advanceTo(h + integ);
       return Math.max(0, rhoCur - h);
     };
-    rReached = growTo(rTarget);
+    rReached = growInteg();
     if (rReached <= 1e-9) { rReached = 0; qx = Vx; qy = Vy; Object.assign(qFa, fFa); Object.assign(qFb, fFb); }
     fc.ok = true; fc.Vx = Vx; fc.Vy = Vy; fc.qx = qx; fc.qy = qy; fc.r = rReached;
     fc.sA = qFa.s; fc.sB = qFb.s; fc.fax = qFa.x; fc.fay = qFa.y; fc.fbx = qFb.x; fc.fby = qFb.y;
@@ -2133,6 +2368,8 @@ export function frame(st: OutlineStructure, scene: SceneIn, profile?: Record<str
       fc.tax = qFa.x + (h * (qx - qFa.x)) / (qFa.d || 1); fc.tay = qFa.y + (h * (qy - qFa.y)) / (qFa.d || 1);
       fc.tbx = qFb.x + (h * (qx - qFb.x)) / (qFb.d || 1); fc.tby = qFb.y + (h * (qy - qFb.y)) / (qFb.d || 1);
     } else { fc.tax = Vx; fc.tay = Vy; fc.tbx = Vx; fc.tby = Vy; fc.sA = fFa.s; fc.sB = fFb.s; fc.fax = fFa.x; fc.fay = fFa.y; fc.fbx = fFb.x; fc.fby = fFb.y; }
+    fc.duA = (qFa.u - A.sR) * A.dir; fc.duB = (qFb.u - B.sR) * B.dir;
+    fc.dvA = (fFa.u - A.sR) * A.dir; fc.dvB = (fFb.u - B.sR) * B.dir;
   }
   mark("corners");
   // Borders: base points from this frame's centrelines, then features.
@@ -2332,6 +2569,116 @@ export function frame(st: OutlineStructure, scene: SceneIn, profile?: Record<str
     rt.capsC[capIdx * 2] = cx0; rt.capsC[capIdx * 2 + 1] = cy0;
   }
   mark("caps");
+  // Frame exposure: per-segment classification from this frame's
+  // corner tangent spans and the covering candidates recorded at
+  // build (re-evaluated against this frame's centrelines).
+  {
+    const memberGroupF = (pi: number, sv: number): number => {
+      let best = 0; let g = -1;
+      const p = polys[pi];
+      for (const ai of rt.chainArms[pi]) {
+        const a = rt.arms[ai];
+        let d = (sv - a.sR) * a.dir;
+        if (p.closed) d = ((d % p.len) + p.len) % p.len;
+        if (d < 0 || d > a.L) continue;
+        const t = ssFB(0, h, a.L - d);
+        if (t > best) { best = t; g = a.g; }
+      }
+      return g;
+    };
+    // Trim spans per border, from this frame's corner tangent points.
+    rt.trimOff[0] = 0;
+    {
+      const cnt = new Int32Array(rt.b.length);
+      const tmp: { b: number; sR: number; dir: number; dEnd: number }[] = [];
+      for (let ci = 0; ci < st.corners.length; ci++) {
+        const fc = rt.fCorners[ci];
+        if (!fc.ok) continue;
+        const cs = st.corners[ci];
+        for (let w = 0; w < 2; w++) {
+          const ai = w === 0 ? cs.aArm : cs.bArm;
+          const A = st.arms[ai];
+          const dEnd = fc.r > 1e-9 ? (w === 0 ? fc.duA : fc.duB) : (w === 0 ? fc.dvA : fc.dvB);
+          const bIdx = A.pi * 2 + ((w === 0 ? cs.sideA : cs.sideB) === 1 ? 0 : 1);
+          tmp.push({ b: bIdx, sR: A.sR, dir: A.dir, dEnd }); cnt[bIdx]++;
+        }
+      }
+      let acc = 0;
+      for (let b = 0; b < rt.b.length; b++) { rt.trimOff[b] = acc; acc += cnt[b]; }
+      rt.trimOff[rt.b.length] = acc;
+      const fill = rt.trimOff.slice();
+      for (const t of tmp) { const o = fill[t.b]++; rt.trimSR[o] = t.sR; rt.trimDir[o] = t.dir; rt.trimDEnd[o] = t.dEnd; }
+    }
+    const sigma = Math.PI * h;
+    for (let b = 0; b < rt.b.length; b++) {
+      const brt = rt.b[b]; const bs = brt.bs;
+      const pi = brt.pi; const p = polys[pi];
+      const exp = brt.exp; const XY = brt.XY; const SA = brt.SA;
+      const t0 = rt.trimOff[b]; const t1 = rt.trimOff[b + 1];
+      for (let j = 0; j < exp.length; j++) {
+        let s1 = SA[j + 1];
+        if (p.closed && s1 < SA[j]) s1 += p.len;
+        let anyExp = false;
+        for (let sub = 0; sub < 1 && !anyExp; sub++) {
+        const fr = 0.5;
+        const midS = SA[j] + fr * (s1 - SA[j]);
+        let trimmed = false;
+        for (let t = t0; t < t1; t++) {
+          let dd = midS - rt.trimSR[t];
+          if (p.closed) { dd = ((dd % p.len) + p.len) % p.len; if (dd > p.len / 2) dd -= p.len; }
+          if (rt.trimDir[t] < 0) dd = -dd;
+          if (p.closed && dd < 0) dd += p.len;
+          if (dd >= -1e-7 && dd <= rt.trimDEnd[t] + 1e-9) { trimmed = true; break; }
+        }
+        if (trimmed) continue;
+        const cp1 = bs.coverPi[j];
+        if (cp1 < 0) { anyExp = true; break; }
+        const mx = XY[2 * j] + fr * (XY[2 * j + 2] - XY[2 * j]); const my = XY[2 * j + 1] + fr * (XY[2 * j + 3] - XY[2 * j + 1]);
+        const zOwn = depthAt(pi, midS);
+        const gOwn = memberGroupF(pi, midS);
+        let covered = false;
+        for (let w = 0; w < 4 && !covered; w++) {
+          const cp = w === 0 ? cp1 : w === 1 ? bs.coverPi2[j] : w === 2 ? bs.coverPi3[j] : bs.coverPi4[j];
+          if (cp < 0) continue;
+          const cs = w === 0 ? bs.coverS[j] : w === 1 ? bs.coverS2[j] : w === 2 ? bs.coverS3[j] : bs.coverS4[j];
+          const pc = polys[cp];
+          if (pc.nseg === 0) continue;
+          // Nearest foot on the candidate centreline within an arc
+          // window of the stored foot (the moving chain's nearest
+          // pass can sit many short segments away).
+          let k0 = 0;
+          { const u = normS(pc, cs); let lo = 0; let hi = pc.n - 1; while (hi - lo > 1) { const m = (lo + hi) >> 1; if (pc.s[m] <= u) lo = m; else hi = m; } k0 = lo; }
+          let bd = Infinity; let bsFoot = cs;
+          const kWin = Math.max(8, Math.ceil(h / Math.max(1e-6, pc.len / Math.max(1, pc.nseg))));
+          for (let dk = -kWin; dk <= kWin; dk++) {
+            let k = k0 + dk;
+            if (pc.closed) k = ((k % pc.nseg) + pc.nseg) % pc.nseg; else if (k < 0 || k >= pc.nseg) continue;
+            const b2 = k + 1 === pc.n ? 0 : k + 1;
+            const ex = pc.x[b2] - pc.x[k]; const ey = pc.y[b2] - pc.y[k];
+            const l2 = ex * ex + ey * ey;
+            let tt = l2 > 0 ? ((mx - pc.x[k]) * ex + (my - pc.y[k]) * ey) / l2 : 0;
+            tt = Math.min(1, Math.max(0, tt));
+            const dx = pc.x[k] + ex * tt - mx; const dy = pc.y[k] + ey * tt - my;
+            const d2 = dx * dx + dy * dy;
+            if (d2 < bd) { bd = d2; bsFoot = pc.s[k] + tt * pc.segLen[k]; }
+          }
+          if (bd >= h * h) continue;
+          if (cp === pi) {
+            let dd = bsFoot - midS;
+            if (p.closed) { dd = ((dd % p.len) + p.len) % p.len; if (dd > p.len / 2) dd -= p.len; }
+            if (Math.abs(dd) <= sigma) continue;
+          }
+          const gOther = memberGroupF(cp, bsFoot);
+          if (gOwn >= 0 && gOther === gOwn) { covered = true; break; }
+          if (depthAt(cp, bsFoot) > zOwn + 1e-9) covered = true;
+        }
+        if (!covered) anyExp = true;
+        }
+        exp[j] = anyExp ? 1 : 0;
+      }
+    }
+  }
+  mark("exposure");
   // Regions into the shared buffer, from the stored templates.
   const regions = rt.regions;
   for (const r of regions) r.pieces.length = 0;
@@ -2374,7 +2721,7 @@ export function frame(st: OutlineStructure, scene: SceneIn, profile?: Record<str
         wp(pt[0], pt[1]);
       } else {
         const fc = rt.fCorners[op.corner];
-        if (fc.r > 1e-9) {
+        if (fc.ok && fc.r > 1e-9) {
           const aA = Math.atan2(fc.tay - fc.qy, fc.tax - fc.qx);
           let da = Math.atan2(fc.tby - fc.qy, fc.tbx - fc.qx) - aA;
           while (da > Math.PI) da -= 2 * Math.PI;
@@ -2392,16 +2739,27 @@ export function frame(st: OutlineStructure, scene: SceneIn, profile?: Record<str
   // Pieces: preallocated objects over the shared buffers.
   const pieces = rt.piecesOut;
   pieces.length = 0;
-  for (const u of rt.runUpd) {
-    const brt = rt.b[u.b];
-    u.piece.s0 = brt.SA[u.start]; u.piece.s1 = brt.SA[u.end];
-    pieces.push(u.piece);
-    const rid = u.piece.region;
-    if (rid >= 0 && regions[rid]) regions[rid].pieces.push(pieces.length - 1);
+  for (let b = 0; b < rt.b.length; b++) {
+    const brt = rt.b[b]; const bs = brt.bs; const exp = brt.exp; const segR = bs.segRegion;
+    let j = 0;
+    while (j < exp.length) {
+      if (!exp[j]) { j++; continue; }
+      const reg = segR[j];
+      let e = j + 1;
+      while (e < exp.length && exp[e] && segR[e] === reg) e++;
+      const piece = rt.runPool[rt.runOff[b] + j];
+      piece.chain = brt.pi; piece.side = brt.side; piece.region = reg; piece.corner = -1;
+      piece.s0 = brt.SA[j]; piece.s1 = brt.SA[e];
+      piece.pts = brt.XY.subarray(2 * j, 2 * (e + 1)) as unknown as number[];
+      piece.cpts = brt.CXY.subarray(2 * j, 2 * (e + 1)) as unknown as number[];
+      pieces.push(piece);
+      if (reg >= 0 && regions[reg]) regions[reg].pieces.push(pieces.length - 1);
+      j = e;
+    }
   }
   for (let ci = 0; ci < st.corners.length; ci++) {
     const cs = st.corners[ci]; const fc = rt.fCorners[ci];
-    if (!cs.ok) continue;
+    if (!fc.ok) continue;
     // A corner whose radius reaches 0 in this frame still emits its
     // arc piece, collapsed onto V (never a missing piece).
     const piece = rt.arcPieces[ci];
@@ -2446,7 +2804,7 @@ export function frame(st: OutlineStructure, scene: SceneIn, profile?: Record<str
   let okCount = 0;
   for (let ci = 0; ci < st.corners.length; ci++) {
     const cs = st.corners[ci]; const out = rt.cornersT[ci]; const fc = rt.fCorners[ci];
-    out.ok = cs.ok; out.theta = fc.theta; out.r = fc.r;
+    out.ok = fc.ok; out.theta = fc.theta; out.r = fc.r;
     out.Vx = fc.Vx; out.Vy = fc.Vy; out.qx = fc.qx; out.qy = fc.qy;
     out.tax = fc.tax; out.tay = fc.tay; out.tbx = fc.tbx; out.tby = fc.tby;
     if (cs.ok) okCount++;
@@ -2473,7 +2831,7 @@ interface BRun {
   bs: BorderStruct; pi: number; side: number;
   X: Float64Array; Y: Float64Array; S: Float64Array; FX: Float64Array; FY: Float64Array; done: Uint8Array;
   baseS: Float64Array; basePos: Int32Array; baseSeqPos: Int32Array;
-  XY: Float64Array; CXY: Float64Array; SA: Float64Array; posOfId: Int32Array;
+  XY: Float64Array; CXY: Float64Array; SA: Float64Array; posOfId: Int32Array; exp: Uint8Array;
 }
 
 interface Runtime {
@@ -2493,6 +2851,10 @@ interface Runtime {
   faces: OutlineFace[]; facesOut: OutlineFace[]; faceOrder: number[]; faceDepth: Float64Array;
   cornersT: OutlineCorner[]; cutsT: OutlineCut[];
   cutList: { b: number; id: number }[]; ptList: { b: number; j: number; id: number }[];
+  nodeState: Float64Array; nodeK: Int32Array;
+  runPool: OutlinePiece[]; runOff: Int32Array; trimSR: Float64Array; trimDir: Float64Array; trimDEnd: Float64Array; trimOff: Int32Array;
+  passS: Float64Array[]; passSq: Float64Array[]; passTheta: Float64Array[]; passQi: Int32Array[]; passN: Int32Array;
+  armLroot: Float64Array; armLcut: Float64Array; armUB: Float64Array; armsOfJSorted: number[][]; chainArms: number[][];
   diag: string[]; table: OutlineTable; emptyPts: number[];
 }
 
@@ -2584,6 +2946,44 @@ function pointAtInto(p: Poly, s: number, out: Float64Array): void {
   out[1] = p.y[k] + (p.y[b] - p.y[k]) * t;
   out[2] = (p.x[b] - p.x[k]) / l;
   out[3] = (p.y[b] - p.y[k]) / l;
+}
+
+const tanScratch0 = new Float64Array(2);
+const tanScratch1 = new Float64Array(2);
+
+/** tanAt without allocation: out = [tx, ty] (vertex tangents lerped). */
+function tanAtInto(p: Poly, s: number, out: Float64Array): void {
+  const u = normS(p, s);
+  let k = 0; let t = 0;
+  if (p.n === 0) { out[0] = 1; out[1] = 0; return; }
+  if (u >= p.s[p.n - 1]) {
+    if (p.closed) { k = p.n - 1; t = Math.min(1, Math.max(0, (u - p.s[p.n - 1]) / (p.segLen[p.n - 1] || 1))); }
+    else { k = Math.max(0, p.nseg - 1); t = 1; }
+  } else {
+    let lo = 0; let hi = p.n - 1;
+    while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (p.s[mid] <= u) lo = mid; else hi = mid; }
+    k = lo; t = (u - p.s[lo]) / (p.segLen[lo] || 1);
+  }
+  const kb = k + 1 === p.n ? 0 : k + 1;
+  const l0 = p.segLen[k] || 1;
+  const stx = (p.x[kb] - p.x[k]) / l0; const sty = (p.y[kb] - p.y[k]) / l0;
+  const vtx = (i: number, o: Float64Array): void => {
+    const kin = i > 0 ? i - 1 : p.closed ? p.nseg - 1 : -1;
+    const kout = i < p.nseg ? i : p.closed ? 0 : -1;
+    let x = 0; let y = 0;
+    for (const kk of [kin, kout]) {
+      if (kk < 0) continue;
+      const l = p.segLen[kk] || 1; const b = kk + 1 === p.n ? 0 : kk + 1;
+      x += (p.x[b] - p.x[kk]) / l; y += (p.y[b] - p.y[kk]) / l;
+    }
+    const l = Math.sqrt(x * x + y * y);
+    if (l > 1e-12) { o[0] = x / l; o[1] = y / l; } else { o[0] = stx; o[1] = sty; }
+  };
+  const v0 = tanScratch0; const v1 = tanScratch1;
+  vtx(k, v0); vtx(kb, v1);
+  const x = v0[0] + (v1[0] - v0[0]) * t; const y = v0[1] + (v1[1] - v0[1]) * t;
+  const l = Math.sqrt(x * x + y * y);
+  if (l > 1e-12) { out[0] = x / l; out[1] = y / l; } else { out[0] = stx; out[1] = sty; }
 }
 
 /** footInWindow's candidate set, written into `out` (no allocation). */
@@ -2811,7 +3211,7 @@ function buildRuntime(st: OutlineStructure, scene: SceneIn): Runtime {
     scene.chains.forEach((c, i) => { depthS[i] = new Float64Array(counts[i] + 1); depthZ[i] = new Float64Array(counts[i] + 1); });
   }
   const arms: FArm[] = st.arms.map((a) => ({ ...a, ux: 0, uy: 0, ang: 0 }));
-  const fCorners: FCorner[] = st.corners.map(() => ({ ok: false, Vx: 0, Vy: 0, qx: 0, qy: 0, tax: 0, tay: 0, tbx: 0, tby: 0, sA: 0, sB: 0, fax: 0, fay: 0, fbx: 0, fby: 0, r: 0, theta: 0 }));
+  const fCorners: FCorner[] = st.corners.map(() => ({ ok: false, Vx: 0, Vy: 0, qx: 0, qy: 0, tax: 0, tay: 0, tbx: 0, tby: 0, sA: 0, sB: 0, fax: 0, fay: 0, fbx: 0, fby: 0, r: 0, theta: 0, duA: 0, duB: 0, dvA: 0, dvB: 0 }));
   const b: BRun[] = st.borders.map((bs, bi) => {
     const pool = bs.kind.length;
     const posOfId = new Int32Array(pool).fill(-1);
@@ -2824,7 +3224,7 @@ function buildRuntime(st: OutlineStructure, scene: SceneIn): Runtime {
       bs, pi: bi >> 1, side: (bi & 1) === 0 ? 1 : -1,
       X: new Float64Array(pool), Y: new Float64Array(pool), S: new Float64Array(pool), FX: new Float64Array(pool), FY: new Float64Array(pool), done: new Uint8Array(pool),
       baseS: new Float64Array(bs.baseSeq.length), basePos, baseSeqPos,
-      XY: new Float64Array(2 * bs.seqPool.length), CXY: new Float64Array(2 * bs.seqPool.length), SA: new Float64Array(bs.seqPool.length), posOfId,
+      XY: new Float64Array(2 * bs.seqPool.length), CXY: new Float64Array(2 * bs.seqPool.length), SA: new Float64Array(bs.seqPool.length), posOfId, exp: new Uint8Array(Math.max(0, bs.seqPool.length - 1)),
     };
   });
   const capsXY = st.caps.map((cap) => new Float64Array(2 * (cap.steps + 1)));
@@ -2914,6 +3314,12 @@ function buildRuntime(st: OutlineStructure, scene: SceneIn): Runtime {
       else if (kd === 5 || kd === 6) ptList.push({ b: bi, j, id });
     });
   });
+  const passCounts = new Int32Array(scene.chains.length);
+  scene.crossings.forEach((x) => { const ia = idxOf.get(x.a.chain); const ib = idxOf.get(x.b.chain); if (ia !== undefined) passCounts[ia]++; if (ib !== undefined) passCounts[ib]++; });
+  const passS = scene.chains.map((_, i) => new Float64Array(passCounts[i] + 1));
+  const passSq = scene.chains.map((_, i) => new Float64Array(passCounts[i] + 1));
+  const passTheta = scene.chains.map((_, i) => new Float64Array(passCounts[i] + 1));
+  const passQi = scene.chains.map((_, i) => new Int32Array(passCounts[i] + 1));
   const cornersT: OutlineCorner[] = st.corners.map((cs) => ({ ...cs.stored }));
   const cutsT: OutlineCut[] = st.cuts.map((c) => ({ crossing: c.crossing, chain: c.chain, side: c.side, s: 0, x: 0, y: 0, overChain: c.overChain }));
   const diag: string[] = [
@@ -2928,6 +3334,13 @@ function buildRuntime(st: OutlineStructure, scene: SceneIn): Runtime {
     arms, fCorners, b, capsXY, capsCXY, capsC: new Float64Array(2 * Math.max(1, st.caps.length)),
     regions, regionTpl, regionBuf, piecesOut, runUpd, arcPieces, arcBuf, arcCBuf, capPieces,
     faces, facesOut, faceOrder, faceDepth: new Float64Array(st.faces.length),
-    cornersT, cutsT, cutList, ptList, diag, table, emptyPts: [],
+    cornersT, cutsT, cutList, ptList, nodeState: new Float64Array(33 * 12), nodeK: new Int32Array(33 * 2),
+    runPool: (() => { const pool: OutlinePiece[] = []; for (const bs of st.borders) for (let j = 0; j + 1 < bs.seqPool.length; j++) pool.push({ kind: "run", chain: 0, side: 1, s0: 0, s1: 0, pts: [], cpts: [], region: -1, corner: -1 }); return pool; })(),
+    runOff: (() => { const o = new Int32Array(st.borders.length + 1); st.borders.forEach((bs, i) => { o[i + 1] = o[i] + Math.max(0, bs.seqPool.length - 1); }); return o; })(),
+    trimSR: new Float64Array(2 * st.corners.length + 2), trimDir: new Float64Array(2 * st.corners.length + 2), trimDEnd: new Float64Array(2 * st.corners.length + 2), trimOff: new Int32Array(st.borders.length + 1),
+    passS, passSq, passTheta, passQi, passN: new Int32Array(scene.chains.length),
+    armLroot: new Float64Array(st.arms.length), armLcut: new Float64Array(st.arms.length), armUB: new Float64Array(st.arms.length),
+    armsOfJSorted: st.armsOfJ.map((l) => l.slice()), chainArms: scene.chains.map((_, pi) => st.arms.map((a, ai) => (a.pi === pi ? ai : -1)).filter((x) => x >= 0)),
+    diag, table, emptyPts: [],
   };
 }

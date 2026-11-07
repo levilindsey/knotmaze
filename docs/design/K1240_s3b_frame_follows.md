@@ -283,3 +283,116 @@ from S3's 26.9 ms locked and from the 3 ms target).
   the trap is that every cheaper foot/radius scheme tried here
   moved the still exact p99 — gate any change on
   [cmp_exact.mjs](/C:/Users/lsl/Repositories/knotmaze/.claude/worktrees/muse-k1240-s1/.claude/probes/K1240/proto/cmp_exact.mjs) staying green first.
+
+## Handoff continued (S3b session, second part, 2026-11-06)
+
+Resumed after the 20:27 stop above (same session
+`01a1b41d-a11f-71f0-8c64-6b3b95e980cf`), stopped
+2026-11-06T21:03-08:00 at the 2 h cap. The corner-radius and
+exposure work below post-dates the first Handoff; where the two
+disagree, this part is current.
+
+### What changed in this part
+
+All in [.claude/probes/K1240/proto/outline.ts](/C:/Users/lsl/Repositories/knotmaze/.claude/worktrees/muse-k1240-s1/.claude/probes/K1240/proto/outline.ts):
+
+- Corner radius is now the builder's gate integral recomputed from
+  the frame: 32 growth nodes of `dN = r0/32`, gates from `wOfF`
+  (margin via `marginOfF`, steepness via `denV` ratio, slack, root
+  via `rootTipScale`), trapezoid integral, nodes in
+  `rt.nodeState`/`rt.nodeK`, final `advanceTo(h + integ)`. The
+  stored-r angle scaling from the first part is gone.
+- V's feet are the builder's `footArm`: the global nearest foot in
+  the arm window `estD ± 4h` (`footInWindow`), re-searched every
+  Newton iteration. This was the load-bearing fix: the tracked
+  `footNear` sits on the wrong medial branch where a chain curves
+  back near its junction (g41_user_tw42 corner 2: tracked foot
+  s = 4.02 vs builder 4.164, r 0.058 vs 0.0081). With the global
+  foot the frame integral reproduces the builder's r bit-for-bit
+  (0.008101999545198465 vs stored 0.008101999545198635 there).
+  A tracked-after-first variant was tried and reverted (broke 7
+  still rows).
+- Arm spans, roots and crossing passes are recomputed per frame
+  (`rt.armLroot`/`armLcut`/`armUB`, `rt.passS/passSq/passTheta/…`,
+  `reachOfF`); corner θ and pass θ use vertex-lerped tangents
+  (`tanAtInto`), matching the builder's `tanAt`.
+- Corner `ok` is recomputed per frame from the builder's predicates
+  (V feet inside both spans, V inside the wedge); builder-not-ok
+  corners are attempted, so ok flips follow in both directions.
+  Arc emission, region corner arcs and trim spans follow `fc.ok`.
+  `FCorner` carries `duA/duB/dvA/dvB` (tangent/V foot distances
+  from the roots) for the trim spans.
+- Exposure is recomputed per frame. At build, `covering()` now
+  runs for every border segment (trimmed included) and records up
+  to four candidate chains per segment (the builder's picks in
+  distance order, plus the nearest chain inside `2.2h`) into
+  BorderStruct `coverPi/coverS` … `coverPi4/coverS4`. In frame,
+  each seq segment is classified at its midpoint: trimmed if the
+  midpoint falls in a frame trim span (`rt.trimSR/trimDir/trimDEnd`
+  from this frame's corners), else covered if any recorded
+  candidate's centreline passes within `h` of the midpoint and
+  classifies covering (same member group via frame arm caps, or
+  greater frame depth via `depthAtRt`). Runs are rebuilt from the
+  frame exposure into the preallocated `rt.runPool`; region
+  templates are unchanged (their spans legitimately walk covered
+  stretches — filtering them broke the closed-eye fill test).
+  At the still scene this reproduces the stored exposure with
+  0–3 segment mismatches per scene.
+
+### Verifications from the Done list, updated
+
+1. **Still — holds, stronger.** `ALL WITHIN TOLERANCE` (24/24)
+   with several scenes now at or below S3's own numbers
+   (muse_hash B over2 83 vs S3 95 at the first part's run; def B
+   6). Synthetic suite ALL PASS. Page tests match S3 within
+   ±2 samples on every scene (locked run above).
+2. **It follows — still fails the literal tolerances, much
+   closer.** Rigid def 4.809e-9 (holds). Corners and cuts match
+   fresh *exactly* on moved def (386 corners, 0 with |Δr| or
+   |Δq| > 0.005; 1412 cuts max 0.0000; same check that failed
+   132 corners in the first part). Moved 0.1h exact: p99 deltas
+   ≈ 0 on 10/12 scenes (worst g41_user_tw64 A +0.108); over2
+   counts still exceed fresh (def A 35 vs 20, ring A 68 vs 53,
+   g41_user_tw64 A 247 vs 209; fat passes; 19/24 rows fail).
+   The remaining gap is exposure/run partition under motion:
+   frame exposure is evaluated at seq-segment midpoints from
+   build-recorded candidates, while the builder classifies every
+   full segment from a fresh grid; slivers and boundary segments
+   flip. At 0.5h (def/ring/fat) it fails by more (def A over2
+   234 vs 54). K1246 is closed for corners (its original text);
+   the exposure residual is filed as a new ledger item.
+3. **Cheap — fails, worse.** Locked bench on def: frame median
+   59.1 ms (corners 20.7, exposure 23.3, setup 4.5, offsets 3.2),
+   against a contended machine (structure medians moved
+   444→573 ms between runs). The gate integral and the exposure
+   pass are the cost; ≤3 ms needs a different evaluation
+   strategy, not micro-tuning. K1247 stays open, text updated.
+
+### Commands run in this part
+
+- `node scripts/run_node.mjs .claude/probes/K1240/proto/outline.test.ts` — ALL PASS.
+- Still/moved/fresh exact regenerations + cmp_exact / cmp_move
+  (0.1 all scenes; 0.5 def/ring/fat) — numbers above; JSONs in
+  [.claude/probes/K1240/out/s3b/](/C:/Users/lsl/Repositories/knotmaze/.claude/worktrees/muse-k1240-s1/.claude/probes/K1240/out/s3b).
+- `node scripts/run_node.mjs .claude/probes/K1240/proto/dbg_mv.ts def` — corners/cuts moved-vs-fresh exact.
+- `node scripts/run_node.mjs .claude/probes/K1240/proto/s3b_move.ts` — rigid 4.809e-9.
+- Locked bench and locked page tests via
+  [run_locked_s3b.ps1](/C:/Users/lsl/Repositories/knotmaze/.claude/worktrees/muse-k1240-s1/.claude/probes/K1240/proto/run_locked_s3b.ps1); page comparison via
+  [cmp_page.mjs](/C:/Users/lsl/Repositories/knotmaze/.claude/worktrees/muse-k1240-s1/.claude/probes/K1240/proto/cmp_page.mjs).
+- `node scripts/probe_types.mjs` on the probe files — 0 errors.
+- `npm test` — 220 files, 2887 passed, 9 skipped.
+
+### How to resume
+
+- The exposure residual: compare frame runs against a fresh
+  build's runs by (chain, side, s-interval) on a moved scene;
+  the win condition is the moved over2 counts in
+  [cmp_move.mjs](/C:/Users/lsl/Repositories/knotmaze/.claude/worktrees/muse-k1240-s1/.claude/probes/K1240/proto/cmp_move.mjs).
+  Candidate ideas not tried: classify at full-segment resolution
+  (structure would need sub-seq candidate records), or record
+  covering's grid cell candidates per segment instead of picks.
+- Perf: profile says corners (gate integral: 32 nodes × advance +
+  `marginOfF` window scans) and exposure (per-segment candidate
+  foot searches). Both need algorithmic cuts (e.g. incremental
+  gate evaluation, spatial index for candidates), gated on
+  still exact staying 24/24.
