@@ -308,11 +308,11 @@ Next free ID: K1241.
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
   float64 reference. Plan S1-S8, about 15 h (F7); supersedes K868 and K992. S1 to S1f merged (S1f: fb348a78); S3 (K1097) merged short of its gate; S1g merged (ca273d04); S3b (K1097) merged (587b7e80, 2026-11-02): 0 DEFECT, the Pixel's 2 ms missed 5-20x. S4a merged (f294dc08, 2026-11-06) short of check #12: the band's tube edges, caps and foot on the GPU, unused by the app; S4a2 merged (365d2244): within 1/32 px away from corners except D4's tie and the cap mix. S4b merged (1ef55958): the corners on the GPU (check #12's near-corner worst 0.19-3.28 px, 9.3-13.6 without) and the fbb flag, off by default (flag on: ~3 fps while moving, one ink colour, K1239's shapes). S4c merged (f5eb875c): D4's ties, the outer edge and the cap mix's shares (check #12 counts down on 11 of 12 scenes); what stays over 1/32 px is the multi-piece cap mix.
-  - owner: nobody since 2026-11-06 13:05: S4c merged; S4d waits on K1239 (the scene's shapes)
-  - branch: mainline; S4b's worktree .claude/worktrees/agent-ac5c423693cf9dec3 kept; last commit: `8e6da07d`
-  - evidence: src/render/field/ (band_b*.ts, field_b_app.ts); .claude/probes/K1040/s4c/ (tracked tools: s4a.mjs check|time|diag|checks|crops, ab_master.mjs; check #12 and checks tables in the S4c brief's Handoff); S4c's out/ in the main checkout's .claude/probes/K1040/s4c/out/ (sheets/: muse_hash_worst.png, user_tw42.lightpaper_worst.png first); S4b's out/ in .claude/probes/K1040/s4b/out/; the 12 scenes in .claude/probes/K868/scenes/
-  - next: S4d (Muse) after K1239 lands: the pop census, the free ends and the missing sheets, then the multi-piece cap mix if it still shows; Claude runs S4b's check #13 batch on the Pixel when Levi leaves it unlocked on its charger
-  - brief: `docs/design/K1040_s4c_ties.md`
+  - owner: muse session 01a1b300-e39a-7192-ac67-65870e35335c (Paseo a4ad219e), coordinated by claude session c18e2f02-e64f-41ba-9af0-2dbd583358e2; started 2026-11-06 14:36, cap 2 h (~16:36)
+  - branch: detached worktree .claude/worktrees/muse-k1040-s4d (node_modules junctioned), pushes to master; S4b's worktree .claude/worktrees/agent-ac5c423693cf9dec3 kept; last commit: `77347245`
+  - evidence: src/render/field/ (form_b.ts, band_b*.ts, label_b*.ts, field_b_app.ts); tracked tools in .claude/probes/K1040/s4c/ and .claude/probes/K1239/; K1239's out/ in the main checkout's .claude/probes/K1239/out/ (spot_oldonly.png, view_def_overlay.png); S4c's out/ in .claude/probes/K1040/s4c/out/; the 12 scenes in .claude/probes/K868/scenes/
+  - next: S4d to its Done (the stroke the field drops at spot_oldonly, the free-end check on the GPU path, the look sheets); Claude views its sheets against K868's look, removes the worktree, shows Levi. Then the pop census and the fades in motion, then the multi-piece cap mix. Claude runs S4b's check #13 batch on the Pixel when Levi leaves it unlocked on its charger
+  - brief: `docs/design/K1040_s4d_still.md`
   - env: from the worktree, `npx vite --config .claude/probes/K1040/vite.private-cache.config.ts --port 5401 --strictPort --host 127.0.0.1`
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
@@ -517,16 +517,6 @@ Next free ID: K1241.
   - evidence: .claude/probes/K1220/s4/ (tracked tools: paintmask.mjs's ink-gated mask, sheets_i.ps1); S4's out/ copied to the main checkout's .claude/probes/K1220/s4/out/ (sheets/: 20 A/B sheets); S4 on master as 291780c5 + 331f425d, pushed short of its Done (counts down at 6 forks, up at 4; bump 816->233 at i xh 3; a new dark tooth at ia xh 2's crossing-gap arc)
   - next: S5 to its Done (each fan paints the ribbon beneath it, picked by coverage rather than angle sector; no bump, no tooth; S3's outline kept); Claude views its sheets against window 84, removes the worktree, shows Levi. If S5 pushes nothing, decide whether 331f425d stays (the ia xh 2 tooth). Then the 1 px jog in ia at xh 2 and the reveal's bare-ribbon moment (a at xh 3, 40%)
   - brief: `docs/design/K1220_s5_fan_cover.md`
-- **K1239** · K868's scene export (src/render/field/scene_export.ts, scene_export_hook.ts) draws a different
-  maze shape than the old ink under the border look: on def at today's defaults the field draws closed loops
-  where the old ink shows cut, notched ends, so lbi overlaps the old ink at IoU 0.588 and fbb at 0.674.
-  Untested guess: it lacks the old renderer's fused-arm cuts and stub ends (S4b Handoff 'In the app';
-  .claude/probes/K1040/s4b/out/sheets/app/view_def_overlay.png, untracked)
-  - owner: muse session 01a1b2ab-c964-7aa3-bb0b-a9dafbbcb7b8 (Paseo d5674413), coordinated by claude session c18e2f02-e64f-41ba-9af0-2dbd583358e2; started 2026-11-06 13:03, cap 2 h (~15:05)
-  - branch: detached worktree .claude/worktrees/muse-k1239 (node_modules junctioned), pushes to master; last commit: `bf8331e7`
-  - evidence: .claude/probes/K1040/s4b/ (app_ab.mjs, smoke.mjs; S4b's overlays in the main checkout's .claude/probes/K1040/s4b/out/sheets/app/, view_def_overlay.png)
-  - next: K1239 to its Done (masked IoU >= 0.97 for lbi and fbb against the old ink on def, muse and user; every old cut or stub end matched within 1 px); Claude views its overlays, removes the worktree. Then K1040 S4d
-  - brief: `docs/design/K1239_export_shapes.md`
 
 ## Next, in order
 
@@ -2012,6 +2002,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1239** · K868's scene export checked against the old ink: accurate. On-screen anchored ends now get their caps. The field's crossings differ from the old ink by K868's design (no gaps), so IoU against the old ink was the wrong target; the one stroke the field drops went to K1040 S4d. Done in b5d9c9c5 (2026-11-06).
 - **K1228** · Cross ji 51's inner-turn notch: a run of folding samples collapses its inner vertices onto the legs' inner-offset crossing, so R < h turns cover the half-width (0 background px, 0 strip flips on cross, loop and x4; pinned by test/render/ribbon_inner.test.ts). Done in ffbd64f3 (2026-11-06).
 - **K1225** · Cursive word-end tails: s and p as J3l or J3lc, and the new b, v, w, o and f tails (`docs/asks/K1225.md`; K863 J3l, 6c4ae88b). Dropped: Levi answered 2026-11-06: J3l for s and p; b, v and w should turn out of their cusp about ESE and swoop up (at a word's end and into high-entry letters; into low-entry ones the sharp cusp stays, the swoop starts later); o's tail hugs the o about 10 deg further; f's tail reaches the baseline and leaves along its pre-cusp stroke, to fuse into a spur. K863 J3m builds it (docs/design/K863_cursive_j3m.md) (2026-11-06).
 - **K1218** · Every junction one fused unit (Levi, window 84): S2 fused the gold, S3 smoothed the gap edges, S4 the gold path's edge, and S5-S7's swept arcs (a web paints each arm at its own ribbon's arc) took out the lines, creases and staircases inside the junctions; K1227-K1231 hold what is left. Done in e4075024 (2026-11-06).
