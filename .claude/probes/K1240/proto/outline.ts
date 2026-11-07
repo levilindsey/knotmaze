@@ -2012,6 +2012,71 @@ interface WalkCache { valid: boolean; qx: number; qy: number; footStartS: number
 function mkWalkCache(): WalkCache { return { valid: false, qx: 0, qy: 0, footStartS: 0, footEndS: 0, hiS: 0, kHi: -1, bkHi: 0, minF: Infinity, loS: 0, kLo: -1, bkLo: 0, maxB: -Infinity }; }
 interface FCorner { ok: boolean; Vx: number; Vy: number; qx: number; qy: number; tax: number; tay: number; tbx: number; tby: number; sA: number; sB: number; fax: number; fay: number; fbx: number; fby: number; r: number; theta: number; duA: number; duB: number; dvA: number; dvB: number }
 
+function footNearM(polys: Poly[], h: number, arm: FArm, x: number, y: number, hintS: number, hintK: number, out: FFoot): void {
+    // The builder's tracked foot (footT): search only h/32 of s around
+    // the current foot estimate, walking the window when the foot sits
+    // on its edge, so the foot cannot jump branch. Segments are found
+    // from the tracked segment index, not by binary search.
+    const p = polys[arm.pi];
+    const winLoR = arm.dir > 0 ? arm.sR : arm.sR - arm.L;
+    const winHiR = arm.dir > 0 ? arm.sR + arm.L : arm.sR;
+    const w = h / 32;
+    let sv = hintS;
+    let k0 = hintK;
+    if (k0 < 0 || k0 >= p.nseg) k0 = segOfS(p, normS(p, sv)).k;
+    let shiftW = 0;
+    if (p.closed && p.len > 0) shiftW = Math.round((sv - (winLoR + winHiR) / 2) / p.len) * p.len;
+    const winLo = winLoR + shiftW; const winHi = winHiR + shiftW;
+    const segShift = p.closed && p.len > 0 ? Math.round((sv - p.s[k0]) / p.len) * p.len : 0;
+    const PX = p.x; const PY = p.y; const PS = p.s; const PSL = p.segLen; const PDX = p.dx; const PDY = p.dy;
+    for (let it = 0; it < 128; it++) {
+      const lo = Math.max(winLo, sv - w);
+      const hi = Math.min(winHi, sv + w);
+      let bd2 = Infinity; let bx = x; let by = y; let bs = sv; let bk = k0; let bu = sv;
+      let covered = false;
+      {
+        let segS = PS[k0] + segShift;
+        if (p.closed && p.len > 0) { if (segS < sv - p.len / 2) segS += p.len; else if (segS > sv + p.len / 2) segS -= p.len; }
+        const segE = segS + PSL[k0];
+        if (segS <= lo && segE >= hi) {
+          covered = true;
+          const ex = PDX[k0]; const ey = PDY[k0];
+          const l = PSL[k0] || 1;
+          const ta = Math.min(1, Math.max(0, (lo - segS) / l));
+          const tb = Math.min(1, Math.max(0, (hi - segS) / l));
+          const l2 = ex * ex + ey * ey;
+          let t = l2 > 0 ? ((x - PX[k0]) * ex + (y - PY[k0]) * ey) / l2 : 0;
+          t = Math.min(tb, Math.max(ta, t));
+          const qx = PX[k0] + ex * t; const qy = PY[k0] + ey * t;
+          bd2 = (x - qx) * (x - qx) + (y - qy) * (y - qy); bx = qx; by = qy; bs = PS[k0] + t * PSL[k0]; bk = k0; bu = segS + t * PSL[k0];
+        }
+      }
+      for (let dk = covered ? 3 : -2; dk <= 2; dk++) {
+        let kk = k0 + dk;
+        if (p.closed) kk = ((kk % p.nseg) + p.nseg) % p.nseg; else if (kk < 0 || kk >= p.nseg) continue;
+        let segS = PS[kk] + segShift;
+        if (p.closed && p.len > 0) { if (segS < sv - p.len / 2) segS += p.len; else if (segS > sv + p.len / 2) segS -= p.len; }
+        const segE = segS + PSL[kk];
+        if (segE < lo || segS > hi) continue;
+        const ex = PDX[kk]; const ey = PDY[kk];
+        const l = PSL[kk] || 1;
+        const ta = Math.min(1, Math.max(0, (Math.max(lo, segS) - segS) / l));
+        const tb = Math.min(1, Math.max(0, (Math.min(hi, segE) - segS) / l));
+        if (tb < ta) continue;
+        const l2 = ex * ex + ey * ey;
+        let t = l2 > 0 ? ((x - PX[kk]) * ex + (y - PY[kk]) * ey) / l2 : 0;
+        t = Math.min(tb, Math.max(ta, t));
+        const qx = PX[kk] + ex * t; const qy = PY[kk] + ey * t;
+        const d2 = (x - qx) * (x - qx) + (y - qy) * (y - qy);
+        if (d2 < bd2) { bd2 = d2; bx = qx; by = qy; bs = PS[kk] + t * PSL[kk]; bk = kk; bu = segS + t * PSL[kk]; }
+      }
+      if (!Number.isFinite(bd2)) { footWinFast(p, x, y, winLoR, winHiR, out); out.u = out.s; return; }
+      out.d = Math.sqrt(bd2); out.x = bx; out.y = by; out.s = bs; out.k = bk; out.u = bu;
+      const edge = (bu <= lo + 1e-9 * h && lo > winLo) || (bu >= hi - 1e-9 * h && hi < winHi);
+      if (!edge || Math.abs(bu - sv) <= 1e-12 * h) return;
+      sv = bu; k0 = bk;
+    }
+}
 export function frame(st: OutlineStructure, scene: SceneIn, profile?: Record<string, number>): OutlineTable {
   const prof = profile;
   let tPhase = prof ? performance.now() : 0;
@@ -2191,71 +2256,6 @@ export function frame(st: OutlineStructure, scene: SceneIn, profile?: Record<str
   const gFa: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 };
   const gFb: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 };
   const mFoot: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 };
-  const footNear = (arm: FArm, x: number, y: number, hintS: number, hintK: number, out: FFoot): void => {
-    // The builder's tracked foot (footT): search only h/32 of s around
-    // the current foot estimate, walking the window when the foot sits
-    // on its edge, so the foot cannot jump branch. Segments are found
-    // from the tracked segment index, not by binary search.
-    const p = polys[arm.pi];
-    const winLoR = arm.dir > 0 ? arm.sR : arm.sR - arm.L;
-    const winHiR = arm.dir > 0 ? arm.sR + arm.L : arm.sR;
-    const w = h / 32;
-    let sv = hintS;
-    let k0 = hintK;
-    if (k0 < 0 || k0 >= p.nseg) k0 = segOfS(p, normS(p, sv)).k;
-    let shiftW = 0;
-    if (p.closed && p.len > 0) shiftW = Math.round((sv - (winLoR + winHiR) / 2) / p.len) * p.len;
-    const winLo = winLoR + shiftW; const winHi = winHiR + shiftW;
-    const segShift = p.closed && p.len > 0 ? Math.round((sv - p.s[k0]) / p.len) * p.len : 0;
-    const PX = p.x; const PY = p.y; const PS = p.s; const PSL = p.segLen; const PDX = p.dx; const PDY = p.dy;
-    for (let it = 0; it < 128; it++) {
-      const lo = Math.max(winLo, sv - w);
-      const hi = Math.min(winHi, sv + w);
-      let bd2 = Infinity; let bx = x; let by = y; let bs = sv; let bk = k0; let bu = sv;
-      let covered = false;
-      {
-        let segS = PS[k0] + segShift;
-        if (p.closed && p.len > 0) { if (segS < sv - p.len / 2) segS += p.len; else if (segS > sv + p.len / 2) segS -= p.len; }
-        const segE = segS + PSL[k0];
-        if (segS <= lo && segE >= hi) {
-          covered = true;
-          const ex = PDX[k0]; const ey = PDY[k0];
-          const l = PSL[k0] || 1;
-          const ta = Math.min(1, Math.max(0, (lo - segS) / l));
-          const tb = Math.min(1, Math.max(0, (hi - segS) / l));
-          const l2 = ex * ex + ey * ey;
-          let t = l2 > 0 ? ((x - PX[k0]) * ex + (y - PY[k0]) * ey) / l2 : 0;
-          t = Math.min(tb, Math.max(ta, t));
-          const qx = PX[k0] + ex * t; const qy = PY[k0] + ey * t;
-          bd2 = (x - qx) * (x - qx) + (y - qy) * (y - qy); bx = qx; by = qy; bs = PS[k0] + t * PSL[k0]; bk = k0; bu = segS + t * PSL[k0];
-        }
-      }
-      for (let dk = covered ? 3 : -2; dk <= 2; dk++) {
-        let kk = k0 + dk;
-        if (p.closed) kk = ((kk % p.nseg) + p.nseg) % p.nseg; else if (kk < 0 || kk >= p.nseg) continue;
-        let segS = PS[kk] + segShift;
-        if (p.closed && p.len > 0) { if (segS < sv - p.len / 2) segS += p.len; else if (segS > sv + p.len / 2) segS -= p.len; }
-        const segE = segS + PSL[kk];
-        if (segE < lo || segS > hi) continue;
-        const ex = PDX[kk]; const ey = PDY[kk];
-        const l = PSL[kk] || 1;
-        const ta = Math.min(1, Math.max(0, (Math.max(lo, segS) - segS) / l));
-        const tb = Math.min(1, Math.max(0, (Math.min(hi, segE) - segS) / l));
-        if (tb < ta) continue;
-        const l2 = ex * ex + ey * ey;
-        let t = l2 > 0 ? ((x - PX[kk]) * ex + (y - PY[kk]) * ey) / l2 : 0;
-        t = Math.min(tb, Math.max(ta, t));
-        const qx = PX[kk] + ex * t; const qy = PY[kk] + ey * t;
-        const d2 = (x - qx) * (x - qx) + (y - qy) * (y - qy);
-        if (d2 < bd2) { bd2 = d2; bx = qx; by = qy; bs = PS[kk] + t * PSL[kk]; bk = kk; bu = segS + t * PSL[kk]; }
-      }
-      if (!Number.isFinite(bd2)) { footWinFast(p, x, y, winLoR, winHiR, out); out.u = out.s; return; }
-      out.d = Math.sqrt(bd2); out.x = bx; out.y = by; out.s = bs; out.k = bk; out.u = bu;
-      const edge = (bu <= lo + 1e-9 * h && lo > winLo) || (bu >= hi - 1e-9 * h && hi < winHi);
-      if (!edge || Math.abs(bu - sv) <= 1e-12 * h) return;
-      sv = bu; k0 = bk;
-    }
-  };
   const solveVS2 = (A: FArm, B: FArm, rho: number, x0: number, y0: number, estD: number, fa: FFoot, fb: FFoot): boolean => {
     let x = x0; let y = y0;
     // The builder's V feet are the global nearest feet in the arm
@@ -2350,7 +2350,7 @@ export function frame(st: OutlineStructure, scene: SceneIn, profile?: Record<str
             const tFa = gFa; const tFb = gFb;
             copyFoot(tFa, qFa); copyFoot(tFb, qFb);
             let sx = gx; let sy = gy;
-            footNear(A, sx, sy, tFa.u, tFa.k, tFa); footNear(B, sx, sy, tFb.u, tFb.k, tFb);
+            footNearM(polys, h, A, sx, sy, tFa.u, tFa.k, tFa); footNearM(polys, h, B, sx, sy, tFb.u, tFb.k, tFb);
             for (let it = 0; it < 60; it++) {
               const Fa = tFa.d - rn; const Fb = tFb.d - rn;
               if (Math.abs(Fa) < 1e-12 * Math.max(1, rn) && Math.abs(Fb) < 1e-12 * Math.max(1, rn)) break;
@@ -2365,7 +2365,7 @@ export function frame(st: OutlineStructure, scene: SceneIn, profile?: Record<str
               const dl = Math.hypot(dx, dy);
               if (dl > acc) { dx *= acc / dl; dy *= acc / dl; }
               sx += dx; sy += dy;
-              footNear(A, sx, sy, tFa.u, tFa.k, tFa); footNear(B, sx, sy, tFb.u, tFb.k, tFb);
+              footNearM(polys, h, A, sx, sy, tFa.u, tFa.k, tFa); footNearM(polys, h, B, sx, sy, tFb.u, tFb.k, tFb);
             }
             const sok = Math.max(Math.abs(tFa.d - rn), Math.abs(tFb.d - rn)) < 1e-9 * Math.max(1, rn);
             if (sok && Math.hypot(sx - gx, sy - gy) <= acc) { qx = sx; qy = sy; copyFoot(qFa, tFa); copyFoot(qFb, tFb); rhoCur = rn; advanced = true; }
