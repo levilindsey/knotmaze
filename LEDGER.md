@@ -522,11 +522,11 @@ Next free ID: K1249.
 - **K1240** · One outline for both looks and every junction consumer (Levi's sketch, 2026-11-06): offset-polyline borders,
   cuts and corner arcs in closed form from each frame; the border look strokes it, the filled look fills it. S1: a clean
   prototype beside the app, checked against form B and timed (Levi: "without all the tech debt"); notes.
-  - owner: muse session 01a1b515-c2a5-7932-ae88-a0c64ca532e2 (Paseo 0c1c8f3c), coordinated by claude session 09c7a672-a414-402a-97da-b3176839a2e5; S3e started 2026-11-07 00:17, cap 2 h
-  - branch: detached worktree .claude/worktrees/muse-k1240-s1 (reused since S1, node_modules junctioned), pushes to master; last commit: `21ff6b39` (the S3e brief; S3d's last code commit is `5290da82`)
-  - evidence: .claude/probes/K1240/proto/ (tracked builder, structure()/frame() since S3, tests and checks: s3_*, s3b_*, s3c_*, s3d_exact/move/decisions/bench.ts, cmp_*.mjs); untracked in the main checkout: .claude/probes/K1240/s1_out/, s2_out/ (with Claude's form B overlays), s3_out/, s3b_out/, s3c_out/ and s3d_out/ (S3d's 105 outputs; claude_rerun/ holds Claude's re-run on a0cd0a26: reference, still, move, decisions, two locked benches); S3e writes .claude/probes/K1240/out/s3e/ in the worktree
-  - next: S3e (K1248) running: structure() reads only the diagram, frame() solves every corner, cut and cap continuously; Done = structure equal under S', still 24/24 vs S3, moved rows within tolerance of S3d's fresh builds, page tests no worse. Then K1247's cost stage (def 12.4-13.2 ms vs 3), S4: K1245's junction tails (L=0 arms, junction clusters). If the outline is cheap, Levi decides whether the seam lanes (K1040, K1220 forks, K1211 edges) start no new stages and consumers move onto the outline (K1242 notes); then continuity across frames on recorded drags, plucks and flow, and the Pixel p95
-  - brief: `docs/design/K1240_s3e_moving_frame.md`
+  - owner: muse session 01a1b583-7cad-73e0-856d-332024745c9f (Paseo f4e0aeb3), coordinated by claude session 09c7a672-a414-402a-97da-b3176839a2e5; S3f started 2026-11-07 02:17, cap 2 h
+  - branch: detached worktree .claude/worktrees/muse-k1240-s1 (reused since S1, node_modules junctioned), pushes to master; last commit: `4a0b901a` (the S3f brief; S3e's last code commit is `72a27c50`)
+  - evidence: .claude/probes/K1240/proto/ (tracked builder, structure()/frame() since S3, tests and checks: s3_*, s3b_* to s3e_* (with Claude's s3e_claude_pieces.ts), cmp_*.mjs); untracked in the main checkout: .claude/probes/K1240/s1_out/ to s3d_out/, and s3e_out/ (S3e's 37 outputs; claude_rerun/ holds Claude's re-run on 72a27c50: synth, structure, still, move, sweep, pieces, page, two locked benches); S3f writes .claude/probes/K1240/out/s3f/ in the worktree
+  - next: S3f (K1248) running: structure() emits the piece list from the diagram (runs between each chain's crossings, arms and ends; one arc per corner; one cap per open end), frame() computes points only; Done = identical piece keys and order under S', still 24/24 vs S3, moved rows within tolerance of S3d's fresh builds, page tests no worse. Then K1247's cost stage (S3e's def frame 327 ms, S3d's 12.4, target 3), S4: K1245's junction tails (L=0 arms, junction clusters). If the outline is cheap, Levi decides whether the seam lanes (K1040, K1220 forks, K1211 edges) start no new stages and consumers move onto the outline (K1242 notes); then continuity across frames on recorded drags, plucks and flow, and the Pixel p95
+  - brief: `docs/design/K1240_s3f_fixed_pieces.md`
   - env: from the worktree, vite on a copy of .claude/probes/K1040/vite.private-cache.config.ts, ports 5980-5989
 
 ## Next, in order
@@ -1720,12 +1720,12 @@ Every other item below waits on the trigger it names.
   performance (def median 396 ms vs 3 ms target); per-spot app sheets beside fbb/today look need a stable
   world-point camera; border-band outside misses on close parallel threads; eye depth-tie path exercised only
   by construction.
-- **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's frame (`5290da82`) takes 12.4-13.2 ms median,
-  p95 15-21 under the lock (corners 7.3, setup 2.7, offsets 1.3-1.45; fat 2.6-3.8): constant-factor cuts are spent, it
-  needs structural ones, after S3e's frame() (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`; notes).
-- **K1248** · K1240 moving frames: frame(structure(S), S') vs a fresh build fails 15/24 rows at 0.1h and 6/6 at 0.5h
-  on S3d's code (def B over2 34->194): structure() holds decisions made at S. S3e (K1240's handle) takes it on, with a
-  structure() that reads only the diagram (`docs/design/K1240_s3e_moving_frame.md`; notes).
+- **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
+  7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
+  (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
+- **K1248** · K1240 moving frames: S3e's structure() is the diagram and moved = fresh exactly, but frame() rebuilds the
+  piece list (def 4373 -> 4330 at 0.5h) and parks covered pieces: moved fails 10/24 at 0.1h, 4/6 at 0.5h. S3f (K1240's
+  handle) moves the piece list into structure() (`docs/design/K1240_s3f_fixed_pieces.md`; notes).
 
 ## Approved, to schedule (2026-10-11)
 

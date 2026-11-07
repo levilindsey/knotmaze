@@ -4090,3 +4090,11 @@ Claude's re-run on a0cd0a26 under the lock (2026-11-07 00:03-00:06, two runs): d
 ## K1248 (2026-11-07, S3d's numbers)
 
 On S3d's code (Claude's re-run on a0cd0a26): 15/24 rows outside tolerance at 0.1h and 6/6 at 0.5h (def A over2 41->165, B 34->194; ring A p99 0.005->0.918; fat B over2 6->453). Decisions at 0.5h on def: 42 of 386 corners flip ok, 26/182 cap runs differ, only 44/184 borders keep their runs (`.claude/probes/K1240/s3d_out/claude_rerun/decisions.log`). S3e (`docs/design/K1240_s3e_moving_frame.md`) makes structure() read only the diagram, and frame() solves every corner, cut and cap continuously.
+
+## K1247 (2026-11-07, S3e's numbers)
+
+S3e's frame() rebuilds the whole outline from positions every frame. Claude's re-run on 72a27c50 under the lock (two runs, 02:03-02:15): def frame median 327.2 / 328.4 ms, p95 445.9 / 438.8; phases setup and borders 19.2 / 19.9, corners 18.7 / 18.8, cuts, eyes and exposure 265.8 / 265.7, regions 24.0 / 23.3, pieces and caps 29.8 / 28.1; structure() 0.5-0.6 ms (`.claude/probes/K1240/s3e_out/claude_rerun/`, the bench outputs in the worktree's `out/s3e/bench_claude{1,2}.json`). The cost stage starts from S3f's frame(), which computes points only.
+
+## K1248 (2026-11-07, S3e's numbers)
+
+Claude's re-run on 72a27c50: structure(S) deep-equals structure(S') in all 15 cases and every junction is cyclic; moved = fresh exactly (maxEnd 0); rigid 4.809e-9; page tests within tolerance. Still 19/24 (5 A rows: muse_hash, muse_default_tw, g41_def_tw64, g41_ring_tw64, g41_user_tw64); moved 10/24 at 0.1h and 4/6 at 0.5h (def A and B, ring A, fat A). The piece list changes with the frame (`proto/s3e_claude_pieces.ts`): keys differ on 10 of 12 scenes at 0.1h; at 0.5h def 4373 -> 4330, ring 923 -> 854, fat 3436 -> 2828; about 30% of pieces are degenerate (def 1293 of 4373). Sweep to 0.5h: largest piece motion per step 15.38 (def), 4.27 (ring), 5.50 (fat), particles at most 0.010. S3f (`docs/design/K1240_s3f_fixed_pieces.md`) has structure() emit the piece list from the diagram.
