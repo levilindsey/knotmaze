@@ -243,9 +243,26 @@ const cols9 = [
   ["fetch - ftentv", (g) => g("ftentvfetch") - g("ftentv")],
   ["spflat - ftentv", (g) => g("ftentvspflat") - g("ftentv")],
 ];
-const cols = set === "s3f5" ? cols9 : set === "s3f4" ? cols8 : set === "s3f2" ? cols7 : set === "s3f1" ? cols6 : set === "s3e3" ? cols5 : set === "s3e1" ? cols4 : set === "s3d3" ? cols3 : set === "s3d2" ? cols2 : cols1;
+// K1040 S3g (the label pass's structural levers, on the split page beside
+// ftentv, ftentvsetup, fempty and ffloor): S3f4's columns, one difference
+// column per lever against ftentv (negative = faster), and a gate column
+// per pass (sync - ffloor + its upload p50, the gate's number; on the
+// desktop the upload reads NaN and the gate columns show "-").
+const cols10 = [
+  ["ftentv", (g) => g("ftentv") - g("ffloor")],
+  ["drawing", (g) => g("ftentv") - g("ftentvsetup")],
+  ["fempty", (g) => g("fempty") - g("ffloor")],
+  ["today gate", (g, u) => g("ftentv") - g("ffloor") + u("ftentv")],
+  ["nops - today", (g) => g("ftentvnops") - g("ftentv")],
+  ["nops gate", (g, u) => g("ftentvnops") - g("ffloor") + u("ftentvnops")],
+  ["clrd - today", (g) => g("ftentvclrd") - g("ftentv")],
+  ["clrd gate", (g, u) => g("ftentvclrd") - g("ffloor") + u("ftentvclrd")],
+  ["d16 - today", (g) => g("ftentvd16") - g("ftentv")],
+  ["d16 gate", (g, u) => g("ftentvd16") - g("ffloor") + u("ftentvd16")],
+];
+const cols = set === "s3g" ? cols10 : set === "s3f5" ? cols9 : set === "s3f4" ? cols8 : set === "s3f2" ? cols7 : set === "s3f1" ? cols6 : set === "s3e3" ? cols5 : set === "s3e1" ? cols4 : set === "s3d3" ? cols3 : set === "s3d2" ? cols2 : cols1;
 const f1 = (x) => (Number.isFinite(x) ? x.toFixed(set.startsWith("s3e") || set.startsWith("s3f") ? 2 : 1) : "-");
-const two = (set === "s3f4" || set === "s3f5") && !!label2;
+const two = (set === "s3f4" || set === "s3f5" || set === "s3g") && !!label2;
 const head = two ? cols.flatMap((c) => [c[0], `${c[0]} d`]) : cols.map((c) => c[0]);
 const rows = [`| scene | ${head.join(" | ")} |`, `|---|${head.map(() => "---").join("|")}|`];
 const sums = cols.map(() => []);
@@ -265,7 +282,7 @@ for (const s of SCENES) {
 }
 const med = (a) => { const b = [...a].sort((x, y) => x - y); return b.length ? b[b.length >> 1] : NaN; };
 rows.push(two ? `| median | ${cols.flatMap((c, i) => [f1(med(sums[i])), f1(med(sumsD[i]))]).join(" | ")} |` : `| median | ${sums.map((a) => f1(med(a))).join(" | ")} |`);
-const what = set === "s3f5" ? "the fixed cost's and cheaper vertices' levers against ftentv (S3f5; d = run 2 - run 1)" : set === "s3f4" ? "what bounds the label drawing (S3f4; d = run 2 - run 1)" : set === "s3f2" ? "the new pass's fixed part and rest upload (S3f2)" : set === "s3f1" ? "the new pass (K1158) against S3e's and the ideal" : set === "s3e1" ? "the floor before building (the ideal family)" : set === "s3e3" ? "the lean empty pass against the ideal floor" : set === "s3d3" ? "the fixed part against one GPU round trip (kick)" : set === "s3d2" ? "the vertex-light tent's and the fixed part's split" : "the tent pass's cost split";
+const what = set === "s3g" ? "the label pass's structural levers against ftentv (S3g; d = run 2 - run 1)" : set === "s3f5" ? "the fixed cost's and cheaper vertices' levers against ftentv (S3f5; d = run 2 - run 1)" : set === "s3f4" ? "what bounds the label drawing (S3f4; d = run 2 - run 1)" : set === "s3f2" ? "the new pass's fixed part and rest upload (S3f2)" : set === "s3f1" ? "the new pass (K1158) against S3e's and the ideal" : set === "s3e1" ? "the floor before building (the ideal family)" : set === "s3e3" ? "the lean empty pass against the ideal floor" : set === "s3d3" ? "the fixed part against one GPU round trip (kick)" : set === "s3d2" ? "the vertex-light tent's and the fixed part's split" : "the tent pass's cost split";
 const text = `# ${label}${label2 ? ` + ${label2}` : ""}: ${what} (render-sync p50 ms, differences on one page)\n\n${rows.join("\n")}\n`;
 console.log(text);
 if (process.argv[3]) writeFileSync(process.argv[3], text);

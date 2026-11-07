@@ -86,6 +86,10 @@ function compile(gl: WebGL2RenderingContext, vs: string, fs: string): WebGLProgr
   return pr;
 }
 
+// S3g (ftentvclrd): the fullscreen clear triangle (word 0 at depth 1).
+const CLR_VS = "#version 300 es\nvoid main() {\n  vec2 p = vec2(float((gl_VertexID << 1) & 2), float(gl_VertexID & 2));\n  gl_Position = vec4(p * 2.0 - 1.0, 1.0, 1.0);\n}\n";
+const CLR_FS = "#version 300 es\nprecision highp int;\nlayout(location = 0) out uint oWord;\nvoid main() { oWord = 0u; }\n";
+
 interface Tex {
   tex: WebGLTexture;
   rows: number;
@@ -219,6 +223,25 @@ export class LabelBPass {
    * only if its readback still equals ftentv's.
    */
   probeNoDepth = false;
+  /**
+   * Probe knob (S3g, ftentvnops): tentv with labelBTentNoPsSources -
+   * skip tentSpanRecord and the ps upload entirely (the vertex shaders
+   * recompute the record from uSpan). Not with probeStrip/probeVid:
+   * their fragment shader is tentv's, which fetches uPs.
+   */
+  probeNoPs = false;
+  /**
+   * Probe knob (S3g, ftentvclrd): no clearBuffer calls - L and D are
+   * invalidated at the bind (a DONT_CARE load) and one fullscreen
+   * triangle writes the clear word 0 at depth 1 (depth test ALWAYS,
+   * then LESS for the tents), so the label is today's. Debug passes
+   * (G attached) keep the clearBuffer path.
+   */
+  probeClearDraw = false;
+  /** The clear-draw's program (S3g), compiled on its first draw. */
+  private clrPr: WebGLProgram | null = null;
+  /** Probe knob (S3g, ftentvd16): lean D as a DEPTH_COMPONENT16 renderbuffer (set before resize()). */
+  probeDepth16 = false;
   /** A full upload has landed, so upload(T, true) may skip (header). */
   private hasUploaded = false;
   private segVerts = TENT_SEG_VERTS;
@@ -326,7 +349,7 @@ export class LabelBPass {
         const prevRb = query ? gl.getParameter(gl.RENDERBUFFER_BINDING) : null;
         this.Drb = gl.createRenderbuffer() as WebGLRenderbuffer;
         gl.bindRenderbuffer(gl.RENDERBUFFER, this.Drb);
-        gl.renderbufferStorage(gl.RENDERBUFFER, this.probeDepth24 ? gl.DEPTH_COMPONENT24 : gl.DEPTH_COMPONENT32F, w, h);
+        gl.renderbufferStorage(gl.RENDERBUFFER, this.probeDepth16 ? gl.DEPTH_COMPONENT16 : this.probeDepth24 ? gl.DEPTH_COMPONENT24 : gl.DEPTH_COMPONENT32F, w, h);
         gl.bindRenderbuffer(gl.RENDERBUFFER, prevRb);
       }
     } else {
@@ -484,8 +507,11 @@ export class LabelBPass {
       this.uploadLean("span", T.span, T.spanRows, nSpan);
       this.uploadLean("fill", T.fill, T.fillRows, FILL_TEXELS * T.nFills);
       if (this.mode === "tentv") {
-        this.psBuf = tentSpanRecord(T, this.psBuf);
-        this.uploadLean("ps", this.psBuf, T.ptsRows, nPts);
+        // S3g (ftentvnops): no ps table at all (probeNoPs's header).
+        if (!(this.probeNoPs && !this.probeStrip && !this.probeVid)) {
+          this.psBuf = tentSpanRecord(T, this.psBuf);
+          this.uploadLean("ps", this.psBuf, T.ptsRows, nPts);
+        }
       } else if (this.mode === "capsule") this.uploadLean("nb", T.nb, T.ptsRows, nPts);
     } else {
       this.uploadTab(this.tabs.pts, T.pts, T.ptsRows);
@@ -695,10 +721,22 @@ export class LabelBPass {
     gl.enable(gl.DEPTH_TEST);
     gl.depthFunc(gl.LESS);
     gl.depthMask(true);
-    if (!this.probeNoClear) gl.clearBufferuiv(gl.COLOR, 0, [0, 0, 0, 0]);
-    if (this.G && !this.probeNoClear) gl.clearBufferfv(gl.COLOR, 1, [-1e30, 0, 0, 0]);
-    // S3f5 (ftentvnodepth): no depth attachment to clear.
-    if (!this.probeNoClear && !this.probeNoDepth) gl.clearBufferfv(gl.DEPTH, 0, [1]);
+    if (this.probeClearDraw && !this.G && !this.probeNoClear) {
+      // S3g (ftentvclrd): DONT_CARE loads, then the clear triangle above
+      // writes word 0 at depth 1 (ALWAYS; LESS is restored for the tents).
+      gl.invalidateFramebuffer(gl.FRAMEBUFFER, this.probeNoDepth ? [gl.COLOR_ATTACHMENT0] : [gl.COLOR_ATTACHMENT0, gl.DEPTH_ATTACHMENT]);
+      this.clrPr ??= compile(gl, CLR_VS, CLR_FS);
+      gl.bindVertexArray(null);
+      gl.useProgram(this.clrPr);
+      gl.depthFunc(gl.ALWAYS);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      gl.depthFunc(gl.LESS);
+    } else {
+      if (!this.probeNoClear) gl.clearBufferuiv(gl.COLOR, 0, [0, 0, 0, 0]);
+      if (this.G && !this.probeNoClear) gl.clearBufferfv(gl.COLOR, 1, [-1e30, 0, 0, 0]);
+      // S3f5 (ftentvnodepth): no depth attachment to clear.
+      if (!this.probeNoClear && !this.probeNoDepth) gl.clearBufferfv(gl.DEPTH, 0, [1]);
+    }
     const ppd = Math.sqrt(Math.abs(M[0] * M[3] - M[1] * M[2]));
     const pad = 2 / Math.max(ppd, 1e-9);
     if (this.tent) this.drawTent(M, ppd);
@@ -863,6 +901,7 @@ export class LabelBPass {
     gl.deleteVertexArray(this.vao);
     gl.deleteProgram(this.capsule);
     gl.deleteProgram(this.fillPr);
+    if (this.clrPr) gl.deleteProgram(this.clrPr);
     if (this.tent) {
       gl.deleteProgram(this.tent.seg);
       gl.deleteProgram(this.tent.cap);

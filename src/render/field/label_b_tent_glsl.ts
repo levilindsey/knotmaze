@@ -577,3 +577,51 @@ export function labelBTentSpanFlatSources(debugOut: boolean): LabelBTentVSources
   const fs = sv.fs.replace("flat in ivec3 vQ;", "flat in ivec3 vQ;\nflat in vec3 vSpF;").replace(spFetch, "  vec4 sp = vec4(vSpF.x, vSpF.y, vSpF.z, 0.0);");
   return { segVs, capVs, fs };
 }
+
+// K1040 S3g (ftentvnops, probe-only beside tentv): spanflat's source set
+// with the per-point span record (uPs, tentSpanRecord's table) not
+// fetched but recomputed in the segment and cap vertex shaders by
+// S3c's spanAt search over uSpan - the same halvings on the same
+// floats tentSpanRecord runs on the CPU, so the record (index, code,
+// nextLo) is bit-identical and the label is today's. The pass then
+// uploads no ps table at all (label_b_pass.ts probeNoPs): one fewer
+// texture and the pts-sized upload beside pts gone. Positions are
+// tentv's emit lines untouched.
+const SPAN_AT = `// The chain's span holding s (spans sorted by lo, the first at s0): its
+// index and code, and the next span's lo (1e30 if none).
+void spanAt(vec4 c1, float s, out int idx, out int code, out float nextLo) {
+  int so = int(c1.z);
+  int ns = int(c1.w);
+  int lo = 0;
+  int hi = ns - 1;
+  for (int it = 0; it < 16; it++) {
+    if (lo >= hi) break;
+    int mid = (lo + hi + 1) / 2;
+    if (fetch(uSpan, so + mid).x <= s) lo = mid;
+    else hi = mid - 1;
+  }
+  idx = lo;
+  code = int(fetch(uSpan, so + lo).y);
+  nextLo = lo + 1 < ns ? fetch(uSpan, so + lo + 1).x : 1e30;
+}
+`;
+export function labelBTentNoPsSources(debugOut: boolean): LabelBTentVSources {
+  const sf = labelBTentSpanFlatSources(debugOut);
+  const once = (s: string, a: string, b: string, what: string) => {
+    if (s.split(a).length !== 2) throw new Error(`nops: ${what} not found once`);
+    return s.replace(a, b);
+  };
+  const segVs = once(
+    once(sf.segVs, "in vec2 aSeg;\nvoid main() {", SPAN_AT + "in vec2 aSeg;\nvoid main() {", "segment main"),
+    "  vec4 spR = fetch(uPs, off + k);\n  vSpF = vec3(spR.x, spR.y, spR.z);",
+    "  int spI; int spC; float spN;\n  spanAt(c1, A.z, spI, spC, spN);\n  vSpF = vec3(float(spI), float(spC), spN);",
+    "segment span record",
+  );
+  const capVs = once(
+    once(sf.capVs, "in vec2 aSeg;\nvoid main() {", SPAN_AT + "in vec2 aSeg;\nvoid main() {", "cap main"),
+    "  vec4 spR = fetch(uPs, ic);\n  vSpF = vec3(spR.x, spR.y, spR.z);",
+    "  int spI; int spC; float spN;\n  spanAt(c1, C.z, spI, spC, spN);\n  vSpF = vec3(float(spI), float(spC), spN);",
+    "cap span record",
+  );
+  return { segVs, capVs, fs: sf.fs };
+}

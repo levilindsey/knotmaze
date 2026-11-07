@@ -11,7 +11,7 @@ import { buildLabelB, labelAt, type LabelBTables } from "../../../../src/render/
 import { LabelBPass, type Affine, type LabelBHost, type LabelBMode } from "../../../../src/render/field/label_b_pass";
 import { pixiLabelHost } from "../../../../src/render/field/label_b_host";
 import { autoDetectRenderer, BlurFilter, Container, Graphics, Mesh, MeshGeometry, Shader, Sprite, Text, Texture, type WebGLRenderer } from "pixi.js";
-import { labelBTentFetchSources, labelBTentSources, labelBTentSpanFlatSources, labelBTentVSources, TENT_NW, type LabelBTentSources, type LabelBTentVSources } from "../../../../src/render/field/label_b_tent_glsl";
+import { labelBTentFetchSources, labelBTentNoPsSources, labelBTentSources, labelBTentSpanFlatSources, labelBTentVSources, TENT_NW, type LabelBTentSources, type LabelBTentVSources } from "../../../../src/render/field/label_b_tent_glsl";
 import { pointAt } from "../../../../src/render/field/geom";
 
 // K1040 S3d: opts.mode names the pass's mode (capsule | tent | tentv); opts.tent
@@ -414,7 +414,7 @@ const LEAN = ["leanempty", "leanemptynoup", "leantentv", "leantentvrest", "leant
 //                 host's restore (the viewport and Pixi's resetState())
 //   ffloor        the new sync alone (no query): the host floor
 // Every older variant runs S3e's query and restore (probeQuery).
-const FNEW = ["ftentv", "ftentvrest", "ftentvsetup", "fempty", "femptynoup", "femptynouph0", "ffloor", "femptyb", "femptynoupnc", "femptynoupst", "ftentvone", "ftentvhalf", "ftentvclip", "ftentvflat", "ftentvnw1c", "ftentvvid", "ftentvd24", "ftentvdinv", "ftentvdtex", "ftentvnodepth", "ftentvfetch", "ftentvspflat"];
+const FNEW = ["ftentv", "ftentvrest", "ftentvsetup", "fempty", "femptynoup", "femptynouph0", "ffloor", "femptyb", "femptynoupnc", "femptynoupst", "ftentvone", "ftentvhalf", "ftentvclip", "ftentvflat", "ftentvnw1c", "ftentvvid", "ftentvd24", "ftentvdinv", "ftentvdtex", "ftentvnodepth", "ftentvfetch", "ftentvspflat", "ftentvnops", "ftentvclrd", "ftentvd16"];
 const VARIANTS = ["tent", "empty", "noup", "degen", "fs0", "fsconst", "half", "nw1", "floor"];
 let kickFb: WebGLFramebuffer | null = null;
 const kickPx = new Uint32Array(4);
@@ -636,6 +636,11 @@ function variantPass(v: string, host: LabelBHost | null = null): LabelBPass {
     } else if (v === "ftentvspflat") {
       // K1040 S3f5: the span record as a flat, not a per-fragment fetch.
       p = new LabelBPass(gl, false, "tentv", { lean: true, host, tentVSources: labelBTentSpanFlatSources(false) });
+    } else if (v === "ftentvnops") {
+      // K1040 S3g: the span record recomputed in the vertex shaders;
+      // no ps table uploaded (probeNoPs in label_b_pass.ts).
+      p = new LabelBPass(gl, false, "tentv", { lean: true, host, tentVSources: labelBTentNoPsSources(false) });
+      p.probeNoPs = true;
     } else {
       p = new LabelBPass(gl, false, "tentv", { lean: true, host: v === "femptynouph0" ? null : host });
     }
@@ -655,6 +660,10 @@ function variantPass(v: string, host: LabelBHost | null = null): LabelBPass {
     if (v === "ftentvdinv") p.probeInvalidateDepth = true;
     if (v === "ftentvdtex") p.probeDepthTexture = true;
     if (v === "ftentvnodepth") p.probeNoDepth = true;
+    // K1040 S3g, the structural levers (set before the first resize):
+    // clrd the clears as one fullscreen draw, d16 depth's format.
+    if (v === "ftentvclrd") p.probeClearDraw = true;
+    if (v === "ftentvd16") p.probeDepth16 = true;
     vpasses.set(v, p);
     return p;
   }
@@ -980,7 +989,7 @@ async function check(scene: FieldScene, opts: { scale?: number } = {}) {
   // half size (M and target halved) and nearest-upscaled for the count;
   // a smaller target cannot keep the label, so it is dropped, not timed.
   const wordDiff: Record<string, number> = {};
-  for (const v of ["ftentvd24", "ftentvdinv", "ftentvdtex", "ftentvnodepth", "ftentvfetch", "ftentvspflat"]) {
+  for (const v of ["ftentvd24", "ftentvdinv", "ftentvdtex", "ftentvnodepth", "ftentvfetch", "ftentvspflat", "ftentvnops", "ftentvclrd", "ftentvd16"]) {
     const w = draw(v);
     let d = 0;
     for (let i = 0; i < base.length; i++) if (base[i] !== w[i]) d++;
