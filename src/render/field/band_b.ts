@@ -12,7 +12,17 @@
 //   CARM  1 texel per chain: (arm offset, arm count, 0, 0) - armsOf[chain]
 //         in order, each as an index into ARM
 //   AIX   1 texel per (chain, arm): (arm index, 0, 0, 0)
-//   GRP   1 texel per group: (window offset, window count, 0, 0)
+//   GRP   1 texel per group: (window offset, window count, corner offset,
+//         corner count) - the corners index CRN, which holds them in group
+//         order (K1040 S4b)
+//   CRN   CRN_TEXELS per corner, in group order (K1040 S4b): (qx, qy, r,
+//         rV), (tax, tay, tbx, tby), (Vx, Vy, omega, Rf) with Rf inFill's
+//         reach rV + 2aa / max(0.1, sin(theta/2)), (arm a, arm b, chain a,
+//         chain b), arm a's and arm b's windows over [0, max(dV, d) + 2h]
+//         (label_b armWindowWalk: inFill's and F9's footArm), form B's
+//         corner-grid cell box (x0, x1, y0, y1) - cornersNear's list, so F9
+//         reads the corners form B reads - and the terms' world bbox (x0,
+//         y0, x1, y1; empty when the corner has no term)
 //   GW    2 texels per group window: (chain, k0, cnt, arm), (cx, cy, rad, 0)
 //         - an arm's segments from its root to the burial's reach (the
 //         farthest corner foot on the arm, + 2h, at most L) and a circle
@@ -39,6 +49,12 @@ export interface BandBTables {
   gwRows: number;
   nb2: Float32Array;
   nb2Rows: number;
+  /** K1040 S4b: the corners (CRN), in group order; one corner quad each. */
+  crn: Float32Array;
+  crnRows: number;
+  nCorners: number;
+  /** form B's corner-grid cell (cornersNear). */
+  cell: number;
   inst: Float32Array;
   nInst: number;
   nGroups: number;
@@ -61,6 +77,9 @@ export interface BandBTables {
 function rows(n: number): number {
   return Math.max(1, Math.ceil(n / TEX_W));
 }
+
+/** K1040 S4b: texels per corner in CRN. */
+export const CRN_TEXELS = 8;
 
 /** How far along arm ai a burial can reach: its corners' feet (V's and the ball's), + 2h, at most L. */
 export function armReach(fb: FormB, ai: number): number {
@@ -139,6 +158,57 @@ export function buildBandB(fb: FormB, T: LabelBTables): BandBTables {
   }
   const gw = new Float32Array(rows(Math.max(1, 2 * wins.length)) * TEX_W * 4);
   wins.forEach((w, i) => gw.set(w, 8 * i));
+  // K1040 S4b: the corners, in group order (GRP's corner offset and count).
+  const byGroupC: number[][] = Array.from({ length: fb.nGroups }, () => []);
+  fb.corners.forEach((c, i) => {
+    if (c.g >= 0 && c.g < fb.nGroups) byGroupC[c.g].push(i);
+  });
+  const order: number[] = [];
+  for (let g = 0; g < fb.nGroups; g++) {
+    grp[4 * g + 2] = order.length;
+    grp[4 * g + 3] = byGroupC[g].length;
+    for (const ci of byGroupC[g]) order.push(ci);
+  }
+  const crn = new Float32Array(rows(Math.max(1, CRN_TEXELS * order.length)) * TEX_W * 4);
+  const fin = (v: number) => (Number.isFinite(v) ? v : 1e30);
+  // form B's corner-grid cell (private there; read, not recomputed).
+  const cs = (fb as unknown as { cell: number }).cell;
+  const reachW = fb.W + fb.aa;
+  order.forEach((ci, i) => {
+    const c = fb.corners[ci];
+    const o = CRN_TEXELS * 4 * i;
+    const Rf = c.rV + (2 * fb.aa) / Math.max(0.1, Math.sin(c.theta / 2)) + 1e-12;
+    crn.set([fin(c.qx), fin(c.qy), fin(c.r), fin(c.rV)], o);
+    crn.set([fin(c.tax), fin(c.tay), fin(c.tbx), fin(c.tby)], o + 4);
+    crn.set([fin(c.Vx), fin(c.Vy), c.omega, fin(Rf)], o + 8);
+    crn.set([c.a, c.b, fb.arms[c.a].pi, fb.arms[c.b].pi], o + 12);
+    crn.set(armWindowWalk(fb, c.a, Math.max(c.dVa, c.dA) + 2 * fb.h), o + 16);
+    crn.set(armWindowWalk(fb, c.b, Math.max(c.dVb, c.dB) + 2 * fb.h), o + 20);
+    // form B addCorner's cell box.
+    const R = Math.max(c.rV, c.r + fb.W) + 2 * fb.W + 4 * fb.aa;
+    crn.set([Math.floor((c.qx - R) / cs), Math.floor((c.qx + R) / cs), Math.floor((c.qy - R) / cs), Math.floor((c.qy + R) / cs)].map(fin), o + 24);
+    // The terms' bbox: the discs (t_a, t_b when omega > 0; V when omega < 1)
+    // and the arc's annulus.
+    let x0 = Infinity;
+    let y0 = Infinity;
+    let x1 = -Infinity;
+    let y1 = -Infinity;
+    const box = (x: number, y: number, r: number) => {
+      if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(r)) return;
+      x0 = Math.min(x0, x - r);
+      y0 = Math.min(y0, y - r);
+      x1 = Math.max(x1, x + r);
+      y1 = Math.max(y1, y + r);
+    };
+    if (c.omega > 0) {
+      box(c.tax, c.tay, reachW);
+      box(c.tbx, c.tby, reachW);
+      if (c.r > 0) box(c.qx, c.qy, c.r + reachW);
+    }
+    if (c.omega < 1) box(c.Vx, c.Vy, reachW);
+    if (x1 >= x0) crn.set([x0, y0, x1, y1], o + 28);
+    else crn.set([1, 1, 0, 0], o + 28);
+  });
   // NB2, indexed as PTS.
   const R = fb.h + fb.W + 2 * fb.aa;
   const nb2 = new Float32Array(T.ptsRows * TEX_W * 4);
@@ -167,6 +237,10 @@ export function buildBandB(fb: FormB, T: LabelBTables): BandBTables {
     gwRows: rows(Math.max(1, 2 * wins.length)),
     nb2,
     nb2Rows: T.ptsRows,
+    crn,
+    crnRows: rows(Math.max(1, CRN_TEXELS * order.length)),
+    nCorners: order.length,
+    cell: cs,
     inst,
     nInst: ii / 3,
     nGroups: fb.nGroups,

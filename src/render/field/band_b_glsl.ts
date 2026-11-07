@@ -29,6 +29,7 @@
 // exact cap-mix for several buriers.
 
 import { TEX_W } from "./label_b";
+import { CRN_TEXELS } from "./band_b";
 
 const HEAD = `#version 300 es
 precision highp float;
@@ -60,6 +61,9 @@ uniform float uDel;
 uniform float uR;
 uniform float uPad;
 uniform float uInvK;
+uniform sampler2D uCrn;
+uniform float uCell;
+#define CRN_TEXELS ${CRN_TEXELS}
 vec4 fetch(sampler2D t, int i) {
   return texelFetch(t, ivec2(i % TEX_W, i / TEX_W), 0);
 }
@@ -151,9 +155,8 @@ void main() {
 }
 `;
 
-const FS = `${HEAD}
-flat in ivec3 vInst;
-out vec4 oInk;
+// The fragment helpers both programs share (the foot's and the corners').
+const LIB = `
 vec2 worldAt() {
   vec2 dev = vec2(gl_FragCoord.x, uView.y - gl_FragCoord.y);
   return vec2(uI0.x * dev.x + uI0.z * dev.y + uI1.x, uI0.y * dev.x + uI0.w * dev.y + uI1.y);
@@ -306,6 +309,170 @@ float topDist(uint wd, vec2 p, int ci, float sA) {
   }
   return best;
 }
+float band(float D) {
+  return 1.0 - ss(uW - uAa, uW + uAa, D);
+}
+// K1040 S4b: form B inWedge - p inside the wedge from q between t_a and t_b.
+bool inWedgeC(vec2 q, vec4 t, vec2 x) {
+  vec2 ra = t.xy - q;
+  vec2 rb = t.zw - q;
+  vec2 w = x - q;
+  float sg = ra.x * rb.y - ra.y * rb.x;
+  if (sg == 0.0) return false;
+  return (ra.x * w.y - ra.y * w.x) * sg >= 0.0 && (w.x * rb.y - w.y * rb.x) * sg >= 0.0;
+}
+// K1040 S4b: FormB.footArm over an arm's window w = (sLo, sHi, k0, cnt)
+// (label_b_glsl.ts footWin, the label's fill test).
+float footWin(vec2 p, int ci, vec4 w) {
+  vec4 c0 = fetch(uChain, 2 * ci);
+  vec4 c1 = fetch(uChain, 2 * ci + 1);
+  int off = int(c0.x);
+  int n = int(c0.y);
+  int nseg = int(c0.z);
+  int cnt = int(w.w);
+  int k = int(w.z);
+  float shift = 0.0;
+  float best = 1e30;
+  for (int i = 0; i < 4096; i++) {
+    if (i >= cnt) break;
+    int kb = (k + 1 == n) ? 0 : k + 1;
+    vec4 A = fetch(uPts, off + k);
+    vec4 B = fetch(uPts, off + kb);
+    float sa = A.z + shift;
+    float sb = (kb == 0 ? c1.x + c1.y : B.z) + shift;
+    float l = sb - sa;
+    if (!(l > 0.0)) l = 1.0;
+    float a = max(w.x, sa);
+    float b = min(w.y, sb);
+    if (b >= a) {
+      vec2 pa = mix(A.xy, B.xy, (a - sa) / l);
+      vec2 pb = mix(A.xy, B.xy, (b - sa) / l);
+      float t = clamp(segT(p, pa, pb), 0.0, 1.0);
+      best = min(best, distance(p, mix(pa, pb, t)));
+    }
+    k++;
+    if (k == nseg) {
+      k = 0;
+      shift += c1.y;
+    }
+  }
+  return best;
+}
+// K1040 S4b: is the piece at (ci, s) on arm ai (form B onArm)?
+bool onArmC(int ai, int chain, int ci, float s, bool closed, float len) {
+  if (chain != ci) return false;
+  vec4 a0 = fetch(uArm, 2 * ai);
+  float d = armDist(a0, s, closed, len);
+  return d >= -1e-12 && d <= a0.w + 1e-12;
+}
+// K1040 S4b: form B's corner rules in the foot (inkOf's foot()), for X on
+// chain ci at s with outline point f, A's group g: F9's same-chain corner
+// burial and the fill's burial at omega, over the corners form B's
+// cornersNear(p) lists; arc gets the partial fill's arc share.
+float cornerBurial(int g, vec2 p, vec2 f, int ci, float s, bool closed, float len, out float arc) {
+  arc = 0.0;
+  float bur = 0.0;
+  vec4 gr = fetch(uGrp, g);
+  int co = int(gr.z);
+  int cn = int(gr.w);
+  vec2 cell = floor(p / uCell);
+  for (int i = 0; i < 1024; i++) {
+    if (i >= cn) break;
+    int o = CRN_TEXELS * (co + i);
+    vec4 c6 = fetch(uCrn, o + 6);
+    if (cell.x < c6.x || cell.x > c6.y || cell.y < c6.z || cell.y > c6.w) continue;
+    vec4 c0 = fetch(uCrn, o);
+    vec4 c2 = fetch(uCrn, o + 2);
+    vec4 c3 = fetch(uCrn, o + 3);
+    int chA = int(c3.z);
+    int chB = int(c3.w);
+    bool onA = onArmC(int(c3.x), chA, ci, s, closed, len);
+    bool onB = onArmC(int(c3.y), chB, ci, s, closed, len);
+    if (chA == ci && chB == ci && (onA || onB)) {
+      // F9: the other arm's tube, from the arm.
+      float dO = onA ? footWin(f, chB, fetch(uCrn, o + 5)) : footWin(f, chA, fetch(uCrn, o + 4));
+      bur = max(bur, 1.0 - ss(uH - 2.0 * uAa, uH, dO));
+    }
+    float om = c2.z;
+    if (!(c0.z > 0.0 && om > 0.0)) continue;
+    float dq = distance(f, c0.xy);
+    if (!(dq > c0.z) || dq > c2.w) continue;
+    if (!inWedgeC(c0.xy, fetch(uCrn, o + 1), f)) continue;
+    float lim = uH - 2.0 * uAa;
+    if (!onA && footWin(f, chA, fetch(uCrn, o + 4)) < lim) continue;
+    if (!onB && footWin(f, chB, fetch(uCrn, o + 5)) < lim) continue;
+    bur = max(bur, om);
+    if (om < 1.0) arc = max(arc, om * band2(distance(p, c0.xy) - c0.z));
+  }
+  return bur;
+}
+// K1040 S4b: group g's alpha at p (form B alphaOf): its pieces' outline AA
+// (each arm window's nearest segment, a member of g there) and its fills'.
+float alphaG(int g, vec2 p) {
+  vec4 gr = fetch(uGrp, g);
+  int wo = int(gr.x);
+  int wn = int(gr.y);
+  float aP = 0.0;
+  for (int wi = 0; wi < 1024; wi++) {
+    if (wi >= wn || aP >= 1.0) break;
+    vec4 w1 = fetch(uGw, 2 * (wo + wi) + 1);
+    if (distance(p, w1.xy) > w1.z + uH + uAa) continue;
+    vec4 w0v = fetch(uGw, 2 * (wo + wi));
+    int bj = int(w0v.x);
+    int k0 = int(w0v.y);
+    int cnt = int(w0v.z);
+    vec4 b0 = fetch(uChain, 2 * bj);
+    vec4 b1 = fetch(uChain, 2 * bj + 1);
+    int boff = int(b0.x);
+    int bn = int(b0.y);
+    bool bcl = b0.w > 0.5;
+    int jj = k0;
+    vec4 Pa = fetch(uPts, boff + jj);
+    float bestDp = 1e30;
+    float bestSj = 0.0;
+    for (int qq = 0; qq < 4096; qq++) {
+      if (qq >= cnt) break;
+      int jb = (jj + 1 == bn) ? 0 : jj + 1;
+      vec4 Pb = fetch(uPts, boff + jb);
+      float t = clamp(segT(p, Pa.xy, Pb.xy), 0.0, 1.0);
+      float dp = distance(p, mix(Pa.xy, Pb.xy, t));
+      if (dp < bestDp) {
+        bestDp = dp;
+        float sb = jb == 0 ? b1.x + b1.y : Pb.z;
+        bestSj = Pa.z + t * (sb - Pa.z);
+        if (bcl && bestSj >= b1.x + b1.y) bestSj -= b1.y;
+      }
+      Pa = Pb;
+      jj = jb;
+    }
+    if (!(bestDp < uH + uAa)) continue;
+    int gB;
+    float rB = memberRamp(bj, bestSj, bcl, b1.y, gB);
+    if (gB != g || !(rB > 0.0)) continue;
+    aP = max(aP, ss(-uAa, uAa, uH - bestDp));
+  }
+  if (aP >= 1.0) return 1.0;
+  float aF = 0.0;
+  int co = int(gr.z);
+  int cn = int(gr.w);
+  for (int i = 0; i < 1024; i++) {
+    if (i >= cn) break;
+    int o = CRN_TEXELS * (co + i);
+    vec4 c0 = fetch(uCrn, o);
+    vec4 c2 = fetch(uCrn, o + 2);
+    if (!(c0.z > 0.0 && c2.z > 0.0)) continue;
+    float dq = distance(p, c0.xy);
+    if (dq > c0.w * (1.0 + 1e-6) || !inWedgeC(c0.xy, fetch(uCrn, o + 1), p)) continue;
+    aF = max(aF, c2.z * ss(-uAa, uAa, dq - c0.z));
+  }
+  return max(aP, aF);
+}
+`;
+
+const FS = `${HEAD}
+flat in ivec3 vInst;
+out vec4 oInk;
+${LIB}
 void main() {
   vec2 p = worldAt();
   int ci = vInst.x;
@@ -646,7 +813,16 @@ void main() {
     }
     if (oDp < 1e29 && zA - dA * uInvK <= oZ - oDp * uInvK) ownVis = 1.0 - ss(-uAa, uAa, uH - oDp);
   }
-  float v = (rA - bur + (1.0 - rA) * ownVis) * w0 * band2(uH - dX);
+  // K1040 S4b: the corner rules (F9 and the fill at omega, with the partial
+  // fill's arc share) bury A's member share rA, as form B buries A in each
+  // configuration where it is the group's (exact at rA = 1, the corners'
+  // case: the cap ramps end far out along the arms).
+  float arcC = 0.0;
+  if (g >= 0) {
+    float burC = cornerBurial(g, p, fX + uH * nX, ci, sX, closed, len, arcC);
+    bur = max(bur, rA * burC);
+  }
+  float v = (rA - bur + (1.0 - rA) * ownVis) * w0 * band2(uH - dX) + rA * beta * arcC;
   if (lay == 1) {
     float DT = uH - dT;
     v = band2(DT) + (1.0 - ss(-uAa, uAa, DT)) * v;
@@ -663,11 +839,70 @@ void main() {
 }
 `;
 
+// K1040 S4b: the corner quads - form B inkOf's corner terms, one quad per
+// corner over its terms' bbox (band_b.ts CRN texel 7): the endpoint discs
+// omega aS band(|p - t_a|), omega aS band(|p - t_b|) and (1 - omega) aS
+// band(|p - V|), clipped by the group's alpha aS (alphaOf), and the arc
+// omega band2(|p - q| - r) inside the wedge. MAX blending with the foot
+// strips keeps form B's max over the surface's terms. The composite with
+// the label's top T is lay 1's (T over the group, through T's AA rim); the
+// group on top, or paper, writes the term as it is.
+const CORNER_VS = `${HEAD}
+flat out int vCrn;
+void main() {
+  int i = gl_InstanceID;
+  vec4 bb = fetch(uCrn, CRN_TEXELS * i + 7);
+  float sx = float(gl_VertexID & 1);
+  float sy = float(gl_VertexID >> 1);
+  vCrn = i;
+  if (bb.z < bb.x) {
+    gl_Position = vec4(2.0, 2.0, 0.5, 1.0);
+    return;
+  }
+  gl_Position = toClip(mix(bb.xy - vec2(uPad), bb.zw + vec2(uPad), vec2(sx, sy)));
+}
+`;
+
+const CORNER_FS = `${HEAD}
+flat in int vCrn;
+out vec4 oInk;
+${LIB}
+void main() {
+  vec2 p = worldAt();
+  int o = CRN_TEXELS * vCrn;
+  vec4 c0 = fetch(uCrn, o);
+  vec4 c1 = fetch(uCrn, o + 1);
+  vec4 c2 = fetch(uCrn, o + 2);
+  vec4 c3 = fetch(uCrn, o + 3);
+  float om = c2.z;
+  int g = int(fetch(uArm, 2 * int(c3.x)).x);
+  float v = 0.0;
+  if (c0.z > 0.0 && om > 0.0 && inWedgeC(c0.xy, c1, p)) v = om * band2(distance(p, c0.xy) - c0.z);
+  float bd = 0.0;
+  if (om > 0.0) bd = om * band(min(distance(p, c1.xy), distance(p, c1.zw)));
+  if (om < 1.0) bd = max(bd, (1.0 - om) * band(distance(p, c2.xy)));
+  if (bd > v) v = max(v, alphaG(g, p) * bd);
+  if (!(v > 0.0)) discard;
+  ivec2 ts = textureSize(uLabel, 0);
+  uint wd = texelFetch(uLabel, clamp(ivec2(gl_FragCoord.xy), ivec2(0), ts - 1), 0).r;
+  if (wd != 0u && int((wd >> 19) & 255u) != g + 1) {
+    float dT = topDist(wd, p, -1, 0.0);
+    if (!(dT > uH - uAa)) discard;
+    float DT = uH - dT;
+    v = band2(DT) + (1.0 - ss(-uAa, uAa, DT)) * v;
+  }
+  oInk = vec4(v, v, v, 1.0);
+}
+`;
+
 export interface BandBSources {
   vs: string;
   fs: string;
+  /** K1040 S4b: the corner quads. */
+  cornerVs: string;
+  cornerFs: string;
 }
 
 export function bandBSources(): BandBSources {
-  return { vs: VS, fs: FS };
+  return { vs: VS, fs: FS, cornerVs: CORNER_VS, cornerFs: CORNER_FS };
 }
