@@ -155,7 +155,12 @@ function fixture(): SceneExportInput {
       rounded: new Set([kUpLeft]),
     },
     freeTips: [{ chain: 1, atEnd: true }],
-    anchoredTips: [{ chain: 2, atEnd: false }],
+    // Chain 2's start is anchored off-screen (CSS (450, -200)); chain 0's
+    // start is anchored but its terminal sits on-screen (CSS (50, 0)).
+    anchoredTips: [
+      { chain: 2, atEnd: false },
+      { chain: 0, atEnd: false },
+    ],
   };
 }
 
@@ -241,10 +246,12 @@ describe("buildFieldScene", () => {
     expect(scene.deadEnds).toEqual([
       { chain: 1, s: expect.any(Number) },
       { chain: 2, s: 0, offscreen: true },
+      { chain: 0, s: 0 },
     ]);
     expect(scene.deadEnds[0].s).toBeCloseTo(3.85, 12);
-    // (4, -2) maps to CSS (450, -200): off-screen.
-    expect(diag.anchoredOnScreen).toBe(0);
+    // (4, -2) maps to CSS (450, -200): off-screen. (0, 0) maps to (50, 0):
+    // on-screen, so its anchored end keeps a cap (no offscreen flag).
+    expect(diag.anchoredOnScreen).toBe(1);
     expect(scene.pois!.map((p) => p.name)).toEqual(["j0", "t0"]);
     expect(scene.pois![1].at).toEqual([2, 2]);
   });

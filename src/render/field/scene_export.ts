@@ -618,8 +618,16 @@ export function buildFieldScene(input: SceneExportInput): {
   });
   let anchoredOnScreen = 0;
   for (const t of input.anchoredTips) {
-    deadEnds.push({ chain: t.chain, s: t.atEnd ? maps[t.chain].total : 0, offscreen: true });
-    if (onScreen(tipPt(t))) anchoredOnScreen++;
+    // An anchored end is flagged off-screen (no cap drawn) only when its
+    // terminal actually lies outside the viewport: an anchored terminal
+    // on-screen (an entrance/exit the camera shows) keeps its cap, as the
+    // old renderer's square cap draws it (K1239).
+    const off = !onScreen(tipPt(t));
+    if (off) deadEnds.push({ chain: t.chain, s: t.atEnd ? maps[t.chain].total : 0, offscreen: true });
+    else {
+      deadEnds.push({ chain: t.chain, s: t.atEnd ? maps[t.chain].total : 0 });
+      anchoredOnScreen++;
+    }
   }
 
   const scene: FieldScene = {

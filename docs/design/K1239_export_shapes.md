@@ -75,3 +75,75 @@ purpose (K868's fused borders); the paths and ends between them may not.
 Append a Handoff to this brief, in the last push: what you found and built, Done's tables, the
 sheets to show first, anything out of scope you saw, your last SHA. Commit messages carry the
 record.
+
+## Handoff (K1239, Muse fix run, 2026-11-06)
+
+Run window: first Get-Date 2026-11-06 13:02:48 PT; 2 h cap 15:02:48 PT. Work stopped inside the cap. Verdict up front: **Done items 1 and 2 do not hold; Done item 5 therefore forbids a push. Nothing was pushed or committed.** The small proven fix sits uncommitted in this worktree and as a patch (below).
+
+### What was checked
+
+- Setup copied (brief §5): S4b''s tools (`app_ab.mjs`, `ab_view.mjs`, `run_locked.ps1` — owner set to `K1239`, worktree path adjusted), invoked with `-Script` / `-RunArgs` only, from the one private-cache Vite config (port 5941). The perf lock was held for every browser job and released each time. Added K1239 probes: `diag_export.mjs` (scene + renderer/ps/slot dump), `cover_probe.mjs`, `cover_shot.mjs`, `analyze.mjs`, `xcheck.mjs`, `xcut.ts`, `xscan.ts`, `formb_check*.ts`, `formb_map.ts`, `formb_at.ts`, `sidecut.ts`, `ends.ts`, `measure*.mjs`, `measure_all.mjs`, `magenta_iou.mjs`, `border_iou.mjs`, `diffmap*.mjs`, `components*.mjs`, `hist.mjs`, `along*.mjs`, `width.mjs`, `profile.mjs`, `sample_px.mjs`, `attribute.mjs`, `locate.mjs`, `overlay.mjs`.
+- Export data verified in `out/diag_def.json` (+ `muse`/`user`): every exported crossing''s point lies on both chains (separation / distance to either polyline ≤ 0.06 world, `xcheck.mjs`); every junction arm''s root lies ≤ 0.3 world from its centre; counts line up (177 fused ps ends = 177 `end` arms; 3 free tips = 3 `freeTips`; 2 anchored). GPU cover matches FormB''s reference raster at sampled points (`cover_cmp.ts`: 590 both, 13/9 edge disagreements at the twist eye).
+
+  | Measurement | Result |
+  |---|---|
+  | Crossing/arm placement in the export | Accurate — not the defect |
+  | Band-centre ink along every chain (FormB from the export) | Misses only within 3h of a junction or 2.5h of a crossing; zero free misses |
+  | GPU cover (`readCover`) vs FormB | Matches — consumers run the export faithfully |
+
+Decisive diff measurements, def at the app_ab zoom (old ink from a `bdc=ff00ff` shot, field from the ON shots / cover; panel cropped):
+- `magenta_iou.mjs`: at discs of 1.5·2h, old-only 6,037 px against field-only 38,746 px (of ~270–303k ink px). Histogram (`hist.mjs`, `components2.mjs`, `attribute.mjs`): field-only clusters sit on one side''s outline, 0.86–1.66 world from junction centres. One zone: old joinery fan flanks + K846 side-cut windows (median 0.93 world, dumped via `junctionCutEntries`) vs FormB corner-arc feet (median ~0.6 world: `sidecut.ts`, 424/563 arms cut longer in old).
+- Other zone: crossing cut ends: old slot cuts (mean 0.334 world, `xcut.ts`) vs FormB burial at the tube radius — nearest field end lands a median 0.172 world from old''s end.
+
+### Done 1 — IoU (markers + panel masked; S4b quoted 0.588 lbi / 0.674 fbb for def)
+
+| family | look | whole | masked 1.5h (=brief''s 1.5 fh, h = halfWidth) | masked 1.5·2h |
+|---|---|---|---|---|
+| def | lbi | 0.697 | 0.738 | 0.854 |
+| def | fbb | 0.706 | 0.742 | 0.856 |
+| muse | lbi | 0.695 | 0.724 | 0.825 |
+| muse | fbb | 0.707 | 0.731 | 0.828 |
+| user | lbi | 0.705 | 0.736 | 0.840 |
+| user | fbb | 0.706 | 0.731 | 0.841 |
+
+Requires ≥ 0.97: **not held** under either disc. (For continuity, S4b''s band rule on my def shots gives 0.680 whole-frame, replicating their 0.674.)
+
+### Done 2 — ends (in the app_ab zoomed view; geometry, world units)
+
+| family | old ends in view | matched @1px zoom (0.0037 world) | matched @1px full-frame (0.030 world) | nearest-field-end distance |
+|---|---|---|---|---|
+| def | 61 | 0 | 0 | min 0.082, median 0.172, p75 0.204 |
+| muse | 52 | 0 | 0 | (same method; see `ends.ts` numbers in the run log) |
+| user | 48 | 0 | 0 | (same method) |
+
+Every unmatched end is a crossing cut end. Stub ends in this view: none (the free tips and both anchored terminals lie outside the zoomed view but inside the full frame). Requires 0 unmatched: **not held**. This is why: the field buries an under-thread only inside the over tube''s radius, while old''s gap slot erases to the casing silhouette (`h + gap`, `gap=0.04` at defaults, cut cap ~0.33 world); the corner-arc vs fan-flank difference adds the junction-zone overage above — all in the off-limits metres (FormB''s model, `label_b*`).
+
+### Done 3 — flag-off parity
+
+- CONTROL `app_ab` (def) after the change: `nDiff 0` (holes = CONTROL''s **0** cells).
+- Physics hashes identical per family across off/on/lbi arms (def `3ce3154b`, muse `0cbb8f07`, user `21c7fda5`).
+- `npm test` plainly: **220 test files passed (2887 tests, 9 skipped)**, goldens included.
+
+### Done 4 — sheets by eye
+
+- `out/view_def_overlay.png`, `view_muse_overlay.png`, `view_user_overlay.png` (red old-only, green field-only, yellow both, from the magenta/field pair; I viewed def''s): paths agree; colour difference sits at crossing cuts, arm sides near junctions, and the twist-eye loop at top-left — exactly the table''s two zones.
+- `app_*_off.png` / `app_*_on.png` and `app_*_master_new.png` sheets in `out/app_magenta/` (fbb) and `out/app_magenta_lbi/` (lbi). Spot crops: `out/spot_j82.png`, `spot_j82_wide.png`, `spot_oldonly.png`.
+- No before/after field sheet: the change below only adds end caps at the 2 anchored terminals per family, which lie outside the zoomed view (full-frame caps; proven by the unit test), so before/after in this view are pixel-identical.
+
+### The change (kept, not pushed, per Done 5)
+
+Anchored ends were flagged `offscreen: true` unconditionally, so consumers drew no cap at terminals that are in fact on-screen (diag proves 2 per family; old draws its square cap there).
+
+- Code: `src/render/field/scene_export.ts` — flag off-screen only when the terminal is outside the viewport.
+- Test: `test/render/field/scene_export.test.ts` — asserts against before it failed (on-screen anchored end got `offscreen: true`), passes after (8/8).
+- Patch: `.claude/probes/K1239/anchored_offscreen.patch` (worktree also holds the identical changes uncommitted).
+
+### Exact stopping point and next action (Done 5)
+
+Done 1–2 fail, so the partial-push test of Done 5 (raise every masked IoU, match more ends in every family) also fails — the fix moves nothing inside the measured view. **Next: the fix Claude/Levi must make is in the consumers'' cut model, outside this brief''s edit scope — give the field old''s casing-reach at crossings (bury to `h + gap`, cap as old''s slot march, `src/render/ribbon/crossing_gaps.ts`) and old''s fan-flank reach at junctions (K846 windows, `src/render/ribbon/joinery.ts`), which lives in FormB''s arm/corner terms and the `label_b*` tables (owned by K1040 S3g / S4b, untouched here).** Export-side data for both is already accurate and sufficient (crossings carry chain+s+over; junctions carry arms+corners); no further export change can express reach the consumers do not read.
+
+Start clock for the record: 13:02:48 PT 2026-11-06 against the 15:02:48 cap; files for Levi: this brief, `.claude/probes/K1239/anchored_offscreen.patch`, `.claude/probes/K1239/out/` (shots, sheets, diags, cover), and the uncommitted changes in this worktree.
+
+### Claude's addendum (2026-11-06 14:30)
+
+Claude landed the anchored-ends fix, its test and this run's probe scripts in the commit that adds this addendum: a proven export bug, verified by its unit test and Done 3, and drawn only with the flags on. The IoU and ends gates move to K1040 S4d, which owns the cut model in `form_b.ts` and `label_b*`: crossings read as joins in the field (`out/spot_j82_wide.png`) and a shallow crossing loses its under-thread (`out/spot_oldonly.png`).
