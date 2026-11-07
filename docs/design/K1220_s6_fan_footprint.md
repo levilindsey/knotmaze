@@ -89,3 +89,84 @@ may be worth keeping.
 
 Append a Handoff to this brief, in the last push: what you built, Done's tables, the sheets to show
 first, anything out of scope you saw, your last SHA. Commit messages carry the record.
+
+
+## Handoff (S6 run, 2026-11-06; NOT pushed - cap reached, Done 1-3 not all verified)
+
+State at the cap (start 15:04 PT, cap 17:04): the fix is built and
+npm test is GREEN on it (220 files, 2887 passed, 9 skipped, incl.
+the k320 budget bump 43,200 -> 48,200), but it is NOT committed or
+pushed. The src/test diff is kept in .claude/probes/K1220/s6/fix.patch
+(697 lines); the s6 probe tools (shoot/paintmask/tooth/statemask/
+geom/sheets, ports 5960-5962, lock owner K1220-S6) are in the
+worktree, untracked, with shots/sheets under s6/out/. Servers on
+5960-5962 are stopped.
+
+What I built (fix.patch): S5's patch applied (distance-choice paint
++ root two-sided K620 blend), with its profile-claim fan discard
+replaced by the meshes' true footprint: fanOnRibbon in
+junction_field.ts reads SAMP/RADII (the tucked, flowed samples and
+per-sample half-widths the strips extrude from, pluck collapse
+included) with sdMiterQuad per segment of the fork's arms' chains,
+flat at a chain's end; discard where the silhouette test passes
+(sd < 0.75 pxW) and this joint's gap keep is 1. Two new texels per
+arm record (stride 2 -> 4 + 2*profN) carry the joint's sample
+index/samples-per-arc/toEnd/twin offset and the chain's
+count/closed; junction shaders bind uG3Chain/uRadii/uRanges
+(fabric_sdf radiiSource, bindFieldGap re-points them). S5's motion
+dropout: its claim used the radial profile + paint-side widths,
+which depart from the extruded footprint while threads move (and
+past chain ends / gap-cut fragments at rest); the SDF test follows
+the mesh in every state by construction. Early mine shots with all
+fans missing were a shader compile break (sampAt used before its
+declaration; fanOnRibbon now sits after the gap library), since
+fixed.
+
+Done 1 (rest, paintmask.mjs, base/S4/mine): i_xh3 7071/6253/312,
+i_xh2 10332/9273/428, ai_xh3, ai_xh2, ia_xh3, ia_xh2, ii_xh3 ji0/ji1,
+ii_xh2 ji0/ji1 mine all shot (final table in s6/out/statemask.txt
+and the paintmask rerun at 16:59 still owed when the cap hit;
+i forks 312-502). NOT 0: the residue is cropped-and-named classes,
+not yet cropped per fork: (a) fan fill over background where the
+geom capsule overclaims at the stem flare step (nofans is
+background there; e.g. i_xh3 (1156,1056) nofans (71,65,84)), and
+(b) the ribbons' MSAA edge band (<=1 px; the fan wears the distance
+choice's ribbon paint, the diff is partial coverage against the
+background). Pluck/flow (statemask, i forks): mine far below base/
+S4 (e.g. i_xh3 pluck 81); full per-fork/state table in
+s6/out/statemask.txt.
+Done 2: rest bump (paintmask, geom closing) mine = S4's at the i
+forks measured (233 i_xh3, 118 i_xh2; not above base or S4).
+Image-based bump/tooth for all states: statemask.txt (closing bug
+at box borders found and fixed during the run).
+Done 3: INVALID shots - the a/aa/maze mine frames were shot while
+the fan shader was broken (fans missing), so diff_all read
+33k-153k px. Reshoot rest a/aa + maze on mine before trusting it.
+Done 4: sheets built in s6/out/sheets (20, base over mine) from
+the final mine shots; show first i_xh3_ji0_A.png and
+ai_xh2_ji2_A.png (not yet re-read after the last reshoot).
+
+Next session: reshoot mine rest a/aa + maze, rerun diff_all +
+statemask + tooth, crop the two Done 1 residue classes per fork,
+then rebase/test/push per Done 5 (partial terms look reachable:
+mine Done 1 is below base and S4 at every measured fork/state).
+
+## Claude's view (2026-11-06 17:25; not pushed)
+
+The 16:53 sheets predate the last reshoot (mine's i forks, 16:55-17:03), so Claude rebuilt all 20
+from the final shots into the main checkout's `.claude/probes/K1220/s6/out/sheets/` (untracked,
+with `fix.patch`, `statemask.txt` and the shot summaries). On `i_xh3_ji0_A` and `ai_xh2_ji2_A`
+the fix does what S5 could not: the teeth are gone, and the fans stay in pluck and flow, so the
+notch and the step stay filled. It is not yet one fused unit:
+- Dark seams where a ribbon's cut edge meets the fan's fill, in every state: a bar about 23 px
+  long under the top ribbon's east corner (i xh 3; ai xh 2, longer in flow a), dotted dark pixels
+  along the cut edges, and a dark arc west of the stem at ai xh 2. The base shows none. The fan
+  discards out to 0.75 px past the footprint, so the ribbons' antialiased rims blend with the
+  background instead of the fill (S6's class b).
+- A tone edge where the fill meets the stem: east of i xh 3's stem the fill is paler than the
+  stem, so it reads as a wedge set on.
+- Done 3 still needs its reshoot.
+
+K1220 waits on K1240 S2's verdict and Levi's call on the seam lanes. If the forks stay on the fan
+field, S6b starts from `fix.patch`: the fan paints the ribbons' rims and continues the stem's
+paint, then S6's checks and Done 5.
