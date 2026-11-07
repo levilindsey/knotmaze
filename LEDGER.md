@@ -512,11 +512,11 @@ Next free ID: K1241.
 - **K1220** · Text forks: a disc with a round edge inside, steps where the arms' straight cuts meet it
   (22N, 655eb6a9): glyph arms under 0.15 world get no field record, so a host-axis disc draws the fork.
   S2 runs on master's fused junctions (`docs/design/K1220_s2_text_forks.md`); S1's WIP 25a5c501 is a lead; notes.
-  - owner: muse session 01a1b2a9-510b-7681-bf23-b78738d4c20c (Paseo 5db09a9f), coordinated by claude session c18e2f02-e64f-41ba-9af0-2dbd583358e2; started 2026-11-06 13:00, cap 2 h (~15:00)
-  - branch: detached worktree .claude/worktrees/muse-k1220-s5 (node_modules junctioned), pushes to master; last commit: `92b85fe9`
-  - evidence: .claude/probes/K1220/s4/ (tracked tools: paintmask.mjs's ink-gated mask, sheets_i.ps1); S4's out/ copied to the main checkout's .claude/probes/K1220/s4/out/ (sheets/: 20 A/B sheets); S4 on master as 291780c5 + 331f425d, pushed short of its Done (counts down at 6 forks, up at 4; bump 816->233 at i xh 3; a new dark tooth at ia xh 2's crossing-gap arc)
-  - next: S5 to its Done (each fan paints the ribbon beneath it, picked by coverage rather than angle sector; no bump, no tooth; S3's outline kept); Claude views its sheets against window 84, removes the worktree, shows Levi. If S5 pushes nothing, decide whether 331f425d stays (the ia xh 2 tooth). Then the 1 px jog in ia at xh 2 and the reveal's bare-ribbon moment (a at xh 3, 40%)
-  - brief: `docs/design/K1220_s5_fan_cover.md`
+  - owner: muse session 01a1b31a-c83b-7ef1-b907-ce34d877ca3d (Paseo c1a4b659), coordinated by claude session c18e2f02-e64f-41ba-9af0-2dbd583358e2; started 2026-11-06 15:04, cap 2 h (~17:04)
+  - branch: detached worktree .claude/worktrees/muse-k1220-s6 (node_modules junctioned), pushes to master; S5's worktree muse-k1220-s5 kept (its unpushed commits d40fb956..dd1d4f59); last commit: `73ecbeb6`
+  - evidence: .claude/probes/K1220/s5/ (tracked tools; untracked out/ with 20 sheets and tables, s5_src.patch = S5's src change). S5's Handoff (docs/design/K1220_s5_fan_cover.md): at rest the teeth fell to near 0 at 9 forks, but the profile clip cuts dark slivers where the meshes are cut short (tooth 628-1265 px), and in pluck and flow the fans vanish (the unfused notch and step return; Claude viewed ai_xh2_ji2_A and i_xh3_ji0_A). S4 (291780c5 + 331f425d) stays on master: net better at 6 forks
+  - next: S6 to its Done (the fans fill only what no ribbon mesh draws, at rest, pluck and flow: no teeth, bump, notch or tooth; S3's fused outline kept); Claude views its sheets against window 84, removes the S5 and S6 worktrees, shows Levi. Then the 1 px jog in ia at xh 2 and the reveal's bare-ribbon moment (a at xh 3, 40%)
+  - brief: `docs/design/K1220_s6_fan_footprint.md`
 
 ## Next, in order
 
