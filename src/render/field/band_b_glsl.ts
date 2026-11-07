@@ -16,10 +16,11 @@
 //     code; the label L read at the pixel (d < h) or just inside A's outline
 //     (d >= h) says whether A's surface is on top there: the same code, and
 //     for an own surface the same chain within sigma of s_A; paper passes.
-//   - The burial: over the group's arm windows (GW), every segment within R
-//     of the pixel (form B's pieces B), except A's own stretch (|ds| <= sigma)
-//     and with the fold's weight on its chain, buries A's outline at
-//     min(ramp_A, ramp_B) winW(f): the cap-mix's weight for one burier.
+//   - The burial: over the group's arm windows (GW), each window's nearest
+//     segment is its burier B (form B's piece), except A's own stretch
+//     (|ds| <= sigma) and with the fold's weight on its chain; B buries A's
+//     outline at min(ramp_A, ramp_B) winW(f) with winW over the +-3 segments
+//     around B (K1040 S4a2): the cap-mix's weight for one burier.
 //   - v = (1 - bur) selfW_A beta band2(h - d_X), written with MAX blending, so
 //     the pixel keeps form B's max over its foot terms.
 // Not here (S4b): the corner terms (V, t_a, t_b, the arc, omega), the fill
@@ -58,6 +59,7 @@ uniform float uLam;
 uniform float uDel;
 uniform float uR;
 uniform float uPad;
+uniform float uInvK;
 vec4 fetch(sampler2D t, int i) {
   return texelFetch(t, ivec2(i % TEX_W, i / TEX_W), 0);
 }
@@ -116,6 +118,16 @@ void main() {
             e0 = ro;
             lo = -ro;
           }
+        } else if (side * cr > 0.0) {
+          // K1040 S4a2: the concave side's wedge too. A vertex foot's rim
+          // points sit behind the start by up to (h + aa) tan(phi/2)
+          // (form B inEdgeStrip's mitre at both ends); with e0 = pad they
+          // fell between this strip and the previous one, whose end has
+          // no extension (g41_user_tw64 chain 1 k131, a dead end's rim).
+          // candOn still owns the foot, so the wider quad writes once.
+          float c = dot(up, u);
+          float tn = c > -1.0 ? min(abs(cr) / (1.0 + c), 5.6713) : 5.6713;
+          e0 = ro * tn + uPad;
         }
       } else {
         e0 = ro;
@@ -167,13 +179,14 @@ float armDist(vec4 a0, float s, bool closed, float len) {
   return d;
 }
 // The foot on segment j when geom.ts candidates() takes it (-1 otherwise).
-float candOn(vec2 p, int off, int n, int nseg, bool closed, vec4 c1, int j, out float s, out vec2 f) {
+float candOn(vec2 p, int off, int n, int nseg, bool closed, vec4 c1, int j, out float s, out vec2 f, out float zz) {
   int jb = (j + 1 == n) ? 0 : j + 1;
   vec4 A = fetch(uPts, off + j);
   vec4 B = fetch(uPts, off + jb);
   float tr = segT(p, A.xy, B.xy);
   s = 0.0;
   f = vec2(0.0);
+  zz = 0.0;
   if (tr <= 0.0) {
     if (closed || j > 0) {
       int jp = j > 0 ? j - 1 : nseg - 1;
@@ -184,12 +197,53 @@ float candOn(vec2 p, int off, int n, int nseg, bool closed, vec4 c1, int j, out 
   }
   float t = clamp(tr, 0.0, 1.0);
   f = mix(A.xy, B.xy, t);
+  zz = mix(A.w, B.w, t);
   float sb = jb == 0 ? c1.x + c1.y : B.z;
   s = A.z + t * (sb - A.z);
   if (closed && s >= c1.x + c1.y) s -= c1.y;
   return distance(p, f);
 }
-// Whether label word wd names A's surface (its code; an own surface: chain
+// form B member(chain, s): the group and cap ramp, with F10's root-side
+// twin (band_b.ts's ARM table; label_b.ts surfCode's rule at full weight).
+// K1040 S4a2: the burial reads the burier's ramp from here, not from the
+// window arm's own ss - at a through's root the twin can hold a piece at
+// ramp 0 while its window arm reads 1 (g41_user_tw64 chain 24 at s 4.28),
+// and the old read buried the group's rim dead there.
+float memberRamp(int chain, float s, bool closedC, float lenC, out int gOut) {
+  vec4 ca2 = fetch(uCarm, chain);
+  int ao2 = int(ca2.x);
+  int an2 = int(ca2.y);
+  int gg = -1;
+  float rr = 0.0;
+  for (int i = 0; i < 64; i++) {
+    if (i >= an2) break;
+    int ai = int(fetch(uAix, ao2 + i).x);
+    vec4 a0 = fetch(uArm, 2 * ai);
+    float lc = fetch(uArm, 2 * ai + 1).x;
+    float d = armDist(a0, s, closedC, lenC);
+    if (d < -1e-12 || d > a0.w + 1e-12) continue;
+    float rp = lc >= 1e29 ? 1.0 : ss(lc, lc - uLam, d);
+    if (gg < 0 || rp > rr) {
+      gg = int(a0.x);
+      rr = rp;
+    }
+  }
+  if (gg >= 0 && rr > 0.0) {
+    for (int i = 0; i < 64; i++) {
+      if (i >= an2) break;
+      int ai = int(fetch(uAix, ao2 + i).x);
+      vec4 a0 = fetch(uArm, 2 * ai);
+      float lc = fetch(uArm, 2 * ai + 1).x;
+      if (int(a0.x) != gg || lc >= 1e29) continue;
+      float d = armDist(a0, s, closedC, lenC);
+      if (closedC && d > lenC / 2.0) d -= lenC;
+      if (!(d < 1e-12 && d > lc - uLam)) continue;
+      rr = min(rr, ss(lc, lc - uLam, d));
+    }
+  }
+  gOut = gg;
+  return gg < 0 ? 1.0 : rr;
+}// Whether label word wd names A's surface (its code; an own surface: chain
 // ci within sigma of s_A, plus the word's s step).
 bool names(uint wd, int code, int ci, float sA, bool closed, float len, float s0) {
   if (int((wd >> 19) & 255u) != code) return false;
@@ -198,12 +252,15 @@ bool names(uint wd, int code, int ci, float sA, bool closed, float len, float s0
   float ws = s0 + float((wd >> 8) & 2047u) / 2047.0 * len;
   return abs(dS(ws, sA, closed, len)) <= uSig + len / 2047.0;
 }
-// The distance from p to the label's top T when T is an own surface: its
-// chain's centreline within sigma (plus the word's s step) of the word's s,
-// A's own stretch skipped. -1 for a group's surface or a fill, whose alpha
-// is a max over pieces this does not see (the fragment stays hidden).
+// The distance from p to the label's top T: its naming chain's centreline
+// within sigma (plus the word's s step) of the word's s, A's own stretch
+// skipped. K1040 S4a2 (R2): a group's surface takes the same walk - the
+// word names one member piece, and away from corners that member is the
+// group's nearest (the members separate past the junction), so its chain's
+// distance is the surface's. -1 only for a fill (S4b's corners), whose
+// alpha is a max over pieces this does not see.
 float topDist(uint wd, vec2 p, int ci, float sA) {
-  if (int((wd >> 19) & 255u) != 0 || ((wd >> 27) & 1u) != 0u) return -1.0;
+  if (((wd >> 27) & 1u) != 0u) return -1.0;
   int c = int(wd & 255u) - 1;
   vec4 d0 = fetch(uChain, 2 * c);
   vec4 d1 = fetch(uChain, 2 * c + 1);
@@ -262,7 +319,8 @@ void main() {
   float len = c1.y;
   float sX;
   vec2 fX;
-  float dX = candOn(p, off, n, nseg, closed, c1, k, sX, fX);
+  float zX;
+  float dX = candOn(p, off, n, nseg, closed, c1, k, sX, fX, zX);
   if (!(dX > uH - uW - uAa && dX < uH + uAa && dX > 1e-12)) discard;
   // D1: this chain's candidates within R over NB2's window, by d.
   float cd[8];
@@ -278,7 +336,8 @@ void main() {
     if (q > m0 + m1) break;
     float sq = sX;
     vec2 fq = fX;
-    float dq = j == k ? dX : candOn(p, off, n, nseg, closed, c1, j, sq, fq);
+    float zq = zX;
+    float dq = j == k ? dX : candOn(p, off, n, nseg, closed, c1, j, sq, fq, zq);
     if (dq >= 0.0 && dq < uR && (nc < 8 || dq < cd[7])) {
       int at = nc < 8 ? nc : 7;
       for (int i = 7; i > 0; i--) {
@@ -314,6 +373,7 @@ void main() {
   int ia = ix < 0 ? -1 : (into[ix] < 0 ? ix : into[ix]);
   float sA = ia < 0 ? sX : cs[ia];
   float dA = ia < 0 ? dX : cd[ia];
+  float zA = zX;
   // D2: the fold (the farther of two kept pieces within 2 sigma fades).
   float selfW = 1.0;
   for (int m = 0; m < 8; m++) {
@@ -355,38 +415,8 @@ void main() {
   float w0 = selfW * beta;
   if (!(w0 > 0.0)) discard;
   // A's surface: member(chain, s_A) with the F10 rule.
-  vec4 ca = fetch(uCarm, ci);
-  int ao = int(ca.x);
-  int an = int(ca.y);
   int g = -1;
-  float rA = 0.0;
-  for (int i = 0; i < 64; i++) {
-    if (i >= an) break;
-    int ai = int(fetch(uAix, ao + i).x);
-    vec4 a0 = fetch(uArm, 2 * ai);
-    float lc = fetch(uArm, 2 * ai + 1).x;
-    float d = armDist(a0, sA, closed, len);
-    if (d < -1e-12 || d > a0.w + 1e-12) continue;
-    float rp = lc >= 1e29 ? 1.0 : ss(lc, lc - uLam, d);
-    if (g < 0 || rp > rA) {
-      g = int(a0.x);
-      rA = rp;
-    }
-  }
-  if (g >= 0 && rA > 0.0) {
-    for (int i = 0; i < 64; i++) {
-      if (i >= an) break;
-      int ai = int(fetch(uAix, ao + i).x);
-      vec4 a0 = fetch(uArm, 2 * ai);
-      float lc = fetch(uArm, 2 * ai + 1).x;
-      if (int(a0.x) != g || lc >= 1e29) continue;
-      float d = armDist(a0, sA, closed, len);
-      if (closed && d > len / 2.0) d -= len;
-      if (!(d < 1e-12 && d > lc - uLam)) continue;
-      rA = min(rA, ss(lc, lc - uLam, d));
-    }
-  }
-  if (g < 0) rA = 1.0;
+  float rA = memberRamp(ci, sA, closed, len, g);
   int so = int(c1.z);
   int ns = int(c1.w);
   int code = int(fetch(uSpan, so).y);
@@ -421,21 +451,52 @@ void main() {
       if (!(dT > uH - uAa)) discard;
       lay = 1;
     }
-  } else if (wd == 0u && !(dX < uH)) {
+  } else if (wd == 0u) {
     // Paper here, on A's rim: a second surface's rim can overlap it (a gap
-    // under 1 px between two threads). The pixel 1 px past here names it;
-    // form B's over of two rims is their union (lay 3).
-    vec2 qo = p + 2.0 * uAa * nX;
-    vec2 dev = vec2(uM0.x * qo.x + uM0.z * qo.y + uM1.x, uM0.y * qo.x + uM0.w * qo.y + uM1.y);
-    ivec2 to = clamp(ivec2(floor(dev.x), floor(uView.y - dev.y)), ivec2(0), ts - 1);
-    uint wo = texelFetch(uLabel, to, 0).r;
-    if (wo != 0u && !names(wo, code, ci, sA, closed, len, c1.x)) {
-      dT = topDist(wo, p, ci, sA);
+    // under 1 px between two threads). K1040 S4a2 (R1): the old probe 1 px
+    // outward lands in paper again exactly where both tubes end together
+    // (fat's notch: both d within 0.04 px of h), so the union was lost.
+    // Probe 1 px inward instead - inside A's tube, so its label names the
+    // top surface there; if that is another surface T, composite A's rim
+    // under T's as in lay 1 (lay 3), with dT from T's naming chain.
+    vec2 qi = p - 2.0 * uAa * nX;
+    vec2 dev = vec2(uM0.x * qi.x + uM0.z * qi.y + uM1.x, uM0.y * qi.x + uM0.w * qi.y + uM1.y);
+    ivec2 ti = clamp(ivec2(floor(dev.x), floor(uView.y - dev.y)), ivec2(0), ts - 1);
+    uint wi = texelFetch(uLabel, ti, 0).r;
+    if (wi != 0u && !names(wi, code, ci, sA, closed, len, c1.x)) {
+      dT = topDist(wi, p, ci, sA);
       if (dT >= 0.0 && dT < uH + uAa) lay = 3;
+    }
+    if (lay == 0) {
+      // The inward probe named A's own surface (A on top inside), or paper
+      // again: scan the four neighbour texels. One of them lies toward the
+      // other tube and names it, where a 1 px probe along either thread's
+      // normal can still land in paper (def chains 58/78 at (1534, 1290):
+      // both distances within 0.3 px of h, both normal probes paper).
+      ivec2 pc = ivec2(gl_FragCoord.xy);
+      float bestT = 1e30;
+      for (int q = 0; q < 4; q++) {
+        ivec2 o = q == 0 ? ivec2(1, 0) : q == 1 ? ivec2(-1, 0) : q == 2 ? ivec2(0, 1) : ivec2(0, -1);
+        uint wn = texelFetch(uLabel, clamp(pc + o, ivec2(0), ts - 1), 0).r;
+        if (wn != 0u && !names(wn, code, ci, sA, closed, len, c1.x)) {
+          float dTn = topDist(wn, p, ci, sA);
+          if (dTn >= 0.0 && dTn < bestT) bestT = dTn;
+        }
+      }
+      if (bestT < uH + uAa) {
+        lay = 3;
+        dT = bestT;
+      }
     }
   }
   // The burial: the group's other pieces within R, winW at f.
   float bur = 0.0;
+  float burBdp = 1e30;
+  float burZ = 0.0;
+  float burR = 0.0;
+  float nearDp = 1e30;
+  float nearZ = 0.0;
+  float nearR = 0.0;
   if (g >= 0) {
     vec2 f = fX + uH * nX;
     vec4 gr = fetch(uGrp, g);
@@ -457,49 +518,145 @@ void main() {
       bool bcl = b0.w > 0.5;
       vec4 a0 = fetch(uArm, 2 * ai);
       float lc = fetch(uArm, 2 * ai + 1).x;
+      // K1040 S4a2: the burier is B's piece - the window's nearest segment
+      // to p - not every segment in the window. A segment past B's foot
+      // reads the cap ramp at its own clamped s and buries at that rate
+      // (user_tw42: rB 0.78 two segments past the foot against the piece's
+      // 0.17 at it); form B buries by the piece, its winW the distance
+      // over the +-3 segments around the piece.
       int jj = k0;
       vec4 Pa = fetch(uPts, boff + jj);
+      float bestDp = 1e30;
+      float bestSj = 0.0;
+      float bestZ = 0.0;
+      int bestQ = -1;
+      int bestSeg = -1;
       for (int qq = 0; qq < 4096; qq++) {
         if (qq >= cnt) break;
         int jb = (jj + 1 == bn) ? 0 : jj + 1;
         vec4 Pb = fetch(uPts, boff + jb);
         float t = clamp(segT(p, Pa.xy, Pb.xy), 0.0, 1.0);
         float dp = distance(p, mix(Pa.xy, Pb.xy, t));
-        if (dp < uR) {
+        if (dp < bestDp) {
+          bestDp = dp;
+          bestZ = mix(Pa.w, Pb.w, t);
+          bestSeg = jj;
+          bestQ = qq;
           float sb = jb == 0 ? b1.x + b1.y : Pb.z;
-          float sj = Pa.z + t * (sb - Pa.z);
-          if (bcl && sj >= b1.x + b1.y) sj -= b1.y;
-          float fw = 1.0;
-          bool ok = true;
-          if (bj == ci) {
-            float ds = abs(dS(sA, sj, closed, len));
-            if (ds <= uSig) ok = false;
-            else if (ds < 2.0 * uSig && dp > dA) fw = ss(uSig, 2.0 * uSig, ds);
-          }
-          if (ok) {
-            float tf = clamp(segT(f, Pa.xy, Pb.xy), 0.0, 1.0);
-            float wb = 1.0 - ss(uH - 2.0 * uAa, uH, distance(f, mix(Pa.xy, Pb.xy, tf)));
-            if (wb > 0.0) {
-              float d = armDist(a0, sj, bcl, b1.y);
-              float rB = (d < -1e-12 || d > a0.w + 1e-12) ? 0.0 : (lc >= 1e29 ? 1.0 : ss(lc, lc - uLam, d));
-              bur = max(bur, min(rA, rB) * fw * wb);
-            }
-          }
+          bestSj = Pa.z + t * (sb - Pa.z);
+          if (bcl && bestSj >= b1.x + b1.y) bestSj -= b1.y;
         }
         Pa = Pb;
         jj = jb;
       }
+      // K1040 S4a2: B is its chain's minimum at p (form B's piece), not
+      // just this window's nearest segment. Overlapping windows of one
+      // chain (two arms of a group on it) otherwise bury by a segment
+      // past B's foot, at that segment's own cap ramp (def chain 62:
+      // ramp 0.49 at s 59.94 against the piece's 0.002 at s 59.81, halving
+      // chain 65's end rim). The chain's true minimum is a local minimum:
+      // no neighbouring segment of the chain is nearer.
+      bool isMin = false;
+      if (bestQ >= 0 && bestDp < uR) {
+        float dpPrev = 1e30;
+        float dpNext = 1e30;
+        if (bestSeg > 0 || bcl) {
+          int jp = bestSeg > 0 ? bestSeg - 1 : bn - 1;
+          vec4 Pp0 = fetch(uPts, boff + jp);
+          vec4 Pp1 = fetch(uPts, boff + bestSeg);
+          float tp = clamp(segT(p, Pp0.xy, Pp1.xy), 0.0, 1.0);
+          dpPrev = distance(p, mix(Pp0.xy, Pp1.xy, tp));
+        }
+        if (bestSeg + 1 < bn || bcl) {
+          int jn = (bestSeg + 1 == bn) ? 0 : bestSeg + 1;
+          int jn2 = (jn + 1 == bn) ? 0 : jn + 1;
+          vec4 Pn0 = fetch(uPts, boff + jn);
+          vec4 Pn1 = fetch(uPts, boff + jn2);
+          float tn = clamp(segT(p, Pn0.xy, Pn1.xy), 0.0, 1.0);
+          dpNext = distance(p, mix(Pn0.xy, Pn1.xy, tn));
+        }
+        isMin = bestDp <= min(dpPrev, dpNext) + 1e-12;
+      }
+      if (isMin) {
+        float fw = 1.0;
+        bool ok = true;
+        if (bj == ci) {
+          float ds = abs(dS(sA, bestSj, closed, len));
+          if (ds <= uSig) ok = false;
+          else if (ds < 2.0 * uSig && bestDp > dA) fw = ss(uSig, 2.0 * uSig, ds);
+        }
+        if (ok) {
+          int gB;
+          float rB = memberRamp(bj, bestSj, bcl, b1.y, gB);
+          if (gB != g) rB = 0.0;
+          if (bestDp < nearDp) {
+            nearDp = bestDp;
+            nearZ = bestZ;
+            nearR = rB;
+          }
+          float minDf = 1e30;
+          int j2 = k0;
+          vec4 Pa2 = fetch(uPts, boff + j2);
+          for (int qq = 0; qq < 4096; qq++) {
+            if (qq >= cnt || qq > bestQ + 3) break;
+            int jb = (j2 + 1 == bn) ? 0 : j2 + 1;
+            vec4 Pb = fetch(uPts, boff + jb);
+            if (qq >= bestQ - 3) {
+              float tf = clamp(segT(f, Pa2.xy, Pb.xy), 0.0, 1.0);
+              minDf = min(minDf, distance(f, mix(Pa2.xy, Pb.xy, tf)));
+            }
+            Pa2 = Pb;
+            j2 = jb;
+          }
+          float wb = 1.0 - ss(uH - 2.0 * uAa, uH, minDf);
+          if (wb > 0.0) {
+            float cand = min(rA, rB) * fw * wb;
+            if (cand > bur) {
+              bur = cand;
+              burBdp = bestDp;
+              burZ = bestZ;
+              burR = rB;
+            }
+          }
+        }
+      }
     }
   }
-  float v = (1.0 - bur) * w0 * band2(uH - dX);
+  // K1040 S4a2 (R4): A's own cap ramp mixes two configurations (form B's
+  // cap mix for one ramp piece): member for rA of the weight, where the
+  // burial above already reads min(ramp_A, ramp_B), and OWN for the rest,
+  // where A's rim shows only past the group's coverage when the group is
+  // above it there (its nearest piece's cone key against A's). Beside a
+  // group surface the old (1 - bur) wrote the OWN share at full strength
+  // under a group that covers the pixel (user_tw42: 0.38 against 0.13).
+  float ownVis = 1.0;
+  if (g >= 0 && rA < 1.0) {
+    // The OWN share's group is the pieces still members there (ramp >
+    // ramp_A): the dominant burier when it is one, else the nearest
+    // group piece that is. A piece at ramp 0 is OWN in every weighted
+    // configuration and must not hide A's share (def chain 65's end).
+    float oDp = 1e30;
+    float oZ = 0.0;
+    if (bur > 0.0 && burR > rA) {
+      oDp = burBdp;
+      oZ = burZ;
+    } else if (nearR > rA) {
+      oDp = nearDp;
+      oZ = nearZ;
+    }
+    if (oDp < 1e29 && zA - dA * uInvK <= oZ - oDp * uInvK) ownVis = 1.0 - ss(-uAa, uAa, uH - oDp);
+  }
+  float v = (rA - bur + (1.0 - rA) * ownVis) * w0 * band2(uH - dX);
   if (lay == 1) {
     float DT = uH - dT;
     v = band2(DT) + (1.0 - ss(-uAa, uAa, DT)) * v;
   } else if (lay == 2 && dT >= 0.0) {
     v += (1.0 - selfW * ss(-uAa, uAa, uH - dX)) * band2(uH - dT);
   } else if (lay == 3) {
-    float b = band2(uH - dT);
-    v = v + b - v * b;
+    // T is on top at the inward probe: form B's over of the two rims
+    // (T's rim approximated unburied, as in lay 1).
+    float DT = uH - dT;
+    v = band2(DT) + (1.0 - ss(-uAa, uAa, DT)) * v;
   }
   if (!(v > 0.0)) discard;
   oInk = vec4(v, v, v, 1.0);

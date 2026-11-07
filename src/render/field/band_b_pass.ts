@@ -42,7 +42,7 @@ function compile(gl: WebGL2RenderingContext, vs: string, fs: string): WebGLProgr
 }
 
 const TABS = ["uPts", "uChain", "uSpan", "uNb2", "uArm", "uCarm", "uAix", "uGrp", "uGw"] as const;
-const UNIS = ["uM0", "uM1", "uI0", "uI1", "uView", "uH", "uW", "uAa", "uSig", "uLam", "uDel", "uR", "uPad", "uLabel"] as const;
+const UNIS = ["uM0", "uM1", "uI0", "uI1", "uView", "uH", "uW", "uAa", "uSig", "uLam", "uDel", "uR", "uPad", "uLabel", "uInvK"] as const;
 
 export class BandBPass {
   readonly gl: WebGL2RenderingContext;
@@ -129,6 +129,7 @@ export class BandBPass {
     gl.uniform1f(L[10], B.delta);
     gl.uniform1f(L[11], B.R);
     gl.uniform1f(L[12], 2 / Math.max(ppd, 1e-9));
+    gl.uniform1f(L[14], B.invK);
     for (let i = 0; i < TABS.length; i++) {
       gl.activeTexture(gl.TEXTURE0 + i);
       gl.bindTexture(gl.TEXTURE_2D, this.tex[i]);
