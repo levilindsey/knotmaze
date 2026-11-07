@@ -1168,6 +1168,54 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
     }
     return out;
   };
+  // K1240 S3f, a tight twist: where the two tubes never part between a
+  // crossing and the pair's next one, an under border never meets the
+  // over tube's far border. It runs on inside the over tube until form
+  // B's depth order flips there (key = z - d*zt/h, so the under border,
+  // d = h, is on top once zU - zt >= zO - dO*zt/h, apart from a shared
+  // junction group) or it leaves the tube. Walk the border from s0,
+  // where it meets the over tube's near border, into the tube, to the
+  // first point form B shows. Null when neither direction starts inside
+  // and hidden, or nothing shows within 20h.
+  const ztB = 0.1 * scene.look.depthAmp;
+  let twistFlips = 0;
+  const twistFlip = (U: number, uSide: number, O: number, s0: number, sO0: number): { x: number; y: number; s: number } | null => {
+    const pts = borders[U][bIdx(uSide)].pts; const n = pts.length;
+    const pU = polys[U]; const pO = polys[O];
+    if (n < 3) return null;
+    const m = pU.closed ? n - 1 : n;
+    let i0 = 0; let bd = Infinity;
+    for (let i = 0; i < m; i++) { const d = Math.abs(dS(pU, s0, pts[i].s)); if (d < bd) { bd = d; i0 = i; } }
+    const hidden = (q: BPt, sO: number): { g: number; sO: number } => {
+      const f = footInWindow(pO, q.x, q.y, sO - 3 * h, sO + 3 * h);
+      const gIn = h - f.d;
+      const gU = memberGroup(U, q.s); const gO = memberGroup(O, f.s);
+      const gHide = gU >= 0 && gU === gO ? Infinity : (depthAt(O, f.s) - f.d * ztB / h) - (depthAt(U, q.s) - ztB);
+      return { g: Math.min(gIn, gHide), sO: f.s };
+    };
+    for (const dir of [1, -1]) {
+      let gPrev = NaN; let sO = sO0; let prev: BPt | null = null; let walked = 0;
+      for (let k = 0; k < m && walked <= 20 * h; k++) {
+        let i = i0 + dir * k;
+        if (pU.closed) i = ((i % m) + m) % m; else if (i < 0 || i >= n) break;
+        const q = pts[i];
+        const off = dS(pU, s0, q.s) * dir;
+        if (off <= 1e-9) continue;
+        if (prev) walked += Math.hypot(q.x - prev.x, q.y - prev.y);
+        const r = hidden(q, sO); sO = r.sO;
+        if (Number.isNaN(gPrev)) {
+          if (!(r.g > 0)) break;
+          gPrev = r.g; prev = q; continue;
+        }
+        if (r.g <= 0 && prev) {
+          const t = gPrev / (gPrev - r.g);
+          return { x: prev.x + (q.x - prev.x) * t, y: prev.y + (q.y - prev.y) * t, s: prev.s + dS(pU, prev.s, q.s) * t };
+        }
+        gPrev = r.g; prev = q;
+      }
+    }
+    return null;
+  };
   scene.crossings.forEach((x, xi) => {
     const cp = crossPt[xi];
     if (!cp) return;
@@ -1193,11 +1241,26 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
         cands.push({ uSide, oSide, x: px, y: py, uRef, oRef, dc: Math.hypot(px - cp.x, py - cp.y) });
       }
     }
+    // A missing cut (a tight twist): the under border's other cut is
+    // where it comes on top inside the over tube (twistFlip). Only the
+    // under chain's stations take it; the over chain's keep real cuts.
+    const synth: Cand[] = [];
+    for (const uSide of [1, -1]) for (const oSide of [1, -1]) {
+      if (cands.some((c) => c.uSide === uSide && c.oSide === oSide)) continue;
+      let from: Cand | null = null;
+      for (const c of cands) if (c.uSide === uSide && c.oSide === -oSide && (!from || c.dc < from.dc)) from = c;
+      if (!from) continue;
+      const f = twistFlip(U, uSide, O, from.uRef.s, from.oRef.s);
+      if (!f) continue;
+      const uRef = addPointAt(U, uSide, f.x, f.y, f.s, { k: 6, s: f.s });
+      synth.push({ uSide, oSide, x: f.x, y: f.y, uRef, oRef: from.oRef, dc: Math.hypot(f.x - cp.x, f.y - cp.y) });
+      twistFlips++;
+    }
     const pairStations: Station[] = [];
     for (const oSide of [1, -1]) {
       const pick = (uSide: number): Cand | null => {
         let best: Cand | null = null;
-        for (const c of cands) if (c.uSide === uSide && c.oSide === oSide && (!best || c.dc < best.dc)) best = c;
+        for (const c of [...cands, ...synth]) if (c.uSide === uSide && c.oSide === oSide && (!best || c.dc < best.dc)) best = c;
         return best;
       };
       const cl = pick(1); const crd = pick(-1);
@@ -1227,6 +1290,7 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
       }
     }
   });
+  diagnostics.push(`twist flips ${twistFlips}`);
 
   // Eyes: crossings of one pair consecutive on both chains.
   let eyeCount = 0; let eyeCutCount = 0; let tieCutCount = 0; let kinkCount = 0;

@@ -1,9 +1,12 @@
 import { readFileSync } from "node:fs";
 import { FormB } from "../../../../src/render/field/form_b";
-const scene = JSON.parse(readFileSync("C:/Users/lsl/Repositories/knotmaze/.claude/probes/K868/scenes/def.json", "utf8"));
+// An optional first arg without a comma names the scene (default def).
+const args = process.argv.slice(2);
+const sceneName = args.length && !args[0].includes(",") ? args.shift()! : "def";
+const scene = JSON.parse(readFileSync(`C:/Users/lsl/Repositories/knotmaze/.claude/probes/K868/scenes/${sceneName}.json`, "utf8"));
 scene.look.ctrlArc ??= 0.47;
 const fb = new FormB(scene, { dpr: 2 }) as any;
-const pts = process.argv.slice(2).map((s) => s.split(",").map(Number));
+const pts = args.map((s) => s.split(",").map(Number));
 for (const [x, y] of pts) {
   const buf: any[] = []; fb.pieces(x, y, buf);
   console.log(`(${x},${y}) h=${fb.h.toFixed(3)}`);
