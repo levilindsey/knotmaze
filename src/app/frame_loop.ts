@@ -205,25 +205,37 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
   // the first repaint with the border look's label ink on and run before
   // each app.render() (frame) and after it (after, S3a3: the ink over the
   // canvas); with the flag off only this check runs.
+  // K1040 S4b: with `fieldBand` the same slot runs form B's passes
+  // (src/render/field/field_b_app.ts) instead; a flip swaps the two.
   let labelApp: { frame(): void; after(): void; dispose(): void } | null = null;
+  let labelKind: "label" | "field" | null = null;
   let labelLoading = false;
   const labelFrame = (): void => {
     const r = scene.renderer;
-    if (!r || r.threadLook !== 1 || !r.labelInk) {
+    const kind = params.fieldBand ? "field" : "label";
+    if (!r || r.threadLook !== 1 || !r.labelInk || (labelApp && labelKind !== kind)) {
       labelApp?.dispose();
       labelApp = null;
-      return;
+      labelKind = null;
+      if (!r || r.threadLook !== 1 || !r.labelInk) return;
     }
     if (labelApp) labelApp.frame();
     else if (!labelLoading) {
       labelLoading = true;
-      import("../render/label/label_app")
-        .then((m) => {
+      const ctx = { scene, app, root, params, host, physicsTuning };
+      const again = (): void => flags.push(Flag.GEOM);
+      const load = kind === "field"
+        ? import("../render/field/field_b_app").then((m) => m.createFieldBApp(ctx, again))
+        : import("../render/label/label_app").then((m) => m.createLabelApp(ctx, again));
+      load
+        .then((made) => {
           labelLoading = false;
-          labelApp = m.createLabelApp({ scene, app, root, params, host, physicsTuning }, () => flags.push(Flag.GEOM));
+          labelApp = made;
+          labelKind = kind;
           flags.push(Flag.GEOM);
         })
-        .catch((e: unknown) => console.error("K868 label pass: load failed", e));
+        // A failed load stays loading: no retry every frame.
+        .catch((e: unknown) => console.error(`K868 ${kind} pass: load failed`, e));
     }
   };
   const labelAfter = (): void => labelApp?.after();
@@ -473,6 +485,7 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
       // K868 S3a2: the lost context took the label's GL objects with it.
       labelApp?.dispose();
       labelApp = null;
+      labelKind = null;
       labelFrame();
       app.render();
       labelAfter();

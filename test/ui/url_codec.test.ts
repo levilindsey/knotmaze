@@ -163,6 +163,7 @@ describe("links", () => {
       nearHops: 2, routeWeight: 4,
       beatTiming: "even", beatPerRun: 1, beatIndicator: "pulse", // K795 beat timing; K804 indicator
       ruleUndos: 1, // K778
+      fieldBand: false, // K1040 S4b
       mud: 0, // K137 s5
       threadLook: "fill", // K797b
       goldWidth: 1, goldTexture: "solid", // K799
@@ -1091,6 +1092,7 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   followDelayMin: "fdm", followDelayMax: "fdx", followShortcut: "fsc", // K807
   swordRingMin: "srm", swordRingMax: "srx", sleeperRingMin: "zrm", sleeperRingMax: "zrx",
   nearHops: "nhp", routeWeight: "rwt",
+  fieldBand: "fbb",
 };
 const APPEAR_GROUP = ["appearMode", "appearSequence", "appearSpeed", "appearFx"];
 

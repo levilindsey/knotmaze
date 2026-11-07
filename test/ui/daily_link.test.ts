@@ -606,9 +606,10 @@ describe("the design rows (K292)", () => {
       .filter((k) => isDesignParam(k))
       .sort();
     expect(got).toEqual(expected);
-    // The counted table: 269 params, 82 exempt, 187 to mark.
+    // The counted table: 270 params, 82 exempt, 188 to mark (K1040 S4b's
+    // fieldBand is a design param, as labelInk is).
     expect([Object.keys(PARAM_DEFAULTS).length, exempt.size, got.length]).toEqual([
-      269, 82, 187,
+      270, 82, 188,
     ]);
     for (const k of DAILY_EXEMPT_KEYS) expect(isDesignParam(k)).toBe(false);
   });

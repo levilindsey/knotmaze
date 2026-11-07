@@ -464,6 +464,7 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   num("touchPickMargin"), // K331: touch's pick margin (CSS px past the edge)
   choice("beatIndicator", ["pulse", "ring", "off"]), // K804: the beat indicator at the dot
   num("ruleUndos"), // K778: undos a run while an extra rule is on (0..5)
+  flag("fieldBand"), // K1040 S4b: the border look's ink from form B's GPU passes (junctions included)
 ]);
 
 // The format version a blob names first. Bump it for anything but an

@@ -573,7 +573,9 @@ export function wirePanel(deps: PanelWiringDeps, scene: SceneRef): PanelWiring {
     scene.renderer.hcLook = a11y.highContrast ? deps.hcLookChoice : 0;
     scene.renderer.appearFx = params.appearFx;
     scene.renderer.threadLook = params.threadLook === "border" ? 1 : params.threadLook === "both" ? 2 : 0; // K797b
-    scene.renderer.labelInk = params.labelInk; // K868 S3a
+    // K868 S3a; K1040 S4b: the field band draws the ink too, so it hides
+    // the old border ink and fan rims the same way.
+    scene.renderer.labelInk = params.labelInk || params.fieldBand;
     // K813: the highlights' colors and widths (hex params as 0xRRGGBB).
     scene.renderer.pulseColor = Number.parseInt(params.pulseColor.slice(1), 16);
     scene.renderer.pulseWidth = params.pulseWidth;

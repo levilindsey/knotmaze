@@ -28,6 +28,8 @@ const EXEMPT: Readonly<Record<string, string>> = {
     "mf: left the panel and the codec in K323 Stage A; `&mf=0` (knot mode) is a link-only probe flag until K326",
   labelGpu:
     "lbp: K868 S3a7's GPU pieces, a link-only stage flag (it takes effect with labelInk) until the coordinator turns it on",
+  fieldBand:
+    "fbb: K1040 S4b's form B passes for the border look's ink, a link-only stage flag (border look only) until Levi approves the junctions",
 };
 
 // View rows: `row(<parent>, <view>, "<viewKey>")` writes param `key`.
