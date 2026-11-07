@@ -75,3 +75,124 @@ Moving-frame accuracy (K1248) belongs to the next stage. Report it here, and don
 - No subagents.
 - Run `Get-Date` at the start and at each milestone. When you stop, commit your WIP, append the
   Handoff, push, and report.
+
+## Handoff (S3d, muse session 01a1b4c4, 2026-11-06; started 22:49:41 -08:00)
+
+Stopped with every correctness Done holding and the cost Done still
+failing after the safe optimizations plateaued (see below); no further
+exact-preserving lever I found credibly reaches 3 ms from here. Times:
+start 22:49:41 (`Get-Date`, first command), restore committed 22:58,
+final verification re-run 23:32-23:36 on the shipped code, Handoff finalized ~23:37. All numbers
+below were re-run on the final code (9405ea74 + this docs commit) unless
+a run says otherwise.
+
+### What shipped
+
+- `275263cd` restores 73558807's frame: `git checkout 73558807 --
+  outline.ts` (the 08390186/fca93b74 per-frame re-tests and their
+  structure() recordings are gone; nothing else in those commits touched
+  structure()), and lands the S3d harnesses (s3d_ref, s3d_bench,
+  s3d_exact, s3d_move, s3d_decisions, cmp_s3d, run_locked_s3d).
+- `0196c467`, `2f784c4b`, `9405ea74` make frame cheaper without changing its output
+  (list in the commit message). No decision moved: structure() is
+  byte-identical in effect, frame() takes the same decisions from the
+  same recorded picks.
+- Outputs (untracked) in `.claude/probes/K1240/out/s3d/`: `ref_*.json`
+  and `ref_move0.1_*.json` (24 reference tables, whole frame output),
+  `exact_*.json`, `fresh0.1_*/move0.1_*`, `fresh0.5_*/move0.5_*` (def,
+  ring, fat), `bench_base/prof/o1..o9/scale/run1/run2.json`,
+  `s3c_move.json` (moved/rigid rows; the filename is inherited from
+  s3c_move), `decisions.json`, `page_results.json`.
+
+### Done, item by item
+
+1. **Reference check: holds; still exact 24/24; S2 passes; rigid exact.**
+   `s3d_ref.ts check`: REFERENCE HOLDS on all 24 scene-frames, worst
+   diff 3.7e-9 (one `advanceTo` accept-at-sok-tolerance shortcut; every
+   other change is at 2e-14 or below). Still: `cmp_s3d.mjs exact` 24/24
+   OK (worst p99 delta 0.001, worst over2 delta -18 inside tolerances;
+   full rows in the run log and `out/s3d/exact_summary.md`).
+   `outline.test.ts`: ALL PASS, 0 failures. Rigid (s3d_move, def
+   rotated 7 deg + translated): maxDiff 4.809e-9 <= 1e-6 (S3c measured
+   0; the same sok-accept shortcut accounts for the difference).
+2. **Cheap: FAILS.** `s3d_bench.ts` times structure() (median of 3),
+   then 10 warm-up + 120 timed frames per scene, under
+   `run_locked_s3d.ps1` (owner K1240-S3d). Two runs on the final code
+   (bench_run1 / bench_run2, this loaded desktop - other sessions were
+   active; Claude's quiet-machine re-bench will differ, S3c's by about
+   0.75x):
+
+   | scene | structure med (ms) | frame med run1/run2 (ms) | p95 run1/run2 (ms) |
+   |---|---|---|---|
+   | muse_hash | 545 / 534 | 11.21 / 11.29 | 15.37 / 13.69 |
+   | muse_default_tw | 337 / 422 | 12.50 / 12.13 | 17.80 / 14.83 |
+   | def | 426 / 417 | 13.54 / 13.73 | 16.45 / 20.05 |
+   | fat | 366 / 372 | 2.45 / 2.38 | 4.26 / 4.04 |
+   | ring | 78 / 107 | 2.11 / 2.23 | 3.68 / 4.09 |
+   | user_tw42.lightpaper | 151 / 130 | 5.79 / 5.66 | 7.37 / 6.14 |
+   | g41_def_tw42 | 445 / 352 | 14.58 / 14.53 | 16.53 / 17.09 |
+   | g41_def_tw64 | 448 / 594 | 12.69 / 13.31 | 15.53 / 16.52 |
+   | g41_ring_tw42 | 60 / 63 | 2.21 / 2.28 | 4.09 / 3.88 |
+   | g41_ring_tw64 | 88 / 83 | 1.83 / 1.83 | 2.68 / 2.31 |
+   | g41_user_tw42 | 160 / 178 | 5.84 / 5.69 | 8.10 / 7.63 |
+   | g41_user_tw64 | 202 / 252 | 5.53 / 5.67 | 6.82 / 7.13 |
+
+   def median ~13.5-13.7 ms against the 3 ms bound, p95 ~16-20 against
+   6. That is 2.2x faster than S3c's 31 ms final code and 1.2x faster
+   than the restored decide-once baseline measured the same way
+   (16.8 ms), nowhere near Done. Per-phase profile of one def frame
+   (profiled run, `phase_run.ts`; profiled total 17.0 ms vs 14.4
+   unprofiled in the same process, so read shares, not absolutes):
+   corners 7.9, setup 2.8, offsets 2.2, crossingCuts 1.4 (0.84-1.2 in
+   the locked benches after the seed-pair fast path), regions 1.1,
+   cornersPts 0.2, transPts 0.3, caps 0.2, pieces 0.25, other 0.6.
+   Counters on def (one frame): 8,677 gate nodes and wOfF calls,
+   17.0k marginOfF calls, ~349k turn-walk steps, 32.8k footNear calls,
+   4.5k footWinFast calls. fat, with no corners at all, still takes
+   2.8 ms (52k border points, 1,712 cuts, 17k centreline points), so
+   the per-point phases alone nearly fill the 3 ms budget before any
+   corner is solved; reaching 3 ms on def needs roughly 3-4x on the
+   per-point phases *and* ~6x on corners, not another constant-factor
+   pass. What I tried beyond the shipped list: a span-search margin
+   shortcut (prove margin >= 0 by searching the span minus the foot
+   segment) - rejected, it broke the reference on muse_hash corner 233
+   (foot pinned at a vertex: the true foot segment by segOfS is the
+   next one, so the excluded segment was wrong; also stopAt == initBd
+   made footWinFast break on the first marginal improvement) - and the
+   marginClear code is removed, not left in. The shipped incremental
+   turn-walk (min-dot guard, sound) is within noise of the plain walk
+   on this machine. K1247 stays open with these numbers.
+3. **Page tests: no worse than S3.** `run_locked_s3d.ps1 -Script
+   run_page.mjs` then `cmp_s3d.mjs page`: fillSamples and overlap
+   identical to S3 on all 12 (e.g. def 1517/1531 and 353/353);
+   borderBand/fillEdge move by at most 10 samples either way (def
+   21933/19833/22677 vs S3 21931/19836/22677); the one console 404 is
+   the same as S3's run. `npm test` green (2887 passed, 2 files
+   skipped) and `npm run probe:types` clean on the final tree.
+
+### Reported, not gated (moved frames, decide-once as designed)
+
+- Moved endpoints (`s3d_move.ts`, moved vs fresh, same counts as S3c's
+  report): at 0.1h maxEnd 0.09 (g41_ring_tw42) to 0.40 (muse_hash),
+  onlyMoved/onlyFresh in the tens; at 0.5h maxEnd 0.19-0.40 with up to
+  ~1k unmatched endpoints on fat. In `out/s3d/s3c_move.json`.
+- Moved exact vs fresh form B (`cmp_s3d.mjs move`): at 0.1h 15 of 24
+  rows outside S3c's tolerances (fresh is the first value: def A over2
+  13 -> 22, def B 7 -> 20, muse_hash A p99 d +0.030 and over2 +34);
+  at 0.5h on def/ring/fat 6 of 6 rows outside (def B over2 34 -> 194).
+  This is the recorded decide-once behaviour (structure-time decisions
+  followed at moved positions), the K1248 residual - not a regression
+  against 73558807, whose still output this code matches to 3.7e-9.
+- Decision counts (`s3d_decisions.ts`, `out/s3d/decisions.json`):
+  def @0.1h okFlip 5, styleFlip 0, pairChange 0 of 386, caps diff
+  12/182; @0.5h okFlip 42, pairChange 2, caps 26/182. ring @0.1h
+  okFlip 10, pairChange 25 of 51 (centre-record pairs, as in S3c's
+  counts); g41_user_tw64 @0.1h okFlip 34, pairChange 110 of 163 is the
+  largest mover. Full rows in the file.
+
+### Reproduce
+
+- Reference: `node scripts/run_node.mjs .claude/probes/K1240/proto/s3d_ref.ts check`
+- Still: `node scripts/run_node.mjs .claude/probes/K1240/proto/s3d_exact.ts` then `node .claude/probes/K1240/proto/cmp_s3d.mjs exact`
+- Bench (twice, under the lock): `run_locked_s3d.ps1 -Script s3d_bench.ts -RunArgs @('bench_run1')` (then `bench_run2`)
+- Moved/decisions/page: `s3d_move.ts`, `s3d_exact.ts --move=0.1 [--fresh]`, `cmp_s3d.mjs move 0.1`, `s3d_decisions.ts`, `run_locked_s3d.ps1 -Script run_page.mjs`, `cmp_s3d.mjs page`
