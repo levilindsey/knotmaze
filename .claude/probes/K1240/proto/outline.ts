@@ -432,7 +432,7 @@ function cutFolds(p: Poly, pts: BPt[], sig: number, h: number, diag: string[]): 
 interface PtRef { pi: number; side: number; x: number; y: number; s: number; idx: number; rec?: BRec }
 interface Ev { seg: number; t: number; ref: PtRef }
 interface ArmInfo { ji: number; ei: number; pi: number; sR: number; dir: number; kind: string; ux: number; uy: number; ang: number; L: number; Lcut: number; g: number; idx: number }
-interface CornerWork extends OutlineCorner { ji: number; aArm: number; bArm: number; sideA: number; sideB: number; sA: number; sB: number; dA: number; dB: number; refA: PtRef | null; refB: PtRef | null; refVA: PtRef | null; refVB: PtRef | null; vKa?: number; vKb?: number; qKa?: number; qKb?: number; vSa?: number; vSb?: number }
+interface CornerWork extends OutlineCorner { ji: number; aArm: number; bArm: number; sideA: number; sideB: number; sA: number; sB: number; dA: number; dB: number; refA: PtRef | null; refB: PtRef | null; refVA: PtRef | null; refVB: PtRef | null; vKa?: number; vKb?: number; qKa?: number; qKb?: number; vSa?: number; vSb?: number; meet?: boolean }
 interface Station { pi: number; cS: number; left: PtRef; right: PtRef; kind: string; key: string }
 
 export function buildOutline(scene: SceneIn): OutlineTable { return frame(structure(scene), scene); }
@@ -812,8 +812,72 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
   // wedge bisector at h, radius 0, tangent points on the arms' borders
   // at their roots (points on the outline), no trim. The arc piece
   // collapses onto the first tangent point; nothing switches.
+  // S3f (Claude): form B has no corner there either (its solveCorner
+  // fails alike), so its outline is the union boundary of the two
+  // tubes, whose corner is where the two facing borders cross. Find
+  // that crossing within a fixed window of each arm's root (signed
+  // chain distance in [-h, 14h], not the frame's arm spans), the one
+  // nearest the roots; both arms' runs end there. Same chain and side
+  // (a through chain's straight side) has no crossing: its border runs
+  // on through the root.
+  type Meet = { x: number; y: number; segA: number; tA: number; sA: number; dA: number; segB: number; tB: number; sB: number; dB: number };
+  const borderMeet = (A: ArmInfo, sideA: number, B: ArmInfo, sideB: number): Meet | null => {
+    if (A.pi === B.pi && sideA === sideB) return null;
+    const lo = -h; const hi = 14 * h;
+    const dSigned = (arm: ArmInfo, s: number): number => {
+      const p = polys[arm.pi];
+      let d = (s - arm.sR) * arm.dir;
+      if (p.closed && p.len > 0) { d = ((d % p.len) + p.len) % p.len; if (d > p.len / 2) d -= p.len; }
+      return d;
+    };
+    const segsOf = (arm: ArmInfo, side: number): number[] => {
+      const pts = borders[arm.pi][bIdx(side)].pts;
+      const half = polys[arm.pi].len / 2;
+      const out: number[] = [];
+      for (let i = 0; i + 1 < pts.length; i++) {
+        const d0 = dSigned(arm, pts[i].s); const d1 = dSigned(arm, pts[i + 1].s);
+        if (Math.abs(d1 - d0) > half) continue;
+        if (Math.max(d0, d1) >= lo && Math.min(d0, d1) <= hi) out.push(i);
+      }
+      return out;
+    };
+    const PA = borders[A.pi][bIdx(sideA)].pts; const PB = borders[B.pi][bIdx(sideB)].pts;
+    const sa = segsOf(A, sideA); const sb = segsOf(B, sideB);
+    let best: Meet | null = null; let bestD = Infinity;
+    for (const i of sa) {
+      const a0 = PA[i]; const a1 = PA[i + 1];
+      for (const k of sb) {
+        const b0 = PB[k]; const b1 = PB[k + 1];
+        const hit = segInt(a0.x, a0.y, a1.x, a1.y, b0.x, b0.y, b1.x, b1.y);
+        if (!hit) continue;
+        const sAh = a0.s + (a1.s - a0.s) * hit.t; const sBh = b0.s + (b1.s - b0.s) * hit.u;
+        const dA = dSigned(A, sAh); const dB = dSigned(B, sBh);
+        if (dA < lo || dA > hi || dB < lo || dB > hi) continue;
+        if (dA + dB < bestD) {
+          bestD = dA + dB;
+          best = { x: a0.x + (a1.x - a0.x) * hit.t, y: a0.y + (a1.y - a0.y) * hit.t, segA: i, tA: hit.t, sA: sAh, dA, segB: k, tB: hit.u, sB: sBh, dB };
+        }
+      }
+    }
+    return best;
+  };
   const cornerFallback = (cw: CornerWork, A: ArmInfo, B: ArmInfo, th: number): void => {
     const j = scene.junctions[cw.ji];
+    const mt = borderMeet(A, cw.sideA, B, cw.sideB);
+    if (mt) {
+      const ci = cornerWork.length;
+      cw.Vx = mt.x; cw.Vy = mt.y; cw.qx = mt.x; cw.qy = mt.y; cw.r = 0;
+      cw.tax = mt.x; cw.tay = mt.y; cw.tbx = mt.x; cw.tby = mt.y;
+      cw.sA = mt.sA; cw.sB = mt.sB; cw.dA = mt.dA; cw.dB = mt.dB;
+      cw.refA = mkRef(A.pi, cw.sideA, mt.x, mt.y, mt.sA, { k: 5, corner: ci, which: 0 });
+      addEv(A.pi, cw.sideA, mt.segA, mt.tA, cw.refA);
+      cw.refB = mkRef(B.pi, cw.sideB, mt.x, mt.y, mt.sB, { k: 5, corner: ci, which: 1 });
+      addEv(B.pi, cw.sideB, mt.segB, mt.tB, cw.refB);
+      cw.refVA = cw.refA; cw.refVB = cw.refB; cw.meet = true;
+      armNextPt[cw.aArm] = cw.refA; armNextSide[cw.aArm] = cw.sideA;
+      armPrevPt[cw.bArm] = cw.refB; armPrevSide[cw.bArm] = cw.sideB;
+      return;
+    }
     let mx = A.ux + B.ux; let my = A.uy + B.uy;
     const ml = Math.sqrt(mx * mx + my * my);
     if (ml < 1e-9) { const ma = Math.atan2(A.uy, A.ux) + th / 2; mx = Math.cos(ma); my = Math.sin(ma); } else { mx /= ml; my /= ml; }
@@ -1761,7 +1825,7 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
     // ends' midpoint). No pass decides whether a border is covered.
     const ivByKeys = new Map<string, Interval>();
     for (const iv of intervals) ivByKeys.set(iv.A.key + ">" + iv.B.key, iv);
-    let runMiss = 0; let runPassed = 0;
+    let runMiss = 0; let runPassed = 0; const runMissKeys: string[] = [];
     for (const dp of dg.piecesD) {
       if (dp.kind === "run") {
         // S3f (Claude): a run is its border between its two end
@@ -1789,7 +1853,7 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
             for (const o of [1, -1]) {
               const st = stationByKey.get("x" + dgs.crossing + "|" + o);
               const rr = st ? (side === 1 ? st.left : st.right) : null;
-              if (rr && rr.idx >= 0 && rr.idx < nB) r.push(rr);
+              if (rr && rr.side === side && rr.idx >= 0 && rr.idx < nB) r.push(rr);
             }
             if (r.length !== 2) { runMiss++; return null; }
             const sC = sFOf(dgs);
@@ -1798,8 +1862,13 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
           }
           const st = stationByKey.get(dgs.key);
           const rr = st ? (side === 1 ? st.left : st.right) : null;
-          if (rr && rr.idx >= 0 && rr.idx < nB) return rr;
+          if (rr && rr.side === side && rr.idx >= 0 && rr.idx < nB) return rr;
           runMiss++;
+          if (runMissKeys.length < 12) {
+            const da = dgs.kind === "junction" ? dg.arms[dgs.arm] : null;
+            const ba = da ? arms.find((a) => a.ji === da.ji && a.ei === da.ei) : null;
+            runMissKeys.push(`${dgs.key}/${side}:${st ? (rr ? "idx" + rr.idx + (rr.side !== side ? "wrongside" : "") : "noref") : "nost"}${ba ? `[b${ba.idx} n${armNextPt[ba.idx] ? armNextPt[ba.idx]!.side : "-"} p${armPrevPt[ba.idx] ? armPrevPt[ba.idx]!.side : "-"}]` : da ? "[nobarm]" : ""}`);
+          }
           return null;
         };
         const fromRef = refOf(dgA); const toRef = refOf(dgB);
@@ -1863,7 +1932,7 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
           while (da < -Math.PI) da += 2 * Math.PI;
           const steps = Math.max(1, Math.ceil(Math.abs(da) / (Math.PI / 16)));
           for (let s = 0; s <= steps; s++) { const a = aA + (da * s) / steps; pts.push(cw.qx + cw.r * Math.cos(a), cw.qy + cw.r * Math.sin(a)); cpts.push(cw.qx, cw.qy); }
-        } else if (!cw.ok) {
+        } else if (!cw.ok && cw.meet) { pts = [cw.qx, cw.qy]; cpts = [cw.qx, cw.qy]; } else if (!cw.ok) {
           let ax = cw.qx; let ay = cw.qy;
           for (const nci of [dp.corner - 1, dp.corner + 1]) {
             const nc = cornerWork[nci];
@@ -1886,7 +1955,7 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
         pieces.push(piece);
       }
     }
-    if (runMiss || runPassed) diagnostics.push(`frame runs: ${runMiss} ends without points, ${runPassed} passed`);
+    if (runMiss || runPassed) diagnostics.push(`frame runs: ${runMiss} ends without points, ${runPassed} passed ${runMissKeys.join(" ")}`);
   }
   borders.forEach((bs, pi) => {
     bs.forEach((B, bi) => {
@@ -2517,7 +2586,9 @@ export function diagramOf(scene: SceneIn): DiagramStructure {
     stationsD.push({ pi: a.pi, key: "j" + a.ji + "|a" + ai, kind: "junction", sKey: j && j.arms[a.ei] ? j.arms[a.ei].s : 0, crossing: -1, arm: ai });
   });
   scene.chains.forEach((c, pi) => {
-    if (c.closed) stationsD.push({ pi, key: "seam" + pi, kind: "seam", sKey: 0, crossing: -1, arm: -1 });
+    // A closed chain's runs wrap past s = 0; only a loop with no other
+    // feature needs the seam, as its one run's two ends.
+    if (c.closed) { if (!stationsD.some((q) => q.pi === pi)) stationsD.push({ pi, key: "seam" + pi, kind: "seam", sKey: 0, crossing: -1, arm: -1 }); }
     else {
       stationsD.push({ pi, key: "cap" + pi + "|0", kind: "capStart", sKey: -1e12, crossing: -1, arm: -1 });
       stationsD.push({ pi, key: "cap" + pi + "|1", kind: "capEnd", sKey: 1e12, crossing: -1, arm: -1 });

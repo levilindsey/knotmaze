@@ -47,7 +47,7 @@ for (const name of names) {
   const worst: { d: number; x: number; y: number; what: string; near: string }[] = ex.A.worst ?? [];
   const centers: typeof worst = [];
   for (const w of worst) { if (centers.every((c) => Math.hypot(c.x - w.x, c.y - w.y) > 3 * h)) centers.push(w); }
-  const pick = centers.slice(skipN, skipN + 4);
+  const pick = process.env.AT ? process.env.AT.split(";").map((q) => { const [x, y] = q.split(",").map(Number); return { d: 0, x, y, what: "at", near: "" }; }) : centers.slice(skipN, skipN + 4);
   const W = 2 * T; const H = 2 * T;
   const img = new Uint8Array(W * H * 3).fill(255);
   const S = T / (cropH * h); // crop px per world unit
