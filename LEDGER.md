@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1241.
+Next free ID: K1242.
 
 ## Waiting on Levi
 
@@ -1707,6 +1707,11 @@ Every other item below waits on the trigger it names.
   the crossing gap where the body's dome passes over the stem (about 1.7 fh along the tip arm). A fix needs
   fan rims reaching the tip's centreline there, or crossing_gaps treating the own-junction crossing as a joint
   pair (K1220 S3's Handoff, `docs/design/K1220_s3_i_forks.md`).
+- **K1241** · K1220 S6's untracked `.claude/probes/K1220/s6/crop.mjs` sizes its output from argv unchecked: a
+  call with the out path second (`crop.mjs rest.png out.png 1140 1000 260 200`) asked Buffer.alloc for
+  1000·200 × 260·200 × 3 = 31 GB, and node reached 15.5 GB at 16:10 on 2026-11-06. Commit memory fell to 2.2
+  GB free and Claude Code reaped a background shell. Fix: validate the numbers and cap the output (the tracked
+  copies under K1139/K1208/K1220 too).
 
 ## Approved, to schedule (2026-10-11)
 
