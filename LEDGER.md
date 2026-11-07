@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1239.
+Next free ID: K1240.
 
 ## Waiting on Levi
 
@@ -307,12 +307,12 @@ Next free ID: K1239.
   - brief: `docs/design/K1211_s6_one_glow.md`
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
-  float64 reference. Plan S1-S8, about 15 h (F7); supersedes K868 and K992. S1 to S1f merged (S1f: fb348a78); S3 (K1097) merged short of its gate; S1g merged (ca273d04); S3b (K1097) merged (587b7e80, 2026-11-02): 0 DEFECT, the Pixel's 2 ms missed 5-20x. S4a merged (f294dc08, 2026-11-06) short of check #12: the band's tube edges, caps and foot on the GPU, unused by the app; S4a2 merged (365d2244): within 1/32 px away from corners except D4's tie and the cap mix.
-  - owner: claude agent ac5c423693cf9dec3, coordinated by claude session c18e2f02-e64f-41ba-9af0-2dbd583358e2; started 2026-11-06 09:44, cap 2 h (~11:45)
-  - branch: worktree-agent-ac5c423693cf9dec3 in .claude/worktrees/agent-ac5c423693cf9dec3; last commit: `d7c9caee`; last commit: `c82ee0ad`
-  - evidence: src/render/field/band_b*.ts (S4a f294dc08, S4a2 365d2244, on master); .claude/probes/K1040/s4a2/ (tracked tools; its check #12 table in the S4a2 brief's Handoff); S4a2's out/ in the main checkout's .claude/probes/K1040/s4a2/out/; the 12 scenes in .claude/probes/K868/scenes/
-  - next: S4b to its Done (corners, D4 tie, outer edge AA, the flag param; check #12 everywhere, census, sheets, a Pixel batch); Claude views the sheets and the flag-on links, merges, shows Levi, runs check #13 on the Pixel (~12:45)
-  - brief: `docs/design/K1040_s4b_band.md`
+  float64 reference. Plan S1-S8, about 15 h (F7); supersedes K868 and K992. S1 to S1f merged (S1f: fb348a78); S3 (K1097) merged short of its gate; S1g merged (ca273d04); S3b (K1097) merged (587b7e80, 2026-11-02): 0 DEFECT, the Pixel's 2 ms missed 5-20x. S4a merged (f294dc08, 2026-11-06) short of check #12: the band's tube edges, caps and foot on the GPU, unused by the app; S4a2 merged (365d2244): within 1/32 px away from corners except D4's tie and the cap mix. S4b merged (1ef55958): the corners on the GPU (check #12's near-corner worst 0.19-3.28 px, 9.3-13.6 without) and the fbb flag, off by default (flag on: ~3 fps while moving, one ink colour, K1239's shapes).
+  - owner: nobody since 2026-11-06 11:12: S4b stopped at half its Done (corners and the flag); S4c not yet briefed
+  - branch: mainline (S4b merged at 1ef55958; its worktree .claude/worktrees/agent-ac5c423693cf9dec3 kept for follow-ups); last commit: `1ef55958`
+  - evidence: src/render/field/ (band_b*.ts, field_b_app.ts); .claude/probes/K1040/s4b/ (tracked tools; check #12 and cost tables in the S4b brief's Handoff); S4b's out/ in the main checkout's .claude/probes/K1040/s4b/out/ (sheets/view/, sheets/app_phw0/, sheets/app/view_def_overlay.png); the 12 scenes in .claude/probes/K868/scenes/
+  - next: brief S4c for Muse from S4b's Handoff Next 1-5 (D4 ties, outer-edge AA, cap mix, the over-ink and dark hook; alphaG's selfW, CORNER_FS's lays 2-3; checks 1-9 and 11, every spot over 1/32 px; the census and free ends; the missing sheets) and K1239; Claude runs Next 6 (check #13) on the Pixel from ~12:45
+  - brief: docs/design/K1040_s4b_band.md (its Handoff's Next)
   - env: from the worktree, `npx vite --config .claude/probes/K1040/vite.private-cache.config.ts --port 5401 --strictPort --host 127.0.0.1`
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
@@ -494,10 +494,10 @@ Next free ID: K1239.
 - **K1097** · K1040 S3, the label pass (F7 of `docs/design/K1040_junction_field.md`): the depth-tested label on
   the GPU, gated by oracle30's verdicts on the 12 scenes (0 DEFECT closes K1033), the recordings' pops and the
   Pixel's 2 ms.
-  - owner: nobody since 2026-11-06 06:59: the S3f5 Pixel batch ran (5ace293a let the phone tools take the USB link when adb lists the phone twice); the next stage waits for S4a's merge (~08:45)
+  - owner: nobody since 2026-11-06 06:59: the S3f5 Pixel batch ran; the lever stage waits for K1040 S4b, which holds src/render/field/ until ~11:45
   - branch: mainline; last commit: `5ace293a`
   - evidence: .claude/probes/K1040/s3/ (s3f5_gate.ps1, s3f4_gate.ps1, split.mjs, vert_count.ts; S3f5 on the Pixel 2026-11-06: out/split_s3f5.md, out/phone_table_s3f5.md, out/batch_s3f5_20261106_0651.log; S3f5 desktop: out/split_s3f5_desktop.md, out/check_s3f5chk_summary.md, out/ab_s3f5ab_summary.md; S3f4: out/split_s3f4.md, out/phone_table_s3f4.md, out/split_s3f4_desktop.md; earlier splits out/split_s3f2.md, out/split_s3d2.md)
-  - next: S3f5 on the Pixel: the gate fails on all 12 scenes (4.1 to 9.7 ms against 2). The median scene is the fixed cost ~2.2 ms (an empty full-size pass; d24, depth invalidate and depth texture move it +0.0 to +0.3) + the drawing ~2.6 (vertex side 1.1, fragment side 0.9; fetch and spflat save 0.0 and +0.2) + the upload ~1.3 (0.6 to 2.8, main thread). No S3f5 variant is adopted. Next: after S4a merges, Claude briefs one Muse stage on the structural levers (where the pass sits in the frame, one pass for the label and the band, the upload's rows and formats), each lever timed live on the Pixel. Levi said yes (2026-11-06) to leaving the phone on its charger, unlocked on the home screen, for a few hours later today: Claude tells him when to set it up
+  - next: S3f5 on the Pixel failed the gate on all 12 scenes (4.1 to 9.7 ms against 2: fixed cost ~2.2 ms, drawing ~2.6, upload ~1.3; no variant adopted). After S4b merges, Claude briefs one Muse stage on the structural levers (where the pass sits in the frame, one pass for the label and the band, the upload's rows and formats), each lever timed live on the Pixel; the phone is set up from ~12:45 on 2026-11-06 (Levi said yes), after S4b's check #13 batch
   - brief: Run B of `docs/design/K1204_muse_batch21.md` (S3f5); `docs/design/K1040_s3f4_bound.md` (its Handoff ends with the Pixel's reading)
   - env: the phone through `.claude/probes/K1040/s3/phone_batch.ps1` (run_phone.ps1: both locks, then K1142's ready check), `phone_time.mjs` serving on 5403; desktop timing through `run_locked.ps1`, never piped through `Select-Object -First` (K1174)
 - **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate correctly
@@ -1696,6 +1696,11 @@ Every other item below waits on the trigger it names.
   the crossing gap where the body's dome passes over the stem (about 1.7 fh along the tip arm). A fix needs
   fan rims reaching the tip's centreline there, or crossing_gaps treating the own-junction crossing as a joint
   pair (K1220 S3's Handoff, `docs/design/K1220_s3_i_forks.md`).
+- **K1239** · K868's scene export (src/render/field/scene_export.ts, scene_export_hook.ts) draws a different
+  maze shape than the old ink under the border look: on def at today's defaults the field draws closed loops
+  where the old ink shows cut, notched ends, so lbi overlaps the old ink at IoU 0.588 and fbb at 0.674.
+  Untested guess: it lacks the old renderer's fused-arm cuts and stub ends (S4b Handoff 'In the app';
+  .claude/probes/K1040/s4b/out/sheets/app/view_def_overlay.png, untracked)
 
 ## Approved, to schedule (2026-10-11)
 
