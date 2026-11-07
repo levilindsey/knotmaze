@@ -232,7 +232,7 @@ stretches so flips can expand, or accept fresh-structure rebuilds when decision 
 K1247 (cost) — the corner gate integral needs incremental evaluation across its 32 nodes or a
 spatial margin index. Both are gated on still exact staying 24/24.
 
-### Handoff continuation 2 (same session, stopped 2026-11-06 22:24 -08:00)
+### Handoff continuation 2 (same session, stopped 2026-11-06 22:22 -08:00)
 
 One hypothesis was tested and rejected after the continuation above. The decision report's
 corner pair changes suggested re-pairing corners per frame: the corner solver was extracted into
