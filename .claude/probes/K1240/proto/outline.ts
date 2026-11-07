@@ -434,7 +434,10 @@ interface Station { pi: number; cS: number; left: PtRef; right: PtRef; kind: str
 
 export function buildOutline(scene: SceneIn): OutlineTable { return frame(structure(scene), scene); }
 export function buildOutlineS2(scene: SceneIn): OutlineTable { return buildOutlineFull(scene).table; }
-export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: Record<string, unknown>; structure: OutlineStructure } {
+export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, prof?: Record<string, number>): { table: OutlineTable; debug: Record<string, unknown>; structure: OutlineStructure } {
+  const frameMode = !!dg;
+  let profT = prof ? performance.now() : 0;
+  const profMark = (key: string): void => { if (prof) { const now = performance.now(); prof[key] = (prof[key] ?? 0) + (now - profT); profT = now; } };
   const h = scene.look.halfWidth;
   const W = scene.look.band;
   const cr = scene.look.cuspRadius ?? 3;
@@ -774,23 +777,72 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
   const armNextSide: number[] = arms.map(() => 0);
   const armPrevSide: number[] = arms.map(() => 0);
   const trimIntervals: { pi: number; side: number; sR: number; dir: number; dEnd: number }[] = [];
-  scene.junctions.forEach((j, ji) => {
-    const list = armsOfJ[ji];
-    const n = list.length;
-    if (n < 2) return;
-    const styles = j.corners ?? [];
-    const ne = j.arms.length;
-    for (let i = 0; i < n; i++) {
-      const ai = list[i]; const bi = list[(i + 1) % n];
+  profMark("setupBorders");
+  // Corner pairs: in frame mode the diagram's pairs (every adjacent pair
+  // in the junction's listed cyclic order, through passes excluded);
+  // otherwise the builder's angular pairs with its skips, as before.
+  const cornerPairs: { ji: number; ai: number; bi: number; style: number }[] = [];
+  if (frameMode) {
+    for (const dc of dg!.corners) cornerPairs.push({ ji: dc.ji, ai: dc.aArm, bi: dc.bArm, style: dc.style });
+  } else {
+    scene.junctions.forEach((j, ji) => {
+      const list = armsOfJ[ji];
+      const n = list.length;
+      if (n < 2) return;
+      const styles = j.corners ?? [];
+      const ne = j.arms.length;
+      for (let i = 0; i < n; i++) {
+        const ai = list[i]; const bi = list[(i + 1) % n];
+        const A = arms[ai]; const B = arms[bi];
+        let th = B.ang - A.ang;
+        th = ((th % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+        if (th <= 1e-6 || th >= Math.PI - 1e-6) continue;
+        const xa = j.arms[A.ei]; const xb = j.arms[B.ei];
+        if (xa && xb && xa.chain === xb.chain && xa.kind === "through" && xb.kind === "through" && Math.abs(xa.s - xb.s) < 1e-6) continue;
+        let st = styles[A.ei]?.style;
+        if ((A.ei + 1) % ne !== B.ei && (B.ei + 1) % ne === A.ei) st = styles[B.ei]?.style;
+        cornerPairs.push({ ji, ai, bi, style: st === "sharp" ? 0 : 1 });
+      }
+    });
+  }
+  // Frame mode, a corner with no feasible V in this frame: V on the
+  // wedge bisector at h, radius 0, tangent points on the arms' borders
+  // at their roots (points on the outline), no trim. The arc piece
+  // collapses onto the first tangent point; nothing switches.
+  const cornerFallback = (cw: CornerWork, A: ArmInfo, B: ArmInfo, th: number): void => {
+    const j = scene.junctions[cw.ji];
+    let mx = A.ux + B.ux; let my = A.uy + B.uy;
+    const ml = Math.sqrt(mx * mx + my * my);
+    if (ml < 1e-9) { const ma = Math.atan2(A.uy, A.ux) + th / 2; mx = Math.cos(ma); my = Math.sin(ma); } else { mx /= ml; my /= ml; }
+    const Vx = j.c[0] + mx * h; const Vy = j.c[1] + my * h;
+    cw.Vx = Vx; cw.Vy = Vy; cw.qx = Vx; cw.qy = Vy; cw.r = 0;
+    const bpOf = (arm: ArmInfo, side: number): { x: number; y: number; s: number } => {
+      // On the border polyline (interpolated at the root s), so the
+      // inserted point never spikes the border.
+      const B = borders[arm.pi][bIdx(side)];
+      const p = polys[arm.pi];
+      let target = arm.sR;
+      if (p.closed) { target = normS(p, target); if (target < B.pts[0].s - 1e-9) target += p.len; }
+      let lo = 0; let hi = B.pts.length - 1;
+      while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (B.pts[mid].s <= target) lo = mid; else hi = mid; }
+      const a = B.pts[lo]; const b = B.pts[Math.min(B.pts.length - 1, lo + 1)];
+      const ds = b.s - a.s;
+      const t = ds > 1e-12 ? Math.min(1, Math.max(0, (target - a.s) / ds)) : 0;
+      return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t, s: arm.sR };
+    };
+    const pa = bpOf(A, cw.sideA); const pb = bpOf(B, cw.sideB);
+    cw.tax = pa.x; cw.tay = pa.y; cw.tbx = pb.x; cw.tby = pb.y; cw.sA = pa.s; cw.sB = pb.s; cw.dA = 0; cw.dB = 0;
+    cw.refA = addPointAt(A.pi, cw.sideA, pa.x, pa.y, pa.s, { k: 5, corner: cornerWork.length, which: 0 });
+    cw.refB = addPointAt(B.pi, cw.sideB, pb.x, pb.y, pb.s, { k: 5, corner: cornerWork.length, which: 1 });
+    cw.refVA = cw.refA; cw.refVB = cw.refB;
+  };
+  for (const cp of cornerPairs) {
+      const ji = cp.ji; const j = scene.junctions[ji];
+      const ai = cp.ai; const bi = cp.bi;
       const A = arms[ai]; const B = arms[bi];
+      const style = cp.style;
       let th = B.ang - A.ang;
       th = ((th % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
-      if (th <= 1e-6 || th >= Math.PI - 1e-6) continue;
-      const xa = j.arms[A.ei]; const xb = j.arms[B.ei];
-      if (xa && xb && xa.chain === xb.chain && xa.kind === "through" && xb.kind === "through" && Math.abs(xa.s - xb.s) < 1e-6) continue;
-      let st = styles[A.ei]?.style;
-      if ((A.ei + 1) % ne !== B.ei && (B.ei + 1) % ne === A.ei) st = styles[B.ei]?.style;
-      const style = st === "sharp" ? 0 : 1;
       const cross = A.ux * B.uy - A.uy * B.ux;
       const sideA = (cross > 0 ? 1 : -1) * A.dir;
       const sideB = (cross > 0 ? -1 : 1) * B.dir;
@@ -801,21 +853,26 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
       };
       const baseIdx = corners.length;
       void baseIdx;
-      if (!(A.L > 1e-9 && B.L > 1e-9)) { cw.why = "arm span 0"; corners.push(cw); cornerWork.push(cw); continue; }
+      if (!(A.L > 1e-9 && B.L > 1e-9)) { cw.why = "arm span 0"; if (frameMode) cornerFallback(cw, A, B, th); corners.push(cw); cornerWork.push(cw); continue; }
+      // A pair's wedge is the minor sweep between its arms (the
+      // junction's other corners take the rest of the circle), so a
+      // pair listed past pi still corners on its minor side; thC is
+      // continuous through pi.
+      const thC = frameMode && th > Math.PI ? 2 * Math.PI - th : th;
       let bx = A.ux + B.ux; let by = A.uy + B.uy;
       const bl = Math.sqrt(bx * bx + by * by) || 1; bx /= bl; by /= bl;
-      const sn = Math.sin(th / 2) || 1;
-      const V = solveEq(A, B, h, j.c[0] + (bx * h) / sn, j.c[1] + (by * h) / sn, h / Math.max(Math.tan(th / 2), 1e-6));
-      if (!V.ok) { cw.why = "no V"; corners.push(cw); cornerWork.push(cw); diagnostics.push(`corner ${j.id}: no V`); continue; }
+      const sn = Math.sin(thC / 2) || 1;
+      const V = solveEq(A, B, h, j.c[0] + (bx * h) / sn, j.c[1] + (by * h) / sn, h / Math.max(Math.tan(thC / 2), 1e-6));
+      if (!V.ok) { cw.why = "no V"; if (frameMode) cornerFallback(cw, A, B, th); corners.push(cw); cornerWork.push(cw); if (!frameMode) diagnostics.push(`corner ${j.id}: no V`); continue; }
       const dVa = armDist(A, V.fa.s); const dVb = armDist(B, V.fb.s);
       const tol = 1e-9 * h;
-      if (!(dVa > tol && dVa < A.L - tol && dVb > tol && dVb < B.L - tol)) { cw.why = "V outside spans"; corners.push(cw); cornerWork.push(cw); continue; }
+      if (!(dVa > tol && dVa < A.L - tol && dVb > tol && dVb < B.L - tol)) { cw.why = "V outside spans"; if (frameMode) cornerFallback(cw, A, B, th); corners.push(cw); cornerWork.push(cw); continue; }
       const crossA = A.ux * (V.y - j.c[1]) - A.uy * (V.x - j.c[0]);
       const crossB = B.ux * (V.y - j.c[1]) - B.uy * (V.x - j.c[0]);
       const sgn = Math.sign(cross) || 1;
-      if (!(crossA * sgn > 0 && crossB * sgn < 0)) { cw.why = "V outside wedge"; corners.push(cw); cornerWork.push(cw); continue; }
+      if (!(crossA * sgn > 0 && crossB * sgn < 0)) { cw.why = "V outside wedge"; if (frameMode) cornerFallback(cw, A, B, th); corners.push(cw); cornerWork.push(cw); continue; }
       cw.Vx = V.x; cw.Vy = V.y; cw.ok = true;
-      const t2 = Math.tan(th / 2);
+      const t2 = Math.tan(thC / 2);
       const r0 = style * (cr / 3) * Math.min(2 * h, 1.5 * h * t2);
       // Form B's tracked ball: the ball grows along V's branch of the
       // medial axis with its feet tracked, and r is the integral of the
@@ -915,7 +972,7 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
         if (hi < win[1]) d2 = Math.min(d2, footInWindow(pl, x, y, hi, win[1]).d);
         return d2 - dc;
       };
-      const rbEff = Math.max(0.5 * h * rootTipScale(th), 1e-9 * h);
+      const rbEff = Math.max(0.5 * h * rootTipScale(thC), 1e-9 * h);
       const v0: TK = { x: V.x, y: V.y, fa: { ...V.fa, u: A.sR + A.dir * dVa }, fb: { ...V.fb, u: B.sR + B.dir * dVb } };
       const denV = denOf(v0);
       const wOf = (p: TK): number => {
@@ -971,9 +1028,9 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
       trimIntervals.push({ pi: B.pi, side: sideB, sR: B.sR, dir: B.dir, dEnd: r > 1e-9 ? dB : dVb });
       corners.push(cw);
       cornerWork.push(cw);
-    }
-  });
+  }
 
+  profMark("corners");
   // Crossings: intersect the under's borders with the over's near each
   // crossing, starting from the crossing's s on each chain.
   const cuts: OutlineCut[] = [];
@@ -1450,6 +1507,9 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
     const n = Math.max(0, B.pts.length - 1);
     return { pi: new Int16Array(n).fill(-1), s: new Float32Array(n), pi2: new Int16Array(n).fill(-1), s2: new Float32Array(n), pi3: new Int16Array(n).fill(-1), s3: new Float32Array(n), pi4: new Int16Array(n).fill(-1), s4: new Float32Array(n), byPi: new Int16Array(n).fill(-1), byS: new Float32Array(n) };
   }));
+  const collapseX: Float64Array[][] = borders.map((bs) => bs.map((B) => new Float64Array(Math.max(0, B.pts.length - 1))));
+  const collapseY: Float64Array[][] = borders.map((bs) => bs.map((B) => new Float64Array(Math.max(0, B.pts.length - 1))));
+  const collapseOk: Uint8Array[][] = borders.map((bs) => bs.map((B) => new Uint8Array(Math.max(0, B.pts.length - 1))));
   const exposed: boolean[][][] = borders.map((bs, pi) => bs.map((B, bi) => {
     const side = bi === 0 ? 1 : -1;
     const out = new Array<boolean>(Math.max(0, B.pts.length - 1)).fill(false);
@@ -1468,6 +1528,39 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
     }
     return out;
   }));
+  if (frameMode) {
+    // Collapse points for covered segments: the covering chain's
+    // nearest exposed border point (the visible outline there).
+    borders.forEach((bs, pi) => {
+      bs.forEach((B, bi) => {
+        const cc = coverCand[pi][bi];
+        for (let i = 0; i + 1 < B.pts.length; i++) {
+          if (exposed[pi][bi][i]) continue;
+          const mx = (B.pts[i].x + B.pts[i + 1].x) / 2; const my = (B.pts[i].y + B.pts[i + 1].y) / 2;
+          let px = mx; let py = my; let found = 0;
+          const cp = cc.byPi[i];
+          if (cp >= 0 && cp < borders.length) {
+            const cs2 = cc.byS[i];
+            let bd = Infinity;
+            for (const cb of borders[cp]) {
+              const cbi = cb.side === 1 ? 0 : 1;
+              const pts = cb.pts; const expC = exposed[cp][cbi];
+              let lo = 0; let hi = pts.length - 1;
+              while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (pts[mid].s <= cs2) lo = mid; else hi = mid; }
+              for (let q = Math.max(0, lo - 24); q <= Math.min(pts.length - 2, lo + 24); q++) {
+                if (!expC[q]) continue;
+                const cx2 = (pts[q].x + pts[q + 1].x) / 2; const cy2 = (pts[q].y + pts[q + 1].y) / 2;
+                const d = (cx2 - mx) * (cx2 - mx) + (cy2 - my) * (cy2 - my);
+                if (d < bd) { bd = d; px = cx2; py = cy2; found = 1; }
+              }
+            }
+          }
+          collapseX[pi][bi][i] = px; collapseY[pi][bi][i] = py; collapseOk[pi][bi][i] = found;
+        }
+      });
+    });
+  }
+  profMark("cutsEyesExposure");
   const segRegion: Int32Array[][] = borders.map((bs) => bs.map((B) => new Int32Array(Math.max(0, B.pts.length - 1)).fill(-1)));
 
   // Intervals between stations, per chain.
@@ -1652,6 +1745,7 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
     faceWorks.push({ owner, group: groupOfJ[ji], pts: flat, sample: [j.c[0], j.c[1]], depth: depthAt(owner, arms[list[0]].sR) });
   });
 
+  profMark("regions");
   // Pieces: exposed border runs, corner arcs, caps.
   const pieces: OutlinePiece[] = [];
   const footFlat = (pi: number, s: number): [number, number] => { const a = pointAt(polys[pi], s); return [a.x, a.y]; };
@@ -1659,6 +1753,119 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
     bs.forEach((B, bi) => {
       const side = bi === 0 ? 1 : -1;
       const exp = exposed[pi][bi];
+      if (frameMode) {
+        // One piece per stretch of border between feature points
+        // (cuts, corner tangents, station points, fold points): the
+        // diagram's piece list for this border. Inside a stretch,
+        // exposed border points draw in order; a covered or trimmed
+        // stretch of segments shrinks onto the stretch's nearest
+        // exposed border point (or, when the whole stretch is
+        // covered, onto the covering chain's nearest border point).
+        // Run ends therefore slide segment by segment with the frame,
+        // and a covered piece shrinks toward zero length without any
+        // piece being added, removed or reordered.
+        const feats = new Set<number>();
+        stations.forEach((st) => {
+          if (st.left.pi === pi && bIdx(st.left.side) === bi) feats.add(st.left.idx);
+          if (st.right.pi === pi && bIdx(st.right.side) === bi) feats.add(st.right.idx);
+        });
+        cornerWork.forEach((cw) => {
+          if (cw.refA && cw.refA.pi === pi && bIdx(cw.refA.side) === bi) feats.add(cw.refA.idx);
+          if (cw.refB && cw.refB.pi === pi && bIdx(cw.refB.side) === bi) feats.add(cw.refB.idx);
+        });
+        arms.forEach((a, ai) => {
+          void a;
+          const np = armNextPt[ai]; if (np && np.pi === pi && bIdx(np.side) === bi) feats.add(np.idx);
+          const pp = armPrevPt[ai]; if (pp && pp.pi === pi && bIdx(pp.side) === bi) feats.add(pp.idx);
+        });
+        B.pts.forEach((pt, idx) => { const k = pt.rec?.k; if (k === 3 || k === 4) feats.add(idx); });
+        const nP = B.pts.length;
+        const fs = [...feats].filter((i) => i >= 0 && i < nP).sort((x, y) => x - y);
+        const ranges: number[][] = [];
+        if (nP >= 2) {
+          if (fs.length === 0) ranges.push(Array.from({ length: nP }, (_, i) => i));
+          else {
+            for (let q = 0; q + 1 < fs.length; q++) { const r: number[] = []; for (let i = fs[q]; i <= fs[q + 1]; i++) r.push(i); ranges.push(r); }
+            const head: number[] = []; for (let i = 0; i <= fs[0]; i++) head.push(i);
+            const tail: number[] = []; for (let i = fs[fs.length - 1]; i < nP; i++) tail.push(i);
+            if (B.closed && fs.length >= 2) {
+              // One wrap stretch: tail then head (pts[nP-1] duplicates pts[0]).
+              ranges.push([...tail, ...head.slice(1)]);
+            } else {
+              if (head.length >= 2) ranges.push(head);
+              if (tail.length >= 2) ranges.push(tail);
+            }
+          }
+        }
+        for (const range of ranges) {
+          if (range.length < 2) continue;
+          // Exposed segments of this stretch (segment = consecutive
+          // border indices; the wrap pair duplicates a point).
+          const segExp: boolean[] = [];
+          for (let m = 0; m + 1 < range.length; m++) {
+            const si = range[m];
+            segExp.push(si + 1 === range[m + 1] ? !!exp[si] : true);
+          }
+          const firstExp = segExp.indexOf(true);
+          const pts: number[] = []; const cpts: number[] = [];
+          const pushPt = (idx: number): void => {
+            const pt = B.pts[idx];
+            const l = pts.length;
+            if (l >= 2 && pts[l - 2] === pt.x && pts[l - 1] === pt.y) return;
+            pts.push(pt.x, pt.y);
+            const f = footFlat(pi, pt.s);
+            cpts.push(f[0], f[1]);
+          };
+          const pushXY = (x: number, y: number, s: number): void => {
+            pts.push(x, y);
+            const f = footFlat(pi, s);
+            cpts.push(f[0], f[1]);
+          };
+          if (firstExp < 0) {
+            const si = range[0];
+            const midS = B.pts[si].s + (B.pts[Math.min(nP - 1, si + 1)].s - B.pts[si].s) / 2;
+            // Collapse onto the covering chain's exposed border
+            // point; failing that, this border's nearest exposed
+            // point (where this border emerges).
+            let bx = collapseX[pi][bi][si]; let by = collapseY[pi][bi][si];
+            let bd = collapseOk[pi][bi][si] ? -1 : Infinity;
+            const mx = (B.pts[si].x + B.pts[Math.min(nP - 1, si + 1)].x) / 2;
+            const my = (B.pts[si].y + B.pts[Math.min(nP - 1, si + 1)].y) / 2;
+            for (let q = bd < 0 ? -1 : range[0] - 1; q >= Math.max(0, range[0] - nP); q--) {
+              if (!exp[q]) continue;
+              bx = (B.pts[q].x + B.pts[q + 1].x) / 2; by = (B.pts[q].y + B.pts[q + 1].y) / 2;
+              bd = (bx - mx) * (bx - mx) + (by - my) * (by - my);
+              break;
+            }
+            for (let q = bd < 0 ? exp.length : range[range.length - 1]; q < Math.min(exp.length, range[range.length - 1] + nP); q++) {
+              if (!exp[q]) continue;
+              const cx2 = (B.pts[q].x + B.pts[q + 1].x) / 2; const cy2 = (B.pts[q].y + B.pts[q + 1].y) / 2;
+              const d = (cx2 - mx) * (cx2 - mx) + (cy2 - my) * (cy2 - my);
+              if (d < bd) { bd = d; bx = cx2; by = cy2; }
+              break;
+            }
+            pushXY(bx, by, midS);
+          } else {
+            let lastExpEnd = -1;
+            for (let m = 0; m < segExp.length; m++) if (segExp[m]) lastExpEnd = m;
+            for (let m = 0; m < range.length; m++) {
+              const idx = range[m];
+              const segBefore = m > 0 ? segExp[m - 1] : false;
+              const segAfter = m < segExp.length ? segExp[m] : false;
+              if (segBefore || segAfter) { pushPt(idx); continue; }
+              // Covered point: shrink onto the nearest exposed point.
+              const src = m <= firstExp ? range[firstExp] : range[lastExpEnd + 1];
+              pushPt(src);
+            }
+          }
+          if (pts.length < 2) continue;
+          const rid = segRegion[pi][bi][range[Math.max(0, firstExp)]];
+          const piece: OutlinePiece = { kind: "run", chain: pi, side, s0: B.pts[range[0]].s, s1: B.pts[range[range.length - 1]].s, pts, cpts, region: rid, corner: -1 };
+          pieces.push(piece);
+          if (rid >= 0 && regions[rid]) regions[rid].pieces.push(pieces.length - 1);
+        }
+        return;
+      }
       let cur: OutlinePiece | null = null;
       const flush = (): void => { if (cur && cur.pts.length >= 4) { pieces.push(cur); if (cur.region >= 0 && regions[cur.region]) regions[cur.region].pieces.push(pieces.length - 1); } cur = null; };
       for (let i = 0; i + 1 < B.pts.length; i++) {
@@ -1678,6 +1885,42 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
     });
   });
   cornerWork.forEach((cw, ci) => {
+    if (frameMode && (!cw.ok || !(cw.r > 1e-9))) {
+      const rid = junctionRegion.get(cw.ji) ?? -1;
+      // Collapse onto the nearest exposed border point of the two
+      // arms (the tangent point itself when the corner is feasible).
+      let ax = cw.tax; let ay = cw.tay;
+      if (!cw.ok) {
+        // Collapse onto a neighbouring successful corner's tangent
+        // point on the shared arm (a point the outline already
+        // samples); fall back to the nearest exposed segment
+        // midpoint on the two arms' borders.
+        let foundArc = false;
+        for (const nci of [ci - 1, ci + 1]) {
+          const nc = cornerWork[nci];
+          if (!nc || nc.ji !== cw.ji || !nc.ok || !(nc.r > 1e-9)) continue;
+          if (nc.aArm === cw.bArm) { ax = nc.tax; ay = nc.tay; foundArc = true; }
+          else if (nc.bArm === cw.aArm) { ax = nc.tbx; ay = nc.tby; foundArc = true; }
+          if (foundArc) break;
+        }
+        let bd = foundArc ? -1 : Infinity;
+        for (const ref of [cw.refA, cw.refB]) {
+          if (!ref || ref.idx < 0) continue;
+          const B = borders[ref.pi][bIdx(ref.side)];
+          const exp = exposed[ref.pi][bIdx(ref.side)];
+          for (let q = Math.max(0, ref.idx - 48); q <= Math.min(exp.length - 1, ref.idx + 48); q++) {
+            if (!exp[q]) continue;
+            const cx2 = (B.pts[q].x + B.pts[q + 1].x) / 2; const cy2 = (B.pts[q].y + B.pts[q + 1].y) / 2;
+            const d = (cx2 - cw.qx) * (cx2 - cw.qx) + (cy2 - cw.qy) * (cy2 - cw.qy);
+            if (d < bd) { bd = d; ax = cx2; ay = cy2; }
+          }
+        }
+      }
+      const piece: OutlinePiece = { kind: "arc", chain: cw.aChain, side: 0, s0: cw.sA, s1: cw.sB, pts: [ax, ay], cpts: [cw.qx, cw.qy], region: rid, corner: ci };
+      pieces.push(piece);
+      if (rid >= 0) regions[rid].pieces.push(pieces.length - 1);
+      return;
+    }
     if (!cw.ok || !(cw.r > 1e-9)) return;
     const aA = Math.atan2(cw.tay - cw.qy, cw.tax - cw.qx);
     let da = Math.atan2(cw.tby - cw.qy, cw.tbx - cw.qx) - aA;
@@ -1697,7 +1940,77 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
   });
   const capCoverPi: Int16Array[] = capInfos.map((ci) => new Int16Array(Math.max(0, ci.arc.length - 1)).fill(-1));
   const capCoverS: Float32Array[] = capInfos.map((ci) => new Float32Array(Math.max(0, ci.arc.length - 1)));
+  if (frameMode) {
+    // One cap piece per cap (the diagram's list): exposed arc points
+    // in order, covered arc points shrunk onto the nearest exposed
+    // arc point, a fully covered cap shrunk to one point on its
+    // covering tube's edge. Coverage within 1e-9 of the tube edge
+    // counts as exposed, so a knife-edge segment cannot flip the
+    // piece under a rigid motion.
+    for (let capIdx = 0; capIdx < capInfos.length; capIdx++) {
+      const ci = capInfos[capIdx];
+      const pi = ci.station.pi;
+      const nSeg = Math.max(0, ci.arc.length - 1);
+      const cov: boolean[] = [];
+      let collapsePt: { x: number; y: number } | null = null;
+      for (let i = 0; i < nSeg; i++) {
+        const a = ci.arc[i]; const b = ci.arc[i + 1];
+        const mx = (a.x + b.x) / 2; const my = (a.y + b.y) / 2;
+        let c = covering(mx, my, pi, ci.station.cS);
+        if (c && coverPickPi.length > 0) {
+          const cp = coverPickPi[coverPickPi.length - 1]; const cs2 = coverPickS[coverPickS.length - 1];
+          const f = pointAt(polys[cp], cs2);
+          const d = Math.hypot(mx - f.x, my - f.y);
+          if (d > h - 1e-9) c = false;
+          else if (!collapsePt) {
+            const dx = mx - f.x; const dy = my - f.y; const dl = Math.sqrt(dx * dx + dy * dy);
+            if (dl > 1e-12) collapsePt = { x: f.x + (h * dx) / dl, y: f.y + (h * dy) / dl };
+          }
+        }
+        cov.push(c);
+      }
+      const expPt: boolean[] = ci.arc.map((_, idx) => (idx > 0 && !cov[idx - 1]) || (idx < nSeg && !cov[idx]));
+      let pts: number[]; let cpts: number[];
+      if (!expPt.some((v) => v)) {
+        // Fully covered: shrink onto this chain's nearest exposed
+        // border segment midpoint (where the thread emerges).
+        const am = ci.arc[Math.floor(ci.arc.length / 2)];
+        let p = collapsePt ?? am;
+        let bd = Infinity;
+        for (const B of borders[pi]) {
+          const bi2 = B.side === 1 ? 0 : 1;
+          const expB = exposed[pi][bi2];
+          const ptsB = B.pts;
+          let lo = 0; let hi = ptsB.length - 1;
+          while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (ptsB[mid].s <= ci.station.cS) lo = mid; else hi = mid; }
+          for (let q = Math.max(0, lo - 96); q <= Math.min(ptsB.length - 1, lo + 96); q++) {
+            if (!(expB[Math.min(q, expB.length - 1)] || (q > 0 && expB[q - 1]))) continue;
+            const d = (ptsB[q].x - am.x) * (ptsB[q].x - am.x) + (ptsB[q].y - am.y) * (ptsB[q].y - am.y);
+            if (d < bd) { bd = d; p = { x: ptsB[q].x, y: ptsB[q].y }; }
+          }
+        }
+        pts = [p.x, p.y]; cpts = [ci.cx, ci.cy];
+      } else {
+        pts = []; cpts = [];
+        for (let idx = 0; idx < ci.arc.length; idx++) {
+          let src = idx;
+          if (!expPt[idx]) {
+            let best = -1; let bd = Infinity;
+            for (let q = 0; q < expPt.length; q++) if (expPt[q] && Math.abs(q - idx) < bd) { bd = Math.abs(q - idx); best = q; }
+            src = best >= 0 ? best : idx;
+          }
+          const pt = ci.arc[src];
+          const l = pts.length;
+          if (l >= 2 && pts[l - 2] === pt.x && pts[l - 1] === pt.y) continue;
+          pts.push(pt.x, pt.y); cpts.push(ci.cx, ci.cy);
+        }
+        if (pts.length < 2) { const p = ci.arc[0]; pts = [p.x, p.y]; cpts = [ci.cx, ci.cy]; }
+      }
+      pieces.push({ kind: "cap", chain: pi, side: 0, s0: ci.station.cS, s1: ci.station.cS, pts, cpts, region: -1, corner: -1 });
+    }
+  }
   for (let capIdx = 0; capIdx < capInfos.length; capIdx++) { const ci = capInfos[capIdx];
+    if (frameMode) break;
     const pi = ci.station.pi; let curStart = -1; let curEnd = -1;
     let cur: OutlinePiece | null = null;
     const flush = (): void => { if (cur && cur.pts.length >= 4) { pieces.push(cur); capRuns[capIdx].push([curStart, curEnd]); } cur = null; };
@@ -1948,7 +2261,8 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
     };
   };
 
-  const structOut = extractStructure();
+  profMark("piecesCapsEtc");
+  const structOut = frameMode ? (dg as unknown as OutlineStructure) : extractStructure();
   const table: OutlineTable = { h, W, pieces, regions, faces, corners, cuts, diagnostics };
   return { table, debug: { arms: arms.map((a) => ({ ji: a.ji, pi: a.pi, sR: a.sR, dir: a.dir, L: a.L, Lcut: a.Lcut, ang: a.ang })), groups: groupOfJ }, structure: structOut };
 }
@@ -2003,7 +2317,112 @@ export interface OutlineStructure {
   stats: { eyeCount: number; eyeTotal: number; eyeKept: number; eyeMaxKept: number; tieCutCount: number; kinkCount: number; crossInJunction: number; arcNearThread: number; segXTotal: number; segXKept: number; nonUniform: number; recMissing: number };
 }
 
-export function structure(scene: SceneIn): OutlineStructure { return buildOutlineFull(scene).structure; }
+export interface DiagramStructure {
+  chainIds: number[];
+  closed: boolean[];
+  nPts: number[];
+  crossings: { aPi: number; bPi: number; over: "a" | "b"; emergent: boolean }[];
+  arms: { ji: number; ei: number; pi: number; kind: string; dir: number }[];
+  armsOfJ: number[][];
+  corners: { ji: number; aArm: number; bArm: number; style: number }[];
+  groupOfJ: number[];
+  caps: { pi: number; atEnd: boolean }[];
+}
+
+/** The diagram of a scene: chains and their point counts, crossings
+ *  and which pass is over, junction arms in their listed (cyclic)
+ *  order with a corner for every adjacent pair, corner styles, caps.
+ *  No position, length, angle or arc-length value of any chain point
+ *  is read: arm and crossing s values enter only as identities (which
+ *  pass of a chain an arm belongs to, root order along a chain). */
+export function diagramOf(scene: SceneIn): DiagramStructure {
+  const idxOf = new Map<number, number>();
+  scene.chains.forEach((c, i) => idxOf.set(c.id, i));
+  const arms: DiagramStructure["arms"] = [];
+  const armsOfJ: number[][] = [];
+  const corners: DiagramStructure["corners"] = [];
+  scene.junctions.forEach((j, ji) => {
+    const list: number[] = [];
+    j.arms.forEach((a, ei) => {
+      const pi = idxOf.get(a.chain);
+      if (pi === undefined) return;
+      list.push(arms.length);
+      arms.push({ ji, ei, pi, kind: a.kind, dir: a.dir });
+    });
+    armsOfJ.push(list);
+    const n = list.length;
+    for (let k = 0; k < n; k++) {
+      const ai = list[k]; const bi = list[(k + 1) % n];
+      const A = arms[ai]; const B = arms[bi];
+      const xa = j.arms[A.ei]; const xb = j.arms[B.ei];
+      // The two arms of one through pass are one tube: no corner.
+      if (xa && xb && xa.chain === xb.chain && xa.kind === "through" && xb.kind === "through" && xa.s === xb.s) continue;
+      corners.push({ ji, aArm: ai, bArm: bi, style: j.corners?.[k]?.style === "sharp" ? 0 : 1 });
+    }
+  });
+  // Junction groups: junctions joined by a run with no crossing
+  // between their roots (root and pass order from the scene's s data).
+  const nj = scene.junctions.length;
+  const parent = Array.from({ length: nj }, (_, i) => i);
+  const find = (i: number): number => { while (parent[i] !== i) i = parent[i] = parent[parent[i]]; return i; };
+  const rootsOf = new Map<number, { s: number; ji: number }[]>();
+  scene.junctions.forEach((j, ji) => {
+    for (const a of j.arms) {
+      const pi = idxOf.get(a.chain);
+      if (pi === undefined) continue;
+      const l = rootsOf.get(pi) ?? [];
+      if (!l.some((q) => q.s === a.s && q.ji === ji)) l.push({ s: a.s, ji });
+      rootsOf.set(pi, l);
+    }
+  });
+  const passSOf = new Map<number, number[]>();
+  for (const x of scene.crossings) {
+    const ia = idxOf.get(x.a.chain); const ib = idxOf.get(x.b.chain);
+    if (ia !== undefined) { const l = passSOf.get(ia) ?? []; l.push(x.a.s); passSOf.set(ia, l); }
+    if (ib !== undefined) { const l = passSOf.get(ib) ?? []; l.push(x.b.s); passSOf.set(ib, l); }
+  }
+  rootsOf.forEach((roots, pi) => {
+    const r = roots.slice().sort((a, b) => a.s - b.s);
+    const ps = passSOf.get(pi) ?? [];
+    const closed = scene.chains[pi]?.closed ?? false;
+    const between = (a: number, b: number): boolean => ps.some((s) => s > a && s < b);
+    for (let i = 0; i + 1 < r.length; i++) if (!between(r[i].s, r[i + 1].s)) parent[find(r[i].ji)] = find(r[i + 1].ji);
+    if (closed && r.length > 1) {
+      const a = r[r.length - 1].s; const b = r[0].s;
+      const wrapped = ps.some((s) => s > a || s < b);
+      if (!wrapped) parent[find(r[r.length - 1].ji)] = find(r[0].ji);
+    }
+  });
+  const gidOf = new Map<number, number>();
+  const groupOfJ: number[] = scene.junctions.map((_, ji) => {
+    const r = find(ji);
+    if (!gidOf.has(r)) gidOf.set(r, gidOf.size);
+    return gidOf.get(r)!;
+  });
+  const caps: DiagramStructure["caps"] = [];
+  scene.chains.forEach((c, pi) => { if (!c.closed) { caps.push({ pi, atEnd: false }); caps.push({ pi, atEnd: true }); } });
+  return {
+    chainIds: scene.chains.map((c) => c.id),
+    closed: scene.chains.map((c) => c.closed),
+    nPts: scene.chains.map((c) => c.pts.length >> 1),
+    crossings: scene.crossings.flatMap((x) => {
+      const aPi = idxOf.get(x.a.chain); const bPi = idxOf.get(x.b.chain);
+      return aPi === undefined || bPi === undefined ? [] : [{ aPi, bPi, over: x.over, emergent: !!x.emergent }];
+    }),
+    arms, armsOfJ, corners, groupOfJ, caps,
+  };
+}
+
+export function structure(scene: SceneIn): DiagramStructure { return diagramOf(scene); }
+
+/** One frame of the diagram at this scene's positions. Every length,
+ *  angle, cut, tangent point, radius and exposure is computed from
+ *  `scene` (the builder's geometry, run per frame); the piece list is
+ *  the diagram's: one run piece per border segment, one arc piece per
+ *  diagram corner, the caps' runs. */
+export function frame(st: DiagramStructure, scene: SceneIn, profile?: Record<string, number>): OutlineTable {
+  return buildOutlineFull(scene, st, profile).table;
+}
 
 interface FArm extends ArmStruct { ux: number; uy: number; ang: number }
 interface FFoot { d: number; x: number; y: number; s: number; k: number; u: number }
@@ -2077,7 +2496,7 @@ function footNearM(polys: Poly[], h: number, arm: FArm, x: number, y: number, hi
       sv = bu; k0 = bk;
     }
 }
-export function frame(st: OutlineStructure, scene: SceneIn, profile?: Record<string, number>): OutlineTable {
+function frameRt(st: OutlineStructure, scene: SceneIn, profile?: Record<string, number>): OutlineTable {
   const prof = profile;
   let tPhase = prof ? performance.now() : 0;
   const mark = (key: string): void => { if (prof) { const now = performance.now(); prof[key] = (prof[key] ?? 0) + (now - tPhase); tPhase = now; } };
