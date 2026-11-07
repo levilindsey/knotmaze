@@ -219,4 +219,4 @@ reference's own) and `user_tw42.lightpaper_worst.png` (the
   the CPU prep's cost (S5), paint on the field (S7), the phone batch.
 
 Ledger items: none new - K1040's remainder is S4d/S5 under the same
-handle. Last SHA: see the push below (this Handoff's commit).
+handle. Last SHA: 425db3bc (fix f5eb875c), pushed to master; deploy run 42292158004 green (4m27s). This line's own commit follows it.
