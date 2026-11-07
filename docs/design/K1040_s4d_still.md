@@ -99,7 +99,7 @@ first, anything out of scope you saw, and your last SHA. Commit messages carry t
 
 ## Handoff (S4d, 2026-11-06)
 
-Muse run 01a1b300 (coordinator: Claude) ran 14:35-16:3x PST in
+Muse run 01a1b300 (coordinator: Claude) ran 14:35-15:21 PST in
 `.claude/worktrees/muse-k1040-s4d`, under the perf lock through
 `.claude/probes/K1040/s4d/` (owner `K1040-S4d`; tools copied from S4c and
 K1239, plus a `freeends` mode in `s4a.mjs`/`page.ts`, `exits.ts` from
