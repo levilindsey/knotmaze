@@ -4059,3 +4059,12 @@ Levi corrected three points of the first analysis:
 - Scope: one system for both looks. The borders bound the interiors (the strip between a thread's two borders plus one polygon per junction, cut at crossings by the same cuts), and paint blending across junctions (K1139, K1211) is paint on that geometry, not a second one. Today's five junction definitions grew one patch at a time: ribbons from P2 (2026-07-16) with their joinery, the junction field (10-11), arm strips (10-12), route bands (10-13), then the field's export. K1239 found the export accurate and the looks differing in their cut models.
 
 Levi then asked for "a new prototype of this approach, without all the tech debt of the current systems", verified there. S1's brief: `docs/design/K1240_s1_outline_proto.md`.
+
+## K1242 (2026-11-06, Levi: "Are there parts of our architecture and systems we would ideally redesign?")
+
+Claude's answer, from that day's src line counts (126.8k lines; src/render 57.9k):
+1. The threads' shape is derived many times: the filled look (ribbon stack, joinery, fans, arm strips, route bands, gap masks; about 17.7k lines), the border look (`render/field` + `render/label`, about 17.9k: the CPU oracle, form B, several generations of label and band passes), and each overlay placing itself on the ribbon. K1240 is the redesign; S1 tests it.
+2. Paint twice: `paint_glsl.ts` (1.2k) and its CPU copy `paint_math.ts` (2.2k), kept in step by fixture tests, so every K1139/K1211 paint change is made twice. Write it once and test it by rendering (headless Chrome, readPixels; CI has no GPU, so software WebGL with small tolerances).
+3. `fabric_maze_renderer.ts` (5.3k) is the file every gameplay look passes through (markers, yarn, fog, trail): agents on different looks collide in it. Split it per overlay once the outline exists. Also big: `main.ts` 4.7k, `tweakpane_panel.ts` 4.2k.
+4. Probe tools copied per run: K1243.
+Left alone: the physics (measured and pinned; a rewrite would rediscover its constants), the physics worker (the phone needs it; K1240 S2 decides where the outline builds), the URL, daily and UI code. Cursive: K1112's per-pair presets are the same kind of debt, retired by K863's letters with consistent exits. The call it sets up (K1240's next): if S1 holds, no new stages in the seam lanes.

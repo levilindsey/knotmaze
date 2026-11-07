@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1242.
+Next free ID: K1244.
 
 ## Waiting on Levi
 
@@ -523,7 +523,7 @@ Next free ID: K1242.
   - owner: muse session 01a1b327-a2f8-7d11-9da3-310b6a569642 (Paseo 610a3e74), coordinated by claude session 09c7a672-a414-402a-97da-b3176839a2e5; started 2026-11-06 15:18, cap 2 h (~17:18)
   - branch: detached worktree .claude/worktrees/muse-k1240-s1 (node_modules junctioned), pushes to master; last commit: `5994b8af`
   - evidence: .claude/probes/K1240/proto/ (tracked source and tests), .claude/probes/K1240/out/ (untracked outputs)
-  - next: S1 to its Done; Claude checks its numbers against the primary records, views its sheets against K868's look and today's, removes the worktree, shows Levi. Then S2: continuity across frames on recorded drags, plucks and flow, and the Pixel's p95
+  - next: S1 to its Done; Claude checks its numbers against the primary records, views its sheets against K868's look and today's, removes the worktree, shows Levi. If S1 holds, Levi decides whether the seam lanes (K1040, K1220's forks, K1211's edges) start no new stages and consumers move onto the outline (K1242's notes). Then S2: continuity across frames on recorded drags, plucks and flow, and the Pixel's p95
   - brief: `docs/design/K1240_s1_outline_proto.md`
   - env: from the worktree, vite on a copy of .claude/probes/K1040/vite.private-cache.config.ts, ports 5980-5989
 
@@ -2012,6 +2012,12 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K1216** · K863's census: a per-row p95, or one that leaves the candidate's spot out, so the census itself
   checks a change's locality (J3k; `local_k863k` does it per piece today). `docs/design/K863_cursive_j3k.md`
   Handoff.
+- **K1242** · Architecture debt that follows K1240 (Levi's question, 2026-11-06): write paint once and test it
+  by rendering, retiring `paint_math.ts`'s CPU copy; split `fabric_maze_renderer.ts` (5.3k lines) into one
+  file per overlay on the outline. Both wait for the outline in the app (notes).
+- **K1243** · One tested probe toolkit in `scripts/probe/` (crop, sheets, compare, perf lock, scene loading,
+  the form-B reference) that briefs point at, instead of per-run copies (master tracks seven `crop.mjs`;
+  K1241); plus a sweep of worktrees whose items have closed (about 40 on disk, 2026-11-06).
 
 ## Done
 
