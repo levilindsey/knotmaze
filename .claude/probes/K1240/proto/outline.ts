@@ -883,6 +883,8 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
       const union = (gA >= 0 && gA === gB) || Math.abs(zA - zB) <= 1e-9;
       cutA = union || zA < zB; cutB = union || zB < zA;
     }
+    const cdbg = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.K1240_CDBG;
+    if (cdbg && cdbg.split(",").includes(String(cw.ji))) diagnostics.push(`cdbg j${cw.ji} a${cw.aArm}(ch${A.pi} side${cw.sideA}) b${cw.bArm}(ch${B.pi} side${cw.sideB}) why ${cw.why}: ${mt ? `meet (${mt.x.toFixed(3)},${mt.y.toFixed(3)}) dA ${(mt.dA / h).toFixed(2)}h dB ${(mt.dB / h).toFixed(2)}h gA ${memberGroup(A.pi, mt.sA)} gB ${memberGroup(B.pi, mt.sB)} zA ${depthAt(A.pi, mt.sA).toFixed(4)} zB ${depthAt(B.pi, mt.sB).toFixed(4)}` : "no meet"} cutA ${cutA} cutB ${cutB} LA ${(A.L / h).toFixed(2)}h LB ${(B.L / h).toFixed(2)}h`);
     const applyMeet = (): void => {
       if (!mt) return;
       const ci = cornerWork.length;
