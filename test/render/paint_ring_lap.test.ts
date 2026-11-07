@@ -350,6 +350,12 @@ const ROUNDED_QUOTIENTS: Record<string, [number, string]> = {
   // (refDepth's float32 wrap). A quotient one off moves u by a whole lap
   // only at the seam (u at 0 or len), where both laps name one point.
   "label/label_glsl.ts: floor(u / len)": [1, "the GPU pieces' closed-chain s wrap (K868 S3a7): one off only at the seam, where both laps name one point"],
+  // K1040 S4b: the band's corner terms read form B's corner grid
+  // (cornersNear: floor(x / cell) in float64). A pixel's world point is
+  // not an integer, so p / uCell sits on an integer only for a point on a
+  // grid line, where p's own float32 rounding already picks the cell; one
+  // off there moves the list's edge by an ulp, not by a cell.
+  "field/band_b_glsl.ts: floor(p / uCell)": [1, "the band's corner-grid cell (K1040 S4b, form B's cornersNear): one off only for a point on a grid line, where p's float32 rounding already picks the cell"],
 };
 
 const ROUNDERS = ["floor", "ceil", "trunc", "round", "roundEven", "fract", "mod", "int"];
