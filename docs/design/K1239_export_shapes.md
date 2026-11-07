@@ -147,3 +147,7 @@ Start clock for the record: 13:02:48 PT 2026-11-06 against the 15:02:48 cap; fil
 ### Claude's addendum (2026-11-06 14:30)
 
 Claude landed the anchored-ends fix, its test and this run's probe scripts in the commit that adds this addendum: a proven export bug, verified by its unit test and Done 3, and drawn only with the flags on. The IoU and ends gates move to K1040 S4d, which owns the cut model in `form_b.ts` and `label_b*`: crossings read as joins in the field (`out/spot_j82_wide.png`) and a shallow crossing loses its under-thread (`out/spot_oldonly.png`).
+
+### Claude's correction (2026-11-06 14:55)
+
+The addendum above misread K868. Its look has no gaps by design (`docs/design/K868_field_border.md` §2, goal 2: "at a crossing the over thread's edges run through, and the under thread's edges stop exactly on the over's outline"). The field's crossing ends are therefore right: the old ink's slot cuts (`h + gap`) are not a target, and neither is IoU against the old ink, so this brief's Done 1-2 asked for the wrong thing. The junction flanks differ because of the field's own corners (K868's G1/G2 outline), not a missing cut. One spot stays open: the stroke the field drops in `out/spot_oldonly.png`, which K1040 S4d (`docs/design/K1040_s4d_still.md`) checks against K868's goals.
