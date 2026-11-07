@@ -4050,3 +4050,12 @@ Levi asked whether this would make junctions easier: threads as node polylines, 
 - Cost: the FieldModel (S3a) spent its 256-474 ms on iterative corner re-fits and on h/8-step walks (partExtents 51/110 ms, passReach 53/81 ms; `docs/design/K868_s3a5_incremental.md`), not on the outline as such. The closed-form trim is unmeasured, and it adds to a prep S5 has yet to bring in budget (243-339 ms per build in the app today). It can run off main.
 - Keep from the sketch: one outline table that every consumer reads (K1239 is that kind of seam). Change: construct the corners (G1 by construction; G2 as an end-matched quintic), never fit them with a constraint solver; insert splice points at fractional positions, never snap them to nodes (about 4 px hops at dpr 2); derive the borders from the centreline each frame, never simulate them (the solver residual reads as width wobble, more soft modes fight sleep, and collision is already about 40% of drag CPU).
 - Test as K1040 S5: check #12 against form B on the 12 scenes, the pop census over the recordings, the prep's p95 in a Pixel drag, and check #13.
+
+## K1240 (2026-11-06, Levi's corrections; the prototype)
+
+Levi corrected three points of the first analysis:
+- Pops: the structure is defined once (the pieces, which crossing cuts which border, which corner joins which arms, sharp or round), and only positions follow the frame. Cut and tangent points are fractional, since crossings slide and arm angles change, but computed in closed form from each frame alone they move continuously, and nothing flips. The old FieldModel popped from its h/8 steps and warm-started re-fits, not from the idea.
+- Cost: segment intersections are cheap, and the crossing and junction tables name which segments can meet, so every cut is a few local tests.
+- Scope: one system for both looks. The borders bound the interiors (the strip between a thread's two borders plus one polygon per junction, cut at crossings by the same cuts), and paint blending across junctions (K1139, K1211) is paint on that geometry, not a second one. Today's five junction definitions grew one patch at a time: ribbons from P2 (2026-07-16) with their joinery, the junction field (10-11), arm strips (10-12), route bands (10-13), then the field's export. K1239 found the export accurate and the looks differing in their cut models.
+
+Levi then asked for "a new prototype of this approach, without all the tech debt of the current systems", verified there. S1's brief: `docs/design/K1240_s1_outline_proto.md`.

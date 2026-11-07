@@ -517,6 +517,15 @@ Next free ID: K1241.
   - evidence: .claude/probes/K1220/s5/ (tracked tools; untracked out/ with 20 sheets and tables, s5_src.patch = S5's src change). S5's Handoff (docs/design/K1220_s5_fan_cover.md): at rest the teeth fell to near 0 at 9 forks, but the profile clip cuts dark slivers where the meshes are cut short (tooth 628-1265 px), and in pluck and flow the fans vanish (the unfused notch and step return; Claude viewed ai_xh2_ji2_A and i_xh3_ji0_A). S4 (291780c5 + 331f425d) stays on master: net better at 6 forks
   - next: S6 to its Done (the fans fill only what no ribbon mesh draws, at rest, pluck and flow: no teeth, bump, notch or tooth; S3's fused outline kept); Claude views its sheets against window 84, removes the S5 and S6 worktrees, shows Levi. Then the 1 px jog in ia at xh 2 and the reveal's bare-ribbon moment (a at xh 3, 40%)
   - brief: `docs/design/K1220_s6_fan_footprint.md`
+- **K1240** · One outline for both looks and every junction consumer (Levi's sketch, 2026-11-06): offset-polyline borders,
+  cuts and corner arcs in closed form from each frame; the border look strokes it, the filled look fills it. S1: a clean
+  prototype beside the app, checked against form B and timed (Levi: "without all the tech debt"); notes.
+  - owner: muse session 01a1b327-a2f8-7d11-9da3-310b6a569642 (Paseo 610a3e74), coordinated by claude session 09c7a672-a414-402a-97da-b3176839a2e5; started 2026-11-06 15:18, cap 2 h (~17:18)
+  - branch: detached worktree .claude/worktrees/muse-k1240-s1 (node_modules junctioned), pushes to master; last commit: `5994b8af`
+  - evidence: .claude/probes/K1240/proto/ (tracked source and tests), .claude/probes/K1240/out/ (untracked outputs)
+  - next: S1 to its Done; Claude checks its numbers against the primary records, views its sheets against K868's look and today's, removes the worktree, shows Levi. Then S2: continuity across frames on recorded drags, plucks and flow, and the Pixel's p95
+  - brief: `docs/design/K1240_s1_outline_proto.md`
+  - env: from the worktree, vite on a copy of .claude/probes/K1040/vite.private-cache.config.ts, ports 5980-5989
 
 ## Next, in order
 
@@ -1996,9 +2005,6 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K1216** · K863's census: a per-row p95, or one that leaves the candidate's spot out, so the census itself
   checks a change's locality (J3k; `local_k863k` does it per piece today). `docs/design/K863_cursive_j3k.md`
   Handoff.
-- **K1240** · Levi's stroke-piece sketch (2026-11-06) as the shape of K1040 S5: the CPU trims each border
-  piece to its exposed interval (form B's burial weight depends only on the foot) and clips unders at
-  crossings; the GPU draws MAX-blended per-piece strokes, no burial search, no label pass for the ink; notes.
 
 ## Done
 
