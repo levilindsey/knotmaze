@@ -1965,7 +1965,7 @@ export function frame(st: OutlineStructure, scene: SceneIn, profile?: Record<str
       const lo = Math.max(winLo, sv - w);
       const hi = Math.min(winHi, sv + w);
       let bd = Infinity; let bx = 0; let by = 0; let bs = sv; let bk = k;
-      for (let dk = -3; dk <= 3; dk++) {
+      for (let dk = -2; dk <= 2; dk++) {
         let kk = k + dk;
         if (p.closed) { kk = ((kk % p.nseg) + p.nseg) % p.nseg; } else if (kk < 0 || kk >= p.nseg) continue;
         let segS = p.s[kk];
@@ -2132,7 +2132,7 @@ export function frame(st: OutlineStructure, scene: SceneIn, profile?: Record<str
     bs: BorderStruct; pi: number; side: number;
     X: Float64Array; Y: Float64Array; S: Float64Array; FX: Float64Array; FY: Float64Array; done: Uint8Array;
     baseReady: boolean; baseX: Float64Array; baseY: Float64Array; baseS: Float64Array;
-    XY: Float64Array; CXY: Float64Array; SA: Float64Array;
+    XY: Float64Array; CXY: Float64Array; SA: Float64Array; posOfId: Int32Array;
   }
   const bStates: BState[] = st.borders.map((bs, b) => ({
     bs, pi: b >> 1, side: (b & 1) === 0 ? 1 : -1,
@@ -2140,6 +2140,7 @@ export function frame(st: OutlineStructure, scene: SceneIn, profile?: Record<str
     FX: new Float64Array(bs.kind.length), FY: new Float64Array(bs.kind.length), done: new Uint8Array(bs.kind.length),
     baseReady: false, baseX: new Float64Array(0), baseY: new Float64Array(0), baseS: new Float64Array(0),
     XY: new Float64Array(2 * bs.seqPool.length), CXY: new Float64Array(2 * bs.seqPool.length), SA: new Float64Array(bs.seqPool.length),
+    posOfId: (() => { const m = new Int32Array(bs.kind.length).fill(-1); bs.seqPool.forEach((id, j) => { m[id] = j; }); return m; })(),
   }));
   const polyTan = polys.map((p) => {
     const tx = new Float64Array(Math.max(1, p.nseg)); const ty = new Float64Array(Math.max(1, p.nseg));
@@ -2211,6 +2212,8 @@ export function frame(st: OutlineStructure, scene: SceneIn, profile?: Record<str
           evalPt(bi, id);
         }
       }
+      const posB = stt.posOfId[id];
+      if (posB >= 0 && bKind[id] <= 2) { stt.XY[2 * posB] = stt.X[id]; stt.XY[2 * posB + 1] = stt.Y[id]; stt.CXY[2 * posB] = stt.FX[id]; stt.CXY[2 * posB + 1] = stt.FY[id]; stt.SA[posB] = stt.S[id]; }
       stt.baseX[j] = stt.X[id]; stt.baseY[j] = stt.Y[id]; stt.baseS[j] = stt.S[id];
     }
   };
@@ -2282,6 +2285,8 @@ export function frame(st: OutlineStructure, scene: SceneIn, profile?: Record<str
       const foot = pointAt(p, s); fx = foot.x; fy = foot.y;
     }
     stt.X[id] = x; stt.Y[id] = y; stt.S[id] = s; stt.FX[id] = fx; stt.FY[id] = fy;
+    const pos = stt.posOfId[id];
+    if (pos >= 0) { stt.XY[2 * pos] = x; stt.XY[2 * pos + 1] = y; stt.CXY[2 * pos] = fx; stt.CXY[2 * pos + 1] = fy; stt.SA[pos] = s; }
   };
   for (let b = 0; b < bStates.length; b++) ensureBase(b);
   mark("offsets", tPhase); tPhase = performance.now();
@@ -2292,7 +2297,7 @@ export function frame(st: OutlineStructure, scene: SceneIn, profile?: Record<str
         const id = bs.seqPool[j];
         const kind = bs.kind[id];
         const c = kind <= 3 || kind === 6 ? 0 : kind === 4 ? (bs.eye[id] >= 0 ? 2 : 1) : 3;
-        if (c === cat) evalPt(b, id);
+        if (c === cat && !stt.done[id]) evalPt(b, id);
       }
     }
   };
@@ -2300,15 +2305,6 @@ export function frame(st: OutlineStructure, scene: SceneIn, profile?: Record<str
   evalCat(1); mark("crossingCuts", tPhase); tPhase = performance.now();
   evalCat(2); mark("eyes", tPhase); tPhase = performance.now();
   evalCat(3); mark("cornersPts", tPhase); tPhase = performance.now();
-  for (const stt of bStates) {
-    const bs = stt.bs;
-    for (let j = 0; j < bs.seqPool.length; j++) {
-      const id = bs.seqPool[j];
-      stt.XY[2 * j] = stt.X[id]; stt.XY[2 * j + 1] = stt.Y[id];
-      stt.CXY[2 * j] = stt.FX[id]; stt.CXY[2 * j + 1] = stt.FY[id];
-      stt.SA[j] = stt.S[id];
-    }
-  }
   mark("offsets", tPhase); tPhase = performance.now();
 
   const stationPt = (b: number, full: number): [number, number] => {
@@ -2393,7 +2389,25 @@ export function frame(st: OutlineStructure, scene: SceneIn, profile?: Record<str
   const pushBorderPts = (seq: number[], pi: number, side: number, idxs: number[]): void => {
     const b = pi * 2 + (side === 1 ? 0 : 1);
     const XY = bStates[b].XY;
-    for (const i of idxs) pushPt(seq, XY[2 * i], XY[2 * i + 1]);
+    // Forward contiguous ranges go in as one push; the caller's
+    // finishPoly/join handling is unchanged because interior range
+    // points are distinct border points.
+    let runStart = -1;
+    let prev = -2;
+    const flushRun = (upto: number): void => {
+      if (runStart < 0) return;
+      const from = idxs[runStart];
+      for (let q = 2 * from; q < 2 * from + 2 * (upto - runStart); q++) seq.push(XY[q]);
+      runStart = -1;
+    };
+    for (let qi = 0; qi < idxs.length; qi++) {
+      const i = idxs[qi];
+      if (i === prev + 1 && runStart >= 0) { prev = i; continue; }
+      flushRun(qi);
+      if (qi + 1 < idxs.length && idxs[qi + 1] === i + 1) { runStart = qi; prev = i; }
+      else pushPt(seq, XY[2 * i], XY[2 * i + 1]);
+    }
+    flushRun(idxs.length);
   };
   const finishPoly = (seq: number[]): number[] => {
     if (seq.length > 2) { const dx = seq[0] - seq[seq.length - 2]; const dy = seq[1] - seq[seq.length - 1]; if (dx * dx + dy * dy < 1e-24) { seq.pop(); seq.pop(); } }
@@ -2464,8 +2478,8 @@ export function frame(st: OutlineStructure, scene: SceneIn, profile?: Record<str
         if (startPt < 0) return;
         const piece: OutlinePiece = {
           kind: "run", chain: pi, side, s0: stt.SA[startPt], s1: stt.SA[endPt],
-          pts: stt.XY.slice(2 * startPt, 2 * (endPt + 1)) as unknown as number[],
-          cpts: stt.CXY.slice(2 * startPt, 2 * (endPt + 1)) as unknown as number[],
+          pts: stt.XY.subarray(2 * startPt, 2 * (endPt + 1)) as unknown as number[],
+          cpts: stt.CXY.subarray(2 * startPt, 2 * (endPt + 1)) as unknown as number[],
           region: curRegion, corner: -1,
         };
         pieces.push(piece);

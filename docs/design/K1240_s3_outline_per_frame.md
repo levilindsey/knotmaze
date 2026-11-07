@@ -76,7 +76,7 @@ Split `outline.ts` into two steps. Keep the table format.
 
 - Muse Spark session (coordinating session's worktree
   `muse-k1240-s1`, detached at `3d29c94a`), started Fri 2026-11-06
-  18:13 PT, lock first taken 19:15 PT, work stopped 19:25 PT.
+  18:13 PT, lock first taken 19:15 PT, work stopped ~19:40 PT.
 - Files changed:
   `.claude/probes/K1240/proto/outline.ts` (the split: `structure()`,
   `frame()`, `buildOutlineS2`; S2's builder instrumented with point
@@ -100,9 +100,12 @@ Split `outline.ts` into two steps. Keep the table format.
 
 ### What failed
 
-- **Done 3's 3 ms target: missed.** def `frame` median **32.6 ms**,
-  p95 60.9 ms (locked run measured 2026-11-06 19:15). The target is
-  ~11x away.
+- **Done 3's 3 ms target: missed.** def `frame` median **30.1 ms**,
+  p95 60.1 ms (locked runs measured 2026-11-06 19:15 and 19:28,
+  after a micro-optimization pass: zero-copy piece views, direct
+  final-array writes, faster region range pushes, narrower corner
+  foot scans - Done 1 re-verified identical after each). The target
+  is ~10x away.
 - Done 1's exact clause against **S2's Handoff table** is formally
   worse on max (see below): S2's own final code reproduces the same
   values on disk, so the split adds no regression, but Levi/Claude
@@ -196,10 +199,11 @@ Split `outline.ts` into two steps. Keep the table format.
    0.495 max 7.30, B p99 0.264 max 17.61 — sub-pixel p99 on def,
    isolated decision-boundary maxima (frozen decisions vs form B's
    rebuilt junctions), as expected for 0.1h.
-3. **Timing** (`s3_bench.ts`, locked 19:15, median of 15 frames
-   after warm-up; structure median of 3): def frame **median 32.6
-   ms, p95 60.9 ms — target 3 ms missed by ~11x**; def structure
-   median 408 ms. All scenes (frame median/p95 ms, structure ms):
+3. **Timing** (`s3_bench.ts`, locked 19:15 and 19:28, median of 15
+   frames after warm-up; structure median of 3): def frame **median
+   30.1 ms, p95 60.1 ms — target 3 ms missed by ~10x** (32.6 ms
+   before the final micro-optimization pass); def structure median
+   397 ms. All scenes (frame median/p95 ms, structure ms):
    muse_hash 23.1/50.5, 508; muse_default_tw 37.6/65.9, 467; def
    32.6/60.9, 408; fat 13.4/16.9, 337; ring 5.4/7.3, 74;
    user 12.3/18.7, 209; g41_def_tw42 36.8/57.2, 318; g41_def_tw64
@@ -265,12 +269,15 @@ Split `outline.ts` into two steps. Keep the table format.
 
 ### Not done, and why
 
-- **3 ms def frame**: not reached (32.6 ms median). The remaining
+- **3 ms def frame**: not reached (30.1 ms median locked). The remaining
   cost is emitting the table itself (77k border points, 3053
   pieces, 1531 regions) plus 386 tracked corner growths per call in
-  JS. Within the remaining minutes, micro-optimizations bought
-  35 -> 25 ms (unlocked dev bench); nothing measured suggests a
-  safe 10x. Suggested next step for a future slice: emit pieces and
+  JS. A micro-optimization pass (zero-copy piece views over the
+  border buffers, final arrays written during point evaluation,
+  batched region range pushes, narrower corner foot scans - each
+  gated by the Done 1 check staying at ~1e-13) bought 32.6 -> 30.1
+  ms locked (23-25 ms on the unlocked dev bench); nothing measured
+  suggests a safe 10x from here. Suggested next step for a future slice: emit pieces and
   regions as views over shared typed buffers (draw.ts already reads
   indexable arrays), and reduce corner growth by solving V and q in
   one tracked pass.
@@ -283,7 +290,8 @@ Split `outline.ts` into two steps. Keep the table format.
 - Fri 2026-11-06 18:13 — session start (brief read, lock-free
   development).
 - 19:15 — perf lock first taken (locked bench/exact/page runs,
-  released between each).
-- ~19:35 — work stopped; this Handoff written; final commit and push
-  follow immediately (hashes in `git log` on origin/master).
+  released between each); 19:25 — first push (`1d366de6`,
+  `603f2d48` on origin/master, atop ledger commit `c5495332`).
+- ~19:40 — work stopped; this Handoff updated with the final
+  locked bench; final commit and push follow immediately.
 
