@@ -510,11 +510,11 @@ Next free ID: K1235.
 - **K1220** · Text forks: a disc with a round edge inside, steps where the arms' straight cuts meet it
   (22N, 655eb6a9): glyph arms under 0.15 world get no field record, so a host-axis disc draws the fork.
   S2 runs on master's fused junctions (`docs/design/K1220_s2_text_forks.md`); S1's WIP 25a5c501 is a lead; notes.
-  - owner: nobody since 2026-11-06 07:55: S2 merged (2f6353b1); S3 not briefed yet
-  - branch: mainline; last commit: `2f6353b1`
-  - evidence: .claude/probes/K1220/s2/ (census.mjs, shoot.mjs, sheets_all.ps1, absdiff_all.ps1, geom.mjs, crop.mjs); its sheets and diffs only in the kept worktree .claude/worktrees/agent-a568a7f4f11c55549/.claude/probes/K1220/s2/out/
-  - next: Levi looks at S2's sheets (the a's L and R in ai at xh 3, the a's L at xh 2: master's disc, notch and ledge are one piece now; sent 2026-11-06). S3: the i's root forks (10 of 30, in i, ai, ia, ii) keep their notch and ledge because taperHideJn hides their joints: un-hide the record's fans at a tapered i fork, or bridge the root's width step; then the 1 px jog at the a's right attachment in ia at xh 2, and the reveal's bare-ribbon moment before the gate opens (a at xh 3, 40%)
-  - brief: `docs/design/K1220_s2_text_forks.md`
+  - owner: muse session b4113946 (Paseo), coordinated by claude session c18e2f02-e64f-41ba-9af0-2dbd583358e2; started 2026-11-06 08:08, cap 2 h
+  - branch: detached worktree .claude/worktrees/muse-k1220-s3 (node_modules junctioned), pushes to master; last commit: `84c6cb92`
+  - evidence: .claude/probes/K1220/s3/ (its copies of S2's tools; outputs untracked); S2's sheets in the kept worktree .claude/worktrees/agent-a568a7f4f11c55549/.claude/probes/K1220/s2/out/
+  - next: S3 to its Done (the i forks draw the record like the a's; geom counts, confinement diffs, sheets); Claude views the sheets, removes the worktree (unlink node_modules first), shows Levi. Then the 1 px jog in ia at xh 2 and the reveal's bare-ribbon moment (a at xh 3, 40%). Levi still to look at S2's sheets (sent 2026-11-06)
+  - brief: `docs/design/K1220_s3_i_forks.md`
 
 ## Next, in order
 
