@@ -76,7 +76,7 @@ Split `outline.ts` into two steps. Keep the table format.
 
 - Muse Spark session (coordinating session's worktree
   `muse-k1240-s1`, detached at `3d29c94a`), started Fri 2026-11-06
-  18:13 PT, lock first taken 19:15 PT, work stopped ~19:35 PT.
+  18:13 PT, lock first taken 19:15 PT, work stopped 19:25 PT.
 - Files changed:
   `.claude/probes/K1240/proto/outline.ts` (the split: `structure()`,
   `frame()`, `buildOutlineS2`; S2's builder instrumented with point
