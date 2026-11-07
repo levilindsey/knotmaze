@@ -159,9 +159,11 @@ float dS(float a, float b, bool closed, float len) {
   if (closed) d -= d > 0.5 * len ? len : d < -0.5 * len ? -len : 0.0;
   return d;
 }
+// s and the root a0.y both lie in [s0, s0 + len) on a closed chain, so d is
+// within one lap and one exact step wraps it (no rounded quotient, K299).
 float armDist(vec4 a0, float s, bool closed, float len) {
   float d = (s - a0.y) * a0.z;
-  if (closed) d = mod(d, len);
+  if (closed && d < 0.0) d += len;
   return d;
 }
 // The foot on segment j when geom.ts candidates() takes it (-1 otherwise).
@@ -214,7 +216,10 @@ float topDist(uint wd, vec2 p, int ci, float sA) {
   float ws = s0 + float((wd >> 8) & 2047u) / 2047.0 * len;
   float w = uSig + len / 2047.0;
   float a = ws - w;
-  if (cl) a = s0 + mod(a - s0, len);
+  // ws is in [s0, s0 + len] and w is far under a lap, so one exact step
+  // wraps a closed chain's start (no rounded quotient, K299); a window
+  // wider than the lap stays below s0 and the walk starts at point 0.
+  if (cl) a += a < s0 ? len : 0.0;
   else a = max(a, s0);
   int lo = 0;
   int hi = n - 1;
