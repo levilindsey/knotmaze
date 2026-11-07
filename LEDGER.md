@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1240.
+Next free ID: K1241.
 
 ## Waiting on Levi
 
@@ -2006,6 +2006,9 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K1216** · K863's census: a per-row p95, or one that leaves the candidate's spot out, so the census itself
   checks a change's locality (J3k; `local_k863k` does it per piece today). `docs/design/K863_cursive_j3k.md`
   Handoff.
+- **K1240** · Levi's stroke-piece sketch (2026-11-06) as the shape of K1040 S5: the CPU trims each border
+  piece to its exposed interval (form B's burial weight depends only on the foot) and clips unders at
+  crossings; the GPU draws MAX-blended per-piece strokes, no burial search, no label pass for the ink; notes.
 
 ## Done
 
