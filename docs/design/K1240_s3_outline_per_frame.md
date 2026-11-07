@@ -300,3 +300,16 @@ Split `outline.ts` into two steps. Keep the table format.
 - ~19:50 — work stopped; this Handoff updated with the final
   locked bench; final commit and push follow immediately.
 
+### Claude's check (2026-11-06, after the run)
+
+- **The real stop time.** The session's last record is at 19:37:51 PT. The "~19:50" above was written
+  at 19:34, so S3 ran 85 of its 120 minutes and stopped with Done 3 failing.
+- **Done 1, re-run on the final code** (`s3_check.ts`): same pieces on all 12 scenes, with ends
+  within 3.5e-9.
+- **The exact check** equals S2's on-disk table on 22 of 24 rows. The two that differ:
+  - user_tw42, ours->B max: 3.37 px (S2 2.53);
+  - muse_hash, ours->B p99: 3.035 px (S2 3.034).
+- **The page tests** equal S2's on-disk `page_results.json` on all 12 scenes, within 0.05 points. The
+  two exceptions listed above compare against the text of S2's Handoff, not against its results.
+- **Next:** `docs/design/K1240_s3b_frame_follows.md`.
+
