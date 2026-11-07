@@ -517,15 +517,6 @@ Next free ID: K1239.
   - evidence: .claude/probes/K1220/s4/ (its copies of S3's tools; outputs untracked); S3's sheets in the main checkout's .claude/probes/K1220/s3/out/sheets/; S3 merged at e8636a3a (fused outline, no notch or ledge; new tone seams and an xh 2 bump)
   - next: S4 to its Done (each fan wears the paint beneath it, no bump, S3's outline kept); Claude views its sheets against window 84, removes the worktree (unlink node_modules first), shows Levi. Then the 1 px jog in ia at xh 2 and the reveal's bare-ribbon moment (a at xh 3, 40%)
   - brief: `docs/design/K1220_s4_i_paint.md`
-- **K1228** · Cross ji 51's spur: chain 61's ribbon leaves 2-4 px of background inside its half-width on the
-  inside of a 40° left turn (radius 19-21 px, under its 23.4 px half-width), in every build; likely
-  `ribbon_mesh.ts`'s concave-side clamp (untested), and a fix touches every ribbon (K1218 S5's handoff,
-  `docs/design/K1218_s5_section_edges.md`).
-  - owner: muse session e0022df5 (Paseo), coordinated by claude session c18e2f02-e64f-41ba-9af0-2dbd583358e2; started 2026-11-06 08:49, cap 2 h (~10:49)
-  - branch: detached worktree `.claude/worktrees/muse-k1228` (node_modules junctioned), pushes to master; last commit: `787e24b5`
-  - evidence: `.claude/probes/K1228/` (its copies of K1218 S5's tools; out/ untracked)
-  - next: the run tests the concave clamp as the cause, fixes the inner side, pushes when Done holds; Claude views its sheets
-  - brief: `docs/design/K1228_inner_turns.md`
 
 ## Next, in order
 
@@ -2008,6 +1999,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1228** · Cross ji 51's inner-turn notch: a run of folding samples collapses its inner vertices onto the legs' inner-offset crossing, so R < h turns cover the half-width (0 background px, 0 strip flips on cross, loop and x4; pinned by test/render/ribbon_inner.test.ts). Done in ffbd64f3 (2026-11-06).
 - **K1225** · Cursive word-end tails: s and p as J3l or J3lc, and the new b, v, w, o and f tails (`docs/asks/K1225.md`; K863 J3l, 6c4ae88b). Dropped: Levi answered 2026-11-06: J3l for s and p; b, v and w should turn out of their cusp about ESE and swoop up (at a word's end and into high-entry letters; into low-entry ones the sharp cusp stays, the swoop starts later); o's tail hugs the o about 10 deg further; f's tail reaches the baseline and leaves along its pre-cusp stroke, to fuse into a spur. K863 J3m builds it (docs/design/K863_cursive_j3m.md) (2026-11-06).
 - **K1218** · Every junction one fused unit (Levi, window 84): S2 fused the gold, S3 smoothed the gap edges, S4 the gold path's edge, and S5-S7's swept arcs (a web paints each arm at its own ribbon's arc) took out the lines, creases and staircases inside the junctions; K1227-K1231 hold what is left. Done in e4075024 (2026-11-06).
 - **K1213** · Cursive v6.8: word-final s and p run on in a flat tongue, the i and j dots are dashes, the q tail steps at 5x; J3k's S2, P1, D2 and Q1 follow the font, each local. Dropped: Levi answered 2026-11-05: "all word-end letters should have a tail, but both the s and p tails are currently bad. Tails should match the curvature they pass by and swoop up more. D2 for [the dots] is good. ... Q1 is good." K863 J3l builds it (docs/design/K863_cursive_j3l.md) (2026-11-05).
