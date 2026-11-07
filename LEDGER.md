@@ -522,11 +522,11 @@ Next free ID: K1249.
 - **K1240** · One outline for both looks and every junction consumer (Levi's sketch, 2026-11-06): offset-polyline borders,
   cuts and corner arcs in closed form from each frame; the border look strokes it, the filled look fills it. S1: a clean
   prototype beside the app, checked against form B and timed (Levi: "without all the tech debt"); notes.
-  - owner: muse session 01a1b46f-f0f3-7b43-802e-9394489eb95f (Paseo 0c2fbd77), coordinated by claude session 09c7a672-a414-402a-97da-b3176839a2e5; S3c started 2026-11-06 21:16, cap 2 h (~23:17)
-  - branch: detached worktree .claude/worktrees/muse-k1240-s1 (reused since S1, node_modules junctioned), pushes to master; last commit: `29d0fa7f`
-  - evidence: .claude/probes/K1240/proto/ (tracked builder, structure()/frame() since S3, tests, checks incl. s3_check.ts, s3_exact.ts, s3_bench.ts, s2_sheets.ts, and S3b's s3b_exact.ts, s3b_bench.ts, s3b_move.ts, cmp_exact/cmp_move/cmp_page.mjs); untracked: .claude/probes/K1240/s1_out/ (S1), .claude/probes/K1240/s2_out/ (S2: exact_*.json, exact_summary.md, bench.json, page_results.json, sheets/, Claude's overlays of S2 on form B and overlay.py), .claude/probes/K1240/s3_out/ (S3: s3_check*.json, s3_bench.json, exact_summary.md, move_exact_summary.md, page_results.json), .claude/probes/K1240/s3b_out/ (S3b's outputs; claude_rerun/ holds Claude's re-run on the final code: 0.5h fresh/move for def, ring, fat, s3b_move.json, the quiet-machine bench); S3c writes .claude/probes/K1240/out/s3c/ in the worktree
-  - next: S3c to its Done: structure() decides once which pieces exist, which are exposed, each corner's arms and sharp or round; frame() solves only positions and degenerates continuously (zero-length piece, zero radius). Still scenes no worse than S3, moving frames (0.1h on all 12, 0.5h on def/ring/fat) no worse than a fresh build, a rigid motion exact, per-scene counts of decisions a fresh structure() makes differently, def frame median <= 3 ms and p95 <= 6 ms. Claude checks its numbers against the primary records. S3b (6f39c517..ed8adb14; Claude's check in its brief): still 24/24, page tests equal S3's, rigid 4.8e-9, corners and cuts equal a fresh build; but it re-decides exposure and corner ok every frame, moved 0.1h fails 19 of 24 rows (ring at 0.5h p99 1.177 px vs 0.005), def frame 31-46 ms median on a quiet machine (S3: 26.9), and it stopped 77 of 120 min in. Then S4: K1245's junction tails (L=0 arms, junction clusters). If S3c is cheap, Levi decides whether the seam lanes (K1040, K1220 forks, K1211 edges) start no new stages and consumers move onto the outline (K1242 notes); then continuity across frames on recorded drags, plucks and flow, and the Pixel p95
-  - brief: `docs/design/K1240_s3c_decide_once.md`
+  - owner: muse session 01a1b4c4-fae7-7a51-92a4-5306e183c220 (Paseo 06881185), coordinated by claude session 09c7a672-a414-402a-97da-b3176839a2e5; S3d started 2026-11-06 22:49, cap 2 h (~00:49)
+  - branch: detached worktree .claude/worktrees/muse-k1240-s1 (reused since S1, node_modules junctioned), pushes to master; last commit: `572ad087`
+  - evidence: .claude/probes/K1240/proto/ (tracked builder, structure()/frame() since S3, tests, checks incl. s3_check.ts, s3_exact.ts, s3_bench.ts, s2_sheets.ts, S3b's s3b_exact.ts, s3b_bench.ts, s3b_move.ts, cmp_exact/cmp_move/cmp_page.mjs, and S3c's s3c_exact.ts, s3c_move.ts, s3c_decisions.ts, s3c_bench.ts, cmp_s3c.mjs); untracked: .claude/probes/K1240/s1_out/ (S1), .claude/probes/K1240/s2_out/ (S2: exact_*.json, exact_summary.md, bench.json, page_results.json, sheets/, Claude's overlays of S2 on form B and overlay.py), .claude/probes/K1240/s3_out/ (S3: s3_check*.json, s3_bench.json, exact_summary.md, move_exact_summary.md, page_results.json), .claude/probes/K1240/s3b_out/ (S3b's outputs; claude_rerun/ holds Claude's re-run on the final code: 0.5h fresh/move for def, ring, fat, s3b_move.json, the quiet-machine bench), .claude/probes/K1240/s3c_out/ (S3c's 53 outputs; claude_rerun/ holds Claude's re-run on fca93b74: two locked benches, move, synthetic and re-run logs, decisions.json); S3d writes .claude/probes/K1240/out/s3d/ in the worktree
+  - next: S3d to its Done: restore 73558807's decide-once frame() (drop the per-frame re-tests of 08390186 and fca93b74), record its whole output as the reference, then make frame() cheap with every piece, point and radius equal to it within 1e-6: still 24/24, synthetic tests pass, rigid exact, def frame median <= 3 ms and p95 <= 6 ms over >= 100 frames under the lock (run twice), page tests no worse than S3; moved checks reported, not gated. Claude checks its numbers against the primary records. S3c (1beb956a..7d992764; Claude's check in its brief): still 24/24, page tests within 0.1 points of S3's, rigid 4.8e-9; but 08390186 put per-frame re-decisions back against the Goal, moved 0.1h fails 12 of 24 rows (0.5h 6 of 6), def frame 31 ms median / 76-79 ms p95 under the lock, and it stopped 76 of 120 min in. Then the moving-frame stage (K1248: structure() records every corner and covered piece so frame() degenerates continuously), then S4: K1245's junction tails (L=0 arms, junction clusters). If the outline is cheap, Levi decides whether the seam lanes (K1040, K1220 forks, K1211 edges) start no new stages and consumers move onto the outline (K1242 notes); then continuity across frames on recorded drags, plucks and flow, and the Pixel p95
+  - brief: `docs/design/K1240_s3d_cheap_frame.md`
   - env: from the worktree, vite on a copy of .claude/probes/K1040/vite.private-cache.config.ts, ports 5980-5989
 
 ## Next, in order
@@ -1720,33 +1720,12 @@ Every other item below waits on the trigger it names.
   performance (def median 396 ms vs 3 ms target); per-spot app sheets beside fbb/today look need a stable
   world-point camera; border-band outside misses on close parallel threads; eye depth-tie path exercised only
   by construction.
-- **K1247** · K1240 frame cost (S3b Done 3, carried through S3c): target ≤3 ms median / ≤6 ms p95 on def.
-  S3c (decide-once, 1beb956a; frame re-evaluation, 08390186) removed per-frame exposure classification
-  and pruned corner foot searches, but def still reads frame med 42.5-44.2 ms / p95 81-118 ms locked
-  on a loaded machine (first phase read 26.4-27.2 ms locked / 17.8 ms unlocked; corners 18.3-21.6 ms
-  and pieces 7.9-10.3 ms now dominate — the 32-node gate integral plus the per-frame stretch/cap
-  candidate scans; final locked bench def med 37.5-37.7 ms / p95 87-111 ms after fca93b74's
-  depth-first verdicts). Needs the algorithmic cut: incremental gate evaluation across nodes or a spatial
-  margin index, gated on still exact staying 24/24. Evidence: .claude/probes/K1240/out/s3c/bench_run{1,2}.json;
-  Handoff in docs/design/K1240_s3c_decide_once.md.
-- **K1248** · K1240 moved-frame residual (S3b Done 2, carried through S3c): decide-once frame(structure(S), S')
-  vs fresh at 0.1h now fails 12/24 rows (was 15/24 after S3c's first phase, 19/24 under S3b);
-  frame() re-tests recorded covering candidates per frame (buried stretches emit their longest
-  uncovered sub-range, run ends trim while covered, corner span/wedge feasibility is re-checked,
-  cap exposure is reclassified), but tolerances are fresh+1 on low-count scenes and still fail
-  (def A 13->21, B 7->14; ring A 53->66; g41_user_tw64 A 189->211 with p99 delta 0.090). At 0.5h
-  all 6 rows fail (def A 41->120, B 34->163). Decision differences are measured per scene in
-  out/s3c/decisions.json (def at 0.1h: 161 exposure segments of ~77k, 5 corner ok flips, 12/182
-  cap runs; g41_user_tw64: 34 ok flips + 110 pair changes; ring: 25/51 pair changes). The pair
-  changes are enumeration-order permutations, NOT adjacency changes: a tested frame-side
-  re-pairing (solve frame-adjacent pairs, suppress non-adjacent structure corners) fired 0-1
-  extra arcs at 0.1h on def/ring/g41_user_tw64/muse_hash and moved no row — reverted. Remaining
-  cost concentrates in exposure flips where structure recorded no covering candidate and in
-  borders whose point count changes (def: only 119/184 borders stable at 0.1h).
-  Ideas: record degenerate (zero-length) pieces for fully covered caps/runs so a flip can expand
-  from a solved edge, or accept fresh-structure rebuilds when the decision-difference count is
-  high. Evidence: .claude/probes/K1240/out/s3c/move*_exact_*.json
-  vs fresh*_exact_*.json; Handoff in docs/design/K1240_s3c_decide_once.md.
+- **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3c's final code takes 31 / 76-79 ms under
+  the lock (corners 16-17 ms, pieces 9.4, setup 4, offsets 3.6); S3d takes it on from the decide-once frame
+  (`docs/design/K1240_s3d_cheap_frame.md`; evidence `.claude/probes/K1240/s3c_out/`; notes).
+- **K1248** · K1240 moving frames: frame(structure(S), S') vs a fresh build fails 12/24 rows at 0.1h on S3c's final
+  code (15/24 decide-once) and 6/6 at 0.5h (def B over2 34->163). The stage after S3d: structure() records every
+  corner and covered piece so frame() degenerates continuously (`docs/design/K1240_s3c_decide_once.md`; notes).
 
 ## Approved, to schedule (2026-10-11)
 
