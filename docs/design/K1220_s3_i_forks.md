@@ -91,3 +91,83 @@ Append a Handoff to this brief, in the fix's push or one after it:
 - your last SHA.
 
 Commit messages carry the record.
+
+## Handoff (K1220 S3, 2026-11-06)
+
+**What I built** (all in `src/render/ribbon/joinery.ts`, each marked `K1220 S3`):
+
+1. A glyph fork where a tapered root ends (the i's fork) now draws its junction record
+   like the a's forks: the seal disc, the wedges with K830's corners, and S2's glyph
+   bridge on the wide sides. The tapered-root hide (`taperJn`) now applies only where
+   no arm is a glyph chain (`glyphOf`), so maze and non-glyph joints keep the K580
+   hide exactly. `ribbon_renderer.ts` and the hide's build are unchanged.
+2. The root arm's strip row is written from the body chain at the joint, scaled to
+   the O foot's span. The root ribbon wears the body strokes' paint (K620), not the
+   spur chain's section; with the spur's own row the fans over the root read as a
+   spike of the wrong section.
+3. A narrow wedge at such a fork is flank-capped at 1.25 fh and ends on the straight
+   segment between its flank tips, not at its corner. Past 1.25 fh its fan repaints
+   the root ribbon, whose paint lags the fans' by its foot arc (K620).
+
+No glyph centreline, width or join moves. No pin moved: `npm test` is green after
+the rebase onto origin/master (217 files, 2879 tests passed, 9 skipped).
+
+**Geom (Done 2).** Tool: `.claude/probes/K1220/s3/batch_geom.mjs` over `geom.mjs`,
+the 10 i forks (i, ai ji2, ia ji0, ii ji0+ji1, at xh 3 and xh 2), master = the
+brief commit's export on 5980, mine on 5981, under the perf lock, `phw=0`, `fw=0`.
+
+| | own-record fans at the 10 i forks |
+|---|---|
+| master | none at 10 of 10 (at ai xh2 one wedge of the neighbouring a fork's record, rb 77, falls inside the 4 fh box; the i fork's own rb 154 draws nothing) |
+| mine | the seal disc, 4 wedges and 2 bridges (both wide sides) at 10 of 10 |
+
+The spur's cap cover (the stadium) is drawn by nothing on either build: no fused
+tip ends at the i's joint (the spur chain starts at the root's R, which gets no cap
+disc, and ends free at the stem tip), so no cap or stadium fan exists there. On
+master the joint is the body and root ribbons alone; on mine it is those plus the
+fans above. The `nofans` frame is identical on the two builds at every i fork: the
+change is fans only.
+
+**Whole-frame diffs at rest (Done 3)**, `diff_all.ps1` (radius 5 fh, per-fork
+attribution; i forks are the meta's taper-hidden glyph forks):
+
+| stand | changed px | within 5 fh of an i fork | near other text forks | beyond |
+|---|---|---|---|---|
+| a xh3 / xh2 | 0 / 0 | – | 0 | 0 |
+| aa xh3 / xh2 | 7 / 0 | – | 7 / 0 | 0 |
+| ai xh3 / xh2 | 16167 / 15400 | all | 0 | 0 |
+| i xh3 / xh2 | 18667 / 17938 | all | 0 | 0 |
+| ia xh3 / xh2 | 17712 / 12787 | all | 0 | 0 |
+| ii xh3 / xh2 | 34594 / 21041 | all | 0 | 0 |
+| maze x4, cross, loop | 0 | – | – | 0 |
+
+The 7 px on aa xh3 are all at most 8 of 255 levels, in one box (1358,1025)–
+(1385,1084) beside an a fork whose code path is unchanged; the same stand measured
+0 px on the previous build of the fix. I read them as load jitter, not an effect.
+
+**Sheets (Done 4)**, in `.claude/probes/K1220/s3/out/sheets/`: for each i fork,
+`<stand>_ji<n>_A.png` (rest, nofans, its pluck, flow at 2.5 and 4.1) and `_B.png`
+(the trace reveal at 20/40/60/80%), master over mine at zoom 4. Show first:
+`ai_xh3_ji2_A.png` (master's pointed notch and right shelf against the fused
+curve), then `i_xh3_ji0_A.png`. On mine the stem's straight cut, the left notch
+and the right ledge are gone at rest, in the pluck and in both flow frames at
+9 of the 10 forks; the reveal holds the fans behind the gate (20% empty, 40%
+bare ribbons, fused from 60%), as the a's forks behave.
+
+**Flaws left.**
+
+- ia at xh 2, the i fork: a dark arc segment and a small dark triangle stay on the
+  stem above the fused joint. They are the emergent crossing gap where the body's
+  dome passes over the stem (past the fans' rims, about 1.7 fh along the tip arm);
+  the fans cover the arc's lower part and leave its top. Covering it means fan rims
+  reaching the tip's centreline there, or the gap machinery treating this
+  own-junction crossing as a joint pair (crossing_gaps, out of this stage's files).
+- At xh 2 the capped narrow fans can read as a pale soft diamond in the cluster
+  below the joint (ii xh2 ji0): inside 1.25 fh the fans wear the body gradient,
+  the root beneath wears its foot-lagged paint. The silhouette is fused; only the
+  tone differs.
+- The reveal's two known looks (bare ribbons before the gate, the fans' settled
+  paint under the trace's tint) are unchanged and out of scope (K1232). Nothing
+  else out of scope was seen; nofans identity is the control.
+
+**Last SHA.** Fix: e8636a3a (after the rebase; this handoff follows it).
