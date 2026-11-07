@@ -307,13 +307,13 @@ Next free ID: K1241.
   - brief: `docs/design/K1211_s6_one_glow.md`
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
-  float64 reference. Plan S1-S8, about 15 h (F7); supersedes K868 and K992. S1 to S1f merged (S1f: fb348a78); S3 (K1097) merged short of its gate; S1g merged (ca273d04); S3b (K1097) merged (587b7e80, 2026-11-02): 0 DEFECT, the Pixel's 2 ms missed 5-20x. S4a merged (f294dc08, 2026-11-06) short of check #12: the band's tube edges, caps and foot on the GPU, unused by the app; S4a2 merged (365d2244): within 1/32 px away from corners except D4's tie and the cap mix. S4b merged (1ef55958): the corners on the GPU (check #12's near-corner worst 0.19-3.28 px, 9.3-13.6 without) and the fbb flag, off by default (flag on: ~3 fps while moving, one ink colour, K1239's shapes). S4c merged (f5eb875c): D4's ties, the outer edge and the cap mix's shares (check #12 counts down on 11 of 12 scenes); what stays over 1/32 px is the multi-piece cap mix.
-  - owner: muse session 01a1b300-e39a-7192-ac67-65870e35335c (Paseo a4ad219e), coordinated by claude session c18e2f02-e64f-41ba-9af0-2dbd583358e2; started 2026-11-06 14:36, cap 2 h (~16:36)
-  - branch: detached worktree .claude/worktrees/muse-k1040-s4d (node_modules junctioned), pushes to master; S4b's worktree .claude/worktrees/agent-ac5c423693cf9dec3 kept; last commit: `77347245`
-  - evidence: src/render/field/ (form_b.ts, band_b*.ts, label_b*.ts, field_b_app.ts); tracked tools in .claude/probes/K1040/s4c/ and .claude/probes/K1239/; K1239's out/ in the main checkout's .claude/probes/K1239/out/ (spot_oldonly.png, view_def_overlay.png); S4c's out/ in .claude/probes/K1040/s4c/out/; the 12 scenes in .claude/probes/K868/scenes/
-  - next: S4d to its Done (the stroke the field drops at spot_oldonly, the free-end check on the GPU path, the look sheets); Claude views its sheets against K868's look, removes the worktree, shows Levi. Then the pop census and the fades in motion, then the multi-piece cap mix. Claude runs S4b's check #13 batch on the Pixel when Levi leaves it unlocked on its charger
+  float64 reference. Plan S1-S8, about 15 h (F7); supersedes K868 and K992. S1 to S1f merged (S1f: fb348a78); S3 (K1097) merged short of its gate; S1g merged (ca273d04); S3b (K1097) merged (587b7e80, 2026-11-02): 0 DEFECT, the Pixel's 2 ms missed 5-20x. S4a merged (f294dc08, 2026-11-06) short of check #12: the band's tube edges, caps and foot on the GPU, unused by the app; S4a2 merged (365d2244): within 1/32 px away from corners except D4's tie and the cap mix. S4b merged (1ef55958): the corners on the GPU (check #12's near-corner worst 0.19-3.28 px, 9.3-13.6 without) and the fbb flag, off by default (flag on: ~3 fps while moving, one ink colour, K1239's shapes). S4c merged (f5eb875c): D4's ties, the outer edge and the cap mix's shares (check #12 counts down on 11 of 12 scenes); what stays over 1/32 px is the multi-piece cap mix. S4d (1813fc1d): no src change; the stroke the field drops at spot_oldonly is the old renderer's casing line inside the over tube (interior ink by K868's check 1), and the GPU path's free ends match form B's but for named spots (120 vs 116).
+  - owner: nobody since 2026-11-06 15:55: S4d done (Muse, Paseo a4ad219e); the next stage waits on K1240 S1's verdict, since one outline for both looks may replace form B's GPU field
+  - branch: mainline; S4b's worktree .claude/worktrees/agent-ac5c423693cf9dec3 kept; last commit: `1813fc1d`
+  - evidence: src/render/field/ (form_b.ts, band_b*.ts, label_b*.ts, field_b_app.ts); tracked tools in .claude/probes/K1040/s4c/, .claude/probes/K1040/s4d/ and .claude/probes/K1239/; S4d's out/ in the main checkout's .claude/probes/K1040/s4d/out/ (sheets: spot_oldonly_z3.png, j139_ball_vapex.png, per-scene _junctions, _worst, _crops_fe); the 12 scenes in .claude/probes/K868/scenes/
+  - next: When K1240 S1 reports: if one outline replaces form B's field, fold K1040's open checks (the pop census, the fades in motion, check #13) into K1240's S2 and close K1040; if not, K1040 S5 takes the pop census and the fades in motion, then the multi-piece cap mix. Claude runs S4b's check #13 batch on the Pixel when Levi leaves it unlocked on its charger
   - brief: `docs/design/K1040_s4d_still.md`
-  - env: from the worktree, `npx vite --config .claude/probes/K1040/vite.private-cache.config.ts --port 5401 --strictPort --host 127.0.0.1`
+  - env: from the main checkout, npx vite --config .claude/probes/K1040/vite.private-cache.config.ts --port 5401 --strictPort --host 127.0.0.1
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
   Levi to edit instead of drawing all 26 (Levi, 2026-10-26). Muse's prototype parked at abc135e7.
@@ -744,7 +744,9 @@ Every other item below waits on the trigger it names.
   needs a Google OAuth client and the Worker + D1 on the Cloudflare account, from Levi.
 - **K1176** · Remove the merged, clean agent worktrees (50 on 11-03; 3 hold closed items' WIP, K372, K578 and
   K441's old briefs: ask Levi) after K1058, since a removal can empty node_modules. First copy `k868-s3a`'s
-  `.claude/probes/S3a/` scripts to main (its seq13 recordings already are).
+  `.claude/probes/S3a/` scripts to main (its seq13 recordings already are). Also delete the empty dirs that removed Muse
+  worktrees leave while Paseo holds them as its cwd (muse-k1220-s3, -k1040-s4a2, -k1228, -k1220-s4, -k1040-s4c, -k1239,
+  -k1040-s4d): after a Paseo restart with nothing running.
 - **K1180** · Form B: let a round's feet run past an arm's root onto the neighbouring arm, so no null band is
   left there (row 15's class: j124, r 1.967h, 0.274h after K1163's softer gate, ab7cad9a). K1179's spike ended
   with no rebuild, so this goes ahead on form B (review section 4).
