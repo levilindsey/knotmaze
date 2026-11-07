@@ -42,10 +42,10 @@ async function shoot(fam, on) {
   // ARM_A / ARM_B: each arm's own keys (default "" and "&fbb=1"; `&lbi=1` is
   // K868's label app, master's other GPU ink).
   const keys = on && !process.env.CONTROL ? (process.env.ARM_B ?? "&fbb=1") : (process.env.ARM_A ?? "");
-  const url = `${base}/?${SEEDS[fam]}&tlk=border${keys}&am=instant&snd=none&phy=0&fw=0${process.env.EXTRA ?? ""}`;
+  const url = `${base}/?${SEEDS[fam]}&tlk=border${keys}&am=instant&snd=none${process.env.PHY ?? "&phy=0&fw=0"}${process.env.EXTRA ?? ""}`;
   await page.goto(url, { waitUntil: "load" });
   await page.waitForFunction(() => window.__knotPerf?.().state && window.__knotPerf().state !== "loading", { timeout: 60000 });
-  await sleep(1500);
+  await sleep(Number(process.env.SETTLE1 ?? 1500));
   await page.evaluate(() => {
     const r = window.__knotRenderer?.();
     if (r) { r.advanceClocks = () => {}; r.paintClock = 100; r.pulseBorn = 0; }
@@ -55,7 +55,7 @@ async function shoot(fam, on) {
   await page.keyboard.down("Control");
   for (let i = 0; i < 2; i++) { await page.mouse.wheel({ deltaY: -120 }); await sleep(60); }
   await page.keyboard.up("Control");
-  await sleep(3500);
+  await sleep(Number(process.env.SETTLE2 ?? 3500));
   const info = await page.evaluate(async () => {
     const divs = [...document.querySelectorAll("div")].map((d) => d.textContent ?? "");
     const fb = window.__knotFieldB;

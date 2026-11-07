@@ -105,52 +105,59 @@ Muse run 01a1b300 (coordinator: Claude) ran 14:35-15:21 PST in
 K1239, plus a `freeends` mode in `s4a.mjs`/`page.ts`, `exits.ts` from
 K934, and the `scan*.ts` reference scans). Dev server (private-cache
 config, port 5942; 5941 was already held by another run's server) and
-browsers are stopped. **No `src/` change: Done 1 does not hold, so per
-Done 5 this push carries only the tools and this Handoff.** `npm test`
+browsers are stopped. **No `src/` change: Done 1's stroke is not
+K868's border (see below), so there is no fix to push; this push
+carries only the tools and this Handoff, per Done 5.** `npm test`
 green at the base and after the rebase: 220 files passed / 2 skipped,
 2887 tests passed / 9 skipped. The `fbb` flag stays off by default.
 
-### Done 1 - the dropped stroke: not reproduced on current master
+### Done 1 - the dropped stroke: found, and it is not a border
 
-Claude's `spot_oldonly.png` could not be located in any shot set I can
-build: template matches (grey, band-mask and geometry-tube, at dpr 1.5
-and dpr 1, native and half scale) against K1239's `app_before`,
-`app_magenta` and `app_magenta_lbi` def shots all score <= 0.41, and
-the old-only band components of those shots, of my own `app_ab` shots
-(def/muse/user, current master 77347245, `phy=0&fw=0&phw=0`), of LBI,
-and of settled-physics screenshots are all edge slivers of the two
-known K1239 zones (junction flanks, crossing cuts) - no whole dropped
-segment anywhere. The spot's shots were K1239's build `bf8331e7` at a
-state I could not reconstruct (its panels' band width ~90 px matches
-neither dpr 1.5 (139 px) nor the s4a page).
+Pixel provenance (found on the continuation): `spot_oldonly.png` is
+bit-identical to `ab_view.mjs` on K1239's `app_before` def shots -
+equally to this run's own `app_ab` shots of current master - at window
+device (1020, 1000), 200x200, z=3 (mean abs diff 0;
+`out/spot_repro.png`). The window is world (17.33-18.07, 19.22-19.97):
+**chain 61 alone, s ~140.2-141.6, between crossing 72 (chain 61 over
+chain 6, at (17.09, 19.81)) and junction j61 (17.82, 18.71)**, in
+j61's arm cap ramp (arm 189, cap at s 140.78, `diag_bur.ts`).
 
-What I could test, I tested:
+What the stroke is: old ink draws, inside chain 61's tube on its SE
+side, a second dark line at perpendicular distance ~0.11 world from
+the centreline (halfway to the edge), running s ~140.5-141.4, with a
+paper slit between it and the SE edge. The field draws only the SE
+edge band (perp 0.161-0.26), so the overlay shows old's inner line
+red. It is the old renderer's crossing-slot casing line inside the
+over tube (crossing 72's slot system), not a thread outline: no scene
+centreline comes within 0.37 world of it except chain 61's own at
+0.11, and a tube outline at that offset would need a half-width-0.11
+thread on chain 61's centreline or a thread centred 0.37 away -
+neither exists. Form B's raster over the exact window
+(`out/spot_ref.txt`, sheet `out/sheets/spot_formb.png`) and the GPU
+agree with the field panel; `spot_eval.ts` shows both of chain 61's
+band centres inked 1.0 through the whole strand (check 16's window
+for crossing 72 ends at s 141.05; past it j61's corner terms ink the
+outline, goal 3).
 
-- In form B, per-foot burial (D10) cannot bury a crossing pass's edge:
-  burial only counts pieces of the same surface, and on all 12 scenes
-  **no crossing has both passes in one group** (`scan3.ts`: 0 of 353 on
-  def, 0 on every other scene). Burial bites only inside a junction
-  union, where goal 3 wants it.
-- A whole-chain scan of the float64 reference (`scan4.ts`: band centre
-  inked >= 0.5 wherever foot and centre lie outside every other tube,
-  own chain's far passes included) finds **no missing run >= 0.5 world
-  on def**; the longest anywhere on def are 12 runs of 0.26-0.36 world,
-  all at junction mouths/corners. Run it on the other scenes before
-  trusting it there.
-- At the app_ab stand on current master, the one shallow-crossing
-  complex in the zoom (chains 6/61, crossings 71/72, with junction j61
-  and chain 24's fork between them) draws both borders of both passes
-  through the eye and the fork: sheet `out/sheets/done1_eye_fork.png`
-  (old | field | overlay). The overlay's red inside the eye is the old
-  look's filled tube where the field draws only edges - the K1239
-  correction's point, not a dropped stroke.
+Why the field drops it: form B inks only within W of the top group's
+exposed outline (K868 section 3.2); a line 0.15 world inside the tube
+is interior ink, which check 1 counts as a defect, and goal 3 wants
+nothing inside a junction's outline. **K868 does not require this
+stroke, so there is nothing to fix** - the brief's D10 lead is also
+falsified (burial counts only same-surface pieces, and on all 12
+scenes no crossing has both passes in one group, `scan3.ts`). Sheet:
+`out/sheets/spot_oldonly_z3.png` (old | master's field | overlay;
+mine is the same field, no src change), at the crop's own z=3.
 
-So the lead is falsified for the reference as built, and the spot is
-either the pre-S4c build, the `lbi` label app (whose old-only
-components are the same slivers as fbb's on the same shots), or a
-settled geometry. Next step for whoever picks this up: re-shoot
-Claude's exact spot state first (the crop's pixel provenance), then
-`diag_bur.ts`/`diag_at.ts` at that point. **Done 1 not held; no fix.**
+Every other spot with that cause: the cause (old's slot/casing lines
+inside over tubes, and its junction fan flanks) is exactly K1239's
+two old-only zones. On the app families their components are the
+edge slivers listed by `components2`-style counts in K1239's
+Handoff - all named there, none a field defect. On the 12 scenes
+the same class in field terms is check 1's interior ink and the
+census spots, whose GPU-vs-reference statuses are S4c's table
+(Done 3 below); `scan4.ts` finds no missing reference border
+>= 0.5 world on def (12 runs of 0.26-0.36 at junction mouths).
 
 ### Done 2 - free ends on the GPU frames (new `s4a.mjs freeends`)
 
@@ -201,9 +208,12 @@ S4c's (no src change here at all).
 
 ### Done 4 - sheets (`out/sheets/`, old border look | field | overlay)
 
-- `done1_eye_fork.png` - Done 1's stand-in spot: the chains 6/61 eye
-  (crossings 71/72) with j61 and chain 24's fork (also the K1045
-  close-junction eye: j60/j61 1.35 apart, form B's dot in the wedge).
+- `spot_oldonly_z3.png` - Done 1's spot, reproduced exactly
+  (old | master's field | overlay, z=3), with `spot_formb.png`
+  (form B's raster of the same window) beside it in the folder.
+- `done1_eye_fork.png` - the chains 6/61 eye (crossings 71/72) with
+  j61 and chain 24's fork (the K1045 close-junction eye: j60/j61
+  1.35 apart, form B's dot in the wedge).
 - `bend_j61.png` - a through-pass bend (K1049): chain 61 bending
   through j61, chain 24 forking off.
 - `j139_ball_vapex.png` - muse_hash j139 (17.18, 17.15): the K1002
@@ -215,7 +225,8 @@ S4c's (no src change here at all).
 The named muse_hash eye (26.675, 1.096) and def eye (30.555, 17.488)
 sit outside the app_ab zoom's view, so they are in the check-run
 junction sheets instead of an app sheet. **Show first:**
-`done1_eye_fork.png` (the eye + fork complex, old beside field) and
+`spot_oldonly_z3.png` (Done 1's spot: the field is right, the old
+line is a casing line inside the tube) and
 `j139_ball_vapex.png` (the ball/apex corner).
 
 ### Out of scope, seen and not fixed
