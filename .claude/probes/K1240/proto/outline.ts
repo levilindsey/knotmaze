@@ -1988,6 +1988,10 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
             const d = (ptsB[q].x - am.x) * (ptsB[q].x - am.x) + (ptsB[q].y - am.y) * (ptsB[q].y - am.y);
             if (d < bd) { bd = d; p = { x: ptsB[q].x, y: ptsB[q].y }; }
           }
+          // Diagram-fixed side first (side +1, borders[pi][0]): the
+          // collapse choice cannot flip between the chain's two
+          // borders when the scene rotates.
+          if (bd < Infinity) break;
         }
         pts = [p.x, p.y]; cpts = [ci.cx, ci.cy];
       } else {
