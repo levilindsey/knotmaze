@@ -148,3 +148,18 @@ ports 5980/5981; `paintmask.mjs`/`violmap.mjs`/`samplepx.mjs` and
 are not committed). Time was up (2 h from 09:38 PT) with Done 1/2/4
 open, so this lands as WIP on purpose: the strip/width work is the
 substrate the sector fix needs, and it changes no other fork.
+
+Addendum (same run, after the push): the deploy of 291780c5
+completed with success (run 42275775141). One narrowing attempt was
+made and reverted before landing: a coverage pass in `junctionBase`
+(flagged records only: the topmost arm whose angular footprint holds
+the pixel paints alone, later chain winning) plus twin emission of
+the C-side wide fans. Measured at rest it helped ia_xh3 (8332→4799)
+and ii_xh2 (8999→4567, 4776→4127) but hurt ai_xh3 (5030→6931),
+ai_xh2 (6294→9104) and ia_xh2 (6396→14540) — the angular footprint
+of a curved arm is not its ribbon, so the assignment trades one
+wrong arm for another on the curved body arms. It was reverted in
+full; the tree is exactly 291780c5 again. The next attempt should
+assign by distance to the arms' centrelines (the profiles' swept
+points), not by angle from J, or should keep fans off the root's
+footprint geometrically.
