@@ -225,9 +225,10 @@ describe("K320 stage 1: char budgets", () => {
     // K1220 S4 (2026-11-06): the field blend reads each arm's width
     // profile (two fetches, two half-widths) so a wide arm (a tapered
     // root, a flared stem) keeps its own paint across its ribbon:
-    // junction-field 36,225 -> 36,792 measured here; budget follows.
+    // junction-field 36,225 -> 37,278 measured here (the priority blend
+    // included); budget follows.
     // The common shader of every fan program, one cold compile each.
-    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(36_850);
+    expect(JUNCTION_FRAG.length).toBeLessThanOrEqual(37_300);
     // K799: uKPath joins KNOT_UNIFORMS_GLSL, which the still pluck
     // includes (+18 here).
     expect(PLUCK_STILL_FRAG.length).toBeLessThanOrEqual(20_550);

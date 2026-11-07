@@ -163,3 +163,42 @@ full; the tree is exactly 291780c5 again. The next attempt should
 assign by distance to the arms' centrelines (the profiles' swept
 points), not by angle from J, or should keep fans off the root's
 footprint geometrically.
+
+Second addendum (same day, closing pass): the priority blend and
+the rim work landed on top of 291780c5. (a) Where the two
+bracketing footprints overlap at a tapered fork, the field no
+longer blends on the bisector: the top ribbon (later chain) paints
+alone inside its footprint (junctionBase + CPU twin; flagged by the
+width texel's z). (b) A tapered root arm's flank follows its own
+edge, and the narrow wedges emit after the wide fans/bridges at
+tapered forks. (c) Bump: a wide wedge's rim corner is pulled to
+0.55 toward J, bridge Hermite tangents ×0.30, rims clamped to the
+tips' radius, all at tapered forks only.
+
+Final measurements (rest; ink-gated geom mask). Done 1 NOT met:
+master → mine — i_xh3 7071→6253, i_xh2 10332→9273, ai_xh3
+3782→3692, ai_xh2 5826→5639, ia_xh3 7099→6041, ia_xh2 4896→5423,
+ii_xh3 7068→6241 / 3013→3071, ii_xh2 8686→8859 / 4221→4639 (max
+~150). The root's interior now reads as the ribbon (violations
+hollowed to edge bands): the residue is the bite zone at the stem's
+west edge (the field brackets bodyC/stem over body/root edges
+there, ~0.4 world across, three ribbons within a half-width of each
+other) plus ribbon-edge bands — the angular field cannot assign
+those pixels to the ribbon on top. Done 2 NOT met: bump
+816→233 (i_xh3), 396→118 (i_xh2), 2625→2339 (ai_xh2, the worst
+spot, at the fan over the neighbouring letter's edge), 0 at
+ii_xh2; the pull helps but the bite fill still crosses the closing
+along the stem's west edge. Done 3 MET against the fix's parent
+(65c2f573; the a9d9602f comparison is contaminated by the K1228 and
+loader commits between): maze_x4/cross/loop 0 px, a_xh3/a_xh2/
+aa_xh2 0 px, aa_xh3 17 px at an a fork (named: sub-AA specks at
+one a fork edge), every i-stand change within 5 fh of an i fork
+except 1–2 px specks. Done 4: sheets built (`sheets_i.ps1`, twenty
+sheets in `out/sheets/`) and read — i_xh3 and ai_xh2 shown: the
+pale teeth still read as teeth in mine (the Done 1 residue), so
+Done 4 does not pass either; the outline reads smoother on the
+west edge. `npm test` passes (220 files; 2 skipped as before).
+What's left is the bite zone: fans there need ribbon-coverage
+(distance-to-centreline, e.g. via the SDF tables the fan shader
+already binds) instead of angle sectors, or fan geometry clipped
+to ribbon footprints; both are bigger than this run's remainder.

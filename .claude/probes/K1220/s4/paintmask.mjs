@@ -17,6 +17,15 @@ const FORKS = [
   ["ia_xh3", 0], ["ia_xh2", 0], ["ii_xh3", 0], ["ii_xh3", 1], ["ii_xh2", 0], ["ii_xh2", 1],
 ];
 function load(p) { return toRGB(decodePNG(readFileSync(p))); }
+function bgOf(im) {
+  const px = [];
+  for (const [x0, y0] of [[0, 0], [im.W - 40, 0], [0, im.H - 40], [im.W - 40, im.H - 40]])
+    for (let y = y0; y < y0 + 40; y += 4) for (let x = x0; x < x0 + 40; x += 4) {
+      const o = (y * im.W + x) * 3; px.push([im.data[o], im.data[o + 1], im.data[o + 2]]);
+    }
+  px.sort((a, b) => a[0] - b[0]);
+  return px[px.length >> 1];
+}
 const distPtSeg = (px, py, ax, ay, bx, by) => {
   const ex = bx - ax, ey = by - ay, l2 = ex * ex + ey * ey;
   let u = l2 > 1e-12 ? ((px - ax) * ex + (py - ay) * ey) / l2 : 0;
@@ -29,6 +38,11 @@ for (const [stand, ji] of FORKS) {
   const meta = JSON.parse(readFileSync(join(dir, "meta.json"), "utf8"));
   const geom = JSON.parse(readFileSync(join(GEOMD, `${stand}_ji${ji}_geom.json`), "utf8"));
   const rest = load(join(dir, "rest.png")), nof = load(join(dir, "nofans.png"));
+  const bg = bgOf(nof);
+  const inkNof = (x, y) => {
+    const o = (y * nof.W + x) * 3;
+    return Math.hypot(nof.data[o] - bg[0], nof.data[o + 1] - bg[1], nof.data[o + 2] - bg[2]) > 40;
+  };
   const rec = meta.recs.find((r) => r.ji === ji);
   const dsf = meta.dsf, s = meta.view.s, vx = meta.view.x, vy = meta.view.y;
   const fh = meta.fh, pxW = 1 / (s * dsf);
@@ -86,20 +100,21 @@ for (const [stand, ji] of FORKS) {
     clo[y * W + x] = ok;
   }
   // Pass 2: diffs.
-  let viol = 0, violMax = 0; const byKey = {};
+  let viol = 0, violMax = 0; const byKey = {}; const violPts = [];
   let fanInk = 0, bump = 0; const bumpPts = [];
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     const gx = x0 + x, gy = y0 + y, o = (gy * rest.W + gx) * 3, i = y * W + x;
     const d = Math.max(Math.abs(rest.data[o] - nof.data[o]), Math.abs(rest.data[o + 1] - nof.data[o + 1]), Math.abs(rest.data[o + 2] - nof.data[o + 2]));
-    if (relGrid[i] < -pxW && d > 4) {
+    if (relGrid[i] < -pxW && d > 4 && inkNof(gx, gy)) {
       viol++; violMax = Math.max(violMax, d);
       const key = `c${chGrid[i]}${kGrid[i] <= kJ[chGrid[i]] ? "R" : "S"}`;
       byKey[key] = (byKey[key] || 0) + 1;
+      if (d === violMax || violPts.length < 6) violPts.push([gx, gy, d]);
     }
     if (d > 8 && !union[i]) {
       fanInk++;
       if (!clo[i]) { bump++; if (bumpPts.length < 10) bumpPts.push([gx, gy]); }
     }
   }
-  console.log(`${stand} ji${ji}: Done1 viol>4 = ${viol} (max ${violMax}, by ${JSON.stringify(byKey)}) | Done2 fanInkOffRibbon = ${fanInk}, bumpOutsideClosing = ${bump} ${JSON.stringify(bumpPts)}`);
+  console.log(`${stand} ji${ji}: Done1 viol>4 = ${viol} (max ${violMax}, by ${JSON.stringify(byKey)}) pts ${JSON.stringify(violPts.slice(0, 6))} | Done2 fanInkOffRibbon = ${fanInk}, bumpOutsideClosing = ${bump} ${JSON.stringify(bumpPts)}`);
 }

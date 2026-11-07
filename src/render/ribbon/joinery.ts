@@ -695,11 +695,19 @@ export class Joinery {
       let lo = hwA;
       let hi = span - hwB;
       const minW = span * FIELD_BLEND_MIN;
-      if (hi - lo < minW) {
+      const prio = J[twA + 2] > 0.5 && hi - lo < minW;
+      if (hi - lo < minW && !prio) {
         lo = (span - minW) * 0.5;
         hi = lo + minW;
       }
-      t = hi > lo ? (relA - lo) / (hi - lo) : relA < span * 0.5 ? 0 : 1;
+      // K1220 S4: priority at a tapered fork (GLSL twin: junctionBase).
+      if (prio) {
+        const inA = relA <= hwA;
+        const inB = relB <= hwB;
+        t = inA && inB ? (Math.round(J[at(abA)]) > Math.round(J[at(abB)]) ? 0 : 1) : inB ? 1 : inA ? 0 : relA < span * 0.5 ? 0 : 1;
+      } else {
+        t = hi > lo ? (relA - lo) / (hi - lo) : relA < span * 0.5 ? 0 : 1;
+      }
       t = t < 0 ? 0 : t > 1 ? 1 : t;
       t = t * t * (3 - 2 * t);
       if (t <= 0) onlyA = true;
@@ -1498,7 +1506,7 @@ export class Joinery {
           const g1 = g + 1 < profN ? g + 1 : g;
           D[p] = useW ? pw[g] : 1;
           D[p + 1] = useW ? pw[g1] : 1;
-          D[p + 2] = 0;
+          D[p + 2] = useW ? 1 : 0; // .z flags the priority blend (junctionBase).
           D[p + 3] = 0;
         }
       }
@@ -2202,7 +2210,8 @@ export class Joinery {
     const glyphBridge = (
       rec: JRec,
       A: JArm,
-      B: JArm
+      B: JArm,
+      tanScale = 1
     ): { rim: number[]; flank: number[] } | null => {
       const wA = wmAt(A, fillHalf * 0.5);
       const wB = wmAt(B, fillHalf * 0.5);
@@ -2244,7 +2253,7 @@ export class Joinery {
       const p0y = bridgeE0[3];
       const p1x = bridgeE1[2];
       const p1y = bridgeE1[3];
-      const mag = Math.hypot(p1x - p0x, p1y - p0y);
+      const mag = Math.hypot(p1x - p0x, p1y - p0y) * tanScale;
       // From A's edge heading in along it, to B's edge heading out along it.
       const m0x = -tax * mag;
       const m0y = -tay * mag;
@@ -2470,6 +2479,10 @@ export class Joinery {
       // neighbour's capsule (fillHalf / sin of the wedge gap), so the
       // side cut's window covers the whole interior section, not only
       // the fillet's flank reach (a shallow spur's mouth runs farther).
+      // K1220 S4: at a tapered fork the narrow wedges emit after the
+      // wide fans (below), so their root paint is not overpainted at the
+      // root's edges by a wide wedge's sector.
+      const deferredNarrow: Array<[JRec, number[], number[]]> = [];
       const armWinL = new Array<number>(arms.length).fill(0);
       const armWinR = new Array<number>(arms.length).fill(0);
 
@@ -2491,7 +2504,25 @@ export class Joinery {
           (glyphOf[A.chain] || glyphOf[B.chain])
         ) {
           // K1220 S2: a glyph fork's width step, bridged.
-          const br = glyphBridge(rec, A, B);
+          const br = glyphBridge(rec, A, B, taperJn && taperJn[rec.jn] ? 0.3 : 1);
+          // K1220 S4: a tapered fork's bridge rim is clamped to its
+          // endpoints' radius, like the wedge rim below.
+          if (br && taperJn && taperJn[rec.jn]) {
+            const rimB = br.rim;
+            const endR = Math.max(
+              Math.hypot(rimB[0] - jx, rimB[1] - jy),
+              Math.hypot(rimB[rimB.length - 2] - jx, rimB[rimB.length - 1] - jy)
+            );
+            for (let i = 0; i < rimB.length; i += 2) {
+              const dx = rimB[i] - jx;
+              const dy = rimB[i + 1] - jy;
+              const d = Math.hypot(dx, dy);
+              if (d > endR && d > 1e-9) {
+                rimB[i] = jx + (dx / d) * endR;
+                rimB[i + 1] = jy + (dy / d) * endR;
+              }
+            }
+          }
           if (br) emitFan(rec, jx, jy, br.rim, br.flank);
         }
 
@@ -2649,7 +2680,12 @@ export class Joinery {
               const off = (left ? 1 : -1) * fillHalf * (wmAt(arm, sArc) + 0.05);
               const qx = px - fp[e * 4 + 3] * off;
               const qy = py + fp[e * 4 + 2] * off;
-              if (coveredBy(other, qx, qy)) {
+              // K1220 S4: a tapered root arm's flank follows its OWN
+              // edge (its ribbon is the wide one here), so the narrow
+              // fan covers the root's whole width on this side.
+              const tpArm = taperJn && taperJn[rec.jn] ? this.r.style.taper?.[arm.chain] : undefined;
+              const rootArm = !!tpArm && tpArm.body !== undefined && arm.dir < 0 && arm.slot === 2 * tpArm.joint;
+              if (rootArm || coveredBy(other, qx, qy)) {
                 ox = qx;
                 oy = qy;
               }
@@ -2694,6 +2730,13 @@ export class Joinery {
         // the corner lies past the root's end, over its lagged paint.
         const cappedNarrow = narrowCapped;
         if (cappedNarrow) { cx = (pax + pbx) / 2; cy = (pay + pby) / 2; }
+        // K1220 S4: at a tapered fork, a wide wedge's rim corner is pulled
+        // toward J: the full corner (near-parallel edges) overshoots the
+        // bite's outline - the bump above the dark bite.
+        if (!cappedNarrow && taperJn && taperJn[rec.jn] && glyphOf && gap > FILLET_MAX_WEDGE) {
+          cx = jx + (cx - jx) * 0.55;
+          cy = jy + (cy - jy) * 0.55;
+        }
         const roundedWedge = this.r.cornerWedgeRounded(rec.jn, A, B);
         if (roundedWedge) {
           // K846/K859: the rim curve (ribbon/rim_curve.ts, which
@@ -2713,6 +2756,24 @@ export class Joinery {
         }
         for (let e = nB - 1; e >= 0; e--) {
           pushPt(edgeB[e * 2], edgeB[e * 2 + 1]);
+        }
+        // K1220 S4: at a tapered glyph fork, a wide wedge's rim arc is
+        // clamped to the farther flank tip's radius: the rounded rim's
+        // corner lies far past the bite on near-parallel edges, and its
+        // arc bulged past the silhouette (the bump above the dark bite).
+        if (taperJn && taperJn[rec.jn] && glyphOf && gap > FILLET_MAX_WEDGE) {
+          const tipR = Math.max(Math.hypot(pax - jx, pay - jy), Math.hypot(pbx - jx, pby - jy));
+          const arcN = roundedWedge ? n + 1 : 1;
+          for (let i = 0; i < arcN; i++) {
+            const pi = (nA - 1 + i) * 2;
+            const dx = rim[pi] - jx;
+            const dy = rim[pi + 1] - jy;
+            const d = Math.hypot(dx, dy);
+            if (d > tipR && d > 1e-9) {
+              rim[pi] = jx + (dx / d) * tipR;
+              rim[pi + 1] = jy + (dy / d) * tipR;
+            }
+          }
         }
         // K815: the wedge's flank coordinate along its rim: +1 down
         // A's flank, across the bezier arc to -1 down B's flank.
@@ -2769,8 +2830,15 @@ export class Joinery {
             (k === infoW.rootIdx && (k + 1) % arms.length === infoW.cIdx))
             ? infoW.dup
             : rec;
-        emitFan(fanRec, jx, jy, rim, flankArr);
+        if (taperJn && taperJn[rec.jn] && gap <= FILLET_MAX_WEDGE) {
+          deferredNarrow.push([fanRec, rim, flankArr]);
+        } else {
+          emitFan(fanRec, jx, jy, rim, flankArr);
+        }
       }
+      // K1220 S4: the deferred narrow wedges (tapered forks), over the
+      // wide fans and bridges.
+      for (const [dRec, dRim, dFlank] of deferredNarrow) emitFan(dRec, jx, jy, dRim, dFlank);
       // K846: this junction's side-cut entries, over each marked arm's
       // interior section. K849: WORLD arc - the junction's arc and the
       // signed window from it along the arm (the shader wraps closed

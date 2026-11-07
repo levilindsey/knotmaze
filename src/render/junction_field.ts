@@ -392,11 +392,21 @@ vec3 junctionBase(int rec, vec2 p, vec4 hd, bool untrav) {
     float lo = hwA;
     float hi = span - hwB;
     float minW = span * uJParams2.y;
-    if (hi - lo < minW) {
+    bool prio = twA.z > 0.5 && hi - lo < minW;
+    if (hi - lo < minW && !prio) {
       lo = (span - minW) * 0.5;
       hi = lo + minW;
     }
-    t = hi > lo ? (relA - lo) / (hi - lo) : (relA < span * 0.5 ? 0.0 : 1.0);
+    // K1220 S4: at a tapered fork, overlapping footprints do not blend
+    // on the bisector: the top ribbon (the later chain, drawn over the
+    // other) paints alone inside its footprint, as the frame reads.
+    if (prio) {
+      bool inA = relA <= hwA;
+      bool inB = relB <= hwB;
+      t = inA && inB ? (jAt(abA).x > jAt(abB).x ? 0.0 : 1.0) : inB ? 1.0 : inA ? 0.0 : (relA < span * 0.5 ? 0.0 : 1.0);
+    } else {
+      t = hi > lo ? (relA - lo) / (hi - lo) : (relA < span * 0.5 ? 0.0 : 1.0);
+    }
     t = clamp(t, 0.0, 1.0);
     t = t * t * (3.0 - 2.0 * t);
     if (t <= 0.0) onlyA = true;
