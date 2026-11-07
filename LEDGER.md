@@ -522,10 +522,10 @@ Next free ID: K1249.
 - **K1240** · One outline for both looks and every junction consumer (Levi's sketch, 2026-11-06): offset-polyline borders,
   cuts and corner arcs in closed form from each frame; the border look strokes it, the filled look fills it. S1: a clean
   prototype beside the app, checked against form B and timed (Levi: "without all the tech debt"); notes.
-  - owner: agent `a157adff8986eedf5` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (Opus 5.5, started 2026-11-07 08:28, 2 h cap ~10:28)
-  - branch: `wip/k1240-s3f`, worktree `.claude/worktrees/muse-k1240-s1`; last commit: `900a293c`
-  - evidence: .claude/probes/K1240/proto/ (tracked builder and checks, s3_* to s3f_*, cmp_*.mjs); untracked .claude/probes/K1240/s1_out/ to s3e_out/ in the main checkout; S3f writes .claude/probes/K1240/out/s3f/ in the worktree (Muse's first outputs moved to out/s3f/muse/)
-  - next: the agent re-runs Muse's S3f checks on 900a293c, then Goal 3 (the still frame draws borders form B lacks); it stops at 2 h, at every Done, or at 96% of Claude's week (Muse's quota resets 2026-11-08 16:00 PT); then K1247, S4, Levi's lane decision, continuity and the Pixel p95
+  - owner: agent `ae92c5676c166a502` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (Opus 5.5, started 2026-11-07 10:18, 2 h cap ~12:18)
+  - branch: `wip/k1240-s3f`, worktree `.claude/worktrees/muse-k1240-s1`; last commit: `5276cc0a`
+  - evidence: .claude/probes/K1240/proto/ (tracked builder and checks, s3_* to s3f_*, the s3f_claude_* checks and diagnostics, cmp_*.mjs); untracked in the main checkout: .claude/probes/K1240/s1_out/ to s3f_out/ (s3f_out/ holds the first Claude run's checks_final.txt, logs, crops, bench and page results, and muse/ Muse's partial run); the worktree writes .claude/probes/K1240/out/s3f/
+  - next: S3f round 2: the agent moves frame()'s two choices made from positions (a failing corner's union or layered, the tight-twist flip) into structure(), then the junction stubs (user_tw42 j28 j29 j32 j61, ring j4 j5 j7 j16), then ring and fat at 0.5h; it stops at 2 h, at every Done, or at 96% of Claude's week. The first run (5276cc0a, verified by Claude): Done 1 and 4 hold; still fails 4 A rows, moved 6 rows at 0.1h and 5 of 6 at 0.5h (the brief's first Handoff). Then K1247, S4, Levi's lane decision, continuity and the Pixel p95
   - brief: `docs/design/K1240_s3f_fixed_pieces.md`
   - env: from the worktree, vite on a copy of .claude/probes/K1040/vite.private-cache.config.ts, ports 5980-5989
 
