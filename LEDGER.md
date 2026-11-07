@@ -517,6 +517,15 @@ Next free ID: K1238.
   - evidence: .claude/probes/K1220/s3/ (its copies of S2's tools; outputs untracked); S2's sheets in the kept worktree .claude/worktrees/agent-a568a7f4f11c55549/.claude/probes/K1220/s2/out/
   - next: S3 to its Done (the i forks draw the record like the a's; geom counts, confinement diffs, sheets); Claude views the sheets, removes the worktree (unlink node_modules first), shows Levi. Then the 1 px jog in ia at xh 2 and the reveal's bare-ribbon moment (a at xh 3, 40%). Levi still to look at S2's sheets (sent 2026-11-06)
   - brief: `docs/design/K1220_s3_i_forks.md`
+- **K1228** · Cross ji 51's spur: chain 61's ribbon leaves 2-4 px of background inside its half-width on the
+  inside of a 40° left turn (radius 19-21 px, under its 23.4 px half-width), in every build; likely
+  `ribbon_mesh.ts`'s concave-side clamp (untested), and a fix touches every ribbon (K1218 S5's handoff,
+  `docs/design/K1218_s5_section_edges.md`).
+  - owner: muse session e0022df5 (Paseo), coordinated by claude session c18e2f02-e64f-41ba-9af0-2dbd583358e2; started 2026-11-06 08:49, cap 2 h (~10:49)
+  - branch: detached worktree `.claude/worktrees/muse-k1228` (node_modules junctioned), pushes to master; last commit: `787e24b5`
+  - evidence: `.claude/probes/K1228/` (its copies of K1218 S5's tools; out/ untracked)
+  - next: the run tests the concave clamp as the cause, fixes the inner side, pushes when Done holds; Claude views its sheets
+  - brief: `docs/design/K1228_inner_turns.md`
 
 ## Next, in order
 
@@ -749,10 +758,6 @@ Every other item below waits on the trigger it names.
   (`paint_glsl.ts`), the quiet flag (`paint_math.ts`), mode 2 in `arm_strip.ts` and joinery's writeStripRow,
   the quiet tests in `paint_gameplay.test.ts`. A Muse fix run after the junction stages: it moves K320's
   section and strip pins, 0 px on a re-shoot.
-- **K1228** · Cross ji 51's spur: chain 61's ribbon leaves 2-4 px of background inside its half-width on the
-  inside of a 40° left turn (radius 19-21 px, under its 23.4 px half-width), in every build; likely
-  `ribbon_mesh.ts`'s concave-side clamp (untested), and a fix touches every ribbon (K1218 S5's handoff,
-  `docs/design/K1218_s5_section_edges.md`).
 - **K1231** · Dark edges inside junctions step at MSAA coverage levels: loop ji 123's and x4 ji 101's eye
   edges, and cross ji 65's, loop ji 64's and 106's dark edges, alike in 7474d09b, master and K1218 S6's
   branch; and x4 ji 101's violet sliver at the eye's upper left, in all three. Unattributed (K1218 S6's
