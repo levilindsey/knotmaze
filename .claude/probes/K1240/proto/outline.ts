@@ -823,6 +823,7 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
   type Meet = { x: number; y: number; segA: number; tA: number; sA: number; dA: number; segB: number; tB: number; sB: number; dB: number };
   const borderMeet = (A: ArmInfo, sideA: number, B: ArmInfo, sideB: number): Meet | null => {
     if (A.pi === B.pi && sideA === sideB) return null;
+    if ((globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.K1240_NOMEET) return null;
     const lo = -h; const hi = 14 * h;
     const dSigned = (arm: ArmInfo, s: number): number => {
       const p = polys[arm.pi];
@@ -864,20 +865,37 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
   const cornerFallback = (cw: CornerWork, A: ArmInfo, B: ArmInfo, th: number): void => {
     const j = scene.junctions[cw.ji];
     const mt = borderMeet(A, cw.sideA, B, cw.sideB);
+    // Which border the meet cuts: both when the two tubes are one
+    // surface there (the union's corner); otherwise only the lower one
+    // (form B layers different surfaces by depth, so the upper border
+    // runs on over the lower tube, as at a crossing).
+    let cutA = false; let cutB = false;
     if (mt) {
-      const ci = cornerWork.length;
-      cw.Vx = mt.x; cw.Vy = mt.y; cw.qx = mt.x; cw.qy = mt.y; cw.r = 0;
-      cw.tax = mt.x; cw.tay = mt.y; cw.tbx = mt.x; cw.tby = mt.y;
-      cw.sA = mt.sA; cw.sB = mt.sB; cw.dA = mt.dA; cw.dB = mt.dB;
-      cw.refA = mkRef(A.pi, cw.sideA, mt.x, mt.y, mt.sA, { k: 5, corner: ci, which: 0 });
-      addEv(A.pi, cw.sideA, mt.segA, mt.tA, cw.refA);
-      cw.refB = mkRef(B.pi, cw.sideB, mt.x, mt.y, mt.sB, { k: 5, corner: ci, which: 1 });
-      addEv(B.pi, cw.sideB, mt.segB, mt.tB, cw.refB);
-      cw.refVA = cw.refA; cw.refVB = cw.refB; cw.meet = true;
-      armNextPt[cw.aArm] = cw.refA; armNextSide[cw.aArm] = cw.sideA;
-      armPrevPt[cw.bArm] = cw.refB; armPrevSide[cw.bArm] = cw.sideB;
-      return;
+      const gA = memberGroup(A.pi, mt.sA); const gB = memberGroup(B.pi, mt.sB);
+      const zA = depthAt(A.pi, mt.sA); const zB = depthAt(B.pi, mt.sB);
+      const union = (gA >= 0 && gA === gB) || Math.abs(zA - zB) <= 1e-9;
+      cutA = union || zA < zB; cutB = union || zB < zA;
     }
+    const applyMeet = (): void => {
+      if (!mt) return;
+      const ci = cornerWork.length;
+      cw.Vx = mt.x; cw.Vy = mt.y; cw.qx = mt.x; cw.qy = mt.y; cw.r = 0; cw.meet = true;
+      if (cutA) {
+        cw.tax = mt.x; cw.tay = mt.y; cw.sA = mt.sA; cw.dA = mt.dA;
+        cw.refA = mkRef(A.pi, cw.sideA, mt.x, mt.y, mt.sA, { k: 5, corner: ci, which: 0 });
+        addEv(A.pi, cw.sideA, mt.segA, mt.tA, cw.refA);
+        cw.refVA = cw.refA;
+        armNextPt[cw.aArm] = cw.refA; armNextSide[cw.aArm] = cw.sideA;
+      }
+      if (cutB) {
+        cw.tbx = mt.x; cw.tby = mt.y; cw.sB = mt.sB; cw.dB = mt.dB;
+        cw.refB = mkRef(B.pi, cw.sideB, mt.x, mt.y, mt.sB, { k: 5, corner: ci, which: 1 });
+        addEv(B.pi, cw.sideB, mt.segB, mt.tB, cw.refB);
+        cw.refVB = cw.refB;
+        armPrevPt[cw.bArm] = cw.refB; armPrevSide[cw.bArm] = cw.sideB;
+      }
+    };
+    if (cutA && cutB) { applyMeet(); return; }
     let mx = A.ux + B.ux; let my = A.uy + B.uy;
     const ml = Math.sqrt(mx * mx + my * my);
     if (ml < 1e-9) { const ma = Math.atan2(A.uy, A.ux) + th / 2; mx = Math.cos(ma); my = Math.sin(ma); } else { mx /= ml; my /= ml; }
@@ -902,6 +920,7 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
     cw.refA = addPointAt(A.pi, cw.sideA, pa.x, pa.y, pa.s, { k: 5, corner: cornerWork.length, which: 0 });
     cw.refB = addPointAt(B.pi, cw.sideB, pb.x, pb.y, pb.s, { k: 5, corner: cornerWork.length, which: 1 });
     cw.refVA = cw.refA; cw.refVB = cw.refB;
+    applyMeet();
   };
   for (const cp of cornerPairs) {
       const ji = cp.ji; const j = scene.junctions[ji];
