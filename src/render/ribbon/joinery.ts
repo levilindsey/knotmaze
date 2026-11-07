@@ -1891,13 +1891,27 @@ export class Joinery {
           );
           const step = sMax / (STRIP_W - 1);
           const slope = rd.data[ab + 1];
+          // K1220 S3: the root arm's strip is written from the body chain
+          // at the joint, scaled to the O foot's span (see glyphOf note).
+          let rChain = a.chain, rArc0 = a.arc0, rStep = a.dir * step, rSeed = a.slot, rSeedStep = a.dir * step * slope;
+          const tpA = this.r.style.taper?.[a.chain];
+          if (tpA && tpA.body !== undefined && tpA.footO && a.dir < 0 && a.slot === 2 * tpA.joint && a.arc0 > 1e-6) {
+            const bArm = rec.arms.find((x) => x.chain === tpA.body && x.dir > 0);
+            const bSmp = this.r.chainSamples[tpA.body];
+            if (bArm && bSmp) {
+              const bClosed = this.r.ps.chainBreakAfter[tpA.body] < 0;
+              const arcR = sampling.paintArcAt(bSmp, tpA.footO[0], bClosed);
+              const scale = (arcR - bArm.arc0) / a.arc0;
+              if (scale > 0.05 && scale < 20) { rChain = tpA.body; rArc0 = bArm.arc0; rStep = step * scale; rSeed = bArm.slot; rSeedStep = step * scale * slope; }
+            }
+          }
           const row = this.writeStripRow(
-            a.chain,
-            a.arc0,
-            a.dir * step,
+            rChain,
+            rArc0,
+            rStep,
             step,
-            a.slot,
-            a.dir * step * slope
+            rSeed,
+            rSeedStep
           );
           // A routed record's arms also get their UNTRAVELED row (row + 1).
           if (untrav) {
@@ -1992,6 +2006,10 @@ export class Joinery {
     // web's reach (0.24 world vs L 0.55 at cr 2.1); the erase only spans
     // the under thread's width, so web material past the cut survived
     // beside it and floated into the dark gap as a pale spur.
+
+
+
+
     const armReach = (arm: JArm): number => {
       // The joint's own domain caps every flank (short bridges).
       const dom = Math.min(L, Math.max(L * FILLET_GAP_MIN_FRAC, arm.domain));
@@ -2011,6 +2029,12 @@ export class Joinery {
     // out to the wide arm's edge 1 fh out, a Hermite curve tangent to both
     // edges. No centreline or width moves (K1119): only the fork is filled.
     const glyphOf = this.r.style.glyph;
+    // K1220 S3: a tapered root's ribbon wears the body strokes' paint
+    // (K620), not its spur chain's section, so in finish() the root arm's
+    // strip row comes from the body chain, scaled to the O foot's span:
+    // fans over the root then read as the root reads, not as a spike of
+    // the spur's section over the body arms.
+
     const wmAt = (arm: JArm, s: number): number => {
       const wl = this.r.widthLast[arm.chain];
       if (!wl) return 1;
@@ -2282,6 +2306,7 @@ export class Joinery {
       return true;
     };
 
+    // K1220 S3: glyph forks at a tapered root (the i's fork) draw below.
     // K81: a routed record's wedge rims (flank tip A, the outer bezier,
     // flank tip B; null = a skipped wedge), kept for the route pass.
     const rimsOf = new Map<JRec, Array<number[] | null>>();
@@ -2293,7 +2318,12 @@ export class Joinery {
       if (
         rec.j1[0] > fxNowJ + GATE_LEAD ||
         (hideJn && hideJn[rec.jn]) ||
-        (taperJn && taperJn[rec.jn])
+        // K1220 S3: a glyph fork where a tapered root ends (the i's fork) draws
+        // its record like the a's forks (seal, wedges, the glyph bridge) instead
+        // of hiding behind the root, whose ribbons alone left a notch and a
+        // ledge there. Glyph forks only (glyphOf): maze and non-glyph joints
+        // keep the tapered-root hide.
+        (taperJn && taperJn[rec.jn] && !(glyphOf && arms.some((a) => glyphOf[a.chain])))
       ) {
         // Nothing of a gated joint draws this rebuild, its bands included
         // (K76 2b: nor of a joint the thread reveal hides).
@@ -2311,6 +2341,14 @@ export class Joinery {
       // the fillets: the concave-side miter clamp can thin a host ribbon
       // at a bend, opening a nick between a tucked cap and the receded
       // edge regardless of tuck depth.
+
+
+
+
+
+
+
+
       pushDiscField(rec, jx, jy, fillHalf * 0.92);
 
       if (!drawWedges) continue;
@@ -2345,6 +2383,9 @@ export class Joinery {
           const br = glyphBridge(rec, A, B);
           if (br) emitFan(rec, jx, jy, br.rim, br.flank);
         }
+
+
+
         if (gap > FILLET_MAX_WEDGE && A.chain === B.chain) continue;
 
         // A's wedge-facing edge is its LEFT edge; B's is its RIGHT edge.
@@ -2476,13 +2517,18 @@ export class Joinery {
           arm: JArm,
           left: boolean,
           out: number[],
-          other: JArm | null
+          other: JArm | null,
+          capS = Infinity
         ): [number, number] => {
           const fp = fpOf(arm);
           const sgn = left ? w : -w;
           const npf = fp.length / 4;
           const reachF = other ? armReach(arm) : 0;
+          const reachA = armReach(arm);
+          let lastE = 0;
           for (let e = 0; e < npf; e++) {
+            if (e > 1 && (0.12 + (0.88 * e) / Math.max(1, npf - 1)) * reachA > capS) break;
+            lastE = e;
             const px = fp[e * 4];
             const py = fp[e * 4 + 1];
             let ox = px - fp[e * 4 + 3] * sgn;
@@ -2500,13 +2546,16 @@ export class Joinery {
             out.push(ox, oy);
           }
           // K846: the tip's outward tangent (the rim's end tangent).
-          const le = fp.length / 4 - 1;
+          const le = lastE;
           return [fp[le * 4 + 2], fp[le * 4 + 3]];
         };
         const edgeA: number[] = [];
         const edgeB: number[] = [];
-        const tanA = flank(A, true, edgeA, glyphPair ? B : null);
-        const tanB = flank(B, false, edgeB, glyphPair ? A : null);
+        // K1220 S3: a narrow wedge at a tapered glyph fork is flank-capped
+        // at 1.25 fh (past there its fan repaints the root's lagged paint).
+        const narrowCapped = !!(taperJn && taperJn[rec.jn]) && glyphPair && gap <= FILLET_MAX_WEDGE;
+        const tanA = flank(A, true, edgeA, glyphPair ? B : null, narrowCapped ? fillHalf * 1.25 : Infinity);
+        const tanB = flank(B, false, edgeB, glyphPair ? A : null, narrowCapped ? fillHalf * 1.25 : Infinity);
 
         // Perimeter: A's flank inner->outer, bezier rim to B's outer tip
         // (control = corner), B's flank outer->inner. Every pixel
@@ -2529,6 +2578,11 @@ export class Joinery {
         // K830: a sharp wedge's flanks meet at the same clamped corner
         // the rounded wedge uses as its bezier control; a rounded wedge
         // keeps the historic quadratic rim byte-for-byte.
+        // K1220 S3: a capped narrow wedge at a tapered glyph fork ends on
+        // the straight segment between its flank tips, not at the corner:
+        // the corner lies past the root's end, over its lagged paint.
+        const cappedNarrow = narrowCapped;
+        if (cappedNarrow) { cx = (pax + pbx) / 2; cy = (pay + pby) / 2; }
         const roundedWedge = this.r.cornerWedgeRounded(rec.jn, A, B);
         if (roundedWedge) {
           // K846/K859: the rim curve (ribbon/rim_curve.ts, which
