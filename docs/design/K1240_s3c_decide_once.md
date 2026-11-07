@@ -192,3 +192,42 @@ corner gate integral needs an incremental evaluation across its 32 nodes (adjace
 turn-walk is the largest single loop. One honest caveat on reading Done 2: the fresh baseline itself
 improved under this frame (fresh def A over2 13 now vs 20 in S3b's runs, because fresh is
 frame(structure(S'), S') with the same boundary slides), so the moved bar rose with the code.
+
+### Handoff continuation (same S3c session, resumed 21:53, stopped 2026-11-06 22:13 -08:00)
+
+The first Handoff above was written at 21:52 and the session then resumed to keep working on
+Done 2 / Done 3. One more code commit landed: `08390186` (frame re-evaluation, below), pushed to
+master. Ledger K1247/K1248 were updated in the same round. All numbers below were re-run on the
+final code (`08390186`); `npm test` 2887 passed / 9 skipped, probe:types 0 errors,
+`outline.test.ts` ALL PASS.
+
+What `08390186` adds to frame(): recorded covering candidates are re-tested on frame geometry.
+Buried stretches emit their longest uncovered sub-range; run ends trim while their end segment is
+covered; every corner re-checks the builder's span/wedge feasibility on frame feet (an infeasible
+corner degenerates to zero radius, and a structure-rejected but frame-feasible corner emits its
+arc with the arms' runs trimmed to the frame tangent feet); cap exposure is reclassified per
+frame against its recorded candidates. Two bugs found and fixed on the way: candidate verdicts
+are indexed by sequence segment, not full-segment index, and a cap's own group/depth uses the
+material chain end, not the stored station s (the stored s often lies outside every arm span, so
+fully covered caps were emitted whole).
+
+Verdicts unchanged in kind: Done 1 (still) HOLDS — 24/24 rows within tolerance vs S3
+(def A over2 22 -> 17, B 6 -> 6; g41_user_tw64 A p99 delta 0.097 -> 0.016). Done 4 (page) HOLDS —
+`cmp_s3c.mjs page` ALL WITHIN TOLERANCE (fillSamples/overlap identical; borderBand/fillEdge
+within ±10). Done 2 (moving) still FAILS but improved: 12/24 rows pass at 0.1h (was 9/24 in the
+first phase). Failing (fresh -> moved over2): muse_default_tw A/B (+2/+2 over fresh), def A
+13->21, B 7->14, ring A 53->66, B 4->8, g41_def_tw42 B 1->6, g41_def_tw64 A 157->164, B 19->30,
+g41_ring_tw64 A 45->54, B 5->8, g41_user_tw64 A 189->211 (p99 delta 0.090). At 0.5h all 6 rows
+fail (def A 41->120, B 34->163; ring A 84->110, B 18->106; fat A 132->194, B 7->94). Rigid motion
+on def remains exact: maxDiff 4.809e-9 (tolerance 1e-6). Decision report
+(`out/s3c/decisions.json`): the largest remaining churn is corner pair changes — ring 25/51 and
+g41_user_tw64 110/163 at 0.1h — which frame does not re-decide (pairing stays structure's), plus
+exposure flips where structure recorded no covering candidate. Done 3 (cost) still FAILS: locked
+bench x2 on the final code reads def frame med 44.2 / 42.5 ms, p95 118 / 81 ms (machine loaded;
+corners 18.3-21.6 ms and pieces 10.2-11.3 ms dominate — the added candidate scans cost more than
+they save in time, though they buy moved accuracy). Target remains ≤3 ms median / ≤6 ms p95.
+
+Next step for whoever picks this up: K1248 (moved) — re-pair corners per frame by arm angle or
+record zero-length pieces for fully covered stretches so flips can expand; K1247 (cost) — the
+corner gate integral needs incremental evaluation across its 32 nodes or a spatial margin index.
+Both are gated on still exact staying 24/24.

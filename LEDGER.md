@@ -1721,25 +1721,28 @@ Every other item below waits on the trigger it names.
   world-point camera; border-band outside misses on close parallel threads; eye depth-tie path exercised only
   by construction.
 - **K1247** · K1240 frame cost (S3b Done 3, carried through S3c): target ≤3 ms median / ≤6 ms p95 on def.
-  S3c (decide-once, 1beb956a) removed per-frame exposure (23.3 ms) entirely and pruned corner foot
-  searches (segment + 32-segment block bounding boxes, margin search capped at the gate's saturation
-  distance), but def still reads frame med 26.4-27.2 ms locked / 17.8 ms unlocked on a loaded machine,
-  with corners 10.5-16.8 ms dominant (32-node gate integral: per-node margin turn-walk + tracked-foot
-  Newton). Needs the algorithmic cut: incremental gate evaluation across nodes or a spatial margin
-  index, gated on still exact staying 24/24. Evidence: .claude/probes/K1240/out/s3c/bench_run{1,2}.json;
+  S3c (decide-once, 1beb956a; frame re-evaluation, 08390186) removed per-frame exposure classification
+  and pruned corner foot searches, but def still reads frame med 42.5-44.2 ms / p95 81-118 ms locked
+  on a loaded machine (first phase read 26.4-27.2 ms locked / 17.8 ms unlocked; corners 18.3-21.6 ms
+  and pieces 10.2-11.3 ms now dominate — the 32-node gate integral plus the per-frame stretch/cap
+  candidate scans). Needs the algorithmic cut: incremental gate evaluation across nodes or a spatial
+  margin index, gated on still exact staying 24/24. Evidence: .claude/probes/K1240/out/s3c/bench_run{1,2}.json;
   Handoff in docs/design/K1240_s3c_decide_once.md.
 - **K1248** · K1240 moved-frame residual (S3b Done 2, carried through S3c): decide-once frame(structure(S), S')
-  vs fresh at 0.1h now fails 15/24 rows (was 19/24 under S3b's reclassification); excesses are small
-  (def A 22 vs fresh 13, B 20 vs 7; seven rows within +8) but tolerances are fresh+1 on low-count scenes.
-  Decision differences are measured per scene in out/s3c/decisions.json (def at 0.1h: 161 exposure
-  segments of ~77k, 5 corner ok flips, 12/182 cap runs; g41_user_tw64: 34 ok flips + 110 pair changes).
-  Remaining geometry cost concentrates in whole-cap and whole-run exposure flips (no recorded piece to
-  degenerate), corner ok flips' untrimmed root stretches, and mid-run covering flips; border/cap
-  boundary points already slide to the frame's tube edge. At 0.5h much worse (def A 165 vs 41). Ideas:
-  record degenerate (zero-length) pieces for fully covered caps/runs so a flip can expand from a solved
-  edge, or accept fresh-structure rebuilds when the decision-difference count is high. Evidence:
-  .claude/probes/K1240/out/s3c/move*_exact_*.json vs fresh*_exact_*.json; Handoff in
-  docs/design/K1240_s3c_decide_once.md.
+  vs fresh at 0.1h now fails 12/24 rows (was 15/24 after S3c's first phase, 19/24 under S3b);
+  frame() re-tests recorded covering candidates per frame (buried stretches emit their longest
+  uncovered sub-range, run ends trim while covered, corner span/wedge feasibility is re-checked,
+  cap exposure is reclassified), but tolerances are fresh+1 on low-count scenes and still fail
+  (def A 13->21, B 7->14; ring A 53->66; g41_user_tw64 A 189->211 with p99 delta 0.090). At 0.5h
+  all 6 rows fail (def A 41->120, B 34->163). Decision differences are measured per scene in
+  out/s3c/decisions.json (def at 0.1h: 161 exposure segments of ~77k, 5 corner ok flips, 12/182
+  cap runs; g41_user_tw64: 34 ok flips + 110 pair changes; ring: 25/51 pair changes). Remaining
+  cost concentrates in corner pair changes (arms pair differently in the fresh structure — frame
+  keeps structure's pairing) and exposure flips where structure recorded no covering candidate.
+  Ideas: record degenerate (zero-length) pieces for fully covered caps/runs so a flip can expand
+  from a solved edge, re-pair corners per frame by arm angle, or accept fresh-structure rebuilds
+  when the decision-difference count is high. Evidence: .claude/probes/K1240/out/s3c/move*_exact_*.json
+  vs fresh*_exact_*.json; Handoff in docs/design/K1240_s3c_decide_once.md.
 
 ## Approved, to schedule (2026-10-11)
 
