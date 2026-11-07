@@ -160,7 +160,7 @@ def main():
     with open(out_txt, "w", encoding="utf-8") as fh:
         fh.write(txt)
     with open(out_json, "w", encoding="utf-8") as fh:
-        json.dump(dict(words=words, **r), fh, indent=1, default=float)
+        json.dump({**r, "n_words": r["words"], "words": words}, fh, indent=1, default=float)
     print(txt)
 
 
