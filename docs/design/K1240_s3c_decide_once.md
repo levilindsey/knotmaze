@@ -73,3 +73,122 @@ S3b (`6f39c517..ed8adb14`; Handoff and Claude's check in `docs/design/K1240_s3b_
 - No subagents.
 - Run `Get-Date` at the start and at each milestone. When you stop, commit your WIP, append the
   Handoff, push, and report.
+
+## Handoff (S3c session, 2026-11-06)
+
+Started 2026-11-06 21:17 -08:00 (Get-Date at session start; the cap this session integrated was ~
+23:17). Stopped 2026-11-06 21:52 -08:00. Housekeeping done: no auto-memory file, no handoff or
+pickup skill. Commits on master: `1beb956a` (code), `73558807` (dead-code cleanup), `f2da6945`
+(ledger). Code is committed and pushed; the tree is clean. Outputs are in
+`.claude/probes/K1240/out/s3c/` (untracked). Code state: `outline.ts` + new
+`s3c_exact.ts`/`s3c_bench.ts`/`s3c_move.ts`/`s3c_decisions.ts`/`cmp_s3c.mjs`/`run_locked_s3c.ps1`
+are TRACKED (force-added); outputs under `out/s3c/` are untracked and regenerable from the commands
+below. npm test 2887 passed / 9 skipped; probe:types 0 errors. The gate integral is still form B's
+own corner definition (32-node, unchanged gates); no scoreboard was re-recorded (nothing compares
+frame against a frozen r list).
+
+### Verdict
+
+Done 1 (still) and Done 4 (page) HOLD. Done 2 (moving) FAILS: 15/24 rows outside tolerance at 0.1h
+(was 19/24 under S3b) and all 6 rows at 0.5h; rigid motion is exact (4.8e-9). Done 3 (cost) FAILS:
+def frame med 26.4-27.2 ms locked on this loaded machine (target ≤3). K1247 (cost) and K1248
+(moved residual) carry the failures, updated with these numbers.
+
+### What changed in outline.ts
+
+Decide-once frame: per-frame exposure classification, trim spans, run rebuilding, member-group
+classification, corner ok re-tests and cap-run storage reads are gone from frame(). Pieces are
+exactly structure's prebuilt run pieces (`runUpd` subarrays over the shared buffers, s0/s1 refreshed
+from SA), one arc piece per structure-ok corner (a corner whose frame radius reaches 0 still emits
+its arc, collapsed onto V; a corner whose V has no frame solution degenerates the same way, and
+structure-not-ok corners emit nothing), and structure's stored cap runs. Per-phase `exposure` is 0.
+What frame still solves per frame: centreline polys/tangents/depth, arm roots/dirs/spans (spans are
+positions — with spans stored from build geometry, 69/386 corners on def differed from fresh by
+|Δr| > 0.005 at 0.1h, because arc lengths drift; with frame spans they match), corner V + gate
+integral, offsets, crossing cuts (window search, unchanged), tangent/border-at points, caps, regions,
+faces.
+
+Feature-bounded boundaries: structure records, for every run boundary where exposure flips at a
+plain border point, the covering chain (the builder covering pick is now stored per segment) and,
+for cap runs, the covering chain per boundary segment (`transitions`, `capTransitions`). Frame
+slides each such point along its border/arc to this frame's tube-edge crossing (distance to the
+recorded centreline = h), restricted to the segment pair bracketing the stored point and to slides
+of at most half a segment; no crossing nearby leaves the point where structure put it. Only 50 such
+points exist on def (most run boundaries already sit on cuts/tangent points/stations), but they are
+worth most of the moved gain (def A 89 -> 22). Material instead of numeric arc length: cap centres
+use the chain-end vertex (stored cS drifted cap arcs by up to 0.03 world at 0.1h), and kind-6
+(border-at-s) points are recorded as base-segment index + fraction (were numeric s, same drift).
+
+Cost: footWinFast gained per-segment bbox pruning plus 32-segment block boxes (filled in fillPoly)
+and an optional starting bound; the margin search is capped at the gate's saturation distance
+(dc - 0.05h still returns gate 0 exactly) and wOfF returns 0 when either margin saturates. These do
+not change any foot minimum. Corners remain dominant: profile on def (unlocked, loaded machine)
+frame 17.8 ms = setup 2.8, corners 10.6, offsets 2.2, cuts 1.3, transPts 0.4, capTrans 0.1, caps
+0.2, regions 0.9, pieces 0.5, other 0.4.
+
+### Measured results (final code, after the last edit)
+
+Still, `node .claude/probes/K1240/proto/cmp_s3c.mjs exact` against S3's `out/s3/`: ALL 24/24 ROWS
+OK — every p99 delta 0.000-0.001 (muse_hash A -0.001), over2 equal or better (def A 22->17, B 6->6;
+g41_user_tw64 A 204->189; muse_default_tw A 12->5). S2 synthetic tests pass (`outline.test.ts` ALL
+PASS).
+
+Moving 0.1h, `cmp_s3c.mjs move 0.1` (moved vs fresh): 9/24 rows OK. Passing: muse_hash B,
+muse_default_tw A, fat A/B, g41_def_tw42 A, g41_ring_tw42 A/B, g41_ring_tw64 A, g41_user_tw64 B.
+Failing (fresh -> moved over2; tolerance in brackets): muse_hash A 1065->1099 (21.3, also p99 2.995->
+3.025), muse_default_tw B 21->28 (1), def A 13->22 (1), def B 7->20 (1), ring A 53->61 (1.1), ring B
+4->12 (1), user_tw42 A 6->12 (1), B 6->12 (1), g41_def_tw42 B 1->6 (1), g41_def_tw64 A 156->162 (3.1),
+B 19->37 (1), g41_ring_tw64 B 5->10 (1), g41_user_tw42 A 5->8 (1), B 6->12 (1), g41_user_tw64 A
+189->208 (3.8, also p99 0.009->0.098). At 0.5h all 6 rows fail (def A 41->165, B 34->194; ring A
+84->191 p99 0.005->0.918; fat A 129->457, B 6->453). Rigid on def exact: max diff 4.8e-9 (tolerance
+1e-6). s3c_move def: moved endpoints onlyMoved/onlyFresh 19/14, maxEnd 0.214 world.
+
+Decision differences a fresh structure(S') makes vs structure(S) (`s3c_decisions.ts`, full table in
+`out/s3c/decisions.json`; runs counted only on borders whose point count is unchanged, since fold
+and point-count changes shift every later index): at 0.1h, def — pieces 3082 vs 3077, runs differing
+226/224 on 119/184 stable borders, 161 exposure segments differ (of ~77k, on the stable borders),
+corner ok flips 5/386, style flips 0, pair changes 0, cap runs differ 12/182; muse_hash — ok flips
+12/342, caps 47/170, 270 exposure segments; ring — ok flips 10/51 and pair changes 25/51 (the ring's
+junction arms pair differently, the largest decision churn per corner); g41_user_tw64 — ok flips
+34/163 and pair changes 110/163 (worst scene, matches its moved numbers); fat — exposure diff 0 (its
+12 borders change point count on 8, so most comparison is index-shifted). At 0.5h def: ok flips
+42/386, caps 26/182.
+
+Cost: `.claude/probes/K1240/proto/run_locked_s3c.ps1 -Script s3c_bench.ts` twice
+(`out/s3c/bench_run1.json`, `bench_run2.json`; machine loaded with other sessions both times —
+read as upper bounds, cf. S3b's 31-46 ms locked for the old code on a quieter machine):
+
+| Scene | Structure med (ms) run1/run2 | Frame med run1/run2 | Frame p95 run1/run2 |
+| --- | ---: | ---: | ---: |
+| muse_hash | 515 / 559 | 16.1 / 15.3 | 27.8 / 28.3 |
+| muse_default_tw | 503 / 612 | 26.8 / 22.7 | 87.3 / 88.6 |
+| def | 434 / 554 | 27.2 / 26.4 | 73.9 / 71.3 |
+| fat | 358 / 371 | 5.7 / 5.4 | 18.9 / 17.8 |
+| ring | 75 / 108 | 4.5 / 4.8 | 7.7 / 16.6 |
+| user_tw42.lightpaper | 191 / 188 | 8.4 / 8.7 | 16.2 / 15.0 |
+| g41_def_tw42 | 510 / 452 | 34.0 / 19.8 | 34.8 / 26.9 |
+| g41_def_tw64 | 779 / 691 | 27.5 / 22.4 | 29.1 / 26.7 |
+| g41_ring_tw42 | 132 / 83 | 5.7 / 5.4 | 8.4 / 7.9 |
+| g41_ring_tw64 | 98 / 108 | 2.6 / 4.1 | 5.4 / 5.7 |
+| g41_user_tw42 | 164 / 213 | 8.3 / 13.6 | 14.5 / 15.1 |
+| g41_user_tw64 | 236 / 308 | 9.9 / 11.8 | 11.4 / 14.5 |
+
+Page tests under the lock (`run_page.mjs`, `cmp_s3c.mjs page`): no worse than S3's
+`out/s3/page_results.json` on every scene — fillSamples and overlap counts identical (def
+fillSamples 1517/1531, overlap 353/353), borderBand/fillEdge within ±10 (def fillEdge S3 19572 vs
+S3c 19571 of 22677; g41_user_tw64 borderBand out 8054 vs 8046). Page errors contain only the usual
+favicon-404-type console error. draw.ts/main.ts were not changed, so no new page-build stamp applies
+to them; the page imports outline.ts, whose measured code matches the committed `1beb956a` plus
+`73558807` cleanup (still exact re-verified identical after the cleanup: def A 17 / B 6).
+
+### Left for Claude / next step
+
+Done 2 and Done 3 fail, carried by K1248 and K1247 (updated). A reasonable next step for Done 2:
+record zero-length pieces for fully covered caps and interior covered stretches at structure time,
+so a flip expands from a solved tube edge instead of being absent (the current geometry cost is
+whole-piece flips, not boundary error — boundary points already follow the frame). For Done 3, the
+corner gate integral needs an incremental evaluation across its 32 nodes (adjacent nodes move
+~r0/32; margins and feet are currently recomputed per node) or a spatial margin index; the margin
+turn-walk is the largest single loop. One honest caveat on reading Done 2: the fresh baseline itself
+improved under this frame (fresh def A over2 13 now vs 20 in S3b's runs, because fresh is
+frame(structure(S'), S') with the same boundary slides), so the moved bar rose with the code.
