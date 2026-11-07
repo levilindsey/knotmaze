@@ -803,7 +803,7 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
       void baseIdx;
       if (!(A.L > 1e-9 && B.L > 1e-9)) { cw.why = "arm span 0"; corners.push(cw); cornerWork.push(cw); continue; }
       let bx = A.ux + B.ux; let by = A.uy + B.uy;
-      const bl = Math.hypot(bx, by) || 1; bx /= bl; by /= bl;
+      const bl = Math.sqrt(bx * bx + by * by) || 1; bx /= bl; by /= bl;
       const sn = Math.sin(th / 2) || 1;
       const V = solveEq(A, B, h, j.c[0] + (bx * h) / sn, j.c[1] + (by * h) / sn, h / Math.max(Math.tan(th / 2), 1e-6));
       if (!V.ok) { cw.why = "no V"; corners.push(cw); cornerWork.push(cw); diagnostics.push(`corner ${j.id}: no V`); continue; }
@@ -874,7 +874,7 @@ export function buildOutlineFull(scene: SceneIn): { table: OutlineTable; debug: 
           if (den > 1e-9) {
             const ux = (nax + nbx) / den; const uy = (nay + nby) / den;
             const gx = p.x + ux * dd; const gy = p.y + uy * dd;
-            const acc = Math.min(h, Math.max(0.5 * Math.hypot(ux, uy) * dd, 1e-3 * h));
+            const acc = Math.min(h, Math.max(0.5 * Math.sqrt(ux * ux + uy * uy) * dd, 1e-3 * h));
             const nn = newtonT(rn, gx, gy, p.fa.u, p.fb.u, acc);
             if (nn.ok && Math.hypot(nn.x - gx, nn.y - gy) <= acc) next = nn;
           }
@@ -2281,7 +2281,7 @@ export function frame(st: OutlineStructure, scene: SceneIn, profile?: Record<str
       if (Math.abs(det) < 1e-12) break;
       let dx = (-Fa * gby + Fb * gay) / det;
       let dy = (-Fb * gax + Fa * gbx) / det;
-      const dl = Math.hypot(dx, dy);
+      const dl = Math.sqrt(dx * dx + dy * dy);
       if (dl > h) { dx *= h / dl; dy *= h / dl; }
       x += dx; y += dy;
       footArmF(A, x, y, fa, fa.u); footArmF(B, x, y, fb, fb.u);
@@ -2311,7 +2311,7 @@ export function frame(st: OutlineStructure, scene: SceneIn, profile?: Record<str
           if (den > 1e-9) {
             const ux = (nax + nbx) / den; const uy = (nay + nby) / den;
             const gx = cst.qx + ux * dd; const gy = cst.qy + uy * dd;
-            const acc = Math.min(h, Math.max(0.5 * Math.hypot(ux, uy) * dd, 1e-3 * h));
+            const acc = Math.min(h, Math.max(0.5 * Math.sqrt(ux * ux + uy * uy) * dd, 1e-3 * h));
             const tFa = gFa; const tFb = gFb;
             copyFoot(tFa, qFa); copyFoot(tFb, qFb);
             let sx = gx; let sy = gy;
@@ -2327,13 +2327,13 @@ export function frame(st: OutlineStructure, scene: SceneIn, profile?: Record<str
               if (Math.max(Math.abs(Fa), Math.abs(Fb)) < 1e-9 * Math.max(1, rn) && Math.abs(det) >= 0.05) break;
               let dx = (-Fa * gby + Fb * gay) / det;
               let dy = (-Fb * gax + Fa * gbx) / det;
-              const dl = Math.hypot(dx, dy);
+              const dl = Math.sqrt(dx * dx + dy * dy);
               if (dl > acc) { dx *= acc / dl; dy *= acc / dl; }
               sx += dx; sy += dy;
               footNearM(polys, h, cst.A, sx, sy, tFa.u, tFa.k, tFa); footNearM(polys, h, cst.B, sx, sy, tFb.u, tFb.k, tFb);
             }
             const sok = Math.max(Math.abs(tFa.d - rn), Math.abs(tFb.d - rn)) < 1e-9 * Math.max(1, rn);
-            if (sok && Math.hypot(sx - gx, sy - gy) <= acc) { cst.qx = sx; cst.qy = sy; copyFoot(qFa, tFa); copyFoot(qFb, tFb); cst.rhoCur = rn; advanced = true; }
+            if (sok && Math.sqrt((sx - gx) * (sx - gx) + (sy - gy) * (sy - gy)) <= acc) { cst.qx = sx; cst.qy = sy; copyFoot(qFa, tFa); copyFoot(qFb, tFb); cst.rhoCur = rn; advanced = true; }
           }
         }
         if (advanced) step = Math.min(dN, 2 * step);
@@ -2348,7 +2348,7 @@ export function frame(st: OutlineStructure, scene: SceneIn, profile?: Record<str
       const TTm = rt.tan[arm.pi]; const TXm = TTm.tx; const TYm = TTm.ty; const GFm = TTm.gF; const GBm = TTm.gB;
       const footStartS = base + pl.s[kFoot];
       const footEndS = footStartS + pl.segLen[kFoot];
-      const delta = cache.valid ? Math.hypot(x - cache.qx, y - cache.qy) : Infinity;
+      const delta = cache.valid ? Math.sqrt((x - cache.qx) * (x - cache.qx) + (y - cache.qy) * (y - cache.qy)) : Infinity;
       let hi = winHi;
       let minF = Infinity;
       let kHi = -1; let bkHi = 0;
@@ -2482,7 +2482,7 @@ export function frame(st: OutlineStructure, scene: SceneIn, profile?: Record<str
     th = ((th % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
     fc.theta = th;
     let bx = A.ux + B.ux; let by = A.uy + B.uy;
-    const bl = Math.hypot(bx, by) || 1; bx /= bl; by /= bl;
+    const bl = Math.sqrt(bx * bx + by * by) || 1; bx /= bl; by /= bl;
     const thC = Math.min(Math.max(th, 1e-3), Math.PI - 1e-3);
     const sn = Math.sin(thC / 2) || 1;
     const vx0 = J.c[0] + (bx * h) / sn; const vy0 = J.c[1] + (by * h) / sn;
