@@ -134,3 +134,35 @@ Times: start Get-Date 2026-11-07 00:17:48 -08:00; last milestone 01:04:45 -08:00
 - The 5 still A rows and the 0.5h moved rows above are the open work: the drawn geometry matches S3d wherever S3d sampled; every excess is a point the new stable piece list emits (collapsed stretches/caps/failed corners, chord midpoints inside stretches) placed on the nearest exposed outline we could name per segment without a decision. Killing them means either placing collapsed points by the covering surface's own exposed segment clipped to the covered stretch's extent (continuous in the stretch, no chord midpoints), or accepting non-uniform piece point counts.
 - Rigid passes at 4.8e-9 after the two choice fixes above; buildBorder's fan step counts have the same ceil shape and have not needed the snap on def.
 - Recovering S3d costs requires moving per-frame border/exposure work onto recorded recipes again, which is exactly what S3e removed.
+
+## Claude's check (2026-11-07, re-run on 72a27c50)
+
+Claude re-ran every check under the perf lock, 01:59-02:15. Muse's outputs were first copied to the
+main checkout's `.claude/probes/K1240/s3e_out/`; the re-run's logs are in `s3e_out/claude_rerun/`.
+
+- **Done 1 holds as written but misses the goal.** structure(S) deep-equals structure(S') in all 15
+  cases, and every junction is cyclic (`structure.log`). The piece list, though, comes from frame(),
+  and it changes with the frame. Claude's `proto/s3e_claude_pieces.ts` compares frame(structure(S), S)
+  with frame(structure(S), S'):
+  - at 0.1h, the piece keys (kind, chain, side, corner) differ on 10 of 12 scenes (muse_hash 31 keys, def 13);
+  - at 0.5h, def goes from 4373 to 4330 pieces (68 keys differ), ring from 923 to 854, and fat from
+    3436 to 2828 (608 pieces).
+  Goal 2's "Nothing in frame() adds, removes or reorders a piece" fails. About 30% of the pieces are
+  one point or zero length (def: 1293 of 4373).
+- **Done 2 fails, as reported.** Still is 19/24, the same 5 A rows with the Handoff's numbers
+  (`cmp_exact.log`). The synthetic tests pass; rigid motion holds to 4.809e-9.
+- **Done 3 fails.** The moved frame equals the fresh one exactly (maxEnd 0 on every scene,
+  `move_rigid.log`). Against S3d's fresh rows, 10 of 24 rows fail at 0.1h (the Handoff says 11) and 4
+  of 6 at 0.5h (def A and B, ring A, fat A; ring B and fat B pass).
+- **Done 4 holds:** all within tolerance. The only console error is the favicon 404.
+- **Done 5.** def's frame median is 327.2 / 328.4 ms and p95 445.9 / 438.8; cuts, eyes and exposure
+  take 265.8 / 265.7 ms of it (`bench_claude1.json`, `bench_claude2.json`). In the sweep, the largest
+  piece motion in one step is 15.38 world units on def (step 8), 4.27 on ring and 5.50 on fat. The
+  medians of the per-step maxima are 2.44, 1.79 and 1.55, while no particle moves more than 0.010.
+- The main checkout's HEAD reached 29d1a862 at 01:29 through the hourly `pull --ff-only`, not through
+  Muse.
+
+Verdict: S3e did the diagram half of Levi's rule (structure() reads no position) but not the piece
+half. frame() still rebuilds the piece list and parks covered pieces on other surfaces, so pieces
+jump and the gates fail. S3f (`K1240_s3f_fixed_pieces.md`) has structure() emit the piece list from
+the diagram, and frame() compute points only.
