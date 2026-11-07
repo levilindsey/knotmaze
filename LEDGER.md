@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1238.
+Next free ID: K1239.
 
 ## Waiting on Levi
 
@@ -307,12 +307,12 @@ Next free ID: K1238.
   - brief: `docs/design/K1211_s6_one_glow.md`
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
-  float64 reference. Plan S1-S8, about 15 h (F7); supersedes K868 and K992. S1 to S1f merged (S1f: fb348a78); S3 (K1097) merged short of its gate; S1g merged (ca273d04); S3b (K1097) merged (587b7e80, 2026-11-02): 0 DEFECT, the Pixel's 2 ms missed 5-20x. S4a merged (f294dc08, 2026-11-06) short of check #12: the band's tube edges, caps and foot on the GPU, unused by the app.
-  - owner: muse session 4d5b34d5 (Paseo), coordinated by claude session c18e2f02-e64f-41ba-9af0-2dbd583358e2; started 2026-11-06 08:18, cap 2 h (~10:18)
-  - branch: detached worktree .claude/worktrees/muse-k1040-s4a2 (node_modules junctioned), pushes to master; last commit: `c82ee0ad`
-  - evidence: src/render/field/band_b.ts, band_b_glsl.ts, band_b_pass.ts (S4a, on master); .claude/probes/K1040/s4a/ (tracked tools); S4a's out/ (check_summary.md, sheets/) in its kept worktree .claude/worktrees/agent-a938d2e1d4d9b45e3/.claude/probes/K1040/s4a/out/; the 12 scenes in the main checkout's .claude/probes/K868/scenes/
-  - next: S4a2 to its Done (check #12 within 1/32 px away from corners: R2 group surfaces, the burial endpoint terms, R3 END arms, R1 union, R4); Claude checks its table and push, then launches S4b (corners, ties, outer edge, the flag: Levi's first look; show him the reference's group-surface halos, S4a crop muse_hash_worst_1), then S4b's Pixel batch (check #13)
-  - brief: `docs/design/K1040_s4a2_band.md`
+  float64 reference. Plan S1-S8, about 15 h (F7); supersedes K868 and K992. S1 to S1f merged (S1f: fb348a78); S3 (K1097) merged short of its gate; S1g merged (ca273d04); S3b (K1097) merged (587b7e80, 2026-11-02): 0 DEFECT, the Pixel's 2 ms missed 5-20x. S4a merged (f294dc08, 2026-11-06) short of check #12: the band's tube edges, caps and foot on the GPU, unused by the app; S4a2 merged (365d2244): within 1/32 px away from corners except D4's tie and the cap mix.
+  - owner: claude agent ac5c423693cf9dec3, coordinated by claude session c18e2f02-e64f-41ba-9af0-2dbd583358e2; started 2026-11-06 09:44, cap 2 h (~11:45)
+  - branch: worktree-agent-ac5c423693cf9dec3 in .claude/worktrees/agent-ac5c423693cf9dec3; last commit: `d7c9caee`; last commit: `c82ee0ad`
+  - evidence: src/render/field/band_b*.ts (S4a f294dc08, S4a2 365d2244, on master); .claude/probes/K1040/s4a2/ (tracked tools; its check #12 table in the S4a2 brief's Handoff); S4a2's out/ in the main checkout's .claude/probes/K1040/s4a2/out/; the 12 scenes in .claude/probes/K868/scenes/
+  - next: S4b to its Done (corners, D4 tie, outer edge AA, the flag param; check #12 everywhere, census, sheets, a Pixel batch); Claude views the sheets and the flag-on links, merges, shows Levi, runs check #13 on the Pixel (~12:45)
+  - brief: `docs/design/K1040_s4b_band.md`
   - env: from the worktree, `npx vite --config .claude/probes/K1040/vite.private-cache.config.ts --port 5401 --strictPort --host 127.0.0.1`
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
@@ -512,11 +512,11 @@ Next free ID: K1238.
 - **K1220** · Text forks: a disc with a round edge inside, steps where the arms' straight cuts meet it
   (22N, 655eb6a9): glyph arms under 0.15 world get no field record, so a host-axis disc draws the fork.
   S2 runs on master's fused junctions (`docs/design/K1220_s2_text_forks.md`); S1's WIP 25a5c501 is a lead; notes.
-  - owner: muse session b4113946 (Paseo), coordinated by claude session c18e2f02-e64f-41ba-9af0-2dbd583358e2; started 2026-11-06 08:08, cap 2 h
-  - branch: detached worktree .claude/worktrees/muse-k1220-s3 (node_modules junctioned), pushes to master; last commit: `84c6cb92`
-  - evidence: .claude/probes/K1220/s3/ (its copies of S2's tools; outputs untracked); S2's sheets in the kept worktree .claude/worktrees/agent-a568a7f4f11c55549/.claude/probes/K1220/s2/out/
-  - next: S3 to its Done (the i forks draw the record like the a's; geom counts, confinement diffs, sheets); Claude views the sheets, removes the worktree (unlink node_modules first), shows Levi. Then the 1 px jog in ia at xh 2 and the reveal's bare-ribbon moment (a at xh 3, 40%). Levi still to look at S2's sheets (sent 2026-11-06)
-  - brief: `docs/design/K1220_s3_i_forks.md`
+  - owner: muse session 9b0093e5 (Paseo), coordinated by claude session c18e2f02-e64f-41ba-9af0-2dbd583358e2; started 2026-11-06 09:38, cap 2 h (~11:39)
+  - branch: detached worktree .claude/worktrees/muse-k1220-s4 (node_modules junctioned), pushes to master; last commit: `a9d9602f`; last commit: `84c6cb92`
+  - evidence: .claude/probes/K1220/s4/ (its copies of S3's tools; outputs untracked); S3's sheets in the main checkout's .claude/probes/K1220/s3/out/sheets/; S3 merged at e8636a3a (fused outline, no notch or ledge; new tone seams and an xh 2 bump)
+  - next: S4 to its Done (each fan wears the paint beneath it, no bump, S3's outline kept); Claude views its sheets against window 84, removes the worktree (unlink node_modules first), shows Levi. Then the 1 px jog in ia at xh 2 and the reveal's bare-ribbon moment (a at xh 3, 40%)
+  - brief: `docs/design/K1220_s4_i_paint.md`
 - **K1228** · Cross ji 51's spur: chain 61's ribbon leaves 2-4 px of background inside its half-width on the
   inside of a 40° left turn (radius 19-21 px, under its 23.4 px half-width), in every build; likely
   `ribbon_mesh.ts`'s concave-side clamp (untested), and a fix touches every ribbon (K1218 S5's handoff,
@@ -1701,6 +1701,10 @@ Every other item below waits on the trigger it names.
 - **K1237** · K863 J3m's leftovers: o's word-end tail has a small notch where it parts from the o and fails
   the census's rough check (J3L's tail did too); f's spur was viewed only at the sheets' 9.2 u pen
   (`.claude/probes/K863/trace/work37/NOTES_k863m.md`)
+- **K1238** · ia at xh 2, the i fork: a dark arc and a small dark triangle on the stem above the fused joint,
+  the crossing gap where the body's dome passes over the stem (about 1.7 fh along the tip arm). A fix needs
+  fan rims reaching the tip's centreline there, or crossing_gaps treating the own-junction crossing as a joint
+  pair (K1220 S3's Handoff, `docs/design/K1220_s3_i_forks.md`).
 
 ## Approved, to schedule (2026-10-11)
 
