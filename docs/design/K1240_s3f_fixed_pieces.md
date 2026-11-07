@@ -300,3 +300,192 @@ session 09c7a672-a414-402a-97da-b3176839a2e5. The agent worked on `wip/k1240-s3f
   | `s3f_claude_pics.ts` | Crops of the worst A spots: env `AT="x,y;..."`, args scene, tag, cropH and skip |
   | `s3f_claude_bpieces.ts [scene] x,y ...` | Form B's pieces and ink at a point |
   | `s3f_claude_run.ts <scene> <ids>` | One run piece, its stations and its points |
+
+## Handoff 2 (Claude, second run, 2026-11-07)
+
+- **Run:** started 10:17:45, stopped at 12:02, before the 12:17:45 cap. Re-running every number
+  takes about 17 minutes (Node checks 2, page 2.5, two benches 12), so the last code change had to
+  land by about 11:45. Usage of the week was 95% at 11:28 and 95% at the stop.
+- **Where:** `wip/k1240-s3f` in `.claude/worktrees/muse-k1240-s1`, on base 5276cc0a. This run's
+  commits are 17245115, a03d2f61, 99b83db1, 028f32dd and this handoff's.
+- **Evidence:** every number below is on 028f32dd: `out/s3f/checks_final4.txt` (logs in
+  `logs_final4/`), `cmp_page_final4.txt`, `bench_final4{a,b}.json` and `sweep.json`.
+
+### Dones
+
+1. **Fixed piece keys and order: holds.**
+   - Ordered piece keys are identical between S and S' at 0.1h on all 12 scenes, and at 0.5h on def,
+     ring and fat.
+   - structure(S) deep-equals structure(S'), and every junction is cyclic.
+   - frame() no longer chooses anything (a03d2f61, below).
+2. **Still: fails** on 3 of the 24 rows (the first run: 4). Every p99 is within 0.01.
+
+   | Row | over2 now | First run | Baseline |
+   |---|---|---|---|
+   | def B | 11 | holds | 6 |
+   | g41_ring_tw42 A | 9 | 9 | 4 |
+   | g41_user_tw42 A | 14 | 23 | 12 |
+
+   muse_default_tw A (15 in the first run) and user_tw42.lightpaper A (23) now hold. S2's synthetic
+   tests pass. A rigid motion of def is exact to 4.809e-9 (the tolerance is 1e-6).
+3. **Moved: fails.**
+   - At 0.1h, 7 of 24 rows fail (the first run: 6):
+
+     | Row | over2 now | First run | Baseline |
+     |---|---|---|---|
+     | muse_default_tw A | 11 | 20 | 5 |
+     | muse_default_tw B | 25 | holds | 21 |
+     | def A | holds | 16 | 13 |
+     | def B | 14 | holds | 7 |
+     | user_tw42.lightpaper A | 19 | 25 | 6 |
+     | g41_ring_tw42 A | 6 | 6 | 3 |
+     | g41_user_tw42 A | 18 | 24 | 5 |
+     | g41_user_tw64 A | 193 | 214 | 189 |
+
+   - At 0.5h, all 6 rows fail (the first run: 5):
+
+     | Row | over2 now | First run | Baseline | p99 now (first run; baseline) |
+     |---|---|---|---|---|
+     | def A | 45 | 54 | 41 | |
+     | def B | 43 | holds | 34 | |
+     | ring A | 253 | 258 | 84 | 3.865 (4.242; 0.005) |
+     | ring B | 51 | 27 | 18 | 0.118 (within; 0.105) |
+     | fat A | 1585 | 1327 | 129 | 8.591 (8.217; 0.000) |
+     | fat B | 161 | 71 | 6 | |
+
+   - The fat rows and 8 of ring B's 24 extra came with the nearest approach that replaced the twist
+     walk (a03d2f61). def B and the other 16 of ring B's came with the cap stations (99b83db1).
+4. **Page tests: hold.** `cmp_s3f.mjs page` reports ALL WITHIN TOLERANCE. The one console 404 is
+   S3's baseline's too.
+5. **Reported.**
+   - **Frame time** under the lock: 120 timed frames per scene, two runs (`bench_final4a` /
+     `bench_final4b`). def's median is where the first run's was (323.1 / 320.1 ms).
+
+     | Scene | Median (ms) | p95 (ms) | structure() (ms) |
+     |---|---|---|---|
+     | muse_hash | 484.0 / 482.6 | 660.6 / 641.4 | 3.7 / 2.9 |
+     | muse_default_tw | 299.5 / 301.4 | 428.6 / 432.0 | 3.3 / 4.3 |
+     | def | 321.5 / 329.7 | 453.5 / 456.0 | 3.6 / 4.3 |
+     | fat | 255.6 / 238.4 | 327.4 / 316.4 | 0.9 / 0.6 |
+     | ring | 57.5 / 57.8 | 128.1 / 124.2 | 0.5 / 0.6 |
+     | user_tw42.lightpaper | 117.9 / 116.8 | 179.8 / 175.9 | 1.7 / 1.2 |
+     | g41_def_tw42 | 274.8 / 281.0 | 385.2 / 378.1 | 4.5 / 4.6 |
+     | g41_def_tw64 | 390.8 / 393.6 | 523.6 / 528.1 | 3.8 / 4.1 |
+     | g41_ring_tw42 | 47.0 / 45.6 | 87.0 / 82.6 | 0.4 / 0.6 |
+     | g41_ring_tw64 | 62.6 / 62.6 | 110.7 / 108.5 | 0.5 / 0.4 |
+     | g41_user_tw42 | 116.7 / 116.4 | 177.8 / 173.4 | 1.2 / 1.1 |
+     | g41_user_tw64 | 178.4 / 178.1 | 258.3 / 257.7 | 1.3 / 1.4 |
+
+   - **def's phases**, run a / run b:
+
+     | Phase | Time (ms) |
+     |---|---|
+     | setupBorders | 21.5 / 20.3 |
+     | corners | 24.9 / 24.8 |
+     | cutsEyesExposure | 277.4 / 283.3 |
+     | regions | 25.3 / 25.1 |
+     | piecesCapsEtc | 13.0 / 13.4 |
+
+   - **The 20-step sweep.** All pieces matched at every step. The largest piece motion fell to 25
+     (def), 75 (ring) and 112 (fat) times the largest particle motion (the first run: 74, 108 and
+     152):
+
+     | Scene | Piece max | Where | Piece median | Particle max |
+     |---|---|---|---|---|
+     | def | 0.221 | step 19, run ch82 side1 | 0.143 | 0.0090 |
+     | ring | 0.745 | step 3, arc ch1 side0 corner26 | 0.142 | 0.0099 |
+     | fat | 0.998 | step 20, run ch2 side1 | 0.070 | 0.0089 |
+
+   - **Degenerate pieces**, S / S'. muse_hash's were 202 / 197 in the first run.
+
+     | Scene | 0.1h | 0.5h |
+     |---|---|---|
+     | muse_hash | 199 / 194 | |
+     | muse_default_tw | 44 / 47 | |
+     | def | 61 / 65 | 61 / 87 |
+     | fat | 0 / 0 | 0 / 0 |
+     | ring | 11 / 13 | 11 / 24 |
+     | user_tw42.lightpaper | 23 / 22 | |
+     | g41_def_tw42 | 7 / 7 | |
+     | g41_def_tw64 | 129 / 121 | |
+     | g41_ring_tw42 | 1 / 1 | |
+     | g41_ring_tw64 | 14 / 15 | |
+     | g41_user_tw42 | 23 / 22 | |
+     | g41_user_tw64 | 58 / 64 | |
+
+6. **A Handoff:** this one.
+
+### What each commit did
+
+- **17245115: continuous corner stations.**
+  - A failing corner ("V outside spans", "arm span 0") with a meet puts each facing border's station
+    a fraction w of the way from the meet to the root.
+  - w = clamp((z_self - z_other) / zt, 0, 1) at the meet, with zt = 0.1 depthAmp, form B's depth
+    scale. w = 0 is the union's corner, and w = 1 runs the layered border on to the root.
+  - Nothing chooses between union and layered.
+- **a03d2f61: nothing left to choose or flip.**
+  - Gone:
+    - the diagram's armLayer and armFirstX;
+    - cornerFallback's union-or-layered decision (cutA, cutB, applyMeet);
+    - the twist walk (twistFlip);
+    - the env switches K1240_LEGACY, K1240_RULE, K1240_CV, K1240_OLDTWIST and K1240_CDBG.
+  - K1240_NOMEET and K1240_XDBG remain.
+  - A tight twist's missing cut is the under border's nearest approach to the over tube's far
+    border, within the crossing's window (segSegClosest over the same segments). Once the two
+    borders touch, it is the crossing itself.
+  - Against the walk at 0.5h, the nearest approach costs: fat B 71 -> 161, fat A 1327 -> 1585,
+    ring B 27 -> 35 and def A 59 -> 62.
+- **99b83db1: the upper border stops at the nearer cap.**
+  - Form B hides a border where both arms are full members of the junction's group.
+  - So the station sits at max(1 - w, rCap) of the meet's distance.
+  - rCap = min over the two arms of cap / d_meet, with cap = min(L, Lcut - h/2), the cap ramp's
+    midpoint.
+  - Still frames went from 5 failing rows to 3. At 0.5h, def A went 62 -> 45, but def B (which had
+    held) went to 43, and ring B went 35 -> 51.
+- **028f32dd:** comments and one unused constant (ztB) only. The Node checks' summary is identical
+  to 99b83db1's.
+
+### Tried and reverted
+
+- **The stubs (goal 2).** Both tries made things worse:
+  - The root tangent points as stations at no-meet corners: user_tw42 A 22 -> 39, g41_ring_tw42 A
+    9 -> 31.
+  - A station at the cap (d = L) for an arm without one, the brief's lead: still A 40, B 7 -> 60.
+- **What the crop shows** (`out/s3f/capw5/g41_user_tw42_A0.png`, j28 and j32):
+  - The stub arm (a87, a99) has no extent.
+  - The neighbour arm's facing border (a85, and a97's side) hangs from the outline's notch, into the
+    union's fill, down to its root.
+  - Form B's corner joins that neighbour to the arm past the stub.
+  - So the fix looks structural: a corner that steps over the stub arm, decided once in the diagram,
+    or a station where the facing border meets the next arm's border.
+- **Other cap rules:**
+  - capw (each arm's own L, multiplied) fixed the A rows but made B much worse.
+  - capw2, capw3 and capw4 each scored worse than 99b83db1 on the Node checks.
+  - capw4, where each arm is limited by the other arm's extent past its root, is kept as
+    `proto/s3f_capw4.patch`.
+
+### Corrections to the first Handoff
+
+- These items under its "Left in the code" are gone (a03d2f61):
+  - K1240_CDBG;
+  - the two frame-time decisions;
+  - K1240_LEGACY, K1240_RULE, K1240_CV and K1240_OLDTWIST.
+- `-Skip` needs the `-Command` form:
+  `pwsh -NoProfile -Command "& .claude/probes/K1240/proto/s3f_claude_checks.ps1 -Tag <t> -Skip sweep"`.
+  Under `-File`, the list arrives as one string.
+
+### Next
+
+1. **The stub corners** (user_tw42.lightpaper j28, j29, j32 and j61; ring j4, j5, j7 and j16). Give
+   the diagram a corner that steps over a stub arm: stations at the roots and at the caps both made
+   things worse.
+2. **The twist's nearest approach.** Limit it, for instance to the span before the pair's next
+   crossing, to win back fat and ring at 0.5h without restoring the walk.
+3. **The still rows left:** def B 11 (since the cap stations), g41_ring_tw42 A 9 and g41_user_tw42
+   A 14.
+4. **ring and fat at 0.5h** (A p99 3.9 and 8.6). This run did not reach them, and the cause is still
+   unknown.
+
+### Commands
+
+As in the first Handoff, with the `-Command` form for `-Skip`. The final run is tag `final4`.
