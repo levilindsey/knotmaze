@@ -2859,3 +2859,111 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 ## K654 (Done 2026-10-29)
 
 - **K654** · the moving lead rides uKTeleAt, no texel rewrite (K324 s2). Done in 754f06a8 (2026-10-29).
+
+## K1056 (Done 2026-10-30)
+
+- **K1056** · Real-time lure lasts until the target (run G, K1062): detect() no longer re-spots a lured monster, both clocks suggest the shipped 2 lures / 1 snare. Done in ab055498 (2026-10-30).
+
+## K321 (Done 2026-10-30)
+
+- **K321** · Credits page: licenses.html became credits.html, Levi header first, Scarborough Fair in Music and sound, Built with Claude Code below art/music. Done in 9de9d25e (2026-10-30).
+
+## K658 (Done 2026-10-30)
+
+- **K658** · K137 page gaps checked: 155 checks in docs/design/K658_page_checks.md, FAILs K1064-K1074, sounds K1075. Done in 7d00fc06 (2026-10-30).
+
+## K814 (Done 2026-10-30)
+
+- **K814** · Text & emblem rows built from SHAPE_INJECTION_PARAMS. Done in 82dd37a5 (2026-10-30).
+
+## K441 (Done 2026-10-30)
+
+- **K441** · Owed same-state rerun done: 8/8 stands asleep at both ends, tick gap +4.24 ms (1x) / +13.16 ms (4x) vs +0.23/+1.85 prediction in docs/design/K441_fire_frame.md. Done in 8308ea15 (2026-10-30).
+
+## K645 (Done 2026-10-30)
+
+- **K645** · K140 frame A/B on one build 72bff312: cannons cost unresolved at 1x, +3.2/+5.6 ms at 4x (K653_checks.md). Done in 295d28c4 (2026-10-30).
+
+## K1062 (Done 2026-10-30)
+
+- **K1062** · Muse batch 3, runs G and A-F, reviewed on master. Done in 5debde5a (2026-10-30).
+
+## K1064 (Done 2026-10-30)
+
+- **K1064** · K658 check: exempt tail crossing. Dropped: stale check, K840 (0484e32f) breaks run ends too (K658_page_checks.md) (2026-10-30).
+
+## K1066 (Done 2026-10-30)
+
+- **K1066** · K658 check: exempt tail crossing. Dropped: stale check, K840 (0484e32f) breaks run ends too (K658_page_checks.md) (2026-10-30).
+
+## K1067 (Done 2026-10-30)
+
+- **K1067** · K658 check: exempt tail crossing. Dropped: stale check, K840 (0484e32f) breaks run ends too (K658_page_checks.md) (2026-10-30).
+
+## K1068 (Done 2026-10-30)
+
+- **K1068** · K658 check: exempt tail crossing. Dropped: stale check, K840 (0484e32f) breaks run ends too (K658_page_checks.md) (2026-10-30).
+
+## K1069 (Done 2026-10-30)
+
+- **K1069** · K658 check: exempt tail crossing. Dropped: stale check, K840 (0484e32f) breaks run ends too (K658_page_checks.md) (2026-10-30).
+
+## K1065 (Done 2026-10-30)
+
+- **K1065** · K658 check: fog IoU 0.9613 after Undo. Dropped: inside K137's 0.956-0.981 spread, the 0.97 line is too tight (K658_page_checks.md) (2026-10-30).
+
+## K1070 (Done 2026-10-30)
+
+- **K1070** · K658 check: real-time Undo. Dropped: by design, the real-time Stranded banner offers Restart only (K658_page_checks.md) (2026-10-30).
+
+## K1071 (Done 2026-10-30)
+
+- **K1071** · K658 check: real-time Undo. Dropped: by design, the real-time Stranded banner offers Restart only (K658_page_checks.md) (2026-10-30).
+
+## K1072 (Done 2026-10-30)
+
+- **K1072** · K658 check: real-time Undo. Dropped: by design, the real-time Stranded banner offers Restart only (K658_page_checks.md) (2026-10-30).
+
+## K1073 (Done 2026-10-30)
+
+- **K1073** · K658 check: real-time Undo. Dropped: by design, the real-time Stranded banner offers Restart only (K658_page_checks.md) (2026-10-30).
+
+## K1074 (Done 2026-10-30)
+
+- **K1074** · K658 check: c4 stub. Dropped: stale check, K840 leaves snap no exempt stub; c5 covers snap (K658_page_checks.md) (2026-10-30).
+
+## K785 (Done 2026-10-30)
+
+- **K785** · Lore attach cost: the hubs now attach only their own lore (re-measured 2026-10-30: frame_loop.ts 2 rules files, 3k tokens, was 11 / 28k; K774's five files 7, 30k, was about 60k, 16k of it the minotaur lore for minotaur_turns.ts). Done in 65c4e1bd (2026-10-30).
+
+## K327 (Done 2026-10-30)
+
+- **K327** · Labels that say what they size: 'Off-screen arrow size' and 'Maze marker size' (K534, 2605bf6b), word labels for the rest (K541); the panel inventory at HEAD shows no row labelled with its key. Done in e77c9746 (2026-10-30).
+
+## K331 (Done 2026-10-30)
+
+- **K331** · touch picks in pixels (touchPickMargin); with K330 glow on press. Done in 20b66f6e (2026-10-30).
+
+## K330 (Done 2026-10-30)
+
+- **K330** · touch press on a choice lights its hover glow at once. Done in 20b66f6e (2026-10-30).
+
+## K549 (Done 2026-10-30)
+
+- **K549** · Text scenes fit beside the open panel (fitArea/fitPlacement in view_clamp, camera reads panel only for params.text); probe .claude/probes/K549/. Done in 48cf34fa (2026-10-30).
+
+## K486 (Done 2026-10-30)
+
+- **K486** · Touch help for the panel's nine buttons (K467's mechanism on buttons); probe .claude/probes/K486/. Done in 4935f769 (2026-10-30).
+
+## K1077 (Done 2026-10-30)
+
+- **K1077** · prof5-prof8 attribute the residual: 82% of +4.24 x1, 87% of +13.16 x4; three clusters (button-tick rects, fillet rebuild, gap-slot pass) filed as K1081-K1083. Done in d21a05d2 (2026-10-30).
+
+## K412 (Done 2026-10-30)
+
+- **K412** · preload verified on real network: through levi.dev proxy chunk downloads once, worker fetch transfer 0 (5 fresh + 5 warm per origin, desktop Chrome); pages.dev revalidates (max-age=0), fix filed K1084. Done in c24d5801 (2026-10-30).
+
+## K1079 (Done 2026-10-30)
+
+- **K1079** · Muse batch 4: A K331+K330 20b66f6e, B K549 48cf34fa, C K486 4935f769, D K1077 d21a05d2, E K412 c24d5801; all passed review (K1081, K1083, K1084 amended; residuals K1085, K1086 filed). Done in c24d5801 (2026-10-30).
