@@ -166,10 +166,18 @@ void main(void) {
   // cross within +-R: the fragment's nearest-cone fallback) keeps the
   // whole box. The trapezoid lies inside the box and holds every pixel
   // of it this quad owns, so the drawn pixels are the box's.
+  // K8 (phone): the margin is ONE CSS pixel along dir, no more. It sits
+  // trapPad * cos >= 0.8 px off the bisector line (cos >= SDF_TRAP_COS),
+  // past any MSAA sample of an owned pixel (half-diagonal 0.71 px), and a
+  // CSS pixel is at least a device pixel. The old max(uSdfPad, 2 px) ran
+  // each end 2 px past a segment of SAMP spacing (0.09 world, a pixel or
+  // two at the links' fit): most of every quad was its neighbours'
+  // pixels, rasterized here only to be discarded.
+  // (uSdfPad still pads the sides, through R.)
   mat3 mvp = uProjectionMatrix * uWorldTransformMatrix * uTransformMatrix;
   mat3 wts = uWorldTransformMatrix * uTransformMatrix;
   float pxWorld = 1.0 / max(length(wts[0].xy), 1e-6);
-  float trapPad = max(uSdfPad, 2.0 * pxWorld);
+  float trapPad = pxWorld;
   bool hasA = r0 > -0.5;
   bool hasB = r3 > -0.5;
   vec2 jA = sdfJointT(P0, P1, P2);
