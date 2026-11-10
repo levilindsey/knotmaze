@@ -4116,3 +4116,26 @@ The proposal is one glyph source in `src/`. It holds the alphabet as data and on
 keeps Hershey only for characters the alphabet lacks. The kit's checks (hooks, spikes, facets,
 locality, census) become tracked tests. It starts after Levi answers K1236. It is independent of
 K1240's outline.
+## K1247 (2026-11-09, Claude's re-run of the Done checks on abb5891d)
+
+Muse's run (Paseo 4e0bc745) ended at Handoff 2, abb5891d. Claude re-ran every check on that commit
+(`.claude/probes/K1240/proto/k1247c_final.ps1`; logs in the main checkout's untracked
+`.claude/probes/K1240/out/k1247c_final/`, timings in `out/k1247c_time/`):
+
+- Done 1, baseline rows: Muse's `out/k1247/base/` (worktree), present for every scene and mult.
+- Done 2, same output: PASS. Every row within tolerance at still, 0.1h and 0.5h (cmp_consistent:
+  "ALL WITHIN TOLERANCE"; the largest moves are muse_hash A at 0.1h, p99 +0.008, over2 +1).
+  Ordered piece keys, kinds and counts identical everywhere. Largest point distance vs the full
+  rebuild: <=3.7e-9 cold and warm on every scene; 1.36e-4 (0.0005 h) on def at 0.5h, at corner
+  108 (ch62) and the two runs it joins. Cold = warm exactly (0.0 on every case, one frame away and
+  walked). The rest: faces and regions that differ only in vertex count (Hausdorff <=3.3e-9, same
+  area), and piece s-labels shifted on muse_hash piece 622 (6.8e-2) and user_tw42 / g41_user_tw42
+  piece 8 (2.3e-2) with identical points.
+- Done 3, unchanged: PASS. structure(S) deep-equals structure(S') in all 15 cases, all junctions
+  cyclic; `outline.test.ts` all pass; rigid def 4.8e-9 (tolerance 1e-6).
+- Done 4, speed: FAIL. Two runs under the lock, in motion (k1247c_time.ts, 120 frames): def median
+  38.5 / 38.3 ms, p95 46.2 / 48.8 (gate 3 / 6, about 13x over); def through the consistent S'
+  58.9 / 47.6; fat 54.9 / 54.9; ring 10.0 / 10.0. def's phases: setupBorders 6.5, corners 11.7-12.0,
+  cutsEyesExposure 17.4-17.6. Structure 5-6 ms, first cold frame 140-160 ms. From 322-325 ms at the
+  brief's start (Muse's harness: 33 ms before its cold = warm fix, 52 ms after).
+- Done 5, handoff: Handoff 2 in the brief.

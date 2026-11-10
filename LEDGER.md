@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1250.
+Next free ID: K1251.
 
 ## Waiting on Levi
 
@@ -291,22 +291,9 @@ Next free ID: K1250.
 - **K1172** · Walker modes, Levi's brainstorm (2026-11-03): guide it, program it, a flock, stop them (and a tower
   defense), steer it live, bend and tilt. Which family first? (`docs/design/K1172_walker_modes.md`; full text:
   `docs/ledger_notes.md`)
-- **K1236** · Cursive J3m: do b, v and w's new cusp exits, and o's and f's new word-end tails, read right?
-  (`docs/asks/K1236.md`; K863 J3m, 5602f487)
-- **K1244** · Does a pulse now cross a junction as one soft glow, as at 7474d09b (K1211 S6, live)? Card
-  `docs/asks/K1244.md`; picture `.claude/probes/K1211/out6/card_glow.png`
 
 ## In progress
 
-- **K1211** · One seamless light inside each junction, no line or edge in it (Levi 2026-11-05; notes). Pulses
-  and the gold path first, then fire and collapse (K1210). S2 a84225d3, S3 66752e75 merged; S4 (42e2a7cc,
-  unmerged): look B out, a soft field. S5 never ran (its session ended). S6, Levi's reset: one agent, the
-  top row of K1190's sheets as its goal, every technical call its own, no numeric gate.
-  - owner: nobody since 2026-11-05 19:54 (merged; agent `a057b2be255c4a410` of claude session c18e2f02-e64f-41ba-9af0-2dbd583358e2)
-  - branch: mainline; last commit: `13aab452`
-  - evidence: .claude/probes/K1211/out6/ in the main checkout: sheets_today/ (per spot, rows 7474d09b, master before S6, S6, today f21bb496, then at rest), today/ shots, card_glow.png; K1190's sheets in .claude/probes/K1139/out/s4/sheets/
-  - next: Levi answers K1244 (docs/asks/K1244.md, sent 2026-11-06). On Keep it, pulses and the gold path are done and fire and collapse (K1210) are next. The edges 7474d09b also draws went to K1218 (Done e4075024); what is left of them is K1227-K1231's
-  - brief: `docs/design/K1211_s6_one_glow.md`
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the
   frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's
   float64 reference. Plan S1-S8, about 15 h (F7); supersedes K868 and K992. S1 to S1f merged (S1f: fb348a78); S3 (K1097) merged short of its gate; S1g merged (ca273d04); S3b (K1097) merged (587b7e80, 2026-11-02): 0 DEFECT, the Pixel's 2 ms missed 5-20x. S4a merged (f294dc08, 2026-11-06) short of check #12: the band's tube edges, caps and foot on the GPU, unused by the app; S4a2 merged (365d2244): within 1/32 px away from corners except D4's tie and the cap mix. S4b merged (1ef55958): the corners on the GPU (check #12's near-corner worst 0.19-3.28 px, 9.3-13.6 without) and the fbb flag, off by default (flag on: ~3 fps while moving, one ink colour, K1239's shapes). S4c merged (f5eb875c): D4's ties, the outer edge and the cap mix's shares (check #12 counts down on 11 of 12 scenes); what stays over 1/32 px is the multi-piece cap mix. S4d (1813fc1d): no src change; the stroke the field drops at spot_oldonly is the old renderer's casing line inside the over tube (interior ink by K868's check 1), and the GPU path's free ends match form B's but for named spots (120 vs 116).
@@ -319,11 +306,11 @@ Next free ID: K1250.
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
   Levi to edit instead of drawing all 26 (Levi, 2026-10-26). Muse's prototype parked at abc135e7.
-  - owner: nobody since 2026-11-06 08:36: J3m is done; waiting on Levi's look (card K1236)
-  - branch: mainline (J3m merged, 5602f487; its worktree `.claude/worktrees/agent-a48ef22ec84a4a83c` kept for follow-ups); last commit: `5602f487`
-  - evidence: .claude/probes/K863/trace/work37/ (NOTES_k863m.md, cand/J3M, crops/card_*.png) and out37/png/ (main checkout, untracked); NOTES.md's "K863 J3m" entry
-  - next: Levi answers K1236; the next stage makes J3M the kit's build, or adjusts the high exit or o's tail as he says
-  - brief: `docs/design/K863_cursive_j3m.md`
+  - owner: agent `a3cab4505b6b75ecb` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-09 14:28, 2 h cap ~16:28)
+  - branch: `worktree-agent-a3cab4505b6b75ecb`, worktree `.claude/worktrees/agent-a3cab4505b6b75ecb`; last commit: `42d4c9f7`
+  - evidence: .claude/probes/K863/trace/work38/ and out38/png/ (main checkout, untracked); NOTES.md's K863 J3n entry; J3m's work37/ and out37/
+  - next: J3n reports; Claude views its crops against J3M and Levi's words, then a card for Levi
+  - brief: `docs/design/K863_cursive_j3n.md`
 - **K114** · Gameplay round 2, designed in
   `docs/design/K80_gameplay_additions.md` section R: burn race, cut
   verb, beat rider, spider, Pluck Hero MVP. Levi took the recs (calls
@@ -522,19 +509,19 @@ Next free ID: K1250.
 - **K1240** · One outline for both looks and every junction consumer (Levi's sketch, 2026-11-06): offset-polyline borders,
   cuts and corner arcs in closed form from each frame; the border look strokes it, the filled look fills it. S1: a clean
   prototype beside the app, checked against form B and timed (Levi: "without all the tech debt"); notes.
-  - owner: nobody since 2026-11-09 12:28: waits on K1247's Muse run (Paseo 4e0bc745) in this item's worktree, then S3f round 4
-  - branch: mainline; last commit: `7e54021f`
+  - owner: nobody since 2026-11-09 12:28: waits on K1247 stage 2 (speed)
+  - branch: mainline; last commit: `abb5891d`
   - evidence: .claude/probes/K1240/proto/ (tracked builder and checks, s3_* to s3f_*, the s3f_claude_* checks and diagnostics, s3f_exact_s3dbase.ts, cmp_*.mjs); untracked in the main checkout: .claude/probes/K1240/s1_out/ to s3f_out/ (s3f_out/ holds the three Claude runs' checks_final*.txt (final6 the last) and logs, crops (capw5/), bench_final4a/b and bench_final6a/b.json, sweep.json, the consistent rows (move*c_, fresh0.5c_, s3dfresh*), Claude's re-run (cverify3_*), page results, and muse/ Muse's partial run); the worktree writes .claude/probes/K1240/out/s3f/
-  - next: K1247 first (reordered 2026-11-07: speed is the open risk, and Levi's lane decision waits on it): a fast frame() that keeps today's frame() output within the checks' tolerances on every row, def <=3 ms median / <=6 ms p95 under the lock, starting from S3d's runtime frame (frameRt in proto/outline.ts; docs/design/K1240_s3d_cheap_frame.md); its brief is still to write. Then S3f round 4 as the brief's decisions after Handoff 3 list it (T crotches def B j3 j1 j151, g41_ring_tw42 j12's reflex round join, the stub corners, muse_default_tw at 0.1h); then the sweep's piece motion (25-112x the particles'), S4, Levi's lane decision and the Pixel p95
+  - next: K1247 stage 2 (def's frame 38 ms at abb5891d against 3). Then S3f round 4 as the brief's decisions after Handoff 3 list it (T crotches def B j3 j1 j151, g41_ring_tw42 j12's reflex round join, the stub corners, muse_default_tw at 0.1h); then the sweep's piece motion (25-112x the particles'), S4, Levi's lane decision and the Pixel p95. K1250 (a pulse's glow in a junction) is rechecked when the outline reaches the app
   - brief: `docs/design/K1240_s3f_fixed_pieces.md`
   - env: from the worktree, vite on a copy of .claude/probes/K1040/vite.private-cache.config.ts, ports 5980-5989; S3d's code for the baselines is proto/outline_s3d.ts (untracked), recreated by the one-line command in s3f_exact_s3dbase.ts's header
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: agent `4e0bc745` of muse session 01a1c1ff-1c73-75f2-a7ea-8a5aefb9634d (muse-wonder-1.0, started 2026-11-09 12:28, 2 h cap ~14:28)
-  - branch: `detached`, worktree `.claude/worktrees/muse-k1240-s1`; last commit: `e527828b`
-  - evidence: .claude/probes/K1240/proto/ (outline.ts, k1247_* scripts); untracked outputs in the worktree's .claude/probes/K1240/out/k1247/
-  - next: Claude re-runs the Done checks on the run's final commit
+  - owner: nobody since 2026-11-09 14:24: Muse's run (Paseo 4e0bc745, idle) ended at Handoff 2; Claude's re-run passes Done 1-3 and 5 and fails Done 4 (def 38 ms median against 3; notes)
+  - branch: `detached`, worktree `.claude/worktrees/muse-k1240-s1`; last commit: `abb5891d`
+  - evidence: .claude/probes/K1240/proto/ (outline.ts, k1247_* and k1247c_* checks; k1247c_final.ps1 re-runs every non-timing check, k1247c_time.ts the timing); untracked in the main checkout: .claude/probes/K1240/out/k1247c_final/, out/k1247c_time/; Muse's rows in the worktree's .claude/probes/K1240/out/k1247/
+  - next: Stage 2, one Muse run from a new brief Claude writes: def <=3 ms median / <=6 ms p95 from abb5891d (cutsEyesExposure 17.5, corners 12, setupBorders 6.5 ms), output within the rows' tolerances. If it ends far above, the per-frame evaluation moves to the GPU (K1040's field) with structure() as its tables, the input to Levi's junction-lane decision
   - brief: `docs/design/K1247_fast_frame.md`
 
 ## Next, in order
@@ -1731,6 +1718,10 @@ Every other item below waits on the trigger it names.
 - **K1248** · K1240 moving frames: S3e's structure() is the diagram and moved = fresh exactly, but frame() rebuilds the
   piece list (def 4373 -> 4330 at 0.5h) and parks covered pieces: moved fails 10/24 at 0.1h, 4/6 at 0.5h. S3f (K1240's
   handle) moves the piece list into structure() (`docs/design/K1240_s3f_fixed_pieces.md`; notes).
+- **K1250** · A pulse's glow inside a junction is not perfectly smooth (Levi on K1244, 2026-11-09: 'I guess
+  it's ok, but it still isn't perfectly smooth'). K1240 repaints it on one junction polygon (paint on the
+  outline's geometry, Levi 2026-11-06); recheck on K1244's sheets (.claude/probes/K1211/out6/) when the
+  outline reaches the app.
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2043,6 +2034,9 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1211** · One seamless light inside each junction for pulses and the gold path (S6), kept on K1244; fire and collapse are K1210, the remaining smoothness K1250. Done in 13aab452 (2026-11-09).
+- **K1244** · A pulse crosses a junction as one soft glow (K1211 S6). Levi, 2026-11-09: kept, 'I guess it's ok, but it still isn't perfectly smooth'; the smoothness is K1250's. Done in 13aab452 (2026-11-09).
+- **K1236** · Cursive J3m's looks (card K1236). Levi, 2026-11-09: b, v and w's exits a little more downward; f's word-end tail shorter, flatter and smooth, p's shorter and flatter; o, q and a fine. Goes to K863 J3n (brief 42d4c9f7). Done in 42d4c9f7 (2026-11-09).
 - **K1246** · Corner radius now follows the frame: V feet are the builder's global footArm (estD ± 4h) search and r is the 32-node gate integral recomputed per frame (margin/steep/slack/root). Moved def: 386 corners, 0 with |Δr|/|Δq| > 0.005 vs fresh (was 132); frame integral matches builder r bit-for-bit on the diagnosed corner. Residual moved over2 is exposure partition, filed separately. Done in 4db4a713 (2026-11-06).
 - **K1239** · K868's scene export checked against the old ink: accurate. On-screen anchored ends now get their caps. The field's crossings differ from the old ink by K868's design (no gaps), so IoU against the old ink was the wrong target; the one stroke the field drops went to K1040 S4d. Done in b5d9c9c5 (2026-11-06).
 - **K1228** · Cross ji 51's inner-turn notch: a run of folding samples collapses its inner vertices onto the legs' inner-offset crossing, so R < h turns cover the half-width (0 background px, 0 strip flips on cross, loop and x4; pinned by test/render/ribbon_inner.test.ts). Done in ffbd64f3 (2026-11-06).
