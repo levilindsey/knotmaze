@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1268.
+Next free ID: K1269.
 
 ## Waiting on Levi
 
@@ -503,10 +503,10 @@ Next free ID: K1268.
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: agent `a9ce576ba016f229e` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-10 01:35, 2 h cap ~03:35)
-  - branch: `worktree-agent-a9ce576ba016f229e`, worktree `.claude/worktrees/agent-a9ce576ba016f229e`; last commit: `6704319e`
+  - owner: nobody since 2026-11-10 02:23 (merged; agent `a9ce576ba016f229e` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `48ce89e9`
   - evidence: .claude/probes/K1240/proto/ (k1247s8_acc, k1247s9_union, k1247c_final.ps1), .claude/probes/K1240/out/
-  - next: Stage 10 (started 2026-11-10 01:36): re-make the k1247c baselines (K1263), re-score k1247s8_acc by the drawn union, fix what still fails at eps 0.1/0.2 (fat cyc18's twist cut, the end tails, g41_user_tw64 piece 34), locked pair at eps 0 and the largest passing eps. When it reports: Claude views the crops, re-runs acc and k1247s9_union, merges
+  - next: Stage 10 merged 48ce89e9: span ramp + end-tail blend; acc by the drawn union fails 16/23/23/26 at eps 0.02/0.05/0.1/0.2 (was 13/20/23/26); still jitter def 0, muse_default_tw 0, muse_hash 1. Stage 11 next: the tail extent's sign flip, then SPAN_RAMP toward h; ring cut 273; key changes; shallow-crossing tangent noise
   - brief: `docs/design/K1247_s10_reduce.md`
 
 ## Next, in order
@@ -1713,9 +1713,6 @@ Every other item below waits on the trigger it names.
   paper side of a corner arc, so an outline sample lying exactly on form B's edge reads 1-3.7 px instead of 0
   (def A, g41_def_tw64 A, def 0.5 A; master too). Fix it before those rows gate (from K1257; k1257_rowdiag.ts,
   K1257_formb_corners.md handoff)
-- **K1263** · k1247c_final.ps1's verify and row baselines are stale: stage 9's deliberate changes (end roots, corner 63) read as 44 verify
-  failures against its fresh out/k1247/s9base. Re-make them from ad313cd7's outline (stage 10 does it first); the script's steps
-  exit 0 when verify or cmprows fail: make it exit nonzero (K1247 stage 9 handoff)
 - **K1264** · The end tails (K1240 round 4, b1930378) cost def +1.8 ms in piece emission (piecesCapsEtc 1.44
   -> 3.2 ms): f at 17 grid points per tail, each a foot walk over 8h of the other arm. Rule a tail out per
   corner before the scan, or fewer points under a conservative test (K1240_s3f_round4.md handoff)
@@ -2053,9 +2050,13 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   still hold (K1247_s7_cf_speed.md, Handoff 1)
 - **K1262** · K1247 lead: setupBorders' mergeBorders deopts (176 OSR deopts a def run, --trace-deopt at stage
   7); setupBorders is 5.0 of def's 19 ms frame (K1247_s7_cf_speed.md, Handoff 1)
+- **K1268** · K1247's 3 ms gate needs a lever past reduction (stage 8: 7.6 ms floor) and WASM (1.2-2x):
+  recompute only what moved, per junction, with the outline's continuity bounding what a frame can change
+  (docs/design/K1247_s10_reduce.md)
 
 ## Done
 
+- **K1263** · k1247c_final.ps1 exits nonzero when a step fails; k1247s10_base.ps1 re-makes the baselines from master's outline. Done in 0de40350 (2026-11-10).
 - **K252** · the head's 0.45 s show delay checked on the Pixel (round 2026-11-09b): 222 taps, 11 off-screen episodes, every blip 103-378 ms hidden, every excursion 638-1039 ms shown (pending 424-480 ms), none between; agrees with the desktop, no change. Done in aca6b86a (2026-11-09).
 - **K1097** · K1040 S3, the label pass (F7 of `docs/design/K1040_junction_field.md`): the depth-tested label on the GPU, gated by oracle30's verdicts on the 12 scenes (0 DEFECT closes K1033), the recordings' pops and the Pixel's 2 ms. Dropped: superseded by K1240 with K1040 (Levi, 2026-11-09: keep the redesign, no fallback to K1040's GPU field); its owed Pixel batch picked levers for that field's label pass (2026-11-09).
 - **K1257** · form B grows corners with the outline's closed-form pieces (src/render/field/corner_cf.ts): 71 corners over 0.5 device px from the outline's -> 0 (max 0.026 px); outside corners bit-identical (k1257_same.ts, 27 scenes); form_b.test.ts's acute pair re-frozen (r 0.170935 -> 0.170801 h); Claude re-ran sliver, same and the field tests and viewed the crops and the fbb shot. Verify's 48 are the stale base tables, not form B. Done in 0656cf58 (2026-11-09).
