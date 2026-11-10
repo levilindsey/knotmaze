@@ -508,6 +508,16 @@ Next free ID: K1283.
   - evidence: .claude/probes/K1240/proto/ (outline.ts, k1247s8_time, k1247s8_run_locked, k1247s9_union, k1247s14_census); .claude/probes/K1240/out/ (untracked)
   - next: make the outline continuous: the station-on-vertex jump, corner 191 at j91, j67, draw order from structure; then re-run k1247s15_gain/bound (s15 handoff)
   - brief: `docs/design/K1247_s15_moved.md`
+- **K1279** · Redesign outline: at shallow crossings the border lines overlap badly, in both K1271 versions
+  (Levi, 2026-11-10), and the crossing gaps must be right everywhere (Levi). Target is form B: the
+  under-thread's edge stops at the over-thread's edge and fades (burial); the over-thread's edges stay
+  unbroken. Gate: every crossing on the 12 scenes against form B. Picture
+  `.claude/probes/K1247/asks/cut273_old_new_formb.png`; after stage 15 (outline.ts)
+  - owner: agent `a70157fa5e512c8ef` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-10 07:58, 2 h cap ~09:58)
+  - branch: `worktree-agent-a70157fa5e512c8ef`, worktree `.claude/worktrees/agent-a70157fa5e512c8ef`; last commit: `c66742e6`
+  - evidence: .claude/probes/K1240/proto/ (outline.ts, draw.ts, k1279_* tools); .claude/probes/K1240/out/k1279/ (untracked)
+  - next: build the per-crossing census against form B, baseline on master, then fix cut 273 and the worst crossings
+  - brief: `docs/design/K1279_crossings.md`
 
 ## Next, in order
 
@@ -760,15 +770,6 @@ Every other item below waits on the trigger it names.
   hand-off as in form B, a pulse's travel distance continuous through the junction), never per face or
   triangle. Gate: a seam test sampling section blends and pulses across every face edge, triangle edge and
   junction for steps and kinks, plus K1244's sheets (K1250).
-- **K1279** · Redesign outline: at shallow crossings the border lines overlap badly, in both K1271 versions
-  (Levi, 2026-11-10), and the crossing gaps must be right everywhere (Levi). Target is form B: the
-  under-thread's edge stops at the over-thread's edge and fades (burial); the over-thread's edges stay
-  unbroken. Gate: every crossing on the 12 scenes against form B. Picture
-  `.claude/probes/K1247/asks/cut273_old_new_formb.png`; after stage 15 (outline.ts)
-  - branch: unknown; last commit: `f0c1111c`
-  - evidence: .claude/probes/K1240/proto/ (outline.ts, draw.ts, k1279_* tools); .claude/probes/K1240/out/k1279/ (untracked)
-  - next: build the per-crossing census against form B, baseline on master, then fix cut 273 and the worst crossings
-  - brief: `docs/design/K1279_crossings.md`
 
 ## Residuals (known, not fixed)
 
