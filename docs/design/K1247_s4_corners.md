@@ -126,6 +126,7 @@ gain (0.2-0.3 ms) matches the unlocked A/B.
 | Newton corrector on local nearest feet instead of `footNearM`'s windowed tracked feet | saves 24% of `footNearM` pairs, but verify fails at up to 0.175 h with faces reordered: in about 2% of advances the local nearest foot differs from the windowed tracked foot (which skips small bumps), and Newton lands on another root. The certified-exact version applies to only 201 of 8743 advances, with no gain. Reverted; the diff is `proto/k1247s4_corrector_diag.diff` |
 | `mergeBorders` split into one call per border (removes about 150 "exit from OSR'd inner loop" deopts per 2 reps) | bit-exact, no measurable gain; reverted |
 | `meetSegsOf`'s double fmod as a bit-exact `wrapLen` (one subtraction when \|d\| < len) | bit-exact, but corners got slower: 6.92/7.03 vs 6.56/6.52. Reverted |
+| `footNearM` split into an inlinable fast path (open polys, the arm window precomputed as `FArm.wLo/wHi`: bytecode 457 bytes, under V8's 460) and `footNearSlow` | bit-exact. V8 then inlines it into `advanceToC` (2 of 8 sites; the cumulative budget stops the rest), but corners got slower: 6.76/6.56 vs 6.43/6.36, in the order that favors the new code. At 517 bytes (closed polys included) it was not inlined and gained nothing (6.56/6.48 vs 6.44/6.46). Reverted |
 
 How far to trust these A/Bs:
 - **The harness is biased.** An A/A run (`outline_ab.ts` identical to `outline.ts`) read corners
