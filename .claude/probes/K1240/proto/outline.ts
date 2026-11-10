@@ -4222,8 +4222,9 @@ function cornersPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): void {
     kfCst.rbEff = Math.max(0.5 * h * rootTipScale(thC), 1e-9 * h);
     kfCst.denV = 1 + ((Vx - kfFa.x) * (Vx - kfFb.x) + (Vy - kfFa.y) * (Vy - kfFb.y)) / ((kfFa.d || 1) * (kfFb.d || 1));
     kfCst.wCacheA = C.walkA[ci]; kfCst.wCacheB = C.walkB[ci];
-    kfCst.wCacheA.valid = false; kfCst.wCacheB.valid = false;
-    kfCst.wCacheA.oLo = NaN; kfCst.wCacheA.oHi = NaN; kfCst.wCacheB.oLo = NaN; kfCst.wCacheB.oHi = NaN;
+    // Margin walk caches persist across frames for this corner:
+    // marginOfC's resume tests already account for q moving (delta), so
+    // last frame's walk bounds stay valid hints under small motion.
     kfCst.rhoCur = h;
     const r = growIntegC(C, ci);
     C.cVx[ci] = Vx; C.cVy[ci] = Vy;

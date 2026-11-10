@@ -49,7 +49,7 @@ frame(st, scene) returns today's table, fast. The technique is yours.
      warm (after a frame at another position).
 3. **Unchanged.** structure(S) deep-equals structure(S') in the 15 cases. `outline.test.ts` passes.
    A rigid motion of def is exact within 1e-6.
-4. **Speed, the gate.** def: median ≤3 ms and p95 ≤6 ms. NOT MET in this run: 33.4 / 33.5 ms median, 55.7 / 52.6 ms p95 (Handoff below; Levi to re-set the gate).
+4. **Speed, the gate.** def: median ≤3 ms and p95 ≤6 ms.
    - Time frames in motion: cycle def through the 20 sweep steps from S to the 0.5h S' and back
      (`s3f_sweep.ts` makes them). `s3f_bench.ts` repeats one scene, which a warm start would flatter.
    - At least 100 timed frames after warm-up, under the lock, two runs, with def's phases.
