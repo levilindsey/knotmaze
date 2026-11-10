@@ -368,11 +368,11 @@ Next free ID: K1267.
   and a JSON looks list into a summary and sheets. Stages 3a-3c merged
   (737ac58..9ab8a01); rounds 2026-10-14, 14b and 14c are done (14c
   merged 772e48a..e1c2a80).
-  - owner: nobody since 2026-11-09 23:38 (round 2026-11-09b finished its steps, merged aca6b86a)
-  - branch: mainline; last commit: `aca6b86a`
-  - evidence: .claude/probes/rounds/2026-11-09b/ (tools tracked; outputs untracked); round 2026-11-09 in .claude/probes/rounds/2026-11-09/
-  - next: The next phone window: K307's restart check first, then K268's census with a view pin shared by both modes, then K8's rp=sdf render sync once rp=sdf draws its gaps again (K8 bisect)
-  - brief: docs/design/K156.md (round 2026-11-09b's handoff)
+  - owner: agent `a73409f4087ce2eae` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (sonnet, started 2026-11-10 01:00, 1 h cap ~02:00)
+  - branch: `worktree-agent-a73409f4087ce2eae`, worktree `.claude/worktrees/agent-a73409f4087ce2eae`; last commit: `953c9034`
+  - evidence: .claude/probes/rounds/2026-11-10/ (outputs untracked); earlier rounds in .claude/probes/rounds/2026-11-09/ and 2026-11-09b/
+  - next: Round 2026-11-10 (phone, the night of 2026-11-09): K8's rp=sdf render sync and look shots now that the gaps draw (0f4c8233), K307's restart check if Chrome's GPU process restarted on its own, K268's census with one framing in both modes; when it reports, Claude views the shots, files the items, merges
+  - brief: docs/design/K156.md (Round 2026-11-10)
   - env: the phone on its charger, reached over adb 5555 through Tailscale (`adb connect`; not the desktop's USB, Levi 2026-11-02); the pass builds and serves both builds itself (ports 5480-5489); nobody else uses the phone during the pass (K234)
 - **K268** · Shaped crossing gaps under thread reveal (K76; Levi, 2026-10-14):
   no gap until the over thread is seen, a dynamic gap for a stub's overlap and
