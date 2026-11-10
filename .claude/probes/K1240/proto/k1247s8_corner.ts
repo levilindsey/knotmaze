@@ -1,0 +1,12 @@
+import { structure, frame, type SceneIn } from "./outline";
+import { load } from "./k1247s5_scenes";
+const name = process.argv[2]; const ch = +process.argv[3]; const dpx = +process.argv[4];
+const still = load(name); const S = still.camera.pxPerUnit * 2;
+let seed = 12345; const rnd = (): number => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
+const sc = JSON.parse(JSON.stringify(still)) as SceneIn;
+for (const c of sc.chains) for (let i = 0; i < c.pts.length; i++) c.pts[i] += ((rnd() * 2 - 1) * dpx) / S / Math.SQRT2;
+const A = frame(structure(still), still).corners; const B = frame(structure(sc), sc).corners;
+const f = (v: number): string => v.toFixed(4);
+A.forEach((c, k) => { if (c.aChain !== ch && c.bChain !== ch) return; const d = B[k];
+  console.log(`corner ${k} j${c.junction} a${c.aChain} b${c.bChain} ok ${c.ok}/${d.ok} why ${c.why ?? ""}/${d.why ?? ""} style ${c.style} theta ${f(c.theta)}`);
+  console.log(`   r ${f(c.r)} -> ${f(d.r)}; V (${f(c.Vx)},${f(c.Vy)}) -> (${f(d.Vx)},${f(d.Vy)}); q (${f(c.qx)},${f(c.qy)}) -> (${f(d.qx)},${f(d.qy)}); ta (${f(c.tax)},${f(c.tay)}) -> (${f(d.tax)},${f(d.tay)}); tb (${f(c.tbx)},${f(c.tby)}) -> (${f(d.tbx)},${f(d.tby)})`); });

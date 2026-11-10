@@ -7,9 +7,9 @@
 //   node scripts/run_node.mjs .claude/probes/K1240/proto/k1247s8_acc.ts --eps=0.2 [--win=0] [--maxseg=0] [--scene=def] [--nocycle] [--list=5]
 // eps in device px (the Douglas-Peucker tolerance on the centreline); win and
 // maxseg in h (0 = off).
-import { structure, frame, type SceneIn } from "./outline";
+import { structure, frame, buildOutlineFull, type SceneIn } from "./outline";
 import { ALL, multsOf, sceneOf, load } from "./k1247s5_scenes";
-import { selectKeep, reduceScene, keepStats } from "./k1247s8_reduce";
+import { selectKeep, reduceScene, keepStats, armRanges, certifyKeep, piecesOf } from "./k1247s8_reduce";
 
 const arg = (k: string): string | undefined => process.argv.find((a) => a.startsWith(`--${k}=`))?.slice(k.length + 3);
 const epsPx = +(arg("eps") ?? 0.2);
@@ -20,6 +20,9 @@ const optW = (v: string | undefined, h: number): number | undefined => (v === un
 const names = arg("scene") ? arg("scene")!.split(",") : ALL;
 const doCycle = !process.argv.includes("--nocycle");
 const nList = +(arg("list") ?? 0);
+const armWin = arg("armwin"); // pad in h: keep every junction arm's window whole
+const certR = arg("cert"); // R in h: certify on the still scene (restore within R of each failing piece)
+const certBar = +(arg("certbar") ?? 0.2); // px, the certification's own bar
 const barPx = 0.25;
 
 function ptSeg(px: number, py: number, ax: number, ay: number, bx: number, by: number): number {
@@ -81,7 +84,15 @@ const report = (r: Row, extra = ""): void => {
 for (const name of names) {
   const still = load(name);
   const S = still.camera.pxPerUnit * 2; const h = still.look.halfWidth;
-  const K = selectKeep(still, { eps: epsPx / S, win: winH * h, winJ: optW(winJ, h), winX: optW(winX, h), winD: optW(winD, h), maxSeg: maxSegH > 0 ? maxSegH * h : Infinity });
+  const keepRanges = armWin === undefined ? undefined : armRanges(buildOutlineFull(still).structure.arms, +armWin * h);
+  const sel = { keepRanges, eps: epsPx / S, win: winH * h, winJ: optW(winJ, h), winX: optW(winX, h), winD: optW(winD, h), maxSeg: maxSegH > 0 ? maxSegH * h : Infinity };
+  let certNote = "";
+  let K = selectKeep(still, sel);
+  if (certR !== undefined) {
+    const t0 = performance.now();
+    const cr = certifyKeep(still, sel, { bar: certBar / S, R: +certR * h }, (s) => piecesOf(frame(structure(s), s)));
+    K = cr.K; certNote = `; cert ${cr.rounds} rounds, +${cr.added} pts, ${cr.left} left, ${(performance.now() - t0).toFixed(0)} ms`;
+  }
   const ks = keepStats(K); totFull += ks.full; totKept += ks.kept;
   const stF = structure(still);
   const stR = structure(reduceScene(still, K));
@@ -90,7 +101,7 @@ for (const name of names) {
     // Cold, as k1247c_coldwarm's cold: a new structure per case.
     const a = copy(frame(structure(still), sc));
     const b = copy(frame(structure(reduceScene(still, K)), reduceScene(sc, K)));
-    report(compare(`${name} ${mult}`, a, b, S), mult === 0 ? `; points ${ks.kept}/${ks.full} (${(ks.kept / ks.full * 100).toFixed(1)}%), h ${(h * S).toFixed(1)} px` : "");
+    report(compare(`${name} ${mult}`, a, b, S), mult === 0 ? `; points ${ks.kept}/${ks.full} (${(ks.kept / ks.full * 100).toFixed(1)}%), h ${(h * S).toFixed(1)} px${certNote}` : "");
   }
   if (doCycle && name === "def") {
     const STEPS = 20;
@@ -107,4 +118,4 @@ for (const name of names) {
     report(agg, `; worst frame ${worstF}`);
   }
 }
-console.log(`eps ${epsPx} px, win ${winH} h (j ${winJ ?? "-"} x ${winX ?? "-"} d ${winD ?? "-"}), maxseg ${maxSegH} h: points ${totKept}/${totFull} (${(totKept / totFull * 100).toFixed(1)}%); worst ${worstAll.toFixed(3)} px; ${fails ? `${fails} FAILURES` : `ALL WITHIN ${barPx} px`}`);
+console.log(`eps ${epsPx} px, win ${winH} h (j ${winJ ?? "-"} x ${winX ?? "-"} d ${winD ?? "-"}), maxseg ${maxSegH} h, armwin ${armWin ?? "-"}, cert ${certR ?? "-"} h at ${certBar} px: points ${totKept}/${totFull} (${(totKept / totFull * 100).toFixed(1)}%); worst ${worstAll.toFixed(3)} px; ${fails ? `${fails} FAILURES` : `ALL WITHIN ${barPx} px`}`);

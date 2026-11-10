@@ -21,7 +21,12 @@
 import type { SceneIn } from "./outline";
 
 export interface KeepSet { idx: Int32Array[]; nFull: number[]; eps: number }
-export interface SelectOpts { eps: number; win?: number; winJ?: number; winX?: number; winD?: number; maxSeg?: number }
+export interface SelectOpts {
+  eps: number; win?: number; winJ?: number; winX?: number; winD?: number; maxSeg?: number;
+  /** Full density over these s ranges [lo, hi] (full chain's arc length;
+   *  a closed chain's range may wrap past either end), keyed by chain index. */
+  keepRanges?: Map<number, [number, number][]>;
+}
 
 function cumOf(pts: ArrayLike<number>, closed: boolean, out?: Float64Array): Float64Array {
   const n = pts.length >> 1;
@@ -67,13 +72,22 @@ export function selectKeep(scene: SceneIn, o: SelectOpts): KeepSet {
   const eps2 = o.eps * o.eps;
   const maxSeg = o.maxSeg ?? Infinity;
   const idx: Int32Array[] = []; const nFull: number[] = [];
-  for (const c of scene.chains) {
+  for (let ci = 0; ci < scene.chains.length; ci++) {
+    const c = scene.chains[ci];
     const P = c.pts; const n = P.length >> 1; nFull.push(n);
     if (n <= 3 || o.eps <= 0) { idx.push(Int32Array.from({ length: n }, (_, i) => i)); continue; }
     const cum = cumOf(P, c.closed);
     const L = c.closed ? cum[n] : cum[n - 1];
     const keep = new Uint8Array(n);
     keep[0] = 1; if (!c.closed) keep[n - 1] = 1;
+    for (const [lo, hi] of o.keepRanges?.get(ci) ?? []) {
+      for (let i = 0; i < n; i++) {
+        const s = cum[i];
+        let inR = s >= lo && s <= hi;
+        if (!inR && c.closed && L > 0) inR = (s + L >= lo && s + L <= hi) || (s - L >= lo && s - L <= hi) || hi - lo >= L;
+        if (inR) keep[i] = 1;
+      }
+    }
     for (const [s, win] of feats.get(c.id) ?? []) {
       const k = segAt(cum, n, c.closed, s);
       keep[k] = 1; keep[(k + 1) % n] = 1;
@@ -169,6 +183,97 @@ export function reduceScene(scene: SceneIn, K: KeepSet): SceneIn {
   const junctions = scene.junctions.map((j) => ({ ...j, arms: j.arms.map((a) => ({ ...a, s: mapS(a.chain, a.s) })) }));
   const deadEnds = scene.deadEnds.map((e) => ({ ...e, s: mapS(e.chain, e.s) }));
   return { ...scene, chains, crossings, junctions, deadEnds };
+}
+
+// ---- Certification (structure time) ----
+type PcIn = { kind: string; chain: number; side: number; corner: number; region: number; pts: ArrayLike<number> };
+export interface Pc { key: string; pts: Float64Array }
+export const piecesOf = (t: { pieces: unknown[] }): Pc[] => (t.pieces as PcIn[]).map((p) => ({ key: `${p.kind}/${p.chain}/${p.side}/${p.corner}/${p.region}`, pts: Float64Array.from(p.pts) }));
+function ptPoly(px: number, py: number, q: Float64Array): number {
+  const n = q.length >> 1;
+  if (n === 0) return Infinity;
+  let best = (q[0] - px) * (q[0] - px) + (q[1] - py) * (q[1] - py);
+  for (let i = 0; i + 1 < n; i++) {
+    const ax = q[2 * i]; const ay = q[2 * i + 1]; const ex = q[2 * i + 2] - ax; const ey = q[2 * i + 3] - ay; const l2 = ex * ex + ey * ey;
+    let t = l2 > 0 ? ((px - ax) * ex + (py - ay) * ey) / l2 : 0; t = t < 0 ? 0 : t > 1 ? 1 : t;
+    const dx = ax + ex * t - px; const dy = ay + ey * t - py; const d = dx * dx + dy * dy;
+    if (d < best) best = d;
+  }
+  return Math.sqrt(best);
+}
+/** Hausdorff distance (both ways) of two polylines, world units. */
+export function hausdorff(a: Float64Array, b: Float64Array): number {
+  if (a.length === 0 && b.length === 0) return 0;
+  if (a.length === 0 || b.length === 0) return Infinity;
+  let m = 0;
+  for (let i = 0; i + 1 < a.length; i += 2) { const d = ptPoly(a[i], a[i + 1], b); if (d > m) m = d; }
+  for (let i = 0; i + 1 < b.length; i += 2) { const d = ptPoly(b[i], b[i + 1], a); if (d > m) m = d; }
+  return m;
+}
+/** Keep every point within R of any listed spot (x, y pairs), on any chain. */
+function restoreNear(scene: SceneIn, K: KeepSet, spots: number[], R: number): number {
+  const cell = R; const grid = new Map<string, number[]>();
+  for (let i = 0; i + 1 < spots.length; i += 2) {
+    const k = `${Math.floor(spots[i] / cell)},${Math.floor(spots[i + 1] / cell)}`;
+    let l = grid.get(k); if (!l) { l = []; grid.set(k, l); } l.push(spots[i], spots[i + 1]);
+  }
+  const R2 = R * R; let added = 0;
+  scene.chains.forEach((c, ci) => {
+    const P = c.pts; const n = P.length >> 1; const ix = K.idx[ci];
+    if (ix.length === n) return;
+    const keep = new Uint8Array(n); for (const i of ix) keep[i] = 1;
+    let ch = false;
+    for (let i = 0; i < n; i++) {
+      if (keep[i]) continue;
+      const x = P[2 * i]; const y = P[2 * i + 1]; const gx = Math.floor(x / cell); const gy = Math.floor(y / cell);
+      let hit = false;
+      for (let u = -1; u <= 1 && !hit; u++) for (let v = -1; v <= 1 && !hit; v++) {
+        const l = grid.get(`${gx + u},${gy + v}`); if (!l) continue;
+        for (let k = 0; k + 1 < l.length; k += 2) if ((l[k] - x) * (l[k] - x) + (l[k + 1] - y) * (l[k + 1] - y) <= R2) { hit = true; break; }
+      }
+      if (hit) { keep[i] = 1; ch = true; added++; }
+    }
+    if (ch) { const out: number[] = []; for (let i = 0; i < n; i++) if (keep[i]) out.push(i); K.idx[ci] = Int32Array.from(out); }
+  });
+  return added;
+}
+export interface CertOpts { bar: number; R: number; iters?: number }
+/** selectKeep, then certify it on `scene` itself: build the full and the
+ *  reduced frame, and wherever a piece's key differs or its distance
+ *  exceeds `bar` (world), keep every point within R of that piece (both
+ *  versions of it), on every chain; repeat until none fails. Structure-time
+ *  work only (one full frame, one reduced frame per round). */
+export function certifyKeep(scene: SceneIn, o: SelectOpts, c: CertOpts, run: (sc: SceneIn) => Pc[]): { K: KeepSet; rounds: number; added: number; left: number } {
+  const K = selectKeep(scene, o);
+  const full = run(scene);
+  let added = 0; let left = 0;
+  const iters = c.iters ?? 8;
+  for (let r = 0; r < iters; r++) {
+    const red = run(reduceScene(scene, K));
+    const spots: number[] = []; left = 0;
+    for (let i = 0; i < full.length; i++) {
+      const a = full[i]; const b = red[i];
+      if (!b) { left++; continue; }
+      if (a.key !== b.key || hausdorff(a.pts, b.pts) > c.bar) { left++; for (const q of [a.pts, b.pts]) for (let k = 0; k < q.length; k++) spots.push(q[k]); }
+    }
+    if (!left) return { K, rounds: r, added, left };
+    added += restoreNear(scene, K, spots, c.R);
+  }
+  return { K, rounds: iters, added, left };
+}
+
+/** The junction arms' windows [sR, sR + dir L] (outline.ts's corner walks
+ *  and feet stay inside them), padded by `pad` world units each way, from a
+ *  full build of `scene` (at structure time). */
+export function armRanges(arms: { pi: number; sR: number; dir: number; L: number }[], pad: number): Map<number, [number, number][]> {
+  const m = new Map<number, [number, number][]>();
+  for (const a of arms) {
+    if (!Number.isFinite(a.L) || !Number.isFinite(a.sR)) continue;
+    const e = a.sR + a.dir * a.L;
+    const r: [number, number] = [Math.min(a.sR, e) - pad, Math.max(a.sR, e) + pad];
+    let l = m.get(a.pi); if (!l) { l = []; m.set(a.pi, l); } l.push(r);
+  }
+  return m;
 }
 
 export function keepStats(K: KeepSet): { full: number; kept: number } {
