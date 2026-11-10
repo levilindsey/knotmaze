@@ -372,10 +372,10 @@ Next free ID: K1272.
   and a JSON looks list into a summary and sheets. Stages 3a-3c merged
   (737ac58..9ab8a01); rounds 2026-10-14, 14b and 14c are done (14c
   merged 772e48a..e1c2a80).
-  - owner: agent `ac7c0de077c9ffcf7` of claude session 2026-11-10 03:25 (sonnet, started 2026-11-10 03:25, 1 h cap ~04:25)
-  - branch: `worktree-agent-ac7c0de077c9ffcf7`, worktree `.claude/worktrees/agent-ac7c0de077c9ffcf7`; last commit: `d6cc118e`
+  - owner: nobody since 2026-11-10 03:58 (merged; agent `ac7c0de077c9ffcf7` of claude session 2026-11-10)
+  - branch: mainline; last commit: `23587715`
   - evidence: .claude/probes/rounds/2026-11-10c/ (outputs untracked)
-  - next: Round 2026-11-10c (started 2026-11-10 03:25): K307's start-time read, the bisect of K8's phone cost (passes bis1 a145be26/c67a75ff, bis2 42900cac/d70fdf0d, rp=sdf both sides). When it reports: Claude files K8 and K307, merges the handoff
+  - next: Next round: A/B the candidate commits of K8's phone stage (docs/design/K8_sdf_phone.md, its phone list) on the three links, with K307's start-time read. Round 2026-11-10c's bisect is in docs/design/K156.md
   - brief: docs/design/K156.md (Round 2026-11-10c)
   - env: the phone on its charger, reached over adb 5555 through Tailscale (`adb connect`; not the desktop's USB, Levi 2026-11-02); the pass builds and serves both builds itself (ports 5480-5489); nobody else uses the phone during the pass (K234)
 - **K268** · Shaped crossing gaps under thread reveal (K76; Levi, 2026-10-14):
@@ -404,7 +404,7 @@ Next free ID: K1272.
   - owner: nobody since 2026-10-15 05:39 (stage 2 done; agent `a11d7ce60428b687d` of claude session d8031183, worktree removed by the K161 sweep 2026-10-15, branch kept)
   - branch: mainline; last commit: `a7e199e` (stage 3 late enable)
   - evidence: `.claude/probes/K307/` (stage 1's tools and traces; `stage2/`: `trace_intro.mjs`, `run_s2.ps1`, batches 1-7, `runs/`, two A/B builds, `k366_firsttap.mjs`); the throwaway branch `k307-proto` (d1aefae), never merged; lore `.claude/rules/render-shaders.md` ("THE WARM-UP")
-  - next: Restart check still open: at 2026-11-10 03:00 Chrome's browser and GPU process still dated 2026-11-09 20:20:21, before salt p1109a (22:07:41). Each phone window reads the start time first and runs the traced load (?daily&snd=none with k307\salt_p1109a.js: 0 translates = persisted, ~21 = not) only if later. Never restart Chrome on the phone. Evidence .claude/probes/rounds/2026-11-09/k307/
+  - next: Restart check still open: at 2026-11-10 03:30 (round 2026-11-10c) Chrome's browser and GPU process still dated 2026-11-09 20:20:21, before salt p1109a (22:07:41). Each phone window reads the start time first and runs the traced load (?daily&snd=none with k307\salt_p1109a.js: 0 translates = persisted, ~21 = not) only if later. Never restart Chrome on the phone. Evidence .claude/probes/rounds/2026-11-09/k307/
   - brief: `docs/design/K307_intro_freezes.md`, "Stage 2 handoff" and "K385" (the mechanism and the plan)
 - **K8** · G3: SDF ribbons drawn from one shared sample texture
   (`docs/design/G3G4_sdf_geometry.md`). G3-0 merged (ebdae8c..b11747e): the four G3
