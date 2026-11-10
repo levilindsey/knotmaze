@@ -190,7 +190,20 @@ The tool paints faces the way draw.ts does, at 40 px per world unit. Pixels that
 
 ### Timing
 
-TIMING_PLACEHOLDER
+Measured under the lock, 05:09:05-05:09:57, on def at eps 0, 4 rounds alternating
+(`out/s12/final_timing.txt`, `k1247s10_ab.mjs s12 4`):
+
+| | medians (ms) | p95 (ms) |
+|---|---|---|
+| master | 21.535, 22.016, 26.983, 22.522 | 33.1, 34.8, 36.8, 34.6 |
+| mine | 30.530, 25.754, 31.787, 23.767 | 34.7, 34.6, 35.3, 34.5 |
+
+Taken under load, so not a verdict. The lock passed between K8 and K268 for 23 minutes before
+mine, and the machine was busy: master's own rounds spread 21.5-27.0 ms against stage 11's
+20.5-20.9, and every p95 is 5-6 ms above stage 11's. The median of rounds reads master 22.3 and
+mine 28.1, but the phase times do not show it: mine is lower in setupBorders (5.6-6.6 vs 6.5-7.2)
+and corners (9.0-10.6 vs 10.1-11.0), and only regions, the envelope's phase, is a little higher
+(3.0-3.5 vs 2.8-3.2). p95 is the same. Re-time on a quiet machine before reading a cost into the envelope.
 
 ### Next
 
