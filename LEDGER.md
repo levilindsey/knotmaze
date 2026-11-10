@@ -1732,7 +1732,7 @@ Every other item below waits on the trigger it names.
   (.claude/probes/K8/sdf_cost/out/crops/maxfab_weave.png, untracked)
 - **K1273** · K1247 s14 leftover: a 2 px speck of paper at a tight inside turn on muse_hash (26.86, 22.32):
   the band's border folds over itself and the even-odd fill drops the loop. `K14_TRIM=1` closes it but decides
-  from positions; the fix belongs where the border is built (docs/design/K1247_s14_seam.md handoff)
+  from positions; the fix belongs where the border is built (trim the swallowtail per side), or fill regions nonzero (the loop winds -2, so it stays inside; untested, the census must show loop eyes stay paper) (docs/design/K1247_s14_seam.md handoff)
 - **K1274** · K1247 s14 leftover: the tail that comes and goes at g41_def_tw64 corner 105 (eps 0.1's worst,
   7.103 px): a near-tie (depth margin -0.015 zt full, +0.020 reduced). Its existence should come from
   structure; stage 11's five continuous measures failed the union bar (K1247_s14_seam.md handoff,
