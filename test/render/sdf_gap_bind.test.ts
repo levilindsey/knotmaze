@@ -7,7 +7,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { gapSource, setGapSource } from "../../src/render/fabric_sdf";
 import { CrossingGaps } from "../../src/render/ribbon/crossing_gaps";
-import { SDF_FRAG } from "../../src/render/ribbon/ribbon_sdf";
+import { SDF_FRAG, SDF_TRAP_COS, SDF_VERT } from "../../src/render/ribbon/ribbon_sdf";
 import { gapTurn } from "../../src/render/pluck_model";
 
 describe("K8 the SDF gap call reads a turn", () => {
@@ -52,6 +52,12 @@ describe("K8 one SDF quad per pixel", () => {
       "bool own = (sA >= -oe && sB < oe) || (sA < 0.0 && sB >= 0.0 && a1 <= a0 && a1 < a2);"
     );
     expect(SDF_FRAG).toContain("if (!own) discard;");
+    // K8 (sdf cost): the vertex's trapezoid, mirrored by the census below
+    expect(SDF_VERT).toContain("vec2 sdfJointT(vec2 a, vec2 b, vec2 c) {");
+    expect(SDF_VERT).toContain("|| (hasA && hasB && dl <= R * abs(tB - tA));");
+    expect(SDF_VERT).toContain("float uA = whole || !hasA ? -R : max(side * R * tA - trapPad, -R);");
+    expect(SDF_VERT).toContain("float uB = whole || !hasB ? dl + R : min(dl + side * R * tB + trapPad, dl + R);");
+    expect(SDF_VERT).toContain(`(hasA && cA < ${SDF_TRAP_COS.toFixed(2)})`);
     // fwidth only in uniform control flow: before the first discard
     expect(SDF_FRAG).not.toContain("fwidth(side01)");
     const main = SDF_FRAG.slice(SDF_FRAG.indexOf("void main(void)"));
@@ -83,33 +89,91 @@ describe("K8 one SDF quad per pixel", () => {
     const R = r + 0.03;
     const pxW = 0.013;
     const oe = 2e-3 * pxW + 1e-5;
+    // K8 (sdf cost): the vertex stage's quad, mirrored. "box" is the
+    // capsule box before the fix; "trap" the bisector trapezoid (SDF_VERT:
+    // trapPad = max(uSdfPad, 2 px), here uSdfPad 0.03 > 2 * 0.013).
+    const trapPad = Math.max(0.03, 2 * pxW);
+    const quads = Array.from({ length: P.length - 1 }, (_, k) => {
+      const P1 = P[k];
+      const P2 = P[k + 1];
+      const dir = unit(sub(P2, P1));
+      const nrm: V = [-dir[1], dir[0]];
+      const L = Math.hypot(P2[0] - P1[0], P2[1] - P1[1]);
+      const hasA = k > 0;
+      const hasB = k + 2 < P.length;
+      const jA = hasA ? jointT(P[k - 1], P1, P2) : dir;
+      const jB = hasB ? jointT(P1, P2, P[k + 2]) : dir;
+      const cA = dot(dir, jA);
+      const cB = dot(dir, jB);
+      const tA = hasA ? -dot(nrm, jA) / Math.max(cA, 1e-3) : 0;
+      const tB = hasB ? -dot(nrm, jB) / Math.max(cB, 1e-3) : 0;
+      const whole =
+        L < 1e-6 || (hasA && cA < SDF_TRAP_COS) || (hasB && cB < SDF_TRAP_COS) || (hasA && hasB && L <= R * Math.abs(tB - tA));
+      const uA = (s: number) => (whole || !hasA ? -R : Math.max(s * R * tA - trapPad, -R));
+      const uB = (s: number) => (whole || !hasB ? L + R : Math.min(L + s * R * tB + trapPad, L + R));
+      return { P1, P2, dir, nrm, L, hasA, hasB, jA, jB, whole, uAm: uA(-1), uAp: uA(1), uBm: uB(-1), uBp: uB(1) };
+    });
+    type Q = (typeof quads)[number];
+    const inGeom = (g: Q, q: V, trap: boolean): boolean => {
+      const u = dot(sub(q, g.P1), g.dir);
+      const v = dot(sub(q, g.P1), g.nrm);
+      if (Math.abs(v) > R) return false;
+      if (!trap) return u >= -R && u <= g.L + R;
+      const f = (v + R) / (2 * R);
+      return u >= g.uAm + f * (g.uAp - g.uAm) && u <= g.uBm + f * (g.uBp - g.uBm);
+    };
     let rnd = 12345;
     const noise = () => {
       rnd = (rnd * 1103515245 + 12345) % 2147483648;
       return (rnd / 2147483648 - 0.5) * 1e-5;
     };
+    const owns = (k: number, q: V): boolean => {
+      const g = quads[k];
+      const sA = g.hasA ? dot(sub(q, g.P1), g.jA) : 1e9;
+      const sB = g.hasB ? dot(sub(q, g.P2), g.jB) : -1e9;
+      const segD = (a: V, b: V) => {
+        const ab = sub(b, a);
+        const t = Math.max(0, Math.min(1, dot(sub(q, a), ab) / dot(ab, ab)));
+        return Math.hypot(q[0] - a[0] - t * ab[0], q[1] - a[1] - t * ab[1]) - r;
+      };
+      const a1 = segD(g.P1, g.P2);
+      const a0 = g.hasA ? segD(P[k - 1], g.P1) : 1e9;
+      const a2 = g.hasB ? segD(g.P2, P[k + 2]) : 1e9;
+      return (sA >= -oe && sB < oe) || (sA < 0 && sB >= 0 && a1 <= a0 && a1 < a2);
+    };
+    // per pixel: the quads that draw it under each geometry; a pixel one
+    // geometry draws and the other does not (lost / extra); an owner whose
+    // trapezoid misses a corner of the pixel that its box held (MSAA writes
+    // only the samples inside the triangle; the lateral sides are the
+    // box's own); and the overdraw (quads rasterizing it)
+    let lost = 0;
+    let extra = 0;
+    let partial = 0;
+    let rasterBox = 0;
+    let rasterTrap = 0;
     const owners = (p: V): number => {
       let n = 0;
       for (let k = 0; k + 1 < P.length; k++) {
         const q: V = [p[0] + noise(), p[1] + noise()];
-        const P1 = P[k];
-        const P2 = P[k + 1];
-        const dir = unit(sub(P2, P1));
-        const L = Math.hypot(P2[0] - P1[0], P2[1] - P1[1]);
-        const u = dot(sub(q, P1), dir);
-        const v = dot(sub(q, P1), [-dir[1], dir[0]]);
-        if (u < -R || u > L + R || Math.abs(v) > R) continue; // outside the box
-        const sA = k === 0 ? 1e9 : dot(sub(q, P1), jointT(P[k - 1], P1, P2));
-        const sB = k + 2 >= P.length ? -1e9 : dot(sub(q, P2), jointT(P1, P2, P[k + 2]));
-        const segD = (a: V, b: V) => {
-          const ab = sub(b, a);
-          const t = Math.max(0, Math.min(1, dot(sub(q, a), ab) / dot(ab, ab)));
-          return Math.hypot(q[0] - a[0] - t * ab[0], q[1] - a[1] - t * ab[1]) - r;
-        };
-        const a1 = segD(P1, P2);
-        const a0 = k === 0 ? 1e9 : segD(P[k - 1], P1);
-        const a2 = k + 2 >= P.length ? 1e9 : segD(P2, P[k + 2]);
-        if ((sA >= -oe && sB < oe) || (sA < 0 && sB >= 0 && a1 <= a0 && a1 < a2)) n++;
+        const g = quads[k];
+        const ib = inGeom(g, q, false);
+        const it = inGeom(g, q, true);
+        if (ib) rasterBox++;
+        if (it) rasterTrap++;
+        if (!ib && !it) continue;
+        const own = owns(k, q);
+        if (own && ib && !it) lost++;
+        if (own && it && !ib) extra++;
+        if (!own || !it) continue;
+        n++;
+        const h = pxW / 2;
+        for (const [dx, dy] of [[-h, -h], [h, -h], [-h, h], [h, h]]) {
+          const cq: V = [q[0] + dx, q[1] + dy];
+          if (inGeom(g, cq, false) && !inGeom(g, cq, true)) {
+            partial++;
+            break;
+          }
+        }
       }
       return n;
     };
@@ -135,20 +199,51 @@ describe("K8 one SDF quad per pixel", () => {
         if (n > 1) doubles++;
       }
     }
-    return { inside, holes, doubles };
+    return {
+      inside, holes, doubles, lost, extra, partial,
+      wholes: quads.filter((g) => g.whole).length,
+      overBox: rasterBox / inside, overTrap: rasterTrap / inside,
+    };
     };
     // open wavy polylines at SAMP's spacing (0.09): gentle (curvature
     // radius >= 0.45 > r) and folded (radius down to 0.13 < r)
     const wave = (a: number, b: number): V[] =>
       Array.from({ length: 60 }, (_, i) => [i * 0.09, a * Math.sin(i * 0.09 * 2.1) + b * Math.sin(i * 0.09 * 5.3)] as V);
+    const checkTrap = (c: ReturnType<typeof census>) => {
+      expect(c.lost).toBe(0);
+      expect(c.extra).toBe(0);
+      expect(c.partial).toBe(0);
+    };
     const gentle = census(wave(0.5, 0));
     expect(gentle.inside).toBeGreaterThan(10000);
     expect(gentle.holes).toBe(0);
     expect(gentle.doubles / gentle.inside).toBeLessThan(0.002);
+    checkTrap(gentle);
+    // the trapezoid rasterizes under a third of what the box did
+    expect(gentle.wholes).toBe(0);
+    expect(gentle.overTrap).toBeLessThan(gentle.overBox / 3);
     // a fold tighter than the ribbon overlaps itself; still no hole
     const folded = census(wave(0.5, 0.2));
     expect(folded.inside).toBeGreaterThan(10000);
     expect(folded.holes).toBe(0);
+    checkTrap(folded);
+    expect(folded.wholes).toBeGreaterThan(0);
+    // sharp joints (runs of 6 samples, headings +-30/45/60 degrees, so
+    // turns of 75 to 105 degrees, past SDF_TRAP_COS) keep the whole box
+    const zig: V[] = [];
+    let at: V = [0.4, 0];
+    const amp = [0.52, 0.79, 1.05];
+    for (let i = 0; i < 48; i++) {
+      zig.push(at);
+      const j = Math.floor(i / 6);
+      const head = (j % 2 === 0 ? 1 : -1) * amp[j % 3];
+      at = [at[0] + 0.09 * Math.cos(head), at[1] + 0.09 * Math.sin(head)];
+    }
+    const sharp = census(zig);
+    expect(sharp.inside).toBeGreaterThan(5000);
+    expect(sharp.holes).toBe(0);
+    checkTrap(sharp);
+    expect(sharp.wholes).toBeGreaterThan(0);
   });
 });
 

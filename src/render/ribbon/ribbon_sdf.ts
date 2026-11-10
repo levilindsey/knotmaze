@@ -2,7 +2,7 @@
 // G3G4_sdf_geometry.md 3.2/3.3): ThreadPass drawing every thread as
 // per-segment quads over the G3 SAMP centreline. The vertex stage
 // fetches the segment's four samples and radii from the G3 tables and
-// emits a capsule box; the fragment stage takes the signed distance
+// emits the segment's quad; the fragment stage takes the signed distance
 // to the own/-1/+1 cones (sdCone), covers analytically (aaCov), then
 // runs the strip fragment's paint orchestration (FX, gameplay paint,
 // telegraph, fray, the thread look) with the side measured from the
@@ -17,8 +17,11 @@
 // cuts cone material inside a fused junction's fan reach, handing the
 // outline to the fan's rim exactly as the strip does.
 //
-// Deviations from the design, recorded in the K8_G3-2 brief: capsule
-// boxes on every segment (no bisector trapezoids yet); no fold pinch
+// K8 (sdf cost, docs/design/K8_sdf_cost.md): the vertex stage emits the
+// bisector trapezoid the fragment's ownership keeps (the box only at
+// folds, sharp joints and zero-length segments), not a capsule box.
+//
+// Deviations from the design, recorded in the K8_G3-2 brief: no fold pinch
 // or joint-cluster discard (G4); the paint varyings ride the strip's
 // wrap pairs from the segment ends, so paint reads the owning
 // segment's ends exactly as the design's caller contract requires.
@@ -50,6 +53,32 @@ import type { RibbonMesh } from "../ribbon_mesh";
 import type { ThreadPass } from "./thread_pass";
 import { StripPass } from "./strip_pass";
 
+// K8: the unit normal of the joint at b between the legs a->b and b->c (the
+// bisector of the two leg directions); a hairpin takes the outgoing leg's,
+// and a zero-length leg borrows the other leg's direction. Shared by the
+// vertex (the trapezoid's ends) and the fragment (ownership), so both read
+// the same line from the same three samples.
+const SDF_JOINT_GLSL = /* glsl */ `// K8: the unit normal of the joint at b between the legs a->b and b->c (the
+// bisector of the two leg directions); a hairpin takes the outgoing leg's,
+// and a zero-length leg borrows the other leg's direction.
+vec2 sdfJointT(vec2 a, vec2 b, vec2 c) {
+  vec2 d0 = b - a;
+  vec2 d1 = c - b;
+  float q0 = dot(d0, d0);
+  float q1 = dot(d1, d1);
+  d0 = q0 > 1e-14 ? d0 * inversesqrt(q0) : vec2(0.0);
+  d1 = q1 > 1e-14 ? d1 * inversesqrt(q1) : d0;
+  if (q0 <= 1e-14) d0 = d1;
+  vec2 n = d0 + d1;
+  float qn = dot(n, n);
+  return qn > 1e-8 ? n * inversesqrt(qn) : d1;
+}`;
+
+/** K8 (sdf cost): a quad with a joint whose bisector meets the segment at
+ *  a cosine below this keeps the whole box (tan(theta/2) <= 0.75 keeps the
+ *  trapezoid inside the box). Mirrored by test/render/sdf_gap_bind.test.ts. */
+export const SDF_TRAP_COS = 0.8;
+
 export const SDF_VERT = /* glsl */ `#version 300 es
 precision highp float;
 precision highp int;
@@ -80,6 +109,7 @@ ${PAINT_DATA_GLSL}
 ${PAINT_SECTION_GLSL}
 ${FABRIC_GLSL}
 ${SDF_TEX_GLSL}
+${SDF_JOINT_GLSL}
 
 int idxOf(KChain kc, int j) {
   if (kc.closed) {
@@ -122,10 +152,37 @@ void main(void) {
   float R = max(max(r0, r1), max(r2, r3)) + uSdfPad;
   float end = aSeg.y;
   float side = aSeg.z;
-  vec2 base = end < 0.5 ? P1 : P2;
-  vec2 ext = end < 0.5 ? -dir : dir;
-  vec2 corner = base + ext * R + nrm * side * R;
+  // K8 (sdf cost): a TRAPEZOID, not the capsule box. The fragment keeps
+  // only the slab between the two joints' bisector lines (ownership), but
+  // the box ran R past both ends: at SAMP spacing (0.09 against R 0.33)
+  // about eight boxes covered each pixel, and every one ran the gap search
+  // before the ownership discard could drop it (the SIMD group runs the
+  // union). The lateral sides stay at +-R; each end follows its bisector
+  // line (along offset s R tan(theta/2) at side s), pushed out by a margin
+  // past a pixel's half-diagonal (MSAA writes only the samples inside the
+  // triangle, and ownership is per pixel centre). An end with no neighbour
+  // keeps the box end. A joint sharper than SDF_TRAP_COS (where its line
+  // would leave the box), a zero-length segment or a fold (the two lines
+  // cross within +-R: the fragment's nearest-cone fallback) keeps the
+  // whole box. The trapezoid lies inside the box and holds every pixel
+  // of it this quad owns, so the drawn pixels are the box's.
   mat3 mvp = uProjectionMatrix * uWorldTransformMatrix * uTransformMatrix;
+  mat3 wts = uWorldTransformMatrix * uTransformMatrix;
+  float pxWorld = 1.0 / max(length(wts[0].xy), 1e-6);
+  float trapPad = max(uSdfPad, 2.0 * pxWorld);
+  bool hasA = r0 > -0.5;
+  bool hasB = r3 > -0.5;
+  vec2 jA = sdfJointT(P0, P1, P2);
+  vec2 jB = sdfJointT(P1, P2, P3);
+  float cA = dot(dir, jA);
+  float cB = dot(dir, jB);
+  float tA = hasA ? -dot(nrm, jA) / max(cA, 1e-3) : 0.0;
+  float tB = hasB ? -dot(nrm, jB) / max(cB, 1e-3) : 0.0;
+  bool whole = dl < 1e-6 || (hasA && cA < ${SDF_TRAP_COS.toFixed(2)}) || (hasB && cB < ${SDF_TRAP_COS.toFixed(2)})
+    || (hasA && hasB && dl <= R * abs(tB - tA));
+  float uA = whole || !hasA ? -R : max(side * R * tA - trapPad, -R);
+  float uB = whole || !hasB ? dl + R : min(dl + side * R * tB + trapPad, dl + R);
+  vec2 corner = P1 + dir * (end < 0.5 ? uA : uB) + nrm * side * R;
   gl_Position = vec4((mvp * vec3(corner, 1.0)).xy, 0.0, 1.0);
   vPos = corner;
   vColor = uColor * uWorldColorAlpha;
@@ -211,21 +268,7 @@ ${GAP_FRAG_LIB}
 ${SDF_CONE_GLSL}
 ${G3_CHAIN_GLSL}
 ${JUNCTION_CUT_GLSL}
-// K8: the unit normal of the joint at b between the legs a->b and b->c (the
-// bisector of the two leg directions); a hairpin takes the outgoing leg's,
-// and a zero-length leg borrows the other leg's direction.
-vec2 sdfJointT(vec2 a, vec2 b, vec2 c) {
-  vec2 d0 = b - a;
-  vec2 d1 = c - b;
-  float q0 = dot(d0, d0);
-  float q1 = dot(d1, d1);
-  d0 = q0 > 1e-14 ? d0 * inversesqrt(q0) : vec2(0.0);
-  d1 = q1 > 1e-14 ? d1 * inversesqrt(q1) : d0;
-  if (q0 <= 1e-14) d0 = d1;
-  vec2 n = d0 + d1;
-  float qn = dot(n, n);
-  return qn > 1e-8 ? n * inversesqrt(qn) : d1;
-}
+${SDF_JOINT_GLSL}
 void main(void) {
   vec2 gfw = fwidth(vPos);
   float pxW = max(max(gfw.x, gfw.y), 1e-5);
