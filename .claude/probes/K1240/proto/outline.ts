@@ -3942,7 +3942,7 @@ function marginOfC(C: FCache, ai: number, ft: FFoot, cache: WalkCache): number {
   // test value moves by at most |q - q_cached| (unit tangents). Positions
   // it cannot certify (near its own foot) are tested as before, so the
   // walk's stop is the full walk's, bit for bit.
-  if (!cache.valid) { cache.valid = true; cache.fOk = false; cache.bOk = false; }
+  if (!cache.valid) { cache.valid = true; cache.fOk = false; cache.bOk = false; cache.mOk = false; }
   const nseg = pl.nseg; const closed = pl.closed;
   const U = closed && pl.len > 0 ? kFoot + nseg * Math.round(base / pl.len) : kFoot;
   const eps = 1e-9 * h;
@@ -4007,9 +4007,30 @@ function marginOfC(C: FCache, ai: number, ft: FFoot, cache: WalkCache): number {
     }
   }
   const stopAt = dc - 0.05 * h;
-  let d2 = Infinity;
-  if (lo > winLo) { { const A = fwA; A[0] = x; A[1] = y; A[2] = winLo; A[3] = lo; A[4] = stopAt; A[5] = dc; A[6] = cache.oLo - 2 * h; A[7] = cache.oLo + 2 * h; A[8] = Infinity; } footWinFast(pl, kfMFoot); d2 = kfMFoot.d; if (d2 <= dc) cache.oLo = pl.closed && pl.len > 0 ? kfMFoot.s + Math.round(((winLo + lo) / 2 - kfMFoot.s) / pl.len) * pl.len : kfMFoot.s; }
-  if (hi < winHi && d2 > stopAt) { { const A = fwA; A[0] = x; A[1] = y; A[2] = hi; A[3] = winHi; A[4] = stopAt; A[5] = dc; A[6] = cache.oHi - 2 * h; A[7] = cache.oHi + 2 * h; A[8] = Infinity; } footWinFast(pl, kfMFoot); if (kfMFoot.d < d2) { d2 = kfMFoot.d; if (d2 <= dc) cache.oHi = pl.closed && pl.len > 0 ? kfMFoot.s + Math.round(((hi + winHi) / 2 - kfMFoot.s) / pl.len) * pl.len : kfMFoot.s; } }
+  // K1247 s5: the margin certificate. The margin is 0 exactly when no point
+  // of the excluded windows ([winLo, lo] and [hi, winHi]) is closer to q
+  // than dc. A search that found none also gives D0, a lower bound on the
+  // excluded set's distance from its q (searched to dc + kfMR h). A later q
+  // whose windows exclude no more ([winLo, lo] and [hi, winHi] inside the
+  // cached ones) is at least D0 - |q - q_m| from its excluded set
+  // (1-Lipschitz), so D0 - |q - q_m| >= dc + 1e-9 h proves its margin is 0
+  // without a search. Exact: only a search's scan order (its hints) changes.
+  const mc = kfMCache;
+  if (mc) { if (!cache.mOk) growStats.mNone++; else if (!(lo <= cache.mLo && hi >= cache.mHi)) growStats.mWin++; }
+  if (mc && cache.mOk && lo <= cache.mLo && hi >= cache.mHi) {
+    const dq = Math.sqrt((x - cache.mQx) * (x - cache.mQx) + (y - cache.mQy) * (y - cache.mQy));
+    if (cache.mD0 - dq >= dc + 1e-9 * h) { growStats.mHits++; return 0; }
+  }
+  if (mc) growStats.mMiss++;
+  const bd = mc ? dc + kfMR * h : dc;
+  // A search to bd finds what a search to dc finds when a point is closer
+  // than dc; when none is, it reports dc and the window's start, as the
+  // search to dc does (so the hints, the scan windows and every value stay
+  // bit for bit), and keeps its own distance for D0.
+  let d2 = Infinity; let dX = Infinity; let hiDone = !(hi < winHi);
+  if (lo > winLo) { { const A = fwA; A[0] = x; A[1] = y; A[2] = winLo; A[3] = lo; A[4] = stopAt; A[5] = bd; A[6] = cache.oLo - 2 * h; A[7] = cache.oLo + 2 * h; A[8] = Infinity; } footWinFast(pl, kfMFoot); const f = kfMFoot.d; dX = f; d2 = f < dc ? f : dc; const s = f < dc ? kfMFoot.s : winLo; cache.oLo = pl.closed && pl.len > 0 ? s + Math.round(((winLo + lo) / 2 - s) / pl.len) * pl.len : s; }
+  if (hi < winHi && d2 > stopAt) { { const A = fwA; A[0] = x; A[1] = y; A[2] = hi; A[3] = winHi; A[4] = stopAt; A[5] = bd; A[6] = cache.oHi - 2 * h; A[7] = cache.oHi + 2 * h; A[8] = Infinity; } footWinFast(pl, kfMFoot); const f = kfMFoot.d; if (f < dX) dX = f; hiDone = true; const fo = f < dc ? f : dc; if (fo < d2) { d2 = fo; const s = f < dc ? kfMFoot.s : hi; cache.oHi = pl.closed && pl.len > 0 ? s + Math.round(((hi + winHi) / 2 - s) / pl.len) * pl.len : s; } }
+  if (mc && hiDone && d2 >= dc) { cache.mOk = true; cache.mQx = x; cache.mQy = y; cache.mLo = lo; cache.mHi = hi; cache.mD0 = dX < bd ? dX : bd; }
   return d2 - dc;
 }
 function wOfC(C: FCache): number {
@@ -4044,15 +4065,23 @@ export function setGrowKnobs(e: number, hm: number, p = kfGrowP): void { kfGrowE
 let kfGrowN = 16; // uniform growth: nodes (and path steps) over r0; 0 = the adaptive one
 let kfGrowZ = 1e-3; // uniform growth: the smallest refined interval, in h
 let kfGrowMid = true; // uniform growth: accept a refined interval by its midpoint test
+let kfGrowS = 1; // uniform growth: path steps per node (w is evaluated at the nodes only)
+export function setGrowSub(s: number): void { kfGrowS = s; }
 export function setGrowUniform(n: number, e: number, z = kfGrowZ, mid = kfGrowMid): void { kfGrowN = n; kfGrowE = e; kfGrowZ = z; kfGrowMid = mid; }
 export const growDbg: { ci: number; rows: number[][] } = { ci: -1, rows: [] };
-export const growStats = { evals: 0, rejects: 0, corners: 0, steps: 0, fails: 0 };
+export const growStats = { evals: 0, rejects: 0, corners: 0, steps: 0, fails: 0, mHits: 0, mMiss: 0, mNone: 0, mWin: 0 };
 // K1247 s5: the predictor's foot hint. footNearM walks from its hint in
 // windows of h/32, so a long step's walk costs (foot travel) / (h/32)
 // windows; moving the hint along the foot's segment by q's tangential
 // motion starts the walk near the answer (a vertex foot walks back).
 let kfShift = true;
 export function setGrowShift(b: boolean): void { kfShift = b; }
+let kfSegPred = true;
+export function setSegPred(b: boolean): void { kfSegPred = b; }
+// K1247 s5: marginOfC's certificate (exact) and how far past dc its
+// refreshing search looks, in h.
+let kfMCache = false; let kfMR = 0.5; // off: no gain, measured (handoff)
+export function setMarginCache(on: boolean, r = kfMR): void { kfMCache = on; kfMR = r; }
 function shiftFootC(C: FCache, arm: FArm, f: FFoot, mx: number, my: number): void {
   const p = C.polys[arm.pi]; let k = f.k;
   if (k < 0 || k >= p.nseg) return;
@@ -4090,6 +4119,26 @@ function advanceToC(C: FCache, rhoT: number, dMax: number): void {
         copyFoot(kfTa, kfQa); copyFoot(kfTb, kfQb);
         if (kfShift) { shiftFootC(C, kfCst.A, kfTa, ux * dd, uy * dd); shiftFootC(C, kfCst.B, kfTb, ux * dd, uy * dd); }
         let sx = gx; let sy = gy;
+        // K1247 s5: the segment predictor. The point at rn from the lines of
+        // the segments the shifted feet sit on: exact while both feet stay
+        // inside those segments, so Newton's first test passes there. The
+        // landing test still measures from g.
+        if (kfSegPred) {
+          const pa = C.polys[kfCst.A.pi]; const pb = C.polys[kfCst.B.pi]; const ka = kfTa.k; const kb = kfTb.k;
+          if (ka >= 0 && ka < pa.nseg && kb >= 0 && kb < pb.nseg && pa.segLen[ka] > 0 && pb.segLen[kb] > 0) {
+            const la = pa.segLen[ka]; const lb = pb.segLen[kb];
+            let pAx = -pa.dy[ka] / la; let pAy = pa.dx[ka] / la;
+            if ((kfCst.qx - pa.x[ka]) * pAx + (kfCst.qy - pa.y[ka]) * pAy < 0) { pAx = -pAx; pAy = -pAy; }
+            let pBx = -pb.dy[kb] / lb; let pBy = pb.dx[kb] / lb;
+            if ((kfCst.qx - pb.x[kb]) * pBx + (kfCst.qy - pb.y[kb]) * pBy < 0) { pBx = -pBx; pBy = -pBy; }
+            const dt = pAx * pBy - pAy * pBx;
+            if (dt > 0.05 || dt < -0.05) {
+              const ca = rn + pAx * pa.x[ka] + pAy * pa.y[ka]; const cb = rn + pBx * pb.x[kb] + pBy * pb.y[kb];
+              const px = (ca * pBy - pAy * cb) / dt; const py = (pAx * cb - ca * pBx) / dt;
+              if ((px - gx) * (px - gx) + (py - gy) * (py - gy) <= 0.25 * acc * acc) { sx = px; sy = py; }
+            }
+          }
+        }
         kfXY[0] = sx; kfXY[1] = sy; footNearM(C, kfCst.A, kfTa); footNearM(C, kfCst.B, kfTb);
         for (let it = 0; it < 60; it++) {
           const Fa = kfTa.d - rn; const Fb = kfTb.d - rn;
@@ -4166,7 +4215,7 @@ function growIntegC(C: FCache, ci: number): number {
   kfCst.qx = kfCst.Vx; kfCst.qy = kfCst.Vy; kfCst.rhoCur = C.h;
   if (!(kfCst.r0 > 1e-9)) { C.nodeN[ci] = 0; return 0; }
   if (kfGrowN > 0) {
-    const h = C.h; const r0 = kfCst.r0; const N = kfGrowN; const dN = r0 / N;
+    const h = C.h; const r0 = kfCst.r0; const N = kfGrowN; const dN = r0 / N; const dP = dN / kfGrowS;
     const E = kfGrowE * h; const Lmin = kfGrowZ * h;
     growStats.corners++;
     saveNodeC(0); nodeRho[0] = h; growNN = 1;
@@ -4175,7 +4224,7 @@ function growIntegC(C: FCache, ci: number): number {
     for (let kk = 1; kk <= N && wa > 0 && growNN < kfNodeCap; kk++) {
       const b = kk === N ? h + r0 : h + kk * dN;
       restoreNodeC(ka);
-      advanceToC(C, b, dN); growStats.evals++;
+      advanceToC(C, b, dP); growStats.evals++;
       if (kfCst.rhoCur < b - 1e-9 * Math.max(1, b)) {
         const s = Math.min(wa, wOfC(C));
         integ += 0.5 * (wa + s) * Math.max(0, kfCst.rhoCur - a);
@@ -4192,7 +4241,7 @@ function growIntegC(C: FCache, ci: number): number {
     let k0 = 0;
     for (let i = 1; i < growNN; i++) if (nodeRho[i] <= target && nodeRho[i] > nodeRho[k0]) k0 = i;
     restoreNodeC(k0);
-    if (target > nodeRho[k0]) advanceToC(C, target, dN);
+    if (target > nodeRho[k0]) advanceToC(C, target, dP);
     return Math.max(0, kfCst.rhoCur - h);
   }
   const h = C.h; const r0 = kfCst.r0;
@@ -5522,8 +5571,9 @@ interface WalkCache {
   valid: boolean; oLo: number; oHi: number;
   fOk: boolean; fQx: number; fQy: number; fU0: number; fN: number; fK: number; fBk: number; fSm: Float64Array;
   bOk: boolean; bQx: number; bQy: number; bU0: number; bN: number; bK: number; bBk: number; bSm: Float64Array;
+  mOk: boolean; mQx: number; mQy: number; mLo: number; mHi: number; mD0: number;
 }
-function mkWalkCache(): WalkCache { return { valid: false, oLo: NaN, oHi: NaN, fOk: false, fQx: 0, fQy: 0, fU0: 0, fN: 0, fK: 0, fBk: 0, fSm: new Float64Array(64), bOk: false, bQx: 0, bQy: 0, bU0: 0, bN: 0, bK: 0, bBk: 0, bSm: new Float64Array(64) }; }
+function mkWalkCache(): WalkCache { return { valid: false, oLo: NaN, oHi: NaN, fOk: false, fQx: 0, fQy: 0, fU0: 0, fN: 0, fK: 0, fBk: 0, fSm: new Float64Array(64), bOk: false, bQx: 0, bQy: 0, bU0: 0, bN: 0, bK: 0, bBk: 0, bSm: new Float64Array(64), mOk: false, mQx: 0, mQy: 0, mLo: 0, mHi: 0, mD0: 0 }; }
 
 // x, y come in kfXY and the hint is out's own foot (s, k): no double crosses
 // the call boundary, so none is boxed (31.8k calls a frame on def).

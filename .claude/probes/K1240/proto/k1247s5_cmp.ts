@@ -18,6 +18,7 @@ const arg = (k: string): string | undefined => process.argv.find((a) => a.starts
 const E = +(arg("E") ?? 0.002); const Hm = +(arg("H") ?? 0.25); const P = +(arg("P") ?? 1 / 64);
 // No --N and no --E: outline.ts's own defaults.
 if (arg("N") !== undefined) O.setGrowUniform(+arg("N")!, E, +(arg("Z") ?? 1e-3), arg("mid") !== "0"); else if (arg("E") !== undefined) O.setGrowKnobs(E, Hm, P);
+if (arg("S") !== undefined) O.setGrowSub(+arg("S")!);
 const only = arg("scene"); const tag = arg("tag") ?? "";
 interface Cn { ok: boolean; r: number; qx: number; qy: number; tax: number; tay: number; tbx: number; tby: number }
 const cdist = (a: Cn, b: Cn): number => Math.max(Math.hypot(a.qx - b.qx, a.qy - b.qy), Math.hypot(a.tax - b.tax, a.tay - b.tay), Math.hypot(a.tbx - b.tbx, a.tby - b.tby));
