@@ -72,10 +72,12 @@ vec4 k8Out() {
       rep("call", call, (m) => m + " if (k8Mode > 0) { finalColor = k8Out(); return; }");
       // Mode 3: every RASTERIZED fragment. The SDF's three discards before
       // the search (ownership, outside the edge, no coverage) are waived in
-      // mode 3, so every fragment reaches the call's k8Out. (A first cut, an
-      // early return right after pxW, left the strip drawing nothing and the
-      // sdf page erroring; inferred: a failed link, derivatives after it.
-      // meta.links now records each tagged program's LINK_STATUS.)
+      // mode 3, so every fragment reaches the call's k8Out. (The strip
+      // drawing nothing and the sdf page erroring in the 04:4x runs was the
+      // caller's fault, not this cut: those links had no pin
+      // (am=instant&snd=none&fw=0&phw=0), so the page ran the intro on the
+      // worker host and never rested. Always pass the pin. meta.links
+      // records each tagged program's LINK_STATUS.)
       rep("raster", /if \((!own|a > 0\.5 \* pxW|cov <= 0\.002)\) discard;/, (m, g1) => `if ((${g1}) && k8Mode != 3) discard;`);
       st.tag.set(sh, kind);
       st.compiled.push({ kind, reps });
