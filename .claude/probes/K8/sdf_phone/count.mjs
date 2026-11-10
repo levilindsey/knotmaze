@@ -48,6 +48,7 @@ const INSTR = () => {
 int k8Seg = 0; int k8Full = 0; int k8Prot = 0; int k8Slot = 0; int k8Win = 0; int k8Chunk = 0;
 uniform int k8Mode;
 vec4 k8Out() {
+  if (k8Mode == 3) return vec4(1.0, 1.0, 0.0, 0.0);
   if (k8Mode == 2) return vec4(float(k8Full), float(k8Chunk), float(k8Slot), float(k8Prot));
   return vec4(float(k8Seg + k8Full), 1.0, float(k8Win), k8Slot > 0 ? 1.0 : 0.0);
 }
@@ -69,8 +70,13 @@ vec4 k8Out() {
       rep("win", /if \(m <= -pxW\) continue;/, (m) => m + " k8Win++;");
       rep("chunk", /int r = g\.w \+ k0 \* g\.y, i;/, (m) => m + " k8Chunk++;");
       rep("call", call, (m) => m + " if (k8Mode > 0) { finalColor = k8Out(); return; }");
-      // Mode 3: every RASTERIZED fragment, counted before any discard.
-      rep("raster", /float pxW = max\(max\(gfw\.x, gfw\.y\), 1e-5\);/, (m) => m + " if (k8Mode == 3) { finalColor = vec4(1.0, 1.0, 0.0, 0.0); return; }");
+      // Mode 3: every RASTERIZED fragment. The SDF's three discards before
+      // the search (ownership, outside the edge, no coverage) are waived in
+      // mode 3, so every fragment reaches the call's k8Out. (A first cut, an
+      // early return right after pxW, left the strip drawing nothing and the
+      // sdf page erroring; inferred: a failed link, derivatives after it.
+      // meta.links now records each tagged program's LINK_STATUS.)
+      rep("raster", /if \((!own|a > 0\.5 \* pxW|cov <= 0\.002)\) discard;/, (m, g1) => `if ((${g1}) && k8Mode != 3) discard;`);
       st.tag.set(sh, kind);
       st.compiled.push({ kind, reps });
     }
@@ -78,6 +84,14 @@ vec4 k8Out() {
   };
   const oAttach = P.attachShader;
   P.attachShader = function (p, sh) { const k = st.tag.get(sh); if (k) st.prog.set(p, k); return oAttach.call(this, p, sh); };
+  st.links = [];
+  const oLink = P.linkProgram;
+  P.linkProgram = function (p) {
+    const r = oLink.call(this, p);
+    const k = st.prog.get(p);
+    if (k) st.links.push({ kind: k, ok: !!this.getProgramParameter(p, this.LINK_STATUS), log: String(this.getProgramInfoLog(p) || "").slice(0, 400) });
+    return r;
+  };
   const oUse = P.useProgram;
   P.useProgram = function (p) { st.cur = p; return oUse.call(this, p); };
   const oBind = P.bindFramebuffer;
@@ -309,7 +323,7 @@ async function run(browser, name, q) {
     const r = window.__knotRenderer();
     const L = window.__knotBackgroundLayer && window.__knotBackgroundLayer();
     const gl = L && L.renderer && L.renderer.gl;
-    return { compiled: window.__k8c.compiled, pass: r.stripPass && r.stripPass.constructor.name, fallback: !!r.rpFallback, glError: gl ? gl.getError() : -1, lost: gl ? gl.isContextLost() : null, lostEvents: window.__k8.lost };
+    return { compiled: window.__k8c.compiled, links: window.__k8c.links, pass: r.stripPass && r.stripPass.constructor.name, fallback: !!r.rpFallback, glError: gl ? gl.getError() : -1, lost: gl ? gl.isContextLost() : null, lostEvents: window.__k8.lost };
   });
   if (a.png) { writeFileSync(join(outDir, `${tag}_${name}_heat.png`), Buffer.from(a.png.split(",")[1], "base64")); delete a.png; }
   await page.close();
@@ -321,7 +335,7 @@ async function run(browser, name, q) {
     segPerFrag: per(a.ch[0].sum), searchesPerFrag: per(a.ch[2].sum), fragsWithSlot: a.ch[3].sum,
     fullPerFrag: per(b.ch[0].sum), chunksPerFrag: per(b.ch[1].sum), slotsPerFrag: per(b.ch[2].sum), protPerFrag: per(b.ch[3].sum),
     totals: { seg: a.ch[0].sum, full: b.ch[0].sum, chunk: b.ch[1].sum, slot: b.ch[2].sum, prot: b.ch[3].sum, win: a.ch[2].sum },
-    draws: { counted: a.drawn, masked: a.masked }, accGlError: [a.glError, b.glError], errors, meta: { compiled: meta.compiled, glError: meta.glError, lost: meta.lost, lostEvents: meta.lostEvents },
+    draws: { counted: a.drawn, masked: a.masked }, accGlError: [a.glError, b.glError], errors, meta: { compiled: meta.compiled, links: meta.links, glError: meta.glError, lost: meta.lost, lostEvents: meta.lostEvents },
     raster: { frags: c.ch[0].sum, px: c.drawnPx, max: c.ch[0].max, perDrawnPx: +(c.ch[0].sum / Math.max(a.drawnPx, 1)).toFixed(3), perFrag: +(c.ch[0].sum / Math.max(a.ch[1].sum, 1)).toFixed(3), glError: c.glError },
     walk,
   };

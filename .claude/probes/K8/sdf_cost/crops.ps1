@@ -2,11 +2,13 @@
 # shots. Each crop is three panels: the fix's default, the fix's rp=sdf, the
 # base's rp=sdf (knot gs 24 and dense: same state, ss_ab's 1400x900 dsf 1;
 # max fabric: diag_screenshot's 1600x900 dsf 1.5, not same state).
-#   pwsh -File .claude/probes/K8/sdf_cost/crops.ps1
+#   pwsh -File .claude/probes/K8/sdf_cost/crops.ps1 [-In <shots dir>] [-Out <crops dir>]
+# (the phone stage: -In .claude/probes/K8/sdf_phone/out/ss_B -Out .../crops_B)
+param([string]$In = ".claude/probes/K8/sdf_cost/out/ss", [string]$Out = ".claude/probes/K8/sdf_cost/out/crops")
 $repo = Resolve-Path (Join-Path $PSScriptRoot "..\..\..\..")
 Set-Location $repo
-$o = ".claude/probes/K8/sdf_cost/out/ss"
-$c = ".claude/probes/K8/sdf_cost/out/crops"
+$o = $In
+$c = $Out
 New-Item -ItemType Directory $c -Force | Out-Null
 $crop = ".claude/probes/K8/sdf_gaps/crop.mjs"
 $jobs = @(
