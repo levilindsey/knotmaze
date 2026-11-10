@@ -177,9 +177,21 @@ function lerpS(p: Poly, a: number, b: number, t: number): number {
 // segment end past it: wherever the points happened to be (g41_ring_tw64 cut 273 moved
 // 0.42 h when reduction lengthened that segment). Clipped, the edge is the same s at any
 // point density.
+// K1247 s14 (#658): a border join's points (miter, fan, bevel) all carry their vertex's s, so a
+// bevel segment has zero s span and real length (fat x366: 0.0074), and a window edge in s
+// jumped the whole bevel when the bevel's s crossed it (cyc18 jit 0.01: the bevel's s moved
+// 1e-4 past the edge, the synthesized cut 0.337 px). The fast path's clip now runs in a border
+// parameter sigma = bs + E, strictly increasing: a segment advances max(L, c len) (c = K14_BEVC),
+// E sums the excess (FBord.be), and the window is measured from E at the window's center
+// (sigCenter). An edge then crosses a bevel at rate 1 / c, and a center crossing a vertex moves
+// the window by c len in s. K14_NOSIGMA=1 restores the old clip (c 0); K14_BEVC=<c> tunes it.
+const K14_ENV = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env ?? {};
+const K14_BEVC = K14_ENV.K14_NOSIGMA ? 0 : Number(K14_ENV.K14_BEVC ?? 0.1);
 const synthTU = new Float64Array(2); const synthTO = new Float64Array(2);
-function clipSegS(p: Poly, a: number, b: number, sC: number, R: number, out: Float64Array): boolean {
-  const L = dS(p, a, b); const d0 = dS(p, sC, a);
+// len: the segment's length (0: the old clip); rel: its sigma offset (be[i] - E at the center).
+function clipSegS(p: Poly, a: number, b: number, sC: number, R: number, out: Float64Array, len = 0, rel = 0): boolean {
+  let L = dS(p, a, b); const d0 = dS(p, sC, a) + rel;
+  if (L >= 0 && L < K14_BEVC * len) L = K14_BEVC * len;
   if (!(L > 0)) { out[0] = 0; out[1] = 1; return Math.abs(d0) <= R; }
   const t0 = (-R - d0) / L; const t1 = (R - d0) / L;
   out[0] = t0 > 0 ? t0 : 0; out[1] = t1 < 1 ? t1 : 1;
@@ -3044,6 +3056,8 @@ interface FBord {
   bx: Float64Array; by: Float64Array; bs: Float64Array; bfx: Float64Array; bfy: Float64Array; nb: number;
   xy: Float64Array; s: Float64Array; cxy: Float64Array; nf: number;
   ins: Int32Array; nIns: number; segReg: Int32Array; sorted: Int32Array; segCnt: Int32Array; mark: Int32Array;
+  // K1247 s14: the clip's sigma excess per base point (sigma = bs + be; borderExcessC).
+  be: Float64Array;
 }
 function mkFBord(): FBord {
   return {
@@ -3051,7 +3065,37 @@ function mkFBord(): FBord {
     bx: new Float64Array(64), by: new Float64Array(64), bs: new Float64Array(64), bfx: new Float64Array(64), bfy: new Float64Array(64), nb: 0,
     xy: new Float64Array(128), s: new Float64Array(64), cxy: new Float64Array(128), nf: 0,
     ins: new Int32Array(16), nIns: 0, segReg: new Int32Array(64), sorted: new Int32Array(16), segCnt: new Int32Array(1024), mark: new Int32Array(64),
+    be: new Float64Array(64),
   };
+}
+// K1247 s14 (#658): the border's cumulative sigma excess: segment i adds max(L, c len) - L for
+// L >= 0 (0 on every ordinary segment, c len on a zero-span join).
+function borderExcessC(p: Poly, B: FBord): void {
+  const n = B.nb; B.be = growF(B.be, n > 0 ? n : 1); B.be[0] = 0;
+  if (K14_BEVC <= 0) return;
+  const be = B.be; const bs = B.bs; const bx = B.bx; const by = B.by;
+  for (let i = 0; i + 1 < n; i++) {
+    const L = dS(p, bs[i], bs[i + 1]); const dx = bx[i + 1] - bx[i]; const dy = by[i + 1] - by[i];
+    const m = K14_BEVC * Math.sqrt(dx * dx + dy * dy);
+    be[i + 1] = be[i] + (L >= 0 && L < m ? m - L : 0);
+  }
+}
+// E at centerline s sC on a border (out[0]) and the segment holding it (out[1]); false: no sigma.
+const sigCU = new Float64Array(2); const sigCO = new Float64Array(2);
+function sigCenter(p: Poly, B: FBord, sC: number, out: Float64Array): boolean {
+  const n = B.nb; if (K14_BEVC <= 0 || n < 2) return false;
+  const bs = B.bs; let lo = 0; let hi = n;
+  while (lo < hi) { const mid = (lo + hi) >> 1; if (bs[mid] <= sC) lo = mid + 1; else hi = mid; }
+  let k = lo - 1; if (k < 0) k = p.closed ? n - 2 : 0; if (k > n - 2) k = n - 2;
+  const L = dS(p, bs[k], bs[k + 1]); const e = B.be[k + 1] - B.be[k];
+  let t = L > 0 ? dS(p, bs[k], sC) / L : 0; t = t < 0 ? 0 : t > 1 ? 1 : t;
+  out[0] = B.be[k] + t * e; out[1] = k; return true;
+}
+// Segment i's sigma offset from the center (be[i] - E_C), across a closed border's seam.
+function sigRel(p: Poly, B: FBord, i: number, sC: number, c: Float64Array): number {
+  let r = B.be[i] - c[0];
+  if (p.closed) { const k = c[1]; const ahead = dS(p, sC, B.bs[i]) >= 0; if (ahead && i < k) r += B.be[B.nb - 1]; else if (!ahead && i > k) r -= B.be[B.nb - 1]; }
+  return r;
 }
 function growF(a: Float64Array, need: number): Float64Array {
   if (a.length >= need) return a;
@@ -3932,6 +3976,7 @@ function buildBorderC(C: FCache, pi: number, sig: number): void {
   }
   B.nb = out;
   cutFoldsC(C, pi, sig, B);
+  borderExcessC(p, B);
 }
 
 function bendsOfC(C: FCache, pi: number): Float64Array {
@@ -5940,11 +5985,15 @@ function crossingsPhaseC(C: FCache, scene: SceneIn): void {
       const Bu = BU[ui]; const Bo = BO[oi];
       let bd = Infinity; let bi = -1; let bt = 0;
       const ulS = uSegs[ui]; const olS = oSegs[oi]; const nuS = xSN[ui]; const noS = xSN[2 + oi];
+      // K1247 s14 (#658): the window in sigma, from E at each chain's center (clipSegS).
+      const hasSU = sigCenter(pU, Bu, sUnder, sigCU); const hasSO = sigCenter(C.polys[O], Bo, sOver, sigCO);
       for (let qa = 0; qa < nuS; qa++) for (let qb = 0; qb < noS; qb++) {
         const i = ulS[qa]; const j = olS[qb];
         if (U === O && ui === oi && i === j) continue;
-        if (!clipSegS(pU, Bu.bs[i], Bu.bs[i + 1], sUnder, R, synthTU)) continue;
-        if (!clipSegS(C.polys[O], Bo.bs[j], Bo.bs[j + 1], sOver, R, synthTO)) continue;
+        const lU = hasSU ? Math.sqrt((Bu.bx[i + 1] - Bu.bx[i]) * (Bu.bx[i + 1] - Bu.bx[i]) + (Bu.by[i + 1] - Bu.by[i]) * (Bu.by[i + 1] - Bu.by[i])) : 0;
+        if (!clipSegS(pU, Bu.bs[i], Bu.bs[i + 1], sUnder, R, synthTU, lU, hasSU ? sigRel(pU, Bu, i, sUnder, sigCU) : 0)) continue;
+        const lO = hasSO ? Math.sqrt((Bo.bx[j + 1] - Bo.bx[j]) * (Bo.bx[j + 1] - Bo.bx[j]) + (Bo.by[j + 1] - Bo.by[j]) * (Bo.by[j + 1] - Bo.by[j])) : 0;
+        if (!clipSegS(C.polys[O], Bo.bs[j], Bo.bs[j + 1], sOver, R, synthTO, lO, hasSO ? sigRel(C.polys[O], Bo, j, sOver, sigCO) : 0)) continue;
         const u0 = synthTU[0]; const u1 = synthTU[1]; const o0 = synthTO[0]; const o1 = synthTO[1];
         const ax = Bu.bx[i]; const ay = Bu.by[i]; const ex = Bu.bx[i + 1] - ax; const ey = Bu.by[i + 1] - ay;
         const cx = Bo.bx[j]; const cy = Bo.by[j]; const fx = Bo.bx[j + 1] - cx; const fy = Bo.by[j + 1] - cy;
