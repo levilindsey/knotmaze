@@ -503,11 +503,11 @@ Next free ID: K1269.
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: nobody since 2026-11-10 02:23 (merged; agent `a9ce576ba016f229e` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `48ce89e9`
-  - evidence: .claude/probes/K1240/proto/ (k1247s8_acc, k1247s9_union, k1247c_final.ps1), .claude/probes/K1240/out/
-  - next: Stage 10 merged 48ce89e9: span ramp + end-tail blend; acc by the drawn union fails 16/23/23/26 at eps 0.02/0.05/0.1/0.2 (was 13/20/23/26); still jitter def 0, muse_default_tw 0, muse_hash 1. Stage 11 next: the tail extent's sign flip, then SPAN_RAMP toward h; ring cut 273; key changes; shallow-crossing tangent noise
-  - brief: `docs/design/K1247_s10_reduce.md`
+  - owner: agent `ab0e33c2e4fe88918` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-10 02:24, 2 h cap ~04:24)
+  - branch: `worktree-agent-ab0e33c2e4fe88918`, worktree `.claude/worktrees/agent-ab0e33c2e4fe88918`; last commit: `b60660a7`
+  - evidence: .claude/probes/K1240/proto/ (k1247s8_acc, k1247s9_union, k1247s10_base.ps1, k1247c_final.ps1), .claude/probes/K1240/out/
+  - next: Stage 11 (started 2026-11-10 02:24): the end tail's extent made continuous, then SPAN_RAMP toward h; g41_ring_tw64 cut 273; region-id key changes; shallow-crossing tangent noise. When it reports: Claude views the crops, re-runs acc and k1247s9_union, merges
+  - brief: `docs/design/K1247_s11_tails.md`
 
 ## Next, in order
 
