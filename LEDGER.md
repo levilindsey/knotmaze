@@ -365,11 +365,11 @@ Next free ID: K1260.
   and a JSON looks list into a summary and sheets. Stages 3a-3c merged
   (737ac58..9ab8a01); rounds 2026-10-14, 14b and 14c are done (14c
   merged 772e48a..e1c2a80).
-  - owner: nobody since 2026-11-09 22:20 (round 2026-11-09 ended; agent ad606c9e of claude session 09c7a672)
-  - branch: mainline; last commit: `fa1b2d73`
-  - evidence: .claude/probes/rounds/2026-11-09/ (untracked: sdf\, k268\, k307\, logs\)
-  - next: Round 2026-11-09 done (K8, K268, K307 below; kit: k539_g31.mjs takes QBASE/QHEAD/DIR and keeps the second of two shots, K1130). The next phone window starts with a fresh idle wait and -Phase check, then K307's restart check before anything else loads the daily; then K8's render sync again once rp=sdf draws its gaps, and K268's still-camera census
-  - brief: docs/design/K156.md, "Round 2026-11-09" and its handoff
+  - owner: agent `ab935dd12e804fe68` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-09 22:23, 2 h cap ~00:23)
+  - branch: `worktree-agent-ab935dd12e804fe68`, worktree `.claude/worktrees/agent-ab935dd12e804fe68`; last commit: `fcfc3128`
+  - evidence: .claude/probes/rounds/2026-11-09b/ (untracked); round 2026-11-09 in .claude/probes/rounds/2026-11-09/
+  - next: Round 2026-11-09b (the rest of tonight's window): K365's ripple at CSS floors 56 and 68 for Levi's pick + dropped frames, K268's census with a still camera (judges the 6 phone-only fails), K252's head show-delay blips against 0.45 s; phone work ends by 07:30. Then the next window: K307's restart check first, K8's render sync once rp=sdf draws its gaps
+  - brief: docs/design/K156.md, "Round 2026-11-09b"
   - env: the phone on its charger, reached over adb 5555 through Tailscale (`adb connect`; not the desktop's USB, Levi 2026-11-02); the pass builds and serves both builds itself (ports 5480-5489); nobody else uses the phone during the pass (K234)
 - **K268** · Shaped crossing gaps under thread reveal (K76; Levi, 2026-10-14):
   no gap until the over thread is seen, a dynamic gap for a stub's overlap and
@@ -471,15 +471,6 @@ Next free ID: K1260.
   - next: locks vs the minotaur/fire once rules leave classic (slices 3 shortcut + 4 colors done 2026-10-21, Handoffs in docs/design/K138_s4.md)
   - brief: `docs/design/K138_s4.md` (Relaunch 3 Handoff and its Remainder)
   - env: vite with `.claude/probes/K138/s4/vite.private-cache.config.ts` on port 5402
-- **K1097** · K1040 S3, the label pass (F7 of `docs/design/K1040_junction_field.md`): the depth-tested label on
-  the GPU, gated by oracle30's verdicts on the 12 scenes (0 DEFECT closes K1033), the recordings' pops and the
-  Pixel's 2 ms. S3g merged (b7f707ae): four structural levers as default-off probe knobs, each bit-identical; the Pixel batch that picks them is owed.
-  - owner: nobody since 2026-11-06 13:36: S3g done, the Pixel batch owed (the phone stayed asleep and locked through 13:25)
-  - branch: mainline; S3g's worktree .claude/worktrees/muse-k1097-s3g kept (Paseo 3775b744); last commit: `b7f707ae`
-  - evidence: .claude/probes/K1040/s3/ (S3g: s3g_gate.ps1, phone_batch_s3g.ps1, run_phone_s3g.ps1, run_locked_s3g.ps1, the s3g set in split.mjs, page.ts canvasDraw; out/split_s3g_desktop.md: every lever within 0.2 ms of today's pass on the desktop, which ranks nothing for the Pixel; S3f5 on the Pixel: out/split_s3f5.md, out/phone_table_s3f5.md; earlier splits out/split_s3f4.md, out/split_s3f2.md, out/split_s3d2.md)
-  - next: When Levi leaves the Pixel unlocked on its charger (~45 min, with S4b's check #13): Claude runs '& .claude\probes\K1040\s3\s3g_gate.ps1 -SkipDesktop' from the main checkout, then a short run adopts the levers that win on 10 of 12 scenes (the Handoff's 'How Done 3 then picks'). First settle S3g's note: field_b_app.ts builds its label pass in capsule mode, so the tentv levers and the gate are not on the app's path
-  - brief: `docs/design/K1040_s3g_levers.md`
-  - env: the phone through `.claude/probes/K1040/s3/phone_batch.ps1` (run_phone.ps1: both locks, then K1142's ready check), `phone_time.mjs` serving on 5403; desktop timing through `run_locked.ps1`, never piped through `Select-Object -First` (K1174)
 - **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate correctly
   across junctions"). S1 to S5 landed (S5 on since fbc1b212); S3b-S5 held the Pixel's frames (render +2%).
   Levi's look K1200, leftovers K1191 and K1201; K1211 (seamless junctions) first, then S6 (notes).
@@ -2045,6 +2036,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1097** · K1040 S3, the label pass (F7 of `docs/design/K1040_junction_field.md`): the depth-tested label on the GPU, gated by oracle30's verdicts on the 12 scenes (0 DEFECT closes K1033), the recordings' pops and the Pixel's 2 ms. Dropped: superseded by K1240 with K1040 (Levi, 2026-11-09: keep the redesign, no fallback to K1040's GPU field); its owed Pixel batch picked levers for that field's label pass (2026-11-09).
 - **K1257** · form B grows corners with the outline's closed-form pieces (src/render/field/corner_cf.ts): 71 corners over 0.5 device px from the outline's -> 0 (max 0.026 px); outside corners bit-identical (k1257_same.ts, 27 scenes); form_b.test.ts's acute pair re-frozen (r 0.170935 -> 0.170801 h); Claude re-ran sliver, same and the field tests and viewed the crops and the fbb shot. Verify's 48 are the stale base tables, not form B. Done in 0656cf58 (2026-11-09).
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's float64 reference. Dropped: superseded by K1240 (Levi, 2026-11-09: keep the redesign, no fallback to K1040's GPU field); its open checks (the pop census, the fades in motion, check #13) fold into K1240 when the outline reaches the app (2026-11-09).
 - **K1251** · J3n's looks (K863, card K1251). Levi, 2026-11-09: the variant everywhere (b, v and w at a word's end and into high-entry letters, f, p); the kit's build is work38/cand/J3NV. Done in 15cb9922 (2026-11-09).
