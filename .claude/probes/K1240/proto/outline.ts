@@ -4768,12 +4768,16 @@ function cfAt(C: FCache, rho: number): boolean {
   kfCst.rhoCur = r;
   return ok;
 }
-// The first piece boundary in (lo + Lmin, hi - Lmin) where q jumps, or -1.
-function cfJumpIn(lo: number, hi: number, Lmin: number): number {
+// The first piece boundary strictly inside (lo, hi) where q jumps, or -1. Not
+// (lo + Lmin, hi - Lmin): a jump just short of a node hides w's fall before it
+// behind the node's w after it (def 0.5 c12: a jump at 0.7955h, the node at
+// 0.7960h; w is 0 from 0.777h on the left side, 0.55 on the right).
+function cfJumpIn(lo: number, hi: number): number {
   if (cfJumpTol < 0) return -1;
   let j = cfCur < cfN ? cfCur : cfN - 1; if (j < 1) j = 1;
   while (j > 1 && cfR[j - 1] > lo) j--;
-  for (; j < cfN; j++) { const r = cfR[j]; if (r >= hi - Lmin) break; if (r > lo + Lmin && cfJ[j]) return j; }
+  const zl = 1e-12 * kfCst.rhoCur;
+  for (; j < cfN; j++) { const r = cfR[j]; if (r >= hi - zl) break; if (r > lo + zl && cfJ[j]) return j; }
   return -1;
 }
 // fSteep on line piece j (constant there; see cfSt).
@@ -4820,7 +4824,7 @@ function cfRefine(C: FCache, lo: number, wlo: number, hi: number, whi: number, E
   if (L > 2 * Lmin) {
     // split at a jump: w at its left limit (cfAt at cfR[j] reads piece j - 1);
     // else inside a dip (a line piece under both ends' w)
-    const j = cfJumpIn(lo, hi, Lmin);
+    const j = cfJumpIn(lo, hi);
     let m = j > 0 ? cfR[j] : -1;
     if (m < 0) {
       const d = cfDipIn(lo, hi, Math.min(wlo, whi));
@@ -4879,7 +4883,7 @@ function growCFC(C: FCache, ci: number): number {
     }
     const wr = wOfC(C); if (ci === wDbg.ci) wDbg.rows.push([1, (b - h) / h, wr, kfCst.qx, kfCst.qy, kfQa.u, kfQb.u, kfQa.d, kfQb.d]);
     const wb = Math.min(wa, wr); if (wr !== 1) all1 = false;
-    if ((wa - wb) * (b - a) * 0.5 <= E && cfJumpIn(a, b, Lmin) < 0 && cfDipIn(a, b, wb) < 0) { integ += 0.5 * (wa + wb) * (b - a); wa = wb; }
+    if ((wa - wb) * (b - a) * 0.5 <= E && cfJumpIn(a, b) < 0 && cfDipIn(a, b, wb) < 0) { integ += 0.5 * (wa + wb) * (b - a); wa = wb; }
     else { integ += cfRefine(C, a, wa, b, wb, E, Lmin); wa = growWEnd; }
     a = b;
   }

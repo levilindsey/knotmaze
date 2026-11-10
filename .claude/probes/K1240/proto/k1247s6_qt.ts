@@ -1,13 +1,15 @@
 // K1247 s6: a quick (unlocked, rough) look at def's frame and phases in
 // motion with the closed-form growth on and off, alternating. Not a
 // measurement: k1247c_time.ts under the lock is.
-//   node scripts/run_node.mjs .claude/probes/K1240/proto/k1247s6_qt.ts [--rounds=3]
+//   node scripts/run_node.mjs .claude/probes/K1240/proto/k1247s6_qt.ts [--rounds=3] [--only=on|off] [--E=1e-3]
 import { readFileSync } from "node:fs";
 import * as O from "./outline";
 import type { SceneIn } from "./outline";
 
 const SCENE_DIR = "C:/Users/lsl/Repositories/knotmaze/.claude/probes/K868/scenes";
 const rounds = +(process.argv.find((a) => a.startsWith("--rounds="))?.slice(9) ?? 3);
+const eArg = process.argv.find((a) => a.startsWith("--E="))?.slice(4); // the growth's error budget in h (default 1e-3)
+if (eArg !== undefined) O.setGrowKnobs(+eArg, 0.25);
 const scene = JSON.parse(readFileSync(`${SCENE_DIR}/def.json`, "utf8")) as SceneIn;
 (scene.look as { ctrlArc?: number }).ctrlArc ??= 0.47;
 function perturb(sc0: SceneIn, A: number): SceneIn {
