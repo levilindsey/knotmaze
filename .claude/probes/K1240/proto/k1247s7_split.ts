@@ -33,13 +33,16 @@ const cc = (O as unknown as { cpCorner: Float64Array }).cpCorner;
 const nC = st.corners.length;
 const cMin = new Float64Array(cycle.length * nC).fill(Infinity);
 const ccl = (O as unknown as { cpClass: Int8Array }).cpClass; const cls = new Int8Array(cycle.length * nC);
+const OX = O as unknown as { cpEv: Int32Array; cpNode: Int32Array; cpPc: Int32Array };
+const cev = OX.cpEv; const cnd = OX.cpNode; const cpc = OX.cpPc;
+const evs = new Int32Array(cycle.length * nC); const nds = new Int32Array(cycle.length * nC); const pcs = new Int32Array(cycle.length * nC);
 for (let r = 0; r < rounds; r++) {
   cycle.forEach((sc, i) => {
     for (const k of keys) cp[k] = 0;
     cc.fill(-1);
     O.frame(st, sc);
     for (const k of keys) if (cp[k] < mins[k][i]) mins[k][i] = cp[k];
-    for (let ci = 0; ci < nC; ci++) if (cc[ci] >= 0) { if (cc[ci] < cMin[i * nC + ci]) cMin[i * nC + ci] = cc[ci]; cls[i * nC + ci] = ccl[ci]; }
+    for (let ci = 0; ci < nC; ci++) if (cc[ci] >= 0) { if (cc[ci] < cMin[i * nC + ci]) cMin[i * nC + ci] = cc[ci]; cls[i * nC + ci] = ccl[ci]; evs[i * nC + ci] = cev[ci]; nds[i * nC + ci] = cnd[ci]; pcs[i * nC + ci] = cpc[ci]; }
   });
 }
 {
@@ -56,6 +59,10 @@ for (let r = 0; r < rounds; r++) {
   const names = ["", "free", "zero", "other"]; const ct = [0, 0, 0, 0]; const cn = [0, 0, 0, 0];
   for (let i = 0; i < cycle.length; i++) for (let ci = 0; ci < nC; ci++) { const v = cMin[i * nC + ci]; if (!Number.isFinite(v)) continue; const k = cls[i * nC + ci]; ct[k] += v; cn[k]++; }
   console.log(`by class: ${[1, 2, 3].map((k) => `${names[k]} ${cn[k]} calls, ${(100 * ct[k] / tot).toFixed(1)}% of the time, ${(1000 * ct[k] / Math.max(1, cn[k])).toFixed(1)} us each`).join("; ")}`);
+  // Evaluations (cfAt calls: nodes, refinement, the final one) and pieces per call, by class (last round).
+  const ev = [0, 0, 0, 0]; const nd = [0, 0, 0, 0]; const pc = [0, 0, 0, 0];
+  for (let i = 0; i < cycle.length; i++) for (let ci = 0; ci < nC; ci++) { if (!Number.isFinite(cMin[i * nC + ci])) continue; const k = cls[i * nC + ci]; ev[k] += evs[i * nC + ci]; nd[k] += nds[i * nC + ci]; pc[k] += pcs[i * nC + ci]; }
+  console.log(`per call by class: ${[1, 2, 3].map((k) => `${names[k]} evals ${(ev[k] / Math.max(1, cn[k])).toFixed(1)} (nodes ${(nd[k] / Math.max(1, cn[k])).toFixed(1)}), pieces ${(pc[k] / Math.max(1, cn[k])).toFixed(1)}`).join("; ")}`);
 }
 const mean = (xs: number[]): number => xs.reduce((a, b) => a + b, 0) / xs.length;
 const m: Record<string, number> = {};

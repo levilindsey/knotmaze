@@ -165,7 +165,13 @@ growth, so there is no hot corner to special-case. By class (22:49 run): free co
 node) are 29% of calls but 24.0% of the time at 12.2 us each; corners whose w reaches 0 are 52% of
 calls and 51.6% of the time at 14.7 us; the rest are 20% of calls and 24.4% of the time at 18.0 us. A
 certificate that a corner is free would save at most a quarter of the growth (about 1.2 ms), less
-whatever the certificate costs.
+whatever the certificate costs. Per call (22:50 run), free corners make 12.1 evaluations (11.0 of
+them nodes) over 19.8 pieces; corners whose w reaches 0 make 19.2 (6.3 nodes) over 12.7 pieces; the
+rest 19.3 (10.7 nodes) over 22.0 pieces. So about 12 of a zero corner's evaluations refine the drop
+to 0. That refinement is cheaper than it looks, because it reuses pieces already stepped: Lmin at
+1e-2 h gains 0.11 ms and at 3e-2 h (almost no refinement) 0.45 ms (`k1247s7_ab.ts --knob=zmin`,
+locked; both fail accuracy). A smarter way to place the drop (a root find on the margin in place of
+bisection) is therefore worth less than 0.45 ms.
 
 Self time inside growCFC (22.6% of the whole profile): marginOfC 27.7%, cfNext 11.3%, cfRoot 7.5%,
 cfAt 6.9%, fwScan 6.4%, cfStep 6.1%, cfFoot 6.1%, wOfC 4.2%, cfQ 4.1%, growCFC 3.8%, cfDipIn 3.7%,

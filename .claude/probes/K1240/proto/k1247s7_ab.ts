@@ -26,6 +26,11 @@ setters.grow = (on: boolean): void => { if (on) O.setGrowUniform(gN, gE); else O
 // --knob=mcertr: the margin certificate searched to dc + --R h (mcert uses 0.5).
 const mR = +(process.argv.find((a) => a.startsWith("--R="))?.slice(4) ?? 0.5);
 setters.mcertr = (on: boolean): void => { O.setMarginCache(on, mR); };
+// --knob=zmin: off = today's growth (10 nodes, E 5e-4 h, Lmin 1e-3 h); on =
+// Lmin --Z h (fails accuracy above 1e-3: a bound on what fewer refinement
+// evaluations near w's drop could gain, not a candidate).
+const gZ = +(process.argv.find((a) => a.startsWith("--Z="))?.slice(4) ?? 1e-2);
+setters.zmin = (on: boolean): void => { O.setGrowUniform(10, 5e-4, on ? gZ : 1e-3); };
 const set = setters[knob];
 if (!set) throw new Error(`no knob ${knob} (have ${Object.keys(setters).join(", ")})`);
 const scene = JSON.parse(readFileSync(`${SCENE_DIR}/def.json`, "utf8")) as SceneIn;
