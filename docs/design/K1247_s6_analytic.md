@@ -136,7 +136,8 @@ switches), 18.6 w evaluations; 28% of corners are free (w = 1 at every node), 53
 
 Master is 2d452e0e's `outline.ts`, run as scratch `_s6time_base.ts`. Rounds 1-2 (one lock): master,
 cf (1ccfb58f), stepping (`K1247_CF=0`). Rounds 3-4 (a second lock): master, cf (a595f5db; same
-outputs as 1ccfb58f, plus the skip of intervals already at w = 0).
+outputs as 1ccfb58f, plus the skip of intervals already at w = 0). Rounds 5-6 (a third lock): master,
+cf at 2e5ce91a (the jump fix, the final code).
 
 | | median ms | p95 ms | setupBorders | corners | cutsEyesExposure | regions | piecesCapsEtc |
 |---|---|---|---|---|---|---|---|
@@ -150,12 +151,15 @@ outputs as 1ccfb58f, plus the skip of intervals already at w = 0).
 | cf 3 | 19.05 | 26.15 | 4.80 | 7.37 | 3.99 | 2.20 | 1.45 |
 | master 4 | 18.77 | 25.31 | 4.82 | 6.51 | 4.20 | 1.96 | 1.47 |
 | cf 4 | 18.95 | 30.64 | 4.87 | 7.54 | 3.88 | 2.10 | 1.41 |
+| master 5 | 17.95 | 20.57 | 4.60 | 6.60 | 4.17 | 1.91 | 1.47 |
+| cf 5 (2e5ce91a) | 18.88 | 22.63 | 4.94 | 7.35 | 4.01 | 2.28 | 1.32 |
+| master 6 | 18.11 | 22.58 | 4.74 | 6.45 | 4.06 | 1.94 | 1.37 |
+| cf 6 (2e5ce91a) | 18.67 | 21.07 | 4.93 | 7.51 | 4.12 | 2.22 | 1.42 |
 
 - Rounds 3-4 read master slower too (load); the w = 0 skip showed 7.09 -> 6.82 ms unlocked
   (`k1247s6_qt.ts`, rough) and nothing under the lock.
-- 2e5ce91a (the jump fix) was not timed under the lock: its evaluations are unchanged (18.6 a
-  corner) and `k1247s6_qt.ts` read 7.00 ms unlocked against 6.82 for a595f5db, within that tool's
-  noise.
+- The final code (2e5ce91a, rounds 5-6): def median 18.88 / 18.67 ms against master's 17.95 / 18.11,
+  corners 7.35 / 7.51 ms against 6.60 / 6.45; evaluations unchanged (18.6 a corner).
 - Before the dip split (9b8514e9), a locked cf run read corners 6.77 ms; the dip test costs about
   0.5 ms (q and both feet twice on each non-line piece).
 
