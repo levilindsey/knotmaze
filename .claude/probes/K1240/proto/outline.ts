@@ -4333,7 +4333,7 @@ const cfSV = new Uint8Array((CF_MAXP + 2) * 2); const cfSI = new Int32Array((CF_
 let cfN = 0; let cfEnded = false; let cfRMax = 0; let cfPx = 0; let cfPy = 0; let cfCur = 0;
 let cfQx = 0; let cfQy = 0;
 let cfEvArm = 0; let cfEvKind = 0;
-export const cfStats = { corners: 0, pieces: 0, lags: 0, ends: 0, jumps: 0, fails: 0, evals: 0 };
+export const cfStats = { corners: 0, pieces: 0, lags: 0, ends: 0, jumps: 0, fails: 0, evals: 0, lagSolves: 0, lagIt: 0 };
 const CF_TURN = 1e-12;
 let cfDbg = false; let cfDbgCi = -1;
 export const cfTrace: string[] = [];
@@ -4451,7 +4451,7 @@ function cfLagCond(X: CfArm, k: number, fwd: boolean, qx: number, qy: number, w:
 // The piece's end: the first event of either arm's site after rs.
 function cfNext(C: FCache, i: number, rs: number): number {
   const w = C.h / 32;
-  let best = Infinity; cfEvArm = 0; cfEvKind = 9;
+  let best = Infinity; cfEvArm = 0; cfEvKind = 9; let nLg = 0;
   for (let j = 0; j < 2; j++) {
     const X = cfAr[j]; const p = X.p; const k = cfSI[2 * i + j];
     if (!cfSV[2 * i + j]) {
@@ -4461,52 +4461,23 @@ function cfNext(C: FCache, i: number, rs: number): number {
       // forward: (q - P_k) . T <= fl
       const fl = Math.min(l, X.hi - s0);
       let r = cfRoot(i, -tx, -ty, -(fl + tP), rs);
-      if (r < best) {
-        let kind = 1; let rr = r;
-        if (fl < l || (!p.closed && k + 1 >= p.nseg)) kind = 9;
-        else {
-          const tn = cfTurn(X, k + 1 >= p.n ? 0 : k + 1);
-          if (tn > CF_TURN) {
-            kind = 5;
-            const rw = l - w > 0 ? cfRoot(i, -tx, -ty, -(l - w + tP), rs) : rs;
-            let lo = Math.max(rs, Math.min(rw, r)); let hi = r;
-            cfQ(i, lo);
-            if (cfLagCond(X, k, true, cfQx, cfQy, w)) hi = lo;
-            else {
-              for (let it = 0; it < 40 && hi - lo > 1e-10 * C.h; it++) {
-                const m = 0.5 * (lo + hi); cfQ(i, m);
-                if (cfLagCond(X, k, true, cfQx, cfQy, w)) hi = m; else lo = m;
-              }
-            }
-            rr = hi;
-          }
-        }
-        if (rr < best) { best = rr; cfEvArm = j; cfEvKind = kind; }
+      if (r < Infinity) {
+        if (fl < l || (!p.closed && k + 1 >= p.nseg)) { if (r < best) { best = r; cfEvArm = j; cfEvKind = 9; } }
+        else if (cfTurn(X, k + 1 >= p.n ? 0 : k + 1) > CF_TURN) {
+          // The lag switch lies in [rw, r]; solved below only if it can win.
+          const rw = l - w > 0 ? cfRoot(i, -tx, -ty, -(l - w + tP), rs) : rs;
+          cfLgArm[nLg] = j; cfLgK[nLg] = k; cfLgF[nLg] = 1; cfLgLo[nLg] = Math.max(rs, Math.min(rw, r)); cfLgHi[nLg] = r; nLg++;
+        } else if (r < best) { best = r; cfEvArm = j; cfEvKind = 1; }
       }
       // backward: (q - P_k) . T >= bl
       const bl = Math.max(0, X.lo - s0);
       r = cfRoot(i, tx, ty, tP + bl, rs);
-      if (r < best) {
-        let kind = 2; let rr = r;
-        if (bl > 0 || (!p.closed && k === 0)) kind = 9;
-        else {
-          const tn = cfTurn(X, k);
-          if (tn > CF_TURN) {
-            kind = 6;
-            const rw = cfRoot(i, tx, ty, tP + Math.min(w, l), rs);
-            let lo = Math.max(rs, Math.min(rw, r)); let hi = r;
-            cfQ(i, lo);
-            if (cfLagCond(X, k, false, cfQx, cfQy, w)) hi = lo;
-            else {
-              for (let it = 0; it < 40 && hi - lo > 1e-10 * C.h; it++) {
-                const m = 0.5 * (lo + hi); cfQ(i, m);
-                if (cfLagCond(X, k, false, cfQx, cfQy, w)) hi = m; else lo = m;
-              }
-            }
-            rr = hi;
-          }
-        }
-        if (rr < best) { best = rr; cfEvArm = j; cfEvKind = kind; }
+      if (r < Infinity) {
+        if (bl > 0 || (!p.closed && k === 0)) { if (r < best) { best = r; cfEvArm = j; cfEvKind = 9; } }
+        else if (cfTurn(X, k) > CF_TURN) {
+          const rw = cfRoot(i, tx, ty, tP + Math.min(w, l), rs);
+          cfLgArm[nLg] = j; cfLgK[nLg] = k; cfLgF[nLg] = 0; cfLgLo[nLg] = Math.max(rs, Math.min(rw, r)); cfLgHi[nLg] = r; nLg++;
+        } else if (r < best) { best = r; cfEvArm = j; cfEvKind = 2; }
       }
     } else {
       const v = k; const px = p.x[v]; const py = p.y[v];
@@ -4524,7 +4495,123 @@ function cfNext(C: FCache, i: number, rs: number): number {
       }
     }
   }
+  for (let g = 0; g < nLg; g++) {
+    if (!(cfLgLo[g] < best)) continue;
+    const X = cfAr[cfLgArm[g]]; const k = cfLgK[g]; const fwd = cfLgF[g] === 1;
+    // Illinois regula falsi on the switch function (negative = switched).
+    let lo = cfLgLo[g]; let hi = cfLgHi[g]; cfStats.lagSolves++;
+    if (cfTy[i] === 0) {
+      const rr = cfLagLine(i, X, k, fwd, lo, hi, w);
+      if (rr < best) { best = rr; cfEvArm = cfLgArm[g]; cfEvKind = fwd ? 5 : 6; }
+      continue;
+    }
+    cfQ(i, lo); let flo = cfLagF(X, k, fwd, cfQx, cfQy, w);
+    let rr = hi;
+    if (flo < 0) rr = lo;
+    else {
+      cfQ(i, hi); let fhi = cfLagF(X, k, fwd, cfQx, cfQy, w);
+      if (fhi < 0) {
+        let side = 0; const tol = 1e-10 * C.h;
+        for (let it = 0; it < 60 && hi - lo > tol; it++) {
+          let m = (lo * fhi - hi * flo) / (fhi - flo);
+          if (!(m > lo && m < hi) || it % 8 === 7) m = 0.5 * (lo + hi);
+          cfQ(i, m); const fm = cfLagF(X, k, fwd, cfQx, cfQy, w); cfStats.lagIt++;
+          if (fm < 0) { hi = m; fhi = fm; if (side === -1) flo *= 0.5; side = -1; }
+          else { lo = m; flo = fm; if (side === 1) fhi *= 0.5; side = 1; }
+        }
+        rr = hi;
+      }
+    }
+    if (rr < best) { best = rr; cfEvArm = cfLgArm[g]; cfEvKind = fwd ? 5 : 6; }
+  }
   return best;
+}
+// The lag switch on a line piece in closed form: a (q's projection to the
+// vertex) and P (q along the next segment) are linear in rho, so the switch
+// condition is piecewise quadratic between the linear breakpoints where s =
+// min(P, w - a, ln) changes branch (and P = 0, a = w). The first rho in
+// [lo, hi] where it holds; hi when it never does (the projection reaches the
+// vertex there, where the plain switch happens).
+const cfBk = new Float64Array(8);
+function cfLagLine(i: number, X: CfArm, k: number, fwd: boolean, lo: number, hi: number, w: number): number {
+  const o = i * 8; const K = cfK; const p = X.p;
+  const q0x = K[o]; const q0y = K[o + 1]; const ux = K[o + 2]; const uy = K[o + 3];
+  const tx = X.tx[k]; const ty = X.ty[k];
+  let vx: number; let vy: number; let nx: number; let ny: number; let ln: number; let a0: number; let a1: number;
+  if (fwd) {
+    const kn = k + 1 >= p.nseg ? 0 : k + 1; const v = k + 1 >= p.n ? 0 : k + 1;
+    vx = p.x[v]; vy = p.y[v]; nx = X.tx[kn]; ny = X.ty[kn]; ln = p.segLen[kn];
+    a0 = (vx - q0x) * tx + (vy - q0y) * ty; a1 = -(ux * tx + uy * ty);
+  } else {
+    const kn = k - 1 >= 0 ? k - 1 : p.nseg - 1;
+    vx = p.x[k]; vy = p.y[k]; nx = -X.tx[kn]; ny = -X.ty[kn]; ln = p.segLen[kn];
+    a0 = (q0x - vx) * tx + (q0y - vy) * ty; a1 = ux * tx + uy * ty;
+  }
+  const P0 = (q0x - vx) * nx + (q0y - vy) * ny; const P1 = ux * nx + uy * ny;
+  // breakpoints: P = 0, a = w, a = w - ln, P + a = w, P = ln
+  let nb = 0;
+  const add = (c0: number, c1: number): void => { if (c1 !== 0) { const x = -c0 / c1; if (x > lo && x < hi) cfBk[nb++] = x; } };
+  add(P0, P1); add(a0 - w, a1); add(a0 - w + ln, a1); add(P0 + a0 - w, P1 + a1); add(P0 - ln, P1);
+  for (let x = 1; x < nb; x++) { const v = cfBk[x]; let y = x - 1; while (y >= 0 && cfBk[y] > v) { cfBk[y + 1] = cfBk[y]; y--; } cfBk[y + 1] = v; }
+  let x0 = lo;
+  for (let b = 0; b <= nb; b++) {
+    const x1 = b < nb ? cfBk[b] : hi;
+    if (!(x1 >= x0)) continue;
+    const xm = 0.5 * (x0 + x1);
+    const am = a0 + a1 * xm; const Pm = P0 + P1 * xm; const smax = Math.min(w - am, ln);
+    if (smax > 0 && Pm > 0) {
+      // f = c2 rho^2 + c1 rho + c0 on [x0, x1]
+      let c2: number; let c1: number; let c0: number;
+      if (Pm <= smax) { // s = P: a^2 - P^2
+        c2 = a1 * a1 - P1 * P1; c1 = 2 * (a0 * a1 - P0 * P1); c0 = a0 * a0 - P0 * P0;
+      } else if (w - am <= ln) { // s = w - a: a^2 + (w - a)^2 - 2 P (w - a)
+        const s0 = w - a0; const s1 = -a1;
+        c2 = a1 * a1 + s1 * s1 - 2 * P1 * s1; c1 = 2 * (a0 * a1 + s0 * s1 - P0 * s1 - P1 * s0); c0 = a0 * a0 + s0 * s0 - 2 * P0 * s0;
+      } else { // s = ln: a^2 + ln^2 - 2 P ln
+        c2 = a1 * a1; c1 = 2 * a0 * a1 - 2 * P1 * ln; c0 = a0 * a0 + ln * ln - 2 * P0 * ln;
+      }
+      const f0 = c0 + x0 * (c1 + c2 * x0);
+      if (f0 < 0) return x0;
+      // the first root in (x0, x1] where f turns negative
+      let r = Infinity;
+      if (c2 === 0) { if (c1 < 0) r = -c0 / c1; }
+      else {
+        const D = c1 * c1 - 4 * c2 * c0;
+        if (D >= 0) {
+          const qq = -0.5 * (c1 + (c1 >= 0 ? Math.sqrt(D) : -Math.sqrt(D)));
+          const r1 = qq / c2; const r2 = qq !== 0 ? c0 / qq : r1;
+          if (c1 + 2 * c2 * r1 < 0 && r1 >= x0 && r1 < r) r = r1;
+          if (c1 + 2 * c2 * r2 < 0 && r2 >= x0 && r2 < r) r = r2;
+        }
+      }
+      if (r <= x1) return r;
+    }
+    x0 = x1;
+  }
+  return hi;
+}
+const cfLgArm = new Int8Array(4); const cfLgK = new Int32Array(4); const cfLgF = new Int8Array(4);
+const cfLgLo = new Float64Array(4); const cfLgHi = new Float64Array(4);
+// The switch condition as a number: negative iff cfLagCond holds.
+function cfLagF(X: CfArm, k: number, fwd: boolean, qx: number, qy: number, w: number): number {
+  const p = X.p; const tx = X.tx[k]; const ty = X.ty[k];
+  let a: number; let vx: number; let vy: number; let nx: number; let ny: number; let ln: number;
+  if (fwd) {
+    const kn = k + 1 >= p.nseg ? 0 : k + 1; const v = k + 1 >= p.n ? 0 : k + 1;
+    vx = p.x[v]; vy = p.y[v];
+    a = (vx - qx) * tx + (vy - qy) * ty;
+    nx = X.tx[kn]; ny = X.ty[kn]; ln = p.segLen[kn];
+  } else {
+    const kn = k - 1 >= 0 ? k - 1 : p.nseg - 1;
+    vx = p.x[k]; vy = p.y[k];
+    a = (qx - vx) * tx + (qy - vy) * ty;
+    nx = -X.tx[kn]; ny = -X.ty[kn]; ln = p.segLen[kn];
+  }
+  const P = (qx - vx) * nx + (qy - vy) * ny;
+  const smax = Math.min(w - a, ln);
+  if (!(smax > 0 && P > 0)) return a * a + w * w;
+  const s = P < smax ? P : smax;
+  return a * a + s * s - 2 * P * s;
 }
 function cfApply(X: CfArm, kind: number): boolean {
   const p = X.p;
@@ -4566,7 +4653,8 @@ function cfBad(C: FCache, i: number, qx: number, qy: number): boolean {
 // One piece: from the frontier to its first event, then the next sites.
 function cfStep(C: FCache): void {
   const i = cfN; const rs = cfR[i]; const h = C.h;
-  if (i >= CF_MAXP || !cfMake(i, cfPx, cfPy)) { cfEnded = true; cfStats.ends++; return; }
+  // piece i was made by cfInit (i = 0) or by the previous step's settle loop
+  if (i >= CF_MAXP - 1) { cfEnded = true; cfStats.ends++; return; }
   let rE = cfNext(C, i, rs);
   if (rE < rs) rE = rs;
   cfStats.pieces++;
