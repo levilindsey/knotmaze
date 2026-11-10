@@ -64,6 +64,31 @@ for (let r = 0; r < rounds; r++) {
   for (let i = 0; i < cycle.length; i++) for (let ci = 0; ci < nC; ci++) { if (!Number.isFinite(cMin[i * nC + ci])) continue; const k = cls[i * nC + ci]; ev[k] += evs[i * nC + ci]; nd[k] += nds[i * nC + ci]; pc[k] += pcs[i * nC + ci]; }
   console.log(`per call by class: ${[1, 2, 3].map((k) => `${names[k]} evals ${(ev[k] / Math.max(1, cn[k])).toFixed(1)} (nodes ${(nd[k] / Math.max(1, cn[k])).toFixed(1)}), pieces ${(pc[k] / Math.max(1, cn[k])).toFixed(1)}`).join("; ")}`);
 }
+// --oracle: the free corners (by the rounds above) skip w (it returns 1),
+// alternating with the plain run: what a free certificate that cost nothing
+// would save. Free corners' outputs are unchanged (w was 1 at their nodes).
+if (process.argv.includes("--oracle")) {
+  const OM = O as unknown as { cpMask: Int8Array; cpMO: number[] };
+  const tOff = new Float64Array(cycle.length * nC).fill(Infinity); const tOn = new Float64Array(cycle.length * nC).fill(Infinity);
+  for (let r = 0; r < 2 * rounds; r++) {
+    const on = r % 2 === 1; OM.cpMO[0] = on ? 1 : 0;
+    cycle.forEach((sc, i) => {
+      for (let ci = 0; ci < nC; ci++) OM.cpMask[ci] = cls[i * nC + ci] === 1 ? 1 : 0;
+      cc.fill(-1); O.frame(st, sc);
+      const T = on ? tOn : tOff;
+      for (let ci = 0; ci < nC; ci++) if (cc[ci] >= 0 && cc[ci] < T[i * nC + ci]) T[i * nC + ci] = cc[ci];
+    });
+  }
+  OM.cpMO[0] = 0;
+  let fOff = 0; let fOn = 0; let aOff = 0; let aOn = 0; let nF = 0;
+  for (let x = 0; x < tOff.length; x++) {
+    if (Number.isFinite(tOff[x])) aOff += tOff[x];
+    if (Number.isFinite(tOn[x])) aOn += tOn[x];
+    if (cls[x] === 1 && Number.isFinite(tOff[x]) && Number.isFinite(tOn[x])) { fOff += tOff[x]; fOn += tOn[x]; nF++; }
+  }
+  const pf = (v: number): string => (v / cycle.length).toFixed(3);
+  console.log(`oracle: free corners (${nF} calls) ${pf(fOff)} ms a frame with w, ${pf(fOn)} without (${(1000 * fOff / nF).toFixed(1)} / ${(1000 * fOn / nF).toFixed(1)} us each); all growth ${pf(aOff)} / ${pf(aOn)} ms a frame`);
+}
 const mean = (xs: number[]): number => xs.reduce((a, b) => a + b, 0) / xs.length;
 const m: Record<string, number> = {};
 for (const k of keys) m[k] = mean(mins[k]);
