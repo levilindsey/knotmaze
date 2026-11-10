@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1279.
+Next free ID: K1280.
 
 ## Waiting on Levi
 
@@ -294,10 +294,6 @@ Next free ID: K1279.
 - **K365** · The phone ripple's size floor, 56 (master) or 68 (probe commit 8f89db59, refs/probes/K365-floor68):
   Levi picks from the pair (docs/asks/K365.md). The phone dropped no frames at either (round 2026-11-09b,
   aca6b86a), so no bbox replay; the pick lands as one constant, RIPPLE_FLOOR_CSS.
-- **K1271** · Redesign outline (K1247 s11, b6103dd1): at a shallow crossing an under-thread's edge line now
-  runs further into the fill before it ends (left panels). Keep the new end (rec.: it is where the cut search
-  was meant to land, and it stops a 9 px pop in motion), or the old one? Picture:
-  `.claude/probes/K1247/asks/cut273_old_new.png`. Prototype only; nothing shipped moved.
 
 ## In progress
 
@@ -764,6 +760,11 @@ Every other item below waits on the trigger it names.
   hand-off as in form B, a pulse's travel distance continuous through the junction), never per face or
   triangle. Gate: a seam test sampling section blends and pulses across every face edge, triangle edge and
   junction for steps and kinks, plus K1244's sheets (K1250).
+- **K1279** · Redesign outline: at shallow crossings the border lines overlap badly, in both K1271 versions
+  (Levi, 2026-11-10), and the crossing gaps must be right everywhere (Levi). Target is form B: the
+  under-thread's edge stops at the over-thread's edge and fades (burial); the over-thread's edges stay
+  unbroken. Gate: every crossing on the 12 scenes against form B. Picture
+  `.claude/probes/K1247/asks/cut273_old_new_formb.png`; after stage 15 (outline.ts)
 
 ## Residuals (known, not fixed)
 
@@ -2091,6 +2092,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1271** · Redesign outline (K1247 s11): the shallow-crossing under-thread edge keeps its new end (Levi, 2026-11-10); the look there is still wrong in both versions, see K1279. Done in 3e50c773 (2026-11-10).
 - **K1263** · k1247c_final.ps1 exits nonzero when a step fails; k1247s10_base.ps1 re-makes the baselines from master's outline. Done in 0de40350 (2026-11-10).
 - **K252** · the head's 0.45 s show delay checked on the Pixel (round 2026-11-09b): 222 taps, 11 off-screen episodes, every blip 103-378 ms hidden, every excursion 638-1039 ms shown (pending 424-480 ms), none between; agrees with the desktop, no change. Done in aca6b86a (2026-11-09).
 - **K1097** · K1040 S3, the label pass (F7 of `docs/design/K1040_junction_field.md`): the depth-tested label on the GPU, gated by oracle30's verdicts on the 12 scenes (0 DEFECT closes K1033), the recordings' pops and the Pixel's 2 ms. Dropped: superseded by K1240 with K1040 (Levi, 2026-11-09: keep the redesign, no fallback to K1040's GPU field); its owed Pixel batch picked levers for that field's label pass (2026-11-09).
