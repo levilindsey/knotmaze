@@ -127,6 +127,7 @@ gain (0.2-0.3 ms) matches the unlocked A/B.
 | `mergeBorders` split into one call per border (removes about 150 "exit from OSR'd inner loop" deopts per 2 reps) | bit-exact, no measurable gain; reverted |
 | `meetSegsOf`'s double fmod as a bit-exact `wrapLen` (one subtraction when \|d\| < len) | bit-exact, but corners got slower: 6.92/7.03 vs 6.56/6.52. Reverted |
 | `footNearM` split into an inlinable fast path (open polys, the arm window precomputed as `FArm.wLo/wHi`: bytecode 457 bytes, under V8's 460) and `footNearSlow` | bit-exact. V8 then inlines it into `advanceToC` (2 of 8 sites; the cumulative budget stops the rest), but corners got slower: 6.76/6.56 vs 6.43/6.36, in the order that favors the new code. At 517 bytes (closed polys included) it was not inlined and gained nothing (6.56/6.48 vs 6.44/6.46). Reverted |
+| The same fast path written in place in `advanceToC` (one foot pair per Newton pass, a 2-arm loop), so every site gets it with no inlining budget | bit-exact, slower: three old-first pairs read 6.48/6.58/6.55 old against 6.63/6.73/6.71 new. A `footNearM` call costs little next to its body, so call overhead is not where its 27% goes. Reverted |
 
 How far to trust these A/Bs:
 - **The harness is biased.** An A/A run (`outline_ab.ts` identical to `outline.ts`) read corners
