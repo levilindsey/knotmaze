@@ -3,7 +3,9 @@
 //   node scripts/run_node.mjs .claude/probes/K1240/proto/k1247s2_prof.ts [scene] [--reps=N]
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { structure, frame, type SceneIn } from "./outline";
+import type { SceneIn } from "./outline";
+// K1247_AB=1 times outline_ab.ts (a scratch copy of another version) instead.
+const { structure, frame } = (process.env.K1247_AB ? await import("./outline_ab") : await import("./outline")) as typeof import("./outline");
 
 const name = process.argv.slice(2).find((a) => !a.startsWith("--")) ?? "def";
 const reps = +(process.argv.find((a) => a.startsWith("--reps="))?.slice(7) ?? 3);

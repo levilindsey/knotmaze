@@ -3203,12 +3203,20 @@ function setupFrame(C: FCache, st: DiagramStructure, scene: SceneIn): void {
     const e = exts[i];
     if (!e.start && !e.end) { if (C.needRaw[i]) copyPoly(C.rawPolys[i], C.polys[i]); continue; }
     const c = scene.chains[i];
-    const pts: number[] = [];
     let s0 = 0;
-    if (e.start) { const d = Math.hypot(c.pts[0] - e.start[0], c.pts[1] - e.start[1]); if (d > 1e-9) { pts.push(e.start[0], e.start[1]); s0 = -d; } }
-    for (const v of c.pts) pts.push(v);
-    if (e.end) { const m = c.pts.length; const d = Math.hypot(c.pts[m - 2] - e.end[0], c.pts[m - 1] - e.end[1]); if (d > 1e-9) pts.push(e.end[0], e.end[1]); }
-    fillPoly(C.polys[i], pts, c.closed, s0);
+    let hasPre = false; let hasPost = false;
+    if (e.start) { const d = Math.hypot(c.pts[0] - e.start[0], c.pts[1] - e.start[1]); if (d > 1e-9) { hasPre = true; s0 = -d; } }
+    if (e.end) { const m = c.pts.length; const d = Math.hypot(c.pts[m - 2] - e.end[0], c.pts[m - 1] - e.end[1]); if (d > 1e-9) hasPost = true; }
+    if ((c.pts.length & 1) === 0) {
+      fillPolyPP(C.polys[i], c.pts, c.closed, s0, hasPre, hasPre ? e.start![0] : 0, hasPre ? e.start![1] : 0, hasPost, hasPost ? e.end![0] : 0, hasPost ? e.end![1] : 0);
+    } else {
+      // An odd-length point list shifts the pairs after it; keep the old concat.
+      const pts: number[] = [];
+      if (hasPre) pts.push(e.start![0], e.start![1]);
+      for (const v of c.pts) pts.push(v);
+      if (hasPost) pts.push(e.end![0], e.end![1]);
+      fillPoly(C.polys[i], pts, c.closed, s0);
+    }
   }
   const polys = C.polys;
   // Crossings: centres, angles, per-chain passes, depth pins.
@@ -5359,6 +5367,23 @@ function fillPoly(p: Poly, pts: ArrayLike<number>, closed: boolean, s0: number):
     if (n > 0 && Math.abs(x - p.x[n - 1]) + Math.abs(y - p.y[n - 1]) < 1e-12) continue;
     p.x[n] = x; p.y[n] = y; n++;
   }
+  finishPoly(p, n, closed, s0);
+}
+// fillPoly of [pre?, ...pts, post?] without building that array (K1247 s2:
+// setupFrame copied every extended chain's points into a fresh number[]).
+function fillPolyPP(p: Poly, pts: ArrayLike<number>, closed: boolean, s0: number, hasPre: boolean, preX: number, preY: number, hasPost: boolean, postX: number, postY: number): void {
+  let n = 0;
+  if (hasPre) { p.x[0] = preX; p.y[0] = preY; n = 1; }
+  const m = Math.floor(pts.length / 2);
+  for (let i = 0; i < m; i++) {
+    const x = pts[2 * i]; const y = pts[2 * i + 1];
+    if (n > 0 && Math.abs(x - p.x[n - 1]) + Math.abs(y - p.y[n - 1]) < 1e-12) continue;
+    p.x[n] = x; p.y[n] = y; n++;
+  }
+  if (hasPost && !(n > 0 && Math.abs(postX - p.x[n - 1]) + Math.abs(postY - p.y[n - 1]) < 1e-12)) { p.x[n] = postX; p.y[n] = postY; n++; }
+  finishPoly(p, n, closed, s0);
+}
+function finishPoly(p: Poly, n: number, closed: boolean, s0: number): void {
   if (closed && n > 2 && Math.abs(p.x[0] - p.x[n - 1]) + Math.abs(p.y[0] - p.y[n - 1]) < 1e-12) n--;
   p.n = n; p.closed = closed;
   p.nseg = closed ? n : Math.max(0, n - 1);
