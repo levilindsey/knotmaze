@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1273.
+Next free ID: K1277.
 
 ## Waiting on Levi
 
@@ -507,11 +507,11 @@ Next free ID: K1273.
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: agent `ad3e63c62ac810610` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-10 05:58, 2 h cap ~07:58)
-  - branch: `worktree-agent-ad3e63c62ac810610`, worktree `.claude/worktrees/agent-ad3e63c62ac810610`; last commit: `79b283ac`
+  - owner: nobody since 2026-11-10 07:25 (merged; agent `ad3e63c62ac810610` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `88503be2`
   - evidence: .claude/probes/K1240/proto/ (k1247s8_acc, k1247s9_union, k1247s12_facecrops, k1247s13_triple, k1247c_final.ps1); .claude/probes/K1240/out/ (untracked)
-  - next: Stage 14 (started 2026-11-10 06:17): coverage census against form B, close the seam, #658, the tail that comes and goes. When it reports: Claude views the census and crops, re-runs acc at eps 0.1 and the still union, merges stages 12-14
-  - brief: `docs/design/K1247_s14_seam.md`
+  - next: Stages 12-14 merged (88503be2; Claude viewed the census, the seam and speck triples, re-ran acc 0.1 and the still union: identical): no worse than master against form B on all 12 scenes, #658 0.337 -> 0.084 px; leftovers K1273-K1276; K14_TRIM left off (decides from positions). Next: stage 15, K1268 (recompute only what moved), from real recorded motion
+  - brief: `docs/design/K1247_s15_moved.md`
 
 ## Next, in order
 
@@ -1730,6 +1730,18 @@ Every other item below waits on the trigger it names.
 - **K1270** · Max fabric's weave shows a light blob inside one dark eye, (780,960) of a 2400x1350 shot, on the
   default path and rp=sdf alike, so it predates K8's fix; not attributed
   (.claude/probes/K8/sdf_cost/out/crops/maxfab_weave.png, untracked)
+- **K1273** · K1247 s14 leftover: a 2 px speck of paper at a tight inside turn on muse_hash (26.86, 22.32):
+  the band's border folds over itself and the even-odd fill drops the loop. `K14_TRIM=1` closes it but decides
+  from positions; the fix belongs where the border is built (docs/design/K1247_s14_seam.md handoff)
+- **K1274** · K1247 s14 leftover: the tail that comes and goes at g41_def_tw64 corner 105 (eps 0.1's worst,
+  7.103 px): a near-tie (depth margin -0.015 zt full, +0.020 reduced). Its existence should come from
+  structure; stage 11's five continuous measures failed the union bar (K1247_s14_seam.md handoff,
+  `k1247s14_tail`)
+- **K1275** · K1247 s14 leftover: a closed chain's seam station falls back to its key's midpoint when the free
+  stretch around it is closed, and could then sit inside a cut (no scene does it today; K1247_s14_seam.md
+  handoff)
+- **K1276** · The K1240 prototype's `verify --ref` reads 48 failures that predate K1247 stage 14 (its
+  handoff); not yet sorted into stale baselines and real ones
 
 ## Approved, to schedule (2026-10-11)
 
