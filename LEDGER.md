@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1260.
+Next free ID: K1263.
 
 ## Waiting on Levi
 
@@ -474,7 +474,7 @@ Next free ID: K1260.
 - **K1139** · Choice pulses across junctions (Levi 2026-11-03: "we have to make pulses animate correctly
   across junctions"). S1 to S5 landed (S5 on since fbc1b212); S3b-S5 held the Pixel's frames (render +2%).
   Levi's look K1200, leftovers K1191 and K1201; K1211 (seamless junctions) first, then S6 (notes).
-  - owner: claude session c18e2f02-e64f-41ba-9af0-2dbd583358e2 (coordinator)
+  - owner: nobody since 2026-11-09 23:18 (claude session c18e2f02-e64f-41ba-9af0-2dbd583358e2 (coordinator); coordinator session c18e2f02 quiet since 2026-11-08 18:06 (29 h, ledger lint dead-owner); paused 2026-11-09 by session 09c7a672, resume from next)
   - branch: mainline (the worktrees `.claude/worktrees/agent-a90af0fe8b4cf82a5` (S4b), `agent-a023a39925efe4816` (S4) and `agent-a8280f4d14ebd8ad1` (the S3b fix) kept); last commit: `fbc1b212`
   - evidence: `.claude/probes/K1139/` (tracked: `*_cyc.mjs`, `ridge_joint.ts`, `s5_sheet.mjs`, `pixel_passes.ps1`, `s5_cool_rerun.ps1`, `out/s4cyc/` sheets, table, bench and `pixel_batch_plan.md` (its Result: S4/S4b on the Pixel), `out/s3b/pixel_batch_plan.md` (its Result: S3b, its fix and S5 on the Pixel), `out/s5/` (20B's q3_head sheet, `s5_sheet.json`), `k307/`; untracked: `out/s4b/`, the round outputs `.claude/probes/rounds/2026-11-04-k1139s4/` and `2026-11-05-k1139s3b`, `-k1139fix`, `-k1139s5`, `-k1139s5b`); the Handoffs of `docs/design/K1139_s4_cycles.md` and `docs/design/K1139_s4b_ridge_fade.md`
   - next: K1211 first: the light inside junctions (Levi 2026-11-05: one seamless unit; the bands may go); then Levi's look K1200 (`docs/asks/K1200.md`), K1201 (its fix (b), Run 22D, held for K1211), S6 (plan section 5) after K1140's Glimpse picks. The next pulse step's Pixel pass watches fabric 7 moves' frames over 25 ms (+14 and +15 in the fix's and S5's passes, floor 13)
@@ -491,20 +491,20 @@ Next free ID: K1260.
 - **K1240** · One outline for both looks and every junction consumer (Levi's sketch, 2026-11-06): offset-polyline borders,
   cuts and corner arcs in closed form from each frame; the border look strokes it, the filled look fills it. S1: a clean
   prototype beside the app, checked against form B and timed (Levi: "without all the tech debt"); notes.
-  - owner: nobody since 2026-11-09 12:28: waits on K1247 stage 7 (speed, same file outline.ts) and K1257
-  - branch: mainline; last commit: `62d03bb1`
-  - evidence: .claude/probes/K1240/proto/ (tracked builder and checks, s3_* to s3f_*, the s3f_claude_* checks and diagnostics, s3f_exact_s3dbase.ts, cmp_*.mjs); untracked in the main checkout: .claude/probes/K1240/s1_out/ to s3f_out/ (s3f_out/ holds the three Claude runs' checks_final*.txt (final6 the last) and logs, crops (capw5/), bench_final4a/b and bench_final6a/b.json, sweep.json, the consistent rows (move*c_, fresh0.5c_, s3dfresh*), Claude's re-run (cverify3_*), page results, and muse/ Muse's partial run); the worktree writes .claude/probes/K1240/out/s3f/
-  - next: S3f round 4 after K1247 stage 7 (same file outline.ts), as the brief's decisions after Handoff 3 list it (T crotches def B j3 j1 j151, g41_ring_tw42 j12's reflex round join, the stub corners ring j4 j5 j7 j16 and user_tw42.lightpaper j29 j61, muse_default_tw at 0.1h); K1257 makes form B's corners match the closed-form outline first. Then the sweep's piece motion (25-112x the particles'), S4 and the Pixel p95. Levi, 2026-11-09: keep the redesign, no fallback to K1040's field; K1040's open checks (pop census, fades in motion, check #13) fold in when the outline reaches the app. K1250 (a pulse's glow in a junction) is rechecked then too
-  - brief: `docs/design/K1240_s3f_fixed_pieces.md`
+  - owner: agent `a6b99b04c9c8fb2ef` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-09 23:17, 2 h cap ~01:17)
+  - branch: `worktree-agent-a6b99b04c9c8fb2ef`, worktree `.claude/worktrees/agent-a6b99b04c9c8fb2ef`; last commit: `df6216bd`
+  - evidence: .claude/probes/K1240/proto/ (outline.ts, s3f_claude_checks.ps1, s3f_exact_s3dbase.ts, cmp_s3f.mjs, k1247c_final.ps1, k1257_sliver.ts, k1247s5_pics.ts); untracked in the main checkout: .claude/probes/K1240/s1_out/ to s3f_out/ (S3f's runs, crops, baselines); the worktree writes .claude/probes/K1240/out/s3f/
+  - next: Round 4 (docs/design/K1240_s3f_round4.md): def B's T crotches j3 j1 j151, g41_ring_tw42 j12's reflex round join, the stub corners ring j4 j5 j7 j16 and user_tw42.lightpaper j29 j61, muse_default_tw at 0.1h; baseline S3d's code re-made against today's form B. When it reports: Claude re-runs the checks, views the crops, merges. Then the sweep's piece motion, S4 and the Pixel p95. Levi, 2026-11-09: keep the redesign, no fallback to K1040's field; K1040's open checks (pop census, fades in motion, check #13) and K1250 fold in when the outline reaches the app
+  - brief: `docs/design/K1240_s3f_round4.md`
   - env: from the worktree, vite on a copy of .claude/probes/K1040/vite.private-cache.config.ts, ports 5980-5989; S3d's code for the baselines is proto/outline_s3d.ts (untracked), recreated by the one-line command in s3f_exact_s3dbase.ts's header
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: agent `a82e0a83c91fe4c5a` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-09 21:31, 2 h cap ~23:31)
-  - branch: `worktree-agent-a82e0a83c91fe4c5a`, worktree `.claude/worktrees/agent-a82e0a83c91fe4c5a`; last commit: `54a6b84d`
-  - evidence: .claude/probes/K1240/proto/ (outline.ts; k1247c_final.ps1, k1247c_coldwarm.ts, k1247c_time.ts + run_locked_k1247s4.ps1, k1247s5_cmp.ts, k1247s5_outside.ts, k1247s5_pics.ts, k1247s6_qt.ts); stage 6's record: K1247_s6_analytic.md Handoff 1
-  - next: Stage 7 (docs/design/K1247_s7_cf_speed.md): def's corners phase to 1 ms median (stage 6: 7.3-7.5 ms locked; profile pieces 2.2, w 2.3 of which margin 2.0, cold V solve 0.8) at stage 6's accuracy (58/17/0/0; the worst, g41_def_tw42 0.1 c3 at 0.079 h, is a foot near-tie). Stage 6 merged at 62d03bb1; K1257 (0656cf58) ported its growth into form B (src/render/field/corner_cf.ts). When it reports: Claude re-runs the checks and timing, merges, re-runs k1257_sliver.ts and ports any output change into corner_cf.ts; then K1240's S3f round 4, K1254, K1256
-  - brief: `docs/design/K1247_s7_cf_speed.md`
+  - owner: agent `a6fbc9ef86c3f931b` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-09 23:17, 2 h cap ~01:17)
+  - branch: `worktree-agent-a6fbc9ef86c3f931b`, worktree `.claude/worktrees/agent-a6fbc9ef86c3f931b`; last commit: `df6216bd`
+  - evidence: .claude/probes/K1240/proto/ (outline.ts untouched; new k1247s8_* tools; k1247c_time.ts + run_locked_k1247s4.ps1, _s7_pair.mjs, k1257_sliver.ts's px scale); stage 7's record: K1247_s7_cf_speed.md Handoff 1
+  - next: Stage 8 (docs/design/K1247_s8_density.md): feed frame() fewer points, every piece within 0.25 device px of the full-density outline's, piece keys unchanged; def's whole frame as fast as that allows (stage 7's -Decimate bound: k = 2 takes corners 6.72 -> 4.85 ms). When it reports: Claude re-runs the distance and timing, merges, then decides the app route (K1252's worker, K1255's WASM) with the numbers
+  - brief: `docs/design/K1247_s8_density.md`
 
 ## Next, in order
 
@@ -2033,6 +2033,14 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K1259** · Time form B's build with K1257's closed-form corners under the perf lock (the same growth in the
   outline took 7.3-7.5 ms against the old growth's 6.5); form B is the probes' float64 reference and the fbb
   flag's path (from K1257)
+- **K1260** · K1247 lead: a clear-margin certificate for the corner growth. 79.1% of margin calls are clear;
+  replaying only those saves about 1.18 ms of the corners' 6.7. Catch: the walks swap tests on segments a
+  moving foot crosses, so one clear walk does not certify the next (K1247_s7_cf_speed.md, Handoff 1)
+- **K1261** · K1247 lead: reuse corners across frames (a corner whose arms moved less than a tolerance keeps
+  last frame's growth). Needs a recorded drag to size how many corners stay still per frame; cold = warm must
+  still hold (K1247_s7_cf_speed.md, Handoff 1)
+- **K1262** · K1247 lead: setupBorders' mergeBorders deopts (176 OSR deopts a def run, --trace-deopt at stage
+  7); setupBorders is 5.0 of def's 19 ms frame (K1247_s7_cf_speed.md, Handoff 1)
 
 ## Done
 
