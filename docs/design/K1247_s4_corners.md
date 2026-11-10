@@ -157,6 +157,12 @@ How far to trust these A/Bs:
     610 ns per node: about 3.7 `footNearM` calls at about 65 ns, the Newton steps, and 2 `marginOfC`
     calls at about 128 ns.
   - 1 ms would need about 100 ns per node for everything.
+  - `footNearM` per frame on def: 15394 of 31756 calls (48%) end on cut 3's one-step fast path. The
+    other 16362 run the windowed walk for 27640 passes: 9422 end after one pass, 5414 after two, 633
+    after three, 310 after four, and 584 take five or more (about 7.3 each). A slow call is one whose
+    window crosses a segment end, so the walk has to compare neighbour segments; an exact shortcut
+    there is the walk itself. (Counted with a scratch `fnFast` / `fnSlowIt` counter in
+    `outline_st.ts`.)
 - **Profile** (`node --cpu-prof`, def, 8 reps, unlocked):
   - Self time: `marginOfC` 683 ms, `footNearM` 658, `fwScan` 350 (shared with other phases),
     `advanceToC` 207, `wOfC` 117, `growIntegC` 70. `cornersPhaseC` total is 2445.
