@@ -3184,7 +3184,7 @@ interface FCache {
   /** K1247 s12: the structural region numbering (structRegionsC), built once;
    *  structMiss counts frame intervals that found no free id (dropped); underMiss
    *  (K1247 s14) discarded frame intervals at no structural pair (or a taken one). */
-  sReg?: StructRegions; structMiss?: number; underMiss?: number;
+  sReg?: StructRegions; structMiss?: number; underMiss?: number; trimCuts?: number;
   crossUnderSlot: Int32Array; crossOverSlot: Int32Array; junctionSlot: Int32Array; capSlot: Int32Array; seamSlot: Int32Array;
   dgSlot: Int32Array; capInfoOfSlot: Int32Array;
   stActive: Uint8Array; stCS: Float64Array; stLeft: Int32Array; stRight: Int32Array;
@@ -5584,6 +5584,58 @@ export const hitWinStats = { out: 0 };
 // only where nothing else paints. One per discarded interval, ids after the junction regions,
 // no pieces. K14_NOUNDER=1 drops them for A/B.
 const KF_NOUNDER = !!(globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.K14_NOUNDER;
+// K1247 s14 EXPERIMENT (default off, fast path only): K14_TRIM=1 splices a region's folds out.
+// A band's border swallowtails on the inside of a turn tighter than its half width (muse_hash
+// chain 11 at arm112, (26.8855, 22.3289): a 5-point loop whose inside has winding -2), and the
+// even-odd fill drops the twice-covered loop where form B's tube covers it. A fold is a
+// self-crossing loop of at most TRIM_K points whose centroid the whole region winds around
+// twice or more; splicing it out at the crossing leaves that area covered once. It decides from
+// positions (a crossing exists or not), but its effect is continuous: the loop's area goes to 0
+// as the crossing vanishes.
+const KF_TRIM = !!(globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.K14_TRIM;
+const TRIM_K = 8;
+function windAt(pts: number[], x: number, y: number): number {
+  let w = 0; const n = pts.length / 2;
+  for (let i = 0, j = n - 1; i < n; j = i++) {
+    const xi = pts[2 * i], yi = pts[2 * i + 1], xj = pts[2 * j], yj = pts[2 * j + 1];
+    const c = (xi - xj) * (y - yj) - (x - xj) * (yi - yj);
+    if (yj <= y) { if (yi > y && c > 0) w++; } else if (yi <= y && c < 0) w--;
+  }
+  return w;
+}
+function trimFoldsC(pts: number[]): number {
+  let cuts = 0;
+  for (let pass = 0; pass < 16; pass++) {
+    const n = pts.length / 2; if (n < 6) return cuts;
+    let done = true;
+    for (let i = 0; i < n && done; i++) {
+      const ax = pts[2 * i], ay = pts[2 * i + 1], bx = pts[2 * ((i + 1) % n)], by = pts[2 * ((i + 1) % n) + 1];
+      for (let k = 2; k <= TRIM_K && k < n - 1; k++) {
+        const j = i + k; if (j + 1 >= n) break;
+        const cx = pts[2 * j], cy = pts[2 * j + 1], dx = pts[2 * (j + 1)], dy = pts[2 * (j + 1) + 1];
+        const den = (bx - ax) * (dy - cy) - (by - ay) * (dx - cx);
+        if (Math.abs(den) < 1e-18) continue;
+        const u = ((cx - ax) * (dy - cy) - (cy - ay) * (dx - cx)) / den;
+        const v = ((cx - ax) * (by - ay) - (cy - ay) * (bx - ax)) / den;
+        if (!(u > 0 && u < 1 && v > 0 && v < 1)) continue;
+        const px = ax + u * (bx - ax), py = ay + u * (by - ay);
+        // The loop: X, pts[i + 1..j], back to X. Its area centroid.
+        let A2 = 0, sx = 0, sy = 0; let qx = px, qy = py;
+        for (let m = i + 1; m <= j + 1; m++) {
+          const rx = m <= j ? pts[2 * m] : px, ry = m <= j ? pts[2 * m + 1] : py;
+          const cr = qx * ry - rx * qy; A2 += cr; sx += (qx + rx) * cr; sy += (qy + ry) * cr; qx = rx; qy = ry;
+        }
+        if (Math.abs(A2) < 1e-14) continue;
+        const gx = sx / (3 * A2), gy = sy / (3 * A2);
+        if (Math.abs(windAt(pts, gx, gy)) < 2) continue;
+        pts.splice(2 * (i + 1), 2 * (j - i), px, py);
+        cuts++; done = false; break;
+      }
+    }
+    if (done) return cuts;
+  }
+  return cuts;
+}
 const UNDER_DEPTH = -1e9;
 const mtSegs = [new Int32Array(1024), new Int32Array(1024)];
 const mtBoxA = mkSegBoxes(); const mtBoxB = mkSegBoxes();
@@ -6610,6 +6662,7 @@ function regionsPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): { regio
       for (let q = C.capArcN[capAInfo] - 2; q >= 1; q--) pushDedup(pts, ax[q], ay[q]);
     }
     if (pts.length >= 2 && Math.hypot(pts[0] - pts[pts.length - 2], pts[1] - pts[pts.length - 1]) < 1e-12) pts.length -= 2;
+    if (KF_TRIM) C.trimCuts = (C.trimCuts ?? 0) + trimFoldsC(pts);
     // K1247 s11: no skip under 3 points (the builder's note): region ids follow the intervals.
     // K1247 s12: ids from structure (structRegionsC).
     let rid = regions.length;
