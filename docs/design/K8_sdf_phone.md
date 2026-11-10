@@ -103,14 +103,15 @@ the strip has no discard ahead of the search, so it rasterizes only what it shad
 rasterizes 3.6 (knot gs 24) to 4.6 (dense) fragments for every one it shades, and its ownership,
 edge and coverage discards drop the rest. On dense it also shades 32% more fragments than the strip
 (overlapping quads at segment joins), with fewer segments and searches each, so its total search
-work is close to the strip's. Heatmaps: out/m601p/<link>_<pass>_heat.png.
+work is close to the strip's. Heatmaps: `out/m601p/<link>_<pass>_heat.png`.
 
 **Why only knot gs 24 pays for 42900cac.** Before it, the SDF vertex shader scanned a chain's first
 16 windows. knot gs 24 is 24 closed chains, and every one has 47 windows. The old scan found 0.248 gap
 ids per segment against the strip's 0.728: it dropped 17,065 ids, on 48% of the segments, so the SDF
 pass missed about two thirds of the gap ids it owed. 42900cac's walk (a binary search of 5.67
-steps, then a walk of 0.73 windows mean, 1 at most) finds 0.728, the strip's figure. Its 223 ms
-phone cost on knot gs 24 is the restored searches, not the walk itself.
+steps, then a walk of 0.73 windows mean, 1 at most) finds 0.728, the strip's figure. Its step on the
+phone (118.5 to 223 ms on knot gs 24) is the restored searches, not the walk itself.
+
 dense has 178 chains, only 5 of them over 16 windows: the old scan lost 445 ids (0.454 against
 0.462 per segment), so 42900cac barely changes its work (a binary search of 2.84 steps, walk 0.46
 mean, 2 at most).
