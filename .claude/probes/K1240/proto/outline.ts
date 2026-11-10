@@ -4592,11 +4592,49 @@ function cfNext(C: FCache, i: number, rs: number): number {
         const r = cfRoot(i, tx, ty, tx * px + ty * py, rs);
         if (r < best) { best = r; cfEvArm = j; cfEvKind = 4; }
       }
+      // K1247 s9: the vertex lag. footNearM's window from a vertex foot
+      // reaches w past it, so when the segment on is shorter than w and the
+      // vertex after it is concave, a point on the segment beyond can win
+      // while q is still behind the short segment's normal (an end arm's
+      // near-duplicate root point, def corner 34 under 0.001 px: the foot
+      // sat on the root and r fell from 2h to 0.197h). Solved below.
+      const sv = p.s[v] + cfSH[2 * i + j];
+      if (kp >= 0 && p.segLen[kp] < w && (p.closed || kp + 1 < p.nseg) && sv + p.segLen[kp] < X.hi && cfTurn(X, v + 1 >= p.n ? 0 : v + 1) > CF_TURN) {
+        cfLgArm[nLg] = j; cfLgK[nLg] = v; cfLgF[nLg] = 2; cfLgLo[nLg] = rs; cfLgHi[nLg] = Infinity; nLg++;
+      }
+      if (km >= 0 && p.segLen[km] < w && (p.closed || km >= 1) && sv - p.segLen[km] > X.lo && cfTurn(X, v - 1 >= 0 ? v - 1 : p.n - 1) > CF_TURN) {
+        cfLgArm[nLg] = j; cfLgK[nLg] = v; cfLgF[nLg] = 3; cfLgLo[nLg] = rs; cfLgHi[nLg] = Infinity; nLg++;
+      }
     }
   }
   for (let g = 0; g < nLg; g++) {
     if (!(cfLgLo[g] < best)) continue;
     const X = cfAr[cfLgArm[g]]; const k = cfLgK[g]; const fwd = cfLgF[g] === 1;
+    if (cfLgF[g] >= 2) {
+      // The vertex lag: no bracket is known, so the first sign change on 8
+      // samples up to the piece's end, then Illinois inside it.
+      const fv = cfLgF[g] === 2; const sv = X.p.s[k] + cfSH[2 * i + cfLgArm[g]];
+      const hv = Math.min(best, cfRMax);
+      if (!(hv > rs)) continue;
+      let a0 = rs; cfQ(i, a0); let f0 = cfVLagF(X, k, fv, sv, cfQx, cfQy, w);
+      let rr = Infinity;
+      if (f0 < 0) rr = a0;
+      else for (let m = 1; m <= 8; m++) {
+        const b0 = rs + ((hv - rs) * m) / 8; cfQ(i, b0); let f1 = cfVLagF(X, k, fv, sv, cfQx, cfQy, w);
+        if (!(f1 < 0)) { a0 = b0; f0 = f1; continue; }
+        let lo2 = a0; let hi2 = b0; let side = 0; const tol = 1e-10 * C.h;
+        for (let it = 0; it < 60 && hi2 - lo2 > tol; it++) {
+          let mm = (lo2 * f1 - hi2 * f0) / (f1 - f0);
+          if (!(mm > lo2 && mm < hi2) || it % 8 === 7) mm = 0.5 * (lo2 + hi2);
+          cfQ(i, mm); const fm = cfVLagF(X, k, fv, sv, cfQx, cfQy, w);
+          if (fm < 0) { hi2 = mm; f1 = fm; if (side === -1) f0 *= 0.5; side = -1; }
+          else { lo2 = mm; f0 = fm; if (side === 1) f1 *= 0.5; side = 1; }
+        }
+        rr = hi2; break;
+      }
+      if (rr < best) { best = rr; cfEvArm = cfLgArm[g]; cfEvKind = fv ? 7 : 8; }
+      continue;
+    }
     // Illinois regula falsi on the switch function (negative = switched).
     let lo = cfLgLo[g]; let hi = cfLgHi[g]; cfStats.lagSolves++;
     if (cfTy[i] === 0) {
@@ -4712,6 +4750,24 @@ function cfLagF(X: CfArm, k: number, fwd: boolean, qx: number, qy: number, w: nu
   const s = P < smax ? P : smax;
   return a * a + s * s - 2 * P * s;
 }
+// K1247 s9: the vertex lag's switch as a number, negative iff footNearM's
+// window from vertex v (foot P_v, s sv) holds a closer point on the segment
+// beyond its short neighbour: D = |q - P_vn|^2 - |q - P_v|^2 plays the
+// segment lag's a^2.
+function cfVLagF(X: CfArm, v: number, fwd: boolean, sv: number, qx: number, qy: number, w: number): number {
+  const p = X.p;
+  let k1: number; let kn: number; let vn: number; let sg: number; let lim: number;
+  if (fwd) { k1 = v; vn = v + 1 >= p.n ? 0 : v + 1; kn = k1 + 1 >= p.nseg ? 0 : k1 + 1; sg = 1; lim = X.hi - (sv + p.segLen[k1]); }
+  else { k1 = v - 1 >= 0 ? v - 1 : p.nseg - 1; vn = v - 1 >= 0 ? v - 1 : p.n - 1; kn = k1 - 1 >= 0 ? k1 - 1 : p.nseg - 1; sg = -1; lim = sv - p.segLen[k1] - X.lo; }
+  const l = p.segLen[k1];
+  const tP = sg * ((qx - p.x[v]) * X.tx[k1] + (qy - p.y[v]) * X.ty[k1]);
+  const D = l * l - 2 * l * tP;
+  const P = sg * ((qx - p.x[vn]) * X.tx[kn] + (qy - p.y[vn]) * X.ty[kn]);
+  let smax = w - l; if (p.segLen[kn] < smax) smax = p.segLen[kn]; if (lim < smax) smax = lim;
+  if (!(smax > 0 && P > 0)) return D + w * w;
+  const s = P < smax ? P : smax;
+  return D + s * s - 2 * P * s;
+}
 function cfApply(X: CfArm, kind: number): boolean {
   const p = X.p;
   switch (kind) {
@@ -4721,6 +4777,10 @@ function cfApply(X: CfArm, kind: number): boolean {
     case 4: X.v = 0; X.i--; if (X.i < 0) { if (!p.closed) return false; X.i = p.nseg - 1; X.sh -= p.len; } return true;
     case 5: X.i++; if (X.i >= p.nseg) { if (!p.closed) return false; X.i = 0; X.sh += p.len; } return true;
     case 6: X.i--; if (X.i < 0) { if (!p.closed) return false; X.i = p.nseg - 1; X.sh -= p.len; } return true;
+    // K1247 s9: the vertex lag, from vertex v past its short segment onto
+    // the segment beyond (forward: v + 1; backward: v - 2).
+    case 7: X.v = 0; X.i++; if (X.i >= p.nseg) { if (!p.closed) return false; X.i -= p.nseg; X.sh += p.len; } return true;
+    case 8: X.v = 0; X.i -= 2; if (X.i < 0) { if (!p.closed) return false; X.i += p.nseg; X.sh -= p.len; } return true;
   }
   return false;
 }
