@@ -4266,21 +4266,42 @@ function segsNearC(C: FCache, pi: number, side: number, sC: number, R: number, o
   const n = B.nb;
   out.length = 0;
   if (n < 2) return;
-  const seen = new Set<number>();
-  const lb = (target: number): number => { let lo = 0; let hi = n; while (lo < hi) { const mid = (lo + hi) >> 1; if (B.bs[mid] < target) lo = mid + 1; else hi = mid; } return lo; };
-  const shifts = p.closed ? [-p.len, 0, p.len] : [0];
-  for (const sh of shifts) {
+  // K1247 s2: a stamp array for the Set, no closures, and the interval
+  // distance's cheap terms first (min of four <= R iff any term is).
+  if (snStamp.length < n) snStamp = new Int32Array(n * 2);
+  if (++snGen > 0x3fffffff) { snStamp.fill(0); snGen = 1; }
+  const gen = snGen; const stamp = snStamp;
+  const bs = B.bs;
+  const closed = p.closed; const len = p.len;
+  const nSh = closed ? 3 : 1;
+  for (let si = 0; si < nSh; si++) {
+    const sh = closed ? (si === 0 ? -len : si === 1 ? 0 : len) : 0;
     const loS = sC - R + sh; const hiS = sC + R + sh;
-    const start = Math.max(0, lb(loS) - 1);
-    for (let i = start; i + 1 < n && B.bs[i] <= hiS; i++) {
-      if (sDistToIntervalC(C, pi, sC, B.bs[i], B.bs[i + 1]) > R) continue;
-      const idx = p.closed ? i % Math.max(1, n - 1) : i;
-      if (seen.has(idx)) continue;
-      seen.add(idx);
+    let lo = 0; let hi = n;
+    while (lo < hi) { const mid = (lo + hi) >> 1; if (bs[mid] < loS) lo = mid + 1; else hi = mid; }
+    const start = Math.max(0, lo - 1);
+    for (let i = start; i + 1 < n && bs[i] <= hiS; i++) {
+      const ls = bs[i]; const hs = bs[i + 1];
+      if (!closed) {
+        if (!(sC >= ls && sC <= hs) && Math.min(Math.abs(sC - ls), Math.abs(sC - hs)) > R) continue;
+      } else {
+        let c = sC;
+        while (c < ls) c += len;
+        while (c > ls + len) c -= len;
+        if (!(c >= ls && c <= hs)) {
+          const m = Math.min(Math.abs(c - ls), Math.abs(c - hs));
+          if (m > R && Math.min(m, Math.abs(dS(p, sC, ls)), Math.abs(dS(p, sC, hs))) > R) continue;
+        }
+      }
+      const idx = closed ? i % Math.max(1, n - 1) : i;
+      if (stamp[idx] === gen) continue;
+      stamp[idx] = gen;
       out.push(idx);
     }
   }
 }
+let snStamp = new Int32Array(1024);
+let snGen = 0;
 function pushCand(uSide: number, oSide: number, x: number, y: number, dc: number, uS: number, oS: number, uSeg: number, oSeg: number, synth: number, from: number, ht = 0, hu = 0): void {
   if (candN >= candUSide.length) throw new Error("cand overflow");
   candUSide[candN] = uSide; candOSide[candN] = oSide;
@@ -4486,6 +4507,85 @@ function crossingsPhaseC(C: FCache, scene: SceneIn): void {
 
 // --- eyes ----------------------------------------------------------------------
 let kfEyeCount = 0; let kfEyeCutCount = 0; let kfTieCutCount = 0;
+function inArcE(p: Poly, s: number, s0: number, gap: number): boolean {
+  let d = s - s0;
+  if (p.closed) d = ((d % p.len) + p.len) % p.len;
+  return d >= -1e-9 && d <= gap + 1e-9;
+}
+function segInArcE(C: FCache, p: Poly, ls: number, hs: number, s0: number, gap: number): boolean {
+  return inArcE(p, ls, s0, gap) || inArcE(p, hs, s0, gap) || (sDistToIntervalC(C, p.id, s0, ls, hs) === 0 && gap >= 0) || Math.abs(dS(p, s0 + gap / 2, ls + (hs - ls) / 2)) <= gap / 2 + Math.abs(hs - ls) / 2;
+}
+function lbBs(bs: Float64Array, n: number, target: number): number {
+  let lo = 0; let hi = n;
+  while (lo < hi) { const m = (lo + hi) >> 1; if (bs[m] < target) lo = m + 1; else hi = m; }
+  return lo;
+}
+function sliceSegsE(C: FCache, Bd: FBord, p: Poly, s0: number, gap: number, out: number[]): void {
+  out.length = 0;
+  const n = Bd.nb;
+  if (n < 2) return;
+  if (snStamp.length < n) snStamp = new Int32Array(n * 2);
+  if (++snGen > 0x3fffffff) { snStamp.fill(0); snGen = 1; }
+  const gen = snGen; const stamp = snStamp; const bs = Bd.bs;
+  const nSh = p.closed ? 3 : 1;
+  for (let si = 0; si < nSh; si++) {
+    const sh = p.closed ? (si === 0 ? -p.len : si === 1 ? 0 : p.len) : 0;
+    const a = Math.max(0, lbBs(bs, n, s0 - 1e-6 + sh) - 3);
+    const b = Math.min(n - 2, lbBs(bs, n, s0 + gap + 1e-6 + sh) + 3);
+    for (let i = a; i <= b; i++) { if (stamp[i] !== gen) { stamp[i] = gen; if (segInArcE(C, p, bs[i], bs[i + 1], s0, gap)) out.push(i); } }
+  }
+}
+const eySegA: number[][] = [[], []];
+const eySegB: number[][] = [[], []];
+let eyCx0 = new Float64Array(256); let eyCx1 = new Float64Array(256); let eyCy0 = new Float64Array(256); let eyCy1 = new Float64Array(256);
+let eyBx0 = new Float64Array(64); let eyBx1 = new Float64Array(64); let eyBy0 = new Float64Array(64); let eyBy1 = new Float64Array(64);
+function eyeComboC(C: FCache, bA: number, bB: number, segsA: number[], segsB: number[], cellE: number, skipSame: boolean): number {
+  const BA = C.bords[bA]; const BB = C.bords[bB];
+  const nB = segsB.length;
+  if (eyCx0.length < nB) { const c = nB * 2; eyCx0 = new Float64Array(c); eyCx1 = new Float64Array(c); eyCy0 = new Float64Array(c); eyCy1 = new Float64Array(c); }
+  const nbk = Math.ceil(nB / XBLK);
+  if (eyBx0.length < nbk) { const c = nbk * 2; eyBx0 = new Float64Array(c); eyBx1 = new Float64Array(c); eyBy0 = new Float64Array(c); eyBy1 = new Float64Array(c); }
+  const X = BB.bx; const Y = BB.by;
+  for (let b = 0; b < nbk; b++) {
+    let bx0 = Infinity; let bx1 = -Infinity; let by0 = Infinity; let by1 = -Infinity;
+    const kEnd = Math.min(nB, (b + 1) * XBLK);
+    for (let k = b * XBLK; k < kEnd; k++) {
+      const j = segsB[k];
+      const cx = X[j]; const cy = Y[j]; const dx = X[j + 1]; const dy = Y[j + 1];
+      let x0 = Math.floor(Math.min(cx, dx) / cellE); let x1 = Math.floor(Math.max(cx, dx) / cellE);
+      let y0 = Math.floor(Math.min(cy, dy) / cellE); let y1 = Math.floor(Math.max(cy, dy) / cellE);
+      if (!(x0 <= x1 && y0 <= y1)) { x0 = Infinity; x1 = -Infinity; y0 = Infinity; y1 = -Infinity; }
+      eyCx0[k] = x0; eyCx1[k] = x1; eyCy0[k] = y0; eyCy1[k] = y1;
+      if (x0 < bx0) bx0 = x0; if (x1 > bx1) bx1 = x1; if (y0 < by0) by0 = y0; if (y1 > by1) by1 = y1;
+    }
+    eyBx0[b] = bx0; eyBx1[b] = bx1; eyBy0[b] = by0; eyBy1[b] = by1;
+  }
+  const AX = BA.bx; const AY = BA.by;
+  let found = 0;
+  for (let q = 0; q < segsA.length; q++) {
+    const i = segsA[q];
+    const ax = AX[i]; const ay = AY[i]; const bx2 = AX[i + 1]; const by2 = AY[i + 1];
+    const x0 = Math.floor(Math.min(ax, bx2) / cellE); const x1 = Math.floor(Math.max(ax, bx2) / cellE);
+    const y0 = Math.floor(Math.min(ay, by2) / cellE); const y1 = Math.floor(Math.max(ay, by2) / cellE);
+    if (!(x0 <= x1 && y0 <= y1)) continue;
+    for (let b = 0; b < nbk; b++) {
+      if (x1 < eyBx0[b] || x0 > eyBx1[b] || y1 < eyBy0[b] || y0 > eyBy1[b]) continue;
+      const kEnd = Math.min(nB, (b + 1) * XBLK);
+      for (let k = b * XBLK; k < kEnd; k++) {
+        if (x1 < eyCx0[k] || x0 > eyCx1[k] || y1 < eyCy0[k] || y0 > eyCy1[k]) continue;
+        const j = segsB[k];
+        if (skipSame && i === j) continue;
+        const hit = segInt(ax, ay, bx2, by2, X[j], Y[j], X[j + 1], Y[j + 1]);
+        if (!hit) continue;
+        const px = ax + (bx2 - ax) * hit.t; const py = ay + (by2 - ay) * hit.t;
+        addInsert(C, bA, i, hit.t, px, py, -1);
+        addInsert(C, bB, j, hit.u, px, py, -1);
+        found++;
+      }
+    }
+  }
+  return found;
+}
 function eyesPhaseC(C: FCache, scene: SceneIn): void {
   const h = C.h;
   kfEyeCount = 0; kfEyeCutCount = 0; kfTieCutCount = 0;
@@ -4506,70 +4606,26 @@ function eyesPhaseC(C: FCache, scene: SceneIn): void {
     pointAtInto(pB, sQi0 + gapQi / 2, ptScratch);
     if (Math.hypot(mAx - ptScratch[0], mAy - ptScratch[1]) > 3 * h) { eye.prevTotal = 0; continue; }
     kfEyeCount++;
-    const inArc = (p: Poly, s: number, s0: number, gap: number): boolean => {
-      let d = s - s0;
-      if (p.closed) d = ((d % p.len) + p.len) % p.len;
-      return d >= -1e-9 && d <= gap + 1e-9;
-    };
-    const segInArc = (p: Poly, ls: number, hs: number, s0: number, gap: number): boolean =>
-      inArc(p, ls, s0, gap) || inArc(p, hs, s0, gap) || (sDistToIntervalC(C, p.id, s0, ls, hs) === 0 && gap >= 0) || Math.abs(dS(p, s0 + gap / 2, ls + (hs - ls) / 2)) <= gap / 2 + Math.abs(hs - ls) / 2;
-    const sliceSegs = (Bd: FBord, p: Poly, s0: number, gap: number): number[] => {
-      const n = Bd.nb;
-      const out: number[] = [];
-      if (n < 2) return out;
-      const seen = new Set<number>();
-      const lb = (target: number): number => { let lo = 0; let hi = n; while (lo < hi) { const m = (lo + hi) >> 1; if (Bd.bs[m] < target) lo = m + 1; else hi = m; } return lo; };
-      const shifts = p.closed ? [-p.len, 0, p.len] : [0];
-      for (const sh of shifts) {
-        const a = Math.max(0, lb(s0 - 1e-6 + sh) - 3);
-        const b = Math.min(n - 2, lb(s0 + gap + 1e-6 + sh) + 3);
-        for (let i = a; i <= b; i++) { if (!seen.has(i)) { seen.add(i); if (segInArc(p, Bd.bs[i], Bd.bs[i + 1], s0, gap)) out.push(i); } }
-      }
-      return out;
-    };
+    // K1247 s2: each border's arc slice once per eye (it does not
+    // change between combos), and the pair search without the string
+    // grid: a pair is tested iff its cell ranges overlap (the old grid's
+    // "share a cell"), pruned by blocks first. Inside one A segment the
+    // B order is free: its inserts can tie only at the same t, and then
+    // they are the same point with no ref.
+    const cellE = Math.max(h, 0.05);
+    sliceSegsE(C, C.bords[pi * 2], pA, sPi0, gapPi, eySegA[0]);
+    sliceSegsE(C, C.bords[pi * 2 + 1], pA, sPi0, gapPi, eySegA[1]);
+    sliceSegsE(C, C.bords[qi * 2], pB, sQi0, gapQi, eySegB[0]);
+    sliceSegsE(C, C.bords[qi * 2 + 1], pB, sQi0, gapQi, eySegB[1]);
     let foundTotal = 0;
     for (let combo = 0; combo < 4; combo++) {
-      const sa = sides[combo >> 1]; const sb = sides[combo & 1];
-      const BA = C.bords[pi * 2 + (sa === 1 ? 0 : 1)];
-      const BB = C.bords[qi * 2 + (sb === 1 ? 0 : 1)];
-      const fullCombo = (): number => {
-        const segsA = sliceSegs(BA, pA, sPi0, gapPi);
-        const segsB = sliceSegs(BB, pB, sQi0, gapQi);
-        const cellE = Math.max(h, 0.05);
-        const gridB = new Map<string, number[]>();
-        for (const j of segsB) {
-          const cx = BB.bx[j]; const cy = BB.by[j]; const dx = BB.bx[j + 1]; const dy = BB.by[j + 1];
-          const x0 = Math.floor(Math.min(cx, dx) / cellE); const x1 = Math.floor(Math.max(cx, dx) / cellE);
-          const y0 = Math.floor(Math.min(cy, dy) / cellE); const y1 = Math.floor(Math.max(cy, dy) / cellE);
-          for (let ix = x0; ix <= x1; ix++) for (let iy = y0; iy <= y1; iy++) { const k = ix + "," + iy; const l = gridB.get(k) ?? []; l.push(j); gridB.set(k, l); }
-        }
-        const us: number[] = []; const os: number[] = [];
-        let found = 0;
-        for (const i of segsA) {
-          const candJ = new Set<number>();
-          const ax = BA.bx[i]; const ay = BA.by[i]; const bx2 = BA.bx[i + 1]; const by2 = BA.by[i + 1];
-          const x0 = Math.floor(Math.min(ax, bx2) / cellE); const x1 = Math.floor(Math.max(ax, bx2) / cellE);
-          const y0 = Math.floor(Math.min(ay, by2) / cellE); const y1 = Math.floor(Math.max(ay, by2) / cellE);
-          for (let ix = x0; ix <= x1; ix++) for (let iy = y0; iy <= y1; iy++) for (const j of gridB.get(ix + "," + iy) ?? []) candJ.add(j);
-          for (const j of candJ) {
-            if (pi === qi && (combo >> 1) === (combo & 1) && i === j) continue;
-            const hit = segInt(ax, ay, bx2, by2, BB.bx[j], BB.by[j], BB.bx[j + 1], BB.by[j + 1]);
-            if (!hit) continue;
-            const px = ax + (bx2 - ax) * hit.t; const py = ay + (by2 - ay) * hit.t;
-            addInsert(C, pi * 2 + (sa === 1 ? 0 : 1), i, hit.t, px, py, -1);
-            addInsert(C, qi * 2 + (sb === 1 ? 0 : 1), j, hit.u, px, py, -1);
-            us.push(i); os.push(j);
-            found++;
-          }
-        }
-        return found;
-      };
+      const ai = combo >> 1; const bi = combo & 1;
       // Full search every frame: the old warm path tracked last
       // frame's pairs (and skipped the search when it had none), so
       // the cuts depended on history.
-      const found = fullCombo();
-      foundTotal += found;
+      foundTotal += eyeComboC(C, pi * 2 + ai, qi * 2 + bi, eySegA[ai], eySegB[bi], cellE, pi === qi && ai === bi);
     }
+    void sides;
     kfEyeCutCount += foundTotal;
     if (!foundTotal) {
       const zA1 = depthAtC(C, pi, sPi0, depthWin); const zA2 = depthAtC(C, pi, sPi0 + gapPi, depthWin);
