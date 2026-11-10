@@ -82,13 +82,17 @@ Short and plain:
 
 End with `Ledger items` and K1247's handle fields (owner, branch, last commit, evidence, next).
 
-## Handoff 1 (2026-11-09, 21:29-23:2x, claude agent a82e0a83c91fe4c5a)
+## Handoff 1 (2026-11-09, 21:29-22:58, claude agent a82e0a83c91fe4c5a)
 
-**Done does not hold.** def's corners phase is still about 7.4 ms, the same as stage 6's, against
-the 1 ms target. The leads as briefed are worth tenths of a millisecond between them, because no
-single function dominates the phase (profile below). As the Done rule allows, the fastest passing
-version is committed: the clear certificate, fSteep from tangents, and growth at 10 nodes with
-E 5e-4 h (last code commit 7bc879c9, then this handoff).
+**Done does not hold.** def's corners phase is 7.3-7.6 ms in the locked pairs (master's 7.7-8.2 in
+the same runs), against the 1 ms target. The leads as briefed are worth tenths of a millisecond
+between them, because no single function dominates the phase (profile below). As the Done rule
+allows, the fastest passing version is committed: the clear certificate, fSteep from tangents, and
+growth at 10 nodes with E 5e-4 h (last code commit 7bc879c9; the commits after it add probes and this
+handoff). The last half hour measured bounds instead (below): the V solve, fallback and the rest are
+1.5 ms on their own, a free certificate is worth at most 0.44 ms, a smarter drop locator under
+0.45 ms, and a polyline at a quarter of the points still leaves 3.6 ms. Stopped about 30 min before
+the cap: no lead left that could be built and checked in that time.
 
 ### Timing (locked, def's 40-frame cycle, ms)
 
@@ -167,7 +171,11 @@ Timed by call (`k1247s7_split.ps1`, locked, 22:47; the fastest of 8 rounds per f
 cycle): the phase is 6.73 ms a frame, of which growCFC 5.20 ms (346 calls), the V solve 0.87 ms (386
 calls), cornerFallbackC 0.40 ms (40 calls, about 10 us each, nearly all borderMeetC) and the rest
 (arm setup, addPointAtC, warm state) 0.27 ms. Solve, fallback and rest alone are 1.53 ms, over the
-1 ms target. The growth's cost is spread evenly: a median call takes 13.8 us (p10 24.4, max 46.0),
+1 ms target. The fallbacks are almost all "V outside spans" (def's first frame: 24 of 386 corners,
+plus 1 "arm span 0"): short arms, which pay for the V solve and then for borderMeetC's search. The
+solve averages 3.25 Newton steps after its first pair of global feet, so even a perfect seed (not
+allowed: a warm V can pick another root) would save at most about three quarters of its 0.87 ms
+(estimated from the step count, not measured). The growth's cost is spread evenly: a median call takes 13.8 us (p10 24.4, max 46.0),
 the slowest 10% of calls hold 21% of the time, and no corner holds more than 0.8% of the cycle's
 growth, so there is no hot corner to special-case. By class (22:49 run): free corners (w 1 at every
 node) are 29% of calls but 24.0% of the time at 12.2 us each; corners whose w reaches 0 are 52% of
