@@ -368,10 +368,10 @@ Next free ID: K1271.
   and a JSON looks list into a summary and sheets. Stages 3a-3c merged
   (737ac58..9ab8a01); rounds 2026-10-14, 14b and 14c are done (14c
   merged 772e48a..e1c2a80).
-  - owner: agent `acaae08c83107d0cb` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (sonnet, started 2026-11-10 02:57, 1 h cap ~03:57)
-  - branch: `worktree-agent-acaae08c83107d0cb`, worktree `.claude/worktrees/agent-acaae08c83107d0cb`; last commit: `cbb13665`
+  - owner: nobody since 2026-11-10 03:24 (merged; agent `acaae08c83107d0cb` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `588d32c3`
   - evidence: .claude/probes/rounds/2026-11-10b/ (outputs untracked)
-  - next: Round 2026-11-10b (started 2026-11-10 02:57): K8's fix (48c21b94) timed on the phone, K307's restart check, K268's beacon c100 still. When it reports: Claude views the crops, files K8/K307/K268, merges the handoff
+  - next: Round 2026-11-10b merged (588d32c3): K8's cost fix moved nothing on the phone (rp=sdf 280/423/162 ms); K307 not due; K268's c100 beacon still reads as the probe's ideal (no casing). Round 2026-11-10c next: bisect K8's phone cost
   - brief: docs/design/K156.md (Round 2026-11-10b)
   - env: the phone on its charger, reached over adb 5555 through Tailscale (`adb connect`; not the desktop's USB, Levi 2026-11-02); the pass builds and serves both builds itself (ports 5480-5489); nobody else uses the phone during the pass (K234)
 - **K268** · Shaped crossing gaps under thread reveal (K76; Levi, 2026-10-14):
@@ -400,7 +400,7 @@ Next free ID: K1271.
   - owner: nobody since 2026-10-15 05:39 (stage 2 done; agent `a11d7ce60428b687d` of claude session d8031183, worktree removed by the K161 sweep 2026-10-15, branch kept)
   - branch: mainline; last commit: `a7e199e` (stage 3 late enable)
   - evidence: `.claude/probes/K307/` (stage 1's tools and traces; `stage2/`: `trace_intro.mjs`, `run_s2.ps1`, batches 1-7, `runs/`, two A/B builds, `k366_firsttap.mjs`); the throwaway branch `k307-proto` (d1aefae), never merged; lore `.claude/rules/render-shaders.md` ("THE WARM-UP")
-  - next: Restart check still open: on 2026-11-10 Chrome's browser and GPU process had started 2026-11-09 20:20:21, before salt p1109a (22:07:41), so nothing ran. At the next phone window read the start time first, and run the traced load (?daily&snd=none with k307\salt_p1109a.js: 0 translates = persisted, ~21 = not) only if it is later. Never restart Chrome on the phone. Optionally a driver-cold first visit (Levi's call). Evidence .claude/probes/rounds/2026-11-09/k307/
+  - next: Restart check still open: at 2026-11-10 03:00 Chrome's browser and GPU process still dated 2026-11-09 20:20:21, before salt p1109a (22:07:41). Each phone window reads the start time first and runs the traced load (?daily&snd=none with k307\salt_p1109a.js: 0 translates = persisted, ~21 = not) only if later. Never restart Chrome on the phone. Evidence .claude/probes/rounds/2026-11-09/k307/
   - brief: `docs/design/K307_intro_freezes.md`, "Stage 2 handoff" and "K385" (the mechanism and the plan)
 - **K8** · G3: SDF ribbons drawn from one shared sample texture
   (`docs/design/G3G4_sdf_geometry.md`). G3-0 merged (ebdae8c..b11747e): the four G3
@@ -408,7 +408,7 @@ Next free ID: K1271.
   - owner: nobody since 2026-11-10 03:00 (cost stage done; agent a6c9382c6e31ac415 of claude session 09c7a672-a414-402a-97da-b3176839a2e5, merged)
   - branch: mainline; last commit: `48c21b94`
   - evidence: .claude/probes/K8/sdf_cost/ (matrix.ps1, ab.ps1, pass_cost.mjs, verify.ps1, crops.ps1; outputs untracked), .claude/probes/K8/sdf_gaps/, scripts/bench_frame.mjs
-  - next: Cost stage merged 48c21b94 (fix cc5606c6: bisector trapezoids, overdraw 6.9 -> 1.5): desktop rp=sdf knot gs 24 14.4 -> 11.15 ms (1.73x the default), dense 1.09x, max fabric 0.90x; gaps unchanged (crops viewed). K156 round 2026-11-10b times it on the phone; if knot gs 24 stays high, lever (b): skip the gap search in the vertex for segments far from any crossing
+  - next: Phone (K156 round 2026-11-10b): the fix moved nothing, rp=sdf 280/423/162 ms against the default's 110/284/32: the phone pays for something the desktop doesn't show. Round 2026-11-10c bisects it (a145be26, c67a75ff, 42900cac, d70fdf0d, rp=sdf both sides); then split that commit's shader work on the phone. G3-3 stays blocked
   - brief: `docs/design/K8_sdf_cost.md`
 - **K5** · Split `main.ts` and `ribbon_renderer.ts` along K1-K3's data lines, with seams so G3 becomes a module
   swap; K6 rides it (`docs/design/K5_K6_split.md`, calls K377). Merged M1-M4 (`src/app/`: camera, frame_loop,
