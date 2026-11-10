@@ -56,8 +56,13 @@
 import type { FieldScene } from "./scene";
 import { candidates, closestOnSeg, dS, footInWindow, makePoly, normS, pointAt, segB, segOfS, SegGrid, zAt } from "./geom";
 import type { Cand, Foot, Poly } from "./geom";
+import { CornerGrowth, polyTangents } from "./corner_cf";
+import type { CfArmIn } from "./corner_cf";
 import { diagramDepth } from "./depth";
 import type { DepthChain } from "./depth";
+
+/** K1257: the closed-form corner growth (one per module: solveCorner does not re-enter). */
+const CF = new CornerGrowth();
 
 export function ss(e0: number, e1: number, x: number): number {
   const t = Math.min(1, Math.max(0, (x - e0) / (e1 - e0)));
@@ -794,6 +799,21 @@ export class FormB {
     return d;
   }
 
+  private readonly tans: ({ tx: Float64Array; ty: Float64Array } | undefined)[] = [];
+
+  /** K1257: arm ai as the closed-form growth reads it, from V's foot on it. */
+  private cfArm(ai: number, foot: Foot, u0: number): CfArmIn {
+    const arm = this.arms[ai];
+    const p = this.polys[arm.pi];
+    let t = this.tans[arm.pi];
+    if (!t) {
+      t = polyTangents(p);
+      this.tans[arm.pi] = t;
+    }
+    const [lo, hi] = this.armWindow(ai);
+    return { p, tx: t.tx, ty: t.ty, lo, hi, foot, u0 };
+  }
+
   footArm(ai: number, x: number, y: number, d0 = 0, d1 = Infinity): Foot {
     const [lo, hi] = this.armWindow(ai, d0, d1);
     return footInWindow(this.polys[this.arms[ai].pi], x, y, lo, hi);
@@ -970,7 +990,7 @@ export class FormB {
       // the target itself, so a reached node is never read as the branch's end.
       return { p, rho: rhoT - rc <= 1e-12 * rhoT ? rhoT : rc };
     };
-    const denOf = (p: Tk): number => 1 + ((p.x - p.fa.x) * (p.x - p.fb.x) + (p.y - p.fa.y) * (p.y - p.fb.y)) / (p.fa.d * p.fb.d);
+    const denOf = (p: Tk): number => 1 + ((p.x - p.fa.x) * (p.x - p.fb.x) + (p.y - p.fa.y) * (p.y - p.fb.y)) / ((p.fa.d || 1) * (p.fb.d || 1));
     const slackOf = (p: Tk): number => Math.min(A.L - this.W - (p.fa.u - A.sR) * A.dir, B.L - this.W - (p.fb.u - B.sR) * B.dir);
     const v0: Tk = { x: V.x, y: V.y, fa: { ...V.fa, u: A.sR + A.dir * dVa }, fb: { ...V.fb, u: B.sR + B.dir * dVb } };
     const denV = denOf(v0);
@@ -981,11 +1001,13 @@ export class FormB {
     // margin from 0 to −0.05h, before another part of the arm is nearer than
     // its contact, instead of a foot jumping there (or tracking a polyline
     // segment's own foot past the arc's centre of curvature).
-    const marginOf = (pl: Poly, x: number, y: number, sf: number, win: [number, number], dc: number): number => {
-      const f0 = pointAt(pl, sf);
+    // K1257: the walks start from the foot's own segment kf (the outline's
+    // marginOfC), not the segment pointAt picks at sf: at a vertex the two
+    // can differ.
+    const marginOf = (pl: Poly, x: number, y: number, sf: number, kf: number, win: [number, number], dc: number): number => {
       const base = sf - normS(pl, sf);
       let hi = win[1];
-      let k = f0.k;
+      let k = kf;
       let bk = base;
       for (let it = 0; it <= pl.nseg; it++) {
         const sv = bk + pl.s[k] + pl.segLen[k];
@@ -1006,7 +1028,7 @@ export class FormB {
         bk = b2;
       }
       let lo = win[0];
-      k = f0.k;
+      k = kf;
       bk = base;
       for (let it = 0; it <= pl.nseg; it++) {
         const sv = bk + pl.s[k];
@@ -1036,19 +1058,53 @@ export class FormB {
     // scale is exactly 1 ('tip' is bit-identical to 'flat' there); a band
     // under 1e-9*h acts as its step limit, with no division by zero.
     const rbEff = Math.max(this.rootBand * h * (this.rootBandScale === "tip" ? rootTipScale(theta) : 1), 1e-9 * h);
+    // K1257: the outline's wOfC: the cheap gates first, a zero ends the
+    // evaluation (the margins are skipped), and the product in its order.
     const wOf = (p: Tk): number => {
-      const mA = marginOf(pa, p.x, p.y, p.fa.u, winA, p.fa.d);
-      const mB = marginOf(pb, p.x, p.y, p.fb.u, winB, p.fb.d);
-      const w = ss(0, 1, 1 + Math.min(0, mA, mB) / (0.05 * h)) * ss(0, 1, (denOf(p) / denV - 0.3) / 0.4) * ss(0, 1, slackOf(p) / (0.5 * h));
-      if (!(this.rootBand > 0)) return w;
+      const fSteep = ss(0, 1, ((Math.abs(denV) > 1e-12 ? denOf(p) / denV : 0) - 0.3) / 0.4);
+      if (fSteep === 0) return 0;
+      const fSlack = ss(0, 1, slackOf(p) / (0.5 * h));
+      if (fSlack === 0) return 0;
       // S1g: the root gate (rootBand), each foot's distance from its root,
       // over this corner's band rbEff (K1163's tip scaling above).
-      return w * ss(0, 1, ((p.fa.u - A.sR) * A.dir) / rbEff) * ss(0, 1, ((p.fb.u - B.sR) * B.dir) / rbEff);
+      let fRootA = 1;
+      let fRootB = 1;
+      if (this.rootBand > 0) {
+        fRootA = ss(0, 1, ((p.fa.u - A.sR) * A.dir) / rbEff);
+        if (fRootA === 0) return 0;
+        fRootB = ss(0, 1, ((p.fb.u - B.sR) * B.dir) / rbEff);
+        if (fRootB === 0) return 0;
+      }
+      const mA = marginOf(pa, p.x, p.y, p.fa.u, p.fa.k, winA, p.fa.d);
+      if (mA <= -0.05 * h) return 0;
+      const mB = marginOf(pb, p.x, p.y, p.fb.u, p.fb.k, winB, p.fb.d);
+      if (mB <= -0.05 * h) return 0;
+      const w = ss(0, 1, 1 + Math.min(0, mA, mB) / (0.05 * h)) * fSteep * fSlack;
+      return this.rootBand > 0 ? w * fRootA * fRootB : w;
     };
     let r = 0;
     let q = v0;
     let room = slackOf(v0);
-    if (r0 > 0) {
+    // K1257: the outline's closed-form growth (corner_cf.ts): q on V's
+    // branch in closed-form pieces, S = the running minimum of w
+    // integrated by an adaptive trapezoid. A corner whose pieces cannot
+    // start at V grows the old way (below).
+    let cfDone = false;
+    if (r0 > 1e-9) {
+      const tkOf = (): Tk => ({ x: CF.qx, y: CF.qy, fa: { ...CF.fa }, fb: { ...CF.fb } });
+      const rr = CF.grow(h, V.x, V.y, r0, denV, this.cfArm(a, V.fa, v0.fa.u), this.cfArm(b, V.fb, v0.fb.u), () => {
+        const p = tkOf();
+        room = Math.min(room, slackOf(p));
+        return wOf(p);
+      });
+      if (rr >= 0) {
+        cfDone = true;
+        r = rr;
+        // The outline's corner keeps V's feet (its tangent points at V) when r <= 1e-9.
+        if (rr > 1e-9) q = tkOf();
+      }
+    }
+    if (r0 > 1e-9 && !cfDone) {
       const dN = r0 / 32;
       const nodes: Tk[] = [v0];
       let sPrev = wOf(v0);

@@ -186,7 +186,11 @@ describe("form B: the terms", () => {
     // With little room the cap gate stops the ball: a crossing 7h up the END
     // caps it (L = 5). On straight arms each foot sits ρ/tan 15° from the
     // root, so w = ss(slack/0.5h) with slack = L − W − ρ/tan 15°, and r is
-    // S's integral over the solve's 32 nodes from h (S1d F3).
+    // S's integral from h by the closed-form growth's adaptive trapezoid
+    // (K1257, corner_cf.ts): 16 nodes, an interval kept while
+    // (w_lo − w_hi)·len/2 ≤ 1e-3 h, else a midpoint test at the same budget,
+    // else halves (no jump or dip on straight arms). It sits within that
+    // budget of the exact integral (closed form: ∫ smoothstep = u³ − u⁴/2).
     const sc = tee(30, 0, [ray(7 * Math.cos(Math.PI / 6), 7 * Math.sin(Math.PI / 6), 120, -10, 10)], [{ a: { chain: 1, s: 7 }, b: { chain: 2, s: 10 }, over: "b" }]);
     const f2 = new FormB(sc);
     const c2 = cornerNear(f2, 1 / t15, 1);
@@ -194,15 +198,38 @@ describe("form B: the terms", () => {
     expect(end.L).toBeCloseTo(7 - 1 / Math.tan(Math.PI / 4) - 1, 9);
     const r0 = 1.5 * H * t15;
     const wAt = (rho: number) => smooth(0, 1, (end.L - W - rho / t15) / (0.5 * H));
+    const E = 1e-3 * H;
+    let wEnd = 0;
+    const refine = (lo: number, wlo: number, hi: number, whi: number): number => {
+      const L = hi - lo;
+      if ((wlo - whi) * L * 0.5 <= E || L <= E) return (wEnd = whi), 0.5 * (wlo + whi) * L;
+      const wm = Math.min(wlo, wAt(0.5 * (lo + hi)));
+      const wh = Math.min(wm, whi);
+      if (Math.abs(wlo - 2 * wm + wh) * L * 0.25 <= E) return (wEnd = wh), (wlo + 2 * wm + wh) * L * 0.25;
+      const left = refine(lo, wlo, 0.5 * (lo + hi), wm);
+      if (!(wEnd > 0)) return (wEnd = 0), left;
+      return left + refine(0.5 * (lo + hi), wEnd, hi, Math.min(wEnd, whi));
+    };
     let rInt = 0;
     let sPrev = wAt(H);
-    for (let k = 1; k <= 32 && sPrev > 0; k++) {
-      const sK = Math.min(sPrev, wAt(H + (k * r0) / 32));
-      rInt += (0.5 * (sPrev + sK) * r0) / 32;
-      sPrev = sK;
+    for (let k = 1; k <= 16 && sPrev > 0; k++) {
+      const a = H + ((k - 1) * r0) / 16;
+      const b = k === 16 ? H + r0 : H + (k * r0) / 16;
+      const sK = Math.min(sPrev, wAt(b));
+      if ((sPrev - sK) * (b - a) * 0.5 <= E) {
+        rInt += 0.5 * (sPrev + sK) * (b - a);
+        sPrev = sK;
+      } else {
+        rInt += refine(a, sPrev, b, sK);
+        sPrev = wEnd;
+      }
     }
+    const u = (rho: number) => Math.min(Math.max((end.L - W - rho / t15) / (0.5 * H), 0), 1);
+    const F = (x: number) => x * x * x - (x * x * x * x) / 2;
+    const rExact = 0.5 * H * t15 * (F(u(H)) + Math.max(0, (end.L - W - H / t15) / (0.5 * H) - 1) - F(u(H + r0)));
     expect(rInt).toBeLessThan(0.5 * r0);
     expect(c2.r).toBeCloseTo(rInt, 9);
+    expect(Math.abs(c2.r - rExact)).toBeLessThan(E);
     expect(c2.qx).toBeCloseTo((H + c2.r) / t15, 9);
     expect(c2.qy).toBeCloseTo(H + c2.r, 9);
   });
