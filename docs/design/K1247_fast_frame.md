@@ -146,3 +146,111 @@ Levi: re-set the gate, or take a follow-up brief aimed at the corner growth and 
 (move rows: prefixes `out/k1247/base/move<mult>c_`); `k1247_cmp.ts [--warm|--move] [scenes]`;
 `k1247_structure.ts`; `k1247_move.ts def`; `k1247_pieces.ts`; `outline.test.ts`;
 `& .claude/probes/K1240/proto/run_locked_k1247.ps1 -Script k1247_bench.ts -RunArgs @('locked<N>')`.
+
+## Handoff 2 (continuation to the 14:28 cap, 2026-11-09)
+
+**Correction to Handoff 1.** There is no infeasibility clause in this brief;
+Done 4's line above stands in its original wording ("def: median ≤3 ms and
+p95 ≤6 ms") and the numbers live here, not in the Done line.
+
+**Finding: Done 2 did not hold.** Claude's `k1247c_coldwarm.ts` (on master
+since `15005546`) compares, per scene and S', the cold frame against the
+same frame after one frame at another S' and after a 0 → 0.5h → back walk.
+On `9577db1f` (and identically on the continuation's first cuts):
+
+- muse_hash, S'=0: 0.97 after one frame at 0.1h (#622, run ch61), same after
+  the walk.
+- muse_hash, S'=0.1h: 0.27 after the walk (#756, run ch66).
+- g41_user_tw64, S'=0: 0.60 after the walk (#61, run ch6).
+- g41_user_tw64, S'=0.1h: 0.19 after one frame at 0.5h (#491, run ch30),
+  0.60 after the walk.
+
+The other 10 scenes passed within 1e-12. My Handoff 1 warm check covered
+only def, ring and fat, which is how this slipped through.
+
+**Bisect.** A debug copy with one kill switch per warm site: disabling all
+warm paths passed; disabling the corner-V warm alone left worst 0.60;
+disabling the crossing-cut warm alone left 3 of 4 failures; disabling both
+passed. Root causes:
+
+- Corner V (`solveVC` warm Newton): validated only by |d − rho| < 1e-9 at
+  the global feet. Distance-to-two-curved-arms has more than one root; the
+  warm start could converge to a different root than the builder's guess,
+  and that root passes the span and wedge checks too.
+- Crossing cuts (segment windows ±2 around last frame's pairs): acceptance
+  only required candidate presence per side. It could miss the
+  minimum-distance candidate the full search picks (picks are min distance
+  to the crossing point), yielding different cut points and stations.
+- Eye pairs: ±1 tracking could miss pairs the full search finds, and a
+  combo with no previous pairs skipped the search entirely (`found = 0`) —
+  history dependence by construction.
+- Border meet (±3 window around last frame's pair): could return a pair
+  that is not the global best by dA + dB.
+- Cut 1's margin walk caches: the resume bounds compare this frame's
+  s-coordinates against last frame's, which is only approximately the same
+  parametrization.
+
+**Fix (`94c677eb`).** Every warm site now runs the cold search every frame:
+corner V solves once from the builder's guess, crossing cuts run the full
+segment search, eye combos run `fullCombo`, border meet runs the full pair
+search, and margin walk caches reset per corner per frame (the
+within-corner, within-frame growth memo is unchanged). `C.warm` is no
+longer read anywhere. The memos that remain — reach per (pass, direction),
+bend values — are stamped with the frame counter and recomputed from
+current-frame geometry; no cross-frame state can affect output.
+
+Re-run on the fixed code (final code `2cd318a` where noted):
+
+- `k1247c_coldwarm.ts`, all 12 scenes (S' 0 and 0.1h, plus 0.5h on def,
+  ring, fat): **COLD = WARM within 0.000001 (worst 0.00e+0)**.
+- Done 1 rows vs the pre-change baseline: ALL WITHIN TOLERANCE (still,
+  0.1h, 0.5h) with Δp99 = 0.000 on every row (regenerated as
+  `out/k1247/fastfix/`).
+- Done 2 (`k1247_cmp.ts` vs frameRef): cold def/ring/fat maxPoint
+  8.5e-10 / 7.6e-10 / 2.4e-11, keyDiff 0; warm numbers identical to cold;
+  moved def maxPoint 1.36e-4 (the known single corner, piece 1382,
+  unchanged from Handoff 1).
+- Done 3: STRUCTURE IS THE DIAGRAM; FIXED PIECES ordered keys identical;
+  rigid def maxDiff 4.8e-9; `outline.test.ts` ALL PASS; `npm test` 2887
+  passed, 9 skipped.
+- Cost of the fix (relative profile, def motion): median 24.1 → 48.4 ms
+  before cut 4 below; phases: cutsEyesExposure 3.9 → 25.8 ms, corners
+  ~9 → ~13 ms.
+
+**Cuts in this continuation** (each committed, `npm test`, pushed):
+
+1. `3c276e90` margin walk caches persist across frames (corners 11.1 →
+   10.7 ms relative). **Reverted by the fix** — same fault class, and the
+   gain was within noise.
+2. `86ee2e9` fused region sequence emission: regions ~3.9 → ~3.1 ms
+   relative. Kept; reads per-frame data only, output-identical.
+3. `dcc744c7` reach cache per (pass, direction): kept; it is a
+   frame-stamped memo, and cmp cold/warm stayed identical.
+4. `94c677eb` the history fix above.
+5. `2cd318a` bbox prune in the cold crossing search (disjoint segment
+   bboxes cannot intersect, so the candidate set is exact):
+   cutsEyesExposure 25.8 → ~18–19 ms relative, every check bit-identical.
+
+Attempted and reverted uncommitted, on measurement: a grid-accelerated
+crossing search (18.0 → 18.4 ms, no gain) and a shared eye-grid with stamp
+dedupe (18.0 → 23.8 ms; clearing the accumulated grid keys cost more than
+the allocations saved). Neither landed.
+
+**Done 4, final (locked `run_locked_k1247.ps1`, final code `2cd318a`, two
+runs).** def motion: median 52.1 / 52.8 ms, p95 101.0 / 65.8 ms — the
+≤3 / ≤6 ms gate is **not met**. Final phases, run 1 (ms): setupBorders 7.8,
+corners 20.8, cutsEyesExposure 22.4, regions 5.6, piecesCapsEtc 3.1 (run 2:
+7.3 / 18.4 / 20.2 / 5.5 / 3.0). Also: ring motion median 14.4 / 15.8 ms,
+fat 58.9 / 60.3 ms; structure() median def 3.6 / 3.5 ms; first cold frame
+def 162 / 156 ms; repeated-scene def median 49.9 ms vs frameRef 446 / 461
+ms (~9x, was ~13–15x before the fix). History independence cost roughly
++19 ms of locked median against the pre-fix 33.4 ms; correctness took
+precedence. The gate is not reachable while every frame runs the cold
+searches at this scene size. Any further speed work must make the cold
+searches themselves faster (crossing candidate search, corner solves) —
+never reintroduce a warm acceptance that is not verified to land on the
+cold search's answer; `k1247c_coldwarm.ts` is the guard.
+
+**Done status at the cap:** Done 1 holds (rows unchanged), Done 2 holds
+(now including cold = warm on all 12 scenes), Done 3 holds, Done 4 does not
+(52 ms vs the 3 ms gate).
