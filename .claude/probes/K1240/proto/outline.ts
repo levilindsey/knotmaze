@@ -1857,8 +1857,15 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
     if (!KF_CSORDER) {
       // K1247 s12: ordered by structure (see regionsPhaseC); every
       // structural interval exists, its length may pass zero.
-      const keyed = list.map((q) => ({ q, k: sKeyOf(q) }));
-      keyed.sort((a, b) => (a.k - b.k) || -dS(p, a.q.cS, b.q.cS));
+      // Inside one key, a through pass's arm leaving backwards first (slotSub).
+      const subOf = (q: Station): number => {
+        if (!q.key.startsWith("j")) return 0;
+        const ai = parseInt(q.key.slice(q.key.indexOf("|a") + 2), 10);
+        if (dg) return dg.arms[ai].dir;
+        const a = arms[ai]; return scene.junctions[a.ji].arms[a.ei].dir;
+      };
+      const keyed = list.map((q) => ({ q, k: sKeyOf(q), d: subOf(q) }));
+      keyed.sort((a, b) => (a.k - b.k) || (a.d - b.d) || -dS(p, a.q.cS, b.q.cS));
       const m = keyed.length;
       for (let i = 0; i < (p.closed ? m : m - 1); i++) {
         const A = keyed[i]; const B = keyed[(i + 1) % m];
@@ -2089,7 +2096,8 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
     // passed each other the run is one point where they met (the
     // ends' midpoint). No pass decides whether a border is covered.
     const ivByKeys = new Map<string, Interval>();
-    for (const iv of intervals) ivByKeys.set(iv.A.key + ">" + iv.B.key, iv);
+    const ivKey = (a: string, b: string): string => KF_CSORDER ? a + ">" + b : a; // K1247 s12: by A alone (see piecesPhaseC)
+    for (const iv of intervals) ivByKeys.set(ivKey(iv.A.key, iv.B.key), iv);
     let runMiss = 0; let runPassed = 0; const runMissKeys: string[] = [];
     for (const dp of dg.piecesD) {
       if (dp.kind === "run") {
@@ -2138,7 +2146,7 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
         };
         const fromRef = refOf(dgA); const toRef = refOf(dgB);
         const pts: number[] = []; const cpts: number[] = []; let rid = -1;
-        const biv = ivByKeys.get(dgA.key + ">" + dgB.key);
+        const biv = ivByKeys.get(ivKey(dgA.key, dgB.key));
         if (biv && biv.region >= 0) rid = biv.region;
         const pushPt = (x: number, y: number, s: number): void => { pts.push(x, y); const f = footFlat(pi, s); cpts.push(f[0], f[1]); };
         const sA = fromRef ? fromRef.s : sFOf(dgA); const sB = toRef ? toRef.s : sFOf(dgB);
@@ -3043,6 +3051,9 @@ interface FCache {
    *  scene s: a crossing's s on that chain, an arm's root s, caps at the
    *  ends): stations are ordered by it, never by frame position. */
   slotKey: Float64Array;
+  /** K1247 s12: the order inside one key: a through pass's two arms share
+   *  the root s, and the arm leaving backwards (dir -1) comes first. */
+  slotSub: Int8Array;
   /** K1247 s12: the structural region numbering (structRegionsC), built once;
    *  structMiss counts frame intervals that found no free id (dropped). */
   sReg?: StructRegions; structMiss?: number;
@@ -3323,6 +3334,7 @@ function buildFastCache(st: DiagramStructure, scene: SceneIn): FCache {
       if (k === 3) return ((r - nX * 4 - nArms) & 1) ? 1e12 : -1e12;
       return 0;
     }),
+    slotSub: Int8Array.from(slotPi, (_, s) => (slotKind[s] === 2 ? st.arms[slotRank[s] - nX * 4].dir : 0)),
     crossUnderSlot, crossOverSlot, junctionSlot, capSlot, seamSlot, dgSlot,
     capInfoOfSlot: Int32Array.from(capInfoOfSlot.slice(0, nSlots)),
     stActive: new Uint8Array(Math.max(1, nSlots)), stCS: new Float64Array(Math.max(1, nSlots)),
@@ -3394,7 +3406,7 @@ function structRegionsC(C: FCache, st: DiagramStructure): StructRegions {
   const minRank = new Array<number>(nCh).fill(Infinity);
   for (let s = 0; s < nS; s++) { const pi = C.slotPi[s]; lists[pi].push(s); if (C.slotRank[s] < minRank[pi]) minRank[pi] = C.slotRank[s]; }
   const pos = new Int32Array(Math.max(1, nS));
-  for (const l of lists) { l.sort((u, v) => (C.slotKey[u] - C.slotKey[v]) || (C.slotRank[u] - C.slotRank[v])); l.forEach((s, j) => { pos[s] = j; }); }
+  for (const l of lists) { l.sort((u, v) => (C.slotKey[u] - C.slotKey[v]) || (C.slotSub[u] - C.slotSub[v]) || (C.slotRank[u] - C.slotRank[v])); l.forEach((s, j) => { pos[s] = j; }); }
   const pair = new Set<number>();
   for (let d = 0; d < C.discardA.length; d++) { const a = C.discardA[d]; const b = C.discardB[d]; if (a >= 0 && b >= 0) { pair.add(a * nS + b); pair.add(b * nS + a); } }
   const order: number[] = [];
@@ -6222,7 +6234,7 @@ function regionsPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): { regio
       list.push(v);
       while (j2 > 0) {
         const u = list[j2 - 1];
-        const c = KF_CSORDER ? (C.stCS[u] - C.stCS[v]) : (C.slotKey[u] - C.slotKey[v]) || -dS(p, C.stCS[u], C.stCS[v]);
+        const c = KF_CSORDER ? (C.stCS[u] - C.stCS[v]) : (C.slotKey[u] - C.slotKey[v]) || (C.slotSub[u] - C.slotSub[v]) || -dS(p, C.stCS[u], C.stCS[v]);
         if ((c || (C.slotRank[u] - C.slotRank[v])) > 0) { list[j2] = u; j2--; } else break;
       }
       list[j2] = v;
@@ -6403,18 +6415,21 @@ function regionsPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): { regio
 function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[]): { pieces: OutlinePiece[]; runMiss: number; runPassed: number } {
   const pieces: OutlinePiece[] = [];
   let runMiss = 0; let runPassed = 0;
-  // Interval lookup by (A slot, B slot) for run regions.
+  // Interval lookup for run regions: by (A slot, B slot) under K12_CSORDER;
+  // by the A slot alone otherwise (K1247 s12: a crossOver station toggling
+  // inside the run must not unset its region).
   C.pairStamp++;
   const stamp = C.pairStamp;
+  const pairKey = (a: number, b: number): number => KF_CSORDER ? a * 8192 + b : a;
   for (let i = 0; i < C.nIv; i++) {
-    const key = C.ivA[i] * 8192 + C.ivB[i];
+    const key = pairKey(C.ivA[i], C.ivB[i]);
     let hx = (key * 2654435761) >>> 0 & 8191;
     while (C.pairHashStamp[hx] === stamp && C.pairHashKey[hx] !== key) hx = (hx + 1) & 8191;
     C.pairHashStamp[hx] = stamp; C.pairHashKey[hx] = key; C.pairHashVal[hx] = i;
   }
   const ivLookup = (a: number, b: number): number => {
-    if (a < 0 || b < 0) return -1;
-    const key = a * 8192 + b;
+    if (a < 0 || (KF_CSORDER && b < 0)) return -1;
+    const key = pairKey(a, b);
     let hx = (key * 2654435761) >>> 0 & 8191;
     while (C.pairHashStamp[hx] === stamp) {
       if (C.pairHashKey[hx] === key) return C.pairHashVal[hx];

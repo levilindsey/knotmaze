@@ -43,9 +43,28 @@ for (let c = 0; c < nCh; c++) {
     console.log(`chain ${c}: iv ${pa.iv[c]}/${pb.iv[c]} regions ${pa.reg[c]}/${pb.reg[c]}; active only full [${onlyA.map((s) => nm2(CA, s)).join(" ")}] only red [${onlyB.map((s) => nm2(CB, s)).join(" ")}]`);
   }
 }
+const dch = arg("chain");
+if (dch !== undefined) for (const [C, tag] of [[CA, "full"], [CB, "red "]] as const) {
+  const nmS = (s: number): string => { const k = C.slotKind[s]; const r = C.slotRank[s]; return `${s}:${["xU", "xO", "jn", "cap", "seam"][k]}${k < 2 ? `x${r >> 2}.${r & 3}` : ""}`; };
+  const iv: string[] = [];
+  for (let i = 0; i < C.nIv; i++) if (C.ivPi[i] === +dch) iv.push(`${nmS(C.ivA[i])}->${nmS(C.ivB[i])} d${C.ivDiscard[i]} r${C.ivRegion[i]} len${C.ivLen[i].toFixed(3)}`);
+  console.log(`${tag} chain ${dch}: ` + iv.join(" | "));
+}
 const pA = A.pieces; const pB = B.pieces;
 console.log(`pieces ${pA.length}/${pB.length} regions ${A.regions.length}/${B.regions.length}`);
 for (let i = 0; i < Math.min(pA.length, pB.length); i++) {
   const p = pA[i]; const r = pB[i];
-  if (p.kind !== r.kind || p.chain !== r.chain || p.side !== r.side || p.corner !== r.corner || p.region !== r.region) { console.log(`first key diff piece ${i}: ${p.kind}/${p.chain}/${p.side}/${p.corner}/${p.region} vs ${r.kind}/${r.chain}/${r.side}/${r.corner}/${r.region}`); break; }
+  if (p.kind !== r.kind || p.chain !== r.chain || p.side !== r.side || p.corner !== r.corner || p.region !== r.region) {
+    console.log(`first key diff piece ${i}: ${p.kind}/${p.chain}/${p.side}/${p.corner}/${p.region} vs ${r.kind}/${r.chain}/${r.side}/${r.corner}/${r.region}`);
+    for (const [st, tag] of [[stA, "full"], [stB, "red "]] as const) {
+      const dp = (st as any).piecesD?.[i]; const iv = dp && dp.interval >= 0 ? (st as any).intervalsD[dp.interval] : null;
+      const C = tag === "full" ? CA : CB;
+      if (iv) {
+        const a = C.dgSlot[iv.aSt]; const b = C.dgSlot[iv.bSt]; const fi: string[] = [];
+        for (let k = 0; k < C.nIv; k++) if (C.ivA[k] === a || C.ivB[k] === b) fi.push(`${C.ivA[k]}->${C.ivB[k]} d${C.ivDiscard[k]} r${C.ivRegion[k]}`);
+        console.log(`  ${tag} diagram interval ${dp.interval}: ${(st as any).stationsD[iv.aSt].key} -> ${(st as any).stationsD[iv.bSt].key} discard ${iv.discard}; slots ${a}(act ${C.stActive[a]}) -> ${b}(act ${C.stActive[b]}); frame ivs ${fi.join(", ")}`);
+      }
+    }
+    break;
+  }
 }
