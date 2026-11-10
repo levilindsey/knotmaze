@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1252.
+Next free ID: K1253.
 
 ## Waiting on Levi
 
@@ -511,20 +511,20 @@ Next free ID: K1252.
 - **K1240** · One outline for both looks and every junction consumer (Levi's sketch, 2026-11-06): offset-polyline borders,
   cuts and corner arcs in closed form from each frame; the border look strokes it, the filled look fills it. S1: a clean
   prototype beside the app, checked against form B and timed (Levi: "without all the tech debt"); notes.
-  - owner: nobody since 2026-11-09 12:28: waits on K1247 stage 2 (speed)
+  - owner: nobody since 2026-11-09 12:28: waits on K1247 stage 3 (speed, same file outline.ts)
   - branch: mainline; last commit: `abb5891d`
   - evidence: .claude/probes/K1240/proto/ (tracked builder and checks, s3_* to s3f_*, the s3f_claude_* checks and diagnostics, s3f_exact_s3dbase.ts, cmp_*.mjs); untracked in the main checkout: .claude/probes/K1240/s1_out/ to s3f_out/ (s3f_out/ holds the three Claude runs' checks_final*.txt (final6 the last) and logs, crops (capw5/), bench_final4a/b and bench_final6a/b.json, sweep.json, the consistent rows (move*c_, fresh0.5c_, s3dfresh*), Claude's re-run (cverify3_*), page results, and muse/ Muse's partial run); the worktree writes .claude/probes/K1240/out/s3f/
-  - next: K1247 stage 2 (agent on docs/design/K1247_s2_speed.md; def's frame 38 ms at abb5891d against 3). Then S3f round 4 as the brief's decisions after Handoff 3 list it (T crotches def B j3 j1 j151, g41_ring_tw42 j12's reflex round join, the stub corners, muse_default_tw at 0.1h); then the sweep's piece motion (25-112x the particles'), S4 and the Pixel p95. Levi, 2026-11-09: keep the redesign, no fallback to K1040's field. K1250 (a pulse's glow in a junction) is rechecked when the outline reaches the app
+  - next: K1247 stage 3 (agent on docs/design/K1247_s3_speed.md; def's frame 20.7 ms at 1346ad87 against 3). Then S3f round 4 as the brief's decisions after Handoff 3 list it (T crotches def B j3 j1 j151, g41_ring_tw42 j12's reflex round join, the stub corners, muse_default_tw at 0.1h); then the sweep's piece motion (25-112x the particles'), S4 and the Pixel p95. Levi, 2026-11-09: keep the redesign, no fallback to K1040's field. K1250 (a pulse's glow in a junction) is rechecked when the outline reaches the app
   - brief: `docs/design/K1240_s3f_fixed_pieces.md`
   - env: from the worktree, vite on a copy of .claude/probes/K1040/vite.private-cache.config.ts, ports 5980-5989; S3d's code for the baselines is proto/outline_s3d.ts (untracked), recreated by the one-line command in s3f_exact_s3dbase.ts's header
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: agent `a88fd0de163807829` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-09 15:06, 2 h cap ~17:06)
-  - branch: `worktree-agent-a88fd0de163807829`, worktree `.claude/worktrees/agent-a88fd0de163807829`; last commit: `86ca3a16`
-  - evidence: .claude/probes/K1240/proto/ (outline.ts; k1247c_final.ps1 every non-timing check, k1247c_coldwarm.ts, k1247c_time.ts the timing); stage 1: abb5891d, def 38 ms median against 3 (notes)
-  - next: Stage 2 speeds up K1240's outline itself (Levi, 2026-11-09: no fallback to the old GPU field). When the agent reports: Claude re-runs k1247c_final.ps1 and the timing under the lock on its last commit, merges, then K1240's S3f round 4
-  - brief: `docs/design/K1247_s2_speed.md`
+  - owner: agent `a59c008133b174d03` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-09 16:05, 2 h cap ~18:05)
+  - branch: `worktree-agent-a59c008133b174d03`, worktree `.claude/worktrees/agent-a59c008133b174d03`; last commit: `def7274a`
+  - evidence: .claude/probes/K1240/proto/ (outline.ts; k1247c_final.ps1 every non-timing check, k1247c_coldwarm.ts, k1247c_time.ts the timing, run_locked_k1247s2.ps1, the k1247s2_* profilers); stage 2: 1346ad87, def 20.7 ms median / 22.6 p95, bit-identical (K1247_s2_speed.md Handoff 1; Claude's locked re-run 20.67 / 20.48 ms, every check passing)
+  - next: Stage 3: corners (fewer steps, a better solve or proven warm starts), WASM for the hot loops, a segment grid for cuts; output within 1e-3 h of stage 2's (Claude's call: technical, not a look). When the agent reports: Claude re-runs k1247c_final.ps1 and the timing under the lock on its last commit, reads the faces log's distances against 1e-3 h, merges, then K1240's S3f round 4
+  - brief: `docs/design/K1247_s3_speed.md`
 
 ## Next, in order
 
@@ -2033,6 +2033,10 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K1249** · Cursive in the app: one glyph source in src/ (J3M's alphabet as data, one join rule, Hershey only
   for missing characters), with the K863 kit's checks as tracked tests. None of the 152 cursive commits since
   10-25 touches src/. Proposed to Levi 2026-11-07; after K1236 (notes).
+- **K1252** · Run the redesigned outline's frame() in the physics worker (K7), beside the sim: moves
+  outline.ts into src/, sends structure()'s tables once per diagram, adds the outline as flat typed arrays to
+  the snapshot. Off main's frame, not the worker's, so it complements K1247's gate
+  (docs/design/K1247_s2_speed.md Handoff 1, Route 5)
 
 ## Done
 
