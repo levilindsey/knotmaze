@@ -6508,10 +6508,10 @@ function tailFoot(p: Poly, lo: number, hi: number, x: number, y: number, out: Fl
   }
   out[0] = normS(p, bs); out[1] = Math.sqrt(best);
 }
-function tailAt(a: TailIn, l1: number, u: number, out: Float64Array, cen: Float64Array): number {
+function tailAt(a: TailIn, l1: number, u: number, out: Float64Array, cen: Float64Array, needCen = true): number {
   if (u <= l1) {
     const s = a.sT - a.dirE * u;
-    a.bp(s, out); pointAtInto(a.pE, s, cen);
+    a.bp(s, out); if (needCen) pointAtInto(a.pE, s, cen);
     return s;
   }
   pointAtInto(a.pE, a.endS, cen);
@@ -6524,7 +6524,7 @@ function tailAt(a: TailIn, l1: number, u: number, out: Float64Array, cen: Float6
   return a.endS;
 }
 function tailF(a: TailIn, l1: number, u: number): number {
-  const sE = tailAt(a, l1, u, tailPt, tailCen);
+  const sE = tailAt(a, l1, u, tailPt, tailCen, false);
   const h = a.h;
   const lo = a.dirX > 0 ? a.sRX - 2 * h : a.sRX - 6 * h;
   tailFoot(a.pX, lo, lo + 8 * h, tailPt[0], tailPt[1], tailFt);
@@ -6536,8 +6536,12 @@ function tailF(a: TailIn, l1: number, u: number): number {
   let ramp = 1;
   if (ad > a.LX) ramp = 0;
   else if (Number.isFinite(a.LcutX)) { let t = (ad - a.LcutX) / -h; t = t < 0 ? 0 : t > 1 ? 1 : t; ramp = t * t * (3 - 2 * t); }
+  // Callers read only f's sign, so a term at or below 0 settles it before
+  // the two depth lookups (r4 timing: same output, less piece emission).
+  const fR = 0.5 - ramp; if (!(fR > 0)) return fR;
+  const fW = (h - a.W - dF) / h; if (!(fW > 0)) return fW;
   const margin = a.zE(sE) - a.zt - a.zX(sF) + (a.zt * dF) / h;
-  return Math.min(0.5 - ramp, a.zt > 0 ? margin / a.zt : margin > 0 ? 1 : -1, (h - a.W - dF) / h);
+  return Math.min(fR, a.zt > 0 ? margin / a.zt : margin > 0 ? 1 : -1, fW);
 }
 const TAIL_N = 16;
 const TAIL_BISECT = 12;

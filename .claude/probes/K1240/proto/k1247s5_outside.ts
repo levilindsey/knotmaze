@@ -38,15 +38,20 @@ let worstRun = 0; let worstAt = "";
 for (const f of files) {
   const J = JSON.parse(readFileSync(join(dir, f), "utf8")) as { name: string; mult: number; table: Tb };
   const sc = sceneOf(J.name, J.mult);
-  const A = J.table; const B = frame(structure(sc), sc) as unknown as Tb; const h = A.h;
+  // K1240 r4: tails (1a8732b0) are new pieces master lacks; compare the rest
+  // (tails come after them, so indices hold).
+  const A = J.table; const B0 = frame(structure(sc), sc) as unknown as Tb; const h = A.h;
+  const B = { ...B0, pieces: B0.pieces.filter((p) => (p as { kind: string }).kind !== "tail") } as Tb;
   const key = (p: Pc): string => `${p.kind}|${p.chain}|${p.side}|${p.corner}|${p.region}`;
   let keyDiff = A.pieces.length === B.pieces.length ? 0 : -1;
   if (keyDiff === 0) for (let i = 0; i < A.pieces.length; i++) if (key(A.pieces[i]) !== key(B.pieces[i])) keyDiff++;
-  let runCurve = 0; let runAt = -1; let runWhere = ""; let runIn = 0; let runEnd = 0; let ptsDiff = 0;
+  let runCurve = 0; let runAt = -1; let runWhere = ""; let runIn = 0; let runEnd = 0; let ptsDiff = 0; let passedDiff = 0;
   if (keyDiff === 0) for (let i = 0; i < A.pieces.length; i++) {
     const a = A.pieces[i]; const b = B.pieces[i];
     if (a.kind !== "run") continue;
     if (a.pts.length !== b.pts.length) ptsDiff++;
+    // K1240 r4: a passed run draws no points now (master drew one).
+    if (!a.pts.length || !b.pts.length) { if (a.pts.length !== b.pts.length) passedDiff++; continue; }
     for (const [P, Q] of [[a.pts, b.pts], [b.pts, a.pts]]) for (let k = 0; k + 1 < P.length; k += 2) {
       const d = toPoly(P[k], P[k + 1], Q) / h; if (k > 0 && k + 2 < P.length && d > runIn) runIn = d; if (d > runCurve) { runCurve = d; runAt = i; runWhere = `${P === a.pts ? "master" : "new"} pt ${k / 2} of ${P.length / 2} (other ${Q.length / 2})`; }
     }
@@ -61,6 +66,6 @@ for (const f of files) {
   let rKey = A.regions.length === B.regions.length ? 0 : -1; let rPts = 0;
   if (rKey === 0) for (let i = 0; i < A.regions.length; i++) { if (rk(A.regions[i]) !== rk(B.regions[i])) rKey++; else if (A.regions[i].pts.length !== B.regions[i].pts.length) rPts++; }
   if (runCurve > worstRun) { worstRun = runCurve; worstAt = `${J.name} ${J.mult} piece ${runAt}`; }
-  console.log(`${J.name} ${J.mult}: pieces ${B.pieces.length} key diffs ${keyDiff}; runs: curve ${runCurve.toExponential(2)} h @${runAt} [${runWhere}] (interior points ${runIn.toExponential(2)} h), ends ${runEnd.toFixed(3)} h, point-count diffs ${ptsDiff}; faces ${A.faces.length}->${B.faces.length} keys ${fSame ? "same set" : "DIFFERENT SET"}, ${fIdx} index moves, ${fPts} point-count diffs; regions ${A.regions.length}->${B.regions.length} key diffs ${rKey}, point-count diffs ${rPts}; cuts ${A.cuts.length}->${B.cuts.length}`);
+  console.log(`${J.name} ${J.mult}: pieces ${B.pieces.length} key diffs ${keyDiff}; runs: curve ${runCurve.toExponential(2)} h @${runAt} [${runWhere}] (interior points ${runIn.toExponential(2)} h), ends ${runEnd.toFixed(3)} h, point-count diffs ${ptsDiff} (passed runs now empty ${passedDiff}); tails ${B0.pieces.length - B.pieces.length}; faces ${A.faces.length}->${B.faces.length} keys ${fSame ? "same set" : "DIFFERENT SET"}, ${fIdx} index moves, ${fPts} point-count diffs; regions ${A.regions.length}->${B.regions.length} key diffs ${rKey}, point-count diffs ${rPts}; cuts ${A.cuts.length}->${B.cuts.length}`);
 }
 console.log(`ALL: worst run curve distance ${worstRun.toExponential(2)} h (${worstAt})`);
