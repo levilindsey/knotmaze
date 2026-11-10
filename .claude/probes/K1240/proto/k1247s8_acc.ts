@@ -23,6 +23,7 @@ const doCycle = !process.argv.includes("--nocycle");
 const nList = +(arg("list") ?? 0);
 const armWin = arg("armwin"); // pad in h: keep every junction arm's window whole
 const armX = arg("armx"); // pad in h: keep whole the crossing that caps each arm's L (both chains)
+const armReach = +(arg("armreach") ?? Infinity); // h: keep only each arm's first armreach from its root
 const armXReach = +(arg("armxreach") ?? 6); // h past sR + dir L to look for that crossing
 const certR = arg("cert"); // R in h: certify on the still scene (restore within R of each failing piece)
 const certBar = +(arg("certbar") ?? 0.2); // px, the certification's own bar
@@ -88,7 +89,7 @@ for (const name of names) {
   const still = load(name);
   const S = still.camera.pxPerUnit * 2; const h = still.look.halfWidth;
   const armsFull = armWin === undefined && armX === undefined ? null : buildOutlineFull(still).structure.arms;
-  let keepRanges = armWin === undefined ? undefined : armRanges(armsFull!, +armWin * h);
+  let keepRanges = armWin === undefined ? undefined : armRanges(armsFull!, +armWin * h, armReach * h);
   if (armX !== undefined) keepRanges = armCrossRanges(still, armsFull!, +armX * h, armXReach * h, keepRanges);
   const sel = { keepRanges, eps: epsPx / S, win: winH * h, winJ: optW(winJ, h), winX: optW(winX, h), winD: optW(winD, h), maxSeg: maxSegH > 0 ? maxSegH * h : Infinity, keepShort: shortH * h };
   let certNote = "";
@@ -123,4 +124,4 @@ for (const name of names) {
     report(agg, `; worst frame ${worstF}`);
   }
 }
-console.log(`eps ${epsPx} px, short ${shortH} h, win ${winH} h (j ${winJ ?? "-"} x ${winX ?? "-"} d ${winD ?? "-"}), maxseg ${maxSegH} h, armwin ${armWin ?? "-"}, armx ${armX ?? "-"}, cert ${certR ?? "-"} h at ${certBar} px: points ${totKept}/${totFull} (${(totKept / totFull * 100).toFixed(1)}%); worst ${worstAll.toFixed(3)} px; ${fails ? `${fails} FAILURES` : `ALL WITHIN ${barPx} px`}`);
+console.log(`eps ${epsPx} px, short ${shortH} h, win ${winH} h (j ${winJ ?? "-"} x ${winX ?? "-"} d ${winD ?? "-"}), maxseg ${maxSegH} h, armwin ${armWin ?? "-"} reach ${armReach}, armx ${armX ?? "-"}, cert ${certR ?? "-"} h at ${certBar} px: points ${totKept}/${totFull} (${(totKept / totFull * 100).toFixed(1)}%); worst ${worstAll.toFixed(3)} px; ${fails ? `${fails} FAILURES` : `ALL WITHIN ${barPx} px`}`);

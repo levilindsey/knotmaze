@@ -270,12 +270,13 @@ export function certifyKeep(scene: SceneIn, o: SelectOpts, c: CertOpts, run: (sc
 
 /** The junction arms' windows [sR, sR + dir L] (outline.ts's corner walks
  *  and feet stay inside them), padded by `pad` world units each way, from a
- *  full build of `scene` (at structure time). */
-export function armRanges(arms: { pi: number; sR: number; dir: number; L: number }[], pad: number): Map<number, [number, number][]> {
+ *  full build of `scene` (at structure time). `reach` (world units) keeps
+ *  only the arm's first `reach` from the root (the corner's own stretch). */
+export function armRanges(arms: { pi: number; sR: number; dir: number; L: number }[], pad: number, reach = Infinity): Map<number, [number, number][]> {
   const m = new Map<number, [number, number][]>();
   for (const a of arms) {
     if (!Number.isFinite(a.L) || !Number.isFinite(a.sR)) continue;
-    const e = a.sR + a.dir * a.L;
+    const e = a.sR + a.dir * Math.min(a.L, reach);
     const r: [number, number] = [Math.min(a.sR, e) - pad, Math.max(a.sR, e) + pad];
     let l = m.get(a.pi); if (!l) { l = []; m.set(a.pi, l); } l.push(r);
   }
