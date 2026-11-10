@@ -368,11 +368,11 @@ Next free ID: K1271.
   and a JSON looks list into a summary and sheets. Stages 3a-3c merged
   (737ac58..9ab8a01); rounds 2026-10-14, 14b and 14c are done (14c
   merged 772e48a..e1c2a80).
-  - owner: nobody since 2026-11-10 01:31 (merged; agent `a73409f4087ce2eae` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `b4710f37`
-  - evidence: .claude/probes/rounds/2026-11-10/ (outputs untracked); earlier rounds in .claude/probes/rounds/2026-11-09/ and 2026-11-09b/
-  - next: Round 2026-11-10 merged (b4710f37; handoff in docs/design/K156.md): K8 rp=sdf render sync measured, K307's restart check not due (Chrome not restarted), K268 census 28/31 under one framing. Next phone window: K307's restart check if Chrome restarted, K268's beacon c100 still, K8 once its gap search is cheaper
-  - brief: docs/design/K156.md (Round 2026-11-10)
+  - owner: agent `acaae08c83107d0cb` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (sonnet, started 2026-11-10 02:57, 1 h cap ~03:57)
+  - branch: `worktree-agent-acaae08c83107d0cb`, worktree `.claude/worktrees/agent-acaae08c83107d0cb`; last commit: `cbb13665`
+  - evidence: .claude/probes/rounds/2026-11-10b/ (outputs untracked)
+  - next: Round 2026-11-10b (started 2026-11-10 02:57): K8's fix (48c21b94) timed on the phone, K307's restart check, K268's beacon c100 still. When it reports: Claude views the crops, files K8/K307/K268, merges the handoff
+  - brief: docs/design/K156.md (Round 2026-11-10b)
   - env: the phone on its charger, reached over adb 5555 through Tailscale (`adb connect`; not the desktop's USB, Levi 2026-11-02); the pass builds and serves both builds itself (ports 5480-5489); nobody else uses the phone during the pass (K234)
 - **K268** · Shaped crossing gaps under thread reveal (K76; Levi, 2026-10-14):
   no gap until the over thread is seen, a dynamic gap for a stub's overlap and
