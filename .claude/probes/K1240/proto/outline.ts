@@ -4834,27 +4834,30 @@ function regionSeqEmit(C: FCache, pi: number, side: number, fromIdx: number, toI
   if (nPts === 0) return 0;
   const XY = B.xy;
   let ns = 0;
-  const emit = (fi: number): void => {
-    const x = XY[2 * fi]; const y = XY[2 * fi + 1];
-    const l = pts.length;
-    if (l >= 2) { const dx = pts[l - 2] - x; const dy = pts[l - 1] - y; if (dx * dx + dy * dy < 1e-24) return; }
-    pts.push(x, y);
-  };
   if (!C.polys[pi].closed) {
-    if (forward) { for (let i = fromIdx; i <= toIdx; i++) { emit(i); if (i < toIdx) segOut[ns++] = i; } }
-    else { for (let i = fromIdx; i >= toIdx; i--) { emit(i); if (i > toIdx) segOut[ns++] = i - 1; } }
+    if (forward) { for (let i = fromIdx; i <= toIdx; i++) { pushDedup(pts, XY[2 * i], XY[2 * i + 1]); if (i < toIdx) segOut[ns++] = i; } }
+    else { for (let i = fromIdx; i >= toIdx; i--) { pushDedup(pts, XY[2 * i], XY[2 * i + 1]); if (i > toIdx) segOut[ns++] = i - 1; } }
     return ns;
   }
   const mod = Math.max(1, nPts - 1);
   let fi = ((fromIdx % mod) + mod) % mod;
   const ti = ((toIdx % mod) + mod) % mod;
   if (forward) {
-    for (let guard = 0; guard <= mod; guard++) { emit(fi); if (fi === ti) break; segOut[ns++] = fi; fi = (fi + 1) % mod; }
+    for (let guard = 0; guard <= mod; guard++) { pushDedup(pts, XY[2 * fi], XY[2 * fi + 1]); if (fi === ti) break; segOut[ns++] = fi; fi = (fi + 1) % mod; }
   } else {
-    for (let guard = 0; guard <= mod; guard++) { emit(fi); if (fi === ti) break; const sg = (fi - 1 + mod) % mod; segOut[ns++] = sg; fi = sg; }
+    for (let guard = 0; guard <= mod; guard++) { pushDedup(pts, XY[2 * fi], XY[2 * fi + 1]); if (fi === ti) break; const sg = (fi - 1 + mod) % mod; segOut[ns++] = sg; fi = sg; }
   }
   return ns;
 }
+// Append (x, y) unless it repeats the last point (K1247 s2: was a closure
+// per call in regionSeqEmit and per region in regionsPhaseC).
+function pushDedup(pts: number[], x: number, y: number): void {
+  const l = pts.length;
+  if (l >= 2) { const dx = pts[l - 2] - x; const dy = pts[l - 1] - y; if (dx * dx + dy * dy < 1e-24) return; }
+  pts.push(x, y);
+}
+// The left border's segment list while the right one fills C.seqSeg.
+let kfSegL = new Int32Array(1024);
 interface FaceWorkF { owner: number; group: number; rid: number; sx: number; sy: number; depth: number }
 function regionsPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): { regions: OutlineRegion[]; faces: OutlineFace[] } {
   const depthWin = C.depthWindow * C.ctrlArc;
@@ -4926,35 +4929,30 @@ function regionsPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): { regio
     const A = C.ivA[i]; const B = C.ivB[i];
     const p = C.polys[pi];
     const pts: number[] = [];
-    const pushPt = (x: number, y: number): void => {
-      const l = pts.length;
-      if (l >= 2) { const dx = pts[l - 2] - x; const dy = pts[l - 1] - y; if (dx * dx + dy * dy < 1e-24) return; }
-      pts.push(x, y);
-    };
     const BdL = C.bords[pi * 2];
-    if (C.seqSeg.length < BdL.nf + 1) { C.seqSeg = new Int32Array((BdL.nf + 1) * 2); C.seqIdx = new Int32Array((BdL.nf + 1) * 2); }
-    const nsL = regionSeqEmit(C, pi, 1, refFinalOf(C.stLeft[A]), refFinalOf(C.stLeft[B]), true, pts, C.seqSeg);
-    const segL = C.seqSeg.slice(0, nsL);
+    if (kfSegL.length < BdL.nf + 1) kfSegL = new Int32Array((BdL.nf + 1) * 2);
+    const segL = kfSegL;
+    const nsL = regionSeqEmit(C, pi, 1, refFinalOf(C.stLeft[A]), refFinalOf(C.stLeft[B]), true, pts, segL);
     const capBInfo = C.capInfoOfSlot[B];
     if (capBInfo >= 0 && C.slotKind[B] === 3) {
       const ax = C.capArcX[capBInfo]; const ay = C.capArcY[capBInfo];
-      for (let q = 1; q + 1 < C.capArcN[capBInfo]; q++) pushPt(ax[q], ay[q]);
+      for (let q = 1; q + 1 < C.capArcN[capBInfo]; q++) pushDedup(pts, ax[q], ay[q]);
     }
     const BdR = C.bords[pi * 2 + 1];
     if (C.seqSeg.length < BdR.nf + 1) { C.seqSeg = new Int32Array((BdR.nf + 1) * 2); C.seqIdx = new Int32Array((BdR.nf + 1) * 2); }
-    const nsR = regionSeqEmit(C, pi, -1, refFinalOf(C.stRight[B]), refFinalOf(C.stRight[A]), false, pts, C.seqSeg);
-    const segR = C.seqSeg.subarray(0, nsR);
+    const segR = C.seqSeg;
+    const nsR = regionSeqEmit(C, pi, -1, refFinalOf(C.stRight[B]), refFinalOf(C.stRight[A]), false, pts, segR);
     const capAInfo = C.capInfoOfSlot[A];
     if (capAInfo >= 0 && C.slotKind[A] === 3) {
       const ax = C.capArcX[capAInfo]; const ay = C.capArcY[capAInfo];
-      for (let q = C.capArcN[capAInfo] - 2; q >= 1; q--) pushPt(ax[q], ay[q]);
+      for (let q = C.capArcN[capAInfo] - 2; q >= 1; q--) pushDedup(pts, ax[q], ay[q]);
     }
     if (pts.length >= 2 && Math.hypot(pts[0] - pts[pts.length - 2], pts[1] - pts[pts.length - 1]) < 1e-12) pts.length -= 2;
     if (pts.length / 2 < 3) continue;
     const rid = regions.length;
     C.ivRegion[i] = rid;
-    for (let q = 0; q < segL.length; q++) BdL.segReg[segL[q]] = rid;
-    for (let q = 0; q < segR.length; q++) BdR.segReg[segR[q]] = rid;
+    for (let q = 0; q < nsL; q++) BdL.segReg[segL[q]] = rid;
+    for (let q = 0; q < nsR; q++) BdR.segReg[segR[q]] = rid;
     const grp = memberGroupC(C, pi, C.ivCMid[i]);
     regions.push({ id: rid, ownerChain: pi, group: grp, pts, pieces: [], hole: false });
     pointAtInto(p, C.ivCMid[i], ptScratch);
