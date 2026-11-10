@@ -368,10 +368,10 @@ Next free ID: K1267.
   and a JSON looks list into a summary and sheets. Stages 3a-3c merged
   (737ac58..9ab8a01); rounds 2026-10-14, 14b and 14c are done (14c
   merged 772e48a..e1c2a80).
-  - owner: agent `a73409f4087ce2eae` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (sonnet, started 2026-11-10 01:00, 1 h cap ~02:00)
-  - branch: `worktree-agent-a73409f4087ce2eae`, worktree `.claude/worktrees/agent-a73409f4087ce2eae`; last commit: `953c9034`
+  - owner: nobody since 2026-11-10 01:31 (merged; agent `a73409f4087ce2eae` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `b4710f37`
   - evidence: .claude/probes/rounds/2026-11-10/ (outputs untracked); earlier rounds in .claude/probes/rounds/2026-11-09/ and 2026-11-09b/
-  - next: Round 2026-11-10 (phone, the night of 2026-11-09): K8's rp=sdf render sync and look shots now that the gaps draw (0f4c8233), K307's restart check if Chrome's GPU process restarted on its own, K268's census with one framing in both modes; when it reports, Claude views the shots, files the items, merges
+  - next: Round 2026-11-10 merged (b4710f37; handoff in docs/design/K156.md): K8 rp=sdf render sync measured, K307's restart check not due (Chrome not restarted), K268 census 28/31 under one framing. Next phone window: K307's restart check if Chrome restarted, K268's beacon c100 still, K8 once its gap search is cheaper
   - brief: docs/design/K156.md (Round 2026-11-10)
   - env: the phone on its charger, reached over adb 5555 through Tailscale (`adb connect`; not the desktop's USB, Levi 2026-11-02); the pass builds and serves both builds itself (ports 5480-5489); nobody else uses the phone during the pass (K234)
 - **K268** · Shaped crossing gaps under thread reveal (K76; Levi, 2026-10-14):
@@ -380,7 +380,7 @@ Next free ID: K1267.
   - owner: nobody since 2026-10-15 11:22 (stage 3a's agent `a5d9b049e72746ad2` of claude session 05e60da0 finished; merged 11:26, worktree on K161's sweep list). Stage 2's agent `a42c63c2db0401edb` (session d8031183): worktree swept; stage 1's `ab65d913a3b9a3dcb` is left, locked by the live Claude process (K161); branches kept
   - branch: mainline; last commit: `19d97f1` (K430 ramp; G3-1 93a231f before it)
   - evidence: `.claude/probes/K268/stage3a/` (census3a.mjs, 31/31 on master; sheet3a.mjs; the k76_probe.mjs copy with the bit-exact view wait; `out/`); `.claude/probes/K268/stage2/`; stage 1's beside it
-  - next: Round 2026-11-09b ran the census under cam=fit on the phone (aca6b86a): 20/31. Its clip shots had been blind there (a clip capture fires a resize that re-solves every slot; fixed with captureBeyondViewport false in that round's copy; round 2026-11-09's census was blind too). ONES restore, hidden over cuts and hidden-class now pass (re-shoot noise). SOLID (0/5) and FADING (4/5) joints can't be judged under fit: with the reveal on, fit frames only the revealed thread, so mode on/off read two framings (inferred, not tested). Next: a probe-side view pin shared by both modes (or follow settled past its ~10 s spring tail), then judge the joints, the hidden fan, the 18161 px attribution residue, visitAll and PROOF's 0 shaped slots; carry the clip fix into every census copy and check whether the desktop census's clip shots also resize (if so, re-run its 22/31 baseline). Evidence .claude/probes/rounds/2026-11-09b/k268/
+  - next: Phone census 2026-11-10 (b4710f37, census3a_phone.mjs): 28/31 under one framing (cam=follow, 12 s after each toggle, bit-exact view), repeated bit for bit. SOLID and FADING joints, gap keeping, the hidden fan and the attribution residue pass; PROOF exercises 16 shaped slots. Left: PROOF's ghost/in-between checks fail only on the beacon look at c100 (449 ghosts; cause unknown, needs a still), visitAll differs 1 blue level in 1 px; a desktop rerun with the clip fix and the toggle wait (carry both into every census copy)
   - brief: `docs/design/K268.md`, Stage 3a handoff (2026-10-15 11:35), For the next stage
 - **K7** · Physics in a Web Worker with render-side interpolation (K28; Levi's
   calls K302). Stages 1-7 merged: the worker is the default (stage 6, call F6), `&phw=0` runs
@@ -400,7 +400,7 @@ Next free ID: K1267.
   - owner: nobody since 2026-10-15 05:39 (stage 2 done; agent `a11d7ce60428b687d` of claude session d8031183, worktree removed by the K161 sweep 2026-10-15, branch kept)
   - branch: mainline; last commit: `a7e199e` (stage 3 late enable)
   - evidence: `.claude/probes/K307/` (stage 1's tools and traces; `stage2/`: `trace_intro.mjs`, `run_s2.ps1`, batches 1-7, `runs/`, two A/B builds, `k366_firsttap.mjs`); the throwaway branch `k307-proto` (d1aefae), never merged; lore `.claude/rules/render-shaders.md` ("THE WARM-UP")
-  - next: Phone measured 2026-11-09 (K156 round): a Chrome program-cache miss costs ~0.1 s of first visible (1.097 s cold, 1.009 s warm; the desktop 3.27 / 0.80 s), no eviction after six salted program sets (~78 programs), DrDc presents through the warm-up's wait (swaps every ~16.7 ms from 494 ms). Left: the restart check at the next phone window (confirm Chrome's GPU process started after the planted salt p1109a, then load ?daily&snd=none traced with k307\salt_p1109a.js: 0 translates = persisted, ~21 = not); optionally a driver-cold first visit, which needs Chrome's data cleared on Levi's phone (Levi's call). Evidence .claude/probes/rounds/2026-11-09/k307/
+  - next: Restart check still open: on 2026-11-10 Chrome's browser and GPU process had started 2026-11-09 20:20:21, before salt p1109a (22:07:41), so nothing ran. At the next phone window read the start time first, and run the traced load (?daily&snd=none with k307\salt_p1109a.js: 0 translates = persisted, ~21 = not) only if it is later. Never restart Chrome on the phone. Optionally a driver-cold first visit (Levi's call). Evidence .claude/probes/rounds/2026-11-09/k307/
   - brief: `docs/design/K307_intro_freezes.md`, "Stage 2 handoff" and "K385" (the mechanism and the plan)
 - **K8** · G3: SDF ribbons drawn from one shared sample texture
   (`docs/design/G3G4_sdf_geometry.md`). G3-0 merged (ebdae8c..b11747e): the four G3
@@ -408,7 +408,7 @@ Next free ID: K1267.
   - owner: nobody since 2026-11-10 00:58 (merged; agent `a452c354b4fd872ce` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
   - branch: mainline; last commit: `0f4c8233`
   - evidence: .claude/probes/K8/sdf_gaps/ (probe scripts tracked; crops untracked in .claude/worktrees/agent-a452c354b4fd872ce/.claude/probes/K8/sdf_gaps/out/crops/), test/render/sdf_gap_bind.test.ts; Handoff 1 in docs/design/K8_sdf_gaps.md
-  - next: rp=sdf's crossing gaps merged (0f4c8233; Claude viewed the 4x crops: every crossing cut, both paths): it never drew them (the gap test got the arc length for the turn since K832, and the vertex saw only a chain's first 16 windows); one quad per pixel fixed the stepped rims. Same-state pairs on knot gs 24 and dense: only 1-2 px edge lines; the default path 0 px. Next: the phone's rp=sdf look and render-sync numbers (K156's round), then Levi's look, then G3-3 (the SDF default flip); K1265, K1266
+  - next: Phone 2026-11-10 (K156 round, b4710f37): with the gaps drawn, rp=sdf costs +131 to +171 ms render sync (dense 109->280, max fabric 284->423, knot gs 24 31->163 ms; gapless rp=sdf was near the default), no GL error. The cost is the per-pixel gap search, so G3-3 (the default flip) and Levi's look wait on a cheaper search. Crops (.claude/probes/rounds/2026-11-10/sdf/sdf/, main checkout): gaps cut on all three links, but the 464 px shots are coarse; a full-resolution pair settles every crossing. Then K1265, K1266
   - brief: `docs/design/K8_sdf_gaps.md`
 - **K5** · Split `main.ts` and `ribbon_renderer.ts` along K1-K3's data lines, with seams so G3 becomes a module
   swap; K6 rides it (`docs/design/K5_K6_split.md`, calls K377). Merged M1-M4 (`src/app/`: camera, frame_loop,
