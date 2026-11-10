@@ -19,10 +19,12 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1251.
+Next free ID: K1252.
 
 ## Waiting on Levi
 
+- **K1251** · J3n's looks (K863): b, v and w exit a little lower; f's and p's word-end tails shorter and
+  flatter. J3n, its variant or a mix (card docs/asks/K1251.md)
 - **K867** · Plain-HTTP links (no AudioWorklet) fall back to the legacy synth, which played out of
   tune. Muse's in-tune voice is parked at 5ae5a1d1, awaiting Levi's timbre verdict (cherry-pick or
   drop); its 5319 server stopped with Muse, so re-serve it with `scripts/preview.ps1` (ledger_notes).
@@ -306,10 +308,10 @@ Next free ID: K1251.
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
   Levi to edit instead of drawing all 26 (Levi, 2026-10-26). Muse's prototype parked at abc135e7.
-  - owner: agent `a3cab4505b6b75ecb` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-09 14:28, 2 h cap ~16:28)
-  - branch: `worktree-agent-a3cab4505b6b75ecb`, worktree `.claude/worktrees/agent-a3cab4505b6b75ecb`; last commit: `42d4c9f7`
-  - evidence: .claude/probes/K863/trace/work38/ and out38/png/ (main checkout, untracked); NOTES.md's K863 J3n entry; J3m's work37/ and out37/
-  - next: J3n reports; Claude views its crops against J3M and Levi's words, then a card for Levi
+  - owner: nobody since 2026-11-09 15:27: J3n done (agent a3cab4505b6b75ecb, claude session 09c7a672-a414-402a-97da-b3176839a2e5), waits on Levi's pick (K1251)
+  - branch: mainline; last commit: `15cb9922`
+  - evidence: kit .claude/probes/K863/trace/work38/ (tools, cand/J3N, cand/J3NV, NOTES_k863n.md, crops/v2_*), out38/png/ (sheets: font | v6.8 | J3M | J3n | variant), NOTES.md entry 'K863 J3n'
+  - next: Levi picks J3n, its variant or a mix on K1251 (docs/asks/K1251.md); the pick becomes the kit's build (work38/cand/J3N or J3NV)
   - brief: `docs/design/K863_cursive_j3n.md`
 - **K114** · Gameplay round 2, designed in
   `docs/design/K80_gameplay_additions.md` section R: burn race, cut
