@@ -2808,6 +2808,7 @@ interface FCache {
   insB: number[]; insSeg: number[]; insT: number[]; insX: number[]; insY: number[]; insRef: number[];
   refB: Int32Array; refFinal: Int32Array; refS: Float64Array; refS0: Float64Array; nRef: number;
   junctionRegion: Int32Array; polyBox: Float64Array; cornerByAArm: Int32Array;
+  chainSlots: number[][]; chainPiRank: number[];
   offAx: Float64Array; offAy: Float64Array; offBx: Float64Array; offBy: Float64Array;
   bendArr: Float64Array[]; bendN: Int32Array; bendStamp: Int32Array;
   // corner results + warm state
@@ -3060,6 +3061,7 @@ function buildFastCache(st: DiagramStructure, scene: SceneIn): FCache {
     refB: new Int32Array(1024), refFinal: new Int32Array(1024), refS: new Float64Array(1024), refS0: new Float64Array(1024), nRef: 0,
     junctionRegion: new Int32Array(Math.max(1, scene.junctions.length)).fill(-1), polyBox: new Float64Array(Math.max(1, nCh * 4)),
     cornerByAArm: new Int32Array(Math.max(1, nArms)).fill(-1),
+    chainSlots: polys.map(() => []), chainPiRank: polys.map(() => Infinity),
     offAx: new Float64Array(Math.max(4, ...st.nPts) + 4), offAy: new Float64Array(Math.max(4, ...st.nPts) + 4),
     offBx: new Float64Array(Math.max(4, ...st.nPts) + 4), offBy: new Float64Array(Math.max(4, ...st.nPts) + 4),
     bendArr: polys.map((pp) => new Float64Array(2 * (pp.x.length + 2))), bendN: new Int32Array(nCh), bendStamp: new Int32Array(nCh),
@@ -4764,12 +4766,42 @@ function borderSeqCounted(C: FCache, pi: number, side: number, fromIdx: number, 
   return { n, ns };
 }
 
+/** Emit one border sequence's points into pts (the builder's dedupe),
+ *  recording segment indices into segOut; returns the segment count. */
+function regionSeqEmit(C: FCache, pi: number, side: number, fromIdx: number, toIdx: number, forward: boolean, pts: number[], segOut: Int32Array): number {
+  const B = C.bords[pi * 2 + (side === 1 ? 0 : 1)];
+  const nPts = B.nf;
+  if (nPts === 0) return 0;
+  const XY = B.xy;
+  let ns = 0;
+  const emit = (fi: number): void => {
+    const x = XY[2 * fi]; const y = XY[2 * fi + 1];
+    const l = pts.length;
+    if (l >= 2) { const dx = pts[l - 2] - x; const dy = pts[l - 1] - y; if (dx * dx + dy * dy < 1e-24) return; }
+    pts.push(x, y);
+  };
+  if (!C.polys[pi].closed) {
+    if (forward) { for (let i = fromIdx; i <= toIdx; i++) { emit(i); if (i < toIdx) segOut[ns++] = i; } }
+    else { for (let i = fromIdx; i >= toIdx; i--) { emit(i); if (i > toIdx) segOut[ns++] = i - 1; } }
+    return ns;
+  }
+  const mod = Math.max(1, nPts - 1);
+  let fi = ((fromIdx % mod) + mod) % mod;
+  const ti = ((toIdx % mod) + mod) % mod;
+  if (forward) {
+    for (let guard = 0; guard <= mod; guard++) { emit(fi); if (fi === ti) break; segOut[ns++] = fi; fi = (fi + 1) % mod; }
+  } else {
+    for (let guard = 0; guard <= mod; guard++) { emit(fi); if (fi === ti) break; const sg = (fi - 1 + mod) % mod; segOut[ns++] = sg; fi = sg; }
+  }
+  return ns;
+}
 interface FaceWorkF { owner: number; group: number; rid: number; sx: number; sy: number; depth: number }
 function regionsPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): { regions: OutlineRegion[]; faces: OutlineFace[] } {
   const depthWin = C.depthWindow * C.ctrlArc;
   // Active stations per chain, sorted by (cS, creation rank).
-  const perChain: number[][] = C.polys.map(() => []);
-  const piRank: number[] = C.polys.map(() => Infinity);
+  const perChain: number[][] = C.chainSlots;
+  const piRank: number[] = C.chainPiRank;
+  for (let pi = 0; pi < C.nCh; pi++) { perChain[pi].length = 0; piRank[pi] = Infinity; }
   for (let s = 0; s < C.nSlots; s++) {
     if (!C.stActive[s]) continue;
     const pi = C.slotPi[s];
@@ -4840,18 +4872,18 @@ function regionsPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): { regio
       pts.push(x, y);
     };
     const BdL = C.bords[pi * 2];
-    const left = borderSeqCounted(C, pi, 1, refFinalOf(C.stLeft[A]), refFinalOf(C.stLeft[B]), true);
-    const segL = C.seqSeg.slice(0, left.ns);
-    for (let q = 0; q < left.n; q++) { const fi = C.seqIdx[q]; pushPt(BdL.xy[2 * fi], BdL.xy[2 * fi + 1]); }
+    if (C.seqSeg.length < BdL.nf + 1) { C.seqSeg = new Int32Array((BdL.nf + 1) * 2); C.seqIdx = new Int32Array((BdL.nf + 1) * 2); }
+    const nsL = regionSeqEmit(C, pi, 1, refFinalOf(C.stLeft[A]), refFinalOf(C.stLeft[B]), true, pts, C.seqSeg);
+    const segL = C.seqSeg.slice(0, nsL);
     const capBInfo = C.capInfoOfSlot[B];
     if (capBInfo >= 0 && C.slotKind[B] === 3) {
       const ax = C.capArcX[capBInfo]; const ay = C.capArcY[capBInfo];
       for (let q = 1; q + 1 < C.capArcN[capBInfo]; q++) pushPt(ax[q], ay[q]);
     }
     const BdR = C.bords[pi * 2 + 1];
-    const right = borderSeqCounted(C, pi, -1, refFinalOf(C.stRight[B]), refFinalOf(C.stRight[A]), false);
-    const segR = C.seqSeg.slice(0, right.ns);
-    for (let q = 0; q < right.n; q++) { const fi = C.seqIdx[q]; pushPt(BdR.xy[2 * fi], BdR.xy[2 * fi + 1]); }
+    if (C.seqSeg.length < BdR.nf + 1) { C.seqSeg = new Int32Array((BdR.nf + 1) * 2); C.seqIdx = new Int32Array((BdR.nf + 1) * 2); }
+    const nsR = regionSeqEmit(C, pi, -1, refFinalOf(C.stRight[B]), refFinalOf(C.stRight[A]), false, pts, C.seqSeg);
+    const segR = C.seqSeg.subarray(0, nsR);
     const capAInfo = C.capInfoOfSlot[A];
     if (capAInfo >= 0 && C.slotKind[A] === 3) {
       const ax = C.capArcX[capAInfo]; const ay = C.capArcY[capAInfo];
