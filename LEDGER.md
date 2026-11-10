@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1265.
+Next free ID: K1267.
 
 ## Waiting on Levi
 
@@ -405,10 +405,10 @@ Next free ID: K1265.
 - **K8** · G3: SDF ribbons drawn from one shared sample texture
   (`docs/design/G3G4_sdf_geometry.md`). G3-0 merged (ebdae8c..b11747e): the four G3
   tables, capture/restore, `scripts/bench_frame.mjs`; no visual change.
-  - owner: agent `a452c354b4fd872ce` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-09 23:43, 2 h cap ~01:43)
-  - branch: `worktree-agent-a452c354b4fd872ce`, worktree `.claude/worktrees/agent-a452c354b4fd872ce`; last commit: `a145be26`
-  - evidence: .claude/probes/K8/sdf_gaps/ (the agent's probes and crops); Claude's desktop crop .claude/probes/rounds/2026-11-09/sdf/desktop/crop4x_knot24_base_sdf.png
-  - next: Bisect rp=sdf's missing crossing gaps from K832 4b02e2dc and fix them on the SDF path, default path unchanged (docs/design/K8_sdf_gaps.md). When it reports: Claude views the crops, merges, then the phone's rp=sdf render sync and Levi's look (G3-3 waits on both). Measured without gaps (round 2026-11-09, ABBA): +12.0 / +19.8 / +17.9 ms render sync (dense / max fabric / knot gs 24). G3-1 stays (Levi, K892); never beside an R stage, K268 item 4 or another GPU measurement
+  - owner: nobody since 2026-11-10 00:58 (merged; agent `a452c354b4fd872ce` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `0f4c8233`
+  - evidence: .claude/probes/K8/sdf_gaps/ (probe scripts tracked; crops untracked in .claude/worktrees/agent-a452c354b4fd872ce/.claude/probes/K8/sdf_gaps/out/crops/), test/render/sdf_gap_bind.test.ts; Handoff 1 in docs/design/K8_sdf_gaps.md
+  - next: rp=sdf's crossing gaps merged (0f4c8233; Claude viewed the 4x crops: every crossing cut, both paths): it never drew them (the gap test got the arc length for the turn since K832, and the vertex saw only a chain's first 16 windows); one quad per pixel fixed the stepped rims. Same-state pairs on knot gs 24 and dense: only 1-2 px edge lines; the default path 0 px. Next: the phone's rp=sdf look and render-sync numbers (K156's round), then Levi's look, then G3-3 (the SDF default flip); K1265, K1266
   - brief: `docs/design/K8_sdf_gaps.md`
 - **K5** · Split `main.ts` and `ribbon_renderer.ts` along K1-K3's data lines, with seams so G3 becomes a module
   swap; K6 rides it (`docs/design/K5_K6_split.md`, calls K377). Merged M1-M4 (`src/app/`: camera, frame_loop,
@@ -1719,6 +1719,10 @@ Every other item below waits on the trigger it names.
 - **K1264** · The end tails (K1240 round 4, b1930378) cost def +1.8 ms in piece emission (piecesCapsEtc 1.44
   -> 3.2 ms): f at 17 grid points per tail, each a foot walk over 8h of the other arm. Rule a tail out per
   corner before the scan, or fewer points under a conservative test (K1240_s3f_round4.md handoff)
+- **K1265** · rp=sdf at max fabric has no same-state pair: it never sleeps, so its pages froze in different
+  states. Restore one captured state on both pages (captureScene / restoreScene) and pair them (K8 Handoff 1)
+- **K1266** · rp=sdf: where a curve folds tighter than the ribbon's half-width, two quads may still both draw
+  a hair-thin strip; sdf_gap_bind.test.ts checks only for holes there (K8 Handoff 1)
 
 ## Approved, to schedule (2026-10-11)
 
