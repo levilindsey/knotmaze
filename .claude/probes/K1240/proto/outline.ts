@@ -6741,6 +6741,36 @@ function tailFoot(p: Poly, lo: number, hi: number, x: number, y: number, out: Fl
   out[0] = normS(p, bs); out[1] = Math.sqrt(best);
 }
 const TAIL_SMOOTH_FOOT = (process.env.K11_SF ?? "1") === "1";
+// K1247 s11: the foot's normal is taken at the scale of the tail's distance, not of a
+// segment. (Q - P(s)) . T_w(s) = 0 with T_w the chord P(s + w) - P(s - w): a circle's
+// chord is parallel to its midpoint tangent, so curvature does not bias it, while noise
+// of size d on the centerline tilts it by d / w, not d / (segment length). Secant steps
+// from tailFoot's root; if they leave +-w of it, the root stays.
+const TAIL_FOOT_W = Number(process.env.K11_FW ?? 0.5);
+const tailWa = new Float64Array(4); const tailWb = new Float64Array(4);
+function tailFootG(p: Poly, s: number, w: number, x: number, y: number): number {
+  pointAtInto(p, s - w, tailWa); pointAtInto(p, s + w, tailWb);
+  const tx = tailWb[0] - tailWa[0]; const ty = tailWb[1] - tailWa[1];
+  const l = Math.sqrt(tx * tx + ty * ty);
+  pointAtInto(p, s, tailWa);
+  return l > 1e-12 ? ((x - tailWa[0]) * tx + (y - tailWa[1]) * ty) / l : 0;
+}
+function tailFootWide(p: Poly, w: number, x: number, y: number, out: Float64Array): void {
+  if (!(w > 0) || p.nseg <= 0 || !Number.isFinite(out[1])) return;
+  const s0 = out[0];
+  const clampS = (s: number): number => (p.closed ? s : s < 0 ? 0 : s > p.len ? p.len : s);
+  let sa = s0; let ga = tailFootG(p, sa, w, x, y);
+  let sb = clampS(sa + ga); let gb = tailFootG(p, sb, w, x, y);
+  for (let it = 0; it < 8 && Math.abs(gb) > 1e-9 * (w + 1); it++) {
+    const den = gb - ga; if (Math.abs(den) < 1e-15) break;
+    let step = (-gb * (sb - sa)) / den;
+    if (step > 0.5 * w) step = 0.5 * w; else if (step < -0.5 * w) step = -0.5 * w;
+    sa = sb; ga = gb; sb = clampS(sb + step); gb = tailFootG(p, sb, w, x, y);
+  }
+  if (!(Math.abs(sb - s0) <= w) || Math.abs(gb) > 1e-6 * (w + 1)) return;
+  pointAtInto(p, sb, tailWa);
+  out[0] = normS(p, sb); out[1] = Math.hypot(x - tailWa[0], y - tailWa[1]);
+}
 const tailTa = new Float64Array(2); const tailTb = new Float64Array(2);
 /** The unit tangent at vertex k of p: the mean of its segments' unit directions. (The
  *  circle's tangent, each direction weighted by the other segment's length, scored worse:
@@ -6781,6 +6811,7 @@ function tailF(a: TailIn, l1: number, u: number, floor: number): number {
   const h = a.h;
   const lo = a.dirX > 0 ? a.sRX - 2 * h : a.sRX - 6 * h;
   tailFoot(a.pX, lo, lo + 8 * h, tailPt[0], tailPt[1], tailFt);
+  if (TAIL_FOOT_W > 0) tailFootWide(a.pX, TAIL_FOOT_W * h, tailPt[0], tailPt[1], tailFt);
   const sF = tailFt[0]; const dF = tailFt[1];
   let ad = (sF - a.sRX) * a.dirX;
   const len = a.pX.len;
@@ -6802,6 +6833,7 @@ const TAIL_FN = 32;
 const TAIL_THETA = Number(process.env.K11_TH ?? 0.1);
 const TAIL_LOF = Number(process.env.K11_LOF ?? 0.5);
 const TAIL_BLEND = 0.5;
+const TAIL_SIGN = process.env.K11_EXT === "sign";
 const tailFv = new Float64Array(TAIL_FN + 1);
 const tailLv = new Float64Array(TAIL_FN + 3);
 // K1247 s9 probe: f's terms along a tail (k1247s9_tail.ts), for corner tailDbg.ci.
@@ -6810,6 +6842,7 @@ function tailTerms(a: TailIn, l1: number, u: number): number[] {
   const sE = tailAt(a, l1, u, tailPt, tailCen, false); const h = a.h;
   const lo = a.dirX > 0 ? a.sRX - 2 * h : a.sRX - 6 * h;
   tailFoot(a.pX, lo, lo + 8 * h, tailPt[0], tailPt[1], tailFt);
+  if (TAIL_FOOT_W > 0) tailFootWide(a.pX, TAIL_FOOT_W * h, tailPt[0], tailPt[1], tailFt);
   const sF = tailFt[0]; const dF = tailFt[1];
   let ad = (sF - a.sRX) * a.dirX; const len = a.pX.len;
   if (a.pX.closed && len > 0) { ad %= len; if (ad > len / 2) ad -= len; if (ad < -len / 2) ad += len; }
@@ -6834,6 +6867,33 @@ export function endTailPts(a: TailIn, pts: number[], cpts: number[]): void {
   // are linear in c between sample values, so the midpoint rule per sub-band is exact.
   // An end moves by at most (the stretch's change) x (the share of the band it spans),
   // and as max f falls to cLo the tail shrinks to the point at the max, then is empty.
+  if (TAIL_SIGN) {
+    const cut = (u0: number, u1: number, posAt1: boolean): number => {
+      let lo = u0; let hi = u1;
+      for (let it = 0; it < 12; it++) { const m = 0.5 * (lo + hi); const pos = tailF(a, l1, m, -Infinity) > 0; if (pos === posAt1) hi = m; else lo = m; }
+      return posAt1 ? hi : lo;
+    };
+    a.bp(a.sT, tailPt); const oX = a.x0 - tailPt[0]; const oY = a.y0 - tailPt[1];
+    const push1 = (u: number): void => {
+      if (u === 0) { pointAtInto(a.pE, a.sT, tailCen); pts.push(a.x0, a.y0); cpts.push(tailCen[0], tailCen[1]); return; }
+      tailAt(a, l1, u, tailPt, tailCen);
+      let t = 1 - u / (TAIL_BLEND * a.h); t = t < 0 ? 0 : t; const w = t * t * (3 - 2 * t);
+      pts.push(tailPt[0] + oX * w, tailPt[1] + oY * w); cpts.push(tailCen[0], tailCen[1]);
+    };
+    let i = 0; let prevU = 0;
+    if (!(tailF(a, l1, 0, -Infinity) > 0)) {
+      for (i = 1; i <= TAIL_N; i++) { const u = (U * i) / TAIL_N; if (tailF(a, l1, u, -Infinity) > 0) break; prevU = u; }
+      if (i > TAIL_N) return;
+      prevU = cut(prevU, (U * i) / TAIL_N, true);
+    }
+    push1(prevU);
+    for (i = Math.max(1, i); i <= TAIL_N; i++) {
+      const u = (U * i) / TAIL_N; if (u <= prevU) continue;
+      if (!(tailF(a, l1, u, -Infinity) > 0)) { push1(cut(prevU, u, false)); return; }
+      push1(u); prevU = u;
+    }
+    return;
+  }
   const cLo = -TAIL_LOF * TAIL_THETA;
   let fMax = cLo;
   for (let k = 0; k <= TAIL_FN; k++) { const f = tailF(a, l1, (U * k) / TAIL_FN, cLo); tailFv[k] = f; if (f > fMax) fMax = f; }
@@ -6865,6 +6925,7 @@ export function endTailPts(a: TailIn, pts: number[], cpts: number[]): void {
   }
   if (!(sw > 0)) return;
   const uA = sa / sw; const uE = se / sw;
+  if (process.env.K11_DBG && tailDbg.cur === tailDbg.ci && tailDbg.ci >= 0) console.error(`tail dbg U ${(U / a.h).toFixed(4)} uA ${(uA / a.h).toFixed(4)} uE ${(uE / a.h).toFixed(4)} fMax ${fMax.toFixed(4)} cHi ${cHi.toFixed(4)} l1 ${(l1 / a.h).toFixed(4)} fv ${Array.from(tailFv).map((v) => v.toFixed(3)).join(",")}`);
   // K1247 s10: the tail leaves the corner's point (x0, y0), which a fallback corner offsets
   // off the border, and blends into the border over TAIL_BLEND h, so a tail whose margin
   // crosses zero near u = 0 draws a point at (x0, y0), not a connector to the border that
