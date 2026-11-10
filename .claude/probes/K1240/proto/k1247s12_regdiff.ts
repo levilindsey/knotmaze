@@ -51,6 +51,17 @@ if (dch !== undefined) for (const [C, tag] of [[CA, "full"], [CB, "red "]] as co
   console.log(`${tag} chain ${dch}: ` + iv.join(" | "));
 }
 const pA = A.pieces; const pB = B.pieces;
+const dpc = arg("piece");
+if (dpc !== undefined) {
+  const i = +dpc; const p = pA[i]; const r = pB[i];
+  const f = (q: any): string => { const n = q.pts.length / 2; const s: string[] = []; for (let k = 0; k < n; k++) s.push(`${(q.pts[2 * k] * S).toFixed(2)},${(q.pts[2 * k + 1] * S).toFixed(2)}`); return `n${n} [${s.join(" ")}]`; };
+  console.log(`piece ${i} ${p.kind}/${p.chain}/${p.side}/${p.corner}/${p.region} full ${f(p)}`);
+  console.log(`piece ${i} ${r.kind}/${r.chain}/${r.side}/${r.corner}/${r.region} red  ${f(r)}`);
+  for (const [st, tag] of [[stA, "full"], [stB, "red "]] as const) {
+    const C = tag === "full" ? CA : CB; const dp = (st as any).piecesD?.[i]; const iv = dp && dp.interval >= 0 ? (st as any).intervalsD[dp.interval] : null;
+    if (iv) console.log(`  ${tag} diagram interval ${dp.interval}: ${(st as any).stationsD[iv.aSt].key} -> ${(st as any).stationsD[iv.bSt].key}; slots ${C.dgSlot[iv.aSt]} -> ${C.dgSlot[iv.bSt]}`);
+  }
+}
 console.log(`pieces ${pA.length}/${pB.length} regions ${A.regions.length}/${B.regions.length}`);
 for (let i = 0; i < Math.min(pA.length, pB.length); i++) {
   const p = pA[i]; const r = pB[i];
