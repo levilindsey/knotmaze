@@ -3942,10 +3942,23 @@ function marginOfC(C: FCache, ai: number, ft: FFoot, cache: WalkCache): number {
   // test value moves by at most |q - q_cached| (unit tangents). Positions
   // it cannot certify (near its own foot) are tested as before, so the
   // walk's stop is the full walk's, bit for bit.
-  if (!cache.valid) { cache.valid = true; cache.fOk = false; cache.bOk = false; cache.mOk = false; }
+  if (!cache.valid) { cache.valid = true; cache.fOk = false; cache.bOk = false; cache.mOk = false; cache.cOk = false; }
   const nseg = pl.nseg; const closed = pl.closed;
   const U = closed && pl.len > 0 ? kFoot + nseg * Math.round(base / pl.len) : kFoot;
   const eps = 1e-9 * h;
+  // K1247 s7: the clear certificate. When both walks ran to the window's
+  // ends (no excluded window: the margin is +Infinity), every test value
+  // was at least cS. The walks from one foot (U, base) test the same
+  // segments, and a test value moves by at most |q - q_c| (unit
+  // tangents), so a later q from that foot within cS - eps of q_c passes
+  // every test too: same walks, same answer, without walking. Exact.
+  growStats.cCalls++;
+  if (kfClear && cache.cOk && cache.cU === U && cache.cB === base) {
+    growStats.cTry++;
+    const dq = Math.sqrt((x - cache.cQx) * (x - cache.cQx) + (y - cache.cQy) * (y - cache.cQy));
+    if (cache.cS - dq > eps) { growStats.cHits++; return Infinity; }
+  }
+  let fMin = Infinity; let bMin = Infinity;
   if (mwScr.length < nseg + 2) mwScr = new Float64Array(2 * (nseg + 2));
   const scr = mwScr;
   let hi = winHi;
@@ -3958,6 +3971,7 @@ function marginOfC(C: FCache, ai: number, ft: FFoot, cache: WalkCache): number {
     let it = 0;
     while (it <= nseg) {
       if (canJump && p >= 0 && p < cache.fN && cache.fSm[p] - delta > eps) {
+        if (cache.fSm[p] - delta < fMin) fMin = cache.fSm[p] - delta;
         it += cache.fN - p; k = cache.fK; bk = cache.fBk; p = cache.fN; canJump = false; full = false;
         if (it > nseg) break;
       }
@@ -3967,6 +3981,7 @@ function marginOfC(C: FCache, ai: number, ft: FFoot, cache: WalkCache): number {
       if (k2 >= nseg) { if (!closed) break; k2 = 0; b2 = bk + pl.len; }
       const dotF = GFm[k2] - (x * TXm[k2] + y * TYm[k2]);
       if (dotF < 0) { hi = sv; break; }
+      if (dotF < fMin) fMin = dotF;
       scr[nW++] = dotF;
       k = k2; bk = b2; p++; it++;
     }
@@ -3987,6 +4002,7 @@ function marginOfC(C: FCache, ai: number, ft: FFoot, cache: WalkCache): number {
     let it = 0;
     while (it <= nseg) {
       if (canJump && p >= 0 && p < cache.bN && cache.bSm[p] + delta < -eps) {
+        if (-(cache.bSm[p] + delta) < bMin) bMin = -(cache.bSm[p] + delta);
         it += cache.bN - p; k = cache.bK; bk = cache.bBk; p = cache.bN; canJump = false; full = false;
         if (it > nseg) break;
       }
@@ -3996,6 +4012,7 @@ function marginOfC(C: FCache, ai: number, ft: FFoot, cache: WalkCache): number {
       if (k2 < 0) { if (!closed) break; k2 = nseg - 1; b2 = bk - pl.len; }
       const dotB = GBm[k] - (x * TXm[k2] + y * TYm[k2]);
       if (dotB > 0) { lo = sv; break; }
+      if (-dotB < bMin) bMin = -dotB;
       scr[nW++] = dotB;
       k = k2; bk = b2; p++; it++;
     }
@@ -4006,6 +4023,7 @@ function marginOfC(C: FCache, ai: number, ft: FFoot, cache: WalkCache): number {
       cache.bOk = true; cache.bQx = x; cache.bQy = y; cache.bU0 = U; cache.bN = nW; cache.bK = k; cache.bBk = bk;
     }
   }
+  if (lo === winLo && hi === winHi) { growStats.cSets++; cache.cOk = true; cache.cU = U; cache.cB = base; cache.cQx = x; cache.cQy = y; cache.cS = fMin < bMin ? fMin : bMin; }
   const stopAt = dc - 0.05 * h;
   // K1247 s5: the margin certificate. The margin is 0 exactly when no point
   // of the excluded windows ([winLo, lo] and [hi, winHi]) is closer to q
@@ -4071,7 +4089,7 @@ export function setGrowUniform(n: number, e: number, z = kfGrowZ, mid = kfGrowMi
 export const growDbg: { ci: number; rows: number[][] } = { ci: -1, rows: [] };
 // K1247 s6: w at each growth node (raw, before the running min) of corner ci: [cf?, rho/h - 1, w, qx, qy, uA, uB, dA, dB].
 export const wDbg: { ci: number; rows: number[][] } = { ci: -1, rows: [] };
-export const growStats = { evals: 0, rejects: 0, corners: 0, steps: 0, fails: 0, mHits: 0, mMiss: 0, mNone: 0, mWin: 0 };
+export const growStats = { evals: 0, rejects: 0, corners: 0, steps: 0, fails: 0, mHits: 0, mMiss: 0, mNone: 0, mWin: 0, cCalls: 0, cTry: 0, cHits: 0, cSets: 0 };
 // K1247 s5: the predictor's foot hint. footNearM walks from its hint in
 // windows of h/32, so a long step's walk costs (foot travel) / (h/32)
 // windows; moving the hint along the foot's segment by q's tangential
@@ -4083,6 +4101,9 @@ export function setSegPred(b: boolean): void { kfSegPred = b; }
 // K1247 s5: marginOfC's certificate (exact) and how far past dc its
 // refreshing search looks, in h.
 let kfMCache = false; let kfMR = 0.5; // off: no gain, measured (handoff)
+// K1247 s7: marginOfC's clear certificate (exact; K1247_CLEAR=0 turns it off).
+let kfClear = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.K1247_CLEAR !== "0";
+export function setClearCert(on: boolean): void { kfClear = on; }
 export function setMarginCache(on: boolean, r = kfMR): void { kfMCache = on; kfMR = r; }
 function shiftFootC(C: FCache, arm: FArm, f: FFoot, mx: number, my: number): void {
   const p = C.polys[arm.pi]; let k = f.k;
@@ -6164,8 +6185,9 @@ interface WalkCache {
   fOk: boolean; fQx: number; fQy: number; fU0: number; fN: number; fK: number; fBk: number; fSm: Float64Array;
   bOk: boolean; bQx: number; bQy: number; bU0: number; bN: number; bK: number; bBk: number; bSm: Float64Array;
   mOk: boolean; mQx: number; mQy: number; mLo: number; mHi: number; mD0: number;
+  cOk: boolean; cU: number; cB: number; cQx: number; cQy: number; cS: number;
 }
-function mkWalkCache(): WalkCache { return { valid: false, oLo: NaN, oHi: NaN, fOk: false, fQx: 0, fQy: 0, fU0: 0, fN: 0, fK: 0, fBk: 0, fSm: new Float64Array(64), bOk: false, bQx: 0, bQy: 0, bU0: 0, bN: 0, bK: 0, bBk: 0, bSm: new Float64Array(64), mOk: false, mQx: 0, mQy: 0, mLo: 0, mHi: 0, mD0: 0 }; }
+function mkWalkCache(): WalkCache { return { valid: false, oLo: NaN, oHi: NaN, fOk: false, fQx: 0, fQy: 0, fU0: 0, fN: 0, fK: 0, fBk: 0, fSm: new Float64Array(64), bOk: false, bQx: 0, bQy: 0, bU0: 0, bN: 0, bK: 0, bBk: 0, bSm: new Float64Array(64), mOk: false, mQx: 0, mQy: 0, mLo: 0, mHi: 0, mD0: 0, cOk: false, cU: 0, cB: 0, cQx: 0, cQy: 0, cS: 0 }; }
 
 // x, y come in kfXY and the hint is out's own foot (s, k): no double crosses
 // the call boundary, so none is boxed (31.8k calls a frame on def).
