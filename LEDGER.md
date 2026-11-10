@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1280.
+Next free ID: K1283.
 
 ## Waiting on Levi
 
@@ -1753,6 +1753,15 @@ Every other item below waits on the trigger it names.
   handoff)
 - **K1276** · The K1240 prototype's `verify --ref` reads 48 failures that predate K1247 stage 14 (its
   handoff); not yet sorted into stale baselines and real ones
+- **K1280** · K1240 outline jumps in motion (K1247 s15): a station whose s crosses a centreline vertex jumps h
+  x the vertex's turn (def j47 chain 61 1.24 px, j146 chain 58 1.0 px), suspect borderPointAtBase/Final
+  interpolating by foot s (docs/design/K1247_s15_moved.md handoff)
+- **K1281** · K1240 outline: corner 191 at def j91 shimmers 0.33 px every ~3 frames through the whole settle
+  (its arc end moves 0.46 px along chain 67's border per 0.03 px of input); j67's region 2056 moves 2.5 px on
+  under 0.1 px, undiagnosed (K1247 s15 handoff)
+- **K1282** · K1240 outline draws faces in a depth order computed from positions (regionsPhaseC's sort by
+  depthAtC): near-equal depths swap between frames (14 faces, def settle 200-201), a decision from positions
+  against Levi's rule; overlap of swapped pairs unchecked (K1247 s15)
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2082,7 +2091,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   7); setupBorders is 5.0 of def's 19 ms frame (K1247_s7_cf_speed.md, Handoff 1)
 - **K1268** · K1247's 3 ms gate needs a lever past reduction (stage 8: 7.6 ms floor) and WASM (1.2-2x):
   recompute only what moved, per junction, with the outline's continuity bounding what a frame can change
-  (docs/design/K1247_s10_reduce.md)
+  (docs/design/K1247_s10_reduce.md). S15 measured it negative on def: no delta holds the bar while the outline jumps, and even continuous only 32-point blocks in every phase reach the p95 (s15 handoff)
 - **K1269** · K8 rp=sdf: a tighter trapezoid per segment (lever (a)), and an fw=0 bench_frame to time the SDF
   pass alone on dense and max fabric, where the desktop frame is CPU-bound (docs/design/K8_sdf_cost.md,
   Handoff 1)
