@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1269.
+Next free ID: K1271.
 
 ## Waiting on Levi
 
@@ -405,10 +405,10 @@ Next free ID: K1269.
 - **K8** · G3: SDF ribbons drawn from one shared sample texture
   (`docs/design/G3G4_sdf_geometry.md`). G3-0 merged (ebdae8c..b11747e): the four G3
   tables, capture/restore, `scripts/bench_frame.mjs`; no visual change.
-  - owner: agent `a6c9382c6e31ac415` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-10 01:35, 2 h cap ~03:35)
-  - branch: `worktree-agent-a6c9382c6e31ac415`, worktree `.claude/worktrees/agent-a6c9382c6e31ac415`; last commit: `6704319e`
-  - evidence: .claude/probes/K8/ (sdf_gaps tools), scripts/bench_frame.mjs
-  - next: Cost stage (started 2026-11-10 01:36): bench_frame on the desktop at a145be26 and each of 0f4c8233's three commits to find where rp=sdf's gap cost comes from (phone +131 to +171 ms render sync), fix it with the gaps unchanged (crops, same-state pair). When it reports: Claude views the crops, merges; the next K156 round measures the phone
+  - owner: nobody since 2026-11-10 03:00 (cost stage done; agent a6c9382c6e31ac415 of claude session 09c7a672-a414-402a-97da-b3176839a2e5, merged)
+  - branch: mainline; last commit: `48c21b94`
+  - evidence: .claude/probes/K8/sdf_cost/ (matrix.ps1, ab.ps1, pass_cost.mjs, verify.ps1, crops.ps1; outputs untracked), .claude/probes/K8/sdf_gaps/, scripts/bench_frame.mjs
+  - next: Cost stage merged 48c21b94 (fix cc5606c6: bisector trapezoids, overdraw 6.9 -> 1.5): desktop rp=sdf knot gs 24 14.4 -> 11.15 ms (1.73x the default), dense 1.09x, max fabric 0.90x; gaps unchanged (crops viewed). K156 round 2026-11-10b times it on the phone; if knot gs 24 stays high, lever (b): skip the gap search in the vertex for segments far from any crossing
   - brief: `docs/design/K8_sdf_cost.md`
 - **K5** · Split `main.ts` and `ribbon_renderer.ts` along K1-K3's data lines, with seams so G3 becomes a module
   swap; K6 rides it (`docs/design/K5_K6_split.md`, calls K377). Merged M1-M4 (`src/app/`: camera, frame_loop,
@@ -1723,6 +1723,9 @@ Every other item below waits on the trigger it names.
 - **K1267** · Form B (src/render/field/) jumps under 0.01 px jitter where the outline no longer does (K1247 stage 9, ad313cd7):
   def corners 34/35 r 2.0 -> 0.765 h, muse_hash 105 3.325 -> 1.168 h, no V at g41_user_tw64 63/105. The outline keeps the
   fixes; port them only if form B stays the reference in motion (k1247s9_formb.ts; docs/design/K1247_s9_continuity.md)
+- **K1270** · Max fabric's weave shows a light blob inside one dark eye, (780,960) of a 2400x1350 shot, on the
+  default path and rp=sdf alike, so it predates K8's fix; not attributed
+  (.claude/probes/K8/sdf_cost/out/crops/maxfab_weave.png, untracked)
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2053,6 +2056,9 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K1268** · K1247's 3 ms gate needs a lever past reduction (stage 8: 7.6 ms floor) and WASM (1.2-2x):
   recompute only what moved, per junction, with the outline's continuity bounding what a frame can change
   (docs/design/K1247_s10_reduce.md)
+- **K1269** · K8 rp=sdf: a tighter trapezoid per segment (lever (a)), and an fw=0 bench_frame to time the SDF
+  pass alone on dense and max fabric, where the desktop frame is CPU-bound (docs/design/K8_sdf_cost.md,
+  Handoff 1)
 
 ## Done
 
