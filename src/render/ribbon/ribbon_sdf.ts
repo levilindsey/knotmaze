@@ -282,6 +282,12 @@ void main(void) {
   // any discard) from the own cone, which is the winning one wherever this
   // quad owns the pixel (below).
   float fwS = fwidth(0.5 - 0.5 * clamp(l1 / max(mix(vRadii.y, vRadii.z, t1), 1e-6), -1.0, 1.0));
+  // K8 (phone): the chain point's two fwidths here too, so no derivative
+  // follows a discard. A derivative after a discard keeps the discarded
+  // lanes alive as helpers (their quads must still feed it), and those
+  // lanes ride through the gap search below; with none after, a
+  // discarded quad can end where it discards.
+  vec2 kpt = kFragPoint(kc);
   // K8: ONE QUAD PER PIXEL. Neighbouring segment boxes overlap by R, so a
   // pixel was drawn by up to three quads and every partial alpha (the
   // gap's fade, the AA rim) compounded, 1 - (1 - a)^n: a narrow, hard
@@ -323,7 +329,6 @@ void main(void) {
   float side01 = 0.5 - 0.5 * clamp(lW / max(r, 1e-6), -1.0, 1.0);
   float vUVx = arc * 0.02;
   float pxArc = pxW * (abs(vDir.x) + abs(vDir.y));
-  vec2 kpt = kFragPoint(kc);
   if (uKBase.z > 0.5 && uKBase.z < 4.5) {
     float kv = uKBase.z < 1.5 ? kCtrlNear(kc, kpt.x, kpt.y) : kpt.x;
     finalColor = vec4(fract(kv), fract(kv * 16.0), float(kc.ch % 64) / 63.0, 1.0);

@@ -69,6 +69,8 @@ vec4 k8Out() {
       rep("win", /if \(m <= -pxW\) continue;/, (m) => m + " k8Win++;");
       rep("chunk", /int r = g\.w \+ k0 \* g\.y, i;/, (m) => m + " k8Chunk++;");
       rep("call", call, (m) => m + " if (k8Mode > 0) { finalColor = k8Out(); return; }");
+      // Mode 3: every RASTERIZED fragment, counted before any discard.
+      rep("raster", /float pxW = max\(max\(gfw\.x, gfw\.y\), 1e-5\);/, (m) => m + " if (k8Mode == 3) { finalColor = vec4(1.0, 1.0, 0.0, 0.0); return; }");
       st.tag.set(sh, kind);
       st.compiled.push({ kind, reps });
     }
@@ -301,6 +303,7 @@ async function run(browser, name, q) {
   await sleep(1500);
   const a = await page.evaluate(ACC, 1);
   const b = await page.evaluate(ACC, 2);
+  const c = await page.evaluate(ACC, 3);
   const walk = /rp=sdf/.test(q) ? await page.evaluate(WALK) : null;
   const meta = await page.evaluate(() => {
     const r = window.__knotRenderer();
@@ -319,6 +322,7 @@ async function run(browser, name, q) {
     fullPerFrag: per(b.ch[0].sum), chunksPerFrag: per(b.ch[1].sum), slotsPerFrag: per(b.ch[2].sum), protPerFrag: per(b.ch[3].sum),
     totals: { seg: a.ch[0].sum, full: b.ch[0].sum, chunk: b.ch[1].sum, slot: b.ch[2].sum, prot: b.ch[3].sum, win: a.ch[2].sum },
     draws: { counted: a.drawn, masked: a.masked }, accGlError: [a.glError, b.glError], errors, meta: { compiled: meta.compiled, glError: meta.glError, lost: meta.lost, lostEvents: meta.lostEvents },
+    raster: { frags: c.ch[0].sum, px: c.drawnPx, max: c.ch[0].max, perDrawnPx: +(c.ch[0].sum / Math.max(a.drawnPx, 1)).toFixed(3), perFrag: +(c.ch[0].sum / Math.max(a.ch[1].sum, 1)).toFixed(3), glError: c.glError },
     walk,
   };
   if (a.error || b.error) summary.accError = [a.error, b.error];
