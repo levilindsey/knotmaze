@@ -1,0 +1,11 @@
+import * as fs from "fs";
+const [a, b, f] = process.argv.slice(2);
+const A = JSON.parse(fs.readFileSync(`.claude/probes/K1240/out/${a}/${f}`, "utf8")); const B = JSON.parse(fs.readFileSync(`.claude/probes/K1240/out/${b}/${f}`, "utf8"));
+const tA = A.table ?? A; const tB = B.table ?? B;
+const rk = (r: any): string => `${r.ownerChain}|${r.group}|${r.hole}|${JSON.stringify(r.pts)}`;
+const setB = new Map<string, number>(); tB.regions.forEach((r: any, i: number) => setB.set(rk(r), i));
+const setA = new Map<string, number>(); tA.regions.forEach((r: any, i: number) => setA.set(rk(r), i));
+const bb = (p: number[]): string => { let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9; for (let i = 0; i < p.length; i += 2) { x0 = Math.min(x0, p[i]); x1 = Math.max(x1, p[i]); y0 = Math.min(y0, p[i + 1]); y1 = Math.max(y1, p[i + 1]); } return `[${x0.toFixed(2)},${y0.toFixed(2)}..${x1.toFixed(2)},${y1.toFixed(2)}]`; };
+let area = (p: number[]): number => { let s = 0; const n = p.length / 2; for (let i = 0; i < n; i++) { const j = (i + 1) % n; s += p[2 * i] * p[2 * j + 1] - p[2 * j] * p[2 * i + 1]; } return s / 2; };
+tA.regions.forEach((r: any, i: number) => { if (r.pts.length && !setB.has(rk(r))) console.log(`only base r${i} ch${r.ownerChain} g${r.group} n${r.pts.length / 2} ${bb(r.pts)} area ${area(r.pts).toFixed(4)}`); });
+tB.regions.forEach((r: any, i: number) => { if (r.pts.length && !setA.has(rk(r))) console.log(`only now  r${i} ch${r.ownerChain} g${r.group} n${r.pts.length / 2} ${bb(r.pts)} area ${area(r.pts).toFixed(4)}`); });
