@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1253.
+Next free ID: K1255.
 
 ## Waiting on Levi
 
@@ -511,7 +511,7 @@ Next free ID: K1253.
 - **K1240** · One outline for both looks and every junction consumer (Levi's sketch, 2026-11-06): offset-polyline borders,
   cuts and corner arcs in closed form from each frame; the border look strokes it, the filled look fills it. S1: a clean
   prototype beside the app, checked against form B and timed (Levi: "without all the tech debt"); notes.
-  - owner: nobody since 2026-11-09 12:28: waits on K1247 stage 3 (speed, same file outline.ts)
+  - owner: nobody since 2026-11-09 12:28: waits on K1247 stage 4 (speed, same file outline.ts)
   - branch: mainline; last commit: `abb5891d`
   - evidence: .claude/probes/K1240/proto/ (tracked builder and checks, s3_* to s3f_*, the s3f_claude_* checks and diagnostics, s3f_exact_s3dbase.ts, cmp_*.mjs); untracked in the main checkout: .claude/probes/K1240/s1_out/ to s3f_out/ (s3f_out/ holds the three Claude runs' checks_final*.txt (final6 the last) and logs, crops (capw5/), bench_final4a/b and bench_final6a/b.json, sweep.json, the consistent rows (move*c_, fresh0.5c_, s3dfresh*), Claude's re-run (cverify3_*), page results, and muse/ Muse's partial run); the worktree writes .claude/probes/K1240/out/s3f/
   - next: K1247 stage 3 (agent on docs/design/K1247_s3_speed.md; def's frame 20.7 ms at 1346ad87 against 3). Then S3f round 4 as the brief's decisions after Handoff 3 list it (T crotches def B j3 j1 j151, g41_ring_tw42 j12's reflex round join, the stub corners, muse_default_tw at 0.1h); then the sweep's piece motion (25-112x the particles'), S4 and the Pixel p95. Levi, 2026-11-09: keep the redesign, no fallback to K1040's field. K1250 (a pulse's glow in a junction) is rechecked when the outline reaches the app
@@ -520,11 +520,19 @@ Next free ID: K1253.
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: agent `a59c008133b174d03` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-09 16:05, 2 h cap ~18:05)
-  - branch: `worktree-agent-a59c008133b174d03`, worktree `.claude/worktrees/agent-a59c008133b174d03`; last commit: `def7274a`
-  - evidence: .claude/probes/K1240/proto/ (outline.ts; k1247c_final.ps1 every non-timing check, k1247c_coldwarm.ts, k1247c_time.ts the timing, run_locked_k1247s2.ps1, the k1247s2_* profilers); stage 2: 1346ad87, def 20.7 ms median / 22.6 p95, bit-identical (K1247_s2_speed.md Handoff 1; Claude's locked re-run 20.67 / 20.48 ms, every check passing)
-  - next: Stage 3: corners (fewer steps, a better solve or proven warm starts), WASM for the hot loops, a segment grid for cuts; output within 1e-3 h of stage 2's (Claude's call: technical, not a look). When the agent reports: Claude re-runs k1247c_final.ps1 and the timing under the lock on its last commit, reads the faces log's distances against 1e-3 h, merges, then K1240's S3f round 4
-  - brief: `docs/design/K1247_s3_speed.md`
+  - owner: agent `a441151101638a205` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-09 16:52, 2 h cap ~18:52)
+  - branch: `worktree-agent-a441151101638a205`, worktree `.claude/worktrees/agent-a441151101638a205`; last commit: `94de06fa`
+  - evidence: .claude/probes/K1240/proto/ (outline.ts; k1247c_final.ps1 every non-timing check, k1247c_coldwarm.ts, k1247c_time.ts the timing, run_locked_k1247s3.ps1, the k1247s2_*/k1247s3_* profilers, k1247s3_floor.ts the output-format floor); stage 3: 919a7bf1, def 18.4 ms bit-identical (K1247_s3_speed.md Handoff 1; Claude's locked A/B in one session: s3 18.3/18.2 ms vs s2 20.5/20.1, corners 6.6 vs 8.4)
+  - next: Stage 4: a cheaper corner solve (corners 6.7 -> 1 ms), output within 1e-3 h. The gate stays def with every chain moving (Claude, 2026-11-09: the load settle and agitation move every chain; a drag-only gate would hide them). When the agent reports: Claude re-runs k1247c_final.ps1 and an A/B timing under the lock, merges; then the flat output (K1254), with the WASM verdict (K1253) deciding whether the kernels port; K1240's S3f round 4 after
+  - brief: `docs/design/K1247_s4_corners.md`
+- **K1253** · Is WebAssembly faster than V8's JS on the redesigned outline's hottest kernel (footNearM, on
+  def's real inputs, matching answers, locked)? Decides whether K1247 ports its corner kernels
+  (docs/design/K1247_wasm_kernel.md)
+  - owner: agent `ac93d89bccb4b3372` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-09 16:52, 2 h cap ~18:52)
+  - branch: `worktree-agent-ac93d89bccb4b3372`, worktree `.claude/worktrees/agent-ac93d89bccb4b3372`; last commit: `94de06fa`
+  - evidence: .claude/probes/K1240/wasm/ (the agent's folder; reads proto/outline.ts)
+  - next: When the agent reports: Claude re-times the ratio under the lock, merges the probe; a port goes into a K1247 stage only if the batched ratio is clearly above 1.5x
+  - brief: `docs/design/K1247_wasm_kernel.md`
 
 ## Next, in order
 
@@ -764,6 +772,9 @@ Every other item below waits on the trigger it names.
   edges, and cross ji 65's, loop ji 64's and 106's dark edges, alike in 7474d09b, master and K1218 S6's
   branch; and x4 ji 101's violet sliver at the eye's upper left, in all three. Unattributed (K1218 S6's
   handoff, `docs/design/K1218_s6_swept_arcs.md`, sheets in its worktree's `s6/out/sheets/`).
+- **K1254** · K1240's outline writes one flat typed array plus offset tables for pieces, regions and faces,
+  with adapters for the checks. Today's shape alone costs 2 ms median / 5 ms p95 of K1247's 3 / 6 ms on def
+  (k1247s3_floor.ts: flat 1.2 / 1.3); it is also K1252's snapshot format. After K1247 stage 4 (same file)
 
 ## Residuals (known, not fixed)
 
