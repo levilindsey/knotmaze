@@ -522,12 +522,20 @@ Next free ID: K1250.
 - **K1240** · One outline for both looks and every junction consumer (Levi's sketch, 2026-11-06): offset-polyline borders,
   cuts and corner arcs in closed form from each frame; the border look strokes it, the filled look fills it. S1: a clean
   prototype beside the app, checked against form B and timed (Levi: "without all the tech debt"); notes.
-  - owner: nobody since 2026-11-07 13:06: S3f run 3 stopped at the coordinator's 13:00 wrap-up; Claude's week stands at 96% against Levi's 97% line, so nothing more starts until Muse's quota returns (2026-11-08 16:00 PT) or Claude's week resets (2026-11-09 11:00 PT)
+  - owner: nobody since 2026-11-09 12:28: waits on K1247's Muse run (Paseo 4e0bc745) in this item's worktree, then S3f round 4
   - branch: mainline; last commit: `7e54021f`
   - evidence: .claude/probes/K1240/proto/ (tracked builder and checks, s3_* to s3f_*, the s3f_claude_* checks and diagnostics, s3f_exact_s3dbase.ts, cmp_*.mjs); untracked in the main checkout: .claude/probes/K1240/s1_out/ to s3f_out/ (s3f_out/ holds the three Claude runs' checks_final*.txt (final6 the last) and logs, crops (capw5/), bench_final4a/b and bench_final6a/b.json, sweep.json, the consistent rows (move*c_, fresh0.5c_, s3dfresh*), Claude's re-run (cverify3_*), page results, and muse/ Muse's partial run); the worktree writes .claude/probes/K1240/out/s3f/
   - next: K1247 first (reordered 2026-11-07: speed is the open risk, and Levi's lane decision waits on it): a fast frame() that keeps today's frame() output within the checks' tolerances on every row, def <=3 ms median / <=6 ms p95 under the lock, starting from S3d's runtime frame (frameRt in proto/outline.ts; docs/design/K1240_s3d_cheap_frame.md); its brief is still to write. Then S3f round 4 as the brief's decisions after Handoff 3 list it (T crotches def B j3 j1 j151, g41_ring_tw42 j12's reflex round join, the stub corners, muse_default_tw at 0.1h); then the sweep's piece motion (25-112x the particles'), S4, Levi's lane decision and the Pixel p95
   - brief: `docs/design/K1240_s3f_fixed_pieces.md`
   - env: from the worktree, vite on a copy of .claude/probes/K1040/vite.private-cache.config.ts, ports 5980-5989; S3d's code for the baselines is proto/outline_s3d.ts (untracked), recreated by the one-line command in s3f_exact_s3dbase.ts's header
+- **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
+  7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
+  (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
+  - owner: agent `4e0bc745` of muse session 01a1c1ff-1c73-75f2-a7ea-8a5aefb9634d (muse-wonder-1.0, started 2026-11-09 12:28, 2 h cap ~14:28)
+  - branch: `detached`, worktree `.claude/worktrees/muse-k1240-s1`; last commit: `e527828b`
+  - evidence: .claude/probes/K1240/proto/ (outline.ts, k1247_* scripts); untracked outputs in the worktree's .claude/probes/K1240/out/k1247/
+  - next: Claude re-runs the Done checks on the run's final commit
+  - brief: `docs/design/K1247_fast_frame.md`
 
 ## Next, in order
 
@@ -1720,9 +1728,6 @@ Every other item below waits on the trigger it names.
   performance (def median 396 ms vs 3 ms target); per-spot app sheets beside fbb/today look need a stable
   world-point camera; border-band outside misses on close parallel threads; eye depth-tie path exercised only
   by construction.
-- **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
-  7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
-  (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
 - **K1248** · K1240 moving frames: S3e's structure() is the diagram and moved = fresh exactly, but frame() rebuilds the
   piece list (def 4373 -> 4330 at 0.5h) and parks covered pieces: moved fails 10/24 at 0.1h, 4/6 at 0.5h. S3f (K1240's
   handle) moves the piece list into structure() (`docs/design/K1240_s3f_fixed_pieces.md`; notes).
