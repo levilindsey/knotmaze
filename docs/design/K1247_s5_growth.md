@@ -329,7 +329,7 @@ certificate is 0.8 ms slower than today, because its block-box scan over the who
 than the walks it skips. So a margin bound for the next stage has to replace the half-plane walks,
 once per corner or once per piece.
 
-**A CPU profile corrects one number (19:50).** `k1247s5_prof_sum.cjs` and `k1247s5_prof_split.cjs`
+**A CPU profile corrects one number (19:48).** `k1247s5_prof_sum.cjs` and `k1247s5_prof_split.cjs`
 read a `.cpuprofile` of `_s5bench`-style def in motion (100 µs sampling; the profile is
 `out/k1247s5/prof/def_motion_c7c9aac3.cpuprofile`). Walks only grows further than today, since no
 margin stops a corner, so it hid part of the window searches' cost. By the profile, the window searches
@@ -344,6 +344,8 @@ marginOfC's own 5.4%). That is about 0.4-0.5 ms, and the walks are the rest. The
 | addPointAtC and the phase's own code | 4.6% |
 
 Inside the growth: advanceToC 35%, wOfC 33% (86% of it marginOfC), refineC 26%. So the 0.7 ms
-outside the growth is mostly the V solve, about 0.8 ms on def. Its global foot per iteration is
-deliberate ("history must not pick a different root"), so speeding it up needs a cheaper exact global
-test, not a tracked foot.
+outside the growth is mostly the V solve, about 0.8 ms on def. A scratch count: def 0 runs 454 V
+solves (361 corners grow; the rest fall back) at 2.8 Newton loop passes each, def 0.5 runs 409 at 3.1,
+ring 0 runs 59 at 3.0. That is about 1.8 µs per solve, so roughly 300 ns per global foot. Its global
+foot per iteration is deliberate ("history must not pick a different root"), so speeding it up needs a
+cheaper exact global test, not a tracked foot.
