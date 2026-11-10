@@ -13,7 +13,7 @@ $jobs = @(
   @("knot24_center", 640, 400, "$o/fix_knot24_A.png", "$o/fix_knot24_B.png", "$o/xs_knot24_B.png"),
   @("knot24_border", 292, 40, "$o/fix_knot24_A.png", "$o/fix_knot24_B.png", "$o/xs_knot24_B.png"),
   @("dense_center", 640, 400, "$o/fix_dense_A.png", "$o/fix_dense_B.png", "$o/xs_dense_B.png"),
-  @("maxfab_weave", 400, 560, "$o/maxfab_fix_base.png", "$o/maxfab_fix_sdf.png", "$o/maxfab_master_sdf.png"),
+  @("maxfab_weave", 780, 960,"$o/maxfab_fix_base.png", "$o/maxfab_fix_sdf.png", "$o/maxfab_master_sdf.png"),
   @("maxfab_crumple", 700, 150, "$o/maxfab_fix_base.png", "$o/maxfab_fix_sdf.png", "$o/maxfab_master_sdf.png")
 )
 foreach ($j in $jobs) {
