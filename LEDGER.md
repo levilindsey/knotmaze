@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1264.
+Next free ID: K1265.
 
 ## Waiting on Levi
 
@@ -494,10 +494,10 @@ Next free ID: K1264.
 - **K1240** · One outline for both looks and every junction consumer (Levi's sketch, 2026-11-06): offset-polyline borders,
   cuts and corner arcs in closed form from each frame; the border look strokes it, the filled look fills it. S1: a clean
   prototype beside the app, checked against form B and timed (Levi: "without all the tech debt"); notes.
-  - owner: agent `a6b99b04c9c8fb2ef` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-09 23:17, 2 h cap ~01:17)
-  - branch: `worktree-agent-a6b99b04c9c8fb2ef`, worktree `.claude/worktrees/agent-a6b99b04c9c8fb2ef`; last commit: `df6216bd`
-  - evidence: .claude/probes/K1240/proto/ (outline.ts, s3f_claude_checks.ps1, s3f_exact_s3dbase.ts, cmp_s3f.mjs, k1247c_final.ps1, k1257_sliver.ts, k1247s5_pics.ts); untracked in the main checkout: .claude/probes/K1240/s1_out/ to s3f_out/ (S3f's runs, crops, baselines); the worktree writes .claude/probes/K1240/out/s3f/
-  - next: Round 4 (docs/design/K1240_s3f_round4.md): def B's T crotches j3 j1 j151, g41_ring_tw42 j12's reflex round join, the stub corners ring j4 j5 j7 j16 and user_tw42.lightpaper j29 j61, muse_default_tw at 0.1h; baseline S3d's code re-made against today's form B. When it reports: Claude re-runs the checks, views the crops, merges. Then the sweep's piece motion, S4 and the Pixel p95. Levi, 2026-11-09: keep the redesign, no fallback to K1040's field; K1040's open checks (pop census, fades in motion, check #13) and K1250 fold in when the outline reaches the app
+  - owner: nobody since 2026-11-10 00:25 (merged; agent `a6b99b04c9c8fb2ef` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `b1930378`
+  - evidence: .claude/probes/K1240/proto/ (outline.ts, s3f_claude_checks.ps1, s3f_exact_s3dbase.ts, cmp_s3f.mjs, s3f_claude_pics.ts, _r4_*.ts, k1247c_final.ps1, k1257_sliver.ts); round 4's crops and logs untracked in its worktree .claude/worktrees/agent-a6b99b04c9c8fb2ef/.claude/probes/K1240/out/s3f/ (r4*, checks_r4p4.txt); older runs in the main checkout's .claude/probes/K1240/s1_out/ to s3f_out/
+  - next: Round 4 merged (b1930378; Claude viewed the crops): end tails at def's T crotches (def B over2 11 -> 0, user_tw42.lightpaper B 23 -> 0, A 36 -> 6), j12's meet-fallback station pinned to the meet (g41_ring_tw42 A 6 -> 3), passed runs draw nothing (muse_default_tw 0.1h A 10 -> 5); every row within S3d's tolerance; def +1.8 ms (the tails, K1264). Next: K1247 stage 9 (corner continuity, the tails' first-interval jump with it), then K1264, K1258, muse_default_tw 0.1h's last points over 2 px (j110, j49, j94, j164; handoff), the sweep's piece motion, S4 and the Pixel p95. Levi, 2026-11-09: keep the redesign, no fallback to K1040's field; K1040's open checks (pop census, fades in motion, check #13) and K1250 fold in when the outline reaches the app
   - brief: `docs/design/K1240_s3f_round4.md`
   - env: from the worktree, vite on a copy of .claude/probes/K1040/vite.private-cache.config.ts, ports 5980-5989; S3d's code for the baselines is proto/outline_s3d.ts (untracked), recreated by the one-line command in s3f_exact_s3dbase.ts's header
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
@@ -1713,10 +1713,12 @@ Every other item below waits on the trigger it names.
   paper side of a corner arc, so an outline sample lying exactly on form B's edge reads 1-3.7 px instead of 0
   (def A, g41_def_tw64 A, def 0.5 A; master too). Fix it before those rows gate (from K1257; k1257_rowdiag.ts,
   K1257_formb_corners.md handoff)
-- **K1263** · k1247c_final.ps1's verify reads out/k1247c_base from the checkout that runs it (an agent
-  worktree fails until it copies the main checkout's), and its baselines and Muse's row baselines predate
-  stages 6-7's outline: re-make them so verify's 48 and the 3/3 row failures go back to 0 (K1247 stage 8's
-  Handoff 1)
+- **K1263** · k1247c_final.ps1's verify and row baselines predate stages 6-7's outline, and verify reads out/k1247c_base from the
+  checkout that runs it: re-make them so verify's 48 and the 3/3 row failures read 0 (K1247 stage 8's Handoff 1; stage 9
+  makes them first). Its steps exit 0 when verify or cmprows fail: make it exit nonzero
+- **K1264** · The end tails (K1240 round 4, b1930378) cost def +1.8 ms in piece emission (piecesCapsEtc 1.44
+  -> 3.2 ms): f at 17 grid points per tail, each a foot walk over 8h of the other arm. Rule a tail out per
+  corner before the scan, or fewer points under a conservative test (K1240_s3f_round4.md handoff)
 
 ## Approved, to schedule (2026-10-11)
 
