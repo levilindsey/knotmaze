@@ -1,7 +1,9 @@
 // K1247 s7: a paired A/B of one stage-7 knob in one process (rough, for
 // choosing; k1247c_time.ts under the lock is the measurement). Each round
 // runs def's 40-frame cycle with the knob off, then on (order alternating),
-// and reports the corners phase's per-round medians and the paired gain.
+// and reports the corners phase's per-round medians and the paired gain,
+// then, per frame, the fastest of the rounds averaged over the cycle (the
+// steadier number while other agents load the machine).
 //   node scripts/run_node.mjs .claude/probes/K1240/proto/k1247s7_ab.ts --knob=steep|clear|vhint|walk [--rounds=8]
 import { readFileSync } from "node:fs";
 import * as O from "./outline";
@@ -32,15 +34,21 @@ const cycle = [...fwd, ...fwd.slice(1, 20).reverse()];
 const med = (xs: number[]): number => { const s = [...xs].sort((a, b) => a - b); return s[Math.floor(s.length / 2)]; };
 for (const on of [false, true]) { set(on); for (const sc of cycle) O.frame(st, sc); }
 const off: number[] = []; const onv: number[] = []; const gain: number[] = [];
+// Per frame, the fastest of the rounds (preemption by other load only adds
+// time), summed over the cycle: the robust number on a loaded machine.
+const minOff = new Array<number>(cycle.length).fill(Infinity); const minOn = new Array<number>(cycle.length).fill(Infinity);
 for (let r = 0; r < rounds; r++) {
   const got: Record<string, number> = {};
   for (const on of r % 2 ? [true, false] : [false, true]) {
     set(on);
     const cor: number[] = [];
-    for (const sc of cycle) { const prof: Record<string, number> = {}; O.frame(st, sc, prof); cor.push(prof.corners ?? NaN); }
+    const mins = on ? minOn : minOff;
+    cycle.forEach((sc, i) => { const prof: Record<string, number> = {}; O.frame(st, sc, prof); const c = prof.corners ?? NaN; cor.push(c); if (c < mins[i]) mins[i] = c; });
     got[on ? "on" : "off"] = med(cor);
   }
   off.push(got.off); onv.push(got.on); gain.push(got.off - got.on);
   console.log(`round ${r}: corners off ${got.off.toFixed(3)} on ${got.on.toFixed(3)} gain ${(got.off - got.on).toFixed(3)} ms`);
 }
 console.log(`${knob}: corners off min ${Math.min(...off).toFixed(3)} med ${med(off).toFixed(3)}; on min ${Math.min(...onv).toFixed(3)} med ${med(onv).toFixed(3)}; paired gain med ${med(gain).toFixed(3)} ms`);
+const mean = (xs: number[]): number => xs.reduce((a, b) => a + b, 0) / xs.length;
+console.log(`${knob}: per-frame min over rounds, mean over the cycle: off ${mean(minOff).toFixed(3)} on ${mean(minOn).toFixed(3)} gain ${(mean(minOff) - mean(minOn)).toFixed(3)} ms`);
