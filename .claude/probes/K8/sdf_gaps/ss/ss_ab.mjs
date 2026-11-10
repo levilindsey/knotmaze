@@ -39,13 +39,13 @@ const PRELUDE = () => {
   };
 };
 
-async function openPage(browser, q) {
+async function openPage(browser, q, h = host) {
   const page = await browser.newPage();
   const errors = [];
   page.on("pageerror", (e) => errors.push(e.message));
   await page.evaluateOnNewDocument(PRELUDE);
   await page.setViewport({ width: W, height: H, deviceScaleFactor: 1 });
-  await page.goto(`${host}/?${q}`, { waitUntil: "load", timeout: 90000 });
+  await page.goto(`${h}/?${q}`, { waitUntil: "load", timeout: 90000 });
   await page.bringToFront();
   await page.mouse.move(1, 1);
   await page.waitForFunction(() => typeof window.__knotPerf === "function" && window.__knotRenderer && window.__knotRenderer(), { timeout: 90000, polling: 250 });
@@ -96,9 +96,11 @@ const GLCHECK = () => {
     pass: (() => { const r = window.__knotRenderer && window.__knotRenderer(); return r ? `${r.stripPass && r.stripPass.constructor.name}${r.rpFallback ? " (fallback)" : ""}` : null; })() };
 };
 
-async function shoot(browser, name, q) {
-  const { page, errors } = await openPage(browser, q);
-  const restMs = await waitAsleep(page);
+async function shoot(browser, name, q, h = host) {
+  const { page, errors } = await openPage(browser, q, h);
+  // env MAXREST: the sleep wait's cap in ms (max fabric never sleeps;
+  // past the cap the page is frozen where it stands, restMs -1)
+  const restMs = await waitAsleep(page, Number(process.env.MAXREST ?? 240000));
   const frozen = await page.evaluate(async () => (typeof window.__knotPhysFreeze === "function" ? await window.__knotPhysFreeze(true) : null));
   const dump = await page.evaluate(async () => (typeof window.__knotPhysDump === "function" ? await window.__knotPhysDump({}) : null));
   await page.evaluate(PIN);
@@ -171,7 +173,10 @@ const res = { tag, query };
 try {
   const A = await shoot(browser, "A", query);
   const A2 = await shoot(browser, "A2", query);
-  const B = await shoot(browser, "B", `${query}&rp=sdf`);
+  // env HOSTB / QB: B's build and link suffix (default: this build, &rp=sdf);
+  // HOSTB=<other build> QB=none is a cross-build check of the default path.
+  const qb = process.env.QB ?? "&rp=sdf";
+  const B = await shoot(browser, "B", `${query}${qb === "none" ? "" : qb}`, process.env.HOSTB ?? host);
   res.pages = { A: A.info, A2: A2.info, B: B.info };
   res.control = diff(A.img, A2.img, "control");
   res.pair = diff(A.img, B.img, "pair");
