@@ -5262,13 +5262,20 @@ function borderMeetC(C: FCache, ci: number, aiA: number, sideA: number, aiB: num
 
 /** K1247 s10: a "V outside spans" fallback's station fraction scale. The
  *  solve fails when the meet passes a span's far end, where the ok corner
- *  is the r = 0 V; scaling the fraction from 0 at the end to 1 at 0.5 h
+ *  is the r = 0 V; scaling the fraction from 0 at the end to 1 at SPAN_RAMP h
  *  past it keeps the stations continuous across that switch (a step of up
  *  to 0.5 h at a cut-limited arm before). eA, eB: the meet's distance past
- *  each arm's end; a meet past neither (behind a root) keeps the fraction. */
+ *  each arm's end; a meet past neither (behind a root) keeps the fraction.
+ *  A cut-limited end carries the reach's tangent noise (about 1 px at
+ *  shallow crossings under 0.01 px of jitter), which the ramp passes to the
+ *  station at (sR - sM) / width (g41_def_tw64 cyc18 run #164, 0.816 px).
+ *  A width of 0.75 h or h (form B's) quiets it but tips def's tail 17 into
+ *  the first-positive-stretch flip (5.8 px at 0.01 px of jitter), so 0.5 h
+ *  stays until tails stop deciding from the margin's sign. */
+const SPAN_RAMP = 0.5;
 function spanRamp(eA: number, eB: number, h: number): number {
   const e = Math.max(eA, eB);
-  return e > 0 ? Math.min(1, e / (0.5 * h)) : 1;
+  return e > 0 ? Math.min(1, e / (SPAN_RAMP * h)) : 1;
 }
 
 function cornerFallbackC(C: FCache, st: DiagramStructure, scene: SceneIn, ci: number, aiA: number, aiB: number, sideA: number, sideB: number, th: number): void {
@@ -6736,6 +6743,7 @@ function tailF(a: TailIn, l1: number, u: number): number {
 }
 const TAIL_N = 16;
 const TAIL_BISECT = 12;
+const TAIL_BLEND = 0.5;
 // K1247 s9 probe: f's terms along a tail (k1247s9_tail.ts), for corner tailDbg.ci.
 export const tailDbg: { ci: number; cur: number; rows: number[][] } = { ci: -1, cur: -1, rows: [] };
 function tailTerms(a: TailIn, l1: number, u: number): number[] {
@@ -6766,10 +6774,16 @@ export function endTailPts(a: TailIn, pts: number[], cpts: number[]): void {
     }
     return posAt1 ? hi : lo;
   };
+  // K1247 s10: the tail leaves the corner's point (x0, y0), which a fallback corner offsets
+  // off the border, and blends into the border over TAIL_BLEND h, so a tail whose margin
+  // crosses zero near u = 0 draws a point at (x0, y0), not a connector to the border that
+  // comes and goes with the margin's sign.
+  a.bp(a.sT, tailPt); const offX = a.x0 - tailPt[0]; const offY = a.y0 - tailPt[1];
   const push = (u: number): void => {
     if (u === 0) { pointAtInto(a.pE, a.sT, tailCen); pts.push(a.x0, a.y0); cpts.push(tailCen[0], tailCen[1]); return; }
     tailAt(a, l1, u, tailPt, tailCen);
-    pts.push(tailPt[0], tailPt[1]); cpts.push(tailCen[0], tailCen[1]);
+    let t = 1 - u / (TAIL_BLEND * a.h); t = t < 0 ? 0 : t; const w = t * t * (3 - 2 * t);
+    pts.push(tailPt[0] + offX * w, tailPt[1] + offY * w); cpts.push(tailCen[0], tailCen[1]);
   };
   let i = 0;
   let prevU = 0;
