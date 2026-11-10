@@ -78,14 +78,8 @@ describe("K8 one SDF quad per pixel", () => {
       const n: V = [d0[0] + d1[0], d0[1] + d1[1]];
       return Math.hypot(n[0], n[1]) > 1e-4 ? unit(n) : d1;
     };
-    // an open wavy polyline, spacing 0.09 (SAMP's), radius 0.3, turns up
-    // to ~30 degrees per sample
-    const P: V[] = [];
-    for (let i = 0; i < 60; i++) {
-      const s = i * 0.09;
-      P.push([s, 0.5 * Math.sin(s * 2.1) + 0.2 * Math.sin(s * 5.3)]);
-    }
     const r = 0.3;
+    const census = (P: V[]) => {
     const R = r + 0.03;
     const pxW = 0.013;
     const oe = 2e-3 * pxW + 1e-5;
@@ -107,7 +101,15 @@ describe("K8 one SDF quad per pixel", () => {
         if (u < -R || u > L + R || Math.abs(v) > R) continue; // outside the box
         const sA = k === 0 ? 1e9 : dot(sub(q, P1), jointT(P[k - 1], P1, P2));
         const sB = k + 2 >= P.length ? -1e9 : dot(sub(q, P2), jointT(P1, P2, P[k + 2]));
-        if (sA >= -oe && sB < oe) n++;
+        const segD = (a: V, b: V) => {
+          const ab = sub(b, a);
+          const t = Math.max(0, Math.min(1, dot(sub(q, a), ab) / dot(ab, ab)));
+          return Math.hypot(q[0] - a[0] - t * ab[0], q[1] - a[1] - t * ab[1]) - r;
+        };
+        const a1 = segD(P1, P2);
+        const a0 = k === 0 ? 1e9 : segD(P[k - 1], P1);
+        const a2 = k + 2 >= P.length ? 1e9 : segD(P2, P[k + 2]);
+        if ((sA >= -oe && sB < oe) || (sA < 0 && sB >= 0 && a1 <= a0 && a1 < a2)) n++;
       }
       return n;
     };
@@ -133,9 +135,20 @@ describe("K8 one SDF quad per pixel", () => {
         if (n > 1) doubles++;
       }
     }
-    expect(inside).toBeGreaterThan(10000);
-    expect(holes).toBe(0);
-    expect(doubles / inside).toBeLessThan(0.002);
+    return { inside, holes, doubles };
+    };
+    // open wavy polylines at SAMP's spacing (0.09): gentle (curvature
+    // radius >= 0.45 > r) and folded (radius down to 0.13 < r)
+    const wave = (a: number, b: number): V[] =>
+      Array.from({ length: 60 }, (_, i) => [i * 0.09, a * Math.sin(i * 0.09 * 2.1) + b * Math.sin(i * 0.09 * 5.3)] as V);
+    const gentle = census(wave(0.5, 0));
+    expect(gentle.inside).toBeGreaterThan(10000);
+    expect(gentle.holes).toBe(0);
+    expect(gentle.doubles / gentle.inside).toBeLessThan(0.002);
+    // a fold tighter than the ribbon overlaps itself; still no hole
+    const folded = census(wave(0.5, 0.2));
+    expect(folded.inside).toBeGreaterThan(10000);
+    expect(folded.holes).toBe(0);
   });
 });
 
