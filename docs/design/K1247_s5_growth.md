@@ -298,3 +298,13 @@ corner, or 140-280 ns per piece.
 - a fixed cost outside the growth below 0.7 ms.
 
 Without all three, ≤1 ms is out of reach. A realistic intermediate target is about 2-3 ms.
+
+**What picks c303's branch? (19:40)** `k1247s5_cmp.ts` now takes `--shift=0|1` and
+`--segpred=0|1`. muse_default_tw 0's corner 303 is 0.49h from the reference with the hint shift on
+(the default) and 0.003h with it off. The reference converged and does not shift. But the shift off
+everywhere is worse overall: 455 corners over 0.01h, against 286 with it on, and user_tw42 0.1 goes
+from 0.096h to 0.297h. I also tried a scratch clamp, which stops the shifted hint at its segment's end.
+It was neutral: 285 corners over 0.01h (285/145/43/14 over 0.01/0.03/0.1/0.3h), c303 still 0.49h. I
+reverted it. So the shift picks between near-tied branches, as item 2 above says; it is not a
+convergence error. A tie rule could start here: when the shifted and the unshifted foot disagree,
+check both and keep the one continuous with the previous node.
