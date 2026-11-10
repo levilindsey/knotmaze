@@ -308,3 +308,23 @@ It was neutral: 285 corners over 0.01h (285/145/43/14 over 0.01/0.03/0.1/0.3h), 
 reverted it. So the shift picks between near-tied branches, as item 2 above says; it is not a
 convergence error. A tie rule could start here: when the shifted and the unshifted foot disagree,
 check both and keep the one continuous with the previous node.
+
+**Where does the margin's cost go? (19:45)** Two more scratch copies of outline.ts, timed like the
+table above (locked, def in motion, one config per process, three rounds):
+- walks only: `marginOfC` runs its two half-plane walks, then returns 0 before the window searches;
+- a whole-window certificate: one `footWinFast` over the arm's whole window [winLo, winHi], bounded
+  by dc. It returns 0 when nothing is closer, and falls back to today's code when something is. On def
+  0 it certifies 11346 of 11854 calls in a frame.
+
+| run | today | walks only | certificate |
+|---|---|---|---|
+| 1 | 5.62 | 5.73 | 6.46 |
+| 2 | 5.62 | 5.61 | 6.41 |
+| 3 | 5.57 | 5.42 | 6.36 |
+
+Walks only and margin-free (4.31 and 4.34 ms, in an earlier locked batch beside today's 5.63) both
+force the margin to 0, so they grow the same path. Their difference is the walks and the calls: about
+1.2-1.3 ms, about 105 ns per `marginOfC` call. The window searches cost at most 0.1-0.2 ms. The
+certificate is 0.8 ms slower than today, because its block-box scan over the whole window costs more
+than the walks it skips. So a margin bound for the next stage has to replace the half-plane walks,
+once per corner or once per piece. Making the window searches cheaper would gain nothing.
