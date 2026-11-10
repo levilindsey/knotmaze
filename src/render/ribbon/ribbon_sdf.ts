@@ -468,6 +468,41 @@ void main(void) {
 }
 `;
 
+// K8 (phone): the explore variant keeps the gap search where it was, after
+// the paint. withExploreSdf (explore_glsl.ts) inserts the reveal's main
+// before the gk line, and that block reads rgb, aM and kctrl, which the
+// early search runs ahead of; its gapKeepAt reads the reveal's state too.
+// So the explore text is SDF_FRAG with the early block moved back, the
+// pre-move text byte for byte.
+const SDF_GAP_EARLY =
+  "  // K8: gapKeepAt reads a TURN, the strip's aArcPos encoding (i / count\n" +
+  "  // on rings, 0.45 i / (count - 1) on open runs; the slot's arcScale\n" +
+  "  // turns it back into arc). Passing the arc itself put every fragment\n" +
+  "  // outside every window: rp=sdf drew no crossing gaps from K832 on.\n";
+const SDF_GAP_EARLY_TAIL =
+  "  // K8 (phone): the search runs BEFORE the paint, while little else is\n" +
+  "  // live, and a fragment it hides whole ends here: lookA and frayA are at\n" +
+  "  // most 1, so the final test below would drop it anyway (the probe tint\n" +
+  "  // keeps it, as there).\n";
+const SDF_GAP_CALL =
+  "  float gTurn = (float(segK) + t1) * (kc.closed ? 1.0 / float(kc.count) : 0.45 / float(max(kc.count - 1, 1)));\n" +
+  "  float gk = gapKeepAt(pxW, vPos, gTurn, vDir, vIds);\n";
+const SDF_GAP_DISCARD = "  if (gk <= 0.002 && !gapProbe()) discard;\n";
+const SDF_GAP_LATE_AT = "  if (uKBase.z > 4.5) {\n    if (gk <= 0.002) discard;";
+function onceAt(s: string, a: string): number {
+  const i = s.indexOf(a);
+  if (i < 0 || s.indexOf(a, i + 1) >= 0) throw new Error("ribbon_sdf: anchor not found once: " + a.slice(0, 40));
+  return i;
+}
+export function sdfGapLate(frag: string): string {
+  const early = SDF_GAP_EARLY + SDF_GAP_EARLY_TAIL + SDF_GAP_CALL + SDF_GAP_DISCARD;
+  const i = onceAt(frag, early);
+  let s = frag.slice(0, i) + frag.slice(i + early.length);
+  const j = onceAt(s, SDF_GAP_LATE_AT);
+  s = s.slice(0, j) + SDF_GAP_EARLY + SDF_GAP_CALL + s.slice(j);
+  return s;
+}
+
 // K905: `root` adds K_ROOT to both texts (the -root programs, master's
 // K620 code); without it the root code compiles out (ribbon_shader.ts).
 let SDF_PROGRAM: GlProgram | null = null;
@@ -482,14 +517,14 @@ export function sdfProgram(explore = false, root = false): GlProgram {
       SDF_ROOT_FRAG ??= withRoot(SDF_FRAG);
       return GlProgram.from({ vertex: SDF_ROOT_VERT, fragment: SDF_ROOT_FRAG, name: "ribbon-sdf-root" });
     }
-    SDF_ROOT_EXPLORE_FRAG ??= withRoot(withExploreSdf(SDF_FRAG));
+    SDF_ROOT_EXPLORE_FRAG ??= withRoot(withExploreSdf(sdfGapLate(SDF_FRAG)));
     return GlProgram.from({ vertex: SDF_ROOT_VERT, fragment: SDF_ROOT_EXPLORE_FRAG, name: "ribbon-sdf-explore-root" });
   }
   if (!explore) {
     SDF_PROGRAM ??= GlProgram.from({ vertex: SDF_VERT, fragment: SDF_FRAG, name: "ribbon-sdf" });
     return SDF_PROGRAM;
   }
-  SDF_EXPLORE_FRAG ??= withExploreSdf(SDF_FRAG);
+  SDF_EXPLORE_FRAG ??= withExploreSdf(sdfGapLate(SDF_FRAG));
   return GlProgram.from({ vertex: SDF_VERT, fragment: SDF_EXPLORE_FRAG, name: "ribbon-sdf-explore" });
 }
 
