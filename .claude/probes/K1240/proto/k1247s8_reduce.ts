@@ -216,6 +216,50 @@ export function hausdorff(a: Float64Array, b: Float64Array): number {
   for (let i = 0; i + 1 < b.length; i += 2) { const d = ptPoly(b[i], b[i + 1], a); if (d > m) m = d; }
   return m;
 }
+/** K1247 s10: what is drawn. A distance function to the union of every
+ *  piece's segments (world units), bucketed on a grid of `cell`; a point
+ *  searches its 3x3 block, so a distance past `cell` reads as `cell`.
+ *  (k1247s9_union.ts's segGrid.) */
+export function segGrid(ps: { pts: ArrayLike<number> }[], cell: number): (x: number, y: number) => number {
+  const g = new Map<string, number[]>();
+  const add = (k: string, a: ArrayLike<number>, i: number, j: number): void => { let l = g.get(k); if (!l) { l = []; g.set(k, l); } l.push(a[i], a[i + 1], a[j], a[j + 1]); };
+  for (const p of ps) {
+    const a = p.pts;
+    if (a.length === 2) { add(`${Math.floor(a[0] / cell)},${Math.floor(a[1] / cell)}`, a, 0, 0); continue; }
+    for (let i = 0; i + 3 < a.length; i += 2) {
+      const x0 = Math.min(a[i], a[i + 2]); const x1 = Math.max(a[i], a[i + 2]); const y0 = Math.min(a[i + 1], a[i + 3]); const y1 = Math.max(a[i + 1], a[i + 3]);
+      for (let cx = Math.floor(x0 / cell); cx <= Math.floor(x1 / cell); cx++) for (let cy = Math.floor(y0 / cell); cy <= Math.floor(y1 / cell); cy++) add(`${cx},${cy}`, a, i, i + 2);
+    }
+  }
+  return (x: number, y: number): number => {
+    let best = cell * cell; const cx = Math.floor(x / cell); const cy = Math.floor(y / cell);
+    for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) {
+      const s = g.get(`${cx + i},${cy + j}`); if (!s) continue;
+      for (let k = 0; k < s.length; k += 4) {
+        const vx = s[k + 2] - s[k]; const vy = s[k + 3] - s[k + 1]; const l2 = vx * vx + vy * vy;
+        const t = l2 > 0 ? Math.max(0, Math.min(1, ((x - s[k]) * vx + (y - s[k + 1]) * vy) / l2)) : 0;
+        const dx = x - s[k] - vx * t; const dy = y - s[k + 1] - vy * t; const d = dx * dx + dy * dy; if (d < best) best = d;
+      }
+    }
+    return Math.sqrt(best);
+  };
+}
+/** Per piece, the drawn move between two frames of one structure: the
+ *  distance from each piece's points to the union of every piece of the
+ *  other frame, both ways (world units, capped at `cell`), and the point
+ *  where it is largest. */
+export function drawnMoves(A: { pts: ArrayLike<number> }[], B: { pts: ArrayLike<number> }[], cell: number): { d: number[]; at: [number, number][] } {
+  const toA = segGrid(A, cell); const toB = segGrid(B, cell);
+  const d: number[] = []; const at: [number, number][] = [];
+  for (let i = 0; i < Math.min(A.length, B.length); i++) {
+    let u = 0; let ax = NaN; let ay = NaN;
+    const a = A[i].pts; const b = B[i].pts;
+    for (let k = 0; k + 1 < b.length; k += 2) { const v = toA(b[k], b[k + 1]); if (v > u) { u = v; ax = b[k]; ay = b[k + 1]; } }
+    for (let k = 0; k + 1 < a.length; k += 2) { const v = toB(a[k], a[k + 1]); if (v > u) { u = v; ax = a[k]; ay = a[k + 1]; } }
+    d.push(u); at.push([ax, ay]);
+  }
+  return { d, at };
+}
 /** Keep every point within R of any listed spot (x, y pairs), on any chain. */
 function restoreNear(scene: SceneIn, K: KeepSet, spots: number[], R: number): number {
   const cell = R; const grid = new Map<string, number[]>();

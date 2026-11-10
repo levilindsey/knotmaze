@@ -4,12 +4,18 @@
 // chain, side, corner, region) in order, and each piece's Hausdorff distance
 // (both ways, pts) in device px at dpr 2 (pxPerUnit * 2, as k1257_sliver.ts).
 // cpts (the centreline the piece was cut from) is reported apart.
-//   node scripts/run_node.mjs .claude/probes/K1240/proto/k1247s8_acc.ts --eps=0.2 [--win=0] [--maxseg=0] [--scene=def] [--nocycle] [--list=5]
+// K1247 s10: a row is scored by what is DRAWN (k1247s9_union's measure): each
+// piece's points against the union of every piece of the other outline, both
+// ways. The per-piece Hausdorff counts a split point sliding along an unchanged
+// curve as a move of both pieces; it stays beside it as "piece max" (--by=piece
+// scores by it again). A failing row lists its pieces over the bar (drawn), with
+// the point of each one's largest move (world units), up to --fails=N (8).
+//   node scripts/run_node.mjs .claude/probes/K1240/proto/k1247s8_acc.ts --eps=0.2 [--win=0] [--maxseg=0] [--scene=def] [--nocycle] [--list=5] [--by=piece] [--fails=8]
 // eps in device px (the Douglas-Peucker tolerance on the centreline); win and
 // maxseg in h (0 = off).
 import { structure, frame, buildOutlineFull, type SceneIn } from "./outline";
 import { ALL, multsOf, sceneOf, load } from "./k1247s5_scenes";
-import { selectKeep, reduceScene, keepStats, armRanges, armCrossRanges, certifyKeep, piecesOf } from "./k1247s8_reduce";
+import { selectKeep, reduceScene, keepStats, armRanges, armCrossRanges, certifyKeep, piecesOf, drawnMoves } from "./k1247s8_reduce";
 
 const arg = (k: string): string | undefined => process.argv.find((a) => a.startsWith(`--${k}=`))?.slice(k.length + 3);
 const epsPx = +(arg("eps") ?? 0.2);
@@ -28,6 +34,8 @@ const armXReach = +(arg("armxreach") ?? 6); // h past sR + dir L to look for tha
 const certR = arg("cert"); // R in h: certify on the still scene (restore within R of each failing piece)
 const certBar = +(arg("certbar") ?? 0.2); // px, the certification's own bar
 const barPx = 0.25;
+const byPiece = arg("by") === "piece";
+const nFails = +(arg("fails") ?? 8);
 
 function ptSeg(px: number, py: number, ax: number, ay: number, bx: number, by: number): number {
   const ex = bx - ax; const ey = by - ay; const l2 = ex * ex + ey * ey;
@@ -54,19 +62,23 @@ interface P { kind: string; chain: number; side: number; corner: number; region:
 const copy = (t: { pieces: unknown[] }): P[] => (t.pieces as { kind: string; chain: number; side: number; corner: number; region: number; pts: ArrayLike<number>; cpts?: ArrayLike<number> }[]).map((p) => ({ kind: p.kind, chain: p.chain, side: p.side, corner: p.corner, region: p.region, pts: Array.from(p.pts), cpts: Array.from(p.cpts ?? []) }));
 const q = (xs: number[], p: number): number => { if (!xs.length) return 0; const s = [...xs].sort((a, b) => a - b); return s[Math.min(s.length - 1, Math.floor(p * s.length))]; };
 
-interface Row { label: string; keys: string; d: number[]; dc: number[]; worst: string[] }
+interface Row { label: string; keys: string; d: number[]; dc: number[]; u: number[]; worst: string[]; over: string[] }
+let cellW = 1; // world units: 0.5 h of the scene being scored (set per scene)
 function compare(label: string, a: P[], b: P[], S: number): Row {
   let keys = a.length !== b.length ? `count ${a.length} vs ${b.length}` : "";
-  const d: number[] = []; const dc: number[] = []; const all: [number, string][] = [];
+  const d: number[] = []; const dc: number[] = []; const all: [number, string][] = []; const over: [number, string][] = [];
+  const dm = drawnMoves(a, b, cellW); const u = dm.d.map((v) => v * S);
   for (let i = 0; i < Math.min(a.length, b.length); i++) {
     const p = a[i]; const r = b[i];
     if (!keys && (p.kind !== r.kind || p.chain !== r.chain || p.side !== r.side || p.corner !== r.corner || p.region !== r.region)) keys = `piece ${i}: ${p.kind}/${p.chain}/${p.side}/${p.corner}/${p.region} vs ${r.kind}/${r.chain}/${r.side}/${r.corner}/${r.region}`;
     const x = hausdorff(p.pts, r.pts) * S; d.push(x);
     dc.push(hausdorff(p.cpts, r.cpts) * S);
-    if (nList) all.push([x, `#${i} ${p.kind} ch${p.chain} side${p.side} corner${p.corner} n${p.pts.length / 2}/${r.pts.length / 2}: ${x.toFixed(3)} px`]);
+    const line = `#${i} ${p.kind}/${p.chain}/${p.side}/${p.corner}/${p.region} n${p.pts.length / 2}/${r.pts.length / 2}: drawn ${u[i] >= cellW * S - 1e-9 ? `>= ${(cellW * S).toFixed(1)}` : u[i].toFixed(3)} px, piece ${x.toFixed(3)} px, at (${dm.at[i][0].toFixed(3)}, ${dm.at[i][1].toFixed(3)})`;
+    if (nList) all.push([byPiece ? x : u[i], line]);
+    if ((byPiece ? x : u[i]) > barPx) over.push([byPiece ? x : u[i], line]);
   }
-  all.sort((u, v) => v[0] - u[0]);
-  return { label, keys, d, dc, worst: all.slice(0, nList).map((w) => w[1]) };
+  all.sort((s, t) => t[0] - s[0]); over.sort((s, t) => t[0] - s[0]);
+  return { label, keys, d, dc, u, worst: all.slice(0, nList).map((w) => w[1]), over: over.map((w) => w[1]) };
 }
 // k1247c_time.ts's (inconsistent) perturb for def's timed cycle.
 function perturbT(scene: SceneIn, A: number): SceneIn {
@@ -77,17 +89,21 @@ function perturbT(scene: SceneIn, A: number): SceneIn {
 }
 
 let fails = 0; let totFull = 0; let totKept = 0; let worstAll = 0;
+let worstPiece = 0;
 const report = (r: Row, extra = ""): void => {
-  const mx = r.d.length ? Math.max(...r.d) : 0; const mxc = r.dc.length ? Math.max(...r.dc) : 0;
-  const bad = !!r.keys || mx > barPx;
+  const mx = r.d.length ? Math.max(...r.d) : 0; const mxc = r.dc.length ? Math.max(...r.dc) : 0; const mu = r.u.length ? Math.max(...r.u) : 0;
+  const score = byPiece ? mx : mu;
+  const bad = !!r.keys || score > barPx;
   if (bad) fails++;
-  worstAll = Math.max(worstAll, mx);
-  console.log(`${bad ? "FAIL" : "ok  "} ${r.label}: ${r.keys ? `KEYS ${r.keys}; ` : ""}max ${mx.toFixed(3)} px, p99 ${q(r.d, 0.99).toFixed(3)}, p50 ${q(r.d, 0.5).toFixed(4)} (${r.d.length} pieces); cpts max ${mxc.toFixed(3)}${extra}`);
+  worstAll = Math.max(worstAll, score); worstPiece = Math.max(worstPiece, mx);
+  console.log(`${bad ? "FAIL" : "ok  "} ${r.label}: ${r.keys ? `KEYS ${r.keys}; ` : ""}drawn max ${mu.toFixed(3)} px (${r.over.length} over), p99 ${q(r.u, 0.99).toFixed(3)}; piece max ${mx.toFixed(3)}, p99 ${q(r.d, 0.99).toFixed(3)}, p50 ${q(r.d, 0.5).toFixed(4)} (${r.d.length} pieces); cpts max ${mxc.toFixed(3)}${extra}`);
+  if (bad) for (const w of r.over.slice(0, nFails)) console.log(`  > ${w}`);
   for (const w of r.worst) console.log(`    ${w}`);
 };
 for (const name of names) {
   const still = load(name);
   const S = still.camera.pxPerUnit * 2; const h = still.look.halfWidth;
+  cellW = 0.5 * h;
   const armsFull = armWin === undefined && armX === undefined ? null : buildOutlineFull(still).structure.arms;
   let keepRanges = armWin === undefined ? undefined : armRanges(armsFull!, +armWin * h, armReach * h);
   if (armX !== undefined) keepRanges = armCrossRanges(still, armsFull!, +armX * h, armXReach * h, keepRanges);
@@ -113,15 +129,16 @@ for (const name of names) {
     const STEPS = 20;
     const fwd = Array.from({ length: STEPS + 1 }, (_, k) => (k === 0 ? still : perturbT(still, (k / STEPS) * 0.5 * h)));
     const cycle = [...fwd, ...fwd.slice(1, STEPS).reverse()];
-    const agg: Row = { label: "def cycle (40 frames, warm)", keys: "", d: [], dc: [], worst: [] };
+    const agg: Row = { label: "def cycle (40 frames, warm)", keys: "", d: [], dc: [], u: [], worst: [], over: [] };
     let worstF = -1; let worstV = -1;
     for (let f = 0; f < cycle.length; f++) {
       const r = compare(`def cycle frame ${f}`, copy(frame(stF, cycle[f])), copy(frame(stR, reduceScene(cycle[f], K))), S);
       if (r.keys && !agg.keys) agg.keys = `frame ${f}: ${r.keys}`;
-      agg.d.push(...r.d); agg.dc.push(...r.dc);
-      const m = Math.max(...r.d); if (m > worstV) { worstV = m; worstF = f; agg.worst = r.worst; }
+      agg.d.push(...r.d); agg.dc.push(...r.dc); agg.u.push(...r.u);
+      agg.over.push(...r.over.map((w) => `frame ${f} ${w}`));
+      const m = Math.max(...(byPiece ? r.d : r.u)); if (m > worstV) { worstV = m; worstF = f; agg.worst = r.worst; }
     }
     report(agg, `; worst frame ${worstF}`);
   }
 }
-console.log(`eps ${epsPx} px, short ${shortH} h, win ${winH} h (j ${winJ ?? "-"} x ${winX ?? "-"} d ${winD ?? "-"}), maxseg ${maxSegH} h, armwin ${armWin ?? "-"} reach ${armReach}, armx ${armX ?? "-"}, cert ${certR ?? "-"} h at ${certBar} px: points ${totKept}/${totFull} (${(totKept / totFull * 100).toFixed(1)}%); worst ${worstAll.toFixed(3)} px; ${fails ? `${fails} FAILURES` : `ALL WITHIN ${barPx} px`}`);
+console.log(`eps ${epsPx} px, short ${shortH} h, win ${winH} h (j ${winJ ?? "-"} x ${winX ?? "-"} d ${winD ?? "-"}), maxseg ${maxSegH} h, armwin ${armWin ?? "-"} reach ${armReach}, armx ${armX ?? "-"}, cert ${certR ?? "-"} h at ${certBar} px: points ${totKept}/${totFull} (${(totKept / totFull * 100).toFixed(1)}%); scored by ${byPiece ? "piece" : "drawn"}: worst ${worstAll.toFixed(3)} px (piece max ${worstPiece.toFixed(3)}); ${fails ? `${fails} FAILURES` : `ALL WITHIN ${barPx} px`}`);
