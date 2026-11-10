@@ -765,6 +765,10 @@ Every other item below waits on the trigger it names.
   under-thread's edge stops at the over-thread's edge and fades (burial); the over-thread's edges stay
   unbroken. Gate: every crossing on the 12 scenes against form B. Picture
   `.claude/probes/K1247/asks/cut273_old_new_formb.png`; after stage 15 (outline.ts)
+  - branch: unknown; last commit: `f0c1111c`
+  - evidence: .claude/probes/K1240/proto/ (outline.ts, draw.ts, k1279_* tools); .claude/probes/K1240/out/k1279/ (untracked)
+  - next: build the per-crossing census against form B, baseline on master, then fix cut 273 and the worst crossings
+  - brief: `docs/design/K1279_crossings.md`
 
 ## Residuals (known, not fixed)
 
