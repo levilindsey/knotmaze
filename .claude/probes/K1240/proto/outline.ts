@@ -3476,6 +3476,20 @@ function slotOfKeyC(C: FCache, key: string): number {
   const xi = parseInt(key.slice(over ? 2 : 1, bar), 10); const side = parseInt(key.slice(bar + 1), 10);
   return (over ? C.crossOverSlot : C.crossUnderSlot)[xi * 2 + (side === 1 ? 0 : 1)];
 }
+// K1247 s13: the group from structure (grpMode.adj, off by default): an
+// interval takes the group of the arm whose root slot bounds it on the arm's
+// own side (dir +1 at A, dir -1 at B), else -1. No diagram fact reproduces
+// today's rest groups: they differ from this rule only where cMid lies past
+// the cut-limited L (728 regions over the 12 scenes, all -1 today, the
+// junction's group here), a length threshold that splits every diagram
+// predicate tried about 26/74 (k1247s13_group.ts GRP_PRED=1). Waits on Levi.
+export const grpMode = { adj: false };
+function adjGroupC(C: FCache, A: number, B: number): number {
+  const base = C.nX * 4;
+  if (A >= 0 && C.slotKind[A] === 2) { const ai = C.slotRank[A] - base; if (C.armDir[ai] > 0) return C.armObj[ai].g; }
+  if (B >= 0 && C.slotKind[B] === 2) { const bi = C.slotRank[B] - base; if (C.armDir[bi] < 0) return C.armObj[bi].g; }
+  return -1;
+}
 function memberGroupC(C: FCache, pi: number, s: number): number {
   let best = 0; let g = -1;
   const h = C.h;
@@ -6402,7 +6416,7 @@ function regionsPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): { regio
     C.ivRegion[i] = rid;
     for (let q = 0; q < nsL; q++) BdL.segReg[segL[q]] = rid;
     for (let q = 0; q < nsR; q++) BdR.segReg[segR[q]] = rid;
-    const grp = memberGroupC(C, pi, C.ivCMid[i]);
+    const grp = grpMode.adj ? adjGroupC(C, C.ivA[i], C.ivB[i]) : memberGroupC(C, pi, C.ivCMid[i]);
     const reg: OutlineRegion = { id: rid, ownerChain: pi, group: grp, pts, pieces: [], hole: false };
     pointAtInto(p, C.ivCMid[i], ptScratch);
     const fw: FaceWorkF = { owner: pi, group: grp, rid, sx: ptScratch[0], sy: ptScratch[1], depth: depthAtC(C, pi, C.ivCMid[i], depthWin) };
@@ -6415,7 +6429,7 @@ function regionsPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): { regio
       if (!reg || !fw) {
         const pi = sR.ridPi[r]; const A = sR.ridA[r]; const p = C.polys[pi];
         const s = C.stActive[A] ? C.stCS[A] : p.s0;
-        const grp = memberGroupC(C, pi, s);
+        const grp = grpMode.adj ? adjGroupC(C, A, -1) : memberGroupC(C, pi, s);
         reg = { id: r, ownerChain: pi, group: grp, pts: [], pieces: [], hole: false };
         pointAtInto(p, s, ptScratch);
         fw = { owner: pi, group: grp, rid: r, sx: ptScratch[0], sy: ptScratch[1], depth: depthAtC(C, pi, s, depthWin) };
