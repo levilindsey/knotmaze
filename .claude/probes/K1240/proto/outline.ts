@@ -983,7 +983,10 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
       };
       const capOf = (X: ArmInfo): number => Math.max(0, Number.isFinite(X.Lcut) ? Math.min(X.L, X.Lcut - 0.5 * h) : X.L);
       const rCap = Math.min(1, Math.max(0, Math.min(mt.dA > 1e-12 ? capOf(A) / mt.dA : 1, mt.dB > 1e-12 ? capOf(B) / mt.dB : 1)));
-      const gA = Math.min(wA, 1 - rCap); const gB = Math.min(wB, 1 - rCap);
+      // K1247 s10: a meet just past a span's end is the ok corner's r = 0
+      // V at the end, so the stations ramp in over 0.5 h past it.
+      const ramp = cw.why === "V outside spans" ? spanRamp(mt.dA - A.L, mt.dB - B.L, h) : 1;
+      const gA = Math.min(wA, 1 - rCap) * ramp; const gB = Math.min(wB, 1 - rCap) * ramp;
       const ea = eOf(A, cw.sideA, mt.sA, gA); const eb = eOf(B, cw.sideB, mt.sB, gB);
       // K1240 S3f r4: w = 0 is the meet itself. The border's point at the
       // meet's s is not always the meet: on the outer side of a sharp bend
@@ -5257,6 +5260,17 @@ function borderMeetC(C: FCache, ci: number, aiA: number, sideA: number, aiB: num
   return found;
 }
 
+/** K1247 s10: a "V outside spans" fallback's station fraction scale. The
+ *  solve fails when the meet passes a span's far end, where the ok corner
+ *  is the r = 0 V; scaling the fraction from 0 at the end to 1 at 0.5 h
+ *  past it keeps the stations continuous across that switch (a step of up
+ *  to 0.5 h at a cut-limited arm before). eA, eB: the meet's distance past
+ *  each arm's end; a meet past neither (behind a root) keeps the fraction. */
+function spanRamp(eA: number, eB: number, h: number): number {
+  const e = Math.max(eA, eB);
+  return e > 0 ? Math.min(1, e / (0.5 * h)) : 1;
+}
+
 function cornerFallbackC(C: FCache, st: DiagramStructure, scene: SceneIn, ci: number, aiA: number, aiB: number, sideA: number, sideB: number, th: number): void {
   const h = C.h;
   const ji = st.corners[ci].ji;
@@ -5283,7 +5297,8 @@ function cornerFallbackC(C: FCache, st: DiagramStructure, scene: SceneIn, ci: nu
     };
     const capOf = (ai: number): number => Math.max(0, Number.isFinite(C.armLcut[ai]) ? Math.min(C.armL[ai], C.armLcut[ai] - 0.5 * h) : C.armL[ai]);
     const rCap = Math.min(1, Math.max(0, Math.min(mt.dA > 1e-12 ? capOf(aiA) / mt.dA : 1, mt.dB > 1e-12 ? capOf(aiB) / mt.dB : 1)));
-    const gA = Math.min(wA, 1 - rCap); const gB = Math.min(wB, 1 - rCap);
+    const ramp = C.cWhy[ci] === "V outside spans" ? spanRamp(mt.dA - C.armL[aiA], mt.dB - C.armL[aiB], h) : 1;
+    const gA = Math.min(wA, 1 - rCap) * ramp; const gB = Math.min(wB, 1 - rCap) * ramp;
     const ea = new Float64Array(2); const eb = new Float64Array(2);
     const sEa = eOf(aiA, sideA, mt.sA, gA, ea);
     const sEb = eOf(aiB, sideB, mt.sB, gB, eb);
