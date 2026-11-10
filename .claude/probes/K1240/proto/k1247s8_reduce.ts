@@ -26,6 +26,11 @@ export interface SelectOpts {
   /** Full density over these s ranges [lo, hi] (full chain's arc length;
    *  a closed chain's range may wrap past either end), keyed by chain index. */
   keepRanges?: Map<number, [number, number][]>;
+  /** Keep every point of a chain shorter than this (world units). A short
+   *  chain between two end arms can carry a sliver region (g41_def_tw64's
+   *  chain 81, 0.8 long: area 7e-5 h^2, 9 points) whose existence turns on
+   *  frame()'s 3-point gate, and losing it shifts every later region id. */
+  keepShort?: number;
 }
 
 function cumOf(pts: ArrayLike<number>, closed: boolean, out?: Float64Array): Float64Array {
@@ -78,6 +83,7 @@ export function selectKeep(scene: SceneIn, o: SelectOpts): KeepSet {
     if (n <= 3 || o.eps <= 0) { idx.push(Int32Array.from({ length: n }, (_, i) => i)); continue; }
     const cum = cumOf(P, c.closed);
     const L = c.closed ? cum[n] : cum[n - 1];
+    if (L < (o.keepShort ?? 0)) { idx.push(Int32Array.from({ length: n }, (_, i) => i)); continue; }
     const keep = new Uint8Array(n);
     keep[0] = 1; if (!c.closed) keep[n - 1] = 1;
     for (const [lo, hi] of o.keepRanges?.get(ci) ?? []) {

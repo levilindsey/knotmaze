@@ -15,6 +15,7 @@ const arg = (k: string): string | undefined => process.argv.find((a) => a.starts
 const epsPx = +(arg("eps") ?? 0.2);
 const winH = +(arg("win") ?? 0);
 const maxSegH = +(arg("maxseg") ?? 0);
+const shortH = +(arg("short") ?? 0); // keepShort, in h
 const winJ = arg("winj"); const winX = arg("winx"); const winD = arg("wind");
 const optW = (v: string | undefined, h: number): number | undefined => (v === undefined ? undefined : +v * h);
 const names = arg("scene") ? arg("scene")!.split(",") : ALL;
@@ -85,7 +86,7 @@ for (const name of names) {
   const still = load(name);
   const S = still.camera.pxPerUnit * 2; const h = still.look.halfWidth;
   const keepRanges = armWin === undefined ? undefined : armRanges(buildOutlineFull(still).structure.arms, +armWin * h);
-  const sel = { keepRanges, eps: epsPx / S, win: winH * h, winJ: optW(winJ, h), winX: optW(winX, h), winD: optW(winD, h), maxSeg: maxSegH > 0 ? maxSegH * h : Infinity };
+  const sel = { keepRanges, eps: epsPx / S, win: winH * h, winJ: optW(winJ, h), winX: optW(winX, h), winD: optW(winD, h), maxSeg: maxSegH > 0 ? maxSegH * h : Infinity, keepShort: shortH * h };
   let certNote = "";
   let K = selectKeep(still, sel);
   if (certR !== undefined) {
@@ -118,4 +119,4 @@ for (const name of names) {
     report(agg, `; worst frame ${worstF}`);
   }
 }
-console.log(`eps ${epsPx} px, win ${winH} h (j ${winJ ?? "-"} x ${winX ?? "-"} d ${winD ?? "-"}), maxseg ${maxSegH} h, armwin ${armWin ?? "-"}, cert ${certR ?? "-"} h at ${certBar} px: points ${totKept}/${totFull} (${(totKept / totFull * 100).toFixed(1)}%); worst ${worstAll.toFixed(3)} px; ${fails ? `${fails} FAILURES` : `ALL WITHIN ${barPx} px`}`);
+console.log(`eps ${epsPx} px, short ${shortH} h, win ${winH} h (j ${winJ ?? "-"} x ${winX ?? "-"} d ${winD ?? "-"}), maxseg ${maxSegH} h, armwin ${armWin ?? "-"}, cert ${certR ?? "-"} h at ${certBar} px: points ${totKept}/${totFull} (${(totKept / totFull * 100).toFixed(1)}%); worst ${worstAll.toFixed(3)} px; ${fails ? `${fails} FAILURES` : `ALL WITHIN ${barPx} px`}`);
