@@ -349,3 +349,13 @@ solves (361 corners grow; the rest fall back) at 2.8 Newton loop passes each, de
 ring 0 runs 59 at 3.0. That is about 1.8 µs per solve, so roughly 300 ns per global foot. Its global
 foot per iteration is deliberate ("history must not pick a different root"), so speeding it up needs a
 cheaper exact global test, not a tracked foot.
+
+**The walk cache still pays (19:50).** A scratch copy with s4's suffix-extrema walk cache off (exact
+either way) is slower: corners 5.80/5.83/5.77 ms against today's 5.59/5.58/5.60, locked, alternating.
+With the cache on, the jump fires on about 78% of calls in each direction on def 0, and a call still
+tests 6.0 segments. No cheap exact trim of the walks is left; the bound has to come from the rewrite.
+
+**Where this stage stops (19:51).** All of today's code paths are measured. The corners phase is at
+5.6-5.8 ms locked, against 6.5-6.7 ms on master. The ≤1 ms goal needs the rewrite that this addendum
+sizes: closed-form pieces, a margin bounded per corner or per piece in place of the walks, and a
+cheaper exact V solve.
