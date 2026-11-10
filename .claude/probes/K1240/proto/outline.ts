@@ -4482,7 +4482,7 @@ function cfQ(i: number, rho: number): void {
 // EXIT root (g' < 0 there); Infinity when it never does. Only exit roots
 // count, so a piece that starts on the boundary it just crossed (g = -1e-17
 // with g' > 0) is not ended at once (the ping-pong at every transition).
-let cfTol = 0; let cfDel = 0;
+let cfTol = 0; let cfDel = 0; let cfZr = NaN;
 function cfRoot(i: number, cx: number, cy: number, d: number, rs: number): number {
   const o = i * 8; const K = cfK; const t = cfTy[i];
   if (t === 0 || t === 3) {
@@ -4618,7 +4618,7 @@ function cfNext(C: FCache, i: number, rs: number): number {
       if (!(hv > rs)) continue;
       let a0 = rs; cfQ(i, a0); let f0 = cfVLagF(X, k, fv, sv, cfQx, cfQy, w);
       let rr = Infinity;
-      if (f0 < 0) rr = a0;
+      if (f0 < 0) { if (cfZr === rs) continue; rr = a0; } // not again at a cycle's rho (cfStep)
       else for (let m = 1; m <= 8; m++) {
         const b0 = rs + ((hv - rs) * m) / 8; cfQ(i, b0); let f1 = cfVLagF(X, k, fv, sv, cfQx, cfQy, w);
         if (!(f1 < 0)) { a0 = b0; f0 = f1; continue; }
@@ -4809,6 +4809,33 @@ function cfBad(C: FCache, i: number, qx: number, qy: number): boolean {
   }
   return false;
 }
+// K1247 s9: the settle loop's fallback. The site fixes test validity at the
+// new piece's q, so a site whose piece is degenerate (a segment shorter than
+// footNearM's window, whose direction the points' jitter turns at will: def
+// corner 35, chain 22's 3e-5 root segment) sends q far away and the fixes
+// cycle. footNearM's tracked foot is what the closed form follows: the next
+// sites are each arm's footNearM foot, from piece i's foot, at q just past the
+// event (cfDel), where the event's tie is broken.
+const cfRF: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 };
+function cfResettle(C: FCache, i: number, rE: number, qx: number, qy: number): boolean {
+  const rp = rE + cfDel; const tol = 1e-12 * C.h;
+  for (let j = 0; j < 2; j++) { const X = cfAr[j]; X.v = cfSV[2 * i + j]; X.i = cfSI[2 * i + j]; X.sh = cfSH[2 * i + j]; }
+  cfQ(i, rp); const px = cfQx; const py = cfQy;
+  for (let j = 0; j < 2; j++) {
+    const X = cfAr[j]; const p = X.p;
+    cfQx = px; cfQy = py; cfFoot(i, j, rp, cfRF);
+    kfXY[0] = px; kfXY[1] = py;
+    footNearM(C, C.armObj[j === 0 ? kfCst.aiA : kfCst.aiB], cfRF);
+    const k = cfRF.k; const tt = cfRF.s - p.s[k];
+    X.sh = cfRF.u - cfRF.s;
+    if (tt <= tol) { X.v = 1; X.i = k; }
+    else if (tt >= p.segLen[k] - tol) { X.v = 1; X.i = k + 1; if (X.i >= p.n) { if (!p.closed) return false; X.i = 0; X.sh += p.len; } }
+    else { X.v = 0; X.i = k; }
+  }
+  if (!cfMake(i + 1, qx, qy)) return false;
+  cfQ(i + 1, rE);
+  return !cfBad(C, i + 1, cfQx, cfQy);
+}
 // One piece: from the frontier to its first event, then the next sites.
 function cfStep(C: FCache): void {
   const i = cfN; const rs = cfR[i]; const h = C.h;
@@ -4823,10 +4850,27 @@ function cfStep(C: FCache): void {
   cfQ(i, rE); const qx = cfQx; const qy = cfQy;
   let kind = cfEvKind; let X = cfAr[cfEvArm];
   if (kind === 5 || kind === 6) cfStats.lags++;
-  for (let it = 0; ; it++) {
-    if (kind === 9 || it > 8 || !cfApply(X, kind) || !cfMake(i + 1, qx, qy)) { if (cfDbg) cfTrace.push(`end kind ${kind} it ${it} A ${cfAr[0].v ? "v" : "s"}${cfAr[0].i} B ${cfAr[1].v ? "v" : "s"}${cfAr[1].i}`); cfEnded = true; cfStats.ends++; return; }
+  // K1247 s9: two zero-length pieces in a row are a site cycle (muse_hash
+  // corner 106 under 0.01 px: a segment lag and the vertex lag at one rho
+  // undo each other); footNearM's own feet decide, once per rho.
+  let zs = false;
+  if (i >= 1 && rE - rs <= cfTol && rs - cfR[i - 1] <= cfTol && cfZr !== rs) {
+    cfZr = rs; zs = cfResettle(C, i, rE, qx, qy);
+    if (cfDbg) cfTrace.push(`  cycle at p${i}: resettle ${zs} -> A ${cfAr[0].v ? "v" : "s"}${cfAr[0].i} B ${cfAr[1].v ? "v" : "s"}${cfAr[1].i}`);
+  }
+  if (!zs) for (let it = 0; ; it++) {
+    const ap = kind !== 9 && it <= 8 && cfApply(X, kind);
+    if (!ap || !cfMake(i + 1, qx, qy)) {
+      // K1247 s9: a site sequence that does not settle falls back on
+      // footNearM's own feet (cfResettle); the event's own end or an arm
+      // leaving its chain still ends the growth.
+      const real = it === 0 && !ap;
+      if (!real && cfResettle(C, i, rE, qx, qy)) { if (cfDbg) cfTrace.push(`  resettle at it ${it} -> A ${cfAr[0].v ? "v" : "s"}${cfAr[0].i} B ${cfAr[1].v ? "v" : "s"}${cfAr[1].i}`); break; }
+      if (cfDbg) cfTrace.push(`end kind ${kind} it ${it} A ${cfAr[0].v ? "v" : "s"}${cfAr[0].i} B ${cfAr[1].v ? "v" : "s"}${cfAr[1].i}`); cfEnded = true; cfStats.ends++; return;
+    }
     cfQ(i + 1, rE);
     if (!cfBad(C, i + 1, cfQx, cfQy)) break;
+    if (cfDbg) cfTrace.push(`  settle it ${it} applied k${kind} -> A ${cfAr[0].v ? "v" : "s"}${cfAr[0].i} B ${cfAr[1].v ? "v" : "s"}${cfAr[1].i} ty${cfTy[i + 1]} q ${cfQx.toFixed(5)},${cfQy.toFixed(5)} bad arm${cfEvArm} k${cfEvKind}`);
     kind = cfEvKind; X = cfAr[cfEvArm];
   }
   const dx = cfQx - qx; const dy = cfQy - qy;
@@ -4856,7 +4900,7 @@ function cfInitArm(C: FCache, X: CfArm, ai: number, F: FFoot, u0: number): void 
   else if (tt <= tol) { if (!(cfTurn(X, k) > CF_TURN)) X.v = 1; }
 }
 function cfInit(C: FCache): boolean {
-  const h = C.h; cfTol = 1e-9 * h; cfDel = 1e-6 * h;
+  const h = C.h; cfTol = 1e-9 * h; cfDel = 1e-6 * h; cfZr = NaN;
   cfInitArm(C, cfAr[0], kfCst.aiA, kfFa, kfQa.u);
   cfInitArm(C, cfAr[1], kfCst.aiB, kfFb, kfQb.u);
   cfN = 0; cfR[0] = h; cfEnded = false; cfRMax = h + kfCst.r0; cfCur = 0; cfSt[0] = NaN;
@@ -6205,6 +6249,7 @@ function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[])
         sideE = dp.interval ? -C.armDir[dc.bArm] : C.armDir[dc.aArm];
         sT = dp.interval ? C.cSB[ci] : C.cSA[ci];
         const depthWin = C.depthWindow * C.ctrlArc;
+        tailDbg.cur = ci;
         endTailPts({
           pE: C.polys[piE], dirE: C.armDir[aiE], endS: C.armSR[aiE], sT,
           x0: dp.interval ? C.cTbx[ci] : C.cTax[ci], y0: dp.interval ? C.cTby[ci] : C.cTay[ci],
@@ -6605,10 +6650,26 @@ function tailF(a: TailIn, l1: number, u: number): number {
 }
 const TAIL_N = 16;
 const TAIL_BISECT = 12;
+// K1247 s9 probe: f's terms along a tail (k1247s9_tail.ts), for corner tailDbg.ci.
+export const tailDbg: { ci: number; cur: number; rows: number[][] } = { ci: -1, cur: -1, rows: [] };
+function tailTerms(a: TailIn, l1: number, u: number): number[] {
+  const sE = tailAt(a, l1, u, tailPt, tailCen, false); const h = a.h;
+  const lo = a.dirX > 0 ? a.sRX - 2 * h : a.sRX - 6 * h;
+  tailFoot(a.pX, lo, lo + 8 * h, tailPt[0], tailPt[1], tailFt);
+  const sF = tailFt[0]; const dF = tailFt[1];
+  let ad = (sF - a.sRX) * a.dirX; const len = a.pX.len;
+  if (a.pX.closed && len > 0) { ad %= len; if (ad > len / 2) ad -= len; if (ad < -len / 2) ad += len; }
+  let ramp = 1;
+  if (ad > a.LX) ramp = 0;
+  else if (Number.isFinite(a.LcutX)) { let t = (ad - a.LcutX) / -h; t = t < 0 ? 0 : t > 1 ? 1 : t; ramp = t * t * (3 - 2 * t); }
+  const margin = a.zE(sE) - a.zt - a.zX(sF) + (a.zt * dF) / h;
+  return [u / h, tailF(a, l1, u), ad / h, 0.5 - ramp, (h - a.W - dF) / h, a.zt > 0 ? margin / a.zt : margin, tailPt[0], tailPt[1]];
+}
 export function endTailPts(a: TailIn, pts: number[], cpts: number[]): void {
   if (!(a.h > 0) || !Number.isFinite(a.sT)) return;
   const l1 = Math.max(0, a.dirE * (a.sT - a.endS));
   const U = l1 + 0.5 * Math.PI * a.h;
+  if (tailDbg.cur === tailDbg.ci && tailDbg.ci >= 0) for (let m = 0; m <= 64; m++) tailDbg.rows.push(tailTerms(a, l1, (U * m) / 64));
   // Bisect a sign change of f on [u0, u1]; want = the side f > 0 is on (0: u0, 1: u1).
   const cut = (u0: number, u1: number, posAt1: boolean): number => {
     let lo = u0; let hi = u1;
