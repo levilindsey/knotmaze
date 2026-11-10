@@ -4365,6 +4365,14 @@ export function setCfJumpTol(t: number): void { cfJumpTol = t; }
 // between nodes at 0.69 and 0.44), so the growth splits there (cfDipIn). NaN =
 // not computed yet; set per piece as it is made.
 const cfSt = new Float64Array(CF_MAXP + 2);
+// K1247 s7: fSteep at piece j's end (cfR[j + 1]) as piece j reads it, and the
+// squared q jump at piece j's start (roundoff, under cfTol = 1e-9 h, at a vertex
+// or segment-end transition, where q and both feet are continuous): the next piece's start value is then
+// this one's end value, without a second cfSteepAt.
+const cfSe = new Float64Array(CF_MAXP + 2);
+const cfJd = new Float64Array(CF_MAXP + 2);
+let cfSteepFast = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.K1247_STEEP !== "0";
+export function setSteepFast(on: boolean): void { cfSteepFast = on; }
 let cfDipOn = true;
 export function setCfDip(on: boolean): void { cfDipOn = on; }
 const cfTy = new Int8Array(CF_MAXP + 2);
@@ -4713,7 +4721,7 @@ function cfStep(C: FCache): void {
     kind = cfEvKind; X = cfAr[cfEvArm];
   }
   const dx = cfQx - qx; const dy = cfQy - qy;
-  cfJ[i + 1] = dx * dx + dy * dy > cfJumpTol * cfJumpTol * h * h ? 1 : 0; cfSt[i + 1] = NaN;
+  cfJ[i + 1] = dx * dx + dy * dy > cfJumpTol * cfJumpTol * h * h ? 1 : 0; cfSt[i + 1] = NaN; cfJd[i + 1] = dx * dx + dy * dy;
   if (dx * dx + dy * dy > kfJump * kfJump * h * h) { cfEnded = true; cfStats.jumps++; return; }
   cfPx = qx; cfPy = qy;
 }
@@ -4815,12 +4823,24 @@ function cfSteepAt(j: number, r: number): number {
   const denRatio = Math.abs(kfCst.denV) > 1e-12 ? denQ / kfCst.denV : 0;
   return ss01((denRatio - 0.3) / 0.4);
 }
+// K1247 s7: on a line piece q - foot is d times the site's unit normal
+// (sgn-rotated tangent) for both feet, so denQ = 1 + nA . nB from the two
+// tangents alone (no q, no feet). K1247_STEEP=0 runs the point evaluations.
+function cfSteepLine(j: number): number {
+  const a = cfAr[0]; const b = cfAr[1]; const ka = cfSI[2 * j]; const kb = cfSI[2 * j + 1];
+  const denQ = 1 + a.sgn * b.sgn * (a.tx[ka] * b.tx[kb] + a.ty[ka] * b.ty[kb]);
+  const denRatio = Math.abs(kfCst.denV) > 1e-12 ? denQ / kfCst.denV : 0;
+  return ss01((denRatio - 0.3) / 0.4);
+}
 function cfSteepOf(j: number): number {
   let s = cfSt[j];
   if (s === s) return s;
-  if (cfTy[j] === 0) { const r = 0.5 * (cfR[j] + cfR[j + 1]); s = cfSteepAt(j, r); cfSr[j] = r; }
-  else {
-    const s0 = cfSteepAt(j, cfR[j]); const s1 = cfSteepAt(j, cfR[j + 1]);
+  if (cfTy[j] === 0) {
+    const r = 0.5 * (cfR[j] + cfR[j + 1]);
+    s = cfSteepFast ? cfSteepLine(j) : cfSteepAt(j, r); cfSr[j] = r; cfSe[j] = s;
+  } else {
+    const s0 = cfSteepFast && j > 0 && cfJd[j] <= cfTol * cfTol && cfSt[j - 1] === cfSt[j - 1] ? cfSe[j - 1] : cfSteepAt(j, cfR[j]);
+    const s1 = cfSteepAt(j, cfR[j + 1]); cfSe[j] = s1;
     if (s1 <= s0) { s = s1; cfSr[j] = cfR[j + 1]; } else { s = s0; cfSr[j] = cfR[j]; }
   }
   cfSt[j] = s;
