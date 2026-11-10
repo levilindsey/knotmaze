@@ -4331,6 +4331,12 @@ function mkCfArm(): CfArm { return { p: null as unknown as Poly, tx: new Float64
 const cfAr: CfArm[] = [mkCfArm(), mkCfArm()];
 const CF_MAXP = 160;
 const cfR = new Float64Array(CF_MAXP + 2);
+// K1247 s6: 1 where q jumps at cfR[j] (a lag switch's lag): w can dip just
+// before it and come back after, between any two nodes, so the growth splits
+// at it (cfJumpIn).
+const cfJ = new Uint8Array(CF_MAXP + 2);
+let cfJumpTol = 1e-3; // in h
+export function setCfJumpTol(t: number): void { cfJumpTol = t; }
 const cfTy = new Int8Array(CF_MAXP + 2);
 const cfK = new Float64Array((CF_MAXP + 2) * 8);
 const cfSV = new Uint8Array((CF_MAXP + 2) * 2); const cfSI = new Int32Array((CF_MAXP + 2) * 2); const cfSH = new Float64Array((CF_MAXP + 2) * 2);
@@ -4675,6 +4681,7 @@ function cfStep(C: FCache): void {
     kind = cfEvKind; X = cfAr[cfEvArm];
   }
   const dx = cfQx - qx; const dy = cfQy - qy;
+  cfJ[i + 1] = dx * dx + dy * dy > cfJumpTol * cfJumpTol * h * h ? 1 : 0;
   if (dx * dx + dy * dy > kfJump * kfJump * h * h) { cfEnded = true; cfStats.jumps++; return; }
   cfPx = qx; cfPy = qy;
 }
@@ -4741,7 +4748,7 @@ function cfAt(C: FCache, rho: number): boolean {
   let r = rho; let ok = true;
   if (r > cfR[cfN]) { r = cfR[cfN]; ok = false; }
   let i = cfCur < cfN ? cfCur : cfN - 1;
-  while (i > 0 && cfR[i] > r) i--;
+  while (i > 0 && cfR[i] >= r) i--; // at a boundary, the left piece (a jump's left limit)
   while (i < cfN - 1 && cfR[i + 1] < r) i++;
   cfCur = i;
   cfQ(i, r);
@@ -4750,8 +4757,28 @@ function cfAt(C: FCache, rho: number): boolean {
   kfCst.rhoCur = r;
   return ok;
 }
+// The first piece boundary in (lo + Lmin, hi - Lmin) where q jumps, or -1.
+function cfJumpIn(lo: number, hi: number, Lmin: number): number {
+  if (cfJumpTol < 0) return -1;
+  let j = cfCur < cfN ? cfCur : cfN - 1; if (j < 1) j = 1;
+  while (j > 1 && cfR[j - 1] > lo) j--;
+  for (; j < cfN; j++) { const r = cfR[j]; if (r >= hi - Lmin) break; if (r > lo + Lmin && cfJ[j]) return j; }
+  return -1;
+}
 function cfRefine(C: FCache, lo: number, wlo: number, hi: number, whi: number, E: number, Lmin: number): number {
   const L = hi - lo;
+  if (L > 2 * Lmin) {
+    // split at a jump: w at its left limit (cfAt at cfR[j] reads piece j - 1)
+    const j = cfJumpIn(lo, hi, Lmin);
+    if (j > 0) {
+      const m = cfR[j];
+      cfAt(C, m); const wm = Math.min(wlo, wOfC(C));
+      const left = cfRefine(C, lo, wlo, m, wm, E, Lmin);
+      const wmid = growWEnd;
+      if (!(wmid > 0)) { growWEnd = 0; return left; }
+      return left + cfRefine(C, m, wmid, hi, Math.min(wmid, whi), E, Lmin);
+    }
+  }
   if ((wlo - whi) * L * 0.5 <= E || L <= Lmin) { growWEnd = whi; return 0.5 * (wlo + whi) * L; }
   const m = 0.5 * (lo + hi);
   if (!cfAt(C, m)) { growWEnd = whi; return 0.5 * (wlo + whi) * L; }
@@ -4796,7 +4823,7 @@ function growCFC(C: FCache, ci: number): number {
     }
     const wr = wOfC(C); if (ci === wDbg.ci) wDbg.rows.push([1, (b - h) / h, wr, kfCst.qx, kfCst.qy, kfQa.u, kfQb.u, kfQa.d, kfQb.d]);
     const wb = Math.min(wa, wr);
-    if ((wa - wb) * (b - a) * 0.5 <= E) { integ += 0.5 * (wa + wb) * (b - a); wa = wb; }
+    if ((wa - wb) * (b - a) * 0.5 <= E && cfJumpIn(a, b, Lmin) < 0) { integ += 0.5 * (wa + wb) * (b - a); wa = wb; }
     else { integ += cfRefine(C, a, wa, b, wb, E, Lmin); wa = growWEnd; }
     a = b;
   }

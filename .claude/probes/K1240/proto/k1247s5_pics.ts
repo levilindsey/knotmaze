@@ -9,7 +9,7 @@
 // Today's outline is outline_base.ts, master 2d452e0e's outline.ts (scratch,
 // never committed):
 //   git show 2d452e0e:.claude/probes/K1240/proto/outline.ts --output=.claude/probes/K1240/proto/outline_base.ts
-//   node scripts/run_node.mjs .claude/probes/K1240/proto/k1247s5_pics.ts [--tag=_final] [--n=6] [--crop=8] [--zoom=3]
+//   node scripts/run_node.mjs .claude/probes/K1240/proto/k1247s5_pics.ts [--tag=_final] [--n=6] [--crop=8] [--zoom=3] [--out=pics]
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -22,7 +22,7 @@ import { FormB } from "../../../../src/render/field/form_b";
 const here = dirname(fileURLToPath(import.meta.url));
 const arg = (k: string): string | undefined => process.argv.find((a) => a.startsWith(`--${k}=`))?.slice(k.length + 3);
 const tag = arg("tag") ?? "_final"; const nPick = +(arg("n") ?? 6); const cropH = +(arg("crop") ?? 8); const zoom = +(arg("zoom") ?? 3);
-const outDir = join(here, "..", "out", "k1247s5", "pics");
+const outDir = join(here, "..", "out", "k1247s5", arg("out") ?? "pics"); // K1247 s6: --out=pics_s6 keeps stage 5's crops
 mkdirSync(outDir, { recursive: true });
 
 const crcT = new Uint32Array(256).map((_, n) => { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; return c >>> 0; });
