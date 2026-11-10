@@ -2809,6 +2809,7 @@ interface FCache {
   refB: Int32Array; refFinal: Int32Array; refS: Float64Array; refS0: Float64Array; nRef: number;
   junctionRegion: Int32Array; polyBox: Float64Array; cornerByAArm: Int32Array;
   chainSlots: number[][]; chainPiRank: number[];
+  reachArr: Float64Array[]; reachStamp: Int32Array[];
   offAx: Float64Array; offAy: Float64Array; offBx: Float64Array; offBy: Float64Array;
   bendArr: Float64Array[]; bendN: Int32Array; bendStamp: Int32Array;
   // corner results + warm state
@@ -3062,6 +3063,7 @@ function buildFastCache(st: DiagramStructure, scene: SceneIn): FCache {
     junctionRegion: new Int32Array(Math.max(1, scene.junctions.length)).fill(-1), polyBox: new Float64Array(Math.max(1, nCh * 4)),
     cornerByAArm: new Int32Array(Math.max(1, nArms)).fill(-1),
     chainSlots: polys.map(() => []), chainPiRank: polys.map(() => Infinity),
+    reachArr: passS.map((a) => new Float64Array(Math.max(2, a.length * 2))), reachStamp: passS.map((a) => new Int32Array(Math.max(2, a.length * 2))),
     offAx: new Float64Array(Math.max(4, ...st.nPts) + 4), offAy: new Float64Array(Math.max(4, ...st.nPts) + 4),
     offBx: new Float64Array(Math.max(4, ...st.nPts) + 4), offBy: new Float64Array(Math.max(4, ...st.nPts) + 4),
     bendArr: polys.map((pp) => new Float64Array(2 * (pp.x.length + 2))), bendN: new Int32Array(nCh), bendStamp: new Int32Array(nCh),
@@ -3287,6 +3289,14 @@ function setupFrame(C: FCache, st: DiagramStructure, scene: SceneIn): void {
     C.chainRoots.push(Float64Array.from(roots));
   }
   const reachOf = (pi: number, e: number, dirA: number): number => {
+    const rKey = e * 2 + (dirA > 0 ? 0 : 1);
+    if (C.reachStamp[pi][rKey] === kfFrameNo) return C.reachArr[pi][rKey];
+    const rVal = reachOfInner(pi, e, dirA);
+    C.reachStamp[pi][rKey] = kfFrameNo;
+    C.reachArr[pi][rKey] = rVal;
+    return rVal;
+  };
+  const reachOfInner = (pi: number, e: number, dirA: number): number => {
     const theta = C.passTheta[pi][e];
     const t = Math.tan(theta / 2);
     let reach = t > 1e-12 ? h / t : Infinity;
