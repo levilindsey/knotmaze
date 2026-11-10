@@ -4337,6 +4337,15 @@ const cfR = new Float64Array(CF_MAXP + 2);
 const cfJ = new Uint8Array(CF_MAXP + 2);
 let cfJumpTol = 1e-3; // in h
 export function setCfJumpTol(t: number): void { cfJumpTol = t; }
+// K1247 s6: on a line piece both feet lie on segments, so q's directions to
+// them are the segments' normals and fSteep is a constant: an upper bound on
+// w over the whole piece. A short line piece whose fSteep sits under both
+// ends' w is a dip the nodes step over (user_tw42 c143: plateaus 0.47 and 0.34
+// between nodes at 0.69 and 0.44), so the growth splits there (cfDipIn). NaN =
+// not computed yet; set per piece as it is made.
+const cfSt = new Float64Array(CF_MAXP + 2);
+let cfDipOn = true;
+export function setCfDip(on: boolean): void { cfDipOn = on; }
 const cfTy = new Int8Array(CF_MAXP + 2);
 const cfK = new Float64Array((CF_MAXP + 2) * 8);
 const cfSV = new Uint8Array((CF_MAXP + 2) * 2); const cfSI = new Int32Array((CF_MAXP + 2) * 2); const cfSH = new Float64Array((CF_MAXP + 2) * 2);
@@ -4345,7 +4354,7 @@ let cfQx = 0; let cfQy = 0;
 let cfEvArm = 0; let cfEvKind = 0;
 // free: corners whose w is 1 at every growth node (a certificate would skip their margins);
 // zeroEnd: corners whose w reached 0; pathEnd: corners whose path ended (kind 9 or the cap).
-export const cfStats = { corners: 0, pieces: 0, lags: 0, ends: 0, jumps: 0, fails: 0, evals: 0, lagSolves: 0, lagIt: 0, free: 0, zeroEnd: 0, pathEnd: 0 };
+export const cfStats = { corners: 0, pieces: 0, lags: 0, ends: 0, jumps: 0, fails: 0, evals: 0, lagSolves: 0, lagIt: 0, free: 0, zeroEnd: 0, pathEnd: 0, dips: 0 };
 const CF_TURN = 1e-12;
 let cfDbg = false; let cfDbgCi = -1;
 export const cfTrace: string[] = [];
@@ -4683,7 +4692,7 @@ function cfStep(C: FCache): void {
     kind = cfEvKind; X = cfAr[cfEvArm];
   }
   const dx = cfQx - qx; const dy = cfQy - qy;
-  cfJ[i + 1] = dx * dx + dy * dy > cfJumpTol * cfJumpTol * h * h ? 1 : 0;
+  cfJ[i + 1] = dx * dx + dy * dy > cfJumpTol * cfJumpTol * h * h ? 1 : 0; cfSt[i + 1] = NaN;
   if (dx * dx + dy * dy > kfJump * kfJump * h * h) { cfEnded = true; cfStats.jumps++; return; }
   cfPx = qx; cfPy = qy;
 }
@@ -4712,7 +4721,7 @@ function cfInit(C: FCache): boolean {
   const h = C.h; cfTol = 1e-9 * h; cfDel = 1e-6 * h;
   cfInitArm(C, cfAr[0], kfCst.aiA, kfFa, kfQa.u);
   cfInitArm(C, cfAr[1], kfCst.aiB, kfFb, kfQb.u);
-  cfN = 0; cfR[0] = h; cfEnded = false; cfRMax = h + kfCst.r0; cfCur = 0;
+  cfN = 0; cfR[0] = h; cfEnded = false; cfRMax = h + kfCst.r0; cfCur = 0; cfSt[0] = NaN;
   cfPx = kfCst.Vx; cfPy = kfCst.Vy;
   for (let it = 0; ; it++) {
     if (it > 8 || !cfMake(0, cfPx, cfPy)) return false;
@@ -4767,13 +4776,57 @@ function cfJumpIn(lo: number, hi: number, Lmin: number): number {
   for (; j < cfN; j++) { const r = cfR[j]; if (r >= hi - Lmin) break; if (r > lo + Lmin && cfJ[j]) return j; }
   return -1;
 }
+// fSteep on line piece j (constant there; see cfSt).
+const cfFa: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 };
+const cfFb: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 };
+// On a parabola piece (one foot on a vertex) q's direction from the vertex
+// turns monotonically away from the segment's normal as rho grows, and on a
+// point-point piece the two directions close up, so fSteep is monotone there:
+// its minimum over the piece is at an end. cfSt holds the minimum, cfSr its rho.
+const cfSr = new Float64Array(CF_MAXP + 2);
+function cfSteepAt(j: number, r: number): number {
+  cfQ(j, r); cfFoot(j, 0, r, cfFa); cfFoot(j, 1, r, cfFb);
+  const denQ = 1 + ((cfQx - cfFa.x) * (cfQx - cfFb.x) + (cfQy - cfFa.y) * (cfQy - cfFb.y)) / ((cfFa.d || 1) * (cfFb.d || 1));
+  const denRatio = Math.abs(kfCst.denV) > 1e-12 ? denQ / kfCst.denV : 0;
+  return ss01((denRatio - 0.3) / 0.4);
+}
+function cfSteepOf(j: number): number {
+  let s = cfSt[j];
+  if (s === s) return s;
+  if (cfTy[j] === 0) { const r = 0.5 * (cfR[j] + cfR[j + 1]); s = cfSteepAt(j, r); cfSr[j] = r; }
+  else {
+    const s0 = cfSteepAt(j, cfR[j]); const s1 = cfSteepAt(j, cfR[j + 1]);
+    if (s1 <= s0) { s = s1; cfSr[j] = cfR[j + 1]; } else { s = s0; cfSr[j] = cfR[j]; }
+  }
+  cfSt[j] = s;
+  return s;
+}
+// The first piece in [lo, hi] whose fSteep minimum (at cfSr) lies strictly
+// inside and under wcap (w there is lower than at either end), or -1.
+function cfDipIn(lo: number, hi: number, wcap: number): number {
+  if (!cfDipOn) return -1;
+  let j = cfCur < cfN ? cfCur : cfN - 1; if (j < 0) return -1;
+  while (j > 0 && cfR[j] > lo) j--;
+  const zl = 1e-12 * kfCst.rhoCur;
+  for (; j < cfN; j++) {
+    const r = cfR[j]; if (r >= hi) break;
+    if (!(cfR[j + 1] - r > zl) || cfR[j + 1] <= lo) continue;
+    if (cfSteepOf(j) < wcap - 1e-12) { const m = cfSr[j]; if (m > lo + zl && m < hi - zl) return j; }
+  }
+  return -1;
+}
 function cfRefine(C: FCache, lo: number, wlo: number, hi: number, whi: number, E: number, Lmin: number): number {
   const L = hi - lo;
   if (L > 2 * Lmin) {
-    // split at a jump: w at its left limit (cfAt at cfR[j] reads piece j - 1)
+    // split at a jump: w at its left limit (cfAt at cfR[j] reads piece j - 1);
+    // else inside a dip (a line piece under both ends' w)
     const j = cfJumpIn(lo, hi, Lmin);
-    if (j > 0) {
-      const m = cfR[j];
+    let m = j > 0 ? cfR[j] : -1;
+    if (m < 0) {
+      const d = cfDipIn(lo, hi, Math.min(wlo, whi));
+      if (d >= 0) { m = 0.5 * (cfR[d] + Math.min(cfR[d + 1], hi)); if (m < lo + Lmin) m = lo + Lmin; if (m > hi - Lmin) m = hi - Lmin; cfStats.dips++; }
+    }
+    if (m > 0) {
       cfAt(C, m); const wm = Math.min(wlo, wOfC(C));
       const left = cfRefine(C, lo, wlo, m, wm, E, Lmin);
       const wmid = growWEnd;
@@ -4826,7 +4879,7 @@ function growCFC(C: FCache, ci: number): number {
     }
     const wr = wOfC(C); if (ci === wDbg.ci) wDbg.rows.push([1, (b - h) / h, wr, kfCst.qx, kfCst.qy, kfQa.u, kfQb.u, kfQa.d, kfQb.d]);
     const wb = Math.min(wa, wr); if (wr !== 1) all1 = false;
-    if ((wa - wb) * (b - a) * 0.5 <= E && cfJumpIn(a, b, Lmin) < 0) { integ += 0.5 * (wa + wb) * (b - a); wa = wb; }
+    if ((wa - wb) * (b - a) * 0.5 <= E && cfJumpIn(a, b, Lmin) < 0 && cfDipIn(a, b, wb) < 0) { integ += 0.5 * (wa + wb) * (b - a); wa = wb; }
     else { integ += cfRefine(C, a, wa, b, wb, E, Lmin); wa = growWEnd; }
     a = b;
   }
