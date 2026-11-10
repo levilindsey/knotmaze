@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1258.
+Next free ID: K1260.
 
 ## Waiting on Levi
 
@@ -512,16 +512,8 @@ Next free ID: K1258.
   - owner: agent `a82e0a83c91fe4c5a` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-09 21:31, 2 h cap ~23:31)
   - branch: `worktree-agent-a82e0a83c91fe4c5a`, worktree `.claude/worktrees/agent-a82e0a83c91fe4c5a`; last commit: `54a6b84d`
   - evidence: .claude/probes/K1240/proto/ (outline.ts; k1247c_final.ps1, k1247c_coldwarm.ts, k1247c_time.ts + run_locked_k1247s4.ps1, k1247s5_cmp.ts, k1247s5_outside.ts, k1247s5_pics.ts, k1247s6_qt.ts); stage 6's record: K1247_s6_analytic.md Handoff 1
-  - next: Stage 7 (docs/design/K1247_s7_cf_speed.md): def's corners phase to 1 ms median (stage 6: 7.3-7.5 ms locked; profile pieces 2.2, w 2.3 of which margin 2.0, cold V solve 0.8) at stage 6's accuracy (58/17/0/0; the worst, g41_def_tw42 0.1 c3 at 0.079 h, is a foot near-tie). Stage 6 merged at 62d03bb1. When it reports: Claude re-runs the checks and timing, merges, then K1240's S3f round 4, K1254, K1256
+  - next: Stage 7 (docs/design/K1247_s7_cf_speed.md): def's corners phase to 1 ms median (stage 6: 7.3-7.5 ms locked; profile pieces 2.2, w 2.3 of which margin 2.0, cold V solve 0.8) at stage 6's accuracy (58/17/0/0; the worst, g41_def_tw42 0.1 c3 at 0.079 h, is a foot near-tie). Stage 6 merged at 62d03bb1; K1257 (0656cf58) ported its growth into form B (src/render/field/corner_cf.ts). When it reports: Claude re-runs the checks and timing, merges, re-runs k1257_sliver.ts and ports any output change into corner_cf.ts; then K1240's S3f round 4, K1254, K1256
   - brief: `docs/design/K1247_s7_cf_speed.md`
-- **K1257** · Form B's corners (src/render/field/, the old 32-node growth) take K1247 stage 6's closed-form
-  growth, so form B (the float64 reference and the check pictures' fill) matches the new outline: today they
-  differ by up to 0.88 h / 8.3 px (k1247s6_sliver.ts) and verify fails 48 corners (from K1247 s6, 62d03bb1)
-  - owner: agent `a50b982830f36c9c8` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-09 21:31, 2 h cap ~23:31)
-  - branch: `worktree-agent-a50b982830f36c9c8`, worktree `.claude/worktrees/agent-a50b982830f36c9c8`; last commit: `54a6b84d`
-  - evidence: .claude/probes/K1240/proto/ (k1247s6_sliver.ts, k1247c_final.ps1, k1247s5_pics.ts); src/render/field/
-  - next: Port the growth from outline.ts into form B (src must not import the probe): no corner over 0.5 device px from the outline's, output outside corners unchanged, verify's corner failures gone, npm test green, one fbb screenshot, stage 6's 6 crops re-cut. When it reports: Claude views the crops, merges, reruns the sliver check
-  - brief: `docs/design/K1257_formb_corners.md`
 
 ## Next, in order
 
@@ -1727,6 +1719,10 @@ Every other item below waits on the trigger it names.
   it's ok, but it still isn't perfectly smooth'). K1240 repaints it on one junction polygon (paint on the
   outline's geometry, Levi 2026-11-06); recheck on K1244's sheets (.claude/probes/K1211/out6/) when the
   outline reaches the app.
+- **K1258** · The row measure (k1247_exact.ts, the cmprows rows) takes a neighbouring arm's tA term on the
+  paper side of a corner arc, so an outline sample lying exactly on form B's edge reads 1-3.7 px instead of 0
+  (def A, g41_def_tw64 A, def 0.5 A; master too). Fix it before those rows gate (from K1257; k1257_rowdiag.ts,
+  K1257_formb_corners.md handoff)
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2043,9 +2039,13 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K1255** · Port K1240's whole corner integrator (growIntegC to footNearM, its WalkCaches and polylines in
   WASM memory) once K1247's corner solve settles: about 3 ms of def's frame at best, so it can't close the
   gate alone (K1247_wasm_kernel.md handoff; harness .claude/probes/K1240/wasm/frame_wasm.ts)
+- **K1259** · Time form B's build with K1257's closed-form corners under the perf lock (the same growth in the
+  outline took 7.3-7.5 ms against the old growth's 6.5); form B is the probes' float64 reference and the fbb
+  flag's path (from K1257)
 
 ## Done
 
+- **K1257** · form B grows corners with the outline's closed-form pieces (src/render/field/corner_cf.ts): 71 corners over 0.5 device px from the outline's -> 0 (max 0.026 px); outside corners bit-identical (k1257_same.ts, 27 scenes); form_b.test.ts's acute pair re-frozen (r 0.170935 -> 0.170801 h); Claude re-ran sliver, same and the field tests and viewed the crops and the fbb shot. Verify's 48 are the stale base tables, not form B. Done in 0656cf58 (2026-11-09).
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's float64 reference. Dropped: superseded by K1240 (Levi, 2026-11-09: keep the redesign, no fallback to K1040's GPU field); its open checks (the pop census, the fades in motion, check #13) fold into K1240 when the outline reaches the app (2026-11-09).
 - **K1251** · J3n's looks (K863, card K1251). Levi, 2026-11-09: the variant everywhere (b, v and w at a word's end and into high-entry letters, f, p); the kit's build is work38/cand/J3NV. Done in 15cb9922 (2026-11-09).
 - **K1253** · WASM vs JS on the outline's kernels: 1.6-1.8x on footNearM and marginOfC replayed alone, bit-exact, but no measurable gain swapped into def's frame; no port now (docs/design/K1247_wasm_kernel.md handoff). Done in e60dff3a (2026-11-09).
