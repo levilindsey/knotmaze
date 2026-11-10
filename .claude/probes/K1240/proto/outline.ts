@@ -4291,6 +4291,37 @@ function pushCand(uSide: number, oSide: number, x: number, y: number, dc: number
   candN++;
 }
 
+// K1247 s2: a segment list's bboxes, per entry and per block of XBLK
+// consecutive entries (the crossing and eye searches' exact prune).
+const XBLK = 8;
+interface SegBoxes { n: number; nb: number; x0: Float64Array; x1: Float64Array; y0: Float64Array; y1: Float64Array; bx0: Float64Array; bx1: Float64Array; by0: Float64Array; by1: Float64Array }
+function mkSegBoxes(): SegBoxes {
+  return { n: 0, nb: 0, x0: new Float64Array(256), x1: new Float64Array(256), y0: new Float64Array(256), y1: new Float64Array(256), bx0: new Float64Array(64), bx1: new Float64Array(64), by0: new Float64Array(64), by1: new Float64Array(64) };
+}
+function fillSegBoxes(sb: SegBoxes, B: FBord, list: ArrayLike<number>, n = list.length): void {
+  if (sb.x0.length < n) { const c = n * 2; sb.x0 = new Float64Array(c); sb.x1 = new Float64Array(c); sb.y0 = new Float64Array(c); sb.y1 = new Float64Array(c); }
+  const nb = Math.ceil(n / XBLK);
+  if (sb.bx0.length < nb) { const c = nb * 2; sb.bx0 = new Float64Array(c); sb.bx1 = new Float64Array(c); sb.by0 = new Float64Array(c); sb.by1 = new Float64Array(c); }
+  const X = B.bx; const Y = B.by;
+  for (let b = 0; b < nb; b++) {
+    let bx0 = Infinity; let bx1 = -Infinity; let by0 = Infinity; let by1 = -Infinity;
+    const kEnd = Math.min(n, (b + 1) * XBLK);
+    for (let k = b * XBLK; k < kEnd; k++) {
+      const i = list[k];
+      const ax = X[i]; const ay = Y[i]; const cx = X[i + 1]; const cy = Y[i + 1];
+      const x0 = ax < cx ? ax : cx; const x1 = ax < cx ? cx : ax;
+      const y0 = ay < cy ? ay : cy; const y1 = ay < cy ? cy : ay;
+      sb.x0[k] = x0; sb.x1[k] = x1; sb.y0[k] = y0; sb.y1[k] = y1;
+      if (x0 < bx0) bx0 = x0; if (x1 > bx1) bx1 = x1; if (y0 < by0) by0 = y0; if (y1 > by1) by1 = y1;
+    }
+    sb.bx0[b] = bx0; sb.bx1[b] = bx1; sb.by0[b] = by0; sb.by1[b] = by1;
+  }
+  sb.n = n; sb.nb = nb;
+}
+const xsU = [mkSegBoxes(), mkSegBoxes()];
+const xsO = [mkSegBoxes(), mkSegBoxes()];
+let xObl = new Int32Array(256);
+
 const kfCuts: { xi: number; U: number; O: number; uSide: number; s: number; x: number; y: number }[] = [];
 const kfDiagCross: string[] = [];
 let kfTwistFlips = 0;
@@ -4317,23 +4348,46 @@ function crossingsPhaseC(C: FCache, scene: SceneIn): void {
     const oSegs: number[][] = [[], []];
     let searched = false;
     const doFull = (): void => {
-      for (let si = 0; si < 2; si++) { segsNearC(C, U, sides[si], sUnder, R, uSegs[si]); segsNearC(C, O, sides[si], sOver, R, oSegs[si]); }
+      for (let si = 0; si < 2; si++) {
+        segsNearC(C, U, sides[si], sUnder, R, uSegs[si]); segsNearC(C, O, sides[si], sOver, R, oSegs[si]);
+        fillSegBoxes(xsU[si], BU[si], uSegs[si]); fillSegBoxes(xsO[si], BO[si], oSegs[si]);
+      }
       candN = 0;
+      // K1247 s2: the same (ui, oi, i, j) order as the all-pairs loop,
+      // with pairs skipped by block bboxes first (a segment pair whose
+      // bboxes overlap lies in block pairs whose bboxes overlap: exact).
       for (let ui = 0; ui < 2; ui++) for (let oi = 0; oi < 2; oi++) {
         const Bu = BU[ui]; const Bo = BO[oi];
-        for (const i of uSegs[ui]) {
-          const a0x = Bu.bx[i]; const a0y = Bu.by[i]; const a1x = Bu.bx[i + 1]; const a1y = Bu.by[i + 1];
-          const mnx = Math.min(a0x, a1x); const mxx = Math.max(a0x, a1x);
-          const mny = Math.min(a0y, a1y); const mxy = Math.max(a0y, a1y);
-          for (const j of oSegs[oi]) {
-            if (U === O && ui === oi && i === j) continue;
-            const b0x = Bo.bx[j]; const b0y = Bo.by[j]; const b1x = Bo.bx[j + 1]; const b1y = Bo.by[j + 1];
-            if (mxx < Math.min(b0x, b1x) || mnx > Math.max(b0x, b1x) || mxy < Math.min(b0y, b1y) || mny > Math.max(b0y, b1y)) continue;
-            const hit = segInt(a0x, a0y, a1x, a1y, b0x, b0y, b1x, b1y);
-            if (!hit) continue;
-            const px = a0x + (a1x - a0x) * hit.t;
-            const py = a0y + (a1y - a0y) * hit.t;
-            pushCand(sides[ui], sides[oi], px, py, Math.hypot(px - cpX, py - cpY), lerpS(pU, Bu.bs[i], Bu.bs[i + 1], hit.t), lerpS(C.polys[O], Bo.bs[j], Bo.bs[j + 1], hit.u), i, j, 0, -1, hit.t, hit.u);
+        const ul = uSegs[ui]; const ol = oSegs[oi];
+        const su = xsU[ui]; const so = xsO[oi];
+        if (xObl.length < so.nb) xObl = new Int32Array(so.nb * 2);
+        const obl = xObl;
+        for (let ub = 0; ub < su.nb; ub++) {
+          const ux0 = su.bx0[ub]; const ux1 = su.bx1[ub]; const uy0 = su.by0[ub]; const uy1 = su.by1[ub];
+          let nOb = 0;
+          for (let ob = 0; ob < so.nb; ob++) if (!(ux1 < so.bx0[ob] || ux0 > so.bx1[ob] || uy1 < so.by0[ob] || uy0 > so.by1[ob])) obl[nOb++] = ob;
+          if (!nOb) continue;
+          const kEnd = Math.min(su.n, (ub + 1) * XBLK);
+          for (let k = ub * XBLK; k < kEnd; k++) {
+            const i = ul[k];
+            const mnx = su.x0[k]; const mxx = su.x1[k]; const mny = su.y0[k]; const mxy = su.y1[k];
+            const a0x = Bu.bx[i]; const a0y = Bu.by[i]; const a1x = Bu.bx[i + 1]; const a1y = Bu.by[i + 1];
+            for (let q = 0; q < nOb; q++) {
+              const ob = obl[q];
+              if (mxx < so.bx0[ob] || mnx > so.bx1[ob] || mxy < so.by0[ob] || mny > so.by1[ob]) continue;
+              const jEnd = Math.min(so.n, (ob + 1) * XBLK);
+              for (let kk = ob * XBLK; kk < jEnd; kk++) {
+                if (mxx < so.x0[kk] || mnx > so.x1[kk] || mxy < so.y0[kk] || mny > so.y1[kk]) continue;
+                const j = ol[kk];
+                if (U === O && ui === oi && i === j) continue;
+                const b0x = Bo.bx[j]; const b0y = Bo.by[j]; const b1x = Bo.bx[j + 1]; const b1y = Bo.by[j + 1];
+                const hit = segInt(a0x, a0y, a1x, a1y, b0x, b0y, b1x, b1y);
+                if (!hit) continue;
+                const px = a0x + (a1x - a0x) * hit.t;
+                const py = a0y + (a1y - a0y) * hit.t;
+                pushCand(sides[ui], sides[oi], px, py, Math.hypot(px - cpX, py - cpY), lerpS(pU, Bu.bs[i], Bu.bs[i + 1], hit.t), lerpS(C.polys[O], Bo.bs[j], Bo.bs[j + 1], hit.u), i, j, 0, -1, hit.t, hit.u);
+              }
+            }
           }
         }
       }
