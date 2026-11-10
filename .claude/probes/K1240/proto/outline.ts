@@ -4037,12 +4037,39 @@ function wOfC(C: FCache): number {
 // (k1247s5_ref.ts) follows it. Today's 1e-3 h floor rejected more of those
 // jumps the smaller the steps (the 128-node run's 0.69 h).
 const kfJump = 0.1;
-let kfGrowE = 0.002; // the integral's error budget, in h (k1247s5 knobs)
+let kfGrowE = 1e-3; // the integral's error budget, in h (k1247s5 knobs)
 let kfGrowH = 0.25; // the largest step, in r0
 let kfGrowP = 1 / 64; // the path's largest advance, in r0
 export function setGrowKnobs(e: number, hm: number, p = kfGrowP): void { kfGrowE = e; kfGrowH = hm; kfGrowP = p; }
+let kfGrowN = 16; // uniform growth: nodes (and path steps) over r0; 0 = the adaptive one
+let kfGrowZ = 1e-3; // uniform growth: the smallest refined interval, in h
+let kfGrowMid = true; // uniform growth: accept a refined interval by its midpoint test
+export function setGrowUniform(n: number, e: number, z = kfGrowZ, mid = kfGrowMid): void { kfGrowN = n; kfGrowE = e; kfGrowZ = z; kfGrowMid = mid; }
 export const growDbg: { ci: number; rows: number[][] } = { ci: -1, rows: [] };
 export const growStats = { evals: 0, rejects: 0, corners: 0, steps: 0, fails: 0 };
+// K1247 s5: the predictor's foot hint. footNearM walks from its hint in
+// windows of h/32, so a long step's walk costs (foot travel) / (h/32)
+// windows; moving the hint along the foot's segment by q's tangential
+// motion starts the walk near the answer (a vertex foot walks back).
+let kfShift = true;
+export function setGrowShift(b: boolean): void { kfShift = b; }
+function shiftFootC(C: FCache, arm: FArm, f: FFoot, mx: number, my: number): void {
+  const p = C.polys[arm.pi]; let k = f.k;
+  if (k < 0 || k >= p.nseg) return;
+  const l = p.segLen[k]; if (!(l > 0)) return;
+  const ds = (mx * p.dx[k] + my * p.dy[k]) / l;
+  const winLoR = arm.dir > 0 ? arm.sR : arm.sR - arm.L;
+  const winHiR = arm.dir > 0 ? arm.sR + arm.L : arm.sR;
+  const sh = p.closed && p.len > 0 ? Math.round((f.u - (winLoR + winHiR) / 2) / p.len) * p.len : 0;
+  const u = f.u + ds;
+  if (!(u > winLoR + sh + C.h / 32 && u < winHiR + sh - C.h / 32)) return;
+  let off = f.s - p.s[k] + ds;
+  for (let it = 0; it < 64; it++) {
+    if (off > p.segLen[k]) { const k2 = k + 1; if (k2 >= p.nseg) { if (!p.closed) return; off -= p.segLen[k]; k = 0; } else { off -= p.segLen[k]; k = k2; } }
+    else if (off < 0) { const k2 = k - 1; if (k2 < 0) { if (!p.closed) return; k = p.nseg - 1; off += p.segLen[k]; } else { k = k2; off += p.segLen[k]; } }
+    else { f.u = u; f.k = k; f.s = p.s[k] + off; return; }
+  }
+}
 function advanceToC(C: FCache, rhoT: number, dMax: number): void {
   const h = C.h;
   const dN = Math.max(dMax, 1e-12);
@@ -4061,6 +4088,7 @@ function advanceToC(C: FCache, rhoT: number, dMax: number): void {
         const gx = kfCst.qx + ux * dd; const gy = kfCst.qy + uy * dd;
         const acc = Math.min(h, Math.max(0.5 * Math.sqrt(ux * ux + uy * uy) * dd, kfJump * h));
         copyFoot(kfTa, kfQa); copyFoot(kfTb, kfQb);
+        if (kfShift) { shiftFootC(C, kfCst.A, kfTa, ux * dd, uy * dd); shiftFootC(C, kfCst.B, kfTb, ux * dd, uy * dd); }
         let sx = gx; let sy = gy;
         kfXY[0] = sx; kfXY[1] = sy; footNearM(C, kfCst.A, kfTa); footNearM(C, kfCst.B, kfTb);
         for (let it = 0; it < 60; it++) {
@@ -4112,12 +4140,61 @@ function restoreNodeC(kk: number): void {
 // its drop in w (so the whole integral is off by at most 2 kfGrowE h).
 // Otherwise the step halves. A drop to 0 is localized the same way, which
 // is the exact stop. The end is re-advanced from the last node below it.
+let growNN = 0; let growWEnd = 0;
+function refineC(C: FCache, klo: number, lo: number, wlo: number, hi: number, whi: number, E: number, Lmin: number): number {
+  const L = hi - lo;
+  if ((wlo - whi) * L * 0.5 <= E || L <= Lmin || growNN >= kfNodeCap) { growWEnd = whi; return 0.5 * (wlo + whi) * L; }
+  const m = 0.5 * (lo + hi);
+  restoreNodeC(klo);
+  advanceToC(C, m, m - lo); growStats.evals++;
+  if (kfCst.rhoCur < m - 1e-9 * Math.max(1, m)) { growWEnd = whi; return 0.5 * (wlo + whi) * L; }
+  const wm = Math.min(wlo, wOfC(C));
+  const km = growNN++; saveNodeC(km); nodeRho[km] = m;
+  if (kfGrowMid) {
+    const wh = Math.min(wm, whi);
+    if (Math.abs(wlo - 2 * wm + wh) * L * 0.25 <= E) { growWEnd = wh; return (wlo + 2 * wm + wh) * L * 0.25; }
+  }
+  const left = refineC(C, klo, lo, wlo, m, wm, E, Lmin);
+  const wmid = growWEnd;
+  if (!(wmid > 0)) { growWEnd = 0; return left; }
+  return left + refineC(C, km, m, wmid, hi, Math.min(wmid, whi), E, Lmin);
+}
 function growIntegC(C: FCache, ci: number): number {
   copyFoot(kfQa, kfFa); copyFoot(kfQb, kfFb);
   kfQa.u = C.armSR[kfCst.aiA] + C.armDir[kfCst.aiA] * armDistC(C, kfCst.aiA, kfFa.s);
   kfQb.u = C.armSR[kfCst.aiB] + C.armDir[kfCst.aiB] * armDistC(C, kfCst.aiB, kfFb.s);
   kfCst.qx = kfCst.Vx; kfCst.qy = kfCst.Vy; kfCst.rhoCur = C.h;
   if (!(kfCst.r0 > 1e-9)) { C.nodeN[ci] = 0; return 0; }
+  if (kfGrowN > 0) {
+    const h = C.h; const r0 = kfCst.r0; const N = kfGrowN; const dN = r0 / N;
+    const E = kfGrowE * h; const Lmin = kfGrowZ * h;
+    growStats.corners++;
+    saveNodeC(0); nodeRho[0] = h; growNN = 1;
+    let ka = 0; let a = h; let wa = wOfC(C); growStats.evals++;
+    let integ = 0;
+    for (let kk = 1; kk <= N && wa > 0 && growNN < kfNodeCap; kk++) {
+      const b = kk === N ? h + r0 : h + kk * dN;
+      restoreNodeC(ka);
+      advanceToC(C, b, dN); growStats.evals++;
+      if (kfCst.rhoCur < b - 1e-9 * Math.max(1, b)) {
+        const s = Math.min(wa, wOfC(C));
+        integ += 0.5 * (wa + s) * Math.max(0, kfCst.rhoCur - a);
+        break;
+      }
+      const wb = Math.min(wa, wOfC(C));
+      const kb = growNN++; saveNodeC(kb); nodeRho[kb] = b;
+      if ((wa - wb) * (b - a) * 0.5 <= E) { integ += 0.5 * (wa + wb) * (b - a); wa = wb; }
+      else { integ += refineC(C, ka, a, wa, b, wb, E, Lmin); wa = growWEnd; }
+      ka = kb; a = b;
+    }
+    C.nodeN[ci] = growNN;
+    const target = h + integ;
+    let k0 = 0;
+    for (let i = 1; i < growNN; i++) if (nodeRho[i] <= target && nodeRho[i] > nodeRho[k0]) k0 = i;
+    restoreNodeC(k0);
+    if (target > nodeRho[k0]) advanceToC(C, target, dN);
+    return Math.max(0, kfCst.rhoCur - h);
+  }
   const h = C.h; const r0 = kfCst.r0;
   const E = kfGrowE * h; const Hmax = kfGrowH * r0; const Lmin = 1e-4 * h; const P = kfGrowP * r0;
   growStats.corners++;

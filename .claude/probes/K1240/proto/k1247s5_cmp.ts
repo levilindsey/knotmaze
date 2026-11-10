@@ -16,12 +16,12 @@ const here = dirname(fileURLToPath(import.meta.url));
 const refDir = join(here, "..", "out", "k1247s5");
 const arg = (k: string): string | undefined => process.argv.find((a) => a.startsWith(`--${k}=`))?.slice(k.length + 3);
 const E = +(arg("E") ?? 0.002); const Hm = +(arg("H") ?? 0.25); const P = +(arg("P") ?? 1 / 64);
-O.setGrowKnobs(E, Hm, P);
+if (arg("N") !== undefined) O.setGrowUniform(+arg("N")!, E, +(arg("Z") ?? 1e-3), arg("mid") !== "0"); else O.setGrowKnobs(E, Hm, P);
 const only = arg("scene"); const tag = arg("tag") ?? "";
 interface Cn { ok: boolean; r: number; qx: number; qy: number; tax: number; tay: number; tbx: number; tby: number }
 const cdist = (a: Cn, b: Cn): number => Math.max(Math.hypot(a.qx - b.qx, a.qy - b.qy), Math.hypot(a.tax - b.tax, a.tay - b.tay), Math.hypot(a.tbx - b.tbx, a.tby - b.tby));
 const out: { name: string; mult: number; h: number; moves: { i: number; d: number; dRef: number; dToday: number; qx: number; qy: number }[] }[] = [];
-let worstNew = 0; let worstToday = 0; let evalsTot = 0; let cornersTot = 0; let stepsTot = 0; let over = 0; let overT = 0;
+let worstNew = 0; let worstToday = 0; let evalsTot = 0; let cornersTot = 0; let stepsTot = 0; let over = 0; let overT = 0; const hist = [0, 0, 0, 0]; const histT = [0, 0, 0, 0]; const edges = [0.01, 0.03, 0.1, 0.3];
 for (const name of ALL) {
   if (only && name !== only) continue;
   for (const mult of multsOf(name)) {
@@ -51,9 +51,10 @@ for (const name of ALL) {
     moves.sort((x, y) => y.d - x.d);
     out.push({ name, mult, h, moves: moves.slice(0, 12) });
     worstNew = Math.max(worstNew, dRef); worstToday = Math.max(worstToday, dTod); evalsTot += ev; cornersTot += nc; stepsTot += stp;
+    for (const x of moves) for (let e = 0; e < 4; e++) { if (x.dRef > edges[e]) hist[e]++; if (x.dToday > edges[e]) histT[e]++; }
     const n01 = moves.filter((x) => x.dRef > 0.01).length; over += n01; const t01 = moves.filter((x) => x.dToday > 0.01).length; overT += t01;
     console.log(`${name} ${mult}${R.conv > 0 ? "" : " (ref not conv)"}: new->ref ${dRef.toFixed(4)} @${atR}; today->ref ${dTod.toFixed(4)} @${atT}; move ${mv.toFixed(4)} @${atM}; >0.01h ${n01} (today ${t01}); okDiff ${okDiff}; evals ${ev} (${(ev / Math.max(1, nc)).toFixed(1)}/corner, rej ${rj}); steps ${stp} fails ${fl}`);
   }
 }
-console.log(`ALL: worst new->ref ${worstNew.toFixed(4)} h, today->ref ${worstToday.toFixed(4)} h, evals ${evalsTot}, steps ${stepsTot}, grown corners ${cornersTot}, corners >0.01h ${over} (today ${overT})`);
+console.log(`ALL: worst new->ref ${worstNew.toFixed(4)} h, today->ref ${worstToday.toFixed(4)} h, evals ${evalsTot}, steps ${stepsTot}, grown corners ${cornersTot}, corners >0.01h ${over} (today ${overT}); >0.01/0.03/0.1/0.3h ${hist.join("/")} (today ${histT.join("/")})`);
 writeFileSync(join(refDir, `cmp${tag}.json`), JSON.stringify(out));
