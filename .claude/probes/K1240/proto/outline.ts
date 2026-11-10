@@ -4321,13 +4321,20 @@ function crossingsPhaseC(C: FCache, scene: SceneIn): void {
       candN = 0;
       for (let ui = 0; ui < 2; ui++) for (let oi = 0; oi < 2; oi++) {
         const Bu = BU[ui]; const Bo = BO[oi];
-        for (const i of uSegs[ui]) for (const j of oSegs[oi]) {
-          if (U === O && ui === oi && i === j) continue;
-          const hit = segInt(Bu.bx[i], Bu.by[i], Bu.bx[i + 1], Bu.by[i + 1], Bo.bx[j], Bo.by[j], Bo.bx[j + 1], Bo.by[j + 1]);
-          if (!hit) continue;
-          const px = Bu.bx[i] + (Bu.bx[i + 1] - Bu.bx[i]) * hit.t;
-          const py = Bu.by[i] + (Bu.by[i + 1] - Bu.by[i]) * hit.t;
-          pushCand(sides[ui], sides[oi], px, py, Math.hypot(px - cpX, py - cpY), lerpS(pU, Bu.bs[i], Bu.bs[i + 1], hit.t), lerpS(C.polys[O], Bo.bs[j], Bo.bs[j + 1], hit.u), i, j, 0, -1, hit.t, hit.u);
+        for (const i of uSegs[ui]) {
+          const a0x = Bu.bx[i]; const a0y = Bu.by[i]; const a1x = Bu.bx[i + 1]; const a1y = Bu.by[i + 1];
+          const mnx = Math.min(a0x, a1x); const mxx = Math.max(a0x, a1x);
+          const mny = Math.min(a0y, a1y); const mxy = Math.max(a0y, a1y);
+          for (const j of oSegs[oi]) {
+            if (U === O && ui === oi && i === j) continue;
+            const b0x = Bo.bx[j]; const b0y = Bo.by[j]; const b1x = Bo.bx[j + 1]; const b1y = Bo.by[j + 1];
+            if (mxx < Math.min(b0x, b1x) || mnx > Math.max(b0x, b1x) || mxy < Math.min(b0y, b1y) || mny > Math.max(b0y, b1y)) continue;
+            const hit = segInt(a0x, a0y, a1x, a1y, b0x, b0y, b1x, b1y);
+            if (!hit) continue;
+            const px = a0x + (a1x - a0x) * hit.t;
+            const py = a0y + (a1y - a0y) * hit.t;
+            pushCand(sides[ui], sides[oi], px, py, Math.hypot(px - cpX, py - cpY), lerpS(pU, Bu.bs[i], Bu.bs[i + 1], hit.t), lerpS(C.polys[O], Bo.bs[j], Bo.bs[j + 1], hit.u), i, j, 0, -1, hit.t, hit.u);
+          }
         }
       }
       searched = true;
