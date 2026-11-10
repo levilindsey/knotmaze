@@ -503,11 +503,11 @@ Next free ID: K1265.
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: nobody since 2026-11-10 00:06 (merged; agent `a6fbc9ef86c3f931b` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `8d72dc37`
-  - evidence: .claude/probes/K1240/proto/ (outline.ts untouched; new k1247s8_* tools; k1247c_time.ts + run_locked_k1247s4.ps1, _s7_pair.mjs, k1257_sliver.ts's px scale); stage 7's record: K1247_s7_cf_speed.md Handoff 1
-  - next: Stage 8 merged (8d72dc37; negative): at 0.25 px, point reduction keeps 96% of def's points and times 19.1 ms against 18.8 (frame ~ 7.6 + 11.2 x kept fraction). The bar needs ~95% because the outline jumps in its own points: 0.001 px random jitter moves def's pieces 9.0 px and muse_default_tw's 8.7 (Claude re-ran k1247s8_jitter.ts: 0.01 px gives 21.8 and 24.7; fat 0.06). Causes: an end arm's root kink pins corner foot ua (def corners 34, 38: r 2h cap -> 0.197h), feet move 9-20x the arm-length change, region ids shift when a sliver drops. Stage 9 after K1240 round 4 lands (outline.ts): make the corners continuous in their points (a pop-in-motion defect as well as the speed's block), then re-time plain eps 0.1 / 0.2 (11.5-13.0 ms if they pass) with k1247s8_acc.ts and k1247s8_pair.mjs
-  - brief: `docs/design/K1247_s8_density.md`
+  - owner: agent `a3d3322f457790ce3` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-10 00:25, 2 h cap ~02:25)
+  - branch: `worktree-agent-a3d3322f457790ce3`, worktree `.claude/worktrees/agent-a3d3322f457790ce3`; last commit: `ae806de9`
+  - evidence: .claude/probes/K1240/proto/ (outline.ts, k1247s8_jitter.ts, k1247s8_acc.ts, k1247s8_pair.mjs + k1247s8_run_locked.ps1, k1247s8_corner/wrows/cornred/regions.ts, _r4_tailjit.ts, k1247c_final.ps1, s3f_claude_checks.ps1); stage 8's record: K1247_s8_density.md Handoff 1
+  - next: Stage 9 (started 2026-11-10 00:31): re-make the k1247c baselines (K1263), then make the outline continuous in its points (the end arm's root-kink foot at def corners 34/38, foot sensitivity to arm L, region ids that skip slivers, the tails' first-interval jump at def corner 35) until no piece moves over 0.25 px at 0.01 px jitter unless form B does; K1240 rows and K1247 checks hold; then plain eps 0.1/0.2 accuracy and a locked pair. When it reports: Claude views the crops, re-runs the jitter tool, merges
+  - brief: `docs/design/K1247_s9_continuity.md`
 
 ## Next, in order
 
