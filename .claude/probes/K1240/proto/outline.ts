@@ -4069,6 +4069,8 @@ let kfGrowS = 1; // uniform growth: path steps per node (w is evaluated at the n
 export function setGrowSub(s: number): void { kfGrowS = s; }
 export function setGrowUniform(n: number, e: number, z = kfGrowZ, mid = kfGrowMid): void { kfGrowN = n; kfGrowE = e; kfGrowZ = z; kfGrowMid = mid; }
 export const growDbg: { ci: number; rows: number[][] } = { ci: -1, rows: [] };
+// K1247 s6: w at each growth node (raw, before the running min) of corner ci: [cf?, rho/h - 1, w, qx, qy, uA, uB, dA, dB].
+export const wDbg: { ci: number; rows: number[][] } = { ci: -1, rows: [] };
 export const growStats = { evals: 0, rejects: 0, corners: 0, steps: 0, fails: 0, mHits: 0, mMiss: 0, mNone: 0, mWin: 0 };
 // K1247 s5: the predictor's foot hint. footNearM walks from its hint in
 // windows of h/32, so a long step's walk costs (foot travel) / (h/32)
@@ -4230,7 +4232,8 @@ function growIntegC(C: FCache, ci: number): number {
         integ += 0.5 * (wa + s) * Math.max(0, kfCst.rhoCur - a);
         break;
       }
-      const wb = Math.min(wa, wOfC(C));
+      const wr = wOfC(C); if (ci === wDbg.ci) wDbg.rows.push([0, (b - h) / h, wr, kfCst.qx, kfCst.qy, kfQa.u, kfQb.u, kfQa.d, kfQb.d]);
+      const wb = Math.min(wa, wr);
       const kb = growNN++; saveNodeC(kb); nodeRho[kb] = b;
       if ((wa - wb) * (b - a) * 0.5 <= E) { integ += 0.5 * (wa + wb) * (b - a); wa = wb; }
       else { integ += refineC(C, ka, a, wa, b, wb, E, Lmin); wa = growWEnd; }
@@ -4320,7 +4323,8 @@ function growIntegC(C: FCache, ci: number): number {
 // on that window). The q of the new sites lands at most kfJump h away or the
 // path ends, as advanceToC's acceptance does. No Newton step and no foot
 // search: the feet are the sites' projections.
-let cfOn = true;
+// K1247_CF=0 in the environment runs stage 5's stepping growth (checks).
+let cfOn = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.K1247_CF !== "0";
 export function setClosedForm(b: boolean): void { cfOn = b; }
 interface CfArm { p: Poly; tx: Float64Array; ty: Float64Array; sgn: number; lo: number; hi: number; v: number; i: number; sh: number }
 function mkCfArm(): CfArm { return { p: null as unknown as Poly, tx: new Float64Array(0), ty: new Float64Array(0), sgn: 1, lo: 0, hi: 0, v: 0, i: 0, sh: 0 }; }
@@ -4782,11 +4786,16 @@ function growCFC(C: FCache, ci: number): number {
     const okb = cfAt(C, b); nn++;
     if (!okb) {
       const f = kfCst.rhoCur;
-      const s = Math.min(wa, wOfC(C));
-      integ += 0.5 * (wa + s) * Math.max(0, f - a);
+      const wr = wOfC(C); if (ci === wDbg.ci) wDbg.rows.push([2, (f - h) / h, wr, kfCst.qx, kfCst.qy, kfQa.u, kfQb.u, kfQa.d, kfQb.d]);
+      const s = Math.min(wa, wr);
+      // K1247 s6: refine up to the path's end too (the stepping growth meets no end
+      // where its foot pins to the window's end, so it refines there).
+      if (f - a > Lmin && (wa - s) * (f - a) * 0.5 > E) integ += cfRefine(C, a, wa, f, s, E, Lmin);
+      else integ += 0.5 * (wa + s) * Math.max(0, f - a);
       break;
     }
-    const wb = Math.min(wa, wOfC(C));
+    const wr = wOfC(C); if (ci === wDbg.ci) wDbg.rows.push([1, (b - h) / h, wr, kfCst.qx, kfCst.qy, kfQa.u, kfQb.u, kfQa.d, kfQb.d]);
+    const wb = Math.min(wa, wr);
     if ((wa - wb) * (b - a) * 0.5 <= E) { integ += 0.5 * (wa + wb) * (b - a); wa = wb; }
     else { integ += cfRefine(C, a, wa, b, wb, E, Lmin); wa = growWEnd; }
     a = b;

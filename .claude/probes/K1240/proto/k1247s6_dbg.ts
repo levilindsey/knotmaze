@@ -13,6 +13,7 @@ interface Cn { ok: boolean; r: number; qx: number; qy: number; tax: number; tay:
 const R = JSON.parse(readFileSync(join(here, "..", "out", "k1247s5", `ref_${name}_${mult}.json`), "utf8")) as { h: number; ref: Cn[] };
 const sc = sceneOf(name, mult);
 const st = O.structure(sc);
+if (arg("gn") || arg("ge")) O.setGrowUniform(+(arg("gn") ?? 16), +(arg("ge") ?? 1e-3));
 O.setClosedForm(false);
 const a = (O.frame(st, sc).corners as unknown as Cn[]).map((c) => ({ ...c }));
 O.setClosedForm(true);
@@ -33,5 +34,11 @@ if (dbg !== undefined) {
   O.setCfDebug(+dbg);
   O.frame(st, sc);
   for (const l of O.cfTrace.slice(0, 60)) console.log(l);
+}
+const wci = arg("wci");
+if (wci !== undefined) {
+  O.wDbg.ci = +wci; O.wDbg.rows.length = 0;
+  O.setClosedForm(false); O.frame(st, sc); O.setClosedForm(true); O.frame(st, sc); O.wDbg.ci = -1;
+  for (const r of [...O.wDbg.rows].sort((x, y) => x[1] - y[1] || x[0] - y[0])) console.log(`  ${r[0] ? "cf  " : "step"} rho ${r[1].toFixed(4)} w ${r[2].toFixed(4)} q ${r[3].toFixed(4)},${r[4].toFixed(4)} uA ${r[5].toFixed(4)} uB ${r[6].toFixed(4)} dA/h ${(r[7] / h - 1 - r[1]).toExponential(1)} dB/h ${(r[8] / h - 1 - r[1]).toExponential(1)}`);
 }
 for (const r of rows.slice(0, nShow)) console.log(`c${r.i}: dq(step,cf) ${r.dq.toFixed(4)} r step ${r.ra.toFixed(4)} cf ${r.rb.toFixed(4)} ref ${r.rr.toFixed(4)} cf->ref ${r.dRef.toFixed(4)}`);
