@@ -125,6 +125,18 @@ gain (0.2-0.3 ms) matches the unlocked A/B.
 | Tangent-aware block bounds plus suffix bounds | slower (6.98/7.07 vs 6.53); reverted |
 | Newton corrector on local nearest feet instead of `footNearM`'s windowed tracked feet | saves 24% of `footNearM` pairs, but verify fails at up to 0.175 h with faces reordered: in about 2% of advances the local nearest foot differs from the windowed tracked foot (which skips small bumps), and Newton lands on another root. The certified-exact version applies to only 201 of 8743 advances, with no gain. Reverted; the diff is `proto/k1247s4_corrector_diag.diff` |
 | `mergeBorders` split into one call per border (removes about 150 "exit from OSR'd inner loop" deopts per 2 reps) | bit-exact, no measurable gain; reverted |
+| `meetSegsOf`'s double fmod as a bit-exact `wrapLen` (one subtraction when \|d\| < len) | bit-exact, but corners got slower: 6.92/7.03 vs 6.56/6.52. Reverted |
+
+How far to trust these A/Bs:
+- **The harness is biased.** An A/A run (`outline_ab.ts` identical to `outline.ts`) read corners
+  6.45/6.36 for `outline.ts` and 6.63/6.55 for `outline_ab.ts`. That is a bias of about 0.2 ms in favor of
+  `outline.ts`.
+- **Inlining shifts results by tenths of a millisecond.** With V8's
+  `--max-inlined-bytecode-size-cumulative=3000`, corners read 6.42/6.48 against 6.84/6.67 without the
+  flag, and cutsEyesExposure 3.80/3.79 against 4.41/4.20.
+  - Comparing the profiles, the gain is spread out. `meetSegsOf` is inlined into `borderMeetC`, a net
+    zero. `footNearM`, `advanceToC` and `growIntegC` each lose 15-45 ms over the run.
+  - A browser can't take the flag. It does explain why a tiny edit can cost 0.4 ms, as `wrapLen` did.
 
 ### Why 1 ms is out of reach in JS at 1e-3 h
 
