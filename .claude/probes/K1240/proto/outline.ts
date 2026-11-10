@@ -523,6 +523,13 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
     const e = exts[i];
     if (!e.start && !e.end) return rawPolys[i];
     const pts = Array.from(c.pts);
+    // K1247 s9 (cause 5): an end arm's first raw segment can be sub-pixel (0.035-0.6 px
+    // seen); its direction then sets the joins at the root and swings under 0.01 px of
+    // jitter (up to 2.7 px drawn). Drop the interior point of a terminal segment shorter
+    // than 0.1 h: the terminal stays, arc lengths move only to second order.
+    const endMin = 0.1 * h;
+    if (e.start && pts.length >= 6 && Math.hypot(pts[2] - pts[0], pts[3] - pts[1]) < endMin) pts.splice(2, 2);
+    if (e.end && pts.length >= 6) { const m = pts.length; if (Math.hypot(pts[m - 2] - pts[m - 4], pts[m - 1] - pts[m - 3]) < endMin) pts.splice(m - 4, 2); }
     let s0 = 0;
     if (e.start) {
       const d = Math.hypot(pts[0] - e.start[0], pts[1] - e.start[1]);
@@ -3326,7 +3333,15 @@ function setupFrame(C: FCache, st: DiagramStructure, scene: SceneIn): void {
   for (let i = 0; i < C.nCh; i++) {
     const e = exts[i];
     if (!e.start && !e.end) { if (C.needRaw[i]) copyPoly(C.rawPolys[i], C.polys[i]); continue; }
-    const c = scene.chains[i];
+    const c0 = scene.chains[i];
+    // K1247 s9 (cause 5): the builder's drop of a sub-0.1 h terminal segment's interior point.
+    let cpts = c0.pts;
+    { const endMin = 0.1 * h; let q: number[] | null = null;
+      if (e.start && cpts.length >= 6 && Math.hypot(cpts[2] - cpts[0], cpts[3] - cpts[1]) < endMin) { q = Array.from(cpts); q.splice(2, 2); }
+      const r = q ?? cpts;
+      if (e.end && r.length >= 6) { const m = r.length; if (Math.hypot(r[m - 2] - r[m - 4], r[m - 1] - r[m - 3]) < endMin) { q = Array.from(r); q.splice(m - 4, 2); } }
+      if (q) cpts = q; }
+    const c = { pts: cpts, closed: c0.closed };
     let s0 = 0;
     let hasPre = false; let hasPost = false;
     if (e.start) { const d = Math.hypot(c.pts[0] - e.start[0], c.pts[1] - e.start[1]); if (d > 1e-9) { hasPre = true; s0 = -d; } }
