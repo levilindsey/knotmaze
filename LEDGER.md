@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1271.
+Next free ID: K1272.
 
 ## Waiting on Levi
 
@@ -294,6 +294,10 @@ Next free ID: K1271.
 - **K365** · The phone ripple's size floor, 56 (master) or 68 (probe commit 8f89db59, refs/probes/K365-floor68):
   Levi picks from the pair (docs/asks/K365.md). The phone dropped no frames at either (round 2026-11-09b,
   aca6b86a), so no bbox replay; the pick lands as one constant, RIPPLE_FLOOR_CSS.
+- **K1271** · Redesign outline (K1247 s11, b6103dd1): at a shallow crossing an under-thread's edge line now
+  runs further into the fill before it ends (left panels). Keep the new end (rec.: it is where the cut search
+  was meant to land, and it stops a 9 px pop in motion), or the old one? Picture:
+  `.claude/probes/K1247/asks/cut273_old_new.png`. Prototype only; nothing shipped moved.
 
 ## In progress
 
@@ -503,10 +507,10 @@ Next free ID: K1271.
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: agent `ab0e33c2e4fe88918` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-10 02:24, 2 h cap ~04:24)
-  - branch: `worktree-agent-ab0e33c2e4fe88918`, worktree `.claude/worktrees/agent-ab0e33c2e4fe88918`; last commit: `b60660a7`
+  - owner: nobody since 2026-11-10 03:30 (merged; agent `ab0e33c2e4fe88918` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `b6103dd1`
   - evidence: .claude/probes/K1240/proto/ (k1247s8_acc, k1247s9_union, k1247s10_base.ps1, k1247c_final.ps1), .claude/probes/K1240/out/
-  - next: Stage 11 (started 2026-11-10 02:24): the end tail's extent made continuous, then SPAN_RAMP toward h; g41_ring_tw64 cut 273; region-id key changes; shallow-crossing tangent noise. When it reports: Claude views the crops, re-runs acc and k1247s9_union, merges
+  - next: Stage 12 (docs/design/K1247_s12_structure.md): region numbering and group from structure (g41_user_tw64 chain 26, memberGroup), the tail that comes and goes (g41_def_tw64 tail/17), reach noise into spanRamp, g41_ring_tw64 eps 0.2 run/1 and run/13, def arc/72. After s11: eps 0.1 worst 7.103 px / 23 fails, eps 0.2 10.620 / 26
   - brief: `docs/design/K1247_s11_tails.md`
 
 ## Next, in order
