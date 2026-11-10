@@ -3206,6 +3206,15 @@ function memberGroupC(C: FCache, pi: number, s: number): number {
 }
 
 const kfFootW = new Float64Array(3);
+// A depth pin, inserted in s order (K1247 s3: was a closure per crossing).
+function addPinC(C: FCache, pi: number, s: number, z: number): void {
+  const S = C.depthS[pi]; const Z = C.depthZ[pi];
+  const n = C.depthN[pi];
+  let i2 = n;
+  while (i2 > 0 && S[i2 - 1] > s) { S[i2] = S[i2 - 1]; Z[i2] = Z[i2 - 1]; i2--; }
+  S[i2] = s; Z[i2] = z;
+  C.depthN[pi] = n + 1;
+}
 function setupFrame(C: FCache, st: DiagramStructure, scene: SceneIn): void {
   const h = C.h;
   const idxOf = new Map<number, number>();
@@ -3277,16 +3286,8 @@ function setupFrame(C: FCache, st: DiagramStructure, scene: SceneIn): void {
     pointAtInto(polys[ia], sa, ptScratch);
     C.cpX[xi] = ptScratch[0]; C.cpY[xi] = ptScratch[1];
     // depth pins (insertion into per-chain sorted arrays)
-    const addPinC = (pi: number, s: number, z: number): void => {
-      const S = C.depthS[pi]; const Z = C.depthZ[pi];
-      let n = C.depthN[pi];
-      let i2 = n;
-      while (i2 > 0 && S[i2 - 1] > s) { S[i2] = S[i2 - 1]; Z[i2] = Z[i2 - 1]; i2--; }
-      S[i2] = s; Z[i2] = z;
-      C.depthN[pi] = n + 1;
-    };
-    addPinC(ia, sa, x.over === "a" ? amp : -amp);
-    addPinC(ib, sb, x.over === "b" ? amp : -amp);
+    addPinC(C, ia, sa, x.over === "a" ? amp : -amp);
+    addPinC(C, ib, sb, x.over === "b" ? amp : -amp);
   }
   for (let pi = 0; pi < C.nCh; pi++) {
     const lst = C.passXi[pi];
