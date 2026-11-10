@@ -89,10 +89,11 @@ the same runs), against the 1 ms target. The leads as briefed are worth tenths o
 between them, because no single function dominates the phase (profile below). As the Done rule
 allows, the fastest passing version is committed: the clear certificate, fSteep from tangents, and
 growth at 10 nodes with E 5e-4 h (last code commit 7bc879c9; the commits after it add probes and this
-handoff). The last half hour measured bounds instead (below): the V solve, fallback and the rest are
-1.5 ms on their own, a free certificate is worth at most 0.44 ms, a smarter drop locator under
-0.45 ms, and a polyline at a quarter of the points still leaves 3.6 ms. Stopped about 30 min before
-the cap: no lead left that could be built and checked in that time.
+handoff). The last 40 minutes measured bounds instead (below): the V solve, fallback and the rest
+are 1.5 ms on their own; the growth's 5.3 ms splits into the path (2.8 ms) and w (2.5 ms, nearly all
+margins); a certificate for the clear margins is worth about 1.2 ms, a free-corner certificate at
+most 0.44 ms, a smarter drop locator under 0.45 ms, and a polyline at a quarter of the points still
+leaves 3.6 ms.
 
 ### Timing (locked, def's 40-frame cycle, ms)
 
@@ -192,6 +193,20 @@ to 0. That refinement is cheaper than it looks, because it reuses pieces already
 locked; both fail accuracy). A smarter way to place the drop (a root find on the margin in place of
 bisection) is therefore worth less than 0.45 ms.
 
+w against the path (`k1247s7_split.ps1 -WReplay`, locked 23:00-23:02, 6 rounds; each frame runs once
+recording every w and every margin, then again returning the recorded values in order: the same path
+and outputs with nothing evaluated; call counts matched in every frame). The growth is 5.35 ms with
+w, 2.83 ms with every w replayed, 3.11 ms with only the margins replayed. So w costs 2.52 ms a frame
+(5598 evaluations, 450 ns each), its two margins 2.25 ms of that (10663 calls, 211 ns each), its
+cheap factors about 0.27 ms; stepping the path, cfAt and the refinement's logic are the other
+2.83 ms. The growth splits about evenly between the path and the margins: correcting the profile's
+reading (above, and my earlier note) that the path is the bulk. The margins' values: 79.1% are
+Infinity (both walks cleared their windows), 14.4% in [0, 0.5 h), 6.3% in (-0.05 h, 0) and 0.2% at or
+under -0.05 h, so only 6.5% of margin calls change w. Replaying only the Infinity ones (the rest
+computed) saves 1.18 ms: a certificate that answered every clear margin at no cost is worth about
+1.2 ms, against the clear certificate's 8% of calls (it needs the same foot, and the foot moves
+between most nodes). The finite margins cost about 1.07 ms (about 480 ns each).
+
 Self time inside growCFC (22.6% of the whole profile): marginOfC 27.7%, cfNext 11.3%, cfRoot 7.5%,
 cfAt 6.9%, fwScan 6.4%, cfStep 6.1%, cfFoot 6.1%, wOfC 4.2%, cfQ 4.1%, growCFC 3.8%, cfDipIn 3.7%,
 cfLagLine 3.1%, cfRefine 2.8%, cfMake 2.1%, cfBad 1.8%, footWinFast 1.1%. Per cycle: 13842 corners,
@@ -225,9 +240,13 @@ profile (1.53 ms timed with the rest, above): over the 1 ms target before any gr
   - a different scheme for the 1.5 ms outside growCFC (V solve 0.87, fallback 0.40, rest 0.27):
     on its own it is over the target, so every part of the phase has to shrink, not just the growth.
 - Measured bounds for growth-only ideas: a free certificate that cost nothing saves 0.44 ms; a
-  smarter locator for w's drop to 0 under 0.45 ms. Both together leave the phase near 5.8 ms.
-  Stepping the path (cfNext, cfRoot, cfStep, cfFoot, cfQ) is the bulk of the growth, so the payoff
-  is in making each piece cheaper (WASM) or needing fewer of them, not in evaluating w less.
+  smarter locator for w's drop to 0 under 0.45 ms; a zero-cost certificate for the clear margins
+  (79% of margin calls) about 1.2 ms, the largest single lever found. The tests are linear in q
+  (GF[k] - q . T[k]) over a window fixed for the corner, so one bound per (corner, side) over the
+  disk q can reach (radius r0 around V) might certify most of them at once; not built. With w gone
+  entirely the phase would be 4.4 ms (measured, replay), so the path (2.83 ms), the margins
+  (2.25 ms) and the 1.5 ms outside the growth all have to shrink: WASM or a different scheme for
+  each, not one trick.
 - setupBorders' `mergeBorders` takes 176 "exit from OSR'd inner loop" deopts a run: a lead for that
   phase, not this one.
 
@@ -237,8 +256,10 @@ profile (1.53 ms timed with the rest, above): over the 1 ms target before any gr
   the in-process A/B above (`mcertr` sets the m-cert's search radius, `zmin` the refinement's Lmin,
   both in h).
 - `k1247s5_cmp.ts --jt=<h>` sets the jump split's floor for an accuracy check.
-- `k1247s7_split.ps1 [-Rounds 8]`: patches timers into a copy of outline.ts's corners phase, runs
-  `k1247s7_split.ts` under the lock (the split by call and the per-corner distribution above) and
+- `k1247s7_split.ps1 [-Rounds 8] [-Oracle] [-Decimate k] [-WReplay]`: patches timers into a copy
+  of outline.ts's corners phase, runs `k1247s7_split.ts` under the lock (the split by call, the
+  per-corner distribution and the classes above; `-Oracle` the free-corner oracle, `-Decimate` the
+  polyline-density bound, `-WReplay` the w and margin record/replay and the margins' values) and
   restores outline.ts byte for byte.
 - `_s7_pair.mjs <tag> <rounds>`: master's outline.ts against the branch's under one lock, every
   phase of def. Run it through `run_locked_k1247s4.ps1 -ScriptName _s7_pair.mjs -RunArgs @('<tag>','2')`.

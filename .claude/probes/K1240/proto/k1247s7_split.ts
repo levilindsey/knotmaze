@@ -100,6 +100,41 @@ if (process.argv.includes("--oracle")) {
   const pf = (v: number): string => (v / cycle.length).toFixed(3);
   console.log(`oracle: free corners (${nF} calls) ${pf(fOff)} ms a frame with w, ${pf(fOn)} without (${(1000 * fOff / nF).toFixed(1)} / ${(1000 * fOn / nF).toFixed(1)} us each); all growth ${pf(aOff)} / ${pf(aOn)} ms a frame`);
 }
+// --wreplay (k1247s7_split.ps1 -WReplay): per frame, a run that records
+// every w (cpWM 1), then one that returns the recorded values in order
+// (cpWM 2): the same path and outputs with no w evaluated, so the growth's
+// time without w (the path stepping, cfAt, refinement logic) and w's share.
+if (process.argv.includes("--wreplay")) {
+  const OW = O as unknown as { cpWM: number[]; cpWS: number[]; cpMS: number[] };
+  const gRec = new Array<number>(cycle.length).fill(Infinity); const gRep = new Array<number>(cycle.length).fill(Infinity); const gMr = new Array<number>(cycle.length).fill(Infinity); const gMi = new Array<number>(cycle.length).fill(Infinity);
+  const aRec = new Array<number>(cycle.length).fill(Infinity); const aRep = new Array<number>(cycle.length).fill(Infinity);
+  let nW = 0; let nM = 0; let bad = 0; const mBin = [0, 0, 0, 0, 0];
+  for (let r = 0; r < rounds; r++) {
+    cycle.forEach((sc, i) => {
+      OW.cpWM[0] = 1; OW.cpWS[0] = 0; OW.cpMS[0] = 0; for (const k of keys) cp[k] = 0;
+      O.frame(st, sc); const n1 = OW.cpWS[0]; const m1 = OW.cpMS[0];
+      if (r === 0) { const MR = (O as unknown as { cpMRec: Float64Array }).cpMRec; for (let x = 0; x < m1; x++) { const v = MR[x]; mBin[v === Infinity ? 0 : v >= 0.5 * h ? 1 : v >= 0 ? 2 : v > -0.05 * h ? 3 : 4]++; } }
+      if (cp.grow < gRec[i]) gRec[i] = cp.grow; if (cp.all < aRec[i]) aRec[i] = cp.all;
+      OW.cpWM[0] = 2; OW.cpWS[0] = 0; for (const k of keys) cp[k] = 0;
+      O.frame(st, sc); if (OW.cpWS[0] !== n1) bad++;
+      if (cp.grow < gRep[i]) gRep[i] = cp.grow; if (cp.all < aRep[i]) aRep[i] = cp.all;
+      OW.cpWM[0] = 3; OW.cpMS[0] = 0; for (const k of keys) cp[k] = 0;
+      O.frame(st, sc); if (OW.cpMS[0] !== m1) bad++;
+      if (cp.grow < gMr[i]) gMr[i] = cp.grow;
+      OW.cpWM[0] = 4; OW.cpMS[0] = 0; for (const k of keys) cp[k] = 0;
+      O.frame(st, sc); if (OW.cpMS[0] !== m1) bad++;
+      if (cp.grow < gMi[i]) gMi[i] = cp.grow;
+      if (r === 0) { nW += n1; nM += m1; }
+    });
+  }
+  OW.cpWM[0] = 0;
+  const mn = (xs: number[]): number => xs.reduce((a, b) => a + b, 0) / xs.length;
+  const pf = cycle.length;
+  // Only a margin in (-0.05 h, 0) changes w's value; at or under -0.05 h w is 0; at or over 0 it is a factor of 1.
+  const mT = mBin.reduce((a, b) => a + b, 0);
+  console.log(`margins (round 0): Infinity ${(100 * mBin[0] / mT).toFixed(1)}%, >= 0.5 h ${(100 * mBin[1] / mT).toFixed(1)}%, [0, 0.5 h) ${(100 * mBin[2] / mT).toFixed(1)}%, (-0.05 h, 0) ${(100 * mBin[3] / mT).toFixed(1)}%, <= -0.05 h ${(100 * mBin[4] / mT).toFixed(1)}%`);
+  console.log(`wreplay: w evaluations ${(nW / pf).toFixed(0)} a frame, margins ${(nM / pf).toFixed(0)} (count mismatches ${bad}); growth ${mn(gRec).toFixed(3)} ms with w, ${mn(gRep).toFixed(3)} with w replayed (w ${(mn(gRec) - mn(gRep)).toFixed(3)} ms, ${(1e6 * (mn(gRec) - mn(gRep)) / Math.max(1, nW / pf)).toFixed(0)} ns each), ${mn(gMr).toFixed(3)} with the margins replayed (margins ${(mn(gRec) - mn(gMr)).toFixed(3)} ms, ${(1e6 * (mn(gRec) - mn(gMr)) / Math.max(1, nM / pf)).toFixed(0)} ns each), ${mn(gMi).toFixed(3)} with only the Infinity margins replayed (they cost ${(mn(gRec) - mn(gMi)).toFixed(3)} ms); corners phase ${mn(aRec).toFixed(3)} / ${mn(aRep).toFixed(3)} ms`);
+}
 const mean = (xs: number[]): number => xs.reduce((a, b) => a + b, 0) / xs.length;
 const m: Record<string, number> = {};
 for (const k of keys) m[k] = mean(mins[k]);
