@@ -1973,6 +1973,15 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
   };
   interface FaceWork { owner: number; group: number; pts: number[]; sample: [number, number]; depth: number }
   const faceWorks: FaceWork[] = [];
+  // K1247 s12: region ids from structure, frame()'s numbering (structRegionsC
+  // on the structure's cache; stations map to its slots by key).
+  const sC = !KF_CSORDER && dg ? (fastCaches.get(dg) ?? (scene.chains.length === dg.chainIds.length ? buildFastCache(dg, scene) : undefined)) : undefined;
+  const sR = sC && dg ? structRegionsC(sC, dg) : null;
+  const sTaken = sR ? new Uint8Array(Math.max(1, sR.n)) : null;
+  const sRegs: (OutlineRegion | undefined)[] = sR ? new Array(sR.n) : [];
+  const sFaces: (FaceWork | undefined)[] = sR ? new Array(sR.n) : [];
+  const slotStation = new Map<number, Station>();
+  if (sC) for (const q of stations) slotStation.set(slotOfKeyC(sC, q.key), q);
   for (const iv of intervals) {
     if (iv.discard) continue;
     const pi = iv.pi;
@@ -1998,15 +2007,34 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
     // area). Skipping it renumbered every later region, and its point count follows the
     // positions: g41_def_tw64 chain 81's interval has 9 points full and 2 reduced at eps 0.1.
     void poly.length;
-    const rid = regions.length;
+    let rid = regions.length;
+    if (sR && sC) {
+      rid = structRidC(sR, pi, slotOfKeyC(sC, iv.A.key), sTaken!);
+      if (rid < 0) continue;
+      sTaken![rid] = 1;
+    }
     iv.region = rid;
     for (const sg of leftSeq.segs) segRegion[pi][0][sg] = rid;
     for (const sg of rightSegs) segRegion[pi][1][sg] = rid;
     const flat = poly.flatMap((pt) => [pt.x, pt.y]);
     const mid = pointAt(p, iv.cMid);
     const grp = memberGroup(pi, iv.cMid);
-    regions.push({ id: rid, ownerChain: pi, group: grp, pts: flat, pieces: [], hole: false });
-    faceWorks.push({ owner: pi, group: grp, pts: flat, sample: [mid.x, mid.y], depth: depthAt(pi, iv.cMid) });
+    const reg: OutlineRegion = { id: rid, ownerChain: pi, group: grp, pts: flat, pieces: [], hole: false };
+    const fw: FaceWork = { owner: pi, group: grp, pts: flat, sample: [mid.x, mid.y], depth: depthAt(pi, iv.cMid) };
+    if (sR) { sRegs[rid] = reg; sFaces[rid] = fw; } else { regions.push(reg); faceWorks.push(fw); }
+  }
+  if (sR) {
+    for (let r = 0; r < sR.n; r++) {
+      let reg = sRegs[r]; let fw = sFaces[r];
+      if (!reg || !fw) {
+        const pi = sR.ridPi[r]; const p = polys[pi];
+        const s = slotStation.get(sR.ridA[r])?.cS ?? p.s0;
+        const grp = memberGroup(pi, s); const mid = pointAt(p, s);
+        reg = { id: r, ownerChain: pi, group: grp, pts: [], pieces: [], hole: false };
+        fw = { owner: pi, group: grp, pts: reg.pts, sample: [mid.x, mid.y], depth: depthAt(pi, s) };
+      }
+      regions.push(reg); faceWorks.push(fw);
+    }
   }
   // Junction regions: one polygon per junction.
   const junctionRegion = new Map<number, number>();
@@ -3015,6 +3043,9 @@ interface FCache {
    *  scene s: a crossing's s on that chain, an arm's root s, caps at the
    *  ends): stations are ordered by it, never by frame position. */
   slotKey: Float64Array;
+  /** K1247 s12: the structural region numbering (structRegionsC), built once;
+   *  structMiss counts frame intervals that found no free id (dropped). */
+  sReg?: StructRegions; structMiss?: number;
   crossUnderSlot: Int32Array; crossOverSlot: Int32Array; junctionSlot: Int32Array; capSlot: Int32Array; seamSlot: Int32Array;
   dgSlot: Int32Array; capInfoOfSlot: Int32Array;
   stActive: Uint8Array; stCS: Float64Array; stLeft: Int32Array; stRight: Int32Array;
@@ -3347,6 +3378,64 @@ function armDistC(C: FCache, ai: number, s: number): number {
   let d = (s - C.armSR[ai]) * C.armDir[ai];
   if (p.closed) d = ((d % p.len) + p.len) % p.len;
   return d;
+}
+/** K1247 s12: region ids from structure. Every slot of a chain, active or
+ *  not, in structural order (slotKey, then rank); chains by their lowest
+ *  rank; one id per structural interval, none for a discard pair that is
+ *  adjacent in that order. A frame's interval takes the first free id at or
+ *  after its first station, and an id no interval takes is an empty region,
+ *  so a station that comes and goes (a crossOver pick: def cycle frame 18,
+ *  fat cyc 18 crossing 310) no longer renumbers every later region. */
+interface StructRegions { pos: Int32Array; base: Int32Array; cnt: Int32Array; closed: Uint8Array; id: Int32Array; n: number; ridPi: Int32Array; ridA: Int32Array }
+function structRegionsC(C: FCache, st: DiagramStructure): StructRegions {
+  if (C.sReg) return C.sReg;
+  const nCh = C.nCh; const nS = C.nSlots;
+  const lists: number[][] = Array.from({ length: nCh }, () => []);
+  const minRank = new Array<number>(nCh).fill(Infinity);
+  for (let s = 0; s < nS; s++) { const pi = C.slotPi[s]; lists[pi].push(s); if (C.slotRank[s] < minRank[pi]) minRank[pi] = C.slotRank[s]; }
+  const pos = new Int32Array(Math.max(1, nS));
+  for (const l of lists) { l.sort((u, v) => (C.slotKey[u] - C.slotKey[v]) || (C.slotRank[u] - C.slotRank[v])); l.forEach((s, j) => { pos[s] = j; }); }
+  const pair = new Set<number>();
+  for (let d = 0; d < C.discardA.length; d++) { const a = C.discardA[d]; const b = C.discardB[d]; if (a >= 0 && b >= 0) { pair.add(a * nS + b); pair.add(b * nS + a); } }
+  const order: number[] = [];
+  for (let pi = 0; pi < nCh; pi++) if (lists[pi].length) order.push(pi);
+  order.sort((a, b) => minRank[a] - minRank[b]);
+  const base = new Int32Array(Math.max(1, nCh)).fill(-1); const cnt = new Int32Array(Math.max(1, nCh));
+  const closed = new Uint8Array(Math.max(1, nCh));
+  const id: number[] = []; const ridPi: number[] = []; const ridA: number[] = [];
+  for (const pi of order) {
+    const l = lists[pi]; const m = l.length; const cl = !!st.closed[pi];
+    closed[pi] = cl ? 1 : 0;
+    const nI = cl ? m : m - 1;
+    base[pi] = id.length; cnt[pi] = nI;
+    for (let j = 0; j < nI; j++) {
+      const a = l[j]; const b = l[(j + 1) % m];
+      if (m > 1 && pair.has(a * nS + b)) { id.push(-1); continue; }
+      id.push(ridPi.length); ridPi.push(pi); ridA.push(a);
+    }
+  }
+  C.sReg = { pos, base, cnt, closed, id: Int32Array.from(id), n: ridPi.length, ridPi: Int32Array.from(ridPi), ridA: Int32Array.from(ridA) };
+  return C.sReg;
+}
+/** The id a frame interval starting at slot A takes (-1: none free). */
+function structRidC(R: StructRegions, pi: number, A: number, taken: Uint8Array): number {
+  const m = R.cnt[pi]; const b = R.base[pi]; const j0 = R.pos[A];
+  for (let k = 0; k < m; k++) {
+    let j = j0 + k;
+    if (j >= m) { if (!R.closed[pi]) break; j -= m; }
+    const r = R.id[b + j];
+    if (r >= 0 && !taken[r]) return r;
+  }
+  return -1;
+}
+/** The builder's station key -> the cache's slot. */
+function slotOfKeyC(C: FCache, key: string): number {
+  if (key.startsWith("cap")) { const bar = key.indexOf("|"); return C.capSlot[parseInt(key.slice(3, bar), 10) * 2 + (key.endsWith("|1") ? 1 : 0)]; }
+  if (key.startsWith("seam")) return C.seamSlot[parseInt(key.slice(4), 10)];
+  if (key.startsWith("j")) return C.junctionSlot[parseInt(key.slice(key.indexOf("|a") + 2), 10)];
+  const over = key.startsWith("xo"); const bar = key.indexOf("|");
+  const xi = parseInt(key.slice(over ? 2 : 1, bar), 10); const side = parseInt(key.slice(bar + 1), 10);
+  return (over ? C.crossOverSlot : C.crossUnderSlot)[xi * 2 + (side === 1 ? 0 : 1)];
 }
 function memberGroupC(C: FCache, pi: number, s: number): number {
   let best = 0; let g = -1;
@@ -6196,6 +6285,11 @@ function regionsPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): { regio
   const regions: OutlineRegion[] = [];
   const faceWorks: FaceWorkF[] = [];
   const refFinalOf = (r: number): number => (r >= 0 ? C.refFinal[r] : -1);
+  const sR = KF_CSORDER ? null : structRegionsC(C, st);
+  const sTaken = sR ? new Uint8Array(Math.max(1, sR.n)) : null;
+  const sRegs: (OutlineRegion | undefined)[] = sR ? new Array(sR.n) : [];
+  const sFaces: (FaceWorkF | undefined)[] = sR ? new Array(sR.n) : [];
+  C.structMiss = 0;
   for (let i = 0; i < nIv; i++) {
     if (C.ivDiscard[i]) continue;
     const pi = C.ivPi[i];
@@ -6225,14 +6319,36 @@ function regionsPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): { regio
     }
     if (pts.length >= 2 && Math.hypot(pts[0] - pts[pts.length - 2], pts[1] - pts[pts.length - 1]) < 1e-12) pts.length -= 2;
     // K1247 s11: no skip under 3 points (the builder's note): region ids follow the intervals.
-    const rid = regions.length;
+    // K1247 s12: ids from structure (structRegionsC).
+    let rid = regions.length;
+    if (sR) {
+      rid = structRidC(sR, pi, A, sTaken!);
+      if (rid < 0) { C.structMiss = (C.structMiss ?? 0) + 1; continue; }
+      sTaken![rid] = 1;
+    }
     C.ivRegion[i] = rid;
     for (let q = 0; q < nsL; q++) BdL.segReg[segL[q]] = rid;
     for (let q = 0; q < nsR; q++) BdR.segReg[segR[q]] = rid;
     const grp = memberGroupC(C, pi, C.ivCMid[i]);
-    regions.push({ id: rid, ownerChain: pi, group: grp, pts, pieces: [], hole: false });
+    const reg: OutlineRegion = { id: rid, ownerChain: pi, group: grp, pts, pieces: [], hole: false };
     pointAtInto(p, C.ivCMid[i], ptScratch);
-    faceWorks.push({ owner: pi, group: grp, rid, sx: ptScratch[0], sy: ptScratch[1], depth: depthAtC(C, pi, C.ivCMid[i], depthWin) });
+    const fw: FaceWorkF = { owner: pi, group: grp, rid, sx: ptScratch[0], sy: ptScratch[1], depth: depthAtC(C, pi, C.ivCMid[i], depthWin) };
+    if (sR) { sRegs[rid] = reg; sFaces[rid] = fw; } else { regions.push(reg); faceWorks.push(fw); }
+  }
+  if (sR) {
+    // Ids no interval took: empty regions at their first station (or the chain's start).
+    for (let r = 0; r < sR.n; r++) {
+      let reg = sRegs[r]; let fw = sFaces[r];
+      if (!reg || !fw) {
+        const pi = sR.ridPi[r]; const A = sR.ridA[r]; const p = C.polys[pi];
+        const s = C.stActive[A] ? C.stCS[A] : p.s0;
+        const grp = memberGroupC(C, pi, s);
+        reg = { id: r, ownerChain: pi, group: grp, pts: [], pieces: [], hole: false };
+        pointAtInto(p, s, ptScratch);
+        fw = { owner: pi, group: grp, rid: r, sx: ptScratch[0], sy: ptScratch[1], depth: depthAtC(C, pi, s, depthWin) };
+      }
+      regions.push(reg); faceWorks.push(fw);
+    }
   }
   // Junction regions.
   C.junctionRegion.fill(-1);
