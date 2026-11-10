@@ -247,3 +247,54 @@ after the first config: the second module ran about 25 ms. Base is 6.1-6.3 ms.
 3. Two run-interior points over 1e-3h: muse_hash 0.1 and g41_user_tw64 0.1. Also, face and region key
    or order changes in def 0.5, g41_def_tw64 0.1 and ring 0. Check them before this lands in `src/`.
 4. Levi: do the crops' corner changes show?
+
+### Addendum: sizing the rewrite (19:38)
+
+Two measurements on c7c9aac3 for the next stage. Neither changes `outline.ts`.
+
+**How many pieces would an analytic growth walk?** `k1247s5_pieces.mjs` writes a scratch copy with
+counters, and `k1247s5_pieces.ts` runs every scene. Per grown corner, over its nodes in rho order:
+
+| | def 0 | all scenes |
+|---|---|---|
+| grown corners | 361 | 4640 |
+| nodes per corner | 17.0 | 16.7 |
+| foot-state changes per corner (a lower bound on pieces, minus 1) | 9.5 (max 21) | 9.0 |
+| segments the two feet cross per corner | 10.4 (max 32) | 10.0 |
+| corners crossing 9 or more segments | 227 | 2768 |
+| w calls that reach the margin | 97% | 96% |
+| margin calls that are nonzero / in ss01's band | 4.3% / 4.1% | 4.9% / 4.7% |
+| half-plane walk segments per margin call | 6.0 | 6.1 |
+| integral / r0: = 1, ≥ 0.9, ≥ 0.5, > 0, = 0 | 109 / 47 / 76 / 100 / 29 | 1254 / 524 / 865 / 1637 / 360 |
+
+- An analytic growth would walk about 10-20 pieces per corner, which is no fewer than today's 17
+  nodes. Its gain would come only from closed-form feet replacing the Newton steps and foot searches.
+- The margin is 0 in 95% of its calls. w still falls on 70% of def's corners, so the fall comes from
+  fSteep, fSlack and the root factors. Those are closed-form in the feet.
+- Only 27% of def's corners keep w = 1, so a whole-corner w = 1 fast path would skip at most a quarter
+  of the work.
+
+**What is the margin worth?** I ran a scratch copy with mA = mB = 0. Its output is wrong, so this is a
+ceiling only. Locked, def in motion, alternating, one config per process:
+
+| run | corners (ms) |
+|---|---|
+| today, run 1 | 5.70 |
+| margin-free, run 1 | 4.22 |
+| today, run 2 | 5.77 |
+| margin-free, run 2 | 4.10 |
+
+So the margin costs about 1.6 ms. The advance and the w factors cost about 3.4 ms, and the rest of the
+phase about 0.7 ms.
+
+**Budget.** Today a grown corner costs about 14 µs (5.0 ms over def's 361). The phase also spends
+0.7 ms outside the growth. A 1 ms phase therefore leaves 0.3 ms for growth, or 0.8 µs per corner:
+40-80 ns per piece, margin included. Even with the outside cost at zero, the budget is only 2.8 µs per
+corner, or 140-280 ns per piece.
+
+**The next stage needs all three of these:**
+- closed-form pieces, which remove the Newton steps and foot searches;
+- a margin bounded once per corner or once per piece, not once per node;
+- a fixed cost outside the growth below 0.7 ms.
+
+Without all three, ≤1 ms is out of reach. A realistic intermediate target is about 2-3 ms.
