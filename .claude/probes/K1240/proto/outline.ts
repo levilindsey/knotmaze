@@ -795,7 +795,7 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
     const hi = arm.dir > 0 ? arm.sR + d1 : arm.sR - d0;
     return footInWindow(p, x, y, lo, hi);
   };
-  const solveEq = (A: ArmInfo, B: ArmInfo, rho: number, x0: number, y0: number, estD?: number): { x: number; y: number; fa: { d: number; x: number; y: number; s: number }; fb: { d: number; x: number; y: number; s: number }; ok: boolean } => {
+  const solveEq = (A: ArmInfo, B: ArmInfo, rho: number, x0: number, y0: number, estD?: number, cx?: number, cy?: number): { x: number; y: number; fa: { d: number; x: number; y: number; s: number }; fb: { d: number; x: number; y: number; s: number }; ok: boolean } => {
     let x = x0; let y = y0;
     let fa = footArm(A, x, y, estD); let fb = footArm(B, x, y, estD);
     for (let it = 0; it < 40; it++) {
@@ -814,7 +814,35 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
       fa = footArm(A, x, y, estD); fb = footArm(B, x, y, estD);
     }
     const ok = Math.abs(fa.d - rho) < 1e-9 * Math.max(h, rho) && Math.abs(fb.d - rho) < 1e-9 * Math.max(h, rho);
-    return { x, y, fa, fb, ok };
+    if (ok) return { x, y, fa, fb, ok };
+    // K1247 s9: plain Newton from a far guess can wander and land on V or
+    // not by chance (muse_hash cycle frame 10 corner 299: V at step 25 still,
+    // a 2-cycle under 0.01 px). On a failure, plain Newton again from points
+    // on the line from the junction through the guess, nearest first; the
+    // first that converges is V (solveVC does the same).
+    if (cx === undefined || cy === undefined) return { x, y, fa, fb, ok };
+    for (let m = 1; m <= 8; m++) {
+      if (m === 4) continue;
+      x = cx + ((x0 - cx) * m) / 4; y = cy + ((y0 - cy) * m) / 4;
+      fa = footArm(A, x, y, estD); fb = footArm(B, x, y, estD);
+      for (let it = 0; it < 40; it++) {
+        const Fa = fa.d - rho; const Fb = fb.d - rho;
+        if (Math.abs(Fa) < 1e-12 * Math.max(1, rho) && Math.abs(Fb) < 1e-12 * Math.max(1, rho)) break;
+        if (!(fa.d > 1e-12 && fb.d > 1e-12)) break;
+        const gax = (x - fa.x) / fa.d; const gay = (y - fa.y) / fa.d;
+        const gbx = (x - fb.x) / fb.d; const gby = (y - fb.y) / fb.d;
+        const det = gax * gby - gay * gbx;
+        if (Math.abs(det) < 1e-12) break;
+        let dx = (-Fa * gby + Fb * gay) / det;
+        let dy = (-Fb * gax + Fa * gbx) / det;
+        const dl = Math.hypot(dx, dy);
+        if (dl > h) { dx *= h / dl; dy *= h / dl; }
+        x += dx; y += dy;
+        fa = footArm(A, x, y, estD); fb = footArm(B, x, y, estD);
+      }
+      if (Math.abs(fa.d - rho) < 1e-9 * Math.max(h, rho) && Math.abs(fb.d - rho) < 1e-9 * Math.max(h, rho)) return { x, y, fa, fb, ok: true };
+    }
+    return { x, y, fa, fb, ok: false };
   };
 
   // Corners (F2): V, r0, fit by room, q, tangent points.
@@ -1034,7 +1062,7 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
       let bx = A.ux + B.ux; let by = A.uy + B.uy;
       const bl = Math.sqrt(bx * bx + by * by) || 1; bx /= bl; by /= bl;
       const sn = Math.sin(thC / 2) || 1;
-      const V = solveEq(A, B, h, j.c[0] + (bx * h) / sn, j.c[1] + (by * h) / sn, h / Math.max(Math.tan(thC / 2), 1e-6));
+      const V = solveEq(A, B, h, j.c[0] + (bx * h) / sn, j.c[1] + (by * h) / sn, h / Math.max(Math.tan(thC / 2), 1e-6), j.c[0], j.c[1]);
       if (!V.ok) { cw.why = "no V"; if (frameMode) cornerFallback(cw, A, B, th); corners.push(cw); cornerWork.push(cw); if (!frameMode) diagnostics.push(`corner ${j.id}: no V`); continue; }
       const dVa = armDist(A, V.fa.s); const dVb = armDist(B, V.fb.s);
       const tol = 1e-9 * h;
@@ -3937,10 +3965,12 @@ function footArmGlobal(C: FCache, ai: number, x: number, y: number, estD: number
   footWinFast(C.polys[a.pi], out);
   out.u = C.armSR[ai] + C.armDir[ai] * armDistC(C, ai, out.s);
 }
-function solveVC(C: FCache, ci: number, aiA: number, aiB: number, rho: number, x0: number, y0: number, estD: number, fa: FFoot, fb: FFoot): boolean {
+// K1247 s9 debug: solveVC's iterations for one corner (gated).
+export const vDbg: { ci: number; rows: number[][] } = { ci: -1, rows: [] };
+function solveVC(C: FCache, ci: number, aiA: number, aiB: number, rho: number, x0: number, y0: number, estD: number, fa: FFoot, fb: FFoot, cx: number, cy: number): boolean {
   const h = C.h;
   const A = C.armObj[aiA]; const B = C.armObj[aiB];
-  void ci; // one cold solve; a warm V can be a different root
+  // one cold solve; a warm V can be a different root (ci: vDbg only)
   // The builder's solveEq: global feet, Newton from the given guess.
   let x = x0; let y = y0;
   footArmGlobal(C, aiA, x, y, estD, fa); footArmGlobal(C, aiB, x, y, estD, fb);
@@ -3962,9 +3992,35 @@ function solveVC(C: FCache, ci: number, aiA: number, aiB: number, rho: number, x
     const pa = Number.isFinite(fa.d) ? Math.sqrt((x - fa.x) * (x - fa.x) + (y - fa.y) * (y - fa.y)) : Infinity;
     const pb = Number.isFinite(fb.d) ? Math.sqrt((x - fb.x) * (x - fb.x) + (y - fb.y) * (y - fb.y)) : Infinity;
     footArmGlobal(C, aiA, x, y, estD, fa, pa); footArmGlobal(C, aiB, x, y, estD, fb, pb);
+    if (vDbg.ci === ci) vDbg.rows.push([it, x, y, (fa.d - rho) / h, (fb.d - rho) / h, fa.k, fb.k, det]);
   }
   kfSv.x = x; kfSv.y = y;
-  return Math.abs(fa.d - rho) < 1e-9 * Math.max(h, rho) && Math.abs(fb.d - rho) < 1e-9 * Math.max(h, rho);
+  if (Math.abs(fa.d - rho) < 1e-9 * Math.max(h, rho) && Math.abs(fb.d - rho) < 1e-9 * Math.max(h, rho)) return true;
+  // K1247 s9: the builder's restarts (solveEq), step for step.
+  for (let m = 1; m <= 8; m++) {
+    if (m === 4) continue;
+    x = cx + ((x0 - cx) * m) / 4; y = cy + ((y0 - cy) * m) / 4;
+    footArmGlobal(C, aiA, x, y, estD, fa); footArmGlobal(C, aiB, x, y, estD, fb);
+    for (let it = 0; it < 40; it++) {
+      const Fa = fa.d - rho; const Fb = fb.d - rho;
+      if (Math.abs(Fa) < 1e-12 * Math.max(1, rho) && Math.abs(Fb) < 1e-12 * Math.max(1, rho)) break;
+      if (!(fa.d > 1e-12 && fb.d > 1e-12)) break;
+      const gax = (x - fa.x) / fa.d; const gay = (y - fa.y) / fa.d;
+      const gbx = (x - fb.x) / fb.d; const gby = (y - fb.y) / fb.d;
+      const det = gax * gby - gay * gbx;
+      if (Math.abs(det) < 1e-12) break;
+      let dx = (-Fa * gby + Fb * gay) / det;
+      let dy = (-Fb * gax + Fa * gbx) / det;
+      const dl = Math.hypot(dx, dy);
+      if (dl > h) { dx *= h / dl; dy *= h / dl; }
+      x += dx; y += dy;
+      footArmGlobal(C, aiA, x, y, estD, fa); footArmGlobal(C, aiB, x, y, estD, fb);
+    }
+    if (vDbg.ci === ci) vDbg.rows.push([100 + m, x, y, (fa.d - rho) / h, (fb.d - rho) / h, fa.k, fb.k, 0]);
+    if (Math.abs(fa.d - rho) < 1e-9 * Math.max(h, rho) && Math.abs(fb.d - rho) < 1e-9 * Math.max(h, rho)) { kfSv.x = x; kfSv.y = y; return true; }
+  }
+  kfSv.x = x; kfSv.y = y;
+  return false;
 }
 
 const ss01 = (x: number): number => { const t = x < 0 ? 0 : x > 1 ? 1 : x; return t * t * (3 - 2 * t); };
@@ -5285,7 +5341,7 @@ function cornersPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): void {
     // Solve + the builder's acceptance checks. One cold solve from
     // the builder's guess: history must not pick a different root.
     const trySolve = (warmCi: number): number => {
-      const okV = solveVC(C, warmCi, aiA, aiB, h, j.c[0] + (bx * h) / sn, j.c[1] + (by * h) / sn, h / Math.max(Math.tan(thC / 2), 1e-6), kfFa, kfFb);
+      const okV = solveVC(C, warmCi, aiA, aiB, h, j.c[0] + (bx * h) / sn, j.c[1] + (by * h) / sn, h / Math.max(Math.tan(thC / 2), 1e-6), kfFa, kfFb, j.c[0], j.c[1]);
       if (!okV) return 1;
       const dVa = armDistC(C, aiA, kfFa.s); const dVb = armDistC(C, aiB, kfFb.s);
       const tol = 1e-9 * h;
