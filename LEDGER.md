@@ -503,10 +503,10 @@ Next free ID: K1280.
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: agent `a6cd6c8845ac7e543` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-10 07:25, 2 h cap ~09:25)
-  - branch: `worktree-agent-a6cd6c8845ac7e543`, worktree `.claude/worktrees/agent-a6cd6c8845ac7e543`; last commit: `b74809d5`
+  - owner: nobody since 2026-11-10 07:55 (merged; agent `a6cd6c8845ac7e543` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `3bf50846`
   - evidence: .claude/probes/K1240/proto/ (outline.ts, k1247s8_time, k1247s8_run_locked, k1247s9_union, k1247s14_census); .claude/probes/K1240/out/ (untracked)
-  - next: Stage 15 (started 2026-11-10 07:25): record real motion on def, bound what a frame moves, build per-unit recompute if the projection reaches 3 ms. When it reports: Claude views per-frame checks and crops, re-runs a bar, merges
+  - next: make the outline continuous: the station-on-vertex jump, corner 191 at j91, j67, draw order from structure; then re-run k1247s15_gain/bound (s15 handoff)
   - brief: `docs/design/K1247_s15_moved.md`
 
 ## Next, in order
