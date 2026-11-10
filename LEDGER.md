@@ -405,11 +405,11 @@ Next free ID: K1263.
 - **K8** · G3: SDF ribbons drawn from one shared sample texture
   (`docs/design/G3G4_sdf_geometry.md`). G3-0 merged (ebdae8c..b11747e): the four G3
   tables, capture/restore, `scripts/bench_frame.mjs`; no visual change.
-  - owner: nobody since 2026-10-15 14:18 (the phone agent `a2c95d8bde8feeea8` of claude session 05e60da0 finished its bench; G3-0's `af653fa7f942f2f1e` (session d8031183) finished, its worktree left, locked by the live Claude process (K161))
-  - branch: mainline; last commit: `93a231f` (G3-1; G3-0 b11747e)
-  - evidence: `.claude/probes/K8/G3-1/` (the brief's texture sizes); `.claude/probes/K8/stage2/` (`notes.md`, `g3_probe.mjs`, `batch3.ps1`-`batch6.ps1`, `phone6.ps1`, results); stage 1's `.claude/probes/K8/stage1/notes.md`
-  - next: rp=sdf draws NO crossing gaps, on the phone and the desktop alike (build 25a52599: knot gs 24's weave renders as a flat lattice with aliased edges, the dense and max fabric crossings lose their casing cuts; Claude's desktop shots .claude/probes/rounds/2026-11-09/sdf/desktop/, the phone's sdf/sdf/crop4x_*). So G3-1's check 7 fails on master: a regression since the gaps last drew (G3-2's K816/K825/K826 and K832 4b02e2dc are the suspects). Next: bisect it with scripts/diag_screenshot.mjs under the perf lock and fix it (after K1247 stage 7 releases the lock's heavy use), then retake the phone render sync. Measured without gaps (K156 round 2026-11-09, ABBA): +12.0 / +19.8 / +17.9 ms (dense / max fabric / knot gs 24). G3-3 and Levi's look wait on the gaps. G3-1 stays (Levi, K892); never beside an R stage, K268 item 4 or another GPU measurement
-  - brief: `docs/design/K8_G3-1.md`; G3-0's handoff: `docs/design/K8_stage1.md` ("Stage 2 handoff")
+  - owner: agent `a452c354b4fd872ce` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-09 23:43, 2 h cap ~01:43)
+  - branch: `worktree-agent-a452c354b4fd872ce`, worktree `.claude/worktrees/agent-a452c354b4fd872ce`; last commit: `a145be26`
+  - evidence: .claude/probes/K8/sdf_gaps/ (the agent's probes and crops); Claude's desktop crop .claude/probes/rounds/2026-11-09/sdf/desktop/crop4x_knot24_base_sdf.png
+  - next: Bisect rp=sdf's missing crossing gaps from K832 4b02e2dc and fix them on the SDF path, default path unchanged (docs/design/K8_sdf_gaps.md). When it reports: Claude views the crops, merges, then the phone's rp=sdf render sync and Levi's look (G3-3 waits on both). Measured without gaps (round 2026-11-09, ABBA): +12.0 / +19.8 / +17.9 ms render sync (dense / max fabric / knot gs 24). G3-1 stays (Levi, K892); never beside an R stage, K268 item 4 or another GPU measurement
+  - brief: `docs/design/K8_sdf_gaps.md`
 - **K5** · Split `main.ts` and `ribbon_renderer.ts` along K1-K3's data lines, with seams so G3 becomes a module
   swap; K6 rides it (`docs/design/K5_K6_split.md`, calls K377). Merged M1-M4 (`src/app/`: camera, frame_loop,
   lifecycle, scene, audio_map; M4 at 592b12b): main.ts 5709 → 3725 lines; R1-R2 (`src/render/ribbon/`; R2 at b88376c): ribbon_renderer.ts 7747 → 5989.
