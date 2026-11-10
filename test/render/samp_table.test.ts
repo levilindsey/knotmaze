@@ -15,6 +15,7 @@ import {
   RANGE_FLOATS,
   RANGE_JUNCTION,
   RANGE_LANE_MASK,
+  RANGE_REACH,
   RANGE_SPLIT,
   assignWindowLanes,
   b64ToF32,
@@ -29,6 +30,7 @@ import {
   packSamp,
   putJunctionRange,
   radTexelSpan,
+  rangeReach,
   readSamp,
   rowSpan,
   sampTexelSpan,
@@ -38,6 +40,38 @@ import {
   writeChainTexels,
 } from "../../src/render/samp_table";
 import { sampleClosedSpline, sampleOpenSpline } from "../../src/geometry/spline_generator";
+import { SDF_VERT } from "../../src/render/ribbon/ribbon_sdf";
+
+// K8: the SDF vertex's window lookup (ribbon_sdf.ts), line for line: a
+// binary search for the entries with kLo <= k, then a walk back that stops
+// at the first entry whose reach falls short of k. Returns the slots found
+// (sorted) and how many entries the walk read.
+function sdfWindowIds(table: Float32Array, winBase: number, nWin: number, k: number): { ids: number[]; walk: number } {
+  let lo = 0;
+  let hi = nWin;
+  for (let it = 0; it < 20 && lo < hi; it++) {
+    const mid = (lo + hi) >> 1;
+    if (table[(winBase + mid) * RANGE_FLOATS + 1] <= k + 0.5) lo = mid + 1;
+    else hi = mid;
+  }
+  const ids: number[] = [];
+  let walk = 0;
+  for (let w = 0; w < 64; w++) {
+    const wi = lo - 1 - w;
+    if (wi < 0 || ids.length > 3) break;
+    walk = w + 1;
+    const o = (winBase + wi) * RANGE_FLOATS;
+    if (Math.floor(table[o + 3] / 64) - 1 < k - 0.5) break;
+    if (table[o + 2] >= k - 0.5) ids.push(table[o]);
+  }
+  return { ids: ids.sort((a, b) => a - b), walk };
+}
+// The slot ids of sample k across the lanes (decoded), sorted.
+function lanesAt(ids: Float32Array, k: number): number[] {
+  const out: number[] = [];
+  for (let l = 0; l < LANES; l++) if (ids[k * LANES + l] >= 0) out.push(ids[k * LANES + l]);
+  return out.sort((a, b) => a - b);
+}
 
 // GAP_SLOTS (gap_mask.ts): the aMaskId lanes.
 const LANES = 4;
@@ -246,7 +280,12 @@ describe("slot windows and RANGES", () => {
     const n = packRanges(acc, count, true, out, 0);
     // A..D start before sample 0 and split at the seam; F does not.
     expect(n).toBe(9);
-    const e = (i: number): number[] => Array.from(out.subarray(i * 4, i * 4 + 4));
+    // (flags below RANGE_REACH; the reach is checked after.)
+    const e = (i: number): number[] => {
+      const a = Array.from(out.subarray(i * 4, i * 4 + 4));
+      a[3] %= RANGE_REACH;
+      return a;
+    };
     // Sorted by kLo (ties in window order); A split into [0, 3] and
     // [18, 19], both flagged.
     expect(e(0)).toEqual([7, 0, 3, RANGE_SPLIT | 0]);
@@ -255,6 +294,8 @@ describe("slot windows and RANGES", () => {
     expect(e(5)).toEqual([7, 18, 19, RANGE_SPLIT | 0]);
     expect(e(8)).toEqual([10, 19, 19, RANGE_SPLIT | 3]);
     for (let i = 1; i < n; i++) expect(out[i * 4 + 1]).toBeGreaterThanOrEqual(out[(i - 1) * 4 + 1]);
+    // K8: each entry's reach is the running max of kHi.
+    expect(Array.from({ length: n }, (_, i) => rangeReach(out[i * 4 + 3]))).toEqual([3, 3, 3, 3, 12, 19, 19, 19, 19]);
     const dec = new Float32Array(count * LANES);
     decodeRanges(out, 0, n, count, LANES, dec);
     expect(dec).toEqual(ids);
@@ -288,7 +329,32 @@ describe("slot windows and RANGES", () => {
     expect(acc2).toEqual([5, 0, 9, 0]);
     const out = new Float32Array(8);
     expect(packRanges(acc2, 10, true, out, 0)).toBe(1);
-    expect(Array.from(out.subarray(0, 4))).toEqual([5, 0, 9, 0]);
+    expect(Array.from(out.subarray(0, 4))).toEqual([5, 0, 9, RANGE_REACH * 10]);
+  });
+
+  it("K8: the SDF vertex's window lookup finds every window past the 16th", () => {
+    // One open chain, 40 windows of 3 samples in two lanes: the old scan
+    // of the first 16 entries gave sample 100 no ids.
+    const count = 200;
+    const acc: number[] = [];
+    for (let w = 0; w < 40; w++) acc.push(w, w * 4, w * 4 + 5, w % 2);
+    const out = new Float32Array(maxRangeEntries(40) * RANGE_FLOATS);
+    const n = packRanges(acc, count, false, out, 0);
+    const dec = new Float32Array(count * LANES);
+    decodeRanges(out, 0, n, count, LANES, dec);
+    for (let k = 0; k < count; k++) {
+      expect(sdfWindowIds(out, 0, n, k).ids).toEqual(lanesAt(dec, k));
+    }
+    expect(sdfWindowIds(out, 0, n, 100).ids).toEqual([24, 25]);
+  });
+
+  it("K8: the shader's walk is the mirror's (RANGE_REACH 64, walk cap 64)", () => {
+    expect(RANGE_REACH).toBe(64);
+    expect(SDF_VERT).toContain("if (rangeAt(winBase + mid).y <= fk + 0.5) wLo = mid + 1;");
+    expect(SDF_VERT).toContain("for (int w = 0; w < 64; w++) {");
+    expect(SDF_VERT).toContain("if (floor(e.w / 64.0) - 1.0 < fk - 0.5) break;");
+    expect(SDF_VERT).toContain("if (e.z >= fk - 0.5) {");
+    expect(SDF_VERT).not.toContain("wnd < 16");
   });
 
   for (const name of ["daily4", "dense", "fat", "ring", "knot"]) {
@@ -299,6 +365,8 @@ describe("slot windows and RANGES", () => {
       let dropped = 0;
       let windows = 0;
       let splits = 0;
+      let maxWalk = 0;
+      let maxWin = 0;
       let base = 3; // Entries start mid-table, as in the renderer.
       const table = new Float32Array(
         (base + f.chains.reduce((s, c) => s + maxRangeEntries(c.wins.length / 4), 0)) * RANGE_FLOATS
@@ -324,8 +392,19 @@ describe("slot windows and RANGES", () => {
         const dec = new Float32Array(c.count * LANES);
         decodeRanges(table, base, n, c.count, LANES, dec);
         expect(dec).toEqual(want);
+        // K8: the SDF vertex's lookup (mirrored) finds exactly the
+        // sample's ids, well inside its walk cap.
+        for (let k = 0; k < c.count; k++) {
+          const got = sdfWindowIds(table, base, n, k);
+          expect(got.ids).toEqual(lanesAt(want, k));
+          maxWalk = Math.max(maxWalk, got.walk);
+        }
+        maxWin = Math.max(maxWin, n);
         base += n;
       }
+      expect(maxWalk).toBeLessThanOrEqual(12);
+      // Some chain has more than the old scan's 16 windows.
+      if (name === "knot" || name === "dense") expect(maxWin).toBeGreaterThan(16);
       expect(dropped).toBe(f.dropped);
       expect(windows).toBeGreaterThan(80);
       // Knot mode's rings carry windows across the seam (split halves).

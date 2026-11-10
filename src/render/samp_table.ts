@@ -27,7 +27,8 @@
 //   ribbon's aMaskId), as sample ranges. kLo/kHi already carry the one
 //   sample of padding each side. flags bits 0-1 = the lane (the aMaskId
 //   component), bit 2 = one half of a closed chain's window split at the
-//   seam. The segment ranges (FOLD at G3-2, CLUSTER at G4-0) will start at
+//   seam, and flags / RANGE_REACH (K8) = the entry's reach (see there).
+//   The segment ranges (FOLD at G3-2, CLUSTER at G4-0) will start at
 //   rangeBase = winBase + nWin; nRange is 0 for now.
 
 // Cap kinds (G3 CHAIN texel 2c .z/.w). A closed ring has no ends.
@@ -41,6 +42,16 @@ export const CAP_FLAT = 2;
 // RANGES flags.
 export const RANGE_LANE_MASK = 3;
 export const RANGE_SPLIT = 4;
+// K8: a window entry's flags also carry its REACH, floor(flags /
+// RANGE_REACH) = 1 + the largest kHi among this entry and every entry
+// before it (sorted by kLo). The SDF vertex (ribbon_sdf.ts) binary-searches
+// kLo, then walks back and stops at the first entry whose reach falls
+// short of its sample: every window that covers a sample, exactly, at any
+// window count. Exact in float32 up to 2^18 samples a chain.
+export const RANGE_REACH = 64;
+export function rangeReach(flags: number): number {
+  return Math.floor(flags / RANGE_REACH) - 1;
+}
 // K846: a junction-cut entry in a chain's segment ranges (CHAIN texel
 // (rangeBase, nRange), after its gap windows): (junction arc, signed
 // arc window from it, flags) - within the window the ribbon's border
@@ -371,6 +382,14 @@ export function packRanges(
       }
     }
     put(slot, k0, k1, lane);
+  }
+  // K8: each entry's REACH (RANGE_REACH): one more than the largest kHi of
+  // this entry and every entry before it, in sorted order.
+  let reach = -1;
+  for (let e = 0; e < n; e++) {
+    const o = (base + e) * RANGE_FLOATS;
+    reach = Math.max(reach, out[o + 2]);
+    out[o + 3] += RANGE_REACH * (reach + 1);
   }
   return n;
 }

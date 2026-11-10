@@ -50,7 +50,7 @@ import type { RibbonMesh } from "../ribbon_mesh";
 import type { ThreadPass } from "./thread_pass";
 import { StripPass } from "./strip_pass";
 
-const SDF_VERT = /* glsl */ `#version 300 es
+export const SDF_VERT = /* glsl */ `#version 300 es
 precision highp float;
 precision highp int;
 
@@ -144,15 +144,32 @@ void main(void) {
   vP01 = vec4(P0, P1);
   vP23 = vec4(P2, P3);
   vDir = dir;
-  // The segment's gap-slot windows (RANGES (slot, kLo, kHi, flags)).
+  // The segment's gap-slot windows: every RANGES entry (slot, kLo, kHi,
+  // flags) whose samples cover segK. K8: the entries sort by kLo and carry
+  // their reach (samp_table RANGE_REACH), so a binary search finds the
+  // last kLo <= segK and the walk back stops at the first entry whose
+  // reach falls short. A scan of a chain's first 16 entries left most of
+  // a long strand with no ids (and so no crossing gaps). At most 4 windows
+  // cover a sample, one per lane.
   vec4 ids = vec4(-1.0);
   int winBase = int(ch1.x + 0.5);
   int nWin = int(ch1.y + 0.5);
+  float fk = float(segK);
+  int wLo = 0;
+  int wHi = nWin;
+  for (int it = 0; it < 20; it++) {
+    if (wLo >= wHi) break;
+    int mid = (wLo + wHi) >> 1;
+    if (rangeAt(winBase + mid).y <= fk + 0.5) wLo = mid + 1;
+    else wHi = mid;
+  }
   int slot = 0;
-  for (int wnd = 0; wnd < 16; wnd++) {
-    if (wnd >= nWin || slot > 3) break;
-    vec4 e = rangeAt(winBase + wnd);
-    if (float(segK) >= e.y - 0.5 && float(segK) <= e.z + 0.5) {
+  for (int w = 0; w < 64; w++) {
+    int wi = wLo - 1 - w;
+    if (wi < 0 || slot > 3) break;
+    vec4 e = rangeAt(winBase + wi);
+    if (floor(e.w / 64.0) - 1.0 < fk - 0.5) break;
+    if (e.z >= fk - 0.5) {
       ids[slot] = e.x;
       slot++;
     }
