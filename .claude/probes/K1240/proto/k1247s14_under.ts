@@ -23,5 +23,7 @@ for (const nm of ALL) {
     for (let k = 0; k < a.pts.length; k++) refMax = Math.max(refMax, Math.abs(a.pts[k] - b.pts[k]));
   }
   console.log(`${nm}: nU ${R?.nU} discarded ${nD} underMiss ${C.underMiss} banded ${banded} regions ${T.regions.length} (ref ${TR.regions.length}) sR.n ${R?.n} | ref underlays differing ${refDiff}, max pt gap ${refMax.toExponential(2)}`);
-  if (chS !== undefined) for (let i = 0; i < C.nIv; i++) if (C.ivDiscard[i] && C.ivPi[i] === +chS) console.log(`  iv${i} A ${C.ivA[i]} B ${C.ivB[i]} eA ${C.ivEA[i]} len ${C.ivLen[i].toFixed(4)} u ${R.uOfPair.get(C.ivA[i] * R.nS + C.ivB[i]) ?? -1}`);
+  const nX = (st as any).crossings?.length ?? 0; const kn = ["xU", "xO", "jn", "cap", "seam"];
+  const sl = (s: number): string => { const k = C.slotKind[s]; const r = C.slotRank[s]; return `${kn[k]}:${k < 2 ? `x${r >> 2}.${r & 3}` : k === 2 ? `arm${r - nX * 4}` : `r${r}`} cS ${C.stCS[s].toFixed(4)}`; };
+  if (chS !== undefined) for (let i = 0; i < C.nIv; i++) if (C.ivDiscard[i] && C.ivPi[i] === +chS) console.log(`  iv${i} A ${C.ivA[i]} (${sl(C.ivA[i])}) B ${C.ivB[i]} (${sl(C.ivB[i])}) eA ${C.ivEA[i]} len ${C.ivLen[i].toFixed(4)} u ${R.uOfPair.get(C.ivA[i] * R.nS + C.ivB[i]) ?? -1}`);
 }
