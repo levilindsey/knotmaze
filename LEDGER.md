@@ -368,20 +368,20 @@ Next free ID: K1271.
   and a JSON looks list into a summary and sheets. Stages 3a-3c merged
   (737ac58..9ab8a01); rounds 2026-10-14, 14b and 14c are done (14c
   merged 772e48a..e1c2a80).
-  - owner: nobody since 2026-11-10 03:24 (merged; agent `acaae08c83107d0cb` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `588d32c3`
-  - evidence: .claude/probes/rounds/2026-11-10b/ (outputs untracked)
-  - next: Round 2026-11-10b merged (588d32c3): K8's cost fix moved nothing on the phone (rp=sdf 280/423/162 ms); K307 not due; K268's c100 beacon still reads as the probe's ideal (no casing). Round 2026-11-10c next: bisect K8's phone cost
-  - brief: docs/design/K156.md (Round 2026-11-10b)
+  - owner: agent `ac7c0de077c9ffcf7` of claude session 2026-11-10 03:25 (sonnet, started 2026-11-10 03:25, 1 h cap ~04:25)
+  - branch: `worktree-agent-ac7c0de077c9ffcf7`, worktree `.claude/worktrees/agent-ac7c0de077c9ffcf7`; last commit: `d6cc118e`
+  - evidence: .claude/probes/rounds/2026-11-10c/ (outputs untracked)
+  - next: Round 2026-11-10c (started 2026-11-10 03:25): K307's start-time read, the bisect of K8's phone cost (passes bis1 a145be26/c67a75ff, bis2 42900cac/d70fdf0d, rp=sdf both sides). When it reports: Claude files K8 and K307, merges the handoff
+  - brief: docs/design/K156.md (Round 2026-11-10c)
   - env: the phone on its charger, reached over adb 5555 through Tailscale (`adb connect`; not the desktop's USB, Levi 2026-11-02); the pass builds and serves both builds itself (ports 5480-5489); nobody else uses the phone during the pass (K234)
 - **K268** · Shaped crossing gaps under thread reveal (K76; Levi, 2026-10-14):
   no gap until the over thread is seen, a dynamic gap for a stub's overlap and
   dead ends. Stages 1-2 merged (stage 2: 2fb3362..0fd6282; MAX fixed, joints fade).
-  - owner: nobody since 2026-10-15 11:22 (stage 3a's agent `a5d9b049e72746ad2` of claude session 05e60da0 finished; merged 11:26, worktree on K161's sweep list). Stage 2's agent `a42c63c2db0401edb` (session d8031183): worktree swept; stage 1's `ab65d913a3b9a3dcb` is left, locked by the live Claude process (K161); branches kept
-  - branch: mainline; last commit: `19d97f1` (K430 ramp; G3-1 93a231f before it)
-  - evidence: `.claude/probes/K268/stage3a/` (census3a.mjs, 31/31 on master; sheet3a.mjs; the k76_probe.mjs copy with the bit-exact view wait; `out/`); `.claude/probes/K268/stage2/`; stage 1's beside it
-  - next: Phone census 2026-11-10 (b4710f37, census3a_phone.mjs): 28/31 under one framing (cam=follow, 12 s after each toggle, bit-exact view), repeated bit for bit. SOLID and FADING joints, gap keeping, the hidden fan and the attribution residue pass; PROOF exercises 16 shaped slots. Left: PROOF's ghost/in-between checks fail only on the beacon look at c100 (449 ghosts; cause unknown, needs a still), visitAll differs 1 blue level in 1 px; a desktop rerun with the clip fix and the toggle wait (carry both into every census copy)
-  - brief: `docs/design/K268.md`, Stage 3a handoff (2026-10-15 11:35), For the next stage
+  - owner: agent `ad983c6ecc2266616` of claude session 2026-11-10 03:25 (opus, started 2026-11-10 03:25, 2 h cap ~05:25)
+  - branch: `worktree-agent-ad983c6ecc2266616`, worktree `.claude/worktrees/agent-ad983c6ecc2266616`; last commit: `d6cc118e`
+  - evidence: .claude/probes/K268/stage3a/ (census3a.mjs), .claude/probes/rounds/2026-11-10b/k268/
+  - next: Proof stage (started 2026-11-10 03:25): the census's CPU ideal for dots and beacon gains the casing (c100 still), one census for both devices, visitAll's bar, the desktop census 31/31 or attributed. When it reports: Claude views the stills, merges; the phone census rides K156's next window
+  - brief: docs/design/K268.md (Proof stage brief)
 - **K7** · Physics in a Web Worker with render-side interpolation (K28; Levi's
   calls K302). Stages 1-7 merged: the worker is the default (stage 6, call F6), `&phw=0` runs
   in-thread. Stage 7 (05ae710..4420d6c) builds the first scene from the Worker's name and
