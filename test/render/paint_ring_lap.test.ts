@@ -336,6 +336,10 @@ const ROUNDED_QUOTIENTS: Record<string, [number, string]> = {
   // rounded quotient is involved.
   "ribbon/ribbon_sdf.ts: mod(vSegInfo.z, 2.0)": [1, "the flat-cap bit of an exact small-integer cap code (K832)"],
   "ribbon/ribbon_sdf.ts: mod(vSegInfo.w, 2.0)": [1, "the flat-cap bit of an exact small-integer cap code (K832)"],
+  // K8: a RANGES entry's reach, packed as flags + 64 (reach + 1) over small
+  // integers (exact in fp32); 64 is a power of two, so the quotient is exact
+  // (a reciprocal 1/64 is exact too) and floor gives the field back.
+  "ribbon/ribbon_sdf.ts: floor(e.w / 64.0)": [1, "a RANGES entry's packed reach: small integers over a power-of-two divisor, exact (K8)"],
   // K846: the junction side cut's flag decode (small integers, exact
   // in fp32): mod by 16/32 is exact, no rounded quotient.
   "fabric_sdf.ts: mod(e.w, 16.0)": [1, "the junction side cut's junction flag bit, exact small integers (K846)"],

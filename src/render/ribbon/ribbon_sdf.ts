@@ -211,6 +211,21 @@ ${GAP_FRAG_LIB}
 ${SDF_CONE_GLSL}
 ${G3_CHAIN_GLSL}
 ${JUNCTION_CUT_GLSL}
+// K8: the unit normal of the joint at b between the legs a->b and b->c (the
+// bisector of the two leg directions); a hairpin takes the outgoing leg's,
+// and a zero-length leg borrows the other leg's direction.
+vec2 sdfJointT(vec2 a, vec2 b, vec2 c) {
+  vec2 d0 = b - a;
+  vec2 d1 = c - b;
+  float q0 = dot(d0, d0);
+  float q1 = dot(d1, d1);
+  d0 = q0 > 1e-14 ? d0 * inversesqrt(q0) : vec2(0.0);
+  d1 = q1 > 1e-14 ? d1 * inversesqrt(q1) : d0;
+  if (q0 <= 1e-14) d0 = d1;
+  vec2 n = d0 + d1;
+  float qn = dot(n, n);
+  return qn > 1e-8 ? n * inversesqrt(qn) : d1;
+}
 void main(void) {
   vec2 gfw = fwidth(vPos);
   float pxW = max(max(gfw.x, gfw.y), 1e-5);
@@ -220,6 +235,27 @@ void main(void) {
   float a1 = sdCone(vPos, vP01.zw, vP23.xy, vRadii.y, vRadii.z, t1, l1);
   float a0 = vRadii.x < -0.5 ? 1e9 : sdCone(vPos, vP01.xy, vP01.zw, vRadii.x, vRadii.y, t0, l0);
   float a2 = vRadii.w < -0.5 ? 1e9 : sdCone(vPos, vP23.xy, vP23.zw, vRadii.z, vRadii.w, t2, l2);
+  // K8: the across derivative, taken here in uniform control flow (before
+  // any discard) from the own cone, which is the winning one wherever this
+  // quad owns the pixel (below).
+  float fwS = fwidth(0.5 - 0.5 * clamp(l1 / max(mix(vRadii.y, vRadii.z, t1), 1e-6), -1.0, 1.0));
+  // K8: ONE QUAD PER PIXEL. Neighbouring segment boxes overlap by R, so a
+  // pixel was drawn by up to three quads and every partial alpha (the
+  // gap's fade, the AA rim) compounded, 1 - (1 - a)^n: a narrow, hard
+  // casing, and rims stepped per segment. A quad now owns the pixels
+  // between its two joints' bisectors, the strip's partition. Both quads
+  // that share a joint compute its bisector from the same three samples
+  // with the same function, and own a hair (oe) past it, so the
+  // interpolation noise in vPos never leaves a hole. Where the bisectors
+  // cross inside the box (a fold tighter than the box), the nearest cone
+  // of the three owns.
+  vec2 jA = sdfJointT(vP01.xy, vP01.zw, vP23.xy);
+  vec2 jB = sdfJointT(vP01.zw, vP23.xy, vP23.zw);
+  float oe = 2e-3 * pxW + 1e-5;
+  float sA = vRadii.x < -0.5 ? 1e9 : dot(vPos - vP01.zw, jA);
+  float sB = vRadii.w < -0.5 ? -1e9 : dot(vPos - vP23.xy, jB);
+  bool own = (sA >= -oe && sB < oe) || (sA < 0.0 && sB >= 0.0 && a1 <= a0 && a1 < a2);
+  if (!own) discard;
   if (mod(vSegInfo.z, 2.0) > 0.5) a1 = max(a1, dot(vP01.zw - vPos, vDir));
   if (mod(vSegInfo.w, 2.0) > 0.5) a1 = max(a1, dot(vPos - vP23.xy, vDir));
   float a = a1;
@@ -267,7 +303,7 @@ void main(void) {
     float ge = abs(2.0 * side01 - 1.0);
     // K835: fill wobble (uKPathB.x) + smooth excursion swell (uKPathB.y).
     if (uKPath.y > 0.5 && (uKPathB.x > 0.0 || uKPathB.y > 0.0)) ge += sin(vUVx * 43.0 + sin(vUVx * 17.0) * 1.7) * 0.22 * uKPathB.x + sin(vUVx * 9.0 + sin(vUVx * 23.0) * 0.7) * 0.45 * uKPathB.y;
-    float fwG = max(fwidth(side01) * 3.0, 0.02);
+    float fwG = max(fwS * 3.0, 0.02);
     float gw2 = uKPath.y > 2.5 ? min(uKPath.x * 1.15, 1.0) : uKPath.x;
     float gm = clamp((gw2 - ge) / fwG + 0.5, 0.0, 1.0)
       * step(0.001, uKPath.x);
@@ -286,7 +322,7 @@ void main(void) {
   }
   if (paintHere && kst.y > 0.5 && uKPath.z < 1.0) {
     float pe = abs(2.0 * side01 - 1.0);
-    float pfw = max(fwidth(side01) * 3.0, 0.02);
+    float pfw = max(fwS * 3.0, 0.02);
     kst.z *= clamp((uKPath.z - pe) / pfw + 0.5, 0.0, 1.0);
   }
   float krim = kst.w > 0.0 ? kst.w * kRimAcross(side01) : 0.0;
@@ -300,7 +336,7 @@ void main(void) {
     frayTint = mix(vec3(lumF) * 0.85, uKHlFray.rgb, uKHlFray.w);
     rgb = mix(rgb, frayTint, 0.75 * kFrayHere);
     float eF = abs(2.0 * side01 - 1.0);
-    float fwF = max(fwidth(side01) * 3.0, 0.02);
+    float fwF = max(fwS * 3.0, 0.02);
     frayA = mix(1.0, clamp((uKPath.w - eF) / fwF + 0.5, 0.0, 1.0), kFrayHere);
   }
   float hiA = 0.0;
@@ -325,7 +361,7 @@ void main(void) {
   bool edgesIntro = uKLook.y > 0.5 && uKLook.z > 0.5;
   if (uKLook.x > 0.5 || edgesIntro) {
     float eAcross = abs(2.0 * side01 - 1.0);
-    float fwA = max(fwidth(side01) * 3.0, 0.02);
+    float fwA = max(fwS * 3.0, 0.02);
     float edge = smoothstep(1.0 - uKLook.w, 1.0 - uKLook.w + fwA, eAcross);
     vec3 stroke = mix(mix(rgb * 0.30, vec3(0.09, 0.085, 0.08), 0.5), uKBorder.rgb, uKBorder.w);
     if (uKLook.x > 0.5 && uKLook.x < 1.5) {

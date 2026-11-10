@@ -41,6 +41,104 @@ describe("K8 the SDF gap call reads a turn", () => {
   });
 });
 
+describe("K8 one SDF quad per pixel", () => {
+  // Segment boxes overlap by R, so before K8 up to three quads drew a
+  // pixel and every partial alpha compounded (a hard, narrow casing fade,
+  // rims stepped per segment). A quad now owns the slab between its two
+  // joints' bisectors, a hair (oe) past each.
+  it("pins the ownership test and the hoisted derivative", () => {
+    expect(SDF_FRAG).toContain("vec2 sdfJointT(vec2 a, vec2 b, vec2 c) {");
+    expect(SDF_FRAG).toContain(
+      "bool own = (sA >= -oe && sB < oe) || (sA < 0.0 && sB >= 0.0 && a1 <= a0 && a1 < a2);"
+    );
+    expect(SDF_FRAG).toContain("if (!own) discard;");
+    // fwidth only in uniform control flow: before the first discard
+    expect(SDF_FRAG).not.toContain("fwidth(side01)");
+    const main = SDF_FRAG.slice(SDF_FRAG.indexOf("void main(void)"));
+    const firstDiscard = main.indexOf("discard;");
+    let at = main.indexOf("fwidth(");
+    expect(at).toBeGreaterThan(0);
+    while (at >= 0) {
+      expect(at).toBeLessThan(firstDiscard);
+      at = main.indexOf("fwidth(", at + 1);
+    }
+  });
+
+  it("leaves no hole and doubles only a hair at the joints (CPU mirror)", () => {
+    type V = [number, number];
+    const sub = (a: V, b: V): V => [a[0] - b[0], a[1] - b[1]];
+    const dot = (a: V, b: V) => a[0] * b[0] + a[1] * b[1];
+    const unit = (a: V): V => {
+      const q = Math.hypot(a[0], a[1]);
+      return q > 1e-7 ? [a[0] / q, a[1] / q] : [0, 0];
+    };
+    const jointT = (a: V, b: V, c: V): V => {
+      const d0 = unit(sub(b, a));
+      const d1 = unit(sub(c, b));
+      const n: V = [d0[0] + d1[0], d0[1] + d1[1]];
+      return Math.hypot(n[0], n[1]) > 1e-4 ? unit(n) : d1;
+    };
+    // an open wavy polyline, spacing 0.09 (SAMP's), radius 0.3, turns up
+    // to ~30 degrees per sample
+    const P: V[] = [];
+    for (let i = 0; i < 60; i++) {
+      const s = i * 0.09;
+      P.push([s, 0.5 * Math.sin(s * 2.1) + 0.2 * Math.sin(s * 5.3)]);
+    }
+    const r = 0.3;
+    const R = r + 0.03;
+    const pxW = 0.013;
+    const oe = 2e-3 * pxW + 1e-5;
+    let rnd = 12345;
+    const noise = () => {
+      rnd = (rnd * 1103515245 + 12345) % 2147483648;
+      return (rnd / 2147483648 - 0.5) * 1e-5;
+    };
+    const owners = (p: V): number => {
+      let n = 0;
+      for (let k = 0; k + 1 < P.length; k++) {
+        const q: V = [p[0] + noise(), p[1] + noise()];
+        const P1 = P[k];
+        const P2 = P[k + 1];
+        const dir = unit(sub(P2, P1));
+        const L = Math.hypot(P2[0] - P1[0], P2[1] - P1[1]);
+        const u = dot(sub(q, P1), dir);
+        const v = dot(sub(q, P1), [-dir[1], dir[0]]);
+        if (u < -R || u > L + R || Math.abs(v) > R) continue; // outside the box
+        const sA = k === 0 ? 1e9 : dot(sub(q, P1), jointT(P[k - 1], P1, P2));
+        const sB = k + 2 >= P.length ? -1e9 : dot(sub(q, P2), jointT(P1, P2, P[k + 2]));
+        if (sA >= -oe && sB < oe) n++;
+      }
+      return n;
+    };
+    // the distance to the polyline, to keep only the ribbon's pixels
+    const dist = (p: V): number => {
+      let best = 1e9;
+      for (let k = 0; k + 1 < P.length; k++) {
+        const ab = sub(P[k + 1], P[k]);
+        const t = Math.max(0, Math.min(1, dot(sub(p, P[k]), ab) / dot(ab, ab)));
+        best = Math.min(best, Math.hypot(p[0] - P[k][0] - t * ab[0], p[1] - P[k][1] - t * ab[1]));
+      }
+      return best;
+    };
+    let holes = 0;
+    let doubles = 0;
+    let inside = 0;
+    for (let x = 0.4; x < 4.8; x += pxW * 1.37) {
+      for (let y = -1.2; y < 1.2; y += pxW * 1.37) {
+        if (dist([x, y]) > r) continue;
+        inside++;
+        const n = owners([x, y]);
+        if (n === 0) holes++;
+        if (n > 1) doubles++;
+      }
+    }
+    expect(inside).toBeGreaterThan(10000);
+    expect(holes).toBe(0);
+    expect(doubles / inside).toBeLessThan(0.002);
+  });
+});
+
 const read = (rel: string): string =>
   readFileSync(new URL(rel, import.meta.url), "utf8").replace(/\r\n/g, "\n");
 
