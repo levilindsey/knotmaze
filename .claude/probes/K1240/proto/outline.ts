@@ -4374,12 +4374,14 @@ function sDistToIntervalC(C: FCache, pi: number, sC: number, ls: number, hs: num
   if (c >= ls && c <= hs) return 0;
   return Math.min(Math.abs(c - ls), Math.abs(c - hs), Math.abs(dS(p, sC, ls)), Math.abs(dS(p, sC, hs)));
 }
-function segsNearC(C: FCache, pi: number, side: number, sC: number, R: number, out: number[]): void {
+// Fills out[0..count) and returns count; out never shrinks (K1247 s3: a
+// length = 0 reset drops a JS array's backing store, so each call regrew it).
+function segsNearC(C: FCache, pi: number, side: number, sC: number, R: number, out: number[]): number {
   const B = C.bords[pi * 2 + (side === 1 ? 0 : 1)];
   const p = C.polys[pi];
   const n = B.nb;
-  out.length = 0;
-  if (n < 2) return;
+  let cnt = 0;
+  if (n < 2) return 0;
   // K1247 s2: a stamp array for the Set, no closures, and the interval
   // distance's cheap terms first (min of four <= R iff any term is).
   if (snStamp.length < n) snStamp = new Int32Array(n * 2);
@@ -4410,9 +4412,11 @@ function segsNearC(C: FCache, pi: number, side: number, sC: number, R: number, o
       const idx = closed ? i % Math.max(1, n - 1) : i;
       if (stamp[idx] === gen) continue;
       stamp[idx] = gen;
-      out.push(idx);
+      if (cnt < out.length) out[cnt] = idx; else out.push(idx);
+      cnt++;
     }
   }
+  return cnt;
 }
 let snStamp = new Int32Array(1024);
 let snGen = 0;
@@ -4463,6 +4467,8 @@ let kfTwistFlips = 0;
 
 const xBU: FBord[] = []; const xBO: FBord[] = [];
 const xUSegs: number[][] = [[], []]; const xOSegs: number[][] = [[], []];
+// Their counts: [u side 1, u side -1, o side 1, o side -1].
+const xSN = new Int32Array(4);
 // The nearest candidate (by candDC, first on ties) among the first n with
 // these sides (K1247 s3: was two closures per crossing).
 function pickCand(uSide: number, oSide: number, n: number): number {
@@ -4493,8 +4499,8 @@ function crossingsPhaseC(C: FCache, scene: SceneIn): void {
     const oSegs = xOSegs;
     {
       for (let si = 0; si < 2; si++) {
-        segsNearC(C, U, sides[si], sUnder, R, uSegs[si]); segsNearC(C, O, sides[si], sOver, R, oSegs[si]);
-        fillSegBoxes(xsU[si], BU[si], uSegs[si]); fillSegBoxes(xsO[si], BO[si], oSegs[si]);
+        xSN[si] = segsNearC(C, U, sides[si], sUnder, R, uSegs[si]); xSN[2 + si] = segsNearC(C, O, sides[si], sOver, R, oSegs[si]);
+        fillSegBoxes(xsU[si], BU[si], uSegs[si], xSN[si]); fillSegBoxes(xsO[si], BO[si], oSegs[si], xSN[2 + si]);
       }
       candN = 0;
       // K1247 s2: the same (ui, oi, i, j) order as the all-pairs loop,
@@ -4550,10 +4556,12 @@ function crossingsPhaseC(C: FCache, scene: SceneIn): void {
       for (let c = 0; c < regN; c++) if (candUSide[c] === sides[ui] && candOSide[c] === -sides[oi] && (from < 0 || candDC[c] < candDC[from])) from = c;
       if (from < 0) continue;
       if (!okWarm) { /* uSegs/oSegs already full */ }
-      else { segsNearC(C, U, sides[ui], sUnder, R, uSegs[ui]); segsNearC(C, O, sides[oi], sOver, R, oSegs[oi]); }
+      else { xSN[ui] = segsNearC(C, U, sides[ui], sUnder, R, uSegs[ui]); xSN[2 + oi] = segsNearC(C, O, sides[oi], sOver, R, oSegs[oi]); }
       const Bu = BU[ui]; const Bo = BO[oi];
       let bd = Infinity; let bi = -1; let bt = 0;
-      for (const i of uSegs[ui]) for (const j of oSegs[oi]) {
+      const ulS = uSegs[ui]; const olS = oSegs[oi]; const nuS = xSN[ui]; const noS = xSN[2 + oi];
+      for (let qa = 0; qa < nuS; qa++) for (let qb = 0; qb < noS; qb++) {
+        const i = ulS[qa]; const j = olS[qb];
         if (U === O && ui === oi && i === j) continue;
         const cl = segSegClosest(Bu.bx[i], Bu.by[i], Bu.bx[i + 1], Bu.by[i + 1], Bo.bx[j], Bo.by[j], Bo.bx[j + 1], Bo.by[j + 1]);
         if (cl[2] < bd) { bd = cl[2]; bi = i; bt = cl[0]; }
@@ -4631,10 +4639,11 @@ function lbBs(bs: Float64Array, n: number, target: number): number {
   while (lo < hi) { const m = (lo + hi) >> 1; if (bs[m] < target) lo = m + 1; else hi = m; }
   return lo;
 }
-function sliceSegsE(C: FCache, Bd: FBord, p: Poly, s0: number, gap: number, out: number[]): void {
-  out.length = 0;
+// Fills out[0..count) and returns count; out never shrinks (as segsNearC).
+function sliceSegsE(C: FCache, Bd: FBord, p: Poly, s0: number, gap: number, out: number[]): number {
+  let cnt = 0;
   const n = Bd.nb;
-  if (n < 2) return;
+  if (n < 2) return 0;
   if (snStamp.length < n) snStamp = new Int32Array(n * 2);
   if (++snGen > 0x3fffffff) { snStamp.fill(0); snGen = 1; }
   const gen = snGen; const stamp = snStamp; const bs = Bd.bs;
@@ -4643,16 +4652,17 @@ function sliceSegsE(C: FCache, Bd: FBord, p: Poly, s0: number, gap: number, out:
     const sh = p.closed ? (si === 0 ? -p.len : si === 1 ? 0 : p.len) : 0;
     const a = Math.max(0, lbBs(bs, n, s0 - 1e-6 + sh) - 3);
     const b = Math.min(n - 2, lbBs(bs, n, s0 + gap + 1e-6 + sh) + 3);
-    for (let i = a; i <= b; i++) { if (stamp[i] !== gen) { stamp[i] = gen; if (segInArcE(C, p, bs[i], bs[i + 1], s0, gap)) out.push(i); } }
+    for (let i = a; i <= b; i++) { if (stamp[i] !== gen) { stamp[i] = gen; if (segInArcE(C, p, bs[i], bs[i + 1], s0, gap)) { if (cnt < out.length) out[cnt] = i; else out.push(i); cnt++; } } }
   }
+  return cnt;
 }
 const eySegA: number[][] = [[], []];
 const eySegB: number[][] = [[], []];
+const eyNA = new Int32Array(2); const eyNB = new Int32Array(2);
 let eyCx0 = new Float64Array(256); let eyCx1 = new Float64Array(256); let eyCy0 = new Float64Array(256); let eyCy1 = new Float64Array(256);
 let eyBx0 = new Float64Array(64); let eyBx1 = new Float64Array(64); let eyBy0 = new Float64Array(64); let eyBy1 = new Float64Array(64);
-function eyeComboC(C: FCache, bA: number, bB: number, segsA: number[], segsB: number[], cellE: number, skipSame: boolean): number {
+function eyeComboC(C: FCache, bA: number, bB: number, segsA: number[], segsB: number[], nA: number, nB: number, cellE: number, skipSame: boolean): number {
   const BA = C.bords[bA]; const BB = C.bords[bB];
-  const nB = segsB.length;
   if (eyCx0.length < nB) { const c = nB * 2; eyCx0 = new Float64Array(c); eyCx1 = new Float64Array(c); eyCy0 = new Float64Array(c); eyCy1 = new Float64Array(c); }
   const nbk = Math.ceil(nB / XBLK);
   if (eyBx0.length < nbk) { const c = nbk * 2; eyBx0 = new Float64Array(c); eyBx1 = new Float64Array(c); eyBy0 = new Float64Array(c); eyBy1 = new Float64Array(c); }
@@ -4673,7 +4683,7 @@ function eyeComboC(C: FCache, bA: number, bB: number, segsA: number[], segsB: nu
   }
   const AX = BA.bx; const AY = BA.by;
   let found = 0;
-  for (let q = 0; q < segsA.length; q++) {
+  for (let q = 0; q < nA; q++) {
     const i = segsA[q];
     const ax = AX[i]; const ay = AY[i]; const bx2 = AX[i + 1]; const by2 = AY[i + 1];
     const x0 = Math.floor(Math.min(ax, bx2) / cellE); const x1 = Math.floor(Math.max(ax, bx2) / cellE);
@@ -4724,17 +4734,17 @@ function eyesPhaseC(C: FCache, scene: SceneIn): void {
     // B order is free: its inserts can tie only at the same t, and then
     // they are the same point with no ref.
     const cellE = Math.max(h, 0.05);
-    sliceSegsE(C, C.bords[pi * 2], pA, sPi0, gapPi, eySegA[0]);
-    sliceSegsE(C, C.bords[pi * 2 + 1], pA, sPi0, gapPi, eySegA[1]);
-    sliceSegsE(C, C.bords[qi * 2], pB, sQi0, gapQi, eySegB[0]);
-    sliceSegsE(C, C.bords[qi * 2 + 1], pB, sQi0, gapQi, eySegB[1]);
+    eyNA[0] = sliceSegsE(C, C.bords[pi * 2], pA, sPi0, gapPi, eySegA[0]);
+    eyNA[1] = sliceSegsE(C, C.bords[pi * 2 + 1], pA, sPi0, gapPi, eySegA[1]);
+    eyNB[0] = sliceSegsE(C, C.bords[qi * 2], pB, sQi0, gapQi, eySegB[0]);
+    eyNB[1] = sliceSegsE(C, C.bords[qi * 2 + 1], pB, sQi0, gapQi, eySegB[1]);
     let foundTotal = 0;
     for (let combo = 0; combo < 4; combo++) {
       const ai = combo >> 1; const bi = combo & 1;
       // Full search every frame: the old warm path tracked last
       // frame's pairs (and skipped the search when it had none), so
       // the cuts depended on history.
-      foundTotal += eyeComboC(C, pi * 2 + ai, qi * 2 + bi, eySegA[ai], eySegB[bi], cellE, pi === qi && ai === bi);
+      foundTotal += eyeComboC(C, pi * 2 + ai, qi * 2 + bi, eySegA[ai], eySegB[bi], eyNA[ai], eyNB[bi], cellE, pi === qi && ai === bi);
     }
     void sides;
     kfEyeCutCount += foundTotal;
