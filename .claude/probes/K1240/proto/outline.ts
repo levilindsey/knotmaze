@@ -1592,12 +1592,26 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
   interface CapInfo { station: Station; atEnd: boolean; cx: number; cy: number; arc: { x: number; y: number }[] }
   const capInfos: CapInfo[] = [];
   const capRuns: [number, number][][] = [];
+  // K1247 s14: the seam's key, mid-gap (seamKeyOf), from the structure's feature keys.
+  const seamKR: number[] = polys.map(() => NaN).concat(polys.map(() => NaN));
+  if (dg && !KF_CSORDER) {
+    const put = (q: number, v: number): void => { if (!(seamKR[q * 2] <= v)) seamKR[q * 2] = v; if (!(seamKR[q * 2 + 1] >= v)) seamKR[q * 2 + 1] = v; };
+    for (const x of dg.crossings) { const uPi = x.over === "a" ? x.bPi : x.aPi; const oPi = x.over === "a" ? x.aPi : x.bPi; put(uPi, x.sUnder); put(oPi, x.sOver); }
+    for (const a of dg.arms) put(a.pi, a.s);
+  }
+  const seamKeyRef = (pi: number): number => (dg && !KF_CSORDER ? seamKeyOf(seamKR[pi * 2], seamKR[pi * 2 + 1], polys[pi].len) : 0);
   polys.forEach((p, pi) => {
     if (p.closed) {
-      const lp = borderPointAt(pi, 1, p.s0); const rp = borderPointAt(pi, -1, p.s0);
-      const left = addPointAt(pi, 1, lp.x, lp.y, p.s0);
-      const right = addPointAt(pi, -1, rp.x, rp.y, p.s0);
-      addStation({ pi, cS: p.s0, left, right, kind: "seam", key: `seam${pi}` });
+      let sSeam = normS(p, p.s0 + seamKeyRef(pi));
+      if (dg && !KF_CSORDER) { // K1247 s14: the middle of the free stretch (seamFreeC)
+        const acc = seamFreeReset();
+        for (const sx of stations) if (sx.pi === pi && (sx.kind === "cross" || sx.kind === "crossOver" || sx.kind === "junction")) seamFreeAdd(acc, sSeam, p.len, sx.left.s, sx.right.s, sx.cS);
+        sSeam = normS(p, sSeam + seamFreeMid(acc));
+      }
+      const lp = borderPointAt(pi, 1, sSeam); const rp = borderPointAt(pi, -1, sSeam);
+      const left = addPointAt(pi, 1, lp.x, lp.y, sSeam);
+      const right = addPointAt(pi, -1, rp.x, rp.y, sSeam);
+      addStation({ pi, cS: sSeam, left, right, kind: "seam", key: `seam${pi}` });
       return;
     }
     for (const atEnd of [false, true]) {
@@ -1874,7 +1888,7 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
   const sKeyOf = (q: Station): number => {
     const k = q.key;
     if (k.startsWith("cap")) return k.endsWith("|1") ? 1e12 : -1e12;
-    if (k.startsWith("seam")) return 0;
+    if (k.startsWith("seam")) return seamKeyRef(parseInt(k.slice(4), 10)); // K1247 s14: mid-gap, below every feature key
     if (k.startsWith("j")) {
       const ai = parseInt(k.slice(k.indexOf("|a") + 2), 10);
       if (dg) return dg.arms[ai].s;
@@ -3157,6 +3171,13 @@ interface FCache {
    *  scene s: a crossing's s on that chain, an arm's root s, caps at the
    *  ends): stations are ordered by it, never by frame position. */
   slotKey: Float64Array;
+  /** K1247 s14: per closed chain, its feature slots' smallest and largest
+   *  slotKey (2 per chain, NaN with none), and the frame's seam key. */
+  seamKR?: Float64Array;
+  /** K1247 s14: per chain, its crossing and junction slots (CSR: seamSl0[pi]..seamSl0[pi + 1]). */
+  seamSl0?: Int32Array;
+  seamSl?: Int32Array;
+  seamKF?: Float64Array;
   /** K1247 s12: the order inside one key: a through pass's two arms share
    *  the root s, and the arm leaving backwards (dir -1) comes first. */
   slotSub: Int8Array;
@@ -3555,6 +3576,76 @@ function structRidC(R: StructRegions, pi: number, A: number, taken: Uint8Array):
     if (r >= 0 && !taken[r]) return r;
   }
   return -1;
+}
+// K1247 s14: a closed chain's seam station sits mid-gap. It sat at s = 0, wherever that fell:
+// fat's chain 2 crosses itself at x136 just past s = 0, so the over pass's entry cut sat 0.042
+// before the seam while its key sat after it; the interval ending at the seam walked into the
+// crossing, its ring overlapped its own start (the under pass's exit, same crossing) and
+// even-odd dropped the overlap (a 1 px crack at 10.01,1.06). The seam now sits at the middle
+// of the structural gap that holds s = 0, between the chain's largest feature key and its
+// smallest plus the frame's length: the key stays below every feature's, so the order and the
+// ids are unchanged, and no feature's station comes near the seam unless its gap is that
+// small. A loop with no feature keeps s = 0. K14_SEAM0=1 restores s = 0 for A/B.
+const KF_SEAM0 = !!(globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.K14_SEAM0;
+function seamKeyOf(kMin: number, kMax: number, len: number): number {
+  if (KF_SEAM0 || !(kMax >= kMin) || !(len > 0)) return 0;
+  return (kMax + kMin - len) / 2;
+}
+/** The frame's seam key for closed chain pi (fills C.seamKF[pi]). */
+function seamKeyC(C: FCache, pi: number, len: number): number {
+  if (!C.seamKR) {
+    const R = new Float64Array(Math.max(1, C.nCh) * 2).fill(NaN);
+    for (let s = 0; s < C.nSlots; s++) {
+      const k = C.slotKind[s]; if (k > 2) continue;
+      const q = C.slotPi[s]; const v = C.slotKey[s];
+      if (!(R[q * 2] <= v)) R[q * 2] = v;
+      if (!(R[q * 2 + 1] >= v)) R[q * 2 + 1] = v;
+    }
+    C.seamKR = R; C.seamKF = new Float64Array(Math.max(1, C.nCh));
+  }
+  const sk = seamKeyOf(C.seamKR[pi * 2], C.seamKR[pi * 2 + 1], len);
+  C.seamKF![pi] = sk;
+  return sk;
+}
+// K1247 s14: the seam's POSITION within its gap. A key midpoint can land beside a station
+// whose cut reaches past it (g41_def_tw64 chain 8: x77's under window wraps past s = 0 to
+// cS 0.352, arm 106 starts at 0.667, the key midpoint is 0.410, and x77.0's oblique border
+// point passed the seam's on one side, so x77.0 -> seam walked the whole border: a 2389 px
+// spill). The seam sits at the middle of the free stretch between the stations behind the
+// key midpoint sk0 and those ahead of it; a station's cS decides its side, its extent is its
+// cS and both border points' s. Positions only: the key, the order and the ids stay
+// structural. No station on a side, or a closed stretch, keeps sk0. K14_SEAMFREE0=1: sk0.
+const KF_SEAMFREE0 = !!(globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.K14_SEAMFREE0;
+const seamFreeAcc0 = new Float64Array(2);
+function seamFreeReset(): Float64Array { seamFreeAcc0[0] = -Infinity; seamFreeAcc0[1] = Infinity; return seamFreeAcc0; }
+function seamWrap(d: number, len: number): number { let v = d % len; if (v < 0) v += len; return v > len / 2 ? v - len : v; }
+function seamFreeAdd(acc: Float64Array, sk0: number, len: number, sL: number, sR: number, cS: number): void {
+  const dc = seamWrap(cS - sk0, len);
+  const dl = dc + seamWrap(sL - cS, len); const dr = dc + seamWrap(sR - cS, len);
+  if (dc < 0) { const m = Math.max(dc, dl, dr); if (m > acc[0]) acc[0] = m; }
+  else { const m = Math.min(dc, dl, dr); if (m < acc[1]) acc[1] = m; }
+}
+function seamFreeMid(acc: Float64Array): number {
+  const b = acc[0]; const a = acc[1];
+  if (KF_SEAMFREE0 || KF_SEAM0 || !(a > b) || !Number.isFinite(a) || !Number.isFinite(b)) return 0;
+  return (a + b) / 2;
+}
+/** Fast path: the seam's offset from sk0 among chain pi's active crossing and junction stations. */
+function seamFreeC(C: FCache, pi: number, sk0: number, len: number): number {
+  if (!C.seamSl) {
+    const cnt = new Int32Array(Math.max(1, C.nCh) + 1);
+    for (let s = 0; s < C.nSlots; s++) if (C.slotKind[s] <= 2) cnt[C.slotPi[s] + 1]++;
+    for (let q = 0; q < C.nCh; q++) cnt[q + 1] += cnt[q];
+    const list = new Int32Array(Math.max(1, cnt[C.nCh])); const at = cnt.slice();
+    for (let s = 0; s < C.nSlots; s++) if (C.slotKind[s] <= 2) list[at[C.slotPi[s]]++] = s;
+    C.seamSl0 = cnt; C.seamSl = list;
+  }
+  const acc = seamFreeReset();
+  for (let k = C.seamSl0![pi]; k < C.seamSl0![pi + 1]; k++) {
+    const s = C.seamSl[k]; if (!C.stActive[s]) continue;
+    seamFreeAdd(acc, sk0, len, C.refS0[C.stLeft[s]], C.refS0[C.stRight[s]], C.stCS[s]);
+  }
+  return seamFreeMid(acc);
 }
 /** The builder's station key -> the cache's slot. */
 function slotOfKeyC(C: FCache, key: string): number {
@@ -6250,13 +6341,17 @@ function stationsPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): void {
   for (let pi = 0; pi < C.nCh; pi++) {
     const p = C.polys[pi];
     if (p.closed) {
-      borderPointAtBase(C, pi, 1, p.s0, ptScratch);
+      // K1247 s14: the seam at the middle of its structural gap (seamKeyOf).
+      const sk = KF_CSORDER ? 0 : seamKeyC(C, pi, p.len);
+      let sSeam = normS(p, p.s0 + sk);
+      if (!KF_CSORDER) sSeam = normS(p, sSeam + seamFreeC(C, pi, sSeam, p.len)); // free-stretch middle
+      borderPointAtBase(C, pi, 1, sSeam, ptScratch);
       const lx = ptScratch[0]; const ly = ptScratch[1];
-      borderPointAtBase(C, pi, -1, p.s0, ptScratch);
-      const left = addPointAtC(C, pi, 1, lx, ly, p.s0);
-      const right = addPointAtC(C, pi, -1, ptScratch[0], ptScratch[1], p.s0);
+      borderPointAtBase(C, pi, -1, sSeam, ptScratch);
+      const left = addPointAtC(C, pi, 1, lx, ly, sSeam);
+      const right = addPointAtC(C, pi, -1, ptScratch[0], ptScratch[1], sSeam);
       const slot = C.seamSlot[pi];
-      C.stActive[slot] = 1; C.stLeft[slot] = left; C.stRight[slot] = right; C.stCS[slot] = p.s0;
+      C.stActive[slot] = 1; C.stLeft[slot] = left; C.stRight[slot] = right; C.stCS[slot] = sSeam;
       continue;
     }
     for (let e = 0; e < 2; e++) {
@@ -6415,7 +6510,10 @@ function regionsPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): { regio
         if (m === 1) len = p.len;
         else if (!p.closed) len = C.stCS[B] - C.stCS[A];
         else {
-          const want = C.slotKey[B] - C.slotKey[A] + (i === m - 1 ? p.len : 0);
+          // K1247 s14: the seam's key is the frame's (seamKeyC), still below every feature's.
+          const kA = C.slotKind[A] === 4 && C.seamKF ? C.seamKF[pi] : C.slotKey[A];
+          const kB = C.slotKind[B] === 4 && C.seamKF ? C.seamKF[pi] : C.slotKey[B];
+          const want = kB - kA + (i === m - 1 ? p.len : 0);
           len = want + dS(p, want, C.stCS[B] - C.stCS[A]);
         }
         C.ivPi[nIv] = pi; C.ivA[nIv] = A; C.ivB[nIv] = B; C.ivCMid[nIv] = C.stCS[A] + Math.max(0, len) / 2; C.ivLen[nIv] = len; C.ivDiscard[nIv] = 0; C.ivRegion[nIv] = -1; nIv++;
