@@ -70,7 +70,7 @@ for (const name of names) {
   const scene0 = JSON.parse(readFileSync(join(SCENE_DIR, `${name}.json`), "utf8")) as SceneIn;
   (scene0.look as { ctrlArc?: number }).ctrlArc ??= 0.47;
   const scene = process.env.MOVE ? perturb(scene0, Number(process.env.MOVE) * scene0.look.halfWidth) : scene0;
-  const table = process.env.S2 ? buildOutlineS2(scene) : frame(structure(scene), scene);
+  const table = process.env.S2 ? buildOutlineS2(scene) : frame(structure(scene0), scene);
   const fb = new FormB(scene as never, { dpr: 2 });
   const ppd = scene.camera.pxPerUnit * 2;
   const h = table.h;

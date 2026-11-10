@@ -2030,10 +2030,13 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
         }
         let s0 = sA; let s1 = sA + span;
         if (nB >= 2 && span <= 0) {
+          // r4: a passed run is degenerate and draws nothing. Its one
+          // border point at sM sat inside the neighbouring tube (a
+          // junction's inner corner, the over chain at a crossing),
+          // where form B draws no ink.
           runPassed++;
           const sM = sA + span / 2;
-          const bp = borderPointAt(pi, side, sM);
-          pushPt(bp.x, bp.y, sM); s0 = sM; s1 = sM;
+          s0 = sM; s1 = sM;
         } else if (nB >= 2 && ivD.aSt === ivD.bSt) {
           for (let i = 0; i < nB; i++) pushPt(B.pts[i].x, B.pts[i].y, B.pts[i].s);
         } else if (nB >= 2 && fromRef && toRef) {
@@ -6060,12 +6063,10 @@ function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[])
       let viewPts: Float64Array | null = null;
       let viewCpts: Float64Array | null = null;
       if (nB >= 2 && span <= 0) {
+        // r4: a passed run is degenerate and draws nothing (the
+        // builder's note).
         runPassed++;
         const sM = sA + span / 2;
-        borderPointAtFinal(C, pi, side, sM, ptScratch);
-        pts.push(ptScratch[0], ptScratch[1]);
-        pointAtInto(p, sM, ptScratch);
-        cpts.push(ptScratch[0], ptScratch[1]);
         s0 = sM; s1 = sM;
       } else if (nB >= 2 && ivD.aSt === ivD.bSt) {
         viewPts = B.xy.subarray(0, 2 * nB); viewCpts = B.cxy.subarray(0, 2 * nB);
