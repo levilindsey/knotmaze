@@ -507,11 +507,11 @@ Next free ID: K1273.
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: agent `af9d422422ea42e42` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-10 05:13, 2 h cap ~07:13)
-  - branch: `worktree-agent-af9d422422ea42e42`, worktree `.claude/worktrees/agent-af9d422422ea42e42`; last commit: `811fca81`
-  - evidence: .claude/probes/K1240/proto/ (k1247s8_acc, k1247s9_union, k1247s12_facecrops, k1247c_final.ps1); .claude/probes/K1240/out/ (untracked)
-  - next: Stage 13 (started 2026-11-10 05:22): close the muse_hash hole from structure, fat crossing 310, the group, a quiet timing pair. When it reports: Claude views the crop pairs, re-runs acc at eps 0.1 and the still union, merges stage 12+13
-  - brief: `docs/design/K1247_s13_hole.md`
+  - owner: nobody since 2026-11-10 05:56 (stage 13 done, not merged: a ~9 px seam of paper where form B covers, muse_hash chain 11)
+  - branch: worktree-agent-af9d422422ea42e42, worktree .claude/worktrees/agent-af9d422422ea42e42; last commit: `79b283ac`
+  - evidence: .claude/probes/K1240/proto/ (k1247s8_acc, k1247s9_union, k1247s12_facecrops, k1247s13_triple, k1247c_final.ps1); .claude/probes/K1240/out/s13/ (untracked, in stage 13's worktree)
+  - next: Stage 14 (brief written 2026-11-10 06:15) continues stage 13's branch: a whole-scene coverage census against form B, close the seam, #658, then the tail that comes and goes. Group stays per frame (form B agrees with today 10914 vs 10230 for the best structural rule)
+  - brief: `docs/design/K1247_s14_seam.md`
 
 ## Next, in order
 
