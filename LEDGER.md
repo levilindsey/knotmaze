@@ -507,10 +507,10 @@ Next free ID: K1277.
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: nobody since 2026-11-10 07:25 (merged; agent `ad3e63c62ac810610` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `88503be2`
-  - evidence: .claude/probes/K1240/proto/ (k1247s8_acc, k1247s9_union, k1247s12_facecrops, k1247s13_triple, k1247c_final.ps1); .claude/probes/K1240/out/ (untracked)
-  - next: Stages 12-14 merged (88503be2; Claude viewed the census, the seam and speck triples, re-ran acc 0.1 and the still union: identical): no worse than master against form B on all 12 scenes, #658 0.337 -> 0.084 px; leftovers K1273-K1276; K14_TRIM left off (decides from positions). Next: stage 15, K1268 (recompute only what moved), from real recorded motion
+  - owner: agent `a6cd6c8845ac7e543` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-10 07:25, 2 h cap ~09:25)
+  - branch: `worktree-agent-a6cd6c8845ac7e543`, worktree `.claude/worktrees/agent-a6cd6c8845ac7e543`; last commit: `b74809d5`
+  - evidence: .claude/probes/K1240/proto/ (outline.ts, k1247s8_time, k1247s8_run_locked, k1247s9_union, k1247s14_census); .claude/probes/K1240/out/ (untracked)
+  - next: Stage 15 (started 2026-11-10 07:25): record real motion on def, bound what a frame moves, build per-unit recompute if the projection reaches 3 ms. When it reports: Claude views per-frame checks and crops, re-runs a bar, merges
   - brief: `docs/design/K1247_s15_moved.md`
 
 ## Next, in order
