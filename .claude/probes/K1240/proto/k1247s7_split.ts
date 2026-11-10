@@ -19,6 +19,17 @@ function perturb(sc0: SceneIn, A: number): SceneIn {
   for (const c of sc.chains) for (let i = 0; i + 1 < c.pts.length; i += 2) { const d = dxy(c.pts[i], c.pts[i + 1]); c.pts[i] += d[0]; c.pts[i + 1] += d[1]; }
   return sc;
 }
+// --decimate=k: keep every k-th chain point (an open chain keeps its last):
+// how the phase scales with the polyline's density (outputs change; a bound).
+const dec = +(process.argv.find((a) => a.startsWith("--decimate="))?.slice(11) ?? 1);
+if (dec > 1) {
+  for (const c of scene.chains) {
+    const n = c.pts.length / 2; const out: number[] = [];
+    for (let i = 0; i < n; i += dec) out.push(c.pts[2 * i], c.pts[2 * i + 1]);
+    if (!c.closed && (n - 1) % dec !== 0) out.push(c.pts[2 * n - 2], c.pts[2 * n - 1]);
+    c.pts = out;
+  }
+}
 const h = scene.look.halfWidth;
 const st = O.structure(scene);
 const fwd = Array.from({ length: 21 }, (_, k) => (k === 0 ? scene : perturb(scene, (k / 20) * 0.5 * h)));

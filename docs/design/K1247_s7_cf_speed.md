@@ -142,6 +142,14 @@ sites, and the growth asks about 1.1 evaluations per piece (225723 pieces, 84279
 switches, for 257995 evaluations a cycle), so neither merging pieces nor a per-piece certificate has
 anything to amortize. Fewer evaluations was the version of it that paid.
 
+The pieces follow the chain polyline's vertices (def's mean segment is 0.24 h), so the only way to
+fewer pieces is a coarser polyline, which changes the outline. As a bound (`k1247s7_split.ps1
+-Decimate k`, locked 22:54, every k-th chain point kept; accuracy not checked): k = 2 halves the
+pieces and takes the phase from 6.72 to 4.85 ms (growth 5.17 to 3.63, solve 0.88 to 0.67); k = 4
+takes it to 3.63 ms, with fewer corners grown (316 a frame in place of 346) and more fallbacks (70 in
+place of 40). Even a quarter of the points leaves the phase at 3.6 ms, so density alone can't reach
+1 ms either.
+
 Other growth settings measured (N / E h: accuracy, gain): 10 / 1e-3 95/26/1/0, 10 / 7e-4 65/16/0/0
 and 8 / 5e-4 45/17/1/0 fail the accuracy bar; 8 / 2.5e-4 -0.19 ms, 12 / 5e-4 -0.03, 12 / 2.5e-4
 -0.48, 10 / 4e-4 -0.01 and 16 / 5e-4 -0.37 are slower. (`k1247s5_cmp.ts --N` defaults E to 0.002,

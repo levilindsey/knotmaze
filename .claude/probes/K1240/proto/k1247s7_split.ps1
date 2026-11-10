@@ -1,7 +1,7 @@
 # K1247 s7: patch timers into outline.ts's corners phase (cpStat), run
 # k1247s7_split.ts under the perf lock, and restore outline.ts byte for byte.
 #   pwsh .claude\probes\K1240\proto\k1247s7_split.ps1 [-Rounds 8]
-param([int]$Rounds = 8, [switch]$Oracle)
+param([int]$Rounds = 8, [switch]$Oracle, [int]$Decimate = 1)
 $src = Join-Path $PSScriptRoot 'outline.ts'
 $bak = Join-Path $env:TEMP 'outline_split_backup.ts'
 Copy-Item $src $bak -Force
@@ -26,7 +26,7 @@ try {
     $t = $t.Replace($r[0], $r[1])
   }
   [IO.File]::WriteAllText($src, $t)
-  & (Join-Path $PSScriptRoot 'run_locked_k1247s4.ps1') -Script k1247s7_split.ts -RunArgs (@("--rounds=$Rounds") + @(if ($Oracle) { '--oracle' }))
+  & (Join-Path $PSScriptRoot 'run_locked_k1247s4.ps1') -Script k1247s7_split.ts -RunArgs (@("--rounds=$Rounds") + @(if ($Oracle) { '--oracle' }) + @(if ($Decimate -gt 1) { "--decimate=$Decimate" }))
 } finally {
   Copy-Item $bak $src -Force
   [IO.File]::Delete($bak)
