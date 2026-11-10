@@ -161,7 +161,11 @@ calls), cornerFallbackC 0.40 ms (40 calls, about 10 us each, nearly all borderMe
 (arm setup, addPointAtC, warm state) 0.27 ms. Solve, fallback and rest alone are 1.53 ms, over the
 1 ms target. The growth's cost is spread evenly: a median call takes 13.8 us (p10 24.4, max 46.0),
 the slowest 10% of calls hold 21% of the time, and no corner holds more than 0.8% of the cycle's
-growth, so there is no hot corner to special-case.
+growth, so there is no hot corner to special-case. By class (22:49 run): free corners (w 1 at every
+node) are 29% of calls but 24.0% of the time at 12.2 us each; corners whose w reaches 0 are 52% of
+calls and 51.6% of the time at 14.7 us; the rest are 20% of calls and 24.4% of the time at 18.0 us. A
+certificate that a corner is free would save at most a quarter of the growth (about 1.2 ms), less
+whatever the certificate costs.
 
 Self time inside growCFC (22.6% of the whole profile): marginOfC 27.7%, cfNext 11.3%, cfRoot 7.5%,
 cfAt 6.9%, fwScan 6.4%, cfStep 6.1%, cfFoot 6.1%, wOfC 4.2%, cfQ 4.1%, growCFC 3.8%, cfDipIn 3.7%,

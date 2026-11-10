@@ -11,10 +11,10 @@ try {
   $n0 = ([regex]::Matches($t, [regex]::Escape("      $fb"))).Count
   if ($n0 -ne 3) { throw "expected 3 fallback calls, found $n0" }
   $reps = @(
-    @('function cornersPhaseC(C: FCache', "export const cpStat: Record<string, number> = { all: 0, solve: 0, grow: 0, fb: 0, nGrow: 0, nSolve: 0, nFb: 0 };`nexport const cpCorner = new Float64Array(8192); let cpT = 0; let cpT0 = 0;`nfunction cornersPhaseC(C: FCache"),
+    @('function cornersPhaseC(C: FCache', "export const cpStat: Record<string, number> = { all: 0, solve: 0, grow: 0, fb: 0, nGrow: 0, nSolve: 0, nFb: 0 };`nexport const cpCorner = new Float64Array(8192); export const cpClass = new Int8Array(8192); let cpT = 0; let cpT0 = 0;`nfunction cornersPhaseC(C: FCache"),
     @("      $fb", "      cpT = performance.now(); $fb cpStat.fb += performance.now() - cpT; cpStat.nFb++;"),
     @('    let solveCode = trySolve(ci);', '    cpT = performance.now(); let solveCode = trySolve(ci); cpStat.solve += performance.now() - cpT; cpStat.nSolve++;'),
-    @('    const r = cfOn ? growCFC(C, ci) : growIntegC(C, ci);', '    cpT = performance.now(); const r = cfOn ? growCFC(C, ci) : growIntegC(C, ci); cpCorner[ci] = performance.now() - cpT; cpStat.grow += cpCorner[ci]; cpStat.nGrow++;'),
+    @('    const r = cfOn ? growCFC(C, ci) : growIntegC(C, ci);', '    const cpF0 = cfStats.free; const cpZ0 = cfStats.zeroEnd; cpT = performance.now(); const r = cfOn ? growCFC(C, ci) : growIntegC(C, ci); cpCorner[ci] = performance.now() - cpT; cpClass[ci] = cfStats.free > cpF0 ? 1 : cfStats.zeroEnd > cpZ0 ? 2 : 3; cpStat.grow += cpCorner[ci]; cpStat.nGrow++;'),
     @('  cornersPhaseC(C, st, scene);', '  cpT0 = performance.now(); cornersPhaseC(C, st, scene); cpStat.all += performance.now() - cpT0;')
   )
   foreach ($r in $reps) {

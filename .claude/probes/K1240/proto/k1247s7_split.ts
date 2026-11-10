@@ -32,13 +32,14 @@ for (const k of keys) mins[k] = new Array<number>(cycle.length).fill(Infinity);
 const cc = (O as unknown as { cpCorner: Float64Array }).cpCorner;
 const nC = st.corners.length;
 const cMin = new Float64Array(cycle.length * nC).fill(Infinity);
+const ccl = (O as unknown as { cpClass: Int8Array }).cpClass; const cls = new Int8Array(cycle.length * nC);
 for (let r = 0; r < rounds; r++) {
   cycle.forEach((sc, i) => {
     for (const k of keys) cp[k] = 0;
     cc.fill(-1);
     O.frame(st, sc);
     for (const k of keys) if (cp[k] < mins[k][i]) mins[k][i] = cp[k];
-    for (let ci = 0; ci < nC; ci++) if (cc[ci] >= 0 && cc[ci] < cMin[i * nC + ci]) cMin[i * nC + ci] = cc[ci];
+    for (let ci = 0; ci < nC; ci++) if (cc[ci] >= 0) { if (cc[ci] < cMin[i * nC + ci]) cMin[i * nC + ci] = cc[ci]; cls[i * nC + ci] = ccl[ci]; }
   });
 }
 {
@@ -51,6 +52,10 @@ for (let r = 0; r < rounds; r++) {
   for (let ci = 0; ci < nC; ci++) { let t = 0; for (let i = 0; i < cycle.length; i++) { const v = cMin[i * nC + ci]; if (Number.isFinite(v)) t += v; } perC.push({ ci, t }); }
   perC.sort((a, b) => b.t - a.t);
   console.log(`heaviest corners (share of the cycle's growth): ${perC.slice(0, 8).map((x) => `${x.ci} ${(100 * x.t / tot).toFixed(1)}%`).join(", ")}`);
+  // By class (cfStats): free = w 1 at every node, zero = w reached 0, other.
+  const names = ["", "free", "zero", "other"]; const ct = [0, 0, 0, 0]; const cn = [0, 0, 0, 0];
+  for (let i = 0; i < cycle.length; i++) for (let ci = 0; ci < nC; ci++) { const v = cMin[i * nC + ci]; if (!Number.isFinite(v)) continue; const k = cls[i * nC + ci]; ct[k] += v; cn[k]++; }
+  console.log(`by class: ${[1, 2, 3].map((k) => `${names[k]} ${cn[k]} calls, ${(100 * ct[k] / tot).toFixed(1)}% of the time, ${(1000 * ct[k] / Math.max(1, cn[k])).toFixed(1)} us each`).join("; ")}`);
 }
 const mean = (xs: number[]): number => xs.reduce((a, b) => a + b, 0) / xs.length;
 const m: Record<string, number> = {};
