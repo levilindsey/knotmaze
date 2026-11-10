@@ -1327,6 +1327,8 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
         const a = BU.pts[i]; const b = BU.pts[i + 1]; const c = BO.pts[j]; const d = BO.pts[j + 1];
         const hit = segInt(a.x, a.y, b.x, b.y, c.x, c.y, d.x, d.y);
         if (!hit) continue;
+        // K1247 s13: inside the window on both chains (KF_NOHITWIN).
+        if (!KF_NOHITWIN && (Math.abs(dS(pU, cp.sUnder, lerpS(pU, a.s, b.s, hit.t))) > R || Math.abs(dS(polys[O], cp.sOver, lerpS(polys[O], c.s, d.s, hit.u))) > R)) continue;
         const px = a.x + (b.x - a.x) * hit.t; const py = a.y + (b.y - a.y) * hit.t;
         const uRef = mkRef(U, uSide, px, py, lerpS(pU, a.s, b.s, hit.t), { k: 4, a, b, c, d, t: hit.t, otherPi: O, otherSide: oSide, eye: -1 });
         const oRef = mkRef(O, oSide, px, py, lerpS(polys[O], c.s, d.s, hit.u), { k: 4, a: c, b: d, c: a, d: b, t: hit.u, otherPi: U, otherSide: uSide, eye: -1 });
@@ -5366,6 +5368,15 @@ const KF_NOMEET = !!(globalThis as { process?: { env?: Record<string, string | u
 const KF_CSORDER = !!(globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.K12_CSORDER;
 // K1247 s12: K12_NOENV=1 drops the envelope (a passed interval's neighbour starts at its own A) for A/B.
 const KF_NOENV = !!(globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.K12_NOENV;
+// K1247 s13: a crossing's real cut counts only where it lies inside the crossing's s window on
+// both chains ([s - R, s + R], the window clipSegS gives a synthesized cut). segsNear keeps whole
+// segments, so a hit up to one segment past R used to count when its segment's first point fell
+// inside the window and vanish when it fell outside, and the synthesized cut that replaced it sat
+// at the edge: fat cyc18 jitter 0.01 moved crossing 310's cut 2 px (R 0.88203 vs 0.88225 against a
+// segment starting at 0.88216). Clipped the same way, a hit leaving the window hands over to the
+// synthesized cut at the same point. K13_NOHITWIN=1 restores stage 12's rule for A/B.
+const KF_NOHITWIN = !!(globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.K13_NOHITWIN;
+export const hitWinStats = { out: 0 };
 const mtSegs = [new Int32Array(1024), new Int32Array(1024)];
 const mtBoxA = mkSegBoxes(); const mtBoxB = mkSegBoxes();
 function dSignedC(C: FCache, ai: number, s: number): number {
@@ -5828,9 +5839,11 @@ function crossingsPhaseC(C: FCache, scene: SceneIn): void {
                 const b0x = Bo.bx[j]; const b0y = Bo.by[j]; const b1x = Bo.bx[j + 1]; const b1y = Bo.by[j + 1];
                 const hit = segInt(a0x, a0y, a1x, a1y, b0x, b0y, b1x, b1y);
                 if (!hit) continue;
+                const hUS = lerpS(pU, Bu.bs[i], Bu.bs[i + 1], hit.t); const hOS = lerpS(C.polys[O], Bo.bs[j], Bo.bs[j + 1], hit.u);
+                if (!KF_NOHITWIN && (Math.abs(dS(pU, sUnder, hUS)) > R || Math.abs(dS(C.polys[O], sOver, hOS)) > R)) { hitWinStats.out++; continue; }
                 const px = a0x + (a1x - a0x) * hit.t;
                 const py = a0y + (a1y - a0y) * hit.t;
-                pushCand(sides[ui], sides[oi], px, py, Math.hypot(px - cpX, py - cpY), lerpS(pU, Bu.bs[i], Bu.bs[i + 1], hit.t), lerpS(C.polys[O], Bo.bs[j], Bo.bs[j + 1], hit.u), i, j, 0, -1, hit.t, hit.u);
+                pushCand(sides[ui], sides[oi], px, py, Math.hypot(px - cpX, py - cpY), hUS, hOS, i, j, 0, -1, hit.t, hit.u);
               }
             }
           }
@@ -5894,6 +5907,7 @@ function crossingsPhaseC(C: FCache, scene: SceneIn): void {
         void Bu; void Bo;
       }
     }
+    if (candDbg.xi === xi) for (let c = 0; c < candN; c++) candDbg.rows.push([candUSide[c], candOSide[c], candX[c], candY[c], candDC[c], candUS[c], candOS[c], candSynth[c], candUSeg[c], candOSeg[c]]);
     // Picks and stations.
     for (let oi = 0; oi < 2; oi++) {
       const oSide = sides[oi];
@@ -7032,6 +7046,9 @@ export const tailDbg: { ci: number; cur: number; rows: number[][] } = { ci: -1, 
 // K1247 s11 probe: a synthesized cut's search at crossing synthDbg.xi (k1247s11_cut.ts):
 // [uSide, oSide, s on the under border, distance] per segment pair.
 export const synthDbg: { xi: number; rows: number[][] } = { xi: -1, rows: [] };
+// K1247 s13 probe: crossing candDbg.xi's cut candidates before the picks (k1247s13_x310.ts):
+// [uSide, oSide, x, y, distance to the crossing point, under s, over s, synth, uSeg, oSeg].
+export const candDbg: { xi: number; rows: number[][] } = { xi: -1, rows: [] };
 function tailTerms(a: TailIn, l1: number, u: number): number[] {
   const sE = tailAt(a, l1, u, tailPt, tailCen, false); const h = a.h;
   const lo = a.dirX > 0 ? a.sRX - 2 * h : a.sRX - 6 * h;
