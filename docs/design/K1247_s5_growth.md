@@ -327,4 +327,23 @@ force the margin to 0, so they grow the same path. Their difference is the walks
 1.2-1.3 ms, about 105 ns per `marginOfC` call. The window searches cost at most 0.1-0.2 ms. The
 certificate is 0.8 ms slower than today, because its block-box scan over the whole window costs more
 than the walks it skips. So a margin bound for the next stage has to replace the half-plane walks,
-once per corner or once per piece. Making the window searches cheaper would gain nothing.
+once per corner or once per piece.
+
+**A CPU profile corrects one number (19:50).** `k1247s5_prof_sum.cjs` and `k1247s5_prof_split.cjs`
+read a `.cpuprofile` of `_s5bench`-style def in motion (100 µs sampling; the profile is
+`out/k1247s5/prof/def_motion_c7c9aac3.cpuprofile`). Walks only grows further than today, since no
+margin stops a corner, so it hid part of the window searches' cost. By the profile, the window searches
+are about a quarter of the margin's cost (footWinFast under marginOfC: 1.9% of samples, against
+marginOfC's own 5.4%). That is about 0.4-0.5 ms, and the walks are the rest. The corners phase splits:
+
+| part of cornersPhaseC | share |
+|---|---|
+| growIntegC (the growth) | 75.5% |
+| trySolve (the cold V solve: solveVC, a global foot per Newton iteration) | 13.7% |
+| cornerFallbackC | 5.4% |
+| addPointAtC and the phase's own code | 4.6% |
+
+Inside the growth: advanceToC 35%, wOfC 33% (86% of it marginOfC), refineC 26%. So the 0.7 ms
+outside the growth is mostly the V solve, about 0.8 ms on def. Its global foot per iteration is
+deliberate ("history must not pick a different root"), so speeding it up needs a cheaper exact global
+test, not a tracked foot.
