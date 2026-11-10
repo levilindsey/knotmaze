@@ -4,7 +4,9 @@
 // and reports the corners phase's per-round medians and the paired gain,
 // then, per frame, the fastest of the rounds averaged over the cycle (the
 // steadier number while other agents load the machine).
-//   node scripts/run_node.mjs .claude/probes/K1240/proto/k1247s7_ab.ts --knob=steep|clear|vhint|walk [--rounds=8]
+//   node scripts/run_node.mjs .claude/probes/K1240/proto/k1247s7_ab.ts --knob=steep|clear|grow [--N=10 --E=5e-4] [--rounds=8]
+// (vhint and walk register only while outline.ts exports their setters; both
+// experiments were reverted.)
 import { readFileSync } from "node:fs";
 import * as O from "./outline";
 import type { SceneIn } from "./outline";
@@ -17,6 +19,10 @@ for (const [k, fn] of [["steep", "setSteepFast"], ["clear", "setClearCert"], ["v
   const f = (O as unknown as Record<string, unknown>)[fn];
   if (typeof f === "function") setters[k] = f as (on: boolean) => void;
 }
+// --knob=grow: off = stage 6's 16 nodes at E 1e-3 h; on = --N nodes at --E h.
+const gN = +(process.argv.find((a) => a.startsWith("--N="))?.slice(4) ?? 16);
+const gE = +(process.argv.find((a) => a.startsWith("--E="))?.slice(4) ?? 1e-3);
+setters.grow = (on: boolean): void => { if (on) O.setGrowUniform(gN, gE); else O.setGrowUniform(16, 1e-3); };
 const set = setters[knob];
 if (!set) throw new Error(`no knob ${knob} (have ${Object.keys(setters).join(", ")})`);
 const scene = JSON.parse(readFileSync(`${SCENE_DIR}/def.json`, "utf8")) as SceneIn;

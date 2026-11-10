@@ -4076,11 +4076,14 @@ function wOfC(C: FCache): number {
 // (k1247s5_ref.ts) follows it. Today's 1e-3 h floor rejected more of those
 // jumps the smaller the steps (the 128-node run's 0.69 h).
 const kfJump = 0.1;
-let kfGrowE = 1e-3; // the integral's error budget, in h (k1247s5 knobs)
+// K1247 s7: 10 nodes at E 5e-4 h in place of stage 6's 16 at 1e-3: closer
+// to the reference (k1247s5_cmp 48/9/0/0 against 58/17/0/0; accuracy follows
+// E more than N) and 0.10-0.11 ms faster (k1247s7_ab.ts --knob=grow, locked).
+let kfGrowE = 5e-4; // the integral's error budget, in h (k1247s5 knobs)
 let kfGrowH = 0.25; // the largest step, in r0
 let kfGrowP = 1 / 64; // the path's largest advance, in r0
 export function setGrowKnobs(e: number, hm: number, p = kfGrowP): void { kfGrowE = e; kfGrowH = hm; kfGrowP = p; }
-let kfGrowN = 16; // uniform growth: nodes (and path steps) over r0; 0 = the adaptive one
+let kfGrowN = 10; // uniform growth: nodes (and path steps) over r0; 0 = the adaptive one
 let kfGrowZ = 1e-3; // uniform growth: the smallest refined interval, in h
 let kfGrowMid = true; // uniform growth: accept a refined interval by its midpoint test
 let kfGrowS = 1; // uniform growth: path steps per node (w is evaluated at the nodes only)
