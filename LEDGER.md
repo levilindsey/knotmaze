@@ -507,11 +507,11 @@ Next free ID: K1272.
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: nobody since 2026-11-10 03:30 (merged; agent `ab0e33c2e4fe88918` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `b6103dd1`
+  - owner: agent `ac68950ce0ddc1f68` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-10 03:30, 2 h cap ~05:30)
+  - branch: `worktree-agent-ac68950ce0ddc1f68`, worktree `.claude/worktrees/agent-ac68950ce0ddc1f68`; last commit: `2130554c`
   - evidence: .claude/probes/K1240/proto/ (k1247s8_acc, k1247s9_union, k1247s10_base.ps1, k1247c_final.ps1), .claude/probes/K1240/out/
-  - next: Stage 12 (docs/design/K1247_s12_structure.md): region numbering and group from structure (g41_user_tw64 chain 26, memberGroup), the tail that comes and goes (g41_def_tw64 tail/17), reach noise into spanRamp, g41_ring_tw64 eps 0.2 run/1 and run/13, def arc/72. After s11: eps 0.1 worst 7.103 px / 23 fails, eps 0.2 10.620 / 26
-  - brief: `docs/design/K1247_s11_tails.md`
+  - next: Stage 12 (started 2026-11-10 03:31): region numbering and group from structure, the tail that comes and goes, reach noise into spanRamp, g41_ring_tw64 eps 0.2, def arc/72. When it reports: Claude views any crops, re-runs acc at eps 0.1 and the still union, merges
+  - brief: `docs/design/K1247_s12_structure.md`
 
 ## Next, in order
 
