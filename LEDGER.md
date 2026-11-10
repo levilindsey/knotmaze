@@ -23,8 +23,6 @@ Next free ID: K1256.
 
 ## Waiting on Levi
 
-- **K1251** · J3n's looks (K863): b, v and w exit a little lower; f's and p's word-end tails shorter and
-  flatter. J3n, its variant or a mix (card docs/asks/K1251.md)
 - **K867** · Plain-HTTP links (no AudioWorklet) fall back to the legacy synth, which played out of
   tune. Muse's in-tune voice is parked at 5ae5a1d1, awaiting Levi's timbre verdict (cherry-pick or
   drop); its 5319 server stopped with Muse, so re-serve it with `scripts/preview.ps1` (ledger_notes).
@@ -308,10 +306,10 @@ Next free ID: K1256.
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
   Levi to edit instead of drawing all 26 (Levi, 2026-10-26). Muse's prototype parked at abc135e7.
-  - owner: nobody since 2026-11-09 15:27: J3n done (agent a3cab4505b6b75ecb, claude session 09c7a672-a414-402a-97da-b3176839a2e5), waits on Levi's pick (K1251)
+  - owner: nobody since 2026-11-09 17:40: J3n done, Levi picked its variant (K1251); no stage running
   - branch: mainline; last commit: `15cb9922`
-  - evidence: kit .claude/probes/K863/trace/work38/ (tools, cand/J3N, cand/J3NV, NOTES_k863n.md, crops/v2_*), out38/png/ (sheets: font | v6.8 | J3M | J3n | variant), NOTES.md entry 'K863 J3n'
-  - next: Levi picks J3n, its variant or a mix on K1251 (docs/asks/K1251.md); the pick becomes the kit's build (work38/cand/J3N or J3NV)
+  - evidence: kit .claude/probes/K863/trace/work38/ (tools, cand/J3NV = the kit's build, spec k863n_var2.json, NOTES_k863n.md, crops/v2_*), out38/png/ (sheets: font | v6.8 | J3M | J3n | variant), NOTES.md entry 'K863 J3n'
+  - next: J3NV (work38/cand/J3NV) is the kit's build; the next stage builds on its join_params. Open on it: J3m's o notch (rough FAIL) and Levi's next look notes
   - brief: `docs/design/K863_cursive_j3n.md`
 - **K114** · Gameplay round 2, designed in
   `docs/design/K80_gameplay_additions.md` section R: burn race, cut
@@ -2046,6 +2044,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1251** · J3n's looks (K863, card K1251). Levi, 2026-11-09: the variant everywhere (b, v and w at a word's end and into high-entry letters, f, p); the kit's build is work38/cand/J3NV. Done in 15cb9922 (2026-11-09).
 - **K1253** · WASM vs JS on the outline's kernels: 1.6-1.8x on footNearM and marginOfC replayed alone, bit-exact, but no measurable gain swapped into def's frame; no port now (docs/design/K1247_wasm_kernel.md handoff). Done in e60dff3a (2026-11-09).
 - **K1211** · One seamless light inside each junction for pulses and the gold path (S6), kept on K1244; fire and collapse are K1210, the remaining smoothness K1250. Done in 13aab452 (2026-11-09).
 - **K1244** · A pulse crosses a junction as one soft glow (K1211 S6). Levi, 2026-11-09: kept, 'I guess it's ok, but it still isn't perfectly smooth'; the smoothness is K1250's. Done in 13aab452 (2026-11-09).
