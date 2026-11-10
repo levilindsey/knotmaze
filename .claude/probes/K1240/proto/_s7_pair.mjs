@@ -21,7 +21,7 @@ for (let r = 0; r < rounds; r++) {
     if (res.status !== 0) process.exit(res.status ?? 1);
     const rep = JSON.parse(readFileSync(join(out, `time_${t}.json`), "utf8"));
     const d = rep[0];
-    rows.push(`${t}: def median ${d.median} p95 ${d.p95} corners ${d.phases?.corners} | ring ${rep[1].median} fat ${rep[2].median} defc ${rep[3].median}`);
+    rows.push(`${t}: def median ${d.median} p95 ${d.p95} phases ${Object.entries(d.phases ?? {}).map(([k, v]) => `${k} ${v}`).join(", ")} | ring ${rep[1].median} fat ${rep[2].median} defc ${rep[3].median}`);
   }
 }
 console.log(rows.join("\n"));
