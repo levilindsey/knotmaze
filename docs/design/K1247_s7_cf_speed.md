@@ -82,7 +82,7 @@ Short and plain:
 
 End with `Ledger items` and K1247's handle fields (owner, branch, last commit, evidence, next).
 
-## Handoff 1 (2026-11-09, 21:29-22:58, claude agent a82e0a83c91fe4c5a)
+## Handoff 1 (2026-11-09, 21:29-23:05, claude agent a82e0a83c91fe4c5a)
 
 **Done does not hold.** def's corners phase is 7.3-7.6 ms in the locked pairs (master's 7.7-8.2 in
 the same runs), against the 1 ms target. The leads as briefed are worth tenths of a millisecond
@@ -243,7 +243,14 @@ profile (1.53 ms timed with the rest, above): over the 1 ms target before any gr
   smarter locator for w's drop to 0 under 0.45 ms; a zero-cost certificate for the clear margins
   (79% of margin calls) about 1.2 ms, the largest single lever found. The tests are linear in q
   (GF[k] - q . T[k]) over a window fixed for the corner, so one bound per (corner, side) over the
-  disk q can reach (radius r0 around V) might certify most of them at once; not built. With w gone
+  disk q can reach (radius r0 around V) might certify most of them at once; not built. The catch:
+  the forward walk from a foot tests the segments ahead of it and the backward walk those behind, so
+  as the foot moves the segments between its old and new place switch tests, and a clear walk is
+  not a superset of the next one. A certificate has to cover both tests on every segment the feet
+  can cross during the growth (unknown before stepping; extendable as they go). Clear calls already
+  cost only about 140 ns (the walk cache jumps to the window's end), so the payoff is in skipping
+  the call, not in a faster walk. A further 14.4% of margins are finite but at or over 0 (a factor
+  of 1 too): 93.5% of margin calls leave w unchanged. With w gone
   entirely the phase would be 4.4 ms (measured, replay), so the path (2.83 ms), the margins
   (2.25 ms) and the 1.5 ms outside the growth all have to shrink: WASM or a different scheme for
   each, not one trick.
