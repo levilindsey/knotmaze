@@ -1958,7 +1958,10 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
     const capA = capByStation.get(iv.A.key);
     if (capA && iv.A.kind.startsWith("cap")) seq.push(...capA.arc.slice(1, -1).reverse());
     const poly = dedupePts(seq);
-    if (poly.length < 3) continue;
+    // K1247 s11: a region per kept interval, even one whose polygon has under 3 points (zero
+    // area). Skipping it renumbered every later region, and its point count follows the
+    // positions: g41_def_tw64 chain 81's interval has 9 points full and 2 reduced at eps 0.1.
+    void poly.length;
     const rid = regions.length;
     iv.region = rid;
     for (const sg of leftSeq.segs) segRegion[pi][0][sg] = rid;
@@ -6144,7 +6147,7 @@ function regionsPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): { regio
       for (let q = C.capArcN[capAInfo] - 2; q >= 1; q--) pushDedup(pts, ax[q], ay[q]);
     }
     if (pts.length >= 2 && Math.hypot(pts[0] - pts[pts.length - 2], pts[1] - pts[pts.length - 1]) < 1e-12) pts.length -= 2;
-    if (pts.length / 2 < 3) continue;
+    // K1247 s11: no skip under 3 points (the builder's note): region ids follow the intervals.
     const rid = regions.length;
     C.ivRegion[i] = rid;
     for (let q = 0; q < nsL; q++) BdL.segReg[segL[q]] = rid;
