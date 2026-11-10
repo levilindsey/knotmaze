@@ -2025,7 +2025,7 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
     for (const sg of rightSegs) segRegion[pi][1][sg] = rid;
     const flat = poly.flatMap((pt) => [pt.x, pt.y]);
     const mid = pointAt(p, iv.cMid);
-    const grp = sR && dg?.regGroup ? dg.regGroup[rid] : memberGroup(pi, iv.cMid);
+    const grp = memberGroup(pi, iv.cMid);
     const reg: OutlineRegion = { id: rid, ownerChain: pi, group: grp, pts: flat, pieces: [], hole: false };
     const fw: FaceWork = { owner: pi, group: grp, pts: flat, sample: [mid.x, mid.y], depth: depthAt(pi, iv.cMid) };
     if (sR) { sRegs[rid] = reg; sFaces[rid] = fw; } else { regions.push(reg); faceWorks.push(fw); }
@@ -2036,7 +2036,7 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
       if (!reg || !fw) {
         const pi = sR.ridPi[r]; const p = polys[pi];
         const s = slotStation.get(sR.ridA[r])?.cS ?? p.s0;
-        const grp = dg?.regGroup ? dg.regGroup[r] : memberGroup(pi, s); const mid = pointAt(p, s);
+        const grp = memberGroup(pi, s); const mid = pointAt(p, s);
         reg = { id: r, ownerChain: pi, group: grp, pts: [], pieces: [], hole: false };
         fw = { owner: pi, group: grp, pts: reg.pts, sample: [mid.x, mid.y], depth: depthAt(pi, s) };
       }
@@ -2777,11 +2777,6 @@ export interface DiagramStructure {
   stationsD: DiagramStation[];
   intervalsD: DiagramInterval[];
   piecesD: DiagramPiece[];
-  /** K1247 s12: each structural region id's junction group, decided once
-   *  from the structure scene's own frame (structure()); frames read it
-   *  instead of the cap ramp at cMid, whose cut-limited L flips the group
-   *  near an arm's end. Absent: the per-frame cap ramp (K12_GROUPCMID=1). */
-  regGroup?: Int32Array;
 }
 
 /** The diagram of a scene: chains and their point counts, crossings
@@ -2959,17 +2954,7 @@ export function diagramOf(scene: SceneIn): DiagramStructure {
   };
 }
 
-export function structure(scene: SceneIn): DiagramStructure {
-  const st = diagramOf(scene);
-  const env = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env;
-  if (!env?.K12_CSORDER && !env?.K12_GROUPCMID) {
-    // K1247 s12: region groups decided once, at the structure scene (ids from structRegionsC).
-    const fr = frame(st, scene);
-    const n = (fastCaches.get(st)?.sReg?.n) ?? 0;
-    st.regGroup = Int32Array.from({ length: n }, (_, r) => fr.regions[r].group);
-  }
-  return st;
-}
+export function structure(scene: SceneIn): DiagramStructure { return diagramOf(scene); }
 
 /** One frame of the diagram at this scene's positions. Every length,
  *  angle, cut, tangent point, radius and exposure is computed from
@@ -6356,7 +6341,7 @@ function regionsPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): { regio
     C.ivRegion[i] = rid;
     for (let q = 0; q < nsL; q++) BdL.segReg[segL[q]] = rid;
     for (let q = 0; q < nsR; q++) BdR.segReg[segR[q]] = rid;
-    const grp = sR && st.regGroup ? st.regGroup[rid] : memberGroupC(C, pi, C.ivCMid[i]);
+    const grp = memberGroupC(C, pi, C.ivCMid[i]);
     const reg: OutlineRegion = { id: rid, ownerChain: pi, group: grp, pts, pieces: [], hole: false };
     pointAtInto(p, C.ivCMid[i], ptScratch);
     const fw: FaceWorkF = { owner: pi, group: grp, rid, sx: ptScratch[0], sy: ptScratch[1], depth: depthAtC(C, pi, C.ivCMid[i], depthWin) };
@@ -6369,7 +6354,7 @@ function regionsPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): { regio
       if (!reg || !fw) {
         const pi = sR.ridPi[r]; const A = sR.ridA[r]; const p = C.polys[pi];
         const s = C.stActive[A] ? C.stCS[A] : p.s0;
-        const grp = st.regGroup ? st.regGroup[r] : memberGroupC(C, pi, s);
+        const grp = memberGroupC(C, pi, s);
         reg = { id: r, ownerChain: pi, group: grp, pts: [], pieces: [], hole: false };
         pointAtInto(p, s, ptScratch);
         fw = { owner: pi, group: grp, rid: r, sx: ptScratch[0], sy: ptScratch[1], depth: depthAtC(C, pi, s, depthWin) };
