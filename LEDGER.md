@@ -372,10 +372,10 @@ Next free ID: K1273.
   and a JSON looks list into a summary and sheets. Stages 3a-3c merged
   (737ac58..9ab8a01); rounds 2026-10-14, 14b and 14c are done (14c
   merged 772e48a..e1c2a80).
-  - owner: agent `a0ef4cd89dee7ff20` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (sonnet, started 2026-11-10 05:53, 1 h cap ~06:53)
-  - branch: `worktree-agent-a0ef4cd89dee7ff20`, worktree `.claude/worktrees/agent-a0ef4cd89dee7ff20`; last commit: `085317ab`
-  - evidence: .claude/probes/rounds/2026-11-10d/ (outputs untracked)
-  - next: Round 2026-11-10d (started 2026-11-10 06:00): K307's start-time read; where rp=sdf stands (pass fin) and K268's phone census on its build; K8's candidates C, A, B rp=sdf on both sides. When it reports: Claude files K8's, K268's and K307's results
+  - owner: nobody since 2026-11-10 07:12 (round 2026-11-10d ran no pass: its driver was launched from the wrong path; only the idle wait, the check and K307's read ran)
+  - branch: mainline; last commit: `d5aa5ca7`
+  - evidence: .claude/probes/rounds/2026-11-10d/driver.ps1; untracked logs/ in the main checkout's .claude/probes/rounds/2026-11-10d/
+  - next: Rerun round 2026-11-10d in the next phone window (Levi asked 2026-11-10 07:15: now or tonight): phone lock, idle wait, check, K307's read, then from the repo root `pwsh -NoProfile -File .\.claude\probes\rounds\2026-11-10d\driver.ps1 -Passes fin,c,a,b` detached, and confirm logs\driver.log exists within a minute (about 45 min of phone time). Then Claude files K8's, K268's and K307's results
   - brief: docs/design/K156.md (Round 2026-11-10d)
   - env: the phone on its charger, reached over adb 5555 through Tailscale (`adb connect`; not the desktop's USB, Levi 2026-11-02); the pass builds and serves both builds itself (ports 5480-5489); nobody else uses the phone during the pass (K234)
 - **K268** · Shaped crossing gaps under thread reveal (K76; Levi, 2026-10-14):
@@ -404,7 +404,7 @@ Next free ID: K1273.
   - owner: nobody since 2026-10-15 05:39 (stage 2 done; agent `a11d7ce60428b687d` of claude session d8031183, worktree removed by the K161 sweep 2026-10-15, branch kept)
   - branch: mainline; last commit: `a7e199e` (stage 3 late enable)
   - evidence: `.claude/probes/K307/` (stage 1's tools and traces; `stage2/`: `trace_intro.mjs`, `run_s2.ps1`, batches 1-7, `runs/`, two A/B builds, `k366_firsttap.mjs`); the throwaway branch `k307-proto` (d1aefae), never merged; lore `.claude/rules/render-shaders.md` ("THE WARM-UP")
-  - next: Restart check still open: at 2026-11-10 03:30 (round 2026-11-10c) Chrome's browser and GPU process still dated 2026-11-09 20:20:21, before salt p1109a (22:07:41). Each phone window reads the start time first and runs the traced load (?daily&snd=none with k307\salt_p1109a.js: 0 translates = persisted, ~21 = not) only if later. Never restart Chrome on the phone. Evidence .claude/probes/rounds/2026-11-09/k307/
+  - next: Restart check still open: at 2026-11-10 06:00 (round 2026-11-10d) Chrome's GPU process still dated 2026-11-09 20:20:20, before salt p1109a (22:07:41). Each phone window reads the start time first and runs the traced load (?daily&snd=none with k307\salt_p1109a.js: 0 translates = persisted, ~21 = not) only if later. Never restart Chrome on the phone. Evidence .claude/probes/rounds/2026-11-09/k307/
   - brief: `docs/design/K307_intro_freezes.md`, "Stage 2 handoff" and "K385" (the mechanism and the plan)
 - **K8** · G3: SDF ribbons drawn from one shared sample texture
   (`docs/design/G3G4_sdf_geometry.md`). G3-0 merged (ebdae8c..b11747e): the four G3
