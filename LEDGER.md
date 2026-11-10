@@ -291,6 +291,9 @@ Next free ID: K1263.
 - **K1172** · Walker modes, Levi's brainstorm (2026-11-03): guide it, program it, a flock, stop them (and a tower
   defense), steer it live, bend and tilt. Which family first? (`docs/design/K1172_walker_modes.md`; full text:
   `docs/ledger_notes.md`)
+- **K365** · The phone ripple's size floor, 56 (master) or 68 (probe commit 8f89db59, refs/probes/K365-floor68):
+  Levi picks from the pair (docs/asks/K365.md). The phone dropped no frames at either (round 2026-11-09b,
+  aca6b86a), so no bbox replay; the pick lands as one constant, RIPPLE_FLOOR_CSS.
 
 ## In progress
 
@@ -365,11 +368,11 @@ Next free ID: K1263.
   and a JSON looks list into a summary and sheets. Stages 3a-3c merged
   (737ac58..9ab8a01); rounds 2026-10-14, 14b and 14c are done (14c
   merged 772e48a..e1c2a80).
-  - owner: agent `ab935dd12e804fe68` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-09 22:23, 2 h cap ~00:23)
-  - branch: `worktree-agent-ab935dd12e804fe68`, worktree `.claude/worktrees/agent-ab935dd12e804fe68`; last commit: `fcfc3128`
-  - evidence: .claude/probes/rounds/2026-11-09b/ (untracked); round 2026-11-09 in .claude/probes/rounds/2026-11-09/
-  - next: Round 2026-11-09b (the rest of tonight's window): K365's ripple at CSS floors 56 and 68 for Levi's pick + dropped frames, K268's census with a still camera (judges the 6 phone-only fails), K252's head show-delay blips against 0.45 s; phone work ends by 07:30. Then the next window: K307's restart check first, K8's render sync once rp=sdf draws its gaps
-  - brief: docs/design/K156.md, "Round 2026-11-09b"
+  - owner: nobody since 2026-11-09 23:38 (round 2026-11-09b finished its steps, merged aca6b86a)
+  - branch: mainline; last commit: `aca6b86a`
+  - evidence: .claude/probes/rounds/2026-11-09b/ (tools tracked; outputs untracked); round 2026-11-09 in .claude/probes/rounds/2026-11-09/
+  - next: The next phone window: K307's restart check first, then K268's census with a view pin shared by both modes, then K8's rp=sdf render sync once rp=sdf draws its gaps again (K8 bisect)
+  - brief: docs/design/K156.md (round 2026-11-09b's handoff)
   - env: the phone on its charger, reached over adb 5555 through Tailscale (`adb connect`; not the desktop's USB, Levi 2026-11-02); the pass builds and serves both builds itself (ports 5480-5489); nobody else uses the phone during the pass (K234)
 - **K268** · Shaped crossing gaps under thread reveal (K76; Levi, 2026-10-14):
   no gap until the over thread is seen, a dynamic gap for a stub's overlap and
@@ -377,7 +380,7 @@ Next free ID: K1263.
   - owner: nobody since 2026-10-15 11:22 (stage 3a's agent `a5d9b049e72746ad2` of claude session 05e60da0 finished; merged 11:26, worktree on K161's sweep list). Stage 2's agent `a42c63c2db0401edb` (session d8031183): worktree swept; stage 1's `ab65d913a3b9a3dcb` is left, locked by the live Claude process (K161); branches kept
   - branch: mainline; last commit: `19d97f1` (K430 ramp; G3-1 93a231f before it)
   - evidence: `.claude/probes/K268/stage3a/` (census3a.mjs, 31/31 on master; sheet3a.mjs; the k76_probe.mjs copy with the bit-exact view wait; `out/`); `.claude/probes/K268/stage2/`; stage 1's beside it
-  - next: The phone proof ran 2026-11-09 (K156 round): census 17/31 at a 1000x900 override (the desktop baseline 22/31), UWRAMP exact (0 mismatched, worst 2e-9), the desktop's 8 known fails (K537) plus 6 phone-only (1-18 px residues and two junction checks needing a bit-exact re-shoot; inferred, untested: re-shoot noise from cam=follow drifting ~1e-5 a shot); the intro close-in passes by eye; PROOF judged 0 px as since G3-1 (K547). Left: a still-camera census at the next phone window so restores are bit-exact; optionally a desktop census on current master to replace the 2026-10-16 baseline. Evidence .claude/probes/rounds/2026-11-09/k268/
+  - next: Round 2026-11-09b ran the census under cam=fit on the phone (aca6b86a): 20/31. Its clip shots had been blind there (a clip capture fires a resize that re-solves every slot; fixed with captureBeyondViewport false in that round's copy; round 2026-11-09's census was blind too). ONES restore, hidden over cuts and hidden-class now pass (re-shoot noise). SOLID (0/5) and FADING (4/5) joints can't be judged under fit: with the reveal on, fit frames only the revealed thread, so mode on/off read two framings (inferred, not tested). Next: a probe-side view pin shared by both modes (or follow settled past its ~10 s spring tail), then judge the joints, the hidden fan, the 18161 px attribution residue, visitAll and PROOF's 0 shaped slots; carry the clip fix into every census copy and check whether the desktop census's clip shots also resize (if so, re-run its 22/31 baseline). Evidence .claude/probes/rounds/2026-11-09b/k268/
   - brief: `docs/design/K268.md`, Stage 3a handoff (2026-10-15 11:35), For the next stage
 - **K7** · Physics in a Web Worker with render-side interpolation (K28; Levi's
   calls K302). Stages 1-7 merged: the worker is the default (stage 6, call F6), `&phw=0` runs
@@ -609,9 +612,6 @@ Every other item below waits on the trigger it names.
 - **K318** · Win effects (Levi 10-14): one show, many themes; thirteen themes in a Win effects
   folder (Theme dropdown, Party default), built in twelve stages. Stage 1 after the confetti stage
   and K111 s5. `docs/design/K318_win_effects.md` ("Build stages").
-- **K365** · K279's phone round: run the fixed `k279_phone.mjs`, pick the
-  ripple's CSS floor (56 or 68; rec 56 unless it reads small), and only if the
-  phone drops frames, a bbox replay (K279.md "Stage 2 handoff").
 
 
 
@@ -862,7 +862,6 @@ Every other item below waits on the trigger it names.
 - **K254** · K193 s1's phone-pass residuals (`docs/design/K193.md`, "Stage 1 handoff"): (a) desktop
   `-Dry -Looks scripts/phone_pass/looks.example.json` unrun, check `looks_report.json`; (b) docked
   landscape unverified (`-Viewport portrait`); (c) is K234.
-- **K252** · K198 s2's residual: the head's 0.45 s show delay rests on five blips (longest 0.33 s): K156's next phone pass can check more. (`docs/design/K198.md`, "Stage 2 handoff").
 - **K246** · K174's residuals (`docs/design/K174.md`, "Stage 1 handoff"): pace links unclamped (old
   `mhp=25` = 25x pace); K80 rt probes (`.claude/probes/K80/rt/`) lack K132's `rt_lib.ts` fix;
   `rt_chase.mjs` uses OS temp (fixed in `.claude/probes/K174/rt/`); panel labels clip `mino*` keys.
@@ -2044,6 +2043,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K252** · the head's 0.45 s show delay checked on the Pixel (round 2026-11-09b): 222 taps, 11 off-screen episodes, every blip 103-378 ms hidden, every excursion 638-1039 ms shown (pending 424-480 ms), none between; agrees with the desktop, no change. Done in aca6b86a (2026-11-09).
 - **K1097** · K1040 S3, the label pass (F7 of `docs/design/K1040_junction_field.md`): the depth-tested label on the GPU, gated by oracle30's verdicts on the 12 scenes (0 DEFECT closes K1033), the recordings' pops and the Pixel's 2 ms. Dropped: superseded by K1240 with K1040 (Levi, 2026-11-09: keep the redesign, no fallback to K1040's GPU field); its owed Pixel batch picked levers for that field's label pass (2026-11-09).
 - **K1257** · form B grows corners with the outline's closed-form pieces (src/render/field/corner_cf.ts): 71 corners over 0.5 device px from the outline's -> 0 (max 0.026 px); outside corners bit-identical (k1257_same.ts, 27 scenes); form_b.test.ts's acute pair re-frozen (r 0.170935 -> 0.170801 h); Claude re-ran sliver, same and the field tests and viewed the crops and the fbb shot. Verify's 48 are the stale base tables, not form B. Done in 0656cf58 (2026-11-09).
 - **K1040** · Junction renderer redesign (K868's goals): the label, borders and corners as a per-pixel function of the frame on the GPU, in two raster passes (a depth-tested label, band strips MAX-blended), checked against form B's float64 reference. Dropped: superseded by K1240 (Levi, 2026-11-09: keep the redesign, no fallback to K1040's GPU field); its open checks (the pop census, the fades in motion, check #13) fold into K1240 when the outline reaches the app (2026-11-09).
