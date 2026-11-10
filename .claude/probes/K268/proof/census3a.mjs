@@ -833,6 +833,7 @@ async function main() {
     log.stableTries = st0.tries;
     check("the mode-off frame is stable (two identical in a row)", st0.tries > 0, st0.tries);
     const offFull = st0.im;
+    const offView = await viewExact(page);
     writeFileSync(join(OUT, `m${MOVES}_off0.png`), st0.buf);
     await fans(page, false); await settle(page);
     const offNoFans = img(await page.screenshot());
@@ -993,9 +994,18 @@ async function main() {
       // across, ~tw * v.s px, by tens of levels at its core), so the bar
       // (every differing pixel within 1 level, at most 8 of them) still
       // fails on any cut that differs.
-      const vOk = log.visitAll.vsOff.max <= 1 && log.visitAll.vsOff.n <= 8;
-      check("visitAll (reach 1000) = the mode-off frame (at most 8 px, each within 1 level: the two programs' rounding)", vOk,
-        { differingPx: dAll.size, maxLevel: log.visitAll.vsOff.max, hist: log.visitAll.vsOff.hist, selfPx: log.visitAll.vsSelf.n, gaps: log.visitAllGaps });
+      // The comparison needs one framing. The FIT camera (no &cam=follow)
+      // reframes under the thread reveal: src/app/camera.ts (K362) frames at
+      // least 2 x (revealDistance + 2) world units, so reach 1000 shrinks
+      // the maze to a speck (the 2026-11-10 m10 fit run: 345706 px, the
+      // whole frame). A moved view is named as such, not read as a cut.
+      const allView = await viewExact(page);
+      const sameView = allView.every((a, i) => a === offView[i]);
+      log.visitAll.view = { off: offView, visitAll: allView, same: sameView };
+      const vOk = sameView && log.visitAll.vsOff.max <= 1 && log.visitAll.vsOff.n <= 8;
+      check(sameView ? "visitAll (reach 1000) = the mode-off frame (at most 8 px, each within 1 level: the two programs' rounding)"
+        : "visitAll (reach 1000) = the mode-off frame: NOT COMPARABLE, the view moved (the fit camera reframes under the reveal; run with EXTRA=&cam=follow)", vOk,
+        { differingPx: dAll.size, maxLevel: log.visitAll.vsOff.max, hist: log.visitAll.vsOff.hist, selfPx: log.visitAll.vsSelf.n, gaps: log.visitAllGaps, view: log.visitAll.view });
 
     };
     if (process.env.PROOF_ONLY) {
