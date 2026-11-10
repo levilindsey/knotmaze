@@ -4302,6 +4302,412 @@ function growIntegC(C: FCache, ci: number): number {
   return Math.max(0, kfCst.rhoCur - h);
 }
 
+// --- K1247 s6: the growth in closed form -------------------------------------
+// The medial path q(rho) (d_A(q) = d_B(q) = rho) is a chain of pieces. On a
+// piece each arm's foot sits on one site: a segment's interior (a line: unit
+// normal n toward q, c = n . P_k) or a convex vertex (a point).
+//   line-line:   q = Q0 + U rho
+//   line-point:  q = P + (rho - e) n + sg b t, b = sqrt(e (2 rho - e)), e the
+//                point's height over the line (a parabola)
+//   point-point: q = M + sg m sqrt(rho^2 - L^2 / 4)
+// A piece ends at its first event, each a root of a linear form in q (in
+// closed form on every piece type): a line foot reaches its segment's end (a
+// convex vertex takes over), a point foot leaves its vertex's normal cone
+// (the next segment takes over), or the arm window or the border ends (the
+// path ends). At a concave vertex the event is the tracked foot's switch:
+// footNearM sees h/32 of s around its foot, so it stays on segment k past
+// the bisector until a point of k + 1 inside that window is closer (bisected
+// on that window). The q of the new sites lands at most kfJump h away or the
+// path ends, as advanceToC's acceptance does. No Newton step and no foot
+// search: the feet are the sites' projections.
+let cfOn = true;
+export function setClosedForm(b: boolean): void { cfOn = b; }
+interface CfArm { p: Poly; tx: Float64Array; ty: Float64Array; sgn: number; lo: number; hi: number; v: number; i: number; sh: number }
+function mkCfArm(): CfArm { return { p: null as unknown as Poly, tx: new Float64Array(0), ty: new Float64Array(0), sgn: 1, lo: 0, hi: 0, v: 0, i: 0, sh: 0 }; }
+const cfAr: CfArm[] = [mkCfArm(), mkCfArm()];
+const CF_MAXP = 160;
+const cfR = new Float64Array(CF_MAXP + 2);
+const cfTy = new Int8Array(CF_MAXP + 2);
+const cfK = new Float64Array((CF_MAXP + 2) * 8);
+const cfSV = new Uint8Array((CF_MAXP + 2) * 2); const cfSI = new Int32Array((CF_MAXP + 2) * 2); const cfSH = new Float64Array((CF_MAXP + 2) * 2);
+let cfN = 0; let cfEnded = false; let cfRMax = 0; let cfPx = 0; let cfPy = 0; let cfCur = 0;
+let cfQx = 0; let cfQy = 0;
+let cfEvArm = 0; let cfEvKind = 0;
+export const cfStats = { corners: 0, pieces: 0, lags: 0, ends: 0, jumps: 0, fails: 0, evals: 0 };
+const CF_TURN = 1e-12;
+let cfDbg = false; let cfDbgCi = -1;
+export const cfTrace: string[] = [];
+export function setCfDebug(ci: number): void { cfDbgCi = ci; cfTrace.length = 0; }
+
+function cfMake(i: number, qx: number, qy: number): boolean {
+  const a = cfAr[0]; const b = cfAr[1];
+  const o = i * 8; const K = cfK;
+  cfSV[2 * i] = a.v; cfSI[2 * i] = a.i; cfSH[2 * i] = a.sh; cfSV[2 * i + 1] = b.v; cfSI[2 * i + 1] = b.i; cfSH[2 * i + 1] = b.sh;
+  if (!a.v && !b.v) {
+    const nax = -a.sgn * a.ty[a.i]; const nay = a.sgn * a.tx[a.i]; const ca = nax * a.p.x[a.i] + nay * a.p.y[a.i];
+    const nbx = -b.sgn * b.ty[b.i]; const nby = b.sgn * b.tx[b.i]; const cb = nbx * b.p.x[b.i] + nby * b.p.y[b.i];
+    const det = nax * nby - nay * nbx;
+    if (!(Math.abs(det) > 1e-9)) return false;
+    K[o] = (ca * nby - nay * cb) / det; K[o + 1] = (nax * cb - ca * nbx) / det;
+    K[o + 2] = (nby - nay) / det; K[o + 3] = (nax - nbx) / det;
+    cfTy[i] = 0; return true;
+  }
+  if (a.v && b.v) {
+    const pax = a.p.x[a.i]; const pay = a.p.y[a.i]; const pbx = b.p.x[b.i]; const pby = b.p.y[b.i];
+    const mx = 0.5 * (pax + pbx); const my = 0.5 * (pay + pby);
+    const dx = pbx - pax; const dy = pby - pay; const L2 = dx * dx + dy * dy;
+    if (!(L2 > 1e-24)) return false;
+    const L = Math.sqrt(L2); const ux = -dy / L; const uy = dx / L;
+    K[o] = mx; K[o + 1] = my; K[o + 2] = ux; K[o + 3] = uy; K[o + 4] = 0.25 * L2;
+    K[o + 5] = (qx - mx) * ux + (qy - my) * uy >= 0 ? 1 : -1;
+    cfTy[i] = 3; return true;
+  }
+  const S = a.v ? b : a; const Pn = a.v ? a : b;
+  const tx = S.tx[S.i]; const ty = S.ty[S.i]; const nx = -S.sgn * ty; const ny = S.sgn * tx;
+  const px = Pn.p.x[Pn.i]; const py = Pn.p.y[Pn.i];
+  const e = nx * (px - S.p.x[S.i]) + ny * (py - S.p.y[S.i]);
+  if (!(e > 1e-12)) return false;
+  K[o] = px; K[o + 1] = py; K[o + 2] = nx; K[o + 3] = ny; K[o + 4] = tx; K[o + 5] = ty; K[o + 6] = e;
+  K[o + 7] = (qx - px) * tx + (qy - py) * ty >= 0 ? 1 : -1;
+  cfTy[i] = a.v ? 2 : 1; return true;
+}
+function cfQ(i: number, rho: number): void {
+  const o = i * 8; const K = cfK; const t = cfTy[i];
+  if (t === 0) { cfQx = K[o] + K[o + 2] * rho; cfQy = K[o + 1] + K[o + 3] * rho; return; }
+  if (t === 3) { const r = Math.sqrt(Math.max(0, rho * rho - K[o + 4])) * K[o + 5]; cfQx = K[o] + K[o + 2] * r; cfQy = K[o + 1] + K[o + 3] * r; return; }
+  const e = K[o + 6]; const al = rho - e; const be = Math.sqrt(Math.max(0, e * (2 * rho - e))) * K[o + 7];
+  cfQx = K[o] + al * K[o + 2] + be * K[o + 4]; cfQy = K[o + 1] + al * K[o + 3] + be * K[o + 5];
+}
+// The first rho >= rs where g(q) = cx qx + cy qy - d leaves g >= 0 on piece
+// i: rs when g(rs) < -cfTol, or when rs sits on (or within roundoff past) an
+// EXIT root (g' < 0 there); Infinity when it never does. Only exit roots
+// count, so a piece that starts on the boundary it just crossed (g = -1e-17
+// with g' > 0) is not ended at once (the ping-pong at every transition).
+let cfTol = 0; let cfDel = 0;
+function cfRoot(i: number, cx: number, cy: number, d: number, rs: number): number {
+  const o = i * 8; const K = cfK; const t = cfTy[i];
+  if (t === 0 || t === 3) {
+    let g1: number; let xs: number;
+    if (t === 0) { g1 = cx * K[o + 2] + cy * K[o + 3]; xs = rs; }
+    else { g1 = K[o + 5] * (cx * K[o + 2] + cy * K[o + 3]); xs = Math.sqrt(Math.max(0, rs * rs - K[o + 4])); }
+    const g0 = cx * K[o] + cy * K[o + 1] - d;
+    if (g0 + g1 * xs < -cfTol) return rs;
+    if (!(g1 < 0)) return Infinity;
+    const x = -g0 / g1;
+    if (x <= xs) return rs;
+    return t === 0 ? x : Math.sqrt(x * x + K[o + 4]);
+  }
+  const e = K[o + 6]; const sg = K[o + 7];
+  const cn = cx * K[o + 2] + cy * K[o + 3]; const ct = cx * K[o + 4] + cy * K[o + 5];
+  const A2 = cn / (2 * e); const A1 = sg * ct; const A0 = cx * K[o] + cy * K[o + 1] - d - 0.5 * cn * e;
+  const bS = Math.sqrt(Math.max(0, e * (2 * rs - e)));
+  if (A0 + bS * (A1 + A2 * bS) < -cfTol) return rs;
+  let bR = Infinity;
+  if (A2 === 0) { if (A1 < 0) bR = -A0 / A1; }
+  else {
+    const D = A1 * A1 - 4 * A2 * A0;
+    if (D >= 0) {
+      const qq = -0.5 * (A1 + (A1 >= 0 ? Math.sqrt(D) : -Math.sqrt(D)));
+      const r1 = qq / A2; const r2 = qq !== 0 ? A0 / qq : r1;
+      if (A1 + 2 * A2 * r1 < 0 && r1 > bS - cfDel && r1 < bR) bR = r1;
+      if (A1 + 2 * A2 * r2 < 0 && r2 > bS - cfDel && r2 < bR) bR = r2;
+    }
+  }
+  if (bR === Infinity) return Infinity;
+  if (bR <= bS) return rs;
+  return (bR * bR + e * e) / (2 * e);
+}
+function cfTurn(X: CfArm, v: number): number {
+  // > 0: the border bends toward q at vertex v (concave); needs both segments.
+  const p = X.p; const nseg = p.nseg;
+  const km = v - 1 >= 0 ? v - 1 : p.closed ? nseg - 1 : -1;
+  const kp = v < nseg ? v : -1;
+  if (km < 0 || kp < 0) return NaN;
+  return X.sgn * (X.tx[km] * X.ty[kp] - X.ty[km] * X.tx[kp]);
+}
+// The tracked foot's switch at a concave vertex (see the header): q's
+// projection on segment k is a from the vertex, P is q's coordinate along
+// the next segment; footNearM's window reaches w - a into it.
+function cfLagCond(X: CfArm, k: number, fwd: boolean, qx: number, qy: number, w: number): boolean {
+  const p = X.p; const tx = X.tx[k]; const ty = X.ty[k];
+  let a: number; let vx: number; let vy: number; let nx: number; let ny: number; let ln: number;
+  if (fwd) {
+    const kn = k + 1 >= p.nseg ? 0 : k + 1; const v = k + 1 >= p.n ? 0 : k + 1;
+    vx = p.x[v]; vy = p.y[v];
+    a = (vx - qx) * tx + (vy - qy) * ty;
+    nx = X.tx[kn]; ny = X.ty[kn]; ln = p.segLen[kn];
+  } else {
+    const kn = k - 1 >= 0 ? k - 1 : p.nseg - 1;
+    vx = p.x[k]; vy = p.y[k];
+    a = (qx - vx) * tx + (qy - vy) * ty;
+    nx = -X.tx[kn]; ny = -X.ty[kn]; ln = p.segLen[kn];
+  }
+  const P = (qx - vx) * nx + (qy - vy) * ny;
+  const smax = Math.min(w - a, ln);
+  if (!(smax > 0 && P > 0)) return false;
+  const s = P < smax ? P : smax;
+  return a * a + s * s - 2 * P * s < 0;
+}
+// The piece's end: the first event of either arm's site after rs.
+function cfNext(C: FCache, i: number, rs: number): number {
+  const w = C.h / 32;
+  let best = Infinity; cfEvArm = 0; cfEvKind = 9;
+  for (let j = 0; j < 2; j++) {
+    const X = cfAr[j]; const p = X.p; const k = cfSI[2 * i + j];
+    if (!cfSV[2 * i + j]) {
+      const tx = X.tx[k]; const ty = X.ty[k]; const l = p.segLen[k];
+      const tP = tx * p.x[k] + ty * p.y[k];
+      const s0 = p.s[k] + cfSH[2 * i + j];
+      // forward: (q - P_k) . T <= fl
+      const fl = Math.min(l, X.hi - s0);
+      let r = cfRoot(i, -tx, -ty, -(fl + tP), rs);
+      if (r < best) {
+        let kind = 1; let rr = r;
+        if (fl < l || (!p.closed && k + 1 >= p.nseg)) kind = 9;
+        else {
+          const tn = cfTurn(X, k + 1 >= p.n ? 0 : k + 1);
+          if (tn > CF_TURN) {
+            kind = 5;
+            const rw = l - w > 0 ? cfRoot(i, -tx, -ty, -(l - w + tP), rs) : rs;
+            let lo = Math.max(rs, Math.min(rw, r)); let hi = r;
+            cfQ(i, lo);
+            if (cfLagCond(X, k, true, cfQx, cfQy, w)) hi = lo;
+            else {
+              for (let it = 0; it < 40 && hi - lo > 1e-10 * C.h; it++) {
+                const m = 0.5 * (lo + hi); cfQ(i, m);
+                if (cfLagCond(X, k, true, cfQx, cfQy, w)) hi = m; else lo = m;
+              }
+            }
+            rr = hi;
+          }
+        }
+        if (rr < best) { best = rr; cfEvArm = j; cfEvKind = kind; }
+      }
+      // backward: (q - P_k) . T >= bl
+      const bl = Math.max(0, X.lo - s0);
+      r = cfRoot(i, tx, ty, tP + bl, rs);
+      if (r < best) {
+        let kind = 2; let rr = r;
+        if (bl > 0 || (!p.closed && k === 0)) kind = 9;
+        else {
+          const tn = cfTurn(X, k);
+          if (tn > CF_TURN) {
+            kind = 6;
+            const rw = cfRoot(i, tx, ty, tP + Math.min(w, l), rs);
+            let lo = Math.max(rs, Math.min(rw, r)); let hi = r;
+            cfQ(i, lo);
+            if (cfLagCond(X, k, false, cfQx, cfQy, w)) hi = lo;
+            else {
+              for (let it = 0; it < 40 && hi - lo > 1e-10 * C.h; it++) {
+                const m = 0.5 * (lo + hi); cfQ(i, m);
+                if (cfLagCond(X, k, false, cfQx, cfQy, w)) hi = m; else lo = m;
+              }
+            }
+            rr = hi;
+          }
+        }
+        if (rr < best) { best = rr; cfEvArm = j; cfEvKind = kind; }
+      }
+    } else {
+      const v = k; const px = p.x[v]; const py = p.y[v];
+      const kp = v < p.nseg ? v : -1;
+      const km = v - 1 >= 0 ? v - 1 : p.closed ? p.nseg - 1 : -1;
+      if (kp >= 0) {
+        const tx = X.tx[kp]; const ty = X.ty[kp];
+        const r = cfRoot(i, -tx, -ty, -(tx * px + ty * py), rs);
+        if (r < best) { best = r; cfEvArm = j; cfEvKind = 3; }
+      }
+      if (km >= 0) {
+        const tx = X.tx[km]; const ty = X.ty[km];
+        const r = cfRoot(i, tx, ty, tx * px + ty * py, rs);
+        if (r < best) { best = r; cfEvArm = j; cfEvKind = 4; }
+      }
+    }
+  }
+  return best;
+}
+function cfApply(X: CfArm, kind: number): boolean {
+  const p = X.p;
+  switch (kind) {
+    case 1: X.v = 1; X.i++; if (X.i >= p.n) { if (!p.closed) return false; X.i = 0; X.sh += p.len; } return true;
+    case 2: X.v = 1; return true;
+    case 3: if (X.i >= p.nseg) return false; X.v = 0; return true;
+    case 4: X.v = 0; X.i--; if (X.i < 0) { if (!p.closed) return false; X.i = p.nseg - 1; X.sh -= p.len; } return true;
+    case 5: X.i++; if (X.i >= p.nseg) { if (!p.closed) return false; X.i = 0; X.sh += p.len; } return true;
+    case 6: X.i--; if (X.i < 0) { if (!p.closed) return false; X.i = p.nseg - 1; X.sh -= p.len; } return true;
+  }
+  return false;
+}
+// Is a site of piece i invalid at q? Sets cfEvArm / cfEvKind to its fix.
+function cfBad(C: FCache, i: number, qx: number, qy: number): boolean {
+  const tol = 1e-9 * C.h;
+  for (let j = 0; j < 2; j++) {
+    const X = cfAr[j]; const p = X.p; const k = cfSI[2 * i + j];
+    if (!cfSV[2 * i + j]) {
+      const tx = X.tx[k]; const ty = X.ty[k]; const l = p.segLen[k];
+      const tt = (qx - p.x[k]) * tx + (qy - p.y[k]) * ty;
+      const s0 = p.s[k] + cfSH[2 * i + j];
+      const fl = Math.min(l, X.hi - s0); const bl = Math.max(0, X.lo - s0);
+      cfEvArm = j;
+      if (tt > fl + tol) { cfEvKind = fl < l || (!p.closed && k + 1 >= p.nseg) ? 9 : cfTurn(X, k + 1 >= p.n ? 0 : k + 1) > CF_TURN ? 5 : 1; return true; }
+      if (tt < bl - tol) { cfEvKind = bl > 0 || (!p.closed && k === 0) ? 9 : cfTurn(X, k) > CF_TURN ? 6 : 2; return true; }
+    } else {
+      const v = k; const px = p.x[v]; const py = p.y[v];
+      const kp = v < p.nseg ? v : -1;
+      const km = v - 1 >= 0 ? v - 1 : p.closed ? p.nseg - 1 : -1;
+      cfEvArm = j;
+      if (kp >= 0 && (qx - px) * X.tx[kp] + (qy - py) * X.ty[kp] > tol) { cfEvKind = 3; return true; }
+      if (km >= 0 && (qx - px) * X.tx[km] + (qy - py) * X.ty[km] < -tol) { cfEvKind = 4; return true; }
+      if (kp < 0 || km < 0) { cfEvKind = 9; return true; }
+    }
+  }
+  return false;
+}
+// One piece: from the frontier to its first event, then the next sites.
+function cfStep(C: FCache): void {
+  const i = cfN; const rs = cfR[i]; const h = C.h;
+  if (i >= CF_MAXP || !cfMake(i, cfPx, cfPy)) { cfEnded = true; cfStats.ends++; return; }
+  let rE = cfNext(C, i, rs);
+  if (rE < rs) rE = rs;
+  cfStats.pieces++;
+  if (cfDbg) { cfQ(i, rs); const q0x = cfQx; const q0y = cfQy; cfQ(i, rE); cfTrace.push(`p${i} ty${cfTy[i]} A ${cfSV[2 * i] ? "v" : "s"}${cfSI[2 * i]} B ${cfSV[2 * i + 1] ? "v" : "s"}${cfSI[2 * i + 1]} rho ${((rs - h) / h).toFixed(6)}..${((rE - h) / h).toFixed(6)} ev arm${cfEvArm} k${cfEvKind} q0 ${q0x.toFixed(4)},${q0y.toFixed(4)} q1 ${cfQx.toFixed(4)},${cfQy.toFixed(4)}`); }
+  if (rE >= cfRMax) { cfR[i + 1] = cfRMax; cfN = i + 1; cfEnded = true; return; }
+  cfR[i + 1] = rE; cfN = i + 1;
+  cfQ(i, rE); const qx = cfQx; const qy = cfQy;
+  let kind = cfEvKind; let X = cfAr[cfEvArm];
+  if (kind === 5 || kind === 6) cfStats.lags++;
+  for (let it = 0; ; it++) {
+    if (kind === 9 || it > 8 || !cfApply(X, kind) || !cfMake(i + 1, qx, qy)) { if (cfDbg) cfTrace.push(`end kind ${kind} it ${it} A ${cfAr[0].v ? "v" : "s"}${cfAr[0].i} B ${cfAr[1].v ? "v" : "s"}${cfAr[1].i}`); cfEnded = true; cfStats.ends++; return; }
+    cfQ(i + 1, rE);
+    if (!cfBad(C, i + 1, cfQx, cfQy)) break;
+    kind = cfEvKind; X = cfAr[cfEvArm];
+  }
+  const dx = cfQx - qx; const dy = cfQy - qy;
+  if (dx * dx + dy * dy > kfJump * kfJump * h * h) { cfEnded = true; cfStats.jumps++; return; }
+  cfPx = qx; cfPy = qy;
+}
+function cfInitArm(C: FCache, X: CfArm, ai: number, F: FFoot, u0: number): void {
+  const arm = C.armObj[ai]; const p = C.polys[arm.pi];
+  X.p = p; X.tx = C.tanTx[arm.pi]; X.ty = C.tanTy[arm.pi];
+  X.lo = C.armDir[ai] > 0 ? C.armSR[ai] : C.armSR[ai] - C.armL[ai];
+  X.hi = C.armDir[ai] > 0 ? C.armSR[ai] + C.armL[ai] : C.armSR[ai];
+  let k = F.k; if (k < 0 || k >= p.nseg) k = segOfS(p, normS(p, F.s)).k;
+  const tx = X.tx[k]; const ty = X.ty[k]; const l = p.segLen[k];
+  const tt = Math.min(l, Math.max(0, (F.x - p.x[k]) * tx + (F.y - p.y[k]) * ty));
+  X.sh = u0 - (p.s[k] + tt);
+  X.v = 0; X.i = k;
+  // The side: q's side of the foot's segment (or of its neighbour's at a vertex).
+  let cr = tx * (kfCst.Vy - p.y[k]) - ty * (kfCst.Vx - p.x[k]);
+  if (Math.abs(cr) < 1e-9 * C.h) {
+    const k2 = tt > 0.5 * l ? (k + 1 < p.nseg ? k + 1 : p.closed ? 0 : k) : (k > 0 ? k - 1 : p.closed ? p.nseg - 1 : k);
+    cr = X.tx[k2] * (kfCst.Vy - p.y[k2]) - X.ty[k2] * (kfCst.Vx - p.x[k2]);
+  }
+  X.sgn = cr >= 0 ? 1 : -1;
+  const tol = 1e-9 * l;
+  if (tt >= l - tol) { if (!(cfTurn(X, k + 1 >= p.n ? 0 : k + 1) > CF_TURN)) cfApply(X, 1); }
+  else if (tt <= tol) { if (!(cfTurn(X, k) > CF_TURN)) X.v = 1; }
+}
+function cfInit(C: FCache): boolean {
+  const h = C.h; cfTol = 1e-9 * h; cfDel = 1e-6 * h;
+  cfInitArm(C, cfAr[0], kfCst.aiA, kfFa, kfQa.u);
+  cfInitArm(C, cfAr[1], kfCst.aiB, kfFb, kfQb.u);
+  cfN = 0; cfR[0] = h; cfEnded = false; cfRMax = h + kfCst.r0; cfCur = 0;
+  cfPx = kfCst.Vx; cfPy = kfCst.Vy;
+  for (let it = 0; ; it++) {
+    if (it > 8 || !cfMake(0, cfPx, cfPy)) return false;
+    cfQ(0, h);
+    if (!cfBad(C, 0, cfQx, cfQy)) break;
+    if (cfEvKind === 9 || !cfApply(cfAr[cfEvArm], cfEvKind)) return false;
+  }
+  const dx = cfQx - kfCst.Vx; const dy = cfQy - kfCst.Vy;
+  return dx * dx + dy * dy <= 1e-12 * h * h;
+}
+function cfFoot(i: number, j: number, rho: number, F: FFoot): void {
+  const X = cfAr[j]; const p = X.p; const k = cfSI[2 * i + j];
+  const qx = cfQx; const qy = cfQy;
+  if (!cfSV[2 * i + j]) {
+    const tx = X.tx[k]; const ty = X.ty[k];
+    const tt = (qx - p.x[k]) * tx + (qy - p.y[k]) * ty;
+    const fx = p.x[k] + tt * tx; const fy = p.y[k] + tt * ty;
+    F.x = fx; F.y = fy; F.d = Math.sqrt((qx - fx) * (qx - fx) + (qy - fy) * (qy - fy)) || rho;
+    F.s = p.s[k] + tt; F.k = k; F.u = F.s + cfSH[2 * i + j];
+  } else {
+    const fx = p.x[k]; const fy = p.y[k];
+    F.x = fx; F.y = fy; F.d = Math.sqrt((qx - fx) * (qx - fx) + (qy - fy) * (qy - fy)) || rho;
+    F.s = p.s[k]; F.k = k < p.nseg ? k : k - 1; F.u = F.s + cfSH[2 * i + j];
+  }
+}
+// q and the feet at rho into kfCst / kfQa / kfQb; false when the path ended
+// before rho (they are then the path's end).
+function cfAt(C: FCache, rho: number): boolean {
+  while (!cfEnded && (cfN === 0 || cfR[cfN] < rho)) cfStep(C);
+  cfStats.evals++;
+  if (cfN === 0) {
+    cfQ(0, cfR[0]); kfCst.qx = cfQx; kfCst.qy = cfQy; cfFoot(0, 0, cfR[0], kfQa); cfFoot(0, 1, cfR[0], kfQb); kfCst.rhoCur = cfR[0];
+    return rho <= cfR[0];
+  }
+  let r = rho; let ok = true;
+  if (r > cfR[cfN]) { r = cfR[cfN]; ok = false; }
+  let i = cfCur < cfN ? cfCur : cfN - 1;
+  while (i > 0 && cfR[i] > r) i--;
+  while (i < cfN - 1 && cfR[i + 1] < r) i++;
+  cfCur = i;
+  cfQ(i, r);
+  kfCst.qx = cfQx; kfCst.qy = cfQy;
+  cfFoot(i, 0, r, kfQa); cfFoot(i, 1, r, kfQb);
+  kfCst.rhoCur = r;
+  return ok;
+}
+function cfRefine(C: FCache, lo: number, wlo: number, hi: number, whi: number, E: number, Lmin: number): number {
+  const L = hi - lo;
+  if ((wlo - whi) * L * 0.5 <= E || L <= Lmin) { growWEnd = whi; return 0.5 * (wlo + whi) * L; }
+  const m = 0.5 * (lo + hi);
+  if (!cfAt(C, m)) { growWEnd = whi; return 0.5 * (wlo + whi) * L; }
+  const wm = Math.min(wlo, wOfC(C));
+  if (kfGrowMid) {
+    const wh = Math.min(wm, whi);
+    if (Math.abs(wlo - 2 * wm + wh) * L * 0.25 <= E) { growWEnd = wh; return (wlo + 2 * wm + wh) * L * 0.25; }
+  }
+  const left = cfRefine(C, lo, wlo, m, wm, E, Lmin);
+  const wmid = growWEnd;
+  if (!(wmid > 0)) { growWEnd = 0; return left; }
+  return left + cfRefine(C, m, wmid, hi, Math.min(wmid, whi), E, Lmin);
+}
+function growCFC(C: FCache, ci: number): number {
+  const h = C.h; const r0 = kfCst.r0;
+  copyFoot(kfQa, kfFa); copyFoot(kfQb, kfFb);
+  kfQa.u = C.armSR[kfCst.aiA] + C.armDir[kfCst.aiA] * armDistC(C, kfCst.aiA, kfFa.s);
+  kfQb.u = C.armSR[kfCst.aiB] + C.armDir[kfCst.aiB] * armDistC(C, kfCst.aiB, kfFb.s);
+  kfCst.qx = kfCst.Vx; kfCst.qy = kfCst.Vy; kfCst.rhoCur = h;
+  if (!(r0 > 1e-9)) { C.nodeN[ci] = 0; return 0; }
+  cfDbg = ci === cfDbgCi;
+  if (!cfInit(C)) { cfStats.fails++; return growIntegC(C, ci); }
+  if (cfDbg) cfTrace.push(`init h ${h} V ${kfCst.Vx},${kfCst.Vy} r0/h ${r0 / h} A ${cfAr[0].v ? "v" : "s"}${cfAr[0].i} sgn ${cfAr[0].sgn} lo ${cfAr[0].lo} hi ${cfAr[0].hi} sh ${cfAr[0].sh} B ${cfAr[1].v ? "v" : "s"}${cfAr[1].i} sgn ${cfAr[1].sgn} lo ${cfAr[1].lo} hi ${cfAr[1].hi} sh ${cfAr[1].sh} uA ${kfQa.u} uB ${kfQb.u}`);
+  cfStats.corners++;
+  const N = kfGrowN > 0 ? kfGrowN : 16; const dN = r0 / N;
+  const E = kfGrowE * h; const Lmin = kfGrowZ * h;
+  cfAt(C, h);
+  let a = h; let wa = wOfC(C); let nn = 1;
+  let integ = 0;
+  for (let kk = 1; kk <= N && wa > 0; kk++) {
+    const b = kk === N ? h + r0 : h + kk * dN;
+    const okb = cfAt(C, b); nn++;
+    if (!okb) {
+      const f = kfCst.rhoCur;
+      const s = Math.min(wa, wOfC(C));
+      integ += 0.5 * (wa + s) * Math.max(0, f - a);
+      break;
+    }
+    const wb = Math.min(wa, wOfC(C));
+    if ((wa - wb) * (b - a) * 0.5 <= E) { integ += 0.5 * (wa + wb) * (b - a); wa = wb; }
+    else { integ += cfRefine(C, a, wa, b, wb, E, Lmin); wa = growWEnd; }
+    a = b;
+  }
+  C.nodeN[ci] = nn;
+  cfAt(C, h + integ);
+  return Math.max(0, kfCst.rhoCur - h);
+}
+
 const meetScratch = { found: false, x: 0, y: 0, sA: 0, dA: 0, sB: 0, dB: 0, segA: -1, segB: -1 };
 // K1247 s2: read once at load (process.env reads are slow per call).
 const KF_NOMEET = !!(globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.K1240_NOMEET;
@@ -4527,7 +4933,7 @@ function cornersPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): void {
     kfCst.wCacheA.valid = false; kfCst.wCacheA.oLo = NaN; kfCst.wCacheA.oHi = NaN;
     kfCst.wCacheB.valid = false; kfCst.wCacheB.oLo = NaN; kfCst.wCacheB.oHi = NaN;
     kfCst.rhoCur = h;
-    const r = growIntegC(C, ci);
+    const r = cfOn ? growCFC(C, ci) : growIntegC(C, ci);
     C.cVx[ci] = Vx; C.cVy[ci] = Vy;
     C.cQx[ci] = kfCst.qx; C.cQy[ci] = kfCst.qy;
     C.cR[ci] = r;
