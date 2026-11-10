@@ -48,7 +48,8 @@ const names = nameArg ? nameArg.split(",") : ALL;
 // binding on its intersection, and junction centres move with the field.
 // Without it a crossing's two pass points drift apart (fat at 0.5h: p50
 // 2.0h, max 5.2h; s3f_claude_drift.ts). Its files carry a "c" (move0.5c_).
-const consistentArg = process.argv.includes("--consistent");
+// Round 4: always on, as in s3f_exact.ts (`--consistent` accepted, no effect).
+const consistentArg = true;
 function perturb(scene: SceneIn, A: number): SceneIn {
   const sc = JSON.parse(JSON.stringify(scene)) as SceneIn;
   const cumOf = (c: { closed: boolean; pts: number[] }): number[] => {

@@ -40,12 +40,14 @@ const freshArg = process.argv.includes("--fresh");
 const moveMult = moveArg && moveArg.includes("=") ? Number(moveArg.split("=")[1]) : 0.1;
 const nameArg = process.argv.slice(2).find((a) => !a.startsWith("--"));
 const names = nameArg ? nameArg.split(",") : ALL;
-// --consistent (K1240 S3f run 3, opt-in; the gated rows never pass it): every
+// The consistent S' (K1240 S3f run 3; the default since the coordinator's
+// decision 1 after Handoff 3, round 4 dropped the stale S'): every
 // s also names the same material point on S', as the physics keeps a
 // binding on its intersection, and junction centres move with the field.
 // Without it a crossing's two pass points drift apart (fat at 0.5h: p50
 // 2.0h, max 5.2h; s3f_claude_drift.ts). Its files carry a "c" (move0.5c_).
-const consistentArg = process.argv.includes("--consistent");
+// `--consistent` is still accepted and changes nothing.
+const consistentArg = true;
 function perturb(scene: SceneIn, A: number): SceneIn {
   const sc = JSON.parse(JSON.stringify(scene)) as SceneIn;
   const cumOf = (c: { closed: boolean; pts: number[] }): number[] => {
