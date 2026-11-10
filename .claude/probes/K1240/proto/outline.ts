@@ -3613,6 +3613,9 @@ function bendsOfC(C: FCache, pi: number): Float64Array {
   return arr;
 }
 let kfFrameNo = 1;
+// The fold search's border sequence (K1247 s3: was a number[] per border
+// with bends, edited by splice; a splice here never lengthens it).
+let cfSeq = new Int32Array(1024);
 function cutFoldsC(C: FCache, pi: number, sig: number, B: FBord): void {
   const p = C.polys[pi];
   const h = C.h;
@@ -3623,8 +3626,10 @@ function cutFoldsC(C: FCache, pi: number, sig: number, B: FBord): void {
   if (bends.length) {
     const bendClusters: number[] = [];
     for (const sb of bends) if (!bendClusters.some((c) => Math.abs(dS(p, c, sb)) < h)) bendClusters.push(sb);
-    const seq: number[] = [];
-    for (let i = 0; i < nb; i++) seq.push(i);
+    if (cfSeq.length < nb) cfSeq = new Int32Array(nb * 2);
+    const seq = cfSeq;
+    let m = nb;
+    for (let i = 0; i < nb; i++) seq[i] = i;
     let poolN = nb;
     const poolPush = (x: number, y: number, s: number): number => {
       B.px = growF(B.px, poolN + 1); B.py = growF(B.py, poolN + 1); B.ps = growF(B.ps, poolN + 1); B.pv = growI(B.pv, poolN + 1);
@@ -3633,17 +3638,16 @@ function cutFoldsC(C: FCache, pi: number, sig: number, B: FBord): void {
     };
     const diag = (C as unknown as { __foldDiag: string[] }).__foldDiag;
     for (const sb of bendClusters) {
-      const idx: number[] = [];
-      for (let i = 0; i < seq.length; i++) if (Math.abs(dS(p, sb, B.ps[seq[i]])) <= 2.5 * h) idx.push(i);
-      if (idx.length < 3) continue;
-      const i0 = idx[0]; const i1 = idx[idx.length - 1];
+      let i0 = -1; let i1 = -1; let nIdx = 0;
+      for (let i = 0; i < m; i++) if (Math.abs(dS(p, sb, B.ps[seq[i]])) <= 2.5 * h) { if (i0 < 0) i0 = i; i1 = i; nIdx++; }
+      if (nIdx < 3) continue;
       let guard = 0;
       let changed = true;
       while (changed && guard++ < 8) {
         changed = false;
-        outer: for (let i = i0; i <= Math.min(i1, seq.length - 2); i++) {
-          for (let j = i + 2; j <= Math.min(i1, seq.length - 1); j++) {
-            if (i === 0 && j === seq.length - 1) continue;
+        outer: for (let i = i0; i <= Math.min(i1, m - 2); i++) {
+          for (let j = i + 2; j <= Math.min(i1, m - 1); j++) {
+            if (i === 0 && j === m - 1) continue;
             const ia = seq[i]; const ib = seq[i + 1]; const ic = seq[j - 1]; const id = seq[j];
             const hit = segInt(B.px[ia], B.py[ia], B.px[ib], B.py[ib], B.px[ic], B.py[ic], B.px[id], B.py[id]);
             if (!hit) continue;
@@ -3651,7 +3655,8 @@ function cutFoldsC(C: FCache, pi: number, sig: number, B: FBord): void {
             const y = B.py[ia] + (B.py[ib] - B.py[ia]) * hit.t;
             const s = B.ps[ia] + dS(p, B.ps[ia], B.ps[ib]) * hit.t;
             const nid = poolPush(x, y, s);
-            seq.splice(i + 1, j - i - 1, nid);
+            // seq.splice(i + 1, j - i - 1, nid)
+            seq[i + 1] = nid; seq.copyWithin(i + 2, j, m); m -= j - i - 2;
             diag.push(`fold ch${pi} side${sig} at s=${sb.toFixed(2)}`);
             changed = true;
             break outer;
@@ -3660,7 +3665,6 @@ function cutFoldsC(C: FCache, pi: number, sig: number, B: FBord): void {
       }
     }
     // Compact the sequence into the base arrays.
-    const m = seq.length;
     B.bx = growF(B.bx, m); B.by = growF(B.by, m); B.bs = growF(B.bs, m); B.bfx = growF(B.bfx, m); B.bfy = growF(B.bfy, m);
     for (let i = 0; i < m; i++) {
       const id = seq[i];
