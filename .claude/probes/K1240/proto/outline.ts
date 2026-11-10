@@ -244,6 +244,40 @@ function footInWindow(p: Poly, px: number, py: number, lo: number, hi: number): 
   }
   return best;
 }
+// footInWindow's d, x, y into out[0..2], allocating nothing (K1247 s2:
+// setupFrame's extension feet built an object per improvement). Same
+// shifts, same order, same strict test, so the same foot.
+function footInWindowInto(p: Poly, px: number, py: number, lo: number, hi: number, out: Float64Array): void {
+  out[0] = Infinity; out[1] = px; out[2] = py;
+  if (p.nseg === 0 || hi < lo) return;
+  const nsh = p.closed ? 3 : 1;
+  for (let si = 0; si < nsh; si++) {
+    const sh = p.closed ? (si === 0 ? -p.len : si === 1 ? 0 : p.len) : 0;
+    let a = 0; let b = p.nseg;
+    while (a < b) { const m = (a + b) >> 1; if (p.s[m] + p.segLen[m] + sh >= lo) b = m; else a = m + 1; }
+    const k0 = a;
+    b = p.nseg;
+    while (a < b) { const m = (a + b) >> 1; if (p.s[m] + sh > hi) b = m; else a = m + 1; }
+    for (let k = k0; k < a; k++) {
+      const sa = p.s[k]; const sb = sa + p.segLen[k];
+      const aa = Math.max(lo, sa + sh); const bb = Math.min(hi, sb + sh);
+      if (bb < aa) continue;
+      const l = p.segLen[k] || 1;
+      const ta = Math.min(1, Math.max(0, (aa - sh - sa) / l));
+      const tb = Math.min(1, Math.max(0, (bb - sh - sa) / l));
+      const kb = k + 1 === p.n ? 0 : k + 1;
+      const ax = p.x[k] + (p.x[kb] - p.x[k]) * ta; const ay = p.y[k] + (p.y[kb] - p.y[k]) * ta;
+      const bx = p.x[k] + (p.x[kb] - p.x[k]) * tb; const by = p.y[k] + (p.y[kb] - p.y[k]) * tb;
+      const ex = bx - ax; const ey = by - ay;
+      const l2 = ex * ex + ey * ey;
+      let t = l2 > 0 ? ((px - ax) * ex + (py - ay) * ey) / l2 : 0;
+      t = Math.min(1, Math.max(0, t));
+      const qx = ax + ex * t; const qy = ay + ey * t;
+      const d = Math.hypot(px - qx, py - qy);
+      if (d < out[0]) { out[0] = d; out[1] = qx; out[2] = qy; }
+    }
+  }
+}
 function ssFB(e0: number, e1: number, x: number): number {
   const t = Math.min(1, Math.max(0, (x - e0) / (e1 - e0)));
   return t * t * (3 - 2 * t);
@@ -3165,6 +3199,7 @@ function memberGroupC(C: FCache, pi: number, s: number): number {
   return g;
 }
 
+const kfFootW = new Float64Array(3);
 function setupFrame(C: FCache, st: DiagramStructure, scene: SceneIn): void {
   const h = C.h;
   const idxOf = new Map<number, number>();
@@ -3193,8 +3228,8 @@ function setupFrame(C: FCache, st: DiagramStructure, scene: SceneIn): void {
       const ti = idxOf.get(t.chain);
       if (ti === undefined) continue;
       const tp = C.needRaw[ti] ? C.rawPolys[ti] : C.polys[ti];
-      const f = footInWindow(tp, term.x, term.y, t.s - 4 * h, t.s + 4 * h);
-      if (f.d < best) { best = f.d; cp = [f.x, f.y]; }
+      footInWindowInto(tp, term.x, term.y, t.s - 4 * h, t.s + 4 * h, kfFootW);
+      if (kfFootW[0] < best) { best = kfFootW[0]; cp = [kfFootW[1], kfFootW[2]]; }
     }
     if (Math.abs(xa.s - 0) < Math.abs(xa.s - rp.len)) exts[a.pi].start = cp;
     else exts[a.pi].end = cp;
@@ -4858,6 +4893,7 @@ function pushDedup(pts: number[], x: number, y: number): void {
 }
 // The left border's segment list while the right one fills C.seqSeg.
 let kfSegL = new Int32Array(1024);
+const kfSortL: number[] = [];
 interface FaceWorkF { owner: number; group: number; rid: number; sx: number; sy: number; depth: number }
 function regionsPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): { regions: OutlineRegion[]; faces: OutlineFace[] } {
   const depthWin = C.depthWindow * C.ctrlArc;
@@ -4879,7 +4915,20 @@ function regionsPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): { regio
   const ivCount = new Int32Array(C.nCh);
   for (const pi of piOrder) {
     const p = C.polys[pi];
-    const list = perChain[pi].slice().sort((a, b) => (C.stCS[a] - C.stCS[b]) || (C.slotRank[a] - C.slotRank[b]));
+    // Stable insertion sort by the old comparator (a chain holds ~25
+    // stations; K1247 s2: was a slice + sort with a closure per chain).
+    const src = perChain[pi];
+    const list = kfSortL; list.length = 0;
+    for (let q = 0; q < src.length; q++) {
+      const v = src[q];
+      let j2 = list.length;
+      list.push(v);
+      while (j2 > 0) {
+        const u = list[j2 - 1];
+        if (((C.stCS[u] - C.stCS[v]) || (C.slotRank[u] - C.slotRank[v])) > 0) { list[j2] = u; j2--; } else break;
+      }
+      list[j2] = v;
+    }
     const uniq: number[] = [];
     for (const s of list) if (!uniq.length || Math.abs(C.stCS[s] - C.stCS[uniq[uniq.length - 1]]) > 1e-9) uniq.push(s);
     const m = uniq.length;
