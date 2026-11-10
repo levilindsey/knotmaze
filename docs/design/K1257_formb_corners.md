@@ -69,3 +69,45 @@ Short and plain:
 - your last SHA.
 
 End with `Ledger items` and K1257's handle fields (owner, branch, last commit, evidence, next).
+
+## Handoff 1 (2026-11-09, 22:03, the K1257 agent)
+
+`npm test` green on this branch (220 files, 2887 tests passed, 9 skipped).
+
+Built and checked (66481923): `src/render/field/corner_cf.ts` ports stage 6's closed-form growth;
+`form_b.ts` grows every corner with it, with the old 32-node growth as a fallback that never runs
+on the check scenes (`cfStats`: 0 of 4,640 corners); denOf, the margin walks and the gate product
+match the outline's.
+
+- Sliver (`k1257_sliver.ts`, log `out/k1257/sliver.txt`): 71 corners over 0.5 px before, 0 after,
+  on every scene; the largest left is 0.026 px (muse_hash 0.1).
+- Outside corners (`k1257_same.ts`, all 27 scenes, master's form B against today's): arms and
+  every corner's growth inputs are bit-identical; evalPoint on every 3rd device pixel is
+  bit-identical wherever no corner's grid cell reaches; inside corner cells but outside every reach
+  disk only Dexp differs (the distance to the corner's arc).
+- `k1247c_final.ps1 -Base ../../../../muse-k1240-s1/.claude/probes/K1240/out/k1247/base`:
+  - Verify: 48 failures, the same log as stage 6's line for line. All 48 are REST MISMATCH of the
+    outline's table against `out/k1247c_base` (corner q and face point counts that moved with
+    stage 6's arcs), cold and warm on the 24 non-fat scene/moves. Verify reads no form B, so this
+    change cannot move it; its corner failures belong to the outline (K1247).
+  - cmprows (form B rows): 16 / 14 / 2 failures (still / 0.1 / 0.5) at stage 6, 3 / 3 / 1 now.
+    - def A, g41_def_tw64 A, def 0.5 A (over2 +2 or +3): outline arc samples now lie exactly on
+      form B's corner circle (`|p-q|-r` about 1e-13 px, ink 0.500), where the label reads paper
+      and the row measure falls back to evalPoint's term, a neighbouring arm's tA at 1-3.7 px
+      (`k1257_rowdiag.ts`). Moved 1e-6 px either way the still-scene samples read 0. On the paper
+      side of def 0.5's two corners the term flips between the corner's foot (correct) and tA
+      (3.3-3.7 px) from point to point; master does the same 0.5 px into the paper (3.37 px). This
+      comes from the measure and the term pick on paper, not from the fill's geometry.
+    - muse_hash A, still and 0.1 (p99 +0.04 to +0.05 px; over2 -1 against stage 6): the same
+      coincidence on about 96 more samples, which move from ink to the term measure (inf 19931 to
+      20027); over8 drops from 745 to 689.
+    - muse_hash B 0.1 (over2 68 to 73, tol 1.4): the 9 px defect at j155/j156 (ch72/ch74) that
+      was already there; its rows jitter by a few samples from build to build.
+- fbb screenshot: `.claude/probes/K1240/out/k1257/fbb_muse.png` (the flag stays on; no fallback).
+- Crops: `.claude/probes/K1240/out/k1247s5/pics_k1257/` (stage 6's six, `--tag=_claude`; the
+  cmp json copied from stage 6's worktree). The new outline's arcs sit on the fill's edge in all
+  six. At this scale they look like stage 6's, except crop 2: its middle tile's pale pixel by the
+  arc is gone.
+- Left: form B's build time with the closed-form growth was not timed (stage 6 measured the same
+  growth in the outline at 7.3-7.5 ms against 6.5-6.7 for the stepping one); the row measure's
+  paper-side term pick (above) would need its own item if the rows are to gate.
