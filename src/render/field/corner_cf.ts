@@ -25,8 +25,8 @@
  * crossed is not ended at once).
  *
  * The growth integrates the running minimum S of w (form B's gates, from a
- * callback) over rho in [h, h + r0] by an adaptive trapezoid: 16 nodes, an
- * error budget of 1e-3 h, intervals no shorter than 1e-3 h, a midpoint
+ * callback) over rho in [h, h + r0] by an adaptive trapezoid: 10 nodes, an
+ * error budget of 5e-4 h, intervals no shorter than 1e-3 h, a midpoint
  * test, splits at q's jumps and at a line piece's steep-gate dip, and a
  * refinement up to the branch's end. A jump over 0.1 h ends the branch.
  * `grow` returns -1 when the pieces cannot start at V (form B then grows
@@ -70,8 +70,8 @@ const CF_TURN = 1e-12;
 const JUMP_TOL = 1e-3;
 /** A q jump over this (in h) ends the branch. */
 const KF_JUMP = 0.1;
-const GROW_N = 16;
-const GROW_E = 1e-3;
+const GROW_N = 10;
+const GROW_E = 5e-4;
 const GROW_Z = 1e-3;
 
 /** Counts for the probes: corners grown, and corners whose pieces could not start at V. */

@@ -187,10 +187,11 @@ describe("form B: the terms", () => {
     // caps it (L = 5). On straight arms each foot sits ρ/tan 15° from the
     // root, so w = ss(slack/0.5h) with slack = L − W − ρ/tan 15°, and r is
     // S's integral from h by the closed-form growth's adaptive trapezoid
-    // (K1257, corner_cf.ts): 16 nodes, an interval kept while
-    // (w_lo − w_hi)·len/2 ≤ 1e-3 h, else a midpoint test at the same budget,
-    // else halves (no jump or dip on straight arms). It sits within that
-    // budget of the exact integral (closed form: ∫ smoothstep = u³ − u⁴/2).
+    // (K1257, corner_cf.ts; K1247 stage 7's settings): 10 nodes, an interval
+    // kept while (w_lo − w_hi)·len/2 ≤ 5e-4 h or it is no longer than 1e-3 h,
+    // else a midpoint test at the same budget, else halves (no jump or dip on
+    // straight arms). It sits within that budget of the exact integral
+    // (closed form: ∫ smoothstep = u³ − u⁴/2).
     const sc = tee(30, 0, [ray(7 * Math.cos(Math.PI / 6), 7 * Math.sin(Math.PI / 6), 120, -10, 10)], [{ a: { chain: 1, s: 7 }, b: { chain: 2, s: 10 }, over: "b" }]);
     const f2 = new FormB(sc);
     const c2 = cornerNear(f2, 1 / t15, 1);
@@ -198,11 +199,13 @@ describe("form B: the terms", () => {
     expect(end.L).toBeCloseTo(7 - 1 / Math.tan(Math.PI / 4) - 1, 9);
     const r0 = 1.5 * H * t15;
     const wAt = (rho: number) => smooth(0, 1, (end.L - W - rho / t15) / (0.5 * H));
-    const E = 1e-3 * H;
+    const E = 5e-4 * H;
+    const Z = 1e-3 * H;
+    const N = 10;
     let wEnd = 0;
     const refine = (lo: number, wlo: number, hi: number, whi: number): number => {
       const L = hi - lo;
-      if ((wlo - whi) * L * 0.5 <= E || L <= E) return (wEnd = whi), 0.5 * (wlo + whi) * L;
+      if ((wlo - whi) * L * 0.5 <= E || L <= Z) return (wEnd = whi), 0.5 * (wlo + whi) * L;
       const wm = Math.min(wlo, wAt(0.5 * (lo + hi)));
       const wh = Math.min(wm, whi);
       if (Math.abs(wlo - 2 * wm + wh) * L * 0.25 <= E) return (wEnd = wh), (wlo + 2 * wm + wh) * L * 0.25;
@@ -212,9 +215,9 @@ describe("form B: the terms", () => {
     };
     let rInt = 0;
     let sPrev = wAt(H);
-    for (let k = 1; k <= 16 && sPrev > 0; k++) {
-      const a = H + ((k - 1) * r0) / 16;
-      const b = k === 16 ? H + r0 : H + (k * r0) / 16;
+    for (let k = 1; k <= N && sPrev > 0; k++) {
+      const a = H + ((k - 1) * r0) / N;
+      const b = k === N ? H + r0 : H + (k * r0) / N;
       const sK = Math.min(sPrev, wAt(b));
       if ((sPrev - sK) * (b - a) * 0.5 <= E) {
         rInt += 0.5 * (sPrev + sK) * (b - a);
