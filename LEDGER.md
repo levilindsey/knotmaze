@@ -405,11 +405,11 @@ Next free ID: K1268.
 - **K8** · G3: SDF ribbons drawn from one shared sample texture
   (`docs/design/G3G4_sdf_geometry.md`). G3-0 merged (ebdae8c..b11747e): the four G3
   tables, capture/restore, `scripts/bench_frame.mjs`; no visual change.
-  - owner: nobody since 2026-11-10 00:58 (merged; agent `a452c354b4fd872ce` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `0f4c8233`
-  - evidence: .claude/probes/K8/sdf_gaps/ (probe scripts tracked; crops untracked in .claude/worktrees/agent-a452c354b4fd872ce/.claude/probes/K8/sdf_gaps/out/crops/), test/render/sdf_gap_bind.test.ts; Handoff 1 in docs/design/K8_sdf_gaps.md
-  - next: Phone 2026-11-10 (K156 round, b4710f37): with the gaps drawn, rp=sdf costs +131 to +171 ms render sync (dense 109->280, max fabric 284->423, knot gs 24 31->163 ms; gapless rp=sdf was near the default), no GL error. The cost is the per-pixel gap search, so G3-3 (the default flip) and Levi's look wait on a cheaper search. Crops (.claude/probes/rounds/2026-11-10/sdf/sdf/, main checkout): gaps cut on all three links, but the 464 px shots are coarse; a full-resolution pair settles every crossing. Then K1265, K1266
-  - brief: `docs/design/K8_sdf_gaps.md`
+  - owner: agent `a6c9382c6e31ac415` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-10 01:35, 2 h cap ~03:35)
+  - branch: `worktree-agent-a6c9382c6e31ac415`, worktree `.claude/worktrees/agent-a6c9382c6e31ac415`; last commit: `6704319e`
+  - evidence: .claude/probes/K8/ (sdf_gaps tools), scripts/bench_frame.mjs
+  - next: Cost stage (started 2026-11-10 01:36): bench_frame on the desktop at a145be26 and each of 0f4c8233's three commits to find where rp=sdf's gap cost comes from (phone +131 to +171 ms render sync), fix it with the gaps unchanged (crops, same-state pair). When it reports: Claude views the crops, merges; the next K156 round measures the phone
+  - brief: `docs/design/K8_sdf_cost.md`
 - **K5** · Split `main.ts` and `ribbon_renderer.ts` along K1-K3's data lines, with seams so G3 becomes a module
   swap; K6 rides it (`docs/design/K5_K6_split.md`, calls K377). Merged M1-M4 (`src/app/`: camera, frame_loop,
   lifecycle, scene, audio_map; M4 at 592b12b): main.ts 5709 → 3725 lines; R1-R2 (`src/render/ribbon/`; R2 at b88376c): ribbon_renderer.ts 7747 → 5989.
@@ -503,11 +503,11 @@ Next free ID: K1268.
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: nobody since 2026-11-10 01:33 (merged; agent `a3d3322f457790ce3` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `ad313cd7`
-  - evidence: .claude/probes/K1240/proto/ (outline.ts, k1247s8_jitter.ts, k1247s8_acc.ts, k1247s8_pair.mjs + k1247s8_run_locked.ps1, k1247s8_corner/wrows/cornred/regions.ts, _r4_tailjit.ts, k1247c_final.ps1, s3f_claude_checks.ps1); stage 8's record: K1247_s8_density.md Handoff 1
-  - next: Stage 9 merged (ad313cd7; Claude viewed the root crops and re-ran k1247s9_union on def, muse_default_tw, muse_hash): four jitter causes fixed (vertex lag, settle loops, V restarts, sub-0.1 h end-root points); drawn moves over 0.25 px at 0.01 px: def 0, muse_default_tw 0, muse_hash 1 (tail/23 at corner 121, 4.6 px); fat cyc18's twist cut (crossing 310) still changes keys. Plain eps 0.1/0.2 accuracy unchanged (25/28 failures), but k1247s8_acc scores pieces by per-piece Hausdorff, which counts a sliding split point as a move (stage 9's finding for jitter). Next: stage 10 re-scores acc by the drawn union and fixes what still fails at eps 0.1/0.2 (the twist cut, the tails), then the locked pair
-  - brief: docs/design/K1247_s9_continuity.md (stage 9 handoff; stage 10's brief follows)
+  - owner: agent `a9ce576ba016f229e` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-10 01:35, 2 h cap ~03:35)
+  - branch: `worktree-agent-a9ce576ba016f229e`, worktree `.claude/worktrees/agent-a9ce576ba016f229e`; last commit: `6704319e`
+  - evidence: .claude/probes/K1240/proto/ (k1247s8_acc, k1247s9_union, k1247c_final.ps1), .claude/probes/K1240/out/
+  - next: Stage 10 (started 2026-11-10 01:36): re-make the k1247c baselines (K1263), re-score k1247s8_acc by the drawn union, fix what still fails at eps 0.1/0.2 (fat cyc18's twist cut, the end tails, g41_user_tw64 piece 34), locked pair at eps 0 and the largest passing eps. When it reports: Claude views the crops, re-runs acc and k1247s9_union, merges
+  - brief: `docs/design/K1247_s10_reduce.md`
 
 ## Next, in order
 
