@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1255.
+Next free ID: K1256.
 
 ## Waiting on Levi
 
@@ -523,16 +523,8 @@ Next free ID: K1255.
   - owner: agent `a441151101638a205` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-09 16:52, 2 h cap ~18:52)
   - branch: `worktree-agent-a441151101638a205`, worktree `.claude/worktrees/agent-a441151101638a205`; last commit: `94de06fa`
   - evidence: .claude/probes/K1240/proto/ (outline.ts; k1247c_final.ps1 every non-timing check, k1247c_coldwarm.ts, k1247c_time.ts the timing, run_locked_k1247s3.ps1, the k1247s2_*/k1247s3_* profilers, k1247s3_floor.ts the output-format floor); stage 3: 919a7bf1, def 18.4 ms bit-identical (K1247_s3_speed.md Handoff 1; Claude's locked A/B in one session: s3 18.3/18.2 ms vs s2 20.5/20.1, corners 6.6 vs 8.4)
-  - next: Stage 4: a cheaper corner solve (corners 6.7 -> 1 ms), output within 1e-3 h. The gate stays def with every chain moving (Claude, 2026-11-09: the load settle and agitation move every chain; a drag-only gate would hide them). When the agent reports: Claude re-runs k1247c_final.ps1 and an A/B timing under the lock, merges; then the flat output (K1254), with the WASM verdict (K1253) deciding whether the kernels port; K1240's S3f round 4 after
+  - next: Stage 4: a cheaper corner solve (corners 6.7 -> 1 ms), output within 1e-3 h. The gate stays def with every chain moving (Claude, 2026-11-09: the load settle and agitation move every chain; a drag-only gate would hide them). When the agent reports: Claude re-runs k1247c_final.ps1 and an A/B timing under the lock, merges; then the flat output (K1254). WASM (K1253): no port now; K1255 after the corner solve settles. K1240's S3f round 4 after
   - brief: `docs/design/K1247_s4_corners.md`
-- **K1253** · Is WebAssembly faster than V8's JS on the redesigned outline's hottest kernel (footNearM, on
-  def's real inputs, matching answers, locked)? Decides whether K1247 ports its corner kernels
-  (docs/design/K1247_wasm_kernel.md)
-  - owner: agent `ac93d89bccb4b3372` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-09 16:52, 2 h cap ~18:52)
-  - branch: `worktree-agent-ac93d89bccb4b3372`, worktree `.claude/worktrees/agent-ac93d89bccb4b3372`; last commit: `94de06fa`
-  - evidence: .claude/probes/K1240/wasm/ (the agent's folder; reads proto/outline.ts)
-  - next: When the agent reports: Claude re-times the ratio under the lock, merges the probe; a port goes into a K1247 stage only if the batched ratio is clearly above 1.5x
-  - brief: `docs/design/K1247_wasm_kernel.md`
 
 ## Next, in order
 
@@ -2048,9 +2040,13 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   outline.ts into src/, sends structure()'s tables once per diagram, adds the outline as flat typed arrays to
   the snapshot. Off main's frame, not the worker's, so it complements K1247's gate
   (docs/design/K1247_s2_speed.md Handoff 1, Route 5)
+- **K1255** · Port K1240's whole corner integrator (growIntegC to footNearM, its WalkCaches and polylines in
+  WASM memory) once K1247's corner solve settles: about 3 ms of def's frame at best, so it can't close the
+  gate alone (K1247_wasm_kernel.md handoff; harness .claude/probes/K1240/wasm/frame_wasm.ts)
 
 ## Done
 
+- **K1253** · WASM vs JS on the outline's kernels: 1.6-1.8x on footNearM and marginOfC replayed alone, bit-exact, but no measurable gain swapped into def's frame; no port now (docs/design/K1247_wasm_kernel.md handoff). Done in e60dff3a (2026-11-09).
 - **K1211** · One seamless light inside each junction for pulses and the gold path (S6), kept on K1244; fire and collapse are K1210, the remaining smoothness K1250. Done in 13aab452 (2026-11-09).
 - **K1244** · A pulse crosses a junction as one soft glow (K1211 S6). Levi, 2026-11-09: kept, 'I guess it's ok, but it still isn't perfectly smooth'; the smoothness is K1250's. Done in 13aab452 (2026-11-09).
 - **K1236** · Cursive J3m's looks (card K1236). Levi, 2026-11-09: b, v and w's exits a little more downward; f's word-end tail shorter, flatter and smooth, p's shorter and flatter; o, q and a fine. Goes to K863 J3n (brief 42d4c9f7). Done in 42d4c9f7 (2026-11-09).
