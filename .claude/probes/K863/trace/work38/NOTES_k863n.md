@@ -92,3 +92,6 @@ Left over:
 - J3N or J3NV waits on Levi's look (a card), then goes into the kit's build or gets adjusted.
 - climb.txt measures J3N only, not the variant's high joins (they dip a little more, as the crops show).
 - J3m's leftovers on o (the notch, its rough FAIL) stand.
+
+Levi's pick (K1251, 2026-11-09): the variant everywhere (b, v and w at a word's end and into high-entry letters, f,
+p). The kit's build is J3NV (`work38/cand/J3NV`, spec `work38/k863n_var2.json`); the next stage builds on its join_params.
