@@ -155,14 +155,22 @@ tried: -0.22 ms at R 0.5 h, -0.12 at 0.1, -0.11 at 0.02 (min metric), so it stay
 
 ### Where the corners phase goes
 
+Timed by call (`k1247s7_split.ps1`, locked, 22:47; the fastest of 8 rounds per frame, mean over the
+cycle): the phase is 6.73 ms a frame, of which growCFC 5.20 ms (346 calls), the V solve 0.87 ms (386
+calls), cornerFallbackC 0.40 ms (40 calls, about 10 us each, nearly all borderMeetC) and the rest
+(arm setup, addPointAtC, warm state) 0.27 ms. Solve, fallback and rest alone are 1.53 ms, over the
+1 ms target. The growth's cost is spread evenly: a median call takes 13.8 us (p10 24.4, max 46.0),
+the slowest 10% of calls hold 21% of the time, and no corner holds more than 0.8% of the cycle's
+growth, so there is no hot corner to special-case.
+
 Self time inside growCFC (22.6% of the whole profile): marginOfC 27.7%, cfNext 11.3%, cfRoot 7.5%,
 cfAt 6.9%, fwScan 6.4%, cfStep 6.1%, cfFoot 6.1%, wOfC 4.2%, cfQ 4.1%, growCFC 3.8%, cfDipIn 3.7%,
 cfLagLine 3.1%, cfRefine 2.8%, cfMake 2.1%, cfBad 1.8%, footWinFast 1.1%. Per cycle: 13842 corners,
 free 28%, zero at the end 53%. About 11.7k margin calls a frame at about 130 ns each: the clear
 certificate answers 8%, the m-cert is off (kfMCache false), and the rest search, walking about 3
 half-planes each way (a full rebuild in 22% of calls, about 6 entries). Outside growCFC, solveVC
-(about 10% of corners), cornerFallbackC (5.5%) and borderMeetC (4.2%) add up to about 1.4 ms: over
-the 1 ms target before any growth runs. A deopt trace shows no repeated deopts on the corners' path.
+(about 10% of corners), cornerFallbackC (5.5%) and borderMeetC (4.2%) add up to about 1.4 ms in the
+profile (1.53 ms timed with the rest, above): over the 1 ms target before any growth runs. A deopt trace shows no repeated deopts on the corners' path.
 
 ### Accuracy (final code, 7bc879c9)
 
@@ -194,6 +202,9 @@ the 1 ms target before any growth runs. A deopt trace shows no repeated deopts o
 - `k1247s7_ab.ts --knob=steep|clear|grow|mcert|mcertr [--N= --E=] [--R=] [--rounds=8]`: the
   in-process A/B above (`mcertr` sets the m-cert's search radius, in h).
 - `k1247s5_cmp.ts --jt=<h>` sets the jump split's floor for an accuracy check.
+- `k1247s7_split.ps1 [-Rounds 8]`: patches timers into a copy of outline.ts's corners phase, runs
+  `k1247s7_split.ts` under the lock (the split by call and the per-corner distribution above) and
+  restores outline.ts byte for byte.
 - `_s7_pair.mjs <tag> <rounds>`: master's outline.ts against the branch's under one lock, every
   phase of def. Run it through `run_locked_k1247s4.ps1 -ScriptName _s7_pair.mjs -RunArgs @('<tag>','2')`.
   It writes `_s7_base.ts` from 54a6b84d on first use.
