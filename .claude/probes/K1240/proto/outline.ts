@@ -1835,8 +1835,41 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
   const intervals: Interval[] = [];
   const stationsOf = new Map<number, Station[]>();
   for (const st of stations) { const l = stationsOf.get(st.pi) ?? []; l.push(st); stationsOf.set(st.pi, l); }
+  // K1247 s12: a station's structural place on its chain (frame()'s
+  // slotKey): the feature's scene s, from the structure when there is one.
+  const sKeyOf = (q: Station): number => {
+    const k = q.key;
+    if (k.startsWith("cap")) return k.endsWith("|1") ? 1e12 : -1e12;
+    if (k.startsWith("seam")) return 0;
+    if (k.startsWith("j")) {
+      const ai = parseInt(k.slice(k.indexOf("|a") + 2), 10);
+      if (dg) return dg.arms[ai].s;
+      const a = arms[ai]; return scene.junctions[a.ji].arms[a.ei].s;
+    }
+    const over = k.startsWith("xo");
+    const xi = parseInt(k.slice(over ? 2 : 1), 10);
+    if (dg) return over ? dg.crossings[xi].sOver : dg.crossings[xi].sUnder;
+    const x = scene.crossings[xi];
+    return (x.over === "a") === over ? x.a.s : x.b.s;
+  };
   stationsOf.forEach((list, pi) => {
     const p = polys[pi];
+    if (!KF_CSORDER) {
+      // K1247 s12: ordered by structure (see regionsPhaseC); every
+      // structural interval exists, its length may pass zero.
+      const keyed = list.map((q) => ({ q, k: sKeyOf(q) }));
+      keyed.sort((a, b) => (a.k - b.k) || -dS(p, a.q.cS, b.q.cS));
+      const m = keyed.length;
+      for (let i = 0; i < (p.closed ? m : m - 1); i++) {
+        const A = keyed[i]; const B = keyed[(i + 1) % m];
+        let len: number;
+        if (m === 1) len = p.len;
+        else if (!p.closed) len = B.q.cS - A.q.cS;
+        else { const want = B.k - A.k + (i === m - 1 ? p.len : 0); len = want + dS(p, want, B.q.cS - A.q.cS); }
+        intervals.push({ pi, A: A.q, B: B.q, cMid: A.q.cS + Math.max(0, len) / 2, len, discard: false, region: -1 });
+      }
+      return;
+    }
     const sorted = list.slice().sort((a, b) => a.cS - b.cS);
     // Drop exact duplicates in s (keep the first of each kind).
     const uniq: Station[] = [];
@@ -1944,19 +1977,22 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
     if (iv.discard) continue;
     const pi = iv.pi;
     const p = polys[pi];
-    const leftSeq = borderSeq(pi, 1, iv.A.left.idx, iv.B.left.idx, true);
+    // K1247 s12: a passed interval (length <= 0) is an empty region.
+    const live = KF_CSORDER || iv.len > 0;
+    const noSeq = { pts: [] as BPt[], segs: [] as number[] };
+    const leftSeq = live ? borderSeq(pi, 1, iv.A.left.idx, iv.B.left.idx, true) : noSeq;
     // The right border is travelled back from B to A (decreasing s),
     // for open and closed chains alike.
-    const rightBack = borderSeq(pi, -1, iv.B.right.idx, iv.A.right.idx, false);
+    const rightBack = live ? borderSeq(pi, -1, iv.B.right.idx, iv.A.right.idx, false) : noSeq;
     const rightPts = rightBack.pts;
     const rightSegs = rightBack.segs;
     const seq: { x: number; y: number }[] = [];
     seq.push(...leftSeq.pts);
     const capB = capByStation.get(iv.B.key);
-    if (capB && iv.B.kind.startsWith("cap")) seq.push(...capB.arc.slice(1, -1));
+    if (live && capB && iv.B.kind.startsWith("cap")) seq.push(...capB.arc.slice(1, -1));
     seq.push(...rightPts);
     const capA = capByStation.get(iv.A.key);
-    if (capA && iv.A.kind.startsWith("cap")) seq.push(...capA.arc.slice(1, -1).reverse());
+    if (live && capA && iv.A.kind.startsWith("cap")) seq.push(...capA.arc.slice(1, -1).reverse());
     const poly = dedupePts(seq);
     // K1247 s11: a region per kept interval, even one whose polygon has under 3 points (zero
     // area). Skipping it renumbered every later region, and its point count follows the
@@ -2696,8 +2732,8 @@ export interface DiagramStructure {
   chainIds: number[];
   closed: boolean[];
   nPts: number[];
-  crossings: { aPi: number; bPi: number; over: "a" | "b"; emergent: boolean }[];
-  arms: { ji: number; ei: number; pi: number; kind: string; dir: number }[];
+  crossings: { aPi: number; bPi: number; over: "a" | "b"; emergent: boolean; sUnder: number; sOver: number }[];
+  arms: { ji: number; ei: number; pi: number; kind: string; dir: number; s: number }[];
   armsOfJ: number[][];
   corners: { ji: number; aArm: number; bArm: number; style: number }[];
   groupOfJ: number[];
@@ -2725,7 +2761,7 @@ export function diagramOf(scene: SceneIn): DiagramStructure {
       const pi = idxOf.get(a.chain);
       if (pi === undefined) return;
       list.push(arms.length);
-      arms.push({ ji, ei, pi, kind: a.kind, dir: a.dir });
+      arms.push({ ji, ei, pi, kind: a.kind, dir: a.dir, s: a.s });
     });
     armsOfJ.push(list);
     const n = list.length;
@@ -2876,7 +2912,7 @@ export function diagramOf(scene: SceneIn): DiagramStructure {
     nPts: scene.chains.map((c) => c.pts.length >> 1),
     crossings: scene.crossings.flatMap((x) => {
       const aPi = idxOf.get(x.a.chain); const bPi = idxOf.get(x.b.chain);
-      return aPi === undefined || bPi === undefined ? [] : [{ aPi, bPi, over: x.over, emergent: !!x.emergent }];
+      return aPi === undefined || bPi === undefined ? [] : [{ aPi, bPi, over: x.over, emergent: !!x.emergent, sUnder: x.over === "a" ? x.b.s : x.a.s, sOver: x.over === "a" ? x.a.s : x.b.s }];
     }),
     arms, armsOfJ, corners, groupOfJ, caps, stationsD, intervalsD, piecesD,
   };
@@ -2975,6 +3011,10 @@ interface FCache {
   eyes: FEye[];
   // stations (slots)
   slotPi: Int32Array; slotRank: Int32Array; slotKind: Int32Array; nSlots: number;
+  /** K1247 s12: each slot's structural place on its chain (the feature's
+   *  scene s: a crossing's s on that chain, an arm's root s, caps at the
+   *  ends): stations are ordered by it, never by frame position. */
+  slotKey: Float64Array;
   crossUnderSlot: Int32Array; crossOverSlot: Int32Array; junctionSlot: Int32Array; capSlot: Int32Array; seamSlot: Int32Array;
   dgSlot: Int32Array; capInfoOfSlot: Int32Array;
   stActive: Uint8Array; stCS: Float64Array; stLeft: Int32Array; stRight: Int32Array;
@@ -2989,6 +3029,8 @@ interface FCache {
   kinkCount: number;
 }
 const fastCaches = new WeakMap<DiagramStructure, FCache>();
+/** Probe hook (K1247 s12): the per-structure frame cache, for station diffs. */
+export function debugCache(st: DiagramStructure): unknown { return fastCaches.get(st); }
 
 function mkPolyBuf(id: number, cap: number, closed: boolean): Poly {
   const c = Math.max(4, cap);
@@ -3242,6 +3284,14 @@ function buildFastCache(st: DiagramStructure, scene: SceneIn): FCache {
     cutPrevPick: new Uint8Array(Math.max(1, nX * 2)),
     eyes,
     slotPi: Int32Array.from(slotPi), slotRank: Int32Array.from(slotRank), slotKind: Int32Array.from(slotKind), nSlots,
+    slotKey: Float64Array.from(slotPi, (_, s) => {
+      const k = slotKind[s]; const r = slotRank[s];
+      if (k === 0) return st.crossings[r >> 2].sUnder;
+      if (k === 1) return st.crossings[r >> 2].sOver;
+      if (k === 2) return st.arms[r - nX * 4].s;
+      if (k === 3) return ((r - nX * 4 - nArms) & 1) ? 1e12 : -1e12;
+      return 0;
+    }),
     crossUnderSlot, crossOverSlot, junctionSlot, capSlot, seamSlot, dgSlot,
     capInfoOfSlot: Int32Array.from(capInfoOfSlot.slice(0, nSlots)),
     stActive: new Uint8Array(Math.max(1, nSlots)), stCS: new Float64Array(Math.max(1, nSlots)),
@@ -5186,6 +5236,8 @@ function growCFC(C: FCache, ci: number): number {
 const meetScratch = { found: false, x: 0, y: 0, sA: 0, dA: 0, sB: 0, dB: 0, segA: -1, segB: -1 };
 // K1247 s2: read once at load (process.env reads are slow per call).
 const KF_NOMEET = !!(globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.K1240_NOMEET;
+// K1247 s12: K12_CSORDER=1 restores stage 11's station order (frame cS, 1e-9 dedupe) for A/B.
+const KF_CSORDER = !!(globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.K12_CSORDER;
 const mtSegs = [new Int32Array(1024), new Int32Array(1024)];
 const mtBoxA = mkSegBoxes(); const mtBoxB = mkSegBoxes();
 function dSignedC(C: FCache, ai: number, s: number): number {
@@ -6069,21 +6121,43 @@ function regionsPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): { regio
     // stations; K1247 s2: was a slice + sort with a closure per chain).
     const src = perChain[pi];
     const list = kfSortL; list.length = 0;
+    // K1247 s12: the order is the structure's (slotKey: the feature's scene
+    // s), not the frame's cS: two features whose stations nearly meet
+    // (g41_user_tw64 chain 26, arms 196 and 198, 0.011 apart) swapped under
+    // reduction and broke both discard pairs. One feature's own stations
+    // (a crossing's two cuts, a through pass's two arms) share a key and
+    // keep their frame order, which only a collapsed tube could flip.
     for (let q = 0; q < src.length; q++) {
       const v = src[q];
       let j2 = list.length;
       list.push(v);
       while (j2 > 0) {
         const u = list[j2 - 1];
-        if (((C.stCS[u] - C.stCS[v]) || (C.slotRank[u] - C.slotRank[v])) > 0) { list[j2] = u; j2--; } else break;
+        const c = KF_CSORDER ? (C.stCS[u] - C.stCS[v]) : (C.slotKey[u] - C.slotKey[v]) || -dS(p, C.stCS[u], C.stCS[v]);
+        if ((c || (C.slotRank[u] - C.slotRank[v])) > 0) { list[j2] = u; j2--; } else break;
       }
       list[j2] = v;
     }
     const uniq: number[] = [];
-    for (const s of list) if (!uniq.length || Math.abs(C.stCS[s] - C.stCS[uniq[uniq.length - 1]]) > 1e-9) uniq.push(s);
+    if (KF_CSORDER) { for (const s of list) if (!uniq.length || Math.abs(C.stCS[s] - C.stCS[uniq[uniq.length - 1]]) > 1e-9) uniq.push(s); }
+    else for (const s of list) uniq.push(s);
     const m = uniq.length;
     ivStart[pi] = nIv;
-    if (p.closed) {
+    if (!KF_CSORDER) {
+      // Every structural interval exists in every frame; its length
+      // follows the positions and may pass zero (an empty region).
+      for (let i = 0; i < (p.closed ? m : m - 1); i++) {
+        const A = uniq[i]; const B = uniq[(i + 1) % m];
+        let len: number;
+        if (m === 1) len = p.len;
+        else if (!p.closed) len = C.stCS[B] - C.stCS[A];
+        else {
+          const want = C.slotKey[B] - C.slotKey[A] + (i === m - 1 ? p.len : 0);
+          len = want + dS(p, want, C.stCS[B] - C.stCS[A]);
+        }
+        C.ivPi[nIv] = pi; C.ivA[nIv] = A; C.ivB[nIv] = B; C.ivCMid[nIv] = C.stCS[A] + Math.max(0, len) / 2; C.ivLen[nIv] = len; C.ivDiscard[nIv] = 0; C.ivRegion[nIv] = -1; nIv++;
+      }
+    } else if (p.closed) {
       for (let i = 0; i < m; i++) {
         const A = uniq[i]; const B = uniq[(i + 1) % m];
         let len = C.stCS[B] - C.stCS[A];
@@ -6131,18 +6205,21 @@ function regionsPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): { regio
     const BdL = C.bords[pi * 2];
     if (kfSegL.length < BdL.nf + 1) kfSegL = new Int32Array((BdL.nf + 1) * 2);
     const segL = kfSegL;
-    const nsL = regionSeqEmit(C, pi, 1, refFinalOf(C.stLeft[A]), refFinalOf(C.stLeft[B]), true, pts, segL);
+    // K1247 s12: an interval whose stations have passed (length <= 0) is
+    // an empty region (a closed border's walk would otherwise wrap the loop).
+    const live = KF_CSORDER || C.ivLen[i] > 0;
+    const nsL = live ? regionSeqEmit(C, pi, 1, refFinalOf(C.stLeft[A]), refFinalOf(C.stLeft[B]), true, pts, segL) : 0;
     const capBInfo = C.capInfoOfSlot[B];
-    if (capBInfo >= 0 && C.slotKind[B] === 3) {
+    if (live && capBInfo >= 0 && C.slotKind[B] === 3) {
       const ax = C.capArcX[capBInfo]; const ay = C.capArcY[capBInfo];
       for (let q = 1; q + 1 < C.capArcN[capBInfo]; q++) pushDedup(pts, ax[q], ay[q]);
     }
     const BdR = C.bords[pi * 2 + 1];
     if (C.seqSeg.length < BdR.nf + 1) { C.seqSeg = new Int32Array((BdR.nf + 1) * 2); C.seqIdx = new Int32Array((BdR.nf + 1) * 2); }
     const segR = C.seqSeg;
-    const nsR = regionSeqEmit(C, pi, -1, refFinalOf(C.stRight[B]), refFinalOf(C.stRight[A]), false, pts, segR);
+    const nsR = live ? regionSeqEmit(C, pi, -1, refFinalOf(C.stRight[B]), refFinalOf(C.stRight[A]), false, pts, segR) : 0;
     const capAInfo = C.capInfoOfSlot[A];
-    if (capAInfo >= 0 && C.slotKind[A] === 3) {
+    if (live && capAInfo >= 0 && C.slotKind[A] === 3) {
       const ax = C.capArcX[capAInfo]; const ay = C.capArcY[capAInfo];
       for (let q = C.capArcN[capAInfo] - 2; q >= 1; q--) pushDedup(pts, ax[q], ay[q]);
     }
