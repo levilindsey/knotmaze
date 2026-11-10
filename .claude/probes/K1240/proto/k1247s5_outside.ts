@@ -7,7 +7,8 @@
 // regions: counts, keys (ownerChain, group, hole) as multisets and by index,
 // point counts. Distances in h.
 //   node scripts/run_node.mjs .claude/probes/K1240/proto/_s5dump_base.ts k1247s5_master   (k1247c_dump.ts importing ./outline_base)
-//   node scripts/run_node.mjs .claude/probes/K1240/proto/k1247s5_outside.ts
+//   node scripts/run_node.mjs .claude/probes/K1240/proto/k1247s5_outside.ts [--base=<out sub, default k1247s5_master>]
+// K1247 s9: --base=k1247c_base reads the step 0 tables (k1247c_dump.ts on master's outline).
 import { readFileSync, readdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -15,7 +16,7 @@ import { structure, frame } from "./outline";
 import { sceneOf } from "./k1247s5_scenes";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const dir = join(here, "..", "out", "k1247s5_master");
+const dir = join(here, "..", "out", process.argv.find((a) => a.startsWith("--base="))?.slice(7) ?? "k1247s5_master");
 type Pc = { kind: string; chain: number; side: number; corner: number; region: number; pts: number[] };
 type Fc = { ownerChain: number; group: number; hole: boolean; pts: number[] };
 type Tb = { h: number; pieces: Pc[]; faces: Fc[]; regions: (Fc & { id: number; pieces: number[] })[]; cuts: unknown[] };

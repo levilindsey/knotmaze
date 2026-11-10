@@ -6,7 +6,8 @@
 // (blue), arcs (green), caps (magenta), and our points whose A
 // distance is over 1/2 device px (red squares).
 //   node scripts/run_node.mjs .claude/probes/K1240/proto/s3f_claude_pics.ts <scene,...> [tag] [cropH=10] [skip=0]
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+//   env: AT=x,y;x,y (crop centres), MOVE=<h>, JIT=<device px> (K1247 s9), S2=1
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { deflateSync } from "node:zlib";
@@ -70,11 +71,19 @@ for (const name of names) {
   const scene0 = JSON.parse(readFileSync(join(SCENE_DIR, `${name}.json`), "utf8")) as SceneIn;
   (scene0.look as { ctrlArc?: number }).ctrlArc ??= 0.47;
   const scene = process.env.MOVE ? perturb(scene0, Number(process.env.MOVE) * scene0.look.halfWidth) : scene0;
-  const table = process.env.S2 ? buildOutlineS2(scene) : frame(structure(scene0), scene);
+  // K1247 s9: JIT=<device px> adds k1247s8_jitter.ts's seeded jitter (seed 12345) after MOVE; form B sees it too.
+  if (process.env.JIT) {
+    let seed = 12345; const rnd = (): number => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
+    const S = scene.camera.pxPerUnit * 2; const dpx = Number(process.env.JIT);
+    if (scene === scene0) Object.assign(scene, JSON.parse(JSON.stringify(scene0)));
+    for (const c of scene.chains) for (let i = 0; i < c.pts.length; i++) c.pts[i] += ((rnd() * 2 - 1) * dpx) / S / Math.SQRT2;
+  }
+  const table = process.env.S2 ? buildOutlineS2(scene) : frame(structure(process.env.JIT ? scene : scene0), scene);
   const fb = new FormB(scene as never, { dpr: 2 });
   const ppd = scene.camera.pxPerUnit * 2;
   const h = table.h;
-  const ex = JSON.parse(readFileSync(join(here, "..", "out", "s3f", `exact_${name}.json`), "utf8"));
+  const exF = join(here, "..", "out", "s3f", `exact_${name}.json`);
+  const ex = process.env.AT && !existsSync(exF) ? { A: { worst: [] } } : JSON.parse(readFileSync(exF, "utf8"));
   const worst: { d: number; x: number; y: number; what: string; near: string }[] = ex.A.worst ?? [];
   const centers: typeof worst = [];
   for (const w of worst) { if (centers.every((c) => Math.hypot(c.x - w.x, c.y - w.y) > 3 * h)) centers.push(w); }
