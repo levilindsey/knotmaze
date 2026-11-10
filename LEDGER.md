@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1263.
+Next free ID: K1264.
 
 ## Waiting on Levi
 
@@ -503,10 +503,10 @@ Next free ID: K1263.
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: agent `a6fbc9ef86c3f931b` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-09 23:17, 2 h cap ~01:17)
-  - branch: `worktree-agent-a6fbc9ef86c3f931b`, worktree `.claude/worktrees/agent-a6fbc9ef86c3f931b`; last commit: `df6216bd`
+  - owner: nobody since 2026-11-10 00:06 (merged; agent `a6fbc9ef86c3f931b` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `8d72dc37`
   - evidence: .claude/probes/K1240/proto/ (outline.ts untouched; new k1247s8_* tools; k1247c_time.ts + run_locked_k1247s4.ps1, _s7_pair.mjs, k1257_sliver.ts's px scale); stage 7's record: K1247_s7_cf_speed.md Handoff 1
-  - next: Stage 8 (docs/design/K1247_s8_density.md): feed frame() fewer points, every piece within 0.25 device px of the full-density outline's, piece keys unchanged; def's whole frame as fast as that allows (stage 7's -Decimate bound: k = 2 takes corners 6.72 -> 4.85 ms). When it reports: Claude re-runs the distance and timing, merges, then decides the app route (K1252's worker, K1255's WASM) with the numbers
+  - next: Stage 8 merged (8d72dc37; negative): at 0.25 px, point reduction keeps 96% of def's points and times 19.1 ms against 18.8 (frame ~ 7.6 + 11.2 x kept fraction). The bar needs ~95% because the outline jumps in its own points: 0.001 px random jitter moves def's pieces 9.0 px and muse_default_tw's 8.7 (Claude re-ran k1247s8_jitter.ts: 0.01 px gives 21.8 and 24.7; fat 0.06). Causes: an end arm's root kink pins corner foot ua (def corners 34, 38: r 2h cap -> 0.197h), feet move 9-20x the arm-length change, region ids shift when a sliver drops. Stage 9 after K1240 round 4 lands (outline.ts): make the corners continuous in their points (a pop-in-motion defect as well as the speed's block), then re-time plain eps 0.1 / 0.2 (11.5-13.0 ms if they pass) with k1247s8_acc.ts and k1247s8_pair.mjs
   - brief: `docs/design/K1247_s8_density.md`
 
 ## Next, in order
@@ -1713,6 +1713,10 @@ Every other item below waits on the trigger it names.
   paper side of a corner arc, so an outline sample lying exactly on form B's edge reads 1-3.7 px instead of 0
   (def A, g41_def_tw64 A, def 0.5 A; master too). Fix it before those rows gate (from K1257; k1257_rowdiag.ts,
   K1257_formb_corners.md handoff)
+- **K1263** · k1247c_final.ps1's verify reads out/k1247c_base from the checkout that runs it (an agent
+  worktree fails until it copies the main checkout's), and its baselines and Muse's row baselines predate
+  stages 6-7's outline: re-make them so verify's 48 and the 3/3 row failures go back to 0 (K1247 stage 8's
+  Handoff 1)
 
 ## Approved, to schedule (2026-10-11)
 
