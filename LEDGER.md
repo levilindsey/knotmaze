@@ -372,7 +372,7 @@ Next free ID: K1273.
   and a JSON looks list into a summary and sheets. Stages 3a-3c merged
   (737ac58..9ab8a01); rounds 2026-10-14, 14b and 14c are done (14c
   merged 772e48a..e1c2a80).
-  - owner: nobody since 2026-11-10 03:58 (merged; agent `ac7c0de077c9ffcf7` of claude session 2026-11-10)
+  - owner: nobody since 2026-11-10 03:57 (round 2026-11-10c done; agent ac7c0de077c9ffcf7 of claude session 09c7a672-a414-402a-97da-b3176839a2e5, merged)
   - branch: mainline; last commit: `23587715`
   - evidence: .claude/probes/rounds/2026-11-10c/ (outputs untracked)
   - next: Next round: A/B the candidate commits of K8's phone stage (docs/design/K8_sdf_phone.md, its phone list) on the three links; K268's phone census rerun (proof/census3a.mjs, PASSCFG, the desktop recipe); K307's start-time read. Round 2026-11-10c's bisect is in docs/design/K156.md
@@ -381,11 +381,11 @@ Next free ID: K1273.
 - **K268** · Shaped crossing gaps under thread reveal (K76; Levi, 2026-10-14):
   no gap until the over thread is seen, a dynamic gap for a stub's overlap and
   dead ends. Stages 1-2 merged (stage 2: 2fb3362..0fd6282; MAX fixed, joints fade).
-  - owner: nobody since 2026-11-10 04:31 (merged; agent `ad983c6ecc2266616` of claude session 2026-11-10)
-  - branch: mainline; last commit: `14957956`
-  - evidence: .claude/probes/K268/proof/ (census3a.mjs supersedes stage3a's and the rounds' phone copies; ideal.mjs, judge.mjs, far_scan.mjs, run_census.ps1); outputs untracked in proof/out/
-  - next: Far-flag fix (docs/design/K268.md, Far-flag fix brief): explore_glsl.ts:815 passes the slot's flags where exploreCutCover expects the profile's; latent (no drawn pixel in the census frames). Then the phone rerun of proof/census3a.mjs (PASSCFG, the desktop recipe, cam=follow) in K156's next window. Desktop census 31/31 at 318d5a19; c100 proves (0 ghosts); only cam=follow is a valid census frame (the fit camera shrinks the maze at reach 1000)
-  - brief: docs/design/K268.md (Proof stage brief)
+  - owner: agent `a93f0ae0ca9155468` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-10 04:31, 1 h cap ~05:31)
+  - branch: `worktree-agent-a93f0ae0ca9155468`, worktree `.claude/worktrees/agent-a93f0ae0ca9155468`; last commit: `f077a97f`
+  - evidence: .claude/probes/K268/proof/ (census3a.mjs, ideal.mjs, judge.mjs, far_scan.mjs, run_census.ps1); outputs untracked in proof/out/
+  - next: Far-flag fix (started 2026-11-10 04:32): the far branch passes the profile's flags, a test that catches the old ones, desktop census 31/31. When it reports: Claude merges (src/: watch the deploy); then the phone census rerun in K156's next window
+  - brief: docs/design/K268.md (Far-flag fix brief)
 - **K7** · Physics in a Web Worker with render-side interpolation (K28; Levi's
   calls K302). Stages 1-7 merged: the worker is the default (stage 6, call F6), `&phw=0` runs
   in-thread. Stage 7 (05ae710..4420d6c) builds the first scene from the Worker's name and
