@@ -514,7 +514,7 @@ Next free ID: K1283.
   unbroken. Gate: every crossing on the 12 scenes against form B. Picture
   `.claude/probes/K1247/asks/cut273_old_new_formb.png`; after stage 15 (outline.ts)
   - owner: agent `a70157fa5e512c8ef` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-10 07:58, 2 h cap ~09:58)
-  - branch: `worktree-agent-a70157fa5e512c8ef`, worktree `.claude/worktrees/agent-a70157fa5e512c8ef`; last commit: `c66742e6`
+  - branch: `worktree-agent-a70157fa5e512c8ef`, worktree `.claude/worktrees/agent-a70157fa5e512c8ef`; last commit: `f0c1111c`
   - evidence: .claude/probes/K1240/proto/ (outline.ts, draw.ts, k1279_* tools); .claude/probes/K1240/out/k1279/ (untracked)
   - next: build the per-crossing census against form B, baseline on master, then fix cut 273 and the worst crossings
   - brief: `docs/design/K1279_crossings.md`
