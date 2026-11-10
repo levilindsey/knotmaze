@@ -3906,7 +3906,10 @@ function solveVC(C: FCache, ci: number, aiA: number, aiB: number, rho: number, x
 
 const ss01 = (x: number): number => { const t = x < 0 ? 0 : x > 1 ? 1 : x; return t * t * (3 - 2 * t); };
 
-function marginOfC(C: FCache, ai: number, x: number, y: number, sf: number, dc: number, kFoot: number, cache: WalkCache): number {
+// The query is kfCst's q and the foot's (u, d, k): passed as objects, so no
+// double is boxed at the call.
+function marginOfC(C: FCache, ai: number, ft: FFoot, cache: WalkCache): number {
+  const x = kfCst.qx; const y = kfCst.qy; const sf = ft.u; const dc = ft.d; const kFoot = ft.k;
   const arm = C.armObj[ai];
   const pl = C.polys[arm.pi];
   const h = C.h;
@@ -3982,9 +3985,9 @@ function wOfC(C: FCache): number {
   if (fRootA === 0) return 0;
   const fRootB = ss01(((kfQb.u - C.armSR[kfCst.aiB]) * C.armDir[kfCst.aiB]) / kfCst.rbEff);
   if (fRootB === 0) return 0;
-  const mA = marginOfC(C, kfCst.aiA, kfCst.qx, kfCst.qy, kfQa.u, kfQa.d, kfQa.k, kfCst.wCacheA);
+  const mA = marginOfC(C, kfCst.aiA, kfQa, kfCst.wCacheA);
   if (mA <= -0.05 * h) return 0;
-  const mB = marginOfC(C, kfCst.aiB, kfCst.qx, kfCst.qy, kfQb.u, kfQb.d, kfQb.k, kfCst.wCacheB);
+  const mB = marginOfC(C, kfCst.aiB, kfQb, kfCst.wCacheB);
   if (mB <= -0.05 * h) return 0;
   return ss01(1 + Math.min(0, mA, mB) / (0.05 * h)) * fSteep * fSlack * fRootA * fRootB;
 }
@@ -4011,7 +4014,7 @@ function advanceToC(C: FCache, rhoT: number): void {
         const acc = Math.min(h, Math.max(0.5 * Math.sqrt(ux * ux + uy * uy) * dd, 1e-3 * h));
         copyFoot(kfTa, kfQa); copyFoot(kfTb, kfQb);
         let sx = gx; let sy = gy;
-        footNearM(C.polys, h, kfCst.A, sx, sy, kfTa.u, kfTa.k, kfTa); footNearM(C.polys, h, kfCst.B, sx, sy, kfTb.u, kfTb.k, kfTb);
+        kfXY[0] = sx; kfXY[1] = sy; footNearM(C, kfCst.A, kfTa); footNearM(C, kfCst.B, kfTb);
         for (let it = 0; it < 60; it++) {
           const Fa = kfTa.d - rn; const Fb = kfTb.d - rn;
           if (Math.abs(Fa) < 1e-12 * Math.max(1, rn) && Math.abs(Fb) < 1e-12 * Math.max(1, rn)) break;
@@ -4026,7 +4029,7 @@ function advanceToC(C: FCache, rhoT: number): void {
           const dl = Math.sqrt(dx * dx + dy * dy);
           if (dl > acc) { dx *= acc / dl; dy *= acc / dl; }
           sx += dx; sy += dy;
-          footNearM(C.polys, h, kfCst.A, sx, sy, kfTa.u, kfTa.k, kfTa); footNearM(C.polys, h, kfCst.B, sx, sy, kfTb.u, kfTb.k, kfTb);
+          kfXY[0] = sx; kfXY[1] = sy; footNearM(C, kfCst.A, kfTa); footNearM(C, kfCst.B, kfTb);
         }
         const sok = Math.max(Math.abs(kfTa.d - rn), Math.abs(kfTb.d - rn)) < 1e-9 * Math.max(1, rn);
         if (sok && Math.sqrt((sx - gx) * (sx - gx) + (sy - gy) * (sy - gy)) <= acc) { kfCst.qx = sx; kfCst.qy = sy; copyFoot(kfQa, kfTa); copyFoot(kfQb, kfTb); kfCst.rhoCur = rn; advanced = true; }
@@ -5342,7 +5345,11 @@ function copyFoot(dst: FFoot, src: FFoot): void { dst.d = src.d; dst.x = src.x; 
 interface WalkCache { valid: boolean; qx: number; qy: number; footStartS: number; footEndS: number; hiS: number; kHi: number; bkHi: number; minF: number; loS: number; kLo: number; bkLo: number; maxB: number; oLo: number; oHi: number }
 function mkWalkCache(): WalkCache { return { valid: false, qx: 0, qy: 0, footStartS: 0, footEndS: 0, hiS: 0, kHi: -1, bkHi: 0, minF: Infinity, loS: 0, kLo: -1, bkLo: 0, maxB: -Infinity, oLo: NaN, oHi: NaN }; }
 
-function footNearM(polys: Poly[], h: number, arm: FArm, x: number, y: number, hintS: number, hintK: number, out: FFoot): void {
+// x, y come in kfXY and the hint is out's own foot (s, k): no double crosses
+// the call boundary, so none is boxed (31.8k calls a frame on def).
+const kfXY = new Float64Array(2);
+function footNearM(C: FCache, arm: FArm, out: FFoot): void {
+    const polys = C.polys; const h = C.h; const x = kfXY[0]; const y = kfXY[1]; const hintS = out.u; const hintK = out.k;
     // The builder's tracked foot (footT): search only h/32 of s around
     // the current foot estimate, walking the window when the foot sits
     // on its edge, so the foot cannot jump branch. Segments are found
