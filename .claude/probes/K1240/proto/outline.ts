@@ -950,6 +950,14 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
       const rCap = Math.min(1, Math.max(0, Math.min(mt.dA > 1e-12 ? capOf(A) / mt.dA : 1, mt.dB > 1e-12 ? capOf(B) / mt.dB : 1)));
       const gA = Math.min(wA, 1 - rCap); const gB = Math.min(wB, 1 - rCap);
       const ea = eOf(A, cw.sideA, mt.sA, gA); const eb = eOf(B, cw.sideB, mt.sB, gB);
+      // K1240 S3f r4: w = 0 is the meet itself. The border's point at the
+      // meet's s is not always the meet: on the outer side of a sharp bend
+      // many border points share one s (g41_ring_tw42 j12, 0.064 off, the
+      // 3.45 px spike), so each station carries the meet's offset from it,
+      // fading out as the station runs on to the root (continuous in g).
+      { const a0 = eOf(A, cw.sideA, mt.sA, 0); const b0 = eOf(B, cw.sideB, mt.sB, 0);
+        ea.x += (mt.x - a0.x) * (1 - gA); ea.y += (mt.y - a0.y) * (1 - gA);
+        eb.x += (mt.x - b0.x) * (1 - gB); eb.y += (mt.y - b0.y) * (1 - gB); }
       cw.Vx = mt.x; cw.Vy = mt.y; cw.qx = mt.x; cw.qy = mt.y; cw.r = 0; cw.meet = true;
       cw.tax = ea.x; cw.tay = ea.y; cw.sA = ea.s; cw.dA = mt.dA * (1 - gA);
       cw.tbx = eb.x; cw.tby = eb.y; cw.sB = eb.s; cw.dB = mt.dB * (1 - gB);
@@ -5066,6 +5074,13 @@ function cornerFallbackC(C: FCache, st: DiagramStructure, scene: SceneIn, ci: nu
     const ea = new Float64Array(2); const eb = new Float64Array(2);
     const sEa = eOf(aiA, sideA, mt.sA, gA, ea);
     const sEb = eOf(aiB, sideB, mt.sB, gB, eb);
+    // K1240 S3f r4: w = 0 is the meet itself (the builder's cornerFallback
+    // says why): each station carries the meet's offset from the border's
+    // point at the meet's s, fading out as the station runs on (1 - g).
+    { const a0 = new Float64Array(2); const b0 = new Float64Array(2);
+      eOf(aiA, sideA, mt.sA, 0, a0); eOf(aiB, sideB, mt.sB, 0, b0);
+      ea[0] += (mt.x - a0[0]) * (1 - gA); ea[1] += (mt.y - a0[1]) * (1 - gA);
+      eb[0] += (mt.x - b0[0]) * (1 - gB); eb[1] += (mt.y - b0[1]) * (1 - gB); }
     C.cVx[ci] = mt.x; C.cVy[ci] = mt.y; C.cQx[ci] = mt.x; C.cQy[ci] = mt.y; C.cR[ci] = 0; C.cMeet[ci] = 1;
     C.cTax[ci] = ea[0]; C.cTay[ci] = ea[1]; C.cSA[ci] = sEa; C.cDA[ci] = mt.dA * (1 - gA);
     C.cTbx[ci] = eb[0]; C.cTby[ci] = eb[1]; C.cSB[ci] = sEb; C.cDB[ci] = mt.dB * (1 - gB);
