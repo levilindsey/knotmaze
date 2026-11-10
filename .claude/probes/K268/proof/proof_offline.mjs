@@ -1,8 +1,9 @@
 // K268 proof stage: re-judge saved PROOF frames (census3a.mjs's
 // OUT/proofdata/<tag>.json + _S/_R/_F.png) with judge.mjs, no Chrome.
-//   node proof_offline.mjs <OUT>/proofdata [tagFilter] [--img] [--far=profile]
+//   node proof_offline.mjs <OUT>/proofdata [tagFilter] [--img] [--far=slot]
 // Prints per slot the AFTER numbers (the line-for-line ideal), BEFORE (the
-// stage 3a ideal) and farProfile (the far branch fed the profile's flags).
+// stage 3a ideal) and farOther (the far branch fed the other flags: the
+// slot's, the slip before the far-flag fix, unless --far=slot).
 import { readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { decodePNG, encodePNG } from "./png.mjs";
@@ -10,7 +11,7 @@ import { judgeSlot } from "./judge.mjs";
 
 const [, , DIR, FILTER = ""] = process.argv;
 const IMG = process.argv.includes("--img");
-const FAR = process.argv.includes("--far=profile") ? "profile" : "slot";
+const FAR = process.argv.includes("--far=slot") ? "slot" : "profile";
 const img = (b) => { const p = decodePNG(b); return { W: p.W, H: p.H, ch: p.ch ?? p.channels ?? 4, data: p.data }; };
 const tot = { px: 0, ghosts: 0, under: 0, between: 0, prot: 0, fmiss: 0, errs: [] };
 for (const f of readdirSync(DIR).filter((f) => f.endsWith(".json") && f.includes(FILTER)).sort()) {
@@ -24,7 +25,7 @@ for (const f of readdirSync(DIR).filter((f) => f.endsWith(".json") && f.includes
   console.log(`${tag} (${Date.now() - t0} ms) cutOnPx=${J.cutOnPx}`);
   console.log("  after      " + JSON.stringify(J.after));
   console.log("  before     " + JSON.stringify(J.before));
-  console.log("  farProfile " + JSON.stringify(J.farProfile));
+  console.log("  farOther   " + JSON.stringify(J.farOther));
   if (J.ghostPx.length) console.log("  ghost px   " + JSON.stringify(J.ghostPx.slice(0, 30)));
   if (J.underPx.length) console.log("  under px   " + JSON.stringify(J.underPx.slice(0, 30)));
   if (J.img) writeFileSync(join(DIR, `${tag}_offline_panels.png`), encodePNG(J.img));

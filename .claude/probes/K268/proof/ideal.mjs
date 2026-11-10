@@ -248,9 +248,10 @@ export function slotCut(sm, p, fa, tanv, pxW, shaped) {
           const bl = abx * abx + aby * aby;
           const fbt = bl > 1e-12 ? clamp(((p[0] - F0[0]) * abx + (p[1] - F0[1]) * aby) / bl, 0, 1) : 0;
           const exA2 = (t4[2] + (bk2 + fbt) * t9[0]) * t4[3];
-          // As drawn: the far branch's cover reads the SLOT's flags (fl,
-          // texel 3.w), not the profile's (texel P2.y) - see the handoff.
-          const exCoverFar = exploreCutCover(U, T, sm.farFlags === "profile" ? Math.round(exP2[1]) : fl, exA2, d2, pxW).cover;
+          // As drawn since the far-flag fix (2026-11-10): the far branch's
+          // cover reads the PROFILE's flags (texel P2.y), as the near call.
+          // farFlags "slot" models the slip before it (fl, texel 3.w).
+          const exCoverFar = exploreCutCover(U, T, sm.farFlags === "slot" ? fl : Math.round(exP2[1]), exA2, d2, pxW).cover;
           const gN = exCutAtDist(d, hO, margin, fadeP, pxW, winM, t8[1], inWin * inFoot);
           const gF = exCutAtDist(d2, hO, margin, fadeP, pxW, winM, t8[1], inWin * inFoot);
           const gS = exCutAtDist(dS, hO, margin, fadeP, pxW, winM, t8[1], inWin * inFoot);
@@ -316,7 +317,7 @@ export function slotModel(dump) {
   const n = Math.round(dump.T[2 * 4 + 3]);
   const P = dump.overPts;
   const pt = (j) => { const q = clamp(j, -1, n) + 1; return [P[2 * q], P[2 * q + 1]]; };
-  return { T: dump.T, U: dump.U, n, pt, under: dump.under, farFlags: dump.farFlags || "slot" };
+  return { T: dump.T, U: dump.U, n, pt, under: dump.under, farFlags: dump.farFlags || "profile" };
 }
 
 // The ideal measured ratio at world point p: S's effective cut over F's.

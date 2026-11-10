@@ -574,7 +574,7 @@ async function proof(page, look, label) {
       writeFileSync(join(dd, `${tag}.json`), JSON.stringify({ label, look, HC, clip, x0, y0, info: { v: info.v, tw: info.tw, U: info.U }, sl }));
     } catch (e) { out.dumpErr = String(e); }
     const J = judgeSlot({ S, R, F, sl, info, x0, y0, look, HC, wantImg: WANT });
-    const rec = { c: sl.c, clip, n: sl.n, prof: sl.prof.map((x) => +x.toFixed(4)), ...J.after, before: J.before, farProfile: J.farProfile,
+    const rec = { c: sl.c, clip, n: sl.n, prof: sl.prof.map((x) => +x.toFixed(4)), ...J.after, before: J.before, farOther: J.farOther,
       cutOnPx: J.cutOnPx, ghostPx: J.ghostPx.slice(0, 40), underPx: J.underPx.slice(0, 40), restored: back.shaped && restoredPx === 0, restoredPx };
     for (const x of J.errsAfter) out.errs.push(x);
     out.before.px += J.before.px; out.before.ghosts += J.before.ghosts; out.before.under += J.before.under; out.before.between += J.before.between;

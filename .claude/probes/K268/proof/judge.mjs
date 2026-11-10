@@ -98,15 +98,18 @@ const pct = (arr) => {
 
 // S, R, F: decoded images ({W, H, ch, data}) of the clip at (x0, y0).
 // sl: the slot's SHAPED_INFO record; info: {v, tw, U}; look: the look index.
-// Returns { after, before, farProfile, img } (img: the 3x3 panel when wantImg).
-export function judgeSlot({ S, R, F, sl, info, x0, y0, look, HC = false, wantImg = false, farFlags = "slot" }) {
+// Returns { after, before, farOther, img } (img: the 3x3 panel when wantImg).
+// farFlags: the flags the far branch's cover reads, "profile" (as drawn
+// since the far-flag fix, 2026-11-10) or "slot" (the slip before it);
+// farOther judges the same pixels under the other reading.
+export function judgeSlot({ S, R, F, sl, info, x0, y0, look, HC = false, wantImg = false, farFlags = "profile" }) {
   const W = S.W, H = S.H, N = W * H;
   const pxW = 1 / info.v.s;
   const U = info.U || [HC ? 2 : 1, look, 1, info.tw];
   const dump = { T: sl.T, overPts: sl.overPts, under: sl.under, U };
   const smS = slotModel({ ...dump, farFlags });
   const smF = slotModel({ ...dump, T: rowF(sl.T, sl.solved) });
-  const smP = slotModel({ ...dump, farFlags: "profile" });
+  const smP = slotModel({ ...dump, farFlags: farFlags === "slot" ? "profile" : "slot" });
   // Per-pixel measurement.
   const meas = new Float32Array(N).fill(NaN), dSRa = new Float32Array(N), dSFa = new Float32Array(N);
   const judged = new Uint8Array(N);
@@ -181,7 +184,7 @@ export function judgeSlot({ S, R, F, sl, info, x0, y0, look, HC = false, wantImg
     return { rec, cls, tag };
   };
   const after = classify(idN, "after");
-  const farProfile = classify(idP, "farProfile");
+  const farProfile = classify(idP, "farOther");
   // BEFORE: the stage 3a ideal (1D in A, +-1.5 px of arc).
   const before = { px: 0, ghosts: 0, under: 0, between: 0, maxErr: 0, errs: [] };
   const idO = new Float32Array(N).fill(NaN), clsO = new Uint8Array(N);
@@ -252,5 +255,5 @@ export function judgeSlot({ S, R, F, sl, info, x0, y0, look, HC = false, wantImg
   for (let i = 0; i < N && ghostPx.length < 400; i++) if (after.cls[i] === 2) ghostPx.push([x0 + (i % W), y0 + ((i / W) | 0)]);
   const underPx = [];
   for (let i = 0; i < N && underPx.length < 400; i++) if (after.cls[i] === 3) underPx.push([x0 + (i % W), y0 + ((i / W) | 0)]);
-  return { after: after.rec, errsAfter, before, farProfile: farProfile.rec, ghostPx, underPx, img, cutOnPx: cutOnA.reduce((a, b) => a + b, 0) };
+  return { after: after.rec, errsAfter, before, farOther: farProfile.rec, ghostPx, underPx, img, cutOnPx: cutOnA.reduce((a, b) => a + b, 0) };
 }
