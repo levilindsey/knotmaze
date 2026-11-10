@@ -250,6 +250,10 @@ function footInWindow(p: Poly, px: number, py: number, lo: number, hi: number): 
 function footInWindowInto(p: Poly, px: number, py: number, lo: number, hi: number, out: Float64Array): void {
   out[0] = Infinity; out[1] = px; out[2] = py;
   if (p.nseg === 0 || hi < lo) return;
+  // hypot only where the squared distance could beat the best: d2 is
+  // within a few ulps of the true square and hypot within one ulp of the
+  // true distance, so the 1e-9 margin skips no foot hypot would pick.
+  let bestSq = Infinity;
   const nsh = p.closed ? 3 : 1;
   for (let si = 0; si < nsh; si++) {
     const sh = p.closed ? (si === 0 ? -p.len : si === 1 ? 0 : p.len) : 0;
@@ -273,8 +277,10 @@ function footInWindowInto(p: Poly, px: number, py: number, lo: number, hi: numbe
       let t = l2 > 0 ? ((px - ax) * ex + (py - ay) * ey) / l2 : 0;
       t = Math.min(1, Math.max(0, t));
       const qx = ax + ex * t; const qy = ay + ey * t;
-      const d = Math.hypot(px - qx, py - qy);
-      if (d < out[0]) { out[0] = d; out[1] = qx; out[2] = qy; }
+      const ddx = px - qx; const ddy = py - qy;
+      if (ddx * ddx + ddy * ddy > bestSq) continue;
+      const d = Math.hypot(ddx, ddy);
+      if (d < out[0]) { out[0] = d; out[1] = qx; out[2] = qy; bestSq = d > 1e-100 ? d * d * (1 + 1e-9) : Infinity; }
     }
   }
 }
