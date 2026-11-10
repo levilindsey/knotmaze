@@ -1,0 +1,182 @@
+diff --git a/.claude/probes/K1240/proto/outline.ts b/.claude/probes/K1240/proto/outline.ts
+index 0678d650..4b018af2 100644
+--- a/.claude/probes/K1240/proto/outline.ts
++++ b/.claude/probes/K1240/proto/outline.ts
+@@ -3864,6 +3864,67 @@ const kfQa: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 };
+ const kfQb: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 };
+ const kfTa: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 };
+ const kfTb: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 };
++const kfLa: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 };
++const kfLb: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 };
++// K1247 s4: the tracked foot footNearM would return at kfXY from the hint
++// (k, u), found without its walk where that answer is certain; else d =
++// Infinity. Certain cases: (a) footNearM's own one-step case (the
++// projection on segment k with every window inside it), or (b) the
++// projection on segment k lies past the k+1 (k-1) end, so the distance
++// falls all the way along segment k, and the projection on the neighbour
++// is inside it by two windows: every window of the walk then has its least
++// distance at its far edge until one holds that projection, which is the
++// walk's answer, computed by the same expressions.
++let kfWhy = 0;
++function footLocalC(C: FCache, arm: FArm, k: number, u: number, out: FFoot): void {
++  out.d = Infinity; kfWhy = 9;
++  const p = C.polys[arm.pi]; const x = kfXY[0]; const y = kfXY[1];
++  const n = p.nseg;
++  if (k < 0 || k >= n) return;
++  const PX = p.x; const PY = p.y; const PDX = p.dx; const PDY = p.dy; const PS = p.s; const PSL = p.segLen;
++  const cl = p.closed && p.len > 0; const len = p.len;
++  const w = C.h / 32;
++  const winLoR = arm.dir > 0 ? arm.sR : arm.sR - arm.L;
++  const winHiR = arm.dir > 0 ? arm.sR + arm.L : arm.sR;
++  const shiftW = cl ? Math.round((u - (winLoR + winHiR) / 2) / len) * len : 0;
++  const winLo = winLoR + shiftW; const winHi = winHiR + shiftW;
++  const segShift = cl ? Math.round((u - PS[k]) / len) * len : 0;
++  const l = PSL[k];
++  if (!(l > 0) || (p.closed && !(l < len / 4))) return;
++  let segS = PS[k] + segShift;
++  if (cl) { if (segS < u - len / 2) segS += len; else if (segS > u + len / 2) segS -= len; }
++  const ex = PDX[k]; const ey = PDY[k]; const l2 = ex * ex + ey * ey;
++  if (!(l2 > 0)) return;
++  const t = ((x - PX[k]) * ex + (y - PY[k]) * ey) / l2;
++  const su = segS + t * l;
++  let kk = k; let tt = t; let sS = segS;
++  {
++    const a = (su < u ? su : u) - w; const b = (su > u ? su : u) + w;
++    if (a > segS && b < segS + l && a > winLo && b < winHi && b - a < 64 * w) {
++      kfWhy = 0;
++    } else {
++      // (b)
++      const dk = t >= 1 ? 1 : t <= 0 ? -1 : 0;
++      kfWhy = 2; if (dk === 0) return; kfWhy = 3;
++      if (dk > 0 ? !(u - w > segS && u <= segS + l && u - w > winLo) : !(u + w < segS + l && u >= segS && u + w < winHi)) return; kfWhy = 4;
++      kk = k + dk;
++      if (kk < 0 || kk >= n) { if (!p.closed) return; kk = ((kk % n) + n) % n; }
++      const l1 = PSL[kk];
++      if (!(l1 > 0) || (p.closed && !(l1 < len / 4))) return;
++      let s1 = PS[kk] + segShift;
++      if (cl) { if (s1 < u - len / 2) s1 += len; else if (s1 > u + len / 2) s1 -= len; }
++      const fx = PDX[kk]; const fy = PDY[kk]; const m2 = fx * fx + fy * fy;
++      if (!(m2 > 0)) return;
++      const t1 = ((x - PX[kk]) * fx + (y - PY[kk]) * fy) / m2;
++      const su1 = s1 + t1 * l1;
++      if (!(su1 - 2 * w > s1 && su1 + 2 * w < s1 + l1 && su1 - 2 * w > winLo && su1 + 2 * w < winHi)) { kfWhy = t1 <= 0 || t1 >= 1 ? 5 : 4; return; } kfWhy = 1;
++      tt = t1; sS = s1;
++    }
++  }
++  const lk = PSL[kk];
++  const qx = PX[kk] + PDX[kk] * tt; const qy = PY[kk] + PDY[kk] * tt;
++  out.d = Math.sqrt((x - qx) * (x - qx) + (y - qy) * (y - qy)); out.x = qx; out.y = qy; out.s = PS[kk] + tt * lk; out.k = kk; out.u = sS + tt * lk;
++}
+ const kfMFoot: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 };
+ const nodeScratch = new Float64Array(33 * 12);
+ const nodeScratchK = new Int32Array(33 * 2);
+@@ -4033,6 +4094,35 @@ const kfGN = 32;
+ const kfPrevX = new Float64Array(33); const kfPrevY = new Float64Array(33);
+ const kfPrevFaS = new Float64Array(33); const kfPrevFbS = new Float64Array(33);
+ const kfPrevFaK = new Int32Array(33); const kfPrevFbK = new Int32Array(33);
++// K1247 s4: the advance's Newton solve for the two tracked feet at distance
++// rn, from (x0, y0), hinted by kfQa/kfQb. True when it converged within acc
++// of the predictor g; the point is in kfNR, the feet in kfTa/kfTb.
++const kfNR = new Float64Array(2); let kfNP = 0;
++const K4T = process.env.K4T === "off" ? 1 : process.env.K4T === "same" ? 2 : process.env.K4T === "diag" ? 3 : process.env.K4T === "retry" ? 4 : 0;
++function newtonFromC(C: FCache, x0: number, y0: number, gx: number, gy: number, rn: number, acc: number, ha: FFoot, hb: FFoot): boolean {
++  copyFoot(kfTa, ha); copyFoot(kfTb, hb);
++  let sx = x0; let sy = y0;
++  kfXY[0] = sx; kfXY[1] = sy; footNearM(C, kfCst.A, kfTa); footNearM(C, kfCst.B, kfTb); kfNP = 1;
++  for (let it = 0; it < 60; it++) {
++    const Fa = kfTa.d - rn; const Fb = kfTb.d - rn;
++    if (Math.abs(Fa) < 1e-12 * Math.max(1, rn) && Math.abs(Fb) < 1e-12 * Math.max(1, rn)) break;
++    if (!(kfTa.d > 1e-12 && kfTb.d > 1e-12)) break;
++    const gax = (sx - kfTa.x) / kfTa.d; const gay = (sy - kfTa.y) / kfTa.d;
++    const gbx = (sx - kfTb.x) / kfTb.d; const gby = (sy - kfTb.y) / kfTb.d;
++    const det = gax * gby - gay * gbx;
++    if (Math.abs(det) < 1e-12) break;
++    if (Math.max(Math.abs(Fa), Math.abs(Fb)) < 1e-9 * Math.max(1, rn) && Math.abs(det) >= 0.05) break;
++    let dx = (-Fa * gby + Fb * gay) / det;
++    let dy = (-Fb * gax + Fa * gbx) / det;
++    const dl = Math.sqrt(dx * dx + dy * dy);
++    if (dl > acc) { dx *= acc / dl; dy *= acc / dl; }
++    sx += dx; sy += dy;
++    kfXY[0] = sx; kfXY[1] = sy; footNearM(C, kfCst.A, kfTa); footNearM(C, kfCst.B, kfTb); kfNP++;
++  }
++  kfNR[0] = sx; kfNR[1] = sy;
++  const sok = Math.max(Math.abs(kfTa.d - rn), Math.abs(kfTb.d - rn)) < 1e-9 * Math.max(1, rn);
++  return sok && Math.sqrt((sx - gx) * (sx - gx) + (sy - gy) * (sy - gy)) <= acc;
++}
+ function advanceToC(C: FCache, rhoT: number): void {
+   const h = C.h;
+   const dN = Math.max(kfCst.r0 / kfGN, 1e-12);
+@@ -4050,27 +4140,53 @@ function advanceToC(C: FCache, rhoT: number): void {
+         const ux = (nax + nbx) / den; const uy = (nay + nby) / den;
+         const gx = kfCst.qx + ux * dd; const gy = kfCst.qy + uy * dd;
+         const acc = Math.min(h, Math.max(0.5 * Math.sqrt(ux * ux + uy * uy) * dd, 1e-3 * h));
+-        copyFoot(kfTa, kfQa); copyFoot(kfTb, kfQb);
+-        let sx = gx; let sy = gy;
+-        kfXY[0] = sx; kfXY[1] = sy; footNearM(C, kfCst.A, kfTa); footNearM(C, kfCst.B, kfTb);
+-        for (let it = 0; it < 60; it++) {
+-          const Fa = kfTa.d - rn; const Fb = kfTb.d - rn;
+-          if (Math.abs(Fa) < 1e-12 * Math.max(1, rn) && Math.abs(Fb) < 1e-12 * Math.max(1, rn)) break;
+-          if (!(kfTa.d > 1e-12 && kfTb.d > 1e-12)) break;
+-          const gax = (sx - kfTa.x) / kfTa.d; const gay = (sy - kfTa.y) / kfTa.d;
+-          const gbx = (sx - kfTb.x) / kfTb.d; const gby = (sy - kfTb.y) / kfTb.d;
+-          const det = gax * gby - gay * gbx;
+-          if (Math.abs(det) < 1e-12) break;
+-          if (Math.max(Math.abs(Fa), Math.abs(Fb)) < 1e-9 * Math.max(1, rn) && Math.abs(det) >= 0.05) break;
+-          let dx = (-Fa * gby + Fb * gay) / det;
+-          let dy = (-Fb * gax + Fa * gbx) / det;
+-          const dl = Math.sqrt(dx * dx + dy * dy);
+-          if (dl > acc) { dx *= acc / dl; dy *= acc / dl; }
+-          sx += dx; sy += dy;
+-          kfXY[0] = sx; kfXY[1] = sy; footNearM(C, kfCst.A, kfTa); footNearM(C, kfCst.B, kfTb);
++        // K1247 s4: the solve's first Newton step on cheap local feet (the
++        // hint's segment and its neighbours) instead of a tracked footing at
++        // g. Where those feet are the tracked feet at g, this is the old
++        // first step bit for bit: the same break tests, the same step, and
++        // the feet passed on as the next footing's hint. The predictor is
++        // exact on the feet's lines, so the tracked footing at g only paid
++        // when a foot moved on to the next segment or sat at a vertex.
++        let x0 = gx; let y0 = gy; let ha = kfQa; let hb = kfQb;
++        const mode = K4T;
++        if (mode !== 1) {
++          kfXY[0] = gx; kfXY[1] = gy; footLocalC(C, kfCst.A, kfQa.k, kfQa.u, kfLa); footLocalC(C, kfCst.B, kfQb.k, kfQb.u, kfLb);
++          const Fa = kfLa.d - rn; const Fb = kfLb.d - rn;
++          const tol = Math.max(1, rn);
++          if (kfLa.d < Infinity && kfLb.d < Infinity && !(Math.abs(Fa) < 1e-12 * tol && Math.abs(Fb) < 1e-12 * tol) && kfLa.d > 1e-12 && kfLb.d > 1e-12) {
++            const gax = (gx - kfLa.x) / kfLa.d; const gay = (gy - kfLa.y) / kfLa.d;
++            const gbx = (gx - kfLb.x) / kfLb.d; const gby = (gy - kfLb.y) / kfLb.d;
++            const det = gax * gby - gay * gbx;
++            if (Math.abs(det) >= 1e-12 && !(Math.max(Math.abs(Fa), Math.abs(Fb)) < 1e-9 * tol && Math.abs(det) >= 0.05)) {
++              let dx = (-Fa * gby + Fb * gay) / det;
++              let dy = (-Fb * gax + Fa * gbx) / det;
++              const dl = Math.sqrt(dx * dx + dy * dy);
++              if (dl > acc) { dx *= acc / dl; dy *= acc / dl; }
++              x0 = gx + dx; y0 = gy + dy; ha = kfLa; hb = kfLb;
++            }
++          }
++        }
++        if (mode === 3) {
++          const G4 = (globalThis as unknown as { __k4d?: Record<string, number> }).__k4d ??= {};
++          kfXY[0] = gx; kfXY[1] = gy; footLocalC(C, kfCst.A, kfQa.k, kfQa.u, kfLa); const wA = kfWhy; footLocalC(C, kfCst.B, kfQb.k, kfQb.u, kfLb); const wB = kfWhy;
++          const okO = newtonFromC(C, gx, gy, gx, gy, rn, acc, kfQa, kfQb); G4.pairsO = (G4.pairsO ?? 0) + kfNP; G4["np" + Math.min(kfNP, 3)] = (G4["np" + Math.min(kfNP, 3)] ?? 0) + 1; if (kfNP >= 2) { const key = "why" + Math.min(wA, wB) + Math.max(wA, wB); G4[key] = (G4[key] ?? 0) + 1; } const sxO = kfNR[0]; const syO = kfNR[1]; const kaO = kfTa.k; const kbO = kfTb.k; const uaO = kfTa.u; const ubO = kfTb.u;
++          const okN = newtonFromC(C, x0, y0, gx, gy, rn, acc, ha, hb); G4.pairsN = (G4.pairsN ?? 0) + kfNP + (ha === kfQa ? 0 : 0.5);
++          G4.adv = (G4.adv ?? 0) + 1;
++          if (ha !== kfQa) { const Tg: FFoot = { ...kfQa }; kfXY[0] = gx; kfXY[1] = gy; footNearM(C, kfCst.A, Tg); const dT = Math.hypot(Tg.x - kfLa.x, Tg.y - kfLa.y) / h; if (dT > 1e-12) { if ((G4.dumps ?? 0) < 2 && Tg.d < kfLa.d - 1e-3 * h) { G4.dumps = (G4.dumps ?? 0) + 1; const p = C.polys[kfCst.A.pi]; const k = kfQa.k; console.log(JSON.stringify({ g: [gx, gy], h, Q: kfQa, L: kfLa, T: Tg, arm: kfCst.A, closed: p.closed, nseg: p.nseg, len: p.len, s: [p.s[k - 1], p.s[k], p.s[k + 1], p.s[k + 2]], sl: [p.segLen[k - 1], p.segLen[k], p.segLen[k + 1]], px: [p.x[k], p.y[k], p.x[k + 1], p.y[k + 1]], d: [p.dx[k], p.dy[k]] })); } G4.TneL = (G4.TneL ?? 0) + 1; G4.TneLmax = Math.max(G4.TneLmax ?? 0, dT); const jk = Tg.k - kfQa.k; G4["TjK" + jk] = (G4["TjK" + jk] ?? 0) + 1; G4["LjK" + (kfLa.k - kfQa.k)] = (G4["LjK" + (kfLa.k - kfQa.k)] ?? 0) + 1; G4.TdMinusLd = Math.min(G4.TdMinusLd ?? 9, (Tg.d - kfLa.d) / h); G4.TdMinusLdMax = Math.max(G4.TdMinusLdMax ?? -9, (Tg.d - kfLa.d) / h); } else G4.TeqL = (G4.TeqL ?? 0) + 1; }
++          if (ha !== kfQa) G4.corrected = (G4.corrected ?? 0) + 1;
++          if (okO !== okN) { G4[okO ? "oldOnly" : "newOnly"] = (G4[okO ? "oldOnly" : "newOnly"] ?? 0) + 1; }
++          else if (okO) {
++            const dd2 = Math.hypot(kfNR[0] - sxO, kfNR[1] - syO) / h; G4.maxD = Math.max(G4.maxD ?? 0, dd2);
++            if (dd2 > 0) G4.nz = (G4.nz ?? 0) + 1;
++            if (dd2 > 1e-6) G4.farD = (G4.farD ?? 0) + 1;
++            if (kfTa.k !== kaO || kfTb.k !== kbO) G4.kDiff = (G4.kDiff ?? 0) + 1;
++            const du = Math.max(Math.abs(kfTa.u - uaO), Math.abs(kfTb.u - ubO)) / h; G4.maxDu = Math.max(G4.maxDu ?? 0, du);
++          }
++          newtonFromC(C, gx, gy, gx, gy, rn, acc, kfQa, kfQb);
++          if (okO) { kfCst.qx = kfNR[0]; kfCst.qy = kfNR[1]; copyFoot(kfQa, kfTa); copyFoot(kfQb, kfTb); kfCst.rhoCur = rn; advanced = true; }
++        } else {
++          if (newtonFromC(C, x0, y0, gx, gy, rn, acc, ha, hb)) { kfCst.qx = kfNR[0]; kfCst.qy = kfNR[1]; copyFoot(kfQa, kfTa); copyFoot(kfQb, kfTb); kfCst.rhoCur = rn; advanced = true; }
+         }
+-        const sok = Math.max(Math.abs(kfTa.d - rn), Math.abs(kfTb.d - rn)) < 1e-9 * Math.max(1, rn);
+-        if (sok && Math.sqrt((sx - gx) * (sx - gx) + (sy - gy) * (sy - gy)) <= acc) { kfCst.qx = sx; kfCst.qy = sy; copyFoot(kfQa, kfTa); copyFoot(kfQb, kfTb); kfCst.rhoCur = rn; advanced = true; }
+       }
+     }
+     if (advanced) step = Math.min(dN, 2 * step);
