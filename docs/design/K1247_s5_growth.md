@@ -88,3 +88,162 @@ Short and plain:
 - each idea and what it gained; what's left; your last SHA.
 
 End with `Ledger items` and K1247's handle fields (owner, branch, last commit, evidence, next).
+
+## Handoff 1 (2026-11-09, 18:20-20:20, claude agent a3deb5723f8c1b194)
+
+**Done does not hold.** def's corners phase is 5.7-5.8 ms (it was 6.5-6.7). The 1 ms target needs a
+different growth, not a faster version of this one (see What's left). As the Done rule says, the
+fastest version that passes is committed: c7c9aac3, plus this handoff.
+
+### Timing (k1247c_time, under the perf lock, base and new alternated in one lock, 19:26-19:28)
+
+Base is master 2d452e0e's `outline.ts`, run as scratch `_s5time_base.ts`. New is c7c9aac3.
+
+| | median ms | p95 ms | setupBorders | corners | cutsEyesExposure | regions | piecesCapsEtc |
+|---|---|---|---|---|---|---|---|
+| base 1 | 18.06 | 22.94 | 4.72 | 6.66 | 4.16 | 1.97 | 1.42 |
+| base 2 | 17.97 | 22.31 | 4.76 | 6.52 | 3.99 | 1.97 | 1.34 |
+| new 1 | 17.60 | 20.91 | 4.93 | 5.84 | 4.11 | 2.18 | 1.36 |
+| new 2 | 17.29 | 20.13 | 4.90 | 5.70 | 4.16 | 2.23 | 1.43 |
+
+- Other scenes, base then new:
+  - ring: 4.18 / 4.10 ms, then 4.24 / 4.05 ms.
+  - fat: 28.3 / 29.0 ms, then 28.1 / 29.0 ms. fat grows no corners.
+  - def through the consistent S': 26.0 / 25.8 ms, then 24.7 / 24.9 ms.
+- `structure()` is one cold call, so it is noisy: 5.8-8.3 ms in both builds.
+- The frame gate (≤3 ms median, ≤6 ms p95) is far off. The corners phase is about a third of the frame.
+- An earlier locked pair at cd4386a0, before the segment predictor, gave corners 6.56 / 6.74 (base) and 6.26 / 6.14 (new).
+
+### The reference and the branch answer
+
+- **How the reference is built.** `k1247s5_mkref.mjs` writes scratch `outline_ref.ts` from master
+  2d452e0e's `outline.ts`, so the reference stays fixed while `outline.ts` changes. It keeps the same
+  equations and adds:
+  - a node count set at run time;
+  - an exact stop: the interval where w reaches 0 is bisected along the path, and the trapezoid runs
+    over the bisection's points;
+  - a landing floor of 0.1h in place of 1e-3h.
+- **How it is run.** `k1247s5_ref.ts` doubles N from 32 until no corner moves more than 1e-4h between
+  N and 2N. Output is `out/k1247s5/ref_<scene>_<mult>.json`, with today's 32-node and 128-node runs
+  beside it.
+- **Where it did not converge.** muse_hash, user_tw42 0.1, g41_def_tw42 0, g41_user_tw42 0.1 and
+  g41_user_tw64 did not converge. In those, a few corners flip between near-tied foot branches as N
+  grows, so 0.01h everywhere is not reachable against any reference.
+- **Which branch was right: neither node count, and the floor is the cause.** advanceToC accepts a
+  Newton landing only within max(0.5|u|dd, 1e-3h) of its predictor. A foot that jumps to another
+  segment lands farther away than that. As steps shrink, more advances are refused, the advance gives
+  up, and the growth stops early (`why` = 3).
+  - 128 nodes hit this more often. Its 0.69h was the wrong branch.
+  - 32 nodes hits it too, for example def c354, 0.51h off the reference.
+  - With the floor at 0.1h (`kfJump`), the growth follows the reference's branch and converges in N.
+
+### Accuracy: c7c9aac3 against the reference (`k1247s5_cmp.ts --tag=_final`)
+
+Distances are in h. "Today" is master's 32 nodes. `*` = the reference did not converge.
+
+| scene | mult | new to ref | today to ref | largest move |
+|---|---|---|---|---|
+| muse_hash* | 0 | 0.529 | 0.528 | 0.433 |
+| muse_hash* | 0.1 | 0.201 | 0.191 | 0.045 |
+| muse_default_tw | 0 | 0.491 | 0.092 | 0.502 |
+| muse_default_tw | 0.1 | 0.085 | 0.095 | 0.105 |
+| def | 0 | 0.090 | 0.512 | 0.522 |
+| def | 0.1 | 0.089 | 0.517 | 0.526 |
+| def | 0.5 | 0.108 | 0.434 | 0.507 |
+| fat | all | 0 | 0 | 0 |
+| ring | 0 | 0.083 | 0.117 | 0.116 |
+| ring | 0.1 | 0.034 | 0.093 | 0.104 |
+| ring | 0.5 | 0.142 | 0.085 | 0.114 |
+| user_tw42 | 0 | 0.435 | 0.509 | 0.941 |
+| user_tw42* | 0.1 | 0.096 | 0.656 | 0.684 |
+| g41_def_tw42* | 0 | 0.486 | 0.882 | 1.181 |
+| g41_def_tw42 | 0.1 | 0.521 | 0.876 | 1.212 |
+| g41_def_tw64 | 0 | 0.062 | 0.389 | 0.349 |
+| g41_def_tw64 | 0.1 | 0.058 | 0.385 | 0.357 |
+| g41_ring_tw42 | 0 | 0.412 | 0.189 | 0.426 |
+| g41_ring_tw42 | 0.1 | 0.439 | 0.396 | 0.469 |
+| g41_ring_tw64 | 0 | 0.095 | 0.078 | 0.093 |
+| g41_ring_tw64 | 0.1 | 0.099 | 0.076 | 0.087 |
+| g41_user_tw42 | 0 | 0.434 | 0.510 | 0.940 |
+| g41_user_tw42* | 0.1 | 0.096 | 0.657 | 0.684 |
+| g41_user_tw64* | 0 | 0.061 | 0.157 | 0.112 |
+| g41_user_tw64* | 0.1 | 0.070 | 0.210 | 0.209 |
+
+- **Overall.** The worst corner is 0.529h new against 0.882h today.
+  - Corners over 0.01 / 0.03 / 0.1 / 0.3h: 286 / 149 / 36 / 12 new, against 567 / 211 / 39 / 15 today.
+  - ok flags match in every case.
+  - 77,384 advances per pass over all scenes.
+- **The 0.01h target is not met.** The large remaining distances are the ambiguous corners above:
+  near-tied foot branches, where the reference itself flips with N.
+- **Where new is worse than today.** muse_default_tw 0 c303, g41_def_tw42 0 c85 and g41_ring_tw42.
+  Today happens to sit on the reference's branch there and new does not.
+- **Outside the corners (`k1247s5_outside.ts` against master's tables in `out/k1247s5_master/`):**
+  - Piece keys: 0 diffs. Cut counts: the same.
+  - Run interiors are identical except one point in each of two cases: muse_hash 0.1 at 1.3e-2h and
+    g41_user_tw64 0.1 at 3.2e-3h. **Both are over the 1e-3h bar.**
+  - Run ends move with their corners, by up to 0.94h.
+  - Faces and regions: the face key set differs in def 0.5, g41_def_tw64 0.1 and ring 0, with one
+    region key diff each. Face index moves reach 489 (def 0), and point counts differ in most cases.
+- **Cold against warm (`k1247c_coldwarm.ts`):** worst 0. **npm test:** 220 files, 2887 tests, green.
+- **k1247c_final on c7c9aac3** (logs in `out/k1247c_final/`): every step exited 0.
+  - coldwarm 0. Structure and pieces identical. move_def rigid 4.8e-9. outline_test ALL PASS.
+  - cmp_cold / warm / move: key diffs 0 in all 12 scenes. Points move up to 0.047 at the corners.
+  - verify reports 48 failures, all corner-driven point counts and face/region order (piece keys ok).
+  - cmprows reports 19 / 16 / 3 failures (still / 0.1 / 0.5). It was 19 / 14 / 3 at cd4386a0.
+- **`k1247s4_nodes.mjs`** is ported to the uniform growth: `<N>` sets kfGrowN, and `--w-only` keeps 16
+  path steps. It still patches the old growth when it finds one.
+
+### Crops: does the change show? (question for Levi)
+
+`.claude/probes/K1240/out/k1247s5/pics/`, from k1247s5_pics.ts on c7c9aac3. Each crop has three
+tiles: today, new, and both (today red, new blue), at the app's dpr-2 scale, zoomed 3x.
+
+| # | file | moved | today to ref | new to ref |
+|---|---|---|---|---|
+| 1 | `1_g41_def_tw42_0.1_c35.png` | 1.21h | 0.88h | 0.34h |
+| 2 | `2_user_tw42.lightpaper_0_c31.png` | 0.94h | 0.51h | 0.44h |
+| 3 | `3_g41_def_tw42_0_c354.png` | 0.56h | 0.55h | 0.01h |
+| 4 | `4_muse_default_tw_0_c303.png` | 0.50h | 0.02h | 0.49h |
+| 5 | `5_g41_def_tw42_0_c85.png` | 0.49h | 0.00h | 0.49h |
+| 6 | `6_g41_ring_tw42_0.1_c19.png` | 0.47h | 0.40h | 0.11h |
+
+h is 9.4-14.3 device px. In the crops viewed (1-5), the arc shifts about 1-2 device px, and the corner
+point moves a little more.
+
+### Ideas and what each gained
+
+All timings are def's corners phase, under the lock, one config per process. In-process A/Bs deopt
+after the first config: the second module ran about 25 ms. Base is 6.1-6.3 ms.
+
+| idea | result |
+|---|---|
+| Landing floor 1e-3h → 0.1h (`kfJump`) | Fixes the branch loss. Without it nothing converges. |
+| Adaptive hybrid (midpoint error control, failure = path end) | Converges, but 12.9 ms. Dropped. |
+| Uniform N = 16 + midpoint-checked refinement (`refineC`, E = Z = 1e-3h) | Fewer advances and closer to the reference than 32 nodes. About 5.9 ms. |
+| Foot hint shift (`shiftFootC`) | Scan windows 25k → 15k at N = 32; 5.93 → 5.81 ms. |
+| Segment predictor (`kfSegPred`, on) | Predicts q as the intersection of both feet's segment offsets. Foot pairs per attempt 1.97 → 1.54; 0.1-0.35 ms. Output changes only in a few ambiguous corners; ok flags match. |
+| Margin certificate (`setMarginCache`, off) | Exact and bit-identical, about 50% hits. 0 gain at R = 0.25 / 0.5 / 1h. |
+| w at fewer nodes (scratch `outline_w8` / `outline_w4`; `setGrowSub`, default 1) | Ceiling about 1.1 ms. Keeping the path at N·S steps (N = 8, S = 2) costs too much accuracy. |
+| N = 8 or 12 | Accuracy worse. |
+
+- **Profile of the final build** (def in motion, self time, as a share of growth):
+  - marginOfC 27.8% (the half-plane walks);
+  - footNearM 26.1%;
+  - fwScan 18.4% (the margin's window searches).
+- Growth is about 89% of the corners phase. The rest of the phase is about 0.7 ms.
+
+### What's left
+
+1. **The 1 ms target needs another formulation.** Each corner still advances about 16 times, and each
+   advance does a Newton step on two feet, then two margin walks and two window searches. That is about
+   330 ns per foot query. Candidates:
+   - an analytic growth on the medial path: piecewise between segment and segment, or segment and
+     vertex, so each piece is a line or a parabola and its feet and w come in closed form;
+   - or a per-arm distance field.
+   Either is a rewrite, about one stage.
+2. **The remaining accuracy gap is ambiguity, not convergence.** Near-tied foot branches flip with N.
+   Deciding them needs a tie rule, for example prefer the branch continuous with the previous frame,
+   or the nearer arm.
+3. Two run-interior points over 1e-3h: muse_hash 0.1 and g41_user_tw64 0.1. Also, face and region key
+   or order changes in def 0.5, g41_def_tw64 0.1 and ring 0. Check them before this lands in `src/`.
+4. Levi: do the crops' corner changes show?
