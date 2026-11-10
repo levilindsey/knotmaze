@@ -1,7 +1,7 @@
 # K156 round 2026-11-10d driver: runs the passes one after another (start, bench, [census], cleanup) and logs each exit code.
 # pwsh -NoProfile -File driver.ps1 -Passes fin,c,a,b   (run from the worktree root; the phone lock is already taken)
 param([string[]]$Passes = @('fin', 'c', 'a', 'b'), [string]$StopAt = '06:50')
-$W = 'C:\Users\lsl\Repositories\knotmaze\.claude\worktrees\agent-a0ef4cd89dee7ff20'
+$W = (Resolve-Path (Join-Path $PSScriptRoot '..\..\..\..')).Path
 $R = 'C:\Users\lsl\Repositories\knotmaze\.claude\probes\rounds\2026-11-10d'
 $PerfLock = Join-Path $env:TEMP 'claude-perf.lock'
 Set-Location $W
