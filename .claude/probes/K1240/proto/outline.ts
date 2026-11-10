@@ -2804,14 +2804,14 @@ interface FBord {
   px: Float64Array; py: Float64Array; ps: Float64Array; pv: Int32Array;
   bx: Float64Array; by: Float64Array; bs: Float64Array; bfx: Float64Array; bfy: Float64Array; nb: number;
   xy: Float64Array; s: Float64Array; cxy: Float64Array; nf: number;
-  ins: number[]; segReg: Int32Array; sorted: Int32Array; segCnt: Int32Array; mark: Int32Array;
+  ins: Int32Array; nIns: number; segReg: Int32Array; sorted: Int32Array; segCnt: Int32Array; mark: Int32Array;
 }
 function mkFBord(): FBord {
   return {
     px: new Float64Array(64), py: new Float64Array(64), ps: new Float64Array(64), pv: new Int32Array(64),
     bx: new Float64Array(64), by: new Float64Array(64), bs: new Float64Array(64), bfx: new Float64Array(64), bfy: new Float64Array(64), nb: 0,
     xy: new Float64Array(128), s: new Float64Array(64), cxy: new Float64Array(128), nf: 0,
-    ins: [], segReg: new Int32Array(64), sorted: new Int32Array(16), segCnt: new Int32Array(1024), mark: new Int32Array(64),
+    ins: new Int32Array(16), nIns: 0, segReg: new Int32Array(64), sorted: new Int32Array(16), segCnt: new Int32Array(1024), mark: new Int32Array(64),
   };
 }
 function growF(a: Float64Array, need: number): Float64Array {
@@ -2845,7 +2845,7 @@ interface FCache {
   extArmPi: Int32Array; extCandPi: Int32Array[]; extCandS: Float64Array[];
   bords: FBord[];
   // inserts (per frame, global pool)
-  insB: number[]; insSeg: number[]; insT: number[]; insX: number[]; insY: number[]; insRef: number[];
+  insB: Int32Array; insSeg: Int32Array; insT: Float64Array; insX: Float64Array; insY: Float64Array; insRef: Int32Array; nIns: number;
   refB: Int32Array; refFinal: Int32Array; refS: Float64Array; refS0: Float64Array; nRef: number;
   junctionRegion: Int32Array; polyBox: Float64Array; cornerByAArm: Int32Array;
   chainSlots: number[][]; chainPiRank: number[];
@@ -3098,7 +3098,7 @@ function buildFastCache(st: DiagramStructure, scene: SceneIn): FCache {
     chainRoots: [],
     extArmPi: Int32Array.from(extArmPi), extCandPi, extCandS,
     bords,
-    insB: [], insSeg: [], insT: [], insX: [], insY: [], insRef: [],
+    insB: new Int32Array(1024), insSeg: new Int32Array(1024), insT: new Float64Array(1024), insX: new Float64Array(1024), insY: new Float64Array(1024), insRef: new Int32Array(1024), nIns: 0,
     refB: new Int32Array(1024), refFinal: new Int32Array(1024), refS: new Float64Array(1024), refS0: new Float64Array(1024), nRef: 0,
     junctionRegion: new Int32Array(Math.max(1, scene.junctions.length)).fill(-1), polyBox: new Float64Array(Math.max(1, nCh * 4)),
     cornerByAArm: new Int32Array(Math.max(1, nArms)).fill(-1),
@@ -3692,9 +3692,18 @@ function newRef(C: FCache, b: number): number {
   return id;
 }
 function addInsert(C: FCache, b: number, seg: number, t: number, x: number, y: number, refId: number): void {
-  const id = C.insB.length;
-  C.insB.push(b); C.insSeg.push(seg); C.insT.push(Math.min(1, Math.max(0, t))); C.insX.push(x); C.insY.push(y); C.insRef.push(refId);
-  C.bords[b].ins.push(id);
+  // K1247 s3: typed arrays with counts (number[] pushes regrew from empty
+  // every frame, after the length = 0 reset dropped the backing stores).
+  const id = C.nIns;
+  if (id >= C.insB.length) {
+    const need = id + 1;
+    C.insB = growI(C.insB, need); C.insSeg = growI(C.insSeg, need); C.insT = growF(C.insT, need); C.insX = growF(C.insX, need); C.insY = growF(C.insY, need); C.insRef = growI(C.insRef, need);
+  }
+  C.insB[id] = b; C.insSeg[id] = seg; C.insT[id] = Math.min(1, Math.max(0, t)); C.insX[id] = x; C.insY[id] = y; C.insRef[id] = refId;
+  C.nIns = id + 1;
+  const B = C.bords[b];
+  if (B.nIns >= B.ins.length) B.ins = growI(B.ins, B.nIns + 1);
+  B.ins[B.nIns++] = id;
 }
 /** The builder's addPointAt: locate (x, y) on the base border near s. */
 function addPointAtC(C: FCache, pi: number, side: number, x: number, y: number, sFoot: number): number {
@@ -3763,7 +3772,7 @@ function mergeBorders(C: FCache): void {
     const p = C.polys[pi];
     const n = B.nb;
     const ins = B.ins;
-    const m = ins.length;
+    const m = B.nIns;
     if (n === 0) { B.nf = 0; continue; }
     // Counting sort of insert ids by segment (stable), then t order
     // inside each segment (groups are tiny).
@@ -4452,6 +4461,15 @@ const kfCuts: { xi: number; U: number; O: number; uSide: number; s: number; x: n
 const kfDiagCross: string[] = [];
 let kfTwistFlips = 0;
 
+const xBU: FBord[] = []; const xBO: FBord[] = [];
+const xUSegs: number[][] = [[], []]; const xOSegs: number[][] = [[], []];
+// The nearest candidate (by candDC, first on ties) among the first n with
+// these sides (K1247 s3: was two closures per crossing).
+function pickCand(uSide: number, oSide: number, n: number): number {
+  let best = -1;
+  for (let c = 0; c < n; c++) if (candUSide[c] === uSide && candOSide[c] === oSide && (best < 0 || candDC[c] < candDC[best])) best = c;
+  return best;
+}
 function crossingsPhaseC(C: FCache, scene: SceneIn): void {
   const h = C.h;
   kfCuts.length = 0;
@@ -4467,13 +4485,13 @@ function crossingsPhaseC(C: FCache, scene: SceneIn): void {
     const R = Math.min(14 * h, h / Math.max(Math.sin(theta), 0.15) + 2 * h);
     const cpX = C.cpX[xi]; const cpY = C.cpY[xi];
     const sUnder = C.cpSUnder[xi]; const sOver = C.cpSOver[xi];
-    const BU = [C.bords[U * 2], C.bords[U * 2 + 1]];
-    const BO = [C.bords[O * 2], C.bords[O * 2 + 1]];
-    // Segment lists per side index (0 -> side 1, 1 -> side -1).
-    const uSegs: number[][] = [[], []];
-    const oSegs: number[][] = [[], []];
-    let searched = false;
-    const doFull = (): void => {
+    const BU = xBU; BU[0] = C.bords[U * 2]; BU[1] = C.bords[U * 2 + 1];
+    const BO = xBO; BO[0] = C.bords[O * 2]; BO[1] = C.bords[O * 2 + 1];
+    // Segment lists per side index (0 -> side 1, 1 -> side -1); reused
+    // across crossings (segsNearC empties them first).
+    const uSegs = xUSegs;
+    const oSegs = xOSegs;
+    {
       for (let si = 0; si < 2; si++) {
         segsNearC(C, U, sides[si], sUnder, R, uSegs[si]); segsNearC(C, O, sides[si], sOver, R, oSegs[si]);
         fillSegBoxes(xsU[si], BU[si], uSegs[si]); fillSegBoxes(xsO[si], BO[si], oSegs[si]);
@@ -4517,14 +4535,11 @@ function crossingsPhaseC(C: FCache, scene: SceneIn): void {
           }
         }
       }
-      searched = true;
-    };
-    // Full search every frame. The old warm path (segment windows
+    }
+    // Full search every frame (above). The old warm path (segment windows
     // around last frame's pairs) could miss the candidate the full
     // search picks, so the frame depended on history.
     const okWarm = false;
-    if (!okWarm) doFull();
-    void searched;
     // Synthesized cuts for missing combos (tight twists).
     const regN = candN;
     for (let ui = 0; ui < 2; ui++) for (let oi = 0; oi < 2; oi++) {
@@ -4570,19 +4585,9 @@ function crossingsPhaseC(C: FCache, scene: SceneIn): void {
       }
     }
     // Picks and stations.
-    const pick = (uSide: number, oSide: number): number => {
-      let best = -1;
-      for (let c = 0; c < candN; c++) if (candUSide[c] === uSide && candOSide[c] === oSide && (best < 0 || candDC[c] < candDC[best])) best = c;
-      return best;
-    };
-    const pickO = (oSide: number, uSide: number): number => {
-      let best = -1;
-      for (let c = 0; c < regN; c++) if (candUSide[c] === uSide && candOSide[c] === oSide && (best < 0 || candDC[c] < candDC[best])) best = c;
-      return best;
-    };
     for (let oi = 0; oi < 2; oi++) {
       const oSide = sides[oi];
-      const cl = pick(1, oSide); const cr = pick(-1, oSide);
+      const cl = pickCand(1, oSide, candN); const cr = pickCand(-1, oSide, candN);
       const slot = C.crossUnderSlot[xi * 2 + oi];
       C.cutPrevPick[xi * 2 + oi] = (cl >= 0 && cr >= 0) ? 1 : 0;
       if (cl < 0 || cr < 0) {
@@ -4594,11 +4599,12 @@ function crossingsPhaseC(C: FCache, scene: SceneIn): void {
       C.stLeft[slot] = candURef[cl]; C.stRight[slot] = candURef[cr];
       const ls = candUS[cl]; const rs = candUS[cr];
       C.stCS[slot] = normS(pU, ls + dS(pU, ls, rs) / 2);
-      for (const c of [cl, cr]) kfCuts.push({ xi, U, O, uSide: candUSide[c], s: candUS[c], x: candX[c], y: candY[c] });
+      kfCuts.push({ xi, U, O, uSide: candUSide[cl], s: candUS[cl], x: candX[cl], y: candY[cl] });
+      kfCuts.push({ xi, U, O, uSide: candUSide[cr], s: candUS[cr], x: candX[cr], y: candY[cr] });
     }
     for (let ui = 0; ui < 2; ui++) {
       const uSide = sides[ui];
-      const pl = pickO(1, uSide); const pr = pickO(-1, uSide);
+      const pl = pickCand(uSide, 1, regN); const pr = pickCand(uSide, -1, regN);
       const slot = C.crossOverSlot[xi * 2 + ui];
       if (pl < 0 || pr < 0) { C.stActive[slot] = 0; continue; }
       const pO = C.polys[O];
@@ -5257,9 +5263,9 @@ function frameFast(st: DiagramStructure, scene: SceneIn, profile?: Record<string
   let profT = profile ? performance.now() : 0;
   const profMark = (key: string): void => { if (profile) { const now = performance.now(); profile[key] = (profile[key] ?? 0) + (now - profT); profT = now; } };
   // Per-frame resets.
-  C.insB.length = 0; C.insSeg.length = 0; C.insT.length = 0; C.insX.length = 0; C.insY.length = 0; C.insRef.length = 0;
+  C.nIns = 0;
   C.nRef = 0;
-  for (const B of C.bords) B.ins.length = 0;
+  for (const B of C.bords) B.nIns = 0;
   C.stActive.fill(0);
   kfFoldDiag = [];
   (C as unknown as { __foldDiag: string[] }).__foldDiag = kfFoldDiag;
