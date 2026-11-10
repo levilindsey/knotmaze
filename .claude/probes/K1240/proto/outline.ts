@@ -4343,7 +4343,9 @@ const cfSV = new Uint8Array((CF_MAXP + 2) * 2); const cfSI = new Int32Array((CF_
 let cfN = 0; let cfEnded = false; let cfRMax = 0; let cfPx = 0; let cfPy = 0; let cfCur = 0;
 let cfQx = 0; let cfQy = 0;
 let cfEvArm = 0; let cfEvKind = 0;
-export const cfStats = { corners: 0, pieces: 0, lags: 0, ends: 0, jumps: 0, fails: 0, evals: 0, lagSolves: 0, lagIt: 0 };
+// free: corners whose w is 1 at every growth node (a certificate would skip their margins);
+// zeroEnd: corners whose w reached 0; pathEnd: corners whose path ended (kind 9 or the cap).
+export const cfStats = { corners: 0, pieces: 0, lags: 0, ends: 0, jumps: 0, fails: 0, evals: 0, lagSolves: 0, lagIt: 0, free: 0, zeroEnd: 0, pathEnd: 0 };
 const CF_TURN = 1e-12;
 let cfDbg = false; let cfDbgCi = -1;
 export const cfTrace: string[] = [];
@@ -4807,11 +4809,12 @@ function growCFC(C: FCache, ci: number): number {
   const E = kfGrowE * h; const Lmin = kfGrowZ * h;
   cfAt(C, h);
   let a = h; let wa = wOfC(C); let nn = 1;
-  let integ = 0;
+  let integ = 0; let all1 = wa === 1;
   for (let kk = 1; kk <= N && wa > 0; kk++) {
     const b = kk === N ? h + r0 : h + kk * dN;
     const okb = cfAt(C, b); nn++;
     if (!okb) {
+      cfStats.pathEnd++; all1 = false;
       const f = kfCst.rhoCur;
       const wr = wOfC(C); if (ci === wDbg.ci) wDbg.rows.push([2, (f - h) / h, wr, kfCst.qx, kfCst.qy, kfQa.u, kfQb.u, kfQa.d, kfQb.d]);
       const s = Math.min(wa, wr);
@@ -4822,11 +4825,13 @@ function growCFC(C: FCache, ci: number): number {
       break;
     }
     const wr = wOfC(C); if (ci === wDbg.ci) wDbg.rows.push([1, (b - h) / h, wr, kfCst.qx, kfCst.qy, kfQa.u, kfQb.u, kfQa.d, kfQb.d]);
-    const wb = Math.min(wa, wr);
+    const wb = Math.min(wa, wr); if (wr !== 1) all1 = false;
     if ((wa - wb) * (b - a) * 0.5 <= E && cfJumpIn(a, b, Lmin) < 0) { integ += 0.5 * (wa + wb) * (b - a); wa = wb; }
     else { integ += cfRefine(C, a, wa, b, wb, E, Lmin); wa = growWEnd; }
     a = b;
   }
+  if (all1) cfStats.free++;
+  if (!(wa > 0)) cfStats.zeroEnd++;
   C.nodeN[ci] = nn;
   cfAt(C, h + integ);
   return Math.max(0, kfCst.rhoCur - h);
