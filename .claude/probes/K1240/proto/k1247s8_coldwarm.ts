@@ -15,7 +15,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { SceneIn } from "./outline";
-import { selectKeep, reduceScene, keepStats, type KeepSet } from "./k1247s8_reduce";
+import { selectKeep, reduceScene, keepStats, armRanges, armCrossRanges, type KeepSet } from "./k1247s8_reduce";
 
 const SCENE_DIR = "C:/Users/lsl/Repositories/knotmaze/.claude/probes/K868/scenes";
 const ALL = ["muse_hash", "muse_default_tw", "def", "fat", "ring", "user_tw42.lightpaper", "g41_def_tw42", "g41_def_tw64", "g41_ring_tw42", "g41_ring_tw64", "g41_user_tw42", "g41_user_tw64"];
@@ -111,7 +111,13 @@ for (const epsPx of epsList) {
 for (const name of names) {
   const orig = load(name);
   const h = orig.look.halfWidth;
-  K = selectKeep(orig, { eps: epsPx / (orig.camera.pxPerUnit * 2) });
+  { // --short / --armwin / --winx in h, as k1247s8_acc.ts (armwin from a full build of the still scene).
+      const hh = orig.look.halfWidth; const av = args.find((a) => a.startsWith("--armwin="))?.slice(9); const xv = args.find((a) => a.startsWith("--winx="))?.slice(7); const sv = args.find((a) => a.startsWith("--short="))?.slice(8);
+      const { buildOutlineFull } = await import("./outline");
+      const axv = args.find((a) => a.startsWith("--armx="))?.slice(7); const armsF = av || axv ? buildOutlineFull(orig).structure.arms : null;
+      let kr = av ? armRanges(armsF!, +av * hh) : undefined; if (axv) kr = armCrossRanges(orig, armsF!, +axv * hh, 6 * hh, kr);
+      K = selectKeep(orig, { eps: epsPx / (orig.camera.pxPerUnit * 2), keepShort: sv ? +sv * hh : 0, winX: xv ? +xv * hh : undefined, keepRanges: kr });
+    }
   const ks = keepStats(K);
   const mults = ["def", "ring", "fat"].includes(name) ? [0, 0.1, 0.5] : [0, 0.1];
   for (const mult of mults) {

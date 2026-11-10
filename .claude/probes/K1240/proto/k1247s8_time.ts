@@ -10,8 +10,8 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { structure, frame, type SceneIn } from "./outline";
-import { selectKeep, reduceScene, keepStats } from "./k1247s8_reduce";
+import { structure, frame, buildOutlineFull, type SceneIn } from "./outline";
+import { selectKeep, reduceScene, keepStats, armRanges, armCrossRanges } from "./k1247s8_reduce";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const arg = (k: string): string | undefined => process.argv.find((a) => a.startsWith(`--${k}=`))?.slice(k.length + 3);
@@ -19,6 +19,7 @@ const tag = process.argv.slice(2).find((a) => !a.startsWith("--")) ?? "run";
 const epsPx = +(arg("eps") ?? 0);
 const name = arg("scene") ?? "def";
 const shortH = +(arg("short") ?? 0); // keepShort, in h
+const armWin = arg("armwin"); const winX = arg("winx"); const armX = arg("armx"); // h, as k1247s8_acc.ts
 const outDir = join(here, "..", "out", "k1247s8_time");
 mkdirSync(outDir, { recursive: true });
 const SCENE_DIR = "C:/Users/lsl/Repositories/knotmaze/.claude/probes/K868/scenes";
@@ -40,7 +41,11 @@ const scene = load(name);
 const h = scene.look.halfWidth; const S = scene.camera.pxPerUnit * 2;
 const reduced = epsPx > 0;
 const ta = performance.now();
-const K = reduced ? selectKeep(scene, { eps: epsPx / S, keepShort: shortH * scene.look.halfWidth }) : null;
+// --armwin: the arms' windows from a full build of the still scene (arm L depends on the crossing cuts), counted in select.
+const armsFull = reduced && (armWin !== undefined || armX !== undefined) ? buildOutlineFull(scene).structure.arms : null;
+let keepRanges = armsFull && armWin !== undefined ? armRanges(armsFull, +armWin * h) : undefined;
+if (armsFull && armX !== undefined) keepRanges = armCrossRanges(scene, armsFull, +armX * h, 6 * h, keepRanges);
+const K = reduced ? selectKeep(scene, { eps: epsPx / S, keepShort: shortH * h, keepRanges, winX: winX === undefined ? undefined : +winX * h }) : null;
 const tSelect = performance.now() - ta;
 const st = structure(K ? reduceScene(scene, K) : scene);
 const tStruct = performance.now() - ta;
@@ -64,6 +69,6 @@ for (const sc of cycle) { const prof: Record<string, number> = {}; one(sc, prof)
 const phases: Record<string, number> = {};
 for (const [k, v] of Object.entries(acc)) phases[k] = +(v / cycle.length).toFixed(3);
 const ks = K ? keepStats(K) : null;
-const row = { scene: name, epsPx, shortH, kept: ks ? ks.kept : null, full: ks ? ks.full : null, frames: ms.length, median: +q(ms, 0.5).toFixed(3), p95: +q(ms, 0.95).toFixed(3), max: +Math.max(...ms).toFixed(3), selectMs: +tSelect.toFixed(2), structureMs: +tStruct.toFixed(2), firstColdMs: +tCold.toFixed(2), phases };
+const row = { scene: name, epsPx, shortH, armWin: armWin ?? null, winX: winX ?? null, armX: armX ?? null, kept: ks ? ks.kept : null, full: ks ? ks.full : null, frames: ms.length, median: +q(ms, 0.5).toFixed(3), p95: +q(ms, 0.95).toFixed(3), max: +Math.max(...ms).toFixed(3), selectMs: +tSelect.toFixed(2), structureMs: +tStruct.toFixed(2), firstColdMs: +tCold.toFixed(2), phases };
 console.log(`${name} eps ${epsPx} px${ks ? ` (${ks.kept}/${ks.full} points, ${(ks.kept / ks.full * 100).toFixed(1)}%)` : " (full)"}: median ${row.median} ms, p95 ${row.p95}, max ${row.max}; select ${row.selectMs} ms, structure (with select) ${row.structureMs}, first cold ${row.firstColdMs}; phases ${Object.entries(phases).map(([k, v]) => `${k} ${v}`).join(", ")}`);
 writeFileSync(join(outDir, `time_${tag}.json`), JSON.stringify(row, null, 1));

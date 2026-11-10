@@ -282,6 +282,35 @@ export function armRanges(arms: { pi: number; sR: number; dir: number; L: number
   return m;
 }
 
+/** Windows around the crossings that cap an arm's L (outline.ts: L is the
+ *  min of the next root, the chain's end and each crossing cut
+ *  d - h cot(theta/2) - h, so the cut's angle, read from both threads'
+ *  tangents at the crossing, sets L; a corner's foot amplifies a change of L
+ *  9-20x, K1247 s8). For each arm, the first crossing on its chain past
+ *  sR + dir L (within `reach`), padded by `pad` on BOTH of the crossing's
+ *  chains. Merged into `into` (chain index -> ranges in the chain's s). */
+export function armCrossRanges(scene: SceneIn, arms: { pi: number; sR: number; dir: number; L: number }[], pad: number, reach: number, into = new Map<number, [number, number][]>()): Map<number, [number, number][]> {
+  const idxOf = new Map<number, number>(); scene.chains.forEach((c, i) => idxOf.set(c.id, i));
+  const ends = new Map<number, { s: number; other: { ci: number; s: number } }[]>();
+  for (const x of scene.crossings) {
+    const ia = idxOf.get(x.a.chain); const ib = idxOf.get(x.b.chain); if (ia === undefined || ib === undefined) continue;
+    for (const [ci, s, o] of [[ia, x.a.s, { ci: ib, s: x.b.s }], [ib, x.b.s, { ci: ia, s: x.a.s }]] as const) { let l = ends.get(ci); if (!l) { l = []; ends.set(ci, l); } l.push({ s, other: o }); }
+  }
+  const push = (ci: number, s: number): void => { let l = into.get(ci); if (!l) { l = []; into.set(ci, l); } l.push([s - pad, s + pad]); };
+  for (const a of arms) {
+    if (!Number.isFinite(a.L) || !Number.isFinite(a.sR)) continue;
+    const c = scene.chains[a.pi]; if (!c) continue;
+    const P = c.pts; const n = P.length >> 1; const cum = cumOf(P, c.closed); const Lc = c.closed ? cum[n] : cum[n - 1];
+    let best: { s: number; other: { ci: number; s: number } } | null = null; let bd = Infinity;
+    for (const e of ends.get(a.pi) ?? []) {
+      let d = (e.s - a.sR) * a.dir; if (c.closed && Lc > 0) d = ((d % Lc) + Lc) % Lc;
+      const past = d - a.L; if (past >= -1e-9 && past <= reach && past < bd) { bd = past; best = e; }
+    }
+    if (best) { push(a.pi, best.s); push(best.other.ci, best.other.s); }
+  }
+  return into;
+}
+
 export function keepStats(K: KeepSet): { full: number; kept: number } {
   let full = 0; let kept = 0;
   for (let i = 0; i < K.idx.length; i++) { full += K.nFull[i]; kept += K.idx[i].length; }
