@@ -409,11 +409,11 @@ Next free ID: K1272.
 - **K8** · G3: SDF ribbons drawn from one shared sample texture
   (`docs/design/G3G4_sdf_geometry.md`). G3-0 merged (ebdae8c..b11747e): the four G3
   tables, capture/restore, `scripts/bench_frame.mjs`; no visual change.
-  - owner: nobody since 2026-11-10 03:00 (cost stage done; agent a6c9382c6e31ac415 of claude session 09c7a672-a414-402a-97da-b3176839a2e5, merged)
-  - branch: mainline; last commit: `48c21b94`
-  - evidence: .claude/probes/K8/sdf_cost/ (matrix.ps1, ab.ps1, pass_cost.mjs, verify.ps1, crops.ps1; outputs untracked), .claude/probes/K8/sdf_gaps/, scripts/bench_frame.mjs
-  - next: Phone (K156 round 2026-11-10b): the fix moved nothing, rp=sdf 280/423/162 ms against the default's 110/284/32: the phone pays for something the desktop doesn't show. Round 2026-11-10c bisects it (a145be26, c67a75ff, 42900cac, d70fdf0d, rp=sdf both sides); then split that commit's shader work on the phone. G3-3 stays blocked
-  - brief: `docs/design/K8_sdf_cost.md`
+  - owner: agent `a42a1b95d18237761` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-10 03:58, 2 h cap ~05:58)
+  - branch: `worktree-agent-a42a1b95d18237761`, worktree `.claude/worktrees/agent-a42a1b95d18237761`; last commit: `601f5d99`
+  - evidence: .claude/probes/K8/sdf_cost/, .claude/probes/K8/sdf_gaps/, .claude/probes/rounds/2026-11-10c/ (outputs untracked), scripts/bench_frame.mjs
+  - next: Phone stage (started 2026-11-10 03:59): count the gap search per fragment and 42900cac's window walk per vertex on the three links, then candidate commits with the gaps unchanged. When it reports: Claude views the crops, merges what passes, and the next K156 round A/Bs its phone list
+  - brief: `docs/design/K8_sdf_phone.md`
 - **K5** · Split `main.ts` and `ribbon_renderer.ts` along K1-K3's data lines, with seams so G3 becomes a module
   swap; K6 rides it (`docs/design/K5_K6_split.md`, calls K377). Merged M1-M4 (`src/app/`: camera, frame_loop,
   lifecycle, scene, audio_map; M4 at 592b12b): main.ts 5709 → 3725 lines; R1-R2 (`src/render/ribbon/`; R2 at b88376c): ribbon_renderer.ts 7747 → 5989.
