@@ -930,6 +930,80 @@ async function main() {
       console.log(`UWRAMP entries mismatched=${bad} worstDelta=${worst} chainsExpected=${uwRamp.length} chainsOn=${uwOn.length}`);
     }
     const crossingsOn = await page.evaluate(CROSSINGS);
+    // K268 proof stage: the proof sweep and the visitAll check as functions,
+    // so PROOF_ONLY=1 can run them right after the mode-on checks (the c100
+    // still, the visitAll bar's measurement) without the whole census.
+    const proofSweep = async () => {
+      // ---- K268 the proof: shaped slots against the CPU ideal ----
+      const LOOKS = ["fade", "halo", "glow", "dots", "fray", "beacon"];
+      const sweep = (process.env.PROOF || "2.5:fade,2.5:beacon,2.5:dots,2.5:glow,2.5:fray,2.5:halo,1.0:beacon,1.5:beacon,2.0:fade,3.0:fade,3.0:beacon").split(",").map((s) => s.split(":"));
+      log.proof = [];
+      for (const [reach, look] of sweep) {
+        if (Date.now() > DEADLINE) { log.proofCut = `deadline before ${reach}:${look}`; break; }
+        await page.evaluate((reach, look) => window.__knotExplore({ on: true, reach, look }), Number(reach), look);
+        await frames(page, 6); await sleep(300); await settle(page);
+        const pr = await proof(page, LOOKS.indexOf(look), `reach ${reach} ${look}`);
+        log.proof.push(pr);
+        console.log(`PROOF reach ${reach} ${look}: ${JSON.stringify({ counts: pr.counts, slots: pr.slots, px: pr.px, ghosts: pr.ghosts, under: pr.under, between: pr.between, err: pr.err, prot: pr.prot, fmiss: pr.fmiss, restoredAll: pr.restoredAll, before: pr.before })}`);
+      }
+      const P = log.proof;
+      const tot = (k) => P.reduce((a, p) => a + p[k], 0);
+      check("PROOF: shaped slots were exercised", tot("slots") > 0, { slots: tot("slots"), px: tot("px") });
+      check("PROOF: no ghost (ideal 0, cut drawn) and no under-cut (ideal 1, cut short)", tot("ghosts") === 0 && tot("under") === 0, { ghosts: tot("ghosts"), under: tot("under"), worst: P.flatMap((p) => p.perSlot.filter((r) => r.ghosts || r.under).map((r) => ({ label: p.label, ...r, prof: undefined }))).slice(0, 8) });
+      check("PROOF: in between, the measured coverage follows the ideal (p95 <= 0.08)", P.every((p) => p.err.n === 0 || p.err.p95 <= 0.08), P.map((p) => ({ label: p.label, err: p.err })));
+      check("PROOF: every shaped slot restored (0 px) after its frames", P.every((p) => p.restoredAll), P.flatMap((p) => p.perSlot.filter((r) => !r.restored).map((r) => ({ label: p.label, c: r.c, px: r.restoredPx }))).slice(0, 6));
+
+    };
+    const visitAllCheck = async () => {
+      // ---- visitAll (every chain whole) draws the mode-off frame ----
+      await page.evaluate(() => window.__knotExplore({ on: true, reach: 1000, look: "beacon", visitAll: true }));
+      await frames(page, 6); await sleep(300); await settle(page);
+      const allBuf = await page.screenshot();
+      const allIm = img(allBuf);
+      const dAll = diffSet(offFull, allIm);
+      log.visitAllGaps = await page.evaluate(() => window.__knotExplore({}).gaps);
+      if (dAll.size) writeFileSync(join(OUT, `m${MOVES}_visitall.png`), allBuf);
+      // The level each differing pixel moves by (max over RGB), and a second
+      // visitAll shot against the first (the same program twice).
+      const levels = (A, B, d) => {
+        const hist = {}, px = [];
+        let max = 0;
+        for (const i of d) {
+          let m = 0;
+          for (let q = 0; q < 3; q++) m = Math.max(m, Math.abs(A.data[i * A.ch + q] - B.data[i * B.ch + q]));
+          hist[m] = (hist[m] || 0) + 1;
+          max = Math.max(max, m);
+          if (px.length < 12) px.push([i % A.W, (i / A.W) | 0, m, [0, 1, 2].map((q) => A.data[i * A.ch + q]), [0, 1, 2].map((q) => B.data[i * B.ch + q])]);
+        }
+        return { n: d.size, max, hist, px };
+      };
+      await frames(page, 6); await sleep(300); await settle(page);
+      const all2 = img(await page.screenshot());
+      log.visitAll = { vsOff: levels(offFull, allIm, dAll), vsSelf: levels(allIm, all2, diffSet(allIm, all2)) };
+      console.log("VISITALL " + JSON.stringify(log.visitAll));
+      // K268 proof stage, THE BAR: visitAll draws every slot as solved, so it
+      // must cut what mode off cuts. It is drawn by the explore program, a
+      // separate compilation of the same gap math (the explore edits are in
+      // its source, inert at vis 1), so on identical inputs the two programs
+      // can round a channel differently where its value sits on an 8-bit
+      // boundary: one level, a handful of isolated pixels (the 2026-11-10
+      // phone round: 1 px, 1 level in blue; this stage's desktop runs: in
+      // log.visitAll). The same program twice is exact (vsSelf 0 px). A
+      // missing or extra cut moves a gap's whole footprint (a ribbon width
+      // across, ~tw * v.s px, by tens of levels at its core), so the bar
+      // (every differing pixel within 1 level, at most 8 of them) still
+      // fails on any cut that differs.
+      const vOk = log.visitAll.vsOff.max <= 1 && log.visitAll.vsOff.n <= 8;
+      check("visitAll (reach 1000) = the mode-off frame (at most 8 px, each within 1 level: the two programs' rounding)", vOk,
+        { differingPx: dAll.size, maxLevel: log.visitAll.vsOff.max, hist: log.visitAll.vsOff.hist, selfPx: log.visitAll.vsSelf.n, gaps: log.visitAllGaps });
+
+    };
+    if (process.env.PROOF_ONLY) {
+      if (process.env.PROOF !== "none") await proofSweep();
+      await visitAllCheck();
+      await page.evaluate(() => window.__knotExplore({ on: false }));
+      return;
+    }
 
     // K268 stage 3a, THE STRENGTH SWEEP (env KSWEEP = a slot; KPX = "x,y",
     // a page pixel, default 623,531): the slot UNSHAPED at factor k from 1
@@ -1437,33 +1511,9 @@ async function main() {
     log.markers = J.markers;
     check("MARKERS (exit-aware, K465): a marker gap slot is on exactly when its thread point is solid, except the lifted exit which is on at any vis", J.markers.every((m) => m.chain === undefined || (m.lifted ? m.k === 1 : (m.vis >= 0.98 ? m.k === 1 : m.k === 0))), J.markers);
 
-    // ---- K268 the proof: shaped slots against the CPU ideal ----
-    const LOOKS = ["fade", "halo", "glow", "dots", "fray", "beacon"];
-    const sweep = (process.env.PROOF || "2.5:fade,2.5:beacon,2.5:dots,2.5:glow,2.5:fray,2.5:halo,1.0:beacon,1.5:beacon,2.0:fade,3.0:fade,3.0:beacon").split(",").map((s) => s.split(":"));
-    log.proof = [];
-    for (const [reach, look] of sweep) {
-      if (Date.now() > DEADLINE) { log.proofCut = `deadline before ${reach}:${look}`; break; }
-      await page.evaluate((reach, look) => window.__knotExplore({ on: true, reach, look }), Number(reach), look);
-      await frames(page, 6); await sleep(300); await settle(page);
-      const pr = await proof(page, LOOKS.indexOf(look), `reach ${reach} ${look}`);
-      log.proof.push(pr);
-      console.log(`PROOF reach ${reach} ${look}: ${JSON.stringify({ counts: pr.counts, slots: pr.slots, px: pr.px, ghosts: pr.ghosts, under: pr.under, between: pr.between, err: pr.err, prot: pr.prot, fmiss: pr.fmiss, restoredAll: pr.restoredAll, before: pr.before })}`);
-    }
-    const P = log.proof;
-    const tot = (k) => P.reduce((a, p) => a + p[k], 0);
-    check("PROOF: shaped slots were exercised", tot("slots") > 0, { slots: tot("slots"), px: tot("px") });
-    check("PROOF: no ghost (ideal 0, cut drawn) and no under-cut (ideal 1, cut short)", tot("ghosts") === 0 && tot("under") === 0, { ghosts: tot("ghosts"), under: tot("under"), worst: P.flatMap((p) => p.perSlot.filter((r) => r.ghosts || r.under).map((r) => ({ label: p.label, ...r, prof: undefined }))).slice(0, 8) });
-    check("PROOF: in between, the measured coverage follows the ideal (p95 <= 0.08)", P.every((p) => p.err.n === 0 || p.err.p95 <= 0.08), P.map((p) => ({ label: p.label, err: p.err })));
-    check("PROOF: every shaped slot restored (0 px) after its frames", P.every((p) => p.restoredAll), P.flatMap((p) => p.perSlot.filter((r) => !r.restored).map((r) => ({ label: p.label, c: r.c, px: r.restoredPx }))).slice(0, 6));
+    await proofSweep();
 
-    // ---- visitAll (every chain whole) draws the mode-off frame ----
-    await page.evaluate(() => window.__knotExplore({ on: true, reach: 1000, look: "beacon", visitAll: true }));
-    await frames(page, 6); await sleep(300); await settle(page);
-    const allBuf = await page.screenshot();
-    const dAll = diffSet(offFull, img(allBuf));
-    log.visitAllGaps = await page.evaluate(() => window.__knotExplore({}).gaps);
-    if (dAll.size) writeFileSync(join(OUT, `m${MOVES}_visitall.png`), allBuf);
-    check("visitAll (reach 1000) = the mode-off frame (0 px)", dAll.size === 0, { differingPx: dAll.size, gaps: log.visitAllGaps });
+    await visitAllCheck();
 
     // ---- the mode off again ----
     await page.evaluate(() => window.__knotExplore({ on: false }));
