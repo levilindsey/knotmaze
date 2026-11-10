@@ -10,6 +10,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { PAINT_ITEM } from "../../src/render/paint_const";
 import {
+  exploreCutCoverCpu,
   kChain,
   kExploreAt,
   kPaintAt,
@@ -19,7 +20,13 @@ import {
   type KPaintState,
   type KUniforms,
 } from "../../src/render/paint_math";
-import { GAP_FRAG, GAP_FRAG_LIB } from "../../src/render/gap_mask";
+import {
+  GAP_FLAG_SHAPED,
+  GAP_FRAG,
+  GAP_FRAG_LIB,
+  GAP_PROF_F0,
+  GAP_PROF_R0,
+} from "../../src/render/gap_mask";
 import { G3_CHAIN_GLSL, JUNCTION_CUT_GLSL } from "../../src/render/fabric_sdf";
 import {
   EXPLORE_DECL_GLSL,
@@ -370,7 +377,8 @@ describe("K76 the explore program variant (withExplore)", () => {
     expect(iFar).toBeGreaterThan(iCut);
     expect(iKeep).toBeGreaterThan(iFar);
     expect(EXPLORE_FAR_GLSL).toContain("max(exCoverNear * exGN, exCoverFar * exGF)");
-    expect(EXPLORE_FAR_GLSL).toContain("exploreCutCover(row, fl, exA2, d2, pxW)");
+    // The far-flag fix: the far cover reads the profile's flags.
+    expect(EXPLORE_FAR_GLSL).toContain("exploreCutCover(row, exProfFl, exA2, d2, pxW)");
     expect(EXPLORE_KEEP_GLSL).toContain("cut = exBlendCut; gst = exStrength;");
     // K397: the dots' casing shape replaces d after the far-branch
     // smooth-min, just before the casing's distance.
@@ -429,5 +437,54 @@ describe("K268 far-branch blend (farBlendCut)", () => {
     expect(b).toBeCloseTo(0.5 + 0.25 * (0.9 - 0.8), 12);
     expect(b).toBeGreaterThan(0.5);
     expect(b).toBeLessThan(0.9);
+  });
+});
+
+// K268 far-flag fix (2026-11-10): from fa4717d1 the far branch passed the
+// SLOT's flags `fl` (texel 3.w: perp 1, self 2, SHAPED 4) to
+// exploreCutCover, which reads the PROFILE's (P2.y: R0 1, R1 2, F0 4, F1 8,
+// MAX 16). A shaped slot's 4 is F0 with no row bit, so the cover read no
+// ramp (MIN: 1) and a hidden far branch cut fully.
+describe("K268 far-flag fix: the far branch's cover reads the profile's flags", () => {
+  // The flags argument of the exploreCutCover call at arc `arc`, as the
+  // shader text passes it.
+  const flagsArg = (glsl: string, arc: string): string => {
+    const m = new RegExp(`exploreCutCover\\(row, ([^,]+), ${arc}, `).exec(glsl);
+    expect(m).not.toBeNull();
+    return m![1];
+  };
+
+  it("both calls pass exProfFl, set from the profile texel's .y", () => {
+    expect(EXPLORE_GAP_CUT_GLSL).toContain("exProfFl = int(exP2.y + 0.5);");
+    expect(flagsArg(EXPLORE_GAP_CUT_GLSL, "exA")).toBe("exProfFl");
+    expect(flagsArg(EXPLORE_FAR_GLSL, "exA2")).toBe("exProfFl");
+  });
+
+  it("a hidden far branch cuts nothing (under slot flags 4 it cut fully)", () => {
+    // One frontier ramp: solid below arc 0, fading over 1, hidden above.
+    const prof = new Float32Array(12);
+    prof.set([0, 1, 1, 1], 0);
+    prof[8] = 1;
+    prof[9] = GAP_PROF_R0 | GAP_PROF_F0;
+    // What each name the far call may pass holds at this slot: exProfFl
+    // the profile's flags, fl the slot's (a shaped slot, neither perp nor
+    // self). The case reads the name from the shader text.
+    const flagsOf: Record<string, number> = { exProfFl: prof[9], fl: GAP_FLAG_SHAPED };
+    const far = flagsArg(EXPLORE_FAR_GLSL, "exA2");
+    expect(Object.keys(flagsOf)).toContain(far);
+    const A2 = 3; // The far branch's projection, two fade lengths past the end.
+    const asDrawn = Float32Array.from(prof);
+    asDrawn[9] = flagsOf[far];
+    const coverFar = exploreCutCoverCpu(asDrawn, A2, 0, 0.2, 0.01);
+    expect(coverFar).toBe(0);
+    // Near branch shown (cover 1, a light cut 0.2), the far branch's full
+    // geometric cut 0.9, the smooth-min's 0.95: only the near cut remains.
+    expect(farBlendCut(1, 0.2, coverFar, 0.9, 0.95)).toBeCloseTo(0.2, 12);
+    // The slip, for the record: slot flags 4 cover 1, so the hidden far
+    // branch's full cut and the shared dip came back (a ghost).
+    const slip = Float32Array.from(prof);
+    slip[9] = GAP_FLAG_SHAPED;
+    expect(exploreCutCoverCpu(slip, A2, 0, 0.2, 0.01)).toBe(1);
+    expect(farBlendCut(1, 0.2, 1, 0.9, 0.95)).toBeCloseTo(0.95, 12);
   });
 });

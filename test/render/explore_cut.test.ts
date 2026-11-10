@@ -780,7 +780,7 @@ describe("K397: the dots fit the fade and cut by their own shape", () => {
     expect(EXPLORE_LOOK_GLSL).toContain("if ((t < 1.0 || dots) && (fl & ");
     expect(EXPLORE_LOOK_GLSL).toContain("    kExCutSd = kExDotsSd(bs, lat, bf);");
     expect(EXPLORE_LOOK_GLSL).toContain("highp float exploreCutCover(int row, int fl, highp float A, highp float lat, highp float pxW) {");
-    expect(EXPLORE_GAP_CUT_GLSL).toContain("exploreCutCover(row, int(exP2.y + 0.5), exA, sqrt(best), pxW)");
+    expect(EXPLORE_GAP_CUT_GLSL).toContain("exploreCutCover(row, exProfFl, exA, sqrt(best), pxW)");
     expect(EXPLORE_FAN_CUT_GLSL).toContain("      if (best < exSure2 && !kExCutOn) {\n");
     expect(EXPLORE_GAP_SHAPE_GLSL).toBe("    if (exShaped && kExCutOn) d = hO + kExCutSd;\n");
     // The fade's end (kExEnd) is set where the solid end is.

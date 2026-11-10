@@ -124,7 +124,10 @@ describe("K320 stage 1: char budgets", () => {
     // the junction field (below) to 40,388, measured here; their
     // budgets follow the measurement. The section (59,041), strip
     // (34,296) and still pluck (20,528) stay inside theirs.
-    expect(SECTION_EXPLORE_FRAG.length).toBeLessThanOrEqual(75_456);
+    // K268 far-flag fix (2026-11-10): the profile's flags held in a
+    // global (exProfFl) for the far branch's cover add 47 (75,456 ->
+    // 75,503 measured here); the explore variants only.
+    expect(SECTION_EXPLORE_FRAG.length).toBeLessThanOrEqual(75_503);
     // K1220 S4 (2026-11-06): the root arm's per-side K620 paint in
     // chainMaterial (the root table read, its two foot sections and the
     // spur's, the ease blend; modes 3-8) adds 1,276 to the strips

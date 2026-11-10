@@ -604,6 +604,7 @@ highp float kExCutSd;
 // EXPLORE_GAP_CUT); exBlendCut / exFarOn carry the blended weighted cut
 // the keep line then applies instead of the near branch's own.
 highp float exCoverNear;
+int exProfFl;
 highp float exStrength;
 highp float exBlendCut;
 bool exFarOn;
@@ -691,7 +692,8 @@ export const EXPLORE_GAP_CUT_GLSL = /* glsl */ `    if (exShaped) {
       highp float exBt = exBl > 1e-12 ? clamp(dot(p - exP0, exAb) / exBl, 0.0, 1.0) : 0.0;
       highp float exA = (exT4.z + (float(bk) + exBt) * exT9.x) * exT4.w;
       highp vec4 exP2 = texelFetch(uGapData, ivec2(${GAP_PROF_BASE + 2}, row), 0);
-      exCoverNear = exploreCutCover(row, int(exP2.y + 0.5), exA, sqrt(best), pxW);
+      exProfFl = int(exP2.y + 0.5);
+      exCoverNear = exploreCutCover(row, exProfFl, exA, sqrt(best), pxW);
       exStrength = gapStrength(exP2.x);
       gst = exStrength * exCoverNear;
       if (gst <= 0.0) continue;
@@ -793,6 +795,12 @@ export const EXPLORE_GAP_SHAPE_GLSL = "    if (exShaped && kExCutOn) d = hO + kE
 // branch contributes nothing). The dots' shape (kExCutOn) already
 // replaces d past this point, so it keeps master's path. Only the
 // explore programs carry this (master's gap text and cost untouched).
+// THE FAR CALL'S FLAGS (K268 far-flag fix, 2026-11-10): the far branch's
+// cover reads the PROFILE's flags (exProfFl, set from P2.y by
+// EXPLORE_GAP_CUT, as the near call reads them), never the slot's own
+// `fl` (texel 3.w: perp 1, self 2, SHAPED 4). Under `fl`, which it read
+// from fa4717d1 until this fix, a shaped slot's 4 is the profile's F0
+// with no row bit, so a hidden far branch covered 1 and cut fully.
 export const EXPLORE_FAR_ANCHOR_GLSL = `        if (bk2 >= 0) {
           highp float d2 = sqrt(best2);
           highp float hb = clamp(0.5 + 0.5 * (d2 - d) / sk, 0.0, 1.0);
@@ -812,7 +820,7 @@ export const EXPLORE_FAR_GLSL = `        if (bk2 >= 0) {
             highp float exA2 = (t4.z + (float(bk2) + exFbt) * t9.x) * t4.w;
             bool exSaveOn = kExCutOn;
             highp float exSaveSd = kExCutSd;
-            highp float exCoverFar = exploreCutCover(row, fl, exA2, d2, pxW);
+            highp float exCoverFar = exploreCutCover(row, exProfFl, exA2, d2, pxW);
             kExCutOn = exSaveOn;
             kExCutSd = exSaveSd;
             highp float exGN = exCutAtDist(d, hO, margin, fadeP, pxW, winM, t8.y, inWin * inFoot, fan);
