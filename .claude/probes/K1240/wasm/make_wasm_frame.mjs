@@ -49,7 +49,11 @@ export function __wasmSet(on: boolean, ex?: WEx): void {
   wDirty = true;
 }
 export function __wasmDirty(): void { wDirty = true; }
+// wSyncMs: the copy's own time, summed (two performance.now() a frame).
+let wSyncMs = 0;
+export function __wasmSyncMs(): number { return wSyncMs; }
 function wSync(C: FCache): void {
+  const t0 = performance.now();
   const ex = wEx as WEx;
   if (C.polys.length > 256) throw new Error("wasm header table holds 256 polys");
   let need = wData;
@@ -73,21 +77,51 @@ function wSync(C: FCache): void {
   }
   ex.setup(wHdr, wOut << 3, (wOut << 3) + 64, wCache << 3, C.h);
   wDirty = false;
+  wSyncMs += performance.now() - t0;
 }
+// wDbl (the *_dbl builds): each kernel call runs twice, so the frame's
+// growth over the single build is the kernels' in-frame cost (JS: the
+// hint or WalkCache saved and restored between the two; WASM: the
+// WalkCache written in again).
+const wDbl = __W_DBL__;
+// wSyncOnly (outline_wasm_sync.ts): JS kernels, but the per-frame copy into
+// WASM memory still runs, so its cost and its cache effect on the JS around
+// it show without the kernels moving.
+const wSyncOnly = __W_SYNC__;
+const wSave = new Float64Array(15);
 function footNearM(C: FCache, arm: FArm, out: FFoot): void {
-  if (!wOn) { footNearM_js(C, arm, out); return; }
+  if (!wOn) {
+    if (wSyncOnly && wDirty) wSync(C);
+    if (wDbl) { const hu = out.u; const hk = out.k; footNearM_js(C, arm, out); out.u = hu; out.k = hk; }
+    footNearM_js(C, arm, out); return;
+  }
   if (wDirty) wSync(C);
+  if (wDbl) (wEx as WEx).fnm(arm.pi, arm.dir, arm.sR, arm.L, kfXY[0], kfXY[1], out.u, out.k);
   (wEx as WEx).fnm(arm.pi, arm.dir, arm.sR, arm.L, kfXY[0], kfXY[1], out.u, out.k);
   const M = wM; const o = wOut;
   out.d = M[o]; out.x = M[o + 1]; out.y = M[o + 2]; out.s = M[o + 3]; out.k = M[o + 4]; out.u = M[o + 5];
 }
 function marginOfC(C: FCache, ai: number, ft: FFoot, cache: WalkCache): number {
-  if (!wOn) return marginOfC_js(C, ai, ft, cache);
+  if (!wOn) {
+    if (wSyncOnly && wDirty) wSync(C);
+    if (wDbl) {
+      const S = wSave; const v = cache.valid;
+      S[1] = cache.qx; S[2] = cache.qy; S[3] = cache.footStartS; S[4] = cache.footEndS; S[5] = cache.hiS; S[6] = cache.kHi; S[7] = cache.bkHi;
+      S[8] = cache.minF; S[9] = cache.loS; S[10] = cache.kLo; S[11] = cache.bkLo; S[12] = cache.maxB; S[13] = cache.oLo; S[14] = cache.oHi;
+      marginOfC_js(C, ai, ft, cache);
+      cache.valid = v; cache.qx = S[1]; cache.qy = S[2]; cache.footStartS = S[3]; cache.footEndS = S[4]; cache.hiS = S[5]; cache.kHi = S[6]; cache.bkHi = S[7];
+      cache.minF = S[8]; cache.loS = S[9]; cache.kLo = S[10]; cache.bkLo = S[11]; cache.maxB = S[12]; cache.oLo = S[13]; cache.oHi = S[14];
+    }
+    return marginOfC_js(C, ai, ft, cache);
+  }
   if (wDirty) wSync(C);
   const M = wM; const c = wCache;
-  M[c] = cache.valid ? 1 : 0; M[c + 1] = cache.qx; M[c + 2] = cache.qy; M[c + 3] = cache.footStartS; M[c + 4] = cache.footEndS;
-  M[c + 5] = cache.hiS; M[c + 6] = cache.kHi; M[c + 7] = cache.bkHi; M[c + 8] = cache.minF; M[c + 9] = cache.loS; M[c + 10] = cache.kLo;
-  M[c + 11] = cache.bkLo; M[c + 12] = cache.maxB; M[c + 13] = cache.oLo; M[c + 14] = cache.oHi;
+  for (let rep = wDbl ? 0 : 1; rep < 2; rep++) {
+    M[c] = cache.valid ? 1 : 0; M[c + 1] = cache.qx; M[c + 2] = cache.qy; M[c + 3] = cache.footStartS; M[c + 4] = cache.footEndS;
+    M[c + 5] = cache.hiS; M[c + 6] = cache.kHi; M[c + 7] = cache.bkHi; M[c + 8] = cache.minF; M[c + 9] = cache.loS; M[c + 10] = cache.kLo;
+    M[c + 11] = cache.bkLo; M[c + 12] = cache.maxB; M[c + 13] = cache.oLo; M[c + 14] = cache.oHi;
+    if (rep === 0) (wEx as WEx).moc(C.armObj[ai].pi, C.armDir[ai], C.armSR[ai], C.armL[ai], kfCst.qx, kfCst.qy, ft.u, ft.d, ft.k);
+  }
   const r = (wEx as WEx).moc(C.armObj[ai].pi, C.armDir[ai], C.armSR[ai], C.armL[ai], kfCst.qx, kfCst.qy, ft.u, ft.d, ft.k);
   cache.valid = M[c] !== 0; cache.qx = M[c + 1]; cache.qy = M[c + 2]; cache.footStartS = M[c + 3]; cache.footEndS = M[c + 4];
   cache.hiS = M[c + 5]; cache.kHi = M[c + 6]; cache.bkHi = M[c + 7]; cache.minF = M[c + 8]; cache.loS = M[c + 9]; cache.kLo = M[c + 10];
@@ -95,6 +129,7 @@ function marginOfC(C: FCache, ai: number, ft: FFoot, cache: WalkCache): number {
   return r;
 }
 `;
-writeFileSync(join(here, "outline_wasm.ts"), src.replace("__W_ON__", "true"));
-writeFileSync(join(here, "outline_wasm_off.ts"), src.replace("__W_ON__", "false"));
-console.log(`wrote outline_wasm.ts (WASM on) and outline_wasm_off.ts (the same copy, WASM off) from outline.ts sha ${sha}`);
+for (const [name, on, dbl, sync] of [["outline_wasm", true, false, false], ["outline_wasm_off", false, false, false], ["outline_wasm_dbl", true, true, false], ["outline_wasm_off_dbl", false, true, false], ["outline_wasm_sync", false, false, true]]) {
+  writeFileSync(join(here, `${name}.ts`), src.replace("__W_ON__", String(on)).replace("__W_DBL__", String(dbl)).replace("__W_SYNC__", String(sync)));
+}
+console.log(`wrote outline_wasm{,_off}{,_dbl}.ts (WASM on/off, kernels once/twice) and outline_wasm_sync.ts (JS kernels + the copy) from outline.ts sha ${sha}`);

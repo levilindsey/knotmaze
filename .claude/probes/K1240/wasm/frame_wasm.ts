@@ -17,6 +17,9 @@ import { fileURLToPath } from "node:url";
 import * as A from "../proto/outline";
 import * as B from "./outline_wasm";
 import * as Boff from "./outline_wasm_off";
+import * as Bd from "./outline_wasm_dbl";
+import * as BoffD from "./outline_wasm_off_dbl";
+import * as Bs from "./outline_wasm_sync";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const ROUNDS = Number(process.argv[2] ?? 3);
@@ -48,6 +51,8 @@ const N = cyc.length;
 const wasmBytes = readFileSync(join(here, "build", wasmName));
 const ex = new WebAssembly.Instance(new WebAssembly.Module(wasmBytes), {}).exports as unknown as Parameters<typeof B.__wasmSet>[1];
 B.__wasmSet(true, ex);
+Bs.__wasmSet(false, new WebAssembly.Instance(new WebAssembly.Module(wasmBytes), {}).exports as unknown as Parameters<typeof Bs.__wasmSet>[1]);
+Bd.__wasmSet(true, new WebAssembly.Instance(new WebAssembly.Module(wasmBytes), {}).exports as unknown as Parameters<typeof Bd.__wasmSet>[1]);
 console.log(`outline.ts ${B.__wasmSourceSha}, wasm ${wasmName} ${wasmBytes.length} B, def motion cycle ${N} scenes, ${ROUNDS} rounds of one cycle per mode`);
 
 // ---- exactness over a fresh cycle -------------------------------------------
@@ -65,15 +70,23 @@ console.log(`outline.ts ${B.__wasmSourceSha}, wasm ${wasmName} ${wasmBytes.lengt
 
 // ---- timing ----------------------------------------------------------------------
 const stJs = A.structure(scene); const stCopy = Boff.structure(scene); const stW = B.structure(scene);
-const prof: Record<string, number>[] = [{}, {}, {}];
+const stCopyD = BoffD.structure(scene); const stWD = Bd.structure(scene);
+const stSync = Bs.structure(scene);
+const prof: Record<string, number>[] = [{}, {}, {}, {}, {}, {}];
 const modes: [string, (sc: SceneIn, p?: Record<string, number>) => unknown][] = [
   ["js", (sc, p) => A.frame(stJs, sc, p)],
   ["copyJs", (sc, p) => Boff.frame(stCopy, sc, p)],
   ["wasm", (sc, p) => { B.__wasmDirty(); return B.frame(stW, sc, p); }],
+  // the doubled builds: every footNearM / marginOfC call runs twice
+  ["copyJsDbl", (sc, p) => BoffD.frame(stCopyD, sc, p)],
+  ["wasmDbl", (sc, p) => { Bd.__wasmDirty(); return Bd.frame(stWD, sc, p); }],
+  // JS kernels plus the per-frame copy into WASM memory
+  ["copyJsSync", (sc, p) => { Bs.__wasmDirty(); return Bs.frame(stSync, sc, p); }],
 ];
-const pos = [0, 0, 0];
+const pos = modes.map(() => 0);
 const T: number[][] = modes.map(() => []);
 for (let j = 0; j < modes.length; j++) for (let i = 0; i < N; i++) modes[j][1](cyc[pos[j]++ % N]);
+const sync0 = [B.__wasmSyncMs(), Bs.__wasmSyncMs()];
 for (let round = 0; round < ROUNDS; round++) {
   for (let jj = 0; jj < modes.length; jj++) {
     const j = (jj + round) % modes.length;
@@ -91,8 +104,11 @@ for (let j = 0; j < modes.length; j++) {
 }
 for (const [m] of modes) console.log(`${m}: median ${res[m].med.toFixed(3)} ms, p95 ${res[m].p95.toFixed(3)} ms; phases ${JSON.stringify(res[m].phases)}`);
 console.log(`saving js - wasm: median ${(res.js.med - res.wasm.med).toFixed(3)} ms; copyJs - wasm ${(res.copyJs.med - res.wasm.med).toFixed(3)} ms`);
+console.log(`the copy into WASM memory, its own time per frame: wasm ${((B.__wasmSyncMs() - sync0[0]) / (ROUNDS * N)).toFixed(3)} ms, copyJsSync ${((Bs.__wasmSyncMs() - sync0[1]) / (ROUNDS * N)).toFixed(3)} ms`);
+const cr = (m: string): number => res[m].phases.corners ?? NaN;
+console.log(`in-frame kernel cost (doubled - single, corners phase): JS ${(cr("copyJsDbl") - cr("copyJs")).toFixed(3)} ms, WASM incl. marshalling ${(cr("wasmDbl") - cr("wasm")).toFixed(3)} ms; frame medians ${(res.copyJsDbl.med - res.copyJs.med).toFixed(3)} / ${(res.wasmDbl.med - res.wasm.med).toFixed(3)} ms`);
 const outs = modes.map(([, f], j) => JSON.stringify(f(cyc[pos[j] % N])));
-console.log(`after: next frame's tables ${outs[0] === outs[1] && outs[0] === outs[2] ? "identical in all three modes" : "DIFFER"}`);
+console.log(`after: next frame's tables ${outs.every((o) => o === outs[0]) ? `identical in all ${outs.length} modes` : `DIFFER (${outs.map((o) => (o === outs[0] ? "=" : "x")).join("")})`}`);
 mkdirSync(join(here, "out"), { recursive: true });
 const stamp = new Date().toISOString().replace(/[:.]/g, "-");
 writeFileSync(join(here, "out", `frame_${wasmName.replace(/\W/g, "_")}_${stamp}.json`), JSON.stringify({ wasm: wasmName, rounds: ROUNDS, node: process.version, sha: B.__wasmSourceSha, res }, null, 1));
