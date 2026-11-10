@@ -3923,6 +3923,7 @@ const ss01 = (x: number): number => { const t = x < 0 ? 0 : x > 1 ? 1 : x; retur
 
 // The query is kfCst's q and the foot's (u, d, k): passed as objects, so no
 // double is boxed at the call.
+let mwScr = new Float64Array(1024);
 function marginOfC(C: FCache, ai: number, ft: FFoot, cache: WalkCache): number {
   const x = kfCst.qx; const y = kfCst.qy; const sf = ft.u; const dc = ft.d; const kFoot = ft.k;
   const arm = C.armObj[ai];
@@ -3932,55 +3933,77 @@ function marginOfC(C: FCache, ai: number, ft: FFoot, cache: WalkCache): number {
   const winHi = C.armDir[ai] > 0 ? C.armSR[ai] + C.armL[ai] : C.armSR[ai];
   const base = sf - normS(pl, sf);
   const TXm = C.tanTx[arm.pi]; const TYm = C.tanTy[arm.pi]; const GFm = C.tanGF[arm.pi]; const GBm = C.tanGB[arm.pi];
-  const footStartS = base + pl.s[kFoot];
-  const footEndS = footStartS + pl.segLen[kFoot];
-  const delta = cache.valid ? Math.sqrt((x - cache.qx) * (x - cache.qx) + (y - cache.qy) * (y - cache.qy)) : Infinity;
+  // K1247 s4: the walks test segments one by one away from the foot until
+  // one fails its half-plane test. A full walk stores its tests' values by
+  // position (unwrapped segment index from its foot) with suffix extrema;
+  // a later query q certifies a whole run of positions at once, since a
+  // test value moves by at most |q - q_cached| (unit tangents). Positions
+  // it cannot certify (near its own foot) are tested as before, so the
+  // walk's stop is the full walk's, bit for bit.
+  if (!cache.valid) { cache.valid = true; cache.fOk = false; cache.bOk = false; }
+  const nseg = pl.nseg; const closed = pl.closed;
+  const U = closed && pl.len > 0 ? kFoot + nseg * Math.round(base / pl.len) : kFoot;
+  const eps = 1e-9 * h;
+  if (mwScr.length < nseg + 2) mwScr = new Float64Array(2 * (nseg + 2));
+  const scr = mwScr;
   let hi = winHi;
-  let minF = Infinity;
-  let kHi = -1; let bkHi = 0;
-  const resumeF = cache.valid && cache.footStartS <= footStartS && footEndS <= cache.hiS && cache.minF - delta > 0;
-  if (resumeF && cache.kHi < 0) { minF = cache.minF - delta; }
-  else {
+  {
     let k = kFoot; let bk = base;
-    if (resumeF) { k = cache.kHi; bk = cache.bkHi; minF = cache.minF - delta; }
-    let stopped = false;
-    for (let it = 0; it <= pl.nseg; it++) {
+    let p = U - cache.fU0;
+    let canJump = cache.fOk && p < cache.fN;
+    const delta = canJump ? Math.sqrt((x - cache.fQx) * (x - cache.fQx) + (y - cache.fQy) * (y - cache.fQy)) : Infinity;
+    let full = true; let nW = 0;
+    let it = 0;
+    while (it <= nseg) {
+      if (canJump && p >= 0 && p < cache.fN && cache.fSm[p] - delta > eps) {
+        it += cache.fN - p; k = cache.fK; bk = cache.fBk; p = cache.fN; canJump = false; full = false;
+        if (it > nseg) break;
+      }
       const sv = bk + pl.s[k] + pl.segLen[k];
       if (sv >= winHi) break;
       let k2 = k + 1; let b2 = bk;
-      if (k2 >= pl.nseg) { if (!pl.closed) break; k2 = 0; b2 = bk + pl.len; }
+      if (k2 >= nseg) { if (!closed) break; k2 = 0; b2 = bk + pl.len; }
       const dotF = GFm[k2] - (x * TXm[k2] + y * TYm[k2]);
-      if (dotF < 0) { hi = sv; kHi = k; bkHi = bk; stopped = true; break; }
-      if (dotF < minF) minF = dotF;
-      k = k2; bk = b2;
+      if (dotF < 0) { hi = sv; break; }
+      scr[nW++] = dotF;
+      k = k2; bk = b2; p++; it++;
     }
-    if (!stopped) kHi = -1;
+    if (full) {
+      if (cache.fSm.length < nW) cache.fSm = new Float64Array(2 * nW);
+      const sm = cache.fSm; let m = Infinity;
+      for (let i = nW - 1; i >= 0; i--) { if (scr[i] < m) m = scr[i]; sm[i] = m; }
+      cache.fOk = true; cache.fQx = x; cache.fQy = y; cache.fU0 = U; cache.fN = nW; cache.fK = k; cache.fBk = bk;
+    }
   }
   let lo = winLo;
-  let maxB = -Infinity;
-  let kLo = -1; let bkLo = 0;
-  const resumeB = cache.valid && footStartS <= cache.footStartS && footStartS >= cache.loS && cache.maxB + delta < 0;
-  if (resumeB && cache.kLo < 0) { maxB = cache.maxB + delta; }
-  else {
+  {
     let k = kFoot; let bk = base;
-    if (resumeB) { k = cache.kLo; bk = cache.bkLo; maxB = cache.maxB + delta; }
-    let stopped = false;
-    for (let it = 0; it <= pl.nseg; it++) {
+    let p = cache.bU0 - U;
+    let canJump = cache.bOk && p < cache.bN;
+    const delta = canJump ? Math.sqrt((x - cache.bQx) * (x - cache.bQx) + (y - cache.bQy) * (y - cache.bQy)) : Infinity;
+    let full = true; let nW = 0;
+    let it = 0;
+    while (it <= nseg) {
+      if (canJump && p >= 0 && p < cache.bN && cache.bSm[p] + delta < -eps) {
+        it += cache.bN - p; k = cache.bK; bk = cache.bBk; p = cache.bN; canJump = false; full = false;
+        if (it > nseg) break;
+      }
       const sv = bk + pl.s[k];
       if (sv <= winLo) break;
       let k2 = k - 1; let b2 = bk;
-      if (k2 < 0) { if (!pl.closed) break; k2 = pl.nseg - 1; b2 = bk - pl.len; }
+      if (k2 < 0) { if (!closed) break; k2 = nseg - 1; b2 = bk - pl.len; }
       const dotB = GBm[k] - (x * TXm[k2] + y * TYm[k2]);
-      if (dotB > 0) { lo = sv; kLo = k; bkLo = bk; stopped = true; break; }
-      if (dotB > maxB) maxB = dotB;
-      k = k2; bk = b2;
+      if (dotB > 0) { lo = sv; break; }
+      scr[nW++] = dotB;
+      k = k2; bk = b2; p++; it++;
     }
-    if (!stopped) kLo = -1;
+    if (full) {
+      if (cache.bSm.length < nW) cache.bSm = new Float64Array(2 * nW);
+      const sm = cache.bSm; let m = -Infinity;
+      for (let i = nW - 1; i >= 0; i--) { if (scr[i] > m) m = scr[i]; sm[i] = m; }
+      cache.bOk = true; cache.bQx = x; cache.bQy = y; cache.bU0 = U; cache.bN = nW; cache.bK = k; cache.bBk = bk;
+    }
   }
-  cache.valid = true; cache.qx = x; cache.qy = y;
-  cache.footStartS = footStartS; cache.footEndS = footEndS;
-  cache.hiS = hi; cache.kHi = kHi; cache.bkHi = bkHi; cache.minF = minF;
-  cache.loS = lo; cache.kLo = kLo; cache.bkLo = bkLo; cache.maxB = maxB;
   const stopAt = dc - 0.05 * h;
   let d2 = Infinity;
   if (lo > winLo) { { const A = fwA; A[0] = x; A[1] = y; A[2] = winLo; A[3] = lo; A[4] = stopAt; A[5] = dc; A[6] = cache.oLo - 2 * h; A[7] = cache.oLo + 2 * h; A[8] = Infinity; } footWinFast(pl, kfMFoot); d2 = kfMFoot.d; if (d2 <= dc) cache.oLo = pl.closed && pl.len > 0 ? kfMFoot.s + Math.round(((winLo + lo) / 2 - kfMFoot.s) / pl.len) * pl.len : kfMFoot.s; }
@@ -4054,6 +4077,15 @@ function advanceToC(C: FCache, rhoT: number): void {
     else { step /= 2; if (step < 1e-5 * h) break; }
   }
 }
+// K1247 s4: a node's state for the final re-advance (was a closure per
+// corner that also filled C.nodeX..., which nothing reads).
+function saveNodeC(kk: number): void {
+  const NS = nodeScratch; const NK = nodeScratchK;
+  const o = kk * 12;
+  NS[o] = kfCst.qx; NS[o + 1] = kfCst.qy; NS[o + 2] = kfQa.d; NS[o + 3] = kfQa.x; NS[o + 4] = kfQa.y; NS[o + 5] = kfQa.s; NS[o + 6] = kfQa.u;
+  NS[o + 7] = kfQb.d; NS[o + 8] = kfQb.x; NS[o + 9] = kfQb.y; NS[o + 10] = kfQb.s; NS[o + 11] = kfQb.u;
+  NK[2 * kk] = kfQa.k; NK[2 * kk + 1] = kfQb.k;
+}
 function growIntegC(C: FCache, ci: number): number {
   copyFoot(kfQa, kfFa); copyFoot(kfQb, kfFb);
   kfQa.u = C.armSR[kfCst.aiA] + C.armDir[kfCst.aiA] * armDistC(C, kfCst.aiA, kfFa.s);
@@ -4062,16 +4094,7 @@ function growIntegC(C: FCache, ci: number): number {
   if (!(kfCst.r0 > 1e-9)) { C.nodeN[ci] = 0; return 0; }
   const dN = kfCst.r0 / kfGN;
   const NS = nodeScratch; const NK = nodeScratchK;
-  const saveNode = (kk: number): void => {
-    const o = kk * 12;
-    NS[o] = kfCst.qx; NS[o + 1] = kfCst.qy; NS[o + 2] = kfQa.d; NS[o + 3] = kfQa.x; NS[o + 4] = kfQa.y; NS[o + 5] = kfQa.s; NS[o + 6] = kfQa.u;
-    NS[o + 7] = kfQb.d; NS[o + 8] = kfQb.x; NS[o + 9] = kfQb.y; NS[o + 10] = kfQb.s; NS[o + 11] = kfQb.u;
-    NK[2 * kk] = kfQa.k; NK[2 * kk + 1] = kfQb.k;
-    const co = ci * 33 + kk;
-    C.nodeX[co] = kfCst.qx; C.nodeY[co] = kfCst.qy;
-    C.nodeFaS[co] = kfQa.s; C.nodeFbS[co] = kfQb.s; C.nodeFaK[co] = kfQa.k; C.nodeFbK[co] = kfQb.k;
-  };
-  saveNode(0);
+  saveNodeC(0);
   let sPrev = wOfC(C);
   let integ = 0;
   let nNodes = 1;
@@ -4083,7 +4106,7 @@ function growIntegC(C: FCache, ci: number): number {
       integ += 0.5 * (sPrev + sK) * Math.max(0, kfCst.rhoCur - (C.h + (kk - 1) * dN));
       break;
     }
-    saveNode(kk); nNodes = kk + 1;
+    saveNodeC(kk); nNodes = kk + 1;
     const sK = Math.min(sPrev, wOfC(C));
     integ += 0.5 * (sPrev + sK) * dN;
     sPrev = sK;
@@ -5364,8 +5387,12 @@ function frameFast(st: DiagramStructure, scene: SceneIn, profile?: Record<string
 interface FArm extends ArmStruct { ux: number; uy: number; ang: number }
 interface FFoot { d: number; x: number; y: number; s: number; k: number; u: number }
 function copyFoot(dst: FFoot, src: FFoot): void { dst.d = src.d; dst.x = src.x; dst.y = src.y; dst.s = src.s; dst.k = src.k; dst.u = src.u; }
-interface WalkCache { valid: boolean; qx: number; qy: number; footStartS: number; footEndS: number; hiS: number; kHi: number; bkHi: number; minF: number; loS: number; kLo: number; bkLo: number; maxB: number; oLo: number; oHi: number }
-function mkWalkCache(): WalkCache { return { valid: false, qx: 0, qy: 0, footStartS: 0, footEndS: 0, hiS: 0, kHi: -1, bkHi: 0, minF: Infinity, loS: 0, kLo: -1, bkLo: 0, maxB: -Infinity, oLo: NaN, oHi: NaN }; }
+interface WalkCache {
+  valid: boolean; oLo: number; oHi: number;
+  fOk: boolean; fQx: number; fQy: number; fU0: number; fN: number; fK: number; fBk: number; fSm: Float64Array;
+  bOk: boolean; bQx: number; bQy: number; bU0: number; bN: number; bK: number; bBk: number; bSm: Float64Array;
+}
+function mkWalkCache(): WalkCache { return { valid: false, oLo: NaN, oHi: NaN, fOk: false, fQx: 0, fQy: 0, fU0: 0, fN: 0, fK: 0, fBk: 0, fSm: new Float64Array(64), bOk: false, bQx: 0, bQy: 0, bU0: 0, bN: 0, bK: 0, bBk: 0, bSm: new Float64Array(64) }; }
 
 // x, y come in kfXY and the hint is out's own foot (s, k): no double crosses
 // the call boundary, so none is boxed (31.8k calls a frame on def).
@@ -5388,6 +5415,27 @@ function footNearM(C: FCache, arm: FArm, out: FFoot): void {
     const winLo = winLoR + shiftW; const winHi = winHiR + shiftW;
     const segShift = p.closed && p.len > 0 ? Math.round((sv - p.s[k0]) / p.len) * p.len : 0;
     const PX = p.x; const PY = p.y; const PS = p.s; const PSL = p.segLen; const PDX = p.dx; const PDY = p.dy;
+    // K1247 s4: the walk's answer in one step when every window it would
+    // visit lies strictly inside the hint segment and the arm window: each
+    // is then "covered" (only that segment is searched) and the walk ends
+    // on the segment's unclamped projection, computed the same way.
+    {
+      const l = PSL[k0];
+      let segS = PS[k0] + segShift;
+      if (p.closed && p.len > 0) { if (segS < sv - p.len / 2) segS += p.len; else if (segS > sv + p.len / 2) segS -= p.len; }
+      const ex = PDX[k0]; const ey = PDY[k0];
+      const l2 = ex * ex + ey * ey;
+      if (l > 0 && l2 > 0 && (!p.closed || l < p.len / 4)) {
+        const t = ((x - PX[k0]) * ex + (y - PY[k0]) * ey) / l2;
+        const su = segS + t * l;
+        const a = (su < sv ? su : sv) - w; const b = (su > sv ? su : sv) + w;
+        if (a > segS && b < segS + l && a > winLo && b < winHi && b - a < 64 * w) {
+          const qx = PX[k0] + ex * t; const qy = PY[k0] + ey * t;
+          out.d = Math.sqrt((x - qx) * (x - qx) + (y - qy) * (y - qy)); out.x = qx; out.y = qy; out.s = PS[k0] + t * l; out.k = k0; out.u = su;
+          return;
+        }
+      }
+    }
     for (let it = 0; it < 128; it++) {
       const lo = Math.max(winLo, sv - w);
       const hi = Math.min(winHi, sv + w);
