@@ -15,7 +15,7 @@ const SCENE_DIR = "C:/Users/lsl/Repositories/knotmaze/.claude/probes/K868/scenes
 const rounds = +(process.argv.find((a) => a.startsWith("--rounds="))?.slice(9) ?? 8);
 const knob = process.argv.find((a) => a.startsWith("--knob="))?.slice(7) ?? "steep";
 const setters: Record<string, (on: boolean) => void> = {};
-for (const [k, fn] of [["steep", "setSteepFast"], ["clear", "setClearCert"], ["vhint", "setVHint"], ["walk", "setWalkFast"]] as [string, string][]) {
+for (const [k, fn] of [["steep", "setSteepFast"], ["clear", "setClearCert"], ["mcert", "setMarginCache"], ["vhint", "setVHint"], ["walk", "setWalkFast"]] as [string, string][]) {
   const f = (O as unknown as Record<string, unknown>)[fn];
   if (typeof f === "function") setters[k] = f as (on: boolean) => void;
 }
@@ -23,6 +23,9 @@ for (const [k, fn] of [["steep", "setSteepFast"], ["clear", "setClearCert"], ["v
 const gN = +(process.argv.find((a) => a.startsWith("--N="))?.slice(4) ?? 16);
 const gE = +(process.argv.find((a) => a.startsWith("--E="))?.slice(4) ?? 1e-3);
 setters.grow = (on: boolean): void => { if (on) O.setGrowUniform(gN, gE); else O.setGrowUniform(16, 1e-3); };
+// --knob=mcertr: the margin certificate searched to dc + --R h (mcert uses 0.5).
+const mR = +(process.argv.find((a) => a.startsWith("--R="))?.slice(4) ?? 0.5);
+setters.mcertr = (on: boolean): void => { O.setMarginCache(on, mR); };
 const set = setters[knob];
 if (!set) throw new Error(`no knob ${knob} (have ${Object.keys(setters).join(", ")})`);
 const scene = JSON.parse(readFileSync(`${SCENE_DIR}/def.json`, "utf8")) as SceneIn;

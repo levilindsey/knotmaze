@@ -21,6 +21,7 @@ if (arg("N") !== undefined) O.setGrowUniform(+arg("N")!, E, +(arg("Z") ?? 1e-3),
 if (arg("S") !== undefined) O.setGrowSub(+arg("S")!);
 if (arg("shift") !== undefined) O.setGrowShift(arg("shift") !== "0");
 if (arg("segpred") !== undefined) O.setSegPred(arg("segpred") !== "0");
+if (arg("jt") !== undefined) O.setCfJumpTol(+arg("jt")!); // K1247 s7: the jump split's floor, in h
 const only = arg("scene"); const tag = arg("tag") ?? "";
 interface Cn { ok: boolean; r: number; qx: number; qy: number; tax: number; tay: number; tbx: number; tby: number }
 const cdist = (a: Cn, b: Cn): number => Math.max(Math.hypot(a.qx - b.qx, a.qy - b.qy), Math.hypot(a.tax - b.tax, a.tay - b.tay), Math.hypot(a.tbx - b.tbx, a.tby - b.tby));
