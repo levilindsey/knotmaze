@@ -2745,7 +2745,2448 @@ export function structure(scene: SceneIn): DiagramStructure { return diagramOf(s
  *  the diagram's: one run piece per border segment, one arc piece per
  *  diagram corner, the caps' runs. */
 export function frame(st: DiagramStructure, scene: SceneIn, profile?: Record<string, number>): OutlineTable {
+  return frameFast(st, scene, profile);
+}
+/** Today's builder, kept as the oracle for the fast frame's checks. */
+export function frameRef(st: DiagramStructure, scene: SceneIn, profile?: Record<string, number>): OutlineTable {
   return buildOutlineFull(scene, st, profile).table;
+}
+
+
+// ---------------------------------------------------------------------------
+// K1247: the fast frame. frame() re-evaluates the diagram's pieces from
+// this frame's centrelines with typed arrays, a per-structure cache
+// (indices, candidate segment windows, array layouts) and warm-start
+// searches from the previous frame's answers. frameRef() (buildOutlineFull)
+// is the oracle. The geometry equations are the builder's, ported.
+
+interface FBord {
+  px: Float64Array; py: Float64Array; ps: Float64Array; pv: Int32Array;
+  bx: Float64Array; by: Float64Array; bs: Float64Array; bfx: Float64Array; bfy: Float64Array; nb: number;
+  xy: Float64Array; s: Float64Array; cxy: Float64Array; nf: number;
+  ins: number[]; segReg: Int32Array; sorted: Int32Array; segCnt: Int32Array; mark: Int32Array;
+}
+function mkFBord(): FBord {
+  return {
+    px: new Float64Array(64), py: new Float64Array(64), ps: new Float64Array(64), pv: new Int32Array(64),
+    bx: new Float64Array(64), by: new Float64Array(64), bs: new Float64Array(64), bfx: new Float64Array(64), bfy: new Float64Array(64), nb: 0,
+    xy: new Float64Array(128), s: new Float64Array(64), cxy: new Float64Array(128), nf: 0,
+    ins: [], segReg: new Int32Array(64), sorted: new Int32Array(16), segCnt: new Int32Array(1024), mark: new Int32Array(64),
+  };
+}
+function growF(a: Float64Array, need: number): Float64Array {
+  if (a.length >= need) return a;
+  let n = a.length * 2; while (n < need) n *= 2;
+  const b = new Float64Array(n); b.set(a); return b;
+}
+function growI(a: Int32Array, need: number): Int32Array {
+  if (a.length >= need) return a;
+  let n = a.length * 2; while (n < need) n *= 2;
+  const b = new Int32Array(n); b.set(a); return b;
+}
+
+interface FEye {
+  pi: number; qi: number; xi: number; xj: number;
+  piFirst: number; piSecond: number; qiFirst: number; qiSecond: number;
+  pairsU: Int32Array[]; pairsO: Int32Array[]; pairN: Int32Array; prevTotal: number;
+}
+interface FCache {
+  h: number; W: number; cr: number; depthAmp: number; depthWindow: number; ctrlArc: number;
+  nCh: number; nX: number; nArms: number; nCorners: number;
+  polys: Poly[]; rawPolys: Poly[]; needRaw: Uint8Array; origLen: Float64Array;
+  tanTx: Float64Array[]; tanTy: Float64Array[]; tanGF: Float64Array[]; tanGB: Float64Array[];
+  crossAPi: Int32Array; crossBPi: Int32Array; crossOver: Int32Array; crossUnder: Int32Array;
+  passXi: Int32Array[]; passIsB: Uint8Array[]; passN: Int32Array;
+  passS: Float64Array[]; passSq: Float64Array[]; passTheta: Float64Array[]; passQi: Int32Array[]; passSort: Int32Array[];
+  depthS: Float64Array[]; depthZ: Float64Array[]; depthN: Int32Array;
+  armObj: FArm[]; armSR: Float64Array; armDir: Int32Array; armL: Float64Array; armLcut: Float64Array; armUx: Float64Array; armUy: Float64Array; armAng: Float64Array;
+  armsOfChain: Int32Array[]; armsOfJSorted: number[][];
+  chainRoots: Float64Array[];
+  extArmPi: Int32Array; extCandPi: Int32Array[]; extCandS: Float64Array[];
+  bords: FBord[];
+  // inserts (per frame, global pool)
+  insB: number[]; insSeg: number[]; insT: number[]; insX: number[]; insY: number[]; insRef: number[];
+  refB: Int32Array; refFinal: Int32Array; refS: Float64Array; refS0: Float64Array; nRef: number;
+  junctionRegion: Int32Array; polyBox: Float64Array; cornerByAArm: Int32Array;
+  offAx: Float64Array; offAy: Float64Array; offBx: Float64Array; offBy: Float64Array;
+  bendArr: Float64Array[]; bendN: Int32Array; bendStamp: Int32Array;
+  // corner results + warm state
+  cOk: Uint8Array; cMeet: Uint8Array; cWhy: (string | undefined)[];
+  cVx: Float64Array; cVy: Float64Array; cQx: Float64Array; cQy: Float64Array;
+  cTax: Float64Array; cTay: Float64Array; cTbx: Float64Array; cTby: Float64Array;
+  cSA: Float64Array; cSB: Float64Array; cDA: Float64Array; cDB: Float64Array; cR: Float64Array; cTheta: Float64Array;
+  cRefA: Int32Array; cRefB: Int32Array;
+  wValid: Uint8Array; wVx: Float64Array; wVy: Float64Array; wFaS: Float64Array; wFbS: Float64Array; wFaK: Int32Array; wFbK: Int32Array;
+  wQx: Float64Array; wQy: Float64Array; wR: Float64Array;
+  nodeX: Float64Array; nodeY: Float64Array; nodeFaS: Float64Array; nodeFbS: Float64Array; nodeFaK: Int32Array; nodeFbK: Int32Array; nodeN: Int32Array;
+  walkA: WalkCache[]; walkB: WalkCache[];
+  meetValid: Uint8Array; meetSegA: Int32Array; meetSegB: Int32Array;
+  armNextRef: Int32Array; armPrevRef: Int32Array; armNextSide: Int32Array; armPrevSide: Int32Array;
+  // crossings per frame + warm
+  cpX: Float64Array; cpY: Float64Array; cpTheta: Float64Array; cpSOver: Float64Array; cpSUnder: Float64Array;
+  cutPairU: Int32Array[]; cutPairO: Int32Array[]; cutPairN: Int32Array; cutPrevCands: Int32Array; cutPrevPick: Uint8Array;
+  eyes: FEye[];
+  // stations (slots)
+  slotPi: Int32Array; slotRank: Int32Array; slotKind: Int32Array; nSlots: number;
+  crossUnderSlot: Int32Array; crossOverSlot: Int32Array; junctionSlot: Int32Array; capSlot: Int32Array; seamSlot: Int32Array;
+  dgSlot: Int32Array; capInfoOfSlot: Int32Array;
+  stActive: Uint8Array; stCS: Float64Array; stLeft: Int32Array; stRight: Int32Array;
+  discardA: Int32Array; discardB: Int32Array;
+  // cap arcs
+  capArcX: Float64Array[]; capArcY: Float64Array[]; capArcN: Int32Array; capCx: Float64Array; capCy: Float64Array; capStation: Int32Array;
+  // intervals / regions scratch
+  ivPi: Int32Array; ivA: Int32Array; ivB: Int32Array; ivCMid: Float64Array; ivLen: Float64Array; ivDiscard: Uint8Array; ivRegion: Int32Array; nIv: number;
+  seqIdx: Int32Array; seqSeg: Int32Array;
+  pairHashKey: Int32Array; pairHashVal: Int32Array; pairHashStamp: Int32Array; pairStamp: number;
+  warm: boolean;
+  kinkCount: number;
+}
+const fastCaches = new WeakMap<DiagramStructure, FCache>();
+
+function mkPolyBuf(id: number, cap: number, closed: boolean): Poly {
+  const c = Math.max(4, cap);
+  return {
+    id, n: 0, closed, nseg: 0, len: 0, s0: 0,
+    x: new Float64Array(c), y: new Float64Array(c), s: new Float64Array(c),
+    segLen: new Float64Array(c), dx: new Float64Array(c), dy: new Float64Array(c),
+    bx0: new Float64Array(c), by0: new Float64Array(c), bx1: new Float64Array(c), by1: new Float64Array(c),
+    bk: new Float64Array(4 * Math.max(1, Math.ceil(c / 32))), nblk: 0,
+  };
+}
+
+function buildFastCache(st: DiagramStructure, scene: SceneIn): FCache {
+  const look = scene.look;
+  const nCh = st.chainIds.length;
+  const idxOf = new Map<number, number>();
+  st.chainIds.forEach((id, i) => idxOf.set(id, i));
+  const polys: Poly[] = []; const rawPolys: Poly[] = [];
+  for (let i = 0; i < nCh; i++) {
+    const cap = (st.nPts[i] || 4) + 4;
+    polys.push(mkPolyBuf(i, cap, st.closed[i]));
+    rawPolys.push(mkPolyBuf(i, cap, st.closed[i]));
+  }
+  const nX = st.crossings.length;
+  const crossAPi = new Int32Array(nX); const crossBPi = new Int32Array(nX);
+  const crossOver = new Int32Array(nX); const crossUnder = new Int32Array(nX);
+  st.crossings.forEach((x, xi) => {
+    crossAPi[xi] = x.aPi; crossBPi[xi] = x.bPi;
+    crossOver[xi] = x.over === "a" ? x.aPi : x.bPi;
+    crossUnder[xi] = x.over === "a" ? x.bPi : x.aPi;
+  });
+  // Per-chain pass entries (crossing index + which pass), in scene order.
+  const passXi: Int32Array[] = []; const passIsB: Uint8Array[] = [];
+  const passS: Float64Array[] = []; const passSq: Float64Array[] = []; const passTheta: Float64Array[] = [];
+  const passQi: Int32Array[] = []; const passSort: Int32Array[] = [];
+  const depthS: Float64Array[] = []; const depthZ: Float64Array[] = [];
+  for (let pi = 0; pi < nCh; pi++) {
+    const lst: number[] = []; const isb: number[] = [];
+    st.crossings.forEach((x, xi) => {
+      if (x.aPi === pi) { lst.push(xi); isb.push(0); }
+      if (x.bPi === pi) { lst.push(xi); isb.push(1); }
+    });
+    passXi.push(Int32Array.from(lst)); passIsB.push(Uint8Array.from(isb));
+    const n = lst.length;
+    passS.push(new Float64Array(Math.max(1, n))); passSq.push(new Float64Array(Math.max(1, n)));
+    passTheta.push(new Float64Array(Math.max(1, n))); passQi.push(new Int32Array(Math.max(1, n)));
+    passSort.push(new Int32Array(Math.max(1, n)));
+    depthS.push(new Float64Array(Math.max(1, n))); depthZ.push(new Float64Array(Math.max(1, n)));
+  }
+  const nArms = st.arms.length;
+  const armObj: FArm[] = st.arms.map((a) => ({ ji: a.ji, ei: a.ei, pi: a.pi, sR: 0, dir: a.dir, kind: a.kind, L: 0, g: st.groupOfJ[a.ji] ?? 0, ux: 0, uy: 0, ang: 0 }));
+  const armsOfChain: Int32Array[] = [];
+  for (let pi = 0; pi < nCh; pi++) armsOfChain.push(Int32Array.from(st.arms.map((a, ai) => (a.pi === pi ? ai : -1)).filter((x) => x >= 0)));
+  // END-arm extension candidates: the junction's through arms.
+  const extArmPi: number[] = []; const extCandPi: Int32Array[] = []; const extCandS: Float64Array[] = [];
+  const needRaw = new Uint8Array(nCh);
+  st.arms.forEach((a) => {
+    if (a.kind !== "end") return;
+    const candPi: number[] = []; const candS: number[] = [];
+    for (const bai of st.armsOfJ[a.ji] ?? []) {
+      const ba = st.arms[bai];
+      if (ba.kind !== "through") continue;
+      const xa = scene.junctions[ba.ji]?.arms[ba.ei];
+      if (!xa) continue;
+      candPi.push(ba.pi); candS.push(xa.s);
+      needRaw[ba.pi] = 1;
+    }
+    if (candPi.length) { extArmPi.push(a.pi); extCandPi.push(Int32Array.from(candPi)); extCandS.push(Float64Array.from(candS)); needRaw[a.pi] = 1; }
+  });
+  // Station slots, in the builder's creation order (rank).
+  const slotPi: number[] = []; const slotRank: number[] = []; const slotKind: number[] = [];
+  const crossUnderSlot = new Int32Array(nX * 2).fill(-1);
+  const crossOverSlot = new Int32Array(nX * 2).fill(-1);
+  for (let xi = 0; xi < nX; xi++) {
+    for (let o = 0; o < 2; o++) { crossUnderSlot[xi * 2 + o] = slotPi.length; slotPi.push(crossUnder[xi]); slotRank.push(xi * 4 + o); slotKind.push(0); }
+    for (let u = 0; u < 2; u++) { crossOverSlot[xi * 2 + u] = slotPi.length; slotPi.push(crossOver[xi]); slotRank.push(xi * 4 + 2 + u); slotKind.push(1); }
+  }
+  const junctionSlot = new Int32Array(Math.max(1, nArms)).fill(-1);
+  st.arms.forEach((a, ai) => { junctionSlot[ai] = slotPi.length; slotPi.push(a.pi); slotRank.push(nX * 4 + ai); slotKind.push(2); });
+  const capSlot = new Int32Array(Math.max(1, nCh * 2)).fill(-1);
+  const seamSlot = new Int32Array(Math.max(1, nCh)).fill(-1);
+  const capInfoOfSlot: number[] = slotPi.map(() => -1);
+  let capInfoCount = 0;
+  for (let pi = 0; pi < nCh; pi++) {
+    if (st.closed[pi]) { seamSlot[pi] = slotPi.length; slotPi.push(pi); slotRank.push(nX * 4 + nArms + pi * 2); slotKind.push(4); capInfoOfSlot.push(-1); }
+    else for (let e = 0; e < 2; e++) { capSlot[pi * 2 + e] = slotPi.length; slotPi.push(pi); slotRank.push(nX * 4 + nArms + pi * 2 + e); slotKind.push(3); capInfoOfSlot.push(capInfoCount++); }
+  }
+  while (capInfoOfSlot.length < slotPi.length) capInfoOfSlot.push(-1);
+  const nSlots = slotPi.length;
+  const dgSlot = new Int32Array(Math.max(1, st.stationsD.length)).fill(-1);
+  st.stationsD.forEach((dgs, i) => {
+    if (dgs.kind === "junction") dgSlot[i] = junctionSlot[dgs.arm];
+    else if (dgs.kind === "capStart") dgSlot[i] = capSlot[dgs.pi * 2];
+    else if (dgs.kind === "capEnd") dgSlot[i] = capSlot[dgs.pi * 2 + 1];
+    else if (dgs.kind === "seam") dgSlot[i] = seamSlot[dgs.pi];
+  });
+  // Discard pairs (builder discardPair candidates).
+  const discardA: number[] = []; const discardB: number[] = [];
+  for (let xi = 0; xi < nX; xi++) { discardA.push(crossUnderSlot[xi * 2]); discardB.push(crossUnderSlot[xi * 2 + 1]); }
+  {
+    const byRoot = new Map<string, number[]>();
+    st.arms.forEach((a, ai) => {
+      if (a.kind !== "through") return;
+      const xa = scene.junctions[a.ji]?.arms[a.ei];
+      if (!xa) return;
+      const k = `${a.ji}|${a.pi}|${xa.s}`;
+      const l = byRoot.get(k) ?? []; l.push(ai); byRoot.set(k, l);
+    });
+    for (const l of byRoot.values()) if (l.length === 2) { discardA.push(junctionSlot[l[0]]); discardB.push(junctionSlot[l[1]]); }
+    // End arm vs junction caps: caps at a chain end where some end arm
+    // roots (builder junctionCapKeys), paired with every end arm's
+    // junction station on that chain.
+    const capEnds = new Set<string>();
+    st.arms.forEach((a) => {
+      if (a.kind !== "end") return;
+      const xa = scene.junctions[a.ji]?.arms[a.ei];
+      const pts = scene.chains[a.pi]?.pts ?? [];
+      let len = 0;
+      for (let i = 0; i + 3 < pts.length; i += 2) len += Math.hypot(pts[i + 2] - pts[i], pts[i + 3] - pts[i + 1]);
+      if (st.closed[a.pi] && pts.length >= 4) len += Math.hypot(pts[0] - pts[pts.length - 2], pts[1] - pts[pts.length - 1]);
+      const atStart = xa ? Math.abs(xa.s) < Math.abs(xa.s - len) : true;
+      capEnds.add(`${a.pi}|${atStart ? 0 : 1}`);
+    });
+    st.arms.forEach((a, ai) => {
+      if (a.kind !== "end") return;
+      for (let e = 0; e < 2; e++) {
+        if (!capEnds.has(`${a.pi}|${e}`)) continue;
+        const cs = capSlot[a.pi * 2 + e];
+        if (cs >= 0) { discardA.push(junctionSlot[ai]); discardB.push(cs); }
+      }
+    });
+  }
+  // Eyes: crossing pairs consecutive on both chains (diagram order
+  // from the structure-time scene's s values). Per eye and chain, the
+  // pass entries (indices into passXi[chain]) that start/end the arc.
+  const eyes: FEye[] = [];
+  {
+    const chainLenOf = (pi: number): number => {
+      const pts = scene.chains[pi]?.pts ?? [];
+      let len = 0;
+      for (let i = 0; i + 3 < pts.length; i += 2) len += Math.hypot(pts[i + 2] - pts[i], pts[i + 3] - pts[i + 1]);
+      if (st.closed[pi] && pts.length >= 4) len += Math.hypot(pts[0] - pts[pts.length - 2], pts[1] - pts[pts.length - 1]);
+      return len;
+    };
+    const sortedEntries: number[][] = [];
+    for (let pi = 0; pi < nCh; pi++) {
+      const len = chainLenOf(pi);
+      const wrap = (s: number): number => (st.closed[pi] && len > 0 ? ((s % len) + len) % len : s);
+      const l = Array.from(passXi[pi], (_, e) => e);
+      l.sort((e1, e2) => {
+        const x1 = scene.crossings[passXi[pi][e1]]; const x2 = scene.crossings[passXi[pi][e2]];
+        const s1 = wrap(passIsB[pi][e1] === 1 ? x1.b.s : x1.a.s);
+        const s2 = wrap(passIsB[pi][e2] === 1 ? x2.b.s : x2.a.s);
+        return s1 - s2;
+      });
+      sortedEntries.push(l);
+    }
+    const partnerOf = (pi: number, e: number): number => {
+      const xi = passXi[pi][e];
+      return passIsB[pi][e] === 1 ? crossAPi[xi] : crossBPi[xi];
+    };
+    const seen = new Set<string>();
+    for (let pi = 0; pi < nCh; pi++) {
+      const list = sortedEntries[pi];
+      for (let k = 0; k < list.length; k++) {
+        if (!st.closed[pi] && k + 1 >= list.length) break;
+        const ea = list[k]; const eb = list[(k + 1) % list.length];
+        const xa = passXi[pi][ea]; const xb = passXi[pi][eb];
+        if (xa === xb) continue;
+        const qi = partnerOf(pi, ea);
+        if (partnerOf(pi, eb) !== qi) continue;
+        const key = `${Math.min(pi, qi)}-${Math.max(pi, qi)}|${Math.min(xa, xb)}-${Math.max(xa, xb)}`;
+        if (seen.has(key)) continue;
+        // The partner chain must list the same pair consecutively.
+        const qlist = sortedEntries[qi];
+        let qEa = -1; let qEb = -1;
+        for (let q = 0; q < qlist.length; q++) {
+          if (!st.closed[qi] && q + 1 >= qlist.length) break;
+          const f = qlist[q]; const s2 = qlist[(q + 1) % qlist.length];
+          const match = (passXi[qi][f] === xa && passXi[qi][s2] === xb) || (passXi[qi][f] === xb && passXi[qi][s2] === xa);
+          if (match) { qEa = f; qEb = s2; break; }
+        }
+        if (qEa < 0 && pi !== qi) continue;
+        if (qEa < 0) { qEa = ea; qEb = eb; }
+        seen.add(key);
+        eyes.push({
+          pi, qi, xi: Math.min(xa, xb), xj: Math.max(xa, xb),
+          piFirst: ea, piSecond: eb, qiFirst: qi === pi ? ea : qEa, qiSecond: qi === pi ? eb : qEb,
+          pairsU: [new Int32Array(0), new Int32Array(0), new Int32Array(0), new Int32Array(0)],
+          pairsO: [new Int32Array(0), new Int32Array(0), new Int32Array(0), new Int32Array(0)],
+          pairN: new Int32Array(4), prevTotal: -1,
+        });
+      }
+    }
+  }
+  const nCorners = st.corners.length;
+  const bords: FBord[] = [];
+  for (let b = 0; b < nCh * 2; b++) bords.push(mkFBord());
+  const capCount = Math.max(1, capInfoCount);
+  const C: FCache = {
+    h: look.halfWidth, W: look.band, cr: look.cuspRadius ?? 3, depthAmp: look.depthAmp, depthWindow: look.depthWindow, ctrlArc: look.ctrlArc ?? 1,
+    nCh, nX, nArms, nCorners,
+    polys, rawPolys, needRaw, origLen: new Float64Array(nCh),
+    tanTx: [], tanTy: [], tanGF: [], tanGB: [],
+    crossAPi, crossBPi, crossOver, crossUnder,
+    passXi, passIsB, passN: new Int32Array(nCh), passS, passSq, passTheta, passQi, passSort,
+    depthS, depthZ, depthN: new Int32Array(nCh),
+    armObj, armSR: new Float64Array(Math.max(1, nArms)), armDir: new Int32Array(Math.max(1, nArms)),
+    armL: new Float64Array(Math.max(1, nArms)), armLcut: new Float64Array(Math.max(1, nArms)),
+    armUx: new Float64Array(Math.max(1, nArms)), armUy: new Float64Array(Math.max(1, nArms)), armAng: new Float64Array(Math.max(1, nArms)),
+    armsOfChain, armsOfJSorted: st.armsOfJ.map((l) => l.slice()),
+    chainRoots: [],
+    extArmPi: Int32Array.from(extArmPi), extCandPi, extCandS,
+    bords,
+    insB: [], insSeg: [], insT: [], insX: [], insY: [], insRef: [],
+    refB: new Int32Array(1024), refFinal: new Int32Array(1024), refS: new Float64Array(1024), refS0: new Float64Array(1024), nRef: 0,
+    junctionRegion: new Int32Array(Math.max(1, scene.junctions.length)).fill(-1), polyBox: new Float64Array(Math.max(1, nCh * 4)),
+    cornerByAArm: new Int32Array(Math.max(1, nArms)).fill(-1),
+    offAx: new Float64Array(Math.max(4, ...st.nPts) + 4), offAy: new Float64Array(Math.max(4, ...st.nPts) + 4),
+    offBx: new Float64Array(Math.max(4, ...st.nPts) + 4), offBy: new Float64Array(Math.max(4, ...st.nPts) + 4),
+    bendArr: polys.map((pp) => new Float64Array(2 * (pp.x.length + 2))), bendN: new Int32Array(nCh), bendStamp: new Int32Array(nCh),
+    cOk: new Uint8Array(Math.max(1, nCorners)), cMeet: new Uint8Array(Math.max(1, nCorners)), cWhy: new Array(Math.max(1, nCorners)),
+    cVx: new Float64Array(Math.max(1, nCorners)), cVy: new Float64Array(Math.max(1, nCorners)),
+    cQx: new Float64Array(Math.max(1, nCorners)), cQy: new Float64Array(Math.max(1, nCorners)),
+    cTax: new Float64Array(Math.max(1, nCorners)), cTay: new Float64Array(Math.max(1, nCorners)),
+    cTbx: new Float64Array(Math.max(1, nCorners)), cTby: new Float64Array(Math.max(1, nCorners)),
+    cSA: new Float64Array(Math.max(1, nCorners)), cSB: new Float64Array(Math.max(1, nCorners)),
+    cDA: new Float64Array(Math.max(1, nCorners)), cDB: new Float64Array(Math.max(1, nCorners)),
+    cR: new Float64Array(Math.max(1, nCorners)), cTheta: new Float64Array(Math.max(1, nCorners)),
+    cRefA: new Int32Array(Math.max(1, nCorners)).fill(-1), cRefB: new Int32Array(Math.max(1, nCorners)).fill(-1),
+    wValid: new Uint8Array(Math.max(1, nCorners)), wVx: new Float64Array(Math.max(1, nCorners)), wVy: new Float64Array(Math.max(1, nCorners)),
+    wFaS: new Float64Array(Math.max(1, nCorners)), wFbS: new Float64Array(Math.max(1, nCorners)),
+    wFaK: new Int32Array(Math.max(1, nCorners)), wFbK: new Int32Array(Math.max(1, nCorners)),
+    wQx: new Float64Array(Math.max(1, nCorners)), wQy: new Float64Array(Math.max(1, nCorners)), wR: new Float64Array(Math.max(1, nCorners)),
+    nodeX: new Float64Array(Math.max(1, nCorners) * 33), nodeY: new Float64Array(Math.max(1, nCorners) * 33),
+    nodeFaS: new Float64Array(Math.max(1, nCorners) * 33), nodeFbS: new Float64Array(Math.max(1, nCorners) * 33),
+    nodeFaK: new Int32Array(Math.max(1, nCorners) * 33), nodeFbK: new Int32Array(Math.max(1, nCorners) * 33),
+    nodeN: new Int32Array(Math.max(1, nCorners)),
+    walkA: Array.from({ length: Math.max(1, nCorners) }, () => mkWalkCache()),
+    walkB: Array.from({ length: Math.max(1, nCorners) }, () => mkWalkCache()),
+    meetValid: new Uint8Array(Math.max(1, nCorners)), meetSegA: new Int32Array(Math.max(1, nCorners)), meetSegB: new Int32Array(Math.max(1, nCorners)),
+    armNextRef: new Int32Array(Math.max(1, nArms)).fill(-1), armPrevRef: new Int32Array(Math.max(1, nArms)).fill(-1),
+    armNextSide: new Int32Array(Math.max(1, nArms)), armPrevSide: new Int32Array(Math.max(1, nArms)),
+    cpX: new Float64Array(Math.max(1, nX)), cpY: new Float64Array(Math.max(1, nX)),
+    cpTheta: new Float64Array(Math.max(1, nX)), cpSOver: new Float64Array(Math.max(1, nX)), cpSUnder: new Float64Array(Math.max(1, nX)),
+    cutPairU: Array.from({ length: Math.max(1, nX * 4) }, () => new Int32Array(0)),
+    cutPairO: Array.from({ length: Math.max(1, nX * 4) }, () => new Int32Array(0)),
+    cutPairN: new Int32Array(Math.max(1, nX * 4)), cutPrevCands: new Int32Array(Math.max(1, nX)).fill(-1),
+    cutPrevPick: new Uint8Array(Math.max(1, nX * 2)),
+    eyes,
+    slotPi: Int32Array.from(slotPi), slotRank: Int32Array.from(slotRank), slotKind: Int32Array.from(slotKind), nSlots,
+    crossUnderSlot, crossOverSlot, junctionSlot, capSlot, seamSlot, dgSlot,
+    capInfoOfSlot: Int32Array.from(capInfoOfSlot.slice(0, nSlots)),
+    stActive: new Uint8Array(Math.max(1, nSlots)), stCS: new Float64Array(Math.max(1, nSlots)),
+    stLeft: new Int32Array(Math.max(1, nSlots)).fill(-1), stRight: new Int32Array(Math.max(1, nSlots)).fill(-1),
+    discardA: Int32Array.from(discardA), discardB: Int32Array.from(discardB),
+    capArcX: Array.from({ length: capCount }, () => new Float64Array(80)),
+    capArcY: Array.from({ length: capCount }, () => new Float64Array(80)),
+    capArcN: new Int32Array(capCount), capCx: new Float64Array(capCount), capCy: new Float64Array(capCount),
+    capStation: new Int32Array(capCount).fill(-1),
+    ivPi: new Int32Array(Math.max(1, nSlots)), ivA: new Int32Array(Math.max(1, nSlots)), ivB: new Int32Array(Math.max(1, nSlots)),
+    ivCMid: new Float64Array(Math.max(1, nSlots)), ivLen: new Float64Array(Math.max(1, nSlots)),
+    ivDiscard: new Uint8Array(Math.max(1, nSlots)), ivRegion: new Int32Array(Math.max(1, nSlots)).fill(-1), nIv: 0,
+    seqIdx: new Int32Array(1024), seqSeg: new Int32Array(1024),
+    pairHashKey: new Int32Array(8192), pairHashVal: new Int32Array(8192), pairHashStamp: new Int32Array(8192), pairStamp: 0,
+    warm: false,
+    kinkCount: scene.crossings.filter((x) => x.a.chain === x.b.chain).length,
+  };
+  for (let pi = 0; pi < nCh; pi++) {
+    const cap = Math.max(4, (st.nPts[pi] || 4) + 4);
+    C.tanTx.push(new Float64Array(cap)); C.tanTy.push(new Float64Array(cap));
+    C.tanGF.push(new Float64Array(cap)); C.tanGB.push(new Float64Array(cap + 1));
+  }
+  st.corners.forEach((dc, ci) => { if (C.cornerByAArm[dc.aArm] < 0) C.cornerByAArm[dc.aArm] = ci; });
+  return C;
+}
+
+
+const ptScratch = new Float64Array(4);
+const ptScratch2 = new Float64Array(4);
+function depthAtC(C: FCache, pi: number, s: number, depthWin: number): number {
+  const P = C.depthS[pi]; const Z = C.depthZ[pi]; const n = C.depthN[pi];
+  if (n === 0) return 0;
+  const p = C.polys[pi];
+  const u = normS(p, s);
+  let lo = -1; let hi = n;
+  while (hi - lo > 1) { const m = (lo + hi) >> 1; if (P[m] <= u) lo = m; else hi = m; }
+  const hat = (z: number, d: number, w: number): number => (w <= 1e-12 ? (d <= 0 ? z : 0) : d >= w ? 0 : z * (1 - d / w));
+  if (p.closed) {
+    const iL = lo < 0 ? n - 1 : lo;
+    const sL = lo < 0 ? P[iL] - p.len : P[iL];
+    const iR = lo + 1 >= n ? 0 : lo + 1;
+    const sR = lo + 1 >= n ? P[iR] + p.len : P[iR];
+    const w = Math.min(depthWin, sR - sL);
+    return hat(Z[iL], u - sL, w) + hat(Z[iR], sR - u, w);
+  }
+  if (lo < 0) return hat(Z[0], P[0] - u, depthWin);
+  if (lo + 1 >= n) return hat(Z[n - 1], u - P[n - 1], depthWin);
+  const w = Math.min(depthWin, P[lo + 1] - P[lo]);
+  return hat(Z[lo], u - P[lo], w) + hat(Z[lo + 1], P[lo + 1] - u, w);
+}
+function armDistC(C: FCache, ai: number, s: number): number {
+  const p = C.polys[C.armObj[ai].pi];
+  let d = (s - C.armSR[ai]) * C.armDir[ai];
+  if (p.closed) d = ((d % p.len) + p.len) % p.len;
+  return d;
+}
+function memberGroupC(C: FCache, pi: number, s: number): number {
+  let best = 0; let g = -1;
+  const h = C.h;
+  for (const ai of C.armsOfChain[pi]) {
+    const d = armDistC(C, ai, s);
+    if (d < 0 || d > C.armL[ai]) continue;
+    const t = ssFB(0, h, C.armL[ai] - d);
+    if (t > best) { best = t; g = C.armObj[ai].g; }
+  }
+  return g;
+}
+
+function setupFrame(C: FCache, st: DiagramStructure, scene: SceneIn): void {
+  const h = C.h;
+  const idxOf = new Map<number, number>();
+  st.chainIds.forEach((id, i) => idxOf.set(id, i));
+  // Centrelines: raw only where an extension may apply.
+  for (let i = 0; i < C.nCh; i++) {
+    if (C.needRaw[i]) fillPoly(C.rawPolys[i], scene.chains[i].pts, scene.chains[i].closed, 0);
+    else fillPoly(C.polys[i], scene.chains[i].pts, scene.chains[i].closed, 0);
+    C.origLen[i] = C.needRaw[i] ? C.rawPolys[i].len : C.polys[i].len;
+  }
+  // Extensions for END arms, as the builder: straight to the foot on the
+  // through chain's centreline inside +-4h of the through arm's s.
+  interface Ext { start?: [number, number]; end?: [number, number] }
+  const exts: Ext[] = C.polys.map(() => ({}));
+  st.arms.forEach((a) => {
+    if (a.kind !== "end") return;
+    const j = scene.junctions[a.ji];
+    const xa = j?.arms[a.ei];
+    if (!xa) return;
+    const rp = C.needRaw[a.pi] ? C.rawPolys[a.pi] : C.polys[a.pi];
+    const term = pointAt(rp, xa.s);
+    let cp: [number, number] = [j.c[0], j.c[1]];
+    let best = Infinity;
+    for (const t of j.arms) {
+      if (t.kind !== "through") continue;
+      const ti = idxOf.get(t.chain);
+      if (ti === undefined) continue;
+      const tp = C.needRaw[ti] ? C.rawPolys[ti] : C.polys[ti];
+      const f = footInWindow(tp, term.x, term.y, t.s - 4 * h, t.s + 4 * h);
+      if (f.d < best) { best = f.d; cp = [f.x, f.y]; }
+    }
+    if (Math.abs(xa.s - 0) < Math.abs(xa.s - rp.len)) exts[a.pi].start = cp;
+    else exts[a.pi].end = cp;
+  });
+  for (let i = 0; i < C.nCh; i++) {
+    const e = exts[i];
+    if (!e.start && !e.end) { if (C.needRaw[i]) copyPoly(C.rawPolys[i], C.polys[i]); continue; }
+    const c = scene.chains[i];
+    const pts: number[] = [];
+    let s0 = 0;
+    if (e.start) { const d = Math.hypot(c.pts[0] - e.start[0], c.pts[1] - e.start[1]); if (d > 1e-9) { pts.push(e.start[0], e.start[1]); s0 = -d; } }
+    for (const v of c.pts) pts.push(v);
+    if (e.end) { const m = c.pts.length; const d = Math.hypot(c.pts[m - 2] - e.end[0], c.pts[m - 1] - e.end[1]); if (d > 1e-9) pts.push(e.end[0], e.end[1]); }
+    fillPoly(C.polys[i], pts, c.closed, s0);
+  }
+  const polys = C.polys;
+  // Crossings: centres, angles, per-chain passes, depth pins.
+  const amp = C.depthAmp;
+  C.depthN.fill(0);
+  for (let xi = 0; xi < C.nX; xi++) {
+    const x = scene.crossings[xi];
+    if (!x) continue;
+    const ia = C.crossAPi[xi]; const ib = C.crossBPi[xi];
+    const sa = normS(polys[ia], x.a.s); const sb = normS(polys[ib], x.b.s);
+    tanAtInto(polys[ia], sa, ptScratch); tanAtInto(polys[ib], sb, ptScratch2);
+    const theta = Math.acos(Math.min(1, Math.abs(ptScratch[0] * ptScratch2[0] + ptScratch[1] * ptScratch2[1])));
+    C.cpTheta[xi] = theta;
+    const over = C.crossOver[xi];
+    C.cpSOver[xi] = over === ia ? sa : sb;
+    C.cpSUnder[xi] = over === ia ? sb : sa;
+    pointAtInto(polys[ia], sa, ptScratch);
+    C.cpX[xi] = ptScratch[0]; C.cpY[xi] = ptScratch[1];
+    // depth pins (insertion into per-chain sorted arrays)
+    const addPinC = (pi: number, s: number, z: number): void => {
+      const S = C.depthS[pi]; const Z = C.depthZ[pi];
+      let n = C.depthN[pi];
+      let i2 = n;
+      while (i2 > 0 && S[i2 - 1] > s) { S[i2] = S[i2 - 1]; Z[i2] = Z[i2 - 1]; i2--; }
+      S[i2] = s; Z[i2] = z;
+      C.depthN[pi] = n + 1;
+    };
+    addPinC(ia, sa, x.over === "a" ? amp : -amp);
+    addPinC(ib, sb, x.over === "b" ? amp : -amp);
+  }
+  for (let pi = 0; pi < C.nCh; pi++) {
+    const lst = C.passXi[pi];
+    let n = 0;
+    for (let e = 0; e < lst.length; e++) {
+      const xi = lst[e];
+      const x = scene.crossings[xi];
+      if (!x) continue;
+      const isB = C.passIsB[pi][e] === 1;
+      const qi = isB ? C.crossAPi[xi] : C.crossBPi[xi];
+      C.passS[pi][n] = normS(polys[pi], isB ? x.b.s : x.a.s);
+      C.passSq[pi][n] = normS(polys[qi], isB ? x.a.s : x.b.s);
+      C.passTheta[pi][n] = C.cpTheta[xi];
+      C.passQi[pi][n] = qi;
+      n++;
+    }
+    C.passN[pi] = n;
+    const ord = C.passSort[pi];
+    for (let e = 0; e < n; e++) ord[e] = e;
+    // insertion sort by s (pass counts per chain are small)
+    for (let i = 1; i < n; i++) {
+      const v = ord[i]; const sv = C.passS[pi][v];
+      let j = i - 1;
+      while (j >= 0 && C.passS[pi][ord[j]] > sv) { ord[j + 1] = ord[j]; j--; }
+      ord[j + 1] = v;
+    }
+  }
+  // Arms: roots, spans, directions (the builder's rules).
+  const arms = C.armObj;
+  for (let ai = 0; ai < C.nArms; ai++) {
+    const a = arms[ai];
+    const p = polys[a.pi];
+    const xa = scene.junctions[a.ji]?.arms[a.ei];
+    if (a.kind === "end") {
+      const atStart = xa ? Math.abs(xa.s - 0) < Math.abs(xa.s - C.origLen[a.pi]) : true;
+      C.armDir[ai] = atStart ? 1 : -1;
+      C.armSR[ai] = atStart ? p.s0 : p.s0 + p.len;
+    } else {
+      C.armDir[ai] = a.dir;
+      C.armSR[ai] = xa ? normS(p, xa.s) : 0;
+    }
+    a.sR = C.armSR[ai]; a.dir = C.armDir[ai];
+  }
+  // Roots per chain for span limits.
+  C.chainRoots = [];
+  for (let pi = 0; pi < C.nCh; pi++) {
+    const roots: number[] = [];
+    for (const ai of C.armsOfChain[pi]) roots.push(C.armSR[ai]);
+    C.chainRoots.push(Float64Array.from(roots));
+  }
+  const reachOf = (pi: number, e: number, dirA: number): number => {
+    const theta = C.passTheta[pi][e];
+    const t = Math.tan(theta / 2);
+    let reach = t > 1e-12 ? h / t : Infinity;
+    const fl = 4 * h;
+    if (reach > fl) {
+      const pa = polys[pi]; const pq = polys[C.passQi[pi][e]];
+      const s = C.passS[pi][e]; const sq = C.passSq[pi][e];
+      tanAtInto(pa, s, ptScratch); tanAtInto(pq, sq, ptScratch2);
+      const sb = -dirA * (ptScratch[0] * ptScratch2[0] + ptScratch[1] * ptScratch2[1]) >= 0 ? 1 : -1;
+      const aC = 2 * Math.sin(theta / 2);
+      const T = 2 * h * Math.cos(theta / 2);
+      const eA = pa.closed ? pa.len / 2 : dirA > 0 ? s - pa.s0 : pa.s0 + pa.len - s;
+      let r = aC > 0 ? T / aC : Infinity;
+      let ee = fl;
+      for (let k = 0; k < 2; k++) {
+        const ek = Math.max(1e-6, Math.min(ee, eA));
+        pointAtInto(pa, s - dirA * ek, ptScratch); pointAtInto(pq, sq + sb * ek, ptScratch2);
+        const gx = ptScratch[0] - ptScratch2[0]; const gy = ptScratch[1] - ptScratch2[1];
+        const g = Math.sqrt(gx * gx + gy * gy);
+        const kap = Math.max(0, (2 * (g - aC * ek)) / (ek * ek));
+        r = (2 * T) / (aC + Math.sqrt(aC * aC + 2 * kap * T));
+        ee = Math.max(fl, r);
+      }
+      reach = Math.min(reach, Math.max(fl, r));
+    }
+    return reach;
+  };
+  const pend: { ai: number; Lroot: number; uB: number }[] = [];
+  for (let ai = 0; ai < C.nArms; ai++) {
+    const a = arms[ai];
+    const p = polys[a.pi];
+    const sR = C.armSR[ai]; const dir = C.armDir[ai];
+    const delta = (sv: number): number => { let d = (sv - sR) * dir; if (p.closed) d = ((d % p.len) + p.len) % p.len; return d; };
+    let L = p.closed ? p.len : dir > 0 ? p.s0 + p.len - sR : sR - p.s0;
+    for (const qs of C.chainRoots[a.pi]) { const d = delta(qs); if (d > 1e-9 && d < L) L = d; }
+    let Lcut = Infinity; let uB = Infinity;
+    const nP = C.passN[a.pi];
+    for (let e = 0; e < nP; e++) {
+      const sv = C.passS[a.pi][e];
+      const d = delta(sv);
+      const u = p.closed ? p.len - d : -d;
+      if (p.closed || d < -1e-12) { if (u >= 0 && u < uB) uB = u; }
+      if (d < -1e-12) continue;
+      Lcut = Math.min(Lcut, d - reachOf(a.pi, e, dir) - h);
+    }
+    const Lroot = L;
+    L = Math.max(0, Math.min(L, Lcut));
+    if (uB < Infinity) pend.push({ ai, Lroot, uB });
+    C.armLcut[ai] = Lcut;
+    C.armL[ai] = L;
+    a.L = L;
+  }
+  for (let ai = 0; ai < C.nArms; ai++) {
+    const a = arms[ai];
+    const p = polys[a.pi];
+    const xa = scene.junctions[a.ji]?.arms[a.ei];
+    const sB = a.kind === "end" && xa ? normS(p, xa.s) : C.armSR[ai];
+    pointAtInto(p, sB, ptScratch);
+    let s1 = sB + C.armDir[ai] * 2 * h;
+    if (!p.closed) s1 = Math.min(Math.max(s1, p.s0), p.s0 + p.len);
+    pointAtInto(p, s1, ptScratch2);
+    let ux = ptScratch2[0] - ptScratch[0]; let uy = ptScratch2[1] - ptScratch[1];
+    const ul = Math.sqrt(ux * ux + uy * uy);
+    if (ul < 1e-12) { ux = ptScratch[2] * C.armDir[ai]; uy = ptScratch[3] * C.armDir[ai]; } else { ux /= ul; uy /= ul; }
+    C.armUx[ai] = ux; C.armUy[ai] = uy; C.armAng[ai] = Math.atan2(uy, ux);
+    a.ux = ux; a.uy = uy; a.ang = C.armAng[ai];
+  }
+  for (let ji = 0; ji < C.armsOfJSorted.length; ji++) {
+    const l = C.armsOfJSorted[ji];
+    const src = st.armsOfJ[ji];
+    l.length = 0;
+    for (const v of src) l.push(v);
+    l.sort((x, y) => C.armAng[x] - C.armAng[y]);
+  }
+  for (const pd of pend) {
+    const A = arms[pd.ai];
+    const list = C.armsOfJSorted[A.ji];
+    const n = list.length;
+    const at = list.indexOf(pd.ai);
+    if (at < 0 || n < 2) continue;
+    const J = scene.junctions[A.ji];
+    if (!J) continue;
+    let gMax = 0;
+    for (const [aa, bb] of [[list[(at + n - 1) % n], pd.ai], [pd.ai, list[(at + 1) % n]]] as [number, number][]) {
+      if (aa === bb) continue;
+      const xa = J.arms[arms[aa].ei]; const xb = J.arms[arms[bb].ei];
+      if (xa && xb && xa.chain === xb.chain && xa.kind === "through" && xb.kind === "through" && Math.abs(xa.s - xb.s) < 1e-6) continue;
+      let th = C.armAng[bb] - C.armAng[aa];
+      th = ((th % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+      if (th < Math.PI) gMax = Math.max(gMax, Math.tan((Math.PI - th) / 4));
+    }
+    const k = gMax > 0 ? Math.min(4, Math.max(1, 1 / gMax)) : 4;
+    const c = k * pd.uB;
+    if (c < C.armLcut[pd.ai]) C.armLcut[pd.ai] = c;
+    C.armL[pd.ai] = Math.max(0, Math.min(pd.Lroot, C.armLcut[pd.ai]));
+    A.L = C.armL[pd.ai];
+  }
+  // Overall chain bboxes (diagnostics pruning).
+  for (let pi = 0; pi < C.nCh; pi++) {
+    const p = polys[pi];
+    let x0 = Infinity; let y0 = Infinity; let x1 = -Infinity; let y1 = -Infinity;
+    for (let blk = 0; blk < p.nblk; blk++) {
+      if (p.bk[4 * blk] < x0) x0 = p.bk[4 * blk];
+      if (p.bk[4 * blk + 1] < y0) y0 = p.bk[4 * blk + 1];
+      if (p.bk[4 * blk + 2] > x1) x1 = p.bk[4 * blk + 2];
+      if (p.bk[4 * blk + 3] > y1) y1 = p.bk[4 * blk + 3];
+    }
+    C.polyBox[4 * pi] = x0; C.polyBox[4 * pi + 1] = y0; C.polyBox[4 * pi + 2] = x1; C.polyBox[4 * pi + 3] = y1;
+  }
+  // Segment tangents + margin dot arrays for chains that carry arms.
+  for (let pi = 0; pi < C.nCh; pi++) {
+    if (!C.armsOfChain[pi].length) continue;
+    const p = polys[pi];
+    const tx = C.tanTx[pi]; const ty = C.tanTy[pi]; const gF = C.tanGF[pi]; const gB = C.tanGB[pi];
+    for (let k = 0; k < p.nseg; k++) {
+      const l = p.segLen[k] || 1;
+      const ux = p.dx[k] / l; const uy = p.dy[k] / l;
+      tx[k] = ux; ty[k] = uy;
+      gF[k] = p.x[k] * ux + p.y[k] * uy;
+    }
+    for (let i = 0; i < p.n; i++) {
+      const kin = i > 0 ? i - 1 : p.closed ? p.nseg - 1 : -1;
+      gB[i] = kin >= 0 ? p.x[i] * tx[kin] + p.y[i] * ty[kin] : 0;
+    }
+  }
+}
+
+// --- borders ---------------------------------------------------------------
+function buildBorderC(C: FCache, pi: number, sig: number): void {
+  const p = C.polys[pi];
+  const B = C.bords[pi * 2 + (sig === 1 ? 0 : 1)];
+  const h = C.h;
+  const n = p.n; const nseg = p.nseg;
+  if (nseg === 0) { B.nb = 0; return; }
+  // Per-vertex offsets: A_v along the incoming segment, B_v along the
+  // outgoing segment (the builder's offPoint at each vertex).
+  const cap = 8 * n + 64;
+  B.px = growF(B.px, cap); B.py = growF(B.py, cap); B.ps = growF(B.ps, cap); B.pv = growI(B.pv, cap);
+  const oax = C.offAx; const oay = C.offAy; const obx = C.offBx; const oby = C.offBy;
+  const PX = B.px; const PY = B.py; const PS = B.ps; const PV = B.pv;
+  for (let v = 0; v < n; v++) {
+    const kPrev = v - 1 < 0 ? nseg - 1 : v - 1;
+    const kNext = v >= nseg ? 0 : v;
+    const bp = kPrev + 1 === n ? 0 : kPrev + 1;
+    const lp = p.segLen[kPrev] || 1;
+    oax[v] = p.x[v] + sig * h * (-(p.y[bp] - p.y[kPrev]) / lp);
+    oay[v] = p.y[v] + sig * h * ((p.x[bp] - p.x[kPrev]) / lp);
+    const bn = kNext + 1 === n ? 0 : kNext + 1;
+    const ln = p.segLen[kNext] || 1;
+    obx[v] = p.x[v] + sig * h * (-(p.y[bn] - p.y[kNext]) / ln);
+    oby[v] = p.y[v] + sig * h * ((p.x[bn] - p.x[kNext]) / ln);
+  }
+  let out = 0;
+  // transition(v): join at vertex v between A_v (already the last point,
+  // except at the start) and B_v. Same branches as the builder.
+  const transition = (v: number): boolean => {
+    const kPrev = v - 1 < 0 ? nseg - 1 : v - 1;
+    const kNext = v >= nseg ? 0 : v;
+    const bp = kPrev + 1 === n ? 0 : kPrev + 1;
+    const lp = p.segLen[kPrev] || 1;
+    const tPx = (p.x[bp] - p.x[kPrev]) / lp; const tPy = (p.y[bp] - p.y[kPrev]) / lp;
+    const bn = kNext + 1 === n ? 0 : kNext + 1;
+    const ln = p.segLen[kNext] || 1;
+    const tNx = (p.x[bn] - p.x[kNext]) / ln; const tNy = (p.y[bn] - p.y[kNext]) / ln;
+    const cross = tPx * tNy - tPy * tNx;
+    const ax = oax[v]; const ay = oay[v]; const bx = obx[v]; const by = oby[v];
+    if (Math.abs(cross) < 1e-12) {
+      if (!(out > 0 && Math.abs(PX[out - 1] - bx) + Math.abs(PY[out - 1] - by) < 1e-12)) { PX[out] = bx; PY[out] = by; PS[out] = p.s[v]; PV[out] = v; out++; }
+      return false;
+    }
+    const joinSide = cross > 0 ? 1 : -1;
+    if (sig === joinSide) {
+      const dx = bx - ax; const dy = by - ay;
+      const tt = (dx * tNy - dy * tNx) / cross;
+      const jx = ax + tPx * tt; const jy = ay + tPy * tt;
+      if (out > 0 && Math.abs(PX[out - 1] - ax) + Math.abs(PY[out - 1] - ay) < 1e-9) { PX[out - 1] = jx; PY[out - 1] = jy; PV[out - 1] = v; }
+      else { PX[out] = jx; PY[out] = jy; PS[out] = p.s[v]; PV[out] = v; out++; }
+      return true;
+    }
+    const a0 = Math.atan2(ay - p.y[v], ax - p.x[v]);
+    let da = Math.atan2(by - p.y[v], bx - p.x[v]) - a0;
+    while (da > Math.PI) da -= 2 * Math.PI;
+    while (da < -Math.PI) da += 2 * Math.PI;
+    const steps = Math.max(1, Math.ceil(Math.abs(da) / (Math.PI / 16)));
+    for (let i = 1; i < steps; i++) {
+      const a = a0 + (da * i) / steps;
+      const fx = p.x[v] + h * Math.cos(a); const fy = p.y[v] + h * Math.sin(a);
+      if (out > 0 && Math.abs(PX[out - 1] - fx) + Math.abs(PY[out - 1] - fy) < 1e-12) continue;
+      PX[out] = fx; PY[out] = fy; PS[out] = p.s[v]; PV[out] = v; out++;
+    }
+    if (!(out > 0 && Math.abs(PX[out - 1] - bx) + Math.abs(PY[out - 1] - by) < 1e-12)) { PX[out] = bx; PY[out] = by; PS[out] = p.s[v]; PV[out] = v; out++; }
+    return false;
+  };
+  if (p.closed) {
+    for (let k = 0; k < nseg; k++) {
+      transition(k);
+      const b = k + 1 === n ? 0 : k + 1;
+      // A_{k+1}: offset of vertex b along segment k.
+      const l = p.segLen[k] || 1;
+      const axv = p.x[b] + sig * h * (-(p.y[b] - p.y[k]) / l);
+      const ayv = p.y[b] + sig * h * ((p.x[b] - p.x[k]) / l);
+      if (!(out > 0 && Math.abs(PX[out - 1] - axv) + Math.abs(PY[out - 1] - ayv) < 1e-12)) { PX[out] = axv; PY[out] = ayv; PS[out] = p.s[b]; PV[out] = b; out++; }
+    }
+    if (out > 1) {
+      const fx = PX[0]; const fy = PY[0]; const fv = PV[0];
+      const dx = fx - PX[out - 1]; const dy = fy - PY[out - 1];
+      if (dx * dx + dy * dy > 1e-24) { PX[out] = fx; PY[out] = fy; PS[out] = p.s0 + p.len; PV[out] = fv; out++; }
+      else PS[out - 1] = p.s0 + p.len;
+    }
+  } else {
+    // B_0, then per segment: join at its start vertex (k>0), A_{k+1}.
+    PX[out] = obx[0]; PY[out] = oby[0]; PS[out] = p.s[0]; PV[out] = 0; out++;
+    for (let k = 0; k < nseg; k++) {
+      if (k > 0) transition(k);
+      const b = k + 1;
+      const l = p.segLen[k] || 1;
+      const axv = p.x[b] + sig * h * (-(p.y[b] - p.y[k]) / l);
+      const ayv = p.y[b] + sig * h * ((p.x[b] - p.x[k]) / l);
+      if (!(out > 0 && Math.abs(PX[out - 1] - axv) + Math.abs(PY[out - 1] - ayv) < 1e-12)) { PX[out] = axv; PY[out] = ayv; PS[out] = p.s[b]; PV[out] = b; out++; }
+    }
+  }
+  B.nb = out;
+  cutFoldsC(C, pi, sig, B);
+}
+
+function bendsOfC(C: FCache, pi: number): Float64Array {
+  // Per-frame memo (kfFrameNo stamp): bend s values + concave side packed
+  // as (s, side) pairs in C.bendArr[pi].
+  if (C.bendStamp[pi] === kfFrameNo) return C.bendArr[pi];
+  C.bendStamp[pi] = kfFrameNo;
+  const p = C.polys[pi];
+  const h = C.h;
+  const arr = C.bendArr[pi];
+  let m = 0;
+  const n = p.n;
+  for (let v = 0; v < n; v++) {
+    if (!p.closed && (v === 0 || v === n - 1)) continue;
+    const vp = v - 1 < 0 ? n - 1 : v - 1;
+    const vn = v + 1 >= n ? 0 : v + 1;
+    const ax = p.x[v] - p.x[vp]; const ay = p.y[v] - p.y[vp];
+    const bx = p.x[vn] - p.x[v]; const by = p.y[vn] - p.y[v];
+    const cx = p.x[vn] - p.x[vp]; const cy = p.y[vn] - p.y[vp];
+    const l2a = ax * ax + ay * ay; const l2b = bx * bx + by * by; const l2c = cx * cx + cy * cy;
+    const area2 = Math.abs(ax * by - ay * bx);
+    if (!(l2a > 0 && l2b > 0 && l2c > 0 && area2 > 1e-15)) continue;
+    // radius < h  <=>  l2a*l2b*l2c < (2*h*area2)^2
+    if (l2a * l2b * l2c >= 4 * h * h * area2 * area2) continue;
+    const cross = ax * by - ay * bx;
+    arr[2 * m] = p.s[v]; arr[2 * m + 1] = cross > 0 ? 1 : -1;
+    m++;
+  }
+  C.bendN[pi] = m;
+  return arr;
+}
+let kfFrameNo = 1;
+function cutFoldsC(C: FCache, pi: number, sig: number, B: FBord): void {
+  const p = C.polys[pi];
+  const h = C.h;
+  const bendAll = bendsOfC(C, pi);
+  const bends: number[] = [];
+  for (let i = 0; i < C.bendN[pi]; i++) if (bendAll[2 * i + 1] === sig) bends.push(bendAll[2 * i]);
+  let nb = B.nb;
+  if (bends.length) {
+    const bendClusters: number[] = [];
+    for (const sb of bends) if (!bendClusters.some((c) => Math.abs(dS(p, c, sb)) < h)) bendClusters.push(sb);
+    const seq: number[] = [];
+    for (let i = 0; i < nb; i++) seq.push(i);
+    let poolN = nb;
+    const poolPush = (x: number, y: number, s: number): number => {
+      B.px = growF(B.px, poolN + 1); B.py = growF(B.py, poolN + 1); B.ps = growF(B.ps, poolN + 1); B.pv = growI(B.pv, poolN + 1);
+      B.px[poolN] = x; B.py[poolN] = y; B.ps[poolN] = s; B.pv[poolN] = -1;
+      return poolN++;
+    };
+    const diag = (C as unknown as { __foldDiag: string[] }).__foldDiag;
+    for (const sb of bendClusters) {
+      const idx: number[] = [];
+      for (let i = 0; i < seq.length; i++) if (Math.abs(dS(p, sb, B.ps[seq[i]])) <= 2.5 * h) idx.push(i);
+      if (idx.length < 3) continue;
+      const i0 = idx[0]; const i1 = idx[idx.length - 1];
+      let guard = 0;
+      let changed = true;
+      while (changed && guard++ < 8) {
+        changed = false;
+        outer: for (let i = i0; i <= Math.min(i1, seq.length - 2); i++) {
+          for (let j = i + 2; j <= Math.min(i1, seq.length - 1); j++) {
+            if (i === 0 && j === seq.length - 1) continue;
+            const ia = seq[i]; const ib = seq[i + 1]; const ic = seq[j - 1]; const id = seq[j];
+            const hit = segInt(B.px[ia], B.py[ia], B.px[ib], B.py[ib], B.px[ic], B.py[ic], B.px[id], B.py[id]);
+            if (!hit) continue;
+            const x = B.px[ia] + (B.px[ib] - B.px[ia]) * hit.t;
+            const y = B.py[ia] + (B.py[ib] - B.py[ia]) * hit.t;
+            const s = B.ps[ia] + dS(p, B.ps[ia], B.ps[ib]) * hit.t;
+            const nid = poolPush(x, y, s);
+            seq.splice(i + 1, j - i - 1, nid);
+            diag.push(`fold ch${pi} side${sig} at s=${sb.toFixed(2)}`);
+            changed = true;
+            break outer;
+          }
+        }
+      }
+    }
+    // Compact the sequence into the base arrays.
+    const m = seq.length;
+    B.bx = growF(B.bx, m); B.by = growF(B.by, m); B.bs = growF(B.bs, m); B.bfx = growF(B.bfx, m); B.bfy = growF(B.bfy, m);
+    for (let i = 0; i < m; i++) {
+      const id = seq[i];
+      B.bx[i] = B.px[id]; B.by[i] = B.py[id]; B.bs[i] = B.ps[id];
+      const v = B.pv[id];
+      if (v >= 0) { B.bfx[i] = p.x[v]; B.bfy[i] = p.y[v]; }
+      else { pointAtInto(p, B.ps[id], ptScratch); B.bfx[i] = ptScratch[0]; B.bfy[i] = ptScratch[1]; }
+    }
+    B.nb = m;
+    return;
+  }
+  B.bx = growF(B.bx, nb); B.by = growF(B.by, nb); B.bs = growF(B.bs, nb); B.bfx = growF(B.bfx, nb); B.bfy = growF(B.bfy, nb);
+  for (let i = 0; i < nb; i++) {
+    B.bx[i] = B.px[i]; B.by[i] = B.py[i]; B.bs[i] = B.ps[i];
+    const v = B.pv[i];
+    if (v >= 0) { B.bfx[i] = p.x[v]; B.bfy[i] = p.y[v]; }
+    else { pointAtInto(p, B.ps[i], ptScratch); B.bfx[i] = ptScratch[0]; B.bfy[i] = ptScratch[1]; }
+  }
+  B.nb = nb;
+}
+
+// --- inserts / refs ----------------------------------------------------------
+function newRef(C: FCache, b: number): number {
+  if (C.nRef >= C.refB.length) {
+    C.refB = growI(C.refB, C.nRef + 1); C.refFinal = growI(C.refFinal, C.nRef + 1); C.refS = growF(C.refS, C.nRef + 1); C.refS0 = growF(C.refS0, C.nRef + 1);
+  }
+  const id = C.nRef++;
+  C.refB[id] = b; C.refFinal[id] = -1; C.refS[id] = 0; C.refS0[id] = 0;
+  return id;
+}
+function addInsert(C: FCache, b: number, seg: number, t: number, x: number, y: number, refId: number): void {
+  const id = C.insB.length;
+  C.insB.push(b); C.insSeg.push(seg); C.insT.push(Math.min(1, Math.max(0, t))); C.insX.push(x); C.insY.push(y); C.insRef.push(refId);
+  C.bords[b].ins.push(id);
+}
+/** The builder's addPointAt: locate (x, y) on the base border near s. */
+function addPointAtC(C: FCache, pi: number, side: number, x: number, y: number, sFoot: number): number {
+  const b = pi * 2 + (side === 1 ? 0 : 1);
+  const B = C.bords[b];
+  const p = C.polys[pi];
+  const refId = newRef(C, b);
+  C.refS0[refId] = sFoot;
+  const n = B.nb;
+  if (n < 2) { addInsert(C, b, 0, 0, x, y, refId); return refId; }
+  const target = p.closed ? normS(p, sFoot) : sFoot;
+  let lo = 0; let hi = n - 1;
+  while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (B.bs[mid] <= target) lo = mid; else hi = mid; }
+  let bestSeg = Math.max(0, lo - 1); let bestT = 0; let bestD = Infinity;
+  for (let i = Math.max(0, lo - 3); i < Math.min(n - 1, lo + 4); i++) {
+    const ax = B.bx[i]; const ay = B.by[i];
+    const ex = B.bx[i + 1] - ax; const ey = B.by[i + 1] - ay;
+    const l2 = ex * ex + ey * ey;
+    let t = l2 > 0 ? ((x - ax) * ex + (y - ay) * ey) / l2 : 0;
+    t = Math.min(1, Math.max(0, t));
+    const dx = ax + ex * t - x; const dy = ay + ey * t - y;
+    const d = Math.sqrt(dx * dx + dy * dy);
+    if (d < bestD) { bestD = d; bestSeg = i; bestT = t; }
+  }
+  addInsert(C, b, bestSeg, bestT, x, y, refId);
+  return refId;
+}
+function borderPointAtBase(C: FCache, pi: number, side: number, s: number, out: Float64Array): void {
+  const B = C.bords[pi * 2 + (side === 1 ? 0 : 1)];
+  const p = C.polys[pi];
+  const n = B.nb;
+  if (n === 0) { out[0] = 0; out[1] = 0; return; }
+  let target = s;
+  if (p.closed) { target = normS(p, s); if (target < B.bs[0] - 1e-9) target += p.len; }
+  let lo = 0; let hi = n - 1;
+  while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (B.bs[mid] <= target) lo = mid; else hi = mid; }
+  const a = lo; const bb = Math.min(n - 1, lo + 1);
+  const ds = B.bs[bb] - B.bs[a];
+  const t = ds > 1e-12 ? Math.min(1, Math.max(0, (target - B.bs[a]) / ds)) : 0;
+  out[0] = B.bx[a] + (B.bx[bb] - B.bx[a]) * t;
+  out[1] = B.by[a] + (B.by[bb] - B.by[a]) * t;
+}
+function borderPointAtFinal(C: FCache, pi: number, side: number, s: number, out: Float64Array): void {
+  const B = C.bords[pi * 2 + (side === 1 ? 0 : 1)];
+  const p = C.polys[pi];
+  const n = B.nf;
+  if (n === 0) { out[0] = 0; out[1] = 0; return; }
+  let target = s;
+  if (p.closed) { target = normS(p, s); if (target < B.s[0] - 1e-9) target += p.len; }
+  let lo = 0; let hi = n - 1;
+  while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (B.s[mid] <= target) lo = mid; else hi = mid; }
+  const a = lo; const bb = Math.min(n - 1, lo + 1);
+  const ds = B.s[bb] - B.s[a];
+  const t = ds > 1e-12 ? Math.min(1, Math.max(0, (target - B.s[a]) / ds)) : 0;
+  out[0] = B.xy[2 * a] + (B.xy[2 * bb] - B.xy[2 * a]) * t;
+  out[1] = B.xy[2 * a + 1] + (B.xy[2 * bb + 1] - B.xy[2 * a + 1]) * t;
+}
+/** Merge every border's inserts into its final arrays (builder rebuild). */
+const kfPend = new Int32Array(256);
+let kfSegStamp = 0;
+function mergeBorders(C: FCache): void {
+  const insSeg = C.insSeg; const insT = C.insT; const insX = C.insX; const insY = C.insY; const insRef = C.insRef;
+  for (let b = 0; b < C.bords.length; b++) {
+    const B = C.bords[b];
+    const pi = b >> 1;
+    const p = C.polys[pi];
+    const n = B.nb;
+    const ins = B.ins;
+    const m = ins.length;
+    if (n === 0) { B.nf = 0; continue; }
+    // Counting sort of insert ids by segment (stable), then t order
+    // inside each segment (groups are tiny).
+    if (B.sorted.length < m) { B.sorted = new Int32Array(Math.max(m, 16)); B.segCnt = new Int32Array(1024); }
+    if (B.segCnt.length < n) B.segCnt = new Int32Array(n * 2);
+    const cnt = B.segCnt;
+    cnt.fill(0, 0, n);
+    for (let q = 0; q < m; q++) { const sg = insSeg[ins[q]]; cnt[sg < n ? sg : n - 1]++; }
+    let sum = 0;
+    for (let i = 0; i < n; i++) { const c0 = cnt[i]; cnt[i] = sum; sum += c0; }
+    const sorted = B.sorted;
+    for (let q = 0; q < m; q++) { const id = ins[q]; const sg = insSeg[id]; sorted[cnt[sg < n ? sg : n - 1]++] = id; }
+    // cnt[i] now holds group ends; insertion-sort each group by t.
+    let gStart = 0;
+    for (let i = 0; i < n; i++) {
+      const gEnd = cnt[i];
+      for (let a = gStart + 1; a < gEnd; a++) {
+        const v = sorted[a]; const tv = insT[v];
+        let bb = a - 1;
+        while (bb >= gStart && insT[sorted[bb]] > tv) { sorted[bb + 1] = sorted[bb]; bb--; }
+        sorted[bb + 1] = v;
+      }
+      gStart = gEnd;
+    }
+    const need = n + m + 1;
+    B.xy = growF(B.xy, 2 * need); B.s = growF(B.s, need); B.cxy = growF(B.cxy, 2 * need);
+    const XY = B.xy; const SS = B.s; const CXY = B.cxy;
+    const BX = B.bx; const BY = B.by; const BS = B.bs; const BFX = B.bfx; const BFY = B.bfy;
+    let out = 0;
+    XY[0] = BX[0]; XY[1] = BY[0]; SS[0] = BS[0]; CXY[0] = BFX[0]; CXY[1] = BFY[0];
+    out = 1;
+    let ii = 0;
+    const pend = kfPend; let pendN = 0;
+    // Group boundaries from cnt (ends): group of segment i is
+    // [groupStart(i), cnt[i]) with groupStart(0)=0, groupStart(i)=cnt[i-1].
+    let groupStart = 0;
+    for (let i = 0; i + 1 < n; i++) {
+      const gEnd = cnt[i];
+      pendN = 0;
+      for (let jj = ii; jj < gEnd; jj++) {
+        const id = sorted[jj];
+        const tt = insT[id];
+        const refId = insRef[id];
+        if (tt >= 1 - 1e-9) { pend[pendN++] = id; continue; }
+        const lx = XY[2 * (out - 1)]; const ly = XY[2 * (out - 1) + 1];
+        const dx = insX[id] - lx; const dy = insY[id] - ly;
+        if (tt <= 1e-9 || dx * dx + dy * dy < 1e-24) {
+          if (refId >= 0) { C.refFinal[refId] = out - 1; C.refS[refId] = SS[out - 1]; }
+          continue;
+        }
+        const s = lerpS(p, BS[i], BS[i + 1], tt);
+        XY[2 * out] = insX[id]; XY[2 * out + 1] = insY[id]; SS[out] = s;
+        CXY[2 * out] = BFX[i] + (BFX[i + 1] - BFX[i]) * tt;
+        CXY[2 * out + 1] = BFY[i] + (BFY[i + 1] - BFY[i]) * tt;
+        if (refId >= 0) { C.refFinal[refId] = out; C.refS[refId] = s; }
+        out++;
+      }
+      ii = gEnd;
+      groupStart = gEnd;
+      void groupStart;
+      XY[2 * out] = BX[i + 1]; XY[2 * out + 1] = BY[i + 1]; SS[out] = BS[i + 1]; CXY[2 * out] = BFX[i + 1]; CXY[2 * out + 1] = BFY[i + 1];
+      out++;
+      for (let q = 0; q < pendN; q++) {
+        const refId = insRef[pend[q]];
+        if (refId >= 0) { C.refFinal[refId] = out - 1; C.refS[refId] = SS[out - 1]; }
+      }
+    }
+    // Inserts on the last segment group (never visited) attach to the
+    // last point, as in the builder's unresolved-ref fallback.
+    for (let jj = ii; jj < m; jj++) {
+      const refId = insRef[sorted[jj]];
+      if (refId >= 0) { C.refFinal[refId] = out - 1; C.refS[refId] = SS[out - 1]; }
+    }
+    B.nf = out;
+    B.segReg = growI(B.segReg, Math.max(1, out));
+    B.segReg.fill(-1);
+  }
+}
+
+// --- corners -----------------------------------------------------------------
+const kfFa: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 };
+const kfFb: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 };
+const kfQa: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 };
+const kfQb: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 };
+const kfTa: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 };
+const kfTb: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 };
+const kfMFoot: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 };
+const nodeScratch = new Float64Array(33 * 12);
+const nodeScratchK = new Int32Array(33 * 2);
+interface KfCst {
+  A: FArm; B: FArm; aiA: number; aiB: number;
+  qx: number; qy: number; rhoCur: number; Vx: number; Vy: number; denV: number; rbEff: number; r0: number;
+  wCacheA: WalkCache; wCacheB: WalkCache;
+}
+const kfCst: KfCst = {
+  A: null as unknown as FArm, B: null as unknown as FArm, aiA: -1, aiB: -1,
+  qx: 0, qy: 0, rhoCur: 0, Vx: 0, Vy: 0, denV: 0, rbEff: 1, r0: 0,
+  wCacheA: mkWalkCache(), wCacheB: mkWalkCache(),
+};
+const kfSv = { x: 0, y: 0 };
+
+function footArmGlobal(C: FCache, ai: number, x: number, y: number, estD: number, out: FFoot): void {
+  const a = C.armObj[ai];
+  const p = C.polys[a.pi];
+  let d0 = Math.max(0, estD - 4 * C.h); let d1 = Math.min(C.armL[ai], estD + 4 * C.h);
+  if (d1 - d0 < 1e-9) { d0 = 0; d1 = C.armL[ai]; }
+  const lo = C.armDir[ai] > 0 ? C.armSR[ai] + d0 : C.armSR[ai] - d1;
+  const hi = C.armDir[ai] > 0 ? C.armSR[ai] + d1 : C.armSR[ai] - d0;
+  void p;
+  footWinFast(C.polys[a.pi], x, y, lo, hi, out);
+  out.u = C.armSR[ai] + C.armDir[ai] * armDistC(C, ai, out.s);
+}
+function solveVC(C: FCache, ci: number, aiA: number, aiB: number, rho: number, x0: number, y0: number, estD: number, fa: FFoot, fb: FFoot): boolean {
+  const h = C.h;
+  const A = C.armObj[aiA]; const B = C.armObj[aiB];
+  // Warm attempt: Newton from last frame's V with tracked feet.
+  if (C.warm && ci >= 0 && C.wValid[ci]) {
+    let x = C.wVx[ci]; let y = C.wVy[ci];
+    footNearM(C.polys, h, A, x, y, C.wFaS[ci], C.wFaK[ci], fa);
+    footNearM(C.polys, h, B, x, y, C.wFbS[ci], C.wFbK[ci], fb);
+    let okIt = false;
+    for (let it = 0; it < 40; it++) {
+      const Fa = fa.d - rho; const Fb = fb.d - rho;
+      if (Math.abs(Fa) < 1e-12 * Math.max(1, rho) && Math.abs(Fb) < 1e-12 * Math.max(1, rho)) { okIt = true; break; }
+      if (!(fa.d > 1e-12 && fb.d > 1e-12)) break;
+      const gax = (x - fa.x) / fa.d; const gay = (y - fa.y) / fa.d;
+      const gbx = (x - fb.x) / fb.d; const gby = (y - fb.y) / fb.d;
+      const det = gax * gby - gay * gbx;
+      if (Math.abs(det) < 1e-12) break;
+      let dx = (-Fa * gby + Fb * gay) / det;
+      let dy = (-Fb * gax + Fa * gbx) / det;
+      const dl = Math.sqrt(dx * dx + dy * dy);
+      if (dl > h) { dx *= h / dl; dy *= h / dl; }
+      x += dx; y += dy;
+      footNearM(C.polys, h, A, x, y, fa.u, fa.k, fa);
+      footNearM(C.polys, h, B, x, y, fb.u, fb.k, fb);
+    }
+    void okIt;
+    // Validate with the builder's global feet at this point.
+    footArmGlobal(C, aiA, x, y, estD, kfTa); footArmGlobal(C, aiB, x, y, estD, kfTb);
+    if (Math.abs(kfTa.d - rho) < 1e-9 * Math.max(h, rho) && Math.abs(kfTb.d - rho) < 1e-9 * Math.max(h, rho)) {
+      copyFoot(fa, kfTa); copyFoot(fb, kfTb);
+      kfSv.x = x; kfSv.y = y;
+      return true;
+    }
+  }
+  // The builder's solveEq: global feet, Newton from the given guess.
+  let x = x0; let y = y0;
+  footArmGlobal(C, aiA, x, y, estD, fa); footArmGlobal(C, aiB, x, y, estD, fb);
+  for (let it = 0; it < 40; it++) {
+    const Fa = fa.d - rho; const Fb = fb.d - rho;
+    if (Math.abs(Fa) < 1e-12 * Math.max(1, rho) && Math.abs(Fb) < 1e-12 * Math.max(1, rho)) break;
+    if (!(fa.d > 1e-12 && fb.d > 1e-12)) break;
+    const gax = (x - fa.x) / fa.d; const gay = (y - fa.y) / fa.d;
+    const gbx = (x - fb.x) / fb.d; const gby = (y - fb.y) / fb.d;
+    const det = gax * gby - gay * gbx;
+    if (Math.abs(det) < 1e-12) break;
+    let dx = (-Fa * gby + Fb * gay) / det;
+    let dy = (-Fb * gax + Fa * gbx) / det;
+    const dl = Math.hypot(dx, dy);
+    if (dl > h) { dx *= h / dl; dy *= h / dl; }
+    x += dx; y += dy;
+    footArmGlobal(C, aiA, x, y, estD, fa); footArmGlobal(C, aiB, x, y, estD, fb);
+  }
+  kfSv.x = x; kfSv.y = y;
+  return Math.abs(fa.d - rho) < 1e-9 * Math.max(h, rho) && Math.abs(fb.d - rho) < 1e-9 * Math.max(h, rho);
+}
+
+const ss01 = (x: number): number => { const t = x < 0 ? 0 : x > 1 ? 1 : x; return t * t * (3 - 2 * t); };
+
+function marginOfC(C: FCache, ai: number, x: number, y: number, sf: number, dc: number, kFoot: number, cache: WalkCache): number {
+  const arm = C.armObj[ai];
+  const pl = C.polys[arm.pi];
+  const h = C.h;
+  const winLo = C.armDir[ai] > 0 ? C.armSR[ai] : C.armSR[ai] - C.armL[ai];
+  const winHi = C.armDir[ai] > 0 ? C.armSR[ai] + C.armL[ai] : C.armSR[ai];
+  const base = sf - normS(pl, sf);
+  const TXm = C.tanTx[arm.pi]; const TYm = C.tanTy[arm.pi]; const GFm = C.tanGF[arm.pi]; const GBm = C.tanGB[arm.pi];
+  const footStartS = base + pl.s[kFoot];
+  const footEndS = footStartS + pl.segLen[kFoot];
+  const delta = cache.valid ? Math.sqrt((x - cache.qx) * (x - cache.qx) + (y - cache.qy) * (y - cache.qy)) : Infinity;
+  let hi = winHi;
+  let minF = Infinity;
+  let kHi = -1; let bkHi = 0;
+  const resumeF = cache.valid && cache.footStartS <= footStartS && footEndS <= cache.hiS && cache.minF - delta > 0;
+  if (resumeF && cache.kHi < 0) { minF = cache.minF - delta; }
+  else {
+    let k = kFoot; let bk = base;
+    if (resumeF) { k = cache.kHi; bk = cache.bkHi; minF = cache.minF - delta; }
+    let stopped = false;
+    for (let it = 0; it <= pl.nseg; it++) {
+      const sv = bk + pl.s[k] + pl.segLen[k];
+      if (sv >= winHi) break;
+      let k2 = k + 1; let b2 = bk;
+      if (k2 >= pl.nseg) { if (!pl.closed) break; k2 = 0; b2 = bk + pl.len; }
+      const dotF = GFm[k2] - (x * TXm[k2] + y * TYm[k2]);
+      if (dotF < 0) { hi = sv; kHi = k; bkHi = bk; stopped = true; break; }
+      if (dotF < minF) minF = dotF;
+      k = k2; bk = b2;
+    }
+    if (!stopped) kHi = -1;
+  }
+  let lo = winLo;
+  let maxB = -Infinity;
+  let kLo = -1; let bkLo = 0;
+  const resumeB = cache.valid && footStartS <= cache.footStartS && footStartS >= cache.loS && cache.maxB + delta < 0;
+  if (resumeB && cache.kLo < 0) { maxB = cache.maxB + delta; }
+  else {
+    let k = kFoot; let bk = base;
+    if (resumeB) { k = cache.kLo; bk = cache.bkLo; maxB = cache.maxB + delta; }
+    let stopped = false;
+    for (let it = 0; it <= pl.nseg; it++) {
+      const sv = bk + pl.s[k];
+      if (sv <= winLo) break;
+      let k2 = k - 1; let b2 = bk;
+      if (k2 < 0) { if (!pl.closed) break; k2 = pl.nseg - 1; b2 = bk - pl.len; }
+      const dotB = GBm[k] - (x * TXm[k2] + y * TYm[k2]);
+      if (dotB > 0) { lo = sv; kLo = k; bkLo = bk; stopped = true; break; }
+      if (dotB > maxB) maxB = dotB;
+      k = k2; bk = b2;
+    }
+    if (!stopped) kLo = -1;
+  }
+  cache.valid = true; cache.qx = x; cache.qy = y;
+  cache.footStartS = footStartS; cache.footEndS = footEndS;
+  cache.hiS = hi; cache.kHi = kHi; cache.bkHi = bkHi; cache.minF = minF;
+  cache.loS = lo; cache.kLo = kLo; cache.bkLo = bkLo; cache.maxB = maxB;
+  const stopAt = dc - 0.05 * h;
+  let d2 = Infinity;
+  if (lo > winLo) { footWinFast(pl, x, y, winLo, lo, kfMFoot, stopAt, dc, cache.oLo - 2 * h, cache.oLo + 2 * h); d2 = kfMFoot.d; if (d2 <= dc) cache.oLo = pl.closed && pl.len > 0 ? kfMFoot.s + Math.round(((winLo + lo) / 2 - kfMFoot.s) / pl.len) * pl.len : kfMFoot.s; }
+  if (hi < winHi && d2 > stopAt) { footWinFast(pl, x, y, hi, winHi, kfMFoot, stopAt, dc, cache.oHi - 2 * h, cache.oHi + 2 * h); if (kfMFoot.d < d2) { d2 = kfMFoot.d; if (d2 <= dc) cache.oHi = pl.closed && pl.len > 0 ? kfMFoot.s + Math.round(((hi + winHi) / 2 - kfMFoot.s) / pl.len) * pl.len : kfMFoot.s; } }
+  return d2 - dc;
+}
+function wOfC(C: FCache): number {
+  const h = C.h; const W = C.W;
+  const denQ = 1 + ((kfCst.qx - kfQa.x) * (kfCst.qx - kfQb.x) + (kfCst.qy - kfQa.y) * (kfCst.qy - kfQb.y)) / ((kfQa.d || 1) * (kfQb.d || 1));
+  const slack = Math.min(C.armL[kfCst.aiA] - W - (kfQa.u - C.armSR[kfCst.aiA]) * C.armDir[kfCst.aiA], C.armL[kfCst.aiB] - W - (kfQb.u - C.armSR[kfCst.aiB]) * C.armDir[kfCst.aiB]);
+  const denRatio = Math.abs(kfCst.denV) > 1e-12 ? denQ / kfCst.denV : 0;
+  const fSteep = ss01((denRatio - 0.3) / 0.4);
+  if (fSteep === 0) return 0;
+  const fSlack = ss01(slack / (0.5 * h));
+  if (fSlack === 0) return 0;
+  const fRootA = ss01(((kfQa.u - C.armSR[kfCst.aiA]) * C.armDir[kfCst.aiA]) / kfCst.rbEff);
+  if (fRootA === 0) return 0;
+  const fRootB = ss01(((kfQb.u - C.armSR[kfCst.aiB]) * C.armDir[kfCst.aiB]) / kfCst.rbEff);
+  if (fRootB === 0) return 0;
+  const mA = marginOfC(C, kfCst.aiA, kfCst.qx, kfCst.qy, kfQa.u, kfQa.d, kfQa.k, kfCst.wCacheA);
+  if (mA <= -0.05 * h) return 0;
+  const mB = marginOfC(C, kfCst.aiB, kfCst.qx, kfCst.qy, kfQb.u, kfQb.d, kfQb.k, kfCst.wCacheB);
+  if (mB <= -0.05 * h) return 0;
+  return ss01(1 + Math.min(0, mA, mB) / (0.05 * h)) * fSteep * fSlack * fRootA * fRootB;
+}
+const kfGN = 32;
+const kfPrevX = new Float64Array(33); const kfPrevY = new Float64Array(33);
+const kfPrevFaS = new Float64Array(33); const kfPrevFbS = new Float64Array(33);
+const kfPrevFaK = new Int32Array(33); const kfPrevFbK = new Int32Array(33);
+function advanceToC(C: FCache, rhoT: number): void {
+  const h = C.h;
+  const dN = Math.max(kfCst.r0 / kfGN, 1e-12);
+  let step = dN;
+  let guard = 0;
+  while (kfCst.rhoCur < rhoT - 1e-12 * rhoT && guard++ < 128) {
+    const rn = Math.min(rhoT, kfCst.rhoCur + step);
+    const dd = rn - kfCst.rhoCur;
+    let advanced = false;
+    if (kfQa.d > 1e-12 && kfQb.d > 1e-12) {
+      const nax = (kfCst.qx - kfQa.x) / kfQa.d; const nay = (kfCst.qy - kfQa.y) / kfQa.d;
+      const nbx = (kfCst.qx - kfQb.x) / kfQb.d; const nby = (kfCst.qy - kfQb.y) / kfQb.d;
+      const den = 1 + nax * nbx + nay * nby;
+      if (den > 1e-9) {
+        const ux = (nax + nbx) / den; const uy = (nay + nby) / den;
+        const gx = kfCst.qx + ux * dd; const gy = kfCst.qy + uy * dd;
+        const acc = Math.min(h, Math.max(0.5 * Math.sqrt(ux * ux + uy * uy) * dd, 1e-3 * h));
+        copyFoot(kfTa, kfQa); copyFoot(kfTb, kfQb);
+        let sx = gx; let sy = gy;
+        footNearM(C.polys, h, kfCst.A, sx, sy, kfTa.u, kfTa.k, kfTa); footNearM(C.polys, h, kfCst.B, sx, sy, kfTb.u, kfTb.k, kfTb);
+        for (let it = 0; it < 60; it++) {
+          const Fa = kfTa.d - rn; const Fb = kfTb.d - rn;
+          if (Math.abs(Fa) < 1e-12 * Math.max(1, rn) && Math.abs(Fb) < 1e-12 * Math.max(1, rn)) break;
+          if (!(kfTa.d > 1e-12 && kfTb.d > 1e-12)) break;
+          const gax = (sx - kfTa.x) / kfTa.d; const gay = (sy - kfTa.y) / kfTa.d;
+          const gbx = (sx - kfTb.x) / kfTb.d; const gby = (sy - kfTb.y) / kfTb.d;
+          const det = gax * gby - gay * gbx;
+          if (Math.abs(det) < 1e-12) break;
+          if (Math.max(Math.abs(Fa), Math.abs(Fb)) < 1e-9 * Math.max(1, rn) && Math.abs(det) >= 0.05) break;
+          let dx = (-Fa * gby + Fb * gay) / det;
+          let dy = (-Fb * gax + Fa * gbx) / det;
+          const dl = Math.sqrt(dx * dx + dy * dy);
+          if (dl > acc) { dx *= acc / dl; dy *= acc / dl; }
+          sx += dx; sy += dy;
+          footNearM(C.polys, h, kfCst.A, sx, sy, kfTa.u, kfTa.k, kfTa); footNearM(C.polys, h, kfCst.B, sx, sy, kfTb.u, kfTb.k, kfTb);
+        }
+        const sok = Math.max(Math.abs(kfTa.d - rn), Math.abs(kfTb.d - rn)) < 1e-9 * Math.max(1, rn);
+        if (sok && Math.sqrt((sx - gx) * (sx - gx) + (sy - gy) * (sy - gy)) <= acc) { kfCst.qx = sx; kfCst.qy = sy; copyFoot(kfQa, kfTa); copyFoot(kfQb, kfTb); kfCst.rhoCur = rn; advanced = true; }
+      }
+    }
+    if (advanced) step = Math.min(dN, 2 * step);
+    else { step /= 2; if (step < 1e-5 * h) break; }
+  }
+}
+function growIntegC(C: FCache, ci: number): number {
+  copyFoot(kfQa, kfFa); copyFoot(kfQb, kfFb);
+  kfQa.u = C.armSR[kfCst.aiA] + C.armDir[kfCst.aiA] * armDistC(C, kfCst.aiA, kfFa.s);
+  kfQb.u = C.armSR[kfCst.aiB] + C.armDir[kfCst.aiB] * armDistC(C, kfCst.aiB, kfFb.s);
+  kfCst.qx = kfCst.Vx; kfCst.qy = kfCst.Vy; kfCst.rhoCur = C.h;
+  if (!(kfCst.r0 > 1e-9)) { C.nodeN[ci] = 0; return 0; }
+  const dN = kfCst.r0 / kfGN;
+  const NS = nodeScratch; const NK = nodeScratchK;
+  const saveNode = (kk: number): void => {
+    const o = kk * 12;
+    NS[o] = kfCst.qx; NS[o + 1] = kfCst.qy; NS[o + 2] = kfQa.d; NS[o + 3] = kfQa.x; NS[o + 4] = kfQa.y; NS[o + 5] = kfQa.s; NS[o + 6] = kfQa.u;
+    NS[o + 7] = kfQb.d; NS[o + 8] = kfQb.x; NS[o + 9] = kfQb.y; NS[o + 10] = kfQb.s; NS[o + 11] = kfQb.u;
+    NK[2 * kk] = kfQa.k; NK[2 * kk + 1] = kfQb.k;
+    const co = ci * 33 + kk;
+    C.nodeX[co] = kfCst.qx; C.nodeY[co] = kfCst.qy;
+    C.nodeFaS[co] = kfQa.s; C.nodeFbS[co] = kfQb.s; C.nodeFaK[co] = kfQa.k; C.nodeFbK[co] = kfQb.k;
+  };
+  saveNode(0);
+  let sPrev = wOfC(C);
+  let integ = 0;
+  let nNodes = 1;
+  for (let kk = 1; kk <= kfGN; kk++) {
+    if (!(sPrev > 0)) break;
+    advanceToC(C, C.h + kk * dN);
+    if (kfCst.rhoCur < C.h + kk * dN - 1e-9 * Math.max(1, C.h + kk * dN)) {
+      const sK = Math.min(sPrev, wOfC(C));
+      integ += 0.5 * (sPrev + sK) * Math.max(0, kfCst.rhoCur - (C.h + (kk - 1) * dN));
+      break;
+    }
+    saveNode(kk); nNodes = kk + 1;
+    const sK = Math.min(sPrev, wOfC(C));
+    integ += 0.5 * (sPrev + sK) * dN;
+    sPrev = sK;
+  }
+  C.nodeN[ci] = nNodes;
+  const k0 = Math.min(nNodes - 1, Math.floor(integ / dN));
+  const o = k0 * 12;
+  kfCst.qx = NS[o]; kfCst.qy = NS[o + 1];
+  kfQa.d = NS[o + 2]; kfQa.x = NS[o + 3]; kfQa.y = NS[o + 4]; kfQa.s = NS[o + 5]; kfQa.u = NS[o + 6]; kfQa.k = NK[2 * k0];
+  kfQb.d = NS[o + 7]; kfQb.x = NS[o + 8]; kfQb.y = NS[o + 9]; kfQb.s = NS[o + 10]; kfQb.u = NS[o + 11]; kfQb.k = NK[2 * k0 + 1];
+  kfCst.rhoCur = C.h + k0 * dN;
+  advanceToC(C, C.h + integ);
+  return Math.max(0, kfCst.rhoCur - C.h);
+}
+
+const meetScratch = { found: false, x: 0, y: 0, sA: 0, dA: 0, sB: 0, dB: 0, segA: -1, segB: -1 };
+function borderMeetC(C: FCache, ci: number, aiA: number, sideA: number, aiB: number, sideB: number): boolean {
+  meetScratch.found = false;
+  const A = C.armObj[aiA]; const B = C.armObj[aiB];
+  if (A.pi === B.pi && sideA === sideB) return false;
+  if ((globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.K1240_NOMEET) return false;
+  const h = C.h;
+  const lo = -h; const hi = 14 * h;
+  const dSigned = (ai: number, s: number): number => {
+    const p = C.polys[C.armObj[ai].pi];
+    let d = (s - C.armSR[ai]) * C.armDir[ai];
+    if (p.closed && p.len > 0) { d = ((d % p.len) + p.len) % p.len; if (d > p.len / 2) d -= p.len; }
+    return d;
+  };
+  const BA = C.bords[A.pi * 2 + (sideA === 1 ? 0 : 1)];
+  const BB = C.bords[B.pi * 2 + (sideB === 1 ? 0 : 1)];
+  const segOk = (Bd: FBord, ai: number, i: number): boolean => {
+    if (i < 0 || i + 1 >= Bd.nb) return false;
+    const p = C.polys[C.armObj[ai].pi];
+    const d0 = dSigned(ai, Bd.bs[i]); const d1 = dSigned(ai, Bd.bs[i + 1]);
+    if (Math.abs(d1 - d0) > p.len / 2) return false;
+    return Math.max(d0, d1) >= lo && Math.min(d0, d1) <= hi;
+  };
+  const tryPairs = (sa: number[], sb: number[]): boolean => {
+    let bestD = Infinity;
+    let found = false;
+    for (const i of sa) {
+      const a0x = BA.bx[i]; const a0y = BA.by[i]; const a1x = BA.bx[i + 1]; const a1y = BA.by[i + 1];
+      for (const k of sb) {
+        const hit = segInt(a0x, a0y, a1x, a1y, BB.bx[k], BB.by[k], BB.bx[k + 1], BB.by[k + 1]);
+        if (!hit) continue;
+        const sAh = lerpS(C.polys[A.pi], BA.bs[i], BA.bs[i + 1], hit.t);
+        const sBh = lerpS(C.polys[B.pi], BB.bs[k], BB.bs[k + 1], hit.u);
+        const dA = dSigned(aiA, sAh); const dB = dSigned(aiB, sBh);
+        if (dA < lo || dA > hi || dB < lo || dB > hi) continue;
+        if (dA + dB < bestD) {
+          bestD = dA + dB; found = true;
+          meetScratch.x = a0x + (a1x - a0x) * hit.t; meetScratch.y = a0y + (a1y - a0y) * hit.t;
+          meetScratch.sA = sAh; meetScratch.dA = dA; meetScratch.sB = sBh; meetScratch.dB = dB;
+          meetScratch.segA = i; meetScratch.segB = k;
+        }
+      }
+    }
+    return found;
+  };
+  if (C.warm && C.meetValid[ci]) {
+    const sa: number[] = []; const sb: number[] = [];
+    for (let d = -3; d <= 3; d++) { if (segOk(BA, aiA, C.meetSegA[ci] + d)) sa.push(C.meetSegA[ci] + d); if (segOk(BB, aiB, C.meetSegB[ci] + d)) sb.push(C.meetSegB[ci] + d); }
+    if (tryPairs(sa, sb)) { meetScratch.found = true; C.meetSegA[ci] = meetScratch.segA; C.meetSegB[ci] = meetScratch.segB; return true; }
+  }
+  const segsOf = (Bd: FBord, ai: number): number[] => {
+    const out: number[] = [];
+    for (let i = 0; i + 1 < Bd.nb; i++) if (segOk(Bd, ai, i)) out.push(i);
+    return out;
+  };
+  const found = tryPairs(segsOf(BA, aiA), segsOf(BB, aiB));
+  if (found) {
+    meetScratch.found = true;
+    C.meetValid[ci] = 1; C.meetSegA[ci] = meetScratch.segA; C.meetSegB[ci] = meetScratch.segB;
+  }
+  return found;
+}
+
+function cornerFallbackC(C: FCache, st: DiagramStructure, scene: SceneIn, ci: number, aiA: number, aiB: number, sideA: number, sideB: number, th: number): void {
+  const h = C.h;
+  const ji = st.corners[ci].ji;
+  const j = scene.junctions[ji];
+  C.cOk[ci] = 0;
+  if (borderMeetC(C, ci, aiA, sideA, aiB, sideB)) {
+    const mt = meetScratch;
+    const depthWin = scene.look.depthWindow * (scene.look.ctrlArc ?? 1);
+    void depthWin;
+    const zt = 0.1 * C.depthAmp;
+    const zA = depthAtC(C, C.armObj[aiA].pi, mt.sA, C.depthWindow * C.ctrlArc);
+    const zB = depthAtC(C, C.armObj[aiB].pi, mt.sB, C.depthWindow * C.ctrlArc);
+    const wA = zt > 0 ? Math.min(1, Math.max(0, (zA - zB) / zt)) : 0;
+    const wB = zt > 0 ? Math.min(1, Math.max(0, (zB - zA) / zt)) : 0;
+    const eOf = (ai: number, side: number, sM: number, w: number, out: Float64Array): number => {
+      const arm = C.armObj[ai];
+      const p = C.polys[arm.pi];
+      let ds = C.armSR[ai] - sM;
+      if (p.closed && p.len > 0) ds = ((((ds + p.len / 2) % p.len) + p.len) % p.len) - p.len / 2;
+      let sAt = sM + ds * w;
+      if (p.closed) sAt = normS(p, sAt);
+      borderPointAtBase(C, arm.pi, side, sAt, out);
+      return sAt;
+    };
+    const capOf = (ai: number): number => Math.max(0, Number.isFinite(C.armLcut[ai]) ? Math.min(C.armL[ai], C.armLcut[ai] - 0.5 * h) : C.armL[ai]);
+    const rCap = Math.min(1, Math.max(0, Math.min(mt.dA > 1e-12 ? capOf(aiA) / mt.dA : 1, mt.dB > 1e-12 ? capOf(aiB) / mt.dB : 1)));
+    const gA = Math.min(wA, 1 - rCap); const gB = Math.min(wB, 1 - rCap);
+    const ea = new Float64Array(2); const eb = new Float64Array(2);
+    const sEa = eOf(aiA, sideA, mt.sA, gA, ea);
+    const sEb = eOf(aiB, sideB, mt.sB, gB, eb);
+    C.cVx[ci] = mt.x; C.cVy[ci] = mt.y; C.cQx[ci] = mt.x; C.cQy[ci] = mt.y; C.cR[ci] = 0; C.cMeet[ci] = 1;
+    C.cTax[ci] = ea[0]; C.cTay[ci] = ea[1]; C.cSA[ci] = sEa; C.cDA[ci] = mt.dA * (1 - gA);
+    C.cTbx[ci] = eb[0]; C.cTby[ci] = eb[1]; C.cSB[ci] = sEb; C.cDB[ci] = mt.dB * (1 - gB);
+    C.cRefA[ci] = addPointAtC(C, C.armObj[aiA].pi, sideA, ea[0], ea[1], sEa);
+    C.cRefB[ci] = addPointAtC(C, C.armObj[aiB].pi, sideB, eb[0], eb[1], sEb);
+    C.armNextRef[aiA] = C.cRefA[ci]; C.armNextSide[aiA] = sideA;
+    C.armPrevRef[aiB] = C.cRefB[ci]; C.armPrevSide[aiB] = sideB;
+    return;
+  }
+  // No meet: V at the junction, tangent points at the roots.
+  let mx = C.armUx[aiA] + C.armUx[aiB]; let my = C.armUy[aiA] + C.armUy[aiB];
+  const ml = Math.sqrt(mx * mx + my * my);
+  if (ml < 1e-9 || th > Math.PI) { const ma = Math.atan2(C.armUy[aiA], C.armUx[aiA]) + th / 2; mx = Math.cos(ma); my = Math.sin(ma); }
+  else { mx /= ml; my /= ml; }
+  const Vx = j.c[0] + mx * h; const Vy = j.c[1] + my * h;
+  C.cVx[ci] = Vx; C.cVy[ci] = Vy; C.cQx[ci] = Vx; C.cQy[ci] = Vy; C.cR[ci] = 0; C.cMeet[ci] = 0;
+  const pa = new Float64Array(2); const pb = new Float64Array(2);
+  borderPointAtBase(C, C.armObj[aiA].pi, sideA, C.armSR[aiA], pa);
+  borderPointAtBase(C, C.armObj[aiB].pi, sideB, C.armSR[aiB], pb);
+  C.cTax[ci] = pa[0]; C.cTay[ci] = pa[1]; C.cTbx[ci] = pb[0]; C.cTby[ci] = pb[1];
+  C.cSA[ci] = C.armSR[aiA]; C.cSB[ci] = C.armSR[aiB]; C.cDA[ci] = 0; C.cDB[ci] = 0;
+  C.cRefA[ci] = addPointAtC(C, C.armObj[aiA].pi, sideA, pa[0], pa[1], C.armSR[aiA]);
+  C.cRefB[ci] = addPointAtC(C, C.armObj[aiB].pi, sideB, pb[0], pb[1], C.armSR[aiB]);
+  C.armNextRef[aiA] = C.cRefA[ci]; C.armNextSide[aiA] = sideA;
+  C.armPrevRef[aiB] = C.cRefB[ci]; C.armPrevSide[aiB] = sideB;
+}
+
+function cornersPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): void {
+  const h = C.h;
+  C.armNextRef.fill(-1); C.armPrevRef.fill(-1);
+  for (let ci = 0; ci < st.corners.length; ci++) {
+    const dc = st.corners[ci];
+    const aiA = dc.aArm; const aiB = dc.bArm;
+    const A = C.armObj[aiA]; const B = C.armObj[aiB];
+    const ji = dc.ji;
+    const j = scene.junctions[ji];
+    const style = dc.style;
+    let th = C.armAng[aiB] - C.armAng[aiA];
+    th = ((th % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+    C.cTheta[ci] = th;
+    C.cWhy[ci] = undefined;
+    C.cMeet[ci] = 0;
+    const sideA = C.armDir[aiA];
+    const sideB = -C.armDir[aiB];
+    if (!j) { C.cOk[ci] = 0; C.cWhy[ci] = "arm span 0"; continue; }
+    if (!(C.armL[aiA] > 1e-9 && C.armL[aiB] > 1e-9)) {
+      C.cWhy[ci] = "arm span 0";
+      cornerFallbackC(C, st, scene, ci, aiA, aiB, sideA, sideB, th);
+      continue;
+    }
+    if (th > Math.PI) {
+      C.cWhy[ci] = "reflex";
+      cornerFallbackC(C, st, scene, ci, aiA, aiB, sideA, sideB, th);
+      continue;
+    }
+    const thC = th;
+    let bx = C.armUx[aiA] + C.armUx[aiB]; let by = C.armUy[aiA] + C.armUy[aiB];
+    const bl = Math.sqrt(bx * bx + by * by) || 1; bx /= bl; by /= bl;
+    const sn = Math.sin(thC / 2) || 1;
+    // Solve + the builder's acceptance checks. A warm V that fails any
+    // check is retried with the builder's global solve before the
+    // fallback, so the frame's decision matches the oracle's.
+    const trySolve = (warmCi: number): number => {
+      const okV = solveVC(C, warmCi, aiA, aiB, h, j.c[0] + (bx * h) / sn, j.c[1] + (by * h) / sn, h / Math.max(Math.tan(thC / 2), 1e-6), kfFa, kfFb);
+      if (!okV) return 1;
+      const dVa = armDistC(C, aiA, kfFa.s); const dVb = armDistC(C, aiB, kfFb.s);
+      const tol = 1e-9 * h;
+      if (!(dVa > tol && dVa < C.armL[aiA] - tol && dVb > tol && dVb < C.armL[aiB] - tol)) return 2;
+      const cross = C.armUx[aiA] * C.armUy[aiB] - C.armUy[aiA] * C.armUx[aiB];
+      const crossA = C.armUx[aiA] * (kfSv.y - j.c[1]) - C.armUy[aiA] * (kfSv.x - j.c[0]);
+      const crossB = C.armUx[aiB] * (kfSv.y - j.c[1]) - C.armUy[aiB] * (kfSv.x - j.c[0]);
+      const sgn = Math.sign(cross) || 1;
+      if (!(crossA * sgn > 0 && crossB * sgn < 0)) return 3;
+      return 0;
+    };
+    let solveCode = trySolve(ci);
+    if (solveCode !== 0 && C.warm && C.wValid[ci]) solveCode = trySolve(-1);
+    if (solveCode !== 0) {
+      C.cWhy[ci] = solveCode === 1 ? "no V" : solveCode === 2 ? "V outside spans" : "V outside wedge";
+      cornerFallbackC(C, st, scene, ci, aiA, aiB, sideA, sideB, th);
+      continue;
+    }
+    const Vx = kfSv.x; const Vy = kfSv.y;
+    const dVa = armDistC(C, aiA, kfFa.s); const dVb = armDistC(C, aiB, kfFb.s);
+    C.cOk[ci] = 1;
+    const t2 = Math.tan(thC / 2);
+    const r0 = style * (C.cr / 3) * Math.min(2 * h, 1.5 * h * t2);
+    kfCst.A = A; kfCst.B = B; kfCst.aiA = aiA; kfCst.aiB = aiB;
+    kfCst.Vx = Vx; kfCst.Vy = Vy;
+    kfCst.r0 = r0;
+    kfCst.rbEff = Math.max(0.5 * h * rootTipScale(thC), 1e-9 * h);
+    kfCst.denV = 1 + ((Vx - kfFa.x) * (Vx - kfFb.x) + (Vy - kfFa.y) * (Vy - kfFb.y)) / ((kfFa.d || 1) * (kfFb.d || 1));
+    kfCst.wCacheA = C.walkA[ci]; kfCst.wCacheB = C.walkB[ci];
+    kfCst.wCacheA.valid = false; kfCst.wCacheB.valid = false;
+    kfCst.wCacheA.oLo = NaN; kfCst.wCacheA.oHi = NaN; kfCst.wCacheB.oLo = NaN; kfCst.wCacheB.oHi = NaN;
+    kfCst.rhoCur = h;
+    const r = growIntegC(C, ci);
+    C.cVx[ci] = Vx; C.cVy[ci] = Vy;
+    C.cQx[ci] = kfCst.qx; C.cQy[ci] = kfCst.qy;
+    C.cR[ci] = r;
+    let tax = Vx; let tay = Vy; let tbx = Vx; let tby = Vy;
+    let sA = kfFa.s; let sB = kfFb.s; let dA = dVa; let dB = dVb;
+    if (r > 1e-9) {
+      tax = kfQa.x + (h * (kfCst.qx - kfQa.x)) / kfQa.d; tay = kfQa.y + (h * (kfCst.qy - kfQa.y)) / kfQa.d;
+      tbx = kfQb.x + (h * (kfCst.qx - kfQb.x)) / kfQb.d; tby = kfQb.y + (h * (kfCst.qy - kfQb.y)) / kfQb.d;
+      sA = kfQa.s; sB = kfQb.s;
+      dA = (kfQa.u - C.armSR[aiA]) * C.armDir[aiA]; dB = (kfQb.u - C.armSR[aiB]) * C.armDir[aiB];
+    }
+    C.cTax[ci] = tax; C.cTay[ci] = tay; C.cTbx[ci] = tbx; C.cTby[ci] = tby;
+    C.cSA[ci] = sA; C.cSB[ci] = sB; C.cDA[ci] = dA; C.cDB[ci] = dB;
+    if (r > 1e-9) {
+      C.cRefA[ci] = addPointAtC(C, A.pi, sideA, tax, tay, sA);
+      C.cRefB[ci] = addPointAtC(C, B.pi, sideB, tbx, tby, sB);
+    } else {
+      C.cRefA[ci] = addPointAtC(C, A.pi, sideA, Vx, Vy, sA);
+      C.cRefB[ci] = addPointAtC(C, B.pi, sideB, Vx, Vy, sB);
+    }
+    C.armNextRef[aiA] = C.cRefA[ci]; C.armNextSide[aiA] = sideA;
+    C.armPrevRef[aiB] = C.cRefB[ci]; C.armPrevSide[aiB] = sideB;
+    // Warm state for the next frame.
+    C.wValid[ci] = 1;
+    C.wVx[ci] = Vx; C.wVy[ci] = Vy;
+    C.wFaS[ci] = kfFa.s; C.wFbS[ci] = kfFb.s; C.wFaK[ci] = kfFa.k; C.wFbK[ci] = kfFb.k;
+    C.wQx[ci] = kfCst.qx; C.wQy[ci] = kfCst.qy; C.wR[ci] = r;
+    void A; void B;
+  }
+}
+
+
+// --- crossings ---------------------------------------------------------------
+const candUSide = new Int32Array(4096); const candOSide = new Int32Array(4096);
+const candX = new Float64Array(4096); const candY = new Float64Array(4096); const candDC = new Float64Array(4096);
+const candUS = new Float64Array(4096); const candOS = new Float64Array(4096);
+const candUSeg = new Int32Array(4096); const candOSeg = new Int32Array(4096);
+const candT = new Float64Array(4096); const candU = new Float64Array(4096);
+const candSynth = new Uint8Array(4096); const candFrom = new Int32Array(4096);
+let candN = 0;
+const candURef = new Int32Array(4096); const candORef = new Int32Array(4096);
+
+function sDistToIntervalC(C: FCache, pi: number, sC: number, ls: number, hs: number): number {
+  const p = C.polys[pi];
+  if (!p.closed) {
+    if (sC >= ls && sC <= hs) return 0;
+    return Math.min(Math.abs(sC - ls), Math.abs(sC - hs));
+  }
+  let c = sC;
+  while (c < ls) c += p.len;
+  while (c > ls + p.len) c -= p.len;
+  if (c >= ls && c <= hs) return 0;
+  return Math.min(Math.abs(c - ls), Math.abs(c - hs), Math.abs(dS(p, sC, ls)), Math.abs(dS(p, sC, hs)));
+}
+function segsNearC(C: FCache, pi: number, side: number, sC: number, R: number, out: number[]): void {
+  const B = C.bords[pi * 2 + (side === 1 ? 0 : 1)];
+  const p = C.polys[pi];
+  const n = B.nb;
+  out.length = 0;
+  if (n < 2) return;
+  const seen = new Set<number>();
+  const lb = (target: number): number => { let lo = 0; let hi = n; while (lo < hi) { const mid = (lo + hi) >> 1; if (B.bs[mid] < target) lo = mid + 1; else hi = mid; } return lo; };
+  const shifts = p.closed ? [-p.len, 0, p.len] : [0];
+  for (const sh of shifts) {
+    const loS = sC - R + sh; const hiS = sC + R + sh;
+    const start = Math.max(0, lb(loS) - 1);
+    for (let i = start; i + 1 < n && B.bs[i] <= hiS; i++) {
+      if (sDistToIntervalC(C, pi, sC, B.bs[i], B.bs[i + 1]) > R) continue;
+      const idx = p.closed ? i % Math.max(1, n - 1) : i;
+      if (seen.has(idx)) continue;
+      seen.add(idx);
+      out.push(idx);
+    }
+  }
+}
+function pushCand(uSide: number, oSide: number, x: number, y: number, dc: number, uS: number, oS: number, uSeg: number, oSeg: number, synth: number, from: number, ht = 0, hu = 0): void {
+  if (candN >= candUSide.length) throw new Error("cand overflow");
+  candUSide[candN] = uSide; candOSide[candN] = oSide;
+  candX[candN] = x; candY[candN] = y; candDC[candN] = dc;
+  candUS[candN] = uS; candOS[candN] = oS;
+  candUSeg[candN] = uSeg; candOSeg[candN] = oSeg;
+  candSynth[candN] = synth; candFrom[candN] = from; candT[candN] = ht; candU[candN] = hu;
+  candN++;
+}
+
+const kfCuts: { xi: number; U: number; O: number; uSide: number; s: number; x: number; y: number }[] = [];
+const kfDiagCross: string[] = [];
+let kfTwistFlips = 0;
+
+function crossingsPhaseC(C: FCache, scene: SceneIn): void {
+  const h = C.h;
+  kfCuts.length = 0;
+  kfDiagCross.length = 0;
+  kfTwistFlips = 0;
+  const sides = [1, -1];
+  for (let xi = 0; xi < C.nX; xi++) {
+    const x = scene.crossings[xi];
+    if (!x) continue;
+    const U = C.crossUnder[xi]; const O = C.crossOver[xi];
+    const pU = C.polys[U];
+    const theta = C.cpTheta[xi];
+    const R = Math.min(14 * h, h / Math.max(Math.sin(theta), 0.15) + 2 * h);
+    const cpX = C.cpX[xi]; const cpY = C.cpY[xi];
+    const sUnder = C.cpSUnder[xi]; const sOver = C.cpSOver[xi];
+    const BU = [C.bords[U * 2], C.bords[U * 2 + 1]];
+    const BO = [C.bords[O * 2], C.bords[O * 2 + 1]];
+    // Segment lists per side index (0 -> side 1, 1 -> side -1).
+    const uSegs: number[][] = [[], []];
+    const oSegs: number[][] = [[], []];
+    let searched = false;
+    const doFull = (): void => {
+      for (let si = 0; si < 2; si++) { segsNearC(C, U, sides[si], sUnder, R, uSegs[si]); segsNearC(C, O, sides[si], sOver, R, oSegs[si]); }
+      candN = 0;
+      for (let ui = 0; ui < 2; ui++) for (let oi = 0; oi < 2; oi++) {
+        const Bu = BU[ui]; const Bo = BO[oi];
+        for (const i of uSegs[ui]) for (const j of oSegs[oi]) {
+          if (U === O && ui === oi && i === j) continue;
+          const hit = segInt(Bu.bx[i], Bu.by[i], Bu.bx[i + 1], Bu.by[i + 1], Bo.bx[j], Bo.by[j], Bo.bx[j + 1], Bo.by[j + 1]);
+          if (!hit) continue;
+          const px = Bu.bx[i] + (Bu.bx[i + 1] - Bu.bx[i]) * hit.t;
+          const py = Bu.by[i] + (Bu.by[i + 1] - Bu.by[i]) * hit.t;
+          pushCand(sides[ui], sides[oi], px, py, Math.hypot(px - cpX, py - cpY), lerpS(pU, Bu.bs[i], Bu.bs[i + 1], hit.t), lerpS(C.polys[O], Bo.bs[j], Bo.bs[j + 1], hit.u), i, j, 0, -1, hit.t, hit.u);
+        }
+      }
+      searched = true;
+    };
+    let okWarm = false;
+    if (C.warm && C.cutPrevCands[xi] >= 0) {
+      // Warm: per-combo segment windows around last frame's pairs.
+      let anyPair = false;
+      candN = 0;
+      for (let combo = 0; combo < 4; combo++) {
+        const ui = combo >> 1; const oi = combo & 1;
+        const pu = C.cutPairU[xi * 4 + combo]; const po = C.cutPairO[xi * 4 + combo];
+        const pn = C.cutPairN[xi * 4 + combo];
+        if (!pn) continue;
+        anyPair = true;
+        const Bu = BU[ui]; const Bo = BO[oi];
+        const wu: number[] = []; const wo: number[] = [];
+        const stamp = ++kfSegStamp;
+        if (Bu.mark.length < Bu.nb) Bu.mark = new Int32Array(Bu.nb * 2);
+        if (Bo.mark.length < Bo.nb) Bo.mark = new Int32Array(Bo.nb * 2);
+        for (let q = 0; q < pn; q++) {
+          for (let d = -2; d <= 2; d++) {
+            const iu = pu[q] + d; const io = po[q] + d;
+            if (iu >= 0 && iu + 1 < Bu.nb && Bu.mark[iu] !== stamp && sDistToIntervalC(C, U, sUnder, Bu.bs[iu], Bu.bs[iu + 1]) <= R) { Bu.mark[iu] = stamp; wu.push(iu); }
+            if (io >= 0 && io + 1 < Bo.nb && Bo.mark[io] !== stamp && sDistToIntervalC(C, O, sOver, Bo.bs[io], Bo.bs[io + 1]) <= R) { Bo.mark[io] = stamp; wo.push(io); }
+          }
+        }
+        for (const i of wu) {
+          const a0x = Bu.bx[i]; const a0y = Bu.by[i]; const a1x = Bu.bx[i + 1]; const a1y = Bu.by[i + 1];
+          const mnx = Math.min(a0x, a1x); const mxx = Math.max(a0x, a1x);
+          const mny = Math.min(a0y, a1y); const mxy = Math.max(a0y, a1y);
+          for (const j of wo) {
+            if (U === O && ui === oi && i === j) continue;
+            const b0x = Bo.bx[j]; const b0y = Bo.by[j]; const b1x = Bo.bx[j + 1]; const b1y = Bo.by[j + 1];
+            if (mxx < Math.min(b0x, b1x) || mnx > Math.max(b0x, b1x) || mxy < Math.min(b0y, b1y) || mny > Math.max(b0y, b1y)) continue;
+            const hit = segInt(a0x, a0y, a1x, a1y, b0x, b0y, b1x, b1y);
+            if (!hit) continue;
+            const px = a0x + (a1x - a0x) * hit.t;
+            const py = a0y + (a1y - a0y) * hit.t;
+            pushCand(sides[ui], sides[oi], px, py, Math.hypot(px - cpX, py - cpY), lerpS(pU, Bu.bs[i], Bu.bs[i + 1], hit.t), lerpS(C.polys[O], Bo.bs[j], Bo.bs[j + 1], hit.u), i, j, 0, -1, hit.t, hit.u);
+          }
+        }
+      }
+      if (anyPair) {
+        okWarm = true;
+        if (candN === 0 && C.cutPrevCands[xi] > 0) okWarm = false;
+        if (okWarm) {
+          for (let oi = 0; oi < 2; oi++) {
+            if (!C.cutPrevPick[xi * 2 + oi]) continue;
+            let has1 = false; let has2 = false;
+            for (let c = 0; c < candN; c++) if (candOSide[c] === sides[oi]) { if (candUSide[c] === 1) has1 = true; else has2 = true; }
+            if (!has1 || !has2) { okWarm = false; break; }
+          }
+        }
+        if (!okWarm) candN = 0;
+      }
+    }
+    if (!okWarm) doFull();
+    void searched;
+    // Synthesized cuts for missing combos (tight twists).
+    const regN = candN;
+    for (let ui = 0; ui < 2; ui++) for (let oi = 0; oi < 2; oi++) {
+      let has = false;
+      for (let c = 0; c < regN; c++) if (candUSide[c] === sides[ui] && candOSide[c] === sides[oi]) { has = true; break; }
+      if (has) continue;
+      let from = -1;
+      for (let c = 0; c < regN; c++) if (candUSide[c] === sides[ui] && candOSide[c] === -sides[oi] && (from < 0 || candDC[c] < candDC[from])) from = c;
+      if (from < 0) continue;
+      if (!okWarm) { /* uSegs/oSegs already full */ }
+      else { segsNearC(C, U, sides[ui], sUnder, R, uSegs[ui]); segsNearC(C, O, sides[oi], sOver, R, oSegs[oi]); }
+      const Bu = BU[ui]; const Bo = BO[oi];
+      let bd = Infinity; let bi = -1; let bt = 0;
+      for (const i of uSegs[ui]) for (const j of oSegs[oi]) {
+        if (U === O && ui === oi && i === j) continue;
+        const cl = segSegClosest(Bu.bx[i], Bu.by[i], Bu.bx[i + 1], Bu.by[i + 1], Bo.bx[j], Bo.by[j], Bo.bx[j + 1], Bo.by[j + 1]);
+        if (cl[2] < bd) { bd = cl[2]; bi = i; bt = cl[0]; }
+      }
+      if (bi < 0) continue;
+      const fx = Bu.bx[bi] + (Bu.bx[bi + 1] - Bu.bx[bi]) * bt;
+      const fy = Bu.by[bi] + (Bu.by[bi + 1] - Bu.by[bi]) * bt;
+      const fs = lerpS(pU, Bu.bs[bi], Bu.bs[bi + 1], bt);
+      pushCand(sides[ui], sides[oi], fx, fy, Math.hypot(fx - cpX, fy - cpY), fs, candOS[from], bi, candOSeg[from], 1, from, bt, 0);
+      kfTwistFlips++;
+    }
+    // Commit candidates as border inserts + refs.
+    for (let c = 0; c < candN; c++) {
+      if (candSynth[c]) {
+        candURef[c] = addPointAtC(C, U, candUSide[c], candX[c], candY[c], candUS[c]);
+        candORef[c] = candORef[candFrom[c]];
+      } else {
+        const ui = candUSide[c] === 1 ? 0 : 1; const oi = candOSide[c] === 1 ? 0 : 1;
+        const Bu = BU[ui]; const Bo = BO[oi];
+        const i = candUSeg[c]; const j = candOSeg[c];
+        const ru = newRef(C, U * 2 + ui);
+        C.refS0[ru] = candUS[c];
+        addInsert(C, U * 2 + ui, i, candT[c], candX[c], candY[c], ru);
+        const ro = newRef(C, O * 2 + oi);
+        C.refS0[ro] = candOS[c];
+        addInsert(C, O * 2 + oi, j, candU[c], candX[c], candY[c], ro);
+        candURef[c] = ru; candORef[c] = ro;
+        void Bu; void Bo;
+      }
+    }
+    // Picks and stations.
+    const pick = (uSide: number, oSide: number): number => {
+      let best = -1;
+      for (let c = 0; c < candN; c++) if (candUSide[c] === uSide && candOSide[c] === oSide && (best < 0 || candDC[c] < candDC[best])) best = c;
+      return best;
+    };
+    const pickO = (oSide: number, uSide: number): number => {
+      let best = -1;
+      for (let c = 0; c < regN; c++) if (candUSide[c] === uSide && candOSide[c] === oSide && (best < 0 || candDC[c] < candDC[best])) best = c;
+      return best;
+    };
+    for (let oi = 0; oi < 2; oi++) {
+      const oSide = sides[oi];
+      const cl = pick(1, oSide); const cr = pick(-1, oSide);
+      const slot = C.crossUnderSlot[xi * 2 + oi];
+      C.cutPrevPick[xi * 2 + oi] = (cl >= 0 && cr >= 0) ? 1 : 0;
+      if (cl < 0 || cr < 0) {
+        C.stActive[slot] = 0;
+        if (regN > 0) kfDiagCross.push(`crossing ${xi}: missing station side ${oSide}`);
+        continue;
+      }
+      C.stActive[slot] = 1;
+      C.stLeft[slot] = candURef[cl]; C.stRight[slot] = candURef[cr];
+      const ls = candUS[cl]; const rs = candUS[cr];
+      C.stCS[slot] = normS(pU, ls + dS(pU, ls, rs) / 2);
+      for (const c of [cl, cr]) kfCuts.push({ xi, U, O, uSide: candUSide[c], s: candUS[c], x: candX[c], y: candY[c] });
+    }
+    for (let ui = 0; ui < 2; ui++) {
+      const uSide = sides[ui];
+      const pl = pickO(1, uSide); const pr = pickO(-1, uSide);
+      const slot = C.crossOverSlot[xi * 2 + ui];
+      if (pl < 0 || pr < 0) { C.stActive[slot] = 0; continue; }
+      const pO = C.polys[O];
+      C.stActive[slot] = 1;
+      C.stLeft[slot] = candORef[pl]; C.stRight[slot] = candORef[pr];
+      const ls = candOS[pl]; const rs = candOS[pr];
+      C.stCS[slot] = normS(pO, ls + dS(pO, ls, rs) / 2);
+    }
+    // Warm pairs for next frame (regular candidates only).
+    C.cutPrevCands[xi] = regN;
+    for (let combo = 0; combo < 4; combo++) {
+      const ui = combo >> 1; const oi = combo & 1;
+      const us: number[] = []; const os: number[] = [];
+      for (let c = 0; c < regN; c++) if (candUSide[c] === sides[ui] && candOSide[c] === sides[oi]) { us.push(candUSeg[c]); os.push(candOSeg[c]); }
+      const key = xi * 4 + combo;
+      if (C.cutPairU[key].length !== us.length) { C.cutPairU[key] = Int32Array.from(us); C.cutPairO[key] = Int32Array.from(os); }
+      else { C.cutPairU[key].set(us); C.cutPairO[key].set(os); }
+      C.cutPairN[key] = us.length;
+    }
+  }
+}
+
+// --- eyes ----------------------------------------------------------------------
+let kfEyeCount = 0; let kfEyeCutCount = 0; let kfTieCutCount = 0;
+function eyesPhaseC(C: FCache, scene: SceneIn): void {
+  const h = C.h;
+  kfEyeCount = 0; kfEyeCutCount = 0; kfTieCutCount = 0;
+  const depthWin = C.depthWindow * C.ctrlArc;
+  const sides = [1, -1];
+  for (const eye of C.eyes) {
+    const pi = eye.pi; const qi = eye.qi;
+    const pA = C.polys[pi]; const pB = C.polys[qi];
+    const sPi0 = C.passS[pi][eye.piFirst]; const sPi1 = C.passS[pi][eye.piSecond];
+    const sQi0 = C.passS[qi][eye.qiFirst]; const sQi1 = C.passS[qi][eye.qiSecond];
+    let gapPi = sPi1 - sPi0;
+    if (pA.closed && gapPi <= 0) gapPi += pA.len;
+    let gapQi = sQi1 - sQi0;
+    if (pB.closed && gapQi <= 0) gapQi += pB.len;
+    if (gapPi > 10 * h || gapQi > 10 * h || gapPi < 1e-9 || gapQi < 1e-9) { eye.prevTotal = 0; continue; }
+    pointAtInto(pA, sPi0 + gapPi / 2, ptScratch);
+    const mAx = ptScratch[0]; const mAy = ptScratch[1];
+    pointAtInto(pB, sQi0 + gapQi / 2, ptScratch);
+    if (Math.hypot(mAx - ptScratch[0], mAy - ptScratch[1]) > 3 * h) { eye.prevTotal = 0; continue; }
+    kfEyeCount++;
+    const inArc = (p: Poly, s: number, s0: number, gap: number): boolean => {
+      let d = s - s0;
+      if (p.closed) d = ((d % p.len) + p.len) % p.len;
+      return d >= -1e-9 && d <= gap + 1e-9;
+    };
+    const segInArc = (p: Poly, ls: number, hs: number, s0: number, gap: number): boolean =>
+      inArc(p, ls, s0, gap) || inArc(p, hs, s0, gap) || (sDistToIntervalC(C, p.id, s0, ls, hs) === 0 && gap >= 0) || Math.abs(dS(p, s0 + gap / 2, ls + (hs - ls) / 2)) <= gap / 2 + Math.abs(hs - ls) / 2;
+    const sliceSegs = (Bd: FBord, p: Poly, s0: number, gap: number): number[] => {
+      const n = Bd.nb;
+      const out: number[] = [];
+      if (n < 2) return out;
+      const seen = new Set<number>();
+      const lb = (target: number): number => { let lo = 0; let hi = n; while (lo < hi) { const m = (lo + hi) >> 1; if (Bd.bs[m] < target) lo = m + 1; else hi = m; } return lo; };
+      const shifts = p.closed ? [-p.len, 0, p.len] : [0];
+      for (const sh of shifts) {
+        const a = Math.max(0, lb(s0 - 1e-6 + sh) - 3);
+        const b = Math.min(n - 2, lb(s0 + gap + 1e-6 + sh) + 3);
+        for (let i = a; i <= b; i++) { if (!seen.has(i)) { seen.add(i); if (segInArc(p, Bd.bs[i], Bd.bs[i + 1], s0, gap)) out.push(i); } }
+      }
+      return out;
+    };
+    let foundTotal = 0;
+    for (let combo = 0; combo < 4; combo++) {
+      const sa = sides[combo >> 1]; const sb = sides[combo & 1];
+      const BA = C.bords[pi * 2 + (sa === 1 ? 0 : 1)];
+      const BB = C.bords[qi * 2 + (sb === 1 ? 0 : 1)];
+      const fullCombo = (): number => {
+        const segsA = sliceSegs(BA, pA, sPi0, gapPi);
+        const segsB = sliceSegs(BB, pB, sQi0, gapQi);
+        const cellE = Math.max(h, 0.05);
+        const gridB = new Map<string, number[]>();
+        for (const j of segsB) {
+          const cx = BB.bx[j]; const cy = BB.by[j]; const dx = BB.bx[j + 1]; const dy = BB.by[j + 1];
+          const x0 = Math.floor(Math.min(cx, dx) / cellE); const x1 = Math.floor(Math.max(cx, dx) / cellE);
+          const y0 = Math.floor(Math.min(cy, dy) / cellE); const y1 = Math.floor(Math.max(cy, dy) / cellE);
+          for (let ix = x0; ix <= x1; ix++) for (let iy = y0; iy <= y1; iy++) { const k = ix + "," + iy; const l = gridB.get(k) ?? []; l.push(j); gridB.set(k, l); }
+        }
+        const us: number[] = []; const os: number[] = [];
+        let found = 0;
+        for (const i of segsA) {
+          const candJ = new Set<number>();
+          const ax = BA.bx[i]; const ay = BA.by[i]; const bx2 = BA.bx[i + 1]; const by2 = BA.by[i + 1];
+          const x0 = Math.floor(Math.min(ax, bx2) / cellE); const x1 = Math.floor(Math.max(ax, bx2) / cellE);
+          const y0 = Math.floor(Math.min(ay, by2) / cellE); const y1 = Math.floor(Math.max(ay, by2) / cellE);
+          for (let ix = x0; ix <= x1; ix++) for (let iy = y0; iy <= y1; iy++) for (const j of gridB.get(ix + "," + iy) ?? []) candJ.add(j);
+          for (const j of candJ) {
+            if (pi === qi && (combo >> 1) === (combo & 1) && i === j) continue;
+            const hit = segInt(ax, ay, bx2, by2, BB.bx[j], BB.by[j], BB.bx[j + 1], BB.by[j + 1]);
+            if (!hit) continue;
+            const px = ax + (bx2 - ax) * hit.t; const py = ay + (by2 - ay) * hit.t;
+            addInsert(C, pi * 2 + (sa === 1 ? 0 : 1), i, hit.t, px, py, -1);
+            addInsert(C, qi * 2 + (sb === 1 ? 0 : 1), j, hit.u, px, py, -1);
+            us.push(i); os.push(j);
+            found++;
+          }
+        }
+        eye.pairsU[combo] = Int32Array.from(us); eye.pairsO[combo] = Int32Array.from(os); eye.pairN[combo] = us.length;
+        return found;
+      };
+      let found = 0;
+      const pn = eye.pairN[combo];
+      if (C.warm && pn > 0) {
+        const pu = eye.pairsU[combo]; const po = eye.pairsO[combo];
+        const keepU: number[] = []; const keepO: number[] = [];
+        for (let q = 0; q < pn; q++) {
+          let hitI = -1; let hitJ = -1; let hitT = 0; let hitU = 0;
+          for (let du = -1; du <= 1 && hitI < 0; du++) for (let dv = -1; dv <= 1; dv++) {
+            const i = pu[q] + du; const j = po[q] + dv;
+            if (i < 0 || i + 1 >= BA.nb || j < 0 || j + 1 >= BB.nb) continue;
+            if (pi === qi && (combo >> 1) === (combo & 1) && i === j) continue;
+            const hit = segInt(BA.bx[i], BA.by[i], BA.bx[i + 1], BA.by[i + 1], BB.bx[j], BB.by[j], BB.bx[j + 1], BB.by[j + 1]);
+            if (hit) { hitI = i; hitJ = j; hitT = hit.t; hitU = hit.u; break; }
+          }
+          if (hitI < 0) continue;
+          // The full search only keeps segments inside the eye arc
+          // (segInArc); a drifted warm pair outside it is dropped, not
+          // inserted (it would add a vertex the oracle does not have).
+          if (!segInArc(pA, BA.bs[hitI], BA.bs[hitI + 1], sPi0, gapPi) || !segInArc(pB, BB.bs[hitJ], BB.bs[hitJ + 1], sQi0, gapQi)) continue;
+          const px = BA.bx[hitI] + (BA.bx[hitI + 1] - BA.bx[hitI]) * hitT;
+          const py = BA.by[hitI] + (BA.by[hitI + 1] - BA.by[hitI]) * hitT;
+          addInsert(C, pi * 2 + (sa === 1 ? 0 : 1), hitI, hitT, px, py, -1);
+          addInsert(C, qi * 2 + (sb === 1 ? 0 : 1), hitJ, hitU, px, py, -1);
+          keepU.push(hitI); keepO.push(hitJ);
+          found++;
+        }
+        if (found === 0) found = fullCombo();
+        else { eye.pairsU[combo] = Int32Array.from(keepU); eye.pairsO[combo] = Int32Array.from(keepO); eye.pairN[combo] = keepU.length; }
+      } else if (!C.warm) {
+        found = fullCombo();
+      } else {
+        // Warm but no previous pairs for this combo: no search (a combo
+        // that had no cut keeps none; verified against the oracle rows).
+        found = 0;
+      }
+      foundTotal += found;
+    }
+    kfEyeCutCount += foundTotal;
+    if (!foundTotal) {
+      const zA1 = depthAtC(C, pi, sPi0, depthWin); const zA2 = depthAtC(C, pi, sPi0 + gapPi, depthWin);
+      const zB1 = depthAtC(C, qi, sQi0, depthWin); const zB2 = depthAtC(C, qi, sQi0 + gapQi, depthWin);
+      const den = (zA2 - zA1) - (zB2 - zB1);
+      if (Math.abs(den) > 1e-12) {
+        const f = (zB1 - zA1) / den;
+        if (f > 0.05 && f < 0.95) {
+          pointAtInto(pA, sPi0 + f * gapPi, ptScratch);
+          const cAx = ptScratch[0]; const cAy = ptScratch[1]; const tAx = ptScratch[2]; const tAy = ptScratch[3];
+          pointAtInto(pB, sQi0 + f * gapQi, ptScratch2);
+          const cBx = ptScratch2[0]; const cBy = ptScratch2[1]; const tBx = ptScratch2[2]; const tBy = ptScratch2[3];
+          if (Math.hypot(cAx - cBx, cAy - cBy) < 2 * h) {
+            const sA = ((tAx * (cBy - cAy) - tAy * (cBx - cAx)) > 0 ? 1 : -1);
+            const sB = ((tBx * (cAy - cBy) - tBy * (cAx - cBx)) > 0 ? 1 : -1);
+            const ptOn = (pi2: number, sd: number, ax: number, ay: number, ox: number, oy: number, sAt: number): void => {
+              let ux = ox - ax; let uy = oy - ay;
+              const ul = Math.hypot(ux, uy) || 1; ux /= ul; uy /= ul;
+              addPointAtC(C, pi2, sd, ax + ux * h, ay + uy * h, sAt);
+            };
+            ptOn(pi, sA, cAx, cAy, cBx, cBy, normS(pA, sPi0 + f * gapPi));
+            ptOn(qi, sB, cBx, cBy, cAx, cAy, normS(pB, sQi0 + f * gapQi));
+            kfTieCutCount++;
+          }
+        }
+      }
+    }
+    eye.prevTotal = foundTotal;
+  }
+  void scene;
+}
+
+// --- junction + cap stations ---------------------------------------------------
+function stationsPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): void {
+  const h = C.h;
+  void h;
+  // Junction stations from corner refs (builder: before the rebuild).
+  for (let ai = 0; ai < C.nArms; ai++) {
+    let nextRef = C.armNextRef[ai]; let prevRef = C.armPrevRef[ai];
+    if (nextRef < 0 && prevRef < 0) continue;
+    const arm = C.armObj[ai];
+    const pi = arm.pi;
+    if (nextRef < 0 || prevRef < 0) {
+      const missingNext = nextRef < 0;
+      const knownSide = missingNext ? C.armPrevSide[ai] : C.armNextSide[ai];
+      const side = -knownSide;
+      borderPointAtBase(C, pi, side, C.armSR[ai], ptScratch);
+      const ref = addPointAtC(C, pi, side, ptScratch[0], ptScratch[1], C.armSR[ai]);
+      if (missingNext) { nextRef = ref; C.armNextRef[ai] = ref; C.armNextSide[ai] = side; }
+      else { prevRef = ref; C.armPrevRef[ai] = ref; C.armPrevSide[ai] = side; }
+    }
+    const sideOf = (r: number): number => (C.refB[r] & 1) === 0 ? 1 : -1;
+    const left = sideOf(nextRef) === 1 ? nextRef : sideOf(prevRef) === 1 ? prevRef : nextRef;
+    const right = sideOf(nextRef) === -1 ? nextRef : sideOf(prevRef) === -1 ? prevRef : prevRef;
+    if (left === right) continue;
+    const p = C.polys[pi];
+    const slot = C.junctionSlot[ai];
+    C.stActive[slot] = 1;
+    C.stLeft[slot] = left; C.stRight[slot] = right;
+    C.stCS[slot] = normS(p, C.refS0[left] + dS(p, C.refS0[left], C.refS0[right]) / 2);
+  }
+  // Cap + seam stations and cap arcs.
+  let capInfo = 0;
+  for (let pi = 0; pi < C.nCh; pi++) {
+    const p = C.polys[pi];
+    if (p.closed) {
+      borderPointAtBase(C, pi, 1, p.s0, ptScratch);
+      const lx = ptScratch[0]; const ly = ptScratch[1];
+      borderPointAtBase(C, pi, -1, p.s0, ptScratch);
+      const left = addPointAtC(C, pi, 1, lx, ly, p.s0);
+      const right = addPointAtC(C, pi, -1, ptScratch[0], ptScratch[1], p.s0);
+      const slot = C.seamSlot[pi];
+      C.stActive[slot] = 1; C.stLeft[slot] = left; C.stRight[slot] = right; C.stCS[slot] = p.s0;
+      continue;
+    }
+    for (let e = 0; e < 2; e++) {
+      const atEnd = e === 1;
+      const sEnd = atEnd ? p.s0 + p.len : p.s0;
+      borderPointAtBase(C, pi, 1, sEnd, ptScratch);
+      const lx = ptScratch[0]; const ly = ptScratch[1];
+      borderPointAtBase(C, pi, -1, sEnd, ptScratch);
+      const rx = ptScratch[0]; const ry = ptScratch[1];
+      const left = addPointAtC(C, pi, 1, lx, ly, sEnd);
+      const right = addPointAtC(C, pi, -1, rx, ry, sEnd);
+      const slot = C.capSlot[pi * 2 + e];
+      C.stActive[slot] = 1; C.stLeft[slot] = left; C.stRight[slot] = right; C.stCS[slot] = sEnd;
+      C.capStation[capInfo] = slot;
+      // Cap arc (builder): left -> right around the end centre.
+      pointAtInto(p, sEnd, ptScratch);
+      const cx = ptScratch[0]; const cy = ptScratch[1];
+      const nbS = atEnd ? sEnd - Math.min(1, p.len) : sEnd + Math.min(1, p.len);
+      pointAtInto(p, nbS, ptScratch2);
+      let ox = cx - ptScratch2[0]; let oy = cy - ptScratch2[1];
+      const ol = Math.hypot(ox, oy) || 1; ox /= ol; oy /= ol;
+      const a0 = Math.atan2(ly - cy, lx - cx);
+      let da = Math.atan2(ry - cy, rx - cx) - a0;
+      while (da > Math.PI) da -= 2 * Math.PI;
+      while (da < -Math.PI) da += 2 * Math.PI;
+      const midA = a0 + da / 2;
+      if (Math.cos(midA) * ox + Math.sin(midA) * oy < 0) da = da > 0 ? da - 2 * Math.PI : da + 2 * Math.PI;
+      const steps = Math.max(2, Math.ceil(Math.abs(da) / (Math.PI / 12) - 1e-9));
+      let ax = C.capArcX[capInfo]; let ay = C.capArcY[capInfo];
+      if (ax.length < steps + 1) { ax = new Float64Array((steps + 1) * 2); ay = new Float64Array((steps + 1) * 2); C.capArcX[capInfo] = ax; C.capArcY[capInfo] = ay; }
+      for (let i = 0; i <= steps; i++) {
+        if (i === 0) { ax[i] = lx; ay[i] = ly; }
+        else if (i === steps) { ax[i] = rx; ay[i] = ry; }
+        else { const a = a0 + (da * i) / steps; ax[i] = cx + C.h * Math.cos(a); ay[i] = cy + C.h * Math.sin(a); }
+      }
+      C.capArcN[capInfo] = steps + 1;
+      C.capCx[capInfo] = cx; C.capCy[capInfo] = cy;
+      capInfo++;
+    }
+  }
+  void st; void scene;
+}
+
+
+// --- intervals, regions, faces -------------------------------------------------
+let kfFoldDiag: string[] = [];
+function borderSeqCounted(C: FCache, pi: number, side: number, fromIdx: number, toIdx: number, forward: boolean): { n: number; ns: number } {
+  const B = C.bords[pi * 2 + (side === 1 ? 0 : 1)];
+  const nPts = B.nf;
+  if (nPts === 0) return { n: 0, ns: 0 };
+  if (C.seqIdx.length < nPts + 1) { C.seqIdx = new Int32Array((nPts + 1) * 2); C.seqSeg = new Int32Array((nPts + 1) * 2); }
+  const idx = C.seqIdx; const segs = C.seqSeg;
+  let n = 0; let ns = 0;
+  if (!C.polys[pi].closed) {
+    if (forward) { for (let i = fromIdx; i <= toIdx; i++) { idx[n++] = i; if (i < toIdx) segs[ns++] = i; } }
+    else { for (let i = fromIdx; i >= toIdx; i--) { idx[n++] = i; if (i > toIdx) segs[ns++] = i - 1; } }
+    return { n, ns };
+  }
+  const mod = Math.max(1, nPts - 1);
+  let fi = ((fromIdx % mod) + mod) % mod;
+  const ti = ((toIdx % mod) + mod) % mod;
+  if (forward) {
+    for (let guard = 0; guard <= mod; guard++) { idx[n++] = fi; if (fi === ti) break; segs[ns++] = fi; fi = (fi + 1) % mod; }
+  } else {
+    for (let guard = 0; guard <= mod; guard++) { idx[n++] = fi; if (fi === ti) break; const sg = (fi - 1 + mod) % mod; segs[ns++] = sg; fi = sg; }
+  }
+  return { n, ns };
+}
+
+interface FaceWorkF { owner: number; group: number; rid: number; sx: number; sy: number; depth: number }
+function regionsPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): { regions: OutlineRegion[]; faces: OutlineFace[] } {
+  const depthWin = C.depthWindow * C.ctrlArc;
+  // Active stations per chain, sorted by (cS, creation rank).
+  const perChain: number[][] = C.polys.map(() => []);
+  const piRank: number[] = C.polys.map(() => Infinity);
+  for (let s = 0; s < C.nSlots; s++) {
+    if (!C.stActive[s]) continue;
+    const pi = C.slotPi[s];
+    perChain[pi].push(s);
+    if (C.slotRank[s] < piRank[pi]) piRank[pi] = C.slotRank[s];
+  }
+  const piOrder: number[] = [];
+  for (let pi = 0; pi < C.nCh; pi++) if (perChain[pi].length) piOrder.push(pi);
+  piOrder.sort((a, b) => piRank[a] - piRank[b]);
+  let nIv = 0;
+  const ivStart = new Int32Array(C.nCh).fill(-1);
+  const ivCount = new Int32Array(C.nCh);
+  for (const pi of piOrder) {
+    const p = C.polys[pi];
+    const list = perChain[pi].slice().sort((a, b) => (C.stCS[a] - C.stCS[b]) || (C.slotRank[a] - C.slotRank[b]));
+    const uniq: number[] = [];
+    for (const s of list) if (!uniq.length || Math.abs(C.stCS[s] - C.stCS[uniq[uniq.length - 1]]) > 1e-9) uniq.push(s);
+    const m = uniq.length;
+    ivStart[pi] = nIv;
+    if (p.closed) {
+      for (let i = 0; i < m; i++) {
+        const A = uniq[i]; const B = uniq[(i + 1) % m];
+        let len = C.stCS[B] - C.stCS[A];
+        if (len <= 0) len += p.len;
+        if (len < 1e-9 || m === 1) {
+          if (m === 1) { C.ivPi[nIv] = pi; C.ivA[nIv] = A; C.ivB[nIv] = B; C.ivCMid[nIv] = C.stCS[A] + p.len / 2; C.ivLen[nIv] = p.len; C.ivDiscard[nIv] = 0; C.ivRegion[nIv] = -1; nIv++; }
+          continue;
+        }
+        C.ivPi[nIv] = pi; C.ivA[nIv] = A; C.ivB[nIv] = B; C.ivCMid[nIv] = C.stCS[A] + len / 2; C.ivLen[nIv] = len; C.ivDiscard[nIv] = 0; C.ivRegion[nIv] = -1; nIv++;
+      }
+    } else {
+      for (let i = 0; i + 1 < m; i++) {
+        const A = uniq[i]; const B = uniq[i + 1];
+        const len = C.stCS[B] - C.stCS[A];
+        if (len < 1e-9) continue;
+        C.ivPi[nIv] = pi; C.ivA[nIv] = A; C.ivB[nIv] = B; C.ivCMid[nIv] = C.stCS[A] + len / 2; C.ivLen[nIv] = len; C.ivDiscard[nIv] = 0; C.ivRegion[nIv] = -1; nIv++;
+      }
+    }
+    ivCount[pi] = nIv - ivStart[pi];
+  }
+  C.nIv = nIv;
+  // Discards (shortest interval between each recorded pair, same chain).
+  for (let d = 0; d < C.discardA.length; d++) {
+    const s1 = C.discardA[d]; const s2 = C.discardB[d];
+    if (s1 < 0 || s2 < 0 || !C.stActive[s1] || !C.stActive[s2]) continue;
+    const pi = C.slotPi[s1];
+    if (C.slotPi[s2] !== pi) continue;
+    let best = -1;
+    for (let i = ivStart[pi]; i < ivStart[pi] + ivCount[pi]; i++) {
+      if ((C.ivA[i] === s1 && C.ivB[i] === s2) || (C.ivA[i] === s2 && C.ivB[i] === s1)) {
+        if (best < 0 || C.ivLen[i] < C.ivLen[best]) best = i;
+      }
+    }
+    if (best >= 0) C.ivDiscard[best] = 1;
+  }
+  const regions: OutlineRegion[] = [];
+  const faceWorks: FaceWorkF[] = [];
+  const refFinalOf = (r: number): number => (r >= 0 ? C.refFinal[r] : -1);
+  for (let i = 0; i < nIv; i++) {
+    if (C.ivDiscard[i]) continue;
+    const pi = C.ivPi[i];
+    const A = C.ivA[i]; const B = C.ivB[i];
+    const p = C.polys[pi];
+    const pts: number[] = [];
+    const pushPt = (x: number, y: number): void => {
+      const l = pts.length;
+      if (l >= 2) { const dx = pts[l - 2] - x; const dy = pts[l - 1] - y; if (dx * dx + dy * dy < 1e-24) return; }
+      pts.push(x, y);
+    };
+    const BdL = C.bords[pi * 2];
+    const left = borderSeqCounted(C, pi, 1, refFinalOf(C.stLeft[A]), refFinalOf(C.stLeft[B]), true);
+    const segL = C.seqSeg.slice(0, left.ns);
+    for (let q = 0; q < left.n; q++) { const fi = C.seqIdx[q]; pushPt(BdL.xy[2 * fi], BdL.xy[2 * fi + 1]); }
+    const capBInfo = C.capInfoOfSlot[B];
+    if (capBInfo >= 0 && C.slotKind[B] === 3) {
+      const ax = C.capArcX[capBInfo]; const ay = C.capArcY[capBInfo];
+      for (let q = 1; q + 1 < C.capArcN[capBInfo]; q++) pushPt(ax[q], ay[q]);
+    }
+    const BdR = C.bords[pi * 2 + 1];
+    const right = borderSeqCounted(C, pi, -1, refFinalOf(C.stRight[B]), refFinalOf(C.stRight[A]), false);
+    const segR = C.seqSeg.slice(0, right.ns);
+    for (let q = 0; q < right.n; q++) { const fi = C.seqIdx[q]; pushPt(BdR.xy[2 * fi], BdR.xy[2 * fi + 1]); }
+    const capAInfo = C.capInfoOfSlot[A];
+    if (capAInfo >= 0 && C.slotKind[A] === 3) {
+      const ax = C.capArcX[capAInfo]; const ay = C.capArcY[capAInfo];
+      for (let q = C.capArcN[capAInfo] - 2; q >= 1; q--) pushPt(ax[q], ay[q]);
+    }
+    if (pts.length >= 2 && Math.hypot(pts[0] - pts[pts.length - 2], pts[1] - pts[pts.length - 1]) < 1e-12) pts.length -= 2;
+    if (pts.length / 2 < 3) continue;
+    const rid = regions.length;
+    C.ivRegion[i] = rid;
+    for (let q = 0; q < segL.length; q++) BdL.segReg[segL[q]] = rid;
+    for (let q = 0; q < segR.length; q++) BdR.segReg[segR[q]] = rid;
+    const grp = memberGroupC(C, pi, C.ivCMid[i]);
+    regions.push({ id: rid, ownerChain: pi, group: grp, pts, pieces: [], hole: false });
+    pointAtInto(p, C.ivCMid[i], ptScratch);
+    faceWorks.push({ owner: pi, group: grp, rid, sx: ptScratch[0], sy: ptScratch[1], depth: depthAtC(C, pi, C.ivCMid[i], depthWin) });
+  }
+  // Junction regions.
+  C.junctionRegion.fill(-1);
+  const cornerByAArm = C.cornerByAArm;
+  scene.junctions.forEach((j, ji) => {
+    const list = C.armsOfJSorted[ji];
+    if (!list || list.length < 2) return;
+    const pts: number[] = [];
+    const pushPt = (x: number, y: number): void => {
+      const l = pts.length;
+      if (l >= 2) { const dx = pts[l - 2] - x; const dy = pts[l - 1] - y; if (dx * dx + dy * dy < 1e-24) return; }
+      pts.push(x, y);
+    };
+    for (const ai of list) {
+      const arm = C.armObj[ai];
+      const prevRef = C.armPrevRef[ai]; const nextRef = C.armNextRef[ai];
+      const sideOf = (r: number): number => (C.refB[r] & 1) === 0 ? 1 : -1;
+      if (prevRef >= 0) { const Bd = C.bords[C.refB[prevRef]]; const fi = C.refFinal[prevRef]; pushPt(Bd.xy[2 * fi], Bd.xy[2 * fi + 1]); }
+      else { borderPointAtFinal(C, arm.pi, nextRef >= 0 ? -sideOf(nextRef) : 1, C.armSR[ai], ptScratch); pushPt(ptScratch[0], ptScratch[1]); }
+      if (nextRef >= 0) { const Bd = C.bords[C.refB[nextRef]]; const fi = C.refFinal[nextRef]; pushPt(Bd.xy[2 * fi], Bd.xy[2 * fi + 1]); }
+      else { borderPointAtFinal(C, arm.pi, prevRef >= 0 ? -sideOf(prevRef) : -1, C.armSR[ai], ptScratch); pushPt(ptScratch[0], ptScratch[1]); }
+      const ci = cornerByAArm[ai] >= 0 ? cornerByAArm[ai] : undefined;
+      if (ci !== undefined && C.cOk[ci] && C.cR[ci] > 1e-9) {
+        const aA = Math.atan2(C.cTay[ci] - C.cQy[ci], C.cTax[ci] - C.cQx[ci]);
+        let da = Math.atan2(C.cTby[ci] - C.cQy[ci], C.cTbx[ci] - C.cQx[ci]) - aA;
+        while (da > Math.PI) da -= 2 * Math.PI;
+        while (da < -Math.PI) da += 2 * Math.PI;
+        const steps = Math.max(1, Math.ceil(Math.abs(da) / (Math.PI / 16)));
+        for (let s2 = 1; s2 < steps; s2++) {
+          const a = aA + (da * s2) / steps;
+          pushPt(C.cQx[ci] + C.cR[ci] * Math.cos(a), C.cQy[ci] + C.cR[ci] * Math.sin(a));
+        }
+      }
+    }
+    if (pts.length >= 2 && Math.hypot(pts[0] - pts[pts.length - 2], pts[1] - pts[pts.length - 1]) < 1e-12) pts.length -= 2;
+    if (pts.length / 2 < 3) return;
+    const rid = regions.length;
+    C.junctionRegion[ji] = rid;
+    const owner = C.armObj[list[0]].pi;
+    regions.push({ id: rid, ownerChain: owner, group: st.groupOfJ[ji], pts, pieces: [], hole: false });
+    faceWorks.push({ owner, group: st.groupOfJ[ji], rid, sx: j.c[0], sy: j.c[1], depth: depthAtC(C, owner, C.armSR[list[0]], depthWin) });
+  });
+  const order = faceWorks.map((_, i) => i).sort((a, b) => faceWorks[a].depth - faceWorks[b].depth);
+  const faces: OutlineFace[] = order.map((i) => {
+    const f = faceWorks[i];
+    return { ownerChain: f.owner, group: f.group, pts: regions[f.rid].pts, sample: [f.sx, f.sy] as [number, number], hole: false };
+  });
+  return { regions, faces };
+}
+
+// --- pieces ----------------------------------------------------------------------
+function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[]): { pieces: OutlinePiece[]; runMiss: number; runPassed: number } {
+  const pieces: OutlinePiece[] = [];
+  let runMiss = 0; let runPassed = 0;
+  // Interval lookup by (A slot, B slot) for run regions.
+  C.pairStamp++;
+  const stamp = C.pairStamp;
+  for (let i = 0; i < C.nIv; i++) {
+    const key = C.ivA[i] * 8192 + C.ivB[i];
+    let hx = (key * 2654435761) >>> 0 & 8191;
+    while (C.pairHashStamp[hx] === stamp && C.pairHashKey[hx] !== key) hx = (hx + 1) & 8191;
+    C.pairHashStamp[hx] = stamp; C.pairHashKey[hx] = key; C.pairHashVal[hx] = i;
+  }
+  const ivLookup = (a: number, b: number): number => {
+    if (a < 0 || b < 0) return -1;
+    const key = a * 8192 + b;
+    let hx = (key * 2654435761) >>> 0 & 8191;
+    while (C.pairHashStamp[hx] === stamp) {
+      if (C.pairHashKey[hx] === key) return C.pairHashVal[hx];
+      hx = (hx + 1) & 8191;
+    }
+    return -1;
+  };
+  const sFOf = (dgs: DiagramStation): number => {
+    if (dgs.kind === "cross") return C.cpSUnder[dgs.crossing];
+    if (dgs.kind === "junction") return C.armSR[dgs.arm];
+    if (dgs.kind === "capEnd") { const p = C.polys[dgs.pi]; return p.s0 + p.len; }
+    return C.polys[dgs.pi].s0;
+  };
+  for (const dp of st.piecesD) {
+    if (dp.kind === "run") {
+      const ivD = st.intervalsD[dp.interval];
+      const dgA = st.stationsD[ivD.aSt]; const dgB = st.stationsD[ivD.bSt];
+      const pi = dp.chain; const side = dp.side;
+      const B = C.bords[pi * 2 + (side === 1 ? 0 : 1)];
+      const p = C.polys[pi];
+      const nB = B.nf;
+      const refOfD = (dgsIdx: number): number => {
+        const dgs = st.stationsD[dgsIdx];
+        if (dgs.kind === "cross") {
+          const refs: number[] = [];
+          for (const oSide of [1, -1]) {
+            const slot = C.crossUnderSlot[dgs.crossing * 2 + (oSide === 1 ? 0 : 1)];
+            if (!C.stActive[slot]) continue;
+            const rr = side === 1 ? C.stLeft[slot] : C.stRight[slot];
+            if (rr < 0) continue;
+            if (C.refB[rr] !== pi * 2 + (side === 1 ? 0 : 1)) continue;
+            const fi = C.refFinal[rr];
+            if (fi < 0 || fi >= nB) continue;
+            refs.push(rr);
+          }
+          if (refs.length !== 2) { runMiss++; return -1; }
+          const sC = sFOf(dgs);
+          const first = dS(p, sC, C.refS0[refs[0]]) <= dS(p, sC, C.refS0[refs[1]]) ? 0 : 1;
+          return dgs.key.endsWith("|in") ? refs[first] : refs[1 - first];
+        }
+        const slot = C.dgSlot[dgsIdx];
+        if (slot < 0 || !C.stActive[slot]) { runMiss++; return -1; }
+        const rr = side === 1 ? C.stLeft[slot] : C.stRight[slot];
+        if (rr < 0 || C.refB[rr] !== pi * 2 + (side === 1 ? 0 : 1)) { runMiss++; return -1; }
+        const fi = C.refFinal[rr];
+        if (fi < 0 || fi >= nB) { runMiss++; return -1; }
+        return rr;
+      };
+      const fromRef = refOfD(ivD.aSt); const toRef = refOfD(ivD.bSt);
+      const pts: number[] = []; const cpts: number[] = [];
+      let rid = -1;
+      const ivx = ivLookup(C.dgSlot[ivD.aSt], C.dgSlot[ivD.bSt]);
+      if (ivx >= 0 && C.ivRegion[ivx] >= 0) rid = C.ivRegion[ivx];
+      const sA = fromRef >= 0 ? C.refS[fromRef] : sFOf(dgA);
+      const sB = toRef >= 0 ? C.refS[toRef] : sFOf(dgB);
+      let span = p.len;
+      if (ivD.aSt !== ivD.bSt) {
+        const want = p.closed && p.len > 0 ? (((sFOf(dgB) - sFOf(dgA)) % p.len) + p.len) % p.len : sFOf(dgB) - sFOf(dgA);
+        let d = sB - sA - want;
+        if (p.closed && p.len > 0) { d = ((d % p.len) + p.len) % p.len; if (d > p.len / 2) d -= p.len; }
+        span = want + d;
+      }
+      let s0 = sA; let s1 = sA + span;
+      let viewPts: Float64Array | null = null;
+      let viewCpts: Float64Array | null = null;
+      if (nB >= 2 && span <= 0) {
+        runPassed++;
+        const sM = sA + span / 2;
+        borderPointAtFinal(C, pi, side, sM, ptScratch);
+        pts.push(ptScratch[0], ptScratch[1]);
+        pointAtInto(p, sM, ptScratch);
+        cpts.push(ptScratch[0], ptScratch[1]);
+        s0 = sM; s1 = sM;
+      } else if (nB >= 2 && ivD.aSt === ivD.bSt) {
+        viewPts = B.xy.subarray(0, 2 * nB); viewCpts = B.cxy.subarray(0, 2 * nB);
+      } else if (nB >= 2 && fromRef >= 0 && toRef >= 0) {
+        const seq = borderSeqCounted(C, pi, side, C.refFinal[fromRef], C.refFinal[toRef], true);
+        if (seq.n > 0 && C.seqIdx[seq.n - 1] - C.seqIdx[0] === seq.n - 1) {
+          viewPts = B.xy.subarray(2 * C.seqIdx[0], 2 * (C.seqIdx[seq.n - 1] + 1));
+          viewCpts = B.cxy.subarray(2 * C.seqIdx[0], 2 * (C.seqIdx[seq.n - 1] + 1));
+        } else {
+          const vp = new Float64Array(2 * seq.n); const vc = new Float64Array(2 * seq.n);
+          for (let q = 0; q < seq.n; q++) { const fi = C.seqIdx[q]; vp[2 * q] = B.xy[2 * fi]; vp[2 * q + 1] = B.xy[2 * fi + 1]; vc[2 * q] = B.cxy[2 * fi]; vc[2 * q + 1] = B.cxy[2 * fi + 1]; }
+          viewPts = vp; viewCpts = vc;
+        }
+        if (rid < 0 && seq.ns > 0) rid = B.segReg[C.seqSeg[0]] ?? -1;
+      } else if (nB >= 2) {
+        borderPointAtFinal(C, pi, side, sA, ptScratch);
+        pts.push(ptScratch[0], ptScratch[1]);
+        pointAtInto(p, sA, ptScratch);
+        cpts.push(ptScratch[0], ptScratch[1]);
+        const mod = p.closed ? nB - 1 : nB;
+        void mod;
+        let target = sA;
+        if (p.closed) { target = normS(p, sA); if (target < B.s[0] - 1e-9) target += p.len; }
+        let i = 0; let hi = nB - 1;
+        while (hi - i > 1) { const mid = (i + hi) >> 1; if (B.s[mid] <= target) i = mid; else hi = mid; }
+        for (let guard = 0; guard < mod; guard++) {
+          i = p.closed ? (i + 1) % mod : i + 1;
+          if (i >= nB) break;
+          let off = B.s[i] - sA;
+          if (p.closed && p.len > 0) off = ((off % p.len) + p.len) % p.len;
+          if (off >= span) break;
+          if (off > 0) { pts.push(B.xy[2 * i], B.xy[2 * i + 1]); cpts.push(B.cxy[2 * i], B.cxy[2 * i + 1]); }
+        }
+        borderPointAtFinal(C, pi, side, sB, ptScratch);
+        pts.push(ptScratch[0], ptScratch[1]);
+        pointAtInto(p, sB, ptScratch);
+        cpts.push(ptScratch[0], ptScratch[1]);
+      }
+      const piece: OutlinePiece = { kind: "run", chain: pi, side, s0, s1, pts: viewPts ? (viewPts as unknown as number[]) : pts, cpts: viewCpts ? (viewCpts as unknown as number[]) : cpts, region: rid, corner: -1 };
+      pieces.push(piece);
+      if (rid >= 0 && regions[rid]) regions[rid].pieces.push(pieces.length - 1);
+    } else if (dp.kind === "arc") {
+      const ci = dp.corner;
+      const dc = st.corners[ci];
+      const rid = dc ? C.junctionRegion[dc.ji] : -1;
+      let pts: number[] = []; let cpts: number[] = [];
+      if (C.cOk[ci] && C.cR[ci] > 1e-9) {
+        const aA = Math.atan2(C.cTay[ci] - C.cQy[ci], C.cTax[ci] - C.cQx[ci]);
+        let da = Math.atan2(C.cTby[ci] - C.cQy[ci], C.cTbx[ci] - C.cQx[ci]) - aA;
+        while (da > Math.PI) da -= 2 * Math.PI;
+        while (da < -Math.PI) da += 2 * Math.PI;
+        const steps = Math.max(1, Math.ceil(Math.abs(da) / (Math.PI / 16)));
+        for (let s2 = 0; s2 <= steps; s2++) { const a = aA + (da * s2) / steps; pts.push(C.cQx[ci] + C.cR[ci] * Math.cos(a), C.cQy[ci] + C.cR[ci] * Math.sin(a)); cpts.push(C.cQx[ci], C.cQy[ci]); }
+      } else if (!C.cOk[ci] && C.cMeet[ci]) { pts = [C.cQx[ci], C.cQy[ci]]; cpts = [C.cQx[ci], C.cQy[ci]]; }
+      else if (!C.cOk[ci]) {
+        let ax = C.cQx[ci]; let ay = C.cQy[ci];
+        for (const nci of [ci - 1, ci + 1]) {
+          const nc = st.corners[nci];
+          if (!nc || !dc || nc.ji !== dc.ji || !C.cOk[nci] || !(C.cR[nci] > 1e-9)) continue;
+          if (nc.aArm === dc.bArm) { ax = C.cTax[nci]; ay = C.cTay[nci]; break; }
+          if (nc.bArm === dc.aArm) { ax = C.cTbx[nci]; ay = C.cTby[nci]; break; }
+        }
+        pts = [ax, ay]; cpts = [C.cQx[ci], C.cQy[ci]];
+      } else { pts = [C.cQx[ci], C.cQy[ci]]; cpts = [C.cQx[ci], C.cQy[ci]]; }
+      const piece: OutlinePiece = { kind: "arc", chain: dc ? C.armObj[dc.aArm].pi : -1, side: 0, s0: C.cSA[ci], s1: C.cSB[ci], pts, cpts, region: rid, corner: ci };
+      pieces.push(piece);
+      if (rid >= 0 && regions[rid]) regions[rid].pieces.push(pieces.length - 1);
+    } else {
+      const capInfo = dp.cap;
+      if (capInfo < 0 || capInfo >= C.capArcN.length) continue;
+      const pts: number[] = []; const cpts: number[] = [];
+      const ax = C.capArcX[capInfo]; const ay = C.capArcY[capInfo];
+      for (let i = 0; i < C.capArcN[capInfo]; i++) { pts.push(ax[i], ay[i]); cpts.push(C.capCx[capInfo], C.capCy[capInfo]); }
+      const slot = C.capStation[capInfo];
+      const cS = slot >= 0 ? C.stCS[slot] : 0;
+      const piece: OutlinePiece = { kind: "cap", chain: dp.chain, side: 0, s0: cS, s1: cS, pts, cpts, region: -1, corner: -1 };
+      pieces.push(piece);
+    }
+  }
+  return { pieces, runMiss, runPassed };
+}
+
+// --- the fast frame ---------------------------------------------------------------
+function frameFast(st: DiagramStructure, scene: SceneIn, profile?: Record<string, number>): OutlineTable {
+  let C = fastCaches.get(st);
+  const look = scene.look;
+  if (C && (C.h !== look.halfWidth || C.W !== look.band || C.cr !== (look.cuspRadius ?? 3) || C.depthAmp !== look.depthAmp || C.depthWindow !== look.depthWindow || C.ctrlArc !== (look.ctrlArc ?? 1))) {
+    return buildOutlineFull(scene, st, profile).table;
+  }
+  if (!C) {
+    if (scene.chains.length !== st.chainIds.length) return buildOutlineFull(scene, st, profile).table;
+    C = buildFastCache(st, scene);
+    fastCaches.set(st, C);
+  }
+  if (scene.chains.length !== C.nCh) return buildOutlineFull(scene, st, profile).table;
+  for (let i = 0; i < C.nCh; i++) {
+    if (Math.ceil(scene.chains[i].pts.length / 2) + 4 > C.polys[i].x.length) return buildOutlineFull(scene, st, profile).table;
+  }
+  let profT = profile ? performance.now() : 0;
+  const profMark = (key: string): void => { if (profile) { const now = performance.now(); profile[key] = (profile[key] ?? 0) + (now - profT); profT = now; } };
+  // Per-frame resets.
+  C.insB.length = 0; C.insSeg.length = 0; C.insT.length = 0; C.insX.length = 0; C.insY.length = 0; C.insRef.length = 0;
+  C.nRef = 0;
+  for (const B of C.bords) B.ins.length = 0;
+  C.stActive.fill(0);
+  kfFoldDiag = [];
+  (C as unknown as { __foldDiag: string[] }).__foldDiag = kfFoldDiag;
+  kfFrameNo++;
+
+  setupFrame(C, st, scene);
+  for (let pi = 0; pi < C.nCh; pi++) { buildBorderC(C, pi, 1); buildBorderC(C, pi, -1); }
+  profMark("setupBorders");
+  cornersPhaseC(C, st, scene);
+  profMark("corners");
+  crossingsPhaseC(C, scene);
+  eyesPhaseC(C, scene);
+  stationsPhaseC(C, st, scene);
+  mergeBorders(C);
+  profMark("cutsEyesExposure");
+  const { regions, faces } = regionsPhaseC(C, st, scene);
+  profMark("regions");
+  const { pieces, runMiss, runPassed } = piecesPhaseC(C, st, regions);
+  // Corners + cuts tables.
+  const corners: OutlineCorner[] = st.corners.map((dc, ci) => {
+    const base: OutlineCorner = {
+      junction: scene.junctions[dc.ji]?.id ?? "",
+      aChain: C.armObj[dc.aArm].pi, bChain: C.armObj[dc.bArm].pi,
+      ok: !!C.cOk[ci], style: dc.style, theta: C.cTheta[ci], r: C.cR[ci],
+      Vx: C.cVx[ci], Vy: C.cVy[ci], qx: C.cQx[ci], qy: C.cQy[ci],
+      tax: C.cTax[ci], tay: C.cTay[ci], tbx: C.cTbx[ci], tby: C.cTby[ci],
+    };
+    if (C.cWhy[ci]) base.why = C.cWhy[ci];
+    return base;
+  });
+  const cuts: OutlineCut[] = kfCuts.map((c) => ({ crossing: c.xi, chain: c.U, side: c.uSide, s: c.s, x: c.x, y: c.y, overChain: c.O }));
+  // Diagnostics.
+  const diagnostics: string[] = [];
+  diagnostics.push(...kfFoldDiag.slice(0, 20));
+  diagnostics.push(...kfDiagCross);
+  diagnostics.push(`twist cuts ${kfTwistFlips}`);
+  diagnostics.push(`eyes ${kfEyeCount} (border cuts ${kfEyeCutCount}, depth-tie cuts ${kfTieCutCount}), kink self-crossings ${C.kinkCount}`);
+  if (runMiss || runPassed) diagnostics.push(`frame runs: ${runMiss} ends without points, ${runPassed} passed `);
+  let crossInJunction = 0;
+  scene.crossings.forEach((x, xi) => {
+    void xi;
+    const ia = C.crossAPi[xi]; const ib = C.crossBPi[xi];
+    if (memberGroupC(C, ia, x.a.s) >= 0 || memberGroupC(C, ib, x.b.s) >= 0) crossInJunction++;
+  });
+  let arcNearThread = 0;
+  for (let ci = 0; ci < st.corners.length; ci++) {
+    if (!C.cOk[ci] || !(C.cR[ci] > 0)) continue;
+    const dc = st.corners[ci];
+    const aChain = C.armObj[dc.aArm].pi; const bChain = C.armObj[dc.bArm].pi;
+    const R = C.h + C.cR[ci];
+    const qx = C.cQx[ci]; const qy = C.cQy[ci];
+    let near = false;
+    outer: for (let pi2 = 0; pi2 < C.nCh; pi2++) {
+      if (pi2 === aChain || pi2 === bChain) continue;
+      if (qx < C.polyBox[4 * pi2] - R || qx > C.polyBox[4 * pi2 + 2] + R || qy < C.polyBox[4 * pi2 + 1] - R || qy > C.polyBox[4 * pi2 + 3] + R) continue;
+      const p = C.polys[pi2];
+      for (let blk = 0; blk < p.nblk; blk++) {
+        if (qx < p.bk[4 * blk] - R || qx > p.bk[4 * blk + 2] + R || qy < p.bk[4 * blk + 1] - R || qy > p.bk[4 * blk + 3] + R) continue;
+        const kEnd = Math.min(p.nseg, (blk + 1) * 32);
+        for (let k = blk * 32; k < kEnd; k++) {
+          if (qx < p.bx0[k] - R || qx > p.bx1[k] + R || qy < p.by0[k] - R || qy > p.by1[k] + R) continue;
+          const b = k + 1 === p.n ? 0 : k + 1;
+          const ex = p.x[b] - p.x[k]; const ey = p.y[b] - p.y[k];
+          const l2 = ex * ex + ey * ey;
+          let t = l2 > 0 ? ((qx - p.x[k]) * ex + (qy - p.y[k]) * ey) / l2 : 0;
+          t = Math.min(1, Math.max(0, t));
+          if (Math.hypot(p.x[k] + ex * t - qx, p.y[k] + ey * t - qy) < R) { near = true; break outer; }
+        }
+      }
+    }
+    if (near) arcNearThread++;
+  }
+  diagnostics.push(`crossings in a junction span ${crossInJunction}, corner arcs near another thread ${arcNearThread}`);
+  let stationsActive = 0;
+  for (let s = 0; s < C.nSlots; s++) if (C.stActive[s]) stationsActive++;
+  diagnostics.push(`chains ${C.nCh}, pieces ${pieces.length}, regions ${regions.length}, faces ${faces.length}, corners ${corners.filter((c) => c.ok).length}/${corners.length} ok, cuts ${cuts.length}, stations ${stationsActive}`);
+  profMark("piecesCapsEtc");
+  C.warm = true;
+  return { h: C.h, W: C.W, pieces, regions, faces, corners, cuts, diagnostics };
 }
 
 interface FArm extends ArmStruct { ux: number; uy: number; ang: number }
@@ -2753,7 +5194,6 @@ interface FFoot { d: number; x: number; y: number; s: number; k: number; u: numb
 function copyFoot(dst: FFoot, src: FFoot): void { dst.d = src.d; dst.x = src.x; dst.y = src.y; dst.s = src.s; dst.k = src.k; dst.u = src.u; }
 interface WalkCache { valid: boolean; qx: number; qy: number; footStartS: number; footEndS: number; hiS: number; kHi: number; bkHi: number; minF: number; loS: number; kLo: number; bkLo: number; maxB: number; oLo: number; oHi: number }
 function mkWalkCache(): WalkCache { return { valid: false, qx: 0, qy: 0, footStartS: 0, footEndS: 0, hiS: 0, kHi: -1, bkHi: 0, minF: Infinity, loS: 0, kLo: -1, bkLo: 0, maxB: -Infinity, oLo: NaN, oHi: NaN }; }
-interface FCorner { ok: boolean; Vx: number; Vy: number; qx: number; qy: number; tax: number; tay: number; tbx: number; tby: number; sA: number; sB: number; fax: number; fay: number; fbx: number; fby: number; r: number; theta: number; duA: number; duB: number; dvA: number; dvB: number }
 
 function footNearM(polys: Poly[], h: number, arm: FArm, x: number, y: number, hintS: number, hintK: number, out: FFoot): void {
     // The builder's tracked foot (footT): search only h/32 of s around
@@ -2820,927 +5260,12 @@ function footNearM(polys: Poly[], h: number, arm: FArm, x: number, y: number, hi
       sv = bu; k0 = bk;
     }
 }
-function frameRt(st: OutlineStructure, scene: SceneIn, profile?: Record<string, number>): OutlineTable {
-  const prof = profile;
-  let tPhase = prof ? performance.now() : 0;
-  const mark = (key: string): void => { if (prof) { const now = performance.now(); prof[key] = (prof[key] ?? 0) + (now - tPhase); tPhase = now; } };
-  const h = scene.look.halfWidth;
-  const W = scene.look.band;
-  const rt = getRuntime(st, scene);
-  const polys = rt.polys;
-  // Polylines for this frame, written into the runtime's buffers.
-  const idxOf = rt.idxOf;
-  idxOf.clear();
-  scene.chains.forEach((c, i) => idxOf.set(c.id, i));
-  rt.needRaw.fill(0);
-    for (let i = 0; i < scene.chains.length; i++) { const spec0 = st.extSpec[i]; if (spec0 && (spec0.start || spec0.end)) { rt.needRaw[i] = 1; if (spec0.start) rt.needRaw[spec0.start.throughPi] = 1; if (spec0.end) rt.needRaw[spec0.end.throughPi] = 1; } }
-    for (let i = 0; i < scene.chains.length; i++) { if (rt.needRaw[i]) fillPoly(rt.rawPolys[i], scene.chains[i].pts, scene.chains[i].closed, 0); else fillPoly(polys[i], scene.chains[i].pts, scene.chains[i].closed, 0); }
-  for (let i = 0; i < scene.chains.length; i++) {
-    const c = scene.chains[i];
-    const spec = st.extSpec[i];
-    if (!spec || (!spec.start && !spec.end)) { if (rt.needRaw[i]) copyPoly(rt.rawPolys[i], polys[i]); fillTangents(rt, polys[i]); continue; }
-    const rp = rt.rawPolys[i];
-    const cpOf = (sp: { throughPi: number; throughS: number; armS: number }): [number, number] => {
-      const term = pointAt(rp, sp.armS);
-      const f = footInWindow(rt.rawPolys[sp.throughPi], term.x, term.y, sp.throughS - 4 * h, sp.throughS + 4 * h);
-      return [f.x, f.y];
-    };
-    const n0 = c.pts.length;
-    const extPts = rt.extPts;
-    let m = 0;
-    let s0 = 0;
-    if (spec.start) { const cp = cpOf(spec.start); const d = Math.hypot(c.pts[0] - cp[0], c.pts[1] - cp[1]); if (d > 1e-9) { extPts[m++] = cp[0]; extPts[m++] = cp[1]; s0 = -d; } }
-    for (let k = 0; k < n0; k++) extPts[m++] = c.pts[k];
-    if (spec.end) { const cp = cpOf(spec.end); const d = Math.hypot(c.pts[n0 - 2] - cp[0], c.pts[n0 - 1] - cp[1]); if (d > 1e-9) { extPts[m++] = cp[0]; extPts[m++] = cp[1]; } }
-    fillPoly(polys[i], extPts.subarray(0, m), c.closed, s0);
-    fillTangents(rt, polys[i]);
-  }
-  // Depth pins for this frame (sorted by s, in the runtime's buffers).
-  const depthWin = scene.look.depthWindow * (scene.look.ctrlArc ?? 1);
-  rt.depthN.fill(0);
-  scene.crossings.forEach((x) => {
-    const ia = idxOf.get(x.a.chain); const ib = idxOf.get(x.b.chain);
-    if (ia === undefined || ib === undefined) return;
-    const amp = scene.look.depthAmp;
-    addPin(rt, ia, normS(polys[ia], x.a.s), x.over === "a" ? amp : -amp);
-    addPin(rt, ib, normS(polys[ib], x.b.s), x.over === "b" ? amp : -amp);
-  });
-  const depthAt = (pi: number, s: number): number => depthAtRt(rt, pi, s, depthWin);
-  // Passes, arm roots and arm spans from this frame (the builder's
-  // span rule: next root, chain end, crossing cuts with their reach).
-  const ptP = new Float64Array(4); const ptQ = new Float64Array(4);
-  const ptR = new Float64Array(4); const ptS = new Float64Array(4);
-  rt.passN.fill(0);
-  scene.crossings.forEach((x) => {
-    const ia = idxOf.get(x.a.chain); const ib = idxOf.get(x.b.chain);
-    if (ia === undefined || ib === undefined) return;
-    const sa = normS(polys[ia], x.a.s); const sb = normS(polys[ib], x.b.s);
-    tanAtInto(polys[ia], sa, ptP); tanAtInto(polys[ib], sb, ptQ);
-    const theta = Math.acos(Math.min(1, Math.abs(ptP[0] * ptQ[0] + ptP[1] * ptQ[1])));
-    let n = rt.passN[ia];
-    rt.passS[ia][n] = sa; rt.passSq[ia][n] = sb; rt.passTheta[ia][n] = theta; rt.passQi[ia][n] = ib;
-    rt.passN[ia] = n + 1;
-    n = rt.passN[ib];
-    rt.passS[ib][n] = sb; rt.passSq[ib][n] = sa; rt.passTheta[ib][n] = theta; rt.passQi[ib][n] = ia;
-    rt.passN[ib] = n + 1;
-  });
-  const reachOfF = (pi: number, qi: number, s: number, sq: number, theta: number, dirA: number): number => {
-    const t = Math.tan(theta / 2);
-    let reach = t > 1e-12 ? h / t : Infinity;
-    const fl = 4 * h;
-    if (reach > fl) {
-      const pa = polys[pi]; const pq = polys[qi];
-      tanAtInto(pa, s, ptP); tanAtInto(pq, sq, ptQ);
-      const sb = -dirA * (ptP[0] * ptQ[0] + ptP[1] * ptQ[1]) >= 0 ? 1 : -1;
-      const aC = 2 * Math.sin(theta / 2); const T = 2 * h * Math.cos(theta / 2);
-      const eA = pa.closed ? pa.len / 2 : dirA > 0 ? s - pa.s0 : pa.s0 + pa.len - s;
-      let r = aC > 0 ? T / aC : Infinity;
-      let e = fl;
-      for (let k = 0; k < 2; k++) {
-        const ek = Math.max(1e-6, Math.min(e, eA));
-        pointAtInto(pa, s - dirA * ek, ptR); pointAtInto(pq, sq + sb * ek, ptS);
-        const gx = ptR[0] - ptS[0]; const gy = ptR[1] - ptS[1];
-        const g = Math.sqrt(gx * gx + gy * gy);
-        const kap = Math.max(0, (2 * (g - aC * ek)) / (ek * ek));
-        r = (2 * T) / (aC + Math.sqrt(aC * aC + 2 * kap * T));
-        e = Math.max(fl, r);
-      }
-      reach = Math.min(reach, Math.max(fl, r));
-    }
-    return reach;
-  };
-  for (const a of rt.arms) {
-    const p = polys[a.pi];
-    const sceneArm = scene.junctions[a.ji]?.arms[a.ei];
-    if (a.kind === "end") {
-      const atStart = sceneArm ? Math.abs(sceneArm.s) < Math.abs(sceneArm.s - rt.rawPolys[a.pi].len) : a.dir > 0;
-      a.dir = atStart ? 1 : -1;
-      a.sR = atStart ? p.s0 : p.s0 + p.len;
-    } else if (sceneArm) a.sR = normS(p, sceneArm.s);
-  }
-  for (let ai = 0; ai < rt.arms.length; ai++) {
-    const a = rt.arms[ai]; const p = polys[a.pi];
-    const delta = (sv: number): number => { let d = (sv - a.sR) * a.dir; if (p.closed) d = ((d % p.len) + p.len) % p.len; return d; };
-    let L = p.closed ? p.len : a.dir > 0 ? p.s0 + p.len - a.sR : a.sR - p.s0;
-    for (const qai of rt.chainArms[a.pi]) { const d = delta(rt.arms[qai].sR); if (d > 1e-9 && d < L) L = d; }
-    let Lcut = Infinity; let uB = Infinity;
-    const nP = rt.passN[a.pi];
-    for (let k = 0; k < nP; k++) {
-      const sv = rt.passS[a.pi][k];
-      const d = delta(sv);
-      const u = p.closed ? p.len - d : -d;
-      if (p.closed || d < -1e-12) { if (u >= 0 && u < uB) uB = u; }
-      if (d < -1e-12) continue;
-      const thP = rt.passTheta[a.pi][k]; const tanP = Math.tan(thP / 2);
-      if (!(tanP > 1e-12) || d - h / tanP - h < Lcut) Lcut = Math.min(Lcut, d - reachOfF(a.pi, rt.passQi[a.pi][k], sv, rt.passSq[a.pi][k], thP, a.dir) - h);
-    }
-    rt.armLroot[ai] = L; rt.armLcut[ai] = Lcut; rt.armUB[ai] = uB;
-    a.L = Math.max(0, Math.min(L, Lcut));
-  }
-  // Arm directions from this frame.
-  const arms = rt.arms;
-  const ptA = new Float64Array(4); const ptB = new Float64Array(4);
-  for (const a of arms) {
-    const p = polys[a.pi];
-    const sceneArm = scene.junctions[a.ji]?.arms[a.ei];
-    const sB = a.kind === "end" && sceneArm ? normS(p, sceneArm.s) : a.sR;
-    pointAtInto(p, sB, ptA);
-    let s1 = sB + a.dir * 2 * h;
-    if (!p.closed) s1 = Math.min(Math.max(s1, p.s0), p.s0 + p.len);
-    pointAtInto(p, s1, ptB);
-    let ux = ptB[0] - ptA[0]; let uy = ptB[1] - ptA[1];
-    const ul = Math.sqrt(ux * ux + uy * uy);
-    if (ul < 1e-12) { ux = ptA[2] * a.dir; uy = ptA[3] * a.dir; } else { ux /= ul; uy /= ul; }
-    a.ux = ux; a.uy = uy; a.ang = Math.atan2(uy, ux);
-  }
-  // Arms with a pass behind the root: dEdgeTip span adjustment,
-  // from this frame's arm angles (the builder's pendArms pass).
-  for (let ji = 0; ji < rt.armsOfJSorted.length; ji++) {
-    const l = rt.armsOfJSorted[ji]; const src = st.armsOfJ[ji];
-    for (let i = 0; i < src.length; i++) l[i] = src[i];
-    l.length = src.length;
-    l.sort((x, y) => arms[x].ang - arms[y].ang);
-  }
-  for (let ai = 0; ai < arms.length; ai++) {
-    const uB = rt.armUB[ai];
-    if (!(uB < Infinity)) continue;
-    const A = arms[ai];
-    const list = rt.armsOfJSorted[A.ji];
-    const n = list.length;
-    if (n < 2) continue;
-    const at = list.indexOf(ai);
-    if (at < 0) continue;
-    const J = scene.junctions[A.ji];
-    if (!J) continue;
-    let gMax = 0;
-    const pairs: [number, number][] = [[list[(at + n - 1) % n], ai], [ai, list[(at + 1) % n]]];
-    for (const [aa, bb] of pairs) {
-      if (aa === bb) continue;
-      const xa = J.arms[arms[aa].ei]; const xb = J.arms[arms[bb].ei];
-      if (xa && xb && xa.chain === xb.chain && xa.kind === "through" && xb.kind === "through" && Math.abs(xa.s - xb.s) < 1e-6) continue;
-      let th = arms[bb].ang - arms[aa].ang;
-      th = ((th % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
-      if (th < Math.PI) gMax = Math.max(gMax, Math.tan((Math.PI - th) / 4));
-    }
-    const k = gMax > 0 ? Math.min(4, Math.max(1, 1 / gMax)) : 4;
-    const c = k * uB;
-    if (c < rt.armLcut[ai]) rt.armLcut[ai] = c;
-    A.L = Math.max(0, Math.min(rt.armLroot[ai], rt.armLcut[ai]));
-  }
-  const armDistF = (arm: FArm, s: number): number => {
-    const p = polys[arm.pi];
-    let d = (s - arm.sR) * arm.dir;
-    if (p.closed) d = ((d % p.len) + p.len) % p.len;
-    return d;
-  };
-  mark("setup");
-  // Corners: V and q solved from this frame; r follows this frame's angle.
-  const sv = { x: 0, y: 0 };
-  const gFa: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 };
-  const gFb: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 };
-  const mFoot: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 };
-  const solveVS2 = (A: FArm, B: FArm, rho: number, x0: number, y0: number, estD: number, fa: FFoot, fb: FFoot, hintUA = NaN, hintUB = NaN): boolean => {
-    let x = x0; let y = y0;
-    // The builder's V feet are the global nearest feet in the arm
-    // window estD +- 4h (footArm), not tracked feet: a tracked foot
-    // can sit on the wrong medial branch where the chain curves back.
-    const footArmF = (arm: FArm, fx: number, fy: number, out: FFoot, hintU = NaN): void => {
-      const p = polys[arm.pi];
-      let d0 = Math.max(0, estD - 4 * h); let d1 = Math.min(arm.L, estD + 4 * h);
-      if (d1 - d0 < 1e-9) { d0 = 0; d1 = arm.L; }
-      const lo = arm.dir > 0 ? arm.sR + d0 : arm.sR - d1;
-      const hi = arm.dir > 0 ? arm.sR + d1 : arm.sR - d0;
-      footWinFast(p, fx, fy, lo, hi, out, -1, Infinity, hintU - 2 * h, hintU + 2 * h);
-      out.u = arm.sR + arm.dir * armDistF(arm, out.s);
-    };
-    footArmF(A, x, y, fa, hintUA); footArmF(B, x, y, fb, hintUB);
-    for (let it = 0; it < 40; it++) {
-      const Fa = fa.d - rho; const Fb = fb.d - rho;
-      if (Math.abs(Fa) < 1e-12 * Math.max(1, rho) && Math.abs(Fb) < 1e-12 * Math.max(1, rho)) break;
-      if (!(fa.d > 1e-12 && fb.d > 1e-12)) break;
-      const gax = (x - fa.x) / fa.d; const gay = (y - fa.y) / fa.d;
-      const gbx = (x - fb.x) / fb.d; const gby = (y - fb.y) / fb.d;
-      const det = gax * gby - gay * gbx;
-      if (Math.abs(det) < 1e-12) break;
-      let dx = (-Fa * gby + Fb * gay) / det;
-      let dy = (-Fb * gax + Fa * gbx) / det;
-      const dl = Math.sqrt(dx * dx + dy * dy);
-      if (dl > h) { dx *= h / dl; dy *= h / dl; }
-      x += dx; y += dy;
-      footArmF(A, x, y, fa, fa.u); footArmF(B, x, y, fb, fb.u);
-    }
-    sv.x = x; sv.y = y;
-    return Math.abs(fa.d - rho) < 1e-9 * Math.max(h, rho) && Math.abs(fb.d - rho) < 1e-9 * Math.max(h, rho);
-  };
-  const ss01 = (x: number): number => { const t = x < 0 ? 0 : x > 1 ? 1 : x; return t * t * (3 - 2 * t); };
-  const crF = scene.look.cuspRadius ?? 3;
-  const fFa: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 };
-  const fFb: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 };
-  const qFa: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 };
-  const qFb: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 };
-  const cst = { A: null as unknown as FArm, B: null as unknown as FArm, qx: 0, qy: 0, rhoCur: 0, Vx: 0, Vy: 0, denV: 0, rbEff: 1, r0: 0, wCacheA: mkWalkCache(), wCacheB: mkWalkCache() };
-    const advanceTo = (rhoT: number): void => {
-      const dN = Math.max(cst.r0 / 32, 1e-12);
-      let step = dN;
-      let guard = 0;
-      while (cst.rhoCur < rhoT - 1e-12 * rhoT && guard++ < 128) {
-        const rn = Math.min(rhoT, cst.rhoCur + step);
-        const dd = rn - cst.rhoCur;
-        let advanced = false;
-        if (qFa.d > 1e-12 && qFb.d > 1e-12) {
-          const nax = (cst.qx - qFa.x) / qFa.d; const nay = (cst.qy - qFa.y) / qFa.d;
-          const nbx = (cst.qx - qFb.x) / qFb.d; const nby = (cst.qy - qFb.y) / qFb.d;
-          const den = 1 + nax * nbx + nay * nby;
-          if (den > 1e-9) {
-            const ux = (nax + nbx) / den; const uy = (nay + nby) / den;
-            const gx = cst.qx + ux * dd; const gy = cst.qy + uy * dd;
-            const acc = Math.min(h, Math.max(0.5 * Math.sqrt(ux * ux + uy * uy) * dd, 1e-3 * h));
-            const tFa = gFa; const tFb = gFb;
-            copyFoot(tFa, qFa); copyFoot(tFb, qFb);
-            let sx = gx; let sy = gy;
-            footNearM(polys, h, cst.A, sx, sy, tFa.u, tFa.k, tFa); footNearM(polys, h, cst.B, sx, sy, tFb.u, tFb.k, tFb);
-            for (let it = 0; it < 60; it++) {
-              const Fa = tFa.d - rn; const Fb = tFb.d - rn;
-              if (Math.abs(Fa) < 1e-12 * Math.max(1, rn) && Math.abs(Fb) < 1e-12 * Math.max(1, rn)) break;
-              if (!(tFa.d > 1e-12 && tFb.d > 1e-12)) break;
-              const gax = (sx - tFa.x) / tFa.d; const gay = (sy - tFa.y) / tFa.d;
-              const gbx = (sx - tFb.x) / tFb.d; const gby = (sy - tFb.y) / tFb.d;
-              const det = gax * gby - gay * gbx;
-              if (Math.abs(det) < 1e-12) break;
-              if (Math.max(Math.abs(Fa), Math.abs(Fb)) < 1e-9 * Math.max(1, rn) && Math.abs(det) >= 0.05) break;
-              let dx = (-Fa * gby + Fb * gay) / det;
-              let dy = (-Fb * gax + Fa * gbx) / det;
-              const dl = Math.sqrt(dx * dx + dy * dy);
-              if (dl > acc) { dx *= acc / dl; dy *= acc / dl; }
-              sx += dx; sy += dy;
-              footNearM(polys, h, cst.A, sx, sy, tFa.u, tFa.k, tFa); footNearM(polys, h, cst.B, sx, sy, tFb.u, tFb.k, tFb);
-            }
-            const sok = Math.max(Math.abs(tFa.d - rn), Math.abs(tFb.d - rn)) < 1e-9 * Math.max(1, rn);
-            if (sok && Math.sqrt((sx - gx) * (sx - gx) + (sy - gy) * (sy - gy)) <= acc) { cst.qx = sx; cst.qy = sy; copyFoot(qFa, tFa); copyFoot(qFb, tFb); cst.rhoCur = rn; advanced = true; }
-          }
-        }
-        if (advanced) step = Math.min(dN, 2 * step);
-        else { step /= 2; if (step < 1e-5 * h) break; }
-      }
-    };
-    const marginOfF = (arm: FArm, x: number, y: number, sf: number, dc: number, kFoot: number, cache: WalkCache): number => {
-      const pl = polys[arm.pi];
-      const winLo = arm.dir > 0 ? arm.sR : arm.sR - arm.L;
-      const winHi = arm.dir > 0 ? arm.sR + arm.L : arm.sR;
-      const base = sf - normS(pl, sf);
-      const TTm = rt.tan[arm.pi]; const TXm = TTm.tx; const TYm = TTm.ty; const GFm = TTm.gF; const GBm = TTm.gB;
-      const footStartS = base + pl.s[kFoot];
-      const footEndS = footStartS + pl.segLen[kFoot];
-      const delta = cache.valid ? Math.sqrt((x - cache.qx) * (x - cache.qx) + (y - cache.qy) * (y - cache.qy)) : Infinity;
-      let hi = winHi;
-      let minF = Infinity;
-      let kHi = -1; let bkHi = 0;
-      const resumeF = cache.valid && cache.footStartS <= footStartS && footEndS <= cache.hiS && cache.minF - delta > 0;
-      if (resumeF && cache.kHi < 0) { minF = cache.minF - delta; }
-      else {
-        let k = kFoot; let bk = base;
-        if (resumeF) { k = cache.kHi; bk = cache.bkHi; minF = cache.minF - delta; }
-        let stopped = false;
-        for (let it = 0; it <= pl.nseg; it++) {
-          const sv = bk + pl.s[k] + pl.segLen[k];
-          if (sv >= winHi) break;
-          let k2 = k + 1; let b2 = bk;
-          if (k2 >= pl.nseg) { if (!pl.closed) break; k2 = 0; b2 = bk + pl.len; }
-          const dotF = GFm[k2] - (x * TXm[k2] + y * TYm[k2]);
-          if (dotF < 0) { hi = sv; kHi = k; bkHi = bk; stopped = true; break; }
-          if (dotF < minF) minF = dotF;
-          k = k2; bk = b2;
-        }
-        if (!stopped) kHi = -1;
-      }
-      let lo = winLo;
-      let maxB = -Infinity;
-      let kLo = -1; let bkLo = 0;
-      const resumeB = cache.valid && footStartS <= cache.footStartS && footStartS >= cache.loS && cache.maxB + delta < 0;
-      if (resumeB && cache.kLo < 0) { maxB = cache.maxB + delta; }
-      else {
-        let k = kFoot; let bk = base;
-        if (resumeB) { k = cache.kLo; bk = cache.bkLo; maxB = cache.maxB + delta; }
-        let stopped = false;
-        for (let it = 0; it <= pl.nseg; it++) {
-          const sv = bk + pl.s[k];
-          if (sv <= winLo) break;
-          let k2 = k - 1; let b2 = bk;
-          if (k2 < 0) { if (!pl.closed) break; k2 = pl.nseg - 1; b2 = bk - pl.len; }
-          const dotB = GBm[k] - (x * TXm[k2] + y * TYm[k2]);
-          if (dotB > 0) { lo = sv; kLo = k; bkLo = bk; stopped = true; break; }
-          if (dotB > maxB) maxB = dotB;
-          k = k2; bk = b2;
-        }
-        if (!stopped) kLo = -1;
-      }
-      cache.valid = true; cache.qx = x; cache.qy = y;
-      cache.footStartS = footStartS; cache.footEndS = footEndS;
-      cache.hiS = hi; cache.kHi = kHi; cache.bkHi = bkHi; cache.minF = minF;
-      cache.loS = lo; cache.kLo = kLo; cache.bkLo = bkLo; cache.maxB = maxB;
-      // Only d2 relative to dc matters: wOfF's margin gate saturates
-      // at dc - 0.05h, so the search may stop once that is proven.
-      const stopAt = dc - 0.05 * h;
-      let d2 = Infinity;
-      if (lo > winLo) { footWinFast(pl, x, y, winLo, lo, mFoot, stopAt, dc, cache.oLo - 2 * h, cache.oLo + 2 * h); d2 = mFoot.d; if (d2 <= dc) cache.oLo = pl.closed && pl.len > 0 ? mFoot.s + Math.round(((winLo + lo) / 2 - mFoot.s) / pl.len) * pl.len : mFoot.s; }
-      if (hi < winHi && d2 > stopAt) { footWinFast(pl, x, y, hi, winHi, mFoot, stopAt, dc, cache.oHi - 2 * h, cache.oHi + 2 * h); if (mFoot.d < d2) { d2 = mFoot.d; if (d2 <= dc) cache.oHi = pl.closed && pl.len > 0 ? mFoot.s + Math.round(((hi + winHi) / 2 - mFoot.s) / pl.len) * pl.len : mFoot.s; } }
-      return d2 - dc;
-    };
-    const wOfF = (): number => {
-      const denQ = 1 + ((cst.qx - qFa.x) * (cst.qx - qFb.x) + (cst.qy - qFa.y) * (cst.qy - qFb.y)) / ((qFa.d || 1) * (qFb.d || 1));
-      const slack = Math.min(cst.A.L - W - (qFa.u - cst.A.sR) * cst.A.dir, cst.B.L - W - (qFb.u - cst.B.sR) * cst.B.dir);
-      const denRatio = Math.abs(cst.denV) > 1e-12 ? denQ / cst.denV : 0;
-      const fSteep = ss01((denRatio - 0.3) / 0.4);
-      if (fSteep === 0) return 0;
-      const fSlack = ss01(slack / (0.5 * h));
-      if (fSlack === 0) return 0;
-      const fRootA = ss01(((qFa.u - cst.A.sR) * cst.A.dir) / cst.rbEff);
-      if (fRootA === 0) return 0;
-      const fRootB = ss01(((qFb.u - cst.B.sR) * cst.B.dir) / cst.rbEff);
-      if (fRootB === 0) return 0;
-      const mA = marginOfF(cst.A, cst.qx, cst.qy, qFa.u, qFa.d, qFa.k, cst.wCacheA);
-      if (mA <= -0.05 * h) return 0;
-      const mB = marginOfF(cst.B, cst.qx, cst.qy, qFb.u, qFb.d, qFb.k, cst.wCacheB);
-      if (mB <= -0.05 * h) return 0;
-      return ss01(1 + Math.min(0, mA, mB) / (0.05 * h)) * fSteep * fSlack * fRootA * fRootB;
-    };
-    const growInteg = (): number => {
-      copyFoot(qFa, fFa); copyFoot(qFb, fFb);
-      qFa.u = cst.A.sR + cst.A.dir * armDistF(cst.A, fFa.s);
-      qFb.u = cst.B.sR + cst.B.dir * armDistF(cst.B, fFb.s);
-      cst.qx = cst.Vx; cst.qy = cst.Vy; cst.rhoCur = h;
-      if (!(cst.r0 > 1e-9)) return 0;
-      const dN = cst.r0 / 32;
-      const NS = rt.nodeState; const NK = rt.nodeK;
-      const saveNode = (kk: number): void => {
-        const o = kk * 12;
-        NS[o] = cst.qx; NS[o + 1] = cst.qy; NS[o + 2] = qFa.d; NS[o + 3] = qFa.x; NS[o + 4] = qFa.y; NS[o + 5] = qFa.s; NS[o + 6] = qFa.u;
-        NS[o + 7] = qFb.d; NS[o + 8] = qFb.x; NS[o + 9] = qFb.y; NS[o + 10] = qFb.s; NS[o + 11] = qFb.u;
-        NK[2 * kk] = qFa.k; NK[2 * kk + 1] = qFb.k;
-      };
-      saveNode(0);
-      let sPrev = wOfF();
-      let integ = 0;
-      let nNodes = 1;
-      for (let kk = 1; kk <= 32; kk++) {
-        if (!(sPrev > 0)) break;
-        advanceTo(h + kk * dN);
-        if (cst.rhoCur < h + kk * dN - 1e-9 * Math.max(1, h + kk * dN)) {
-          const sK = Math.min(sPrev, wOfF());
-          integ += 0.5 * (sPrev + sK) * Math.max(0, cst.rhoCur - (h + (kk - 1) * dN));
-          break;
-        }
-        saveNode(kk); nNodes = kk + 1;
-        const sK = Math.min(sPrev, wOfF());
-        integ += 0.5 * (sPrev + sK) * dN;
-        sPrev = sK;
-      }
-      const k0 = Math.min(nNodes - 1, Math.floor(integ / dN));
-      const o = k0 * 12;
-      cst.qx = NS[o]; cst.qy = NS[o + 1];
-      qFa.d = NS[o + 2]; qFa.x = NS[o + 3]; qFa.y = NS[o + 4]; qFa.s = NS[o + 5]; qFa.u = NS[o + 6]; qFa.k = NK[2 * k0];
-      qFb.d = NS[o + 7]; qFb.x = NS[o + 8]; qFb.y = NS[o + 9]; qFb.s = NS[o + 10]; qFb.u = NS[o + 11]; qFb.k = NK[2 * k0 + 1];
-      cst.rhoCur = h + k0 * dN;
-      advanceTo(h + integ);
-      return Math.max(0, cst.rhoCur - h);
-    };
-  for (let ci = 0; ci < st.corners.length; ci++) {
-    const cs = st.corners[ci];
-    const fc = rt.fCorners[ci];
-    const A = arms[cs.aArm]; const B = arms[cs.bArm];
-    const J = scene.junctions[cs.ji];
-    const degen = (vx: number, vy: number): void => {
-      // No position in this frame: the corner keeps structure's ok and
-      // collapses to zero radius at V (never a switch, never missing).
-      fc.ok = cs.ok; fc.Vx = vx; fc.Vy = vy; fc.qx = vx; fc.qy = vy;
-      fc.tax = vx; fc.tay = vy; fc.tbx = vx; fc.tby = vy; fc.r = 0; fc.theta = cs.theta;
-      if (A) { const hA = A.sR + A.dir * armDistF(A, cs.vSa); footWinFast(polys[A.pi], vx, vy, A.dir > 0 ? A.sR : A.sR - A.L, A.dir > 0 ? A.sR + A.L : A.sR, gFa, -1, Infinity, hA - 2 * h, hA + 2 * h); fc.fax = gFa.x; fc.fay = gFa.y; fc.sA = gFa.s; } else { fc.fax = vx; fc.fay = vy; fc.sA = cs.sA; }
-      if (B) { const hB = B.sR + B.dir * armDistF(B, cs.vSb); footWinFast(polys[B.pi], vx, vy, B.dir > 0 ? B.sR : B.sR - B.L, B.dir > 0 ? B.sR + B.L : B.sR, gFb, -1, Infinity, hB - 2 * h, hB + 2 * h); fc.fbx = gFb.x; fc.fby = gFb.y; fc.sB = gFb.s; } else { fc.fbx = vx; fc.fby = vy; fc.sB = cs.sB; }
-      fc.duA = A ? armDistF(A, fc.sA) : 0; fc.duB = B ? armDistF(B, fc.sB) : 0;
-      fc.dvA = fc.duA; fc.dvB = fc.duB;
-    };
-    if (!A || !B || !J) { degen(J ? J.c[0] : 0, J ? J.c[1] : 0); continue; }
-    if (!cs.ok) { degen(J.c[0], J.c[1]); fc.theta = cs.theta; continue; }
-    let th = B.ang - A.ang;
-    th = ((th % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
-    fc.theta = th;
-    let bx = A.ux + B.ux; let by = A.uy + B.uy;
-    const bl = Math.sqrt(bx * bx + by * by) || 1; bx /= bl; by /= bl;
-    const thC = Math.min(Math.max(th, 1e-3), Math.PI - 1e-3);
-    const sn = Math.sin(thC / 2) || 1;
-    const vx0 = J.c[0] + (bx * h) / sn; const vy0 = J.c[1] + (by * h) / sn;
-    const okV = A.L > 1e-9 && B.L > 1e-9 && solveVS2(A, B, h, vx0, vy0, h / Math.max(Math.tan(thC / 2), 1e-6), fFa, fFb, A.sR + A.dir * armDistF(A, cs.vSa), B.sR + B.dir * armDistF(B, cs.vSb));
-    if (!okV) { degen(vx0, vy0); continue; }
-    cst.A = A; cst.B = B;
-    cst.qx = sv.x; cst.qy = sv.y;
-    copyFoot(qFa, fFa); copyFoot(qFb, fFb);
-    cst.Vx = cst.qx; cst.Vy = cst.qy;
-    let rReached = 0;
-    cst.r0 = cs.style * (crF / 3) * Math.min(2 * h, 1.5 * h * Math.tan(thC / 2));
-    cst.rbEff = Math.max(0.5 * h * rootTipScale(th), 1e-9 * h);
-    cst.denV = 1 + ((cst.Vx - fFa.x) * (cst.Vx - fFb.x) + (cst.Vy - fFa.y) * (cst.Vy - fFb.y)) / ((fFa.d || 1) * (fFb.d || 1));
-    cst.wCacheA.valid = false; cst.wCacheB.valid = false; cst.wCacheA.oLo = NaN; cst.wCacheA.oHi = NaN; cst.wCacheB.oLo = NaN; cst.wCacheB.oHi = NaN;
-    cst.rhoCur = h;
-
-    rReached = growInteg();
-    if (rReached <= 1e-9) { rReached = 0; cst.qx = cst.Vx; cst.qy = cst.Vy; copyFoot(qFa, fFa); copyFoot(qFb, fFb); }
-    fc.ok = true; fc.Vx = cst.Vx; fc.Vy = cst.Vy; fc.qx = cst.qx; fc.qy = cst.qy; fc.r = rReached;
-    fc.sA = qFa.s; fc.sB = qFb.s; fc.fax = qFa.x; fc.fay = qFa.y; fc.fbx = qFb.x; fc.fby = qFb.y;
-    if (rReached > 1e-9) {
-      fc.tax = qFa.x + (h * (cst.qx - qFa.x)) / (qFa.d || 1); fc.tay = qFa.y + (h * (cst.qy - qFa.y)) / (qFa.d || 1);
-      fc.tbx = qFb.x + (h * (cst.qx - qFb.x)) / (qFb.d || 1); fc.tby = qFb.y + (h * (cst.qy - qFb.y)) / (qFb.d || 1);
-    } else { fc.tax = cst.Vx; fc.tay = cst.Vy; fc.tbx = cst.Vx; fc.tby = cst.Vy; fc.sA = fFa.s; fc.sB = fFb.s; fc.fax = fFa.x; fc.fay = fFa.y; fc.fbx = fFb.x; fc.fby = fFb.y; }
-    fc.duA = (qFa.u - A.sR) * A.dir; fc.duB = (qFb.u - B.sR) * B.dir;
-    fc.dvA = (fFa.u - A.sR) * A.dir; fc.dvB = (fFb.u - B.sR) * B.dir;
-  }
-  mark("corners");
-  // Borders: base points from this frame's centrelines, then features.
-  for (let b = 0; b < rt.b.length; b++) {
-    const brt = rt.b[b]; const bs = brt.bs; const p = polys[brt.pi]; const sig = brt.side;
-    const TT = rt.tan[brt.pi];
-    const kind = bs.kind; const i1 = bs.i1; const i2 = bs.i2; const fArr = bs.f; const sOff = bs.sOff;
-    const X = brt.X; const Y = brt.Y; const S = brt.S; const FX = brt.FX; const FY = brt.FY; const done = brt.done;
-    done.fill(0);
-    const baseSeq = bs.baseSeq;
-    // One pool point, kinds 0-2, written to the base/seq views.
-    const evalBasic = (id: number): void => {
-      if (done[id]) return;
-      const kd = kind[id];
-      if (kd === 0) {
-        const v = i1[id]; const seg = i2[id];
-        X[id] = p.x[v] + sig * h * -TT.ty[seg]; Y[id] = p.y[v] + sig * h * TT.tx[seg];
-        S[id] = p.s[v] + sOff[id]; FX[id] = p.x[v]; FY[id] = p.y[v];
-      } else if (kd === 1) {
-        const v = i1[id];
-        const kPrev = v - 1 < 0 ? p.nseg - 1 : v - 1;
-        const kNext = v >= p.nseg ? 0 : v;
-        const tPx = TT.tx[kPrev]; const tPy = TT.ty[kPrev]; const tNx = TT.tx[kNext]; const tNy = TT.ty[kNext];
-        const Ax = p.x[v] + sig * h * -tPy; const Ay = p.y[v] + sig * h * tPx;
-        const Bx = p.x[v] + sig * h * -tNy; const By = p.y[v] + sig * h * tNx;
-        const det = tPx * tNy - tPy * tNx;
-        if (Math.abs(det) < 1e-300) { X[id] = Bx; Y[id] = By; } else { const t = ((Bx - Ax) * tNy - (By - Ay) * tNx) / det; X[id] = Ax + tPx * t; Y[id] = Ay + tPy * t; }
-        S[id] = p.s[v] + sOff[id]; FX[id] = p.x[v]; FY[id] = p.y[v];
-      } else if (kd === 2) {
-        const v = i1[id];
-        const kPrev = v - 1 < 0 ? p.nseg - 1 : v - 1;
-        const kNext = v >= p.nseg ? 0 : v;
-        const Ax = p.x[v] + sig * h * -TT.ty[kPrev]; const Ay = p.y[v] + sig * h * TT.tx[kPrev];
-        const Bx = p.x[v] + sig * h * -TT.ty[kNext]; const By = p.y[v] + sig * h * TT.tx[kNext];
-        const a0 = Math.atan2(Ay - p.y[v], Ax - p.x[v]);
-        let da = Math.atan2(By - p.y[v], Bx - p.x[v]) - a0;
-        while (da > Math.PI) da -= 2 * Math.PI;
-        while (da < -Math.PI) da += 2 * Math.PI;
-        const a = a0 + da * fArr[id];
-        X[id] = p.x[v] + h * Math.cos(a); Y[id] = p.y[v] + h * Math.sin(a);
-        S[id] = p.s[v] + sOff[id]; FX[id] = p.x[v]; FY[id] = p.y[v];
-      } else return;
-      done[id] = 1;
-      const bj = brt.basePos[id];
-      if (bj >= 0) brt.baseS[bj] = S[id];
-      const pos = brt.posOfId[id];
-      if (pos >= 0) { brt.XY[2 * pos] = X[id]; brt.XY[2 * pos + 1] = Y[id]; brt.CXY[2 * pos] = FX[id]; brt.CXY[2 * pos + 1] = FY[id]; brt.SA[pos] = S[id]; }
-    };
-    // Kind 3 (fold) points can reference fold points that a later fold
-    // cut dropped from the border, so they resolve recursively through
-    // the pool (the builder's evalPt did the same).
-    const subX = (id: number): number => { const bj = brt.basePos[id]; return bj >= 0 ? brt.XY[2 * brt.posOfId[id]] : X[id]; };
-    const subY = (id: number): number => { const bj = brt.basePos[id]; return bj >= 0 ? brt.XY[2 * brt.posOfId[id] + 1] : Y[id]; };
-    const subS = (id: number): number => { const bj = brt.basePos[id]; return bj >= 0 ? brt.baseS[bj] : S[id]; };
-    const subFX = (id: number): number => { const bj = brt.basePos[id]; return bj >= 0 ? brt.CXY[2 * brt.posOfId[id]] : FX[id]; };
-    const subFY = (id: number): number => { const bj = brt.basePos[id]; return bj >= 0 ? brt.CXY[2 * brt.posOfId[id] + 1] : FY[id]; };
-    const eval3 = (id: number): void => {
-      if (done[id]) return;
-      const a = i1[id]; const bb = i2[id]; const c = bs.i3[id]; const d = bs.i4[id];
-      evalAny(a); evalAny(bb); evalAny(c); evalAny(d);
-      const hit = segInt(subX(a), subY(a), subX(bb), subY(bb), subX(c), subY(c), subX(d), subY(d));
-      const t = hit ? hit.t : fArr[id];
-      X[id] = subX(a) + (subX(bb) - subX(a)) * t; Y[id] = subY(a) + (subY(bb) - subY(a)) * t;
-      S[id] = subS(a) + dS(p, subS(a), subS(bb)) * t;
-      FX[id] = subFX(a) + (subFX(bb) - subFX(a)) * t; FY[id] = subFY(a) + (subFY(bb) - subFY(a)) * t;
-      done[id] = 1;
-      const bj = brt.basePos[id];
-      if (bj >= 0) brt.baseS[bj] = S[id];
-      const pos = brt.posOfId[id];
-      if (pos >= 0) { brt.XY[2 * pos] = X[id]; brt.XY[2 * pos + 1] = Y[id]; brt.CXY[2 * pos] = FX[id]; brt.CXY[2 * pos + 1] = FY[id]; brt.SA[pos] = S[id]; }
-    };
-    const evalAny = (id: number): void => {
-      if (done[id]) return;
-      if (kind[id] === 3) eval3(id); else evalBasic(id);
-    };
-    let k2v = -1; let k2a0 = 0; let k2da = 0;
-    // Kind 0 points in structure-fixed runs (no per-point kind/done
-    // dispatch); kinds 1-2 follow from the recorded index list. Base
-    // points write only the base and sequence views; cold paths (fold
-    // recursion, cut fallbacks) read a base point through its base view.
-    const k0Runs = brt.k0Runs;
-    for (let r = 0; r < k0Runs.length; r += 2) {
-      const jEnd = k0Runs[r] + k0Runs[r + 1];
-      for (let j = k0Runs[r]; j < jEnd; j++) {
-        const id = baseSeq[j];
-        const v = i1[id]; const seg = i2[id];
-        const vx = p.x[v] + sig * h * -TT.ty[seg]; const vy = p.y[v] + sig * h * TT.tx[seg];
-        const vs = p.s[v] + sOff[id];
-        done[id] = 1;
-        brt.baseS[j] = vs;
-        const pos = brt.baseSeqPos[j];
-        brt.XY[2 * pos] = vx; brt.XY[2 * pos + 1] = vy; brt.CXY[2 * pos] = p.x[v]; brt.CXY[2 * pos + 1] = p.y[v]; brt.SA[pos] = vs;
-      }
-    }
-    const baseOther = brt.baseOther;
-    for (let oi = 0; oi < baseOther.length; oi++) {
-      const j = baseOther[oi];
-      const id = baseSeq[j]; const kd = kind[id];
-      let vx = 0; let vy = 0; let vs = 0; let vfx = 0; let vfy = 0;
-      if (kd === 1) {
-        const v = i1[id];
-        const kPrev = v - 1 < 0 ? p.nseg - 1 : v - 1;
-        const kNext = v >= p.nseg ? 0 : v;
-        const tPx = TT.tx[kPrev]; const tPy = TT.ty[kPrev]; const tNx = TT.tx[kNext]; const tNy = TT.ty[kNext];
-        const Ax = p.x[v] + sig * h * -tPy; const Ay = p.y[v] + sig * h * tPx;
-        const Bx = p.x[v] + sig * h * -tNy; const By = p.y[v] + sig * h * tNx;
-        const det = tPx * tNy - tPy * tNx;
-        if (Math.abs(det) < 1e-300) { vx = Bx; vy = By; } else { const t = ((Bx - Ax) * tNy - (By - Ay) * tNx) / det; vx = Ax + tPx * t; vy = Ay + tPy * t; }
-        vs = p.s[v] + sOff[id]; vfx = p.x[v]; vfy = p.y[v];
-      } else if (kd === 2) {
-        const v = i1[id];
-        if (v !== k2v) {
-          const kPrev = v - 1 < 0 ? p.nseg - 1 : v - 1;
-          const kNext = v >= p.nseg ? 0 : v;
-          const Ax = p.x[v] + sig * h * -TT.ty[kPrev]; const Ay = p.y[v] + sig * h * TT.tx[kPrev];
-          const Bx = p.x[v] + sig * h * -TT.ty[kNext]; const By = p.y[v] + sig * h * TT.tx[kNext];
-          k2a0 = Math.atan2(Ay - p.y[v], Ax - p.x[v]);
-          let da = Math.atan2(By - p.y[v], Bx - p.x[v]) - k2a0;
-          while (da > Math.PI) da -= 2 * Math.PI;
-          while (da < -Math.PI) da += 2 * Math.PI;
-          k2da = da; k2v = v;
-        }
-        const a = k2a0 + k2da * fArr[id];
-        vx = p.x[v] + h * Math.cos(a); vy = p.y[v] + h * Math.sin(a);
-        vs = p.s[v] + sOff[id]; vfx = p.x[v]; vfy = p.y[v];
-      } else continue;
-      done[id] = 1;
-      brt.baseS[j] = vs;
-      const pos = brt.baseSeqPos[j];
-      if (pos >= 0) { brt.XY[2 * pos] = vx; brt.XY[2 * pos + 1] = vy; brt.CXY[2 * pos] = vfx; brt.CXY[2 * pos + 1] = vfy; brt.SA[pos] = vs; }
-    }
-    for (let j = 0; j < baseSeq.length; j++) { const id = baseSeq[j]; if (kind[id] === 3) eval3(id); }
-  }
-  mark("offsets");
-  // Crossing and eye cuts: search the recorded borders' intersection
-  // inside the feature's s window on both borders, from this frame.
-  for (const e of rt.cutList) {
-    if (rt.b[e.b].done[e.id]) continue;
-    evalCut(rt, e.b, e.id, h);
-  }
-  mark("crossingCuts");
-  // Corner tangent points and border-at points.
-  for (const e of rt.ptList) {
-    const b = e.b; const j = e.j; const id = e.id;
-    {
-      const brt = rt.b[b]; const bs = brt.bs; const p = polys[brt.pi];
-      if (brt.done[id]) continue;
-      const kd = bs.kind[id];
-      if (kd === 5) {
-        const fc = rt.fCorners[bs.i1[id]];
-        let x: number; let y: number; let fx: number; let fy: number; let s: number;
-        if (bs.i2[id] === 0) { x = fc.tax; y = fc.tay; fx = fc.fax; fy = fc.fay; s = fc.sA; } else { x = fc.tbx; y = fc.tby; fx = fc.fbx; fy = fc.fby; s = fc.sB; }
-        brt.X[id] = x; brt.Y[id] = y; brt.S[id] = s; brt.FX[id] = fx; brt.FY[id] = fy; brt.done[id] = 1;
-        brt.XY[2 * j] = x; brt.XY[2 * j + 1] = y; brt.CXY[2 * j] = fx; brt.CXY[2 * j + 1] = fy; brt.SA[j] = s;
-      } else if (kd === 6) {
-        const enc = bs.f[id];
-        const kk = Math.min(Math.max(Math.floor(enc), 0), Math.max(0, brt.baseSeqPos.length - 1));
-        const tt = Math.min(1, Math.max(0, enc - Math.floor(enc)));
-        const pa = brt.baseSeqPos[kk]; const pb = brt.baseSeqPos[Math.min(brt.baseSeqPos.length - 1, kk + 1)];
-        const x = brt.XY[2 * pa] + (brt.XY[2 * pb] - brt.XY[2 * pa]) * tt;
-        const y = brt.XY[2 * pa + 1] + (brt.XY[2 * pb + 1] - brt.XY[2 * pa + 1]) * tt;
-        const fx = brt.CXY[2 * pa] + (brt.CXY[2 * pb] - brt.CXY[2 * pa]) * tt;
-        const fy = brt.CXY[2 * pa + 1] + (brt.CXY[2 * pb + 1] - brt.CXY[2 * pa + 1]) * tt;
-        const s = brt.SA[pa] + (brt.SA[pb] - brt.SA[pa]) * tt;
-        brt.X[id] = x; brt.Y[id] = y; brt.S[id] = s; brt.FX[id] = fx; brt.FY[id] = fy; brt.done[id] = 1;
-        brt.XY[2 * j] = x; brt.XY[2 * j + 1] = y; brt.CXY[2 * j] = fx; brt.CXY[2 * j + 1] = fy; brt.SA[j] = s;
-      } else if (kd === 3) {
-        const a = bs.i1[id]; const bb = bs.i2[id]; const c = bs.i3[id]; const d = bs.i4[id];
-        const hit = segInt(brt.X[a], brt.Y[a], brt.X[bb], brt.Y[bb], brt.X[c], brt.Y[c], brt.X[d], brt.Y[d]);
-        const t = hit ? hit.t : bs.f[id];
-        const x = brt.X[a] + (brt.X[bb] - brt.X[a]) * t; const y = brt.Y[a] + (brt.Y[bb] - brt.Y[a]) * t;
-        const s = brt.S[a] + dS(p, brt.S[a], brt.S[bb]) * t;
-        const fx = brt.FX[a] + (brt.FX[bb] - brt.FX[a]) * t; const fy = brt.FY[a] + (brt.FY[bb] - brt.FY[a]) * t;
-        brt.X[id] = x; brt.Y[id] = y; brt.S[id] = s; brt.FX[id] = fx; brt.FY[id] = fy; brt.done[id] = 1;
-        brt.XY[2 * j] = x; brt.XY[2 * j + 1] = y; brt.CXY[2 * j] = fx; brt.CXY[2 * j + 1] = fy; brt.SA[j] = s;
-      }
-    }
-  }
-  mark("cornersPts");
-  // Exposure-transition points: each run boundary that structure
-  // recorded as covered on one side slides along its border to where
-  // a recorded covering chain's tube edge crosses in this frame. No
-  // sign change nearby leaves the point where structure put it.
-  {
-    const foot: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 };
-    const ds = new Float64Array(9);
-    for (const tr of st.transitions) {
-      const brt = rt.b[tr.b]; const pOwn = polys[brt.pi];
-      const XY = brt.XY; const CXY = brt.CXY; const SA = brt.SA;
-      const nP = brt.bs.seqPool.length;
-      if (nP < 2) continue;
-      const closedB = pOwn.closed;
-      const wrap = (i: number): number => (closedB ? ((i % (nP - 1)) + (nP - 1)) % (nP - 1) : i);
-      let solved = false;
-      for (let w = 0; w < 4 && !solved; w++) {
-        const cp = tr.pi[w]; if (cp < 0) continue;
-        const p2 = polys[cp]; if (p2.nseg === 0) continue;
-        const k0 = tr.k[w];
-        const sAt = (i: number): number => {
-          if (p2.closed) { const n = p2.nseg; const q = ((i % n) + n) % n; return p2.s[q] + Math.floor(i / n) * p2.len; }
-          if (i < 0) return p2.s[0];
-          if (i >= p2.nseg) return p2.s0 + p2.len;
-          return p2.s[i];
-        };
-        const loS = sAt(k0 - 28); const hiS = sAt(k0 + 29);
-        let bestPair = -1; let bestT = 0; let bestOff = Infinity;
-        for (let di = -3; di <= 3; di++) {
-          const ii = wrap(tr.j + di);
-          if (!closedB && (ii < 0 || ii >= nP)) { ds[di + 3] = NaN; continue; }
-          footWinFast(p2, XY[2 * ii], XY[2 * ii + 1], loS, hiS, foot, -1, Infinity, sAt(k0) - 2 * h, sAt(k0) + 2 * h);
-          ds[di + 3] = foot.d;
-        }
-        for (let di = -3; di < 3; di++) {
-          const d0 = ds[di + 3]; const d1 = ds[di + 4];
-          if (!Number.isFinite(d0) || !Number.isFinite(d1)) continue;
-          const g0 = d0 - h; const g1 = d1 - h;
-          if (g0 * g1 > 0 || (g0 === 0 && g1 === 0)) continue;
-          const tt = Math.abs(g1 - g0) > 1e-300 ? g0 / (g0 - g1) : 0;
-          const off = Math.abs(di + tt);
-          if (off < bestOff) { bestOff = off; bestPair = di; bestT = tt; }
-        }
-        if (bestPair < -1 || bestPair > 0) continue;
-        const i0 = wrap(tr.j + bestPair); const i1 = wrap(tr.j + bestPair + 1);
-        const x = XY[2 * i0] + (XY[2 * i1] - XY[2 * i0]) * bestT;
-        // A slide of more than half the bracketing segment means the
-        // recorded candidate's edge is not this point's boundary.
-        if (Math.hypot(x - XY[2 * tr.j], (XY[2 * i0 + 1] + (XY[2 * i1 + 1] - XY[2 * i0 + 1]) * bestT) - XY[2 * tr.j + 1]) > 0.5 * Math.hypot(XY[2 * i1] - XY[2 * i0], XY[2 * i1 + 1] - XY[2 * i0 + 1])) continue;
-        const y = XY[2 * i0 + 1] + (XY[2 * i1 + 1] - XY[2 * i0 + 1]) * bestT;
-        const cxp = CXY[2 * i0] + (CXY[2 * i1] - CXY[2 * i0]) * bestT;
-        const cyp = CXY[2 * i0 + 1] + (CXY[2 * i1 + 1] - CXY[2 * i0 + 1]) * bestT;
-        let sA0 = SA[i0]; let sA1 = SA[i1];
-        if (pOwn.closed && sA1 < sA0) sA1 += pOwn.len;
-        const sv = sA0 + (sA1 - sA0) * bestT;
-        XY[2 * tr.j] = x; XY[2 * tr.j + 1] = y; CXY[2 * tr.j] = cxp; CXY[2 * tr.j + 1] = cyp; SA[tr.j] = sv;
-        if (closedB && (tr.j === 0 || tr.j === nP - 1)) { const twin = tr.j === 0 ? nP - 1 : 0; XY[2 * twin] = x; XY[2 * twin + 1] = y; CXY[2 * twin] = cxp; CXY[2 * twin + 1] = cyp; SA[twin] = tr.j === 0 ? sv + pOwn.len : sv - pOwn.len; }
-        solved = true;
-      }
-    }
-  }
-  mark("transPts");
-  // Caps regenerated from this frame's station points.
-  for (let capIdx = 0; capIdx < st.caps.length; capIdx++) {
-    const cap = st.caps[capIdx];
-    const s = st.stations[cap.station];
-    const lb = rt.b[s.leftB]; const rb = rt.b[s.rightB];
-    const lfi = lb.bs.idxOfFull[s.leftFull]; const rfi = rb.bs.idxOfFull[s.rightFull];
-    const lpx = lb.XY[2 * lfi]; const lpy = lb.XY[2 * lfi + 1];
-    const rpx = rb.XY[2 * rfi]; const rpy = rb.XY[2 * rfi + 1];
-    const p = polys[cap.pi];
-    const endS = cap.atEnd ? p.s0 + p.len : p.s0;
-    pointAtInto(p, endS, ptA);
-    const cx0 = ptA[0]; const cy0 = ptA[1];
-    const nbS = cap.atEnd ? endS - Math.min(1, p.len) : endS + Math.min(1, p.len);
-    pointAtInto(p, nbS, ptB);
-    let ox = cx0 - ptB[0]; let oy = cy0 - ptB[1];
-    const ol = Math.hypot(ox, oy) || 1; ox /= ol; oy /= ol;
-    const a0 = Math.atan2(lpy - cy0, lpx - cx0);
-    let da = Math.atan2(rpy - cy0, rpx - cx0) - a0;
-    while (da > Math.PI) da -= 2 * Math.PI;
-    while (da < -Math.PI) da += 2 * Math.PI;
-    const midA = a0 + da / 2;
-    if (Math.cos(midA) * ox + Math.sin(midA) * oy < 0) da = da > 0 ? da - 2 * Math.PI : da + 2 * Math.PI;
-    const steps = Math.max(1, cap.steps);
-    const xy = rt.capsXY[capIdx]; const cxy = rt.capsCXY[capIdx];
-    for (let i = 0; i <= steps; i++) {
-      if (i === 0) { xy[0] = lpx; xy[1] = lpy; }
-      else if (i === steps) { xy[2 * i] = rpx; xy[2 * i + 1] = rpy; }
-      else { const a = a0 + (da * i) / steps; xy[2 * i] = cx0 + h * Math.cos(a); xy[2 * i + 1] = cy0 + h * Math.sin(a); }
-      cxy[2 * i] = cx0; cxy[2 * i + 1] = cy0;
-    }
-    rt.capsC[capIdx * 2] = cx0; rt.capsC[capIdx * 2 + 1] = cy0;
-  }
-  mark("caps");
-  mark("exposure");
-  // Cap-run boundary points slide along their arc to this frame's
-  // covering tube edge, as border transition points do.
-  {
-    const foot: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 };
-    const ds = new Float64Array(9);
-    for (const ct of st.capTransitions) {
-      const arc = rt.capsXY[ct.cap]; const steps = st.caps[ct.cap].steps;
-      const p2 = polys[ct.pi];
-      if (p2.nseg === 0 || steps < 1) continue;
-      const sAt = (i: number): number => {
-        if (p2.closed) { const n = p2.nseg; const q = ((i % n) + n) % n; return p2.s[q] + Math.floor(i / n) * p2.len; }
-        if (i < 0) return p2.s[0];
-        if (i >= p2.nseg) return p2.s0 + p2.len;
-        return p2.s[i];
-      };
-      const loS = sAt(ct.k - 28); const hiS = sAt(ct.k + 29);
-      let bestPair = -1; let bestT = 0; let bestOff = Infinity;
-      for (let di = -3; di <= 3; di++) {
-        const ii = ct.pt + di;
-        if (ii < 0 || ii > steps) { ds[di + 3] = NaN; continue; }
-        footWinFast(p2, arc[2 * ii], arc[2 * ii + 1], loS, hiS, foot);
-        ds[di + 3] = foot.d;
-      }
-      for (let di = -3; di < 3; di++) {
-        const d0 = ds[di + 3]; const d1 = ds[di + 4];
-        if (!Number.isFinite(d0) || !Number.isFinite(d1)) continue;
-        const g0 = d0 - h; const g1 = d1 - h;
-        if (g0 * g1 > 0 || (g0 === 0 && g1 === 0)) continue;
-        const tt = Math.abs(g1 - g0) > 1e-300 ? g0 / (g0 - g1) : 0;
-        const off = Math.abs(di + tt);
-        if (off < bestOff) { bestOff = off; bestPair = di; bestT = tt; }
-      }
-      if (bestPair < -1 || bestPair > 0) continue;
-      const i0 = ct.pt + bestPair; const i1 = i0 + 1;
-      if (Math.hypot(arc[2 * i0] + (arc[2 * i1] - arc[2 * i0]) * bestT - arc[2 * ct.pt], arc[2 * i0 + 1] + (arc[2 * i1 + 1] - arc[2 * i0 + 1]) * bestT - arc[2 * ct.pt + 1]) > 0.5 * Math.hypot(arc[2 * i1] - arc[2 * i0], arc[2 * i1 + 1] - arc[2 * i0 + 1])) continue;
-      arc[2 * ct.pt] = arc[2 * i0] + (arc[2 * i1] - arc[2 * i0]) * bestT;
-      arc[2 * ct.pt + 1] = arc[2 * i0 + 1] + (arc[2 * i1 + 1] - arc[2 * i0 + 1]) * bestT;
-    }
-  }
-  mark("capTrans");
-  rt.arcDone.fill(0);
-  const ensureArc = (ci: number): number => {
-    if (rt.arcDone[ci]) return rt.arcSteps[ci];
-    const fc = rt.fCorners[ci];
-    const aA = Math.atan2(fc.tay - fc.qy, fc.tax - fc.qx);
-    let da = Math.atan2(fc.tby - fc.qy, fc.tbx - fc.qx) - aA;
-    while (da > Math.PI) da -= 2 * Math.PI;
-    while (da < -Math.PI) da += 2 * Math.PI;
-    const steps = Math.min(32, Math.max(1, Math.ceil(Math.abs(da) / (Math.PI / 16))));
-    const buf = rt.arcBuf[ci]; const cbuf = rt.arcCBuf[ci];
-    for (let si = 0; si <= steps; si++) {
-      const a = aA + (da * si) / steps;
-      buf[2 * si] = fc.qx + fc.r * Math.cos(a); buf[2 * si + 1] = fc.qy + fc.r * Math.sin(a);
-      cbuf[2 * si] = fc.qx; cbuf[2 * si + 1] = fc.qy;
-    }
-    rt.arcSteps[ci] = steps; rt.arcDone[ci] = 1;
-    return steps;
-  };
-  // Regions into the shared buffer, from the stored templates.
-  const regions = rt.regions;
-  for (const r of regions) r.pieces.length = 0;
-  const rgc = { c: 0, lx: 0, ly: 0, have: false };
-  const wp = (x: number, y: number): void => {
-    if (rgc.have) { const dx = x - rgc.lx; const dy = y - rgc.ly; if (dx * dx + dy * dy < 1e-24) return; }
-    rt.regionBuf[2 * rgc.c] = x; rt.regionBuf[2 * rgc.c + 1] = y;
-    rgc.c++; rgc.lx = x; rgc.ly = y; rgc.have = true;
-  };
-  for (let ri = 0; ri < regions.length; ri++) {
-    const region = regions[ri];
-    const tpl = rt.regionTpl[ri];
-    const start = rgc.c;
-    rgc.have = false;
-    for (const op of tpl.ops) {
-      if (op.t === 0) {
-        const XY = rt.b[op.b].XY;
-        let from = op.from;
-        if (rgc.have && op.count > 0) { const dx = XY[2 * from] - rgc.lx; const dy = XY[2 * from + 1] - rgc.ly; if (dx * dx + dy * dy < 1e-24) from++; }
-        const cnt = op.from + op.count - from;
-        if (cnt > 0) { rt.regionBuf.set(XY.subarray(2 * from, 2 * (from + cnt)), 2 * rgc.c); rgc.c += cnt; rgc.lx = rt.regionBuf[2 * rgc.c - 2]; rgc.ly = rt.regionBuf[2 * rgc.c - 1]; rgc.have = true; }
-      } else if (op.t === 6) {
-        const XY = rt.b[op.b].XY;
-        let cnt = op.count;
-        if (rgc.have && cnt > 0) { const dx = XY[2 * op.from] - rgc.lx; const dy = XY[2 * op.from + 1] - rgc.ly; if (dx * dx + dy * dy < 1e-24) cnt--; }
-        for (let k = 0; k < cnt; k++) { const i = op.from - (op.count - cnt) - k; rt.regionBuf[2 * rgc.c] = XY[2 * i]; rt.regionBuf[2 * rgc.c + 1] = XY[2 * i + 1]; rgc.c++; }
-        if (cnt > 0) { rgc.lx = rt.regionBuf[2 * rgc.c - 2]; rgc.ly = rt.regionBuf[2 * rgc.c - 1]; rgc.have = true; }
-      } else if (op.t === 1) {
-        const XY = rt.b[op.b].XY;
-        for (let k = 0; k < op.idx.length; k++) { const i = op.idx[k]; wp(XY[2 * i], XY[2 * i + 1]); }
-      } else if (op.t === 2) {
-        const xy = rt.capsXY[op.cap];
-        if (op.step > 0) { for (let i = op.from; i <= op.to; i++) wp(xy[2 * i], xy[2 * i + 1]); }
-        else { for (let i = op.from; i >= op.to; i--) wp(xy[2 * i], xy[2 * i + 1]); }
-      } else if (op.t === 3) {
-        const brt = rt.b[op.b]; const fi = brt.bs.idxOfFull[op.full];
-        wp(brt.XY[2 * fi], brt.XY[2 * fi + 1]);
-      } else if (op.t === 4) {
-        const pt = borderAtRuntime(rt, op.pi, op.side, op.s);
-        wp(pt[0], pt[1]);
-      } else {
-        const fc = rt.fCorners[op.corner];
-        if (fc.ok && fc.r > 1e-9) {
-          const steps = ensureArc(op.corner);
-          const buf = rt.arcBuf[op.corner];
-          for (let si = 1; si < steps; si++) wp(buf[2 * si], buf[2 * si + 1]);
-        }
-      }
-    }
-    let len = rgc.c - start;
-    if (len > 1) { const dx = rt.regionBuf[2 * start] - rt.regionBuf[2 * (rgc.c - 1)]; const dy = rt.regionBuf[2 * start + 1] - rt.regionBuf[2 * rgc.c - 1]; if (dx * dx + dy * dy < 1e-24) { rgc.c--; len--; } }
-    region.pts = rt.regionBuf.subarray(2 * start, 2 * (start + len)) as unknown as number[];
-  }
-  mark("regions");
-  // Pieces: exactly structure's runs, arcs and cap runs (decided
-  // once); only their positions (the SA/XY views) follow this frame.
-  const pieces = rt.piecesOut;
-  pieces.length = 0;
-  for (const u of rt.runUpd) {
-    const brt = rt.b[u.b];
-    u.piece.s0 = brt.SA[u.start];
-    u.piece.s1 = brt.SA[u.end];
-    pieces.push(u.piece);
-    if (u.piece.region >= 0 && regions[u.piece.region]) regions[u.piece.region].pieces.push(pieces.length - 1);
-  }
-  for (let ci = 0; ci < st.corners.length; ci++) {
-    const cs = st.corners[ci]; const fc = rt.fCorners[ci];
-    if (!fc.ok) continue;
-    // A corner whose radius reaches 0 in this frame still emits its
-    // arc piece, collapsed onto V (never a missing piece).
-    const piece = rt.arcPieces[ci];
-    const steps = ensureArc(ci);
-    const buf = rt.arcBuf[ci]; const cbuf = rt.arcCBuf[ci];
-    piece.pts = buf.subarray(0, 2 * (steps + 1)) as unknown as number[];
-    piece.cpts = cbuf.subarray(0, 2 * (steps + 1)) as unknown as number[];
-    piece.s0 = fc.sA; piece.s1 = fc.sB;
-    pieces.push(piece);
-    const rid = piece.region;
-    if (rid >= 0 && regions[rid]) regions[rid].pieces.push(pieces.length - 1);
-  }
-  for (const p of rt.capPieces) pieces.push(p);
-  mark("pieces");
-  // Faces, cuts, corners.
-  for (let fi = 0; fi < st.faces.length; fi++) {
-    const f = st.faces[fi]; const face = rt.faces[fi];
-    const region = regions[f.rid];
-    face.pts = region ? region.pts : rt.emptyPts;
-    if (f.kind === 1) { face.sample[0] = scene.junctions[f.ji].c[0]; face.sample[1] = scene.junctions[f.ji].c[1]; }
-    else { pointAtInto(polys[f.pi], f.cMid, ptA); face.sample[0] = ptA[0]; face.sample[1] = ptA[1]; }
-    rt.faceDepth[fi] = depthAt(f.owner, f.kind === 1 ? f.armS : f.cMid);
-  }
-  rt.faceOrder.sort((a, b) => rt.faceDepth[a] - rt.faceDepth[b]);
-  for (let i = 0; i < rt.faceOrder.length; i++) rt.facesOut[i] = rt.faces[rt.faceOrder[i]];
-  for (let ci = 0; ci < st.cuts.length; ci++) {
-    const c = st.cuts[ci]; const out = rt.cutsT[ci]; const brt = rt.b[c.border];
-    const fi = brt.bs.idxOfFull[c.fullIdx];
-    out.s = fi >= 0 ? brt.SA[fi] : 0;
-    out.x = fi >= 0 ? brt.XY[2 * fi] : 0;
-    out.y = fi >= 0 ? brt.XY[2 * fi + 1] : 0;
-  }
-  let okCount = 0;
-  for (let ci = 0; ci < st.corners.length; ci++) {
-    const cs = st.corners[ci]; const out = rt.cornersT[ci]; const fc = rt.fCorners[ci];
-    out.ok = fc.ok; out.theta = fc.theta; out.r = fc.r;
-    out.Vx = fc.Vx; out.Vy = fc.Vy; out.qx = fc.qx; out.qy = fc.qy;
-    out.tax = fc.tax; out.tay = fc.tay; out.tbx = fc.tbx; out.tby = fc.tby;
-    if (cs.ok) okCount++;
-  }
-  rt.diag[2] = `chains ${polys.length}, pieces ${pieces.length}, regions ${regions.length}, faces ${rt.facesOut.length}, corners ${okCount}/${st.corners.length} ok, cuts ${st.cuts.length}, stations ${st.stations.length}`;
-  rt.table.h = h; rt.table.W = W;
-  mark("other");
-  return rt.table;
-}
 
 // ---------------------------------------------------------------------------
-// S3b runtime: buffers owned by the structure, reused by every frame.
+// ---------------------------------------------------------------------------
+// Shared typed-array helpers (kept from the S3 runtime): poly fills and
+// foot searches the fast frame's corner solver reuses.
 
-type RegionOp =
-  | { t: 0; b: number; from: number; count: number }
-  | { t: 1; b: number; idx: Int32Array }
-  | { t: 2; cap: number; from: number; to: number; step: number }
-  | { t: 3; b: number; full: number }
-  | { t: 4; pi: number; side: number; s: number }
-  | { t: 5; corner: number }
-  | { t: 6; b: number; from: number; count: number };
-
-interface BRun {
-  bs: BorderStruct; pi: number; side: number;
-  X: Float64Array; Y: Float64Array; S: Float64Array; FX: Float64Array; FY: Float64Array; done: Uint8Array;
-  baseS: Float64Array; basePos: Int32Array; baseSeqPos: Int32Array; k0Runs: Int32Array; baseOther: Int32Array;
-  XY: Float64Array; CXY: Float64Array; SA: Float64Array; posOfId: Int32Array; exp: Uint8Array;
-}
-
-interface Runtime {
-  rawPolys: Poly[]; polys: Poly[]; extPts: Float64Array; capPts: Int32Array;
-  tan: { tx: Float64Array; ty: Float64Array; vtX: Float64Array; vtY: Float64Array; gF: Float64Array; gB: Float64Array }[];
-  needRaw: Uint8Array;
-  idxOf: Map<number, number>;
-  depthS: Float64Array[]; depthZ: Float64Array[]; depthN: Int32Array;
-  arms: FArm[];
-  fCorners: FCorner[];
-  b: BRun[];
-  capsXY: Float64Array[]; capsCXY: Float64Array[]; capsC: Float64Array;
-  regions: OutlineRegion[]; regionTpl: { ops: RegionOp[] }[]; regionBuf: Float64Array;
-  piecesOut: OutlinePiece[];
-  runUpd: { piece: OutlinePiece; b: number; start: number; end: number }[];
-  arcPieces: OutlinePiece[]; arcBuf: Float64Array[]; arcCBuf: Float64Array[]; arcSteps: Int32Array; arcDone: Uint8Array;
-  capPieces: OutlinePiece[];
-  faces: OutlineFace[]; facesOut: OutlineFace[]; faceOrder: number[]; faceDepth: Float64Array;
-  cornersT: OutlineCorner[]; cutsT: OutlineCut[];
-  cutList: { b: number; id: number }[]; ptList: { b: number; j: number; id: number }[];
-  nodeState: Float64Array; nodeK: Int32Array;
-  runPool: OutlinePiece[]; runOff: Int32Array; trimSR: Float64Array; trimDir: Float64Array; trimDEnd: Float64Array; trimOff: Int32Array;
-  passS: Float64Array[]; passSq: Float64Array[]; passTheta: Float64Array[]; passQi: Int32Array[]; passN: Int32Array;
-  armLroot: Float64Array; armLcut: Float64Array; armUB: Float64Array; armsOfJSorted: number[][]; chainArms: number[][];
-  diag: string[]; table: OutlineTable; emptyPts: number[];
-}
 
 function fillPoly(p: Poly, pts: ArrayLike<number>, closed: boolean, s0: number): void {
   let n = 0;
@@ -3783,51 +5308,8 @@ function copyPoly(src: Poly, dst: Poly): void {
   dst.nblk = src.nblk; dst.bk.set(src.bk.subarray(0, 4 * src.nblk));
 }
 
-function fillTangents(rt: Runtime, p: Poly): void {
-  const TT = rt.tan[p.id];
-  const needG = rt.chainArms[p.id].length > 0;
-  for (let k = 0; k < p.nseg; k++) {
-    const l = p.segLen[k] || 1;
-    const tx = p.dx[k] / l; const ty = p.dy[k] / l;
-    TT.tx[k] = tx; TT.ty[k] = ty;
-    if (needG) TT.gF[k] = p.x[k] * tx + p.y[k] * ty;
-  }
-  if (needG) for (let i = 0; i < p.n; i++) {
-    const kin = i > 0 ? i - 1 : p.closed ? p.nseg - 1 : -1;
-    TT.gB[i] = kin >= 0 ? p.x[i] * TT.tx[kin] + p.y[i] * TT.ty[kin] : 0;
-  }
-}
 
-function addPin(rt: Runtime, pi: number, s: number, z: number): void {
-  const S = rt.depthS[pi]; const Z = rt.depthZ[pi];
-  let n = rt.depthN[pi];
-  let i = n;
-  while (i > 0 && S[i - 1] > s) { S[i] = S[i - 1]; Z[i] = Z[i - 1]; i--; }
-  S[i] = s; Z[i] = z;
-  rt.depthN[pi] = n + 1;
-}
 
-function depthAtRt(rt: Runtime, pi: number, s: number, depthWin: number): number {
-  const P = rt.depthS[pi]; const Z = rt.depthZ[pi]; const n = rt.depthN[pi];
-  if (n === 0) return 0;
-  const p = rt.polys[pi];
-  const u = normS(p, s);
-  let lo = -1; let hi = n;
-  while (hi - lo > 1) { const m = (lo + hi) >> 1; if (P[m] <= u) lo = m; else hi = m; }
-  const hat = (z: number, d: number, w: number): number => (w <= 1e-12 ? (d <= 0 ? z : 0) : d >= w ? 0 : z * (1 - d / w));
-  if (p.closed) {
-    const iL = lo < 0 ? n - 1 : lo;
-    const sL = lo < 0 ? P[iL] - p.len : P[iL];
-    const iR = lo + 1 >= n ? 0 : lo + 1;
-    const sR = lo + 1 >= n ? P[iR] + p.len : P[iR];
-    const w = Math.min(depthWin, sR - sL);
-    return hat(Z[iL], u - sL, w) + hat(Z[iR], sR - u, w);
-  }
-  if (lo < 0) return hat(Z[0], P[0] - u, depthWin);
-  if (lo + 1 >= n) return hat(Z[n - 1], u - P[n - 1], depthWin);
-  const w = Math.min(depthWin, P[lo + 1] - P[lo]);
-  return hat(Z[lo], u - P[lo], w) + hat(Z[lo + 1], P[lo + 1] - u, w);
-}
 
 /** pointAt without allocation: out = [x, y, tx, ty]. */
 function pointAtInto(p: Poly, s: number, out: Float64Array): void {
@@ -3950,20 +5432,6 @@ function footWinFast(p: Poly, px: number, py: number, lo: number, hi: number, ou
   out.d = Math.sqrt(bd2); out.x = bx; out.y = by; out.s = bs; out.k = bk; out.u = bs;
 }
 
-function borderAtRuntime(rt: Runtime, pi: number, side: number, sIn: number): [number, number] {
-  const b = pi * 2 + (side === 1 ? 0 : 1);
-  const brt = rt.b[b]; const p = rt.polys[pi];
-  let target = sIn;
-  if (p.closed) { target = normS(p, target); if (target < brt.baseS[0] - 1e-9) target += p.len; }
-  const baseS = brt.baseS;
-  let lo = 0; let hi = baseS.length - 1;
-  while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (baseS[mid] <= target) lo = mid; else hi = mid; }
-  const a = lo; const bb = Math.min(baseS.length - 1, lo + 1);
-  const ds = baseS[bb] - baseS[a];
-  const t = ds > 1e-12 ? Math.min(1, Math.max(0, (target - baseS[a]) / ds)) : 0;
-  const pa = brt.baseSeqPos[a]; const pb = brt.baseSeqPos[bb];
-  return [brt.XY[2 * pa] + (brt.XY[2 * pb] - brt.XY[2 * pa]) * t, brt.XY[2 * pa + 1] + (brt.XY[2 * pb + 1] - brt.XY[2 * pa + 1]) * t];
-}
 
 /** Closest points of two segments: [t on ab, u on cd, distance squared]. */
 function segSegClosest(ax: number, ay: number, bx: number, by: number, cx: number, cy: number, dx: number, dy: number): [number, number, number] {
@@ -3986,328 +5454,7 @@ function segSegClosest(ax: number, ay: number, bx: number, by: number, cx: numbe
   return [bestT, bestU, bestD];
 }
 
-/** Solve one crossing/eye cut inside its s window on both borders. */
-function evalCut(rt: Runtime, b: number, id: number, h: number): void {
-  const brt = rt.b[b]; const bs = brt.bs;
-  const ob = bs.other[id]; const ort = rt.b[ob]; const obs = ort.bs;
-  const a = bs.i1[id]; const bb = bs.i2[id]; const c = bs.i3[id]; const d = bs.i4[id];
-  const j = brt.posOfId[id];
-  const j0 = brt.basePos[a]; const j1 = ort.basePos[c];
-  let x = 0; let y = 0; let s = 0; let fx = 0; let fy = 0;
-  let solved = false;
-  if (j0 >= 0 && j1 >= 0) {
-    const bp = brt.baseSeqPos; const op = ort.baseSeqPos;
-    const bXY = brt.XY; const oXY = ort.XY; const bC = brt.CXY;
-    const tryPair = (di: number, dj: number): boolean => {
-      const jo = j0 + di; const jo2 = j1 + dj;
-      const pa = bp[jo]; const pb = bp[jo + 1]; const pc = op[jo2]; const pd = op[jo2 + 1];
-      const ax = bXY[2 * pa]; const ay = bXY[2 * pa + 1];
-      const ex = bXY[2 * pb] - ax; const ey = bXY[2 * pb + 1] - ay;
-      const cx = oXY[2 * pc]; const cy = oXY[2 * pc + 1];
-      const fx2 = oXY[2 * pd] - cx; const fy2 = oXY[2 * pd + 1] - cy;
-      if (Math.max(cx, cx + fx2) < Math.min(ax, ax + ex) || Math.min(cx, cx + fx2) > Math.max(ax, ax + ex) || Math.max(cy, cy + fy2) < Math.min(ay, ay + ey) || Math.min(cy, cy + fy2) > Math.max(ay, ay + ey)) return false;
-      const det = ex * fy2 - ey * fx2;
-      if (Math.abs(det) < 1e-300) return false;
-      const gx = cx - ax; const gy = cy - ay;
-      const tt = (gx * fy2 - gy * fx2) / det;
-      const uu = (gx * ey - gy * ex) / det;
-      if (tt < -1e-9 || tt > 1 + 1e-9 || uu < -1e-9 || uu > 1 + 1e-9) return false;
-      const hitT = Math.min(1, Math.max(0, tt));
-      x = ax + ex * hitT;
-      y = ay + ey * hitT;
-      s = brt.baseS[jo] + (brt.baseS[jo + 1] - brt.baseS[jo]) * hitT;
-      fx = bC[2 * pa] + (bC[2 * pb] - bC[2 * pa]) * hitT;
-      fy = bC[2 * pa + 1] + (bC[2 * pb + 1] - bC[2 * pa + 1]) * hitT;
-      return true;
-    };
-    solved = tryPair(0, 0);
-    if (!solved) {
-      const nOwn = bs.baseSeq.length - 1; const nOther = obs.baseSeq.length - 1;
-      const winS = bs.winS[id] > 0 ? bs.winS[id] : 2.5 * h;
-      const seedSOwn = brt.baseS[j0]; const seedSOther = ort.baseS[j1];
-      const ubS = (arr: Float64Array, v: number, loI: number, hiI: number): number => { let a = loI; let b = hiI; while (a < b) { const m = (a + b) >> 1; if (arr[m] <= v) a = m + 1; else b = m; } return a; };
-      const diMax = Math.max(0, Math.min(nOwn - 1, ubS(brt.baseS, seedSOwn + winS, j0, brt.baseS.length) - 1) - j0);
-      const diMin = Math.max(0, j0 - ubS(brt.baseS, seedSOwn - winS - 1e-12, 0, j0));
-      const djMax = Math.max(0, Math.min(nOther - 1, ubS(ort.baseS, seedSOther + winS, j1, ort.baseS.length) - 1) - j1);
-      const djMin = Math.max(0, j1 - ubS(ort.baseS, seedSOther - winS - 1e-12, 0, j1));
-      const Rmax = Math.max(diMax, diMin, djMax, djMin);
-      outer: for (let R = 0; R <= Rmax && !solved; R++) {
-        for (let di = -R; di <= R && !solved; di++) {
-          if (di < -diMin || di > diMax) continue;
-          const jo = j0 + di;
-          const pa = bp[jo]; const pb = bp[jo + 1];
-          const ax = bXY[2 * pa]; const ay = bXY[2 * pa + 1];
-          const ex = bXY[2 * pb] - ax; const ey = bXY[2 * pb + 1] - ay;
-          const obx0 = Math.min(ax, ax + ex); const obx1 = Math.max(ax, ax + ex);
-          const oby0 = Math.min(ay, ay + ey); const oby1 = Math.max(ay, ay + ey);
-          const testDj = (dj: number): boolean => {
-            if (dj < -djMin || dj > djMax) return false;
-            const jo2 = j1 + dj;
-            const pc = op[jo2]; const pd = op[jo2 + 1];
-            const cx = oXY[2 * pc]; const cy = oXY[2 * pc + 1];
-            const fx2 = oXY[2 * pd] - cx; const fy2 = oXY[2 * pd + 1] - cy;
-            if (Math.max(cx, cx + fx2) < obx0 || Math.min(cx, cx + fx2) > obx1 || Math.max(cy, cy + fy2) < oby0 || Math.min(cy, cy + fy2) > oby1) return false;
-            const det = ex * fy2 - ey * fx2;
-            if (Math.abs(det) < 1e-300) return false;
-            const gx = cx - ax; const gy = cy - ay;
-            const tt = (gx * fy2 - gy * fx2) / det;
-            const uu = (gx * ey - gy * ex) / det;
-            if (tt < -1e-9 || tt > 1 + 1e-9 || uu < -1e-9 || uu > 1 + 1e-9) return false;
-            const hitT = Math.min(1, Math.max(0, tt));
-            x = ax + ex * hitT;
-            y = ay + ey * hitT;
-            s = brt.baseS[jo] + (brt.baseS[jo + 1] - brt.baseS[jo]) * hitT;
-            fx = bC[2 * pa] + (bC[2 * pb] - bC[2 * pa]) * hitT;
-            fy = bC[2 * pa + 1] + (bC[2 * pb + 1] - bC[2 * pa + 1]) * hitT;
-            return true;
-          };
-          if (Math.abs(di) === R) {
-            for (let dj = -R; dj <= R && !solved; dj++) if (testDj(dj)) solved = true;
-          } else {
-            if (testDj(-R)) solved = true;
-            else if (testDj(R)) solved = true;
-          }
-        }
-      }
-    }
-    if (!solved) {
-      // No intersection inside the window: the cut collapses to the
-      // closest approach of the two seed segments in this frame.
-      const pa = bp[j0]; const pb = bp[j0 + 1]; const pc = op[j1]; const pd = op[j1 + 1];
-      const cl = segSegClosest(bXY[2 * pa], bXY[2 * pa + 1], bXY[2 * pb], bXY[2 * pb + 1], oXY[2 * pc], oXY[2 * pc + 1], oXY[2 * pd], oXY[2 * pd + 1]);
-      const t = cl[0];
-      x = bXY[2 * pa] + (bXY[2 * pb] - bXY[2 * pa]) * t;
-      y = bXY[2 * pa + 1] + (bXY[2 * pb + 1] - bXY[2 * pa + 1]) * t;
-      s = brt.baseS[j0] + (brt.baseS[j0 + 1] - brt.baseS[j0]) * t;
-      fx = bC[2 * pa] + (bC[2 * pb] - bC[2 * pa]) * t;
-      fy = bC[2 * pa + 1] + (bC[2 * pb + 1] - bC[2 * pa + 1]) * t;
-    }
-  } else {
-    const pX = (r: BRun, id: number): number => { const q = r.basePos[id]; return q >= 0 ? r.XY[2 * r.posOfId[id]] : r.X[id]; };
-    const pY = (r: BRun, id: number): number => { const q = r.basePos[id]; return q >= 0 ? r.XY[2 * r.posOfId[id] + 1] : r.Y[id]; };
-    const pS = (r: BRun, id: number): number => { const q = r.basePos[id]; return q >= 0 ? r.baseS[q] : r.S[id]; };
-    const pFX = (r: BRun, id: number): number => { const q = r.basePos[id]; return q >= 0 ? r.CXY[2 * r.posOfId[id]] : r.FX[id]; };
-    const pFY = (r: BRun, id: number): number => { const q = r.basePos[id]; return q >= 0 ? r.CXY[2 * r.posOfId[id] + 1] : r.FY[id]; };
-    const ax = pX(brt, a); const ay = pY(brt, a); const bx2 = pX(brt, bb); const by2 = pY(brt, bb);
-    const cx = pX(ort, c); const cy = pY(ort, c); const dx2 = pX(ort, d); const dy2 = pY(ort, d);
-    const hit = segInt(ax, ay, bx2, by2, cx, cy, dx2, dy2);
-    if (hit) { x = ax + (bx2 - ax) * hit.t; y = ay + (by2 - ay) * hit.t; s = pS(brt, a) + (pS(brt, bb) - pS(brt, a)) * hit.t; fx = pFX(brt, a) + (pFX(brt, bb) - pFX(brt, a)) * hit.t; fy = pFY(brt, a) + (pFY(brt, bb) - pFY(brt, a)) * hit.t; }
-    else { const cl = segSegClosest(ax, ay, bx2, by2, cx, cy, dx2, dy2); const t = cl[0]; x = ax + (bx2 - ax) * t; y = ay + (by2 - ay) * t; s = pS(brt, a) + (pS(brt, bb) - pS(brt, a)) * t; fx = pFX(brt, a) + (pFX(brt, bb) - pFX(brt, a)) * t; fy = pFY(brt, a) + (pFY(brt, bb) - pFY(brt, a)) * t; }
-  }
-  brt.X[id] = x; brt.Y[id] = y; brt.S[id] = s; brt.FX[id] = fx; brt.FY[id] = fy; brt.done[id] = 1;
-  if (j >= 0) { brt.XY[2 * j] = x; brt.XY[2 * j + 1] = y; brt.CXY[2 * j] = fx; brt.CXY[2 * j + 1] = fy; brt.SA[j] = s; }
-  void h;
-}
 
-function borderSeqIdx(st: OutlineStructure, closed: boolean[], pi: number, side: number, fromIdx: number, toIdx: number, forward: boolean): number[] {
-  const b = pi * 2 + (side === 1 ? 0 : 1);
-  const nPts = st.borders[b].seqPool.length;
-  const out: number[] = [];
-  if (nPts === 0) return out;
-  const from = Math.max(0, fromIdx); const to = Math.max(0, toIdx);
-  if (!closed[pi]) {
-    if (forward) { for (let i = from; i <= to && i < nPts; i++) out.push(i); }
-    else { for (let i = from; i >= to && i >= 0; i--) out.push(i); }
-    return out;
-  }
-  const mod = Math.max(1, nPts - 1);
-  let fi = ((from % mod) + mod) % mod;
-  const ti = ((to % mod) + mod) % mod;
-  if (forward) {
-    for (let guard = 0; guard <= mod; guard++) { out.push(fi); if (fi === ti) break; fi = (fi + 1) % mod; }
-  } else {
-    for (let guard = 0; guard <= mod; guard++) { out.push(fi); if (fi === ti) break; fi = (fi - 1 + mod) % mod; }
-  }
-  return out;
-}
 
-function seqToOps(b: number, seq: number[], ops: RegionOp[]): void {
-  let i = 0;
-  let pending: number[] = [];
-  const flush = (): void => { if (pending.length) { ops.push({ t: 1, b, idx: Int32Array.from(pending) }); pending = []; } };
-  while (i < seq.length) {
-    if (i + 1 < seq.length && seq[i + 1] === seq[i] + 1) {
-      flush();
-      const from = seq[i];
-      let count = 1;
-      while (i + count < seq.length && seq[i + count] === from + count) count++;
-      ops.push({ t: 0, b, from, count });
-      i += count;
-    } else if (i + 1 < seq.length && seq[i + 1] === seq[i] - 1) {
-      flush();
-      const from = seq[i];
-      let count = 1;
-      while (i + count < seq.length && seq[i + count] === from - count) count++;
-      ops.push({ t: 6, b, from, count });
-      i += count;
-    } else { pending.push(seq[i]); i++; }
-  }
-  flush();
-}
 
-function getRuntime(st: OutlineStructure, scene: SceneIn): Runtime {
-  const holder = st as OutlineStructure & { __rt?: Runtime };
-  if (holder.__rt) {
-    let ok = true;
-    scene.chains.forEach((c, i) => { if (Math.ceil(c.pts.length / 2) + 2 > holder.__rt!.capPts[i]) ok = false; });
-    if (ok) return holder.__rt;
-  }
-  const rt = buildRuntime(st, scene);
-  holder.__rt = rt;
-  return rt;
-}
 
-function buildRuntime(st: OutlineStructure, scene: SceneIn): Runtime {
-  const closed = scene.chains.map((c) => c.closed);
-  const capPts = new Int32Array(scene.chains.length);
-  const mkPoly = (i: number, cap: number): Poly => ({ id: i, n: 0, closed: scene.chains[i].closed, nseg: 0, len: 0, s0: 0, x: new Float64Array(Math.max(1, cap)), y: new Float64Array(Math.max(1, cap)), s: new Float64Array(Math.max(1, cap)), segLen: new Float64Array(Math.max(1, cap)), dx: new Float64Array(Math.max(1, cap)), dy: new Float64Array(Math.max(1, cap)), bx0: new Float64Array(Math.max(1, cap)), by0: new Float64Array(Math.max(1, cap)), bx1: new Float64Array(Math.max(1, cap)), by1: new Float64Array(Math.max(1, cap)), bk: new Float64Array(4 * Math.max(1, Math.ceil(cap / 32))), nblk: 0 });
-  const rawPolys: Poly[] = []; const polys: Poly[] = [];
-  let maxPts = 4;
-  scene.chains.forEach((c, i) => { const cap = Math.ceil(c.pts.length / 2) + 2; capPts[i] = cap; maxPts = Math.max(maxPts, cap); rawPolys.push(mkPoly(i, cap)); polys.push(mkPoly(i, cap)); });
-  const tan = scene.chains.map((c, i) => ({ tx: new Float64Array(Math.max(1, capPts[i])), ty: new Float64Array(Math.max(1, capPts[i])), vtX: new Float64Array(Math.max(1, capPts[i])), vtY: new Float64Array(Math.max(1, capPts[i])), gF: new Float64Array(Math.max(1, capPts[i])), gB: new Float64Array(Math.max(1, capPts[i])) }));
-  const idxOf = new Map<number, number>();
-  scene.chains.forEach((c, i) => idxOf.set(c.id, i));
-  const depthS: Float64Array[] = scene.chains.map(() => new Float64Array(4));
-  const depthZ: Float64Array[] = scene.chains.map(() => new Float64Array(4));
-  {
-    const counts = new Int32Array(scene.chains.length);
-    scene.crossings.forEach((x) => { const ia = idxOf.get(x.a.chain); const ib = idxOf.get(x.b.chain); if (ia !== undefined) counts[ia]++; if (ib !== undefined) counts[ib]++; });
-    scene.chains.forEach((c, i) => { depthS[i] = new Float64Array(counts[i] + 1); depthZ[i] = new Float64Array(counts[i] + 1); });
-  }
-  const arms: FArm[] = st.arms.map((a) => ({ ...a, ux: 0, uy: 0, ang: 0 }));
-  const fCorners: FCorner[] = st.corners.map(() => ({ ok: false, Vx: 0, Vy: 0, qx: 0, qy: 0, tax: 0, tay: 0, tbx: 0, tby: 0, sA: 0, sB: 0, fax: 0, fay: 0, fbx: 0, fby: 0, r: 0, theta: 0, duA: 0, duB: 0, dvA: 0, dvB: 0 }));
-  const b: BRun[] = st.borders.map((bs, bi) => {
-    const pool = bs.kind.length;
-    const posOfId = new Int32Array(pool).fill(-1);
-    bs.seqPool.forEach((id, j) => { posOfId[id] = j; });
-    const basePos = new Int32Array(pool).fill(-1);
-    bs.baseSeq.forEach((id, j) => { basePos[id] = j; });
-    const baseSeqPos = new Int32Array(bs.baseSeq.length);
-    bs.baseSeq.forEach((id, j) => { baseSeqPos[j] = posOfId[id]; });
-    const runsArr: number[] = []; const otherArr: number[] = [];
-    for (let j = 0; j < bs.baseSeq.length; j++) { const kd = bs.kind[bs.baseSeq[j]]; if (kd === 0) { if (runsArr.length >= 2 && runsArr[runsArr.length - 2] + runsArr[runsArr.length - 1] === j) runsArr[runsArr.length - 1]++; else runsArr.push(j, 1); } else if (kd === 1 || kd === 2) otherArr.push(j); }
-    const k0Runs = Int32Array.from(runsArr); const baseOther = Int32Array.from(otherArr);
-    return {
-      bs, pi: bi >> 1, side: (bi & 1) === 0 ? 1 : -1,
-      X: new Float64Array(pool), Y: new Float64Array(pool), S: new Float64Array(pool), FX: new Float64Array(pool), FY: new Float64Array(pool), done: new Uint8Array(pool),
-      baseS: new Float64Array(bs.baseSeq.length), basePos, baseSeqPos, k0Runs, baseOther,
-      XY: new Float64Array(2 * bs.seqPool.length), CXY: new Float64Array(2 * bs.seqPool.length), SA: new Float64Array(bs.seqPool.length), posOfId, exp: new Uint8Array(Math.max(0, bs.seqPool.length - 1)),
-    };
-  });
-  const capsXY = st.caps.map((cap) => new Float64Array(2 * (cap.steps + 1)));
-  const capsCXY = st.caps.map((cap) => new Float64Array(2 * (cap.steps + 1)));
-  const junctionRid = new Map<number, number>();
-  for (const f of st.faces) if (f.kind === 1) junctionRid.set(f.ji, f.rid);
-  const cornerByArmA = new Map<string, number>();
-  st.corners.forEach((cs, ci) => cornerByArmA.set(`${cs.ji}|${cs.aArm}`, ci));
-  const nRegions = st.faces.length;
-  const regions: OutlineRegion[] = [];
-  const regionTpl: { ops: RegionOp[] }[] = [];
-  for (let r = 0; r < nRegions; r++) { const f = st.faces.find((q) => q.rid === r); regions.push({ id: r, ownerChain: f ? f.owner : -1, group: f ? f.group : -1, pts: [], pieces: [], hole: false }); regionTpl.push({ ops: [] }); }
-  for (const iv of st.intervals) {
-    if (iv.discard || iv.rid < 0 || iv.rid >= nRegions) continue;
-    const A = st.stations[iv.aSt]; const B = st.stations[iv.bSt];
-    if (!A || !B) continue;
-    const ops: RegionOp[] = [];
-    const aLeft = st.borders[A.leftB].idxOfFull[A.leftFull];
-    const bLeft = st.borders[B.leftB].idxOfFull[B.leftFull];
-    const bRight = st.borders[B.rightB].idxOfFull[B.rightFull];
-    const aRight = st.borders[A.rightB].idxOfFull[A.rightFull];
-    seqToOps(iv.pi * 2, borderSeqIdx(st, closed, iv.pi, 1, aLeft, bLeft, true), ops);
-    const capB = st.capByStation[iv.bSt];
-    if (capB >= 0 && B.kind.startsWith("cap")) ops.push({ t: 2, cap: capB, from: 1, to: st.caps[capB].steps - 1, step: 1 });
-    seqToOps(iv.pi * 2 + 1, borderSeqIdx(st, closed, iv.pi, -1, bRight, aRight, false), ops);
-    const capA = st.capByStation[iv.aSt];
-    if (capA >= 0 && A.kind.startsWith("cap")) ops.push({ t: 2, cap: capA, from: st.caps[capA].steps - 1, to: 1, step: -1 });
-    regionTpl[iv.rid] = { ops };
-  }
-  scene.junctions.forEach((J, ji) => {
-    const rid = junctionRid.get(ji);
-    if (rid === undefined) return;
-    const list = st.armsOfJ[ji];
-    if (!list || list.length < 2) return;
-    const ops: RegionOp[] = [];
-    for (const ai of list) {
-      const arm = st.arms[ai]; const ap = st.armPts[ai];
-      if (ap.prevFull >= 0) ops.push({ t: 3, b: ap.prevB, full: ap.prevFull });
-      else ops.push({ t: 4, pi: arm.pi, side: ap.nextFull >= 0 ? -ap.nextSide : 1, s: arm.sR });
-      if (ap.nextFull >= 0) ops.push({ t: 3, b: ap.nextB, full: ap.nextFull });
-      else ops.push({ t: 4, pi: arm.pi, side: ap.prevFull >= 0 ? -ap.prevSide : -1, s: arm.sR });
-      const ci = cornerByArmA.get(`${ji}|${ai}`);
-      if (ci !== undefined) ops.push({ t: 5, corner: ci });
-    }
-    regionTpl[rid] = { ops };
-    void J;
-  });
-  let regionCap = 0;
-  for (const tpl of regionTpl) for (const op of tpl.ops) regionCap += op.t === 0 || op.t === 6 ? op.count : op.t === 1 ? op.idx.length : op.t === 2 ? Math.abs(op.to - op.from) + 1 : op.t === 5 ? 17 : 1;
-  const regionBuf = new Float64Array(2 * Math.max(16, regionCap));
-  const piecesOut: OutlinePiece[] = [];
-  const runUpd: Runtime["runUpd"] = [];
-  for (let pi = 0; pi < closed.length; pi++) {
-    for (let bi = 0; bi < 2; bi++) {
-      const bIdx = pi * 2 + bi; const bs = st.borders[bIdx]; const brt = b[bIdx];
-      const side = bi === 0 ? 1 : -1;
-      const runs = bs.runs;
-      for (let ri = 0; ri < runs.length; ri += 3) {
-        const start = runs[ri]; const end = runs[ri + 1]; const rid = runs[ri + 2];
-        const piece: OutlinePiece = { kind: "run", chain: pi, side, s0: 0, s1: 0, pts: brt.XY.subarray(2 * start, 2 * (end + 1)) as unknown as number[], cpts: brt.CXY.subarray(2 * start, 2 * (end + 1)) as unknown as number[], region: rid, corner: -1 };
-        runUpd.push({ piece, b: bIdx, start, end });
-      }
-    }
-  }
-  const arcPieces: OutlinePiece[] = [];
-  const arcBuf: Float64Array[] = []; const arcCBuf: Float64Array[] = [];
-  st.corners.forEach((cs, ci) => {
-    arcBuf.push(new Float64Array(2 * 33)); arcCBuf.push(new Float64Array(2 * 33));
-    arcPieces.push({ kind: "arc", chain: cs.stored.aChain, side: 0, s0: 0, s1: 0, pts: [], cpts: [], region: junctionRid.get(cs.ji) ?? -1, corner: ci });
-  });
-  const capPieces: OutlinePiece[] = [];
-  st.caps.forEach((cap, capIdx) => {
-    const cS = st.stations[cap.station].cS;
-    for (const run of cap.runs) {
-      capPieces.push({ kind: "cap", chain: cap.pi, side: 0, s0: cS, s1: cS, pts: capsXY[capIdx].subarray(2 * run[0], 2 * run[1] + 2) as unknown as number[], cpts: capsCXY[capIdx].subarray(2 * run[0], 2 * run[1] + 2) as unknown as number[], region: -1, corner: -1 });
-    }
-  });
-  const faces: OutlineFace[] = st.faces.map((f) => ({ ownerChain: f.owner, group: f.group, pts: [], sample: [0, 0], hole: false }));
-  const facesOut: OutlineFace[] = faces.slice();
-  const faceOrder = st.faces.map((_, i) => i);
-  const cutList: Runtime["cutList"] = [];
-  const ptList: Runtime["ptList"] = [];
-  st.borders.forEach((bs, bi) => {
-    bs.seqPool.forEach((id, j) => {
-      const kd = bs.kind[id];
-      if (kd === 4) cutList.push({ b: bi, id });
-      else if (kd === 5 || kd === 6) ptList.push({ b: bi, j, id });
-    });
-  });
-  const passCounts = new Int32Array(scene.chains.length);
-  scene.crossings.forEach((x) => { const ia = idxOf.get(x.a.chain); const ib = idxOf.get(x.b.chain); if (ia !== undefined) passCounts[ia]++; if (ib !== undefined) passCounts[ib]++; });
-  const passS = scene.chains.map((_, i) => new Float64Array(passCounts[i] + 1));
-  const passSq = scene.chains.map((_, i) => new Float64Array(passCounts[i] + 1));
-  const passTheta = scene.chains.map((_, i) => new Float64Array(passCounts[i] + 1));
-  const passQi = scene.chains.map((_, i) => new Int32Array(passCounts[i] + 1));
-  const cornersT: OutlineCorner[] = st.corners.map((cs) => ({ ...cs.stored }));
-  const cutsT: OutlineCut[] = st.cuts.map((c) => ({ crossing: c.crossing, chain: c.chain, side: c.side, s: 0, x: 0, y: 0, overChain: c.overChain }));
-  const diag: string[] = [
-    `eyes ${st.stats.eyeCount} (border cuts ${st.stats.eyeKept}, depth-tie cuts ${st.stats.tieCutCount}), kink self-crossings ${st.stats.kinkCount}`,
-    `crossings in a junction span ${st.stats.crossInJunction}, corner arcs near another thread ${st.stats.arcNearThread}`,
-    "",
-  ];
-  const table: OutlineTable = { h: 0, W: 0, pieces: piecesOut, regions, faces: facesOut, corners: cornersT, cuts: cutsT, diagnostics: diag };
-  return {
-    rawPolys, polys, needRaw: new Uint8Array(scene.chains.length), extPts: new Float64Array(2 * (maxPts + 2)), capPts, tan, idxOf,
-    depthS, depthZ, depthN: new Int32Array(scene.chains.length),
-    arms, fCorners, b, capsXY, capsCXY, capsC: new Float64Array(2 * Math.max(1, st.caps.length)),
-    regions, regionTpl, regionBuf, piecesOut, runUpd, arcPieces, arcBuf, arcCBuf, arcSteps: new Int32Array(st.corners.length), arcDone: new Uint8Array(st.corners.length), capPieces,
-    faces, facesOut, faceOrder, faceDepth: new Float64Array(st.faces.length),
-cornersT, cutsT, cutList, ptList, nodeState: new Float64Array(33 * 12), nodeK: new Int32Array(33 * 2),
-    runPool: (() => { const pool: OutlinePiece[] = []; for (const bs of st.borders) for (let j = 0; j + 1 < bs.seqPool.length; j++) pool.push({ kind: "run", chain: 0, side: 1, s0: 0, s1: 0, pts: [], cpts: [], region: -1, corner: -1 }); return pool; })(),
-    runOff: (() => { const o = new Int32Array(st.borders.length + 1); st.borders.forEach((bs, i) => { o[i + 1] = o[i] + Math.max(0, bs.seqPool.length - 1); }); return o; })(),
-    trimSR: new Float64Array(2 * st.corners.length + 2), trimDir: new Float64Array(2 * st.corners.length + 2), trimDEnd: new Float64Array(2 * st.corners.length + 2), trimOff: new Int32Array(st.borders.length + 1),
-    passS, passSq, passTheta, passQi, passN: new Int32Array(scene.chains.length),
-    armLroot: new Float64Array(st.arms.length), armLcut: new Float64Array(st.arms.length), armUB: new Float64Array(st.arms.length),
-    armsOfJSorted: st.armsOfJ.map((l) => l.slice()), chainArms: scene.chains.map((_, pi) => st.arms.map((a, ai) => (a.pi === pi ? ai : -1)).filter((x) => x >= 0)),
-    diag, table, emptyPts: [],
-  };
-}
