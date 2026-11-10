@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1277.
+Next free ID: K1279.
 
 ## Waiting on Levi
 
@@ -754,6 +754,16 @@ Every other item below waits on the trigger it names.
 - **K1256** · K1240's outline: frame() leads outside corners from K1247 stage 4 (unmeasured):
   crossingsPhaseC's OSR-exit deopts, frameFast's wrong-map and generic-global deopts, and about 40
   cornerFallbackC fallbacks a frame (about 0.5 ms). K1247_s4_corners.md Handoff 1
+- **K1277** · K1240 fill as triangles fixed at structure (Levi 2026-11-10: 'divide it into seamless
+  triangles'): a strip per face between its two borders' stations, junction faces triangulated once, only
+  vertices move per frame; drawn plainly instead of the stencil's even-odd fan
+  (.claude/probes/K1240/proto/draw.ts), so a fold overdraws instead of cracking (K1273). Gate: stage 14's
+  census, cracks and spill both; after K1247 s15 (same files).
+- **K1278** · Paint on the outline must blend seamlessly across junctions (Levi 2026-11-10): colour per pixel
+  from fields continuous across faces, triangles and junctions (chain + s, per-arm weights easing to an exact
+  hand-off as in form B, a pulse's travel distance continuous through the junction), never per face or
+  triangle. Gate: a seam test sampling section blends and pulses across every face edge, triangle edge and
+  junction for steps and kinks, plus K1244's sheets (K1250).
 
 ## Residuals (known, not fixed)
 
