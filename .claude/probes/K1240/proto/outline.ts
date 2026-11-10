@@ -3818,37 +3818,7 @@ function footArmGlobal(C: FCache, ai: number, x: number, y: number, estD: number
 function solveVC(C: FCache, ci: number, aiA: number, aiB: number, rho: number, x0: number, y0: number, estD: number, fa: FFoot, fb: FFoot): boolean {
   const h = C.h;
   const A = C.armObj[aiA]; const B = C.armObj[aiB];
-  // Warm attempt: Newton from last frame's V with tracked feet.
-  if (C.warm && ci >= 0 && C.wValid[ci]) {
-    let x = C.wVx[ci]; let y = C.wVy[ci];
-    footNearM(C.polys, h, A, x, y, C.wFaS[ci], C.wFaK[ci], fa);
-    footNearM(C.polys, h, B, x, y, C.wFbS[ci], C.wFbK[ci], fb);
-    let okIt = false;
-    for (let it = 0; it < 40; it++) {
-      const Fa = fa.d - rho; const Fb = fb.d - rho;
-      if (Math.abs(Fa) < 1e-12 * Math.max(1, rho) && Math.abs(Fb) < 1e-12 * Math.max(1, rho)) { okIt = true; break; }
-      if (!(fa.d > 1e-12 && fb.d > 1e-12)) break;
-      const gax = (x - fa.x) / fa.d; const gay = (y - fa.y) / fa.d;
-      const gbx = (x - fb.x) / fb.d; const gby = (y - fb.y) / fb.d;
-      const det = gax * gby - gay * gbx;
-      if (Math.abs(det) < 1e-12) break;
-      let dx = (-Fa * gby + Fb * gay) / det;
-      let dy = (-Fb * gax + Fa * gbx) / det;
-      const dl = Math.sqrt(dx * dx + dy * dy);
-      if (dl > h) { dx *= h / dl; dy *= h / dl; }
-      x += dx; y += dy;
-      footNearM(C.polys, h, A, x, y, fa.u, fa.k, fa);
-      footNearM(C.polys, h, B, x, y, fb.u, fb.k, fb);
-    }
-    void okIt;
-    // Validate with the builder's global feet at this point.
-    footArmGlobal(C, aiA, x, y, estD, kfTa); footArmGlobal(C, aiB, x, y, estD, kfTb);
-    if (Math.abs(kfTa.d - rho) < 1e-9 * Math.max(h, rho) && Math.abs(kfTb.d - rho) < 1e-9 * Math.max(h, rho)) {
-      copyFoot(fa, kfTa); copyFoot(fb, kfTb);
-      kfSv.x = x; kfSv.y = y;
-      return true;
-    }
-  }
+  void ci; // one cold solve; a warm V can be a different root
   // The builder's solveEq: global feet, Newton from the given guess.
   let x = x0; let y = y0;
   footArmGlobal(C, aiA, x, y, estD, fa); footArmGlobal(C, aiB, x, y, estD, fb);
@@ -4093,11 +4063,8 @@ function borderMeetC(C: FCache, ci: number, aiA: number, sideA: number, aiB: num
     }
     return found;
   };
-  if (C.warm && C.meetValid[ci]) {
-    const sa: number[] = []; const sb: number[] = [];
-    for (let d = -3; d <= 3; d++) { if (segOk(BA, aiA, C.meetSegA[ci] + d)) sa.push(C.meetSegA[ci] + d); if (segOk(BB, aiB, C.meetSegB[ci] + d)) sb.push(C.meetSegB[ci] + d); }
-    if (tryPairs(sa, sb)) { meetScratch.found = true; C.meetSegA[ci] = meetScratch.segA; C.meetSegB[ci] = meetScratch.segB; return true; }
-  }
+  // Full search every frame: a window around last frame's meet pair
+  // could return a different intersection than the global best.
   const segsOf = (Bd: FBord, ai: number): number[] => {
     const out: number[] = [];
     for (let i = 0; i + 1 < Bd.nb; i++) if (segOk(Bd, ai, i)) out.push(i);
@@ -4200,9 +4167,8 @@ function cornersPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): void {
     let bx = C.armUx[aiA] + C.armUx[aiB]; let by = C.armUy[aiA] + C.armUy[aiB];
     const bl = Math.sqrt(bx * bx + by * by) || 1; bx /= bl; by /= bl;
     const sn = Math.sin(thC / 2) || 1;
-    // Solve + the builder's acceptance checks. A warm V that fails any
-    // check is retried with the builder's global solve before the
-    // fallback, so the frame's decision matches the oracle's.
+    // Solve + the builder's acceptance checks. One cold solve from
+    // the builder's guess: history must not pick a different root.
     const trySolve = (warmCi: number): number => {
       const okV = solveVC(C, warmCi, aiA, aiB, h, j.c[0] + (bx * h) / sn, j.c[1] + (by * h) / sn, h / Math.max(Math.tan(thC / 2), 1e-6), kfFa, kfFb);
       if (!okV) return 1;
@@ -4217,7 +4183,6 @@ function cornersPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): void {
       return 0;
     };
     let solveCode = trySolve(ci);
-    if (solveCode !== 0 && C.warm && C.wValid[ci]) solveCode = trySolve(-1);
     if (solveCode !== 0) {
       C.cWhy[ci] = solveCode === 1 ? "no V" : solveCode === 2 ? "V outside spans" : "V outside wedge";
       cornerFallbackC(C, st, scene, ci, aiA, aiB, sideA, sideB, th);
@@ -4234,9 +4199,11 @@ function cornersPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): void {
     kfCst.rbEff = Math.max(0.5 * h * rootTipScale(thC), 1e-9 * h);
     kfCst.denV = 1 + ((Vx - kfFa.x) * (Vx - kfFb.x) + (Vy - kfFa.y) * (Vy - kfFb.y)) / ((kfFa.d || 1) * (kfFb.d || 1));
     kfCst.wCacheA = C.walkA[ci]; kfCst.wCacheB = C.walkB[ci];
-    // Margin walk caches persist across frames for this corner:
-    // marginOfC's resume tests already account for q moving (delta), so
-    // last frame's walk bounds stay valid hints under small motion.
+    // Margin walk caches reset per corner per frame: they still
+    // memoize this corner's growth steps within the frame, but no
+    // earlier frame's bounds may limit this frame's margin search.
+    kfCst.wCacheA.valid = false; kfCst.wCacheA.oLo = NaN; kfCst.wCacheA.oHi = NaN;
+    kfCst.wCacheB.valid = false; kfCst.wCacheB.oLo = NaN; kfCst.wCacheB.oHi = NaN;
     kfCst.rhoCur = h;
     const r = growIntegC(C, ci);
     C.cVx[ci] = Vx; C.cVy[ci] = Vy;
@@ -4365,59 +4332,10 @@ function crossingsPhaseC(C: FCache, scene: SceneIn): void {
       }
       searched = true;
     };
-    let okWarm = false;
-    if (C.warm && C.cutPrevCands[xi] >= 0) {
-      // Warm: per-combo segment windows around last frame's pairs.
-      let anyPair = false;
-      candN = 0;
-      for (let combo = 0; combo < 4; combo++) {
-        const ui = combo >> 1; const oi = combo & 1;
-        const pu = C.cutPairU[xi * 4 + combo]; const po = C.cutPairO[xi * 4 + combo];
-        const pn = C.cutPairN[xi * 4 + combo];
-        if (!pn) continue;
-        anyPair = true;
-        const Bu = BU[ui]; const Bo = BO[oi];
-        const wu: number[] = []; const wo: number[] = [];
-        const stamp = ++kfSegStamp;
-        if (Bu.mark.length < Bu.nb) Bu.mark = new Int32Array(Bu.nb * 2);
-        if (Bo.mark.length < Bo.nb) Bo.mark = new Int32Array(Bo.nb * 2);
-        for (let q = 0; q < pn; q++) {
-          for (let d = -2; d <= 2; d++) {
-            const iu = pu[q] + d; const io = po[q] + d;
-            if (iu >= 0 && iu + 1 < Bu.nb && Bu.mark[iu] !== stamp && sDistToIntervalC(C, U, sUnder, Bu.bs[iu], Bu.bs[iu + 1]) <= R) { Bu.mark[iu] = stamp; wu.push(iu); }
-            if (io >= 0 && io + 1 < Bo.nb && Bo.mark[io] !== stamp && sDistToIntervalC(C, O, sOver, Bo.bs[io], Bo.bs[io + 1]) <= R) { Bo.mark[io] = stamp; wo.push(io); }
-          }
-        }
-        for (const i of wu) {
-          const a0x = Bu.bx[i]; const a0y = Bu.by[i]; const a1x = Bu.bx[i + 1]; const a1y = Bu.by[i + 1];
-          const mnx = Math.min(a0x, a1x); const mxx = Math.max(a0x, a1x);
-          const mny = Math.min(a0y, a1y); const mxy = Math.max(a0y, a1y);
-          for (const j of wo) {
-            if (U === O && ui === oi && i === j) continue;
-            const b0x = Bo.bx[j]; const b0y = Bo.by[j]; const b1x = Bo.bx[j + 1]; const b1y = Bo.by[j + 1];
-            if (mxx < Math.min(b0x, b1x) || mnx > Math.max(b0x, b1x) || mxy < Math.min(b0y, b1y) || mny > Math.max(b0y, b1y)) continue;
-            const hit = segInt(a0x, a0y, a1x, a1y, b0x, b0y, b1x, b1y);
-            if (!hit) continue;
-            const px = a0x + (a1x - a0x) * hit.t;
-            const py = a0y + (a1y - a0y) * hit.t;
-            pushCand(sides[ui], sides[oi], px, py, Math.hypot(px - cpX, py - cpY), lerpS(pU, Bu.bs[i], Bu.bs[i + 1], hit.t), lerpS(C.polys[O], Bo.bs[j], Bo.bs[j + 1], hit.u), i, j, 0, -1, hit.t, hit.u);
-          }
-        }
-      }
-      if (anyPair) {
-        okWarm = true;
-        if (candN === 0 && C.cutPrevCands[xi] > 0) okWarm = false;
-        if (okWarm) {
-          for (let oi = 0; oi < 2; oi++) {
-            if (!C.cutPrevPick[xi * 2 + oi]) continue;
-            let has1 = false; let has2 = false;
-            for (let c = 0; c < candN; c++) if (candOSide[c] === sides[oi]) { if (candUSide[c] === 1) has1 = true; else has2 = true; }
-            if (!has1 || !has2) { okWarm = false; break; }
-          }
-        }
-        if (!okWarm) candN = 0;
-      }
-    }
+    // Full search every frame. The old warm path (segment windows
+    // around last frame's pairs) could miss the candidate the full
+    // search picks, so the frame depended on history.
+    const okWarm = false;
     if (!okWarm) doFull();
     void searched;
     // Synthesized cuts for missing combos (tight twists).
@@ -4502,17 +4420,6 @@ function crossingsPhaseC(C: FCache, scene: SceneIn): void {
       const ls = candOS[pl]; const rs = candOS[pr];
       C.stCS[slot] = normS(pO, ls + dS(pO, ls, rs) / 2);
     }
-    // Warm pairs for next frame (regular candidates only).
-    C.cutPrevCands[xi] = regN;
-    for (let combo = 0; combo < 4; combo++) {
-      const ui = combo >> 1; const oi = combo & 1;
-      const us: number[] = []; const os: number[] = [];
-      for (let c = 0; c < regN; c++) if (candUSide[c] === sides[ui] && candOSide[c] === sides[oi]) { us.push(candUSeg[c]); os.push(candOSeg[c]); }
-      const key = xi * 4 + combo;
-      if (C.cutPairU[key].length !== us.length) { C.cutPairU[key] = Int32Array.from(us); C.cutPairO[key] = Int32Array.from(os); }
-      else { C.cutPairU[key].set(us); C.cutPairO[key].set(os); }
-      C.cutPairN[key] = us.length;
-    }
   }
 }
 
@@ -4594,44 +4501,12 @@ function eyesPhaseC(C: FCache, scene: SceneIn): void {
             found++;
           }
         }
-        eye.pairsU[combo] = Int32Array.from(us); eye.pairsO[combo] = Int32Array.from(os); eye.pairN[combo] = us.length;
         return found;
       };
-      let found = 0;
-      const pn = eye.pairN[combo];
-      if (C.warm && pn > 0) {
-        const pu = eye.pairsU[combo]; const po = eye.pairsO[combo];
-        const keepU: number[] = []; const keepO: number[] = [];
-        for (let q = 0; q < pn; q++) {
-          let hitI = -1; let hitJ = -1; let hitT = 0; let hitU = 0;
-          for (let du = -1; du <= 1 && hitI < 0; du++) for (let dv = -1; dv <= 1; dv++) {
-            const i = pu[q] + du; const j = po[q] + dv;
-            if (i < 0 || i + 1 >= BA.nb || j < 0 || j + 1 >= BB.nb) continue;
-            if (pi === qi && (combo >> 1) === (combo & 1) && i === j) continue;
-            const hit = segInt(BA.bx[i], BA.by[i], BA.bx[i + 1], BA.by[i + 1], BB.bx[j], BB.by[j], BB.bx[j + 1], BB.by[j + 1]);
-            if (hit) { hitI = i; hitJ = j; hitT = hit.t; hitU = hit.u; break; }
-          }
-          if (hitI < 0) continue;
-          // The full search only keeps segments inside the eye arc
-          // (segInArc); a drifted warm pair outside it is dropped, not
-          // inserted (it would add a vertex the oracle does not have).
-          if (!segInArc(pA, BA.bs[hitI], BA.bs[hitI + 1], sPi0, gapPi) || !segInArc(pB, BB.bs[hitJ], BB.bs[hitJ + 1], sQi0, gapQi)) continue;
-          const px = BA.bx[hitI] + (BA.bx[hitI + 1] - BA.bx[hitI]) * hitT;
-          const py = BA.by[hitI] + (BA.by[hitI + 1] - BA.by[hitI]) * hitT;
-          addInsert(C, pi * 2 + (sa === 1 ? 0 : 1), hitI, hitT, px, py, -1);
-          addInsert(C, qi * 2 + (sb === 1 ? 0 : 1), hitJ, hitU, px, py, -1);
-          keepU.push(hitI); keepO.push(hitJ);
-          found++;
-        }
-        if (found === 0) found = fullCombo();
-        else { eye.pairsU[combo] = Int32Array.from(keepU); eye.pairsO[combo] = Int32Array.from(keepO); eye.pairN[combo] = keepU.length; }
-      } else if (!C.warm) {
-        found = fullCombo();
-      } else {
-        // Warm but no previous pairs for this combo: no search (a combo
-        // that had no cut keeps none; verified against the oracle rows).
-        found = 0;
-      }
+      // Full search every frame: the old warm path tracked last
+      // frame's pairs (and skipped the search when it had none), so
+      // the cuts depended on history.
+      const found = fullCombo();
       foundTotal += found;
     }
     kfEyeCutCount += foundTotal;
@@ -5228,7 +5103,6 @@ function frameFast(st: DiagramStructure, scene: SceneIn, profile?: Record<string
   for (let s = 0; s < C.nSlots; s++) if (C.stActive[s]) stationsActive++;
   diagnostics.push(`chains ${C.nCh}, pieces ${pieces.length}, regions ${regions.length}, faces ${faces.length}, corners ${corners.filter((c) => c.ok).length}/${corners.length} ok, cuts ${cuts.length}, stations ${stationsActive}`);
   profMark("piecesCapsEtc");
-  C.warm = true;
   return { h: C.h, W: C.W, pieces, regions, faces, corners, cuts, diagnostics };
 }
 
