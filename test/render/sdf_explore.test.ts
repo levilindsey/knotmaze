@@ -23,7 +23,7 @@ describe("K825 SDF explore variant", () => {
 
   it("keeps the master's gap call after the visibility", () => {
     const evAt = frag.indexOf("aM *= ev;");
-    const gapAt = frag.indexOf("float gk = gapKeepAt(pxW, vPos, arc, vDir, vIds);");
+    const gapAt = frag.indexOf("float gk = gapKeepAt(pxW, vPos, gTurn, vDir, vIds);");
     expect(evAt).toBeGreaterThan(0);
     expect(gapAt).toBeGreaterThan(evAt);
   });

@@ -970,7 +970,7 @@ export function withExplore(frag: string): string {
 const ANCHOR_SDF_PXARC = "  float pxArc = pxW * (abs(vDir.x) + abs(vDir.y));";
 const ANCHOR_SDF_KCTRL =
   "  float kctrl = fxHere || paintHere ? kCtrlNear(kc, kpt.x, kpt.y) : 0.0;";
-const ANCHOR_SDF_GAP = "  float gk = gapKeepAt(pxW, vPos, arc, vDir, vIds);";
+const ANCHOR_SDF_GAP = "  float gk = gapKeepAt(pxW, vPos, gTurn, vDir, vIds);";
 export function withExploreSdf(frag: string): string {
   let s = frag;
   let i = once(s, ANCHOR_DECL);

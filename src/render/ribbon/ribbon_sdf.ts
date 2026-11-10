@@ -334,7 +334,12 @@ void main(void) {
     // (lW > 0 is the chain's left, as the strip's aUV.y = 0 side).
     lookA *= 1.0 - kJunctionSideCut(kc.ch, arc, kc.total, kc.closed, lW > 0.0 ? -1.0 : 1.0, pxW);
   }
-  float gk = gapKeepAt(pxW, vPos, arc, vDir, vIds);
+  // K8: gapKeepAt reads a TURN, the strip's aArcPos encoding (i / count
+  // on rings, 0.45 i / (count - 1) on open runs; the slot's arcScale
+  // turns it back into arc). Passing the arc itself put every fragment
+  // outside every window: rp=sdf drew no crossing gaps from K832 on.
+  float gTurn = (float(segK) + t1) * (kc.closed ? 1.0 / float(kc.count) : 0.45 / float(max(kc.count - 1, 1)));
+  float gk = gapKeepAt(pxW, vPos, gTurn, vDir, vIds);
   if (uKBase.z > 4.5) {
     if (gk <= 0.002) discard;
     finalColor = vec4(clamp(kst.x, 0.0, 1.0), kst.y > 0.5 ? kst.z : 0.0, max(kgl, krim), 1.0);

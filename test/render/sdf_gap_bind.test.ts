@@ -8,6 +8,38 @@ import { describe, expect, it } from "vitest";
 import { gapSource, setGapSource } from "../../src/render/fabric_sdf";
 import { CrossingGaps } from "../../src/render/ribbon/crossing_gaps";
 import { SDF_FRAG } from "../../src/render/ribbon/ribbon_sdf";
+import { gapTurn } from "../../src/render/pluck_model";
+
+describe("K8 the SDF gap call reads a turn", () => {
+  // gapKeepAt multiplies its turn by the slot's arcScale (crossing_gaps:
+  // closed total, open total / 0.45). K832 passed the ARC, so every
+  // fragment fell outside every window and rp=sdf cut no casing at all.
+  const line =
+    "float gTurn = (float(segK) + t1) * (kc.closed ? 1.0 / float(kc.count) : 0.45 / float(max(kc.count - 1, 1)));";
+  it("passes the strip's turn, never the arc", () => {
+    expect(SDF_FRAG).toContain(line);
+    expect(SDF_FRAG).toContain("float gk = gapKeepAt(pxW, vPos, gTurn, vDir, vIds);");
+    expect(SDF_FRAG).not.toContain("gapKeepAt(pxW, vPos, arc,");
+  });
+  it("matches gapTurn (the strip's encoding) at every sample and between", () => {
+    // The shader's expression, mirrored; arcPer as gap_mask.ts defines it.
+    const sdfTurn = (k: number, closed: boolean, count: number) =>
+      k * (closed ? 1 / count : 0.45 / Math.max(count - 1, 1));
+    for (const closed of [true, false]) {
+      for (const count of [5, 64, 401]) {
+        const total = 37.25;
+        const arcPer = total / (closed ? count : count - 1);
+        const last = closed ? count : count - 1;
+        for (let k = 0; k <= last; k += 0.25) {
+          const turn = sdfTurn(k, closed, count);
+          expect(turn).toBeCloseTo(gapTurn(k * arcPer, total, closed), 12);
+          // and the slot's arcScale gives the sample's arc back
+          expect(turn * (closed ? total : total / 0.45)).toBeCloseTo(k * arcPer, 9);
+        }
+      }
+    }
+  });
+});
 
 const read = (rel: string): string =>
   readFileSync(new URL(rel, import.meta.url), "utf8").replace(/\r\n/g, "\n");
