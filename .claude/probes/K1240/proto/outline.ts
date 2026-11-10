@@ -5391,6 +5391,19 @@ const KF_NOENV = !!(globalThis as { process?: { env?: Record<string, string | un
 // synthesized cut at the same point. K13_NOHITWIN=1 restores stage 12's rule for A/B.
 const KF_NOHITWIN = !!(globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.K13_NOHITWIN;
 export const hitWinStats = { out: 0 };
+// K1247 s14: underlays. A discarded structural interval (an under pass's gap, a junction's
+// through pass, an end arm's stretch to its cap) is still the chain's band. Stage 12's
+// structural order discards every pair, where the cS order missed the ones another station
+// fell between (a seam inside an under pass, two junctions' stations interleaved), and the
+// regions those misses left drew the band there. Without them, the band shows paper where the
+// cut's straight chord falls short of the over band's curved edge (fat 19.76,1.47; muse_hash
+// 28.39,20.41) and where a junction region misses a stretch of its chain (def 19.95,31.31;
+// muse_hash 26.86,22.32). Each discarded interval now also paints its band (from the envelope
+// start, so a passed station's triangle is inside) as a face beneath every other face: it shows
+// only where nothing else paints. One per discarded interval, ids after the junction regions,
+// no pieces. K14_NOUNDER=1 drops them for A/B.
+const KF_NOUNDER = !!(globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.K14_NOUNDER;
+const UNDER_DEPTH = -1e9;
 const mtSegs = [new Int32Array(1024), new Int32Array(1024)];
 const mtBoxA = mkSegBoxes(); const mtBoxB = mkSegBoxes();
 function dSignedC(C: FCache, ai: number, s: number): number {
@@ -6478,6 +6491,33 @@ function regionsPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): { regio
     regions.push({ id: rid, ownerChain: owner, group: st.groupOfJ[ji], pts, pieces: [], hole: false });
     faceWorks.push({ owner, group: st.groupOfJ[ji], rid, sx: j.c[0], sy: j.c[1], depth: depthAtC(C, owner, C.armSR[list[0]], depthWin) });
   });
+  // K1247 s14: underlays (KF_NOUNDER's note): the band of each discarded interval, beneath
+  // every face. Border segments stay with their regions (no segReg, no pieces).
+  if (!KF_NOUNDER && !KF_CSORDER) {
+    for (let i = 0; i < nIv; i++) {
+      if (!C.ivDiscard[i]) continue;
+      const pi = C.ivPi[i]; const B = C.ivB[i]; const eA = C.ivEA[i];
+      const pts: number[] = [];
+      if (C.ivLen[i] > 0) {
+        const BdL = C.bords[pi * 2];
+        if (kfSegL.length < BdL.nf + 1) kfSegL = new Int32Array((BdL.nf + 1) * 2);
+        regionSeqEmit(C, pi, 1, refFinalOf(C.stLeft[eA]), refFinalOf(C.stLeft[B]), true, pts, kfSegL);
+        const capBInfo = C.capInfoOfSlot[B];
+        if (capBInfo >= 0 && C.slotKind[B] === 3) { const ax = C.capArcX[capBInfo]; const ay = C.capArcY[capBInfo]; for (let q = 1; q + 1 < C.capArcN[capBInfo]; q++) pushDedup(pts, ax[q], ay[q]); }
+        const BdR = C.bords[pi * 2 + 1];
+        if (C.seqSeg.length < BdR.nf + 1) { C.seqSeg = new Int32Array((BdR.nf + 1) * 2); C.seqIdx = new Int32Array((BdR.nf + 1) * 2); }
+        regionSeqEmit(C, pi, -1, refFinalOf(C.stRight[B]), refFinalOf(C.stRight[eA]), false, pts, C.seqSeg);
+        const capAInfo = C.capInfoOfSlot[eA];
+        if (capAInfo >= 0 && C.slotKind[eA] === 3) { const ax = C.capArcX[capAInfo]; const ay = C.capArcY[capAInfo]; for (let q = C.capArcN[capAInfo] - 2; q >= 1; q--) pushDedup(pts, ax[q], ay[q]); }
+        if (pts.length >= 2 && Math.hypot(pts[0] - pts[pts.length - 2], pts[1] - pts[pts.length - 1]) < 1e-12) pts.length -= 2;
+      }
+      const rid = regions.length;
+      const grp = grpMode.adj ? adjGroupC(C, C.ivA[i], B) : memberGroupC(C, pi, C.ivCMid[i]);
+      regions.push({ id: rid, ownerChain: pi, group: grp, pts, pieces: [], hole: false });
+      pointAtInto(C.polys[pi], C.ivCMid[i], ptScratch);
+      faceWorks.push({ owner: pi, group: grp, rid, sx: ptScratch[0], sy: ptScratch[1], depth: UNDER_DEPTH });
+    }
+  }
   const order = faceWorks.map((_, i) => i).sort((a, b) => faceWorks[a].depth - faceWorks[b].depth);
   const faces: OutlineFace[] = order.map((i) => {
     const f = faceWorks[i];

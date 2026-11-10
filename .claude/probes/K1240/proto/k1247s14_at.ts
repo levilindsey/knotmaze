@@ -47,8 +47,10 @@ if (crack.length) {
   let sx = 0; let sy = 0; for (const [x, y] of crack) { sx += x; sy += y; }
   console.log(`  crack centroid (${(sx / crack.length).toFixed(4)}, ${(sy / crack.length).toFixed(4)})`);
 }
+// Faces are sorted by depth; a face shares its region's pts (same length and points).
+const regionOf = (T: any, f: any): any => T.regions.find((rg: any) => rg.pts.length === f.pts.length && rg.pts.every((v: number, k: number) => v === f.pts[k])) ?? { id: "?", pieces: [] };
 const desc = (T: any, i: number): string => {
-  const f = T.faces[i]; const rg = T.regions[i];
+  const f = T.faces[i]; const rg = regionOf(T, f);
   const ps = (rg.pieces ?? []).map((k: number) => { const p = T.pieces[k]; return `#${k} ${p.kind}/${p.chain}${p.side !== undefined ? (p.side > 0 ? "+" : "-") : ""} s ${p.s0?.toFixed?.(4)}..${p.s1?.toFixed?.(4)}${p.corner !== undefined && p.corner >= 0 ? ` c${p.corner}` : ""}`; });
   return `face ${i} region ${rg.id} owner ${f.ownerChain} group ${f.group} n ${f.pts.length / 2}: ${ps.join(", ")}`;
 };
