@@ -4804,7 +4804,7 @@ function cfSteepOf(j: number): number {
 // The first piece in [lo, hi] whose fSteep minimum (at cfSr) lies strictly
 // inside and under wcap (w there is lower than at either end), or -1.
 function cfDipIn(lo: number, hi: number, wcap: number): number {
-  if (!cfDipOn) return -1;
+  if (!cfDipOn || !(wcap > 1e-12)) return -1; // fSteep >= 0: nothing dips under a w of 0
   let j = cfCur < cfN ? cfCur : cfN - 1; if (j < 0) return -1;
   while (j > 0 && cfR[j] > lo) j--;
   const zl = 1e-12 * kfCst.rhoCur;
