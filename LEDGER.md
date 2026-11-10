@@ -381,11 +381,11 @@ Next free ID: K1273.
 - **K268** · Shaped crossing gaps under thread reveal (K76; Levi, 2026-10-14):
   no gap until the over thread is seen, a dynamic gap for a stub's overlap and
   dead ends. Stages 1-2 merged (stage 2: 2fb3362..0fd6282; MAX fixed, joints fade).
-  - owner: agent `a93f0ae0ca9155468` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-10 04:31, 1 h cap ~05:31)
-  - branch: `worktree-agent-a93f0ae0ca9155468`, worktree `.claude/worktrees/agent-a93f0ae0ca9155468`; last commit: `f077a97f`
-  - evidence: .claude/probes/K268/proof/ (census3a.mjs, ideal.mjs, judge.mjs, far_scan.mjs, run_census.ps1); outputs untracked in proof/out/
-  - next: Far-flag fix (started 2026-11-10 04:32): the far branch passes the profile's flags, a test that catches the old ones, desktop census 31/31. When it reports: Claude merges (src/: watch the deploy); then the phone census rerun in K156's next window
-  - brief: docs/design/K268.md (Far-flag fix brief)
+  - owner: nobody since 2026-11-10 05:01 (far-flag fix merged; waits on K156's phone window)
+  - branch: mainline; last commit: `0c1fc78e`
+  - evidence: .claude/probes/K268/proof/ (run_census.ps1, census3a.mjs, far_scan.mjs, lock_take.ps1); test/render/paint_explore.test.ts; outputs untracked in proof/out/
+  - next: Phone census rerun of proof/census3a.mjs (PASSCFG, same recipe) in K156's next window; PROOF coverage of a visible far branch is K1272
+  - brief: docs/design/K268.md (Far-flag fix handoff)
 - **K7** · Physics in a Web Worker with render-side interpolation (K28; Levi's
   calls K302). Stages 1-7 merged: the worker is the default (stage 6, call F6), `&phw=0` runs
   in-thread. Stage 7 (05ae710..4420d6c) builds the first scene from the Worker's name and
@@ -2065,7 +2065,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   Handoff 1)
 - **K1272** · K268 PROOF coverage: on the census's 10-move frame only c100 has in-between pixels; the other
   shaped slots judge 0 px (under thread hidden at the crossing). Find frames or seeds where more shaped slots
-  show their under thread (with K547's visible far branch). docs/design/K268.md (Proof stage handoff)
+  show their under thread (with K547's visible far branch), including one where `far_scan.mjs` reads farVisible > 0, so the GPU shows the far-flag fix (0c1fc78e). docs/design/K268.md (Proof stage and Far-flag fix handoffs)
 
 ## Done
 
