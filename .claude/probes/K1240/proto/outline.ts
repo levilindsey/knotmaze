@@ -2067,6 +2067,44 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
       regions.push(reg); faceWorks.push(fw);
     }
   }
+  // K1247 s14: underlays, as the fast path's (regionsPhaseC): one per structural discard
+  // pair, ids sR.n + u, the band of the frame's discarded interval there, beneath every face.
+  if (sR && sC && !KF_NOUNDER) {
+    const uBase = regions.length;
+    const uRegs: (OutlineRegion | undefined)[] = new Array(sR.nU);
+    const uFaces: (FaceWork | undefined)[] = new Array(sR.nU);
+    for (const iv of intervals) {
+      if (!iv.discard) continue;
+      const u = sR.uOfPair.get(slotOfKeyC(sC, iv.A.key) * sR.nS + slotOfKeyC(sC, iv.B.key)) ?? -1;
+      if (u < 0 || uRegs[u]) continue;
+      const pi = iv.pi; const p = polys[pi];
+      const eA = iv.eA ?? iv.A;
+      const seq: { x: number; y: number }[] = [];
+      if (iv.len > 0) {
+        seq.push(...borderSeq(pi, 1, eA.left.idx, iv.B.left.idx, true).pts);
+        const capB = capByStation.get(iv.B.key);
+        if (capB && iv.B.kind.startsWith("cap")) seq.push(...capB.arc.slice(1, -1));
+        seq.push(...borderSeq(pi, -1, iv.B.right.idx, eA.right.idx, false).pts);
+        const capA = capByStation.get(eA.key);
+        if (capA && eA.kind.startsWith("cap")) seq.push(...capA.arc.slice(1, -1).reverse());
+      }
+      const flat = dedupePts(seq).flatMap((pt) => [pt.x, pt.y]);
+      const grp = memberGroup(pi, iv.cMid); const mid = pointAt(p, iv.cMid);
+      uRegs[u] = { id: uBase + u, ownerChain: pi, group: grp, pts: flat, pieces: [], hole: false };
+      uFaces[u] = { owner: pi, group: grp, pts: flat, sample: [mid.x, mid.y], depth: UNDER_DEPTH };
+    }
+    for (let u = 0; u < sR.nU; u++) {
+      let reg = uRegs[u]; let fw = uFaces[u];
+      if (!reg || !fw) {
+        const pi = sR.uPi[u]; const p = polys[pi];
+        const s = slotStation.get(sR.uA[u])?.cS ?? p.s0;
+        const grp = memberGroup(pi, s); const mid = pointAt(p, s);
+        reg = { id: uBase + u, ownerChain: pi, group: grp, pts: [], pieces: [], hole: false };
+        fw = { owner: pi, group: grp, pts: reg.pts, sample: [mid.x, mid.y], depth: UNDER_DEPTH };
+      }
+      regions.push(reg); faceWorks.push(fw);
+    }
+  }
   // Junction regions: one polygon per junction.
   const junctionRegion = new Map<number, number>();
   scene.junctions.forEach((j, ji) => {
@@ -3079,8 +3117,9 @@ interface FCache {
    *  the root s, and the arm leaving backwards (dir -1) comes first. */
   slotSub: Int8Array;
   /** K1247 s12: the structural region numbering (structRegionsC), built once;
-   *  structMiss counts frame intervals that found no free id (dropped). */
-  sReg?: StructRegions; structMiss?: number;
+   *  structMiss counts frame intervals that found no free id (dropped); underMiss
+   *  (K1247 s14) discarded frame intervals at no structural pair (or a taken one). */
+  sReg?: StructRegions; structMiss?: number; underMiss?: number;
   crossUnderSlot: Int32Array; crossOverSlot: Int32Array; junctionSlot: Int32Array; capSlot: Int32Array; seamSlot: Int32Array;
   dgSlot: Int32Array; capInfoOfSlot: Int32Array;
   stActive: Uint8Array; stCS: Float64Array; stLeft: Int32Array; stRight: Int32Array;
@@ -3425,7 +3464,10 @@ function armDistC(C: FCache, ai: number, s: number): number {
  *  after its first station, and an id no interval takes is an empty region,
  *  so a station that comes and goes (a crossOver pick: def cycle frame 18,
  *  fat cyc 18 crossing 310) no longer renumbers every later region. */
-interface StructRegions { pos: Int32Array; base: Int32Array; cnt: Int32Array; closed: Uint8Array; id: Int32Array; n: number; ridPi: Int32Array; ridA: Int32Array }
+// K1247 s14: uid numbers the discard pairs (-1 elsewhere): underlay u = uid, at (uPi, uA);
+// uOfPair: slots a * nS + b (either order) -> the pair's underlay. Either order: the
+// structural tie-break (slotRank) and the frame's (-dS(cS)) may order a pair's slots apart.
+interface StructRegions { pos: Int32Array; base: Int32Array; cnt: Int32Array; closed: Uint8Array; id: Int32Array; n: number; ridPi: Int32Array; ridA: Int32Array; uid: Int32Array; nU: number; uPi: Int32Array; uA: Int32Array; uOfPair: Map<number, number>; nS: number }
 function structRegionsC(C: FCache, st: DiagramStructure): StructRegions {
   if (C.sReg) return C.sReg;
   const nCh = C.nCh; const nS = C.nSlots;
@@ -3442,6 +3484,7 @@ function structRegionsC(C: FCache, st: DiagramStructure): StructRegions {
   const base = new Int32Array(Math.max(1, nCh)).fill(-1); const cnt = new Int32Array(Math.max(1, nCh));
   const closed = new Uint8Array(Math.max(1, nCh));
   const id: number[] = []; const ridPi: number[] = []; const ridA: number[] = [];
+  const uid: number[] = []; const uPi: number[] = []; const uA: number[] = []; const uB: number[] = [];
   for (const pi of order) {
     const l = lists[pi]; const m = l.length; const cl = !!st.closed[pi];
     closed[pi] = cl ? 1 : 0;
@@ -3449,11 +3492,13 @@ function structRegionsC(C: FCache, st: DiagramStructure): StructRegions {
     base[pi] = id.length; cnt[pi] = nI;
     for (let j = 0; j < nI; j++) {
       const a = l[j]; const b = l[(j + 1) % m];
-      if (m > 1 && pair.has(a * nS + b)) { id.push(-1); continue; }
-      id.push(ridPi.length); ridPi.push(pi); ridA.push(a);
+      if (m > 1 && pair.has(a * nS + b)) { id.push(-1); uid.push(uPi.length); uPi.push(pi); uA.push(a); uB.push(b); continue; }
+      id.push(ridPi.length); ridPi.push(pi); ridA.push(a); uid.push(-1);
     }
   }
-  C.sReg = { pos, base, cnt, closed, id: Int32Array.from(id), n: ridPi.length, ridPi: Int32Array.from(ridPi), ridA: Int32Array.from(ridA) };
+  const uOfPair = new Map<number, number>();
+  for (let u = 0; u < uPi.length; u++) { const a = uA[u]; const b = uB[u]; uOfPair.set(a * nS + b, u); uOfPair.set(b * nS + a, u); }
+  C.sReg = { pos, base, cnt, closed, id: Int32Array.from(id), n: ridPi.length, ridPi: Int32Array.from(ridPi), ridA: Int32Array.from(ridA), uid: Int32Array.from(uid), nU: uPi.length, uPi: Int32Array.from(uPi), uA: Int32Array.from(uA), uOfPair, nS };
   return C.sReg;
 }
 /** The id a frame interval starting at slot A takes (-1: none free). */
@@ -6450,6 +6495,53 @@ function regionsPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): { regio
       regions.push(reg); faceWorks.push(fw);
     }
   }
+  // K1247 s14: underlays (KF_NOUNDER's note): one per structural discard pair (sR.nU, ids
+  // sR.n + u, before the junction regions, whose count follows positions), the band of
+  // the frame's discarded interval at that pair, beneath every face; empty when the
+  // frame has none there. Border segments stay with their regions (no segReg, no pieces).
+  C.underMiss = 0;
+  if (sR && !KF_NOUNDER) {
+    const uBase = regions.length;
+    const uRegs: (OutlineRegion | undefined)[] = new Array(sR.nU);
+    const uFaces: (FaceWorkF | undefined)[] = new Array(sR.nU);
+    for (let i = 0; i < nIv; i++) {
+      if (!C.ivDiscard[i]) continue;
+      const u = sR.uOfPair.get(C.ivA[i] * sR.nS + C.ivB[i]) ?? -1;
+      if (u < 0 || uRegs[u]) { C.underMiss = (C.underMiss ?? 0) + 1; continue; }
+      const pi = C.ivPi[i]; const B = C.ivB[i]; const eA = C.ivEA[i];
+      const pts: number[] = [];
+      if (C.ivLen[i] > 0) {
+        const BdL = C.bords[pi * 2];
+        if (kfSegL.length < BdL.nf + 1) kfSegL = new Int32Array((BdL.nf + 1) * 2);
+        regionSeqEmit(C, pi, 1, refFinalOf(C.stLeft[eA]), refFinalOf(C.stLeft[B]), true, pts, kfSegL);
+        const capBInfo = C.capInfoOfSlot[B];
+        if (capBInfo >= 0 && C.slotKind[B] === 3) { const ax = C.capArcX[capBInfo]; const ay = C.capArcY[capBInfo]; for (let q = 1; q + 1 < C.capArcN[capBInfo]; q++) pushDedup(pts, ax[q], ay[q]); }
+        const BdR = C.bords[pi * 2 + 1];
+        if (C.seqSeg.length < BdR.nf + 1) { C.seqSeg = new Int32Array((BdR.nf + 1) * 2); C.seqIdx = new Int32Array((BdR.nf + 1) * 2); }
+        regionSeqEmit(C, pi, -1, refFinalOf(C.stRight[B]), refFinalOf(C.stRight[eA]), false, pts, C.seqSeg);
+        const capAInfo = C.capInfoOfSlot[eA];
+        if (capAInfo >= 0 && C.slotKind[eA] === 3) { const ax = C.capArcX[capAInfo]; const ay = C.capArcY[capAInfo]; for (let q = C.capArcN[capAInfo] - 2; q >= 1; q--) pushDedup(pts, ax[q], ay[q]); }
+        if (pts.length >= 2 && Math.hypot(pts[0] - pts[pts.length - 2], pts[1] - pts[pts.length - 1]) < 1e-12) pts.length -= 2;
+      }
+      const rid = uBase + u;
+      const grp = grpMode.adj ? adjGroupC(C, C.ivA[i], B) : memberGroupC(C, pi, C.ivCMid[i]);
+      uRegs[u] = { id: rid, ownerChain: pi, group: grp, pts, pieces: [], hole: false };
+      pointAtInto(C.polys[pi], C.ivCMid[i], ptScratch);
+      uFaces[u] = { owner: pi, group: grp, rid, sx: ptScratch[0], sy: ptScratch[1], depth: UNDER_DEPTH };
+    }
+    for (let u = 0; u < sR.nU; u++) {
+      let reg = uRegs[u]; let fw = uFaces[u];
+      if (!reg || !fw) {
+        const pi = sR.uPi[u]; const A = sR.uA[u]; const p = C.polys[pi];
+        const s = C.stActive[A] ? C.stCS[A] : p.s0;
+        const grp = grpMode.adj ? adjGroupC(C, A, -1) : memberGroupC(C, pi, s);
+        reg = { id: uBase + u, ownerChain: pi, group: grp, pts: [], pieces: [], hole: false };
+        pointAtInto(p, s, ptScratch);
+        fw = { owner: pi, group: grp, rid: uBase + u, sx: ptScratch[0], sy: ptScratch[1], depth: UNDER_DEPTH };
+      }
+      regions.push(reg); faceWorks.push(fw);
+    }
+  }
   // Junction regions.
   C.junctionRegion.fill(-1);
   const cornerByAArm = C.cornerByAArm;
@@ -6491,33 +6583,6 @@ function regionsPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): { regio
     regions.push({ id: rid, ownerChain: owner, group: st.groupOfJ[ji], pts, pieces: [], hole: false });
     faceWorks.push({ owner, group: st.groupOfJ[ji], rid, sx: j.c[0], sy: j.c[1], depth: depthAtC(C, owner, C.armSR[list[0]], depthWin) });
   });
-  // K1247 s14: underlays (KF_NOUNDER's note): the band of each discarded interval, beneath
-  // every face. Border segments stay with their regions (no segReg, no pieces).
-  if (!KF_NOUNDER && !KF_CSORDER) {
-    for (let i = 0; i < nIv; i++) {
-      if (!C.ivDiscard[i]) continue;
-      const pi = C.ivPi[i]; const B = C.ivB[i]; const eA = C.ivEA[i];
-      const pts: number[] = [];
-      if (C.ivLen[i] > 0) {
-        const BdL = C.bords[pi * 2];
-        if (kfSegL.length < BdL.nf + 1) kfSegL = new Int32Array((BdL.nf + 1) * 2);
-        regionSeqEmit(C, pi, 1, refFinalOf(C.stLeft[eA]), refFinalOf(C.stLeft[B]), true, pts, kfSegL);
-        const capBInfo = C.capInfoOfSlot[B];
-        if (capBInfo >= 0 && C.slotKind[B] === 3) { const ax = C.capArcX[capBInfo]; const ay = C.capArcY[capBInfo]; for (let q = 1; q + 1 < C.capArcN[capBInfo]; q++) pushDedup(pts, ax[q], ay[q]); }
-        const BdR = C.bords[pi * 2 + 1];
-        if (C.seqSeg.length < BdR.nf + 1) { C.seqSeg = new Int32Array((BdR.nf + 1) * 2); C.seqIdx = new Int32Array((BdR.nf + 1) * 2); }
-        regionSeqEmit(C, pi, -1, refFinalOf(C.stRight[B]), refFinalOf(C.stRight[eA]), false, pts, C.seqSeg);
-        const capAInfo = C.capInfoOfSlot[eA];
-        if (capAInfo >= 0 && C.slotKind[eA] === 3) { const ax = C.capArcX[capAInfo]; const ay = C.capArcY[capAInfo]; for (let q = C.capArcN[capAInfo] - 2; q >= 1; q--) pushDedup(pts, ax[q], ay[q]); }
-        if (pts.length >= 2 && Math.hypot(pts[0] - pts[pts.length - 2], pts[1] - pts[pts.length - 1]) < 1e-12) pts.length -= 2;
-      }
-      const rid = regions.length;
-      const grp = grpMode.adj ? adjGroupC(C, C.ivA[i], B) : memberGroupC(C, pi, C.ivCMid[i]);
-      regions.push({ id: rid, ownerChain: pi, group: grp, pts, pieces: [], hole: false });
-      pointAtInto(C.polys[pi], C.ivCMid[i], ptScratch);
-      faceWorks.push({ owner: pi, group: grp, rid, sx: ptScratch[0], sy: ptScratch[1], depth: UNDER_DEPTH });
-    }
-  }
   const order = faceWorks.map((_, i) => i).sort((a, b) => faceWorks[a].depth - faceWorks[b].depth);
   const faces: OutlineFace[] = order.map((i) => {
     const f = faceWorks[i];
