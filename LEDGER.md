@@ -372,11 +372,11 @@ Next free ID: K1273.
   and a JSON looks list into a summary and sheets. Stages 3a-3c merged
   (737ac58..9ab8a01); rounds 2026-10-14, 14b and 14c are done (14c
   merged 772e48a..e1c2a80).
-  - owner: nobody since 2026-11-10 03:57 (round 2026-11-10c done; agent ac7c0de077c9ffcf7 of claude session 09c7a672-a414-402a-97da-b3176839a2e5, merged)
-  - branch: mainline; last commit: `23587715`
-  - evidence: .claude/probes/rounds/2026-11-10c/ (outputs untracked)
-  - next: Next round: A/B the candidate commits of K8's phone stage (docs/design/K8_sdf_phone.md, its phone list) on the three links; K268's phone census rerun (proof/census3a.mjs, PASSCFG, the desktop recipe); K307's start-time read. Round 2026-11-10c's bisect is in docs/design/K156.md
-  - brief: docs/design/K156.md (Round 2026-11-10c)
+  - owner: agent `a0ef4cd89dee7ff20` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (sonnet, started 2026-11-10 05:53, 1 h cap ~06:53)
+  - branch: `worktree-agent-a0ef4cd89dee7ff20`, worktree `.claude/worktrees/agent-a0ef4cd89dee7ff20`; last commit: `085317ab`
+  - evidence: .claude/probes/rounds/2026-11-10d/ (outputs untracked)
+  - next: Round 2026-11-10d (started 2026-11-10 06:00): K307's start-time read; where rp=sdf stands (pass fin) and K268's phone census on its build; K8's candidates C, A, B rp=sdf on both sides. When it reports: Claude files K8's, K268's and K307's results
+  - brief: docs/design/K156.md (Round 2026-11-10d)
   - env: the phone on its charger, reached over adb 5555 through Tailscale (`adb connect`; not the desktop's USB, Levi 2026-11-02); the pass builds and serves both builds itself (ports 5480-5489); nobody else uses the phone during the pass (K234)
 - **K268** · Shaped crossing gaps under thread reveal (K76; Levi, 2026-10-14):
   no gap until the over thread is seen, a dynamic gap for a stub's overlap and
