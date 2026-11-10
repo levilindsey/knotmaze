@@ -3865,15 +3865,13 @@ const kfCst: KfCst = {
 };
 const kfSv = { x: 0, y: 0 };
 
-function footArmGlobal(C: FCache, ai: number, x: number, y: number, estD: number, out: FFoot): void {
+function footArmGlobal(C: FCache, ai: number, x: number, y: number, estD: number, out: FFoot, prune = Infinity): void {
   const a = C.armObj[ai];
-  const p = C.polys[a.pi];
   let d0 = Math.max(0, estD - 4 * C.h); let d1 = Math.min(C.armL[ai], estD + 4 * C.h);
   if (d1 - d0 < 1e-9) { d0 = 0; d1 = C.armL[ai]; }
   const lo = C.armDir[ai] > 0 ? C.armSR[ai] + d0 : C.armSR[ai] - d1;
   const hi = C.armDir[ai] > 0 ? C.armSR[ai] + d1 : C.armSR[ai] - d0;
-  void p;
-  footWinFast(C.polys[a.pi], x, y, lo, hi, out);
+  footWinFast(C.polys[a.pi], x, y, lo, hi, out, -1, Infinity, NaN, NaN, prune);
   out.u = C.armSR[ai] + C.armDir[ai] * armDistC(C, ai, out.s);
 }
 function solveVC(C: FCache, ci: number, aiA: number, aiB: number, rho: number, x0: number, y0: number, estD: number, fa: FFoot, fb: FFoot): boolean {
@@ -3896,7 +3894,11 @@ function solveVC(C: FCache, ci: number, aiA: number, aiB: number, rho: number, x
     const dl = Math.hypot(dx, dy);
     if (dl > h) { dx *= h / dl; dy *= h / dl; }
     x += dx; y += dy;
-    footArmGlobal(C, aiA, x, y, estD, fa); footArmGlobal(C, aiB, x, y, estD, fb);
+    // The window is the same every iteration, so the last foot is a point
+    // of it: its distance bounds the new minimum (prune only, exact).
+    const pa = Number.isFinite(fa.d) ? Math.sqrt((x - fa.x) * (x - fa.x) + (y - fa.y) * (y - fa.y)) : Infinity;
+    const pb = Number.isFinite(fb.d) ? Math.sqrt((x - fb.x) * (x - fb.x) + (y - fb.y) * (y - fb.y)) : Infinity;
+    footArmGlobal(C, aiA, x, y, estD, fa, pa); footArmGlobal(C, aiB, x, y, estD, fb, pb);
   }
   kfSv.x = x; kfSv.y = y;
   return Math.abs(fa.d - rho) < 1e-9 * Math.max(h, rho) && Math.abs(fb.d - rho) < 1e-9 * Math.max(h, rho);
@@ -5537,38 +5539,43 @@ function tanAtInto(p: Poly, s: number, out: Float64Array): void {
  *  cannot beat the current best; that cannot change the minimum. If
  *  `stopAt` >= 0 the search may return once the best is <= stopAt, in
  *  which case the returned distance is only known to be <= stopAt. */
-function footWinFast(p: Poly, px: number, py: number, lo: number, hi: number, out: FFoot, stopAt = -1, initBd = Infinity, hintLo = NaN, hintHi = NaN): void {
-  let bd2 = initBd * initBd; let bx = px; let by = py; let bs = lo; let bk = 0;
-  if (p.nseg === 0 || hi < lo) { out.d = initBd; out.x = bx; out.y = by; out.s = bs; out.k = bk; out.u = bs; return; }
-  const stop2 = stopAt * stopAt;
-  const scanRange = (rlo: number, rhi: number): void => {
+// footWinFast's running best, shared with fwScan (module state: no closure
+// per call). fwLim2 = min(best, prune bound): segments whose box is at or
+// beyond it cannot be the first segment that reaches the minimum.
+let fwBd2 = 0; let fwBx = 0; let fwBy = 0; let fwBs = 0; let fwBk = 0; let fwPr2 = Infinity;
+function fwScan(p: Poly, px: number, py: number, rlo: number, rhi: number, stopOn: boolean, stop2: number): void {
+  let bd2 = fwBd2; let bx = fwBx; let by = fwBy; let bs = fwBs; let bk = fwBk; const pr2 = fwPr2;
+  let lim2 = bd2 < pr2 ? bd2 : pr2;
+  const closed = p.closed; const len = p.len; const nseg = p.nseg; const ps = p.s; const pl = p.segLen;
+  const nblk = p.nblk; const pbk = p.bk; const bx0 = p.bx0; const bx1 = p.bx1; const by0 = p.by0; const by1 = p.by1;
   let si0 = 0; let si1 = 0;
-  if (p.closed && p.len > 0) { si0 = Math.max(-1, Math.floor((rlo - p.s[0]) / p.len) - 1); si1 = Math.min(1, Math.floor((rhi - p.s[0]) / p.len)); }
-  for (let si = si0; si <= si1; si++) {
-    const sh = p.closed ? si * p.len : 0;
-    let a = 0; let b = p.nseg;
-    while (a < b) { const m = (a + b) >> 1; if (p.s[m] + p.segLen[m] + sh >= rlo) b = m; else a = m + 1; }
+  if (closed && len > 0) { si0 = Math.max(-1, Math.floor((rlo - ps[0]) / len) - 1); si1 = Math.min(1, Math.floor((rhi - ps[0]) / len)); }
+  outer: for (let si = si0; si <= si1; si++) {
+    const sh = closed ? si * len : 0;
+    let a = 0; let b = nseg;
+    while (a < b) { const m = (a + b) >> 1; if (ps[m] + pl[m] + sh >= rlo) b = m; else a = m + 1; }
     const k0 = a;
-    b = p.nseg;
-    while (a < b) { const m = (a + b) >> 1; if (p.s[m] + sh > rhi) b = m; else a = m + 1; }
+    b = nseg;
+    while (a < b) { const m = (a + b) >> 1; if (ps[m] + sh > rhi) b = m; else a = m + 1; }
     for (let k = k0; k < a; k++) {
-      if (((k & 31) === 0 || k === k0) && bd2 < Infinity && p.nblk > 0) {
+      if (((k & 31) === 0 || k === k0) && lim2 < Infinity && nblk > 0) {
         const bi = k >> 5;
-        if (bi < p.nblk) {
-          const dxb = px < p.bk[4 * bi] ? p.bk[4 * bi] - px : px > p.bk[4 * bi + 2] ? px - p.bk[4 * bi + 2] : 0;
-          const dyb = py < p.bk[4 * bi + 1] ? p.bk[4 * bi + 1] - py : py > p.bk[4 * bi + 3] ? py - p.bk[4 * bi + 3] : 0;
-          if (dxb * dxb + dyb * dyb >= bd2) { k = Math.min(a, (bi + 1) * 32) - 1; continue; }
+        if (bi < nblk) {
+          const q = 4 * bi;
+          const dxb = px < pbk[q] ? pbk[q] - px : px > pbk[q + 2] ? px - pbk[q + 2] : 0;
+          const dyb = py < pbk[q + 1] ? pbk[q + 1] - py : py > pbk[q + 3] ? py - pbk[q + 3] : 0;
+          if (dxb * dxb + dyb * dyb >= lim2) { k = Math.min(a, (bi + 1) * 32) - 1; continue; }
         }
       }
-      if (bd2 < Infinity) {
-        const dxb = px < p.bx0[k] ? p.bx0[k] - px : px > p.bx1[k] ? px - p.bx1[k] : 0;
-        const dyb = py < p.by0[k] ? p.by0[k] - py : py > p.by1[k] ? py - p.by1[k] : 0;
-        if (dxb * dxb + dyb * dyb >= bd2) continue;
+      if (lim2 < Infinity) {
+        const dxb = px < bx0[k] ? bx0[k] - px : px > bx1[k] ? px - bx1[k] : 0;
+        const dyb = py < by0[k] ? by0[k] - py : py > by1[k] ? py - by1[k] : 0;
+        if (dxb * dxb + dyb * dyb >= lim2) continue;
       }
-      const sa = p.s[k]; const sb = sa + p.segLen[k];
+      const sa = ps[k]; const sb = sa + pl[k];
       const aa = Math.max(rlo, sa + sh); const bb = Math.min(rhi, sb + sh);
       if (bb < aa) continue;
-      const l = p.segLen[k] || 1;
+      const l = pl[k] || 1;
       const ta = Math.min(1, Math.max(0, (aa - sh - sa) / l));
       const tb = Math.min(1, Math.max(0, (bb - sh - sa) / l));
       const dxk = p.dx[k]; const dyk = p.dy[k];
@@ -5580,18 +5587,30 @@ function footWinFast(p: Poly, px: number, py: number, lo: number, hi: number, ou
       const qx = ax + ex2 * tt; const qy = ay + ey2 * tt;
       const ddx = px - qx; const ddy = py - qy;
       const d2 = ddx * ddx + ddy * ddy;
-      if (d2 < bd2) { const t2 = ta + (tb - ta) * tt; bd2 = d2; bx = qx; by = qy; bs = sa + t2 * p.segLen[k]; bk = k; if (stopAt >= 0 && bd2 <= stop2) return; }
+      if (d2 < bd2) {
+        const t2 = ta + (tb - ta) * tt; bd2 = d2; bx = qx; by = qy; bs = sa + t2 * pl[k]; bk = k;
+        if (bd2 < lim2) lim2 = bd2;
+        if (stopOn && bd2 <= stop2) break outer;
+      }
     }
   }
-  };
+  fwBd2 = bd2; fwBx = bx; fwBy = by; fwBs = bs; fwBk = bk;
+}
+function footWinFast(p: Poly, px: number, py: number, lo: number, hi: number, out: FFoot, stopAt = -1, initBd = Infinity, hintLo = NaN, hintHi = NaN, prune = Infinity): void {
+  fwBd2 = initBd * initBd; fwBx = px; fwBy = py; fwBs = lo; fwBk = 0;
+  if (p.nseg === 0 || hi < lo) { out.d = initBd; out.x = px; out.y = py; out.s = lo; out.k = 0; out.u = lo; return; }
+  // A prune bound must be a distance some point of the window reaches (an
+  // upper bound on the minimum); inflated so rounding cannot cut the winner.
+  fwPr2 = prune < Infinity ? prune * prune * (1 + 1e-9) + 1e-300 : Infinity;
+  const stopOn = stopAt >= 0; const stop2 = stopAt * stopAt;
   if (Number.isFinite(hintLo) && hintHi > hintLo && hintHi > lo && hintLo < hi) {
-    scanRange(Math.max(lo, hintLo), Math.min(hi, hintHi));
-    if (!(stopAt >= 0 && bd2 <= stop2)) {
-      if (hintLo > lo) scanRange(lo, Math.min(hi, hintLo));
-      if (hintHi < hi && !(stopAt >= 0 && bd2 <= stop2)) scanRange(Math.max(lo, hintHi), hi);
+    fwScan(p, px, py, Math.max(lo, hintLo), Math.min(hi, hintHi), stopOn, stop2);
+    if (!(stopOn && fwBd2 <= stop2)) {
+      if (hintLo > lo) fwScan(p, px, py, lo, Math.min(hi, hintLo), stopOn, stop2);
+      if (hintHi < hi && !(stopOn && fwBd2 <= stop2)) fwScan(p, px, py, Math.max(lo, hintHi), hi, stopOn, stop2);
     }
-  } else scanRange(lo, hi);
-  out.d = Math.sqrt(bd2); out.x = bx; out.y = by; out.s = bs; out.k = bk; out.u = bs;
+  } else fwScan(p, px, py, lo, hi, stopOn, stop2);
+  out.d = Math.sqrt(fwBd2); out.x = fwBx; out.y = fwBy; out.s = fwBs; out.k = fwBk; out.u = fwBs;
 }
 
 
