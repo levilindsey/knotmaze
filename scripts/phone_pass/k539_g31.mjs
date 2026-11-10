@@ -5,16 +5,22 @@
 // each followed by a 1-px readback in one task (K10). Per link, TWO runs a build in an alternating order: ORDER=abba (default: base,
 // head, head, base; a linear drift in heat cancels between the builds' means) or abab. Also per cell: gl.getError() drained, ctx lost,
 // a shot; base vs head pixel diff of the first runs (pixdiff_g31.mjs reads the shots).
+// QBASE / QHEAD (K156 round 2026-11-09, K8's `?rp=sdf`): extra link keys for the base's and the head's loads, so an A/A pass
+// (`-Base master -Head master`, one build on two ports) times a LINK flag instead of a commit: QHEAD="rp=sdf" puts base = without,
+// head = with. DIR (default g31) names the output folder. K1130: every kept shot is the SECOND of two taken back to back; the first
+// is thrown away and its difference from the kept one is recorded per run (`repeat`), so a dark first capture never enters a pair.
 //
 // Call, once `phone_pass.ps1 -Phase start ... -Out <pass folder>` is up:
-//   node scripts/phone_pass/k539_g31.mjs <pass folder>/config.json   (env ORDER=abba|abab, ITER=60, ONLY=dense|maxfab|knot24)
-// Writes <pass folder>/g31/results.json, log.txt and the shots.
+//   node scripts/phone_pass/k539_g31.mjs <pass folder>/config.json   (env ORDER=abba|abab, ITER=60, ONLY=dense|maxfab|knot24,
+//                                                                     QBASE=, QHEAD=, DIR=g31)
+// Writes <pass folder>/<DIR>/results.json, log.txt and the shots.
 import { pathToFileURL } from "node:url";
 import { KIT, head, base, connect, ownPage, parkTab, sleep, out, assertFree, thermal, shotViewport, loadFrozen, checkBuild, makeLog, cleanOrigin, prep, readImg, saveJSON, savePNG, S } from "./p_common.mjs";
 const W = await import(pathToFileURL(KIT + "walk.mjs").href);
-const DIR = "g31";
+const DIR = process.env.DIR || "g31";
 const log = makeLog(DIR);
 const Q = "am=instant&snd=none";
+const QX = { base: (process.env.QBASE || "").replace(/^&/, ""), head: (process.env.QHEAD || "").replace(/^&/, "") };
 const ITER = Number(process.env.ITER || 60);
 const ORDER = (process.env.ORDER || "abba").toLowerCase();
 const ALL = [
@@ -24,7 +30,7 @@ const ALL = [
 ];
 const LINKS = process.env.ONLY ? ALL.filter((l) => l.name === process.env.ONLY) : ALL;
 const SEQ = ORDER === "abab" ? [base, head, base, head] : [base, head, head, base];
-const R = { head: head.sha, base: base.sha, order: ORDER, iter: ITER, errors: [], thermalStart: null, thermalEnd: null, cells: {} };
+const R = { head: head.sha, base: base.sha, qbase: QX.base, qhead: QX.head, order: ORDER, iter: ITER, errors: [], thermalStart: null, thermalEnd: null, cells: {} };
 const save = () => saveJSON(DIR, R);
 const GL = () => {
   const L = window.__knotBackgroundLayer && window.__knotBackgroundLayer();
@@ -58,7 +64,7 @@ try {
   const sheet = [];
   async function frozen(b, link, run) {
     assertFree();
-    const url = `${b.host}/?${link.q}&${Q}&fw=0&phy=0`;
+    const url = `${b.host}/?${link.q}&${Q}&fw=0&phy=0${QX[b.key] ? "&" + QX[b.key] : ""}`;
     await cleanOrigin(page, b.host);
     const { stamp } = await loadFrozen(page, url);
     checkBuild(b, stamp);
@@ -71,11 +77,13 @@ try {
     c.glLoad = await page.evaluate(GL);
     c.renderLoop = await page.evaluate(W.renderLoop, ITER).catch((e) => ({ err: String(e.message).slice(0, 80) }));
     c.glAfter = await page.evaluate(GL);
+    const first = await shotViewport(page); // K1130: thrown away; the kept shot is the repeat
     const buf = await shotViewport(page);
     savePNG(DIR, `${link.name}_${b.key}_r${run}.png`, buf);
     c.img = readImg(buf);
+    c.repeat = exactDiff(readImg(first), c.img);
     c.thermal = thermal();
-    log(link.name, "run", run, b.key, b.sha, "renderLoop", JSON.stringify(c.renderLoop), "glLoad", JSON.stringify(c.glLoad.errs), "glAfter", JSON.stringify(c.glAfter.errs), "ctxLost", c.glAfter.ctxLost, "th", JSON.stringify(c.thermal).slice(0, 90));
+    log(link.name, "run", run, b.key, b.sha, "renderLoop", JSON.stringify(c.renderLoop), "glLoad", JSON.stringify(c.glLoad.errs), "glAfter", JSON.stringify(c.glAfter.errs), "ctxLost", c.glAfter.ctxLost, "repeat", JSON.stringify(c.repeat), "th", JSON.stringify(c.thermal).slice(0, 90));
     return c;
   }
   for (const link of LINKS) {
