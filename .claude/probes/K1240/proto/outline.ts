@@ -3865,8 +3865,10 @@ const kfQb: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 };
 const kfTa: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 };
 const kfTb: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 };
 const kfMFoot: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 };
-const nodeScratch = new Float64Array(33 * 12);
-const nodeScratchK = new Int32Array(33 * 2);
+const kfNodeCap = 513;
+const nodeScratch = new Float64Array(kfNodeCap * 12);
+const nodeScratchK = new Int32Array(kfNodeCap * 2);
+const nodeRho = new Float64Array(kfNodeCap);
 interface KfCst {
   A: FArm; B: FArm; aiA: number; aiB: number;
   qx: number; qy: number; rhoCur: number; Vx: number; Vy: number; denV: number; rbEff: number; r0: number;
@@ -4029,16 +4031,24 @@ function wOfC(C: FCache): number {
   if (mB <= -0.05 * h) return 0;
   return ss01(1 + Math.min(0, mA, mB) / (0.05 * h)) * fSteep * fSlack * fRootA * fRootB;
 }
-const kfGN = 32;
-const kfPrevX = new Float64Array(33); const kfPrevY = new Float64Array(33);
-const kfPrevFaS = new Float64Array(33); const kfPrevFbS = new Float64Array(33);
-const kfPrevFaK = new Int32Array(33); const kfPrevFbK = new Int32Array(33);
-function advanceToC(C: FCache, rhoT: number): void {
+// K1247 s5: the growth's knobs. A landing within max(0.5 |u| dd, kfJump h)
+// of the predictor is the path: a tracked foot that walks over a dent moves
+// q by 1e-3 to 6e-2 h at any step size, and the converged reference
+// (k1247s5_ref.ts) follows it. Today's 1e-3 h floor rejected more of those
+// jumps the smaller the steps (the 128-node run's 0.69 h).
+const kfJump = 0.1;
+let kfGrowE = 0.002; // the integral's error budget, in h (k1247s5 knobs)
+let kfGrowH = 0.25; // the largest step, in r0
+let kfGrowP = 1 / 64; // the path's largest advance, in r0
+export function setGrowKnobs(e: number, hm: number, p = kfGrowP): void { kfGrowE = e; kfGrowH = hm; kfGrowP = p; }
+export const growDbg: { ci: number; rows: number[][] } = { ci: -1, rows: [] };
+export const growStats = { evals: 0, rejects: 0, corners: 0, steps: 0, fails: 0 };
+function advanceToC(C: FCache, rhoT: number, dMax: number): void {
   const h = C.h;
-  const dN = Math.max(kfCst.r0 / kfGN, 1e-12);
+  const dN = Math.max(dMax, 1e-12);
   let step = dN;
-  let guard = 0;
-  while (kfCst.rhoCur < rhoT - 1e-12 * rhoT && guard++ < 128) {
+  let guard = 0; const gMax = 128 + 4 * Math.ceil((rhoT - kfCst.rhoCur) / dN);
+  while (kfCst.rhoCur < rhoT - 1e-12 * rhoT && guard++ < gMax) {
     const rn = Math.min(rhoT, kfCst.rhoCur + step);
     const dd = rn - kfCst.rhoCur;
     let advanced = false;
@@ -4049,7 +4059,7 @@ function advanceToC(C: FCache, rhoT: number): void {
       if (den > 1e-9) {
         const ux = (nax + nbx) / den; const uy = (nay + nby) / den;
         const gx = kfCst.qx + ux * dd; const gy = kfCst.qy + uy * dd;
-        const acc = Math.min(h, Math.max(0.5 * Math.sqrt(ux * ux + uy * uy) * dd, 1e-3 * h));
+        const acc = Math.min(h, Math.max(0.5 * Math.sqrt(ux * ux + uy * uy) * dd, kfJump * h));
         copyFoot(kfTa, kfQa); copyFoot(kfTb, kfQb);
         let sx = gx; let sy = gy;
         kfXY[0] = sx; kfXY[1] = sy; footNearM(C, kfCst.A, kfTa); footNearM(C, kfCst.B, kfTb);
@@ -4073,8 +4083,8 @@ function advanceToC(C: FCache, rhoT: number): void {
         if (sok && Math.sqrt((sx - gx) * (sx - gx) + (sy - gy) * (sy - gy)) <= acc) { kfCst.qx = sx; kfCst.qy = sy; copyFoot(kfQa, kfTa); copyFoot(kfQb, kfTb); kfCst.rhoCur = rn; advanced = true; }
       }
     }
-    if (advanced) step = Math.min(dN, 2 * step);
-    else { step /= 2; if (step < 1e-5 * h) break; }
+    if (advanced) { step = Math.min(dN, 2 * step); growStats.steps++; }
+    else { growStats.fails++; step /= 2; if (step < 1e-5 * h) break; }
   }
 }
 // K1247 s4: a node's state for the final re-advance (was a closure per
@@ -4086,40 +4096,84 @@ function saveNodeC(kk: number): void {
   NS[o + 7] = kfQb.d; NS[o + 8] = kfQb.x; NS[o + 9] = kfQb.y; NS[o + 10] = kfQb.s; NS[o + 11] = kfQb.u;
   NK[2 * kk] = kfQa.k; NK[2 * kk + 1] = kfQb.k;
 }
+function restoreNodeC(kk: number): void {
+  const NS = nodeScratch; const NK = nodeScratchK; const o = kk * 12;
+  kfCst.qx = NS[o]; kfCst.qy = NS[o + 1];
+  kfQa.d = NS[o + 2]; kfQa.x = NS[o + 3]; kfQa.y = NS[o + 4]; kfQa.s = NS[o + 5]; kfQa.u = NS[o + 6]; kfQa.k = NK[2 * kk];
+  kfQb.d = NS[o + 7]; kfQb.x = NS[o + 8]; kfQb.y = NS[o + 9]; kfQb.s = NS[o + 10]; kfQb.u = NS[o + 11]; kfQb.k = NK[2 * kk + 1];
+  kfCst.rhoCur = nodeRho[kk];
+}
+// K1247 s5: the growth integrates the running min of w over rho with
+// adaptive steps instead of 32 even nodes. A step [a, b] is taken as two
+// halves (a -> m -> b); since the running min only falls, the error of the
+// halves' trapezoid is at most |w_a - 2 w_m + w_b| (b - a) / 4 (a drop at an
+// unknown place in one half, or the smooth parts' curvature), and a step is
+// kept when that is under kfGrowE h times the larger of its share of r0 and
+// its drop in w (so the whole integral is off by at most 2 kfGrowE h).
+// Otherwise the step halves. A drop to 0 is localized the same way, which
+// is the exact stop. The end is re-advanced from the last node below it.
 function growIntegC(C: FCache, ci: number): number {
   copyFoot(kfQa, kfFa); copyFoot(kfQb, kfFb);
   kfQa.u = C.armSR[kfCst.aiA] + C.armDir[kfCst.aiA] * armDistC(C, kfCst.aiA, kfFa.s);
   kfQb.u = C.armSR[kfCst.aiB] + C.armDir[kfCst.aiB] * armDistC(C, kfCst.aiB, kfFb.s);
   kfCst.qx = kfCst.Vx; kfCst.qy = kfCst.Vy; kfCst.rhoCur = C.h;
   if (!(kfCst.r0 > 1e-9)) { C.nodeN[ci] = 0; return 0; }
-  const dN = kfCst.r0 / kfGN;
-  const NS = nodeScratch; const NK = nodeScratchK;
-  saveNodeC(0);
-  let sPrev = wOfC(C);
-  let integ = 0;
-  let nNodes = 1;
-  for (let kk = 1; kk <= kfGN; kk++) {
-    if (!(sPrev > 0)) break;
-    advanceToC(C, C.h + kk * dN);
-    if (kfCst.rhoCur < C.h + kk * dN - 1e-9 * Math.max(1, C.h + kk * dN)) {
-      const sK = Math.min(sPrev, wOfC(C));
-      integ += 0.5 * (sPrev + sK) * Math.max(0, kfCst.rhoCur - (C.h + (kk - 1) * dN));
-      break;
+  const h = C.h; const r0 = kfCst.r0;
+  const E = kfGrowE * h; const Hmax = kfGrowH * r0; const Lmin = 1e-4 * h; const P = kfGrowP * r0;
+  growStats.corners++;
+  saveNodeC(0); nodeRho[0] = h;
+  let nN = 1; let ka = 0; let a = h;
+  let wa = wOfC(C); growStats.evals++;
+  let integ = 0; let H = Hmax;
+  // rCap: where the path ends (r0, or where an advance gave up: the
+  // integral stops there, as the 32-node growth's did).
+  let rCap = h + r0;
+  for (let guard = 0; guard < 4 * kfNodeCap && wa > 0 && a < rCap - 1e-12 * rCap && nN + 2 <= kfNodeCap; guard++) {
+    const b = Math.min(rCap, a + H);
+    restoreNodeC(ka);
+    advanceToC(C, b, Math.min(P, b - a)); growStats.evals++;
+    if (kfCst.rhoCur < b - 1e-9 * Math.max(1, b)) {
+      // The path ends at f: integrate to it when it is near, else refine.
+      const f = kfCst.rhoCur;
+      if (f - a <= Lmin) { const s = Math.min(wa, wOfC(C)); integ += 0.5 * (wa + s) * Math.max(0, f - a); break; }
+      rCap = f; H = Math.min(H, f - a); continue;
     }
-    saveNodeC(kk); nNodes = kk + 1;
-    const sK = Math.min(sPrev, wOfC(C));
-    integ += 0.5 * (sPrev + sK) * dN;
-    sPrev = sK;
+    const wb = Math.min(wa, wOfC(C));
+    const L = b - a;
+    if (wa - wb <= 1e-9) {
+      // Flat (the running min did not move): exact.
+      saveNodeC(nN); nodeRho[nN] = b;
+      integ += 0.5 * (wa + wb) * L;
+      ka = nN; nN++; a = b; wa = wb;
+      H = Math.min(Hmax, 2 * L);
+      continue;
+    }
+    // w fell: take the step as two halves; the error of their trapezoid is
+    // within |wa - 2 wm + wb| L / 4 (a fall at an unknown place in one half,
+    // or the smooth parts' curvature).
+    saveNodeC(nN + 1); nodeRho[nN + 1] = b;
+    const m = 0.5 * (a + b);
+    restoreNodeC(ka);
+    advanceToC(C, m, Math.min(P, m - a)); growStats.evals++;
+    if (kfCst.rhoCur < m - 1e-9 * Math.max(1, m)) { rCap = kfCst.rhoCur; H = Math.min(H, rCap - a); continue; }
+    const wm = Math.min(wa, wOfC(C));
+    const wb2 = Math.min(wm, wb);
+    if (ci === growDbg.ci) growDbg.rows.push([(a - h) / h, (m - h) / h, (b - h) / h, wa, wm, wb2]);
+    const err = Math.abs(wa - 2 * wm + wb2) * L * 0.25;
+    if (err > E * Math.max(L / r0, wa - wb2) && L > Lmin) { H = 0.5 * L; growStats.rejects++; continue; }
+    // Keep m and b (b's state is the direct advance from a).
+    saveNodeC(nN); nodeRho[nN] = m;
+    integ += (wa + 2 * wm + wb2) * L * 0.25;
+    ka = nN + 1; nN += 2; a = b; wa = wb2;
+    H = Math.min(Hmax, 2 * L);
   }
-  C.nodeN[ci] = nNodes;
-  const k0 = Math.min(nNodes - 1, Math.floor(integ / dN));
-  const o = k0 * 12;
-  kfCst.qx = NS[o]; kfCst.qy = NS[o + 1];
-  kfQa.d = NS[o + 2]; kfQa.x = NS[o + 3]; kfQa.y = NS[o + 4]; kfQa.s = NS[o + 5]; kfQa.u = NS[o + 6]; kfQa.k = NK[2 * k0];
-  kfQb.d = NS[o + 7]; kfQb.x = NS[o + 8]; kfQb.y = NS[o + 9]; kfQb.s = NS[o + 10]; kfQb.u = NS[o + 11]; kfQb.k = NK[2 * k0 + 1];
-  kfCst.rhoCur = C.h + k0 * dN;
-  advanceToC(C, C.h + integ);
-  return Math.max(0, kfCst.rhoCur - C.h);
+  C.nodeN[ci] = nN;
+  const target = h + integ;
+  let k0 = 0;
+  for (let i = 1; i < nN; i++) if (nodeRho[i] <= target && nodeRho[i] > nodeRho[k0]) k0 = i;
+  restoreNodeC(k0);
+  if (target > nodeRho[k0]) advanceToC(C, target, Math.min(P, target - nodeRho[k0]));
+  return Math.max(0, kfCst.rhoCur - h);
 }
 
 const meetScratch = { found: false, x: 0, y: 0, sA: 0, dA: 0, sB: 0, dB: 0, segA: -1, segB: -1 };

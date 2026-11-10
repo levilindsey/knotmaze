@@ -7,11 +7,14 @@
 // the running min, the final re-advance from node floor(integ / dN).
 //   node .claude/probes/K1240/proto/k1247s5_mkref.mjs
 // Used by k1247s5_ref.ts.
-import { readFileSync, writeFileSync } from "node:fs";
+// The base is master 2d452e0e's outline.ts (the growth before stage 5), so
+// the reference stays the same while outline.ts changes.
+import { writeFileSync } from "node:fs";
+import { execSync } from "node:child_process";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 const here = dirname(fileURLToPath(import.meta.url));
-let t = readFileSync(join(here, "outline.ts"), "utf8").replace(/\r\n/g, "\n");
+let t = execSync("git show 2d452e0e:.claude/probes/K1240/proto/outline.ts", { cwd: here, encoding: "utf8", maxBuffer: 64 << 20 }).replace(/\r\n/g, "\n");
 const rep = (a, b) => { if (!t.includes(a)) throw new Error("missing: " + a); t = t.split(a).join(b); };
 const MAXN = 65537;
 rep("const kfGN = 32;", "let kfGN = 32;\nlet refStop = false;\nexport function setRefGN(n: number): void { kfGN = n; }\nexport function setRefStop(b: boolean): void { refStop = b; }\nexport const refInfo = { why: new Int32Array(8192), rhoEnd: new Float64Array(8192) };");
