@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1267.
+Next free ID: K1268.
 
 ## Waiting on Levi
 
@@ -503,11 +503,11 @@ Next free ID: K1267.
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: agent `a3d3322f457790ce3` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-10 00:25, 2 h cap ~02:25)
-  - branch: `worktree-agent-a3d3322f457790ce3`, worktree `.claude/worktrees/agent-a3d3322f457790ce3`; last commit: `ae806de9`
+  - owner: nobody since 2026-11-10 01:33 (merged; agent `a3d3322f457790ce3` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `ad313cd7`
   - evidence: .claude/probes/K1240/proto/ (outline.ts, k1247s8_jitter.ts, k1247s8_acc.ts, k1247s8_pair.mjs + k1247s8_run_locked.ps1, k1247s8_corner/wrows/cornred/regions.ts, _r4_tailjit.ts, k1247c_final.ps1, s3f_claude_checks.ps1); stage 8's record: K1247_s8_density.md Handoff 1
-  - next: Stage 9 (started 2026-11-10 00:31): re-make the k1247c baselines (K1263), then make the outline continuous in its points (the end arm's root-kink foot at def corners 34/38, foot sensitivity to arm L, region ids that skip slivers, the tails' first-interval jump at def corner 35) until no piece moves over 0.25 px at 0.01 px jitter unless form B does; K1240 rows and K1247 checks hold; then plain eps 0.1/0.2 accuracy and a locked pair. When it reports: Claude views the crops, re-runs the jitter tool, merges
-  - brief: `docs/design/K1247_s9_continuity.md`
+  - next: Stage 9 merged (ad313cd7; Claude viewed the root crops and re-ran k1247s9_union on def, muse_default_tw, muse_hash): four jitter causes fixed (vertex lag, settle loops, V restarts, sub-0.1 h end-root points); drawn moves over 0.25 px at 0.01 px: def 0, muse_default_tw 0, muse_hash 1 (tail/23 at corner 121, 4.6 px); fat cyc18's twist cut (crossing 310) still changes keys. Plain eps 0.1/0.2 accuracy unchanged (25/28 failures), but k1247s8_acc scores pieces by per-piece Hausdorff, which counts a sliding split point as a move (stage 9's finding for jitter). Next: stage 10 re-scores acc by the drawn union and fixes what still fails at eps 0.1/0.2 (the twist cut, the tails), then the locked pair
+  - brief: docs/design/K1247_s9_continuity.md (stage 9 handoff; stage 10's brief follows)
 
 ## Next, in order
 
@@ -1713,9 +1713,9 @@ Every other item below waits on the trigger it names.
   paper side of a corner arc, so an outline sample lying exactly on form B's edge reads 1-3.7 px instead of 0
   (def A, g41_def_tw64 A, def 0.5 A; master too). Fix it before those rows gate (from K1257; k1257_rowdiag.ts,
   K1257_formb_corners.md handoff)
-- **K1263** · k1247c_final.ps1's verify and row baselines predate stages 6-7's outline, and verify reads out/k1247c_base from the
-  checkout that runs it: re-make them so verify's 48 and the 3/3 row failures read 0 (K1247 stage 8's Handoff 1; stage 9
-  makes them first). Its steps exit 0 when verify or cmprows fail: make it exit nonzero
+- **K1263** · k1247c_final.ps1's verify and row baselines are stale: stage 9's deliberate changes (end roots, corner 63) read as 44 verify
+  failures against its fresh out/k1247/s9base. Re-make them from ad313cd7's outline (stage 10 does it first); the script's steps
+  exit 0 when verify or cmprows fail: make it exit nonzero (K1247 stage 9 handoff)
 - **K1264** · The end tails (K1240 round 4, b1930378) cost def +1.8 ms in piece emission (piecesCapsEtc 1.44
   -> 3.2 ms): f at 17 grid points per tail, each a foot walk over 8h of the other arm. Rule a tail out per
   corner before the scan, or fewer points under a conservative test (K1240_s3f_round4.md handoff)
@@ -1723,6 +1723,9 @@ Every other item below waits on the trigger it names.
   states. Restore one captured state on both pages (captureScene / restoreScene) and pair them (K8 Handoff 1)
 - **K1266** · rp=sdf: where a curve folds tighter than the ribbon's half-width, two quads may still both draw
   a hair-thin strip; sdf_gap_bind.test.ts checks only for holes there (K8 Handoff 1)
+- **K1267** · Form B (src/render/field/) jumps under 0.01 px jitter where the outline no longer does (K1247 stage 9, ad313cd7):
+  def corners 34/35 r 2.0 -> 0.765 h, muse_hash 105 3.325 -> 1.168 h, no V at g41_user_tw64 63/105. The outline keeps the
+  fixes; port them only if form B stays the reference in motion (k1247s9_formb.ts; docs/design/K1247_s9_continuity.md)
 
 ## Approved, to schedule (2026-10-11)
 
