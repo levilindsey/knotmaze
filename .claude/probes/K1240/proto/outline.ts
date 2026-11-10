@@ -4019,58 +4019,96 @@ function growIntegC(C: FCache, ci: number): number {
 }
 
 const meetScratch = { found: false, x: 0, y: 0, sA: 0, dA: 0, sB: 0, dB: 0, segA: -1, segB: -1 };
+// K1247 s2: read once at load (process.env reads are slow per call).
+const KF_NOMEET = !!(globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.K1240_NOMEET;
+const mtSegs = [new Int32Array(1024), new Int32Array(1024)];
+const mtBoxA = mkSegBoxes(); const mtBoxB = mkSegBoxes();
+function dSignedC(C: FCache, ai: number, s: number): number {
+  const p = C.polys[C.armObj[ai].pi];
+  let d = (s - C.armSR[ai]) * C.armDir[ai];
+  if (p.closed && p.len > 0) { d = ((d % p.len) + p.len) % p.len; if (d > p.len / 2) d -= p.len; }
+  return d;
+}
+/** The border segments whose signed arm distance range meets [lo, hi]
+ *  (the old segOk), in index order, into mtSegs[which]. */
+function meetSegsOf(C: FCache, Bd: FBord, ai: number, lo: number, hi: number, which: number): number {
+  const nb = Bd.nb;
+  if (mtSegs[which].length < nb) mtSegs[which] = new Int32Array(nb * 2);
+  const out = mtSegs[which];
+  const p = C.polys[C.armObj[ai].pi];
+  const sR = C.armSR[ai]; const dir = C.armDir[ai];
+  const wrap = p.closed && p.len > 0; const len = p.len; const half = p.len / 2;
+  const bs = Bd.bs;
+  let n = 0;
+  let d1 = 0;
+  for (let i = 0; i + 1 < nb; i++) {
+    let d0: number;
+    if (i === 0) { d0 = (bs[0] - sR) * dir; if (wrap) { d0 = ((d0 % len) + len) % len; if (d0 > half) d0 -= len; } }
+    else d0 = d1;
+    d1 = (bs[i + 1] - sR) * dir; if (wrap) { d1 = ((d1 % len) + len) % len; if (d1 > half) d1 -= len; }
+    if (Math.abs(d1 - d0) > half) continue;
+    if (Math.max(d0, d1) >= lo && Math.min(d0, d1) <= hi) out[n++] = i;
+  }
+  return n;
+}
 function borderMeetC(C: FCache, ci: number, aiA: number, sideA: number, aiB: number, sideB: number): boolean {
   meetScratch.found = false;
   const A = C.armObj[aiA]; const B = C.armObj[aiB];
   if (A.pi === B.pi && sideA === sideB) return false;
-  if ((globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.K1240_NOMEET) return false;
+  if (KF_NOMEET) return false;
   const h = C.h;
   const lo = -h; const hi = 14 * h;
-  const dSigned = (ai: number, s: number): number => {
-    const p = C.polys[C.armObj[ai].pi];
-    let d = (s - C.armSR[ai]) * C.armDir[ai];
-    if (p.closed && p.len > 0) { d = ((d % p.len) + p.len) % p.len; if (d > p.len / 2) d -= p.len; }
-    return d;
-  };
   const BA = C.bords[A.pi * 2 + (sideA === 1 ? 0 : 1)];
   const BB = C.bords[B.pi * 2 + (sideB === 1 ? 0 : 1)];
-  const segOk = (Bd: FBord, ai: number, i: number): boolean => {
-    if (i < 0 || i + 1 >= Bd.nb) return false;
-    const p = C.polys[C.armObj[ai].pi];
-    const d0 = dSigned(ai, Bd.bs[i]); const d1 = dSigned(ai, Bd.bs[i + 1]);
-    if (Math.abs(d1 - d0) > p.len / 2) return false;
-    return Math.max(d0, d1) >= lo && Math.min(d0, d1) <= hi;
-  };
-  const tryPairs = (sa: number[], sb: number[]): boolean => {
-    let bestD = Infinity;
-    let found = false;
-    for (const i of sa) {
+  // Full search every frame: a window around last frame's meet pair
+  // could return a different intersection than the global best.
+  // K1247 s2: the same (i, k) order, pairs skipped by padded block
+  // bboxes (segInt accepts t and u up to 1e-9 outside [0, 1]; the pad
+  // is far wider than that).
+  const nA = meetSegsOf(C, BA, aiA, lo, hi, 0);
+  const nB = meetSegsOf(C, BB, aiB, lo, hi, 1);
+  const sa = mtSegs[0]; const sb = mtSegs[1];
+  fillSegBoxes(mtBoxA, BA, sa, nA); fillSegBoxes(mtBoxB, BB, sb, nB);
+  const xa = mtBoxA; const xb = mtBoxB;
+  const pad = 1e-6 * h;
+  if (xObl.length < xb.nb) xObl = new Int32Array(xb.nb * 2);
+  const obl = xObl;
+  let bestD = Infinity;
+  let found = false;
+  const pA = C.polys[A.pi]; const pB = C.polys[B.pi];
+  for (let ub = 0; ub < xa.nb; ub++) {
+    const ux0 = xa.bx0[ub] - pad; const ux1 = xa.bx1[ub] + pad; const uy0 = xa.by0[ub] - pad; const uy1 = xa.by1[ub] + pad;
+    let nOb = 0;
+    for (let ob = 0; ob < xb.nb; ob++) if (!(ux1 < xb.bx0[ob] || ux0 > xb.bx1[ob] || uy1 < xb.by0[ob] || uy0 > xb.by1[ob])) obl[nOb++] = ob;
+    if (!nOb) continue;
+    const kEnd = Math.min(nA, (ub + 1) * XBLK);
+    for (let kq = ub * XBLK; kq < kEnd; kq++) {
+      const i = sa[kq];
+      const mnx = xa.x0[kq] - pad; const mxx = xa.x1[kq] + pad; const mny = xa.y0[kq] - pad; const mxy = xa.y1[kq] + pad;
       const a0x = BA.bx[i]; const a0y = BA.by[i]; const a1x = BA.bx[i + 1]; const a1y = BA.by[i + 1];
-      for (const k of sb) {
-        const hit = segInt(a0x, a0y, a1x, a1y, BB.bx[k], BB.by[k], BB.bx[k + 1], BB.by[k + 1]);
-        if (!hit) continue;
-        const sAh = lerpS(C.polys[A.pi], BA.bs[i], BA.bs[i + 1], hit.t);
-        const sBh = lerpS(C.polys[B.pi], BB.bs[k], BB.bs[k + 1], hit.u);
-        const dA = dSigned(aiA, sAh); const dB = dSigned(aiB, sBh);
-        if (dA < lo || dA > hi || dB < lo || dB > hi) continue;
-        if (dA + dB < bestD) {
-          bestD = dA + dB; found = true;
-          meetScratch.x = a0x + (a1x - a0x) * hit.t; meetScratch.y = a0y + (a1y - a0y) * hit.t;
-          meetScratch.sA = sAh; meetScratch.dA = dA; meetScratch.sB = sBh; meetScratch.dB = dB;
-          meetScratch.segA = i; meetScratch.segB = k;
+      for (let q = 0; q < nOb; q++) {
+        const ob = obl[q];
+        if (mxx < xb.bx0[ob] || mnx > xb.bx1[ob] || mxy < xb.by0[ob] || mny > xb.by1[ob]) continue;
+        const jEnd = Math.min(nB, (ob + 1) * XBLK);
+        for (let kk = ob * XBLK; kk < jEnd; kk++) {
+          if (mxx < xb.x0[kk] || mnx > xb.x1[kk] || mxy < xb.y0[kk] || mny > xb.y1[kk]) continue;
+          const k = sb[kk];
+          const hit = segInt(a0x, a0y, a1x, a1y, BB.bx[k], BB.by[k], BB.bx[k + 1], BB.by[k + 1]);
+          if (!hit) continue;
+          const sAh = lerpS(pA, BA.bs[i], BA.bs[i + 1], hit.t);
+          const sBh = lerpS(pB, BB.bs[k], BB.bs[k + 1], hit.u);
+          const dA = dSignedC(C, aiA, sAh); const dB = dSignedC(C, aiB, sBh);
+          if (dA < lo || dA > hi || dB < lo || dB > hi) continue;
+          if (dA + dB < bestD) {
+            bestD = dA + dB; found = true;
+            meetScratch.x = a0x + (a1x - a0x) * hit.t; meetScratch.y = a0y + (a1y - a0y) * hit.t;
+            meetScratch.sA = sAh; meetScratch.dA = dA; meetScratch.sB = sBh; meetScratch.dB = dB;
+            meetScratch.segA = i; meetScratch.segB = k;
+          }
         }
       }
     }
-    return found;
-  };
-  // Full search every frame: a window around last frame's meet pair
-  // could return a different intersection than the global best.
-  const segsOf = (Bd: FBord, ai: number): number[] => {
-    const out: number[] = [];
-    for (let i = 0; i + 1 < Bd.nb; i++) if (segOk(Bd, ai, i)) out.push(i);
-    return out;
-  };
-  const found = tryPairs(segsOf(BA, aiA), segsOf(BB, aiB));
+  }
   if (found) {
     meetScratch.found = true;
     C.meetValid[ci] = 1; C.meetSegA[ci] = meetScratch.segA; C.meetSegB[ci] = meetScratch.segB;
