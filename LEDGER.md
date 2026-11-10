@@ -507,11 +507,11 @@ Next free ID: K1273.
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: agent `ac68950ce0ddc1f68` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-10 03:30, 2 h cap ~05:30)
-  - branch: `worktree-agent-ac68950ce0ddc1f68`, worktree `.claude/worktrees/agent-ac68950ce0ddc1f68`; last commit: `2130554c`
-  - evidence: .claude/probes/K1240/proto/ (k1247s8_acc, k1247s9_union, k1247s10_base.ps1, k1247c_final.ps1), .claude/probes/K1240/out/
-  - next: Stage 12 (started 2026-11-10 03:31): region numbering and group from structure, the tail that comes and goes, reach noise into spanRamp, g41_ring_tw64 eps 0.2, def arc/72. When it reports: Claude views any crops, re-runs acc at eps 0.1 and the still union, merges
-  - brief: `docs/design/K1247_s12_structure.md`
+  - owner: nobody since 2026-11-10 05:10 (stage 12 stopped at its cap, not merged: its structural order leaves a hole at rest in muse_hash)
+  - branch: worktree-agent-ac68950ce0ddc1f68, worktree .claude/worktrees/agent-ac68950ce0ddc1f68; last commit: `811fca81`
+  - evidence: .claude/probes/K1240/proto/ (k1247s8_acc, k1247s9_union, k1247s12_facecrops, k1247c_final.ps1); .claude/probes/K1240/out/s12/ (untracked, in stage 12's worktree)
+  - next: Stage 13 (brief written 2026-11-10 05:20) continues stage 12's branch: close the muse_hash hole from structure, fat crossing 310, the group, a quiet timing pair. Then places 2-5 of stage 12's brief
+  - brief: `docs/design/K1247_s13_hole.md`
 
 ## Next, in order
 
