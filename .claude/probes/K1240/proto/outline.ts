@@ -1831,8 +1831,28 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
   const segRegion: Int32Array[][] = borders.map((bs) => bs.map((B) => new Int32Array(Math.max(0, B.pts.length - 1)).fill(-1)));
 
   // Intervals between stations, per chain.
-  interface Interval { pi: number; A: Station; B: Station; cMid: number; len: number; discard: boolean; region: number }
+  interface Interval { pi: number; A: Station; B: Station; cMid: number; len: number; discard: boolean; region: number; eA?: Station }
   const intervals: Interval[] = [];
+  // K1247 s12: positions follow the structure. A chain's structural
+  // intervals, in order, laid end to end by their lengths; an interval whose
+  // start some earlier station has already passed starts where that station
+  // is (eA, the furthest so far) and is that much shorter. A closed chain
+  // runs a lap first so the wrap carries in. With every length positive this
+  // is the identity (eA = A); it moves continuously with the positions.
+  const envelopeRef = (ivs: Interval[], cyc: boolean): void => {
+    let T = 0; for (const iv of ivs) T += iv.len;
+    let env = -Infinity; let eA: Station | undefined;
+    const laps = cyc ? 2 : 1;
+    for (let lap = 0; lap < laps; lap++) {
+      let pos = lap * T;
+      for (const iv of ivs) {
+        if (pos >= env) { env = pos; eA = iv.A; }
+        const posB = pos + iv.len;
+        if (lap === laps - 1) { iv.eA = eA; iv.len = posB - env; iv.cMid = eA!.cS + Math.max(0, iv.len) / 2; }
+        pos = posB;
+      }
+    }
+  };
   const stationsOf = new Map<number, Station[]>();
   for (const st of stations) { const l = stationsOf.get(st.pi) ?? []; l.push(st); stationsOf.set(st.pi, l); }
   // K1247 s12: a station's structural place on its chain (frame()'s
@@ -1875,6 +1895,7 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
         else { const want = B.k - A.k + (i === m - 1 ? p.len : 0); len = want + dS(p, want, B.q.cS - A.q.cS); }
         intervals.push({ pi, A: A.q, B: B.q, cMid: A.q.cS + Math.max(0, len) / 2, len, discard: false, region: -1 });
       }
+      if (!KF_NOENV) envelopeRef(intervals.slice(intervals.length - (p.closed ? m : m - 1)), p.closed && m > 1);
       return;
     }
     const sorted = list.slice().sort((a, b) => a.cS - b.cS);
@@ -1996,10 +2017,11 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
     // K1247 s12: a passed interval (length <= 0) is an empty region.
     const live = KF_CSORDER || iv.len > 0;
     const noSeq = { pts: [] as BPt[], segs: [] as number[] };
-    const leftSeq = live ? borderSeq(pi, 1, iv.A.left.idx, iv.B.left.idx, true) : noSeq;
+    const eA = iv.eA ?? iv.A; // K1247 s12: where the interval starts (envelopeRef)
+    const leftSeq = live ? borderSeq(pi, 1, eA.left.idx, iv.B.left.idx, true) : noSeq;
     // The right border is travelled back from B to A (decreasing s),
     // for open and closed chains alike.
-    const rightBack = live ? borderSeq(pi, -1, iv.B.right.idx, iv.A.right.idx, false) : noSeq;
+    const rightBack = live ? borderSeq(pi, -1, iv.B.right.idx, eA.right.idx, false) : noSeq;
     const rightPts = rightBack.pts;
     const rightSegs = rightBack.segs;
     const seq: { x: number; y: number }[] = [];
@@ -2007,8 +2029,8 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
     const capB = capByStation.get(iv.B.key);
     if (live && capB && iv.B.kind.startsWith("cap")) seq.push(...capB.arc.slice(1, -1));
     seq.push(...rightPts);
-    const capA = capByStation.get(iv.A.key);
-    if (live && capA && iv.A.kind.startsWith("cap")) seq.push(...capA.arc.slice(1, -1).reverse());
+    const capA = capByStation.get(eA.key);
+    if (live && capA && eA.kind.startsWith("cap")) seq.push(...capA.arc.slice(1, -1).reverse());
     const poly = dedupePts(seq);
     // K1247 s11: a region per kept interval, even one whose polygon has under 3 points (zero
     // area). Skipping it renumbered every later region, and its point count follows the
@@ -3065,6 +3087,8 @@ interface FCache {
   capArcX: Float64Array[]; capArcY: Float64Array[]; capArcN: Int32Array; capCx: Float64Array; capCy: Float64Array; capStation: Int32Array;
   // intervals / regions scratch
   ivPi: Int32Array; ivA: Int32Array; ivB: Int32Array; ivCMid: Float64Array; ivLen: Float64Array; ivDiscard: Uint8Array; ivRegion: Int32Array; nIv: number;
+  /** K1247 s12: the slot an interval starts at (its A, or a station past it). */
+  ivEA: Int32Array;
   seqIdx: Int32Array; seqSeg: Int32Array;
   pairHashKey: Int32Array; pairHashVal: Int32Array; pairHashStamp: Int32Array; pairStamp: number;
   warm: boolean;
@@ -3347,6 +3371,7 @@ function buildFastCache(st: DiagramStructure, scene: SceneIn): FCache {
     ivPi: new Int32Array(Math.max(1, nSlots)), ivA: new Int32Array(Math.max(1, nSlots)), ivB: new Int32Array(Math.max(1, nSlots)),
     ivCMid: new Float64Array(Math.max(1, nSlots)), ivLen: new Float64Array(Math.max(1, nSlots)),
     ivDiscard: new Uint8Array(Math.max(1, nSlots)), ivRegion: new Int32Array(Math.max(1, nSlots)).fill(-1), nIv: 0,
+    ivEA: new Int32Array(Math.max(1, nSlots)),
     seqIdx: new Int32Array(1024), seqSeg: new Int32Array(1024),
     pairHashKey: new Int32Array(8192), pairHashVal: new Int32Array(8192), pairHashStamp: new Int32Array(8192), pairStamp: 0,
     warm: false,
@@ -5339,6 +5364,8 @@ const meetScratch = { found: false, x: 0, y: 0, sA: 0, dA: 0, sB: 0, dB: 0, segA
 const KF_NOMEET = !!(globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.K1240_NOMEET;
 // K1247 s12: K12_CSORDER=1 restores stage 11's station order (frame cS, 1e-9 dedupe) for A/B.
 const KF_CSORDER = !!(globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.K12_CSORDER;
+// K1247 s12: K12_NOENV=1 drops the envelope (a passed interval's neighbour starts at its own A) for A/B.
+const KF_NOENV = !!(globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.K12_NOENV;
 const mtSegs = [new Int32Array(1024), new Int32Array(1024)];
 const mtBoxA = mkSegBoxes(); const mtBoxB = mkSegBoxes();
 function dSignedC(C: FCache, ai: number, s: number): number {
@@ -6278,6 +6305,25 @@ function regionsPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): { regio
       }
     }
     ivCount[pi] = nIv - ivStart[pi];
+    // K1247 s12: positions follow the structure (envelopeRef in the ref):
+    // an interval some earlier station has passed starts at the furthest one.
+    if (!KF_CSORDER) {
+      const n0 = ivStart[pi]; const nC = ivCount[pi];
+      if (!KF_NOENV) {
+        let T = 0; for (let k = n0; k < n0 + nC; k++) T += C.ivLen[k];
+        let env = -Infinity; let eA = -1;
+        const laps = p.closed && m > 1 ? 2 : 1;
+        for (let lap = 0; lap < laps; lap++) {
+          let pos = lap * T;
+          for (let k = n0; k < n0 + nC; k++) {
+            if (pos >= env) { env = pos; eA = C.ivA[k]; }
+            const posB = pos + C.ivLen[k];
+            if (lap === laps - 1) { C.ivEA[k] = eA; C.ivLen[k] = posB - env; C.ivCMid[k] = C.stCS[eA] + Math.max(0, C.ivLen[k]) / 2; }
+            pos = posB;
+          }
+        }
+      } else for (let k = n0; k < n0 + nC; k++) C.ivEA[k] = C.ivA[k];
+    }
   }
   C.nIv = nIv;
   // Discards (shortest interval between each recorded pair, same chain).
@@ -6314,7 +6360,8 @@ function regionsPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): { regio
     // K1247 s12: an interval whose stations have passed (length <= 0) is
     // an empty region (a closed border's walk would otherwise wrap the loop).
     const live = KF_CSORDER || C.ivLen[i] > 0;
-    const nsL = live ? regionSeqEmit(C, pi, 1, refFinalOf(C.stLeft[A]), refFinalOf(C.stLeft[B]), true, pts, segL) : 0;
+    const eA = KF_CSORDER ? A : C.ivEA[i]; // K1247 s12: where the interval starts (the envelope)
+    const nsL = live ? regionSeqEmit(C, pi, 1, refFinalOf(C.stLeft[eA]), refFinalOf(C.stLeft[B]), true, pts, segL) : 0;
     const capBInfo = C.capInfoOfSlot[B];
     if (live && capBInfo >= 0 && C.slotKind[B] === 3) {
       const ax = C.capArcX[capBInfo]; const ay = C.capArcY[capBInfo];
@@ -6323,9 +6370,9 @@ function regionsPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): { regio
     const BdR = C.bords[pi * 2 + 1];
     if (C.seqSeg.length < BdR.nf + 1) { C.seqSeg = new Int32Array((BdR.nf + 1) * 2); C.seqIdx = new Int32Array((BdR.nf + 1) * 2); }
     const segR = C.seqSeg;
-    const nsR = live ? regionSeqEmit(C, pi, -1, refFinalOf(C.stRight[B]), refFinalOf(C.stRight[A]), false, pts, segR) : 0;
-    const capAInfo = C.capInfoOfSlot[A];
-    if (live && capAInfo >= 0 && C.slotKind[A] === 3) {
+    const nsR = live ? regionSeqEmit(C, pi, -1, refFinalOf(C.stRight[B]), refFinalOf(C.stRight[eA]), false, pts, segR) : 0;
+    const capAInfo = C.capInfoOfSlot[eA];
+    if (live && capAInfo >= 0 && C.slotKind[eA] === 3) {
       const ax = C.capArcX[capAInfo]; const ay = C.capArcY[capAInfo];
       for (let q = C.capArcN[capAInfo] - 2; q >= 1; q--) pushDedup(pts, ax[q], ay[q]);
     }
