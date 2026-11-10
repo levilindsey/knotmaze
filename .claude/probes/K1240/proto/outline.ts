@@ -3425,6 +3425,7 @@ function setupFrame(C: FCache, st: DiagramStructure, scene: SceneIn): void {
 }
 
 // --- borders ---------------------------------------------------------------
+const KF_COS_FAN2 = Math.cos((Math.PI / 16) * (1 - 1e-6)) ** 2;
 function buildBorderC(C: FCache, pi: number, sig: number): void {
   const p = C.polys[pi];
   const B = C.bords[pi * 2 + (sig === 1 ? 0 : 1)];
@@ -3475,6 +3476,17 @@ function buildBorderC(C: FCache, pi: number, sig: number): void {
       if (out > 0 && Math.abs(PX[out - 1] - ax) + Math.abs(PY[out - 1] - ay) < 1e-9) { PX[out - 1] = jx; PY[out - 1] = jy; PV[out - 1] = v; }
       else { PX[out] = jx; PY[out] = jy; PS[out] = p.s[v]; PV[out] = v; out++; }
       return true;
+    }
+    // K1247 s2: a turn clearly under pi/16 makes one step (no fan
+    // points), so the two atan2 calls are skipped there: the dot test's
+    // margin (1e-6 of the angle) dwarfs atan2's rounding.
+    {
+      const ux = ax - p.x[v]; const uy = ay - p.y[v]; const wx = bx - p.x[v]; const wy = by - p.y[v];
+      const dot = ux * wx + uy * wy;
+      if (dot > 0 && dot * dot > KF_COS_FAN2 * (ux * ux + uy * uy) * (wx * wx + wy * wy)) {
+        if (!(out > 0 && Math.abs(PX[out - 1] - bx) + Math.abs(PY[out - 1] - by) < 1e-12)) { PX[out] = bx; PY[out] = by; PS[out] = p.s[v]; PV[out] = v; out++; }
+        return false;
+      }
     }
     const a0 = Math.atan2(ay - p.y[v], ax - p.x[v]);
     let da = Math.atan2(by - p.y[v], bx - p.x[v]) - a0;
