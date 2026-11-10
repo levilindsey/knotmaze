@@ -365,11 +365,11 @@ Next free ID: K1260.
   and a JSON looks list into a summary and sheets. Stages 3a-3c merged
   (737ac58..9ab8a01); rounds 2026-10-14, 14b and 14c are done (14c
   merged 772e48a..e1c2a80).
-  - owner: agent `ad606c9ea6adf5a06` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-09 21:31, 2 h cap ~23:31)
-  - branch: `worktree-agent-ad606c9ea6adf5a06`, worktree `.claude/worktrees/agent-ad606c9ea6adf5a06`; last commit: `54a6b84d`
-  - evidence: .claude/probes/rounds/2026-11-09/ (untracked)
-  - next: Round 2026-11-09 (Levi left the phone unlocked overnight): K8's rp=sdf render sync (ABBA, k539_g31.mjs's method), K268's phone proof (K268.md Stage 3a handoff item 1), K307's phone measures (programs across a restart, Android's cache cap, DrDc through the wait), K1130's throwaway first shot; phone work ends by 07:30. When it reports: Claude files K8's, K268's and K307's next
-  - brief: docs/design/K156.md, "Round 2026-11-09"
+  - owner: nobody since 2026-11-09 22:20 (round 2026-11-09 ended; agent ad606c9e of claude session 09c7a672)
+  - branch: mainline; last commit: `fa1b2d73`
+  - evidence: .claude/probes/rounds/2026-11-09/ (untracked: sdf\, k268\, k307\, logs\)
+  - next: Round 2026-11-09 done (K8, K268, K307 below; kit: k539_g31.mjs takes QBASE/QHEAD/DIR and keeps the second of two shots, K1130). The next phone window starts with a fresh idle wait and -Phase check, then K307's restart check before anything else loads the daily; then K8's render sync again once rp=sdf draws its gaps, and K268's still-camera census
+  - brief: docs/design/K156.md, "Round 2026-11-09" and its handoff
   - env: the phone on its charger, reached over adb 5555 through Tailscale (`adb connect`; not the desktop's USB, Levi 2026-11-02); the pass builds and serves both builds itself (ports 5480-5489); nobody else uses the phone during the pass (K234)
 - **K268** · Shaped crossing gaps under thread reveal (K76; Levi, 2026-10-14):
   no gap until the over thread is seen, a dynamic gap for a stub's overlap and
@@ -377,7 +377,7 @@ Next free ID: K1260.
   - owner: nobody since 2026-10-15 11:22 (stage 3a's agent `a5d9b049e72746ad2` of claude session 05e60da0 finished; merged 11:26, worktree on K161's sweep list). Stage 2's agent `a42c63c2db0401edb` (session d8031183): worktree swept; stage 1's `ab65d913a3b9a3dcb` is left, locked by the live Claude process (K161); branches kept
   - branch: mainline; last commit: `19d97f1` (K430 ramp; G3-1 93a231f before it)
   - evidence: `.claude/probes/K268/stage3a/` (census3a.mjs, 31/31 on master; sheet3a.mjs; the k76_probe.mjs copy with the bit-exact view wait; `out/`); `.claude/probes/K268/stage2/`; stage 1's beside it
-  - next: Stage 2 item 2 is COMPLETE (ramp 19d97f1, PROTECT 2c03b57, far-branch this commit: the smooth-min blends vis-weighted cuts, census3a 22/31 = baseline, K537's 9 fails unchanged; evidence `.claude/probes/K268/stage3a/out/census_far1/`). Items 5/6 closed 2026-10-21: item 6 already landed (program_registry.ts registers arm-strip-explore, junction-field-explore, pluck-still-explore); item 5's desktop eye passed (`.claude/probes/K268/intro_eye/` r0/r2: joints emerge with their arms in the close-in, no popping fans). Left: the phone proof, riding K156's next window. Probe fixes: K431 (narrowed), K432; far-branch GPU isolation is K547
+  - next: The phone proof ran 2026-11-09 (K156 round): census 17/31 at a 1000x900 override (the desktop baseline 22/31), UWRAMP exact (0 mismatched, worst 2e-9), the desktop's 8 known fails (K537) plus 6 phone-only (1-18 px residues and two junction checks needing a bit-exact re-shoot; inferred, untested: re-shoot noise from cam=follow drifting ~1e-5 a shot); the intro close-in passes by eye; PROOF judged 0 px as since G3-1 (K547). Left: a still-camera census at the next phone window so restores are bit-exact; optionally a desktop census on current master to replace the 2026-10-16 baseline. Evidence .claude/probes/rounds/2026-11-09/k268/
   - brief: `docs/design/K268.md`, Stage 3a handoff (2026-10-15 11:35), For the next stage
 - **K7** · Physics in a Web Worker with render-side interpolation (K28; Levi's
   calls K302). Stages 1-7 merged: the worker is the default (stage 6, call F6), `&phw=0` runs
@@ -397,7 +397,7 @@ Next free ID: K1260.
   - owner: nobody since 2026-10-15 05:39 (stage 2 done; agent `a11d7ce60428b687d` of claude session d8031183, worktree removed by the K161 sweep 2026-10-15, branch kept)
   - branch: mainline; last commit: `a7e199e` (stage 3 late enable)
   - evidence: `.claude/probes/K307/` (stage 1's tools and traces; `stage2/`: `trace_intro.mjs`, `run_s2.ps1`, batches 1-7, `runs/`, two A/B builds, `k366_firsttap.mjs`); the throwaway branch `k307-proto` (d1aefae), never merged; lore `.claude/rules/render-shaders.md` ("THE WARM-UP")
-  - next: stage 3 done in a7e199e (late enable shipped, K517 (b); K385 ships with it - crbug (d) drafted at `.claude/probes/K307/stage3/crbug.md` for Levi to submit; cold first visible 3.27 s, warm restart 0.80 s, suite 1379). Remaining: phone measures only (persistence, Android cache cap, DrDc presents) with K156's next pass. K366 done as measured/attributed in the same commit; its fix is K535
+  - next: Phone measured 2026-11-09 (K156 round): a Chrome program-cache miss costs ~0.1 s of first visible (1.097 s cold, 1.009 s warm; the desktop 3.27 / 0.80 s), no eviction after six salted program sets (~78 programs), DrDc presents through the warm-up's wait (swaps every ~16.7 ms from 494 ms). Left: the restart check at the next phone window (confirm Chrome's GPU process started after the planted salt p1109a, then load ?daily&snd=none traced with k307\salt_p1109a.js: 0 translates = persisted, ~21 = not); optionally a driver-cold first visit, which needs Chrome's data cleared on Levi's phone (Levi's call). Evidence .claude/probes/rounds/2026-11-09/k307/
   - brief: `docs/design/K307_intro_freezes.md`, "Stage 2 handoff" and "K385" (the mechanism and the plan)
 - **K8** · G3: SDF ribbons drawn from one shared sample texture
   (`docs/design/G3G4_sdf_geometry.md`). G3-0 merged (ebdae8c..b11747e): the four G3
@@ -405,7 +405,7 @@ Next free ID: K1260.
   - owner: nobody since 2026-10-15 14:18 (the phone agent `a2c95d8bde8feeea8` of claude session 05e60da0 finished its bench; G3-0's `af653fa7f942f2f1e` (session d8031183) finished, its worktree left, locked by the live Claude process (K161))
   - branch: mainline; last commit: `93a231f` (G3-1; G3-0 b11747e)
   - evidence: `.claude/probes/K8/G3-1/` (the brief's texture sizes); `.claude/probes/K8/stage2/` (`notes.md`, `g3_probe.mjs`, `batch3.ps1`-`batch6.ps1`, `phone6.ps1`, results); stage 1's `.claude/probes/K8/stage1/notes.md`
-  - next: G3-1 (`93a231f0`) stays despite +24.5 to +48.0 ms of phone render sync until K868 settles the gap search (Levi, K892). G3-2 landed (777e19a8 seam, K816 70e2fe12 ribbon_sdf, K825 explore variant, K826 mitered silhouette; the residual A/B diff is uniform and needs the same-state capture). Desktop bench 2026-10-22: SDF frame p50 0.3 ms / 10 draws vs strip 1.1 ms / 102. G3-3 (default flip + strip deletion) waits on Levi's phone look and on a phone render-sync measurement of `?rp=sdf`. Lane: G4-1 is replaced for the border look by K868; never beside an R stage, K268 item 4 or another GPU measurement; may run beside K7. K90 stopped (Levi 2026-10-20)
+  - next: rp=sdf draws NO crossing gaps, on the phone and the desktop alike (build 25a52599: knot gs 24's weave renders as a flat lattice with aliased edges, the dense and max fabric crossings lose their casing cuts; Claude's desktop shots .claude/probes/rounds/2026-11-09/sdf/desktop/, the phone's sdf/sdf/crop4x_*). So G3-1's check 7 fails on master: a regression since the gaps last drew (G3-2's K816/K825/K826 and K832 4b02e2dc are the suspects). Next: bisect it with scripts/diag_screenshot.mjs under the perf lock and fix it (after K1247 stage 7 releases the lock's heavy use), then retake the phone render sync. Measured without gaps (K156 round 2026-11-09, ABBA): +12.0 / +19.8 / +17.9 ms (dense / max fabric / knot gs 24). G3-3 and Levi's look wait on the gaps. G3-1 stays (Levi, K892); never beside an R stage, K268 item 4 or another GPU measurement
   - brief: `docs/design/K8_G3-1.md`; G3-0's handoff: `docs/design/K8_stage1.md` ("Stage 2 handoff")
 - **K5** · Split `main.ts` and `ribbon_renderer.ts` along K1-K3's data lines, with seams so G3 becomes a module
   swap; K6 rides it (`docs/design/K5_K6_split.md`, calls K377). Merged M1-M4 (`src/app/`: camera, frame_loop,
