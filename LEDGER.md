@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1256.
+Next free ID: K1257.
 
 ## Waiting on Levi
 
@@ -509,7 +509,7 @@ Next free ID: K1256.
 - **K1240** · One outline for both looks and every junction consumer (Levi's sketch, 2026-11-06): offset-polyline borders,
   cuts and corner arcs in closed form from each frame; the border look strokes it, the filled look fills it. S1: a clean
   prototype beside the app, checked against form B and timed (Levi: "without all the tech debt"); notes.
-  - owner: nobody since 2026-11-09 12:28: waits on K1247 stage 4 (speed, same file outline.ts)
+  - owner: nobody since 2026-11-09 12:28: waits on K1247 stage 5 (speed, same file outline.ts)
   - branch: mainline; last commit: `abb5891d`
   - evidence: .claude/probes/K1240/proto/ (tracked builder and checks, s3_* to s3f_*, the s3f_claude_* checks and diagnostics, s3f_exact_s3dbase.ts, cmp_*.mjs); untracked in the main checkout: .claude/probes/K1240/s1_out/ to s3f_out/ (s3f_out/ holds the three Claude runs' checks_final*.txt (final6 the last) and logs, crops (capw5/), bench_final4a/b and bench_final6a/b.json, sweep.json, the consistent rows (move*c_, fresh0.5c_, s3dfresh*), Claude's re-run (cverify3_*), page results, and muse/ Muse's partial run); the worktree writes .claude/probes/K1240/out/s3f/
   - next: K1247 stage 3 (agent on docs/design/K1247_s3_speed.md; def's frame 20.7 ms at 1346ad87 against 3). Then S3f round 4 as the brief's decisions after Handoff 3 list it (T crotches def B j3 j1 j151, g41_ring_tw42 j12's reflex round join, the stub corners, muse_default_tw at 0.1h); then the sweep's piece motion (25-112x the particles'), S4 and the Pixel p95. Levi, 2026-11-09: keep the redesign, no fallback to K1040's field. K1250 (a pulse's glow in a junction) is rechecked when the outline reaches the app
@@ -518,11 +518,11 @@ Next free ID: K1256.
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: agent `a441151101638a205` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-09 16:52, 2 h cap ~18:52)
-  - branch: `worktree-agent-a441151101638a205`, worktree `.claude/worktrees/agent-a441151101638a205`; last commit: `94de06fa`
-  - evidence: .claude/probes/K1240/proto/ (outline.ts; k1247c_final.ps1 every non-timing check, k1247c_coldwarm.ts, k1247c_time.ts the timing, run_locked_k1247s3.ps1, the k1247s2_*/k1247s3_* profilers, k1247s3_floor.ts the output-format floor); stage 3: 919a7bf1, def 18.4 ms bit-identical (K1247_s3_speed.md Handoff 1; Claude's locked A/B in one session: s3 18.3/18.2 ms vs s2 20.5/20.1, corners 6.6 vs 8.4)
-  - next: Stage 4: a cheaper corner solve (corners 6.7 -> 1 ms), output within 1e-3 h. The gate stays def with every chain moving (Claude, 2026-11-09: the load settle and agitation move every chain; a drag-only gate would hide them). When the agent reports: Claude re-runs k1247c_final.ps1 and an A/B timing under the lock, merges; then the flat output (K1254). WASM (K1253): no port now; K1255 after the corner solve settles. K1240's S3f round 4 after
-  - brief: `docs/design/K1247_s4_corners.md`
+  - owner: agent `a3deb5723f8c1b194` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-09 18:21, 2 h cap ~20:21)
+  - branch: `worktree-agent-a3deb5723f8c1b194`, worktree `.claude/worktrees/agent-a3deb5723f8c1b194`; last commit: `2d452e0e`
+  - evidence: .claude/probes/K1240/proto/ (outline.ts; k1247c_final.ps1 every non-timing check, k1247c_coldwarm.ts, k1247c_time.ts the timing, run_locked_k1247s4.ps1, k1247s4_nodes.mjs node counts, the k1247s2_*/k1247s3_*/k1247s4_* profilers, k1247s3_floor.ts the output-format floor); stage 4: fe237b5b, def 18.4 ms bit-identical (K1247_s4_corners.md Handoff 1; Claude's locked A/B in one session: s4 18.4/18.4 ms vs s3 18.7, corners 6.8 vs 7.0)
+  - next: Stage 5 (docs/design/K1247_s5_growth.md): replace the 32-node corner growth (an exact stop where w reaches 0, adaptive nodes), judged against a converged reference within 0.01 h; corners 6.8 -> 1 ms. Stage 4 merged (fe237b5b..69a1e070): exact cuts, corners 7.0 -> 6.8 ms, def 18.7 -> 18.4 (Claude's same-session A/B). When stage 5 reports: Claude re-runs the checks and timing, looks at its crops of the 6 corners that moved most and asks Levi if the change shows; then the flat output (K1254). K1255 after the growth settles; K1240's S3f round 4 after
+  - brief: `docs/design/K1247_s5_growth.md`
 
 ## Next, in order
 
@@ -765,6 +765,9 @@ Every other item below waits on the trigger it names.
 - **K1254** · K1240's outline writes one flat typed array plus offset tables for pieces, regions and faces,
   with adapters for the checks. Today's shape alone costs 2 ms median / 5 ms p95 of K1247's 3 / 6 ms on def
   (k1247s3_floor.ts: flat 1.2 / 1.3); it is also K1252's snapshot format. After K1247 stage 4 (same file)
+- **K1256** · K1240's outline: frame() leads outside corners from K1247 stage 4 (unmeasured):
+  crossingsPhaseC's OSR-exit deopts, frameFast's wrong-map and generic-global deopts, and about 40
+  cornerFallbackC fallbacks a frame (about 0.5 ms). K1247_s4_corners.md Handoff 1
 
 ## Residuals (known, not fixed)
 
