@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1293.
+Next free ID: K1294.
 
 ## Waiting on Levi
 
@@ -508,20 +508,17 @@ Next free ID: K1293.
   - evidence: .claude/probes/K1240/proto/ (outline.ts, k1247s17_* tools); .claude/probes/K1240/out/s17/ (untracked)
   - next: Stage 17 merged: junction arms matched to frame 0's order by edge identity (K17_JA) and chain buffers with room to double (K17_CAP); jumps def 18 -> 15, muse_hash 34 -> 17, fat 0; every bar equals master's (no change at rest). The continuity work left (corner foot, j176, j35, muse_hash's places, K1288) is K1281's. Speed: K1290's forward placement made it slower (not adopted). The outline now runs in the app's outline worker (K1240 S4b, 8d56f5c0): 117 ms p50 a def frame (frame 34, zChains 17, fill 21, paint 5, band 38), and that sets how far the outline lags the physics. Next cuts in src/render/outline/: the band's foot search and slots, zChains, the fill, or a second worker for the draw data; after K1283 and K1278 stage 2 free those files
   - brief: `docs/design/K1247_s17_feet.md`
-- **K1278** · Paint on the outline must blend seamlessly across junctions (Levi 2026-11-10): colour per pixel
-  from fields continuous across faces, triangles and junctions (chain + s, per-arm weights easing to an exact
-  hand-off as in form B, a pulse's travel distance continuous through the junction), never per face or
-  triangle. Gate: a seam test sampling section blends and pulses across every face edge, triangle edge and
-  junction for steps and kinks, plus K1244's sheets (K1250).
+- **K1278** · The outline's paint blends seamlessly across junctions (Levi 2026-11-10): section colour and pulses
+  from per-pixel fields continuous across faces, triangles and junctions, gated by a seam test on every
+  face edge, triangle edge and junction. Full text in docs/ledger_notes.md
   - owner: agent `ab4debcc50d9ea9fe` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-10 19:44, 2 h cap ~21:44)
   - branch: `worktree-agent-ab4debcc50d9ea9fe`, worktree `.claude/worktrees/agent-ab4debcc50d9ea9fe`; last commit: `8f7004bf`
   - evidence: src/render/outline/ (paint, fill_tri, draw, band_gpu), k1278s2_* tools; untracked .claude/probes/K1240/out/k1278s2/
   - next: stage 2 (section colour across junctions in src/): wait for its report, view the crops, merge; stage 3 = the pulses
   - brief: `docs/design/K1278_s2.md`
-- **K1283** · Redesign junctions against form B: after K1279 every crossing that still differs from form B
-  sits at a junction (the 25 worst, e.g. muse_hash x77 846 px): form B blends the edges softly where threads
-  meet, the redesign draws hard lines. Census k1279_census.ts; crops
-  .claude/probes/K1240/out/k1279/crops/worst10_{a,b}.png. The fill half, K1277's end-arm sliver (through-thread colour over the end thread's round end, muse_hash x73 x47 x292 x177), went to K1278 stage 1 (9f6a38f2), which fixed its colour; its geometry stays here: the end thread's round end and tail do not cover where form B shows it (x47, x73, x349; the stage 1 handoff in docs/design/K1278_paint.md). Concave corners bite where form B is round (def j55, j156, j91, j45, j54, j73, j30, x81; .claude/probes/K1240/out/k1290/crops/fail_j55_j156.png, rest_feet.png); first in src/ after K1240 S4
+- **K1283** · Junction borders of the outline (rp=outline) against form B. Stage 1 (3c8bd61e) fixed the concave
+  corner bites (census 27528 -> 17756 px); left: the failed corners and the end-arm round ends (x47, x73,
+  x349). Full text in docs/ledger_notes.md
   - owner: nobody since 2026-11-10 20:12 (merged; agent `a4ab8fb10e6a7a9d3` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
   - branch: mainline; last commit: `3c8bd61e`
   - evidence: src/render/outline/outline.ts, k1283_* tools; untracked .claude/probes/K1240/out/k1283/
@@ -1781,6 +1778,9 @@ Every other item below waits on the trigger it names.
   is worse than master at 24 crossings (muse_hash x71, x149; g41_def_tw64 x191, x71)
 - **K1292** · k1240s4_crops (K1240 S4) steps to sim 40 a substep apart from run to run, so g41_ring_tw64 reads
   two physics hashes (a4b8c1bf, ea67fc77); step a fixed substep count (.claude/probes/K1240/s4/)
+- **K1293** · outline_port.test.ts's second frame (a rigid 0.3 rad turn) leaves every corner degenerate, so
+  its pins there exercise no arc; give it a frame with real corners (K1283 handoff,
+  docs/design/K1283_junctions.md)
 
 ## Approved, to schedule (2026-10-11)
 

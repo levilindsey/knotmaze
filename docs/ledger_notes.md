@@ -4139,3 +4139,11 @@ Muse's run (Paseo 4e0bc745) ended at Handoff 2, abb5891d. Claude re-ran every ch
   cutsEyesExposure 17.4-17.6. Structure 5-6 ms, first cold frame 140-160 ms. From 322-325 ms at the
   brief's start (Muse's harness: 33 ms before its cold = warm fix, 52 ms after).
 - Done 5, handoff: Handoff 2 in the brief.
+
+## K1283
+
+Redesign junctions against form B: after K1279 every crossing that still differs from form B sits at a junction (the 25 worst, e.g. muse_hash x77 846 px): form B blends the edges softly where threads meet, the redesign draws hard lines. Census k1279_census.ts; crops .claude/probes/K1240/out/k1279/crops/worst10_{a,b}.png. The fill half, K1277's end-arm sliver (through-thread colour over the end thread's round end, muse_hash x73 x47 x292 x177), went to K1278 stage 1 (9f6a38f2), which fixed its colour; its geometry stays here: the end thread's round end and tail do not cover where form B shows it (x47, x73, x349; the stage 1 handoff in docs/design/K1278_paint.md). Concave corners bite where form B is round (def j55, j156, j91, j45, j54, j73, j30, x81; .claude/probes/K1240/out/k1290/crops/fail_j55_j156.png, rest_feet.png); first in src/ after K1240 S4
+
+## K1278
+
+Paint on the outline must blend seamlessly across junctions (Levi 2026-11-10): colour per pixel from fields continuous across faces, triangles and junctions (chain + s, per-arm weights easing to an exact hand-off as in form B, a pulse's travel distance continuous through the junction), never per face or triangle. Gate: a seam test sampling section blends and pulses across every face edge, triangle edge and junction for steps and kinks, plus K1244's sheets (K1250).
