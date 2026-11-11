@@ -1,13 +1,19 @@
-// K1240 S4: src/render/outline equals the prototype's default path.
-// .claude/probes/K1240/s4/k1240s4_eq.ts checked the port against the
-// prototype (.claude/probes/K1240/proto) on K1240's 12 scenes, bit for bit,
-// at the first frame (the page: buildOutline + buildDrawData(.., "app")) and
-// at a second, moved frame in the carried order (OutlineModel.update). Its
-// digests are pinned here: ring from a committed fixture, g41_ring_tw42 when
-// its scene is on disk (.claude/probes/K868/scenes, untracked); eq.txt in
-// .claude/probes/K1240/out/s4/ has all twelve.
-// A port or prototype change that moves an output fails here; re-run the
-// tool, check EQUAL against the prototype, then re-pin.
+// src/render/outline's outputs, pinned as a change detector: the table, the
+// paint data and the per-vertex band, at the first frame (OutlineModel's
+// constructor) and at a second, moved frame (OutlineModel.update). Ring from
+// a committed fixture, g41_ring_tw42 when its scene is on disk
+// (.claude/probes/K868/scenes, untracked).
+// History: K1240 S4 pinned these as equal to the prototype
+// (.claude/probes/K1240/proto; k1240s4_eq.ts, eq.txt in out/s4/). Since
+// K1283 the prototype is history, not the reference: src is judged against
+// form B (k1279_census.ts, k1283_crops.ts), and its own outputs are pinned.
+// K1283 moved the arc pieces' cpts to the thread side (r + h from Q), which
+// moved f0's table and band; paint and the moved frame did not move (the
+// test's rigid 0.3 rad turn leaves every corner degenerate at f1, so f1
+// has no arc to move).
+// An outline change that moves an output fails here: check it against form
+// B, then re-pin on purpose (.claude/probes/K1240/proto/k1283_pins.ts
+// prints the digests).
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -19,11 +25,11 @@ import { digestOut, loadScene } from "./outline_digest";
 
 type Pin = { f0: { table: string; paint: string; band: string }; f1: { table: string; paint: string; band: string } };
 
-// From .claude/probes/K1240/out/s4/eq.txt (k1240s4_eq.ts, 2026-11-10: all
-// 12 scenes EQUAL to the prototype at frames 0 and 1).
+// K1283 (2026-11-10): src's outputs, from k1283_pins.ts. f1 is still the
+// prototype's (eq.txt in .claude/probes/K1240/out/s4/).
 const PINS: Record<string, Pin> = {
-  ring: { f0: { table: "eb8d71ed276b39a3", paint: "d576e92f8dc923ff", band: "d60de7814e62c01d" }, f1: { table: "ff804403e48659c1", paint: "649fb47c4cce79d8", band: "090775f172b680ad" } },
-  g41_ring_tw42: { f0: { table: "fb41a33853c68f12", paint: "4c0e7a971b3ff09d", band: "f676f6ddb859356c" }, f1: { table: "5f9432ea1beea2c2", paint: "730e817437d2d5b8", band: "42cfed2f285c467a" } },
+  ring: { f0: { table: "9f9093fa9404af2a", paint: "d576e92f8dc923ff", band: "4ca202931cf7d276" }, f1: { table: "ff804403e48659c1", paint: "649fb47c4cce79d8", band: "090775f172b680ad" } },
+  g41_ring_tw42: { f0: { table: "2ca6769189c72b66", paint: "4c0e7a971b3ff09d", band: "401eac7908b4706f" }, f1: { table: "5f9432ea1beea2c2", paint: "730e817437d2d5b8", band: "42cfed2f285c467a" } },
 };
 
 // The tool's second frame: every chain point rotated 0.3 rad and moved.
@@ -56,15 +62,15 @@ const run = (s0: SceneIn): Pin => {
   return { f0, f1: out() };
 };
 
-describe("K1240 S4 outline port", () => {
-  it("ring (committed fixture) equals the prototype's pinned outputs", () => {
+describe("K1240 S4 / K1283 outline pins", () => {
+  it("ring (committed fixture) matches the pinned outputs", () => {
     const s0 = loadScene(fileURLToPath(new URL("./fixtures/outline_ring.json.gz", import.meta.url)));
     expect(run(s0)).toEqual(PINS.ring);
   }, 60_000);
 
   const dir = fileURLToPath(new URL("../../.claude/probes/K868/scenes/", import.meta.url));
   const extra = join(dir, "g41_ring_tw42.json");
-  it.skipIf(!existsSync(extra))("g41_ring_tw42 (scene on disk) equals the prototype's pinned outputs", () => {
+  it.skipIf(!existsSync(extra))("g41_ring_tw42 (scene on disk) matches the pinned outputs", () => {
     expect(run(loadScene(extra))).toEqual(PINS.g41_ring_tw42);
   }, 60_000);
 });
