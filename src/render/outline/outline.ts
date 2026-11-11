@@ -2386,7 +2386,9 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
           while (da > Math.PI) da -= 2 * Math.PI;
           while (da < -Math.PI) da += 2 * Math.PI;
           const steps = Math.max(1, Math.ceil(Math.abs(da) / (Math.PI / 16)));
-          for (let s = 0; s <= steps; s++) { const a = aA + (da * s) / steps; pts.push(cw.qx + cw.r * Math.cos(a), cw.qy + cw.r * Math.sin(a)); cpts.push(cw.qx, cw.qy); }
+          // K1283: the foot at r + h, on the thread side (piecesPhaseC's note).
+          const rf = cw.r + h;
+          for (let s = 0; s <= steps; s++) { const a = aA + (da * s) / steps; pts.push(cw.qx + cw.r * Math.cos(a), cw.qy + cw.r * Math.sin(a)); cpts.push(cw.qx + rf * Math.cos(a), cw.qy + rf * Math.sin(a)); }
         } else if (!cw.ok && cw.meet) { pts = [cw.qx, cw.qy]; cpts = [cw.qx, cw.qy]; } else if (!cw.ok) {
           let ax = cw.qx; let ay = cw.qy;
           for (const nci of [dp.corner - 1, dp.corner + 1]) {
@@ -6979,7 +6981,14 @@ function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[])
         while (da > Math.PI) da -= 2 * Math.PI;
         while (da < -Math.PI) da += 2 * Math.PI;
         const steps = Math.max(1, Math.ceil(Math.abs(da) / (Math.PI / 16)));
-        for (let s2 = 0; s2 <= steps; s2++) { const a = aA + (da * s2) / steps; pts.push(C.cQx[ci] + C.cR[ci] * Math.cos(a), C.cQy[ci] + C.cR[ci] * Math.sin(a)); cpts.push(C.cQx[ci], C.cQy[ci]); }
+        // K1283: an arc point's foot is on the far side from Q, at r + h
+        // (Q is in the paper; form B's arc band is r <= |x - Q| <= r + W).
+        // At the arc's ends it is the arm's foot, the run's own foot there,
+        // so the band turns inward on the thread side and meets the runs'.
+        // The foot used to be Q: the band lay on the paper side, a step of
+        // W at each end (the "bite" at the corner's feet).
+        const rf = C.cR[ci] + C.h;
+        for (let s2 = 0; s2 <= steps; s2++) { const a = aA + (da * s2) / steps; const ca = Math.cos(a); const sa = Math.sin(a); pts.push(C.cQx[ci] + C.cR[ci] * ca, C.cQy[ci] + C.cR[ci] * sa); cpts.push(C.cQx[ci] + rf * ca, C.cQy[ci] + rf * sa); }
       } else if (!C.cOk[ci] && C.cMeet[ci]) { pts = [C.cQx[ci], C.cQy[ci]]; cpts = [C.cQx[ci], C.cQy[ci]]; }
       else if (!C.cOk[ci]) {
         let ax = C.cQx[ci]; let ay = C.cQy[ci];
