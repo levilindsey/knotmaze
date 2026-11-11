@@ -79,7 +79,88 @@ export const ARC_K = 16;
 export const TAIL_M = 24;
 /** K1283 s9: a frame tail's vertices paint their foot's s (see the tail item). */
 const TAIL_FOOT = true;
+/** K1283 s9: every strip vertex paints its foot's s (see the strip item),
+ *  taken every FOOT_STEP columns and interpolated between. */
 const STRIP_FOOT = true;
+const FOOT_STEP = 8;
+
+type FootChain = Parameters<typeof footNear>[0];
+let footD2 = 0; let footSg = 0;
+/** Squared distance from (x, y) to segment k of c (into footD2) and the foot's s (footSg). */
+function footSeg(c: FootChain, x: number, y: number, k: number): void {
+  const j = k + 1 === c.n ? 0 : k + 1; const sk = c.s[k]; const lk = j === 0 ? c.len - sk : c.s[j] - sk;
+  const ax = c.xs[k]; const ay = c.ys[k]; const ex = c.xs[j] - ax; const ey = c.ys[j] - ay;
+  const l2 = ex * ex + ey * ey;
+  let t = l2 > 0 ? ((x - ax) * ex + (y - ay) * ey) / l2 : 0;
+  t = t < 0 ? 0 : t > 1 ? 1 : t;
+  const dx = x - ax - t * ex; const dy = y - ay - t * ey;
+  footD2 = dx * dx + dy * dy; footSg = sk + t * lk;
+}
+function footLen(c: FootChain, k: number): number { return k + 1 === c.n ? c.len - c.s[k] : c.s[k + 1] - c.s[k]; }
+/** The segment holding arc position u (0 <= u < len on a ring), by binary search. */
+function footFirst(c: FootChain, segs: number, u: number): number {
+  const ss = c.s; if (ss[0] > u) return 0;
+  let lo = 0; let hi = segs - 1;
+  while (hi > lo) { const m = (lo + hi + 1) >> 1; if (ss[m] <= u) lo = m; else hi = m - 1; }
+  return lo;
+}
+/** K1283 s9: draw.footNear's foot (no skip) for the per-vertex strip and
+ *  tail feet, allocation-free: the s of the nearest point on chain c to
+ *  (x, y) among the segments whose arc span meets [sC - r, sC + r], unwrapped
+ *  to sC's lap on a closed chain; NaN when there is no segment. Exact like
+ *  footNear's scan of the window, but it walks out from the segment at sC
+ *  and skips what cannot be nearer: the distance is 1-Lipschitz in arc
+ *  length, so past a vertex at distance d no point within arc d - best is
+ *  nearer than best. A vertex beside a hairpin can sit nearly as near to the
+ *  far branch (muse_hash: 1488 strip vertices pick another branch than a
+ *  descent from sC does), so a descent alone is not footNear's foot. footNear
+ *  scanned 33 segments a foot on def (215k feet a frame). */
+function footS(c: FootChain, x: number, y: number, sC: number, r: number): number {
+  const segs = c.closed ? c.n : c.n - 1;
+  if (segs <= 0) return NaN;
+  const L = c.len; const ring = c.closed && L > 0; const xs = c.xs; const ys = c.ys;
+  const u = ring ? ((sC % L) + L) % L : sC;
+  const k0 = footFirst(c, segs, u);
+  footSeg(c, x, y, k0);
+  let best = footD2; let bs = footSg; let bd = Math.sqrt(best);
+  // Forward: off = arc from u to segment k's start.
+  let k = k0; let off = c.s[k0] + footLen(c, k0) - u;
+  for (let m = 0; m < segs - 1; m++) {
+    k = k + 1 < segs ? k + 1 : ring ? 0 : -1;
+    if (k < 0 || off > r) break;
+    // Skip the segments wholly within arc dv - best of their start vertex.
+    const dx = x - xs[k]; const dy = y - ys[k]; const lim = off + Math.sqrt(dx * dx + dy * dy) - bd;
+    let lk = footLen(c, k);
+    while (off + lk <= lim && m < segs - 1) {
+      off += lk; m++; k = k + 1 < segs ? k + 1 : ring ? 0 : -1;
+      if (k < 0 || off > r) break;
+      lk = footLen(c, k);
+    }
+    if (k < 0 || off > r) break;
+    footSeg(c, x, y, k);
+    if (footD2 < best) { best = footD2; bs = footSg; bd = Math.sqrt(best); }
+    off += lk;
+  }
+  // Backward: off = arc from u back to segment k's end.
+  k = k0; off = u - c.s[k0];
+  for (let m = 0; m < segs - 1; m++) {
+    const kE = k; // segment k - 1 ends at k's start vertex
+    k = k > 0 ? k - 1 : ring ? segs - 1 : -1;
+    if (k < 0 || off > r) break;
+    const dx = x - xs[kE]; const dy = y - ys[kE]; const lim = off + Math.sqrt(dx * dx + dy * dy) - bd;
+    let lk = footLen(c, k);
+    while (off + lk <= lim && m < segs - 1) {
+      off += lk; m++; k = k > 0 ? k - 1 : ring ? segs - 1 : -1;
+      if (k < 0 || off > r) break;
+      lk = footLen(c, k);
+    }
+    if (k < 0 || off > r) break;
+    footSeg(c, x, y, k);
+    if (footD2 < best) { best = footD2; bs = footSg; bd = Math.sqrt(best); }
+    off += lk;
+  }
+  return ring ? bs + L * Math.round((sC - bs) / L) : bs;
+}
 /** K1283 s4: rim points of an end arm's round end (DiskItem). */
 export const DISK_M = 32;
 /** K1283 s6: rings of a round end (radii h k / DISK_R), so over its fan the
@@ -589,17 +670,41 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
         const atA = stationS(I.aSt) !== null; const atB = stationS(I.bSt) !== null;
         const rF = 4 * hW;
         const foot = (v: number): void => {
-          const s = s4[SLOTS * v]; const f = footNear(c, pos[2 * v], pos[2 * v + 1], s, rF, 0, 0);
-          if (Number.isFinite(f.d)) s4[SLOTS * v] = c.closed && c.len > 0 ? f.s + c.len * Math.round((s - f.s) / c.len) : f.s;
+          const f = footS(c, pos[2 * v], pos[2 * v + 1], s4[SLOTS * v], rF);
+          if (f === f) s4[SLOTS * v] = f;
         };
-        if (fbL || fbR || atA || atB || STRIP_FOOT) {
+        if (fbL || fbR || atA || atB) {
           for (let i = 0; i <= N; i++) {
-            const end = (i === 0 && atA) || (i === N && atB) || STRIP_FOOT;
+            const end = (i === 0 && atA) || (i === N && atB);
             if (!end && !fbL && !fbR) continue;
             const vL = it.base + i; const vC = vL + W; const vR = vC + W;
             if (end || fbL) foot(vL);
             if (end || fbR) foot(vR);
             if (end || (fbL && fbR)) foot(vC); else s4[SLOTS * vC] = (s4[SLOTS * vL] + s4[SLOTS * vR]) / 2;
+          }
+        }
+        // K1283 s9: every row paints its foot's s, the strip beside an
+        // interpolated chevron or a frame tail reading the s of where it is
+        // (muse_hash: strip|strip 183 -> 85, strip|tail 121 -> 1). The foot
+        // is taken every FOOT_STEP columns (and at both ends) and its offset
+        // from the row's s interpolated between: a foot at each of def's 215k
+        // strip vertices cost 80 ms a frame. Rows already on their feet
+        // (a missing side's) keep them.
+        if (STRIP_FOOT) {
+          const step = FOOT_STEP;
+          for (let row = 0; row < 3; row++) {
+            if ((row === 0 && fbL) || (row === 2 && fbR)) continue;
+            const b0 = it.base + row * W;
+            let iP = 0; let dP = 0;
+            for (let i = 0; ; i = Math.min(i + step, N)) {
+              const v = b0 + i; const s = s4[SLOTS * v];
+              const f = footS(c, pos[2 * v], pos[2 * v + 1], s, rF);
+              const d = f === f ? f - s : 0;
+              s4[SLOTS * v] = s + d;
+              for (let k = iP + 1; k < i; k++) s4[SLOTS * (b0 + k)] += dP + ((d - dP) * (k - iP)) / (i - iP);
+              iP = i; dP = d;
+              if (i >= N) break;
+            }
           }
         }
       }
@@ -631,9 +736,9 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
       if (TAIL_FOOT && c && c.n > 1 && Math.abs(dsT) < 1e-9) {
         const rF = 4 * hW;
         for (let i = 0; i < 2 * W; i++) {
-          const v = it.base + i; const s0 = s4[SLOTS * v];
-          const f = footNear(c, pos[2 * v], pos[2 * v + 1], s0, rF, 0, 0);
-          if (Number.isFinite(f.d)) s4[SLOTS * v] = c.closed && c.len > 0 ? f.s + c.len * Math.round((s0 - f.s) / c.len) : f.s;
+          const v = it.base + i;
+          const f = footS(c, pos[2 * v], pos[2 * v + 1], s4[SLOTS * v], rF);
+          if (f === f) s4[SLOTS * v] = f;
         }
       }
     } else if (it.kind === "disk") {
