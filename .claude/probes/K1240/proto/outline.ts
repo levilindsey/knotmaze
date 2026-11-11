@@ -336,6 +336,8 @@ function footInWindowInto(p: Poly, px: number, py: number, lo: number, hi: numbe
 // to the nearest of segments k - 1, k, k + 1, so that the result is a
 // function of the point near k, not of the growth's path (true when it
 // moved).
+const KF_EB = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.K16_EB !== "0"; // s16 experiment switch: K16_EB=0 turns the END arms' extension-foot blend off
+const KF_TS = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.K16_TS !== "0"; // s16 experiment switch: K16_TS=0 turns K1280's tie spread (spreadTiesC) off
 function footBlendInto(p: Poly, px: number, py: number, k: number, t: number, out: Float64Array, loc = false): boolean {
   if (p.nseg < 2 || k < 0 || k >= p.nseg) return false;
   let moved = false;
@@ -626,7 +628,7 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
         if (ti === undefined) continue;
         footInWindowInto(rawPolys[ti], term.x, term.y, t.s - 4 * h, t.s + 4 * h, kfFootR);
         // K1247 s16: blended across a concave vertex's bisector (footBlendInto).
-        if (footBlendInto(rawPolys[ti], term.x, term.y, kfFootR[4], kfFootR[5], kfFootB)) { kfFootR[0] = kfFootB[0]; kfFootR[1] = kfFootB[1]; kfFootR[2] = kfFootB[2]; }
+        if (KF_EB && footBlendInto(rawPolys[ti], term.x, term.y, kfFootR[4], kfFootR[5], kfFootB)) { kfFootR[0] = kfFootB[0]; kfFootR[1] = kfFootB[1]; kfFootR[2] = kfFootB[2]; }
         const f = { d: kfFootR[0], x: kfFootR[1], y: kfFootR[2] };
         if (f.d < best) { best = f.d; cp = [f.x, f.y]; bestTi = ti; bestTS = t.s; }
       }
@@ -3829,7 +3831,7 @@ function setupFrame(C: FCache, st: DiagramStructure, scene: SceneIn): void {
       const tp = C.needRaw[ti] ? C.rawPolys[ti] : C.polys[ti];
       footInWindowInto(tp, term.x, term.y, t.s - 4 * h, t.s + 4 * h, kfFootW);
       // K1247 s16: blended across a concave vertex's bisector (footBlendInto).
-      if (footBlendInto(tp, term.x, term.y, kfFootW[4], kfFootW[5], kfFootB)) { kfFootW[0] = kfFootB[0]; kfFootW[1] = kfFootB[1]; kfFootW[2] = kfFootB[2]; }
+      if (KF_EB && footBlendInto(tp, term.x, term.y, kfFootW[4], kfFootW[5], kfFootB)) { kfFootW[0] = kfFootB[0]; kfFootW[1] = kfFootB[1]; kfFootW[2] = kfFootB[2]; }
       if (kfFootW[0] < best) { best = kfFootW[0]; cp = [kfFootW[1], kfFootW[2]]; }
     }
     if (Math.abs(xa.s - 0) < Math.abs(xa.s - rp.len)) exts[a.pi].start = cp;
@@ -3985,7 +3987,6 @@ function setupFrame(C: FCache, st: DiagramStructure, scene: SceneIn): void {
       if (p.closed || d < -1e-12) { if (u >= 0 && u < uB) uB = u; }
       if (d < -1e-12) continue;
       Lcut = Math.min(Lcut, d - reachOf(a.pi, e, dir) - h);
-      if (armDbg.ai === ai) armDbg.rows.push(["pass", e, d, reachOf(a.pi, e, dir), C.passTheta[a.pi][e]]);
     }
     const Lroot = L;
     L = Math.max(0, Math.min(L, Lcut));
@@ -4035,7 +4036,6 @@ function setupFrame(C: FCache, st: DiagramStructure, scene: SceneIn): void {
     }
     const k = gMax > 0 ? Math.min(4, Math.max(1, 1 / gMax)) : 4;
     const c = k * pd.uB;
-    if (armDbg.ai === pd.ai) armDbg.rows.push(["pend", gMax, k, pd.uB, c]);
     if (c < C.armLcut[pd.ai]) C.armLcut[pd.ai] = c;
     C.armL[pd.ai] = Math.max(0, Math.min(pd.Lroot, C.armLcut[pd.ai]));
     A.L = C.armL[pd.ai];
@@ -4195,6 +4195,7 @@ function spreadTiesC(B: FBord): void {
   const n = B.nb; B.bc = growF(B.bc, n > 0 ? n : 1);
   const bs = B.bs; const bc = B.bc; const bx = B.bx; const by = B.by;
   for (let i = 0; i < n; i++) bc[i] = bs[i];
+  if (!KF_TS) return;
   let i = 1;
   while (i < n - 1) {
     if (Math.abs(bs[i + 1] - bs[i]) > 1e-12) { i++; continue; }
@@ -4731,11 +4732,8 @@ function wOfC(C: FCache): number {
   if (mA <= -0.05 * h) return 0;
   const mB = marginOfC(C, kfCst.aiB, kfQb, kfCst.wCacheB);
   if (mB <= -0.05 * h) return 0;
-  if (wFacDbg.on) wFacDbg.last = [fSteep, fSlack, fRootA, fRootB, mA / h, mB / h];
   return ss01(1 + Math.min(0, mA, mB) / (0.05 * h)) * fSteep * fSlack * fRootA * fRootB;
 }
-export const wFacDbg: { on: boolean; last: number[] } = { on: false, last: [] }; // TEMP s16
-export const armDbg: { ai: number; rows: (string | number)[][] } = { ai: -1, rows: [] }; // TEMP s16
 // K1247 s5: the growth's knobs. A landing within max(0.5 |u| dd, kfJump h)
 // of the predictor is the path: a tracked foot that walks over a dent moves
 // q by 1e-3 to 6e-2 h at any step size, and the converged reference
@@ -7254,9 +7252,11 @@ function copyFoot(dst: FFoot, src: FFoot): void { dst.d = src.d; dst.x = src.x; 
 // K1247 s16: a corner arc end's foot. dst is Q (the nearest foot), or,
 // with q in a concave vertex's bisector band, footBlendInto's foot, its u
 // following its s.
-// K16_CB (experiment): "0" = the nearest foot as on master, "band" = the
-// band blend around the tracked foot, default "loc" (footBlendInto's loc).
-const KF_CB = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.K16_CB ?? "loc";
+// K16_CB (experiment): "0" (default) = the nearest foot as on master,
+// "band" = the band blend around the tracked foot, "loc" = footBlendInto's
+// loc (fixes 10 more def jump places, but moves the look at rest: K1279
+// census 42 crossings worse, cmp 670/354/134/16; s16 handoff).
+const KF_CB = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.K16_CB ?? "0";
 function blendFootC(p: Poly, qx: number, qy: number, Q: FFoot, dst: FFoot): void {
   copyFoot(dst, Q);
   if (KF_CB === "0") return;
