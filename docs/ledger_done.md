@@ -3131,3 +3131,255 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 ## K1033 (Done 2026-11-02)
 
 - **K1033** · form B names a surface by its covering pieces only (`labelBy: "cover"`, S3b F1-F2): the census reads 0 DEFECT and 0 fade on all 12 scenes (was 137 and 216). Done in 239fba3f (2026-11-02).
+
+## K403 (Done 2026-11-03)
+
+- **K403** · abbott comment stage 4, codec citation by name, K74 stage 3 sections 4.2-4.3 and handoff files. Done in cb9e6fdb (2026-11-03).
+
+## K263 (Done 2026-11-03)
+
+- **K263** · lore and K80 brief no longer cite undoAllowed (removed 2605bf6b/K534). Done in 5316c39a (2026-11-03).
+
+## K600 (Done 2026-11-03)
+
+- **K600** · gameplay-links.md gains gm key and K534 entry. Done in 6ef60f05 (2026-11-03).
+
+## K609 (Done 2026-11-03)
+
+- **K609** · pluck docs point at chain 2 key 427, rechecked live on 5585. Done in b4d15403 (2026-11-03).
+
+## K462 (Done 2026-11-03)
+
+- **K462** · K323 table and undo list updated to shipped burn rows (2026-11). Done in 7760bf01 (2026-11-03).
+
+## K1125 (Done 2026-11-03)
+
+- **K1125** · K309 control from failing (k, n) pairs (seed 4 chain 7 n 82: pre-fix 359-389 px, master 0 px) and rimSeam whole-frame diff explained as a first-capture blank frame (K156 round 2026-11-03). Done in e7ebb1c4 (2026-11-03).
+
+## K1124 (Done 2026-11-03)
+
+- **K1124** · K895 (b): installer refuses finish samples (fa39d0bd, test test/phone_pass/install_floor.test.ts); portrait A/A retaken at -Moves 0,7,11 and installed as scripts/phone_pass/noise.json (d4c1dc41). Done in d4c1dc41 (2026-11-03).
+
+## K895 (Done 2026-11-03)
+
+- **K895** · phone_pass kit (K156 round 2026-11-02): (a) the median averages at even n and (d) a phase refuses once its pass has `state/watchdog.trip` (452cf61b, test `test/phone_pass/k895.test.ts`); (c) servers and watchdog start detached through WMI (f8c7669e). (b), the A/A floor, continues as K1124. Done in f8c7669e (2026-11-03).
+
+## K1107 (Done 2026-11-03)
+
+- **K1107** · Muse batch 6: runs A-F passed their gates (2026-11-02 20:20 to 2026-11-03 00:28) and closed all 14 items (K343, K130, K495, K128, K212, K490, K787, K584, K112, K403, K263, K600, K609, K462); Levi checks K1110, K1111 and K1118. Done in b4d15403 (2026-11-03).
+
+## K368 (Done 2026-11-03)
+
+- **K368** · High contrast wears the ring. Done in 89836d3b (2026-11-03).
+
+## K1100 (Done 2026-11-03)
+
+- **K1100** · non-breaking joins in the hidden row. Done in 22b5ebab (2026-11-03).
+
+## K748 (Done 2026-11-03)
+
+- **K748** · no focus ring after a pointer click; phone pass and fragile check split out. Done in 70a1a43b (2026-11-03).
+
+## K1109 (Done 2026-11-03)
+
+- **K1109** · probed: the taps jump. Done in 977ad2f8 (2026-11-03).
+
+## K1099 (Done 2026-11-03)
+
+- **K1099** · reset snaps; jump threshold checked; follow spring to Levi. Done in 977ad2f8 (2026-11-03).
+
+## K1101 (Done 2026-11-03)
+
+- **K1101** · 119 pairs merged under one heading. Done in e5996c10 (2026-11-03).
+
+## K426 (Done 2026-11-03)
+
+- **K426** · index rows complete; scripts/lore_index_check.mjs. Done in 13906317 (2026-11-03).
+
+## K437 (Done 2026-11-03)
+
+- **K437** · rules name frame_loop.ts; half rate added. Done in 13906317 (2026-11-03).
+
+## K1108 (Done 2026-11-03)
+
+- **K1108** · Muse batch 7: runs A-F passed their gates (2026-11-03 00:29 to 03:06) and closed K368, K1100, K748, K1109, K1099, K1101, K426, K437; filed K1126, K1127, K1129 (Levi) and K1128. Done in 13906317 (2026-11-03).
+
+## K332 (Done 2026-11-03)
+
+- **K332** · key hints after the first direction press. Done in 698a2924 (2026-11-03).
+
+## K657 (Done 2026-11-03)
+
+- **K657** · win banner shows snapped and par rows. Done in 85decf22 (2026-11-03).
+
+## K1081 (Done 2026-11-03)
+
+- **K1081** · one panel rect read a frame (camera cache). Done in ac42b67a (2026-11-03).
+
+## K1082 (Done 2026-11-03)
+
+- **K1082** · incremental burn declare; fillets split out. Done in e0ec49f3 (2026-11-03).
+
+## K1115 (Done 2026-11-03)
+
+- **K1115** · one general Reset fix in row/doReset. Done in 0ad79ddc (2026-11-03).
+
+## K1131 (Done 2026-11-03)
+
+- **K1131** · Muse batch 8: K332, K657, K1081 and K1115 done, K1082's declare half; K1083 and K1133 were measured with `fw=0`, not on K1077's flow-on stand (the brief's error), so both retrace. Done in 0ad79ddc (2026-11-03).
+
+## K1134 (Done 2026-11-03)
+
+- **K1134** · Gap slots stand pat on the K1083 burn stands (cause none on 120/120 frames; 0 updates and 0 gap solves a frame, realtime and turn, on master and pre-K1082 alike), so K1077 cluster 3 does not reproduce there; solves still run per awake update (drag 287/frame) (split from K1083). Dropped: its stands were `fw=0`, which removes K1077's flow trigger; folded into K1083's retrace (the drag stand's re-solve per awake update is expected: the geometry moves) (2026-11-03).
+
+## K1110 (Done 2026-11-03)
+
+- **K1110** · Levi heard the snore on the phone's first touch (2026-11-03: 'The snore sound is good'). Done in 2b539fc8 (2026-11-03).
+
+## K1083 (Done 2026-11-03)
+
+- **K1083** · retraced with the flow on: no realtime extra. Done in 0451032c (2026-11-03).
+
+## K1135 (Done 2026-11-03)
+
+- **K1135** · behavior test on a real Pane, plus a warn-once. Done in d18d0be3 (2026-11-03).
+
+## K1111 (Done 2026-11-03)
+
+- **K1111** · Levi 2026-11-03: the finer-step sliders feel right ("Pulse reach is good"; "Settle params are probably good for now"). Done in 9e617d7a (2026-11-03).
+
+## K1118 (Done 2026-11-03)
+
+- **K1118** · Levi 2026-11-03: Motion follows across tabs without a reload. Done in 758dfe1e (2026-11-03).
+
+## K1129 (Done 2026-11-03)
+
+- **K1129** · With Reduced motion on and the camera following the player, the view still glides after every move. Dropped: Levi 2026-11-03: "camera glide with reduced motion is fine", so the view keeps gliding (2026-11-03).
+
+## K1137 (Done 2026-11-03)
+
+- **K1137** · Muse batch 9: A, K1132's key-hint pictures; B, K1083 closed and K1133 kept open on the flow-on retrace; C, K1135's Reset test; D, batch 10's draft (K1141). Done in ff87d810 (2026-11-03).
+
+## K1141 (Done 2026-11-03)
+
+- **K1141** · Muse batch 10: A, K1138's backdrop tuning (6aa02f19; the slider's top waits on Levi); B, batch 11's draft, reviewed into K1146 with its Run B dropped. Done in 39d47cce (2026-11-03).
+
+## K1142 (Done 2026-11-03)
+
+- **K1142** · Phone kit guard: one shared read-only readiness check (`scripts/phone_pass/phone_ready.mjs`: screen on, unlocked, the launcher in front, 120 s without a touch) that every tracked phone runner calls before opening anything. Done in d773eb10 (2026-11-03).
+
+## K234 (Done 2026-11-03)
+
+- **K234** · `scripts/phone_pass.ps1`'s `-Phase check` and `-WaitReady` called a phone in use ready: K1142's shared check (`scripts/phone_pass/phone_ready.mjs`) now needs the launcher in front and 120 s without a touch. Done in d773eb10 (2026-11-03).
+
+## K804 (Done 2026-11-03)
+
+- **K804** · beat indicator dropdown: pulse and ring at the dot; dots split out. Done in 4f6ff982 (2026-11-03).
+
+## K1146 (Done 2026-11-03)
+
+- **K1146** · Muse batch 11: K252 (a), the pan range's ease by time (0bbdc36b); K144's accounts doc (61a24a82); K804's beat ring (4f6ff982); K207's fog dedupe, partial (16b1c56f); K688's healing-cuts doc (182cfc8d). Done in 55df4231 (2026-11-03).
+
+## K202 (Done 2026-11-03)
+
+- **K202** · an unstarted floating daily rolls to the new day at midnight. Done in 20ee92c0 (2026-11-03).
+
+## K201 (Done 2026-11-03)
+
+- **K201** · the Played chip counts the tile's days; a practice row shows its count. Done in 9cf52379 (2026-11-03).
+
+## K125 (Done 2026-11-03)
+
+- **K125** · Scarborough Fair loops on whole bars (closing rest 3). Done in 26455925 (2026-11-03).
+
+## K165 (Done 2026-11-03)
+
+- **K165** · a halted load keeps its HALTED stamp; the load wall clock split out. Done in 0efcead7 (2026-11-03).
+
+## K170 (Done 2026-11-03)
+
+- **K170** · scripts/phone.ps1 wakes the phone only under -Wake. Done in 620ddf93 (2026-11-03).
+
+## K308 (Done 2026-11-03)
+
+- **K308** · the contours' fifth line counts exactly (integer-corrected). Done in cd1f0087 (2026-11-03).
+
+## K1153 (Done 2026-11-03)
+
+- **K1153** · Muse batch 12: K202's midnight rollover (20ee92c0); K201's Played chip (9cf52379); K125's whole bars (26455925); K165 (a)'s HALTED stamp (0efcead7, K1154 split off); K170's opt-in wake (620ddf93); K308's exact fifth contour (cd1f0087). Done in 57b60232 (2026-11-03).
+
+## K1152 (Done 2026-11-03)
+
+- **K1152** · phone_ready.mjs states its check in its own words (no deleted file, no rebased hash). Done in 1bb70ac1 (2026-11-03).
+
+## K1148 (Done 2026-11-03)
+
+- **K1148** · --ready guards bench_frame --cdp, k923 sync --target phone and close_tabs; the adb fold split out. Done in 1bb70ac1 (2026-11-03).
+
+## K1155 (Done 2026-11-03)
+
+- **K1155** · scripts/phone.ps1 finds the phone among online android peers; -TailscaleHost is the override, default empty. Done in 2e188c47 (2026-11-03).
+
+## K1154 (Done 2026-11-03)
+
+- **K1154** · the physics-off load's wall cap and reported time count visible time (both hosts). Done in 746284a4 (2026-11-03).
+
+## K351 (Done 2026-11-03)
+
+- **K351** · the panel inventory's Read by follows url_state's *Of builders. Done in 0a16e218 (2026-11-03).
+
+## K685 (Done 2026-11-03)
+
+- **K685** · a respawn into stranded or out of strokes shows its banner without a tap. Done in 630da3c0 (2026-11-03).
+
+## K1156 (Done 2026-11-03)
+
+- **K1156** · Muse batch 13: B K1152+K1148 (1bb70ac1), C K1155 (2e188c47), D K1154 (746284a4), E K351 (0a16e218), F K392's seam half (e611bc2e), G K685 (630da3c0); all reviewed. Done in b3ca3046 (2026-11-03).
+
+## K1160 (Done 2026-11-03)
+
+- **K1160** · scripts/phone_pass.ps1 finds the phone among online android peers; -TailscaleHost is the override, default empty. Done in 0904b7ce (2026-11-03).
+
+## K1159 (Done 2026-11-03)
+
+- **K1159** · adb lookup folded into phone_ready.mjs (findAdb picker); phone_pass.ps1 delegates with --find-adb; phone.ps1's own lookup left beside them. Done in 0904b7ce (2026-11-03).
+
+## K710 (Done 2026-11-03)
+
+- **K710** · a real-time catch (and an extra's, and the sword's touch) cannot land through a broken run; contact counts tails but not broken runs. Done in 4b347cad (2026-11-03).
+
+## K1161 (Done 2026-11-03)
+
+- **K1161** · Muse batch 14: runs B-F landed K1160+K1159, K710, K711 (c), K732's desktop half and K740's first gap. Done in e11beadd (2026-11-03).
+
+## K1114 (Done 2026-11-03)
+
+- **K1114** · S1i: corner rounding back at the junction roots (rootBand 0.5). Done in 8b436272 (2026-11-03).
+
+## K1138 (Done 2026-11-03)
+
+- **K1138** · The backdrop speed slider tops out at 16x (Levi's call, 2026-11-03). Done in 56e6262f (2026-11-03).
+
+## K628 (Done 2026-11-03)
+
+- **K628** · Confetti (Levi 2026-11-03): the finish spray throws no streamers (as built); GPU confetti (K579) goes after K318 stage 1, where it is queued. Done in this commit (2026-11-03).
+
+## K1164 (Done 2026-11-03)
+
+- **K1164** · Master's history rewritten without the device addresses (force-pushed 2026-11-03; 2,456 commits from 7645fe67 on) and 3,823 quoted SHAs remapped; the old history is mirrored in ~/Backups, the map is `.claude/probes/K1164/commit-map`; leftovers K1166, K1167. Done in 82aa5072 (2026-11-03).
+
+## K1170 (Done 2026-11-03)
+
+- **K1170** · The key hints show the d-pad button that takes each run (Levi 2026-11-03: the arrows point along the runs, mostly diagonals no pad button presses; `hintMap` picks the smallest err). Done in 81081ab9 (2026-11-03).
+
+## K778 (Done 2026-11-03)
+
+- **K778** · an Undo button in the HUD's rules row; ruleUndos 0-5 (default 1) sets how many a run gets; the Stranded banner's Undo unchanged. Done in 82537593 (2026-11-03).
+
+## K1158 (Done 2026-11-03)
+
+- **K1158** · K1040's label pass keeps GL state from Pixi's tracking, without draw()'s queries (S3f step 1). Done in 1aac725b (2026-11-03).
+
+## K1132 (Done 2026-11-03)
+
+- **K1132** · key hints (the d-pad button that takes each run, K1170) sit out past the head marker; the reach placement and __knotKeyHintPlace are gone. Done in 415d131f (2026-11-03).
