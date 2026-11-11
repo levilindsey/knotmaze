@@ -4445,7 +4445,6 @@ function cutFoldsC(C: FCache, pi: number, sig: number, B: FBord): void {
         if (C.crossAPi[xi] === C.crossBPi[xi] && Math.abs(dS(p, C.passS[pi][e], sb)) < h) nearKink = true;
       }
       if (nearKink) continue;
-      { const ks = (globalThis as unknown as { process?: { env: Record<string, string | undefined> } }).process?.env.K6SKIP; if (ks && ks.split(",").some((e) => { const [a, b] = e.split(":").map(Number); return a === pi && Math.abs(sb - b) < 0.2; })) continue; } // K6TMP
       let i0 = -1; let i1 = -1; let nIdx = 0;
       for (let i = 0; i < m; i++) if (Math.abs(dS(p, sb, B.ps[seq[i]])) <= 2.5 * h) { if (i0 < 0) i0 = i; i1 = i; nIdx++; }
       if (nIdx < 3) continue;
@@ -7709,10 +7708,8 @@ function tailAlphaAt(a: TailIn, x: number, y: number, keyE: number, side: boolea
   const m = keyE - (a.zX(sF) - (a.zt * dF) / h);
   let t = a.zt > 0 ? (m + a.zt) / (2 * a.zt) : m > 0 ? 1 : 0; t = t < 0 ? 0 : t > 1 ? 1 : t;
   const al = 1 - g * (1 - (1 - ramp) * t * t * (3 - 2 * t));
-  if (TPROBE.on) TPROBE.rec.push(x, y, g, ramp, t, al, side ? 1 : 0, a.pE, a.pX, dF, sF);
   return side && g < 1 ? (1 - ramp) * al : al;
 }
-export const TPROBE = { on: false, rec: [] as number[] };
 /** K1283 s3: where a tail is drawn. Stage 2 drew it at alpha 1 and cut it at
  *  ramp 0.5 and a depth margin of 0.4 zt (form B's burial is soft: tie alpha
  *  0.5 at margin 0); the tail now carries form B's alpha (tailAlpha), so it
