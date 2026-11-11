@@ -77,20 +77,30 @@ export const CAP_M = 17;
 export const ARC_K = 16;
 /** Tail resolution: above outline.ts's TAIL_N + 2 points, so a tail is never dense. */
 export const TAIL_M = 24;
+/** K1283 s4: rim points of an end arm's round end (DiskItem). */
+export const DISK_M = 32;
 
 export interface StripItem { kind: "strip"; iv: number; pi: number; ghost: boolean; N: number; base: number; pL: number; pR: number }
 export interface CapItem { kind: "cap"; pi: number; piece: number; atEnd: boolean; base: number }
 /** jItem / arm: the junction item and its arm index (its end arm) whose fan the tail lies over; -1 if none. */
 export interface TailItem { kind: "tail"; pi: number; piece: number; base: number; jItem: number; arm: number }
+/** K1283 s4: an end arm's round end, form B's disk of radius h about the
+ *  junction's centre: a hub keyed z_E(s_E) and DISK_M rim points keyed
+ *  z_E(s_E) - zt, so its key is form B's cone key z - d zt / h and the seam
+ *  against the through chain curves where the two cone keys meet. Every end
+ *  arm gets one, decided here once; a frame moves its points only. Its
+ *  paint is the tail's: the fan's where it lies over the fan, its own arm's
+ *  slot at s_E elsewhere. */
+export interface DiskItem { kind: "disk"; pi: number; ai: number; base: number; jItem: number; arm: number }
 /** `strip`: the item index of the arm's strip (-1: none), whose end row at
  *  `atStart` is the arm's P, M, N. */
 export interface JArm { ai: number; pi: number; ei: number; pN: number; pP: number; atStart: boolean; corner: number; strip: number }
 export interface JuncItem { kind: "junc"; ji: number; owner: number; arms: JArm[]; base: number; R: number }
-export type FillItem = StripItem | CapItem | TailItem | JuncItem;
+export type FillItem = StripItem | CapItem | TailItem | JuncItem | DiskItem;
 
 /** Vertices an item owns, from `base`. */
 export function itemVerts(it: FillItem): number {
-  return it.kind === "strip" ? 3 * (it.N + 1) : it.kind === "cap" ? CAP_M + 1 : it.kind === "tail" ? 2 * (TAIL_M + 1) : 1 + it.R;
+  return it.kind === "strip" ? 3 * (it.N + 1) : it.kind === "cap" ? CAP_M + 1 : it.kind === "tail" ? 2 * (TAIL_M + 1) : it.kind === "disk" ? DISK_M + 1 : 1 + it.R;
 }
 
 export interface FillStructure {
@@ -264,6 +274,18 @@ export function fillStructure(st: DiagramStructure, res: Int32Array): FillStruct
     const L = c ? jOfArm.get(d.interval ? c.bArm : c.aArm) : undefined;
     if (L && L[1] < SLOTS) { it.jItem = L[0]; it.arm = L[1]; }
   }
+  // 6. K1283 s4: round ends, one per end arm, after the fans (an exact key
+  // tie goes to the later triangle: the end chain's own disk).
+  st.arms.forEach((a, ai) => {
+    if (a.kind !== "end") return;
+    const base = nV;
+    for (let i = 0; i <= DISK_M; i++) { vChain.push(a.pi); vW.push(1, 0, 0, 0); }
+    nV += DISK_M + 1;
+    for (let i = 0; i < DISK_M; i++) idx.push(base, base + 1 + i, base + 1 + ((i + 1) % DISK_M));
+    const L = jOfArm.get(ai);
+    const inJ = !!L && L[1] < SLOTS;
+    items.push({ kind: "disk", pi: a.pi, ai, base, jItem: inJ && L ? L[0] : -1, arm: inJ && L ? L[1] : -1 });
+  });
   return { nV, idx: Uint32Array.from(idx), vChain: Int32Array.from(vChain), items, missingArmEnds: missing, vW: Float32Array.from(vW) };
 }
 
@@ -305,9 +327,9 @@ export function fillRuns(fs: FillStructure, st: DiagramStructure, fr0: FillFrame
     const r = runAt(sp, it.pi, sMid);
     for (let v = it.base; v < it.base + n; v++) run[SLOTS * v] = r;
   }
-  // K1278 s2: a tail at a junction carries the fan's runs, slot for slot.
+  // K1278 s2: a tail (K1283 s4: and a round end) at a junction carries the fan's runs, slot for slot.
   for (const it of fs.items) {
-    if (it.kind !== "tail" || it.jItem < 0) continue;
+    if ((it.kind !== "tail" && it.kind !== "disk") || it.jItem < 0) continue;
     const hb = (fs.items[it.jItem] as JuncItem).base;
     for (let v = it.base; v < it.base + itemVerts(it); v++) for (let k = 0; k < SLOTS; k++) run[SLOTS * v + k] = run[SLOTS * hb + k];
   }
@@ -544,6 +566,16 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
         s4[SLOTS * (it.base + i)] = s4[SLOTS * (it.base + W + i)] = p.s0 + (dsT * i) / TAIL_M;
         across[it.base + i] = 1;
       }
+    } else if (it.kind === "disk") {
+      const a = st.arms[it.ai]; const J = a ? scene.junctions[a.ji] : undefined;
+      const sE = armSOf(it.ai); const z = zAt(it.pi, sE); const hD = table.h;
+      if (!J) { for (let i = 0; i <= DISK_M; i++) set(it.base + i, 0, 0, -1e3, sE); continue; }
+      set(it.base, J.c[0], J.c[1], z, sE); s4[SLOTS * it.base] = sE;
+      for (let i = 0; i < DISK_M; i++) {
+        const an = (2 * Math.PI * i) / DISK_M;
+        set(it.base + 1 + i, J.c[0] + hD * Math.cos(an), J.c[1] + hD * Math.sin(an), z - zt, sE);
+        s4[SLOTS * (it.base + 1 + i)] = sE; across[it.base + 1 + i] = 1;
+      }
     } else if (it.kind === "cap") {
       const p = table.pieces[it.piece];
       const rim = new Float64Array(2 * CAP_M);
@@ -655,7 +687,7 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
   // fan takes the fan's weights and s there (barycentric over the fan
   // triangle under it); one off the fan keeps its own s, on its arm's slot.
   for (const it of fs.items) {
-    if (it.kind !== "tail" || it.jItem < 0) continue;
+    if ((it.kind !== "tail" && it.kind !== "disk") || it.jItem < 0) continue;
     const J = fs.items[it.jItem] as JuncItem; const h = J.base; const R = J.R;
     let x0 = Infinity; let y0 = Infinity; let x1 = -Infinity; let y1 = -Infinity;
     for (let v = h; v <= h + R; v++) { x0 = Math.min(x0, pos[2 * v]); x1 = Math.max(x1, pos[2 * v]); y0 = Math.min(y0, pos[2 * v + 1]); y1 = Math.max(y1, pos[2 * v + 1]); }
