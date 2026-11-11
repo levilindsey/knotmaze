@@ -4459,6 +4459,11 @@ async function main(): Promise<void> {
     },
   });
 
+  // K1240 S4: a probe's camera on a world spot: (x, y) at the screen's
+  // centre at s CSS px per world unit (taken as asked: the peek tween's
+  // free placement, no clamp).
+  (window as unknown as Record<string, unknown>).__knotLookAt = (x: number, y: number, s: number): void =>
+    placeWorldAt(x, y, app.screen.width / 2, app.screen.height / 2, s, true);
   // The probe hooks (window.__knot*): src/app/probe_hooks.ts.
   installProbeHooks({
     scene,

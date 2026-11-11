@@ -207,24 +207,31 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
   // canvas); with the flag off only this check runs.
   // K1040 S4b: with `fieldBand` the same slot runs form B's passes
   // (src/render/field/field_b_app.ts) instead; a flip swaps the two.
+  // K1240 S4: with the link flag `rp=outline` the same slot runs the
+  // redesign (src/render/outline/outline_app.ts) in every look.
   let labelApp: { frame(): void; after(): void; dispose(): void } | null = null;
-  let labelKind: "label" | "field" | null = null;
+  let labelKind: "label" | "field" | "outline" | null = null;
   let labelLoading = false;
+  const outlineFlag =
+    typeof location !== "undefined" && new URLSearchParams(location.search).get("rp") === "outline";
   const labelFrame = (): void => {
     const r = scene.renderer;
-    const kind = params.fieldBand ? "field" : "label";
-    if (!r || r.threadLook !== 1 || !r.labelInk || (labelApp && labelKind !== kind)) {
+    const kind = outlineFlag ? "outline" : params.fieldBand ? "field" : "label";
+    const on = !!r && (outlineFlag || (r.threadLook === 1 && r.labelInk));
+    if (!on || (labelApp && labelKind !== kind)) {
       labelApp?.dispose();
       labelApp = null;
       labelKind = null;
-      if (!r || r.threadLook !== 1 || !r.labelInk) return;
+      if (!on) return;
     }
     if (labelApp) labelApp.frame();
     else if (!labelLoading) {
       labelLoading = true;
       const ctx = { scene, app, root, params, host, physicsTuning };
       const again = (): void => flags.push(Flag.GEOM);
-      const load = kind === "field"
+      const load = kind === "outline"
+        ? import("../render/outline/outline_app").then((m) => m.createOutlineApp(ctx, again))
+        : kind === "field"
         ? import("../render/field/field_b_app").then((m) => m.createFieldBApp(ctx, again))
         : import("../render/label/label_app").then((m) => m.createLabelApp(ctx, again));
       load
