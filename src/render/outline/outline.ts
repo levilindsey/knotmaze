@@ -4367,12 +4367,13 @@ let cfS2 = new Float64Array(16);
 const CF_S2 = true;
 // K1283 s8: bsm is the meet's s (borderMeetC, cutMirrorS, meetSegsOf, the station insert); bs is
 // everything else's (the paint's piece walk via bc/sc, the tie spread, the gap searches). On, the
-// chevron's bs is interpolated too (bs = bsm, de5fe023). Off (kept), bs keeps the flat s1 of
-// before s8: g41_user_tw64's seams 532 -> 445 (strip|strip 112 -> 27, master's),
-// j59 kept (sweep 834), but muse_hash gains a junc|strip cluster at (22.5, 34.0) (+29: piece
-// 1027, chain 75, starts at its station's flat s 16.380 where the mouth reads 16.594). Seam
-// 5773 -> 5675 over 1/255; K1283_s8.md's handoff has the rest.
-const CF_S2_PAINT = false;
+// chevron's bs is interpolated too (bs = bsm, de5fe023's outputs; kept). Off (7d0ae1a0), bs keeps
+// the flat s1 of before s8: seam 5773 -> 5675 over 1/255 (g41_user_tw64 532 -> 445, strip|strip
+// 112 -> 27, master's) and j59 kept (sweep 834), but colour ROUND ENDS 31789 -> 31926 (bar
+// 31891), g41_user_tw64's j8/j9 sweep strays come back, and muse_hash gains a junc|strip cluster
+// at (22.5, 34.0) (+29: piece 1027, chain 75, starts at its station's flat s 16.380 where the
+// mouth reads 16.594). K1283_s8.md's handoff has the rest.
+const CF_S2_PAINT = true;
 /** The inward unit normal of a border leg along (dx, dy): sig (ty, -tx). */
 function foldNormal(dx: number, dy: number, sig: number, out: Float64Array, o: number): void {
   const l = Math.sqrt(dx * dx + dy * dy) || 1;
