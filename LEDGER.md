@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1292.
+Next free ID: K1293.
 
 ## Waiting on Levi
 
@@ -506,7 +506,7 @@ Next free ID: K1292.
   - owner: nobody since 2026-11-10 15:10 (merged; agent `a45a644b0bf24dfee` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
   - branch: mainline; last commit: `f5761d43`
   - evidence: .claude/probes/K1240/proto/ (outline.ts, k1247s17_* tools); .claude/probes/K1240/out/s17/ (untracked)
-  - next: Stage 17 merged: junction arms matched to frame 0's order by edge identity (K17_JA) and chain buffers with room to double (K17_CAP); jumps def 18 -> 15, muse_hash 34 -> 17, fat 0; every bar equals master's (no change at rest). The continuity work left (corner foot, j176, j35, muse_hash's places, K1288) is K1281's. Speed: about 21 ms on def, not lowered since stage 10; next is the forward-placement experiment, then S4's Pixel timing (K1240)
+  - next: Stage 17 merged: junction arms matched to frame 0's order by edge identity (K17_JA) and chain buffers with room to double (K17_CAP); jumps def 18 -> 15, muse_hash 34 -> 17, fat 0; every bar equals master's (no change at rest). The continuity work left (corner foot, j176, j35, muse_hash's places, K1288) is K1281's. Speed: K1290's forward placement made it slower (not adopted). The outline now runs in the app's outline worker (K1240 S4b, 8d56f5c0): 117 ms p50 a def frame (frame 34, zChains 17, fill 21, paint 5, band 38), and that sets how far the outline lags the physics. Next cuts in src/render/outline/: the band's foot search and slots, zChains, the fill, or a second worker for the draw data; after K1283 and K1278 stage 2 free those files
   - brief: `docs/design/K1247_s17_feet.md`
 - **K1278** · Paint on the outline must blend seamlessly across junctions (Levi 2026-11-10): colour per pixel
   from fields continuous across faces, triangles and junctions (chain + s, per-arm weights easing to an exact
@@ -516,7 +516,7 @@ Next free ID: K1292.
   - owner: nobody since 2026-11-10 11:23 (merged; agent `abbdf5d7bf1c88649` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
   - branch: mainline; last commit: `9f6a38f2`
   - evidence: .claude/probes/K1240/proto/ (draw.ts, fill_tri.ts, k1278_* tools); .claude/probes/K1240/out/k1278/ (untracked)
-  - next: Stage 1 merged (Claude viewed the crops): the fill paints section colours per pixel from per-vertex run/weight/s slots fixed at structure; a junction hands off by corner arc length (smoothstep). Edge seams over 1/255 34045 -> 41 (app), junction windows steppier than form B 650 -> 7; colour at the six end-arm slivers matches form B; K1277's bars hold. Next: stage 2 = an end-arm fan's per-pixel round-end term (x14: form B's hard edge), the across upload in draw.ts, then the pulses (K1250); the handoff in the brief lists the rest. Stage 2 lands in src/ once K1240 S4 has ported the paint
+  - next: Stage 1 merged (Claude viewed the crops): the fill paints section colours per pixel from per-vertex run/weight/s slots fixed at structure; a junction hands off by corner arc length (smoothstep). Edge seams over 1/255 34045 -> 41 (app), junction windows steppier than form B 650 -> 7; colour at the six end-arm slivers matches form B; K1277's bars hold. Next: stage 2 = an end-arm fan's per-pixel round-end term (x14: form B's hard edge), the across upload in draw.ts, then the pulses (K1250); the handoff in the brief lists the rest. Stage 2 lands in src/ (ported in 8d56f5c0). It also takes the strips across junction mouths (def_j156, def_j16; the prototype draws them too: .claude/probes/K1240/out/s4/crops/def_j156_proto_vs_app.png, def_j16.png) and the hard colour wedges at muse_j150
   - brief: `docs/design/K1278_paint.md`
 
 ## Next, in order
@@ -1774,6 +1774,8 @@ Every other item below waits on the trigger it names.
   (23.218, 26.683) reaches 79/255; thin striped slivers at hub edges show in
   out/k1278/crops/k1278_worst_junctions.png; 7 junction windows steppier than form B; the paint's thread term
   is worse than master at 24 crossings (muse_hash x71, x149; g41_def_tw64 x191, x71)
+- **K1292** · k1240s4_crops (K1240 S4) steps to sim 40 a substep apart from run to run, so g41_ring_tw64 reads
+  two physics hashes (a4b8c1bf, ea67fc77); step a fixed substep count (.claude/probes/K1240/s4/)
 
 ## Approved, to schedule (2026-10-11)
 
