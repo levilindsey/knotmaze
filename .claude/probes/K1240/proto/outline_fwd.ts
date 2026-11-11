@@ -7448,14 +7448,30 @@ const fwNx = new Float64Array(FWM); const fwNy = new Float64Array(FWM); const fw
  *  "0" = the first version's 48-step bisection with trig per evaluation. */
 let FWD_FAST = (K1290_E.K1290_FAST ?? "1") !== "0";
 export function fwdSetFast(on: boolean): void { FWD_FAST = on; }
+/** K1290_SMOOTH=1: the window's normal turns on a smoothstep (C1 normal
+ *  field, so f' is continuous across window edges); 0: a linear ramp. */
+const FWD_SMOOTH = K1290_E.K1290_SMOOTH === "1";
+function fwRamp(x: number): number { return FWD_SMOOTH ? x * x * (3 - 2 * x) : x; }
+/** K1290_PICK=soft: the end's s is a weighted mean over the distance minima
+ *  (g > 0, not fan roots), weight |f'(s_i)| / (|f'(s_i)| + KAP) *
+ *  exp(-(d_i - d_min) / (TAU h)). |f'| vanishes where a root pair is born or
+ *  dies, so roots enter and leave the mean with zero weight; near-equal
+ *  minima (the concentric case) share it instead of one winning. A fan root
+ *  that outweighs every other minimum is taken alone (discrete). */
+const FWD_TAU = Number(K1290_E.K1290_TAU ?? "0.005");
+const FWD_KAP = Number(K1290_E.K1290_KAP ?? "0.05");
+const FWR = 32;
+const fwRs = new Float64Array(FWR); const fwRd = new Float64Array(FWR); const fwRw = new Float64Array(FWR);
+const fwRm = new Int32Array(FWR); const fwRf = new Int32Array(FWR);
+let fwRn = 0;
 // Normal angle and centre at local s (unwrapped), on local segment m.
 const fwOut = new Float64Array(3);
 function fwEval(m: number, s: number): number {
   const t = s - fwSs[m];
   const cx = fwAx[m] + fwUx[m] * t; const cy = fwAy[m] + fwUy[m] * t;
   let th = fwTh[m];
-  if (m > 0 && fwW[m] > 0 && t < fwW[m]) th = fwTh[m - 1] + (fwAl[m] * (t + fwW[m])) / (2 * fwW[m]);
-  else if (m + 1 < fwM && fwW[m + 1] > 0 && fwL[m] - t < fwW[m + 1]) th = fwTh[m] + (fwAl[m + 1] * (t - (fwL[m] - fwW[m + 1]))) / (2 * fwW[m + 1]);
+  if (m > 0 && fwW[m] > 0 && t < fwW[m]) th = FWD_SMOOTH ? fwTh[m - 1] + fwAl[m] * fwRamp((t + fwW[m]) / (2 * fwW[m])) : fwTh[m - 1] + (fwAl[m] * (t + fwW[m])) / (2 * fwW[m]);
+  else if (m + 1 < fwM && fwW[m + 1] > 0 && fwL[m] - t < fwW[m + 1]) th = FWD_SMOOTH ? fwTh[m] + fwAl[m + 1] * fwRamp((t - (fwL[m] - fwW[m + 1])) / (2 * fwW[m + 1])) : fwTh[m] + (fwAl[m + 1] * (t - (fwL[m] - fwW[m + 1]))) / (2 * fwW[m + 1]);
   fwOut[0] = cx; fwOut[1] = cy; fwOut[2] = th;
   // Outside a window the normal is the segment's own, its cos/sin computed
   // once per call (bit-identical to the per-eval trig).
@@ -7518,8 +7534,22 @@ function fwdFootC(p: Poly, sig: number, h: number, qx: number, qy: number, Q: FF
   if (dbg) console.log(`  fwd Q (${qx.toFixed(4)},${qy.toFixed(4)}) sig ${sig} k0 ${k0} jlo ${jlo} W ${Array.from(fwW.subarray(0, fwM + 1), (w) => w.toFixed(3)).join(" ")} cc ${Array.from(fwCc.subarray(0, fwM + 1)).join("")}`);
   const pickNear = FWD_PICK === "near" && dir !== 0;
   const pickAnchor = FWD_PICK === "anchor";
+  const pickSoft = FWD_PICK === "soft"; fwRn = 0;
   const consider = (m: number, s: number, fanV: number, isMin = true): void => {
     if (pickNear && !isMin) return;
+    if (pickSoft) {
+      if (!isMin || fwRn >= FWR) return;
+      let dd: number; let wf = 1;
+      if (fanV >= 0) { const vx = fwAx[fanV]; const vy = fwAy[fanV]; dd = Math.sqrt((qx - vx) * (qx - vx) + (qy - vy) * (qy - vy)); }
+      else {
+        fwEval(m, s); dd = fwG(); if (!(dd > 0)) return;
+        const e = 1e-6; const fp = Math.abs(fwEval(m, s + e) - fwEval(m, s - e)) / (2 * e);
+        wf = fp / (fp + FWD_KAP);
+      }
+      if (dbg) console.log(`   soft m${m} j${fwJ[m]} s ${s.toFixed(5)} fan ${fanV} d ${dd.toFixed(5)} wf ${wf.toFixed(4)}`);
+      fwRs[fwRn] = s; fwRd[fwRn] = dd; fwRw[fwRn] = wf; fwRm[fwRn] = m; fwRf[fwRn] = fanV; fwRn++;
+      return;
+    }
     let d: number;
     if (fanV >= 0) {
       const vx = fwAx[fanV]; const vy = fwAy[fanV];
@@ -7588,6 +7618,21 @@ function fwdFootC(p: Poly, sig: number, h: number, qx: number, qy: number, Q: FF
       const fl = fwEval(m - 1, fwSs[m]); const gl = fwG();
       const fr = fwEval(m, fwSs[m]); const gr = fwG();
       if ((fl > 0) !== (fr > 0) && (gl > 0 || gr > 0)) consider(m, fwSs[m], m);
+    }
+  }
+  if (pickSoft && fwRn > 0) {
+    let dMin = Infinity; for (let i = 0; i < fwRn; i++) if (fwRd[i] < dMin) dMin = fwRd[i];
+    const tau = FWD_TAU * h;
+    let bw = -1; let bi = 0; let sw = 0; let ss = 0;
+    for (let i = 0; i < fwRn; i++) {
+      const w = fwRw[i] * Math.exp(-(fwRd[i] - dMin) / tau); fwRw[i] = w;
+      if (w > bw) { bw = w; bi = i; }
+      if (fwRf[i] < 0) { sw += w; ss += w * fwRs[i]; }
+    }
+    if (fwRf[bi] >= 0 || !(sw > 0)) { bS = fwRs[bi]; bM = fwRm[bi]; bFan = fwRf[bi]; }
+    else {
+      bS = ss / sw; bFan = -1; bM = fwM - 1;
+      for (let m2 = 0; m2 < fwM; m2++) if (bS < fwSs[m2 + 1]) { bM = m2; break; }
     }
   }
   if (dbg) console.log(`   -> m ${bM} fan ${bFan}`);
