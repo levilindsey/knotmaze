@@ -27,6 +27,8 @@ export interface OutlineReply {
   ms: number;
   structureMs: number;
   frameMs: number;
+  /** The last frame's parts (OutlineModel.parts). */
+  parts: { frame: number; zChains: number; fill: number; paint: number; band: number } | null;
   idx: Uint32Array | null;
   run: Int32Array | null;
   pos: Float32Array;
@@ -103,6 +105,7 @@ scope.onmessage = (e: MessageEvent<OutlineRequest>): void => {
       ms: performance.now() - t0,
       structureMs: m.structureMs,
       frameMs: restructured ? 0 : m.frameMs,
+      parts: restructured ? null : m.parts,
       idx: restructured ? pd.idx.slice() : null,
       run: restructured ? pd.run.slice() : null,
       pos: pd.pos.slice(),

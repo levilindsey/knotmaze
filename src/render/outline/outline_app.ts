@@ -479,6 +479,11 @@ export function createOutlineApp(ctx: SceneExportCtx, requestFrame: () => void):
     triangles: 0,
     chains: 0,
     key: "",
+    /** The last frame's parts in the worker (OutlineModel.parts). */
+    parts: null as { frame: number; zChains: number; fill: number; paint: number; band: number } | null,
+    /** The last 512 replies' [frame, round trip, upload, then parts in OutlineModel.parts order] ms and draws' ms, for medians (K1240 S4b). */
+    replyMs: [] as number[][],
+    drawMsLog: [] as number[],
     /** Each restructure: when (performance.now ms), why (the worker's cause), its worker ms. */
     rebuilds: [] as { at: number; cause: string; ms: number }[],
   };
@@ -621,7 +626,13 @@ export function createOutlineApp(ctx: SceneExportCtx, requestFrame: () => void):
       }
       stats.workerMs = r.ms;
       stats.structureMs = r.structureMs;
-      if (!r.restructured) stats.frameMs = r.frameMs;
+      if (!r.restructured) {
+        stats.frameMs = r.frameMs;
+        stats.parts = r.parts;
+        const p = r.parts;
+        stats.replyMs.push([r.frameMs, stats.roundTripMs, stats.uploadMs, p?.frame ?? 0, p?.zChains ?? 0, p?.fill ?? 0, p?.paint ?? 0, p?.band ?? 0]);
+        if (stats.replyMs.length > 512) stats.replyMs.shift();
+      }
       stats.bandCount = r.bandCount;
       stats.triangles = pass.nIdx / 3;
       stats.key = r.key.length > 64 ? `${r.key.slice(0, 64)}...` : r.key;
@@ -689,6 +700,8 @@ export function createOutlineApp(ctx: SceneExportCtx, requestFrame: () => void):
         pass.draw(cam.mat, cam.w, cam.h);
         host?.restore();
         stats.drawMs = performance.now() - t0;
+      stats.drawMsLog.push(stats.drawMs);
+      if (stats.drawMsLog.length > 512) stats.drawMsLog.shift();
         stats.draws++;
         dirty = false;
         camKey = cam.key;

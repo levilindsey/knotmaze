@@ -68,10 +68,17 @@ try {
         return { t1, hash: d1.hashes.all, frozenHash: d2.hashes.all };
       }, SIM_T);
       rec.hashOk = rec.step.hash === sc.hash && rec.step.frozenHash === sc.hash;
-      // Hide the chrome: everything but the app's canvas.
-      await page.evaluate(() => {
-        const cs = [...document.querySelectorAll("canvas")];
-        const c = cs.reduce((a, b) => (b.width * b.height > a.width * a.height ? b : a));
+      // Hide the chrome: everything but the app's canvas. The app's canvas
+      // is scripts/export_scene.mjs's: the largest on screen by bounding
+      // rect, never the loader's (same size; ties go to the later one). By
+      // backing-store size the field's canvas won and fbb came out white.
+      rec.canvas = await page.evaluate(() => {
+        let c = null; let area = -1;
+        for (const k of document.querySelectorAll("canvas")) {
+          if (k.id === "knot-loading-canvas") continue;
+          const r = k.getBoundingClientRect();
+          if (r.width * r.height >= area) { area = r.width * r.height; c = k; }
+        }
         c.setAttribute("data-k1240-main", "1");
         const st = document.createElement("style");
         st.textContent = "body * { visibility: hidden !important; } canvas[data-k1240-main] { visibility: visible !important; }";

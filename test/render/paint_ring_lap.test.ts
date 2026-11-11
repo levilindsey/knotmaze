@@ -360,6 +360,12 @@ const ROUNDED_QUOTIENTS: Record<string, [number, string]> = {
   // grid line, where p's own float32 rounding already picks the cell; one
   // off there moves the list's edge by an ulp, not by a cell.
   "field/band_b_glsl.ts: floor(p / uCell)": [1, "the band's corner-grid cell (K1040 S4b, form B's cornersNear): one off only for a point on a grid line, where p's float32 rounding already picks the cell"],
+  // K1240: the outline's paint pass (draw.ts's PAINT_FS and outline_app's
+  // copy) takes s's lap nearest the run's middle; the tie band's dS wraps a
+  // closed chain's s difference into (-len/2, len/2].
+  "outline/draw.ts: floor((0.5 * (t0.x + t0.y) - s) / t2.w + 0.5)": [1, "the paint pass's nearest lap to a run's middle (K1240): ambiguous only at the antipode, outside the run whose pixels it paints"],
+  "outline/outline_app.ts: floor((0.5 * (t0.x + t0.y) - s) / t2.w + 0.5)": [1, "the app's copy of draw.ts's paint pass (K1240): the same nearest lap, ambiguous only at the antipode"],
+  "outline/outline_app.ts: mod(d, len)": [1, "the GPU tie band's closed-chain s difference (K1240 S4b): one off only next to a lap boundary, where the fold into (-len/2, len/2] gives the same d"],
 };
 
 const ROUNDERS = ["floor", "ceil", "trunc", "round", "roundEven", "fract", "mod", "int"];

@@ -60,6 +60,8 @@ export class OutlineModel {
   /** Wall ms of the last structure and the last frame (performance.now). */
   readonly structureMs: number;
   frameMs = 0;
+  /** Wall ms of the last frame's parts, in update's order (K1240 S4b). */
+  parts = { frame: 0, zChains: 0, fill: 0, paint: 0, band: 0 };
 
   constructor(scene: SceneIn) {
     const t0 = performance.now();
@@ -82,10 +84,16 @@ export class OutlineModel {
     // Every part reads the junctions in the structure's arm order.
     const scene = alignJunctionArms(this.st, scene0);
     this.table = frame(this.st, scene);
+    const t1 = performance.now();
     const zz = zChains(scene);
+    const t2 = performance.now();
     const fr = fillFrame(this.fs, this.st, this.table, scene, zz);
+    const t3 = performance.now();
     paintFrame(this.pd, fr, sectionPaint(scene, "app", this.baseHue));
+    const t4 = performance.now();
     this.band = bandGpu(this.table, scene, zz);
-    this.frameMs = performance.now() - t0;
+    const t5 = performance.now();
+    this.parts = { frame: t1 - t0, zChains: t2 - t1, fill: t3 - t2, paint: t4 - t3, band: t5 - t4 };
+    this.frameMs = t5 - t0;
   }
 }
