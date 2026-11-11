@@ -81,3 +81,63 @@ Report these:
 - your last SHA.
 
 End with `Ledger items` and K1279's handle fields.
+
+## Handoff (2026-11-10, agent stage 1)
+
+Branch `worktree-agent-a70157fa5e512c8ef`, from f0c1111c. Tools in `.claude/probes/K1240/proto/`
+(`k1279_census.ts`, `k1279_crops.ts`, `k1279_motion.ts`, `k1279_dbg.ts`, `k1279_bars.ps1`, and the
+master snapshots `k1279_base_*.ts` with `k1279_dump_base.ts`, `k1279_union_base.ts`); outputs in
+`.claude/probes/K1240/out/k1279/` (untracked).
+
+**Census** (`k1279_census.ts <tag> --vs=master`; per crossing, a window of half size
+h·min(7, 1.25 + 1/sin θ) against form B's evalPoint, 3x3 range tolerance, "differs" above 12 px):
+
+| | differ | total px | away from junctions (differ / px) | outside 4h of junctions |
+|---|---|---|---|---|
+| master | 1584 / 2916 | 81083 | 427 / 14322 | 890 / 33874 |
+| mine | 458 / 2916 | 27594 | 0 / 406 | 5 / 1305 |
+
+Per crossing: 0 worse than master (> +1 px), 2841 better, 75 the same. The 25 worst all sit at
+junctions (muse_hash x77 846, x64 411, x278 371; g41_user_tw64 x138 370; muse_hash x292 346,
+x134 328, x6 324, x71 293, x182 293, x287 269): form B's junction groups and arm fans blend the
+borders softly there; the redesign draws them hard, on master too.
+
+**Changes** (each decided once from the crossing diagram; positions only move ends and fades):
+1. Ghost pieces (outline.ts): one per side of every crossing's discarded interval, diagram only,
+   appended after every other piece, no region. Every crossing has them in every frame.
+2. Form B's tie alpha on the bands (draw.ts): a band vertex inside a partner pass's tube is drawn at
+   1 - g(d_o) ss(-zt, zt, key_o - key_c), key = z - d zt/h, g ramping across the partner's band.
+   The passes come from the diagram; the fade is a continuous function of positions.
+3. Walked pass spans: a pass's span runs while the two threads stay within 2.2h (h/4 steps), at
+   least the straight reach 2h/sin + h; a walk that meets a junction root keeps the straight reach.
+   Fixed cut 273's top-left (c3/c4 overlap 1.6 units past the straight reach).
+4. Band rows: near a pass the band is split into 8 rows across its width, so a fade is not
+   interpolated into pixels the partner does not cover (x346, x281).
+5. One factor per partner stretch (same partner, |Δs| < h), the strongest fade: a minimum of
+   continuous fades stays continuous (x221's band showed through the over's fill).
+6. Tied segments are split on a fixed grid s = m·h/8, not into equal parts by length, so no sample
+   jumps when a count steps.
+
+**Crops** (form B | master | mine | |mine - B| | mine worse red / better blue), ppu 280, 1.6 units:
+`out/k1279/crops/cut273.png`, `worst10_a.png`, `worst10_b.png`, `off_junction.png` (x22, x58).
+
+**Motion** (`k1279_motion.ts`: k1247s9_union's jitter, a jump = ink moving > 0.25 past the 3x3
+range): still master 6 / 191 px at d 0.001 / 0.01, mine 0 / 123; cyc10 master 9 / 106, mine 0 / 22;
+cyc18 master 5 / 84, mine 0 / 7. Every crossing where mine jumps also jumps on master (still and
+cyc10 with the same px: muse_hash x61, x182; g41_user_tw64 x54; g41_def_tw64 x309): outline jumps,
+K1280-K1282.
+
+**Bars** (`k1279_bars.ps1 -Tag final -SkipMaster`, logs in `out/k1279/bars/final/`, master's in
+`bars/w1/`): k1247s14_census "B no worse than A on every scene"; k1247s5_cmp 44/8/0/0;
+k1247s9_union `--d=0.001,0.01` still, `--cyc=10`, `--cyc=18`: identical to master line for line;
+`npm test` green (220 files, 2897 tests).
+
+**Left:**
+- Junctions: all of the worst crossings. Form B's soft groups and fans belong to the junction lanes.
+- The fill owner where two threads overlap at a shallow crossing (cut 273's top-left: form B pink,
+  mine cyan): fill as faces, K1277.
+- The walked span's junction-root fallback is decided by positions, so a span can snap between the
+  walked reach and the straight one. Not seen in the motion runs.
+- Small steps under the bar (largest 0.04 at d 0.001): candidates are the walk's h/4 steps and the
+  |Δs| < h stretch threshold.
+- Cut 273's second spot: a 79 px sliver drawn at 0.74 where form B is solid (net better than master).
