@@ -306,6 +306,7 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
   };
   const stationS = (sti: number): number | null => { const q = st.stationsD[sti]; return q && q.kind === "junction" && q.arm >= 0 ? armSOf(q.arm) : null; };
   let bufL = new Float64Array(0); let bufR = new Float64Array(0);
+  let bufCL = new Float64Array(0); let bufCR = new Float64Array(0);
   const line = (a: [number, number], b: [number, number], N: number, out: Float64Array): void => {
     for (let i = 0; i <= N; i++) { const t = i / N; out[2 * i] = a[0] + (b[0] - a[0]) * t; out[2 * i + 1] = a[1] + (b[1] - a[1]) * t; }
   };
@@ -315,17 +316,32 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
       if (bufL.length < 2 * W) { bufL = new Float64Array(2 * W); bufR = new Float64Array(2 * W); }
       const I = st.intervalsD[it.iv];
       const pl = it.pL >= 0 ? table.pieces[it.pL] : null; const pr = it.pR >= 0 ? table.pieces[it.pR] : null;
-      const side = (p: typeof pl, sg: number, buf: Float64Array): boolean => {
-        if (p && p.pts.length >= 4) return resample(p.pts, p.cpts, N, buf);
+      if (bufCL.length < 2 * W) { bufCL = new Float64Array(2 * W); bufCR = new Float64Array(2 * W); }
+      // A side's border, and (cOk) its centreline feet resampled alongside.
+      let cOkL = false; let cOkR = false;
+      const side = (p: typeof pl, sg: number, buf: Float64Array, cbuf: Float64Array): boolean => {
+        if (p && p.pts.length >= 4) {
+          const two = p.cpts.length === p.pts.length;
+          const ok = two ? resample(p.pts, p.cpts, N, buf, p.cpts, cbuf) : resample(p.pts, p.cpts, N, buf);
+          if (ok && two) { if (sg > 0) cOkL = true; else cOkR = true; }
+          return ok;
+        }
         const a = stationEnd(I.aSt, sg); const b = stationEnd(I.bSt, sg);
         if (a && b) { line(a, b, N, buf); fallbacks++; return true; }
         if (p && p.pts.length === 2) return resample(p.pts, null, N, buf);
         return false;
       };
-      let okL = side(pl, 1, bufL);
-      let okR = side(pr, -1, bufR);
-      if (!okL && okR) { bufL.set(bufR.subarray(0, 2 * W)); okL = true; fallbacks++; }
-      if (!okR && okL) { bufR.set(bufL.subarray(0, 2 * W)); okR = true; fallbacks++; }
+      let okL = side(pl, 1, bufL, bufCL);
+      let okR = side(pr, -1, bufR, bufCR);
+      // A side the frame leaves empty (its border consumed by a junction's
+      // corner or a crossing next to it) is the other side mirrored across
+      // the centreline: the strip keeps the tube's full width, so the tube
+      // under the junction is never paper. Same vertices, positions only.
+      const mirror = (src: Float64Array, c: Float64Array, dst: Float64Array): void => {
+        for (let i = 0; i < 2 * W; i++) dst[i] = 2 * c[i] - src[i];
+      };
+      if (!okL && okR) { if (cOkR) mirror(bufR, bufCR, bufL); else bufL.set(bufR.subarray(0, 2 * W)); okL = true; fallbacks++; }
+      if (!okR && okL) { if (cOkL) mirror(bufL, bufCL, bufR); else bufR.set(bufL.subarray(0, 2 * W)); okR = true; fallbacks++; }
       const P = pl && pl.pts.length >= 4 ? pl : pr && pr.pts.length >= 4 ? pr : null;
       let s0 = P ? P.s0 : (pl ?? pr)?.s0 ?? 0; let ds = P ? P.s1 - P.s0 : 0;
       const c = zc[it.pi];
