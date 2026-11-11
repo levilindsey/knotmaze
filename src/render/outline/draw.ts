@@ -400,18 +400,10 @@ export function paintFrame(pd: PaintData, fr: FillFrame, sp?: SectionPaint): voi
   const t = runTable(pd.sp); pd.tex = t.tex; pd.texW = t.texW; pd.texH = t.texH;
 }
 
-export function buildDrawData(table: OutlineTable, scene: SceneIn, fill?: { st: DiagramStructure; fs?: FillStructure }, paint: PaintMode | "flat" = "app"): DrawData {
-  const baseHue = baseHueFor(scene.name);
-  const nCh = scene.chains.length;
-  // K1277: the fill as triangles fixed at structure; per frame, positions,
-  // keys and s only. Colour is one flat colour per owner chain.
-  const st = fill?.st ?? structure(scene);
-  const fs = fill?.fs ?? fillStructure(st, fillResolution(st, table));
-  const zz = zChains(scene);
-  const fr = fillFrame(fs, st, table, scene, zz);
-  const chainCols = Array.from({ length: nCh }, (_, c) => chainColor(c, nCh, baseHue));
-  const fillCol = new Float32Array(3 * fs.nV);
-  for (let v = 0; v < fs.nV; v++) { const c = chainCols[fs.vChain[v]] ?? [0, 0, 0]; fillCol[3 * v] = c[0]; fillCol[3 * v + 1] = c[1]; fillCol[3 * v + 2] = c[2]; }
+/** The border ink's band of one frame (form B's tie alpha per vertex). The
+ *  app rebuilds it every frame: its vertex count follows the pieces. */
+export interface BandData { bandPos: Float32Array; bandCol: Float32Array; bandAlpha: Float32Array; bandCount: number }
+export function bandData(table: OutlineTable, scene: SceneIn, zz: ReturnType<typeof zChains>): BandData {
   const ink = parseColor(scene.look.ink);
   const bandPos: number[] = [];
   const bandCol: number[] = [];
@@ -541,11 +533,26 @@ export function buildDrawData(table: OutlineTable, scene: SceneIn, fill?: { st: 
       for (let k = 0; k < 6; k++) { bandCol.push(ink[0], ink[1], ink[2]); bandAlpha.push(1); }
     }
   }
+  return { bandPos: Float32Array.from(bandPos), bandCol: Float32Array.from(bandCol), bandAlpha: Float32Array.from(bandAlpha), bandCount: bandPos.length / 2 };
+}
+
+export function buildDrawData(table: OutlineTable, scene: SceneIn, fill?: { st: DiagramStructure; fs?: FillStructure }, paint: PaintMode | "flat" = "app"): DrawData {
+  const baseHue = baseHueFor(scene.name);
+  const nCh = scene.chains.length;
+  // K1277: the fill as triangles fixed at structure; per frame, positions,
+  // keys and s only. Colour is one flat colour per owner chain.
+  const st = fill?.st ?? structure(scene);
+  const fs = fill?.fs ?? fillStructure(st, fillResolution(st, table));
+  const zz = zChains(scene);
+  const fr = fillFrame(fs, st, table, scene, zz);
+  const chainCols = Array.from({ length: nCh }, (_, c) => chainColor(c, nCh, baseHue));
+  const fillCol = new Float32Array(3 * fs.nV);
+  for (let v = 0; v < fs.nV; v++) { const c = chainCols[fs.vChain[v]] ?? [0, 0, 0]; fillCol[3 * v] = c[0]; fillCol[3 * v + 1] = c[1]; fillCol[3 * v + 2] = c[2]; }
+  const band = bandData(table, scene, zz);
   return {
     fillPos: Float32Array.from(fr.pos), fillCol, fillKey: fr.key, fillS: fr.s, fillIdx: fs.idx, fillKS: keyScale(scene), fill: fs,
     paint: paint === "flat" ? null : paintData(fs, st, fr, scene, paint, baseHue),
-    bandPos: Float32Array.from(bandPos), bandCol: Float32Array.from(bandCol), bandAlpha: Float32Array.from(bandAlpha),
-    bandCount: bandPos.length / 2,
+    ...band,
   };
 }
 

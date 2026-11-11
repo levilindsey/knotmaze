@@ -304,5 +304,22 @@ const p = new Src("paint.ts");
 p.write("");
 const d = new Src("draw.ts");
 d.rep("export function chainColor(chain: number, nChains: number,", "export function chainColor(chain: number, _nChains: number,");
+// The app rebuilds the band every frame without the fill's structure: move
+// buildDrawData's band block (code motion only) into bandData.
+{
+  const head = "  const ink = parseColor(scene.look.ink);\n  const bandPos: number[] = [];";
+  const tail = "  return {\n    fillPos: Float32Array.from(fr.pos),";
+  const i0 = d.t.indexOf(head);
+  const i1 = d.t.indexOf(tail);
+  if (i0 < 0 || i1 < i0 || d.t.indexOf(head, i0 + 1) >= 0) throw new Error("draw.ts: band block not found once");
+  const mid = d.t.slice(i0, i1);
+  d.t = d.t.slice(0, i0) + "  const band = bandData(table, scene, zz);\n" + d.t.slice(i1);
+  d.rep("    bandPos: Float32Array.from(bandPos), bandCol: Float32Array.from(bandCol), bandAlpha: Float32Array.from(bandAlpha),\n    bandCount: bandPos.length / 2,\n", "    ...band,\n");
+  const fn = "\n/** The border ink's band of one frame (form B's tie alpha per vertex). The\n *  app rebuilds it every frame: its vertex count follows the pieces. */\n" +
+    "export interface BandData { bandPos: Float32Array; bandCol: Float32Array; bandAlpha: Float32Array; bandCount: number }\n" +
+    "export function bandData(table: OutlineTable, scene: SceneIn, zz: ReturnType<typeof zChains>): BandData {\n" + mid +
+    "  return { bandPos: Float32Array.from(bandPos), bandCol: Float32Array.from(bandCol), bandAlpha: Float32Array.from(bandAlpha), bandCount: bandPos.length / 2 };\n}\n";
+  d.rep("\nexport function buildDrawData(", fn + "\nexport function buildDrawData(");
+}
 d.write("");
 console.log("ported to", dest);
