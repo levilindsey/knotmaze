@@ -4309,6 +4309,60 @@ let kfFrameNo = 1;
 // The fold search's border sequence (K1247 s3: was a number[] per border
 // with bends, edited by splice; a splice here never lengthens it).
 let cfSeq = new Int32Array(1024);
+// K1283 s5: each cut point's legs' inward normals (n1x, n1y, n2x, n2y per pool point past nb),
+// and foldChevron's output (x, y, foot x, foot y per point).
+let cfCut = new Float64Array(64); const cfChev = new Float64Array(12); const cfSegs: number[] = [];
+/** The inward unit normal of a border leg along (dx, dy): sig (ty, -tx). */
+function foldNormal(dx: number, dy: number, sig: number, out: Float64Array, o: number): void {
+  const l = Math.sqrt(dx * dx + dy * dy) || 1;
+  out[o] = (sig * dy) / l; out[o + 1] = (-sig * dx) / l;
+}
+/**
+ * K1283 s5: a cut fold's chevron. Form B's band at a cut fold is {h - W <= d <= h}: a chevron
+ * whose inner corner Xin lies on e = unit(n1 + n2), deeper than W (the legs' inner lines meet
+ * W sqrt(2 / (1 + n1.n2)) from X; the inner level set's arc is nearer when the bend's radius
+ * exceeds h - W). A border point's inner edge lies W along its foot, so one cut point left the
+ * kite X, X + W n1, Xin, X + W n2 bare (stage 4: cutting the folds lost 2265 px of census ink),
+ * while the uncut swallowtail drew it and a spur past it. The cut point becomes X with its foot
+ * along n1, Y = Xin - W e with its foot along e, and X with its foot along n2: the band's quads
+ * then cover the kite and nothing past Xin. Returns the point count written to out (x, y, foot
+ * x, foot y each), or 0 (antiparallel legs: the cut point alone).
+ */
+function foldChevron(p: Poly, h: number, W: number, x: number, y: number, s: number, nrm: Float64Array, q: number, out: Float64Array): number {
+  const n1x = nrm[q]; const n1y = nrm[q + 1]; const n2x = nrm[q + 2]; const n2y = nrm[q + 3];
+  const c = n1x * n2x + n1y * n2y;
+  let ex = n1x + n2x; let ey = n1y + n2y; const el = Math.sqrt(ex * ex + ey * ey);
+  if (!(c > -0.95) || el < 1e-9) return 0;
+  ex /= el; ey /= el;
+  const tMax = Math.min(4 * h, W * Math.sqrt(2 / (1 + c)));
+  cfSegs.length = 0;
+  for (let k = 0; k < p.nseg; k++) {
+    const b = k + 1 === p.n ? 0 : k + 1;
+    if (Math.abs(dS(p, s, p.s[k])) <= 3 * h || Math.abs(dS(p, s, p.s[b])) <= 3 * h) cfSegs.push(k);
+  }
+  const dist = (t: number): number => {
+    const qx = x + ex * t; const qy = y + ey * t; let best = Infinity;
+    for (let m = 0; m < cfSegs.length; m++) {
+      const k = cfSegs[m]; const b = k + 1 === p.n ? 0 : k + 1;
+      const ax = p.x[k]; const ay = p.y[k]; const vx = p.x[b] - ax; const vy = p.y[b] - ay;
+      const l2 = vx * vx + vy * vy; let u = l2 > 0 ? ((qx - ax) * vx + (qy - ay) * vy) / l2 : 0; u = u < 0 ? 0 : u > 1 ? 1 : u;
+      const dx = ax + vx * u - qx; const dy = ay + vy * u - qy; const d = dx * dx + dy * dy; if (d < best) best = d;
+    }
+    return Math.sqrt(best);
+  };
+  const target = h - W;
+  let t = tMax;
+  if (dist(tMax) < target) {
+    let lo = W; let hi = tMax;
+    if (dist(lo) <= target) t = W;
+    else { for (let it = 0; it < 40; it++) { const mid = 0.5 * (lo + hi); if (dist(mid) > target) lo = mid; else hi = mid; } t = 0.5 * (lo + hi); }
+  }
+  let k = 0;
+  out[0] = x; out[1] = y; out[2] = x + h * n1x; out[3] = y + h * n1y; k = 1;
+  if (t - W > 1e-9) { const yx = x + ex * (t - W); const yy = y + ey * (t - W); out[4] = yx; out[5] = yy; out[6] = yx + h * ex; out[7] = yy + h * ey; k = 2; }
+  out[4 * k] = x; out[4 * k + 1] = y; out[4 * k + 2] = x + h * n2x; out[4 * k + 3] = y + h * n2y;
+  return k + 1;
+}
 function cutFoldsC(C: FCache, pi: number, sig: number, B: FBord): void {
   const p = C.polys[pi];
   const h = C.h;
@@ -4339,7 +4393,9 @@ function cutFoldsC(C: FCache, pi: number, sig: number, B: FBord): void {
       while (changed && guard++ < 8) {
         changed = false;
         outer: for (let i = i0; i <= Math.min(i1, m - 2); i++) {
-          for (let j = i + 2; j <= Math.min(i1, m - 1); j++) {
+          // K1283 s5: from i + 3. Segment i + 1 (j = i + 2) shares seq[i + 1] with segment i, so
+          // segInt always "hit" there: the splice was a no-op and no fold was ever cut.
+          for (let j = i + 3; j <= Math.min(i1, m - 1); j++) {
             if (i === 0 && j === m - 1) continue;
             const ia = seq[i]; const ib = seq[i + 1]; const ic = seq[j - 1]; const id = seq[j];
             const hit = segInt(B.px[ia], B.py[ia], B.px[ib], B.py[ib], B.px[ic], B.py[ic], B.px[id], B.py[id]);
@@ -4348,6 +4404,10 @@ function cutFoldsC(C: FCache, pi: number, sig: number, B: FBord): void {
             const y = B.py[ia] + (B.py[ib] - B.py[ia]) * hit.t;
             const s = B.ps[ia] + dS(p, B.ps[ia], B.ps[ib]) * hit.t;
             const nid = poolPush(x, y, s);
+            // The legs' inward normals (the border is the centreline + sig h (-ty, tx)).
+            const q = 4 * (nid - nb); if (cfCut.length < q + 4) { const g = new Float64Array(2 * (q + 4)); g.set(cfCut); cfCut = g; }
+            foldNormal(B.px[ib] - B.px[ia], B.py[ib] - B.py[ia], sig, cfCut, q);
+            foldNormal(B.px[id] - B.px[ic], B.py[id] - B.py[ic], sig, cfCut, q + 2);
             // seq.splice(i + 1, j - i - 1, nid)
             seq[i + 1] = nid; seq.copyWithin(i + 2, j, m); m -= j - i - 2;
             diag.push(`fold ch${pi} side${sig} at s=${sb.toFixed(2)}`);
@@ -4357,16 +4417,27 @@ function cutFoldsC(C: FCache, pi: number, sig: number, B: FBord): void {
         }
       }
     }
-    // Compact the sequence into the base arrays.
-    B.bx = growF(B.bx, m); B.by = growF(B.by, m); B.bs = growF(B.bs, m); B.bfx = growF(B.bfx, m); B.bfy = growF(B.bfy, m);
+    // Compact the sequence into the base arrays; each cut fold becomes its chevron (foldChevron).
+    let cuts = 0; for (let i = 0; i < m; i++) if (seq[i] >= nb) cuts++;
+    const cap = m + 2 * cuts;
+    B.bx = growF(B.bx, cap); B.by = growF(B.by, cap); B.bs = growF(B.bs, cap); B.bfx = growF(B.bfx, cap); B.bfy = growF(B.bfy, cap);
+    let o = 0;
     for (let i = 0; i < m; i++) {
       const id = seq[i];
-      B.bx[i] = B.px[id]; B.by[i] = B.py[id]; B.bs[i] = B.ps[id];
+      if (id >= nb) {
+        const k = foldChevron(p, h, C.W, B.px[id], B.py[id], B.ps[id], cfCut, 4 * (id - nb), cfChev);
+        if (k > 0) {
+          for (let r = 0; r < k; r++) { B.bx[o] = cfChev[4 * r]; B.by[o] = cfChev[4 * r + 1]; B.bs[o] = B.ps[id]; B.bfx[o] = cfChev[4 * r + 2]; B.bfy[o] = cfChev[4 * r + 3]; o++; }
+          continue;
+        }
+      }
+      B.bx[o] = B.px[id]; B.by[o] = B.py[id]; B.bs[o] = B.ps[id];
       const v = B.pv[id];
-      if (v >= 0) { B.bfx[i] = p.x[v]; B.bfy[i] = p.y[v]; }
-      else { pointAtInto(p, B.ps[id], ptScratch); B.bfx[i] = ptScratch[0]; B.bfy[i] = ptScratch[1]; }
+      if (v >= 0) { B.bfx[o] = p.x[v]; B.bfy[o] = p.y[v]; }
+      else { pointAtInto(p, B.ps[id], ptScratch); B.bfx[o] = ptScratch[0]; B.bfy[o] = ptScratch[1]; }
+      o++;
     }
-    B.nb = m;
+    B.nb = o;
     return;
   }
   B.bx = growF(B.bx, nb); B.by = growF(B.by, nb); B.bs = growF(B.bs, nb); B.bfx = growF(B.bfx, nb); B.bfy = growF(B.bfy, nb);
