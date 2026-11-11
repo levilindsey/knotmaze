@@ -80,7 +80,8 @@ export const TAIL_M = 24;
 
 export interface StripItem { kind: "strip"; iv: number; pi: number; ghost: boolean; N: number; base: number; pL: number; pR: number }
 export interface CapItem { kind: "cap"; pi: number; piece: number; atEnd: boolean; base: number }
-export interface TailItem { kind: "tail"; pi: number; piece: number; base: number }
+/** jItem / arm: the junction item and its arm index (its end arm) whose fan the tail lies over; -1 if none. */
+export interface TailItem { kind: "tail"; pi: number; piece: number; base: number; jItem: number; arm: number }
 /** `strip`: the item index of the arm's strip (-1: none), whose end row at
  *  `atStart` is the arm's P, M, N. */
 export interface JArm { ai: number; pi: number; ei: number; pN: number; pP: number; atStart: boolean; corner: number; strip: number }
@@ -202,7 +203,7 @@ export function fillStructure(st: DiagramStructure, res: Int32Array): FillStruct
       idx.push(base + i, base + i + 1, base + W + i);
       idx.push(base + W + i, base + i + 1, base + W + i + 1);
     }
-    items.push({ kind: "tail", pi: d.chain, piece: k, base });
+    items.push({ kind: "tail", pi: d.chain, piece: k, base, jItem: -1, arm: -1 });
   });
   // 5. junctions.
   const stOfArm = new Map<number, number>();
@@ -252,6 +253,17 @@ export function fillStructure(st: DiagramStructure, res: Int32Array): FillStruct
     for (let i = 0; i < R; i++) idx.push(base, base + 1 + i, base + 1 + ((i + 1) % R));
     items.push({ kind: "junc", ji, owner, arms, base, R });
   });
+  // K1278 s2: a tail's junction and arm. The tail is its corner's end-arm
+  // margin; fillRuns and fillFrame give it the fan's paint where it lies
+  // over the fan, so the tail's edge carries no step.
+  const jOfArm = new Map<number, [number, number]>();
+  items.forEach((it, q) => { if (it.kind === "junc") it.arms.forEach((a, k) => jOfArm.set(a.ai, [q, k])); });
+  for (const it of items) {
+    if (it.kind !== "tail") continue;
+    const d = st.piecesD[it.piece]; const c = d && d.corner >= 0 ? st.corners[d.corner] : undefined;
+    const L = c ? jOfArm.get(d.interval ? c.bArm : c.aArm) : undefined;
+    if (L && L[1] < SLOTS) { it.jItem = L[0]; it.arm = L[1]; }
+  }
   return { nV, idx: Uint32Array.from(idx), vChain: Int32Array.from(vChain), items, missingArmEnds: missing, vW: Float32Array.from(vW) };
 }
 
@@ -292,6 +304,12 @@ export function fillRuns(fs: FillStructure, st: DiagramStructure, fr0: FillFrame
     const sMid = it.kind === "strip" ? fr0.s[it.base + (it.N + 1) + (it.N >> 1)] : fr0.s[it.base];
     const r = runAt(sp, it.pi, sMid);
     for (let v = it.base; v < it.base + n; v++) run[SLOTS * v] = r;
+  }
+  // K1278 s2: a tail at a junction carries the fan's runs, slot for slot.
+  for (const it of fs.items) {
+    if (it.kind !== "tail" || it.jItem < 0) continue;
+    const hb = (fs.items[it.jItem] as JuncItem).base;
+    for (let v = it.base; v < it.base + itemVerts(it); v++) for (let k = 0; k < SLOTS; k++) run[SLOTS * v + k] = run[SLOTS * hb + k];
   }
   return run;
 }
@@ -628,6 +646,36 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
           w4[SLOTS * vN] = 1 - wN; w4[SLOTS * vN + nb.slotN] = wN;
           w4[SLOTS * vP] = 1 - wP; w4[SLOTS * vP + nb.slotP] = wP;
         }
+      }
+    }
+  }
+  // K1278 s2: tails at junctions (runs: fillRuns). A tail vertex over its
+  // fan takes the fan's weights and s there (barycentric over the fan
+  // triangle under it); one off the fan keeps its own s, on its arm's slot.
+  for (const it of fs.items) {
+    if (it.kind !== "tail" || it.jItem < 0) continue;
+    const J = fs.items[it.jItem] as JuncItem; const h = J.base; const R = J.R;
+    let x0 = Infinity; let y0 = Infinity; let x1 = -Infinity; let y1 = -Infinity;
+    for (let v = h; v <= h + R; v++) { x0 = Math.min(x0, pos[2 * v]); x1 = Math.max(x1, pos[2 * v]); y0 = Math.min(y0, pos[2 * v + 1]); y1 = Math.max(y1, pos[2 * v + 1]); }
+    for (let v = it.base; v < it.base + itemVerts(it); v++) {
+      const o = SLOTS * v; const sOwn = s4[o];
+      for (let k = 0; k < SLOTS; k++) { w4[o + k] = 0; s4[o + k] = s4[SLOTS * h + k]; }
+      w4[o + it.arm] = 1; s4[o + it.arm] = sOwn;
+      const px = pos[2 * v]; const py = pos[2 * v + 1];
+      if (key[v] < -999 || px < x0 || px > x1 || py < y0 || py > y1) continue;
+      for (let i = 0; i < R; i++) {
+        const b = h + 1 + i; const c = h + 1 + ((i + 1) % R);
+        const ax = pos[2 * h]; const ay = pos[2 * h + 1]; const bx = pos[2 * b]; const by = pos[2 * b + 1]; const cx = pos[2 * c]; const cy = pos[2 * c + 1];
+        const A = (bx - ax) * (cy - ay) - (by - ay) * (cx - ax); if (Math.abs(A) < 1e-12) continue;
+        const la = ((bx - px) * (cy - py) - (by - py) * (cx - px)) / A;
+        const lb = ((cx - px) * (ay - py) - (cy - py) * (ax - px)) / A;
+        const lc = 1 - la - lb;
+        if (la < -1e-9 || lb < -1e-9 || lc < -1e-9) continue;
+        for (let k = 0; k < SLOTS; k++) {
+          w4[o + k] = la * w4[SLOTS * h + k] + lb * w4[SLOTS * b + k] + lc * w4[SLOTS * c + k];
+          s4[o + k] = la * s4[SLOTS * h + k] + lb * s4[SLOTS * b + k] + lc * s4[SLOTS * c + k];
+        }
+        break;
       }
     }
   }
