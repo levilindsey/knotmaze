@@ -3,7 +3,7 @@
 // Usage: node scripts/run_node.mjs .claude/probes/K1240/proto/k1279_dbg.ts <scene> <x0>:<y0> <x1>:<y1> [--n=8]
 import { FormB } from "../../../../src/render/field/form_b";
 import { loadScene } from "./k1279_census";
-import { zChains, zAtC, footNear } from "./draw";
+import { zChains, zAtC, footNear, dSC } from "./draw";
 
 const args = process.argv.slice(2);
 const pos = args.filter((a) => !a.startsWith("--"));
@@ -27,3 +27,23 @@ for (let i = 0; i <= n; i++) {
 const near = (ci: number): string => passes[ci].map((p) => `[s ${p.s.toFixed(2)} o c${p.o} so ${p.so.toFixed(2)} lo ${(p.lo / h).toFixed(1)}h hi ${(p.hi / h).toFixed(1)}h rO ${(p.rO / h).toFixed(1)}h]`).join(" ");
 const used = new Set<number>(); zc.forEach((c, ci) => { const f = footNear(c, (x0 + x1) / 2, (y0 + y1) / 2, 0, 1e9, 0, 0); if (f.d < 3 * h) used.add(ci); });
 for (const ci of used) console.log(`c${ci} passes: ${near(ci)}`);
+const ac = args.find((a) => a.startsWith("--alpha="));
+if (ac) {
+  const c = Number(ac.slice(8)); const C = zc[c];
+  for (let i = 0; i <= n; i++) {
+    const t = i / n; const x = x0 + (x1 - x0) * t; const y = y0 + (y1 - y0) * t;
+    const fc = footNear(C, x, y, 0, 1e9, 0, 0); const dC = Math.min(fc.d, h); const s = fc.s;
+    const keyC = zAtC(C, s) - (dC * zt) / h;
+    const parts: string[] = [];
+    for (const P of passes[c]) {
+      const ds = dSC(C, P.s, s); if (ds < -P.lo || ds > P.hi) continue;
+      const O = zc[P.o];
+      const f = footNear(O, x, y, P.so, P.rO, s, P.o === c ? 3 * h : 0);
+      const W = 0.25 * h;
+      const g = Math.min(1, Math.max(0, (h - f.d) / W));
+      const keyO = zAtC(O, f.s) - (Math.min(f.d, h) * zt) / h;
+      parts.push(`P(s ${P.s.toFixed(2)} o c${P.o}) ds ${(ds / h).toFixed(2)}h fo.d ${(f.d / h).toFixed(2)}h fo.s ${f.s.toFixed(2)} g ${g.toFixed(2)} keyO-keyC ${(keyO - keyC).toFixed(3)}`);
+    }
+    console.log(`alpha c${c} (${x.toFixed(3)}, ${y.toFixed(3)}) dC ${(fc.d / h).toFixed(2)}h s ${s.toFixed(2)} keyC ${keyC.toFixed(3)} :: ${parts.join(" | ")}`);
+  }
+}

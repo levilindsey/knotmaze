@@ -349,7 +349,7 @@ export function buildDrawData(table: OutlineTable, scene: SceneIn): DrawData {
     }
     return a;
   };
-  const SUB = h / 8;
+  const SUB = h / 8; const ROWS = 8;
   for (const p of table.pieces) {
     const np = p.pts.length / 2;
     if (np < 2) continue;
@@ -382,21 +382,31 @@ export function buildDrawData(table: OutlineTable, scene: SceneIn): DrawData {
         const sa = sv[i]; const sb = sa + dSC(C, sa, sv[i + 1]);
         const k = near(sa) || near(sb) ? Math.max(1, Math.ceil(Math.hypot(bx - ax, by - ay) / SUB)) : 1;
         const tiedSeg = k > 1 || near(sa) || near(sb);
-        let pO: [number, number, number] | null = null; let pI: [number, number, number] | null = null;
+        // Near a pass the band is also split across its width (ROWS rows): the
+        // alpha falls across the partner's border, which can cut the band at
+        // any angle, and one outer/inner pair would interpolate the fade
+        // into pixels the partner does not cover.
+        const R = tiedSeg ? ROWS : 1;
+        let prev: [number, number, number][] | null = null;
         for (let q = 0; q <= k; q++) {
           const t = q / k;
           const ox = ax + (bx - ax) * t; const oy = ay + (by - ay) * t;
           const ix = ia[0] + (ib[0] - ia[0]) * t; const iy = ia[1] + (ib[1] - ia[1]) * t;
           const s = sa + (sb - sa) * t;
-          const aO = tiedSeg ? alphaAt(p.chain, ox, oy, s, h) : 1;
-          const aI = tiedSeg ? alphaAt(p.chain, ix, iy, s, h - W) : 1;
-          const cO: [number, number, number] = [ox, oy, aO]; const cI: [number, number, number] = [ix, iy, aI];
-          if (pO && pI) {
-            bandPos.push(pO[0], pO[1], cO[0], cO[1], pI[0], pI[1], cO[0], cO[1], cI[0], cI[1], pI[0], pI[1]);
-            bandAlpha.push(pO[2], cO[2], pI[2], cO[2], cI[2], pI[2]);
-            for (let m = 0; m < 6; m++) bandCol.push(ink[0], ink[1], ink[2]);
+          const cur: [number, number, number][] = [];
+          for (let r = 0; r <= R; r++) {
+            const u = r / R; const x = ox + (ix - ox) * u; const y = oy + (iy - oy) * u;
+            cur.push([x, y, tiedSeg ? alphaAt(p.chain, x, y, s, h - W * u) : 1]);
           }
-          pO = cO; pI = cI;
+          if (prev) {
+            for (let r = 0; r < R; r++) {
+              const pO = prev[r]; const cO = cur[r]; const pI = prev[r + 1]; const cI = cur[r + 1];
+              bandPos.push(pO[0], pO[1], cO[0], cO[1], pI[0], pI[1], cO[0], cO[1], cI[0], cI[1], pI[0], pI[1]);
+              bandAlpha.push(pO[2], cO[2], pI[2], cO[2], cI[2], pI[2]);
+              for (let m = 0; m < 6; m++) bandCol.push(ink[0], ink[1], ink[2]);
+            }
+          }
+          prev = cur;
         }
       }
       continue;

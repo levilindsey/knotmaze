@@ -4,7 +4,8 @@
 // darkened by the ink (form B's ink; the redesign's bands with their alpha).
 // Usage (from the worktree root):
 //   node scripts/run_node.mjs .claude/probes/K1240/proto/k1279_crops.ts <out.png> <scene>:<x>:<y>[:label] ... [--ppu=280] [--w=1.6] [--err]
-// --err adds a fourth panel: |ink mine - ink form B| (red) and covered/paper disagreement (blue).
+// --err adds a fourth panel: |ink mine - ink form B| (red) and covered/paper disagreement (blue),
+// and a fifth: where mine's ink error exceeds master's (red) or master's exceeds mine (blue).
 import { writeFileSync } from "node:fs";
 import { deflateSync } from "node:zlib";
 import { FormB } from "../../../../src/render/field/form_b";
@@ -20,7 +21,7 @@ const opt = (k: string): string | undefined => args.find((a) => a.startsWith(`--
 const out = pos[0];
 const specs = pos.slice(1).map((s) => { const [scene, x, y, label] = s.split(":"); return { scene, x: +x, y: +y, label }; });
 const ppu = Number(opt("ppu") ?? 280); const Wd = Number(opt("w") ?? 1.6); const withErr = args.includes("--err");
-const P = Math.round(Wd * ppu); const GAP = 6; const nPan = withErr ? 4 : 3;
+const P = Math.round(Wd * ppu); const GAP = 6; const nPan = withErr ? 5 : 3;
 const Wt = nPan * P + (nPan - 1) * GAP; const Ht = specs.length * P + (specs.length - 1) * GAP;
 const img = new Uint8Array(Wt * Ht * 3).fill(128);
 const hue = (c: number): [number, number, number] => { const h = ((c * 0.61803398875) % 1) * 6; const f = h - Math.floor(h); const q = [[1, f, 0], [1 - f, 1, 0], [0, 1, f], [0, 1 - f, 1], [f, 0, 1], [1, 0, 1 - f]][Math.floor(h) % 6]; return q.map((v) => 150 + 90 * v) as [number, number, number]; };
@@ -49,9 +50,10 @@ specs.forEach((sp, row) => {
     put(row, 0, r, c, shade(bCh[i], bInk[i]));
     put(row, 1, r, c, shade(rm.own[i], rm.ink[i]));
     put(row, 2, r, c, shade(ry.own[i], ry.ink[i]));
-    if (withErr) { const d = Math.abs(ry.ink[i] - bInk[i]); const f = (ry.own[i] >= 0) !== (bCh[i] >= 0) ? 1 : 0; put(row, 3, r, c, [255 - Math.round(255 * f), Math.round(255 * (1 - d) * (1 - f)), Math.round(255 * (1 - d))]); }
+    if (withErr) { const d = Math.abs(ry.ink[i] - bInk[i]); const f = (ry.own[i] >= 0) !== (bCh[i] >= 0) ? 1 : 0; put(row, 3, r, c, [255 - Math.round(255 * f), Math.round(255 * (1 - d) * (1 - f)), Math.round(255 * (1 - d))]); const dm = Math.abs(rm.ink[i] - bInk[i]); const w = Math.max(0, d - dm); const b = Math.max(0, dm - d); put(row, 4, r, c, [Math.round(255 * (1 - b)), Math.round(255 * (1 - w - b)), Math.round(255 * (1 - w))]); }
   }
   console.log(`${sp.label ?? ""} ${sp.scene} (${sp.x}, ${sp.y})`);
+  if (args.includes("--px")) { const ws: [number, number][] = []; for (let i = 0; i < P * P; i++) { const w = Math.abs(ry.ink[i] - bInk[i]) - Math.abs(rm.ink[i] - bInk[i]); if (w > 0.2) ws.push([w, i]); } ws.sort((u, v) => v[0] - u[0]); console.log(`  mine worse than master on ${ws.length} px (> 0.2)`); for (const [w, i] of ws.slice(0, 10)) { const r = Math.floor(i / P); const c = i % P; console.log(`  (${((c0 + c + 0.5) / ppu).toFixed(3)}, ${((r0 + r + 0.5) / ppu).toFixed(3)}) B ${bInk[i].toFixed(2)} master ${rm.ink[i].toFixed(2)} mine ${ry.ink[i].toFixed(2)} (+${w.toFixed(2)})`); } }
 });
 const crcT = new Int32Array(256).map((_, m) => { let c = m; for (let j = 0; j < 8; j++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; return c; });
 const crc = (b: Buffer): number => { let c = 0xffffffff; for (const x of b) c = crcT[(c ^ x) & 255] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; };
