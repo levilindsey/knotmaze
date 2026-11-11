@@ -315,6 +315,76 @@ function footInWindowInto(p: Poly, px: number, py: number, lo: number, hi: numbe
     }
   }
 }
+// K1247 s16: an END arm's extension foot, continuous in the point. The
+// polyline's nearest point jumps where the point sits on the concave side
+// of a vertex (the two segments' projections tie on the bisector): j67's
+// cap centre moved 1.5 px under 0.075 px of input (def f23). This foot is
+// the root of (q - c(u)) . T(u) = 0, the tangent interpolated linearly
+// across each segment from its vertices' tangents (the mean of the two
+// segment directions), so it follows q continuously wherever the root is
+// unique (q nearer the line than its radius of curvature); among several
+// roots the nearest wins. No root in the window: footInWindowInto's foot.
+function footSmoothInto(p: Poly, px: number, py: number, lo: number, hi: number, out: Float64Array): void {
+  out[0] = Infinity; out[1] = px; out[2] = py;
+  if (p.nseg === 0 || hi < lo) return;
+  const vt = (k: number, o: number): void => {
+    // Vertex k's unit tangent into kfVT[o], kfVT[o + 1].
+    const segD = (q: number, w: number): void => { const kb = q + 1 === p.n ? 0 : q + 1; const l = p.segLen[q] || 1; kfVT[w] = (p.x[kb] - p.x[q]) / l; kfVT[w + 1] = (p.y[kb] - p.y[q]) / l; };
+    const prev = k > 0 ? k - 1 : p.closed ? p.nseg - 1 : -1;
+    const next = k < p.nseg ? k : p.closed ? 0 : -1;
+    if (prev < 0) { segD(next, o); return; }
+    if (next < 0) { segD(prev, o); return; }
+    segD(prev, 4); segD(next, 6);
+    let tx = kfVT[4] + kfVT[6]; let ty = kfVT[5] + kfVT[7];
+    const l = Math.hypot(tx, ty);
+    if (l < 1e-12) { tx = kfVT[6]; ty = kfVT[7]; } else { tx /= l; ty /= l; }
+    kfVT[o] = tx; kfVT[o + 1] = ty;
+  };
+  const nsh = p.closed ? 3 : 1;
+  for (let si = 0; si < nsh; si++) {
+    const sh = p.closed ? (si === 0 ? -p.len : si === 1 ? 0 : p.len) : 0;
+    let a = 0; let b = p.nseg;
+    while (a < b) { const m = (a + b) >> 1; if (p.s[m] + p.segLen[m] + sh >= lo) b = m; else a = m + 1; }
+    const k0 = a;
+    b = p.nseg;
+    while (a < b) { const m = (a + b) >> 1; if (p.s[m] + sh > hi) b = m; else a = m + 1; }
+    for (let k = k0; k < a; k++) {
+      const sa = p.s[k]; const sb = sa + p.segLen[k];
+      const aa = Math.max(lo, sa + sh); const bb = Math.min(hi, sb + sh);
+      if (bb < aa) continue;
+      const l = p.segLen[k] || 1;
+      const ta = Math.min(1, Math.max(0, (aa - sh - sa) / l));
+      const tb = Math.min(1, Math.max(0, (bb - sh - sa) / l));
+      const kb = k + 1 === p.n ? 0 : k + 1;
+      vt(k, 0); vt(kb, 2);
+      const Ax = kfVT[0]; const Ay = kfVT[1]; const Bx = kfVT[2] - Ax; const By = kfVT[3] - Ay;
+      const Ex = p.x[kb] - p.x[k]; const Ey = p.y[kb] - p.y[k];
+      const Dx = px - p.x[k]; const Dy = py - p.y[k];
+      // g(u) = (D - u E) . (A + u B) = c0 + c1 u + c2 u^2
+      const c0 = Dx * Ax + Dy * Ay; const c1 = Dx * Bx + Dy * By - (Ex * Ax + Ey * Ay); const c2 = -(Ex * Bx + Ey * By);
+      const tryU = (u: number): void => {
+        if (!(u >= ta - 1e-12 && u <= tb + 1e-12)) return;
+        u = Math.min(tb, Math.max(ta, u));
+        const qx = p.x[k] + Ex * u; const qy = p.y[k] + Ey * u;
+        const d = Math.hypot(px - qx, py - qy);
+        if (d < out[0]) { out[0] = d; out[1] = qx; out[2] = qy; }
+      };
+      if (Math.abs(c2) < 1e-14 * (Math.abs(c1) + 1e-300)) { if (Math.abs(c1) > 1e-300) tryU(-c0 / c1); }
+      else {
+        const disc = c1 * c1 - 4 * c2 * c0;
+        if (disc >= 0) {
+          const sq = Math.sqrt(disc);
+          // Stable roots: q = -(c1 + sign(c1) sq) / 2, roots q / c2 and c0 / q.
+          const qq = -0.5 * (c1 + (c1 >= 0 ? sq : -sq));
+          if (Math.abs(qq) > 1e-300) { tryU(qq / c2); tryU(c0 / qq); } else tryU(-c1 / (2 * c2));
+        }
+      }
+    }
+  }
+  if (out[0] === Infinity) footInWindowInto(p, px, py, lo, hi, out);
+}
+const kfVT = new Float64Array(8);
+const kfFootR = new Float64Array(3);
 function ssFB(e0: number, e1: number, x: number): number {
   const t = Math.min(1, Math.max(0, (x - e0) / (e1 - e0)));
   return t * t * (3 - 2 * t);
@@ -543,7 +613,8 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
         if (t.kind !== "through") continue;
         const ti = idxOf.get(t.chain);
         if (ti === undefined) continue;
-        const f = footInWindow(rawPolys[ti], term.x, term.y, t.s - 4 * h, t.s + 4 * h);
+        footSmoothInto(rawPolys[ti], term.x, term.y, t.s - 4 * h, t.s + 4 * h, kfFootR); // K1247 s16
+        const f = { d: kfFootR[0], x: kfFootR[1], y: kfFootR[2] };
         if (f.d < best) { best = f.d; cp = [f.x, f.y]; bestTi = ti; bestTS = t.s; }
       }
       if (Math.abs(arm.s - 0) < Math.abs(arm.s - p.len)) { exts[pi].start = cp; if (bestTi >= 0) extSpec[pi].start = { throughPi: bestTi, throughS: bestTS, armS: arm.s }; }
@@ -3737,7 +3808,7 @@ function setupFrame(C: FCache, st: DiagramStructure, scene: SceneIn): void {
       const ti = idxOf.get(t.chain);
       if (ti === undefined) continue;
       const tp = C.needRaw[ti] ? C.rawPolys[ti] : C.polys[ti];
-      footInWindowInto(tp, term.x, term.y, t.s - 4 * h, t.s + 4 * h, kfFootW);
+      footSmoothInto(tp, term.x, term.y, t.s - 4 * h, t.s + 4 * h, kfFootW); // K1247 s16
       if (kfFootW[0] < best) { best = kfFootW[0]; cp = [kfFootW[1], kfFootW[2]]; }
     }
     if (Math.abs(xa.s - 0) < Math.abs(xa.s - rp.len)) exts[a.pi].start = cp;
