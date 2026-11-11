@@ -102,4 +102,30 @@ describe("K1240 S4b GPU band", () => {
         expect(b.chainTex[4 * (base + k) + 2]).toBe(Math.fround(c.s[k]));
       }
     });
-  }, 60_000);});
+  }, 60_000);
+  it("K1291 s3: an arc's quads point at its entry (chain A, sA, chain B, sB) after the passes", () => {
+    const sc = loadScene(fileURLToPath(new URL("./fixtures/outline_ring.json.gz", import.meta.url)));
+    const tb = frame(structure(sc), sc);
+    const b = bandGpu(tb, sc, zChains(sc));
+    const nPass = b.passTex.length; // upper bound on entries' texel offsets
+    let v = 0; let arcs = 0; let other = 0;
+    for (const p of tb.pieces) {
+      const np = p.pts.length / 2;
+      const isArc = p.kind === "arc";
+      for (let i = 0; i + 1 < np; i++, v += 6) {
+        const s0 = b.slots[BAND_SLOTS * v];
+        for (let k = 1; k < 6; k++) expect(b.slots[BAND_SLOTS * (v + k)]).toBe(s0);
+        if (!isArc) { if (s0 <= -2) other++; continue; }
+        expect(s0).toBeLessThanOrEqual(-2);
+        const o = 4 * 4 * (-2 - s0);
+        expect(o + 3).toBeLessThan(nPass);
+        const cw = tb.corners[p.corner];
+        expect(Array.from(b.passTex.subarray(o, o + 4))).toEqual([p.chain, p.s0, cw.bChain, p.s1].map(Math.fround));
+        expect(cw.aChain).toBe(p.chain);
+        if (i === 0) arcs++;
+      }
+    }
+    expect(other).toBe(0);
+    expect(arcs).toBeGreaterThan(10);
+  }, 60_000);
+});

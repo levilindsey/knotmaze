@@ -20,13 +20,23 @@
 // compares the same footprint at a few moves in and mid-maze.
 // Headed hardware-GPU Chrome off-screen, real time. Never virtual time.
 import puppeteer from "puppeteer-core";
-import { mkdirSync, writeFileSync, rmSync } from "node:fs";
+import { mkdirSync, writeFileSync, rmSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 
 const [, , base, outDir, ...only] = process.argv;
 const VW = 1240, VH = 900, DSF = 2;
 const FOOT = Number(process.env.FOOT ?? 10), NEAR = Number(process.env.NEAR ?? 3), CROP = 80;
+const RC = Number(process.env.RC ?? 14);
+const SPOTS = {};
+if (process.env.SPOTS) {
+  // A before-run report ({ base, cases: [{ name, states: [{ state, pastXY, cornerSpots }] }] })
+  // or a flat { "<case>_<label>": [[x, y]...] }.
+  const j = JSON.parse(readFileSync(process.env.SPOTS, "utf8"));
+  if (Array.isArray(j.cases)) {
+    for (const c of j.cases) for (const r of c.states ?? []) SPOTS[`${c.name}_${r.state}`] = [...(r.pastXY ? [r.pastXY] : []), ...(r.cornerSpots ?? []).filter((q) => q[2] >= 4).map((q) => [q[0], q[1]])];
+  } else Object.assign(SPOTS, j);
+}
 const FRACS = (process.env.FRACS ?? "0.2,0.5,0.85,1").split(",").map(Number);
 const DEF = "?s=b";
 const MUSE = "?3&cr=6&bg=wash&bgcm=custom&bgc0=e6e9ee";
@@ -88,8 +98,21 @@ await ana.evaluate(() => {
     const dT = dil(fT, r), dO = dil(fO, r);
     let past = 0, short = 0;
     const pastPix = [];
+    // K1291 s3: corner zones, discs of RC css px around every open chain's
+    // ends (a junction's arms end at its centre); pastC = past pixels in one.
+    const zone = new Uint8Array(W * H);
+    const RCp = Math.round(window.RC * DSF);
+    for (const ch of chains) {
+      if (ch.closed || ch.pts.length < 4) continue;
+      for (const k of [0, ch.pts.length / 2 - 1]) {
+        const cx = Math.round(ch.pts[2 * k] * DSF), cy = Math.round(ch.pts[2 * k + 1] * DSF);
+        for (let y = Math.max(0, cy - RCp); y <= Math.min(H - 1, cy + RCp); y++) for (let x = Math.max(0, cx - RCp); x <= Math.min(W - 1, cx + RCp); x++) if ((x - cx) ** 2 + (y - cy) ** 2 <= RCp * RCp) zone[y * W + x] = 1;
+      }
+    }
+    let pastC = 0;
+    const cornerPix = [];
     for (let p = 0; p < W * H; p++) {
-      if (fO[p] && !dT[p]) { past++; if (pastPix.length < 2000) pastPix.push(p); }
+      if (fO[p] && !dT[p]) { past++; if (pastPix.length < 2000) pastPix.push(p); if (zone[p]) { pastC++; if (cornerPix.length < 4000) cornerPix.push(p); } }
       if (fT[p] && !dO[p]) short++;
     }
     // Fronts: covered sample centres per chain.
@@ -117,7 +140,11 @@ await ana.evaluate(() => {
     for (const p of pastPix) { const k = `${Math.floor((p % W) / G)},${Math.floor(p / W / G)}`; cells.set(k, (cells.get(k) ?? 0) + 1); }
     const top = [...cells.entries()].sort((a, b) => b[1] - a[1])[0];
     const pastSpot = top ? top[0].split(",").map((v) => (Number(v) * G + G / 2) / DSF) : null;
-    return { footToday: nT, footOutline: nO, iou: nU ? nI / nU : null, past, short, worstShiftPx: Math.round(worstShift * 10) / 10, fronts: fronts.filter((f) => f.partial || f.mismatched > 0), pastSpot, visT };
+    // K1291 s3: the densest corner-past cells (up to 4, css px).
+    const cc = new Map();
+    for (const p of cornerPix) { const k = `${Math.floor((p % W) / G)},${Math.floor(p / W / G)}`; cc.set(k, (cc.get(k) ?? 0) + 1); }
+    const cornerSpots = [...cc.entries()].sort((a, b) => b[1] - a[1]).slice(0, 4).map(([k, n]) => [...k.split(",").map((v) => (Number(v) * G + G / 2) / DSF), n]);
+    return { footToday: nT, footOutline: nO, iou: nU ? nI / nU : null, past, pastC, short, worstShiftPx: Math.round(worstShift * 10) / 10, fronts: fronts.filter((f) => f.partial || f.mismatched > 0), pastSpot, cornerSpots, visT };
   };
   window.cropRow = async (CROP, DSF, sx, sy) => {
     const I = window.imgs; const W = I.N.w, H = I.N.h; const S = CROP * DSF;
@@ -228,11 +255,16 @@ try {
       await put("O", shO); await put("T", shT); await put("N", shN);
       writeFileSync(join(outDir, `${cs.name}_${label}_outline.png`), Buffer.from(shO, "base64"));
       writeFileSync(join(outDir, `${cs.name}_${label}_today.png`), Buffer.from(shT, "base64"));
-      const res = await ana.evaluate((F, NR, D, ch) => window.measure(F, NR, D, ch), FOOT, NEAR, DSF, chains.map(({ c, pts, step, partial }) => ({ c, pts, step, partial })));
+      await ana.evaluate((rc) => { window.RC = rc; }, RC);
+      const res = await ana.evaluate((F, NR, D, ch) => window.measure(F, NR, D, ch), FOOT, NEAR, DSF, chains.map(({ c, pts, step, partial, closed }) => ({ c, pts, step, partial, closed })));
       const spots = [...cropAt];
       // Thread reveal: the ends of today's visible stretches (up to 2 + 2).
       if (cs.threads) spots.push(...spotsFor(chains.map((ch, i) => ({ ...ch, m: res.visT[i] }))));
       if (res.pastSpot) spots.push({ why: "past", x: res.pastSpot[0], y: res.pastSpot[1] });
+      // K1291 s3: the corner-past cells, and the spots a before-run flagged (env SPOTS: its reveal.json).
+      for (const [x, y, n] of res.cornerSpots) if (n >= 4) spots.push({ why: "corner", x, y });
+      for (const [x, y] of SPOTS[`${cs.name}_${label}`] ?? []) spots.push({ why: "s2spot", x, y });
+      res.pastXY = res.pastSpot;
       const wm = [...res.fronts].sort((a, b) => b.mismatched - a.mismatched)[0];
       if (wm && wm.misAt.length && wm.mismatched > 3) spots.push({ why: `mis_c${wm.c}`, x: wm.misAt[0][0], y: wm.misAt[0][1] });
       res.crops = [];
@@ -283,7 +315,7 @@ try {
         const rep1 = await page.evaluate(() => window.__knotOutline.stats.replies);
         const partial = chains.filter((c) => c.partial).length;
         rec.states.push({ state: label, partialChains: partial, workerRepliesOverToggles: rep1 - rep0, ...res });
-        console.log(`${cs.name} ${label}: partial chains ${partial}; IoU ${res.iou?.toFixed(4)} today ${res.footToday} outline ${res.footOutline}; past ${res.past} short ${res.short}; worst front shift ${res.worstShiftPx} px; replies over toggles ${rep1 - rep0}`);
+        console.log(`${cs.name} ${label}: partial chains ${partial}; IoU ${res.iou?.toFixed(4)} today ${res.footToday} outline ${res.footOutline}; past ${res.past} (corner ${res.pastC}) short ${res.short}; worst front shift ${res.worstShiftPx} px; replies over toggles ${rep1 - rep0}`);
       }
     } else {
       // Thread reveal: a few moves in, then mid-maze (greedy toward the finish).
@@ -313,7 +345,7 @@ try {
         const chains = await chainsNow();
         const res = await capture(label, chains, []);
         rec.states.push({ state: label, moves: total, ...res });
-        console.log(`${cs.name} ${label}: moves ${total}; IoU ${res.iou?.toFixed(4)} today ${res.footToday} outline ${res.footOutline}; past ${res.past} short ${res.short}`);
+        console.log(`${cs.name} ${label}: moves ${total}; IoU ${res.iou?.toFixed(4)} today ${res.footToday} outline ${res.footOutline}; past ${res.past} (corner ${res.pastC}) short ${res.short}`);
       }
     }
     if (rec.errors.length) console.log(`${cs.name}: page errors ${rec.errors.length}: ${rec.errors[0]}`);

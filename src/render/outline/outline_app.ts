@@ -243,6 +243,7 @@ vec3 appMaterial(int ch, highp float a, highp float side01, int scn, highp float
   highp float an = c.closed ? kWrap(a, total) : clamp(a, 0.0, total);
   vec3 m = kSectionAtArc(c, an, -1.0);
   highp float actrl = kCtrlOfArcNear(c, an, kSecK0);
+#if KRV
   if (uKFx.w > 0.5 && uKFx.z < c.fxDone) {
     int st = int(uKFx.x + 0.5);
     if (st >= 1) {
@@ -251,10 +252,12 @@ vec3 appMaterial(int ch, highp float a, highp float side01, int scn, highp float
       if (pR > 0.0) m = kRainbowBlend(m, pR, side01);
     }
   }
+#endif
   if ((uKPaint.x > 0.5 && c.paintOn) || uKFx2.z > 0.5) {
     highp vec4 st = kPaintAt(c, actrl, an, uPx, false);
     m = kComposePaintFlat(m, st, kGlow(c, actrl));
   }
+#if KRV
   if (uKExplore.x > 0.5) {
     // The thread reveal (EXPLORE_MAIN_GLSL's look, by the same inputs: lat
     // from the foot distance over the thread width, a pixel in world units).
@@ -281,6 +284,7 @@ vec3 appMaterial(int ch, highp float a, highp float side01, int scn, highp float
     }
     al *= ev;
   }
+#endif
   return m;
 }
 void main() {
@@ -290,6 +294,8 @@ void main() {
   // width h m(foot) gives the coverage, and the last W of it is the
   // border's ink (the band steps aside wherever its own width is below 1).
   float ink = 0.0;
+  float side = 0.5;
+#if KRV
   if (uRvOn > 0) {
     int kb = -1; float wb = 0.0;
     for (int k = 0; k < 4; k++) if (vRun[k] >= 0 && vW[k] > wb) { wb = vW[k]; kb = k; }
@@ -320,7 +326,6 @@ void main() {
   }
   // The rainbow's stripes run across the thread: the side from the signed
   // distance to the heaviest slot's centerline (0.5 = on it).
-  float side = 0.5;
   if (uKFx.w > 0.5 && int(uKFx.x + 0.5) == 1) {
     int kb = -1; float wb = 0.0;
     for (int k = 0; k < 4; k++) if (vRun[k] >= 0 && vW[k] > wb) { wb = vW[k]; kb = k; }
@@ -333,6 +338,7 @@ void main() {
       }
     }
   }
+#endif
   vec3 c = vec3(0.0); float W = 0.0; float A = 0.0;
   for (int k = 0; k < 4; k++) {
     int r = vRun[k]; float w = vW[k];
@@ -343,6 +349,11 @@ void main() {
     c += w * appMaterial(int(m.x + 0.5), m.y + vS[k] * m.z, side, int(m.w + 0.5), vS[k], al); W += w; A += w * al;
   }
   vec3 col = mix(W > 0.0 ? c / W : vec3(0.0), uInk, ink);
+#if !KRV
+  // K1291 s3: no reveal, intro FX or thread reveal: the opaque write, and
+  // no discard (it would cost the fill its early depth test).
+  o = vec4(col, 1.0);
+#else
   // The intro's materialize alpha (comet, dust), premultiplied; the fill
   // blends only while those styles run (1 otherwise: the opaque write).
   float al = W > 0.0 ? A / W : 1.0;
@@ -353,6 +364,7 @@ void main() {
   if (uFp == 1 && al < 0.999) discard;
   if (uFp == 2 && al >= 0.999) discard;
   o = vec4(col * al, al);
+#endif
 }`;
 /** The knot uniforms APP_FS reads (paint_model.ts knotUniforms). */
 const KNOT_NAMES = [
@@ -446,14 +458,26 @@ float dS(float len, float a, float c) { float d = c - a; if (len > 0.0) { d = mo
 float sst(float e0, float e1, float x) { float t = clamp((x - e0) / (e1 - e0), 0.0, 1.0); return t * t * (3.0 - 2.0 * t); }
 void main() {
   float s = vA.x;
+#if KRV
+  // K1291 s3: an arc (a junction corner, slot 0 = -2 - its entry) runs
+  // from chain A's sA to chain B's sB: it shows where BOTH arms show at its
+  // ends (band_gpu.ts).
+  float sA = s; int chB = -1; float sB = 0.0;
+  if (vSl.x <= -2) { vec4 e = T(-2 - vSl.x, 0); sA = e.y; chB = int(e.z + 0.5); sB = e.w; }
   // K1291 s2: under a reveal, the band is the whole-width border only; a
   // narrowed stretch's border is the fill's (APP_FS), none is unrevealed.
   bool rv = uRvOn > 0;
-  if (rv && vCh >= 0 && rvMaskS(vCh, s) < 0.999) discard;
+  if (rv && vCh >= 0 && min(rvMaskS(vCh, sA), chB >= 0 ? rvMaskS(chB, sB) : 1.0) < 0.999) discard;
   // K1291 s2: under the thread reveal, the border shows with its OWN
   // thread (a hidden thread's border would cross a seen one's fill).
-  float exV = exVisS(vCh, s);
+  float exV = exVisS(vCh, sA);
+  if (chB >= 0) exV = min(exV, exVisS(chB, sB));
   if (exV <= 0.002) discard;
+#else
+  // K1291 s3: no reveal: whole, as stage 1's band.
+  const bool rv = false;
+  const float exV = 1.0;
+#endif
   float keyC = vA.z - vA.y * uZt / uH;
   float seenO[4]; float seenS[4]; float seenL[4]; float seenF[4];
   int n = 0;
@@ -485,8 +509,12 @@ void main() {
     float hO = rv ? uH * rvMaskS(int(t1.w + 0.5), bs) : uH;
     if (!(best < hO)) continue;
     // ... and under the thread reveal, a hidden thread covers nothing.
+#if KRV
     float vO = exVisS(int(t1.w + 0.5), bs);
     if (vO <= 0.002) continue;
+#else
+    const float vO = 1.0;
+#endif
     float g = clamp((hO - best) / uW, 0.0, 1.0) * vO;
     float keyO = bz - best * uZt / uH;
     float f = 1.0 - g * sst(-uZt, uZt, keyO - keyC);
@@ -517,7 +545,19 @@ void main() {
   o = c;
 }`;
 
+/** K1291 s3: a fill or band shader with its reveal code in (KRV 1) or out
+ *  (KRV 0). Exported for the tests. */
+export function krvSource(src: string, on: boolean): string {
+  const m = /^#version 300 es\r?\n/.exec(src);
+  if (!m) throw new Error("krvSource: no #version line");
+  return `${m[0]}#define KRV ${on ? 1 : 0}\n${src.slice(m[0].length)}`;
+}
+/** K1291 s3: the shaders krvSource builds both ways (for the tests). */
+export const KRV_SHADERS = { APP_FS, BAND_FS };
+
 type U = WebGLUniformLocation | null;
+type UA = { mat: U; ks: U; map: U; px: U; tex: U[]; knot: U[]; ink: U; h: U; w: U; rv: U; cm: U; rvOn: U; chainS: U; ci: U; fp: U };
+type UB = { mat: U; chain: U; pass: U; ink: U; h: U; w: U; zt: U; rv: U; cm: U; rvOn: U; pre: U; tex: U[]; knot: U[]; px: U };
 
 /** The GL side: programs, the outline's buffers, the offscreen target. */
 class OutlinePass {
@@ -530,10 +570,23 @@ class OutlinePass {
   private uP: { mat: U; ks: U; runs: U };
   /** K1291: the app's fill (APP_FS) and its uniforms. */
   private app: WebGLProgram;
-  private uA: { mat: U; ks: U; map: U; px: U; tex: U[]; knot: U[]; ink: U; h: U; w: U; rv: U; cm: U; rvOn: U; chainS: U; ci: U; fp: U };
+  private uA: UA;
   private runMap: WebGLTexture;
   hasMap = false;
-  private uB: { mat: U; chain: U; pass: U; ink: U; h: U; w: U; zt: U; rv: U; cm: U; rvOn: U; pre: U; tex: U[]; knot: U[]; px: U };
+  private uB: UB;
+  /** K1291 s3: the fill and band programs twice: [0] with the reveal, intro
+   *  FX and thread reveal code (KRV 1), [1] without (KRV 0, stage 1's
+   *  programs: no discard, so the fill keeps its early depth test). A frame
+   *  where none of the three runs draws [1]; app/uA and band/uB are this
+   *  frame's pick. */
+  private appV: [WebGLProgram, WebGLProgram];
+  private uAV: [UA, UA];
+  private bandV: [WebGLProgram, WebGLProgram];
+  private uBV: [UB, UB];
+  /** K1291 s3: force a pair (a probe's A/B: true = [1], false = [0]); null = by the frame. */
+  lite: boolean | null = null;
+  /** K1291 s3: the pair the last draw used (1 = without the reveal code). */
+  drewLite = -1;
   private chainTex: WebGLTexture;
   private passTex: WebGLTexture;
   /** K1291 s2: the reveal masks (paint.ts revealMaskTex), the per-scene-chain
@@ -581,35 +634,17 @@ class OutlinePass {
       return p;
     };
     this.paint = mk(PAINT_VS, PAINT_FS, "paint");
-    this.band = mk(BAND_VS, BAND_FS, "band");
+    this.bandV = [mk(BAND_VS, krvSource(BAND_FS, true), "band"), mk(BAND_VS, krvSource(BAND_FS, false), "band (no reveal)")];
+    this.band = this.bandV[0];
     this.comp = mk(COMP_VS, COMP_FS, "composite");
     this.uP = { mat: gl.getUniformLocation(this.paint, "uMat"), ks: gl.getUniformLocation(this.paint, "uKS"), runs: gl.getUniformLocation(this.paint, "uRuns") };
-    this.app = mk(APP_VS, APP_FS, "app paint");
-    const ua = (n: string): U => gl.getUniformLocation(this.app, n);
-    this.uA = {
-      fp: ua("uFp"),
-      mat: ua("uMat"),
-      ks: ua("uKS"),
-      map: ua("uRunMap"),
-      px: ua("uPx"),
-      tex: APP_TEX.map(ua),
-      knot: KNOT_NAMES.map(ua),
-      ink: ua("uInk"),
-      h: ua("uH"),
-      w: ua("uW"),
-      rv: ua("uRv"),
-      cm: ua("uCm"),
-      rvOn: ua("uRvOn"),
-      chainS: ua("uChainS"),
-      ci: ua("uCi"),
-    };
+    this.appV = [mk(APP_VS, krvSource(APP_FS, true), "app paint"), mk(APP_VS, krvSource(APP_FS, false), "app paint (no reveal)")];
+    this.uAV = [this.appUniforms(this.appV[0]), this.appUniforms(this.appV[1])];
+    this.uBV = [this.bandUniforms(this.bandV[0]), this.bandUniforms(this.bandV[1])];
+    this.app = this.appV[0];
+    this.uA = this.uAV[0];
+    this.uB = this.uBV[0];
     this.runMap = gl.createTexture()!;
-    const ub = (n: string): U => gl.getUniformLocation(this.band, n);
-    this.uB = {
-      mat: ub("uMat"), chain: ub("uChain"), pass: ub("uPass"), ink: ub("uInk"), h: ub("uH"), w: ub("uW"), zt: ub("uZt"),
-      rv: ub("uRv"), cm: ub("uCm"), rvOn: ub("uRvOn"), pre: ub("uPre"),
-      tex: APP_TEX.map(ub), knot: KNOT_NAMES.map(ub), px: ub("uPx"),
-    };
     this.uC = gl.getUniformLocation(this.comp, "uC");
     const nb = (): WebGLBuffer => gl.createBuffer()!;
     this.bufs = { pos: nb(), key: nb(), w: nb(), s: nb(), run: nb(), idx: nb(), bPos: nb(), bAttr: nb(), bSl: nb(), bCh: nb() };
@@ -645,6 +680,24 @@ class OutlinePass {
     this.cmTex = gl.createTexture()!;
     this.ciTex = gl.createTexture()!;
     this.fbo = gl.createFramebuffer()!;
+  }
+
+  private appUniforms(p: WebGLProgram): UA {
+    const ua = (n: string): U => this.gl.getUniformLocation(p, n);
+    return {
+      fp: ua("uFp"), mat: ua("uMat"), ks: ua("uKS"), map: ua("uRunMap"), px: ua("uPx"),
+      tex: APP_TEX.map(ua), knot: KNOT_NAMES.map(ua), ink: ua("uInk"), h: ua("uH"), w: ua("uW"),
+      rv: ua("uRv"), cm: ua("uCm"), rvOn: ua("uRvOn"), chainS: ua("uChainS"), ci: ua("uCi"),
+    };
+  }
+
+  private bandUniforms(p: WebGLProgram): UB {
+    const ub = (n: string): U => this.gl.getUniformLocation(p, n);
+    return {
+      mat: ub("uMat"), chain: ub("uChain"), pass: ub("uPass"), ink: ub("uInk"), h: ub("uH"), w: ub("uW"), zt: ub("uZt"),
+      rv: ub("uRv"), cm: ub("uCm"), rvOn: ub("uRvOn"), pre: ub("uPre"),
+      tex: APP_TEX.map(ub), knot: KNOT_NAMES.map(ub), px: ub("uPx"),
+    };
   }
 
   /** A worker reply into the buffers (idx and run only on a restructure). */
@@ -794,6 +847,15 @@ class OutlinePass {
       const fade =
         (!!kfx && kfx[3] > 0.5 && (Math.round(kfx[0]) === 2 || Math.round(kfx[0]) === 3)) ||
         (!!kex && kex[0] > 0.5);
+      // K1291 s3: no reveal, intro FX or thread reveal this frame: the
+      // programs without their code (stage 1's cost).
+      const lite = this.lite ?? (!rvOn && !(!!kfx && kfx[3] > 0.5) && !(!!kex && kex[0] > 0.5));
+      const li = lite ? 1 : 0;
+      this.app = this.appV[li];
+      this.uA = this.uAV[li];
+      this.band = this.bandV[li];
+      this.uB = this.uBV[li];
+      this.drewLite = li;
       if (fade) {
         gl.enable(gl.BLEND);
         gl.blendEquation(gl.FUNC_ADD);
@@ -942,9 +1004,9 @@ class OutlinePass {
     gl.deleteVertexArray(this.bVao);
     gl.deleteVertexArray(this.cVao);
     gl.deleteProgram(this.paint);
-    gl.deleteProgram(this.app);
+    for (const p of this.appV) gl.deleteProgram(p);
     gl.deleteTexture(this.runMap);
-    gl.deleteProgram(this.band);
+    for (const p of this.bandV) gl.deleteProgram(p);
     gl.deleteProgram(this.comp);
     gl.deleteTexture(this.runTex);
     gl.deleteTexture(this.chainTex);
@@ -1339,6 +1401,17 @@ export function createOutlineApp(ctx: SceneExportCtx, requestFrame: () => void):
       if (rc) rc.visible = on === true;
       dirty = true;
       requestFrame();
+    },
+    /** K1291 s3 probes: force the fill/band pair (true = without the reveal
+     *  code, false = with it, null = by the frame); drewLite = the last
+     *  draw's (1 = without). */
+    setLite(v: boolean | null): void {
+      if (pass) pass.lite = v;
+      dirty = true;
+      requestFrame();
+    },
+    get drewLite(): number {
+      return pass ? pass.drewLite : -1;
     },
   };
   (globalThis as unknown as Record<string, unknown>).__knotOutline = api;

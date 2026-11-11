@@ -33,7 +33,9 @@ export interface BandGpu {
   pos: Float32Array;
   /** Per vertex: own s, dC, own zAtC(C, s), the piece's own alpha (K1283 s3: a tail's, else 1). */
   attr: Float32Array;
-  /** Per vertex (flat, the quad's): BAND_SLOTS global pass ids, -1 none. */
+  /** Per vertex (flat, the quad's): BAND_SLOTS global pass ids, -1 none.
+   *  K1291 s3: an arc's slot 0 is -2 - its entry in passTex (chain A, sA,
+   *  chain B, sB in the entry's first texel). */
   slots: Int32Array;
   count: number;
   /** Chain samples (x, y, s, z), BAND_TEX_W texels a row. */
@@ -111,8 +113,24 @@ export function bandGpu(table: OutlineTable, scene: SceneIn, zz: ZZ): BandGpu {
   // Passes, chain by chain in order (global id = passBase[c] + j).
   const passBase: number[] = []; let nP = 0;
   for (const ps of passes) { passBase.push(nP); nP += ps.length; }
-  const passTexH = Math.max(1, Math.ceil((PT * nP) / BAND_TEX_W));
+  // K1291 s3: an arc piece (a junction corner) runs from chain A's sA to
+  // chain B's sB, so one chain's reveal cannot say whether it shows. Each
+  // arc gets an entry after the passes (pass id nP + k, first texel: chain
+  // A, sA, chain B, sB) and its quads carry slot 0 = -2 - id (no pass slot:
+  // every pass loop skips ids < 0); BAND_FS reads both arms there.
+  const arcOf = new Map<number, number>();
+  const arcEnt: number[] = [];
+  table.pieces.forEach((p, i) => {
+    if (p.kind !== "arc" || p.pts.length < 4 || !(p.chain >= 0 && p.chain < zc.length)) return;
+    const cw = table.corners[p.corner];
+    if (!cw || !(cw.bChain >= 0 && cw.bChain < zc.length) || cw.aChain !== p.chain) return;
+    arcOf.set(i, nP + arcEnt.length / 4);
+    arcEnt.push(p.chain, p.s0, cw.bChain, p.s1);
+  });
+  const nArc = arcEnt.length / 4;
+  const passTexH = Math.max(1, Math.ceil((PT * (nP + nArc)) / BAND_TEX_W));
   const passTex = new Float32Array(4 * BAND_TEX_W * passTexH);
+  for (let k = 0; k < nArc; k++) passTex.set(arcEnt.slice(4 * k, 4 * k + 4), 4 * PT * (nP + k));
   const sgn = (c: ZChain): number => (c.closed && c.len > 0 ? c.len : -1);
   passes.forEach((ps, c) => ps.forEach((P, j) => {
     const O = zc[P.o];
@@ -146,7 +164,9 @@ export function bandGpu(table: OutlineTable, scene: SceneIn, zz: ZZ): BandGpu {
   };
   const sl: number[] = [];
   const cand: number[] = [];
+  let pIdx = -1;
   for (const p of table.pieces) {
+    pIdx++;
     const np = p.pts.length / 2;
     if (np < 2) continue;
     const tied = (p.kind === "run" || p.kind === "ghost") && p.chain >= 0 && p.chain < zc.length && passes[p.chain].length > 0;
@@ -165,6 +185,8 @@ export function bandGpu(table: OutlineTable, scene: SceneIn, zz: ZZ): BandGpu {
       let L = 0;
       for (let i = 1; i < np; i++) L += Math.sqrt((p.pts[2 * i] - p.pts[2 * i - 2]) ** 2 + (p.pts[2 * i + 1] - p.pts[2 * i - 1]) ** 2);
       const span = p.s1 - p.s0;
+      const arc = arcOf.get(pIdx);
+      const asl = arc === undefined ? null : [-2 - arc];
       let cum = 0;
       let ia = inner(0);
       for (let i = 0; i + 1 < np; i++) {
@@ -172,7 +194,7 @@ export function bandGpu(table: OutlineTable, scene: SceneIn, zz: ZZ): BandGpu {
         const sa = L > 0 ? p.s0 + (span * cum) / L : p.s0;
         cum += Math.sqrt((p.pts[2 * i + 2] - p.pts[2 * i]) ** 2 + (p.pts[2 * i + 3] - p.pts[2 * i + 1]) ** 2);
         const sb = L > 0 ? p.s0 + (span * cum) / L : p.s1;
-        quad(p.pts[2 * i], p.pts[2 * i + 1], p.pts[2 * i + 2], p.pts[2 * i + 3], ia[0], ia[1], ib[0], ib[1], sa, sb, 0, 0, null, pa, i);
+        quad(p.pts[2 * i], p.pts[2 * i + 1], p.pts[2 * i + 2], p.pts[2 * i + 3], ia[0], ia[1], ib[0], ib[1], sa, sb, 0, 0, asl, pa, i);
         ia = ib;
       }
       continue;
