@@ -517,11 +517,11 @@ Next free ID: K1310.
 - **K1278** · The outline's paint blends seamlessly across junctions (Levi 2026-11-10): section colour and pulses
   from per-pixel fields continuous across faces, triangles and junctions, gated by a seam test on every
   face edge, triangle edge and junction. Full text in docs/ledger_notes.md
-  - owner: nobody since 2026-11-10 21:00 (merged; agent `ab4debcc50d9ea9fe` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `884bb4e8`
-  - evidence: src/render/outline/ (paint, fill_tri, draw, band_gpu), k1278s2_* tools; untracked .claude/probes/K1240/out/k1278s2/
-  - next: Stage 3 (pulses): since K1291 s1 (c7fa5c61) rp=outline draws pulses through today's paint code (kPaintAt), matching at the pinned clock; check a second phase (K299's t 100 and 100.45) and the seams. stage 3 (pulses) after the junction residuals: across as a GPU vertex attribute, the round-end term with K1283 stage 3 cap; residuals in docs/design/K1278_s2.md handoff (folded rings muse_hash j100, strip border over the next fan, the T at ji 32, 1-4 level seams need per-pixel s)
-  - brief: `docs/design/K1278_s2.md`
+  - owner: agent `a0e0c69694779aaec` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-11 07:56, 2 h cap ~09:56)
+  - branch: `worktree-agent-a0e0c69694779aaec`, worktree `.claude/worktrees/agent-a0e0c69694779aaec`; last commit: `f6968f7d`
+  - evidence: `.claude/probes/K1278/`
+  - next: Stage 3 running: a seam test on the app path (APP_FS) at pulse phases t 100 and 100.45 on def, muse_hash, g41_user_tw64, a ring; fix steps steeper than today's look
+  - brief: `docs/design/K1278_s3.md`
 - **K1283** · Junction borders of the outline (rp=outline) against form B. Stage 1 (3c8bd61e) fixed the concave
   corner bites (census 27528 -> 17756 px); left: the failed corners and the end-arm round ends (x47, x73,
   x349). Full text in docs/ledger_notes.md
@@ -536,7 +536,7 @@ Next free ID: K1310.
   - owner: nobody since 2026-11-11 07:55 (merged; agent `a06c167761380dff5` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
   - branch: mainline; last commit: `00317716`
   - evidence: `.claude/probes/K1291/`
-  - next: Stage 3 merged: corner specks gone from the burn/rainbow fronts (muse burn f50 1989 -> 8), the rainbow head swells as today (f20 IoU .65-.75 -> .97-.99), main frame back at s1 cost when nothing reveals (rest 5.8, drag 8.5 ms). Stage 4: f100 corner specks (ring burn/rainbow 332, muse rainbow f85 186), the rainbow colour order (outline purple-first vs today red-first) and a dark notch at the rainbow head (crops/muse_trace-rainbow_f50_0_front.png), the threads start-marker glow, muse comet border fade (K1308); check the swell over crossings behind the front. Then the tied-run alpha for K1283 (band_gpu.ts) is free
+  - next: Stage 3 merged at 00317716 (corner specks gone, rainbow head swell, main frame at s1 cost). Stage 4 waits for K1278 s3 to free outline_app/paint (junction priority): f100 corner specks (ring burn/rainbow 332, muse rainbow f85 186), rainbow colour order (outline purple-first vs today red-first), dark notch at the rainbow head (out/s3/crops/crops/muse_trace-rainbow_f50_0_front.png), threads start-marker glow, muse comet border fade (K1308), the swell over crossings behind the front
   - brief: `docs/design/K1291_s3.md`
 
 ## Next, in order
