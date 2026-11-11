@@ -70,7 +70,7 @@
 // Which run a slot reads is decided once (`fillRuns`, from frame 0); the
 // run's span follows the frame.
 import type { DiagramStructure, OutlineTable, SceneIn } from "./outline";
-import { zChains, zAtC, footNear } from "./draw";
+import { zChains, zAtC, zPastC, footNear } from "./draw";
 import { paintAt, runAt, type SectionPaint } from "./paint";
 
 export const CAP_M = 17;
@@ -82,22 +82,35 @@ export const DISK_M = 32;
 /** K1283 s6: rings of a round end (radii h k / DISK_R), so over its fan the
  *  disk samples the fan's paint field as finely as the tail beside it does. */
 export const DISK_R = 4;
-/** K1283 s7 experiment: a round end paints its own arm's slot at s_E, keyed by its cone. */
+/** K1283 s7: a round end is form B's end cap: centred at c', keyed by form
+ *  B's cone about the segment term -> c', painting its own arm's slot at s_E
+ *  (false: s6's disk at J.c under the fan, with the fan's paint). */
 export const DISK_OWN = true;
+/** K1283 s7: where form B's through chain is on top of the round end (its
+ *  margin is negative), the disk's key falls this many times faster, so the
+ *  through chain's strip shows there even where its own key sags near the
+ *  mouth (about 0.2 under its cone at muse_hash j29 and j133). 1, 10, 40 on
+ *  muse_hash j29 / j44 / j133: +15 / +10 / +10, +7 / +7 / +5, +5 / +6 / +4 px. */
+export const DISK_DROP = 40;
 
 export interface StripItem { kind: "strip"; iv: number; pi: number; ghost: boolean; N: number; base: number; pL: number; pR: number }
 export interface CapItem { kind: "cap"; pi: number; piece: number; atEnd: boolean; base: number }
 /** jItem / arm: the junction item and its arm index (its end arm) whose fan the tail lies over; -1 if none. */
 export interface TailItem { kind: "tail"; pi: number; piece: number; base: number; jItem: number; arm: number }
-/** K1283 s4: an end arm's round end, form B's disk of radius h about the
- *  junction's centre: a hub keyed z_E(s_E) and DISK_R rings of DISK_M
- *  points at radius h k / DISK_R keyed z_E(s_E) - zt k / DISK_R (s6: the
- *  rings, so the paint over the fan is sampled as finely as the tail's), so
- *  its key is form B's cone key z - d zt / h and the seam
- *  against the through chain curves where the two cone keys meet. Every end
- *  arm gets one, decided here once; a frame moves its points only. Its
- *  paint is the tail's: the fan's where it lies over the fan, its own arm's
- *  slot at s_E elsewhere. */
+/** K1283 s4: an end arm's round end, form B's disk of radius h: a hub and
+ *  DISK_R rings of DISK_M points at radius h k / DISK_R (s6: the rings, so
+ *  the key and paint are sampled as finely as the tail's). K1283 s7 (with
+ *  DISK_OWN): it is form B's end cap. Form B extends the end chain from its
+ *  term to c', the nearest point of a through chain's centreline, so the
+ *  disk is centred on c', keyed by form B's cone about that segment (z runs
+ *  from z_E(s_E) at the term to the chain's depth past its end at c'), and
+ *  paints its own arm's slot at s_E. Its key is then shifted to meet what
+ *  it lies over: the fan's key there (or, off the fan, the highest through
+ *  chain's cone key) plus form B's margin, its cone key minus that through
+ *  chain's, steepened DISK_DROP times where negative. So it shows where
+ *  form B's end chain is on top, and its seam curves where the cone keys
+ *  meet. Every end arm gets one, decided here once; a frame moves its
+ *  points only. */
 export interface DiskItem { kind: "disk"; pi: number; ai: number; base: number; jItem: number; arm: number }
 /** `strip`: the item index of the arm's strip (-1: none), whose end row at
  *  `atStart` is the arm's P, M, N. */
@@ -610,9 +623,15 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
         }
       }
       const sx = tx - cx; const sy = ty - cy; const sl2 = sx * sx + sy * sy;
+      // Form B's appended vertex c' takes the chain's depth past its end
+      // (s_E - |term c'| at a start, s_E + |term c'| at an end), and z runs
+      // linearly along the segment: a raised end falls to c''s depth, so it
+      // ties the through chain there instead of covering it.
+      const atS = cE ? Math.abs(sE) <= Math.abs(sE - cE.len) : true;
+      const zC = DISK_OWN && cE && sl2 > 0 ? zPastC(cE, atS ? sE - Math.sqrt(sl2) : sE + Math.sqrt(sl2)) : z;
       const coneZ = (x: number, y: number): number => {
         const u = sl2 > 0 ? Math.min(1, Math.max(0, ((x - cx) * sx + (y - cy) * sy) / sl2)) : 0;
-        return z - (Math.hypot(x - cx - u * sx, y - cy - u * sy) * zt) / hD;
+        return zC + (z - zC) * u - (Math.hypot(x - cx - u * sx, y - cy - u * sy) * zt) / hD;
       };
       set(it.base, cx, cy, DISK_OWN ? coneZ(cx, cy) : z, sE); s4[SLOTS * it.base] = sE;
       for (let r = 0; r < DISK_R; r++) {
@@ -746,13 +765,25 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
       const px = pos[2 * v]; const py = pos[2 * v + 1];
       if (key[v] < -999) continue;
       // K1283 s7: a round end paints its own arm's slot at s_E, as form B
-      // paints the end chain's colour over its disk. Over the fan it is keyed
-      // by the fan's key there plus form B's margin (its cone key minus the
-      // highest through chain's, z - d zt / h about that chain's centreline),
-      // so it shows where form B's end chain is on top and its seam curves
-      // where the cone keys meet; off the fan its cone key meets the strips'.
+      // paints the end chain's colour over its cap. It is keyed by the fan's
+      // key there (off the fan, the highest through chain's cone key) plus
+      // form B's margin: its cone key minus the highest through arm's, z - d
+      // zt / h about that arm's centreline (any arm but its own, so a chain
+      // that ends on itself counts), DISK_DROP times steeper where negative.
+      // So it shows where form B's end chain is on top, and its seam curves
+      // where the cone keys meet, against a strip whose key sags too.
       if (it.kind === "disk" && DISK_OWN) {
         if (!(px >= x0 && px <= x1 && py >= y0 && py <= y1)) continue;
+        let kT = -Infinity;
+        for (const ja of J.arms) {
+          if (ja.ai === it.ai || st.arms[ja.ai]?.kind === "end") continue;
+          const zj = zc[ja.pi]; if (!zj || zj.n < 2) continue;
+          const f = footNear(zj, px, py, armSOf(ja.ai), 4 * table.h, 0, 0); if (!Number.isFinite(f.d)) continue;
+          const kk = zAtC(zj, f.s) - (f.d * zt) / table.h; if (kk > kT) kT = kk;
+        }
+        if (!Number.isFinite(kT)) continue;
+        const mg = key[v] - kT; const mD = mg >= 0 ? mg : DISK_DROP * mg;
+        let kB = kT;
         for (let i = 0; i < R; i++) {
           const b = h + 1 + i; const c = h + 1 + ((i + 1) % R);
           const ax = pos[2 * h]; const ay = pos[2 * h + 1]; const bx = pos[2 * b]; const by = pos[2 * b + 1]; const cx = pos[2 * c]; const cy = pos[2 * c + 1];
@@ -761,19 +792,10 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
           const lb = ((cx - px) * (ay - py) - (cy - py) * (ax - px)) / A;
           const lc = 1 - la - lb;
           if (la < -1e-9 || lb < -1e-9 || lc < -1e-9) continue;
-          if (key[h] > -999 && key[b] > -999 && key[c] > -999) {
-            const kf = la * key[h] + lb * key[b] + lc * key[c];
-            let kT = -Infinity;
-            for (const ja of J.arms) {
-              if (ja.pi === it.pi || st.arms[ja.ai]?.kind === "end") continue;
-              const zj = zc[ja.pi]; if (!zj || zj.n < 2) continue;
-              const f = footNear(zj, px, py, armSOf(ja.ai), 4 * table.h, 0, 0); if (!Number.isFinite(f.d)) continue;
-              const kk = zAtC(zj, f.s) - (f.d * zt) / table.h; if (kk > kT) kT = kk;
-            }
-            if (Number.isFinite(kT)) key[v] = kf + (key[v] - kT);
-          }
+          if (key[h] > -999 && key[b] > -999 && key[c] > -999) kB = la * key[h] + lb * key[b] + lc * key[c];
           break;
         }
+        key[v] = kB + mD;
         continue;
       }
       let found = false;

@@ -80,24 +80,27 @@ function paintFB(fb: FBW, sp: SectionPaint, n: number): Float32Array {
 }
 
 /** One candidate (before or after): its table, fill and paint, rastered per window. */
-interface Cand { paintWin(w: JWin, pp?: number): Float32Array; inkWin(w: JWin, pp?: number): Float32Array; disk: Uint8Array }
+interface Cand { paintWin(w: JWin, pp?: number): Float32Array; inkWin(w: JWin, pp?: number): Float32Array; disk: Uint8Array; itm: Int32Array; kr: Float32Array; label(i: number): string; cone(i: number, x: number, y: number): number }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function cand(Om: any, Fm: any, scene: O.SceneIn, sp: SectionPaint): Cand {
   const st = Om.structure(scene); const t = Om.frame(st, scene);
   const fs = Fm.fillStructure(st, Fm.fillResolution(st, t)); const fr = Fm.fillFrame(fs, st, t, scene);
   const runs = Fm.fillRuns(fs, st, fr, sp) as Int32Array;
-  const R = rScene(t, scene, D);
+  const R = rScene(t, scene, D); const zz = D.zChains(scene);
   const r4 = new Int32Array(4); const w4 = new Float64Array(4); const s4 = new Float64Array(4); const c: RGB = [0, 0, 0];
   const dV = new Uint8Array(fs.nV); for (const it of fs.items) if (it.kind === "disk") for (let v = it.base; v < it.base + 1 + F.DISK_R * F.DISK_M; v++) dV[v] = 1;
+  const vIt = new Int32Array(fs.nV).fill(-1); fs.items.forEach((it: any, i: number) => { for (let v = it.base; v < it.base + Fm.itemVerts(it); v++) vIt[v] = i; });
   const self = {
-    disk: new Uint8Array(0),
+    disk: new Uint8Array(0), itm: new Int32Array(0), kr: new Float32Array(0),
+    cone(i: number, x: number, y: number): number { const it = fs.items[i]; const c = zz.zc[it.pi]; if (!c || c.n < 2) return NaN; const h = scene.look.halfWidth; const zt = 0.1 * scene.look.depthAmp; let b = { d: Infinity, s: 0 }; for (let k = 0; k < c.n; k++) { const d = Math.hypot(c.xs[k] - x, c.ys[k] - y); if (d < b.d) b = { d, s: c.s[k] }; } const f = D.footNear(c, x, y, b.s, 4 * h, 0, 0); return D.zAtC(c, f.s) - (f.d * zt) / h; },
+    label(i: number): string { if (i < 0) return "none"; const it = fs.items[i]; const ch = [...zz.idx].find(([, v]) => v === it.pi)?.[0]; return `${it.kind}:c${ch ?? "?"}`; },
     paintWin(w, pp = ppu) {
       const n = w.N * w.N; const win = { tri: new Int32Array(n).fill(-1), bary: new Float32Array(3 * n) };
       const own = Fm.rasterFill(fs, fr, w.c0 / pp, w.r0 / pp, w.N, w.N, pp, win) as Int32Array;
-      const rgb = new Float32Array(3 * n).fill(-1); const I = fs.idx as Uint32Array; self.disk = new Uint8Array(n);
+      const rgb = new Float32Array(3 * n).fill(-1); const I = fs.idx as Uint32Array; self.disk = new Uint8Array(n); self.itm = new Int32Array(n).fill(-1); self.kr = new Float32Array(n).fill(NaN);
       for (let o = 0; o < n; o++) {
         const tr = win.tri[o]; if (own[o] === 0 || tr < 0) continue;
-        if (dV[I[tr]]) self.disk[o] = 1;
+        if (dV[I[tr]]) self.disk[o] = 1; self.itm[o] = vIt[I[tr]]; self.kr[o] = win.bary[3 * o] * fr.key[I[tr]] + win.bary[3 * o + 1] * fr.key[I[tr + 1]] + win.bary[3 * o + 2] * fr.key[I[tr + 2]];
         Fm.vertexPaint(fs, fr, runs, [I[tr], I[tr + 1], I[tr + 2]], [win.bary[3 * o], win.bary[3 * o + 1], win.bary[3 * o + 2]], r4, w4, s4);
         paintAt(sp, r4, w4, s4, c); rgb[3 * o] = c[0]; rgb[3 * o + 1] = c[1]; rgb[3 * o + 2] = c[2];
       }
@@ -171,7 +174,13 @@ if (cropOut) {
       const d = (ma[o] - mb[o]) * amp; const wv = Math.min(1, Math.max(0, d)); const bv = Math.min(1, Math.max(0, -d));
       put(row, 4, o, N, [Math.round(255 * (1 - bv)), Math.round(255 * (1 - wv - bv)), Math.round(255 * (1 - wv))]);
     }
-    const k = (cppu / ppu) ** 2;
+    if (args.includes("--diag")) {
+      const tally = new Map<string, [number, number]>(); const kd = { n: 0, a: 0, b: 0 };
+      for (let o = 0; o < n; o++) { const d = ma[o] - mb[o]; if (Math.abs(d) < Number(opt("dthr") ?? 0.05)) continue; const key = `fb c${fbw.chain[o]} | before ${e.B.label(e.B.itm[o])} | after ${e.A.label(e.A.itm[o])}`; const v = tally.get(key) ?? [0, 0]; if (d > 0) v[0] += d; else v[1] -= d; tally.set(key, v); if (d > 0.002 && e.A.label(e.A.itm[o]).startsWith("disk") && e.B.label(e.B.itm[o]).startsWith("strip")) { const x = (w.c0 + (o % N) + 0.5) / cppu; const y = (w.r0 + Math.floor(o / N) + 0.5) / cppu; const cT = e.B.cone(e.B.itm[o], x, y); kd.n++; kd.a += e.A.kr[o] - cT; kd.b += e.B.kr[o] - cT; } }
+      if (kd.n) console.log(`  disk-over-strip worse px ${kd.n}: after disk key - through cone ${(kd.a / kd.n).toFixed(4)}, before strip key - through cone ${(kd.b / kd.n).toFixed(4)}`);
+      const jj = e.scene.junctions[at.ji] as any; console.log(`  arms: ${jj.arms.map((a: any) => `${a.kind}:c${a.chain}@${(+a.s).toFixed(2)}`).join(" ")}`);
+      for (const [key, v] of [...tally].sort((x, y) => (y[1][0] - y[1][1]) - (x[1][0] - x[1][1])).slice(0, 8)) console.log(`  worse ${v[0].toFixed(1)} better ${v[1].toFixed(1)}  ${key}`);
+    }    const k = (cppu / ppu) ** 2;
     console.log(`${at.label ?? ""} ${at.scene} j${at.ji} (${J.c[0].toFixed(3)}, ${J.c[1].toFixed(3)}): colour err*v before ${(sb / k).toFixed(1)} after ${(sa / k).toFixed(1)} (px at ${ppu} ppu)`);
   });
   writePng(cropOut, img, Wt, Ht);

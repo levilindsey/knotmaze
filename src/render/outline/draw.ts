@@ -155,7 +155,7 @@ export interface DrawData {
 // in form B, which never tie-mixes a group with itself. The walk ends where
 // the partner is beyond 2.2h, so g is 0 there and the span's end shows no step.
 
-interface ZChain { closed: boolean; len: number; xs: Float64Array; ys: Float64Array; s: Float64Array; z: Float64Array; n: number }
+interface ZChain { closed: boolean; len: number; xs: Float64Array; ys: Float64Array; s: Float64Array; z: Float64Array; n: number; pins?: { s: number; z: number }[]; win?: number }
 interface Pass { s: number; o: number; so: number; lo: number; hi: number; rO: number }
 
 export function sstep(e0: number, e1: number, x: number): number {
@@ -263,8 +263,14 @@ export function zChains(scene: SceneIn): { zc: ZChain[]; passes: Pass[][]; idx: 
     passes[ia].push({ s: sa, o: ib, so: sb, lo: loA, hi: hiA, rO: Math.max(loB, hiB) });
     passes[ib].push({ s: sb, o: ia, so: sa, lo: loB, hi: hiB, rO: Math.max(loA, hiA) });
   }
-  zc.forEach((c, i) => { pins[i].sort((u, v) => u.s - v.s); for (let k = 0; k < c.n; k++) c.z[k] = depthAt(pins[i], c.closed, c.len, win, c.s[k]); });
+  zc.forEach((c, i) => { pins[i].sort((u, v) => u.s - v.s); for (let k = 0; k < c.n; k++) c.z[k] = depthAt(pins[i], c.closed, c.len, win, c.s[k]); c.pins = pins[i]; c.win = win; });
   return { zc, passes, idx };
+}
+
+/** K1283 s7: form B's depth at any s of chain c, past an open chain's ends
+ *  too (form B's end arm extension to c' takes its depth there). */
+export function zPastC(c: ZChain, s: number): number {
+  return c.pins ? depthAt(c.pins, c.closed, c.len, c.win ?? 0, s) : zAtC(c, s);
 }
 
 /** Signed arc distance b - a on a chain (wrapped into (-len/2, len/2] when closed). */
