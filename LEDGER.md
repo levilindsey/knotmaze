@@ -503,11 +503,11 @@ Next free ID: K1289.
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: nobody since 2026-11-10 10:40 (merged; agent `ad757402004124445` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `541d22fb`
-  - evidence: .claude/probes/K1240/proto/ (outline.ts, k1247s15_gain, k1247s15_bound, k1247s16_* tools); .claude/probes/K1240/out/ (untracked)
-  - next: stage 16 merged (Claude viewed x308, x124, x14: no visible change at rest, census vs form B 27594 -> 27528): def jumps 33 -> 18, fat 0; K1280 tie spread, END-arm extension feet and arc ends continuous (K16_EB/TS, corners K16_CB=0). Left: the corner foot across concave bisectors (j91 and 10 more; K16_CB=loc fixes them but moves cmp to 670/354/134/16), j176 (Lcut from far positions), j45/j0/j39 undiagnosed, addPointAtC's fold flip (K1288). Bound with jumps gone: block reuse 2-3x at p95, chain closure 1.2-1.4x, so K1268 alone can't reach 3 ms. Next: stage 17 brief
-  - brief: `docs/design/K1247_s16_continuous.md`
+  - owner: agent `a45a644b0bf24dfee` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-10 10:43, 2 h cap ~12:43)
+  - branch: `worktree-agent-a45a644b0bf24dfee`, worktree `.claude/worktrees/agent-a45a644b0bf24dfee`; last commit: `5f3f3862`
+  - evidence: .claude/probes/K1240/proto/ (outline.ts, k1247s17_* tools); .claude/probes/K1240/out/s17/ (untracked)
+  - next: record muse_hash, then the corner foot (K1281), j176, j45/j0/j39 and K1288's fold flip; gain tool no jumps on def, fat, muse_hash
+  - brief: `docs/design/K1247_s17_feet.md`
 - **K1278** · Paint on the outline must blend seamlessly across junctions (Levi 2026-11-10): colour per pixel
   from fields continuous across faces, triangles and junctions (chain + s, per-arm weights easing to an exact
   hand-off as in form B, a pulse's travel distance continuous through the junction), never per face or
