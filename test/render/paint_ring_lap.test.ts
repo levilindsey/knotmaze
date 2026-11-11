@@ -365,7 +365,9 @@ const ROUNDED_QUOTIENTS: Record<string, [number, string]> = {
   // closed chain's s difference into (-len/2, len/2].
   "outline/draw.ts: floor((0.5 * (t0.x + t0.y) - s) / t2.w + 0.5)": [1, "the paint pass's nearest lap to a run's middle (K1240): ambiguous only at the antipode, outside the run whose pixels it paints"],
   "outline/outline_app.ts: floor((0.5 * (t0.x + t0.y) - s) / t2.w + 0.5)": [1, "the app's copy of draw.ts's paint pass (K1240): the same nearest lap, ambiguous only at the antipode"],
-  "outline/outline_app.ts: mod(d, len)": [1, "the GPU tie band's closed-chain s difference (K1240 S4b): one off only next to a lap boundary, where the fold into (-len/2, len/2] gives the same d"],
+  "outline/outline_app.ts: mod(d, len)": [2, "the GPU tie band's closed-chain s difference (K1240 S4b) and the reveal footprint's copy, rvdS (K1291 s2): one off only next to a lap boundary, where the fold into (-len/2, len/2] gives the same d"],
+  "outline/outline_app.ts: floor(u / float(n))": [1, "the ring reveal mask's sample wrap (K1291 s2, rvMask): one off only at a lap boundary, where u lands at -0 or n; k0 and the fraction are clamped, so both read the same ring point"],
+  "outline/outline_app.ts: floor(s / L)": [1, "the reveal footprint's ring wrap (K1291 s2, rvFoot): it only seeds the binary search's start; the walk wraps both ways on folded rvdS distances, so a lap off finds the same foot"],
 };
 
 const ROUNDERS = ["floor", "ceil", "trunc", "round", "roundEven", "fract", "mod", "int"];

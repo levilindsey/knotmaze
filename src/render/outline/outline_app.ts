@@ -111,8 +111,8 @@ float rvMask(int c, highp float a) {
   if (!(T > 0.0)) return rvT(off);
   if (fl > 0.5) {
     highp float u = a / T * float(n); u -= float(n) * floor(u / float(n));
-    int k0 = min(n - 1, int(floor(u))); int k1 = k0 + 1 == n ? 0 : k0 + 1;
-    return mix(rvT(off + k0), rvT(off + k1), u - float(k0));
+    int k0 = clamp(int(floor(u)), 0, n - 1); int k1 = k0 + 1 == n ? 0 : k0 + 1;
+    return mix(rvT(off + k0), rvT(off + k1), clamp(u - float(k0), 0.0, 1.0));
   }
   highp float u = clamp(a / T, 0.0, 1.0) * float(n - 1);
   int k0 = min(n - 2, int(floor(u)));
