@@ -142,7 +142,7 @@ describe("swellStrip", () => {
   const h = 1, W = 0.2, zt = 0.5;
   const at = (d: Float32Array, v: number, q: number): number => d[v * SWELL_STRIDE + q];
 
-  it("covers each segment that swells past 1 at h w, inked over its outer W", () => {
+  it("covers each segment that swells past 1 at h w, its outer W inked until the swell clears h + W", () => {
     const sw = revealMaskTex([{ mask: [1, 1, 2, 1, 1], count: 5, total: 10, closed: false }]);
     const s = swellStrip(sw, z, maps, h, W, zt);
     expect(s.chains).toEqual([{ scene: 0, first: 0, count: 48 }]);
@@ -153,13 +153,22 @@ describe("swellStrip", () => {
       expect(x).toBeGreaterThanOrEqual(2.5);
       expect(x).toBeLessThanOrEqual(7.5);
       expect(Math.abs(y)).toBeLessThanOrEqual(hw + 1e-6);
-      expect(at(s.data, v, 2)).toBeCloseTo(0.3 - (Math.abs(y) * zt) / h + zt / 50, 5);
+      expect(at(s.data, v, 2)).toBeCloseTo(0.3 - (Math.min(Math.abs(y), h) * zt) / h + zt / 50, 5);
       expect(at(s.data, v, 3)).toBe(1);
       expect(at(s.data, v, 5)).toBeCloseTo(0.5 + (0.5 * y) / hw, 5);
       expect(at(s.data, v, 7)).toBe(x);
-      if (at(s.data, v, 4) === 0) expect(Math.abs(y)).toBeLessThanOrEqual(hw - W + 1e-6);
-      else expect(Math.abs(y)).toBeGreaterThanOrEqual(hw - W - 1e-6);
+      // The border fades out as the swell clears today's width-1 casing.
+      const e = Math.min(1, Math.max(0, (h + W - hw) / W));
+      const ink = at(s.data, v, 4);
+      if (ink !== 0) {
+        expect(ink).toBeCloseTo(e, 5);
+        expect(Math.abs(y)).toBeGreaterThanOrEqual(hw - W - 1e-6);
+      }
+      if (Math.abs(Math.abs(y) - hw) < 1e-6) expect(ink).toBeCloseTo(e, 5);
     }
+    const inks = Array.from({ length: 48 }, (_, v) => [Math.abs(at(s.data, v, 1)), at(s.data, v, 4)]);
+    expect(inks.some(([y, k]) => Math.abs(y - 1) < 1e-6 && k === 1)).toBe(true);
+    expect(inks.filter(([y]) => Math.abs(y - 2) < 1e-6).every(([, k]) => k === 0)).toBe(true);
     const ys = Array.from({ length: 48 }, (_, v) => at(s.data, v, 1));
     expect(Math.max(...ys)).toBeCloseTo(2, 5);
     expect(Math.min(...ys)).toBeCloseTo(-2, 5);

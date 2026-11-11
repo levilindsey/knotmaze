@@ -310,8 +310,9 @@ export function revealMaskAt(t: { tex: Float32Array }, c: number, a: number): nu
 // worker's, at width 1. The app draws the swell itself: a strip along each
 // scene chain's band samples (band_gpu chainTex: x, y, s, z) over every
 // segment whose ends swell past 1, at the fill's key (z - d zt / h, lifted
-// zt / 50 over the chain's own fill), its outer W inked as the border (the
-// band steps aside wherever the swell passes 1) and the rainbow's side
+// zt / 50 over the chain's own fill), its outer W inked as the border while
+// today's width-1 casing would still show past the swelled ribbon (fading
+// out by h w = h + W; the band steps aside wherever the swell passes 1), and the rainbow's side
 // across the swelled width. Vertices, SWELL_STRIDE floats each:
 // x, y, key, 1, ink, side, 0, s - the fill's aPos, aKey, aW and aS.
 
@@ -361,7 +362,9 @@ export function swellStrip(
     };
     const vert = (f: number[], o: number, ink: number): void => {
       const side = f[4] > 0 ? 0.5 + (0.5 * o) / f[4] : 0.5;
-      out.push(f[0] + f[2] * o, f[1] + f[3] * o, f[6] - (Math.abs(o) * zt) / h + zt / 50, 1, ink, side, 0, f[7]);
+      // The fill's key out to h, held at its edge's key past it: falling on
+      // to z - 2 zt at a doubled width let the threads under it through.
+      out.push(f[0] + f[2] * o, f[1] + f[3] * o, f[6] - (Math.min(Math.abs(o), h) * zt) / h + zt / 50, 1, ink, side, 0, f[7]);
     };
     for (let j = 0; j < segs; j++) {
       const k1 = j + 1 === n ? 0 : j + 1;
@@ -370,10 +373,15 @@ export function swellStrip(
       // Across: [hw, ib] ink, [ib, 0] and [0, -ib] fill, [-ib, -hw] ink.
       const off = (f: number[]): number[] => [f[4], f[5], 0, -f[5], -f[4]];
       const oa = off(A); const ob = off(B);
+      // Today's casing stays at width 1 under the swelled ribbon, so the
+      // border shows only until the swell clears it: ink fades out over one W.
+      const ea = Math.min(1, Math.max(0, (h + W - A[4]) / W));
+      const eb = Math.min(1, Math.max(0, (h + W - B[4]) / W));
       for (let q = 0; q < 4; q++) {
-        const ink = q === 0 || q === 3 ? 1 : 0;
-        vert(A, oa[q], ink); vert(B, ob[q], ink); vert(B, ob[q + 1], ink);
-        vert(A, oa[q], ink); vert(B, ob[q + 1], ink); vert(A, oa[q + 1], ink);
+        const ia = q === 0 || q === 3 ? ea : 0;
+        const ibk = q === 0 || q === 3 ? eb : 0;
+        vert(A, oa[q], ia); vert(B, ob[q], ibk); vert(B, ob[q + 1], ibk);
+        vert(A, oa[q], ia); vert(B, ob[q + 1], ibk); vert(A, oa[q + 1], ia);
       }
     }
     const count = out.length / SWELL_STRIDE - first;

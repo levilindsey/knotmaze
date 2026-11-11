@@ -607,6 +607,10 @@ class OutlinePass {
   private uAV: [UA, UA];
   private bandV: [WebGLProgram, WebGLProgram];
   private uBV: [UB, UB];
+  /** K1291 s3: the swell depth-tested against the fill (true: under the
+   *  threads that pass over it) or drawn over everything (false, today's
+   *  rainbow head: no thread's casing shows across it). A probe's A/B. */
+  swDepth = false;
   /** K1291 s3: force a pair (a probe's A/B: true = [1], false = [0]); null = by the frame. */
   lite: boolean | null = null;
   /** K1291 s3: the pair the last draw used (1 = without the reveal code). */
@@ -976,20 +980,7 @@ class OutlinePass {
         gl.depthMask(true);
         gl.uniform1i(this.uA.fp, 0);
       } else gl.drawElements(gl.TRIANGLES, this.nIdx, gl.UNSIGNED_INT, 0);
-      // K1291 s3: the rainbow's swell over the fill (paint.ts swellStrip):
-      // the same program, the per-scene-chain map in the run map's place.
       const swl = !fade && !!ap && this.hasMap && li === 0 && this.swOn && this.hasCm;
-      if (swl) {
-        gl.uniform1i(this.uA.swl, 1);
-        gl.activeTexture(gl.TEXTURE0);
-        gl.bindTexture(gl.TEXTURE_2D, this.cmTex);
-        gl.bindVertexArray(this.swVao);
-        for (const c of this.swChains) {
-          gl.vertexAttribI4i(3, c.scene, -1, -1, -1);
-          gl.drawArrays(gl.TRIANGLES, c.first, c.count);
-        }
-        gl.uniform1i(this.uA.swl, 0);
-      }
       if (ap && this.hasMap) {
         for (let i = APP_TEX.length + 4; i >= 1; i--) {
           gl.activeTexture(gl.TEXTURE0 + i);
@@ -1049,6 +1040,36 @@ class OutlinePass {
       gl.bindVertexArray(this.bVao);
       gl.drawArrays(gl.TRIANGLES, 0, this.nBand);
       gl.disable(gl.BLEND);
+      if (swl && ap) {
+        // K1291 s3: the rainbow's swell (paint.ts swellStrip) after the band,
+        // so it covers the lines of the threads it passes over, as today's
+        // swelled ribbon does; the fill's depth still puts it under the
+        // threads that pass over it. The fill's program and textures, the
+        // per-scene-chain map in the run map's place.
+        if (this.swDepth) {
+          gl.enable(gl.DEPTH_TEST);
+          gl.depthFunc(gl.LEQUAL);
+        }
+        gl.useProgram(this.app);
+        gl.uniform1i(this.uA.swl, 1);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this.cmTex);
+        for (let i = 0; i < APP_TEX.length; i++) {
+          gl.activeTexture(gl.TEXTURE1 + i);
+          gl.bindTexture(gl.TEXTURE_2D, ap.tex[i]);
+        }
+        [this.chainTex, this.rvTex, this.cmTex, this.ciTex].forEach((t, i) => {
+          gl.activeTexture(gl.TEXTURE5 + i);
+          gl.bindTexture(gl.TEXTURE_2D, t);
+        });
+        gl.bindVertexArray(this.swVao);
+        for (const c of this.swChains) {
+          gl.vertexAttribI4i(3, c.scene, -1, -1, -1);
+          gl.drawArrays(gl.TRIANGLES, c.first, c.count);
+        }
+        gl.uniform1i(this.uA.swl, 0);
+        gl.disable(gl.DEPTH_TEST);
+      }
       for (let i = 8; i >= 1; i--) {
         gl.activeTexture(gl.TEXTURE0 + i);
         gl.bindTexture(gl.TEXTURE_2D, null);
