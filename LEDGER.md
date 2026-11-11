@@ -503,10 +503,10 @@ Next free ID: K1290.
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: agent `a45a644b0bf24dfee` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-10 10:43, 2 h cap ~12:43)
-  - branch: `worktree-agent-a45a644b0bf24dfee`, worktree `.claude/worktrees/agent-a45a644b0bf24dfee`; last commit: `5f3f3862`
+  - owner: nobody since 2026-11-10 15:10 (merged; agent `a45a644b0bf24dfee` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `f5761d43`
   - evidence: .claude/probes/K1240/proto/ (outline.ts, k1247s17_* tools); .claude/probes/K1240/out/s17/ (untracked)
-  - next: record muse_hash, then the corner foot (K1281), j176, j45/j0/j39 and K1288's fold flip; gain tool no jumps on def, fat, muse_hash
+  - next: Stage 17 merged: junction arms matched to frame 0's order by edge identity (K17_JA) and chain buffers with room to double (K17_CAP); jumps def 18 -> 15, muse_hash 34 -> 17, fat 0; every bar equals master's (no change at rest). The continuity work left (corner foot, j176, j35, muse_hash's places, K1288) is K1281's. Speed: about 21 ms on def, not lowered since stage 10; next is the forward-placement experiment, then S4's Pixel timing (K1240)
   - brief: `docs/design/K1247_s17_feet.md`
 - **K1278** · Paint on the outline must blend seamlessly across junctions (Levi 2026-11-10): colour per pixel
   from fields continuous across faces, triangles and junctions (chain + s, per-arm weights easing to an exact
