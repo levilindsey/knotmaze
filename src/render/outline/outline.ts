@@ -7475,7 +7475,15 @@ function tailAlpha(a: TailIn, l1: number, u: number, out: Float64Array): void {
   let nx = tailCen[0] - tailPt[0]; let ny = tailCen[1] - tailPt[1]; const nl = Math.sqrt(nx * nx + ny * ny);
   if (nl > 1e-12) { nx /= nl; ny /= nl; } else { nx = 0; ny = 0; }
   const x0 = tailPt[0]; const y0 = tailPt[1];
-  for (let e = 0; e < 2; e++) out[e] = tailAlphaAt(a, x0 + nx * a.W * e, y0 + ny * a.W * e, zE - (a.zt * (h - a.W * e)) / h);
+  // The band interpolates its two edges' alphas linearly, while form B's
+  // tie mix is a smoothstep of a key gap that can move fast across the band
+  // (X's depth changes steeply near a crossing): sample a quarter in from
+  // each edge and extend the line through them to the edges (the least-
+  // squares line of a profile that saturates inside the band).
+  const aQ = tailAlphaAt(a, x0 + nx * a.W * 0.25, y0 + ny * a.W * 0.25, zE - (a.zt * (h - a.W * 0.25)) / h);
+  const aR = tailAlphaAt(a, x0 + nx * a.W * 0.75, y0 + ny * a.W * 0.75, zE - (a.zt * (h - a.W * 0.75)) / h);
+  const o0 = 1.5 * aQ - 0.5 * aR; const o1 = 1.5 * aR - 0.5 * aQ;
+  out[0] = o0 < 0 ? 0 : o0 > 1 ? 1 : o0; out[1] = o1 < 0 ? 0 : o1 > 1 ? 1 : o1;
 }
 function tailAlphaAt(a: TailIn, x: number, y: number, keyE: number): number {
   const h = a.h;
@@ -7486,6 +7494,8 @@ function tailAlphaAt(a: TailIn, x: number, y: number, keyE: number): number {
   if (ramp < 0) return 0;
   const g = Math.min(1, Math.max(0, (h - dF) / a.W));
   if (!(g > 0)) return 1;
+  // One chain is one surface in form B: E's border never shows inside X's.
+  if (a.pE === a.pX) return 1 - g;
   const m = keyE - (a.zX(sF) - (a.zt * dF) / h);
   let t = a.zt > 0 ? (m + a.zt) / (2 * a.zt) : m > 0 ? 1 : 0; t = t < 0 ? 0 : t > 1 ? 1 : t;
   return 1 - g * (1 - (1 - ramp) * t * t * (3 - 2 * t));
