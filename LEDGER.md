@@ -525,11 +525,11 @@ Next free ID: K1308.
 - **K1283** · Junction borders of the outline (rp=outline) against form B. Stage 1 (3c8bd61e) fixed the concave
   corner bites (census 27528 -> 17756 px); left: the failed corners and the end-arm round ends (x47, x73,
   x349). Full text in docs/ledger_notes.md
-  - owner: nobody since 2026-11-11 05:13 (merged; agent `a6cc857893dca0d84` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `9780a820`
-  - evidence: `.claude/probes/K1240/out/k1283s8/`
-  - next: Stage 8 merged: the cut mirror, the no-meet burial and the meet s split from the paint s; census vs form B 4677 -> 4401 (x134 328 -> 73.5, x182 30 -> 19), sweep j59 921 -> 834, j58 761 -> 610, colour 31891 -> 31789; but seams over 1/255 5577 -> 5773 and steeper than form B 459 -> 480 (chevron interpolated s: +90 strip|strip g41_user_tw64, +32 muse_hash; burial: 82 strip|tail at muse_hash j149). Stage 9: the seams back to <= 5577/459 without switching off the mirror or the burial, then j59 cut-point ink (draw.ts) and x134 black square end. x77/x304 need tied-path alpha in draw.ts + band_gpu.ts (after K1291 s2 frees band_gpu)
-  - brief: `docs/design/K1283_s8.md`
+  - owner: agent `aaccd3d0d6492246f` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-11 05:15, 2 h cap ~07:15)
+  - branch: `worktree-agent-aaccd3d0d6492246f`, worktree `.claude/worktrees/agent-aaccd3d0d6492246f`; last commit: `f88cf62f`
+  - evidence: `.claude/probes/K1240/out/k1283s9/`
+  - next: Stage 9 running: seams back to <= 5577/459 without switching off the cut mirror or the burial, then j59 cut-point ink and x134 square end (outline.ts, draw.ts, fill_tri.ts)
+  - brief: `docs/design/K1283_s9.md`
 - **K1291** · rp=outline in the app (K1240 S4) lacks the app palette and hides the overlays drawn inside the
   base layer (trail, fog, reveal masks, pulses, gameplay paint); markers, plucks and the HUD still draw (S4
   handoff in docs/design/K1240_s4_app.md on worktree-agent-a5393aa1f25f2ff33)
