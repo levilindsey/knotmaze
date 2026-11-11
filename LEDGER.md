@@ -503,11 +503,21 @@ Next free ID: K1285.
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: nobody since 2026-11-10 07:55 (merged; agent `a6cd6c8845ac7e543` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `3bf50846`
-  - evidence: .claude/probes/K1240/proto/ (outline.ts, k1247s8_time, k1247s8_run_locked, k1247s9_union, k1247s14_census); .claude/probes/K1240/out/ (untracked)
-  - next: make the outline continuous: the station-on-vertex jump, corner 191 at j91, j67, draw order from structure; then re-run k1247s15_gain/bound (s15 handoff)
-  - brief: `docs/design/K1247_s15_moved.md`
+  - owner: agent `ad757402004124445` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-10 09:15, 2 h cap ~11:15)
+  - branch: `worktree-agent-ad757402004124445`, worktree `.claude/worktrees/agent-ad757402004124445`; last commit: `afc1ec98`
+  - evidence: .claude/probes/K1240/proto/ (outline.ts, k1247s15_gain, k1247s15_bound, k1247s16_* tools); .claude/probes/K1240/out/ (untracked)
+  - next: fix K1280's station-on-vertex jump, then K1281; re-run k1247s15_gain def/fat until no jumps, then the bound
+  - brief: `docs/design/K1247_s16_continuous.md`
+- **K1277** · K1240 fill as triangles fixed at structure (Levi 2026-11-10: 'divide it into seamless
+  triangles'): a strip per face between its two borders' stations, junction faces triangulated once, only
+  vertices move per frame; drawn plainly instead of the stencil's even-odd fan
+  (.claude/probes/K1240/proto/draw.ts), so a fold overdraws instead of cracking (K1273). Gate: stage 14's
+  census, cracks and spill both; after K1247 s15 (same files). Also the fill colour at shallow overlaps: cut 273's top-left is pink in form B, cyan in the redesign (K1279).
+  - owner: agent `aa92acf32efe15555` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-10 09:15, 2 h cap ~11:15)
+  - branch: `worktree-agent-aa92acf32efe15555`, worktree `.claude/worktrees/agent-aa92acf32efe15555`; last commit: `afc1ec98`
+  - evidence: .claude/probes/K1240/proto/ (draw.ts, k1277_* tools); .claude/probes/K1240/out/k1277/ (untracked)
+  - next: build per-face strips and junction triangulation at structure, structural draw order; census at rest and on s15's motion
+  - brief: `docs/design/K1277_triangles.md`
 
 ## Next, in order
 
@@ -750,11 +760,6 @@ Every other item below waits on the trigger it names.
 - **K1256** · K1240's outline: frame() leads outside corners from K1247 stage 4 (unmeasured):
   crossingsPhaseC's OSR-exit deopts, frameFast's wrong-map and generic-global deopts, and about 40
   cornerFallbackC fallbacks a frame (about 0.5 ms). K1247_s4_corners.md Handoff 1
-- **K1277** · K1240 fill as triangles fixed at structure (Levi 2026-11-10: 'divide it into seamless
-  triangles'): a strip per face between its two borders' stations, junction faces triangulated once, only
-  vertices move per frame; drawn plainly instead of the stencil's even-odd fan
-  (.claude/probes/K1240/proto/draw.ts), so a fold overdraws instead of cracking (K1273). Gate: stage 14's
-  census, cracks and spill both; after K1247 s15 (same files). Also the fill colour at shallow overlaps: cut 273's top-left is pink in form B, cyan in the redesign (K1279).
 - **K1278** · Paint on the outline must blend seamlessly across junctions (Levi 2026-11-10): colour per pixel
   from fields continuous across faces, triangles and junctions (chain + s, per-arm weights easing to an exact
   hand-off as in form B, a pulse's travel distance continuous through the junction), never per face or
