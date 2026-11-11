@@ -896,7 +896,7 @@ export function createOutlineApp(ctx: SceneExportCtx, requestFrame: () => void):
   };
 
   const after = (): void => {
-    if (off || !pass || composited) return;
+    if (off || !pass || composited || (rc && !rc.visible)) return;
     // The root went through another target this render (a pluck ripple's
     // filter): composite over the canvas instead.
     try {
@@ -932,6 +932,16 @@ export function createOutlineApp(ctx: SceneExportCtx, requestFrame: () => void):
     resend(): void {
       drawn = [];
       seenCount = -1;
+      requestFrame();
+    },
+    /** K1291 probes: show today's base and fillet layers in place of the
+     *  outline (false) or the outline again (true), on the same page and
+     *  state: a same-state A/B without a reload; null hides both (the
+     *  threads' mask against what is left). */
+    show(on: boolean | null): void {
+      for (const c of hidden) c.visible = on === false;
+      if (rc) rc.visible = on === true;
+      dirty = true;
       requestFrame();
     },
   };
