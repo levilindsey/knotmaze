@@ -185,7 +185,7 @@ function segIdxOfS(p: Poly, u: number): number {
  * transversal. out = [sa, sb]; false (out = the binding) if no intersection
  * is reached within 48 steps.
  */
-const KF_XS = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.K17_XS !== "0"; // s17 switch: K17_XS=0 reads the bindings' s
+const KF_XS = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.K17_XS === "1"; // s17 switch, off: K17_XS=1 snaps (moves the rest look off form B's bindings: census +285, 27 crossings over 12 px)
 function crossSnapInto(pa: Poly, sa: number, pb: Poly, sb: number, out: Float64Array): boolean {
   out[0] = sa; out[1] = sb;
   let i = segIdxOfS(pa, sa); let j = segIdxOfS(pb, sb);
