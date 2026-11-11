@@ -7669,11 +7669,13 @@ function tailAlphaAt(a: TailIn, x: number, y: number, keyE: number, side: boolea
   // Along E's side (u <= l1) X's border band is the union's corner, which X's
   // own arcs draw; E's border there lies in fill form B leaves bare when X is
   // in the junction's group (stage 3's cut: (h - W - d_X) / h > 0).
-  if (side && g < 1) return 0;
+  if (side && g < 1 && ramp >= 1) return 0;
   // One chain is one surface in form B: E's border never shows inside X's.
-  if (a.pE === a.pX) return 1 - g;
+  if (a.pE === a.pX) return side && g < 1 ? (1 - ramp) * (1 - g) : 1 - g;
   const m = keyE - (a.zX(sF) - (a.zt * dF) / h);
-  let t = a.zt > 0 ? (m + a.zt) / (2 * a.zt) : m > 0 ? 1 : 0; t = t < 0 ? 0 : t > 1 ? 1 : t;  return 1 - g * (1 - (1 - ramp) * t * t * (3 - 2 * t));
+  let t = a.zt > 0 ? (m + a.zt) / (2 * a.zt) : m > 0 ? 1 : 0; t = t < 0 ? 0 : t > 1 ? 1 : t;
+  const al = 1 - g * (1 - (1 - ramp) * t * t * (3 - 2 * t));
+  return side && g < 1 ? (1 - ramp) * al : al;
 }
 /** K1283 s3: where a tail is drawn. Stage 2 drew it at alpha 1 and cut it at
  *  ramp 0.5 and a depth margin of 0.4 zt (form B's burial is soft: tie alpha
