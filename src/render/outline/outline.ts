@@ -7133,9 +7133,47 @@ function sharpJoinFan(C: FCache, ci: number, aiA: number, aiB: number, pts: numb
   for (let k = 0; k <= steps; k++) { const a = a0 + (da * k) / steps; pts.push(qx, qy); cpts.push(qx + C.h * Math.cos(a), qy + C.h * Math.sin(a)); }
 }
 
+/** K1283 s9 (j59): at a failed corner the a arm's run ends at the corner's
+ *  TA, past the meet V, inside X's tube, where its tail starts at form B's
+ *  alpha (muse_hash j59: 0.30): the run inked that stretch at 1, a hard black
+ *  block where form B fades it. The run's points near that end now carry
+ *  form B's alpha (tailAlpha against the tail's X; 1 outside X's tube), so
+ *  the band fades from V into the tail. An untied run's band reads p.alpha
+ *  (draw.ts, band_gpu.ts); a tied one's ignores it (x77/x304's
+ *  band_gpu.ts residual). Which run is the corner's is structure (the arm's
+ *  junction station and side); only the alphas follow the frame. */
+const RUN_END_FADE = true;
+const RUN_FADE_L = 3;
+function runEndFade(a: TailIn, p: OutlinePiece, atEnd: boolean): void {
+  const np = p.pts.length / 2;
+  if (np < 2 || p.kind !== "run") return;
+  let al: number[] | null = null;
+  let cum = 0;
+  const span = p.s1 - p.s0;
+  for (let q = 0; q < np; q++) {
+    const i = atEnd ? np - 1 - q : q;
+    if (q > 0) {
+      const j = atEnd ? i + 1 : i - 1;
+      const dx = p.pts[2 * i] - p.pts[2 * j]; const dy = p.pts[2 * i + 1] - p.pts[2 * j + 1];
+      cum += Math.sqrt(dx * dx + dy * dy);
+      if (cum > RUN_FADE_L * a.h) break;
+    }
+    const sE = atEnd ? p.s1 - Math.min(cum, Math.abs(span)) : p.s0 + Math.min(cum, Math.abs(span));
+    tailCen[0] = p.cpts[2 * i]; tailCen[1] = p.cpts[2 * i + 1];
+    tailAlpha(a, sE, p.pts[2 * i], p.pts[2 * i + 1], tailA, true, true);
+    if (tailA[0] < 1 - 1e-9 || tailA[1] < 1 - 1e-9) {
+      if (!al) al = new Array<number>(2 * np).fill(1);
+      al[2 * i] = tailA[0]; al[2 * i + 1] = tailA[1];
+    }
+  }
+  if (al) p.alpha = al;
+}
+
 function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[]): { pieces: OutlinePiece[]; runMiss: number; runPassed: number } {
   const pieces: OutlinePiece[] = [];
   let runMiss = 0; let runPassed = 0;
+  const runFade: { a: TailIn; key: number }[] = [];
+  const runAtArm = new Map<number, number>();
   // Interval lookup for run regions: by (A slot, B slot) under K12_CSORDER;
   // by the A slot alone otherwise (K1247 s12: a crossOver station toggling
   // inside the run must not unset its region).
@@ -7267,6 +7305,11 @@ function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[])
       const piece: OutlinePiece = { kind: dp.kind, chain: pi, side, s0, s1, pts: viewPts ? (viewPts as unknown as number[]) : pts, cpts: viewCpts ? (viewCpts as unknown as number[]) : cpts, region: rid, corner: -1 };
       pieces.push(piece);
       if (rid >= 0 && regions[rid]) regions[rid].pieces.push(pieces.length - 1);
+      if (RUN_END_FADE && !ghost) {
+        const sk = side === 1 ? 0 : 1;
+        if (dgB.kind === "junction") runAtArm.set(dgB.arm * 2 + sk, 2 * (pieces.length - 1) + 1);
+        if (dgA.kind === "junction") runAtArm.set(dgA.arm * 2 + sk, 2 * (pieces.length - 1));
+      }
     } else if (dp.kind === "arc") {
       const ci = dp.corner;
       const dc = st.corners[ci];
@@ -7314,14 +7357,16 @@ function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[])
         // K1283 s4: X's other arm at the junction, if X runs through it.
         let aiX2 = -1;
         for (const ai of st.armsOfJ[dc.ji] ?? []) if (ai !== aiX && ai !== aiE && C.armObj[ai].pi === piX) { aiX2 = ai; break; }
-        endTailPts({
+        const tin: TailIn = {
           alt: aiX2 >= 0 ? { sRX: C.armSR[aiX2], dirX: C.armDir[aiX2], LX: C.armL[aiX2], LcutX: C.armLcut[aiX2] } : null,
           pE: C.polys[piE], dirE: C.armDir[aiE], endS: C.armSR[aiE], sT,
           x0: dp.interval ? C.cTbx[ci] : C.cTax[ci], y0: dp.interval ? C.cTby[ci] : C.cTay[ci],
           bp: (s, out) => borderPointAtFinal(C, piE, sideE, s, out),
           pX: C.polys[piX], sRX: C.armSR[aiX], dirX: C.armDir[aiX], LX: C.armL[aiX], LcutX: C.armLcut[aiX],
           zE: (s) => depthAtC(C, piE, s, depthWin), zX: (s) => depthAtC(C, piX, s, depthWin), h: C.h, zt: 0.1 * C.depthAmp, W: C.W,
-        }, pts, cpts, alpha, fill);
+        };
+        endTailPts(tin, pts, cpts, alpha, fill);
+        if (RUN_END_FADE && !dp.interval && !C.cOk[ci]) runFade.push({ a: tin, key: aiE * 2 + (sideE === 1 ? 0 : 1) });
       }
       pieces.push({ kind: "tail", chain: dp.chain, side: sideE, s0: sT, s1: sT, pts, cpts, region: -1, corner: ci, alpha, fpts: fill.pts, fcpts: fill.cpts });
     } else {
@@ -7335,6 +7380,11 @@ function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[])
       const piece: OutlinePiece = { kind: "cap", chain: dp.chain, side: 0, s0: cS, s1: cS, pts, cpts, region: -1, corner: -1 };
       pieces.push(piece);
     }
+  }
+  for (const f of runFade) {
+    const r = runAtArm.get(f.key);
+    if (r === undefined) continue;
+    runEndFade(f.a, pieces[r >> 1], (r & 1) === 1);
   }
   return { pieces, runMiss, runPassed };
 }
@@ -7802,7 +7852,7 @@ function tailF(a: TailIn, l1: number, u: number, rampCut: number, marginCut: num
  *  border point instead, a fallback corner whose point lies inside X drew a
  *  tail start at alpha 1 inside X's fill (def j45, j54: a dark blot where
  *  form B has nothing). */
-function tailAlpha(a: TailIn, sE: number, x0: number, y0: number, out: Float64Array, side: boolean): void {
+function tailAlpha(a: TailIn, sE: number, x0: number, y0: number, out: Float64Array, side: boolean, own = false): void {
   const h = a.h; const zE = a.zE(sE);
   let nx = tailCen[0] - x0; let ny = tailCen[1] - y0; const nl = Math.sqrt(nx * nx + ny * ny);
   if (nl > 1e-12) { nx /= nl; ny /= nl; } else { nx = 0; ny = 0; }
@@ -7811,23 +7861,25 @@ function tailAlpha(a: TailIn, sE: number, x0: number, y0: number, out: Float64Ar
   // (X's depth changes steeply near a crossing): sample a quarter in from
   // each edge and extend the line through them to the edges (the least-
   // squares line of a profile that saturates inside the band).
-  const aQ = tailAlphaAt(a, x0 + nx * a.W * 0.25, y0 + ny * a.W * 0.25, zE - (a.zt * (h - a.W * 0.25)) / h, side);
-  const aR = tailAlphaAt(a, x0 + nx * a.W * 0.75, y0 + ny * a.W * 0.75, zE - (a.zt * (h - a.W * 0.75)) / h, side);
+  const aQ = tailAlphaAt(a, x0 + nx * a.W * 0.25, y0 + ny * a.W * 0.25, zE - (a.zt * (h - a.W * 0.25)) / h, side, own);
+  const aR = tailAlphaAt(a, x0 + nx * a.W * 0.75, y0 + ny * a.W * 0.75, zE - (a.zt * (h - a.W * 0.75)) / h, side, own);
   const o0 = 1.5 * aQ - 0.5 * aR; const o1 = 1.5 * aR - 0.5 * aQ;
   out[0] = o0 < 0 ? 0 : o0 > 1 ? 1 : o0; out[1] = o1 < 0 ? 0 : o1 > 1 ? 1 : o1;
 }
-function tailAlphaAt(a: TailIn, x: number, y: number, keyE: number, side: boolean): number {
+function tailAlphaAt(a: TailIn, x: number, y: number, keyE: number, side: boolean, own = false): number {
   const h = a.h;
   const lo = a.dirX > 0 ? a.sRX - 2 * h : a.sRX - 6 * h;
   tailFoot(a.pX, lo, lo + 8 * h, x, y, tailFt);
   const sF = tailFt[0]; const dF = tailFt[1];
   const ramp = tailRamp(a, sF, true);
-  if (ramp < 0) return 0;
+  // K1283 s9: `own` = a run's point (runEndFade): outside X's tube, or past
+  // X's arm, it is E's own border, at 1.
+  if (ramp < 0) return own ? 1 : 0;
   const g = Math.min(1, Math.max(0, (h - dF) / a.W));
   // K1283 s4: outside X's tube the band is not X's to fade: E's own arcs
   // draw E's border there, and at a fallback corner or the round end's far
   // edge the point lies in fill form B leaves bare (def j45, j54 blots).
-  if (!(g > 0)) return 0;
+  if (!(g > 0)) return own ? 1 : 0;
   // Along E's side (u <= l1) X's border band is the union's corner, which X's
   // own arcs draw; E's border there lies in fill form B leaves bare when X is
   // in the junction's group (stage 3's cut: (h - W - d_X) / h > 0).
