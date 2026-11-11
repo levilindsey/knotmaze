@@ -523,11 +523,11 @@ Next free ID: K1302.
 - **K1283** · Junction borders of the outline (rp=outline) against form B. Stage 1 (3c8bd61e) fixed the concave
   corner bites (census 27528 -> 17756 px); left: the failed corners and the end-arm round ends (x47, x73,
   x349). Full text in docs/ledger_notes.md
-  - owner: nobody since 2026-11-10 23:38 (merged)
-  - branch: mainline; last commit: `a31f4619`
-  - evidence: .claude/probes/K1240/out/k1283s4/ (untracked), tools .claude/probes/K1240/proto/k1283s4_*
-  - next: stage 5: x6's fold cut keeping form B's wedge (cutFolds j = i + 2 never cuts), form B's soft T-corner shadow back without the blots (tell fallback corners from real T corners in the band's side gate; crops/sweep_worst*.png), round-end seam steps back to <= 449 over 1/255 (disk|tail, user_tw42 near (-0.1, 16.6)); K1283_s4.md handoff 2
-  - brief: `docs/design/K1283_s4.md`
+  - owner: agent `claude agent a9a9474cbd1104d1b (Opus), coordinator claude session 09c7a672-a414-402a-97da-b3176839a2e5` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-10 23:39, 2 h cap ~01:39)
+  - branch: `worktree-agent-a9a9474cbd1104d1b`, worktree `.claude/worktrees/agent-a9a9474cbd1104d1b`; last commit: `5ccf2188`
+  - evidence: .claude/probes/K1240/out/k1283s5/ (untracked), tools .claude/probes/K1240/proto/k1283s5_*
+  - next: stage 5 running: x6's fold cut, the T-corner shadow, the round end's seams
+  - brief: `docs/design/K1283_s5.md`
 
 ## Next, in order
 
