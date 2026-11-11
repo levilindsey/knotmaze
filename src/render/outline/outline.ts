@@ -462,7 +462,8 @@ function segInt(ax: number, ay: number, bx: number, by: number, cx: number, cy: 
 // ---------------------------------------------------------------------------
 // Borders: the offset polyline of one side of one chain.
 
-interface BPt { x: number; y: number; s: number; rec?: BRec; ev?: unknown }
+/** fx, fy: the point's foot when it is not the centreline at s (a cut fold's chevron, foldChevron). */
+interface BPt { x: number; y: number; s: number; rec?: BRec; ev?: unknown; fx?: number; fy?: number }
 interface Border { pi: number; side: number; pts: BPt[]; closed: boolean }
 
 /** How one border point is recomputed from a frame's centrelines.
@@ -567,8 +568,13 @@ export function buildBorder(p: Poly, sig: number, h: number): BPt[] {
 }
 
 /** Cut a border's swallowtails at tight bends (radius of curvature < h
- *  on the concave side), searched only inside each bend's s window. */
-function cutFolds(p: Poly, pts: BPt[], sig: number, h: number, diag: string[]): BPt[] {
+ *  on the concave side), searched only inside each bend's s window.
+ *  K1283 s6: the fallback builder's copy of cutFoldsC (the fast frame's), which
+ *  it had stopped matching: j from i + 3 (j = i + 2 shares a point with segment
+ *  i, so segInt always hit there and no fold was ever cut), no cut within h of
+ *  `keep` (the chain's arm roots and kink stations), and each cut point drawn as
+ *  form B's chevron (foldChevron) with its points' own feet. */
+function cutFolds(p: Poly, pts: BPt[], sig: number, h: number, W: number, keep: number[], diag: string[]): BPt[] {
   const bends: number[] = [];
   const n = p.n;
   for (let v = 0; v < n; v++) {
@@ -591,7 +597,9 @@ function cutFolds(p: Poly, pts: BPt[], sig: number, h: number, diag: string[]): 
   const bendClusters: number[] = [];
   for (const sb of bends) if (!bendClusters.some((c) => Math.abs(dS(p, c, sb)) < h)) bendClusters.push(sb);
   let out = pts;
+  const cutN = new Map<BPt, Float64Array>();
   for (const sb of bendClusters) {
+    if (keep.some((q) => Math.abs(dS(p, q, sb)) < h)) continue;
     // Segment index range whose s lies within 2.5h of the bend.
     const idx: number[] = [];
     for (let i = 0; i < out.length; i++) if (Math.abs(dS(p, sb, out[i].s)) <= 2.5 * h) idx.push(i);
@@ -602,8 +610,7 @@ function cutFolds(p: Poly, pts: BPt[], sig: number, h: number, diag: string[]): 
     while (changed && guard++ < 8) {
       changed = false;
       outer: for (let i = i0; i <= Math.min(i1, out.length - 2); i++) {
-        for (let j = i + 2; j <= Math.min(i1, out.length - 1); j++) {
-          if (j === i + 1) continue;
+        for (let j = i + 3; j <= Math.min(i1, out.length - 1); j++) {
           // A loop that closes on an endpoint is the closed loop itself.
           if (i === 0 && j === out.length - 1) continue;
           const hit = segInt(out[i].x, out[i].y, out[i + 1].x, out[i + 1].y, out[j - 1].x, out[j - 1].y, out[j].x, out[j].y);
@@ -611,7 +618,12 @@ function cutFolds(p: Poly, pts: BPt[], sig: number, h: number, diag: string[]): 
           const x = out[i].x + (out[i + 1].x - out[i].x) * hit.t;
           const y = out[i].y + (out[i + 1].y - out[i].y) * hit.t;
           const s = out[i].s + dS(p, out[i].s, out[i + 1].s) * hit.t;
-          out = [...out.slice(0, i + 1), { x, y, s, rec: { k: 3, a: out[i], b: out[i + 1], c: out[j - 1], d: out[j], t: hit.t } as BRec }, ...out.slice(j)];
+          const cp: BPt = { x, y, s, rec: { k: 3, a: out[i], b: out[i + 1], c: out[j - 1], d: out[j], t: hit.t } as BRec };
+          const nrm = new Float64Array(4);
+          foldNormal(out[i + 1].x - out[i].x, out[i + 1].y - out[i].y, sig, nrm, 0);
+          foldNormal(out[j].x - out[j - 1].x, out[j].y - out[j - 1].y, sig, nrm, 2);
+          cutN.set(cp, nrm);
+          out = [...out.slice(0, i + 1), cp, ...out.slice(j)];
           diag.push(`fold ch${p.id} side${sig} at s=${sb.toFixed(2)}`);
           changed = true;
           break outer;
@@ -619,7 +631,17 @@ function cutFolds(p: Poly, pts: BPt[], sig: number, h: number, diag: string[]): 
       }
     }
   }
-  return out;
+  if (!cutN.size) return out;
+  // Each cut point that survived becomes its chevron: the first point keeps the cut's record (a
+  // feature point), the rest are border points at the cut's s with their own feet.
+  const res: BPt[] = [];
+  for (const pt of out) {
+    const nrm = cutN.get(pt);
+    const k = nrm ? foldChevron(p, h, W, pt.x, pt.y, pt.s, nrm, 0, cfChev) : 0;
+    if (k <= 0) { res.push(pt); continue; }
+    for (let r = 0; r < k; r++) res.push({ x: cfChev[4 * r], y: cfChev[4 * r + 1], s: pt.s, rec: r === 0 ? pt.rec : { k: 6, s: pt.s }, fx: cfChev[4 * r + 2], fy: cfChev[4 * r + 3] });
+  }
+  return res;
 }
 
 // ---------------------------------------------------------------------------
@@ -908,9 +930,11 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
 
   // Borders, with folds cut inside their bends.
   const foldDiag: string[] = [];
+  // A bend within h of an arm's root or of a kink's station stays uncut (cutFoldsC's rule).
+  const foldKeep = polys.map((_p, pi) => [...(rootsOf.get(pi) ?? []).map((q) => q.s), ...passes[pi].filter((q) => q.qi === pi).map((q) => q.s)]);
   const borderRaw: Border[][] = polys.map((p, pi) => [
-    { pi, side: 1, pts: cutFolds(p, buildBorder(p, 1, h), 1, h, foldDiag), closed: p.closed },
-    { pi, side: -1, pts: cutFolds(p, buildBorder(p, -1, h), -1, h, foldDiag), closed: p.closed },
+    { pi, side: 1, pts: cutFolds(p, buildBorder(p, 1, h), 1, h, W, foldKeep[pi], foldDiag), closed: p.closed },
+    { pi, side: -1, pts: cutFolds(p, buildBorder(p, -1, h), -1, h, W, foldKeep[pi], foldDiag), closed: p.closed },
   ]);
   diagnostics.push(...foldDiag.slice(0, 20));
   const bIdx = (side: number): number => (side === 1 ? 0 : 1);
@@ -2514,7 +2538,7 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
             const l = pts.length;
             if (l >= 2 && pts[l - 2] === pt.x && pts[l - 1] === pt.y) return;
             pts.push(pt.x, pt.y);
-            const f = footFlat(pi, pt.s);
+            const f = pt.fx !== undefined ? [pt.fx, pt.fy as number] : footFlat(pi, pt.s);
             cpts.push(f[0], f[1]);
           };
           const pushXY = (x: number, y: number, s: number): void => {
@@ -2574,11 +2598,11 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
         const rid = segRegion[pi][bi][i];
         if (!cur || cur.region !== rid) {
           flush();
-          const f0 = footFlat(pi, B.pts[i].s);
+          const q0 = B.pts[i]; const f0 = q0.fx !== undefined ? [q0.fx, q0.fy as number] : footFlat(pi, q0.s);
           cur = { kind: "run", chain: pi, side, s0: B.pts[i].s, s1: B.pts[i + 1].s, pts: [B.pts[i].x, B.pts[i].y], cpts: [f0[0], f0[1]], region: rid, corner: -1 };
         }
         cur.pts.push(B.pts[i + 1].x, B.pts[i + 1].y);
-        const f1 = footFlat(pi, B.pts[i + 1].s);
+        const q1 = B.pts[i + 1]; const f1 = q1.fx !== undefined ? [q1.fx, q1.fy as number] : footFlat(pi, q1.s);
         cur.cpts.push(f1[0], f1[1]);
         cur.s1 = B.pts[i + 1].s;
       }
@@ -4421,6 +4445,7 @@ function cutFoldsC(C: FCache, pi: number, sig: number, B: FBord): void {
         if (C.crossAPi[xi] === C.crossBPi[xi] && Math.abs(dS(p, C.passS[pi][e], sb)) < h) nearKink = true;
       }
       if (nearKink) continue;
+      { const ks = (globalThis as unknown as { process?: { env: Record<string, string | undefined> } }).process?.env.K6SKIP; if (ks && ks.split(",").some((e) => { const [a, b] = e.split(":").map(Number); return a === pi && Math.abs(sb - b) < 0.2; })) continue; } // K6TMP
       let i0 = -1; let i1 = -1; let nIdx = 0;
       for (let i = 0; i < m; i++) if (Math.abs(dS(p, sb, B.ps[seq[i]])) <= 2.5 * h) { if (i0 < 0) i0 = i; i1 = i; nIdx++; }
       if (nIdx < 3) continue;
@@ -7684,8 +7709,10 @@ function tailAlphaAt(a: TailIn, x: number, y: number, keyE: number, side: boolea
   const m = keyE - (a.zX(sF) - (a.zt * dF) / h);
   let t = a.zt > 0 ? (m + a.zt) / (2 * a.zt) : m > 0 ? 1 : 0; t = t < 0 ? 0 : t > 1 ? 1 : t;
   const al = 1 - g * (1 - (1 - ramp) * t * t * (3 - 2 * t));
+  if (TPROBE.on) TPROBE.rec.push(x, y, g, ramp, t, al, side ? 1 : 0, a.pE, a.pX, dF, sF);
   return side && g < 1 ? (1 - ramp) * al : al;
 }
+export const TPROBE = { on: false, rec: [] as number[] };
 /** K1283 s3: where a tail is drawn. Stage 2 drew it at alpha 1 and cut it at
  *  ramp 0.5 and a depth margin of 0.4 zt (form B's burial is soft: tie alpha
  *  0.5 at margin 0); the tail now carries form B's alpha (tailAlpha), so it

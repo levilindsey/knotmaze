@@ -79,14 +79,19 @@ export const ARC_K = 16;
 export const TAIL_M = 24;
 /** K1283 s4: rim points of an end arm's round end (DiskItem). */
 export const DISK_M = 32;
+/** K1283 s6: rings of a round end (radii h k / DISK_R), so over its fan the
+ *  disk samples the fan's paint field as finely as the tail beside it does. */
+export const DISK_R = 4;
 
 export interface StripItem { kind: "strip"; iv: number; pi: number; ghost: boolean; N: number; base: number; pL: number; pR: number }
 export interface CapItem { kind: "cap"; pi: number; piece: number; atEnd: boolean; base: number }
 /** jItem / arm: the junction item and its arm index (its end arm) whose fan the tail lies over; -1 if none. */
 export interface TailItem { kind: "tail"; pi: number; piece: number; base: number; jItem: number; arm: number }
 /** K1283 s4: an end arm's round end, form B's disk of radius h about the
- *  junction's centre: a hub keyed z_E(s_E) and DISK_M rim points keyed
- *  z_E(s_E) - zt, so its key is form B's cone key z - d zt / h and the seam
+ *  junction's centre: a hub keyed z_E(s_E) and DISK_R rings of DISK_M
+ *  points at radius h k / DISK_R keyed z_E(s_E) - zt k / DISK_R (s6: the
+ *  rings, so the paint over the fan is sampled as finely as the tail's), so
+ *  its key is form B's cone key z - d zt / h and the seam
  *  against the through chain curves where the two cone keys meet. Every end
  *  arm gets one, decided here once; a frame moves its points only. Its
  *  paint is the tail's: the fan's where it lies over the fan, its own arm's
@@ -100,7 +105,7 @@ export type FillItem = StripItem | CapItem | TailItem | JuncItem | DiskItem;
 
 /** Vertices an item owns, from `base`. */
 export function itemVerts(it: FillItem): number {
-  return it.kind === "strip" ? 3 * (it.N + 1) : it.kind === "cap" ? CAP_M + 1 : it.kind === "tail" ? 2 * (TAIL_M + 1) : it.kind === "disk" ? DISK_M + 1 : 1 + it.R;
+  return it.kind === "strip" ? 3 * (it.N + 1) : it.kind === "cap" ? CAP_M + 1 : it.kind === "tail" ? 2 * (TAIL_M + 1) : it.kind === "disk" ? 1 + DISK_R * DISK_M : 1 + it.R;
 }
 
 export interface FillStructure {
@@ -278,10 +283,13 @@ export function fillStructure(st: DiagramStructure, res: Int32Array): FillStruct
   // tie goes to the later triangle: the end chain's own disk).
   st.arms.forEach((a, ai) => {
     if (a.kind !== "end") return;
-    const base = nV;
-    for (let i = 0; i <= DISK_M; i++) { vChain.push(a.pi); vW.push(1, 0, 0, 0); }
-    nV += DISK_M + 1;
-    for (let i = 0; i < DISK_M; i++) idx.push(base, base + 1 + i, base + 1 + ((i + 1) % DISK_M));
+    const base = nV; const nD = 1 + DISK_R * DISK_M;
+    for (let i = 0; i < nD; i++) { vChain.push(a.pi); vW.push(1, 0, 0, 0); }
+    nV += nD;
+    // K1283 s6: the hub's fan to ring 0, then a quad band per ring pair.
+    const rv = (r: number, i: number): number => base + 1 + r * DISK_M + (i % DISK_M);
+    for (let i = 0; i < DISK_M; i++) idx.push(base, rv(0, i), rv(0, i + 1));
+    for (let r = 0; r + 1 < DISK_R; r++) for (let i = 0; i < DISK_M; i++) idx.push(rv(r, i), rv(r + 1, i), rv(r + 1, i + 1), rv(r, i), rv(r + 1, i + 1), rv(r, i + 1));
     const L = jOfArm.get(ai);
     const inJ = !!L && L[1] < SLOTS;
     items.push({ kind: "disk", pi: a.pi, ai, base, jItem: inJ && L ? L[0] : -1, arm: inJ && L ? L[1] : -1 });
@@ -569,12 +577,15 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
     } else if (it.kind === "disk") {
       const a = st.arms[it.ai]; const J = a ? scene.junctions[a.ji] : undefined;
       const sE = armSOf(it.ai); const z = zAt(it.pi, sE); const hD = table.h;
-      if (!J) { for (let i = 0; i <= DISK_M; i++) set(it.base + i, 0, 0, -1e3, sE); continue; }
+      if (!J) { for (let i = 0; i < 1 + DISK_R * DISK_M; i++) set(it.base + i, 0, 0, -1e3, sE); continue; }
       set(it.base, J.c[0], J.c[1], z, sE); s4[SLOTS * it.base] = sE;
-      for (let i = 0; i < DISK_M; i++) {
-        const an = (2 * Math.PI * i) / DISK_M;
-        set(it.base + 1 + i, J.c[0] + hD * Math.cos(an), J.c[1] + hD * Math.sin(an), z - zt, sE);
-        s4[SLOTS * (it.base + 1 + i)] = sE; across[it.base + 1 + i] = 1;
+      for (let r = 0; r < DISK_R; r++) {
+        const f = (r + 1) / DISK_R; const rr = hD * f;
+        for (let i = 0; i < DISK_M; i++) {
+          const an = (2 * Math.PI * i) / DISK_M; const v = it.base + 1 + r * DISK_M + i;
+          set(v, J.c[0] + rr * Math.cos(an), J.c[1] + rr * Math.sin(an), z - f * zt, sE);
+          s4[SLOTS * v] = sE; across[v] = f;
+        }
       }
     } else if (it.kind === "cap") {
       const p = table.pieces[it.piece];
@@ -696,8 +707,9 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
       for (let k = 0; k < SLOTS; k++) { w4[o + k] = 0; s4[o + k] = s4[SLOTS * h + k]; }
       w4[o + it.arm] = 1; s4[o + it.arm] = sOwn;
       const px = pos[2 * v]; const py = pos[2 * v + 1];
-      if (key[v] < -999 || px < x0 || px > x1 || py < y0 || py > y1) continue;
-      for (let i = 0; i < R; i++) {
+      if (key[v] < -999) continue;
+      let found = false;
+      if (px >= x0 && px <= x1 && py >= y0 && py <= y1) for (let i = 0; i < R; i++) {
         const b = h + 1 + i; const c = h + 1 + ((i + 1) % R);
         const ax = pos[2 * h]; const ay = pos[2 * h + 1]; const bx = pos[2 * b]; const by = pos[2 * b + 1]; const cx = pos[2 * c]; const cy = pos[2 * c + 1];
         const A = (bx - ax) * (cy - ay) - (by - ay) * (cx - ax); if (Math.abs(A) < 1e-12) continue;
@@ -709,7 +721,34 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
           w4[o + k] = la * w4[SLOTS * h + k] + lb * w4[SLOTS * b + k] + lc * w4[SLOTS * c + k];
           s4[o + k] = la * s4[SLOTS * h + k] + lb * s4[SLOTS * b + k] + lc * s4[SLOTS * c + k];
         }
+        // K1283 s6: over its fan a round end lies just under it. The two paint
+        // one field, sampled on two meshes, so where their keys crossed (a fan
+        // ring near h) they striped by 2-5/255 (muse_hash j126).
+        if (it.kind === "disk" && key[h] > -999 && key[b] > -999 && key[c] > -999) {
+          const kf = la * key[h] + lb * key[b] + lc * key[c] - 1e-5;
+          if (key[v] > kf) key[v] = kf;
+        }
+        found = true;
         break;
+      }
+      // K1283 s6: a round end's point off the fan takes the fan's field at the
+      // nearest point of the fan's ring (an arm's strip end there, whose field
+      // the strip continues): its own arm's slot alone stepped against a
+      // through arm's strip beside it (user_tw42 j14: 15/255).
+      if (found || it.kind !== "disk") continue;
+      let bd = Infinity; let bi = -1; let bu = 0;
+      for (let i = 0; i < R; i++) {
+        const b = h + 1 + i; const c = h + 1 + ((i + 1) % R);
+        const bx = pos[2 * b]; const by = pos[2 * b + 1]; const vx = pos[2 * c] - bx; const vy = pos[2 * c + 1] - by;
+        const l2 = vx * vx + vy * vy; let u = l2 > 0 ? ((px - bx) * vx + (py - by) * vy) / l2 : 0; u = u < 0 ? 0 : u > 1 ? 1 : u;
+        const dx = bx + vx * u - px; const dy = by + vy * u - py; const d = dx * dx + dy * dy;
+        if (d < bd) { bd = d; bi = i; bu = u; }
+      }
+      if (bi < 0) continue;
+      const b = h + 1 + bi; const c = h + 1 + ((bi + 1) % R);
+      for (let k = 0; k < SLOTS; k++) {
+        w4[o + k] = (1 - bu) * w4[SLOTS * b + k] + bu * w4[SLOTS * c + k];
+        s4[o + k] = (1 - bu) * s4[SLOTS * b + k] + bu * s4[SLOTS * c + k];
       }
     }
   }
