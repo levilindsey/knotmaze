@@ -519,10 +519,10 @@ Next free ID: K1294.
 - **K1283** · Junction borders of the outline (rp=outline) against form B. Stage 1 (3c8bd61e) fixed the concave
   corner bites (census 27528 -> 17756 px); left: the failed corners and the end-arm round ends (x47, x73,
   x349). Full text in docs/ledger_notes.md
-  - owner: agent `a1ee6a7b4d944a1fa` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-10 20:14, 2 h cap ~22:14)
-  - branch: `worktree-agent-a1ee6a7b4d944a1fa`, worktree `.claude/worktrees/agent-a1ee6a7b4d944a1fa`; last commit: `c3d7ad32`
+  - owner: nobody since 2026-11-10 20:57 (merged; agent `a1ee6a7b4d944a1fa` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `3338abe5`
   - evidence: src/render/outline/outline.ts, k1283_* tools; untracked .claude/probes/K1240/out/k1283s2/
-  - next: stage 2 (failed corners, the end-arm round end): wait for its report, view the crops against form B, merge
+  - next: stage 3, the end-arm round end, one agent across both file areas once K1278 s2 merges: an outline.ts cap at "arm span 0" corners whose zero arm is a chain end (x73 j103, x47, x349), the disk filled in the end chain colour (fill_tri/paint), draw.ts per-vertex alpha (1 - ramp) x tieAlpha on tails and caps, then TAIL_MARGIN back to 0; after it the reflex corners, x182 short chain, x77 missing segment; handoffs in docs/design/K1283_s2.md
   - brief: `docs/design/K1283_s2.md`
 
 ## Next, in order
