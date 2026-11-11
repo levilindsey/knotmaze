@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1308.
+Next free ID: K1310.
 
 ## Waiting on Levi
 
@@ -1818,6 +1818,11 @@ Every other item below waits on the trigger it names.
   .claude/probes/K1291/out/s1/palette/)
 - **K1307** · X-shaped strokes in the outline band at muse_hash junctions, seen by K1291 s1, not located:
   check against form B in K1283's next stage
+- **K1308** · rp=outline reveal looks against today's (K1291 s2): on muse the comet's grey border fades in
+  with its thread (17,385 px past today's footprint at f20); the start marker's soft start is missing (s1).
+  Crops: .claude/probes/K1291/out/s2/crops/muse_bloom-comet_*
+- **K1309** · K1291 s2 checks not run: the thread reveal's end looks other than beacon (fade, dots) are wired
+  but unmeasured; the probe's ring wrap crop never fired (k1291_reveal.mjs, cause unchecked)
 
 ## Approved, to schedule (2026-10-11)
 
