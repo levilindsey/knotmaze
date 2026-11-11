@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1283.
+Next free ID: K1285.
 
 ## Waiting on Levi
 
@@ -754,12 +754,16 @@ Every other item below waits on the trigger it names.
   triangles'): a strip per face between its two borders' stations, junction faces triangulated once, only
   vertices move per frame; drawn plainly instead of the stencil's even-odd fan
   (.claude/probes/K1240/proto/draw.ts), so a fold overdraws instead of cracking (K1273). Gate: stage 14's
-  census, cracks and spill both; after K1247 s15 (same files).
+  census, cracks and spill both; after K1247 s15 (same files). Also the fill colour at shallow overlaps: cut 273's top-left is pink in form B, cyan in the redesign (K1279).
 - **K1278** · Paint on the outline must blend seamlessly across junctions (Levi 2026-11-10): colour per pixel
   from fields continuous across faces, triangles and junctions (chain + s, per-arm weights easing to an exact
   hand-off as in form B, a pulse's travel distance continuous through the junction), never per face or
   triangle. Gate: a seam test sampling section blends and pulses across every face edge, triangle edge and
   junction for steps and kinks, plus K1244's sheets (K1250).
+- **K1283** · Redesign junctions against form B: after K1279 every crossing that still differs from form B
+  sits at a junction (the 25 worst, e.g. muse_hash x77 846 px): form B blends the edges softly where threads
+  meet, the redesign draws hard lines. Census k1279_census.ts; crops
+  .claude/probes/K1240/out/k1279/crops/worst10_{a,b}.png
 
 ## Residuals (known, not fixed)
 
@@ -1750,13 +1754,17 @@ Every other item below waits on the trigger it names.
   handoff); not yet sorted into stale baselines and real ones
 - **K1280** · K1240 outline jumps in motion (K1247 s15): a station whose s crosses a centreline vertex jumps h
   x the vertex's turn (def j47 chain 61 1.24 px, j146 chain 58 1.0 px), suspect borderPointAtBase/Final
-  interpolating by foot s (docs/design/K1247_s15_moved.md handoff)
+  interpolating by foot s (docs/design/K1247_s15_moved.md handoff). K1279's jitter check finds more, shared with master: muse_hash x61, x182, g41_user_tw64 x54, g41_def_tw64 x309 (cyc10)
 - **K1281** · K1240 outline: corner 191 at def j91 shimmers 0.33 px every ~3 frames through the whole settle
   (its arc end moves 0.46 px along chain 67's border per 0.03 px of input); j67's region 2056 moves 2.5 px on
   under 0.1 px, undiagnosed (K1247 s15 handoff)
 - **K1282** · K1240 outline draws faces in a depth order computed from positions (regionsPhaseC's sort by
   depthAtC): near-equal depths swap between frames (14 faces, def settle 200-201), a decision from positions
   against Levi's rule; overlap of swapped pairs unchecked (K1247 s15)
+- **K1284** · K1279 leftovers: a pass span that runs into a junction keeps the straight reach, a choice from
+  positions that can snap (not seen in the jitter runs); fade steps under the bar (max 0.04 at d 0.001) from
+  the span walk's h/4 steps; cut 273 spot b keeps a 79 px sliver at 0.74 ink where form B is solid
+  (docs/design/K1279_crossings.md handoff)
 
 ## Approved, to schedule (2026-10-11)
 
