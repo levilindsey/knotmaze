@@ -33,9 +33,14 @@ type Pin = { f0: { table: string; paint: string; band: string }; f1: { table: st
 // mouths and on pieceless strip rows is now the vertex's foot on its thread,
 // and a tail over its fan paints the fan's runs; on top of K1283 s2 only the
 // paint digests moved (coordinator re-pin at the merge).
+// K1283 s3 re-pinned on purpose: tails carry form B's alpha (piece.alpha, in
+// the table and the band) and run on to where it reaches 0 (margin -zt, ramp 1),
+// so the tails' points moved; g41_ring_tw42's tails are all unburied (alpha 1),
+// so only its table (the alpha arrays and the fill stretch) moved. The fill
+// keeps stage 2's cut (piece.fpts), so every paint digest is back to stage 2's.
 const PINS: Record<string, Pin> = {
-  ring: { f0: { table: "869f55a7a9bc3ff0", paint: "b8170b0df0a1b9e8", band: "a48ca4cce167aff0" }, f1: { table: "183e5bf7c8cd0ac1", paint: "d85300304eb3c41f", band: "f753e1bcf9cbb076" } },
-  g41_ring_tw42: { f0: { table: "453f89fc56acca13", paint: "4297de14331c8db3", band: "28b346eaaf964948" }, f1: { table: "f1a9706c8dc59c67", paint: "e213861f4ff64060", band: "819dbecf09c86769" } },
+  ring: { f0: { table: "c889ab688dbaf96a", paint: "b8170b0df0a1b9e8", band: "816a44d69ee052dd" }, f1: { table: "17e6147e61e758b3", paint: "d85300304eb3c41f", band: "9d3f93d7f1284139" } },
+  g41_ring_tw42: { f0: { table: "c19bec9cad36772e", paint: "4297de14331c8db3", band: "28b346eaaf964948" }, f1: { table: "a880ab3f2faabad3", paint: "e213861f4ff64060", band: "819dbecf09c86769" } },
 };
 
 // The tool's second frame: every chain point rotated 0.3 rad and moved.

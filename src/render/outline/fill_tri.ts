@@ -530,7 +530,9 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
       const s = p ? p.s0 : 0; const z = zAt(it.pi, s);
       if (bufL.length < 2 * W) { bufL = new Float64Array(2 * W); bufR = new Float64Array(2 * W); }
       // An empty tail (the margin never opens this frame) is degenerate, not a fallback.
-      if (!p || !resample(p.pts, null, TAIL_M, bufL, p.cpts.length === p.pts.length ? p.cpts : p.pts, bufR)) {
+      // K1283 s3: the fill covers the tail's fill stretch (fpts: stage 2's cut), not its whole band.
+      const fp = p ? p.fpts ?? p.pts : []; const fc = p ? (p.fpts ? p.fcpts ?? p.fpts : p.cpts) : [];
+      if (!p || !resample(fp, null, TAIL_M, bufL, fc.length === fp.length ? fc : fp, bufR)) {
         for (let i = 0; i < 2 * W; i++) set(it.base + i, 0, 0, -1e3, s);
         continue;
       }

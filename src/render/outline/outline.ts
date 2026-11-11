@@ -77,6 +77,10 @@ export interface OutlinePiece {
    *  under the other arm. Absent = 1. Run and ghost pieces carry their tie
    *  alpha in draw.ts instead. */
   alpha?: number[];
+  /** K1283 s3: a tail's fill stretch (border points and their feet), stage
+   *  2's cut, shorter than its band (pts); fill_tri fills these. Absent = pts. */
+  fpts?: number[];
+  fcpts?: number[];
 }
 export interface OutlineRegion {
   id: number;
@@ -2409,7 +2413,7 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
         if (rid >= 0 && regions[rid]) regions[rid].pieces.push(pieces.length - 1);
       } else if (dp.kind === "tail") {
         const cw = cornerWork[dp.corner];
-        const pts: number[] = []; const cpts: number[] = []; const alpha: number[] = [];
+        const pts: number[] = []; const cpts: number[] = []; const alpha: number[] = []; const fill = { pts: [] as number[], cpts: [] as number[] };
         const E = cw ? arms[dp.interval ? cw.bArm : cw.aArm] : undefined;
         const X = cw ? arms[dp.interval ? cw.aArm : cw.bArm] : undefined;
         if (cw && E && X) {
@@ -2430,9 +2434,9 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
             pE, dirE: E.dir, endS: E.sR, sT: dp.interval ? cw.sB : cw.sA, x0: dp.interval ? cw.tbx : cw.tax, y0: dp.interval ? cw.tby : cw.tay, bp,
             pX: polys[X.pi], sRX: X.sR, dirX: X.dir, LX: X.L, LcutX: X.Lcut,
             zE: (s) => depthAt(E.pi, s), zX: (s) => depthAt(X.pi, s), h, zt: 0.1 * scene.look.depthAmp, W: scene.look.band,
-          }, pts, cpts, alpha);
+          }, pts, cpts, alpha, fill);
         }
-        pieces.push({ kind: "tail", chain: dp.chain, side: cw ? (dp.interval ? cw.sideB : cw.sideA) : 0, s0: cw ? (dp.interval ? cw.sB : cw.sA) : 0, s1: cw ? (dp.interval ? cw.sB : cw.sA) : 0, pts, cpts, region: -1, corner: dp.corner, alpha });
+        pieces.push({ kind: "tail", chain: dp.chain, side: cw ? (dp.interval ? cw.sideB : cw.sideA) : 0, s0: cw ? (dp.interval ? cw.sB : cw.sA) : 0, s1: cw ? (dp.interval ? cw.sB : cw.sA) : 0, pts, cpts, region: -1, corner: dp.corner, alpha, fpts: fill.pts, fcpts: fill.cpts });
       } else {
         const ci = capInfos[dp.cap];
         if (!ci) continue;
@@ -7039,7 +7043,7 @@ function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[])
     } else if (dp.kind === "tail") {
       const ci = dp.corner;
       const dc = st.corners[ci];
-      const pts: number[] = []; const cpts: number[] = []; const alpha: number[] = [];
+      const pts: number[] = []; const cpts: number[] = []; const alpha: number[] = []; const fill = { pts: [] as number[], cpts: [] as number[] };
       let sideE = 0; let sT = 0;
       if (dc) {
         const aiE = dp.interval ? dc.bArm : dc.aArm; const aiX = dp.interval ? dc.aArm : dc.bArm;
@@ -7053,9 +7057,9 @@ function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[])
           bp: (s, out) => borderPointAtFinal(C, piE, sideE, s, out),
           pX: C.polys[piX], sRX: C.armSR[aiX], dirX: C.armDir[aiX], LX: C.armL[aiX], LcutX: C.armLcut[aiX],
           zE: (s) => depthAtC(C, piE, s, depthWin), zX: (s) => depthAtC(C, piX, s, depthWin), h: C.h, zt: 0.1 * C.depthAmp, W: C.W,
-        }, pts, cpts, alpha);
+        }, pts, cpts, alpha, fill);
       }
-      pieces.push({ kind: "tail", chain: dp.chain, side: sideE, s0: sT, s1: sT, pts, cpts, region: -1, corner: ci, alpha });
+      pieces.push({ kind: "tail", chain: dp.chain, side: sideE, s0: sT, s1: sT, pts, cpts, region: -1, corner: ci, alpha, fpts: fill.pts, fcpts: fill.cpts });
     } else {
       const capInfo = dp.cap;
       if (capInfo < 0 || capInfo >= C.capArcN.length) continue;
@@ -7446,7 +7450,7 @@ function tailRamp(a: TailIn, sF: number): number {
   let t = (ad - a.LcutX) / -a.h; t = t < 0 ? 0 : t > 1 ? 1 : t;
   return t * t * (3 - 2 * t);
 }
-function tailF(a: TailIn, l1: number, u: number): number {
+function tailF(a: TailIn, l1: number, u: number, rampCut: number, marginCut: number): number {
   const sE = tailAt(a, l1, u, tailPt, tailCen, false);
   const h = a.h;
   const lo = a.dirX > 0 ? a.sRX - 2 * h : a.sRX - 6 * h;
@@ -7456,10 +7460,10 @@ function tailF(a: TailIn, l1: number, u: number): number {
   if (ramp < 0) return -1;
   // Callers read only f's sign, so a term at or below 0 settles it before
   // the two depth lookups (r4 timing: same output, less piece emission).
-  const fR = TAIL_RAMP_CUT - ramp; if (!(fR > 0)) return fR;
+  const fR = rampCut - ramp; if (!(fR > 0)) return fR;
   const fW = (h - a.W - dF) / h; if (!(fW > 0)) return fW;
   const margin = a.zE(sE) - a.zt - a.zX(sF) + (a.zt * dF) / h;
-  return Math.min(fR, a.zt > 0 ? margin / a.zt - TAIL_MARGIN : margin > 0 ? 1 : -1, fW);
+  return Math.min(fR, a.zt > 0 ? margin / a.zt - marginCut : margin > 0 ? 1 : -1, fW);
 }
 /** K1283 s3: a tail point's alpha, at the band's outer edge (out[0]) and
  *  inner edge (out[1], W nearer E's centre). Form B composites E's surface
@@ -7503,23 +7507,36 @@ function tailAlphaAt(a: TailIn, x: number, y: number, keyE: number): number {
 /** K1283 s3: where a tail is drawn. Stage 2 drew it at alpha 1 and cut it at
  *  ramp 0.5 and a depth margin of 0.4 zt (form B's burial is soft: tie alpha
  *  0.5 at margin 0); the tail now carries form B's alpha (tailAlpha), so it
- *  runs on to where that alpha reaches 0: ramp 1, margin -zt. */
+ *  runs on to where that alpha reaches 0: ramp 1, margin -zt. Its FILL keeps
+ *  stage 2's cut (TAIL_FILL_*): past it the end arm lies over the junction's
+ *  fan, and a fill tail run on to alpha 0 there put steps on the fan's edge
+ *  (k1278s2_seam --fbstep: junc|tail 31 -> 255 on muse_hash), while form B's
+ *  surface there is the fan's anyway (the tail's key is below X's). */
 const TAIL_RAMP_CUT = 1;
 const TAIL_MARGIN = -1;
+const TAIL_FILL_RAMP_CUT = 0.5;
+const TAIL_FILL_MARGIN = 0.4;
 const TAIL_N = 16;
 const TAIL_BISECT = 12;
 const TAIL_BLEND = 0.5;
 const tailA = new Float64Array(2);
-export function endTailPts(a: TailIn, pts: number[], cpts: number[], alpha?: number[]): void {
+/** A tail's border points (pts, cpts, alpha: its band) and, given `fill`,
+ *  the stretch its fill covers (fill_tri reads OutlinePiece.fpts). */
+export function endTailPts(a: TailIn, pts: number[], cpts: number[], alpha?: number[], fill?: { pts: number[]; cpts: number[] }): void {
   if (!(a.h > 0) || !Number.isFinite(a.sT)) return;
+  tailWalk(a, TAIL_RAMP_CUT, TAIL_MARGIN, pts, cpts, alpha);
+  if (fill) tailWalk(a, TAIL_FILL_RAMP_CUT, TAIL_FILL_MARGIN, fill.pts, fill.cpts);
+}
+function tailWalk(a: TailIn, rampCut: number, marginCut: number, pts: number[], cpts: number[], alpha?: number[]): void {
   const l1 = Math.max(0, a.dirE * (a.sT - a.endS));
   const U = l1 + 0.5 * Math.PI * a.h;
+  const f = (u: number): number => tailF(a, l1, u, rampCut, marginCut);
   // Bisect a sign change of f on [u0, u1]; want = the side f > 0 is on (0: u0, 1: u1).
   const cut = (u0: number, u1: number, posAt1: boolean): number => {
     let lo = u0; let hi = u1;
     for (let it = 0; it < TAIL_BISECT; it++) {
       const m = 0.5 * (lo + hi);
-      const pos = tailF(a, l1, m) > 0;
+      const pos = f(m) > 0;
       if (pos === posAt1) hi = m; else lo = m;
     }
     return posAt1 ? hi : lo;
@@ -7540,10 +7557,10 @@ export function endTailPts(a: TailIn, pts: number[], cpts: number[], alpha?: num
   };
   let i = 0;
   let prevU = 0;
-  if (!(tailF(a, l1, 0) > 0)) {
+  if (!(f(0) > 0)) {
     for (i = 1; i <= TAIL_N; i++) {
       const u = (U * i) / TAIL_N;
-      if (tailF(a, l1, u) > 0) break;
+      if (f(u) > 0) break;
       prevU = u;
     }
     if (i > TAIL_N) return;
@@ -7553,7 +7570,7 @@ export function endTailPts(a: TailIn, pts: number[], cpts: number[], alpha?: num
   for (i = Math.max(1, i); i <= TAIL_N; i++) {
     const u = (U * i) / TAIL_N;
     if (u <= prevU) continue;
-    if (!(tailF(a, l1, u) > 0)) { push(cut(prevU, u, false)); return; }
+    if (!(f(u) > 0)) { push(cut(prevU, u, false)); return; }
     push(u);
     prevU = u;
   }
