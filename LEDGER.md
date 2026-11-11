@@ -522,10 +522,10 @@ Next free ID: K1293.
   sits at a junction (the 25 worst, e.g. muse_hash x77 846 px): form B blends the edges softly where threads
   meet, the redesign draws hard lines. Census k1279_census.ts; crops
   .claude/probes/K1240/out/k1279/crops/worst10_{a,b}.png. The fill half, K1277's end-arm sliver (through-thread colour over the end thread's round end, muse_hash x73 x47 x292 x177), went to K1278 stage 1 (9f6a38f2), which fixed its colour; its geometry stays here: the end thread's round end and tail do not cover where form B shows it (x47, x73, x349; the stage 1 handoff in docs/design/K1278_paint.md). Concave corners bite where form B is round (def j55, j156, j91, j45, j54, j73, j30, x81; .claude/probes/K1240/out/k1290/crops/fail_j55_j156.png, rest_feet.png); first in src/ after K1240 S4
-  - owner: agent `a4ab8fb10e6a7a9d3` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-10 19:44, 2 h cap ~21:44)
-  - branch: `worktree-agent-a4ab8fb10e6a7a9d3`, worktree `.claude/worktrees/agent-a4ab8fb10e6a7a9d3`; last commit: `8f7004bf`
+  - owner: nobody since 2026-11-10 20:12 (merged; agent `a4ab8fb10e6a7a9d3` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `3c8bd61e`
   - evidence: src/render/outline/outline.ts, k1283_* tools; untracked .claude/probes/K1240/out/k1283/
-  - next: wait for its report; view the crops against form B; merge
+  - next: stage 2 after K1278 s2 merges: the "V outside spans" failed corners (153 crossings, 6495 px; x177, x71, x303) and the "arm span 0" round-end cap (x73 at j103, x47, x77, x182; outline.ts emits it, paint/fill_tri colour the disk); handoff in the brief
   - brief: `docs/design/K1283_junctions.md`
 
 ## Next, in order
