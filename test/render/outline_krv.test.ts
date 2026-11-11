@@ -60,4 +60,20 @@ describe("K1291 s3 KRV program pairs", () => {
     const f = mainOf(pre(krvSource(KRV_SHADERS.BAND_FS, true)));
     for (const w of ["discard", "rvMaskS(vCh", "exVisS("]) expect(f).toContain(w);
   });
+
+  it("the rainbow's swell only with KRV: the fill's strip mode, the band's step-aside", () => {
+    const fillLite = pre(krvSource(KRV_SHADERS.APP_FS, false));
+    const fillFull = pre(krvSource(KRV_SHADERS.APP_FS, true));
+    expect(fillLite).not.toContain("uSwl");
+    expect(fillFull).toContain("uniform int uSwl;");
+    expect(mainOf(fillFull)).toContain("if (uSwl == 1) { ink = vW.y; side = vW.z; }");
+    const bandLite = pre(krvSource(KRV_SHADERS.BAND_FS, false));
+    const bandFull = pre(krvSource(KRV_SHADERS.BAND_FS, true));
+    expect(bandLite).not.toMatch(/\buSw\b|swMask/);
+    expect(bandFull).toContain("uniform highp sampler2D uSw;");
+    expect(mainOf(bandFull)).toContain("swMaskS(vCh, sA)");
+    // The swell's reads are the reveal mask's, renamed.
+    const body = (src: string, name: string): string => src.slice(src.indexOf(`float ${name}(int c`), src.indexOf(`float ${name}S(int i`));
+    expect(body(bandFull, "swMask").replace(/swT\(/g, "rvT(").replace(/swMask/g, "rvMask")).toBe(body(bandFull, "rvMask"));
+  });
 });

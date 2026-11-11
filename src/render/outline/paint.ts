@@ -303,3 +303,81 @@ export function revealMaskAt(t: { tex: Float32Array }, c: number, a: number): nu
   const k0 = Math.min(n - 2, Math.floor(u));
   return T[off + k0] + (T[off + k0 + 1] - T[off + k0]) * (u - k0);
 }
+
+// ---- K1291 s3: the rainbow's swell ----
+// Today's ribbon swells to h w behind the rainbow front (reveal_fx.ts
+// widthMulFor: w = mask x kSwell, up to 2), but the outline's fill is the
+// worker's, at width 1. The app draws the swell itself: a strip along each
+// scene chain's band samples (band_gpu chainTex: x, y, s, z) over every
+// segment whose ends swell past 1, at the fill's key (z - d zt / h, lifted
+// zt / 50 over the chain's own fill), its outer W inked as the border (the
+// band steps aside wherever the swell passes 1) and the rainbow's side
+// across the swelled width. Vertices, SWELL_STRIDE floats each:
+// x, y, key, 1, ink, side, 0, s - the fill's aPos, aKey, aW and aS.
+
+/** Floats per swell vertex. */
+export const SWELL_STRIDE = 8;
+
+/** The swell's vertices (TRIANGLES) and, per scene chain drawn, its range. */
+export interface SwellStrip {
+  data: Float32Array;
+  chains: { scene: number; first: number; count: number }[];
+}
+
+/** Build the swell strip. `sw` is revealMaskTex over the chains' width
+ *  multipliers (null = no swell), `z` the band's chain samples, `maps` each
+ *  scene chain's app chain and arc map. */
+export function swellStrip(
+  sw: { tex: Float32Array },
+  z: { chainTex: ArrayLike<number>; chainInfo: ArrayLike<number> },
+  maps: readonly ({ chain: number; arcLo: number; scale: number } | undefined)[],
+  h: number,
+  W: number,
+  zt: number
+): SwellStrip {
+  const out: number[] = [];
+  const chains: SwellStrip["chains"] = [];
+  const nC = Math.min(maps.length, Math.floor(z.chainInfo.length / 4));
+  for (let i = 0; i < nC; i++) {
+    const m = maps[i];
+    if (!m || m.chain < 0 || 4 * m.chain + 3 >= sw.tex.length || sw.tex[4 * m.chain + 3] < -0.5) continue;
+    const base = z.chainInfo[4 * i]; const n = z.chainInfo[4 * i + 1]; const ring = z.chainInfo[4 * i + 2] > 0;
+    const segs = ring ? n : n - 1;
+    if (segs < 1) continue;
+    const T = (k: number, q: number): number => z.chainTex[4 * (base + k) + q];
+    const w = new Float64Array(n);
+    for (let k = 0; k < n; k++) w[k] = revealMaskAt(sw, m.chain, m.arcLo + T(k, 2) * m.scale);
+    const first = out.length / SWELL_STRIDE;
+    // A sample's frame: its normal (left of travel) from its neighbours.
+    const frame = (k: number): number[] => {
+      const a = ring ? (k + n - 1) % n : Math.max(0, k - 1);
+      const b = ring ? (k + 1) % n : Math.min(n - 1, k + 1);
+      let tx = T(b, 0) - T(a, 0); let ty = T(b, 1) - T(a, 1);
+      const l = Math.sqrt(tx * tx + ty * ty);
+      if (l > 0) { tx /= l; ty /= l; } else { tx = 1; ty = 0; }
+      const hw = h * w[k];
+      const ib = Math.max(hw - W, 0);
+      return [T(k, 0), T(k, 1), -ty, tx, hw, ib, T(k, 3), T(k, 2)];
+    };
+    const vert = (f: number[], o: number, ink: number): void => {
+      const side = f[4] > 0 ? 0.5 + (0.5 * o) / f[4] : 0.5;
+      out.push(f[0] + f[2] * o, f[1] + f[3] * o, f[6] - (Math.abs(o) * zt) / h + zt / 50, 1, ink, side, 0, f[7]);
+    };
+    for (let j = 0; j < segs; j++) {
+      const k1 = j + 1 === n ? 0 : j + 1;
+      if (!(Math.max(w[j], w[k1]) > 1 + 1e-4)) continue;
+      const A = frame(j); const B = frame(k1);
+      // Across: [hw, ib] ink, [ib, 0] and [0, -ib] fill, [-ib, -hw] ink.
+      const off = (f: number[]): number[] => [f[4], f[5], 0, -f[5], -f[4]];
+      const oa = off(A); const ob = off(B);
+      for (let q = 0; q < 4; q++) {
+        const ink = q === 0 || q === 3 ? 1 : 0;
+        vert(A, oa[q], ink); vert(B, ob[q], ink); vert(B, ob[q + 1], ink);
+        vert(A, oa[q], ink); vert(B, ob[q + 1], ink); vert(A, oa[q + 1], ink);
+      }
+    }
+    const count = out.length / SWELL_STRIDE - first;
+    if (count > 0) chains.push({ scene: i, first, count });
+  }
+  return { data: new Float32Array(out), chains };
+}

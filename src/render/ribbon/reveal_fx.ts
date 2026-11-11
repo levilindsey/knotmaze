@@ -151,6 +151,10 @@ export class RevealFx {
   /** @internal ribbon */ revealOn = false;
   /** @internal ribbon */ revealWas = false;
   /** @internal ribbon */ revealMask: (Float32Array | null)[] = [];
+  // K1291 s3: the chain's width multipliers (widthMulFor's array) while any
+  // sample swells past 1 (the rainbow front), else null. rp=outline reads it
+  // to draw the swell; the ribbons never do.
+  /** @internal ribbon */ revealWidth: (Float32Array | null)[] = [];
   /** @internal ribbon */ revealMaskPool = new Map<number, Float32Array>();
   private revealTipGfx: Graphics | null = null;
   // APPEARANCE FX (Stage 26): frontier particles while revealing. The
@@ -177,6 +181,7 @@ export class RevealFx {
   beginReveal(anim: RevealAnimator | null): void {
     this.revealAnim = anim;
     this.revealMask = this.ps.chains.map(() => null);
+    this.revealWidth = this.ps.chains.map(() => null);
     // Fresh reveal, fresh particle field: a Replay-settle resets particle
     // positions, and motes from the previous run would float over the
     // re-angular knot.
@@ -498,6 +503,7 @@ export class RevealFx {
   // the pure mask in revealMask[chain] (null = fully revealed).
   /** @internal ribbon */ widthMulFor(chain: number, samples: SplineSamples): Float32Array | null {
     this.revealMask[chain] = null;
+    this.revealWidth[chain] = null;
     if (!this.fxLive) return null;
     const U = knotUniformValues();
     const reveal = this.revealOn;
@@ -533,6 +539,7 @@ export class RevealFx {
     }
     let minM = 1;
     let anyW = false;
+    let swelled = false;
     let slot = 0;
     for (let k = 0; k < count; k++) {
       // The sample's ctrl: the bake's monotone walk over this frame's arc
@@ -552,8 +559,10 @@ export class RevealFx {
       }
       width[k] = w;
       if (w !== 1) anyW = true;
+      if (w > 1) swelled = true;
     }
     if (reveal && minM < 1) this.revealMask[chain] = mask;
+    if (swelled) this.revealWidth[chain] = width;
     return anyW ? width : null;
   }
 
@@ -564,6 +573,7 @@ export class RevealFx {
   private finishReveal(): void {
     this.revealAnim = null;
     this.revealMask = this.ps.chains.map(() => null);
+    this.revealWidth = this.ps.chains.map(() => null);
     this.revealTipGfx?.clear();
   }
 

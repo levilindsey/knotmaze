@@ -2,7 +2,7 @@
 // the renderer's arc (chainArcMap) and the packed run map the outline's
 // app fill reads (appRunMap).
 import { describe, expect, it } from "vitest";
-import { RUN_MAP_W, RV_W, appRunMap, chainArcMap, revealMaskAt, revealMaskTex } from "../../src/render/outline/paint";
+import { RUN_MAP_W, RV_W, SWELL_STRIDE, appRunMap, chainArcMap, revealMaskAt, revealMaskTex, swellStrip } from "../../src/render/outline/paint";
 
 // A straight open polyline of length 10 along x, and a unit square ring.
 const LINE = [0, 0, 2.5, 0, 5, 0, 7.5, 0, 10, 0];
@@ -128,5 +128,61 @@ describe("appRunMap as the per-scene-chain map", () => {
     const maps = [{ chain: 4, arcLo: 0.25, scale: 2 }, undefined];
     const r = appRunMap([0, 1], maps);
     expect(Array.from(r.tex.subarray(0, 8))).toEqual([4, 0.25, 2, 0, -1, 0, 0, 0]);
+  });
+});
+describe("swellStrip", () => {
+  // One open scene chain on app chain 0: five band samples along x (s = x),
+  // z = 0.3; the width mask swells to 2 at x = 5 only.
+  const XS = [0, 2.5, 5, 7.5, 10];
+  const z = {
+    chainTex: new Float32Array(XS.flatMap((x) => [x, 0, x, 0.3])),
+    chainInfo: new Float32Array([0, 5, -1, 0]),
+  };
+  const maps = [{ chain: 0, arcLo: 0, scale: 1 }];
+  const h = 1, W = 0.2, zt = 0.5;
+  const at = (d: Float32Array, v: number, q: number): number => d[v * SWELL_STRIDE + q];
+
+  it("covers each segment that swells past 1 at h w, inked over its outer W", () => {
+    const sw = revealMaskTex([{ mask: [1, 1, 2, 1, 1], count: 5, total: 10, closed: false }]);
+    const s = swellStrip(sw, z, maps, h, W, zt);
+    expect(s.chains).toEqual([{ scene: 0, first: 0, count: 48 }]);
+    expect(s.data.length).toBe(48 * SWELL_STRIDE);
+    for (let v = 0; v < 48; v++) {
+      const x = at(s.data, v, 0); const y = at(s.data, v, 1);
+      const hw = h * revealMaskAt(sw, 0, x);
+      expect(x).toBeGreaterThanOrEqual(2.5);
+      expect(x).toBeLessThanOrEqual(7.5);
+      expect(Math.abs(y)).toBeLessThanOrEqual(hw + 1e-6);
+      expect(at(s.data, v, 2)).toBeCloseTo(0.3 - (Math.abs(y) * zt) / h + zt / 50, 5);
+      expect(at(s.data, v, 3)).toBe(1);
+      expect(at(s.data, v, 5)).toBeCloseTo(0.5 + (0.5 * y) / hw, 5);
+      expect(at(s.data, v, 7)).toBe(x);
+      if (at(s.data, v, 4) === 0) expect(Math.abs(y)).toBeLessThanOrEqual(hw - W + 1e-6);
+      else expect(Math.abs(y)).toBeGreaterThanOrEqual(hw - W - 1e-6);
+    }
+    const ys = Array.from({ length: 48 }, (_, v) => at(s.data, v, 1));
+    expect(Math.max(...ys)).toBeCloseTo(2, 5);
+    expect(Math.min(...ys)).toBeCloseTo(-2, 5);
+  });
+
+  it("draws nothing where no sample swells or the chain is fully revealed", () => {
+    expect(swellStrip(revealMaskTex([{ mask: [1, 1, 1, 0.5, 0], count: 5, total: 10, closed: false }]), z, maps, h, W, zt).chains).toEqual([]);
+    expect(swellStrip(revealMaskTex([null]), z, maps, h, W, zt).data.length).toBe(0);
+    expect(swellStrip(revealMaskTex([{ mask: [2, 2, 2, 2, 2], count: 5, total: 10, closed: false }]), z, [undefined], h, W, zt).chains).toEqual([]);
+  });
+
+  it("wraps a ring's last segment and maps s through the chain's arc map", () => {
+    const ring = {
+      chainTex: new Float32Array([0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 2, 0, 0, 1, 3, 0]),
+      chainInfo: new Float32Array([0, 4, 4, 0]),
+    };
+    // App chain 1, its arc = 10 + 2 s (mod 16): s = 0..3 read mask samples
+    // 5, 6, 7 and 0 (arc 2 k). Only sample 0 swells, so s = 3 does.
+    const mask = Array.from({ length: 8 }, (_, k) => (k === 0 ? 1.5 : 1));
+    const sw = revealMaskTex([null, { mask, count: 8, total: 16, closed: true }]);
+    const s = swellStrip(sw, ring, [{ chain: 1, arcLo: 10, scale: 2 }], h, W, zt);
+    // Segments 2-3 and the wrap 3-0, which alone reaches sample 0 (s = 0).
+    expect(s.chains).toEqual([{ scene: 0, first: 0, count: 48 }]);
+    expect(Array.from({ length: 48 }, (_, v) => at(s.data, v, 7)).filter((x) => x === 0).length).toBeGreaterThan(0);
   });
 });

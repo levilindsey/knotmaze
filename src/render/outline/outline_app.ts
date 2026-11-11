@@ -41,7 +41,7 @@ import {
 import { EXPLORE_GLOW_RGB, EXPLORE_LOOK_GLSL, EXPLORE_VIS_GLSL } from "../explore_glsl";
 import { kGeom, kPaint, kReveal, kStatic, knotUniformValues } from "../paint_model";
 import type { SceneIn } from "./outline";
-import { RUN_MAP_W, RV_W, appRunMap, chainArcMap, revealMaskTex } from "./paint";
+import { RUN_MAP_W, RV_W, SWELL_STRIDE, appRunMap, chainArcMap, revealMaskTex, swellStrip, type SwellStrip } from "./paint";
 import type { OutlineReply, OutlineRequest } from "./outline_worker";
 
 const CTRL_ARC = 0.47;
@@ -125,6 +125,18 @@ float rvMaskS(int i, highp float s) {
   return rvMask(int(m.x + 0.5), m.y + s * m.z);
 }
 `;
+// K1291 s3: the rainbow's swell (reveal_fx.ts revealWidth, packed as the
+// masks are: revealMaskTex) on uSw, read as RV_MASK_GLSL reads uRv. The band
+// steps aside wherever its chain swells past 1: the swell (paint.ts
+// swellStrip) draws its own border there.
+const SW_MASK_GLSL = `
+uniform highp sampler2D uSw;
+uniform int uSwOn;
+${RV_MASK_GLSL.slice(RV_MASK_GLSL.indexOf("float rvT("))
+  .replace(/\brvT\(/g, "swT(")
+  .replace(/\buRv\b/g, "uSw")
+  .replace(/\brvMask\b/g, "swMask")
+  .replace(/\brvMaskS\b/g, "swMaskS")}`;
 // The fill's distance to a scene chain's centerline (band_gpu's chain
 // samples) within r of s, and the foot's s: the fill has no across
 // coordinate, so the narrowed reveal width needs it.
@@ -220,6 +232,11 @@ in vec4 vS;
 in vec2 vPos;
 uniform int uFp;
 out vec4 o;
+#if KRV
+// K1291 s3: 1 while drawing the rainbow's swell (paint.ts swellStrip): the
+// strip carries its own ink (vW.y) and stripe side (vW.z).
+uniform int uSwl;
+#endif
 ${RV_MASK_GLSL}
 ${RV_FOOT_GLSL}
 ${KNOT_UNIFORMS_GLSL}
@@ -296,6 +313,7 @@ void main() {
   float ink = 0.0;
   float side = 0.5;
 #if KRV
+  if (uSwl == 1) { ink = vW.y; side = vW.z; } else {
   if (uRvOn > 0) {
     int kb = -1; float wb = 0.0;
     for (int k = 0; k < 4; k++) if (vRun[k] >= 0 && vW[k] > wb) { wb = vW[k]; kb = k; }
@@ -337,6 +355,7 @@ void main() {
         if (f.x < 1e29) side = clamp(0.5 + 0.5 * f.z * f.x / uH, 0.0, 1.0);
       }
     }
+  }
   }
 #endif
   vec3 c = vec3(0.0); float W = 0.0; float A = 0.0;
@@ -420,6 +439,9 @@ flat in int vCh;
 uniform int uPre;
 out vec4 o;
 ${RV_MASK_GLSL}
+#if KRV
+${SW_MASK_GLSL}
+#endif
 ${KNOT_UNIFORMS_GLSL}
 ${PAINT_CONST_GLSL}
 ${PAINT_DATA_GLSL}
@@ -468,6 +490,8 @@ void main() {
   // narrowed stretch's border is the fill's (APP_FS), none is unrevealed.
   bool rv = uRvOn > 0;
   if (rv && vCh >= 0 && min(rvMaskS(vCh, sA), chB >= 0 ? rvMaskS(chB, sB) : 1.0) < 0.999) discard;
+  // K1291 s3: where the rainbow swells the thread, its swell draws the border.
+  if (uSwOn > 0 && vCh >= 0 && max(swMaskS(vCh, sA), chB >= 0 ? swMaskS(chB, sB) : 1.0) > 1.0005) discard;
   // K1291 s2: under the thread reveal, the border shows with its OWN
   // thread (a hidden thread's border would cross a seen one's fill).
   float exV = exVisS(vCh, sA);
@@ -556,8 +580,8 @@ export function krvSource(src: string, on: boolean): string {
 export const KRV_SHADERS = { APP_FS, BAND_FS };
 
 type U = WebGLUniformLocation | null;
-type UA = { mat: U; ks: U; map: U; px: U; tex: U[]; knot: U[]; ink: U; h: U; w: U; rv: U; cm: U; rvOn: U; chainS: U; ci: U; fp: U };
-type UB = { mat: U; chain: U; pass: U; ink: U; h: U; w: U; zt: U; rv: U; cm: U; rvOn: U; pre: U; tex: U[]; knot: U[]; px: U };
+type UA = { mat: U; ks: U; map: U; px: U; tex: U[]; knot: U[]; ink: U; h: U; w: U; rv: U; cm: U; rvOn: U; chainS: U; ci: U; fp: U; swl: U };
+type UB = { mat: U; chain: U; pass: U; ink: U; h: U; w: U; zt: U; rv: U; cm: U; rvOn: U; pre: U; tex: U[]; knot: U[]; px: U; sw: U; swOn: U };
 
 /** The GL side: programs, the outline's buffers, the offscreen target. */
 class OutlinePass {
@@ -596,6 +620,16 @@ class OutlinePass {
   private ciTex: WebGLTexture;
   /** A reveal is running (a mask packed and uploaded this frame or before). */
   rvOn = false;
+  /** K1291 s3: the rainbow's swell - its multipliers (revealMaskTex of
+   *  reveal_fx revealWidth) for the band, its strip (paint.ts swellStrip)
+   *  for the fill; swOn while any chain swells. */
+  private swTex: WebGLTexture;
+  private swBuf: WebGLBuffer;
+  private swVao: WebGLVertexArrayObject;
+  swOn = false;
+  private swChains: SwellStrip["chains"] = [];
+  /** The last reply's band chain samples (swellStrip reads them). */
+  zTab: { chainTex: Float32Array; chainInfo: Float32Array } | null = null;
   private hasCm = false;
   private band_: { ink: [number, number, number]; h: number; W: number; zt: number } = { ink: [0, 0, 0], h: 1, W: 1, zt: 0 };
   private uC: U;
@@ -671,6 +705,17 @@ class OutlinePass {
     gl.enableVertexAttribArray(2);
     gl.vertexAttribIPointer(2, 1, gl.SHORT, 0, 0);
     this.cVao = gl.createVertexArray()!;
+    // K1291 s3: the swell strip (paint.ts swellStrip, SWELL_STRIDE floats a
+    // vertex) as the fill's aPos, aKey, aW and aS; aRun stays a constant.
+    this.swBuf = gl.createBuffer()!;
+    this.swVao = gl.createVertexArray()!;
+    gl.bindVertexArray(this.swVao);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.swBuf);
+    const sb = 4 * SWELL_STRIDE;
+    for (const [loc, n, at] of [[0, 2, 0], [2, 1, 2], [4, 4, 3], [5, 1, 7]]) {
+      gl.enableVertexAttribArray(loc);
+      gl.vertexAttribPointer(loc, n, gl.FLOAT, false, sb, 4 * at);
+    }
     gl.bindVertexArray(null);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
     this.runTex = gl.createTexture()!;
@@ -679,6 +724,7 @@ class OutlinePass {
     this.rvTex = gl.createTexture()!;
     this.cmTex = gl.createTexture()!;
     this.ciTex = gl.createTexture()!;
+    this.swTex = gl.createTexture()!;
     this.fbo = gl.createFramebuffer()!;
   }
 
@@ -687,7 +733,7 @@ class OutlinePass {
     return {
       fp: ua("uFp"), mat: ua("uMat"), ks: ua("uKS"), map: ua("uRunMap"), px: ua("uPx"),
       tex: APP_TEX.map(ua), knot: KNOT_NAMES.map(ua), ink: ua("uInk"), h: ua("uH"), w: ua("uW"),
-      rv: ua("uRv"), cm: ua("uCm"), rvOn: ua("uRvOn"), chainS: ua("uChainS"), ci: ua("uCi"),
+      rv: ua("uRv"), cm: ua("uCm"), rvOn: ua("uRvOn"), chainS: ua("uChainS"), ci: ua("uCi"), swl: ua("uSwl"),
     };
   }
 
@@ -696,7 +742,7 @@ class OutlinePass {
     return {
       mat: ub("uMat"), chain: ub("uChain"), pass: ub("uPass"), ink: ub("uInk"), h: ub("uH"), w: ub("uW"), zt: ub("uZt"),
       rv: ub("uRv"), cm: ub("uCm"), rvOn: ub("uRvOn"), pre: ub("uPre"),
-      tex: APP_TEX.map(ub), knot: KNOT_NAMES.map(ub), px: ub("uPx"),
+      tex: APP_TEX.map(ub), knot: KNOT_NAMES.map(ub), px: ub("uPx"), sw: ub("uSw"), swOn: ub("uSwOn"),
     };
   }
 
@@ -750,7 +796,25 @@ class OutlinePass {
     ci.set(r.chainInfo);
     ftex(this.ciTex, ci, ciH);
     gl.bindTexture(gl.TEXTURE_2D, null);
+    this.zTab = { chainTex: r.chainTex, chainInfo: r.chainInfo };
     this.hasData = true;
+  }
+
+  /** The last reply's band widths (h, W) and depth step (zt). */
+  bandParams(): { h: number; W: number; zt: number } {
+    return this.band_;
+  }
+
+  /** K1291 s3: this frame's swell (multipliers and strip); off when none. */
+  uploadSwell(m: { tex: Float32Array; w: number; h: number; on: boolean }, s: SwellStrip | null): void {
+    this.swOn = m.on && !!s && s.chains.length > 0;
+    if (!this.swOn || !s) { this.swChains = []; return; }
+    this.tex2d(this.swTex, this.gl.R32F, m.w, m.h, m.tex);
+    const gl = this.gl;
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.swBuf);
+    gl.bufferData(gl.ARRAY_BUFFER, s.data, gl.DYNAMIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    this.swChains = s.chains;
   }
 
   private tex2d(t: WebGLTexture, fmt: number, w: number, h: number, d: Float32Array): void {
@@ -849,7 +913,7 @@ class OutlinePass {
         (!!kex && kex[0] > 0.5);
       // K1291 s3: no reveal, intro FX or thread reveal this frame: the
       // programs without their code (stage 1's cost).
-      const lite = this.lite ?? (!rvOn && !(!!kfx && kfx[3] > 0.5) && !(!!kex && kex[0] > 0.5));
+      const lite = this.lite ?? (!rvOn && !this.swOn && !(!!kfx && kfx[3] > 0.5) && !(!!kex && kex[0] > 0.5));
       const li = lite ? 1 : 0;
       this.app = this.appV[li];
       this.uA = this.uAV[li];
@@ -912,6 +976,20 @@ class OutlinePass {
         gl.depthMask(true);
         gl.uniform1i(this.uA.fp, 0);
       } else gl.drawElements(gl.TRIANGLES, this.nIdx, gl.UNSIGNED_INT, 0);
+      // K1291 s3: the rainbow's swell over the fill (paint.ts swellStrip):
+      // the same program, the per-scene-chain map in the run map's place.
+      const swl = !fade && !!ap && this.hasMap && li === 0 && this.swOn && this.hasCm;
+      if (swl) {
+        gl.uniform1i(this.uA.swl, 1);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this.cmTex);
+        gl.bindVertexArray(this.swVao);
+        for (const c of this.swChains) {
+          gl.vertexAttribI4i(3, c.scene, -1, -1, -1);
+          gl.drawArrays(gl.TRIANGLES, c.first, c.count);
+        }
+        gl.uniform1i(this.uA.swl, 0);
+      }
       if (ap && this.hasMap) {
         for (let i = APP_TEX.length + 4; i >= 1; i--) {
           gl.activeTexture(gl.TEXTURE0 + i);
@@ -961,10 +1039,17 @@ class OutlinePass {
         const i = KNOT_NAMES.indexOf("uKExplore");
         if (this.uB.knot[i]) gl.uniform4f(this.uB.knot[i], 0, 0, 0, 0);
       }
+      // K1291 s3: the swell's multipliers on unit 8 (the band steps aside).
+      gl.uniform1i(this.uB.swOn, swl ? 1 : 0);
+      if (swl) {
+        gl.activeTexture(gl.TEXTURE8);
+        gl.bindTexture(gl.TEXTURE_2D, this.swTex);
+        gl.uniform1i(this.uB.sw, 8);
+      }
       gl.bindVertexArray(this.bVao);
       gl.drawArrays(gl.TRIANGLES, 0, this.nBand);
       gl.disable(gl.BLEND);
-      for (let i = 7; i >= 1; i--) {
+      for (let i = 8; i >= 1; i--) {
         gl.activeTexture(gl.TEXTURE0 + i);
         gl.bindTexture(gl.TEXTURE_2D, null);
       }
@@ -1324,6 +1409,16 @@ export function createOutlineApp(ctx: SceneExportCtx, requestFrame: () => void):
           pass.uploadReveal(
             revealMaskTex(ss.map((s, c) => (s && M[c] ? { mask: M[c], count: s.count, total: s.totalLength, closed: s.closed } : null)))
           );
+          dirty = true;
+        }
+        // K1291 s3: the rainbow's swell behind its front (revealWidth: the
+        // ribbon's width multipliers while any passes 1).
+        const SW = r.revealFx.revealWidth;
+        if (pass.swOn || SW.some((m) => !!m)) {
+          const ss = r.chainSamples;
+          const swT = revealMaskTex(ss.map((s, c) => (s && SW[c] ? { mask: SW[c], count: s.count, total: s.totalLength, closed: s.closed } : null)));
+          const B = pass.bandParams();
+          pass.uploadSwell(swT, swT.on && pass.zTab ? swellStrip(swT, pass.zTab, sentMaps, B.h, B.W, B.zt) : null);
           dirty = true;
         }
       }
