@@ -763,7 +763,7 @@ Every other item below waits on the trigger it names.
 - **K1283** · Redesign junctions against form B: after K1279 every crossing that still differs from form B
   sits at a junction (the 25 worst, e.g. muse_hash x77 846 px): form B blends the edges softly where threads
   meet, the redesign draws hard lines. Census k1279_census.ts; crops
-  .claude/probes/K1240/out/k1279/crops/worst10_{a,b}.png. The fill half, K1277's end-arm sliver (through-thread colour over the end thread's round end, muse_hash x73 x47 x292 x177), went to K1278 stage 1 (9f6a38f2), which fixed its colour; its geometry stays here: the end thread's round end and tail do not cover where form B shows it (x47, x73, x349; the stage 1 handoff in docs/design/K1278_paint.md)
+  .claude/probes/K1240/out/k1279/crops/worst10_{a,b}.png. The fill half, K1277's end-arm sliver (through-thread colour over the end thread's round end, muse_hash x73 x47 x292 x177), went to K1278 stage 1 (9f6a38f2), which fixed its colour; its geometry stays here: the end thread's round end and tail do not cover where form B shows it (x47, x73, x349; the stage 1 handoff in docs/design/K1278_paint.md). Concave corners bite where form B is round (def j55, j156, j91, j45, j54, j73, j30, x81; .claude/probes/K1240/out/k1290/crops/fail_j55_j156.png, rest_feet.png); first in src/ after K1240 S4
 
 ## Residuals (known, not fixed)
 
@@ -1749,7 +1749,7 @@ Every other item below waits on the trigger it names.
   handoff)
 - **K1276** · The K1240 prototype's `verify --ref` reads 48 failures that predate K1247 stage 14 (its
   handoff); not yet sorted into stale baselines and real ones
-- **K1281** · K1240 outline jumps left after stage 17 (f5761d43; def 15 places, muse_hash 17, fat 0): 13 of def's 15 are the corner foot flipping across a concave bisector (K16_CB=arc takes def to 3 but census vs form B +212, 3 crossings over 12 px: ring x10, def x81, x131); j176 the physics crossing binding sliding 1.6 px about 2.1h away (src physics, or the gain tool's input radius); j35 under arc; muse_hash's 17 undiagnosed; the full builder still the fallback past 2n+8 points. Held for K1290, which may remove the class (s17 handoff in docs/design/K1247_s17_feet.md)
+- **K1281** · K1240 outline jumps left after stage 17 (f5761d43; def 15 places, muse_hash 17, fat 0): 13 of def's 15 are the corner foot flipping across a concave bisector (K16_CB=arc takes def to 3 but census vs form B +212, 3 crossings over 12 px: ring x10, def x81, x131); j176 the physics crossing binding sliding 1.6 px about 2.1h away (src physics, or the gain tool's input radius); j35 under arc; muse_hash's 17 undiagnosed; the full builder still the fallback past 2n+8 points. K1290 (97f4f2e2, not adopted): forward corner-arc ends take def 66 -> 4 jump pairs but census +1.8%, frame() +6%, still need the nearest search to insert, and concentric corners (j55, j156) switch roots; revisit once K1283 has the corners matching form B at rest, choosing the root once in structure() (s17 handoff in docs/design/K1247_s17_feet.md, K1290's in docs/design/K1290_forward.md)
 - **K1284** · K1279 leftovers: a pass span that runs into a junction keeps the straight reach, a choice from
   positions that can snap (not seen in the jitter runs); fade steps under the bar (max 0.04 at d 0.001) from
   the span walk's h/4 steps; cut 273 spot b keeps a 79 px sliver at 0.74 ink where form B is solid
