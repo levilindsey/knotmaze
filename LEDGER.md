@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1302.
+Next free ID: K1303.
 
 ## Waiting on Levi
 
@@ -384,7 +384,7 @@ Next free ID: K1302.
   - owner: nobody since 2026-11-10 05:01 (far-flag fix merged; waits on K156's phone window)
   - branch: mainline; last commit: `0c1fc78e`
   - evidence: .claude/probes/K268/proof/ (run_census.ps1, census3a.mjs, far_scan.mjs, lock_take.ps1); test/render/paint_explore.test.ts; outputs untracked in proof/out/
-  - next: Phone census rerun of proof/census3a.mjs (PASSCFG, same recipe) in K156's next window; PROOF coverage of a visible far branch is K1272
+  - next: Phone census passed 31/31 (K156 round 2026-11-10d rerun, 08b65e81): PROOF rows pass (fade and beacon ghosts 0, under-cuts 0), far_scan 0 visible far-branch pixels. Left: read in census3a.mjs which beacon figure the gate means (its before field still reads 449 ghosts, the final row 0), then close; PROOF coverage of a visible far branch is K1272
   - brief: docs/design/K268.md (Far-flag fix handoff)
 - **K7** · Physics in a Web Worker with render-side interpolation (K28; Levi's
   calls K302). Stages 1-7 merged: the worker is the default (stage 6, call F6), `&phw=0` runs
@@ -404,7 +404,7 @@ Next free ID: K1302.
   - owner: nobody since 2026-10-15 05:39 (stage 2 done; agent `a11d7ce60428b687d` of claude session d8031183, worktree removed by the K161 sweep 2026-10-15, branch kept)
   - branch: mainline; last commit: `a7e199e` (stage 3 late enable)
   - evidence: `.claude/probes/K307/` (stage 1's tools and traces; `stage2/`: `trace_intro.mjs`, `run_s2.ps1`, batches 1-7, `runs/`, two A/B builds, `k366_firsttap.mjs`); the throwaway branch `k307-proto` (d1aefae), never merged; lore `.claude/rules/render-shaders.md` ("THE WARM-UP")
-  - next: Restart check still open: at 2026-11-10 06:00 (round 2026-11-10d) Chrome's GPU process still dated 2026-11-09 20:20:20, before salt p1109a (22:07:41). Each phone window reads the start time first and runs the traced load (?daily&snd=none with k307\salt_p1109a.js: 0 translates = persisted, ~21 = not) only if later. Never restart Chrome on the phone. Evidence .claude/probes/rounds/2026-11-09/k307/
+  - next: Restart check done (K156 round 2026-11-10d rerun, 08b65e81): Chrome restarted 2026-11-10 08:11, after salt p1109a, and the traced load read 21 translates: the program cache did not survive the restart (first visible 1.063 s); p1109a planted again. Next phone window: the same salted traced load with no Chrome restart in between (0 translates = warm across a page load). Never restart Chrome on the phone
   - brief: `docs/design/K307_intro_freezes.md`, "Stage 2 handoff" and "K385" (the mechanism and the plan)
 - **K8** · G3: SDF ribbons drawn from one shared sample texture
   (`docs/design/G3G4_sdf_geometry.md`). G3-0 merged (ebdae8c..b11747e): the four G3
@@ -412,7 +412,7 @@ Next free ID: K1302.
   - owner: nobody since 2026-11-10 05:48 (phone stage done; agent a42a1b95d18237761 of claude session 09c7a672-a414-402a-97da-b3176839a2e5, merged)
   - branch: mainline; last commit: `0fe6316c`
   - evidence: .claude/probes/K8/sdf_phone/ (count.mjs, diffspots.mjs, bench.ps1, verify.ps1, bench_diag.mjs; outputs untracked), .claude/probes/K8/sdf_cost/, scripts/bench_frame.mjs
-  - next: Phone stage merged: rp=sdf candidates A 53702915, A+B 1800ddbf, A+B+C c9186de5 (master; desktop knot gs 24 10.85 -> 8.90 ms). K156 round 2026-11-10d A/Bs them on the phone. Then the SDF's shaded overdraw at segment joins (dense 1.32x, max fabric 1.95x the strip's fragments) and a device-pixel end margin for C
+  - next: Phone A/B done (K156 round 2026-11-10d rerun, 08b65e81): A 53702915 -11 / -6 / -11% render sync (dense / max fabric / knot gs 24), B nothing, C -2 / -1.5 / -7%; rp=sdf still +134 / +112 / +101 ms over default (was +170 / +139 / +130), so G3-3 cannot flip. The cost left is c67a75ff gap search itself: next a GPU frame split or the search per-pixel count, then a phone round
   - brief: docs/design/K8_sdf_phone.md (Handoff 1)
 - **K5** · Split `main.ts` and `ribbon_renderer.ts` along K1-K3's data lines, with seams so G3 becomes a module
   swap; K6 rides it (`docs/design/K5_K6_split.md`, calls K377). Merged M1-M4 (`src/app/`: camera, frame_loop,
@@ -1798,6 +1798,9 @@ Every other item below waits on the trigger it names.
 - **K1301** · Outline worker frame after K1283 s3+s4: s3 +5.7% (tail walk), s4 within 5% by ABBA but its frame
   part still 3-9 ms over; re-bench quietly with K1247's cuts (bench_abba4.json in
   .claude/probes/K1240/out/k1283s4/)
+- **K1302** · scripts/phone_pass idle_wait.ps1 exits at once with 'no phone connected' when the wireless adb
+  link has dropped though the phone is up; it could adb connect once before giving up (K156 round 2026-11-10d
+  rerun handoff, docs/design/K156.md)
 
 ## Approved, to schedule (2026-10-11)
 
