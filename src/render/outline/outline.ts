@@ -4302,9 +4302,29 @@ function buildBorderC(C: FCache, pi: number, sig: number): void {
 // at f33, a station 0.02 px of input from the vertex); it puts a point at
 // most min(w, h * turn / 2) along the border from where bs put it. A run at
 // either end of the border (a closed border's seam) keeps bs.
+// K1283 s9: a cut fold's chevron counts as one tie run at its first leg's s
+// here (its points' bs are interpolated for the paint, CF_S2_PAINT): a station
+// whose s falls inside the chevron's s range is placed past it, as before
+// stage 8, not mid-chevron, where the next run's strip retraced the
+// chevron's return half at another s (g41_user_tw64 (3.5, 4.0), +90 seams).
+const CF_TIE = true;
+let stKey = new Float64Array(64);
 function spreadTiesC(B: FBord): void {
   const n = B.nb; B.bc = growF(B.bc, n > 0 ? n : 1);
-  const bs = B.bs; const bc = B.bc; const bx = B.bx; const by = B.by;
+  const bc = B.bc; const bx = B.bx; const by = B.by;
+  let bs = B.bs;
+  if (CF_TIE) {
+    if (stKey.length < n) stKey = new Float64Array(2 * n);
+    const bcv = B.bcv;
+    for (let i = 0; i < n; i++) stKey[i] = B.bs[i];
+    for (let i = 0; i < n; i++) {
+      if (bcv[i] !== 1) continue;
+      let j = i + 1;
+      while (j < n && bcv[j] === 0 && j - i <= 2 * CF_NS + 2) j++;
+      if (j < n && bcv[j] === 2) { for (let k = i + 1; k <= j; k++) stKey[k] = B.bs[i]; i = j; }
+    }
+    bs = stKey;
+  }
   for (let i = 0; i < n; i++) bc[i] = bs[i];
   let i = 1;
   while (i < n - 1) {

@@ -77,6 +77,9 @@ export const CAP_M = 17;
 export const ARC_K = 16;
 /** Tail resolution: above outline.ts's TAIL_N + 2 points, so a tail is never dense. */
 export const TAIL_M = 24;
+/** K1283 s9: a frame tail's vertices paint their foot's s (see the tail item). */
+const TAIL_FOOT = true;
+const STRIP_FOOT = true;
 /** K1283 s4: rim points of an end arm's round end (DiskItem). */
 export const DISK_M = 32;
 /** K1283 s6: rings of a round end (radii h k / DISK_R), so over its fan the
@@ -589,9 +592,9 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
           const s = s4[SLOTS * v]; const f = footNear(c, pos[2 * v], pos[2 * v + 1], s, rF, 0, 0);
           if (Number.isFinite(f.d)) s4[SLOTS * v] = c.closed && c.len > 0 ? f.s + c.len * Math.round((s - f.s) / c.len) : f.s;
         };
-        if (fbL || fbR || atA || atB) {
+        if (fbL || fbR || atA || atB || STRIP_FOOT) {
           for (let i = 0; i <= N; i++) {
-            const end = (i === 0 && atA) || (i === N && atB);
+            const end = (i === 0 && atA) || (i === N && atB) || STRIP_FOOT;
             if (!end && !fbL && !fbR) continue;
             const vL = it.base + i; const vC = vL + W; const vR = vC + W;
             if (end || fbL) foot(vL);
@@ -618,6 +621,20 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
         set(it.base + W + i, bufR[2 * i], bufR[2 * i + 1], z, s);
         s4[SLOTS * (it.base + i)] = s4[SLOTS * (it.base + W + i)] = p.s0 + (dsT * i) / TAIL_M;
         across[it.base + i] = 1;
+      }
+      // K1283 s9: a frame tail (s0 = s1: the corner's s) takes, vertex by
+      // vertex, its foot on the chain near that s, as a strip's end column
+      // does (K1278 s2), so the tail carries the s of where it is. Flat at the
+      // corner's s, its edge stepped against the strip beside it where the
+      // no-meet burial moved the corner off the arm's root (muse_hash j149
+      // (17, 3): 82 strip|tail seams).
+      if (TAIL_FOOT && c && c.n > 1 && Math.abs(dsT) < 1e-9) {
+        const rF = 4 * hW;
+        for (let i = 0; i < 2 * W; i++) {
+          const v = it.base + i; const s0 = s4[SLOTS * v];
+          const f = footNear(c, pos[2 * v], pos[2 * v + 1], s0, rF, 0, 0);
+          if (Number.isFinite(f.d)) s4[SLOTS * v] = c.closed && c.len > 0 ? f.s + c.len * Math.round((s0 - f.s) / c.len) : f.s;
+        }
       }
     } else if (it.kind === "disk") {
       const a = st.arms[it.ai]; const J = a ? scene.junctions[a.ji] : undefined;
