@@ -4412,6 +4412,15 @@ function cutFoldsC(C: FCache, pi: number, sig: number, B: FBord): void {
     for (const sb of bendClusters) {
       let nearRoot = false; for (let r = 0; r < roots.length; r++) if (Math.abs(dS(p, roots[r], sb)) < h) nearRoot = true;
       if (nearRoot) continue;
+      // Likewise a bend within h of a kink's station (a self-crossing of this chain): its border
+      // crosses itself there because the thread does, and the crossing's gap draws it (muse_hash
+      // x58 70.4 -> 18.6 px, x22 68.2 -> 43.3; cut, they were 43 and 21 px worse than master).
+      let nearKink = false;
+      for (let e = 0; e < C.passN[pi]; e++) {
+        const xi = C.passXi[pi][e];
+        if (C.crossAPi[xi] === C.crossBPi[xi] && Math.abs(dS(p, C.passS[pi][e], sb)) < h) nearKink = true;
+      }
+      if (nearKink) continue;
       let i0 = -1; let i1 = -1; let nIdx = 0;
       for (let i = 0; i < m; i++) if (Math.abs(dS(p, sb, B.ps[seq[i]])) <= 2.5 * h) { if (i0 < 0) i0 = i; i1 = i; nIdx++; }
       if (nIdx < 3) continue;
