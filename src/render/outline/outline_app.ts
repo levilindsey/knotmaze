@@ -132,16 +132,16 @@ uniform highp sampler2D uChainS;
 uniform highp sampler2D uCi;
 highp vec4 rvS(int i) { return texelFetch(uChainS, ivec2(i % ${BAND_TEX_W}, i / ${BAND_TEX_W}), 0); }
 highp float rvdS(highp float len, highp float a, highp float c) { highp float d = c - a; if (len > 0.0) { d = mod(d, len); if (d > 0.5 * len) d -= len; } return d; }
-highp vec2 rvFoot(int i, highp float s, highp vec2 p, highp float r) {
+highp vec3 rvFoot(int i, highp float s, highp vec2 p, highp float r) {
   highp vec4 I = texelFetch(uCi, ivec2(i % ${BAND_TEX_W}, i / ${BAND_TEX_W}), 0);
   int b = int(I.x + 0.5); int n = int(I.y + 0.5); highp float L = I.z;
   bool ring = L > 0.0;
   int segs = ring ? n : n - 1;
-  if (segs < 1) return vec2(1e30, s);
+  if (segs < 1) return vec3(1e30, s, 1.0);
   highp float sw = ring ? s - L * floor(s / L) : s;
   int lo = 0; int hi = n - 1;
   for (int it = 0; it < 24 && lo < hi; it++) { int m = (lo + hi + 1) / 2; if (rvS(b + m).z <= sw) lo = m; else hi = m - 1; }
-  highp float best = 1e30; highp float bs = sw;
+  highp float best = 1e30; highp float bs = sw; highp float sg = 1.0;
   for (int dir = 0; dir < 2; dir++) {
     for (int t = 0; t < 64; t++) {
       int k = dir == 0 ? lo + t : lo - 1 - t;
@@ -154,10 +154,10 @@ highp vec2 rvFoot(int i, highp float s, highp vec2 p, highp float r) {
       highp vec2 e = B.xy - A.xy; highp float l2 = dot(e, e);
       highp float tt = l2 > 0.0 ? clamp(dot(p - A.xy, e) / l2, 0.0, 1.0) : 0.0;
       highp float d = length(p - A.xy - tt * e);
-      if (d < best) { best = d; bs = A.z + tt * lk; }
+      if (d < best) { best = d; bs = A.z + tt * lk; sg = e.x * (p.y - A.y) - e.y * (p.x - A.x) < 0.0 ? -1.0 : 1.0; }
     }
   }
-  return vec2(best, bs);
+  return vec3(best, bs, sg);
 }
 `;
 // PAINT_VS plus the world position (the reveal front's distance).
@@ -210,7 +210,10 @@ ${PAINT_SECTION_GLSL}
 ${PAINT_GATE_THREAD_GLSL}
 ${PAINT_FX_GLSL}
 ${PAINT_PAINT_STRIP_GLSL}
-vec3 appMaterial(int ch, highp float a) {
+// K1291 s2: al = the intro's materialize alpha (comet, dust; 1 otherwise)
+// and side01 the point's side across the thread (the rainbow's stripes).
+vec3 appMaterial(int ch, highp float a, highp float side01, out float al) {
+  al = 1.0;
   KChain c = kChain(ch);
   highp float total = c.total;
   if (total <= 0.0 || c.count < 2) return knotSection(c, 0.0);
@@ -219,10 +222,10 @@ vec3 appMaterial(int ch, highp float a) {
   highp float actrl = kCtrlOfArcNear(c, an, kSecK0);
   if (uKFx.w > 0.5 && uKFx.z < c.fxDone) {
     int st = int(uKFx.x + 0.5);
-    if (st == 4 || st == 5) {
+    if (st >= 1) {
       highp float pR;
-      highp float al;
       m = kFxColor(c, actrl, an / c.arcPer, m, pR, al);
+      if (pR > 0.0) m = kRainbowBlend(m, pR, side01);
     }
   }
   if ((uKPaint.x > 0.5 && c.paintOn) || uKFx2.z > 0.5) {
@@ -253,7 +256,7 @@ void main() {
         float mn = min(m0, min(m1, m2));
         if (max(m0, max(m1, m2)) <= 0.0) discard;
         if (mn < 1.0) {
-          highp vec2 f = rvFoot(int(m.w + 0.5), s, vPos, 2.0 * uH);
+          highp vec3 f = rvFoot(int(m.w + 0.5), s, vPos, 2.0 * uH);
           bool hit = f.x < 1e29;
           float mf = hit ? rvMask(ac, m.y + f.y * m.z) : m0;
           float hm = uH * mf;
@@ -266,16 +269,36 @@ void main() {
       }
     }
   }
-  vec3 c = vec3(0.0); float W = 0.0;
+  // The rainbow's stripes run across the thread: the side from the signed
+  // distance to the heaviest slot's centerline (0.5 = on it).
+  float side = 0.5;
+  if (uKFx.w > 0.5 && int(uKFx.x + 0.5) == 1) {
+    int kb = -1; float wb = 0.0;
+    for (int k = 0; k < 4; k++) if (vRun[k] >= 0 && vW[k] > wb) { wb = vW[k]; kb = k; }
+    if (kb >= 0) {
+      int r = vRun[kb];
+      highp vec4 m = texelFetch(uRunMap, ivec2(r % ${RUN_MAP_W}, r / ${RUN_MAP_W}), 0);
+      if (m.x > -0.5) {
+        highp vec3 f = rvFoot(int(m.w + 0.5), vS[kb], vPos, 2.0 * uH);
+        if (f.x < 1e29) side = clamp(0.5 + 0.5 * f.z * f.x / uH, 0.0, 1.0);
+      }
+    }
+  }
+  vec3 c = vec3(0.0); float W = 0.0; float A = 0.0;
   for (int k = 0; k < 4; k++) {
     int r = vRun[k]; float w = vW[k];
     if (r < 0 || !(w > 0.0)) continue;
     highp vec4 m = texelFetch(uRunMap, ivec2(r % ${RUN_MAP_W}, r / ${RUN_MAP_W}), 0);
     if (m.x < -0.5) continue;
-    c += w * appMaterial(int(m.x + 0.5), m.y + vS[k] * m.z); W += w;
+    float al;
+    c += w * appMaterial(int(m.x + 0.5), m.y + vS[k] * m.z, side, al); W += w; A += w * al;
   }
   vec3 col = mix(W > 0.0 ? c / W : vec3(0.0), uInk, ink);
-  o = vec4(col, 1.0);
+  // The intro's materialize alpha (comet, dust), premultiplied; the fill
+  // blends only while those styles run (1 otherwise: the opaque write).
+  float al = W > 0.0 ? A / W : 1.0;
+  if (al <= 0.002) discard;
+  o = vec4(col * al, al);
 }`;
 /** The knot uniforms APP_FS reads (paint_model.ts knotUniforms). */
 const KNOT_NAMES = [
@@ -327,6 +350,7 @@ in vec2 vPos;
 in vec4 vA;
 flat in ivec4 vSl;
 flat in int vCh;
+uniform int uPre;
 out vec4 o;
 ${RV_MASK_GLSL}
 const int TW = ${BAND_TEX_W};
@@ -380,7 +404,9 @@ void main() {
   }
   float a = vA.w;
   for (int u = 0; u < 4; u++) if (u < n) a *= seenF[u];
-  o = vec4(uInk, a);
+  // K1291 s2: while a materializing intro runs, premultiplied (blended by
+  // the fill's alpha under it, so a border fades with its thread).
+  o = uPre > 0 ? vec4(uInk * a, a) : vec4(uInk, a);
 }`;
 const COMP_VS = `#version 300 es
 void main() {
@@ -414,7 +440,7 @@ class OutlinePass {
   private uA: { mat: U; ks: U; map: U; px: U; tex: U[]; knot: U[]; ink: U; h: U; w: U; rv: U; cm: U; rvOn: U; chainS: U; ci: U };
   private runMap: WebGLTexture;
   hasMap = false;
-  private uB: { mat: U; chain: U; pass: U; ink: U; h: U; w: U; zt: U; rv: U; cm: U; rvOn: U };
+  private uB: { mat: U; chain: U; pass: U; ink: U; h: U; w: U; zt: U; rv: U; cm: U; rvOn: U; pre: U };
   private chainTex: WebGLTexture;
   private passTex: WebGLTexture;
   /** K1291 s2: the reveal masks (paint.ts revealMaskTex), the per-scene-chain
@@ -487,7 +513,7 @@ class OutlinePass {
     const ub = (n: string): U => gl.getUniformLocation(this.band, n);
     this.uB = {
       mat: ub("uMat"), chain: ub("uChain"), pass: ub("uPass"), ink: ub("uInk"), h: ub("uH"), w: ub("uW"), zt: ub("uZt"),
-      rv: ub("uRv"), cm: ub("uCm"), rvOn: ub("uRvOn"),
+      rv: ub("uRv"), cm: ub("uCm"), rvOn: ub("uRvOn"), pre: ub("uPre"),
     };
     this.uC = gl.getUniformLocation(this.comp, "uC");
     const nb = (): WebGLBuffer => gl.createBuffer()!;
@@ -665,7 +691,16 @@ class OutlinePass {
     if (this.hasData) {
       // The fill: the highest key wins (LEQUAL: a tie goes to the later
       // triangle, as the prototype's page).
-      gl.disable(gl.BLEND);
+      // K1291 s2: a materializing intro (comet, dust) fades the fill in:
+      // premultiplied over what is under it (alpha 1 elsewhere: the same
+      // write as no blending).
+      const kfx = ap?.knot["uKFx"];
+      const fade = !!kfx && kfx[3] > 0.5 && (Math.round(kfx[0]) === 2 || Math.round(kfx[0]) === 3);
+      if (fade) {
+        gl.enable(gl.BLEND);
+        gl.blendEquation(gl.FUNC_ADD);
+        gl.blendFuncSeparate(gl.ONE, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+      } else gl.disable(gl.BLEND);
       gl.enable(gl.DEPTH_TEST);
       gl.depthFunc(gl.LEQUAL);
       if (ap && this.hasMap) {
@@ -719,8 +754,10 @@ class OutlinePass {
       // The band over it at its tie alpha; alpha accumulates premultiplied.
       gl.enable(gl.BLEND);
       gl.blendEquation(gl.FUNC_ADD);
-      gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+      if (fade) gl.blendFuncSeparate(gl.DST_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ZERO, gl.ONE);
+      else gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
       gl.useProgram(this.band);
+      gl.uniform1i(this.uB.pre, fade ? 1 : 0);
       gl.uniformMatrix3fv(this.uB.mat, false, mat);
       const B = this.band_;
       gl.uniform3f(this.uB.ink, B.ink[0], B.ink[1], B.ink[2]);
