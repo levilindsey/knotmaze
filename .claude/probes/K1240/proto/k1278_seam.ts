@@ -237,7 +237,10 @@ interface Worst { nm: string; ji: number; x: number; y: number; mine: number; ba
 const worst: Worst[] = [];
 const fmt = (s: SeamStat): string => `paint seams ${s.n} samples, ${s.over} over 1/255 [${[...s.kinds].map(([k, v]) => `${k} ${v}`).join(", ")}], max ${s.max.toFixed(1)} (folds ${s.fold} over, max ${s.foldMax.toFixed(1)}; thread edges ${s.thread} over, max ${s.threadMax.toFixed(1)})`;
 const tot: Record<string, { over: number; max: number; jOver: number; jWorse: number; jMaxExcess: number }> = {};
-for (const nm of scenes) {
+// --at=<scene>:<x>:<y>,...: skip the test and crop these points (the sliver
+// row); the mean diffs are taken at crop time. --cropname names the png.
+const atPts: Worst[] | undefined = opt("at")?.split(",").map((p) => { const [nm, x, y] = p.split(":"); return { nm, ji: -1, x: Number(x), y: Number(y), mine: NaN, base: NaN }; });
+for (const nm of atPts ? [] : scenes) {
   const scene = loadScene(nm); const st = O.structure(scene); const table = O.frame(st, scene);
   const fs = F.fillStructure(st, F.fillResolution(st, table)); const fr = F.fillFrame(fs, st, table, scene);
   const bfs = B.fillStructure(st, B.fillResolution(st, table)); const bfr = B.fillFrame(bfs, st, table, scene);
@@ -278,7 +281,7 @@ console.log("worst junctions (app, mean colour diff vs form B x255):", worst.sli
 
 if (cropDir) {
   mkdirSync(cropDir, { recursive: true });
-  const six = worst.slice(0, 6);
+  const six = atPts ?? worst.slice(0, 6);
   const P = 280; const cppu = 200; const GAP = 6; const nPan = 3;
   const Wt = nPan * P + (nPan - 1) * GAP; const Ht = six.length * P + (six.length - 1) * GAP;
   const img = new Uint8Array(Wt * Ht * 3).fill(128);
@@ -307,9 +310,10 @@ if (cropDir) {
     const ab = paintAtPpu({ fs: bfs as never, fr: bfr as never }, basePainter({ fs: bfs as never, fr: bfr as never }, sp, lens));
     const y = rScene(table, scene, D); y.faces = []; const band = rasterR(y, cw.c0, cw.r0, P, cppu);
     for (let o = 0; o < n; o++) { put(row, 0, o, shade(ref, o, fw.ink[o])); put(row, 1, o, shade(ab, o, band.ink[o])); put(row, 2, o, shade(am, o, band.ink[o])); }
+    if (Number.isNaN(w.mine)) { w.mine = meanDiff(am, ref, n); w.base = meanDiff(ab, ref, n); }
     console.log(`crop row ${row}: ${w.nm} j${w.ji} (${w.x.toFixed(3)}, ${w.y.toFixed(3)}) mean diff vs form B: master ${w.base.toFixed(1)}, mine ${w.mine.toFixed(1)}`);
   });
-  writePng(join(cropDir, "k1278_worst_junctions.png"), img, Wt, Ht);
+  writePng(join(cropDir, opt("cropname") ?? "k1278_worst_junctions.png"), img, Wt, Ht);
 }
 
 export function writePng(out: string, img: Uint8Array, Wt: number, Ht: number): void {
