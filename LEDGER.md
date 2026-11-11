@@ -523,10 +523,10 @@ Next free ID: K1298.
 - **K1283** · Junction borders of the outline (rp=outline) against form B. Stage 1 (3c8bd61e) fixed the concave
   corner bites (census 27528 -> 17756 px); left: the failed corners and the end-arm round ends (x47, x73,
   x349). Full text in docs/ledger_notes.md
-  - owner: agent `a565890508fa5c81c` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-10 21:02, 2 h cap ~23:02)
-  - branch: `worktree-agent-a565890508fa5c81c`, worktree `.claude/worktrees/agent-a565890508fa5c81c`; last commit: `3dc21b4b`
+  - owner: nobody since 2026-11-10 22:01 (merged; agent `a565890508fa5c81c` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `d1834f66`
   - evidence: src/render/outline/, k1283s3_* tools; untracked .claude/probes/K1240/out/k1283s3/
-  - next: stage 3 (end-arm round end, soft tails, burials): wait for its report, view the crops against form B, merge; then K1278 residual geometry, K1247 cuts, flow-on settle
+  - next: stage 4: the round-end disk fill at end arms (x73/j103, x14, x6's spur at j4) and the end-arm border fade, per the stage 3 handoff in docs/design/K1283_s3.md
   - brief: `docs/design/K1283_s3.md`
 
 ## Next, in order
