@@ -518,12 +518,6 @@ Next free ID: K1291.
   - evidence: .claude/probes/K1240/proto/ (draw.ts, fill_tri.ts, k1278_* tools); .claude/probes/K1240/out/k1278/ (untracked)
   - next: Stage 1 merged (Claude viewed the crops): the fill paints section colours per pixel from per-vertex run/weight/s slots fixed at structure; a junction hands off by corner arc length (smoothstep). Edge seams over 1/255 34045 -> 41 (app), junction windows steppier than form B 650 -> 7; colour at the six end-arm slivers matches form B; K1277's bars hold. Next: stage 2 = an end-arm fan's per-pixel round-end term (x14: form B's hard edge), the across upload in draw.ts, then the pulses (K1250); the handoff in the brief lists the rest. Stage 2 lands in src/ once K1240 S4 has ported the paint
   - brief: `docs/design/K1278_paint.md`
-- **K1290** · Experiment: K1240's border vertices placed forward from the centreline (centre(s) ± h·n(s), corners as closed-form intersections) instead of at nearest points, which jump (docs/design/K1290_forward.md)
-  - owner: agent `a78fafb07699a0d0b` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-10 15:12, 2 h cap ~17:12)
-  - branch: `worktree-agent-a78fafb07699a0d0b`, worktree `.claude/worktrees/agent-a78fafb07699a0d0b`; last commit: `e2b373d3`
-  - evidence: .claude/probes/K1240/proto/outline_fwd.ts, k1290_* tools; untracked .claude/probes/K1240/out/k1290/
-  - next: wait for its report; adopt, adopt in part or drop; it decides whether the K1281 corner-foot question remains
-  - brief: `docs/design/K1290_forward.md`
 
 ## Next, in order
 
@@ -2116,6 +2110,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1290** · answered, not adopted: forward corner-arc ends cut def jump pairs 66 -> 4 (muse_hash 33 -> 14) but census vs form B +1.8%, frame() +6%, concentric corners (j55, j156) still switch roots, and the corner-foot bites stay; follow-up in K1281. Done in 97f4f2e2 (2026-11-10).
 - **K1280** · K1240 outline jumps where a station's s crosses a centreline vertex: the tie spread gives each tie run a continuous s; def j47 1.243, j146 1.007, j158 0.264 px -> no jump (K1247 s16). The jitter-check crossings (muse_hash x61, x182, ...) now 0 jump px in k1279_motion. Done in 541d22fb (2026-11-10).
 - **K1282** · the outline's draw order from positions: nothing draws by regionsPhaseC's depthAtC sort since K1277 (fill order = structural item index, over/under per pixel); the sort is dead weight in outline.ts, remove it when stage 16 frees the file. Done in 4d168bb4 (2026-11-10).
 - **K1273** · K1247 s14 leftover, the 2 px speck at muse_hash (26.86, 22.32): closed by K1277's triangle fill (a fold overdraws instead of dropping out), 2 -> 0 px, loop eyes stay paper. Done in 4d168bb4 (2026-11-10).
