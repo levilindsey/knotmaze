@@ -5,6 +5,8 @@
 // Results land on window.__k1240 for the drivers.
 import { buildOutline, type SceneIn } from "./outline";
 import { buildDrawData, OutlineRenderer, chainColor, baseHueFor, parseColor, worldToDevice, scenePointAt } from "./draw";
+import { rasterPaint } from "./fill_tri";
+import type { PaintMode } from "./paint";
 
 declare global {
   interface Window { __k1240?: unknown }
@@ -37,9 +39,14 @@ async function main(): Promise<void> {
   const t0 = performance.now();
   const table = buildOutline(scene);
   const buildMs = performance.now() - t0;
-  const data = buildDrawData(table, scene);
+  // K1278: ?paint=app|step|kink paints the section colours per pixel
+  // (default app); ?paint=flat keeps K1277's flat chain colours.
+  const paintQ = (q.get("paint") ?? "app") as PaintMode | "flat";
+  const data = buildDrawData(table, scene, undefined, paintQ);
   const renderer = new OutlineRenderer(canvas, data);
   renderer.draw(scene, mode, crop);
+  // The Done 3 tests below check flat chain colours.
+  renderer.usePaint = false;
 
   // ---- Done 3 tests -------------------------------------------------------
   const gl = canvas.getContext("webgl2")!;
@@ -137,6 +144,43 @@ async function main(): Promise<void> {
     }
     tests.fillEdge = { inOk, total: tot };
     say(`TEST fill edge inside: ${inOk}/${tot} ${inOk === tot ? "PASS" : "CHECK"}`);
+  }
+
+  // K1278: the GPU paint against its CPU twin (fill_tri.rasterPaint at the
+  // pixel's centre): face samples, and rings around every junction (the
+  // corner hand-off). Max channel difference in 1/255.
+  renderer.usePaint = true;
+  if (data.paint) {
+    renderer.draw(scene, "fill");
+    const pd = data.paint;
+    const m = scene.camera.worldToCss; const det = m[0] * m[3] - m[2] * m[1];
+    const devToWorld = (dx: number, dy: number): [number, number] => {
+      const cx = dx / 2 - m[4]; const cy = dy / 2 - m[5];
+      return [(m[3] * cx - m[2] * cy) / det, (-m[1] * cx + m[0] * cy) / det];
+    };
+    const pts: [number, number][] = [];
+    for (const f of table.faces) if (!f.hole && f.ownerChain >= 0) pts.push([f.sample[0], f.sample[1]]);
+    const h = scene.look.halfWidth;
+    for (const J of scene.junctions) for (let a = 0; a < 24; a++) for (const r of [0.3, 0.7, 1.1, 1.6]) {
+      const t = (2 * Math.PI * a) / 24; pts.push([J.c[0] + r * h * Math.cos(t), J.c[1] + r * h * Math.sin(t)]);
+    }
+    let tot = 0; let over = 0; let max = 0; let miss = 0; const worst: string[] = [];
+    for (const [wx, wy] of pts.slice(0, 3000)) {
+      const [dx, dy] = worldToDevice(scene, wx, wy);
+      const x = Math.floor(dx); const y = Math.floor(dy);
+      if (x < 0 || y < 0 || x >= canvas.width || y >= canvas.height) continue;
+      const [cx, cy] = devToWorld(x + 0.5, y + 0.5);
+      const cpu = rasterPaint(data.fill, pd.fr, pd.runs, pd.sp, cx - 0.0005, cy - 0.0005, 1, 1, 1000);
+      if (cpu.own[0] === 0) continue;
+      gl.readPixels(x, canvas.height - 1 - y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
+      tot++;
+      const d = Math.max(...[0, 1, 2].map((c) => Math.abs(px[c] - cpu.rgb[c] * 255)));
+      if (d > 3) { over++; if (worst.length < 5) worst.push(`${d.toFixed(1)} at (${cx.toFixed(3)}, ${cy.toFixed(3)}) gpu ${px[0]},${px[1]},${px[2]}`); }
+      if (d > max) max = d;
+      if (px[0] === Math.round(parseColor(scene.look.paper)[0] * 255) && cpu.own[0] > 0 && d > 3) miss++;
+    }
+    tests.paintGpuCpu = { total: tot, over3: over, max, worst, copies: pd.copies, runs: pd.sp.runs.length };
+    say(`TEST K1278 paint GPU vs CPU (${pd.mode}): ${tot} px, ${over} over 3/255, max ${max.toFixed(1)} | ${pd.sp.runs.length} runs, ${pd.copies} provoking copies ${over === 0 ? "PASS" : "CHECK " + worst.join("; ")}`);
   }
 
   // GPU draw time (synchronous finish timing), median of 5.

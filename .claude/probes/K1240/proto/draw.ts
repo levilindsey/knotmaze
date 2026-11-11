@@ -9,9 +9,20 @@
 // K1277: the fill is plain triangles (fill_tri.ts) whose topology comes
 // from the diagram once; a depth test on form B's key picks the top
 // surface. No stencil.
+// K1278: the fill paints the section colours per PIXEL (paint.ts): each
+// vertex carries four slots (run, weight, s; fill_tri.ts's paint fields),
+// the fragment shader evaluates every slot's run colour at its
+// interpolated s from a run table texture (runCol, the twin of paint.ts's
+// runColour) and blends by the interpolated weights. A slot's run is flat
+// per triangle: WebGL2 takes it from the triangle's LAST vertex, so where
+// that vertex's runs differ from the CPU rule (vertexPaint: the first
+// vertex with a run), the triangle gets its own copy of the vertex
+// (PaintData.src maps copies to fill vertices). `?paint=flat` keeps the
+// K1277 flat chain colours.
 import type { DiagramStructure, OutlineTable, SceneIn } from "./outline";
 import { structure } from "./outline";
-import { fillFrame, fillResolution, fillStructure, keyScale, type FillStructure } from "./fill_tri";
+import { fillFrame, fillResolution, fillRuns, fillStructure, keyScale, SLOTS, type FillFrame, type FillStructure } from "./fill_tri";
+import { runTexture, sectionPaint, type PaintMode, type SectionPaint } from "./paint";
 
 export function parseColor(s: string): [number, number, number] {
   const m = /^#([0-9a-f]{6})$/i.exec(s.trim());
@@ -113,6 +124,8 @@ export interface DrawData {
   /** Every key lies in [-fillKS, fillKS] (the depth mapping). */
   fillKS: number;
   fill: FillStructure;
+  /** K1278: the per-pixel section paint (null: flat chain colours). */
+  paint: PaintData | null;
   bandPos: Float32Array;
   bandCol: Float32Array;
   /** K1279: one alpha per band vertex (form B's tie alpha; 1 outside every partner tube). */
@@ -302,7 +315,91 @@ export function footNear(c: ZChain, x: number, y: number, sC: number, r: number,
 
 /** `fill` carries the structure the table was framed from and, for motion,
  *  the fill topology decided once on frame 0 (omit both for a still). */
-export function buildDrawData(table: OutlineTable, scene: SceneIn, fill?: { st: DiagramStructure; fs?: FillStructure }): DrawData {
+/** K1278: the GPU's paint buffers. GPU vertex g draws fill vertex src[g]
+ *  (the first nV are the fill's own; the rest are provoking-vertex copies
+ *  carrying a triangle's runs). run is structural; pos, key, w and s are
+ *  refreshed per frame (paintFrame), the run table (tex) too, since a
+ *  run's span follows the arms. */
+export interface PaintData {
+  mode: PaintMode;
+  sp: SectionPaint;
+  /** Fill-vertex runs (fill_tri.fillRuns), kept for the CPU twin. */
+  runs: Int32Array;
+  fr: FillFrame;
+  src: Uint32Array;
+  idx: Uint32Array;
+  run: Int32Array;
+  pos: Float32Array;
+  key: Float32Array;
+  w: Float32Array;
+  s: Float32Array;
+  tex: Float32Array;
+  texW: number;
+  texH: number;
+  copies: number;
+}
+
+/** Texels per row of the run table (4 texels per run). */
+const RUN_TEX_W = 1024;
+
+/** The run table laid out RUN_TEX_W texels wide (texel 4r+i of run r). */
+function runTable(sp: SectionPaint): { tex: Float32Array; texW: number; texH: number } {
+  const t = runTexture(sp);
+  const texH = Math.max(1, Math.ceil(t.length / 4 / RUN_TEX_W));
+  const tex = new Float32Array(4 * RUN_TEX_W * texH); tex.set(t);
+  return { tex, texW: RUN_TEX_W, texH };
+}
+
+export function paintData(fs: FillStructure, st: DiagramStructure, fr: FillFrame, scene: SceneIn, mode: PaintMode, baseHue: number): PaintData {
+  const sp = sectionPaint(scene, mode, baseHue);
+  const runs = fillRuns(fs, st, fr, sp);
+  const nV = fs.nV;
+  const idx = Uint32Array.from(fs.idx);
+  const src: number[] = []; for (let v = 0; v < nV; v++) src.push(v);
+  const run: number[] = Array.from(runs);
+  const claimed = new Uint8Array(nV);
+  const copyOf = new Map<string, number>();
+  const want = new Int32Array(SLOTS);
+  for (let t = 0; t < idx.length; t += 3) {
+    for (let k = 0; k < SLOTS; k++) {
+      want[k] = -1;
+      for (let q = 0; q < 3; q++) { const r = runs[SLOTS * fs.idx[t + q] + k]; if (r >= 0) { want[k] = r; break; } }
+    }
+    const v = idx[t + 2];
+    let same = true; for (let k = 0; k < SLOTS; k++) if (run[SLOTS * v + k] !== want[k]) same = false;
+    if (same) { claimed[v] = 1; continue; }
+    if (!claimed[v]) { claimed[v] = 1; for (let k = 0; k < SLOTS; k++) run[SLOTS * v + k] = want[k]; continue; }
+    const key = `${v}:${want.join(",")}`;
+    let g = copyOf.get(key);
+    if (g === undefined) { g = src.length; src.push(v); for (let k = 0; k < SLOTS; k++) run.push(want[k]); copyOf.set(key, g); }
+    idx[t + 2] = g;
+  }
+  const nG = src.length;
+  const pd: PaintData = {
+    mode, sp, runs, fr, src: Uint32Array.from(src), idx, run: Int32Array.from(run),
+    pos: new Float32Array(2 * nG), key: new Float32Array(nG), w: new Float32Array(SLOTS * nG), s: new Float32Array(SLOTS * nG),
+    tex: new Float32Array(0), texW: RUN_TEX_W, texH: 1, copies: nG - nV,
+  };
+  paintFrame(pd, fr, sp);
+  return pd;
+}
+
+/** A frame's paint: positions, keys, slot weights and s through src, and
+ *  the run table (the runs' spans on this frame; same runs, same order). */
+export function paintFrame(pd: PaintData, fr: FillFrame, sp?: SectionPaint): void {
+  const S = pd.src;
+  for (let g = 0; g < S.length; g++) {
+    const v = S[g];
+    pd.pos[2 * g] = fr.pos[2 * v]; pd.pos[2 * g + 1] = fr.pos[2 * v + 1];
+    pd.key[g] = fr.key[v];
+    for (let k = 0; k < SLOTS; k++) { pd.w[SLOTS * g + k] = fr.w4[SLOTS * v + k]; pd.s[SLOTS * g + k] = fr.s4[SLOTS * v + k]; }
+  }
+  pd.fr = fr;
+  if (sp) { if (sp.runs.length !== pd.sp.runs.length) throw new Error("paintFrame: run count changed"); pd.sp = sp; }
+  const t = runTable(pd.sp); pd.tex = t.tex; pd.texW = t.texW; pd.texH = t.texH;
+}
+
+export function buildDrawData(table: OutlineTable, scene: SceneIn, fill?: { st: DiagramStructure; fs?: FillStructure }, paint: PaintMode | "flat" = "app"): DrawData {
   const baseHue = baseHueFor(scene.name);
   const nCh = scene.chains.length;
   // K1277: the fill as triangles fixed at structure; per frame, positions,
@@ -445,6 +542,7 @@ export function buildDrawData(table: OutlineTable, scene: SceneIn, fill?: { st: 
   }
   return {
     fillPos: Float32Array.from(fr.pos), fillCol, fillKey: fr.key, fillS: fr.s, fillIdx: fs.idx, fillKS: keyScale(scene), fill: fs,
+    paint: paint === "flat" ? null : paintData(fs, st, fr, scene, paint, baseHue),
     bandPos: Float32Array.from(bandPos), bandCol: Float32Array.from(bandCol), bandAlpha: Float32Array.from(bandAlpha),
     bandCount: bandPos.length / 2,
   };
@@ -460,6 +558,14 @@ export class OutlineRenderer {
   private uMat: WebGLUniformLocation | null;
   private uKS: WebGLUniformLocation | null;
   private data: DrawData;
+  /** K1278: the paint fill (program, VAO, per-frame buffers, run table). */
+  private pProg: WebGLProgram | null = null;
+  private pVao: WebGLVertexArrayObject | null = null;
+  private pBufs: { pos: WebGLBuffer; key: WebGLBuffer; w: WebGLBuffer; s: WebGLBuffer } | null = null;
+  private pTex: WebGLTexture | null = null;
+  private pU: { mat: WebGLUniformLocation | null; ks: WebGLUniformLocation | null; runs: WebGLUniformLocation | null } | null = null;
+  /** Draw the fill with the per-pixel paint (when the data has one). */
+  usePaint = true;
   constructor(canvas: HTMLCanvasElement, data: DrawData) {
     const gl = canvas.getContext("webgl2", { antialias: false, preserveDrawingBuffer: true, depth: true, stencil: false });
     if (!gl) throw new Error("WebGL2 unavailable");
@@ -542,6 +648,99 @@ void main() { o = vCol; }`;
     const nb = data.bandCol.length / 3; const rgba = new Float32Array(4 * nb);
     for (let i = 0; i < nb; i++) { rgba[4 * i] = data.bandCol[3 * i]; rgba[4 * i + 1] = data.bandCol[3 * i + 1]; rgba[4 * i + 2] = data.bandCol[3 * i + 2]; rgba[4 * i + 3] = data.bandAlpha[i] ?? 1; }
     this.vaoBand = mkVao(data.bandPos, rgba, 4);
+    if (data.paint) this.initPaint(data.paint, mk);
+  }
+
+  /** K1278: the paint fill program. runCol is paint.ts's runColour. */
+  private initPaint(pd: PaintData, mk: (type: number, src: string) => WebGLShader): void {
+    const gl = this.gl;
+    const vs = `#version 300 es
+layout(location=0) in vec2 aPos;
+layout(location=2) in float aKey;
+layout(location=3) in ivec4 aRun;
+layout(location=4) in vec4 aW;
+layout(location=5) in vec4 aS;
+uniform mat3 uMat;
+uniform float uKS;
+flat out ivec4 vRun;
+out vec4 vW;
+out vec4 vS;
+void main() {
+  vec3 p = uMat * vec3(aPos, 1.0);
+  gl_Position = vec4(p.xy, clamp(-aKey / uKS, -1.0, 1.0), 1.0);
+  vRun = aRun; vW = aW; vS = aS;
+}`;
+    const fsrc = `#version 300 es
+precision highp float;
+precision highp int;
+uniform highp sampler2D uRuns;
+flat in ivec4 vRun;
+in vec4 vW;
+in vec4 vS;
+out vec4 o;
+vec4 tx(int q) { return texelFetch(uRuns, ivec2(q % ${RUN_TEX_W}, q / ${RUN_TEX_W}), 0); }
+float ez(float u, float e) { return u + (u * u * (3.0 - 2.0 * u) - u) * e; }
+vec3 runCol(int r, float s) {
+  vec4 t0 = tx(4 * r); vec4 t1 = tx(4 * r + 1); vec4 t2 = tx(4 * r + 2); vec4 t3 = tx(4 * r + 3);
+  float cu = s;
+  if (t2.w > 0.0) cu = s + t2.w * floor((0.5 * (t0.x + t0.y) - s) / t2.w + 0.5);
+  float da = cu - t0.x; float db = t0.y - cu;
+  if (t0.z > 0.0 && da < t0.z) return mix(t1.rgb, t2.rgb, ez(clamp(da / t0.z, 0.0, 1.0), t1.w));
+  if (t0.w > 0.0 && db < t0.w) return mix(t3.rgb, t2.rgb, ez(clamp(db / t0.w, 0.0, 1.0), t1.w));
+  return t2.rgb;
+}
+void main() {
+  vec3 c = vec3(0.0); float W = 0.0;
+  for (int k = 0; k < 4; k++) {
+    int r = vRun[k]; float w = vW[k];
+    if (r < 0 || !(w > 0.0)) continue;
+    c += w * runCol(r, vS[k]); W += w;
+  }
+  o = vec4(W > 0.0 ? c / W : vec3(0.0), 1.0);
+}`;
+    const prog = gl.createProgram()!;
+    gl.attachShader(prog, mk(gl.VERTEX_SHADER, vs));
+    gl.attachShader(prog, mk(gl.FRAGMENT_SHADER, fsrc));
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error("paint link failed: " + gl.getProgramInfoLog(prog));
+    this.pProg = prog;
+    this.pU = { mat: gl.getUniformLocation(prog, "uMat"), ks: gl.getUniformLocation(prog, "uKS"), runs: gl.getUniformLocation(prog, "uRuns") };
+    const vao = gl.createVertexArray()!;
+    gl.bindVertexArray(vao);
+    const buf = (data: ArrayBufferView, loc: number, n: number, usage: number, int = false): WebGLBuffer => {
+      const b = gl.createBuffer()!;
+      gl.bindBuffer(gl.ARRAY_BUFFER, b);
+      gl.bufferData(gl.ARRAY_BUFFER, data, usage);
+      gl.enableVertexAttribArray(loc);
+      if (int) gl.vertexAttribIPointer(loc, n, gl.INT, 0, 0);
+      else gl.vertexAttribPointer(loc, n, gl.FLOAT, false, 0, 0);
+      return b;
+    };
+    this.pBufs = {
+      pos: buf(pd.pos, 0, 2, gl.DYNAMIC_DRAW),
+      key: buf(pd.key, 2, 1, gl.DYNAMIC_DRAW),
+      w: buf(pd.w, 4, 4, gl.DYNAMIC_DRAW),
+      s: buf(pd.s, 5, 4, gl.DYNAMIC_DRAW),
+    };
+    buf(pd.run, 3, 4, gl.STATIC_DRAW, true);
+    const ib = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ib);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, pd.idx, gl.STATIC_DRAW);
+    gl.bindVertexArray(null);
+    this.pVao = vao;
+    this.pTex = gl.createTexture();
+    this.uploadRuns(pd);
+  }
+
+  private uploadRuns(pd: PaintData): void {
+    const gl = this.gl;
+    gl.bindTexture(gl.TEXTURE_2D, this.pTex);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, pd.texW, pd.texH, 0, gl.RGBA, gl.FLOAT, pd.tex);
+    gl.bindTexture(gl.TEXTURE_2D, null);
   }
 
   /**
@@ -581,6 +780,17 @@ void main() { o = vCol; }`;
     this.data = { ...this.data, fillPos: pos, fillKey: key };
   }
 
+  /** K1278: a new frame's paint (same topology): positions, keys, slot
+   *  weights and s, and the run table (spans follow the arms). */
+  updatePaint(fr: FillFrame, sp?: SectionPaint): void {
+    const pd = this.data.paint; if (!pd || !this.pBufs) return;
+    paintFrame(pd, fr, sp);
+    const gl = this.gl;
+    const put = (b: WebGLBuffer, d: Float32Array): void => { gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferSubData(gl.ARRAY_BUFFER, 0, d); };
+    put(this.pBufs.pos, pd.pos); put(this.pBufs.key, pd.key); put(this.pBufs.w, pd.w); put(this.pBufs.s, pd.s);
+    this.uploadRuns(pd);
+  }
+
   draw(scene: SceneIn, mode: "border" | "fill" | "both", crop?: { cx: number; cy: number; zoom: number }): void {
     const gl = this.gl;
     const canvas = gl.canvas as HTMLCanvasElement;
@@ -602,8 +812,22 @@ void main() { o = vCol; }`;
       gl.clear(gl.DEPTH_BUFFER_BIT);
       gl.enable(gl.DEPTH_TEST);
       gl.depthFunc(gl.LEQUAL);
-      gl.bindVertexArray(this.vaoFill);
-      gl.drawElements(gl.TRIANGLES, this.data.fillIdx.length, gl.UNSIGNED_INT, 0);
+      if (this.usePaint && this.data.paint && this.pProg && this.pU) {
+        // K1278: the per-pixel paint, same raster and depth rule.
+        gl.useProgram(this.pProg);
+        gl.uniformMatrix3fv(this.pU.mat, false, mat);
+        gl.uniform1f(this.pU.ks, this.data.fillKS);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this.pTex);
+        gl.uniform1i(this.pU.runs, 0);
+        gl.bindVertexArray(this.pVao);
+        gl.drawElements(gl.TRIANGLES, this.data.paint.idx.length, gl.UNSIGNED_INT, 0);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+        gl.useProgram(this.prog);
+      } else {
+        gl.bindVertexArray(this.vaoFill);
+        gl.drawElements(gl.TRIANGLES, this.data.fillIdx.length, gl.UNSIGNED_INT, 0);
+      }
       gl.disable(gl.DEPTH_TEST);
     }
     if (mode === "border" || mode === "both") {
