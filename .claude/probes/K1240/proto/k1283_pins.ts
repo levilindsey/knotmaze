@@ -17,6 +17,11 @@ const moved = (s: SceneIn): SceneIn => {
     c.pts[i] = 1.3 + Math.cos(0.3) * x - Math.sin(0.3) * y;
     c.pts[i + 1] = -0.7 + Math.sin(0.3) * x + Math.cos(0.3) * y;
   }
+  // K1293: the junction centres move with the chains (frame reads j.c).
+  for (const j of t.junctions) {
+    const [x, y] = j.c;
+    j.c = [1.3 + Math.cos(0.3) * x - Math.sin(0.3) * y, -0.7 + Math.sin(0.3) * x + Math.cos(0.3) * y];
+  }
   return t;
 };
 const arcLook = (t: OutlineTable): string => {

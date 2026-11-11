@@ -25,11 +25,13 @@ import { digestOut, loadScene } from "./outline_digest";
 
 type Pin = { f0: { table: string; paint: string; band: string }; f1: { table: string; paint: string; band: string } };
 
-// K1283 (2026-11-10): src's outputs, from k1283_pins.ts. f1 is still the
-// prototype's (eq.txt in .claude/probes/K1240/out/s4/).
+// K1283 (2026-11-10): src's outputs, from k1283_pins.ts. Stage 2 re-pinned
+// both frames: a corner with no arc now draws a round join (sharpJoinFan),
+// and a tail shows only past TAIL_MARGIN (ring's paint digest moved with them).
+// K1293: f1 now moves the junction centres too, so its corners are real.
 const PINS: Record<string, Pin> = {
-  ring: { f0: { table: "9f9093fa9404af2a", paint: "d576e92f8dc923ff", band: "4ca202931cf7d276" }, f1: { table: "ff804403e48659c1", paint: "649fb47c4cce79d8", band: "090775f172b680ad" } },
-  g41_ring_tw42: { f0: { table: "2ca6769189c72b66", paint: "4c0e7a971b3ff09d", band: "401eac7908b4706f" }, f1: { table: "5f9432ea1beea2c2", paint: "730e817437d2d5b8", band: "42cfed2f285c467a" } },
+  ring: { f0: { table: "869f55a7a9bc3ff0", paint: "0adb707c5943c534", band: "a48ca4cce167aff0" }, f1: { table: "183e5bf7c8cd0ac1", paint: "1bb26d676a357828", band: "f753e1bcf9cbb076" } },
+  g41_ring_tw42: { f0: { table: "453f89fc56acca13", paint: "4c0e7a971b3ff09d", band: "28b346eaaf964948" }, f1: { table: "f1a9706c8dc59c67", paint: "c51bea44c94c0411", band: "819dbecf09c86769" } },
 };
 
 // The tool's second frame: every chain point rotated 0.3 rad and moved.
@@ -40,6 +42,12 @@ const moved = (s: SceneIn): SceneIn => {
     const y = c.pts[i + 1];
     c.pts[i] = 1.3 + Math.cos(0.3) * x - Math.sin(0.3) * y;
     c.pts[i + 1] = -0.7 + Math.sin(0.3) * x + Math.cos(0.3) * y;
+  }
+  // K1293: the junction centres move with the chains (frame reads j.c), so
+  // f1 is f0's rigid image with real corners, not every corner degenerate.
+  for (const j of t.junctions) {
+    const [x, y] = j.c;
+    j.c = [1.3 + Math.cos(0.3) * x - Math.sin(0.3) * y, -0.7 + Math.sin(0.3) * x + Math.cos(0.3) * y];
   }
   return t;
 };
