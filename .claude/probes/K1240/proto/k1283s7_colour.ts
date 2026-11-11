@@ -37,6 +37,7 @@ const tag = pos[0] ?? "cur";
 const scenes = opt("scene")?.split(",") ?? ALL;
 const ppu = Number(opt("ppu") ?? 80);
 const topN = Number(opt("top") ?? 10);
+const pmode = (opt("mode") ?? "app") as "app" | "step" | "kink";
 const VIS = 10 / 255;
 
 interface JWin { ji: number; c0: number; r0: number; N: number; x: number; y: number }
@@ -79,7 +80,7 @@ function paintFB(fb: FBW, sp: SectionPaint, n: number): Float32Array {
 }
 
 /** One candidate (before or after): its table, fill and paint, rastered per window. */
-interface Cand { paintWin(w: JWin, pp?: number): Float32Array; inkWin(w: JWin, pp?: number): Float32Array }
+interface Cand { paintWin(w: JWin, pp?: number): Float32Array; inkWin(w: JWin, pp?: number): Float32Array; disk: Uint8Array }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function cand(Om: any, Fm: any, scene: O.SceneIn, sp: SectionPaint): Cand {
   const st = Om.structure(scene); const t = Om.frame(st, scene);
@@ -87,13 +88,16 @@ function cand(Om: any, Fm: any, scene: O.SceneIn, sp: SectionPaint): Cand {
   const runs = Fm.fillRuns(fs, st, fr, sp) as Int32Array;
   const R = rScene(t, scene, D);
   const r4 = new Int32Array(4); const w4 = new Float64Array(4); const s4 = new Float64Array(4); const c: RGB = [0, 0, 0];
-  return {
+  const dV = new Uint8Array(fs.nV); for (const it of fs.items) if (it.kind === "disk") for (let v = it.base; v < it.base + 1 + F.DISK_R * F.DISK_M; v++) dV[v] = 1;
+  const self = {
+    disk: new Uint8Array(0),
     paintWin(w, pp = ppu) {
       const n = w.N * w.N; const win = { tri: new Int32Array(n).fill(-1), bary: new Float32Array(3 * n) };
       const own = Fm.rasterFill(fs, fr, w.c0 / pp, w.r0 / pp, w.N, w.N, pp, win) as Int32Array;
-      const rgb = new Float32Array(3 * n).fill(-1); const I = fs.idx as Uint32Array;
+      const rgb = new Float32Array(3 * n).fill(-1); const I = fs.idx as Uint32Array; self.disk = new Uint8Array(n);
       for (let o = 0; o < n; o++) {
         const tr = win.tri[o]; if (own[o] === 0 || tr < 0) continue;
+        if (dV[I[tr]]) self.disk[o] = 1;
         Fm.vertexPaint(fs, fr, runs, [I[tr], I[tr + 1], I[tr + 2]], [win.bary[3 * o], win.bary[3 * o + 1], win.bary[3 * o + 2]], r4, w4, s4);
         paintAt(sp, r4, w4, s4, c); rgb[3 * o] = c[0]; rgb[3 * o + 1] = c[1]; rgb[3 * o + 2] = c[2];
       }
@@ -101,6 +105,7 @@ function cand(Om: any, Fm: any, scene: O.SceneIn, sp: SectionPaint): Cand {
     },
     inkWin(w, pp = ppu) { return rasterR(R, w.c0, w.r0, w.N, pp).ink; },
   };
+  return self;
 }
 
 const dist = (a: Float32Array, i: number, b: Float32Array, j: number): number => Math.max(Math.abs(a[3 * i] - b[3 * j]), Math.abs(a[3 * i + 1] - b[3 * j + 1]), Math.abs(a[3 * i + 2] - b[3 * j + 2]));
@@ -148,7 +153,7 @@ if (cropOut) {
   ats.forEach((at, row) => {
     let e = cache.get(at.scene);
     if (!e) {
-      const scene = loadScene(at.scene); const sp = sectionPaint(scene, "app", D.baseHueFor(at.scene));
+      const scene = loadScene(at.scene); const sp = sectionPaint(scene, pmode, D.baseHueFor(at.scene));
       e = { scene, sp, A: cand(O, F, scene, sp), B: cand(BO, BF, scene, sp), fb: new FormB(JSON.parse(JSON.stringify(scene)) as never, { dpr: 2 }) as never };
       cache.set(at.scene, e);
     }
@@ -174,12 +179,12 @@ if (cropOut) {
   process.exit(0);
 }
 
-interface Row { scene: string; ji: number; x: number; y: number; end: boolean; before: number; after: number; visB: number; visA: number }
+interface Row { scene: string; ji: number; x: number; y: number; end: boolean; before: number; after: number; visB: number; visA: number; dB: number; dA: number; nB: number; nA: number; eB: number; eA: number; eN: number; hN: number }
 const rows: Row[] = [];
 for (const nm of scenes) {
   const t0 = Date.now();
   const scene = loadScene(nm);
-  const sp = sectionPaint(scene, "app", D.baseHueFor(nm));
+  const sp = sectionPaint(scene, pmode, D.baseHueFor(nm));
   const st = O.structure(scene);
   const endJ = new Set<number>(); st.arms.forEach((a) => { if (a.kind === "end") endJ.add(a.ji); });
   const wins = jWindows(scene); const fbw = formBJ(nm, scene, wins);
@@ -187,9 +192,19 @@ for (const nm of scenes) {
   let sB = 0; let sA = 0; let vB = 0; let vA = 0;
   wins.forEach((w, k) => {
     const n = w.N * w.N; const ref = paintFB(fbw[k], sp, n); const inkF = fbw[k].ink;
-    const [b, vb] = score(Bc.paintWin(w), Bc.inkWin(w), ref, inkF, w.N);
-    const [a, va] = score(A.paintWin(w), A.inkWin(w), ref, inkF, w.N);
-    rows.push({ scene: nm, ji: w.ji, x: w.x, y: w.y, end: endJ.has(w.ji), before: b, after: a, visB: vb, visA: va });
+    const mB = new Float32Array(n); const mA = new Float32Array(n);
+    const [b, vb] = score(Bc.paintWin(w), Bc.inkWin(w), ref, inkF, w.N, mB);
+    const [a, va] = score(A.paintWin(w), A.inkWin(w), ref, inkF, w.N, mA);
+    let dB = 0; let dA = 0; for (let o = 0; o < n; o++) if (Bc.disk[o] || A.disk[o]) { dB += mB[o]; dA += mA[o]; }
+    let nB = 0; let nA = 0; const hh = scene.look.halfWidth; let eB = 0; let eA = 0; let eN = 0; let hN = 0;
+    const ec = new Set<number>(); for (const ar of scene.junctions[w.ji].arms) if (ar.kind === "end") ec.add(ar.chain);
+    for (let r = 0; r < w.N; r++) for (let cc = 0; cc < w.N; cc++) {
+      const px = (w.c0 + cc + 0.5) / ppu - w.x; const py = (w.r0 + r + 0.5) / ppu - w.y; if (px * px + py * py >= hh * hh) continue;
+      const o = r * w.N + cc; nB += mB[o]; nA += mA[o];
+      if (fbw[k].top[o] < 0) continue; hN++;
+      if (ec.has(fbw[k].chain[o])) { eN++; eB += mB[o]; eA += mA[o]; }
+    }
+    rows.push({ scene: nm, ji: w.ji, x: w.x, y: w.y, end: endJ.has(w.ji), before: b, after: a, visB: vb, visA: va, dB, dA, nB, nA, eB, eA, eN, hN });
     sB += b; sA += a; vB += vb; vA += va;
   });
   console.log(`${nm}: ${wins.length} junctions (${endJ.size} round ends): colour err*v before ${sB.toFixed(0)} after ${sA.toFixed(0)} px; visible px before ${vB} after ${vA} (${((Date.now() - t0) / 1000).toFixed(1)} s)`);
@@ -197,11 +212,17 @@ for (const nm of scenes) {
 const tot = (f: (r: Row) => boolean): string => { const R = rows.filter(f); return `${R.length} junctions: err*v before ${R.reduce((s, r) => s + r.before, 0).toFixed(0)} after ${R.reduce((s, r) => s + r.after, 0).toFixed(0)} px; visible px before ${R.reduce((s, r) => s + r.visB, 0)} after ${R.reduce((s, r) => s + r.visA, 0)}`; };
 console.log(`ALL ${tot(() => true)}`);
 console.log(`ROUND ENDS ${tot((r) => r.end)}`);
+console.log(`DISK PIXELS (top triangle a round end's, before or after): err*v before ${rows.reduce((s, r) => s + r.dB, 0).toFixed(0)} after ${rows.reduce((s, r) => s + r.dA, 0).toFixed(0)} px; within h of a round end's centre: before ${rows.filter((r) => r.end).reduce((s, r) => s + r.nB, 0).toFixed(0)} after ${rows.filter((r) => r.end).reduce((s, r) => s + r.nA, 0).toFixed(0)} px`);
+const ends0 = rows.filter((r) => r.end);
+console.log(`within h of a round end: ${ends0.reduce((s, r) => s + r.hN, 0)} form B px, ${ends0.reduce((s, r) => s + r.eN, 0)} show the end chain; err*v there before ${ends0.reduce((s, r) => s + r.eB, 0).toFixed(0)} after ${ends0.reduce((s, r) => s + r.eA, 0).toFixed(0)} px; end chain px better ${ends0.filter((r) => r.eA < r.eB - 0.5).length}, worse ${ends0.filter((r) => r.eA > r.eB + 0.5).length}`); console.log(`within h: round ends better ${ends0.filter((r) => r.nA < r.nB - 0.5).length}, worse ${ends0.filter((r) => r.nA > r.nB + 0.5).length} (by > 0.5 px)`);
 console.log(`OTHER ${tot((r) => !r.end)}`);
 const ends = rows.filter((r) => r.end);
 const better = ends.filter((r) => r.after < r.before - 1).length; const worse = ends.filter((r) => r.after > r.before + 1);
 console.log(`round ends: ${better} better, ${worse.length} worse by > 1 px (visible px worse: ${ends.filter((r) => r.visA > r.visB).length})`);
-const fmt = (r: Row): string => `${r.scene} j${r.ji} (${r.x.toFixed(3)}, ${r.y.toFixed(3)})${r.end ? " end" : ""} ${r.before.toFixed(1)} -> ${r.after.toFixed(1)} (vis ${r.visB} -> ${r.visA})`;
+const fmt = (r: Row): string => `${r.scene} j${r.ji} (${r.x.toFixed(3)}, ${r.y.toFixed(3)})${r.end ? " end" : ""} ${r.before.toFixed(1)} -> ${r.after.toFixed(1)} (vis ${r.visB} -> ${r.visA}; disk ${r.dB.toFixed(1)} -> ${r.dA.toFixed(1)}; in h ${r.nB.toFixed(1)} -> ${r.nA.toFixed(1)}; end px ${r.eN}/${r.hN} ${r.eB.toFixed(1)} -> ${r.eA.toFixed(1)})`;
+console.log(`worst ${topN} round ends on the end chain's px after:`); for (const r of [...rows].filter((r) => r.end).sort((a, b) => b.eA - a.eA).slice(0, topN)) console.log(`  ${fmt(r)}`);
+console.log(`worst ${topN} round ends within h after:`); for (const r of [...rows].filter((r) => r.end).sort((a, b) => b.nA - a.nA).slice(0, topN)) console.log(`  ${fmt(r)}`);
+console.log(`worst ${topN} round ends by disk err after:`); for (const r of [...rows].filter((r) => r.end).sort((a, b) => b.dA - a.dA).slice(0, topN)) console.log(`  ${fmt(r)}`);
 console.log(`worst ${topN} round ends after:`); for (const r of [...ends].sort((a, b) => b.after - a.after).slice(0, topN)) console.log(`  ${fmt(r)}`);
 console.log(`worst ${topN} junctions after:`); for (const r of [...rows].sort((a, b) => b.after - a.after).slice(0, topN)) console.log(`  ${fmt(r)}`);
 console.log(`most worse (after - before):`); for (const r of [...rows].sort((a, b) => b.after - b.before - (a.after - a.before)).slice(0, topN)) console.log(`  ${fmt(r)}`);

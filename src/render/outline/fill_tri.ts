@@ -82,6 +82,8 @@ export const DISK_M = 32;
 /** K1283 s6: rings of a round end (radii h k / DISK_R), so over its fan the
  *  disk samples the fan's paint field as finely as the tail beside it does. */
 export const DISK_R = 4;
+/** K1283 s7 experiment: a round end paints its own arm's slot at s_E, keyed by its cone. */
+export const DISK_OWN = true;
 
 export interface StripItem { kind: "strip"; iv: number; pi: number; ghost: boolean; N: number; base: number; pL: number; pR: number }
 export interface CapItem { kind: "cap"; pi: number; piece: number; atEnd: boolean; base: number }
@@ -415,6 +417,20 @@ function resample(pts: number[], par: number[] | null, n: number, out: Float64Ar
  *  over a short run) becomes the straight line between the junction ring
  *  points at its two ends, the same points the junction fans use, so the
  *  strip still closes the gap between the two fans. */
+/** K1283 s7: a z-chain's point at s (a closed chain wraps, an open one clamps). */
+function zPointAt(c: ReturnType<typeof zChains>["zc"][number], s: number): [number, number] {
+  const n = c.n;
+  const u = c.closed && c.len > 0 ? ((s % c.len) + c.len) % c.len : Math.min(Math.max(s, c.s[0]), c.s[n - 1]);
+  if (c.closed && u >= c.s[n - 1]) {
+    const l = c.len - c.s[n - 1]; const t = l > 0 ? (u - c.s[n - 1]) / l : 0;
+    return [c.xs[n - 1] + (c.xs[0] - c.xs[n - 1]) * t, c.ys[n - 1] + (c.ys[0] - c.ys[n - 1]) * t];
+  }
+  let lo = 0; let hi = n - 1;
+  while (hi - lo > 1) { const m = (lo + hi) >> 1; if (c.s[m] <= u) lo = m; else hi = m; }
+  const l = c.s[hi] - c.s[lo]; const t = l > 0 ? Math.min(1, Math.max(0, (u - c.s[lo]) / l)) : 0;
+  return [c.xs[lo] + (c.xs[hi] - c.xs[lo]) * t, c.ys[lo] + (c.ys[hi] - c.ys[lo]) * t];
+}
+
 export function fillFrame(fs: FillStructure, st: DiagramStructure, table: OutlineTable, scene: SceneIn, zcIn?: ReturnType<typeof zChains>): FillFrame {
   const zz = zcIn ?? zChains(scene);
   const zc = zz.zc;
@@ -578,12 +594,33 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
       const a = st.arms[it.ai]; const J = a ? scene.junctions[a.ji] : undefined;
       const sE = armSOf(it.ai); const z = zAt(it.pi, sE); const hD = table.h;
       if (!J) { for (let i = 0; i < 1 + DISK_R * DISK_M; i++) set(it.base + i, 0, 0, -1e3, sE); continue; }
-      set(it.base, J.c[0], J.c[1], z, sE); s4[SLOTS * it.base] = sE;
+      // K1283 s7: form B extends an end arm's chain from its point at s_E
+      // (the term) to c', the nearest point of a through chain's centreline
+      // within 4 h of that arm's s, and caps it there: the disk is centred on
+      // c', keyed by its cone about the segment term -> c'.
+      let cx = J.c[0]; let cy = J.c[1]; let tx = cx; let ty = cy;
+      const cE = zc[it.pi];
+      if (DISK_OWN && cE && cE.n > 1) {
+        [tx, ty] = zPointAt(cE, sE); let best = Infinity;
+        for (const t of J.arms) {
+          if (t.kind !== "through") continue;
+          const ti = zz.idx.get(t.chain); const ct = ti === undefined ? undefined : zc[ti]; if (!ct || ct.n < 2) continue;
+          const f = footNear(ct, tx, ty, t.s, 4 * hD, 0, 0);
+          if (f.d < best) { best = f.d; [cx, cy] = zPointAt(ct, f.s); }
+        }
+      }
+      const sx = tx - cx; const sy = ty - cy; const sl2 = sx * sx + sy * sy;
+      const coneZ = (x: number, y: number): number => {
+        const u = sl2 > 0 ? Math.min(1, Math.max(0, ((x - cx) * sx + (y - cy) * sy) / sl2)) : 0;
+        return z - (Math.hypot(x - cx - u * sx, y - cy - u * sy) * zt) / hD;
+      };
+      set(it.base, cx, cy, DISK_OWN ? coneZ(cx, cy) : z, sE); s4[SLOTS * it.base] = sE;
       for (let r = 0; r < DISK_R; r++) {
         const f = (r + 1) / DISK_R; const rr = hD * f;
         for (let i = 0; i < DISK_M; i++) {
           const an = (2 * Math.PI * i) / DISK_M; const v = it.base + 1 + r * DISK_M + i;
-          set(v, J.c[0] + rr * Math.cos(an), J.c[1] + rr * Math.sin(an), z - f * zt, sE);
+          const x = cx + rr * Math.cos(an); const y = cy + rr * Math.sin(an);
+          set(v, x, y, DISK_OWN ? coneZ(x, y) : z - f * zt, sE);
           s4[SLOTS * v] = sE; across[v] = f;
         }
       }
@@ -708,6 +745,37 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
       w4[o + it.arm] = 1; s4[o + it.arm] = sOwn;
       const px = pos[2 * v]; const py = pos[2 * v + 1];
       if (key[v] < -999) continue;
+      // K1283 s7: a round end paints its own arm's slot at s_E, as form B
+      // paints the end chain's colour over its disk. Over the fan it is keyed
+      // by the fan's key there plus form B's margin (its cone key minus the
+      // highest through chain's, z - d zt / h about that chain's centreline),
+      // so it shows where form B's end chain is on top and its seam curves
+      // where the cone keys meet; off the fan its cone key meets the strips'.
+      if (it.kind === "disk" && DISK_OWN) {
+        if (!(px >= x0 && px <= x1 && py >= y0 && py <= y1)) continue;
+        for (let i = 0; i < R; i++) {
+          const b = h + 1 + i; const c = h + 1 + ((i + 1) % R);
+          const ax = pos[2 * h]; const ay = pos[2 * h + 1]; const bx = pos[2 * b]; const by = pos[2 * b + 1]; const cx = pos[2 * c]; const cy = pos[2 * c + 1];
+          const A = (bx - ax) * (cy - ay) - (by - ay) * (cx - ax); if (Math.abs(A) < 1e-12) continue;
+          const la = ((bx - px) * (cy - py) - (by - py) * (cx - px)) / A;
+          const lb = ((cx - px) * (ay - py) - (cy - py) * (ax - px)) / A;
+          const lc = 1 - la - lb;
+          if (la < -1e-9 || lb < -1e-9 || lc < -1e-9) continue;
+          if (key[h] > -999 && key[b] > -999 && key[c] > -999) {
+            const kf = la * key[h] + lb * key[b] + lc * key[c];
+            let kT = -Infinity;
+            for (const ja of J.arms) {
+              if (ja.pi === it.pi || st.arms[ja.ai]?.kind === "end") continue;
+              const zj = zc[ja.pi]; if (!zj || zj.n < 2) continue;
+              const f = footNear(zj, px, py, armSOf(ja.ai), 4 * table.h, 0, 0); if (!Number.isFinite(f.d)) continue;
+              const kk = zAtC(zj, f.s) - (f.d * zt) / table.h; if (kk > kT) kT = kk;
+            }
+            if (Number.isFinite(kT)) key[v] = kf + (key[v] - kT);
+          }
+          break;
+        }
+        continue;
+      }
       let found = false;
       if (px >= x0 && px <= x1 && py >= y0 && py <= y1) for (let i = 0; i < R; i++) {
         const b = h + 1 + i; const c = h + 1 + ((i + 1) % R);
