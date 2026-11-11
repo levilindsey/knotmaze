@@ -523,11 +523,11 @@ Next free ID: K1305.
 - **K1283** · Junction borders of the outline (rp=outline) against form B. Stage 1 (3c8bd61e) fixed the concave
   corner bites (census 27528 -> 17756 px); left: the failed corners and the end-arm round ends (x47, x73,
   x349). Full text in docs/ledger_notes.md
-  - owner: nobody since 2026-11-11 02:24 (merged; agent `aef3d2423ba493150` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `bb3ad376`
-  - evidence: src/render/outline/; .claude/probes/K1240/proto/k1283s6_* tools; untracked .claude/probes/K1240/out/k1283s6/
-  - next: Stage 6 merged: round ends 4 rings x 32 under their fan, steeper-than-form-B seams 521 -> 459, the fallback builder cuts folds; census unchanged 4677. Stage 7: the round end colour (form B paints the end chain disk over the other chain, the outline splits at a straight seam: k1283s6 roundends.png), muse_hash j59, then x134/x77/x304
-  - brief: `docs/design/K1283_s6.md`
+  - owner: agent `ac0a88be8830aa656` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-11 02:26, 2 h cap ~04:26)
+  - branch: `worktree-agent-ac0a88be8830aa656`, worktree `.claude/worktrees/agent-ac0a88be8830aa656`; last commit: `7c5cab34`
+  - evidence: `.claude/probes/K1240/out/k1283s7/`
+  - next: Stage 7 running: round end colour vs form B (colour census), muse_hash j59, then x134/x77/x304
+  - brief: `docs/design/K1283_s7.md`
 
 ## Next, in order
 
