@@ -53,6 +53,9 @@ export interface OutlineReply {
   h: number;
   W: number;
   zt: number;
+  /** K1291 s2: per band vertex its scene chain (-1 none); per scene chain (base, n, closed length or -1, 0) in chainTex. */
+  bandChain: Int16Array;
+  chainInfo: Float32Array;
 }
 
 /** Where two diagram keys first differ: the part (chains | crossings |
@@ -130,8 +133,10 @@ scope.onmessage = (e: MessageEvent<OutlineRequest>): void => {
       h: m.band.h,
       W: m.band.W,
       zt: m.band.zt,
+      bandChain: m.band.chain,
+      chainInfo: m.band.chainInfo,
     };
-    const tr: Transferable[] = [r.pos.buffer, r.pkey.buffer, r.w.buffer, r.s.buffer, r.tex.buffer, r.bandPos.buffer, r.bandAttr.buffer, r.bandSlots.buffer, r.chainTex.buffer, r.passTex.buffer];
+    const tr: Transferable[] = [r.pos.buffer, r.pkey.buffer, r.w.buffer, r.s.buffer, r.tex.buffer, r.bandPos.buffer, r.bandAttr.buffer, r.bandSlots.buffer, r.chainTex.buffer, r.passTex.buffer, r.bandChain.buffer, r.chainInfo.buffer];
     if (r.idx) tr.push(r.idx.buffer);
     if (r.run) tr.push(r.run.buffer);
     scope.postMessage(r, tr);

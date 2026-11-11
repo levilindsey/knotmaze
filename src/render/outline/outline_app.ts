@@ -40,7 +40,7 @@ import {
 } from "../paint_glsl";
 import { kGeom, kPaint, kReveal, kStatic, knotUniformValues } from "../paint_model";
 import type { SceneIn } from "./outline";
-import { RUN_MAP_W, appRunMap, chainArcMap } from "./paint";
+import { RUN_MAP_W, RV_W, appRunMap, chainArcMap, revealMaskTex } from "./paint";
 import type { OutlineReply, OutlineRequest } from "./outline_worker";
 
 const CTRL_ARC = 0.47;
@@ -92,6 +92,92 @@ void main() {
   }
   o = vec4(W > 0.0 ? c / W : vec3(0.0), 1.0);
 }`;
+// K1291 s2: THE APPEARANCE REVEAL. Today's ribbon draws each chain at its
+// reveal width (revealMask, paint.ts revealMaskTex packs it). rvMask reads
+// an app chain's width at an arc; rvMaskS a scene chain's at its s through
+// the per-scene-chain map (appRunMap over 0..n-1). uRvOn 0 = no reveal
+// running: every read below is skipped.
+const RV_MASK_GLSL = `
+uniform highp sampler2D uRv;
+uniform highp sampler2D uCm;
+uniform int uRvOn;
+float rvT(int i) { return texelFetch(uRv, ivec2(i % ${RV_W}, i / ${RV_W}), 0).x; }
+float rvMask(int c, highp float a) {
+  if (c < 0) return 1.0;
+  float fl = rvT(4 * c + 3);
+  if (fl < -0.5) return 1.0;
+  int off = int(rvT(4 * c) + 0.5); int n = int(rvT(4 * c + 1) + 0.5); highp float T = rvT(4 * c + 2);
+  if (!(T > 0.0)) return rvT(off);
+  if (fl > 0.5) {
+    highp float u = a / T * float(n); u -= float(n) * floor(u / float(n));
+    int k0 = min(n - 1, int(floor(u))); int k1 = k0 + 1 == n ? 0 : k0 + 1;
+    return mix(rvT(off + k0), rvT(off + k1), u - float(k0));
+  }
+  highp float u = clamp(a / T, 0.0, 1.0) * float(n - 1);
+  int k0 = min(n - 2, int(floor(u)));
+  return mix(rvT(off + k0), rvT(off + k0 + 1), u - float(k0));
+}
+float rvMaskS(int i, highp float s) {
+  if (i < 0) return 1.0;
+  highp vec4 m = texelFetch(uCm, ivec2(i % ${RUN_MAP_W}, i / ${RUN_MAP_W}), 0);
+  if (m.x < -0.5) return 1.0;
+  return rvMask(int(m.x + 0.5), m.y + s * m.z);
+}
+`;
+// The fill's distance to a scene chain's centerline (band_gpu's chain
+// samples) within r of s, and the foot's s: the fill has no across
+// coordinate, so the narrowed reveal width needs it.
+const RV_FOOT_GLSL = `
+uniform highp sampler2D uChainS;
+uniform highp sampler2D uCi;
+highp vec4 rvS(int i) { return texelFetch(uChainS, ivec2(i % ${BAND_TEX_W}, i / ${BAND_TEX_W}), 0); }
+highp float rvdS(highp float len, highp float a, highp float c) { highp float d = c - a; if (len > 0.0) { d = mod(d, len); if (d > 0.5 * len) d -= len; } return d; }
+highp vec2 rvFoot(int i, highp float s, highp vec2 p, highp float r) {
+  highp vec4 I = texelFetch(uCi, ivec2(i % ${BAND_TEX_W}, i / ${BAND_TEX_W}), 0);
+  int b = int(I.x + 0.5); int n = int(I.y + 0.5); highp float L = I.z;
+  bool ring = L > 0.0;
+  int segs = ring ? n : n - 1;
+  if (segs < 1) return vec2(1e30, s);
+  highp float sw = ring ? s - L * floor(s / L) : s;
+  int lo = 0; int hi = n - 1;
+  for (int it = 0; it < 24 && lo < hi; it++) { int m = (lo + hi + 1) / 2; if (rvS(b + m).z <= sw) lo = m; else hi = m - 1; }
+  highp float best = 1e30; highp float bs = sw;
+  for (int dir = 0; dir < 2; dir++) {
+    for (int t = 0; t < 64; t++) {
+      int k = dir == 0 ? lo + t : lo - 1 - t;
+      if (ring) { k = k % n; if (k < 0) k += n; } else if (k < 0 || k >= segs) break;
+      int j = k + 1 == n ? 0 : k + 1;
+      highp vec4 A = rvS(b + k); highp vec4 B = rvS(b + j);
+      highp float lk = j == 0 ? L - A.z : B.z - A.z;
+      if (dir == 0 && rvdS(L, sw, A.z) > r) break;
+      if (dir == 1 && rvdS(L, sw, A.z + lk) < -r) break;
+      highp vec2 e = B.xy - A.xy; highp float l2 = dot(e, e);
+      highp float tt = l2 > 0.0 ? clamp(dot(p - A.xy, e) / l2, 0.0, 1.0) : 0.0;
+      highp float d = length(p - A.xy - tt * e);
+      if (d < best) { best = d; bs = A.z + tt * lk; }
+    }
+  }
+  return vec2(best, bs);
+}
+`;
+// PAINT_VS plus the world position (the reveal front's distance).
+const APP_VS = `#version 300 es
+layout(location=0) in vec2 aPos;
+layout(location=2) in float aKey;
+layout(location=3) in ivec4 aRun;
+layout(location=4) in vec4 aW;
+layout(location=5) in vec4 aS;
+uniform mat3 uMat;
+uniform float uKS;
+flat out ivec4 vRun;
+out vec4 vW;
+out vec4 vS;
+out vec2 vPos;
+void main() {
+  vec3 p = uMat * vec3(aPos, 1.0);
+  gl_Position = vec4(p.xy, clamp(-aKey / uKS, -1.0, 1.0), 1.0);
+  vRun = aRun; vW = aW; vS = aS; vPos = aPos;
+}`;
 // K1291: THE APP'S FILL. The same slots as PAINT_FS, but each slot's
 // colour is the app's own material at that point of its chain: the run
 // map (paint.ts appRunMap) names the run's chain and maps the slot's s to
@@ -107,10 +193,16 @@ precision highp float;
 precision highp int;
 uniform highp sampler2D uRunMap;
 uniform float uPx;
+uniform vec3 uInk;
+uniform float uH;
+uniform float uW;
 flat in ivec4 vRun;
 in vec4 vW;
 in vec4 vS;
+in vec2 vPos;
 out vec4 o;
+${RV_MASK_GLSL}
+${RV_FOOT_GLSL}
 ${KNOT_UNIFORMS_GLSL}
 ${PAINT_CONST_GLSL}
 ${PAINT_DATA_GLSL}
@@ -140,6 +232,40 @@ vec3 appMaterial(int ch, highp float a) {
   return m;
 }
 void main() {
+  // K1291 s2: the reveal. The heaviest slot's chain decides: away from a
+  // front (its width 1 or 0 for 2h either side) the fill is whole or
+  // gone; near one, the centerline distance d against the narrowed half
+  // width h m(foot) gives the coverage, and the last W of it is the
+  // border's ink (the band steps aside wherever its own width is below 1).
+  float ink = 0.0;
+  if (uRvOn > 0) {
+    int kb = -1; float wb = 0.0;
+    for (int k = 0; k < 4; k++) if (vRun[k] >= 0 && vW[k] > wb) { wb = vW[k]; kb = k; }
+    if (kb >= 0) {
+      int r = vRun[kb];
+      highp vec4 m = texelFetch(uRunMap, ivec2(r % ${RUN_MAP_W}, r / ${RUN_MAP_W}), 0);
+      if (m.x > -0.5) {
+        int ac = int(m.x + 0.5);
+        highp float s = vS[kb];
+        float m0 = rvMask(ac, m.y + s * m.z);
+        float m1 = rvMask(ac, m.y + (s - 2.0 * uH) * m.z);
+        float m2 = rvMask(ac, m.y + (s + 2.0 * uH) * m.z);
+        float mn = min(m0, min(m1, m2));
+        if (max(m0, max(m1, m2)) <= 0.0) discard;
+        if (mn < 1.0) {
+          highp vec2 f = rvFoot(int(m.w + 0.5), s, vPos, 2.0 * uH);
+          bool hit = f.x < 1e29;
+          float mf = hit ? rvMask(ac, m.y + f.y * m.z) : m0;
+          float hm = uH * mf;
+          float d = hit ? f.x : 0.0;
+          // A hard edge, as the outline's own (no MSAA, depth-tested
+          // opaque fill): a partial alpha here would hide the thread under.
+          if (!(d < hm)) discard;
+          ink = clamp((d - (hm - uW)) / uPx + 0.5, 0.0, 1.0);
+        }
+      }
+    }
+  }
   vec3 c = vec3(0.0); float W = 0.0;
   for (int k = 0; k < 4; k++) {
     int r = vRun[k]; float w = vW[k];
@@ -148,7 +274,8 @@ void main() {
     if (m.x < -0.5) continue;
     c += w * appMaterial(int(m.x + 0.5), m.y + vS[k] * m.z); W += w;
   }
-  o = vec4(W > 0.0 ? c / W : vec3(0.0), 1.0);
+  vec3 col = mix(W > 0.0 ? c / W : vec3(0.0), uInk, ink);
+  o = vec4(col, 1.0);
 }`;
 /** The knot uniforms APP_FS reads (paint_model.ts knotUniforms). */
 const KNOT_NAMES = [
@@ -171,17 +298,20 @@ export interface AppPaint {
 const BAND_VS = `#version 300 es
 layout(location=0) in vec2 aPos;
 layout(location=1) in vec4 aA;
+layout(location=2) in int aCh;
 layout(location=3) in ivec4 aSl;
 uniform mat3 uMat;
 out vec2 vPos;
 out vec4 vA;
 flat out ivec4 vSl;
+flat out int vCh;
 void main() {
   vec3 p = uMat * vec3(aPos, 1.0);
   gl_Position = vec4(p.xy, 0.0, 1.0);
   vPos = aPos;
   vA = aA;
   vSl = aSl;
+  vCh = aCh;
 }`;
 const BAND_FS = `#version 300 es
 precision highp float;
@@ -196,7 +326,9 @@ uniform float uZt;
 in vec2 vPos;
 in vec4 vA;
 flat in ivec4 vSl;
+flat in int vCh;
 out vec4 o;
+${RV_MASK_GLSL}
 const int TW = ${BAND_TEX_W};
 vec4 T(int q, int k) { int i = q * 4 + k; return texelFetch(uPass, ivec2(i % TW, i / TW), 0); }
 vec4 S(int i) { return texelFetch(uChain, ivec2(i % TW, i / TW), 0); }
@@ -204,6 +336,10 @@ float dS(float len, float a, float c) { float d = c - a; if (len > 0.0) { d = mo
 float sst(float e0, float e1, float x) { float t = clamp((x - e0) / (e1 - e0), 0.0, 1.0); return t * t * (3.0 - 2.0 * t); }
 void main() {
   float s = vA.x;
+  // K1291 s2: under a reveal, the band is the whole-width border only; a
+  // narrowed stretch's border is the fill's (APP_FS), none is unrevealed.
+  bool rv = uRvOn > 0;
+  if (rv && vCh >= 0 && rvMaskS(vCh, s) < 0.999) discard;
   float keyC = vA.z - vA.y * uZt / uH;
   float seenO[4]; float seenS[4]; float seenL[4]; float seenF[4];
   int n = 0;
@@ -231,8 +367,10 @@ void main() {
         if (d < best) { best = d; bs = A.z + t * lk; bz = A.w + (B.w - A.w) * t; }
       }
     }
-    if (!(best < uH)) continue;
-    float g = clamp((uH - best) / uW, 0.0, 1.0);
+    // The covering thread at its reveal width (unrevealed covers nothing).
+    float hO = rv ? uH * rvMaskS(int(t1.w + 0.5), bs) : uH;
+    if (!(best < hO)) continue;
+    float g = clamp((hO - best) / uW, 0.0, 1.0);
     float keyO = bz - best * uZt / uH;
     float f = 1.0 - g * sst(-uZt, uZt, keyO - keyC);
     int m = -1;
@@ -273,18 +411,26 @@ class OutlinePass {
   private uP: { mat: U; ks: U; runs: U };
   /** K1291: the app's fill (APP_FS) and its uniforms. */
   private app: WebGLProgram;
-  private uA: { mat: U; ks: U; map: U; px: U; tex: U[]; knot: U[] };
+  private uA: { mat: U; ks: U; map: U; px: U; tex: U[]; knot: U[]; ink: U; h: U; w: U; rv: U; cm: U; rvOn: U; chainS: U; ci: U };
   private runMap: WebGLTexture;
   hasMap = false;
-  private uB: { mat: U; chain: U; pass: U; ink: U; h: U; w: U; zt: U };
+  private uB: { mat: U; chain: U; pass: U; ink: U; h: U; w: U; zt: U; rv: U; cm: U; rvOn: U };
   private chainTex: WebGLTexture;
   private passTex: WebGLTexture;
+  /** K1291 s2: the reveal masks (paint.ts revealMaskTex), the per-scene-chain
+   *  map (appRunMap over 0..n-1) and band_gpu's chain table (base, n, len). */
+  private rvTex: WebGLTexture;
+  private cmTex: WebGLTexture;
+  private ciTex: WebGLTexture;
+  /** A reveal is running (a mask packed and uploaded this frame or before). */
+  rvOn = false;
+  private hasCm = false;
   private band_: { ink: [number, number, number]; h: number; W: number; zt: number } = { ink: [0, 0, 0], h: 1, W: 1, zt: 0 };
   private uC: U;
   private pVao: WebGLVertexArrayObject;
   private bVao: WebGLVertexArrayObject;
   private cVao: WebGLVertexArrayObject;
-  private bufs: Record<"pos" | "key" | "w" | "s" | "run" | "idx" | "bPos" | "bAttr" | "bSl", WebGLBuffer>;
+  private bufs: Record<"pos" | "key" | "w" | "s" | "run" | "idx" | "bPos" | "bAttr" | "bSl" | "bCh", WebGLBuffer>;
   private runTex: WebGLTexture;
   private fbo: WebGLFramebuffer;
   private color: WebGLTexture | null = null;
@@ -319,7 +465,7 @@ class OutlinePass {
     this.band = mk(BAND_VS, BAND_FS, "band");
     this.comp = mk(COMP_VS, COMP_FS, "composite");
     this.uP = { mat: gl.getUniformLocation(this.paint, "uMat"), ks: gl.getUniformLocation(this.paint, "uKS"), runs: gl.getUniformLocation(this.paint, "uRuns") };
-    this.app = mk(PAINT_VS, APP_FS, "app paint");
+    this.app = mk(APP_VS, APP_FS, "app paint");
     const ua = (n: string): U => gl.getUniformLocation(this.app, n);
     this.uA = {
       mat: ua("uMat"),
@@ -328,13 +474,24 @@ class OutlinePass {
       px: ua("uPx"),
       tex: APP_TEX.map(ua),
       knot: KNOT_NAMES.map(ua),
+      ink: ua("uInk"),
+      h: ua("uH"),
+      w: ua("uW"),
+      rv: ua("uRv"),
+      cm: ua("uCm"),
+      rvOn: ua("uRvOn"),
+      chainS: ua("uChainS"),
+      ci: ua("uCi"),
     };
     this.runMap = gl.createTexture()!;
     const ub = (n: string): U => gl.getUniformLocation(this.band, n);
-    this.uB = { mat: ub("uMat"), chain: ub("uChain"), pass: ub("uPass"), ink: ub("uInk"), h: ub("uH"), w: ub("uW"), zt: ub("uZt") };
+    this.uB = {
+      mat: ub("uMat"), chain: ub("uChain"), pass: ub("uPass"), ink: ub("uInk"), h: ub("uH"), w: ub("uW"), zt: ub("uZt"),
+      rv: ub("uRv"), cm: ub("uCm"), rvOn: ub("uRvOn"),
+    };
     this.uC = gl.getUniformLocation(this.comp, "uC");
     const nb = (): WebGLBuffer => gl.createBuffer()!;
-    this.bufs = { pos: nb(), key: nb(), w: nb(), s: nb(), run: nb(), idx: nb(), bPos: nb(), bAttr: nb(), bSl: nb() };
+    this.bufs = { pos: nb(), key: nb(), w: nb(), s: nb(), run: nb(), idx: nb(), bPos: nb(), bAttr: nb(), bSl: nb(), bCh: nb() };
     const attr = (b: WebGLBuffer, loc: number, n: number, int = false): void => {
       gl.bindBuffer(gl.ARRAY_BUFFER, b);
       gl.enableVertexAttribArray(loc);
@@ -354,12 +511,18 @@ class OutlinePass {
     attr(this.bufs.bPos, 0, 2);
     attr(this.bufs.bAttr, 1, 4);
     attr(this.bufs.bSl, 3, 4, true);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.bufs.bCh);
+    gl.enableVertexAttribArray(2);
+    gl.vertexAttribIPointer(2, 1, gl.SHORT, 0, 0);
     this.cVao = gl.createVertexArray()!;
     gl.bindVertexArray(null);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
     this.runTex = gl.createTexture()!;
     this.chainTex = gl.createTexture()!;
     this.passTex = gl.createTexture()!;
+    this.rvTex = gl.createTexture()!;
+    this.cmTex = gl.createTexture()!;
+    this.ciTex = gl.createTexture()!;
     this.fbo = gl.createFramebuffer()!;
   }
 
@@ -385,6 +548,7 @@ class OutlinePass {
     put(this.bufs.bPos, r.bandPos);
     put(this.bufs.bAttr, r.bandAttr);
     put(this.bufs.bSl, r.bandSlots);
+    put(this.bufs.bCh, r.bandChain);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
     this.nBand = r.bandCount;
     this.band_ = { ink: r.ink, h: r.h, W: r.W, zt: r.zt };
@@ -407,8 +571,38 @@ class OutlinePass {
     };
     ftex(this.chainTex, r.chainTex, r.chainTexH);
     ftex(this.passTex, r.passTex, r.passTexH);
+    const ciH = Math.max(1, Math.ceil(r.chainInfo.length / 4 / BAND_TEX_W));
+    const ci = new Float32Array(4 * BAND_TEX_W * ciH);
+    ci.set(r.chainInfo);
+    ftex(this.ciTex, ci, ciH);
     gl.bindTexture(gl.TEXTURE_2D, null);
     this.hasData = true;
+  }
+
+  private tex2d(t: WebGLTexture, fmt: number, w: number, h: number, d: Float32Array): void {
+    const gl = this.gl;
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, t);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 4);
+    if (fmt === gl.R32F) gl.texImage2D(gl.TEXTURE_2D, 0, gl.R32F, w, h, 0, gl.RED, gl.FLOAT, d);
+    else gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, w, h, 0, gl.RGBA, gl.FLOAT, d);
+    gl.bindTexture(gl.TEXTURE_2D, null);
+  }
+
+  /** K1291 s2: the per-scene-chain map (appRunMap over 0..n-1) of a reply. */
+  uploadChainMap(m: { tex: Float32Array; w: number; h: number }): void {
+    this.tex2d(this.cmTex, this.gl.RGBA32F, m.w, m.h, m.tex);
+    this.hasCm = true;
+  }
+
+  /** K1291 s2: this frame's reveal masks (paint.ts revealMaskTex); off when none. */
+  uploadReveal(m: { tex: Float32Array; w: number; h: number; on: boolean }): void {
+    this.rvOn = m.on;
+    if (m.on) this.tex2d(this.rvTex, this.gl.R32F, m.w, m.h, m.tex);
   }
 
   /** K1291: the run map (paint.ts appRunMap) for the reply just uploaded. */
@@ -466,6 +660,8 @@ class OutlinePass {
     gl.clearColor(0, 0, 0, 0);
     gl.clearDepth(1);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    // The reveal needs the app's run map (the fill's chain) and the chain map.
+    const rvOn = this.rvOn && this.hasCm && !!ap && this.hasMap;
     if (this.hasData) {
       // The fill: the highest key wins (LEQUAL: a tie goes to the later
       // triangle, as the prototype's page).
@@ -491,6 +687,18 @@ class OutlinePass {
           gl.bindTexture(gl.TEXTURE_2D, ap.tex[i]);
           gl.uniform1i(A.tex[i], 1 + i);
         }
+        // K1291 s2: the reveal's textures on units 5-8.
+        const B = this.band_;
+        gl.uniform1i(A.rvOn, rvOn ? 1 : 0);
+        gl.uniform3f(A.ink, B.ink[0], B.ink[1], B.ink[2]);
+        gl.uniform1f(A.h, B.h);
+        gl.uniform1f(A.w, B.W);
+        const rvUnits: [WebGLTexture, U][] = [[this.chainTex, A.chainS], [this.rvTex, A.rv], [this.cmTex, A.cm], [this.ciTex, A.ci]];
+        rvUnits.forEach(([t, u], i) => {
+          gl.activeTexture(gl.TEXTURE5 + i);
+          gl.bindTexture(gl.TEXTURE_2D, t);
+          gl.uniform1i(u, 5 + i);
+        });
       } else {
         gl.useProgram(this.paint);
         gl.uniformMatrix3fv(this.uP.mat, false, mat);
@@ -502,7 +710,7 @@ class OutlinePass {
       gl.bindVertexArray(this.pVao);
       gl.drawElements(gl.TRIANGLES, this.nIdx, gl.UNSIGNED_INT, 0);
       if (ap && this.hasMap) {
-        for (let i = APP_TEX.length; i >= 1; i--) {
+        for (let i = APP_TEX.length + 4; i >= 1; i--) {
           gl.activeTexture(gl.TEXTURE0 + i);
           gl.bindTexture(gl.TEXTURE_2D, null);
         }
@@ -525,10 +733,20 @@ class OutlinePass {
       gl.activeTexture(gl.TEXTURE1);
       gl.bindTexture(gl.TEXTURE_2D, this.passTex);
       gl.uniform1i(this.uB.pass, 1);
+      gl.uniform1i(this.uB.rvOn, rvOn ? 1 : 0);
+      gl.activeTexture(gl.TEXTURE2);
+      gl.bindTexture(gl.TEXTURE_2D, this.rvTex);
+      gl.uniform1i(this.uB.rv, 2);
+      gl.activeTexture(gl.TEXTURE3);
+      gl.bindTexture(gl.TEXTURE_2D, this.cmTex);
+      gl.uniform1i(this.uB.cm, 3);
       gl.bindVertexArray(this.bVao);
       gl.drawArrays(gl.TRIANGLES, 0, this.nBand);
       gl.disable(gl.BLEND);
-      gl.bindTexture(gl.TEXTURE_2D, null);
+      for (let i = 3; i >= 1; i--) {
+        gl.activeTexture(gl.TEXTURE0 + i);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+      }
       gl.activeTexture(gl.TEXTURE0);
     }
     gl.bindVertexArray(null);
@@ -572,6 +790,9 @@ class OutlinePass {
     gl.deleteTexture(this.runTex);
     gl.deleteTexture(this.chainTex);
     gl.deleteTexture(this.passTex);
+    gl.deleteTexture(this.rvTex);
+    gl.deleteTexture(this.cmTex);
+    gl.deleteTexture(this.ciTex);
     if (this.color) gl.deleteTexture(this.color);
     if (this.depth) gl.deleteRenderbuffer(this.depth);
     gl.deleteFramebuffer(this.fbo);
@@ -607,6 +828,7 @@ export function createOutlineApp(ctx: SceneExportCtx, requestFrame: () => void):
   // update events and the knot uniforms' last drawn values (an overlay
   // change redraws on the next frame, no worker build).
   let sentMaps: ({ chain: number; arcLo: number; scale: number } | undefined)[] = [];
+  let rvSeen = -1;
   const paintSources = [kStatic(), kGeom(), kReveal(), kPaint()].map((r) => r.source);
   const onPaint = (): void => {
     dirty = true;
@@ -787,6 +1009,7 @@ export function createOutlineApp(ctx: SceneExportCtx, requestFrame: () => void):
       const t0 = performance.now();
       pass.upload(r);
       pass.uploadRunMap(appRunMap(r.runChain, sentMaps));
+      pass.uploadChainMap(appRunMap(sentMaps.map((_, i) => i), sentMaps));
       stats.uploadMs = performance.now() - t0;
       if (r.restructured) {
         stats.restructures++;
@@ -858,6 +1081,7 @@ export function createOutlineApp(ctx: SceneExportCtx, requestFrame: () => void):
       if (r !== lastR) {
         lastR = r;
         seenCount = -1;
+        rvSeen = -1;
         drawn = [];
         attach();
       }
@@ -869,6 +1093,19 @@ export function createOutlineApp(ctx: SceneExportCtx, requestFrame: () => void):
         else if (drawn.length === 0 || moved()) send();
       }
       if (!pass) return;
+      // K1291 s2: the reveal's width masks as the ribbon computed them this
+      // update (reveal_fx.ts widthMulFor), on the GPU the same frame.
+      if (r.updateCount !== rvSeen) {
+        rvSeen = r.updateCount;
+        const M = r.revealFx.revealMask;
+        if (pass.rvOn || M.some((m) => !!m)) {
+          const ss = r.chainSamples;
+          pass.uploadReveal(
+            revealMaskTex(ss.map((s, c) => (s && M[c] ? { mask: M[c], count: s.count, total: s.totalLength, closed: s.closed } : null)))
+          );
+          dirty = true;
+        }
+      }
       const cam = camera();
       const knot = knotUniformValues() as unknown as Record<string, Float32Array>;
       if (knotChanged(knot)) dirty = true;

@@ -226,10 +226,12 @@ export function chainArcMap(
 /** Texels per row of the app's run map. */
 export const RUN_MAP_W = 1024;
 
-/** The app's run map: one RGBA32F texel per run, (chain, arcLo, scale, 0)
- *  of the run's chain, RUN_MAP_W texels wide. `runChain` holds each run's
- *  scene chain index, `maps` each scene chain's app chain and arc map. A
- *  run whose chain has no map gets chain -1 (the shader skips the slot). */
+/** The app's run map: one RGBA32F texel per run, (chain, arcLo, scale,
+ *  scene chain) of the run's chain, RUN_MAP_W texels wide. `runChain` holds
+ *  each run's scene chain index, `maps` each scene chain's app chain and
+ *  arc map. A run whose chain has no map gets chain -1 (the shader skips
+ *  the slot). Called with runChain = 0..n-1 it is the per-scene-chain map
+ *  (the band's reveal mask reads it so). */
 export function appRunMap(
   runChain: ArrayLike<number>,
   maps: readonly ({ chain: number; arcLo: number; scale: number } | undefined)[]
@@ -240,7 +242,64 @@ export function appRunMap(
   for (let r = 0; r < runChain.length; r++) {
     const m = maps[runChain[r]];
     if (!m) { tex[4 * r] = -1; continue; }
-    tex[4 * r] = m.chain; tex[4 * r + 1] = m.arcLo; tex[4 * r + 2] = m.scale;
+    tex[4 * r] = m.chain; tex[4 * r + 1] = m.arcLo; tex[4 * r + 2] = m.scale; tex[4 * r + 3] = runChain[r];
   }
   return { tex, w: RUN_MAP_W, h };
+}
+
+// ---- K1291 s2: the appearance reveal's width masks on the GPU ----
+// Today's ribbon draws each chain at its reveal width multiplier
+// (reveal_fx.ts widthMulFor -> revealMask[c], per renderer sample, null =
+// fully revealed), linear between samples. The outline reads the same
+// numbers: one R32F texture, RV_W texels a row; app chain c's header at
+// texels 4c..4c+3 = (offset, count, total arc, flag), flag -1 = fully
+// revealed (no samples stored), 0 open, 1 ring; its samples from offset.
+// Sample k sits at arc k / count * total on a ring, k / (count - 1) *
+// total open (paint_math kSampleArc).
+
+/** Texels per row of the reveal mask texture. */
+export const RV_W = 1024;
+
+/** One app chain's reveal state: its mask (null = fully revealed) and its samples' layout. */
+export interface RevealChain {
+  mask: ArrayLike<number> | null;
+  count: number;
+  total: number;
+  closed: boolean;
+}
+
+/** Pack the reveal masks (see above); `on` is false when no chain has one
+ *  (the shaders then skip the reveal entirely). */
+export function revealMaskTex(chains: readonly (RevealChain | null | undefined)[]): { tex: Float32Array; w: number; h: number; on: boolean } {
+  let n = 4 * chains.length;
+  let on = false;
+  for (const c of chains) if (c && c.mask && c.count >= 2) { n += c.count; on = true; }
+  const h = Math.max(1, Math.ceil(n / RV_W));
+  const tex = new Float32Array(RV_W * h);
+  let o = 4 * chains.length;
+  chains.forEach((c, i) => {
+    if (!c || !c.mask || c.count < 2) { tex[4 * i + 3] = -1; return; }
+    tex[4 * i] = o; tex[4 * i + 1] = c.count; tex[4 * i + 2] = c.total; tex[4 * i + 3] = c.closed ? 1 : 0;
+    for (let k = 0; k < c.count; k++) tex[o + k] = c.mask[k];
+    o += c.count;
+  });
+  return { tex, w: RV_W, h, on };
+}
+
+/** The CPU twin of the shaders' rvMask: chain c's reveal width at arc a
+ *  (linear between samples; a ring wraps, an open chain clamps). */
+export function revealMaskAt(t: { tex: Float32Array }, c: number, a: number): number {
+  const T = t.tex;
+  if (T[4 * c + 3] < -0.5) return 1;
+  const off = T[4 * c]; const n = T[4 * c + 1]; const total = T[4 * c + 2];
+  if (!(total > 0)) return T[off];
+  if (T[4 * c + 3] > 0.5) {
+    let u = (a / total) * n;
+    u -= n * Math.floor(u / n);
+    const k0 = Math.min(n - 1, Math.floor(u)); const k1 = k0 + 1 === n ? 0 : k0 + 1;
+    return T[off + k0] + (T[off + k1] - T[off + k0]) * (u - k0);
+  }
+  const u = Math.min(1, Math.max(0, a / total)) * (n - 1);
+  const k0 = Math.min(n - 2, Math.floor(u));
+  return T[off + k0] + (T[off + k0 + 1] - T[off + k0]) * (u - k0);
 }

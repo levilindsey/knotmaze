@@ -48,6 +48,13 @@ export interface BandGpu {
   zt: number;
   /** Border segments that had more than BAND_SLOTS passes near them. */
   dropped: number;
+  /** K1291 s2: per vertex, the piece's scene chain (-1 none). With attr .x
+   *  (own s; an untied piece's s0..s1 by length) it keys the reveal mask. */
+  chain: Int16Array;
+  /** K1291 s2: per scene chain, (sample base in chainTex, sample count,
+   *  closed length or -1 open, 0): the fill's reveal front finds its
+   *  distance to the centerline here. */
+  chainInfo: Float32Array;
 }
 
 /** footNear's visited segment ranges for (sC, r): [k0, k1] pairs, empty when k0 > k1. */
@@ -120,10 +127,14 @@ export function bandGpu(table: OutlineTable, scene: SceneIn, zz: ZZ): BandGpu {
   const pos = new Float32Array(2 * count);
   const attr = new Float32Array(4 * count);
   const slots = new Int32Array(BAND_SLOTS * count).fill(-1);
-  let v = 0; let dropped = 0;
+  const chain = new Int16Array(count).fill(-1);
+  const chainInfo = new Float32Array(4 * Math.max(1, zc.length));
+  zc.forEach((c, i) => { chainInfo[4 * i] = base[i]; chainInfo[4 * i + 1] = c.n; chainInfo[4 * i + 2] = sgn(c); });
+  let v = 0; let dropped = 0; let vCh = -1;
   const vert = (x: number, y: number, s: number, dC: number, z: number, sl: number[] | null, ba = 1): void => {
     pos[2 * v] = x; pos[2 * v + 1] = y;
     attr[4 * v] = s; attr[4 * v + 1] = dC; attr[4 * v + 2] = z; attr[4 * v + 3] = ba;
+    chain[v] = vCh;
     if (sl) for (let k = 0; k < sl.length; k++) slots[BAND_SLOTS * v + k] = sl[k];
     v++;
   };
@@ -146,12 +157,22 @@ export function bandGpu(table: OutlineTable, scene: SceneIn, zz: ZZ): BandGpu {
       if (l < 1e-12) { const j = Math.min(i + 1, np - 1); const ex = p.pts[2 * j] - x; const ey = p.pts[2 * j + 1] - y; const el = Math.sqrt(ex * ex + ey * ey) || 1; dx = -ey / el; dy = ex / el; } else { dx /= l; dy /= l; }
       return [x + dx * W, y + dy * W];
     };
+    vCh = p.chain >= 0 && p.chain < zc.length ? p.chain : -1;
     if (!tied) {
       const pa = p.alpha && p.alpha.length === 2 * np ? p.alpha : null;
+      // K1291 s2: own s from s0 to s1 by length (the shader reads it only
+      // for the reveal mask: an untied quad has no pass slots).
+      let L = 0;
+      for (let i = 1; i < np; i++) L += Math.sqrt((p.pts[2 * i] - p.pts[2 * i - 2]) ** 2 + (p.pts[2 * i + 1] - p.pts[2 * i - 1]) ** 2);
+      const span = p.s1 - p.s0;
+      let cum = 0;
       let ia = inner(0);
       for (let i = 0; i + 1 < np; i++) {
         const ib = inner(i + 1);
-        quad(p.pts[2 * i], p.pts[2 * i + 1], p.pts[2 * i + 2], p.pts[2 * i + 3], ia[0], ia[1], ib[0], ib[1], 0, 0, 0, 0, null, pa, i);
+        const sa = L > 0 ? p.s0 + (span * cum) / L : p.s0;
+        cum += Math.sqrt((p.pts[2 * i + 2] - p.pts[2 * i]) ** 2 + (p.pts[2 * i + 3] - p.pts[2 * i + 1]) ** 2);
+        const sb = L > 0 ? p.s0 + (span * cum) / L : p.s1;
+        quad(p.pts[2 * i], p.pts[2 * i + 1], p.pts[2 * i + 2], p.pts[2 * i + 3], ia[0], ia[1], ib[0], ib[1], sa, sb, 0, 0, null, pa, i);
         ia = ib;
       }
       continue;
@@ -191,7 +212,7 @@ export function bandGpu(table: OutlineTable, scene: SceneIn, zz: ZZ): BandGpu {
       ia = ib;
     }
   }
-  return { pos, attr, slots, count, chainTex, chainTexH, passTex, passTexH, ink: parseColor(scene.look.ink), h, W, zt, dropped };
+  return { pos, attr, slots, count, chainTex, chainTexH, passTex, passTexH, ink: parseColor(scene.look.ink), h, W, zt, dropped, chain, chainInfo };
 }
 
 /** The shader's CPU twin: alphaAt from the tables above, for a point (x, y)

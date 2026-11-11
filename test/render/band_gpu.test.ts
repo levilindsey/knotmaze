@@ -77,4 +77,25 @@ describe("K1240 S4b GPU band", () => {
     expect(tails).toBeGreaterThan(0);
     expect(faded).toBeGreaterThan(0);
   }, 60_000);
-});
+  it("K1291 s2: each quad carries its piece's scene chain; chainInfo finds that chain's samples", () => {
+    const sc = loadScene(fileURLToPath(new URL("./fixtures/outline_ring.json.gz", import.meta.url)));
+    const tb = frame(structure(sc), sc);
+    const zz = zChains(sc);
+    const b = bandGpu(tb, sc, zz);
+    let v = 0;
+    for (const p of tb.pieces) {
+      const np = p.pts.length / 2;
+      for (let i = 0; i + 1 < np; i++, v += 6) for (let k = 0; k < 6; k++) expect(b.chain[v + k]).toBe(p.chain);
+    }
+    expect(v).toBe(b.count);
+    expect(b.chainInfo.length).toBe(4 * zz.zc.length);
+    zz.zc.forEach((c, i) => {
+      const base = b.chainInfo[4 * i];
+      expect(b.chainInfo[4 * i + 1]).toBe(c.n);
+      expect(b.chainInfo[4 * i + 2]).toBe(c.closed && c.len > 0 ? Math.fround(c.len) : -1);
+      for (const k of [0, c.n - 1]) {
+        expect(b.chainTex[4 * (base + k)]).toBe(Math.fround(c.xs[k]));
+        expect(b.chainTex[4 * (base + k) + 2]).toBe(Math.fround(c.s[k]));
+      }
+    });
+  }, 60_000);});
