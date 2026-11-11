@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1291.
+Next free ID: K1292.
 
 ## Waiting on Levi
 
@@ -764,6 +764,9 @@ Every other item below waits on the trigger it names.
   sits at a junction (the 25 worst, e.g. muse_hash x77 846 px): form B blends the edges softly where threads
   meet, the redesign draws hard lines. Census k1279_census.ts; crops
   .claude/probes/K1240/out/k1279/crops/worst10_{a,b}.png. The fill half, K1277's end-arm sliver (through-thread colour over the end thread's round end, muse_hash x73 x47 x292 x177), went to K1278 stage 1 (9f6a38f2), which fixed its colour; its geometry stays here: the end thread's round end and tail do not cover where form B shows it (x47, x73, x349; the stage 1 handoff in docs/design/K1278_paint.md). Concave corners bite where form B is round (def j55, j156, j91, j45, j54, j73, j30, x81; .claude/probes/K1240/out/k1290/crops/fail_j55_j156.png, rest_feet.png); first in src/ after K1240 S4
+- **K1291** · rp=outline in the app (K1240 S4) lacks the app palette and hides the overlays drawn inside the
+  base layer (trail, fog, reveal masks, pulses, gameplay paint); markers, plucks and the HUD still draw (S4
+  handoff in docs/design/K1240_s4_app.md on worktree-agent-a5393aa1f25f2ff33)
 
 ## Residuals (known, not fixed)
 
