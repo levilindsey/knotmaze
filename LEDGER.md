@@ -533,10 +533,10 @@ Next free ID: K1305.
 - **K1291** · rp=outline in the app (K1240 S4) lacks the app palette and hides the overlays drawn inside the
   base layer (trail, fog, reveal masks, pulses, gameplay paint); markers, plucks and the HUD still draw (S4
   handoff in docs/design/K1240_s4_app.md on worktree-agent-a5393aa1f25f2ff33)
-  - owner: agent `acb4e37afc1c4006e` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-11 03:47, 2 h cap ~05:47)
-  - branch: `worktree-agent-acb4e37afc1c4006e`, worktree `.claude/worktrees/agent-acb4e37afc1c4006e`; last commit: `39b7c8a9`
+  - owner: nobody since 2026-11-11 04:42 (merged; agent `acb4e37afc1c4006e` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `c7fa5c61`
   - evidence: `.claude/probes/K1291/`
-  - next: Stage 1 running: the app palette, then trail and gameplay paint, then fog, then reveal masks in rp=outline, judged against today's look
+  - next: Stage 1 merged: rp=outline paints the app section palette (run-middle median 0, p99 <= 4.1/255), the gold path and trail (footprint IoU 0.96-0.99) and the fog (0.996-0.998) through today's paint code, each change on the next frame with no worker build. Stage 2: the reveal width masks (rp=outline shows the whole maze during the intro), per the plan in the docs/design/K1291_s1.md handoff
   - brief: `docs/design/K1291_s1.md`
 
 ## Next, in order
