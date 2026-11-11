@@ -513,11 +513,20 @@ Next free ID: K1293.
   hand-off as in form B, a pulse's travel distance continuous through the junction), never per face or
   triangle. Gate: a seam test sampling section blends and pulses across every face edge, triangle edge and
   junction for steps and kinks, plus K1244's sheets (K1250).
-  - owner: nobody since 2026-11-10 11:23 (merged; agent `abbdf5d7bf1c88649` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `9f6a38f2`
-  - evidence: .claude/probes/K1240/proto/ (draw.ts, fill_tri.ts, k1278_* tools); .claude/probes/K1240/out/k1278/ (untracked)
-  - next: Stage 1 merged (Claude viewed the crops): the fill paints section colours per pixel from per-vertex run/weight/s slots fixed at structure; a junction hands off by corner arc length (smoothstep). Edge seams over 1/255 34045 -> 41 (app), junction windows steppier than form B 650 -> 7; colour at the six end-arm slivers matches form B; K1277's bars hold. Next: stage 2 = an end-arm fan's per-pixel round-end term (x14: form B's hard edge), the across upload in draw.ts, then the pulses (K1250); the handoff in the brief lists the rest. Stage 2 lands in src/ (ported in 8d56f5c0). It also takes the strips across junction mouths (def_j156, def_j16; the prototype draws them too: .claude/probes/K1240/out/s4/crops/def_j156_proto_vs_app.png, def_j16.png) and the hard colour wedges at muse_j150
-  - brief: `docs/design/K1278_paint.md`
+  - owner: agent `ab4debcc50d9ea9fe` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-10 19:44, 2 h cap ~21:44)
+  - branch: `worktree-agent-ab4debcc50d9ea9fe`, worktree `.claude/worktrees/agent-ab4debcc50d9ea9fe`; last commit: `8f7004bf`
+  - evidence: src/render/outline/ (paint, fill_tri, draw, band_gpu), k1278s2_* tools; untracked .claude/probes/K1240/out/k1278s2/
+  - next: stage 2 (section colour across junctions in src/): wait for its report, view the crops, merge; stage 3 = the pulses
+  - brief: `docs/design/K1278_s2.md`
+- **K1283** · Redesign junctions against form B: after K1279 every crossing that still differs from form B
+  sits at a junction (the 25 worst, e.g. muse_hash x77 846 px): form B blends the edges softly where threads
+  meet, the redesign draws hard lines. Census k1279_census.ts; crops
+  .claude/probes/K1240/out/k1279/crops/worst10_{a,b}.png. The fill half, K1277's end-arm sliver (through-thread colour over the end thread's round end, muse_hash x73 x47 x292 x177), went to K1278 stage 1 (9f6a38f2), which fixed its colour; its geometry stays here: the end thread's round end and tail do not cover where form B shows it (x47, x73, x349; the stage 1 handoff in docs/design/K1278_paint.md). Concave corners bite where form B is round (def j55, j156, j91, j45, j54, j73, j30, x81; .claude/probes/K1240/out/k1290/crops/fail_j55_j156.png, rest_feet.png); first in src/ after K1240 S4
+  - owner: agent `a4ab8fb10e6a7a9d3` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-10 19:44, 2 h cap ~21:44)
+  - branch: `worktree-agent-a4ab8fb10e6a7a9d3`, worktree `.claude/worktrees/agent-a4ab8fb10e6a7a9d3`; last commit: `8f7004bf`
+  - evidence: src/render/outline/outline.ts, k1283_* tools; untracked .claude/probes/K1240/out/k1283/
+  - next: wait for its report; view the crops against form B; merge
+  - brief: `docs/design/K1283_junctions.md`
 
 ## Next, in order
 
@@ -760,10 +769,6 @@ Every other item below waits on the trigger it names.
 - **K1256** · K1240's outline: frame() leads outside corners from K1247 stage 4 (unmeasured):
   crossingsPhaseC's OSR-exit deopts, frameFast's wrong-map and generic-global deopts, and about 40
   cornerFallbackC fallbacks a frame (about 0.5 ms). K1247_s4_corners.md Handoff 1
-- **K1283** · Redesign junctions against form B: after K1279 every crossing that still differs from form B
-  sits at a junction (the 25 worst, e.g. muse_hash x77 846 px): form B blends the edges softly where threads
-  meet, the redesign draws hard lines. Census k1279_census.ts; crops
-  .claude/probes/K1240/out/k1279/crops/worst10_{a,b}.png. The fill half, K1277's end-arm sliver (through-thread colour over the end thread's round end, muse_hash x73 x47 x292 x177), went to K1278 stage 1 (9f6a38f2), which fixed its colour; its geometry stays here: the end thread's round end and tail do not cover where form B shows it (x47, x73, x349; the stage 1 handoff in docs/design/K1278_paint.md). Concave corners bite where form B is round (def j55, j156, j91, j45, j54, j73, j30, x81; .claude/probes/K1240/out/k1290/crops/fail_j55_j156.png, rest_feet.png); first in src/ after K1240 S4
 - **K1291** · rp=outline in the app (K1240 S4) lacks the app palette and hides the overlays drawn inside the
   base layer (trail, fog, reveal masks, pulses, gameplay paint); markers, plucks and the HUD still draw (S4
   handoff in docs/design/K1240_s4_app.md on worktree-agent-a5393aa1f25f2ff33)
