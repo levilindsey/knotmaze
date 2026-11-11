@@ -324,8 +324,10 @@ function footInWindowInto(p: Poly, px: number, py: number, lo: number, hi: numbe
 // segment directions), so it follows q continuously wherever the root is
 // unique (q nearer the line than its radius of curvature); among several
 // roots the nearest wins. No root in the window: footInWindowInto's foot.
-function footSmoothInto(p: Poly, px: number, py: number, lo: number, hi: number, out: Float64Array): void {
-  out[0] = Infinity; out[1] = px; out[2] = py;
+function footSmoothInto(p: Poly, px: number, py: number, lo: number, hi: number, out: Float64Array, sNear = NaN): void {
+  out[0] = Infinity; out[1] = px; out[2] = py; if (out.length > 3) out[3] = NaN;
+  // sNear finite: among several roots the one nearest sNear along s wins.
+  const byS = Number.isFinite(sNear); let bestKey = Infinity;
   if (p.nseg === 0 || hi < lo) return;
   const vt = (k: number, o: number): void => {
     // Vertex k's unit tangent into kfVT[o], kfVT[o + 1].
@@ -364,10 +366,14 @@ function footSmoothInto(p: Poly, px: number, py: number, lo: number, hi: number,
       const c0 = Dx * Ax + Dy * Ay; const c1 = Dx * Bx + Dy * By - (Ex * Ax + Ey * Ay); const c2 = -(Ex * Bx + Ey * By);
       const tryU = (u: number): void => {
         if (!(u >= ta - 1e-12 && u <= tb + 1e-12)) return;
+        // A distance minimum only (g falls through 0): beyond the centre of
+        // curvature a root is a distance maximum.
+        if (c1 + 2 * c2 * u > 0) return;
         u = Math.min(tb, Math.max(ta, u));
         const qx = p.x[k] + Ex * u; const qy = p.y[k] + Ey * u;
         const d = Math.hypot(px - qx, py - qy);
-        if (d < out[0]) { out[0] = d; out[1] = qx; out[2] = qy; }
+        const sU = sa + sh + p.segLen[k] * u; const key = byS ? Math.abs(sU - sNear) : d;
+        if (key < bestKey) { bestKey = key; out[0] = d; out[1] = qx; out[2] = qy; if (out.length > 3) out[3] = sU; }
       };
       if (Math.abs(c2) < 1e-14 * (Math.abs(c1) + 1e-300)) { if (Math.abs(c1) > 1e-300) tryU(-c0 / c1); }
       else {
@@ -381,10 +387,10 @@ function footSmoothInto(p: Poly, px: number, py: number, lo: number, hi: number,
       }
     }
   }
-  if (out[0] === Infinity) footInWindowInto(p, px, py, lo, hi, out);
+  if (out[0] === Infinity) { footInWindowInto(p, px, py, lo, hi, out); if (out.length > 3) out[3] = NaN; }
 }
 const kfVT = new Float64Array(8);
-const kfFootR = new Float64Array(3);
+const kfFootR = new Float64Array(4);
 function ssFB(e0: number, e1: number, x: number): number {
   const t = Math.min(1, Math.max(0, (x - e0) / (e1 - e0)));
   return t * t * (3 - 2 * t);
@@ -3770,7 +3776,7 @@ function memberGroupC(C: FCache, pi: number, s: number): number {
   return g;
 }
 
-const kfFootW = new Float64Array(3);
+const kfFootW = new Float64Array(4);
 // A depth pin, inserted in s order (K1247 s3: was a closure per crossing).
 function addPinC(C: FCache, pi: number, s: number, z: number): void {
   const S = C.depthS[pi]; const Z = C.depthZ[pi];
@@ -3964,6 +3970,7 @@ function setupFrame(C: FCache, st: DiagramStructure, scene: SceneIn): void {
       if (p.closed || d < -1e-12) { if (u >= 0 && u < uB) uB = u; }
       if (d < -1e-12) continue;
       Lcut = Math.min(Lcut, d - reachOf(a.pi, e, dir) - h);
+      if (armDbg.ai === ai) armDbg.rows.push(["pass", e, d, reachOf(a.pi, e, dir), C.passTheta[a.pi][e]]);
     }
     const Lroot = L;
     L = Math.max(0, Math.min(L, Lcut));
@@ -4013,6 +4020,7 @@ function setupFrame(C: FCache, st: DiagramStructure, scene: SceneIn): void {
     }
     const k = gMax > 0 ? Math.min(4, Math.max(1, 1 / gMax)) : 4;
     const c = k * pd.uB;
+    if (armDbg.ai === pd.ai) armDbg.rows.push(["pend", gMax, k, pd.uB, c]);
     if (c < C.armLcut[pd.ai]) C.armLcut[pd.ai] = c;
     C.armL[pd.ai] = Math.max(0, Math.min(pd.Lroot, C.armLcut[pd.ai]));
     A.L = C.armL[pd.ai];
@@ -4670,8 +4678,11 @@ function wOfC(C: FCache): number {
   if (mA <= -0.05 * h) return 0;
   const mB = marginOfC(C, kfCst.aiB, kfQb, kfCst.wCacheB);
   if (mB <= -0.05 * h) return 0;
+  if (wFacDbg.on) wFacDbg.last = [fSteep, fSlack, fRootA, fRootB, mA / h, mB / h];
   return ss01(1 + Math.min(0, mA, mB) / (0.05 * h)) * fSteep * fSlack * fRootA * fRootB;
 }
+export const wFacDbg: { on: boolean; last: number[] } = { on: false, last: [] }; // TEMP s16
+export const armDbg: { ai: number; rows: (string | number)[][] } = { ai: -1, rows: [] }; // TEMP s16
 // K1247 s5: the growth's knobs. A landing within max(0.5 |u| dd, kfJump h)
 // of the predictor is the path: a tracked foot that walks over a dent moves
 // q by 1e-3 to 6e-2 h at any step size, and the converged reference
@@ -5980,10 +5991,23 @@ function cornersPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): void {
     let tax = Vx; let tay = Vy; let tbx = Vx; let tby = Vy;
     let sA = kfFa.s; let sB = kfFb.s; let dA = dVa; let dB = dVb;
     if (r > 1e-9) {
-      tax = kfQa.x + (h * (kfCst.qx - kfQa.x)) / kfQa.d; tay = kfQa.y + (h * (kfCst.qy - kfQa.y)) / kfQa.d;
-      tbx = kfQb.x + (h * (kfCst.qx - kfQb.x)) / kfQb.d; tby = kfQb.y + (h * (kfCst.qy - kfQb.y)) / kfQb.d;
-      sA = kfQa.s; sB = kfQb.s;
-      dA = (kfQa.u - C.armSR[aiA]) * C.armDir[aiA]; dB = (kfQb.u - C.armSR[aiB]) * C.armDir[aiB];
+      // K1247 s16: the arc's ends sit on the centre's smooth feet. The
+      // nearest foot jumps across a vertex's bisector on the curve's inner
+      // side (j87 corner 182: its A end slid 1.2 px along s under 0.02 px of
+      // input, def f23); the smooth foot follows q continuously and is
+      // within d x turn / 2 of it.
+      footSmoothInto(C.polys[A.pi], kfCst.qx, kfCst.qy, kfQa.s - 0.25 * h, kfQa.s + 0.25 * h, kfFootR, kfQa.s);
+      const fdA = Number.isFinite(kfFootR[3]) && kfFootR[0] > 1e-12 ? 1 : 0;
+      const ax = fdA ? kfFootR[1] : kfQa.x; const ay = fdA ? kfFootR[2] : kfQa.y; const ad = fdA ? kfFootR[0] : kfQa.d;
+      sA = fdA ? kfFootR[3] : kfQa.s;
+      footSmoothInto(C.polys[B.pi], kfCst.qx, kfCst.qy, kfQb.s - 0.25 * h, kfQb.s + 0.25 * h, kfFootR, kfQb.s);
+      const fdB = Number.isFinite(kfFootR[3]) && kfFootR[0] > 1e-12 ? 1 : 0;
+      const bx2 = fdB ? kfFootR[1] : kfQb.x; const by2 = fdB ? kfFootR[2] : kfQb.y; const bd2 = fdB ? kfFootR[0] : kfQb.d;
+      sB = fdB ? kfFootR[3] : kfQb.s;
+      tax = ax + (h * (kfCst.qx - ax)) / ad; tay = ay + (h * (kfCst.qy - ay)) / ad;
+      tbx = bx2 + (h * (kfCst.qx - bx2)) / bd2; tby = by2 + (h * (kfCst.qy - by2)) / bd2;
+      dA = armDistC(C, aiA, sA); dB = armDistC(C, aiB, sB);
+      if (armDbg.ai === -2 - ci) armDbg.rows.push(["feet", kfQa.s, sA, kfQa.d, kfQb.s, sB, kfQb.d, bd2]);
     }
     C.cTax[ci] = tax; C.cTay[ci] = tay; C.cTbx[ci] = tbx; C.cTby[ci] = tby;
     C.cSA[ci] = sA; C.cSB[ci] = sB; C.cDA[ci] = dA; C.cDB[ci] = dB;

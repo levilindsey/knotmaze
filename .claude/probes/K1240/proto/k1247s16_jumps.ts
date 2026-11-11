@@ -61,11 +61,11 @@ function pieceAt(t: OutlineTable, r: number, x: number, y: number): { pi: number
   if (best.d * S > 0.05) scan(t.pieces.keys());
   return best;
 }
-type J = { f: number; x: number; y: number; d: number; mv: number; r: number; which: "A" | "B"; piece: number; pk: number; pd: number };
+type J = { f: number; x: number; y: number; d: number; mv: number; mv4: number; r: number; which: "A" | "B"; piece: number; pk: number; pd: number };
 const jumps: J[] = [];
 for (let f = 1; f < F; f++) {
   if (sig(scenes[f]) !== sig(scenes[f - 1])) continue;
-  const A = tables[f - 1], B = tables[f]; const mv2 = inputMove(scenes[f - 1], scenes[f], 2 * h);
+  const A = tables[f - 1], B = tables[f]; const mv2 = inputMove(scenes[f - 1], scenes[f], 2 * h); const mv4 = inputMove(scenes[f - 1], scenes[f], 4 * h);
   for (let i = 0; i < A.length; i++) {
     if (!A[i] || !B[i]) continue;
     for (const [P, Q, which, t] of [[A[i], B[i], "A", tabs[f - 1]], [B[i], A[i], "B", tabs[f]]] as const) {
@@ -74,7 +74,7 @@ for (let f = 1; f < F; f++) {
         if (out[k] * S <= 0.25) continue; const x = P.pts[2 * k], y = P.pts[2 * k + 1]; const m2 = mv2(x, y);
         if (m2 * S >= 0.1) continue;
         const pa = pieceAt(t, i, x, y);
-        jumps.push({ f, x, y, d: out[k] * S, mv: m2 * S, r: i, which, piece: pa.pi, pk: pa.k, pd: pa.d * S });
+        jumps.push({ f, x, y, d: out[k] * S, mv: m2 * S, mv4: mv4(x, y) * S, r: i, which, piece: pa.pi, pk: pa.k, pd: pa.d * S });
       }
     }
   }
@@ -89,7 +89,7 @@ for (const c of cl) {
   const worst = c.js.reduce((a, b) => (b.d > a.d ? b : a));
   const frames = [...new Set(c.js.map((j) => j.f))];
   const pieces = [...new Set(c.js.map((j) => j.piece))];
-  console.log(`\n(${c.x.toFixed(3)}, ${c.y.toFixed(3)}) ${nearJ(c.x, c.y)}: ${frames.length} pairs, worst ${worst.d.toFixed(3)} px at f${worst.f} (input ${worst.mv.toFixed(3)}), regions ${[...new Set(c.js.map((j) => j.r))].join(",")}`);
+  console.log(`\n(${c.x.toFixed(3)}, ${c.y.toFixed(3)}) ${nearJ(c.x, c.y)}: ${frames.length} pairs, worst ${worst.d.toFixed(3)} px at f${worst.f} (input ${worst.mv.toFixed(3)}, within 4h ${worst.mv4.toFixed(3)}; frames ${frames.slice(0, 12).join(",")}), regions ${[...new Set(c.js.map((j) => j.r))].join(",")}`);
   for (const pi of pieces.slice(0, 4)) {
     const js = c.js.filter((j) => j.piece === pi); const w = js.reduce((a, b) => (b.d > a.d ? b : a));
     const ta = tabs[w.f - 1], tb = tabs[w.f];
