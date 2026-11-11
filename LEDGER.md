@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1301.
+Next free ID: K1302.
 
 ## Waiting on Levi
 
@@ -1795,6 +1795,9 @@ Every other item below waits on the trigger it names.
   (k1283s3_capcmp.ts), but a buried cap would draw full ink (K1283 s3 handoff)
 - **K1300** · K1278's seam tool: its frozen reference copy (k1278_base_fill.ts) reads the tails' band points
   since K1283 s3 lengthened them; point it at the fill points if that column matters (K1283 s3 handoff)
+- **K1301** · Outline worker frame after K1283 s3+s4: s3 +5.7% (tail walk), s4 within 5% by ABBA but its frame
+  part still 3-9 ms over; re-bench quietly with K1247's cuts (bench_abba4.json in
+  .claude/probes/K1240/out/k1283s4/)
 
 ## Approved, to schedule (2026-10-11)
 
