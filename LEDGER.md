@@ -523,10 +523,10 @@ Next free ID: K1305.
 - **K1283** · Junction borders of the outline (rp=outline) against form B. Stage 1 (3c8bd61e) fixed the concave
   corner bites (census 27528 -> 17756 px); left: the failed corners and the end-arm round ends (x47, x73,
   x349). Full text in docs/ledger_notes.md
-  - owner: agent `ac0a88be8830aa656` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-11 02:26, 2 h cap ~04:26)
-  - branch: `worktree-agent-ac0a88be8830aa656`, worktree `.claude/worktrees/agent-ac0a88be8830aa656`; last commit: `7c5cab34`
+  - owner: nobody since 2026-11-11 03:44 (merged; agent `ac0a88be8830aa656` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `23a96e13`
   - evidence: `.claude/probes/K1240/out/k1283s7/`
-  - next: Stage 7 running: round end colour vs form B (colour census), muse_hash j59, then x134/x77/x304
+  - next: Stage 7 merged without a look change: every own-colour round end failed the seam bars (own colour: colour census 31891 -> 29713 but seams 25359/11227), so DISK_OWN is false and the s7 disk code (fill_tri, zPastC in draw.ts) sits switched off; colour census tool k1283s7_colour.ts. Stage 8: muse_hash j59 (fade the chevron cut points), then x134/x77/x304. Round-end colour after that: the fan paints the end chain slot over form B end-cap area with its own weights ramping into it (s7 handoff item 1), or delete the switched-off code
   - brief: `docs/design/K1283_s7.md`
 
 ## Next, in order
