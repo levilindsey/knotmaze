@@ -96,10 +96,15 @@ await ana.evaluate(() => {
     const at = (f, x, y) => { const X = Math.round(x * DSF), Y = Math.round(y * DSF); return X >= 0 && Y >= 0 && X < W && Y < H ? f[Y * W + X] : -1; };
     const fronts = [];
     let worstShift = 0;
+    const visT = [];
     for (const ch of chains) {
       let cT = 0, cO = 0, mis = 0, n = 0; const misAt = [];
+      // Today's visibility at each sample (the thread reveal's end spots).
+      const vis = [];
+      visT.push(vis);
       for (let k = 0; k < ch.pts.length; k += 2) {
         const t = at(fT, ch.pts[k], ch.pts[k + 1]), o = at(fO, ch.pts[k], ch.pts[k + 1]);
+        vis.push(t > 0 ? 1 : 0);
         if (t < 0 || o < 0) continue;
         n++; cT += t; cO += o; if (t !== o) { mis++; if (misAt.length < 6) misAt.push([Math.round(ch.pts[k]), Math.round(ch.pts[k + 1]), t, o]); }
       }
@@ -112,7 +117,7 @@ await ana.evaluate(() => {
     for (const p of pastPix) { const k = `${Math.floor((p % W) / G)},${Math.floor(p / W / G)}`; cells.set(k, (cells.get(k) ?? 0) + 1); }
     const top = [...cells.entries()].sort((a, b) => b[1] - a[1])[0];
     const pastSpot = top ? top[0].split(",").map((v) => (Number(v) * G + G / 2) / DSF) : null;
-    return { footToday: nT, footOutline: nO, iou: nU ? nI / nU : null, past, short, worstShiftPx: Math.round(worstShift * 10) / 10, fronts: fronts.filter((f) => f.partial || f.mismatched > 0), pastSpot };
+    return { footToday: nT, footOutline: nO, iou: nU ? nI / nU : null, past, short, worstShiftPx: Math.round(worstShift * 10) / 10, fronts: fronts.filter((f) => f.partial || f.mismatched > 0), pastSpot, visT };
   };
   window.cropRow = async (CROP, DSF, sx, sy) => {
     const I = window.imgs; const W = I.N.w, H = I.N.h; const S = CROP * DSF;
@@ -152,7 +157,9 @@ try {
       await page.waitForFunction(() => window.__knotPerf?.().state && window.__knotPerf().state !== "loading", { timeout: 120000, polling: 200 });
       // The plain fade end: the end looks (beacon dots, halo sprites) are
       // not in the outline yet (K1291 s2 handoff).
-      await page.evaluate(() => window.__knotExplore({ look: "fade" }));
+      // LOOK=default keeps the page's own (beacon).
+      const look = process.env.LOOK ?? "fade";
+      if (look !== "default") await page.evaluate((l) => window.__knotExplore({ look: l }), look);
     } else {
       // The reveal is attached once the loader hands over.
       await page.waitForFunction(() => !!window.__knotRenderer?.()?.revealFx?.revealAnim, { timeout: 120000, polling: 50 });
@@ -176,7 +183,11 @@ try {
     const settle = async () => {
       await page.evaluate(() => window.__knotOutline.resend());
       await sleep(400);
-      try { await page.waitForFunction(() => window.__knotOutline.settled, { timeout: 30000, polling: 200 }); } catch (e) { console.log(cs.name, "not settled", rec.errors.slice(0, 4)); throw e; }
+      try { await page.waitForFunction(() => window.__knotOutline.settled, { timeout: 30000, polling: 200 }); } catch (e) {
+        const fb = await page.evaluate(() => String(window.__knotOutline?.stats?.fallback ?? "")).catch(() => "?");
+        console.log(cs.name, "not settled; fallback:", fb.slice(0, 600), rec.errors.slice(0, 4));
+        throw e;
+      }
       await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(r)))));
       await sleep(250);
     };
@@ -219,6 +230,8 @@ try {
       writeFileSync(join(outDir, `${cs.name}_${label}_today.png`), Buffer.from(shT, "base64"));
       const res = await ana.evaluate((F, NR, D, ch) => window.measure(F, NR, D, ch), FOOT, NEAR, DSF, chains.map(({ c, pts, step, partial }) => ({ c, pts, step, partial })));
       const spots = [...cropAt];
+      // Thread reveal: the ends of today's visible stretches (up to 2 + 2).
+      if (cs.threads) spots.push(...spotsFor(chains.map((ch, i) => ({ ...ch, m: res.visT[i] }))));
       if (res.pastSpot) spots.push({ why: "past", x: res.pastSpot[0], y: res.pastSpot[1] });
       const wm = [...res.fronts].sort((a, b) => b.mismatched - a.mismatched)[0];
       if (wm && wm.misAt.length && wm.mismatched > 3) spots.push({ why: `mis_c${wm.c}`, x: wm.misAt[0][0], y: wm.misAt[0][1] });
@@ -229,7 +242,7 @@ try {
         writeFileSync(f, Buffer.from(b, "base64"));
         res.crops.push(f);
       }
-      delete res.pastSpot;
+      delete res.pastSpot; delete res.visT;
       return res;
     };
     // Crop spots from the masks: front tips (mask falls to 0), the ones
