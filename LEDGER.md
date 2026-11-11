@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1297.
+Next free ID: K1298.
 
 ## Waiting on Levi
 
@@ -294,6 +294,10 @@ Next free ID: K1297.
 - **K365** · The phone ripple's size floor, 56 (master) or 68 (probe commit 8f89db59, refs/probes/K365-floor68):
   Levi picks from the pair (docs/asks/K365.md). The phone dropped no frames at either (round 2026-11-09b,
   aca6b86a), so no bbox replay; the pick lands as one constant, RIPPLE_FLOOR_CSS.
+- **K1297** · Cursive after J3NV (K863): is iterating done, so J3NV goes to Levi as the template to hand-edit
+  (his K928 plan: finish iterating, then hand-edit, then the pipeline reads his curves as drawn), or more look
+  notes first? Every note so far is built (K1251). Sheets: .claude/probes/K863/trace/out38/png/; J3NV has no
+  template SVG yet (out34/cursive_template.svg shows the export).
 
 ## In progress
 
