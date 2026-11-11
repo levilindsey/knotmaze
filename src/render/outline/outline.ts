@@ -1215,8 +1215,16 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
       const t = ds > 1e-12 ? Math.min(1, Math.max(0, (target - a.s) / ds)) : 0;
       return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t, s: d > 0 ? sAt : arm.sR };
     };
-    const pa = bpOf(A, cw.sideA, 0); const pb = bpOf(B, cw.sideB, 0);
-    cw.tax = pa.x; cw.tay = pa.y; cw.tbx = pb.x; cw.tby = pb.y; cw.sA = pa.s; cw.sB = pb.s; cw.dA = 0; cw.dB = 0;
+    // K1283 s8: each station where its border comes out of the other arm's fill (buriedReach).
+    const dOf = (arm: ArmInfo, side: number, o: ArmInfo): number => {
+      if (!NOMEET_BURY || o.pi === arm.pi) return 0;
+      const p = polys[arm.pi];
+      const sAt = (d: number): number => (p.closed ? normS(p, arm.sR + arm.dir * d) : arm.sR + arm.dir * d);
+      return buriedReach(p, sAt, arm.L, polys[o.pi], o.sR, h, W, (dd, out) => { const q = bpOf(arm, side, dd); out[0] = q.x; out[1] = q.y; });
+    };
+    const dTa = dOf(A, cw.sideA, B); const dTb = dOf(B, cw.sideB, A);
+    const pa = bpOf(A, cw.sideA, dTa); const pb = bpOf(B, cw.sideB, dTb);
+    cw.tax = pa.x; cw.tay = pa.y; cw.tbx = pb.x; cw.tby = pb.y; cw.sA = pa.s; cw.sB = pb.s; cw.dA = dTa; cw.dB = dTb;
     cw.refA = addPointAt(A.pi, cw.sideA, pa.x, pa.y, pa.s, { k: 5, corner: cornerWork.length, which: 0 });
     cw.refB = addPointAt(B.pi, cw.sideB, pb.x, pb.y, pb.s, { k: 5, corner: cornerWork.length, which: 1 });
     cw.refVA = cw.refA; cw.refVB = cw.refB;
@@ -5999,6 +6007,35 @@ function borderMeetC(C: FCache, ci: number, aiA: number, sideA: number, aiB: num
  *  the first-positive-stretch flip (5.8 px at 0.01 px of jitter), so 0.5 h
  *  stays until tails stop deciding from the margin's sign. */
 const SPAN_RAMP = 0.5;
+/** K1283 s8 (x134, muse_hash j81 corner 164): a fallback corner whose borders never meet (they part
+ *  toward the junction: chain 75's side -1 runs inside end chain 34's fill all the way to its root)
+ *  kept both stations at the arm roots, so each border ran hard through the other chain's fill, where
+ *  form B buries it (its fill covers the border's band). Each station now sits where its border's band
+ *  comes out of the other chain's fill: the band's midline (W / 2 in from the base border) at h - W
+ *  from the other chain's centerline, within 4 h of its root. A border already out at its root keeps
+ *  the root; one buried the whole reach stops at the reach's end, so the station moves continuously. */
+const NOMEET_BURY = true;
+function buriedReach(p: Poly, sAt: (d: number) => number, L: number, q: Poly, sRq: number, h: number, W: number, bp: (d: number, out: Float64Array) => void): number {
+  const fillR = h - W;
+  const reach = Math.min(L, 4 * h);
+  if (!(reach > 0) || !(fillR > 0)) return 0;
+  const lo = q.closed ? sRq - 4 * h : Math.max(q.s0, sRq - 4 * h);
+  const hi = q.closed ? sRq + 4 * h : Math.min(q.s0 + q.len, sRq + 4 * h);
+  const P = new Float64Array(2); const c = new Float64Array(4);
+  const buried = (d: number): boolean => {
+    bp(d, P);
+    pointAtInto(p, sAt(d), c);
+    const ox = c[0] - P[0]; const oy = c[1] - P[1]; const ol = Math.sqrt(ox * ox + oy * oy) || 1;
+    return footInWindow(q, P[0] + (ox / ol) * 0.5 * W, P[1] + (oy / ol) * 0.5 * W, lo, hi).d < fillR;
+  };
+  if (!buried(0)) return 0;
+  const step = h / 16;
+  let a = 0; let b = -1;
+  for (let d = step; d < reach + 1e-12; d += step) { if (!buried(d)) { b = d; break; } a = d; }
+  if (b < 0) { if (!buried(reach)) b = reach; else return reach; }
+  for (let it = 0; it < 12; it++) { const m = 0.5 * (a + b); if (buried(m)) a = m; else b = m; }
+  return b;
+}
 function spanRamp(eA: number, eB: number, h: number): number {
   const e = Math.max(eA, eB);
   return e > 0 ? Math.min(1, e / (SPAN_RAMP * h)) : 1;
@@ -6059,12 +6096,25 @@ function cornerFallbackC(C: FCache, st: DiagramStructure, scene: SceneIn, ci: nu
   const Vx = j.c[0] + mx * h; const Vy = j.c[1] + my * h;
   C.cVx[ci] = Vx; C.cVy[ci] = Vy; C.cQx[ci] = Vx; C.cQy[ci] = Vy; C.cR[ci] = 0; C.cMeet[ci] = 0;
   const pa = new Float64Array(2); const pb = new Float64Array(2);
-  borderPointAtBase(C, C.armObj[aiA].pi, sideA, C.armSR[aiA], pa);
-  borderPointAtBase(C, C.armObj[aiB].pi, sideB, C.armSR[aiB], pb);
+  // K1283 s8: each station where its border comes out of the other arm's fill (buriedReach).
+  const dOf = (ai: number, side: number, aiO: number): number => {
+    const pi = C.armObj[ai].pi; const p = C.polys[pi]; const sR = C.armSR[ai]; const dir = C.armDir[ai];
+    if (!NOMEET_BURY || C.armObj[aiO].pi === pi) return 0;
+    const sAt = (d: number): number => (p.closed ? normS(p, sR + dir * d) : sR + dir * d);
+    return buriedReach(p, sAt, C.armL[ai], C.polys[C.armObj[aiO].pi], C.armSR[aiO], h, C.W, (dd, out) => borderPointAtBase(C, pi, side, sAt(dd), out));
+  };
+  const sOf = (ai: number, d: number): number => {
+    const p = C.polys[C.armObj[ai].pi]; const s = C.armSR[ai] + C.armDir[ai] * d;
+    return d > 0 ? (p.closed ? normS(p, s) : s) : C.armSR[ai];
+  };
+  const dTa = dOf(aiA, sideA, aiB); const dTb = dOf(aiB, sideB, aiA);
+  const sTa = sOf(aiA, dTa); const sTb = sOf(aiB, dTb);
+  borderPointAtBase(C, C.armObj[aiA].pi, sideA, sTa, pa);
+  borderPointAtBase(C, C.armObj[aiB].pi, sideB, sTb, pb);
   C.cTax[ci] = pa[0]; C.cTay[ci] = pa[1]; C.cTbx[ci] = pb[0]; C.cTby[ci] = pb[1];
-  C.cSA[ci] = C.armSR[aiA]; C.cSB[ci] = C.armSR[aiB]; C.cDA[ci] = 0; C.cDB[ci] = 0;
-  C.cRefA[ci] = addPointAtC(C, C.armObj[aiA].pi, sideA, pa[0], pa[1], C.armSR[aiA]);
-  C.cRefB[ci] = addPointAtC(C, C.armObj[aiB].pi, sideB, pb[0], pb[1], C.armSR[aiB]);
+  C.cSA[ci] = sTa; C.cSB[ci] = sTb; C.cDA[ci] = dTa; C.cDB[ci] = dTb;
+  C.cRefA[ci] = addPointAtC(C, C.armObj[aiA].pi, sideA, pa[0], pa[1], sTa);
+  C.cRefB[ci] = addPointAtC(C, C.armObj[aiB].pi, sideB, pb[0], pb[1], sTb);
   C.armNextRef[aiA] = C.cRefA[ci]; C.armNextSide[aiA] = sideA;
   C.armPrevRef[aiB] = C.cRefB[ci]; C.armPrevSide[aiB] = sideB;
 }
