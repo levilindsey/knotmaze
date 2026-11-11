@@ -48,9 +48,12 @@ type Pin = { f0: { table: string; paint: string; band: string }; f1: { table: st
 // form B's chevron (cutFoldsC: the border's points, so the table, the fill and its paint
 // moved), and the band's side gate fades by 1 - ramp instead of dropping to 0 outside X's
 // arm stretch (the tails' alpha: table and band). Checked against form B (census, sweep).
+// K1283 s6 re-pinned on purpose (2026-11-11): a round end is DISK_R rings, keyed just under
+// its fan and sampling the fan's paint where it lies over it, so only the paint digests
+// moved (table and band unchanged). Checked against form B (seam --fbstep, census, sweep).
 const PINS: Record<string, Pin> = {
-  ring: { f0: { table: "29eeb5c5be39c50d", paint: "7fc049018c431b60", band: "252cbf97f524511a" }, f1: { table: "01799d25e21091e9", paint: "3b587b5e00665c2b", band: "569c618ef0f7075f" } },
-  g41_ring_tw42: { f0: { table: "41e36980cea61e26", paint: "05abe6d97a3e8fe4", band: "331b5a8c6fb97028" }, f1: { table: "4a97e69c9a8ecb4e", paint: "40b51a4c1de73d66", band: "6d0d5de16c791081" } },
+  ring: { f0: { table: "29eeb5c5be39c50d", paint: "b5c1043d062a9900", band: "252cbf97f524511a" }, f1: { table: "01799d25e21091e9", paint: "84a65127f4c3979c", band: "569c618ef0f7075f" } },
+  g41_ring_tw42: { f0: { table: "41e36980cea61e26", paint: "d396f4634638199e", band: "331b5a8c6fb97028" }, f1: { table: "4a97e69c9a8ecb4e", paint: "2a0bf5486b003cc4", band: "6d0d5de16c791081" } },
 };
 
 // The tool's second frame: every chain point rotated 0.3 rad and moved.
