@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1285.
+Next free ID: K1287.
 
 ## Waiting on Levi
 
@@ -758,7 +758,7 @@ Every other item below waits on the trigger it names.
 - **K1283** · Redesign junctions against form B: after K1279 every crossing that still differs from form B
   sits at a junction (the 25 worst, e.g. muse_hash x77 846 px): form B blends the edges softly where threads
   meet, the redesign draws hard lines. Census k1279_census.ts; crops
-  .claude/probes/K1240/out/k1279/crops/worst10_{a,b}.png
+  .claude/probes/K1240/out/k1279/crops/worst10_{a,b}.png. The fill half, K1277's end-arm sliver (through-thread colour over the end thread's round end, muse_hash x73 x47 x292 x177), goes with K1278 stage 1
 
 ## Residuals (known, not fixed)
 
@@ -1735,9 +1735,6 @@ Every other item below waits on the trigger it names.
 - **K1270** · Max fabric's weave shows a light blob inside one dark eye, (780,960) of a 2400x1350 shot, on the
   default path and rp=sdf alike, so it predates K8's fix; not attributed
   (.claude/probes/K8/sdf_cost/out/crops/maxfab_weave.png, untracked)
-- **K1273** · K1247 s14 leftover: a 2 px speck of paper at a tight inside turn on muse_hash (26.86, 22.32):
-  the band's border folds over itself and the even-odd fill drops the loop. `K14_TRIM=1` closes it but decides
-  from positions; the fix belongs where the border is built (trim the swallowtail per side), or fill regions nonzero (the loop winds -2, so it stays inside; untested, the census must show loop eyes stay paper) (docs/design/K1247_s14_seam.md handoff)
 - **K1274** · K1247 s14 leftover: the tail that comes and goes at g41_def_tw64 corner 105 (eps 0.1's worst,
   7.103 px): a near-tie (depth margin -0.015 zt full, +0.020 reduced). Its existence should come from
   structure; stage 11's five continuous measures failed the union bar (K1247_s14_seam.md handoff,
@@ -1753,13 +1750,15 @@ Every other item below waits on the trigger it names.
 - **K1281** · K1240 outline: corner 191 at def j91 shimmers 0.33 px every ~3 frames through the whole settle
   (its arc end moves 0.46 px along chain 67's border per 0.03 px of input); j67's region 2056 moves 2.5 px on
   under 0.1 px, undiagnosed (K1247 s15 handoff)
-- **K1282** · K1240 outline draws faces in a depth order computed from positions (regionsPhaseC's sort by
-  depthAtC): near-equal depths swap between frames (14 faces, def settle 200-201), a decision from positions
-  against Levi's rule; overlap of swapped pairs unchecked (K1247 s15)
 - **K1284** · K1279 leftovers: a pass span that runs into a junction keeps the straight reach, a choice from
   positions that can snap (not seen in the jitter runs); fade steps under the bar (max 0.04 at d 0.001) from
   the span walk's h/4 steps; cut 273 spot b keeps a 79 px sliver at 0.74 ink where form B is solid
   (docs/design/K1279_crossings.md handoff)
+- **K1285** · K1277 leftover: muse_hash keeps 58 px of fill cracks at rest in 49 spots, worst 5 px at (31.11,
+  1.22) and 4 px at (20.32, 20.34) (k1277_cracks.ts --near; docs/design/K1277_triangles.md handoff)
+- **K1286** · K1277 leftover: up to 16 dense border pieces on def use fill_tri's equal-fraction fallback, and
+  def's chain point counts change on 7 recorded frames with the same diagram (chain 16: 34 to 36 at frame 25),
+  a count from positions (docs/design/K1277_triangles.md handoff)
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2099,6 +2098,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1282** · the outline's draw order from positions: nothing draws by regionsPhaseC's depthAtC sort since K1277 (fill order = structural item index, over/under per pixel); the sort is dead weight in outline.ts, remove it when stage 16 frees the file. Done in 4d168bb4 (2026-11-10).
+- **K1273** · K1247 s14 leftover, the 2 px speck at muse_hash (26.86, 22.32): closed by K1277's triangle fill (a fold overdraws instead of dropping out), 2 -> 0 px, loop eyes stay paper. Done in 4d168bb4 (2026-11-10).
 - **K1277** · the fill is plain triangles fixed at structure (fill_tri.ts: strips, cap fans, tail strips, junction ring fans; draw order = item index; over/under by form B's per-pixel depth key; no stencil). At rest every scene beats master (def fill/paper 200/406 -> 44/60, muse_hash 422/2021 -> 241/267); def motion topology constant, fill 32069 -> 548 px, paper 78508 -> 66; cut 273 pink as form B; K1273 speck 2 -> 0 px. Claude viewed the crops. Left: K1283 end-arm sliver, K1285, K1286. Done in 4d168bb4 (2026-11-10).
 - **K1279** · Redesign crossings match form B away from junctions: census 2916 crossings, differing 1584 -> 458, 0 worse, 0 off-junction (ghost pieces, form B's burial fade on edge lines, longer pass spans); junctions left to K1283. Done in f2231a19 (2026-11-10).
 - **K1271** · Redesign outline (K1247 s11): the shallow-crossing under-thread edge keeps its new end (Levi, 2026-11-10); the look there is still wrong in both versions, see K1279. Done in 3e50c773 (2026-11-10).
