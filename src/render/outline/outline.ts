@@ -7051,7 +7051,11 @@ function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[])
         sideE = dp.interval ? -C.armDir[dc.bArm] : C.armDir[dc.aArm];
         sT = dp.interval ? C.cSB[ci] : C.cSA[ci];
         const depthWin = C.depthWindow * C.ctrlArc;
+        // K1283 s4: X's other arm at the junction, if X runs through it.
+        let aiX2 = -1;
+        for (const ai of st.armsOfJ[dc.ji] ?? []) if (ai !== aiX && ai !== aiE && C.armObj[ai].pi === piX) { aiX2 = ai; break; }
         endTailPts({
+          alt: aiX2 >= 0 ? { sRX: C.armSR[aiX2], dirX: C.armDir[aiX2], LX: C.armL[aiX2], LcutX: C.armLcut[aiX2] } : null,
           pE: C.polys[piE], dirE: C.armDir[aiE], endS: C.armSR[aiE], sT,
           x0: dp.interval ? C.cTbx[ci] : C.cTax[ci], y0: dp.interval ? C.cTby[ci] : C.cTay[ci],
           bp: (s, out) => borderPointAtFinal(C, piE, sideE, s, out),
@@ -7397,6 +7401,8 @@ export interface TailIn {
   bp: (s: number, out: Float64Array) => void;
   pX: Poly; sRX: number; dirX: number; LX: number; LcutX: number;
   zE: (s: number) => number; zX: (s: number) => number; h: number; zt: number; W: number;
+  /** K1283 s4: X's other arm at the junction (X runs through), or null. */
+  alt?: { sRX: number; dirX: number; LX: number; LcutX: number } | null;
 }
 const tailPt = new Float64Array(4); const tailCen = new Float64Array(4); const tailFt = new Float64Array(2);
 /** The nearest point of p to (x, y) over the segments covering s in [lo, hi]: out = [s, d]. */
@@ -7439,29 +7445,37 @@ function tailAt(a: TailIn, l1: number, u: number, out: Float64Array, cen: Float6
   return a.endS;
 }
 /** X's cap ramp at its foot s (1 deep in the junction's group, 0 on its own
- *  run), or -1 behind X's arm start. */
-function tailRamp(a: TailIn, sF: number): number {
-  let ad = (sF - a.sRX) * a.dirX;
-  const len = a.pX.len;
-  if (a.pX.closed && len > 0) { ad %= len; if (ad > len / 2) ad -= len; if (ad < -len / 2) ad += len; }
+ *  run), or -1 behind X's arm start. K1283 s4: with `useAlt`, a foot behind
+ *  X's arm start that lies on X's other arm at the junction (X runs through)
+ *  takes that arm's ramp: the round end's border (the tail's quarter circle
+ *  about E's end) goes on past the junction's centre, where its foot on X
+ *  moves to X's other arm, instead of stopping there. */
+function tailRamp(a: TailIn, sF: number, useAlt = false): number {
+  const r = rampOn(a.pX, a.sRX, a.dirX, a.LX, a.LcutX, a.h, sF);
+  return r < 0 && useAlt && a.alt ? rampOn(a.pX, a.alt.sRX, a.alt.dirX, a.alt.LX, a.alt.LcutX, a.h, sF) : r;
+}
+function rampOn(pX: Poly, sRX: number, dirX: number, LX: number, LcutX: number, h: number, sF: number): number {
+  let ad = (sF - sRX) * dirX;
+  const len = pX.len;
+  if (pX.closed && len > 0) { ad %= len; if (ad > len / 2) ad -= len; if (ad < -len / 2) ad += len; }
   if (ad < 0) return -1;
-  if (ad > a.LX) return 0;
-  if (!Number.isFinite(a.LcutX)) return 1;
-  let t = (ad - a.LcutX) / -a.h; t = t < 0 ? 0 : t > 1 ? 1 : t;
+  if (ad > LX) return 0;
+  if (!Number.isFinite(LcutX)) return 1;
+  let t = (ad - LcutX) / -h; t = t < 0 ? 0 : t > 1 ? 1 : t;
   return t * t * (3 - 2 * t);
 }
-function tailF(a: TailIn, l1: number, u: number, rampCut: number, marginCut: number): number {
+function tailF(a: TailIn, l1: number, u: number, rampCut: number, marginCut: number, useAlt = false, wCut = a.W): number {
   const sE = tailAt(a, l1, u, tailPt, tailCen, false);
   const h = a.h;
   const lo = a.dirX > 0 ? a.sRX - 2 * h : a.sRX - 6 * h;
   tailFoot(a.pX, lo, lo + 8 * h, tailPt[0], tailPt[1], tailFt);
   const sF = tailFt[0]; const dF = tailFt[1];
-  const ramp = tailRamp(a, sF);
+  const ramp = tailRamp(a, sF, useAlt);
   if (ramp < 0) return -1;
   // Callers read only f's sign, so a term at or below 0 settles it before
   // the two depth lookups (r4 timing: same output, less piece emission).
   const fR = rampCut - ramp; if (!(fR > 0)) return fR;
-  const fW = (h - a.W - dF) / h; if (!(fW > 0)) return fW;
+  const fW = (h - wCut - dF) / h; if (!(fW > 0)) return fW;
   const margin = a.zE(sE) - a.zt - a.zX(sF) + (a.zt * dF) / h;
   return Math.min(fR, a.zt > 0 ? margin / a.zt - marginCut : margin > 0 ? 1 : -1, fW);
 }
@@ -7494,7 +7508,7 @@ function tailAlphaAt(a: TailIn, x: number, y: number, keyE: number): number {
   const lo = a.dirX > 0 ? a.sRX - 2 * h : a.sRX - 6 * h;
   tailFoot(a.pX, lo, lo + 8 * h, x, y, tailFt);
   const sF = tailFt[0]; const dF = tailFt[1];
-  const ramp = tailRamp(a, sF);
+  const ramp = tailRamp(a, sF, true);
   if (ramp < 0) return 0;
   const g = Math.min(1, Math.max(0, (h - dF) / a.W));
   if (!(g > 0)) return 1;
@@ -7512,8 +7526,11 @@ function tailAlphaAt(a: TailIn, x: number, y: number, keyE: number): number {
  *  fan, and a fill tail run on to alpha 0 there put steps on the fan's edge
  *  (k1278s2_seam --fbstep: junc|tail 31 -> 255 on muse_hash), while form B's
  *  surface there is the fan's anyway (the tail's key is below X's). */
-const TAIL_RAMP_CUT = 1;
-const TAIL_MARGIN = -1;
+/** K1283 s4: the band's walk goes on wherever the point lies inside X's tube
+ *  (dF < h): no ramp or depth cut, since tailAlpha already fades it (1 - g at
+ *  ramp 1, form B's union border in the junction's group). */
+const TAIL_BAND_RAMP_CUT = 2;
+const TAIL_BAND_MARGIN = -Infinity;
 const TAIL_FILL_RAMP_CUT = 0.5;
 const TAIL_FILL_MARGIN = 0.4;
 const TAIL_N = 16;
@@ -7524,13 +7541,15 @@ const tailA = new Float64Array(2);
  *  the stretch its fill covers (fill_tri reads OutlinePiece.fpts). */
 export function endTailPts(a: TailIn, pts: number[], cpts: number[], alpha?: number[], fill?: { pts: number[]; cpts: number[] }): void {
   if (!(a.h > 0) || !Number.isFinite(a.sT)) return;
-  tailWalk(a, TAIL_RAMP_CUT, TAIL_MARGIN, pts, cpts, alpha);
+  // K1283 s4: the band goes on past X's arm start (tailRamp's useAlt); the
+  // fill keeps stage 2's cut (fill_tri's round end, DiskItem, covers it).
+  tailWalk(a, TAIL_BAND_RAMP_CUT, TAIL_BAND_MARGIN, pts, cpts, alpha, true, 0);
   if (fill) tailWalk(a, TAIL_FILL_RAMP_CUT, TAIL_FILL_MARGIN, fill.pts, fill.cpts);
 }
-function tailWalk(a: TailIn, rampCut: number, marginCut: number, pts: number[], cpts: number[], alpha?: number[]): void {
+function tailWalk(a: TailIn, rampCut: number, marginCut: number, pts: number[], cpts: number[], alpha?: number[], useAlt = false, wCut = a.W): void {
   const l1 = Math.max(0, a.dirE * (a.sT - a.endS));
   const U = l1 + 0.5 * Math.PI * a.h;
-  const f = (u: number): number => tailF(a, l1, u, rampCut, marginCut);
+  const f = (u: number): number => tailF(a, l1, u, rampCut, marginCut, useAlt, wCut);
   // Bisect a sign change of f on [u0, u1]; want = the side f > 0 is on (0: u0, 1: u1).
   const cut = (u0: number, u1: number, posAt1: boolean): number => {
     let lo = u0; let hi = u1;
