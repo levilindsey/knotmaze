@@ -124,11 +124,18 @@ export interface DrawData {
 // tie at shallow crossings), the over pass's fade in a tie (eyes), and 1
 // everywhere else. Which passes are partners comes from the crossing table
 // (structure); alpha and where it fades follow positions continuously.
+// A pass's span on its own chain is [s - lo, s + hi]: at least the straight
+// reach 2h / sin + h, and as far as the two threads stay within 2.2h of each
+// other (walked in h/4 steps; a shallow crossing's tubes can overlap far past
+// the straight reach, cut 273). A walk that meets a junction root on either
+// chain keeps the straight reach: past it the threads are one junction group
+// in form B, which never tie-mixes a group with itself. The walk ends where
+// the partner is beyond 2.2h, so g is 0 there and the span's end shows no step.
 
 interface ZChain { closed: boolean; len: number; xs: Float64Array; ys: Float64Array; s: Float64Array; z: Float64Array; n: number }
-interface Pass { s: number; o: number; so: number; reach: number }
+interface Pass { s: number; o: number; so: number; lo: number; hi: number; rO: number }
 
-function sstep(e0: number, e1: number, x: number): number {
+export function sstep(e0: number, e1: number, x: number): number {
   const t = Math.min(1, Math.max(0, (x - e0) / (e1 - e0)));
   return t * t * (3 - 2 * t);
 }
@@ -156,7 +163,7 @@ function depthAt(pins: { s: number; z: number }[], closed: boolean, len: number,
   return hat(pins[lo].z, u - pins[lo].s, w) + hat(pins[lo + 1].z, pins[lo + 1].s - u, w);
 }
 
-function zChains(scene: SceneIn): { zc: ZChain[]; passes: Pass[][]; idx: Map<number, number> } {
+export function zChains(scene: SceneIn): { zc: ZChain[]; passes: Pass[][]; idx: Map<number, number> } {
   const amp = scene.look.depthAmp;
   const win = scene.look.depthWindow * (scene.look.ctrlArc ?? 1);
   const h = scene.look.halfWidth;
@@ -175,6 +182,49 @@ function zChains(scene: SceneIn): { zc: ZChain[]; passes: Pass[][]; idx: Map<num
     const j = c.closed ? (k + 1) % c.n : Math.min(k + 1, c.n - 1);
     const dx = c.xs[j] - c.xs[k]; const dy = c.ys[j] - c.ys[k]; const l = Math.hypot(dx, dy) || 1; return [dx / l, dy / l];
   };
+  const posAt = (c: ZChain, s: number): [number, number] => {
+    const m = c.n - 1;
+    const u = c.closed && c.len > 0 ? norm(c, s) : Math.min(Math.max(s, 0), c.s[m]);
+    if (u >= c.s[m]) {
+      if (!c.closed) return [c.xs[m], c.ys[m]];
+      const l = c.len - c.s[m]; const t = l > 0 ? (u - c.s[m]) / l : 0;
+      return [c.xs[m] + (c.xs[0] - c.xs[m]) * t, c.ys[m] + (c.ys[0] - c.ys[m]) * t];
+    }
+    let lo = 0; let hi = m;
+    while (hi - lo > 1) { const k = (lo + hi) >> 1; if (c.s[k] <= u) lo = k; else hi = k; }
+    const l = c.s[lo + 1] - c.s[lo]; const t = l > 0 ? (u - c.s[lo]) / l : 0;
+    return [c.xs[lo] + (c.xs[lo + 1] - c.xs[lo]) * t, c.ys[lo] + (c.ys[lo + 1] - c.ys[lo]) * t];
+  };
+  // Junction roots per chain: a through arm's s, an end arm's chain end.
+  const roots: number[][] = scene.chains.map(() => []);
+  for (const j of scene.junctions) for (const arm of j.arms) {
+    const i = idx.get(arm.chain); if (i === undefined) continue;
+    const c = zc[i];
+    roots[i].push(arm.kind === "end" ? (Math.abs(arm.s) <= Math.abs(arm.s - c.len) ? 0 : c.len) : norm(c, arm.s));
+  }
+  const rootBetween = (i: number, a: number, b: number): boolean => {
+    const c = zc[i]; const d = dSC(c, a, b);
+    return roots[i].some((r) => { const e = dSC(c, a, r); return d >= 0 ? e > 0 && e <= d : e < 0 && e >= d; });
+  };
+  /** Walk chain ia from sa in direction dir while chain ib (tracked from sb) stays within 2.2h. */
+  const walk = (ia: number, sa: number, ib: number, sb: number, dir: number): { u: number; root: boolean } => {
+    const C = zc[ia]; const O = zc[ib]; const step = h / 4;
+    let u = 0; let so = sb; let sPrev = sa;
+    while (u < 64 * h) {
+      const un = u + step; const s = sa + dir * un;
+      if (!C.closed && (s < 0 || s > C.len)) break;
+      const [x, y] = posAt(C, s);
+      const f = footNear(O, x, y, so, 2 * h, s, ib === ia ? 3 * h : 0);
+      if (!(f.d < 2.2 * h)) break;
+      if (rootBetween(ia, sPrev, s) || rootBetween(ib, so, f.s)) return { u: un, root: true };
+      u = un; so = f.s; sPrev = s;
+    }
+    return { u, root: false };
+  };
+  const span = (ia: number, sa: number, ib: number, sb: number, base: number): [number, number] => {
+    const f = walk(ia, sa, ib, sb, 1); const b = walk(ia, sa, ib, sb, -1);
+    return [b.root ? base : Math.max(base, b.u + h), f.root ? base : Math.max(base, f.u + h)];
+  };
   for (const x of scene.crossings) {
     const ia = idx.get(x.a.chain); const ib = idx.get(x.b.chain);
     if (ia === undefined || ib === undefined) continue;
@@ -183,23 +233,25 @@ function zChains(scene: SceneIn): { zc: ZChain[]; passes: Pass[][]; idx: Map<num
     pins[ib].push({ s: sb, z: x.over === "b" ? amp : -amp });
     const ta = tan(zc[ia], sa); const tb = tan(zc[ib], sb);
     const sin = Math.abs(ta[0] * tb[1] - ta[1] * tb[0]);
-    // How far along each pass the other's tube can reach: 2h / sin, plus h.
-    const reach = Math.min(2 * h / Math.max(sin, 0.05) + h, 48 * h);
-    passes[ia].push({ s: sa, o: ib, so: sb, reach });
-    passes[ib].push({ s: sb, o: ia, so: sa, reach });
+    // How far along each pass the other's tube can reach on straight threads: 2h / sin, plus h.
+    const base = Math.min(2 * h / Math.max(sin, 0.05) + h, 48 * h);
+    const [loA, hiA] = span(ia, sa, ib, sb, base);
+    const [loB, hiB] = span(ib, sb, ia, sa, base);
+    passes[ia].push({ s: sa, o: ib, so: sb, lo: loA, hi: hiA, rO: Math.max(loB, hiB) });
+    passes[ib].push({ s: sb, o: ia, so: sa, lo: loB, hi: hiB, rO: Math.max(loA, hiA) });
   }
   zc.forEach((c, i) => { pins[i].sort((u, v) => u.s - v.s); for (let k = 0; k < c.n; k++) c.z[k] = depthAt(pins[i], c.closed, c.len, win, c.s[k]); });
   return { zc, passes, idx };
 }
 
 /** Signed arc distance b - a on a chain (wrapped into (-len/2, len/2] when closed). */
-function dSC(c: ZChain, a: number, b: number): number {
+export function dSC(c: ZChain, a: number, b: number): number {
   let d = b - a;
   if (c.closed && c.len > 0) { d = ((d % c.len) + c.len) % c.len; if (d > c.len / 2) d -= c.len; }
   return d;
 }
 
-function zAtC(c: ZChain, s: number): number {
+export function zAtC(c: ZChain, s: number): number {
   if (c.n === 0) return 0;
   const u = c.closed && c.len > 0 ? ((s % c.len) + c.len) % c.len : Math.min(Math.max(s, 0), c.s[c.n - 1]);
   let lo = 0; let hi = c.n - 1;
@@ -214,20 +266,28 @@ function zAtC(c: ZChain, s: number): number {
 
 /** Nearest point on chain c to (x, y) among segments whose arc span meets
  *  [sC - r, sC + r], skipping those within `skipR` of sSkip (a self pass). */
-function footNear(c: ZChain, x: number, y: number, sC: number, r: number, sSkip: number, skipR: number): { d: number; s: number } {
+export function footNear(c: ZChain, x: number, y: number, sC: number, r: number, sSkip: number, skipR: number): { d: number; s: number } {
   let best = Infinity; let bs = 0;
   const segs = c.closed ? c.n : c.n - 1;
-  for (let k = 0; k < segs; k++) {
+  if (segs <= 0) return { d: best, s: bs };
+  const visit = (k: number): void => {
     const j = (k + 1) % c.n; const sk = c.s[k]; const lk = j === 0 ? c.len - sk : c.s[j] - sk;
     const mid = sk + lk / 2;
-    if (Math.abs(dSC(c, sC, mid)) > r + lk / 2) continue;
-    if (skipR > 0 && Math.abs(dSC(c, sSkip, mid)) < skipR) continue;
+    if (Math.abs(dSC(c, sC, mid)) > r + lk / 2) return;
+    if (skipR > 0 && Math.abs(dSC(c, sSkip, mid)) < skipR) return;
     const ax = c.xs[k]; const ay = c.ys[k]; const ex = c.xs[j] - ax; const ey = c.ys[j] - ay;
     const l2 = ex * ex + ey * ey;
     const t = l2 > 0 ? Math.min(1, Math.max(0, ((x - ax) * ex + (y - ay) * ey) / l2)) : 0;
     const d = Math.hypot(x - ax - t * ex, y - ay - t * ey);
     if (d < best) { best = d; bs = sk + t * lk; }
-  }
+  };
+  // Only the segments whose arc span meets [sC - r, sC + r] (binary search).
+  const first = (u: number): number => { let lo = 0; let hi = segs - 1; if (c.s[0] > u) return 0; while (hi > lo) { const m = (lo + hi + 1) >> 1; if (c.s[m] <= u) lo = m; else hi = m - 1; } return lo; };
+  const range = (a: number, b: number): void => { for (let k = first(a); k < segs && c.s[k] <= b; k++) visit(k); };
+  if (c.closed && c.len > 0) {
+    if (2 * r >= c.len) { for (let k = 0; k < segs; k++) visit(k); }
+    else { const a = (((sC - r) % c.len) + c.len) % c.len; const b = a + 2 * r; if (b <= c.len) range(a, b); else { range(a, c.len); range(0, b - c.len); } }
+  } else range(sC - r, sC + r);
   return { d: best, s: bs };
 }
 
@@ -277,9 +337,9 @@ export function buildDrawData(table: OutlineTable, scene: SceneIn): DrawData {
     const C = zc[c];
     const keyC = zAtC(C, s) - (dC * zt) / h;
     for (const P of passes[c]) {
-      if (Math.abs(dSC(C, P.s, s)) > P.reach) continue;
+      const ds = dSC(C, P.s, s); if (ds < -P.lo || ds > P.hi) continue;
       const O = zc[P.o];
-      const f = footNear(O, x, y, P.so, P.reach, s, P.o === c ? 3 * h : 0);
+      const f = footNear(O, x, y, P.so, P.rO, s, P.o === c ? 3 * h : 0);
       if (!(f.d < h)) continue;
       if (seen.some((q) => q.o === P.o && Math.abs(dSC(O, q.s, f.s)) < h)) continue;
       seen.push({ o: P.o, s: f.s });
@@ -307,7 +367,7 @@ export function buildDrawData(table: OutlineTable, scene: SceneIn): DrawData {
         const sI = p.s0 + (span * cum[i]) / L;
         sv.push(footNear(C, p.cpts[2 * i], p.cpts[2 * i + 1], sI, 2 * h, 0, 0).s);
       }
-      const near = (s: number): boolean => passes[p.chain].some((P) => Math.abs(dSC(C, P.s, s)) <= P.reach + h);
+      const near = (s: number): boolean => passes[p.chain].some((P) => { const ds = dSC(C, P.s, s); return ds >= -P.lo - h && ds <= P.hi + h; });
       const inn = (i: number): [number, number] => {
         const x = p.pts[2 * i]; const y = p.pts[2 * i + 1];
         let dx = p.cpts[2 * i] - x; let dy = p.cpts[2 * i + 1] - y;
