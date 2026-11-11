@@ -144,7 +144,7 @@ function seamSamples(f: Fill, h: number, zt: number): Sample[] {
   }
   return res;
 }
-interface SeamStat { n: number; over: number; max: number; at: string; kinds: Map<string, number>; fold: number; thread: number; foldMax: number; threadMax: number; hist: number[]; cells: Map<string, { w: number; x: number; y: number; k: string }> }
+interface SeamStat { n: number; over: number; max: number; at: string; kinds: Map<string, number>; fold: number; thread: number; foldMax: number; threadMax: number; hist: number[]; cells: Map<string, { w: number; x: number; y: number; k: string }>; bad: { x: number; y: number; w: number; k: string }[] }
 let dbgN = 0;
 const itemIdxCache = new WeakMap<object, Int32Array>();
 function itemIdx(f: Fill, v: number): number {
@@ -153,9 +153,11 @@ function itemIdx(f: Fill, v: number): number {
   return a[v];
 }
 let curLens: number[] = []; let curHW = 0;
+let fbE: { evalPoint(x: number, y: number): { ink: number; top: number; chain: number; s: number } } | undefined;
+const fbT = { same: 0, paper: 0, ex: [0, 0, 0, 0, 0] };
 function seamStat(f: Fill, samples: Sample[], paint: Painter, itemOf: (v: number) => string, dbg?: Int32Array): SeamStat {
   dbgN = 0;
-  const st: SeamStat = { n: 0, over: 0, max: 0, at: "", kinds: new Map(), fold: 0, thread: 0, foldMax: 0, threadMax: 0, hist: [0, 0, 0, 0], cells: new Map() };
+  const st: SeamStat = { n: 0, over: 0, max: 0, at: "", kinds: new Map(), fold: 0, thread: 0, foldMax: 0, threadMax: 0, hist: [0, 0, 0, 0], cells: new Map(), bad: [] };
   const ca: RGB = [0, 0, 0]; const cb: RGB = [0, 0, 0];
   for (const p of samples) {
     if (!paint(p.tA, p.bA, ca) || !paint(p.tB, p.bB, cb)) continue;
@@ -171,7 +173,7 @@ function seamStat(f: Fill, samples: Sample[], paint: Painter, itemOf: (v: number
     st.n++;
     if (w > 1 && dbg) { const r4 = new Int32Array(4); const w4 = new Float64Array(4); const s4 = new Float64Array(4); const I = f.fs.idx; const sh = (t: number, b: number[]): string => { F.vertexPaint(f.fs as F.FillStructure, f.fr as F.FillFrame, dbg, [I[t], I[t + 1], I[t + 2]], b, r4, w4, s4); return `ch${f.fs.vChain[I[t]]} r[${[...r4]}] w[${[...w4].map((x) => x.toFixed(3))}] s[${[...s4].map((x) => x.toFixed(3))}] verts ${I[t]},${I[t + 1]},${I[t + 2]}`; }; if (dbgN++ < 12) console.log(`    ${w.toFixed(1)} at (${p.x.toFixed(3)}, ${p.y.toFixed(3)}) ${itemOf(I[p.tA])}: ${sh(p.tA, p.bA)} | ${itemOf(I[p.tB])}: ${sh(p.tB, p.bB)}`); }
     if (w > 1) { for (const [q, lim] of [2, 4, 8, 16].entries()) if (w > lim) st.hist[q]++; const ck = `${Math.round(p.x * 4) / 4},${Math.round(p.y * 4) / 4}`; const o = st.cells.get(ck); if (!o || o.w < w) st.cells.set(ck, { w, x: p.x, y: p.y, k: [itemOf(f.fs.idx[p.tA]), itemOf(f.fs.idx[p.tB])].join("|") }); }
-    if (w > 1) { st.over++; const kp = [itemOf(f.fs.idx[p.tA]), itemOf(f.fs.idx[p.tB])].sort().join("|"); st.kinds.set(kp, (st.kinds.get(kp) ?? 0) + 1); }
+    if (w > 1) { st.over++; const kp = [itemOf(f.fs.idx[p.tA]), itemOf(f.fs.idx[p.tB])].sort().join("|"); st.kinds.set(kp, (st.kinds.get(kp) ?? 0) + 1); st.bad.push({ x: p.x, y: p.y, w, k: kp }); }
     if (w > st.max) { st.max = w; st.at = `(${p.x.toFixed(3)}, ${p.y.toFixed(3)}) ${itemOf(f.fs.idx[p.tA])}|${itemOf(f.fs.idx[p.tB])}`; }
   }
   return st;
@@ -254,7 +256,7 @@ const tot: Record<string, { over: number; max: number; jOver: number; jWorse: nu
 // row); the mean diffs are taken at crop time. --cropname names the png.
 const atPts: Worst[] | undefined = opt("at")?.split(",").map((p) => { const [nm, x, y] = p.split(":"); return { nm, ji: -1, x: Number(x), y: Number(y), mine: NaN, base: NaN }; });
 for (const nm of atPts ? [] : scenes) {
-  const scene = loadScene(nm); const st = O.structure(scene); const table = O.frame(st, scene);
+  const scene = loadScene(nm); const st = O.structure(scene); const table = O.frame(st, scene); fbE = undefined;
   const fs = F.fillStructure(st, F.fillResolution(st, table)); const fr = flag("fill0") ? (F0.fillFrame(fs as never, st, table, scene) as unknown as F.FillFrame) : F.fillFrame(fs, st, table, scene); // --fill0: src before stage 2 (only s4 differs, k1278s2_ident)
   const bfs = B.fillStructure(st, B.fillResolution(st, table)); const bfr = B.fillFrame(bfs, st, table, scene);
   const mine: Fill = { fs, fr }; const base: Fill = { fs: bfs as never, fr: bfr as never };
@@ -289,10 +291,35 @@ for (const nm of atPts ? [] : scenes) {
     const T = (tot[mode] ??= { over: 0, max: 0, jOver: 0, jWorse: 0, jMaxExcess: 0 }); T.over += sm.over; T.max = Math.max(T.max, sm.max); T.jWorse += jWorse; T.jMaxExcess = Math.max(T.jMaxExcess, jMaxExcess); T.jOver += jbWorse;
     console.log(`  ${mode}: edges mine ${fmt(sm)} ${sm.at} | master fields ${fmt(sb)} ${sb.at}`);
     if (flag("hist")) console.log(`  ${mode}: mine over 2/4/8/16: ${sm.hist.join("/")}; worst spots: ${[...sm.cells.values()].sort((a, b) => b.w - a.w).slice(0, 10).map((c) => `(${c.x.toFixed(2)}, ${c.y.toFixed(2)}) ${c.w.toFixed(0)} ${c.k}`).join("; ")}`);
+    // --fbstep: is form B just as steppy there? Form B's colour at p +-d in x and y (d = --fbd, 0.03
+    // world); its step = the largest pairwise difference among the four (x255). A seam is "form B too"
+    // when form B steps at least w - 1 (a hard edge in form B as well: a round end, an under-pass
+    // ink line); the rest are counted by their excess over form B's step.
+    if (flag("fbstep") && mode === "app" && sm.bad.length) {
+      fbE ??= new FormB(JSON.parse(JSON.stringify(scene)) as never, { dpr: 2 }) as unknown as typeof fbE;
+      const d = Number(opt("fbd") ?? 0.03); const cs: RGB[] = [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]];
+      let same = 0; let paper = 0; const ex = [0, 0, 0, 0, 0]; const exK = new Map<string, number>(); const exCells = new Map<string, { w: number; x: number; y: number; k: string; fb: number }>();
+      for (const b of sm.bad) {
+        let ok = true;
+        [[d, 0], [-d, 0], [0, d], [0, -d]].forEach(([dx, dy], q) => {
+          const ev = fbE!.evalPoint(b.x + dx, b.y + dy); if (ev.top < 0 || ev.chain < 0 || ev.ink > 0.5) { ok = false; return; }
+          const r = runAt(sp, ev.chain, ev.s); if (r < 0) { ok = false; return; } runColour(sp.runs[r], ev.s, cs[q]);
+        });
+        if (!ok) { paper++; continue; }
+        let fbs = 0; for (let i = 0; i < 4; i++) for (let j = i + 1; j < 4; j++) fbs = Math.max(fbs, 255 * Math.max(Math.abs(cs[i][0] - cs[j][0]), Math.abs(cs[i][1] - cs[j][1]), Math.abs(cs[i][2] - cs[j][2])));
+        const e = b.w - fbs; if (e <= 1) { same++; continue; }
+        ex[0]++; for (const [q, lim] of [2, 4, 8, 16].entries()) if (e > lim) ex[q + 1]++;
+        exK.set(b.k, (exK.get(b.k) ?? 0) + 1);
+        const ck = `${Math.round(b.x * 4) / 4},${Math.round(b.y * 4) / 4}`; const o = exCells.get(ck); if (!o || o.w - o.fb < e) exCells.set(ck, { ...b, fb: fbs });
+      }
+      fbT.same += same; fbT.paper += paper; for (let q = 0; q < 5; q++) fbT.ex[q] += ex[q];
+      console.log(`  ${mode}: fbstep: of ${sm.bad.length} over 1/255, form B steps as much ${same}, ink/paper beside ${paper}; steppier than form B by over 1/2/4/8/16: ${ex.join("/")} [${[...exK].map(([k, v]) => `${k} ${v}`).join(", ")}]; worst: ${[...exCells.values()].sort((a, b) => b.w - b.fb - (a.w - a.fb)).slice(0, 6).map((c) => `(${c.x.toFixed(2)}, ${c.y.toFixed(2)}) ${c.w.toFixed(0)} vs ${c.fb.toFixed(0)} ${c.k}`).join("; ")}`);
+    }
     if (wins.length) console.log(`  ${mode}: junctions ${wins.length}: step over form B's +1: mine ${jOver} (max excess ${jMaxExcess.toFixed(1)}), master ${jbWorse}; mean colour diff vs form B: mine ${(dM / wins.length).toFixed(2)}, master ${(dB / wins.length).toFixed(2)}`);
   }
 }
 console.log("TOTAL (mine):", Object.entries(tot).map(([m, t]) => `${m}: edge seams over 1/255 ${t.over} (max ${t.max.toFixed(1)}), junctions steppier than form B ${t.jWorse} (max excess ${t.jMaxExcess.toFixed(1)}) [master ${t.jOver}]`).join("; "));
+if (flag("fbstep")) console.log(`fbstep TOTAL (app): form B steps as much ${fbT.same}, ink/paper beside ${fbT.paper}; steppier than form B by over 1/2/4/8/16: ${fbT.ex.join("/")}`);
 worst.sort((a, b) => b.mine - a.mine);
 console.log("worst junctions (app, mean colour diff vs form B x255):", worst.slice(0, 8).map((w) => `${w.nm} j${w.ji} (${w.x.toFixed(2)}, ${w.y.toFixed(2)}) mine ${w.mine.toFixed(1)} master ${w.base.toFixed(1)}`).join("; "));
 
