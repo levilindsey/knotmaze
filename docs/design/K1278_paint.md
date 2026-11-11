@@ -73,3 +73,117 @@ Report these:
 - your last SHA.
 
 End with `Ledger items` and K1278's handle fields.
+
+## Handoff, stage 1 (2026-11-10)
+
+Branch `worktree-agent-abbdf5d7bf1c88649`, from master 9849a26e. The commits are `e59db081..` (WIP: paint fields, then the corner hand-off, then the GPU, then the tools); the last SHA is in the report. The prototype paints per pixel by default (`?paint=app|step|kink`; `?paint=flat` keeps K1277's flat chain colours).
+
+**The paint fields** (`proto/fill_tri.ts`, `proto/paint.ts`, `proto/draw.ts`):
+- **Per vertex, four slots.** Each slot carries:
+  - a run (the section run it reads, or -1). This is structure, decided once by `fillRuns`.
+  - a weight. Structure (`vW`) gives it, and per frame `fillFrame` writes `w4`, placing each corner's hand-off by the corner's shape.
+  - an s along the slot's chain (`s4`, per frame; at a junction it is unwrapped to the junction's copy of a closed chain).
+- **Per vertex, also** `across` (0 centreline, 1 border). It is computed but not yet uploaded.
+- **Per pixel.** The colour is `sum w * runColour(run, s) / sum w`, with w and s interpolated barycentrically. A triangle's slot reads the run of its first vertex whose run is >= 0 (`vertexPaint`). On the GPU that is a flat varying, so `paintData` adds provoking-vertex copies: 1122 on def. The run table is an RGBA32F texture read with texelFetch.
+- **What each item carries.**
+  - Strips: slot 0 is the strip's own run, one-hot.
+  - A strip's end columns also carry the neighbour arms' runs (`stripNb`), so the end row meets the junction ring with the ring's own slots and weights.
+  - Caps and tails: one-hot to their chain.
+- **The junction hand-off.**
+  - The hub weighs each arm 1/n.
+  - Each arm's mouth (P, M, N) is one-hot to that arm.
+  - Each corner hands off from N_k to P_{k+1} by arc length along the corner, through smoothstep.
+- **Colours.** `paint.ts`'s `sectionPaint(scene, mode, baseHue)` builds the runs. `app` is the app's section colours (`src/render/section_colors.ts`, `paint_math.ts`, read only). `step` and `kink` are the seam test's hard modes.
+
+**Seam test** (`proto/k1278_seam.ts`, 12 scenes, `out/k1278/seam_full.txt`). Edge seams over 1/255; junction windows steppier than form B's (+1):
+
+| | edge seams app / step / kink | junction windows app / step / kink |
+|---|---|---|
+| master fields | 34045 / 25671 / 34627 | 650 / 89 / 410 |
+| master as drawn (flat chain colours) | 20310 | - |
+| mine | 41 / 90 / 74 | 7 / 0 / 4 |
+
+- **Mean colour difference** against form B, junction windows, app mode (x255): def 1.37 against master's 9.97.
+- **The strict bar (0 and 0) is not met.**
+  - *Edge seams.* They are mostly junc|strip, in the step and kink modes:
+    - g41_def_tw64: 26, max 76.9 at (19.244, 2.243);
+    - muse_hash step: 25;
+    - ring step: 16, max 8.2.
+  - *The largest seams:*
+    - muse_hash ghost|strip at (23.218, 26.683): 79.0 in app;
+    - muse_hash strip|strip at (33.310, 9.101): 82.6 in step.
+  - *junc|tail.* Tails carry no neighbour slots.
+  - *Steppier junction windows:*
+    - app: muse_hash 2 (excess 1.6), g41_def_tw64 1 (1.1), g41_user_tw64 4 (4.6);
+    - kink: g41_ring_tw64 1 (3.6), g41_user_tw64 3 (1.8).
+  - *Folds.* The test counts K1277's inherited folds separately.
+
+**Crops.**
+- `out/k1278/crops/k1278_worst_junctions.png`: form B | master | mine at the 6 worst junctions, app mode. Mean diff, master -> mine:
+  - def j16: 15.8 -> 10.6
+  - def j14: 16.8 -> 10.6
+  - def j156: 20.4 -> 8.8
+  - def j81: 19.0 -> 8.8
+  - muse_default_tw j150: 18.5 -> 8.7
+  - muse_default_tw j163: 16.2 -> 8.3
+- `out/k1278/crops/k1278_sliver.png`: the six sliver crossings. Command: `k1278_seam.ts --at=<scene>:<x>:<y>,... --crops=<dir> --cropname=<png>`.
+
+**The end-arm sliver.**
+- **Colour.** At rest the sliver's colour is gone at all six crossings. Crop-window mean diff against form B, master -> mine:
+  - x73: 0.5 -> 0.1
+  - x47: 0.4 -> 0.1
+  - x292: 5.9 -> 5.3
+  - x177: 0.9 -> 0.1
+  - x14: 2.1 -> 0.2
+  - x349: 1.5 -> 0.2
+
+  The crop row shows master's pink (x14), cyan (x349) and green (x177) slivers gone.
+- **Chain identity.** The census thread term (`proto/k1278_k1279.ts`, the paint column = the chain of the pixel's dominant slot) is worse than master at four crossings. Thread px, master | tri | paint:
+
+  | crossing | master | tri | paint |
+  |---|---|---|---|
+  | x47 | 81 | 142 | 142 |
+  | x73 | 113 | 202 | 202 |
+  | x177 | 290 | 457 | 167 |
+  | x292 | 1620 | 1858 | 989 |
+  | x349 | 67 | 189 | 128 |
+  | x14 | 5 | 64 | 119 |
+
+  Over all 2916 crossings: master 41225, tri 32928, paint 13198 (worse on 24, better on 273); total worse on 0.
+- **Why: geometry at x73, x47 and x349.** The end thread's own triangles do not cover form B's end-thread region (`k1278_sliver.ts`, `k1278_jdbg.ts --map/--under/--only`).
+  - At x73 (junction 103), ch81's tail (a half-tube wedge) and strip 915 leave a band beside ch45 uncovered. There ch45's mirrored strip lies under the fan, and the fan's hub-P0-M0 triangle (arm 0, ch45) wins.
+  - At x349, ch11's tail covers ch89's region.
+
+  The fix reshapes the end thread's round end over the through thread. That is geometry (K1277's bars to re-run), not paint.
+- **Why: paint at x14 (junction 4).** ch1 ends there and owns the fan; ch24 passes through.
+  - Form B shows ch1's round end over the disc, with a hard edge (no ink) against ch24.
+  - The fan blends from the ring arc between ch24's two arms (weight 1 to ch24) toward the hub (1/3 each), so the fan's middle is mostly ch24.
+  - At rest, runs 2, 75 and 76 share a section colour, so it does not show; stage 2's pulses would.
+  - A vertex field cannot make a hard edge inside a fan triangle. It needs a per-pixel term, for example the distance to the end thread's round-end disc.
+  - Tried and reverted: a hub carrying only the owner's arms. Paint thread rose 13198 -> 14515 px, x14 went 119 -> 116, and it opened junc|tail and junc|strip seams (`out/k1278/k1279_hub.txt`).
+
+**K1277's bars hold** (`out/k1278/bars.txt`, `run_bars.ps1`):
+
+| bar | result |
+|---|---|
+| rest census | identical on all 12 scenes |
+| motion def | 226 frames, topology 0, worse on 0, fill 548, paper 66 |
+| motion fat | 217 frames, 0/0 |
+| `k1277_k1279` | 0 worse, 38 better (total 26926, fill 0) |
+| `k1247s5_cmp` | 44/8/0/0 |
+| `npm test` | 220 files, 2897 tests green |
+| GPU vs CPU paint (def, page test) | 2951 px, 0 over 3/255, max 0.6 |
+
+**Stage 2 (pulses) needs.**
+- s per slot: present, continuous along a chain, unwrapped at junctions.
+- `across`: computed in `fillFrame` (`fr.across`). It needs a vertex attribute and a per-frame upload in `draw.ts`.
+- The runs' identities per slot: present, so a pulse on a run lights exactly its slots.
+- The x14 chain mismatch: a pulse will show it at end-arm junctions until a per-pixel round-end term exists.
+
+**Left.**
+- The residual seams and steppier windows above.
+- The four sliver crossings' chain identity.
+- Paint thread worse elsewhere: muse_hash x71 0->91, x149 4->73; g41_def_tw64 x191 5->59, x71 16->68.
+- GPU vs CPU checked on def only.
+- The untracked experiment copy `proto/proto_sliver/`, to delete.
+- Tools: `k1278_seam.ts`, `k1278_k1279.ts`, `k1278_sliver.ts` (`--paint`), `k1278_jdbg.ts`, `k1278_base_fill.ts` (master's fill).
