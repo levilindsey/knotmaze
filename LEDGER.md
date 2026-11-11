@@ -511,10 +511,10 @@ Next free ID: K1294.
 - **K1278** · The outline's paint blends seamlessly across junctions (Levi 2026-11-10): section colour and pulses
   from per-pixel fields continuous across faces, triangles and junctions, gated by a seam test on every
   face edge, triangle edge and junction. Full text in docs/ledger_notes.md
-  - owner: agent `ab4debcc50d9ea9fe` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-10 19:44, 2 h cap ~21:44)
-  - branch: `worktree-agent-ab4debcc50d9ea9fe`, worktree `.claude/worktrees/agent-ab4debcc50d9ea9fe`; last commit: `8f7004bf`
+  - owner: nobody since 2026-11-10 21:00 (merged; agent `ab4debcc50d9ea9fe` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `884bb4e8`
   - evidence: src/render/outline/ (paint, fill_tri, draw, band_gpu), k1278s2_* tools; untracked .claude/probes/K1240/out/k1278s2/
-  - next: stage 2 (section colour across junctions in src/): wait for its report, view the crops, merge; stage 3 = the pulses
+  - next: stage 3 (pulses) after the junction residuals: across as a GPU vertex attribute, the round-end term with K1283 stage 3 cap; residuals in docs/design/K1278_s2.md handoff (folded rings muse_hash j100, strip border over the next fan, the T at ji 32, 1-4 level seams need per-pixel s)
   - brief: `docs/design/K1278_s2.md`
 - **K1283** · Junction borders of the outline (rp=outline) against form B. Stage 1 (3c8bd61e) fixed the concave
   corner bites (census 27528 -> 17756 px); left: the failed corners and the end-arm round ends (x47, x73,
