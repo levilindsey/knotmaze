@@ -7476,6 +7476,9 @@ function tailF(a: TailIn, l1: number, u: number, rampCut: number, marginCut: num
   // the two depth lookups (r4 timing: same output, less piece emission).
   const fR = rampCut - ramp; if (!(fR > 0)) return fR;
   const fW = (h - wCut - dF) / h; if (!(fW > 0)) return fW;
+  // K1283 s4: the band's walk has no depth cut (marginCut -Infinity): with
+  // zt > 0 the margin term is +Infinity whatever it is, so skip its lookups.
+  if (marginCut === -Infinity && a.zt > 0) return Math.min(fR, fW);
   const margin = a.zE(sE) - a.zt - a.zX(sF) + (a.zt * dF) / h;
   return Math.min(fR, a.zt > 0 ? margin / a.zt - marginCut : margin > 0 ? 1 : -1, fW);
 }
@@ -7487,23 +7490,27 @@ function tailF(a: TailIn, l1: number, u: number, rampCut: number, marginCut: num
  *  where X covers; and only in the configurations where X is its own, by the
  *  member weight 1 - ramp (in the group's, the union has no border there).
  *  Across X's border band (g = (h - dF) / W) it blends to 1. */
-function tailAlpha(a: TailIn, l1: number, u: number, out: Float64Array): void {
-  const sE = tailAt(a, l1, u, tailPt, tailCen, true);
+/*  K1283 s4: (x0, y0) is the point the band DRAWS (the walk's point plus its
+ *  blend toward the corner's point, tailWalk's push) and tailCen its centre
+ *  (push leaves it there), so the alpha is form B's at the drawn band. At the
+ *  border point instead, a fallback corner whose point lies inside X drew a
+ *  tail start at alpha 1 inside X's fill (def j45, j54: a dark blot where
+ *  form B has nothing). */
+function tailAlpha(a: TailIn, sE: number, x0: number, y0: number, out: Float64Array, side: boolean): void {
   const h = a.h; const zE = a.zE(sE);
-  let nx = tailCen[0] - tailPt[0]; let ny = tailCen[1] - tailPt[1]; const nl = Math.sqrt(nx * nx + ny * ny);
+  let nx = tailCen[0] - x0; let ny = tailCen[1] - y0; const nl = Math.sqrt(nx * nx + ny * ny);
   if (nl > 1e-12) { nx /= nl; ny /= nl; } else { nx = 0; ny = 0; }
-  const x0 = tailPt[0]; const y0 = tailPt[1];
   // The band interpolates its two edges' alphas linearly, while form B's
   // tie mix is a smoothstep of a key gap that can move fast across the band
   // (X's depth changes steeply near a crossing): sample a quarter in from
   // each edge and extend the line through them to the edges (the least-
   // squares line of a profile that saturates inside the band).
-  const aQ = tailAlphaAt(a, x0 + nx * a.W * 0.25, y0 + ny * a.W * 0.25, zE - (a.zt * (h - a.W * 0.25)) / h);
-  const aR = tailAlphaAt(a, x0 + nx * a.W * 0.75, y0 + ny * a.W * 0.75, zE - (a.zt * (h - a.W * 0.75)) / h);
+  const aQ = tailAlphaAt(a, x0 + nx * a.W * 0.25, y0 + ny * a.W * 0.25, zE - (a.zt * (h - a.W * 0.25)) / h, side);
+  const aR = tailAlphaAt(a, x0 + nx * a.W * 0.75, y0 + ny * a.W * 0.75, zE - (a.zt * (h - a.W * 0.75)) / h, side);
   const o0 = 1.5 * aQ - 0.5 * aR; const o1 = 1.5 * aR - 0.5 * aQ;
   out[0] = o0 < 0 ? 0 : o0 > 1 ? 1 : o0; out[1] = o1 < 0 ? 0 : o1 > 1 ? 1 : o1;
 }
-function tailAlphaAt(a: TailIn, x: number, y: number, keyE: number): number {
+function tailAlphaAt(a: TailIn, x: number, y: number, keyE: number, side: boolean): number {
   const h = a.h;
   const lo = a.dirX > 0 ? a.sRX - 2 * h : a.sRX - 6 * h;
   tailFoot(a.pX, lo, lo + 8 * h, x, y, tailFt);
@@ -7511,12 +7518,18 @@ function tailAlphaAt(a: TailIn, x: number, y: number, keyE: number): number {
   const ramp = tailRamp(a, sF, true);
   if (ramp < 0) return 0;
   const g = Math.min(1, Math.max(0, (h - dF) / a.W));
-  if (!(g > 0)) return 1;
+  // K1283 s4: outside X's tube the band is not X's to fade: E's own arcs
+  // draw E's border there, and at a fallback corner or the round end's far
+  // edge the point lies in fill form B leaves bare (def j45, j54 blots).
+  if (!(g > 0)) return 0;
+  // Along E's side (u <= l1) X's border band is the union's corner, which X's
+  // own arcs draw; E's border there lies in fill form B leaves bare when X is
+  // in the junction's group (stage 3's cut: (h - W - d_X) / h > 0).
+  if (side && g < 1) return 0;
   // One chain is one surface in form B: E's border never shows inside X's.
   if (a.pE === a.pX) return 1 - g;
   const m = keyE - (a.zX(sF) - (a.zt * dF) / h);
-  let t = a.zt > 0 ? (m + a.zt) / (2 * a.zt) : m > 0 ? 1 : 0; t = t < 0 ? 0 : t > 1 ? 1 : t;
-  return 1 - g * (1 - (1 - ramp) * t * t * (3 - 2 * t));
+  let t = a.zt > 0 ? (m + a.zt) / (2 * a.zt) : m > 0 ? 1 : 0; t = t < 0 ? 0 : t > 1 ? 1 : t;  return 1 - g * (1 - (1 - ramp) * t * t * (3 - 2 * t));
 }
 /** K1283 s3: where a tail is drawn. Stage 2 drew it at alpha 1 and cut it at
  *  ramp 0.5 and a depth margin of 0.4 zt (form B's burial is soft: tie alpha
@@ -7566,13 +7579,15 @@ function tailWalk(a: TailIn, rampCut: number, marginCut: number, pts: number[], 
   // comes and goes with the margin's sign.
   a.bp(a.sT, tailPt); const offX = a.x0 - tailPt[0]; const offY = a.y0 - tailPt[1];
   const push = (u: number): void => {
-    if (u === 0) { pointAtInto(a.pE, a.sT, tailCen); pts.push(a.x0, a.y0); cpts.push(tailCen[0], tailCen[1]); }
+    let sE: number; let px: number; let py: number;
+    if (u === 0) { pointAtInto(a.pE, a.sT, tailCen); sE = a.sT; px = a.x0; py = a.y0; }
     else {
-      tailAt(a, l1, u, tailPt, tailCen);
+      sE = tailAt(a, l1, u, tailPt, tailCen);
       let t = 1 - u / (TAIL_BLEND * a.h); t = t < 0 ? 0 : t; const w = t * t * (3 - 2 * t);
-      pts.push(tailPt[0] + offX * w, tailPt[1] + offY * w); cpts.push(tailCen[0], tailCen[1]);
+      px = tailPt[0] + offX * w; py = tailPt[1] + offY * w;
     }
-    if (alpha) { tailAlpha(a, l1, u, tailA); alpha.push(tailA[0], tailA[1]); }
+    pts.push(px, py); cpts.push(tailCen[0], tailCen[1]);
+    if (alpha) { tailAlpha(a, sE, px, py, tailA, u <= l1); alpha.push(tailA[0], tailA[1]); }
   };
   let i = 0;
   let prevU = 0;
