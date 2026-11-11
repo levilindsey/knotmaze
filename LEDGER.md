@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1305.
+Next free ID: K1308.
 
 ## Waiting on Levi
 
@@ -520,7 +520,7 @@ Next free ID: K1305.
   - owner: nobody since 2026-11-10 21:00 (merged; agent `ab4debcc50d9ea9fe` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
   - branch: mainline; last commit: `884bb4e8`
   - evidence: src/render/outline/ (paint, fill_tri, draw, band_gpu), k1278s2_* tools; untracked .claude/probes/K1240/out/k1278s2/
-  - next: stage 3 (pulses) after the junction residuals: across as a GPU vertex attribute, the round-end term with K1283 stage 3 cap; residuals in docs/design/K1278_s2.md handoff (folded rings muse_hash j100, strip border over the next fan, the T at ji 32, 1-4 level seams need per-pixel s)
+  - next: Stage 3 (pulses): since K1291 s1 (c7fa5c61) rp=outline draws pulses through today's paint code (kPaintAt), matching at the pinned clock; check a second phase (K299's t 100 and 100.45) and the seams. stage 3 (pulses) after the junction residuals: across as a GPU vertex attribute, the round-end term with K1283 stage 3 cap; residuals in docs/design/K1278_s2.md handoff (folded rings muse_hash j100, strip border over the next fan, the T at ji 32, 1-4 level seams need per-pixel s)
   - brief: `docs/design/K1278_s2.md`
 - **K1283** · Junction borders of the outline (rp=outline) against form B. Stage 1 (3c8bd61e) fixed the concave
   corner bites (census 27528 -> 17756 px); left: the failed corners and the end-arm round ends (x47, x73,
@@ -533,11 +533,11 @@ Next free ID: K1305.
 - **K1291** · rp=outline in the app (K1240 S4) lacks the app palette and hides the overlays drawn inside the
   base layer (trail, fog, reveal masks, pulses, gameplay paint); markers, plucks and the HUD still draw (S4
   handoff in docs/design/K1240_s4_app.md on worktree-agent-a5393aa1f25f2ff33)
-  - owner: nobody since 2026-11-11 04:42 (merged; agent `acb4e37afc1c4006e` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `c7fa5c61`
-  - evidence: `.claude/probes/K1291/`
-  - next: Stage 1 merged: rp=outline paints the app section palette (run-middle median 0, p99 <= 4.1/255), the gold path and trail (footprint IoU 0.96-0.99) and the fog (0.996-0.998) through today's paint code, each change on the next frame with no worker build. Stage 2: the reveal width masks (rp=outline shows the whole maze during the intro), per the plan in the docs/design/K1291_s1.md handoff
-  - brief: `docs/design/K1291_s1.md`
+  - owner: agent `a72915389c5d50e4a` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-11 04:44, 2 h cap ~06:44)
+  - branch: `worktree-agent-a72915389c5d50e4a`, worktree `.claude/worktrees/agent-a72915389c5d50e4a`; last commit: `143b86b1`
+  - evidence: `.claude/probes/K1291/out/s2/`
+  - next: Stage 2 running: the intro width masks in rp=outline (only the revealed stretch, front closed), then the thread reveal (xp=threads), judged against today's look
+  - brief: `docs/design/K1291_s2.md`
 
 ## Next, in order
 
@@ -1813,6 +1813,11 @@ Every other item below waits on the trigger it names.
 - **K1304** · def gain hold max 3.96 at f35 (20.023, 18.999), region 672, since K1283 s5 (master 3.34 before);
   whether the fold cut causes it is untested, the no-cut gain run hung (docs/design/K1283_s6.md handoff,
   k1283s6_gainloc.ts)
+- **K1306** · rp=outline palette outlier: muse finish marker stub end (chain 35, run 64, by the exit) is
+  lighter in today's look than the outline (max 62.7/255; K1291 s1 palette check,
+  .claude/probes/K1291/out/s1/palette/)
+- **K1307** · X-shaped strokes in the outline band at muse_hash junctions, seen by K1291 s1, not located:
+  check against form B in K1283's next stage
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2149,6 +2154,9 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K1272** · K268 PROOF coverage: on the census's 10-move frame only c100 has in-between pixels; the other
   shaped slots judge 0 px (under thread hidden at the crossing). Find frames or seeds where more shaped slots
   show their under thread (with K547's visible far branch), including one where `far_scan.mjs` reads farVisible > 0, so the GPU shows the far-flag fix (0c1fc78e). docs/design/K268.md (Proof stage and Far-flag fix handoffs)
+- **K1305** · rp=outline redraws every frame at rest since K1291 s1 (main 6.0-6.4 ms vs master outline
+  1.3-1.7; today 12.4-12.9): the paint clock and the choice arms pulse. Cache the band (it reads no paint) and
+  redraw only the fill (docs/design/K1291_s1.md handoff item 2)
 
 ## Done
 
