@@ -1,0 +1,283 @@
+// K1278 seam test: is the fill's paint continuous across every triangle
+// edge, face edge and junction ring, and are junctions no steppier than
+// form B's?
+//
+//   node scripts/run_node.mjs .claude/probes/K1240/proto/k1278_seam.ts [--scene=a,b] [--ppu=80] [--modes=app,step,kink] [--crops=<dir>] [--edges-only]
+//
+// 1. EDGE SEAMS. Every triangle edge is keyed by its endpoints (quantized
+//    1e-6 world); two triangles on one geometric edge whose vertices are
+//    different vertices (strip end row vs junction ring, cap or tail vs
+//    strip, strip vs ghost strip, ...) are a seam. Both sides' paint is
+//    sampled at t = 0, .25, .5, .75, 1 along the edge (each side with its
+//    own triangle's slots, as the raster paints it) and the largest channel
+//    difference (x255) is the seam's step. Bar: no seam over 1/255.
+//    Painted three ways: mine (fill_tri.ts paint fields, paint.ts), master's
+//    fill (k1278_base_fill.ts = 9849a26e) painting its own fields (vertex
+//    owner chain + Gouraud s: the run at that s), and master's flat chain
+//    colours (what master's draw.ts paints).
+// 2. JUNCTION WINDOWS (ppu, half-size 3h about each junction's centre).
+//    Form B (src/render/field/form_b.ts evalPoint: top chain, s) painted
+//    with the same section colours; mine (rasterPaint) and master's fields.
+//    Per junction: the largest per-pixel step between 4-neighbours that are
+//    ink in form B and in the candidate (the bar: no larger than form B's
+//    + 1/255), and the mean colour difference against form B over those
+//    pixels (x255; the crops pick the 6 worst junctions by it, app mode).
+//    Form B's chain/s/ink per pixel are cached in out/k1278/fb/.
+// 3. --crops=<dir>: crops form B | master | mine at the 6 worst junctions
+//    (app mode), the outline band (draw.ts) darkening the fill as drawn.
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+import { deflateSync } from "node:zlib";
+import { FormB } from "../../../../src/render/field/form_b";
+import * as O from "./outline";
+import * as D from "./draw";
+import * as F from "./fill_tri";
+import * as B from "./k1278_base_fill";
+import { ALL, loadScene, rScene, rasterR } from "./k1279_census";
+import { sectionPaint, runAt, runColour, paintAt, type PaintMode, type SectionPaint, type RGB } from "./paint";
+
+const here = dirname(fileURLToPath(import.meta.url));
+const outDir = join(here, "..", "out", "k1278"); const fbDir = join(outDir, "fb");
+mkdirSync(fbDir, { recursive: true });
+const args = process.argv.slice(2);
+const opt = (k: string): string | undefined => args.find((a) => a.startsWith(`--${k}=`))?.slice(k.length + 3);
+const flag = (k: string): boolean => args.includes(`--${k}`);
+const scenes = opt("scene")?.split(",") ?? ALL;
+const ppu = Number(opt("ppu") ?? 80);
+const modes = (opt("modes")?.split(",") ?? ["app", "step", "kink"]) as PaintMode[];
+const cropDir = opt("crops");
+
+interface Fill { fs: F.FillStructure; fr: F.FillFrame }
+type Painter = (t: number, b: number[], out: RGB) => RGB | null;
+
+/** Mine: the triangle's slots, interpolated, painted. */
+function minePainter(f: Fill, runs: Int32Array, sp: SectionPaint): Painter {
+  const r4 = new Int32Array(4); const w4 = new Float64Array(4); const s4 = new Float64Array(4);
+  return (t, b, out) => {
+    const I = f.fs.idx;
+    F.vertexPaint(f.fs, f.fr, runs, [I[t], I[t + 1], I[t + 2]], b, r4, w4, s4);
+    return paintAt(sp, r4, w4, s4, out);
+  };
+}
+/** Master's fill painting its own fields: owner chain + Gouraud s (unwrapped
+ *  about the triangle's first vertex on a closed chain). */
+function basePainter(f: Fill, sp: SectionPaint, lens: number[]): Painter {
+  return (t, b, out) => {
+    const I = f.fs.idx; const a = I[t]; const ch = f.fs.vChain[a]; const L = lens[ch];
+    const sa = f.fr.s[a]; let s = 0;
+    for (let q = 0; q < 3; q++) { let v = f.fr.s[I[t + q]]; if (L > 0) v += L * Math.round((sa - v) / L); s += b[q] * v; }
+    const r = runAt(sp, ch, s); if (r < 0) return null;
+    return runColour(sp.runs[r], s, out);
+  };
+}
+function flatPainter(f: Fill, nCh: number, hue: number): Painter {
+  return (t, _b, out) => { const c = D.chainColor(f.fs.vChain[f.fs.idx[t]], nCh, hue); out[0] = c[0]; out[1] = c[1]; out[2] = c[2]; return out; };
+}
+
+interface SeamStat { n: number; over: number; max: number; at: string; kinds: Map<string, number> }
+/** Pairs of triangles on one geometric edge with different vertices. */
+function seamPairs(f: Fill): { tA: number; tB: number; qa: [number, number]; qb: [number, number] }[] {
+  const P = f.fr.pos; const K = f.fr.key; const I = f.fs.idx;
+  const pk = (v: number): string => `${Math.round(P[2 * v] * 1e6)},${Math.round(P[2 * v + 1] * 1e6)}`;
+  const m = new Map<string, { t: number; a: number; b: number }[]>();
+  for (let t = 0; t < I.length; t += 3) {
+    const v = [I[t], I[t + 1], I[t + 2]];
+    if (v.some((x) => !(K[x] > -999))) continue;
+    const ar = (P[2 * v[1]] - P[2 * v[0]]) * (P[2 * v[2] + 1] - P[2 * v[0] + 1]) - (P[2 * v[2]] - P[2 * v[0]]) * (P[2 * v[1] + 1] - P[2 * v[0] + 1]);
+    if (!(Math.abs(ar) > 1e-12)) continue;
+    for (let e = 0; e < 3; e++) {
+      let ia = e; let ib = (e + 1) % 3; let ka = pk(v[ia]); let kb = pk(v[ib]);
+      if (ka === kb) continue;
+      if (ka > kb) { [ia, ib] = [ib, ia]; [ka, kb] = [kb, ka]; }
+      const key = `${ka}|${kb}`; const l = m.get(key) ?? []; l.push({ t, a: ia, b: ib }); m.set(key, l);
+    }
+  }
+  const res: { tA: number; tB: number; qa: [number, number]; qb: [number, number] }[] = [];
+  for (const l of m.values()) {
+    for (let i = 0; i < l.length; i++) for (let j = i + 1; j < l.length; j++) {
+      const A = l[i]; const Bq = l[j];
+      if (I[A.t + A.a] === I[Bq.t + Bq.a] && I[A.t + A.b] === I[Bq.t + Bq.b]) continue;
+      res.push({ tA: A.t, tB: Bq.t, qa: [A.a, A.b], qb: [Bq.a, Bq.b] });
+    }
+  }
+  return res;
+}
+function seamStat(f: Fill, pairs: ReturnType<typeof seamPairs>, paint: Painter, itemOf: (v: number) => string): SeamStat {
+  const st: SeamStat = { n: 0, over: 0, max: 0, at: "", kinds: new Map() };
+  const ca: RGB = [0, 0, 0]; const cb: RGB = [0, 0, 0];
+  for (const p of pairs) {
+    let worst = 0;
+    for (const t of [0, 0.25, 0.5, 0.75, 1]) {
+      const ba = [0, 0, 0]; ba[p.qa[0]] = 1 - t; ba[p.qa[1]] = t;
+      const bb = [0, 0, 0]; bb[p.qb[0]] = 1 - t; bb[p.qb[1]] = t;
+      if (!paint(p.tA, ba, ca) || !paint(p.tB, bb, cb)) continue;
+      worst = Math.max(worst, Math.abs(ca[0] - cb[0]), Math.abs(ca[1] - cb[1]), Math.abs(ca[2] - cb[2]));
+    }
+    st.n++; const w = worst * 255;
+    if (w > 1) { st.over++; const kp = [itemOf(f.fs.idx[p.tA]), itemOf(f.fs.idx[p.tB])].sort().join("|"); st.kinds.set(kp, (st.kinds.get(kp) ?? 0) + 1); }
+    if (w > st.max) {
+      st.max = w; const v = f.fs.idx[p.tA + p.qa[0]];
+      st.at = `(${f.fr.pos[2 * v].toFixed(3)}, ${f.fr.pos[2 * v + 1].toFixed(3)}) ${itemOf(f.fs.idx[p.tA])}|${itemOf(f.fs.idx[p.tB])}`;
+    }
+  }
+  return st;
+}
+
+interface JWin { ji: number; c0: number; r0: number; N: number; x: number; y: number }
+function jWindows(scene: O.SceneIn): JWin[] {
+  const h = scene.look.halfWidth; const half = 3 * h;
+  return scene.junctions.map((J, ji) => {
+    const c0 = Math.round((J.c[0] - half) * ppu); const r0 = Math.round((J.c[1] - half) * ppu);
+    return { ji, c0, r0, N: Math.round(2 * half * ppu), x: J.c[0], y: J.c[1] };
+  });
+}
+interface FBW { top: Int32Array; chain: Int32Array; ink: Float32Array; s: Float64Array }
+function formBJ(nm: string, scene: O.SceneIn, wins: JWin[]): FBW[] {
+  const file = join(fbDir, `${nm}_j${ppu}.bin`);
+  const total = wins.reduce((a, w) => a + w.N * w.N, 0);
+  let top: Int32Array; let chain: Int32Array; let ink: Float32Array; let s: Float64Array;
+  if (existsSync(file) && readFileSync(file).length === 20 * total) {
+    const b = readFileSync(file); const ab = b.buffer.slice(b.byteOffset, b.byteOffset + b.length);
+    s = new Float64Array(ab, 0, total); top = new Int32Array(ab, 8 * total, total); chain = new Int32Array(ab, 12 * total, total); ink = new Float32Array(ab, 16 * total, total);
+  } else {
+    const t0 = Date.now();
+    const fb = new FormB(JSON.parse(JSON.stringify(scene)) as never, { dpr: 2 }) as unknown as { evalPoint(x: number, y: number): { ink: number; top: number; chain: number; s: number } };
+    s = new Float64Array(total); top = new Int32Array(total); chain = new Int32Array(total); ink = new Float32Array(total);
+    let o = 0;
+    for (const w of wins) for (let r = 0; r < w.N; r++) for (let c = 0; c < w.N; c++) {
+      const ev = fb.evalPoint((w.c0 + c + 0.5) / ppu, (w.r0 + r + 0.5) / ppu);
+      top[o] = ev.top; chain[o] = ev.top < 0 ? -1 : ev.chain; s[o] = ev.s; ink[o] = Math.min(1, Math.max(0, ev.ink)); o++;
+    }
+    writeFileSync(file, Buffer.concat([Buffer.from(s.buffer), Buffer.from(top.buffer), Buffer.from(chain.buffer), Buffer.from(ink.buffer)]));
+    console.error(`${nm}: form B ${total} px in ${wins.length} junction windows, ${((Date.now() - t0) / 1000).toFixed(1)} s`);
+  }
+  let o = 0;
+  return wins.map((w) => { const n = w.N * w.N; const r = { top: top.subarray(o, o + n), chain: chain.subarray(o, o + n), ink: ink.subarray(o, o + n), s: s.subarray(o, o + n) }; o += n; return r; });
+}
+/** Paint one window: rgb (-1 = paper) from a fill's raster + a painter. */
+function paintWin(f: Fill, paint: Painter, w: JWin): Float32Array {
+  const n = w.N * w.N;
+  const win = { tri: new Int32Array(n).fill(-1), bary: new Float32Array(3 * n) };
+  const own = F.rasterFill(f.fs as F.FillStructure, f.fr as F.FillFrame, w.c0 / ppu, w.r0 / ppu, w.N, w.N, ppu, win);
+  const rgb = new Float32Array(3 * n).fill(-1); const c: RGB = [0, 0, 0];
+  for (let o = 0; o < n; o++) {
+    if (own[o] === 0 || win.tri[o] < 0) continue;
+    if (!paint(win.tri[o], [win.bary[3 * o], win.bary[3 * o + 1], win.bary[3 * o + 2]], c)) continue;
+    rgb[3 * o] = c[0]; rgb[3 * o + 1] = c[1]; rgb[3 * o + 2] = c[2];
+  }
+  return rgb;
+}
+function paintFB(fb: FBW, sp: SectionPaint, n: number): Float32Array {
+  const rgb = new Float32Array(3 * n).fill(-1); const c: RGB = [0, 0, 0];
+  for (let o = 0; o < n; o++) {
+    if (fb.top[o] < 0 || fb.chain[o] < 0) continue;
+    const r = runAt(sp, fb.chain[o], fb.s[o]); if (r < 0) continue;
+    runColour(sp.runs[r], fb.s[o], c); rgb[3 * o] = c[0]; rgb[3 * o + 1] = c[1]; rgb[3 * o + 2] = c[2];
+  }
+  return rgb;
+}
+const cd = (a: Float32Array, i: number, j: number): number => Math.max(Math.abs(a[3 * i] - a[3 * j]), Math.abs(a[3 * i + 1] - a[3 * j + 1]), Math.abs(a[3 * i + 2] - a[3 * j + 2]));
+/** Largest 4-neighbour step over pairs inked in both rasters. */
+function maxStep(a: Float32Array, ref: Float32Array, N: number): number {
+  let m = 0;
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+    const i = r * N + c; if (a[3 * i] < 0 || ref[3 * i] < 0) continue;
+    if (c + 1 < N) { const j = i + 1; if (a[3 * j] >= 0 && ref[3 * j] >= 0) m = Math.max(m, cd(a, i, j)); }
+    if (r + 1 < N) { const j = i + N; if (a[3 * j] >= 0 && ref[3 * j] >= 0) m = Math.max(m, cd(a, i, j)); }
+  }
+  return m * 255;
+}
+function meanDiff(a: Float32Array, ref: Float32Array, n: number): number {
+  let s = 0; let k = 0;
+  for (let i = 0; i < n; i++) { if (a[3 * i] < 0 || ref[3 * i] < 0) continue; s += Math.max(Math.abs(a[3 * i] - ref[3 * i]), Math.abs(a[3 * i + 1] - ref[3 * i + 1]), Math.abs(a[3 * i + 2] - ref[3 * i + 2])); k++; }
+  return k ? (255 * s) / k : 0;
+}
+
+interface Worst { nm: string; ji: number; x: number; y: number; mine: number; base: number }
+const worst: Worst[] = [];
+const fmt = (s: SeamStat): string => `${s.n} seams, ${s.over} over 1/255 [${[...s.kinds].map(([k, v]) => `${k} ${v}`).join(", ")}], max ${s.max.toFixed(1)}`;
+const tot: Record<string, { over: number; max: number; jOver: number; jWorse: number; jMaxExcess: number }> = {};
+for (const nm of scenes) {
+  const scene = loadScene(nm); const st = O.structure(scene); const table = O.frame(st, scene);
+  const fs = F.fillStructure(st, F.fillResolution(st, table)); const fr = F.fillFrame(fs, st, table, scene);
+  const bfs = B.fillStructure(st, B.fillResolution(st, table)); const bfr = B.fillFrame(bfs, st, table, scene);
+  const mine: Fill = { fs, fr }; const base: Fill = { fs: bfs as never, fr: bfr as never };
+  const lens = scene.chains.map((c) => { if (!c.closed) return 0; let L = 0; const n = c.pts.length >> 1; for (let i = 0; i < n; i++) { const j = (i + 1) % n; L += Math.hypot(c.pts[2 * j] - c.pts[2 * i], c.pts[2 * j + 1] - c.pts[2 * i + 1]); } return L; });
+  const kindOf = (f: Fill): ((v: number) => string) => { const k = new Array<string>(f.fs.nV).fill("?"); for (const it of f.fs.items) { const n = (it.kind === "junc" ? 1 + it.R : F.itemVerts(it as F.FillItem)); for (let q = 0; q < n; q++) k[it.base + q] = it.kind === "strip" && (it as F.StripItem).ghost ? "ghost" : it.kind; } return (v) => k[v]; };
+  const pM = seamPairs(mine); const pB = seamPairs(base);
+  const flat = seamStat(base, pB, flatPainter(base, scene.chains.length, D.baseHueFor(nm)), kindOf(base));
+  console.log(`${nm}: master flat chain colours: ${fmt(flat)} ${flat.at}`);
+  const wins = flag("edges-only") ? [] : jWindows(scene);
+  const fbw = wins.length ? formBJ(nm, scene, wins) : [];
+  for (const mode of modes) {
+    const sp = sectionPaint(scene, mode, D.baseHueFor(nm));
+    const runs = F.fillRuns(fs, st, fr, sp);
+    const pm = minePainter(mine, runs, sp); const pb = basePainter(base, sp, lens);
+    const sm = seamStat(mine, pM, pm, kindOf(mine)); const sb = seamStat(base, pB, pb, kindOf(base));
+    let jOver = 0; let jWorse = 0; let jMaxExcess = 0; let jbWorse = 0; let dM = 0; let dB = 0;
+    wins.forEach((w, k) => {
+      const n = w.N * w.N; const ref = paintFB(fbw[k], sp, n);
+      const am = paintWin(mine, pm, w); const ab = paintWin(base, pb, w);
+      const sF = maxStep(ref, am, w.N); const sMi = maxStep(am, ref, w.N); const sBa = maxStep(ab, ref, w.N);
+      if (sMi > sF + 1) { jWorse++; jMaxExcess = Math.max(jMaxExcess, sMi - sF); }
+      if (sBa > sF + 1) jbWorse++;
+      const mdM = meanDiff(am, ref, n); const mdB = meanDiff(ab, ref, n); dM += mdM; dB += mdB;
+      if (mode === "app") worst.push({ nm, ji: w.ji, x: w.x, y: w.y, mine: mdM, base: mdB });
+      if (sMi > sF + 1 && flag("v")) console.log(`  ${mode} j${w.ji} (${w.x.toFixed(2)}, ${w.y.toFixed(2)}) step mine ${sMi.toFixed(1)} formB ${sF.toFixed(1)} master ${sBa.toFixed(1)}`);
+    });
+    jOver = jWorse;
+    const T = (tot[mode] ??= { over: 0, max: 0, jOver: 0, jWorse: 0, jMaxExcess: 0 }); T.over += sm.over; T.max = Math.max(T.max, sm.max); T.jWorse += jWorse; T.jMaxExcess = Math.max(T.jMaxExcess, jMaxExcess); T.jOver += jbWorse;
+    console.log(`  ${mode}: edges mine ${fmt(sm)} ${sm.at} | master fields ${fmt(sb)} ${sb.at}`);
+    if (wins.length) console.log(`  ${mode}: junctions ${wins.length}: step over form B's +1: mine ${jOver} (max excess ${jMaxExcess.toFixed(1)}), master ${jbWorse}; mean colour diff vs form B: mine ${(dM / wins.length).toFixed(2)}, master ${(dB / wins.length).toFixed(2)}`);
+  }
+}
+console.log("TOTAL (mine):", Object.entries(tot).map(([m, t]) => `${m}: edge seams over 1/255 ${t.over} (max ${t.max.toFixed(1)}), junctions steppier than form B ${t.jWorse} (max excess ${t.jMaxExcess.toFixed(1)}) [master ${t.jOver}]`).join("; "));
+worst.sort((a, b) => b.mine - a.mine);
+console.log("worst junctions (app, mean colour diff vs form B x255):", worst.slice(0, 8).map((w) => `${w.nm} j${w.ji} (${w.x.toFixed(2)}, ${w.y.toFixed(2)}) mine ${w.mine.toFixed(1)} master ${w.base.toFixed(1)}`).join("; "));
+
+if (cropDir) {
+  mkdirSync(cropDir, { recursive: true });
+  const six = worst.slice(0, 6);
+  const P = 280; const cppu = 200; const GAP = 6; const nPan = 3;
+  const Wt = nPan * P + (nPan - 1) * GAP; const Ht = six.length * P + (six.length - 1) * GAP;
+  const img = new Uint8Array(Wt * Ht * 3).fill(128);
+  const put = (row: number, pan: number, o: number, c: number[]): void => { const r = Math.floor(o / P); const q = o % P; const k = ((row * (P + GAP) + r) * Wt + pan * (P + GAP) + q) * 3; img[k] = c[0]; img[k + 1] = c[1]; img[k + 2] = c[2]; };
+  const shade = (rgb: Float32Array, o: number, ink: number): number[] => { const a = Math.min(1, Math.max(0, ink)); if (rgb[3 * o] < 0) return [255, 255, 255].map((v) => Math.round(v * (1 - a))); return [0, 1, 2].map((q) => Math.round(255 * rgb[3 * o + q] * (1 - a))); };
+  six.forEach((w, row) => {
+    const scene = loadScene(w.nm); const st = O.structure(scene); const table = O.frame(st, scene);
+    const fs = F.fillStructure(st, F.fillResolution(st, table)); const fr = F.fillFrame(fs, st, table, scene);
+    const bfs = B.fillStructure(st, B.fillResolution(st, table)); const bfr = B.fillFrame(bfs, st, table, scene);
+    const sp = sectionPaint(scene, "app", D.baseHueFor(w.nm)); const runs = F.fillRuns(fs, st, fr, sp);
+    const lens = scene.chains.map((c) => { if (!c.closed) return 0; let L = 0; const n = c.pts.length >> 1; for (let i = 0; i < n; i++) { const j = (i + 1) % n; L += Math.hypot(c.pts[2 * j] - c.pts[2 * i], c.pts[2 * j + 1] - c.pts[2 * i + 1]); } return L; });
+    const cw: JWin = { ji: w.ji, c0: Math.round(w.x * cppu - P / 2), r0: Math.round(w.y * cppu - P / 2), N: P, x: w.x, y: w.y };
+    const fb = new FormB(JSON.parse(JSON.stringify(scene)) as never, { dpr: 2 }) as unknown as { evalPoint(x: number, y: number): { ink: number; top: number; chain: number; s: number } };
+    const n = P * P; const fw: FBW = { top: new Int32Array(n), chain: new Int32Array(n), ink: new Float32Array(n), s: new Float64Array(n) };
+    for (let r = 0; r < P; r++) for (let c = 0; c < P; c++) { const ev = fb.evalPoint((cw.c0 + c + 0.5) / cppu, (cw.r0 + r + 0.5) / cppu); const o = r * P + c; fw.top[o] = ev.top; fw.chain[o] = ev.top < 0 ? -1 : ev.chain; fw.s[o] = ev.s; fw.ink[o] = ev.ink; }
+    const savedPpu = ppu; void savedPpu;
+    const paintAtPpu = (f: Fill, p: Painter): Float32Array => {
+      const win = { tri: new Int32Array(n).fill(-1), bary: new Float32Array(3 * n) };
+      const own = F.rasterFill(f.fs, f.fr, cw.c0 / cppu, cw.r0 / cppu, P, P, cppu, win);
+      const rgb = new Float32Array(3 * n).fill(-1); const c: RGB = [0, 0, 0];
+      for (let o = 0; o < n; o++) { if (own[o] === 0 || win.tri[o] < 0) continue; if (!p(win.tri[o], [win.bary[3 * o], win.bary[3 * o + 1], win.bary[3 * o + 2]], c)) continue; rgb[3 * o] = c[0]; rgb[3 * o + 1] = c[1]; rgb[3 * o + 2] = c[2]; }
+      return rgb;
+    };
+    const ref = paintFB(fw, sp, n);
+    const am = paintAtPpu({ fs, fr }, minePainter({ fs, fr }, runs, sp));
+    const ab = paintAtPpu({ fs: bfs as never, fr: bfr as never }, basePainter({ fs: bfs as never, fr: bfr as never }, sp, lens));
+    const y = rScene(table, scene, D); y.faces = []; const band = rasterR(y, cw.c0, cw.r0, P, cppu);
+    for (let o = 0; o < n; o++) { put(row, 0, o, shade(ref, o, fw.ink[o])); put(row, 1, o, shade(ab, o, band.ink[o])); put(row, 2, o, shade(am, o, band.ink[o])); }
+    console.log(`crop row ${row}: ${w.nm} j${w.ji} (${w.x.toFixed(3)}, ${w.y.toFixed(3)}) mean diff vs form B: master ${w.base.toFixed(1)}, mine ${w.mine.toFixed(1)}`);
+  });
+  writePng(join(cropDir, "k1278_worst_junctions.png"), img, Wt, Ht);
+}
+
+export function writePng(out: string, img: Uint8Array, Wt: number, Ht: number): void {
+  const crcT = new Int32Array(256).map((_, m) => { let c = m; for (let j = 0; j < 8; j++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; return c; });
+  const crc = (b: Buffer): number => { let c = 0xffffffff; for (const x of b) c = crcT[(c ^ x) & 255] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; };
+  const chunk = (t: string, d: Buffer): Buffer => { const l = Buffer.alloc(4); l.writeUInt32BE(d.length); const td = Buffer.concat([Buffer.from(t), d]); const cb = Buffer.alloc(4); cb.writeUInt32BE(crc(td)); return Buffer.concat([l, td, cb]); };
+  const raw = Buffer.alloc((Wt * 3 + 1) * Ht); for (let r = 0; r < Ht; r++) { raw[r * (Wt * 3 + 1)] = 0; Buffer.from(img.buffer, img.byteOffset + r * Wt * 3, Wt * 3).copy(raw, r * (Wt * 3 + 1) + 1); }
+  const ih = Buffer.alloc(13); ih.writeUInt32BE(Wt, 0); ih.writeUInt32BE(Ht, 4); ih[8] = 8; ih[9] = 2;
+  writeFileSync(out, Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk("IHDR", ih), chunk("IDAT", deflateSync(raw)), chunk("IEND", Buffer.alloc(0))]));
+  console.log(`wrote ${out} (${Wt}x${Ht})`);
+}

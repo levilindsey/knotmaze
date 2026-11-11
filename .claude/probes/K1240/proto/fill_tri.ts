@@ -21,7 +21,9 @@
 //   resampled to M points.
 // - JUNCTION: a fan from the junction centre over the junction region's
 //   ring, built as the region is (outline.ts regionsPhaseC): per arm in
-//   `armsOfJ` order, P (side -dir end of the arm's interval), N (side +dir),
+//   `armsOfJ` order, P (side -dir end of the arm's interval), M (the
+//   midpoint of P and N: the strip's centre vertex, so the fan and the
+//   strip share every vertex of that edge, K1278), N (side +dir),
 //   then K interior points of the corner whose aArm is that arm (its arc
 //   about Q, or a straight line to the next arm's P). A fan covers its
 //   ring's nonzero-winding area, so a fold overdraws instead of cracking.
@@ -43,8 +45,32 @@
 //
 // The only frame-0 measurement is each strip's resolution N
 // (`fillResolution`, from frame 0's piece lengths), taken once.
+//
+// THE PAINT FIELDS (K1278). Every vertex carries four paint slots, each a
+// section run (paint.ts) and a weight (`vW`, structure) and an s along
+// that run's chain (`FillFrame.s4`, per frame), plus `across` (0 on the
+// centreline, 1 on the border). A pixel's colour is the weighted mean of
+// its slots' run colours at their interpolated s (paint.ts paintAt, the
+// shader's twin); every field is linear in a triangle and equal at every
+// vertex two faces share, so the paint is continuous across every
+// triangle, face and junction edge. Never a colour per face or triangle.
+// - Strip, cap and tail vertices use slot 0 only: their run, weight 1. A
+//   strip's border rows take s from their own piece's feet (s0 -> s1), the
+//   centre row their mean; a cap's s is its chain end's; a tail's runs
+//   from its piece's s0 to s1.
+// - A junction's slot k is its arm k (armsOfJ order, at most 4). Arm k's
+//   P, M, N take the strip end row's s (bit-equal values on the shared
+//   edge) with weight one-hot on k; a corner's points ease the weight from
+//   arm k to arm k + 1 (smoothstep along the arc); the hub weighs every
+//   arm 1 / n at the junction's own s, where every run of the app's
+//   contract shows the junction's converged colour. So a junction hands
+//   off from one arm's run to the next across its corners, and to the
+//   converged colour at its centre, with no step on any edge.
+// Which run a slot reads is decided once (`fillRuns`, from frame 0); the
+// run's span follows the frame.
 import type { DiagramStructure, OutlineTable, SceneIn } from "./outline";
 import { zChains, zAtC } from "./draw";
+import { paintAt, runAt, type SectionPaint } from "./paint";
 
 export const CAP_M = 17;
 export const ARC_K = 16;
@@ -54,7 +80,9 @@ export const TAIL_M = 24;
 export interface StripItem { kind: "strip"; iv: number; pi: number; ghost: boolean; N: number; base: number; pL: number; pR: number }
 export interface CapItem { kind: "cap"; pi: number; piece: number; atEnd: boolean; base: number }
 export interface TailItem { kind: "tail"; pi: number; piece: number; base: number }
-export interface JArm { ai: number; pi: number; ei: number; pN: number; pP: number; atStart: boolean; corner: number }
+/** `strip`: the item index of the arm's strip (-1: none), whose end row at
+ *  `atStart` is the arm's P, M, N. */
+export interface JArm { ai: number; pi: number; ei: number; pN: number; pP: number; atStart: boolean; corner: number; strip: number }
 export interface JuncItem { kind: "junc"; ji: number; owner: number; arms: JArm[]; base: number; R: number }
 export type FillItem = StripItem | CapItem | TailItem | JuncItem;
 
@@ -71,15 +99,25 @@ export interface FillStructure {
   items: FillItem[];
   /** Junction arms whose P or N has no interval piece (structure-level count). */
   missingArmEnds: number;
+  /** K1278: per vertex, the four paint slots' weights (see the header). */
+  vW: Float32Array;
 }
+
+/** Paint slots per vertex. */
+export const SLOTS = 4;
 
 export interface FillFrame {
   /** Positions in float64, as the outline table holds them (the census
    *  rasters these, as it rasters master's faces); draw.ts uploads float32. */
   pos: Float64Array;
   key: Float32Array;
-  /** Chain arc length per vertex (K1278's paint coordinate). */
+  /** Chain arc length per vertex (slot 0's s). */
   s: Float32Array;
+  /** K1278: per vertex, the four paint slots' s (float64: a long closed
+   *  chain's s must not lose the paint's precision). */
+  s4: Float64Array;
+  /** K1278: 0 on the centreline, 1 on the border. */
+  across: Float32Array;
   fallbacks: number;
   /** Border pieces with more points than their strip has samples (equal-fraction samples instead). */
   dense: number;
@@ -111,7 +149,9 @@ export function fillStructure(st: DiagramStructure, res: Int32Array): FillStruct
   const items: FillItem[] = [];
   const idx: number[] = [];
   const vChain: number[] = [];
+  const vW: number[] = [];
   let nV = 0;
+  const stripOfIv = new Map<number, number>();
   // Border pieces per interval and side.
   const ivPieces = new Map<number, { L: number; R: number; ghost: boolean }>();
   st.piecesD.forEach((d, k) => {
@@ -124,8 +164,9 @@ export function fillStructure(st: DiagramStructure, res: Int32Array): FillStruct
     const pi = st.intervalsD[iv].pi;
     const N = Math.max(1, res[iv] || 8);
     const base = nV; const W = N + 1;
-    for (let r = 0; r < 3; r++) for (let i = 0; i <= N; i++) vChain.push(pi);
+    for (let r = 0; r < 3; r++) for (let i = 0; i <= N; i++) { vChain.push(pi); vW.push(1, 0, 0, 0); }
     nV += 3 * W;
+    stripOfIv.set(iv, items.length);
     const V = (r: number, i: number): number => base + r * W + i;
     for (let i = 0; i < N; i++) {
       idx.push(V(0, i), V(0, i + 1), V(1, i));
@@ -143,7 +184,7 @@ export function fillStructure(st: DiagramStructure, res: Int32Array): FillStruct
     if (d.kind !== "cap") return;
     const cp = st.caps[capK++];
     const base = nV;
-    for (let i = 0; i <= CAP_M; i++) vChain.push(d.chain); // hub + M rim
+    for (let i = 0; i <= CAP_M; i++) { vChain.push(d.chain); vW.push(1, 0, 0, 0); } // hub + M rim
     nV += CAP_M + 1;
     for (let i = 0; i + 1 < CAP_M; i++) idx.push(base, base + 1 + i, base + 2 + i);
     items.push({ kind: "cap", pi: d.chain, piece: k, atEnd: cp ? cp.atEnd : false, base });
@@ -152,7 +193,7 @@ export function fillStructure(st: DiagramStructure, res: Int32Array): FillStruct
   st.piecesD.forEach((d, k) => {
     if (d.kind !== "tail") return;
     const base = nV; const W = TAIL_M + 1;
-    for (let i = 0; i < 2 * W; i++) vChain.push(d.chain);
+    for (let i = 0; i < 2 * W; i++) { vChain.push(d.chain); vW.push(1, 0, 0, 0); }
     nV += 2 * W;
     for (let i = 0; i < TAIL_M; i++) {
       idx.push(base + i, base + i + 1, base + W + i);
@@ -172,7 +213,7 @@ export function fillStructure(st: DiagramStructure, res: Int32Array): FillStruct
     for (const ai of L) {
       const a = st.arms[ai];
       const sti = stOfArm.get(ai);
-      let pN = -1; let pP = -1; let atStart = true;
+      let pN = -1; let pP = -1; let atStart = true; let strip = -1;
       if (sti !== undefined) {
         for (const [iv, e] of ivPieces) {
           const I = st.intervalsD[iv];
@@ -180,21 +221,55 @@ export function fillStructure(st: DiagramStructure, res: Int32Array): FillStruct
           atStart = I.aSt === sti;
           pN = a.dir > 0 ? e.L : e.R;
           pP = a.dir > 0 ? e.R : e.L;
+          strip = stripOfIv.get(iv) ?? -1;
           break;
         }
       }
       if (pN < 0 || pP < 0) missing++;
-      arms.push({ ai, pi: a.pi, ei: a.ei, pN, pP, atStart, corner: cornerByAArm.get(ai) ?? -1 });
+      arms.push({ ai, pi: a.pi, ei: a.ei, pN, pP, atStart, corner: cornerByAArm.get(ai) ?? -1, strip });
     }
-    const R = arms.length * (2 + ARC_K);
+    const n = arms.length;
+    const R = n * (3 + ARC_K);
     const base = nV;
     const owner = st.arms[L[0]].pi;
-    for (let i = 0; i <= R; i++) vChain.push(owner);
+    // Weights: hub 1 / n per arm; P, M, N one-hot; a corner eases arm k -> k + 1.
+    const wv = (k: number, u: number): number[] => {
+      const w = [0, 0, 0, 0];
+      const k1 = (k + 1) % n;
+      if (k < SLOTS) w[k] += 1 - u;
+      if (k1 < SLOTS) w[k1] += u;
+      return w;
+    };
+    vChain.push(owner); vW.push(...[0, 1, 2, 3].map((k) => (k < n ? 1 / Math.min(n, SLOTS) : 0)));
+    for (let k = 0; k < n; k++) {
+      for (let q = 0; q < 3; q++) { vChain.push(owner); vW.push(...wv(k, 0)); }
+      for (let q = 1; q <= ARC_K; q++) { const t = q / (ARC_K + 1); vChain.push(owner); vW.push(...wv(k, t * t * (3 - 2 * t))); }
+    }
     nV += R + 1;
     for (let i = 0; i < R; i++) idx.push(base, base + 1 + i, base + 1 + ((i + 1) % R));
     items.push({ kind: "junc", ji, owner, arms, base, R });
   });
-  return { nV, idx: Uint32Array.from(idx), vChain: Int32Array.from(vChain), items, missingArmEnds: missing };
+  return { nV, idx: Uint32Array.from(idx), vChain: Int32Array.from(vChain), items, missingArmEnds: missing, vW: Float32Array.from(vW) };
+}
+
+/** K1278: the run each vertex's slots read (-1: none), decided once from
+ *  frame 0 (`fr0`) and the section paint's runs (paint.ts). A strip reads
+ *  the run holding its middle; a cap its chain end's; a tail its start's;
+ *  a junction's slot k the run arm k leaves along. */
+export function fillRuns(fs: FillStructure, st: DiagramStructure, fr0: FillFrame, sp: SectionPaint): Int32Array {
+  const run = new Int32Array(SLOTS * fs.nV).fill(-1);
+  for (const it of fs.items) {
+    if (it.kind === "junc") {
+      const k0 = it.arms.map((a) => { const A = st.arms[a.ai]; return sp.armRun.get(`${A.ji}:${A.ei}`) ?? runAt(sp, a.pi, A.s); });
+      for (let v = it.base; v <= it.base + it.R; v++) for (let k = 0; k < Math.min(SLOTS, k0.length); k++) run[SLOTS * v + k] = k0[k];
+      continue;
+    }
+    const n = itemVerts(it);
+    const sMid = it.kind === "strip" ? fr0.s[it.base + (it.N + 1) + (it.N >> 1)] : fr0.s[it.base];
+    const r = runAt(sp, it.pi, sMid);
+    for (let v = it.base; v < it.base + n; v++) run[SLOTS * v] = r;
+  }
+  return run;
 }
 
 /** A topology signature: vertex count, index buffer and owner chains, hashed. */
@@ -275,6 +350,8 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
   const pos = new Float64Array(2 * fs.nV);
   const key = new Float32Array(fs.nV);
   const sv = new Float32Array(fs.nV);
+  const s4 = new Float64Array(SLOTS * fs.nV);
+  const across = new Float32Array(fs.nV);
   let fallbacks = 0;
   denseCount = 0;
   const zAt = (pi: number, s: number): number => (zc[pi] ? zAtC(zc[pi], s) : 0);
@@ -355,13 +432,23 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
         ds = ((ds % c.len) + c.len) % c.len;
         if (I.aSt === I.bSt && ds < 1e-9) ds = c.len; // a loop's one run, seam to seam
       }
-      if (!okL) { fallbacks++; for (let r = 0; r < 3; r++) for (let i = 0; i <= N; i++) set(it.base + r * W + i, 0, 0, -1e3, s0); continue; }
+      if (!okL) { fallbacks++; for (let r = 0; r < 3; r++) for (let i = 0; i <= N; i++) { set(it.base + r * W + i, 0, 0, -1e3, s0); s4[SLOTS * (it.base + r * W + i)] = s0; } continue; }
+      // K1278: the paint's s, per border row from its own piece's feet (a
+      // mirrored or missing side takes the other's), the centre row their
+      // mean; on a closed chain the R row unwraps to the L row's copy.
+      const wrap = (d: number): number => (c && c.closed && c.len > 0 ? ((d % c.len) + c.len) % c.len : d);
+      const range = (p: typeof pl): [number, number] | null => (p && p.pts.length >= 4 ? [p.s0, wrap(p.s1 - p.s0)] : null);
+      const rL = range(pl) ?? range(pr) ?? [s0, ds]; const rR = range(pr) ?? rL;
+      if (c && c.closed && c.len > 0) rR[0] += c.len * Math.round((rL[0] - rR[0]) / c.len);
       for (let i = 0; i <= N; i++) {
         const s = s0 + (ds * i) / N; const z = zAt(it.pi, s);
         const lx = bufL[2 * i]; const ly = bufL[2 * i + 1]; const rx = bufR[2 * i]; const ry = bufR[2 * i + 1];
+        const sL = rL[0] + (rL[1] * i) / N; const sR = rR[0] + (rR[1] * i) / N;
         set(it.base + i, lx, ly, z - zt, s);
         set(it.base + W + i, (lx + rx) / 2, (ly + ry) / 2, z, s);
         set(it.base + 2 * W + i, rx, ry, z - zt, s);
+        s4[SLOTS * (it.base + i)] = sL; s4[SLOTS * (it.base + W + i)] = (sL + sR) / 2; s4[SLOTS * (it.base + 2 * W + i)] = sR;
+        across[it.base + i] = 1; across[it.base + 2 * W + i] = 1;
       }
     } else if (it.kind === "tail") {
       const p = table.pieces[it.piece]; const W = TAIL_M + 1;
@@ -372,9 +459,13 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
         for (let i = 0; i < 2 * W; i++) set(it.base + i, 0, 0, -1e3, s);
         continue;
       }
+      const c = zc[it.pi];
+      const dsT = c && c.closed && c.len > 0 ? (((p.s1 - p.s0) % c.len) + 1.5 * c.len) % c.len - 0.5 * c.len : p.s1 - p.s0;
       for (let i = 0; i <= TAIL_M; i++) {
         set(it.base + i, bufL[2 * i], bufL[2 * i + 1], z - zt, s);
         set(it.base + W + i, bufR[2 * i], bufR[2 * i + 1], z, s);
+        s4[SLOTS * (it.base + i)] = s4[SLOTS * (it.base + W + i)] = p.s0 + (dsT * i) / TAIL_M;
+        across[it.base + i] = 1;
       }
     } else if (it.kind === "cap") {
       const p = table.pieces[it.piece];
@@ -387,6 +478,7 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
       }
       set(it.base, (rim[0] + rim[2 * CAP_M - 2]) / 2, (rim[1] + rim[2 * CAP_M - 1]) / 2, z, sEnd);
       for (let i = 0; i < CAP_M; i++) set(it.base + 1 + i, rim[2 * i], rim[2 * i + 1], z - zt, sEnd);
+      for (let i = 0; i <= CAP_M; i++) { s4[SLOTS * (it.base + i)] = sEnd; across[it.base + i] = i === 0 ? 0 : 1; }
     } else {
       const J = scene.junctions[it.ji];
       const n = it.arms.length;
@@ -394,13 +486,36 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
       for (const a of it.arms) { const e = armEnd.get(a.ai)!; Ps.push(e.P); Ns.push(e.N); Zs.push(zAt(a.pi, armSOf(a.ai))); }
       const hx = J ? J.c[0] : 0; const hy = J ? J.c[1] : 0;
       const s0 = armSOf(it.arms[0].ai);
+      // K1278: each arm's s at the hub (the junction's s), and at P, M, N
+      // (its strip's end row, unwrapped to the junction's copy).
+      const sJ: number[] = []; const sP: number[] = []; const sM: number[] = []; const sN: number[] = [];
+      for (const a of it.arms) {
+        const sa = armSOf(a.ai); sJ.push(sa);
+        const c = zc[a.pi]; const Lc = c && c.closed && c.len > 0 ? c.len : 0;
+        const un = (s: number): number => (Lc ? s + Lc * Math.round((sa - s) / Lc) : s);
+        const S = a.strip >= 0 ? (fs.items[a.strip] as StripItem) : null;
+        if (S && S.kind === "strip") {
+          const W = S.N + 1; const i = a.atStart ? 0 : S.N; const rowN = st.arms[a.ai].dir > 0 ? 0 : 2;
+          sN.push(un(s4[SLOTS * (S.base + rowN * W + i)])); sM.push(un(s4[SLOTS * (S.base + W + i)])); sP.push(un(s4[SLOTS * (S.base + (2 - rowN) * W + i)]));
+        } else { sP.push(sa); sM.push(sa); sN.push(sa); }
+      }
+      const nS = Math.min(n, SLOTS);
+      const slots = (vv: number, own: number, sOwn: number, k2: number, s2: number): void => {
+        for (let j = 0; j < nS; j++) s4[SLOTS * vv + j] = j === own ? sOwn : j === k2 ? s2 : sM[j];
+      };
       set(it.base, hx, hy, zAt(it.owner, s0), s0);
+      for (let j = 0; j < nS; j++) s4[SLOTS * it.base + j] = sJ[j];
       let v = it.base + 1;
       for (let k = 0; k < n; k++) {
         const a = it.arms[k]; const sA = armSOf(a.ai);
         const nx = (k + 1) % n;
+        slots(v, k, sP[k], -1, 0); across[v] = 1;
         set(v++, Ps[k][0], Ps[k][1], Zs[k] - zt, sA);
+        slots(v, k, sM[k], -1, 0);
+        set(v++, (Ps[k][0] + Ns[k][0]) / 2, (Ps[k][1] + Ns[k][1]) / 2, Zs[k] - zt, sA);
+        slots(v, k, sN[k], -1, 0); across[v] = 1;
         set(v++, Ns[k][0], Ns[k][1], Zs[k] - zt, sA);
+        for (let q = 0; q < ARC_K; q++) { slots(v + q, k, sN[k], nx, sP[nx]); across[v + q] = 1; }
         const T = Ps[nx]; const zA = Zs[k] - zt; const zB = Zs[nx] - zt;
         const cr = a.corner >= 0 ? table.corners[a.corner] : null;
         const arc = !!cr && cr.ok && cr.r > 1e-9;
@@ -423,7 +538,7 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
       }
     }
   }
-  return { pos, key, s: sv, fallbacks, dense: denseCount };
+  return { pos, key, s: sv, s4, across, fallbacks, dense: denseCount };
 }
 
 /** Key range for the depth mapping: every key lies in [-KS, KS]. */
@@ -443,7 +558,7 @@ function edgeFn(ux: number, uy: number, vx: number, vy: number, px: number, py: 
  *  chain + 1 (0 = paper), the highest key winning, ties to the later
  *  triangle (the GPU's LEQUAL). A centre exactly on an edge counts as
  *  inside (closed triangles, as the census paints master's faces). */
-export function rasterFill(fs: FillStructure, fr: FillFrame, x0: number, y0: number, Wd: number, Hd: number, ppu: number): Int32Array {
+export function rasterFill(fs: FillStructure, fr: FillFrame, x0: number, y0: number, Wd: number, Hd: number, ppu: number, win?: { tri: Int32Array; bary: Float32Array }): Int32Array {
   const own = new Int32Array(Wd * Hd);
   const zb = new Float32Array(Wd * Hd).fill(-Infinity);
   const P = fr.pos; const K = fr.key; const I = fs.idx;
@@ -470,9 +585,47 @@ export function rasterFill(fs: FillStructure, fr: FillFrame, x0: number, y0: num
         const w0 = e0 / sum; const w1 = e1 / sum; const w2 = e2 / sum;
         const k = w0 * K[a] + w1 * K[b] + w2 * K[c];
         const o = j * Wd + i;
-        if (k >= zb[o]) { zb[o] = k; own[o] = ch; }
+        if (k >= zb[o]) {
+          zb[o] = k; own[o] = ch;
+          if (win) { win.tri[o] = t; win.bary[3 * o] = w0; win.bary[3 * o + 1] = w1; win.bary[3 * o + 2] = w2; }
+        }
       }
     }
   }
   return own;
+}
+
+/** K1278: the CPU twin of draw.ts's fill shader: per pixel, the top
+ *  triangle's slots interpolated and painted (paint.ts paintAt). rgb in
+ *  0..1, paper (own 0) left at -1. */
+export function rasterPaint(fs: FillStructure, fr: FillFrame, runs: Int32Array, sp: SectionPaint, x0: number, y0: number, Wd: number, Hd: number, ppu: number): { own: Int32Array; rgb: Float32Array } {
+  const win = { tri: new Int32Array(Wd * Hd).fill(-1), bary: new Float32Array(3 * Wd * Hd) };
+  const own = rasterFill(fs, fr, x0, y0, Wd, Hd, ppu, win);
+  const rgb = new Float32Array(3 * Wd * Hd).fill(-1);
+  const r4 = new Int32Array(SLOTS); const w4 = new Float64Array(SLOTS); const s4 = new Float64Array(SLOTS);
+  const out: [number, number, number] = [0, 0, 0];
+  for (let o = 0; o < Wd * Hd; o++) {
+    const t = win.tri[o]; if (t < 0 || own[o] === 0) continue;
+    vertexPaint(fs, fr, runs, [fs.idx[t], fs.idx[t + 1], fs.idx[t + 2]], [win.bary[3 * o], win.bary[3 * o + 1], win.bary[3 * o + 2]], r4, w4, s4);
+    paintAt(sp, r4, w4, s4, out);
+    rgb[3 * o] = out[0]; rgb[3 * o + 1] = out[1]; rgb[3 * o + 2] = out[2];
+  }
+  return { own, rgb };
+}
+
+/** The slots at barycentric `b` of vertices `v` (a triangle, or an edge
+ *  with one weight 0). Runs are per triangle-constant only where the
+ *  vertices agree; a slot's run is taken from the first vertex with
+ *  weight in it (the structure gives every vertex of an item the same
+ *  runs, so they always agree). */
+export function vertexPaint(fs: FillStructure, fr: FillFrame, runs: Int32Array, v: number[], b: number[], r4: Int32Array, w4: Float64Array, s4: Float64Array): void {
+  for (let k = 0; k < SLOTS; k++) {
+    r4[k] = -1; w4[k] = 0; s4[k] = 0;
+    for (let q = 0; q < v.length; q++) {
+      const vi = v[q];
+      if (r4[k] < 0 && runs[SLOTS * vi + k] >= 0) r4[k] = runs[SLOTS * vi + k];
+      w4[k] += b[q] * fs.vW[SLOTS * vi + k];
+      s4[k] += b[q] * fr.s4[SLOTS * vi + k];
+    }
+  }
 }
