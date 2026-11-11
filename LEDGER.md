@@ -519,11 +519,11 @@ Next free ID: K1294.
 - **K1283** · Junction borders of the outline (rp=outline) against form B. Stage 1 (3c8bd61e) fixed the concave
   corner bites (census 27528 -> 17756 px); left: the failed corners and the end-arm round ends (x47, x73,
   x349). Full text in docs/ledger_notes.md
-  - owner: nobody since 2026-11-10 20:12 (merged; agent `a4ab8fb10e6a7a9d3` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `3c8bd61e`
-  - evidence: src/render/outline/outline.ts, k1283_* tools; untracked .claude/probes/K1240/out/k1283/
-  - next: stage 2 after K1278 s2 merges: the "V outside spans" failed corners (153 crossings, 6495 px; x177, x71, x303) and the "arm span 0" round-end cap (x73 at j103, x47, x77, x182; outline.ts emits it, paint/fill_tri colour the disk); handoff in the brief
-  - brief: `docs/design/K1283_junctions.md`
+  - owner: agent `a1ee6a7b4d944a1fa` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-10 20:14, 2 h cap ~22:14)
+  - branch: `worktree-agent-a1ee6a7b4d944a1fa`, worktree `.claude/worktrees/agent-a1ee6a7b4d944a1fa`; last commit: `c3d7ad32`
+  - evidence: src/render/outline/outline.ts, k1283_* tools; untracked .claude/probes/K1240/out/k1283s2/
+  - next: stage 2 (failed corners, the end-arm round end): wait for its report, view the crops against form B, merge
+  - brief: `docs/design/K1283_s2.md`
 
 ## Next, in order
 
