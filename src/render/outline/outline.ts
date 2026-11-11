@@ -7447,8 +7447,17 @@ function tailF(a: TailIn, l1: number, u: number): number {
   const fR = 0.5 - ramp; if (!(fR > 0)) return fR;
   const fW = (h - a.W - dF) / h; if (!(fW > 0)) return fW;
   const margin = a.zE(sE) - a.zt - a.zX(sF) + (a.zt * dF) / h;
-  return Math.min(fR, a.zt > 0 ? margin / a.zt : margin > 0 ? 1 : -1, fW);
+  return Math.min(fR, a.zt > 0 ? margin / a.zt - TAIL_MARGIN : margin > 0 ? 1 : -1, fW);
 }
+/** K1283 s2: the depth margin (in zt) a tail point needs to show. Form B's
+ *  burial is soft (draw.ts tieAlpha: alpha 0.5 at margin 0, 0.8 at 0.4 zt),
+ *  and draw.ts draws a tail at alpha 1, so a tail cut at margin 0 drew full
+ *  ink where form B shows a half-faded shadow (muse_hash x177, x71,
+ *  g41_user_tw64 x143, g41_def_tw64 x349). Measured against form B on the
+ *  census (stage 2): 0 -> 16960 px, 0.25 -> 16525, 0.35 -> 16409,
+ *  0.42 -> 16369 with no crossing worse, 0.5 -> 16413 with ring x11 worse
+ *  by 28 px. */
+const TAIL_MARGIN = 0.4;
 const TAIL_N = 16;
 const TAIL_BISECT = 12;
 const TAIL_BLEND = 0.5;
