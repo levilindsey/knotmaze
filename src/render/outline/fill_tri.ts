@@ -83,22 +83,10 @@ const TAIL_FOOT = true;
  *  taken every FOOT_STEP columns and interpolated between. */
 const STRIP_FOOT = true;
 const FOOT_STEP = 8;
-/** K1283 s10 probe switches (k1283s10_*): skip the end feet K1278 took; the centre row as its sides' mean. */
-export const stripCfg = { skipEnd: true, tol: -1 };
+/** K1283 s10: the centre row is footed only within C_FOOT_ENDS samples of its ends (see the strip item). */
+const C_FOOT_ENDS = 2;
 
 type FootChain = Parameters<typeof footNear>[0];
-let footD2 = 0; let footSg = 0;
-/** Squared distance from (x, y) to segment k of c (into footD2) and the foot's s (footSg). */
-function footSeg(c: FootChain, x: number, y: number, k: number): void {
-  const j = k + 1 === c.n ? 0 : k + 1; const sk = c.s[k]; const lk = j === 0 ? c.len - sk : c.s[j] - sk;
-  const ax = c.xs[k]; const ay = c.ys[k]; const ex = c.xs[j] - ax; const ey = c.ys[j] - ay;
-  const l2 = ex * ex + ey * ey;
-  let t = l2 > 0 ? ((x - ax) * ex + (y - ay) * ey) / l2 : 0;
-  t = t < 0 ? 0 : t > 1 ? 1 : t;
-  const dx = x - ax - t * ex; const dy = y - ay - t * ey;
-  footD2 = dx * dx + dy * dy; footSg = sk + t * lk;
-}
-function footLen(c: FootChain, k: number): number { return k + 1 === c.n ? c.len - c.s[k] : c.s[k + 1] - c.s[k]; }
 /** The segment holding arc position u (0 <= u < len on a ring), by binary search. */
 function footFirst(c: FootChain, segs: number, u: number): number {
   const ss = c.s; if (ss[0] > u) return 0;
@@ -117,50 +105,77 @@ function footFirst(c: FootChain, segs: number, u: number): number {
  *  far branch (muse_hash: 1488 strip vertices pick another branch than a
  *  descent from sC does), so a descent alone is not footNear's foot. footNear
  *  scanned 33 segments a foot on def (215k feet a frame). */
-export const footCntX = { calls: 0 };
+let footK = 0;
+/** K1283 s10 (perf, same feet bit for bit): the arrays in locals, the projection inline, and the
+ *  segment at sC walked from the last foot's (feet come in runs along a row) before footFirst's
+ *  binary search; half s9's time on def. */
 function footS(c: FootChain, x: number, y: number, sC: number, r: number): number {
-  footCntX.calls++;
-  const segs = c.closed ? c.n : c.n - 1;
+  const n = c.n; const segs = c.closed ? n : n - 1;
   if (segs <= 0) return NaN;
-  const L = c.len; const ring = c.closed && L > 0; const xs = c.xs; const ys = c.ys;
+  const L = c.len; const ring = c.closed && L > 0; const xs = c.xs; const ys = c.ys; const ss = c.s;
   const u = ring ? ((sC % L) + L) % L : sC;
-  const k0 = footFirst(c, segs, u);
-  footSeg(c, x, y, k0);
-  let best = footD2; let bs = footSg; let bd = Math.sqrt(best);
+  let k0 = footK < segs ? footK : segs - 1;
+  if (ss[0] > u) k0 = 0;
+  else if (ss[k0] <= u) {
+    let q = 0; while (k0 + 1 < segs && ss[k0 + 1] <= u && q < 16) { k0++; q++; }
+    if (k0 + 1 < segs && ss[k0 + 1] <= u) k0 = footFirst(c, segs, u);
+  } else {
+    let q = 0; while (ss[k0] > u && q < 16) { k0--; q++; }
+    if (ss[k0] > u) k0 = footFirst(c, segs, u);
+  }
+  footK = k0;
+  let best: number; let bs: number;
+  {
+    const k = k0; const j = k + 1 === n ? 0 : k + 1; const sk = ss[k]; const lk = j === 0 ? L - sk : ss[j] - sk;
+    const ax = xs[k]; const ay = ys[k]; const ex = xs[j] - ax; const ey = ys[j] - ay;
+    const l2 = ex * ex + ey * ey;
+    let t = l2 > 0 ? ((x - ax) * ex + (y - ay) * ey) / l2 : 0;
+    t = t < 0 ? 0 : t > 1 ? 1 : t;
+    const dx = x - ax - t * ex; const dy = y - ay - t * ey;
+    best = dx * dx + dy * dy; bs = sk + t * lk;
+  }
+  let bd = Math.sqrt(best);
   // Forward: off = arc from u to segment k's start.
-  let k = k0; let off = c.s[k0] + footLen(c, k0) - u;
+  let k = k0; let off = ss[k0] + ((k0 + 1 === n ? L : ss[k0 + 1]) - ss[k0]) - u;
   for (let m = 0; m < segs - 1; m++) {
     k = k + 1 < segs ? k + 1 : ring ? 0 : -1;
     if (k < 0 || off > r) break;
-    // Skip the segments wholly within arc dv - best of their start vertex.
-    const dx = x - xs[k]; const dy = y - ys[k]; const lim = off + Math.sqrt(dx * dx + dy * dy) - bd;
-    let lk = footLen(c, k);
+    const vx = x - xs[k]; const vy = y - ys[k]; const lim = off + Math.sqrt(vx * vx + vy * vy) - bd;
+    let j = k + 1 === n ? 0 : k + 1; let sk = ss[k]; let lk = (j === 0 ? L : ss[j]) - sk;
     while (off + lk <= lim && m < segs - 1) {
       off += lk; m++; k = k + 1 < segs ? k + 1 : ring ? 0 : -1;
       if (k < 0 || off > r) break;
-      lk = footLen(c, k);
+      j = k + 1 === n ? 0 : k + 1; sk = ss[k]; lk = (j === 0 ? L : ss[j]) - sk;
     }
     if (k < 0 || off > r) break;
-    footSeg(c, x, y, k);
-    if (footD2 < best) { best = footD2; bs = footSg; bd = Math.sqrt(best); }
+    const ax = xs[k]; const ay = ys[k]; const ex = xs[j] - ax; const ey = ys[j] - ay;
+    const l2 = ex * ex + ey * ey;
+    let t = l2 > 0 ? ((x - ax) * ex + (y - ay) * ey) / l2 : 0;
+    t = t < 0 ? 0 : t > 1 ? 1 : t;
+    const dx = x - ax - t * ex; const dy = y - ay - t * ey; const d2 = dx * dx + dy * dy;
+    if (d2 < best) { best = d2; bs = sk + t * lk; bd = Math.sqrt(best); }
     off += lk;
   }
   // Backward: off = arc from u back to segment k's end.
-  k = k0; off = u - c.s[k0];
+  k = k0; off = u - ss[k0];
   for (let m = 0; m < segs - 1; m++) {
     const kE = k; // segment k - 1 ends at k's start vertex
     k = k > 0 ? k - 1 : ring ? segs - 1 : -1;
     if (k < 0 || off > r) break;
-    const dx = x - xs[kE]; const dy = y - ys[kE]; const lim = off + Math.sqrt(dx * dx + dy * dy) - bd;
-    let lk = footLen(c, k);
+    const vx = x - xs[kE]; const vy = y - ys[kE]; const lim = off + Math.sqrt(vx * vx + vy * vy) - bd;
+    let j = k + 1 === n ? 0 : k + 1; let sk = ss[k]; let lk = (j === 0 ? L : ss[j]) - sk;
     while (off + lk <= lim && m < segs - 1) {
       off += lk; m++; k = k > 0 ? k - 1 : ring ? segs - 1 : -1;
       if (k < 0 || off > r) break;
-      lk = footLen(c, k);
+      j = k + 1 === n ? 0 : k + 1; sk = ss[k]; lk = (j === 0 ? L : ss[j]) - sk;
     }
     if (k < 0 || off > r) break;
-    footSeg(c, x, y, k);
-    if (footD2 < best) { best = footD2; bs = footSg; bd = Math.sqrt(best); }
+    const ax = xs[k]; const ay = ys[k]; const ex = xs[j] - ax; const ey = ys[j] - ay;
+    const l2 = ex * ex + ey * ey;
+    let t = l2 > 0 ? ((x - ax) * ex + (y - ay) * ey) / l2 : 0;
+    t = t < 0 ? 0 : t > 1 ? 1 : t;
+    const dx = x - ax - t * ex; const dy = y - ay - t * ey; const d2 = dx * dx + dy * dy;
+    if (d2 < best) { best = d2; bs = sk + t * lk; bd = Math.sqrt(best); }
     off += lk;
   }
   return ring ? bs + L * Math.round((sC - bs) / L) : bs;
@@ -693,29 +708,28 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
         // is taken every FOOT_STEP columns (and at both ends) and its offset
         // from the row's s interpolated between: a foot at each of def's 215k
         // strip vertices cost 80 ms a frame. Rows already on their feet
-        // (a missing side's) keep them.
+        // (a missing side's) keep them. K1283 s10: the centre row is footed
+        // only within C_FOOT_ENDS samples of its ends (where frame tails meet
+        // it: unfooted there, muse_hash strip|tail 1 -> 121; one sample, 16);
+        // its interior keeps its s (the same seams: 1612 / strip|strip 86 / 243).
         if (STRIP_FOOT) {
-          const step = FOOT_STEP; const tol = stripCfg.tol * hW;
+          const step = FOOT_STEP; const cEnd = C_FOOT_ENDS * step;
           for (let row = 0; row < 3; row++) {
             if ((row === 0 && fbL) || (row === 2 && fbR)) continue;
             const b0 = it.base + row * W;
-            // The offset at column i: the foot's, set on the vertex; 0 at an end the K1278 foot took.
-            const at = (i: number): number => {
-              if (stripCfg.skipEnd && ((i === 0 && atA) || (i === N && atB))) return 0;
-              const v = b0 + i; const s = s4[SLOTS * v];
-              const f = footS(c, pos[2 * v], pos[2 * v + 1], s, rF);
-              const d = f === f ? f - s : 0;
-              s4[SLOTS * v] = s + d;
-              return d;
-            };
-            const lerp = (iA: number, dA: number, iB: number, dB: number): void => {
-              for (let k = iA + 1; k < iB; k++) s4[SLOTS * (b0 + k)] += dA + ((dB - dA) * (k - iA)) / (iB - iA);
-            };
-            let iA = 0; let dA = at(0);
-            while (iA < N) {
-              const iB = Math.min(iA + 2 * step, N); const dB = at(iB); const iM = iA + step;
-              if (iM < iB && !(Math.abs(dB - dA) <= tol)) { const dM = at(iM); lerp(iA, dA, iM, dM); lerp(iM, dM, iB, dB); } else lerp(iA, dA, iB, dB);
-              iA = iB; dA = dB;
+            let iP = 0; let dP = 0;
+            for (let i = 0; ; i = Math.min(i + step, N)) {
+              // An end column a station's K1278 foot took keeps it; the centre row's interior keeps its s.
+              let d = 0;
+              if (!((i === 0 && atA) || (i === N && atB)) && !(row === 1 && i > cEnd && i < N - cEnd)) {
+                const v = b0 + i; const s = s4[SLOTS * v];
+                const f = footS(c, pos[2 * v], pos[2 * v + 1], s, rF);
+                d = f === f ? f - s : 0;
+                s4[SLOTS * v] = s + d;
+              }
+              for (let k = iP + 1; k < i; k++) s4[SLOTS * (b0 + k)] += dP + ((d - dP) * (k - iP)) / (i - iP);
+              iP = i; dP = d;
+              if (i >= N) break;
             }
           }
         }
