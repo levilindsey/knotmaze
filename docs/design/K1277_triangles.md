@@ -88,3 +88,40 @@ Report these:
 - your last SHA.
 
 End with `Ledger items` and K1277's handle fields.
+
+## Handoff (K1277 agent, 2026-11-10, stage done at 2 h less 50 min)
+
+Every bar passes. Code: `.claude/probes/K1240/proto/fill_tri.ts` (the triangles; its header is the
+spec) and `draw.ts` (draws them depth-tested, no stencil). Tools: `k1277_census.ts` (`rest`,
+`motion def|fat`), `k1277_k1279.ts` (K1279's crossing census, master vs triangles), `k1277_crops.ts`,
+`k1277_cracks.ts` (`--near=x,y,r`), `k1277_base_draw.ts` (master's draw.ts, for the A side).
+
+- **Structure.** Items come from `DiagramStructure` only: a strip per interval with border pieces
+  (ghost strips first, then runs), a cap fan per cap, a tail strip per tail piece (form B's end-arm
+  round end), a fan per junction over its ring (per arm P, N, then 16 corner points). The draw order is
+  the item index. Over and under is a per-pixel depth key (form B's z - d zt / h), so no order
+  comes from positions. The one frame-0 measurement is each strip's resolution N.
+- **Per frame.** Positions only. A missing side of a strip, which the frame leaves empty next to a
+  junction or a crossing, is the other side mirrored across its centreline feet. Before, a copied side
+  made the strip zero-width, and paper showed in the tube (muse_hash iv 477).
+- **At rest** (ppu 40, master fill/paper -> triangles fill/paper): muse_hash 422/2021 -> 241/267,
+  muse_default_tw 376/908 -> 70/82, def 200/406 -> 44/60, fat 0/42 -> 0/42, ring 30/44 -> 3/44,
+  user_tw42.lightpaper 47/21 -> 12/20, g41_def_tw42 208/138 -> 45/44, g41_def_tw64 182/644 -> 34/103,
+  g41_ring_tw42 24/21 -> 8/21, g41_ring_tw64 29/70 -> 6/66, g41_user_tw42 47/19 -> 15/18,
+  g41_user_tw64 52/216 -> 9/56. K1273's speck: paper 2 -> 0 px.
+- **Motion.** def: 226 frames, topology identical to frame 0 on all, worse than master on 0; fill
+  32069 -> 548, paper 78508 -> 66. Worst crack f63 2 px at (22.60, 23.13); worst spill 1 px at
+  (33.26, 7.34). fat: 217 frames, 0 and 0, the same as master.
+- **K1279 census** (ppu 80): 0 crossings worse, 38 better; total 27594 -> 26926, fill 668 -> 0;
+  top thread differs 41225 -> 32928 px (worse on 30 crossings, better on 114).
+- `k1247s5_cmp` 44/8/0/0; `npm test` green (220 files).
+- **Crops** in `.claude/probes/K1240/out/k1277/crops/`: `cut273.png` (pink, as form B),
+  `k1273_speck.png`, `rest_worst.png`, `motion_worst.png`, `k1279_worse.png`.
+- **Left.** (1) Top colour at end-arm junctions: the mirrored through-chain strip pokes a sliver of
+  its colour over the end chain's round end, where form B shows the end chain (muse_hash x73 / x47,
+  g41_user_tw64 x14; K1279's thread term is worse there). That is depth at junctions, K1283's
+  question. (2) muse_hash keeps 58 px of cracks at rest in 49 spots, worst 5 px at (31.11, 1.22).
+  (3) Up to 16 dense border pieces on def use the equal-fraction fallback, and def's chain point
+  counts change on 7 frames with the same diagram. (4) For K1278: every vertex carries chain and s
+  (`FillFrame.s`); the paint needs the distance across (0 at the centre row, 1 at the borders),
+  which the rows already give.

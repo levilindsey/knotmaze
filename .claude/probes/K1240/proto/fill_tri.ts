@@ -12,6 +12,11 @@
 //   the midpoint of the two border vertices, so a strip's end row lies on
 //   the straight edge between its two end points (watertight with the
 //   junction fan and the cap fan that share that edge). 4 N triangles.
+//   A side the frame leaves empty (its border consumed next to a junction
+//   or a crossing) is the other side mirrored across that side's
+//   centreline feet, so the strip keeps the tube's width; copying the
+//   other side made it zero-width and left paper in the tube under the
+//   junction (muse_hash iv 477, K1279 x73 / x47, g41_user_tw64 x14).
 // - CAP: a fan from the midpoint of the cap's two ends over the cap rim,
 //   resampled to M points.
 // - JUNCTION: a fan from the junction centre over the junction region's
