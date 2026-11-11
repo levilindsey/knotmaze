@@ -70,7 +70,7 @@
 // Which run a slot reads is decided once (`fillRuns`, from frame 0); the
 // run's span follows the frame.
 import type { DiagramStructure, OutlineTable, SceneIn } from "./outline";
-import { zChains, zAtC } from "./draw";
+import { zChains, zAtC, footNear } from "./draw";
 import { paintAt, runAt, type SectionPaint } from "./paint";
 
 export const CAP_M = 17;
@@ -474,6 +474,38 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
         set(it.base + 2 * W + i, rx, ry, z - zt, s);
         s4[SLOTS * (it.base + i)] = sL; s4[SLOTS * (it.base + W + i)] = (sL + sR) / 2; s4[SLOTS * (it.base + 2 * W + i)] = sR;
         across[it.base + i] = 1; across[it.base + 2 * W + i] = 1;
+      }
+      // K1278 s2: the paint's s where the frame's own s is not where the
+      // vertex is. A row with no border piece (consumed by a junction's
+      // corner) is a line between the two rings, often INVERTED (each mouth
+      // past the other's) and drawn over both fans, and its s, spread
+      // between the junction s values, ran against its positions. A mouth
+      // (the end column at a junction, the fan's P, M, N) took its piece's
+      // end s, which is the junction's own s where the border runs into a
+      // sharp corner, however far along the thread the mouth sits. Both
+      // pinned the run at the junction's colour up to the mouth, then the
+      // strip jumped: hard steps at the mouth lines (def j16, j156, j74;
+      // muse_default_tw j150). These vertices take their foot on the chain
+      // instead (near their old s), so strips and fans carry the s of where
+      // they are; the fans read it from the end columns.
+      if (c && c.n > 1) {
+        const fbL = !(pl && pl.pts.length >= 4); const fbR = !(pr && pr.pts.length >= 4);
+        const atA = stationS(I.aSt) !== null; const atB = stationS(I.bSt) !== null;
+        const rF = 4 * hW;
+        const foot = (v: number): void => {
+          const s = s4[SLOTS * v]; const f = footNear(c, pos[2 * v], pos[2 * v + 1], s, rF, 0, 0);
+          if (Number.isFinite(f.d)) s4[SLOTS * v] = c.closed && c.len > 0 ? f.s + c.len * Math.round((s - f.s) / c.len) : f.s;
+        };
+        if (fbL || fbR || atA || atB) {
+          for (let i = 0; i <= N; i++) {
+            const end = (i === 0 && atA) || (i === N && atB);
+            if (!end && !fbL && !fbR) continue;
+            const vL = it.base + i; const vC = vL + W; const vR = vC + W;
+            if (end || fbL) foot(vL);
+            if (end || fbR) foot(vR);
+            if (end || (fbL && fbR)) foot(vC); else s4[SLOTS * vC] = (s4[SLOTS * vL] + s4[SLOTS * vR]) / 2;
+          }
+        }
       }
     } else if (it.kind === "tail") {
       const p = table.pieces[it.piece]; const W = TAIL_M + 1;
