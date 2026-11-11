@@ -75,55 +75,94 @@ function flatPainter(f: Fill, nCh: number, hue: number): Painter {
   return (t, _b, out) => { const c = D.chainColor(f.fs.vChain[f.fs.idx[t]], nCh, hue); out[0] = c[0]; out[1] = c[1]; out[2] = c[2]; return out; };
 }
 
-interface SeamStat { n: number; over: number; max: number; at: string; kinds: Map<string, number> }
-/** Pairs of triangles on one geometric edge with different vertices. */
-function seamPairs(f: Fill): { tA: number; tB: number; qa: [number, number]; qb: [number, number] }[] {
+/** Visible seams: every edge of every non-degenerate triangle, sampled at
+ *  t = .1 .. .9; at each sample the top triangle (highest key, ties to the
+ *  later one, as the raster) just to either side (1e-5 world). Where the two
+ *  differ and neither covers the other side's point, two triangles abut
+ *  there: a seam, whatever their vertices (T-junctions included), unless
+ *  their keys there differ by more than 3 zt (an over / under edge). */
+interface Sample { tA: number; bA: number[]; tB: number; bB: number[]; x: number; y: number }
+function seamSamples(f: Fill, h: number, zt: number): Sample[] {
   const P = f.fr.pos; const K = f.fr.key; const I = f.fs.idx;
-  const pk = (v: number): string => `${Math.round(P[2 * v] * 1e6)},${Math.round(P[2 * v + 1] * 1e6)}`;
-  const m = new Map<string, { t: number; a: number; b: number }[]>();
+  const tris: number[] = []; let x0 = Infinity; let y0 = Infinity; let x1 = -Infinity; let y1 = -Infinity;
   for (let t = 0; t < I.length; t += 3) {
-    const v = [I[t], I[t + 1], I[t + 2]];
-    if (v.some((x) => !(K[x] > -999))) continue;
-    const ar = (P[2 * v[1]] - P[2 * v[0]]) * (P[2 * v[2] + 1] - P[2 * v[0] + 1]) - (P[2 * v[2]] - P[2 * v[0]]) * (P[2 * v[1] + 1] - P[2 * v[0] + 1]);
+    const a = I[t]; const b = I[t + 1]; const c = I[t + 2];
+    if (!(K[a] > -999 && K[b] > -999 && K[c] > -999)) continue;
+    const ar = (P[2 * b] - P[2 * a]) * (P[2 * c + 1] - P[2 * a + 1]) - (P[2 * c] - P[2 * a]) * (P[2 * b + 1] - P[2 * a + 1]);
     if (!(Math.abs(ar) > 1e-12)) continue;
-    for (let e = 0; e < 3; e++) {
-      let ia = e; let ib = (e + 1) % 3; let ka = pk(v[ia]); let kb = pk(v[ib]);
-      if (ka === kb) continue;
-      if (ka > kb) { [ia, ib] = [ib, ia]; [ka, kb] = [kb, ka]; }
-      const key = `${ka}|${kb}`; const l = m.get(key) ?? []; l.push({ t, a: ia, b: ib }); m.set(key, l);
+    tris.push(t);
+    for (const v of [a, b, c]) { x0 = Math.min(x0, P[2 * v]); x1 = Math.max(x1, P[2 * v]); y0 = Math.min(y0, P[2 * v + 1]); y1 = Math.max(y1, P[2 * v + 1]); }
+  }
+  const cs = h; const nx = Math.max(1, Math.ceil((x1 - x0) / cs) + 1); const ny = Math.max(1, Math.ceil((y1 - y0) / cs) + 1);
+  const cells = new Map<number, number[]>();
+  for (const t of tris) {
+    let bx0 = Infinity; let by0 = Infinity; let bx1 = -Infinity; let by1 = -Infinity;
+    for (let q = 0; q < 3; q++) { const v = I[t + q]; bx0 = Math.min(bx0, P[2 * v]); bx1 = Math.max(bx1, P[2 * v]); by0 = Math.min(by0, P[2 * v + 1]); by1 = Math.max(by1, P[2 * v + 1]); }
+    for (let cy = Math.floor((by0 - y0) / cs); cy <= Math.floor((by1 - y0) / cs); cy++) for (let cx = Math.floor((bx0 - x0) / cs); cx <= Math.floor((bx1 - x0) / cs); cx++) {
+      const k = cy * nx + cx; const l = cells.get(k); if (l) l.push(t); else cells.set(k, [t]);
     }
   }
-  const res: { tA: number; tB: number; qa: [number, number]; qb: [number, number] }[] = [];
-  for (const l of m.values()) {
-    for (let i = 0; i < l.length; i++) for (let j = i + 1; j < l.length; j++) {
-      const A = l[i]; const Bq = l[j];
-      if (I[A.t + A.a] === I[Bq.t + Bq.a] && I[A.t + A.b] === I[Bq.t + Bq.b]) continue;
-      res.push({ tA: A.t, tB: Bq.t, qa: [A.a, A.b], qb: [Bq.a, Bq.b] });
+  void ny;
+  const bary = (t: number, px: number, py: number, out: number[]): boolean => {
+    const a = I[t]; const b = I[t + 1]; const c = I[t + 2];
+    const ax = P[2 * a]; const ay = P[2 * a + 1]; const bx = P[2 * b]; const by = P[2 * b + 1]; const cx = P[2 * c]; const cy = P[2 * c + 1];
+    const d = (bx - ax) * (cy - ay) - (cx - ax) * (by - ay);
+    const w1 = ((px - ax) * (cy - ay) - (cx - ax) * (py - ay)) / d; const w2 = ((bx - ax) * (py - ay) - (px - ax) * (by - ay)) / d;
+    out[0] = 1 - w1 - w2; out[1] = w1; out[2] = w2;
+    return out[0] >= -1e-9 && w1 >= -1e-9 && w2 >= -1e-9;
+  };
+  const tmp = [0, 0, 0];
+  const top = (px: number, py: number): number => {
+    const l = cells.get(Math.floor((py - y0) / cs) * nx + Math.floor((px - x0) / cs)); if (!l) return -1;
+    let best = -1; let bk = -Infinity;
+    for (const t of l) { if (!bary(t, px, py, tmp)) continue; const k = tmp[0] * K[I[t]] + tmp[1] * K[I[t + 1]] + tmp[2] * K[I[t + 2]]; if (k > bk || (k === bk && t > best)) { bk = k; best = t; } }
+    return best;
+  };
+  const res: Sample[] = []; const eps = 1e-5;
+  for (const t of tris) for (let e = 0; e < 3; e++) {
+    const a = I[t + e]; const b = I[t + ((e + 1) % 3)];
+    const dx = P[2 * b] - P[2 * a]; const dy = P[2 * b + 1] - P[2 * a + 1]; const L = Math.hypot(dx, dy);
+    if (L < 1e-6) continue;
+    const nxv = -dy / L; const nyv = dx / L;
+    for (const u of [0.1, 0.3, 0.5, 0.7, 0.9]) {
+      const px = P[2 * a] + u * dx; const py = P[2 * a + 1] + u * dy;
+      const tA = top(px + eps * nxv, py + eps * nyv); const tB = top(px - eps * nxv, py - eps * nyv);
+      if (tA < 0 || tB < 0 || tA === tB) continue;
+      if (bary(tA, px - eps * nxv, py - eps * nyv, tmp) || bary(tB, px + eps * nxv, py + eps * nyv, tmp)) continue;
+      const bA = [0, 0, 0]; const bB = [0, 0, 0]; bary(tA, px, py, bA); bary(tB, px, py, bB);
+      const kA = bA[0] * K[I[tA]] + bA[1] * K[I[tA + 1]] + bA[2] * K[I[tA + 2]]; const kB = bB[0] * K[I[tB]] + bB[1] * K[I[tB + 1]] + bB[2] * K[I[tB + 2]];
+      if (Math.abs(kA - kB) > 3 * Math.abs(zt)) continue; // a depth edge (over / under), not a seam
+      res.push({ tA, bA, tB, bB, x: px, y: py });
     }
   }
   return res;
 }
-function seamStat(f: Fill, pairs: ReturnType<typeof seamPairs>, paint: Painter, itemOf: (v: number) => string): SeamStat {
-  const st: SeamStat = { n: 0, over: 0, max: 0, at: "", kinds: new Map() };
+interface SeamStat { n: number; over: number; max: number; at: string; kinds: Map<string, number>; fold: number; thread: number; foldMax: number; threadMax: number }
+let dbgN = 0;
+const itemIdxCache = new WeakMap<object, Int32Array>();
+function itemIdx(f: Fill, v: number): number {
+  let a = itemIdxCache.get(f.fs);
+  if (!a) { a = new Int32Array(f.fs.nV).fill(-1); f.fs.items.forEach((it, k) => { const n = it.kind === "junc" ? 1 + it.R : F.itemVerts(it as F.FillItem); for (let q = 0; q < n; q++) a![it.base + q] = k; }); itemIdxCache.set(f.fs, a); }
+  return a[v];
+}
+function seamStat(f: Fill, samples: Sample[], paint: Painter, itemOf: (v: number) => string, dbg?: Int32Array): SeamStat {
+  dbgN = 0;
+  const st: SeamStat = { n: 0, over: 0, max: 0, at: "", kinds: new Map(), fold: 0, thread: 0, foldMax: 0, threadMax: 0 };
   const ca: RGB = [0, 0, 0]; const cb: RGB = [0, 0, 0];
-  for (const p of pairs) {
-    let worst = 0;
-    for (const t of [0, 0.25, 0.5, 0.75, 1]) {
-      const ba = [0, 0, 0]; ba[p.qa[0]] = 1 - t; ba[p.qa[1]] = t;
-      const bb = [0, 0, 0]; bb[p.qb[0]] = 1 - t; bb[p.qb[1]] = t;
-      if (!paint(p.tA, ba, ca) || !paint(p.tB, bb, cb)) continue;
-      worst = Math.max(worst, Math.abs(ca[0] - cb[0]), Math.abs(ca[1] - cb[1]), Math.abs(ca[2] - cb[2]));
-    }
-    st.n++; const w = worst * 255;
+  for (const p of samples) {
+    if (!paint(p.tA, p.bA, ca) || !paint(p.tB, p.bB, cb)) continue;
+    const w = 255 * Math.max(Math.abs(ca[0] - cb[0]), Math.abs(ca[1] - cb[1]), Math.abs(ca[2] - cb[2]));
+    const I0 = f.fs.idx; const iA = itemIdx(f, I0[p.tA]); const iB = itemIdx(f, I0[p.tB]);
+    if (iA === iB) { if (w > 1) st.fold++; st.foldMax = Math.max(st.foldMax, w); continue; }
+    const kA = itemOf(I0[p.tA]); const kB = itemOf(I0[p.tB]);
+    if (f.fs.vChain[I0[p.tA]] !== f.fs.vChain[I0[p.tB]] && kA !== "junc" && kB !== "junc") { if (w > 1) st.thread++; st.threadMax = Math.max(st.threadMax, w); continue; }
+    st.n++;
+    if (w > 1 && dbg) { const r4 = new Int32Array(4); const w4 = new Float64Array(4); const s4 = new Float64Array(4); const I = f.fs.idx; const sh = (t: number, b: number[]): string => { F.vertexPaint(f.fs as F.FillStructure, f.fr as F.FillFrame, dbg, [I[t], I[t + 1], I[t + 2]], b, r4, w4, s4); return `ch${f.fs.vChain[I[t]]} r[${[...r4]}] w[${[...w4].map((x) => x.toFixed(3))}] s[${[...s4].map((x) => x.toFixed(3))}] verts ${I[t]},${I[t + 1]},${I[t + 2]}`; }; if (dbgN++ < 12) console.log(`    ${w.toFixed(1)} at (${p.x.toFixed(3)}, ${p.y.toFixed(3)}) ${itemOf(I[p.tA])}: ${sh(p.tA, p.bA)} | ${itemOf(I[p.tB])}: ${sh(p.tB, p.bB)}`); }
     if (w > 1) { st.over++; const kp = [itemOf(f.fs.idx[p.tA]), itemOf(f.fs.idx[p.tB])].sort().join("|"); st.kinds.set(kp, (st.kinds.get(kp) ?? 0) + 1); }
-    if (w > st.max) {
-      st.max = w; const v = f.fs.idx[p.tA + p.qa[0]];
-      st.at = `(${f.fr.pos[2 * v].toFixed(3)}, ${f.fr.pos[2 * v + 1].toFixed(3)}) ${itemOf(f.fs.idx[p.tA])}|${itemOf(f.fs.idx[p.tB])}`;
-    }
+    if (w > st.max) { st.max = w; st.at = `(${p.x.toFixed(3)}, ${p.y.toFixed(3)}) ${itemOf(f.fs.idx[p.tA])}|${itemOf(f.fs.idx[p.tB])}`; }
   }
   return st;
 }
-
 interface JWin { ji: number; c0: number; r0: number; N: number; x: number; y: number }
 function jWindows(scene: O.SceneIn): JWin[] {
   const h = scene.look.halfWidth; const half = 3 * h;
@@ -196,7 +235,7 @@ function meanDiff(a: Float32Array, ref: Float32Array, n: number): number {
 
 interface Worst { nm: string; ji: number; x: number; y: number; mine: number; base: number }
 const worst: Worst[] = [];
-const fmt = (s: SeamStat): string => `${s.n} seams, ${s.over} over 1/255 [${[...s.kinds].map(([k, v]) => `${k} ${v}`).join(", ")}], max ${s.max.toFixed(1)}`;
+const fmt = (s: SeamStat): string => `paint seams ${s.n} samples, ${s.over} over 1/255 [${[...s.kinds].map(([k, v]) => `${k} ${v}`).join(", ")}], max ${s.max.toFixed(1)} (folds ${s.fold} over, max ${s.foldMax.toFixed(1)}; thread edges ${s.thread} over, max ${s.threadMax.toFixed(1)})`;
 const tot: Record<string, { over: number; max: number; jOver: number; jWorse: number; jMaxExcess: number }> = {};
 for (const nm of scenes) {
   const scene = loadScene(nm); const st = O.structure(scene); const table = O.frame(st, scene);
@@ -205,7 +244,8 @@ for (const nm of scenes) {
   const mine: Fill = { fs, fr }; const base: Fill = { fs: bfs as never, fr: bfr as never };
   const lens = scene.chains.map((c) => { if (!c.closed) return 0; let L = 0; const n = c.pts.length >> 1; for (let i = 0; i < n; i++) { const j = (i + 1) % n; L += Math.hypot(c.pts[2 * j] - c.pts[2 * i], c.pts[2 * j + 1] - c.pts[2 * i + 1]); } return L; });
   const kindOf = (f: Fill): ((v: number) => string) => { const k = new Array<string>(f.fs.nV).fill("?"); for (const it of f.fs.items) { const n = (it.kind === "junc" ? 1 + it.R : F.itemVerts(it as F.FillItem)); for (let q = 0; q < n; q++) k[it.base + q] = it.kind === "strip" && (it as F.StripItem).ghost ? "ghost" : it.kind; } return (v) => k[v]; };
-  const pM = seamPairs(mine); const pB = seamPairs(base);
+  const zt = 0.1 * scene.look.depthAmp;
+  const pM = seamSamples(mine, scene.look.halfWidth, zt); const pB = seamSamples(base, scene.look.halfWidth, zt);
   const flat = seamStat(base, pB, flatPainter(base, scene.chains.length, D.baseHueFor(nm)), kindOf(base));
   console.log(`${nm}: master flat chain colours: ${fmt(flat)} ${flat.at}`);
   const wins = flag("edges-only") ? [] : jWindows(scene);
@@ -214,7 +254,7 @@ for (const nm of scenes) {
     const sp = sectionPaint(scene, mode, D.baseHueFor(nm));
     const runs = F.fillRuns(fs, st, fr, sp);
     const pm = minePainter(mine, runs, sp); const pb = basePainter(base, sp, lens);
-    const sm = seamStat(mine, pM, pm, kindOf(mine)); const sb = seamStat(base, pB, pb, kindOf(base));
+    const sm = seamStat(mine, pM, pm, kindOf(mine), flag("dbg") ? runs : undefined); const sb = seamStat(base, pB, pb, kindOf(base));
     let jOver = 0; let jWorse = 0; let jMaxExcess = 0; let jbWorse = 0; let dM = 0; let dB = 0;
     wins.forEach((w, k) => {
       const n = w.N * w.N; const ref = paintFB(fbw[k], sp, n);

@@ -116,6 +116,8 @@ export interface FillFrame {
   /** K1278: per vertex, the four paint slots' s (float64: a long closed
    *  chain's s must not lose the paint's precision). */
   s4: Float64Array;
+  /** K1278: per vertex, the four slots' weights on this frame: the structure's (vW), with each junction corner's hand-off placed by the corner's shape (see the header). */
+  w4: Float32Array;
   /** K1278: 0 on the centreline, 1 on the border. */
   across: Float32Array;
   fallbacks: number;
@@ -256,12 +258,33 @@ export function fillStructure(st: DiagramStructure, res: Int32Array): FillStruct
  *  frame 0 (`fr0`) and the section paint's runs (paint.ts). A strip reads
  *  the run holding its middle; a cap its chain end's; a tail its start's;
  *  a junction's slot k the run arm k leaves along. */
+/** Arm k's strip as the junction sees it: the end column (`col`, the
+ *  mouth row), the column before it, and which strip slot holds the N-side
+ *  (next arm) and the P-side (previous arm) neighbour. Null without a strip. */
+export function stripNb(fs: FillStructure, st: DiagramStructure, it: JuncItem, k: number): { S: StripItem; col: number; cols: number[]; rowN: number; slotN: number; slotP: number } | null {
+  const a = it.arms[k]; if (a.strip < 0) return null;
+  const S = fs.items[a.strip]; if (!S || S.kind !== "strip") return null;
+  const col = a.atStart ? 0 : S.N; const rowN = st.arms[a.ai].dir > 0 ? 0 : 2;
+  return { S, col, cols: [col, a.atStart ? 1 : S.N - 1], rowN, slotN: rowN === 0 ? 1 : 2, slotP: rowN === 0 ? 2 : 1 };
+}
+
 export function fillRuns(fs: FillStructure, st: DiagramStructure, fr0: FillFrame, sp: SectionPaint): Int32Array {
   const run = new Int32Array(SLOTS * fs.nV).fill(-1);
   for (const it of fs.items) {
     if (it.kind === "junc") {
       const k0 = it.arms.map((a) => { const A = st.arms[a.ai]; return sp.armRun.get(`${A.ji}:${A.ei}`) ?? runAt(sp, a.pi, A.s); });
       for (let v = it.base; v <= it.base + it.R; v++) for (let k = 0; k < Math.min(SLOTS, k0.length); k++) run[SLOTS * v + k] = k0[k];
+      // The arm's strip: its end column and the one before carry the
+      // neighbour arms' runs (P side: the previous arm, N side: the next),
+      // the mouth's half of the corner hand-off (stripNb).
+      const n = it.arms.length;
+      it.arms.forEach((a, k) => {
+        const nb = stripNb(fs, st, it, k); if (!nb) return;
+        for (const col of nb.cols) for (let r = 0; r < 3; r++) {
+          const v = nb.S.base + r * (nb.S.N + 1) + col;
+          run[SLOTS * v + nb.slotN] = k0[(k + 1) % n]; run[SLOTS * v + nb.slotP] = k0[(k + n - 1) % n];
+        }
+      });
       continue;
     }
     const n = itemVerts(it);
@@ -352,6 +375,7 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
   const sv = new Float32Array(fs.nV);
   const s4 = new Float64Array(SLOTS * fs.nV);
   const across = new Float32Array(fs.nV);
+  const w4 = Float32Array.from(fs.vW); const hW = scene.look.halfWidth;
   let fallbacks = 0;
   denseCount = 0;
   const zAt = (pi: number, s: number): number => (zc[pi] ? zAtC(zc[pi], s) : 0);
@@ -500,8 +524,12 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
         } else { sP.push(sa); sM.push(sa); sN.push(sa); }
       }
       const nS = Math.min(n, SLOTS);
-      const slots = (vv: number, own: number, sOwn: number, k2: number, s2: number): void => {
-        for (let j = 0; j < nS; j++) s4[SLOTS * vv + j] = j === own ? sOwn : j === k2 ? s2 : sM[j];
+      // A ring vertex of arm k's mouth or corner k: slot k its own s; the
+      // next arm its P (the corner's far side), the previous arm its N
+      // (where the strips' neighbour slots read them); others their M.
+      const slots = (vv: number, own: number, sOwn: number): void => {
+        const nx = (own + 1) % n; const pv = (own + n - 1) % n;
+        for (let j = 0; j < nS; j++) s4[SLOTS * vv + j] = j === own ? sOwn : j === nx ? sP[nx] : j === pv ? sN[pv] : sM[j];
       };
       set(it.base, hx, hy, zAt(it.owner, s0), s0);
       for (let j = 0; j < nS; j++) s4[SLOTS * it.base + j] = sJ[j];
@@ -509,13 +537,13 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
       for (let k = 0; k < n; k++) {
         const a = it.arms[k]; const sA = armSOf(a.ai);
         const nx = (k + 1) % n;
-        slots(v, k, sP[k], -1, 0); across[v] = 1;
+        slots(v, k, sP[k]); across[v] = 1;
         set(v++, Ps[k][0], Ps[k][1], Zs[k] - zt, sA);
-        slots(v, k, sM[k], -1, 0);
+        slots(v, k, sM[k]);
         set(v++, (Ps[k][0] + Ns[k][0]) / 2, (Ps[k][1] + Ns[k][1]) / 2, Zs[k] - zt, sA);
-        slots(v, k, sN[k], -1, 0); across[v] = 1;
+        slots(v, k, sN[k]); across[v] = 1;
         set(v++, Ns[k][0], Ns[k][1], Zs[k] - zt, sA);
-        for (let q = 0; q < ARC_K; q++) { slots(v + q, k, sN[k], nx, sP[nx]); across[v + q] = 1; }
+        for (let q = 0; q < ARC_K; q++) { slots(v + q, k, sN[k]); across[v + q] = 1; }
         const T = Ps[nx]; const zA = Zs[k] - zt; const zB = Zs[nx] - zt;
         const cr = a.corner >= 0 ? table.corners[a.corner] : null;
         const arc = !!cr && cr.ok && cr.r > 1e-9;
@@ -536,9 +564,41 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
           }
         }
       }
+      // K1278: the corner hand-off. Corner k runs N_k, its ARC_K points,
+      // P_(k+1); a parameter u along its polyline (by length, so points
+      // that coincide share one weight) eases arm k to arm k+1 (smoothstep).
+      // A corner shorter than h has too little area to hold it: a share
+      // a = 1 - Lc/h of the hand-off moves into the two mouths (u starts at
+      // a/2, ends at 1 - a/2), and the strips' end columns carry it (their
+      // neighbour slots), so a sharp corner (Lc = 0) meets at V half and half.
+      if (nS === n) {
+        const ring = (k: number, q: number): number => it.base + 1 + k * (3 + ARC_K) + q;
+        const ss = (u: number): number => u * u * (3 - 2 * u);
+        const u0 = new Float64Array(n);
+        const put = (vv: number, k: number, wk: number, j: number, wj: number): void => { for (let q = 0; q < SLOTS; q++) w4[SLOTS * vv + q] = 0; w4[SLOTS * vv + k] = wk; w4[SLOTS * vv + j] += wj; };
+        for (let k = 0; k < n; k++) {
+          const nx = (k + 1) % n;
+          const pts = [ring(k, 2)]; for (let q = 0; q < ARC_K; q++) pts.push(ring(k, 3 + q)); pts.push(ring(nx, 0));
+          const cum = [0]; for (let m = 1; m < pts.length; m++) cum.push(cum[m - 1] + Math.hypot(pos[2 * pts[m]] - pos[2 * pts[m - 1]], pos[2 * pts[m] + 1] - pos[2 * pts[m - 1] + 1]));
+          const Lc = cum[cum.length - 1];
+          const aSh = Math.min(1, Math.max(0, 1 - Lc / hW)); const ua = 0.5 * aSh; const ub = 1 - 0.5 * aSh; u0[k] = ua;
+          for (let m = 1; m <= ARC_K; m++) { const u = Lc > 1e-12 ? ua + ((ub - ua) * cum[m]) / Lc : 0.5; const w = ss(u); put(pts[m], k, 1 - w, nx, w); }
+        }
+        for (let k = 0; k < n; k++) {
+          const nx = (k + 1) % n; const pv = (k + n - 1) % n;
+          const wN = ss(u0[k]); const wP = ss(u0[pv]);
+          put(ring(k, 0), k, 1 - wP, pv, wP); put(ring(k, 1), k, 1, nx, 0); put(ring(k, 2), k, 1 - wN, nx, wN);
+          const nb = stripNb(fs, st, it, k); if (!nb) continue;
+          const W = nb.S.N + 1;
+          for (const col of nb.cols) for (let r = 0; r < 3; r++) { const vv = nb.S.base + r * W + col; s4[SLOTS * vv + nb.slotN] = sP[nx]; s4[SLOTS * vv + nb.slotP] = sN[pv]; }
+          const vN = nb.S.base + nb.rowN * W + nb.col; const vP = nb.S.base + (2 - nb.rowN) * W + nb.col;
+          w4[SLOTS * vN] = 1 - wN; w4[SLOTS * vN + nb.slotN] = wN;
+          w4[SLOTS * vP] = 1 - wP; w4[SLOTS * vP + nb.slotP] = wP;
+        }
+      }
     }
   }
-  return { pos, key, s: sv, s4, across, fallbacks, dense: denseCount };
+  return { pos, key, s: sv, s4, w4, across, fallbacks, dense: denseCount };
 }
 
 /** Key range for the depth mapping: every key lies in [-KS, KS]. */
@@ -624,7 +684,7 @@ export function vertexPaint(fs: FillStructure, fr: FillFrame, runs: Int32Array, 
     for (let q = 0; q < v.length; q++) {
       const vi = v[q];
       if (r4[k] < 0 && runs[SLOTS * vi + k] >= 0) r4[k] = runs[SLOTS * vi + k];
-      w4[k] += b[q] * fs.vW[SLOTS * vi + k];
+      w4[k] += b[q] * fr.w4[SLOTS * vi + k];
       s4[k] += b[q] * fr.s4[SLOTS * vi + k];
     }
   }
