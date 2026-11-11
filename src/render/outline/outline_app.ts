@@ -86,11 +86,11 @@ void main() {
 // test ties it to the prototype's per-vertex alphaAt).
 const BAND_VS = `#version 300 es
 layout(location=0) in vec2 aPos;
-layout(location=1) in vec3 aA;
+layout(location=1) in vec4 aA;
 layout(location=3) in ivec4 aSl;
 uniform mat3 uMat;
 out vec2 vPos;
-out vec3 vA;
+out vec4 vA;
 flat out ivec4 vSl;
 void main() {
   vec3 p = uMat * vec3(aPos, 1.0);
@@ -110,7 +110,7 @@ uniform float uH;
 uniform float uW;
 uniform float uZt;
 in vec2 vPos;
-in vec3 vA;
+in vec4 vA;
 flat in ivec4 vSl;
 out vec4 o;
 const int TW = ${BAND_TEX_W};
@@ -156,7 +156,7 @@ void main() {
     if (m < 0) { seenO[n] = t1.w; seenS[n] = bs; seenL[n] = oLen; seenF[n] = f; n++; }
     else if (f < seenF[m]) { seenS[m] = bs; seenF[m] = f; }
   }
-  float a = 1.0;
+  float a = vA.w;
   for (int u = 0; u < 4; u++) if (u < n) a *= seenF[u];
   o = vec4(uInk, a);
 }`;
@@ -252,7 +252,7 @@ class OutlinePass {
     this.bVao = gl.createVertexArray()!;
     gl.bindVertexArray(this.bVao);
     attr(this.bufs.bPos, 0, 2);
-    attr(this.bufs.bAttr, 1, 3);
+    attr(this.bufs.bAttr, 1, 4);
     attr(this.bufs.bSl, 3, 4, true);
     this.cVao = gl.createVertexArray()!;
     gl.bindVertexArray(null);

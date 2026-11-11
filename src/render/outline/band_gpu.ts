@@ -31,7 +31,7 @@ const PT = 4;
 export interface BandGpu {
   /** Per vertex: world x, y. */
   pos: Float32Array;
-  /** Per vertex: own s, dC, own zAtC(C, s). */
+  /** Per vertex: own s, dC, own zAtC(C, s), the piece's own alpha (K1283 s3: a tail's, else 1). */
   attr: Float32Array;
   /** Per vertex (flat, the quad's): BAND_SLOTS global pass ids, -1 none. */
   slots: Int32Array;
@@ -118,19 +118,20 @@ export function bandGpu(table: OutlineTable, scene: SceneIn, zz: ZZ): BandGpu {
   for (const p of table.pieces) { const np = p.pts.length / 2; if (np >= 2) nQ += np - 1; }
   const count = 6 * nQ;
   const pos = new Float32Array(2 * count);
-  const attr = new Float32Array(3 * count);
+  const attr = new Float32Array(4 * count);
   const slots = new Int32Array(BAND_SLOTS * count).fill(-1);
   let v = 0; let dropped = 0;
-  const vert = (x: number, y: number, s: number, dC: number, z: number, sl: number[] | null): void => {
+  const vert = (x: number, y: number, s: number, dC: number, z: number, sl: number[] | null, ba = 1): void => {
     pos[2 * v] = x; pos[2 * v + 1] = y;
-    attr[3 * v] = s; attr[3 * v + 1] = dC; attr[3 * v + 2] = z;
+    attr[4 * v] = s; attr[4 * v + 1] = dC; attr[4 * v + 2] = z; attr[4 * v + 3] = ba;
     if (sl) for (let k = 0; k < sl.length; k++) slots[BAND_SLOTS * v + k] = sl[k];
     v++;
   };
-  const quad = (ax: number, ay: number, bx: number, by: number, iax: number, iay: number, ibx: number, iby: number, sa: number, sb: number, za: number, zb: number, sl: number[] | null): void => {
-    // pO, cO, pI, cO, cI, pI (bandData's order).
-    vert(ax, ay, sa, h, za, sl); vert(bx, by, sb, h, zb, sl); vert(iax, iay, sa, h - W, za, sl);
-    vert(bx, by, sb, h, zb, sl); vert(ibx, iby, sb, h - W, zb, sl); vert(iax, iay, sa, h - W, za, sl);
+  const quad = (ax: number, ay: number, bx: number, by: number, iax: number, iay: number, ibx: number, iby: number, sa: number, sb: number, za: number, zb: number, sl: number[] | null, pa: number[] | null = null, i = 0): void => {
+    // pO, cO, pI, cO, cI, pI (bandData's order); pa: the piece's own alpha per point (outer, inner).
+    const oA = pa ? pa[2 * i] : 1; const iA = pa ? pa[2 * i + 1] : 1; const oB = pa ? pa[2 * i + 2] : 1; const iB = pa ? pa[2 * i + 3] : 1;
+    vert(ax, ay, sa, h, za, sl, oA); vert(bx, by, sb, h, zb, sl, oB); vert(iax, iay, sa, h - W, za, sl, iA);
+    vert(bx, by, sb, h, zb, sl, oB); vert(ibx, iby, sb, h - W, zb, sl, iB); vert(iax, iay, sa, h - W, za, sl, iA);
   };
   const sl: number[] = [];
   const cand: number[] = [];
@@ -146,10 +147,11 @@ export function bandGpu(table: OutlineTable, scene: SceneIn, zz: ZZ): BandGpu {
       return [x + dx * W, y + dy * W];
     };
     if (!tied) {
+      const pa = p.alpha && p.alpha.length === 2 * np ? p.alpha : null;
       let ia = inner(0);
       for (let i = 0; i + 1 < np; i++) {
         const ib = inner(i + 1);
-        quad(p.pts[2 * i], p.pts[2 * i + 1], p.pts[2 * i + 2], p.pts[2 * i + 3], ia[0], ia[1], ib[0], ib[1], 0, 0, 0, 0, null);
+        quad(p.pts[2 * i], p.pts[2 * i + 1], p.pts[2 * i + 2], p.pts[2 * i + 3], ia[0], ia[1], ib[0], ib[1], 0, 0, 0, 0, null, pa, i);
         ia = ib;
       }
       continue;
@@ -193,8 +195,9 @@ export function bandGpu(table: OutlineTable, scene: SceneIn, zz: ZZ): BandGpu {
 }
 
 /** The shader's CPU twin: alphaAt from the tables above, for a point (x, y)
- *  of chain c's band at own s, dC and own depth zC, with the quad's slots. */
-export function alphaCpu(b: BandGpu, x: number, y: number, s: number, dC: number, zC: number, sl: ArrayLike<number>): number {
+ *  of chain c's band at own s, dC and own depth zC, with the quad's slots,
+ *  times the vertex's own alpha (attr .w, base: a tail's, K1283 s3). */
+export function alphaCpu(b: BandGpu, x: number, y: number, s: number, dC: number, zC: number, sl: ArrayLike<number>, base = 1): number {
   const T = (q: number, k: number): number => b.passTex[4 * (PT * q + (k >> 2)) + (k & 3)];
   const S = (i: number, k: number): number => b.chainTex[4 * i + k];
   const dS = (len: number, a: number, c: number): number => { let d = c - a; if (len > 0) { d = ((d % len) + len) % len; if (d > len / 2) d -= len; } return d; };
@@ -229,6 +232,6 @@ export function alphaCpu(b: BandGpu, x: number, y: number, s: number, dC: number
     for (let u = 0; u < seenO.length; u++) if (seenO[u] === o && Math.abs(dS(oLen, seenS[u], bs)) < h) { m = u; break; }
     if (m < 0) { seenO.push(o); seenS.push(bs); seenF.push(f); } else if (f < seenF[m]) { seenS[m] = bs; seenF[m] = f; }
   }
-  let a = 1; for (const f of seenF) a *= f;
+  let a = base; for (const f of seenF) a *= f;
   return a;
 }

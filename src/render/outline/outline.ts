@@ -72,6 +72,11 @@ export interface OutlinePiece {
   cpts: number[];
   region: number;
   corner: number;
+  /** K1283 s3: a tail's own alpha per point, outer then inner edge of the
+   *  band (2 per point): form B's member weight (1 - ramp) times its burial
+   *  under the other arm. Absent = 1. Run and ghost pieces carry their tie
+   *  alpha in draw.ts instead. */
+  alpha?: number[];
 }
 export interface OutlineRegion {
   id: number;
@@ -2404,7 +2409,7 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
         if (rid >= 0 && regions[rid]) regions[rid].pieces.push(pieces.length - 1);
       } else if (dp.kind === "tail") {
         const cw = cornerWork[dp.corner];
-        const pts: number[] = []; const cpts: number[] = [];
+        const pts: number[] = []; const cpts: number[] = []; const alpha: number[] = [];
         const E = cw ? arms[dp.interval ? cw.bArm : cw.aArm] : undefined;
         const X = cw ? arms[dp.interval ? cw.aArm : cw.bArm] : undefined;
         if (cw && E && X) {
@@ -2425,9 +2430,9 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
             pE, dirE: E.dir, endS: E.sR, sT: dp.interval ? cw.sB : cw.sA, x0: dp.interval ? cw.tbx : cw.tax, y0: dp.interval ? cw.tby : cw.tay, bp,
             pX: polys[X.pi], sRX: X.sR, dirX: X.dir, LX: X.L, LcutX: X.Lcut,
             zE: (s) => depthAt(E.pi, s), zX: (s) => depthAt(X.pi, s), h, zt: 0.1 * scene.look.depthAmp, W: scene.look.band,
-          }, pts, cpts);
+          }, pts, cpts, alpha);
         }
-        pieces.push({ kind: "tail", chain: dp.chain, side: cw ? (dp.interval ? cw.sideB : cw.sideA) : 0, s0: cw ? (dp.interval ? cw.sB : cw.sA) : 0, s1: cw ? (dp.interval ? cw.sB : cw.sA) : 0, pts, cpts, region: -1, corner: dp.corner });
+        pieces.push({ kind: "tail", chain: dp.chain, side: cw ? (dp.interval ? cw.sideB : cw.sideA) : 0, s0: cw ? (dp.interval ? cw.sB : cw.sA) : 0, s1: cw ? (dp.interval ? cw.sB : cw.sA) : 0, pts, cpts, region: -1, corner: dp.corner, alpha });
       } else {
         const ci = capInfos[dp.cap];
         if (!ci) continue;
@@ -7034,7 +7039,7 @@ function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[])
     } else if (dp.kind === "tail") {
       const ci = dp.corner;
       const dc = st.corners[ci];
-      const pts: number[] = []; const cpts: number[] = [];
+      const pts: number[] = []; const cpts: number[] = []; const alpha: number[] = [];
       let sideE = 0; let sT = 0;
       if (dc) {
         const aiE = dp.interval ? dc.bArm : dc.aArm; const aiX = dp.interval ? dc.aArm : dc.bArm;
@@ -7048,9 +7053,9 @@ function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[])
           bp: (s, out) => borderPointAtFinal(C, piE, sideE, s, out),
           pX: C.polys[piX], sRX: C.armSR[aiX], dirX: C.armDir[aiX], LX: C.armL[aiX], LcutX: C.armLcut[aiX],
           zE: (s) => depthAtC(C, piE, s, depthWin), zX: (s) => depthAtC(C, piX, s, depthWin), h: C.h, zt: 0.1 * C.depthAmp, W: C.W,
-        }, pts, cpts);
+        }, pts, cpts, alpha);
       }
-      pieces.push({ kind: "tail", chain: dp.chain, side: sideE, s0: sT, s1: sT, pts, cpts, region: -1, corner: ci });
+      pieces.push({ kind: "tail", chain: dp.chain, side: sideE, s0: sT, s1: sT, pts, cpts, region: -1, corner: ci, alpha });
     } else {
       const capInfo = dp.cap;
       if (capInfo < 0 || capInfo >= C.capArcN.length) continue;
@@ -7429,39 +7434,73 @@ function tailAt(a: TailIn, l1: number, u: number, out: Float64Array, cen: Float6
   out[1] = cen[1] + ry * c - a.h * a.dirE * cen[3] * sn;
   return a.endS;
 }
+/** X's cap ramp at its foot s (1 deep in the junction's group, 0 on its own
+ *  run), or -1 behind X's arm start. */
+function tailRamp(a: TailIn, sF: number): number {
+  let ad = (sF - a.sRX) * a.dirX;
+  const len = a.pX.len;
+  if (a.pX.closed && len > 0) { ad %= len; if (ad > len / 2) ad -= len; if (ad < -len / 2) ad += len; }
+  if (ad < 0) return -1;
+  if (ad > a.LX) return 0;
+  if (!Number.isFinite(a.LcutX)) return 1;
+  let t = (ad - a.LcutX) / -a.h; t = t < 0 ? 0 : t > 1 ? 1 : t;
+  return t * t * (3 - 2 * t);
+}
 function tailF(a: TailIn, l1: number, u: number): number {
   const sE = tailAt(a, l1, u, tailPt, tailCen, false);
   const h = a.h;
   const lo = a.dirX > 0 ? a.sRX - 2 * h : a.sRX - 6 * h;
   tailFoot(a.pX, lo, lo + 8 * h, tailPt[0], tailPt[1], tailFt);
   const sF = tailFt[0]; const dF = tailFt[1];
-  let ad = (sF - a.sRX) * a.dirX;
-  const len = a.pX.len;
-  if (a.pX.closed && len > 0) { ad %= len; if (ad > len / 2) ad -= len; if (ad < -len / 2) ad += len; }
-  if (ad < 0) return -1;
-  let ramp = 1;
-  if (ad > a.LX) ramp = 0;
-  else if (Number.isFinite(a.LcutX)) { let t = (ad - a.LcutX) / -h; t = t < 0 ? 0 : t > 1 ? 1 : t; ramp = t * t * (3 - 2 * t); }
+  const ramp = tailRamp(a, sF);
+  if (ramp < 0) return -1;
   // Callers read only f's sign, so a term at or below 0 settles it before
   // the two depth lookups (r4 timing: same output, less piece emission).
-  const fR = 0.5 - ramp; if (!(fR > 0)) return fR;
+  const fR = TAIL_RAMP_CUT - ramp; if (!(fR > 0)) return fR;
   const fW = (h - a.W - dF) / h; if (!(fW > 0)) return fW;
   const margin = a.zE(sE) - a.zt - a.zX(sF) + (a.zt * dF) / h;
   return Math.min(fR, a.zt > 0 ? margin / a.zt - TAIL_MARGIN : margin > 0 ? 1 : -1, fW);
 }
-/** K1283 s2: the depth margin (in zt) a tail point needs to show. Form B's
- *  burial is soft (draw.ts tieAlpha: alpha 0.5 at margin 0, 0.8 at 0.4 zt),
- *  and draw.ts draws a tail at alpha 1, so a tail cut at margin 0 drew full
- *  ink where form B shows a half-faded shadow (muse_hash x177, x71,
- *  g41_user_tw64 x143, g41_def_tw64 x349). Measured against form B on the
- *  census (stage 2): 0 -> 16960 px, 0.25 -> 16525, 0.35 -> 16409,
- *  0.42 -> 16369 with no crossing worse, 0.5 -> 16413 with ring x11 worse
- *  by 28 px. */
-const TAIL_MARGIN = 0.4;
+/** K1283 s3: a tail point's alpha, at the band's outer edge (out[0]) and
+ *  inner edge (out[1], W nearer E's centre). Form B composites E's surface
+ *  and X's by their cone keys (z - d zt / h, each at its own foot of the
+ *  point: X's depth can move fast along X, so the inner edge takes its own
+ *  foot) with the tie mix, so E's border shows at sstep(-zt, zt, keyE - keyX)
+ *  where X covers; and only in the configurations where X is its own, by the
+ *  member weight 1 - ramp (in the group's, the union has no border there).
+ *  Across X's border band (g = (h - dF) / W) it blends to 1. */
+function tailAlpha(a: TailIn, l1: number, u: number, out: Float64Array): void {
+  const sE = tailAt(a, l1, u, tailPt, tailCen, true);
+  const h = a.h; const zE = a.zE(sE);
+  let nx = tailCen[0] - tailPt[0]; let ny = tailCen[1] - tailPt[1]; const nl = Math.sqrt(nx * nx + ny * ny);
+  if (nl > 1e-12) { nx /= nl; ny /= nl; } else { nx = 0; ny = 0; }
+  const x0 = tailPt[0]; const y0 = tailPt[1];
+  for (let e = 0; e < 2; e++) out[e] = tailAlphaAt(a, x0 + nx * a.W * e, y0 + ny * a.W * e, zE - (a.zt * (h - a.W * e)) / h);
+}
+function tailAlphaAt(a: TailIn, x: number, y: number, keyE: number): number {
+  const h = a.h;
+  const lo = a.dirX > 0 ? a.sRX - 2 * h : a.sRX - 6 * h;
+  tailFoot(a.pX, lo, lo + 8 * h, x, y, tailFt);
+  const sF = tailFt[0]; const dF = tailFt[1];
+  const ramp = tailRamp(a, sF);
+  if (ramp < 0) return 0;
+  const g = Math.min(1, Math.max(0, (h - dF) / a.W));
+  if (!(g > 0)) return 1;
+  const m = keyE - (a.zX(sF) - (a.zt * dF) / h);
+  let t = a.zt > 0 ? (m + a.zt) / (2 * a.zt) : m > 0 ? 1 : 0; t = t < 0 ? 0 : t > 1 ? 1 : t;
+  return 1 - g * (1 - (1 - ramp) * t * t * (3 - 2 * t));
+}
+/** K1283 s3: where a tail is drawn. Stage 2 drew it at alpha 1 and cut it at
+ *  ramp 0.5 and a depth margin of 0.4 zt (form B's burial is soft: tie alpha
+ *  0.5 at margin 0); the tail now carries form B's alpha (tailAlpha), so it
+ *  runs on to where that alpha reaches 0: ramp 1, margin -zt. */
+const TAIL_RAMP_CUT = 1;
+const TAIL_MARGIN = -1;
 const TAIL_N = 16;
 const TAIL_BISECT = 12;
 const TAIL_BLEND = 0.5;
-export function endTailPts(a: TailIn, pts: number[], cpts: number[]): void {
+const tailA = new Float64Array(2);
+export function endTailPts(a: TailIn, pts: number[], cpts: number[], alpha?: number[]): void {
   if (!(a.h > 0) || !Number.isFinite(a.sT)) return;
   const l1 = Math.max(0, a.dirE * (a.sT - a.endS));
   const U = l1 + 0.5 * Math.PI * a.h;
@@ -7481,10 +7520,13 @@ export function endTailPts(a: TailIn, pts: number[], cpts: number[]): void {
   // comes and goes with the margin's sign.
   a.bp(a.sT, tailPt); const offX = a.x0 - tailPt[0]; const offY = a.y0 - tailPt[1];
   const push = (u: number): void => {
-    if (u === 0) { pointAtInto(a.pE, a.sT, tailCen); pts.push(a.x0, a.y0); cpts.push(tailCen[0], tailCen[1]); return; }
-    tailAt(a, l1, u, tailPt, tailCen);
-    let t = 1 - u / (TAIL_BLEND * a.h); t = t < 0 ? 0 : t; const w = t * t * (3 - 2 * t);
-    pts.push(tailPt[0] + offX * w, tailPt[1] + offY * w); cpts.push(tailCen[0], tailCen[1]);
+    if (u === 0) { pointAtInto(a.pE, a.sT, tailCen); pts.push(a.x0, a.y0); cpts.push(tailCen[0], tailCen[1]); }
+    else {
+      tailAt(a, l1, u, tailPt, tailCen);
+      let t = 1 - u / (TAIL_BLEND * a.h); t = t < 0 ? 0 : t; const w = t * t * (3 - 2 * t);
+      pts.push(tailPt[0] + offX * w, tailPt[1] + offY * w); cpts.push(tailCen[0], tailCen[1]);
+    }
+    if (alpha) { tailAlpha(a, l1, u, tailA); alpha.push(tailA[0], tailA[1]); }
   };
   let i = 0;
   let prevU = 0;

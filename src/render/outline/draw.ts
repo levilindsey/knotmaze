@@ -535,7 +535,11 @@ export function bandData(table: OutlineTable, scene: SceneIn, zz: ReturnType<typ
       const [iax, iay] = inner[i];
       const [ibx, iby] = inner[i + 1];
       bandPos.push(ax, ay, bx, by, iax, iay, bx, by, ibx, iby, iax, iay);
-      for (let k = 0; k < 6; k++) { bandCol.push(ink[0], ink[1], ink[2]); bandAlpha.push(1); }
+      for (let k = 0; k < 6; k++) bandCol.push(ink[0], ink[1], ink[2]);
+      // K1283 s3: a tail's own alpha per point (outer, inner), else 1.
+      const pa = p.alpha && p.alpha.length === 2 * np ? p.alpha : null;
+      if (pa) bandAlpha.push(pa[2 * i], pa[2 * i + 2], pa[2 * i + 1], pa[2 * i + 2], pa[2 * i + 3], pa[2 * i + 1]);
+      else for (let k = 0; k < 6; k++) bandAlpha.push(1);
     }
   }
   return { bandPos: Float32Array.from(bandPos), bandCol: Float32Array.from(bandCol), bandAlpha: Float32Array.from(bandAlpha), bandCount: bandPos.length / 2 };

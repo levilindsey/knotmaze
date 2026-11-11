@@ -34,7 +34,7 @@ describe("K1240 S4b GPU band", () => {
       const c = chainOf[q];
       // Vertices pO (v), cO (v+1), pI (v+2), cI (v+4): bilinear points.
       const P = (k: number, i: number): number => b.pos[2 * (v + k) + i];
-      const A = (k: number, i: number): number => b.attr[3 * (v + k) + i];
+      const A = (k: number, i: number): number => b.attr[4 * (v + k) + i];
       for (const t of [0, 0.3, 0.7, 1]) for (const u of [0, 0.25, 0.5, 1]) {
         const ox = P(0, 0) + (P(1, 0) - P(0, 0)) * t; const oy = P(0, 1) + (P(1, 1) - P(0, 1)) * t;
         const ix = P(2, 0) + (P(4, 0) - P(2, 0)) * t; const iy = P(2, 1) + (P(4, 1) - P(2, 1)) * t;
@@ -51,5 +51,30 @@ describe("K1240 S4b GPU band", () => {
     expect(n).toBeGreaterThan(1000);
     // float32 tables (positions, s, depth): the alphas agree to 1e-3.
     expect(worst).toBeLessThan(1e-3);
+  }, 60_000);
+  it("K1283 s3: a tail's own alpha reaches the band's vertices (attr .w), the rest at 1", () => {
+    const sc = loadScene(fileURLToPath(new URL("./fixtures/outline_ring.json.gz", import.meta.url)));
+    const tb = frame(structure(sc), sc);
+    const b = bandGpu(tb, sc, zChains(sc));
+    let v = 0; let tails = 0; let faded = 0;
+    for (const p of tb.pieces) {
+      const np = p.pts.length / 2;
+      if (np < 2) continue;
+      const pa = p.kind === "tail" ? p.alpha : undefined;
+      if (pa) { tails++; expect(pa.length).toBe(2 * np); }
+      for (let i = 0; i + 1 < np; i++) {
+        // pO, cO, pI, cO, cI, pI: outer i, outer i+1, inner i, outer i+1, inner i+1, inner i.
+        const want = pa ? [pa[2 * i], pa[2 * i + 2], pa[2 * i + 1], pa[2 * i + 2], pa[2 * i + 3], pa[2 * i + 1]] : [1, 1, 1, 1, 1, 1];
+        for (let k = 0; k < 6; k++) {
+          expect(b.attr[4 * (v + k) + 3]).toBeCloseTo(want[k], 6);
+          if (want[k] < 0 || want[k] > 1) throw new Error(`alpha ${want[k]} out of [0, 1]`);
+          if (want[k] < 0.999) faded++;
+        }
+        v += 6;
+      }
+    }
+    expect(v).toBe(b.count);
+    expect(tails).toBeGreaterThan(0);
+    expect(faded).toBeGreaterThan(0);
   }, 60_000);
 });
