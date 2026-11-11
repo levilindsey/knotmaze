@@ -513,10 +513,10 @@ Next free ID: K1289.
   hand-off as in form B, a pulse's travel distance continuous through the junction), never per face or
   triangle. Gate: a seam test sampling section blends and pulses across every face edge, triangle edge and
   junction for steps and kinks, plus K1244's sheets (K1250).
-  - owner: agent `abbdf5d7bf1c88649` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-10 10:24, 2 h cap ~12:24)
-  - branch: `worktree-agent-abbdf5d7bf1c88649`, worktree `.claude/worktrees/agent-abbdf5d7bf1c88649`; last commit: `9849a26e`
+  - owner: nobody since 2026-11-10 11:23 (merged; agent `abbdf5d7bf1c88649` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `9f6a38f2`
   - evidence: .claude/probes/K1240/proto/ (draw.ts, fill_tri.ts, k1278_* tools); .claude/probes/K1240/out/k1278/ (untracked)
-  - next: seam test on master, then paint fields (chain, s, across, junction arm weights) and section colours; end-arm sliver
+  - next: Stage 1 merged (Claude viewed the crops): the fill paints section colours per pixel from per-vertex run/weight/s slots fixed at structure; a junction hands off by corner arc length (smoothstep). Edge seams over 1/255 34045 -> 41 (app), junction windows steppier than form B 650 -> 7; colour at the six end-arm slivers matches form B; K1277's bars hold. Next: stage 2 = an end-arm fan's per-pixel round-end term (x14: form B's hard edge), the across upload in draw.ts, then the pulses (K1250); the handoff in the brief lists the rest
   - brief: `docs/design/K1278_paint.md`
 
 ## Next, in order
