@@ -494,10 +494,10 @@ Next free ID: K1292.
 - **K1240** · One outline for both looks and every junction consumer (Levi's sketch, 2026-11-06): offset-polyline borders,
   cuts and corner arcs in closed form from each frame; the border look strokes it, the filled look fills it. S1: a clean
   prototype beside the app, checked against form B and timed (Levi: "without all the tech debt"); notes.
-  - owner: agent `a6107b5edd571a0aa` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-10 18:54, 2 h cap ~20:54)
-  - branch: `worktree-agent-a6107b5edd571a0aa`, worktree `.claude/worktrees/agent-a6107b5edd571a0aa`; last commit: `ae2a1787`
+  - owner: nobody since 2026-11-10 19:42 (merged; agent `a6107b5edd571a0aa` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `8d56f5c0`
   - evidence: src/render/outline/, .claude/probes/K1240/s4/ tools; untracked .claude/probes/K1240/out/s4/ (S4 at 60f934b7 on worktree-agent-a5393aa1f25f2ff33)
-  - next: S4b: rp=outline at the prototype's cost (app ~3 s a def frame vs proto ~29 ms), structure once, tests, bench, crops; then merge, the Pixel timing, K1283 and K1278 stage 2 in src/
+  - next: S4b merged: rp=outline draws the redesign in the app (outline worker 117 ms a def frame, from 3.4 s; structure once; flag off byte-identical). Next: the Pixel timing when the phone is free; flow on (fw=1) never settles: flow in the outline's shader on a resting build vs a throttle, decided by checks; the worker cost is K1247's
   - brief: `docs/design/K1240_s4b_cost.md`
   - env: from the worktree, vite on a copy of .claude/probes/K1040/vite.private-cache.config.ts, ports 5980-5989; S3d's code for the baselines is proto/outline_s3d.ts (untracked), recreated by the one-line command in s3f_exact_s3dbase.ts's header
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
