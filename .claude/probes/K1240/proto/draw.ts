@@ -106,7 +106,129 @@ export interface DrawData {
   fillFaces: FillFaceDraw[];
   bandPos: Float32Array;
   bandCol: Float32Array;
+  /** K1279: one alpha per band vertex (form B's tie alpha; 1 outside every partner tube). */
+  bandAlpha: Float32Array;
   bandCount: number;
+}
+
+// ---------------------------------------------------------------------------
+// K1279: form B's crossing look for the bands. form B sorts the surfaces at a
+// pixel by key = z - d zt / h (z the chain's diagram depth, d the distance to
+// its centreline, zt = 0.1 depthAmp) and, where the top two keys are within
+// zt, mixes the swapped order in at 1 - ss(-zt, zt, gap). So a band vertex of
+// chain c inside a partner pass o's tube is drawn at
+//   alpha = 1 - g(d_o) ss(-zt, zt, key_o - key_c),
+// g(d_o) = clamp((h - d_o) / W): 0 at o's border (d_o = h), 1 past o's own
+// band (d_o <= h - W), where o's band ink covers the ramp. That one formula is
+// the under pass's burial (0 deep under the over, fading in where the keys
+// tie at shallow crossings), the over pass's fade in a tie (eyes), and 1
+// everywhere else. Which passes are partners comes from the crossing table
+// (structure); alpha and where it fades follow positions continuously.
+
+interface ZChain { closed: boolean; len: number; xs: Float64Array; ys: Float64Array; s: Float64Array; z: Float64Array; n: number }
+interface Pass { s: number; o: number; so: number; reach: number }
+
+function sstep(e0: number, e1: number, x: number): number {
+  const t = Math.min(1, Math.max(0, (x - e0) / (e1 - e0)));
+  return t * t * (3 - 2 * t);
+}
+
+/** form B's diagramDepth (src/render/field/depth.ts), mirrored. */
+function depthAt(pins: { s: number; z: number }[], closed: boolean, len: number, win: number, s: number): number {
+  const n = pins.length;
+  if (n === 0) return 0;
+  const hat = (z: number, d: number, w: number): number => (w <= 1e-12 ? (d <= 0 ? z : 0) : d >= w ? 0 : z * (1 - d / w));
+  let u = s;
+  if (closed && len > 0) { u = s % len; if (u < 0) u += len; }
+  let lo = -1; let hi = n;
+  while (hi - lo > 1) { const m = (lo + hi) >> 1; if (pins[m].s <= u) lo = m; else hi = m; }
+  if (closed) {
+    const iL = lo < 0 ? n - 1 : lo;
+    const sL = lo < 0 ? pins[iL].s - len : pins[iL].s;
+    const iR = lo + 1 >= n ? 0 : lo + 1;
+    const sR = lo + 1 >= n ? pins[iR].s + len : pins[iR].s;
+    const w = Math.min(win, sR - sL);
+    return hat(pins[iL].z, u - sL, w) + hat(pins[iR].z, sR - u, w);
+  }
+  if (lo < 0) return hat(pins[0].z, pins[0].s - u, win);
+  if (lo + 1 >= n) return hat(pins[n - 1].z, u - pins[n - 1].s, win);
+  const w = Math.min(win, pins[lo + 1].s - pins[lo].s);
+  return hat(pins[lo].z, u - pins[lo].s, w) + hat(pins[lo + 1].z, pins[lo + 1].s - u, w);
+}
+
+function zChains(scene: SceneIn): { zc: ZChain[]; passes: Pass[][]; idx: Map<number, number> } {
+  const amp = scene.look.depthAmp;
+  const win = scene.look.depthWindow * (scene.look.ctrlArc ?? 1);
+  const h = scene.look.halfWidth;
+  const idx = new Map<number, number>(); scene.chains.forEach((c, i) => idx.set(c.id, i));
+  const zc: ZChain[] = scene.chains.map((c) => {
+    const n = c.pts.length >> 1; const xs = new Float64Array(n); const ys = new Float64Array(n); const s = new Float64Array(n);
+    for (let i = 0; i < n; i++) { xs[i] = c.pts[2 * i]; ys[i] = c.pts[2 * i + 1]; if (i > 0) s[i] = s[i - 1] + Math.hypot(xs[i] - xs[i - 1], ys[i] - ys[i - 1]); }
+    const len = c.closed && n > 1 ? s[n - 1] + Math.hypot(xs[0] - xs[n - 1], ys[0] - ys[n - 1]) : n > 0 ? s[n - 1] : 0;
+    return { closed: c.closed, len, xs, ys, s, z: new Float64Array(n), n };
+  });
+  const pins: { s: number; z: number }[][] = scene.chains.map(() => []);
+  const passes: Pass[][] = scene.chains.map(() => []);
+  const norm = (c: ZChain, s: number): number => (c.closed && c.len > 0 ? ((s % c.len) + c.len) % c.len : s);
+  const tan = (c: ZChain, s: number): [number, number] => {
+    const u = norm(c, s); let k = 0; while (k + 2 < c.n && c.s[k + 1] <= u) k++;
+    const j = c.closed ? (k + 1) % c.n : Math.min(k + 1, c.n - 1);
+    const dx = c.xs[j] - c.xs[k]; const dy = c.ys[j] - c.ys[k]; const l = Math.hypot(dx, dy) || 1; return [dx / l, dy / l];
+  };
+  for (const x of scene.crossings) {
+    const ia = idx.get(x.a.chain); const ib = idx.get(x.b.chain);
+    if (ia === undefined || ib === undefined) continue;
+    const sa = norm(zc[ia], x.a.s); const sb = norm(zc[ib], x.b.s);
+    pins[ia].push({ s: sa, z: x.over === "a" ? amp : -amp });
+    pins[ib].push({ s: sb, z: x.over === "b" ? amp : -amp });
+    const ta = tan(zc[ia], sa); const tb = tan(zc[ib], sb);
+    const sin = Math.abs(ta[0] * tb[1] - ta[1] * tb[0]);
+    // How far along each pass the other's tube can reach: 2h / sin, plus h.
+    const reach = Math.min(2 * h / Math.max(sin, 0.05) + h, 48 * h);
+    passes[ia].push({ s: sa, o: ib, so: sb, reach });
+    passes[ib].push({ s: sb, o: ia, so: sa, reach });
+  }
+  zc.forEach((c, i) => { pins[i].sort((u, v) => u.s - v.s); for (let k = 0; k < c.n; k++) c.z[k] = depthAt(pins[i], c.closed, c.len, win, c.s[k]); });
+  return { zc, passes, idx };
+}
+
+/** Signed arc distance b - a on a chain (wrapped into (-len/2, len/2] when closed). */
+function dSC(c: ZChain, a: number, b: number): number {
+  let d = b - a;
+  if (c.closed && c.len > 0) { d = ((d % c.len) + c.len) % c.len; if (d > c.len / 2) d -= c.len; }
+  return d;
+}
+
+function zAtC(c: ZChain, s: number): number {
+  if (c.n === 0) return 0;
+  const u = c.closed && c.len > 0 ? ((s % c.len) + c.len) % c.len : Math.min(Math.max(s, 0), c.s[c.n - 1]);
+  let lo = 0; let hi = c.n - 1;
+  if (u >= c.s[c.n - 1]) {
+    if (!c.closed) return c.z[c.n - 1];
+    const l = c.len - c.s[c.n - 1]; const t = l > 0 ? (u - c.s[c.n - 1]) / l : 0; return c.z[c.n - 1] + (c.z[0] - c.z[c.n - 1]) * t;
+  }
+  while (hi - lo > 1) { const m = (lo + hi) >> 1; if (c.s[m] <= u) lo = m; else hi = m; }
+  const l = c.s[lo + 1] - c.s[lo]; const t = l > 0 ? (u - c.s[lo]) / l : 0;
+  return c.z[lo] + (c.z[lo + 1] - c.z[lo]) * t;
+}
+
+/** Nearest point on chain c to (x, y) among segments whose arc span meets
+ *  [sC - r, sC + r], skipping those within `skipR` of sSkip (a self pass). */
+function footNear(c: ZChain, x: number, y: number, sC: number, r: number, sSkip: number, skipR: number): { d: number; s: number } {
+  let best = Infinity; let bs = 0;
+  const segs = c.closed ? c.n : c.n - 1;
+  for (let k = 0; k < segs; k++) {
+    const j = (k + 1) % c.n; const sk = c.s[k]; const lk = j === 0 ? c.len - sk : c.s[j] - sk;
+    const mid = sk + lk / 2;
+    if (Math.abs(dSC(c, sC, mid)) > r + lk / 2) continue;
+    if (skipR > 0 && Math.abs(dSC(c, sSkip, mid)) < skipR) continue;
+    const ax = c.xs[k]; const ay = c.ys[k]; const ex = c.xs[j] - ax; const ey = c.ys[j] - ay;
+    const l2 = ex * ex + ey * ey;
+    const t = l2 > 0 ? Math.min(1, Math.max(0, ((x - ax) * ex + (y - ay) * ey) / l2)) : 0;
+    const d = Math.hypot(x - ax - t * ex, y - ay - t * ey);
+    if (d < best) { best = d; bs = sk + t * lk; }
+  }
+  return { d: best, s: bs };
 }
 
 export function buildDrawData(table: OutlineTable, scene: SceneIn): DrawData {
@@ -143,10 +265,82 @@ export function buildDrawData(table: OutlineTable, scene: SceneIn): DrawData {
   const ink = parseColor(scene.look.ink);
   const bandPos: number[] = [];
   const bandCol: number[] = [];
+  const bandAlpha: number[] = [];
   const W = table.W;
+  const h = table.h;
+  const zt = 0.1 * scene.look.depthAmp;
+  const { zc, passes } = zChains(scene);
+  const seen: { o: number; s: number }[] = [];
+  /** The tie alpha of a band vertex of chain c at (x, y), own foot s, own distance dC. */
+  const alphaAt = (c: number, x: number, y: number, s: number, dC: number): number => {
+    let a = 1; seen.length = 0;
+    const C = zc[c];
+    const keyC = zAtC(C, s) - (dC * zt) / h;
+    for (const P of passes[c]) {
+      if (Math.abs(dSC(C, P.s, s)) > P.reach) continue;
+      const O = zc[P.o];
+      const f = footNear(O, x, y, P.so, P.reach, s, P.o === c ? 3 * h : 0);
+      if (!(f.d < h)) continue;
+      if (seen.some((q) => q.o === P.o && Math.abs(dSC(O, q.s, f.s)) < h)) continue;
+      seen.push({ o: P.o, s: f.s });
+      const g = Math.min(1, Math.max(0, (h - f.d) / W));
+      const keyO = zAtC(O, f.s) - (f.d * zt) / h;
+      a *= 1 - g * sstep(-zt, zt, keyO - keyC);
+    }
+    return a;
+  };
+  const SUB = h / 8;
   for (const p of table.pieces) {
     const np = p.pts.length / 2;
     if (np < 2) continue;
+    const tied = (p.kind === "run" || p.kind === "ghost") && p.chain >= 0 && p.chain < zc.length && passes[p.chain].length > 0;
+    if (tied) {
+      // Per-vertex own s: the piece's [s0, s1] by border length, refined to
+      // the nearest centreline point within 2h of it.
+      const C = zc[p.chain];
+      const cum: number[] = [0];
+      for (let i = 1; i < np; i++) cum.push(cum[i - 1] + Math.hypot(p.pts[2 * i] - p.pts[2 * i - 2], p.pts[2 * i + 1] - p.pts[2 * i - 1]));
+      const L = cum[np - 1] || 1;
+      const span = p.s1 - p.s0;
+      const sv: number[] = [];
+      for (let i = 0; i < np; i++) {
+        const sI = p.s0 + (span * cum[i]) / L;
+        sv.push(footNear(C, p.cpts[2 * i], p.cpts[2 * i + 1], sI, 2 * h, 0, 0).s);
+      }
+      const near = (s: number): boolean => passes[p.chain].some((P) => Math.abs(dSC(C, P.s, s)) <= P.reach + h);
+      const inn = (i: number): [number, number] => {
+        const x = p.pts[2 * i]; const y = p.pts[2 * i + 1];
+        let dx = p.cpts[2 * i] - x; let dy = p.cpts[2 * i + 1] - y;
+        const l = Math.hypot(dx, dy);
+        if (l < 1e-12) { const j = Math.min(i + 1, np - 1); const ex = p.pts[2 * j] - x; const ey = p.pts[2 * j + 1] - y; const el = Math.hypot(ex, ey) || 1; dx = -ey / el; dy = ex / el; } else { dx /= l; dy /= l; }
+        return [x + dx * W, y + dy * W];
+      };
+      let prevI = inn(0);
+      for (let i = 0; i + 1 < np; i++) {
+        const ax = p.pts[2 * i]; const ay = p.pts[2 * i + 1]; const bx = p.pts[2 * i + 2]; const by = p.pts[2 * i + 3];
+        const ia = prevI; const ib = inn(i + 1); prevI = ib;
+        const sa = sv[i]; const sb = sa + dSC(C, sa, sv[i + 1]);
+        const k = near(sa) || near(sb) ? Math.max(1, Math.ceil(Math.hypot(bx - ax, by - ay) / SUB)) : 1;
+        const tiedSeg = k > 1 || near(sa) || near(sb);
+        let pO: [number, number, number] | null = null; let pI: [number, number, number] | null = null;
+        for (let q = 0; q <= k; q++) {
+          const t = q / k;
+          const ox = ax + (bx - ax) * t; const oy = ay + (by - ay) * t;
+          const ix = ia[0] + (ib[0] - ia[0]) * t; const iy = ia[1] + (ib[1] - ia[1]) * t;
+          const s = sa + (sb - sa) * t;
+          const aO = tiedSeg ? alphaAt(p.chain, ox, oy, s, h) : 1;
+          const aI = tiedSeg ? alphaAt(p.chain, ix, iy, s, h - W) : 1;
+          const cO: [number, number, number] = [ox, oy, aO]; const cI: [number, number, number] = [ix, iy, aI];
+          if (pO && pI) {
+            bandPos.push(pO[0], pO[1], cO[0], cO[1], pI[0], pI[1], cO[0], cO[1], cI[0], cI[1], pI[0], pI[1]);
+            bandAlpha.push(pO[2], cO[2], pI[2], cO[2], cI[2], pI[2]);
+            for (let m = 0; m < 6; m++) bandCol.push(ink[0], ink[1], ink[2]);
+          }
+          pO = cO; pI = cI;
+        }
+      }
+      continue;
+    }
     const inner: [number, number][] = [];
     for (let i = 0; i < np; i++) {
       const x = p.pts[2 * i]; const y = p.pts[2 * i + 1];
@@ -168,14 +362,14 @@ export function buildDrawData(table: OutlineTable, scene: SceneIn): DrawData {
       const [iax, iay] = inner[i];
       const [ibx, iby] = inner[i + 1];
       bandPos.push(ax, ay, bx, by, iax, iay, bx, by, ibx, iby, iax, iay);
-      for (let k = 0; k < 6; k++) bandCol.push(ink[0], ink[1], ink[2]);
+      for (let k = 0; k < 6; k++) { bandCol.push(ink[0], ink[1], ink[2]); bandAlpha.push(1); }
     }
   }
   return {
     fillFanPos: Float32Array.from(fanPos), fillFanCol: Float32Array.from(fanCol),
     fillQuadPos: Float32Array.from(quadPos), fillQuadCol: Float32Array.from(quadCol),
     fillFaces,
-    bandPos: Float32Array.from(bandPos), bandCol: Float32Array.from(bandCol),
+    bandPos: Float32Array.from(bandPos), bandCol: Float32Array.from(bandCol), bandAlpha: Float32Array.from(bandAlpha),
     bandCount: bandPos.length / 2,
   };
 }
@@ -195,9 +389,9 @@ export class OutlineRenderer {
     this.data = data;
     const vs = `#version 300 es
 layout(location=0) in vec2 aPos;
-layout(location=1) in vec3 aCol;
+layout(location=1) in vec4 aCol;
 uniform mat3 uMat;
-out vec3 vCol;
+out vec4 vCol;
 void main() {
   vec3 p = uMat * vec3(aPos, 1.0);
   gl_Position = vec4(p.xy, 0.0, 1.0);
@@ -205,9 +399,9 @@ void main() {
 }`;
     const fs = `#version 300 es
 precision highp float;
-in vec3 vCol;
+in vec4 vCol;
 out vec4 o;
-void main() { o = vec4(vCol, 1.0); }`;
+void main() { o = vCol; }`;
     const mk = (type: number, src: string): WebGLShader => {
       const s = gl.createShader(type)!;
       gl.shaderSource(s, src);
@@ -222,7 +416,7 @@ void main() { o = vec4(vCol, 1.0); }`;
     if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error("link failed");
     this.prog = prog;
     this.uMat = gl.getUniformLocation(prog, "uMat");
-    const mkVao = (pos: Float32Array, col: Float32Array): WebGLVertexArrayObject => {
+    const mkVao = (pos: Float32Array, col: Float32Array, nc = 3): WebGLVertexArrayObject => {
       const vao = gl.createVertexArray()!;
       gl.bindVertexArray(vao);
       const pb = gl.createBuffer();
@@ -234,13 +428,16 @@ void main() { o = vec4(vCol, 1.0); }`;
       gl.bindBuffer(gl.ARRAY_BUFFER, cb);
       gl.bufferData(gl.ARRAY_BUFFER, col, gl.STATIC_DRAW);
       gl.enableVertexAttribArray(1);
-      gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 0, 0);
+      gl.vertexAttribPointer(1, nc, gl.FLOAT, false, 0, 0);
       gl.bindVertexArray(null);
       return vao;
     };
     this.vaoFill = mkVao(data.fillFanPos, data.fillFanCol);
     this.vaoQuad = mkVao(data.fillQuadPos, data.fillQuadCol);
-    this.vaoBand = mkVao(data.bandPos, data.bandCol);
+    // K1279: bands carry their tie alpha (RGBA) and blend over the fills.
+    const nb = data.bandCol.length / 3; const rgba = new Float32Array(4 * nb);
+    for (let i = 0; i < nb; i++) { rgba[4 * i] = data.bandCol[3 * i]; rgba[4 * i + 1] = data.bandCol[3 * i + 1]; rgba[4 * i + 2] = data.bandCol[3 * i + 2]; rgba[4 * i + 3] = data.bandAlpha[i] ?? 1; }
+    this.vaoBand = mkVao(data.bandPos, rgba, 4);
   }
 
   /**
@@ -301,8 +498,11 @@ void main() { o = vec4(vCol, 1.0); }`;
       gl.disable(gl.STENCIL_TEST);
     }
     if (mode === "border" || mode === "both") {
+      gl.enable(gl.BLEND);
+      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
       gl.bindVertexArray(this.vaoBand);
       gl.drawArrays(gl.TRIANGLES, 0, this.data.bandCount);
+      gl.disable(gl.BLEND);
     }
     gl.bindVertexArray(null);
   }

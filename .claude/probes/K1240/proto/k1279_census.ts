@@ -269,7 +269,8 @@ async function main(): Promise<void> {
   // over the other's by more than 1 px.
   const vs = opt("vs");
   if (vs) {
-    const other = JSON.parse(readFileSync(join(outDir, `census_${vs}${suffix}.json`), "utf8")) as { rows: Row[] };
+    const of = existsSync(join(outDir, `census_${vs}${suffix}.json`)) ? `census_${vs}${suffix}.json` : `census_${vs}.json`;
+    const other = JSON.parse(readFileSync(join(outDir, of), "utf8")) as { rows: Row[] };
     const om = new Map(other.rows.map((r) => [`${r.scene}|${r.xi}`, r]));
     const d = rows.map((r) => ({ r, o: om.get(`${r.scene}|${r.xi}`)! })).filter((e) => e.o);
     const worse = d.filter((e) => e.r.total > e.o.total + 1).sort((a, b) => (b.r.total - b.o.total) - (a.r.total - a.o.total));

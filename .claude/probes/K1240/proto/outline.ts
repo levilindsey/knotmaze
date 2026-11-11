@@ -55,7 +55,12 @@ export interface SceneIn {
   deadEnds: { chain: number; s: number; offscreen?: boolean }[];
 }
 
-export type PieceKind = "run" | "arc" | "cap" | "tail";
+/** K1279: a "ghost" is the under pass's border across its crossing's
+ *  discarded interval (in -> out), one per side per crossing, decided by the
+ *  diagram alone. It owns no region; draw.ts draws it (and every band) at
+ *  form B's tie alpha, which is 0 deep under the over pass and fades in
+ *  continuously where the two passes' keys tie (form B's burial). */
+export type PieceKind = "run" | "arc" | "cap" | "tail" | "ghost";
 export interface OutlinePiece {
   kind: PieceKind;
   chain: number;
@@ -2188,7 +2193,8 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
     for (const iv of intervals) ivByKeys.set(ivKey(iv.A.key, iv.B.key), iv);
     let runMiss = 0; let runPassed = 0; const runMissKeys: string[] = [];
     for (const dp of dg.piecesD) {
-      if (dp.kind === "run") {
+      if (dp.kind === "run" || dp.kind === "ghost") {
+        const ghost = dp.kind === "ghost"; const missAt = runMiss; const passAt = runPassed;
         // S3f (Claude): a run is its border between its two end
         // features, walked forward along the chain. A crossing cuts
         // the under chain's border twice (the over chain's two
@@ -2235,7 +2241,7 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
         const fromRef = refOf(dgA); const toRef = refOf(dgB);
         const pts: number[] = []; const cpts: number[] = []; let rid = -1;
         const biv = ivByKeys.get(ivKey(dgA.key, dgB.key));
-        if (biv && biv.region >= 0) rid = biv.region;
+        if (!ghost && biv && biv.region >= 0) rid = biv.region;
         const pushPt = (x: number, y: number, s: number): void => { pts.push(x, y); const f = footFlat(pi, s); cpts.push(f[0], f[1]); };
         const sA = fromRef ? fromRef.s : sFOf(dgA); const sB = toRef ? toRef.s : sFOf(dgB);
         // The run's length along the chain at this frame, read near
@@ -2261,7 +2267,7 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
         } else if (nB >= 2 && fromRef && toRef) {
           const seq = borderSeq(pi, side, fromRef.idx, toRef.idx, true);
           for (const q of seq.pts) pushPt(q.x, q.y, q.s);
-          if (rid < 0 && seq.segs.length) rid = segRegion[pi][bi][seq.segs[0]] ?? -1;
+          if (!ghost && rid < 0 && seq.segs.length) rid = segRegion[pi][bi][seq.segs[0]] ?? -1;
         } else if (nB >= 2) {
           // A feature without its points: border points at the
           // features' s, and the border vertices between.
@@ -2281,7 +2287,8 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
           }
           const b0 = borderPointAt(pi, side, sB); pushPt(b0.x, b0.y, sB);
         }
-        const piece: OutlinePiece = { kind: "run", chain: pi, side, s0, s1, pts, cpts, region: rid, corner: -1 };
+        if (ghost) { runMiss = missAt; runPassed = passAt; }
+        const piece: OutlinePiece = { kind: dp.kind, chain: pi, side, s0, s1, pts, cpts, region: rid, corner: -1 };
         pieces.push(piece);
         if (rid >= 0 && regions[rid]) regions[rid].pieces.push(pieces.length - 1);
       } else if (dp.kind === "arc") {
@@ -3029,6 +3036,16 @@ export function diagramOf(scene: SceneIn): DiagramStructure {
     const which = b.kind === "end" ? 1 : a.kind === "end" ? 0 : -1;
     if (which < 0) return;
     piecesD.push({ kind: "tail", chain: which ? b.pi : a.pi, side: 0, corner: ci, interval: which, cap: -1 });
+  });
+  // K1279: a ghost per side of every crossing's discarded interval (in -> out
+  // of one crossing), last so no earlier piece moves.
+  scene.chains.forEach((c, pi) => {
+    for (const side of [1, -1]) for (const gi of perChainIntervals[pi]) {
+      const iv = intervalsD[gi]; if (!iv.discard) continue;
+      const A = stationsD[iv.aSt]; const B = stationsD[iv.bSt];
+      if (A.kind !== "cross" || B.kind !== "cross" || A.crossing < 0 || A.crossing !== B.crossing) continue;
+      piecesD.push({ kind: "ghost", chain: pi, side, corner: -1, interval: gi, cap: -1 });
+    }
   });
   return {
     chainIds: scene.chains.map((c) => c.id),
@@ -6824,7 +6841,8 @@ function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[])
     return C.polys[dgs.pi].s0;
   };
   for (const dp of st.piecesD) {
-    if (dp.kind === "run") {
+    if (dp.kind === "run" || dp.kind === "ghost") {
+      const ghost = dp.kind === "ghost"; const missAt = runMiss; const passAt = runPassed;
       const ivD = st.intervalsD[dp.interval];
       const dgA = st.stationsD[ivD.aSt]; const dgB = st.stationsD[ivD.bSt];
       const pi = dp.chain; const side = dp.side;
@@ -6862,7 +6880,7 @@ function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[])
       const pts: number[] = []; const cpts: number[] = [];
       let rid = -1;
       const ivx = ivLookup(C.dgSlot[ivD.aSt], C.dgSlot[ivD.bSt]);
-      if (ivx >= 0 && C.ivRegion[ivx] >= 0) rid = C.ivRegion[ivx];
+      if (!ghost && ivx >= 0 && C.ivRegion[ivx] >= 0) rid = C.ivRegion[ivx];
       const sA = fromRef >= 0 ? C.refS[fromRef] : sFOf(dgA);
       const sB = toRef >= 0 ? C.refS[toRef] : sFOf(dgB);
       let span = p.len;
@@ -6893,7 +6911,7 @@ function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[])
           for (let q = 0; q < seq.n; q++) { const fi = C.seqIdx[q]; vp[2 * q] = B.xy[2 * fi]; vp[2 * q + 1] = B.xy[2 * fi + 1]; vc[2 * q] = B.cxy[2 * fi]; vc[2 * q + 1] = B.cxy[2 * fi + 1]; }
           viewPts = vp; viewCpts = vc;
         }
-        if (rid < 0 && seq.ns > 0) rid = B.segReg[C.seqSeg[0]] ?? -1;
+        if (!ghost && rid < 0 && seq.ns > 0) rid = B.segReg[C.seqSeg[0]] ?? -1;
       } else if (nB >= 2) {
         borderPointAtFinal(C, pi, side, sA, ptScratch);
         pts.push(ptScratch[0], ptScratch[1]);
@@ -6918,7 +6936,8 @@ function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[])
         pointAtInto(p, sB, ptScratch);
         cpts.push(ptScratch[0], ptScratch[1]);
       }
-      const piece: OutlinePiece = { kind: "run", chain: pi, side, s0, s1, pts: viewPts ? (viewPts as unknown as number[]) : pts, cpts: viewCpts ? (viewCpts as unknown as number[]) : cpts, region: rid, corner: -1 };
+      if (ghost) { runMiss = missAt; runPassed = passAt; }
+      const piece: OutlinePiece = { kind: dp.kind, chain: pi, side, s0, s1, pts: viewPts ? (viewPts as unknown as number[]) : pts, cpts: viewCpts ? (viewCpts as unknown as number[]) : cpts, region: rid, corner: -1 };
       pieces.push(piece);
       if (rid >= 0 && regions[rid]) regions[rid].pieces.push(pieces.length - 1);
     } else if (dp.kind === "arc") {
