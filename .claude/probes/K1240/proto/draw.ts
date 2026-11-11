@@ -330,10 +330,10 @@ export function buildDrawData(table: OutlineTable, scene: SceneIn): DrawData {
   const h = table.h;
   const zt = 0.1 * scene.look.depthAmp;
   const { zc, passes } = zChains(scene);
-  const seen: { o: number; s: number }[] = [];
+  const seen: { o: number; s: number; d: number; f: number }[] = [];
   /** The tie alpha of a band vertex of chain c at (x, y), own foot s, own distance dC. */
   const alphaAt = (c: number, x: number, y: number, s: number, dC: number): number => {
-    let a = 1; seen.length = 0;
+    seen.length = 0;
     const C = zc[c];
     const keyC = zAtC(C, s) - (dC * zt) / h;
     for (const P of passes[c]) {
@@ -341,12 +341,16 @@ export function buildDrawData(table: OutlineTable, scene: SceneIn): DrawData {
       const O = zc[P.o];
       const f = footNear(O, x, y, P.so, P.rO, s, P.o === c ? 3 * h : 0);
       if (!(f.d < h)) continue;
-      if (seen.some((q) => q.o === P.o && Math.abs(dSC(O, q.s, f.s)) < h)) continue;
-      seen.push({ o: P.o, s: f.s });
       const g = Math.min(1, Math.max(0, (h - f.d) / W));
       const keyO = zAtC(O, f.s) - (f.d * zt) / h;
-      a *= 1 - g * sstep(-zt, zt, keyO - keyC);
+      const e = { o: P.o, s: f.s, d: f.d, f: 1 - g * sstep(-zt, zt, keyO - keyC) };
+      // Two passes can reach the same stretch of the partner (neighbouring
+      // crossings of one pair): it counts once, at its nearest foot (a pass
+      // whose window stops short of the true foot finds a farther one).
+      const q = seen.findIndex((u) => u.o === P.o && Math.abs(dSC(O, u.s, f.s)) < h);
+      if (q < 0) seen.push(e); else if (e.d < seen[q].d) seen[q] = e;
     }
+    let a = 1; for (const u of seen) a *= u.f;
     return a;
   };
   const SUB = h / 8; const ROWS = 8;

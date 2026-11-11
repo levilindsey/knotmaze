@@ -220,7 +220,7 @@ function tolErr(N: number, Rv: (i: number) => number, Bv: (i: number) => number,
   return sum;
 }
 
-export interface Row { scene: string; xi: number; x: number; y: number; R: number; theta: number; ink: number; fill: number; thread: number; total: number }
+export interface Row { scene: string; xi: number; x: number; y: number; R: number; theta: number; ink: number; fill: number; thread: number; total: number; jn?: boolean; nj?: number }
 export function scoreWin(w: Win, fbw: FBWin, rr: { ink: Float32Array; own: Int32Array }): { ink: number; fill: number; thread: number } {
   const N = w.N;
   const ink = tolErr(N, (i) => rr.ink[i], (i) => fbw.ink[i], w.mask);
@@ -249,20 +249,34 @@ async function main(): Promise<void> {
     const table = O.frame(O.structure(scene), scene);
     const R = rScene(table as curO.OutlineTable, scene, D);
     let sum = 0; let nDiff = 0;
+    // jn: a junction centre within 3R + 2h of the crossing (the window reaches +-3R along both threads; form B fans its junctions).
+    const hJ = scene.look.halfWidth; const jcs = ((scene as unknown as { junctions?: { c: [number, number] }[] }).junctions ?? []).map((j) => j.c);
     wins.forEach((w, k) => {
+      const jn = jcs.some((c) => Math.hypot(c[0] - w.x, c[1] - w.y) < 3 * w.R + 2 * hJ);
       const rr = rasterR(R, w.c0, w.r0, w.N, ppu);
       const s = scoreWin(w, fbw[k], rr);
       const total = s.ink + s.fill;
+      // nj: the same score with every pixel within 4h of a junction centre left out.
+      let nj = total;
+      if (jn) {
+        const m2 = w.mask.slice(); const J2 = (4 * hJ) ** 2;
+        for (let r = 0; r < w.N; r++) for (let c = 0; c < w.N; c++) { const x = (w.c0 + c + 0.5) / ppu; const y = (w.r0 + r + 0.5) / ppu; if (jcs.some((q) => (q[0] - x) ** 2 + (q[1] - y) ** 2 < J2)) m2[r * w.N + c] = 0; }
+        const s2 = scoreWin({ ...w, mask: m2 }, fbw[k], rr); nj = s2.ink + s2.fill;
+      }
       sum += total; if (total > tol) nDiff++;
-      rows.push({ scene: nm, xi: w.xi, x: +w.x.toFixed(3), y: +w.y.toFixed(3), R: +w.R.toFixed(3), theta: +w.theta.toFixed(1), ink: +s.ink.toFixed(1), fill: +s.fill.toFixed(1), thread: s.thread, total: +total.toFixed(1) });
+      rows.push({ scene: nm, xi: w.xi, x: +w.x.toFixed(3), y: +w.y.toFixed(3), R: +w.R.toFixed(3), theta: +w.theta.toFixed(1), ink: +s.ink.toFixed(1), fill: +s.fill.toFixed(1), thread: s.thread, total: +total.toFixed(1), jn, nj: +nj.toFixed(1) });
     });
     console.log(`${nm}: ${wins.length} crossings, ${nDiff} differ (> ${tol} px), total ${sum.toFixed(0)} px`);
   }
   rows.sort((a, b) => b.total - a.total);
   const nDiff = rows.filter((r) => r.total > tol).length;
   console.log(`ALL: ${rows.length} crossings, ${nDiff} differ, total ${rows.reduce((s, r) => s + r.total, 0).toFixed(0)} px (ink ${rows.reduce((s, r) => s + r.ink, 0).toFixed(0)}, fill ${rows.reduce((s, r) => s + r.fill, 0).toFixed(0)}, thread ${rows.reduce((s, r) => s + r.thread, 0)}), ${((Date.now() - t0) / 1000).toFixed(0)} s`);
+  const away = rows.filter((r) => !r.jn);
+  console.log(`away from junctions (no junction centre within 3R + 2h): ${away.length} crossings, ${away.filter((r) => r.total > tol).length} differ, total ${away.reduce((s, r) => s + r.total, 0).toFixed(0)} px; worst: ${away.slice(0, 8).map((r) => `${r.scene} x${r.xi} ${r.total}`).join(", ")}`);
+  const njs = rows.slice().sort((a, b) => (b.nj ?? 0) - (a.nj ?? 0));
+  console.log(`outside 4h of every junction centre: ${njs.filter((r) => (r.nj ?? 0) > tol).length} differ, total ${njs.reduce((s, r) => s + (r.nj ?? 0), 0).toFixed(0)} px; worst: ${njs.slice(0, 8).map((r) => `${r.scene} x${r.xi} ${r.nj}`).join(", ")}`);
   console.log(`worst ${topN}:`);
-  for (const r of rows.slice(0, topN)) console.log(`  ${r.scene} x${r.xi} (${r.x}, ${r.y}) θ ${r.theta}° R ${r.R}: total ${r.total} = ink ${r.ink} + fill ${r.fill} (thread ${r.thread})`);
+  for (const r of rows.slice(0, topN)) console.log(`  ${r.scene} x${r.xi} (${r.x}, ${r.y}) θ ${r.theta}° R ${r.R}: total ${r.total} = ink ${r.ink} + fill ${r.fill} (thread ${r.thread})${r.jn ? " junction" : ""}`);
   const suffix = filt ? `_${filt}` : "";
   writeFileSync(join(outDir, `census_${tag}${suffix}.json`), JSON.stringify({ tag, base: useBase, ppu, tol, rows }));
   // --vs=<tag>: per crossing against another census (same filter); worse = total

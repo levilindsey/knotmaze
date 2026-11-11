@@ -46,4 +46,15 @@ if (ac) {
     }
     console.log(`alpha c${c} (${x.toFixed(3)}, ${y.toFixed(3)}) dC ${(fc.d / h).toFixed(2)}h s ${s.toFixed(2)} keyC ${keyC.toFixed(3)} :: ${parts.join(" | ")}`);
   }
+}const tq = args.find((a) => a.startsWith("--tri="));
+if (tq) {
+  const [qx, qy] = tq.slice(6).split(":").map(Number);
+  const O = await import("./outline"); const D = await import("./draw");
+  const dd = D.buildDrawData(O.frame(O.structure(scene), scene), scene) as unknown as { bandPos: Float32Array; bandAlpha: Float32Array; bandCount: number };
+  const cr = (ax: number, ay: number, bx: number, by: number, px: number, py: number): number => (bx - ax) * (py - ay) - (by - ay) * (px - ax);
+  for (let t = 0; t < dd.bandCount / 3; t++) {
+    const p = Array.from(dd.bandPos.slice(6 * t, 6 * t + 6));
+    const c1 = cr(p[0], p[1], p[2], p[3], qx, qy); const c2 = cr(p[2], p[3], p[4], p[5], qx, qy); const c3 = cr(p[4], p[5], p[0], p[1], qx, qy);
+    if ((c1 >= 0 && c2 >= 0 && c3 >= 0) || (c1 <= 0 && c2 <= 0 && c3 <= 0)) console.log(`tri ${t}: ${[0, 1, 2].map((k) => `(${p[2 * k].toFixed(4)}, ${p[2 * k + 1].toFixed(4)}) a ${dd.bandAlpha[3 * t + k].toFixed(2)}`).join(" ")}`);
+  }
 }
