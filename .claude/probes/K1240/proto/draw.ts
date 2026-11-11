@@ -345,10 +345,11 @@ export function buildDrawData(table: OutlineTable, scene: SceneIn): DrawData {
       const keyO = zAtC(O, f.s) - (f.d * zt) / h;
       const e = { o: P.o, s: f.s, d: f.d, f: 1 - g * sstep(-zt, zt, keyO - keyC) };
       // Two passes can reach the same stretch of the partner (neighbouring
-      // crossings of one pair): it counts once, at its nearest foot (a pass
-      // whose window stops short of the true foot finds a farther one).
+      // crossings of one pair): it counts once, by its strongest fade (a pass
+      // whose window stops short of the true foot finds a farther, weaker
+      // one). A minimum of continuous fades stays continuous as feet move.
       const q = seen.findIndex((u) => u.o === P.o && Math.abs(dSC(O, u.s, f.s)) < h);
-      if (q < 0) seen.push(e); else if (e.d < seen[q].d) seen[q] = e;
+      if (q < 0) seen.push(e); else if (e.f < seen[q].f) seen[q] = e;
     }
     let a = 1; for (const u of seen) a *= u.f;
     return a;
