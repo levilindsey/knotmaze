@@ -525,11 +525,19 @@ Next free ID: K1305.
 - **K1283** · Junction borders of the outline (rp=outline) against form B. Stage 1 (3c8bd61e) fixed the concave
   corner bites (census 27528 -> 17756 px); left: the failed corners and the end-arm round ends (x47, x73,
   x349). Full text in docs/ledger_notes.md
-  - owner: nobody since 2026-11-11 03:44 (merged; agent `ac0a88be8830aa656` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `23a96e13`
-  - evidence: `.claude/probes/K1240/out/k1283s7/`
-  - next: Stage 7 merged without a look change: every own-colour round end failed the seam bars (own colour: colour census 31891 -> 29713 but seams 25359/11227), so DISK_OWN is false and the s7 disk code (fill_tri, zPastC in draw.ts) sits switched off; colour census tool k1283s7_colour.ts. Stage 8: muse_hash j59 (fade the chevron cut points), then x134/x77/x304. Round-end colour after that: the fan paints the end chain slot over form B end-cap area with its own weights ramping into it (s7 handoff item 1), or delete the switched-off code
-  - brief: `docs/design/K1283_s7.md`
+  - owner: agent `a6cc857893dca0d84` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-11 03:47, 2 h cap ~05:47)
+  - branch: `worktree-agent-a6cc857893dca0d84`, worktree `.claude/worktrees/agent-a6cc857893dca0d84`; last commit: `39b7c8a9`
+  - evidence: `.claude/probes/K1240/out/k1283s8/`
+  - next: Stage 8 running: muse_hash j59 (the chevron cut points fade), then x134/x77/x304; round-end colour after (s7 handoff item 1)
+  - brief: `docs/design/K1283_s8.md`
+- **K1291** · rp=outline in the app (K1240 S4) lacks the app palette and hides the overlays drawn inside the
+  base layer (trail, fog, reveal masks, pulses, gameplay paint); markers, plucks and the HUD still draw (S4
+  handoff in docs/design/K1240_s4_app.md on worktree-agent-a5393aa1f25f2ff33)
+  - owner: agent `acb4e37afc1c4006e` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-11 03:47, 2 h cap ~05:47)
+  - branch: `worktree-agent-acb4e37afc1c4006e`, worktree `.claude/worktrees/agent-acb4e37afc1c4006e`; last commit: `39b7c8a9`
+  - evidence: `.claude/probes/K1291/`
+  - next: Stage 1 running: the app palette, then trail and gameplay paint, then fog, then reveal masks in rp=outline, judged against today's look
+  - brief: `docs/design/K1291_s1.md`
 
 ## Next, in order
 
@@ -772,9 +780,6 @@ Every other item below waits on the trigger it names.
 - **K1256** · K1240's outline: frame() leads outside corners from K1247 stage 4 (unmeasured):
   crossingsPhaseC's OSR-exit deopts, frameFast's wrong-map and generic-global deopts, and about 40
   cornerFallbackC fallbacks a frame (about 0.5 ms). K1247_s4_corners.md Handoff 1
-- **K1291** · rp=outline in the app (K1240 S4) lacks the app palette and hides the overlays drawn inside the
-  base layer (trail, fog, reveal masks, pulses, gameplay paint); markers, plucks and the HUD still draw (S4
-  handoff in docs/design/K1240_s4_app.md on worktree-agent-a5393aa1f25f2ff33)
 
 ## Residuals (known, not fixed)
 
