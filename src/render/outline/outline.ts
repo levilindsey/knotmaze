@@ -4311,7 +4311,8 @@ let kfFrameNo = 1;
 let cfSeq = new Int32Array(1024);
 // K1283 s5: each cut point's legs' inward normals (n1x, n1y, n2x, n2y per pool point past nb),
 // and foldChevron's output (x, y, foot x, foot y per point).
-let cfCut = new Float64Array(64); const cfChev = new Float64Array(12); const cfSegs: number[] = [];
+const CF_NS = 4; // side samples per half chevron: 2 CF_NS + 1 points per cut fold
+let cfCut = new Float64Array(64); const cfChev = new Float64Array(4 * (2 * CF_NS + 1)); const cfSegs: number[] = []; const cfU = new Float64Array(2);
 /** The inward unit normal of a border leg along (dx, dy): sig (ty, -tx). */
 function foldNormal(dx: number, dy: number, sig: number, out: Float64Array, o: number): void {
   const l = Math.sqrt(dx * dx + dy * dy) || 1;
@@ -4340,8 +4341,9 @@ function foldChevron(p: Poly, h: number, W: number, x: number, y: number, s: num
     const b = k + 1 === p.n ? 0 : k + 1;
     if (Math.abs(dS(p, s, p.s[k])) <= 3 * h || Math.abs(dS(p, s, p.s[b])) <= 3 * h) cfSegs.push(k);
   }
-  const dist = (t: number): number => {
-    const qx = x + ex * t; const qy = y + ey * t; let best = Infinity;
+  const dist = (t: number): number => distAt(x + ex * t, y + ey * t);
+  const distAt = (qx: number, qy: number): number => {
+    let best = Infinity;
     for (let m = 0; m < cfSegs.length; m++) {
       const k = cfSegs[m]; const b = k + 1 === p.n ? 0 : k + 1;
       const ax = p.x[k]; const ay = p.y[k]; const vx = p.x[b] - ax; const vy = p.y[b] - ay;
@@ -4355,13 +4357,32 @@ function foldChevron(p: Poly, h: number, W: number, x: number, y: number, s: num
   if (dist(tMax) < target) {
     let lo = W; let hi = tMax;
     if (dist(lo) <= target) t = W;
-    else { for (let it = 0; it < 40; it++) { const mid = 0.5 * (lo + hi); if (dist(mid) > target) lo = mid; else hi = mid; } t = 0.5 * (lo + hi); }
+    else { for (let it = 0; it < 24; it++) { const mid = 0.5 * (lo + hi); if (dist(mid) > target) lo = mid; else hi = mid; } t = 0.5 * (lo + hi); }
   }
   let k = 0;
-  out[0] = x; out[1] = y; out[2] = x + h * n1x; out[3] = y + h * n1y; k = 1;
-  if (t - W > 1e-9) { const yx = x + ex * (t - W); const yy = y + ey * (t - W); out[4] = yx; out[5] = yy; out[6] = yx + h * ex; out[7] = yy + h * ey; k = 2; }
-  out[4 * k] = x; out[4 * k + 1] = y; out[4 * k + 2] = x + h * n2x; out[4 * k + 3] = y + h * n2y;
-  return k + 1;
+  const put = (px: number, py: number, ux: number, uy: number): void => { out[4 * k] = px; out[4 * k + 1] = py; out[4 * k + 2] = px + h * ux; out[4 * k + 3] = py + h * uy; k++; };
+  put(x, y, n1x, n1y);
+  if (t - W > 1e-9) {
+    // The chevron's sides are the legs' inner level sets d = h - W, which bow towards e where the
+    // legs bend (x292: a straight X + W n1 -> Xin side inked 160 px past form B's). Each side point
+    // P on X..Y gets the foot direction u, between its leg's normal and e, that puts P + W u on it.
+    const side = (ax: number, ay: number, rev: boolean): void => {
+      for (let jj = 1; jj < CF_NS; jj++) {
+        const j = rev ? CF_NS - jj : jj; const tau = ((t - W) * j) / CF_NS;
+        const px = x + ex * tau; const py = y + ey * tau;
+        const uAt = (th: number): number => { const ux = (1 - th) * ax + th * ex; const uy = (1 - th) * ay + th * ey; const l = Math.sqrt(ux * ux + uy * uy) || 1; cfU[0] = ux / l; cfU[1] = uy / l; return distAt(px + W * cfU[0], py + W * cfU[1]) - target; };
+        let th = 1;
+        if (uAt(0) >= 0) th = 0;
+        else if (uAt(1) > 0) { let lo = 0; let hi = 1; for (let it = 0; it < 24; it++) { const mid = 0.5 * (lo + hi); if (uAt(mid) < 0) lo = mid; else hi = mid; } th = 0.5 * (lo + hi); }
+        uAt(th); put(px, py, cfU[0], cfU[1]);
+      }
+    };
+    side(n1x, n1y, false);
+    put(x + ex * (t - W), y + ey * (t - W), ex, ey);
+    side(n2x, n2y, true);
+  }
+  put(x, y, n2x, n2y);
+  return k;
 }
 function cutFoldsC(C: FCache, pi: number, sig: number, B: FBord): void {
   const p = C.polys[pi];
@@ -4384,7 +4405,13 @@ function cutFoldsC(C: FCache, pi: number, sig: number, B: FBord): void {
       return poolN++;
     };
     const diag = (C as unknown as { __foldDiag: string[] }).__foldDiag;
+    // K1283 s5: a bend within h of an arm's root is the junction's corner, which the corner and
+    // tail machinery draw (x300: a chevron there inked a blot form B leaves bare, +32 px); it stays
+    // uncut, as every fold was before stage 5. At 2 h, x182's fold (244.8 -> 30.1 px) would too.
+    const roots = C.chainRoots[pi];
     for (const sb of bendClusters) {
+      let nearRoot = false; for (let r = 0; r < roots.length; r++) if (Math.abs(dS(p, roots[r], sb)) < h) nearRoot = true;
+      if (nearRoot) continue;
       let i0 = -1; let i1 = -1; let nIdx = 0;
       for (let i = 0; i < m; i++) if (Math.abs(dS(p, sb, B.ps[seq[i]])) <= 2.5 * h) { if (i0 < 0) i0 = i; i1 = i; nIdx++; }
       if (nIdx < 3) continue;
@@ -4419,7 +4446,7 @@ function cutFoldsC(C: FCache, pi: number, sig: number, B: FBord): void {
     }
     // Compact the sequence into the base arrays; each cut fold becomes its chevron (foldChevron).
     let cuts = 0; for (let i = 0; i < m; i++) if (seq[i] >= nb) cuts++;
-    const cap = m + 2 * cuts;
+    const cap = m + 2 * CF_NS * cuts;
     B.bx = growF(B.bx, cap); B.by = growF(B.by, cap); B.bs = growF(B.bs, cap); B.bfx = growF(B.bfx, cap); B.bfy = growF(B.bfy, cap);
     let o = 0;
     for (let i = 0; i < m; i++) {
