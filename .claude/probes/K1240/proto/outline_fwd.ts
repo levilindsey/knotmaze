@@ -6191,9 +6191,9 @@ function cornersPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): void {
       blendFootC(C.polys[B.pi], kfCst.qx, kfCst.qy, kfQb, kfEb);
       tax = kfEa.x + (h * (kfCst.qx - kfEa.x)) / kfEa.d; tay = kfEa.y + (h * (kfCst.qy - kfEa.y)) / kfEa.d;
       tbx = kfEb.x + (h * (kfCst.qx - kfEb.x)) / kfEb.d; tby = kfEb.y + (h * (kfCst.qy - kfEb.y)) / kfEb.d;
-      fwdA = FWD_ON && fwdFootC(C.polys[A.pi], sideA, h, kfCst.qx, kfCst.qy, kfQa, kfEa, fwPosA);
+      fwdA = FWD_ON && fwdFootC(C.polys[A.pi], sideA, h, kfCst.qx, kfCst.qy, kfQa, kfEa, fwPosA, C.armDir[aiA]);
       if (fwdA) { tax = fwPosA[0]; tay = fwPosA[1]; }
-      fwdB = FWD_ON && fwdFootC(C.polys[B.pi], sideB, h, kfCst.qx, kfCst.qy, kfQb, kfEb, fwPosB);
+      fwdB = FWD_ON && fwdFootC(C.polys[B.pi], sideB, h, kfCst.qx, kfCst.qy, kfQb, kfEb, fwPosB, C.armDir[aiB]);
       if (fwdB) { tbx = fwPosB[0]; tby = fwPosB[1]; }
       sA = kfEa.s; sB = kfEb.s;
       dA = (kfEa.u - C.armSR[aiA]) * C.armDir[aiA]; dB = (kfEb.u - C.armSR[aiB]) * C.armDir[aiB];
@@ -7424,11 +7424,17 @@ function blendFootC(p: Poly, qx: number, qy: number, Q: FFoot, dst: FFoot): void
 // (K1288's fold flip). Anything the rule cannot place (no root, a segment
 // whose two miters overlap) takes master's foot.
 const K1290_E = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env ?? {};
-const FWD_ON = (K1290_E.K1290_FWD ?? "1") !== "0";
+let FWD_ON = (K1290_E.K1290_FWD ?? "1") !== "0";
+/** K1290: the crop tool draws master (false) and the forward table (true) in one process. */
+export function fwdSetOn(on: boolean): void { FWD_ON = on; }
 const FWD_POS = K1290_E.K1290_POS ?? "b";
 const FWD_K = Number(K1290_E.K1290_K ?? "1.5");
 const FWD_INS_ALL = K1290_E.K1290_INS === "all";
-const FWD_SC = (K1290_E.K1290_SC ?? "1") !== "0";
+const FWD_SC = (K1290_E.K1290_SC ?? "0") !== "0";
+/** "d": the root nearest Q; "near": among distance minima, the one nearest the junction along the arm. */
+const FWD_PICK = K1290_E.K1290_PICK ?? "near";
+const FWD_R = Number(K1290_E.K1290_R ?? "6");
+const FWD_DBG = (K1290_E.K1290_DBG ?? "").split(",").filter((v) => v !== "").map(Number);
 export const fwdStats = { tried: 0, placed: 0, noRoot: 0, tight: 0, fan: 0, window: 0, miter: 0 };
 const FWM = 16;
 const fwAx = new Float64Array(FWM); const fwAy = new Float64Array(FWM); const fwL = new Float64Array(FWM);
@@ -7452,12 +7458,12 @@ function fwG(): number { return Math.cos(fwOut[2]) * (fwQx - fwOut[0]) + Math.si
 /** K1290: the forward foot of Q on p's side sig (see above). Fills dst
  *  (centre foot: x, y, d, s, k, u) and pos (the border point); false when
  *  the rule does not apply (the caller keeps master's foot). */
-function fwdFootC(p: Poly, sig: number, h: number, qx: number, qy: number, Q: FFoot, dst: FFoot, pos: Float64Array): boolean {
+function fwdFootC(p: Poly, sig: number, h: number, qx: number, qy: number, Q: FFoot, dst: FFoot, pos: Float64Array, dir = 0): boolean {
   fwdStats.tried++;
   const nseg = p.nseg; const n = p.n;
   const k0 = Q.k;
   if (nseg < 1 || !(k0 >= 0 && k0 < nseg)) { fwdStats.noRoot++; return false; }
-  const R = 3;
+  const R = FWD_R;
   let jlo = k0 - R; let jhi = k0 + R;
   if (!p.closed) { jlo = Math.max(0, jlo); jhi = Math.min(nseg - 1, jhi); }
   else if (nseg < 2 * R + 1) { jlo = k0 - ((nseg - 1) >> 1); jhi = jlo + nseg - 1; }
@@ -7497,7 +7503,12 @@ function fwdFootC(p: Poly, sig: number, h: number, qx: number, qy: number, Q: FF
   // window end (the whole end segment at an open chain's end).
   const openLo = !p.closed && jlo === 0; const openHi = !p.closed && jhi === nseg - 1;
   let best = Infinity; let bS = 0; let bM = -1; let bFan = -1;
-  const consider = (m: number, s: number, fanV: number): void => {
+  const dbg = FWD_DBG.length === 2 && Math.hypot(qx - FWD_DBG[0], qy - FWD_DBG[1]) < 0.02;
+  if (dbg) console.log(`  fwd Q (${qx.toFixed(4)},${qy.toFixed(4)}) sig ${sig} k0 ${k0} jlo ${jlo} W ${Array.from(fwW.subarray(0, fwM + 1), (w) => w.toFixed(3)).join(" ")} cc ${Array.from(fwCc.subarray(0, fwM + 1)).join("")}`);
+  const pickNear = FWD_PICK === "near" && dir !== 0;
+  const pickAnchor = FWD_PICK === "anchor";
+  const consider = (m: number, s: number, fanV: number, isMin = true): void => {
+    if (pickNear && !isMin) return;
     let d: number;
     if (fanV >= 0) {
       const vx = fwAx[fanV]; const vy = fwAy[fanV];
@@ -7509,6 +7520,8 @@ function fwdFootC(p: Poly, sig: number, h: number, qx: number, qy: number, Q: FF
       if (!(g > 0)) return;
       d = g;
     }
+    if (dbg) console.log(`   cand m${m} j${fwJ[m]} s ${s.toFixed(5)} fan ${fanV} d ${d.toFixed(5)}`);
+    if (pickNear || pickAnchor) { let ds = s - Q.s; if (p.closed) { ds -= p.len * Math.round(ds / p.len); } d = pickNear ? dir * ds : Math.abs(ds); }
     if (d < best) { best = d; bS = s; bM = m; bFan = fanV; }
   };
   for (let m = 0; m < fwM; m++) {
@@ -7528,12 +7541,13 @@ function fwdFootC(p: Poly, sig: number, h: number, qx: number, qy: number, Q: FF
       if (flo === 0) { consider(m, lo, -1); continue; }
       if (fhi === 0) { consider(m, hi, -1); continue; }
       if ((flo > 0) === (fhi > 0)) continue;
+      const isMin = sig * flo < 0;
       for (let it = 0; it < 48; it++) {
         const mid = 0.5 * (lo + hi);
         const fm = fwEval(m, mid);
         if ((fm > 0) === (flo > 0)) { lo = mid; flo = fm; } else hi = mid;
       }
-      consider(m, 0.5 * (lo + hi), -1);
+      consider(m, 0.5 * (lo + hi), -1, isMin);
     }
     // A convex vertex at this segment's start: the normal jumps there (no
     // window), and Q between the two normals has its root AT the vertex.
@@ -7543,13 +7557,14 @@ function fwdFootC(p: Poly, sig: number, h: number, qx: number, qy: number, Q: FF
       if ((fl > 0) !== (fr > 0) && (gl > 0 || gr > 0)) consider(m, fwSs[m], m);
     }
   }
+  if (dbg) console.log(`   -> m ${bM} fan ${bFan}`);
   if (bM < 0) { fwdStats.noRoot++; return false; }
   // The border point at that s.
   const m = bM; const t = bS - fwSs[m];
   fwEval(m, bS);
   const cx = fwOut[0]; const cy = fwOut[1];
   if (bFan >= 0) {
-    const d = best;
+    const d = Math.sqrt((qx - cx) * (qx - cx) + (qy - cy) * (qy - cy));
     if (!(d > 1e-12)) { fwdStats.noRoot++; return false; }
     pos[0] = cx + (h * (qx - cx)) / d; pos[1] = cy + (h * (qy - cy)) / d;
     fwdStats.fan++;
