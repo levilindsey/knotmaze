@@ -3,9 +3,13 @@
 // as k1279_crops.ts does. Run through the K1290 config so "./outline" is the
 // forward copy:
 //   node scripts/run_node.mjs --config .claude/probes/K1240/proto/k1290_vite.config.mjs .claude/probes/K1240/proto/k1290_crops.ts <out.png> <scene>:<x>:<y>[:label] ... [--ppu=280] [--w=1.6] [--err]
+// <scene> is a census scene (K868 scenes, at rest) or <name>@<frame>, a frame of out/s15/rec_<name>.
 // --err adds |ink fwd - ink form B| (red) / covered disagreement (blue), and
 // where fwd's ink error exceeds master's (red) or master's exceeds fwd's (blue).
-import { writeFileSync } from "node:fs";
+import { writeFileSync, readFileSync, readdirSync } from "node:fs";
+import { gunzipSync } from "node:zlib";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import { deflateSync } from "node:zlib";
 import { FormB } from "../../../../src/render/field/form_b";
 import * as O from "./outline";
@@ -27,11 +31,14 @@ const hue = (c: number): [number, number, number] => { const h = ((c * 0.6180339
 const put = (row: number, pan: number, r: number, c: number, col: [number, number, number]): void => { const o = ((row * (P + GAP) + r) * Wt + pan * (P + GAP) + c) * 3; img[o] = col[0]; img[o + 1] = col[1]; img[o + 2] = col[2]; };
 const shade = (chain: number, ink: number): [number, number, number] => { const base: [number, number, number] = chain < 0 ? [255, 255, 255] : hue(chain); const a = Math.min(1, Math.max(0, ink)); return base.map((v) => Math.round(v * (1 - a))) as [number, number, number]; };
 
+// "<name>@<f>" is frame f of the recorded motion out/s15/rec_<name>.
+const recDir = join(dirname(fileURLToPath(import.meta.url)), "..", "out", "s15");
+const loadRec = (spec: string): O.SceneIn => { const [nm, fs] = spec.split("@"); const d = join(recDir, `rec_${nm}`); const fl = readdirSync(d).filter((x) => x.endsWith(".json.gz")).sort(); const s = JSON.parse(gunzipSync(readFileSync(join(d, fl[Number(fs)]))).toString("utf8")) as O.SceneIn; (s.look as { ctrlArc?: number }).ctrlArc ??= 0.47; return s; };
 const cache = new Map<string, { fb: { evalPoint(x: number, y: number): { ink: number; top: number; chain: number } }; m: RScene; y: RScene }>();
 specs.forEach((sp, row) => {
   let e = cache.get(sp.scene);
   if (!e) {
-    const scene = loadScene(sp.scene);
+    const scene = sp.scene.includes("@") ? loadRec(sp.scene) : loadScene(sp.scene);
     const fb = new FormB(JSON.parse(JSON.stringify(scene)) as never, { dpr: 2 }) as never;
     const st = O.structure(scene);
     setOn(false); const m = rScene(O.frame(st, scene), scene, D);

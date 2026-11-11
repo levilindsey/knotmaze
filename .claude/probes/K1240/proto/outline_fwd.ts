@@ -7442,6 +7442,12 @@ const fwUx = new Float64Array(FWM); const fwUy = new Float64Array(FWM); const fw
 const fwSs = new Float64Array(FWM + 1); const fwAl = new Float64Array(FWM + 1); const fwW = new Float64Array(FWM + 1);
 const fwCc = new Uint8Array(FWM + 1); const fwJ = new Int32Array(FWM);
 let fwM = 0; let fwQx = 0; let fwQy = 0;
+const fwNx = new Float64Array(FWM); const fwNy = new Float64Array(FWM); const fwNo = new Float64Array(2);
+/** K1290_FAST (default "1"): a plain stretch's root in closed form, a
+ *  window's by Illinois regula falsi, segment normals' trig once per call;
+ *  "0" = the first version's 48-step bisection with trig per evaluation. */
+let FWD_FAST = (K1290_E.K1290_FAST ?? "1") !== "0";
+export function fwdSetFast(on: boolean): void { FWD_FAST = on; }
 // Normal angle and centre at local s (unwrapped), on local segment m.
 const fwOut = new Float64Array(3);
 function fwEval(m: number, s: number): number {
@@ -7451,10 +7457,14 @@ function fwEval(m: number, s: number): number {
   if (m > 0 && fwW[m] > 0 && t < fwW[m]) th = fwTh[m - 1] + (fwAl[m] * (t + fwW[m])) / (2 * fwW[m]);
   else if (m + 1 < fwM && fwW[m + 1] > 0 && fwL[m] - t < fwW[m + 1]) th = fwTh[m] + (fwAl[m + 1] * (t - (fwL[m] - fwW[m + 1]))) / (2 * fwW[m + 1]);
   fwOut[0] = cx; fwOut[1] = cy; fwOut[2] = th;
+  // Outside a window the normal is the segment's own, its cos/sin computed
+  // once per call (bit-identical to the per-eval trig).
+  if (FWD_FAST && th === fwTh[m]) { fwNo[0] = fwNx[m]; fwNo[1] = fwNy[m]; return fwNx[m] * (fwQy - cy) - fwNy[m] * (fwQx - cx); }
   const c = Math.cos(th); const sn = Math.sin(th);
+  fwNo[0] = c; fwNo[1] = sn;
   return c * (fwQy - cy) - sn * (fwQx - cx);
 }
-function fwG(): number { return Math.cos(fwOut[2]) * (fwQx - fwOut[0]) + Math.sin(fwOut[2]) * (fwQy - fwOut[1]); }
+function fwG(): number { return fwNo[0] * (fwQx - fwOut[0]) + fwNo[1] * (fwQy - fwOut[1]); }
 /** K1290: the forward foot of Q on p's side sig (see above). Fills dst
  *  (centre foot: x, y, d, s, k, u) and pos (the border point); false when
  *  the rule does not apply (the caller keeps master's foot). */
@@ -7481,6 +7491,7 @@ function fwdFootC(p: Poly, sig: number, h: number, qx: number, qy: number, Q: FF
     if (!(L > 1e-12)) { fwdStats.noRoot++; return false; }
     fwUx[m] = ex / L; fwUy[m] = ey / L;
     fwTh[m] = Math.atan2(sig * fwUx[m], -sig * fwUy[m]);
+    fwNx[m] = Math.cos(fwTh[m]); fwNy[m] = Math.sin(fwTh[m]);
     if (m > 0) fwSs[m] = fwSs[m - 1] + fwL[m - 1];
   }
   fwSs[fwM] = fwSs[fwM - 1] + fwL[fwM - 1];
@@ -7542,6 +7553,28 @@ function fwdFootC(p: Poly, sig: number, h: number, qx: number, qy: number, Q: FF
       if (fhi === 0) { consider(m, hi, -1); continue; }
       if ((flo > 0) === (fhi > 0)) continue;
       const isMin = sig * flo < 0;
+      if (FWD_FAST && q === 1) {
+        // Plain stretch: f is linear in s, so the root is closed-form.
+        const nx = fwNx[m]; const ny = fwNy[m];
+        const f0 = nx * (qy - fwAy[m]) - ny * (qx - fwAx[m]);
+        const sl = nx * fwUy[m] - ny * fwUx[m];
+        const sr = fwSs[m] + f0 / sl;
+        consider(m, Math.min(hi, Math.max(lo, sr)), -1, isMin);
+        continue;
+      }
+      if (FWD_FAST) {
+        // A window: Illinois regula falsi, bracketed.
+        let a = lo; let fa = flo; let b = hi; let fb = fhi; let side = 0; let x = 0.5 * (a + b);
+        for (let it = 0; it < 60; it++) {
+          x = (a * fb - b * fa) / (fb - fa);
+          if (!(x > a && x < b)) x = 0.5 * (a + b);
+          const fx = fwEval(m, x);
+          if (fx === 0 || Math.abs(fx) < 1e-15 || b - a < 1e-14) break;
+          if ((fx > 0) === (fa > 0)) { a = x; fa = fx; if (side === -1) fb *= 0.5; side = -1; } else { b = x; fb = fx; if (side === 1) fa *= 0.5; side = 1; }
+        }
+        consider(m, x, -1, isMin);
+        continue;
+      }
       for (let it = 0; it < 48; it++) {
         const mid = 0.5 * (lo + hi);
         const fm = fwEval(m, mid);
