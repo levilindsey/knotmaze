@@ -21,7 +21,15 @@
 //   about Q, or a straight line to the next arm's P). A fan covers its
 //   ring's nonzero-winding area, so a fold overdraws instead of cracking.
 //
-// Draw order: ghost strips, run strips, caps, junctions, fixed by index.
+// - TAIL: one per tail piece (a junction corner with an end arm, outline.ts
+//   endTailPts): two rows of TAIL_M + 1 vertices, the tail's border points
+//   and their centreline feet, resampled together. It fills the strip of
+//   the end chain the tail walks along, between its border and its
+//   centreline, which no strip or cap covers (the end arm's interval ends
+//   at the junction). An empty tail (the margin never opens) is
+//   degenerate: every vertex at one point.
+//
+// Draw order: ghost strips, run strips, caps, tails, junctions, fixed by index.
 // Over before under is decided per pixel by a depth key (form B's own key,
 // z - d zt / h: z the chain's crossing-diagram depth at s, d the distance
 // to the centreline, zt = 0.1 depthAmp), linear across each triangle:
@@ -35,12 +43,20 @@ import { zChains, zAtC } from "./draw";
 
 export const CAP_M = 17;
 export const ARC_K = 16;
+/** Tail resolution: above outline.ts's TAIL_N + 2 points, so a tail is never dense. */
+export const TAIL_M = 24;
 
 export interface StripItem { kind: "strip"; iv: number; pi: number; ghost: boolean; N: number; base: number; pL: number; pR: number }
 export interface CapItem { kind: "cap"; pi: number; piece: number; atEnd: boolean; base: number }
+export interface TailItem { kind: "tail"; pi: number; piece: number; base: number }
 export interface JArm { ai: number; pi: number; ei: number; pN: number; pP: number; atStart: boolean; corner: number }
 export interface JuncItem { kind: "junc"; ji: number; owner: number; arms: JArm[]; base: number; R: number }
-export type FillItem = StripItem | CapItem | JuncItem;
+export type FillItem = StripItem | CapItem | TailItem | JuncItem;
+
+/** Vertices an item owns, from `base`. */
+export function itemVerts(it: FillItem): number {
+  return it.kind === "strip" ? 3 * (it.N + 1) : it.kind === "cap" ? CAP_M + 1 : it.kind === "tail" ? 2 * (TAIL_M + 1) : 1 + it.R;
+}
 
 export interface FillStructure {
   nV: number;
@@ -127,7 +143,19 @@ export function fillStructure(st: DiagramStructure, res: Int32Array): FillStruct
     for (let i = 0; i + 1 < CAP_M; i++) idx.push(base, base + 1 + i, base + 2 + i);
     items.push({ kind: "cap", pi: d.chain, piece: k, atEnd: cp ? cp.atEnd : false, base });
   });
-  // 4. junctions.
+  // 4. tails: row 0 the tail's border points, row 1 their centreline feet.
+  st.piecesD.forEach((d, k) => {
+    if (d.kind !== "tail") return;
+    const base = nV; const W = TAIL_M + 1;
+    for (let i = 0; i < 2 * W; i++) vChain.push(d.chain);
+    nV += 2 * W;
+    for (let i = 0; i < TAIL_M; i++) {
+      idx.push(base + i, base + i + 1, base + W + i);
+      idx.push(base + W + i, base + i + 1, base + W + i + 1);
+    }
+    items.push({ kind: "tail", pi: d.chain, piece: k, base });
+  });
+  // 5. junctions.
   const stOfArm = new Map<number, number>();
   st.stationsD.forEach((q, i) => { if (q.kind === "junction" && q.arm >= 0) stOfArm.set(q.arm, i); });
   const cornerByAArm = new Map<number, number>();
@@ -186,24 +214,33 @@ export function fillSig(fs: FillStructure): string {
  *  past its frame-0 length), samples fall at equal fractions instead
  *  (`dense`, counted). */
 let denseCount = 0;
-function resample(pts: number[], par: number[] | null, n: number, out: Float64Array): boolean {
+function resample(pts: number[], par: number[] | null, n: number, out: Float64Array, two?: number[], out2?: Float64Array): boolean {
   const m = pts.length >> 1;
   if (m === 0) return false;
-  if (m === 1) { for (let i = 0; i <= n; i++) { out[2 * i] = pts[0]; out[2 * i + 1] = pts[1]; } return true; }
+  // `two` (same length as pts) is sampled at the same (segment, t) as pts, into out2.
+  const lerp = (i: number, k: number, t: number): void => {
+    out[2 * i] = pts[2 * k] + (pts[2 * k + 2] - pts[2 * k]) * t; out[2 * i + 1] = pts[2 * k + 1] + (pts[2 * k + 3] - pts[2 * k + 1]) * t;
+    if (two && out2) { out2[2 * i] = two[2 * k] + (two[2 * k + 2] - two[2 * k]) * t; out2[2 * i + 1] = two[2 * k + 1] + (two[2 * k + 3] - two[2 * k + 1]) * t; }
+  };
+  const at = (i: number, j: number): void => {
+    out[2 * i] = pts[2 * j]; out[2 * i + 1] = pts[2 * j + 1];
+    if (two && out2) { out2[2 * i] = two[2 * j]; out2[2 * i + 1] = two[2 * j + 1]; }
+  };
+  if (m === 1) { for (let i = 0; i <= n; i++) at(i, 0); return true; }
   const P = par && par.length === pts.length && polyLen(par) > 1e-9 ? par : pts;
   const cum = new Float64Array(m);
   for (let i = 1; i < m; i++) cum[i] = cum[i - 1] + Math.hypot(P[2 * i] - P[2 * i - 2], P[2 * i + 1] - P[2 * i - 1]);
   const tot = cum[m - 1];
   if (m <= n + 1) {
     let prev = 0;
-    out[0] = pts[0]; out[1] = pts[1];
+    at(0, 0);
     for (let j = 1; j < m; j++) {
       const ideal = j === m - 1 ? n : Math.round(tot > 0 ? (cum[j] / tot) * n : (j * n) / (m - 1));
       const idx = Math.min(n - (m - 1 - j), Math.max(prev + 1, ideal));
       // samples prev+1 .. idx-1 on the segment (j-1, j), then idx = point j
-      const ax = pts[2 * j - 2]; const ay = pts[2 * j - 1]; const bx = pts[2 * j]; const by = pts[2 * j + 1];
       const span = idx - prev;
-      for (let i = prev + 1; i <= idx; i++) { const t = (i - prev) / span; out[2 * i] = ax + (bx - ax) * t; out[2 * i + 1] = ay + (by - ay) * t; }
+      for (let i = prev + 1; i < idx; i++) lerp(i, j - 1, (i - prev) / span);
+      at(idx, j);
       prev = idx;
     }
     return true;
@@ -211,14 +248,12 @@ function resample(pts: number[], par: number[] | null, n: number, out: Float64Ar
   denseCount++;
   let k = 0;
   for (let i = 0; i <= n; i++) {
-    if (i === 0) { out[0] = pts[0]; out[1] = pts[1]; continue; }
-    if (i === n) { out[2 * n] = pts[2 * m - 2]; out[2 * n + 1] = pts[2 * m - 1]; continue; }
+    if (i === 0) { at(0, 0); continue; }
+    if (i === n) { at(n, m - 1); continue; }
     const u = (tot * i) / n;
     while (k + 2 < m && cum[k + 1] < u) k++;
     const l = cum[k + 1] - cum[k];
-    const t = l > 0 ? Math.min(1, Math.max(0, (u - cum[k]) / l)) : 0;
-    out[2 * i] = pts[2 * k] + (pts[2 * k + 2] - pts[2 * k]) * t;
-    out[2 * i + 1] = pts[2 * k + 1] + (pts[2 * k + 3] - pts[2 * k + 1]) * t;
+    lerp(i, k, l > 0 ? Math.min(1, Math.max(0, (u - cum[k]) / l)) : 0);
   }
   return true;
 }
@@ -306,6 +341,19 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
         set(it.base + i, lx, ly, z - zt, s);
         set(it.base + W + i, (lx + rx) / 2, (ly + ry) / 2, z, s);
         set(it.base + 2 * W + i, rx, ry, z - zt, s);
+      }
+    } else if (it.kind === "tail") {
+      const p = table.pieces[it.piece]; const W = TAIL_M + 1;
+      const s = p ? p.s0 : 0; const z = zAt(it.pi, s);
+      if (bufL.length < 2 * W) { bufL = new Float64Array(2 * W); bufR = new Float64Array(2 * W); }
+      // An empty tail (the margin never opens this frame) is degenerate, not a fallback.
+      if (!p || !resample(p.pts, null, TAIL_M, bufL, p.cpts.length === p.pts.length ? p.cpts : p.pts, bufR)) {
+        for (let i = 0; i < 2 * W; i++) set(it.base + i, 0, 0, -1e3, s);
+        continue;
+      }
+      for (let i = 0; i <= TAIL_M; i++) {
+        set(it.base + i, bufL[2 * i], bufL[2 * i + 1], z - zt, s);
+        set(it.base + W + i, bufR[2 * i], bufR[2 * i + 1], z, s);
       }
     } else if (it.kind === "cap") {
       const p = table.pieces[it.piece];

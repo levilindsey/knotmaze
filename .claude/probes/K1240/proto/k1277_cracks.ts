@@ -1,5 +1,5 @@
 // K1277: where the triangles leave paper that master fills, at rest.
-//   node scripts/run_node.mjs .claude/probes/K1240/proto/k1277_cracks.ts <scene> [--ppu=40] [--n=12]
+//   node scripts/run_node.mjs .claude/probes/K1240/proto/k1277_cracks.ts <scene> [--ppu=40] [--n=12] [--near=x,y,r]
 // For each such pixel: the nearest triangle (distance in px), its item
 // (strip / ghost strip / cap / junction), and for a strip the segment
 // (0 or N-1 = at a station) and the row pair (border or centre).
@@ -8,7 +8,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { structure, frame } from "./outline";
 import { loadScene } from "./k1279_census";
-import { fillResolution, fillStructure, fillFrame, rasterFill } from "./fill_tri";
+import { fillResolution, fillStructure, fillFrame, rasterFill, itemVerts } from "./fill_tri";
 import { paintFaces } from "./k1277_census";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -16,6 +16,7 @@ const args = process.argv.slice(2);
 const nm = args.find((a) => !a.startsWith("--")) ?? "fat";
 const opt = (k: string): string | undefined => args.find((a) => a.startsWith(`--${k}=`))?.slice(k.length + 3);
 const ppu = Number(opt("ppu") ?? 40); const nShow = Number(opt("n") ?? 12);
+const near = opt("near")?.split(",").map(Number); // --near=x,y,r: only pixels within r of (x, y)
 const scene = loadScene(nm);
 const st = structure(scene); const table = frame(st, scene);
 const fs = fillStructure(st, fillResolution(st, table)); const fr = fillFrame(fs, st, table, scene);
@@ -29,7 +30,7 @@ const gB = rasterFill(fs, fr, x0, y0, W, H, ppu);
 // vertex -> item
 const itemOfV = new Int32Array(fs.nV).fill(-1);
 fs.items.forEach((it, k) => {
-  const n = it.kind === "strip" ? 3 * (it.N + 1) : it.kind === "cap" ? 18 : 1 + it.R;
+  const n = itemVerts(it);
   for (let v = it.base; v < it.base + n; v++) itemOfV[v] = k;
 });
 const P = fr.pos; const I = fs.idx;
@@ -50,8 +51,9 @@ const hist: Record<string, number> = {}; const rows: string[] = [];
 let n = 0;
 for (let i = 0; i < W * H; i++) {
   if (!(top[i] >= 0 && gA[i] !== 0 && gB[i] === 0)) continue;
-  n++;
   const r = Math.floor(i / W); const c = i % W; const x = x0 + (c + 0.5) / ppu; const y = y0 + (r + 0.5) / ppu;
+  if (near && Math.hypot(x - near[0], y - near[1]) > near[2]) continue;
+  n++;
   let best = Infinity; let bt = -1;
   for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) for (const t of grid.get(`${Math.floor(x / cell) + dx},${Math.floor(y / cell) + dy}`) ?? []) {
     const a = I[t]; const bb = I[t + 1]; const cc = I[t + 2];
