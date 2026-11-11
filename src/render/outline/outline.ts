@@ -7415,14 +7415,20 @@ function tailFoot(p: Poly, lo: number, hi: number, x: number, y: number, out: Fl
   let walked = p.s[k] - u0;
   let best = Infinity; let bs = u0;
   for (let guard = 0; guard <= nseg; guard++) {
-    const b = k + 1 === p.n ? 0 : k + 1;
-    const ax = p.x[k]; const ay = p.y[k]; const ex = p.x[b] - ax; const ey = p.y[b] - ay;
-    const l2 = ex * ex + ey * ey;
-    let t = l2 > 1e-24 ? ((x - ax) * ex + (y - ay) * ey) / l2 : 0;
-    t = t < 0 ? 0 : t > 1 ? 1 : t;
-    const dx = ax + ex * t - x; const dy = ay + ey * t - y;
-    const d2 = dx * dx + dy * dy;
-    if (d2 < best) { best = d2; bs = p.s[k] + t * (p.segLen[k] || 0); }
+    // K1283 s4 (perf): the segment's box holds it, so a box no nearer than the best
+    // cannot win the strict < below; skip the projection (same feet, cheaper walk).
+    const qx = p.bx0[k] - x > 0 ? p.bx0[k] - x : x - p.bx1[k] > 0 ? x - p.bx1[k] : 0;
+    const qy = p.by0[k] - y > 0 ? p.by0[k] - y : y - p.by1[k] > 0 ? y - p.by1[k] : 0;
+    if (qx * qx + qy * qy < best) {
+      const b = k + 1 === p.n ? 0 : k + 1;
+      const ax = p.x[k]; const ay = p.y[k]; const ex = p.x[b] - ax; const ey = p.y[b] - ay;
+      const l2 = ex * ex + ey * ey;
+      let t = l2 > 1e-24 ? ((x - ax) * ex + (y - ay) * ey) / l2 : 0;
+      t = t < 0 ? 0 : t > 1 ? 1 : t;
+      const dx = ax + ex * t - x; const dy = ay + ey * t - y;
+      const d2 = dx * dx + dy * dy;
+      if (d2 < best) { best = d2; bs = p.s[k] + t * (p.segLen[k] || 0); }
+    }
     walked += p.segLen[k] || 0;
     if (walked >= span) break;
     if (k + 1 >= nseg) { if (!p.closed) break; k = 0; } else k++;

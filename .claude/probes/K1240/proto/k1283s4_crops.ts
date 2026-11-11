@@ -39,7 +39,9 @@ const out = pos[0];
 const specs = pos.slice(1).map((s) => { const [scene, x, y, label] = s.split(":"); return { scene, x: +x, y: +y, label }; });
 const B0 = (opt("b0") === "s2" ? B0s2 : opt("b0") === "s3" ? B0s3 : opt("b0") === "a" ? B0a : B0s4) as typeof B0a; const withTri = args.includes("--tri"); const ppu = Number(opt("ppu") ?? 280); const Wd = Number(opt("w") ?? 1.6); const withErr = args.includes("--err"); const withDbg = args.includes("--dbg");
 const P = Math.round(Wd * ppu); const GAP = 6; const nPan = 3 + (withErr ? 2 : 0) + (withDbg ? 1 : 0);
-const Wt = nPan * P + (nPan - 1) * GAP; const Ht = specs.length * P + (specs.length - 1) * GAP;
+// --noimg (the k1283s4_sweep run over hundreds of spots): one row of image (the first spot), the rest
+// scored only (a typed array drops the out-of-range writes).
+const Wt = nPan * P + (nPan - 1) * GAP; const Ht = args.includes("--noimg") ? P : specs.length * P + (specs.length - 1) * GAP;
 const img = new Uint8Array(Wt * Ht * 3).fill(128);
 const hue = (c: number): [number, number, number] => { const h = ((c * 0.61803398875) % 1) * 6; const f = h - Math.floor(h); const q = [[1, f, 0], [1 - f, 1, 0], [0, 1, f], [0, 1 - f, 1], [f, 0, 1], [1, 0, 1 - f]][Math.floor(h) % 6]; return q.map((v) => 150 + 90 * v) as [number, number, number]; };
 const put = (row: number, pan: number, r: number, c: number, col: [number, number, number]): void => { if (r < 0 || c < 0 || r >= P || c >= P) return; const o = ((row * (P + GAP) + r) * Wt + pan * (P + GAP) + c) * 3; img[o] = col[0]; img[o + 1] = col[1]; img[o + 2] = col[2]; };
