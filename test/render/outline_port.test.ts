@@ -42,9 +42,11 @@ type Pin = { f0: { table: string; paint: string; band: string }; f1: { table: st
 // (DiskItem, decided in fillStructure), so every paint digest moved; the tail's
 // band walks on past X's arm start onto X's other arm and wherever it lies in
 // X's tube (wCut 0, tailAlpha fades it), so the tails' points (table, band) moved.
+// K1283 s4 (blots, 2f091862): the band's alpha is read at the point it draws, 0 outside
+// X's tube and on E's side within X's border band, so the tails moved again.
 const PINS: Record<string, Pin> = {
-  ring: { f0: { table: "c917ccdc552f8463", paint: "216c6fa053bf3df9", band: "194748672a6f5650" }, f1: { table: "38b74a6dd2fad5e3", paint: "55431978a4aee4f1", band: "5674fd716ab2b482" } },
-  g41_ring_tw42: { f0: { table: "2524c44017ad0553", paint: "49144461a5527443", band: "769ea88eb2053a7a" }, f1: { table: "2e55c75d81fd5aaf", paint: "664be0924976288d", band: "8ff65c6af6674be2" } },
+  ring: { f0: { table: "5c46edcbfe04c56c", paint: "216c6fa053bf3df9", band: "6f5e9a670a61d54a" }, f1: { table: "8f2cea7b62d0aab0", paint: "55431978a4aee4f1", band: "fb7f1766e8127f86" } },
+  g41_ring_tw42: { f0: { table: "3433f810a896d9c6", paint: "49144461a5527443", band: "147b6f6af7c266b4" }, f1: { table: "fc7e894794410749", paint: "664be0924976288d", band: "a3b3ef57c9e4c38c" } },
 };
 
 // The tool's second frame: every chain point rotated 0.3 rad and moved.
