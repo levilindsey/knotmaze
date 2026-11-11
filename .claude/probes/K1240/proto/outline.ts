@@ -3437,6 +3437,15 @@ function mkPolyBuf(id: number, cap: number, closed: boolean): Poly {
   };
 }
 
+/** K1247 s17 (j0 on def): a chain's buffers were sized to its frame-0
+ *  point count + 4, and a chain that grew past that sent the frame to the
+ *  full builder (def f25-f31: chain 16 at 36 points against a cap of 38),
+ *  whose table differs from the fast one, with a stale debug cache. The
+ *  physics adds points to a chain as it stretches, so give every chain
+ *  room to double (`K17_CAP=0`: the old cap). */
+const KF_CAP = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.K17_CAP !== "0";
+function polyCapOf(n: number): number { const b = n || 4; return KF_CAP ? 2 * b + 8 : b + 4; }
+
 function buildFastCache(st: DiagramStructure, scene: SceneIn): FCache {
   const look = scene.look;
   const nCh = st.chainIds.length;
@@ -3444,7 +3453,7 @@ function buildFastCache(st: DiagramStructure, scene: SceneIn): FCache {
   st.chainIds.forEach((id, i) => idxOf.set(id, i));
   const polys: Poly[] = []; const rawPolys: Poly[] = [];
   for (let i = 0; i < nCh; i++) {
-    const cap = (st.nPts[i] || 4) + 4;
+    const cap = polyCapOf(st.nPts[i]);
     polys.push(mkPolyBuf(i, cap, st.closed[i]));
     rawPolys.push(mkPolyBuf(i, cap, st.closed[i]));
   }
@@ -3707,7 +3716,7 @@ function buildFastCache(st: DiagramStructure, scene: SceneIn): FCache {
     kinkCount: scene.crossings.filter((x) => x.a.chain === x.b.chain).length,
   };
   for (let pi = 0; pi < nCh; pi++) {
-    const cap = Math.max(4, (st.nPts[pi] || 4) + 4);
+    const cap = Math.max(4, polyCapOf(st.nPts[pi]));
     C.tanTx.push(new Float64Array(cap)); C.tanTy.push(new Float64Array(cap));
     C.tanGF.push(new Float64Array(cap)); C.tanGB.push(new Float64Array(cap + 1));
   }

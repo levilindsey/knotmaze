@@ -136,7 +136,7 @@ console.log(`  whole-frame drawn max / input max: med ${q(gainRows.filter((x) =>
   cl.sort((u, v) => v.frames.size - u.frames.size || v.d - u.d);
   const nearJ = (x: number, y: number): string => { let b = Infinity, id = ""; for (const jn of s0.junctions) { const d = Math.hypot(jn.c[0] - x, jn.c[1] - y); if (d < b) { b = d; id = jn.id; } } return `${id} ${(b / h).toFixed(1)}h`; };
   console.log(`\njumps (a vertex moves > 0.25 px while its inputs within 2h moved < 0.1 px): ${jumps.length} vertices in ${new Set(jumps.map((j) => j.f)).size} frame pairs, ${cl.length} places`);
-  for (const c of cl.slice(0, 15)) console.log(`  (${c.x.toFixed(3)}, ${c.y.toFixed(3)}) nearest junction ${nearJ(c.x, c.y)}: ${c.frames.size} frame pairs, worst ${c.d.toFixed(3)} px at input <= ${c.mv.toFixed(3)} px, regions ${[...c.regions].slice(0, 4).join(",")}; vertex count changed in ${c.nChange} of ${c.n}`);
+  for (const c of cl.slice(0, 15)) console.log(`  (${c.x.toFixed(3)}, ${c.y.toFixed(3)}) nearest junction ${nearJ(c.x, c.y)}: ${c.frames.size} frame pairs, worst ${c.d.toFixed(3)} px at input <= ${c.mv.toFixed(3)} px, regions ${[...c.regions].slice(0, 4).join(",")}; vertex count changed in ${c.nChange} of ${c.n}${process.env.K17_GF === "1" ? `; frames ${[...c.frames].sort((u, v) => u - v).slice(0, 10).join(",")}` : ""}`);
 }
 
 // 2. Rung 1: the whole-frame gate.
