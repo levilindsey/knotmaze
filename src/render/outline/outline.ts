@@ -463,7 +463,7 @@ function segInt(ax: number, ay: number, bx: number, by: number, cx: number, cy: 
 // Borders: the offset polyline of one side of one chain.
 
 /** fx, fy: the point's foot when it is not the centreline at s (a cut fold's chevron, foldChevron). */
-interface BPt { x: number; y: number; s: number; rec?: BRec; ev?: unknown; fx?: number; fy?: number }
+interface BPt { x: number; y: number; s: number; rec?: BRec; ev?: unknown; fx?: number; fy?: number; cv?: number; s2?: number }
 interface Border { pi: number; side: number; pts: BPt[]; closed: boolean }
 
 /** How one border point is recomputed from a frame's centrelines.
@@ -618,7 +618,7 @@ function cutFolds(p: Poly, pts: BPt[], sig: number, h: number, W: number, keep: 
           const x = out[i].x + (out[i + 1].x - out[i].x) * hit.t;
           const y = out[i].y + (out[i + 1].y - out[i].y) * hit.t;
           const s = out[i].s + dS(p, out[i].s, out[i + 1].s) * hit.t;
-          const cp: BPt = { x, y, s, rec: { k: 3, a: out[i], b: out[i + 1], c: out[j - 1], d: out[j], t: hit.t } as BRec };
+          const cp: BPt = { x, y, s, rec: { k: 3, a: out[i], b: out[i + 1], c: out[j - 1], d: out[j], t: hit.t } as BRec, s2: out[j - 1].s + dS(p, out[j - 1].s, out[j].s) * hit.u };
           const nrm = new Float64Array(4);
           foldNormal(out[i + 1].x - out[i].x, out[i + 1].y - out[i].y, sig, nrm, 0);
           foldNormal(out[j].x - out[j - 1].x, out[j].y - out[j - 1].y, sig, nrm, 2);
@@ -639,7 +639,12 @@ function cutFolds(p: Poly, pts: BPt[], sig: number, h: number, W: number, keep: 
     const nrm = cutN.get(pt);
     const k = nrm ? foldChevron(p, h, W, pt.x, pt.y, pt.s, nrm, 0, cfChev) : 0;
     if (k <= 0) { res.push(pt); continue; }
-    for (let r = 0; r < k; r++) res.push({ x: cfChev[4 * r], y: cfChev[4 * r + 1], s: pt.s, rec: r === 0 ? pt.rec : { k: 6, s: pt.s }, fx: cfChev[4 * r + 2], fy: cfChev[4 * r + 3] });
+    // K1283 s8: s from the first leg's to the second's along the chevron (cutFoldsC says why).
+    const ds = CF_S2 && pt.s2 !== undefined ? dS(p, pt.s, pt.s2) : 0;
+    for (let r = 0; r < k; r++) {
+      const s = pt.s + (k > 1 ? (ds * r) / (k - 1) : 0);
+      res.push({ x: cfChev[4 * r], y: cfChev[4 * r + 1], s, rec: r === 0 ? pt.rec : { k: 6, s }, fx: cfChev[4 * r + 2], fy: cfChev[4 * r + 3], cv: r === 0 ? 1 : r === k - 1 ? 2 : 0, s2: r === 0 ? pt.s + ds : pt.s });
+    }
   }
   return res;
 }
@@ -1107,8 +1112,16 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
         const b0 = PB[k]; const b1 = PB[k + 1];
         const hit = segInt(a0.x, a0.y, a1.x, a1.y, b0.x, b0.y, b1.x, b1.y);
         if (!hit) continue;
-        const sAh = lerpS(polys[A.pi], a0.s, a1.s, hit.t); const sBh = lerpS(polys[B.pi], b0.s, b1.s, hit.u);
-        const dA = dSigned(A, sAh); const dB = dSigned(B, sBh);
+        let sAh = lerpS(polys[A.pi], a0.s, a1.s, hit.t); let sBh = lerpS(polys[B.pi], b0.s, b1.s, hit.u);
+        let dA = dSigned(A, sAh); let dB = dSigned(B, sBh);
+        if (MEET_MIRROR) {
+          // K1283 s8: borderMeetC's cut mirror (cutMirrorS).
+          const mir = (p: Poly, q0: BPt, q1: BPt, s: number): number => q1.cv === 1 ? q1.s2! - dS(p, s, q1.s) : q0.cv === 2 ? q0.s2! + dS(p, q0.s, s) : s;
+          const mA = mir(polys[A.pi], a0, a1, sAh);
+          if (mA !== sAh) { const d = dSigned(A, mA); if (d >= lo && d <= hi && (d < dA || dA < lo || dA > hi)) { sAh = mA; dA = d; } }
+          const mB = mir(polys[B.pi], b0, b1, sBh);
+          if (mB !== sBh) { const d = dSigned(B, mB); if (d >= lo && d <= hi && (d < dB || dB < lo || dB > hi)) { sBh = mB; dB = d; } }
+        }
         if (dA < lo || dA > hi || dB < lo || dB > hi) continue;
         if (dA + dB < bestD) {
           bestD = dA + dB;
@@ -3265,6 +3278,9 @@ interface FBord {
   // bc/sc spread each such tie over a window around the vertex
   // (spreadTiesC), and the lookups by s and the piece walk read them.
   bc: Float64Array; sc: Float64Array;
+  // K1283 s8: a cut fold's chevron ends, both at its cut point: bcv 1 at the first (s on the
+  // fold's first leg), 2 at the last (on its second leg), else 0; bs2 = the other end's s.
+  bcv: Int8Array; bs2: Float64Array;
 }
 function mkFBord(): FBord {
   return {
@@ -3273,6 +3289,7 @@ function mkFBord(): FBord {
     xy: new Float64Array(128), s: new Float64Array(64), cxy: new Float64Array(128), nf: 0,
     ins: new Int32Array(16), nIns: 0, segReg: new Int32Array(64), sorted: new Int32Array(16), segCnt: new Int32Array(1024), mark: new Int32Array(64),
     be: new Float64Array(64), bc: new Float64Array(64), sc: new Float64Array(64),
+    bcv: new Int8Array(64), bs2: new Float64Array(64),
   };
 }
 // K1247 s14 (#658): the border's cumulative sigma excess: segment i adds max(L, c len) - L for
@@ -4337,6 +4354,9 @@ let cfSeq = new Int32Array(1024);
 // and foldChevron's output (x, y, foot x, foot y per point).
 const CF_NS = 4; // side samples per half chevron: 2 CF_NS + 1 points per cut fold
 let cfCut = new Float64Array(64); const cfChev = new Float64Array(4 * (2 * CF_NS + 1)); const cfSegs: number[] = []; const cfU = new Float64Array(2);
+// K1283 s8: each cut point's s on its second leg (the cut point's own s is the first leg's).
+let cfS2 = new Float64Array(16);
+const CF_S2 = true;
 /** The inward unit normal of a border leg along (dx, dy): sig (ty, -tx). */
 function foldNormal(dx: number, dy: number, sig: number, out: Float64Array, o: number): void {
   const l = Math.sqrt(dx * dx + dy * dy) || 1;
@@ -4468,6 +4488,8 @@ function cutFoldsC(C: FCache, pi: number, sig: number, B: FBord): void {
             const q = 4 * (nid - nb); if (cfCut.length < q + 4) { const g = new Float64Array(2 * (q + 4)); g.set(cfCut); cfCut = g; }
             foldNormal(B.px[ib] - B.px[ia], B.py[ib] - B.py[ia], sig, cfCut, q);
             foldNormal(B.px[id] - B.px[ic], B.py[id] - B.py[ic], sig, cfCut, q + 2);
+            if (cfS2.length <= nid - nb) { const g = new Float64Array(2 * (nid - nb + 1)); g.set(cfS2); cfS2 = g; }
+            cfS2[nid - nb] = B.ps[ic] + dS(p, B.ps[ic], B.ps[id]) * hit.u;
             // seq.splice(i + 1, j - i - 1, nid)
             seq[i + 1] = nid; seq.copyWithin(i + 2, j, m); m -= j - i - 2;
             diag.push(`fold ch${pi} side${sig} at s=${sb.toFixed(2)}`);
@@ -4481,16 +4503,25 @@ function cutFoldsC(C: FCache, pi: number, sig: number, B: FBord): void {
     let cuts = 0; for (let i = 0; i < m; i++) if (seq[i] >= nb) cuts++;
     const cap = m + 2 * CF_NS * cuts;
     B.bx = growF(B.bx, cap); B.by = growF(B.by, cap); B.bs = growF(B.bs, cap); B.bfx = growF(B.bfx, cap); B.bfy = growF(B.bfy, cap);
+    if (B.bcv.length < cap) { B.bcv = new Int8Array(2 * cap); B.bs2 = new Float64Array(2 * cap); }
     let o = 0;
     for (let i = 0; i < m; i++) {
       const id = seq[i];
       if (id >= nb) {
         const k = foldChevron(p, h, C.W, B.px[id], B.py[id], B.ps[id], cfCut, 4 * (id - nb), cfChev);
         if (k > 0) {
-          for (let r = 0; r < k; r++) { B.bx[o] = cfChev[4 * r]; B.by[o] = cfChev[4 * r + 1]; B.bs[o] = B.ps[id]; B.bfx[o] = cfChev[4 * r + 2]; B.bfy[o] = cfChev[4 * r + 3]; o++; }
+          // K1283 s8: the chevron's s runs from the cut's s on the fold's first leg to its s on the
+          // second (was the first leg's s throughout), and its ends know each other's (borderMeetC).
+          const s1 = B.ps[id]; const ds = CF_S2 ? dS(p, s1, cfS2[id - nb]) : 0;
+          for (let r = 0; r < k; r++) {
+            B.bx[o] = cfChev[4 * r]; B.by[o] = cfChev[4 * r + 1]; B.bs[o] = s1 + (k > 1 ? (ds * r) / (k - 1) : 0); B.bfx[o] = cfChev[4 * r + 2]; B.bfy[o] = cfChev[4 * r + 3];
+            B.bcv[o] = r === 0 ? 1 : r === k - 1 ? 2 : 0; B.bs2[o] = r === 0 ? s1 + ds : s1;
+            o++;
+          }
           continue;
         }
       }
+      B.bcv[o] = 0;
       B.bx[o] = B.px[id]; B.by[o] = B.py[id]; B.bs[o] = B.ps[id];
       const v = B.pv[id];
       if (v >= 0) { B.bfx[o] = p.x[v]; B.bfy[o] = p.y[v]; }
@@ -4501,6 +4532,7 @@ function cutFoldsC(C: FCache, pi: number, sig: number, B: FBord): void {
     return;
   }
   B.bx = growF(B.bx, nb); B.by = growF(B.by, nb); B.bs = growF(B.bs, nb); B.bfx = growF(B.bfx, nb); B.bfy = growF(B.bfy, nb);
+  if (B.bcv.length < nb) { B.bcv = new Int8Array(2 * nb); B.bs2 = new Float64Array(2 * nb); } else B.bcv.fill(0, 0, nb);
   for (let i = 0; i < nb; i++) {
     B.bx[i] = B.px[i]; B.by[i] = B.py[i]; B.bs[i] = B.ps[i];
     const v = B.pv[i];
@@ -5872,6 +5904,18 @@ function meetSegsOf(C: FCache, Bd: FBord, ai: number, lo: number, hi: number, wh
   }
   return n;
 }
+/** K1283 s8 (j59): a cut fold's cut point stands on both of the fold's legs (its chevron's ends,
+ *  s on the first leg and on the second). Uncut, a border meeting the fold near it crossed both
+ *  legs, and the meet took the leg nearer the arm (the least d); cut, only the kept leg's segment
+ *  next to the cut point is there. A hit on that segment (into the chevron's first end, or out of
+ *  its last) also stands at the same offset from the cut point on the other leg: this returns that
+ *  s (or s itself), and borderMeetC keeps the one nearer the arm, as the uncut search did. */
+const MEET_MIRROR = true;
+function cutMirrorS(p: Poly, B: FBord, k: number, s: number): number {
+  if (B.bcv[k + 1] === 1) return B.bs2[k + 1] - dS(p, s, B.bs[k + 1]);
+  if (B.bcv[k] === 2) return B.bs2[k] + dS(p, B.bs[k], s);
+  return s;
+}
 function borderMeetC(C: FCache, ci: number, aiA: number, sideA: number, aiB: number, sideB: number): boolean {
   meetScratch.found = false;
   const A = C.armObj[aiA]; const B = C.armObj[aiB];
@@ -5915,9 +5959,15 @@ function borderMeetC(C: FCache, ci: number, aiA: number, sideA: number, aiB: num
           const k = sb[kk];
           const hit = segInt(a0x, a0y, a1x, a1y, BB.bx[k], BB.by[k], BB.bx[k + 1], BB.by[k + 1]);
           if (!hit) continue;
-          const sAh = lerpS(pA, BA.bs[i], BA.bs[i + 1], hit.t);
-          const sBh = lerpS(pB, BB.bs[k], BB.bs[k + 1], hit.u);
-          const dA = dSignedC(C, aiA, sAh); const dB = dSignedC(C, aiB, sBh);
+          let sAh = lerpS(pA, BA.bs[i], BA.bs[i + 1], hit.t);
+          let sBh = lerpS(pB, BB.bs[k], BB.bs[k + 1], hit.u);
+          let dA = dSignedC(C, aiA, sAh); let dB = dSignedC(C, aiB, sBh);
+          if (MEET_MIRROR) {
+            const mA = cutMirrorS(pA, BA, i, sAh);
+            if (mA !== sAh) { const d = dSignedC(C, aiA, mA); if (d >= lo && d <= hi && (d < dA || dA < lo || dA > hi)) { sAh = mA; dA = d; } }
+            const mB = cutMirrorS(pB, BB, k, sBh);
+            if (mB !== sBh) { const d = dSignedC(C, aiB, mB); if (d >= lo && d <= hi && (d < dB || dB < lo || dB > hi)) { sBh = mB; dB = d; } }
+          }
           if (dA < lo || dA > hi || dB < lo || dB > hi) continue;
           if (dA + dB < bestD) {
             bestD = dA + dB; found = true;
