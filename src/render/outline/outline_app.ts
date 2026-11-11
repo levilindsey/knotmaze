@@ -38,6 +38,7 @@ import {
   PAINT_PAINT_STRIP_GLSL,
   PAINT_SECTION_GLSL,
 } from "../paint_glsl";
+import { EXPLORE_VIS_GLSL } from "../explore_glsl";
 import { kGeom, kPaint, kReveal, kStatic, knotUniformValues } from "../paint_model";
 import type { SceneIn } from "./outline";
 import { RUN_MAP_W, RV_W, appRunMap, chainArcMap, revealMaskTex } from "./paint";
@@ -210,7 +211,9 @@ ${PAINT_SECTION_GLSL}
 ${PAINT_GATE_THREAD_GLSL}
 ${PAINT_FX_GLSL}
 ${PAINT_PAINT_STRIP_GLSL}
+${EXPLORE_VIS_GLSL}
 // K1291 s2: al = the intro's materialize alpha (comet, dust; 1 otherwise)
+// times the thread reveal's visibility (K76 kExploreAt, the plain fade end),
 // and side01 the point's side across the thread (the rainbow's stripes).
 vec3 appMaterial(int ch, highp float a, highp float side01, out float al) {
   al = 1.0;
@@ -232,6 +235,7 @@ vec3 appMaterial(int ch, highp float a, highp float side01, out float al) {
     highp vec4 st = kPaintAt(c, actrl, an, uPx, false);
     m = kComposePaintFlat(m, st, kGlow(c, actrl));
   }
+  if (uKExplore.x > 0.5) al *= kExploreAt(c, actrl);
   return m;
 }
 void main() {
@@ -304,6 +308,7 @@ void main() {
 const KNOT_NAMES = [
   "uKBase", "uKFx", "uKFx2", "uKShape", "uKInk", "uKKnots", "uKGamut", "uKSect", "uKPaint", "uKPulse",
   "uKHead", "uKReach", "uKGold", "uKLook", "uKPath", "uKPathB", "uKHlPulse", "uKHlHover", "uKHlFray", "uKBorder",
+  "uKExplore",
 ] as const;
 /** The paint data textures' samplers, on units 1-4 (paint_glsl PAINT_DATA_GLSL). */
 const APP_TEX = ["uKStatic", "uKGeom", "uKReveal", "uKPaintData"] as const;
@@ -695,7 +700,10 @@ class OutlinePass {
       // premultiplied over what is under it (alpha 1 elsewhere: the same
       // write as no blending).
       const kfx = ap?.knot["uKFx"];
-      const fade = !!kfx && kfx[3] > 0.5 && (Math.round(kfx[0]) === 2 || Math.round(kfx[0]) === 3);
+      const kex = ap?.knot["uKExplore"];
+      const fade =
+        (!!kfx && kfx[3] > 0.5 && (Math.round(kfx[0]) === 2 || Math.round(kfx[0]) === 3)) ||
+        (!!kex && kex[0] > 0.5);
       if (fade) {
         gl.enable(gl.BLEND);
         gl.blendEquation(gl.FUNC_ADD);

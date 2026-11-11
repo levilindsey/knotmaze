@@ -150,6 +150,9 @@ try {
     await page.mouse.move(3, VH - 3);
     if (cs.threads) {
       await page.waitForFunction(() => window.__knotPerf?.().state && window.__knotPerf().state !== "loading", { timeout: 120000, polling: 200 });
+      // The plain fade end: the end looks (beacon dots, halo sprites) are
+      // not in the outline yet (K1291 s2 handoff).
+      await page.evaluate(() => window.__knotExplore({ look: "fade" }));
     } else {
       // The reveal is attached once the loader hands over.
       await page.waitForFunction(() => !!window.__knotRenderer?.()?.revealFx?.revealAnim, { timeout: 120000, polling: 50 });
@@ -274,15 +277,14 @@ try {
       const moveTo = async (k) => {
         let made = 0;
         for (let i = 0; i < 200 && made < k; i++) {
-          const f = await page.evaluate(() => { const f = window.__knotFabric(); return { solved: f.solved, opts: f.options?.() ?? f.moves ?? null }; });
+          const f = await page.evaluate(() => ({ solved: window.__knotFabric().solved }));
           if (f.solved) break;
+          // The fewest-moves choice (probe_hooks __knotFabric choiceMoves).
           const ok = await page.evaluate(() => {
-            const f = window.__knotFabric();
-            const opts = typeof f.options === "function" ? f.options() : f.moves;
+            const opts = window.__knotFabric().choiceMoves;
             if (!opts || !opts.length) return false;
-            const best = opts.reduce((a, b) => ((b.toFinish ?? 0) < (a.toFinish ?? 0) ? b : a));
-            window.__knotTurnMove(best.edge);
-            return true;
+            const best = opts.reduce((a, b) => (b.moves < a.moves ? b : a));
+            return window.__knotTurnMove(best.edge);
           });
           if (!ok) break;
           await page.waitForFunction(() => !window.__knotFabric().animating, { timeout: 30000, polling: 50 });
@@ -294,7 +296,6 @@ try {
       for (const [label, k] of [["m3", 3], ["mid", 8]]) {
         total += await moveTo(k - total);
         await sleep(1200);
-        await page.evaluate(() => { const F = window.__knotFabricRenderer?.(); if (F) { F.exploreClock = 1000; } });
         await settle();
         const chains = await chainsNow();
         const res = await capture(label, chains, []);
