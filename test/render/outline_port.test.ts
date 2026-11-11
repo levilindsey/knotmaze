@@ -56,8 +56,12 @@ type Pin = { f0: { table: string; paint: string; band: string }; f1: { table: st
 // burial (NOMEET_BURY) leaves ring unchanged. The meet and the paint both read the chevron's
 // interpolated s (CF_S2_PAINT on; off, tried in 7d0ae1a0, failed the colour bar).
 // Checked against form B (census, sweep, seam).
+// K1283 s9 re-pinned on purpose (2026-11-11): the chevron is one tie run for station lookups
+// (bc), frame tails and fill strips paint their foot's s (fill_tri footS, every 8 columns),
+// and an untied run at a failed corner fades into its tail (runEndFade): table, paint and
+// band moved. Checked against form B (census, sweep, seam).
 const PINS: Record<string, Pin> = {
-  ring: { f0: { table: "59a1ee42da00c000", paint: "1353964394ab6dcb", band: "9c3178901b238529" }, f1: { table: "08a76e48703f6f05", paint: "011fd7a74f530594", band: "38d9b62e04678d59" } },
+  ring: { f0: { table: "4c2ac91c6888ecbe", paint: "5e4217ee69951e8f", band: "d0b0b9cba8a04152" }, f1: { table: "f642f5b062839e73", paint: "69d5380db966d331", band: "47a8b0d91600ce6a" } },
   g41_ring_tw42: { f0: { table: "41e36980cea61e26", paint: "d396f4634638199e", band: "331b5a8c6fb97028" }, f1: { table: "4a97e69c9a8ecb4e", paint: "2a0bf5486b003cc4", band: "6d0d5de16c791081" } },
 };
 

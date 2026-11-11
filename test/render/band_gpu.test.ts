@@ -52,16 +52,20 @@ describe("K1240 S4b GPU band", () => {
     // float32 tables (positions, s, depth): the alphas agree to 1e-3.
     expect(worst).toBeLessThan(1e-3);
   }, 60_000);
-  it("K1283 s3: a tail's own alpha reaches the band's vertices (attr .w), the rest at 1", () => {
+  it("K1283 s3: a tail's own alpha (s9: and an untied run's end fade) reaches the band's vertices (attr .w), the rest at 1", () => {
     const sc = loadScene(fileURLToPath(new URL("./fixtures/outline_ring.json.gz", import.meta.url)));
     const tb = frame(structure(sc), sc);
-    const b = bandGpu(tb, sc, zChains(sc));
+    const zz = zChains(sc);
+    const b = bandGpu(tb, sc, zz);
     let v = 0; let tails = 0; let faded = 0;
     for (const p of tb.pieces) {
       const np = p.pts.length / 2;
       if (np < 2) continue;
-      const pa = p.kind === "tail" ? p.alpha : undefined;
-      if (pa) { tails++; expect(pa.length).toBe(2 * np); }
+      // A tied piece's alpha is the tie's, in the shader (.w = 1).
+      const tied = (p.kind === "run" || p.kind === "ghost") && p.chain >= 0 && p.chain < zz.zc.length && zz.passes[p.chain].length > 0;
+      const pa = (p.kind === "tail" || (p.kind === "run" && !tied)) ? p.alpha : undefined;
+      if (pa) expect(pa.length).toBe(2 * np);
+      if (pa && p.kind === "tail") tails++;
       for (let i = 0; i + 1 < np; i++) {
         // pO, cO, pI, cO, cI, pI: outer i, outer i+1, inner i, outer i+1, inner i+1, inner i.
         const want = pa ? [pa[2 * i], pa[2 * i + 2], pa[2 * i + 1], pa[2 * i + 2], pa[2 * i + 3], pa[2 * i + 1]] : [1, 1, 1, 1, 1, 1];
