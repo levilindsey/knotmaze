@@ -17,12 +17,12 @@ foreach ($p in $Passes) {
   if ((Get-Date).ToString('HH:mm') -ge $StopAt) { Say "$p skipped: past $StopAt"; continue }
   # perf lock around the build
   $t0 = Get-Date
-  while ((Test-Path $PerfLock) -and ((Get-Date) - $t0).TotalMinutes -lt 20) { Start-Sleep 10 }
-  "K156 agent a0ef4cd8 | $(Get-Date -Format s) | round 2026-11-10d $p build" | Set-Content $PerfLock
+  while ((Test-Path $PerfLock) -and ((Get-Date) - (Get-Item $PerfLock).LastWriteTime).TotalMinutes -lt 30) { Start-Sleep 10 }
+  "K156 agent ab9da9e8 | $(Get-Date -Format s) | round 2026-11-10d $p build" | Set-Content $PerfLock
   Say "$p perf lock taken, start"
   pwsh -NoProfile -File scripts/phone_pass.ps1 -Phase start -Base $c.base -Head $c.head -AllowChrome -QuietS 30 -Out $out *> "$R\logs\${p}_start.out"
   $se = $LASTEXITCODE
-  if ((Test-Path $PerfLock) -and ((Get-Content $PerfLock -Raw) -match 'a0ef4cd8')) { Remove-Item $PerfLock -Force }
+  if ((Test-Path $PerfLock) -and ((Get-Content $PerfLock -Raw) -match 'ab9da9e8')) { Remove-Item $PerfLock -Force }
   Say "$p start exit $se; perf lock released"
   if ($se -eq 0) {
     $env:ITER = '60'; $env:QBASE = $c.qb; $env:QHEAD = $c.qh
@@ -41,6 +41,18 @@ foreach ($p in $Passes) {
         Say "$p far_scan exit $LASTEXITCODE"
       }
     }
+  }
+  if ($c.census -and $se -eq 0 -and -not (Test-Path "$out\state\watchdog.trip")) {
+    # K307 traced load: Chrome restarted 2026-11-10 08:11 (after salt p1109a, 2026-11-09 22:07:41); 0 shader translates = the program cache persisted
+    $env:PASSCFG = "$out\config.json"
+    $hb = (Get-Content "$out\config.json" -Raw | ConvertFrom-Json).hostB
+    Say "$p k307 traced load begin"
+    $kp = Start-Process -FilePath node -ArgumentList @('--max-old-space-size=8192', "$R\k307\trace_intro_phone.mjs", $hb, 'k307_p1109a_after_restart', '?daily&snd=none', '--loads', '1', '--vp', '411x753x2.625', '--max', '20', '--ms', '12000', '--inject', 'salt_p1109a.js', '--trace', 'first') -WorkingDirectory "$R\k307" -RedirectStandardOutput "$R\logs\${p}_k307.out" -RedirectStandardError "$R\logs\${p}_k307.err" -WindowStyle Hidden -PassThru
+    $dl = (Get-Date).AddMinutes(4)
+    while (-not $kp.HasExited -and (Get-Date) -lt $dl) { if (Test-Path "$out\state\watchdog.trip") { break }; Start-Sleep 3 }
+    if (-not $kp.HasExited) { Stop-Process -Id $kp.Id -Force; Say "$p k307 STOPPED (timeout or trip)" }
+    Say "$p k307 exit $($kp.ExitCode)"
+    Remove-Item Env:PASSCFG -ErrorAction SilentlyContinue
   }
   $trip = if (Test-Path "$out\state\watchdog.trip") { (Get-Content "$out\state\watchdog.trip" -Raw).Trim() } else { 'none' }
   Say "$p trip=$trip"
