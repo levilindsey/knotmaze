@@ -109,7 +109,11 @@ function loadNamed(nm: string): SceneIn {
   return s;
 }
 
-const diagSig = (s: SceneIn): string => [s.chains.map((c) => `${c.id}:${c.pts.length}:${c.closed ? 1 : 0}`).join(","), s.crossings.map((x) => `${x.a.chain}/${x.b.chain}/${x.over}`).join(","),
+// The diagram: chains (id, closed), crossings, junction arms, dead ends.
+// The chains' point counts are not the diagram (a recording's chain can
+// gain points mid-motion); ptsSig reports them separately.
+const ptsSig = (s: SceneIn): string => s.chains.map((c) => `${c.id}:${c.pts.length}`).join(",");
+const diagSig = (s: SceneIn): string => [s.chains.map((c) => `${c.id}:${c.closed ? 1 : 0}`).join(","), s.crossings.map((x) => `${x.a.chain}/${x.b.chain}/${x.over}`).join(","),
   s.junctions.map((j) => `${j.id}:${j.arms.map((a) => `${a.chain}${a.kind[0]}${a.dir}`).join("")}`).join(","), s.deadEnds.map((d) => d.chain).join(",")].join("|");
 
 const isMain = !!process.argv[1] && process.argv[1].includes("k1277_census");
@@ -168,7 +172,8 @@ if (isMain && mode === "rest") {
   const t0 = frame(st0, s0);
   const res0 = fillResolution(st0, t0);
   const fs0 = fillStructure(st0, res0);
-  const sig0 = fillSig(fs0); const dsig0 = diagSig(s0);
+  const sig0 = fillSig(fs0); const dsig0 = diagSig(s0); const psig0 = ptsSig(s0);
+  let ptsChanged = 0; let denseMax = 0;
   console.log(`${name}: ${files.length} frames; fill ${fs0.nV} vertices, ${fs0.idx.length / 3} triangles, sig ${sig0}; ${ppu} px/unit`);
   const rows: { f: number; fillA: number; paperA: number; fillB: number; paperB: number; diff: number; fallbacks: number; ms: number }[] = [];
   const worstCr: (Cl & { f: number })[] = []; const worstSp: (Cl & { f: number })[] = [];
@@ -182,9 +187,11 @@ if (isMain && mode === "rest") {
     const fsF = fillStructure(structure(sc), res0);
     const tOk = fillSig(fsF) === sig0;
     if (!dOk || !tOk) { topoBad++; console.log(`frame ${f}: TOPOLOGY DIFFERS (diagram ${dOk ? "same" : "differs"}, fill ${tOk ? "same" : fillSig(fsF)})`); }
+    if (ptsSig(sc) !== psig0) { ptsChanged++; if (ptsChanged <= 3) console.log(`frame ${f}: chain point counts differ from frame 0's (diagram and fill topology ${dOk && tOk ? "same" : "differ"})`); }
     const table = frame(st0, sc);
     const zz = zChains(sc);
     const fr = fillFrame(fs0, st0, table, sc, zz);
+    denseMax = Math.max(denseMax, fr.dense);
     const g = gridOf(sc);
     const gA = paintFaces(table.faces, g.x0, g.y0, g.W, g.H, ppu);
     const gB = rasterFill(fs0, fr, g.x0, g.y0, g.W, g.H, ppu);
@@ -209,9 +216,9 @@ if (isMain && mode === "rest") {
   }
   worstCr.sort((a, b) => b.n - a.n); worstSp.sort((a, b) => b.n - a.n);
   const tot = (k: "fillA" | "paperA" | "fillB" | "paperB"): number => rows.reduce((s, r) => s + r[k], 0);
-  console.log(`${name}: ${rows.length} frames; topology differs on ${topoBad}; triangles worse than master on ${worse} frames`);
+  console.log(`${name}: ${rows.length} frames; topology differs on ${topoBad}; chain point counts differ on ${ptsChanged}; dense border pieces at most ${denseMax}; triangles worse than master on ${worse} frames`);
   console.log(`  totals over the differing px: master fill ${tot("fillA")} paper ${tot("paperA")} | triangles fill ${tot("fillB")} paper ${tot("paperB")}`);
   console.log(`  worst cracks: ${worstCr.slice(0, 5).map((c) => `f${c.f} ${fmt(c)}`).join("; ")}`);
   console.log(`  worst spills: ${worstSp.slice(0, 5).map((c) => `f${c.f} ${fmt(c)}`).join("; ")}`);
-  writeFileSync(join(outDir, `motion_${name}_${ppu}.json`), JSON.stringify({ rows, worstCr: worstCr.slice(0, 20), worstSp: worstSp.slice(0, 20), topoBad, worse }));
+  writeFileSync(join(outDir, `motion_${name}_${ppu}.json`), JSON.stringify({ rows, worstCr: worstCr.slice(0, 20), worstSp: worstSp.slice(0, 20), topoBad, ptsChanged, denseMax, worse }));
 }
