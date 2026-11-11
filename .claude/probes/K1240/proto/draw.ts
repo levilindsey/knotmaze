@@ -6,7 +6,12 @@
 // one flat colour per chain in the section-colours scheme (the gamut arc
 // at pastel saturation/lightness, one hue step per chain). Both looks
 // read the same OutlineTable; nothing here recomputes geometry.
-import type { OutlineTable, SceneIn } from "./outline";
+// K1277: the fill is plain triangles (fill_tri.ts) whose topology comes
+// from the diagram once; a depth test on form B's key picks the top
+// surface. No stencil.
+import type { DiagramStructure, OutlineTable, SceneIn } from "./outline";
+import { structure } from "./outline";
+import { fillFrame, fillResolution, fillStructure, keyScale, type FillStructure } from "./fill_tri";
 
 export function parseColor(s: string): [number, number, number] {
   const m = /^#([0-9a-f]{6})$/i.exec(s.trim());
@@ -97,13 +102,17 @@ export function earClip(pts: number[]): number[] {
   return idx;
 }
 
-export interface FillFaceDraw { fanOff: number; fanCnt: number; quadOff: number }
 export interface DrawData {
-  fillFanPos: Float32Array; // fan triangles per face (stencil pass)
-  fillFanCol: Float32Array;
-  fillQuadPos: Float32Array; // one bbox quad per face (colour pass)
-  fillQuadCol: Float32Array;
-  fillFaces: FillFaceDraw[];
+  /** K1277: the fill's vertices (x, y), colours (rgb), depth keys and
+   *  chain s, and its index buffer, whose topology is fixed at structure. */
+  fillPos: Float32Array;
+  fillCol: Float32Array;
+  fillKey: Float32Array;
+  fillS: Float32Array;
+  fillIdx: Uint32Array;
+  /** Every key lies in [-fillKS, fillKS] (the depth mapping). */
+  fillKS: number;
+  fill: FillStructure;
   bandPos: Float32Array;
   bandCol: Float32Array;
   /** K1279: one alpha per band vertex (form B's tie alpha; 1 outside every partner tube). */
@@ -291,37 +300,20 @@ export function footNear(c: ZChain, x: number, y: number, sC: number, r: number,
   return { d: best, s: bs };
 }
 
-export function buildDrawData(table: OutlineTable, scene: SceneIn): DrawData {
+/** `fill` carries the structure the table was framed from and, for motion,
+ *  the fill topology decided once on frame 0 (omit both for a still). */
+export function buildDrawData(table: OutlineTable, scene: SceneIn, fill?: { st: DiagramStructure; fs?: FillStructure }): DrawData {
   const baseHue = baseHueFor(scene.name);
   const nCh = scene.chains.length;
-  // Fill is drawn with the stencil: a fan from each face's first vertex
-  // toggles the stencil, then the face's bbox quad paints where set.
-  // That fills any simple loop exactly, with no CPU triangulation.
-  const fanPos: number[] = [];
-  const fanCol: number[] = [];
-  const quadPos: number[] = [];
-  const quadCol: number[] = [];
-  const fillFaces: FillFaceDraw[] = [];
-  for (const f of table.faces) {
-    if (f.hole || f.ownerChain < 0) continue;
-    const col = chainColor(f.ownerChain, nCh, baseHue);
-    const n = f.pts.length / 2;
-    if (n < 3) continue;
-    const fanOff = fanPos.length / 2;
-    let x0 = Infinity; let y0 = Infinity; let x1 = -Infinity; let y1 = -Infinity;
-    for (let i = 0; i < n; i++) {
-      x0 = Math.min(x0, f.pts[2 * i]); x1 = Math.max(x1, f.pts[2 * i]);
-      y0 = Math.min(y0, f.pts[2 * i + 1]); y1 = Math.max(y1, f.pts[2 * i + 1]);
-    }
-    for (let i = 1; i + 1 < n; i++) {
-      fanPos.push(f.pts[0], f.pts[1], f.pts[2 * i], f.pts[2 * i + 1], f.pts[2 * i + 2], f.pts[2 * i + 3]);
-      for (let k = 0; k < 3; k++) fanCol.push(col[0], col[1], col[2]);
-    }
-    const quadOff = quadPos.length / 2;
-    quadPos.push(x0, y0, x1, y0, x1, y1, x0, y0, x1, y1, x0, y1);
-    for (let k = 0; k < 6; k++) quadCol.push(col[0], col[1], col[2]);
-    fillFaces.push({ fanOff, fanCnt: (n - 2) * 3, quadOff });
-  }
+  // K1277: the fill as triangles fixed at structure; per frame, positions,
+  // keys and s only. Colour is one flat colour per owner chain.
+  const st = fill?.st ?? structure(scene);
+  const fs = fill?.fs ?? fillStructure(st, fillResolution(st, table));
+  const zz = zChains(scene);
+  const fr = fillFrame(fs, st, table, scene, zz);
+  const chainCols = Array.from({ length: nCh }, (_, c) => chainColor(c, nCh, baseHue));
+  const fillCol = new Float32Array(3 * fs.nV);
+  for (let v = 0; v < fs.nV; v++) { const c = chainCols[fs.vChain[v]] ?? [0, 0, 0]; fillCol[3 * v] = c[0]; fillCol[3 * v + 1] = c[1]; fillCol[3 * v + 2] = c[2]; }
   const ink = parseColor(scene.look.ink);
   const bandPos: number[] = [];
   const bandCol: number[] = [];
@@ -329,7 +321,7 @@ export function buildDrawData(table: OutlineTable, scene: SceneIn): DrawData {
   const W = table.W;
   const h = table.h;
   const zt = 0.1 * scene.look.depthAmp;
-  const { zc, passes } = zChains(scene);
+  const { zc, passes } = zz;
   const seen: { o: number; s: number; d: number; f: number }[] = [];
   /** The tie alpha of a band vertex of chain c at (x, y), own foot s, own distance dC. */
   const alphaAt = (c: number, x: number, y: number, s: number, dC: number): number => {
@@ -452,9 +444,7 @@ export function buildDrawData(table: OutlineTable, scene: SceneIn): DrawData {
     }
   }
   return {
-    fillFanPos: Float32Array.from(fanPos), fillFanCol: Float32Array.from(fanCol),
-    fillQuadPos: Float32Array.from(quadPos), fillQuadCol: Float32Array.from(quadCol),
-    fillFaces,
+    fillPos: fr.pos, fillCol, fillKey: fr.key, fillS: fr.s, fillIdx: fs.idx, fillKS: keyScale(scene), fill: fs,
     bandPos: Float32Array.from(bandPos), bandCol: Float32Array.from(bandCol), bandAlpha: Float32Array.from(bandAlpha),
     bandCount: bandPos.length / 2,
   };
@@ -464,23 +454,29 @@ export class OutlineRenderer {
   private gl: WebGL2RenderingContext;
   private prog: WebGLProgram;
   private vaoFill: WebGLVertexArrayObject;
-  private vaoQuad: WebGLVertexArrayObject;
+  private fillPosBuf: WebGLBuffer;
+  private fillKeyBuf: WebGLBuffer;
   private vaoBand: WebGLVertexArrayObject;
   private uMat: WebGLUniformLocation | null;
+  private uKS: WebGLUniformLocation | null;
   private data: DrawData;
   constructor(canvas: HTMLCanvasElement, data: DrawData) {
-    const gl = canvas.getContext("webgl2", { antialias: false, preserveDrawingBuffer: true, stencil: true });
+    const gl = canvas.getContext("webgl2", { antialias: false, preserveDrawingBuffer: true, depth: true, stencil: false });
     if (!gl) throw new Error("WebGL2 unavailable");
     this.gl = gl;
     this.data = data;
+    // K1277: aKey is form B's surface key; the depth test keeps the highest
+    // (the top surface). Bands leave aKey at its default (0) with the test off.
     const vs = `#version 300 es
 layout(location=0) in vec2 aPos;
 layout(location=1) in vec4 aCol;
+layout(location=2) in float aKey;
 uniform mat3 uMat;
+uniform float uKS;
 out vec4 vCol;
 void main() {
   vec3 p = uMat * vec3(aPos, 1.0);
-  gl_Position = vec4(p.xy, 0.0, 1.0);
+  gl_Position = vec4(p.xy, clamp(-aKey / uKS, -1.0, 1.0), 1.0);
   vCol = aCol;
 }`;
     const fs = `#version 300 es
@@ -502,6 +498,7 @@ void main() { o = vCol; }`;
     if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error("link failed");
     this.prog = prog;
     this.uMat = gl.getUniformLocation(prog, "uMat");
+    this.uKS = gl.getUniformLocation(prog, "uKS");
     const mkVao = (pos: Float32Array, col: Float32Array, nc = 3): WebGLVertexArrayObject => {
       const vao = gl.createVertexArray()!;
       gl.bindVertexArray(vao);
@@ -518,8 +515,29 @@ void main() { o = vCol; }`;
       gl.bindVertexArray(null);
       return vao;
     };
-    this.vaoFill = mkVao(data.fillFanPos, data.fillFanCol);
-    this.vaoQuad = mkVao(data.fillQuadPos, data.fillQuadCol);
+    // K1277: the fill VAO: positions and keys change per frame (DYNAMIC),
+    // colours and the index buffer never do.
+    this.vaoFill = gl.createVertexArray()!;
+    gl.bindVertexArray(this.vaoFill);
+    this.fillPosBuf = gl.createBuffer()!;
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.fillPosBuf);
+    gl.bufferData(gl.ARRAY_BUFFER, data.fillPos, gl.DYNAMIC_DRAW);
+    gl.enableVertexAttribArray(0);
+    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+    const fcb = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, fcb);
+    gl.bufferData(gl.ARRAY_BUFFER, data.fillCol, gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(1);
+    gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 0, 0);
+    this.fillKeyBuf = gl.createBuffer()!;
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.fillKeyBuf);
+    gl.bufferData(gl.ARRAY_BUFFER, data.fillKey, gl.DYNAMIC_DRAW);
+    gl.enableVertexAttribArray(2);
+    gl.vertexAttribPointer(2, 1, gl.FLOAT, false, 0, 0);
+    const ib = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ib);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, data.fillIdx, gl.STATIC_DRAW);
+    gl.bindVertexArray(null);
     // K1279: bands carry their tie alpha (RGBA) and blend over the fills.
     const nb = data.bandCol.length / 3; const rgba = new Float32Array(4 * nb);
     for (let i = 0; i < nb; i++) { rgba[4 * i] = data.bandCol[3 * i]; rgba[4 * i + 1] = data.bandCol[3 * i + 1]; rgba[4 * i + 2] = data.bandCol[3 * i + 2]; rgba[4 * i + 3] = data.bandAlpha[i] ?? 1; }
@@ -553,6 +571,16 @@ void main() { o = vCol; }`;
     ]);
   }
 
+  /** K1277: a new frame's fill positions and keys (same topology). */
+  updateFill(pos: Float32Array, key: Float32Array): void {
+    const gl = this.gl;
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.fillPosBuf);
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, pos);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.fillKeyBuf);
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, key);
+    this.data = { ...this.data, fillPos: pos, fillKey: key };
+  }
+
   draw(scene: SceneIn, mode: "border" | "fill" | "both", crop?: { cx: number; cy: number; zoom: number }): void {
     const gl = this.gl;
     const canvas = gl.canvas as HTMLCanvasElement;
@@ -566,22 +594,17 @@ void main() { o = vCol; }`;
     // (a, b, 0, c', d', 0, tx, ty, 1) matching GLSL mat3 columns below.
     gl.uniformMatrix3fv(this.uMat, false, mat);
     if (mode === "fill" || mode === "both") {
-      // Stencil fill per face: fan toggles, bbox quad paints where set.
-      gl.enable(gl.STENCIL_TEST);
-      for (const f of this.data.fillFaces) {
-        gl.clear(gl.STENCIL_BUFFER_BIT);
-        gl.colorMask(false, false, false, false);
-        gl.stencilFunc(gl.ALWAYS, 0, 0xff);
-        gl.stencilOp(gl.KEEP, gl.KEEP, gl.INVERT);
-        gl.bindVertexArray(this.vaoFill);
-        gl.drawArrays(gl.TRIANGLES, f.fanOff, f.fanCnt);
-        gl.colorMask(true, true, true, true);
-        gl.stencilFunc(gl.NOTEQUAL, 0, 0xff);
-        gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
-        gl.bindVertexArray(this.vaoQuad);
-        gl.drawArrays(gl.TRIANGLES, f.quadOff, 6);
-      }
-      gl.disable(gl.STENCIL_TEST);
+      // K1277: one indexed draw; the depth test keeps the highest key
+      // (LEQUAL: an exact tie goes to the later triangle, as fill_tri's
+      // CPU raster does).
+      gl.uniform1f(this.uKS, this.data.fillKS);
+      gl.clearDepth(1);
+      gl.clear(gl.DEPTH_BUFFER_BIT);
+      gl.enable(gl.DEPTH_TEST);
+      gl.depthFunc(gl.LEQUAL);
+      gl.bindVertexArray(this.vaoFill);
+      gl.drawElements(gl.TRIANGLES, this.data.fillIdx.length, gl.UNSIGNED_INT, 0);
+      gl.disable(gl.DEPTH_TEST);
     }
     if (mode === "border" || mode === "both") {
       gl.enable(gl.BLEND);
