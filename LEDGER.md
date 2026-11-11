@@ -523,11 +523,11 @@ Next free ID: K1302.
 - **K1283** · Junction borders of the outline (rp=outline) against form B. Stage 1 (3c8bd61e) fixed the concave
   corner bites (census 27528 -> 17756 px); left: the failed corners and the end-arm round ends (x47, x73,
   x349). Full text in docs/ledger_notes.md
-  - owner: nobody since 2026-11-11 01:01 (merged)
-  - branch: mainline; last commit: `a0a8a280`
-  - evidence: .claude/probes/K1240/out/k1283s5/ (untracked), tools .claude/probes/K1240/proto/k1283s5_*
-  - next: Stage 5 merged: folds cut with form B chevron (x6 324 -> 25 px), T-corner shadow fades by degrees, census 5609 -> 4677; stage 6: the round-end/tail seam (steeper-than-form-B 521 vs 449), sweep muse_hash j59, the fallback builder cutFolds, def gain hold max 3.34 -> 3.96, then x134/x77/x304
-  - brief: `docs/design/K1283_s5.md`
+  - owner: agent `aef3d2423ba493150` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-11 01:01, 2 h cap ~03:01)
+  - branch: `worktree-agent-aef3d2423ba493150`, worktree `.claude/worktrees/agent-aef3d2423ba493150`; last commit: `849a26d2`
+  - evidence: src/render/outline/; .claude/probes/K1240/proto/k1283s6_* tools; untracked .claude/probes/K1240/out/k1283s6/
+  - next: Stage 6 running: the round end's seam (steeper than form B 521 -> <=449), muse_hash j59, the fallback builder's cutFolds, def gain hold max <=3.34; then x134/x77/x304
+  - brief: `docs/design/K1283_s6.md`
 
 ## Next, in order
 
