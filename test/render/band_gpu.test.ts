@@ -1,0 +1,55 @@
+// K1240 S4b: the band's tie alpha per fragment (band_gpu) against the
+// prototype's per vertex (draw.bandData's alphaAt, as draw.tieAlpha). The
+// shader's CPU twin (alphaCpu), fed what a fragment gets (its quad's pass
+// slots, own s, dC and own depth, the two float32 tables), must give
+// alphaAt's value at points across every border quad: the passes it keeps
+// per quad, footNear's window as k-ranges, the self skip and the "one
+// partner stretch counts once" rule all reproduced. The GLSL in
+// outline_app.ts is alphaCpu line for line.
+import { fileURLToPath } from "node:url";
+import { describe, expect, it } from "vitest";
+import { structure, frame } from "../../src/render/outline/outline";
+import { tieAlpha, zAtC, zChains } from "../../src/render/outline/draw";
+import { alphaCpu, bandGpu, BAND_SLOTS } from "../../src/render/outline/band_gpu";
+import { loadScene } from "./outline_digest";
+
+describe("K1240 S4b GPU band", () => {
+  it("alphaCpu equals bandData's alphaAt across the ring's band", () => {
+    const sc = loadScene(fileURLToPath(new URL("./fixtures/outline_ring.json.gz", import.meta.url)));
+    const tb = frame(structure(sc), sc);
+    const zz = zChains(sc);
+    const b = bandGpu(tb, sc, zz);
+    const ref = tieAlpha(zz, tb.h, tb.W, 0.1 * sc.look.depthAmp);
+    expect(b.dropped).toBe(0);
+    // Quads in table order: map each to its piece's chain.
+    const chainOf: number[] = [];
+    for (const p of tb.pieces) { const np = p.pts.length / 2; for (let i = 0; i + 1 < np; i++) chainOf.push(p.chain); }
+    expect(6 * chainOf.length).toBe(b.count);
+    let n = 0; let tied = 0; let worst = 0;
+    for (let q = 0; q < chainOf.length; q++) {
+      const v = 6 * q;
+      const sl = Array.from(b.slots.subarray(BAND_SLOTS * v, BAND_SLOTS * v + BAND_SLOTS));
+      if (sl.every((x) => x < 0)) continue;
+      tied++;
+      const c = chainOf[q];
+      // Vertices pO (v), cO (v+1), pI (v+2), cI (v+4): bilinear points.
+      const P = (k: number, i: number): number => b.pos[2 * (v + k) + i];
+      const A = (k: number, i: number): number => b.attr[3 * (v + k) + i];
+      for (const t of [0, 0.3, 0.7, 1]) for (const u of [0, 0.25, 0.5, 1]) {
+        const ox = P(0, 0) + (P(1, 0) - P(0, 0)) * t; const oy = P(0, 1) + (P(1, 1) - P(0, 1)) * t;
+        const ix = P(2, 0) + (P(4, 0) - P(2, 0)) * t; const iy = P(2, 1) + (P(4, 1) - P(2, 1)) * t;
+        const x = ox + (ix - ox) * u; const y = oy + (iy - oy) * u;
+        const s = A(0, 0) + (A(1, 0) - A(0, 0)) * t;
+        const dC = tb.h - tb.W * u;
+        const want = ref(c, x, y, s, dC);
+        const got = alphaCpu(b, x, y, s, dC, zAtC(zz.zc[c], s), sl);
+        worst = Math.max(worst, Math.abs(got - want));
+        n++;
+      }
+    }
+    expect(tied).toBeGreaterThan(100);
+    expect(n).toBeGreaterThan(1000);
+    // float32 tables (positions, s, depth): the alphas agree to 1e-3.
+    expect(worst).toBeLessThan(1e-3);
+  }, 60_000);
+});

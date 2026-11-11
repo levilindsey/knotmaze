@@ -34,6 +34,7 @@ import type { OutlineReply, OutlineRequest } from "./outline_worker";
 
 const CTRL_ARC = 0.47;
 const RUN_TEX_W = 1024;
+const BAND_TEX_W = 1024; // band_gpu.BAND_TEX_W (not imported: it would pull draw.ts into main)
 
 const PAINT_VS = `#version 300 es
 layout(location=0) in vec2 aPos;
@@ -80,23 +81,85 @@ void main() {
   }
   o = vec4(W > 0.0 ? c / W : vec3(0.0), 1.0);
 }`;
-// draw.ts's band: RGB + tie alpha (here two attributes, not one RGBA).
+// band_gpu's band: one quad per border segment, the tie alpha per fragment.
+// The fragment shader is band_gpu.alphaCpu line for line (that function's
+// test ties it to the prototype's per-vertex alphaAt).
 const BAND_VS = `#version 300 es
 layout(location=0) in vec2 aPos;
-layout(location=1) in vec3 aCol;
-layout(location=3) in float aA;
+layout(location=1) in vec3 aA;
+layout(location=3) in ivec4 aSl;
 uniform mat3 uMat;
-out vec4 vCol;
+out vec2 vPos;
+out vec3 vA;
+flat out ivec4 vSl;
 void main() {
   vec3 p = uMat * vec3(aPos, 1.0);
   gl_Position = vec4(p.xy, 0.0, 1.0);
-  vCol = vec4(aCol, aA);
+  vPos = aPos;
+  vA = aA;
+  vSl = aSl;
 }`;
 const BAND_FS = `#version 300 es
 precision highp float;
-in vec4 vCol;
+precision highp int;
+precision highp sampler2D;
+uniform sampler2D uChain;
+uniform sampler2D uPass;
+uniform vec3 uInk;
+uniform float uH;
+uniform float uW;
+uniform float uZt;
+in vec2 vPos;
+in vec3 vA;
+flat in ivec4 vSl;
 out vec4 o;
-void main() { o = vCol; }`;
+const int TW = ${BAND_TEX_W};
+vec4 T(int q, int k) { int i = q * 4 + k; return texelFetch(uPass, ivec2(i % TW, i / TW), 0); }
+vec4 S(int i) { return texelFetch(uChain, ivec2(i % TW, i / TW), 0); }
+float dS(float len, float a, float c) { float d = c - a; if (len > 0.0) { d = mod(d, len); if (d > 0.5 * len) d -= len; } return d; }
+float sst(float e0, float e1, float x) { float t = clamp((x - e0) / (e1 - e0), 0.0, 1.0); return t * t * (3.0 - 2.0 * t); }
+void main() {
+  float s = vA.x;
+  float keyC = vA.z - vA.y * uZt / uH;
+  float seenO[4]; float seenS[4]; float seenL[4]; float seenF[4];
+  int n = 0;
+  for (int q = 0; q < 4; q++) {
+    int pid = vSl[q];
+    if (pid < 0) continue;
+    vec4 t0 = T(pid, 0); vec4 t1 = T(pid, 1); vec4 t2 = T(pid, 2); vec4 t3 = T(pid, 3);
+    float ds = dS(t2.y, t0.x, s);
+    if (ds < -t0.y || ds > t0.z) continue;
+    float r = t0.w; float so = t1.x; int ob = int(t1.y); int on = int(t1.z);
+    float oLen = t2.x; float skipR = t2.z;
+    float best = 1e30; float bs = 0.0; float bz = 0.0;
+    for (int w = 0; w < 2; w++) {
+      int k0 = int(w == 0 ? t3.x : t3.z); int k1 = int(w == 0 ? t3.y : t3.w);
+      for (int k = k0; k <= k1; k++) {
+        int j = k + 1 == on ? 0 : k + 1;
+        vec4 A = S(ob + k); vec4 B = S(ob + j);
+        float lk = j == 0 ? max(oLen, 0.0) - A.z : B.z - A.z;
+        float mid = A.z + 0.5 * lk;
+        if (abs(dS(oLen, so, mid)) > r + 0.5 * lk) continue;
+        if (skipR > 0.0 && abs(dS(oLen, s, mid)) < skipR) continue;
+        vec2 e = B.xy - A.xy; float l2 = dot(e, e);
+        float t = l2 > 0.0 ? clamp(dot(vPos - A.xy, e) / l2, 0.0, 1.0) : 0.0;
+        float d = length(vPos - A.xy - t * e);
+        if (d < best) { best = d; bs = A.z + t * lk; bz = A.w + (B.w - A.w) * t; }
+      }
+    }
+    if (!(best < uH)) continue;
+    float g = clamp((uH - best) / uW, 0.0, 1.0);
+    float keyO = bz - best * uZt / uH;
+    float f = 1.0 - g * sst(-uZt, uZt, keyO - keyC);
+    int m = -1;
+    for (int u = 0; u < 4; u++) if (m < 0 && u < n && seenO[u] == t1.w && abs(dS(seenL[u], seenS[u], bs)) < uH) m = u;
+    if (m < 0) { seenO[n] = t1.w; seenS[n] = bs; seenL[n] = oLen; seenF[n] = f; n++; }
+    else if (f < seenF[m]) { seenS[m] = bs; seenF[m] = f; }
+  }
+  float a = 1.0;
+  for (int u = 0; u < 4; u++) if (u < n) a *= seenF[u];
+  o = vec4(uInk, a);
+}`;
 const COMP_VS = `#version 300 es
 void main() {
   int id = gl_VertexID;
@@ -124,12 +187,15 @@ class OutlinePass {
   private band: WebGLProgram;
   private comp: WebGLProgram;
   private uP: { mat: U; ks: U; runs: U };
-  private uB: { mat: U };
+  private uB: { mat: U; chain: U; pass: U; ink: U; h: U; w: U; zt: U };
+  private chainTex: WebGLTexture;
+  private passTex: WebGLTexture;
+  private band_: { ink: [number, number, number]; h: number; W: number; zt: number } = { ink: [0, 0, 0], h: 1, W: 1, zt: 0 };
   private uC: U;
   private pVao: WebGLVertexArrayObject;
   private bVao: WebGLVertexArrayObject;
   private cVao: WebGLVertexArrayObject;
-  private bufs: Record<"pos" | "key" | "w" | "s" | "run" | "idx" | "bPos" | "bCol" | "bA", WebGLBuffer>;
+  private bufs: Record<"pos" | "key" | "w" | "s" | "run" | "idx" | "bPos" | "bAttr" | "bSl", WebGLBuffer>;
   private runTex: WebGLTexture;
   private fbo: WebGLFramebuffer;
   private color: WebGLTexture | null = null;
@@ -164,10 +230,11 @@ class OutlinePass {
     this.band = mk(BAND_VS, BAND_FS, "band");
     this.comp = mk(COMP_VS, COMP_FS, "composite");
     this.uP = { mat: gl.getUniformLocation(this.paint, "uMat"), ks: gl.getUniformLocation(this.paint, "uKS"), runs: gl.getUniformLocation(this.paint, "uRuns") };
-    this.uB = { mat: gl.getUniformLocation(this.band, "uMat") };
+    const ub = (n: string): U => gl.getUniformLocation(this.band, n);
+    this.uB = { mat: ub("uMat"), chain: ub("uChain"), pass: ub("uPass"), ink: ub("uInk"), h: ub("uH"), w: ub("uW"), zt: ub("uZt") };
     this.uC = gl.getUniformLocation(this.comp, "uC");
     const nb = (): WebGLBuffer => gl.createBuffer()!;
-    this.bufs = { pos: nb(), key: nb(), w: nb(), s: nb(), run: nb(), idx: nb(), bPos: nb(), bCol: nb(), bA: nb() };
+    this.bufs = { pos: nb(), key: nb(), w: nb(), s: nb(), run: nb(), idx: nb(), bPos: nb(), bAttr: nb(), bSl: nb() };
     const attr = (b: WebGLBuffer, loc: number, n: number, int = false): void => {
       gl.bindBuffer(gl.ARRAY_BUFFER, b);
       gl.enableVertexAttribArray(loc);
@@ -185,12 +252,14 @@ class OutlinePass {
     this.bVao = gl.createVertexArray()!;
     gl.bindVertexArray(this.bVao);
     attr(this.bufs.bPos, 0, 2);
-    attr(this.bufs.bCol, 1, 3);
-    attr(this.bufs.bA, 3, 1);
+    attr(this.bufs.bAttr, 1, 3);
+    attr(this.bufs.bSl, 3, 4, true);
     this.cVao = gl.createVertexArray()!;
     gl.bindVertexArray(null);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
     this.runTex = gl.createTexture()!;
+    this.chainTex = gl.createTexture()!;
+    this.passTex = gl.createTexture()!;
     this.fbo = gl.createFramebuffer()!;
   }
 
@@ -214,10 +283,11 @@ class OutlinePass {
       this.nIdx = r.idx.length;
     }
     put(this.bufs.bPos, r.bandPos);
-    put(this.bufs.bCol, r.bandCol);
-    put(this.bufs.bA, r.bandAlpha);
+    put(this.bufs.bAttr, r.bandAttr);
+    put(this.bufs.bSl, r.bandSlots);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
     this.nBand = r.bandCount;
+    this.band_ = { ink: r.ink, h: r.h, W: r.W, zt: r.zt };
     this.ks = r.ks;
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.runTex);
@@ -227,6 +297,16 @@ class OutlinePass {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.pixelStorei(gl.UNPACK_ALIGNMENT, 4);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, r.texW, r.texH, 0, gl.RGBA, gl.FLOAT, r.tex);
+    const ftex = (t: WebGLTexture, d: Float32Array, h: number): void => {
+      gl.bindTexture(gl.TEXTURE_2D, t);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, BAND_TEX_W, h, 0, gl.RGBA, gl.FLOAT, d);
+    };
+    ftex(this.chainTex, r.chainTex, r.chainTexH);
+    ftex(this.passTex, r.passTex, r.passTexH);
     gl.bindTexture(gl.TEXTURE_2D, null);
     this.hasData = true;
   }
@@ -292,9 +372,22 @@ class OutlinePass {
       gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
       gl.useProgram(this.band);
       gl.uniformMatrix3fv(this.uB.mat, false, mat);
+      const B = this.band_;
+      gl.uniform3f(this.uB.ink, B.ink[0], B.ink[1], B.ink[2]);
+      gl.uniform1f(this.uB.h, B.h);
+      gl.uniform1f(this.uB.w, B.W);
+      gl.uniform1f(this.uB.zt, B.zt);
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, this.chainTex);
+      gl.uniform1i(this.uB.chain, 0);
+      gl.activeTexture(gl.TEXTURE1);
+      gl.bindTexture(gl.TEXTURE_2D, this.passTex);
+      gl.uniform1i(this.uB.pass, 1);
       gl.bindVertexArray(this.bVao);
       gl.drawArrays(gl.TRIANGLES, 0, this.nBand);
       gl.disable(gl.BLEND);
+      gl.bindTexture(gl.TEXTURE_2D, null);
+      gl.activeTexture(gl.TEXTURE0);
     }
     gl.bindVertexArray(null);
     gl.bindTexture(gl.TEXTURE_2D, null);
@@ -333,6 +426,8 @@ class OutlinePass {
     gl.deleteProgram(this.band);
     gl.deleteProgram(this.comp);
     gl.deleteTexture(this.runTex);
+    gl.deleteTexture(this.chainTex);
+    gl.deleteTexture(this.passTex);
     if (this.color) gl.deleteTexture(this.color);
     if (this.depth) gl.deleteRenderbuffer(this.depth);
     gl.deleteFramebuffer(this.fbo);
@@ -384,6 +479,8 @@ export function createOutlineApp(ctx: SceneExportCtx, requestFrame: () => void):
     triangles: 0,
     chains: 0,
     key: "",
+    /** Each restructure: when (performance.now ms), why (the worker's cause), its worker ms. */
+    rebuilds: [] as { at: number; cause: string; ms: number }[],
   };
 
   const gl = (): WebGL2RenderingContext | null => {
@@ -515,7 +612,13 @@ export function createOutlineApp(ctx: SceneExportCtx, requestFrame: () => void):
       const t0 = performance.now();
       pass.upload(r);
       stats.uploadMs = performance.now() - t0;
-      if (r.restructured) stats.restructures++;
+      if (r.restructured) {
+        stats.restructures++;
+        const at = Math.round(performance.now());
+        stats.rebuilds.push({ at, cause: r.cause ?? "?", ms: Math.round(r.ms) });
+        if (stats.rebuilds.length > 64) stats.rebuilds.shift();
+        console.info(`K1240 outline: restructure (${r.cause}) ${Math.round(r.ms)} ms`);
+      }
       stats.workerMs = r.ms;
       stats.structureMs = r.structureMs;
       if (!r.restructured) stats.frameMs = r.frameMs;

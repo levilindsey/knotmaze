@@ -3167,7 +3167,7 @@ export function frame(st: DiagramStructure, scene: SceneIn, profile?: Record<str
  *  and the corners follow the arms. Identity, never position, decides; a
  *  junction already in order passes through untouched, and one whose arms
  *  match no identity is left as it is. `K17_JA=0` turns it off. */
-function alignJunctionArms(st: DiagramStructure, scene: SceneIn): SceneIn {
+export function alignJunctionArms(st: DiagramStructure, scene: SceneIn): SceneIn {
   let out: SceneJunctionIn[] | null = null;
   const nJ = Math.min(scene.junctions.length, st.armsOfJ.length);
   for (let ji = 0; ji < nJ; ji++) {

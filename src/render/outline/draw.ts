@@ -403,18 +403,12 @@ export function paintFrame(pd: PaintData, fr: FillFrame, sp?: SectionPaint): voi
 /** The border ink's band of one frame (form B's tie alpha per vertex). The
  *  app rebuilds it every frame: its vertex count follows the pieces. */
 export interface BandData { bandPos: Float32Array; bandCol: Float32Array; bandAlpha: Float32Array; bandCount: number }
-export function bandData(table: OutlineTable, scene: SceneIn, zz: ReturnType<typeof zChains>): BandData {
-  const ink = parseColor(scene.look.ink);
-  const bandPos: number[] = [];
-  const bandCol: number[] = [];
-  const bandAlpha: number[] = [];
-  const W = table.W;
-  const h = table.h;
-  const zt = 0.1 * scene.look.depthAmp;
+/** The tie alpha of a band point of chain c at (x, y), own foot s, own
+ *  distance dC (bandData's, taken out of it as is for band_gpu's twin test). */
+export function tieAlpha(zz: ReturnType<typeof zChains>, h: number, W: number, zt: number): (c: number, x: number, y: number, s: number, dC: number) => number {
   const { zc, passes } = zz;
   const seen: { o: number; s: number; d: number; f: number }[] = [];
-  /** The tie alpha of a band vertex of chain c at (x, y), own foot s, own distance dC. */
-  const alphaAt = (c: number, x: number, y: number, s: number, dC: number): number => {
+  return (c: number, x: number, y: number, s: number, dC: number): number => {
     seen.length = 0;
     const C = zc[c];
     const keyC = zAtC(C, s) - (dC * zt) / h;
@@ -436,6 +430,17 @@ export function bandData(table: OutlineTable, scene: SceneIn, zz: ReturnType<typ
     let a = 1; for (const u of seen) a *= u.f;
     return a;
   };
+}
+export function bandData(table: OutlineTable, scene: SceneIn, zz: ReturnType<typeof zChains>): BandData {
+  const ink = parseColor(scene.look.ink);
+  const bandPos: number[] = [];
+  const bandCol: number[] = [];
+  const bandAlpha: number[] = [];
+  const W = table.W;
+  const h = table.h;
+  const zt = 0.1 * scene.look.depthAmp;
+  const { zc, passes } = zz;
+  const alphaAt = tieAlpha(zz, h, W, zt);
   const SUB = h / 8; const ROWS = 8;
   for (const p of table.pieces) {
     const np = p.pts.length / 2;

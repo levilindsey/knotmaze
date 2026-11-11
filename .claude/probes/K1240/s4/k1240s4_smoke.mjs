@@ -1,6 +1,9 @@
 // K1240 S4: rp=outline in the app: load, settle, drag. Headed hardware-GPU
 // Chrome off-screen (diag_screenshot.mjs's launch), real time.
-// Usage: node k1240s4_smoke.mjs <base> <outDir> <tag> <query> [settleMs=20000]
+// Usage: node k1240s4_smoke.mjs <base> <outDir> <tag> <query> [settleMs=20000] [dragMs=1500]
+// (S4b: dragMs > 1500 drags a loop of that length: out and back, twice;
+// <tag>.json's steps.dragRebuilds lists the restructures from the grab to
+// the outline's settle after release, with their causes.)
 // Writes <tag>_rest.png, <tag>_drag.png, <tag>_after.png and <tag>.json
 // (the outline's stats at each step, rAF intervals during the drag, console
 // warnings/errors, the build stamp).
@@ -9,7 +12,8 @@ import { mkdirSync, writeFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 
-const [, , base, outDir, tag, query, settleArg] = process.argv;
+const [, , base, outDir, tag, query, settleArg, dragArg] = process.argv;
+const DRAG = Number(dragArg ?? 1500);
 const SETTLE = Number(settleArg ?? 20000);
 mkdirSync(outDir, { recursive: true });
 const profileDir = join(tmpdir(), `k1240s4-smoke-${process.pid}`);
@@ -71,7 +75,12 @@ try {
     });
     await page.mouse.move(grab.x, grab.y);
     await page.mouse.down();
-    for (let k = 1; k <= 30; k++) { await page.mouse.move(grab.x + 4 * k, grab.y + 2 * k); await sleep(50); }
+    const dragT0 = await page.evaluate(() => performance.now());
+    if (DRAG > 1500) {
+      const N = Math.round(DRAG / 50);
+      for (let k = 1; k <= N; k++) { const u = Math.sin((2 * Math.PI * 2 * k) / N); await page.mouse.move(grab.x + 120 * u, grab.y + 60 * u * Math.cos((2 * Math.PI * k) / N)); await sleep(50); }
+    } else for (let k = 1; k <= 30; k++) { await page.mouse.move(grab.x + 4 * k, grab.y + 2 * k); await sleep(50); }
+    out.steps.dragWallMs = (await page.evaluate(() => performance.now())) - dragT0;
     await sleep(1500);
     out.steps.drag = await info();
     writeFileSync(join(outDir, `${tag}_drag.png`), await page.screenshot());
@@ -82,6 +91,7 @@ try {
     const t1 = Date.now();
     await page.waitForFunction(() => window.__knotOutline?.settled, { timeout: SETTLE, polling: 500 }).catch(() => {});
     out.steps.after = { waitedMs: Date.now() - t1, ...(await info()) };
+    out.steps.dragRebuilds = (out.steps.after.outline?.rebuilds ?? []).filter((b) => b.at >= dragT0);
     writeFileSync(join(outDir, `${tag}_after.png`), await page.screenshot());
   }
 } finally {

@@ -14,6 +14,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { OutlineModel, diagramKey } from "../../src/render/outline/outline_model";
 import type { SceneIn } from "../../src/render/outline/outline";
+import { bandData, zChains } from "../../src/render/outline/draw";
 import { digestOut, loadScene } from "./outline_digest";
 
 type Pin = { f0: { table: string; paint: string; band: string }; f1: { table: string; paint: string; band: string } };
@@ -37,17 +38,21 @@ const moved = (s: SceneIn): SceneIn => {
   return t;
 };
 
+// The app draws the band from band_gpu (band_gpu.test.ts ties it to this);
+// the pin keeps the prototype's per-vertex band, built from the model's table.
 const run = (s0: SceneIn): Pin => {
   const m = new OutlineModel(s0);
+  let sc = s0;
   const out = () => digestOut({
     table: m.table,
     paint: { idx: m.pd.idx, run: m.pd.run, src: m.pd.src, pos: m.pd.pos, key: m.pd.key, w: m.pd.w, s: m.pd.s, tex: m.pd.tex, copies: m.pd.copies, ks: m.ks },
-    band: { bandPos: m.band.bandPos, bandCol: m.band.bandCol, bandAlpha: m.band.bandAlpha, bandCount: m.band.bandCount },
+    band: bandData(m.table, sc, zChains(sc)),
   });
   const f0 = out();
   const s1 = moved(s0);
   expect(diagramKey(s1)).toBe(m.key);
   m.update(s1);
+  sc = s1;
   return { f0, f1: out() };
 };
 
