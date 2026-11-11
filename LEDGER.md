@@ -523,11 +523,11 @@ Next free ID: K1301.
 - **K1283** · Junction borders of the outline (rp=outline) against form B. Stage 1 (3c8bd61e) fixed the concave
   corner bites (census 27528 -> 17756 px); left: the failed corners and the end-arm round ends (x47, x73,
   x349). Full text in docs/ledger_notes.md
-  - owner: nobody since 2026-11-10 22:01 (merged; agent `a565890508fa5c81c` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `d1834f66`
-  - evidence: src/render/outline/, k1283s3_* tools; untracked .claude/probes/K1240/out/k1283s3/
-  - next: stage 4: the round-end disk fill at end arms (x73/j103, x14, x6's spur at j4) and the end-arm border fade, per the stage 3 handoff in docs/design/K1283_s3.md
-  - brief: `docs/design/K1283_s3.md`
+  - owner: agent `claude agent a9d5b71448e51ed25 (Opus), coordinator claude session 09c7a672-a414-402a-97da-b3176839a2e5` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-10 22:02, 2 h cap ~00:02)
+  - branch: `worktree-agent-a9d5b71448e51ed25`, worktree `.claude/worktrees/agent-a9d5b71448e51ed25`; last commit: `9963d239`
+  - evidence: .claude/probes/K1240/out/k1283s4/ (untracked), tools .claude/probes/K1240/proto/k1283s4_*
+  - next: stage 4 running: the round end at end arms (x73, x14, x6), then def j45 if time
+  - brief: `docs/design/K1283_s4.md`
 
 ## Next, in order
 
