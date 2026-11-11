@@ -164,6 +164,45 @@ function normS(p: Poly, s: number): number {
   if (p.closed && p.len > 0) { let u = (s - p.s0) % p.len; if (u < 0) u += p.len; return p.s0 + u; }
   return Math.min(Math.max(s, p.s0), p.s0 + p.len);
 }
+function segIdxOfS(p: Poly, u: number): number {
+  if (p.nseg <= 0) return -1;
+  if (u >= p.s[p.n - 1]) return p.closed ? p.n - 1 : p.nseg - 1;
+  let lo = 0; let hi = p.n - 1;
+  while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (p.s[mid] <= u) lo = mid; else hi = mid; }
+  return lo;
+}
+/**
+ * K1247 s17 (j176): a crossing's s on its two chains, as the centrelines'
+ * true intersection, not the physics binding's s. The binding is a
+ * fractional position on the particle chain that slides on its own (def f1:
+ * chain 82's binding moved 1.606 px, chain 74's 0.627 px, while the two
+ * centrelines' intersection moved 0.045 / 0.011 px), and every pass length,
+ * gap and pin read it, so the arms cut by it jumped. The walk starts on the
+ * binding's segments and steps each chain one segment toward the two
+ * segments' line intersection until it lands inside both: the binding only
+ * picks which intersection (its basin), and the s returned is the
+ * intersection's, continuous in the vertices wherever the crossing is
+ * transversal. out = [sa, sb]; false (out = the binding) if no intersection
+ * is reached within 48 steps.
+ */
+const KF_XS = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.K17_XS !== "0"; // s17 switch: K17_XS=0 reads the bindings' s
+function crossSnapInto(pa: Poly, sa: number, pb: Poly, sb: number, out: Float64Array): boolean {
+  out[0] = sa; out[1] = sb;
+  let i = segIdxOfS(pa, sa); let j = segIdxOfS(pb, sb);
+  if (i < 0 || j < 0) return false;
+  for (let it = 0; it < 48; it++) {
+    const rx = pa.dx[i], ry = pa.dy[i], qx = pb.dx[j], qy = pb.dy[j];
+    const den = rx * qy - ry * qx;
+    if (Math.abs(den) < 1e-18) return false;
+    const ex = pb.x[j] - pa.x[i], ey = pb.y[j] - pa.y[i];
+    const t = (ex * qy - ey * qx) / den; const u = (ex * ry - ey * rx) / den;
+    const ti = t < 0 ? -1 : t > 1 ? 1 : 0; const uj = u < 0 ? -1 : u > 1 ? 1 : 0;
+    if (ti === 0 && uj === 0) { out[0] = pa.s[i] + t * pa.segLen[i]; out[1] = pb.s[j] + u * pb.segLen[j]; return true; }
+    if (ti !== 0) { i += ti; if (i < 0 || i >= pa.nseg) { if (!pa.closed) return false; i = (i + pa.nseg) % pa.nseg; } }
+    if (uj !== 0) { j += uj; if (j < 0 || j >= pb.nseg) { if (!pb.closed) return false; j = (j + pb.nseg) % pb.nseg; } }
+  }
+  return false;
+}
 function dS(p: Poly, a: number, b: number): number {
   let d = b - a;
   if (p.closed && p.len > 0) { d %= p.len; if (d > p.len / 2) d -= p.len; if (d < -p.len / 2) d += p.len; }
@@ -339,7 +378,7 @@ function footInWindowInto(p: Poly, px: number, py: number, lo: number, hi: numbe
 const KF_EB = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.K16_EB !== "0"; // s16 experiment switch: K16_EB=0 turns the END arms' extension-foot blend off
 const KF_TS = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.K16_TS !== "0"; // s16 experiment switch: K16_TS=0 turns K1280's tie spread (spreadTiesC) off
 const KF_PS = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.K16_PS === "1"; // s16 experiment switch: K16_PS=1 adds the s distance to addPointAtC's nearest-segment pick
-function footBlendInto(p: Poly, px: number, py: number, k: number, t: number, out: Float64Array, loc = false): boolean {
+function footBlendInto(p: Poly, px: number, py: number, k: number, t: number, out: Float64Array, loc = false, circ = false): boolean {
   if (p.nseg < 2 || k < 0 || k >= p.nseg) return false;
   let moved = false;
   if (loc) {
@@ -361,10 +400,17 @@ function footBlendInto(p: Poly, px: number, py: number, k: number, t: number, ou
       out[0] = bd; out[1] = fx; out[2] = fy; out[3] = normS(p, p.s[k] + p.segLen[k] * t);
     }
   }
-  if (footBandInto(p, px, py, k, t, out)) return true;
+  if (footBandInto(p, px, py, k, t, out, circ)) return true;
   return moved;
 }
-function footBandInto(p: Poly, px: number, py: number, k: number, t: number, out: Float64Array): boolean {
+// circ (K1247 s17, the corners' feet): the blended foot is pushed out along
+// its direction from the point to the blended perpendicular distance
+// (1 - w) da + w db, so a corner's arc end (foot + h toward the centre)
+// stays on the arc's circle rather than on the chord between the two feet:
+// the arc end slides along the circle from one contact to the other, and
+// only the invisible lens between the circle and the creased border
+// (r phi^2 / 8 wide) changes as the centre crosses the bisector.
+function footBandInto(p: Poly, px: number, py: number, k: number, t: number, out: Float64Array, circ = false): boolean {
   for (let pass = 0; pass < 2; pass++) {
     const atEnd = (t >= 0.5) === (pass === 0);
     let ka: number; let kb: number;
@@ -390,8 +436,14 @@ function footBandInto(p: Poly, px: number, py: number, k: number, t: number, out
     if (!(beta > 1e-12) || Math.abs(sig) >= beta) continue;
     const x = (sig + beta) / (2 * beta); const w = x * x * (3 - 2 * x);
     const pa = qx * tax + qy * tay; const pb = qx * tbx + qy * tby;
-    const fx = vx + (1 - w) * pa * tax + w * pb * tbx; const fy = vy + (1 - w) * pa * tay + w * pb * tby;
-    out[0] = Math.hypot(px - fx, py - fy); out[1] = fx; out[2] = fy;
+    let fx = vx + (1 - w) * pa * tax + w * pb * tbx; let fy = vy + (1 - w) * pa * tay + w * pb * tby;
+    out[0] = Math.hypot(px - fx, py - fy);
+    if (circ && out[0] > 1e-12) {
+      const da = Math.abs(qx * tay - qy * tax); const db = Math.abs(qx * tby - qy * tbx);
+      const dN = (1 - w) * da + w * db;
+      fx = px + ((fx - px) * dN) / out[0]; fy = py + ((fy - py) * dN) / out[0]; out[0] = dN;
+    }
+    out[1] = fx; out[2] = fy;
     out[3] = normS(p, p.s[ka] + la + (1 - w) * pa + w * pb);
     return true;
   }
@@ -3154,11 +3206,70 @@ export function structure(scene: SceneIn): DiagramStructure { return diagramOf(s
  *  the diagram's: one run piece per border segment, one arc piece per
  *  diagram corner, the caps' runs. */
 export function frame(st: DiagramStructure, scene: SceneIn, profile?: Record<string, number>): OutlineTable {
-  return frameFast(st, scene, profile);
+  return frameFast(st, KF_JA ? alignJunctionArms(st, scene) : scene, profile);
 }
 /** Today's builder, kept as the oracle for the fast frame's checks. */
 export function frameRef(st: DiagramStructure, scene: SceneIn, profile?: Record<string, number>): OutlineTable {
-  return buildOutlineFull(scene, st, profile).table;
+  return buildOutlineFull(KF_JA ? alignJunctionArms(st, scene) : scene, st, profile).table;
+}
+
+/** K1247 s17 (j154, j114 on muse_hash): the scene lists a junction's arms
+ *  in angular order, and that list may start at a different arm from one
+ *  frame to the next (muse_hash f2: junction 113's arms[0] went from chain
+ *  85's through arm to chain 49's end). The structure names an arm by its
+ *  index at structure time (`ei`), so a read of `arms[a.ei]` then took
+ *  another chain's s: a false root at s 0 on chain 85 cut arm 467 from
+ *  1.262 to 0.193 and failed corners 318 and 319 (1.35 px faces, the gain
+ *  tool's cap). Every frame now reads the scene through this alignment:
+ *  each structure arm takes the scene arm of its own identity (chain, kind,
+ *  dir; s, the material coordinate, only between two arms of one identity),
+ *  and the corners follow the arms. Identity, never position, decides; a
+ *  junction already in order passes through untouched, and one whose arms
+ *  match no identity is left as it is. `K17_JA=0` turns it off. */
+const KF_JA = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.K17_JA !== "0";
+let kfJaCount = 0;
+export function junctionAlignCount(): number { return kfJaCount; }
+function alignJunctionArms(st: DiagramStructure, scene: SceneIn): SceneIn {
+  let out: SceneJunctionIn[] | null = null;
+  const nJ = Math.min(scene.junctions.length, st.armsOfJ.length);
+  for (let ji = 0; ji < nJ; ji++) {
+    const J = scene.junctions[ji]; const list = st.armsOfJ[ji];
+    if (!J || !list || list.length === 0) continue;
+    const n = J.arms.length;
+    const same = (e: number, x: SceneArmIn | undefined): boolean => {
+      const A = st.arms[e];
+      return !!x && x.chain === st.chainIds[A.pi] && x.kind === A.kind && x.dir === A.dir;
+    };
+    let inOrder = true;
+    for (const e of list) { if (!same(e, J.arms[st.arms[e].ei])) { inOrder = false; break; } }
+    if (inOrder) continue;
+    const perm = new Int32Array(n).fill(-1); const used = new Uint8Array(n); let ok = true;
+    for (const e of list) {
+      const A = st.arms[e]; let best = -1; let bestD = Infinity;
+      for (let k = 0; k < n; k++) {
+        if (used[k] || !same(e, J.arms[k])) continue;
+        const d = Math.abs(J.arms[k].s - A.s);
+        if (d < bestD) { bestD = d; best = k; }
+      }
+      if (best < 0 || A.ei >= n) { ok = false; break; }
+      perm[A.ei] = best; used[best] = 1;
+    }
+    if (!ok) continue;
+    // Slots no structure arm names (an unknown chain) keep the leftovers in order.
+    let fill = 0;
+    for (let e = 0; e < n; e++) { if (perm[e] >= 0) continue; while (used[fill]) fill++; perm[e] = fill; used[fill] = 1; }
+    // Corner k lies between arms k and k+1; a rotation carries it along.
+    let rot = -1;
+    const r0 = (perm[0] + n) % n; let isRot = true;
+    for (let e = 0; e < n; e++) if (perm[e] !== (e + r0) % n) { isRot = false; break; }
+    if (isRot) rot = r0;
+    const arms = Array.from(perm, (k) => J.arms[k]);
+    const corners = J.corners && rot >= 0 ? J.corners.map((_, k) => J.corners![(k + rot) % n]) : J.corners;
+    if (!out) out = scene.junctions.slice();
+    out[ji] = { ...J, arms, corners };
+    kfJaCount++;
+  }
+  return out ? { ...scene, junctions: out } : scene;
 }
 
 
@@ -3273,6 +3384,7 @@ interface FCache {
   armNextRef: Int32Array; armPrevRef: Int32Array; armNextSide: Int32Array; armPrevSide: Int32Array;
   // crossings per frame + warm
   cpX: Float64Array; cpY: Float64Array; cpTheta: Float64Array; cpSOver: Float64Array; cpSUnder: Float64Array;
+  cpSA: Float64Array; cpSB: Float64Array; cpSnap: Uint8Array; // s17: each crossing's s on chain a / b (the centrelines' true intersection), 1 if the walk found it
   cutPairU: Int32Array[]; cutPairO: Int32Array[]; cutPairN: Int32Array; cutPrevCands: Int32Array; cutPrevPick: Uint8Array;
   eyes: FEye[];
   // stations (slots)
@@ -3560,6 +3672,7 @@ function buildFastCache(st: DiagramStructure, scene: SceneIn): FCache {
     armNextSide: new Int32Array(Math.max(1, nArms)), armPrevSide: new Int32Array(Math.max(1, nArms)),
     cpX: new Float64Array(Math.max(1, nX)), cpY: new Float64Array(Math.max(1, nX)),
     cpTheta: new Float64Array(Math.max(1, nX)), cpSOver: new Float64Array(Math.max(1, nX)), cpSUnder: new Float64Array(Math.max(1, nX)),
+    cpSA: new Float64Array(Math.max(1, nX)), cpSB: new Float64Array(Math.max(1, nX)), cpSnap: new Uint8Array(Math.max(1, nX)),
     cutPairU: Array.from({ length: Math.max(1, nX * 4) }, () => new Int32Array(0)),
     cutPairO: Array.from({ length: Math.max(1, nX * 4) }, () => new Int32Array(0)),
     cutPairN: new Int32Array(Math.max(1, nX * 4)), cutPrevCands: new Int32Array(Math.max(1, nX)).fill(-1),
@@ -3873,7 +3986,10 @@ function setupFrame(C: FCache, st: DiagramStructure, scene: SceneIn): void {
     const x = scene.crossings[xi];
     if (!x) continue;
     const ia = C.crossAPi[xi]; const ib = C.crossBPi[xi];
-    const sa = normS(polys[ia], x.a.s); const sb = normS(polys[ib], x.b.s);
+    let sa = normS(polys[ia], x.a.s); let sb = normS(polys[ib], x.b.s);
+    C.cpSnap[xi] = 0;
+    if (KF_XS && crossSnapInto(polys[ia], sa, polys[ib], sb, ptScratch)) { sa = normS(polys[ia], ptScratch[0]); sb = normS(polys[ib], ptScratch[1]); C.cpSnap[xi] = 1; }
+    C.cpSA[xi] = sa; C.cpSB[xi] = sb;
     tanAtInto(polys[ia], sa, ptScratch); tanAtInto(polys[ib], sb, ptScratch2);
     const theta = Math.acos(Math.min(1, Math.abs(ptScratch[0] * ptScratch2[0] + ptScratch[1] * ptScratch2[1])));
     C.cpTheta[xi] = theta;
@@ -3895,8 +4011,8 @@ function setupFrame(C: FCache, st: DiagramStructure, scene: SceneIn): void {
       if (!x) continue;
       const isB = C.passIsB[pi][e] === 1;
       const qi = isB ? C.crossAPi[xi] : C.crossBPi[xi];
-      C.passS[pi][n] = normS(polys[pi], isB ? x.b.s : x.a.s);
-      C.passSq[pi][n] = normS(polys[qi], isB ? x.a.s : x.b.s);
+      C.passS[pi][n] = isB ? C.cpSB[xi] : C.cpSA[xi];
+      C.passSq[pi][n] = isB ? C.cpSA[xi] : C.cpSB[xi];
       C.passTheta[pi][n] = C.cpTheta[xi];
       C.passQi[pi][n] = qi;
       n++;
@@ -7275,7 +7391,7 @@ function blendFootC(p: Poly, qx: number, qy: number, Q: FFoot, dst: FFoot): void
   copyFoot(dst, Q);
   if (KF_CB === "0") return;
   const k = Q.k; const l = k >= 0 && k < p.nseg ? p.segLen[k] : 0;
-  if (!(l > 1e-12) || !footBlendInto(p, qx, qy, k, (Q.s - p.s[k]) / l, kfFootB, KF_CB !== "band") || !(kfFootB[0] > 1e-12)) return;
+  if (!(l > 1e-12) || !footBlendInto(p, qx, qy, k, (Q.s - p.s[k]) / l, kfFootB, KF_CB === "loc", KF_CB === "arc") || !(kfFootB[0] > 1e-12)) return;
   dst.d = kfFootB[0]; dst.x = kfFootB[1]; dst.y = kfFootB[2]; dst.u = Q.u + dS(p, Q.s, kfFootB[3]); dst.s = kfFootB[3];
 }
 const kfEa: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 };
