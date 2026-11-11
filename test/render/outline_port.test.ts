@@ -29,6 +29,9 @@ type Pin = { f0: { table: string; paint: string; band: string }; f1: { table: st
 // both frames: a corner with no arc now draws a round join (sharpJoinFan),
 // and a tail shows only past TAIL_MARGIN (ring's paint digest moved with them).
 // K1293: f1 now moves the junction centres too, so its corners are real.
+// K1278 s2 re-pinned every paint digest on purpose: fill_tri's s at junction
+// mouths and on pieceless strip rows is now the vertex's foot on its thread,
+// and a tail over its fan paints the fan's runs (positions did not move).
 const PINS: Record<string, Pin> = {
   ring: { f0: { table: "869f55a7a9bc3ff0", paint: "0adb707c5943c534", band: "a48ca4cce167aff0" }, f1: { table: "183e5bf7c8cd0ac1", paint: "1bb26d676a357828", band: "f753e1bcf9cbb076" } },
   g41_ring_tw42: { f0: { table: "453f89fc56acca13", paint: "4c0e7a971b3ff09d", band: "28b346eaaf964948" }, f1: { table: "f1a9706c8dc59c67", paint: "c51bea44c94c0411", band: "819dbecf09c86769" } },
