@@ -83,6 +83,8 @@ const TAIL_FOOT = true;
  *  taken every FOOT_STEP columns and interpolated between. */
 const STRIP_FOOT = true;
 const FOOT_STEP = 8;
+/** K1283 s10 probe switches (k1283s10_*): skip the end feet K1278 took; the centre row as its sides' mean. */
+export const stripCfg = { skipEnd: true, tol: -1 };
 
 type FootChain = Parameters<typeof footNear>[0];
 let footD2 = 0; let footSg = 0;
@@ -115,7 +117,9 @@ function footFirst(c: FootChain, segs: number, u: number): number {
  *  far branch (muse_hash: 1488 strip vertices pick another branch than a
  *  descent from sC does), so a descent alone is not footNear's foot. footNear
  *  scanned 33 segments a foot on def (215k feet a frame). */
+export const footCntX = { calls: 0 };
 function footS(c: FootChain, x: number, y: number, sC: number, r: number): number {
+  footCntX.calls++;
   const segs = c.closed ? c.n : c.n - 1;
   if (segs <= 0) return NaN;
   const L = c.len; const ring = c.closed && L > 0; const xs = c.xs; const ys = c.ys;
@@ -691,19 +695,27 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
         // strip vertices cost 80 ms a frame. Rows already on their feet
         // (a missing side's) keep them.
         if (STRIP_FOOT) {
-          const step = FOOT_STEP;
+          const step = FOOT_STEP; const tol = stripCfg.tol * hW;
           for (let row = 0; row < 3; row++) {
             if ((row === 0 && fbL) || (row === 2 && fbR)) continue;
             const b0 = it.base + row * W;
-            let iP = 0; let dP = 0;
-            for (let i = 0; ; i = Math.min(i + step, N)) {
+            // The offset at column i: the foot's, set on the vertex; 0 at an end the K1278 foot took.
+            const at = (i: number): number => {
+              if (stripCfg.skipEnd && ((i === 0 && atA) || (i === N && atB))) return 0;
               const v = b0 + i; const s = s4[SLOTS * v];
               const f = footS(c, pos[2 * v], pos[2 * v + 1], s, rF);
               const d = f === f ? f - s : 0;
               s4[SLOTS * v] = s + d;
-              for (let k = iP + 1; k < i; k++) s4[SLOTS * (b0 + k)] += dP + ((d - dP) * (k - iP)) / (i - iP);
-              iP = i; dP = d;
-              if (i >= N) break;
+              return d;
+            };
+            const lerp = (iA: number, dA: number, iB: number, dB: number): void => {
+              for (let k = iA + 1; k < iB; k++) s4[SLOTS * (b0 + k)] += dA + ((dB - dA) * (k - iA)) / (iB - iA);
+            };
+            let iA = 0; let dA = at(0);
+            while (iA < N) {
+              const iB = Math.min(iA + 2 * step, N); const dB = at(iB); const iM = iA + step;
+              if (iM < iB && !(Math.abs(dB - dA) <= tol)) { const dM = at(iM); lerp(iA, dA, iM, dM); lerp(iM, dM, iB, dB); } else lerp(iA, dA, iB, dB);
+              iA = iB; dA = dB;
             }
           }
         }

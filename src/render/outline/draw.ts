@@ -226,8 +226,9 @@ export function zChains(scene: SceneIn): { zc: ZChain[]; passes: Pass[][]; idx: 
     roots[i].push(arm.kind === "end" ? (Math.abs(arm.s) <= Math.abs(arm.s - c.len) ? 0 : c.len) : norm(c, arm.s));
   }
   const rootBetween = (i: number, a: number, b: number): boolean => {
-    const c = zc[i]; const d = dSC(c, a, b);
-    return roots[i].some((r) => { const e = dSC(c, a, r); return d >= 0 ? e > 0 && e <= d : e < 0 && e >= d; });
+    const c = zc[i]; const d = dSC(c, a, b); const R = roots[i];
+    for (let q = 0; q < R.length; q++) { const e = dSC(c, a, R[q]); if (d >= 0 ? e > 0 && e <= d : e < 0 && e >= d) return true; }
+    return false;
   };
   /** Walk chain ia from sa in direction dir while chain ib (tracked from sb) stays within 2.2h. */
   const walk = (ia: number, sa: number, ib: number, sb: number, dir: number): { u: number; root: boolean } => {
@@ -237,10 +238,11 @@ export function zChains(scene: SceneIn): { zc: ZChain[]; passes: Pass[][]; idx: 
       const un = u + step; const s = sa + dir * un;
       if (!C.closed && (s < 0 || s > C.len)) break;
       const [x, y] = posAt(C, s);
-      const f = footNear(O, x, y, so, 2 * h, s, ib === ia ? 3 * h : 0);
-      if (!(f.d < 2.2 * h)) break;
-      if (rootBetween(ia, sPrev, s) || rootBetween(ib, so, f.s)) return { u: un, root: true };
-      u = un; so = f.s; sPrev = s;
+      // K1283 s10 (perf): footNear's foot, allocation-free (zChains ran 11 ms a frame on def).
+      nearW(O, x, y, so, 2 * h, s, ib === ia ? 3 * h : 0);
+      if (!(nwBest < 2.2 * h)) break;
+      if (rootBetween(ia, sPrev, s) || rootBetween(ib, so, nwBs)) return { u: un, root: true };
+      u = un; so = nwBs; sPrev = s;
     }
     return { u, root: false };
   };
@@ -291,6 +293,75 @@ export function zAtC(c: ZChain, s: number): number {
   while (hi - lo > 1) { const m = (lo + hi) >> 1; if (c.s[m] <= u) lo = m; else hi = m; }
   const l = c.s[lo + 1] - c.s[lo]; const t = l > 0 ? (u - c.s[lo]) / l : 0;
   return c.z[lo] + (c.z[lo + 1] - c.z[lo]) * t;
+}
+
+/** K1283 s10 (perf): footNear(c, x, y, sC, r, sSkip, skipR) into nwBest (d)
+ *  and nwBs (s), allocation-free, the same foot bit for bit: a segment whose
+ *  squared distance is past the best's square (with a 1e-12 margin over
+ *  hypot's rounding) cannot win footNear's hypot comparison, so only the
+ *  rest pay for Math.hypot. zChains' pass walks call it about 100k times a
+ *  frame on def. */
+let nwBest = Infinity; let nwBest2 = Infinity; let nwBs = 0;
+function nearVisit(c: ZChain, x: number, y: number, sC: number, r: number, sSkip: number, skipR: number, k: number): void {
+  const j = (k + 1) % c.n; const sk = c.s[k]; const lk = j === 0 ? c.len - sk : c.s[j] - sk;
+  const mid = sk + lk / 2;
+  const cl = c.closed && c.len > 0;
+  let dA = mid - sC;
+  if (cl) { dA = ((dA % c.len) + c.len) % c.len; if (dA > c.len / 2) dA -= c.len; }
+  if (Math.abs(dA) > r + lk / 2) return;
+  if (skipR > 0) {
+    let dB = mid - sSkip;
+    if (cl) { dB = ((dB % c.len) + c.len) % c.len; if (dB > c.len / 2) dB -= c.len; }
+    if (Math.abs(dB) < skipR) return;
+  }
+  const ax = c.xs[k]; const ay = c.ys[k]; const ex = c.xs[j] - ax; const ey = c.ys[j] - ay;
+  const l2 = ex * ex + ey * ey;
+  const t = l2 > 0 ? Math.min(1, Math.max(0, ((x - ax) * ex + (y - ay) * ey) / l2)) : 0;
+  const px = x - ax - t * ex; const py = y - ay - t * ey;
+  if (px * px + py * py > nwBest2 * (1 + 1e-12)) return;
+  const d = Math.hypot(px, py);
+  if (d < nwBest) { nwBest = d; nwBest2 = d * d; nwBs = sk + t * lk; }
+}
+// An upper bound on the foot's distance (a segment footNear accepts): segments
+// whose every point is farther, by the distance's 1-Lipschitz bound in arc
+// length from a vertex, are skipped. They cannot be the first minimum
+// footNear's index-order scan keeps, so the scan of the rest keeps it.
+let nwBound = Infinity;
+function nearRange(c: ZChain, x: number, y: number, sC: number, r: number, sSkip: number, skipR: number, a: number, b: number): void {
+  const segs = c.closed ? c.n : c.n - 1; const ss = c.s; const xs = c.xs; const ys = c.ys;
+  let k = 0;
+  if (ss[0] <= a) { let lo = 0; let hi = segs - 1; while (hi > lo) { const m = (lo + hi + 1) >> 1; if (ss[m] <= a) lo = m; else hi = m - 1; } k = lo; }
+  while (k < segs && ss[k] <= b) {
+    const bd = nwBest < nwBound ? nwBest : nwBound;
+    if (bd < Infinity) {
+      const dx = x - xs[k]; const dy = y - ys[k];
+      const reach = Math.sqrt(dx * dx + dy * dy) - bd * (1 + 1e-9) - 1e-12;
+      if (reach > 0) {
+        const sv = ss[k]; let kk = k;
+        while (kk < segs && ss[kk] <= b && (kk + 1 < c.n ? ss[kk + 1] : c.len) - sv <= reach) kk++;
+        if (kk > k) { k = kk; continue; }
+      }
+    }
+    nearVisit(c, x, y, sC, r, sSkip, skipR, k);
+    k++;
+  }
+}
+function nearW(c: ZChain, x: number, y: number, sC: number, r: number, sSkip: number, skipR: number): void {
+  nwBest = Infinity; nwBest2 = Infinity; nwBs = 0; nwBound = Infinity;
+  const segs = c.closed ? c.n : c.n - 1;
+  if (segs <= 0) return;
+  // The bound: footNear's own test of the segment at sC (it accepts it unless a self pass skips it).
+  {
+    const u = c.closed && c.len > 0 ? (((sC % c.len) + c.len) % c.len) : sC; const ss = c.s;
+    let k0 = 0;
+    if (ss[0] <= u) { let lo = 0; let hi = segs - 1; while (hi > lo) { const m = (lo + hi + 1) >> 1; if (ss[m] <= u) lo = m; else hi = m - 1; } k0 = lo; }
+    nearVisit(c, x, y, sC, r, sSkip, skipR, k0);
+    nwBound = nwBest; nwBest = Infinity; nwBest2 = Infinity; nwBs = 0;
+  }
+  if (c.closed && c.len > 0) {
+    if (2 * r >= c.len) { for (let k = 0; k < segs; k++) nearVisit(c, x, y, sC, r, sSkip, skipR, k); }
+    else { const a = (((sC - r) % c.len) + c.len) % c.len; const b = a + 2 * r; if (b <= c.len) nearRange(c, x, y, sC, r, sSkip, skipR, a, b); else { nearRange(c, x, y, sC, r, sSkip, skipR, a, c.len); nearRange(c, x, y, sC, r, sSkip, skipR, 0, b - c.len); } }
+  } else nearRange(c, x, y, sC, r, sSkip, skipR, sC - r, sC + r);
 }
 
 /** Nearest point on chain c to (x, y) among segments whose arc span meets
