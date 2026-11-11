@@ -263,7 +263,9 @@ Next free ID: K1305.
   and outlines the best row (an inferred risk, not seen; `docs/design/K793.md`)
 - **K1045** · Junction eyes, by look at K1040 S4b: where two junctions sit close, their threads close in a
   small eye of paper. Form B leaves a dot about 0.16 across, today's look a thin lens (0.67 x 0.12), or it
-  could be covered (`docs/design/K1040_s1b_holes_fades.md` F1). Nothing to look at before S4b.
+  could be covered (`docs/design/K1040_s1b_holes_fades.md` F1). Nothing to look at before S4b. The outline
+  (rp=outline) closes them: muse_hash j74/j73, form B an open bordered eye, the outline two black flecks
+  (`.claude/probes/K1240/out/k1283s7/crops/colour10.png` rows 1-2, form B | master | after).
 - **K1049** · Through-pass bends, by look at K1040 S4b: where a thread passes through a junction and bends, form B
   now draws today's sharp inner corner; S1b and S1c rounded it (`docs/design/K1040_s1d_corner.md` F2, and F6's Look
   with crops). Nothing to look at before S4b.
