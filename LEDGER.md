@@ -372,10 +372,10 @@ Next free ID: K1302.
   and a JSON looks list into a summary and sheets. Stages 3a-3c merged
   (737ac58..9ab8a01); rounds 2026-10-14, 14b and 14c are done (14c
   merged 772e48a..e1c2a80).
-  - owner: agent `ab9da9e8941a20b97` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (sonnet, started 2026-11-11 00:08, 1.5 h cap ~01:38)
-  - branch: `worktree-agent-ab9da9e8941a20b97`, worktree `.claude/worktrees/agent-ab9da9e8941a20b97`; last commit: `d49b51ca`
+  - owner: nobody since 2026-11-11 01:29 (merged; agent `ab9da9e8941a20b97` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `08b65e81`
   - evidence: .claude/probes/rounds/2026-11-10d/driver.ps1; untracked logs/ and pass folders in the main checkout's .claude/probes/rounds/2026-11-10d/
-  - next: Round 2026-11-10d rerun on the charged phone (2026-11-11 ~00:05, stop 01:30): phone lock, idle wait, check, K307 read, driver fin,c,a,b detached; then Claude files K8's, K268's and K307's results
+  - next: Round 2026-11-10d rerun done (K8, K268, K307 results filed; handoff in docs/design/K156.md). Next round when K8 has a GPU frame split to A/B or K307 its same-salt reload; read the phone start time first, adb connect if the wireless link dropped
   - brief: docs/design/K156.md (Round 2026-11-10d and its handoff)
   - env: the phone on its charger, reached over adb 5555 through Tailscale (`adb connect`; not the desktop's USB, Levi 2026-11-02); the pass builds and serves both builds itself (ports 5480-5489); nobody else uses the phone during the pass (K234)
 - **K268** · Shaped crossing gaps under thread reveal (K76; Levi, 2026-10-14):
