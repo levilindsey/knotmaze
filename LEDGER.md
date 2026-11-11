@@ -508,16 +508,6 @@ Next free ID: K1285.
   - evidence: .claude/probes/K1240/proto/ (outline.ts, k1247s15_gain, k1247s15_bound, k1247s16_* tools); .claude/probes/K1240/out/ (untracked)
   - next: fix K1280's station-on-vertex jump, then K1281; re-run k1247s15_gain def/fat until no jumps, then the bound
   - brief: `docs/design/K1247_s16_continuous.md`
-- **K1277** · K1240 fill as triangles fixed at structure (Levi 2026-11-10: 'divide it into seamless
-  triangles'): a strip per face between its two borders' stations, junction faces triangulated once, only
-  vertices move per frame; drawn plainly instead of the stencil's even-odd fan
-  (.claude/probes/K1240/proto/draw.ts), so a fold overdraws instead of cracking (K1273). Gate: stage 14's
-  census, cracks and spill both; after K1247 s15 (same files). Also the fill colour at shallow overlaps: cut 273's top-left is pink in form B, cyan in the redesign (K1279).
-  - owner: agent `aa92acf32efe15555` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-10 09:15, 2 h cap ~11:15)
-  - branch: `worktree-agent-aa92acf32efe15555`, worktree `.claude/worktrees/agent-aa92acf32efe15555`; last commit: `afc1ec98`
-  - evidence: .claude/probes/K1240/proto/ (draw.ts, k1277_* tools); .claude/probes/K1240/out/k1277/ (untracked)
-  - next: build per-face strips and junction triangulation at structure, structural draw order; census at rest and on s15's motion
-  - brief: `docs/design/K1277_triangles.md`
 
 ## Next, in order
 
@@ -2109,6 +2099,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1277** · the fill is plain triangles fixed at structure (fill_tri.ts: strips, cap fans, tail strips, junction ring fans; draw order = item index; over/under by form B's per-pixel depth key; no stencil). At rest every scene beats master (def fill/paper 200/406 -> 44/60, muse_hash 422/2021 -> 241/267); def motion topology constant, fill 32069 -> 548 px, paper 78508 -> 66; cut 273 pink as form B; K1273 speck 2 -> 0 px. Claude viewed the crops. Left: K1283 end-arm sliver, K1285, K1286. Done in 4d168bb4 (2026-11-10).
 - **K1279** · Redesign crossings match form B away from junctions: census 2916 crossings, differing 1584 -> 458, 0 worse, 0 off-junction (ghost pieces, form B's burial fade on edge lines, longer pass spans); junctions left to K1283. Done in f2231a19 (2026-11-10).
 - **K1271** · Redesign outline (K1247 s11): the shallow-crossing under-thread edge keeps its new end (Levi, 2026-11-10); the look there is still wrong in both versions, see K1279. Done in 3e50c773 (2026-11-10).
 - **K1263** · k1247c_final.ps1 exits nonzero when a step fails; k1247s10_base.ps1 re-makes the baselines from master's outline. Done in 0de40350 (2026-11-10).
