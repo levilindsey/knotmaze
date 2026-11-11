@@ -372,11 +372,11 @@ Next free ID: K1302.
   and a JSON looks list into a summary and sheets. Stages 3a-3c merged
   (737ac58..9ab8a01); rounds 2026-10-14, 14b and 14c are done (14c
   merged 772e48a..e1c2a80).
-  - owner: nobody since 2026-11-10 07:12 (round 2026-11-10d ran no pass: its driver was launched from the wrong path; only the idle wait, the check and K307's read ran)
-  - branch: mainline; last commit: `d5aa5ca7`
-  - evidence: .claude/probes/rounds/2026-11-10d/driver.ps1; untracked logs/ in the main checkout's .claude/probes/rounds/2026-11-10d/
-  - next: Rerun round 2026-11-10d in the next phone window (Levi asked 2026-11-10 07:15: now or tonight): phone lock, idle wait, check, K307's read, then from the repo root `pwsh -NoProfile -File .\.claude\probes\rounds\2026-11-10d\driver.ps1 -Passes fin,c,a,b` detached, and confirm logs\driver.log exists within a minute (about 45 min of phone time). Then Claude files K8's, K268's and K307's results
-  - brief: docs/design/K156.md (Round 2026-11-10d)
+  - owner: agent `ab9da9e8941a20b97` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (sonnet, started 2026-11-11 00:08, 1.5 h cap ~01:38)
+  - branch: `worktree-agent-ab9da9e8941a20b97`, worktree `.claude/worktrees/agent-ab9da9e8941a20b97`; last commit: `d49b51ca`
+  - evidence: .claude/probes/rounds/2026-11-10d/driver.ps1; untracked logs/ and pass folders in the main checkout's .claude/probes/rounds/2026-11-10d/
+  - next: Round 2026-11-10d rerun on the charged phone (2026-11-11 ~00:05, stop 01:30): phone lock, idle wait, check, K307 read, driver fin,c,a,b detached; then Claude files K8's, K268's and K307's results
+  - brief: docs/design/K156.md (Round 2026-11-10d and its handoff)
   - env: the phone on its charger, reached over adb 5555 through Tailscale (`adb connect`; not the desktop's USB, Levi 2026-11-02); the pass builds and serves both builds itself (ports 5480-5489); nobody else uses the phone during the pass (K234)
 - **K268** · Shaped crossing gaps under thread reveal (K76; Levi, 2026-10-14):
   no gap until the over thread is seen, a dynamic gap for a stub's overlap and
