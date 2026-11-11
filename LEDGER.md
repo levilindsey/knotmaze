@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1287.
+Next free ID: K1289.
 
 ## Waiting on Levi
 
@@ -1749,12 +1749,9 @@ Every other item below waits on the trigger it names.
   handoff)
 - **K1276** · The K1240 prototype's `verify --ref` reads 48 failures that predate K1247 stage 14 (its
   handoff); not yet sorted into stale baselines and real ones
-- **K1280** · K1240 outline jumps in motion (K1247 s15): a station whose s crosses a centreline vertex jumps h
-  x the vertex's turn (def j47 chain 61 1.24 px, j146 chain 58 1.0 px), suspect borderPointAtBase/Final
-  interpolating by foot s (docs/design/K1247_s15_moved.md handoff). K1279's jitter check finds more, shared with master: muse_hash x61, x182, g41_user_tw64 x54, g41_def_tw64 x309 (cyc10)
 - **K1281** · K1240 outline: corner 191 at def j91 shimmers 0.33 px every ~3 frames through the whole settle
   (its arc end moves 0.46 px along chain 67's border per 0.03 px of input); j67's region 2056 moves 2.5 px on
-  under 0.1 px, undiagnosed (K1247 s15 handoff)
+  under 0.1 px, undiagnosed (K1247 s15 handoff). S16: j67 fixed (END-arm feet continuous); corner 191 at j91 and 10 more (j30, j87, j54, j42, j73, j181, j178, j135, j105, j90) are the corner foot jumping across a concave bisector: K16_CB=loc fixes them but moves cmp to 670/354/134/16; plus j176 (Lcut chosen from far positions) and j45, j0, j39 undiagnosed (s16 handoff)
 - **K1284** · K1279 leftovers: a pass span that runs into a junction keeps the straight reach, a choice from
   positions that can snap (not seen in the jitter runs); fade steps under the bar (max 0.04 at d 0.001) from
   the span walk's h/4 steps; cut 273 spot b keeps a 79 px sliver at 0.74 ink where form B is solid
@@ -1764,6 +1761,13 @@ Every other item below waits on the trigger it names.
 - **K1286** · K1277 leftover: up to 16 dense border pieces on def use fill_tri's equal-fraction fallback, and
   def's chain point counts change on 7 recorded frames with the same diagram (chain 16: 34 to 36 at frame 25),
   a count from positions (docs/design/K1277_triangles.md handoff)
+- **K1287** · K1247 s16 leftover: continuous END-arm feet (EB) make muse_hash x308 9.4 px further from form B
+  (65.7 -> 75.1; not visible in a crop), and stage 16 adds s14 cracks on muse_hash (4 px in 4) and def (2 px
+  in 1) (docs/design/K1247_s16_continuous.md handoff)
+- **K1288** · K1247 s16 leftover: addPointAtC's nearest-segment pick flips between two border branches about
+  0.01 px apart on a fold (muse_hash cyc10 #200, 1.311 px); union drawn > 0.25 px went 4/14/5 -> 2/16/8
+  (still/cyc10/cyc18). The branch should come from structure; K16_PS=1 halves it but adds hits elsewhere (s16
+  handoff)
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2093,7 +2097,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   7); setupBorders is 5.0 of def's 19 ms frame (K1247_s7_cf_speed.md, Handoff 1)
 - **K1268** · K1247's 3 ms gate needs a lever past reduction (stage 8: 7.6 ms floor) and WASM (1.2-2x):
   recompute only what moved, per junction, with the outline's continuity bounding what a frame can change
-  (docs/design/K1247_s10_reduce.md). S15 measured it negative on def: no delta holds the bar while the outline jumps, and even continuous only 32-point blocks in every phase reach the p95 (s15 handoff)
+  (docs/design/K1247_s10_reduce.md). S15 measured it negative on def: no delta holds the bar while the outline jumps, and even continuous only 32-point blocks in every phase reach the p95 (s15 handoff). S16 re-bound at delta 0.07-0.0875 px (gain 2.9-3.6): block reuse projects 2-3x at p95, chain closure 1.2-1.4x, so this lever alone can't reach 3 ms
 - **K1269** · K8 rp=sdf: a tighter trapezoid per segment (lever (a)), and an fw=0 bench_frame to time the SDF
   pass alone on dense and max fabric, where the desktop frame is CPU-bound (docs/design/K8_sdf_cost.md,
   Handoff 1)
@@ -2103,6 +2107,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1280** · K1240 outline jumps where a station's s crosses a centreline vertex: the tie spread gives each tie run a continuous s; def j47 1.243, j146 1.007, j158 0.264 px -> no jump (K1247 s16). The jitter-check crossings (muse_hash x61, x182, ...) now 0 jump px in k1279_motion. Done in 541d22fb (2026-11-10).
 - **K1282** · the outline's draw order from positions: nothing draws by regionsPhaseC's depthAtC sort since K1277 (fill order = structural item index, over/under per pixel); the sort is dead weight in outline.ts, remove it when stage 16 frees the file. Done in 4d168bb4 (2026-11-10).
 - **K1273** · K1247 s14 leftover, the 2 px speck at muse_hash (26.86, 22.32): closed by K1277's triangle fill (a fold overdraws instead of dropping out), 2 -> 0 px, loop eyes stay paper. Done in 4d168bb4 (2026-11-10).
 - **K1277** · the fill is plain triangles fixed at structure (fill_tri.ts: strips, cap fans, tail strips, junction ring fans; draw order = item index; over/under by form B's per-pixel depth key; no stencil). At rest every scene beats master (def fill/paper 200/406 -> 44/60, muse_hash 422/2021 -> 241/267); def motion topology constant, fill 32069 -> 548 px, paper 78508 -> 66; cut 273 pink as form B; K1273 speck 2 -> 0 px. Claude viewed the crops. Left: K1283 end-arm sliver, K1285, K1286. Done in 4d168bb4 (2026-11-10).
