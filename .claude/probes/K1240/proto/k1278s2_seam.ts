@@ -35,6 +35,7 @@ import * as O from "../../../../src/render/outline/outline";
 import * as D from "../../../../src/render/outline/draw";
 import * as F from "../../../../src/render/outline/fill_tri";
 import * as B from "./k1278_base_fill";
+import * as F0 from "./k1278s2_before_fill";
 import { ALL, loadScene, rScene, rasterR } from "./k1279_census";
 import { sectionPaint, runAt, runColour, paintAt, type PaintMode, type SectionPaint, type RGB } from "../../../../src/render/outline/paint";
 
@@ -151,6 +152,7 @@ function itemIdx(f: Fill, v: number): number {
   if (!a) { a = new Int32Array(f.fs.nV).fill(-1); f.fs.items.forEach((it, k) => { const n = it.kind === "junc" ? 1 + it.R : F.itemVerts(it as F.FillItem); for (let q = 0; q < n; q++) a![it.base + q] = k; }); itemIdxCache.set(f.fs, a); }
   return a[v];
 }
+let curLens: number[] = []; let curHW = 0;
 function seamStat(f: Fill, samples: Sample[], paint: Painter, itemOf: (v: number) => string, dbg?: Int32Array): SeamStat {
   dbgN = 0;
   const st: SeamStat = { n: 0, over: 0, max: 0, at: "", kinds: new Map(), fold: 0, thread: 0, foldMax: 0, threadMax: 0, hist: [0, 0, 0, 0], cells: new Map() };
@@ -161,7 +163,11 @@ function seamStat(f: Fill, samples: Sample[], paint: Painter, itemOf: (v: number
     const I0 = f.fs.idx; const iA = itemIdx(f, I0[p.tA]); const iB = itemIdx(f, I0[p.tB]);
     if (iA === iB) { if (w > 1) st.fold++; st.foldMax = Math.max(st.foldMax, w); continue; }
     const kA = itemOf(I0[p.tA]); const kB = itemOf(I0[p.tB]);
-    if (f.fs.vChain[I0[p.tA]] !== f.fs.vChain[I0[p.tB]] && kA !== "junc" && kB !== "junc") { if (w > 1) st.thread++; st.threadMax = Math.max(st.threadMax, w); continue; }
+    // A chain crossing itself: the two passes are a thread edge too (s apart by more than 3 hW).
+    const chA = f.fs.vChain[I0[p.tA]]; const sa0 = f.fr.s4 ? f.fr.s4[4 * I0[p.tA]] : 0; const sb0 = f.fr.s4 ? f.fr.s4[4 * I0[p.tB]] : 0;
+    const Lc = curLens[chA] ?? 0; const dS = Lc > 0 ? Math.min(((sa0 - sb0) % Lc + Lc) % Lc, ((sb0 - sa0) % Lc + Lc) % Lc) : Math.abs(sa0 - sb0);
+    const selfX = chA === f.fs.vChain[I0[p.tB]] && kA !== "junc" && kB !== "junc" && f.fr.s4 !== undefined && dS > 3 * curHW;
+    if (selfX || (f.fs.vChain[I0[p.tA]] !== f.fs.vChain[I0[p.tB]] && kA !== "junc" && kB !== "junc")) { if (w > 1) st.thread++; st.threadMax = Math.max(st.threadMax, w); continue; }
     st.n++;
     if (w > 1 && dbg) { const r4 = new Int32Array(4); const w4 = new Float64Array(4); const s4 = new Float64Array(4); const I = f.fs.idx; const sh = (t: number, b: number[]): string => { F.vertexPaint(f.fs as F.FillStructure, f.fr as F.FillFrame, dbg, [I[t], I[t + 1], I[t + 2]], b, r4, w4, s4); return `ch${f.fs.vChain[I[t]]} r[${[...r4]}] w[${[...w4].map((x) => x.toFixed(3))}] s[${[...s4].map((x) => x.toFixed(3))}] verts ${I[t]},${I[t + 1]},${I[t + 2]}`; }; if (dbgN++ < 12) console.log(`    ${w.toFixed(1)} at (${p.x.toFixed(3)}, ${p.y.toFixed(3)}) ${itemOf(I[p.tA])}: ${sh(p.tA, p.bA)} | ${itemOf(I[p.tB])}: ${sh(p.tB, p.bB)}`); }
     if (w > 1) { for (const [q, lim] of [2, 4, 8, 16].entries()) if (w > lim) st.hist[q]++; const ck = `${Math.round(p.x * 4) / 4},${Math.round(p.y * 4) / 4}`; const o = st.cells.get(ck); if (!o || o.w < w) st.cells.set(ck, { w, x: p.x, y: p.y, k: [itemOf(f.fs.idx[p.tA]), itemOf(f.fs.idx[p.tB])].join("|") }); }
@@ -249,12 +255,13 @@ const tot: Record<string, { over: number; max: number; jOver: number; jWorse: nu
 const atPts: Worst[] | undefined = opt("at")?.split(",").map((p) => { const [nm, x, y] = p.split(":"); return { nm, ji: -1, x: Number(x), y: Number(y), mine: NaN, base: NaN }; });
 for (const nm of atPts ? [] : scenes) {
   const scene = loadScene(nm); const st = O.structure(scene); const table = O.frame(st, scene);
-  const fs = F.fillStructure(st, F.fillResolution(st, table)); const fr = F.fillFrame(fs, st, table, scene);
+  const fs = F.fillStructure(st, F.fillResolution(st, table)); const fr = flag("fill0") ? (F0.fillFrame(fs as never, st, table, scene) as unknown as F.FillFrame) : F.fillFrame(fs, st, table, scene); // --fill0: src before stage 2 (only s4 differs, k1278s2_ident)
   const bfs = B.fillStructure(st, B.fillResolution(st, table)); const bfr = B.fillFrame(bfs, st, table, scene);
   const mine: Fill = { fs, fr }; const base: Fill = { fs: bfs as never, fr: bfr as never };
   const lens = scene.chains.map((c) => { if (!c.closed) return 0; let L = 0; const n = c.pts.length >> 1; for (let i = 0; i < n; i++) { const j = (i + 1) % n; L += Math.hypot(c.pts[2 * j] - c.pts[2 * i], c.pts[2 * j + 1] - c.pts[2 * i + 1]); } return L; });
   const kindOf = (f: Fill): ((v: number) => string) => { const k = new Array<string>(f.fs.nV).fill("?"); for (const it of f.fs.items) { const n = (it.kind === "junc" ? 1 + it.R : F.itemVerts(it as F.FillItem)); for (let q = 0; q < n; q++) k[it.base + q] = it.kind === "strip" && (it as F.StripItem).ghost ? "ghost" : it.kind; } return (v) => k[v]; };
   const zt = 0.1 * scene.look.depthAmp;
+  curHW = scene.look.halfWidth; curLens = scene.chains.map((c) => { if (!c.closed) return 0; let L = 0; const n = c.pts.length >> 1; for (let i = 0; i < n; i++) { const j = (i + 1) % n; L += Math.hypot(c.pts[2 * j] - c.pts[2 * i], c.pts[2 * j + 1] - c.pts[2 * i + 1]); } return L; });
   let pM = seamSamples(mine, scene.look.halfWidth, zt); const pB = seamSamples(base, scene.look.halfWidth, zt);
   // --near=x:y:r: only the samples within r of (x, y) (with --dbg, the first 12 over 1/255 printed).
   const nearO = opt("near")?.split(":").map(Number); if (nearO) pM = pM.filter((p) => Math.hypot(p.x - nearO[0], p.y - nearO[1]) < nearO[2]);
@@ -317,11 +324,14 @@ if (cropDir) {
     };
     const ref = paintFB(fw, sp, n);
     const am = paintAtPpu({ fs, fr }, minePainter({ fs, fr }, runs, sp));
-    const ab = paintAtPpu({ fs: bfs as never, fr: bfr as never }, basePainter({ fs: bfs as never, fr: bfr as never }, sp, lens));
+    // --before: the middle column is src before stage 2 (8f7004bf), not master's old fill.
+    let ab: Float32Array;
+    if (flag("before")) { const fs0 = F0.fillStructure(st, F0.fillResolution(st, table)); const fr0 = F0.fillFrame(fs0, st, table, scene); const f0 = { fs: fs0, fr: fr0 } as unknown as Fill; ab = paintAtPpu(f0, minePainter(f0, F0.fillRuns(fs0, st, fr0, sp), sp)); }
+    else ab = paintAtPpu({ fs: bfs as never, fr: bfr as never }, basePainter({ fs: bfs as never, fr: bfr as never }, sp, lens));
     const y = rScene(table, scene, D); y.faces = []; const band = rasterR(y, cw.c0, cw.r0, P, cppu);
     for (let o = 0; o < n; o++) { put(row, 0, o, shade(ref, o, fw.ink[o])); put(row, 1, o, shade(ab, o, band.ink[o])); put(row, 2, o, shade(am, o, band.ink[o])); }
     if (Number.isNaN(w.mine)) { w.mine = meanDiff(am, ref, n); w.base = meanDiff(ab, ref, n); }
-    console.log(`crop row ${row}: ${w.nm} j${w.ji} (${w.x.toFixed(3)}, ${w.y.toFixed(3)}) mean diff vs form B: master ${w.base.toFixed(1)}, mine ${w.mine.toFixed(1)}`);
+    console.log(`crop row ${row}: ${w.nm} j${w.ji} (${w.x.toFixed(3)}, ${w.y.toFixed(3)}) mean diff vs form B: ${flag("before") ? "before" : "master"} ${(flag("before") ? meanDiff(ab, ref, n) : w.base).toFixed(1)}, mine ${meanDiff(am, ref, n).toFixed(1)}`);
   });
   writePng(join(cropDir, opt("cropname") ?? "k1278_worst_junctions.png"), img, Wt, Ht);
 }
