@@ -6836,6 +6836,34 @@ function regionsPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): { regio
 }
 
 // --- pieces ----------------------------------------------------------------------
+/** K1283 s2: a corner with no arc (r = 0: a sharp corner, or a failed
+ *  corner at its borders' meet) is a point where two border bands end
+ *  square, which leaves a wedge of the thread uncovered between their inner
+ *  edges (the notch at muse_hash j103's lower corner). Form B's border is
+ *  every point within W of the outline, so there it is a round join: the
+ *  disc sector about the point between the two arms' inward normals. The
+ *  arc piece becomes that sector as a fan: every point at Q, each foot one
+ *  normal of the sweep (draw.ts offsets a band point W toward its foot), the
+ *  short way from arm A's foot direction to arm B's. */
+function sharpJoinFan(C: FCache, ci: number, aiA: number, aiB: number, pts: number[], cpts: number[]): void {
+  const qx = pts[0]; const qy = pts[1];
+  pointAtInto(C.polys[C.armObj[aiA].pi], C.cSA[ci], ptScratch);
+  let ax = ptScratch[0] - qx; let ay = ptScratch[1] - qy;
+  pointAtInto(C.polys[C.armObj[aiB].pi], C.cSB[ci], ptScratch);
+  let bx = ptScratch[0] - qx; let by = ptScratch[1] - qy;
+  const la = Math.sqrt(ax * ax + ay * ay); const lb = Math.sqrt(bx * bx + by * by);
+  if (!(la > 1e-9 && lb > 1e-9)) return;
+  ax /= la; ay /= la; bx /= lb; by /= lb;
+  const a0 = Math.atan2(ay, ax);
+  let da = Math.atan2(by, bx) - a0;
+  while (da > Math.PI) da -= 2 * Math.PI;
+  while (da < -Math.PI) da += 2 * Math.PI;
+  if (Math.abs(da) < 1e-4) return;
+  const steps = Math.max(1, Math.ceil(Math.abs(da) / (Math.PI / 16)));
+  pts.length = 0; cpts.length = 0;
+  for (let k = 0; k <= steps; k++) { const a = a0 + (da * k) / steps; pts.push(qx, qy); cpts.push(qx + C.h * Math.cos(a), qy + C.h * Math.sin(a)); }
+}
+
 function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[]): { pieces: OutlinePiece[]; runMiss: number; runPassed: number } {
   const pieces: OutlinePiece[] = [];
   let runMiss = 0; let runPassed = 0;
@@ -6989,7 +7017,7 @@ function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[])
         // W at each end (the "bite" at the corner's feet).
         const rf = C.cR[ci] + C.h;
         for (let s2 = 0; s2 <= steps; s2++) { const a = aA + (da * s2) / steps; const ca = Math.cos(a); const sa = Math.sin(a); pts.push(C.cQx[ci] + C.cR[ci] * ca, C.cQy[ci] + C.cR[ci] * sa); cpts.push(C.cQx[ci] + rf * ca, C.cQy[ci] + rf * sa); }
-      } else if (!C.cOk[ci] && C.cMeet[ci]) { pts = [C.cQx[ci], C.cQy[ci]]; cpts = [C.cQx[ci], C.cQy[ci]]; }
+      } else if (!C.cOk[ci] && C.cMeet[ci]) { pts = [C.cQx[ci], C.cQy[ci]]; cpts = [C.cQx[ci], C.cQy[ci]]; if (dc) sharpJoinFan(C, ci, dc.aArm, dc.bArm, pts, cpts); }
       else if (!C.cOk[ci]) {
         let ax = C.cQx[ci]; let ay = C.cQy[ci];
         for (const nci of [ci - 1, ci + 1]) {
@@ -6999,7 +7027,7 @@ function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[])
           if (nc.bArm === dc.aArm) { ax = C.cTbx[nci]; ay = C.cTby[nci]; break; }
         }
         pts = [ax, ay]; cpts = [C.cQx[ci], C.cQy[ci]];
-      } else { pts = [C.cQx[ci], C.cQy[ci]]; cpts = [C.cQx[ci], C.cQy[ci]]; }
+      } else { pts = [C.cQx[ci], C.cQy[ci]]; cpts = [C.cQx[ci], C.cQy[ci]]; if (dc) sharpJoinFan(C, ci, dc.aArm, dc.bArm, pts, cpts); }
       const piece: OutlinePiece = { kind: "arc", chain: dc ? C.armObj[dc.aArm].pi : -1, side: 0, s0: C.cSA[ci], s1: C.cSB[ci], pts, cpts, region: rid, corner: ci };
       pieces.push(piece);
       if (rid >= 0 && regions[rid]) regions[rid].pieces.push(pieces.length - 1);
