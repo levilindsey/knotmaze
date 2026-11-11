@@ -444,7 +444,7 @@ export function buildDrawData(table: OutlineTable, scene: SceneIn, fill?: { st: 
     }
   }
   return {
-    fillPos: fr.pos, fillCol, fillKey: fr.key, fillS: fr.s, fillIdx: fs.idx, fillKS: keyScale(scene), fill: fs,
+    fillPos: Float32Array.from(fr.pos), fillCol, fillKey: fr.key, fillS: fr.s, fillIdx: fs.idx, fillKS: keyScale(scene), fill: fs,
     bandPos: Float32Array.from(bandPos), bandCol: Float32Array.from(bandCol), bandAlpha: Float32Array.from(bandAlpha),
     bandCount: bandPos.length / 2,
   };

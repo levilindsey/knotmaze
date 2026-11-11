@@ -53,11 +53,15 @@ export interface FillStructure {
 }
 
 export interface FillFrame {
-  pos: Float32Array;
+  /** Positions in float64, as the outline table holds them (the census
+   *  rasters these, as it rasters master's faces); draw.ts uploads float32. */
+  pos: Float64Array;
   key: Float32Array;
   /** Chain arc length per vertex (K1278's paint coordinate). */
   s: Float32Array;
   fallbacks: number;
+  /** Border pieces with more points than their strip has samples (equal-fraction samples instead). */
+  dense: number;
 }
 
 /** Each interval's strip resolution, measured once on frame 0's table. */
@@ -170,8 +174,18 @@ export function fillSig(fs: FillStructure): string {
   return `${fs.nV}/${fs.idx.length / 3}/${h.toString(16)}`;
 }
 
-/** Resample a polyline at `n + 1` equal fractions of a parameter polyline's
- *  length (same point count; falls back to its own length). */
+/** Resample a polyline to `n + 1` points that keep every one of its own
+ *  points (the border is the outline's polyline exactly: chords between
+ *  resamples straddling a convex corner, or the arc a convex corner sweeps
+ *  about one centreline foot, would cut paper into it). Each own point j
+ *  takes the sample index nearest its share of the parameter polyline's
+ *  length (the centreline feet), kept increasing; the samples between two
+ *  kept points are spread evenly along the straight segment joining them.
+ *  The triangles never change: only where the samples sit along the
+ *  border. With more own points than samples (an interval stretched far
+ *  past its frame-0 length), samples fall at equal fractions instead
+ *  (`dense`, counted). */
+let denseCount = 0;
 function resample(pts: number[], par: number[] | null, n: number, out: Float64Array): boolean {
   const m = pts.length >> 1;
   if (m === 0) return false;
@@ -180,6 +194,21 @@ function resample(pts: number[], par: number[] | null, n: number, out: Float64Ar
   const cum = new Float64Array(m);
   for (let i = 1; i < m; i++) cum[i] = cum[i - 1] + Math.hypot(P[2 * i] - P[2 * i - 2], P[2 * i + 1] - P[2 * i - 1]);
   const tot = cum[m - 1];
+  if (m <= n + 1) {
+    let prev = 0;
+    out[0] = pts[0]; out[1] = pts[1];
+    for (let j = 1; j < m; j++) {
+      const ideal = j === m - 1 ? n : Math.round(tot > 0 ? (cum[j] / tot) * n : (j * n) / (m - 1));
+      const idx = Math.min(n - (m - 1 - j), Math.max(prev + 1, ideal));
+      // samples prev+1 .. idx-1 on the segment (j-1, j), then idx = point j
+      const ax = pts[2 * j - 2]; const ay = pts[2 * j - 1]; const bx = pts[2 * j]; const by = pts[2 * j + 1];
+      const span = idx - prev;
+      for (let i = prev + 1; i <= idx; i++) { const t = (i - prev) / span; out[2 * i] = ax + (bx - ax) * t; out[2 * i + 1] = ay + (by - ay) * t; }
+      prev = idx;
+    }
+    return true;
+  }
+  denseCount++;
   let k = 0;
   for (let i = 0; i <= n; i++) {
     if (i === 0) { out[0] = pts[0]; out[1] = pts[1]; continue; }
@@ -203,10 +232,11 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
   const zz = zcIn ?? zChains(scene);
   const zc = zz.zc;
   const zt = 0.1 * scene.look.depthAmp;
-  const pos = new Float32Array(2 * fs.nV);
+  const pos = new Float64Array(2 * fs.nV);
   const key = new Float32Array(fs.nV);
   const sv = new Float32Array(fs.nV);
   let fallbacks = 0;
+  denseCount = 0;
   const zAt = (pi: number, s: number): number => (zc[pi] ? zAtC(zc[pi], s) : 0);
   const set = (v: number, x: number, y: number, k: number, s: number): void => { pos[2 * v] = x; pos[2 * v + 1] = y; key[v] = k; sv[v] = s; };
   const armSOf = (ai: number): number => { const a = st.arms[ai]; const J = scene.junctions[a.ji]; return J && J.arms[a.ei] ? J.arms[a.ei].s : 0; };
@@ -324,15 +354,26 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
       }
     }
   }
-  return { pos, key, s: sv, fallbacks };
+  return { pos, key, s: sv, fallbacks, dense: denseCount };
 }
 
 /** Key range for the depth mapping: every key lies in [-KS, KS]. */
 export function keyScale(scene: SceneIn): number { return 4 * Math.abs(scene.look.depthAmp) + 1; }
 
+/** Edge function of the edge u -> v at p, computed in one canonical order
+ *  (the lexicographically smaller end first) and negated for the other
+ *  direction: two triangles sharing an edge (same vertices, or bit-equal
+ *  positions) get exactly opposite values, so no pixel centre falls
+ *  between them (the GPU's raster is watertight the same way). */
+function edgeFn(ux: number, uy: number, vx: number, vy: number, px: number, py: number): number {
+  if (ux < vx || (ux === vx && uy <= vy)) return (vx - ux) * (py - uy) - (vy - uy) * (px - ux);
+  return -((ux - vx) * (py - vy) - (uy - vy) * (px - vx));
+}
+
 /** CPU raster of the fill at pixel centres (x0 + (i + .5) / ppu): own = top
  *  chain + 1 (0 = paper), the highest key winning, ties to the later
- *  triangle (the GPU's LEQUAL). */
+ *  triangle (the GPU's LEQUAL). A centre exactly on an edge counts as
+ *  inside (closed triangles, as the census paints master's faces). */
 export function rasterFill(fs: FillStructure, fr: FillFrame, x0: number, y0: number, Wd: number, Hd: number, ppu: number): Int32Array {
   const own = new Int32Array(Wd * Hd);
   const zb = new Float32Array(Wd * Hd).fill(-Infinity);
@@ -342,21 +383,22 @@ export function rasterFill(fs: FillStructure, fr: FillFrame, x0: number, y0: num
     const ax = (P[2 * a] - x0) * ppu; const ay = (P[2 * a + 1] - y0) * ppu;
     const bx = (P[2 * b] - x0) * ppu; const by = (P[2 * b + 1] - y0) * ppu;
     const cx = (P[2 * c] - x0) * ppu; const cy = (P[2 * c + 1] - y0) * ppu;
-    const area = (bx - ax) * (cy - ay) - (by - ay) * (cx - ax);
+    const area = edgeFn(ax, ay, bx, by, cx, cy);
     if (!(Math.abs(area) > 1e-12)) continue;
     const i0 = Math.max(0, Math.ceil(Math.min(ax, bx, cx) - 0.5)); const i1 = Math.min(Wd - 1, Math.floor(Math.max(ax, bx, cx) - 0.5));
     const j0 = Math.max(0, Math.ceil(Math.min(ay, by, cy) - 0.5)); const j1 = Math.min(Hd - 1, Math.floor(Math.max(ay, by, cy) - 0.5));
     if (i0 > i1 || j0 > j1) continue;
     const ch = fs.vChain[a] + 1;
-    const inv = 1 / area;
+    const sg = area > 0 ? 1 : -1;
     for (let j = j0; j <= j1; j++) {
       const py = j + 0.5;
       for (let i = i0; i <= i1; i++) {
         const px = i + 0.5;
-        const w0 = ((bx - px) * (cy - py) - (by - py) * (cx - px)) * inv;
-        const w1 = ((cx - px) * (ay - py) - (cy - py) * (ax - px)) * inv;
-        const w2 = 1 - w0 - w1;
-        if (w0 < 0 || w1 < 0 || w2 < 0) continue;
+        const e0 = sg * edgeFn(bx, by, cx, cy, px, py); if (e0 < 0) continue;
+        const e1 = sg * edgeFn(cx, cy, ax, ay, px, py); if (e1 < 0) continue;
+        const e2 = sg * edgeFn(ax, ay, bx, by, px, py); if (e2 < 0) continue;
+        const sum = e0 + e1 + e2;
+        const w0 = e0 / sum; const w1 = e1 / sum; const w2 = e2 / sum;
         const k = w0 * K[a] + w1 * K[b] + w2 * K[c];
         const o = j * Wd + i;
         if (k >= zb[o]) { zb[o] = k; own[o] = ch; }

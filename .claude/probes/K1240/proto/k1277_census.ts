@@ -112,7 +112,8 @@ function loadNamed(nm: string): SceneIn {
 const diagSig = (s: SceneIn): string => [s.chains.map((c) => `${c.id}:${c.pts.length}:${c.closed ? 1 : 0}`).join(","), s.crossings.map((x) => `${x.a.chain}/${x.b.chain}/${x.over}`).join(","),
   s.junctions.map((j) => `${j.id}:${j.arms.map((a) => `${a.chain}${a.kind[0]}${a.dir}`).join("")}`).join(","), s.deadEnds.map((d) => d.chain).join(",")].join("|");
 
-if (mode === "rest") {
+const isMain = !!process.argv[1] && process.argv[1].includes("k1277_census");
+if (isMain && mode === "rest") {
   const filt = pos[1];
   const summary: Record<string, unknown> = {};
   let pass = true;
@@ -156,7 +157,7 @@ if (mode === "rest") {
   }
   console.log(pass ? "census: triangles no worse than master on every scene" : "census: triangles worse than master somewhere");
   writeFileSync(join(outDir, `rest_${filt ?? "all"}_${ppu}.json`), JSON.stringify(summary));
-} else if (mode === "motion") {
+} else if (isMain && mode === "motion") {
   const name = pos[1] ?? "def";
   const every = Number(opt("every") ?? 1);
   const dir = join(here, "..", "out", "s15", `rec_${name}`);
