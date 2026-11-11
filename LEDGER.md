@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1290.
+Next free ID: K1291.
 
 ## Waiting on Levi
 
@@ -494,11 +494,11 @@ Next free ID: K1290.
 - **K1240** · One outline for both looks and every junction consumer (Levi's sketch, 2026-11-06): offset-polyline borders,
   cuts and corner arcs in closed form from each frame; the border look strokes it, the filled look fills it. S1: a clean
   prototype beside the app, checked against form B and timed (Levi: "without all the tech debt"); notes.
-  - owner: nobody since 2026-11-10 00:25 (merged; agent `a6b99b04c9c8fb2ef` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `b1930378`
-  - evidence: .claude/probes/K1240/proto/ (outline.ts, s3f_claude_checks.ps1, s3f_exact_s3dbase.ts, cmp_s3f.mjs, s3f_claude_pics.ts, _r4_*.ts, k1247c_final.ps1, k1257_sliver.ts); round 4's crops and logs untracked in its worktree .claude/worktrees/agent-a6b99b04c9c8fb2ef/.claude/probes/K1240/out/s3f/ (r4*, checks_r4p4.txt); older runs in the main checkout's .claude/probes/K1240/s1_out/ to s3f_out/
-  - next: Round 4 merged (b1930378; Claude viewed the crops): end tails at def's T crotches (def B over2 11 -> 0, user_tw42.lightpaper B 23 -> 0, A 36 -> 6), j12's meet-fallback station pinned to the meet (g41_ring_tw42 A 6 -> 3), passed runs draw nothing (muse_default_tw 0.1h A 10 -> 5); every row within S3d's tolerance; def +1.8 ms (the tails, K1264). Next: K1247 stage 9 (corner continuity, the tails' first-interval jump with it), then K1264, K1258, muse_default_tw 0.1h's last points over 2 px (j110, j49, j94, j164; handoff), the sweep's piece motion, S4 and the Pixel p95. Levi, 2026-11-09: keep the redesign, no fallback to K1040's field; K1040's open checks (pop census, fades in motion, check #13) and K1250 fold in when the outline reaches the app
-  - brief: `docs/design/K1240_s3f_round4.md`
+  - owner: agent `a5393aa1f25f2ff33` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-10 15:12, 2 h cap ~17:12)
+  - branch: `worktree-agent-a5393aa1f25f2ff33`, worktree `.claude/worktrees/agent-a5393aa1f25f2ff33`; last commit: `e2b373d3`
+  - evidence: src/ (new outline files), k1240s4_* tools; untracked .claude/probes/K1240/out/s4/
+  - next: S4: the redesign in the app behind rp=outline; then the Pixel timing (coordinator, when the phone is free), K1283 and K1278 stage 2 in src/
+  - brief: `docs/design/K1240_s4_app.md`
   - env: from the worktree, vite on a copy of .claude/probes/K1040/vite.private-cache.config.ts, ports 5980-5989; S3d's code for the baselines is proto/outline_s3d.ts (untracked), recreated by the one-line command in s3f_exact_s3dbase.ts's header
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
@@ -516,8 +516,14 @@ Next free ID: K1290.
   - owner: nobody since 2026-11-10 11:23 (merged; agent `abbdf5d7bf1c88649` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
   - branch: mainline; last commit: `9f6a38f2`
   - evidence: .claude/probes/K1240/proto/ (draw.ts, fill_tri.ts, k1278_* tools); .claude/probes/K1240/out/k1278/ (untracked)
-  - next: Stage 1 merged (Claude viewed the crops): the fill paints section colours per pixel from per-vertex run/weight/s slots fixed at structure; a junction hands off by corner arc length (smoothstep). Edge seams over 1/255 34045 -> 41 (app), junction windows steppier than form B 650 -> 7; colour at the six end-arm slivers matches form B; K1277's bars hold. Next: stage 2 = an end-arm fan's per-pixel round-end term (x14: form B's hard edge), the across upload in draw.ts, then the pulses (K1250); the handoff in the brief lists the rest
+  - next: Stage 1 merged (Claude viewed the crops): the fill paints section colours per pixel from per-vertex run/weight/s slots fixed at structure; a junction hands off by corner arc length (smoothstep). Edge seams over 1/255 34045 -> 41 (app), junction windows steppier than form B 650 -> 7; colour at the six end-arm slivers matches form B; K1277's bars hold. Next: stage 2 = an end-arm fan's per-pixel round-end term (x14: form B's hard edge), the across upload in draw.ts, then the pulses (K1250); the handoff in the brief lists the rest. Stage 2 lands in src/ once K1240 S4 has ported the paint
   - brief: `docs/design/K1278_paint.md`
+- **K1290** · Experiment: K1240's border vertices placed forward from the centreline (centre(s) ± h·n(s), corners as closed-form intersections) instead of at nearest points, which jump (docs/design/K1290_forward.md)
+  - owner: agent `a78fafb07699a0d0b` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-10 15:12, 2 h cap ~17:12)
+  - branch: `worktree-agent-a78fafb07699a0d0b`, worktree `.claude/worktrees/agent-a78fafb07699a0d0b`; last commit: `e2b373d3`
+  - evidence: .claude/probes/K1240/proto/outline_fwd.ts, k1290_* tools; untracked .claude/probes/K1240/out/k1290/
+  - next: wait for its report; adopt, adopt in part or drop; it decides whether the K1281 corner-foot question remains
+  - brief: `docs/design/K1290_forward.md`
 
 ## Next, in order
 
@@ -1749,9 +1755,7 @@ Every other item below waits on the trigger it names.
   handoff)
 - **K1276** · The K1240 prototype's `verify --ref` reads 48 failures that predate K1247 stage 14 (its
   handoff); not yet sorted into stale baselines and real ones
-- **K1281** · K1240 outline: corner 191 at def j91 shimmers 0.33 px every ~3 frames through the whole settle
-  (its arc end moves 0.46 px along chain 67's border per 0.03 px of input); j67's region 2056 moves 2.5 px on
-  under 0.1 px, undiagnosed (K1247 s15 handoff). S16: j67 fixed (END-arm feet continuous); corner 191 at j91 and 10 more (j30, j87, j54, j42, j73, j181, j178, j135, j105, j90) are the corner foot jumping across a concave bisector: K16_CB=loc fixes them but moves cmp to 670/354/134/16; plus j176 (Lcut chosen from far positions) and j45, j0, j39 undiagnosed (s16 handoff)
+- **K1281** · K1240 outline jumps left after stage 17 (f5761d43; def 15 places, muse_hash 17, fat 0): 13 of def's 15 are the corner foot flipping across a concave bisector (K16_CB=arc takes def to 3 but census vs form B +212, 3 crossings over 12 px: ring x10, def x81, x131); j176 the physics crossing binding sliding 1.6 px about 2.1h away (src physics, or the gain tool's input radius); j35 under arc; muse_hash's 17 undiagnosed; the full builder still the fallback past 2n+8 points. Held for K1290, which may remove the class (s17 handoff in docs/design/K1247_s17_feet.md)
 - **K1284** · K1279 leftovers: a pass span that runs into a junction keeps the straight reach, a choice from
   positions that can snap (not seen in the jitter runs); fade steps under the bar (max 0.04 at d 0.001) from
   the span walk's h/4 steps; cut 273 spot b keeps a 79 px sliver at 0.74 ink where form B is solid
