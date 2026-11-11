@@ -508,6 +508,16 @@ Next free ID: K1287.
   - evidence: .claude/probes/K1240/proto/ (outline.ts, k1247s15_gain, k1247s15_bound, k1247s16_* tools); .claude/probes/K1240/out/ (untracked)
   - next: fix K1280's station-on-vertex jump, then K1281; re-run k1247s15_gain def/fat until no jumps, then the bound
   - brief: `docs/design/K1247_s16_continuous.md`
+- **K1278** · Paint on the outline must blend seamlessly across junctions (Levi 2026-11-10): colour per pixel
+  from fields continuous across faces, triangles and junctions (chain + s, per-arm weights easing to an exact
+  hand-off as in form B, a pulse's travel distance continuous through the junction), never per face or
+  triangle. Gate: a seam test sampling section blends and pulses across every face edge, triangle edge and
+  junction for steps and kinks, plus K1244's sheets (K1250).
+  - owner: agent `abbdf5d7bf1c88649` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-10 10:24, 2 h cap ~12:24)
+  - branch: `worktree-agent-abbdf5d7bf1c88649`, worktree `.claude/worktrees/agent-abbdf5d7bf1c88649`; last commit: `9849a26e`
+  - evidence: .claude/probes/K1240/proto/ (draw.ts, fill_tri.ts, k1278_* tools); .claude/probes/K1240/out/k1278/ (untracked)
+  - next: seam test on master, then paint fields (chain, s, across, junction arm weights) and section colours; end-arm sliver
+  - brief: `docs/design/K1278_paint.md`
 
 ## Next, in order
 
@@ -750,11 +760,6 @@ Every other item below waits on the trigger it names.
 - **K1256** · K1240's outline: frame() leads outside corners from K1247 stage 4 (unmeasured):
   crossingsPhaseC's OSR-exit deopts, frameFast's wrong-map and generic-global deopts, and about 40
   cornerFallbackC fallbacks a frame (about 0.5 ms). K1247_s4_corners.md Handoff 1
-- **K1278** · Paint on the outline must blend seamlessly across junctions (Levi 2026-11-10): colour per pixel
-  from fields continuous across faces, triangles and junctions (chain + s, per-arm weights easing to an exact
-  hand-off as in form B, a pulse's travel distance continuous through the junction), never per face or
-  triangle. Gate: a seam test sampling section blends and pulses across every face edge, triangle edge and
-  junction for steps and kinks, plus K1244's sheets (K1250).
 - **K1283** · Redesign junctions against form B: after K1279 every crossing that still differs from form B
   sits at a junction (the 25 worst, e.g. muse_hash x77 846 px): form B blends the edges softly where threads
   meet, the redesign draws hard lines. Census k1279_census.ts; crops
