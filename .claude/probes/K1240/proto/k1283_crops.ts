@@ -8,6 +8,8 @@
 // error exceeds before's (red) or before's exceeds after's (blue).
 // --dbg adds a panel: after with the centrelines (grey), the arc pieces (orange), and per corner
 // V (blue), Q (magenta) and the arc ends TA/TB (green); and prints the corners within the crop.
+// --b0=s2 takes "before" from k1283s2_before_outline.ts (src's outline.ts at master c3d7ad32,
+// stage 1's result: K1283 stage 2's before) instead of 8f7004bf.
 import { writeFileSync, readFileSync, readdirSync } from "node:fs";
 import { gunzipSync } from "node:zlib";
 import { join, dirname } from "node:path";
@@ -15,7 +17,8 @@ import { fileURLToPath } from "node:url";
 import { deflateSync } from "node:zlib";
 import { FormB } from "../../../../src/render/field/form_b";
 import * as O from "./outline";
-import * as B0 from "./k1283_before_outline";
+import * as B0a from "./k1283_before_outline";
+import * as B0s2 from "./k1283s2_before_outline";
 import * as D from "./draw";
 import { loadScene, rScene, rasterR, type RScene } from "./k1279_census";
 
@@ -24,7 +27,7 @@ const pos = args.filter((a) => !a.startsWith("--"));
 const opt = (k: string): string | undefined => args.find((a) => a.startsWith(`--${k}=`))?.slice(k.length + 3);
 const out = pos[0];
 const specs = pos.slice(1).map((s) => { const [scene, x, y, label] = s.split(":"); return { scene, x: +x, y: +y, label }; });
-const ppu = Number(opt("ppu") ?? 280); const Wd = Number(opt("w") ?? 1.6); const withErr = args.includes("--err"); const withDbg = args.includes("--dbg");
+const B0 = (opt("b0") === "s2" ? B0s2 : B0a) as typeof B0a; const ppu = Number(opt("ppu") ?? 280); const Wd = Number(opt("w") ?? 1.6); const withErr = args.includes("--err"); const withDbg = args.includes("--dbg");
 const P = Math.round(Wd * ppu); const GAP = 6; const nPan = 3 + (withErr ? 2 : 0) + (withDbg ? 1 : 0);
 const Wt = nPan * P + (nPan - 1) * GAP; const Ht = specs.length * P + (specs.length - 1) * GAP;
 const img = new Uint8Array(Wt * Ht * 3).fill(128);
