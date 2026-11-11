@@ -533,10 +533,10 @@ Next free ID: K1310.
 - **K1291** · rp=outline in the app (K1240 S4) lacks the app palette and hides the overlays drawn inside the
   base layer (trail, fog, reveal masks, pulses, gameplay paint); markers, plucks and the HUD still draw (S4
   handoff in docs/design/K1240_s4_app.md on worktree-agent-a5393aa1f25f2ff33)
-  - owner: agent `a06c167761380dff5` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-11 06:24, 2 h cap ~08:24)
-  - branch: `worktree-agent-a06c167761380dff5`, worktree `.claude/worktrees/agent-a06c167761380dff5`; last commit: `677d8053`
+  - owner: nobody since 2026-11-11 07:55 (merged; agent `a06c167761380dff5` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `00317716`
   - evidence: `.claude/probes/K1291/`
-  - next: Stage 3 running: corner specks (arc pieces read chain B too), main frame back to s1 cost, then the rainbow front swell
+  - next: Stage 3 merged: corner specks gone from the burn/rainbow fronts (muse burn f50 1989 -> 8), the rainbow head swells as today (f20 IoU .65-.75 -> .97-.99), main frame back at s1 cost when nothing reveals (rest 5.8, drag 8.5 ms). Stage 4: f100 corner specks (ring burn/rainbow 332, muse rainbow f85 186), the rainbow colour order (outline purple-first vs today red-first) and a dark notch at the rainbow head (crops/muse_trace-rainbow_f50_0_front.png), the threads start-marker glow, muse comet border fade (K1308); check the swell over crossings behind the front. Then the tied-run alpha for K1283 (band_gpu.ts) is free
   - brief: `docs/design/K1291_s3.md`
 
 ## Next, in order
