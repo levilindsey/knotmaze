@@ -338,6 +338,7 @@ function footInWindowInto(p: Poly, px: number, py: number, lo: number, hi: numbe
 // moved).
 const KF_EB = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.K16_EB !== "0"; // s16 experiment switch: K16_EB=0 turns the END arms' extension-foot blend off
 const KF_TS = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.K16_TS !== "0"; // s16 experiment switch: K16_TS=0 turns K1280's tie spread (spreadTiesC) off
+const KF_PS = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.K16_PS === "1"; // s16 experiment switch: K16_PS=1 adds the s distance to addPointAtC's nearest-segment pick
 function footBlendInto(p: Poly, px: number, py: number, k: number, t: number, out: Float64Array, loc = false): boolean {
   if (p.nseg < 2 || k < 0 || k >= p.nseg) return false;
   let moved = false;
@@ -4361,7 +4362,15 @@ function addPointAtC(C: FCache, pi: number, side: number, x: number, y: number, 
     let t = l2 > 0 ? ((x - ax) * ex + (y - ay) * ey) / l2 : 0;
     t = Math.min(1, Math.max(0, t));
     const dx = ax + ex * t - x; const dy = ay + ey * t - y;
-    const d = Math.sqrt(dx * dx + dy * dy);
+    let d = Math.sqrt(dx * dx + dy * dy);
+    if (KF_PS) {
+      // K1247 s16: plus the s distance from the foot, so a point on a
+      // fold (two branches of the border within 0.01 px, muse_hash c25)
+      // keeps the branch its s names instead of flipping with the jitter.
+      let ds = B.bc[i] + (B.bc[i + 1] - B.bc[i]) * t - target;
+      if (p.closed && p.len > 0) { ds = ((ds % p.len) + p.len) % p.len; if (ds > p.len / 2) ds -= p.len; }
+      d += Math.abs(ds);
+    }
     if (d < bestD) { bestD = d; bestSeg = i; bestT = t; }
   }
   addInsert(C, b, bestSeg, bestT, x, y, refId);
@@ -4460,7 +4469,7 @@ function mergeBorders(C: FCache): void {
         const lx = XY[2 * (out - 1)]; const ly = XY[2 * (out - 1) + 1];
         const dx = insX[id] - lx; const dy = insY[id] - ly;
         if (tt <= 1e-9 || dx * dx + dy * dy < 1e-24) {
-          if (refId >= 0) { C.refFinal[refId] = out - 1; C.refS[refId] = SS[out - 1]; }
+          if (refId >= 0) { C.refFinal[refId] = out - 1; C.refS[refId] = SC[out - 1]; }
           continue;
         }
         const s = lerpS(p, BS[i], BS[i + 1], tt);
@@ -4468,7 +4477,12 @@ function mergeBorders(C: FCache): void {
         SC[out] = s + (BC[i] - BS[i]) + (BC[i + 1] - BS[i + 1] - (BC[i] - BS[i])) * tt;
         CXY[2 * out] = BFX[i] + (BFX[i + 1] - BFX[i]) * tt;
         CXY[2 * out + 1] = BFY[i] + (BFY[i + 1] - BFY[i]) * tt;
-        if (refId >= 0) { C.refFinal[refId] = out; C.refS[refId] = s; }
+        // K1247 s16: a ref's s is its continuous s (sc), the domain the end
+        // lookup searched (inside a K1280 tie run the BS lerp is the run's
+        // one s_v, not where the ref sits along it). Neutral on every bar;
+        // muse_hash cyc10 #200 is a different cause, addPointAtC's
+        // nearest-segment pick flipping across a fold (K16_PS).
+        if (refId >= 0) { C.refFinal[refId] = out; C.refS[refId] = SC[out]; }
         out++;
       }
       ii = gEnd;
@@ -4478,14 +4492,14 @@ function mergeBorders(C: FCache): void {
       out++;
       for (let q = 0; q < pendN; q++) {
         const refId = insRef[pend[q]];
-        if (refId >= 0) { C.refFinal[refId] = out - 1; C.refS[refId] = SS[out - 1]; }
+        if (refId >= 0) { C.refFinal[refId] = out - 1; C.refS[refId] = SC[out - 1]; }
       }
     }
     // Inserts on the last segment group (never visited) attach to the
     // last point, as in the builder's unresolved-ref fallback.
     for (let jj = ii; jj < m; jj++) {
       const refId = insRef[sorted[jj]];
-      if (refId >= 0) { C.refFinal[refId] = out - 1; C.refS[refId] = SS[out - 1]; }
+      if (refId >= 0) { C.refFinal[refId] = out - 1; C.refS[refId] = SC[out - 1]; }
     }
     B.nf = out;
     B.segReg = growI(B.segReg, Math.max(1, out));
