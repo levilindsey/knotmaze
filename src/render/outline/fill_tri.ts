@@ -84,8 +84,14 @@ export const DISK_M = 32;
 export const DISK_R = 4;
 /** K1283 s7: a round end is form B's end cap: centred at c', keyed by form
  *  B's cone about the segment term -> c', painting its own arm's slot at s_E
- *  (false: s6's disk at J.c under the fan, with the fan's paint). */
-export const DISK_OWN = true;
+ *  (false: s6's disk at J.c under the fan, with the fan's paint).
+ *  OFF since s7's guards (2026-11-11): with the fan's field over the fan
+ *  (DISK_RAMP Infinity) the app seam over 1/255 is 6534 against s6's 5577
+ *  and steppier than form B by > 1 is 624 against 459, for a round-end colour
+ *  gain of 31891 -> 31763 err*v px (17 worse by > 1 px); with its own slot
+ *  the colour gains 31891 -> 29713 but the seam goes to 25359 / 11227.
+ *  K1283_s7.md's handoff has the numbers and what is left. */
+export const DISK_OWN = false;
 /** K1283 s7: where form B's through chain is on top of the round end (its
  *  margin is negative), the disk's key falls this many times faster, so the
  *  through chain's strip shows there even where its own key sags near the
