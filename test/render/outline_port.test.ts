@@ -51,8 +51,13 @@ type Pin = { f0: { table: string; paint: string; band: string }; f1: { table: st
 // K1283 s6 re-pinned on purpose (2026-11-11): a round end is DISK_R rings, keyed just under
 // its fan and sampling the fan's paint where it lies over it, so only the paint digests
 // moved (table and band unchanged). Checked against form B (seam --fbstep, census, sweep).
+// K1283 s7 re-pinned on purpose (2026-11-11): the round end paints form B's end cap at c'
+// (the disk's z follows the end chain's depth to c', its key is the through arms' margin
+// over the fan; it paints the fan's field over the fan, its own slot off it), so only the
+// paint digests moved. Checked with the colour census (k1283s7_colour.ts), census, sweep
+// and seam.
 const PINS: Record<string, Pin> = {
-  ring: { f0: { table: "29eeb5c5be39c50d", paint: "b5c1043d062a9900", band: "252cbf97f524511a" }, f1: { table: "01799d25e21091e9", paint: "84a65127f4c3979c", band: "569c618ef0f7075f" } },
+  ring: { f0: { table: "29eeb5c5be39c50d", paint: "7cccb6ed3f7da157", band: "252cbf97f524511a" }, f1: { table: "01799d25e21091e9", paint: "68b085723c710900", band: "569c618ef0f7075f" } },
   g41_ring_tw42: { f0: { table: "41e36980cea61e26", paint: "d396f4634638199e", band: "331b5a8c6fb97028" }, f1: { table: "4a97e69c9a8ecb4e", paint: "2a0bf5486b003cc4", band: "6d0d5de16c791081" } },
 };
 

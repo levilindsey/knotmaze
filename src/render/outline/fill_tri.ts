@@ -92,6 +92,16 @@ export const DISK_OWN = true;
  *  mouth (about 0.2 under its cone at muse_hash j29 and j133). 1, 10, 40 on
  *  muse_hash j29 / j44 / j133: +15 / +10 / +10, +7 / +7 / +5, +5 / +6 / +4 px. */
 export const DISK_DROP = 40;
+/** K1283 s7: over its fan, the round end's paint runs from the fan's field
+ *  where its margin is 0 (its seam with the fan) to its own slot where the
+ *  margin reaches DISK_RAMP zt (about DISK_RAMP h from the through chain's
+ *  side). Infinity = the fan's field everywhere over the fan, own slot only
+ *  off it. Measured on muse_hash (app seam edges over 1/255 / fbstep steppier
+ *  by > 1; two-scene round-end colour err*v, before 12117): own slot (0)
+ *  4419 / 1700, 11192; ramp 0.5 4042 / 1474, 11458; Infinity 1923 / 292,
+ *  12012 (s6 1700 / 246). The own slot's colour gain needs a seam-free
+ *  boundary first (form B steps far less there): left open. */
+export const DISK_RAMP = Infinity;
 
 export interface StripItem { kind: "strip"; iv: number; pi: number; ghost: boolean; N: number; base: number; pL: number; pR: number }
 export interface CapItem { kind: "cap"; pi: number; piece: number; atEnd: boolean; base: number }
@@ -793,6 +803,15 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
           const lc = 1 - la - lb;
           if (la < -1e-9 || lb < -1e-9 || lc < -1e-9) continue;
           if (key[h] > -999 && key[b] > -999 && key[c] > -999) kB = la * key[h] + lb * key[b] + lc * key[c];
+          // DISK_RAMP: from the fan's field at the seam (margin 0) to its own slot.
+          const a = !(DISK_RAMP > 0) ? 1 : DISK_RAMP === Infinity ? 0 : Math.min(1, Math.max(0, mD / (DISK_RAMP * zt)));
+          if (a < 1) for (let k = 0; k < SLOTS; k++) {
+            const wf = la * w4[SLOTS * h + k] + lb * w4[SLOTS * b + k] + lc * w4[SLOTS * c + k];
+            const sf = la * s4[SLOTS * h + k] + lb * s4[SLOTS * b + k] + lc * s4[SLOTS * c + k];
+            if (k !== it.arm) { w4[o + k] = (1 - a) * wf; s4[o + k] = sf; continue; }
+            const wo = a + (1 - a) * wf; w4[o + k] = wo;
+            s4[o + k] = wo > 1e-9 ? (a * sOwn + (1 - a) * wf * sf) / wo : sf;
+          }
           break;
         }
         key[v] = kB + mD;
