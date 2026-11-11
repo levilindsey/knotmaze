@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1303.
+Next free ID: K1305.
 
 ## Waiting on Levi
 
@@ -1801,6 +1801,11 @@ Every other item below waits on the trigger it names.
 - **K1302** · scripts/phone_pass idle_wait.ps1 exits at once with 'no phone connected' when the wireless adb
   link has dropped though the phone is up; it could adb connect once before giving up (K156 round 2026-11-10d
   rerun handoff, docs/design/K156.md)
+- **K1303** · K1283 s6: round-end seams steeper than form B 459 vs its 449 (muse_hash disk|junc 37, disk|tail
+  27, steps of 1-4/255); DISK_M 64 gives 452 at +7% fill time (docs/design/K1283_s6.md handoff)
+- **K1304** · def gain hold max 3.96 at f35 (20.023, 18.999), region 672, since K1283 s5 (master 3.34 before);
+  whether the fold cut causes it is untested, the no-cut gain run hung (docs/design/K1283_s6.md handoff,
+  k1283s6_gainloc.ts)
 
 ## Approved, to schedule (2026-10-11)
 
