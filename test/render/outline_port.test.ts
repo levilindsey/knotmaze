@@ -38,9 +38,13 @@ type Pin = { f0: { table: string; paint: string; band: string }; f1: { table: st
 // so the tails' points moved; g41_ring_tw42's tails are all unburied (alpha 1),
 // so only its table (the alpha arrays and the fill stretch) moved. The fill
 // keeps stage 2's cut (piece.fpts), so every paint digest is back to stage 2's.
+// K1283 s4 re-pinned on purpose: fill_tri paints a round end at every end arm
+// (DiskItem, decided in fillStructure), so every paint digest moved; the tail's
+// band walks on past X's arm start onto X's other arm and wherever it lies in
+// X's tube (wCut 0, tailAlpha fades it), so the tails' points (table, band) moved.
 const PINS: Record<string, Pin> = {
-  ring: { f0: { table: "c889ab688dbaf96a", paint: "b8170b0df0a1b9e8", band: "816a44d69ee052dd" }, f1: { table: "17e6147e61e758b3", paint: "d85300304eb3c41f", band: "9d3f93d7f1284139" } },
-  g41_ring_tw42: { f0: { table: "c19bec9cad36772e", paint: "4297de14331c8db3", band: "28b346eaaf964948" }, f1: { table: "a880ab3f2faabad3", paint: "e213861f4ff64060", band: "819dbecf09c86769" } },
+  ring: { f0: { table: "c917ccdc552f8463", paint: "216c6fa053bf3df9", band: "194748672a6f5650" }, f1: { table: "38b74a6dd2fad5e3", paint: "55431978a4aee4f1", band: "5674fd716ab2b482" } },
+  g41_ring_tw42: { f0: { table: "2524c44017ad0553", paint: "49144461a5527443", band: "769ea88eb2053a7a" }, f1: { table: "2e55c75d81fd5aaf", paint: "664be0924976288d", band: "8ff65c6af6674be2" } },
 };
 
 // The tool's second frame: every chain point rotated 0.3 rad and moved.
