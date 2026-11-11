@@ -525,10 +525,10 @@ Next free ID: K1310.
 - **K1283** · Junction borders of the outline (rp=outline) against form B. Stage 1 (3c8bd61e) fixed the concave
   corner bites (census 27528 -> 17756 px); left: the failed corners and the end-arm round ends (x47, x73,
   x349). Full text in docs/ledger_notes.md
-  - owner: agent `aaccd3d0d6492246f` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-11 05:15, 2 h cap ~07:15)
-  - branch: `worktree-agent-aaccd3d0d6492246f`, worktree `.claude/worktrees/agent-aaccd3d0d6492246f`; last commit: `f88cf62f`
+  - owner: nobody since 2026-11-11 06:35 (merged; agent `aaccd3d0d6492246f` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `73f695ca`
   - evidence: `.claude/probes/K1240/out/k1283s9/`
-  - next: Stage 9 running: seams back to <= 5577/459 without switching off the cut mirror or the burial, then j59 cut-point ink and x134 square end (outline.ts, draw.ts, fill_tri.ts)
+  - next: Stage 9 merged: seams over 1/255 5773 -> 5411, steeper than form B 480 -> 444, colour census 31789 -> 23339, census 4401 -> 4400, sweep j59 834 -> 730 (strip and tail foot s in fill_tri.ts, runEndFade for untied runs); but the worker frame on def +21% (strip foot: ~27k nearest-point searches a frame). Stage 10: the worker frame back within 3% of f88cf62f with the seam bars holding (warm-start each column from the previous nearest segment, or search only rows near chevrons/cut folds/tails); then g41_user_tw64 j8/j9 arm-root wedges (+26/+28 px). Tied-run alpha (j59 run 379, x134 run 279, x77, x304) needs band_gpu.ts: after K1291 s3
   - brief: `docs/design/K1283_s9.md`
 - **K1291** · rp=outline in the app (K1240 S4) lacks the app palette and hides the overlays drawn inside the
   base layer (trail, fog, reveal masks, pulses, gameplay paint); markers, plucks and the HUD still draw (S4
