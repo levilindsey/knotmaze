@@ -44,9 +44,13 @@ type Pin = { f0: { table: string; paint: string; band: string }; f1: { table: st
 // X's tube (wCut 0, tailAlpha fades it), so the tails' points (table, band) moved.
 // K1283 s4 (blots, 2f091862): the band's alpha is read at the point it draws, 0 outside
 // X's tube and on E's side within X's border band, so the tails moved again.
+// K1283 s5 re-pinned on purpose (2026-11-11): a fold away from an arm root is cut into
+// form B's chevron (cutFoldsC: the border's points, so the table, the fill and its paint
+// moved), and the band's side gate fades by 1 - ramp instead of dropping to 0 outside X's
+// arm stretch (the tails' alpha: table and band). Checked against form B (census, sweep).
 const PINS: Record<string, Pin> = {
-  ring: { f0: { table: "5c46edcbfe04c56c", paint: "216c6fa053bf3df9", band: "6f5e9a670a61d54a" }, f1: { table: "8f2cea7b62d0aab0", paint: "55431978a4aee4f1", band: "fb7f1766e8127f86" } },
-  g41_ring_tw42: { f0: { table: "3433f810a896d9c6", paint: "49144461a5527443", band: "147b6f6af7c266b4" }, f1: { table: "fc7e894794410749", paint: "664be0924976288d", band: "a3b3ef57c9e4c38c" } },
+  ring: { f0: { table: "29eeb5c5be39c50d", paint: "7fc049018c431b60", band: "252cbf97f524511a" }, f1: { table: "01799d25e21091e9", paint: "3b587b5e00665c2b", band: "569c618ef0f7075f" } },
+  g41_ring_tw42: { f0: { table: "41e36980cea61e26", paint: "05abe6d97a3e8fe4", band: "331b5a8c6fb97028" }, f1: { table: "4a97e69c9a8ecb4e", paint: "40b51a4c1de73d66", band: "6d0d5de16c791081" } },
 };
 
 // The tool's second frame: every chain point rotated 0.3 rad and moved.
