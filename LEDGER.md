@@ -533,11 +533,11 @@ Next free ID: K1310.
 - **K1291** · rp=outline in the app (K1240 S4) lacks the app palette and hides the overlays drawn inside the
   base layer (trail, fog, reveal masks, pulses, gameplay paint); markers, plucks and the HUD still draw (S4
   handoff in docs/design/K1240_s4_app.md on worktree-agent-a5393aa1f25f2ff33)
-  - owner: nobody since 2026-11-11 06:23 (merged; agent `a72915389c5d50e4a` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `f6e89576`
-  - evidence: `.claude/probes/K1291/out/s2/`
-  - next: Stage 2 merged (rp=outline draws the appearance and thread reveals; most cases at s1 at-rest IoU from f50). Stage 3: arc pieces read only chain A reveal, so dashed border specks show ahead of the front at junction corners (band_gpu: carry chain B and sB per vertex, draw where both arms are revealed; same for xp=threads); then the main frame (+2 ms at rest 8.0-8.4 vs 6.0-6.6, mid-drag 11.1-14.4 vs 9.0-11.7: time each program, a no-reveal variant); then the rainbow front swell (IoU 0.65-0.78 at f20)
-  - brief: `docs/design/K1291_s2.md`
+  - owner: agent `a06c167761380dff5` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-11 06:24, 2 h cap ~08:24)
+  - branch: `worktree-agent-a06c167761380dff5`, worktree `.claude/worktrees/agent-a06c167761380dff5`; last commit: `677d8053`
+  - evidence: `.claude/probes/K1291/`
+  - next: Stage 3 running: corner specks (arc pieces read chain B too), main frame back to s1 cost, then the rainbow front swell
+  - brief: `docs/design/K1291_s3.md`
 
 ## Next, in order
 
