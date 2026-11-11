@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1289.
+Next free ID: K1290.
 
 ## Waiting on Levi
 
@@ -763,7 +763,7 @@ Every other item below waits on the trigger it names.
 - **K1283** · Redesign junctions against form B: after K1279 every crossing that still differs from form B
   sits at a junction (the 25 worst, e.g. muse_hash x77 846 px): form B blends the edges softly where threads
   meet, the redesign draws hard lines. Census k1279_census.ts; crops
-  .claude/probes/K1240/out/k1279/crops/worst10_{a,b}.png. The fill half, K1277's end-arm sliver (through-thread colour over the end thread's round end, muse_hash x73 x47 x292 x177), goes with K1278 stage 1
+  .claude/probes/K1240/out/k1279/crops/worst10_{a,b}.png. The fill half, K1277's end-arm sliver (through-thread colour over the end thread's round end, muse_hash x73 x47 x292 x177), went to K1278 stage 1 (9f6a38f2), which fixed its colour; its geometry stays here: the end thread's round end and tail do not cover where form B shows it (x47, x73, x349; the stage 1 handoff in docs/design/K1278_paint.md)
 
 ## Residuals (known, not fixed)
 
@@ -1768,6 +1768,11 @@ Every other item below waits on the trigger it names.
   0.01 px apart on a fold (muse_hash cyc10 #200, 1.311 px); union drawn > 0.25 px went 4/14/5 -> 2/16/8
   (still/cyc10/cyc18). The branch should come from structure; K16_PS=1 halves it but adds hits elsewhere (s16
   handoff)
+- **K1289** · K1278 paint residuals (9f6a38f2): 41/90/74 edge seams over 1/255 (app/step/kink), mostly
+  junction-to-strip and junction-to-tail (tails carry no neighbour slots); a ghost-strip seam on muse_hash
+  (23.218, 26.683) reaches 79/255; thin striped slivers at hub edges show in
+  out/k1278/crops/k1278_worst_junctions.png; 7 junction windows steppier than form B; the paint's thread term
+  is worse than master at 24 crossings (muse_hash x71, x149; g41_def_tw64 x191, x71)
 
 ## Approved, to schedule (2026-10-11)
 
