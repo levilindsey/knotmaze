@@ -35,7 +35,11 @@ const CASES = mode === "palette"
     { name: "muse_segments", link: MUSE }, { name: "muse_strands", link: `${MUSE}&cs=strands` },
     { name: "ring_segments", link: RING }, { name: "ring_strands", link: `${RING}&cs=strands` },
   ]
-  : [{ name: "def_play", link: DEF }];
+  : [
+    { name: "def_gold", link: DEF, toggle: "paint" },
+    { name: "def_trail", link: `${DEF}&pv=trail`, toggle: "paint" },
+    { name: "def_fog", link: `${DEF}&xp=fog`, toggle: "fog" },
+  ];
 const cases = only.length ? CASES.filter((c) => only.includes(c.name)) : CASES;
 
 const profileDir = join(tmpdir(), `k1291-ab-${process.pid}`);
@@ -93,6 +97,8 @@ try {
       r.advanceClocks = () => {};
       r.paintClock = 100;
       r.pulseBorn = 0;
+      const bg = window.__knotBackgroundLayer?.();
+      if (bg) bg.tick = () => false;
       window.__knotLoop?.({ continuous: true });
       window.__knotOutline.resend();
       return f;
@@ -123,10 +129,16 @@ try {
       await sleep(200);
       return shot(page);
     };
-    const paintOn = (on) => page.evaluate(async (v) => {
+    const paintOn = (on) => page.evaluate(async (v, kind) => {
+      if (kind === "fog") {
+        const F = window.__knotFabricRenderer();
+        if (F.fogSprite) F.fogSprite.renderable = !!v;
+        if (F.fogBackdrop?.mesh) F.fogBackdrop.mesh.renderable = !!v;
+        return;
+      }
       const pm = await import("/src/render/paint_model.ts");
       pm.knotUniformValues().uKPaint[0] = v;
-    }, on ? 1 : 0);
+    }, on ? 1 : 0, cs.toggle);
     const view = () => page.evaluate(() => window.__knotView());
 
     if (mode === "palette") {
@@ -138,6 +150,28 @@ try {
         const ps = window.__knotPS();
         const v = window.__knotView();
         const out = [];
+        // Screen segments of every chain; clear() = no segment of another
+        // chain (or of this chain more than 6 slots away) within R px.
+        const R = 14;
+        const segs = [];
+        for (let c = 0; c < ps.chains.length; c++) {
+          const ch = ps.chains[c];
+          for (let k = 0; k + 1 < ch.length; k++) {
+            const p = ch[k], q = ch[k + 1];
+            segs.push([c, k, ps.positions[2 * p] * v.s + v.x, ps.positions[2 * p + 1] * v.s + v.y, ps.positions[2 * q] * v.s + v.x, ps.positions[2 * q + 1] * v.s + v.y]);
+          }
+        }
+        const clear = (c, m, x, y) => {
+          const n = ps.chains[c].length;
+          for (const [sc2, k, ax, ay, bx, by] of segs) {
+            if (sc2 === c) { const dk = Math.abs(k - m); if (Math.min(dk, n - dk) <= 6) continue; }
+            const dx = bx - ax, dy = by - ay, L = dx * dx + dy * dy;
+            const tt = L > 0 ? Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / L)) : 0;
+            const ex = ax + tt * dx - x, ey = ay + tt * dy - y;
+            if (ex * ex + ey * ey < R * R) return false;
+          }
+          return true;
+        };
         for (let c = 0; c < sc.chains.length; c++) {
           const n = sc.chains[c].nCtrl;
           const b = sc.idxBase[c];
@@ -155,16 +189,31 @@ try {
           }
           for (const [a, e, id] of groups) {
             if (e - a < 3) continue;
-            const m = Math.floor((a + e) / 2) % n;
-            const p = ps.chains[c][m];
-            const x = ps.positions[2 * p], y = ps.positions[2 * p + 1];
-            out.push({ c, run: id, slots: e - a, sx: x * v.s + v.x, sy: y * v.s + v.y });
+            // The slot nearest the middle whose centre is clear of every
+            // other thread (a run's middle can sit under a crossing).
+            const mid = (a + e - 1) / 2;
+            const order = [];
+            for (let s = a + 1; s < e - 1; s++) order.push(s);
+            order.sort((u, w) => Math.abs(u - mid) - Math.abs(w - mid));
+            let pick = null;
+            for (const s of order) {
+              const m = s % n;
+              const p = ps.chains[c][m];
+              const x = ps.positions[2 * p] * v.s + v.x, y = ps.positions[2 * p + 1] * v.s + v.y;
+              if (clear(c, m, x, y)) { pick = { m, x, y }; break; }
+            }
+            if (!pick) { out.push({ c, run: id, slots: e - a, blocked: true }); continue; }
+            out.push({ c, run: id, slots: e - a, slot: pick.m, sx: pick.x, sy: pick.y });
           }
         }
         return out;
       });
-      await put("out", await look(true));
-      await put("today", await look(false));
+      const shO = await look(true), shT = await look(false);
+      writeFileSync(join(outDir, `${cs.name}_outline.png`), Buffer.from(shO, "base64"));
+      writeFileSync(join(outDir, `${cs.name}_today.png`), Buffer.from(shT, "base64"));
+      writeFileSync(join(outDir, `${cs.name}_pts.json`), JSON.stringify(pts));
+      await put("out", shO);
+      await put("today", shT);
       rec.palette = await ana.evaluate((pts, DSF) => {
         const A = window.imgs.today, B = window.imgs.out;
         const mean = (I, x, y) => {
@@ -178,7 +227,9 @@ try {
         const diffs = [];
         const worst = [];
         let off = 0;
+        let blocked = 0;
         for (const p of pts) {
+          if (p.blocked) { blocked++; continue; }
           const x = Math.round(p.sx * DSF), y = Math.round(p.sy * DSF);
           if (x < 2 || y < 2 || x >= A.w - 2 || y >= A.h - 2) { off++; continue; }
           const a = mean(A, x, y), b = mean(B, x, y);
@@ -187,9 +238,9 @@ try {
           worst.push({ ...p, today: a.map(Math.round), outline: b.map(Math.round), d: Math.round(dd * 10) / 10 });
         }
         worst.sort((u, v) => v.d - u.d);
-        return { runs: pts.length, offscreen: off, diff: window.q(diffs), over8: diffs.filter((t) => t > 8).length, over3: diffs.filter((t) => t > 3).length, worst: worst.slice(0, 8) };
+        return { runs: pts.length, blocked, offscreen: off, diff: window.q(diffs), over8: diffs.filter((t) => t > 8).length, over3: diffs.filter((t) => t > 3).length, worst: worst.slice(0, 8) };
       }, pts, DSF);
-      console.log(`${cs.name}: runs ${rec.palette.runs}, diff median ${rec.palette.diff.median?.toFixed(2)} p99 ${rec.palette.diff.p99?.toFixed(2)} max ${rec.palette.diff.max?.toFixed(2)}, >3: ${rec.palette.over3}, >8: ${rec.palette.over8}, errors ${rec.errors.length}`);
+      console.log(`${cs.name}: runs ${rec.palette.runs} (blocked ${rec.palette.blocked}, off ${rec.palette.offscreen}), diff median ${rec.palette.diff.median?.toFixed(2)} p99 ${rec.palette.diff.p99?.toFixed(2)} max ${rec.palette.diff.max?.toFixed(2)}, >3: ${rec.palette.over3}, >8: ${rec.palette.over8}, errors ${rec.errors.length}`);
     } else {
       // Overlay states: greedy fewest-move choices.
       const fewest0 = await page.evaluate(() => window.__knotFabric().fewest);
@@ -237,8 +288,11 @@ try {
           const foot = new Uint8Array(W * H);
           for (let p = 0; p < W * H; p++) {
             const i = 4 * p;
-            const inT = dmax(I.todayOff, I.bg, i) > MASK || dmax(I.todayOn, I.bg, i) > MASK;
-            const inO = dmax(I.outOff, I.bg, i) > MASK || dmax(I.outOn, I.bg, i) > MASK;
+            // Inside the thread: the overlay-off frame differs from the
+            // threads-hidden frame and is bright (no border, no shadow).
+            const br = (P) => Math.max(P.d[i], P.d[i + 1], P.d[i + 2]) > 80;
+            const inT = dmax(I.todayOff, I.bg, i) > MASK && br(I.todayOff);
+            const inO = dmax(I.outOff, I.bg, i) > MASK && br(I.outOff);
             if (!(inT && inO)) continue;
             const fT = dmax(I.todayOn, I.todayOff, i) > FOOT;
             const fO = dmax(I.outOn, I.outOff, i) > FOOT;
