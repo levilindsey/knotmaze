@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1298.
+Next free ID: K1301.
 
 ## Waiting on Levi
 
@@ -1788,6 +1788,13 @@ Every other item below waits on the trigger it names.
   on def from about 21 to 24.5 ms; a cheaper search is one of K1247's cuts (docs/design/K1278_s2.md handoff)
 - **K1296** · The outline's GPU paint vs its CPU twin was not re-measured on src after K1278 s2
   (docs/design/K1278_s2.md handoff)
+- **K1298** · Outline (rp=outline) def j45: a soft under-pass form B draws faded stays hard after K1283 s3
+  (3237 -> 3240 px); not a tail, the drawing piece unknown (docs/design/K1283_s3.md handoff;
+  .claude/probes/K1240/out/k1283s3/crops/spots_final.png row 6)
+- **K1299** · Outline caps draw at alpha 1: form B fades none of the 54 caps in the 12 census scenes today
+  (k1283s3_capcmp.ts), but a buried cap would draw full ink (K1283 s3 handoff)
+- **K1300** · K1278's seam tool: its frozen reference copy (k1278_base_fill.ts) reads the tails' band points
+  since K1283 s3 lengthened them; point it at the fill points if that column matters (K1283 s3 handoff)
 
 ## Approved, to schedule (2026-10-11)
 
