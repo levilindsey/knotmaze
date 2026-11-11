@@ -385,16 +385,27 @@ export function buildDrawData(table: OutlineTable, scene: SceneIn): DrawData {
         const ax = p.pts[2 * i]; const ay = p.pts[2 * i + 1]; const bx = p.pts[2 * i + 2]; const by = p.pts[2 * i + 3];
         const ia = prevI; const ib = inn(i + 1); prevI = ib;
         const sa = sv[i]; const sb = sa + dSC(C, sa, sv[i + 1]);
-        const k = near(sa) || near(sb) ? Math.max(1, Math.ceil(Math.hypot(bx - ax, by - ay) / SUB)) : 1;
-        const tiedSeg = k > 1 || near(sa) || near(sb);
+        const tiedSeg = near(sa) || near(sb);
+        // Near a pass the segment is split where it crosses the lines
+        // s = m SUB of its own chain (not into equal parts: a count that
+        // follows the length would move every sample when it steps, while a
+        // grid line enters a segment at one of its ends, on a vertex that is
+        // already there, so the interpolated fade moves continuously).
+        const ts: number[] = [0];
+        if (tiedSeg && Math.abs(sb - sa) > 1e-9) {
+          const lo = Math.min(sa, sb); const hi = Math.max(sa, sb);
+          const m0 = Math.floor(lo / SUB) + 1; const m1 = Math.min(Math.ceil(hi / SUB) - 1, m0 + 63);
+          for (let m = m0; m <= m1; m++) ts.push((m * SUB - sa) / (sb - sa));
+          if (sb < sa) ts.splice(1, ts.length - 1, ...ts.slice(1).reverse());
+        }
+        ts.push(1);
         // Near a pass the band is also split across its width (ROWS rows): the
         // alpha falls across the partner's border, which can cut the band at
         // any angle, and one outer/inner pair would interpolate the fade
         // into pixels the partner does not cover.
         const R = tiedSeg ? ROWS : 1;
         let prev: [number, number, number][] | null = null;
-        for (let q = 0; q <= k; q++) {
-          const t = q / k;
+        for (const t of ts) {
           const ox = ax + (bx - ax) * t; const oy = ay + (by - ay) * t;
           const ix = ia[0] + (ib[0] - ia[0]) * t; const iy = ia[1] + (ib[1] - ia[1]) * t;
           const s = sa + (sb - sa) * t;
