@@ -269,6 +269,7 @@ try {
         });
         await sleep(1500);
         const fab = await page.evaluate(() => { const f = window.__knotFabric(); return { head: f.head, solved: f.solved, pathLength: f.pathLength, taps: f.taps }; });
+        const rep0 = await page.evaluate(() => window.__knotOutline.stats.replies);
         await paintOn(true);
         await put("outOn", await look(true));
         await put("todayOn", await look(false));
@@ -278,6 +279,8 @@ try {
         await put("bg", await look(null));
         await paintOn(true);
         await look(true);
+        // The overlay toggles redrew from the cached build: no worker reply.
+        const rep1 = await page.evaluate(() => window.__knotOutline.stats.replies);
         const res = await ana.evaluate((FOOT, MASK, CROP, DSF) => {
           const I = window.imgs;
           const W = I.bg.w, H = I.bg.h;
@@ -320,8 +323,8 @@ try {
             spots: spots.map(([x, y]) => [Math.max(0, x / DSF - CROP / 2), Math.max(0, y / DSF - CROP / 2)]),
           };
         }, FOOT, MASK, CROP, DSF).catch((e) => ({ error: String(e) }));
-        rec.states.push({ state: st, moves: made, fab, ...res });
-        console.log(`${cs.name} ${st}: moves ${made} solved ${fab.solved}; footprint today ${res.footToday} outline ${res.footOutline} IoU ${res.iou?.toFixed(3)}; colour median ${res.colour?.median} p99 ${res.colour?.p99}; inside-both median ${res.insideBoth?.median} p99 ${res.insideBoth?.p99}`);
+        rec.states.push({ state: st, moves: made, fab, workerReplies: rep1 - rep0, ...res });
+        console.log(`${cs.name} ${st}: moves ${made} solved ${fab.solved}; worker replies over the toggles ${rep1 - rep0}; footprint today ${res.footToday} outline ${res.footOutline} IoU ${res.iou?.toFixed(3)}; colour median ${res.colour?.median} p99 ${res.colour?.p99}; inside-both median ${res.insideBoth?.median} p99 ${res.insideBoth?.p99}`);
         // Crop rows, re-drawn in-page as PNG data.
         const rowsB64 = await ana.evaluate(async (CROP, DSF, spots) => {
           const I = window.imgs; const W = I.bg.w, H = I.bg.h; const S = CROP * DSF;
