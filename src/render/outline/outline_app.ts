@@ -197,6 +197,15 @@ export function exLookGlsl(src: string): string {
   if (at < 0 || src.indexOf("kExploreLook(") > at) throw new Error("K1291: EXPLORE_LOOK_GLSL's shaped cut moved");
   return src.slice(0, at);
 }
+/** K1291 s2: kSmooth alone (the end looks need it; the band takes no gate
+ * lib), cut from today's text so the two never differ. */
+export const K_SMOOTH_GLSL = glslFn(PAINT_GATE_THREAD_GLSL, "highp float kSmooth(");
+export function glslFn(src: string, head: string): string {
+  const at = src.indexOf(head);
+  const end = at < 0 ? -1 : src.indexOf("\n}\n", at);
+  if (end < 0) throw new Error(`K1291: ${head} moved`);
+  return src.slice(at, end + 3);
+}
 const APP_FS = `#version 300 es
 precision highp float;
 precision highp int;
@@ -209,6 +218,7 @@ flat in ivec4 vRun;
 in vec4 vW;
 in vec4 vS;
 in vec2 vPos;
+uniform int uFp;
 out vec4 o;
 ${RV_MASK_GLSL}
 ${RV_FOOT_GLSL}
@@ -337,6 +347,11 @@ void main() {
   // blends only while those styles run (1 otherwise: the opaque write).
   float al = W > 0.0 ? A / W : 1.0;
   if (al <= 0.002) discard;
+  // Fade mode's two passes: the opaque fill writes depth, then the
+  // translucent fill blends over it without (a fading over pass must not
+  // punch through a seen under pass).
+  if (uFp == 1 && al < 0.999) discard;
+  if (uFp == 2 && al >= 0.999) discard;
   o = vec4(col * al, al);
 }`;
 /** The knot uniforms APP_FS reads (paint_model.ts knotUniforms). */
@@ -397,6 +412,33 @@ ${KNOT_UNIFORMS_GLSL}
 ${PAINT_CONST_GLSL}
 ${PAINT_DATA_GLSL}
 ${EXPLORE_VIS_GLSL}
+uniform float uPx;
+${K_SMOOTH_GLSL}
+${EX_LOOK_GLSL}
+// K1291 s2: a scene chain's visibility at s under the thread reveal (1
+// when it is off), with the fill's end look at the edge: where the look
+// hides a frontier's fill, its border and its crossings go too.
+highp float exVisS(int i, highp float s) {
+  if (!(uKExplore.x > 0.5) || i < 0) return 1.0;
+  highp vec4 cm = texelFetch(uCm, ivec2(i % ${RUN_MAP_W}, i / ${RUN_MAP_W}), 0);
+  if (cm.x < -0.5) return 1.0;
+  KChain c = kChain(int(cm.x + 0.5));
+  if (!(c.total > 0.0) || c.count < 2) return 1.0;
+  highp float a = cm.y + s * cm.z;
+  a = c.closed ? kWrap(a, c.total) : clamp(a, 0.0, c.total);
+  highp float v = kExploreAt(c, kCtrlOfArc(c, a));
+  int look = int(uKExplore.y + 0.5);
+  if (kExTip >= 0.0 && look >= 2) {
+    highp float exS = 0.0; highp float exLf = 0.0;
+    if (look != 2) {
+      highp float exA0 = kArcU(c, kExSolid);
+      exS = abs(kArcU(c, kExX) - exA0);
+      exLf = abs(kArcU(c, kExEnd) - exA0);
+    }
+    v = kExploreLook(look, v, kExTip, exS, exLf, 0.5, uPx / max(uKExplore.w, 1e-6), uPx);
+  }
+  return v;
+}
 const int TW = ${BAND_TEX_W};
 vec4 T(int q, int k) { int i = q * 4 + k; return texelFetch(uPass, ivec2(i % TW, i / TW), 0); }
 vec4 S(int i) { return texelFetch(uChain, ivec2(i % TW, i / TW), 0); }
@@ -410,19 +452,8 @@ void main() {
   if (rv && vCh >= 0 && rvMaskS(vCh, s) < 0.999) discard;
   // K1291 s2: under the thread reveal, the border shows with its OWN
   // thread (a hidden thread's border would cross a seen one's fill).
-  float exV = 1.0;
-  if (uKExplore.x > 0.5 && vCh >= 0) {
-    highp vec4 cm = texelFetch(uCm, ivec2(vCh % ${RUN_MAP_W}, vCh / ${RUN_MAP_W}), 0);
-    if (cm.x > -0.5) {
-      KChain c = kChain(int(cm.x + 0.5));
-      if (c.total > 0.0 && c.count >= 2) {
-        highp float a = cm.y + s * cm.z;
-        a = c.closed ? kWrap(a, c.total) : clamp(a, 0.0, c.total);
-        exV = kExploreAt(c, kCtrlOfArc(c, a));
-        if (exV <= 0.002) discard;
-      }
-    }
-  }
+  float exV = exVisS(vCh, s);
+  if (exV <= 0.002) discard;
   float keyC = vA.z - vA.y * uZt / uH;
   float seenO[4]; float seenS[4]; float seenL[4]; float seenF[4];
   int n = 0;
@@ -453,7 +484,10 @@ void main() {
     // The covering thread at its reveal width (unrevealed covers nothing).
     float hO = rv ? uH * rvMaskS(int(t1.w + 0.5), bs) : uH;
     if (!(best < hO)) continue;
-    float g = clamp((hO - best) / uW, 0.0, 1.0);
+    // ... and under the thread reveal, a hidden thread covers nothing.
+    float vO = exVisS(int(t1.w + 0.5), bs);
+    if (vO <= 0.002) continue;
+    float g = clamp((hO - best) / uW, 0.0, 1.0) * vO;
     float keyO = bz - best * uZt / uH;
     float f = 1.0 - g * sst(-uZt, uZt, keyO - keyC);
     int m = -1;
@@ -496,10 +530,10 @@ class OutlinePass {
   private uP: { mat: U; ks: U; runs: U };
   /** K1291: the app's fill (APP_FS) and its uniforms. */
   private app: WebGLProgram;
-  private uA: { mat: U; ks: U; map: U; px: U; tex: U[]; knot: U[]; ink: U; h: U; w: U; rv: U; cm: U; rvOn: U; chainS: U; ci: U };
+  private uA: { mat: U; ks: U; map: U; px: U; tex: U[]; knot: U[]; ink: U; h: U; w: U; rv: U; cm: U; rvOn: U; chainS: U; ci: U; fp: U };
   private runMap: WebGLTexture;
   hasMap = false;
-  private uB: { mat: U; chain: U; pass: U; ink: U; h: U; w: U; zt: U; rv: U; cm: U; rvOn: U; pre: U; tex: U[]; knot: U[] };
+  private uB: { mat: U; chain: U; pass: U; ink: U; h: U; w: U; zt: U; rv: U; cm: U; rvOn: U; pre: U; tex: U[]; knot: U[]; px: U };
   private chainTex: WebGLTexture;
   private passTex: WebGLTexture;
   /** K1291 s2: the reveal masks (paint.ts revealMaskTex), the per-scene-chain
@@ -553,6 +587,7 @@ class OutlinePass {
     this.app = mk(APP_VS, APP_FS, "app paint");
     const ua = (n: string): U => gl.getUniformLocation(this.app, n);
     this.uA = {
+      fp: ua("uFp"),
       mat: ua("uMat"),
       ks: ua("uKS"),
       map: ua("uRunMap"),
@@ -573,7 +608,7 @@ class OutlinePass {
     this.uB = {
       mat: ub("uMat"), chain: ub("uChain"), pass: ub("uPass"), ink: ub("uInk"), h: ub("uH"), w: ub("uW"), zt: ub("uZt"),
       rv: ub("uRv"), cm: ub("uCm"), rvOn: ub("uRvOn"), pre: ub("uPre"),
-      tex: APP_TEX.map(ub), knot: KNOT_NAMES.map(ub),
+      tex: APP_TEX.map(ub), knot: KNOT_NAMES.map(ub), px: ub("uPx"),
     };
     this.uC = gl.getUniformLocation(this.comp, "uC");
     const nb = (): WebGLBuffer => gl.createBuffer()!;
@@ -806,7 +841,15 @@ class OutlinePass {
         gl.uniform1i(this.uP.runs, 0);
       }
       gl.bindVertexArray(this.pVao);
-      gl.drawElements(gl.TRIANGLES, this.nIdx, gl.UNSIGNED_INT, 0);
+      if (fade && ap && this.hasMap) {
+        gl.uniform1i(this.uA.fp, 1);
+        gl.drawElements(gl.TRIANGLES, this.nIdx, gl.UNSIGNED_INT, 0);
+        gl.depthMask(false);
+        gl.uniform1i(this.uA.fp, 2);
+        gl.drawElements(gl.TRIANGLES, this.nIdx, gl.UNSIGNED_INT, 0);
+        gl.depthMask(true);
+        gl.uniform1i(this.uA.fp, 0);
+      } else gl.drawElements(gl.TRIANGLES, this.nIdx, gl.UNSIGNED_INT, 0);
       if (ap && this.hasMap) {
         for (let i = APP_TEX.length + 4; i >= 1; i--) {
           gl.activeTexture(gl.TEXTURE0 + i);
@@ -846,6 +889,7 @@ class OutlinePass {
           const v = ap.knot[KNOT_NAMES[i]];
           if (v && this.uB.knot[i]) gl.uniform4fv(this.uB.knot[i], v);
         }
+        gl.uniform1f(this.uB.px, ap.px);
         for (let i = 0; i < APP_TEX.length; i++) {
           gl.activeTexture(gl.TEXTURE4 + i);
           gl.bindTexture(gl.TEXTURE_2D, ap.tex[i]);
