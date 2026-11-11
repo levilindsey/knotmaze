@@ -7413,8 +7413,45 @@ function tailFoot(p: Poly, lo: number, hi: number, x: number, y: number, out: Fl
   const u0 = normS(p, lo);
   let k = segOfS(p, u0).k;
   let walked = p.s[k] - u0;
-  let best = Infinity; let bs = u0;
+  let best = Infinity; let bs = u0; let bk = -1;
+  // K1283 s4 (perf): seed the best with the last foot's segment when the walk below
+  // visits it (the band's consecutive points sit on one stretch of X), so the box
+  // tests prune from the start. Same foot: a tie between segments is a shared vertex,
+  // and p.s is a running sum, so either gives the same s.
+  if (tailFootP === p && tailFootK < nseg) {
+    const kw = tailFootK;
+    let off = p.s[kw] - u0; if (p.closed && off < 0) off += p.len;
+    if (kw === k || (off > 0 && off < span - 1e-9 && (p.closed || kw > k))) {
+      const b = kw + 1 === p.n ? 0 : kw + 1;
+      const ax = p.x[kw]; const ay = p.y[kw]; const ex = p.x[b] - ax; const ey = p.y[b] - ay;
+      const l2 = ex * ex + ey * ey;
+      let t = l2 > 1e-24 ? ((x - ax) * ex + (y - ay) * ey) / l2 : 0;
+      t = t < 0 ? 0 : t > 1 ? 1 : t;
+      const dx = ax + ex * t - x; const dy = ay + ey * t - y;
+      best = dx * dx + dy * dy; bs = p.s[kw] + t * (p.segLen[kw] || 0); bk = kw;
+    }
+  }
   for (let guard = 0; guard <= nseg; guard++) {
+    // K1283 s4 (perf): a 32-segment block whose box is no nearer than the best has no
+    // winner: walk its lengths only (the same stop as below, sum for sum).
+    if ((k & 31) === 0) {
+      const bI = 4 * (k >> 5);
+      const gx = p.bk[bI] - x > 0 ? p.bk[bI] - x : x - p.bk[bI + 2] > 0 ? x - p.bk[bI + 2] : 0;
+      const gy = p.bk[bI + 1] - y > 0 ? p.bk[bI + 1] - y : y - p.bk[bI + 3] > 0 ? y - p.bk[bI + 3] : 0;
+      if (gx * gx + gy * gy >= best) {
+        const kEnd = Math.min(nseg, k + 32);
+        let stop = false;
+        for (;;) {
+          walked += p.segLen[k] || 0;
+          if (walked >= span) { stop = true; break; }
+          if (k + 1 >= kEnd || guard + 1 > nseg) break;
+          k++; guard++;
+        }
+        if (stop) break;
+        if (k + 1 >= nseg) { if (!p.closed) break; k = 0; } else k++;
+        continue;
+      }
+    }
     // K1283 s4 (perf): the segment's box holds it, so a box no nearer than the best
     // cannot win the strict < below; skip the projection (same feet, cheaper walk).
     const qx = p.bx0[k] - x > 0 ? p.bx0[k] - x : x - p.bx1[k] > 0 ? x - p.bx1[k] : 0;
@@ -7427,14 +7464,17 @@ function tailFoot(p: Poly, lo: number, hi: number, x: number, y: number, out: Fl
       t = t < 0 ? 0 : t > 1 ? 1 : t;
       const dx = ax + ex * t - x; const dy = ay + ey * t - y;
       const d2 = dx * dx + dy * dy;
-      if (d2 < best) { best = d2; bs = p.s[k] + t * (p.segLen[k] || 0); }
+      if (d2 < best) { best = d2; bs = p.s[k] + t * (p.segLen[k] || 0); bk = k; }
     }
     walked += p.segLen[k] || 0;
     if (walked >= span) break;
     if (k + 1 >= nseg) { if (!p.closed) break; k = 0; } else k++;
   }
+  if (bk >= 0) { tailFootP = p; tailFootK = bk; }
   out[0] = normS(p, bs); out[1] = Math.sqrt(best);
 }
+let tailFootP: Poly | null = null;
+let tailFootK = 0;
 function tailAt(a: TailIn, l1: number, u: number, out: Float64Array, cen: Float64Array, needCen = true): number {
   if (u <= l1) {
     const s = a.sT - a.dirE * u;
