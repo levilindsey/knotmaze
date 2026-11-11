@@ -29,7 +29,18 @@ import { RenderContainer, type Container, type WebGLRenderer } from "pixi.js";
 import { gatherSceneInput, type SceneExportCtx } from "../field/scene_export_hook";
 import { buildFieldScene } from "../field/scene_export";
 import { pixiLabelHost } from "../field/label_b_host";
+import {
+  KNOT_UNIFORMS_GLSL,
+  PAINT_CONST_GLSL,
+  PAINT_DATA_GLSL,
+  PAINT_FX_GLSL,
+  PAINT_GATE_THREAD_GLSL,
+  PAINT_PAINT_STRIP_GLSL,
+  PAINT_SECTION_GLSL,
+} from "../paint_glsl";
+import { kGeom, kPaint, kReveal, kStatic, knotUniformValues } from "../paint_model";
 import type { SceneIn } from "./outline";
+import { RUN_MAP_W, appRunMap, chainArcMap } from "./paint";
 import type { OutlineReply, OutlineRequest } from "./outline_worker";
 
 const CTRL_ARC = 0.47;
@@ -81,6 +92,79 @@ void main() {
   }
   o = vec4(W > 0.0 ? c / W : vec3(0.0), 1.0);
 }`;
+// K1291: THE APP'S FILL. The same slots as PAINT_FS, but each slot's
+// colour is the app's own material at that point of its chain: the run
+// map (paint.ts appRunMap) names the run's chain and maps the slot's s to
+// the renderer's arc, and appMaterial composes there exactly as
+// arm_strip.ts's chainMaterial (mode 0, roots aside) composes the joinery:
+// the ribbon's section colour (kSectionAtArc), the reveal FX that tint
+// (burn, roots), then the gameplay paint and the reveal glow, flat (no
+// across coordinate, as the fans and strips). The data are the app's
+// page-lifetime paint textures and knot uniforms (paint_model.ts), so a
+// palette, a move, a trail fade or a reveal frame shows on the next frame.
+const APP_FS = `#version 300 es
+precision highp float;
+precision highp int;
+uniform highp sampler2D uRunMap;
+uniform float uPx;
+flat in ivec4 vRun;
+in vec4 vW;
+in vec4 vS;
+out vec4 o;
+${KNOT_UNIFORMS_GLSL}
+${PAINT_CONST_GLSL}
+${PAINT_DATA_GLSL}
+${PAINT_SECTION_GLSL}
+${PAINT_GATE_THREAD_GLSL}
+${PAINT_FX_GLSL}
+${PAINT_PAINT_STRIP_GLSL}
+vec3 appMaterial(int ch, highp float a) {
+  KChain c = kChain(ch);
+  highp float total = c.total;
+  if (total <= 0.0 || c.count < 2) return knotSection(c, 0.0);
+  highp float an = c.closed ? kWrap(a, total) : clamp(a, 0.0, total);
+  vec3 m = kSectionAtArc(c, an, -1.0);
+  highp float actrl = kCtrlOfArcNear(c, an, kSecK0);
+  if (uKFx.w > 0.5 && uKFx.z < c.fxDone) {
+    int st = int(uKFx.x + 0.5);
+    if (st == 4 || st == 5) {
+      highp float pR;
+      highp float al;
+      m = kFxColor(c, actrl, an / c.arcPer, m, pR, al);
+    }
+  }
+  if ((uKPaint.x > 0.5 && c.paintOn) || uKFx2.z > 0.5) {
+    highp vec4 st = kPaintAt(c, actrl, an, uPx, false);
+    m = kComposePaintFlat(m, st, kGlow(c, actrl));
+  }
+  return m;
+}
+void main() {
+  vec3 c = vec3(0.0); float W = 0.0;
+  for (int k = 0; k < 4; k++) {
+    int r = vRun[k]; float w = vW[k];
+    if (r < 0 || !(w > 0.0)) continue;
+    highp vec4 m = texelFetch(uRunMap, ivec2(r % ${RUN_MAP_W}, r / ${RUN_MAP_W}), 0);
+    if (m.x < -0.5) continue;
+    c += w * appMaterial(int(m.x + 0.5), m.y + vS[k] * m.z); W += w;
+  }
+  o = vec4(W > 0.0 ? c / W : vec3(0.0), 1.0);
+}`;
+/** The knot uniforms APP_FS reads (paint_model.ts knotUniforms). */
+const KNOT_NAMES = [
+  "uKBase", "uKFx", "uKFx2", "uKShape", "uKInk", "uKKnots", "uKGamut", "uKSect", "uKPaint", "uKPulse",
+  "uKHead", "uKReach", "uKGold", "uKLook", "uKPath", "uKPathB", "uKHlPulse", "uKHlHover", "uKHlFray", "uKBorder",
+] as const;
+/** The paint data textures' samplers, on units 1-4 (paint_glsl PAINT_DATA_GLSL). */
+const APP_TEX = ["uKStatic", "uKGeom", "uKReveal", "uKPaintData"] as const;
+/** What APP_FS reads beyond the outline's own arrays: the app's paint
+ * textures (pixi's GL handles, fetched each draw), its knot uniform values,
+ * and the world size of one device pixel (kPaintAt's antialiasing). */
+export interface AppPaint {
+  tex: readonly WebGLTexture[];
+  knot: Readonly<Record<string, Float32Array>>;
+  px: number;
+}
 // band_gpu's band: one quad per border segment, the tie alpha per fragment.
 // The fragment shader is band_gpu.alphaCpu line for line (that function's
 // test ties it to the prototype's per-vertex alphaAt).
@@ -187,6 +271,11 @@ class OutlinePass {
   private band: WebGLProgram;
   private comp: WebGLProgram;
   private uP: { mat: U; ks: U; runs: U };
+  /** K1291: the app's fill (APP_FS) and its uniforms. */
+  private app: WebGLProgram;
+  private uA: { mat: U; ks: U; map: U; px: U; tex: U[]; knot: U[] };
+  private runMap: WebGLTexture;
+  hasMap = false;
   private uB: { mat: U; chain: U; pass: U; ink: U; h: U; w: U; zt: U };
   private chainTex: WebGLTexture;
   private passTex: WebGLTexture;
@@ -230,6 +319,17 @@ class OutlinePass {
     this.band = mk(BAND_VS, BAND_FS, "band");
     this.comp = mk(COMP_VS, COMP_FS, "composite");
     this.uP = { mat: gl.getUniformLocation(this.paint, "uMat"), ks: gl.getUniformLocation(this.paint, "uKS"), runs: gl.getUniformLocation(this.paint, "uRuns") };
+    this.app = mk(PAINT_VS, APP_FS, "app paint");
+    const ua = (n: string): U => gl.getUniformLocation(this.app, n);
+    this.uA = {
+      mat: ua("uMat"),
+      ks: ua("uKS"),
+      map: ua("uRunMap"),
+      px: ua("uPx"),
+      tex: APP_TEX.map(ua),
+      knot: KNOT_NAMES.map(ua),
+    };
+    this.runMap = gl.createTexture()!;
     const ub = (n: string): U => gl.getUniformLocation(this.band, n);
     this.uB = { mat: ub("uMat"), chain: ub("uChain"), pass: ub("uPass"), ink: ub("uInk"), h: ub("uH"), w: ub("uW"), zt: ub("uZt") };
     this.uC = gl.getUniformLocation(this.comp, "uC");
@@ -311,6 +411,21 @@ class OutlinePass {
     this.hasData = true;
   }
 
+  /** K1291: the run map (paint.ts appRunMap) for the reply just uploaded. */
+  uploadRunMap(m: { tex: Float32Array; w: number; h: number }): void {
+    const gl = this.gl;
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, this.runMap);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 4);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, m.w, m.h, 0, gl.RGBA, gl.FLOAT, m.tex);
+    gl.bindTexture(gl.TEXTURE_2D, null);
+    this.hasMap = true;
+  }
+
   private target(w: number, h: number): void {
     const gl = this.gl;
     if (w === this.w && h === this.h && this.color) return;
@@ -337,7 +452,7 @@ class OutlinePass {
   }
 
   /** The fill, then the band, into the offscreen target (premultiplied). */
-  draw(mat: Float32Array, w: number, h: number): void {
+  draw(mat: Float32Array, w: number, h: number, ap: AppPaint | null = null): void {
     const gl = this.gl;
     this.target(w, h);
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.fbo);
@@ -357,14 +472,41 @@ class OutlinePass {
       gl.disable(gl.BLEND);
       gl.enable(gl.DEPTH_TEST);
       gl.depthFunc(gl.LEQUAL);
-      gl.useProgram(this.paint);
-      gl.uniformMatrix3fv(this.uP.mat, false, mat);
-      gl.uniform1f(this.uP.ks, this.ks);
-      gl.activeTexture(gl.TEXTURE0);
-      gl.bindTexture(gl.TEXTURE_2D, this.runTex);
-      gl.uniform1i(this.uP.runs, 0);
+      if (ap && this.hasMap) {
+        // K1291: the app's material per slot (APP_FS).
+        const A = this.uA;
+        gl.useProgram(this.app);
+        gl.uniformMatrix3fv(A.mat, false, mat);
+        gl.uniform1f(A.ks, this.ks);
+        gl.uniform1f(A.px, ap.px);
+        for (let i = 0; i < KNOT_NAMES.length; i++) {
+          const v = ap.knot[KNOT_NAMES[i]];
+          if (v && A.knot[i]) gl.uniform4fv(A.knot[i], v);
+        }
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this.runMap);
+        gl.uniform1i(A.map, 0);
+        for (let i = 0; i < APP_TEX.length; i++) {
+          gl.activeTexture(gl.TEXTURE1 + i);
+          gl.bindTexture(gl.TEXTURE_2D, ap.tex[i]);
+          gl.uniform1i(A.tex[i], 1 + i);
+        }
+      } else {
+        gl.useProgram(this.paint);
+        gl.uniformMatrix3fv(this.uP.mat, false, mat);
+        gl.uniform1f(this.uP.ks, this.ks);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this.runTex);
+        gl.uniform1i(this.uP.runs, 0);
+      }
       gl.bindVertexArray(this.pVao);
       gl.drawElements(gl.TRIANGLES, this.nIdx, gl.UNSIGNED_INT, 0);
+      if (ap && this.hasMap) {
+        for (let i = APP_TEX.length; i >= 1; i--) {
+          gl.activeTexture(gl.TEXTURE0 + i);
+          gl.bindTexture(gl.TEXTURE_2D, null);
+        }
+      }
       gl.disable(gl.DEPTH_TEST);
       // The band over it at its tie alpha; alpha accumulates premultiplied.
       gl.enable(gl.BLEND);
@@ -423,6 +565,8 @@ class OutlinePass {
     gl.deleteVertexArray(this.bVao);
     gl.deleteVertexArray(this.cVao);
     gl.deleteProgram(this.paint);
+    gl.deleteProgram(this.app);
+    gl.deleteTexture(this.runMap);
     gl.deleteProgram(this.band);
     gl.deleteProgram(this.comp);
     gl.deleteTexture(this.runTex);
@@ -458,6 +602,32 @@ export function createOutlineApp(ctx: SceneExportCtx, requestFrame: () => void):
   let camKey = "";
   let composited = false;
   let drawn: (Float32Array | null)[] = [];
+  // K1291: each request's chain maps (scene chain index -> the app's chain
+  // and arc map), read back by its reply's run map; the paint textures'
+  // update events and the knot uniforms' last drawn values (an overlay
+  // change redraws on the next frame, no worker build).
+  let sentMaps: ({ chain: number; arcLo: number; scale: number } | undefined)[] = [];
+  const paintSources = [kStatic(), kGeom(), kReveal(), kPaint()].map((r) => r.source);
+  const onPaint = (): void => {
+    dirty = true;
+  };
+  for (const s of paintSources) s.on("update", onPaint);
+  const knotSeen = new Float32Array(4 * (KNOT_NAMES.length + 7));
+  const knotChanged = (k: Readonly<Record<string, Float32Array>>): boolean => {
+    let o = 0;
+    let changed = false;
+    for (const n of KNOT_NAMES) {
+      const v = k[n];
+      if (!v) continue;
+      for (let i = 0; i < v.length && o < knotSeen.length; i++, o++) {
+        if (knotSeen[o] !== v[i]) {
+          knotSeen[o] = v[i];
+          changed = true;
+        }
+      }
+    }
+    return changed;
+  };
   const stats = {
     posts: 0,
     replies: 0,
@@ -616,6 +786,7 @@ export function createOutlineApp(ctx: SceneExportCtx, requestFrame: () => void):
       }
       const t0 = performance.now();
       pass.upload(r);
+      pass.uploadRunMap(appRunMap(r.runChain, sentMaps));
       stats.uploadMs = performance.now() - t0;
       if (r.restructured) {
         stats.restructures++;
@@ -658,6 +829,10 @@ export function createOutlineApp(ctx: SceneExportCtx, requestFrame: () => void):
     );
     const { scene } = buildFieldScene(input);
     scene.look.ctrlArc ??= CTRL_ARC;
+    sentMaps = scene.chains.map((sc, i) => {
+      const ch = input.chains[i];
+      return ch ? { chain: sc.id, ...chainArcMap(ch, sc.pts, input.look.halfWidth) } : undefined;
+    });
     stats.gatherMs = performance.now() - t0;
     stats.chains = scene.chains.length;
     snapshot();
@@ -695,9 +870,16 @@ export function createOutlineApp(ctx: SceneExportCtx, requestFrame: () => void):
       }
       if (!pass) return;
       const cam = camera();
+      const knot = knotUniformValues() as unknown as Record<string, Float32Array>;
+      if (knotChanged(knot)) dirty = true;
       if (dirty || cam.key !== camKey) {
         const t0 = performance.now();
-        pass.draw(cam.mat, cam.w, cam.h);
+        // The app's paint textures as pixi holds them (getGlSource creates
+        // and uploads one the base layer has not drawn yet).
+        const wr = ctx.app.renderer as unknown as WebGLRenderer;
+        const tex = paintSources.map((s) => wr.texture.getGlSource(s).texture);
+        const a = (cam.mat[0] * cam.w) / 2;
+        pass.draw(cam.mat, cam.w, cam.h, { tex, knot, px: a > 0 ? 1 / a : 1 });
         host?.restore();
         stats.drawMs = performance.now() - t0;
       stats.drawMsLog.push(stats.drawMs);
@@ -733,6 +915,7 @@ export function createOutlineApp(ctx: SceneExportCtx, requestFrame: () => void):
   };
 
   const dispose = (): void => {
+    for (const s of paintSources) s.off("update", onPaint);
     release();
     off = true;
     const G = globalThis as unknown as Record<string, unknown>;

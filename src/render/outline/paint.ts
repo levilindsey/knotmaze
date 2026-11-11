@@ -192,3 +192,55 @@ export function runTexture(sp: SectionPaint): Float32Array {
   });
   return t;
 }
+
+// K1291: THE APP'S PALETTE AND OVERLAYS. The app (outline_app.ts) paints a
+// fill pixel from the app's own paint data (paint_model.ts textures through
+// paint_glsl.ts, as arm_strip.ts's chainMaterial does), not from the run
+// table above: each slot's run names its chain, and the slot's s (arc
+// along the scene's kept polyline) maps to the renderer's arc on that
+// chain. The census tools and the port's pins never call these.
+
+/** scene_export.ts's tuck (strip_pass.ts): trim = min(0.75 h, total / 4). */
+const TUCK_SHARE = 0.75;
+const TUCK_MAX_FRAC = 0.25;
+
+/** Where a scene chain's s sits on the renderer's arc: arc = arcLo + s *
+ *  scale. The scene's polyline starts at the tuck point (renderer arc
+ *  trim) on a tucked start and ends at total - trim on a tucked end
+ *  (scene_export.ts sampleArc); a ring runs 0 .. total over its closed
+ *  polyline. Linear between: the samples are evenly spaced in arc, so
+ *  the chord sum differs from the arc only by the samples' sag. */
+export function chainArcMap(
+  ch: { closed: boolean; totalLength: number; tucked: readonly [boolean, boolean] | readonly boolean[] },
+  pts: ArrayLike<number>,
+  h: number
+): { arcLo: number; scale: number } {
+  const T = ch.totalLength;
+  const trim = Math.min(h * TUCK_SHARE, T * TUCK_MAX_FRAC);
+  const lo = !ch.closed && ch.tucked[0] ? trim : 0;
+  const hi = !ch.closed && ch.tucked[1] ? T - trim : T;
+  const L = chainLen(Array.from(pts), ch.closed);
+  return { arcLo: lo, scale: L > 0 ? (hi - lo) / L : 0 };
+}
+
+/** Texels per row of the app's run map. */
+export const RUN_MAP_W = 1024;
+
+/** The app's run map: one RGBA32F texel per run, (chain, arcLo, scale, 0)
+ *  of the run's chain, RUN_MAP_W texels wide. `runChain` holds each run's
+ *  scene chain index, `maps` each scene chain's app chain and arc map. A
+ *  run whose chain has no map gets chain -1 (the shader skips the slot). */
+export function appRunMap(
+  runChain: ArrayLike<number>,
+  maps: readonly ({ chain: number; arcLo: number; scale: number } | undefined)[]
+): { tex: Float32Array; w: number; h: number } {
+  const n = Math.max(1, runChain.length);
+  const h = Math.ceil(n / RUN_MAP_W);
+  const tex = new Float32Array(4 * RUN_MAP_W * h);
+  for (let r = 0; r < runChain.length; r++) {
+    const m = maps[runChain[r]];
+    if (!m) { tex[4 * r] = -1; continue; }
+    tex[4 * r] = m.chain; tex[4 * r + 1] = m.arcLo; tex[4 * r + 2] = m.scale;
+  }
+  return { tex, w: RUN_MAP_W, h };
+}

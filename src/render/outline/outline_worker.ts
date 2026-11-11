@@ -31,6 +31,8 @@ export interface OutlineReply {
   parts: { frame: number; zChains: number; fill: number; paint: number; band: number } | null;
   idx: Uint32Array | null;
   run: Int32Array | null;
+  /** K1291: each section run's chain (the scene chain index = the app's). */
+  runChain: Int32Array;
   pos: Float32Array;
   pkey: Float32Array;
   w: Float32Array;
@@ -108,6 +110,7 @@ scope.onmessage = (e: MessageEvent<OutlineRequest>): void => {
       parts: restructured ? null : m.parts,
       idx: restructured ? pd.idx.slice() : null,
       run: restructured ? pd.run.slice() : null,
+      runChain: Int32Array.from(pd.sp.runs, (q) => q.pi),
       pos: pd.pos.slice(),
       pkey: pd.key.slice(),
       w: pd.w.slice(),
