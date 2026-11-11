@@ -279,7 +279,7 @@ function footInWindow(p: Poly, px: number, py: number, lo: number, hi: number): 
 // setupFrame's extension feet built an object per improvement). Same
 // shifts, same order, same strict test, so the same foot.
 function footInWindowInto(p: Poly, px: number, py: number, lo: number, hi: number, out: Float64Array): void {
-  out[0] = Infinity; out[1] = px; out[2] = py;
+  out[0] = Infinity; out[1] = px; out[2] = py; if (out.length >= 6) out[4] = -1;
   if (p.nseg === 0 || hi < lo) return;
   // hypot only where the squared distance could beat the best: d2 is
   // within a few ulps of the true square and hypot within one ulp of the
@@ -311,86 +311,91 @@ function footInWindowInto(p: Poly, px: number, py: number, lo: number, hi: numbe
       const ddx = px - qx; const ddy = py - qy;
       if (ddx * ddx + ddy * ddy > bestSq) continue;
       const d = Math.hypot(ddx, ddy);
-      if (d < out[0]) { out[0] = d; out[1] = qx; out[2] = qy; bestSq = d > 1e-100 ? d * d * (1 + 1e-9) : Infinity; }
-    }
-  }
-}
-// K1247 s16: an END arm's extension foot, continuous in the point. The
-// polyline's nearest point jumps where the point sits on the concave side
-// of a vertex (the two segments' projections tie on the bisector): j67's
-// cap centre moved 1.5 px under 0.075 px of input (def f23). This foot is
-// the root of (q - c(u)) . T(u) = 0, the tangent interpolated linearly
-// across each segment from its vertices' tangents (the mean of the two
-// segment directions), so it follows q continuously wherever the root is
-// unique (q nearer the line than its radius of curvature); among several
-// roots the nearest wins. No root in the window: footInWindowInto's foot.
-function footSmoothInto(p: Poly, px: number, py: number, lo: number, hi: number, out: Float64Array, sNear = NaN): void {
-  out[0] = Infinity; out[1] = px; out[2] = py; if (out.length > 3) out[3] = NaN;
-  // sNear finite: among several roots the one nearest sNear along s wins.
-  const byS = Number.isFinite(sNear); let bestKey = Infinity;
-  if (p.nseg === 0 || hi < lo) return;
-  const vt = (k: number, o: number): void => {
-    // Vertex k's unit tangent into kfVT[o], kfVT[o + 1].
-    const segD = (q: number, w: number): void => { const kb = q + 1 === p.n ? 0 : q + 1; const l = p.segLen[q] || 1; kfVT[w] = (p.x[kb] - p.x[q]) / l; kfVT[w + 1] = (p.y[kb] - p.y[q]) / l; };
-    const prev = k > 0 ? k - 1 : p.closed ? p.nseg - 1 : -1;
-    const next = k < p.nseg ? k : p.closed ? 0 : -1;
-    if (prev < 0) { segD(next, o); return; }
-    if (next < 0) { segD(prev, o); return; }
-    segD(prev, 4); segD(next, 6);
-    let tx = kfVT[4] + kfVT[6]; let ty = kfVT[5] + kfVT[7];
-    const l = Math.hypot(tx, ty);
-    if (l < 1e-12) { tx = kfVT[6]; ty = kfVT[7]; } else { tx /= l; ty /= l; }
-    kfVT[o] = tx; kfVT[o + 1] = ty;
-  };
-  const nsh = p.closed ? 3 : 1;
-  for (let si = 0; si < nsh; si++) {
-    const sh = p.closed ? (si === 0 ? -p.len : si === 1 ? 0 : p.len) : 0;
-    let a = 0; let b = p.nseg;
-    while (a < b) { const m = (a + b) >> 1; if (p.s[m] + p.segLen[m] + sh >= lo) b = m; else a = m + 1; }
-    const k0 = a;
-    b = p.nseg;
-    while (a < b) { const m = (a + b) >> 1; if (p.s[m] + sh > hi) b = m; else a = m + 1; }
-    for (let k = k0; k < a; k++) {
-      const sa = p.s[k]; const sb = sa + p.segLen[k];
-      const aa = Math.max(lo, sa + sh); const bb = Math.min(hi, sb + sh);
-      if (bb < aa) continue;
-      const l = p.segLen[k] || 1;
-      const ta = Math.min(1, Math.max(0, (aa - sh - sa) / l));
-      const tb = Math.min(1, Math.max(0, (bb - sh - sa) / l));
-      const kb = k + 1 === p.n ? 0 : k + 1;
-      vt(k, 0); vt(kb, 2);
-      const Ax = kfVT[0]; const Ay = kfVT[1]; const Bx = kfVT[2] - Ax; const By = kfVT[3] - Ay;
-      const Ex = p.x[kb] - p.x[k]; const Ey = p.y[kb] - p.y[k];
-      const Dx = px - p.x[k]; const Dy = py - p.y[k];
-      // g(u) = (D - u E) . (A + u B) = c0 + c1 u + c2 u^2
-      const c0 = Dx * Ax + Dy * Ay; const c1 = Dx * Bx + Dy * By - (Ex * Ax + Ey * Ay); const c2 = -(Ex * Bx + Ey * By);
-      const tryU = (u: number): void => {
-        if (!(u >= ta - 1e-12 && u <= tb + 1e-12)) return;
-        // A distance minimum only (g falls through 0): beyond the centre of
-        // curvature a root is a distance maximum.
-        if (c1 + 2 * c2 * u > 0) return;
-        u = Math.min(tb, Math.max(ta, u));
-        const qx = p.x[k] + Ex * u; const qy = p.y[k] + Ey * u;
-        const d = Math.hypot(px - qx, py - qy);
-        const sU = sa + sh + p.segLen[k] * u; const key = byS ? Math.abs(sU - sNear) : d;
-        if (key < bestKey) { bestKey = key; out[0] = d; out[1] = qx; out[2] = qy; if (out.length > 3) out[3] = sU; }
-      };
-      if (Math.abs(c2) < 1e-14 * (Math.abs(c1) + 1e-300)) { if (Math.abs(c1) > 1e-300) tryU(-c0 / c1); }
-      else {
-        const disc = c1 * c1 - 4 * c2 * c0;
-        if (disc >= 0) {
-          const sq = Math.sqrt(disc);
-          // Stable roots: q = -(c1 + sign(c1) sq) / 2, roots q / c2 and c0 / q.
-          const qq = -0.5 * (c1 + (c1 >= 0 ? sq : -sq));
-          if (Math.abs(qq) > 1e-300) { tryU(qq / c2); tryU(c0 / qq); } else tryU(-c1 / (2 * c2));
-        }
+      if (d < out[0]) {
+        out[0] = d; out[1] = qx; out[2] = qy; bestSq = d > 1e-100 ? d * d * (1 + 1e-9) : Infinity;
+        // K1247 s16: the foot's segment and parameter, for footBlendInto.
+        if (out.length >= 6) { out[4] = k; out[5] = ta + (tb - ta) * t; }
       }
     }
   }
-  if (out[0] === Infinity) { footInWindowInto(p, px, py, lo, hi, out); if (out.length > 3) out[3] = NaN; }
 }
-const kfVT = new Float64Array(8);
-const kfFootR = new Float64Array(4);
+// K1247 s16: the polyline's nearest point, made continuous in the point.
+// On the concave side of a vertex the nearest point jumps from one
+// segment's projection to the other's where the point crosses the
+// vertex's bisector (the two tie there): j67's cap centre moved 1.5 px
+// under 0.075 px of input (def f23), j87's corner arc end slid 1.2 px
+// along s under 0.02 px. Inside a band |sigma| < beta around that
+// bisector the foot blends the two lines' projections (smoothstep across
+// the band); outside it, and on the convex side, it is the nearest point
+// exactly, so the look at rest moves only inside the band. beta is 0.75 x
+// the jump it replaces (the feet's separation there), capped at a quarter
+// of either segment. (k, t) is the nearest foot's segment and parameter;
+// true when the point is in a band, with d, x, y, s in out[0..3].
+// loc: (k, t) is a tracked foot, a local minimum that may sit on the far
+// side of a bisector (the corner growth's feet); the foot is first moved
+// to the nearest of segments k - 1, k, k + 1, so that the result is a
+// function of the point near k, not of the growth's path (true when it
+// moved).
+function footBlendInto(p: Poly, px: number, py: number, k: number, t: number, out: Float64Array, loc = false): boolean {
+  if (p.nseg < 2 || k < 0 || k >= p.nseg) return false;
+  let moved = false;
+  if (loc) {
+    let bd = Infinity; let bk = k; let bt = t;
+    for (let o = -1; o <= 1; o++) {
+      let j = k + o;
+      if (j < 0 || j >= p.nseg) { if (!p.closed) continue; j = (j + p.nseg) % p.nseg; }
+      const je = j + 1 === p.n ? 0 : j + 1;
+      const ex = p.x[je] - p.x[j]; const ey = p.y[je] - p.y[j]; const l2 = ex * ex + ey * ey;
+      let u = l2 > 0 ? ((px - p.x[j]) * ex + (py - p.y[j]) * ey) / l2 : 0;
+      u = u < 0 ? 0 : u > 1 ? 1 : u;
+      const d = Math.hypot(px - p.x[j] - ex * u, py - p.y[j] - ey * u);
+      if (d < bd - 1e-15 || (o === 0 && d <= bd)) { bd = d; bk = j; bt = u; }
+    }
+    if (bk !== k) {
+      moved = true; k = bk; t = bt;
+      const ke = k + 1 === p.n ? 0 : k + 1;
+      const fx = p.x[k] + (p.x[ke] - p.x[k]) * t; const fy = p.y[k] + (p.y[ke] - p.y[k]) * t;
+      out[0] = bd; out[1] = fx; out[2] = fy; out[3] = normS(p, p.s[k] + p.segLen[k] * t);
+    }
+  }
+  if (footBandInto(p, px, py, k, t, out)) return true;
+  return moved;
+}
+function footBandInto(p: Poly, px: number, py: number, k: number, t: number, out: Float64Array): boolean {
+  for (let pass = 0; pass < 2; pass++) {
+    const atEnd = (t >= 0.5) === (pass === 0);
+    let ka: number; let kb: number;
+    if (atEnd) { ka = k; kb = k + 1; if (kb >= p.nseg) { if (!p.closed) continue; kb = 0; } }
+    else { kb = k; ka = k - 1; if (ka < 0) { if (!p.closed) continue; ka = p.nseg - 1; } }
+    const va = ka + 1 === p.n ? 0 : ka + 1;
+    const la = p.segLen[ka]; const lb = p.segLen[kb];
+    if (!(la > 1e-12 && lb > 1e-12)) continue;
+    const vx = p.x[va]; const vy = p.y[va];
+    const tax = (vx - p.x[ka]) / la; const tay = (vy - p.y[ka]) / la;
+    const kbE = kb + 1 === p.n ? 0 : kb + 1;
+    const tbx = (p.x[kbE] - vx) / lb; const tby = (p.y[kbE] - vy) / lb;
+    const cross = tax * tby - tay * tbx;
+    if (Math.abs(cross) < 1e-12) continue;
+    let bx = tax + tbx; let by = tay + tby; const bl = Math.hypot(bx, by);
+    if (bl < 1e-12) continue;
+    bx /= bl; by /= bl;
+    const qx = px - vx; const qy = py - vy;
+    const yN = (-by * qx + bx * qy) * (cross > 0 ? 1 : -1);
+    if (!(yN > 0)) continue;
+    const sig = qx * bx + qy * by;
+    const beta = Math.min(0.75 * yN * Math.hypot(tax - tbx, tay - tby), 0.25 * la, 0.25 * lb);
+    if (!(beta > 1e-12) || Math.abs(sig) >= beta) continue;
+    const x = (sig + beta) / (2 * beta); const w = x * x * (3 - 2 * x);
+    const pa = qx * tax + qy * tay; const pb = qx * tbx + qy * tby;
+    const fx = vx + (1 - w) * pa * tax + w * pb * tbx; const fy = vy + (1 - w) * pa * tay + w * pb * tby;
+    out[0] = Math.hypot(px - fx, py - fy); out[1] = fx; out[2] = fy;
+    out[3] = normS(p, p.s[ka] + la + (1 - w) * pa + w * pb);
+    return true;
+  }
+  return false;
+}
+const kfFootR = new Float64Array(6);
+const kfFootB = new Float64Array(4);
 function ssFB(e0: number, e1: number, x: number): number {
   const t = Math.min(1, Math.max(0, (x - e0) / (e1 - e0)));
   return t * t * (3 - 2 * t);
@@ -619,7 +624,9 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
         if (t.kind !== "through") continue;
         const ti = idxOf.get(t.chain);
         if (ti === undefined) continue;
-        footSmoothInto(rawPolys[ti], term.x, term.y, t.s - 4 * h, t.s + 4 * h, kfFootR); // K1247 s16
+        footInWindowInto(rawPolys[ti], term.x, term.y, t.s - 4 * h, t.s + 4 * h, kfFootR);
+        // K1247 s16: blended across a concave vertex's bisector (footBlendInto).
+        if (footBlendInto(rawPolys[ti], term.x, term.y, kfFootR[4], kfFootR[5], kfFootB)) { kfFootR[0] = kfFootB[0]; kfFootR[1] = kfFootB[1]; kfFootR[2] = kfFootB[2]; }
         const f = { d: kfFootR[0], x: kfFootR[1], y: kfFootR[2] };
         if (f.d < best) { best = f.d; cp = [f.x, f.y]; bestTi = ti; bestTS = t.s; }
       }
@@ -3166,6 +3173,12 @@ interface FBord {
   ins: Int32Array; nIns: number; segReg: Int32Array; sorted: Int32Array; segCnt: Int32Array; mark: Int32Array;
   // K1247 s14: the clip's sigma excess per base point (sigma = bs + be; borderExcessC).
   be: Float64Array;
+  // K1247 s16 (K1280): the continuous s of each base point (bc) and final
+  // point (sc). bs/s give a convex vertex's whole fan (A_v, fan, B_v) the
+  // vertex's s, so a lookup by s jumped from A_v to B_v as s crossed it;
+  // bc/sc spread each such tie over a window around the vertex
+  // (spreadTiesC), and the lookups by s and the piece walk read them.
+  bc: Float64Array; sc: Float64Array;
 }
 function mkFBord(): FBord {
   return {
@@ -3173,7 +3186,7 @@ function mkFBord(): FBord {
     bx: new Float64Array(64), by: new Float64Array(64), bs: new Float64Array(64), bfx: new Float64Array(64), bfy: new Float64Array(64), nb: 0,
     xy: new Float64Array(128), s: new Float64Array(64), cxy: new Float64Array(128), nf: 0,
     ins: new Int32Array(16), nIns: 0, segReg: new Int32Array(64), sorted: new Int32Array(16), segCnt: new Int32Array(1024), mark: new Int32Array(64),
-    be: new Float64Array(64),
+    be: new Float64Array(64), bc: new Float64Array(64), sc: new Float64Array(64),
   };
 }
 // K1247 s14 (#658): the border's cumulative sigma excess: segment i adds max(L, c len) - L for
@@ -3776,7 +3789,7 @@ function memberGroupC(C: FCache, pi: number, s: number): number {
   return g;
 }
 
-const kfFootW = new Float64Array(4);
+const kfFootW = new Float64Array(6);
 // A depth pin, inserted in s order (K1247 s3: was a closure per crossing).
 function addPinC(C: FCache, pi: number, s: number, z: number): void {
   const S = C.depthS[pi]; const Z = C.depthZ[pi];
@@ -3814,7 +3827,9 @@ function setupFrame(C: FCache, st: DiagramStructure, scene: SceneIn): void {
       const ti = idxOf.get(t.chain);
       if (ti === undefined) continue;
       const tp = C.needRaw[ti] ? C.rawPolys[ti] : C.polys[ti];
-      footSmoothInto(tp, term.x, term.y, t.s - 4 * h, t.s + 4 * h, kfFootW); // K1247 s16
+      footInWindowInto(tp, term.x, term.y, t.s - 4 * h, t.s + 4 * h, kfFootW);
+      // K1247 s16: blended across a concave vertex's bisector (footBlendInto).
+      if (footBlendInto(tp, term.x, term.y, kfFootW[4], kfFootW[5], kfFootB)) { kfFootW[0] = kfFootB[0]; kfFootW[1] = kfFootB[1]; kfFootW[2] = kfFootB[2]; }
       if (kfFootW[0] < best) { best = kfFootW[0]; cp = [kfFootW[1], kfFootW[2]]; }
     }
     if (Math.abs(xa.s - 0) < Math.abs(xa.s - rp.len)) exts[a.pi].start = cp;
@@ -4164,6 +4179,39 @@ function buildBorderC(C: FCache, pi: number, sig: number): void {
   B.nb = out;
   cutFoldsC(C, pi, sig, B);
   borderExcessC(p, B);
+  spreadTiesC(B);
+}
+
+// K1247 s16 (K1280): bc = bs with each tie run (a convex vertex's A_v, fan
+// and B_v, all at s_v) spread over [s_v - w, s_v + w] by arc length along
+// the path from the incoming offset at s_v - w through the fan to the
+// outgoing offset at s_v + w. w is half the s gap to each neighbour, so two
+// windows never overlap. A lookup by bc slides through the fan as s crosses
+// the vertex, where one by bs jumped from A_v to B_v (j47's 1.243 px on def
+// at f33, a station 0.02 px of input from the vertex); it puts a point at
+// most min(w, h * turn / 2) along the border from where bs put it. A run at
+// either end of the border (a closed border's seam) keeps bs.
+function spreadTiesC(B: FBord): void {
+  const n = B.nb; B.bc = growF(B.bc, n > 0 ? n : 1);
+  const bs = B.bs; const bc = B.bc; const bx = B.bx; const by = B.by;
+  for (let i = 0; i < n; i++) bc[i] = bs[i];
+  let i = 1;
+  while (i < n - 1) {
+    if (Math.abs(bs[i + 1] - bs[i]) > 1e-12) { i++; continue; }
+    const g0 = i; let g1 = i + 1;
+    while (g1 + 1 < n && Math.abs(bs[g1 + 1] - bs[g0]) <= 1e-12) g1++;
+    i = g1 + 1;
+    if (g1 >= n - 1) break;
+    const sv = bs[g0]; const gp = sv - bs[g0 - 1]; const gn = bs[g1 + 1] - sv;
+    if (!(gp > 1e-12 && gn > 1e-12)) continue;
+    let arc = 0;
+    for (let k = g0 + 1; k <= g1; k++) arc += Math.hypot(bx[k] - bx[k - 1], by[k] - by[k - 1]);
+    if (arc < 1e-12) continue;
+    const w = 0.5 * Math.min(gp, gn); const L = 2 * w + arc;
+    let a = 0;
+    bc[g0] = sv - w + (2 * w * w) / L;
+    for (let k = g0 + 1; k <= g1; k++) { a += Math.hypot(bx[k] - bx[k - 1], by[k] - by[k - 1]); bc[k] = sv - w + (2 * w * (w + a)) / L; }
+  }
 }
 
 function bendsOfC(C: FCache, pi: number): Float64Array {
@@ -4323,13 +4371,15 @@ function borderPointAtBase(C: FCache, pi: number, side: number, s: number, out: 
   const p = C.polys[pi];
   const n = B.nb;
   if (n === 0) { out[0] = 0; out[1] = 0; return; }
+  // K1247 s16: by the continuous s (bc), not bs (spreadTiesC).
+  const BC = B.bc;
   let target = s;
-  if (p.closed) { target = normS(p, s); if (target < B.bs[0] - 1e-9) target += p.len; }
+  if (p.closed) { target = normS(p, s); if (target < BC[0] - 1e-9) target += p.len; }
   let lo = 0; let hi = n - 1;
-  while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (B.bs[mid] <= target) lo = mid; else hi = mid; }
+  while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (BC[mid] <= target) lo = mid; else hi = mid; }
   const a = lo; const bb = Math.min(n - 1, lo + 1);
-  const ds = B.bs[bb] - B.bs[a];
-  const t = ds > 1e-12 ? Math.min(1, Math.max(0, (target - B.bs[a]) / ds)) : 0;
+  const ds = BC[bb] - BC[a];
+  const t = ds > 1e-12 ? Math.min(1, Math.max(0, (target - BC[a]) / ds)) : 0;
   out[0] = B.bx[a] + (B.bx[bb] - B.bx[a]) * t;
   out[1] = B.by[a] + (B.by[bb] - B.by[a]) * t;
 }
@@ -4338,13 +4388,15 @@ function borderPointAtFinal(C: FCache, pi: number, side: number, s: number, out:
   const p = C.polys[pi];
   const n = B.nf;
   if (n === 0) { out[0] = 0; out[1] = 0; return; }
+  // K1247 s16: by the continuous s (sc), not s (spreadTiesC).
+  const SC = B.sc;
   let target = s;
-  if (p.closed) { target = normS(p, s); if (target < B.s[0] - 1e-9) target += p.len; }
+  if (p.closed) { target = normS(p, s); if (target < SC[0] - 1e-9) target += p.len; }
   let lo = 0; let hi = n - 1;
-  while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (B.s[mid] <= target) lo = mid; else hi = mid; }
+  while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (SC[mid] <= target) lo = mid; else hi = mid; }
   const a = lo; const bb = Math.min(n - 1, lo + 1);
-  const ds = B.s[bb] - B.s[a];
-  const t = ds > 1e-12 ? Math.min(1, Math.max(0, (target - B.s[a]) / ds)) : 0;
+  const ds = SC[bb] - SC[a];
+  const t = ds > 1e-12 ? Math.min(1, Math.max(0, (target - SC[a]) / ds)) : 0;
   out[0] = B.xy[2 * a] + (B.xy[2 * bb] - B.xy[2 * a]) * t;
   out[1] = B.xy[2 * a + 1] + (B.xy[2 * bb + 1] - B.xy[2 * a + 1]) * t;
 }
@@ -4385,11 +4437,11 @@ function mergeBorders(C: FCache): void {
       gStart = gEnd;
     }
     const need = n + m + 1;
-    B.xy = growF(B.xy, 2 * need); B.s = growF(B.s, need); B.cxy = growF(B.cxy, 2 * need);
-    const XY = B.xy; const SS = B.s; const CXY = B.cxy;
+    B.xy = growF(B.xy, 2 * need); B.s = growF(B.s, need); B.cxy = growF(B.cxy, 2 * need); B.sc = growF(B.sc, need);
+    const XY = B.xy; const SS = B.s; const CXY = B.cxy; const SC = B.sc; const BC = B.bc;
     const BX = B.bx; const BY = B.by; const BS = B.bs; const BFX = B.bfx; const BFY = B.bfy;
     let out = 0;
-    XY[0] = BX[0]; XY[1] = BY[0]; SS[0] = BS[0]; CXY[0] = BFX[0]; CXY[1] = BFY[0];
+    XY[0] = BX[0]; XY[1] = BY[0]; SS[0] = BS[0]; CXY[0] = BFX[0]; CXY[1] = BFY[0]; SC[0] = BC[0];
     out = 1;
     let ii = 0;
     const pend = kfPend; let pendN = 0;
@@ -4412,6 +4464,7 @@ function mergeBorders(C: FCache): void {
         }
         const s = lerpS(p, BS[i], BS[i + 1], tt);
         XY[2 * out] = insX[id]; XY[2 * out + 1] = insY[id]; SS[out] = s;
+        SC[out] = s + (BC[i] - BS[i]) + (BC[i + 1] - BS[i + 1] - (BC[i] - BS[i])) * tt;
         CXY[2 * out] = BFX[i] + (BFX[i + 1] - BFX[i]) * tt;
         CXY[2 * out + 1] = BFY[i] + (BFY[i + 1] - BFY[i]) * tt;
         if (refId >= 0) { C.refFinal[refId] = out; C.refS[refId] = s; }
@@ -4420,7 +4473,7 @@ function mergeBorders(C: FCache): void {
       ii = gEnd;
       groupStart = gEnd;
       void groupStart;
-      XY[2 * out] = BX[i + 1]; XY[2 * out + 1] = BY[i + 1]; SS[out] = BS[i + 1]; CXY[2 * out] = BFX[i + 1]; CXY[2 * out + 1] = BFY[i + 1];
+      XY[2 * out] = BX[i + 1]; XY[2 * out + 1] = BY[i + 1]; SS[out] = BS[i + 1]; CXY[2 * out] = BFX[i + 1]; CXY[2 * out + 1] = BFY[i + 1]; SC[out] = BC[i + 1];
       out++;
       for (let q = 0; q < pendN; q++) {
         const refId = insRef[pend[q]];
@@ -5991,23 +6044,16 @@ function cornersPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): void {
     let tax = Vx; let tay = Vy; let tbx = Vx; let tby = Vy;
     let sA = kfFa.s; let sB = kfFb.s; let dA = dVa; let dB = dVb;
     if (r > 1e-9) {
-      // K1247 s16: the arc's ends sit on the centre's smooth feet. The
-      // nearest foot jumps across a vertex's bisector on the curve's inner
-      // side (j87 corner 182: its A end slid 1.2 px along s under 0.02 px of
-      // input, def f23); the smooth foot follows q continuously and is
-      // within d x turn / 2 of it.
-      footSmoothInto(C.polys[A.pi], kfCst.qx, kfCst.qy, kfQa.s - 0.25 * h, kfQa.s + 0.25 * h, kfFootR, kfQa.s);
-      const fdA = Number.isFinite(kfFootR[3]) && kfFootR[0] > 1e-12 ? 1 : 0;
-      const ax = fdA ? kfFootR[1] : kfQa.x; const ay = fdA ? kfFootR[2] : kfQa.y; const ad = fdA ? kfFootR[0] : kfQa.d;
-      sA = fdA ? kfFootR[3] : kfQa.s;
-      footSmoothInto(C.polys[B.pi], kfCst.qx, kfCst.qy, kfQb.s - 0.25 * h, kfQb.s + 0.25 * h, kfFootR, kfQb.s);
-      const fdB = Number.isFinite(kfFootR[3]) && kfFootR[0] > 1e-12 ? 1 : 0;
-      const bx2 = fdB ? kfFootR[1] : kfQb.x; const by2 = fdB ? kfFootR[2] : kfQb.y; const bd2 = fdB ? kfFootR[0] : kfQb.d;
-      sB = fdB ? kfFootR[3] : kfQb.s;
-      tax = ax + (h * (kfCst.qx - ax)) / ad; tay = ay + (h * (kfCst.qy - ay)) / ad;
-      tbx = bx2 + (h * (kfCst.qx - bx2)) / bd2; tby = by2 + (h * (kfCst.qy - by2)) / bd2;
-      dA = armDistC(C, aiA, sA); dB = armDistC(C, aiB, sB);
-      if (armDbg.ai === -2 - ci) armDbg.rows.push(["feet", kfQa.s, sA, kfQa.d, kfQb.s, sB, kfQb.d, bd2]);
+      // K1247 s16: the arc's ends sit on the centre's feet, blended across
+      // a concave vertex's bisector (blendFootC). The nearest foot jumps
+      // there (j87 corner 182: its A end slid 1.2 px along s under 0.02 px
+      // of input, def f23); outside the band the feet are the nearest.
+      blendFootC(C.polys[A.pi], kfCst.qx, kfCst.qy, kfQa, kfEa);
+      blendFootC(C.polys[B.pi], kfCst.qx, kfCst.qy, kfQb, kfEb);
+      tax = kfEa.x + (h * (kfCst.qx - kfEa.x)) / kfEa.d; tay = kfEa.y + (h * (kfCst.qy - kfEa.y)) / kfEa.d;
+      tbx = kfEb.x + (h * (kfCst.qx - kfEb.x)) / kfEb.d; tby = kfEb.y + (h * (kfCst.qy - kfEb.y)) / kfEb.d;
+      sA = kfEa.s; sB = kfEb.s;
+      dA = (kfEa.u - C.armSR[aiA]) * C.armDir[aiA]; dB = (kfEb.u - C.armSR[aiB]) * C.armDir[aiB];
     }
     C.cTax[ci] = tax; C.cTay[ci] = tay; C.cTbx[ci] = tbx; C.cTby[ci] = tby;
     C.cSA[ci] = sA; C.cSB[ci] = sB; C.cDA[ci] = dA; C.cDB[ci] = dB;
@@ -7014,14 +7060,17 @@ function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[])
         cpts.push(ptScratch[0], ptScratch[1]);
         const mod = p.closed ? nB - 1 : nB;
         void mod;
+        // K1247 s16: the walk reads the continuous s (sc), as the end
+        // lookups do, so a fan point joins the piece as its end slides past it.
+        const SCw = B.sc;
         let target = sA;
-        if (p.closed) { target = normS(p, sA); if (target < B.s[0] - 1e-9) target += p.len; }
+        if (p.closed) { target = normS(p, sA); if (target < SCw[0] - 1e-9) target += p.len; }
         let i = 0; let hi = nB - 1;
-        while (hi - i > 1) { const mid = (i + hi) >> 1; if (B.s[mid] <= target) i = mid; else hi = mid; }
+        while (hi - i > 1) { const mid = (i + hi) >> 1; if (SCw[mid] <= target) i = mid; else hi = mid; }
         for (let guard = 0; guard < mod; guard++) {
           i = p.closed ? (i + 1) % mod : i + 1;
           if (i >= nB) break;
-          let off = B.s[i] - sA;
+          let off = SCw[i] - sA;
           if (p.closed && p.len > 0) off = ((off % p.len) + p.len) % p.len;
           if (off >= span) break;
           if (off > 0) { pts.push(B.xy[2 * i], B.xy[2 * i + 1]); cpts.push(B.cxy[2 * i], B.cxy[2 * i + 1]); }
@@ -7202,6 +7251,21 @@ function frameFast(st: DiagramStructure, scene: SceneIn, profile?: Record<string
 interface FArm extends ArmStruct { ux: number; uy: number; ang: number }
 interface FFoot { d: number; x: number; y: number; s: number; k: number; u: number }
 function copyFoot(dst: FFoot, src: FFoot): void { dst.d = src.d; dst.x = src.x; dst.y = src.y; dst.s = src.s; dst.k = src.k; dst.u = src.u; }
+// K1247 s16: a corner arc end's foot. dst is Q (the nearest foot), or,
+// with q in a concave vertex's bisector band, footBlendInto's foot, its u
+// following its s.
+// K16_CB (experiment): "0" = the nearest foot as on master, "band" = the
+// band blend around the tracked foot, default "loc" (footBlendInto's loc).
+const KF_CB = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.K16_CB ?? "loc";
+function blendFootC(p: Poly, qx: number, qy: number, Q: FFoot, dst: FFoot): void {
+  copyFoot(dst, Q);
+  if (KF_CB === "0") return;
+  const k = Q.k; const l = k >= 0 && k < p.nseg ? p.segLen[k] : 0;
+  if (!(l > 1e-12) || !footBlendInto(p, qx, qy, k, (Q.s - p.s[k]) / l, kfFootB, KF_CB !== "band") || !(kfFootB[0] > 1e-12)) return;
+  dst.d = kfFootB[0]; dst.x = kfFootB[1]; dst.y = kfFootB[2]; dst.u = Q.u + dS(p, Q.s, kfFootB[3]); dst.s = kfFootB[3];
+}
+const kfEa: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 };
+const kfEb: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 };
 interface WalkCache {
   valid: boolean; oLo: number; oHi: number;
   fOk: boolean; fQx: number; fQy: number; fU0: number; fN: number; fK: number; fBk: number; fSm: Float64Array;
