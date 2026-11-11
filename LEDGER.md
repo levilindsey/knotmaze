@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1294.
+Next free ID: K1297.
 
 ## Waiting on Levi
 
@@ -1778,9 +1778,12 @@ Every other item below waits on the trigger it names.
   is worse than master at 24 crossings (muse_hash x71, x149; g41_def_tw64 x191, x71)
 - **K1292** · k1240s4_crops (K1240 S4) steps to sim 40 a substep apart from run to run, so g41_ring_tw64 reads
   two physics hashes (a4b8c1bf, ea67fc77); step a fixed substep count (.claude/probes/K1240/s4/)
-- **K1293** · outline_port.test.ts's second frame (a rigid 0.3 rad turn) leaves every corner degenerate, so
-  its pins there exercise no arc; give it a frame with real corners (K1283 handoff,
-  docs/design/K1283_junctions.md)
+- **K1294** · The outline's border pieces have no frame-to-frame motion guard: k1247s15_gain.ts measures faces
+  only, so a border jump between frames passes every check (K1283 s2 handoff, docs/design/K1283_s2.md)
+- **K1295** · K1278 s2's foot search (footNear at mouths and pieceless strips) raised the outline's fill p50
+  on def from about 21 to 24.5 ms; a cheaper search is one of K1247's cuts (docs/design/K1278_s2.md handoff)
+- **K1296** · The outline's GPU paint vs its CPU twin was not re-measured on src after K1278 s2
+  (docs/design/K1278_s2.md handoff)
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2120,6 +2123,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1293** · outline_port.test.ts's second frame (a rigid 0.3 rad turn) leaves every corner degenerate, so its pins there exercise no arc; give it a frame with real corners (K1283 handoff, docs/design/K1283_junctions.md). Done in fe4dd895 (2026-11-10).
 - **K1290** · answered, not adopted: forward corner-arc ends cut def jump pairs 66 -> 4 (muse_hash 33 -> 14) but census vs form B +1.8%, frame() +6%, concentric corners (j55, j156) still switch roots, and the corner-foot bites stay; follow-up in K1281. Done in 97f4f2e2 (2026-11-10).
 - **K1280** · K1240 outline jumps where a station's s crosses a centreline vertex: the tie spread gives each tie run a continuous s; def j47 1.243, j146 1.007, j158 0.264 px -> no jump (K1247 s16). The jitter-check crossings (muse_hash x61, x182, ...) now 0 jump px in k1279_motion. Done in 541d22fb (2026-11-10).
 - **K1282** · the outline's draw order from positions: nothing draws by regionsPhaseC's depthAtC sort since K1277 (fill order = structural item index, over/under per pixel); the sort is dead weight in outline.ts, remove it when stage 16 frees the file. Done in 4d168bb4 (2026-11-10).
