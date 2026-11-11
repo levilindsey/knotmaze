@@ -56,8 +56,8 @@ type Pin = { f0: { table: string; paint: string; band: string }; f1: { table: st
 // burial (NOMEET_BURY) leaves ring unchanged. The meet and the paint both read the chevron's
 // interpolated s (CF_S2_PAINT on; off, tried in 7d0ae1a0, failed the colour bar).
 // Checked against form B (census, sweep, seam).
-// K1283 s9 re-pinned on purpose (2026-11-11): the chevron is one tie run for station lookups
-// (bc), frame tails and fill strips paint their foot's s (fill_tri footS, every 8 columns),
+// K1283 s9 re-pinned on purpose (2026-11-11): frame tails and fill strips paint their foot's
+// s (fill_tri footS, every 8 columns; CF_TIE, tried, is off and leaves ring unchanged),
 // and an untied run at a failed corner fades into its tail (runEndFade): table, paint and
 // band moved. Checked against form B (census, sweep, seam).
 const PINS: Record<string, Pin> = {

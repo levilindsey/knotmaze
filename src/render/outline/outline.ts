@@ -4307,7 +4307,11 @@ function buildBorderC(C: FCache, pi: number, sig: number): void {
 // whose s falls inside the chevron's s range is placed past it, as before
 // stage 8, not mid-chevron, where the next run's strip retraced the
 // chevron's return half at another s (g41_user_tw64 (3.5, 4.0), +90 seams).
-const CF_TIE = true;
+// Off since fill_tri's strip foot (STRIP_FOOT) paints that strip at its foot's
+// s: with the foot, off holds the seam bars (5411 over 1/255, 444 steeper than
+// form B; on 5341 / 446) and keeps the census at 4400 (on: 4406, muse_hash
+// x305 +3.2 and x292 +2 px of ink at their chevron tips).
+const CF_TIE = false;
 let stKey = new Float64Array(64);
 function spreadTiesC(B: FBord): void {
   const n = B.nb; B.bc = growF(B.bc, n > 0 ? n : 1);
