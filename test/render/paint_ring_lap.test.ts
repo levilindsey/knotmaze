@@ -369,6 +369,10 @@ const ROUNDED_QUOTIENTS: Record<string, [number, string]> = {
   "outline/outline_app.ts: floor(u / float(n))": [1, "the ring reveal mask's sample wrap (K1291 s2, rvMask): one off only at a lap boundary, where u lands at -0 or n; k0 and the fraction are clamped, so both read the same ring point"],
   "outline/outline_app.ts: floor(s / L)": [1, "the reveal footprint's ring wrap (K1291 s2, rvFoot): it only seeds the binary search's start; the walk wraps both ways on folded rvdS distances, so a lap off finds the same foot"],
   "outline/rec_glsl.ts: mod(u, L)": [1, "the fill records' closed-chain arc wrap (K1247 s19, recWrap; offsetRow's ((u % L) + L) % L): one off only at a lap boundary, where u lands at -0 or L and the segment search reads the same point (sample 0) or a continuous tiny extrapolation; GPU vs CPU checked to 0.006 px"],
+  // K1247 s20: mode 4's shader placement (recSpan, recCs; chain_frame colAt's twin).
+  "outline/rec_glsl.ts: floor(sA / L)": [1, "recSpan's closed-chain wrap of a record's start (K1247 s20): one off only at a lap boundary, where a lands at L (or -0) instead of 0; a >= sm then takes the last segment, whose end is sample 0, and sB and base shift with a, so every column reads the same point"],
+  "outline/rec_glsl.ts: floor(max(0.0, sB) / L)": [1, "recSpan's search bound for the record's last vertex (K1247 s20): the bound carries two laps of margin, so a lap short still brackets it"],
+  "outline/rec_glsl.ts: floor((recSV(b, n, L, V) - a) * B / S + 0.5)": [1, "recCs, the column nearest a polygon vertex (K1247 s20, colAt's round((s(V) - a) B / S)): one off only at a half-column tie, where the vertex takes the neighbouring column; cs stays monotone in V and every column stays on the side's own polygon, so the border is unchanged and only the column spacing moves (GPU vs float64 twin p99 0.0002 px)"],
 };
 
 const ROUNDERS = ["floor", "ceil", "trunc", "round", "roundEven", "fract", "mod", "int"];

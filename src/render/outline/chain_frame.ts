@@ -412,7 +412,7 @@ export function recSideOk(c: FrameChain, T: RecTables, ci: number, sA: number, d
 
 /** Column i (1 <= i <= N - 1) of a record side placed by mode 4 into out[oi], out[oi + 1]; returns its
  *  centreline s. Each interior vertex V's fan takes the columns cs(V) .. cs(V) + steps(V), one per fan
- *  point (a concave side's miter for each), cs(V) = round((s(V) - a) B / S) + F_before(V) (S the straight
+ *  point (a concave side's miter for each), cs(V) = (s(V) - a) B / S rounded, + F_before(V) (S the straight
  *  length, B = N - F the straight columns); the straight parts take the columns between, evenly in s; a
  *  later fan wins a shared column. Every polygon vertex of the border (outline.ts buildBorder) lands on a
  *  column, so no chord between two columns cuts a corner. The shader's recCol is this, line for line. */
