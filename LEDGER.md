@@ -261,14 +261,6 @@ Next free ID: K1315.
 - **K809** · Panel search on your phone (K793): typing in the box must not jump or zoom the maze, the
   keyboard must not cover the box, results scroll under the sticky bar, and Enter closes the keyboard
   and outlines the best row (an inferred risk, not seen; `docs/design/K793.md`)
-- **K1045** · Junction eyes, by look (K1040 S4b was dropped for K1240; asked again 2026-11-11): where two junctions sit close, their threads close in a
-  small eye of paper. Form B leaves a dot about 0.16 across, today's look a thin lens (0.67 x 0.12), or it
-  could be covered (`docs/design/K1040_s1b_holes_fades.md` F1). The outline
-  (rp=outline) closes them: muse_hash j74/j73, form B an open bordered eye, the outline two black flecks
-  (`.claude/probes/K1240/out/k1283s7/crops/colour10.png` rows 1-2, form B | master | after).
-- **K1049** · Through-pass bends, by look (K1040 S4b was dropped; asked again 2026-11-11): where a thread passes through a junction and bends, form B
-  now draws today's sharp inner corner; S1b and S1c rounded it (`docs/design/K1040_s1d_corner.md` F2, and F6's Look
-  with crops). Recommended: keep sharp (form B and today agree)
 - **K1075** · K137 sounds unchecked: the snap pluck and the strand glissando need an ear (left by K658; K658
   doc Findings filed).
 - **K1080** · On the phone, zoom in and out and tap threads and junction choices: do the tap targets feel
@@ -799,6 +791,14 @@ Every other item below waits on the trigger it names.
   cornerFallbackC fallbacks a frame (about 0.5 ms). K1247_s4_corners.md Handoff 1
 - **K1311** · Route bands (K81) in rp=outline's junction fans: without them pink wedges poke into the gold
   path at lit junctions, the max steps 42-51 in muse_hash and ring (K1278 s3 handoff, docs/design/K1278_s3.md)
+- **K1045** · Junction eyes, DECIDED (Levi 2026-11-11: "form B's open eye"); rp=outline must draw it in a K1314 fix stage: where two junctions sit close, their threads close in a
+  small eye of paper. Form B leaves a dot about 0.16 across, today's look a thin lens (0.67 x 0.12), or it
+  could be covered (`docs/design/K1040_s1b_holes_fades.md` F1). The outline
+  (rp=outline) closes them: muse_hash j74/j73, form B an open bordered eye, the outline two black flecks
+  (`.claude/probes/K1240/out/k1283s7/crops/colour10.png` rows 1-2, form B | master | after).
+- **K1049** · Through-pass bends, DECIDED (Levi 2026-11-11: "Rounded corner", S1b/S1c's fillet); rp=outline must draw it in a K1314 fix stage: where a thread passes through a junction and bends, form B
+  now draws today's sharp inner corner; S1b and S1c rounded it (`docs/design/K1040_s1d_corner.md` F2, and F6's Look
+  with crops)
 
 ## Residuals (known, not fixed)
 
