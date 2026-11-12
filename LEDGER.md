@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1310.
+Next free ID: K1311.
 
 ## Waiting on Levi
 
@@ -300,6 +300,10 @@ Next free ID: K1310.
   (his K928 plan: finish iterating, then hand-edit, then the pipeline reads his curves as drawn), or more look
   notes first? Every note so far is built (K1251). Sheets: .claude/probes/K863/trace/out38/png/; J3NV has no
   template SVG yet (out34/cursive_template.svg shows the export).
+- **K1310** · Redesign course check (assessment 2026-11-11): (1) write the gate for making rp=outline the
+  default; (2) a crop sheet, outline vs form B at the worst spots, so Levi says which differences still
+  matter; (3) put speed first: the worker frame on def is ~120-185 ms during a drag vs K1247's 3 ms target;
+  (4) pause K1283 after s11 until (2) is answered
 
 ## In progress
 
