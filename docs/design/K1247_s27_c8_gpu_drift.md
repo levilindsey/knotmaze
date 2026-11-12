@@ -91,3 +91,33 @@ Under 40 lines:
 
 End with `Ledger items` and K1247's handle fields.
 
+
+## Handoff (stage 27, agent ac9acd27cfb1cf144, 2026-11-12)
+
+Started 06:10:16, stopped 07:50. All three goals done; every Done check ran.
+
+- **c8 (K1332)**: two rules in fill_tri, record fill and rec_glsl alike. (1) 5709f5e0: a junction fan's mid-mouth
+  vertex M takes the cone key of its arm's centreline, `zAt(a.pi, sM)`, not `Zs - zt`. (2) 87d55749 FLOOR_EDGE: in
+  REC_KEY_FLOOR mode (reKey, unmatched ranges, jEnd strips included) a border row's key is
+  `max(zOwn - zt, 2 z(sQ) - zt - keyC)`, sQ the quarter s toward the centre, so the border edge's midpoint sits on
+  the cone. Cause: c67's sheared jEnd strip 751 dipped its border vertex into an under-pass and lost to c8's
+  strip 410. Crop: `.claude/probes/K1247/out/s27/after4x/spot_001.png` (fillet | master | after): quad and stair gone.
+- **Census s27a** at 87d55749 (own cache; copies and diffs in `out/s27/census/`): bar kinds equal s8f
+  (stray_ink 9, hard_edge 1, paper 0, broken_ink 13, k1049 0), no bar find moved. #234 is gone. owner_only
+  2300 -> 1241 finds; at d 0.3: 1066 gone (957 disk-tagged at junction hubs, 101 junc, 8 strip), 117 moved,
+  7 new (1752 px, crops `out/s27/new_after/spot_001..007`: n4 muse_hash j149 loses master's fan wedge, the
+  other six match master by eye). jmis (fan cells vs form B's chain): 59240 -> 36374 (fan M) -> 36028.
+- **Drift (K1327, c3b31eb7)**: GPU vs CPU max px, master -> after: def 0.59 -> 0.0004, fat 0.63 -> 0.0016,
+  muse_hash 1.85 -> 0.0003, muse_default_tw 0.63 -> 0.0002, ring 2.88 -> 0.0004, g41_def_tw64 3.33 -> 0.0011,
+  g41_ring_tw42 1.61 -> 0.0013, g41_ring_tw64 3.06 -> 0.0013; the four clean scenes stay <= 0.0012. Cause:
+  span-end and column ties read differently in f32 and f64 (brought in by 49afe511). `out/s27/drift_*.txt`.
+- **Fixture (K1328, 3d93fd29)**: `outline_mirror.json.gz` (g41_user_tw64 at 4 decimals, c32's mirrored strip) in
+  rec_tie, plus a recSpan / recCs pin against chain_frame. rec_tie 0 on every scene.
+- **Speed** (two ABBA rounds, `out/s27/bench/`, f2b87087 vs 87d55749): main frame identical (def rest 5.7-5.8
+  both, drag p50 6.7-6.8 both; fat rest 5.9-6.1 vs 5.9-6.0, drag 6.9-7.1 vs 6.8-7.0); worker p50 def 141-149 vs
+  130-147, fat 140-155 vs 145-150 (one master outlier 302): inside the run-to-run spread.
+- **Tests**: npm test green at b356445c (paint_ring_lap's reviewed site now names recCs's `floor(r / S + 0.5)`);
+  outline_port paint re-pinned (ring, g41_ring_tw42, f0 and f1), golden snapshots unchanged.
+- **Left**: the 25 junctions FLOOR_EDGE made a few cells worse and the 7 the fan rule made worse
+  (muse_hash j1390 +47 cells), all owner-only, none visible in the crops; the faint seam line inside c8's
+  under-pass (in master too).
