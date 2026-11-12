@@ -85,3 +85,68 @@ Under 40 lines:
 - your last SHA.
 
 End with `Ledger items` and K1314's handle fields.
+
+## Handoff (K1314 s4 agent, 2026-11-11 17:52 PT)
+
+Stopped with the checks done, 50 min before the cap. Done holds except "no find left" near the goal
+junctions: 25 finds there at stage 3, 11 now (below). Commits: 8492c0d9 (goal 1), ac065f0c (goal 2),
+fe111dd0 (tool), then this handoff.
+
+**Goal 1, the 5 bends (8492c0d9, `outline.ts` cornersPhaseC's through pass, regionsPhaseC, piecesPhaseC's
+thruJoinFan).** A through bend whose arc overflows the room left by the next junction's SAME-SIDE corner
+(thruRoomC now counts only that corner and names it) ends at X, where its circle crosses that corner's
+circle with X on both arcs (circleCrossC, onArcC). The neighbour's arc starts at X (its cTa/cTb are
+rewritten), the border cut moves to the neighbour's foot, X joins both junction polygons (thruJoinEnd)
+and thruJoinFan rounds the ink there. Where the circles don't cross on both arcs, thruFitC clamps r along
+the closed-form path (cfAt), and only a bend that doesn't fit at r 0 is declined. All 5 join: muse_hash
+j78 (X 5.730,9.033), j98 (17.357,29.606), j135 (4.759,24.502), g41_user_tw64 j48 (14.178,7.655), j49
+(12.819,6.658).
+
+**Goal 2, the eyes (ac065f0c, `outline.ts` cornersPhaseC, after the first trySolve).** A corner's V is its
+borders' FIRST meet from the junction: a V farther than h/sin(th/2) is solved again from halfway back to
+the junction, and that root is kept when it passes trySolve's checks with both feet nearer. It moves 3
+corners in the 12 census scenes, all in muse_hash (222 at j73, 471 at j155, 475 at j156). Both eyes now
+draw open and ink-ringed. Re-solves per frame: muse_hash 68, def 58, g41_user_tw64 43, fat 0.
+
+**Census** (`k1314_run.ps1 -Lock`, out/s1/census_s4b.*), s3c -> s4b: stray_ink 29 -> 25, hard_edge 4 -> 4,
+paper 7 -> 0, broken_ink 18 -> 16, k1049 1 -> 0, total 59 -> 45. The join alone (s4, 8492c0d9) gave
+24/4/2/18/0 = 48.
+
+**Left near the goal junctions** (`k1314_ll_diff.ps1 -Near`, crops out/s4/left/spot_001..011):
+- j77: stray cut 50 px, broken cut short 63.
+- j78: stray cut 33, hard wedge 15.
+- j20: stray cut 46, broken 105.
+- j135: stray cut 36.
+- j154: stray cut 48, broken 62.
+- j49: stray cut 43.
+- j73: spike 29.
+
+Five are stage-3 finds at the same places (both at j77, j20's stray, both at j154). The j154 pair is the
+inner edge of the ink at j154's own corner 469 (r 0.62h): round in the outline, pointed in the fillet
+reference (out/s4/dbg/join98_left.png).
+
+**The j73 spike is a reference quirk.** The outline now rounds j73's first meet (corner 222, V
+5.536,14.971, r 0.289h). Form B's j73 corner takes the far meet, which is j74's V (5.355,14.738), so form
+B rounds the eye's top tip twice and leaves its right tip sharp (`k1314_s4_fbc.ts`). Whether that tip
+should be round or sharp is Levi's call (out/s4/dbg/spike73.png).
+
+**Bench** (def drag, ABBA, out/s4/bench_s4.json): worker frame p50 master 63.2 / 68.0 ms vs ac065f0c 62.4 /
+63.5 ms; worker 185.1 / 175.2 vs 180.8 / 182.9 ms. Within the spread.
+
+**Tests.** npm test green (226 files, 2928 tests), goldens unchanged, outline_port pins unmoved, so nothing
+was re-frozen. buildOutlineFull (its own solveEq) mirrors none of these: thruRoomC's same-side rule, thruFitC
+(K1318), the join, or the first meet.
+
+**For the band (K1247 s22, not edited).** The join rewrites a DONE neighbour corner's cTa/cTb to X in pass
+1 and adds X to two region polygons. Whatever reads a corner's ta/tb or rebuilds its arc from records
+(fill_tri's fillStructure/recStrip, chain_frame) has to take the same X. The round ink at X is
+thruJoinFan's extra pts/cpts on the arc piece.
+
+**Crops** (fillet | master | after), out/s4/after/spot_001..007: j135, j78, j98, g41 j48, j49, the j73
+eye, the j156 eye.
+
+**Next:**
+1. Attribute the "cut" stray ink and "cut short" broken ink near the joins and their neighbours to the
+   piece under each (`k1314_s4_plot.ts --zoom=3`, `k1314_s4_eye.ts`), then fix.
+2. Get Levi's call on j73's right tip.
+3. Mirror the rules in buildOutlineFull if a pin should cover them.
