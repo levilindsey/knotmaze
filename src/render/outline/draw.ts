@@ -299,8 +299,10 @@ export function zChains(scene: SceneIn): { zc: ZChain[]; passes: Pass[][]; idx: 
  *  tube at 11's s 6.6, 4.7 from their junction), and its border there ties
  *  (form B's ink 0.34 = 1 - sstep of the key gap) where the outline inked 1.
  *  Each stretch of chain i whose vertices lie within 2.25h of chain j's
- *  (not already a crossing pass's pair there, not both within 6h of a
- *  junction they share: runEndFade's) becomes a pass of i against j, so
+ *  and that goes inside j's tube (nearest under 1.6h; threads merely side
+ *  by side at 2h tie nowhere in form B either), not already a crossing
+ *  pass's pair there and not both within 6h of a junction they share
+ *  (runEndFade's), becomes a pass of i against j, so
  *  tieAlpha and band_gpu.ts tie it as a crossing's. The tie is continuous:
  *  a pass appears before any band point is within h of the partner. */
 const CONTACT_PASSES = true;
@@ -308,7 +310,7 @@ const CONTACT_CACHE = new Map<string, Pass[][]>();
 /** Probe counters: contact sets built and reused. */
 export const contactStats = { built: 0, hits: 0 };
 function contactPasses(zc: ZChain[], passes: Pass[][], jr: { i: number; s: number }[][], h: number): void {
-  const R = 2.25 * h; const R2 = R * R; const LJ = 6 * h; const SELF = 6 * h; const STEP = 0.5 * h;
+  const R = 2.25 * h; const R2 = R * R; const LJ = 6 * h; const SELF = 6 * h; const STEP = 0.5 * h; const DEEP2 = 1.6 * h * 1.6 * h;
   // Samples every STEP of arc (the chains' vertices are ~h/6 apart), in a counting-sort grid of R cells.
   let N = 0;
   for (const c of zc) N += Math.ceil(c.len / STEP) + 2;
@@ -359,7 +361,7 @@ function contactPasses(zc: ZChain[], passes: Pass[][], jr: { i: number; s: numbe
         }
       }
       for (const j of touched) {
-        const O = zc[j]; const sm = bestS[j]; bestD[j] = Infinity;
+        const O = zc[j]; const sm = bestS[j]; const d2 = bestD[j]; bestD[j] = Infinity;
         let covered = false;
         const L = byO.get(j);
         if (L) for (const P of L) {
@@ -375,7 +377,7 @@ function contactPasses(zc: ZChain[], passes: Pass[][], jr: { i: number; s: numbe
         if (covered) continue;
         if (!hits) hits = new Map();
         let H = hits.get(j); if (!H) { H = []; hits.set(j, H); }
-        H.push(sk, sm);
+        H.push(sk, sm, d2);
       }
     }
     if (!hits) continue;
@@ -383,17 +385,22 @@ function contactPasses(zc: ZChain[], passes: Pass[][], jr: { i: number; s: numbe
       const O = zc[j];
       let a = 0;
       const flush = (b: number): void => {
-        // Stretch H[a..b) (pairs): own span by summed steps, partner span about its first s.
-        let span = 0; let mLo = 0; let mHi = 0;
-        for (let u = a + 2; u < b; u += 2) span += dSC(C, H[u - 2], H[u]);
-        for (let u = a; u < b; u += 2) { const dm = dSC(O, H[a + 1], H[u + 1]); if (dm < mLo) mLo = dm; if (dm > mHi) mHi = dm; }
+        // Stretch H[a..b) (triples: own s, partner s, d²): own span by summed steps, partner span
+        // about its first s. Only a stretch that goes INSIDE the partner's tube (nearest sample
+        // under DEEP; x77's is 0.9h) ties: two threads side by side (j59's ch7/ch23, 1.98h) touch
+        // without overlapping, and a tie there faded the border form B keeps.
+        let span = 0; let mLo = 0; let mHi = 0; let dm2 = Infinity;
+        for (let u = a; u < b; u += 3) if (H[u + 2] < dm2) dm2 = H[u + 2];
+        if (!(dm2 < DEEP2)) return;
+        for (let u = a + 3; u < b; u += 3) span += dSC(C, H[u - 3], H[u]);
+        for (let u = a; u < b; u += 3) { const dm = dSC(O, H[a + 1], H[u + 1]); if (dm < mLo) mLo = dm; if (dm > mHi) mHi = dm; }
         let s = H[a] + span / 2; if (C.closed && C.len > 0) s = ((s % C.len) + C.len) % C.len;
         let so = H[a + 1] + (mLo + mHi) / 2; if (O.closed && O.len > 0) so = ((so % O.len) + O.len) % O.len;
         const hs = Math.abs(span) / 2;
         passes[i].push({ s, o: j, so, lo: hs + h, hi: hs + h, rO: (mHi - mLo) / 2 + 2 * h });
       };
-      for (let u = 2; u < H.length; u += 2) {
-        if (Math.abs(dSC(C, H[u - 2], H[u])) > 2 * h || Math.abs(dSC(O, H[u - 1], H[u + 1])) > 4 * h) { flush(u); a = u; }
+      for (let u = 3; u < H.length; u += 3) {
+        if (Math.abs(dSC(C, H[u - 3], H[u])) > 2 * h || Math.abs(dSC(O, H[u - 2], H[u + 1])) > 4 * h) { flush(u); a = u; }
       }
       flush(H.length);
     }
@@ -699,21 +706,15 @@ export function bandData(table: OutlineTable, scene: SceneIn, zz: ReturnType<typ
         // any angle, and one outer/inner pair would interpolate the fade
         // into pixels the partner does not cover.
         const R = tiedSeg ? ROWS : 1;
-        // K1283 s11: a tied run's own alpha (runEndFade's, at a failed
-        // corner) multiplies the tie's, interpolated as an untied band's.
-        const pa = p.alpha;
         let prev: [number, number, number][] | null = null;
         for (const t of ts) {
           const ox = ax + (bx - ax) * t; const oy = ay + (by - ay) * t;
           const ix = ia[0] + (ib[0] - ia[0]) * t; const iy = ia[1] + (ib[1] - ia[1]) * t;
           const s = sa + (sb - sa) * t;
-          const oA = pa ? pa[2 * i] + (pa[2 * i + 2] - pa[2 * i]) * t : 1;
-          const iA = pa ? pa[2 * i + 1] + (pa[2 * i + 3] - pa[2 * i + 1]) * t : 1;
           const cur: [number, number, number][] = [];
           for (let r = 0; r <= R; r++) {
             const u = r / R; const x = ox + (ix - ox) * u; const y = oy + (iy - oy) * u;
-            const bA = oA + (iA - oA) * u;
-            cur.push([x, y, (tiedSeg ? alphaAt(p.chain, x, y, s, h - W * u) : 1) * bA]);
+            cur.push([x, y, tiedSeg ? alphaAt(p.chain, x, y, s, h - W * u) : 1]);
           }
           if (prev) {
             for (let r = 0; r < R; r++) {

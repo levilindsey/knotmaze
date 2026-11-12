@@ -7150,8 +7150,6 @@ const RUN_END_FADE = true;
 const RUN_FADE_L = 3;
 /** K1283 s11: the fade at a failed corner whose end arm is B (s9 faded A's only). */
 const RUN_FADE_B = true;
-/** K1283 s11: X's runs at a failed corner, inside E's tube (muse_hash j59's run 379, x77's 151). */
-const RUN_FADE_X = true;
 function runEndFade(a: TailIn, p: OutlinePiece, atEnd: boolean): void {
   const np = p.pts.length / 2;
   if (np < 2 || p.kind !== "run") return;
@@ -7375,20 +7373,6 @@ function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[])
         };
         endTailPts(tin, pts, cpts, alpha, fill);
         if (RUN_END_FADE && (RUN_FADE_B || !dp.interval) && !C.cOk[ci]) runFade.push({ a: tin, key: aiE * 2 + (sideE === 1 ? 0 : 1) });
-        if (RUN_END_FADE && RUN_FADE_X && !C.cOk[ci]) {
-          // K1283 s11: X's runs at the corner's other arm, by the same rule
-          // with the roles swapped: X's border inside E's tube.
-          let aiE2 = -1;
-          for (const ai of st.armsOfJ[dc.ji] ?? []) if (ai !== aiX && ai !== aiE && C.armObj[ai].pi === piE) { aiE2 = ai; break; }
-          const tx: TailIn = {
-            ...tin,
-            alt: aiE2 >= 0 ? { sRX: C.armSR[aiE2], dirX: C.armDir[aiE2], LX: C.armL[aiE2], LcutX: C.armLcut[aiE2] } : null,
-            pE: C.polys[piX], dirE: C.armDir[aiX], endS: C.armSR[aiX],
-            pX: C.polys[piE], sRX: C.armSR[aiE], dirX: C.armDir[aiE], LX: C.armL[aiE], LcutX: C.armLcut[aiE],
-            zE: tin.zX, zX: tin.zE,
-          };
-          runFade.push({ a: tx, key: aiX * 2 }); runFade.push({ a: tx, key: aiX * 2 + 1 });
-        }
       }
       pieces.push({ kind: "tail", chain: dp.chain, side: sideE, s0: sT, s1: sT, pts, cpts, region: -1, corner: ci, alpha, fpts: fill.pts, fcpts: fill.cpts });
     } else {

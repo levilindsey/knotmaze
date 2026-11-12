@@ -200,7 +200,6 @@ export function bandGpu(table: OutlineTable, scene: SceneIn, zz: ZZ): BandGpu {
       continue;
     }
     const C = zc[p.chain]; const PS = passes[p.chain]; const pb = passBase[p.chain];
-    const tpa = p.alpha && p.alpha.length === 2 * np ? p.alpha : null;
     // Per-vertex own s, as bandData.
     let cum = 0; let L = 0;
     for (let i = 1; i < np; i++) { const ex = p.pts[2 * i] - p.pts[2 * i - 2]; const ey = p.pts[2 * i + 1] - p.pts[2 * i - 1]; L += Math.sqrt(ex * ex + ey * ey); }
@@ -231,8 +230,7 @@ export function bandGpu(table: OutlineTable, scene: SceneIn, zz: ZZ): BandGpu {
         if (Math.max(da, db) >= -P.lo - h && Math.min(da, db) <= P.hi + h) sl.push(pb + j);
       }
       if (sl.length > BAND_SLOTS) { dropped++; sl.length = BAND_SLOTS; }
-      // K1283 s11: a tied run's own alpha (runEndFade's) multiplies the tie's.
-      quad(p.pts[2 * i], p.pts[2 * i + 1], p.pts[2 * i + 2], p.pts[2 * i + 3], ia[0], ia[1], ib[0], ib[1], sa, sb, zAtC(C, sa), zAtC(C, sb), sl.length ? sl : null, tpa, i);
+      quad(p.pts[2 * i], p.pts[2 * i + 1], p.pts[2 * i + 2], p.pts[2 * i + 3], ia[0], ia[1], ib[0], ib[1], sa, sb, zAtC(C, sa), zAtC(C, sb), sl.length ? sl : null);
       ia = ib;
     }
   }
