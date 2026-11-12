@@ -551,11 +551,11 @@ Next free ID: K1325.
   most cases. But there are still plenty of unacceptable artifacts"): an artifact census (stray ink, hard
   colour edges inside fills, paper holes, broken ink) across scenes, then fix stages that drive its count to
   0; the look gate in docs/design/K1240_gate.md
-  - owner: nobody since 2026-11-12 02:50 (merged; agent `a7a3fe2b0a6d97b23` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `c5ba26b8`
-  - evidence: .claude/probes/K1314/ (census tools); untracked out/s1-s5/
-  - next: s7: g41_user_tw64 j71 hard wedge (MATCH_MIRROR plus a junction fill that yields to an arm's own tube; keep muse_hash j56 clear)
-  - brief: `docs/design/K1314_s6_faults.md`
+  - owner: agent `a7eace4bdd5301d8d` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 02:55, 2 h cap ~04:55)
+  - branch: `worktree-agent-a7eace4bdd5301d8d`, worktree `.claude/worktrees/agent-a7eace4bdd5301d8d`; last commit: `50a45d3b`
+  - evidence: .claude/probes/K1314/ (census tools); untracked out/s1-s6/
+  - next: s7: j71 wedge, class (b) loops (x15, j58), class (d) (j55, x22, x304, j30)
+  - brief: `docs/design/K1314_s7_wedge_loops.md`
 
 ## Next, in order
 
