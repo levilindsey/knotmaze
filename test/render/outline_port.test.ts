@@ -87,9 +87,13 @@ type Pin = { f0: { table: string; paint: string; band: string }; f1: { table: st
 // whose border pieces span different s ranges samples both on one s scale, its centre
 // keyed at the mid s unless the ranges part at a junction end (fill_tri fillFrame JEND_GATE:
 // paint): every digest, f0 and f1, on ring and g41_ring_tw42. Checked against form B (census s6, crops in out/s6).
+// K1314 s8 re-pinned on purpose (2026-11-12): cutFoldsC cuts a bend within h of an arm root
+// unless it also lies within h of an open end, and an end fold's chord normal faces the end's
+// centre: table, paint and band on ring (f0 and f1), table on g41_ring_tw42 (f0 and f1).
+// Checked against form B (census s8f, crops in out/s8).
 const PINS: Record<string, Pin> = {
-  ring: { f0: { table: "20693f9bd711d99b", paint: "cf123b21dafdb5c2", band: "694b09357ee4698b" }, f1: { table: "9b4a2a467d87b059", paint: "5e73c2aab864a311", band: "28df117af057152f" } },
-  g41_ring_tw42: { f0: { table: "1b110913f87cc76e", paint: "50247878bd6fdaa4", band: "957f29f6c7f99cb6" }, f1: { table: "2b2e4e3c1314f909", paint: "b3f49438beaea1e7", band: "d4999b0de32693ce" } },
+  ring: { f0: { table: "276636e58a693c3b", paint: "4c55915bb7048867", band: "aae65c8f2abc2099" }, f1: { table: "884b7cf4c709b5c6", paint: "243dea8ca577e14f", band: "f1d10a471bd74cac" } },
+  g41_ring_tw42: { f0: { table: "11c7cdb8da1b9891", paint: "50247878bd6fdaa4", band: "957f29f6c7f99cb6" }, f1: { table: "1f89393aff28b751", paint: "b3f49438beaea1e7", band: "d4999b0de32693ce" } },
 };
 
 // The tool's second frame: every chain point rotated 0.3 rad and moved.
