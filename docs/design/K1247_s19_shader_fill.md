@@ -73,3 +73,90 @@ Under 40 lines:
 - your last SHA.
 
 End with `Ledger items` and K1247's handle fields.
+
+## Handoff (stage 19 agent, 2026-11-11)
+
+Status: the shader placement is in, behind `oe=1` (fillRec 2), and draws what
+s18's CPU placement draws. The fill target (1 ms or less) is NOT met: the
+worker's fill is about half of off's. Commits on `worktree-agent-ad99eae806bca8e74`:
+4bca8c22 (records placed in the vertex shader), 8279232e (GLSL in
+`rec_glsl.ts`, the twin), 58138b0e (checks, tools, the reviewed `mod(u, L)`),
+4ab1cbab (transform feedback), d968fd2c (the twin checks the app's program).
+
+Design.
+- The worker places columns 0, 1, N-1 and N of each record strip and every
+  vertex that is not a record. Columns 2..N-2 come from a strip table
+  (REC_TEXELS 3 texels a strip) or, for a fallback strip, rows of `uRecFb`.
+  Paint vertices are reordered dynamic-first (nDyn), so a reply that is not a
+  restructure sends prefix slices, uploaded with bufferSubData.
+- Main places once per reply, not per frame: `REC_PLACE_VS` (rec_glsl.ts,
+  `recVs` over a pass-through) runs under transform feedback, with
+  RASTERIZER_DISCARD, into `placedBuf` (8 floats a vertex: x, y, key, 0, then
+  aS). The fill and app programs are the plain PAINT_VS and APP_VS reading
+  locations 0, 2 and 5 from that buffer. Before the tables arrive, attribute 6
+  is the constant -1 (every vertex passes through). A frame at rest pays
+  nothing. The first try placed in the fill's own vertex shader every frame;
+  it cost main 0.2-0.3 ms at rest (def off 5.9/5.9, on 6.1/6.1; fat off
+  6.1/6.2, on 6.4/6.4), so it was replaced.
+- With the switch off nothing changes: no placement program, no tables.
+
+Fidelity (`k1247s19_twin.ts`, GPU frame 14, the app's REC_PLACE_VS in headed
+Chrome, ANGLE D3D11, RX 6800 XT). GPU vs CPU max 0.0011 / 0.0020 / 0.0057
+device px (def / muse_hash / fat). |key| and |s| are within 0.0001;
+glError 0. The float32 twin vs CPU over the whole 5 s drags: max 0.0017 /
+0.0014 / 0.0065 px. The only rounded quotient, rec_glsl's `mod(u, L)`, is
+listed in paint_ring_lap.test.ts.
+
+Census against form B (`k1247s19_fillcensus.ts`; s19 / s18): def 52/177 vs
+52/178, muse_hash 253/471 vs 253/472, g41_user_tw64 15/131 vs 15/131.
+
+Speed (`k1247s19_bench.ps1`, ABBA off / on / on / off, under the perf lock,
+p50 ms; reply MB is the drag's total, about 19-22 replies).
+
+| def | off | on | on | off |
+|---|---|---|---|---|
+| main at rest | 5.9 | 6.0 | 6.0 | 6.0 |
+| main mid-drag | 8.6 | 8.5 | 8.5 | 9.1 |
+| worker fill | 47.6 | 22.5 | 23.0 | 46.6 |
+| worker frame | 190 | 155.8 | 163.6 | 193.1 |
+| reply MB | 32.06 | 22.61 | 22.61 | 32.49 |
+| upload | 4.1 | 3.8 | 3.7 | 4.4 |
+
+| fat | off | on | on | off |
+|---|---|---|---|---|
+| main at rest | 6.3 | 6.2 | 6.3 | 6.2 |
+| main mid-drag | 9.6 | 8.8 | 8.7 | 9.0 |
+| worker fill | 45.3 | 28.1 | 24.1 | 47.1 |
+| worker frame | 205.9 | 174.2 | 165.9 | 188.6 |
+| reply MB | 32.55 | 23.07 | 23.07 | 32.78 |
+
+Main stays within the run-to-run spread at rest and mid-drag.
+
+Where the fill still goes (Node, `k1247s19_fillprof.ts`, fillRec 2, def,
+about 17 ms total): fans 6.4, strip:rec 4.24 (990 strips, about 4.3 us
+each: pointAt, 4 to 8 offsetAt, zAt1 for 4 columns, footS), pre 1.9,
+junctions 1.6, disks 1.2, tail 0.85.
+
+Crops (from d968fd2c): `.claude/probes/K1247/out/s19/crops/{def,muse_hash,fat}.png`,
+each row off | on | |diff|. On vs s18's CPU placement differs by 0 px in 14
+rows and 1 px in one (def row 3). The off-vs-on differences are s18's record
+differences (owner swaps where strips meet), including muse_hash row 2 (f18,
+1308 px).
+
+Checks (from d968fd2c): `npm test` green (tsc, then 225 files / 2927 tests
+passed, 2 files / 10 tests skipped); byte_identity and outline_port.test.ts
+pass with their files unchanged from master (the only test edit is
+paint_ring_lap's new entry).
+
+Left for stage 20 and later.
+- Stage 20: the cracks.
+- The 1 ms fill target: make fans, junctions and disks GPU records (fans
+  alone are 6.4 ms); reuse buffers in `pre`; make strip:rec cheaper (fewer
+  offsetAt calls, or place columns 0, 1, N-1 and N on the GPU too, with the
+  worker sending only the strip table).
+- The worker frame is still dominated by the band (58-63 ms) and zC (16 ms),
+  which this stage did not touch.
+
+Tools (tracked): `.claude/probes/K1247/k1247s19_{lib,twin,fillcensus,fillprof,crops}.ts`,
+`k1247s19_smoke.mjs`, `k1247s19_bench.ps1`. Outputs (untracked):
+`.claude/probes/K1247/out/s19/`.
