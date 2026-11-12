@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1319.
+Next free ID: K1320.
 
 ## Waiting on Levi
 
@@ -296,6 +296,11 @@ Next free ID: K1319.
   K1314 group 1, 18 census finds (e.g. muse_default_tw j150, g41_user_tw64 j63/j64, x134); sheet
   `.claude/probes/K1314/out/s1/crops/sheets/broken_ink_01.png` (form B | today | rp=outline). Asked
   2026-11-11.
+- **K1319** · The K1045 open eye at muse_hash j73 in rp=outline: its ink ring closes round at the right tip,
+  where form B cuts it off at an angle (form B's j73 corner takes the same far meet as j74's and never rounds
+  it). Keep the round tip, or match form B? Census counts it as one stray_ink spike (262 px). Picture
+  `.claude/probes/K1314/out/s4/dbg/spike73.png` (form B | difference | rp=outline);
+  `out/s4/after/spot_006.png`. Asked 2026-11-11.
 
 ## In progress
 
@@ -513,11 +518,11 @@ Next free ID: K1319.
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: nobody since 2026-11-11 17:53 (merged; agent `a555ed905a6dda790` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `673b1cc0`
-  - evidence: .claude/probes/K1247/ (tools); untracked out/s22/
-  - next: s23: shader placement of the band records (main places the columns from chainTex; removes ob=1's extra ~6 MB reply and 10-15 ms worker band time); the run-end column fidelity (max 1.155 px muse_hash c71); then fans, junctions and disks as records, zC, the first frame (frame ~235 ms, cold fill ~122 ms)
-  - brief: `docs/design/K1247_s22_band_records.md`
+  - owner: agent `a4396d99ea4060cf3` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-11 17:58, 2 h cap ~19:58)
+  - branch: `worktree-agent-a4396d99ea4060cf3`, worktree `.claude/worktrees/agent-a4396d99ea4060cf3`; last commit: `6a9e7415`
+  - evidence: .claude/probes/K1247/ (tools); src/render/outline/band_rec.ts; untracked out/s22/, out/s23/
+  - next: s23: main places the band records (tied runs, ghosts) from chainTex; the run-end column fidelity; trim the fallback slack; flip ob to the default if it beats ob=0
+  - brief: `docs/design/K1247_s23_band_shader.md`
 - **K1278** · The outline's paint blends seamlessly across junctions (Levi 2026-11-10): section colour and pulses
   from per-pixel fields continuous across faces, triangles and junctions, gated by a seam test on every
   face edge, triangle edge and junction. Full text in docs/ledger_notes.md
@@ -546,11 +551,11 @@ Next free ID: K1319.
   most cases. But there are still plenty of unacceptable artifacts"): an artifact census (stray ink, hard
   colour edges inside fills, paper holes, broken ink) across scenes, then fix stages that drive its count to
   0; the look gate in docs/design/K1240_gate.md
-  - owner: nobody since 2026-11-11 17:53 (merged; agent `a4e491db0bb7d458e` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `30c5b392`
-  - evidence: .claude/probes/K1314/ (census tools); untracked out/s1-s4/
-  - next: s5: the finds left near the joins (j78 wedge and cuts; cut / cut short at j77, j20, j135, j154, j49), the other hard wedges (g41_ring_tw64 x67/x68, g41_user_tw64 j71), stray classes a-d (s2 handoff); the j73 eye tip waits on Levi; K1315 waits on Levi
-  - brief: `docs/design/K1314_s4_bends_eyes.md`
+  - owner: agent `a245bd015c3213ac1` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-11 17:58, 2 h cap ~19:58)
+  - branch: `worktree-agent-a245bd015c3213ac1`, worktree `.claude/worktrees/agent-a245bd015c3213ac1`; last commit: `6a9e7415`
+  - evidence: .claude/probes/K1314/ (census tools); untracked out/s1-s5/
+  - next: s5: the finds left at s4's joins (j78 wedge, cuts at j77/j135/j20/j154, g41_user_tw64 j49), hard wedges (x67, x68, j71), stray classes c then a; K1315 and K1319 wait on Levi
+  - brief: `docs/design/K1314_s5_joins_wedges.md`
 
 ## Next, in order
 
@@ -1857,7 +1862,8 @@ Every other item below waits on the trigger it names.
   `docs/design/K1247_s20_records_look.md` handoff.
 - **K1318** · rp=outline fallback builder (outline.ts buildOutlineFull) lacks K1314 s3's thruRoomC (a through
   bend's arc yields to the next junction's corner) and TailIn.bend (a stub cap under the arc): the fast path
-  has both (K1314 s3 handoff, docs/design/K1314_s3_corners.md)
+  has both (K1314 s3 handoff, docs/design/K1314_s3_corners.md); nor s4's bend join (same-side room, thruFitC,
+  the meet X) or first meet (docs/design/K1314_s4_bends_eyes.md handoff); the pins did not need them
 
 ## Approved, to schedule (2026-10-11)
 
