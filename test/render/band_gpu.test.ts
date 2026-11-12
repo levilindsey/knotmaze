@@ -61,9 +61,8 @@ describe("K1240 S4b GPU band", () => {
     for (const p of tb.pieces) {
       const np = p.pts.length / 2;
       if (np < 2) continue;
-      // A tied piece's alpha is the tie's, in the shader (.w = 1).
-      const tied = (p.kind === "run" || p.kind === "ghost") && p.chain >= 0 && p.chain < zz.zc.length && zz.passes[p.chain].length > 0;
-      const pa = (p.kind === "tail" || (p.kind === "run" && !tied)) ? p.alpha : undefined;
+      // K1314 s3: a tied run's own alpha reaches .w too (the shader multiplies it by the tie's).
+      const pa = (p.kind === "tail" || p.kind === "run") ? p.alpha : undefined;
       if (pa) expect(pa.length).toBe(2 * np);
       if (pa && p.kind === "tail") tails++;
       for (let i = 0; i + 1 < np; i++) {

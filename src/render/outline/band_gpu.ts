@@ -218,6 +218,9 @@ export function bandGpu(table: OutlineTable, scene: SceneIn, zz: ZZ): BandGpu {
       const P = PS[j]; const d0 = dSC(C, P.s, sv[0]);
       if (d0 + uMax >= -P.lo - h - 1e-6 && d0 + uMin <= P.hi + h + 1e-6) cand.push(j);
     }
+    // K1314 s3: a tied run's own alpha (runEndFade's fade at a failed corner)
+    // multiplies the tie's, as bandData's tied branch reads it since K1314 s2.
+    const paT = p.alpha && p.alpha.length === 2 * np ? p.alpha : null;
     let ia = inner(0);
     for (let i = 0; i + 1 < np; i++) {
       const ib = inner(i + 1);
@@ -239,7 +242,7 @@ export function bandGpu(table: OutlineTable, scene: SceneIn, zz: ZZ): BandGpu {
         sl.sort((u, v) => (dist.get(u) as number) - (dist.get(v) as number) || u - v);
         sl.length = BAND_SLOTS; sl.sort((u, v) => u - v);
       }
-      quad(p.pts[2 * i], p.pts[2 * i + 1], p.pts[2 * i + 2], p.pts[2 * i + 3], ia[0], ia[1], ib[0], ib[1], sa, sb, zAtC(C, sa), zAtC(C, sb), sl.length ? sl : null);
+      quad(p.pts[2 * i], p.pts[2 * i + 1], p.pts[2 * i + 2], p.pts[2 * i + 3], ia[0], ia[1], ib[0], ib[1], sa, sb, zAtC(C, sa), zAtC(C, sb), sl.length ? sl : null, paT, i);
       ia = ib;
     }
   }
