@@ -47,10 +47,22 @@ import { sectionPaint, runAt, runColour, type RGB } from "../../../src/render/ou
 const here = dirname(fileURLToPath(import.meta.url));
 export const SCENE_DIR = "C:/Users/lsl/Repositories/knotmaze/.claude/probes/K868/scenes";
 export const ALL = ["muse_hash", "muse_default_tw", "def", "fat", "ring", "user_tw42.lightpaper", "g41_def_tw42", "g41_def_tw64", "g41_ring_tw42", "g41_ring_tw64", "g41_user_tw42", "g41_user_tw64"];
-export const KINDS = ["stray_ink", "hard_edge", "paper", "broken_ink", "k1049", "owner_only"] as const;
+export const KINDS = ["stray_ink", "hard_edge", "paper", "broken_ink", "k1049", "owner_only", "tail_look"] as const;
 /** owner_only: a fill owned by another chain than form B's, invisible in the app's paint (junction colours converge);
  *  shown on the K1310 sheet's per-chain hues. Informational: not in the artifact total. */
+/** tail_look: broken-ink finds at a junction's under-tail (band:tail faded, fill:junc unbordered) that end
+ * without a hard cut: form B's tail runs longer and fades, rp=outline ends it sooner, rounded or faded.
+ * Viewed in s1's random 20: they look right, so informational, not counted. The second sample (seed 2) put every
+ * band:tail find and the fill:junc finds under 250 px there too (9 of 12 broken_ink were rounded or faded ends);
+ * the cost is x134's square block, a band:tail end this pixel test can't tell from them (s2: an end-shape test). */
 export const ARTIFACT_KINDS: readonly Kind[] = ["stray_ink", "hard_edge", "paper", "broken_ink", "k1049"];
+/** s1's tuning from the viewed samples, applied to every find (and to merged JSON, so it re-tallies without a render).
+ *  null drops the find. */
+export function reclassS1(a: Art): Art | null {
+  if (a.kind === "k1049" && a.sizePx < 5) return null; // seed 2: 3 and 3.2 px looked rounded, 5.3 px and up sharp
+  if (a.kind === "broken_ink" && (a.part.startsWith("band:tail") || (a.part.startsWith("fill:junc") && a.px < 250))) return { ...a, kind: "tail_look" };
+  return a;
+}
 const COL = 0.06;
 export type Kind = (typeof KINDS)[number];
 
@@ -260,6 +272,7 @@ export function census(nm: string, ppu: number, MIN_PX = 12): { arts: Art[]; m: 
     return st;
   };
   const oStep = step(R.rgb, (i) => R.own[i] > 0 && R.rgb[3 * i] >= 0 && R.ink[i] < 0.25);
+  const oStepMax2 = boxMax(oStep, Wd, Hd, 2); // a wedge counts only where the outline itself shows a step (s1 FP: form B's own wedge)
   const bStep = step(B.rgb, (i) => B.chain[i] >= 0 && B.rgb[3 * i] >= 0);
   const bStepMax3 = boxMax(bStep, Wd, Hd, 3);
   // Ink steps: a hard ink edge (x134's cut-off tail) where form B's ink changes gently within 2 px.
@@ -269,7 +282,7 @@ export function census(nm: string, ppu: number, MIN_PX = 12): { arts: Art[]; m: 
     return st;
   };
   const oIStep = iStep(R.ink); const bIStepMax2 = boxMax(iStep(B.ink), Wd, Hd, 2);
-  const flags: Record<Kind, Uint8Array> = { stray_ink: new Uint8Array(n), hard_edge: new Uint8Array(n), paper: new Uint8Array(n), broken_ink: new Uint8Array(n), k1049: new Uint8Array(n), owner_only: new Uint8Array(n) };
+  const flags: Record<Kind, Uint8Array> = { stray_ink: new Uint8Array(n), hard_edge: new Uint8Array(n), paper: new Uint8Array(n), broken_ink: new Uint8Array(n), k1049: new Uint8Array(n), owner_only: new Uint8Array(n), tail_look: new Uint8Array(n) };
   const sub = new Uint8Array(n); // paper: 1 hole, 2 covered; hard_edge: 1 wedge (owner mismatch), 2 step; stray: 3 hard cut
   const bInkMax2 = boxMax(B.ink, Wd, Hd, 2); const oInkMax2 = boxMax(R.ink, Wd, Hd, 2);
   const has = (i: number, want: (q: number) => boolean): boolean => {
@@ -293,7 +306,7 @@ export function census(nm: string, ppu: number, MIN_PX = 12): { arts: Art[]; m: 
         // outline's colour here against the nearest form B colour within 2 px
         let dMin = Infinity;
         if (R.rgb[3 * i] >= 0) has(i, (q) => { if (B.rgb[3 * q] < 0) return false; dMin = Math.min(dMin, Math.max(Math.abs(R.rgb[3 * i] - B.rgb[3 * q]), Math.abs(R.rgb[3 * i + 1] - B.rgb[3 * q + 1]), Math.abs(R.rgb[3 * i + 2] - B.rgb[3 * q + 2]))); return false; });
-        if (dMin > COL && dMin < Infinity) { flags.hard_edge[i] = 1; sub[i] = 1; } else flags.owner_only[i] = 1;
+        if (dMin > COL && dMin < Infinity && oStepMax2[i] > STEP) { flags.hard_edge[i] = 1; sub[i] = 1; } else flags.owner_only[i] = 1;
       }
     }
     if (!flags.hard_edge[i] && oStep[i] > STEP && bStepMax3[i] < STEP / 2 && bInkMax3[i] < 0.3) { flags.hard_edge[i] = 1; sub[i] = 2; }
@@ -306,7 +319,7 @@ export function census(nm: string, ppu: number, MIN_PX = 12): { arts: Art[]; m: 
   };
   const lab = new Int32Array(n); const stack: number[] = [];
   for (const kind of KINDS) {
-    if (kind === "k1049") continue;
+    if (kind === "k1049" || kind === "tail_look") continue;
     const f = flags[kind]; const dil = boxMax(Float32Array.from(f), Wd, Hd, 2);
     lab.fill(0); let nl = 0;
     for (let s0 = 0; s0 < n; s0++) {
@@ -321,7 +334,7 @@ export function census(nm: string, ppu: number, MIN_PX = 12): { arts: Art[]; m: 
           const j = yy * Wd + xx; if (dil[j] && !lab[j]) { lab[j] = nl; stack.push(j); }
         }
       }
-      if (pix.length < MIN_PX) continue;
+      if (pix.length < (kind === "paper" ? Math.min(MIN_PX, 10) : MIN_PX)) continue; // paper: hairline cracks are short
       let sx = 0; let sy = 0; let bx0 = Infinity; let by0 = Infinity; let bx1 = -Infinity; let by1 = -Infinity;
       const votes = new Map<string, number>(); let nHole = 0; let nCut = 0; let geoOn = 0; let appD = 0; let inPaper = 0;
       for (const i of pix) {
@@ -363,7 +376,14 @@ export function census(nm: string, ppu: number, MIN_PX = 12): { arts: Art[]; m: 
       if (kind === "hard_edge" || kind === "owner_only") detail = `app colour diff ${(appD / pix.length).toFixed(3)}`;
       const pk = part.split(":")[1]?.split(" ")[0] ?? "";
       const file = part.startsWith("band") ? PIECE_FILE[pk] ?? "outline.ts" : part.startsWith("fill") ? (kind === "hard_edge" || kind === "owner_only" ? (shape === "wedge" ? "fill_tri.ts (fill ownership: " + pk + ")" : "fill_tri.ts (slots/vW) + paint.ts") : ITEM_FILE[pk.split("|")[0]] ?? "fill_tri.ts") : "?";
-      arts.push({ id: "", scene: nm, kind, sub: shape, x: +cx.toFixed(3), y: +cy.toFixed(3), px: pix.length, sizePx: Math.max(bw, bh), bbox: [+((c0 + bx0) / ppu).toFixed(3), +((r0 + by0) / ppu).toFixed(3), +((c0 + bx1 + 1) / ppu).toFixed(3), +((r0 + by1 + 1) / ppu).toFixed(3)], near: nb.id, dNear: +nb.d.toFixed(3), part, file, detail });
+      // a junction under-tail without a hard cut: tail_look (see KINDS)
+      let kOut: Kind = kind;
+      if (kind === "broken_ink" && (part.startsWith("band:tail") || part.startsWith("fill:junc"))) {
+        let cut = 0;
+        for (let y = Math.max(0, by0 - 3); y <= Math.min(Hd - 1, by1 + 3); y++) for (let x = Math.max(0, bx0 - 3); x <= Math.min(Wd - 1, bx1 + 3); x++) { const q = y * Wd + x; if (oIStep[q] > 0.35 && bIStepMax2[q] < 0.12 && bInkMax2[q] > 0.1) cut++; }
+        if (cut < 6) kOut = "tail_look"; else shape = "cut short";
+      }
+      arts.push({ id: "", scene: nm, kind: kOut, sub: shape, x: +cx.toFixed(3), y: +cy.toFixed(3), px: pix.length, sizePx: Math.max(bw, bh), bbox: [+((c0 + bx0) / ppu).toFixed(3), +((r0 + by0) / ppu).toFixed(3), +((c0 + bx1 + 1) / ppu).toFixed(3), +((r0 + by1 + 1) / ppu).toFixed(3)], near: nb.id, dNear: +nb.d.toFixed(3), part, file, detail });
     }
   }
   }
@@ -385,7 +405,7 @@ export function census(nm: string, ppu: number, MIN_PX = 12): { arts: Art[]; m: 
         const g = ccw(u, v); if (others.some((o) => ccw(u, o) < g)) continue;
         if (g >= Math.PI) continue; // the outer side of the bend
         const dev = rMed * (1 / Math.sin(g / 2) - 1) * cam; // how far a rounded corner moves the inner edge, screen px at the scene's camera
-        if (dev < 0.5) continue;
+        if (dev < 2.5) continue; // s1 FP: under 2.5 screen px a rounded corner is not visible at the camera
         const has = m.table.corners.some((c) => c.junction === J.id && c.aChain === a.chain && c.bChain === a.chain && c.ok);
         if (has) continue;
         const mid = u + g / 2; const d = h / Math.sin(g / 2);
@@ -395,7 +415,7 @@ export function census(nm: string, ppu: number, MIN_PX = 12): { arts: Art[]; m: 
     }));
   });
   arts.forEach((a, i) => { a.id = `${nm}#${i}`; });
-  return { arts, m };
+  return { arts: arts.map(reclassS1).filter((a): a is Art => a !== null), m };
 }
 
 async function main(): Promise<void> {
@@ -406,7 +426,7 @@ async function main(): Promise<void> {
   const scenes = (opt("scene") ?? ALL.join(",")).split(",").filter((s) => existsSync(join(SCENE_DIR, `${s}.json`)));
   const outDir = join(here, "out", "s1"); mkdirSync(outDir, { recursive: true });
   const all: Art[] = []; const lines: string[] = [];
-  lines.push(["scene", ...ARTIFACT_KINDS, "total", "owner_only"].map((s, i) => (i ? s.padStart(11) : s.padEnd(22))).join(""));
+  lines.push(["scene", ...ARTIFACT_KINDS, "total", "owner_only", "tail_look"].map((s, i) => (i ? s.padStart(11) : s.padEnd(22))).join(""));
   const merge = opt("merge")?.split(",");
   const waitLock = (): void => {
     const lock = join(process.env.TEMP ?? "", "claude-perf.lock"); const sab = new Int32Array(new SharedArrayBuffer(4));
@@ -414,15 +434,15 @@ async function main(): Promise<void> {
   };
   for (const nm of scenes) {
     let arts: Art[];
-    if (merge) arts = merge.flatMap((t) => (JSON.parse(readFileSync(join(outDir, `census_${t}.json`), "utf8")).arts as Art[]).filter((a) => a.scene === nm));
+    if (merge) arts = merge.flatMap((t) => (JSON.parse(readFileSync(join(outDir, `census_${t}.json`), "utf8")).arts as Art[]).filter((a) => a.scene === nm)).map(reclassS1).filter((a): a is Art => a !== null);
     else { waitLock(); arts = census(nm, ppu, minPx).arts; }
     all.push(...arts);
     const cnt = ARTIFACT_KINDS.map((k) => arts.filter((a) => a.kind === k).length);
-    lines.push([nm.padEnd(22), ...[...cnt, cnt.reduce((a, b) => a + b, 0), arts.filter((a) => a.kind === "owner_only").length].map((v) => String(v).padStart(11))].join(""));
+    lines.push([nm.padEnd(22), ...[...cnt, cnt.reduce((a, b) => a + b, 0), arts.filter((a) => a.kind === "owner_only").length, arts.filter((a) => a.kind === "tail_look").length].map((v) => String(v).padStart(11))].join(""));
     writeFileSync(join(outDir, `census_${tag}.json`), JSON.stringify({ ppu, minPx, scenes, arts: all }, null, 1));
   }
   const tot = ARTIFACT_KINDS.map((k) => all.filter((a) => a.kind === k).length);
-  lines.push(["TOTAL".padEnd(22), ...[...tot, tot.reduce((a, b) => a + b, 0), all.filter((a) => a.kind === "owner_only").length].map((v) => String(v).padStart(11))].join(""));
+  lines.push(["TOTAL".padEnd(22), ...[...tot, tot.reduce((a, b) => a + b, 0), all.filter((a) => a.kind === "owner_only").length, all.filter((a) => a.kind === "tail_look").length].map((v) => String(v).padStart(11))].join(""));
   writeFileSync(join(outDir, `census_${tag}.txt`), lines.join("\n") + "\n");
   console.log(lines.join("\n"));
 }

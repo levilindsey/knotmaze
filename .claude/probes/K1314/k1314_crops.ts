@@ -113,7 +113,7 @@ function main(): void {
   const args = process.argv.slice(2);
   const pos = args.filter((a) => !a.startsWith("--"));
   const opt = (k: string): string | undefined => args.find((a) => a.startsWith(`--${k}=`))?.slice(k.length + 3);
-  const P = Number(opt("px") ?? 240); ZOOM = Number(opt("zoom") ?? 8);
+  const P = Number(opt("px") ?? 240); ZOOM = Number(opt("zoom") ?? 5);
   const outDir = opt("out") ?? join(here, "out", "s1", "crops"); mkdirSync(outDir, { recursive: true });
   const man: { n: number; file: string; kind: string; label: string }[] = [];
   const spots = opt("spots");
@@ -135,11 +135,18 @@ function main(): void {
     let arts = J.arts.filter((a) => !kinds || kinds.includes(a.kind));
     const sample = Number(opt("sample") ?? 0);
     if (sample) { let s = Number(opt("seed") ?? 1); const rnd = (): number => { s = (s * 1103515245 + 12345) % 2147483648; return s / 2147483648; }; arts = arts.map((a) => ({ a, k: rnd() })).sort((p, q) => p.k - q.k).slice(0, sample).map((p) => p.a); }
+    // --top=N: the N largest per kind (by pixels; K1049 by its screen deviation), census order kept within a kind
+    const top = Number(opt("top") ?? 0);
+    if (top) {
+      const keep = new Set<Art>();
+      for (const k of new Set(arts.map((a) => a.kind))) arts.filter((a) => a.kind === k).sort((p, q) => (q.kind === "k1049" ? q.sizePx - p.sizePx : q.px - p.px)).slice(0, top).forEach((a) => keep.add(a));
+      arts = arts.filter((a) => keep.has(a));
+    }
     const per = new Map<string, number>();
     for (const a of arts) {
       const n = (per.get(a.kind) ?? 0) + 1; per.set(a.kind, n);
       const h = sceneCtx(a.scene).m.scene.look.halfWidth;
-      const rr = Math.max(0.6 * h, 0.5 * Math.hypot(a.bbox[2] - a.bbox[0], a.bbox[3] - a.bbox[1]) + 0.25 * h);
+      const rr = a.kind === "k1049" ? 0.8 * h : Math.max(0.6 * h, 0.5 * Math.hypot(a.bbox[2] - a.bbox[0], a.bbox[3] - a.bbox[1]) + 0.25 * h);
       const file = `${sample ? "fp_" : ""}${a.kind}_${String(n).padStart(3, "0")}.png`;
       writePng(join(outDir, file), cropRow(a.scene, a.x, a.y, Math.min(rr, 3.6 * h), P), 3 * P + 8, P);
       man.push({ n, file, kind: a.kind, label: `${a.kind} ${n}: ${a.scene} ${a.near} ${a.sub} ${a.px}px ${a.part}${a.detail ? " (" + a.detail + ")" : ""} [${a.id}]` });
