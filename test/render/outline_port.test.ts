@@ -66,9 +66,15 @@ type Pin = { f0: { table: string; paint: string; band: string }; f1: { table: st
 // is unchanged on ring; g41_ring_tw42's paint pins were already stale at master f1a39b95
 // (its scene is not committed, so the test skipped there) and take master's own digests.
 // Checked against form B (census, sweep, seam).
+// K1314 s2 re-pinned on purpose (2026-11-11): sharpJoinFan draws no fan whose short way
+// turns against the border (da > 0), and runEndFade fades no run at a near-straight or
+// reflex failed corner (RUN_FADE_TH): table (ring and g41_ring_tw42, f0 and f1). With
+// those, and a tied run's band reading its own p.alpha (draw.ts bandData), ring's band
+// moved (f0 and f1; g41_ring_tw42's is unchanged). Paint is unchanged on both. Checked
+// against form B (census s2a, crops).
 const PINS: Record<string, Pin> = {
-  ring: { f0: { table: "0a5d816a0930b944", paint: "5e4217ee69951e8f", band: "9c1b3a98924d745c" }, f1: { table: "aa7e4a6ddaaf4ea2", paint: "69d5380db966d331", band: "6f0837c638f1c815" } },
-  g41_ring_tw42: { f0: { table: "7abc152b2c17e61a", paint: "fe6e5cd8fa6434c5", band: "745db7b9507eaa90" }, f1: { table: "e805423e64bb5ade", paint: "3b2f0873cfc48357", band: "3c67691dccf05395" } },
+  ring: { f0: { table: "e6dc331e31cb136f", paint: "5e4217ee69951e8f", band: "dd409f898cf6e1fc" }, f1: { table: "9e34f4e566a8284b", paint: "69d5380db966d331", band: "795e77374f9c90de" } },
+  g41_ring_tw42: { f0: { table: "41e36980cea61e26", paint: "fe6e5cd8fa6434c5", band: "745db7b9507eaa90" }, f1: { table: "4a97e69c9a8ecb4e", paint: "3b2f0873cfc48357", band: "3c67691dccf05395" } },
 };
 
 // The tool's second frame: every chain point rotated 0.3 rad and moved.
