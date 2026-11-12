@@ -268,12 +268,14 @@ export function zChains(scene: SceneIn): { zc: ZChain[]; passes: Pass[][]; idx: 
   if (CONTACT_PASSES) {
     // The contacts are structure: found on a diagram's first frame, then reused (a stale one ties
     // nothing - tieAlpha needs the partner's foot within h).
-    let key = `${scene.name}|${scene.crossings.length}|${scene.junctions.length}`;
+    let key = `${scene.name}|${scene.crossings.length}|${scene.junctions.length}|${contactOpts.groups ? contactOpts.tau : -1}`;
     for (const [id, i] of idx) key += `|${id}:${zc[i].n}`;
-    let cp = CONTACT_CACHE.get(key);
+    let cp = contactOpts.onSkip || contactOpts.onArms ? undefined : CONTACT_CACHE.get(key);
     if (!cp) {
       const n0 = passes.map((P) => P.length);
-      contactPasses(zc, passes, h, CONTACT_GROUPS ? groupArms(scene, zc, idx, passes, h, norm, tan, posAt) : null);
+      const arms = contactOpts.groups ? groupArms(scene, zc, idx, passes, h, norm, tan, posAt) : null;
+      if (arms) contactOpts.onArms?.(arms);
+      contactPasses(zc, passes, h, arms);
       cp = passes.map((P, i) => P.slice(n0[i]));
       if (CONTACT_CACHE.size >= 8) CONTACT_CACHE.delete(CONTACT_CACHE.keys().next().value as string);
       CONTACT_CACHE.set(key, cp);
@@ -314,32 +316,34 @@ export function zChains(scene: SceneIn): { zc: ZChain[]; passes: Pass[][]; idx: 
  *  g41_def_tw64 0 -> 5, g41_user_tw64 3 -> 8, muse_default_tw 0 -> 2;
  *  census_s26b against census_s26off, which equals census_s7f). */
 const CONTACT_PASSES = true;
-const CONTACT_GROUPS = false;
+const CONTACT_GROUPS = true;
+/** K1324 probe hooks: the group skip on or off, and each skipped sample (own chain i at s, partner j at so). */
+export const contactOpts: { groups: boolean; tau: number; onSkip: ((i: number, s: number, j: number, so: number, d2: number) => void) | null; onArms: ((arms: GroupArm[][]) => void) | null } = { groups: CONTACT_GROUPS, tau: 0.999, onSkip: null, onArms: null };
 const CONTACT_CACHE = new Map<string, Pass[][]>();
 /** Probe counters: contact sets built and reused. */
 export const contactStats = { built: 0, hits: 0 };
-/** A junction arm on its chain: root s, direction, span L, group. */
-export interface GroupArm { s: number; dir: number; L: number; g: number }
+/** A junction arm on its chain: root s, direction, span L, cap cut Lcut, group. */
+export interface GroupArm { s: number; dir: number; L: number; Lcut: number; g: number }
 /** K1247 s26 (K1324): the junction arms per chain as outline.ts builds them
  *  (form B's), in zChains' s: an end arm roots at its chain end (outline.ts
  *  roots it at the extension to c', the same span past the chain's end).
  *  Groups: junctions joined by a run with no crossing between their roots.
- *  L: the next root, the chain's end, or a crossing's cut d - reach - h
- *  (h cot(theta/2), or the quadratic reach on a shallow crossing). Not
- *  ported: the cut a crossing BEHIND the root sets (outline.ts's pendArms,
- *  k * uB, from the arm's corner angles), which only shortens an arm. passes
- *  holds the crossing passes only (contactPasses appends after). */
+ *  L: the next root, the chain's end, or the cap cut Lcut: a crossing's
+ *  d - reach - h (h cot(theta/2), or the quadratic reach on a shallow
+ *  crossing), and (K1324 s1) a crossing BEHIND the root's k * uB, k from
+ *  the arm's corner angles (outline.ts's pendArms, form B's dEdgeTip).
+ *  passes holds the crossing passes only (contactPasses appends after). */
 export function groupArms(scene: SceneIn, zc: ZChain[], idx: Map<number, number>, passes: Pass[][], h: number, norm: (c: ZChain, s: number) => number, tan: (c: ZChain, s: number) => [number, number], posAt: (c: ZChain, s: number) => [number, number]): GroupArm[][] {
   const nJ = scene.junctions.length; const parent = new Int32Array(nJ); for (let q = 0; q < nJ; q++) parent[q] = q;
   const find = (q: number): number => { while (parent[q] !== q) { parent[q] = parent[parent[q]]; q = parent[q]; } return q; };
-  const rt: { s: number; j: number; dir: number }[][] = zc.map(() => []);
+  const rt: { s: number; j: number; dir: number; e: number; sB: number; thru: boolean; sScene: number; i: number }[][] = zc.map(() => []);
   scene.junctions.forEach((J, ji) => {
-    for (const arm of J.arms) {
-      const i = idx.get(arm.chain); if (i === undefined) continue;
+    J.arms.forEach((arm, e) => {
+      const i = idx.get(arm.chain); if (i === undefined) return;
       const c = zc[i];
-      if (arm.kind === "end") { const st = Math.abs(arm.s) <= Math.abs(arm.s - c.len); rt[i].push({ s: st ? 0 : c.len, j: ji, dir: st ? 1 : -1 }); }
-      else rt[i].push({ s: norm(c, arm.s), j: ji, dir: arm.dir });
-    }
+      if (arm.kind === "end") { const st = Math.abs(arm.s) <= Math.abs(arm.s - c.len); rt[i].push({ s: st ? 0 : c.len, j: ji, dir: st ? 1 : -1, e, sB: Math.min(Math.max(arm.s, 0), c.len), thru: false, sScene: arm.s, i }); }
+      else { const s = norm(c, arm.s); rt[i].push({ s, j: ji, dir: arm.dir, e, sB: s, thru: arm.kind === "through", sScene: arm.s, i }); }
+    });
   });
   const crossBetween = (i: number, a: number, b: number): boolean => {
     const c = zc[i]; const len = b - a;
@@ -368,31 +372,81 @@ export function groupArms(scene: SceneIn, zc: ZChain[], idx: Map<number, number>
     }
     return Math.min(reach, Math.max(fl, r));
   };
-  return rt.map((R, i) => {
+  const out = rt.map((R, i) => {
     const c = zc[i];
     return R.map((A) => {
       const delta = (s: number): number => { let d = (s - A.s) * A.dir; if (c.closed && c.len > 0) d = ((d % c.len) + c.len) % c.len; return d; };
       let L = c.closed ? c.len : A.dir > 0 ? c.len - A.s : A.s;
       for (const q of R) { const d = delta(q.s); if (d > 1e-9 && d < L) L = d; }
-      for (const P of passes[i]) { const d = delta(P.s); if (d < -1e-12) continue; L = Math.min(L, d - reachOf(i, P, A.dir) - h); }
-      return { s: A.s, dir: A.dir, L: Math.max(0, L), g: find(A.j) };
+      let Lcut = Infinity; let uB = Infinity;
+      for (const P of passes[i]) {
+        const d = delta(P.s);
+        const u = c.closed ? c.len - d : -d;
+        if ((c.closed || d < -1e-12) && u >= 0 && u < uB) uB = u;
+        if (d < -1e-12) continue;
+        Lcut = Math.min(Lcut, d - reachOf(i, P, A.dir) - h);
+      }
+      let sE = A.sB + A.dir * 2 * h; if (!c.closed) sE = Math.min(Math.max(sE, 0), c.len);
+      const a0 = posAt(c, A.sB); const a1 = posAt(c, sE);
+      let ux = a1[0] - a0[0]; let uy = a1[1] - a0[1];
+      if (Math.hypot(ux, uy) < 1e-12) { const t = tan(c, A.sB); ux = t[0] * A.dir; uy = t[1] * A.dir; }
+      return { arm: { s: A.s, dir: A.dir, L: Math.max(0, Math.min(L, Lcut)), Lcut, g: find(A.j) }, Lroot: L, uB, ang: Math.atan2(uy, ux), src: A };
     });
   });
+  // K1324 s1: the behind cut c = k uB, k from the arm's two cyclic neighbours at its junction (outline.ts's
+  // pendArms): g = tan((pi - theta)/4) for theta < pi, k = clamp(1/g, 1, 4); a through pass's own two arms
+  // make no corner.
+  const byJ: (typeof out)[number][number][][] = scene.junctions.map(() => []);
+  for (const R of out) for (const X of R) byJ[X.src.j].push(X);
+  for (const L of byJ) L.sort((u, v) => u.ang - v.ang);
+  for (const L of byJ) {
+    const n = L.length;
+    L.forEach((X, at) => {
+      if (!(X.uB < Infinity) || n < 2) return;
+      let gMax = 0;
+      for (const [a, b] of [[L[(at + n - 1) % n], X], [X, L[(at + 1) % n]]]) {
+        if (a === b) continue;
+        if (a.src.i === b.src.i && a.src.thru && b.src.thru && Math.abs(a.src.sScene - b.src.sScene) < 1e-6) continue;
+        let th = b.ang - a.ang; th = ((th % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+        if (th < Math.PI) gMax = Math.max(gMax, Math.tan((Math.PI - th) / 4));
+      }
+      const k = gMax > 0 ? Math.min(4, Math.max(1, 1 / gMax)) : 4;
+      const cut = k * X.uB;
+      if (cut < X.arm.Lcut) X.arm.Lcut = cut;
+      X.arm.L = Math.max(0, Math.min(X.Lroot, X.arm.Lcut));
+    });
+  }
+  return out.map((R) => R.map((X) => X.arm));
+}
+/** K1324 s1: form B's member() on groupArms' arms: chain c at s belongs to group g with cap ramp
+ *  ss(Lcut, Lcut - h, d) (1 inside the arm, 0 at its cut; form B's capw = h), the largest ramp over the
+ *  arms it lies on; a cut nearer its root than h reaches back past the root. g -1: on no arm. */
+export function groupMember(A: GroupArm[], c: ZChain, s: number, h: number): { g: number; ramp: number } {
+  const dOf = (X: GroupArm): number => { let d = (s - X.s) * X.dir; if (c.closed && c.len > 0) d = ((d % c.len) + c.len) % c.len; return d; };
+  const rp = (X: GroupArm, d: number): number => { if (X.Lcut === Infinity) return 1; const t = Math.min(1, Math.max(0, (d - X.Lcut) / -h)); return t * t * (3 - 2 * t); };
+  let g = -1; let ramp = 0;
+  for (const X of A) {
+    const d = dOf(X); if (d < -1e-12 || d > X.L + 1e-12) continue;
+    const r = rp(X, d); if (g < 0 || r > ramp) { g = X.g; ramp = r; }
+  }
+  if (g >= 0 && ramp > 0) {
+    for (const X of A) {
+      if (X.g !== g || X.Lcut === Infinity) continue;
+      let d = dOf(X); if (c.closed && d > c.len / 2) d -= c.len;
+      if (d < 1e-12 && d > X.Lcut - h) ramp = Math.min(ramp, rp(X, d));
+    }
+  }
+  return { g, ramp: g < 0 ? 1 : ramp };
 }
 function contactPasses(zc: ZChain[], passes: Pass[][], h: number, arms: GroupArm[][] | null): void {
   const R = 2.25 * h; const R2 = R * R; const SELF = 6 * h; const STEP = 0.5 * h; const DEEP2 = 1.6 * h * 1.6 * h;
-  // K1324: groupArms' reach is a port of form B's, within ~0.2h of it (crossing s from the passes, not the
-  // scene); the slack keeps a tie off the tip of form B's own arm.
-  const SLACK = 0.25 * h;
-  const onArm = (c: ZChain, A: GroupArm, s: number): boolean => { let d = (s - A.s) * A.dir; if (c.closed && c.len > 0) d = ((d % c.len) + c.len) % c.len; return d >= -1e-9 && d <= A.L + SLACK; };
-  /** Do chain i at s and chain j at so both lie on arms of one junction group? */
+  /** K1324 s1: chain i at s and chain j at so are both whole members of one junction group (form B's
+   *  member(), ramp at least contactOpts.tau on both sides): form B draws them as one surface, no tie. */
   const sameGroup = (i: number, s: number, j: number, so: number): boolean => {
     if (!arms) return false;
-    for (const A of arms[i]) {
-      if (!onArm(zc[i], A, s)) continue;
-      for (const B of arms[j]) if (B.g === A.g && onArm(zc[j], B, so)) return true;
-    }
-    return false;
+    const a = groupMember(arms[i], zc[i], s, h); if (a.g < 0 || a.ramp < contactOpts.tau) return false;
+    const b = groupMember(arms[j], zc[j], so, h);
+    return b.g === a.g && b.ramp >= contactOpts.tau;
   };
   // Samples every STEP of arc (the chains' vertices are ~h/6 apart), in a counting-sort grid of R cells.
   let N = 0;
@@ -450,6 +504,7 @@ function contactPasses(zc: ZChain[], passes: Pass[][], h: number, arms: GroupArm
         }
         if (covered) continue;
         if (sameGroup(i, sk, j, sm)) {
+          contactOpts.onSkip?.(i, sk, j, sm, d2);
           // K1324: a cut, so the stretches on either side stay apart (an arm shorter than 2h would
           // otherwise be bridged, and the joined pass centred back on the group's arms).
           const H = hits?.get(j); if (H && H[H.length - 1] !== Infinity) H.push(NaN, NaN, Infinity);
