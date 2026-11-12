@@ -865,13 +865,26 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
       const range = (p: typeof pl): [number, number] | null => (p && p.pts.length >= 4 ? [p.s0, wrap(p.s1 - p.s0)] : null);
       const rL = range(pl) ?? range(pr) ?? [s0, ds]; const rR = range(pr) ?? rL;
       if (c && c.closed && c.len > 0) rR[0] += c.len * Math.round((rL[0] - rR[0]) / c.len);
+      // K1314 s5: with both borders their own pieces, each border row is
+      // resampled over its own piece's s range, so where the two ranges
+      // differ (one side's border runs on past a crossing or a junction
+      // corner that consumed the other's) row i sits at sL on one side and
+      // sR on the other. Each border vertex is keyed by the depth at its own
+      // s, and the centre by the mean's: keyed by the L range on both sides,
+      // the R side's end rows took a depth up to the range offset away and
+      // the strip sank under its neighbour in a wedge (g41_ring_tw64 x67,
+      // x68: an over pass drawn under). Equal ranges key as before, bit for
+      // bit (sL === sR === s).
+      const perSide = range(pl) !== null && range(pr) !== null;
       for (let i = 0; i <= N; i++) {
-        const s = s0 + (ds * i) / N; const z = zAt(it.pi, s);
+        const s = s0 + (ds * i) / N;
         const lx = bufL[2 * i]; const ly = bufL[2 * i + 1]; const rx = bufR[2 * i]; const ry = bufR[2 * i + 1];
         const sL = rL[0] + (rL[1] * i) / N; const sR = rR[0] + (rR[1] * i) / N;
-        set(it.base + i, lx, ly, z - zt, s);
+        const z = perSide ? zAt(it.pi, (sL + sR) / 2) : zAt(it.pi, s);
+        const zl = perSide ? zAt(it.pi, sL) : z; const zr = perSide ? zAt(it.pi, sR) : z;
+        set(it.base + i, lx, ly, zl - zt, s);
         set(it.base + W + i, (lx + rx) / 2, (ly + ry) / 2, z, s);
-        set(it.base + 2 * W + i, rx, ry, z - zt, s);
+        set(it.base + 2 * W + i, rx, ry, zr - zt, s);
         s4[SLOTS * (it.base + i)] = sL; s4[SLOTS * (it.base + W + i)] = (sL + sR) / 2; s4[SLOTS * (it.base + 2 * W + i)] = sR;
         across[it.base + i] = 1; across[it.base + 2 * W + i] = 1;
       }
