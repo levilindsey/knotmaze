@@ -676,6 +676,8 @@ class OutlinePass {
   readonly tfCpu: number[] = [];
   private tq: { TIME_ELAPSED_EXT: number; GPU_DISJOINT_EXT: number } | null | undefined = undefined;
   private tqPend: WebGLQuery[] = [];
+  /** K1247 s25: each BAND_TEX_W-wide data texture's height at its last upload. */
+  private readonly ftexH = new WeakMap<WebGLTexture, number>();
   private recOk = false;
   private recN = 0;
   private nPaint = 0;
@@ -918,7 +920,9 @@ class OutlinePass {
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, BAND_TEX_W, h, 0, gl.RGBA, gl.FLOAT, d);
+      // K1247 s25: same height as the last reply's: overwrite in place (texImage2D redefines the storage).
+      if (this.ftexH.get(t) === h) gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, BAND_TEX_W, h, gl.RGBA, gl.FLOAT, d);
+      else { gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, BAND_TEX_W, h, 0, gl.RGBA, gl.FLOAT, d); this.ftexH.set(t, h); }
     };
     ftex(this.chainTex, r.chainTex, r.chainTexH);
     ftex(this.passTex, r.passTex, r.passTexH);
