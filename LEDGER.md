@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1320.
+Next free ID: K1321.
 
 ## Waiting on Levi
 
@@ -518,11 +518,11 @@ Next free ID: K1320.
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: nobody since 2026-11-12 01:05 (merged; agent `aa65540a6e30e2162` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `72b642ff`
-  - evidence: .claude/probes/K1247/ (tools, k1247s23_twin.ts); untracked out/s22/, out/s23/; the paused s23 worktree agent-a4396d99ea4060cf3 (129e2dfc, merged into the new branch first)
-  - next: s24 (flip blockers): port the nearest-thread rule past 4 slots to BAND_PLACE_VS (4925 muse_hash quads differ), colRow at def c61 d730 v109 and muse_hash c8 d121, run the twin on a captured g41_user_tw64 drag (through-bends j48/j49), count the TF pass in the bench frame; then flip ob in frame_loop.ts and re-freeze the outline_port pins
-  - brief: `docs/design/K1247_s23_band_shader.md`
+  - owner: agent `a806ccdba5e983525` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 01:06, 2 h cap ~03:06)
+  - branch: `worktree-agent-a806ccdba5e983525`, worktree `.claude/worktrees/agent-a806ccdba5e983525`; last commit: `6a7aac90`
+  - evidence: .claude/probes/K1247/ (tools: k1247s23_twin, _slack, _bench); src/render/outline/band_rec.ts, band_place.ts; untracked out/s22/, out/s23/
+  - next: s24: the past-4 slot rule to footNear on the GPU, the def c61 d730 and muse_hash c8 d121 misses, the twin on a g41_user_tw64 drag, the TF pass in the main frame; then flip ob to the default
+  - brief: `docs/design/K1247_s24_flip.md`
 - **K1278** · The outline's paint blends seamlessly across junctions (Levi 2026-11-10): section colour and pulses
   from per-pixel fields continuous across faces, triangles and junctions, gated by a seam test on every
   face edge, triangle edge and junction. Full text in docs/ledger_notes.md
@@ -1864,6 +1864,10 @@ Every other item below waits on the trigger it names.
   bend's arc yields to the next junction's corner) and TailIn.bend (a stub cap under the arc): the fast path
   has both (K1314 s3 handoff, docs/design/K1314_s3_corners.md); nor s4's bend join (same-side room, thruFitC,
   the meet X) or first meet (docs/design/K1314_s4_bends_eyes.md handoff); the pins did not need them
+- **K1320** · ob=1 band records decimate some record runs mid-drag: muse_hash runs past q0+2 (137
+  piece-frames), 7 wide pieces, def 3 runs (K1247 s23 slack census, `.claude/probes/K1247/k1247s23_slack.ts`;
+  handoff in docs/design/K1247_s23_band_shader.md). Matters once ob=1 is the default (K1247 s24 reports
+  whether it shows)
 
 ## Approved, to schedule (2026-10-11)
 
