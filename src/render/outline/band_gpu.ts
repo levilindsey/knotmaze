@@ -18,15 +18,15 @@
 import type { OutlineTable, SceneIn } from "./outline";
 import { dSC, footNear, parseColor, sstep, zAtC, type zChains } from "./draw";
 
-type ZZ = ReturnType<typeof zChains>;
-type ZChain = ZZ["zc"][number];
+export type ZZ = ReturnType<typeof zChains>;
+export type ZChain = ZZ["zc"][number];
 
 /** Texels per row of the chain-sample and pass tables. */
 export const BAND_TEX_W = 1024;
 /** Pass slots per quad (flat). More passes near one border segment are dropped (counted in `dropped`). */
 export const BAND_SLOTS = 4;
 /** Texels per pass in the pass table. */
-const PT = 4;
+export const PT = 4;
 
 export interface BandGpu {
   /** Per vertex: world x, y. */
@@ -60,7 +60,7 @@ export interface BandGpu {
 }
 
 /** footNear's visited segment ranges for (sC, r): [k0, k1] pairs, empty when k0 > k1. */
-function windowRanges(c: ZChain, sC: number, r: number): [number, number, number, number] {
+export function windowRanges(c: ZChain, sC: number, r: number): [number, number, number, number] {
   const segs = c.closed ? c.n : c.n - 1;
   if (segs <= 0) return [0, -1, 0, -1];
   const first = (u: number): number => { let lo = 0; let hi = segs - 1; if (c.s[0] > u) return 0; while (hi > lo) { const m = (lo + hi + 1) >> 1; if (c.s[m] <= u) lo = m; else hi = m - 1; } return lo; };
@@ -78,7 +78,7 @@ function windowRanges(c: ZChain, sC: number, r: number): [number, number, number
 }
 
 /** footNear(c, x, y, sC, r, 0, 0).s with sqrt for hypot (bandData's own-s refinement; hot). */
-function footS(c: ZChain, x: number, y: number, sC: number, r: number): number {
+export function footS(c: ZChain, x: number, y: number, sC: number, r: number): number {
   const w = windowRanges(c, sC, r);
   let best = Infinity; let bs = 0;
   const xs = c.xs; const ys = c.ys; const ss = c.s; const n = c.n; const len = c.len; const closed = c.closed && len > 0;

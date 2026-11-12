@@ -81,7 +81,11 @@ export interface OutlinePiece {
    *  2's cut, shorter than its band (pts); fill_tri fills these. Absent = pts. */
   fpts?: number[];
   fcpts?: number[];
+  /** K1247 s22 (ob=1, OB_DI.on): the piece's index in st.piecesD, the band's fixed layout's key. */
+  di?: number;
 }
+/** K1247 s22: when on, piecesPhaseC tags each piece with its piecesD index (di). Off: nothing changes. */
+export const OB_DI = { on: false };
 export interface OutlineRegion {
   id: number;
   ownerChain: number;
@@ -7436,7 +7440,10 @@ function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[])
     if (dgs.kind === "capEnd") { const p = C.polys[dgs.pi]; return p.s0 + p.len; }
     return C.polys[dgs.pi].s0;
   };
+  // K1247 s22: each piecesD entry pushes at most one piece, so the last push of each iteration is its own.
+  let obD = -1; let obN = 0;
   for (const dp of st.piecesD) {
+    if (OB_DI.on) { if (pieces.length > obN) pieces[pieces.length - 1].di = obD; obD++; obN = pieces.length; }
     if (dp.kind === "run" || dp.kind === "ghost") {
       const ghost = dp.kind === "ghost"; const missAt = runMiss; const passAt = runPassed;
       const ivD = st.intervalsD[dp.interval];
@@ -7627,6 +7634,7 @@ function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[])
       pieces.push(piece);
     }
   }
+  if (OB_DI.on && pieces.length > obN) pieces[pieces.length - 1].di = obD;
   for (const f of runFade) {
     const r = runAtArm.get(f.key);
     if (r === undefined) continue;
