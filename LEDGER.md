@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1318.
+Next free ID: K1319.
 
 ## Waiting on Levi
 
@@ -546,11 +546,11 @@ Next free ID: K1318.
   most cases. But there are still plenty of unacceptable artifacts"): an artifact census (stray ink, hard
   colour edges inside fills, paper holes, broken ink) across scenes, then fix stages that drive its count to
   0; the look gate in docs/design/K1240_gate.md
-  - owner: agent `a4e6c1c337ca465db` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-11 14:25, 2 h cap ~16:25)
-  - branch: `worktree-agent-a4e6c1c337ca465db`, worktree `.claude/worktrees/agent-a4e6c1c337ca465db`; last commit: `c51244ea`
+  - owner: agent a4e6c1c337ca465db of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (s3 follow-up, resumed 2026-11-11 about 16:00, cap 40 min)
+  - branch: worktree-agent-a4e6c1c337ca465db (.claude/worktrees/agent-a4e6c1c337ca465db); last commit: 0cc837c9; last commit: `c51244ea`
   - evidence: .claude/probes/K1314/ (census tools); untracked out/s1/, out/s2/, out/s3/
-  - next: s3 running: band_gpu.ts tied alpha, then K1049 rounded corners to census 0
-  - brief: `docs/design/K1314_s3_corners.md`
+  - next: s3 follow-up running: census of stage 2 code against the fillet reference (are the 20 new finds a reference change only?), crops of the 5 bends left sharp; then merge s3 and ask Levi about the long gentle bends
+  - brief: docs/design/K1314_s3_corners.md (handoff at the end)
 
 ## Next, in order
 
@@ -1855,6 +1855,9 @@ Every other item below waits on the trigger it names.
   arc, off the chain's border polygon (census paper def 61 vs 60, g41_user_tw64 56 vs 55); muse_hash f8
   (16.20, 19.83) junction owner swap, per-chain hues only (1034 px), app paint converges.
   `docs/design/K1247_s20_records_look.md` handoff.
+- **K1318** · rp=outline fallback builder (outline.ts buildOutlineFull) lacks K1314 s3's thruRoomC (a through
+  bend's arc yields to the next junction's corner) and TailIn.bend (a stub cap under the arc): the fast path
+  has both (K1314 s3 handoff, docs/design/K1314_s3_corners.md)
 
 ## Approved, to schedule (2026-10-11)
 
