@@ -386,7 +386,7 @@ Next free ID: K1325.
   - owner: nobody since 2026-11-11 15:21 (merged; agent `a785e71cf6c686198` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
   - branch: mainline; last commit: `cbc32d02`
   - evidence: `.claude/probes/rounds/2026-11-11/`
-  - next: rerun round 2026-11-11 (steps 1-7) when Levi leaves the phone unlocked on its charger with the launcher in front; step 3 first ports k1240s4b_bench.mjs to the pass tab as k1310_phone_bench.mjs
+  - next: rerun round 2026-11-11 (steps 1-7) when Levi leaves the phone unlocked on its charger with the launcher in front; step 3 first ports k1240s4b_bench.mjs to the pass tab as k1310_phone_bench.mjs, and adds rp=outline ob=0 vs the default (ob on since K1247 s25, e69fa795)
   - brief: docs/design/K156.md (Round 2026-11-11)
   - env: the phone on its charger, reached over adb 5555 through Tailscale (`adb connect`; not the desktop's USB, Levi 2026-11-02); the pass builds and serves both builds itself (ports 5480-5489); nobody else uses the phone during the pass (K234)
 - **K268** · Shaped crossing gaps under thread reveal (K76; Levi, 2026-10-14):
