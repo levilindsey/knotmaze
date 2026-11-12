@@ -135,3 +135,46 @@ Next step:
    confirms which group 1 finds the reference yield clears, so the before counts become s4b re-taken
    under the new reference.
 2. Then fix j135, and continue the brief's order.
+
+## Handoff (2026-11-12 01:10, resumed run; 2 h cap reached, stage NOT done)
+
+Census (`k1314_run.ps1 -Lock`, the reference with the yield): before = `out/s1/census_s5ref` (master's
+outline), after = `census_s5c` (HEAD). stray_ink 25 -> 25, hard_edge 4 -> 3, paper 0, broken_ink 13 -> 13
+(16 at stage 4: the reference's yield took 3), k1049 0; owner_only 2299 -> 2303, tail_look 182 -> 182.
+Nothing new. Crops (reference | before | after): `.claude/probes/K1314/out/s5/after/` (spots in
+`out/s5/spots.txt`). Bench (`out/s5/bench_s5.json`, ABBA, def, drag): worker frame p50 45.8/45.5 ms
+master, 45.7/45.4 HEAD (within the spread). outline_port: ring's paint pins (f0, f1) re-pinned.
+
+What landed (fill_tri.ts `fillFrame`, strip branch): a strip whose two border pieces span different s
+ranges keys each border row by its own side's s and the centre by max(z(row s), z(mid of sL and sR)).
+x67's hard edge clears; a narrower owner wedge remains there (`k1314_s5_own.ts g41_ring_tw64 18.085
+20.685`), and the crop still shows part of the purple tongue.
+
+The key-rule trade (all censused):
+- Pure per-side, centre at the mid s (be92e2cb, `census_s5a`): x67 and x68 clear, a new hard edge at
+  muse_hash j50 (c71 strip item 812 vs c18 item 443; c71's z falls steeply from s 40.9, an under pass).
+- Each vertex keyed by its STRIP_FOOT foot s (`census_s5b`): the same, j50 at (21.64,34.06).
+- Foot keys only where they differ by more than zt: x68 back. A smoothstep-gated centre drop: j50 back.
+- j50 is a near-tie: both chains are at z 0 there and form B decides by distance, so ANY drop of c71's
+  centre flips it. x68 needs c4's (item 196) centre lowered. At (20.096,20.627) form B shows c3 where a
+  plain z(foot) - d zt / h comparison favours c4: unexplained; start there.
+- The band's record path (K1247's `recStrip`) will need the same key rule. Not edited (its files).
+
+Group 1 (muse_hash): j77, j20, j154 carry no finds under the yield reference. j135's two finds are not
+a band skip (the earlier diagnosis was wrong): the arc band is whole; the reference inks beyond it
+(the V merge of plain form B and the fillet; the fillet's inner border differs by up to 0.067), so
+it is a yield artifact of the reference. The j78 spike, j98 and the user j49 spike are the same kind.
+The j78 hard wedge (5.88,8.50) is failed corner 235's tail 1878 at alpha 0 (maybe K1315); not analysed.
+
+j71 (g41_user_tw64 (4.95,7.54), fill:strip): c32 ends over c30 at a level tie (z 0 both). The wedge
+pixels have no c32 item at all, only c30's strip (item 389) and j71's fan (item 638). c32's strip
+(item 424) stops at y 7.561 and its tail fill (piece 912, item 561) is empty: tailF's margin term
+is margin/zt = -1 + dF/h <= 0 at a tie, always under TAIL_FILL_MARGIN 0.4, and fW < 0 for the walk's
+first stretch. Tried and reverted: the fill walk at margin -1 and wCut 0 (fill from u ~0.33 only, the
+wedge unchanged; why the walk did not open at u 0 is untraced). Next: trace endTailPts' fill walk for
+piece 912 from u 0, or let j71's fan defer to E's end at a tie.
+
+Classes (c) and (a): form B flaws (see the paused handoff above); the census still counts their
+spikes (def j174, ring j12, ring_tw42 j12, def_tw64 j45, j48, user j39, j28).
+
+Next step: x68 (the unexplained form B pick at (20.096,20.627)), then j71, then the j78 wedge.
