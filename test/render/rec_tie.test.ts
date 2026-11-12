@@ -9,6 +9,8 @@ import { describe, expect, it } from "vitest";
 import { frame, structure, type SceneIn } from "../../src/render/outline/outline";
 import { zChains } from "../../src/render/outline/draw";
 import { REC_TEXELS, fillFrame, fillResolution, fillStructure, recStrips, type StripItem } from "../../src/render/outline/fill_tri";
+import { SPAN_EPS } from "../../src/render/outline/chain_frame";
+import { REC_GLSL } from "../../src/render/outline/rec_glsl";
 import { loadScene } from "./outline_digest";
 
 const ring = (): SceneIn => loadScene(fileURLToPath(new URL("./fixtures/outline_ring.json.gz", import.meta.url)));
@@ -71,8 +73,17 @@ describe("K1247 s26 the record fill keys as fillFrame (K1322)", () => {
     expect(r.dS).toBeLessThan(1e-9);
   });
   // K1314 s7's mirror (mirA, mirB: a side past its span reflected from the other) is rare: no strip of
-  // ring, its waves or g41_ring_tw42 takes it, muse_hash 3 and g41_user_tw64 1 (k1247s26_mir.ts). These
-  // census scenes are untracked, so the case runs where a checkout has them.
+  // ring, its waves or g41_ring_tw42 takes it, muse_hash 3 and g41_user_tw64 1 (k1247s26_mir.ts).
+  // K1247 s27 (K1328): outline_mirror.json.gz is g41_user_tw64 with its numbers rounded to 4 decimals
+  // (.claude/probes/K1247/k1247s27_fixture.ts), which keeps that strip (c32's), so every checkout runs it.
+  it("ties them on the tracked mirrored fixture (K1328)", () => {
+    const r = tie(loadScene(fileURLToPath(new URL("./fixtures/outline_mirror.json.gz", import.meta.url))));
+    expect(r.mirrored).toBeGreaterThan(0);
+    expect(r.bad).toBe(0);
+    expect(r.dKey).toBeLessThan(1e-9);
+    expect(r.dS).toBeLessThan(1e-9);
+  });
+  // The census scenes are untracked, so their case runs where a checkout has them.
   const MIR = ["muse_hash", "g41_user_tw64"].map((n) => fileURLToPath(new URL(`../../.claude/probes/K868/scenes/${n}.json`, import.meta.url)));
   it.skipIf(!MIR.every(existsSync))("ties them on the mirrored strips of muse_hash and g41_user_tw64", () => {
     for (const p of MIR) {
@@ -83,5 +94,12 @@ describe("K1247 s26 the record fill keys as fillFrame (K1322)", () => {
       expect(r.dKey).toBeLessThan(1e-9);
       expect(r.dS).toBeLessThan(1e-9);
     }
+  });
+  // K1247 s27 (K1327): the shader's recSpan and recCs decide a span's ends and a sample's column as
+  // chain_frame's spanOf and colR do (the GPU check, k1247s19_twin.ts, measures the result; this pins the text).
+  it("keeps recSpan's tolerance and recCs's column rule in step with chain_frame", () => {
+    expect(SPAN_EPS).toBe(2e-4);
+    expect(REC_GLSL).toContain("const float REC_SPAN_EPS = 2e-4;");
+    expect(REC_GLSL).toContain("if ((m - 0.5) * S > r) m -= 1.0; else if ((m + 0.5) * S <= r) m += 1.0;");
   });
 });
