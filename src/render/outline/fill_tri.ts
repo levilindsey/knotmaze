@@ -91,6 +91,8 @@ const STRIP_FOOT = true;
  *  7 hard edges on muse_hash, 1 on g41_user_tw64, 4 paper spots. On needs
  *  that junction fill to yield to an arm's own tube first. */
 const MATCH_MIRROR = false;
+/** K1314 s6: no matched s scale for a strip whose ranges part at a junction end. */
+const JEND_GATE = true;
 const FOOT_STEP = 8;
 
 type FootChain = Parameters<typeof footNear>[0];
@@ -852,7 +854,12 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
       if (pl && pr && pl.pts.length >= 4 && pr.pts.length >= 4 && N >= 2) {
         const a0 = pl.s0; const a1 = wrapZ(pl.s1 - pl.s0); let b0 = pr.s0; const b1 = wrapZ(pr.s1 - pr.s0);
         if (cz && cz.closed && cz.len > 0) b0 += cz.len * Math.round((a0 - b0) / cz.len);
-        if (a0 !== b0 || a1 !== b1) {
+        // Not where the ranges part at a junction end: the side the junction's
+        // corner consumed would be held at its piece's end there (MATCH_MIRROR
+        // off), a fan that leaves the tube's ink unbordered (muse_hash j77,
+        // j20, j154: 3 broken_ink); such a strip keeps stage 5's rows.
+        const jEnd = (a0 !== b0 && stationS(I.aSt) !== null) || (a0 + a1 !== b0 + b1 && stationS(I.bSt) !== null);
+        if ((a0 !== b0 || a1 !== b1) && !(JEND_GATE && jEnd)) {
           const u0 = Math.min(a0, b0); const u1 = Math.max(a0 + a1, b0 + b1);
           const ov = Math.min(a0 + a1, b0 + b1) - Math.max(a0, b0);
           if (u1 - u0 > 1e-9 && ov > 0) {
