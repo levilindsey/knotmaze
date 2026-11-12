@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1316.
+Next free ID: K1318.
 
 ## Waiting on Levi
 
@@ -306,7 +306,7 @@ Next free ID: K1316.
   - owner: claude session 09c7a672-a414-402a-97da-b3176839a2e5
   - branch: mainline; last commit: `1fb47bd3`
   - evidence: docs/design/K1240_gate.md; .claude/probes/K1240/proto/k1310_sheet.ps1; untracked .claude/probes/K1240/out/k1310/sheet.png
-  - next: Levi answered the sheet (2026-11-11): the outline looks a little better than form B for most cases, but has plenty of unacceptable artifacts. The look bar is now zero artifacts (K1314, gate updated a72503a9). Waiting on K1247 s18 (speed verdict) and K1314 s1 (artifact count and fix plan)
+  - next: Speed: K1247 s18-s19 merged (record fill behind oe=1, def worker frame 190 -> 156-164 ms p50); s20+s21 make it the default (merge pending s21's structure cost); the projected floor is ~2.7 ms only with every part GPU-placed and a fixed band topology. Look: K1314 census s1 = 57 artifacts at 47 spots (fix stages running, s2 spikes); K1315 asks Levi about tail ends. Pixel lines unmeasured: next K156 round
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
   Levi to edit instead of drawing all 26 (Levi, 2026-10-26). Muse's prototype parked at abc135e7.
@@ -513,11 +513,11 @@ Next free ID: K1316.
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: agent `a095e7cff519b9abd` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-11 12:57, 2 h cap ~14:57)
-  - branch: `worktree-agent-a095e7cff519b9abd`, worktree `.claude/worktrees/agent-a095e7cff519b9abd`; last commit: `e7a90e53`
-  - evidence: .claude/probes/K1247/ (tools); untracked .claude/probes/K1247/out/s18/, s19/, s20/
-  - next: s20 running: close the oe=1 strip-side cracks (census within 1% of off), check junction boundaries in app paint, flip rp=outline to the record fill by default; later: fans/junctions/disks + strip end columns as shader records (after K1314 fan look fixes), the band fixed topology (58-63 ms), zC (16 ms), seeded end solves
-  - brief: `docs/design/K1247_s20_records_look.md`
+  - owner: agent `afc77e62550888b86` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-11 14:19, 1.5 h cap ~15:49)
+  - branch: `worktree-agent-afc77e62550888b86`, worktree `.claude/worktrees/agent-afc77e62550888b86`; last commit: `e1c3e446`
+  - evidence: .claude/probes/K1247/ (tools); untracked .claude/probes/K1247/out/s18-s20/; s20 branch worktree-agent-a095e7cff519b9abd (13abc7e1, record fill default, crops viewed: app paint matches)
+  - next: s21 running on top of s20: first structure back to master (s20 +200 ms); then merge s20+s21 together; later: phone check of the placement shader, fans/junctions/disks + strip end columns as records (after K1314 fan fixes), the band fixed topology (58-63 ms), zC (16 ms), seeded end solves
+  - brief: `docs/design/K1247_s21_structure_cost.md`
 - **K1278** · The outline's paint blends seamlessly across junctions (Levi 2026-11-10): section colour and pulses
   from per-pixel fields continuous across faces, triangles and junctions, gated by a seam test on every
   face edge, triangle edge and junction. Full text in docs/ledger_notes.md
@@ -1851,6 +1851,10 @@ Every other item below waits on the trigger it names.
 - **K1313** · rp=outline: where band_gpu.ts's 4 pass slots overflow (187 passes on muse_hash, 130 on
   g41_user_tw64), the CPU and GPU bands disagree; the census also ignores contacts with a third thread (K1283
   s11 handoff, docs/design/K1283_s11.md)
+- **K1316** · rp=outline record fill (K1247 s20): 1 px of paper where a fill piece starts on a junction fillet
+  arc, off the chain's border polygon (census paper def 61 vs 60, g41_user_tw64 56 vs 55); muse_hash f8
+  (16.20, 19.83) junction owner swap, per-chain hues only (1034 px), app paint converges.
+  `docs/design/K1247_s20_records_look.md` handoff.
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2190,6 +2194,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K1305** · rp=outline redraws every frame at rest since K1291 s1 (main 6.0-6.4 ms vs master outline
   1.3-1.7; today 12.4-12.9): the paint clock and the choice arms pulse. Cache the band (it reads no paint) and
   redraw only the fill (docs/design/K1291_s1.md handoff item 2)
+- **K1317** · An app scene-replay hook (load a captured physics scene into the app), so the app's paint can be
+  compared same-state mid-drag across builds; K1247 s20 could compare only at rest.
 
 ## Done
 
