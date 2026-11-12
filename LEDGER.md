@@ -546,10 +546,10 @@ Next free ID: K1319.
   most cases. But there are still plenty of unacceptable artifacts"): an artifact census (stray ink, hard
   colour edges inside fills, paper holes, broken ink) across scenes, then fix stages that drive its count to
   0; the look gate in docs/design/K1240_gate.md
-  - owner: agent a4e6c1c337ca465db of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (s3 follow-up, resumed 2026-11-11 about 16:00, cap 40 min)
-  - branch: worktree-agent-a4e6c1c337ca465db (.claude/worktrees/agent-a4e6c1c337ca465db); last commit: 0cc837c9; last commit: `c51244ea`
+  - owner: nobody since 2026-11-11 16:38 (merged; agent `a4e6c1c337ca465db` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `6dd39fc6`
   - evidence: .claude/probes/K1314/ (census tools); untracked out/s1/, out/s2/, out/s3/
-  - next: s3 follow-up running: census of stage 2 code against the fillet reference (are the 20 new finds a reference change only?), crops of the 5 bends left sharp; then merge s3 and ask Levi about the long gentle bends
+  - next: s4: the rest of the census (K1045 open eyes 2, hard wedges 4, s2 spike classes a-d: notch fans, uncut swallowtails in cutFoldsC, rounded fans where form B is square); the 5 sharp through bends past a junction wait on Levi (bends sheet out/s3/bends/bends_sheet.png); K1315 tail ends wait on Levi
   - brief: docs/design/K1314_s3_corners.md (handoff at the end)
 
 ## Next, in order
