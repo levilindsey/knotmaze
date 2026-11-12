@@ -39,7 +39,11 @@ import { sectionPaint, runAt, runColour, type RGB } from "../../../src/render/ou
 const here = dirname(fileURLToPath(import.meta.url));
 export const SCENE_DIR = "C:/Users/lsl/Repositories/knotmaze/.claude/probes/K868/scenes";
 export const ALL = ["muse_hash", "muse_default_tw", "def", "fat", "ring", "user_tw42.lightpaper", "g41_def_tw42", "g41_def_tw64", "g41_ring_tw42", "g41_ring_tw64", "g41_user_tw42", "g41_user_tw64"];
-export const KINDS = ["stray_ink", "hard_edge", "paper", "broken_ink", "k1049"] as const;
+export const KINDS = ["stray_ink", "hard_edge", "paper", "broken_ink", "k1049", "owner_only"] as const;
+/** owner_only: a fill owned by another chain than form B's, invisible in the app's paint (junction colours converge);
+ *  shown on the K1310 sheet's per-chain hues. Informational: not in the artifact total. */
+export const ARTIFACT_KINDS: readonly Kind[] = ["stray_ink", "hard_edge", "paper", "broken_ink", "k1049"];
+const COL = 0.06;
 export type Kind = (typeof KINDS)[number];
 
 export function loadScene(nm: string): O.SceneIn {
@@ -228,15 +232,33 @@ export function census(nm: string, ppu: number, MIN_PX = 12): { arts: Art[]; m: 
   const oStep = step(R.rgb, (i) => R.own[i] > 0 && R.rgb[3 * i] >= 0 && R.ink[i] < 0.25);
   const bStep = step(B.rgb, (i) => B.chain[i] >= 0 && B.rgb[3 * i] >= 0);
   const bStepMax3 = boxMax(bStep, Wd, Hd, 3);
-  const flags: Record<Kind, Uint8Array> = { stray_ink: new Uint8Array(n), hard_edge: new Uint8Array(n), paper: new Uint8Array(n), broken_ink: new Uint8Array(n), k1049: new Uint8Array(n) };
-  const sub = new Uint8Array(n); // paper: 1 hole, 2 covered
+  const flags: Record<Kind, Uint8Array> = { stray_ink: new Uint8Array(n), hard_edge: new Uint8Array(n), paper: new Uint8Array(n), broken_ink: new Uint8Array(n), k1049: new Uint8Array(n), owner_only: new Uint8Array(n) };
+  const sub = new Uint8Array(n); // paper: 1 hole, 2 covered; hard_edge: 1 wedge (owner mismatch), 2 step
+  const bInkMax2 = boxMax(B.ink, Wd, Hd, 2); const oInkMax2 = boxMax(R.ink, Wd, Hd, 2);
+  const has = (i: number, want: (q: number) => boolean): boolean => {
+    const x = i % Wd; const y = (i - x) / Wd;
+    for (let dy = -2; dy <= 2; dy++) { const yy = y + dy; if (yy < 0 || yy >= Hd) continue; for (let dx = -2; dx <= 2; dx++) { const xx = x + dx; if (xx >= 0 && xx < Wd && want(yy * Wd + xx)) return true; } }
+    return false;
+  };
   for (let i = 0; i < n; i++) {
     const oInk = R.ink[i]; const oCov = R.own[i] > 0;
-    if (oInk >= 0.5 && bInkMax3[i] < 0.25) flags.stray_ink[i] = 1;
+    // stray: solid outline ink where form B has none, or only a faint fade (x134's block, j59's bars)
+    if (oInk >= 0.5 && oInk - bInkMax3[i] > 0.4) flags.stray_ink[i] = 1;
     if (!oCov && oInk < 0.3 && bCovMin2[i] === 1) { flags.paper[i] = 1; sub[i] = 1; }
     if (oCov && oInk < 0.3 && bCovMax2[i] === 0) { flags.paper[i] = 1; sub[i] = 2; }
-    if (B.ink[i] >= 0.5 && oCov && oInkMax3[i] < 0.25) flags.broken_ink[i] = 1;
-    if (oStep[i] > STEP && bStepMax3[i] < STEP / 2 && bInkMax3[i] < 0.3) flags.hard_edge[i] = 1;
+    if (B.ink[i] >= 0.5 && oCov && B.ink[i] - oInkMax3[i] > 0.4) flags.broken_ink[i] = 1;
+    // hard edge, wedge: a fill of one chain where form B paints another (no pixel of it within 2 px), away from ink
+    if (oCov && B.chain[i] >= 0 && oInkMax2[i] < 0.25 && bInkMax2[i] < 0.25) {
+      const oc = R.own[i] - 1; const bc = B.chain[i];
+      if (oc !== bc && (!has(i, (q) => B.chain[q] === oc) || !has(i, (q) => R.own[q] === bc + 1))) {
+        // visible in the app's paint only where the colours differ (junction colours converge): the
+        // outline's colour here against the nearest form B colour within 2 px
+        let dMin = Infinity;
+        if (R.rgb[3 * i] >= 0) has(i, (q) => { if (B.rgb[3 * q] < 0) return false; dMin = Math.min(dMin, Math.max(Math.abs(R.rgb[3 * i] - B.rgb[3 * q]), Math.abs(R.rgb[3 * i + 1] - B.rgb[3 * q + 1]), Math.abs(R.rgb[3 * i + 2] - B.rgb[3 * q + 2]))); return false; });
+        if (dMin > COL && dMin < Infinity) { flags.hard_edge[i] = 1; sub[i] = 1; } else flags.owner_only[i] = 1;
+      }
+    }
+    if (!flags.hard_edge[i] && oStep[i] > STEP && bStepMax3[i] < STEP / 2 && bInkMax3[i] < 0.3) { flags.hard_edge[i] = 1; sub[i] = 2; }
   }
   const arts: Art[] = [];
   const near = (x: number, y: number): { id: string; d: number } => {
@@ -264,7 +286,7 @@ export function census(nm: string, ppu: number, MIN_PX = 12): { arts: Art[]; m: 
       }
       if (pix.length < MIN_PX) continue;
       let sx = 0; let sy = 0; let bx0 = Infinity; let by0 = Infinity; let bx1 = -Infinity; let by1 = -Infinity;
-      const votes = new Map<string, number>(); let nHole = 0; let geoOn = 0;
+      const votes = new Map<string, number>(); let nHole = 0; let geoOn = 0; let appD = 0; let inPaper = 0;
       for (const i of pix) {
         const x = i % Wd; const y = (i - x) / Wd; sx += x; sy += y; bx0 = Math.min(bx0, x); bx1 = Math.max(bx1, x); by0 = Math.min(by0, y); by1 = Math.max(by1, y);
         if (sub[i] === 1) nHole++;
@@ -277,10 +299,12 @@ export function census(nm: string, ppu: number, MIN_PX = 12): { arts: Art[]; m: 
           let it = R.item[i];
           if (it < 0) for (let d = 1; d <= 4 && it < 0; d++) for (const j of [i - d, i + d, i - d * Wd, i + d * Wd]) if (j >= 0 && j < n && R.item[j] >= 0) { it = R.item[j]; break; }
           key = "fill:" + (it >= 0 ? m.fs.items[it].kind : "none");
-        } else if (kind === "hard_edge") {
-          const its = new Set<string>(); for (const j of [i, i + 1, i + Wd]) if (j < n && R.item[j] >= 0) its.add(m.fs.items[R.item[j]].kind);
-          key = "fill:" + [...its].sort().join("|");
+        } else if (kind === "hard_edge" || kind === "owner_only") {
+          if (sub[i] === 1 || kind === "owner_only") key = "fill:" + (R.item[i] >= 0 ? m.fs.items[R.item[i]].kind : "none");
+          else { const its = new Set<string>(); for (const j of [i, i + 1, i + Wd]) if (j < n && R.item[j] >= 0) its.add(m.fs.items[R.item[j]].kind); key = "fill:" + [...its].sort().join("|"); }
+          if (R.rgb[3 * i] >= 0 && B.rgb[3 * i] >= 0) appD += Math.max(Math.abs(R.rgb[3 * i] - B.rgb[3 * i]), Math.abs(R.rgb[3 * i + 1] - B.rgb[3 * i + 1]), Math.abs(R.rgb[3 * i + 2] - B.rgb[3 * i + 2]));
         }
+        if (bCovMax2[i] === 0) inPaper++;
         if (key) votes.set(key, (votes.get(key) ?? 0) + 1);
       }
       const cx = (c0 + sx / pix.length + 0.5) / ppu; const cy = (r0 + sy / pix.length + 0.5) / ppu;
@@ -291,10 +315,15 @@ export function census(nm: string, ppu: number, MIN_PX = 12): { arts: Art[]; m: 
       if (kind === "stray_ink") shape = pix.length / (bw * bh) > 0.45 && Math.min(bw, bh) > 1.6 * m.table.W * ppu ? "block" : Math.max(bw, bh) > 3 * Math.min(bw, bh) ? "bar" : pix.length < 40 ? "fleck" : "spike";
       else if (kind === "paper") shape = nHole > pix.length / 2 ? (B.ink[pix[0]] >= 0.5 ? "notch" : "hole") : "covered";
       else if (kind === "broken_ink") shape = geoOn > pix.length / 2 ? "faded" : "missing";
-      else shape = "edge";
+      else shape = kind === "owner_only" || nHole > pix.length / 2 ? "wedge" : "step";
+      // K1045: a covered eye, or ink inside form B's open paper, between two close junctions
+      const jd = sc.junctions.map((J) => Math.hypot(J.c[0] - cx, J.c[1] - cy)).sort((a, b) => a - b);
+      const eye = (shape === "covered" || (kind === "stray_ink" && inPaper > pix.length / 2)) && jd.length > 1 && jd[1] < 5 * h;
+      let detail = eye ? "K1045 eye" : "";
+      if (kind === "hard_edge" || kind === "owner_only") detail = `app colour diff ${(appD / pix.length).toFixed(3)}`;
       const pk = part.split(":")[1]?.split(" ")[0] ?? "";
-      const file = part.startsWith("band") ? PIECE_FILE[pk] ?? "outline.ts" : part.startsWith("fill") ? (kind === "hard_edge" ? "fill_tri.ts (slots/vW) + paint.ts" : ITEM_FILE[pk.split("|")[0]] ?? "fill_tri.ts") : "?";
-      arts.push({ id: "", scene: nm, kind, sub: shape, x: +cx.toFixed(3), y: +cy.toFixed(3), px: pix.length, sizePx: Math.max(bw, bh), bbox: [+((c0 + bx0) / ppu).toFixed(3), +((r0 + by0) / ppu).toFixed(3), +((c0 + bx1 + 1) / ppu).toFixed(3), +((r0 + by1 + 1) / ppu).toFixed(3)], near: nb.id, dNear: +nb.d.toFixed(3), part, file });
+      const file = part.startsWith("band") ? PIECE_FILE[pk] ?? "outline.ts" : part.startsWith("fill") ? (kind === "hard_edge" || kind === "owner_only" ? (shape === "wedge" ? "fill_tri.ts (fill ownership: " + pk + ")" : "fill_tri.ts (slots/vW) + paint.ts") : ITEM_FILE[pk.split("|")[0]] ?? "fill_tri.ts") : "?";
+      arts.push({ id: "", scene: nm, kind, sub: shape, x: +cx.toFixed(3), y: +cy.toFixed(3), px: pix.length, sizePx: Math.max(bw, bh), bbox: [+((c0 + bx0) / ppu).toFixed(3), +((r0 + by0) / ppu).toFixed(3), +((c0 + bx1 + 1) / ppu).toFixed(3), +((r0 + by1 + 1) / ppu).toFixed(3)], near: nb.id, dNear: +nb.d.toFixed(3), part, file, detail });
     }
   }
   // K1049: through-pass bends with a visible inner corner (rp=outline skips the through pair's corner).
@@ -334,15 +363,15 @@ async function main(): Promise<void> {
   const scenes = (opt("scene") ?? ALL.join(",")).split(",").filter((s) => existsSync(join(SCENE_DIR, `${s}.json`)));
   const outDir = join(here, "out", "s1"); mkdirSync(outDir, { recursive: true });
   const all: Art[] = []; const lines: string[] = [];
-  lines.push(["scene", ...KINDS, "total"].map((s, i) => (i ? s.padStart(10) : s.padEnd(22))).join(""));
+  lines.push(["scene", ...ARTIFACT_KINDS, "total", "owner_only"].map((s, i) => (i ? s.padStart(11) : s.padEnd(22))).join(""));
   for (const nm of scenes) {
     const { arts } = census(nm, ppu, minPx); all.push(...arts);
-    const cnt = KINDS.map((k) => arts.filter((a) => a.kind === k).length);
-    lines.push([nm.padEnd(22), ...[...cnt, arts.length].map((v) => String(v).padStart(10))].join(""));
+    const cnt = ARTIFACT_KINDS.map((k) => arts.filter((a) => a.kind === k).length);
+    lines.push([nm.padEnd(22), ...[...cnt, cnt.reduce((a, b) => a + b, 0), arts.filter((a) => a.kind === "owner_only").length].map((v) => String(v).padStart(11))].join(""));
     writeFileSync(join(outDir, `census_${tag}.json`), JSON.stringify({ ppu, minPx, scenes, arts: all }, null, 1));
   }
-  const tot = KINDS.map((k) => all.filter((a) => a.kind === k).length);
-  lines.push(["TOTAL".padEnd(22), ...[...tot, all.length].map((v) => String(v).padStart(10))].join(""));
+  const tot = ARTIFACT_KINDS.map((k) => all.filter((a) => a.kind === k).length);
+  lines.push(["TOTAL".padEnd(22), ...[...tot, tot.reduce((a, b) => a + b, 0), all.filter((a) => a.kind === "owner_only").length].map((v) => String(v).padStart(11))].join(""));
   writeFileSync(join(outDir, `census_${tag}.txt`), lines.join("\n") + "\n");
   console.log(lines.join("\n"));
 }
