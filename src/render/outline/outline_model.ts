@@ -59,6 +59,8 @@ export class OutlineModel {
   band: BandGpu;
   /** Wall ms of the last structure and the last frame (performance.now). */
   readonly structureMs: number;
+  /** K1247 s21: the structure's parts, wall ms in the constructor's order. */
+  readonly structureParts: Record<string, number>;
   frameMs = 0;
   /** K1247 s19 (look.fillRec 2, oe=1): the record layout (null otherwise) and this frame's strip table. */
   readonly rec: RecLayout | null;
@@ -68,25 +70,28 @@ export class OutlineModel {
 
   constructor(scene: SceneIn) {
     const t0 = performance.now();
+    const P: Record<string, number> = {}; let tl = t0;
+    const lap = (k: string): void => { const n = performance.now(); P[k] = n - tl; tl = n; };
     this.key = diagramKey(scene);
     this.baseHue = baseHueFor(scene.name);
-    this.st = structure(scene);
-    this.table = frame(this.st, scene);
-    this.fs = fillStructure(this.st, fillResolution(this.st, this.table));
-    const zz = zChains(scene);
+    this.st = structure(scene); lap("structure");
+    this.table = frame(this.st, scene); lap("frame");
+    this.fs = fillStructure(this.st, fillResolution(this.st, this.table)); lap("fillStructure");
+    const zz = zChains(scene); lap("zChains");
     // K1247 s19: with the records on the GPU (fillRec 2) the structure's paint is built from frame 0
     // placed whole on the CPU, then reordered (recLayout). K1247 s21: one fill, fillRec 3 (fillRec 2's
     // frame and table, the shader's columns placed as the shader places them), where s19/s20 ran a
     // whole-CPU fill (fillRec 1) and then fillRec 2's: the first structure's extra 200-280 ms.
     const gpu = scene.look.fillRec === 2;
     const sc1 = gpu ? { ...scene, look: { ...scene.look, fillRec: 3 } } : scene;
-    const fr = fillFrame(this.fs, this.st, this.table, sc1, zz);
-    this.pd = paintData(this.fs, this.st, fr, sc1, "app", this.baseHue);
-    this.rec = gpu ? recLayout(this.fs, this.pd) : null;
+    const fr = fillFrame(this.fs, this.st, this.table, sc1, zz); lap("fill");
+    this.pd = paintData(this.fs, this.st, fr, sc1, "app", this.baseHue); lap("paintData");
+    this.rec = gpu ? recLayout(this.fs, this.pd) : null; lap("recLayout");
     if (gpu) this.recFrame = fr.rec ?? null;
-    this.band = bandGpu(this.table, scene, zz);
+    this.band = bandGpu(this.table, scene, zz); lap("band");
     this.ks = keyScale(scene);
     this.structureMs = performance.now() - t0;
+    this.structureParts = P;
   }
 
   /** A new frame of the same diagram (positions moved). */

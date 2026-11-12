@@ -28,6 +28,8 @@ export interface OutlineReply {
   /** Worker wall ms: this message, the model's structure, its last frame. */
   ms: number;
   structureMs: number;
+  /** K1247 s21: the structure's parts (OutlineModel.structureParts). */
+  structureParts: Record<string, number>;
   frameMs: number;
   /** The last frame's parts (OutlineModel.parts). */
   parts: { frame: number; zChains: number; fill: number; paint: number; band: number } | null;
@@ -126,6 +128,7 @@ scope.onmessage = (e: MessageEvent<OutlineRequest>): void => {
       ks: m.ks,
       ms: performance.now() - t0,
       structureMs: m.structureMs,
+      structureParts: m.structureParts,
       frameMs: restructured ? 0 : m.frameMs,
       parts: restructured ? null : m.parts,
       idx: restructured ? pd.idx.slice() : null,

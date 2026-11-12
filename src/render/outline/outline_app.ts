@@ -1331,6 +1331,8 @@ export function createOutlineApp(ctx: SceneExportCtx, requestFrame: () => void):
     postMs: 0,
     workerMs: 0,
     structureMs: 0,
+    /** K1247 s21: the structure's parts (OutlineModel.structureParts). */
+    structureParts: null as Record<string, number> | null,
     frameMs: 0,
     roundTripMs: 0,
     uploadMs: 0,
@@ -1494,7 +1496,7 @@ export function createOutlineApp(ctx: SceneExportCtx, requestFrame: () => void):
         console.info(`K1240 outline: restructure (${r.cause}) ${Math.round(r.ms)} ms`);
       }
       stats.workerMs = r.ms;
-      stats.structureMs = r.structureMs;
+      stats.structureMs = r.structureMs; stats.structureParts = r.structureParts;
       if (!r.restructured) {
         stats.frameMs = r.frameMs;
         stats.parts = r.parts;
