@@ -509,10 +509,10 @@ Next free ID: K1315.
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: agent `a386181a3c29cd603` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-11 11:08, 2 h cap ~13:08)
-  - branch: `worktree-agent-a386181a3c29cd603`, worktree `.claude/worktrees/agent-a386181a3c29cd603`; last commit: `1fb47bd3`
+  - owner: nobody since 2026-11-11 12:05 (merged; agent `a386181a3c29cd603` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `4fb996cb`
   - evidence: .claude/probes/K1247/ (tools); untracked .claude/probes/K1247/out/s18/
-  - next: Stage 18 (fixed records evaluated per frame, the fill ported behind a switch): a measured verdict on whether the moved frame reaches 3 ms on def (gate K1240_gate.md); the step-back question Levi asked 2026-11-11 turns on it
+  - next: s19: vertex-shader placement of the fill records from BandGpu.chainTex (reply carries only moved ends), then the between-vertex strip-side cracks; brief to write (docs/design/K1247_s18_records.md handoff)
   - brief: `docs/design/K1247_s18_records.md`
 - **K1278** · The outline's paint blends seamlessly across junctions (Levi 2026-11-10): section colour and pulses
   from per-pixel fields continuous across faces, triangles and junctions, gated by a seam test on every
