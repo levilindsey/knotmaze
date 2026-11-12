@@ -551,10 +551,10 @@ Next free ID: K1321.
   most cases. But there are still plenty of unacceptable artifacts"): an artifact census (stray ink, hard
   colour edges inside fills, paper holes, broken ink) across scenes, then fix stages that drive its count to
   0; the look gate in docs/design/K1240_gate.md
-  - owner: agent `a1c74506131956ddd` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-11 23:56, 2 h cap ~01:56)
-  - branch: `worktree-agent-a1c74506131956ddd`, worktree `.claude/worktrees/agent-a1c74506131956ddd`; last commit: `4add74f1`
+  - owner: nobody since 2026-11-12 01:10 (merged; agent `a1c74506131956ddd` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `d687763b`
   - evidence: .claude/probes/K1314/ (census tools); untracked out/s1-s5/; the paused s5 worktree agent-a245bd015c3213ac1 (d8e47dce, merged into the new branch first)
-  - next: s5 resumed: rerun the census reference (s5ref), then the j135 arc-band fix in piecesPhaseC, then the brief order; K1315 and K1319 wait on Levi
+  - next: s6: the census reference draws the approved look where form B is flawed (classes a/c rounded per K1049; the yield-blend artifacts at j135, j78, j49), then the outline faults left: x68, x67 leftover wedge, j71 tail fill, the specks at class-a joints (def j174, ring j12, g41_ring_tw42 j12, g41_user j28), the j39 ink ticks
   - brief: `docs/design/K1314_s5_joins_wedges.md`
 
 ## Next, in order
