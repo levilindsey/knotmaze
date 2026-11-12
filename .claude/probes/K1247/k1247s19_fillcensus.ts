@@ -27,12 +27,14 @@ import { fileURLToPath } from "node:url";
 import { FormB } from "../../../src/render/field/form_b";
 import { structure, frame, type SceneIn, type OutlineFace, type DiagramStructure } from "../../../src/render/outline/outline";
 import { fillResolution, fillStructure, fillFrame, fillSig, rasterFill } from "../../../src/render/outline/fill_tri";
-import { ARC, SAG } from "../../../src/render/outline/chain_frame";
+import { ARC, POLY, SAG } from "../../../src/render/outline/chain_frame";
 // K1247 s18: env SAG = the convex side's sagitta push (share of the chord's sagitta; default 0);
 // env ARC = 1 spaces each side's columns uniformly in its border length (ARC_SUB sub-steps a column).
 if (process.env.SAG !== undefined) SAG.f = Number(process.env.SAG);
 if (process.env.ARC !== undefined) ARC.on = process.env.ARC === "1";
 if (process.env.ARC_SUB !== undefined) ARC.sub = Number(process.env.ARC_SUB);
+// K1247 s20: env POLY = chain_frame POLY.mode (0 smooth frame, 1 border polygon, 2 + fan columns).
+if (process.env.POLY !== undefined) POLY.mode = Number(process.env.POLY);
 import { zChains } from "../../../src/render/outline/draw";
 import { s19Frame } from "./k1247s19_lib";
 

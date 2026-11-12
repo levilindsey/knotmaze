@@ -71,7 +71,7 @@
 // run's span follows the frame.
 import type { DiagramStructure, OutlineTable, SceneIn } from "./outline";
 import { zChains, zAtC, zPastC, footNear } from "./draw";
-import { chainTangents, frameAt, offsetAt, offsetRow, pointAt, zAt1, zRow } from "./chain_frame";
+import { chainTangents, colAt, frameAt, offsetAt, offsetRow, POLY, pointAt, recSideOk, recTables, zAt1, zRow } from "./chain_frame";
 import { paintAt, runAt, type SectionPaint } from "./paint";
 
 export const CAP_M = 17;
@@ -276,7 +276,7 @@ export interface FillFrame {
   /** K1247 s19 (look.fillRec 2): the record strips' table (REC_TEXELS texels of 4 floats each, in
    *  recStrips order) and the fallback rows (x, y, key, s per vertex) of those that took today's
    *  path this frame. The interior columns' entries of pos, key, s and s4 are left unset. */
-  rec?: { strip: Float32Array; fb: Float32Array; nFb: number; hW: number; zt: number };
+  rec?: { strip: Float32Array; fb: Float32Array; nFb: number; hW: number; zt: number; pf: Float32Array | null };
 }
 
 /** K1247 s19: texels per record strip in the strip table: (rL0, rL1, rR0, rR1), (s0, ds, sg, mode:
@@ -656,6 +656,8 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
   const rsOrd = new Map<number, number>(); if (rsI) rsI.forEach((ii, o) => rsOrd.set(ii, o));
   const recTab = rsI ? new Float32Array(4 * REC_TEXELS * Math.max(1, rsI.length)) : null;
   const fbOrd: number[] = [];
+  // K1247 s20: the chains' fan-step and fold tables (POLY.mode 4: colAt, the shader's uRecPf).
+  const recT = rec && POLY.mode === 4 ? recTables(zc, hW) : null;
   const fa = new Float64Array(5);
   const recStrip = (it: Extract<FillItem, { kind: "strip" }>, aSt: number, bSt: number, pl: OutlineTable["pieces"][number], pr: OutlineTable["pieces"][number]): boolean => {
     const N = it.N; const W = N + 1; const c = zc[it.pi]; const t = tgAt(it.pi)!;
@@ -675,26 +677,41 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
     const nl = pl.pts.length >> 1; const nr = pr.pts.length >> 1; const m = nl >> 1;
     frameAt(c, t, rL[0] + (rL[1] * m) / Math.max(1, nl - 1), -1, fa);
     let sg = (pl.pts[2 * m] - fa[0]) * -fa[3] + (pl.pts[2 * m + 1] - fa[1]) * fa[2] >= 0 ? 1 : -1;
-    if (rowL.length < 2 * W) { rowL = new Float64Array(2 * W); rowR = new Float64Array(2 * W); rowZ = new Float64Array(W); }
-    offsetRow(c, t, rL[0], rL[1], N, sg, hW, rowL); offsetRow(c, t, rR[0], rR[1], N, -sg, hW, rowR);
+    if (rowL.length < 2 * W) { rowL = new Float64Array(2 * W); rowR = new Float64Array(2 * W); rowZ = new Float64Array(W); rowSL = new Float64Array(W); rowSR = new Float64Array(W); }
+    // K1247 s20 (POLY.mode 4): each column on the border's polygon by colAt, the shader's recCol.
+    const place = (): boolean => {
+      if (POLY.mode === 4 && recT) {
+        const o = recT.base[it.pi];
+        for (let i = 1; i < N; i++) { rowSL[i] = colAt(c, recT.pf, o, rL[0], rL[1], N, sg, hW, i, rowL, 2 * i); rowSR[i] = colAt(c, recT.pf, o, rR[0], rR[1], N, -sg, hW, i, rowR, 2 * i); }
+        return recSideOk(c, recT, it.pi, rL[0], rL[1], N, sg) && recSideOk(c, recT, it.pi, rR[0], rR[1], N, -sg);
+      }
+      return offsetRow(c, t, rL[0], rL[1], N, sg, hW, rowL, rowSL) && offsetRow(c, t, rR[0], rR[1], N, -sg, hW, rowR, rowSR);
+    };
+    let ok = place();
     const j = N > 1 ? 1 : 0; const k = N > 1 ? N - 1 : N;
     const d2 = (row: Float64Array, i: number, x: number, y: number): number => (row[2 * i] - x) ** 2 + (row[2 * i + 1] - y) ** 2;
     const xa = pl.pts[0]; const ya = pl.pts[1]; const xb = pl.pts[2 * nl - 2]; const yb = pl.pts[2 * nl - 1];
-    if (d2(rowR, j, xa, ya) + d2(rowR, k, xb, yb) < d2(rowL, j, xa, ya) + d2(rowL, k, xb, yb)) {
-      sg = -sg; offsetRow(c, t, rL[0], rL[1], N, sg, hW, rowL); offsetRow(c, t, rR[0], rR[1], N, -sg, hW, rowR);
-    }
-    zRow(c, s0, ds, N, rowZ);
+    if (d2(rowR, j, xa, ya) + d2(rowR, k, xb, yb) < d2(rowL, j, xa, ya) + d2(rowL, k, xb, yb)) { sg = -sg; ok = place(); }
+    // K1247 s20: a side on the border's polygon that folds (two miters' trims overlap on a segment: the
+    // border there is cutFolds') keeps today's path.
+    if (!ok) return false;
+    // The polygon's columns are uniform in its shared u, not in s: each carries its own s (POLY.mode >= 1).
+    // Mode 4: a side's column carries its own s, its key the depth there (the centre's at the mean s).
+    const pol = POLY.mode > 0;
+    if (pol) { for (let i = 1; i < N; i++) rowZ[i] = zAt1(c, rowSL[i]); rowZ[0] = zAt1(c, s0); rowZ[N] = zAt1(c, s0 + ds); } else zRow(c, s0, ds, N, rowZ);
     rowL[0] = pl.pts[0]; rowL[1] = pl.pts[1]; rowR[0] = pr.pts[0]; rowR[1] = pr.pts[1];
     rowL[2 * N] = pl.pts[2 * nl - 2]; rowL[2 * N + 1] = pl.pts[2 * nl - 1]; rowR[2 * N] = pr.pts[2 * nr - 2]; rowR[2 * N + 1] = pr.pts[2 * nr - 1];
-    const b0 = it.base;
+    const b0 = it.base; const m4 = POLY.mode === 4 && recT !== null;
     for (let i = 0; i <= N; i++) {
-      const s = s0 + (ds * i) / N; const z = rowZ[i];
-      const sL = rL[0] + (rL[1] * i) / N; const sR = rR[0] + (rR[1] * i) / N;
+      const mid = pol && i > 0 && i < N;
+      const sL = mid ? rowSL[i] : rL[0] + (rL[1] * i) / N; const sR = mid ? rowSR[i] : rR[0] + (rR[1] * i) / N;
+      const s = m4 && mid ? (sL + sR) / 2 : mid ? rowSL[i] : s0 + (ds * i) / N; const z = m4 && mid ? zAt1(c, s) : rowZ[i];
+      const zl = m4 && mid ? zAt1(c, sL) : z; const zr = m4 && mid ? zAt1(c, sR) : z;
       const lx = rowL[2 * i]; const ly = rowL[2 * i + 1]; const rx = rowR[2 * i]; const ry = rowR[2 * i + 1];
       const vL = b0 + i; const vC = vL + W; const vR = vC + W;
-      pos[2 * vL] = lx; pos[2 * vL + 1] = ly; key[vL] = z - zt; sv[vL] = s;
+      pos[2 * vL] = lx; pos[2 * vL + 1] = ly; key[vL] = zl - zt; sv[vL] = s;
       pos[2 * vC] = (lx + rx) / 2; pos[2 * vC + 1] = (ly + ry) / 2; key[vC] = z; sv[vC] = s;
-      pos[2 * vR] = rx; pos[2 * vR + 1] = ry; key[vR] = z - zt; sv[vR] = s;
+      pos[2 * vR] = rx; pos[2 * vR + 1] = ry; key[vR] = zr - zt; sv[vR] = s;
       s4[SLOTS * vL] = sL; s4[SLOTS * vC] = (sL + sR) / 2; s4[SLOTS * vR] = sR;
       across[vL] = 1; across[vR] = 1;
     }
@@ -708,7 +725,7 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
   };
   // K1247 s19: recStrip with the shader's share left out. The same s ranges and side, its columns 0, 1,
   // N-1 and N placed here (single points of offsetRow / zRow), and the strip's row of the table.
-  const P4 = new Float64Array(8);
+  const P4 = new Float64Array(8); const PS4 = new Float64Array(4);
   const recStrip2 = (it: Extract<FillItem, { kind: "strip" }>, ord: number, aSt: number, bSt: number, pl: OutlineTable["pieces"][number], pr: OutlineTable["pieces"][number]): boolean => {
     const N = it.N; const W = N + 1; const c = zc[it.pi];
     const loop = c.closed && c.len > 0;
@@ -721,7 +738,14 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
     const nl = pl.pts.length >> 1; const nr = pr.pts.length >> 1; const m = nl >> 1;
     pointAt(c, rL0 + (rL1 * m) / Math.max(1, nl - 1), fa);
     let sg = (pl.pts[2 * m] - fa[0]) * -fa[3] + (pl.pts[2 * m + 1] - fa[1]) * fa[2] >= 0 ? 1 : -1;
+    // K1247 s20 (POLY.mode 4): columns 1 and N-1 by colAt (their s into PS4: L1, LN-1, R1, RN-1).
+    const o4 = recT ? recT.base[it.pi] : 0;
     const sides = (): void => {
+      if (recT) {
+        PS4[0] = colAt(c, recT.pf, o4, rL0, rL1, N, sg, hW, 1, P4, 0); PS4[1] = colAt(c, recT.pf, o4, rL0, rL1, N, sg, hW, N - 1, P4, 2);
+        PS4[2] = colAt(c, recT.pf, o4, rR0, rR1, N, -sg, hW, 1, P4, 4); PS4[3] = colAt(c, recT.pf, o4, rR0, rR1, N, -sg, hW, N - 1, P4, 6);
+        return;
+      }
       offsetAt(c, rL0 + rL1 / N, sg, hW, rL1 / N, P4, 0); offsetAt(c, rL0 + (rL1 * (N - 1)) / N, sg, hW, rL1 / N, P4, 2);
       offsetAt(c, rR0 + rR1 / N, -sg, hW, rR1 / N, P4, 4); offsetAt(c, rR0 + (rR1 * (N - 1)) / N, -sg, hW, rR1 / N, P4, 6);
     };
@@ -729,20 +753,24 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
     const xa = pl.pts[0]; const ya = pl.pts[1]; const xb = pl.pts[2 * nl - 2]; const yb = pl.pts[2 * nl - 1];
     const d2 = (o: number, x: number, y: number): number => (P4[o] - x) ** 2 + (P4[o + 1] - y) ** 2;
     if (d2(4, xa, ya) + d2(6, xb, yb) < d2(0, xa, ya) + d2(2, xb, yb)) { sg = -sg; sides(); }
+    if (recT && !(recSideOk(c, recT, it.pi, rL0, rL1, N, sg) && recSideOk(c, recT, it.pi, rR0, rR1, N, -sg))) return false;
     const b0 = it.base;
-    const col = (i: number, lx: number, ly: number, rx: number, ry: number): void => {
-      const s = s0 + (ds * i) / N; const z = zAt1(c, s);
-      const sL = rL0 + (rL1 * i) / N; const sR = rR0 + (rR1 * i) / N;
+    // ls, rs: the column's side s (mode 4: colAt's; -1: uniform), keyed per side as recStrip's.
+    const col = (i: number, lx: number, ly: number, rx: number, ry: number, ls = NaN, rs = NaN): void => {
+      const own = ls === ls;
+      const sL = own ? ls : rL0 + (rL1 * i) / N; const sR = own ? rs : rR0 + (rR1 * i) / N;
+      const s = own ? (sL + sR) / 2 : s0 + (ds * i) / N; const z = zAt1(c, s);
+      const zl = own ? zAt1(c, sL) : z; const zr = own ? zAt1(c, sR) : z;
       const vL = b0 + i; const vC = vL + W; const vR = vC + W;
-      pos[2 * vL] = lx; pos[2 * vL + 1] = ly; key[vL] = z - zt; sv[vL] = s;
+      pos[2 * vL] = lx; pos[2 * vL + 1] = ly; key[vL] = zl - zt; sv[vL] = s;
       pos[2 * vC] = (lx + rx) / 2; pos[2 * vC + 1] = (ly + ry) / 2; key[vC] = z; sv[vC] = s;
-      pos[2 * vR] = rx; pos[2 * vR + 1] = ry; key[vR] = z - zt; sv[vR] = s;
+      pos[2 * vR] = rx; pos[2 * vR + 1] = ry; key[vR] = zr - zt; sv[vR] = s;
       s4[SLOTS * vL] = sL; s4[SLOTS * vC] = (sL + sR) / 2; s4[SLOTS * vR] = sR;
       across[vL] = 1; across[vR] = 1;
     };
     col(0, pl.pts[0], pl.pts[1], pr.pts[0], pr.pts[1]);
-    col(1, P4[0], P4[1], P4[4], P4[5]);
-    col(N - 1, P4[2], P4[3], P4[6], P4[7]);
+    if (recT) { col(1, P4[0], P4[1], P4[4], P4[5], PS4[0], PS4[2]); col(N - 1, P4[2], P4[3], P4[6], P4[7], PS4[1], PS4[3]); }
+    else { col(1, P4[0], P4[1], P4[4], P4[5]); col(N - 1, P4[2], P4[3], P4[6], P4[7]); }
     col(N, pl.pts[2 * nl - 2], pl.pts[2 * nl - 1], pr.pts[2 * nr - 2], pr.pts[2 * nr - 1]);
     const rF = 4 * hW;
     const footEnd = (i: number): void => {
@@ -757,7 +785,7 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
     T[o + 8] = it.pi; T[o + 9] = N; T[o + 10] = 0; T[o + 11] = 0;
     return true;
   };
-  let rowL = new Float64Array(0); let rowR = new Float64Array(0); let rowZ = new Float64Array(0);
+  let rowL = new Float64Array(0); let rowR = new Float64Array(0); let rowZ = new Float64Array(0); let rowSL = new Float64Array(0); let rowSR = new Float64Array(0);
   if (FILL_PROF.on) FILL_PROF.t.pre = (FILL_PROF.t.pre ?? 0) + performance.now() - tP;
   for (let ii = 0; ii < fs.items.length; ii++) {
     const it = fs.items[ii];
@@ -1181,7 +1209,7 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
       recTab[o + 7] = 0; recTab[o + 8] = S.pi; recTab[o + 9] = S.N; recTab[o + 10] = q;
       for (let v = S.base; v < S.base + 3 * (S.N + 1); v++, q++) { fb[4 * q] = pos[2 * v]; fb[4 * q + 1] = pos[2 * v + 1]; fb[4 * q + 2] = key[v]; fb[4 * q + 3] = s4[SLOTS * v]; }
     }
-    return { pos, key, s: sv, s4, w4, across, fallbacks, dense: denseCount, rec: { strip: recTab, fb, nFb, hW, zt } };
+    return { pos, key, s: sv, s4, w4, across, fallbacks, dense: denseCount, rec: { strip: recTab, fb, nFb, hW, zt, pf: recT ? recT.pf : null } };
   }
   return { pos, key, s: sv, s4, w4, across, fallbacks, dense: denseCount };
 }

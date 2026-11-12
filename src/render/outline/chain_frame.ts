@@ -79,8 +79,10 @@ function arcColumns(c: FrameChain, t: ChainTangents, sA: number, dS: number, N: 
 }
 
 /** Row i = 1..N-1 of a strip side: C(s) + sgn b N(s) at s = sA + dS i / N, b = h clamped to 0.9 of the
- *  radius on the concave side; into out[2i], out[2i+1]. A cursor walks the segments (rows run along s). */
-export function offsetRow(c: FrameChain, t: ChainTangents, sA: number, dS: number, N: number, sgn: number, h: number, out: Float64Array): void {
+ *  radius on the concave side; into out[2i], out[2i+1]. A cursor walks the segments (rows run along s).
+ *  POLY.mode >= 1 (K1247 s20): polyRow's columns instead, their s into sOut; false where it folds. */
+export function offsetRow(c: FrameChain, t: ChainTangents, sA: number, dS: number, N: number, sgn: number, h: number, out: Float64Array, sOut: Float64Array | null = null): boolean {
+  if (POLY.mode > 0) return polyRow(c, sA, dS, N, sgn, h, 1, N - 1, out, sOut);
   const m = c.n - 1; const loop = c.closed && c.len > 0; const L = c.len;
   const xs = c.xs; const ys = c.ys; const ss = c.s; const tx = t.tx; const ty = t.ty; const kk = t.k;
   const us = ARC.on ? arcColumns(c, t, sA, dS, N, sgn, h) : null;
@@ -104,6 +106,7 @@ export function offsetRow(c: FrameChain, t: ChainTangents, sA: number, dS: numbe
     const b = sgn * kap > 0 ? Math.min(h, 0.9 / ak) : h + SAG.f * st * st * ak * (1 + h * ak) / 8;
     out[2 * i] = x - sgn * b * ay; out[2 * i + 1] = y + sgn * b * ax;
   }
+  return true;
 }
 
 /** z (the chain's depth, linear between samples) at s = sA + dS i / N, i = 0..N, into out[i]. */
@@ -140,6 +143,319 @@ export function tanAt(c: FrameChain, i: number, out: Float64Array, o = 0): void 
     const cr = (ax * by - ay * bx) / (la * lb); const dt = (ax * bx + ay * by) / (la * lb);
     out[o + 2] = Math.atan2(cr, dt) / (0.5 * (la + lb));
   }
+}
+
+/** K1247 s20: how a record side's columns are placed. 0: C(s) +- b N(s) in the smooth frame (s18, s19),
+ *  whose points sit inside the border wherever the polyline turns (the cracks against form B); 1: on the
+ *  border's own polygon (outline.ts buildBorder: each segment's offset line, trimmed at a concave
+ *  vertex's miter, a convex vertex's fan of pi/16 chords). Both sides share one parameter u, the chain's
+ *  s with each vertex given its fan's length w (the convex side walks the fan over it, the concave side
+ *  waits at the miter), so a column's two side points stay across the strip from each other; columns are
+ *  uniform in u. 2: as 1, and the column nearest each polygon vertex (within half a step; the sharpest
+ *  vertex first) moves onto it, so no column chord cuts a corner off. */
+export const POLY = { mode: 4, folds: 0, calls: 0 };
+const FAN_STEP = Math.PI / 16;
+const CW = new Float64Array(10);
+
+/** Vertex v's corner on side sgn (none at an open chain's ends or a straight vertex): into o, [type
+ *  (0 none, 1 convex fan, 2 concave miter), trim h tan(theta / 2) (concave), the fan's length w (either
+ *  side: the shared u's width at v), a0, da, steps, miter x, miter y, theta]. */
+function cornerAt(c: FrameChain, v: number, sgn: number, h: number, o: Float64Array): void {
+  const m = c.n - 1; const loop = c.closed && c.len > 0; o[0] = 0; o[1] = 0; o[2] = 0; o[5] = 0; o[8] = 0;
+  if (!loop && (v <= 0 || v >= m)) return;
+  const p = v > 0 ? v - 1 : m; const q = v < m ? v + 1 : 0;
+  const xs = c.xs; const ys = c.ys;
+  let ax = xs[v] - xs[p]; let ay = ys[v] - ys[p]; let bx = xs[q] - xs[v]; let by = ys[q] - ys[v];
+  const la = Math.sqrt(ax * ax + ay * ay); const lb = Math.sqrt(bx * bx + by * by);
+  if (!(la > 0 && lb > 0)) return;
+  ax /= la; ay /= la; bx /= lb; by /= lb;
+  const cr = ax * by - ay * bx; const dt = ax * bx + ay * by;
+  if (Math.abs(cr) < 1e-12) return;
+  // Side normals sgn (-dy, dx), as offsetRow's.
+  const n1x = -sgn * ay; const n1y = sgn * ax; const n2x = -sgn * by; const n2y = sgn * bx;
+  const da = Math.atan2(n1x * n2y - n1y * n2x, n1x * n2x + n1y * n2y); const th = Math.abs(da);
+  const steps = Math.max(1, Math.ceil(th / FAN_STEP));
+  o[2] = steps * 2 * h * Math.sin(th / (2 * steps)); o[5] = steps; o[8] = th;
+  if (sgn * cr > 0) {
+    o[0] = 2; o[1] = (h * Math.abs(cr)) / (1 + dt);
+    const d = 1 + n1x * n2x + n1y * n2y;
+    o[6] = xs[v] + (h * (n1x + n2x)) / d; o[7] = ys[v] + (h * (n1y + n2y)) / d;
+  } else { o[0] = 1; o[3] = Math.atan2(n1y, n1x); o[4] = da; o[5] = steps; }
+}
+
+// A side's pieces along u, PS floats each: [type, u0, uLen, s0, s1, ...]: type 0 an edge from (x0, y0)
+// to (x1, y1) at [5..8]; 1 a fan about (cx, cy) [5, 6], a0, da, steps [7..9]; 2 a fixed point (x, y)
+// [5, 6] (a miter).
+const PS = 10; let PC = new Float64Array(64 * PS);
+// Polygon vertices for the snap: [u, sharpness].
+let VX = new Float64Array(128);
+// Mode 4: the strip's interior chain vertices, [u at the fan's start, w, steps] (steps 0: a straight one).
+let FV = new Float64Array(96);
+
+/** Columns i = iLo..iHi (1 <= i <= N-1) of a record side on the border's polygon (POLY.mode >= 1)
+ *  into out[2i], out[2i+1], and their centreline s into sOut[i] when given. False when the side folds
+ *  (two miters' trims overlap on a segment: the border there is cutFolds', not this). */
+export function polyRow(c: FrameChain, sA: number, dS: number, N: number, sgn: number, h: number, iLo: number, iHi: number, out: Float64Array, sOut: Float64Array | null): boolean {
+  const n = c.n; const m = n - 1; const loop = c.closed && c.len > 0; const L = c.len;
+  const xs = c.xs; const ys = c.ys; const ss = c.s;
+  const segEnd = (k: number): number => (k < m ? ss[k + 1] : L);
+  let a = sA; let base = 0;
+  if (loop) { const w = ((a % L) + L) % L; base = a - w; a = w; } else a = a < 0 ? 0 : a > ss[m] ? ss[m] : a;
+  const sB = loop ? sA + dS : Math.min(Math.max(sA + dS, 0), ss[m]);
+  let k: number;
+  if (a >= ss[m]) k = loop ? m : m - 1;
+  else { let lo = 0; let hi = m; while (hi - lo > 1) { const q = (lo + hi) >> 1; if (ss[q] <= a) lo = q; else hi = q; } k = lo; }
+  const sStart = a + base; const eps = 1e-9;
+  let np = 0; let nv = 0; let nf = 0; let U = 0; let bs = base; let first = true; let ok = true;
+  const grow = (): void => {
+    if ((np + 8) * PS > PC.length) { const t = new Float64Array(PC.length * 2); t.set(PC); PC = t; }
+    if (2 * (nv + 40) > VX.length) { const t = new Float64Array(VX.length * 2); t.set(VX); VX = t; }
+    if (3 * (nf + 2) > FV.length) { const t = new Float64Array(FV.length * 2); t.set(FV); FV = t; }
+  };
+  const piece = (type: number, uLen: number, s0: number, s1: number, p5: number, p6: number, p7: number, p8: number, p9 = 0): void => {
+    if (!(uLen > 0)) return;
+    const o = np * PS; PC[o] = type; PC[o + 1] = U; PC[o + 2] = uLen; PC[o + 3] = s0; PC[o + 4] = s1;
+    PC[o + 5] = p5; PC[o + 6] = p6; PC[o + 7] = p7; PC[o + 8] = p8; PC[o + 9] = p9; np++; U += uLen;
+  };
+  const vtx = (u: number, sharp: number): void => { VX[2 * nv] = u; VX[2 * nv + 1] = sharp; nv++; };
+  for (let g = 0; g <= n + 1; g++) {
+    grow();
+    const st = ss[k] + bs; const en = segEnd(k) + bs; const last = en >= sB - eps;
+    const j = k < m ? k + 1 : 0;
+    let dx = xs[j] - xs[k]; let dy = ys[j] - ys[k]; const l = Math.sqrt(dx * dx + dy * dy) || 1; dx /= l; dy /= l;
+    const nx = -sgn * dy; const ny = sgn * dx;
+    cornerAt(c, k, sgn, h, CW); const eS = CW[0] === 2 ? CW[1] : 0; const mSx = CW[6]; const mSy = CW[7];
+    cornerAt(c, j, sgn, h, CW); const eE = CW[0] === 2 ? CW[1] : 0; const mEx = CW[6]; const mEy = CW[7];
+    let es = st + eS; let ee = en - eE;
+    if (ee < es) { ok = false; const mid = st + ((en - st) * eS) / (eS + eE); es = mid; ee = mid; }
+    const ca = first ? Math.max(st, Math.min(en, sStart)) : st; const cb = last ? Math.max(ca, Math.min(en, sB)) : en;
+    first = false;
+    // [ca, cb] in s: the start miter's trim, the edge, the end miter's trim.
+    const t1 = Math.min(cb, es); if (t1 > ca) piece(2, t1 - ca, ca, t1, mSx, mSy, 0, 0);
+    const e0 = Math.max(ca, es); const e1 = Math.min(cb, ee);
+    if (e1 > e0) piece(0, e1 - e0, e0, e1, xs[k] + dx * (e0 - st) + h * nx, ys[k] + dy * (e0 - st) + h * ny, xs[k] + dx * (e1 - st) + h * nx, ys[k] + dy * (e1 - st) + h * ny);
+    const t2 = Math.max(ca, ee); if (cb > t2) piece(2, cb - t2, t2, cb, mEx, mEy, 0, 0);
+    if (last) break;
+    // Vertex j, inside the strip: its width w in u.
+    cornerAt(c, j, sgn, h, CW);
+    FV[3 * nf] = U; FV[3 * nf + 1] = CW[2]; FV[3 * nf + 2] = CW[5]; nf++;
+    if (CW[0] === 1) {
+      const steps = CW[5]; const w = CW[2]; const th = CW[8];
+      vtx(U, th / (2 * steps));
+      const u0 = U; piece(1, w, en, en, xs[j], ys[j], CW[3], CW[4], steps);
+      for (let f = 1; f < steps; f++) vtx(u0 + (w * f) / steps, th / steps);
+      vtx(U, th / (2 * steps));
+    } else if (CW[0] === 2) {
+      vtx(U + CW[2] / 2, CW[8]); piece(2, CW[2], en, en, CW[6], CW[7], 0, 0);
+    }
+    if (k < m - (loop ? 0 : 1)) k++; else if (loop) { k = 0; bs += L; } else break;
+  }
+  // Column targets, uniform in u; mode 2 moves the nearest column onto each vertex, sharpest first.
+  const T = targets(N, U, nv, nf);
+  let p = 0;
+  for (let i = iLo; i <= iHi; i++) {
+    const t = T[i];
+    while (p + 1 < np && t > PC[(p + 1) * PS + 1]) p++;
+    const o = p * PS; const len = PC[o + 2]; const f = len > 0 ? Math.min(1, Math.max(0, (t - PC[o + 1]) / len)) : 0;
+    const ty = PC[o];
+    if (ty === 0) { out[2 * i] = PC[o + 5] + (PC[o + 7] - PC[o + 5]) * f; out[2 * i + 1] = PC[o + 6] + (PC[o + 8] - PC[o + 6]) * f; }
+    else if (ty === 2) { out[2 * i] = PC[o + 5]; out[2 * i + 1] = PC[o + 6]; }
+    else {
+      const steps = PC[o + 9]; const qq = f * steps; const jf = Math.min(steps - 1, Math.floor(qq)); const fr = qq - jf;
+      const c0 = PC[o + 7] + (PC[o + 8] * jf) / steps; const c1 = PC[o + 7] + (PC[o + 8] * (jf + 1)) / steps;
+      out[2 * i] = PC[o + 5] + h * (Math.cos(c0) + (Math.cos(c1) - Math.cos(c0)) * fr);
+      out[2 * i + 1] = PC[o + 6] + h * (Math.sin(c0) + (Math.sin(c1) - Math.sin(c0)) * fr);
+    }
+    if (sOut) sOut[i] = PC[o + 3] + (PC[o + 4] - PC[o + 3]) * f;
+  }
+  POLY.calls++; if (!ok) POLY.folds++;
+  return ok;
+}
+
+let TG = new Float64Array(64); let TS = new Float64Array(64);
+/** The columns' u: U i / N, then (mode 2) each polygon vertex (VX) claims its nearest column within half
+ *  a step when no sharper vertex has: what a vertex shader decides per column from the vertices within
+ *  half a step of it. */
+function targets(N: number, U: number, nv: number, nf: number): Float64Array {
+  if (TG.length < N + 1) { TG = new Float64Array(2 * (N + 1)); TS = new Float64Array(2 * (N + 1)); }
+  const du = U / N;
+  for (let i = 0; i <= N; i++) { TG[i] = du * i; TS[i] = -1; }
+  if (POLY.mode === 4 && du > 0) {
+    // Each interior vertex's fan takes `steps` columns, one per fan point, from column
+    // round(S_before B / S) + F_before (S: the straight length, B = N - F the straight columns, F the
+    // fan steps; *_before: before this vertex); the straight parts between take the columns left,
+    // evenly in u. Per column, a later vertex's fan wins. Decidable per column (a vertex shader's
+    // search over the chain's prefix of steps), unlike mode 3.
+    let wsum = 0; let ft = 0;
+    for (let f = 0; f < nf; f++) { wsum += FV[3 * f + 1]; ft += FV[3 * f + 2]; }
+    const S = U - wsum; const B = N - ft;
+    if (S > 0 && B >= 1) {
+      let pc = 0; let pu = 0; let wb = 0; let fb = 0;
+      for (let f = 0; f < nf; f++) {
+        const u0 = FV[3 * f]; const w = FV[3 * f + 1]; const st = FV[3 * f + 2];
+        const cs = Math.round(((u0 - wb) * B) / S) + fb;
+        for (let i = pc + 1; i < cs && i < N; i++) TG[i] = pu + ((u0 - pu) * (i - pc)) / (cs - pc);
+        for (let g = 0; g <= st; g++) { const i = cs + g; if (i >= 1 && i <= N - 1) TG[i] = st > 0 ? u0 + (w * g) / st : u0; }
+        pc = cs + st; pu = u0 + w; wb += w; fb += st;
+      }
+      for (let i = pc + 1; i < N; i++) TG[i] = pu + ((U - pu) * (i - pc)) / (N - pc);
+      return TG;
+    }
+  }
+  if (POLY.mode === 3 && du > 0) {
+    // As the off fill's resample: every vertex its own column, at the index nearest its u, kept
+    // increasing; the columns between two kept vertices spread evenly in u between them.
+    let cnt = 0; const e = 1e-9 * (U + 1);
+    for (let q = 0; q < nv; q++) { const u = VX[2 * q]; if (u > e && u < U - e) cnt++; }
+    if (cnt <= N - 1) {
+      let prev = 0; let pu = 0; let left = cnt; let lastU = -1;
+      for (let q = 0; q < nv; q++) {
+        const u = VX[2 * q]; if (!(u > e && u < U - e)) continue;
+        left--; if (Math.abs(u - lastU) <= e) continue; lastU = u;
+        const idx = Math.min(N - 1 - left, Math.max(prev + 1, Math.round(u / du)));
+        for (let i = prev + 1; i < idx; i++) TG[i] = pu + ((u - pu) * (i - prev)) / (idx - prev);
+        TG[idx] = u; prev = idx; pu = u;
+      }
+      for (let i = prev + 1; i < N; i++) TG[i] = pu + ((U - pu) * (i - prev)) / (N - prev);
+      return TG;
+    }
+  }
+  if (POLY.mode >= 2 && du > 0) {
+    for (let q = 0; q < nv; q++) {
+      const u = VX[2 * q]; const sh = VX[2 * q + 1]; const j = Math.round(u / du);
+      if (j < 1 || j > N - 1 || Math.abs(u - du * j) > 0.5 * du) continue;
+      if (sh > TS[j]) { TS[j] = sh; TG[j] = u; }
+    }
+  }
+  return TG;
+}
+
+/** K1247 s20 (POLY.mode 4): vertex v's fan steps (side-independent; 0 at an open chain's end, a
+ *  degenerate or a straight vertex), its miter trim h tan(theta / 2) and on which side that trim is (the
+ *  sign of the turn): [steps, trim, sign]. As cornerAt. */
+function stepsAt(c: FrameChain, v: number, h: number, o: Float64Array): void {
+  const m = c.n - 1; const loop = c.closed && c.len > 0; o[0] = 0; o[1] = 0; o[2] = 0;
+  if (!loop && (v <= 0 || v >= m)) return;
+  const p = v > 0 ? v - 1 : m; const q = v < m ? v + 1 : 0;
+  const xs = c.xs; const ys = c.ys;
+  let ax = xs[v] - xs[p]; let ay = ys[v] - ys[p]; let bx = xs[q] - xs[v]; let by = ys[q] - ys[v];
+  const la = Math.sqrt(ax * ax + ay * ay); const lb = Math.sqrt(bx * bx + by * by);
+  if (!(la > 0 && lb > 0)) return;
+  ax /= la; ay /= la; bx /= lb; by /= lb;
+  const cr = ax * by - ay * bx; const dt = ax * bx + ay * by;
+  if (Math.abs(cr) < 1e-12) return;
+  o[0] = Math.max(1, Math.ceil(Math.abs(Math.atan2(cr, dt)) / FAN_STEP)); o[1] = (h * Math.abs(cr)) / (1 + dt); o[2] = cr > 0 ? 1 : -1;
+}
+
+/** K1247 s20: the record placement's chain tables, one entry a chain sample in band_gpu's chainTex
+ *  layout (chains back to back): pf the fan steps of samples 0..v (inclusive prefix; the shader's
+ *  uRecPf), fp / fm the folds on side +1 / -1 of segments 0..v (segment v runs from sample v to v + 1;
+ *  a fold: the two miters' trims overlap on it). */
+export interface RecTables { pf: Float32Array; fp: Int32Array; fm: Int32Array; base: number[] }
+export function recTables(zc: readonly FrameChain[], h: number): RecTables {
+  const base: number[] = []; let nS = 0;
+  for (const c of zc) { base.push(nS); nS += c.n; }
+  const pf = new Float32Array(Math.max(1, nS)); const fp = new Int32Array(Math.max(1, nS)); const fm = new Int32Array(Math.max(1, nS));
+  const A = new Float64Array(3); const Bc = new Float64Array(3);
+  zc.forEach((c, ci) => {
+    const o = base[ci]; const n = c.n; const m = n - 1; const loop = c.closed && c.len > 0;
+    let sp = 0; let cp = 0; let cm = 0;
+    for (let v = 0; v < n; v++) {
+      stepsAt(c, v, h, A); sp += A[0]; pf[o + v] = sp;
+      if (v < m || loop) {
+        const j = v < m ? v + 1 : 0; stepsAt(c, j, h, Bc);
+        const len = (v < m ? c.s[v + 1] : c.len) - c.s[v];
+        if ((A[2] > 0 ? A[1] : 0) + (Bc[2] > 0 ? Bc[1] : 0) > len) cp++;
+        if ((A[2] < 0 ? A[1] : 0) + (Bc[2] < 0 ? Bc[1] : 0) > len) cm++;
+      }
+      fp[o + v] = cp; fm[o + v] = cm;
+    }
+  });
+  return { pf, fp, fm, base };
+}
+
+// A record side's span: [a (the start, wrapped into [0, L) on a loop), sB (the end, same frame), k (the
+// first segment), V1, V2 (the interior vertices, unwrapped: sample V % n, s(V) = s[V % n] + floor(V / n)
+// L), base (sA minus a: colAt's s is in sA's frame)]. As polyRow's walk.
+const SPN = new Float64Array(6);
+function spanOf(c: FrameChain, sA: number, dS: number): Float64Array {
+  const n = c.n; const m = n - 1; const loop = c.closed && c.len > 0; const L = c.len; const ss = c.s;
+  let a = sA; let base = 0;
+  if (loop) { const w = ((a % L) + L) % L; base = a - w; a = w; } else a = a < 0 ? 0 : a > ss[m] ? ss[m] : a;
+  const sB = (loop ? sA + dS : Math.min(Math.max(sA + dS, 0), ss[m])) - base;
+  let k: number;
+  if (a >= ss[m]) k = loop ? m : m - 1;
+  else { let lo = 0; let hi = m; while (hi - lo > 1) { const q = (lo + hi) >> 1; if (ss[q] <= a) lo = q; else hi = q; } k = lo; }
+  // V2: the last V with s(V) < sB - 1e-9 (V1 - 1 = k when none).
+  const lim = sB - 1e-9; let lo = k; let hi = loop ? k + 1 + n * (Math.floor(Math.max(0, sB) / L) + 2) : m;
+  while (hi - lo > 1) { const q = (lo + hi) >> 1; if (sOfV(c, q) < lim) lo = q; else hi = q; }
+  SPN[0] = a; SPN[1] = sB; SPN[2] = k; SPN[3] = k + 1; SPN[4] = lo; SPN[5] = base;
+  return SPN;
+}
+function sOfV(c: FrameChain, V: number): number { const n = c.n; const q = Math.floor(V / n); return c.s[V - q * n] + q * c.len; }
+function pfU(c: FrameChain, pf: ArrayLike<number>, o: number, V: number): number {
+  if (V < 0) return 0; const n = c.n; const q = Math.floor(V / n); return pf[o + V - q * n] + q * pf[o + n - 1];
+}
+function foldU(c: FrameChain, f: ArrayLike<number>, o: number, V: number): number {
+  if (V < 0) return 0; const n = c.n; const q = Math.floor(V / n); return f[o + V - q * n] + q * f[o + n - 1];
+}
+
+/** Whether a record side places by mode 4 (else the strip falls back to off): no fold among its
+ *  segments, straight length and a straight column left after the fans' columns. */
+export function recSideOk(c: FrameChain, T: RecTables, ci: number, sA: number, dS: number, N: number, sgn: number): boolean {
+  const o = T.base[ci]; const sp = spanOf(c, sA, dS); const a = sp[0]; const sB = sp[1]; const k = sp[2]; const V1 = sp[3]; const V2 = sp[4];
+  const F = pfU(c, T.pf, o, V2) - pfU(c, T.pf, o, V1 - 1);
+  if (!(sB - a > 0) || N - F < 1) return false;
+  const fd = sgn > 0 ? T.fp : T.fm;
+  return foldU(c, fd, o, V2) - foldU(c, fd, o, k - 1) === 0;
+}
+
+/** Column i (1 <= i <= N - 1) of a record side placed by mode 4 into out[oi], out[oi + 1]; returns its
+ *  centreline s. Each interior vertex V's fan takes the columns cs(V) .. cs(V) + steps(V), one per fan
+ *  point (a concave side's miter for each), cs(V) = round((s(V) - a) B / S) + F_before(V) (S the straight
+ *  length, B = N - F the straight columns); the straight parts take the columns between, evenly in s; a
+ *  later fan wins a shared column. Every polygon vertex of the border (outline.ts buildBorder) lands on a
+ *  column, so no chord between two columns cuts a corner. The shader's recCol is this, line for line. */
+export function colAt(c: FrameChain, pf: ArrayLike<number>, o: number, sA: number, dS: number, N: number, sgn: number, h: number, i: number, out: Float64Array, oi: number): number {
+  const sp = spanOf(c, sA, dS); const a = sp[0]; const sB = sp[1]; const k = sp[2]; const V1 = sp[3]; const V2 = sp[4];
+  const S = sB - a; const p0 = pfU(c, pf, o, V1 - 1); const B = N - (pfU(c, pf, o, V2) - p0);
+  const cs = (V: number): number => Math.floor(((sOfV(c, V) - a) * B) / S + 0.5) + pfU(c, pf, o, V - 1) - p0;
+  // The last interior V with cs(V) <= i (V1 - 1: none).
+  let lo = V1 - 1; let hi = V2 + 1;
+  while (hi - lo > 1) { const q = (lo + hi) >> 1; if (cs(q) <= i) lo = q; else hi = q; }
+  const V = lo; let s: number; let K: number;
+  if (V >= V1) {
+    const st = pfU(c, pf, o, V) - pfU(c, pf, o, V - 1); const c0 = cs(V); const g = i - c0;
+    if (g <= st) { fanPt(c, V % c.n, sgn, h, st, g, out, oi); return sOfV(c, V) + sp[5]; }
+    const ce = c0 + st; const sv = sOfV(c, V); const cn = V < V2 ? cs(V + 1) : N; const sn = V < V2 ? sOfV(c, V + 1) : sB;
+    s = sv + ((sn - sv) * (i - ce)) / (cn - ce); K = V;
+  } else {
+    const cn = V2 >= V1 ? cs(V1) : N; const sn = V2 >= V1 ? sOfV(c, V1) : sB;
+    s = a + ((sn - a) * i) / cn; K = k;
+  }
+  edgePt(c, K, s, sgn, h, out, oi);
+  return s + sp[5];
+}
+const CWF = new Float64Array(10);
+/** Fan point g of st at sample v on side sgn: the miter on the concave side, else P + h (cos, sin)(a0 +
+ *  da g / st); st 0: the offset line's point. */
+function fanPt(c: FrameChain, v: number, sgn: number, h: number, st: number, g: number, out: Float64Array, oi: number): void {
+  cornerAt(c, v, sgn, h, CWF);
+  if (CWF[0] === 2) { out[oi] = CWF[6]; out[oi + 1] = CWF[7]; return; }
+  if (CWF[0] === 1 && st > 0) { const an = CWF[3] + (CWF[4] * g) / st; out[oi] = c.xs[v] + h * Math.cos(an); out[oi + 1] = c.ys[v] + h * Math.sin(an); return; }
+  edgePt(c, v, c.s[v], sgn, h, out, oi);
+}
+/** The border's point at s (unwrapped) along segment K (unwrapped) on side sgn: the offset line, or a
+ *  miter within its trim. */
+function edgePt(c: FrameChain, K: number, s: number, sgn: number, h: number, out: Float64Array, oi: number): void {
+  const n = c.n; const m = n - 1; const k = K % n; const j = k < m ? k + 1 : 0;
+  const st = sOfV(c, K); const en = st + ((k < m ? c.s[k + 1] : c.len) - c.s[k]);
+  cornerAt(c, k, sgn, h, CWF);
+  if (CWF[0] === 2 && s - st < CWF[1]) { out[oi] = CWF[6]; out[oi + 1] = CWF[7]; return; }
+  cornerAt(c, j, sgn, h, CWF);
+  if (CWF[0] === 2 && en - s < CWF[1]) { out[oi] = CWF[6]; out[oi + 1] = CWF[7]; return; }
+  let dx = c.xs[j] - c.xs[k]; let dy = c.ys[j] - c.ys[k]; const l = Math.sqrt(dx * dx + dy * dy) || 1; dx /= l; dy /= l;
+  out[oi] = c.xs[k] + dx * (s - st) - sgn * h * dy; out[oi + 1] = c.ys[k] + dy * (s - st) + sgn * h * dx;
 }
 
 /** offsetRow's segment and fraction for arc u (wrapped or clamped as it does): [k, f]. */
