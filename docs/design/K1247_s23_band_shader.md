@@ -82,3 +82,49 @@ Under 40 lines:
 - your last SHA.
 
 End with `Ledger items` and K1247's handle fields.
+
+## Handoff (paused by Levi)
+
+Paused 2026-11-11 at about 23:26, partway through the stage. The default did not flip; Done 1, 3, 4 and 5 were not started.
+
+**What 1512b6d7 does.** `ob=1` (`__knotOutlineBandRec`) now sends band_rec's per-piece table instead of placed vertices, and main places the band.
+- The worker sends: a BT = 5 texels a piece table, the quads it still places itself (faded runs and non-record pieces, compact, in `fb`/`fbSl`), and the fan-step prefix (`pf`).
+- Main places every vertex of the fixed layout in one transform-feedback pass per reply: new `src/render/outline/band_place.ts` (BAND_PLACE_VS, built on REC_GLSL's recCol/recZ), run by `outline_app.ts` `placeBand`.
+- `BandRecState(gpu)` in band_rec.ts; outline_worker's OutlineReply carries `bandRec`; outline_model passes `look.bandRecGpu`.
+- The K299 list (paint_ring_lap.test.ts) has band_place's `mod(d, L)`.
+- tsc is clean. `npm test` has not been run.
+
+**What the twin measured** (`.claude/probes/K1247/k1247s23_twin.ts` (WIP ee10f587), real BAND_PLACE_VS in headed Chrome, RX 6800 XT):
+
+| Check | def (29 frames) | fat (34 frames) |
+|---|---|---|
+| GPU vs CPU records, device px | p99 2e-4 | p99 3e-4 |
+| dC, alpha, chain | exact | exact |
+| Padding quads with area | none | none |
+| Quads with other slots | 2 | 65 |
+| Fidelity vs today, GPU (ppu 40) | max 0.533, 83 of 56827 pieces > 0.25 px | max 0.225, 0 > 0.25 px |
+| Fidelity vs today, CPU records | same as GPU | same as GPU |
+
+- The GPU adds no fidelity loss: the misses are the records' own.
+- The few GPU vs CPU vertex gaps (def f23 d775, 3.8 px; fat f9 d387, 5.4 px) are one fan column landing one column later. This is a float32 vs float64 tie in recCs's `floor(x + 0.5)`. Both versions sit on the same border vertices, so the band shape does not move.
+- The fat slot differences come from the past-4 nearest-in-s rule or the same tie. They are not attributed yet.
+- muse_hash did not run: the session restart killed it.
+
+**Untested.**
+- The app path: `rp=outline&ob=1` in a page, GL errors, and whether the band draws.
+- `npm test`.
+- muse_hash and the K1314 through-bends (muse_hash j78, j98, j135; g41_user_tw64 j48, j49).
+- The run-end miss: def c24 0.533 is still there, and its cause is still unchecked.
+
+**Left.**
+- Done 2: run the twin on muse_hash, then fix the run-end miss in band_rec (column 0/N on the clipping border vs the chain normal).
+- Done 3: the slack trim, with band vertex counts before and after.
+- Done 1: the ABBA bench under the perf lock, plus the TF pass's GPU cost.
+- The census (ob=1 vs ob=0 within 1%).
+- Done 4: the flip in frame_loop.ts, with the outline_port pins.
+- Done 5: the crops and the app diff.
+
+**Exact next step.**
+1. `node scripts/run_node.mjs .claude/probes/K1247/k1247s23_twin.ts C:\Users\lsl\Repositories\knotmaze\.claude\probes\K1247\out\s22\drag\muse_hash --out=.claude/probes/K1247/out/s23/twin_muse_hash.json`
+2. `npm test`.
+3. A headed smoke of `?<seed>&am=instant&rp=outline&ob=1` on a private dev server.
