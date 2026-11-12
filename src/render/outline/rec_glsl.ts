@@ -1,5 +1,5 @@
-// K1247 s19: the fill's record placement in GLSL (outline_app's fill programs with oe=1; the s19
-// probes compile it under transform feedback against fill_tri's CPU placement).
+// K1247 s19: the fill's record placement in GLSL (outline_app's placement pass with oe=1, REC_PLACE_VS
+// under transform feedback once per reply; the s19 twin probe checks it against fill_tri's CPU placement).
 const BAND_TEX_W = 1024; // band_gpu.BAND_TEX_W
 
 // K1247 s19 (oe=1): the fill's record vertices placed here from the chain
@@ -88,3 +88,19 @@ export function recVs(vs: string): string {
   if (!out.includes("aPos0;") || !out.includes("aKey0;") || !out.includes("aS0;") || !out.includes("recPlace(aPos")) throw new Error("recVs: the fill shader changed");
   return out;
 }
+
+// K1247 s19: outline_app places the fill once per reply, by transform feedback, into one buffer of
+// REC_PLACE_STRIDE floats a vertex, (x, y, key, 0) then aS, which the fill programs draw from: a frame
+// without a reply (at rest) pays nothing for the placement. The twin probe checks this same shader.
+export const REC_PLACE_VS = recVs(`#version 300 es
+layout(location=0) in vec2 aPos;
+layout(location=2) in float aKey;
+layout(location=5) in vec4 aS;
+out vec4 tPK;
+out vec4 tS;
+void main() {
+  tPK = vec4(aPos, aKey, 0.0); tS = aS; gl_Position = vec4(0.0, 0.0, 0.0, 1.0);
+}`);
+export const REC_PLACE_FS = "#version 300 es\nprecision highp float; out vec4 o; void main() { o = vec4(0.0); }";
+export const REC_PLACE_OUT = ["tPK", "tS"];
+export const REC_PLACE_STRIDE = 8;

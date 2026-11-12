@@ -43,7 +43,7 @@ import { kGeom, kPaint, kReveal, kStatic, knotUniformValues } from "../paint_mod
 import type { SceneIn } from "./outline";
 import { RUN_MAP_W, RV_W, SWELL_STRIDE, appRunMap, chainArcMap, revealMaskTex, swellStrip, type SwellStrip } from "./paint";
 import type { OutlineReply, OutlineRequest } from "./outline_worker";
-import { recVs } from "./rec_glsl";
+import { REC_PLACE_FS, REC_PLACE_OUT, REC_PLACE_STRIDE, REC_PLACE_VS } from "./rec_glsl";
 
 const CTRL_ARC = 0.47;
 // K1247 s18: oe=1, as src/app/frame_loop.ts read it (the link rewrite drops the key before this loads).
@@ -647,6 +647,15 @@ class OutlinePass {
   private recFbTex: WebGLTexture | null = null;
   private recU = new Map<WebGLProgram, Record<"chain" | "ci" | "strip" | "fb" | "hw" | "zt" | "sag", U>>();
   private recV = { hw: 0, zt: 0, sag: 0 };
+  /** K1247 s19 (oe=1): the placement pass (transform feedback, once per reply), its VAO over the
+   *  reply's buffers, and the placed vertices the fill programs draw from (REC_PLACE_STRIDE floats). */
+  private place: WebGLProgram | null = null;
+  private placeVao: WebGLVertexArrayObject | null = null;
+  private placeTf: WebGLTransformFeedback | null = null;
+  private placedBuf: WebGLBuffer | null = null;
+  private placedN = -1;
+  private recOk = false;
+  private recN = 0;
   private nPaint = 0;
   private swBuf: WebGLBuffer;
   private swVao: WebGLVertexArrayObject;
@@ -672,7 +681,7 @@ class OutlinePass {
 
   constructor(gl: WebGL2RenderingContext) {
     this.gl = gl;
-    const mk = (vs: string, fs: string, what: string): WebGLProgram => {
+    const mk = (vs: string, fs: string, what: string, tf?: string[]): WebGLProgram => {
       const sh = (type: number, src: string): WebGLShader => {
         const s = gl.createShader(type)!;
         gl.shaderSource(s, src);
@@ -685,20 +694,22 @@ class OutlinePass {
       const f = sh(gl.FRAGMENT_SHADER, fs);
       gl.attachShader(p, v);
       gl.attachShader(p, f);
+      if (tf) gl.transformFeedbackVaryings(p, tf, gl.INTERLEAVED_ATTRIBS);
       gl.linkProgram(p);
       if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(`outline ${what} link: ${gl.getProgramInfoLog(p)}`);
       gl.deleteShader(v);
       gl.deleteShader(f);
       return p;
     };
-    this.paint = mk(FILL_REC ? recVs(PAINT_VS) : PAINT_VS, PAINT_FS, "paint");
+    this.paint = mk(PAINT_VS, PAINT_FS, "paint");
     this.bandV = [mk(BAND_VS, krvSource(BAND_FS, true), "band"), mk(BAND_VS, krvSource(BAND_FS, false), "band (no reveal)")];
     this.band = this.bandV[0];
     this.comp = mk(COMP_VS, COMP_FS, "composite");
     this.uP = { mat: gl.getUniformLocation(this.paint, "uMat"), ks: gl.getUniformLocation(this.paint, "uKS"), runs: gl.getUniformLocation(this.paint, "uRuns") };
-    const appVs = FILL_REC ? recVs(APP_VS) : APP_VS;
-    this.appV = [mk(appVs, krvSource(APP_FS, true), "app paint"), mk(appVs, krvSource(APP_FS, false), "app paint (no reveal)")];
-    if (FILL_REC) for (const p of [this.paint, ...this.appV]) {
+    this.appV = [mk(APP_VS, krvSource(APP_FS, true), "app paint"), mk(APP_VS, krvSource(APP_FS, false), "app paint (no reveal)")];
+    if (FILL_REC) {
+      const p = mk(REC_PLACE_VS, REC_PLACE_FS, "record placement", REC_PLACE_OUT);
+      this.place = p;
       const u = (n: string): U => gl.getUniformLocation(p, n);
       this.recU.set(p, { chain: u("uRecChain"), ci: u("uRecCi"), strip: u("uRecStrip"), fb: u("uRecFb"), hw: u("uRecHW"), zt: u("uRecZt"), sag: u("uRecSag") });
     }
@@ -717,14 +728,35 @@ class OutlinePass {
       if (int) gl.vertexAttribIPointer(loc, n, gl.INT, 0, 0);
       else gl.vertexAttribPointer(loc, n, gl.FLOAT, false, 0, 0);
     };
+    if (FILL_REC) {
+      // K1247 s19: the placement pass reads the reply's buffers and the record tags.
+      this.recBuf = nb();
+      this.placedBuf = nb();
+      this.placeTf = gl.createTransformFeedback();
+      this.placeVao = gl.createVertexArray()!;
+      gl.bindVertexArray(this.placeVao);
+      attr(this.bufs.pos, 0, 2);
+      attr(this.bufs.key, 2, 1);
+      attr(this.bufs.s, 5, 4);
+      attr(this.recBuf, 6, 2, true);
+    }
     this.pVao = gl.createVertexArray()!;
     gl.bindVertexArray(this.pVao);
-    attr(this.bufs.pos, 0, 2);
-    attr(this.bufs.key, 2, 1);
+    if (this.placedBuf) {
+      // K1247 s19: the fill draws aPos, aKey and aS from the placed vertices.
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.placedBuf);
+      const sb = 4 * REC_PLACE_STRIDE;
+      for (const [loc, n, at] of [[0, 2, 0], [2, 1, 2], [5, 4, 4]]) {
+        gl.enableVertexAttribArray(loc);
+        gl.vertexAttribPointer(loc, n, gl.FLOAT, false, sb, 4 * at);
+      }
+    } else {
+      attr(this.bufs.pos, 0, 2);
+      attr(this.bufs.key, 2, 1);
+      attr(this.bufs.s, 5, 4);
+    }
     attr(this.bufs.run, 3, 4, true);
     attr(this.bufs.w, 4, 4);
-    attr(this.bufs.s, 5, 4);
-    if (FILL_REC) { this.recBuf = nb(); gl.bindBuffer(gl.ARRAY_BUFFER, this.recBuf); gl.enableVertexAttribArray(6); gl.vertexAttribIPointer(6, 2, gl.INT, 0, 0); }
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.bufs.idx);
     this.bVao = gl.createVertexArray()!;
     gl.bindVertexArray(this.bVao);
@@ -811,7 +843,10 @@ class OutlinePass {
     putP(this.bufs.w, r.w);
     putP(this.bufs.s, r.s);
     if (!sub) this.nPaint = r.pkey.length;
-    if (r.rec && this.recBuf) put(this.recBuf, r.rec);
+    if (r.rec && this.recBuf) {
+      put(this.recBuf, r.rec);
+      this.recN = r.rec.length >> 1;
+    }
     if (r.run) put(this.bufs.run, r.run);
     if (r.idx) {
       gl.bindVertexArray(null);
@@ -858,10 +893,47 @@ class OutlinePass {
       ftex(this.recStripTex, ...pad(r.recStrip));
       ftex(this.recFbTex, ...pad(r.recFb));
       this.recV = { hw: r.recHW, zt: r.recZt, sag: r.recSag };
+      this.recOk = true;
     }
     gl.bindTexture(gl.TEXTURE_2D, null);
+    this.placeFill();
     this.zTab = { chainTex: r.chainTex, chainInfo: r.chainInfo };
     this.hasData = true;
+  }
+
+  /** K1247 s19 (oe=1): the fill's vertices placed into placedBuf, once per reply (transform
+   *  feedback through REC_PLACE_VS); the fill programs draw from it. Before the record tables
+   *  arrive, every vertex passes through as the worker placed it. */
+  private placeFill(): void {
+    const gl = this.gl;
+    const p = this.place;
+    const n = this.nPaint;
+    if (!p || !this.placeVao || !this.placeTf || !this.placedBuf || n <= 0) return;
+    if (this.placedN !== n) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.placedBuf);
+      gl.bufferData(gl.ARRAY_BUFFER, 4 * REC_PLACE_STRIDE * n, gl.DYNAMIC_COPY);
+      gl.bindBuffer(gl.ARRAY_BUFFER, null);
+      this.placedN = n;
+    }
+    gl.useProgram(p);
+    this.recBind(p);
+    gl.bindVertexArray(this.placeVao);
+    if (this.recOk && this.recN === n) gl.enableVertexAttribArray(6);
+    else {
+      gl.disableVertexAttribArray(6);
+      gl.vertexAttribI4i(6, -1, 0, 0, 0);
+    }
+    gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, this.placeTf);
+    gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, this.placedBuf);
+    gl.enable(gl.RASTERIZER_DISCARD);
+    gl.beginTransformFeedback(gl.POINTS);
+    gl.drawArrays(gl.POINTS, 0, n);
+    gl.endTransformFeedback();
+    gl.disable(gl.RASTERIZER_DISCARD);
+    gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, null);
+    gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, null);
+    gl.bindVertexArray(null);
+    gl.useProgram(null);
   }
 
   /** The last reply's band widths (h, W) and depth step (zt). */
@@ -1030,7 +1102,6 @@ class OutlinePass {
         gl.bindTexture(gl.TEXTURE_2D, this.runTex);
         gl.uniform1i(this.uP.runs, 0);
       }
-      this.recBind(ap && this.hasMap ? this.app : this.paint);
       gl.bindVertexArray(this.pVao);
       if (fade && ap && this.hasMap) {
         gl.uniform1i(this.uA.fp, 1);
@@ -1126,7 +1197,6 @@ class OutlinePass {
           gl.bindTexture(gl.TEXTURE_2D, t);
         });
         gl.bindVertexArray(this.swVao);
-        if (FILL_REC) gl.vertexAttribI4i(6, -1, 0, 0, 0);
         for (const c of this.swChains) {
           gl.vertexAttribI4i(3, c.scene, -1, -1, -1);
           gl.drawArrays(gl.TRIANGLES, c.first, c.count);
@@ -1187,6 +1257,10 @@ class OutlinePass {
     if (this.recBuf) gl.deleteBuffer(this.recBuf);
     if (this.recStripTex) gl.deleteTexture(this.recStripTex);
     if (this.recFbTex) gl.deleteTexture(this.recFbTex);
+    if (this.place) gl.deleteProgram(this.place);
+    if (this.placeVao) gl.deleteVertexArray(this.placeVao);
+    if (this.placeTf) gl.deleteTransformFeedback(this.placeTf);
+    if (this.placedBuf) gl.deleteBuffer(this.placedBuf);
     if (this.color) gl.deleteTexture(this.color);
     if (this.depth) gl.deleteRenderbuffer(this.depth);
     gl.deleteFramebuffer(this.fbo);
