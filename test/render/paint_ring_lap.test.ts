@@ -375,6 +375,8 @@ const ROUNDED_QUOTIENTS: Record<string, [number, string]> = {
   "outline/rec_glsl.ts: floor((recSV(b, n, L, V) - a) * B / S + 0.5)": [1, "recCs, the column nearest a polygon vertex (K1247 s20, colAt's round((s(V) - a) B / S)): one off only at a half-column tie, where the vertex takes the neighbouring column; cs stays monotone in V and every column stays on the side's own polygon, so the border is unchanged and only the column spacing moves (GPU vs float64 twin p99 0.0002 px)"],
   // K1247 s23: the band placement's s difference (band_place.ts bpD, draw.ts dSC's twin).
   "outline/band_place.ts: mod(d, L)": [1, "the band placement's closed-chain s difference (K1247 s23, bpD; dSC's ((d % L) + L) % L): one off only next to a lap boundary, where the fold into (-L/2, L/2] gives the same d"],
+  // K1247 s24: bpNear's window start, past 4 slots (band_gpu.ts's ((sC - r) % len + len) % len).
+  "outline/band_place.ts: mod(sC - r, oL)": [1, "bpNear's closed-chain window start (K1247 s24, slots past 4; band_gpu.ts's ((sC - r) % len + len) % len): one lap off only when sC - r lies within the division's error of a lap boundary; a then lands at about oL, and the split at oL covers the same arc, or just under 0, and the window loses at most that error at its start, a window-edge tie (twin7: slot-only quads 0 on muse_hash, def, g41; fat's 32 are window-edge ties, at most 0.0002 px)"],
 };
 
 const ROUNDERS = ["floor", "ceil", "trunc", "round", "roundEven", "fract", "mod", "int"];

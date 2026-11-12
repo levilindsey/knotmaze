@@ -665,6 +665,10 @@ class OutlinePass {
   /** K1247 s24 (ob=1): the placement pass waiting for the next draw (nD, h, W): it runs at the start of
    *  the frame that draws the reply, not in the reply's message task, so the frame pays for it. */
   private bpPend: [number, number, number] | null = null;
+  /** K1247 s24 probes: the last placement's inputs, and how many more draws re-run it (no reply, no upload:
+   *  the pass's own GPU cost, `__knotOutline.replace(n)`). */
+  private bpLast: [number, number, number] | null = null;
+  bpRep = 0;
   /** K1247 s24: the placement pass's GPU ms (EXT_disjoint_timer_query_webgl2, when exposed) and its CPU
    *  dispatch ms, the last 512 each. */
   readonly tfGpu: number[] = [];
@@ -1002,7 +1006,9 @@ class OutlinePass {
         this.tqPend.shift();
       }
     }
-    const P = this.bpPend;
+    let P = this.bpPend;
+    if (P) this.bpLast = P;
+    else if (this.bpRep > 0 && this.bpLast) { P = this.bpLast; this.bpRep--; }
     if (!P) return;
     this.bpPend = null;
     const t0 = performance.now();
@@ -1134,7 +1140,7 @@ class OutlinePass {
   /** The fill, then the band, into the offscreen target (premultiplied). */
   draw(mat: Float32Array, w: number, h: number, ap: AppPaint | null = null): void {
     const gl = this.gl;
-    if (this.bpOn || this.bpPend || this.tqPend.length) this.placeBandTimed();
+    if (this.bpOn || this.bpPend || this.bpRep || this.tqPend.length) this.placeBandTimed();
     this.target(w, h);
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.fbo);
     gl.drawBuffers([gl.COLOR_ATTACHMENT0]);
@@ -1813,6 +1819,13 @@ export function createOutlineApp(ctx: SceneExportCtx, requestFrame: () => void):
     },
     get drewLite(): number {
       return pass ? pass.drewLite : -1;
+    },
+    /** K1247 s24 probes (ob=1): re-run the last band placement on the next n draws, with no reply and no
+     *  upload, so stats.bandTfGpuMs reads the pass alone. */
+    replace(n: number): void {
+      if (pass) pass.bpRep = n;
+      dirty = true;
+      requestFrame();
     },
   };
   (globalThis as unknown as Record<string, unknown>).__knotOutline = api;

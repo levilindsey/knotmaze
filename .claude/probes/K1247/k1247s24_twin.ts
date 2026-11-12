@@ -42,12 +42,14 @@ const dPoly = (x: number, y: number, P: ArrayLike<number>, n: number): number =>
   if (n === 1) best = (P[0] - x) ** 2 + (P[1] - y) ** 2;
   return Math.sqrt(best);
 };
-const fidG: number[] = []; const fidC: number[] = []; const fWorst: { f: number; d: number; g: number; c: number; kind: string; chain: number; x: number; y: number }[] = [];
+// s24: decimated pieces (how 3, today's points squeezed into the range) measured apart, GPU placement.
+const fidD: number[] = []; let dWorst: { f: number; d: number; g: number; chain: number; x: number; y: number } | null = null;
+const HOW = [0, 0, 0, 0]; const fidG: number[] = []; const fidC: number[] = []; const fWorst: { f: number; d: number; g: number; c: number; kind: string; chain: number; x: number; y: number }[] = [];
 const fid = (f: number, lay: { off: Int32Array | number[]; cap: Int32Array | number[]; used: Int32Array | number[]; how: Uint8Array | number[] }, tb: ReturnType<typeof frame>, today: { pos: Float32Array }, G: (v: number, k: number) => number, C: (v: number, k: number) => number): void => {
   let qG = 0;
   for (const p of tb.pieces) {
     const np = p.pts.length / 2; if (np < 2) continue;
-    const q0 = qG; qG += np - 1; const d = p.di as number; if (lay.how[d] !== 1) continue;
+    const q0 = qG; qG += np - 1; const d = p.di as number; const hw = lay.how[d]; if (hw !== 1 && hw !== 3) continue;
     const TO = new Float64Array(2 * np); const TI = new Float64Array(2 * np);
     for (let i = 0; i < np - 1; i++) { const w = 6 * (q0 + i); TO[2 * i] = today.pos[2 * w]; TO[2 * i + 1] = today.pos[2 * w + 1]; TI[2 * i] = today.pos[2 * (w + 2)]; TI[2 * i + 1] = today.pos[2 * (w + 2) + 1]; }
     { const w = 6 * (q0 + np - 2); TO[2 * np - 2] = today.pos[2 * (w + 1)]; TO[2 * np - 1] = today.pos[2 * (w + 1) + 1]; TI[2 * np - 2] = today.pos[2 * (w + 4)]; TI[2 * np - 1] = today.pos[2 * (w + 4) + 1]; }
@@ -59,7 +61,9 @@ const fid = (f: number, lay: { off: Int32Array | number[]; cap: Int32Array | num
       for (let i = 0; i < np; i++) { upd(dPoly(TO[2 * i], TO[2 * i + 1], RO, nr), TO[2 * i], TO[2 * i + 1]); upd(dPoly(TI[2 * i], TI[2 * i + 1], RI, nr), TI[2 * i], TI[2 * i + 1]); }
       return [e * 40, ex, ey];
     };
-    const g = one(G); const c = one(C); fidG.push(g[0]); fidC.push(c[0]);
+    const g = one(G); const c = one(C);
+    if (hw === 3) { fidD.push(g[0]); if (g[0] > (dWorst?.g ?? 0)) dWorst = { f, d, g: g[0], chain: p.chain, x: g[1], y: g[2] }; continue; }
+    fidG.push(g[0]); fidC.push(c[0]);
     if (g[0] > 0.1) fWorst.push({ f, d, g: g[0], c: c[0], kind: p.kind, chain: p.chain, x: g[1], y: g[2] });
   }
 };
@@ -108,7 +112,7 @@ try {  const page = await browser.newPage();
     gpuName = out.gpu; if (out.err) console.log(`frame ${f}: glError ${out.err}`);
     const U = new Uint32Array(out.raw); const Fv = new Float32Array(U.buffer); const Iv = new Int32Array(U.buffer); const S = BAND_PLACE_STRIDE;
     if (c.count !== g.count) console.log(`frame ${f}: count ${c.count} vs ${g.count}`);
-    { const tb = frame(st, sc); const today = bandGpu(tb, sc, zz); fid(f, layC, tb, today, (v, k) => Fv[S * v + k], (v, k) => c.pos[2 * v + k]); }
+    { const tb = frame(st, sc); const today = bandGpu(tb, sc, zz); fid(f, layC, tb, today, (v, k) => Fv[S * v + k], (v, k) => c.pos[2 * v + k]); for (const p of tb.pieces) HOW[layC.how[p.di as number]]++; }
     for (let d = 0; d < layC.off.length; d++) {
       const q0 = layC.off[d]; const used = layC.used[d]; const cap = layC.cap[d];
       for (let q = q0; q < q0 + cap; q++) {
@@ -147,5 +151,7 @@ console.log(`dC/alpha mismatches ${badA}; chain mismatches ${badCh}; quads with 
 console.log(`worst: ${worst.slice(0, 5).map((w) => `f${w.f} d${w.piece}(how ${w.how}) ${w.d.toFixed(3)} at (${w.x.toFixed(2)}, ${w.y.toFixed(2)})`).join("; ")}`);
 fWorst.sort((a, b) => b.g - a.g);
 console.log(`fidelity vs today (ppu 40), GPU: ${fq(fidG)}; CPU records: ${fq(fidC)}`);
+console.log(`pieces over the frames by placement: absent ${HOW[0]}, records ${HOW[1]}, today's points padded ${HOW[2]}, decimated ${HOW[3]}`);
+if (fidD.length) console.log(`decimated pieces vs today (ppu 40), GPU: ${fq(fidD)}; worst f${dWorst?.f} c${dWorst?.chain} d${dWorst?.d} (${dWorst?.x.toFixed(2)},${dWorst?.y.toFixed(2)}) ${dWorst?.g.toFixed(3)}`);
 console.log(`fid worst: ${fWorst.slice(0, 6).map((w) => `f${w.f} ${w.kind} c${w.chain} d${w.d} (${w.x.toFixed(2)},${w.y.toFixed(2)}) gpu ${w.g.toFixed(3)} cpu ${w.c.toFixed(3)}`).join("; ")}`);
 if (OUT) writeFileSync(OUT, JSON.stringify({ fWorst: fWorst.slice(0, 100),  dir, frames: nFr, quads: nQ, px: qs(dP), s: qs(dS), z: qs(dZ), badA, badCh, badSl, dropped, padBad, worst }));
