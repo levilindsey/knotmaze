@@ -8,13 +8,17 @@
 // camera: what master draws by default, at the capture's resolution) and rp=outline (the census's own
 // raster of fill_tri + bandData). A red ring marks the find. Writes <out>/<kind>_<nnn>.png and
 // <out>/manifest.json (numbered in census order per kind) for k1314_sheet.ps1.
+// K1314 s3: --before=<dir> makes the panels fillet | before | after: form_b_fillet (form B with the
+// through pass's bend rounded, K1049; the census's s3 reference) | the third panel of <dir>/<same file>
+// (this tool's crop at the base commit, same spots in the same order) | rp=outline now.
 import { readFileSync, writeFileSync, mkdirSync, existsSync, statSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { inflateSync, deflateSync } from "node:zlib";
 import { FormB } from "../../../src/render/field/form_b";
 import { runAt, runColour, type RGB } from "../../../src/render/outline/paint";
-import { buildModel, rasterOutline, SCENE_DIR, type Art, type Model } from "./k1314_census";
+import { buildModel, filletOf, rasterOutline, SCENE_DIR, type Art, type Model } from "./k1314_census";
+let BEFORE: string | undefined; // K1314 s3: the base commit's crops (--before)
 
 const here = dirname(fileURLToPath(import.meta.url));
 let ZOOM = 8; // crop width in h
@@ -65,7 +69,7 @@ function sceneCtx(nm: string): SceneCtx {
 }
 
 /** One crop row: three P x P panels with 4 px gaps, the ring at (x, y) radius rr (world). */
-export function cropRow(nm: string, x: number, y: number, rr: number, P: number): Uint8Array {
+export function cropRow(nm: string, x: number, y: number, rr: number, P: number, file?: string): Uint8Array {
   const e = sceneCtx(nm); const h = e.m.scene.look.halfWidth; const S = ZOOM * h; const ppu = P / S;
   const c0 = Math.round(x * ppu - P / 2); const r0 = Math.round(y * ppu - P / 2);
   const Wt = 3 * P + 8; const out = new Uint8Array(Wt * P * 3).fill(255);
@@ -74,13 +78,16 @@ export function cropRow(nm: string, x: number, y: number, rr: number, P: number)
   const col: RGB = [0, 0, 0];
   // form B
   for (let r = 0; r < P; r++) for (let c = 0; c < P; c++) {
-    const ev = e.fb.evalPoint((c0 + c + 0.5) / ppu, (r0 + r + 0.5) / ppu);
+    const ev = (BEFORE ? filletOf(e.m) : e.fb).evalPoint((c0 + c + 0.5) / ppu, (r0 + r + 0.5) / ppu);
     let fill: number[] | null = null;
     if (ev.top >= 0 && ev.chain >= 0) { const k = runAt(e.m.sp, ev.chain, ev.s); if (k >= 0) { runColour(e.m.sp.runs[k], ev.s, col); fill = [col[0], col[1], col[2]]; } }
     put(0, c, r, comp(fill, ev.ink));
   }
   // today (master.png through the camera, bilinear)
-  if (e.master && e.cam) {
+  if (BEFORE && file) {
+    const B = readPng(join(BEFORE, file)); if (B.W !== 3 * P + 8 || B.H !== P) throw new Error(`before crop ${file}: ${B.W}x${B.H}, not ${3 * P + 8}x${P}`);
+    for (let r = 0; r < P; r++) for (let c = 0; c < P; c++) { const o = 3 * (r * B.W + 2 * (P + 4) + c); put(1, c, r, [B.px[o], B.px[o + 1], B.px[o + 2]]); }
+  } else if (e.master && e.cam) {
     const [a, , , d, tx, ty] = e.cam; const M = e.master;
     for (let r = 0; r < P; r++) for (let c = 0; c < P; c++) {
       const wx = (c0 + c + 0.5) / ppu; const wy = (r0 + r + 0.5) / ppu;
@@ -113,7 +120,7 @@ function main(): void {
   const args = process.argv.slice(2);
   const pos = args.filter((a) => !a.startsWith("--"));
   const opt = (k: string): string | undefined => args.find((a) => a.startsWith(`--${k}=`))?.slice(k.length + 3);
-  const P = Number(opt("px") ?? 240); ZOOM = Number(opt("zoom") ?? 5);
+  const P = Number(opt("px") ?? 240); ZOOM = Number(opt("zoom") ?? 5); BEFORE = opt("before");
   const outDir = opt("out") ?? join(here, "out", "s1", "crops"); mkdirSync(outDir, { recursive: true });
   const man: { n: number; file: string; kind: string; label: string }[] = [];
   const spots = opt("spots");
@@ -126,7 +133,7 @@ function main(): void {
         xs = String(p.x); ys = String(p.y); label = parts[1]; console.log(`${nm} ${parts[1]} at ${p.x.toFixed(3)} ${p.y.toFixed(3)}`);
       }
       const file = `spot_${String(n + 1).padStart(3, "0")}.png`;
-      writePng(join(outDir, file), cropRow(nm, +xs, +ys, 1.2 * h, P), 3 * P + 8, P);
+      writePng(join(outDir, file), cropRow(nm, +xs, +ys, 1.2 * h, P, file), 3 * P + 8, P);
       man.push({ n: n + 1, file, kind: "spot", label: `${label ?? ""} ${nm}` });
     });
   } else {
@@ -151,7 +158,7 @@ function main(): void {
       const h = sceneCtx(a.scene).m.scene.look.halfWidth;
       const rr = a.kind === "k1049" ? 0.8 * h : Math.max(0.6 * h, 0.5 * Math.hypot(a.bbox[2] - a.bbox[0], a.bbox[3] - a.bbox[1]) + 0.25 * h);
       const file = `${sample ? "fp_" : ""}${a.kind}_${String(n).padStart(3, "0")}.png`;
-      writePng(join(outDir, file), cropRow(a.scene, a.x, a.y, Math.min(rr, 3.6 * h), P), 3 * P + 8, P);
+      writePng(join(outDir, file), cropRow(a.scene, a.x, a.y, Math.min(rr, 3.6 * h), P, file), 3 * P + 8, P);
       man.push({ n, file, kind: a.kind, label: `${a.kind} ${n}: ${a.scene} ${a.near} ${a.sub} ${a.kind === "k1049" ? a.sizePx + " screen px" : a.px + "px"} ${a.part}${a.detail ? " (" + a.detail + ")" : ""} [${a.id}]` });
     }
   }

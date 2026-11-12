@@ -7416,7 +7416,18 @@ function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[])
         // K1283 s4: X's other arm at the junction, if X runs through it.
         let aiX2 = -1;
         for (const ai of st.armsOfJ[dc.ji] ?? []) if (ai !== aiX && ai !== aiE && C.armObj[ai].pi === piX) { aiX2 = ai; break; }
+        // K1314 s3 (K1049): X's bend, if its through pass rounds here (the junction's corners are contiguous).
+        let bend: TailIn["bend"] = null;
+        if (aiX2 >= 0) {
+          let k0 = ci; while (k0 > 0 && st.corners[k0 - 1].ji === dc.ji) k0--;
+          for (let k = k0; k < st.corners.length && st.corners[k].ji === dc.ji; k++) {
+            const kc = st.corners[k];
+            if (kc.thru !== 1 || !C.cOk[k] || !(C.cR[k] > 1e-9)) continue;
+            if ((kc.aArm === aiX && kc.bArm === aiX2) || (kc.aArm === aiX2 && kc.bArm === aiX)) { bend = { qx: C.cQx[k], qy: C.cQy[k], r: C.cR[k], tax: C.cTax[k], tay: C.cTay[k], tbx: C.cTbx[k], tby: C.cTby[k] }; break; }
+          }
+        }
         const tin: TailIn = {
+          bend,
           alt: aiX2 >= 0 ? { sRX: C.armSR[aiX2], dirX: C.armDir[aiX2], LX: C.armL[aiX2], LcutX: C.armLcut[aiX2] } : null,
           pE: C.polys[piE], dirE: C.armDir[aiE], endS: C.armSR[aiE], sT,
           x0: dp.interval ? C.cTbx[ci] : C.cTax[ci], y0: dp.interval ? C.cTby[ci] : C.cTay[ci],
@@ -7772,8 +7783,11 @@ export interface TailIn {
   zE: (s: number) => number; zX: (s: number) => number; h: number; zt: number; W: number;
   /** K1283 s4: X's other arm at the junction (X runs through), or null. */
   alt?: { sRX: number; dirX: number; LX: number; LcutX: number } | null;
+  /** K1314 s3 (K1049): X's through pass's bend at the junction, rounded (the ok thru corner of
+   *  X's two arms): ball centre q, radius r, tangent points ta, tb (tailAlphaAt, bendDist). */
+  bend?: { qx: number; qy: number; r: number; tax: number; tay: number; tbx: number; tby: number } | null;
 }
-const tailPt = new Float64Array(4); const tailCen = new Float64Array(4); const tailFt = new Float64Array(2);
+const tailPt = new Float64Array(4); const tailCen = new Float64Array(4); const tailFt = new Float64Array(2); const tailBendF = new Float64Array(2);
 /** The nearest point of p to (x, y) over the segments covering s in [lo, hi]: out = [s, d]. */
 function tailFoot(p: Poly, lo: number, hi: number, x: number, y: number, out: Float64Array): void {
   const nseg = p.nseg;
@@ -7925,11 +7939,25 @@ function tailAlpha(a: TailIn, sE: number, x0: number, y0: number, out: Float64Ar
   const o0 = 1.5 * aQ - 0.5 * aR; const o1 = 1.5 * aR - 0.5 * aQ;
   out[0] = o0 < 0 ? 0 : o0 > 1 ? 1 : o0; out[1] = o1 < 0 ? 0 : o1 > 1 ? 1 : o1;
 }
+/** K1314 s3 (K1049): d_X at (x, y) with X's bend rounded. Inside the bend's cone (from the ball's
+ *  centre q between its tangent points), on q's side of X's centreline, X's inner edge is the arc,
+ *  not the sharp corner: d = min(d, max(0, h - (|p - q| - r))). On the cone's edges that is d itself
+ *  (the ball meets each border along its normal), so the fade moves with the arc and nowhere else. */
+function bendDist(a: TailIn, b: NonNullable<TailIn["bend"]>, x: number, y: number, sF: number, dF: number): number {
+  const px = x - b.qx; const py = y - b.qy;
+  const ax = b.tax - b.qx; const ay = b.tay - b.qy; const bx = b.tbx - b.qx; const by = b.tby - b.qy;
+  const cT = ax * by - ay * bx;
+  if ((ax * py - ay * px) * cT < 0 || (px * by - py * bx) * cT < 0) return dF;
+  pointAtInto(a.pX, sF, tailBendF);
+  if ((x - tailBendF[0]) * (b.qx - tailBendF[0]) + (y - tailBendF[1]) * (b.qy - tailBendF[1]) <= 0) return dF;
+  const dA = a.h - (Math.sqrt(px * px + py * py) - b.r);
+  return Math.min(dF, dA > 0 ? dA : 0);
+}
 function tailAlphaAt(a: TailIn, x: number, y: number, keyE: number, side: boolean, own = false): number {
   const h = a.h;
   const lo = a.dirX > 0 ? a.sRX - 2 * h : a.sRX - 6 * h;
   tailFoot(a.pX, lo, lo + 8 * h, x, y, tailFt);
-  const sF = tailFt[0]; const dF = tailFt[1];
+  const sF = tailFt[0]; const dF = a.bend ? bendDist(a, a.bend, x, y, sF, tailFt[1]) : tailFt[1];
   const ramp = tailRamp(a, sF, true);
   // K1283 s9: `own` = a run's point (runEndFade): outside X's tube, or past
   // X's arm, it is E's own border, at 1.
