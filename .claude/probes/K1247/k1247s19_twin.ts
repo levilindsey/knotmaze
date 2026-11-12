@@ -10,7 +10,7 @@ import { tmpdir } from "node:os";
 import { alignJunctionArms, frame, structure, type SceneIn } from "../../../src/render/outline/outline";
 import { REC_TEXELS, SLOTS, fillFrame, fillResolution, fillStructure, recStrips, type FillFrame, type StripItem } from "../../../src/render/outline/fill_tri";
 import { zChains } from "../../../src/render/outline/draw";
-import { recVs } from "../../../src/render/outline/rec_glsl";
+import { REC_PLACE_OUT, REC_PLACE_STRIDE, REC_PLACE_VS } from "../../../src/render/outline/rec_glsl";
 import { F, chainTables, twin } from "./k1247s19_lib";
 
 const args = process.argv.slice(2).filter((a) => !a.startsWith("--"));
@@ -75,25 +75,19 @@ for (const w of worst) { if (spots.every((s) => Math.hypot(s.x - w.x, s.y - w.y)
 console.log(`worst: ${spots.map((s) => `f${s.f} v${s.v} ${s.d.toFixed(4)}px @(${s.x.toFixed(1)},${s.y.toFixed(1)})`).join("; ") || "none"}`);
 let gpuRes: Record<string, string> | null = null;
 if (gpuIn && gpuWant) {
-  const VS = recVs(`#version 300 es
-layout(location=0) in vec2 aPos;
-layout(location=2) in float aKey;
-layout(location=5) in vec4 aS;
-out vec4 tf;
-void main() {
-  tf = vec4(aPos, aKey, aS.x); gl_Position = vec4(0.0, 0.0, 0.0, 1.0);
-}`);
+  // outline_app's own placement pass: REC_PLACE_STRIDE floats a vertex, (x, y, key, 0) then aS.
+  const VS = REC_PLACE_VS; const OUT = REC_PLACE_OUT; const STR = REC_PLACE_STRIDE;
   const puppeteer = (await import("puppeteer-core")).default;
   const profile = mkdtempSync(join(tmpdir(), "k1247s19-"));
   const browser = await puppeteer.launch({ executablePath: "C:/Program Files/Google/Chrome/Application/chrome.exe", headless: false, userDataDir: profile, args: ["--window-size=400,300"] });
   try {
     const page = await browser.newPage();
-    const out = await page.evaluate((VS: string, D: Record<string, unknown>) => {
+    const out = await page.evaluate((VS: string, D: Record<string, unknown>, OUT: string[], STR: number) => {
       const cv = document.createElement("canvas"); const gl = cv.getContext("webgl2")!;
       const ren = gl.getExtension("WEBGL_debug_renderer_info"); const gpu = ren ? gl.getParameter(ren.UNMASKED_RENDERER_WEBGL) : "?";
       const sh = (t: number, s: string): WebGLShader => { const o = gl.createShader(t)!; gl.shaderSource(o, s); gl.compileShader(o); if (!gl.getShaderParameter(o, gl.COMPILE_STATUS)) throw new Error(String(gl.getShaderInfoLog(o))); return o; };
       const p = gl.createProgram()!; gl.attachShader(p, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(p, sh(gl.FRAGMENT_SHADER, "#version 300 es\nprecision highp float; out vec4 o; void main() { o = vec4(1.0); }"));
-      gl.transformFeedbackVaryings(p, ["tf"], gl.INTERLEAVED_ATTRIBS); gl.linkProgram(p);
+      gl.transformFeedbackVaryings(p, OUT, gl.INTERLEAVED_ATTRIBS); gl.linkProgram(p);
       if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(String(gl.getProgramInfoLog(p)));
       gl.useProgram(p);
       const tex = (name: string, arr: number[], unit: number): void => {
@@ -110,13 +104,15 @@ void main() {
       const vao = gl.createVertexArray(); gl.bindVertexArray(vao);
       const ib = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, ib); gl.bufferData(gl.ARRAY_BUFFER, tag, gl.STATIC_DRAW);
       gl.enableVertexAttribArray(6); gl.vertexAttribIPointer(6, 2, gl.INT, 0, 0);
-      const ob = gl.createBuffer(); gl.bindBuffer(gl.TRANSFORM_FEEDBACK_BUFFER, ob); gl.bufferData(gl.TRANSFORM_FEEDBACK_BUFFER, 16 * M, gl.STREAM_READ);
+      const ob = gl.createBuffer(); gl.bindBuffer(gl.TRANSFORM_FEEDBACK_BUFFER, ob); gl.bufferData(gl.TRANSFORM_FEEDBACK_BUFFER, 4 * STR * M, gl.STREAM_READ);
       const tf = gl.createTransformFeedback(); gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, tf); gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, ob);
       gl.enable(gl.RASTERIZER_DISCARD); gl.beginTransformFeedback(gl.POINTS); gl.drawArrays(gl.POINTS, 0, M); gl.endTransformFeedback(); gl.disable(gl.RASTERIZER_DISCARD);
       gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, null);
-      const res = new Float32Array(4 * M); gl.bindBuffer(gl.TRANSFORM_FEEDBACK_BUFFER, ob); gl.getBufferSubData(gl.TRANSFORM_FEEDBACK_BUFFER, 0, res);
+      const raw = new Float32Array(STR * M); gl.bindBuffer(gl.TRANSFORM_FEEDBACK_BUFFER, ob); gl.getBufferSubData(gl.TRANSFORM_FEEDBACK_BUFFER, 0, raw);
+      const res = new Float32Array(4 * M);
+      for (let q = 0; q < M; q++) { res[4 * q] = raw[STR * q]; res[4 * q + 1] = raw[STR * q + 1]; res[4 * q + 2] = raw[STR * q + 2]; res[4 * q + 3] = raw[STR * q + 4]; }
       return { gpu, err: gl.getError(), res: Array.from(res) };
-    }, VS, gpuIn);
+    }, VS, gpuIn, OUT, STR);
     const M = (gpuIn.recO as number[]).length; const dT: number[] = []; const dC: number[] = []; const kT: number[] = []; const sC: number[] = [];
     for (let q = 0; q < M; q++) {
       const g = out.res.slice(4 * q, 4 * q + 4); const t = gpuWant.tw.slice(4 * q, 4 * q + 4); const c = gpuWant.cpu.slice(4 * q, 4 * q + 4);
