@@ -7467,18 +7467,23 @@ function runEndFade(a: TailIn, p: OutlinePiece, atEnd: boolean): void {
  *  root without moving the fill (fill_tri.ts strips the run's own points),
  *  so where form B's tie at the root is below RUN_RAMP_F the band fades in
  *  over RUN_RAMP_L h instead (own alpha, which the band multiplies by the
- *  tie). Form B's tie, with outline's depths: 1 - g sstep(-zt, zt, keyO -
- *  keyC), keys z - d zt / h, g = (h - d) / W, d the root's distance from
- *  the other arm's centreline (its foot within 4 h of that arm's root). */
+ *  tie). Below RUN_RAMP_F0 the tie already ends the band at no ink, and a
+ *  ramp there only shortens ink form B draws. Form B's tie, with outline's
+ *  depths: 1 - g sstep(-zt, zt, keyO - keyC), keys z - d zt / h, g = (h -
+ *  d) / W, d the root's distance from the other arm's centreline (its foot
+ *  within 4 h of that arm's root). It also clears muse_hash j58a (the
+ *  fold's second leg's band where it meets c43's root). Censused at 0.35,
+ *  0.45 and 0.6 h (s9): 0.6 shortened the most ink at other roots (the
+ *  census's tail_look), 0.35 still cleared both. */
 const RUN_ROOT_RAMP = true;
 const RUN_RAMP_F = 0.5;
-const RUN_RAMP_L = 0.6;
-const K1314X9J = (): string => (globalThis as unknown as { process?: { env: Record<string, string | undefined> } }).process?.env.EXP9J ?? "";
+const RUN_RAMP_F0 = 0.05;
+const RUN_RAMP_L = 0.35;
 const rampFt = new Float64Array(2);
 function runRootRamp(C: FCache, st: DiagramStructure, pieces: OutlinePiece[], runAtArm: Map<number, number>): void {
   const h = C.h; const W = C.W; const zt = 0.1 * C.depthAmp; const depthWin = C.depthWindow * C.ctrlArc;
   if (!(zt > 0)) return;
-  const L = (Number(K1314X9J()) || RUN_RAMP_L) * h; const fMax = RUN_RAMP_F;
+  const L = RUN_RAMP_L * h; const fMax = RUN_RAMP_F;
   for (const [key, r] of runAtArm) {
     const arm = key >> 1; const p = pieces[r >> 1]; const atEnd = (r & 1) === 1;
     const np = p.pts.length / 2; if (np < 2) continue;
@@ -7493,7 +7498,7 @@ function runRootRamp(C: FCache, st: DiagramStructure, pieces: OutlinePiece[], ru
       const u = Math.min(1, Math.max(0, (depthAtC(C, pj, rampFt[0], depthWin) - (d * zt) / h - keyC + zt) / (2 * zt)));
       f *= 1 - g * u * u * (3 - 2 * u);
     }
-    if (!(f < fMax)) continue;
+    if (!(f < fMax) || f < RUN_RAMP_F0) continue;
     const al = p.alpha ?? new Array<number>(2 * np).fill(1);
     let cum = 0;
     for (let q = 0; q < np; q++) {
@@ -7771,7 +7776,7 @@ function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[])
     if (r === undefined) continue;
     runEndFade(f.a, pieces[r >> 1], (r & 1) === 1);
   }
-  if (RUN_ROOT_RAMP && K1314X9J() !== "off") runRootRamp(C, st, pieces, runAtArm);
+  if (RUN_ROOT_RAMP) runRootRamp(C, st, pieces, runAtArm);
   if (ARC_END_FEET) arcEndFeet(st, pieces, runAtArm);
   return { pieces, runMiss, runPassed };
 }
