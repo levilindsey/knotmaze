@@ -529,10 +529,10 @@ Next free ID: K1313.
 - **K1283** · Junction borders of the outline (rp=outline) against form B. Stage 1 (3c8bd61e) fixed the concave
   corner bites (census 27528 -> 17756 px); left: the failed corners and the end-arm round ends (x47, x73,
   x349). Full text in docs/ledger_notes.md
-  - owner: agent `ae62168490360313e` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-11 08:16, 2 h cap ~10:16)
-  - branch: `worktree-agent-ae62168490360313e`, worktree `.claude/worktrees/agent-ae62168490360313e`; last commit: `f1a39b95`
+  - owner: nobody since 2026-11-11 10:09 (merged; agent `ae62168490360313e` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `c0531aa1`
   - evidence: .claude/probes/K1240/out/k1283s11/ (untracked), .claude/probes/K1240/proto/k1283s11_*
-  - next: Stage 11 running: the tied runs ends (j59 run 379, x134 run 279, x77, x304) toward form B, then g41_user_tw64 j8/j9 arm-root wedges; band_gpu.ts is K1283s now
+  - next: Stage 11 merged: tied runs fade into their tails (RUN_FADE_B, CONTACT_PASSES, band_gpu nearest-partner slots); census 4400 -> 4312, sweep 77 better / 0 worse (j59 730 -> 510), seam 5411/444 held, worker +1.5%, main frame +0.1 ms. PAUSED pending K1310 (Levi: is the remaining difference from form B worth more stages?). If resumed: j8/j9 wedges need per-chain cone keys in fill_tri's junction fan (each arm has one fixed colour now); x134 still ends harder than form B (54.9); the colour bar re-baselines to master 25875 (s11 26067, +193 visible round-end px, error per px down) with today's tool
   - brief: `docs/design/K1283_s11.md`
 - **K1291** · rp=outline in the app (K1240 S4) lacks the app palette and hides the overlays drawn inside the
   base layer (trail, fog, reveal masks, pulses, gameplay paint); markers, plucks and the HUD still draw (S4
