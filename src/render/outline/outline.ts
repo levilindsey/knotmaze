@@ -1046,9 +1046,9 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
   // Corner pairs: in frame mode the diagram's pairs (every adjacent pair
   // in the junction's listed cyclic order, through passes excluded);
   // otherwise the builder's angular pairs with its skips, as before.
-  const cornerPairs: { ji: number; ai: number; bi: number; style: number }[] = [];
+  const cornerPairs: { ji: number; ai: number; bi: number; style: number; thru?: 1 }[] = [];
   if (frameMode) {
-    for (const dc of dg!.corners) cornerPairs.push({ ji: dc.ji, ai: dc.aArm, bi: dc.bArm, style: dc.style });
+    for (const dc of dg!.corners) cornerPairs.push({ ji: dc.ji, ai: dc.aArm, bi: dc.bArm, style: dc.style, thru: dc.thru });
   } else {
     scene.junctions.forEach((j, ji) => {
       const list = armsOfJ[ji];
@@ -1233,6 +1233,13 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
       armPrevPt[cw.bArm] = cw.refB; armPrevSide[cw.bArm] = cw.sideB;
     }
   };
+  // K1314 s3: a through pass's corner that cannot round is dead, as
+  // cornersPhaseC's cornerDeadThruC: no refs (the stations' root points).
+  const thruDead = (cw: CornerWork, jx: number, jy: number, sA: number, sB: number): void => {
+    cw.why = `through: ${cw.why ?? ""}`; cw.ok = false; cw.r = 0;
+    cw.Vx = jx; cw.Vy = jy; cw.qx = jx; cw.qy = jy; cw.tax = jx; cw.tay = jy; cw.tbx = jx; cw.tby = jy;
+    cw.sA = sA; cw.sB = sB; cw.dA = 0; cw.dB = 0;
+  };
   for (const cp of cornerPairs) {
       const ji = cp.ji; const j = scene.junctions[ji];
       const ai = cp.ai; const bi = cp.bi;
@@ -1255,10 +1262,10 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
       };
       const baseIdx = corners.length;
       void baseIdx;
-      if (!(A.L > 1e-9 && B.L > 1e-9)) { cw.why = "arm span 0"; if (frameMode) cornerFallback(cw, A, B, th); corners.push(cw); cornerWork.push(cw); continue; }
+      if (!(A.L > 1e-9 && B.L > 1e-9)) { cw.why = "arm span 0"; if (cp.thru) thruDead(cw, j.c[0], j.c[1], A.sR, B.sR); else if (frameMode) cornerFallback(cw, A, B, th); corners.push(cw); cornerWork.push(cw); continue; }
       // A reflex sweep: the facing borders part behind the roots, so the
       // corner is their meet there (or the roots), never a fillet.
-      if (frameMode && th > Math.PI) { cw.why = "reflex"; cornerFallback(cw, A, B, th); corners.push(cw); cornerWork.push(cw); continue; }
+      if (frameMode && (th > Math.PI || (cp.thru && th >= Math.PI))) { cw.why = "reflex"; if (cp.thru) thruDead(cw, j.c[0], j.c[1], A.sR, B.sR); else cornerFallback(cw, A, B, th); corners.push(cw); cornerWork.push(cw); continue; }
       // A pair's wedge is the minor sweep between its arms (the
       // junction's other corners take the rest of the circle), so a
       // pair listed past pi still corners on its minor side; thC is
@@ -1268,14 +1275,14 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
       const bl = Math.sqrt(bx * bx + by * by) || 1; bx /= bl; by /= bl;
       const sn = Math.sin(thC / 2) || 1;
       const V = solveEq(A, B, h, j.c[0] + (bx * h) / sn, j.c[1] + (by * h) / sn, h / Math.max(Math.tan(thC / 2), 1e-6), j.c[0], j.c[1]);
-      if (!V.ok) { cw.why = "no V"; if (frameMode) cornerFallback(cw, A, B, th); corners.push(cw); cornerWork.push(cw); if (!frameMode) diagnostics.push(`corner ${j.id}: no V`); continue; }
+      if (!V.ok) { cw.why = "no V"; if (cp.thru) thruDead(cw, j.c[0], j.c[1], A.sR, B.sR); else if (frameMode) cornerFallback(cw, A, B, th); corners.push(cw); cornerWork.push(cw); if (!frameMode) diagnostics.push(`corner ${j.id}: no V`); continue; }
       const dVa = armDist(A, V.fa.s); const dVb = armDist(B, V.fb.s);
       const tol = 1e-9 * h;
-      if (!(dVa > tol && dVa < A.L - tol && dVb > tol && dVb < B.L - tol)) { cw.why = "V outside spans"; if (frameMode) cornerFallback(cw, A, B, th); corners.push(cw); cornerWork.push(cw); continue; }
+      if (!(dVa > tol && dVa < A.L - tol && dVb > tol && dVb < B.L - tol)) { cw.why = "V outside spans"; if (cp.thru) thruDead(cw, j.c[0], j.c[1], A.sR, B.sR); else if (frameMode) cornerFallback(cw, A, B, th); corners.push(cw); cornerWork.push(cw); continue; }
       const crossA = A.ux * (V.y - j.c[1]) - A.uy * (V.x - j.c[0]);
       const crossB = B.ux * (V.y - j.c[1]) - B.uy * (V.x - j.c[0]);
       const sgn = Math.sign(cross) || 1;
-      if (!(crossA * sgn > 0 && crossB * sgn < 0)) { cw.why = "V outside wedge"; if (frameMode) cornerFallback(cw, A, B, th); corners.push(cw); cornerWork.push(cw); continue; }
+      if (!(crossA * sgn > 0 && crossB * sgn < 0)) { cw.why = "V outside wedge"; if (cp.thru) thruDead(cw, j.c[0], j.c[1], A.sR, B.sR); else if (frameMode) cornerFallback(cw, A, B, th); corners.push(cw); cornerWork.push(cw); continue; }
       cw.Vx = V.x; cw.Vy = V.y; cw.ok = true;
       const t2 = Math.tan(thC / 2);
       const r0 = style * (cr / 3) * Math.min(2 * h, 1.5 * h * t2);
@@ -3006,7 +3013,7 @@ export interface DiagramStructure {
   crossings: { aPi: number; bPi: number; over: "a" | "b"; emergent: boolean; sUnder: number; sOver: number }[];
   arms: { ji: number; ei: number; pi: number; kind: string; dir: number; s: number }[];
   armsOfJ: number[][];
-  corners: { ji: number; aArm: number; bArm: number; style: number }[];
+  corners: { ji: number; aArm: number; bArm: number; style: number; thru?: 1 }[];
   groupOfJ: number[];
   caps: { pi: number; atEnd: boolean; capInfo?: number }[];
   stationsD: DiagramStation[];
@@ -3040,9 +3047,14 @@ export function diagramOf(scene: SceneIn): DiagramStructure {
       const ai = list[k]; const bi = list[(k + 1) % n];
       const A = arms[ai]; const B = arms[bi];
       const xa = j.arms[A.ei]; const xb = j.arms[B.ei];
-      // The two arms of one through pass are one tube: no corner.
-      if (xa && xb && xa.chain === xb.chain && xa.kind === "through" && xb.kind === "through" && xa.s === xb.s) continue;
-      corners.push({ ji, aArm: ai, bArm: bi, style: j.corners?.[k]?.style === "sharp" ? 0 : 1 });
+      // K1314 s3 (K1049): the two arms of one through pass are one tube, but
+      // its bend's inner side rounds like any corner (Levi's "Rounded corner",
+      // form B's S1b/S1c fillet). The pair is a corner flagged thru: solved
+      // as one when its sweep is under pi, else dead (cornersPhaseC).
+      const thru = !!(xa && xb && xa.chain === xb.chain && xa.kind === "through" && xb.kind === "through" && xa.s === xb.s);
+      const dc: { ji: number; aArm: number; bArm: number; style: number; thru?: 1 } = { ji, aArm: ai, bArm: bi, style: j.corners?.[k]?.style === "sharp" ? 0 : 1 };
+      if (thru) dc.thru = 1;
+      corners.push(dc);
     }
   });
   // Junction groups: junctions joined by a run with no crossing
@@ -6152,6 +6164,20 @@ function cornerFallbackC(C: FCache, st: DiagramStructure, scene: SceneIn, ci: nu
   C.armPrevRef[aiB] = C.cRefB[ci]; C.armPrevSide[aiB] = sideB;
 }
 
+// K1314 s3: a through pass's corner that cannot round (the bend's outer,
+// reflex side, or a failed solve) is dead: no refs, so the stations put
+// both arms' borders at their shared root point (stationsPhaseC), as when
+// a through pass had no corner. Its fields sit at the junction centre,
+// read by nothing while it is not ok.
+function cornerDeadThruC(C: FCache, ci: number, aiA: number, aiB: number, jx: number, jy: number, why: string): void {
+  C.cOk[ci] = 0; C.cMeet[ci] = 0; C.cR[ci] = 0; C.cWhy[ci] = `through: ${why}`;
+  C.cVx[ci] = jx; C.cVy[ci] = jy; C.cQx[ci] = jx; C.cQy[ci] = jy;
+  C.cTax[ci] = jx; C.cTay[ci] = jy; C.cTbx[ci] = jx; C.cTby[ci] = jy;
+  C.cSA[ci] = C.armSR[aiA]; C.cSB[ci] = C.armSR[aiB]; C.cDA[ci] = 0; C.cDB[ci] = 0;
+  C.cRefA[ci] = -1; C.cRefB[ci] = -1;
+  C.wValid[ci] = 0;
+}
+
 function cornersPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): void {
   const h = C.h;
   C.armNextRef.fill(-1); C.armPrevRef.fill(-1);
@@ -6170,6 +6196,11 @@ function cornersPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): void {
     const sideA = C.armDir[aiA];
     const sideB = -C.armDir[aiB];
     if (!j) { C.cOk[ci] = 0; C.cWhy[ci] = "arm span 0"; continue; }
+    const thru = dc.thru === 1;
+    if (thru && !(C.armL[aiA] > 1e-9 && C.armL[aiB] > 1e-9 && th < Math.PI)) {
+      cornerDeadThruC(C, ci, aiA, aiB, j.c[0], j.c[1], th < Math.PI ? "arm span 0" : "reflex");
+      continue;
+    }
     if (!(C.armL[aiA] > 1e-9 && C.armL[aiB] > 1e-9)) {
       C.cWhy[ci] = "arm span 0";
       cornerFallbackC(C, st, scene, ci, aiA, aiB, sideA, sideB, th);
@@ -6202,6 +6233,7 @@ function cornersPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): void {
     let solveCode = trySolve(ci);
     if (solveCode !== 0) {
       C.cWhy[ci] = solveCode === 1 ? "no V" : solveCode === 2 ? "V outside spans" : "V outside wedge";
+      if (thru) { cornerDeadThruC(C, ci, aiA, aiB, j.c[0], j.c[1], C.cWhy[ci] as string); continue; }
       cornerFallbackC(C, st, scene, ci, aiA, aiB, sideA, sideB, th);
       continue;
     }
