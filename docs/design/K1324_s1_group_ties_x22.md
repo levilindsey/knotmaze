@@ -94,3 +94,44 @@ Under 40 lines:
 - your last SHA.
 
 End with `Ledger items` and K1324's handle fields.
+
+## Handoff (K1324 s1 agent, 2026-11-12, start 06:10:20, stop 07:13)
+
+Done holds for the four specks; x22 is a form B flaw whose fix needs K1247's file.
+
+- **The s26 skip's 20 finds:** s26 skipped every contact pass between two arms of one group (whole arms, no cap
+  ramp, no behind cut). At those 20 arm roots one side was OWN or a partial member, so the pass's tie fade
+  (tieAlpha) was real: without it the behind thread's band stayed at full ink under the front thread's fill
+  (stray_ink: 8 muse_hash, 2 muse_default_tw, 5 g41_def_tw64, 5 g41_user_tw64). All 20 are back to master
+  (sheets `out/s1/s26_sheet/`, crops `crops_after/spot_006..025`).
+- **The rule:** `src/render/outline/draw.ts`. `contactPasses` (its `sameGroup`) skips a pass only when both
+  sides are FULL members (ramp >= `contactOpts.tau` 0.999) of one group. `groupArms` ports form B's arm cuts
+  (Lcut = min over front passes of d - reach - h, behind cut k*uB, L = max(0, min(Lroot, Lcut))) and
+  `groupMember` form B's member() cap ramp (ss(Lcut, Lcut - h, d), max over arms, back reach on same-group
+  arms). `CONTACT_GROUPS = true`. Guard: `test/render/contact_groups.test.ts` (form B's own member() on the
+  ring fixture, at rest and moved; a groups-off control shows it can fail).
+- **Census k1324h (729e8b6d)** = census_s8f on every counted kind: stray_ink 9, hard_edge 1, paper 0,
+  broken_ink 13, k1049 0. No counted find moved: every scene, kind, place (0.06) and pixel count is equal
+  (`.claude/probes/K1324/k1324_s1_cmp.cjs`). Informational kinds: tail_look 175 -> 174 (gone: g41_user_tw64
+  j10, 108 px; g41_def_tw64 j53 94 -> 47 px; crops `tail_after/`, after is closer to form B in both),
+  owner_only stays 2300 with pixel shifts at 13 junction fills.
+- **The five spots** (`k1324_s1_spots.ts`, ppu 320): def j174, ring j12 and g41_ring_tw42 j12 have 0 holes,
+  0 stray, lowest ink 0.77-0.83 -> 0.94-0.99. g41_user_tw64 j28: the speck is gone (`crops_after/spot_004`),
+  and its 44 holes / 51 stray, the same off and on, are form B's own broken outline at j28's left (the
+  reference panel). j28's right keeps two faint shades beside the outline, identical in master
+  (`j28r_after/spot_001`, zoom 2), where form B draws a hairline sliver. No run pass reaches that border,
+  so it is not a run tie; not chased.
+- **x22 (K1331), a form B flaw:** form B draws the same smear (`crops_after/spot_005`, `x22_master/`). At the
+  twist eye the two passes' depth tents cancel beyond the window, so tieAlpha's sstep(-zt, zt, keyO - keyC)
+  sits mid-ramp and half-fades ghost p2065. The fix is a self-pass burial rule in draw.ts tieAlpha AND the
+  same in outline_app.ts's GLSL twin (K1247's file), so it is reported, not made. A wider zb tent was tried
+  and rejected: it makes p47 opaque where form B fades it.
+- **Worker frame on def** (outline `frame` p50, ABBA under the lock, `out/s1/bench.json`): master 66.0 / 67.0
+  ms, branch 62.8 / 61.8 ms (band p50 26.0 / 15.9 -> 13.5 / 14.8). Not worse: about 4 ms faster, with a
+  1 ms spread.
+- **Tests:** `npm test` green (229 files, 2936 tests), golden snapshots unchanged. outline_port.test.ts
+  re-pinned, band digests only: ring f0/f1 and g41_ring_tw42 f0/f1 (729e8b6d).
+- **Disk full** (C: from about 06:43 to 06:55): census k1324g lost 6 scenes and left 3 zero-byte form B
+  tiles (deleted). The rerun k1324h is clean, and git fsck is clean.
+- **Next:** merge. x22 needs the K1247 owner of outline_app.ts plus a tieAlpha rule in draw.ts. j28's right
+  shades and form B's own breaks at j28 and x22 are for the reference's owner.
