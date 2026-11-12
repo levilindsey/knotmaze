@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1331.
+Next free ID: K1333.
 
 ## Waiting on Levi
 
@@ -824,6 +824,14 @@ Every other item below waits on the trigger it names.
 - **K1328** · A tracked fixture with a mirrored strip (K1314 s7 mirA/mirB) for `test/render/rec_tie.test.ts`:
   today only the untracked muse_hash and g41_user_tw64 scenes cover the mirror, so CI never ties it (K1247
   s26)
+- **K1331** · muse_hash x22's smear at a twist eye (form B smears too): the ghost is drawn at the tie alpha,
+  and there the depth tents cancel, so the keys tie and the ghost half fades in. Fix the tie or the ghost's
+  alpha at kinks in draw.ts; dropping ghosts at self-crossings took stray 8 -> 39 and paper 0 -> 61 (K1314 s8
+  handoff; crop `.claude/probes/K1314/out/s8/after4x/spot_004.png`)
+- **K1332** · muse_hash c8's open end (19.41, 14.16): c8's fill strip owns c67's area near the end, giving a
+  hard-edged pink quad with a stair edge. Fill ownership in fill_tri (fillFrame and the record fill), not
+  folds; the end's shape waits on K1315 (K1314 s8 handoff; crop
+  `.claude/probes/K1314/out/s8/after4x/spot_006.png`)
 
 ## Residuals (known, not fixed)
 
