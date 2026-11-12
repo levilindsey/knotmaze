@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1333.
+Next free ID: K1334.
 
 ## Waiting on Levi
 
@@ -585,6 +585,10 @@ Binding for every stage:
   new, and pause running agents with their WIP committed.
 
 Running agents are listed under In progress, each with its own next step.
+- **K1333** · The K1314 census builds form B tiles per checkout (out/fb, out/fbf, ~7.8 GB each), and 11 agent
+  worktrees filled C: on 2026-11-12 (06:43-06:55; the finished ones' caches were deleted). The keys are the
+  reference's code hash, so share one cache in the main checkout with atomic writes (s26's EPERM) and lift the
+  briefs' no-copy rule (`k1314_run.ps1`); until then delete a worktree's caches at its merge
 - **K1201** · S4b's joint step (K1139): a two-ended arm's ridge near its joint (xR < 0.5) steps the light.
   21F (8e0c5a1c): play meets it in every daily of a week, 2-6 arm-ends each, steps up to 0.77 after the reach
   window (CPU, lattice spans; notes). Fix (b) crossfaded the pulse bands K1211 S6 removed (13aab452); K1218 S2's crops at its eight spots show no step (5a12c51f).
