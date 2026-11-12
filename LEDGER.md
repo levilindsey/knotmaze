@@ -509,11 +509,11 @@ Next free ID: K1315.
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: nobody since 2026-11-11 12:05 (merged; agent `a386181a3c29cd603` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `4fb996cb`
-  - evidence: .claude/probes/K1247/ (tools); untracked .claude/probes/K1247/out/s18/
-  - next: s19: vertex-shader placement of the fill records from BandGpu.chainTex (reply carries only moved ends), then the between-vertex strip-side cracks; brief to write (docs/design/K1247_s18_records.md handoff)
-  - brief: `docs/design/K1247_s18_records.md`
+  - owner: agent `ad99eae806bca8e74` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-11 12:06, 2 h cap ~14:06)
+  - branch: `worktree-agent-ad99eae806bca8e74`, worktree `.claude/worktrees/agent-ad99eae806bca8e74`; last commit: `569db037`
+  - evidence: .claude/probes/K1247/ (tools); untracked .claude/probes/K1247/out/s18/, out/s19/
+  - next: s19 running: vertex-shader placement of the oe=1 fill records; then s20, the between-vertex strip-side cracks (census fill/paper vs off within 1%); then borders, z, the band fixed topology, seeded end solves
+  - brief: `docs/design/K1247_s19_shader_fill.md`
 - **K1278** · The outline's paint blends seamlessly across junctions (Levi 2026-11-10): section colour and pulses
   from per-pixel fields continuous across faces, triangles and junctions, gated by a seam test on every
   face edge, triangle edge and junction. Full text in docs/ledger_notes.md
