@@ -869,19 +869,25 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
       // resampled over its own piece's s range, so where the two ranges
       // differ (one side's border runs on past a crossing or a junction
       // corner that consumed the other's) row i sits at sL on one side and
-      // sR on the other. Each border vertex is keyed by the depth at its own
-      // s, and the centre by the mean's: keyed by the L range on both sides,
-      // the R side's end rows took a depth up to the range offset away and
-      // the strip sank under its neighbour in a wedge (g41_ring_tw64 x67,
-      // x68: an over pass drawn under). Equal ranges key as before, bit for
-      // bit (sL === sR === s).
-      const perSide = range(pl) !== null && range(pr) !== null;
+      // sR on the other, and the centre vertex, their midpoint, can sit far
+      // from either. Keyed by the row's s (the L range), the R side's rows
+      // took a depth up to the range offset away and the strip sank under
+      // its neighbour in a wedge (g41_ring_tw64 x67, x68: an over pass drawn
+      // under). Such a strip keys each border row by its own side's s (sL,
+      // sR), and the centre by the depth at the row's s or at the midpoint
+      // of sL and sR, whichever is higher: lowering the centre too sank a
+      // border that ran on into an under pass under the junction's other
+      // arm (muse_hash j50: c71 under c18 where form B has it over, a
+      // near-tie form B decides by distance), and so did keying each vertex
+      // by its foot's s. x67 clears; x68's wedge needs the centre lowered
+      // and stays. Equal ranges key as before, bit for bit.
+      const reKey = range(pl) !== null && range(pr) !== null && (rL[0] !== rR[0] || rL[1] !== rR[1]);
       for (let i = 0; i <= N; i++) {
         const s = s0 + (ds * i) / N;
         const lx = bufL[2 * i]; const ly = bufL[2 * i + 1]; const rx = bufR[2 * i]; const ry = bufR[2 * i + 1];
         const sL = rL[0] + (rL[1] * i) / N; const sR = rR[0] + (rR[1] * i) / N;
-        const z = perSide ? zAt(it.pi, (sL + sR) / 2) : zAt(it.pi, s);
-        const zl = perSide ? zAt(it.pi, sL) : z; const zr = perSide ? zAt(it.pi, sR) : z;
+        const zs = zAt(it.pi, s); const z = reKey ? Math.max(zs, zAt(it.pi, (sL + sR) / 2)) : zs;
+        const zl = reKey ? zAt(it.pi, sL) : z; const zr = reKey ? zAt(it.pi, sR) : z;
         set(it.base + i, lx, ly, zl - zt, s);
         set(it.base + W + i, (lx + rx) / 2, (ly + ry) / 2, z, s);
         set(it.base + 2 * W + i, rx, ry, zr - zt, s);
