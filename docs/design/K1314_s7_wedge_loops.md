@@ -93,3 +93,43 @@ Under 40 lines:
 - your last SHA.
 
 End with `Ledger items` and K1314's handle fields.
+
+## Handoff (stage 7 agent, 2026-11-12 02:55 to 04:05)
+
+Commits on `worktree-agent-a7eace4bdd5301d8d`, based on master 50a45d3b: dd8d3e62, ddf12c5d (src), 5de00ae0
+(re-pin), then this handoff.
+
+- Baseline. census_s6 does not reproduce on master: master (same src as c5ba26b8) finds on muse_hash and
+  g41_user_tw64 broken j77, j20, j154 and six strays census_s6 lacks. The 12-scene master baseline is stray 18,
+  hard 2, paper 0, broken 16, k1049 0. The j77 broken is form B's own notch (outline clean, out/s7/vX/spot_001).
+- Census s7 (ddf12c5d, `k1314_run.ps1 -Tag s7 -Lock`): stray 17, hard 1, paper 0, broken 16, k1049 0. Cleared:
+  muse_hash x15 stray 538 px and g41_user_tw64 j71 hard 128 px. No new find, no find's size changed.
+- Rules.
+  - `fill_tri.ts` `fillFrame`, the matched-scale block: MATCH_MIRROR is on, and both it and the matched scale apply at
+    an end arm's junction end only (mirA, mirB) where the consumed side stops at a dropped corner's V and is
+    consumed past the sides' overlap, with overlap >= h / 4. Elsewhere, master's JEND gate. This clears j71.
+    Mirroring at every end arm (dd8d3e62) seamed j43, j0, j127 and j124 over their round corners' fans.
+  - `outline.ts` `cutFoldsC`, the end-cap clip: a border that dips W / 4 into the end cap's disc (radius h about an
+    open end), within 2.5 h of a bend, is cut at the disc and runs straight to its end point. This clears x15 and
+    master's chevrons at muse_hash c1, c4, c6, c70, j124 and g41_def_tw64 (10.56, 9.17).
+  - `outline.ts` kink pass: no nearKink for a pass within h of an open end (`atEnd`).
+- Form B flaws, where the outline is clean: x304 and g41_user_tw64 j30 (out/s7/after4x/spot_007, spot_008).
+- Left.
+  - j58a and j58b: a needle from the chevron of c43's side -1 bend at s 28.23, 0.54 from root 28.77. Form B is
+    jagged there too.
+  - j55: an ink notch at (29.84, 4.74), where c58's consumed R side (24.649 to 24.946) meets c21's end arm.
+    Form B's notch there is smaller.
+  - x22: a smear, in both form B and the outline.
+  - j71: the over-pass shade still ends in a hard cut near (5.2, 7.55), as on master.
+  - The end clip changes the look at muse_hash c8's open end (19.41, 14.16) without making it cleaner. Master's
+    round cap and wedge become an angled cap with a pink triangle (out/s7/efafter/spot_005). It is a tail end, so
+    it overlaps K1315.
+- Bench (`k1314_s7_bench.ps1`, def, ABBA, outline worker frame p50): master 45.7 and 47.7 ms, s7 45.4 and 45.2 ms.
+- Tests: `npm test` green. The goldens are unchanged. outline_port's table and band pins are re-pinned (ring and
+  g41_ring_tw42, f0 and f1) for the open-end changes in outline.ts; its paint pins are unchanged. Today's look is
+  byte-identical, because the outline loads only under rp=outline (frame_loop.ts).
+- Crops (reference | master | s7).
+  - The brief's spots: out/s7/after (2x) and after4x.
+  - Every muse_hash end-clip site: efafter.
+  - Other scenes' first clip sites: eafter_f.
+  - The finds pre-existing on master: nafter_f.
