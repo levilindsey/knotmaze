@@ -66,6 +66,8 @@ export interface OutlineReply {
   rec: Int32Array | null;
   recStrip: Float32Array | null;
   recFb: Float32Array | null;
+  /** K1247 s20: the chains' fan-step prefix (chain_frame recTables' pf, the shader's uRecPf). */
+  recPf: Float32Array | null;
   recSag: number;
   recHW: number;
   recZt: number;
@@ -154,6 +156,7 @@ scope.onmessage = (e: MessageEvent<OutlineRequest>): void => {
       rec: m.rec && restructured ? m.rec.rec.slice() : null,
       recStrip: m.recFrame ? m.recFrame.strip : null,
       recFb: m.recFrame ? m.recFrame.fb : null,
+      recPf: m.recFrame ? m.recFrame.pf : null,
       recSag: SAG.f,
       recHW: m.recFrame ? m.recFrame.hW : 0,
       recZt: m.recFrame ? m.recFrame.zt : 0,
@@ -164,6 +167,7 @@ scope.onmessage = (e: MessageEvent<OutlineRequest>): void => {
     if (r.rec) tr.push(r.rec.buffer);
     if (r.recStrip) tr.push(r.recStrip.buffer);
     if (r.recFb) tr.push(r.recFb.buffer);
+    if (r.recPf) tr.push(r.recPf.buffer);
     scope.postMessage(r, tr);
   } catch (err) {
     model = null;

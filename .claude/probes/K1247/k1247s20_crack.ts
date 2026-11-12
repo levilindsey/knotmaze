@@ -99,7 +99,7 @@ if (process.env.DBG) {
   const it = fs.items[Number(process.env.DBG)];
   if (it.kind === "strip") {
     const Wc = it.N + 1; console.log(`strip ${process.env.DBG}: chain ${it.pi} N ${it.N} closed ${zz.zc[it.pi].closed} n ${zz.zc[it.pi].n} len ${zz.zc[it.pi].len.toFixed(3)} h ${scene.look.halfWidth}`);
-    for (let i = 0; i <= it.N; i += Math.max(1, Math.floor(it.N / 24))) {
+    for (let i = 0; i <= Math.min(it.N, Number(process.env.DBGTO ?? it.N)); i += Number(process.env.DBGSTEP ?? Math.max(1, Math.floor(it.N / 24)))) {
       const f = (P: Float64Array, v: number): string => `${P[2 * v].toFixed(3)},${P[2 * v + 1].toFixed(3)}`;
       console.log(`  ${i}: L ${f(A.pos, it.base + i)} -> ${f(C.pos, it.base + i)} | R ${f(A.pos, it.base + 2 * Wc + i)} -> ${f(C.pos, it.base + 2 * Wc + i)} | s ${C.s[it.base + Wc + i]?.toFixed(3)}`);
     }

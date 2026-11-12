@@ -3,6 +3,7 @@
 import { REC_TEXELS, SLOTS, fillFrame, recStrips, type FillFrame, type FillStructure, type StripItem } from "../../../src/render/outline/fill_tri";
 import type { DiagramStructure, SceneIn } from "../../../src/render/outline/outline";
 import { zChains } from "../../../src/render/outline/draw";
+import { colAt, zAt1 } from "../../../src/render/outline/chain_frame";
 
 export const F = Math.fround;
 // The chain table as band_gpu packs it (chainTex, chainInfo).
@@ -60,6 +61,19 @@ export function twin(CT: Float32Array, CI: Float32Array, T: Float32Array, FB: Fl
   if (r === 2) return [pr[0], pr[1], F(z - zt), sR];
   return [F((pl[0] + pr[0]) / 2), F((pl[1] + pr[1]) / 2), z, F((sL + sR) / 2)];
 }
+/** K1247 s20: the mode-4 twin (rec_glsl's recPlace since s20): chain_frame's colAt on the zz chains in
+ *  float64 with the table's own float32 inputs; [x, y, key, s]. */
+export function twin4(zz: ReturnType<typeof zChains>, pf: Float32Array, T: Float32Array, FB: Float32Array, hW: number, zt: number, o: number, ri: number): number[] {
+  const q = 4 * REC_TEXELS * o; const r = ri >> 16; const i = ri & 65535; const N = T[q + 9];
+  if (T[q + 7] < 0.5) { const p = 4 * (T[q + 10] + r * (N + 1) + i); return [FB[p], FB[p + 1], FB[p + 2], FB[p + 3]]; }
+  const ci = T[q + 8]; const c = zz.zc[ci]; let b = 0; for (let k = 0; k < ci; k++) b += zz.zc[k].n;
+  const P = new Float64Array(4);
+  const sL = r !== 2 ? colAt(c, pf, b, T[q], T[q + 1], N, T[q + 6], hW, i, P, 0) : 0;
+  const sR = r !== 0 ? colAt(c, pf, b, T[q + 2], T[q + 3], N, -T[q + 6], hW, i, P, 2) : 0;
+  if (r === 0) return [P[0], P[1], zAt1(c, sL) - zt, sL];
+  if (r === 2) return [P[2], P[3], zAt1(c, sR) - zt, sR];
+  const s = (sL + sR) / 2; return [(P[0] + P[2]) / 2, (P[1] + P[3]) / 2, zAt1(c, s), s];
+}
 /** The record vertices of fs: (fill vertex, strip ordinal, (row << 16) | column). */
 export function recVerts(fs: FillStructure): { recV: number[]; recO: number[]; recRI: number[] } {
   const strips = recStrips(fs); const recV: number[] = []; const recO: number[] = []; const recRI: number[] = [];
@@ -74,7 +88,7 @@ export function s19Frame(fs: FillStructure, st: DiagramStructure, tb: Parameters
   const b = fillFrame(fs, st, tb, { ...sc, look: { ...sc.look, fillRec: 2 } } as SceneIn, zz);
   const rec = b.rec!; const { CT, CI } = chainTables(zz);
   for (let q = 0; q < rv.recV.length; q++) {
-    const v = rv.recV[q]; const t = twin(CT, CI, rec.strip, rec.fb, rec.hW, rec.zt, 0, rv.recO[q], rv.recRI[q]);
+    const v = rv.recV[q]; const t = rec.pf ? twin4(zz, rec.pf, rec.strip, rec.fb, rec.hW, rec.zt, rv.recO[q], rv.recRI[q]) : twin(CT, CI, rec.strip, rec.fb, rec.hW, rec.zt, 0, rv.recO[q], rv.recRI[q]);
     b.pos[2 * v] = t[0]; b.pos[2 * v + 1] = t[1]; b.key[v] = t[2]; b.s4[SLOTS * v] = t[3];
   }
   return b;

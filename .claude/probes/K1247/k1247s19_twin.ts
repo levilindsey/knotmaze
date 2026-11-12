@@ -11,7 +11,7 @@ import { alignJunctionArms, frame, structure, type SceneIn } from "../../../src/
 import { REC_TEXELS, SLOTS, fillFrame, fillResolution, fillStructure, recStrips, type FillFrame, type StripItem } from "../../../src/render/outline/fill_tri";
 import { zChains } from "../../../src/render/outline/draw";
 import { REC_PLACE_OUT, REC_PLACE_STRIDE, REC_PLACE_VS } from "../../../src/render/outline/rec_glsl";
-import { F, chainTables, twin } from "./k1247s19_lib";
+import { F, chainTables, twin, twin4 } from "./k1247s19_lib";
 
 const args = process.argv.slice(2).filter((a) => !a.startsWith("--"));
 const gpuArg = process.argv.find((a) => a.startsWith("--gpu="));
@@ -46,7 +46,7 @@ for (let k = 0; k < scenes.length; k++) {
   let fbs = 0; for (let o = 0; o < strips.length; o++) if (rec.strip[4 * REC_TEXELS * o + 7] < 0.5) fbs++;
   nFbStrips += fbs; if (fbs) nFbFrames++;
   const tw = new Float64Array(4 * fs.nV);
-  for (let q = 0; q < recV.length; q++) { const t = twin(CT, CI, rec.strip, rec.fb, rec.hW, rec.zt, 0, recO[q], recRI[q]); tw.set(t, 4 * recV[q]); }
+  for (let q = 0; q < recV.length; q++) { const t = rec.pf ? twin4(zz, rec.pf, rec.strip, rec.fb, rec.hW, rec.zt, recO[q], recRI[q]) : twin(CT, CI, rec.strip, rec.fb, rec.hW, rec.zt, 0, recO[q], recRI[q]); tw.set(t, 4 * recV[q]); }
   for (let v = 0; v < fs.nV; v++) {
     if (!(a.key[v] > -999) && !(b.key[v] > -999)) continue;
     const R = isRec[v] === 1;
@@ -58,7 +58,7 @@ for (let k = 0; k < scenes.length; k++) {
     if (R) { for (let s = 0; s < SLOTS; s++) if (a.w4[SLOTS * v + s] !== fr0.w4[SLOTS * v + s] || (s > 0 && a.s4[SLOTS * v + s] !== fr0.s4[SLOTS * v + s])) staticBad++; }
   }
   if (k === gpuFrame) {
-    gpuIn = { CT: Array.from(CT), CI: Array.from(CI), T: Array.from(rec.strip), FB: Array.from(rec.fb), hW: rec.hW, zt: rec.zt, recO, recRI };
+    gpuIn = { CT: Array.from(CT), CI: Array.from(CI), T: Array.from(rec.strip), FB: Array.from(rec.fb), PF: Array.from(rec.pf ?? new Float32Array(4)), hW: rec.hW, zt: rec.zt, recO, recRI };
     const twv: number[] = []; const cpu: number[] = [];
     for (const v of recV) { twv.push(tw[4 * v], tw[4 * v + 1], tw[4 * v + 2], tw[4 * v + 3]); cpu.push(a.pos[2 * v], a.pos[2 * v + 1], a.key[v], a.s4[SLOTS * v]); }
     gpuWant = { tw: twv, cpu };
@@ -97,7 +97,7 @@ if (gpuIn && gpuWant) {
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, 1024, h, 0, gl.RGBA, gl.FLOAT, d);
         gl.uniform1i(gl.getUniformLocation(p, name), unit);
       };
-      tex("uRecChain", D.CT as number[], 9); tex("uRecCi", D.CI as number[], 10); tex("uRecStrip", D.T as number[], 11); tex("uRecFb", D.FB as number[], 12);
+      tex("uRecChain", D.CT as number[], 9); tex("uRecCi", D.CI as number[], 10); tex("uRecStrip", D.T as number[], 11); tex("uRecFb", D.FB as number[], 12); tex("uRecPf", D.PF as number[], 13);
       gl.uniform1f(gl.getUniformLocation(p, "uRecHW"), D.hW as number); gl.uniform1f(gl.getUniformLocation(p, "uRecZt"), D.zt as number); gl.uniform1f(gl.getUniformLocation(p, "uRecSag"), 0);
       const O = D.recO as number[]; const RI = D.recRI as number[]; const M = O.length;
       const tag = new Int32Array(2 * M); for (let q = 0; q < M; q++) { tag[2 * q] = O[q]; tag[2 * q + 1] = RI[q]; }

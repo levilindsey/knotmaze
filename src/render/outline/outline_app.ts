@@ -645,7 +645,8 @@ class OutlinePass {
   private recBuf: WebGLBuffer | null = null;
   private recStripTex: WebGLTexture | null = null;
   private recFbTex: WebGLTexture | null = null;
-  private recU = new Map<WebGLProgram, Record<"chain" | "ci" | "strip" | "fb" | "hw" | "zt" | "sag", U>>();
+  private recPfTex: WebGLTexture | null = null;
+  private recU = new Map<WebGLProgram, Record<"chain" | "ci" | "strip" | "fb" | "pf" | "hw" | "zt" | "sag", U>>();
   private recV = { hw: 0, zt: 0, sag: 0 };
   /** K1247 s19 (oe=1): the placement pass (transform feedback, once per reply), its VAO over the
    *  reply's buffers, and the placed vertices the fill programs draw from (REC_PLACE_STRIDE floats). */
@@ -711,7 +712,7 @@ class OutlinePass {
       const p = mk(REC_PLACE_VS, REC_PLACE_FS, "record placement", REC_PLACE_OUT);
       this.place = p;
       const u = (n: string): U => gl.getUniformLocation(p, n);
-      this.recU.set(p, { chain: u("uRecChain"), ci: u("uRecCi"), strip: u("uRecStrip"), fb: u("uRecFb"), hw: u("uRecHW"), zt: u("uRecZt"), sag: u("uRecSag") });
+      this.recU.set(p, { chain: u("uRecChain"), ci: u("uRecCi"), strip: u("uRecStrip"), fb: u("uRecFb"), pf: u("uRecPf"), hw: u("uRecHW"), zt: u("uRecZt"), sag: u("uRecSag") });
     }
     this.uAV = [this.appUniforms(this.appV[0]), this.appUniforms(this.appV[1])];
     this.uBV = [this.bandUniforms(this.bandV[0]), this.bandUniforms(this.bandV[1])];
@@ -787,15 +788,15 @@ class OutlinePass {
     this.cmTex = gl.createTexture()!;
     this.ciTex = gl.createTexture()!;
     this.swTex = gl.createTexture()!;
-    if (FILL_REC) { this.recStripTex = gl.createTexture()!; this.recFbTex = gl.createTexture()!; }
+    if (FILL_REC) { this.recStripTex = gl.createTexture()!; this.recFbTex = gl.createTexture()!; this.recPfTex = gl.createTexture()!; }
     this.fbo = gl.createFramebuffer()!;
   }
 
   /** K1247 s19: program p's record uniforms and the record textures on units 9-12. */
   private recBind(p: WebGLProgram): void {
-    const u = this.recU.get(p); if (!u || !this.recStripTex || !this.recFbTex) return;
+    const u = this.recU.get(p); if (!u || !this.recStripTex || !this.recFbTex || !this.recPfTex) return;
     const gl = this.gl;
-    ([[this.chainTex, u.chain], [this.ciTex, u.ci], [this.recStripTex, u.strip], [this.recFbTex, u.fb]] as [WebGLTexture, U][]).forEach(([tx, l], i) => {
+    ([[this.chainTex, u.chain], [this.ciTex, u.ci], [this.recStripTex, u.strip], [this.recFbTex, u.fb], [this.recPfTex, u.pf]] as [WebGLTexture, U][]).forEach(([tx, l], i) => {
       gl.activeTexture(gl.TEXTURE9 + i);
       gl.bindTexture(gl.TEXTURE_2D, tx);
       gl.uniform1i(l, 9 + i);
@@ -885,13 +886,14 @@ class OutlinePass {
     const ci = new Float32Array(4 * BAND_TEX_W * ciH);
     ci.set(r.chainInfo);
     ftex(this.ciTex, ci, ciH);
-    if (this.recStripTex && this.recFbTex && r.recStrip && r.recFb) {
+    if (this.recStripTex && this.recFbTex && this.recPfTex && r.recStrip && r.recFb && r.recPf) {
       const pad = (d: Float32Array): [Float32Array, number] => {
         const h = Math.max(1, Math.ceil(d.length / 4 / BAND_TEX_W)); if (d.length === 4 * BAND_TEX_W * h) return [d, h];
         const o = new Float32Array(4 * BAND_TEX_W * h); o.set(d); return [o, h];
       };
       ftex(this.recStripTex, ...pad(r.recStrip));
       ftex(this.recFbTex, ...pad(r.recFb));
+      ftex(this.recPfTex, ...pad(r.recPf));
       this.recV = { hw: r.recHW, zt: r.recZt, sag: r.recSag };
       this.recOk = true;
     }
@@ -1257,6 +1259,7 @@ class OutlinePass {
     if (this.recBuf) gl.deleteBuffer(this.recBuf);
     if (this.recStripTex) gl.deleteTexture(this.recStripTex);
     if (this.recFbTex) gl.deleteTexture(this.recFbTex);
+    if (this.recPfTex) gl.deleteTexture(this.recPfTex);
     if (this.place) gl.deleteProgram(this.place);
     if (this.placeVao) gl.deleteVertexArray(this.placeVao);
     if (this.placeTf) gl.deleteTransformFeedback(this.placeTf);

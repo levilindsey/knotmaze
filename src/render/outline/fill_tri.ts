@@ -742,8 +742,10 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
     const o4 = recT ? recT.base[it.pi] : 0;
     const sides = (): void => {
       if (recT) {
-        PS4[0] = colAt(c, recT.pf, o4, rL0, rL1, N, sg, hW, 1, P4, 0); PS4[1] = colAt(c, recT.pf, o4, rL0, rL1, N, sg, hW, N - 1, P4, 2);
-        PS4[2] = colAt(c, recT.pf, o4, rR0, rR1, N, -sg, hW, 1, P4, 4); PS4[3] = colAt(c, recT.pf, o4, rR0, rR1, N, -sg, hW, N - 1, P4, 6);
+        // The table's float32 s ranges, as the shader reads them: its columns 2 and N-2 agree with these.
+        const a0 = Math.fround(rL0); const a1 = Math.fround(rL1); const b0r = Math.fround(rR0); const b1r = Math.fround(rR1);
+        PS4[0] = colAt(c, recT.pf, o4, a0, a1, N, sg, hW, 1, P4, 0); PS4[1] = colAt(c, recT.pf, o4, a0, a1, N, sg, hW, N - 1, P4, 2);
+        PS4[2] = colAt(c, recT.pf, o4, b0r, b1r, N, -sg, hW, 1, P4, 4); PS4[3] = colAt(c, recT.pf, o4, b0r, b1r, N, -sg, hW, N - 1, P4, 6);
         return;
       }
       offsetAt(c, rL0 + rL1 / N, sg, hW, rL1 / N, P4, 0); offsetAt(c, rL0 + (rL1 * (N - 1)) / N, sg, hW, rL1 / N, P4, 2);
@@ -755,7 +757,7 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
     if (d2(4, xa, ya) + d2(6, xb, yb) < d2(0, xa, ya) + d2(2, xb, yb)) { sg = -sg; sides(); }
     if (recT && !(recSideOk(c, recT, it.pi, rL0, rL1, N, sg) && recSideOk(c, recT, it.pi, rR0, rR1, N, -sg))) return false;
     const b0 = it.base;
-    // ls, rs: the column's side s (mode 4: colAt's; -1: uniform), keyed per side as recStrip's.
+    // ls, rs: the column's side s (mode 4: colAt's; NaN: uniform in s), keyed per side as recStrip's.
     const col = (i: number, lx: number, ly: number, rx: number, ry: number, ls = NaN, rs = NaN): void => {
       const own = ls === ls;
       const sL = own ? ls : rL0 + (rL1 * i) / N; const sR = own ? rs : rR0 + (rR1 * i) / N;
