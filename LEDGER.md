@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1314.
+Next free ID: K1315.
 
 ## Waiting on Levi
 
@@ -790,6 +790,10 @@ Every other item below waits on the trigger it names.
   cornerFallbackC fallbacks a frame (about 0.5 ms). K1247_s4_corners.md Handoff 1
 - **K1311** · Route bands (K81) in rp=outline's junction fans: without them pink wedges poke into the gold
   path at lit junctions, the max steps 42-51 in muse_hash and ring (K1278 s3 handoff, docs/design/K1278_s3.md)
+- **K1314** · rp=outline artifacts to zero (Levi 2026-11-11: "in general rp=outline looks a little better for
+  most cases. But there are still plenty of unacceptable artifacts"): an artifact census (stray ink, hard
+  colour edges inside fills, paper holes, broken ink) across scenes, then fix stages that drive its count to
+  0; the look gate in docs/design/K1240_gate.md
 
 ## Residuals (known, not fixed)
 

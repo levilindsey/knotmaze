@@ -16,10 +16,17 @@ below holds on master. Ink is judged against form B, paint, overlays and reveals
 
 ## Look
 
-- **Levi signs off a crop sheet:** form B | rp=outline at the census's 10 worst crossings and the named
-  junctions. Current sheet: `.claude/probes/K1240/out/k1310/sheet.png`, made from master c0531aa1's
-  stage 11 crops by `.claude/probes/K1240/proto/k1310_sheet.ps1`. Rebuild it at each merge that moves ink.
-- Regression bars, at stage 11's numbers (each may only improve):
+Levi on the crop sheet (2026-11-11): "in general rp=outline looks a little better for most cases. But
+there are still plenty of unacceptable artifacts." So the outline's own look is the target. Form B is no
+longer the bar, only a reference for what an artifact's spot should look like.
+
+- **Zero artifacts:** the K1314 artifact census counts stray ink (blocks, flecks, bars, spikes), hard
+  colour edges inside a fill where colours should blend, paper holes or notches, and broken or missing
+  ink. Its total must reach 0, and Levi signs off its last crop sheet.
+- The first sheet: `.claude/probes/K1240/out/k1310/sheet.png` (form B | rp=outline, master c0531aa1,
+  `.claude/probes/K1240/proto/k1310_sheet.ps1`).
+- Regression guards, at stage 11's numbers. Each may only improve, except a census change that removes an
+  artifact:
   - census against form B (`k1279_census.ts`): total <= 4312, no crossing worse by more than 12 px;
   - end-arm sweep (`k1283s5_sweep.ps1`): no stray ink, muse_hash j59 <= 510, j58 <= 571;
   - outline paint seams (`k1278s2_seam.ts --hist --fbstep`, 12 scenes): <= 5411 over 1/255, <= 444
