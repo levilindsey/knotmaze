@@ -68,6 +68,8 @@ import type { DepthChain } from "../../../src/render/field/depth";
 
 /** K1257: the closed-form corner growth (one per module: solveCorner does not re-enter). */
 const CF = new CornerGrowth();
+/** K1321: how far past an arm's span (in h) a dropped corner's V and disk read the chain (footExt). */
+export const FOOT_EXT = 3;
 
 export function ss(e0: number, e1: number, x: number): number {
   const t = Math.min(1, Math.max(0, (x - e0) / (e1 - e0)));
@@ -913,12 +915,34 @@ export class FormB {
       const sgn = Math.sign(A.ux * B.uy - A.uy * B.ux);
       if (!(crossA * sgn > 0 && crossB * sgn < 0)) return;
     }
+    // The span windows clamp a foot past the span to its end, so the V above can sit on that end's cap
+    // (muse_hash j10: 0.075 off the paper's tip, inside the ink). Re-solve on the chains' own curves,
+    // FOOT_EXT h past each span (footExt), from that V.
+    const La = A.L;
+    const Lb = B.L;
+    let V2 = V;
+    try {
+      A.L = La + FOOT_EXT * h;
+      B.L = Lb + FOOT_EXT * h;
+      V2 = this.solveEq(a, b, h, V.x, V.y, full, full);
+    } finally {
+      A.L = La;
+      B.L = Lb;
+    }
+    if (!V2.ok || Math.hypot(V2.x - V.x, V2.y - V.y) > 2 * h) return;
     // V on the tubes' boundary: no other arm of the junction covers it.
     for (let k = 0; k < this.arms.length; k++) {
       if (k === a || k === b || this.arms[k].j !== ji) continue;
-      if (this.footArm(k, V.x, V.y).d < 0.95 * h) return;
+      if (this.footArm(k, V2.x, V2.y).d < 0.95 * h) return;
     }
-    this.vfail.push({ ji, a, b, Vx: V.x, Vy: V.y, ca: A.pi, cb: B.pi });
+    this.vfail.push({ ji, a, b, Vx: V2.x, Vy: V2.y, ca: A.pi, cb: B.pi });
+  }
+
+  /** K1321: the foot on arm ai's chain up to FOOT_EXT h past its span (a dropped corner's V and disk). */
+  footExt(ai: number, x: number, y: number): Foot {
+    const a = this.arms[ai];
+    const hi = a.L + FOOT_EXT * this.h;
+    return footInWindow(this.polys[a.pi], x, y, a.dir > 0 ? a.sR : a.sR - hi, a.dir > 0 ? a.sR + hi : a.sR);
   }
 
   private solveCorner(ji: number, a: number, b: number, th0: number, style: number): Corner | null {

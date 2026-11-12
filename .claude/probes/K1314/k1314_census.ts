@@ -185,17 +185,63 @@ export interface FBF { thruCi: Set<number>; corners: { j: number; a: number; b: 
 // translucent band across that junction's thread (out/s5 crops, j77/j78/j20/j154). Inside another
 // junction's own ok corner's wedge that corner rules, as the outline's s4 join at X has it: form B there.
 export const FILLET_YIELD = { on: !process.argv.includes("--noyield") };
-export function filletHere(f: FBF, x: number, y: number): boolean {
-  const near = f.cornersNear(x, y); const tj: number[] = [];
-  for (const ci of near) if (f.thruCi.has(ci)) tj.push(f.corners[ci].j);
-  if (tj.length === 0) return false;
-  if (!FILLET_YIELD.on) return true;
+// K1321: and only where its own corner changes the look: inside the corner's cone (q through t_a and t_b,
+// form_b_fillet's inWedge) and within rV + W + 4 aa of q, the old sharp corner's band included. Outside the
+// cone the rounded and the sharp corner have the same straight edges, so the switch to plain form B there
+// leaves no seam (the fillet drawn with no end used to ink past t_a and t_b: the j49 and j135 blobs).
+// --nocone restores s5's neighbourhood.
+export const FILLET_CONE = { on: !process.argv.includes("--nocone") };
+export function filletHere(f: FBF, x: number, y: number): boolean { return filletCorner(f, x, y) >= 0; }
+/** The through corner whose fillet the reference reads at (x, y), or -1 (form B there). */
+export function filletCorner(f: FBF, x: number, y: number): number { const p = filletPick(f, x, y); return p.yielded ? -1 : p.ci; }
+/** The through corner whose cone holds (x, y) (ci, or -1), and whether it yields there to another junction's corner. */
+export function filletPick(f: FBF, x: number, y: number): { ci: number; yielded: boolean } {
+  const near = f.cornersNear(x, y); const tj: number[] = []; let first = -1;
+  const F = f as FBF & { W: number; aa: number };
+  for (const ci of near) {
+    if (!f.thruCi.has(ci)) continue;
+    const c = f.corners[ci] as FBF["corners"][number] & { qx: number; qy: number; rV: number };
+    if (FILLET_CONE.on && !(c.ok && c.r > 0 && f.inWedge(c, x, y) && Math.hypot(x - c.qx, y - c.qy) <= c.rV + F.W + 4 * F.aa)) continue;
+    tj.push(c.j); if (first < 0) first = ci;
+  }
+  if (tj.length === 0) return { ci: -1, yielded: false };
+  if (!FILLET_YIELD.on) return { ci: first, yielded: false };
   for (const ci of near) {
     const c = f.corners[ci];
     if (f.thruCi.has(ci) || !c.ok || tj.includes(c.j)) continue;
-    if (f.inWedge(c, x, y)) return false;
+    if (f.inWedge(c, x, y)) return { ci: first, yielded: true };
   }
-  return true;
+  return { ci: first, yielded: false };
+}
+// K1321: where the bend yields, plain form B rules, but the bend's fill still turns plain's paper outside its
+// circle into the arc's band (and tube past it): g41_user_tw64 j49, where j10's corner c8 yielded the bend's
+// circle away and left plain's paper notch past the arc (s5's stray_ink there). Plain's tube pixels stay as
+// they are: past the other corner the arc no longer bounds paper, and its band there was a spike. --noyieldfill
+// restores the plain value.
+export const YIELD_FILL = { on: !process.argv.includes("--noyieldfill") };
+export function yieldInk(f: FBF, ci: number, x: number, y: number, pl: { ink: number; chain: number; s: number }): { ink: number; chain: number; s: number } {
+  if (!YIELD_FILL.on || !ARC_BAND.on || !FILLET_CONE.on) return pl;
+  const F = f as FBF & { aa: number; arms: { pi: number }[] };
+  const c = f.corners[ci] as FBF["corners"][number] & { qx: number; qy: number };
+  const own = F.arms[c.a].pi;
+  if (pl.chain >= 0 || Math.hypot(x - c.qx, y - c.qy) < c.r - F.aa) return pl;
+  const ev = f.evalPoint(x, y); if (ev.top < 0 || ev.chain !== own) return pl;
+  return { ink: arcInk(f, ci, x, y, ev), chain: ev.chain, s: ev.s };
+}
+// K1321: inside its cone the rounded corner's ink is the arc's band alone, r <= |p - q| <= r + W. The fillet
+// copy keeps the sharp corner's band about V as well (its feet past V are not in the fill), so it inked
+// beyond the arc band: muse_hash j135, j98, g41_user_tw64 j49. Only the corner's own thread is redrawn; a
+// thread on top keeps the fillet copy's value. --noarc restores the copy's ink.
+export const ARC_BAND = { on: !process.argv.includes("--noarc") };
+export function arcInk(f: FBF, ci: number, x: number, y: number, ev: { ink: number; top: number; chain: number }): number {
+  const ink = Math.min(1, Math.max(0, ev.ink));
+  if (!ARC_BAND.on || !FILLET_CONE.on || ci < 0) return ink;
+  const F = f as FBF & { W: number; aa: number; arms: { pi: number }[] };
+  const c = f.corners[ci] as FBF["corners"][number] & { qx: number; qy: number };
+  const top = ev.top < 0 ? -1 : ev.chain;
+  if (top >= 0 && top !== F.arms[c.a].pi) return ink;
+  const dq = Math.hypot(x - c.qx, y - c.qy);
+  return ssK(c.r - F.aa, c.r + F.aa, dq) * (1 - ssK(c.r + F.W - F.aa, c.r + F.W + F.aa, dq));
 }
 const FBF_CACHE = new WeakMap<object, FBF>();
 export function filletOf(m: Model): FBF {
@@ -214,7 +260,11 @@ export function plainOf(m: Model): EVF {
 /** The census reference at one point (what rasterFormB stores per pixel). */
 export function refEval(m: Model, x: number, y: number): { ink: number; top: number; chain: number; s: number } {
   const fbf = filletOf(m);
-  const e = { ...(FILLET_REF.on && fbf.thruCi.size && filletHere(fbf, x, y) ? fbf.evalPoint(x, y) : plainOf(m).evalPoint(x, y)) };
+  const p = FILLET_REF.on && fbf.thruCi.size ? filletPick(fbf, x, y) : { ci: -1, yielded: false };
+  const ci = p.yielded ? -1 : p.ci;
+  const e = { ...(ci >= 0 ? fbf.evalPoint(x, y) : plainOf(m).evalPoint(x, y)) };
+  if (ci >= 0) e.ink = arcInk(fbf, ci, x, y, e);
+  if (p.yielded) { const y2 = yieldInk(fbf, p.ci, x, y, { ink: Math.min(1, Math.max(0, e.ink)), chain: e.top < 0 ? -1 : e.chain, s: e.s }); e.ink = y2.ink; e.chain = y2.chain; e.s = y2.s; if (y2.chain >= 0) e.top = Math.max(e.top, 0); }
   e.ink = vroundInk(m, x, y, Math.min(1, Math.max(0, e.ink)), e.top < 0 ? -1 : e.chain);
   return e;
 }
@@ -226,29 +276,39 @@ export function refEval(m: Model, x: number, y: number): { ink: number; top: num
 // --novround restores s5's reference.
 export const VROUND = { on: !process.argv.includes("--novround") };
 type VFail = { ji: number; a: number; b: number; Vx: number; Vy: number; ca: number; cb: number };
-type FBG = FBF & { vfail: VFail[]; h: number; W: number; aa: number; footArm(ai: number, x: number, y: number, d0?: number, d1?: number): { d: number } };
-const VGRID = new WeakMap<object, { cell: number; g: Map<string, VFail[]> }>();
-function vfailGrid(f: FBF): { cell: number; g: Map<string, VFail[]> } {
-  let G = VGRID.get(f);
+type FBG = FBF & { vfail: VFail[]; h: number; W: number; aa: number; footExt(ai: number, x: number, y: number): { d: number; x: number; y: number } };
+const VGRID = new WeakMap<object, { cell: number; g: Map<string, VFail[]>; n: number }>();
+/** The dropped corners vroundInk rounds, on a 0.5 grid. V must be the paper's tip in form B's own picture:
+ * just past V, away from both feet, form B draws paper (top < 0). */
+export function vfailGrid(m: Model): { cell: number; g: Map<string, VFail[]>; n: number } {
+  const F = filletOf(m) as FBG;
+  let G = VGRID.get(F);
   if (G) return G;
-  const F = f as FBG; const cell = 0.5; const g = new Map<string, VFail[]>(); const R = F.W + 2 * F.aa;
-  for (const v of F.vfail ?? []) {
+  const P = plainOf(m); const cell = 0.5; const g = new Map<string, VFail[]>(); const R = F.W + 2 * F.aa;
+  const keep = (F.vfail ?? []).filter((v) => {
+    const fa = F.footExt(v.a, v.Vx, v.Vy); const fb = F.footExt(v.b, v.Vx, v.Vy);
+    let nx = (v.Vx - fa.x) / (fa.d || 1) + (v.Vx - fb.x) / (fb.d || 1); let ny = (v.Vy - fa.y) / (fa.d || 1) + (v.Vy - fb.y) / (fb.d || 1);
+    const nl = Math.hypot(nx, ny); if (nl < 0.2) return true;
+    nx /= nl; ny /= nl;
+    return P.evalPoint(v.Vx + 3 * F.aa * nx, v.Vy + 3 * F.aa * ny).top < 0;
+  });
+  for (const v of keep) {
     for (let i = Math.floor((v.Vx - R) / cell); i <= Math.floor((v.Vx + R) / cell); i++) for (let k = Math.floor((v.Vy - R) / cell); k <= Math.floor((v.Vy + R) / cell); k++) {
       const key = `${i},${k}`; const l = g.get(key); if (l) l.push(v); else g.set(key, [v]);
     }
   }
-  G = { cell, g }; VGRID.set(f, G); return G;
+  G = { cell, g, n: keep.length }; VGRID.set(F, G); return G;
 }
 const ssK = (a: number, b: number, x: number): number => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 /** The reference's ink at (x, y) given form B's (ink, chain): raised to the disk about a dropped corner's V. */
 export function vroundInk(m: Model, x: number, y: number, ink: number, chain: number): number {
   if (!VROUND.on) return ink;
-  const F = filletOf(m) as FBG; const G = vfailGrid(F);
+  const F = filletOf(m) as FBG; const G = vfailGrid(m);
   const l = G.g.get(`${Math.floor(x / G.cell)},${Math.floor(y / G.cell)}`); if (!l) return ink;
   for (const v of l) {
     const d = Math.hypot(x - v.Vx, y - v.Vy); if (d > F.W + F.aa) continue;
     if (chain >= 0 && chain !== v.ca && chain !== v.cb) continue;
-    const dIn = Math.min(F.footArm(v.a, x, y).d, F.footArm(v.b, x, y).d);
+    const dIn = Math.min(F.footExt(v.a, x, y).d, F.footExt(v.b, x, y).d);
     const w = (1 - ssK(F.h - F.aa, F.h + F.aa, dIn)) * (1 - ssK(F.W - F.aa, F.W + F.aa, d));
     if (w > ink) ink = w;
   }
@@ -281,9 +341,10 @@ export function rasterFormB(m: Model, c0: number, r0: number, Wd: number, Hd: nu
         ink = ink.slice(); chain = chain.slice(); s = s.slice();
         for (let r = 0; r < Hd; r++) for (let c = 0; c < Wd; c++) {
           const x = (c0 + c + 0.5) / ppu; const y = (r0 + r + 0.5) / ppu;
-          if (!filletHere(fbf, x, y)) continue;
-          const ev = fbf.evalPoint(x, y); const o = r * Wd + c;
-          ink[o] = Math.min(1, Math.max(0, ev.ink)); chain[o] = ev.top < 0 ? -1 : ev.chain; s[o] = ev.s;
+          const p = filletPick(fbf, x, y); if (p.ci < 0) continue; const ci = p.ci; const o = r * Wd + c;
+          if (p.yielded) { const y2 = yieldInk(fbf, ci, x, y, { ink: ink[o], chain: chain[o], s: s[o] }); ink[o] = y2.ink; chain[o] = y2.chain; s[o] = y2.s; continue; }
+          const ev = fbf.evalPoint(x, y);
+          ink[o] = arcInk(fbf, ci, x, y, ev); chain[o] = ev.top < 0 ? -1 : ev.chain; s[o] = ev.s;
         }
       }
       if (filletFile) writeFileSync(filletFile, Buffer.concat([Buffer.from(ink.buffer), Buffer.from(chain.buffer), Buffer.from(s.buffer)]));
