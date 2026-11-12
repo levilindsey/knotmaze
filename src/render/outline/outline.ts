@@ -4485,6 +4485,7 @@ function foldChevron(p: Poly, h: number, W: number, x: number, y: number, s: num
   put(x, y, n2x, n2y);
   return k;
 }
+const K1314X9 = (): string => (globalThis as unknown as { process?: { env: Record<string, string | undefined> } }).process?.env.EXP9 ?? "";
 function cutFoldsC(C: FCache, pi: number, sig: number, B: FBord): void {
   const p = C.polys[pi];
   const h = C.h;
@@ -4621,10 +4622,21 @@ function cutFoldsC(C: FCache, pi: number, sig: number, B: FBord): void {
           // K1283 s8: the chevron's s runs from the cut's s on the fold's first leg to its s on the
           // second (was the first leg's s throughout), and its ends know each other's (borderMeetC).
           const s1 = B.ps[id]; const ds = CF_S2 ? dS(p, s1, cfS2[id - nb]) : 0;
+          { const dbg = (globalThis as unknown as { __k1314dbg?: string[] }).__k1314dbg; if (dbg) { const s2 = cfS2[id - nb]; const arms = C.armsOfChain[pi]; let txt = ""; for (let r = 0; r < roots.length; r++) { const a = dS(p, s2, roots[r]); const b = dS(p, roots[r], s1); if (Math.abs(a) < 3 * C.W || Math.abs(b) < 3 * C.W) { const ai = arms[r]; txt += ` |ai${ai} j${C.armObj[ai].ji} ${C.armObj[ai].kind} dir${C.armDir[ai]} a=${a.toFixed(3)} b=${b.toFixed(3)}`; } } dbg.push(`c${pi} sig${sig} s1 ${s1.toFixed(3)} s2 ${s2.toFixed(3)} X ${B.px[id].toFixed(3)} ${B.py[id].toFixed(3)} k${k} n1 ${cfCut[4 * (id - nb)].toFixed(2)},${cfCut[4 * (id - nb) + 1].toFixed(2)} n2 ${cfCut[4 * (id - nb) + 2].toFixed(2)},${cfCut[4 * (id - nb) + 3].toFixed(2)}${txt}`); } }
+          const X9 = K1314X9(); let rA = NaN; const s2x = cfS2[id - nb];
+          if (X9 && dS(p, s1, s2x) > 1e-9) for (let r = 0; r < roots.length; r++) { const a = dS(p, s2x, roots[r]); if (a >= 0 && a < C.W) rA = roots[r]; }
+          const kx9 = cfCut[4 * (id - nb)]; const ky9 = cfCut[4 * (id - nb) + 1]; const kh9 = (k - 1) >> 1;
           for (let r = 0; r < k; r++) {
             B.bx[o] = cfChev[4 * r]; B.by[o] = cfChev[4 * r + 1]; B.bsm[o] = s1 + (k > 1 ? (ds * r) / (k - 1) : 0); B.bs[o] = CF_S2_PAINT ? B.bsm[o] : s1; B.bfx[o] = cfChev[4 * r + 2]; B.bfy[o] = cfChev[4 * r + 3];
             B.bcv[o] = r === 0 ? 1 : r === k - 1 ? 2 : 0; B.bs2[o] = r === 0 ? s1 + ds : s1;
+            if (rA === rA && X9 === "v1") { if (r > kh9) { B.bfx[o] = B.bx[o] + h * kx9; B.bfy[o] = B.by[o] + h * ky9; } B.bcv[o] = 0; B.bs2[o] = s1; }
+            if (rA === rA && X9 === "v4" && r > kh9) { B.bfx[o] = cfChev[4 * (k - 1 - r) + 2]; B.bfy[o] = cfChev[4 * (k - 1 - r) + 3]; }
             o++;
+          }
+          if (rA === rA) while (i + 1 < m && seq[i + 1] < nb && dS(p, s2x, B.ps[seq[i + 1]]) >= -1e-9 && dS(p, B.ps[seq[i + 1]], rA) >= 0) {
+            const q = seq[++i]; if (X9 === "v3") continue;
+            B.bcv[o] = 0; B.bx[o] = B.px[q]; B.by[o] = B.py[q]; B.bs[o] = B.ps[q]; B.bsm[o] = B.ps[q];
+            B.bfx[o] = B.px[q] + h * kx9; B.bfy[o] = B.py[q] + h * ky9; o++;
           }
           continue;
         }
