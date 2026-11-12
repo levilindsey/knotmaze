@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1325.
+Next free ID: K1327.
 
 ## Waiting on Levi
 
@@ -295,7 +295,8 @@ Next free ID: K1325.
 - **K1315** · Junction under-tail ends in rp=outline: form B's round dot, or keep the outline's square end?
   K1314 group 1, 18 census finds (e.g. muse_default_tw j150, g41_user_tw64 j63/j64, x134); sheet
   `.claude/probes/K1314/out/s1/crops/sheets/broken_ink_01.png` (form B | today | rp=outline). Asked
-  2026-11-11. Also muse_hash j78's hard edge (5.88, 8.50): c79's open start under c33 (K1314 s6 handoff).
+  2026-11-11. Also muse_hash j78's hard edge (5.88, 8.50): c79's open start under c33 (K1314 s6 handoff),
+  and muse_hash c8's open end (19.41, 14.16; `.claude/probes/K1314/out/s7/efafter/spot_005.png`).
 - **K1319** · The K1045 open eye at muse_hash j73 in rp=outline: its ink ring closes round at the right tip,
   where form B cuts it off at an angle (form B's j73 corner takes the same far meet as j74's and never rounds
   it). Keep the round tip, or match form B? Census counts it as one stray_ink spike (262 px). Picture
@@ -551,11 +552,11 @@ Next free ID: K1325.
   most cases. But there are still plenty of unacceptable artifacts"): an artifact census (stray ink, hard
   colour edges inside fills, paper holes, broken ink) across scenes, then fix stages that drive its count to
   0; the look gate in docs/design/K1240_gate.md
-  - owner: nobody since 2026-11-12 04:34 (merged; agent `a7eace4bdd5301d8d` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `34d37fb8`
-  - evidence: .claude/probes/K1314/ (census tools); untracked out/s1-s6/
-  - next: s8: j58 needles, j55 notch, x22 smear, j71 shade cut (5.2, 7.55), x15 inner step (now a tail_look); s7 census vs a fresh reference: census_s7f (stray 11, hard 1, broken 13)
-  - brief: `docs/design/K1314_s7_wedge_loops.md`
+  - owner: agent `a321157f4e8ed2ebe` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 04:40, 2 h cap ~06:40)
+  - branch: `worktree-agent-a321157f4e8ed2ebe`, worktree `.claude/worktrees/agent-a321157f4e8ed2ebe`; last commit: `8c2dcf97`
+  - evidence: .claude/probes/K1314/ (census tools); untracked out/s1-s8/
+  - next: s8 running: j58 needles, j55 notch, x22 smear, j71 shade cut, c8 wedge, x15 inner step; baseline census_s7f (stray 11, hard 1, broken 13)
+  - brief: `docs/design/K1314_s8_needles_notches.md`
 
 ## Next, in order
 
@@ -816,6 +817,10 @@ Every other item below waits on the trigger it names.
   ink there: specks inside the ink at def j174 (c71/c73, group 119), ring j12, g41_ring_tw42 j12,
   g41_user_tw64 j28 (K1314 s6 handoff; crops `.claude/probes/K1314/out/s6/after4x/spot_016-019`). Make no
   contact pass between arms of one group. After K1247 s25 merges (it owns draw.ts)
+- **K1325** · K1314 census reference: form B draws stray ink at muse_hash x304 and g41_user_tw64 j30 where
+  rp=outline is clean, so the census counts them against the outline (crops
+  `.claude/probes/K1314/out/s7/after4x/spot_007.png`, `spot_008.png`); fix the reference as K1321 did, in
+  `k1314_census.ts` / `form_b_fillet.ts` (K1314 s7 handoff)
 
 ## Residuals (known, not fixed)
 
@@ -1880,6 +1885,9 @@ Every other item below waits on the trigger it names.
   fillet cone's edge and a faint smear (the old reference too); small reference specks at g41_def_tw64 j45
   (the disk meets the band) and g41_user_tw64 j49 (top right). Crops .claude/probes/K1321/out/sheet_y.png,
   sheet_ca1.png
+- **K1326** · `.claude/probes/K1247/k1247s22_census.ts` still caches form B tiles unkeyed (`K1247/out/fb`,
+  `fbf`, `FBDIR`), read back by size: a stale cache passes after a reference change. Key them by the reference
+  code's hash as `k1314_census.ts` `refCacheDirs` does (0b10c10b), or retire the script
 
 ## Approved, to schedule (2026-10-11)
 
