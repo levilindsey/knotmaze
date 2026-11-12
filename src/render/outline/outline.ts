@@ -7154,6 +7154,12 @@ function sharpJoinFan(C: FCache, ci: number, aiA: number, aiB: number, pts: numb
  *  junction station and side); only the alphas follow the frame. */
 const RUN_END_FADE = true;
 const RUN_FADE_L = 3;
+/** K1314 s2 (g41_user_tw64 j39, g41_def_tw64 j45, j48): no fade whose faded
+ *  points all lie within RUN_FADE_MIN h of the run's end. That is a sliver of
+ *  the run past V (j39: 0.003 h), and its band's ramp to the last unfaded
+ *  point, before V, falls outside the corner's fan: a light slit where form B
+ *  inks. A real fade runs on from V (j78: 0.31). */
+const RUN_FADE_MIN = 0.15;
 /** K1283 s11: the fade at a failed corner whose end arm is B (s9 faded A's only). */
 const RUN_FADE_B = true;
 /** K1314 s2: no fade at a corner whose sector is near straight or reflex (theta
@@ -7168,7 +7174,7 @@ function runEndFade(a: TailIn, p: OutlinePiece, atEnd: boolean): void {
   const np = p.pts.length / 2;
   if (np < 2 || p.kind !== "run") return;
   let al: number[] | null = null;
-  let cum = 0;
+  let cum = 0; let farCum = 0;
   const span = p.s1 - p.s0;
   for (let q = 0; q < np; q++) {
     const i = atEnd ? np - 1 - q : q;
@@ -7184,9 +7190,10 @@ function runEndFade(a: TailIn, p: OutlinePiece, atEnd: boolean): void {
     if (tailA[0] < 1 - 1e-9 || tailA[1] < 1 - 1e-9) {
       if (!al) al = new Array<number>(2 * np).fill(1);
       al[2 * i] = tailA[0]; al[2 * i + 1] = tailA[1];
+      farCum = cum;
     }
   }
-  if (al) p.alpha = al;
+  if (al && farCum >= RUN_FADE_MIN * a.h) p.alpha = al;
 }
 
 function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[]): { pieces: OutlinePiece[]; runMiss: number; runPassed: number } {
