@@ -1,4 +1,5 @@
 // K1247 s18: a copy of K1240/s4/k1240s4b_bench.mjs that also records the last reply's bytes (stats.replyBytes).
+// K1247 s20: draws inside a transform-feedback pass no longer start the frame clock (see BENCH).
 // K1240 S4b: frame bench at rest and mid-drag, with the outline's own
 // numbers. bench_frame.mjs's frame time (first draw call -> a 1-px
 // readPixels returned, so the GPU work queued is in it), plus the rAF
@@ -36,11 +37,17 @@ const BENCH = (SEC) => new Promise((resolve) => {
   const gl = canvas.getContext("webgl2");
   const names = ["drawElements", "drawArrays", "drawElementsInstanced", "drawArraysInstanced", "drawRangeElements"];
   const orig = {};
-  let tFirst = -1, draws = 0;
+  let tFirst = -1, draws = 0, inTF = false;
   for (const n of names) {
     if (typeof gl[n] !== "function") continue;
     orig[n] = gl[n];
-    gl[n] = function (...a) { if (tFirst < 0) tFirst = performance.now(); draws++; return orig[n].apply(this, a); };
+    gl[n] = function (...a) { if (tFirst < 0 && !inTF) tFirst = performance.now(); draws++; return orig[n].apply(this, a); };
+  }
+  // K1247 s20: a transform-feedback pass (the record placement, run in the worker reply's message task, between
+  // frames) is not a frame's first draw: before this, it started the frame clock early and the idle wait to
+  // the next rAF counted as frame time (the s19/s20 oe=1 mid-drag p95 of 53-76 ms).
+  for (const [n, v] of [["beginTransformFeedback", true], ["endTransformFeedback", false]]) {
+    orig[n] = gl[n]; gl[n] = function (...a) { inTF = v; return orig[n].apply(this, a); };
   }
   const o = window.__knotOutline;
   const r0 = o ? o.stats.replies : 0, d0 = o ? o.stats.draws : 0;
