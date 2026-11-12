@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1311.
+Next free ID: K1313.
 
 ## Waiting on Levi
 
@@ -521,10 +521,10 @@ Next free ID: K1311.
 - **K1278** · The outline's paint blends seamlessly across junctions (Levi 2026-11-10): section colour and pulses
   from per-pixel fields continuous across faces, triangles and junctions, gated by a seam test on every
   face edge, triangle edge and junction. Full text in docs/ledger_notes.md
-  - owner: agent `a0e0c69694779aaec` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-11 07:56, 2 h cap ~09:56)
-  - branch: `worktree-agent-a0e0c69694779aaec`, worktree `.claude/worktrees/agent-a0e0c69694779aaec`; last commit: `f6968f7d`
-  - evidence: `.claude/probes/K1278/`
-  - next: Stage 3 running: a seam test on the app path (APP_FS) at pulse phases t 100 and 100.45 on def, muse_hash, g41_user_tw64, a ring; fix steps steeper than today's look
+  - owner: nobody since 2026-11-11 09:42 (agent `a0e0c69694779aaec` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-11 07:56, 2 h cap ~09:56); stage 3 done on its branch, not merged: fails the main frame (+4.3 ms fill at rest, 9.9 vs 5.8 ms) and worker (+14%) guards)
+  - branch: worktree-agent-a0e0c69694779aaec, worktree C:\Users\lsl\Repositories\knotmaze\.claude\worktrees\agent-a0e0c69694779aaec; last commit: `4b1025cc`
+  - evidence: .claude/probes/K1278/k1278s3_seam.mjs, k1278s3_guards.ps1; untracked .claude/probes/K1278/out/s3/ in that worktree (seam.json, crops/, guards/)
+  - next: Stage 3 (per-pixel fan feet) halves junction steps vs today (def 8593 -> 3155 over 1 level, muse_hash 7233 -> 3091) but costs +4.3 ms fill at rest (search walk ~half; FAN_FOOT_R 1 gives 7.7 ms, look unmeasured) and the worker read +14% (unattributed). Stage 4: cut that cost (smaller radius with the seam test re-run, start index per vertex, or feet per fan vertex on the worker), re-run k1278s3_guards.ps1, then merge. Held pending K1310.
   - brief: `docs/design/K1278_s3.md`
 - **K1283** · Junction borders of the outline (rp=outline) against form B. Stage 1 (3c8bd61e) fixed the concave
   corner bites (census 27528 -> 17756 px); left: the failed corners and the end-arm round ends (x47, x73,
@@ -784,6 +784,8 @@ Every other item below waits on the trigger it names.
 - **K1256** · K1240's outline: frame() leads outside corners from K1247 stage 4 (unmeasured):
   crossingsPhaseC's OSR-exit deopts, frameFast's wrong-map and generic-global deopts, and about 40
   cornerFallbackC fallbacks a frame (about 0.5 ms). K1247_s4_corners.md Handoff 1
+- **K1311** · Route bands (K81) in rp=outline's junction fans: without them pink wedges poke into the gold
+  path at lit junctions, the max steps 42-51 in muse_hash and ring (K1278 s3 handoff, docs/design/K1278_s3.md)
 
 ## Residuals (known, not fixed)
 
@@ -1827,6 +1829,8 @@ Every other item below waits on the trigger it names.
   Crops: .claude/probes/K1291/out/s2/crops/muse_bloom-comet_*
 - **K1309** · K1291 s2 checks not run: the thread reveal's end looks other than beacon (fade, dots) are wired
   but unmeasured; the probe's ring wrap crop never fired (k1291_reveal.mjs, cause unchecked)
+- **K1312** · K1278 s3's fan gate smoothstep(0, FAN_GATE, n w) leaves faint spokes that crease along triangle
+  edges in rp=outline junction fans (branch worktree-agent-a0e0c69694779aaec, docs/design/K1278_s3.md)
 
 ## Approved, to schedule (2026-10-11)
 
