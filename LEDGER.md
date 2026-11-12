@@ -561,10 +561,10 @@ Next free ID: K1334.
   ink there: specks inside the ink at def j174 (c71/c73, group 119), ring j12, g41_ring_tw42 j12,
   g41_user_tw64 j28 (K1314 s6 handoff; crops `.claude/probes/K1314/out/s6/after4x/spot_016-019`). Make no
   contact pass between arms of one group. After K1247 s25 merges (it owns draw.ts)
-  - owner: agent `aa00c89b1725519ea` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 06:10, 2 h cap ~08:10)
-  - branch: `worktree-agent-aa00c89b1725519ea`, worktree `.claude/worktrees/agent-aa00c89b1725519ea`; last commit: `337d785d`
+  - owner: nobody since 2026-11-12 07:15 (merged; agent `aa00c89b1725519ea` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `b45dc3e9`
   - evidence: .claude/probes/K1324/; K1314 out/s1/census_s26b* and census_s26off*; K1247 out/s26/master4x, after4x
-  - next: s1 running: the four group specks without s26's 20 stray finds, and K1331 x22's twist-eye smear
+  - next: x22 (K1331), a form B smear too: a self-pass rule in tieAlpha plus its GLSL twin in outline_app.ts, once K1247 s27 frees outline_app.ts; j28's faint right-side shades (same on master, form B draws a hairline sliver)
   - brief: `docs/design/K1324_s1_group_ties_x22.md`
 
 ## Next, in order
