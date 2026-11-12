@@ -518,11 +518,11 @@ Next free ID: K1323.
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: nobody since 2026-11-12 02:13 (merged; agent `a806ccdba5e983525` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `802e22db`
-  - evidence: .claude/probes/K1247/ (tools: k1247s23_twin, _slack, _bench); src/render/outline/band_rec.ts, band_place.ts; untracked out/s22/, out/s23/
-  - next: s25: one transform-feedback invocation per column (points, s, slot search once), expanded to the quad's 6 vertices; re-bench ABBA; flip ob if the reply frame holds; then the g41 c20 d118 end vertex (0.276 px)
-  - brief: `docs/design/K1247_s24_flip.md`
+  - owner: agent `a2a09438173cbb356` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 02:17, 2 h cap ~04:17)
+  - branch: `worktree-agent-a2a09438173cbb356`, worktree `.claude/worktrees/agent-a2a09438173cbb356`; last commit: `c3dffd97`
+  - evidence: .claude/probes/K1247/ (k1247s24_twin, _bench, _tfonly, _rest); src/render/outline/band_place.ts; untracked out/s22/, out/s24/
+  - next: s25: one TF invocation per column, expanded to 6 vertices; re-bench ABBA on def and fat; flip ob if the reply frame holds; then the g41 c20 d118 end vertex
+  - brief: `docs/design/K1247_s25_column_pass.md`
 - **K1278** · The outline's paint blends seamlessly across junctions (Levi 2026-11-10): section colour and pulses
   from per-pixel fields continuous across faces, triangles and junctions, gated by a seam test on every
   face edge, triangle edge and junction. Full text in docs/ledger_notes.md
