@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1321.
+Next free ID: K1323.
 
 ## Waiting on Levi
 
@@ -556,6 +556,10 @@ Next free ID: K1321.
   - evidence: .claude/probes/K1314/ (census tools); untracked out/s1-s5/; the paused s5 worktree agent-a245bd015c3213ac1 (d8e47dce, merged into the new branch first)
   - next: s6: the census reference draws the approved look where form B is flawed (classes a/c rounded per K1049; the yield-blend artifacts at j135, j78, j49), then the outline faults left: x68, x67 leftover wedge, j71 tail fill, the specks at class-a joints (def j174, ring j12, g41_ring_tw42 j12, g41_user j28), the j39 ink ticks
   - brief: `docs/design/K1314_s5_joins_wedges.md`
+- **K1321** · K1314's census reference draws the approved look where form B is flawed: the class (a) and (c)
+  corners rounded per K1049 (Levi 2026-11-11: form B's open eye, rounded corner), and no V-merge artifacts
+  where the fillet yields (muse_hash j135, j78, j98; g41_user_tw64 j49). Tools only
+  (.claude/probes/K1314/k1314_census.ts, form_b_fillet.ts)
 
 ## Next, in order
 
@@ -808,6 +812,8 @@ Every other item below waits on the trigger it names.
 - **K1049** · Through-pass bends, DECIDED (Levi 2026-11-11: "Rounded corner", S1b/S1c's fillet); rp=outline must draw it in a K1314 fix stage: where a thread passes through a junction and bends, form B
   now draws today's sharp inner corner; S1b and S1c rounded it (`docs/design/K1040_s1d_corner.md` F2, and F6's Look
   with crops)
+- **K1322** · K1247's recStrip follows fill_tri fillFrame's per-side strip key rule (K1314 s5, f705ddd7):
+  until then the record fill (default) and oe=0 may differ at g41_ring_tw64 x67/x68. After K1247 s24
 
 ## Residuals (known, not fixed)
 
