@@ -15,7 +15,7 @@ import { BAND_PLACE_OUT, BAND_PLACE_STRIDE, BAND_PLACE_VS } from "../../../src/r
 
 const args = process.argv.slice(2).filter((a) => !a.startsWith("--"));
 const opt = (k: string, d: string): string => (process.argv.find((a) => a.startsWith(`--${k}=`)) ?? `--${k}=${d}`).split("=")[1];
-const dir = args[0]; const EVERY = Number(opt("every", "1")); const OUT = opt("out", ""); const DBG = opt("dbg", "").split(":").map(Number); const ONLY = opt("only", "");
+let slTie = 0; let slOther = 0; const dir = args[0]; const EVERY = Number(opt("every", "1")); const OUT = opt("out", ""); const DBG = opt("dbg", "").split(":").map(Number); const ONLY = opt("only", "");
 OB_DI.on = true;
 const files = readdirSync(dir).filter((f) => /^f\d+\.json$/.test(f)).sort();
 const scenes: SceneIn[] = files.map((f) => { const s = JSON.parse(readFileSync(join(dir, f), "utf8")); s.look.ctrlArc ??= 0.47; return s; });
@@ -128,6 +128,7 @@ try {  const page = await browser.newPage();
           if (Iv[o + 6] !== c.chain[v]) badCh++;
           for (let j = 0; j < 4; j++) if (Iv[o + 7 + j] !== c.slots[4 * v + j]) qBad = true;
         }
+        if (qBad) { let eM = 0; let sM = 0; for (let k = 0; k < 6; k++) { const v = 6 * q + k; const o = S * v; eM = Math.max(eM, Math.hypot(Fv[o] - c.pos[2 * v], Fv[o + 1] - c.pos[2 * v + 1]) * px); sM = Math.max(sM, Math.abs(Fv[o + 2] - c.attr[4 * v])); } if (eM > 0.5 || sM > 1e-3) slTie++; else { slOther++; if (slOther <= 8) console.log(`slot-only f${f} d${d} q${q - q0} eMax ${eM.toFixed(4)} px sMax ${sM.toExponential(2)} s ${c.attr[24 * q].toFixed(5)}: gpu ${[0, 1, 2, 3].map((j) => Iv[S * 6 * q + 7 + j]).join(",")} cpu ${[0, 1, 2, 3].map((j) => c.slots[24 * q + j]).join(",")}`); } }
         if (qBad) { badSl++; if (DBG.length === 2) console.log(`slots f${f} d${d} q${q - q0}: gpu ${[0, 1, 2, 3].map((j) => Iv[S * 6 * q + 7 + j]).join(",")} cpu ${[0, 1, 2, 3].map((j) => c.slots[24 * q + j]).join(",")}`); }
         if (DBG.length === 2 && DBG[0] === f && DBG[1] === d) { const e = [0, 1, 2, 3, 4, 5].map((k) => Math.hypot(Fv[S * (6 * q + k)] - c.pos[2 * (6 * q + k)], Fv[S * (6 * q + k) + 1] - c.pos[2 * (6 * q + k) + 1]) * px); console.log(`q${q - q0}/${used} err ${e.map((x) => x.toFixed(2)).join(" ")} s cpu ${c.attr[24 * q].toFixed(4)} gpu ${Fv[S * 6 * q + 2].toFixed(4)}`); }
       }
@@ -139,7 +140,7 @@ try {  const page = await browser.newPage();
 }
 console.log(`${dir}: ${nFr} frames on ${gpuName}; ${nQ} used quads`);
 console.log(`device px GPU vs CPU ${qs(dP)}; |s| ${qs(dS)}; |z| ${qs(dZ)}`);
-console.log(`dC/alpha mismatches ${badA}; chain mismatches ${badCh}; quads with other slots ${badSl} (CPU quads past BAND_SLOTS ${dropped}); padding quads with area ${padBad}`);
+console.log(`dC/alpha mismatches ${badA}; chain mismatches ${badCh}; quads with other slots ${badSl} (with a moved vertex, the recCs tie: ${slTie}; slots only: ${slOther}) (CPU quads past BAND_SLOTS ${dropped}); padding quads with area ${padBad}`);
 console.log(`worst: ${worst.slice(0, 5).map((w) => `f${w.f} d${w.piece}(how ${w.how}) ${w.d.toFixed(3)} at (${w.x.toFixed(2)}, ${w.y.toFixed(2)})`).join("; ")}`);
 fWorst.sort((a, b) => b.g - a.g);
 console.log(`fidelity vs today (ppu 40), GPU: ${fq(fidG)}; CPU records: ${fq(fidC)}`);
