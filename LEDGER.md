@@ -518,11 +518,11 @@ Next free ID: K1325.
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: nobody since 2026-11-12 03:39 (merged; agent `a2a09438173cbb356` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `e69fa795`
-  - evidence: .claude/probes/K1247/ (k1247s24_twin, _bench, _tfonly, _rest); src/render/outline/band_place.ts; untracked out/s22/, out/s24/
-  - next: s26: K1322 (recStrip follows fillFrame's s6 rule, a test tying the record fill to fillFrame) and K1324 (no contact pass between arms of one junction group); then the phone A/B of ob on vs off, and the g41 residual (f11 c20 d118, recSideOk)
-  - brief: `docs/design/K1247_s25_column_pass.md`
+  - owner: agent `aa4ea631c73c1c296` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 03:43, 2 h cap ~05:43)
+  - branch: `worktree-agent-aa4ea631c73c1c296`, worktree `.claude/worktrees/agent-aa4ea631c73c1c296`; last commit: `cbc9717b`
+  - evidence: .claude/probes/K1247/ (k1247s25_twin, _bench, _rest; k1247s19_twin, _fillcensus); untracked out/s22-s25/
+  - next: s26: K1322 (recStrip follows fillFrame, tie test) and K1324 (no contact pass within one junction group); then the phone A/B (K156 round) and the g41 residual (f11 c20 d118, recSideOk)
+  - brief: `docs/design/K1247_s26_rec_fill_specks.md`
 - **K1278** · The outline's paint blends seamlessly across junctions (Levi 2026-11-10): section colour and pulses
   from per-pixel fields continuous across faces, triangles and junctions, gated by a seam test on every
   face edge, triangle edge and junction. Full text in docs/ledger_notes.md
