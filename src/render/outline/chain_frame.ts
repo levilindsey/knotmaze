@@ -52,3 +52,43 @@ export function frameAt(c: FrameChain, t: ChainTangents, s: number, hint: number
   out[2] = tx / l; out[3] = ty / l; out[4] = t.k[k] + (t.k[j] - t.k[k]) * f;
   return k;
 }
+
+/** Row i = 1..N-1 of a strip side: C(s) + sgn b N(s) at s = sA + dS i / N, b = h clamped to 0.9 of the
+ *  radius on the concave side; into out[2i], out[2i+1]. A cursor walks the segments (rows run along s). */
+export function offsetRow(c: FrameChain, t: ChainTangents, sA: number, dS: number, N: number, sgn: number, h: number, out: Float64Array): void {
+  const m = c.n - 1; const loop = c.closed && c.len > 0; const L = c.len;
+  const xs = c.xs; const ys = c.ys; const ss = c.s; const tx = t.tx; const ty = t.ty; const kk = t.k;
+  let k = -1;
+  for (let i = 1; i < N; i++) {
+    let u = sA + (dS * i) / N;
+    if (loop) { if (u < 0 || u >= L) u = ((u % L) + L) % L; } else u = u < 0 ? 0 : u > ss[m] ? ss[m] : u;
+    if (k < 0 || u < ss[k] || u > (k < m ? ss[k + 1] : L)) {
+      if (k >= 0 && k < m && u > ss[k + 1] && (k + 1 >= m || u <= ss[k + 2])) k++;
+      else { let lo = 0; let hi = m; while (hi - lo > 1) { const q = (lo + hi) >> 1; if (ss[q] <= u) lo = q; else hi = q; } k = u >= ss[m] ? (loop ? m : m - 1) : lo; }
+    }
+    const j = k < m ? k + 1 : 0; const e = k < m ? ss[k + 1] : L; const sl = e - ss[k];
+    const f = sl > 0 ? (u - ss[k]) / sl : 0;
+    const x = xs[k] + (xs[j] - xs[k]) * f; const y = ys[k] + (ys[j] - ys[k]) * f;
+    let ax = tx[k] + (tx[j] - tx[k]) * f; let ay = ty[k] + (ty[j] - ty[k]) * f; const l = Math.sqrt(ax * ax + ay * ay) || 1; ax /= l; ay /= l;
+    const kap = kk[k] + (kk[j] - kk[k]) * f;
+    const b = sgn * kap > 0 ? Math.min(h, 0.9 / Math.abs(kap)) : h;
+    out[2 * i] = x - sgn * b * ay; out[2 * i + 1] = y + sgn * b * ax;
+  }
+}
+
+/** z (the chain's depth, linear between samples) at s = sA + dS i / N, i = 0..N, into out[i]. */
+export function zRow(c: FrameChain & { z: Float64Array }, sA: number, dS: number, N: number, out: Float64Array): void {
+  const m = c.n - 1; const loop = c.closed && c.len > 0; const L = c.len; const ss = c.s; const z = c.z;
+  let k = -1;
+  for (let i = 0; i <= N; i++) {
+    let u = sA + (dS * i) / N;
+    if (loop) { if (u < 0 || u >= L) u = ((u % L) + L) % L; } else u = u < 0 ? 0 : u > ss[m] ? ss[m] : u;
+    if (!loop && u >= ss[m]) { out[i] = z[m]; continue; }
+    if (k < 0 || u < ss[k] || u > (k < m ? ss[k + 1] : L)) {
+      if (k >= 0 && k < m && u > ss[k + 1] && (k + 1 >= m || u <= ss[k + 2])) k++;
+      else { let lo = 0; let hi = m; while (hi - lo > 1) { const q = (lo + hi) >> 1; if (ss[q] <= u) lo = q; else hi = q; } k = u >= ss[m] ? m : lo; }
+    }
+    const j = k < m ? k + 1 : 0; const e = k < m ? ss[k + 1] : L; const sl = e - ss[k];
+    out[i] = z[k] + (z[j] - z[k]) * (sl > 0 ? (u - ss[k]) / sl : 0);
+  }
+}

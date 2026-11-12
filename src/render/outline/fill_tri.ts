@@ -71,7 +71,7 @@
 // run's span follows the frame.
 import type { DiagramStructure, OutlineTable, SceneIn } from "./outline";
 import { zChains, zAtC, zPastC, footNear } from "./draw";
-import { chainTangents, frameAt } from "./chain_frame";
+import { chainTangents, frameAt, offsetRow, zRow } from "./chain_frame";
 import { paintAt, runAt, type SectionPaint } from "./paint";
 
 export const CAP_M = 17;
@@ -635,31 +635,30 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
     const nl = pl.pts.length >> 1; const nr = pr.pts.length >> 1; const m = nl >> 1;
     frameAt(c, t, rL[0] + (rL[1] * m) / Math.max(1, nl - 1), -1, fa);
     const sg = (pl.pts[2 * m] - fa[0]) * -fa[3] + (pl.pts[2 * m + 1] - fa[1]) * fa[2] >= 0 ? 1 : -1;
-    let hL = -1; let hR = -1;
-    const off = (sgn: number, out: number): void => {
-      const k = fa[4]; const b = sgn * k > 0 ? Math.min(hW, 0.9 / Math.abs(k)) : hW;
-      fa[out] = fa[0] - sgn * b * fa[3]; fa[out + 1] = fa[1] + sgn * b * fa[2];
-    };
-    const atA = stationS(aSt) !== null; const atB = stationS(bSt) !== null; const rF = 4 * hW;
+    if (rowL.length < 2 * W) { rowL = new Float64Array(2 * W); rowR = new Float64Array(2 * W); rowZ = new Float64Array(W); }
+    offsetRow(c, t, rL[0], rL[1], N, sg, hW, rowL); offsetRow(c, t, rR[0], rR[1], N, -sg, hW, rowR); zRow(c, s0, ds, N, rowZ);
+    rowL[0] = pl.pts[0]; rowL[1] = pl.pts[1]; rowR[0] = pr.pts[0]; rowR[1] = pr.pts[1];
+    rowL[2 * N] = pl.pts[2 * nl - 2]; rowL[2 * N + 1] = pl.pts[2 * nl - 1]; rowR[2 * N] = pr.pts[2 * nr - 2]; rowR[2 * N + 1] = pr.pts[2 * nr - 1];
+    const b0 = it.base;
     for (let i = 0; i <= N; i++) {
-      const s = s0 + (ds * i) / N; const z = zAt(it.pi, s);
+      const s = s0 + (ds * i) / N; const z = rowZ[i];
       const sL = rL[0] + (rL[1] * i) / N; const sR = rR[0] + (rR[1] * i) / N;
-      let lx: number; let ly: number; let rx: number; let ry: number;
-      if (i === 0) { lx = pl.pts[0]; ly = pl.pts[1]; rx = pr.pts[0]; ry = pr.pts[1]; }
-      else if (i === N) { lx = pl.pts[2 * nl - 2]; ly = pl.pts[2 * nl - 1]; rx = pr.pts[2 * nr - 2]; ry = pr.pts[2 * nr - 1]; }
-      else {
-        hL = frameAt(c, t, sL, hL, fa); off(sg, 0); lx = fa[0]; ly = fa[1];
-        hR = frameAt(c, t, sR, hR, fa); off(-sg, 0); rx = fa[0]; ry = fa[1];
-      }
-      const vL = it.base + i; const vC = vL + W; const vR = vC + W;
-      set(vL, lx, ly, z - zt, s); set(vC, (lx + rx) / 2, (ly + ry) / 2, z, s); set(vR, rx, ry, z - zt, s);
+      const lx = rowL[2 * i]; const ly = rowL[2 * i + 1]; const rx = rowR[2 * i]; const ry = rowR[2 * i + 1];
+      const vL = b0 + i; const vC = vL + W; const vR = vC + W;
+      pos[2 * vL] = lx; pos[2 * vL + 1] = ly; key[vL] = z - zt; sv[vL] = s;
+      pos[2 * vC] = (lx + rx) / 2; pos[2 * vC + 1] = (ly + ry) / 2; key[vC] = z; sv[vC] = s;
+      pos[2 * vR] = rx; pos[2 * vR + 1] = ry; key[vR] = z - zt; sv[vR] = s;
       s4[SLOTS * vL] = sL; s4[SLOTS * vC] = (sL + sR) / 2; s4[SLOTS * vR] = sR;
       across[vL] = 1; across[vR] = 1;
-      if ((i === 0 && atA) || (i === N && atB)) for (const v of [vL, vC, vR]) {
-        const f = footS(c, pos[2 * v], pos[2 * v + 1], s4[SLOTS * v], rF); if (f === f) s4[SLOTS * v] = f;
-      }
     }
+    const rF = 4 * hW;
+    const footEnd = (i: number): void => {
+      for (let r = 0; r < 3; r++) { const v = b0 + r * W + i; const f = footS(c, pos[2 * v], pos[2 * v + 1], s4[SLOTS * v], rF); if (f === f) s4[SLOTS * v] = f; }
+    };
+    if (stationS(aSt) !== null) footEnd(0);
+    if (stationS(bSt) !== null) footEnd(N);
   };
+  let rowL = new Float64Array(0); let rowR = new Float64Array(0); let rowZ = new Float64Array(0);
   if (FILL_PROF.on) FILL_PROF.t.pre = (FILL_PROF.t.pre ?? 0) + performance.now() - tP;
   for (const it of fs.items) {
     const tI = FILL_PROF.on ? performance.now() : 0;
