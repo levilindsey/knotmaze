@@ -48,6 +48,8 @@ import { REC_PLACE_FS, REC_PLACE_OUT, REC_PLACE_STRIDE, REC_PLACE_VS } from "./r
 const CTRL_ARC = 0.47;
 // K1247 s18: the record fill, as src/app/frame_loop.ts read it (the link rewrite drops the key before this loads; K1247 s20: on unless oe=0).
 const FILL_REC = (globalThis as { __knotOutlineFillRec?: boolean }).__knotOutlineFillRec === true;
+/** K1247 s22: ob=1, the band as a fixed layout of records (band_rec.ts). */
+const BAND_REC = (globalThis as { __knotOutlineBandRec?: boolean }).__knotOutlineBandRec === true;
 
 /** K1247 s18: a reply's typed-array bytes, top level and one level down (the bench's reply size). */
 function replyBytes(r: object): number {
@@ -1345,6 +1347,8 @@ export function createOutlineApp(ctx: SceneExportCtx, requestFrame: () => void):
     replyBytes: 0,
     /** K1247 s18: oe=1 is on (the fill's strips placed as records). */
     fillRec: FILL_REC,
+    /** K1247 s22: ob=1 is on (the band as a fixed layout of records). */
+    bandRec: BAND_REC,
     triangles: 0,
     chains: 0,
     key: "",
@@ -1532,6 +1536,7 @@ export function createOutlineApp(ctx: SceneExportCtx, requestFrame: () => void):
     scene.look.ctrlArc ??= CTRL_ARC;
     // K1247 s18: the record fill places the fill's strips as records (fill_tri.ts recStrip2). On unless oe=0 (K1247 s20).
     if (FILL_REC) (scene.look as { fillRec?: number }).fillRec = 2;
+    if (BAND_REC) (scene.look as { bandRec?: number }).bandRec = 1;
     // K1247 s18 probe: a page that sets window.__knotOutlineCapture to an
     // array gets every sent scene as JSON (the drag's frames, replayed in Node).
     const cap = (globalThis as { __knotOutlineCapture?: string[] }).__knotOutlineCapture;

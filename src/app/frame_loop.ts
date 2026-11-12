@@ -218,6 +218,8 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
   // the key before outline_app.ts loads. K1247 s20: on by default under
   // `rp=outline`; `oe=0` turns them off (today's resampled fill).
   if (outlineFlag && new URLSearchParams(location.search).get("oe") !== "0") (globalThis as { __knotOutlineFillRec?: boolean }).__knotOutlineFillRec = true;
+  // K1247 s22: `ob=1` places the border band as a fixed layout of records (band_rec.ts); off by default.
+  if (outlineFlag && new URLSearchParams(location.search).get("ob") === "1") (globalThis as { __knotOutlineBandRec?: boolean }).__knotOutlineBandRec = true;
   const labelFrame = (): void => {
     const r = scene.renderer;
     const kind = outlineFlag ? "outline" : params.fieldBand ? "field" : "label";
