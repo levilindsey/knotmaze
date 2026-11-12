@@ -513,10 +513,10 @@ Next free ID: K1318.
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: agent `afc77e62550888b86` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-11 14:19, 1.5 h cap ~15:49)
-  - branch: `worktree-agent-afc77e62550888b86`, worktree `.claude/worktrees/agent-afc77e62550888b86`; last commit: `e1c3e446`
+  - owner: nobody since 2026-11-11 15:16 (merged; agent `afc77e62550888b86` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `8f38164c`
   - evidence: .claude/probes/K1247/ (tools); untracked .claude/probes/K1247/out/s18-s20/; s20 branch worktree-agent-a095e7cff519b9abd (13abc7e1, record fill default, crops viewed: app paint matches)
-  - next: s21 running on top of s20: first structure back to master (s20 +200 ms); then merge s20+s21 together; later: phone check of the placement shader, fans/junctions/disks + strip end columns as records (after K1314 fan fixes), the band fixed topology (58-63 ms), zC (16 ms), seeded end solves
+  - next: the first outline frame: cut its frame step (~235 ms in the browser) and cold fill (~122 ms); then fans, junctions and disks as records, the band topology, zC; phone check of the placement shader in the next K156 round
   - brief: `docs/design/K1247_s21_structure_cost.md`
 - **K1278** · The outline's paint blends seamlessly across junctions (Levi 2026-11-10): section colour and pulses
   from per-pixel fields continuous across faces, triangles and junctions, gated by a seam test on every
