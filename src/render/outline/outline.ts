@@ -7488,12 +7488,15 @@ function runRootRamp(C: FCache, st: DiagramStructure, pieces: OutlinePiece[], ru
     const arm = key >> 1; const p = pieces[r >> 1]; const atEnd = (r & 1) === 1;
     const np = p.pts.length / 2; if (np < 2) continue;
     const i0 = atEnd ? np - 1 : 0; const x = p.pts[2 * i0]; const y = p.pts[2 * i0 + 1];
-    const keyC = depthAtC(C, p.chain, atEnd ? p.s1 : p.s0, depthWin) - zt;
+    // K1314 s10 (perf): only a foot nearer than h counts, so tailFoot prunes with cap h
+    // and the root's own key waits for the first such foot (same f, bit for bit).
+    let keyC = NaN;
     let f = 1;
     for (const aj of st.armsOfJ[C.armObj[arm].ji]) {
       const pj = C.armObj[aj].pi; if (pj === p.chain) continue;
-      tailFoot(C.polys[pj], C.armSR[aj] - 4 * h, C.armSR[aj] + 4 * h, x, y, rampFt);
+      tailFoot(C.polys[pj], C.armSR[aj] - 4 * h, C.armSR[aj] + 4 * h, x, y, rampFt, h);
       const d = rampFt[1]; if (!(d < h)) continue;
+      if (keyC !== keyC) keyC = depthAtC(C, p.chain, atEnd ? p.s1 : p.s0, depthWin) - zt;
       const g = Math.min(1, (h - d) / W);
       const u = Math.min(1, Math.max(0, (depthAtC(C, pj, rampFt[0], depthWin) - (d * zt) / h - keyC + zt) / (2 * zt)));
       f *= 1 - g * u * u * (3 - 2 * u);
@@ -8110,15 +8113,18 @@ export interface TailIn {
   bend?: { qx: number; qy: number; r: number; tax: number; tay: number; tbx: number; tby: number } | null;
 }
 const tailPt = new Float64Array(4); const tailCen = new Float64Array(4); const tailFt = new Float64Array(2); const tailBendF = new Float64Array(2);
-/** The nearest point of p to (x, y) over the segments covering s in [lo, hi]: out = [s, d]. */
-function tailFoot(p: Poly, lo: number, hi: number, x: number, y: number, out: Float64Array): void {
+/** The nearest point of p to (x, y) over the segments covering s in [lo, hi]: out = [s, d].
+ *  K1314 s10 (perf): with cap, a caller that only reads a foot nearer than cap starts the
+ *  best at cap^2, so the box tests below prune every farther block and segment; a foot
+ *  nearer than cap is the same foot, and none gives out[1] = cap (not Infinity). */
+function tailFoot(p: Poly, lo: number, hi: number, x: number, y: number, out: Float64Array, cap = Infinity): void {
   const nseg = p.nseg;
   if (nseg <= 0 || p.n < 2) { out[0] = lo; out[1] = Infinity; return; }
   const span = Math.min(hi - lo, p.closed ? p.len : Infinity);
   const u0 = normS(p, lo);
   let k = segOfS(p, u0).k;
   let walked = p.s[k] - u0;
-  let best = Infinity; let bs = u0; let bk = -1;
+  let best = cap * cap; let bs = u0; let bk = -1;
   // K1283 s4 (perf): seed the best with the last foot's segment when the walk below
   // visits it (the band's consecutive points sit on one stretch of X), so the box
   // tests prune from the start. Same foot: a tie between segments is a shared vertex,
@@ -8133,7 +8139,8 @@ function tailFoot(p: Poly, lo: number, hi: number, x: number, y: number, out: Fl
       let t = l2 > 1e-24 ? ((x - ax) * ex + (y - ay) * ey) / l2 : 0;
       t = t < 0 ? 0 : t > 1 ? 1 : t;
       const dx = ax + ex * t - x; const dy = ay + ey * t - y;
-      best = dx * dx + dy * dy; bs = p.s[kw] + t * (p.segLen[kw] || 0); bk = kw;
+      const d2 = dx * dx + dy * dy;
+      if (d2 < best || cap === Infinity) { best = d2; bs = p.s[kw] + t * (p.segLen[kw] || 0); bk = kw; }
     }
   }
   for (let guard = 0; guard <= nseg; guard++) {
