@@ -45,6 +45,7 @@ import { RUN_MAP_W, RV_W, SWELL_STRIDE, appRunMap, chainArcMap, revealMaskTex, s
 import type { OutlineReply, OutlineRequest } from "./outline_worker";
 
 const CTRL_ARC = 0.47;
+const FILL_REC = typeof location !== "undefined" && new URLSearchParams(location.search).get("oe") === "1";
 const RUN_TEX_W = 1024;
 const BAND_TEX_W = 1024; // band_gpu.BAND_TEX_W (not imported: it would pull draw.ts into main)
 
@@ -1379,6 +1380,8 @@ export function createOutlineApp(ctx: SceneExportCtx, requestFrame: () => void):
     );
     const { scene } = buildFieldScene(input);
     scene.look.ctrlArc ??= CTRL_ARC;
+    // K1247 s18: oe=1 places the fill's strips as records (fill_tri.ts recStrip). Off by default.
+    if (FILL_REC) (scene.look as { fillRec?: number }).fillRec = 1;
     // K1247 s18 probe: a page that sets window.__knotOutlineCapture to an
     // array gets every sent scene as JSON (the drag's frames, replayed in Node).
     const cap = (globalThis as { __knotOutlineCapture?: string[] }).__knotOutlineCapture;

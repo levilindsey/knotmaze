@@ -71,6 +71,7 @@
 // run's span follows the frame.
 import type { DiagramStructure, OutlineTable, SceneIn } from "./outline";
 import { zChains, zAtC, zPastC, footNear } from "./draw";
+import { chainTangents, frameAt } from "./chain_frame";
 import { paintAt, runAt, type SectionPaint } from "./paint";
 
 export const CAP_M = 17;
@@ -561,7 +562,11 @@ function zPointAt(c: ReturnType<typeof zChains>["zc"][number], s: number): [numb
   return [c.xs[lo] + (c.xs[hi] - c.xs[lo]) * t, c.ys[lo] + (c.ys[hi] - c.ys[lo]) * t];
 }
 
+/** K1247 s18: opt-in section timings of fillFrame (ms, summed over calls). */
+export const FILL_PROF = { on: false, t: {} as Record<string, number> };
+
 export function fillFrame(fs: FillStructure, st: DiagramStructure, table: OutlineTable, scene: SceneIn, zcIn?: ReturnType<typeof zChains>): FillFrame {
+  let tP = FILL_PROF.on ? performance.now() : 0;
   const zz = zcIn ?? zChains(scene);
   const zc = zz.zc;
   const zt = 0.1 * scene.look.depthAmp;
@@ -611,12 +616,60 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
   const line = (a: [number, number], b: [number, number], N: number, out: Float64Array): void => {
     for (let i = 0; i <= N; i++) { const t = i / N; out[2 * i] = a[0] + (b[0] - a[0]) * t; out[2 * i + 1] = a[1] + (b[1] - a[1]) * t; }
   };
+  // K1247 s18 (oe=1, off by default): a strip with both border pieces places its interior columns as
+  // records, C(s) +- h N(s) in the chain's smooth frame (chain_frame.ts), the s from its piece's
+  // moving ends; only the end columns (the moving points) come from the frame's pieces. No resample,
+  // no foot search: a record's foot is its own s.
+  const rec = scene.look.fillRec === 1;
+  const tg = rec ? zc.map((c) => (c.n > 1 ? chainTangents(c) : null)) : [];
+  const fa = new Float64Array(5);
+  const recStrip = (it: Extract<FillItem, { kind: "strip" }>, aSt: number, bSt: number, pl: OutlineTable["pieces"][number], pr: OutlineTable["pieces"][number]): void => {
+    const N = it.N; const W = N + 1; const c = zc[it.pi]; const t = tg[it.pi]!;
+    const loop = c.closed && c.len > 0;
+    const wrap = (d: number): number => (loop ? ((d % c.len) + c.len) % c.len : d);
+    const s0 = pl.s0; let ds = wrap(pl.s1 - pl.s0);
+    if (loop && aSt === bSt && ds < 1e-9) ds = c.len;
+    const rL: [number, number] = [pl.s0, wrap(pl.s1 - pl.s0)]; const rR: [number, number] = [pr.s0, wrap(pr.s1 - pr.s0)];
+    if (loop) rR[0] += c.len * Math.round((rL[0] - rR[0]) / c.len);
+    // L's side: the across sign of its middle point.
+    const nl = pl.pts.length >> 1; const nr = pr.pts.length >> 1; const m = nl >> 1;
+    frameAt(c, t, rL[0] + (rL[1] * m) / Math.max(1, nl - 1), -1, fa);
+    const sg = (pl.pts[2 * m] - fa[0]) * -fa[3] + (pl.pts[2 * m + 1] - fa[1]) * fa[2] >= 0 ? 1 : -1;
+    let hL = -1; let hR = -1;
+    const off = (sgn: number, out: number): void => {
+      const k = fa[4]; const b = sgn * k > 0 ? Math.min(hW, 0.9 / Math.abs(k)) : hW;
+      fa[out] = fa[0] - sgn * b * fa[3]; fa[out + 1] = fa[1] + sgn * b * fa[2];
+    };
+    const atA = stationS(aSt) !== null; const atB = stationS(bSt) !== null; const rF = 4 * hW;
+    for (let i = 0; i <= N; i++) {
+      const s = s0 + (ds * i) / N; const z = zAt(it.pi, s);
+      const sL = rL[0] + (rL[1] * i) / N; const sR = rR[0] + (rR[1] * i) / N;
+      let lx: number; let ly: number; let rx: number; let ry: number;
+      if (i === 0) { lx = pl.pts[0]; ly = pl.pts[1]; rx = pr.pts[0]; ry = pr.pts[1]; }
+      else if (i === N) { lx = pl.pts[2 * nl - 2]; ly = pl.pts[2 * nl - 1]; rx = pr.pts[2 * nr - 2]; ry = pr.pts[2 * nr - 1]; }
+      else {
+        hL = frameAt(c, t, sL, hL, fa); off(sg, 0); lx = fa[0]; ly = fa[1];
+        hR = frameAt(c, t, sR, hR, fa); off(-sg, 0); rx = fa[0]; ry = fa[1];
+      }
+      const vL = it.base + i; const vC = vL + W; const vR = vC + W;
+      set(vL, lx, ly, z - zt, s); set(vC, (lx + rx) / 2, (ly + ry) / 2, z, s); set(vR, rx, ry, z - zt, s);
+      s4[SLOTS * vL] = sL; s4[SLOTS * vC] = (sL + sR) / 2; s4[SLOTS * vR] = sR;
+      across[vL] = 1; across[vR] = 1;
+      if ((i === 0 && atA) || (i === N && atB)) for (const v of [vL, vC, vR]) {
+        const f = footS(c, pos[2 * v], pos[2 * v + 1], s4[SLOTS * v], rF); if (f === f) s4[SLOTS * v] = f;
+      }
+    }
+  };
+  if (FILL_PROF.on) FILL_PROF.t.pre = (FILL_PROF.t.pre ?? 0) + performance.now() - tP;
   for (const it of fs.items) {
+    const tI = FILL_PROF.on ? performance.now() : 0;
+    try {
     if (it.kind === "strip") {
       const N = it.N; const W = N + 1;
       if (bufL.length < 2 * W) { bufL = new Float64Array(2 * W); bufR = new Float64Array(2 * W); }
       const I = st.intervalsD[it.iv];
       const pl = it.pL >= 0 ? table.pieces[it.pL] : null; const pr = it.pR >= 0 ? table.pieces[it.pR] : null;
+      if (rec && pl && pr && pl.pts.length >= 4 && pr.pts.length >= 4 && tg[it.pi]) { recStrip(it, I.aSt, I.bSt, pl, pr); continue; }
       if (bufCL.length < 2 * W) { bufCL = new Float64Array(2 * W); bufCR = new Float64Array(2 * W); }
       // A side's border, and (cOk) its centreline feet resampled alongside.
       let cOkL = false; let cOkR = false;
@@ -910,10 +963,12 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
         }
       }
     }
+    } finally { if (FILL_PROF.on) FILL_PROF.t[it.kind] = (FILL_PROF.t[it.kind] ?? 0) + performance.now() - tI; }
   }
   // K1278 s2: tails at junctions (runs: fillRuns). A tail vertex over its
   // fan takes the fan's weights and s there (barycentric over the fan
   // triangle under it); one off the fan keeps its own s, on its arm's slot.
+  if (FILL_PROF.on) tP = performance.now();
   for (const it of fs.items) {
     if ((it.kind !== "tail" && it.kind !== "disk") || it.jItem < 0) continue;
     const J = fs.items[it.jItem] as JuncItem; const h = J.base; const R = J.R;
@@ -1012,6 +1067,7 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
       }
     }
   }
+  if (FILL_PROF.on) FILL_PROF.t.fans = (FILL_PROF.t.fans ?? 0) + performance.now() - tP;
   return { pos, key, s: sv, s4, w4, across, fallbacks, dense: denseCount };
 }
 

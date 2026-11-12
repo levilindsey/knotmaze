@@ -50,7 +50,7 @@ export interface SceneJunctionIn { id: string; c: [number, number]; arms: SceneA
 export interface SceneIn {
   name: string;
   camera: { worldToCss: number[]; pxPerUnit: number; dpr: number; viewport: [number, number] };
-  look: { halfWidth: number; band: number; cornerRoundShare: number; cuspRadius: number; depthAmp: number; depthWindow: number; paper: string; ink: string; ctrlArc?: number };
+  look: { halfWidth: number; band: number; cornerRoundShare: number; cuspRadius: number; depthAmp: number; depthWindow: number; paper: string; ink: string; ctrlArc?: number; fillRec?: number };
   chains: SceneChainIn[];
   crossings: SceneCrossingIn[];
   junctions: SceneJunctionIn[];
