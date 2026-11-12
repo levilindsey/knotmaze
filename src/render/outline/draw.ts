@@ -265,8 +265,139 @@ export function zChains(scene: SceneIn): { zc: ZChain[]; passes: Pass[][]; idx: 
     passes[ia].push({ s: sa, o: ib, so: sb, lo: loA, hi: hiA, rO: Math.max(loB, hiB) });
     passes[ib].push({ s: sb, o: ia, so: sa, lo: loB, hi: hiB, rO: Math.max(loA, hiA) });
   }
+  if (CONTACT_PASSES) {
+    // The contacts are structure: found on a diagram's first frame, then reused (a stale one ties
+    // nothing - tieAlpha needs the partner's foot within h).
+    let key = `${scene.name}|${scene.crossings.length}|${scene.junctions.length}`;
+    for (const [id, i] of idx) key += `|${id}:${zc[i].n}`;
+    let cp = CONTACT_CACHE.get(key);
+    if (!cp) {
+      const jr: { i: number; s: number }[][] = scene.junctions.map((j) => j.arms.flatMap((arm) => {
+        const i = idx.get(arm.chain); if (i === undefined) return [];
+        const c = zc[i];
+        return [{ i, s: arm.kind === "end" ? (Math.abs(arm.s) <= Math.abs(arm.s - c.len) ? 0 : c.len) : norm(c, arm.s) }];
+      }));
+      const n0 = passes.map((P) => P.length);
+      contactPasses(zc, passes, jr, h);
+      cp = passes.map((P, i) => P.slice(n0[i]));
+      if (CONTACT_CACHE.size >= 8) CONTACT_CACHE.delete(CONTACT_CACHE.keys().next().value as string);
+      CONTACT_CACHE.set(key, cp);
+      contactStats.built++;
+    } else {
+      for (let i = 0; i < cp.length; i++) for (const P of cp[i]) passes[i].push(P);
+      contactStats.hits++;
+    }
+  }
   zc.forEach((c, i) => { pins[i].sort((u, v) => u.s - v.s); for (let k = 0; k < c.n; k++) c.z[k] = depthAt(pins[i], c.closed, c.len, win, c.s[k]); c.pins = pins[i]; c.win = win; });
   return { zc, passes, idx };
+}
+
+/** K1283 s11: contact passes. Form B's tie mix blends ANY two surfaces whose
+ *  cone keys are within zt, not only a crossing's pair: near a crossing a
+ *  third thread (or the same one, far along it) can lie inside a tube
+ *  without crossing it (muse_hash x77: chain 50's end arm inside chain 11's
+ *  tube at 11's s 6.6, 4.7 from their junction), and its border there ties
+ *  (form B's ink 0.34 = 1 - sstep of the key gap) where the outline inked 1.
+ *  Each stretch of chain i whose vertices lie within 2.25h of chain j's
+ *  (not already a crossing pass's pair there, not both within 6h of a
+ *  junction they share: runEndFade's) becomes a pass of i against j, so
+ *  tieAlpha and band_gpu.ts tie it as a crossing's. The tie is continuous:
+ *  a pass appears before any band point is within h of the partner. */
+const CONTACT_PASSES = true;
+const CONTACT_CACHE = new Map<string, Pass[][]>();
+/** Probe counters: contact sets built and reused. */
+export const contactStats = { built: 0, hits: 0 };
+function contactPasses(zc: ZChain[], passes: Pass[][], jr: { i: number; s: number }[][], h: number): void {
+  const R = 2.25 * h; const R2 = R * R; const LJ = 6 * h; const SELF = 6 * h; const STEP = 0.5 * h;
+  // Samples every STEP of arc (the chains' vertices are ~h/6 apart), in a counting-sort grid of R cells.
+  let N = 0;
+  for (const c of zc) N += Math.ceil(c.len / STEP) + 2;
+  const sx = new Float64Array(N); const sy = new Float64Array(N); const ss = new Float64Array(N); const sc = new Int32Array(N);
+  const first = new Int32Array(zc.length + 1);
+  let n = 0; let x0 = Infinity; let y0 = Infinity; let x1 = -Infinity; let y1 = -Infinity;
+  for (let i = 0; i < zc.length; i++) {
+    const c = zc[i]; first[i] = n; let last = -Infinity;
+    for (let k = 0; k < c.n && n < N; k++) {
+      if (c.s[k] - last < STEP && k !== c.n - 1) continue;
+      last = c.s[k]; const x = c.xs[k]; const y = c.ys[k];
+      sx[n] = x; sy[n] = y; ss[n] = c.s[k]; sc[n] = i; n++;
+      if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
+    }
+  }
+  first[zc.length] = n;
+  if (n === 0) return;
+  const gw = Math.floor((x1 - x0) / R) + 1; const gh = Math.floor((y1 - y0) / R) + 1;
+  const start = new Int32Array(gw * gh + 1); const cell = new Int32Array(n); const items = new Int32Array(n);
+  for (let q = 0; q < n; q++) { const g = Math.floor((sy[q] - y0) / R) * gw + Math.floor((sx[q] - x0) / R); cell[q] = g; start[g + 1]++; }
+  for (let g = 0; g < gw * gh; g++) start[g + 1] += start[g];
+  const fillAt = start.slice(0, gw * gh);
+  for (let q = 0; q < n; q++) items[fillAt[cell[q]]++] = q;
+  // Junction roots by chain: [junction, s] pairs.
+  const roots: number[][] = zc.map(() => []);
+  jr.forEach((J, ji) => { for (const r of J) roots[r.i].push(ji, r.s); });
+  const bestD = new Float64Array(zc.length).fill(Infinity); const bestS = new Float64Array(zc.length); const touched: number[] = [];
+  for (let i = 0; i < zc.length; i++) {
+    const C = zc[i]; const half = C.len / 2;
+    const byO = new Map<number, Pass[]>();
+    for (const P of passes[i]) { let L = byO.get(P.o); if (!L) { L = []; byO.set(P.o, L); } L.push(P); }
+    let hits: Map<number, number[]> | null = null;
+    for (let q = first[i]; q < first[i + 1]; q++) {
+      const x = sx[q]; const y = sy[q]; const sk = ss[q];
+      const gx = Math.floor((x - x0) / R); const gy = Math.floor((y - y0) / R);
+      touched.length = 0;
+      for (let yy = Math.max(0, gy - 1); yy <= Math.min(gh - 1, gy + 1); yy++) {
+        for (let xx = Math.max(0, gx - 1); xx <= Math.min(gw - 1, gx + 1); xx++) {
+          const g = yy * gw + xx;
+          for (let t = start[g]; t < start[g + 1]; t++) {
+            const it = items[t]; const j = sc[it];
+            const ex = sx[it] - x; const ey = sy[it] - y; const d2 = ex * ex + ey * ey;
+            if (!(d2 < R2)) continue;
+            if (j === i) { let d = Math.abs(ss[it] - sk); if (C.closed && d > half) d = C.len - d; if (d < SELF) continue; }
+            if (bestD[j] === Infinity) touched.push(j);
+            if (d2 < bestD[j]) { bestD[j] = d2; bestS[j] = ss[it]; }
+          }
+        }
+      }
+      for (const j of touched) {
+        const O = zc[j]; const sm = bestS[j]; bestD[j] = Infinity;
+        let covered = false;
+        const L = byO.get(j);
+        if (L) for (const P of L) {
+          const ds = dSC(C, P.s, sk);
+          if (ds >= -P.lo - h && ds <= P.hi + h && Math.abs(dSC(O, P.so, sm)) <= P.rO + h) { covered = true; break; }
+        }
+        if (covered) continue;
+        const ra = roots[i]; const rb = roots[j];
+        for (let u = 0; u < ra.length && !covered; u += 2) {
+          if (Math.abs(dSC(C, ra[u + 1], sk)) >= LJ) continue;
+          for (let v = 0; v < rb.length; v += 2) if (rb[v] === ra[u] && Math.abs(dSC(O, rb[v + 1], sm)) < LJ) { covered = true; break; }
+        }
+        if (covered) continue;
+        if (!hits) hits = new Map();
+        let H = hits.get(j); if (!H) { H = []; hits.set(j, H); }
+        H.push(sk, sm);
+      }
+    }
+    if (!hits) continue;
+    for (const [j, H] of hits) {
+      const O = zc[j];
+      let a = 0;
+      const flush = (b: number): void => {
+        // Stretch H[a..b) (pairs): own span by summed steps, partner span about its first s.
+        let span = 0; let mLo = 0; let mHi = 0;
+        for (let u = a + 2; u < b; u += 2) span += dSC(C, H[u - 2], H[u]);
+        for (let u = a; u < b; u += 2) { const dm = dSC(O, H[a + 1], H[u + 1]); if (dm < mLo) mLo = dm; if (dm > mHi) mHi = dm; }
+        let s = H[a] + span / 2; if (C.closed && C.len > 0) s = ((s % C.len) + C.len) % C.len;
+        let so = H[a + 1] + (mLo + mHi) / 2; if (O.closed && O.len > 0) so = ((so % O.len) + O.len) % O.len;
+        const hs = Math.abs(span) / 2;
+        passes[i].push({ s, o: j, so, lo: hs + h, hi: hs + h, rO: (mHi - mLo) / 2 + 2 * h });
+      };
+      for (let u = 2; u < H.length; u += 2) {
+        if (Math.abs(dSC(C, H[u - 2], H[u])) > 2 * h || Math.abs(dSC(O, H[u - 1], H[u + 1])) > 4 * h) { flush(u); a = u; }
+      }
+      flush(H.length);
+    }
+  }
 }
 
 /** K1283 s7: form B's depth at any s of chain c, past an open chain's ends
@@ -568,15 +699,21 @@ export function bandData(table: OutlineTable, scene: SceneIn, zz: ReturnType<typ
         // any angle, and one outer/inner pair would interpolate the fade
         // into pixels the partner does not cover.
         const R = tiedSeg ? ROWS : 1;
+        // K1283 s11: a tied run's own alpha (runEndFade's, at a failed
+        // corner) multiplies the tie's, interpolated as an untied band's.
+        const pa = p.alpha;
         let prev: [number, number, number][] | null = null;
         for (const t of ts) {
           const ox = ax + (bx - ax) * t; const oy = ay + (by - ay) * t;
           const ix = ia[0] + (ib[0] - ia[0]) * t; const iy = ia[1] + (ib[1] - ia[1]) * t;
           const s = sa + (sb - sa) * t;
+          const oA = pa ? pa[2 * i] + (pa[2 * i + 2] - pa[2 * i]) * t : 1;
+          const iA = pa ? pa[2 * i + 1] + (pa[2 * i + 3] - pa[2 * i + 1]) * t : 1;
           const cur: [number, number, number][] = [];
           for (let r = 0; r <= R; r++) {
             const u = r / R; const x = ox + (ix - ox) * u; const y = oy + (iy - oy) * u;
-            cur.push([x, y, tiedSeg ? alphaAt(p.chain, x, y, s, h - W * u) : 1]);
+            const bA = oA + (iA - oA) * u;
+            cur.push([x, y, (tiedSeg ? alphaAt(p.chain, x, y, s, h - W * u) : 1) * bA]);
           }
           if (prev) {
             for (let r = 0; r < R; r++) {
