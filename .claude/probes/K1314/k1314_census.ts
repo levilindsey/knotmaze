@@ -35,9 +35,10 @@
 // crossing x<i> / junction j<i>), size, sub-shape, and the part that draws it
 // (the band piece with the most alpha there, or the fill item, with its file).
 // Writes out/s1/census_<tag>.json and prints counts per kind per scene.
-import { readFileSync, writeFileSync, mkdirSync, existsSync, statSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, existsSync, statSync, readdirSync, rmSync, utimesSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createHash } from "node:crypto";
 import { FormB } from "../../../src/render/field/form_b";
 import { FormB as FormBFillet } from "./form_b_fillet";
 import * as O from "../../../src/render/outline/outline";
@@ -411,6 +412,32 @@ const PIECE_FILE: Record<string, string> = {
 };
 const ITEM_FILE: Record<string, string> = { strip: "fill_tri.ts (strips)", cap: "fill_tri.ts (caps)", tail: "fill_tri.ts (tails)", disk: "fill_tri.ts (disks)", junc: "fill_tri.ts (junction fan)" };
 
+// The form B caches are keyed by what draws them. They used to be read back by length alone, so a census run
+// after K1321 changed the reference read a cache built before it and found K1321's cleared spots again (K1314
+// s7, 2026-11-12). out/fb/<key> hashes src/render/field (plain form B) and the scene; out/fbf/<key> adds this
+// file, form_b_fillet.ts and the reference's --no* flags. A key unused for a day is deleted, as are the old
+// unkeyed caches.
+const FIELD_SRC = join(here, "..", "..", "..", "src", "render", "field");
+const hashOf = (parts: (string | Buffer)[]): string => { const h = createHash("sha1"); for (const p of parts) h.update(p); return h.digest("hex").slice(0, 12); };
+export function refCacheDirs(nm: string): { fbDir: string; fbfDir: string } {
+  const field = readdirSync(FIELD_SRC).filter((f) => f.endsWith(".ts")).sort().map((f) => readFileSync(join(FIELD_SRC, f)));
+  const fbKey = hashOf([...field, readFileSync(join(SCENE_DIR, `${nm}.json`))]);
+  const flags = process.argv.filter((a) => a.startsWith("--no")).sort().join(" ");
+  const fbfKey = hashOf([fbKey, readFileSync(fileURLToPath(import.meta.url)), readFileSync(join(here, "form_b_fillet.ts")), flags]);
+  const dirs = { fbDir: join(here, "out", "fb", `${nm}_${fbKey}`), fbfDir: join(here, "out", "fbf", `${nm}_${fbfKey}`) };
+  const now = new Date();
+  for (const [root, keep] of [[join(here, "out", "fb"), dirs.fbDir], [join(here, "out", "fbf"), dirs.fbfDir]]) {
+    mkdirSync(keep, { recursive: true }); utimesSync(keep, now, now);
+    for (const e of readdirSync(root, { withFileTypes: true })) {
+      const p = join(root, e.name);
+      // force: k1314_run.ps1's three jobs prune the same roots at once.
+      if (e.isFile() && e.name.endsWith(".bin")) rmSync(p, { force: true });
+      else if (e.isDirectory() && p !== keep && now.getTime() - statSync(p).mtimeMs > 24 * 3600e3) rmSync(p, { recursive: true, force: true });
+    }
+  }
+  return dirs;
+}
+
 export function census(nm: string, ppu: number, MIN_PX = 12): { arts: Art[]; m: Model } {
   const m = buildModel(nm); const sc = m.scene; const h = sc.look.halfWidth;
   let x0 = Infinity; let y0 = Infinity; let x1 = -Infinity; let y1 = -Infinity;
@@ -420,8 +447,7 @@ export function census(nm: string, ppu: number, MIN_PX = 12): { arts: Art[]; m: 
   // Tiles of T px with an M px margin: a component counts in the tile whose core holds its centroid.
   const T = 1280; const M = 24;
   const arts: Art[] = [];
-  const fbDir = join(here, "out", "fb"); mkdirSync(fbDir, { recursive: true });
-  const fbfDir = join(here, "out", "fbf"); mkdirSync(fbfDir, { recursive: true });
+  const { fbDir, fbfDir } = refCacheDirs(nm);
   const t0 = Date.now();
   for (let ty = 0; ty < GH; ty += T) for (let tx = 0; tx < GW; tx += T) {
   const kx0 = g0 + tx; const ky0 = q0 + ty; const kx1 = Math.min(g0 + GW, kx0 + T); const ky1 = Math.min(q0 + GH, ky0 + T);

@@ -1,6 +1,8 @@
 # K1314 s1: the 12-scene census at --ppu=160 --min=40 in three parallel groups, then merged.
 #   pwsh .claude/probes/K1314/k1314_run.ps1 [-Tag s1] [-Lock]
-# Form B tiles are cached in out/fb/, so a rerun after an outline change costs the outline raster only.
+# Form B tiles are cached in out/fb/<scene>_<key>/ and out/fbf/<scene>_<key>/, keyed by a hash of the reference's
+# code (k1314_census.ts refCacheDirs), so a rerun after an outline change costs the outline raster only, and a
+# reference change rebuilds them. Never copy another checkout's caches.
 # The census waits before each scene while anyone holds $env:TEMP\claude-perf.lock. -Lock holds the lock for the
 # whole run: it waits for a free lock (one blocking loop; a lock older than 30 min is stale), writes its own owner
 # line, passes that line's prefix as $env:K1314_LOCK_OWNER (the census skips its own lock) and deletes the lock
