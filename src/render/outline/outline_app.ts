@@ -46,6 +46,16 @@ import type { OutlineReply, OutlineRequest } from "./outline_worker";
 
 const CTRL_ARC = 0.47;
 const FILL_REC = typeof location !== "undefined" && new URLSearchParams(location.search).get("oe") === "1";
+
+/** K1247 s18: a reply's typed-array bytes, top level and one level down (the bench's reply size). */
+function replyBytes(r: object): number {
+  let n = 0;
+  for (const v of Object.values(r)) {
+    if (ArrayBuffer.isView(v)) n += v.byteLength;
+    else if (v && typeof v === "object") for (const w of Object.values(v)) if (ArrayBuffer.isView(w)) n += w.byteLength;
+  }
+  return n;
+}
 const RUN_TEX_W = 1024;
 const BAND_TEX_W = 1024; // band_gpu.BAND_TEX_W (not imported: it would pull draw.ts into main)
 
@@ -1196,6 +1206,8 @@ export function createOutlineApp(ctx: SceneExportCtx, requestFrame: () => void):
     composites: 0,
     compositesAfter: 0,
     bandCount: 0,
+    /** K1247 s18: the last reply's typed-array bytes (top level and one level down). */
+    replyBytes: 0,
     triangles: 0,
     chains: 0,
     key: "",
@@ -1356,6 +1368,7 @@ export function createOutlineApp(ctx: SceneExportCtx, requestFrame: () => void):
         if (stats.replyMs.length > 512) stats.replyMs.shift();
       }
       stats.bandCount = r.bandCount;
+      stats.replyBytes = replyBytes(r);
       stats.triangles = pass.nIdx / 3;
       stats.key = r.key.length > 64 ? `${r.key.slice(0, 64)}...` : r.key;
       dirty = true;
