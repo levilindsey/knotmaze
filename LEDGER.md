@@ -525,10 +525,10 @@ Next free ID: K1310.
 - **K1283** · Junction borders of the outline (rp=outline) against form B. Stage 1 (3c8bd61e) fixed the concave
   corner bites (census 27528 -> 17756 px); left: the failed corners and the end-arm round ends (x47, x73,
   x349). Full text in docs/ledger_notes.md
-  - owner: agent `a1be9abe643f43725` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-11 06:36, 2 h cap ~08:36)
-  - branch: `worktree-agent-a1be9abe643f43725`, worktree `.claude/worktrees/agent-a1be9abe643f43725`; last commit: `1467fefa`
+  - owner: nobody since 2026-11-11 08:14 (merged; agent `a1be9abe643f43725` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `67261d58`
   - evidence: `.claude/probes/K1240/out/k1283s10/`
-  - next: Stage 10 running: the strip foot (+21% worker frame) back within 3% of f88cf62f with stage 9 seam/colour numbers holding, then g41_user_tw64 j8/j9 arm-root wedges. Tied-run alpha (j59 run 379, x134 run 279, x77, x304) needs band_gpu.ts: after K1291 s3
+  - next: Stage 10 merged: worker frame on def +0.7% vs f88cf62f (stage 9 was +21%), output hash-identical to stage 9 (strip foot halved, zChains 24.3 -> 15.7 ms exact; the foot still costs ~7.5 ms of fill). Stage 11: tied-run alpha in draw.ts + band_gpu.ts (j59 run 379 cut point, x134 run 279 square end, x77, x304: the census worst) toward form B; then g41_user_tw64 j8/j9 arm-root wedges (outline: crisp teal sector, form B: soft narrow wedge; out/k1283s10/crops/junctions.png rows 2-3)
   - brief: `docs/design/K1283_s10.md`
 - **K1291** · rp=outline in the app (K1240 S4) lacks the app palette and hides the overlays drawn inside the
   base layer (trail, fog, reveal masks, pulses, gameplay paint); markers, plucks and the HUD still draw (S4
