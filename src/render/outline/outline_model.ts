@@ -123,18 +123,29 @@ export function recLayout(fs: FillStructure, pd: PaintData): RecLayout {
     const it = fs.items[strips[o]] as StripItem; const W = it.N + 1;
     for (let r = 0; r < 3; r++) for (let i = 2; i <= it.N - 2; i++) { const v = it.base + r * W + i; tag[2 * v] = o; tag[2 * v + 1] = (r << 16) | i; }
   }
-  const nG = pd.src.length; const perm = new Uint32Array(nG); let nDyn = 0;
-  for (let g = 0; g < nG; g++) if (tag[2 * pd.src[g]] < 0) perm[nDyn++] = g;
-  for (let g = 0, q = nDyn; g < nG; g++) if (tag[2 * pd.src[g]] >= 0) perm[q++] = g;
-  const inv = new Uint32Array(nG); for (let n = 0; n < nG; n++) inv[perm[n]] = n;
+  // inv[g] = the vertex's new index: the dynamic ones first, each group in its old order.
+  const S0 = pd.src; const nG = S0.length; const inv = new Uint32Array(nG); let nDyn = 0;
+  for (let g = 0; g < nG; g++) if (tag[2 * S0[g]] < 0) nDyn++;
+  for (let g = 0, qd = 0, qr = nDyn; g < nG; g++) inv[g] = tag[2 * S0[g]] < 0 ? qd++ : qr++;
   const src = new Uint32Array(nG), run = new Int32Array(SLOTS * nG), pos = new Float32Array(2 * nG), key = new Float32Array(nG);
   const w = new Float32Array(SLOTS * nG), s = new Float32Array(SLOTS * nG), rec = new Int32Array(2 * nG);
-  for (let n = 0; n < nG; n++) {
-    const g = perm[n]; const v = pd.src[g];
-    src[n] = v; pos[2 * n] = pd.pos[2 * g]; pos[2 * n + 1] = pd.pos[2 * g + 1]; key[n] = pd.key[g];
-    for (let k = 0; k < SLOTS; k++) { run[SLOTS * n + k] = pd.run[SLOTS * g + k]; w[SLOTS * n + k] = pd.w[SLOTS * g + k]; s[SLOTS * n + k] = pd.s[SLOTS * g + k]; }
-    rec[2 * n] = tag[2 * v]; rec[2 * n + 1] = tag[2 * v] < 0 ? 0 : tag[2 * v + 1];
+  // K1247 s21: copied by runs of consecutive vertices (a few thousand: rows of record columns), not vertex by
+  // vertex (the per-vertex loop took 70 ms of def's first structure, its arrays by property each time).
+  const blk = (A: Uint32Array | Int32Array | Float32Array, D: Uint32Array | Int32Array | Float32Array, K: number, a: number, b: number, d: number): void => {
+    if (b - a > 8) { D.set(A.subarray(K * a, K * b), K * d); return; }
+    for (let i = K * a, j = K * d; i < K * b; i++, j++) D[j] = A[i];
+  };
+  const P0 = pd.pos, K0 = pd.key, R0 = pd.run, W0 = pd.w, Q0 = pd.s;
+  for (let a = 0; a < nG;) {
+    const dyn = tag[2 * S0[a]] < 0; let b = a + 1;
+    while (b < nG && (tag[2 * S0[b]] < 0) === dyn) b++;
+    const d = inv[a];
+    blk(S0, src, 1, a, b, d); blk(P0, pos, 2, a, b, d); blk(K0, key, 1, a, b, d);
+    blk(R0, run, SLOTS, a, b, d); blk(W0, w, SLOTS, a, b, d); blk(Q0, s, SLOTS, a, b, d);
+    a = b;
   }
+  for (let n = 0; n < nDyn; n++) rec[2 * n] = -1;
+  for (let n = nDyn; n < nG; n++) { const v = src[n]; rec[2 * n] = tag[2 * v]; rec[2 * n + 1] = tag[2 * v + 1]; }
   const idx = pd.idx; for (let t = 0; t < idx.length; t++) idx[t] = inv[idx[t]];
   pd.src = src; pd.run = run; pd.pos = pos; pd.key = key; pd.w = w; pd.s = s;
   return { nDyn, rec, nStrips: strips.length };
