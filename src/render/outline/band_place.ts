@@ -31,7 +31,7 @@ const PT = 4; // band_gpu.PT
 const glsl = REC_GLSL.replace("layout(location=6) in ivec2 aRec;", "const ivec2 aRec = ivec2(-1, 0);").replace("uniform float uRecHW;", "float uRecHW = 0.0;");
 if (!glsl.includes("const ivec2 aRec") || !glsl.includes("float uRecHW = 0.0;")) throw new Error("band_place: REC_GLSL changed");
 
-export const BAND_PLACE_VS = `#version 300 es
+const BP_HEAD = `#version 300 es
 precision highp float;
 precision highp int;
 ${glsl}
@@ -42,10 +42,8 @@ uniform highp sampler2D uBpPass;
 uniform int uBpND;
 uniform float uBpH;
 uniform float uBpW;
-out vec2 tPos;
-out vec4 tA;
-flat out int tCh;
-flat out ivec4 tSl;
+`;
+const BP_LIB = `
 // draw.ts dSC: b - a, on a loop wrapped into (-L/2, L/2].
 float bpD(float L, float a, float b) { float d = b - a; if (L > 0.0) { d = mod(d, L); if (d > L / 2.0) d -= L; } return d; }
 // K1247 s24: draw.ts footNear(O, p, sC, r, 0, 0).d on chain texels ob.. (on vertices, oL its closed length or
@@ -81,6 +79,16 @@ float bpNear(int ob, int on, float oL, vec2 p, float sC, float r) {
   }
   return bpRange(ob, on, segs, oL, p, sC, r, sC - r, sC + r, best);
 }
+`;
+
+// s23's per-vertex placement: every vertex places its own column (6 per quad, 12 column evaluations a
+// quad); s25 keeps it only as the twin's reference (k1247s25_twin.ts runs both).
+export const BAND_PLACE_VS = `${BP_HEAD}
+out vec2 tPos;
+out vec4 tA;
+flat out int tCh;
+flat out ivec4 tSl;
+${BP_LIB}
 // Column k of record piece o (x, y, s): the table's ends, else colAt at hh.
 vec3 bpCol(int o, int b, int n, float L, vec4 t1, int N, float sgn, int k, bool inner) {
   if (k == 0) { vec4 e = recT(uBpTab, o + 2); return vec3(inner ? e.zw : e.xy, recT(uBpTab, o + 4).x); }
@@ -171,3 +179,142 @@ export const BAND_PLACE_FS = "#version 300 es\nprecision highp float; out vec4 o
 export const BAND_PLACE_OUT = ["tPos", "tA", "tCh", "tSl"];
 export const BAND_PLACE_STRIDE = 11;
 export const BAND_PLACE_TEX_W = W;
+
+// K1247 s25: the placement by QUAD. One invocation per quad q (gl_VertexID; Q = 6 Q vertices / 6) places
+// its two columns once each, outer and inner together (bpCol2: recCol's span search, fan-step search and
+// s are the same at both widths, only recFan / recEdge read uRecHW), runs the slot loop once, and writes
+// five vec4s (BAND_QUAD_OUT, interleaved):
+//   qO (A outer, B outer)  qI (A inner, B inner)  qS (sa, sb, z(sa), z(sb))  qM (mode, a, ch, 0)  qL slots
+// mode 2: a record quad (the band program's corner c picks A / B, outer / inner from qO, qI, qS; w 1);
+// mode 1: a worker-placed quad, a = its index in uBpFb (the band program copies vertex 6 a + c, as s23 did);
+// mode 0: every corner is qO.xy with attributes qS (padding: the piece's last placed vertex at w 0;
+// an empty piece or an absent one: zero, chain qM.z). bandQuadVs turns BAND_VS into the program that
+// draws these as instances of 6 vertices (drawArraysInstanced(TRIANGLES, 0, 6, Q)).
+const recColSrc = ((): string => {
+  const a = glsl.indexOf("vec3 recCol(int b"); const e = glsl.indexOf("\n}\n", a);
+  if (a < 0 || e < 0) throw new Error("band_place: recCol not found");
+  const fan = "if (g <= st) return vec3(recFan(b, n, L, V, sgn, st, g), sv + base);";
+  const edge = "return vec3(recEdge(b, n, L, K, s, sgn), s + base);";
+  const head = "vec3 recCol(int b, int n, float L, float sA, float dS, int N, float sgn, int i) {";
+  let t = glsl.slice(a, e + 3);
+  if (!t.includes(fan) || !t.includes(edge) || !t.includes(head)) throw new Error("band_place: recCol changed");
+  t = t.replace(head, "vec3 bpRecCol2(int b, int n, float L, float sA, float dS, int N, float sgn, int i, out vec2 pin) {");
+  t = t.replace(fan, "if (g <= st) { uRecHW = uBpH - uBpW; pin = recFan(b, n, L, V, sgn, st, g); uRecHW = uBpH; return vec3(recFan(b, n, L, V, sgn, st, g), sv + base); }");
+  t = t.replace(edge, "uRecHW = uBpH - uBpW; pin = recEdge(b, n, L, K, s, sgn); uRecHW = uBpH; return vec3(recEdge(b, n, L, K, s, sgn), s + base);");
+  return t;
+})();
+
+export const BAND_QUAD_VS = `${BP_HEAD}
+out vec4 qO;
+out vec4 qI;
+out vec4 qS;
+out vec4 qM;
+out vec4 qL;
+${BP_LIB}
+${recColSrc}
+// Column k of record piece o: (outer x, y, s), its inner point in pin (bpCol at both widths).
+vec3 bpCol2(int o, int b, int n, float L, vec4 t1, int N, float sgn, int k, out vec2 pin) {
+  if (k == 0) { vec4 e = recT(uBpTab, o + 2); pin = e.zw; return vec3(e.xy, recT(uBpTab, o + 4).x); }
+  if (k == N) { vec4 e = recT(uBpTab, o + 3); pin = e.zw; return vec3(e.xy, recT(uBpTab, o + 4).y); }
+  vec4 fS = recT(uBpTab, o + 5); vec4 fE = recT(uBpTab, o + 6); int nS = int(fS.w); int nE = int(fE.w);
+  if (nS < 0) { vec4 e0 = recT(uBpTab, o + 2); vec4 e1 = recT(uBpTab, o + 3); vec2 s01 = recT(uBpTab, o + 4).xy; float t = float(k) / float(N); pin = mix(e0.zw, e1.zw, t); return vec3(mix(e0.xy, e1.xy, t), mix(s01.x, s01.y, t)); }
+  float hi = uBpH - uBpW;
+  if (nS > 0 && k <= nS) { float a = fS.y + float(k - 1) * fS.z; vec2 C = recT(uRecChain, b + int(fS.x)).xy; vec2 u = vec2(cos(a), sin(a)); pin = C + hi * u; return vec3(C + uBpH * u, recT(uBpTab, o + 7).x); }
+  if (nE > 0 && k >= N - nE) { float a = fE.y + float(k - N + nE) * fE.z; vec2 C = recT(uRecChain, b + int(fE.x)).xy; vec2 u = vec2(cos(a), sin(a)); pin = C + hi * u; return vec3(C + uBpH * u, recT(uBpTab, o + 7).y); }
+  int oS = nS > 0 ? nS + 1 : int(recT(uBpTab, o + 7).z);
+  return bpRecCol2(b, n, L, t1.x, t1.y, N - oS - (nE > 0 ? nE + 1 : int(recT(uBpTab, o + 7).w)), sgn, k - oS, pin);
+}
+void main() {
+  gl_Position = vec4(0.0, 0.0, 0.0, 1.0);
+  qO = vec4(0.0); qI = vec4(0.0); qS = vec4(0.0); qM = vec4(0.0, 0.0, -1.0, 0.0); qL = vec4(-1.0);
+  int q = gl_VertexID;
+  int lo = 0; int hi = uBpND;
+  while (hi - lo > 1) { int m = (lo + hi) >> 1; if (int(recT(uBpTab, ${BT} * m + 4).w) <= q) lo = m; else hi = m; }
+  int o = ${BT} * lo; vec4 t0 = recT(uBpTab, o); vec4 t4 = recT(uBpTab, o + 4);
+  int i = q - int(t4.w);
+  if (t0.x == 1.0) {
+    int f = int(t0.y); int u = int(t0.z);
+    if (i < u) { qM = vec4(1.0, float(f + i), 0.0, 0.0); return; }
+    qM.z = t0.w;
+    if (u > 0) {
+      int v = 6 * (f + u - 1) + 1; vec4 a = recT(uBpFb, 2 * v); vec4 e = recT(uBpFb, 2 * v + 1);
+      qO = vec4(a.xy, 0.0, 0.0); qS = vec4(a.z, uBpH, e.x, 0.0);
+    }
+    return;
+  }
+  if (t0.x != 2.0) return;
+  int ch = int(t0.y); int N = int(t0.z); float sgn = t0.w; vec4 t1 = recT(uBpTab, o + 1);
+  vec4 ci = recT(uRecCi, ch); int b = int(ci.x); int n = int(ci.y); float L = ci.z;
+  vec2 Ai; vec2 Bi;
+  vec3 A = bpCol2(o, b, n, L, t1, N, sgn, i, Ai);
+  vec3 B = bpCol2(o, b, n, L, t1, N, sgn, i + 1, Bi);
+  float sa = A.z; float sb = sa + bpD(L, sa, B.z);
+  qO = vec4(A.xy, B.xy); qI = vec4(Ai, Bi); qS = vec4(sa, sb, recZ(b, n, L, sa), recZ(b, n, L, sb)); qM = vec4(2.0, 0.0, float(ch), 0.0);
+  // The quad's passes (band_rec's cand, then its per-quad window test); past 4, the nearest (s24's rule).
+  int pb = int(t1.z); int np = int(t1.w); float U = t4.z;
+  int id[4] = int[4](-1, -1, -1, -1); int ns = 0;
+  for (int j = 0; j < np; j++) {
+    vec4 Pj = recT(uBpPass, ${PT} * (pb + j));
+    float d0 = bpD(L, Pj.x, t4.x);
+    if (!(d0 + U >= -Pj.y - uBpH - 1e-6 && d0 <= Pj.z + uBpH + 1e-6)) continue;
+    float da = bpD(L, Pj.x, sa); float db = da + (sb - sa);
+    if (!(max(da, db) >= -Pj.y - uBpH && min(da, db) <= Pj.z + uBpH)) continue;
+    if (ns < 4) id[ns] = pb + j;
+    ns++;
+  }
+  if (ns > 4) {
+    vec2 m = 0.5 * (A.xy + B.xy);
+    float key[4] = float[4](1e38, 1e38, 1e38, 1e38); id = int[4](-1, -1, -1, -1);
+    for (int j = 0; j < np; j++) {
+      vec4 Pj = recT(uBpPass, ${PT} * (pb + j));
+      float d0 = bpD(L, Pj.x, t4.x);
+      if (!(d0 + U >= -Pj.y - uBpH - 1e-6 && d0 <= Pj.z + uBpH + 1e-6)) continue;
+      float da = bpD(L, Pj.x, sa); float db = da + (sb - sa);
+      if (!(max(da, db) >= -Pj.y - uBpH && min(da, db) <= Pj.z + uBpH)) continue;
+      vec4 P1 = recT(uBpPass, ${PT} * (pb + j) + 1); float oL = recT(uBpPass, ${PT} * (pb + j) + 2).x;
+      float kk = bpNear(int(P1.y), int(P1.z), oL, m, P1.x, Pj.w + uBpH);
+      int w = 0; for (int r = 1; r < 4; r++) if (key[r] > key[w] || (key[r] == key[w] && id[r] > id[w])) w = r;
+      if (kk < key[w] || id[w] < 0) { id[w] = pb + j; key[w] = kk; }
+    }
+    for (int x = 0; x < 3; x++) for (int y = 0; y < 3 - x; y++) if (id[y] > id[y + 1]) { int t = id[y]; id[y] = id[y + 1]; id[y + 1] = t; }
+  }
+  qL = vec4(float(id[0]), float(id[1]), float(id[2]), float(id[3]));
+}`;
+export const BAND_QUAD_OUT = ["qO", "qI", "qS", "qM", "qL"];
+export const BAND_QUAD_STRIDE = 20;
+
+const BQ_IN = `layout(location=0) in vec2 aPos;
+layout(location=1) in vec4 aA;
+layout(location=2) in int aCh;
+layout(location=3) in ivec4 aSl;`;
+/** BAND_VS drawing BAND_QUAD_VS's quads as instances (divisor-1 attributes qO..qL at locations 0-4; corner
+ *  c = gl_VertexID in s23's order A out, B out, A in, B out, B in, A in): the attributes become globals that
+ *  bqLoad fills, so the rest of the program is BAND_VS's, unchanged. uBqFb / uBqSl are uBpFb / uBpSl. */
+export function bandQuadVs(vs: string): string {
+  if (!vs.includes(BQ_IN) || !vs.includes("void main() {")) throw new Error("band_place: BAND_VS changed");
+  return vs.replace(BQ_IN, `layout(location=0) in vec4 qO;
+layout(location=1) in vec4 qI;
+layout(location=2) in vec4 qS;
+layout(location=3) in vec4 qM;
+layout(location=4) in vec4 qL;
+uniform highp sampler2D uBqFb;
+uniform highp sampler2D uBqSl;
+uniform float uBqH;
+uniform float uBqW;
+vec2 aPos; vec4 aA; int aCh; ivec4 aSl;
+vec4 bqT(highp sampler2D t, int q) { return texelFetch(t, ivec2(q % ${W}, q / ${W}), 0); }
+void bqLoad() {
+  int c = gl_VertexID; int md = int(qM.x);
+  if (md == 2) {
+    bool isB = c == 1 || c == 3 || c == 4; bool inner = c == 2 || c == 4 || c == 5;
+    vec4 P = inner ? qI : qO;
+    aPos = isB ? P.zw : P.xy; aA = vec4(isB ? qS.y : qS.x, inner ? uBqH - uBqW : uBqH, isB ? qS.w : qS.z, 1.0);
+    aCh = int(qM.z); aSl = ivec4(qL);
+  } else if (md == 1) {
+    int f = int(qM.y); int v = 6 * f + c; vec4 a = bqT(uBqFb, 2 * v); vec4 e = bqT(uBqFb, 2 * v + 1);
+    aPos = a.xy; aA = vec4(a.zw, e.xy); aCh = int(e.z); aSl = ivec4(bqT(uBqSl, f));
+  } else {
+    aPos = qO.xy; aA = qS; aCh = int(qM.z); aSl = ivec4(qL);
+  }
+}`).replace("void main() {", "void main() {\n  bqLoad();");
+}

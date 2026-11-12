@@ -44,7 +44,7 @@ import type { SceneIn } from "./outline";
 import { RUN_MAP_W, RV_W, SWELL_STRIDE, appRunMap, chainArcMap, revealMaskTex, swellStrip, type SwellStrip } from "./paint";
 import type { OutlineReply, OutlineRequest } from "./outline_worker";
 import { REC_PLACE_FS, REC_PLACE_OUT, REC_PLACE_STRIDE, REC_PLACE_VS } from "./rec_glsl";
-import { BAND_PLACE_FS, BAND_PLACE_OUT, BAND_PLACE_STRIDE, BAND_PLACE_VS } from "./band_place";
+import { BAND_PLACE_FS, BAND_QUAD_OUT, BAND_QUAD_STRIDE, BAND_QUAD_VS, bandQuadVs } from "./band_place";
 
 const CTRL_ARC = 0.47;
 // K1247 s18: the record fill, as src/app/frame_loop.ts read it (the link rewrite drops the key before this loads; K1247 s20: on unless oe=0).
@@ -659,8 +659,9 @@ class OutlinePass {
   private placedBuf: WebGLBuffer | null = null;
   private placedN = -1;
   /** K1247 s23 (ob=1): the band's placement pass (band_place.ts, once per reply), its tables, the placed
-   *  vertices (BAND_PLACE_STRIDE words) and the VAO the band program draws them through. */
-  private bp: { prog: WebGLProgram; u: Record<"tab" | "fb" | "sl" | "pass" | "chain" | "ci" | "pf" | "nd" | "h" | "w", U>; tf: WebGLTransformFeedback; buf: WebGLBuffer; vao: WebGLVertexArrayObject; tex: Record<"tab" | "fb" | "sl" | "pf", WebGLTexture>; n: number } | null = null;
+   *  quads (s25: BAND_QUAD_STRIDE words a quad, BAND_QUAD_VS) and the VAO the band's quad programs (rv)
+   *  draw them through as instances; hw: the h, W the last placement used. */
+  private bp: { prog: WebGLProgram; u: Record<"tab" | "fb" | "sl" | "pass" | "chain" | "ci" | "pf" | "nd" | "h" | "w", U>; tf: WebGLTransformFeedback; buf: WebGLBuffer; vao: WebGLVertexArrayObject; tex: Record<"tab" | "fb" | "sl" | "pf", WebGLTexture>; n: number; rv: [WebGLProgram, WebGLProgram]; uRV: [UB, UB]; qU: [Record<"fb" | "sl" | "h" | "w", U>, Record<"fb" | "sl" | "h" | "w", U>]; hw: [number, number] } | null = null;
   private bpOn = false;
   /** K1247 s24 (ob=1): the placement pass waiting for the next draw (nD, h, W): it runs at the start of
    *  the frame that draws the reply, not in the reply's message task, so the frame pays for it. */
@@ -735,18 +736,18 @@ class OutlinePass {
       this.recU.set(p, { chain: u("uRecChain"), ci: u("uRecCi"), strip: u("uRecStrip"), fb: u("uRecFb"), pf: u("uRecPf"), hw: u("uRecHW"), zt: u("uRecZt"), sag: u("uRecSag") });
     }
     if (BAND_REC) {
-      const p = mk(BAND_PLACE_VS, BAND_PLACE_FS, "band placement", BAND_PLACE_OUT);
+      const p = mk(BAND_QUAD_VS, BAND_PLACE_FS, "band placement", BAND_QUAD_OUT);
       const u = (n: string): U => gl.getUniformLocation(p, n);
       const tx = (): WebGLTexture => gl.createTexture()!;
-      this.bp = { prog: p, u: { tab: u("uBpTab"), fb: u("uBpFb"), sl: u("uBpSl"), pass: u("uBpPass"), chain: u("uRecChain"), ci: u("uRecCi"), pf: u("uRecPf"), nd: u("uBpND"), h: u("uBpH"), w: u("uBpW") }, tf: gl.createTransformFeedback()!, buf: gl.createBuffer()!, vao: gl.createVertexArray()!, tex: { tab: tx(), fb: tx(), sl: tx(), pf: tx() }, n: -1 };
-      // The band program's inputs from the placed vertices: aPos, aA, aCh, aSl.
+      const rvs = bandQuadVs(BAND_VS);
+      const rv: [WebGLProgram, WebGLProgram] = [mk(rvs, krvSource(BAND_FS, true), "band quads"), mk(rvs, krvSource(BAND_FS, false), "band quads (no reveal)")];
+      const qu = (q: WebGLProgram): Record<"fb" | "sl" | "h" | "w", U> => ({ fb: gl.getUniformLocation(q, "uBqFb"), sl: gl.getUniformLocation(q, "uBqSl"), h: gl.getUniformLocation(q, "uBqH"), w: gl.getUniformLocation(q, "uBqW") });
+      this.bp = { prog: p, u: { tab: u("uBpTab"), fb: u("uBpFb"), sl: u("uBpSl"), pass: u("uBpPass"), chain: u("uRecChain"), ci: u("uRecCi"), pf: u("uRecPf"), nd: u("uBpND"), h: u("uBpH"), w: u("uBpW") }, tf: gl.createTransformFeedback()!, buf: gl.createBuffer()!, vao: gl.createVertexArray()!, tex: { tab: tx(), fb: tx(), sl: tx(), pf: tx() }, n: -1, rv, uRV: [this.bandUniforms(rv[0]), this.bandUniforms(rv[1])], qU: [qu(rv[0]), qu(rv[1])], hw: [0, 0] };
+      // The band's quad programs read the placed quads as instances (qO, qI, qS, qM, qL; divisor 1).
       gl.bindVertexArray(this.bp.vao);
       gl.bindBuffer(gl.ARRAY_BUFFER, this.bp.buf);
-      const sb = 4 * BAND_PLACE_STRIDE;
-      gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, sb, 0);
-      gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 4, gl.FLOAT, false, sb, 8);
-      gl.enableVertexAttribArray(2); gl.vertexAttribIPointer(2, 1, gl.INT, sb, 24);
-      gl.enableVertexAttribArray(3); gl.vertexAttribIPointer(3, 4, gl.INT, sb, 28);
+      const sb = 4 * BAND_QUAD_STRIDE;
+      for (let k = 0; k < 5; k++) { gl.enableVertexAttribArray(k); gl.vertexAttribPointer(k, 4, gl.FLOAT, false, sb, 16 * k); gl.vertexAttribDivisor(k, 1); }
       gl.bindVertexArray(null);
       gl.bindBuffer(gl.ARRAY_BUFFER, null);
     }
@@ -1020,14 +1021,16 @@ class OutlinePass {
     if (this.tfCpu.length > 512) this.tfCpu.shift();
   }
 
-  /** K1247 s23 (ob=1): the band's vertices placed into bp.buf, once per reply (transform feedback
-   *  through BAND_PLACE_VS over the gl_VertexID of every band vertex); the band program draws from it. */
+  /** K1247 s23 (ob=1): the band placed into bp.buf, once per reply (transform feedback); the band's quad
+   *  programs draw from it. s25: one invocation per QUAD (BAND_QUAD_VS over gl_VertexID = quad), each
+   *  column placed once at both widths, the slots once; s23 ran BAND_PLACE_VS over every vertex. */
   private placeBand(nD: number, h: number, W: number): void {
-    const gl = this.gl; const bp = this.bp; const n = this.nBand;
+    const gl = this.gl; const bp = this.bp; const n = Math.floor(this.nBand / 6);
     if (!bp || n <= 0) return;
+    bp.hw = [h, W];
     if (bp.n !== n) {
       gl.bindBuffer(gl.ARRAY_BUFFER, bp.buf);
-      gl.bufferData(gl.ARRAY_BUFFER, 4 * BAND_PLACE_STRIDE * n, gl.DYNAMIC_COPY);
+      gl.bufferData(gl.ARRAY_BUFFER, 4 * BAND_QUAD_STRIDE * n, gl.DYNAMIC_COPY);
       gl.bindBuffer(gl.ARRAY_BUFFER, null);
       bp.n = n;
     }
@@ -1172,8 +1175,8 @@ class OutlinePass {
       const li = lite ? 1 : 0;
       this.app = this.appV[li];
       this.uA = this.uAV[li];
-      this.band = this.bandV[li];
-      this.uB = this.uBV[li];
+      this.band = this.bpOn && this.bp ? this.bp.rv[li] : this.bandV[li];
+      this.uB = this.bpOn && this.bp ? this.bp.uRV[li] : this.uBV[li];
       this.drewLite = li;
       if (fade) {
         gl.enable(gl.BLEND);
@@ -1290,8 +1293,24 @@ class OutlinePass {
         gl.bindTexture(gl.TEXTURE_2D, this.swTex);
         gl.uniform1i(this.uB.sw, 8);
       }
-      gl.bindVertexArray(this.bpOn && this.bp ? this.bp.vao : this.bVao);
-      gl.drawArrays(gl.TRIANGLES, 0, this.nBand);
+      if (this.bpOn && this.bp) {
+        // K1247 s25: the placed quads as instances of 6 corners; worker-placed quads read uBpFb / uBpSl.
+        const bp = this.bp; const qu = bp.qU[this.bp.rv[0] === this.band ? 0 : 1];
+        gl.activeTexture(gl.TEXTURE9);
+        gl.bindTexture(gl.TEXTURE_2D, bp.tex.fb);
+        gl.uniform1i(qu.fb, 9);
+        gl.activeTexture(gl.TEXTURE10);
+        gl.bindTexture(gl.TEXTURE_2D, bp.tex.sl);
+        gl.uniform1i(qu.sl, 10);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.uniform1f(qu.h, bp.hw[0]);
+        gl.uniform1f(qu.w, bp.hw[1]);
+        gl.bindVertexArray(bp.vao);
+        gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, Math.floor(this.nBand / 6));
+      } else {
+        gl.bindVertexArray(this.bVao);
+        gl.drawArrays(gl.TRIANGLES, 0, this.nBand);
+      }
       gl.disable(gl.BLEND);
       if (swl && ap) {
         // K1291 s3: the rainbow's swell (paint.ts swellStrip) after the band,
@@ -1383,6 +1402,7 @@ class OutlinePass {
     if (this.placedBuf) gl.deleteBuffer(this.placedBuf);
     if (this.bp) {
       gl.deleteProgram(this.bp.prog);
+      for (const p of this.bp.rv) gl.deleteProgram(p);
       gl.deleteTransformFeedback(this.bp.tf);
       gl.deleteBuffer(this.bp.buf);
       gl.deleteVertexArray(this.bp.vao);
