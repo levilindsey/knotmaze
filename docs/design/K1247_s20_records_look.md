@@ -76,3 +76,58 @@ Under 40 lines:
 - your last SHA.
 
 End with `Ledger items` and K1247's handle fields.
+
+## Handoff (stage 20 agent, 2026-11-11)
+
+Commits on `worktree-agent-a095e7cff519b9abd` (base e7a90e53): 00aab547 (mode 4: record columns on
+the border's own polygon), 9479e939 (rec_glsl places by mode 4), 31b58786 (the flip), 70032712 (tools),
+a85e8da6 (the bench clock), 8939b5a6 (the K299 rounding sites), then this handoff.
+
+1. **Cracks** (k1247s20_crack.ts against form B, fill / paper px; `out/s20/`): oe=1 before (s19)
+   def 52/177, muse_hash 253/471, g41_user_tw64 15/131; after def 44/61, muse_hash 242/259,
+   g41 13/56; off def 44/60, muse_hash 243/266, g41 13/55. Fill matches off on all three; paper is
+   within 1 px of off but 1.7% (def) and 1.8% (g41) over, so the 1% bar is missed on those two by one
+   pixel each. The def pixel is strip#829's R piece starting on a junction fillet arc (6.863, 25.762)
+   that is not on the chain's polygon; not fixed.
+2. **Junction boundaries.** App paint at rest (phw=0 same state, final build, default vs oe=0):
+   def 33 px, fat 26 px scattered (at most 3 px a 240 px window) beyond the start marker's per-load
+   flip, against off-vs-off controls of 17 / 20 px: nothing visible, nothing to fix
+   (`crops/app_rest_{def,fat}.png`, controls `_ctl`). Per-chain hues only: the s19 spots
+   (`crops/s19spots_{def,muse_hash}.png`; muse_hash f18 1308 -> 0 px) leave the junction owner swap at
+   muse_hash f8 (16.20, 19.83), 1034 px; the s20 worst drag spots (`crops/{def,muse_hash,fat}.png`,
+   picked by k1247s18_fill.ts's largest fill-vertex move on vs off: 6.7 device px def, 19.1
+   muse_hash, 6.0 fat) differ only in where the hue boundaries fall.
+   App paint mid-drag is not compared: the app has no replay of a captured scene, so two drags
+   never share a state.
+3. **Default flipped** (31b58786): `src/app/frame_loop.ts` sets `__knotOutlineFillRec` under
+   `rp=outline` unless `oe=0`. Off-outline links are untouched; no `outline_port.test.ts` pin moved
+   (none sets fillRec).
+4. **Speed** (ABBA under the perf lock, master 2d547152 vs 31b58786, both at defaults;
+   `out/s20/bench_{def,fat}.json`, re-run with the fixed frame clock in `bench2_{def,fat}.json`):
+   frame ms from the first draw to a readPixels (p50/p95), master runs 1 and 4, branch runs 2 and 3:
+   def rest 6.5/6.9, 6.0/6.4 vs 5.9/6.4, 5.9/6.4; mid-drag 8.7/12.6, 8.9/13.3 vs 8.2/10.8, 8.3/11.0.
+   fat rest 6.2/6.4, 6.2/6.6 vs 6.1/6.4, 6.2/6.6; mid-drag 8.8/13.1, 9.2/13.4 vs 8.6/11.2, 8.6/11.2.
+   The mid-drag rAF interval is p50 34-38 ms and p95 51-63 ms on both. Worker frame p50/p95: def
+   191/341, 187/360 vs 172/247, 168/205; fat 200/355, 199/336 vs 164/216, 169/212. Its fill p50:
+   def 46/45 vs 28/29 ms, fat 50/49 vs 30/29; its paint 7.1-7.5 vs 3.0-3.6. Reply 32.1-32.8 MB vs
+   22.8-23.3 MB. First structure: def 672/594 vs 880/875 ms, fat 620/532 vs 723/701, so about
+   +200 ms with records (left). The first run (`bench_*.json`) read the branch's mid-drag p95 at
+   53-76 ms. That was the probe: the placement's transform-feedback draw runs in the worker reply's
+   message task, between frames, and started the frame clock early. `k1247s18_bench.mjs` now skips
+   draws inside a TF pass (a85e8da6). The pass on its own (`k1247s20_tfprobe.mjs`, readPixels-synced,
+   def at rest, 280,193 points): p50 2.6 ms of GPU, max 15.0; the first draw after it p50 3.8, max
+   24.7. The frame clock starts after the pass, so the frame numbers count only the part of it still
+   on the GPU when a frame draws.
+5. **Crops** (`.claude/probes/K1247/out/s20/crops/`): per-chain hues `def.png`, `muse_hash.png`,
+   `fat.png` (the five worst spots per drag, off | on | |diff|), `s19spots_*.png`; app paint at rest
+   `app_rest_def.png`, `app_rest_fat.png` (+ `_ctl`).
+6. **Checks:** `npm test` green on 8939b5a6 (tsc, then 225 files / 2927 tests passed, 2 files skipped); no golden snapshot moved. 8939b5a6 lists mode 4's three rounded quotients in rec_glsl.ts in `paint_ring_lap.test.ts` (K299), each with why it is benign.
+
+**Tools:** `k1247s20_crack.ts` (census), `k1247s20_appdiff.mjs` (app-paint A/B crops),
+`k1247s20_bench.ps1` (def + fat ABBA in one lock), `k1247s20_tfprobe.mjs` (the placement pass's GPU
+cost), `k1247s19_lib.mjs` twin4 (mode 4's float64 twin). `k1247s18_bench.mjs` now ignores draws inside
+a transform-feedback pass.
+
+**Left:** the 1 px fillet-arc crack (def, g41); the muse_hash f8 owner swap (hues only); an app-paint
+drag A/B (needs a scene replay hook); the phone (PowerVR) check of the mode-4 shader, now the default;
+the first structure's +200 ms with records; the 1 ms worker fill target (s19).
