@@ -69,7 +69,7 @@ const BENCH = (SEC) => new Promise((resolve) => {
       res.outline = { replies: nr, draws: nd, restructures: o.stats.restructures, rebuilds: o.stats.rebuilds.map((x) => `${x.cause} ${x.ms}`) };
       cols.forEach((c, i) => { res.outline[c] = s(rep.map((x) => x[i])); });
       res.outline.draw = s(nd > 0 ? o.stats.drawMsLog.slice(-Math.min(nd, o.stats.drawMsLog.length)) : []);
-      res.outline.structureMs = o.stats.structureMs; res.outline.replyBytes = o.stats.replyBytes;
+      res.outline.structureMs = o.stats.structureMs; res.outline.replyBytes = o.stats.replyBytes; res.outline.fillRec = o.stats.fillRec;
     }
     resolve(res);
   };

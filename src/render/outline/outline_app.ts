@@ -45,7 +45,8 @@ import { RUN_MAP_W, RV_W, SWELL_STRIDE, appRunMap, chainArcMap, revealMaskTex, s
 import type { OutlineReply, OutlineRequest } from "./outline_worker";
 
 const CTRL_ARC = 0.47;
-const FILL_REC = typeof location !== "undefined" && new URLSearchParams(location.search).get("oe") === "1";
+// K1247 s18: oe=1, as src/app/frame_loop.ts read it (the link rewrite drops the key before this loads).
+const FILL_REC = (globalThis as { __knotOutlineFillRec?: boolean }).__knotOutlineFillRec === true;
 
 /** K1247 s18: a reply's typed-array bytes, top level and one level down (the bench's reply size). */
 function replyBytes(r: object): number {
@@ -1208,6 +1209,8 @@ export function createOutlineApp(ctx: SceneExportCtx, requestFrame: () => void):
     bandCount: 0,
     /** K1247 s18: the last reply's typed-array bytes (top level and one level down). */
     replyBytes: 0,
+    /** K1247 s18: oe=1 is on (the fill's strips placed as records). */
+    fillRec: FILL_REC,
     triangles: 0,
     chains: 0,
     key: "",

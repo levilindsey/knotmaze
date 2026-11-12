@@ -214,6 +214,9 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
   let labelLoading = false;
   const outlineFlag =
     typeof location !== "undefined" && new URLSearchParams(location.search).get("rp") === "outline";
+  // K1247 s18: `oe=1` (the fill's records), read here because the link
+  // rewrite drops the key before outline_app.ts loads.
+  if (outlineFlag && new URLSearchParams(location.search).get("oe") === "1") (globalThis as { __knotOutlineFillRec?: boolean }).__knotOutlineFillRec = true;
   const labelFrame = (): void => {
     const r = scene.renderer;
     const kind = outlineFlag ? "outline" : params.fieldBand ? "field" : "label";
