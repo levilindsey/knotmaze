@@ -1,4 +1,5 @@
-// K1247 s19: the shader placement (fillRec 2: rec_glsl.ts) vs stage 18's CPU placement (fillRec 1)
+// K1247 s19: the shader placement (fillRec 2: rec_glsl.ts) vs stage 18's CPU placement (fillRec 1; --cpu=3:
+// fillRec 3, its full CPU twin since s21, the reference since s26)
 // over a captured drag, in Node, through a float32 twin of the shader; with --gpu=<frame> the real
 // shader also runs on that frame in headed Chrome under transform feedback (GPU vs twin, GPU vs CPU).
 // Reports device px over every live fill vertex (the records twin-placed, the rest fillRec 2's own),
@@ -20,6 +21,7 @@ const dir = args[0]; const outJson = args[1];
 const files = readdirSync(dir).filter((f) => /^f\d+\.json$/.test(f)).sort();
 const scenes: SceneIn[] = files.map((f) => { const s = JSON.parse(readFileSync(join(dir, f), "utf8")); s.look.ctrlArc ??= 0.47; delete s.look.fillRec; return s; });
 const sc0 = scenes[0];
+const CPU_REC = Number(process.argv.find((a) => a.startsWith("--cpu="))?.slice(6) ?? 1);
 const px = sc0.camera.pxPerUnit * (sc0.camera.dpr || 1);
 const st = structure(sc0);
 const fs = fillStructure(st, fillResolution(st, frame(st, sc0)));
@@ -39,7 +41,7 @@ let gpuIn: Record<string, unknown> | null = null; let gpuWant: { tw: number[]; c
 for (let k = 0; k < scenes.length; k++) {
   const sc = alignJunctionArms(st, scenes[k]);
   const tb = frame(st, sc); const zz = zChains(sc);
-  const a = fillFrame(fs, st, tb, { ...sc, look: { ...sc.look, fillRec: 1 } }, zz);
+  const a = fillFrame(fs, st, tb, { ...sc, look: { ...sc.look, fillRec: CPU_REC } }, zz);
   const b = fillFrame(fs, st, tb, { ...sc, look: { ...sc.look, fillRec: 2 } }, zz);
   if (!fr0) fr0 = a;
   const rec = b.rec!; const { CT, CI } = chainTables(zz);
@@ -119,6 +121,9 @@ if (gpuIn && gpuWant) {
       dT.push(Math.hypot(g[0] - t[0], g[1] - t[1]) * px); dC.push(Math.hypot(g[0] - c[0], g[1] - c[1]) * px);
       kT.push(Math.abs(g[2] - c[2])); sC.push(Math.abs(g[3] - c[3]));
     }
+    // K1247 s26: the vertices over 1/4 px (strip ordinal, row, column), worst first.
+    const big = dT.map((d, q) => [d, q]).filter((e) => e[0] > 0.25).sort((a, b) => b[0] - a[0]);
+    console.log(`GPU vs twin over 1/4 px: ${big.length}${big.length ? ': ' + big.slice(0, 8).map(([d, q]) => `o${gpuIn.recO[q]} r${gpuIn.recRI[q] >> 16} i${gpuIn.recRI[q] & 65535} ${d.toFixed(2)}`).join(', ') + `; worst strip mode/N/spans ${[7, 9, 10, 11].map((k) => gpuIn.T[4 * REC_TEXELS * gpuIn.recO[big[0][1]] + k]).join("/")}` : ''}`);
     gpuRes = { gpu: String(out.gpu), glError: String(out.err), vsTwin: qs(dT), vsCpu: qs(dC), keyVsCpu: qs(kT), sVsCpu: qs(sC) };
     console.log(`GPU frame ${gpuFrame} (${out.gpu}, glError ${out.err}): ${M} records; device px GPU vs twin ${qs(dT)}; GPU vs CPU ${qs(dC)}; |key| ${qs(kT)}; |s| ${qs(sC)}`);
   } finally { await browser.close(); rmSync(profile, { recursive: true, force: true }); }

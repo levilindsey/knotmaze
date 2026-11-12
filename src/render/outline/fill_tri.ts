@@ -73,6 +73,7 @@ import type { DiagramStructure, OutlineTable, SceneIn } from "./outline";
 import { zChains, zAtC, zPastC, footNear } from "./draw";
 import { chainTangents, colAt, colRow, frameAt, offsetAt, offsetRow, POLY, pointAt, recSideOk, recTables, zAt1, zRow } from "./chain_frame";
 import { paintAt, runAt, type SectionPaint } from "./paint";
+import { REC_KEY_FLOOR, REC_KEY_MID, REC_KEY_ROW, REC_TEXELS } from "./rec_glsl";
 
 export const CAP_M = 17;
 export const ARC_K = 16;
@@ -292,9 +293,9 @@ export interface FillFrame {
   rec?: { strip: Float32Array; fb: Float32Array; nFb: number; hW: number; zt: number; pf: Float32Array | null };
 }
 
-/** K1247 s19: texels per record strip in the strip table: (rL0, rL1, rR0, rR1), (s0, ds, sg, mode:
- *  1 record, 0 fallback), (chain, N, fallback base, 0). */
-export const REC_TEXELS = 3;
+// K1247 s19, s26: the strip table's layout and key modes live with the shader that reads them
+// (rec_glsl.ts, which the main thread loads without this file).
+export { REC_TEXELS, REC_KEY_MID, REC_KEY_FLOOR, REC_KEY_ROW } from "./rec_glsl";
 /** K1247 s19: the strip columns 2..N-2 of a strip with both border pieces and N >= 4 are records the
  *  vertex shader places (oe=1); columns 0, 1, N-1 and N stay the CPU's (the moving ends, and the
  *  columns a junction writes paint slots into). */
@@ -752,6 +753,48 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
     if (loop && aSt === bSt && ds < 1e-9) ds = c.len;
     const rL0 = pl.s0; const rL1 = wrap(pl.s1 - pl.s0); let rR0 = pr.s0; const rR1 = wrap(pr.s1 - pr.s0);
     if (loop) rR0 += c.len * Math.round((rL0 - rR0) / c.len);
+    // K1247 s26 (K1322): fillFrame's strip rule (K1314 s5, s6), line for line (tie: test/render/
+    // rec_tie.test.ts). Border ranges that differ (reKey) sample on one s scale, their union (matched),
+    // unless they part at a junction end (JEND_GATE): side L takes columns pL0 .. pL0 + nL, R likewise,
+    // and a column past its side's span holds at its piece's end. The keys are fillFrame's: border rows
+    // by their own side's s on that scale, the centre by the depth at their midpoint (REC_KEY_MID);
+    // ranges that differ unmatched, the same with the centre floored at the row's s (REC_KEY_FLOOR);
+    // equal ranges, every row by the row's s (REC_KEY_ROW). Keyed by colAt's own s (s19 .. s25), the
+    // centre sat between two sides a range offset apart and the strip parted from the census's fill
+    // (g41_ring_tw64 x67, x68; muse_hash j101). K1314 s7's exception, line for line (mirA, mirB): an
+    // END arm's junction end whose consumed side stops at a dropped corner's V, consumed over more than
+    // the sides overlap and the overlap h / 4 or more, keeps the matched scale, and there a column past
+    // one side's span but within the other's is the other side mirrored across the chain (recMir).
+    const reKey = rL0 !== rR0 || rL1 !== rR1;
+    const armKind = (sti: number): string | null => (stationS(sti) !== null ? st.arms[st.stationsD[sti].arm].kind : null);
+    const droppedAt = (sti: number, x: number, y: number): boolean => {
+      const ai = st.stationsD[sti].arm;
+      for (let k = 0; k < st.corners.length; k++) {
+        const cn = st.corners[k]; if (cn.aArm !== ai && cn.bArm !== ai) continue;
+        const o = table.corners[k]; if (o && !o.ok && Math.abs(o.Vx - x) < 1e-4 && Math.abs(o.Vy - y) < 1e-4) return true;
+      }
+      return false;
+    };
+    const partA = rL0 !== rR0; const partB = rL0 + rL1 !== rR0 + rR1;
+    const ovAB = Math.min(rL0 + rL1, rR0 + rR1) - Math.max(rL0, rR0);
+    const nl0 = pl.pts.length; const nr0 = pr.pts.length;
+    let mirA = partA && armKind(aSt) === "end" && ovAB < Math.abs(rL0 - rR0) &&
+      (rL0 > rR0 ? droppedAt(aSt, pl.pts[0], pl.pts[1]) : droppedAt(aSt, pr.pts[0], pr.pts[1]));
+    let mirB = partB && armKind(bSt) === "end" && ovAB < Math.abs(rL0 + rL1 - rR0 - rR1) &&
+      (rL0 + rL1 < rR0 + rR1 ? droppedAt(bSt, pl.pts[nl0 - 2], pl.pts[nl0 - 1]) : droppedAt(bSt, pr.pts[nr0 - 2], pr.pts[nr0 - 1]));
+    if (ovAB < 0.25 * table.h) { mirA = false; mirB = false; }
+    const jEnd = (partA && !mirA && armKind(aSt) !== null) || (partB && !mirB && armKind(bSt) !== null);
+    let pL0 = 0; let nL = N; let pR0 = 0; let nR = N; let mU0 = 0; let mUl = 0; let matched = false;
+    if (reKey && !(JEND_GATE && jEnd)) {
+      const u0 = Math.min(rL0, rR0); const u1 = Math.max(rL0 + rL1, rR0 + rR1);
+      const ov = Math.min(rL0 + rL1, rR0 + rR1) - Math.max(rL0, rR0);
+      if (u1 - u0 > 1e-9 && ov > 0) {
+        const ix = (s: number): number => Math.round(((s - u0) / (u1 - u0)) * N);
+        const l0 = ix(rL0); const l1 = ix(rL0 + rL1); const q0 = ix(rR0); const q1 = ix(rR0 + rR1);
+        if (l1 - l0 >= 1 && q1 - q0 >= 1) { pL0 = l0; nL = l1 - l0; pR0 = q0; nR = q1 - q0; mU0 = u0; mUl = u1 - u0; matched = true; }
+      }
+    }
+    if (W * W > 16777216) return false; // a span packs into one float32 (pL0 * W + nL)
     const nl = pl.pts.length >> 1; const nr = pr.pts.length >> 1; const m = nl >> 1;
     pointAt(c, rL0 + (rL1 * m) / Math.max(1, nl - 1), fa);
     let sg = (pl.pts[2 * m] - fa[0]) * -fa[3] + (pl.pts[2 * m + 1] - fa[1]) * fa[2] >= 0 ? 1 : -1;
@@ -772,14 +815,42 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
     const xa = pl.pts[0]; const ya = pl.pts[1]; const xb = pl.pts[2 * nl - 2]; const yb = pl.pts[2 * nl - 1];
     const d2 = (o: number, x: number, y: number): number => (P4[o] - x) ** 2 + (P4[o + 1] - y) ** 2;
     if (d2(4, xa, ya) + d2(6, xb, yb) < d2(0, xa, ya) + d2(2, xb, yb)) { sg = -sg; sides(); }
-    if (recT && !(recSideOk(c, recT, it.pi, rL0, rL1, N, sg) && recSideOk(c, recT, it.pi, rR0, rR1, N, -sg))) return false;
+    if (recT && !(recSideOk(c, recT, it.pi, rL0, rL1, nL, sg) && recSideOk(c, recT, it.pi, rR0, rR1, nR, -sg))) return false;
     const b0 = it.base;
-    // ls, rs: the column's side s (mode 4: colAt's; NaN: uniform in s), keyed per side as recStrip's.
+    const xc = pr.pts[0]; const yc = pr.pts[1]; const xd = pr.pts[2 * nr - 2]; const yd = pr.pts[2 * nr - 1];
+    // Column i of side L (R: the right) into P4[oi]; returns its paint s (NaN: the key's s). k, the
+    // column on the side's span: 0 and n2 its piece's ends (held there past the span), else colAt
+    // over n2 columns (the shader's recSide).
+    const sideAt = (i: number, R: boolean, oi: number): number => {
+      const p0 = R ? pR0 : pL0; const n2 = R ? nR : nL; const k = Math.min(Math.max(i - p0, 0), n2);
+      const r0 = R ? rR0 : rL0; const r1 = R ? rR1 : rL1;
+      if (k === 0) { P4[oi] = R ? xc : xa; P4[oi + 1] = R ? yc : ya; return r0; }
+      if (k === n2) { P4[oi] = R ? xd : xb; P4[oi + 1] = R ? yd : yb; return r0 + r1; }
+      if (recT) return colAt(c, recT.pf, o4, Math.fround(r0), Math.fround(r1), n2, R ? -sg : sg, hW, k, P4, oi);
+      offsetAt(c, r0 + (r1 * k) / n2, R ? -sg : sg, hW, r1 / n2, P4, oi); return NaN;
+    };
+    const fr01 = (i: number, p0: number, n2: number): number => Math.min(Math.max((i - p0) / n2, 0), 1);
+    // K1314 s7 (MATCH_MIRROR at mirA / mirB): fillFrame's mirL / mirR. A side's piece without its own
+    // centre polyline (cpts) mirrors nothing there, as fillFrame's cOkL / cOkR.
+    const mirOn = MATCH_MIRROR && (mirA || mirB) && matched;
+    const cOkL = pl.cpts.length === pl.pts.length; const cOkR = pr.cpts.length === pr.pts.length;
+    const onChain = (i: number): boolean => { if (c.closed) return true; const s = mU0 + (mUl * i) / N; return s >= 0 && s <= c.len; };
+    const mirL = (i: number): boolean => mirOn && (i < pL0 ? mirA : mirB) && cOkR && !(i >= pL0 && i <= pL0 + nL) && i >= pR0 && i <= pR0 + nR && onChain(i);
+    const mirR = (i: number): boolean => mirOn && (i < pR0 ? mirA : mirB) && cOkL && !(i >= pR0 && i <= pR0 + nR) && i >= pL0 && i <= pL0 + nL && onChain(i);
+    // ls, rs: the column's paint s (mode 4: colAt's; NaN: the key's); keys as fillFrame's (above). A
+    // mirrored side is the other side reflected across the chain at that side's s, keyed and painted by it.
     const col = (i: number, lx: number, ly: number, rx: number, ry: number, ls = NaN, rs = NaN): void => {
-      const own = ls === ls;
-      const sL = own ? ls : rL0 + (rL1 * i) / N; const sR = own ? rs : rR0 + (rR1 * i) / N;
-      const s = own ? (sL + sR) / 2 : s0 + (ds * i) / N; const z = zAt1(c, s);
-      const zl = own ? zAt1(c, sL) : z; const zr = own ? zAt1(c, sR) : z;
+      const s = matched ? mU0 + (mUl * i) / N : s0 + (ds * i) / N;
+      const kL0 = matched ? rL0 + rL1 * fr01(i, pL0, nL) : rL0 + (rL1 * i) / N;
+      const kR0 = matched ? rR0 + rR1 * fr01(i, pR0, nR) : rR0 + (rR1 * i) / N;
+      const mL = mirL(i); const mR = mirR(i);
+      if (mL) { pointAt(c, rs === rs ? rs : kR0, fa); lx = 2 * fa[0] - rx; ly = 2 * fa[1] - ry; ls = rs; }
+      else if (mR) { pointAt(c, ls === ls ? ls : kL0, fa); rx = 2 * fa[0] - lx; ry = 2 * fa[1] - ly; rs = ls; }
+      const kL = mL ? kR0 : kL0; const kR = mR ? kL0 : kR0;
+      const zm = reKey ? zAt1(c, (kL + kR) / 2) : 0;
+      const z = !reKey ? zAt1(c, s) : matched ? zm : Math.max(zAt1(c, s), zm);
+      const zl = reKey ? zAt1(c, kL) : z; const zr = reKey ? zAt1(c, kR) : z;
+      const sL = ls === ls ? ls : kL; const sR = rs === rs ? rs : kR;
       const vL = b0 + i; const vC = vL + W; const vR = vC + W;
       pos[2 * vL] = lx; pos[2 * vL + 1] = ly; key[vL] = zl - zt; sv[vL] = s;
       pos[2 * vC] = (lx + rx) / 2; pos[2 * vC + 1] = (ly + ry) / 2; key[vC] = z; sv[vC] = s;
@@ -787,23 +858,31 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
       s4[SLOTS * vL] = sL; s4[SLOTS * vC] = (sL + sR) / 2; s4[SLOTS * vR] = sR;
       across[vL] = 1; across[vR] = 1;
     };
-    col(0, pl.pts[0], pl.pts[1], pr.pts[0], pr.pts[1]);
-    if (recT) { col(1, P4[0], P4[1], P4[4], P4[5], PS4[0], PS4[2]); col(N - 1, P4[2], P4[3], P4[6], P4[7], PS4[1], PS4[3]); }
-    else { col(1, P4[0], P4[1], P4[4], P4[5]); col(N - 1, P4[2], P4[3], P4[6], P4[7]); }
-    col(N, pl.pts[2 * nl - 2], pl.pts[2 * nl - 1], pr.pts[2 * nr - 2], pr.pts[2 * nr - 1]);
+    // Columns 1 and N-1: sides()'s unless the spans moved them.
+    if (matched) { PS4[0] = sideAt(1, false, 0); PS4[1] = sideAt(N - 1, false, 2); PS4[2] = sideAt(1, true, 4); PS4[3] = sideAt(N - 1, true, 6); }
+    else if (!recT) PS4.fill(NaN);
+    col(0, xa, ya, xc, yc, rL0, rR0);
+    col(1, P4[0], P4[1], P4[4], P4[5], PS4[0], PS4[2]); col(N - 1, P4[2], P4[3], P4[6], P4[7], PS4[1], PS4[3]);
+    col(N, xb, yb, xd, yd);
     // K1247 s21 (fillRec 3): columns 2..N-2 as the shader places them (mode 4: colAt on the float32
-    // ranges, by colRow; else the offset line uniform in s).
+    // ranges, by colRow over each side's span; else the offset line uniform in s).
     if (full && N >= 4) {
       if (rowL.length < 2 * W) { rowL = new Float64Array(2 * W); rowR = new Float64Array(2 * W); rowZ = new Float64Array(W); rowSL = new Float64Array(W); rowSR = new Float64Array(W); }
       if (recT) {
-        colRow(c, recT.pf, o4, Math.fround(rL0), Math.fround(rL1), N, sg, hW, 2, N - 2, rowL, rowSL);
-        colRow(c, recT.pf, o4, Math.fround(rR0), Math.fround(rR1), N, -sg, hW, 2, N - 2, rowR, rowSR);
-        for (let i = 2; i <= N - 2; i++) col(i, rowL[2 * i], rowL[2 * i + 1], rowR[2 * i], rowR[2 * i + 1], rowSL[i], rowSR[i]);
-      } else {
+        const row = (R: boolean, out: Float64Array, sOut: Float64Array): void => {
+          const p0 = R ? pR0 : pL0; const n2 = R ? nR : nL; const kLo = Math.max(1, 2 - p0); const kHi = Math.min(n2 - 1, N - 2 - p0);
+          if (kLo <= kHi) colRow(c, recT.pf, o4, Math.fround(R ? rR0 : rL0), Math.fround(R ? rR1 : rL1), n2, R ? -sg : sg, hW, kLo, kHi, out, sOut);
+        };
+        row(false, rowL, rowSL); row(true, rowR, rowSR);
         for (let i = 2; i <= N - 2; i++) {
-          offsetAt(c, rL0 + (rL1 * i) / N, sg, hW, rL1 / N, P4, 0); offsetAt(c, rR0 + (rR1 * i) / N, -sg, hW, rR1 / N, P4, 4);
-          col(i, P4[0], P4[1], P4[4], P4[5]);
+          const kl = Math.min(Math.max(i - pL0, 0), nL); const kr = Math.min(Math.max(i - pR0, 0), nR);
+          let lx: number; let ly: number; let ls: number; let rx: number; let ry: number; let rs: number;
+          if (kl === 0 || kl === nL) { ls = sideAt(i, false, 0); lx = P4[0]; ly = P4[1]; } else { lx = rowL[2 * kl]; ly = rowL[2 * kl + 1]; ls = rowSL[kl]; }
+          if (kr === 0 || kr === nR) { rs = sideAt(i, true, 4); rx = P4[4]; ry = P4[5]; } else { rx = rowR[2 * kr]; ry = rowR[2 * kr + 1]; rs = rowSR[kr]; }
+          col(i, lx, ly, rx, ry, ls, rs);
         }
+      } else {
+        for (let i = 2; i <= N - 2; i++) { const ls = sideAt(i, false, 0); const rs = sideAt(i, true, 4); col(i, P4[0], P4[1], P4[4], P4[5], ls, rs); }
       }
     }
     const rF = 4 * hW;
@@ -815,8 +894,13 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
     if (ord < 0) return true;
     const T = recTab!; const o = 4 * REC_TEXELS * ord;
     T[o] = rL0; T[o + 1] = rL1; T[o + 2] = rR0; T[o + 3] = rR1;
-    T[o + 4] = s0; T[o + 5] = ds; T[o + 6] = sg; T[o + 7] = 1;
-    T[o + 8] = it.pi; T[o + 9] = N; T[o + 10] = 0; T[o + 11] = 0;
+    // The key mode, with the mirrored ends (K1314 s7) as bits 2 (mirA) and 3 (mirB), and which sides
+    // have a centre polyline as bits 4 (L) and 5 (R).
+    T[o + 4] = s0; T[o + 5] = ds; T[o + 6] = sg;
+    T[o + 7] = (!reKey ? REC_KEY_ROW : matched ? REC_KEY_MID : REC_KEY_FLOOR) + (mirOn ? (mirA ? 4 : 0) + (mirB ? 8 : 0) + (cOkL ? 16 : 0) + (cOkR ? 32 : 0) : 0);
+    T[o + 8] = it.pi; T[o + 9] = N; T[o + 10] = pL0 * W + nL; T[o + 11] = pR0 * W + nR;
+    T[o + 12] = xa; T[o + 13] = ya; T[o + 14] = xb; T[o + 15] = yb;
+    T[o + 16] = xc; T[o + 17] = yc; T[o + 18] = xd; T[o + 19] = yd;
     return true;
   };
   let bufM = new Float64Array(0); let bufMC = new Float64Array(0);

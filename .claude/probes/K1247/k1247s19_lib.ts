@@ -1,9 +1,9 @@
 // K1247 s19: the float32 twin of rec_glsl.ts's recPlace (checked against the GPU by k1247s19_twin.ts --gpu),
 // and s19Frame: fillRec 2's frame with the record vertices placed by the twin, i.e. what oe=1 draws.
-import { REC_TEXELS, SLOTS, fillFrame, recStrips, type FillFrame, type FillStructure, type StripItem } from "../../../src/render/outline/fill_tri";
+import { REC_KEY_FLOOR, REC_KEY_MID, REC_KEY_ROW, REC_TEXELS, SLOTS, fillFrame, recStrips, type FillFrame, type FillStructure, type StripItem } from "../../../src/render/outline/fill_tri";
 import type { DiagramStructure, SceneIn } from "../../../src/render/outline/outline";
 import { zChains } from "../../../src/render/outline/draw";
-import { colAt, zAt1 } from "../../../src/render/outline/chain_frame";
+import { colAt, pointAt, zAt1 } from "../../../src/render/outline/chain_frame";
 
 export const F = Math.fround;
 // The chain table as band_gpu packs it (chainTex, chainInfo).
@@ -68,11 +68,35 @@ export function twin4(zz: ReturnType<typeof zChains>, pf: Float32Array, T: Float
   if (T[q + 7] < 0.5) { const p = 4 * (T[q + 10] + r * (N + 1) + i); return [FB[p], FB[p + 1], FB[p + 2], FB[p + 3]]; }
   const ci = T[q + 8]; const c = zz.zc[ci]; let b = 0; for (let k = 0; k < ci; k++) b += zz.zc[k].n;
   const P = new Float64Array(4);
-  const sL = r !== 2 ? colAt(c, pf, b, T[q], T[q + 1], N, T[q + 6], hW, i, P, 0) : 0;
-  const sR = r !== 0 ? colAt(c, pf, b, T[q + 2], T[q + 3], N, -T[q + 6], hW, i, P, 2) : 0;
-  if (r === 0) return [P[0], P[1], zAt1(c, sL) - zt, sL];
-  if (r === 2) return [P[2], P[3], zAt1(c, sR) - zt, sR];
-  const s = (sL + sR) / 2; return [(P[0] + P[2]) / 2, (P[1] + P[3]) / 2, zAt1(c, s), s];
+  // K1247 s26: each side over its span (held at its piece's ends past it), keyed as fillFrame (REC_KEY_*).
+  const W = N + 1; const cL = Math.round(T[q + 10]); const pL = Math.floor(cL / W); const nL = cL - pL * W;
+  const cR = Math.round(T[q + 11]); const pR = Math.floor(cR / W); const nR = cR - pR * W; const mw = Math.round(T[q + 7]); const md = mw & 3;
+  // K1314 s7's mirror (mode bits 2, 3: ends A, B; 4, 5: L, R have a centre polyline), as recPlace.
+  const mA = (mw & 4) !== 0; const mB = (mw & 8) !== 0; let mL = false; let mR = false;
+  if (mA || mB) {
+    const u0 = Math.min(T[q], T[q + 2]); const u1 = Math.max(T[q] + T[q + 1], T[q + 2] + T[q + 3]); const su = u0 + ((u1 - u0) * i) / N;
+    const onC = c.closed || (su >= 0 && su <= c.s[c.n - 1]);
+    mL = onC && (i < pL ? mA : mB) && (mw & 32) !== 0 && (i < pL || i > pL + nL) && i >= pR && i <= pR + nR;
+    mR = onC && (i < pR ? mA : mB) && (mw & 16) !== 0 && (i < pR || i > pR + nR) && i >= pL && i <= pL + nL;
+  }
+  const side = (sA: number, dS: number, sgn: number, p0: number, n2: number, e: number, oi: number): number => {
+    const k = Math.min(Math.max(i - p0, 0), n2);
+    if (k === 0) { P[oi] = T[e]; P[oi + 1] = T[e + 1]; return sA; }
+    if (k === n2) { P[oi] = T[e + 2]; P[oi + 1] = T[e + 3]; return sA + dS; }
+    return colAt(c, pf, b, sA, dS, n2, sgn, hW, k, P, oi);
+  };
+  let sL = !mL && (r !== 2 || mR) ? side(T[q], T[q + 1], T[q + 6], pL, nL, q + 12, 0) : 0;
+  let sR = !mR && (r !== 0 || mL) ? side(T[q + 2], T[q + 3], -T[q + 6], pR, nR, q + 16, 2) : 0;
+  const fa = new Float64Array(5);
+  if (mL) { pointAt(c, sR, fa); P[0] = 2 * fa[0] - P[2]; P[1] = 2 * fa[1] - P[3]; sL = sR; }
+  if (mR) { pointAt(c, sL, fa); P[2] = 2 * fa[0] - P[0]; P[3] = 2 * fa[1] - P[1]; sR = sL; }
+  const kL0 = T[q] + T[q + 1] * Math.min(Math.max((i - pL) / nL, 0), 1); const kR0 = T[q + 2] + T[q + 3] * Math.min(Math.max((i - pR) / nR, 0), 1);
+  const kL = mL ? kR0 : kL0; const kR = mR ? kL0 : kR0;
+  const zs = md !== REC_KEY_MID ? zAt1(c, T[q + 4] + (T[q + 5] * i) / N) : 0;
+  if (r === 0) return [P[0], P[1], (md === REC_KEY_ROW ? zs : zAt1(c, kL)) - zt, sL];
+  if (r === 2) return [P[2], P[3], (md === REC_KEY_ROW ? zs : zAt1(c, kR)) - zt, sR];
+  const zm = md === REC_KEY_ROW ? zs : zAt1(c, (kL + kR) / 2);
+  return [(P[0] + P[2]) / 2, (P[1] + P[3]) / 2, md === REC_KEY_FLOOR ? Math.max(zs, zm) : zm, (sL + sR) / 2];
 }
 /** The record vertices of fs: (fill vertex, strip ordinal, (row << 16) | column). */
 export function recVerts(fs: FillStructure): { recV: number[]; recO: number[]; recRI: number[] } {

@@ -89,3 +89,56 @@ Under 40 lines:
 - your last SHA.
 
 End with `Ledger items` and K1247's handle fields.
+
+## Handoff (K1247 s26 agent, 2026-11-12)
+
+Start 03:43:05, stop 05:42 (the 2 h cap). Branch `worktree-agent-aa4ea631c73c1c296`, on master 46e057fb (K1314 s7 merged).
+
+**K1322, the tie.** `recStrip2` (fill_tri.ts) and `recPlace` (rec_glsl.ts) key every strip as `fillFrame`
+does, including K1314 s7's mirror: the strip table's mode texel carries mirA, mirB (bits 2, 3) and the two
+sides' centre-polyline flags (bits 4, 5); a column past its span and inside the other side's takes the other
+side reflected across the chain (`recPt`), with its key and s. The CPU twin (fillRec 3, k1247s19_lib.ts
+twin4) follows. Largest key difference, fillFrame against fillRec 3, pre-s26 master -> after: muse_hash
+0.919 -> 0, muse_default_tw 0.403 -> 0, def 0.352 -> 0, fat 0.444 -> 0, ring 0.576 -> 0, user_tw42 0.323 -> 0,
+g41_def_tw42 0.211 -> 0, g41_def_tw64 0.615 -> 0, g41_ring_tw42 0.181 -> 0, g41_ring_tw64 0.579 -> 0,
+g41_user_tw42 0.323 -> 0, g41_user_tw64 0.635 -> 0 (row s too; out/s26/tie_before.json, tie_after_s7.json).
+Raster px differing: muse_hash 769 -> 234, def 383 -> 62, g41_def_tw64 632 -> 124 (the rest likewise; what is
+left is the columns' positions, which differ by design). Test: `test/render/rec_tie.test.ts` (ring fixture at
+rest and waved, g41_ring_tw42, and the mirrored strips of muse_hash and g41_user_tw64 where the untracked
+scenes exist; only those two scenes have mirrored strips, k1247s26_mir.ts). GPU against the twin: the mirror
+strip of g41_user_tw64 0.0008 px.
+
+**K1324, the specks.** `draw.ts` `contactPasses` skips a hit between two arms of one form B junction group
+(`groupArms`, slack 0.25 h, cut at the sentinel), switch `CONTACT_GROUPS`. Same-group passes on def 367 -> 0;
+the specks at def j174, ring j12, g41_ring_tw42 j12 and g41_user_tw64 j28 are gone
+(out/s26/master4x | after4x, 4x, taken before the s7 merge; the K1324 change does not touch the fill).
+
+**Census** (s26b against census_s7f; branch | s7f): **NOT DONE: stray_ink is above census_s7f.** Groups 0 and 1 (8 of 12 scenes;
+group 2 died on an EPERM writing the shared fbf cache and was re-run alone after the stop): stray 21 | 8, hard
+1 | 1, paper 0 | 0, broken 6 | 7, k1049 0 | 0 (census_s26b_0/1.txt against s7f on the same scenes). New
+stray_ink: muse_hash (19.30,10.81) 358 px, (5.34,21.58) 1522 px, (10.92,14.46), (21.21,21.32), (26.58,21.03)
+690 px, (24.65,23.28), (33.02,23.00), (12.76,31.58); g41_def_tw64 (30.55,6.42), (19.34,14.50), (29.56,13.35),
+(31.24,19.62), (10.46,31.50). muse_hash broken_ink 2 -> 1. The pre-merge census s26 had the same rise
+(muse_hash 9 -> 17, g41_def_tw64 0 -> 5 against s6), and the census rasters fillFrame, which this branch does
+not touch, so the inferred cause is K1324's skipped contact passes (draw.ts): not tested, and not cropped
+(no time left). Test it first: census muse_hash with `CONTACT_GROUPS = false`.
+
+**Main frame** (ABBA under the perf lock, ee53408f | c8ae2b86, out/s26/bench_s7_def.json, bench_s7_fat.json):
+def rest p50 5.8, 5.9 | 5.7, 5.7 ms, drag p50 6.7, 6.8 | 6.6, 6.6; fat rest 6.1, 6.1 | 5.9, 5.8, drag 7.1, 7.1 |
+7.0, 6.9. No worse. Worker fill p50 on fat 41.6, 35.9 | 42.7, 45.6 ms: within A's own spread, but note it.
+
+**Left:**
+- The reference draws a thin paper crack between two arms of one group that neither master nor the branch
+  draws (after4x crops).
+- GPU against the CPU twin: 118 vertices of muse_hash over 1/4 px, max 1.85 px, at FLOOR strips o375 and o850
+  row 2 (whole-span recCol rows, no mirror); def 1.63 px. s19 measured 0.002 px, so it entered between s20 and
+  s26 in the recCol path; when is not verified.
+- The mirror is tied only on untracked census scenes; a tracked fixture with a mirrored strip would pin it.
+- One shared rule (a function fillFrame and recStrip2 both call for the jEnd, mirror and keys) would end the
+  port-and-tie cycle; worth doing once K1314's corner work settles.
+- Inputs copied into this worktree, untracked: `.claude/probes/K868/scenes/muse_hash.json`,
+  `g41_user_tw64.json`. No caches copied.
+
+
+
+**Census, all 12 scenes** (group 2 re-run alone, merged as census_s26b): stray 31 | 11, hard 1 | 1, paper 0 | 0, broken 12 | 13, k1049 0 | 0. Group 2 adds muse_default_tw stray 0 -> 2 and g41_user_tw64 stray 3 -> 8 (census_s26b_2.txt).

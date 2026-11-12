@@ -2,13 +2,29 @@
 // under transform feedback once per reply; the s19 twin probe checks it against fill_tri's CPU placement).
 const BAND_TEX_W = 1024; // band_gpu.BAND_TEX_W
 
+/** K1247 s19: texels per record strip in the strip table (fill_tri recStrip2 writes it): (rL0, rL1,
+ *  rR0, rR1), (s0, ds, side sign, mode: 0 fallback, else REC_KEY_*), (chain, N, L span | fallback row,
+ *  R span), and (K1247 s26) the L piece's end points (x0, y0, x1, y1), then the R piece's. A span packs
+ *  the side's first column p0 and column count n2 on fillFrame's matched s scale (K1314 s6) as
+ *  p0 * (N + 1) + n2 (0, N where the side runs the whole strip); a column past it holds at its piece's
+ *  end point, unless the mode's bits 2 (end A) and 3 (end B) mirror it there (K1314 s7's mirA, mirB:
+ *  the other side reflected across the chain; bits 4 and 5: L, R have a centre polyline). */
+export const REC_TEXELS = 5;
+/** K1247 s26 (K1322): a record strip's keys, as fill_tri's fillFrame keys it (K1314 s5, s6). MID
+ *  (matched spans): each border row by its own side's s on the matched scale, the centre by the
+ *  depth at their midpoint. FLOOR (ranges that differ without matched spans: they part at a junction
+ *  end, or do not overlap): the same with the sides' s uniform over the strip and the centre floored
+ *  at the row's s (s0 + ds i / N). ROW (equal ranges): every row by the row's s. */
+export const REC_KEY_MID = 1;
+export const REC_KEY_FLOOR = 2;
+export const REC_KEY_ROW = 3;
+
 // K1247 s19 (oe=1): the fill's record vertices placed here from the chain
-// samples, as fill_tri's recStrip places them on the CPU (chain_frame's
-// colAt, zAt1; K1247 s20). aRec: the strip's
-// ordinal (-1: the worker placed the vertex) and (row << 16) | column. The
-// strip table holds REC_TEXELS texels a strip: (rL0, rL1, rR0, rR1), (s0,
-// ds, side sign, 1 record / 0 fallback), (chain, N, fallback row, 0); a
-// fallback strip's vertices come as rows (x, y, key, s) of uRecFb.
+// samples, as fill_tri's recStrip2 places them on the CPU (chain_frame's
+// colAt, zAt1; K1247 s20; fillFrame's spans and keys, s26). aRec: the
+// strip's ordinal (-1: the worker placed the vertex) and (row << 16) |
+// column. The strip table: REC_TEXELS above; a fallback strip's vertices
+// come as rows (x, y, key, s) of uRecFb.
 export const REC_GLSL = `layout(location=6) in ivec2 aRec;
 uniform highp sampler2D uRecChain;
 uniform highp sampler2D uRecCi;
@@ -107,17 +123,53 @@ float recZ(int b, int n, float L, float u0) {
   int k; int j; float f; recSeg(b, n, L, u, k, j, f);
   float zk = recT(uRecChain, b + k).w; return zk + (recT(uRecChain, b + j).w - zk) * f;
 }
+// chain_frame's pointAt: the chain's centre at arc u0 (a mirrored column reflects the other side across it).
+vec2 recPt(int b, int n, float L, float u0) {
+  float u = recWrap(b, n - 1, L, u0);
+  int k; int j; float f; recSeg(b, n, L, u, k, j, f);
+  vec2 pk = recT(uRecChain, b + k).xy; return pk + (recT(uRecChain, b + j).xy - pk) * f;
+}
+// K1247 s26: column i of a side whose span starts at column p0 and runs n2 columns: its piece's end
+// points (e.xy at s sA, e.zw at sA + dS) at and past the span's ends, else recCol over n2 columns.
+vec3 recSide(int b, int n, float L, float sA, float dS, float sgn, int i, int p0, int n2, vec4 e) {
+  int k = clamp(i - p0, 0, n2);
+  if (k == 0) return vec3(e.xy, sA);
+  if (k == n2) return vec3(e.zw, sA + dS);
+  return recCol(b, n, L, sA, dS, n2, sgn, k);
+}
 void recPlace(inout vec2 P, inout float key, inout vec4 S) {
   if (aRec.x < 0) return;
-  int q = 3 * aRec.x; vec4 t0 = recT(uRecStrip, q); vec4 t1 = recT(uRecStrip, q + 1); vec4 t2 = recT(uRecStrip, q + 2);
+  int q = ${REC_TEXELS} * aRec.x; vec4 t0 = recT(uRecStrip, q); vec4 t1 = recT(uRecStrip, q + 1); vec4 t2 = recT(uRecStrip, q + 2);
   int r = aRec.y >> 16; int i = aRec.y & 65535; int N = int(t2.y);
   if (t1.w < 0.5) { vec4 v = recT(uRecFb, int(t2.z) + r * (N + 1) + i); P = v.xy; key = v.z; S.x = v.w; return; }
   vec4 ci = recT(uRecCi, int(t2.x)); int b = int(ci.x); int n = int(ci.y); float L = ci.z;
-  vec3 cl = r != 2 ? recCol(b, n, L, t0.x, t0.y, N, t1.z, i) : vec3(0.0);
-  vec3 cr = r != 0 ? recCol(b, n, L, t0.z, t0.w, N, -t1.z, i) : vec3(0.0);
-  if (r == 0) { P = cl.xy; key = recZ(b, n, L, cl.z) - uRecZt; S.x = cl.z; }
-  else if (r == 2) { P = cr.xy; key = recZ(b, n, L, cr.z) - uRecZt; S.x = cr.z; }
-  else { float s = (cl.z + cr.z) / 2.0; P = (cl.xy + cr.xy) / 2.0; key = recZ(b, n, L, s); S.x = s; }
+  int W = N + 1; int cL = int(t2.z + 0.5); int pL = cL / W; int nL = cL - pL * W; int cR = int(t2.w + 0.5); int pR = cR / W; int nR = cR - pR * W;
+  int mw = int(t1.w + 0.5); int md = mw & 3;
+  // K1314 s7 (fill_tri recStrip2's mirL / mirR): a column past one side's span but within the other's,
+  // at a mirrored end (bit 2: before the span, bit 3: after it), on the chain, the other side having a
+  // centre polyline (bits 5, 4).
+  bool mA = (mw & 4) != 0; bool mB = (mw & 8) != 0; bool mL = false; bool mR = false;
+  if (mA || mB) {
+    float u0 = min(t0.x, t0.z); float u1 = max(t0.x + t0.y, t0.z + t0.w); float su = u0 + (u1 - u0) * float(i) / float(N);
+    bool onC = L > 0.0 || (su >= 0.0 && su <= recT(uRecChain, b + n - 1).z);
+    mL = onC && (i < pL ? mA : mB) && (mw & 32) != 0 && (i < pL || i > pL + nL) && i >= pR && i <= pR + nR;
+    mR = onC && (i < pR ? mA : mB) && (mw & 16) != 0 && (i < pR || i > pR + nR) && i >= pL && i <= pL + nL;
+  }
+  vec3 cl = !mL && (r != 2 || mR) ? recSide(b, n, L, t0.x, t0.y, t1.z, i, pL, nL, recT(uRecStrip, q + 3)) : vec3(0.0);
+  vec3 cr = !mR && (r != 0 || mL) ? recSide(b, n, L, t0.z, t0.w, -t1.z, i, pR, nR, recT(uRecStrip, q + 4)) : vec3(0.0);
+  if (mL) cl = vec3(2.0 * recPt(b, n, L, cr.z) - cr.xy, cr.z);
+  if (mR) cr = vec3(2.0 * recPt(b, n, L, cl.z) - cl.xy, cl.z);
+  // fillFrame's keys (REC_KEY_*): the sides' s on the strip's scale (a mirrored side: the other's), the row's s.
+  float kL0 = t0.x + t0.y * clamp(float(i - pL) / float(nL), 0.0, 1.0);
+  float kR0 = t0.z + t0.w * clamp(float(i - pR) / float(nR), 0.0, 1.0);
+  float kL = mL ? kR0 : kL0; float kR = mR ? kL0 : kR0;
+  float zs = md != ${REC_KEY_MID} ? recZ(b, n, L, t1.x + t1.y * float(i) / float(N)) : 0.0;
+  if (r == 0) { P = cl.xy; key = (md == ${REC_KEY_ROW} ? zs : recZ(b, n, L, kL)) - uRecZt; S.x = cl.z; }
+  else if (r == 2) { P = cr.xy; key = (md == ${REC_KEY_ROW} ? zs : recZ(b, n, L, kR)) - uRecZt; S.x = cr.z; }
+  else {
+    float zm = md == ${REC_KEY_ROW} ? zs : recZ(b, n, L, (kL + kR) / 2.0);
+    P = (cl.xy + cr.xy) / 2.0; key = md == ${REC_KEY_FLOOR} ? max(zs, zm) : zm; S.x = (cl.z + cr.z) / 2.0;
+  }
 }
 `;
 /** A fill vertex shader with the records placed in it (oe=1). */

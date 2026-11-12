@@ -273,7 +273,7 @@ export function zChains(scene: SceneIn): { zc: ZChain[]; passes: Pass[][]; idx: 
     let cp = CONTACT_CACHE.get(key);
     if (!cp) {
       const n0 = passes.map((P) => P.length);
-      contactPasses(zc, passes, h);
+      contactPasses(zc, passes, h, CONTACT_GROUPS ? groupArms(scene, zc, idx, passes, h, norm, tan, posAt) : null);
       cp = passes.map((P, i) => P.slice(n0[i]));
       if (CONTACT_CACHE.size >= 8) CONTACT_CACHE.delete(CONTACT_CACHE.keys().next().value as string);
       CONTACT_CACHE.set(key, cp);
@@ -302,13 +302,98 @@ export function zChains(scene: SceneIn): { zc: ZChain[]; passes: Pass[][]; idx: 
  *  (muse_hash j59: ch43's run 379 inside ch23's junction group), and the
  *  junction sweep moved 77 of 453 junctions toward form B by over 20 px,
  *  none away. The tie is continuous: a pass appears before any band point
- *  is within h of the partner. */
+ *  is within h of the partner.
+ *  K1247 s26 (K1324): but never between two arms of ONE junction group
+ *  (CONTACT_GROUPS): form B draws a group as one surface and never
+ *  tie-mixes it with itself, and such a tie faded the ink inside the
+ *  joint (def j174: c71 and c73's arms of group 119, ink 0.014; ring j12,
+ *  g41_ring_tw42 j12, g41_user_tw64 j28). A sample pair whose two s both
+ *  lie on arms of one group (groupArms: outline.ts's arms) is no hit.
+ *  OFF until it is narrowed (K1324): the skip clears those specks but
+ *  adds 20 stray_ink finds to the K1314 census (muse_hash 8 -> 16,
+ *  g41_def_tw64 0 -> 5, g41_user_tw64 3 -> 8, muse_default_tw 0 -> 2;
+ *  census_s26b against census_s26off, which equals census_s7f). */
 const CONTACT_PASSES = true;
+const CONTACT_GROUPS = false;
 const CONTACT_CACHE = new Map<string, Pass[][]>();
 /** Probe counters: contact sets built and reused. */
 export const contactStats = { built: 0, hits: 0 };
-function contactPasses(zc: ZChain[], passes: Pass[][], h: number): void {
+/** A junction arm on its chain: root s, direction, span L, group. */
+export interface GroupArm { s: number; dir: number; L: number; g: number }
+/** K1247 s26 (K1324): the junction arms per chain as outline.ts builds them
+ *  (form B's), in zChains' s: an end arm roots at its chain end (outline.ts
+ *  roots it at the extension to c', the same span past the chain's end).
+ *  Groups: junctions joined by a run with no crossing between their roots.
+ *  L: the next root, the chain's end, or a crossing's cut d - reach - h
+ *  (h cot(theta/2), or the quadratic reach on a shallow crossing). Not
+ *  ported: the cut a crossing BEHIND the root sets (outline.ts's pendArms,
+ *  k * uB, from the arm's corner angles), which only shortens an arm. passes
+ *  holds the crossing passes only (contactPasses appends after). */
+export function groupArms(scene: SceneIn, zc: ZChain[], idx: Map<number, number>, passes: Pass[][], h: number, norm: (c: ZChain, s: number) => number, tan: (c: ZChain, s: number) => [number, number], posAt: (c: ZChain, s: number) => [number, number]): GroupArm[][] {
+  const nJ = scene.junctions.length; const parent = new Int32Array(nJ); for (let q = 0; q < nJ; q++) parent[q] = q;
+  const find = (q: number): number => { while (parent[q] !== q) { parent[q] = parent[parent[q]]; q = parent[q]; } return q; };
+  const rt: { s: number; j: number; dir: number }[][] = zc.map(() => []);
+  scene.junctions.forEach((J, ji) => {
+    for (const arm of J.arms) {
+      const i = idx.get(arm.chain); if (i === undefined) continue;
+      const c = zc[i];
+      if (arm.kind === "end") { const st = Math.abs(arm.s) <= Math.abs(arm.s - c.len); rt[i].push({ s: st ? 0 : c.len, j: ji, dir: st ? 1 : -1 }); }
+      else rt[i].push({ s: norm(c, arm.s), j: ji, dir: arm.dir });
+    }
+  });
+  const crossBetween = (i: number, a: number, b: number): boolean => {
+    const c = zc[i]; const len = b - a;
+    for (const P of passes[i]) { let u = P.s - a; if (c.closed && c.len > 0) u = ((u % c.len) + c.len) % c.len; if (u > 1e-9 && u < len - 1e-9) return true; }
+    return false;
+  };
+  rt.forEach((R, i) => {
+    const r = R.slice().sort((u, v) => u.s - v.s);
+    for (let q = 0; q + 1 < r.length; q++) if (!crossBetween(i, r[q].s, r[q + 1].s)) parent[find(r[q].j)] = find(r[q + 1].j);
+    if (zc[i].closed && r.length > 1 && !crossBetween(i, r[r.length - 1].s, r[0].s + zc[i].len)) parent[find(r[r.length - 1].j)] = find(r[0].j);
+  });
+  const reachOf = (i: number, P: Pass, dirA: number): number => {
+    const C = zc[i]; const Q = zc[P.o]; const ta = tan(C, P.s); const tb = tan(Q, P.so);
+    const dot = ta[0] * tb[0] + ta[1] * tb[1]; const th = Math.acos(Math.min(1, Math.abs(dot)));
+    const t = Math.tan(th / 2); let reach = t > 1e-12 ? h / t : Infinity; const fl = 4 * h;
+    if (!(reach > fl)) return reach;
+    const sb = -dirA * dot >= 0 ? 1 : -1; const aC = 2 * Math.sin(th / 2); const T = 2 * h * Math.cos(th / 2);
+    const eA = C.closed ? C.len / 2 : dirA > 0 ? P.s : C.len - P.s;
+    let r = aC > 0 ? T / aC : Infinity; let e = fl;
+    for (let k = 0; k < 2; k++) {
+      const ek = Math.max(1e-6, Math.min(e, eA));
+      const A = posAt(C, P.s - dirA * ek); const B = posAt(Q, P.so + sb * ek);
+      const g = Math.hypot(A[0] - B[0], A[1] - B[1]);
+      const kap = Math.max(0, (2 * (g - aC * ek)) / (ek * ek));
+      r = (2 * T) / (aC + Math.sqrt(aC * aC + 2 * kap * T)); e = Math.max(fl, r);
+    }
+    return Math.min(reach, Math.max(fl, r));
+  };
+  return rt.map((R, i) => {
+    const c = zc[i];
+    return R.map((A) => {
+      const delta = (s: number): number => { let d = (s - A.s) * A.dir; if (c.closed && c.len > 0) d = ((d % c.len) + c.len) % c.len; return d; };
+      let L = c.closed ? c.len : A.dir > 0 ? c.len - A.s : A.s;
+      for (const q of R) { const d = delta(q.s); if (d > 1e-9 && d < L) L = d; }
+      for (const P of passes[i]) { const d = delta(P.s); if (d < -1e-12) continue; L = Math.min(L, d - reachOf(i, P, A.dir) - h); }
+      return { s: A.s, dir: A.dir, L: Math.max(0, L), g: find(A.j) };
+    });
+  });
+}
+function contactPasses(zc: ZChain[], passes: Pass[][], h: number, arms: GroupArm[][] | null): void {
   const R = 2.25 * h; const R2 = R * R; const SELF = 6 * h; const STEP = 0.5 * h; const DEEP2 = 1.6 * h * 1.6 * h;
+  // K1324: groupArms' reach is a port of form B's, within ~0.2h of it (crossing s from the passes, not the
+  // scene); the slack keeps a tie off the tip of form B's own arm.
+  const SLACK = 0.25 * h;
+  const onArm = (c: ZChain, A: GroupArm, s: number): boolean => { let d = (s - A.s) * A.dir; if (c.closed && c.len > 0) d = ((d % c.len) + c.len) % c.len; return d >= -1e-9 && d <= A.L + SLACK; };
+  /** Do chain i at s and chain j at so both lie on arms of one junction group? */
+  const sameGroup = (i: number, s: number, j: number, so: number): boolean => {
+    if (!arms) return false;
+    for (const A of arms[i]) {
+      if (!onArm(zc[i], A, s)) continue;
+      for (const B of arms[j]) if (B.g === A.g && onArm(zc[j], B, so)) return true;
+    }
+    return false;
+  };
   // Samples every STEP of arc (the chains' vertices are ~h/6 apart), in a counting-sort grid of R cells.
   let N = 0;
   for (const c of zc) N += Math.ceil(c.len / STEP) + 2;
@@ -364,6 +449,12 @@ function contactPasses(zc: ZChain[], passes: Pass[][], h: number): void {
           if (ds >= -P.lo - h && ds <= P.hi + h && Math.abs(dSC(O, P.so, sm)) <= P.rO + h) { covered = true; break; }
         }
         if (covered) continue;
+        if (sameGroup(i, sk, j, sm)) {
+          // K1324: a cut, so the stretches on either side stay apart (an arm shorter than 2h would
+          // otherwise be bridged, and the joined pass centred back on the group's arms).
+          const H = hits?.get(j); if (H && H[H.length - 1] !== Infinity) H.push(NaN, NaN, Infinity);
+          continue;
+        }
         if (!hits) hits = new Map();
         let H = hits.get(j); if (!H) { H = []; hits.set(j, H); }
         H.push(sk, sm, d2);
@@ -389,6 +480,8 @@ function contactPasses(zc: ZChain[], passes: Pass[][], h: number): void {
         passes[i].push({ s, o: j, so, lo: hs + h, hi: hs + h, rO: (mHi - mLo) / 2 + 2 * h });
       };
       for (let u = 3; u < H.length; u += 3) {
+        if (H[u + 2] === Infinity) { flush(u); a = u + 3; continue; } // a K1324 group cut
+        if (u === a) continue;
         if (Math.abs(dSC(C, H[u - 3], H[u])) > 2 * h || Math.abs(dSC(O, H[u - 2], H[u + 1])) > 4 * h) { flush(u); a = u; }
       }
       flush(H.length);
