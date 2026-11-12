@@ -17,7 +17,7 @@ import { OB_DI, alignJunctionArms, frame, structure, type DiagramStructure, type
 import { SLOTS, fillFrame, fillResolution, fillStructure, keyScale, recStrips, type FillFrame, type FillStructure, type StripItem } from "./fill_tri";
 import { baseHueFor, paintData, paintFrame, zChains, type PaintData } from "./draw";
 import { bandGpu, type BandGpu } from "./band_gpu";
-import { BandRecState } from "./band_rec";
+import { BandRecState, type BandRecGpu } from "./band_rec";
 import { sectionPaint } from "./paint";
 
 /** What fixes the structure: chains (id, closed), crossings (chains, over)
@@ -57,7 +57,7 @@ export class OutlineModel {
   /** Every fill key lies in [-ks, ks] (the depth mapping). */
   readonly ks: number;
   table: OutlineTable;
-  band: BandGpu;
+  band: BandGpu & { rec?: BandRecGpu };
   /** Wall ms of the last structure and the last frame (performance.now). */
   readonly structureMs: number;
   /** K1247 s21: the structure's parts, wall ms in the constructor's order. */
@@ -73,7 +73,7 @@ export class OutlineModel {
   /** K1247 s22: frames whose records failed and fell back to bandGpu (a piece without a key). */
   bandRecFallbacks = 0;
 
-  private bandOf(scene: SceneIn, zz: ReturnType<typeof zChains>): BandGpu {
+  private bandOf(scene: SceneIn, zz: ReturnType<typeof zChains>): BandGpu & { rec?: BandRecGpu } {
     if (this.bandRec) {
       try { return this.bandRec.band(this.st, this.table, scene, zz); } catch { this.bandRecFallbacks++; }
     }
@@ -87,7 +87,7 @@ export class OutlineModel {
     this.key = diagramKey(scene);
     this.baseHue = baseHueFor(scene.name);
     this.st = structure(scene); lap("structure");
-    this.bandRec = (scene.look as { bandRec?: number }).bandRec === 1 ? new BandRecState() : null;
+    this.bandRec = (scene.look as { bandRec?: number }).bandRec === 1 ? new BandRecState((scene.look as { bandRecGpu?: number }).bandRecGpu === 1) : null;
     OB_DI.on = this.bandRec !== null;
     this.table = frame(this.st, scene); lap("frame");
     this.fs = fillStructure(this.st, fillResolution(this.st, this.table)); lap("fillStructure");

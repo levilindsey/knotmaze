@@ -373,6 +373,8 @@ const ROUNDED_QUOTIENTS: Record<string, [number, string]> = {
   "outline/rec_glsl.ts: floor(sA / L)": [1, "recSpan's closed-chain wrap of a record's start (K1247 s20): one off only at a lap boundary, where a lands at L (or -0) instead of 0; a >= sm then takes the last segment, whose end is sample 0, and sB and base shift with a, so every column reads the same point"],
   "outline/rec_glsl.ts: floor(max(0.0, sB) / L)": [1, "recSpan's search bound for the record's last vertex (K1247 s20): the bound carries two laps of margin, so a lap short still brackets it"],
   "outline/rec_glsl.ts: floor((recSV(b, n, L, V) - a) * B / S + 0.5)": [1, "recCs, the column nearest a polygon vertex (K1247 s20, colAt's round((s(V) - a) B / S)): one off only at a half-column tie, where the vertex takes the neighbouring column; cs stays monotone in V and every column stays on the side's own polygon, so the border is unchanged and only the column spacing moves (GPU vs float64 twin p99 0.0002 px)"],
+  // K1247 s23: the band placement's s difference (band_place.ts bpD, draw.ts dSC's twin).
+  "outline/band_place.ts: mod(d, L)": [1, "the band placement's closed-chain s difference (K1247 s23, bpD; dSC's ((d % L) + L) % L): one off only next to a lap boundary, where the fold into (-L/2, L/2] gives the same d"],
 };
 
 const ROUNDERS = ["floor", "ceil", "trunc", "round", "roundEven", "fract", "mod", "int"];

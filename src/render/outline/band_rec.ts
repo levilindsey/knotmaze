@@ -14,6 +14,7 @@ import type { OutlineTable, SceneIn } from "./outline";
 import { dSC, footNear, parseColor, zAtC } from "./draw";
 import { BAND_SLOTS, BAND_TEX_W, PT, footS, windowRanges, type BandGpu, type ZChain, type ZZ } from "./band_gpu";
 import { colRow, recSideOk, recTables } from "./chain_frame";
+import { BT } from "./band_place";
 
 export interface BandLayout {
   /** The structure it was built for (identity). */
@@ -78,9 +79,24 @@ export function bandLayout(st: { piecesD: readonly { kind: string }[] }, table: 
 
 export interface BandRecStats { rec: number; pad: number; over: number; unkeyed: number; lastOver?: string }
 
+/** K1247 s23: texels per diagram piece in BandRecGpu.tab (band_place.ts reads them):
+ *  0 (mode, a, b, c): mode 0 absent (all padding), 1 placed by the worker (a = its first quad in fb,
+ *    b = its quads, the rest padding), 2 records main places (a = chain, b = N, c = side);
+ *  1 (s0, dS, first pass id of the chain, the chain's pass count) for mode 2;
+ *  2, 3 columns 0 and N (outer x, y, inner x, y) for mode 2 (today's end points, as the CPU records);
+ *  4 (column 0's s, column N's s, 0, the piece's first quad in the layout). */
+// BT: texels per diagram piece in the gpu table (band_place.ts's header has the layout).
+export { BT };
+
+/** K1247 s23 (ob=1 in the app): what main needs to place the band (band_place.ts): the pieces' table, the
+ *  quads the worker placed (compact: 2 texels a vertex, (x, y, s, dC) and (z, alpha, chain, 0), 6 a quad;
+ *  their slots one texel a quad) and recTables' fan-step prefix (uRecPf). count is still 6 Q. */
+export interface BandRecGpu { tab: Float32Array; nD: number; fb: Float32Array; fbSl: Float32Array; nFb: number; pf: Float32Array }
+
 /** bandGpu's output on the fixed layout; null when a piece outgrows its capacity or has no key (the caller
- *  relayouts from this table and calls again). */
-export function bandRec(table: OutlineTable, scene: SceneIn, zz: ZZ, lay: BandLayout, stats: BandRecStats | null = null): BandGpu | null {
+ *  relayouts from this table and calls again). gpu (K1247 s23): the record pieces go to main as table
+ *  entries (out.rec), the others as compact quads; pos/attr/slots/chain then hold only those. */
+export function bandRec(table: OutlineTable, scene: SceneIn, zz: ZZ, lay: BandLayout, stats: BandRecStats | null = null, gpu = false): (BandGpu & { rec?: BandRecGpu }) | null {
   const { zc, passes } = zz;
   const h = table.h; const W = table.W;
   const zt = 0.1 * scene.look.depthAmp;
@@ -133,10 +149,25 @@ export function bandRec(table: OutlineTable, scene: SceneIn, zz: ZZ, lay: BandLa
   }
   const count = 6 * lay.Q;
   lay.used.fill(0); lay.how.fill(0);
-  const pos = new Float32Array(2 * count);
-  const attr = new Float32Array(4 * count);
-  const slots = new Int32Array(BAND_SLOTS * count).fill(-1);
-  const chain = new Int16Array(count).fill(-1);
+  // K1247 s23 (gpu): a record piece without its own alpha goes to main as a table entry; the arrays
+  // below then hold only the other pieces' quads, back to back (fbQ: the next free quad).
+  const gpuR = new Uint8Array(table.pieces.length);
+  let nArr = count;
+  if (gpu) {
+    nArr = 0;
+    for (let pi = 0; pi < table.pieces.length; pi++) {
+      const p = table.pieces[pi]; const np = p.pts.length / 2; if (np < 2) continue;
+      if (useR[pi] === 1 && !(p.alpha && p.alpha.length === p.pts.length)) gpuR[pi] = 1;
+      else nArr += 6 * lay.cap[p.di as number];
+    }
+  }
+  const tab = gpu ? new Float32Array(4 * BT * Math.max(1, nD)) : null;
+  if (tab) for (let d = 0; d < nD; d++) tab[4 * (BT * d + 4) + 3] = lay.off[d];
+  let fbQ = 0;
+  const pos = new Float32Array(2 * nArr);
+  const attr = new Float32Array(4 * nArr);
+  const slots = new Int32Array(BAND_SLOTS * nArr).fill(-1);
+  const chain = new Int16Array(nArr).fill(-1);
   const chainInfo = new Float32Array(4 * Math.max(1, zc.length));
   zc.forEach((c, i) => { chainInfo[4 * i] = base[i]; chainInfo[4 * i + 1] = c.n; chainInfo[4 * i + 2] = sgnL(c); });
   let v = 0; let dropped = 0; let vCh = -1;
@@ -160,6 +191,19 @@ export function bandRec(table: OutlineTable, scene: SceneIn, zz: ZZ, lay: BandLa
     while (v < end) { pos[2 * v] = x; pos[2 * v + 1] = y; attr[4 * v] = s; attr[4 * v + 1] = h; attr[4 * v + 2] = z; attr[4 * v + 3] = 0; chain[v] = vCh; v++; }
   };
   const sl: number[] = [];
+  // The inner point of P[i] (out[0], out[1]): W along its cpts direction, as innerOf below.
+  const innerOfP = (P: ArrayLike<number>, Cp: ArrayLike<number>, n: number, i: number, out: Float64Array): void => {
+    const x = P[2 * i]; const y = P[2 * i + 1];
+    let dx = Cp[2 * i] - x; let dy = Cp[2 * i + 1] - y;
+    const l = Math.sqrt(dx * dx + dy * dy);
+    if (l < 1e-12) { const j = Math.min(i + 1, n - 1); const ex = P[2 * j] - x; const ey = P[2 * j + 1] - y; const el = Math.sqrt(ex * ex + ey * ey) || 1; dx = -ey / el; dy = ex / el; } else { dx /= l; dy /= l; }
+    out[0] = x + dx * W; out[1] = y + dy * W;
+  };
+  // A piece's end: today padded to its range; with gpu, its quads stay compact and main pads.
+  const endPiece = (d: number, vStart: number, vEnd: number): void => {
+    const u = (v - vStart) / 6; lay.used[d] = u;
+    if (tab) { const o = 4 * BT * d; tab[o] = 1; tab[o + 1] = fbQ; tab[o + 2] = u; tab[o + 3] = vCh; fbQ += u; } else pad(vEnd);
+  };
   const cand: number[] = [];
   // Record columns of a piece (N + 1 points): outer, inner, own s.
   let RO = new Float64Array(64); let RI = new Float64Array(64); let RS = new Float64Array(32); let RS2 = new Float64Array(32); let RA = new Float64Array(64);
@@ -169,7 +213,26 @@ export function bandRec(table: OutlineTable, scene: SceneIn, zz: ZZ, lay: BandLa
     const np0 = p.pts.length / 2;
     if (np0 < 2) continue;
     const d = p.di as number; const capQ = lay.cap[d];
-    v = 6 * lay.off[d]; const vEnd = v + 6 * capQ;
+    if (tab && gpuR[pIdx] === 1) {
+      // K1247 s23: main places columns 1..N-1 (band_place.ts, colAt's twin); the worker sends the record's
+      // parameters and its two end columns, as the CPU records below place them.
+      const C = zc[p.chain]; let dS = p.s1 - p.s0; if (C.closed && C.len > 0 && dS <= 0) dS += C.len;
+      const o = 4 * BT * d;
+      tab[o] = 2; tab[o + 1] = p.chain; tab[o + 2] = capQ; tab[o + 3] = p.side;
+      tab[o + 4] = p.s0; tab[o + 5] = dS; tab[o + 6] = passBase[p.chain]; tab[o + 7] = passes[p.chain].length;
+      const E = new Float64Array(2);
+      tab[o + 8] = p.pts[0]; tab[o + 9] = p.pts[1];
+      innerOfP(p.pts, p.cpts, np0, 0, E); tab[o + 10] = E[0]; tab[o + 11] = E[1];
+      tab[o + 12] = p.pts[2 * np0 - 2]; tab[o + 13] = p.pts[2 * np0 - 1];
+      innerOfP(p.pts, p.cpts, np0, np0 - 1, E); tab[o + 14] = E[0]; tab[o + 15] = E[1];
+      tab[o + 16] = footS(C, p.cpts[0], p.cpts[1], p.s0, 2 * h);
+      tab[o + 17] = footS(C, p.cpts[2 * np0 - 2], p.cpts[2 * np0 - 1], p.s0 + dS, 2 * h);
+      tab[o + 18] = dS + dSC(C, p.s0 + dS, tab[o + 17]) - dSC(C, p.s0, tab[o + 16]);
+      lay.how[d] = 1; lay.used[d] = capQ;
+      if (stats) stats.rec++;
+      continue;
+    }
+    v = gpu ? 6 * fbQ : 6 * lay.off[d]; const vStart = v; const vEnd = v + 6 * capQ;
     // Today's points, decimated to the range when they outgrow it (counted in stats.over).
     let pts: ArrayLike<number> = p.pts; let cpts: ArrayLike<number> = p.cpts; let npU = np0;
     let al: ArrayLike<number> | null = p.alpha && p.alpha.length === 2 * np0 ? p.alpha : null;
@@ -207,8 +270,7 @@ export function bandRec(table: OutlineTable, scene: SceneIn, zz: ZZ, lay: BandLa
         ia[0] = ib[0]; ia[1] = ib[1];
       }
       if (stats) stats.pad++;
-      lay.used[d] = (v - 6 * lay.off[d]) / 6;
-      pad(vEnd);
+      endPiece(d, vStart, vEnd);
       continue;
     }
     const C = zc[p.chain]; const PS = passes[p.chain]; const pb = passBase[p.chain];
@@ -285,10 +347,20 @@ export function bandRec(table: OutlineTable, scene: SceneIn, zz: ZZ, lay: BandLa
       }
       quad(P[2 * i], P[2 * i + 1], P[2 * i + 2], P[2 * i + 3], Ip[2 * i], Ip[2 * i + 1], Ip[2 * i + 2], Ip[2 * i + 3], sa, sb, zAtC(C, sa), zAtC(C, sb), sl.length ? sl : null, paR, i);
     }
-    lay.used[d] = (v - 6 * lay.off[d]) / 6;
-    pad(vEnd);
+    endPiece(d, vStart, vEnd);
   }
-  return { pos, attr, slots, count, chainTex, chainTexH, passTex, passTexH, ink: parseColor(scene.look.ink), h, W, zt, dropped, chain, chainInfo };
+  const out = { pos, attr, slots, count, chainTex, chainTexH, passTex, passTexH, ink: parseColor(scene.look.ink), h, W, zt, dropped, chain, chainInfo };
+  if (!tab) return out;
+  // K1247 s23: the compact quads as main's textures (band_place.ts).
+  const nV = 6 * fbQ;
+  const fb = new Float32Array(8 * Math.max(1, nV)); const fbSl = new Float32Array(4 * Math.max(1, fbQ));
+  for (let i = 0; i < nV; i++) {
+    fb[8 * i] = pos[2 * i]; fb[8 * i + 1] = pos[2 * i + 1]; fb[8 * i + 2] = attr[4 * i]; fb[8 * i + 3] = attr[4 * i + 1];
+    fb[8 * i + 4] = attr[4 * i + 2]; fb[8 * i + 5] = attr[4 * i + 3]; fb[8 * i + 6] = chain[i];
+  }
+  for (let q = 0; q < fbQ; q++) for (let k = 0; k < BAND_SLOTS; k++) fbSl[4 * q + k] = slots[BAND_SLOTS * 6 * q + k];
+  // Each its own buffer: the worker transfers them all.
+  return { ...out, pos: new Float32Array(0), attr: new Float32Array(0), slots: new Int32Array(0), chain: new Int16Array(0), rec: { tab, nD, fb, fbSl, nFb: fbQ, pf: T.pf } };
 }
 
 /** Holds the layout across frames (OutlineModel with ob=1): relayouts on a new structure or an overflow. */
@@ -296,19 +368,22 @@ export class BandRecState {
   lay: BandLayout | null = null;
   relayouts = 0;
   stats: BandRecStats = { rec: 0, pad: 0, over: 0, unkeyed: 0 };
-  band(st: { piecesD: readonly { kind: string }[] }, table: OutlineTable, scene: SceneIn, zz: ZZ): BandGpu {
-    let b: BandGpu | null = null;
+  /** gpu (K1247 s23): the records go to main as parameters (bandRec's rec), placed by band_place.ts. */
+  readonly gpu: boolean;
+  constructor(gpu = false) { this.gpu = gpu; }
+  band(st: { piecesD: readonly { kind: string }[] }, table: OutlineTable, scene: SceneIn, zz: ZZ): BandGpu & { rec?: BandRecGpu } {
+    let b: (BandGpu & { rec?: BandRecGpu }) | null = null;
     if (!this.lay || this.lay.st !== st) {
       // A new structure: a run or ghost its first frame cannot place by records (a fold, too many fan steps)
       // gets a padded piece's slack, so it is not decimated as it grows.
       this.lay = bandLayout(st, table); this.relayouts++;
-      b = bandRec(table, scene, zz, this.lay, null);
+      b = bandRec(table, scene, zz, this.lay, null, this.gpu);
       const L = this.lay; const wid = new Uint8Array(L.cap.length); let any = false;
       for (let d = 0; d < wid.length; d++) { const k = st.piecesD[d].kind; if ((k === "run" || k === "ghost") && L.how[d] >= 2) { wid[d] = 1; any = true; } }
       if (any) { this.lay = bandLayout(st, table, null, wid); b = null; }
     }
-    if (!b) b = bandRec(table, scene, zz, this.lay, this.stats);
-    if (!b) { this.lay = bandLayout(st, table, this.lay); this.relayouts++; b = bandRec(table, scene, zz, this.lay, this.stats); }
+    if (!b) b = bandRec(table, scene, zz, this.lay, this.stats, this.gpu);
+    if (!b) { this.lay = bandLayout(st, table, this.lay); this.relayouts++; b = bandRec(table, scene, zz, this.lay, this.stats, this.gpu); }
     if (!b) throw new Error("bandRec: relayout did not fit");
     return b;
   }

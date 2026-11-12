@@ -73,6 +73,8 @@ export interface OutlineReply {
   recSag: number;
   recHW: number;
   recZt: number;
+  /** K1247 s23 (ob=1): the band's records for main to place (band_rec BandRecGpu; null: bandPos and the rest carry it). */
+  bandRec: { tab: Float32Array; nD: number; fb: Float32Array; fbSl: Float32Array; nFb: number; pf: Float32Array } | null;
 }
 
 /** Where two diagram keys first differ: the part (chains | crossings |
@@ -163,6 +165,7 @@ scope.onmessage = (e: MessageEvent<OutlineRequest>): void => {
       recSag: SAG.f,
       recHW: m.recFrame ? m.recFrame.hW : 0,
       recZt: m.recFrame ? m.recFrame.zt : 0,
+      bandRec: m.band.rec ?? null,
     };
     const tr: Transferable[] = [r.pos.buffer, r.pkey.buffer, r.w.buffer, r.s.buffer, r.tex.buffer, r.bandPos.buffer, r.bandAttr.buffer, r.bandSlots.buffer, r.chainTex.buffer, r.passTex.buffer, r.bandChain.buffer, r.chainInfo.buffer];
     if (r.idx) tr.push(r.idx.buffer);
@@ -171,6 +174,7 @@ scope.onmessage = (e: MessageEvent<OutlineRequest>): void => {
     if (r.recStrip) tr.push(r.recStrip.buffer);
     if (r.recFb) tr.push(r.recFb.buffer);
     if (r.recPf) tr.push(r.recPf.buffer);
+    if (r.bandRec) tr.push(r.bandRec.tab.buffer, r.bandRec.fb.buffer, r.bandRec.fbSl.buffer, r.bandRec.pf.buffer);
     scope.postMessage(r, tr);
   } catch (err) {
     model = null;

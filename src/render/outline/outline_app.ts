@@ -44,6 +44,7 @@ import type { SceneIn } from "./outline";
 import { RUN_MAP_W, RV_W, SWELL_STRIDE, appRunMap, chainArcMap, revealMaskTex, swellStrip, type SwellStrip } from "./paint";
 import type { OutlineReply, OutlineRequest } from "./outline_worker";
 import { REC_PLACE_FS, REC_PLACE_OUT, REC_PLACE_STRIDE, REC_PLACE_VS } from "./rec_glsl";
+import { BAND_PLACE_FS, BAND_PLACE_OUT, BAND_PLACE_STRIDE, BAND_PLACE_VS } from "./band_place";
 
 const CTRL_ARC = 0.47;
 // K1247 s18: the record fill, as src/app/frame_loop.ts read it (the link rewrite drops the key before this loads; K1247 s20: on unless oe=0).
@@ -657,6 +658,10 @@ class OutlinePass {
   private placeTf: WebGLTransformFeedback | null = null;
   private placedBuf: WebGLBuffer | null = null;
   private placedN = -1;
+  /** K1247 s23 (ob=1): the band's placement pass (band_place.ts, once per reply), its tables, the placed
+   *  vertices (BAND_PLACE_STRIDE words) and the VAO the band program draws them through. */
+  private bp: { prog: WebGLProgram; u: Record<"tab" | "fb" | "sl" | "pass" | "chain" | "ci" | "pf" | "nd" | "h" | "w", U>; tf: WebGLTransformFeedback; buf: WebGLBuffer; vao: WebGLVertexArrayObject; tex: Record<"tab" | "fb" | "sl" | "pf", WebGLTexture>; n: number } | null = null;
+  private bpOn = false;
   private recOk = false;
   private recN = 0;
   private nPaint = 0;
@@ -715,6 +720,22 @@ class OutlinePass {
       this.place = p;
       const u = (n: string): U => gl.getUniformLocation(p, n);
       this.recU.set(p, { chain: u("uRecChain"), ci: u("uRecCi"), strip: u("uRecStrip"), fb: u("uRecFb"), pf: u("uRecPf"), hw: u("uRecHW"), zt: u("uRecZt"), sag: u("uRecSag") });
+    }
+    if (BAND_REC) {
+      const p = mk(BAND_PLACE_VS, BAND_PLACE_FS, "band placement", BAND_PLACE_OUT);
+      const u = (n: string): U => gl.getUniformLocation(p, n);
+      const tx = (): WebGLTexture => gl.createTexture()!;
+      this.bp = { prog: p, u: { tab: u("uBpTab"), fb: u("uBpFb"), sl: u("uBpSl"), pass: u("uBpPass"), chain: u("uRecChain"), ci: u("uRecCi"), pf: u("uRecPf"), nd: u("uBpND"), h: u("uBpH"), w: u("uBpW") }, tf: gl.createTransformFeedback()!, buf: gl.createBuffer()!, vao: gl.createVertexArray()!, tex: { tab: tx(), fb: tx(), sl: tx(), pf: tx() }, n: -1 };
+      // The band program's inputs from the placed vertices: aPos, aA, aCh, aSl.
+      gl.bindVertexArray(this.bp.vao);
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.bp.buf);
+      const sb = 4 * BAND_PLACE_STRIDE;
+      gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, sb, 0);
+      gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 4, gl.FLOAT, false, sb, 8);
+      gl.enableVertexAttribArray(2); gl.vertexAttribIPointer(2, 1, gl.INT, sb, 24);
+      gl.enableVertexAttribArray(3); gl.vertexAttribIPointer(3, 4, gl.INT, sb, 28);
+      gl.bindVertexArray(null);
+      gl.bindBuffer(gl.ARRAY_BUFFER, null);
     }
     this.uAV = [this.appUniforms(this.appV[0]), this.appUniforms(this.appV[1])];
     this.uBV = [this.bandUniforms(this.bandV[0]), this.bandUniforms(this.bandV[1])];
@@ -858,10 +879,13 @@ class OutlinePass {
       gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
       this.nIdx = r.idx.length;
     }
-    put(this.bufs.bPos, r.bandPos);
-    put(this.bufs.bAttr, r.bandAttr);
-    put(this.bufs.bSl, r.bandSlots);
-    put(this.bufs.bCh, r.bandChain);
+    this.bpOn = !!(r.bandRec && this.bp);
+    if (!this.bpOn) {
+      put(this.bufs.bPos, r.bandPos);
+      put(this.bufs.bAttr, r.bandAttr);
+      put(this.bufs.bSl, r.bandSlots);
+      put(this.bufs.bCh, r.bandChain);
+    }
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
     this.nBand = r.bandCount;
     this.band_ = { ink: r.ink, h: r.h, W: r.W, zt: r.zt };
@@ -899,8 +923,20 @@ class OutlinePass {
       this.recV = { hw: r.recHW, zt: r.recZt, sag: r.recSag };
       this.recOk = true;
     }
+    if (this.bpOn && this.bp && r.bandRec) {
+      const pad = (d: Float32Array): [Float32Array, number] => {
+        const h = Math.max(1, Math.ceil(d.length / 4 / BAND_TEX_W)); if (d.length === 4 * BAND_TEX_W * h) return [d, h];
+        const o = new Float32Array(4 * BAND_TEX_W * h); o.set(d); return [o, h];
+      };
+      const B = r.bandRec;
+      ftex(this.bp.tex.tab, ...pad(B.tab));
+      ftex(this.bp.tex.fb, ...pad(B.fb));
+      ftex(this.bp.tex.sl, ...pad(B.fbSl));
+      ftex(this.bp.tex.pf, ...pad(B.pf));
+    }
     gl.bindTexture(gl.TEXTURE_2D, null);
     this.placeFill();
+    if (this.bpOn && r.bandRec) this.placeBand(r.bandRec.nD, r.h, r.W);
     this.zTab = { chainTex: r.chainTex, chainInfo: r.chainInfo };
     this.hasData = true;
   }
@@ -937,6 +973,40 @@ class OutlinePass {
     gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, null);
     gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, null);
     gl.bindVertexArray(null);
+    gl.useProgram(null);
+  }
+
+  /** K1247 s23 (ob=1): the band's vertices placed into bp.buf, once per reply (transform feedback
+   *  through BAND_PLACE_VS over the gl_VertexID of every band vertex); the band program draws from it. */
+  private placeBand(nD: number, h: number, W: number): void {
+    const gl = this.gl; const bp = this.bp; const n = this.nBand;
+    if (!bp || n <= 0) return;
+    if (bp.n !== n) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, bp.buf);
+      gl.bufferData(gl.ARRAY_BUFFER, 4 * BAND_PLACE_STRIDE * n, gl.DYNAMIC_COPY);
+      gl.bindBuffer(gl.ARRAY_BUFFER, null);
+      bp.n = n;
+    }
+    gl.useProgram(bp.prog);
+    ([[bp.tex.tab, bp.u.tab], [bp.tex.fb, bp.u.fb], [bp.tex.sl, bp.u.sl], [this.passTex, bp.u.pass], [this.chainTex, bp.u.chain], [this.ciTex, bp.u.ci], [bp.tex.pf, bp.u.pf]] as [WebGLTexture, U][]).forEach(([tx, l], i) => {
+      gl.activeTexture(gl.TEXTURE9 + i);
+      gl.bindTexture(gl.TEXTURE_2D, tx);
+      gl.uniform1i(l, 9 + i);
+    });
+    gl.activeTexture(gl.TEXTURE0);
+    gl.uniform1i(bp.u.nd, nD);
+    gl.uniform1f(bp.u.h, h);
+    gl.uniform1f(bp.u.w, W);
+    gl.bindVertexArray(null);
+    gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, bp.tf);
+    gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, bp.buf);
+    gl.enable(gl.RASTERIZER_DISCARD);
+    gl.beginTransformFeedback(gl.POINTS);
+    gl.drawArrays(gl.POINTS, 0, n);
+    gl.endTransformFeedback();
+    gl.disable(gl.RASTERIZER_DISCARD);
+    gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, null);
+    gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, null);
     gl.useProgram(null);
   }
 
@@ -1175,7 +1245,7 @@ class OutlinePass {
         gl.bindTexture(gl.TEXTURE_2D, this.swTex);
         gl.uniform1i(this.uB.sw, 8);
       }
-      gl.bindVertexArray(this.bVao);
+      gl.bindVertexArray(this.bpOn && this.bp ? this.bp.vao : this.bVao);
       gl.drawArrays(gl.TRIANGLES, 0, this.nBand);
       gl.disable(gl.BLEND);
       if (swl && ap) {
@@ -1266,6 +1336,13 @@ class OutlinePass {
     if (this.placeVao) gl.deleteVertexArray(this.placeVao);
     if (this.placeTf) gl.deleteTransformFeedback(this.placeTf);
     if (this.placedBuf) gl.deleteBuffer(this.placedBuf);
+    if (this.bp) {
+      gl.deleteProgram(this.bp.prog);
+      gl.deleteTransformFeedback(this.bp.tf);
+      gl.deleteBuffer(this.bp.buf);
+      gl.deleteVertexArray(this.bp.vao);
+      for (const t of Object.values(this.bp.tex)) gl.deleteTexture(t);
+    }
     if (this.color) gl.deleteTexture(this.color);
     if (this.depth) gl.deleteRenderbuffer(this.depth);
     gl.deleteFramebuffer(this.fbo);
@@ -1539,7 +1616,7 @@ export function createOutlineApp(ctx: SceneExportCtx, requestFrame: () => void):
     scene.look.ctrlArc ??= CTRL_ARC;
     // K1247 s18: the record fill places the fill's strips as records (fill_tri.ts recStrip2). On unless oe=0 (K1247 s20).
     if (FILL_REC) (scene.look as { fillRec?: number }).fillRec = 2;
-    if (BAND_REC) (scene.look as { bandRec?: number }).bandRec = 1;
+    if (BAND_REC) Object.assign(scene.look, { bandRec: 1, bandRecGpu: 1 }); // K1247 s23: main places the records (band_place.ts)
     // K1247 s18 probe: a page that sets window.__knotOutlineCapture to an
     // array gets every sent scene as JSON (the drag's frames, replayed in Node).
     const cap = (globalThis as { __knotOutlineCapture?: string[] }).__knotOutlineCapture;
