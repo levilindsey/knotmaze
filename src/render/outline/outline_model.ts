@@ -123,10 +123,9 @@ export function recLayout(fs: FillStructure, pd: PaintData): RecLayout {
     const it = fs.items[strips[o]] as StripItem; const W = it.N + 1;
     for (let r = 0; r < 3; r++) for (let i = 2; i <= it.N - 2; i++) { const v = it.base + r * W + i; tag[2 * v] = o; tag[2 * v + 1] = (r << 16) | i; }
   }
-  const nG = pd.src.length; const perm: number[] = [];
-  for (let g = 0; g < nG; g++) if (tag[2 * pd.src[g]] < 0) perm.push(g);
-  const nDyn = perm.length;
-  for (let g = 0; g < nG; g++) if (tag[2 * pd.src[g]] >= 0) perm.push(g);
+  const nG = pd.src.length; const perm = new Uint32Array(nG); let nDyn = 0;
+  for (let g = 0; g < nG; g++) if (tag[2 * pd.src[g]] < 0) perm[nDyn++] = g;
+  for (let g = 0, q = nDyn; g < nG; g++) if (tag[2 * pd.src[g]] >= 0) perm[q++] = g;
   const inv = new Uint32Array(nG); for (let n = 0; n < nG; n++) inv[perm[n]] = n;
   const src = new Uint32Array(nG), run = new Int32Array(SLOTS * nG), pos = new Float32Array(2 * nG), key = new Float32Array(nG);
   const w = new Float32Array(SLOTS * nG), s = new Float32Array(SLOTS * nG), rec = new Int32Array(2 * nG);
