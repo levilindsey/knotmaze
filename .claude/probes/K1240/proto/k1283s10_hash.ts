@@ -1,7 +1,9 @@
 // K1283 s10: an FNV-1a hash of every typed array fillFrame returns on a scene (a refactor's bit-for-bit check).
-//   node scripts/run_node.mjs --config .claude/probes/K1240/proto/k1283_vite.config.mjs .claude/probes/K1240/proto/k1283s10_hash.ts [scene=def]
+//   node scripts/run_node.mjs --config .claude/probes/K1240/proto/k1283_vite.config.mjs .claude/probes/K1240/proto/k1283s10_hash.ts [scene=def] [--s9: 73f695ca's fill]
 import * as O from "./outline";
-import * as F from "./fill_tri";
+import * as FS from "./fill_tri";
+import * as S9 from "./k1283s10_s9_fill";
+const F = (process.argv.includes("--s9") ? S9 : FS) as unknown as typeof FS;
 import { loadScene } from "./k1279_census";
 const name = process.argv.slice(2).find((a) => !a.startsWith("--")) ?? "def";
 const scene = loadScene(name); const st = O.structure(scene); const t0 = O.frame(st, scene);

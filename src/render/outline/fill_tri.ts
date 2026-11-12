@@ -83,8 +83,6 @@ const TAIL_FOOT = true;
  *  taken every FOOT_STEP columns and interpolated between. */
 const STRIP_FOOT = true;
 const FOOT_STEP = 8;
-/** K1283 s10: the centre row is footed only within C_FOOT_ENDS samples of its ends (see the strip item). */
-const C_FOOT_ENDS = 2;
 
 type FootChain = Parameters<typeof footNear>[0];
 /** The segment holding arc position u (0 <= u < len on a ring), by binary search. */
@@ -708,20 +706,19 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
         // is taken every FOOT_STEP columns (and at both ends) and its offset
         // from the row's s interpolated between: a foot at each of def's 215k
         // strip vertices cost 80 ms a frame. Rows already on their feet
-        // (a missing side's) keep them. K1283 s10: the centre row is footed
-        // only within C_FOOT_ENDS samples of its ends (where frame tails meet
-        // it: unfooted there, muse_hash strip|tail 1 -> 121; one sample, 16);
-        // its interior keeps its s (the same seams: 1612 / strip|strip 86 / 243).
+        // (a missing side's) keep them. K1283 s10 tried footing the centre
+        // row only near its ends: the same seams, but the round-end colour
+        // census 23339 -> 26294, so every row is footed.
         if (STRIP_FOOT) {
-          const step = FOOT_STEP; const cEnd = C_FOOT_ENDS * step;
+          const step = FOOT_STEP;
           for (let row = 0; row < 3; row++) {
             if ((row === 0 && fbL) || (row === 2 && fbR)) continue;
             const b0 = it.base + row * W;
             let iP = 0; let dP = 0;
             for (let i = 0; ; i = Math.min(i + step, N)) {
-              // An end column a station's K1278 foot took keeps it; the centre row's interior keeps its s.
+              // An end column a station's K1278 foot took keeps it.
               let d = 0;
-              if (!((i === 0 && atA) || (i === N && atB)) && !(row === 1 && i > cEnd && i < N - cEnd)) {
+              if (!((i === 0 && atA) || (i === N && atB))) {
                 const v = b0 + i; const s = s4[SLOTS * v];
                 const f = footS(c, pos[2 * v], pos[2 * v + 1], s, rF);
                 d = f === f ? f - s : 0;
