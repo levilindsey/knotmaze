@@ -673,6 +673,7 @@ export function bandData(table: OutlineTable, scene: SceneIn, zz: ReturnType<typ
         if (l < 1e-12) { const j = Math.min(i + 1, np - 1); const ex = p.pts[2 * j] - x; const ey = p.pts[2 * j + 1] - y; const el = Math.hypot(ex, ey) || 1; dx = -ey / el; dy = ex / el; } else { dx /= l; dy /= l; }
         return [x + dx * W, y + dy * W];
       };
+      const pa = p.alpha && p.alpha.length === 2 * np ? p.alpha : null;
       let prevI = inn(0);
       for (let i = 0; i + 1 < np; i++) {
         const ax = p.pts[2 * i]; const ay = p.pts[2 * i + 1]; const bx = p.pts[2 * i + 2]; const by = p.pts[2 * i + 3];
@@ -697,15 +698,22 @@ export function bandData(table: OutlineTable, scene: SceneIn, zz: ReturnType<typ
         // any angle, and one outer/inner pair would interpolate the fade
         // into pixels the partner does not cover.
         const R = tiedSeg ? ROWS : 1;
+        // K1314 s2: a tied run's own alpha (runEndFade's fade at a failed
+        // corner, outer and inner per point) multiplies the tie's, as an
+        // untied band reads it: ignoring it inked the run's stretch from
+        // the tail's start to V at 1, the black bars at muse_hash j78, j58.
+        const oA = pa ? pa[2 * i] : 1; const iA = pa ? pa[2 * i + 1] : 1; const oB = pa ? pa[2 * i + 2] : 1; const iB = pa ? pa[2 * i + 3] : 1;
         let prev: [number, number, number][] | null = null;
         for (const t of ts) {
           const ox = ax + (bx - ax) * t; const oy = ay + (by - ay) * t;
           const ix = ia[0] + (ib[0] - ia[0]) * t; const iy = ia[1] + (ib[1] - ia[1]) * t;
           const s = sa + (sb - sa) * t;
+          const oT = oA + (oB - oA) * t; const iT = iA + (iB - iA) * t;
           const cur: [number, number, number][] = [];
           for (let r = 0; r <= R; r++) {
             const u = r / R; const x = ox + (ix - ox) * u; const y = oy + (iy - oy) * u;
-            cur.push([x, y, tiedSeg ? alphaAt(p.chain, x, y, s, h - W * u) : 1]);
+            const own = pa ? oT + (iT - oT) * u : 1;
+            cur.push([x, y, (tiedSeg ? alphaAt(p.chain, x, y, s, h - W * u) : 1) * own]);
           }
           if (prev) {
             for (let r = 0; r < R; r++) {
