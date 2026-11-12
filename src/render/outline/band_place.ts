@@ -6,9 +6,9 @@
 // - a record quad i joins columns i and i + 1: colAt at h outside and h - W inside (REC_GLSL's recCol),
 //   columns 0 and N from the table (today's end points); s as the CPU's sa = sv[i], sb = sa + dSC(sa,
 //   sv[i + 1]); z = zAtC (recZ); its slots: the chain's passes whose lo/hi + h window meets [sa, sb]
-//   (band_rec's cand filter first), at most BAND_SLOTS. Past BAND_SLOTS the CPU keeps the passes whose
-//   other thread is nearest (footNear); this keeps the nearest in s instead (band_rec counts those
-//   quads in `dropped`).
+//   (band_rec's cand filter first), at most BAND_SLOTS. Past BAND_SLOTS (band_rec counts those quads in
+//   `dropped`) it keeps, as the CPU and today do, the passes whose other thread is nearest the quad's
+//   outer midpoint (footNear, bpNear here; s24).
 // - a worker-placed quad is copied from uBpFb; the rest of its piece's range is zero-area padding.
 // The table (band_rec.ts writes it), per diagram piece d at texel BT d:
 //   0 (mode, a, b, c): mode 0 absent; 1 worker-placed (a: first quad in uBpFb, b: quads, c: chain);
@@ -46,6 +46,39 @@ flat out int tCh;
 flat out ivec4 tSl;
 // draw.ts dSC: b - a, on a loop wrapped into (-L/2, L/2].
 float bpD(float L, float a, float b) { float d = b - a; if (L > 0.0) { d = mod(d, L); if (d > L / 2.0) d -= L; } return d; }
+// K1247 s24: draw.ts footNear(O, p, sC, r, 0, 0).d on chain texels ob.. (on vertices, oL its closed length or
+// -1 open): the segments of [first(a), s <= b] whose arc span meets [sC - r, sC + r]. 1e30 when none.
+int bpFirst(int ob, int segs, float u) {
+  if (recT(uRecChain, ob).z > u) return 0;
+  int lo = 0; int hi = segs - 1;
+  while (hi > lo) { int m = (lo + hi + 1) >> 1; if (recT(uRecChain, ob + m).z <= u) lo = m; else hi = m - 1; }
+  return lo;
+}
+float bpRange(int ob, int on, int segs, float oL, vec2 p, float sC, float r, float a, float b, float best) {
+  for (int k = bpFirst(ob, segs, a); k < segs; k++) {
+    vec4 A = recT(uRecChain, ob + k); if (A.z > b) break;
+    int j = k + 1 == on ? 0 : k + 1; vec4 B = recT(uRecChain, ob + j);
+    float lk = j == 0 ? oL - A.z : B.z - A.z;
+    if (abs(bpD(oL, sC, A.z + lk / 2.0)) > r + lk / 2.0) continue;
+    vec2 e = B.xy - A.xy; float l2 = dot(e, e);
+    float t = l2 > 0.0 ? clamp(dot(p - A.xy, e) / l2, 0.0, 1.0) : 0.0;
+    float d = length(p - A.xy - t * e);
+    if (d < best) best = d;
+  }
+  return best;
+}
+float bpNear(int ob, int on, float oL, vec2 p, float sC, float r) {
+  int segs = oL > 0.0 ? on : on - 1; float best = 1e30;
+  if (segs <= 0) return best;
+  if (oL > 0.0) {
+    if (2.0 * r >= oL) return bpRange(ob, on, segs, oL, p, sC, r, -1e30, 1e30, best);
+    float a = mod(sC - r, oL); float b = a + 2.0 * r;
+    if (b <= oL) return bpRange(ob, on, segs, oL, p, sC, r, a, b, best);
+    best = bpRange(ob, on, segs, oL, p, sC, r, a, oL, best);
+    return bpRange(ob, on, segs, oL, p, sC, r, 0.0, b - oL, best);
+  }
+  return bpRange(ob, on, segs, oL, p, sC, r, sC - r, sC + r, best);
+}
 // Column k of record piece o (x, y, s): the table's ends, else colAt at hh.
 vec3 bpCol(int o, int b, int n, float L, vec4 t1, int N, float sgn, int k, bool inner) {
   if (k == 0) { vec4 e = recT(uBpTab, o + 2); return vec3(inner ? e.zw : e.xy, recT(uBpTab, o + 4).x); }
@@ -100,23 +133,35 @@ void main() {
   float s = isB ? sb : sa;
   tPos = P.xy; tA = vec4(s, inner ? uBpH - uBpW : uBpH, recZ(b, n, L, s), 1.0); tCh = ch;
   // The quad's passes (band_rec's cand, then its per-quad window test).
-  int pb = int(t1.z); int np = int(t1.w); float U = t4.z; float sm = 0.5 * (sa + sb);
-  int id[4] = int[4](-1, -1, -1, -1); float key[4] = float[4](0.0, 0.0, 0.0, 0.0); int ns = 0;
+  int pb = int(t1.z); int np = int(t1.w); float U = t4.z;
+  int id[4] = int[4](-1, -1, -1, -1); int ns = 0;
   for (int j = 0; j < np; j++) {
     vec4 Pj = recT(uBpPass, ${PT} * (pb + j));
     float d0 = bpD(L, Pj.x, t4.x);
     if (!(d0 + U >= -Pj.y - uBpH - 1e-6 && d0 <= Pj.z + uBpH + 1e-6)) continue;
     float da = bpD(L, Pj.x, sa); float db = da + (sb - sa);
     if (!(max(da, db) >= -Pj.y - uBpH && min(da, db) <= Pj.z + uBpH)) continue;
-    float kk = abs(bpD(L, Pj.x, sm));
-    if (ns < 4) { id[ns] = pb + j; key[ns] = kk; }
-    else {
-      int w = 0; for (int r = 1; r < 4; r++) if (key[r] > key[w]) w = r;
-      if (kk < key[w]) { id[w] = pb + j; key[w] = kk; }
-    }
+    if (ns < 4) id[ns] = pb + j;
     ns++;
   }
-  if (ns > 4) for (int x = 0; x < 3; x++) for (int y = 0; y < 3 - x; y++) if (id[y] > id[y + 1]) { int t = id[y]; id[y] = id[y + 1]; id[y + 1] = t; }
+  // K1247 s24: past BAND_SLOTS, band_rec's (and today's) rule: the passes whose other thread is nearest the
+  // quad's outer midpoint (footNear(O, m, so, rO + h)), ties to the lower id, then in id order.
+  if (ns > 4) {
+    vec2 m = 0.5 * (bpCol(o, b, n, L, t1, N, sgn, i, false).xy + bpCol(o, b, n, L, t1, N, sgn, i + 1, false).xy);
+    float key[4] = float[4](1e38, 1e38, 1e38, 1e38); id = int[4](-1, -1, -1, -1);
+    for (int j = 0; j < np; j++) {
+      vec4 Pj = recT(uBpPass, ${PT} * (pb + j));
+      float d0 = bpD(L, Pj.x, t4.x);
+      if (!(d0 + U >= -Pj.y - uBpH - 1e-6 && d0 <= Pj.z + uBpH + 1e-6)) continue;
+      float da = bpD(L, Pj.x, sa); float db = da + (sb - sa);
+      if (!(max(da, db) >= -Pj.y - uBpH && min(da, db) <= Pj.z + uBpH)) continue;
+      vec4 P1 = recT(uBpPass, ${PT} * (pb + j) + 1); float oL = recT(uBpPass, ${PT} * (pb + j) + 2).x;
+      float kk = bpNear(int(P1.y), int(P1.z), oL, m, P1.x, Pj.w + uBpH);
+      int w = 0; for (int r = 1; r < 4; r++) if (key[r] > key[w] || (key[r] == key[w] && id[r] > id[w])) w = r;
+      if (kk < key[w] || id[w] < 0) { id[w] = pb + j; key[w] = kk; }
+    }
+    for (int x = 0; x < 3; x++) for (int y = 0; y < 3 - x; y++) if (id[y] > id[y + 1]) { int t = id[y]; id[y] = id[y + 1]; id[y + 1] = t; }
+  }
   tSl = ivec4(id[0], id[1], id[2], id[3]);
 }`;
 export const BAND_PLACE_FS = "#version 300 es\nprecision highp float; out vec4 o; void main() { o = vec4(0.0); }";
