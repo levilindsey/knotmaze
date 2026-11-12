@@ -59,9 +59,10 @@ function keepIdx(P: ArrayLike<number>, np: number, n: number): Int32Array {
 const EF_D = 1e-4;
 // Today's arc points match the arc to this (units; 1e-3 px at 40 px a unit): an open chain's end arc sits ~6e-7 off h.
 const EF_TOL = 2.5e-5;
-// The arc's first (end) or last (start) point lies this near the colAt span's offset line end (0.16 px): an
-// open chain's end arc can start a little off it (def c24, 0.1 px), the chord to it then within that.
-const EF_OFF = 4e-3;
+// The colAt span's offset line end lies this near today's polyline beside the arc's first (end) or last
+// (start) point (0.1 px): an open chain's end arc can start a little off it (def c24; muse_hash c8 after a
+// 0.007-unit last segment).
+const EF_OFF = 2.5e-3;
 const REC_ADD = 2; const SLACK = 1.25; const SLACK_ADD = 4; const ABSENT_RUN = 8; const ABSENT_ARC = 24;
 
 /** The layout for a structure from one frame's table, keeping an older layout's capacities as floors. */
@@ -219,7 +220,7 @@ export function bandRec(table: OutlineTable, scene: SceneIn, zz: ZZ, lay: BandLa
   const endFans = (p: OutlineTable["pieces"][number], C: ZChain, sgn: number, dS: number, N: number): void => {
     EF.fill(0); EF[0] = -1; EF[4] = -1; EF[8] = p.s0; EF[9] = dS;
     const np0 = p.pts.length / 2; const cp = p.cpts; const P = p.pts; const n = C.n; const L = C.len; const loop = C.closed && L > 0;
-    if (np0 < 4) return;
+    if (np0 < 2) return;
     // The vertex at (x, y) near s (-1: none).
     const vAt = (x: number, y: number, s: number): number => {
       const w = loop ? ((s % L) + L) % L : s; let lo = 0; let hi = n - 1;
@@ -228,12 +229,19 @@ export function bandRec(table: OutlineTable, scene: SceneIn, zz: ZZ, lay: BandLa
       return -1;
     };
     const sNear = (v: number, s: number): number => (loop ? C.s[v] + Math.round((s - C.s[v]) / L) * L : C.s[v]);
-    // Whether today's point i is segment k's offset-line point at vertex v (edgePt's normal).
+    // Whether segment k's offset-line point at vertex v (edgePt's normal), the colAt span's end column, lies on
+    // today's polyline next to point i (muse_hash c8's end: today's arc starts on the segment before a 0.007-unit last one).
     const offAt = (k: number, v: number, i: number): boolean => {
       if (k < 0 || k >= n || (!loop && k >= n - 1)) return false;
       const j = k + 1 === n ? 0 : k + 1; let dx = C.xs[j] - C.xs[k]; let dy = C.ys[j] - C.ys[k];
       const l = Math.sqrt(dx * dx + dy * dy); if (!(l > 0)) return false; dx /= l; dy /= l;
-      return Math.abs(C.xs[v] - sgn * h * dy - P[2 * i]) < EF_OFF && Math.abs(C.ys[v] + sgn * h * dx - P[2 * i + 1]) < EF_OFF;
+      const ox = C.xs[v] - sgn * h * dy; const oy = C.ys[v] + sgn * h * dx; let best = Infinity;
+      for (let q = Math.max(0, i - 1); q < Math.min(np0 - 1, i + 1); q++) {
+        const ax = P[2 * q]; const ay = P[2 * q + 1]; const ex = P[2 * q + 2] - ax; const ey = P[2 * q + 3] - ay; const l2 = ex * ex + ey * ey;
+        const u = l2 > 0 ? Math.max(0, Math.min(1, ((ox - ax) * ex + (oy - ay) * ey) / l2)) : 0;
+        best = Math.min(best, Math.hypot(ax + u * ex - ox, ay + u * ey - oy));
+      }
+      return best < EF_OFF;
     };
     // Today's points i0..i1 as an even arc about v (radius h): a0, dA into EF[e], EF[e + 1].
     const arcOf = (v: number, i0: number, i1: number, e: number): boolean => {
@@ -247,8 +255,23 @@ export function bandRec(table: OutlineTable, scene: SceneIn, zz: ZZ, lay: BandLa
       EF[e] = a0; EF[e + 1] = dA; return true;
     };
     const segOut = (v: number): number => (v < n - 1 ? C.s[v + 1] : L) - C.s[v];
-    // The start: points 0..kS - 1 share cpts 0; 1..kS - 1 the arc, kS - 1 on the outgoing offset line.
+    // A piece inside one vertex's fan (every point shares its cpts; muse_hash c66 d754, 0.75 px): the start
+    // arc takes today's interior points, and an end arc of step 0 repeats the last of them up to column N - 1.
     let kS = 1; while (kS < np0 && cp[2 * kS] === cp[0] && cp[2 * kS + 1] === cp[1]) kS++;
+    if (kS === np0) {
+      const v = vAt(cp[0], cp[1], p.s0);
+      if (v >= 0 && np0 === 2) {
+        // Two clip points (muse_hash c66 d754 f21): columns 1..N - 1 at point 0's angle, radius h, if it lies near it.
+        const r0 = Math.hypot(P[0] - C.xs[v], P[1] - C.ys[v]);
+        if (N >= 2 && Math.abs(r0 - h) < EF_OFF) { EF[0] = v; EF[1] = Math.atan2(P[1] - C.ys[v], P[0] - C.xs[v]); EF[3] = N - 1; EF[10] = sNear(v, p.s0); }
+      } else if (v >= 0 && N - 1 >= np0 - 2 && arcOf(v, 1, np0 - 2, 1)) {
+        EF[0] = v; EF[3] = np0 - 2; EF[4] = v; EF[5] = EF[1] + (np0 - 3) * EF[2]; EF[6] = 0; EF[7] = N - 1 - (np0 - 2);
+        EF[10] = sNear(v, p.s0); EF[11] = EF[10];
+      }
+      return;
+    }
+    if (np0 < 4) return;
+    // The start: points 0..kS - 1 share cpts 0; 1..kS - 1 the arc, kS - 1 on the outgoing offset line.
     if (kS >= 2 && kS < np0 - 1) {
       const v = vAt(cp[0], cp[1], p.s0);
       if (v >= 0 && segOut(v) > 4 * EF_D && offAt(v, v, kS - 1) && arcOf(v, 1, kS - 1, 1)) { EF[0] = v; EF[3] = kS - 1; EF[10] = sNear(v, p.s0); }
