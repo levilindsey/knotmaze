@@ -88,8 +88,8 @@ type Pin = { f0: { table: string; paint: string; band: string }; f1: { table: st
 // keyed at the mid s unless the ranges part at a junction end (fill_tri fillFrame JEND_GATE:
 // paint): every digest, f0 and f1, on ring and g41_ring_tw42. Checked against form B (census s6, crops in out/s6).
 const PINS: Record<string, Pin> = {
-  ring: { f0: { table: "dd122306be5f6868", paint: "cf123b21dafdb5c2", band: "edb5420b6c199be4" }, f1: { table: "91334bd2901855b9", paint: "5e73c2aab864a311", band: "d809667fe9f07a43" } },
-  g41_ring_tw42: { f0: { table: "38943925cac82649", paint: "50247878bd6fdaa4", band: "6e4be03d9399a659" }, f1: { table: "aa468938dfc7b49b", paint: "b3f49438beaea1e7", band: "32effce2092feece" } },
+  ring: { f0: { table: "20693f9bd711d99b", paint: "cf123b21dafdb5c2", band: "694b09357ee4698b" }, f1: { table: "9b4a2a467d87b059", paint: "5e73c2aab864a311", band: "28df117af057152f" } },
+  g41_ring_tw42: { f0: { table: "1b110913f87cc76e", paint: "50247878bd6fdaa4", band: "957f29f6c7f99cb6" }, f1: { table: "2b2e4e3c1314f909", paint: "b3f49438beaea1e7", band: "d4999b0de32693ce" } },
 };
 
 // The tool's second frame: every chain point rotated 0.3 rad and moved.
