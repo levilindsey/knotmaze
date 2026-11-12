@@ -85,11 +85,11 @@ type Pin = { f0: { table: string; paint: string; band: string }; f1: { table: st
 // K1314 s6 re-pinned on purpose (2026-11-12): an ok corner's arc takes the run's foot at
 // each end it shares with a run (outline arcEndFeet: table and band), and a fill strip
 // whose border pieces span different s ranges samples both on one s scale, its centre
-// keyed at the mid s (fill_tri fillFrame: paint): every digest, f0 and f1, on ring and
-// g41_ring_tw42. Checked against form B (census s6, crops in out/s6).
+// keyed at the mid s unless the ranges part at a junction end (fill_tri fillFrame JEND_GATE:
+// paint): every digest, f0 and f1, on ring and g41_ring_tw42. Checked against form B (census s6, crops in out/s6).
 const PINS: Record<string, Pin> = {
-  ring: { f0: { table: "dd122306be5f6868", paint: "c91ebe22c0aaac3c", band: "edb5420b6c199be4" }, f1: { table: "91334bd2901855b9", paint: "91235fb3d861a930", band: "d809667fe9f07a43" } },
-  g41_ring_tw42: { f0: { table: "38943925cac82649", paint: "4ce14a41f5950a70", band: "6e4be03d9399a659" }, f1: { table: "aa468938dfc7b49b", paint: "1eec49dfc612334a", band: "32effce2092feece" } },
+  ring: { f0: { table: "dd122306be5f6868", paint: "cf123b21dafdb5c2", band: "edb5420b6c199be4" }, f1: { table: "91334bd2901855b9", paint: "5e73c2aab864a311", band: "d809667fe9f07a43" } },
+  g41_ring_tw42: { f0: { table: "38943925cac82649", paint: "50247878bd6fdaa4", band: "6e4be03d9399a659" }, f1: { table: "aa468938dfc7b49b", paint: "b3f49438beaea1e7", band: "32effce2092feece" } },
 };
 
 // The tool's second frame: every chain point rotated 0.3 rad and moved.
