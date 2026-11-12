@@ -837,15 +837,9 @@ Every other item below waits on the trigger it names.
 - **K1049** · Through-pass bends, DECIDED (Levi 2026-11-11: "Rounded corner", S1b/S1c's fillet); rp=outline must draw it in a K1314 fix stage: where a thread passes through a junction and bends, form B
   now draws today's sharp inner corner; S1b and S1c rounded it (`docs/design/K1040_s1d_corner.md` F2, and F6's Look
   with crops)
-- **K1328** · A tracked fixture with a mirrored strip (K1314 s7 mirA/mirB) for `test/render/rec_tie.test.ts`:
-  today only the untracked muse_hash and g41_user_tw64 scenes cover the mirror, so CI never ties it (K1247
-  s26)
 - **K1331** · muse_hash x22's smear at a twist eye: the depth tents cancel, the keys tie and the ghost half fades
   in; fix the tie or the ghost's alpha at kinks in draw.ts, not by dropping ghosts (K1314 s8 handoff; crop
   `.claude/probes/K1314/out/s8/after4x/spot_004.png`)
-- **K1332** · muse_hash c8's open end: c8's fill strip owns c67's area, a hard pink quad with a stair edge; fill
-  ownership in fill_tri, both fills; the end's shape waits on K1315 (K1314 s8 handoff; crop
-  `.claude/probes/K1314/out/s8/after4x/spot_006.png`)
 
 ## Residuals (known, not fixed)
 
@@ -1913,9 +1907,6 @@ Every other item below waits on the trigger it names.
 - **K1326** · `.claude/probes/K1247/k1247s22_census.ts` still caches form B tiles unkeyed (`K1247/out/fb`,
   `fbf`, `FBDIR`), read back by size: a stale cache passes after a reference change. Key them by the reference
   code's hash as `k1314_census.ts` `refCacheDirs` does (0b10c10b), or retire the script
-- **K1327** · The record fill's GPU shader drifts from its CPU twin by up to 1.85 px on muse_hash (FLOOR
-  strips o375, o850, row 2) and 1.63 px on def, in whole-span rows, not the mirror (s19 measured 0.002 px); it
-  came in between K1247 s20 and s26 (s26 handoff in `docs/design/K1247_s26_rec_fill_specks.md`)
 - **K1330** · The K1314 census reference draws a thin paper crack between two arms of one junction group;
   neither master nor K1247 s26 draws it (s26 handoff)
 
@@ -2264,6 +2255,9 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1328** · a tracked mirrored fixture in rec_tie (g41_user_tw64, c32's strip). Done in 7d4018a9 (2026-11-12).
+- **K1327** · the GPU record fill within 0.0016 px of its CPU twin on every census scene (span-end ties, exact column rule; brought in by 49afe511). Done in 45257b7e (2026-11-12).
+- **K1332** · c8's quad and stair edge cleared in both fills (fan mid-mouth key + FLOOR_EDGE, K1247 s27, with 5b345bd9). Done in 809d8421 (2026-11-12).
 - **K1322** · The record fill keys every strip as fillFrame does (K1247 s26), tied by test/render/rec_tie.test.ts. Done in caceed3a (2026-11-12).
 - **K1321** · the census reference draws the approved rounded look at classes (a)/(c) and the fillet yield (census_k1321c: stray_ink 25 -> 12, nothing new). Done in a8bab56a (2026-11-12).
 - **K1293** · outline_port.test.ts's second frame (a rigid 0.3 rad turn) leaves every corner degenerate, so its pins there exercise no arc; give it a frame with real corners (K1283 handoff, docs/design/K1283_junctions.md). Done in fe4dd895 (2026-11-10).
