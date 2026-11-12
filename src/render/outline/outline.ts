@@ -7132,6 +7132,12 @@ function sharpJoinFan(C: FCache, ci: number, aiA: number, aiB: number, pts: numb
   while (da > Math.PI) da -= 2 * Math.PI;
   while (da < -Math.PI) da += 2 * Math.PI;
   if (Math.abs(da) < 1e-4) return;
+  // K1314 s2 (muse_hash j73, the j74 spike): a border turns one way at every
+  // corner, and every other fan of the census scenes (424 of 425) sweeps that
+  // way (da < 0). A short way that turns against it is a sector the two arms'
+  // bands already overlap across, where form B inks nothing (0 of its
+  // samples): no fan there.
+  if (da > 0) return;
   const steps = Math.max(1, Math.ceil(Math.abs(da) / (Math.PI / 16)));
   pts.length = 0; cpts.length = 0;
   for (let k = 0; k <= steps; k++) { const a = a0 + (da * k) / steps; pts.push(qx, qy); cpts.push(qx + C.h * Math.cos(a), qy + C.h * Math.sin(a)); }
