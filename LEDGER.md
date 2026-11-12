@@ -513,11 +513,11 @@ Next free ID: K1319.
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: nobody since 2026-11-11 15:16 (merged; agent `afc77e62550888b86` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `8f38164c`
-  - evidence: .claude/probes/K1247/ (tools); untracked .claude/probes/K1247/out/s18-s20/; s20 branch worktree-agent-a095e7cff519b9abd (13abc7e1, record fill default, crops viewed: app paint matches)
-  - next: the first outline frame: cut its frame step (~235 ms in the browser) and cold fill (~122 ms); then fans, junctions and disks as records, the band topology, zC; phone check of the placement shader in the next K156 round
-  - brief: `docs/design/K1247_s21_structure_cost.md`
+  - owner: agent `a555ed905a6dda790` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-11 16:40, 2 h cap ~18:40)
+  - branch: `worktree-agent-a555ed905a6dda790`, worktree `.claude/worktrees/agent-a555ed905a6dda790`; last commit: `a6093589`
+  - evidence: .claude/probes/K1247/ (tools); untracked out/s22/
+  - next: s22: the band keeps one topology between structures with ob=1, its vertices CPU-placed records; then fans, junctions and disks as records, zC, the first frame (frame step ~235 ms, cold fill ~122 ms)
+  - brief: `docs/design/K1247_s22_band_records.md`
 - **K1278** · The outline's paint blends seamlessly across junctions (Levi 2026-11-10): section colour and pulses
   from per-pixel fields continuous across faces, triangles and junctions, gated by a seam test on every
   face edge, triangle edge and junction. Full text in docs/ledger_notes.md
@@ -546,11 +546,11 @@ Next free ID: K1319.
   most cases. But there are still plenty of unacceptable artifacts"): an artifact census (stray ink, hard
   colour edges inside fills, paper holes, broken ink) across scenes, then fix stages that drive its count to
   0; the look gate in docs/design/K1240_gate.md
-  - owner: nobody since 2026-11-11 16:38 (merged; agent `a4e6c1c337ca465db` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `6dd39fc6`
-  - evidence: .claude/probes/K1314/ (census tools); untracked out/s1/, out/s2/, out/s3/
-  - next: s4: the rest of the census (K1045 open eyes 2, hard wedges 4, s2 spike classes a-d: notch fans, uncut swallowtails in cutFoldsC, rounded fans where form B is square); the 5 sharp through bends past a junction wait on Levi (bends sheet out/s3/bends/bends_sheet.png); K1315 tail ends wait on Levi
-  - brief: docs/design/K1314_s3_corners.md (handoff at the end)
+  - owner: agent `a4e491db0bb7d458e` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-11 16:40, 2 h cap ~18:40)
+  - branch: `worktree-agent-a4e491db0bb7d458e`, worktree `.claude/worktrees/agent-a4e491db0bb7d458e`; last commit: `a6093589`
+  - evidence: .claude/probes/K1314/ (census tools); untracked out/s1-s4/
+  - next: s4: round the 5 through bends past a junction (muse_hash j78/j135/j98, g41_user_tw64 j48/j49) joined to the next corner; K1045 open eyes (muse_hash j73, j156); then s5: hard wedges, stray classes a-d; K1315 waits on Levi
+  - brief: `docs/design/K1314_s4_bends_eyes.md`
 
 ## Next, in order
 
