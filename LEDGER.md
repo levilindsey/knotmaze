@@ -512,7 +512,7 @@ Next free ID: K1315.
   - owner: agent `ad99eae806bca8e74` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-11 12:06, 2 h cap ~14:06)
   - branch: `worktree-agent-ad99eae806bca8e74`, worktree `.claude/worktrees/agent-ad99eae806bca8e74`; last commit: `569db037`
   - evidence: .claude/probes/K1247/ (tools); untracked .claude/probes/K1247/out/s18/, out/s19/
-  - next: s19 running: vertex-shader placement of the oe=1 fill records; then s20, the between-vertex strip-side cracks (census fill/paper vs off within 1%); then borders, z, the band fixed topology, seeded end solves
+  - next: s19 running: vertex-shader placement of the oe=1 fill records; then s20, oe=1 look: the between-vertex strip-side cracks (census fill/paper vs off within 1%) and the moved section boundaries at junctions (Claude saw them in s18 crops def rows 2-3 and muse_hash row 3); then borders, z, the band fixed topology, seeded end solves
   - brief: `docs/design/K1247_s19_shader_fill.md`
 - **K1278** · The outline's paint blends seamlessly across junctions (Levi 2026-11-10): section colour and pulses
   from per-pixel fields continuous across faces, triangles and junctions, gated by a seam test on every
