@@ -378,10 +378,10 @@ Next free ID: K1318.
   and a JSON looks list into a summary and sheets. Stages 3a-3c merged
   (737ac58..9ab8a01); rounds 2026-10-14, 14b and 14c are done (14c
   merged 772e48a..e1c2a80).
-  - owner: agent `a785e71cf6c686198` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (sonnet, started 2026-11-11 15:19, 1 h cap ~16:19)
-  - branch: `worktree-agent-a785e71cf6c686198`, worktree `.claude/worktrees/agent-a785e71cf6c686198`; last commit: `b26e8451`
+  - owner: nobody since 2026-11-11 15:21 (merged; agent `a785e71cf6c686198` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `cbc32d02`
   - evidence: `.claude/probes/rounds/2026-11-11/`
-  - next: round 2026-11-11 running: rp=outline worker frame, first frame, render sync and the placement shader on the Pixel (the K1240 gate phone lines)
+  - next: rerun round 2026-11-11 (steps 1-7) when Levi leaves the phone unlocked on its charger with the launcher in front; step 3 first ports k1240s4b_bench.mjs to the pass tab as k1310_phone_bench.mjs
   - brief: docs/design/K156.md (Round 2026-11-11)
   - env: the phone on its charger, reached over adb 5555 through Tailscale (`adb connect`; not the desktop's USB, Levi 2026-11-02); the pass builds and serves both builds itself (ports 5480-5489); nobody else uses the phone during the pass (K234)
 - **K268** · Shaped crossing gaps under thread reveal (K76; Levi, 2026-10-14):
