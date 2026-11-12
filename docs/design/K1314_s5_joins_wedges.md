@@ -88,3 +88,50 @@ Under 40 lines:
 - your last SHA.
 
 End with `Ledger items` and K1314's handle fields.
+
+## Handoff (2026-11-11 18:23, paused by Levi; stage NOT done)
+
+Done: no `src/` change (outline.ts equals 6a9e7415). One probe-only change to the census reference,
+committed in 6b010f54:
+- `filletHere` (k1314_census.ts): the fillet yields to form B inside another junction's ok corner's wedge
+  (`inWedge`).
+- Why: form_b_fillet draws a thru bend's circle with no end. muse_hash j78's (r 3.1 h) ran across j77, and
+  j20 and j154 behave the same way, so a translucent band crossed the next junction's thread and the
+  census counted that against the outline. The s4 crops in the main checkout's `out/s4/left/` (spot_004,
+  spot_008, spot_010) show the smear.
+- `--noyield` restores the old reference. k1314_crops.ts uses the same rule, and `k1314_s5_ref.ts` samples
+  plain B | fillet | hybrid | outline along a segment.
+
+Diagnosed, not fixed (`out/s5/before/` holds the 19 master crops, and `out/s5/spots.txt` holds the spot
+list, in the worktree, untracked):
+- muse_hash j135 is a real outline fault. Arc piece 1621 (corner 409, thru bend, r 1.2856,
+  q (4.079,25.592)) has points 0-5 all at the s4 join X (4.7593,24.5019), with feet dirs -8..-58 (the
+  thruJoinFan). Point 6 is at (4.5630,24.4016), dir -68, so the band skips dir about -61. That leaves ink
+  0 at (4.76-4.81, 24.25-24.33), where both references ink 1.0, and tails 1988 and 1989 have alpha 0
+  there.
+  - Next: in piecesPhaseC's arc branch (outline.ts ~7545-7575, thruJoinFan ~7336), make the first arc
+    point after the fan start at the fan's last ray. Check with
+    `k1314_s5_ref.ts muse_hash '4.62,24.46' '4.90,24.18' --n=15` (the outline should ink to about 4.81).
+- Class (c) at def j45/j48 and user j39 is form B's flaw: square band ends plus a gray smear wedge. The
+  outline draws a crisp round join (`out/s5/dbg/c_old`).
+  - Tried and reverted: fanning from the arm normals. It left a white hairline seam at j39 and kept the
+    mid-fan bulge.
+- Class (a) at def j174, ring j12, ring_tw42 j12 and user j28 #1 is form B's V notch, which the outline
+  fills (`out/s5/dbg/z/`). Outline side-notes:
+  - gray run-end fades inside the black near the corners;
+  - a pink sliver outside the black at ring j12;
+  - a green sliver at j28.
+- Not analysed:
+  - j49, a hairpin cap: a narrower, pointed hole, and a white seam at the upper-left;
+  - j154's inner edge;
+  - the j78 black wedges, from failed corners 235/236 ("V outside spans") and tails 1878/1879;
+  - group 2 (j71, x67, x68), which are fill:strip ownership edges in fill_tri.ts.
+
+In flight: the s5ref census (master's outline under the new reference) was stopped part-way. Its
+`out/s1/census_s5ref_1/_2.json` files are partial, so don't use them. The perf lock was released.
+
+Next step:
+1. Rerun `k1314_run.ps1 -Tag s5ref -Lock` and diff it against s4b with `k1314_ll_diff.ps1 -Near`. That
+   confirms which group 1 finds the reference yield clears, so the before counts become s4b re-taken
+   under the new reference.
+2. Then fix j135, and continue the brief's order.
