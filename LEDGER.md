@@ -818,10 +818,6 @@ Every other item below waits on the trigger it names.
 - **K1049** · Through-pass bends, DECIDED (Levi 2026-11-11: "Rounded corner", S1b/S1c's fillet); rp=outline must draw it in a K1314 fix stage: where a thread passes through a junction and bends, form B
   now draws today's sharp inner corner; S1b and S1c rounded it (`docs/design/K1040_s1d_corner.md` F2, and F6's Look
   with crops)
-- **K1322** · K1247's recStrip follows fill_tri fillFrame's strip rule as of K1314 s6 (c5ba26b8: both
-  sides on one s scale, centre at the mid s, JEND_GATE keeps s5's rows at junction ends): until then the
-  record fill (default) and oe=0 may differ at g41_ring_tw64 x67/x68. After K1247 s25 merges (it owns
-  fill_tri's record code); add a test tying the record fill to fillFrame
 - **K1325** · K1314 census reference: form B draws stray ink at muse_hash x304 and g41_user_tw64 j30 where
   rp=outline is clean, so the census counts them against the outline (crops
   `.claude/probes/K1314/out/s7/after4x/spot_007.png`, `spot_008.png`); fix the reference as K1321 did, in
@@ -829,13 +825,11 @@ Every other item below waits on the trigger it names.
 - **K1328** · A tracked fixture with a mirrored strip (K1314 s7 mirA/mirB) for `test/render/rec_tie.test.ts`:
   today only the untracked muse_hash and g41_user_tw64 scenes cover the mirror, so CI never ties it (K1247
   s26)
-- **K1331** · muse_hash x22's smear at a twist eye (form B smears too): the ghost is drawn at the tie alpha,
-  and there the depth tents cancel, so the keys tie and the ghost half fades in. Fix the tie or the ghost's
-  alpha at kinks in draw.ts; dropping ghosts at self-crossings took stray 8 -> 39 and paper 0 -> 61 (K1314 s8
-  handoff; crop `.claude/probes/K1314/out/s8/after4x/spot_004.png`)
-- **K1332** · muse_hash c8's open end (19.41, 14.16): c8's fill strip owns c67's area near the end, giving a
-  hard-edged pink quad with a stair edge. Fill ownership in fill_tri (fillFrame and the record fill), not
-  folds; the end's shape waits on K1315 (K1314 s8 handoff; crop
+- **K1331** · muse_hash x22's smear at a twist eye: the depth tents cancel, the keys tie and the ghost half fades
+  in; fix the tie or the ghost's alpha at kinks in draw.ts, not by dropping ghosts (K1314 s8 handoff; crop
+  `.claude/probes/K1314/out/s8/after4x/spot_004.png`)
+- **K1332** · muse_hash c8's open end: c8's fill strip owns c67's area, a hard pink quad with a stair edge; fill
+  ownership in fill_tri, both fills; the end's shape waits on K1315 (K1314 s8 handoff; crop
   `.claude/probes/K1314/out/s8/after4x/spot_006.png`)
 
 ## Residuals (known, not fixed)
@@ -2255,6 +2249,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1322** · The record fill keys every strip as fillFrame does (K1247 s26), tied by test/render/rec_tie.test.ts. Done in caceed3a (2026-11-12).
 - **K1321** · the census reference draws the approved rounded look at classes (a)/(c) and the fillet yield (census_k1321c: stray_ink 25 -> 12, nothing new). Done in a8bab56a (2026-11-12).
 - **K1293** · outline_port.test.ts's second frame (a rigid 0.3 rad turn) leaves every corner degenerate, so its pins there exercise no arc; give it a frame with real corners (K1283 handoff, docs/design/K1283_junctions.md). Done in fe4dd895 (2026-11-10).
 - **K1290** · answered, not adopted: forward corner-arc ends cut def jump pairs 66 -> 4 (muse_hash 33 -> 14) but census vs form B +1.8%, frame() +6%, concentric corners (j55, j156) still switch roots, and the corner-foot bites stay; follow-up in K1281. Done in 97f4f2e2 (2026-11-10).
