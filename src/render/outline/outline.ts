@@ -5870,14 +5870,18 @@ function cfRefine(C: FCache, lo: number, wlo: number, hi: number, whi: number, E
   if (!(wmid > 0)) { growWEnd = 0; return left; }
   return left + cfRefine(C, m, wmid, hi, Math.min(wmid, whi), E, Lmin);
 }
+// K1314 s4: true when the last growCFC grew along the closed-form path (cfAt can revisit any rho
+// of it), false on the integrator fallback.
+let growCfOk = false;
 function growCFC(C: FCache, ci: number): number {
-  const h = C.h; const r0 = kfCst.r0;
+  const h = C.h; const r0 = kfCst.r0; growCfOk = false;
   copyFoot(kfQa, kfFa); copyFoot(kfQb, kfFb);
   kfQa.u = C.armSR[kfCst.aiA] + C.armDir[kfCst.aiA] * armDistC(C, kfCst.aiA, kfFa.s);
   kfQb.u = C.armSR[kfCst.aiB] + C.armDir[kfCst.aiB] * armDistC(C, kfCst.aiB, kfFb.s);
   kfCst.qx = kfCst.Vx; kfCst.qy = kfCst.Vy; kfCst.rhoCur = h;
   if (!(r0 > 1e-9)) { C.nodeN[ci] = 0; return 0; }
   if (!cfInit(C)) { return growIntegC(C, ci); }
+  growCfOk = true;
   const N = kfGrowN > 0 ? kfGrowN : 16; const dN = r0 / N;
   const E = kfGrowE * h; const Lmin = kfGrowZ * h;
   cfAt(C, h);
@@ -6182,10 +6186,48 @@ function cornerDeadThruC(C: FCache, ci: number, aiA: number, aiB: number, jx: nu
 // another junction on its chain (wrapping a closed chain; Infinity with none), less the farthest
 // tangent foot of that junction's corners on its arm back along the same stretch (corners solved
 // this frame only: armCA/armCB map an arm to the corner it is aArm/bArm of, done marks them).
-function thruRoomC(C: FCache, ai: number, ji: number, armCA: Int32Array, armCB: Int32Array, done: Uint8Array): number {
+// K1314 s4: the corner whose foot set thruRoomC's room (-1: none) and which of its ends lies on the
+// chain (0: its ta, on its A arm; 1: its tb).
+let thruNbCi = -1; let thruNbEnd = 0;
+const thruX = { x: 0, y: 0 };
+// K1314 s4: this frame's joins, as (through corner, its joined end 0 A / 1 B, neighbour corner) triples,
+// and joinEnd[ci * 2 + end] = 1 for every arc end that sits on a join's X (both corners).
+const thruJoins: number[] = [];
+let thruJoinEnd = new Uint8Array(0);
+// K1314 s4: where circle (ax, ay, ar) crosses circle (bx, by, br), the crossing nearer (px, py), into
+// thruX; false when the circles do not cross.
+function circleCrossC(ax: number, ay: number, ar: number, bx: number, by: number, br: number, px: number, py: number): boolean {
+  const dx = bx - ax; const dy = by - ay; const d = Math.hypot(dx, dy);
+  if (!(d > 1e-12) || d > ar + br || d < Math.abs(ar - br)) return false;
+  const a = (ar * ar - br * br + d * d) / (2 * d); const hh = Math.sqrt(Math.max(0, ar * ar - a * a));
+  const mx = ax + (a * dx) / d; const my = ay + (a * dy) / d;
+  const x1 = mx - (hh * dy) / d; const y1 = my + (hh * dx) / d; const x2 = mx + (hh * dy) / d; const y2 = my - (hh * dx) / d;
+  if ((x1 - px) * (x1 - px) + (y1 - py) * (y1 - py) <= (x2 - px) * (x2 - px) + (y2 - py) * (y2 - py)) { thruX.x = x1; thruX.y = y1; } else { thruX.x = x2; thruX.y = y2; }
+  return true;
+}
+// K1314 s4: whether (x, y) lies on the shorter arc about (qx, qy) from (ax, ay) to (bx, by).
+function onArcC(qx: number, qy: number, ax: number, ay: number, bx: number, by: number, x: number, y: number): boolean {
+  const a0 = Math.atan2(ay - qy, ax - qx);
+  let da = Math.atan2(by - qy, bx - qx) - a0; while (da > Math.PI) da -= 2 * Math.PI; while (da < -Math.PI) da += 2 * Math.PI;
+  let t = Math.atan2(y - qy, x - qx) - a0; while (t > Math.PI) t -= 2 * Math.PI; while (t < -Math.PI) t += 2 * Math.PI;
+  return da >= 0 ? t >= -1e-9 && t <= da + 1e-9 : t <= 1e-9 && t >= da - 1e-9;
+}
+// K1314 s4: the largest radius at most r whose two tangent feet lie within roomA / roomB of their arms'
+// roots, by bisection along the growth's closed-form path (cfAt); leaves kfCst / kfQa / kfQb at it.
+// -1 when even V's feet (r 0) do not fit.
+function thruFitC(C: FCache, aiA: number, aiB: number, r: number, roomA: number, roomB: number): number {
+  const h = C.h;
+  const fits = (): boolean => (kfQa.u - C.armSR[aiA]) * C.armDir[aiA] <= roomA && (kfQb.u - C.armSR[aiB]) * C.armDir[aiB] <= roomB;
+  cfAt(C, h); if (!fits()) return -1;
+  let lo = 0; let hi = r;
+  for (let it = 0; it < 32 && hi - lo > 1e-7 * h; it++) { const m = 0.5 * (lo + hi); cfAt(C, h + m); if (fits()) lo = m; else hi = m; }
+  cfAt(C, h + lo);
+  return lo;
+}
+function thruRoomC(C: FCache, ai: number, ji: number, armCA: Int32Array, armCB: Int32Array, done: Uint8Array, side: number): number {
   const a = C.armObj[ai]; const p = C.polys[a.pi];
   const s0 = C.armSR[ai]; const dir = C.armDir[ai];
-  let best = Infinity; let nb = -1;
+  let best = Infinity; let nb = -1; thruNbCi = -1; thruNbEnd = 0;
   for (const k of C.armsOfChain[a.pi]) {
     if (C.armObj[k].ji === ji) continue;
     let d = (C.armSR[k] - s0) * dir;
@@ -6195,8 +6237,10 @@ function thruRoomC(C: FCache, ai: number, ji: number, armCA: Int32Array, armCB: 
   if (nb < 0) return best;
   let foot = 0;
   const ca = armCA[nb]; const cb = armCB[nb];
-  if (ca >= 0 && done[ca] && C.cOk[ca] && C.cDA[ca] > foot) foot = C.cDA[ca];
-  if (cb >= 0 && done[cb] && C.cOk[cb] && C.cDB[cb] > foot) foot = C.cDB[cb];
+  // K1314 s4: only the corner on the arc's side of the chain (a corner's side on its A arm is that
+  // arm's dir, on its B arm minus it); the other side's corner never meets the arc.
+  if (ca >= 0 && done[ca] && C.cOk[ca] && C.armDir[nb] === side && C.cDA[ca] > foot) { foot = C.cDA[ca]; thruNbCi = ca; thruNbEnd = 0; }
+  if (cb >= 0 && done[cb] && C.cOk[cb] && -C.armDir[nb] === side && C.cDB[cb] > foot) { foot = C.cDB[cb]; thruNbCi = cb; thruNbEnd = 1; }
   return best - foot;
 }
 
@@ -6208,6 +6252,8 @@ function cornersPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): void {
   const armCA = new Int32Array(nArm).fill(-1); const armCB = new Int32Array(nArm).fill(-1);
   for (let ci = 0; ci < st.corners.length; ci++) { armCA[st.corners[ci].aArm] = ci; armCB[st.corners[ci].bArm] = ci; }
   const done = new Uint8Array(st.corners.length);
+  thruJoins.length = 0;
+  if (thruJoinEnd.length < 2 * st.corners.length) thruJoinEnd = new Uint8Array(2 * st.corners.length); else thruJoinEnd.fill(0);
   for (let pass = 0; pass < 2; pass++)
   for (let ci = 0; ci < st.corners.length; ci++) {
     if ((st.corners[ci].thru === 1) !== (pass === 1)) continue;
@@ -6284,12 +6330,13 @@ function cornersPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): void {
     kfCst.wCacheA.valid = false; kfCst.wCacheA.oLo = NaN; kfCst.wCacheA.oHi = NaN;
     kfCst.wCacheB.valid = false; kfCst.wCacheB.oLo = NaN; kfCst.wCacheB.oHi = NaN;
     kfCst.rhoCur = h;
-    const r = growCFC(C, ci);
+    let r = growCFC(C, ci);
     C.cVx[ci] = Vx; C.cVy[ci] = Vy;
     C.cQx[ci] = kfCst.qx; C.cQy[ci] = kfCst.qy;
     C.cR[ci] = r;
     let tax = Vx; let tay = Vy; let tbx = Vx; let tby = Vy;
     let sA = kfFa.s; let sB = kfFb.s; let dA = dVa; let dB = dVb;
+    let rax = NaN; let ray = NaN; let rbx = NaN; let rby = NaN; // K1314 s4: a joined end's border cut
     if (r > 1e-9) {
       // K1247 s16: the arc's ends sit on the centre's feet, blended across
       // a concave vertex's bisector (blendFootC). The nearest foot jumps
@@ -6302,18 +6349,61 @@ function cornersPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): void {
       sA = kfEa.s; sB = kfEb.s;
       dA = (kfEa.u - C.armSR[aiA]) * C.armDir[aiA]; dB = (kfEb.u - C.armSR[aiB]) * C.armDir[aiB];
       // K1314 s3: a through bend's arc must not overlap the next junction's corner along its chain
-      // (thruRoomC), else the bend stays sharp: an arc reaching into that junction's corners left a
-      // border spur and its fill unbordered (muse_hash j135's r 3.2 h arc at j20).
-      if (thru && (dA > thruRoomC(C, aiA, ji, armCA, armCB, done) || dB > thruRoomC(C, aiB, ji, armCA, armCB, done))) {
-        cornerDeadThruC(C, ci, aiA, aiB, j.c[0], j.c[1], "past a junction");
-        continue;
+      // (thruRoomC): an arc reaching into that junction's corners left a border spur and its fill
+      // unbordered (muse_hash j135's r 3.2 h arc at j20). K1314 s4: the arc shrinks until both feet
+      // fit (thruFitC), so it ends where that corner's foot begins; the bend stays sharp only when
+      // even r 0 does not fit or the growth had no closed-form path to shrink along.
+      if (thru) {
+        const roomA = thruRoomC(C, aiA, ji, armCA, armCB, done, sideA); const nA = thruNbCi; const eA = thruNbEnd;
+        const roomB = thruRoomC(C, aiB, ji, armCA, armCB, done, sideB); const nB = thruNbCi; const eB = thruNbEnd;
+        const overA = dA > roomA; const overB = dB > roomB;
+        // K1314 s4: an end past the neighbour's foot JOINS that neighbour's arc where the two circles
+        // cross (X): this arc ends at X, the neighbour's starts there, and the border cut moves to
+        // the neighbour's foot (the border between the two feet lies under both fills). Paper's edge
+        // is the outer of the two arcs, as the fillet reference draws it.
+        let joinOk = (overA || overB) && nA !== nB;
+        let jxA = NaN; let jyA = NaN; let jxB = NaN; let jyB = NaN;
+        if (joinOk && overA) {
+          if (nA >= 0 && C.cR[nA] > 1e-9 && circleCrossC(kfCst.qx, kfCst.qy, r, C.cQx[nA], C.cQy[nA], C.cR[nA], eA === 0 ? C.cTax[nA] : C.cTbx[nA], eA === 0 ? C.cTay[nA] : C.cTby[nA]) &&
+            onArcC(kfCst.qx, kfCst.qy, tax, tay, tbx, tby, thruX.x, thruX.y) && onArcC(C.cQx[nA], C.cQy[nA], C.cTax[nA], C.cTay[nA], C.cTbx[nA], C.cTby[nA], thruX.x, thruX.y)) { jxA = thruX.x; jyA = thruX.y; } else joinOk = false;
+        }
+        if (joinOk && overB) {
+          if (nB >= 0 && C.cR[nB] > 1e-9 && circleCrossC(kfCst.qx, kfCst.qy, r, C.cQx[nB], C.cQy[nB], C.cR[nB], eB === 0 ? C.cTax[nB] : C.cTbx[nB], eB === 0 ? C.cTay[nB] : C.cTby[nB]) &&
+            onArcC(kfCst.qx, kfCst.qy, tax, tay, tbx, tby, thruX.x, thruX.y) && onArcC(C.cQx[nB], C.cQy[nB], C.cTax[nB], C.cTay[nB], C.cTbx[nB], C.cTby[nB], thruX.x, thruX.y)) { jxB = thruX.x; jyB = thruX.y; } else joinOk = false;
+        }
+        if (joinOk) {
+          if (overA) {
+            rax = eA === 0 ? C.cTax[nA] : C.cTbx[nA]; ray = eA === 0 ? C.cTay[nA] : C.cTby[nA]; sA = eA === 0 ? C.cSA[nA] : C.cSB[nA]; dA = roomA;
+            tax = jxA; tay = jyA;
+            if (eA === 0) { C.cTax[nA] = jxA; C.cTay[nA] = jyA; } else { C.cTbx[nA] = jxA; C.cTby[nA] = jyA; }
+            thruJoins.push(ci, 0, nA); thruJoinEnd[2 * ci] = 1; thruJoinEnd[2 * nA + eA] = 1;
+          }
+          if (overB) {
+            rbx = eB === 0 ? C.cTax[nB] : C.cTbx[nB]; rby = eB === 0 ? C.cTay[nB] : C.cTby[nB]; sB = eB === 0 ? C.cSA[nB] : C.cSB[nB]; dB = roomB;
+            tbx = jxB; tby = jyB;
+            if (eB === 0) { C.cTax[nB] = jxB; C.cTay[nB] = jyB; } else { C.cTbx[nB] = jxB; C.cTby[nB] = jyB; }
+            thruJoins.push(ci, 1, nB); thruJoinEnd[2 * ci + 1] = 1; thruJoinEnd[2 * nB + eB] = 1;
+          }
+        } else if (overA || overB) {
+          const rFit = growCfOk ? thruFitC(C, aiA, aiB, r, roomA, roomB) : -1;
+          if (!(rFit > 1e-9)) {
+            cornerDeadThruC(C, ci, aiA, aiB, j.c[0], j.c[1], "past a junction");
+            continue;
+          }
+          r = rFit; C.cQx[ci] = kfCst.qx; C.cQy[ci] = kfCst.qy; C.cR[ci] = r;
+          copyFoot(kfEa, kfQa); copyFoot(kfEb, kfQb);
+          tax = kfEa.x + (h * (kfCst.qx - kfEa.x)) / kfEa.d; tay = kfEa.y + (h * (kfCst.qy - kfEa.y)) / kfEa.d;
+          tbx = kfEb.x + (h * (kfCst.qx - kfEb.x)) / kfEb.d; tby = kfEb.y + (h * (kfCst.qy - kfEb.y)) / kfEb.d;
+          sA = kfEa.s; sB = kfEb.s;
+          dA = (kfEa.u - C.armSR[aiA]) * C.armDir[aiA]; dB = (kfEb.u - C.armSR[aiB]) * C.armDir[aiB];
+        }
       }
     }
     C.cTax[ci] = tax; C.cTay[ci] = tay; C.cTbx[ci] = tbx; C.cTby[ci] = tby;
     C.cSA[ci] = sA; C.cSB[ci] = sB; C.cDA[ci] = dA; C.cDB[ci] = dB;
     if (r > 1e-9) {
-      C.cRefA[ci] = addPointAtC(C, A.pi, sideA, tax, tay, sA);
-      C.cRefB[ci] = addPointAtC(C, B.pi, sideB, tbx, tby, sB);
+      C.cRefA[ci] = Number.isNaN(rax) ? addPointAtC(C, A.pi, sideA, tax, tay, sA) : addPointAtC(C, A.pi, sideA, rax, ray, sA);
+      C.cRefB[ci] = Number.isNaN(rbx) ? addPointAtC(C, B.pi, sideB, tbx, tby, sB) : addPointAtC(C, B.pi, sideB, rbx, rby, sB);
     } else {
       C.cRefA[ci] = addPointAtC(C, A.pi, sideA, Vx, Vy, sA);
       C.cRefB[ci] = addPointAtC(C, B.pi, sideB, Vx, Vy, sB);
@@ -7155,10 +7245,14 @@ function regionsPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): { regio
         while (da > Math.PI) da -= 2 * Math.PI;
         while (da < -Math.PI) da += 2 * Math.PI;
         const steps = Math.max(1, Math.ceil(Math.abs(da) / (Math.PI / 16)));
+        // K1314 s4: a joined end (X, where a through bend's arc meets its neighbour's) is a vertex of
+        // both junctions' polygons, so the two cover the wedge between the arcs and the shared foot.
+        if (thruJoinEnd[2 * ci]) pushPt(C.cTax[ci], C.cTay[ci]);
         for (let s2 = 1; s2 < steps; s2++) {
           const a = aA + (da * s2) / steps;
           pushPt(C.cQx[ci] + C.cR[ci] * Math.cos(a), C.cQy[ci] + C.cR[ci] * Math.sin(a));
         }
+        if (thruJoinEnd[2 * ci + 1]) pushPt(C.cTbx[ci], C.cTby[ci]);
       }
     }
     if (pts.length >= 2 && Math.hypot(pts[0] - pts[pts.length - 2], pts[1] - pts[pts.length - 1]) < 1e-12) pts.length -= 2;
@@ -7210,6 +7304,32 @@ function sharpJoinFan(C: FCache, ci: number, aiA: number, aiB: number, pts: numb
   const steps = Math.max(1, Math.ceil(Math.abs(da) / (Math.PI / 16)));
   pts.length = 0; cpts.length = 0;
   for (let k = 0; k <= steps; k++) { const a = a0 + (da * k) / steps; pts.push(qx, qy); cpts.push(qx + C.h * Math.cos(a), qy + C.h * Math.sin(a)); }
+}
+
+/** K1314 s4: at a through bend's joined end X (cornersPhaseC) its arc's band and the neighbour's end
+ *  square, each along its own circle's normal, which leaves the wedge between them uninked. Form B's
+ *  border is every point within W of the outline, a round join there: a fan on the through corner's
+ *  arc (every point at X, each foot one normal of the sweep, as sharpJoinFan), from its normal to the
+ *  neighbour's, the short way. */
+function thruJoinFan(C: FCache, ci: number, pts: number[], cpts: number[]): void {
+  for (let k = 0; k < thruJoins.length; k += 3) {
+    if (thruJoins[k] !== ci) continue;
+    const end = thruJoins[k + 1]; const nc = thruJoins[k + 2];
+    const x = end === 0 ? C.cTax[ci] : C.cTbx[ci]; const y = end === 0 ? C.cTay[ci] : C.cTby[ci];
+    const aO = Math.atan2(y - C.cQy[ci], x - C.cQx[ci]);
+    let da = Math.atan2(y - C.cQy[nc], x - C.cQx[nc]) - aO;
+    while (da > Math.PI) da -= 2 * Math.PI;
+    while (da < -Math.PI) da += 2 * Math.PI;
+    if (Math.abs(da) < 1e-4) continue;
+    const steps = Math.max(1, Math.ceil(Math.abs(da) / (Math.PI / 16)));
+    if (end === 1) {
+      for (let s = 1; s <= steps; s++) { const a = aO + (da * s) / steps; pts.push(x, y); cpts.push(x + C.h * Math.cos(a), y + C.h * Math.sin(a)); }
+    } else {
+      const fp: number[] = []; const fc: number[] = [];
+      for (let s = steps; s >= 1; s--) { const a = aO + (da * s) / steps; fp.push(x, y); fc.push(x + C.h * Math.cos(a), y + C.h * Math.sin(a)); }
+      pts.unshift(...fp); cpts.unshift(...fc);
+    }
+  }
 }
 
 /** K1283 s9 (j59): at a failed corner the a arm's run ends at the corner's
@@ -7425,6 +7545,7 @@ function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[])
         // W at each end (the "bite" at the corner's feet).
         const rf = C.cR[ci] + C.h;
         for (let s2 = 0; s2 <= steps; s2++) { const a = aA + (da * s2) / steps; const ca = Math.cos(a); const sa = Math.sin(a); pts.push(C.cQx[ci] + C.cR[ci] * ca, C.cQy[ci] + C.cR[ci] * sa); cpts.push(C.cQx[ci] + rf * ca, C.cQy[ci] + rf * sa); }
+        if (thruJoins.length > 0) thruJoinFan(C, ci, pts, cpts);
       } else if (!C.cOk[ci] && C.cMeet[ci]) { pts = [C.cQx[ci], C.cQy[ci]]; cpts = [C.cQx[ci], C.cQy[ci]]; if (dc) sharpJoinFan(C, ci, dc.aArm, dc.bArm, pts, cpts); }
       else if (!C.cOk[ci]) {
         let ax = C.cQx[ci]; let ay = C.cQy[ci];

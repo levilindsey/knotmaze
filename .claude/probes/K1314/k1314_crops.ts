@@ -69,8 +69,8 @@ function sceneCtx(nm: string): SceneCtx {
 }
 
 /** One crop row: three P x P panels with 4 px gaps, the ring at (x, y) radius rr (world). */
-export function cropRow(nm: string, x: number, y: number, rr: number, P: number, file?: string): Uint8Array {
-  const e = sceneCtx(nm); const h = e.m.scene.look.halfWidth; const S = ZOOM * h; const ppu = P / S;
+export function cropRow(nm: string, x: number, y: number, rr: number, P: number, file?: string, zoom?: number): Uint8Array {
+  const e = sceneCtx(nm); const h = e.m.scene.look.halfWidth; const S = (zoom ?? ZOOM) * h; const ppu = P / S;
   const c0 = Math.round(x * ppu - P / 2); const r0 = Math.round(y * ppu - P / 2);
   const Wt = 3 * P + 8; const out = new Uint8Array(Wt * P * 3).fill(255);
   const put = (col: number, c: number, r: number, rgb: [number, number, number]): void => { const o = 3 * (r * Wt + col * (P + 4) + c); out[o] = rgb[0]; out[o + 1] = rgb[1]; out[o + 2] = rgb[2]; };
