@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1315.
+Next free ID: K1316.
 
 ## Waiting on Levi
 
@@ -292,6 +292,10 @@ Next free ID: K1315.
   (his K928 plan: finish iterating, then hand-edit, then the pipeline reads his curves as drawn), or more look
   notes first? Every note so far is built (K1251). Sheets: .claude/probes/K863/trace/out38/png/; J3NV has no
   template SVG yet (out34/cursive_template.svg shows the export).
+- **K1315** · Junction under-tail ends in rp=outline: form B's round dot, or keep the outline's square end?
+  K1314 group 1, 18 census finds (e.g. muse_default_tw j150, g41_user_tw64 j63/j64, x134); sheet
+  `.claude/probes/K1314/out/s1/crops/sheets/broken_ink_01.png` (form B | today | rp=outline). Asked
+  2026-11-11.
 
 ## In progress
 
@@ -542,11 +546,11 @@ Next free ID: K1315.
   most cases. But there are still plenty of unacceptable artifacts"): an artifact census (stray ink, hard
   colour edges inside fills, paper holes, broken ink) across scenes, then fix stages that drive its count to
   0; the look gate in docs/design/K1240_gate.md
-  - owner: nobody since 2026-11-11 12:42 (merged; agent `a777f76a2eea30deb` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `50a89fef`
-  - evidence: .claude/probes/K1314/ (tools); untracked .claude/probes/K1314/out/s1/
-  - next: fix stages by group (census k1314_run.ps1 drives each to 0): s2 stray spikes in band ink (corner arcs + run pieces, 19); then K1049 rounded corners (14), K1045 open eyes (2 spots), hard colour wedges (4), square junction tail ends (18, look question to Levi); detector debts: tail end-shape test (x134), hairline arm-root cracks
-  - brief: `docs/design/K1314_s1_census.md`
+  - owner: agent `ae44cdbece648f3d2` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-11 12:43, 2 h cap ~14:43)
+  - branch: `worktree-agent-ae44cdbece648f3d2`, worktree `.claude/worktrees/agent-ae44cdbece648f3d2`; last commit: `27d4c722`
+  - evidence: .claude/probes/K1314/ (census tools); untracked .claude/probes/K1314/out/s1/ (census s1d, crop sheets), out/s2/
+  - next: s2 running: stray ink spikes in the band (19) to 0; then K1049 rounded corners (14) + K1045 open eyes (2 spots), hard colour wedges (4), junction tail ends (18, waits on Levi), detector debts (x134 end shape, hairline arm-root cracks)
+  - brief: `docs/design/K1314_s2_spikes.md`
 
 ## Next, in order
 
