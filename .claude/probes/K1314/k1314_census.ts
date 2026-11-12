@@ -219,12 +219,25 @@ export function filletPick(f: FBF, x: number, y: number): { ci: number; yielded:
 // they are: past the other corner the arc no longer bounds paper, and its band there was a spike. --noyieldfill
 // restores the plain value.
 export const YIELD_FILL = { on: !process.argv.includes("--noyieldfill") };
-export function yieldInk(f: FBF, ci: number, x: number, y: number, pl: { ink: number; chain: number; s: number }): { ink: number; chain: number; s: number } {
+// K1321: and plain's own-thread band past the arc's outer edge goes: the yielded side's paper is plain's paper
+// cut by the circle, so its band is the band of that intersection (the larger of the two distances), and
+// plain's straight band past r + W was the sharp corner's spike at the yield line (muse_hash j135, between
+// c172's arc and j20's c24). By the same intersection plain's inner AA ramp (its paper 2 aa toward q) takes the
+// circle's inner edge instead, or the paper edge the fill covered stayed a faint line inside the band.
+// --noyieldclip keeps plain's tube ink.
+export const YIELD_CLIP = { on: !process.argv.includes("--noyieldclip") };
+export function yieldInk(f: FBF, ci: number, x: number, y: number, pl: { ink: number; chain: number; s: number }, plainAt?: (x: number, y: number) => { top: number }): { ink: number; chain: number; s: number } {
   if (!YIELD_FILL.on || !ARC_BAND.on || !FILLET_CONE.on) return pl;
   const F = f as FBF & { aa: number; arms: { pi: number }[] };
   const c = f.corners[ci] as FBF["corners"][number] & { qx: number; qy: number };
   const own = F.arms[c.a].pi;
-  if (pl.chain >= 0 || Math.hypot(x - c.qx, y - c.qy) < c.r - F.aa) return pl;
+  const dq = Math.hypot(x - c.qx, y - c.qy);
+  if (pl.chain === own && YIELD_CLIP.on) {
+    const W = (f as FBF & { W: number }).W; let ink = pl.ink;
+    if (ink < 1 && plainAt && dq > c.r - F.aa && plainAt(x + 2 * F.aa * (c.qx - x) / dq, y + 2 * F.aa * (c.qy - y) / dq).top < 0) ink = Math.max(ink, ssK(c.r - F.aa, c.r + F.aa, dq));
+    return { ...pl, ink: Math.min(ink, 1 - ssK(c.r + W - F.aa, c.r + W + F.aa, dq)) };
+  }
+  if (pl.chain >= 0 || dq < c.r - F.aa) return pl;
   const ev = f.evalPoint(x, y); if (ev.top < 0 || ev.chain !== own) return pl;
   return { ink: arcInk(f, ci, x, y, ev), chain: ev.chain, s: ev.s };
 }
@@ -264,7 +277,7 @@ export function refEval(m: Model, x: number, y: number): { ink: number; top: num
   const ci = p.yielded ? -1 : p.ci;
   const e = { ...(ci >= 0 ? fbf.evalPoint(x, y) : plainOf(m).evalPoint(x, y)) };
   if (ci >= 0) e.ink = arcInk(fbf, ci, x, y, e);
-  if (p.yielded) { const y2 = yieldInk(fbf, p.ci, x, y, { ink: Math.min(1, Math.max(0, e.ink)), chain: e.top < 0 ? -1 : e.chain, s: e.s }); e.ink = y2.ink; e.chain = y2.chain; e.s = y2.s; if (y2.chain >= 0) e.top = Math.max(e.top, 0); }
+  if (p.yielded) { const y2 = yieldInk(fbf, p.ci, x, y, { ink: Math.min(1, Math.max(0, e.ink)), chain: e.top < 0 ? -1 : e.chain, s: e.s }, (px, py) => plainOf(m).evalPoint(px, py)); e.ink = y2.ink; e.chain = y2.chain; e.s = y2.s; if (y2.chain >= 0) e.top = Math.max(e.top, 0); }
   e.ink = vroundInk(m, x, y, Math.min(1, Math.max(0, e.ink)), e.top < 0 ? -1 : e.chain);
   return e;
 }
@@ -342,7 +355,7 @@ export function rasterFormB(m: Model, c0: number, r0: number, Wd: number, Hd: nu
         for (let r = 0; r < Hd; r++) for (let c = 0; c < Wd; c++) {
           const x = (c0 + c + 0.5) / ppu; const y = (r0 + r + 0.5) / ppu;
           const p = filletPick(fbf, x, y); if (p.ci < 0) continue; const ci = p.ci; const o = r * Wd + c;
-          if (p.yielded) { const y2 = yieldInk(fbf, ci, x, y, { ink: ink[o], chain: chain[o], s: s[o] }); ink[o] = y2.ink; chain[o] = y2.chain; s[o] = y2.s; continue; }
+          if (p.yielded) { const y2 = yieldInk(fbf, ci, x, y, { ink: ink[o], chain: chain[o], s: s[o] }, (px, py) => plainOf(m).evalPoint(px, py)); ink[o] = y2.ink; chain[o] = y2.chain; s[o] = y2.s; continue; }
           const ev = fbf.evalPoint(x, y);
           ink[o] = arcInk(fbf, ci, x, y, ev); chain[o] = ev.top < 0 ? -1 : ev.chain; s[o] = ev.s;
         }

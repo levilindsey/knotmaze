@@ -18,6 +18,8 @@ const SPOTS: [string, string, number, number][] = [
   ["y", "muse_hash j135", 4.745, 24.325], ["y", "muse_hash j78c", 5.90, 8.965], ["y", "muse_hash j98", 17.323, 29.666], ["y", "g41_user_tw64 j49", 12.885, 6.665],
   ["u", "g41_ring_tw64 x68", 20.10, 20.50], ["u", "g41_user_tw64 j71", 4.985, 7.55], ["u", "g41_ring_tw64 x67", 18.085, 20.685],
 ];
+// --spots=<scene>:<label>:<x>:<y>[;...] replaces the list (class "q"), for a census find's neighbourhood.
+const cli = opt("spots"); if (cli) SPOTS.splice(0, SPOTS.length, ...cli.split(";").map((t): [string, string, number, number] => { const [sc, lb, x, y] = t.split(":"); return ["q", `${sc} ${lb}`, +x, +y]; }));
 const flags = [VROUND, FILLET_CONE, ARC_BAND, YIELD_FILL];
 mkdirSync(dir, { recursive: true });
 const models = new Map<string, ReturnType<typeof buildModel>>();
