@@ -95,9 +95,13 @@ type Pin = { f0: { table: string; paint: string; band: string }; f1: { table: st
 // junction group (form B's member(): cap ramp 1) is no tie (draw.ts CONTACT_GROUPS, groupArms,
 // groupMember): band only, f0 and f1, on ring and g41_ring_tw42 (the j12 specks). Table and
 // paint unchanged. Checked against form B (census k1324g, crops in .claude/probes/K1324/out/s1).
+// K1247 s27 re-pinned on purpose (2026-11-12, coordinator at the merge): a junction fan's mid-mouth
+// vertex takes its arm centreline's cone key, and an unmatched strip's border row puts its edge's
+// midpoint on the cone (fill_tri FLOOR_EDGE, c8's quad): paint only, f0 and f1, on ring and
+// g41_ring_tw42. Checked against form B (census s27a, crops in .claude/probes/K1247/out/s27).
 const PINS: Record<string, Pin> = {
-  ring: { f0: { table: "276636e58a693c3b", paint: "4c55915bb7048867", band: "c7d0acec83f744ae" }, f1: { table: "884b7cf4c709b5c6", paint: "243dea8ca577e14f", band: "18d50ba8e6dde409" } },
-  g41_ring_tw42: { f0: { table: "11c7cdb8da1b9891", paint: "50247878bd6fdaa4", band: "04aed65d7f33bcd6" }, f1: { table: "1f89393aff28b751", paint: "b3f49438beaea1e7", band: "4591b35dc2e61f25" } },
+  ring: { f0: { table: "276636e58a693c3b", paint: "e57b025dc17996ca", band: "c7d0acec83f744ae" }, f1: { table: "884b7cf4c709b5c6", paint: "a32ea02671fd16bb", band: "18d50ba8e6dde409" } },
+  g41_ring_tw42: { f0: { table: "11c7cdb8da1b9891", paint: "c06a2bc79a0cc3d1", band: "04aed65d7f33bcd6" }, f1: { table: "1f89393aff28b751", paint: "cc9e773970557908", band: "4591b35dc2e61f25" } },
 };
 
 // The tool's second frame: every chain point rotated 0.3 rad and moved.
