@@ -72,9 +72,14 @@ type Pin = { f0: { table: string; paint: string; band: string }; f1: { table: st
 // run's end (RUN_FADE_MIN): table (ring and g41_ring_tw42, f0 and f1). A tied run's band
 // reads its own p.alpha (draw.ts bandData), but no band pin moved with these. Paint is
 // unchanged on both. Checked against form B (census s2b, crops).
+// K1314 s3 re-pinned on purpose (2026-11-11): a through pass's bend at a junction is a
+// corner (K1049: diagramOf flags it thru, cornersPhaseC rounds it like any corner under
+// pi, else dead), and a stub's end-cap tail under that bend reads the arc as X's inner
+// edge (TailIn.bend): table, paint and band (ring and g41_ring_tw42, f0 and f1). Checked
+// against the S1b/S1c fillet (form_b_fillet; census, crops in out/s3).
 const PINS: Record<string, Pin> = {
-  ring: { f0: { table: "59a1ee42da00c000", paint: "5e4217ee69951e8f", band: "9c1b3a98924d745c" }, f1: { table: "08a76e48703f6f05", paint: "69d5380db966d331", band: "6f0837c638f1c815" } },
-  g41_ring_tw42: { f0: { table: "41e36980cea61e26", paint: "fe6e5cd8fa6434c5", band: "745db7b9507eaa90" }, f1: { table: "4a97e69c9a8ecb4e", paint: "3b2f0873cfc48357", band: "3c67691dccf05395" } },
+  ring: { f0: { table: "690e07ffa66c47d1", paint: "7e7f975d1e62c865", band: "dbfa50a533512927" }, f1: { table: "e3368902550703db", paint: "4cee12264ccb438b", band: "ebc03b20bc572afe" } },
+  g41_ring_tw42: { f0: { table: "d9a1d684f5a1a3c7", paint: "a4002552459d302f", band: "8c4ffd61d7fb2346" }, f1: { table: "3b384287edd751ae", paint: "c0a2dcf38d4069ed", band: "b9078c643957d70d" } },
 };
 
 // The tool's second frame: every chain point rotated 0.3 rad and moved.
