@@ -518,10 +518,10 @@ Next free ID: K1320.
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: agent `aa65540a6e30e2162` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-11 23:56, 2 h cap ~01:56)
-  - branch: `worktree-agent-aa65540a6e30e2162`, worktree `.claude/worktrees/agent-aa65540a6e30e2162`; last commit: `21b266a2`
+  - owner: nobody since 2026-11-12 01:05 (merged; agent `aa65540a6e30e2162` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `72b642ff`
   - evidence: .claude/probes/K1247/ (tools, k1247s23_twin.ts); untracked out/s22/, out/s23/; the paused s23 worktree agent-a4396d99ea4060cf3 (129e2dfc, merged into the new branch first)
-  - next: s23 resumed: twin on muse_hash, npm test, headed ob=1 check, the def c24 run-end miss, then trim, bench, census, flip, crops
+  - next: s24 (flip blockers): port the nearest-thread rule past 4 slots to BAND_PLACE_VS (4925 muse_hash quads differ), colRow at def c61 d730 v109 and muse_hash c8 d121, run the twin on a captured g41_user_tw64 drag (through-bends j48/j49), count the TF pass in the bench frame; then flip ob in frame_loop.ts and re-freeze the outline_port pins
   - brief: `docs/design/K1247_s23_band_shader.md`
 - **K1278** · The outline's paint blends seamlessly across junctions (Levi 2026-11-10): section colour and pulses
   from per-pixel fields continuous across faces, triangles and junctions, gated by a seam test on every
