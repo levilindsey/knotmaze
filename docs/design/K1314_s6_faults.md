@@ -93,3 +93,42 @@ Under 40 lines:
 - your last SHA.
 
 End with `Ledger items` and K1314's handle fields.
+
+## Handoff (stage 6 agent, 2026-11-12, start 1:20 AM, stop 2:50 AM)
+
+Census (`k1314_run.ps1 -Tag s6 -Lock` at 85b9516a, out/s1/census_s6.*) against
+census_k1321c (master's outline, K1321's reference): stray_ink 12 -> 12,
+hard_edge 3 -> 2, paper 0 -> 0, broken_ink 13 -> 13, k1049 0 -> 0. The one
+difference is x68's wedge gone (g41_ring_tw64); no new find of any kind.
+
+Rules:
+- `outline.ts` `arcEndFeet` (ARC_END_FEET, end of piecesPhaseC): an ok
+  corner's arc takes the adjoining run's foot at each end it shares with a
+  run. Clears j39's ticks.
+- `fill_tri.ts` `fillFrame`, the strip loop: a strip whose two border pieces
+  span different s ranges samples both sides on one s scale (their union; a
+  side outside its span holds at its piece end) and keys its centre at the
+  mid s. Clears x68 and x67's tongue. JEND_GATE: not where the ranges part
+  at a junction end (stationS of that station non-null), which keep stage
+  5's rows (else muse_hash j77, j20, j154 broke: 3 broken_ink).
+- MATCH_MIRROR (off): mirroring the consumed side across the centreline
+  clears j71, but the mirrored tube then lies under another arm's junction
+  fill keyed above it (muse_hash j56: 7 hard edges, 4 paper on two scenes).
+
+Bench (k1314_s3_bench.ps1, def, ABBA, perf lock; worker frame p50 ms):
+A 4f3cbb0c 49.6 / 44.6, B b0340614 47.0 / 44.8 (out/s6/bench_s6b.json).
+A first run under another agent's load read 67.0/67.2/66.7/48.8
+(bench_s6.json), void.
+
+Crops (fillet ref | master 4f3cbb0c | s6): out/s6/after (px 240) and
+out/s6/after4x (px 480, zoom 2.5); master's own in out/s6/before{,4x}.
+
+Left:
+- j71 (g41_user_tw64, 4.95, 7.54): needs MATCH_MIRROR plus a junction fill
+  that yields to an arm's own tube where it lies over it.
+- Fault 4 specks (def j174, ring j12, g41_ring_tw42 j12, g41_user_tw64
+  j28): unchanged; the ink fades there come from draw.ts tieAlpha /
+  contactPasses tying two arms of one form B junction group (def j174:
+  c71/c73, group 119). K1247's file.
+- j78 (muse_hash 5.88, 8.50) is K1315's: c79's open start under c33, run
+  1105 faded by runEndFade, tail 1878 at alpha 0.
