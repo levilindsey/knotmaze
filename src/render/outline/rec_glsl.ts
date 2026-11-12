@@ -55,15 +55,17 @@ void recSeg(int b, int n, float L, float u, out int k, out int j, out float f) {
 float recPfAt(int g) { vec4 t = recT(uRecPf, g >> 2); int c = g & 3; return c == 0 ? t.x : c == 1 ? t.y : c == 2 ? t.z : t.w; }
 float recPfU(int b, int n, int V) { if (V < 0) return 0.0; int q = V / n; return recPfAt(b + V - q * n) + float(q) * recPfAt(b + n - 1); }
 float recSV(int b, int n, float L, int V) { int q = V / n; return recT(uRecChain, b + V - q * n).z + (q > 0 ? float(q) * L : 0.0); }
+// K1247 s27 (K1327): chain_frame's SPAN_EPS, a sample that close to the span's start or end is at it.
+const float REC_SPAN_EPS = 2e-4;
 void recSpan(int b, int n, float L, float sA, float dS, out float a, out float sB, out float base, out int k, out int V2) {
   int m = n - 1; float sm = recT(uRecChain, b + m).z;
   base = 0.0;
   if (L > 0.0) { a = sA - L * floor(sA / L); base = sA - a; } else a = clamp(sA, 0.0, sm);
   sB = (L > 0.0 ? sA + dS : clamp(sA + dS, 0.0, sm)) - base;
-  if (a >= sm) k = L > 0.0 ? m : m - 1;
-  else { int lo = 0; int hi = m; while (hi - lo > 1) { int q = (lo + hi) >> 1; if (recT(uRecChain, b + q).z <= a) lo = q; else hi = q; } k = lo; }
+  if (a + REC_SPAN_EPS >= sm) k = L > 0.0 ? m : m - 1;
+  else { int lo = 0; int hi = m; while (hi - lo > 1) { int q = (lo + hi) >> 1; if (recT(uRecChain, b + q).z <= a + REC_SPAN_EPS) lo = q; else hi = q; } k = lo; }
   int lo = k; int hi = L > 0.0 ? k + 1 + n * (int(floor(max(0.0, sB) / L)) + 2) : m;
-  while (hi - lo > 1) { int q = (lo + hi) >> 1; if (recSV(b, n, L, q) < sB) lo = q; else hi = q; }
+  while (hi - lo > 1) { int q = (lo + hi) >> 1; if (recSV(b, n, L, q) < sB - REC_SPAN_EPS) lo = q; else hi = q; }
   V2 = lo;
 }
 // Sample v's corner on side sgn: 0 none, 1 convex (a fan from a0 by da), 2 concave (its miter M, trim).
@@ -98,7 +100,13 @@ vec2 recFan(int b, int n, float L, int V, float sgn, float st, float g) {
   if (ty == 1 && st > 0.0) { float an = a0 + da * g / st; return recT(uRecChain, b + v).xy + uRecHW * vec2(cos(an), sin(an)); }
   return recEdge(b, n, L, v, recT(uRecChain, b + v).z, sgn);
 }
-float recCs(int b, int n, float L, float a, float B, float S, float p0, int V) { return floor((recSV(b, n, L, V) - a) * B / S + 0.5) + recPfU(b, n, V - 1) - p0; }
+// K1247 s27 (K1327): the nearest column, as the largest m with (m - 0.5) S <= (s(V) - a) B: the division only
+// guesses it (it is not IEEE on D3D11), the products and compares settle it, as chain_frame's colR does.
+float recCs(int b, int n, float L, float a, float B, float S, float p0, int V) {
+  float r = (recSV(b, n, L, V) - a) * B; float m = floor(r / S + 0.5);
+  if ((m - 0.5) * S > r) m -= 1.0; else if ((m + 0.5) * S <= r) m += 1.0;
+  return m + recPfU(b, n, V - 1) - p0;
+}
 // Column i of a record side: (x, y, its centreline s in sA's frame).
 vec3 recCol(int b, int n, float L, float sA, float dS, int N, float sgn, int i) {
   float a; float sB; float base; int k; int V2; recSpan(b, n, L, sA, dS, a, sB, base, k, V2);

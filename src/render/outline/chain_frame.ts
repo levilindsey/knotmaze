@@ -377,20 +377,47 @@ export function recTables(zc: readonly FrameChain[], h: number): RecTables {
 // A record side's span: [a (the start, wrapped into [0, L) on a loop), sB (the end, same frame), k (the
 // first segment), V1, V2 (the interior vertices, unwrapped: sample V % n, s(V) = s[V % n] + floor(V / n)
 // L), base (sA minus a: colAt's s is in sA's frame)]. As polyRow's walk.
-const SPN = new Float64Array(6);
+// K1247 s27 (K1327): a sample within SPAN_EPS of the span's start or end counts as at it (k takes it,
+// V2 leaves it out). A piece often ends on a chain sample, and the table's float32 sA, dS put that end
+// a few float32 ulps either side of it: float64 here and float32 in rec_glsl's recSpan split such a tie
+// differently, and a corner's fan steps then moved in or out of the span, shifting every column after
+// it by a step (muse_hash o375, o850: 1.85 px). The tolerance is far above float32's error at these s
+// (2e-4 against an ulp of 4e-6 at s 40) and far below a column (h / 8), and recSpan uses the same one.
+export const SPAN_EPS = 2e-4;
+const SPN = new Float64Array(8);
 function spanOf(c: FrameChain, sA: number, dS: number): Float64Array {
   const n = c.n; const m = n - 1; const loop = c.closed && c.len > 0; const L = c.len; const ss = c.s;
   let a = sA; let base = 0;
   if (loop) { const w = ((a % L) + L) % L; base = a - w; a = w; } else a = a < 0 ? 0 : a > ss[m] ? ss[m] : a;
   const sB = (loop ? sA + dS : Math.min(Math.max(sA + dS, 0), ss[m])) - base;
   let k: number;
-  if (a >= ss[m]) k = loop ? m : m - 1;
-  else { let lo = 0; let hi = m; while (hi - lo > 1) { const q = (lo + hi) >> 1; if (ss[q] <= a) lo = q; else hi = q; } k = lo; }
-  // V2: the last V with s(V) < sB - 1e-9 (V1 - 1 = k when none).
-  const lim = sB - 1e-9; let lo = k; let hi = loop ? k + 1 + n * (Math.floor(Math.max(0, sB) / L) + 2) : m;
+  if (a + SPAN_EPS >= ss[m]) k = loop ? m : m - 1;
+  else { let lo = 0; let hi = m; while (hi - lo > 1) { const q = (lo + hi) >> 1; if (ss[q] <= a + SPAN_EPS) lo = q; else hi = q; } k = lo; }
+  // V2: the last V with s(V) < sB - SPAN_EPS (V1 - 1 = k when none).
+  const lim = sB - SPAN_EPS; let lo = k; let hi = loop ? k + 1 + n * (Math.floor(Math.max(0, sB) / L) + 2) : m;
   while (hi - lo > 1) { const q = (lo + hi) >> 1; if (sOfV(c, q) < lim) lo = q; else hi = q; }
+  // recSpan's own float32 a and S = sB - a (SPN[6], SPN[7]), for colR's column rounding.
+  const F = Math.fround; const sA32 = F(sA); const L32 = loop ? F(L) : 0; const sm32 = F(ss[m]);
+  const a32 = loop ? F(sA32 - F(L32 * Math.floor(F(sA32 / L32)))) : Math.min(Math.max(sA32, 0), sm32);
+  const base32 = loop ? F(sA32 - a32) : 0;
+  const sB32 = F((loop ? F(sA32 + F(dS)) : Math.min(Math.max(F(sA32 + F(dS)), 0), sm32)) - base32);
+  const S32 = F(sB32 - a32); SPN[6] = a32; SPN[7] = S32 > 0 ? S32 : sB - a;
   SPN[0] = a; SPN[1] = sB; SPN[2] = k; SPN[3] = k + 1; SPN[4] = lo; SPN[5] = base;
   return SPN;
+}
+/** K1247 s27 (K1327): sample V's column before its fans, (s(V) - a) B / S rounded to the nearest, as the
+ *  largest m with (m - 0.5) S <= (s(V) - a) B, from the shader's float32 inputs (the table's s; recSpan's a and
+ *  S, spanOf's SPN[6] and SPN[7]) with float32 products, the same rule recCs runs. A sample about half a column
+ *  between two columns was rounded one way here (float64 s, a and division) and the other way on the GPU,
+ *  whose s - a loses about B / S float32 ulps of s (to 3e-4 of a column) and whose division is not IEEE on
+ *  D3D11. That shifted the columns around it by one (def o927 R V828: x = 104.0000018 here, 103.99993 there;
+ *  0.54-0.59 px). The division only guesses m here and in recCs; the products and compares settle it. */
+function colR(c: FrameChain, V: number, a32: number, B: number, S32: number): number {
+  const F = Math.fround; const n = c.n; const q = Math.floor(V / n);
+  const sv = q > 0 ? F(F(c.s[V - q * n]) + F(q * F(c.len))) : F(c.s[V]);
+  const r = F(F(sv - a32) * B); let m = Math.floor(r / S32 + 0.5);
+  if (F((m - 0.5) * S32) > r) m -= 1; else if (F((m + 0.5) * S32) <= r) m += 1;
+  return m;
 }
 function sOfV(c: FrameChain, V: number): number { const n = c.n; const q = Math.floor(V / n); return c.s[V - q * n] + q * c.len; }
 function pfU(c: FrameChain, pf: ArrayLike<number>, o: number, V: number): number {
@@ -418,8 +445,8 @@ export function recSideOk(c: FrameChain, T: RecTables, ci: number, sA: number, d
  *  column, so no chord between two columns cuts a corner. The shader's recCol is this, line for line. */
 export function colAt(c: FrameChain, pf: ArrayLike<number>, o: number, sA: number, dS: number, N: number, sgn: number, h: number, i: number, out: Float64Array, oi: number): number {
   const sp = spanOf(c, sA, dS); const a = sp[0]; const sB = sp[1]; const k = sp[2]; const V1 = sp[3]; const V2 = sp[4];
-  const S = sB - a; const p0 = pfU(c, pf, o, V1 - 1); const B = N - (pfU(c, pf, o, V2) - p0);
-  const cs = (V: number): number => Math.floor(((sOfV(c, V) - a) * B) / S + 0.5) + pfU(c, pf, o, V - 1) - p0;
+  const p0 = pfU(c, pf, o, V1 - 1); const B = N - (pfU(c, pf, o, V2) - p0);
+  const a32 = sp[6]; const S32 = sp[7]; const cs = (V: number): number => colR(c, V, a32, B, S32) + pfU(c, pf, o, V - 1) - p0;
   // The last interior V with cs(V) <= i (V1 - 1: none).
   let lo = V1 - 1; let hi = V2 + 1;
   while (hi - lo > 1) { const q = (lo + hi) >> 1; if (cs(q) <= i) lo = q; else hi = q; }
@@ -475,7 +502,7 @@ export function colRow(c: FrameChain, pf: ArrayLike<number>, o: number, sA: numb
   const sp = spanOf(c, sA, dS); const a = sp[0]; const sB = sp[1]; const k = sp[2]; const V1 = sp[3]; const V2 = sp[4]; const base = sp[5];
   const S = sB - a; const p0 = pfU(c, pf, o, V1 - 1); const B = N - (pfU(c, pf, o, V2) - p0);
   if (!(S > 0) || !(B >= 0)) { for (let i = iLo; i <= iHi; i++) sOut[i] = colAt(c, pf, o, sA, dS, N, sgn, h, i, out, 2 * i); return; }
-  const cs = (V: number): number => Math.floor(((sOfV(c, V) - a) * B) / S + 0.5) + pfU(c, pf, o, V - 1) - p0;
+  const a32 = sp[6]; const S32 = sp[7]; const cs = (V: number): number => colR(c, V, a32, B, S32) + pfU(c, pf, o, V - 1) - p0;
   CR_ON = true; CRK[0] = -1; CRK[1] = -1;
   try {
     // V: the last interior vertex with cs(V) <= i (V1 - 1: none); c0 = cs(V), cN = cs(V + 1).
@@ -506,8 +533,8 @@ export function colEnds(c: FrameChain, pf: ArrayLike<number>, o: number, sA: num
   if (V1 > V2) return false;
   const S = sB - a; const p0 = pfU(c, pf, o, V1 - 1); const B = N - (pfU(c, pf, o, V2) - p0);
   if (!(S > 0) || !(B >= 0)) return false;
-  out[0] = Math.floor(((sOfV(c, V1) - a) * B) / S + 0.5);
-  out[1] = Math.floor(((sOfV(c, V2) - a) * B) / S + 0.5) + pfU(c, pf, o, V2) - p0; out[2] = B;
+  out[0] = colR(c, V1, sp[6], B, sp[7]);
+  out[1] = colR(c, V2, sp[6], B, sp[7]) + pfU(c, pf, o, V2) - p0; out[2] = B;
   out[3] = V1 % c.n; out[4] = V2 % c.n;
   return true;
 }
