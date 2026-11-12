@@ -106,7 +106,10 @@ over. Padded pieces are exact (max 0); decimated max 0.195. Every piece over 0.2
 the worst sit at a run's end column (muse_hash c71 at (16.75, 33.63), c67 (22.63, 17.64), c66 (33.16,
 17.85); def c24 (17.79, 18.63), c73 (6.87, 25.77)), several at alpha 0. Inferred, not checked: today's end
 vertex lies on the clipping border while the record's is on the chain normal. Census (form B, ppu 160,
-min 40, `k1247s22_census.ts`, OB=G today's bandGpu vs OB=1): CENSUS_PENDING.
+min 40, `k1247s22_census.ts`, OB=G today's bandGpu vs OB=1; caches copied to `out/s22/fbcache`): every
+kind's count is equal on all three scenes (def 397 = 397, fat 0 = 0, muse_hash 451 = 451; artifacts 33,
+owner_only 701, tail_look 114 in both), and the artifact pixels differ by +0.0001% (def) and -0.022%
+(muse_hash).
 
 **Speed** (ABBA under the perf lock, preview of 34d499b4, p50 per phase, off | on): def band part 62.2/65.2
 | 71.7/68.6 ms, worker 174.4/179.2 | 189.7/183.0 ms, reply 22.7 | 28.8 MB, band vertices 457k | 603k,
