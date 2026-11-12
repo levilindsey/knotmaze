@@ -4401,6 +4401,8 @@ let cfSeq = new Int32Array(1024);
 // K1283 s5: each cut point's legs' inward normals (n1x, n1y, n2x, n2y per pool point past nb),
 // and foldChevron's output (x, y, foot x, foot y per point).
 const CF_NS = 4; // side samples per half chevron: 2 CF_NS + 1 points per cut fold
+/** K1314 s9 (perf): the frame reports its first CF_DIAG_N fold notes; cutFoldsC builds no more. */
+const CF_DIAG_N = 20;
 let cfCut = new Float64Array(64); const cfChev = new Float64Array(4 * (2 * CF_NS + 1)); const cfSegs: number[] = []; const cfU = new Float64Array(2);
 // K1283 s8: each cut point's s on its second leg (the cut point's own s is the first leg's).
 let cfS2 = new Float64Array(16);
@@ -4485,7 +4487,6 @@ function foldChevron(p: Poly, h: number, W: number, x: number, y: number, s: num
   put(x, y, n2x, n2y);
   return k;
 }
-const K1314X9 = (): string => (globalThis as unknown as { process?: { env: Record<string, string | undefined> } }).process?.env.EXP9 ?? "";
 function cutFoldsC(C: FCache, pi: number, sig: number, B: FBord): void {
   const p = C.polys[pi];
   const h = C.h;
@@ -4495,7 +4496,7 @@ function cutFoldsC(C: FCache, pi: number, sig: number, B: FBord): void {
   let nb = B.nb;
   if (bends.length) {
     const bendClusters: number[] = [];
-    for (const sb of bends) if (!bendClusters.some((c) => Math.abs(dS(p, c, sb)) < h)) bendClusters.push(sb);
+    for (const sb of bends) { let near = false; for (let c = 0; c < bendClusters.length && !near; c++) near = Math.abs(dS(p, bendClusters[c], sb)) < h; if (!near) bendClusters.push(sb); }
     if (cfSeq.length < nb) cfSeq = new Int32Array(nb * 2);
     const seq = cfSeq;
     let m = nb;
@@ -4514,8 +4515,7 @@ function cutFoldsC(C: FCache, pi: number, sig: number, B: FBord): void {
     // and a chevron inks a dark quad over c8's end (muse_hash c8 / x300's old blot).
     const roots = C.chainRoots[pi];
     for (const sb of bendClusters) {
-      let nearRoot = false; for (let r = 0; r < roots.length; r++) if (Math.abs(dS(p, roots[r], sb)) < h) nearRoot = true;
-      if (nearRoot && atEnd(sb)) continue;
+      if (atEnd(sb)) { let nearRoot = false; for (let r = 0; r < roots.length && !nearRoot; r++) nearRoot = Math.abs(dS(p, roots[r], sb)) < h; if (nearRoot) continue; }
       // A bend within h of a kink's station (a self-crossing of this chain): its border
       // crosses itself there because the thread does, and the crossing's gap draws it (muse_hash
       // x58 70.4 -> 18.6 px, x22 68.2 -> 43.3; cut, they were 43 and 21 px worse than master).
@@ -4556,7 +4556,7 @@ function cutFoldsC(C: FCache, pi: number, sig: number, B: FBord): void {
             cfS2[nid - nb] = B.ps[ic] + dS(p, B.ps[ic], B.ps[id]) * hit.u;
             // seq.splice(i + 1, j - i - 1, nid)
             seq[i + 1] = nid; seq.copyWithin(i + 2, j, m); m -= j - i - 2;
-            diag.push(`fold ch${pi} side${sig} at s=${sb.toFixed(2)}`);
+            if (diag.length < CF_DIAG_N) diag.push(`fold ch${pi} side${sig} at s=${sb.toFixed(2)}`);
             changed = true;
             break outer;
           }
@@ -4606,7 +4606,7 @@ function cutFoldsC(C: FCache, pi: number, sig: number, B: FBord): void {
       cfS2[nid - nb] = hs;
       if (atS) { seq[1] = nid; seq.copyWithin(2, iIn + 1, m); m -= iIn - 1; }
       else { seq[iIn] = nid; seq[iIn + 1] = seq[iE]; m = iIn + 2; }
-      diag.push(`end fold ch${pi} side${sig} at s=${hs.toFixed(2)} (${hx.toFixed(2)}, ${hy.toFixed(2)})`);
+      if (diag.length < CF_DIAG_N) diag.push(`end fold ch${pi} side${sig} at s=${hs.toFixed(2)} (${hx.toFixed(2)}, ${hy.toFixed(2)})`);
     }
     // Compact the sequence into the base arrays; each cut fold becomes its chevron (foldChevron).
     let cuts = 0; for (let i = 0; i < m; i++) if (seq[i] >= nb) cuts++;
@@ -4622,21 +4622,10 @@ function cutFoldsC(C: FCache, pi: number, sig: number, B: FBord): void {
           // K1283 s8: the chevron's s runs from the cut's s on the fold's first leg to its s on the
           // second (was the first leg's s throughout), and its ends know each other's (borderMeetC).
           const s1 = B.ps[id]; const ds = CF_S2 ? dS(p, s1, cfS2[id - nb]) : 0;
-          { const dbg = (globalThis as unknown as { __k1314dbg?: string[] }).__k1314dbg; if (dbg) { const s2 = cfS2[id - nb]; const arms = C.armsOfChain[pi]; let txt = ""; for (let r = 0; r < roots.length; r++) { const a = dS(p, s2, roots[r]); const b = dS(p, roots[r], s1); if (Math.abs(a) < 3 * C.W || Math.abs(b) < 3 * C.W) { const ai = arms[r]; txt += ` |ai${ai} j${C.armObj[ai].ji} ${C.armObj[ai].kind} dir${C.armDir[ai]} a=${a.toFixed(3)} b=${b.toFixed(3)}`; } } dbg.push(`c${pi} sig${sig} s1 ${s1.toFixed(3)} s2 ${s2.toFixed(3)} X ${B.px[id].toFixed(3)} ${B.py[id].toFixed(3)} k${k} n1 ${cfCut[4 * (id - nb)].toFixed(2)},${cfCut[4 * (id - nb) + 1].toFixed(2)} n2 ${cfCut[4 * (id - nb) + 2].toFixed(2)},${cfCut[4 * (id - nb) + 3].toFixed(2)}${txt}`); } }
-          const X9 = K1314X9(); let rA = NaN; const s2x = cfS2[id - nb];
-          if (X9 && dS(p, s1, s2x) > 1e-9) for (let r = 0; r < roots.length; r++) { const a = dS(p, s2x, roots[r]); if (a >= 0 && a < C.W) rA = roots[r]; }
-          const kx9 = cfCut[4 * (id - nb)]; const ky9 = cfCut[4 * (id - nb) + 1]; const kh9 = (k - 1) >> 1;
           for (let r = 0; r < k; r++) {
             B.bx[o] = cfChev[4 * r]; B.by[o] = cfChev[4 * r + 1]; B.bsm[o] = s1 + (k > 1 ? (ds * r) / (k - 1) : 0); B.bs[o] = CF_S2_PAINT ? B.bsm[o] : s1; B.bfx[o] = cfChev[4 * r + 2]; B.bfy[o] = cfChev[4 * r + 3];
             B.bcv[o] = r === 0 ? 1 : r === k - 1 ? 2 : 0; B.bs2[o] = r === 0 ? s1 + ds : s1;
-            if (rA === rA && X9 === "v1") { if (r > kh9) { B.bfx[o] = B.bx[o] + h * kx9; B.bfy[o] = B.by[o] + h * ky9; } B.bcv[o] = 0; B.bs2[o] = s1; }
-            if (rA === rA && X9 === "v4" && r > kh9) { B.bfx[o] = cfChev[4 * (k - 1 - r) + 2]; B.bfy[o] = cfChev[4 * (k - 1 - r) + 3]; }
             o++;
-          }
-          if (rA === rA) while (i + 1 < m && seq[i + 1] < nb && dS(p, s2x, B.ps[seq[i + 1]]) >= -1e-9 && dS(p, B.ps[seq[i + 1]], rA) >= 0) {
-            const q = seq[++i]; if (X9 === "v3") continue;
-            B.bcv[o] = 0; B.bx[o] = B.px[q]; B.by[o] = B.py[q]; B.bs[o] = B.ps[q]; B.bsm[o] = B.ps[q];
-            B.bfx[o] = B.px[q] + h * kx9; B.bfy[o] = B.py[q] + h * ky9; o++;
           }
           continue;
         }
@@ -7470,6 +7459,54 @@ function runEndFade(a: TailIn, p: OutlinePiece, atEnd: boolean): void {
   if (al && farCum >= RUN_FADE_MIN * a.h) p.alpha = al;
 }
 
+/** K1314 s9 (g41_user_tw64 j71's shade): a run starts at its arm's root,
+ *  which can lie inside another arm's tube of the junction. There form B's
+ *  tie fades the run's border (draw.ts tieAlpha: 0.16 at j71) and carries it
+ *  on past the root, fading out, while the band stops at the run's first
+ *  point: a hard cut across a faint band. The band can't run on past the
+ *  root without moving the fill (fill_tri.ts strips the run's own points),
+ *  so where form B's tie at the root is below RUN_RAMP_F the band fades in
+ *  over RUN_RAMP_L h instead (own alpha, which the band multiplies by the
+ *  tie). Form B's tie, with outline's depths: 1 - g sstep(-zt, zt, keyO -
+ *  keyC), keys z - d zt / h, g = (h - d) / W, d the root's distance from
+ *  the other arm's centreline (its foot within 4 h of that arm's root). */
+const RUN_ROOT_RAMP = true;
+const RUN_RAMP_F = 0.5;
+const RUN_RAMP_L = 0.6;
+const K1314X9J = (): string => (globalThis as unknown as { process?: { env: Record<string, string | undefined> } }).process?.env.EXP9J ?? "";
+const rampFt = new Float64Array(2);
+function runRootRamp(C: FCache, st: DiagramStructure, pieces: OutlinePiece[], runAtArm: Map<number, number>): void {
+  const h = C.h; const W = C.W; const zt = 0.1 * C.depthAmp; const depthWin = C.depthWindow * C.ctrlArc;
+  if (!(zt > 0)) return;
+  const L = (Number(K1314X9J()) || RUN_RAMP_L) * h; const fMax = RUN_RAMP_F;
+  for (const [key, r] of runAtArm) {
+    const arm = key >> 1; const p = pieces[r >> 1]; const atEnd = (r & 1) === 1;
+    const np = p.pts.length / 2; if (np < 2) continue;
+    const i0 = atEnd ? np - 1 : 0; const x = p.pts[2 * i0]; const y = p.pts[2 * i0 + 1];
+    const keyC = depthAtC(C, p.chain, atEnd ? p.s1 : p.s0, depthWin) - zt;
+    let f = 1;
+    for (const aj of st.armsOfJ[C.armObj[arm].ji]) {
+      const pj = C.armObj[aj].pi; if (pj === p.chain) continue;
+      tailFoot(C.polys[pj], C.armSR[aj] - 4 * h, C.armSR[aj] + 4 * h, x, y, rampFt);
+      const d = rampFt[1]; if (!(d < h)) continue;
+      const g = Math.min(1, (h - d) / W);
+      const u = Math.min(1, Math.max(0, (depthAtC(C, pj, rampFt[0], depthWin) - (d * zt) / h - keyC + zt) / (2 * zt)));
+      f *= 1 - g * u * u * (3 - 2 * u);
+    }
+    if (!(f < fMax)) continue;
+    const al = p.alpha ?? new Array<number>(2 * np).fill(1);
+    let cum = 0;
+    for (let q = 0; q < np; q++) {
+      const i = atEnd ? np - 1 - q : q;
+      if (q > 0) { const j = atEnd ? i + 1 : i - 1; const dx = p.pts[2 * i] - p.pts[2 * j]; const dy = p.pts[2 * i + 1] - p.pts[2 * j + 1]; cum += Math.sqrt(dx * dx + dy * dy); }
+      if (cum >= L) break;
+      const t = cum / L; const w = t * t * (3 - 2 * t);
+      al[2 * i] *= w; al[2 * i + 1] *= w;
+    }
+    p.alpha = al;
+  }
+}
+
 /** K1314 s6 (g41_user_tw64 j39 ticks): a band's end edge runs from its end
  *  point toward that point's foot, so two pieces that meet at one point join
  *  without a crack only when they give it one foot. An ok corner's arc puts
@@ -7734,6 +7771,7 @@ function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[])
     if (r === undefined) continue;
     runEndFade(f.a, pieces[r >> 1], (r & 1) === 1);
   }
+  if (RUN_ROOT_RAMP && K1314X9J() !== "off") runRootRamp(C, st, pieces, runAtArm);
   if (ARC_END_FEET) arcEndFeet(st, pieces, runAtArm);
   return { pieces, runMiss, runPassed };
 }
@@ -7793,7 +7831,7 @@ function frameFast(st: DiagramStructure, scene: SceneIn, profile?: Record<string
   const cuts: OutlineCut[] = kfCuts.map((c) => ({ crossing: c.xi, chain: c.U, side: c.uSide, s: c.s, x: c.x, y: c.y, overChain: c.O }));
   // Diagnostics.
   const diagnostics: string[] = [];
-  diagnostics.push(...kfFoldDiag.slice(0, 20));
+  diagnostics.push(...kfFoldDiag.slice(0, CF_DIAG_N));
   diagnostics.push(...kfDiagCross);
   diagnostics.push(`twist cuts ${kfTwistFlips}`);
   diagnostics.push(`eyes ${kfEyeCount} (border cuts ${kfEyeCutCount}, depth-tie cuts ${kfTieCutCount}), kink self-crossings ${C.kinkCount}`);
