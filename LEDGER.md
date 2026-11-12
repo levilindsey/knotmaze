@@ -518,10 +518,10 @@ Next free ID: K1323.
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: agent `a806ccdba5e983525` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 01:06, 2 h cap ~03:06)
-  - branch: `worktree-agent-a806ccdba5e983525`, worktree `.claude/worktrees/agent-a806ccdba5e983525`; last commit: `6a7aac90`
+  - owner: nobody since 2026-11-12 02:13 (merged; agent `a806ccdba5e983525` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `802e22db`
   - evidence: .claude/probes/K1247/ (tools: k1247s23_twin, _slack, _bench); src/render/outline/band_rec.ts, band_place.ts; untracked out/s22/, out/s23/
-  - next: s24: the past-4 slot rule to footNear on the GPU, the def c61 d730 and muse_hash c8 d121 misses, the twin on a g41_user_tw64 drag, the TF pass in the main frame; then flip ob to the default
+  - next: s25: one transform-feedback invocation per column (points, s, slot search once), expanded to the quad's 6 vertices; re-bench ABBA; flip ob if the reply frame holds; then the g41 c20 d118 end vertex (0.276 px)
   - brief: `docs/design/K1247_s24_flip.md`
 - **K1278** · The outline's paint blends seamlessly across junctions (Levi 2026-11-10): section colour and pulses
   from per-pixel fields continuous across faces, triangles and junctions, gated by a seam test on every
