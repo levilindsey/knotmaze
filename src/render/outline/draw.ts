@@ -309,12 +309,18 @@ export function zChains(scene: SceneIn): { zc: ZChain[]; passes: Pass[][]; idx: 
  *  (CONTACT_GROUPS): form B draws a group as one surface and never
  *  tie-mixes it with itself, and such a tie faded the ink inside the
  *  joint (def j174: c71 and c73's arms of group 119, ink 0.014; ring j12,
- *  g41_ring_tw42 j12, g41_user_tw64 j28). A sample pair whose two s both
- *  lie on arms of one group (groupArms: outline.ts's arms) is no hit.
- *  OFF until it is narrowed (K1324): the skip clears those specks but
- *  adds 20 stray_ink finds to the K1314 census (muse_hash 8 -> 16,
- *  g41_def_tw64 0 -> 5, g41_user_tw64 3 -> 8, muse_default_tw 0 -> 2;
- *  census_s26b against census_s26off, which equals census_s7f). */
+ *  g41_ring_tw42 j12, g41_user_tw64 j28).
+ *  K1324 s1: narrowed to form B's member(). s26 skipped a sample pair
+ *  whose two s lay anywhere on arms of one group (whole arms to the root
+ *  cut, plus 0.25h slack), and added 20 stray_ink census finds: every one
+ *  sat where form B has one side OWN or still inside the cap ramp, so
+ *  form B tie-mixes it and the skip dropped a real fade. Now groupArms
+ *  ports form B's arm cuts (Lcut from the front passes, the behind cut
+ *  k·uB with the neighbour-angle factor) and groupMember its cap ramp
+ *  (ss(Lcut, Lcut - h, d), back reach on same-group arms); a pair is no
+ *  hit only when BOTH sides are full members (ramp >= contactOpts.tau)
+ *  of one group. test/render/contact_groups.test.ts checks it against
+ *  form B's own member(). */
 const CONTACT_PASSES = true;
 const CONTACT_GROUPS = true;
 /** K1324 probe hooks: the group skip on or off, and each skipped sample (own chain i at s, partner j at so). */
