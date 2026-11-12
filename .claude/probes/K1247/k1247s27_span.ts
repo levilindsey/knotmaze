@@ -7,7 +7,7 @@ import { alignJunctionArms, frame, structure, type SceneIn } from "../../../src/
 import { REC_TEXELS, fillFrame, fillResolution, fillStructure, recStrips, type StripItem } from "../../../src/render/outline/fill_tri";
 import { zChains } from "../../../src/render/outline/draw";
 
-import { COL_EPS, SPAN_EPS } from "../../../src/render/outline/chain_frame";
+import { SPAN_EPS } from "../../../src/render/outline/chain_frame";
 const F = Math.fround; const E = SPAN_EPS; const E32 = F(SPAN_EPS);
 const args = process.argv.slice(2).filter((a) => !a.startsWith("--"));
 const all = process.argv.includes("--all");
@@ -76,7 +76,7 @@ if (tArg) {
     const [a, sB, k, V2] = span64(c, sA, dS); const S = sB - a; const p0 = pfU(k); const B = N - (pfU(V2) - p0);
     console.log(`o${o} ${nm} N ${N} a ${a} sB ${sB} k ${k} V2 ${V2} B ${B} S ${S}`);
     for (let V = k + 1; V <= V2; V++) {
-      const x = ((sOfV(V) - a) * B) / S + 0.5 + COL_EPS; const fr = x - Math.floor(x);
+      const x = ((sOfV(V) - a) * B) / S + 0.5; const fr = x - Math.floor(x);
       const x32 = F(F(F(F(F(F(sOfV(V)) - F(a)) * B) / F(S)) + 0.5) + E32 * 5);
       if (fr < 2e-4 || fr > 1 - 2e-4) console.log(`  V ${V} x ${x.toFixed(8)} f32 ${x32.toFixed(8)} pf ${pfU(V) - pfU(V - 1)}`);
     }

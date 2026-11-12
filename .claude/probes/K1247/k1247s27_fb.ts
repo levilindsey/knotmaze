@@ -28,7 +28,9 @@ for (const [x, y] of pts) {
     const k = l1 * K[a] + l2 * K[b] + l3 * K[c];
     const it = m.vItem[a]; const item = m.fs.items[it] as { kind: string; pi: number };
     const lab = `${cid(item.pi)} item ${it} ${item.kind}`;
-    console.log(`  fill tri ${t / 3} ${lab} key ${k.toFixed(4)}`);
+    const S = m.fs.items[it] as { kind: string; base: number; N: number };
+    const vd = (v: number): string => { const o = v - S.base; const W = S.N + 1; const rc = S.kind === "strip" ? `r${Math.floor(o / W)}c${o % W}` : `v${o}`; return `${rc}(${P[2 * v].toFixed(3)},${P[2 * v + 1].toFixed(3)} k${K[v].toFixed(4)} s${m.fr.s[v].toFixed(3)})`; };
+    console.log(`  fill tri ${t / 3} ${lab} key ${k.toFixed(4)}${process.argv.includes("--verts") ? ` | ${vd(a)} ${vd(b)} ${vd(c)}` : ""}`);
     if (k > best) { best = k; who = lab; }
   }
   console.log(`  fill top: ${who} key ${best.toFixed(4)}`);

@@ -1275,7 +1275,7 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
         slots(v, k, sP[k]); across[v] = 1;
         set(v++, Ps[k][0], Ps[k][1], Zs[k] - zt, sA);
         slots(v, k, sM[k]);
-        set(v++, (Ps[k][0] + Ns[k][0]) / 2, (Ps[k][1] + Ns[k][1]) / 2, Zs[k] - zt, sA);
+        set(v++, (Ps[k][0] + Ns[k][0]) / 2, (Ps[k][1] + Ns[k][1]) / 2, zAt(a.pi, sM[k]), sA);
         slots(v, k, sN[k]); across[v] = 1;
         set(v++, Ns[k][0], Ns[k][1], Zs[k] - zt, sA);
         for (let q = 0; q < ARC_K; q++) { slots(v + q, k, sN[k]); across[v + q] = 1; }
