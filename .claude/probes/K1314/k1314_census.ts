@@ -1,6 +1,10 @@
 // K1314 s1: the artifact census of rp=outline (find, classify, count; no fixes).
 //
-//   node scripts/run_node.mjs .claude/probes/K1314/k1314_census.ts [tag] [--scene=a,b] [--ppu=80]
+//   node scripts/run_node.mjs .claude/probes/K1314/k1314_census.ts [tag] [--scene=a,b] [--ppu=160] [--min=40]
+//   ... <tag> --merge=tagA,tagB   (no rendering: joins census_tagA/B.json per scene into census_<tag>)
+// s1's census: --ppu=160 --min=40, run in parallel groups and merged (scripts in k1314_run.ps1).
+// Each scene is rendered in 1280 px tiles (24 px margins); it waits while another owner holds
+// $env:TEMP\claude-perf.lock.
 //
 // Renders what the app draws for rp=outline at rest (outline_model's first
 // frame: outline.structure + frame, fill_tri's triangles painted with the
@@ -9,13 +13,17 @@
 // tie alpha), on white paper with black ink, over each whole scene at <ppu>
 // px/unit, and form B (src/render/field/form_b.ts evalPoint, cached in
 // out/fb/) on the same grid. Then per pixel (r = a shift tolerance in px):
-//   stray ink   outline ink >= .5 where form B's ink is < .25 everywhere within 3 px;
+//   stray ink   outline ink >= .5 where form B's ink is < .25 everywhere within 3 px,
+//               or outline ink >= .6 where the 7x7 mean of (outline - form B) ink > DM,
+//               or (sub 'cut') an outline ink step > .35 across 1 px where form B's ink
+//               steps < .12 within 2 px but is present (x134's tail cut off over form B's fade);
 //   paper       hole: outline paper (no fill, ink < .3) where form B is covered
 //               everywhere within 2 px (a notch in a border included);
 //               covered: outline fill where form B is paper everywhere within 2 px
 //               (a covered eye, K1045);
 //   broken ink  form B ink >= .5, outline covered there, outline ink < .25
-//               everywhere within 3 px;
+//               everywhere within 3 px, or form B ink >= .6 where the 7x7 mean of
+//               (form B - outline) ink > DM;
 //   hard edge   a 4-neighbour colour step > STEP inside the outline's fill (both
 //               pixels covered, ink < .25) where form B is smooth within 3 px
 //               (no step > STEP/2, ink < .3);
@@ -27,7 +35,7 @@
 // crossing x<i> / junction j<i>), size, sub-shape, and the part that draws it
 // (the band piece with the most alpha there, or the fill item, with its file).
 // Writes out/s1/census_<tag>.json and prints counts per kind per scene.
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, existsSync, statSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { FormB } from "../../../src/render/field/form_b";
@@ -183,6 +191,18 @@ export function boxMax(a: Float32Array, W: number, H: number, r: number, useMin 
   return o;
 }
 
+/** Mean over the (2r+1)^2 box (clipped at the edges), by an integral image. */
+export function boxMean(a: Float32Array, W: number, H: number, r: number): Float32Array {
+  const I = new Float64Array((W + 1) * (H + 1));
+  for (let y = 0; y < H; y++) { let row = 0; for (let x = 0; x < W; x++) { row += a[y * W + x]; I[(y + 1) * (W + 1) + x + 1] = I[y * (W + 1) + x + 1] + row; } }
+  const o = new Float32Array(W * H);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const xa = Math.max(0, x - r); const xb = Math.min(W, x + r + 1); const ya = Math.max(0, y - r); const yb = Math.min(H, y + r + 1);
+    o[y * W + x] = (I[yb * (W + 1) + xb] - I[ya * (W + 1) + xb] - I[yb * (W + 1) + xa] + I[ya * (W + 1) + xa]) / ((xb - xa) * (yb - ya));
+  }
+  return o;
+}
+
 export interface Art {
   id: string; scene: string; kind: Kind; sub: string; x: number; y: number; px: number; sizePx: number;
   bbox: [number, number, number, number];
@@ -202,18 +222,28 @@ export function census(nm: string, ppu: number, MIN_PX = 12): { arts: Art[]; m: 
   const m = buildModel(nm); const sc = m.scene; const h = sc.look.halfWidth;
   let x0 = Infinity; let y0 = Infinity; let x1 = -Infinity; let y1 = -Infinity;
   for (const c of sc.chains) for (let i = 0; i < c.pts.length; i += 2) { x0 = Math.min(x0, c.pts[i]); x1 = Math.max(x1, c.pts[i]); y0 = Math.min(y0, c.pts[i + 1]); y1 = Math.max(y1, c.pts[i + 1]); }
-  const c0 = Math.floor((x0 - 3 * h) * ppu); const r0 = Math.floor((y0 - 3 * h) * ppu);
-  const Wd = Math.ceil((x1 + 3 * h) * ppu) - c0; const Hd = Math.ceil((y1 + 3 * h) * ppu) - r0; const n = Wd * Hd;
-  const t0 = Date.now();
-  const R = rasterOutline(m, c0, r0, Wd, Hd, ppu);
+  const g0 = Math.floor((x0 - 3 * h) * ppu); const q0 = Math.floor((y0 - 3 * h) * ppu);
+  const GW = Math.ceil((x1 + 3 * h) * ppu) - g0; const GH = Math.ceil((y1 + 3 * h) * ppu) - q0;
+  // Tiles of T px with an M px margin: a component counts in the tile whose core holds its centroid.
+  const T = 1280; const M = 24;
+  const arts: Art[] = [];
   const fbDir = join(here, "out", "fb"); mkdirSync(fbDir, { recursive: true });
+  const t0 = Date.now();
+  for (let ty = 0; ty < GH; ty += T) for (let tx = 0; tx < GW; tx += T) {
+  const kx0 = g0 + tx; const ky0 = q0 + ty; const kx1 = Math.min(g0 + GW, kx0 + T); const ky1 = Math.min(q0 + GH, ky0 + T);
+  const c0 = kx0 - M; const r0 = ky0 - M; const Wd = kx1 - kx0 + 2 * M; const Hd = ky1 - ky0 + 2 * M; const n = Wd * Hd;
+  const R = rasterOutline(m, c0, r0, Wd, Hd, ppu);
+  if (!R.ink.some((v) => v > 0) && !R.own.some((v) => v > 0)) continue; // empty paper tile
   const B = rasterFormB(m, c0, r0, Wd, Hd, ppu, join(fbDir, `${nm}_${ppu}_${c0}_${r0}_${Wd}_${Hd}.bin`));
-  console.error(`${nm}: ${Wd}x${Hd} px, rasters ${((Date.now() - t0) / 1000).toFixed(1)} s`);
   // Fields for the tolerance tests.
   const bInkMax3 = boxMax(B.ink, Wd, Hd, 3);
   const bCov = new Float32Array(n); for (let i = 0; i < n; i++) bCov[i] = B.chain[i] >= 0 || B.ink[i] >= 0.5 ? 1 : 0;
   const bCovMin2 = boxMax(bCov, Wd, Hd, 2, true); const bCovMax2 = boxMax(bCov, Wd, Hd, 2);
   const oInkMax3 = boxMax(R.ink, Wd, Hd, 3);
+  // Area ink difference (outline - form B) over 7x7: a 1-2 px border offset averages under DM,
+  // a solid block over form B's fading tail does not.
+  const dIn = new Float32Array(n); for (let i = 0; i < n; i++) dIn[i] = R.ink[i] - B.ink[i];
+  const dMean3 = boxMean(dIn, Wd, Hd, 3); const DM = 0.35;
   // Colour steps (max channel over the 4-neighbours, both covered and clean).
   const STEP = 0.1;
   const step = (rgb: Float32Array, ok: (i: number) => boolean): Float32Array => {
@@ -232,8 +262,15 @@ export function census(nm: string, ppu: number, MIN_PX = 12): { arts: Art[]; m: 
   const oStep = step(R.rgb, (i) => R.own[i] > 0 && R.rgb[3 * i] >= 0 && R.ink[i] < 0.25);
   const bStep = step(B.rgb, (i) => B.chain[i] >= 0 && B.rgb[3 * i] >= 0);
   const bStepMax3 = boxMax(bStep, Wd, Hd, 3);
+  // Ink steps: a hard ink edge (x134's cut-off tail) where form B's ink changes gently within 2 px.
+  const iStep = (ink: Float32Array): Float32Array => {
+    const st = new Float32Array(n);
+    for (let y = 0; y + 1 < Hd; y++) for (let x = 0; x + 1 < Wd; x++) { const i = y * Wd + x; st[i] = Math.max(Math.abs(ink[i] - ink[i + 1]), Math.abs(ink[i] - ink[i + Wd])); }
+    return st;
+  };
+  const oIStep = iStep(R.ink); const bIStepMax2 = boxMax(iStep(B.ink), Wd, Hd, 2);
   const flags: Record<Kind, Uint8Array> = { stray_ink: new Uint8Array(n), hard_edge: new Uint8Array(n), paper: new Uint8Array(n), broken_ink: new Uint8Array(n), k1049: new Uint8Array(n), owner_only: new Uint8Array(n) };
-  const sub = new Uint8Array(n); // paper: 1 hole, 2 covered; hard_edge: 1 wedge (owner mismatch), 2 step
+  const sub = new Uint8Array(n); // paper: 1 hole, 2 covered; hard_edge: 1 wedge (owner mismatch), 2 step; stray: 3 hard cut
   const bInkMax2 = boxMax(B.ink, Wd, Hd, 2); const oInkMax2 = boxMax(R.ink, Wd, Hd, 2);
   const has = (i: number, want: (q: number) => boolean): boolean => {
     const x = i % Wd; const y = (i - x) / Wd;
@@ -243,10 +280,11 @@ export function census(nm: string, ppu: number, MIN_PX = 12): { arts: Art[]; m: 
   for (let i = 0; i < n; i++) {
     const oInk = R.ink[i]; const oCov = R.own[i] > 0;
     // stray: solid outline ink where form B has none, or only a faint fade (x134's block, j59's bars)
-    if (oInk >= 0.5 && oInk - bInkMax3[i] > 0.4) flags.stray_ink[i] = 1;
+    if (oInk >= 0.5 && (oInk - bInkMax3[i] > 0.4 || (oInk >= 0.6 && dMean3[i] > DM))) flags.stray_ink[i] = 1;
+    else if (oIStep[i] > 0.35 && bIStepMax2[i] < 0.12 && bInkMax2[i] > 0.1) { flags.stray_ink[i] = 1; sub[i] = 3; }
     if (!oCov && oInk < 0.3 && bCovMin2[i] === 1) { flags.paper[i] = 1; sub[i] = 1; }
     if (oCov && oInk < 0.3 && bCovMax2[i] === 0) { flags.paper[i] = 1; sub[i] = 2; }
-    if (B.ink[i] >= 0.5 && oCov && B.ink[i] - oInkMax3[i] > 0.4) flags.broken_ink[i] = 1;
+    if (B.ink[i] >= 0.5 && oCov && (B.ink[i] - oInkMax3[i] > 0.4 || (B.ink[i] >= 0.6 && -dMean3[i] > DM))) flags.broken_ink[i] = 1;
     // hard edge, wedge: a fill of one chain where form B paints another (no pixel of it within 2 px), away from ink
     if (oCov && B.chain[i] >= 0 && oInkMax2[i] < 0.25 && bInkMax2[i] < 0.25) {
       const oc = R.own[i] - 1; const bc = B.chain[i];
@@ -260,7 +298,6 @@ export function census(nm: string, ppu: number, MIN_PX = 12): { arts: Art[]; m: 
     }
     if (!flags.hard_edge[i] && oStep[i] > STEP && bStepMax3[i] < STEP / 2 && bInkMax3[i] < 0.3) { flags.hard_edge[i] = 1; sub[i] = 2; }
   }
-  const arts: Art[] = [];
   const near = (x: number, y: number): { id: string; d: number } => {
     let best = { id: "-", d: Infinity };
     m.xPts.forEach((p, xi) => { const d = Math.hypot(p.x - x, p.y - y); if (d < best.d) best = { id: `x${xi}`, d }; });
@@ -286,10 +323,10 @@ export function census(nm: string, ppu: number, MIN_PX = 12): { arts: Art[]; m: 
       }
       if (pix.length < MIN_PX) continue;
       let sx = 0; let sy = 0; let bx0 = Infinity; let by0 = Infinity; let bx1 = -Infinity; let by1 = -Infinity;
-      const votes = new Map<string, number>(); let nHole = 0; let geoOn = 0; let appD = 0; let inPaper = 0;
+      const votes = new Map<string, number>(); let nHole = 0; let nCut = 0; let geoOn = 0; let appD = 0; let inPaper = 0;
       for (const i of pix) {
         const x = i % Wd; const y = (i - x) / Wd; sx += x; sy += y; bx0 = Math.min(bx0, x); bx1 = Math.max(bx1, x); by0 = Math.min(by0, y); by1 = Math.max(by1, y);
-        if (sub[i] === 1) nHole++;
+        if (sub[i] === 1) nHole++; if (sub[i] === 3) nCut++;
         if (R.geo[i]) geoOn++;
         let key = "";
         if (kind === "stray_ink" && R.pc[i] >= 0) key = "band:" + m.table.pieces[R.pc[i]].kind;
@@ -308,11 +345,14 @@ export function census(nm: string, ppu: number, MIN_PX = 12): { arts: Art[]; m: 
         if (key) votes.set(key, (votes.get(key) ?? 0) + 1);
       }
       const cx = (c0 + sx / pix.length + 0.5) / ppu; const cy = (r0 + sy / pix.length + 0.5) / ppu;
+      const gx = c0 + sx / pix.length; const gy = r0 + sy / pix.length;
+      if (gx < kx0 || gx >= kx1 || gy < ky0 || gy >= ky1) continue; // another tile's
       const nb = near(cx, cy);
       const part = [...votes.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? "?";
       const bw = bx1 - bx0 + 1; const bh = by1 - by0 + 1;
       let shape = "";
-      if (kind === "stray_ink") shape = pix.length / (bw * bh) > 0.45 && Math.min(bw, bh) > 1.6 * m.table.W * ppu ? "block" : Math.max(bw, bh) > 3 * Math.min(bw, bh) ? "bar" : pix.length < 40 ? "fleck" : "spike";
+      if (kind === "stray_ink" && nCut > pix.length / 2) shape = "cut";
+      else if (kind === "stray_ink") shape = pix.length / (bw * bh) > 0.45 && Math.min(bw, bh) > 1.6 * m.table.W * ppu ? "block" : Math.max(bw, bh) > 3 * Math.min(bw, bh) ? "bar" : pix.length < 40 ? "fleck" : "spike";
       else if (kind === "paper") shape = nHole > pix.length / 2 ? (B.ink[pix[0]] >= 0.5 ? "notch" : "hole") : "covered";
       else if (kind === "broken_ink") shape = geoOn > pix.length / 2 ? "faded" : "missing";
       else shape = kind === "owner_only" || nHole > pix.length / 2 ? "wedge" : "step";
@@ -326,9 +366,12 @@ export function census(nm: string, ppu: number, MIN_PX = 12): { arts: Art[]; m: 
       arts.push({ id: "", scene: nm, kind, sub: shape, x: +cx.toFixed(3), y: +cy.toFixed(3), px: pix.length, sizePx: Math.max(bw, bh), bbox: [+((c0 + bx0) / ppu).toFixed(3), +((r0 + by0) / ppu).toFixed(3), +((c0 + bx1 + 1) / ppu).toFixed(3), +((r0 + by1 + 1) / ppu).toFixed(3)], near: nb.id, dNear: +nb.d.toFixed(3), part, file, detail });
     }
   }
+  }
+  console.error(`${nm}: ${GW}x${GH} px at ${ppu} px/unit, ${((Date.now() - t0) / 1000).toFixed(1)} s`);
   // K1049: through-pass bends with a visible inner corner (rp=outline skips the through pair's corner).
   const rC = m.table.corners.filter((c) => c.ok && c.r > 0).map((c) => c.r).sort((a, b) => a - b);
   const rMed = rC.length ? rC[rC.length >> 1] : 0.5 * h;
+  const cam = Math.abs((sc as any).camera?.worldToCss?.[0] ?? 20) * ((sc as any).camera?.dpr ?? 1);
   const idx = new Map<number, number>(); sc.chains.forEach((c, i) => idx.set(c.id, i));
   sc.junctions.forEach((J, ji) => {
     const ang = J.arms.map((a) => { const ch = sc.chains[idx.get(a.chain) ?? -1]; if (!ch) return NaN; const p = chainPt(ch.pts, ch.closed, a.s + a.dir * 2 * h); return Math.atan2(p.y - J.c[1], p.x - J.c[0]); });
@@ -341,13 +384,13 @@ export function census(nm: string, ppu: number, MIN_PX = 12): { arts: Art[]; m: 
       for (const [u, v] of [[ang[i], ang[k]], [ang[k], ang[i]]] as [number, number][]) {
         const g = ccw(u, v); if (others.some((o) => ccw(u, o) < g)) continue;
         if (g >= Math.PI) continue; // the outer side of the bend
-        const dev = rMed * (1 / Math.sin(g / 2) - 1) * ppu; // how far a rounded corner moves the inner edge, px
-        if (dev < 1) continue;
+        const dev = rMed * (1 / Math.sin(g / 2) - 1) * cam; // how far a rounded corner moves the inner edge, screen px at the scene's camera
+        if (dev < 0.5) continue;
         const has = m.table.corners.some((c) => c.junction === J.id && c.aChain === a.chain && c.bChain === a.chain && c.ok);
         if (has) continue;
         const mid = u + g / 2; const d = h / Math.sin(g / 2);
         const vx = J.c[0] + Math.cos(mid) * d; const vy = J.c[1] + Math.sin(mid) * d;
-        arts.push({ id: "", scene: nm, kind: "k1049", sub: "sharp", x: +vx.toFixed(3), y: +vy.toFixed(3), px: Math.round(dev * dev), sizePx: Math.round(dev), bbox: [+(vx - 2 * h).toFixed(3), +(vy - 2 * h).toFixed(3), +(vx + 2 * h).toFixed(3), +(vy + 2 * h).toFixed(3)], near: `j${ji}`, dNear: +d.toFixed(3), part: "corner: through pair skipped", file: "outline.ts (corner loops: 'two arms of one through pass are one tube: no corner') + fill_tri.ts (junction fan)", detail: `bend gap ${(g * 180 / Math.PI).toFixed(1)} deg, chain ${a.chain}` });
+        arts.push({ id: "", scene: nm, kind: "k1049", sub: "sharp", x: +vx.toFixed(3), y: +vy.toFixed(3), px: Math.round(dev * dev), sizePx: +dev.toFixed(1), bbox: [+(vx - 2 * h).toFixed(3), +(vy - 2 * h).toFixed(3), +(vx + 2 * h).toFixed(3), +(vy + 2 * h).toFixed(3)], near: `j${ji}`, dNear: +d.toFixed(3), part: "corner: through pair skipped", file: "outline.ts (corner loops: 'two arms of one through pass are one tube: no corner') + fill_tri.ts (junction fan)", detail: `bend gap ${(g * 180 / Math.PI).toFixed(1)} deg, chain ${a.chain}` });
       }
     }));
   });
@@ -364,8 +407,16 @@ async function main(): Promise<void> {
   const outDir = join(here, "out", "s1"); mkdirSync(outDir, { recursive: true });
   const all: Art[] = []; const lines: string[] = [];
   lines.push(["scene", ...ARTIFACT_KINDS, "total", "owner_only"].map((s, i) => (i ? s.padStart(11) : s.padEnd(22))).join(""));
+  const merge = opt("merge")?.split(",");
+  const waitLock = (): void => {
+    const lock = join(process.env.TEMP ?? "", "claude-perf.lock"); const sab = new Int32Array(new SharedArrayBuffer(4));
+    while (existsSync(lock) && Date.now() - statSync(lock).mtimeMs < 30 * 60e3) Atomics.wait(sab, 0, 0, 10e3);
+  };
   for (const nm of scenes) {
-    const { arts } = census(nm, ppu, minPx); all.push(...arts);
+    let arts: Art[];
+    if (merge) arts = merge.flatMap((t) => (JSON.parse(readFileSync(join(outDir, `census_${t}.json`), "utf8")).arts as Art[]).filter((a) => a.scene === nm));
+    else { waitLock(); arts = census(nm, ppu, minPx).arts; }
+    all.push(...arts);
     const cnt = ARTIFACT_KINDS.map((k) => arts.filter((a) => a.kind === k).length);
     lines.push([nm.padEnd(22), ...[...cnt, cnt.reduce((a, b) => a + b, 0), arts.filter((a) => a.kind === "owner_only").length].map((v) => String(v).padStart(11))].join(""));
     writeFileSync(join(outDir, `census_${tag}.json`), JSON.stringify({ ppu, minPx, scenes, arts: all }, null, 1));
