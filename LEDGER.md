@@ -297,6 +297,7 @@ Next free ID: K1334.
   `.claude/probes/K1314/out/s1/crops/sheets/broken_ink_01.png` (form B | today | rp=outline). Asked
   2026-11-11. Also muse_hash j78's hard edge (5.88, 8.50): c79's open start under c33 (K1314 s6 handoff),
   and muse_hash c8's open end (19.41, 14.16; `.claude/probes/K1314/out/s7/efafter/spot_005.png`).
+  Since K1314 s9 (b9db678f) about 19 such ends fade in instead (`out/s9/after/spot_004.png`, `spot_011.png`); keep, or back to square.
 - **K1319** · The K1045 open eye at muse_hash j73 in rp=outline: its ink ring closes round at the right tip,
   where form B cuts it off at an angle (form B's j73 corner takes the same far meet as j74's and never rounds
   it). Keep the round tip, or match form B? Census counts it as one stray_ink spike (262 px). Picture
@@ -552,11 +553,11 @@ Next free ID: K1334.
   most cases. But there are still plenty of unacceptable artifacts"): an artifact census (stray ink, hard
   colour edges inside fills, paper holes, broken ink) across scenes, then fix stages that drive its count to
   0; the look gate in docs/design/K1240_gate.md
-  - owner: nobody since 2026-11-12 07:45 (merged; agent `a88e9bc054f3e16da` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `b9db678f`
-  - evidence: .claude/probes/K1314/ (census tools, k1314_s8_bench.ps1); untracked out/s1-s9/, baseline census_s8f
-  - next: s10: j71 step (a band past the run root: draw.ts/band_rec.ts or fill_tri.ts); runRootRamp 0.6 ms (quick reject before tailFoot); j58a soft dark fade where form B is pale; the ramp's tail fades wait on K1315
-  - brief: `docs/design/K1314_s9_needle_shade_cost.md`
+  - owner: agent `a8105bc6c8e6fc6d7` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 07:47, 2 h cap ~09:47)
+  - branch: `worktree-agent-a8105bc6c8e6fc6d7`, worktree `.claude/worktrees/agent-a8105bc6c8e6fc6d7`; last commit: `55aef041`
+  - evidence: .claude/probes/K1314/ (census tools, k1314_s8_bench.ps1); untracked out/s1-s10/, baseline census_s9
+  - next: s10 running: muse_hash j36 and j49, g41_def_tw64 j97, j71 step, j58a dark fade, runRootRamp 0.6 ms; baseline census_s9 (stray 7, hard 1, broken 12)
+  - brief: `docs/design/K1314_s10_breaks_step.md`
 - **K1324** · draw.ts tieAlpha / contactPasses ties two arms of one form B junction group, so the band fades
   ink there: specks inside the ink at def j174 (c71/c73, group 119), ring j12, g41_ring_tw42 j12,
   g41_user_tw64 j28 (K1314 s6 handoff; crops `.claude/probes/K1314/out/s6/after4x/spot_016-019`). Make no
@@ -566,6 +567,24 @@ Next free ID: K1334.
   - evidence: .claude/probes/K1324/; K1314 out/s1/census_s26b* and census_s26off*; K1247 out/s26/master4x, after4x
   - next: x22 (K1331), a form B smear too: a self-pass rule in tieAlpha plus its GLSL twin in outline_app.ts, once K1247 s27 frees outline_app.ts; j28's faint right-side shades (same on master, form B draws a hairline sliver)
   - brief: `docs/design/K1324_s1_group_ties_x22.md`
+- **K1325** · K1314 census reference: form B draws stray ink at muse_hash x304 and g41_user_tw64 j30 where
+  rp=outline is clean, so the census counts them against the outline (crops
+  `.claude/probes/K1314/out/s7/after4x/spot_007.png`, `spot_008.png`); fix the reference as K1321 did, in
+  `k1314_census.ts` / `form_b_fillet.ts` (K1314 s7 handoff)
+  - owner: agent `ab310ce6484ab4f81` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 07:47, 2 h cap ~09:47)
+  - branch: `worktree-agent-ab310ce6484ab4f81`, worktree `.claude/worktrees/agent-ab310ce6484ab4f81`; last commit: `55aef041`
+  - evidence: .claude/probes/K1314/k1314_census.ts, form_b_fillet.ts, k1314_run.ps1; untracked .claude/probes/K1325/out/s1/
+  - next: s1 running: the reference at x304/j30 (K1325) and one shared form B cache in the main checkout (K1333)
+  - brief: `docs/design/K1325_s1_reference_shared_cache.md`
+- **K1333** · The K1314 census builds form B tiles per checkout (out/fb, out/fbf, ~7.8 GB each), and 11 agent
+  worktrees filled C: on 2026-11-12 (06:43-06:55; the finished ones' caches were deleted). The keys are the
+  reference's code hash, so share one cache in the main checkout with atomic writes (s26's EPERM) and lift the
+  briefs' no-copy rule (`k1314_run.ps1`); until then delete a worktree's caches at its merge
+  - owner: agent `ab310ce6484ab4f81` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 07:47, 2 h cap ~09:47)
+  - branch: `worktree-agent-ab310ce6484ab4f81`, worktree `.claude/worktrees/agent-ab310ce6484ab4f81`; last commit: `55aef041`
+  - evidence: .claude/probes/K1314/k1314_census.ts, form_b_fillet.ts, k1314_run.ps1; untracked .claude/probes/K1325/out/s1/
+  - next: s1 running: the reference at x304/j30 (K1325) and one shared form B cache in the main checkout (K1333)
+  - brief: `docs/design/K1325_s1_reference_shared_cache.md`
 
 ## Next, in order
 
@@ -585,10 +604,6 @@ Binding for every stage:
   new, and pause running agents with their WIP committed.
 
 Running agents are listed under In progress, each with its own next step.
-- **K1333** · The K1314 census builds form B tiles per checkout (out/fb, out/fbf, ~7.8 GB each), and 11 agent
-  worktrees filled C: on 2026-11-12 (06:43-06:55; the finished ones' caches were deleted). The keys are the
-  reference's code hash, so share one cache in the main checkout with atomic writes (s26's EPERM) and lift the
-  briefs' no-copy rule (`k1314_run.ps1`); until then delete a worktree's caches at its merge
 - **K1201** · S4b's joint step (K1139): a two-ended arm's ridge near its joint (xR < 0.5) steps the light.
   21F (8e0c5a1c): play meets it in every daily of a week, 2-6 arm-ends each, steps up to 0.77 after the reach
   window (CPU, lattice spans; notes). Fix (b) crossfaded the pulse bands K1211 S6 removed (13aab452); K1218 S2's crops at its eight spots show no step (5a12c51f).
@@ -822,10 +837,6 @@ Every other item below waits on the trigger it names.
 - **K1049** · Through-pass bends, DECIDED (Levi 2026-11-11: "Rounded corner", S1b/S1c's fillet); rp=outline must draw it in a K1314 fix stage: where a thread passes through a junction and bends, form B
   now draws today's sharp inner corner; S1b and S1c rounded it (`docs/design/K1040_s1d_corner.md` F2, and F6's Look
   with crops)
-- **K1325** · K1314 census reference: form B draws stray ink at muse_hash x304 and g41_user_tw64 j30 where
-  rp=outline is clean, so the census counts them against the outline (crops
-  `.claude/probes/K1314/out/s7/after4x/spot_007.png`, `spot_008.png`); fix the reference as K1321 did, in
-  `k1314_census.ts` / `form_b_fillet.ts` (K1314 s7 handoff)
 - **K1328** · A tracked fixture with a mirrored strip (K1314 s7 mirA/mirB) for `test/render/rec_tie.test.ts`:
   today only the untracked muse_hash and g41_user_tw64 scenes cover the mirror, so CI never ties it (K1247
   s26)
