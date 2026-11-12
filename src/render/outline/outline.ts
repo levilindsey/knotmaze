@@ -7407,6 +7407,37 @@ function runEndFade(a: TailIn, p: OutlinePiece, atEnd: boolean): void {
   if (al && farCum >= RUN_FADE_MIN * a.h) p.alpha = al;
 }
 
+/** K1314 s6 (g41_user_tw64 j39 ticks): a band's end edge runs from its end
+ *  point toward that point's foot, so two pieces that meet at one point join
+ *  without a crack only when they give it one foot. An ok corner's arc puts
+ *  its ends' feet on the ball's normal (Q + (r + h) dir), the runs beside it
+ *  on their own chain's nearest point; where the arm's border bends inside
+ *  the junction those differ (j39: 3 and 10 degrees), and the two bands leave
+ *  a light wedge across the ink from the shared point inward. The arc's end
+ *  takes the run's foot there; its band then turns from the run's edge to
+ *  the ball's normal along the arc. */
+const ARC_END_FEET = true;
+function arcEndFeet(st: DiagramStructure, pieces: OutlinePiece[], runAtArm: Map<number, number>): void {
+  for (const p of pieces) {
+    if (p.kind !== "arc" || p.corner < 0 || p.pts.length < 4 || p.cpts.length !== p.pts.length) continue;
+    const dc = st.corners[p.corner];
+    if (!dc) continue;
+    const n = p.pts.length;
+    for (let e = 0; e < 2; e++) {
+      const arm = e === 0 ? dc.aArm : dc.bArm; const k = e === 0 ? 0 : n - 2;
+      const x = p.pts[k]; const y = p.pts[k + 1];
+      for (let sk = 0; sk < 2; sk++) {
+        const r = runAtArm.get(arm * 2 + sk);
+        if (r === undefined) continue;
+        const q = pieces[r >> 1]; const j = (r & 1) === 1 ? q.pts.length - 2 : 0;
+        if (q.cpts.length !== q.pts.length || Math.abs(q.pts[j] - x) > 1e-9 || Math.abs(q.pts[j + 1] - y) > 1e-9) continue;
+        p.cpts[k] = q.cpts[j]; p.cpts[k + 1] = q.cpts[j + 1];
+        break;
+      }
+    }
+  }
+}
+
 function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[]): { pieces: OutlinePiece[]; runMiss: number; runPassed: number } {
   const pieces: OutlinePiece[] = [];
   let runMiss = 0; let runPassed = 0;
@@ -7640,6 +7671,7 @@ function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[])
     if (r === undefined) continue;
     runEndFade(f.a, pieces[r >> 1], (r & 1) === 1);
   }
+  if (ARC_END_FEET) arcEndFeet(st, pieces, runAtArm);
   return { pieces, runMiss, runPassed };
 }
 

@@ -83,6 +83,8 @@ const TAIL_FOOT = true;
 /** K1283 s9: every strip vertex paints its foot's s (see the strip item),
  *  taken every FOOT_STEP columns and interpolated between. */
 const STRIP_FOOT = true;
+/** K1314 s6 probe toggle (temporary). */
+export const S6KEY = { mode: typeof process !== "undefined" && process.env && process.env.S6KEY ? Number(process.env.S6KEY) : 0 };
 const FOOT_STEP = 8;
 
 type FootChain = Parameters<typeof footNear>[0];
@@ -806,6 +808,7 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
     T[o + 8] = it.pi; T[o + 9] = N; T[o + 10] = 0; T[o + 11] = 0;
     return true;
   };
+  let bufM = new Float64Array(0); let bufMC = new Float64Array(0);
   let rowL = new Float64Array(0); let rowR = new Float64Array(0); let rowZ = new Float64Array(0); let rowSL = new Float64Array(0); let rowSR = new Float64Array(0);
   if (FILL_PROF.on) FILL_PROF.t.pre = (FILL_PROF.t.pre ?? 0) + performance.now() - tP;
   for (let ii = 0; ii < fs.items.length; ii++) {
@@ -826,9 +829,50 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
       if (bufCL.length < 2 * W) { bufCL = new Float64Array(2 * W); bufCR = new Float64Array(2 * W); }
       // A side's border, and (cOk) its centreline feet resampled alongside.
       let cOkL = false; let cOkR = false;
+      // K1314 s6: two own border pieces over different s ranges sample on
+      // one s scale (the union of the ranges): column i of each side sits at
+      // the row's s where its piece runs, and at its piece's end past it, so
+      // the rows cross the tube square wherever both borders run. Resampled
+      // each over its own range (stage 5 and before), row i sat at sL on one
+      // side and sR on the other, its centre vertex between, and no key at
+      // those vertices is linear across the skewed triangles where the
+      // depth falls along the thread: g41_ring_tw64 x68 (a centre keyed far
+      // above its cone, c4 over c3 in a wedge), muse_hash j50 (keyed by its
+      // own foot, c71 sank under c18). The strip's outline is the same two
+      // borders and end columns; only where the samples sit along them.
+      const cz = zc[it.pi];
+      const wrapZ = (d: number): number => (cz && cz.closed && cz.len > 0 ? ((d % cz.len) + cz.len) % cz.len : d);
+      let spL: [number, number] | null = null; let spR: [number, number] | null = null; let mU0 = 0; let mUl = 0;
+      if (S6KEY.mode !== 2 && pl && pr && pl.pts.length >= 4 && pr.pts.length >= 4 && N >= 2) {
+        const a0 = pl.s0; const a1 = wrapZ(pl.s1 - pl.s0); let b0 = pr.s0; const b1 = wrapZ(pr.s1 - pr.s0);
+        if (cz && cz.closed && cz.len > 0) b0 += cz.len * Math.round((a0 - b0) / cz.len);
+        if (a0 !== b0 || a1 !== b1) {
+          const u0 = Math.min(a0, b0); const u1 = Math.max(a0 + a1, b0 + b1);
+          const ov = Math.min(a0 + a1, b0 + b1) - Math.max(a0, b0);
+          if (u1 - u0 > 1e-9 && ov > 0) {
+            const ix = (s: number): number => Math.round(((s - u0) / (u1 - u0)) * N);
+            const L: [number, number] = [ix(a0), ix(a0 + a1)]; const R: [number, number] = [ix(b0), ix(b0 + b1)];
+            if (L[1] - L[0] >= 1 && R[1] - R[0] >= 1) { spL = L; spR = R; mU0 = u0; mUl = u1 - u0; }
+          }
+        }
+      }
       const side = (p: typeof pl, sg: number, buf: Float64Array, cbuf: Float64Array): boolean => {
         if (p && p.pts.length >= 4) {
           const two = p.cpts.length === p.pts.length;
+          const sp = sg > 0 ? spL : spR;
+          if (sp) {
+            const n2 = sp[1] - sp[0];
+            if (bufM.length < 2 * (n2 + 1)) { bufM = new Float64Array(2 * W); bufMC = new Float64Array(2 * W); }
+            const ok2 = two ? resample(p.pts, p.cpts, n2, bufM, p.cpts, bufMC) : resample(p.pts, p.cpts, n2, bufM);
+            if (!ok2) return false;
+            for (let i = 0; i <= N; i++) {
+              const k = Math.min(Math.max(i - sp[0], 0), n2);
+              buf[2 * i] = bufM[2 * k]; buf[2 * i + 1] = bufM[2 * k + 1];
+              if (two) { cbuf[2 * i] = bufMC[2 * k]; cbuf[2 * i + 1] = bufMC[2 * k + 1]; }
+            }
+            if (two) { if (sg > 0) cOkL = true; else cOkR = true; }
+            return true;
+          }
           const ok = two ? resample(p.pts, p.cpts, N, buf, p.cpts, cbuf) : resample(p.pts, p.cpts, N, buf);
           if (ok && two) { if (sg > 0) cOkL = true; else cOkR = true; }
           return ok;
@@ -849,6 +893,17 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
       };
       if (!okL && okR) { if (cOkR) mirror(bufR, bufCR, bufL); else bufL.set(bufR.subarray(0, 2 * W)); okL = true; fallbacks++; }
       if (!okR && okL) { if (cOkL) mirror(bufL, bufCL, bufR); else bufR.set(bufL.subarray(0, 2 * W)); okR = true; fallbacks++; }
+      // (probe) mode 3: a side past its own piece's end is the other side mirrored there.
+      let mirL0 = -1; let mirL1 = N + 1; let mirR0 = -1; let mirR1 = N + 1;
+      if (S6KEY.mode !== 1 && spL && spR && okL && okR) {
+        for (let i = 0; i <= N; i++) {
+          const inL = i >= spL[0] && i <= spL[1]; const inR = i >= spR[0] && i <= spR[1];
+          if (!inL && inR && cOkR) { bufL[2 * i] = 2 * bufCR[2 * i] - bufR[2 * i]; bufL[2 * i + 1] = 2 * bufCR[2 * i + 1] - bufR[2 * i + 1]; }
+          if (!inR && inL && cOkL) { bufR[2 * i] = 2 * bufCL[2 * i] - bufL[2 * i]; bufR[2 * i + 1] = 2 * bufCL[2 * i + 1] - bufL[2 * i + 1]; }
+        }
+        if (cOkR) { mirL0 = spL[0]; mirL1 = spL[1]; }
+        if (cOkL) { mirR0 = spR[0]; mirR1 = spR[1]; }
+      }
       const P = pl && pl.pts.length >= 4 ? pl : pr && pr.pts.length >= 4 ? pr : null;
       let s0 = P ? P.s0 : (pl ?? pr)?.s0 ?? 0; let ds = P ? P.s1 - P.s0 : 0;
       const c = zc[it.pi];
@@ -882,11 +937,15 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
       // by its foot's s. x67 clears; x68's wedge needs the centre lowered
       // and stays. Equal ranges key as before, bit for bit.
       const reKey = range(pl) !== null && range(pr) !== null && (rL[0] !== rR[0] || rL[1] !== rR[1]);
+      const fr01 = (i: number, sp: [number, number]): number => Math.min(Math.max((i - sp[0]) / (sp[1] - sp[0]), 0), 1);
       for (let i = 0; i <= N; i++) {
-        const s = s0 + (ds * i) / N;
+        const s = spL ? mU0 + (mUl * i) / N : s0 + (ds * i) / N;
         const lx = bufL[2 * i]; const ly = bufL[2 * i + 1]; const rx = bufR[2 * i]; const ry = bufR[2 * i + 1];
-        const sL = rL[0] + (rL[1] * i) / N; const sR = rR[0] + (rR[1] * i) / N;
-        const zs = zAt(it.pi, s); const z = reKey ? Math.max(zs, zAt(it.pi, (sL + sR) / 2)) : zs;
+        const sL0 = spL ? rL[0] + rL[1] * fr01(i, spL) : rL[0] + (rL[1] * i) / N;
+        const sR0 = spR ? rR[0] + rR[1] * fr01(i, spR) : rR[0] + (rR[1] * i) / N;
+        const sL = (i < mirL0 || i > mirL1) && spR && i >= spR[0] && i <= spR[1] ? sR0 : sL0;
+        const sR = (i < mirR0 || i > mirR1) && spL && i >= spL[0] && i <= spL[1] ? sL0 : sR0;
+        const zs = zAt(it.pi, s); const z = reKey ? (spL ? zAt(it.pi, (sL + sR) / 2) : Math.max(zs, zAt(it.pi, (sL + sR) / 2))) : zs;
         const zl = reKey ? zAt(it.pi, sL) : z; const zr = reKey ? zAt(it.pi, sR) : z;
         set(it.base + i, lx, ly, zl - zt, s);
         set(it.base + W + i, (lx + rx) / 2, (ly + ry) / 2, z, s);
