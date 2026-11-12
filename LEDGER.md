@@ -410,7 +410,7 @@ Next free ID: K1318.
   - owner: nobody since 2026-10-15 05:39 (stage 2 done; agent `a11d7ce60428b687d` of claude session d8031183, worktree removed by the K161 sweep 2026-10-15, branch kept)
   - branch: mainline; last commit: `a7e199e` (stage 3 late enable)
   - evidence: `.claude/probes/K307/` (stage 1's tools and traces; `stage2/`: `trace_intro.mjs`, `run_s2.ps1`, batches 1-7, `runs/`, two A/B builds, `k366_firsttap.mjs`); the throwaway branch `k307-proto` (d1aefae), never merged; lore `.claude/rules/render-shaders.md` ("THE WARM-UP")
-  - next: Restart check done (K156 round 2026-11-10d rerun, 08b65e81): Chrome restarted 2026-11-10 08:11, after salt p1109a, and the traced load read 21 translates: the program cache did not survive the restart (first visible 1.063 s); p1109a planted again. Next phone window: the same salted traced load with no Chrome restart in between (0 translates = warm across a page load). Never restart Chrome on the phone
+  - next: Chrome on the phone restarted again 2026-11-11 11:03 (seen by K156 round 2026-11-11, which did not run: the phone was asleep). Next phone window: the salted traced load (salt_p1109a.js) re-checks the restart case (21 translates expected) and re-plants; the window after it, with no Chrome restart in between, tests warm across a page load (0 translates). Never restart Chrome on the phone
   - brief: `docs/design/K307_intro_freezes.md`, "Stage 2 handoff" and "K385" (the mechanism and the plan)
 - **K8** · G3: SDF ribbons drawn from one shared sample texture
   (`docs/design/G3G4_sdf_geometry.md`). G3-0 merged (ebdae8c..b11747e): the four G3
