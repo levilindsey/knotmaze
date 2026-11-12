@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1323.
+Next free ID: K1324.
 
 ## Waiting on Levi
 
@@ -1871,6 +1871,10 @@ Every other item below waits on the trigger it names.
   piece-frames), 7 wide pieces, def 3 runs (K1247 s23 slack census, `.claude/probes/K1247/k1247s23_slack.ts`;
   handoff in docs/design/K1247_s23_band_shader.md). Matters once ob=1 is the default (K1247 s24 reports
   whether it shows)
+- **K1323** · K1314's census reference (after K1321): at muse_hash j78c its fill colour has a seam at the
+  fillet cone's edge and a faint smear (the old reference too); small reference specks at g41_def_tw64 j45
+  (the disk meets the band) and g41_user_tw64 j49 (top right). Crops .claude/probes/K1321/out/sheet_y.png,
+  sheet_ca1.png
 
 ## Approved, to schedule (2026-10-11)
 
