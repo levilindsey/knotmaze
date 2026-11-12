@@ -518,10 +518,10 @@ Next free ID: K1320.
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: nobody since 2026-11-11 23:26 (paused by Levi; was agent `a4396d99ea4060cf3` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: `worktree-agent-a4396d99ea4060cf3`, worktree `.claude/worktrees/agent-a4396d99ea4060cf3`; last commit: `129e2dfc`
-  - evidence: .claude/probes/K1247/ (tools; k1247s23_twin.ts, GPU vs CPU records); src/render/outline/band_rec.ts, band_place.ts (branch only); untracked out/s22/, out/s23/ (twin_def.json, twin_fat.json)
-  - next: s23 resume: the twin on the muse_hash drag, npm test, a headed check that rp=outline&ob=1 draws the band; then the def c24 run-end miss (0.533 px), the slack trim, the ABBA bench, the census, the flip, the crops. Unattributed: a recCs float32 tie moves one fan column (shape unchanged), and 65 fat slot differences (handoff in the brief)
+  - owner: agent `aa65540a6e30e2162` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-11 23:56, 2 h cap ~01:56)
+  - branch: `worktree-agent-aa65540a6e30e2162`, worktree `.claude/worktrees/agent-aa65540a6e30e2162`; last commit: `21b266a2`
+  - evidence: .claude/probes/K1247/ (tools, k1247s23_twin.ts); untracked out/s22/, out/s23/; the paused s23 worktree agent-a4396d99ea4060cf3 (129e2dfc, merged into the new branch first)
+  - next: s23 resumed: twin on muse_hash, npm test, headed ob=1 check, the def c24 run-end miss, then trim, bench, census, flip, crops
   - brief: `docs/design/K1247_s23_band_shader.md`
 - **K1278** · The outline's paint blends seamlessly across junctions (Levi 2026-11-10): section colour and pulses
   from per-pixel fields continuous across faces, triangles and junctions, gated by a seam test on every
@@ -551,10 +551,10 @@ Next free ID: K1320.
   most cases. But there are still plenty of unacceptable artifacts"): an artifact census (stray ink, hard
   colour edges inside fills, paper holes, broken ink) across scenes, then fix stages that drive its count to
   0; the look gate in docs/design/K1240_gate.md
-  - owner: nobody since 2026-11-11 18:23 (paused by Levi; was agent `a245bd015c3213ac1` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: `worktree-agent-a245bd015c3213ac1`, worktree `.claude/worktrees/agent-a245bd015c3213ac1`; last commit: `d8e47dce`
-  - evidence: .claude/probes/K1314/ (census tools; k1314_census.ts filletHere, the reference yield; k1314_s5_ref.ts); untracked out/s1-s5/ (the partial census_s5ref_1/_2.json in the worktree are from a stopped run: ignore)
-  - next: s5 resume: k1314_run.ps1 -Tag s5ref -Lock, diff against s4b with k1314_ll_diff.ps1 -Near; then the j135 arc-band fix in outline.ts piecesPhaseC (next to thruJoinFan), then the brief order; classes a/c are form B flaws, do not copy (handoff in the brief). K1315 and K1319 wait on Levi
+  - owner: agent `a1c74506131956ddd` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-11 23:56, 2 h cap ~01:56)
+  - branch: `worktree-agent-a1c74506131956ddd`, worktree `.claude/worktrees/agent-a1c74506131956ddd`; last commit: `4add74f1`
+  - evidence: .claude/probes/K1314/ (census tools); untracked out/s1-s5/; the paused s5 worktree agent-a245bd015c3213ac1 (d8e47dce, merged into the new branch first)
+  - next: s5 resumed: rerun the census reference (s5ref), then the j135 arc-band fix in piecesPhaseC, then the brief order; K1315 and K1319 wait on Levi
   - brief: `docs/design/K1314_s5_joins_wedges.md`
 
 ## Next, in order
