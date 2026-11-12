@@ -90,7 +90,7 @@ const STRIP_FOOT = true;
  *  form B unions the group and paints c22), a colour step inside the ink:
  *  7 hard edges on muse_hash, 1 on g41_user_tw64, 4 paper spots. On needs
  *  that junction fill to yield to an arm's own tube first. */
-const MATCH_MIRROR = false;
+const MATCH_MIRROR = true;
 /** K1314 s6: no matched s scale for a strip whose ranges part at a junction end. */
 const JEND_GATE = true;
 const FOOT_STEP = 8;
@@ -858,7 +858,8 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
         // corner consumed would be held at its piece's end there (MATCH_MIRROR
         // off), a fan that leaves the tube's ink unbordered (muse_hash j77,
         // j20, j154: 3 broken_ink); such a strip keeps stage 5's rows.
-        const jEnd = (a0 !== b0 && stationS(I.aSt) !== null) || (a0 + a1 !== b0 + b1 && stationS(I.bSt) !== null);
+        const thru = (sti: number): boolean => stationS(sti) !== null && st.arms[st.stationsD[sti].arm].kind !== "end";
+        const jEnd = (a0 !== b0 && thru(I.aSt)) || (a0 + a1 !== b0 + b1 && thru(I.bSt));
         if ((a0 !== b0 || a1 !== b1) && !(JEND_GATE && jEnd)) {
           const u0 = Math.min(a0, b0); const u1 = Math.max(a0 + a1, b0 + b1);
           const ov = Math.min(a0 + a1, b0 + b1) - Math.max(a0, b0);
