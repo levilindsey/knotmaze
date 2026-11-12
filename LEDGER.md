@@ -546,10 +546,10 @@ Next free ID: K1319.
   most cases. But there are still plenty of unacceptable artifacts"): an artifact census (stray ink, hard
   colour edges inside fills, paper holes, broken ink) across scenes, then fix stages that drive its count to
   0; the look gate in docs/design/K1240_gate.md
-  - owner: agent `a4e491db0bb7d458e` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-11 16:40, 2 h cap ~18:40)
-  - branch: `worktree-agent-a4e491db0bb7d458e`, worktree `.claude/worktrees/agent-a4e491db0bb7d458e`; last commit: `a6093589`
+  - owner: nobody since 2026-11-11 17:53 (merged; agent `a4e491db0bb7d458e` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `30c5b392`
   - evidence: .claude/probes/K1314/ (census tools); untracked out/s1-s4/
-  - next: s4: round the 5 through bends past a junction (muse_hash j78/j135/j98, g41_user_tw64 j48/j49) joined to the next corner; K1045 open eyes (muse_hash j73, j156); then s5: hard wedges, stray classes a-d; K1315 waits on Levi
+  - next: s5: the finds left near the joins (j78 wedge and cuts; cut / cut short at j77, j20, j135, j154, j49), the other hard wedges (g41_ring_tw64 x67/x68, g41_user_tw64 j71), stray classes a-d (s2 handoff); the j73 eye tip waits on Levi; K1315 waits on Levi
   - brief: `docs/design/K1314_s4_bends_eyes.md`
 
 ## Next, in order
