@@ -1379,6 +1379,10 @@ export function createOutlineApp(ctx: SceneExportCtx, requestFrame: () => void):
     );
     const { scene } = buildFieldScene(input);
     scene.look.ctrlArc ??= CTRL_ARC;
+    // K1247 s18 probe: a page that sets window.__knotOutlineCapture to an
+    // array gets every sent scene as JSON (the drag's frames, replayed in Node).
+    const cap = (globalThis as { __knotOutlineCapture?: string[] }).__knotOutlineCapture;
+    if (Array.isArray(cap)) cap.push(JSON.stringify(scene));
     sentMaps = scene.chains.map((sc, i) => {
       const ch = input.chains[i];
       return ch ? { chain: sc.id, ...chainArcMap(ch, sc.pts, input.look.halfWidth) } : undefined;
