@@ -71,7 +71,7 @@
 // run's span follows the frame.
 import type { DiagramStructure, OutlineTable, SceneIn } from "./outline";
 import { zChains, zAtC, zPastC, footNear } from "./draw";
-import { chainTangents, colAt, frameAt, offsetAt, offsetRow, POLY, pointAt, recSideOk, recTables, zAt1, zRow } from "./chain_frame";
+import { chainTangents, colAt, colRow, frameAt, offsetAt, offsetRow, POLY, pointAt, recSideOk, recTables, zAt1, zRow } from "./chain_frame";
 import { paintAt, runAt, type SectionPaint } from "./paint";
 
 export const CAP_M = 17;
@@ -645,7 +645,11 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
   // no foot search: a record's foot is its own s.
   // K1247 s19 (fillRec 2, oe=1 in the app): the vertex shader places a record strip's columns
   // 2..N-2 from the strip table (rec below); the CPU places only columns 0, 1, N-1 and N.
-  const gpu = scene.look.fillRec === 2;
+  // K1247 s21 (fillRec 3, the structure's frame 0): fillRec 2's frame and table, plus columns 2..N-2
+  // placed here as the shader places them (colRow on the table's float32 s ranges), so the paint is
+  // built from one fill instead of a whole-CPU fill (fillRec 1) and then fillRec 2's.
+  const full = scene.look.fillRec === 3;
+  const gpu = scene.look.fillRec === 2 || full;
   const rec = scene.look.fillRec === 1 || gpu;
   // Tangents per chain, on first use (gpu mode takes its few points without them).
   const tgC: (ReturnType<typeof chainTangents> | null | undefined)[] = [];
@@ -774,6 +778,21 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
     if (recT) { col(1, P4[0], P4[1], P4[4], P4[5], PS4[0], PS4[2]); col(N - 1, P4[2], P4[3], P4[6], P4[7], PS4[1], PS4[3]); }
     else { col(1, P4[0], P4[1], P4[4], P4[5]); col(N - 1, P4[2], P4[3], P4[6], P4[7]); }
     col(N, pl.pts[2 * nl - 2], pl.pts[2 * nl - 1], pr.pts[2 * nr - 2], pr.pts[2 * nr - 1]);
+    // K1247 s21 (fillRec 3): columns 2..N-2 as the shader places them (mode 4: colAt on the float32
+    // ranges, by colRow; else the offset line uniform in s).
+    if (full && N >= 4) {
+      if (rowL.length < 2 * W) { rowL = new Float64Array(2 * W); rowR = new Float64Array(2 * W); rowZ = new Float64Array(W); rowSL = new Float64Array(W); rowSR = new Float64Array(W); }
+      if (recT) {
+        colRow(c, recT.pf, o4, Math.fround(rL0), Math.fround(rL1), N, sg, hW, 2, N - 2, rowL, rowSL);
+        colRow(c, recT.pf, o4, Math.fround(rR0), Math.fround(rR1), N, -sg, hW, 2, N - 2, rowR, rowSR);
+        for (let i = 2; i <= N - 2; i++) col(i, rowL[2 * i], rowL[2 * i + 1], rowR[2 * i], rowR[2 * i + 1], rowSL[i], rowSR[i]);
+      } else {
+        for (let i = 2; i <= N - 2; i++) {
+          offsetAt(c, rL0 + (rL1 * i) / N, sg, hW, rL1 / N, P4, 0); offsetAt(c, rR0 + (rR1 * i) / N, -sg, hW, rR1 / N, P4, 4);
+          col(i, P4[0], P4[1], P4[4], P4[5]);
+        }
+      }
+    }
     const rF = 4 * hW;
     const footEnd = (i: number): void => {
       for (let r = 0; r < 3; r++) { const v = b0 + r * W + i; const f = footS(c, pos[2 * v], pos[2 * v + 1], s4[SLOTS * v], rF); if (f === f) s4[SLOTS * v] = f; }

@@ -440,9 +440,9 @@ const CWF = new Float64Array(10);
 /** Fan point g of st at sample v on side sgn: the miter on the concave side, else P + h (cos, sin)(a0 +
  *  da g / st); st 0: the offset line's point. */
 function fanPt(c: FrameChain, v: number, sgn: number, h: number, st: number, g: number, out: Float64Array, oi: number): void {
-  cornerAt(c, v, sgn, h, CWF);
-  if (CWF[0] === 2) { out[oi] = CWF[6]; out[oi + 1] = CWF[7]; return; }
-  if (CWF[0] === 1 && st > 0) { const an = CWF[3] + (CWF[4] * g) / st; out[oi] = c.xs[v] + h * Math.cos(an); out[oi + 1] = c.ys[v] + h * Math.sin(an); return; }
+  const w = corner(c, v, sgn, h);
+  if (w[0] === 2) { out[oi] = w[6]; out[oi + 1] = w[7]; return; }
+  if (w[0] === 1 && st > 0) { const an = w[3] + (w[4] * g) / st; out[oi] = c.xs[v] + h * Math.cos(an); out[oi + 1] = c.ys[v] + h * Math.sin(an); return; }
   edgePt(c, v, c.s[v], sgn, h, out, oi);
 }
 /** The border's point at s (unwrapped) along segment K (unwrapped) on side sgn: the offset line, or a
@@ -450,12 +450,52 @@ function fanPt(c: FrameChain, v: number, sgn: number, h: number, st: number, g: 
 function edgePt(c: FrameChain, K: number, s: number, sgn: number, h: number, out: Float64Array, oi: number): void {
   const n = c.n; const m = n - 1; const k = K % n; const j = k < m ? k + 1 : 0;
   const st = sOfV(c, K); const en = st + ((k < m ? c.s[k + 1] : c.len) - c.s[k]);
-  cornerAt(c, k, sgn, h, CWF);
-  if (CWF[0] === 2 && s - st < CWF[1]) { out[oi] = CWF[6]; out[oi + 1] = CWF[7]; return; }
-  cornerAt(c, j, sgn, h, CWF);
-  if (CWF[0] === 2 && en - s < CWF[1]) { out[oi] = CWF[6]; out[oi + 1] = CWF[7]; return; }
+  let w = corner(c, k, sgn, h);
+  if (w[0] === 2 && s - st < w[1]) { out[oi] = w[6]; out[oi + 1] = w[7]; return; }
+  w = corner(c, j, sgn, h);
+  if (w[0] === 2 && en - s < w[1]) { out[oi] = w[6]; out[oi + 1] = w[7]; return; }
   let dx = c.xs[j] - c.xs[k]; let dy = c.ys[j] - c.ys[k]; const l = Math.sqrt(dx * dx + dy * dy) || 1; dx /= l; dy /= l;
   out[oi] = c.xs[k] + dx * (s - st) - sgn * h * dy; out[oi + 1] = c.ys[k] + dy * (s - st) + sgn * h * dx;
+}
+// K1247 s21: colRow's corner cache, the last two vertices' cornerAt on its one side (c, sgn, h fixed
+// while CR_ON). Off (colAt): each call computes into CWF, as before.
+let CR_ON = false; let CRN = 0; const CRK = new Float64Array(2); const CRV = [new Float64Array(10), new Float64Array(10)];
+function corner(c: FrameChain, v: number, sgn: number, h: number): Float64Array {
+  if (!CR_ON) { cornerAt(c, v, sgn, h, CWF); return CWF; }
+  if (CRK[0] === v) return CRV[0];
+  if (CRK[1] === v) return CRV[1];
+  const sl = CRN; CRN ^= 1; cornerAt(c, v, sgn, h, CRV[sl]); CRK[sl] = v; return CRV[sl];
+}
+
+/** K1247 s21: colAt for columns i = iLo..iHi of one side, bit for bit, into out[2i], out[2i + 1] and
+ *  their s into sOut[i]: one span and a walk along V instead of a span and a binary search per column,
+ *  each vertex's corner once. The walk finds the same V as colAt's search wherever cs is monotone in V
+ *  (S > 0, B >= 0); otherwise each column is colAt's. */
+export function colRow(c: FrameChain, pf: ArrayLike<number>, o: number, sA: number, dS: number, N: number, sgn: number, h: number, iLo: number, iHi: number, out: Float64Array, sOut: Float64Array): void {
+  const sp = spanOf(c, sA, dS); const a = sp[0]; const sB = sp[1]; const k = sp[2]; const V1 = sp[3]; const V2 = sp[4]; const base = sp[5];
+  const S = sB - a; const p0 = pfU(c, pf, o, V1 - 1); const B = N - (pfU(c, pf, o, V2) - p0);
+  if (!(S > 0) || !(B >= 0)) { for (let i = iLo; i <= iHi; i++) sOut[i] = colAt(c, pf, o, sA, dS, N, sgn, h, i, out, 2 * i); return; }
+  const cs = (V: number): number => Math.floor(((sOfV(c, V) - a) * B) / S + 0.5) + pfU(c, pf, o, V - 1) - p0;
+  CR_ON = true; CRK[0] = -1; CRK[1] = -1;
+  try {
+    // V: the last interior vertex with cs(V) <= i (V1 - 1: none); c0 = cs(V), cN = cs(V + 1).
+    let V = V1 - 1; let c0 = 0; let cN = V1 <= V2 ? cs(V1) : Infinity;
+    for (let i = iLo; i <= iHi; i++) {
+      while (V + 1 <= V2 && cN <= i) { V++; c0 = cN; cN = V + 1 <= V2 ? cs(V + 1) : Infinity; }
+      const oi = 2 * i; let s: number; let K: number;
+      if (V >= V1) {
+        const st = pfU(c, pf, o, V) - pfU(c, pf, o, V - 1); const g = i - c0;
+        if (g <= st) { fanPt(c, V % c.n, sgn, h, st, g, out, oi); sOut[i] = sOfV(c, V) + base; continue; }
+        const ce = c0 + st; const sv = sOfV(c, V); const cn = V < V2 ? cN : N; const sn = V < V2 ? sOfV(c, V + 1) : sB;
+        s = sv + ((sn - sv) * (i - ce)) / (cn - ce); K = V;
+      } else {
+        const cn = V < V2 ? cN : N; const sn = V < V2 ? sOfV(c, V1) : sB;
+        s = a + ((sn - a) * i) / cn; K = k;
+      }
+      edgePt(c, K, s, sgn, h, out, oi);
+      sOut[i] = s + base;
+    }
+  } finally { CR_ON = false; }
 }
 
 /** offsetRow's segment and fraction for arc u (wrapped or clamped as it does): [k, f]. */

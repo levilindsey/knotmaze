@@ -75,13 +75,15 @@ export class OutlineModel {
     this.fs = fillStructure(this.st, fillResolution(this.st, this.table));
     const zz = zChains(scene);
     // K1247 s19: with the records on the GPU (fillRec 2) the structure's paint is built from frame 0
-    // placed whole on the CPU (fillRec 1, stage 18's), then reordered (recLayout).
+    // placed whole on the CPU, then reordered (recLayout). K1247 s21: one fill, fillRec 3 (fillRec 2's
+    // frame and table, the shader's columns placed as the shader places them), where s19/s20 ran a
+    // whole-CPU fill (fillRec 1) and then fillRec 2's: the first structure's extra 200-280 ms.
     const gpu = scene.look.fillRec === 2;
-    const sc1 = gpu ? { ...scene, look: { ...scene.look, fillRec: 1 } } : scene;
+    const sc1 = gpu ? { ...scene, look: { ...scene.look, fillRec: 3 } } : scene;
     const fr = fillFrame(this.fs, this.st, this.table, sc1, zz);
     this.pd = paintData(this.fs, this.st, fr, sc1, "app", this.baseHue);
     this.rec = gpu ? recLayout(this.fs, this.pd) : null;
-    if (gpu) this.recFrame = fillFrame(this.fs, this.st, this.table, scene, zz).rec ?? null;
+    if (gpu) this.recFrame = fr.rec ?? null;
     this.band = bandGpu(this.table, scene, zz);
     this.ks = keyScale(scene);
     this.structureMs = performance.now() - t0;
