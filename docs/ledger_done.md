@@ -3383,3 +3383,95 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 ## K1132 (Done 2026-11-03)
 
 - **K1132** · key hints (the d-pad button that takes each run, K1170) sit out past the head marker; the reach placement and __knotKeyHintPlace are gone. Done in 415d131f (2026-11-03).
+
+## K1162 (Done 2026-11-04)
+
+- **K1162** · Doc and item-text errata from the ask-card pass, all 15 checked: Muse run 15C fixed the docs (b2ca45af; claims 4, 11 and half of 8 were wrong), Claude applied its seven item-text lines (K440, K626, K1128, K887, K656, K693 and the K207 note). Done in b2ca45af (2026-11-04).
+
+## K1169 (Done 2026-11-04)
+
+- **K1169** · Muse batch 15 (`docs/design/K1169_muse_batch15.md`): runs A (K1139 S2), B (K778) and C (K1162) done, each reviewed against its report and CI. Done in 95f8f0b0 (2026-11-04).
+
+## K1171 (Done 2026-11-04)
+
+- **K1171** · One Rules dropdown, Fragile runs: off, crack, snap, collapse, collapse (free); one link param (codec v10, `&cl=` gone); the Par rows disabled under the collapse options (Muse run 15E; shots checked). Done in 9a655597 (2026-11-04).
+
+## K1173 (Done 2026-11-04)
+
+- **K1173** · A Tug threads checkbox in Touch & feel (per browser, on by default, never in a link): off, a drag pans wherever it starts and a tap still plucks (Muse run 15F). Done in d41a02c9 (2026-11-04).
+
+## K435 (Done 2026-11-04)
+
+- **K435** · probes.md's FX-off burn pin waits two frames and says container.visible = false does not stop the burn FX; THE BURN's under-both-looks line was already corrected by K599. Done in 08e2165e (2026-11-04).
+
+## K390 (Done 2026-11-04)
+
+- **K390** · probes.md's fog A/B recipe passes &phw=0 (same-build controls about 700 px instead of 4054-7979); the start marker's two states stay unexplained, and the recipe says so. Done in 08e2165e (2026-11-04).
+
+## K69 (Done 2026-11-04)
+
+- **K69** · String mode (`pv=string`) on pre-G2.3 builds drew a 1-px diagonal sliver from the start to the exit marker (`?b.c&pv=string`, 6 moves); G2.3 doesn't show it, never attributed (G2 doc section 7, Follow-ups). Dropped: moot: G2.3 and later never showed the sliver, and since K83 (21a525e) that Graphics draws only the win ring (2026-11-04).
+
+## K511 (Done 2026-11-04)
+
+- **K511** · K334/K348 note (2026-10-15): K334's pointer queueing is superseded by Levi's correction in 2bcf771; K348's mid-move wait-tap leftover is now intentional for pointers. Dropped: a note, not open work: K334's queueing was superseded by 2bcf771 and K348's leftover is intentional (2026-11-04).
+
+## K701 (Done 2026-11-04)
+
+- **K701** · Section shader lengths rose again, limits now 47,750 / 64,150 characters (K324 s2: +85 each; `test/render/k320_slim.test.ts`). Dropped: a record, not open work: k320_slim.test.ts pins the section shader limits (57,430 and 73,850 today) (2026-11-04).
+
+## K1166 (Done 2026-11-04)
+
+- **K1166** · After the history rewrite (K1164), two things only you can do: send GitHub Support the drafted request so closed PR #1 stops serving the old commits, and reset the laptop's knotmaze copy before its next use. Dropped: Levi 11-04: “let's ignore this”: the Support request is not sent; the laptop reset is Residual K1181 now (2026-11-04).
+
+## K1163 (Done 2026-11-04)
+
+- **K1163** · Corner rounding's softer root gate (the root band scaled by the tip factor, Muse batch 16 Run H): the ten near-straight cusp corners now match S1f; row 15's corner goes on in K1180. Done in ab7cad9a (2026-11-04).
+
+## K1175 (Done 2026-11-04)
+
+- **K1175** · key hints recompute while the flow is on, so a disc never names a stale key on a bisector run. Done in 2a856876 (2026-11-04).
+
+## K999 (Done 2026-11-04)
+
+- **K999** · probes.md's paths narrowed to the probe scripts; K863's trace and data reads no longer carry it. Done in 2b302a3f (2026-11-04).
+
+## K178 (Done 2026-11-04)
+
+- **K178** · K79, K99 and K104 private-cache wrappers load the config with loadConfigFromFile, as K1139's tracked copy does. Done in 1a02e2b8 (2026-11-04).
+
+## K1178 (Done 2026-11-04)
+
+- **K1178** · Muse batch 16 (runs A-L, `docs/design/K1178_muse_batch16.md`), each through the chain's gate; the open leftovers stay on their own items (K484, K648, K1179). Done in 20453e7c (2026-11-04).
+
+## K1179 (Done 2026-11-04)
+
+- **K1179** · Thread geometry (Levi 11-04: rethink how thread bodies, junction rounds and gaps are built, maybe as a skin on the thread centres): reviewed (`docs/design/K1179_geometry_review.md`), no simulated skin; its one-rule outline failed the spike five times (S1-S1e, `docs/design/K1179_s1e.md`), so no rebuild. Done in b6174b00 (2026-11-04).
+
+## K1183 (Done 2026-11-04)
+
+- **K1183** · .claude/rules/render-field.md covers src/render/field/ and test/render/field/ with narrow paths, distilling only the binding form B and field-scene grammar from the design docs and code headers; no open K1179 question settled. Done in 9ebf6ace (2026-11-04).
+
+## K1184 (Done 2026-11-04)
+
+- **K1184** · Muse batch 17 (runs B-G: K1183 rules file, K711 b, K737 fire piece, K782 follower, K188 restart, K292 dog-ears gated for the look) reviewed by Claude. Done in 06a41d1d (2026-11-04).
+
+## K292 (Done 2026-11-04)
+
+- **K292** · the panel's corner marks and key line show for everyone, Seed row marked too (Levi 2026-11-04: yes as shown). Done in 38116577 (2026-11-04).
+
+## K1187 (Done 2026-11-04)
+
+- **K1187** · Fire with breaking runs: a broken anim run's unswept stretch draws its burn again (Muse batch 18 run D; Claude scoped the cut to a broken run in 222452e3). Done in 0a776aa0 (2026-11-04).
+
+## K1188 (Done 2026-11-04)
+
+- **K1188** · scripts/preview.ps1 reproduced and fixed: a -Root whose -Ref worktree files pass 260 chars is refused before creating anything (git 2.33: GIT_DIR too big); a killed -Ref server's temp worktree is cleaned by the next run under the same -Root, junction unlinked first, live siblings untouched (Claude read the cleanup: src-* under that root only, any doubt kept). Done in f5035e0d (2026-11-04).
+
+## K1189 (Done 2026-11-04)
+
+- **K1189** · Muse batch 18: K292 corner marks (38116577), K782 toast (8ba8dc69), K711 chase tap (ee46522e), K1187 burn (0a776aa0, scoped by 222452e3), K1188 preview.ps1 (f5035e0d). Done in f5035e0d (2026-11-04).
+
+## K1192 (Done 2026-11-04)
+
+- **K1192** · Muse batch 19 (`docs/design/K1192_muse_batch19.md`): K1186's flip count, K1182's biarc and Run F's look at its corners, K1191's examinations, K782's waiting follower. Done in 3ddaec22 (2026-11-04).
