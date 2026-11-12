@@ -84,14 +84,17 @@ const TAIL_FOOT = true;
  *  taken every FOOT_STEP columns and interpolated between. */
 const STRIP_FOOT = true;
 /** K1314 s6: mirror a consumed border on the matched s scale (see the strip
- *  item). Off: it clears g41_user_tw64 j71 but the mirrored tube then lies
- *  under the junction fill of another arm keyed above its border (muse_hash
- *  j56: c66's fill at -0.056 over c22's mirrored border at -0.093, where
- *  form B unions the group and paints c22), a colour step inside the ink:
- *  7 hard edges on muse_hash, 1 on g41_user_tw64, 4 paper spots. On needs
- *  that junction fill to yield to an arm's own tube first. */
+ *  item). Everywhere, it clears g41_user_tw64 j71 but the mirrored tube then
+ *  lies under the junction fill of another arm keyed above its border
+ *  (muse_hash j56: c66's fill at -0.056 over c22's mirrored border at -0.093,
+ *  where form B unions the group and paints c22), a colour step inside the
+ *  ink: 7 hard edges on muse_hash, 1 on g41_user_tw64, 4 paper spots.
+ *  K1314 s7: only at an END arm's junction end whose consumed side stops at
+ *  a dropped corner's V, consumed over more than the sides overlap, and the
+ *  overlap h / 4 or more (mirA, mirB in fillFrame). */
 const MATCH_MIRROR = true;
-/** K1314 s6: no matched s scale for a strip whose ranges part at a junction end. */
+/** K1314 s6: no matched s scale for a strip whose ranges part at a junction end
+ *  (s7: except where that end is mirrored, mirA / mirB). */
 const JEND_GATE = true;
 const FOOT_STEP = 8;
 
@@ -854,21 +857,40 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
       if (pl && pr && pl.pts.length >= 4 && pr.pts.length >= 4 && N >= 2) {
         const a0 = pl.s0; const a1 = wrapZ(pl.s1 - pl.s0); let b0 = pr.s0; const b1 = wrapZ(pr.s1 - pr.s0);
         if (cz && cz.closed && cz.len > 0) b0 += cz.len * Math.round((a0 - b0) / cz.len);
-        // Not where the ranges part at a THROUGH arm's junction end: the side
-        // the junction's corner consumed would be held at its piece's end there,
-        // a fan that leaves the tube's ink unbordered (muse_hash j77, j20, j154:
-        // 3 broken_ink), and mirrored it rose over the junction's fill (j56);
-        // such a strip keeps stage 5's rows. K1314 s7: at an END arm's junction
-        // end the matched scale holds, and that end's columns are mirrored
-        // (mirA, mirB; g41_user_tw64 j71's c32 wedge).
+        // Not where the ranges part at a junction end: the side the junction's
+        // corner consumed would be held at its piece's end there, a fan that
+        // leaves the tube's ink unbordered (muse_hash j77, j20, j154: 3
+        // broken_ink), and mirrored it rose over the junction's fill (j56);
+        // such a strip keeps stage 5's rows. K1314 s7, the one exception
+        // (mirA, mirB): an END arm whose consumed side stops at a DROPPED
+        // corner's V (no round corner, so no fan paints that stretch), consumed
+        // over more than the sides overlap: there stage 5's rows skew into a
+        // hard wedge (g41_user_tw64 j71's c32: consumed 0.69, overlap 0.25), so
+        // the matched scale holds and that end's columns are mirrored. Where a
+        // round corner consumed the side (muse_hash j43, j0, j127; g41 j49) the
+        // mirrored tube rose over the junction's fan in a hard seam, and where
+        // the sides overlap longer (muse_hash j124: 1.79) stage 5's rows hold.
         const armKind = (sti: number): string | null => (stationS(sti) !== null ? st.arms[st.stationsD[sti].arm].kind : null);
         const partA = a0 !== b0; const partB = a0 + a1 !== b0 + b1;
-        const jEnd = (partA && armKind(I.aSt) === "through") || (partB && armKind(I.bSt) === "through");
-        mirA = partA && armKind(I.aSt) === "end"; mirB = partB && armKind(I.bSt) === "end";
+        const ovAB = Math.min(a0 + a1, b0 + b1) - Math.max(a0, b0);
+        const droppedAt = (sti: number, x: number, y: number): boolean => {
+          const ai = st.stationsD[sti].arm;
+          for (let k = 0; k < st.corners.length; k++) {
+            const c = st.corners[k]; if (c.aArm !== ai && c.bArm !== ai) continue;
+            const o = table.corners[k]; if (o && !o.ok && Math.abs(o.Vx - x) < 1e-4 && Math.abs(o.Vy - y) < 1e-4) return true;
+          }
+          return false;
+        };
+        const nl = pl.pts.length; const nr = pr.pts.length;
+        mirA = partA && armKind(I.aSt) === "end" && ovAB < Math.abs(a0 - b0) &&
+          (a0 > b0 ? droppedAt(I.aSt, pl.pts[0], pl.pts[1]) : droppedAt(I.aSt, pr.pts[0], pr.pts[1]));
+        mirB = partB && armKind(I.bSt) === "end" && ovAB < Math.abs(a0 + a1 - b0 - b1) &&
+          (a0 + a1 < b0 + b1 ? droppedAt(I.bSt, pl.pts[nl - 2], pl.pts[nl - 1]) : droppedAt(I.bSt, pr.pts[nr - 2], pr.pts[nr - 1]));
         // Only a tube: where the sides' ranges overlap by under h / 4 the strip is two corners'
         // leftovers, and the mirror fabricates a tube over the junction's fill (muse_hash j56's
         // c22 end arm, overlap 0.004: a hard-edged patch; j71's overlaps 0.25).
-        if (Math.min(a0 + a1, b0 + b1) - Math.max(a0, b0) < 0.25 * table.h) { mirA = false; mirB = false; }
+        if (ovAB < 0.25 * table.h) { mirA = false; mirB = false; }
+        const jEnd = (partA && !mirA && armKind(I.aSt) !== null) || (partB && !mirB && armKind(I.bSt) !== null);
         if ((a0 !== b0 || a1 !== b1) && !(JEND_GATE && jEnd)) {
           const u0 = Math.min(a0, b0); const u1 = Math.max(a0 + a1, b0 + b1);
           const ov = Math.min(a0 + a1, b0 + b1) - Math.max(a0, b0);
@@ -916,7 +938,7 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
       };
       if (!okL && okR) { if (cOkR) mirror(bufR, bufCR, bufL); else bufL.set(bufR.subarray(0, 2 * W)); okL = true; fallbacks++; }
       if (!okR && okL) { if (cOkL) mirror(bufL, bufCL, bufR); else bufR.set(bufL.subarray(0, 2 * W)); okR = true; fallbacks++; }
-      // K1314 s6 (OFF, MATCH_MIRROR): on the matched s scale, a column past
+      // K1314 s6 (MATCH_MIRROR; s7: at an end arm's end only): on the matched s scale, a column past
       // one side's own piece (its border consumed by a junction corner or a
       // crossing) but within the other's is the other side mirrored across
       // the centreline, not the consumed side's end point held: held, the

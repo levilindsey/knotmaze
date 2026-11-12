@@ -4600,7 +4600,7 @@ function cutFoldsC(C: FCache, pi: number, sig: number, B: FBord): void {
       cfS2[nid - nb] = hs;
       if (atS) { seq[1] = nid; seq.copyWithin(2, iIn + 1, m); m -= iIn - 1; }
       else { seq[iIn] = nid; seq[iIn + 1] = seq[iE]; m = iIn + 2; }
-      diag.push(`end fold ch${pi} side${sig} at s=${hs.toFixed(2)}`);
+      diag.push(`end fold ch${pi} side${sig} at s=${hs.toFixed(2)} (${hx.toFixed(2)}, ${hy.toFixed(2)})`);
     }
     // Compact the sequence into the base arrays; each cut fold becomes its chevron (foldChevron).
     let cuts = 0; for (let i = 0; i < m; i++) if (seq[i] >= nb) cuts++;
