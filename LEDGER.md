@@ -518,10 +518,10 @@ Next free ID: K1325.
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: agent `a2a09438173cbb356` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 02:17, 2 h cap ~04:17)
-  - branch: `worktree-agent-a2a09438173cbb356`, worktree `.claude/worktrees/agent-a2a09438173cbb356`; last commit: `c3dffd97`
+  - owner: nobody since 2026-11-12 03:39 (merged; agent `a2a09438173cbb356` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `e69fa795`
   - evidence: .claude/probes/K1247/ (k1247s24_twin, _bench, _tfonly, _rest); src/render/outline/band_place.ts; untracked out/s22/, out/s24/
-  - next: s25: one TF invocation per column, expanded to 6 vertices; re-bench ABBA on def and fat; flip ob if the reply frame holds; then the g41 c20 d118 end vertex
+  - next: s26: K1322 (recStrip follows fillFrame's s6 rule, a test tying the record fill to fillFrame) and K1324 (no contact pass between arms of one junction group); then the phone A/B of ob on vs off, and the g41 residual (f11 c20 d118, recSideOk)
   - brief: `docs/design/K1247_s25_column_pass.md`
 - **K1278** · The outline's paint blends seamlessly across junctions (Levi 2026-11-10): section colour and pulses
   from per-pixel fields continuous across faces, triangles and junctions, gated by a seam test on every
