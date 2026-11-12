@@ -551,10 +551,10 @@ Next free ID: K1325.
   most cases. But there are still plenty of unacceptable artifacts"): an artifact census (stray ink, hard
   colour edges inside fills, paper holes, broken ink) across scenes, then fix stages that drive its count to
   0; the look gate in docs/design/K1240_gate.md
-  - owner: agent `a7eace4bdd5301d8d` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 02:55, 2 h cap ~04:55)
-  - branch: `worktree-agent-a7eace4bdd5301d8d`, worktree `.claude/worktrees/agent-a7eace4bdd5301d8d`; last commit: `50a45d3b`
+  - owner: nobody since 2026-11-12 04:34 (merged; agent `a7eace4bdd5301d8d` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `34d37fb8`
   - evidence: .claude/probes/K1314/ (census tools); untracked out/s1-s6/
-  - next: s7: j71 wedge, class (b) loops (x15, j58), class (d) (j55, x22, x304, j30)
+  - next: s8: j58 needles, j55 notch, x22 smear, j71 shade cut (5.2, 7.55), x15 inner step (now a tail_look); s7 census vs a fresh reference: census_s7f (stray 11, hard 1, broken 13)
   - brief: `docs/design/K1314_s7_wedge_loops.md`
 
 ## Next, in order
