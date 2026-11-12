@@ -498,6 +498,20 @@ export function colRow(c: FrameChain, pf: ArrayLike<number>, o: number, sA: numb
   } finally { CR_ON = false; }
 }
 
+/** K1247 s24 (band records): colRow's columns at the ends of [sA, sA + dS] at N columns, into out: [cs(V1), the
+ *  column of the last interior vertex's last fan point cs(V2) + st(V2), B, the sample of V1, of V2]. False: no
+ *  interior vertex, or a span colRow hands to colAt. */
+export function colEnds(c: FrameChain, pf: ArrayLike<number>, o: number, sA: number, dS: number, N: number, out: Float64Array): boolean {
+  const sp = spanOf(c, sA, dS); const a = sp[0]; const sB = sp[1]; const V1 = sp[3]; const V2 = sp[4];
+  if (V1 > V2) return false;
+  const S = sB - a; const p0 = pfU(c, pf, o, V1 - 1); const B = N - (pfU(c, pf, o, V2) - p0);
+  if (!(S > 0) || !(B >= 0)) return false;
+  out[0] = Math.floor(((sOfV(c, V1) - a) * B) / S + 0.5);
+  out[1] = Math.floor(((sOfV(c, V2) - a) * B) / S + 0.5) + pfU(c, pf, o, V2) - p0; out[2] = B;
+  out[3] = V1 % c.n; out[4] = V2 % c.n;
+  return true;
+}
+
 /** offsetRow's segment and fraction for arc u (wrapped or clamped as it does): [k, f]. */
 function segOf(c: FrameChain, u0: number, kf: Float64Array): void {
   const m = c.n - 1; const loop = c.closed && c.len > 0; const L = c.len; const ss = c.s;

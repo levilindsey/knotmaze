@@ -662,6 +662,15 @@ class OutlinePass {
    *  vertices (BAND_PLACE_STRIDE words) and the VAO the band program draws them through. */
   private bp: { prog: WebGLProgram; u: Record<"tab" | "fb" | "sl" | "pass" | "chain" | "ci" | "pf" | "nd" | "h" | "w", U>; tf: WebGLTransformFeedback; buf: WebGLBuffer; vao: WebGLVertexArrayObject; tex: Record<"tab" | "fb" | "sl" | "pf", WebGLTexture>; n: number } | null = null;
   private bpOn = false;
+  /** K1247 s24 (ob=1): the placement pass waiting for the next draw (nD, h, W): it runs at the start of
+   *  the frame that draws the reply, not in the reply's message task, so the frame pays for it. */
+  private bpPend: [number, number, number] | null = null;
+  /** K1247 s24: the placement pass's GPU ms (EXT_disjoint_timer_query_webgl2, when exposed) and its CPU
+   *  dispatch ms, the last 512 each. */
+  readonly tfGpu: number[] = [];
+  readonly tfCpu: number[] = [];
+  private tq: { TIME_ELAPSED_EXT: number; GPU_DISJOINT_EXT: number } | null | undefined = undefined;
+  private tqPend: WebGLQuery[] = [];
   private recOk = false;
   private recN = 0;
   private nPaint = 0;
@@ -936,7 +945,7 @@ class OutlinePass {
     }
     gl.bindTexture(gl.TEXTURE_2D, null);
     this.placeFill();
-    if (this.bpOn && r.bandRec) this.placeBand(r.bandRec.nD, r.h, r.W);
+    this.bpPend = this.bpOn && r.bandRec ? [r.bandRec.nD, r.h, r.W] : null;
     this.zTab = { chainTex: r.chainTex, chainInfo: r.chainInfo };
     this.hasData = true;
   }
@@ -974,6 +983,35 @@ class OutlinePass {
     gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, null);
     gl.bindVertexArray(null);
     gl.useProgram(null);
+  }
+
+  /** K1247 s24: the pending placement pass, timed (CPU dispatch; GPU by a timer query read back frames
+   *  later), then the finished queries collected. */
+  private placeBandTimed(): void {
+    const gl = this.gl;
+    if (this.tq === undefined) this.tq = gl.getExtension("EXT_disjoint_timer_query_webgl2");
+    const tq = this.tq;
+    if (tq && this.tqPend.length) {
+      const disjoint = gl.getParameter(tq.GPU_DISJOINT_EXT);
+      while (this.tqPend.length) {
+        const q = this.tqPend[0];
+        if (!gl.getQueryParameter(q, gl.QUERY_RESULT_AVAILABLE)) break;
+        const ns = gl.getQueryParameter(q, gl.QUERY_RESULT) as number;
+        if (!disjoint) { this.tfGpu.push(ns / 1e6); if (this.tfGpu.length > 512) this.tfGpu.shift(); }
+        gl.deleteQuery(q);
+        this.tqPend.shift();
+      }
+    }
+    const P = this.bpPend;
+    if (!P) return;
+    this.bpPend = null;
+    const t0 = performance.now();
+    const q = tq && this.tqPend.length < 8 ? gl.createQuery() : null;
+    if (q && tq) gl.beginQuery(tq.TIME_ELAPSED_EXT, q);
+    this.placeBand(P[0], P[1], P[2]);
+    if (q && tq) { gl.endQuery(tq.TIME_ELAPSED_EXT); this.tqPend.push(q); }
+    this.tfCpu.push(performance.now() - t0);
+    if (this.tfCpu.length > 512) this.tfCpu.shift();
   }
 
   /** K1247 s23 (ob=1): the band's vertices placed into bp.buf, once per reply (transform feedback
@@ -1096,6 +1134,7 @@ class OutlinePass {
   /** The fill, then the band, into the offscreen target (premultiplied). */
   draw(mat: Float32Array, w: number, h: number, ap: AppPaint | null = null): void {
     const gl = this.gl;
+    if (this.bpOn || this.bpPend || this.tqPend.length) this.placeBandTimed();
     this.target(w, h);
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.fbo);
     gl.drawBuffers([gl.COLOR_ATTACHMENT0]);
@@ -1436,6 +1475,9 @@ export function createOutlineApp(ctx: SceneExportCtx, requestFrame: () => void):
     /** The last 512 replies' [frame, round trip, upload, then parts in OutlineModel.parts order] ms and draws' ms, for medians (K1240 S4b). */
     replyMs: [] as number[][],
     drawMsLog: [] as number[],
+    /** K1247 s24 (ob=1): the band placement pass's GPU ms (timer query; empty when not exposed) and CPU ms. */
+    bandTfGpuMs: [] as number[],
+    bandTfCpuMs: [] as number[],
     /** Each restructure: when (performance.now ms), why (the worker's cause), its worker ms. */
     rebuilds: [] as { at: number; cause: string; ms: number }[],
   };
@@ -1564,6 +1606,7 @@ export function createOutlineApp(ctx: SceneExportCtx, requestFrame: () => void):
     try {
       if (!pass) {
         pass = new OutlinePass(g);
+        stats.bandTfGpuMs = pass.tfGpu; stats.bandTfCpuMs = pass.tfCpu;
         host = pixiLabelHost(ctx.app.renderer as unknown as WebGLRenderer);
       }
       const t0 = performance.now();

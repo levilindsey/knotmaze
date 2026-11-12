@@ -13,7 +13,7 @@
 import type { OutlineTable, SceneIn } from "./outline";
 import { dSC, footNear, parseColor, zAtC } from "./draw";
 import { BAND_SLOTS, BAND_TEX_W, PT, footS, windowRanges, type BandGpu, type ZChain, type ZZ } from "./band_gpu";
-import { colRow, recSideOk, recTables } from "./chain_frame";
+import { colEnds, colRow, recSideOk, recTables } from "./chain_frame";
 import { BT } from "./band_place";
 
 export interface BandLayout {
@@ -222,6 +222,22 @@ export function bandRec(table: OutlineTable, scene: SceneIn, zz: ZZ, lay: BandLa
   // which the arc's first (end) or last (start) point closes on the offset line. EF = [vS, a0S, dAS, nS, vE, a0E, dAE, nE, s0', dS',
   // sVs, sVe]: arc point j at angle a0 + j dA about vertex v; nS, nE 0: none; s0', dS' the colAt span.
   const EF = new Float64Array(12);
+  // K1247 s24, the row's end columns: with no arc at an end, columns 0 and N are today's end points, so colAt's
+  // row lost the first vertex's first point when cs(V1) = 0 (def c61 d730, 0.30 px: its corner cut) and the
+  // last vertex's last fan point when that is column N (muse_hash c8 d121, 0.49 px: today's end clip at radius
+  // 0.416 folds back behind it). The row then starts at column 1 (sh, table texel 7.z) or ends at column N - 1
+  // (eh, 7.w): sh + 2 eh. Not when today's end point's cpts is that vertex, or within 0.01 of it: the run
+  // ends inside (or 0.0016 past) the vertex's fan, so the fan's far point lies outside the run (muse_hash
+  // c66 d754, c64 d677 and c51 d514 overshot by 1.09, 0.41 and 0.31 px). Reads EF: endFans first.
+  const CE = new Float64Array(5);
+  const atV = (C: ZChain, cp: ArrayLike<number>, i: number, V: number): boolean => { const dx = cp[i] - C.xs[V]; const dy = cp[i + 1] - C.ys[V]; return dx * dx + dy * dy < 1e-4; };
+  const rowShift = (C: ZChain, pf: ArrayLike<number>, o: number, N: number, cp: ArrayLike<number>): number => {
+    if (EF[3] < 0) return 0;
+    let NM = N - (EF[3] > 0 ? EF[3] + 1 : 0) - (EF[7] > 0 ? EF[7] + 1 : 0); let sh = 0; let eh = 0; const e = cp.length - 2;
+    if (EF[3] === 0 && colEnds(C, pf, o, EF[8], EF[9], NM, CE) && CE[0] === 0 && CE[2] >= 1 && !atV(C, cp, 0, CE[3])) { sh = 1; NM--; }
+    if (EF[7] === 0 && colEnds(C, pf, o, EF[8], EF[9], NM, CE) && CE[1] === NM && CE[2] >= 1 && !atV(C, cp, e, CE[4])) eh = 1;
+    return sh + 2 * eh;
+  };
   const endFans = (p: OutlineTable["pieces"][number], C: ZChain, sgn: number, dS: number, N: number): void => {
     EF.fill(0); EF[0] = -1; EF[4] = -1; EF[8] = p.s0; EF[9] = dS;
     const np0 = p.pts.length / 2; const cp = p.cpts; const P = p.pts; const n = C.n; const L = C.len; const loop = C.closed && L > 0;
@@ -317,7 +333,7 @@ export function bandRec(table: OutlineTable, scene: SceneIn, zz: ZZ, lay: BandLa
       tab[o] = 2; tab[o + 1] = p.chain; tab[o + 2] = capQ; tab[o + 3] = p.side;
       tab[o + 4] = EF[8]; tab[o + 5] = EF[9]; tab[o + 6] = passBase[p.chain]; tab[o + 7] = passes[p.chain].length;
       for (let j = 0; j < 8; j++) tab[o + 20 + j] = EF[j];
-      tab[o + 28] = EF[10]; tab[o + 29] = EF[11];
+      tab[o + 28] = EF[10]; tab[o + 29] = EF[11]; const SH = rowShift(C, T.pf, T.base[p.chain], capQ, p.cpts); tab[o + 30] = SH & 1; tab[o + 31] = SH >> 1;
       const E = new Float64Array(2);
       tab[o + 8] = p.pts[0]; tab[o + 9] = p.pts[1];
       innerOfP(p.pts, p.cpts, np0, 0, E); tab[o + 10] = E[0]; tab[o + 11] = E[1];
@@ -388,13 +404,14 @@ export function bandRec(table: OutlineTable, scene: SceneIn, zz: ZZ, lay: BandLa
       // Run-end arcs (endFans): columns 1..nS and N - nE..N - 1 their points; colAt the NM + 1 columns between
       // (oS..N - nE - 1), its own end columns too where an arc takes over, so a fan next to the arc keeps all its points.
       endFans(p, C, sgn, dS, N);
-      const nS = EF[3]; const nE = EF[7]; const oS = nS > 0 ? nS + 1 : 0; const NM = N - oS - (nE > 0 ? nE + 1 : 0);
+      const nS = EF[3]; const nE = EF[7]; const SH = rowShift(C, T.pf, o, N, p.cpts); const sh = SH & 1; const eh = SH >> 1;
+      const oS = nS > 0 ? nS + 1 : sh; const NM = N - oS - (nE > 0 ? nE + 1 : eh);
       const arcPt = (v: number, an: number, k: number, sv: number): void => {
         const ca = Math.cos(an); const sa = Math.sin(an);
         RO[2 * k] = C.xs[v] + h * ca; RO[2 * k + 1] = C.ys[v] + h * sa; RI[2 * k] = C.xs[v] + (h - W) * ca; RI[2 * k + 1] = C.ys[v] + (h - W) * sa; RS[k] = sv;
       };
       for (let j = 1; j <= nS; j++) arcPt(EF[0], EF[1] + (j - 1) * EF[2], j, EF[10]);
-      const jLo = nS > 0 ? 0 : 1; const jHi = nE > 0 ? NM : NM - 1;
+      const jLo = nS > 0 || sh > 0 ? 0 : 1; const jHi = nE > 0 || eh > 0 ? NM : NM - 1;
       if (nS >= 0 && jHi >= jLo) { colRow(C, T.pf, o, EF[8], EF[9], NM, sgn, h, jLo, jHi, RO.subarray(2 * oS), RS.subarray(oS)); colRow(C, T.pf, o, EF[8], EF[9], NM, sgn, h - W, jLo, jHi, RI.subarray(2 * oS), RS2.subarray(oS)); }
       for (let j = 0; j < nE; j++) arcPt(EF[4], EF[5] + j * EF[6], N - nE + j, EF[11]);
       RO[2 * N] = p.pts[2 * np0 - 2]; RO[2 * N + 1] = p.pts[2 * np0 - 1]; innerOf(p.pts, p.cpts, np0, np0 - 1, RI, 2 * N);
