@@ -818,7 +818,8 @@ Every other item below waits on the trigger it names.
   now draws today's sharp inner corner; S1b and S1c rounded it (`docs/design/K1040_s1d_corner.md` F2, and F6's Look
   with crops)
 - **K1322** · K1247's recStrip follows fill_tri fillFrame's per-side strip key rule (K1314 s5, f705ddd7):
-  until then the record fill (default) and oe=0 may differ at g41_ring_tw64 x67/x68. After K1247 s24
+  until then the record fill (default) and oe=0 may differ at g41_ring_tw64 x67/x68. After K1314 s6
+  merges (it may change the rule again); add a test tying the record fill to fillFrame
 
 ## Residuals (known, not fixed)
 
