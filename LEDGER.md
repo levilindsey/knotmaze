@@ -519,10 +519,10 @@ Next free ID: K1331.
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: nobody since 2026-11-12 05:43 (agent `aa4ea631c73c1c296` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 03:43, 2 h cap ~05:43); 2 h cap, 2026-11-12 05:42; s26 not Done: stray_ink 31 against census_s7f 11)
-  - branch: `worktree-agent-aa4ea631c73c1c296`, worktree `.claude/worktrees/agent-aa4ea631c73c1c296`; last commit: `5b22d5b8`
+  - owner: nobody since 2026-11-12 06:04 (merged; agent `aa4ea631c73c1c296` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `caceed3a`
   - evidence: .claude/probes/K1247/ (k1247s26_mir, k1247s19_lib twin4), test/render/rec_tie.test.ts; untracked out/s26/, K1314 out/s1/census_s26b*
-  - next: census s26off (CONTACT_GROUPS false) vs census_s7f: if equal, merge the tie (K1322) with the skip off and re-open K1324; then the phone A/B (K156 round) and the g41 residual (recSideOk)
+  - next: K1324 narrowed: CONTACT_GROUPS is off (the skip added 20 stray finds; first step: census its finds by scene); K1327 GPU twin drift; then the phone A/B (K156 round) and the g41 residual (recSideOk)
   - brief: `docs/design/K1247_s26_rec_fill_specks.md`
 - **K1278** · The outline's paint blends seamlessly across junctions (Levi 2026-11-10): section colour and pulses
   from per-pixel fields continuous across faces, triangles and junctions, gated by a seam test on every
