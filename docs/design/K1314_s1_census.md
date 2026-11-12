@@ -72,3 +72,67 @@ differs from form B and looks right is not one. This stage does not change `src/
 The counts per kind and scene; the validation (found or missed, false positives in 20); the fix plan's
 groups with their files; crop paths; your last SHA. Under 40 lines. End with `Ledger items` and K1314's
 handle fields.
+
+## Handoff (stage 1 agent, 2026-11-11)
+
+**Tools** (`.claude/probes/K1314/`, headers give usage): `k1314_census.ts` (the census; `--merge=` re-tallies
+saved JSON without rendering), `k1314_run.ps1` (three parallel groups at ppu 160 then the merge, ~10 min
+with form B cached under `out/fb/`), `k1314_crops.ts` (form B | today | rp=outline crops; `--sample`,
+`--top`, `--spots`; waits out the perf lock), `k1314_sheet.ps1` (sheets), `k1314_peek.ts` (ASCII map of a
+spot). Outputs (untracked) in `out/s1/`: `census_s1d.{json,txt}` is the current census (s1b's render
+with s1's tuning, `reclassS1`, applied).
+
+**Method.** The CPU twin of rp=outline (structure, frame, fill_tri fills, section paint, band ink) and
+form B (`FormB.evalPoint`) rasterized at 160 px/unit in 1280 px tiles; per-pixel detectors (ink where
+form B has none, ink missing, paper holes and covered paper, owner and colour steps); connected
+components of at least 40 px (paper 10), attributed to the nearest crossing or junction and to the
+outline part under the pixels. K1049 is geometric: a through-pass bend with no corner record, counted
+when a rounded corner would move the inner edge 5 screen px or more at the scene's camera. The scenes
+are the 12 whose scene JSON exists (def, fat, ring, muse_hash, muse_default_tw, user_tw42 and the six g41).
+
+**Counts (census_s1d):** stray_ink 22, hard_edge 4, paper 2, broken_ink 15, k1049 14: **57 finds at 47
+spots** (a square end can count as stray and broken; j156 three times). By scene: muse_hash 18,
+g41_user_tw64 10, g41_ring_tw42 7, g41_def_tw64 5, g41_ring_tw64 4, muse_default_tw 4, def 3,
+g41_def_tw42 3, ring 1, user_tw42 1, g41_user_tw42 1, fat 0. Informational: owner_only 2326, tail_look 151.
+
+**Validation.** Found: j58/j59 (one spot: stray spikes, band:run), the K1045 eyes (muse_hash j73
+covered + j74 spike; j156 covered), K1049's bends. Found only as owner_only (not counted):
+g41_user_tw64 j8/j9, x201, x292, x325. Their wedges show in the K1310 sheet's per-chain hues; in the
+app paint the junction colours converge (diff at most 0.016). Found as tail_look (not counted): x134's
+square block, a band:tail end this pixel test can't tell from the acceptable short tails. Missed:
+hairline paper cracks at junction arm roots (g41_ring j7/j9/j15, g41_def j174, g41_user_tw64 j26), under
+the paper minimum. False positives in a random 20: sample 1, 12; sample 2 (seed 2), 11; sample 3
+(seed 3), 8 (6 of 8 broken_ink, all band:run or fill:strip under-tail ends); each tuned by `reclassS1`;
+sample 4 (seed 4, s1d, after the last tuning): **4 of 20, above the bar of 2**. The four: a junction tail
+dot that rp=outline omits cleanly (def j76, broken_ink); a stray hook at g41_user_tw64 j28 (band:run,
+86 px) and a short dark tail at muse_hash j29 (band:tail, 53 px) that read as tail ends; a K1049 bend
+(g41_ring_tw64 j14, 5.7 px) whose small paper eye already reads round. Real stray finds go down to 45
+px and FP ones up to 86, so no size cut separates them; s2 needs the end-shape test.
+
+**Fix plan (by cause, largest first).**
+1. Square under-tail ends at junctions (15 fill:junc + 3 stray cut, e.g. muse_default_tw j150,
+   g41_user_tw64 j63/j64, g41_def_tw64 j97; x134 belongs here): rp=outline ends a junction's under-tail
+   with a square bar or hook where form B ends it with a round dot. fill_tri.ts `fillFrame` (junction
+   fan, ~564), `fillStructure` (~299), `stripNb` (~439); outline.ts tails `runEndFade` (~7153),
+   `tailFoot` (~7725), `tailAt` (~7794), `tailRamp` (~7815), `tailF` (~7829); draw.ts `tieAlpha` (~612).
+   The 151 tail_look finds are shorter tails that look right; leave them.
+2. Stray spikes in the band ink (19): corner arcs 9 (outline.ts `cornersPhaseC` ~6155,
+   `cornerFallbackC` ~6077), run pieces 9 (muse_hash j58, j78, x15, x22, x304: black bars across a strand
+   at a junction or crossing; outline.ts run pieces, draw.ts `bandData` ~638 and `zChains` ~189), tail 1.
+3. K1049 sharp inner corners at through-pass bends (14, 6 on g41_ring_tw42): outline.ts skips the
+   through pair's corner in `buildOutlineFull` (~662; the skips at ~907 and ~1066) and `diagramOf`
+   (~3023, skip ~3043); the fill_tri.ts junction fan must follow the rounded corner. Spec: K1040
+   S1b/S1c, `K1040_s1d_corner.md` F2/F6.
+4. Hard colour wedges (4: g41_ring_tw64 x67/x68, g41_user_tw64 j71, muse_hash j78; on the sheet the
+   first three read as hard, j78's disk barely): fill ownership in fill_tri.ts `fillFrame` (strip 3, disk 1).
+5. K1045 covered eyes (2 spots: muse_hash j73, j156; 5 finds): the junction fan covers the eye where
+   Levi chose form B's open eye with a border. fill_tri.ts `fillFrame`; outline.ts must border the eye.
+6. Not counted yet: the hairline cracks (fill_tri junction fan seams) and x134's square tail block. s2
+   needs a line detector and an end-shape test.
+
+**Crops:** `out/s1/crops/sheets/` (every counted find, `000_totals.png` first), `out/s1/crops_info/sheets/`
+(the 18 largest owner_only and tail_look), FP samples `out/s1/fp2`, `fp3`, `fp4`, named spots
+`out/s1/named2/`.
+
+**Next:** Levi views the sheets; then a fix stage per group, each rerunning `k1314_run.ps1` (then the
+merge) to drive its group's count to 0. Detector debts: x134's end shape, the hairline cracks.

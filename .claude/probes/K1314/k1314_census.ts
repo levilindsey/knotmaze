@@ -61,6 +61,9 @@ export const ARTIFACT_KINDS: readonly Kind[] = ["stray_ink", "hard_edge", "paper
 export function reclassS1(a: Art): Art | null {
   if (a.kind === "k1049" && a.sizePx < 5) return null; // seed 2: 3 and 3.2 px looked rounded, 5.3 px and up sharp
   if (a.kind === "broken_ink" && (a.part.startsWith("band:tail") || (a.part.startsWith("fill:junc") && a.px < 250))) return { ...a, kind: "tail_look" };
+  // seed 3: band:run "faded" (4 of 4) and fill:strip "missing" (2 of 2; 1 of 2 in seed 2) were under-tail ends that
+  // look right; only fill:junc cut short of 250 px or more (4 of 4 real) stays broken_ink
+  if (a.kind === "broken_ink" && (a.part.startsWith("band:run") || a.part.startsWith("fill:strip"))) return { ...a, kind: "tail_look" };
   return a;
 }
 const COL = 0.06;

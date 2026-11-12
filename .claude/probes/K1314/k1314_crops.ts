@@ -8,7 +8,7 @@
 // camera: what master draws by default, at the capture's resolution) and rp=outline (the census's own
 // raster of fill_tri + bandData). A red ring marks the find. Writes <out>/<kind>_<nnn>.png and
 // <out>/manifest.json (numbered in census order per kind) for k1314_sheet.ps1.
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, existsSync, statSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { inflateSync, deflateSync } from "node:zlib";
@@ -143,13 +143,16 @@ function main(): void {
       arts = arts.filter((a) => keep.has(a));
     }
     const per = new Map<string, number>();
+    // never render under someone else's perf lock (a lock older than 30 min is stale)
+    const lock = join(process.env.TEMP ?? "", "claude-perf.lock"); const sab = new Int32Array(new SharedArrayBuffer(4));
     for (const a of arts) {
+      while (existsSync(lock) && Date.now() - statSync(lock).mtimeMs < 30 * 60e3) Atomics.wait(sab, 0, 0, 5e3);
       const n = (per.get(a.kind) ?? 0) + 1; per.set(a.kind, n);
       const h = sceneCtx(a.scene).m.scene.look.halfWidth;
       const rr = a.kind === "k1049" ? 0.8 * h : Math.max(0.6 * h, 0.5 * Math.hypot(a.bbox[2] - a.bbox[0], a.bbox[3] - a.bbox[1]) + 0.25 * h);
       const file = `${sample ? "fp_" : ""}${a.kind}_${String(n).padStart(3, "0")}.png`;
       writePng(join(outDir, file), cropRow(a.scene, a.x, a.y, Math.min(rr, 3.6 * h), P), 3 * P + 8, P);
-      man.push({ n, file, kind: a.kind, label: `${a.kind} ${n}: ${a.scene} ${a.near} ${a.sub} ${a.px}px ${a.part}${a.detail ? " (" + a.detail + ")" : ""} [${a.id}]` });
+      man.push({ n, file, kind: a.kind, label: `${a.kind} ${n}: ${a.scene} ${a.near} ${a.sub} ${a.kind === "k1049" ? a.sizePx + " screen px" : a.px + "px"} ${a.part}${a.detail ? " (" + a.detail + ")" : ""} [${a.id}]` });
     }
   }
   writeFileSync(join(outDir, "manifest.json"), JSON.stringify(man, null, 1));
