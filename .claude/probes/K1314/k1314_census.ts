@@ -39,6 +39,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync, statSync } from "no
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { FormB } from "../../../src/render/field/form_b";
+import { FormB as FormBFillet } from "./form_b_fillet";
 import * as O from "../../../src/render/outline/outline";
 import * as D from "../../../src/render/outline/draw";
 import * as F from "../../../src/render/outline/fill_tri";
@@ -174,7 +175,20 @@ export function rasterOutline(m: Model, c0: number, r0: number, Wd: number, Hd: 
 }
 
 export interface FBRas { ink: Float32Array; chain: Int32Array; s: Float32Array; rgb: Float32Array }
-export function rasterFormB(m: Model, c0: number, r0: number, Wd: number, Hd: number, ppu: number, cacheFile?: string): FBRas {
+// K1314 s3: at a through pass's bend the reference is the S1b/S1c fillet (K1049), not form B's
+// sharp inner corner. form_b_fillet is form B with the corner loop's through-pair skip removed;
+// it is evaluated at every pixel whose corner cell (cornersNear) holds a corner stock form B skips
+// (thruCi), and replaces form B's value there. Everywhere else the two are the same field.
+export interface FBF { thruCi: Set<number>; corners: { j: number; a: number; b: number; ok: boolean; r: number; theta: number; Vx: number; Vy: number }[]; arms: { ei: number }[]; cornersNear(x: number, y: number): number[]; evalPoint(x: number, y: number): { ink: number; top: number; chain: number; s: number } }
+const FBF_CACHE = new WeakMap<object, FBF>();
+export function filletOf(m: Model): FBF {
+  let f = FBF_CACHE.get(m);
+  if (!f) { f = new FormBFillet(JSON.parse(JSON.stringify(m.scene)) as never, { dpr: 2 }) as unknown as FBF; FBF_CACHE.set(m, f); }
+  return f;
+}
+/** --nofillet: s2's reference (form B everywhere, the s1/s2 k1049 detector). */
+export const FILLET_REF = { on: !process.argv.includes("--nofillet") };
+export function rasterFormB(m: Model, c0: number, r0: number, Wd: number, Hd: number, ppu: number, cacheFile?: string, filletFile?: string): FBRas {
   const n = Wd * Hd;
   let ink: Float32Array; let chain: Int32Array; let s: Float32Array;
   if (cacheFile && existsSync(cacheFile) && readFileSync(cacheFile).length === 12 * n) {
@@ -188,6 +202,24 @@ export function rasterFormB(m: Model, c0: number, r0: number, Wd: number, Hd: nu
       ink[o] = Math.min(1, Math.max(0, ev.ink)); chain[o] = ev.top < 0 ? -1 : ev.chain; s[o] = ev.s;
     }
     if (cacheFile) writeFileSync(cacheFile, Buffer.concat([Buffer.from(ink.buffer), Buffer.from(chain.buffer), Buffer.from(s.buffer)]));
+  }
+  if (FILLET_REF.on) {
+    if (filletFile && existsSync(filletFile) && readFileSync(filletFile).length === 12 * n) {
+      const b = readFileSync(filletFile); const ab = b.buffer.slice(b.byteOffset, b.byteOffset + b.length);
+      ink = new Float32Array(ab, 0, n); chain = new Int32Array(ab, 4 * n, n); s = new Float32Array(ab, 8 * n, n);
+    } else {
+      const fbf = filletOf(m);
+      if (fbf.thruCi.size) {
+        ink = ink.slice(); chain = chain.slice(); s = s.slice();
+        for (let r = 0; r < Hd; r++) for (let c = 0; c < Wd; c++) {
+          const x = (c0 + c + 0.5) / ppu; const y = (r0 + r + 0.5) / ppu;
+          if (!fbf.cornersNear(x, y).some((ci) => fbf.thruCi.has(ci))) continue;
+          const ev = fbf.evalPoint(x, y); const o = r * Wd + c;
+          ink[o] = Math.min(1, Math.max(0, ev.ink)); chain[o] = ev.top < 0 ? -1 : ev.chain; s[o] = ev.s;
+        }
+      }
+      if (filletFile) writeFileSync(filletFile, Buffer.concat([Buffer.from(ink.buffer), Buffer.from(chain.buffer), Buffer.from(s.buffer)]));
+    }
   }
   const rgb = new Float32Array(3 * n).fill(-1); const col: RGB = [0, 0, 0];
   for (let o = 0; o < n; o++) {
@@ -243,13 +275,14 @@ export function census(nm: string, ppu: number, MIN_PX = 12): { arts: Art[]; m: 
   const T = 1280; const M = 24;
   const arts: Art[] = [];
   const fbDir = join(here, "out", "fb"); mkdirSync(fbDir, { recursive: true });
+  const fbfDir = join(here, "out", "fbf"); mkdirSync(fbfDir, { recursive: true });
   const t0 = Date.now();
   for (let ty = 0; ty < GH; ty += T) for (let tx = 0; tx < GW; tx += T) {
   const kx0 = g0 + tx; const ky0 = q0 + ty; const kx1 = Math.min(g0 + GW, kx0 + T); const ky1 = Math.min(q0 + GH, ky0 + T);
   const c0 = kx0 - M; const r0 = ky0 - M; const Wd = kx1 - kx0 + 2 * M; const Hd = ky1 - ky0 + 2 * M; const n = Wd * Hd;
   const R = rasterOutline(m, c0, r0, Wd, Hd, ppu);
   if (!R.ink.some((v) => v > 0) && !R.own.some((v) => v > 0)) continue; // empty paper tile
-  const B = rasterFormB(m, c0, r0, Wd, Hd, ppu, join(fbDir, `${nm}_${ppu}_${c0}_${r0}_${Wd}_${Hd}.bin`));
+  const B = rasterFormB(m, c0, r0, Wd, Hd, ppu, join(fbDir, `${nm}_${ppu}_${c0}_${r0}_${Wd}_${Hd}.bin`), join(fbfDir, `${nm}_${ppu}_${c0}_${r0}_${Wd}_${Hd}.bin`));
   // Fields for the tolerance tests.
   const bInkMax3 = boxMax(B.ink, Wd, Hd, 3);
   const bCov = new Float32Array(n); for (let i = 0; i < n; i++) bCov[i] = B.chain[i] >= 0 || B.ink[i] >= 0.5 ? 1 : 0;
@@ -407,13 +440,30 @@ export function census(nm: string, ppu: number, MIN_PX = 12): { arts: Art[]; m: 
       for (const [u, v] of [[ang[i], ang[k]], [ang[k], ang[i]]] as [number, number][]) {
         const g = ccw(u, v); if (others.some((o) => ccw(u, o) < g)) continue;
         if (g >= Math.PI) continue; // the outer side of the bend
-        const dev = rMed * (1 / Math.sin(g / 2) - 1) * cam; // how far a rounded corner moves the inner edge, screen px at the scene's camera
-        if (dev < 2.5) continue; // s1 FP: under 2.5 screen px a rounded corner is not visible at the camera
-        const has = m.table.corners.some((c) => c.junction === J.id && c.aChain === a.chain && c.bChain === a.chain && c.ok);
-        if (has) continue;
         const mid = u + g / 2; const d = h / Math.sin(g / 2);
         const vx = J.c[0] + Math.cos(mid) * d; const vy = J.c[1] + Math.sin(mid) * d;
-        arts.push({ id: "", scene: nm, kind: "k1049", sub: "sharp", x: +vx.toFixed(3), y: +vy.toFixed(3), px: Math.round(dev * dev), sizePx: +dev.toFixed(1), bbox: [+(vx - 2 * h).toFixed(3), +(vy - 2 * h).toFixed(3), +(vx + 2 * h).toFixed(3), +(vy + 2 * h).toFixed(3)], near: `j${ji}`, dNear: +d.toFixed(3), part: "corner: through pair skipped", file: "outline.ts (corner loops: 'two arms of one through pass are one tube: no corner') + fill_tri.ts (junction fan)", detail: `bend gap ${(g * 180 / Math.PI).toFixed(1)} deg, chain ${a.chain}` });
+        // the outline's corner at this bend: an ok same-chain corner at the junction, V nearest the bend's
+        const oc = m.table.corners.filter((c) => c.junction === J.id && c.aChain === a.chain && c.bChain === a.chain && c.ok && c.r > 0)
+          .sort((p, q) => Math.hypot(p.Vx - vx, p.Vy - vy) - Math.hypot(q.Vx - vx, q.Vy - vy))[0];
+        const reach = (r: number, th: number): number => r * (1 / Math.sin(th / 2) - 1) * cam; // how far a rounded corner moves the inner edge, screen px at the scene's camera
+        let dev: number; let sub = "sharp"; let ref = "";
+        if (FILLET_REF.on) {
+          // s3: the reference is the fillet's own corner at this bend (form_b_fillet, K1049): a find
+          // when the outline's reach (0 with no corner) differs from the fillet's by 2.5 px or more.
+          const fbf = filletOf(m);
+          const fc = [...fbf.thruCi].map((ci) => fbf.corners[ci]).find((c) => c.j === ji && ((fbf.arms[c.a].ei === i && fbf.arms[c.b].ei === k) || (fbf.arms[c.a].ei === k && fbf.arms[c.b].ei === i)));
+          const devF = fc && fc.ok && fc.r > 0 ? reach(fc.r, fc.theta) : 0;
+          const devO = oc ? reach(oc.r, oc.theta) : 0;
+          dev = Math.abs(devO - devF);
+          if (dev < 2.5) continue; // under 2.5 screen px the difference is not visible at the camera
+          sub = oc ? (devF > 0 ? "radius" : "extra") : "sharp";
+          ref = `, fillet r ${fc && fc.ok ? (fc.r / h).toFixed(3) : "none"} h (reach ${devF.toFixed(1)} px), outline r ${oc ? (oc.r / h).toFixed(3) : "none"} h (reach ${devO.toFixed(1)} px)`;
+        } else {
+          dev = rMed * (1 / Math.sin(g / 2) - 1) * cam;
+          if (dev < 2.5) continue; // s1 FP: under 2.5 screen px a rounded corner is not visible at the camera
+          if (oc) continue;
+        }
+        arts.push({ id: "", scene: nm, kind: "k1049", sub, x: +vx.toFixed(3), y: +vy.toFixed(3), px: Math.round(dev * dev), sizePx: +dev.toFixed(1), bbox: [+(vx - 2 * h).toFixed(3), +(vy - 2 * h).toFixed(3), +(vx + 2 * h).toFixed(3), +(vy + 2 * h).toFixed(3)], near: `j${ji}`, dNear: +d.toFixed(3), part: "corner: through pair's bend vs the fillet", file: "outline.ts (diagramOf's through-pair corners, cornersPhaseC) + fill_tri.ts (junction fan)", detail: `bend gap ${(g * 180 / Math.PI).toFixed(1)} deg, chain ${a.chain}${ref}` });
       }
     }));
   });

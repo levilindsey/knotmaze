@@ -467,6 +467,8 @@ export class FormB {
   readonly groupOf: number[];
   readonly nGroups: number;
   readonly corners: Corner[] = [];
+  /** K1314 s3 probe: the corners the stock form B skips (a through pass's two arms). */
+  readonly thruCi = new Set<number>();
   readonly diagnostics: string[] = [];
   /** Per chain: crossing passes (s, θ_c) on it, with the partner's chain and s. */
   readonly passes: Pass[][];
@@ -776,13 +778,13 @@ export class FormB {
         const xa = j.arms[ea];
         const xb = j.arms[eb];
         // K1314 s3 probe copy: the through pair corners too (the S1b/S1c fillet, K1049).
-        void xa; void xb;
+        const thruPair = xa.chain === xb.chain && xa.kind === "through" && xb.kind === "through" && Math.abs(xa.s - xb.s) < 1e-6;
         const ne = j.arms.length;
         let st = styles[ea]?.style;
         if ((ea + 1) % ne !== eb && (eb + 1) % ne === ea) st = styles[eb]?.style;
         const style = st === "sharp" ? 0 : 1;
         const c = this.solveCorner(ji, a, b, th, style);
-        if (c) this.addCorner(c);
+        if (c) { if (thruPair) this.thruCi.add(this.corners.length); this.addCorner(c); }
       }
     });
   }
