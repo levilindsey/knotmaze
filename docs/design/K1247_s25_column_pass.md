@@ -84,3 +84,44 @@ Under 40 lines:
 - your last SHA.
 
 End with `Ledger items` and K1247's handle fields.
+
+## Handoff (stage 25, 2026-11-12; start 02:17:50, stop 03:41)
+
+Done 1-5 hold; Done 6 not started. Stopped because Done held (1 h 23 min in).
+
+- **The pass.** `BAND_QUAD_VS` (band_place.ts) runs one TF invocation per quad: each column placed once at
+  both widths, the slot loop once, five interleaved vec4s out (qO, qI, qS, qM, qL; mode 2 record, 1
+  worker-placed from uBqFb/uBqSl, 0 generic or padding at zero area). The band draws them as instances of six
+  corners (`bandQuadVs(BAND_VS)`, divisor-1 attributes, `drawArraysInstanced`).
+- **GPU time** (timer query, `k1247s25_tfonly.ps1`, at rest): def 4.044 -> 0.953 ms, fat 4.040 -> 0.917; on
+  reply frames 4.12-4.13 -> 0.94-0.96 (p95 4.35-4.42 -> 0.98-1.0). An EMPTY query reads 0.938 / 0.919 on
+  ANGLE D3D11, so the pass's own cost is now about 0 (s24's was about 3.1 ms plus that floor). The query now
+  runs only with `obt=1` (the tfonly script passes it).
+- **Main frame** (`k1247s25_bench.ps1`, ABBA under the lock; bench4, the final build; p50 ms, ob=1 vs ob=0):
+  def reply 10.0/9.8 vs 10.0/10.2, all-frames p95 10.2/10.0 vs 10.3/11.1, quiet 6.4/6.4 vs 7.8/8.2; fat reply
+  11.0/10.4 vs 10.5/10.5, all-frames p95 11.7/11.3 vs 11.4/11.5, quiet 6.8/6.6 vs 8.5/8.3. s24's ob=1 reply
+  frame was 13.8-14.5 (def), 14.1-14.9 (fat). Fat's reply p50 ran +0.45-0.5 over ob=0 in bench2 and bench3
+  (query on, off), +0.2 in bench4 after the reply's data textures were overwritten in place
+  (`texSubImage2D` when the height holds): marginal, inside bench4's spread. ob=1 also uploads less (p50
+  1.5-1.9 vs 3.6-4.1 ms), its worker answers sooner (p50 101-117 vs 130-138 ms) and it gets more replies per
+  drag (28-33 vs 26-28). bench1's def run 3 is void (a src edit reloaded its page).
+- **Fidelity** (`k1247s25_twin.ts`, the two-stage pipeline captured): every word equals s24's
+  BAND_PLACE_VS on def, fat, muse_hash and g41_user_tw64; over 1/4 px 0 / 0 / 0 / 1 (g41 0.276 px); slot-only
+  quads 0 / 32 / 0 / 0.
+- **The flip** (27b56d43): frame_loop.ts sets `__knotOutlineBandRec` under `rp=outline` unless `ob=0`. The
+  model's look default is unchanged (main sets bandRec / bandRecGpu, as s20 did for oe), so no
+  `outline_port.test.ts` pin moved and none was re-frozen. `npm test` green (227 files, 2931 tests),
+  goldens unchanged, outline_port passes with g41_ring_tw42 on disk.
+- **Census** (`k1247s22_census.ts`, ppu 160): OB=1 and OB=G both TOTAL 23 (def 3, fat 0, muse_hash 20),
+  owner_only 709, tail_look 114, identical counts (s24's OB=1: 23 / 701 / 114; the 8 owner_only came with
+  master). Outputs `out/s22/census/census_s25ob1.*`, `census_s25obG.*`. The copied form B caches are deleted.
+- **Crops** (off | on | |diff|, five worst per drag): `out/s25/crops/crops_{def,fat,muse_hash,g41}.png`.
+  Rest paint: `out/s25/rest_ob1/` (ob=0 vs the default: 262 px over channel 24, single-pixel specks on band
+  edges); its same-build control `out/s25/rest_ctrl/` (ob=0 vs ob=0: 570 px, one pulse patch by the start
+  marker).
+- **Left:** Done 6, the g41 residual (f11 c20 d118). `recSideOk` (chain_frame.ts) is shared with
+  fill_tri's record checks, so a fix there moves the fill records too: a stage of its own with twin, census and
+  pins. The phone (PowerVR) A/B of ob on vs off was not run (no phone in this stage). K1322's recStrip key
+  port waits for K1314 s6.
+- **Tools** (committed): `k1247s25_twin.ts`, `k1247s25_tfonly.ps1`, `k1247s25_bench.ps1`,
+  `k1247s25_benchsum.cjs`, `k1247s25_rest.ps1`. Outputs (untracked) in `.claude/probes/K1247/out/s25/`.
