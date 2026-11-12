@@ -128,3 +128,56 @@ Paused 2026-11-11 at about 23:26, partway through the stage. The default did not
 1. `node scripts/run_node.mjs .claude/probes/K1247/k1247s23_twin.ts C:\Users\lsl\Repositories\knotmaze\.claude\probes\K1247\out\s22\drag\muse_hash --out=.claude/probes/K1247/out/s23/twin_muse_hash.json`
 2. `npm test`.
 3. A headed smoke of `?<seed>&am=instant&rp=outline&ob=1` on a private dev server.
+
+## Handoff (s23 resumed, 2026-11-12, 23:56-01:35)
+
+Commits on `worktree-agent-aa65540a6e30e2162`: 8e20b975 (run-end arcs placed as today's: band_rec endFans,
+band_place texels 5-7), bea6e03c (one-vertex fan pieces; a polyline test for the arc's offset end), d278dcf8 (a
+two-point piece lerps its end columns), e5182672 (a present arc's floor 12 vertices), 79f206e0 (twin slot split).
+Outputs (untracked): `.claude/probes/K1247/out/s23/`, census in `out/s22/census/census_s23{R,G}.*`.
+
+**Speed (Done 1), ABBA on e5182672, RX 6800 XT, `k1247s23_bench.ps1`; off -> on, both runs each.**
+| | def `?b` | fat `?p9ar6.FHFUnxp1_T-IDyQ9` |
+|---|---|---|
+| worker drag p50 ms | 146.8 / 127.6 -> 97.3 / 103.4 | 126.6 / 130.0 -> 98.2 / 98.0 |
+| band part ms | 45.9 / 43.9 -> 11.1 / 13.1 | 39.8 / 39.3 -> 12.8 / 13.0 |
+| reply | 22.74 -> 5.94 MB | 23.25 -> 6.68 MB |
+| main frame mid-drag ms | 8.8 / 8.4 -> 6.5 / 6.4 | 8.4 / 8.4 -> 6.7 / 6.7 |
+| main frame at rest ms | 5.6 / 5.8 -> 5.8 / 5.7 | 5.8 all |
+| band vertices | 457158 -> 572754 | 465498 -> 570096 |
+| buffer resizes mid-drag | 24-26 -> 0 | 26-27 -> 0 |
+The bar holds (worker and reply far below off, main no worse). Caveat: def off run 1 overlapped a 3.6 GB file copy
+(146.8 vs 127.6); even the faster off run beats on by 24 ms. The TF pass (`tfprobe.txt`, a readPixels sync per
+pass, taken under CPU load) costs p50 4.8 ms def / 4.7 fat, max 14.5, and is NOT in the bench's frame clock.
+
+**Fidelity (Done 2), `k1247s23_twin.ts` on the s22 drags, GPU = CPU records.** Pieces over 1/4 px: def 2 of 56827
+(max 0.296), fat 0 of 58208 (0.212), muse_hash 2 of 39585 (0.488). def c61 d730 f10/f14: v109 (s 8.2792) lies
+inside the clipped span but colRow gives its two-point fan no column (r0 jumps to v110's fan at s 8.3555); moving
+the span start to the clip point's footS changed nothing (reverted). muse_hash c8 d121 f4 0.488 / f7 0.416:
+duplicated end points, uneven steps, the clip at radius 0.416. The K1314 through-bends: the mh junctions sit in the
+muse_hash drag the twin covers whole; g41_user_tw64 j48/j49 were NOT checked (no captured drag of it; the
+K1040 `g41_user_tw64.json` files are census results, not scenes).
+Slots: quads whose slot list differs from today's split into the recCs float32 tie (a moved vertex, max 3.4-4 px,
+same border) and slots only: def 1 + 0, fat 22 + 31 (one adjacent pass more or fewer at s 200-440, the float32
+window edge, inferred), muse_hash 26 + 4925. The 4925 are the documented past-BAND_SLOTS rule (GPU keeps the passes
+nearest in s; CPU and today keep footNear, band_rec.ts:450). The CPU census below cannot see them.
+
+**Census (ob=1 CPU records vs ob=0, `k1247s22_census.ts`, ppu 160, min 40): identical.** def 3, fat 0, muse_hash
+20, TOTAL 23 (stray_ink 15, broken_ink 7, hard_edge 1); owner_only 701, tail_look 114 on both.
+
+**Slack (Done 3), `k1247s23_slack.ts`, 6Q max:** def 560220 -> 535710 (1.171 x today's 457326), muse_hash 575994 ->
+554202 (1.220 x 454308), fat 354168 unchanged (1.061 x 333702). No new decimation; still decimated: mh record runs
+past q0+2 mid-drag (137 piece-frames) and 7 wide pieces, def 3 record runs.
+
+**Crops (Done 5):** `out/s23/crops/crops_{def,fat,muse_hash}.png` (off | on | |diff| at the five worst per drag;
+worst def f14 c61, fat f17 c3, mh f4 c8): thin one-pixel edge slivers. App paint at rest (`k1247s20_appdiff.mjs`,
+`out/s23/smoke2/rest_off_vs_ob1.png`): 398 of 5.76M px differ, scattered single pixels.
+
+**Flip (Done 4): NOT done, blocked by** (1) 4 pieces over 1/4 px (def c61 d730, mh c8 d121); (2) the GPU's
+past-4 slot rule differs from today's in 4925 mh quads, which no census measures; (3) g41_user_tw64's
+through-bends unchecked. `npm test` green, golden snapshots unchanged.
+
+**Next, in order.** Port footNear's past-4 choice to BAND_PLACE_VS (or add a GPU-record census mode and show it
+moves nothing); fix colRow's column for a fan just inside a start clip (def c61 d730 v109); fix mh c8 d121; capture
+a g41_user_tw64 drag and run the twin; count the TF pass in the bench's frame clock; then the flip in frame_loop.ts
+and the outline_port pins.
