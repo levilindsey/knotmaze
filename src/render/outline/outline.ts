@@ -6178,10 +6178,40 @@ function cornerDeadThruC(C: FCache, ci: number, aiA: number, aiB: number, jx: nu
   C.wValid[ci] = 0;
 }
 
+// K1314 s3: the room a through bend's arc has along arm ai: the distance to the nearest root of
+// another junction on its chain (wrapping a closed chain; Infinity with none), less the farthest
+// tangent foot of that junction's corners on its arm back along the same stretch (corners solved
+// this frame only: armCA/armCB map an arm to the corner it is aArm/bArm of, done marks them).
+function thruRoomC(C: FCache, ai: number, ji: number, armCA: Int32Array, armCB: Int32Array, done: Uint8Array): number {
+  const a = C.armObj[ai]; const p = C.polys[a.pi];
+  const s0 = C.armSR[ai]; const dir = C.armDir[ai];
+  let best = Infinity; let nb = -1;
+  for (const k of C.armsOfChain[a.pi]) {
+    if (C.armObj[k].ji === ji) continue;
+    let d = (C.armSR[k] - s0) * dir;
+    if (p.closed && p.len > 0) d = ((d % p.len) + p.len) % p.len;
+    if (d > 0 && (d < best - 1e-12 || (d < best + 1e-12 && C.armDir[k] === -dir))) { best = d; nb = k; }
+  }
+  if (nb < 0) return best;
+  let foot = 0;
+  const ca = armCA[nb]; const cb = armCB[nb];
+  if (ca >= 0 && done[ca] && C.cOk[ca] && C.cDA[ca] > foot) foot = C.cDA[ca];
+  if (cb >= 0 && done[cb] && C.cOk[cb] && C.cDB[cb] > foot) foot = C.cDB[cb];
+  return best - foot;
+}
+
 function cornersPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): void {
   const h = C.h;
   C.armNextRef.fill(-1); C.armPrevRef.fill(-1);
+  // K1314 s3: every other corner first, then the through bends (thruRoomC reads their feet).
+  const nArm = C.armObj.length;
+  const armCA = new Int32Array(nArm).fill(-1); const armCB = new Int32Array(nArm).fill(-1);
+  for (let ci = 0; ci < st.corners.length; ci++) { armCA[st.corners[ci].aArm] = ci; armCB[st.corners[ci].bArm] = ci; }
+  const done = new Uint8Array(st.corners.length);
+  for (let pass = 0; pass < 2; pass++)
   for (let ci = 0; ci < st.corners.length; ci++) {
+    if ((st.corners[ci].thru === 1) !== (pass === 1)) continue;
+    done[ci] = 1;
     const dc = st.corners[ci];
     const aiA = dc.aArm; const aiB = dc.bArm;
     const A = C.armObj[aiA]; const B = C.armObj[aiB];
@@ -6271,6 +6301,13 @@ function cornersPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): void {
       tbx = kfEb.x + (h * (kfCst.qx - kfEb.x)) / kfEb.d; tby = kfEb.y + (h * (kfCst.qy - kfEb.y)) / kfEb.d;
       sA = kfEa.s; sB = kfEb.s;
       dA = (kfEa.u - C.armSR[aiA]) * C.armDir[aiA]; dB = (kfEb.u - C.armSR[aiB]) * C.armDir[aiB];
+      // K1314 s3: a through bend's arc must not overlap the next junction's corner along its chain
+      // (thruRoomC), else the bend stays sharp: an arc reaching into that junction's corners left a
+      // border spur and its fill unbordered (muse_hash j135's r 3.2 h arc at j20).
+      if (thru && (dA > thruRoomC(C, aiA, ji, armCA, armCB, done) || dB > thruRoomC(C, aiB, ji, armCA, armCB, done))) {
+        cornerDeadThruC(C, ci, aiA, aiB, j.c[0], j.c[1], "past a junction");
+        continue;
+      }
     }
     C.cTax[ci] = tax; C.cTay[ci] = tay; C.cTbx[ci] = tbx; C.cTby[ci] = tby;
     C.cSA[ci] = sA; C.cSB[ci] = sB; C.cDA[ci] = dA; C.cDB[ci] = dB;

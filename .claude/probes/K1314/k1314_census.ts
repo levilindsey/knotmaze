@@ -453,11 +453,15 @@ export function census(nm: string, ppu: number, MIN_PX = 12): { arts: Art[]; m: 
           const fbf = filletOf(m);
           const fc = [...fbf.thruCi].map((ci) => fbf.corners[ci]).find((c) => c.j === ji && ((fbf.arms[c.a].ei === i && fbf.arms[c.b].ei === k) || (fbf.arms[c.a].ei === k && fbf.arms[c.b].ei === i)));
           const devF = fc && fc.ok && fc.r > 0 ? reach(fc.r, fc.theta) : 0;
-          const devO = oc ? reach(oc.r, oc.theta) : 0;
+          // The outline's corner for this same arm pair (its diagram corner flagged thru; outline arm
+          // indices are form B's). s3b's nearest same-chain corner also took a chain's end-to-through
+          // corner where the chain ends at the junction it passes (g41_ring j13, j22: 5 false finds).
+          const ot = m.table.corners.find((c, ci) => { const dc = m.st.corners[ci]; return dc.ji === ji && dc.thru === 1 && c.ok && c.r > 0 && ((fbf.arms[dc.aArm].ei === i && fbf.arms[dc.bArm].ei === k) || (fbf.arms[dc.aArm].ei === k && fbf.arms[dc.bArm].ei === i)); });
+          const devO = ot ? reach(ot.r, ot.theta) : 0;
           dev = Math.abs(devO - devF);
           if (dev < 2.5) continue; // under 2.5 screen px the difference is not visible at the camera
-          sub = oc ? (devF > 0 ? "radius" : "extra") : "sharp";
-          ref = `, fillet r ${fc && fc.ok ? (fc.r / h).toFixed(3) : "none"} h (reach ${devF.toFixed(1)} px), outline r ${oc ? (oc.r / h).toFixed(3) : "none"} h (reach ${devO.toFixed(1)} px)`;
+          sub = ot ? (devF > 0 ? "radius" : "extra") : "sharp";
+          ref = `, fillet r ${fc && fc.ok ? (fc.r / h).toFixed(3) : "none"} h (reach ${devF.toFixed(1)} px), outline r ${ot ? (ot.r / h).toFixed(3) : "none"} h (reach ${devO.toFixed(1)} px)`;
         } else {
           dev = rMed * (1 / Math.sin(g / 2) - 1) * cam;
           if (dev < 2.5) continue; // s1 FP: under 2.5 screen px a rounded corner is not visible at the camera
