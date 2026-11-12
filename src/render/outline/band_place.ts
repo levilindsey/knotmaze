@@ -15,9 +15,14 @@
 //     2 record (a: chain, b: N, c: side)
 //   1 (s0, dS, first global pass, passes)   2, 3: column 0, column N (outer x, y, inner x, y)
 //   4 (s of column 0, s of column N, the columns' s span, the piece's first quad off[d])
+//   5, 6 (v, a0, dA, n): the run-end arcs (band_rec endFans), n 0 none: columns 1..nS are the start arc's
+//     points j = 0..nS - 1, columns N - nE..N - 1 the end arc's, point j at chain vertex v + r (cos, sin)(a0 +
+//     j dA) (r = h, or h - W inside); colAt places the columns between (its own ends too where an arc takes
+//     over: nS + 1..N - nE - 1, NM = N - (nS + 1) - (nE + 1)) over texel 1's span
+//   7 (s of the start arc's vertex, s of the end arc's vertex, 0, 0)
 import { REC_GLSL } from "./rec_glsl";
 
-export const BT = 5;
+export const BT = 8;
 const W = 1024; // band_gpu.BAND_TEX_W
 const PT = 4; // band_gpu.PT
 
@@ -46,13 +51,21 @@ vec3 bpCol(int o, int b, int n, float L, vec4 t1, int N, float sgn, int k, bool 
   if (k == 0) { vec4 e = recT(uBpTab, o + 2); return vec3(inner ? e.zw : e.xy, recT(uBpTab, o + 4).x); }
   if (k == N) { vec4 e = recT(uBpTab, o + 3); return vec3(inner ? e.zw : e.xy, recT(uBpTab, o + 4).y); }
   uRecHW = inner ? uBpH - uBpW : uBpH;
-  return recCol(b, n, L, t1.x, t1.y, N, sgn, k);
+  vec4 fS = recT(uBpTab, o + 5); vec4 fE = recT(uBpTab, o + 6); int nS = int(fS.w); int nE = int(fE.w);
+  if (nS > 0 && k <= nS) { float a = fS.y + float(k - 1) * fS.z; return vec3(recT(uRecChain, b + int(fS.x)).xy + uRecHW * vec2(cos(a), sin(a)), recT(uBpTab, o + 7).x); }
+  if (nE > 0 && k >= N - nE) { float a = fE.y + float(k - N + nE) * fE.z; return vec3(recT(uRecChain, b + int(fE.x)).xy + uRecHW * vec2(cos(a), sin(a)), recT(uBpTab, o + 7).y); }
+  int oS = nS > 0 ? nS + 1 : 0;
+  return recCol(b, n, L, t1.x, t1.y, N - oS - (nE > 0 ? nE + 1 : 0), sgn, k - oS);
 }
 float bpColS(int o, int b, int n, float L, vec4 t1, int N, float sgn, int k) {
   if (k == 0) return recT(uBpTab, o + 4).x;
   if (k == N) return recT(uBpTab, o + 4).y;
+  int nS = int(recT(uBpTab, o + 5).w); int nE = int(recT(uBpTab, o + 6).w);
+  if (nS > 0 && k <= nS) return recT(uBpTab, o + 7).x;
+  if (nE > 0 && k >= N - nE) return recT(uBpTab, o + 7).y;
   uRecHW = uBpH;
-  return recCol(b, n, L, t1.x, t1.y, N, sgn, k).z;
+  int oS = nS > 0 ? nS + 1 : 0;
+  return recCol(b, n, L, t1.x, t1.y, N - oS - (nE > 0 ? nE + 1 : 0), sgn, k - oS).z;
 }
 void main() {
   gl_Position = vec4(0.0, 0.0, 0.0, 1.0);

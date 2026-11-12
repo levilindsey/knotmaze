@@ -55,6 +55,13 @@ function keepIdx(P: ArrayLike<number>, np: number, n: number): Int32Array {
 
 // A record piece always fills its N quads (N only bounds how many border vertices get their own column);
 // a padded piece needs room for today's point count to grow while the threads move.
+// K1247 s23: a run-end fan's colAt span stops this far (s) inside the fan's vertex, so the shader's float32 span never takes the vertex in.
+const EF_D = 1e-4;
+// Today's arc points match the arc to this (units; 1e-3 px at 40 px a unit): an open chain's end arc sits ~6e-7 off h.
+const EF_TOL = 2.5e-5;
+// The arc's first (end) or last (start) point lies this near the colAt span's offset line end (0.16 px): an
+// open chain's end arc can start a little off it (def c24, 0.1 px), the chord to it then within that.
+const EF_OFF = 4e-3;
 const REC_ADD = 2; const SLACK = 1.25; const SLACK_ADD = 4; const ABSENT_RUN = 8; const ABSENT_ARC = 24;
 
 /** The layout for a structure from one frame's table, keeping an older layout's capacities as floors. */
@@ -199,6 +206,67 @@ export function bandRec(table: OutlineTable, scene: SceneIn, zz: ZZ, lay: BandLa
     if (l < 1e-12) { const j = Math.min(i + 1, n - 1); const ex = P[2 * j] - x; const ey = P[2 * j + 1] - y; const el = Math.sqrt(ex * ex + ey * ey) || 1; dx = -ey / el; dy = ex / el; } else { dx /= l; dy /= l; }
     out[0] = x + dx * W; out[1] = y + dy * W;
   };
+  // K1247 s23, run-end arcs: a run whose end lies on an arc about a chain vertex (a convex vertex's fan, or
+  // an open chain's end cap). Today's piece then ends with that arc's points and the clip point, all with
+  // the vertex as cpts (or starts with them); colAt over the whole span drops the arc (the vertex at the
+  // span's end) or places a whole fan (the vertex just inside), so the chord to the clip point cut today's
+  // arc (def c24 and c73 at their caps, 0.53 px; muse_hash c71's fan, 1.16 px). The record places those
+  // arc points itself, columns 1..nS and N - nE..N - 1 (outer at h, inner at h - W, as innerOf's), and
+  // colAt the span between, EF_D inside each arc's vertex, with its own end columns (nS + 1, N - nE - 1),
+  // which the arc's first (end) or last (start) point closes on the offset line. EF = [vS, a0S, dAS, nS, vE, a0E, dAE, nE, s0', dS',
+  // sVs, sVe]: arc point j at angle a0 + j dA about vertex v; nS, nE 0: none; s0', dS' the colAt span.
+  const EF = new Float64Array(12);
+  const endFans = (p: OutlineTable["pieces"][number], C: ZChain, sgn: number, dS: number, N: number): void => {
+    EF.fill(0); EF[0] = -1; EF[4] = -1; EF[8] = p.s0; EF[9] = dS;
+    const np0 = p.pts.length / 2; const cp = p.cpts; const P = p.pts; const n = C.n; const L = C.len; const loop = C.closed && L > 0;
+    if (np0 < 4) return;
+    // The vertex at (x, y) near s (-1: none).
+    const vAt = (x: number, y: number, s: number): number => {
+      const w = loop ? ((s % L) + L) % L : s; let lo = 0; let hi = n - 1;
+      while (hi - lo > 1) { const q = (lo + hi) >> 1; if (C.s[q] <= w) lo = q; else hi = q; }
+      for (let d = -3; d <= 4; d++) { let v = lo + d; if (loop) v = ((v % n) + n) % n; else if (v < 0 || v >= n) continue; if (C.xs[v] === x && C.ys[v] === y) return v; }
+      return -1;
+    };
+    const sNear = (v: number, s: number): number => (loop ? C.s[v] + Math.round((s - C.s[v]) / L) * L : C.s[v]);
+    // Whether today's point i is segment k's offset-line point at vertex v (edgePt's normal).
+    const offAt = (k: number, v: number, i: number): boolean => {
+      if (k < 0 || k >= n || (!loop && k >= n - 1)) return false;
+      const j = k + 1 === n ? 0 : k + 1; let dx = C.xs[j] - C.xs[k]; let dy = C.ys[j] - C.ys[k];
+      const l = Math.sqrt(dx * dx + dy * dy); if (!(l > 0)) return false; dx /= l; dy /= l;
+      return Math.abs(C.xs[v] - sgn * h * dy - P[2 * i]) < EF_OFF && Math.abs(C.ys[v] + sgn * h * dx - P[2 * i + 1]) < EF_OFF;
+    };
+    // Today's points i0..i1 as an even arc about v (radius h): a0, dA into EF[e], EF[e + 1].
+    const arcOf = (v: number, i0: number, i1: number, e: number): boolean => {
+      const cx = C.xs[v]; const cy = C.ys[v];
+      const a0 = Math.atan2(P[2 * i0 + 1] - cy, P[2 * i0] - cx); let dA = 0;
+      if (i1 > i0) { dA = Math.atan2(P[2 * i0 + 3] - cy, P[2 * i0 + 2] - cx) - a0; while (dA > Math.PI) dA -= 2 * Math.PI; while (dA < -Math.PI) dA += 2 * Math.PI; }
+      for (let i = i0; i <= i1; i++) {
+        const an = a0 + (i - i0) * dA;
+        if (Math.abs(cx + h * Math.cos(an) - P[2 * i]) > EF_TOL || Math.abs(cy + h * Math.sin(an) - P[2 * i + 1]) > EF_TOL) return false;
+      }
+      EF[e] = a0; EF[e + 1] = dA; return true;
+    };
+    const segOut = (v: number): number => (v < n - 1 ? C.s[v + 1] : L) - C.s[v];
+    // The start: points 0..kS - 1 share cpts 0; 1..kS - 1 the arc, kS - 1 on the outgoing offset line.
+    let kS = 1; while (kS < np0 && cp[2 * kS] === cp[0] && cp[2 * kS + 1] === cp[1]) kS++;
+    if (kS >= 2 && kS < np0 - 1) {
+      const v = vAt(cp[0], cp[1], p.s0);
+      if (v >= 0 && segOut(v) > 4 * EF_D && offAt(v, v, kS - 1) && arcOf(v, 1, kS - 1, 1)) { EF[0] = v; EF[3] = kS - 1; EF[10] = sNear(v, p.s0); }
+    }
+    // The end: points np0 - kE..np0 - 1 share the last cpts; np0 - kE..np0 - 2 the arc, the first on the
+    // incoming offset line.
+    const e = 2 * np0 - 2; let kE = 1; while (kE < np0 && cp[e - 2 * kE] === cp[e] && cp[e - 2 * kE + 1] === cp[e + 1]) kE++;
+    if (kE >= 2 && kE < np0 - 1) {
+      const v = vAt(cp[e], cp[e + 1], p.s0 + dS); const k = v > 0 ? v - 1 : loop ? n - 1 : -1;
+      if (v >= 0 && k >= 0 && segOut(k) > 4 * EF_D && offAt(k, v, np0 - kE) && arcOf(v, np0 - kE, np0 - 2, 5)) { EF[4] = v; EF[7] = kE - 1; EF[11] = sNear(v, p.s0 + dS); }
+    }
+    const nS = EF[3]; const nE = EF[7];
+    if (nS === 0 && nE === 0) return;
+    const s0 = nS > 0 ? EF[10] + EF_D : p.s0; const s1 = nE > 0 ? EF[11] - EF_D : p.s0 + dS;
+    const NM = N - (nS > 0 ? nS + 1 : 0) - (nE > 0 ? nE + 1 : 0);
+    if (!(s1 - s0 > 0) || NM < 1 || !recSideOk(C, T, p.chain, s0, s1 - s0, NM, sgn)) { EF.fill(0); EF[0] = -1; EF[4] = -1; EF[8] = p.s0; EF[9] = dS; return; }
+    EF[8] = s0; EF[9] = s1 - s0;
+  };
   // A piece's end: today padded to its range; with gpu, its quads stay compact and main pads.
   const endPiece = (d: number, vStart: number, vEnd: number): void => {
     const u = (v - vStart) / 6; lay.used[d] = u;
@@ -218,8 +286,11 @@ export function bandRec(table: OutlineTable, scene: SceneIn, zz: ZZ, lay: BandLa
       // parameters and its two end columns, as the CPU records below place them.
       const C = zc[p.chain]; let dS = p.s1 - p.s0; if (C.closed && C.len > 0 && dS <= 0) dS += C.len;
       const o = 4 * BT * d;
+      endFans(p, C, p.side, dS, capQ);
       tab[o] = 2; tab[o + 1] = p.chain; tab[o + 2] = capQ; tab[o + 3] = p.side;
-      tab[o + 4] = p.s0; tab[o + 5] = dS; tab[o + 6] = passBase[p.chain]; tab[o + 7] = passes[p.chain].length;
+      tab[o + 4] = EF[8]; tab[o + 5] = EF[9]; tab[o + 6] = passBase[p.chain]; tab[o + 7] = passes[p.chain].length;
+      for (let j = 0; j < 8; j++) tab[o + 20 + j] = EF[j];
+      tab[o + 28] = EF[10]; tab[o + 29] = EF[11];
       const E = new Float64Array(2);
       tab[o + 8] = p.pts[0]; tab[o + 9] = p.pts[1];
       innerOfP(p.pts, p.cpts, np0, 0, E); tab[o + 10] = E[0]; tab[o + 11] = E[1];
@@ -287,7 +358,18 @@ export function bandRec(table: OutlineTable, scene: SceneIn, zz: ZZ, lay: BandLa
       const o = T.base[p.chain];
       RO[0] = p.pts[0]; RO[1] = p.pts[1]; innerOf(p.pts, p.cpts, np0, 0, RI, 0);
       RS[0] = footS(C, p.cpts[0], p.cpts[1], p.s0, 2 * h);
-      if (N > 1) { colRow(C, T.pf, o, p.s0, dS, N, sgn, h, 1, N - 1, RO, RS); colRow(C, T.pf, o, p.s0, dS, N, sgn, h - W, 1, N - 1, RI, RS2); }
+      // Run-end arcs (endFans): columns 1..nS and N - nE..N - 1 their points; colAt the NM + 1 columns between
+      // (oS..N - nE - 1), its own end columns too where an arc takes over, so a fan next to the arc keeps all its points.
+      endFans(p, C, sgn, dS, N);
+      const nS = EF[3]; const nE = EF[7]; const oS = nS > 0 ? nS + 1 : 0; const NM = N - oS - (nE > 0 ? nE + 1 : 0);
+      const arcPt = (v: number, an: number, k: number, sv: number): void => {
+        const ca = Math.cos(an); const sa = Math.sin(an);
+        RO[2 * k] = C.xs[v] + h * ca; RO[2 * k + 1] = C.ys[v] + h * sa; RI[2 * k] = C.xs[v] + (h - W) * ca; RI[2 * k + 1] = C.ys[v] + (h - W) * sa; RS[k] = sv;
+      };
+      for (let j = 1; j <= nS; j++) arcPt(EF[0], EF[1] + (j - 1) * EF[2], j, EF[10]);
+      const jLo = nS > 0 ? 0 : 1; const jHi = nE > 0 ? NM : NM - 1;
+      if (jHi >= jLo) { colRow(C, T.pf, o, EF[8], EF[9], NM, sgn, h, jLo, jHi, RO.subarray(2 * oS), RS.subarray(oS)); colRow(C, T.pf, o, EF[8], EF[9], NM, sgn, h - W, jLo, jHi, RI.subarray(2 * oS), RS2.subarray(oS)); }
+      for (let j = 0; j < nE; j++) arcPt(EF[4], EF[5] + j * EF[6], N - nE + j, EF[11]);
       RO[2 * N] = p.pts[2 * np0 - 2]; RO[2 * N + 1] = p.pts[2 * np0 - 1]; innerOf(p.pts, p.cpts, np0, np0 - 1, RI, 2 * N);
       RS[N] = footS(C, p.cpts[2 * np0 - 2], p.cpts[2 * np0 - 1], p.s0 + dS, 2 * h);
       P = RO; Ip = RI; sv = RS;
