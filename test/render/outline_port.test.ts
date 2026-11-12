@@ -91,9 +91,13 @@ type Pin = { f0: { table: string; paint: string; band: string }; f1: { table: st
 // unless it also lies within h of an open end, and an end fold's chord normal faces the end's
 // centre: table, paint and band on ring (f0 and f1), table on g41_ring_tw42 (f0 and f1).
 // Checked against form B (census s8f, crops in out/s8).
+// K1324 s1 re-pinned on purpose (2026-11-12): a contact pass between two FULL members of one
+// junction group (form B's member(): cap ramp 1) is no tie (draw.ts CONTACT_GROUPS, groupArms,
+// groupMember): band only, f0 and f1, on ring and g41_ring_tw42 (the j12 specks). Table and
+// paint unchanged. Checked against form B (census k1324g, crops in .claude/probes/K1324/out/s1).
 const PINS: Record<string, Pin> = {
-  ring: { f0: { table: "276636e58a693c3b", paint: "4c55915bb7048867", band: "aae65c8f2abc2099" }, f1: { table: "884b7cf4c709b5c6", paint: "243dea8ca577e14f", band: "f1d10a471bd74cac" } },
-  g41_ring_tw42: { f0: { table: "11c7cdb8da1b9891", paint: "50247878bd6fdaa4", band: "957f29f6c7f99cb6" }, f1: { table: "1f89393aff28b751", paint: "b3f49438beaea1e7", band: "d4999b0de32693ce" } },
+  ring: { f0: { table: "276636e58a693c3b", paint: "4c55915bb7048867", band: "c7d0acec83f744ae" }, f1: { table: "884b7cf4c709b5c6", paint: "243dea8ca577e14f", band: "18d50ba8e6dde409" } },
+  g41_ring_tw42: { f0: { table: "11c7cdb8da1b9891", paint: "50247878bd6fdaa4", band: "04aed65d7f33bcd6" }, f1: { table: "1f89393aff28b751", paint: "b3f49438beaea1e7", band: "4591b35dc2e61f25" } },
 };
 
 // The tool's second frame: every chain point rotated 0.3 rad and moved.
