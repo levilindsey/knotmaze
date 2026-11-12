@@ -562,11 +562,11 @@ Next free ID: K1334.
   ink there: specks inside the ink at def j174 (c71/c73, group 119), ring j12, g41_ring_tw42 j12,
   g41_user_tw64 j28 (K1314 s6 handoff; crops `.claude/probes/K1314/out/s6/after4x/spot_016-019`). Make no
   contact pass between arms of one group. After K1247 s25 merges (it owns draw.ts)
-  - owner: nobody since 2026-11-12 07:15 (merged; agent `aa00c89b1725519ea` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `b45dc3e9`
-  - evidence: .claude/probes/K1324/; K1314 out/s1/census_s26b* and census_s26off*; K1247 out/s26/master4x, after4x
-  - next: x22 (K1331), a form B smear too: a self-pass rule in tieAlpha plus its GLSL twin in outline_app.ts, once K1247 s27 frees outline_app.ts; j28's faint right-side shades (same on master, form B draws a hairline sliver)
-  - brief: `docs/design/K1324_s1_group_ties_x22.md`
+  - owner: agent `ae09a2169bcb0030b` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 07:52, 2 h cap ~09:52)
+  - branch: `worktree-agent-ae09a2169bcb0030b`, worktree `.claude/worktrees/agent-ae09a2169bcb0030b`; last commit: `efd82460`
+  - evidence: .claude/probes/K1324/ (tools); untracked out/s1-s2/; baseline census_s9
+  - next: s2 running: x22 self-pass burial rule in draw.ts tieAlpha + outline_app.ts GLSL twin; j28 right-side shades
+  - brief: `docs/design/K1324_s2_x22_burial.md`
 - **K1325** · K1314 census reference: form B draws stray ink at muse_hash x304 and g41_user_tw64 j30 where
   rp=outline is clean, so the census counts them against the outline (crops
   `.claude/probes/K1314/out/s7/after4x/spot_007.png`, `spot_008.png`); fix the reference as K1321 did, in
@@ -585,6 +585,14 @@ Next free ID: K1334.
   - evidence: .claude/probes/K1314/k1314_census.ts, form_b_fillet.ts, k1314_run.ps1; untracked .claude/probes/K1325/out/s1/
   - next: s1 running: the reference at x304/j30 (K1325) and one shared form B cache in the main checkout (K1333)
   - brief: `docs/design/K1325_s1_reference_shared_cache.md`
+- **K1331** · muse_hash x22's smear at a twist eye: the depth tents cancel, the keys tie and the ghost half fades
+  in; fix the tie or the ghost's alpha at kinks in draw.ts, not by dropping ghosts (K1314 s8 handoff; crop
+  `.claude/probes/K1314/out/s8/after4x/spot_004.png`)
+  - owner: agent `ae09a2169bcb0030b` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 07:52, 2 h cap ~09:52)
+  - branch: `worktree-agent-ae09a2169bcb0030b`, worktree `.claude/worktrees/agent-ae09a2169bcb0030b`; last commit: `efd82460`
+  - evidence: .claude/probes/K1324/ (tools); untracked out/s1-s2/; baseline census_s9
+  - next: s2 running: x22 self-pass burial rule in draw.ts tieAlpha + outline_app.ts GLSL twin; j28 right-side shades
+  - brief: `docs/design/K1324_s2_x22_burial.md`
 
 ## Next, in order
 
@@ -837,9 +845,6 @@ Every other item below waits on the trigger it names.
 - **K1049** · Through-pass bends, DECIDED (Levi 2026-11-11: "Rounded corner", S1b/S1c's fillet); rp=outline must draw it in a K1314 fix stage: where a thread passes through a junction and bends, form B
   now draws today's sharp inner corner; S1b and S1c rounded it (`docs/design/K1040_s1d_corner.md` F2, and F6's Look
   with crops)
-- **K1331** · muse_hash x22's smear at a twist eye: the depth tents cancel, the keys tie and the ghost half fades
-  in; fix the tie or the ghost's alpha at kinks in draw.ts, not by dropping ghosts (K1314 s8 handoff; crop
-  `.claude/probes/K1314/out/s8/after4x/spot_004.png`)
 
 ## Residuals (known, not fixed)
 
