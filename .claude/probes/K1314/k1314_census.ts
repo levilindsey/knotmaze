@@ -485,9 +485,14 @@ async function main(): Promise<void> {
   const all: Art[] = []; const lines: string[] = [];
   lines.push(["scene", ...ARTIFACT_KINDS, "total", "owner_only", "tail_look"].map((s, i) => (i ? s.padStart(11) : s.padEnd(22))).join(""));
   const merge = opt("merge")?.split(",");
+  // Waits before each scene while a perf lock younger than 30 min exists, unless its owner line starts with
+  // $env:K1314_LOCK_OWNER (the run's own lock: without this a run holding the lock waited on itself until it
+  // went stale, K1314 s3's like-for-like census).
   const waitLock = (): void => {
     const lock = join(process.env.TEMP ?? "", "claude-perf.lock"); const sab = new Int32Array(new SharedArrayBuffer(4));
-    while (existsSync(lock) && Date.now() - statSync(lock).mtimeMs < 30 * 60e3) Atomics.wait(sab, 0, 0, 10e3);
+    const own = process.env.K1314_LOCK_OWNER;
+    const mine = (): boolean => { try { return !!own && readFileSync(lock, "utf8").startsWith(own); } catch { return false; } };
+    while (existsSync(lock) && Date.now() - statSync(lock).mtimeMs < 30 * 60e3 && !mine()) Atomics.wait(sab, 0, 0, 10e3);
   };
   for (const nm of scenes) {
     let arts: Art[];
