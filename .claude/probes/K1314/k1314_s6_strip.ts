@@ -2,8 +2,6 @@
 // paint s), and the cone key form B would give there (z at the vertex's foot on the chain - d zt / h).
 //   node scripts/run_node.mjs .claude/probes/K1314/k1314_s6_strip.ts <scene> <item> [<x> <y> [--n=6]]
 import { buildModel } from "./k1314_census";
-import { S6KEY } from "../../../src/render/outline/fill_tri";
-S6KEY.mode = Number(process.argv.find((a) => a.startsWith("--mode="))?.split("=")[1] ?? 0);
 import * as F from "../../../src/render/outline/fill_tri";
 import { FormB } from "../../../src/render/field/form_b";
 

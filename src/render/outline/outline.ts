@@ -7416,7 +7416,7 @@ function runEndFade(a: TailIn, p: OutlinePiece, atEnd: boolean): void {
  *  a light wedge across the ink from the shared point inward. The arc's end
  *  takes the run's foot there; its band then turns from the run's edge to
  *  the ball's normal along the arc. */
-const ARC_END_FEET = !(typeof process !== "undefined" && process.env && process.env.S6ARC === "0");
+const ARC_END_FEET = true;
 function arcEndFeet(st: DiagramStructure, pieces: OutlinePiece[], runAtArm: Map<number, number>): void {
   for (const p of pieces) {
     if (p.kind !== "arc" || p.corner < 0 || p.pts.length < 4 || p.cpts.length !== p.pts.length) continue;

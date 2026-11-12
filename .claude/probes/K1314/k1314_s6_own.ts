@@ -1,9 +1,7 @@
-// K1314 s6 (s5_own with --mode=N, fill_tri S6KEY): which chain owns each cell, outline (fill_tri rasterFill) | form B (top chain), ink as '#'.
+// K1314 s6 (s5_own with stage 6 rules): which chain owns each cell, outline (fill_tri rasterFill) | form B (top chain), ink as '#'.
 // Chains print as letters (legend at the end); '.' paper, '#' ink >= .5.
 //   node scripts/run_node.mjs .claude/probes/K1314/k1314_s5_own.ts <scene> <x> <y> [--r=0.3 (world)] [--cell=0.0125]
 import { buildModel, rasterFormB, rasterOutline } from "./k1314_census";
-import { S6KEY } from "../../../src/render/outline/fill_tri";
-S6KEY.mode = Number(process.argv.find((a) => a.startsWith("--mode="))?.split("=")[1] ?? 0);
 
 const args = process.argv.slice(2).filter((a) => !a.startsWith("--"));
 const opt = (k: string, d: number): number => Number(process.argv.find((a) => a.startsWith(`--${k}=`))?.split("=")[1] ?? d);

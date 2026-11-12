@@ -83,8 +83,6 @@ const TAIL_FOOT = true;
 /** K1283 s9: every strip vertex paints its foot's s (see the strip item),
  *  taken every FOOT_STEP columns and interpolated between. */
 const STRIP_FOOT = true;
-/** K1314 s6 probe toggle (temporary). */
-export const S6KEY = { mode: typeof process !== "undefined" && process.env && process.env.S6KEY ? Number(process.env.S6KEY) : 0 };
 const FOOT_STEP = 8;
 
 type FootChain = Parameters<typeof footNear>[0];
@@ -843,7 +841,7 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
       const cz = zc[it.pi];
       const wrapZ = (d: number): number => (cz && cz.closed && cz.len > 0 ? ((d % cz.len) + cz.len) % cz.len : d);
       let spL: [number, number] | null = null; let spR: [number, number] | null = null; let mU0 = 0; let mUl = 0;
-      if (S6KEY.mode !== 2 && pl && pr && pl.pts.length >= 4 && pr.pts.length >= 4 && N >= 2) {
+      if (pl && pr && pl.pts.length >= 4 && pr.pts.length >= 4 && N >= 2) {
         const a0 = pl.s0; const a1 = wrapZ(pl.s1 - pl.s0); let b0 = pr.s0; const b1 = wrapZ(pr.s1 - pr.s0);
         if (cz && cz.closed && cz.len > 0) b0 += cz.len * Math.round((a0 - b0) / cz.len);
         if (a0 !== b0 || a1 !== b1) {
@@ -893,10 +891,17 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
       };
       if (!okL && okR) { if (cOkR) mirror(bufR, bufCR, bufL); else bufL.set(bufR.subarray(0, 2 * W)); okL = true; fallbacks++; }
       if (!okR && okL) { if (cOkL) mirror(bufL, bufCL, bufR); else bufR.set(bufL.subarray(0, 2 * W)); okR = true; fallbacks++; }
-      // (probe) mode 3: a side past its own piece's end is the other side mirrored there.
-      const mirOn = S6KEY.mode !== 1 && spL !== null && spR !== null && okL && okR;
+      // K1314 s6: on the matched s scale, a column past one side's own piece
+      // (its border consumed by a crossing or a junction corner there) but
+      // within the other's is the other side mirrored across the centreline,
+      // not the consumed side's end point held: held, the columns fan from
+      // that one point into a skewed wedge (g41_user_tw64 j71). Only where
+      // the column's s lies on the chain: past an open chain's end the strip
+      // would run out over the junction's other arms, keyed below their cone
+      // (muse_hash j126, c55 over c68).
+      const mirOn = spL !== null && spR !== null && okL && okR;
       const onChain = (i: number): boolean => {
-        if (S6KEY.mode === 3 || !cz || cz.closed) return true;
+        if (!cz || cz.closed) return true;
         const s = mU0 + (mUl * i) / N; return s >= 0 && s <= cz.len;
       };
       const mirL = (i: number): boolean => mirOn && cOkR && !(i >= (spL as [number, number])[0] && i <= (spL as [number, number])[1]) && i >= (spR as [number, number])[0] && i <= (spR as [number, number])[1] && onChain(i);
@@ -932,13 +937,12 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
       // took a depth up to the range offset away and the strip sank under
       // its neighbour in a wedge (g41_ring_tw64 x67, x68: an over pass drawn
       // under). Such a strip keys each border row by its own side's s (sL,
-      // sR), and the centre by the depth at the row's s or at the midpoint
-      // of sL and sR, whichever is higher: lowering the centre too sank a
-      // border that ran on into an under pass under the junction's other
-      // arm (muse_hash j50: c71 under c18 where form B has it over, a
-      // near-tie form B decides by distance), and so did keying each vertex
-      // by its foot's s. x67 clears; x68's wedge needs the centre lowered
-      // and stays. Equal ranges key as before, bit for bit.
+      // sR; a mirrored column takes the other side's), and the centre by
+      // the depth at the midpoint of sL and sR. On the matched s scale (s6)
+      // the rows are square, so the centre needs no floor at the row's s:
+      // stage 5's max() (kept for a strip without matched spans) held x68's
+      // centre above its cone, and muse_hash j50 stays clear without it.
+      // Equal ranges key as before, bit for bit.
       const reKey = range(pl) !== null && range(pr) !== null && (rL[0] !== rR[0] || rL[1] !== rR[1]);
       const fr01 = (i: number, sp: [number, number]): number => Math.min(Math.max((i - sp[0]) / (sp[1] - sp[0]), 0), 1);
       for (let i = 0; i <= N; i++) {
