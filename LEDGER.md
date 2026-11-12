@@ -551,15 +551,20 @@ Next free ID: K1323.
   most cases. But there are still plenty of unacceptable artifacts"): an artifact census (stray ink, hard
   colour edges inside fills, paper holes, broken ink) across scenes, then fix stages that drive its count to
   0; the look gate in docs/design/K1240_gate.md
-  - owner: nobody since 2026-11-12 01:10 (merged; agent `a1c74506131956ddd` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `d687763b`
-  - evidence: .claude/probes/K1314/ (census tools); untracked out/s1-s5/; the paused s5 worktree agent-a245bd015c3213ac1 (d8e47dce, merged into the new branch first)
-  - next: s6: the census reference draws the approved look where form B is flawed (classes a/c rounded per K1049; the yield-blend artifacts at j135, j78, j49), then the outline faults left: x68, x67 leftover wedge, j71 tail fill, the specks at class-a joints (def j174, ring j12, g41_ring_tw42 j12, g41_user j28), the j39 ink ticks
-  - brief: `docs/design/K1314_s5_joins_wedges.md`
+  - owner: agent `a7a3fe2b0a6d97b23` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 01:20, 2 h cap ~03:20)
+  - branch: `worktree-agent-a7a3fe2b0a6d97b23`, worktree `.claude/worktrees/agent-a7a3fe2b0a6d97b23`; last commit: `ae907f1d`
+  - evidence: .claude/probes/K1314/ (census tools); untracked out/s1-s5/
+  - next: s6: x68 (form B picks c3 at (20.096,20.627)), x67 tongue, j71 tail fill, the class (a) joint specks, the j39 ticks, whether j78 is K1315's
+  - brief: `docs/design/K1314_s6_faults.md`
 - **K1321** · K1314's census reference draws the approved look where form B is flawed: the class (a) and (c)
   corners rounded per K1049 (Levi 2026-11-11: form B's open eye, rounded corner), and no V-merge artifacts
   where the fillet yields (muse_hash j135, j78, j98; g41_user_tw64 j49). Tools only
   (.claude/probes/K1314/k1314_census.ts, form_b_fillet.ts)
+  - owner: agent `a2a649168bc36da29` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 01:20, 2 h cap ~03:20)
+  - branch: `worktree-agent-a2a649168bc36da29`, worktree `.claude/worktrees/agent-a2a649168bc36da29`; last commit: `ae907f1d`
+  - evidence: .claude/probes/K1314/k1314_census.ts, form_b_fillet.ts; untracked out/s5/
+  - next: the reference rounds the class (a)/(c) corners and drops the yield blends (j135, j78, j98, user j49); reference crops for Claude
+  - brief: `docs/design/K1321_census_reference.md`
 
 ## Next, in order
 
