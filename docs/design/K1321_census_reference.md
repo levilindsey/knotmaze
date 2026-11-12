@@ -74,3 +74,25 @@ Under 30 lines:
 - your last SHA.
 
 End with `Ledger items` and K1321's handle fields.
+
+## Handoff (K1321 agent, 2026-11-12, 01:20:41 to 02:23)
+
+Done 1-3 hold. The reference lives in `.claude/probes/K1314/k1314_census.ts`, V re-solve in
+`form_b_fillet.ts`; each piece has an off flag (`--novround --nocone --noarc --noyield --noyieldfill --noyieldclip`).
+- Class (a), dropped corners at a paper tip: `vroundInk` / `vfailGrid` ink a disk of radius W about the
+  corner's true V; form_b_fillet re-solves V on the arms' extended feet (`FOOT_EXT` 3) when the clamped feet miss it.
+- Class (c) and the yield blends: `filletPick` reads the fillet only inside a thru corner's cone (within
+  rV + W + 4aa of q) and leaves another junction's ok-corner wedge to plain form B; `arcInk` draws the ring
+  r..r+W in the cone; `yieldInk` fills plain paper outside the circle with the arc band and clips the
+  corner's own thread's plain ink at r + W, plain's inner AA ramp moved onto the circle.
+- Census s5c -> k1321c (`out/s1/census_k1321c.*`): stray_ink 25 -> 12, hard_edge 3 -> 3, paper 0, broken_ink
+  13 -> 13, k1049 0 (bar 41 -> 28); owner_only 2303 -> 2304; tail_look 182 -> 177. Gone: the 13 bar finds at
+  the listed spots; none appeared. tail_look gone at muse_hash j78, j135, j98, g41_user_tw64 j49 (listed) and
+  g41_user_tw64 j48 (14.10, 7.77), NOT listed: the arc band at its thru corner c76 rounds the old notch, as the
+  outline does (`.claude/probes/K1321/out/q/crop_00_q_g41_user_tw64_j48t.png`). owner_only: ring j12's wedge
+  split in two by the disk's ink (new part at 9.49, 1.01; `out/q/crop_01_q_ring_j12w.png`).
+- Crops: `.claude/probes/K1321/out/crop_00..13_*.png` (old | new | rp=outline), sheets `sheet_ca1/a2/y.png`;
+  the untouched spots (g41_ring_tw64 x68, x67, g41_user_tw64 j71) change 0 px. npm test green.
+- Left: muse_hash j78 hard_edge (5.88, 8.50) still found (in s5c too, not listed); j78c's fill colour
+  (chain/s) has a seam at the cone edge and a faint smear, both in the old reference too; specks: j45 a
+  blue speck where the disk meets the band, j49 a sliver at the top right. Form B caches deleted.
