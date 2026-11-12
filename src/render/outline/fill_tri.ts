@@ -894,15 +894,18 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
       if (!okL && okR) { if (cOkR) mirror(bufR, bufCR, bufL); else bufL.set(bufR.subarray(0, 2 * W)); okL = true; fallbacks++; }
       if (!okR && okL) { if (cOkL) mirror(bufL, bufCL, bufR); else bufR.set(bufL.subarray(0, 2 * W)); okR = true; fallbacks++; }
       // (probe) mode 3: a side past its own piece's end is the other side mirrored there.
-      let mirL0 = -1; let mirL1 = N + 1; let mirR0 = -1; let mirR1 = N + 1;
-      if (S6KEY.mode !== 1 && spL && spR && okL && okR) {
+      const mirOn = S6KEY.mode !== 1 && spL !== null && spR !== null && okL && okR;
+      const onChain = (i: number): boolean => {
+        if (S6KEY.mode === 3 || !cz || cz.closed) return true;
+        const s = mU0 + (mUl * i) / N; return s >= 0 && s <= cz.len;
+      };
+      const mirL = (i: number): boolean => mirOn && cOkR && !(i >= (spL as [number, number])[0] && i <= (spL as [number, number])[1]) && i >= (spR as [number, number])[0] && i <= (spR as [number, number])[1] && onChain(i);
+      const mirR = (i: number): boolean => mirOn && cOkL && !(i >= (spR as [number, number])[0] && i <= (spR as [number, number])[1]) && i >= (spL as [number, number])[0] && i <= (spL as [number, number])[1] && onChain(i);
+      if (mirOn) {
         for (let i = 0; i <= N; i++) {
-          const inL = i >= spL[0] && i <= spL[1]; const inR = i >= spR[0] && i <= spR[1];
-          if (!inL && inR && cOkR) { bufL[2 * i] = 2 * bufCR[2 * i] - bufR[2 * i]; bufL[2 * i + 1] = 2 * bufCR[2 * i + 1] - bufR[2 * i + 1]; }
-          if (!inR && inL && cOkL) { bufR[2 * i] = 2 * bufCL[2 * i] - bufL[2 * i]; bufR[2 * i + 1] = 2 * bufCL[2 * i + 1] - bufL[2 * i + 1]; }
+          if (mirL(i)) { bufL[2 * i] = 2 * bufCR[2 * i] - bufR[2 * i]; bufL[2 * i + 1] = 2 * bufCR[2 * i + 1] - bufR[2 * i + 1]; }
+          if (mirR(i)) { bufR[2 * i] = 2 * bufCL[2 * i] - bufL[2 * i]; bufR[2 * i + 1] = 2 * bufCL[2 * i + 1] - bufL[2 * i + 1]; }
         }
-        if (cOkR) { mirL0 = spL[0]; mirL1 = spL[1]; }
-        if (cOkL) { mirR0 = spR[0]; mirR1 = spR[1]; }
       }
       const P = pl && pl.pts.length >= 4 ? pl : pr && pr.pts.length >= 4 ? pr : null;
       let s0 = P ? P.s0 : (pl ?? pr)?.s0 ?? 0; let ds = P ? P.s1 - P.s0 : 0;
@@ -943,8 +946,8 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
         const lx = bufL[2 * i]; const ly = bufL[2 * i + 1]; const rx = bufR[2 * i]; const ry = bufR[2 * i + 1];
         const sL0 = spL ? rL[0] + rL[1] * fr01(i, spL) : rL[0] + (rL[1] * i) / N;
         const sR0 = spR ? rR[0] + rR[1] * fr01(i, spR) : rR[0] + (rR[1] * i) / N;
-        const sL = (i < mirL0 || i > mirL1) && spR && i >= spR[0] && i <= spR[1] ? sR0 : sL0;
-        const sR = (i < mirR0 || i > mirR1) && spL && i >= spL[0] && i <= spL[1] ? sL0 : sR0;
+        const sL = mirL(i) ? sR0 : sL0;
+        const sR = mirR(i) ? sL0 : sR0;
         const zs = zAt(it.pi, s); const z = reKey ? (spL ? zAt(it.pi, (sL + sR) / 2) : Math.max(zs, zAt(it.pi, (sL + sR) / 2))) : zs;
         const zl = reKey ? zAt(it.pi, sL) : z; const zr = reKey ? zAt(it.pi, sR) : z;
         set(it.base + i, lx, ly, zl - zt, s);

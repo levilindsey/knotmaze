@@ -7416,7 +7416,7 @@ function runEndFade(a: TailIn, p: OutlinePiece, atEnd: boolean): void {
  *  a light wedge across the ink from the shared point inward. The arc's end
  *  takes the run's foot there; its band then turns from the run's edge to
  *  the ball's normal along the arc. */
-const ARC_END_FEET = true;
+const ARC_END_FEET = !(typeof process !== "undefined" && process.env && process.env.S6ARC === "0");
 function arcEndFeet(st: DiagramStructure, pieces: OutlinePiece[], runAtArm: Map<number, number>): void {
   for (const p of pieces) {
     if (p.kind !== "arc" || p.corner < 0 || p.pts.length < 4 || p.cpts.length !== p.pts.length) continue;
@@ -7430,7 +7430,7 @@ function arcEndFeet(st: DiagramStructure, pieces: OutlinePiece[], runAtArm: Map<
         const r = runAtArm.get(arm * 2 + sk);
         if (r === undefined) continue;
         const q = pieces[r >> 1]; const j = (r & 1) === 1 ? q.pts.length - 2 : 0;
-        if (q.cpts.length !== q.pts.length || Math.abs(q.pts[j] - x) > 1e-9 || Math.abs(q.pts[j + 1] - y) > 1e-9) continue;
+        if (q.pts.length < 4 || q.cpts.length !== q.pts.length || !(Math.abs(q.pts[j] - x) <= 1e-9 && Math.abs(q.pts[j + 1] - y) <= 1e-9)) continue;
         p.cpts[k] = q.cpts[j]; p.cpts[k + 1] = q.cpts[j + 1];
         break;
       }
