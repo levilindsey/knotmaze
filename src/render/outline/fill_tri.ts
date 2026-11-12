@@ -71,7 +71,7 @@
 // run's span follows the frame.
 import type { DiagramStructure, OutlineTable, SceneIn } from "./outline";
 import { zChains, zAtC, zPastC, footNear } from "./draw";
-import { chainTangents, frameAt, offsetRow, zRow } from "./chain_frame";
+import { chainTangents, frameAt, offsetAt, offsetRow, pointAt, zAt1, zRow } from "./chain_frame";
 import { paintAt, runAt, type SectionPaint } from "./paint";
 
 export const CAP_M = 17;
@@ -273,6 +273,29 @@ export interface FillFrame {
   fallbacks: number;
   /** Border pieces with more points than their strip has samples (equal-fraction samples instead). */
   dense: number;
+  /** K1247 s19 (look.fillRec 2): the record strips' table (REC_TEXELS texels of 4 floats each, in
+   *  recStrips order) and the fallback rows (x, y, key, s per vertex) of those that took today's
+   *  path this frame. The interior columns' entries of pos, key, s and s4 are left unset. */
+  rec?: { strip: Float32Array; fb: Float32Array; nFb: number; hW: number; zt: number };
+}
+
+/** K1247 s19: texels per record strip in the strip table: (rL0, rL1, rR0, rR1), (s0, ds, sg, mode:
+ *  1 record, 0 fallback), (chain, N, fallback base, 0). */
+export const REC_TEXELS = 3;
+/** K1247 s19: the strip columns 2..N-2 of a strip with both border pieces and N >= 4 are records the
+ *  vertex shader places (oe=1); columns 0, 1, N-1 and N stay the CPU's (the moving ends, and the
+ *  columns a junction writes paint slots into). */
+export const REC_MIN_N = 4;
+const REC_STRIPS = new WeakMap<FillStructure, Int32Array>();
+/** The record strips' item indices, in item order (their row in the strip table). */
+export function recStrips(fs: FillStructure): Int32Array {
+  let r = REC_STRIPS.get(fs);
+  if (!r) {
+    const a: number[] = [];
+    fs.items.forEach((it, i) => { if (it.kind === "strip" && it.pL >= 0 && it.pR >= 0 && it.N >= REC_MIN_N) a.push(i); });
+    r = Int32Array.from(a); REC_STRIPS.set(fs, r);
+  }
+  return r;
 }
 
 /** Each interval's strip resolution, measured once on frame 0's table. */
@@ -620,11 +643,22 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
   // records, C(s) +- h N(s) in the chain's smooth frame (chain_frame.ts), the s from its piece's
   // moving ends; only the end columns (the moving points) come from the frame's pieces. No resample,
   // no foot search: a record's foot is its own s.
-  const rec = scene.look.fillRec === 1;
-  const tg = rec ? zc.map((c) => (c.n > 1 ? chainTangents(c) : null)) : [];
+  // K1247 s19 (fillRec 2, oe=1 in the app): the vertex shader places a record strip's columns
+  // 2..N-2 from the strip table (rec below); the CPU places only columns 0, 1, N-1 and N.
+  const gpu = scene.look.fillRec === 2;
+  const rec = scene.look.fillRec === 1 || gpu;
+  // Tangents per chain, on first use (gpu mode takes its few points without them).
+  const tgC: (ReturnType<typeof chainTangents> | null | undefined)[] = [];
+  const tgAt = (pi: number): ReturnType<typeof chainTangents> | null => {
+    let t = tgC[pi]; if (t === undefined) { const c = zc[pi]; t = c && c.n > 1 ? chainTangents(c) : null; tgC[pi] = t; } return t;
+  };
+  const rsI = gpu ? recStrips(fs) : null;
+  const rsOrd = new Map<number, number>(); if (rsI) rsI.forEach((ii, o) => rsOrd.set(ii, o));
+  const recTab = rsI ? new Float32Array(4 * REC_TEXELS * Math.max(1, rsI.length)) : null;
+  const fbOrd: number[] = [];
   const fa = new Float64Array(5);
   const recStrip = (it: Extract<FillItem, { kind: "strip" }>, aSt: number, bSt: number, pl: OutlineTable["pieces"][number], pr: OutlineTable["pieces"][number]): boolean => {
-    const N = it.N; const W = N + 1; const c = zc[it.pi]; const t = tg[it.pi]!;
+    const N = it.N; const W = N + 1; const c = zc[it.pi]; const t = tgAt(it.pi)!;
     const loop = c.closed && c.len > 0;
     // A border past an open chain's end (it wraps round the cap: muse_hash's 25 px) has no s to be a
     // record at: today's path keeps it.
@@ -672,9 +706,61 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
     if (stationS(bSt) !== null) footEnd(N);
     return true;
   };
+  // K1247 s19: recStrip with the shader's share left out. The same s ranges and side, its columns 0, 1,
+  // N-1 and N placed here (single points of offsetRow / zRow), and the strip's row of the table.
+  const P4 = new Float64Array(8);
+  const recStrip2 = (it: Extract<FillItem, { kind: "strip" }>, ord: number, aSt: number, bSt: number, pl: OutlineTable["pieces"][number], pr: OutlineTable["pieces"][number]): boolean => {
+    const N = it.N; const W = N + 1; const c = zc[it.pi];
+    const loop = c.closed && c.len > 0;
+    if (!loop) for (const q of [pl.s0, pl.s1, pr.s0, pr.s1]) if (q < -1e-6 || q > c.len + 1e-6) return false;
+    const wrap = (d: number): number => (loop ? ((d % c.len) + c.len) % c.len : d);
+    const s0 = pl.s0; let ds = wrap(pl.s1 - pl.s0);
+    if (loop && aSt === bSt && ds < 1e-9) ds = c.len;
+    const rL0 = pl.s0; const rL1 = wrap(pl.s1 - pl.s0); let rR0 = pr.s0; const rR1 = wrap(pr.s1 - pr.s0);
+    if (loop) rR0 += c.len * Math.round((rL0 - rR0) / c.len);
+    const nl = pl.pts.length >> 1; const nr = pr.pts.length >> 1; const m = nl >> 1;
+    pointAt(c, rL0 + (rL1 * m) / Math.max(1, nl - 1), fa);
+    let sg = (pl.pts[2 * m] - fa[0]) * -fa[3] + (pl.pts[2 * m + 1] - fa[1]) * fa[2] >= 0 ? 1 : -1;
+    const sides = (): void => {
+      offsetAt(c, rL0 + rL1 / N, sg, hW, rL1 / N, P4, 0); offsetAt(c, rL0 + (rL1 * (N - 1)) / N, sg, hW, rL1 / N, P4, 2);
+      offsetAt(c, rR0 + rR1 / N, -sg, hW, rR1 / N, P4, 4); offsetAt(c, rR0 + (rR1 * (N - 1)) / N, -sg, hW, rR1 / N, P4, 6);
+    };
+    sides();
+    const xa = pl.pts[0]; const ya = pl.pts[1]; const xb = pl.pts[2 * nl - 2]; const yb = pl.pts[2 * nl - 1];
+    const d2 = (o: number, x: number, y: number): number => (P4[o] - x) ** 2 + (P4[o + 1] - y) ** 2;
+    if (d2(4, xa, ya) + d2(6, xb, yb) < d2(0, xa, ya) + d2(2, xb, yb)) { sg = -sg; sides(); }
+    const b0 = it.base;
+    const col = (i: number, lx: number, ly: number, rx: number, ry: number): void => {
+      const s = s0 + (ds * i) / N; const z = zAt1(c, s);
+      const sL = rL0 + (rL1 * i) / N; const sR = rR0 + (rR1 * i) / N;
+      const vL = b0 + i; const vC = vL + W; const vR = vC + W;
+      pos[2 * vL] = lx; pos[2 * vL + 1] = ly; key[vL] = z - zt; sv[vL] = s;
+      pos[2 * vC] = (lx + rx) / 2; pos[2 * vC + 1] = (ly + ry) / 2; key[vC] = z; sv[vC] = s;
+      pos[2 * vR] = rx; pos[2 * vR + 1] = ry; key[vR] = z - zt; sv[vR] = s;
+      s4[SLOTS * vL] = sL; s4[SLOTS * vC] = (sL + sR) / 2; s4[SLOTS * vR] = sR;
+      across[vL] = 1; across[vR] = 1;
+    };
+    col(0, pl.pts[0], pl.pts[1], pr.pts[0], pr.pts[1]);
+    col(1, P4[0], P4[1], P4[4], P4[5]);
+    col(N - 1, P4[2], P4[3], P4[6], P4[7]);
+    col(N, pl.pts[2 * nl - 2], pl.pts[2 * nl - 1], pr.pts[2 * nr - 2], pr.pts[2 * nr - 1]);
+    const rF = 4 * hW;
+    const footEnd = (i: number): void => {
+      for (let r = 0; r < 3; r++) { const v = b0 + r * W + i; const f = footS(c, pos[2 * v], pos[2 * v + 1], s4[SLOTS * v], rF); if (f === f) s4[SLOTS * v] = f; }
+    };
+    if (stationS(aSt) !== null) footEnd(0);
+    if (stationS(bSt) !== null) footEnd(N);
+    if (ord < 0) return true;
+    const T = recTab!; const o = 4 * REC_TEXELS * ord;
+    T[o] = rL0; T[o + 1] = rL1; T[o + 2] = rR0; T[o + 3] = rR1;
+    T[o + 4] = s0; T[o + 5] = ds; T[o + 6] = sg; T[o + 7] = 1;
+    T[o + 8] = it.pi; T[o + 9] = N; T[o + 10] = 0; T[o + 11] = 0;
+    return true;
+  };
   let rowL = new Float64Array(0); let rowR = new Float64Array(0); let rowZ = new Float64Array(0);
   if (FILL_PROF.on) FILL_PROF.t.pre = (FILL_PROF.t.pre ?? 0) + performance.now() - tP;
-  for (const it of fs.items) {
+  for (let ii = 0; ii < fs.items.length; ii++) {
+    const it = fs.items[ii];
     const tI = FILL_PROF.on ? performance.now() : 0;
     try {
     if (it.kind === "strip") {
@@ -682,7 +768,12 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
       if (bufL.length < 2 * W) { bufL = new Float64Array(2 * W); bufR = new Float64Array(2 * W); }
       const I = st.intervalsD[it.iv];
       const pl = it.pL >= 0 ? table.pieces[it.pL] : null; const pr = it.pR >= 0 ? table.pieces[it.pR] : null;
-      if (rec && pl && pr && pl.pts.length >= 4 && pr.pts.length >= 4 && tg[it.pi] && recStrip(it, I.aSt, I.bSt, pl, pr)) continue;
+      // gpu: recStrip2 for N >= 2 (it places every column of a strip without a table row, N < 4).
+      if (gpu && N >= 2) {
+        const ord = rsOrd.get(ii) ?? -1;
+        if (pl && pr && pl.pts.length >= 4 && pr.pts.length >= 4 && zc[it.pi] && zc[it.pi].n > 1 && recStrip2(it, ord, I.aSt, I.bSt, pl, pr)) continue;
+        if (ord >= 0) fbOrd.push(ord);
+      } else if (rec && pl && pr && pl.pts.length >= 4 && pr.pts.length >= 4 && tgAt(it.pi) && recStrip(it, I.aSt, I.bSt, pl, pr)) continue;
       if (bufCL.length < 2 * W) { bufCL = new Float64Array(2 * W); bufCR = new Float64Array(2 * W); }
       // A side's border, and (cOk) its centreline feet resampled alongside.
       let cOkL = false; let cOkR = false;
@@ -1081,6 +1172,17 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
     }
   }
   if (FILL_PROF.on) FILL_PROF.t.fans = (FILL_PROF.t.fans ?? 0) + performance.now() - tP;
+  if (gpu && rsI && recTab) {
+    // Record strips that took today's path this frame: their rows (every column) go as fallback rows.
+    let nFb = 0; for (const ord of fbOrd) nFb += 3 * ((fs.items[rsI[ord]] as StripItem).N + 1);
+    const fb = new Float32Array(4 * Math.max(1, nFb)); let q = 0;
+    for (const ord of fbOrd) {
+      const S = fs.items[rsI[ord]] as StripItem; const o = 4 * REC_TEXELS * ord;
+      recTab[o + 7] = 0; recTab[o + 8] = S.pi; recTab[o + 9] = S.N; recTab[o + 10] = q;
+      for (let v = S.base; v < S.base + 3 * (S.N + 1); v++, q++) { fb[4 * q] = pos[2 * v]; fb[4 * q + 1] = pos[2 * v + 1]; fb[4 * q + 2] = key[v]; fb[4 * q + 3] = s4[SLOTS * v]; }
+    }
+    return { pos, key, s: sv, s4, w4, across, fallbacks, dense: denseCount, rec: { strip: recTab, fb, nFb, hW, zt } };
+  }
   return { pos, key, s: sv, s4, w4, across, fallbacks, dense: denseCount };
 }
 

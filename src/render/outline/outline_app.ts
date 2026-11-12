@@ -203,7 +203,92 @@ void main() {
   gl_Position = vec4(p.xy, clamp(-aKey / uKS, -1.0, 1.0), 1.0);
   vRun = aRun; vW = aW; vS = aS; vPos = aPos;
 }`;
-// K1291: THE APP'S FILL. The same slots as PAINT_FS, but each slot's
+// K1247 s19 (oe=1): the fill's record vertices placed here from the chain
+// samples, as fill_tri's recStrip places them on the CPU (chain_frame's
+// offsetRow, zRow; tangents by chainTangents' formula). aRec: the strip's
+// ordinal (-1: the worker placed the vertex) and (row << 16) | column. The
+// strip table holds REC_TEXELS texels a strip: (rL0, rL1, rR0, rR1), (s0,
+// ds, side sign, 1 record / 0 fallback), (chain, N, fallback row, 0); a
+// fallback strip's vertices come as rows (x, y, key, s) of uRecFb.
+const REC_GLSL = `layout(location=6) in ivec2 aRec;
+uniform highp sampler2D uRecChain;
+uniform highp sampler2D uRecCi;
+uniform highp sampler2D uRecStrip;
+uniform highp sampler2D uRecFb;
+uniform float uRecHW;
+uniform float uRecZt;
+uniform float uRecSag;
+vec4 recT(highp sampler2D t, int q) { return texelFetch(t, ivec2(q % ${BAND_TEX_W}, q / ${BAND_TEX_W}), 0); }
+vec3 recTan(int b, int n, bool closed, int i) {
+  int a = closed ? (i - 1 + n) % n : max(0, i - 1);
+  int c = closed ? (i + 1) % n : min(n - 1, i + 1);
+  vec2 P = recT(uRecChain, b + i).xy;
+  vec2 av = P - recT(uRecChain, b + a).xy; vec2 bv = recT(uRecChain, b + c).xy - P;
+  vec2 d = av + bv; float l = length(d); if (!(l > 0.0)) l = 1.0;
+  vec3 o = vec3(d / l, 0.0);
+  float la = length(av); float lb = length(bv);
+  if (la > 1e-12 && lb > 1e-12) {
+    float cr = (av.x * bv.y - av.y * bv.x) / (la * lb); float dt = (av.x * bv.x + av.y * bv.y) / (la * lb);
+    o.z = atan(cr, dt) / (0.5 * (la + lb));
+  }
+  return o;
+}
+float recWrap(int b, int m, float L, float u0) {
+  float u = u0;
+  if (L > 0.0) { if (u < 0.0 || u >= L) u = mod(u, L); }
+  else u = clamp(u, 0.0, recT(uRecChain, b + m).z);
+  return u;
+}
+void recSeg(int b, int n, float L, float u, out int k, out int j, out float f) {
+  int m = n - 1;
+  if (u >= recT(uRecChain, b + m).z) k = L > 0.0 ? m : m - 1;
+  else { int lo = 0; int hi = m; while (hi - lo > 1) { int q = (lo + hi) >> 1; if (recT(uRecChain, b + q).z <= u) lo = q; else hi = q; } k = lo; }
+  j = k < m ? k + 1 : 0;
+  float sk = recT(uRecChain, b + k).z; float e = k < m ? recT(uRecChain, b + k + 1).z : L; float sl = e - sk;
+  f = sl > 0.0 ? (u - sk) / sl : 0.0;
+}
+vec2 recOff(int b, int n, float L, float u0, float sgn, float st) {
+  int k; int j; float f; recSeg(b, n, L, recWrap(b, n - 1, L, u0), k, j, f);
+  vec2 A = recT(uRecChain, b + k).xy; vec2 B = recT(uRecChain, b + j).xy;
+  vec3 ta = recTan(b, n, L > 0.0, k); vec3 tb = recTan(b, n, L > 0.0, j);
+  vec2 p = A + (B - A) * f;
+  vec2 ax = ta.xy + (tb.xy - ta.xy) * f; float l = length(ax); if (!(l > 0.0)) l = 1.0; ax /= l;
+  float kap = ta.z + (tb.z - ta.z) * f; float ak = abs(kap);
+  float bb = sgn * kap > 0.0 ? min(uRecHW, 0.9 / ak) : uRecHW + uRecSag * st * st * ak * (1.0 + uRecHW * ak) / 8.0;
+  return vec2(p.x - sgn * bb * ax.y, p.y + sgn * bb * ax.x);
+}
+float recZ(int b, int n, float L, float u0) {
+  int m = n - 1; float u = recWrap(b, m, L, u0);
+  if (!(L > 0.0) && u >= recT(uRecChain, b + m).z) return recT(uRecChain, b + m).w;
+  int k; int j; float f; recSeg(b, n, L, u, k, j, f);
+  float zk = recT(uRecChain, b + k).w; return zk + (recT(uRecChain, b + j).w - zk) * f;
+}
+void recPlace(inout vec2 P, inout float key, inout vec4 S) {
+  if (aRec.x < 0) return;
+  int q = 3 * aRec.x; vec4 t0 = recT(uRecStrip, q); vec4 t1 = recT(uRecStrip, q + 1); vec4 t2 = recT(uRecStrip, q + 2);
+  int r = aRec.y >> 16; int i = aRec.y & 65535; int N = int(t2.y);
+  if (t1.w < 0.5) { vec4 v = recT(uRecFb, int(t2.z) + r * (N + 1) + i); P = v.xy; key = v.z; S.x = v.w; return; }
+  vec4 ci = recT(uRecCi, int(t2.x)); int b = int(ci.x); int n = int(ci.y); float L = ci.z;
+  float fi = float(i); float fN = float(N);
+  float z = recZ(b, n, L, t1.x + t1.y * fi / fN);
+  float sL = t0.x + t0.y * fi / fN; float sR = t0.z + t0.w * fi / fN;
+  vec2 pl = r != 2 ? recOff(b, n, L, sL, t1.z, t0.y / fN) : vec2(0.0);
+  vec2 pr = r != 0 ? recOff(b, n, L, sR, -t1.z, t0.w / fN) : vec2(0.0);
+  if (r == 0) { P = pl; key = z - uRecZt; S.x = sL; }
+  else if (r == 2) { P = pr; key = z - uRecZt; S.x = sR; }
+  else { P = (pl + pr) / 2.0; key = z; S.x = (sL + sR) / 2.0; }
+}
+`;
+/** A fill vertex shader with the records placed in it (oe=1). */
+function recVs(vs: string): string {
+  const out = vs
+    .replace("layout(location=0) in vec2 aPos;", "layout(location=0) in vec2 aPos0;")
+    .replace("layout(location=2) in float aKey;", "layout(location=2) in float aKey0;")
+    .replace("layout(location=5) in vec4 aS;", "layout(location=5) in vec4 aS0;")
+    .replace("void main() {", `${REC_GLSL}void main() {\n  vec2 aPos = aPos0; float aKey = aKey0; vec4 aS = aS0; recPlace(aPos, aKey, aS);`);
+  if (!out.includes("aPos0;") || !out.includes("aKey0;") || !out.includes("aS0;") || !out.includes("recPlace(aPos")) throw new Error("recVs: the fill shader changed");
+  return out;
+}// K1291: THE APP'S FILL. The same slots as PAINT_FS, but each slot's
 // colour is the app's own material at that point of its chain: the run
 // map (paint.ts appRunMap) names the run's chain and maps the slot's s to
 // the renderer's arc, and appMaterial composes there exactly as
@@ -640,6 +725,13 @@ class OutlinePass {
    *  reveal_fx revealWidth) for the band, its strip (paint.ts swellStrip)
    *  for the fill; swOn while any chain swells. */
   private swTex: WebGLTexture;
+  /** K1247 s19 (oe=1): the record tag buffer, the strip table and fallback rows, their uniforms per program. */
+  private recBuf: WebGLBuffer | null = null;
+  private recStripTex: WebGLTexture | null = null;
+  private recFbTex: WebGLTexture | null = null;
+  private recU = new Map<WebGLProgram, Record<"chain" | "ci" | "strip" | "fb" | "hw" | "zt" | "sag", U>>();
+  private recV = { hw: 0, zt: 0, sag: 0 };
+  private nPaint = 0;
   private swBuf: WebGLBuffer;
   private swVao: WebGLVertexArrayObject;
   swOn = false;
@@ -683,12 +775,17 @@ class OutlinePass {
       gl.deleteShader(f);
       return p;
     };
-    this.paint = mk(PAINT_VS, PAINT_FS, "paint");
+    this.paint = mk(FILL_REC ? recVs(PAINT_VS) : PAINT_VS, PAINT_FS, "paint");
     this.bandV = [mk(BAND_VS, krvSource(BAND_FS, true), "band"), mk(BAND_VS, krvSource(BAND_FS, false), "band (no reveal)")];
     this.band = this.bandV[0];
     this.comp = mk(COMP_VS, COMP_FS, "composite");
     this.uP = { mat: gl.getUniformLocation(this.paint, "uMat"), ks: gl.getUniformLocation(this.paint, "uKS"), runs: gl.getUniformLocation(this.paint, "uRuns") };
-    this.appV = [mk(APP_VS, krvSource(APP_FS, true), "app paint"), mk(APP_VS, krvSource(APP_FS, false), "app paint (no reveal)")];
+    const appVs = FILL_REC ? recVs(APP_VS) : APP_VS;
+    this.appV = [mk(appVs, krvSource(APP_FS, true), "app paint"), mk(appVs, krvSource(APP_FS, false), "app paint (no reveal)")];
+    if (FILL_REC) for (const p of [this.paint, ...this.appV]) {
+      const u = (n: string): U => gl.getUniformLocation(p, n);
+      this.recU.set(p, { chain: u("uRecChain"), ci: u("uRecCi"), strip: u("uRecStrip"), fb: u("uRecFb"), hw: u("uRecHW"), zt: u("uRecZt"), sag: u("uRecSag") });
+    }
     this.uAV = [this.appUniforms(this.appV[0]), this.appUniforms(this.appV[1])];
     this.uBV = [this.bandUniforms(this.bandV[0]), this.bandUniforms(this.bandV[1])];
     this.app = this.appV[0];
@@ -711,6 +808,7 @@ class OutlinePass {
     attr(this.bufs.run, 3, 4, true);
     attr(this.bufs.w, 4, 4);
     attr(this.bufs.s, 5, 4);
+    if (FILL_REC) { this.recBuf = nb(); gl.bindBuffer(gl.ARRAY_BUFFER, this.recBuf); gl.enableVertexAttribArray(6); gl.vertexAttribIPointer(6, 2, gl.INT, 0, 0); }
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.bufs.idx);
     this.bVao = gl.createVertexArray()!;
     gl.bindVertexArray(this.bVao);
@@ -741,7 +839,23 @@ class OutlinePass {
     this.cmTex = gl.createTexture()!;
     this.ciTex = gl.createTexture()!;
     this.swTex = gl.createTexture()!;
+    if (FILL_REC) { this.recStripTex = gl.createTexture()!; this.recFbTex = gl.createTexture()!; }
     this.fbo = gl.createFramebuffer()!;
+  }
+
+  /** K1247 s19: program p's record uniforms and the record textures on units 9-12. */
+  private recBind(p: WebGLProgram): void {
+    const u = this.recU.get(p); if (!u || !this.recStripTex || !this.recFbTex) return;
+    const gl = this.gl;
+    ([[this.chainTex, u.chain], [this.ciTex, u.ci], [this.recStripTex, u.strip], [this.recFbTex, u.fb]] as [WebGLTexture, U][]).forEach(([tx, l], i) => {
+      gl.activeTexture(gl.TEXTURE9 + i);
+      gl.bindTexture(gl.TEXTURE_2D, tx);
+      gl.uniform1i(l, 9 + i);
+    });
+    gl.activeTexture(gl.TEXTURE0);
+    gl.uniform1f(u.hw, this.recV.hw);
+    gl.uniform1f(u.zt, this.recV.zt);
+    gl.uniform1f(u.sag, this.recV.sag);
   }
 
   private appUniforms(p: WebGLProgram): UA {
@@ -769,10 +883,19 @@ class OutlinePass {
       gl.bindBuffer(gl.ARRAY_BUFFER, b);
       gl.bufferData(gl.ARRAY_BUFFER, d, gl.DYNAMIC_DRAW);
     };
-    put(this.bufs.pos, r.pos);
-    put(this.bufs.key, r.pkey);
-    put(this.bufs.w, r.w);
-    put(this.bufs.s, r.s);
+    // K1247 s19: a frame with the records on the GPU sends only the first nDyn paint vertices.
+    const sub = r.nDyn >= 0 && !r.restructured && 2 * r.nDyn <= r.pos.length && this.nPaint > 0;
+    const putP = (b: WebGLBuffer, d: ArrayBufferView): void => {
+      if (!sub) return put(b, d);
+      gl.bindBuffer(gl.ARRAY_BUFFER, b);
+      gl.bufferSubData(gl.ARRAY_BUFFER, 0, d);
+    };
+    putP(this.bufs.pos, r.pos);
+    putP(this.bufs.key, r.pkey);
+    putP(this.bufs.w, r.w);
+    putP(this.bufs.s, r.s);
+    if (!sub) this.nPaint = r.pkey.length;
+    if (r.rec && this.recBuf) put(this.recBuf, r.rec);
     if (r.run) put(this.bufs.run, r.run);
     if (r.idx) {
       gl.bindVertexArray(null);
@@ -811,6 +934,15 @@ class OutlinePass {
     const ci = new Float32Array(4 * BAND_TEX_W * ciH);
     ci.set(r.chainInfo);
     ftex(this.ciTex, ci, ciH);
+    if (this.recStripTex && this.recFbTex && r.recStrip && r.recFb) {
+      const pad = (d: Float32Array): [Float32Array, number] => {
+        const h = Math.max(1, Math.ceil(d.length / 4 / BAND_TEX_W)); if (d.length === 4 * BAND_TEX_W * h) return [d, h];
+        const o = new Float32Array(4 * BAND_TEX_W * h); o.set(d); return [o, h];
+      };
+      ftex(this.recStripTex, ...pad(r.recStrip));
+      ftex(this.recFbTex, ...pad(r.recFb));
+      this.recV = { hw: r.recHW, zt: r.recZt, sag: r.recSag };
+    }
     gl.bindTexture(gl.TEXTURE_2D, null);
     this.zTab = { chainTex: r.chainTex, chainInfo: r.chainInfo };
     this.hasData = true;
@@ -982,6 +1114,7 @@ class OutlinePass {
         gl.bindTexture(gl.TEXTURE_2D, this.runTex);
         gl.uniform1i(this.uP.runs, 0);
       }
+      this.recBind(ap && this.hasMap ? this.app : this.paint);
       gl.bindVertexArray(this.pVao);
       if (fade && ap && this.hasMap) {
         gl.uniform1i(this.uA.fp, 1);
@@ -999,6 +1132,8 @@ class OutlinePass {
           gl.bindTexture(gl.TEXTURE_2D, null);
         }
       }
+      if (FILL_REC) for (let i = 12; i >= 9; i--) { gl.activeTexture(gl.TEXTURE0 + i); gl.bindTexture(gl.TEXTURE_2D, null); }
+      if (FILL_REC) gl.activeTexture(gl.TEXTURE0);
       gl.disable(gl.DEPTH_TEST);
       // The band over it at its tie alpha; alpha accumulates premultiplied.
       gl.enable(gl.BLEND);
@@ -1075,6 +1210,7 @@ class OutlinePass {
           gl.bindTexture(gl.TEXTURE_2D, t);
         });
         gl.bindVertexArray(this.swVao);
+        if (FILL_REC) gl.vertexAttribI4i(6, -1, 0, 0, 0);
         for (const c of this.swChains) {
           gl.vertexAttribI4i(3, c.scene, -1, -1, -1);
           gl.drawArrays(gl.TRIANGLES, c.first, c.count);
@@ -1132,6 +1268,9 @@ class OutlinePass {
     gl.deleteTexture(this.rvTex);
     gl.deleteTexture(this.cmTex);
     gl.deleteTexture(this.ciTex);
+    if (this.recBuf) gl.deleteBuffer(this.recBuf);
+    if (this.recStripTex) gl.deleteTexture(this.recStripTex);
+    if (this.recFbTex) gl.deleteTexture(this.recFbTex);
     if (this.color) gl.deleteTexture(this.color);
     if (this.depth) gl.deleteRenderbuffer(this.depth);
     gl.deleteFramebuffer(this.fbo);
@@ -1397,7 +1536,7 @@ export function createOutlineApp(ctx: SceneExportCtx, requestFrame: () => void):
     const { scene } = buildFieldScene(input);
     scene.look.ctrlArc ??= CTRL_ARC;
     // K1247 s18: oe=1 places the fill's strips as records (fill_tri.ts recStrip). Off by default.
-    if (FILL_REC) (scene.look as { fillRec?: number }).fillRec = 1;
+    if (FILL_REC) (scene.look as { fillRec?: number }).fillRec = 2;
     // K1247 s18 probe: a page that sets window.__knotOutlineCapture to an
     // array gets every sent scene as JSON (the drag's frames, replayed in Node).
     const cap = (globalThis as { __knotOutlineCapture?: string[] }).__knotOutlineCapture;

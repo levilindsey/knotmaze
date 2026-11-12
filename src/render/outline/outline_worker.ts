@@ -7,6 +7,8 @@
 // outline_app.ts's header.
 import { OutlineModel, diagramKey } from "./outline_model";
 import type { SceneIn } from "./outline";
+import { SLOTS } from "./fill_tri";
+import { SAG } from "./chain_frame";
 
 export interface OutlineRequest {
   id: number;
@@ -56,6 +58,17 @@ export interface OutlineReply {
   /** K1291 s2: per band vertex its scene chain (-1 none); per scene chain (base, n, closed length or -1, 0) in chainTex. */
   bandChain: Int16Array;
   chainInfo: Float32Array;
+  /** K1247 s19 (oe=1): pos/pkey/w/s carry only the first nDyn paint vertices
+   *  unless restructured (-1: no records, they carry all); rec (restructure
+   *  only) is the per-vertex record tag; recStrip the strip table
+   *  (REC_TEXELS texels per strip), recFb the fallback rows, recSag SAG.f. */
+  nDyn: number;
+  rec: Int32Array | null;
+  recStrip: Float32Array | null;
+  recFb: Float32Array | null;
+  recSag: number;
+  recHW: number;
+  recZt: number;
 }
 
 /** Where two diagram keys first differ: the part (chains | crossings |
@@ -99,6 +112,8 @@ scope.onmessage = (e: MessageEvent<OutlineRequest>): void => {
     const restructured = cause !== null;
     const m = model;
     const pd = m.pd;
+    // K1247 s19: with the records on the GPU a frame sends the dynamic prefix only.
+    const nD = m.rec ? m.rec.nDyn : pd.src.length; const pre = m.rec !== null && !restructured;
     // The paint arrays are the model's own (paintFrame writes them in
     // place): copies go; the band is new each frame and goes itself.
     const r: OutlineReply = {
@@ -114,10 +129,10 @@ scope.onmessage = (e: MessageEvent<OutlineRequest>): void => {
       idx: restructured ? pd.idx.slice() : null,
       run: restructured ? pd.run.slice() : null,
       runChain: Int32Array.from(pd.sp.runs, (q) => q.pi),
-      pos: pd.pos.slice(),
-      pkey: pd.key.slice(),
-      w: pd.w.slice(),
-      s: pd.s.slice(),
+      pos: pre ? pd.pos.slice(0, 2 * nD) : pd.pos.slice(),
+      pkey: pre ? pd.key.slice(0, nD) : pd.key.slice(),
+      w: pre ? pd.w.slice(0, SLOTS * nD) : pd.w.slice(),
+      s: pre ? pd.s.slice(0, SLOTS * nD) : pd.s.slice(),
       tex: pd.tex.slice(),
       texW: pd.texW,
       texH: pd.texH,
@@ -135,10 +150,20 @@ scope.onmessage = (e: MessageEvent<OutlineRequest>): void => {
       zt: m.band.zt,
       bandChain: m.band.chain,
       chainInfo: m.band.chainInfo,
+      nDyn: m.rec ? nD : -1,
+      rec: m.rec && restructured ? m.rec.rec.slice() : null,
+      recStrip: m.recFrame ? m.recFrame.strip : null,
+      recFb: m.recFrame ? m.recFrame.fb : null,
+      recSag: SAG.f,
+      recHW: m.recFrame ? m.recFrame.hW : 0,
+      recZt: m.recFrame ? m.recFrame.zt : 0,
     };
     const tr: Transferable[] = [r.pos.buffer, r.pkey.buffer, r.w.buffer, r.s.buffer, r.tex.buffer, r.bandPos.buffer, r.bandAttr.buffer, r.bandSlots.buffer, r.chainTex.buffer, r.passTex.buffer, r.bandChain.buffer, r.chainInfo.buffer];
     if (r.idx) tr.push(r.idx.buffer);
     if (r.run) tr.push(r.run.buffer);
+    if (r.rec) tr.push(r.rec.buffer);
+    if (r.recStrip) tr.push(r.recStrip.buffer);
+    if (r.recFb) tr.push(r.recFb.buffer);
     scope.postMessage(r, tr);
   } catch (err) {
     model = null;

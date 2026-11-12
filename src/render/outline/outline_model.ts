@@ -14,7 +14,7 @@
 // The first frame equals the prototype's page (buildOutline +
 // buildDrawData(..., "app")); test/render/outline_port.test.ts pins it.
 import { alignJunctionArms, frame, structure, type DiagramStructure, type OutlineTable, type SceneIn } from "./outline";
-import { fillFrame, fillResolution, fillStructure, keyScale, type FillStructure } from "./fill_tri";
+import { SLOTS, fillFrame, fillResolution, fillStructure, keyScale, recStrips, type FillFrame, type FillStructure, type StripItem } from "./fill_tri";
 import { baseHueFor, paintData, paintFrame, zChains, type PaintData } from "./draw";
 import { bandGpu, type BandGpu } from "./band_gpu";
 import { sectionPaint } from "./paint";
@@ -60,6 +60,9 @@ export class OutlineModel {
   /** Wall ms of the last structure and the last frame (performance.now). */
   readonly structureMs: number;
   frameMs = 0;
+  /** K1247 s19 (look.fillRec 2, oe=1): the record layout (null otherwise) and this frame's strip table. */
+  readonly rec: RecLayout | null;
+  recFrame: FillFrame["rec"] | null = null;
   /** Wall ms of the last frame's parts, in update's order (K1240 S4b). */
   parts = { frame: 0, zChains: 0, fill: 0, paint: 0, band: 0 };
 
@@ -71,8 +74,14 @@ export class OutlineModel {
     this.table = frame(this.st, scene);
     this.fs = fillStructure(this.st, fillResolution(this.st, this.table));
     const zz = zChains(scene);
-    const fr = fillFrame(this.fs, this.st, this.table, scene, zz);
-    this.pd = paintData(this.fs, this.st, fr, scene, "app", this.baseHue);
+    // K1247 s19: with the records on the GPU (fillRec 2) the structure's paint is built from frame 0
+    // placed whole on the CPU (fillRec 1, stage 18's), then reordered (recLayout).
+    const gpu = scene.look.fillRec === 2;
+    const sc1 = gpu ? { ...scene, look: { ...scene.look, fillRec: 1 } } : scene;
+    const fr = fillFrame(this.fs, this.st, this.table, sc1, zz);
+    this.pd = paintData(this.fs, this.st, fr, sc1, "app", this.baseHue);
+    this.rec = gpu ? recLayout(this.fs, this.pd) : null;
+    if (gpu) this.recFrame = fillFrame(this.fs, this.st, this.table, scene, zz).rec ?? null;
     this.band = bandGpu(this.table, scene, zz);
     this.ks = keyScale(scene);
     this.structureMs = performance.now() - t0;
@@ -89,11 +98,43 @@ export class OutlineModel {
     const t2 = performance.now();
     const fr = fillFrame(this.fs, this.st, this.table, scene, zz);
     const t3 = performance.now();
-    paintFrame(this.pd, fr, sectionPaint(scene, "app", this.baseHue));
+    paintFrame(this.pd, fr, sectionPaint(scene, "app", this.baseHue), this.rec ? this.rec.nDyn : undefined);
+    this.recFrame = fr.rec ?? null;
     const t4 = performance.now();
     this.band = bandGpu(this.table, scene, zz);
     const t5 = performance.now();
     this.parts = { frame: t1 - t0, zChains: t2 - t1, fill: t3 - t2, paint: t4 - t3, band: t5 - t4 };
     this.frameMs = t5 - t0;
   }
+}
+
+/** K1247 s19 (oe=1): the paint vertices reordered so the ones the shader
+ *  places (record strips' columns 2..N-2, copies included) sit after the
+ *  nDyn the worker still writes; rec is 2 ints per paint vertex: the strip's
+ *  ordinal in recStrips (-1 for a dynamic vertex), (row << 16) | column. */
+export interface RecLayout { nDyn: number; rec: Int32Array; nStrips: number }
+
+export function recLayout(fs: FillStructure, pd: PaintData): RecLayout {
+  const strips = recStrips(fs);
+  const tag = new Int32Array(2 * fs.nV).fill(-1);
+  for (let o = 0; o < strips.length; o++) {
+    const it = fs.items[strips[o]] as StripItem; const W = it.N + 1;
+    for (let r = 0; r < 3; r++) for (let i = 2; i <= it.N - 2; i++) { const v = it.base + r * W + i; tag[2 * v] = o; tag[2 * v + 1] = (r << 16) | i; }
+  }
+  const nG = pd.src.length; const perm: number[] = [];
+  for (let g = 0; g < nG; g++) if (tag[2 * pd.src[g]] < 0) perm.push(g);
+  const nDyn = perm.length;
+  for (let g = 0; g < nG; g++) if (tag[2 * pd.src[g]] >= 0) perm.push(g);
+  const inv = new Uint32Array(nG); for (let n = 0; n < nG; n++) inv[perm[n]] = n;
+  const src = new Uint32Array(nG), run = new Int32Array(SLOTS * nG), pos = new Float32Array(2 * nG), key = new Float32Array(nG);
+  const w = new Float32Array(SLOTS * nG), s = new Float32Array(SLOTS * nG), rec = new Int32Array(2 * nG);
+  for (let n = 0; n < nG; n++) {
+    const g = perm[n]; const v = pd.src[g];
+    src[n] = v; pos[2 * n] = pd.pos[2 * g]; pos[2 * n + 1] = pd.pos[2 * g + 1]; key[n] = pd.key[g];
+    for (let k = 0; k < SLOTS; k++) { run[SLOTS * n + k] = pd.run[SLOTS * g + k]; w[SLOTS * n + k] = pd.w[SLOTS * g + k]; s[SLOTS * n + k] = pd.s[SLOTS * g + k]; }
+    rec[2 * n] = tag[2 * v]; rec[2 * n + 1] = tag[2 * v] < 0 ? 0 : tag[2 * v + 1];
+  }
+  const idx = pd.idx; for (let t = 0; t < idx.length; t++) idx[t] = inv[idx[t]];
+  pd.src = src; pd.run = run; pd.pos = pos; pd.key = key; pd.w = w; pd.s = s;
+  return { nDyn, rec, nStrips: strips.length };
 }

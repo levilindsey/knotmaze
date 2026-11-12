@@ -591,9 +591,11 @@ export function paintData(fs: FillStructure, st: DiagramStructure, fr: FillFrame
 
 /** A frame's paint: positions, keys, slot weights and s through src, and
  *  the run table (the runs' spans on this frame; same runs, same order). */
-export function paintFrame(pd: PaintData, fr: FillFrame, sp?: SectionPaint): void {
+export function paintFrame(pd: PaintData, fr: FillFrame, sp?: SectionPaint, n?: number): void {
   const S = pd.src;
-  for (let g = 0; g < S.length; g++) {
+  // K1247 s19 hook: n copies only the first n paint vertices (oe=1: the rest are the shader's records).
+  const nG = n ?? S.length;
+  for (let g = 0; g < nG; g++) {
     const v = S[g];
     pd.pos[2 * g] = fr.pos[2 * v]; pd.pos[2 * g + 1] = fr.pos[2 * v + 1];
     pd.key[g] = fr.key[v];

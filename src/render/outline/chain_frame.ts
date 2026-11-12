@@ -122,3 +122,66 @@ export function zRow(c: FrameChain & { z: Float64Array }, sA: number, dS: number
     out[i] = z[k] + (z[j] - z[k]) * (sl > 0 ? (u - ss[k]) / sl : 0);
   }
 }
+
+// K1247 s19 (oe=1 places the records on the GPU): single points of the same frame, the tangents taken
+// on the fly from the samples (chainTangents' formula, so the values equal its rows), for the few
+// columns the CPU still places (a strip's moving ends and the columns beside them).
+
+/** chainTangents' (tx, ty, k) at sample i, into out[0..2]. */
+export function tanAt(c: FrameChain, i: number, out: Float64Array, o = 0): void {
+  const n = c.n;
+  const a = c.closed ? (i - 1 + n) % n : Math.max(0, i - 1);
+  const b = c.closed ? (i + 1) % n : Math.min(n - 1, i + 1);
+  const ax = c.xs[i] - c.xs[a]; const ay = c.ys[i] - c.ys[a]; const bx = c.xs[b] - c.xs[i]; const by = c.ys[b] - c.ys[i];
+  const dx = ax + bx; const dy = ay + by; const l = Math.sqrt(dx * dx + dy * dy) || 1;
+  out[o] = dx / l; out[o + 1] = dy / l; out[o + 2] = 0;
+  const la = Math.sqrt(ax * ax + ay * ay); const lb = Math.sqrt(bx * bx + by * by);
+  if (la > 1e-12 && lb > 1e-12) {
+    const cr = (ax * by - ay * bx) / (la * lb); const dt = (ax * bx + ay * by) / (la * lb);
+    out[o + 2] = Math.atan2(cr, dt) / (0.5 * (la + lb));
+  }
+}
+
+/** offsetRow's segment and fraction for arc u (wrapped or clamped as it does): [k, f]. */
+function segOf(c: FrameChain, u0: number, kf: Float64Array): void {
+  const m = c.n - 1; const loop = c.closed && c.len > 0; const L = c.len; const ss = c.s;
+  let u = u0;
+  if (loop) { if (u < 0 || u >= L) u = ((u % L) + L) % L; } else u = u < 0 ? 0 : u > ss[m] ? ss[m] : u;
+  let k: number;
+  if (u >= ss[m]) k = loop ? m : m - 1;
+  else { let lo = 0; let hi = m; while (hi - lo > 1) { const q = (lo + hi) >> 1; if (ss[q] <= u) lo = q; else hi = q; } k = lo; }
+  const e = k < m ? ss[k + 1] : L; const sl = e - ss[k];
+  kf[0] = k; kf[1] = sl > 0 ? (u - ss[k]) / sl : 0; kf[2] = u;
+}
+
+const KF = new Float64Array(3); const TA = new Float64Array(6);
+
+/** One point of offsetRow (column at arc u, side sgn, step st = dS / N), into out[0..1]. */
+export function offsetAt(c: FrameChain, u: number, sgn: number, h: number, st: number, out: Float64Array, o = 0): void {
+  segOf(c, u, KF); const k = KF[0]; const f = KF[1]; const m = c.n - 1; const j = k < m ? k + 1 : 0;
+  tanAt(c, k, TA, 0); tanAt(c, j, TA, 3);
+  const x = c.xs[k] + (c.xs[j] - c.xs[k]) * f; const y = c.ys[k] + (c.ys[j] - c.ys[k]) * f;
+  let ax = TA[0] + (TA[3] - TA[0]) * f; let ay = TA[1] + (TA[4] - TA[1]) * f; const l = Math.sqrt(ax * ax + ay * ay) || 1; ax /= l; ay /= l;
+  const kap = TA[2] + (TA[5] - TA[2]) * f; const ak = Math.abs(kap);
+  const b = sgn * kap > 0 ? Math.min(h, 0.9 / ak) : h + SAG.f * st * st * ak * (1 + h * ak) / 8;
+  out[o] = x - sgn * b * ay; out[o + 1] = y + sgn * b * ax;
+}
+
+/** frameAt's (x, y, tx, ty) at arc s without ChainTangents (the side guess). */
+export function pointAt(c: FrameChain, s: number, out: Float64Array): void {
+  segOf(c, s, KF); const k = KF[0]; const f = KF[1]; const m = c.n - 1; const j = k < m ? k + 1 : 0;
+  tanAt(c, k, TA, 0); tanAt(c, j, TA, 3);
+  out[0] = c.xs[k] + (c.xs[j] - c.xs[k]) * f; out[1] = c.ys[k] + (c.ys[j] - c.ys[k]) * f;
+  const tx = TA[0] + (TA[3] - TA[0]) * f; const ty = TA[1] + (TA[4] - TA[1]) * f; const l = Math.sqrt(tx * tx + ty * ty) || 1;
+  out[2] = tx / l; out[3] = ty / l;
+}
+
+/** zRow's value at one arc u. */
+export function zAt1(c: FrameChain & { z: Float64Array }, u0: number): number {
+  const m = c.n - 1; const loop = c.closed && c.len > 0; const ss = c.s;
+  let u = u0;
+  if (loop) { if (u < 0 || u >= c.len) u = ((u % c.len) + c.len) % c.len; } else u = u < 0 ? 0 : u > ss[m] ? ss[m] : u;
+  if (!loop && u >= ss[m]) return c.z[m];
+  segOf(c, u, KF); const k = KF[0]; const j = k < m ? k + 1 : 0;
+  return c.z[k] + (c.z[j] - c.z[k]) * KF[1];
+}
