@@ -761,7 +761,7 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
   if (FILL_PROF.on) FILL_PROF.t.pre = (FILL_PROF.t.pre ?? 0) + performance.now() - tP;
   for (let ii = 0; ii < fs.items.length; ii++) {
     const it = fs.items[ii];
-    const tI = FILL_PROF.on ? performance.now() : 0;
+    const tI = FILL_PROF.on ? performance.now() : 0; let pk: string = it.kind;
     try {
     if (it.kind === "strip") {
       const N = it.N; const W = N + 1;
@@ -771,8 +771,8 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
       // gpu: recStrip2 for N >= 2 (it places every column of a strip without a table row, N < 4).
       if (gpu && N >= 2) {
         const ord = rsOrd.get(ii) ?? -1;
-        if (pl && pr && pl.pts.length >= 4 && pr.pts.length >= 4 && zc[it.pi] && zc[it.pi].n > 1 && recStrip2(it, ord, I.aSt, I.bSt, pl, pr)) continue;
-        if (ord >= 0) fbOrd.push(ord);
+        if (pl && pr && pl.pts.length >= 4 && pr.pts.length >= 4 && zc[it.pi] && zc[it.pi].n > 1 && recStrip2(it, ord, I.aSt, I.bSt, pl, pr)) { pk = ord >= 0 ? "strip:rec" : "strip:short"; continue; }
+        if (ord >= 0) { fbOrd.push(ord); pk = "strip:fb"; }
       } else if (rec && pl && pr && pl.pts.length >= 4 && pr.pts.length >= 4 && tgAt(it.pi) && recStrip(it, I.aSt, I.bSt, pl, pr)) continue;
       if (bufCL.length < 2 * W) { bufCL = new Float64Array(2 * W); bufCR = new Float64Array(2 * W); }
       // A side's border, and (cOk) its centreline feet resampled alongside.
@@ -1067,7 +1067,7 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
         }
       }
     }
-    } finally { if (FILL_PROF.on) FILL_PROF.t[it.kind] = (FILL_PROF.t[it.kind] ?? 0) + performance.now() - tI; }
+    } finally { if (FILL_PROF.on) FILL_PROF.t[pk] = (FILL_PROF.t[pk] ?? 0) + performance.now() - tI; }
   }
   // K1278 s2: tails at junctions (runs: fillRuns). A tail vertex over its
   // fan takes the fan's weights and s there (barycentric over the fan

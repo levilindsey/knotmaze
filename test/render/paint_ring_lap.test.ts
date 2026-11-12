@@ -368,6 +368,7 @@ const ROUNDED_QUOTIENTS: Record<string, [number, string]> = {
   "outline/outline_app.ts: mod(d, len)": [2, "the GPU tie band's closed-chain s difference (K1240 S4b) and the reveal footprint's copy, rvdS (K1291 s2): one off only next to a lap boundary, where the fold into (-len/2, len/2] gives the same d"],
   "outline/outline_app.ts: floor(u / float(n))": [1, "the ring reveal mask's sample wrap (K1291 s2, rvMask): one off only at a lap boundary, where u lands at -0 or n; k0 and the fraction are clamped, so both read the same ring point"],
   "outline/outline_app.ts: floor(s / L)": [1, "the reveal footprint's ring wrap (K1291 s2, rvFoot): it only seeds the binary search's start; the walk wraps both ways on folded rvdS distances, so a lap off finds the same foot"],
+  "outline/rec_glsl.ts: mod(u, L)": [1, "the fill records' closed-chain arc wrap (K1247 s19, recWrap; offsetRow's ((u % L) + L) % L): one off only at a lap boundary, where u lands at -0 or L and the segment search reads the same point (sample 0) or a continuous tiny extrapolation; GPU vs CPU checked to 0.006 px"],
 };
 
 const ROUNDERS = ["floor", "ceil", "trunc", "round", "roundEven", "fract", "mod", "int"];
