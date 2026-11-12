@@ -97,7 +97,7 @@ Under 40 lines:
 End with `Ledger items` and K1314's handle fields.
 
 
-## Handoff (s9 agent, 2026-11-12, start 06:10:15 PT, stop 07:44 PT)
+## Handoff (s9 agent, 2026-11-12, start 06:10:15 PT, stop 07:41 PT)
 
 Last commit: see `git log -1` on worktree-agent-a88e9bc054f3e16da (outline.ts work in 4cee7c5b).
 
