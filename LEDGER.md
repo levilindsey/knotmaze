@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1324.
+Next free ID: K1325.
 
 ## Waiting on Levi
 
@@ -295,7 +295,7 @@ Next free ID: K1324.
 - **K1315** · Junction under-tail ends in rp=outline: form B's round dot, or keep the outline's square end?
   K1314 group 1, 18 census finds (e.g. muse_default_tw j150, g41_user_tw64 j63/j64, x134); sheet
   `.claude/probes/K1314/out/s1/crops/sheets/broken_ink_01.png` (form B | today | rp=outline). Asked
-  2026-11-11.
+  2026-11-11. Also muse_hash j78's hard edge (5.88, 8.50): c79's open start under c33 (K1314 s6 handoff).
 - **K1319** · The K1045 open eye at muse_hash j73 in rp=outline: its ink ring closes round at the right tip,
   where form B cuts it off at an angle (form B's j73 corner takes the same far meet as j74's and never rounds
   it). Keep the round tip, or match form B? Census counts it as one stray_ink spike (262 px). Picture
@@ -808,9 +808,14 @@ Every other item below waits on the trigger it names.
 - **K1049** · Through-pass bends, DECIDED (Levi 2026-11-11: "Rounded corner", S1b/S1c's fillet); rp=outline must draw it in a K1314 fix stage: where a thread passes through a junction and bends, form B
   now draws today's sharp inner corner; S1b and S1c rounded it (`docs/design/K1040_s1d_corner.md` F2, and F6's Look
   with crops)
-- **K1322** · K1247's recStrip follows fill_tri fillFrame's per-side strip key rule (K1314 s5, f705ddd7):
-  until then the record fill (default) and oe=0 may differ at g41_ring_tw64 x67/x68. After K1314 s6
-  merges (it may change the rule again); add a test tying the record fill to fillFrame
+- **K1322** · K1247's recStrip follows fill_tri fillFrame's strip rule as of K1314 s6 (c5ba26b8: both
+  sides on one s scale, centre at the mid s, JEND_GATE keeps s5's rows at junction ends): until then the
+  record fill (default) and oe=0 may differ at g41_ring_tw64 x67/x68. After K1247 s25 merges (it owns
+  fill_tri's record code); add a test tying the record fill to fillFrame
+- **K1324** · draw.ts tieAlpha / contactPasses ties two arms of one form B junction group, so the band fades
+  ink there: specks inside the ink at def j174 (c71/c73, group 119), ring j12, g41_ring_tw42 j12,
+  g41_user_tw64 j28 (K1314 s6 handoff; crops `.claude/probes/K1314/out/s6/after4x/spot_016-019`). Make no
+  contact pass between arms of one group. After K1247 s25 merges (it owns draw.ts)
 
 ## Residuals (known, not fixed)
 
