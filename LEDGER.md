@@ -310,7 +310,7 @@ Next free ID: K1315.
   - owner: claude session 09c7a672-a414-402a-97da-b3176839a2e5
   - branch: mainline; last commit: `1fb47bd3`
   - evidence: docs/design/K1240_gate.md; .claude/probes/K1240/proto/k1310_sheet.ps1; untracked .claude/probes/K1240/out/k1310/sheet.png
-  - next: Gate written (1fb47bd3). Waiting on two answers: Levi on the crop sheet (sent 2026-11-11: which form B differences matter), and K1247 s18 on whether the fixed-record design reaches 3 ms. Then decide: resume ink (K1283) and paint (K1278), or step back on how the outline runs
+  - next: Levi answered the sheet (2026-11-11): the outline looks a little better than form B for most cases, but has plenty of unacceptable artifacts. The look bar is now zero artifacts (K1314, gate updated a72503a9). Waiting on K1247 s18 (speed verdict) and K1314 s1 (artifact count and fix plan)
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
   Levi to edit instead of drawing all 26 (Levi, 2026-10-26). Muse's prototype parked at abc135e7.
@@ -536,7 +536,7 @@ Next free ID: K1315.
   - owner: nobody since 2026-11-11 10:09 (merged; agent `ae62168490360313e` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
   - branch: mainline; last commit: `c0531aa1`
   - evidence: .claude/probes/K1240/out/k1283s11/ (untracked), .claude/probes/K1240/proto/k1283s11_*
-  - next: Stopped after stage 11 (census 4312, sweep j59 510 / j58 571, seam 5411/444, colour 26067, now the gate bars in docs/design/K1240_gate.md). Resumes only if Levi names differences on the K1310 crop sheet; then: j8/j9 wedges (per-chain cone keys in fill_tri fan), x134 black block, j59 black bars
+  - next: Stopped after stage 11. Its ink work continues as K1314 fix stages (bar: zero artifacts, not distance to form B); stage 11 numbers are regression guards in docs/design/K1240_gate.md
   - brief: `docs/design/K1283_s11.md`
 - **K1291** · rp=outline in the app (K1240 S4) lacks the app palette and hides the overlays drawn inside the
   base layer (trail, fog, reveal masks, pulses, gameplay paint); markers, plucks and the HUD still draw (S4
@@ -546,6 +546,15 @@ Next free ID: K1315.
   - evidence: `.claude/probes/K1291/`
   - next: Stage 3 merged at 00317716 (corner specks gone, rainbow head swell, main frame at s1 cost). Stage 4 waits for K1278 s3 to free outline_app/paint (junction priority): f100 corner specks (ring burn/rainbow 332, muse rainbow f85 186), rainbow colour order (outline purple-first vs today red-first), dark notch at the rainbow head (out/s3/crops/crops/muse_trace-rainbow_f50_0_front.png), threads start-marker glow, muse comet border fade (K1308), the swell over crossings behind the front
   - brief: `docs/design/K1291_s3.md`
+- **K1314** · rp=outline artifacts to zero (Levi 2026-11-11: "in general rp=outline looks a little better for
+  most cases. But there are still plenty of unacceptable artifacts"): an artifact census (stray ink, hard
+  colour edges inside fills, paper holes, broken ink) across scenes, then fix stages that drive its count to
+  0; the look gate in docs/design/K1240_gate.md
+  - owner: agent `a777f76a2eea30deb` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-11 11:18, 2 h cap ~13:18)
+  - branch: `worktree-agent-a777f76a2eea30deb`, worktree `.claude/worktrees/agent-a777f76a2eea30deb`; last commit: `a72503a9`
+  - evidence: .claude/probes/K1314/ (tools); untracked .claude/probes/K1314/out/s1/
+  - next: Stage 1: the artifact census (count per kind and scene, validated on the sheet examples, numbered crop sheets, a fix plan grouped by cause). Then fix stages drive the count to 0
+  - brief: `docs/design/K1314_s1_census.md`
 
 ## Next, in order
 
@@ -790,10 +799,6 @@ Every other item below waits on the trigger it names.
   cornerFallbackC fallbacks a frame (about 0.5 ms). K1247_s4_corners.md Handoff 1
 - **K1311** · Route bands (K81) in rp=outline's junction fans: without them pink wedges poke into the gold
   path at lit junctions, the max steps 42-51 in muse_hash and ring (K1278 s3 handoff, docs/design/K1278_s3.md)
-- **K1314** · rp=outline artifacts to zero (Levi 2026-11-11: "in general rp=outline looks a little better for
-  most cases. But there are still plenty of unacceptable artifacts"): an artifact census (stray ink, hard
-  colour edges inside fills, paper holes, broken ink) across scenes, then fix stages that drive its count to
-  0; the look gate in docs/design/K1240_gate.md
 
 ## Residuals (known, not fixed)
 
