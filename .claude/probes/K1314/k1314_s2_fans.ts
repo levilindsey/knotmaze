@@ -38,9 +38,10 @@ for (const nm of args.filter((a) => !a.startsWith("--"))) {
       const e = fb.evalPoint(x, y).ink; n++; if (e > 0.5) ink++; grid += e > 0.5 ? "#" : ".";
     if (r === 3) grid += " "; }
     const share = n ? ink / n : 1;
+    const endD = (ci: number): string => { const ch = (m.scene as unknown as { chains: { closed: boolean; pts: number[] }[] }).chains[ci]; if (!ch || ch.closed) return "closed"; const k = ch.pts.length; return Math.min(Math.hypot(ch.pts[0] - c.Vx, ch.pts[1] - c.Vy), Math.hypot(ch.pts[k - 2] - c.Vx, ch.pts[k - 1] - c.Vy)).toFixed(2); };
     const key = `${c.ok ? "ok" : "failed"}${c.ok ? "" : " " + (c.why ?? "")}`;
     const tv = tally.get(key) ?? [0, 0]; tv[0]++; if (n >= 4 && share < 0.5) tv[1]++; tally.set(key, tv);
-    if (all || (n >= 4 && share < 0.5)) console.log(`${nm} piece ${pi} corner ${p.corner} ${c.junction} a${c.aChain} b${c.bChain} ${key} th ${c.theta.toFixed(2)} sweep ${((da * 180) / Math.PI).toFixed(0)} V (${qx.toFixed(3)},${qy.toFixed(3)}) uncovered ${n}/28 formB ${share.toFixed(2)} ${grid}`);
+    if (all || (n >= 4 && share < 0.5)) console.log(`${nm} piece ${pi} corner ${p.corner} ${c.junction} a${c.aChain} b${c.bChain} ${key} th ${c.theta.toFixed(2)} sweep ${((da * 180) / Math.PI).toFixed(0)} V (${qx.toFixed(3)},${qy.toFixed(3)}) uncovered ${n}/28 formB ${share.toFixed(2)} ends a ${endD(c.aChain)} b ${endD(c.bChain)} ${grid}`);
   });
   for (const [k, [a, b]] of tally) console.log(`${nm} ${k}: fans ${a}, unlinked by form B ${b}`);
 }

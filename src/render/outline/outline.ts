@@ -7156,6 +7156,14 @@ const RUN_END_FADE = true;
 const RUN_FADE_L = 3;
 /** K1283 s11: the fade at a failed corner whose end arm is B (s9 faded A's only). */
 const RUN_FADE_B = true;
+/** K1314 s2: no fade at a corner whose sector is near straight or reflex (theta
+ *  at least 3 pi / 4). There E's border carries on from X's with no corner
+ *  between them, the union's border, which form B inks: at all six such
+ *  corners of the census scenes (ring and g41_ring_tw42 j12, def j174,
+ *  g41_user_tw64 j4, j27, j28: theta 3.09..3.68) form B inks every faded
+ *  sample, while every fade it agrees with sits at theta 2.14 or less. A
+ *  tied run's band reads the fade since s2 (draw.ts), which showed it. */
+const RUN_FADE_TH = 0.75 * Math.PI;
 function runEndFade(a: TailIn, p: OutlinePiece, atEnd: boolean): void {
   const np = p.pts.length / 2;
   if (np < 2 || p.kind !== "run") return;
@@ -7378,7 +7386,7 @@ function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[])
           zE: (s) => depthAtC(C, piE, s, depthWin), zX: (s) => depthAtC(C, piX, s, depthWin), h: C.h, zt: 0.1 * C.depthAmp, W: C.W,
         };
         endTailPts(tin, pts, cpts, alpha, fill);
-        if (RUN_END_FADE && (RUN_FADE_B || !dp.interval) && !C.cOk[ci]) runFade.push({ a: tin, key: aiE * 2 + (sideE === 1 ? 0 : 1) });
+        if (RUN_END_FADE && (RUN_FADE_B || !dp.interval) && !C.cOk[ci] && C.cTheta[ci] < RUN_FADE_TH) runFade.push({ a: tin, key: aiE * 2 + (sideE === 1 ? 0 : 1) });
       }
       pieces.push({ kind: "tail", chain: dp.chain, side: sideE, s0: sT, s1: sT, pts, cpts, region: -1, corner: ci, alpha, fpts: fill.pts, fcpts: fill.cpts });
     } else {
