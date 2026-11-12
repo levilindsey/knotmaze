@@ -124,7 +124,10 @@ export function bandRec(table: OutlineTable, scene: SceneIn, zz: ZZ, lay: BandLa
     if (p.di === undefined || p.di < 0 || p.di >= nD) { if (stats) stats.unkeyed++; return null; }
     if ((p.kind === "run" || p.kind === "ghost") && p.chain >= 0 && p.chain < zc.length && passes[p.chain].length > 0 && (p.side === 1 || p.side === -1)) {
       const C = zc[p.chain]; let dS = p.s1 - p.s0; if (C.closed && C.len > 0 && dS <= 0) dS += C.len;
-      if (dS > 0 && recSideOk(C, T, p.chain, p.s0, dS, lay.cap[p.di], p.side)) { useR[pi] = 1; continue; }
+      // An open chain's run past an end (s outside [0, len], the end's straight extension) keeps today's points:
+      // colAt clamps s to the chain, so its records would cut the extension to a chord.
+      const inside = C.closed || (p.s0 >= -1e-6 && p.s0 + dS <= C.len + 1e-6);
+      if (dS > 0 && inside && recSideOk(C, T, p.chain, p.s0, dS, lay.cap[p.di], p.side)) { useR[pi] = 1; continue; }
     }
     if (np - 1 > lay.cap[p.di] && stats) { stats.over++; stats.lastOver = `${p.kind} d${p.di} c${p.chain} np ${np} cap ${lay.cap[p.di]} alpha ${p.alpha ? 1 : 0} s ${p.s0.toFixed(2)}..${p.s1.toFixed(2)}`; }
   }
