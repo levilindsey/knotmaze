@@ -85,9 +85,9 @@ Under 40 lines:
 
 End with `Ledger items` and K1247's handle fields.
 
-## Handoff (stage 25, 2026-11-12; start 02:17:50, stop 03:41)
+## Handoff (stage 25, 2026-11-12; start 02:17:50, stop 03:38)
 
-Done 1-5 hold; Done 6 not started. Stopped because Done held (1 h 23 min in).
+Done 1-5 hold; Done 6 not started. Stopped because Done held (1 h 20 min in).
 
 - **The pass.** `BAND_QUAD_VS` (band_place.ts) runs one TF invocation per quad: each column placed once at
   both widths, the slot loop once, five interleaved vec4s out (qO, qI, qS, qM, qL; mode 2 record, 1
