@@ -7,14 +7,16 @@
 import { readdirSync, readFileSync, writeFileSync, mkdtempSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { alignJunctionArms, frame, structure, type SceneIn } from "../../../src/render/outline/outline";
+import { OB_DI, alignJunctionArms, frame, structure, type SceneIn } from "../../../src/render/outline/outline";
 import { zChains } from "../../../src/render/outline/draw";
 import { BandRecState } from "../../../src/render/outline/band_rec";
+import { bandGpu } from "../../../src/render/outline/band_gpu";
 import { BAND_PLACE_OUT, BAND_PLACE_STRIDE, BAND_PLACE_VS } from "../../../src/render/outline/band_place";
 
 const args = process.argv.slice(2).filter((a) => !a.startsWith("--"));
 const opt = (k: string, d: string): string => (process.argv.find((a) => a.startsWith(`--${k}=`)) ?? `--${k}=${d}`).split("=")[1];
-const dir = args[0]; const EVERY = Number(opt("every", "1")); const OUT = opt("out", "");
+const dir = args[0]; const EVERY = Number(opt("every", "1")); const OUT = opt("out", ""); const DBG = opt("dbg", "").split(":").map(Number); const ONLY = opt("only", "");
+OB_DI.on = true;
 const files = readdirSync(dir).filter((f) => /^f\d+\.json$/.test(f)).sort();
 const scenes: SceneIn[] = files.map((f) => { const s = JSON.parse(readFileSync(join(dir, f), "utf8")); s.look.ctrlArc ??= 0.47; return s; });
 const px = scenes[0].camera.pxPerUnit * (scenes[0].camera.dpr || 1);
@@ -26,8 +28,41 @@ const browser = await puppeteer.launch({ executablePath: "C:/Program Files/Googl
 const qs = (a: number[]): string => { if (!a.length) return "-"; const s = [...a].sort((x, y) => x - y); const q = (p: number): number => s[Math.min(s.length - 1, Math.floor(p * s.length))]; return `p50 ${q(0.5).toExponential(2)} p99 ${q(0.99).toExponential(2)} max ${s[s.length - 1].toExponential(2)}`; };
 const dP: number[] = []; const dS: number[] = []; const dZ: number[] = []; let badA = 0; let badCh = 0; let badSl = 0; let nQ = 0; let padBad = 0; let dropped = 0; let nFr = 0; let gpuName = "";
 const worst: { f: number; x: number; y: number; d: number; piece: number; how: number }[] = [];
-try {
-  const page = await browser.newPage();
+// s22's fidelity (k1247s22_rec.ts): per piece, the max over both polylines' vertices, both ways, of the
+// point-to-polyline distance between today's band (bandGpu) and a placement, px at ppu 40.
+const dPoly = (x: number, y: number, P: ArrayLike<number>, n: number): number => {
+  let best = Infinity;
+  for (let i = 0; i + 1 < n; i++) {
+    const ax = P[2 * i]; const ay = P[2 * i + 1]; const ex = P[2 * i + 2] - ax; const ey = P[2 * i + 3] - ay; const l2 = ex * ex + ey * ey;
+    const u = l2 > 0 ? Math.max(0, Math.min(1, ((x - ax) * ex + (y - ay) * ey) / l2)) : 0;
+    const dx = ax + u * ex - x; const dy = ay + u * ey - y; const d = dx * dx + dy * dy; if (d < best) best = d;
+  }
+  if (n === 1) best = (P[0] - x) ** 2 + (P[1] - y) ** 2;
+  return Math.sqrt(best);
+};
+const fidG: number[] = []; const fidC: number[] = []; const fWorst: { f: number; d: number; g: number; c: number; kind: string; chain: number; x: number; y: number }[] = [];
+const fid = (f: number, lay: { off: Int32Array | number[]; cap: Int32Array | number[]; used: Int32Array | number[]; how: Uint8Array | number[] }, tb: ReturnType<typeof frame>, today: { pos: Float32Array }, G: (v: number, k: number) => number, C: (v: number, k: number) => number): void => {
+  let qG = 0;
+  for (const p of tb.pieces) {
+    const np = p.pts.length / 2; if (np < 2) continue;
+    const q0 = qG; qG += np - 1; const d = p.di as number; if (lay.how[d] !== 1) continue;
+    const TO = new Float64Array(2 * np); const TI = new Float64Array(2 * np);
+    for (let i = 0; i < np - 1; i++) { const w = 6 * (q0 + i); TO[2 * i] = today.pos[2 * w]; TO[2 * i + 1] = today.pos[2 * w + 1]; TI[2 * i] = today.pos[2 * (w + 2)]; TI[2 * i + 1] = today.pos[2 * (w + 2) + 1]; }
+    { const w = 6 * (q0 + np - 2); TO[2 * np - 2] = today.pos[2 * (w + 1)]; TO[2 * np - 1] = today.pos[2 * (w + 1) + 1]; TI[2 * np - 2] = today.pos[2 * (w + 4)]; TI[2 * np - 1] = today.pos[2 * (w + 4) + 1]; }
+    const one = (P: (v: number, k: number) => number): [number, number, number] => {
+      const RO: number[] = []; const RI: number[] = []; const vo = 6 * lay.off[d];
+      for (let i = 0; i < Math.min(lay.cap[d], lay.used[d]); i++) { const w = vo + 6 * i; if (i === 0) { RO.push(P(w, 0), P(w, 1)); RI.push(P(w + 2, 0), P(w + 2, 1)); } RO.push(P(w + 1, 0), P(w + 1, 1)); RI.push(P(w + 4, 0), P(w + 4, 1)); }
+      const nr = RO.length / 2; let e = 0; let ex = 0; let ey = 0; const upd = (dd: number, x: number, y: number): void => { if (dd > e) { e = dd; ex = x; ey = y; } };
+      for (let i = 0; i < nr; i++) { upd(dPoly(RO[2 * i], RO[2 * i + 1], TO, np), RO[2 * i], RO[2 * i + 1]); upd(dPoly(RI[2 * i], RI[2 * i + 1], TI, np), RI[2 * i], RI[2 * i + 1]); }
+      for (let i = 0; i < np; i++) { upd(dPoly(TO[2 * i], TO[2 * i + 1], RO, nr), TO[2 * i], TO[2 * i + 1]); upd(dPoly(TI[2 * i], TI[2 * i + 1], RI, nr), TI[2 * i], TI[2 * i + 1]); }
+      return [e * 40, ex, ey];
+    };
+    const g = one(G); const c = one(C); fidG.push(g[0]); fidC.push(c[0]);
+    if (g[0] > 0.1) fWorst.push({ f, d, g: g[0], c: c[0], kind: p.kind, chain: p.chain, x: g[1], y: g[2] });
+  }
+};
+const fq = (a: number[]): string => { const s = [...a].sort((x, y) => x - y); const q = (p: number): number => s[Math.min(s.length - 1, Math.floor(p * s.length))]; return `p50 ${q(0.5).toFixed(4)} p99 ${q(0.99).toFixed(3)} max ${q(1).toFixed(3)}, > 0.25 px ${a.filter((x) => x > 0.25).length} of ${a.length}`; };
+try {  const page = await browser.newPage();
   await page.evaluate((VS: string, OUTV: string[]) => {
     const cv = document.createElement("canvas"); const gl = cv.getContext("webgl2")!;
     const sh = (t: number, s: string): WebGLShader => { const o = gl.createShader(t)!; gl.shaderSource(o, s); gl.compileShader(o); if (!gl.getShaderParameter(o, gl.COMPILE_STATUS)) throw new Error(String(gl.getShaderInfoLog(o))); return o; };
@@ -40,7 +75,7 @@ try {
     const sc = f === 0 ? scenes[0] : alignJunctionArms(st, scenes[f]); const zz = zChains(sc);
     const c = SC.band(st, frame(st, sc), sc, zz); const layC = SC.lay!;
     const g = SG.band(st, frame(st, sc), sc, zz); const R = g.rec!;
-    if (f % EVERY !== 0) continue;
+    if (f % EVERY !== 0 || (ONLY !== "" && f !== Number(ONLY))) continue;
     nFr++; dropped += c.dropped;
     const D = { CT: Array.from(g.chainTex), CI: Array.from(g.chainInfo), PS: Array.from(g.passTex), TB: Array.from(R.tab), FB: Array.from(R.fb), SL: Array.from(R.fbSl), PF: Array.from(R.pf), nD: R.nD, h: g.h, W: g.W, n: g.count };
     const out = await page.evaluate((D: Record<string, number[] | number>, STR: number) => {
@@ -71,6 +106,7 @@ try {
     gpuName = out.gpu; if (out.err) console.log(`frame ${f}: glError ${out.err}`);
     const U = new Uint32Array(out.raw); const Fv = new Float32Array(U.buffer); const Iv = new Int32Array(U.buffer); const S = BAND_PLACE_STRIDE;
     if (c.count !== g.count) console.log(`frame ${f}: count ${c.count} vs ${g.count}`);
+    { const tb = frame(st, sc); const today = bandGpu(tb, sc, zz); fid(f, layC, tb, today, (v, k) => Fv[S * v + k], (v, k) => c.pos[2 * v + k]); }
     for (let d = 0; d < layC.off.length; d++) {
       const q0 = layC.off[d]; const used = layC.used[d]; const cap = layC.cap[d];
       for (let q = q0; q < q0 + cap; q++) {
@@ -92,7 +128,8 @@ try {
           if (Iv[o + 6] !== c.chain[v]) badCh++;
           for (let j = 0; j < 4; j++) if (Iv[o + 7 + j] !== c.slots[4 * v + j]) qBad = true;
         }
-        if (qBad) badSl++;
+        if (qBad) { badSl++; if (DBG.length === 2) console.log(`slots f${f} d${d} q${q - q0}: gpu ${[0, 1, 2, 3].map((j) => Iv[S * 6 * q + 7 + j]).join(",")} cpu ${[0, 1, 2, 3].map((j) => c.slots[24 * q + j]).join(",")}`); }
+        if (DBG.length === 2 && DBG[0] === f && DBG[1] === d) { const e = [0, 1, 2, 3, 4, 5].map((k) => Math.hypot(Fv[S * (6 * q + k)] - c.pos[2 * (6 * q + k)], Fv[S * (6 * q + k) + 1] - c.pos[2 * (6 * q + k) + 1]) * px); console.log(`q${q - q0}/${used} err ${e.map((x) => x.toFixed(2)).join(" ")} s cpu ${c.attr[24 * q].toFixed(4)} gpu ${Fv[S * 6 * q + 2].toFixed(4)}`); }
       }
     }
   }
@@ -104,4 +141,7 @@ console.log(`${dir}: ${nFr} frames on ${gpuName}; ${nQ} used quads`);
 console.log(`device px GPU vs CPU ${qs(dP)}; |s| ${qs(dS)}; |z| ${qs(dZ)}`);
 console.log(`dC/alpha mismatches ${badA}; chain mismatches ${badCh}; quads with other slots ${badSl} (CPU quads past BAND_SLOTS ${dropped}); padding quads with area ${padBad}`);
 console.log(`worst: ${worst.slice(0, 5).map((w) => `f${w.f} d${w.piece}(how ${w.how}) ${w.d.toFixed(3)} at (${w.x.toFixed(2)}, ${w.y.toFixed(2)})`).join("; ")}`);
-if (OUT) writeFileSync(OUT, JSON.stringify({ dir, frames: nFr, quads: nQ, px: qs(dP), s: qs(dS), z: qs(dZ), badA, badCh, badSl, dropped, padBad, worst }));
+fWorst.sort((a, b) => b.g - a.g);
+console.log(`fidelity vs today (ppu 40), GPU: ${fq(fidG)}; CPU records: ${fq(fidC)}`);
+console.log(`fid worst: ${fWorst.slice(0, 6).map((w) => `f${w.f} ${w.kind} c${w.chain} d${w.d} (${w.x.toFixed(2)},${w.y.toFixed(2)}) gpu ${w.g.toFixed(3)} cpu ${w.c.toFixed(3)}`).join("; ")}`);
+if (OUT) writeFileSync(OUT, JSON.stringify({ fWorst: fWorst.slice(0, 100),  dir, frames: nFr, quads: nQ, px: qs(dP), s: qs(dS), z: qs(dZ), badA, badCh, badSl, dropped, padBad, worst }));
