@@ -83,6 +83,14 @@ const TAIL_FOOT = true;
 /** K1283 s9: every strip vertex paints its foot's s (see the strip item),
  *  taken every FOOT_STEP columns and interpolated between. */
 const STRIP_FOOT = true;
+/** K1314 s6: mirror a consumed border on the matched s scale (see the strip
+ *  item). Off: it clears g41_user_tw64 j71 but the mirrored tube then lies
+ *  under the junction fill of another arm keyed above its border (muse_hash
+ *  j56: c66's fill at -0.056 over c22's mirrored border at -0.093, where
+ *  form B unions the group and paints c22), a colour step inside the ink:
+ *  7 hard edges on muse_hash, 1 on g41_user_tw64, 4 paper spots. On needs
+ *  that junction fill to yield to an arm's own tube first. */
+const MATCH_MIRROR = false;
 const FOOT_STEP = 8;
 
 type FootChain = Parameters<typeof footNear>[0];
@@ -891,15 +899,15 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
       };
       if (!okL && okR) { if (cOkR) mirror(bufR, bufCR, bufL); else bufL.set(bufR.subarray(0, 2 * W)); okL = true; fallbacks++; }
       if (!okR && okL) { if (cOkL) mirror(bufL, bufCL, bufR); else bufR.set(bufL.subarray(0, 2 * W)); okR = true; fallbacks++; }
-      // K1314 s6: on the matched s scale, a column past one side's own piece
-      // (its border consumed by a crossing or a junction corner there) but
-      // within the other's is the other side mirrored across the centreline,
-      // not the consumed side's end point held: held, the columns fan from
-      // that one point into a skewed wedge (g41_user_tw64 j71). Only where
-      // the column's s lies on the chain: past an open chain's end the strip
-      // would run out over the junction's other arms, keyed below their cone
+      // K1314 s6 (OFF, MATCH_MIRROR): on the matched s scale, a column past
+      // one side's own piece (its border consumed by a junction corner or a
+      // crossing) but within the other's is the other side mirrored across
+      // the centreline, not the consumed side's end point held: held, the
+      // columns fan from that one point (g41_user_tw64 j71's wedge, which the
+      // mirror clears). Only where the column's s lies on the chain: past an
+      // open chain's end the strip ran out over the junction's other arms
       // (muse_hash j126, c55 over c68).
-      const mirOn = spL !== null && spR !== null && okL && okR;
+      const mirOn = MATCH_MIRROR && spL !== null && spR !== null && okL && okR;
       const onChain = (i: number): boolean => {
         if (!cz || cz.closed) return true;
         const s = mU0 + (mUl * i) / N; return s >= 0 && s <= cz.len;
