@@ -94,3 +94,44 @@ Under 40 lines:
 - your last SHA.
 
 End with `Ledger items` and K1314's handle fields.
+
+## Handoff (stage 8 agent, 2026-11-12)
+
+Start 2026-11-12 04:40:02 -08:00, stop 2026-11-12 06:02:13 -08:00 (Done items run; not the cap).
+
+**Landed** (f1dc5408 rules, 0c021be2 re-pin), all in `outline.ts` `cutFoldsC`:
+- **Near-root bends are cut** (muse_hash j55 105 px, j58b 41 px -> 0). K1283 s5 left every bend within h of an
+  arm root uncut. Now it stays uncut only when it also lies within h of an open end (`atEnd`), which keeps
+  x300 and c8's end as on master.
+- **End-fold chord normal faces the end's centre** (muse_hash x15's inner step; crop `out/s8/after_x15`).
+  The flip comes after s7's `foldNormal` calls.
+- Census s8f vs master s8m: stray 11 -> 9, hard 1, paper 0, broken 13, k1049 0. Nothing new. Only j55 and j58b moved.
+- outline_port re-pinned: ring table, paint and band (f0, f1); g41_ring_tw42 table (f0, f1). Goldens unchanged.
+- Bench, two ABBA rounds on def, worker `frame` p50: master 61.8, 61.3, 65.6, 58.2 (mean 61.7); s8 66.4, 63.4,
+  66.0, 68.3 (mean 66.0). That is +4.3 ms, inside master's 7.4 ms spread, but s8 is higher in 15 of 16 pairs.
+  Probably real: the bends that now reach the cut search. Not attributed.
+
+**Tried and dropped** (8b1da324 has them EXP-gated):
+- **ha/hb.** A fold leg running into an arm root within W takes the other leg's normal. It removed j58a's
+  67 px but added j49 679 px (a black stroke across c75's fill), j58 142 px and j38 52 px.
+- **gk.** No ghost pieces at self-crossings. It cleared x22's smear in the crop but took muse_hash stray 8 -> 39 and
+  paper 0 -> 61, because those ghosts carry real under-pass border.
+
+**Left:**
+- **muse_hash j58a** (67 px). The fold's second leg runs into c43's arm root, and its band, with feet along its
+  own normal, crosses the first leg's band. Needs a rule narrower than ha/hb (only the leg inside the
+  junction's covered area?).
+- **muse_hash x22.** The ghost is drawn at form B's tie alpha, and at a twist eye the depth tents cancel, so
+  the keys tie and the ghost half fades in. Form B smears too. The fix belongs in the tie or the ghost's alpha
+  at kinks (draw.ts tieAlpha is K1247's), not in dropping ghosts.
+- **g41_user_tw64 j71.** The shade ends in a hard diagonal: run 461's start under c32's end arm. Not attempted.
+- **muse_hash c8's end.** c8's fill strip owns c67's area near the end, giving the hard quad with a stair edge.
+  The quad is a little lighter at f1dc5408 and still hard-edged. It is fill ownership (fill_tri), not folds.
+- x304 and g41_user_tw64 j30 stay form B flaws (crops 012 and 013).
+
+**Crops** in `.claude/probes/K1314/out/s8/`:
+- `before`/`after` (360 px, 5 h) and `before4x`/`after4x` (480 px, 1.25 h) for 13 spots
+  (`out/s8_spots.txt`): j58a, j58b, j55, x22, j71shade, c8end, x15, x300, j56, c1start, c1end, x304, j30.
+- `x15b`/`after_x15` for the x15 step.
+- `before_new`/`new`: ha/hb's finds.
+- `after_x22`: x22's find.
