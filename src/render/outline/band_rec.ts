@@ -64,6 +64,11 @@ const EF_TOL = 2.5e-5;
 // 0.007-unit last segment).
 const EF_OFF = 2.5e-3;
 const REC_ADD = 2; const SLACK = 1.25; const SLACK_ADD = 4; const ABSENT_RUN = 8; const ABSENT_ARC = 24;
+// K1247 s23: a present arc's floor, 24 (ABSENT_ARC) before: arcs used 19.9k of their 62k vertices on def, 15.4k of 52k
+// on muse_hash. 12 decimates none on def, fat or muse_hash and saves 24k / 22k vertices; 0 decimated 5 on def.
+// (Trimming the runs widened at creation instead, 1.25 q0 + 4 -> 1.15 q0 + 4, saved 8.7k on muse_hash and
+// doubled its decimated pieces, 7 -> 15; 1.1 q0 + 2: 16k, 41.)
+const ARC_FLOOR = 12;
 
 /** The layout for a structure from one frame's table, keeping an older layout's capacities as floors. */
 export function bandLayout(st: { piecesD: readonly { kind: string }[] }, table: OutlineTable, old: BandLayout | null = null, widen: Uint8Array | null = null): BandLayout {
@@ -76,7 +81,7 @@ export function bandLayout(st: { piecesD: readonly { kind: string }[] }, table: 
     const rk = k === "run" || k === "ghost";
     const grown = (old !== null && old.st === st && d < old.cap.length && q0[d] > old.cap[d]) || (widen !== null && widen[d] === 1);
     let c = q0[d] >= 1 ? (rk && !grown ? q0[d] + REC_ADD : Math.ceil(q0[d] * SLACK) + SLACK_ADD) : k === "arc" ? ABSENT_ARC : ABSENT_RUN;
-    if (k === "arc") c = Math.max(c, ABSENT_ARC);
+    if (k === "arc") c = Math.max(c, ARC_FLOOR);
     if (old && old.st === st && d < old.cap.length) c = Math.max(c, old.cap[d]);
     off[d] = Q; cap[d] = c; Q += c;
   }
