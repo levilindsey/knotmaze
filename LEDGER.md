@@ -261,14 +261,14 @@ Next free ID: K1314.
 - **K809** · Panel search on your phone (K793): typing in the box must not jump or zoom the maze, the
   keyboard must not cover the box, results scroll under the sticky bar, and Enter closes the keyboard
   and outlines the best row (an inferred risk, not seen; `docs/design/K793.md`)
-- **K1045** · Junction eyes, by look at K1040 S4b: where two junctions sit close, their threads close in a
+- **K1045** · Junction eyes, by look (K1040 S4b was dropped for K1240; asked again 2026-11-11): where two junctions sit close, their threads close in a
   small eye of paper. Form B leaves a dot about 0.16 across, today's look a thin lens (0.67 x 0.12), or it
-  could be covered (`docs/design/K1040_s1b_holes_fades.md` F1). Nothing to look at before S4b. The outline
+  could be covered (`docs/design/K1040_s1b_holes_fades.md` F1). The outline
   (rp=outline) closes them: muse_hash j74/j73, form B an open bordered eye, the outline two black flecks
   (`.claude/probes/K1240/out/k1283s7/crops/colour10.png` rows 1-2, form B | master | after).
-- **K1049** · Through-pass bends, by look at K1040 S4b: where a thread passes through a junction and bends, form B
+- **K1049** · Through-pass bends, by look (K1040 S4b was dropped; asked again 2026-11-11): where a thread passes through a junction and bends, form B
   now draws today's sharp inner corner; S1b and S1c rounded it (`docs/design/K1040_s1d_corner.md` F2, and F6's Look
-  with crops). Nothing to look at before S4b.
+  with crops). Recommended: keep sharp (form B and today agree)
 - **K1075** · K137 sounds unchecked: the snap pluck and the strand glissando need an ear (left by K658; K658
   doc Findings filed).
 - **K1080** · On the phone, zoom in and out and tap threads and junction choices: do the tap targets feel
@@ -300,13 +300,17 @@ Next free ID: K1314.
   (his K928 plan: finish iterating, then hand-edit, then the pipeline reads his curves as drawn), or more look
   notes first? Every note so far is built (K1251). Sheets: .claude/probes/K863/trace/out38/png/; J3NV has no
   template SVG yet (out34/cursive_template.svg shows the export).
+
+## In progress
+
 - **K1310** · Redesign course check (assessment 2026-11-11): (1) write the gate for making rp=outline the
   default; (2) a crop sheet, outline vs form B at the worst spots, so Levi says which differences still
   matter; (3) put speed first: the worker frame on def is ~120-185 ms during a drag vs K1247's 3 ms target;
   (4) pause K1283 after s11 until (2) is answered
-
-## In progress
-
+  - owner: claude session 09c7a672-a414-402a-97da-b3176839a2e5
+  - branch: mainline; last commit: `1fb47bd3`
+  - evidence: docs/design/K1240_gate.md; .claude/probes/K1240/proto/k1310_sheet.ps1; untracked .claude/probes/K1240/out/k1310/sheet.png
+  - next: Gate written (1fb47bd3). Waiting on two answers: Levi on the crop sheet (sent 2026-11-11: which form B differences matter), and K1247 s18 on whether the fixed-record design reaches 3 ms. Then decide: resume ink (K1283) and paint (K1278), or step back on how the outline runs
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
   Levi to edit instead of drawing all 26 (Levi, 2026-10-26). Muse's prototype parked at abc135e7.
@@ -513,18 +517,18 @@ Next free ID: K1314.
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: nobody since 2026-11-10 15:10 (merged; agent `a45a644b0bf24dfee` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `f5761d43`
-  - evidence: .claude/probes/K1240/proto/ (outline.ts, k1247s17_* tools); .claude/probes/K1240/out/s17/ (untracked)
-  - next: Stage 17 merged: junction arms matched to frame 0's order by edge identity (K17_JA) and chain buffers with room to double (K17_CAP); jumps def 18 -> 15, muse_hash 34 -> 17, fat 0; every bar equals master's (no change at rest). The continuity work left (corner foot, j176, j35, muse_hash's places, K1288) is K1281's. Speed: K1290's forward placement made it slower (not adopted). The outline now runs in the app's outline worker (K1240 S4b, 8d56f5c0): 117 ms p50 a def frame (frame 34, zChains 17, fill 21, paint 5, band 38), and that sets how far the outline lags the physics. Next cuts in src/render/outline/: the band's foot search and slots, zChains, the fill, or a second worker for the draw data; after K1283 and K1278 stage 2 free those files
-  - brief: `docs/design/K1247_s17_feet.md`
+  - owner: agent `a386181a3c29cd603` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-11 11:08, 2 h cap ~13:08)
+  - branch: `worktree-agent-a386181a3c29cd603`, worktree `.claude/worktrees/agent-a386181a3c29cd603`; last commit: `1fb47bd3`
+  - evidence: .claude/probes/K1247/ (tools); untracked .claude/probes/K1247/out/s18/
+  - next: Stage 18 (fixed records evaluated per frame, the fill ported behind a switch): a measured verdict on whether the moved frame reaches 3 ms on def (gate K1240_gate.md); the step-back question Levi asked 2026-11-11 turns on it
+  - brief: `docs/design/K1247_s18_records.md`
 - **K1278** · The outline's paint blends seamlessly across junctions (Levi 2026-11-10): section colour and pulses
   from per-pixel fields continuous across faces, triangles and junctions, gated by a seam test on every
   face edge, triangle edge and junction. Full text in docs/ledger_notes.md
   - owner: nobody since 2026-11-11 09:42 (agent `a0e0c69694779aaec` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-11 07:56, 2 h cap ~09:56); stage 3 done on its branch, not merged: fails the main frame (+4.3 ms fill at rest, 9.9 vs 5.8 ms) and worker (+14%) guards)
   - branch: worktree-agent-a0e0c69694779aaec, worktree C:\Users\lsl\Repositories\knotmaze\.claude\worktrees\agent-a0e0c69694779aaec; last commit: `4b1025cc`
   - evidence: .claude/probes/K1278/k1278s3_seam.mjs, k1278s3_guards.ps1; untracked .claude/probes/K1278/out/s3/ in that worktree (seam.json, crops/, guards/)
-  - next: Stage 3 (per-pixel fan feet) halves junction steps vs today (def 8593 -> 3155 over 1 level, muse_hash 7233 -> 3091) but costs +4.3 ms fill at rest (search walk ~half; FAN_FOOT_R 1 gives 7.7 ms, look unmeasured) and the worker read +14% (unattributed). Stage 4: cut that cost (smaller radius with the seam test re-run, start index per vertex, or feet per fan vertex on the worker), re-run k1278s3_guards.ps1, then merge. Held pending K1310.
+  - next: Held: stage 3 (4b1025cc, branch) halves junction steps but fails the speed guards (+4.3 ms main, +14% worker). Waits on K1247 s18: if the outline moves to fixed records evaluated per frame, the fan feet move with it, so stage 4 is re-scoped then
   - brief: `docs/design/K1278_s3.md`
 - **K1283** · Junction borders of the outline (rp=outline) against form B. Stage 1 (3c8bd61e) fixed the concave
   corner bites (census 27528 -> 17756 px); left: the failed corners and the end-arm round ends (x47, x73,
@@ -532,7 +536,7 @@ Next free ID: K1314.
   - owner: nobody since 2026-11-11 10:09 (merged; agent `ae62168490360313e` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
   - branch: mainline; last commit: `c0531aa1`
   - evidence: .claude/probes/K1240/out/k1283s11/ (untracked), .claude/probes/K1240/proto/k1283s11_*
-  - next: Stage 11 merged: tied runs fade into their tails (RUN_FADE_B, CONTACT_PASSES, band_gpu nearest-partner slots); census 4400 -> 4312, sweep 77 better / 0 worse (j59 730 -> 510), seam 5411/444 held, worker +1.5%, main frame +0.1 ms. PAUSED pending K1310 (Levi: is the remaining difference from form B worth more stages?). If resumed: j8/j9 wedges need per-chain cone keys in fill_tri's junction fan (each arm has one fixed colour now); x134 still ends harder than form B (54.9); the colour bar re-baselines to master 25875 (s11 26067, +193 visible round-end px, error per px down) with today's tool
+  - next: Stopped after stage 11 (census 4312, sweep j59 510 / j58 571, seam 5411/444, colour 26067, now the gate bars in docs/design/K1240_gate.md). Resumes only if Levi names differences on the K1310 crop sheet; then: j8/j9 wedges (per-chain cone keys in fill_tri fan), x134 black block, j59 black bars
   - brief: `docs/design/K1283_s11.md`
 - **K1291** · rp=outline in the app (K1240 S4) lacks the app palette and hides the overlays drawn inside the
   base layer (trail, fog, reveal masks, pulses, gameplay paint); markers, plucks and the HUD still draw (S4
