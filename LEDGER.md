@@ -546,10 +546,10 @@ Next free ID: K1318.
   most cases. But there are still plenty of unacceptable artifacts"): an artifact census (stray ink, hard
   colour edges inside fills, paper holes, broken ink) across scenes, then fix stages that drive its count to
   0; the look gate in docs/design/K1240_gate.md
-  - owner: agent `ae44cdbece648f3d2` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-11 12:43, 2 h cap ~14:43)
-  - branch: `worktree-agent-ae44cdbece648f3d2`, worktree `.claude/worktrees/agent-ae44cdbece648f3d2`; last commit: `27d4c722`
+  - owner: nobody since 2026-11-11 14:23 (merged; agent `ae44cdbece648f3d2` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `3db1e8fb`
   - evidence: .claude/probes/K1314/ (census tools); untracked .claude/probes/K1314/out/s1/ (census s1d, crop sheets), out/s2/
-  - next: s2 running: stray ink spikes in the band (19) to 0; then K1049 rounded corners (14) + K1045 open eyes (2 spots), hard colour wedges (4), junction tail ends (18, waits on Levi), detector debts (x134 end shape, hairline arm-root cracks)
+  - next: s3: port the tied alpha to band_gpu.ts, then the K1049 rounded corners and K1045 open eyes (brief to come)
   - brief: `docs/design/K1314_s2_spikes.md`
 
 ## Next, in order
