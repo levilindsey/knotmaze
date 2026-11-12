@@ -226,9 +226,10 @@ tag together with the version.
 
 ## Roadmap status — what's next (updated 2026-10-10, after P4 Stage 25)
 
-**Priority (Levi, 2026-11-04): "perfecting all junction and cursive work
-is always my main priority".** Agents and Muse batches go to the
-junction lanes (K1040, K1139) and the cursive lanes (K863, K1112) first.
+**Priority (Levi, 2026-11-11): "Junctions and outlines are the true
+priority"; cursive is paused.** Agents and Muse batches go to the
+junction and outline lanes (K1240 and its lanes, K1139) first; the
+cursive lanes (K863, K1112) wait until Levi resumes them.
 
 **P0–P3 done** (their saga lives in the Follow-ups of `docs/history.md`;
 the bounded post-VIOLENT-play loud attractor at fat params remains the

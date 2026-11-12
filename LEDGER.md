@@ -310,7 +310,7 @@ Next free ID: K1314.
 - **K863** · Cursive clean slate: trace a real school model's lowercase (Playwrite US Trad, OFL;
   credit it in `notices/credits.ts` if traced data ships) into `cursive_template.svg`'s format, for
   Levi to edit instead of drawing all 26 (Levi, 2026-10-26). Muse's prototype parked at abc135e7.
-  - owner: nobody since 2026-11-09 17:40: J3n done, Levi picked its variant (K1251); no stage running
+  - owner: nobody since 2026-11-11 11:01 (Levi 2026-11-11: cursive paused, junctions and outlines are the true priority)
   - branch: mainline; last commit: `15cb9922`
   - evidence: kit .claude/probes/K863/trace/work38/ (tools, cand/J3NV = the kit's build, spec k863n_var2.json, NOTES_k863n.md, crops/v2_*), out38/png/ (sheets: font | v6.8 | J3M | J3n | variant), NOTES.md entry 'K863 J3n'
   - next: J3NV (work38/cand/J3NV) is the kit's build; the next stage builds on its join_params. Open on it: J3m's o notch (rough FAIL) and Levi's next look notes
