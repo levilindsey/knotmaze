@@ -513,11 +513,11 @@ Next free ID: K1316.
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: nobody since 2026-11-11 12:57 (merged; agent `ad99eae806bca8e74` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `18f838ff`
-  - evidence: .claude/probes/K1247/ (tools); untracked .claude/probes/K1247/out/s18/, out/s19/
-  - next: s20 (brief to write): the oe=1 look, i.e. the between-vertex strip-side cracks (census fill/paper vs off within 1%) and the moved section boundaries at junctions (s18/s19 crops def rows 2-3, muse_hash row 3); later: fans/junctions/disks and strip end columns as shader records (fill 1 ms target; after K1314 fan look fixes), the band fixed topology (58-63 ms), zC (16 ms), seeded end solves
-  - brief: `docs/design/K1247_s19_shader_fill.md`
+  - owner: agent `a095e7cff519b9abd` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-11 12:57, 2 h cap ~14:57)
+  - branch: `worktree-agent-a095e7cff519b9abd`, worktree `.claude/worktrees/agent-a095e7cff519b9abd`; last commit: `e7a90e53`
+  - evidence: .claude/probes/K1247/ (tools); untracked .claude/probes/K1247/out/s18/, s19/, s20/
+  - next: s20 running: close the oe=1 strip-side cracks (census within 1% of off), check junction boundaries in app paint, flip rp=outline to the record fill by default; later: fans/junctions/disks + strip end columns as shader records (after K1314 fan look fixes), the band fixed topology (58-63 ms), zC (16 ms), seeded end solves
+  - brief: `docs/design/K1247_s20_records_look.md`
 - **K1278** · The outline's paint blends seamlessly across junctions (Levi 2026-11-10): section colour and pulses
   from per-pixel fields continuous across faces, triangles and junctions, gated by a seam test on every
   face edge, triangle edge and junction. Full text in docs/ledger_notes.md
