@@ -53,14 +53,40 @@ export function frameAt(c: FrameChain, t: ChainTangents, s: number, hint: number
   return k;
 }
 
+/** The convex side's sagitta push, as a share of the chord's sagitta (probes vary it). */
+export const SAG = { f: 0 };
+/** Columns uniform in the SIDE's length, not in s (probes vary it). */
+export const ARC = { on: false, sub: 3 };
+
+/** A side's column s values, uniform in its border length (1 - sgn kap b) ds between sA and sA + dS:
+ *  sub x N midpoint steps, then the inverse. What a vertex shader would read from a per-chain prefix
+ *  of the side's length. */
+function arcColumns(c: FrameChain, t: ChainTangents, sA: number, dS: number, N: number, sgn: number, h: number): Float64Array {
+  const M = ARC.sub * N; const cum = new Float64Array(M + 1); const fa = new Float64Array(5); let hint = -1;
+  const step = Math.abs(dS) / M;
+  for (let q = 1; q <= M; q++) {
+    hint = frameAt(c, t, sA + (dS * (q - 0.5)) / M, hint, fa); const kap = fa[4]; const ak = Math.abs(kap);
+    const b = sgn * kap > 0 ? Math.min(h, 0.9 / ak) : h;
+    cum[q] = cum[q - 1] + Math.max(0.05, 1 - sgn * kap * b) * step;
+  }
+  const us = new Float64Array(N + 1); let q = 1;
+  for (let i = 1; i < N; i++) {
+    const tg = (cum[M] * i) / N; while (q < M && cum[q] < tg) q++;
+    const a = cum[q - 1]; const w = cum[q] - a; const f = w > 0 ? (tg - a) / w : 0;
+    us[i] = sA + (dS * (q - 1 + f)) / M;
+  }
+  return us;
+}
+
 /** Row i = 1..N-1 of a strip side: C(s) + sgn b N(s) at s = sA + dS i / N, b = h clamped to 0.9 of the
  *  radius on the concave side; into out[2i], out[2i+1]. A cursor walks the segments (rows run along s). */
 export function offsetRow(c: FrameChain, t: ChainTangents, sA: number, dS: number, N: number, sgn: number, h: number, out: Float64Array): void {
   const m = c.n - 1; const loop = c.closed && c.len > 0; const L = c.len;
   const xs = c.xs; const ys = c.ys; const ss = c.s; const tx = t.tx; const ty = t.ty; const kk = t.k;
+  const us = ARC.on ? arcColumns(c, t, sA, dS, N, sgn, h) : null;
   let k = -1;
   for (let i = 1; i < N; i++) {
-    let u = sA + (dS * i) / N;
+    let u = us ? us[i] : sA + (dS * i) / N;
     if (loop) { if (u < 0 || u >= L) u = ((u % L) + L) % L; } else u = u < 0 ? 0 : u > ss[m] ? ss[m] : u;
     if (k < 0 || u < ss[k] || u > (k < m ? ss[k + 1] : L)) {
       if (k >= 0 && k < m && u > ss[k + 1] && (k + 1 >= m || u <= ss[k + 2])) k++;
@@ -71,7 +97,11 @@ export function offsetRow(c: FrameChain, t: ChainTangents, sA: number, dS: numbe
     const x = xs[k] + (xs[j] - xs[k]) * f; const y = ys[k] + (ys[j] - ys[k]) * f;
     let ax = tx[k] + (tx[j] - tx[k]) * f; let ay = ty[k] + (ty[j] - ty[k]) * f; const l = Math.sqrt(ax * ax + ay * ay) || 1; ax /= l; ay /= l;
     const kap = kk[k] + (kk[j] - kk[k]) * f;
-    const b = sgn * kap > 0 ? Math.min(h, 0.9 / Math.abs(kap)) : h;
+    // Convex side: out by the chord's sagitta, (dS/N)^2 |kap| (1 + h |kap|) / 8 (the border's chord is
+    // (1 + h|kap|) times a centreline step, its curvature |kap| / (1 + h|kap|)), so the side's chords
+    // do not cut inside form B's arc (columns are uniform in s, not in border length).
+    const ak = Math.abs(kap); const st = dS / N;
+    const b = sgn * kap > 0 ? Math.min(h, 0.9 / ak) : h + SAG.f * st * st * ak * (1 + h * ak) / 8;
     out[2 * i] = x - sgn * b * ay; out[2 * i + 1] = y + sgn * b * ax;
   }
 }

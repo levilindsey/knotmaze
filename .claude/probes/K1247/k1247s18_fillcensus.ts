@@ -25,6 +25,12 @@ import { fileURLToPath } from "node:url";
 import { FormB } from "../../../src/render/field/form_b";
 import { structure, frame, type SceneIn, type OutlineFace, type DiagramStructure } from "../../../src/render/outline/outline";
 import { fillResolution, fillStructure, fillFrame, fillSig, rasterFill } from "../../../src/render/outline/fill_tri";
+import { ARC, SAG } from "../../../src/render/outline/chain_frame";
+// K1247 s18: env SAG = the convex side's sagitta push (share of the chord's sagitta; default 0);
+// env ARC = 1 spaces each side's columns uniformly in its border length (ARC_SUB sub-steps a column).
+if (process.env.SAG !== undefined) SAG.f = Number(process.env.SAG);
+if (process.env.ARC !== undefined) ARC.on = process.env.ARC === "1";
+if (process.env.ARC_SUB !== undefined) ARC.sub = Number(process.env.ARC_SUB);
 import { zChains } from "../../../src/render/outline/draw";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -148,6 +154,26 @@ if (isMain && mode === "rest") {
     const crA = clusters(crackA, g.W, g.H, g.x0, g.y0); const spA = clusters(spillA, g.W, g.H, g.x0, g.y0);
     const sum = (l: Cl[]): number => l.reduce((s, c) => s + c.n, 0);
     console.log(`${nm} (${g.W}x${g.H}, ${fs.nV} v, ${fs.idx.length / 3} tri, fallbacks ${fr.fallbacks}): A fill ${aFill} paper ${aPaper} | B fill ${bFill} paper ${bPaper} ${ok ? "ok" : "WORSE"} | B-only cracks ${sum(cr)} px in ${cr.length}, B-only spills ${sum(sp)} px in ${sp.length} | A-only cracks ${sum(crA)} in ${crA.length}, A-only spills ${sum(spA)} in ${spA.length}`);
+    if (process.argv.includes("--classify")) {
+      // Each B-only crack's nearest B vertex: its item kind, and for a strip its column (end 0/N, next
+      // to an end 1/N-1, interior) and row (side or centre). Where the records' cracks sit.
+      const owner = new Int32Array(fs.nV).fill(-1);
+      const order = fs.items.map((it, k) => [it.base, k]).sort((p, q) => p[0] - q[0]);
+      order.forEach(([b, k], o) => { const e = o + 1 < order.length ? order[o + 1][0] : fs.nV; for (let v = b; v < e; v++) owner[v] = k; });
+      const hist: Record<string, number> = {};
+      for (const c of cr) {
+        let best = -1; let bd = Infinity;
+        for (let v = 0; v < fs.nV; v++) { const d = (fr.pos[2 * v] - c.x) ** 2 + (fr.pos[2 * v + 1] - c.y) ** 2; if (d < bd) { bd = d; best = v; } }
+        const it = fs.items[owner[best]]; let cls: string = it.kind;
+        if (it.kind === "strip") {
+          const W = it.N + 1; const col = (best - it.base) % W; const row = Math.floor((best - it.base) / W);
+          cls += col === 0 || col === it.N ? ":end" : col === 1 || col === it.N - 1 ? ":nextEnd" : ":interior";
+          cls += row === 1 ? "/centre" : "/side";
+        }
+        hist[cls] = (hist[cls] ?? 0) + c.n;
+      }
+      console.log(`  B-only crack px by nearest B vertex: ${Object.entries(hist).sort((p, q) => q[1] - p[1]).map(([k, n]) => `${k} ${n}`).join(", ")}`);
+    }
     for (const c of cr.filter((c) => c.n >= minPx).slice(0, 8)) console.log(`  crack ${fmt(c)}`);
     for (const c of sp.filter((c) => c.n >= minPx).slice(0, 8)) console.log(`  spill ${fmt(c)}`);
     if (nm === "muse_hash") {

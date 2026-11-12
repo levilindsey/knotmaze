@@ -623,20 +623,33 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
   const rec = scene.look.fillRec === 1;
   const tg = rec ? zc.map((c) => (c.n > 1 ? chainTangents(c) : null)) : [];
   const fa = new Float64Array(5);
-  const recStrip = (it: Extract<FillItem, { kind: "strip" }>, aSt: number, bSt: number, pl: OutlineTable["pieces"][number], pr: OutlineTable["pieces"][number]): void => {
+  const recStrip = (it: Extract<FillItem, { kind: "strip" }>, aSt: number, bSt: number, pl: OutlineTable["pieces"][number], pr: OutlineTable["pieces"][number]): boolean => {
     const N = it.N; const W = N + 1; const c = zc[it.pi]; const t = tg[it.pi]!;
     const loop = c.closed && c.len > 0;
+    // A border past an open chain's end (it wraps round the cap: muse_hash's 25 px) has no s to be a
+    // record at: today's path keeps it.
+    if (!loop) for (const q of [pl.s0, pl.s1, pr.s0, pr.s1]) if (q < -1e-6 || q > c.len + 1e-6) return false;
     const wrap = (d: number): number => (loop ? ((d % c.len) + c.len) % c.len : d);
     const s0 = pl.s0; let ds = wrap(pl.s1 - pl.s0);
     if (loop && aSt === bSt && ds < 1e-9) ds = c.len;
     const rL: [number, number] = [pl.s0, wrap(pl.s1 - pl.s0)]; const rR: [number, number] = [pr.s0, wrap(pr.s1 - pr.s0)];
     if (loop) rR[0] += c.len * Math.round((rL[0] - rR[0]) / c.len);
-    // L's side: the across sign of its middle point.
+    // L's side: a guess from its middle point (whose s assumes the piece's points uniform in s, which a
+    // long curved piece breaks), checked against the piece's own end points: columns 1 and N-1 of the
+    // right side sit next to them, of the wrong side a strip width away (a swapped strip folds its end
+    // triangles into bowties: def's 37 px crack).
     const nl = pl.pts.length >> 1; const nr = pr.pts.length >> 1; const m = nl >> 1;
     frameAt(c, t, rL[0] + (rL[1] * m) / Math.max(1, nl - 1), -1, fa);
-    const sg = (pl.pts[2 * m] - fa[0]) * -fa[3] + (pl.pts[2 * m + 1] - fa[1]) * fa[2] >= 0 ? 1 : -1;
+    let sg = (pl.pts[2 * m] - fa[0]) * -fa[3] + (pl.pts[2 * m + 1] - fa[1]) * fa[2] >= 0 ? 1 : -1;
     if (rowL.length < 2 * W) { rowL = new Float64Array(2 * W); rowR = new Float64Array(2 * W); rowZ = new Float64Array(W); }
-    offsetRow(c, t, rL[0], rL[1], N, sg, hW, rowL); offsetRow(c, t, rR[0], rR[1], N, -sg, hW, rowR); zRow(c, s0, ds, N, rowZ);
+    offsetRow(c, t, rL[0], rL[1], N, sg, hW, rowL); offsetRow(c, t, rR[0], rR[1], N, -sg, hW, rowR);
+    const j = N > 1 ? 1 : 0; const k = N > 1 ? N - 1 : N;
+    const d2 = (row: Float64Array, i: number, x: number, y: number): number => (row[2 * i] - x) ** 2 + (row[2 * i + 1] - y) ** 2;
+    const xa = pl.pts[0]; const ya = pl.pts[1]; const xb = pl.pts[2 * nl - 2]; const yb = pl.pts[2 * nl - 1];
+    if (d2(rowR, j, xa, ya) + d2(rowR, k, xb, yb) < d2(rowL, j, xa, ya) + d2(rowL, k, xb, yb)) {
+      sg = -sg; offsetRow(c, t, rL[0], rL[1], N, sg, hW, rowL); offsetRow(c, t, rR[0], rR[1], N, -sg, hW, rowR);
+    }
+    zRow(c, s0, ds, N, rowZ);
     rowL[0] = pl.pts[0]; rowL[1] = pl.pts[1]; rowR[0] = pr.pts[0]; rowR[1] = pr.pts[1];
     rowL[2 * N] = pl.pts[2 * nl - 2]; rowL[2 * N + 1] = pl.pts[2 * nl - 1]; rowR[2 * N] = pr.pts[2 * nr - 2]; rowR[2 * N + 1] = pr.pts[2 * nr - 1];
     const b0 = it.base;
@@ -657,6 +670,7 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
     };
     if (stationS(aSt) !== null) footEnd(0);
     if (stationS(bSt) !== null) footEnd(N);
+    return true;
   };
   let rowL = new Float64Array(0); let rowR = new Float64Array(0); let rowZ = new Float64Array(0);
   if (FILL_PROF.on) FILL_PROF.t.pre = (FILL_PROF.t.pre ?? 0) + performance.now() - tP;
@@ -668,7 +682,7 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
       if (bufL.length < 2 * W) { bufL = new Float64Array(2 * W); bufR = new Float64Array(2 * W); }
       const I = st.intervalsD[it.iv];
       const pl = it.pL >= 0 ? table.pieces[it.pL] : null; const pr = it.pR >= 0 ? table.pieces[it.pR] : null;
-      if (rec && pl && pr && pl.pts.length >= 4 && pr.pts.length >= 4 && tg[it.pi]) { recStrip(it, I.aSt, I.bSt, pl, pr); continue; }
+      if (rec && pl && pr && pl.pts.length >= 4 && pr.pts.length >= 4 && tg[it.pi] && recStrip(it, I.aSt, I.bSt, pl, pr)) continue;
       if (bufCL.length < 2 * W) { bufCL = new Float64Array(2 * W); bufCR = new Float64Array(2 * W); }
       // A side's border, and (cOk) its centreline feet resampled alongside.
       let cOkL = false; let cOkR = false;
