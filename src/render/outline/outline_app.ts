@@ -46,7 +46,7 @@ import type { OutlineReply, OutlineRequest } from "./outline_worker";
 import { REC_PLACE_FS, REC_PLACE_OUT, REC_PLACE_STRIDE, REC_PLACE_VS } from "./rec_glsl";
 
 const CTRL_ARC = 0.47;
-// K1247 s18: oe=1, as src/app/frame_loop.ts read it (the link rewrite drops the key before this loads).
+// K1247 s18: the record fill, as src/app/frame_loop.ts read it (the link rewrite drops the key before this loads; K1247 s20: on unless oe=0).
 const FILL_REC = (globalThis as { __knotOutlineFillRec?: boolean }).__knotOutlineFillRec === true;
 
 /** K1247 s18: a reply's typed-array bytes, top level and one level down (the bench's reply size). */
@@ -1528,7 +1528,7 @@ export function createOutlineApp(ctx: SceneExportCtx, requestFrame: () => void):
     );
     const { scene } = buildFieldScene(input);
     scene.look.ctrlArc ??= CTRL_ARC;
-    // K1247 s18: oe=1 places the fill's strips as records (fill_tri.ts recStrip). Off by default.
+    // K1247 s18: the record fill places the fill's strips as records (fill_tri.ts recStrip2). On unless oe=0 (K1247 s20).
     if (FILL_REC) (scene.look as { fillRec?: number }).fillRec = 2;
     // K1247 s18 probe: a page that sets window.__knotOutlineCapture to an
     // array gets every sent scene as JSON (the drag's frames, replayed in Node).
