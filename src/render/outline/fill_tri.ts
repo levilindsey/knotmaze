@@ -850,16 +850,25 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
       // borders and end columns; only where the samples sit along them.
       const cz = zc[it.pi];
       const wrapZ = (d: number): number => (cz && cz.closed && cz.len > 0 ? ((d % cz.len) + cz.len) % cz.len : d);
-      let spL: [number, number] | null = null; let spR: [number, number] | null = null; let mU0 = 0; let mUl = 0;
+      let spL: [number, number] | null = null; let spR: [number, number] | null = null; let mU0 = 0; let mUl = 0; let mirA = false; let mirB = false;
       if (pl && pr && pl.pts.length >= 4 && pr.pts.length >= 4 && N >= 2) {
         const a0 = pl.s0; const a1 = wrapZ(pl.s1 - pl.s0); let b0 = pr.s0; const b1 = wrapZ(pr.s1 - pr.s0);
         if (cz && cz.closed && cz.len > 0) b0 += cz.len * Math.round((a0 - b0) / cz.len);
-        // Not where the ranges part at a junction end: the side the junction's
-        // corner consumed would be held at its piece's end there (MATCH_MIRROR
-        // off), a fan that leaves the tube's ink unbordered (muse_hash j77,
-        // j20, j154: 3 broken_ink); such a strip keeps stage 5's rows.
-        const thru = (sti: number): boolean => stationS(sti) !== null && st.arms[st.stationsD[sti].arm].kind !== "end";
-        const jEnd = (a0 !== b0 && thru(I.aSt)) || (a0 + a1 !== b0 + b1 && thru(I.bSt));
+        // Not where the ranges part at a THROUGH arm's junction end: the side
+        // the junction's corner consumed would be held at its piece's end there,
+        // a fan that leaves the tube's ink unbordered (muse_hash j77, j20, j154:
+        // 3 broken_ink), and mirrored it rose over the junction's fill (j56);
+        // such a strip keeps stage 5's rows. K1314 s7: at an END arm's junction
+        // end the matched scale holds, and that end's columns are mirrored
+        // (mirA, mirB; g41_user_tw64 j71's c32 wedge).
+        const armKind = (sti: number): string | null => (stationS(sti) !== null ? st.arms[st.stationsD[sti].arm].kind : null);
+        const partA = a0 !== b0; const partB = a0 + a1 !== b0 + b1;
+        const jEnd = (partA && armKind(I.aSt) === "through") || (partB && armKind(I.bSt) === "through");
+        mirA = partA && armKind(I.aSt) === "end"; mirB = partB && armKind(I.bSt) === "end";
+        // Only a tube: where the sides' ranges overlap by under h / 4 the strip is two corners'
+        // leftovers, and the mirror fabricates a tube over the junction's fill (muse_hash j56's
+        // c22 end arm, overlap 0.004: a hard-edged patch; j71's overlaps 0.25).
+        if (Math.min(a0 + a1, b0 + b1) - Math.max(a0, b0) < 0.25 * table.h) { mirA = false; mirB = false; }
         if ((a0 !== b0 || a1 !== b1) && !(JEND_GATE && jEnd)) {
           const u0 = Math.min(a0, b0); const u1 = Math.max(a0 + a1, b0 + b1);
           const ov = Math.min(a0 + a1, b0 + b1) - Math.max(a0, b0);
@@ -915,13 +924,13 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
       // mirror clears). Only where the column's s lies on the chain: past an
       // open chain's end the strip ran out over the junction's other arms
       // (muse_hash j126, c55 over c68).
-      const mirOn = MATCH_MIRROR && spL !== null && spR !== null && okL && okR;
+      const mirOn = MATCH_MIRROR && (mirA || mirB) && spL !== null && spR !== null && okL && okR;
       const onChain = (i: number): boolean => {
         if (!cz || cz.closed) return true;
         const s = mU0 + (mUl * i) / N; return s >= 0 && s <= cz.len;
       };
-      const mirL = (i: number): boolean => mirOn && cOkR && !(i >= (spL as [number, number])[0] && i <= (spL as [number, number])[1]) && i >= (spR as [number, number])[0] && i <= (spR as [number, number])[1] && onChain(i);
-      const mirR = (i: number): boolean => mirOn && cOkL && !(i >= (spR as [number, number])[0] && i <= (spR as [number, number])[1]) && i >= (spL as [number, number])[0] && i <= (spL as [number, number])[1] && onChain(i);
+      const mirL = (i: number): boolean => mirOn && (i < (spL as [number, number])[0] ? mirA : mirB) && cOkR && !(i >= (spL as [number, number])[0] && i <= (spL as [number, number])[1]) && i >= (spR as [number, number])[0] && i <= (spR as [number, number])[1] && onChain(i);
+      const mirR = (i: number): boolean => mirOn && (i < (spR as [number, number])[0] ? mirA : mirB) && cOkL && !(i >= (spR as [number, number])[0] && i <= (spR as [number, number])[1]) && i >= (spL as [number, number])[0] && i <= (spL as [number, number])[1] && onChain(i);
       if (mirOn) {
         for (let i = 0; i <= N; i++) {
           if (mirL(i)) { bufL[2 * i] = 2 * bufCR[2 * i] - bufR[2 * i]; bufL[2 * i + 1] = 2 * bufCR[2 * i + 1] - bufR[2 * i + 1]; }

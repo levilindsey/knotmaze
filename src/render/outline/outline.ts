@@ -4516,10 +4516,15 @@ function cutFoldsC(C: FCache, pi: number, sig: number, B: FBord): void {
       // Likewise a bend within h of a kink's station (a self-crossing of this chain): its border
       // crosses itself there because the thread does, and the crossing's gap draws it (muse_hash
       // x58 70.4 -> 18.6 px, x22 68.2 -> 43.3; cut, they were 43 and 21 px worse than master).
+      // K1314 s7: not a kink where the chain ENDS on its own body (one pass at an open end):
+      // no thread crosses there, so no gap draws the fold, and uncut it inks a square block
+      // (muse_hash x15).
+      const atEnd = (s: number): boolean => !p.closed && (Math.abs(s - p.s[0]) < h || Math.abs(s - p.s[p.n - 1]) < h);
       let nearKink = false;
       for (let e = 0; e < C.passN[pi]; e++) {
         const xi = C.passXi[pi][e];
-        if (C.crossAPi[xi] === C.crossBPi[xi] && Math.abs(dS(p, C.passS[pi][e], sb)) < h) nearKink = true;
+        if (C.crossAPi[xi] === C.crossBPi[xi] && Math.abs(dS(p, C.passS[pi][e], sb)) < h &&
+          !atEnd(C.passS[pi][e]) && !atEnd(C.passSq[pi][e])) nearKink = true;
       }
       if (nearKink) continue;
       let i0 = -1; let i1 = -1; let nIdx = 0;
@@ -4555,6 +4560,47 @@ function cutFoldsC(C: FCache, pi: number, sig: number, B: FBord): void {
           }
         }
       }
+    }
+    // K1314 s7: a fold the chain's open end cuts short (muse_hash x15: a curl's inner border that
+    // ends within h of its turn never crosses itself, so the loop above finds nothing and the
+    // hairpin inks a block). Form B's border there is the end cap's circle (radius h about the
+    // end): the border is cut where it enters that disc and runs straight to its end point, where
+    // the cap's arc takes over. Only a border that dips inside the disc by W / 4 or more: a plain
+    // or gently curving end stays at h or beyond.
+    if (!p.closed) for (let e2 = 0; e2 < 2; e2++) {
+      const atS = e2 === 0; const k0 = atS ? 0 : p.n - 1; const sE = p.s[k0];
+      if (!bendClusters.some((c) => Math.abs(dS(p, c, sE)) < 2.5 * h)) continue;
+      const iE = atS ? 0 : m - 1; const dir = atS ? -1 : 1; // dir: towards the end
+      if (seq[iE] >= nb || Math.abs(B.ps[seq[iE]] - sE) > 1e-6) continue;
+      const cx = p.x[k0]; const cy = p.y[k0];
+      const dE = (id: number): number => Math.sqrt((B.px[id] - cx) ** 2 + (B.py[id] - cy) ** 2);
+      // The window's far point, then the first border point (towards the end) inside the disc.
+      let iF = iE; while (iF - dir >= 0 && iF - dir < m && Math.abs(B.ps[seq[iF - dir]] - sE) <= 2.5 * h) iF -= dir;
+      let iIn = -1; let deep = false;
+      for (let i = iF; i !== iE; i += dir) {
+        const dd = dE(seq[i]);
+        if (iIn < 0 && dd < h && i !== iF) iIn = i;
+        if (iIn >= 0 && dd < h - 0.25 * C.W) { deep = true; break; }
+      }
+      if (iIn < 0 || !deep || seq[iIn - dir] >= nb || seq[iIn] >= nb) continue;
+      // Segment a -> b (a outside, b inside) meets the circle at t.
+      const a = seq[iIn - dir]; const b = seq[iIn];
+      const dx = B.px[b] - B.px[a]; const dy = B.py[b] - B.py[a]; const fx = B.px[a] - cx; const fy = B.py[a] - cy;
+      const qa = dx * dx + dy * dy; const qb = 2 * (fx * dx + fy * dy); const qc = fx * fx + fy * fy - h * h;
+      const disc = qb * qb - 4 * qa * qc; if (!(qa > 1e-18) || disc < 0) continue;
+      const t = Math.min(1, Math.max(0, (-qb - Math.sqrt(disc)) / (2 * qa)));
+      const hx = B.px[a] + dx * t; const hy = B.py[a] + dy * t; const hs = B.ps[a] + (B.ps[b] - B.ps[a]) * t;
+      const nid = poolPush(hx, hy, hs);
+      const q = 4 * (nid - nb); if (cfCut.length < q + 4) { const g = new Float64Array(2 * (q + 4)); g.set(cfCut); cfCut = g; }
+      // The legs in border order: the entering segment and the chord to the end point.
+      const ex = B.px[seq[iE]]; const ey = B.py[seq[iE]];
+      if (atS) { foldNormal(hx - ex, hy - ey, sig, cfCut, q); foldNormal(-dx, -dy, sig, cfCut, q + 2); }
+      else { foldNormal(dx, dy, sig, cfCut, q); foldNormal(ex - hx, ey - hy, sig, cfCut, q + 2); }
+      if (cfS2.length <= nid - nb) { const g = new Float64Array(2 * (nid - nb + 1)); g.set(cfS2); cfS2 = g; }
+      cfS2[nid - nb] = hs;
+      if (atS) { seq[1] = nid; seq.copyWithin(2, iIn + 1, m); m -= iIn - 1; }
+      else { seq[iIn] = nid; seq[iIn + 1] = seq[iE]; m = iIn + 2; }
+      diag.push(`end fold ch${pi} side${sig} at s=${hs.toFixed(2)}`);
     }
     // Compact the sequence into the base arrays; each cut fold becomes its chevron (foldChevron).
     let cuts = 0; for (let i = 0; i < m; i++) if (seq[i] >= nb) cuts++;
