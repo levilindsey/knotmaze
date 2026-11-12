@@ -272,13 +272,8 @@ export function zChains(scene: SceneIn): { zc: ZChain[]; passes: Pass[][]; idx: 
     for (const [id, i] of idx) key += `|${id}:${zc[i].n}`;
     let cp = CONTACT_CACHE.get(key);
     if (!cp) {
-      const jr: { i: number; s: number }[][] = scene.junctions.map((j) => j.arms.flatMap((arm) => {
-        const i = idx.get(arm.chain); if (i === undefined) return [];
-        const c = zc[i];
-        return [{ i, s: arm.kind === "end" ? (Math.abs(arm.s) <= Math.abs(arm.s - c.len) ? 0 : c.len) : norm(c, arm.s) }];
-      }));
       const n0 = passes.map((P) => P.length);
-      contactPasses(zc, passes, jr, h);
+      contactPasses(zc, passes, h);
       cp = passes.map((P, i) => P.slice(n0[i]));
       if (CONTACT_CACHE.size >= 8) CONTACT_CACHE.delete(CONTACT_CACHE.keys().next().value as string);
       CONTACT_CACHE.set(key, cp);
@@ -301,16 +296,19 @@ export function zChains(scene: SceneIn): { zc: ZChain[]; passes: Pass[][]; idx: 
  *  Each stretch of chain i whose vertices lie within 2.25h of chain j's
  *  and that goes inside j's tube (nearest under 1.6h; threads merely side
  *  by side at 2h tie nowhere in form B either), not already a crossing
- *  pass's pair there and not both within 6h of a junction they share
- *  (runEndFade's), becomes a pass of i against j, so
- *  tieAlpha and band_gpu.ts tie it as a crossing's. The tie is continuous:
- *  a pass appears before any band point is within h of the partner. */
+ *  pass's pair there, becomes a pass of i against j, so tieAlpha and
+ *  band_gpu.ts tie it as a crossing's. Junction arms included: form B ties
+ *  an arm's border inside a neighbour arm's surface where their keys meet
+ *  (muse_hash j59: ch43's run 379 inside ch23's junction group), and the
+ *  junction sweep moved 77 of 453 junctions toward form B by over 20 px,
+ *  none away. The tie is continuous: a pass appears before any band point
+ *  is within h of the partner. */
 const CONTACT_PASSES = true;
 const CONTACT_CACHE = new Map<string, Pass[][]>();
 /** Probe counters: contact sets built and reused. */
 export const contactStats = { built: 0, hits: 0 };
-function contactPasses(zc: ZChain[], passes: Pass[][], jr: { i: number; s: number }[][], h: number): void {
-  const R = 2.25 * h; const R2 = R * R; const LJ = 6 * h; const SELF = 6 * h; const STEP = 0.5 * h; const DEEP2 = 1.6 * h * 1.6 * h;
+function contactPasses(zc: ZChain[], passes: Pass[][], h: number): void {
+  const R = 2.25 * h; const R2 = R * R; const SELF = 6 * h; const STEP = 0.5 * h; const DEEP2 = 1.6 * h * 1.6 * h;
   // Samples every STEP of arc (the chains' vertices are ~h/6 apart), in a counting-sort grid of R cells.
   let N = 0;
   for (const c of zc) N += Math.ceil(c.len / STEP) + 2;
@@ -334,9 +332,6 @@ function contactPasses(zc: ZChain[], passes: Pass[][], jr: { i: number; s: numbe
   for (let g = 0; g < gw * gh; g++) start[g + 1] += start[g];
   const fillAt = start.slice(0, gw * gh);
   for (let q = 0; q < n; q++) items[fillAt[cell[q]]++] = q;
-  // Junction roots by chain: [junction, s] pairs.
-  const roots: number[][] = zc.map(() => []);
-  jr.forEach((J, ji) => { for (const r of J) roots[r.i].push(ji, r.s); });
   const bestD = new Float64Array(zc.length).fill(Infinity); const bestS = new Float64Array(zc.length); const touched: number[] = [];
   for (let i = 0; i < zc.length; i++) {
     const C = zc[i]; const half = C.len / 2;
@@ -367,12 +362,6 @@ function contactPasses(zc: ZChain[], passes: Pass[][], jr: { i: number; s: numbe
         if (L) for (const P of L) {
           const ds = dSC(C, P.s, sk);
           if (ds >= -P.lo - h && ds <= P.hi + h && Math.abs(dSC(O, P.so, sm)) <= P.rO + h) { covered = true; break; }
-        }
-        if (covered) continue;
-        const ra = roots[i]; const rb = roots[j];
-        for (let u = 0; u < ra.length && !covered; u += 2) {
-          if (Math.abs(dSC(C, ra[u + 1], sk)) >= LJ) continue;
-          for (let v = 0; v < rb.length; v += 2) if (rb[v] === ra[u] && Math.abs(dSC(O, rb[v + 1], sm)) < LJ) { covered = true; break; }
         }
         if (covered) continue;
         if (!hits) hits = new Map();

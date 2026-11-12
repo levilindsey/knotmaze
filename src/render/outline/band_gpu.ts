@@ -16,7 +16,7 @@
 // alphaCpu below is the shader's CPU twin; test/render/band_gpu.test.ts
 // checks it against bandData's alphas at bandData's own vertices.
 import type { OutlineTable, SceneIn } from "./outline";
-import { dSC, parseColor, sstep, zAtC, type zChains } from "./draw";
+import { dSC, footNear, parseColor, sstep, zAtC, type zChains } from "./draw";
 
 type ZZ = ReturnType<typeof zChains>;
 type ZChain = ZZ["zc"][number];
@@ -229,7 +229,16 @@ export function bandGpu(table: OutlineTable, scene: SceneIn, zz: ZZ): BandGpu {
         const da = dSC(C, P.s, sa); const db = da + (sb - sa);
         if (Math.max(da, db) >= -P.lo - h && Math.min(da, db) <= P.hi + h) sl.push(pb + j);
       }
-      if (sl.length > BAND_SLOTS) { dropped++; sl.length = BAND_SLOTS; }
+      if (sl.length > BAND_SLOTS) {
+        // K1283 s11: keep the passes whose partner comes nearest the segment (contact passes at a
+        // junction can list more than BAND_SLOTS; one far from the quad fades nothing there).
+        dropped++;
+        const mx = (p.pts[2 * i] + p.pts[2 * i + 2]) / 2; const my = (p.pts[2 * i + 1] + p.pts[2 * i + 3]) / 2;
+        const dist = new Map<number, number>();
+        for (const g of sl) { const P = PS[g - pb]; dist.set(g, footNear(zc[P.o], mx, my, P.so, P.rO + h, 0, 0).d); }
+        sl.sort((u, v) => (dist.get(u) as number) - (dist.get(v) as number) || u - v);
+        sl.length = BAND_SLOTS; sl.sort((u, v) => u - v);
+      }
       quad(p.pts[2 * i], p.pts[2 * i + 1], p.pts[2 * i + 2], p.pts[2 * i + 3], ia[0], ia[1], ib[0], ib[1], sa, sb, zAtC(C, sa), zAtC(C, sb), sl.length ? sl : null);
       ia = ib;
     }
