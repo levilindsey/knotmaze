@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1327.
+Next free ID: K1331.
 
 ## Waiting on Levi
 
@@ -519,10 +519,10 @@ Next free ID: K1327.
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: agent `aa4ea631c73c1c296` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 03:43, 2 h cap ~05:43)
-  - branch: `worktree-agent-aa4ea631c73c1c296`, worktree `.claude/worktrees/agent-aa4ea631c73c1c296`; last commit: `cbc9717b`
-  - evidence: .claude/probes/K1247/ (k1247s25_twin, _bench, _rest; k1247s19_twin, _fillcensus); untracked out/s22-s25/
-  - next: s26: K1322 (recStrip follows fillFrame, tie test) and K1324 (no contact pass within one junction group); then the phone A/B (K156 round) and the g41 residual (f11 c20 d118, recSideOk)
+  - owner: nobody since 2026-11-12 05:43 (agent `aa4ea631c73c1c296` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 03:43, 2 h cap ~05:43); 2 h cap, 2026-11-12 05:42; s26 not Done: stray_ink 31 against census_s7f 11)
+  - branch: `worktree-agent-aa4ea631c73c1c296`, worktree `.claude/worktrees/agent-aa4ea631c73c1c296`; last commit: `5b22d5b8`
+  - evidence: .claude/probes/K1247/ (k1247s26_mir, k1247s19_lib twin4), test/render/rec_tie.test.ts; untracked out/s26/, K1314 out/s1/census_s26b*
+  - next: census s26off (CONTACT_GROUPS false) vs census_s7f: if equal, merge the tie (K1322) with the skip off and re-open K1324; then the phone A/B (K156 round) and the g41 residual (recSideOk)
   - brief: `docs/design/K1247_s26_rec_fill_specks.md`
 - **K1278** · The outline's paint blends seamlessly across junctions (Levi 2026-11-10): section colour and pulses
   from per-pixel fields continuous across faces, triangles and junctions, gated by a seam test on every
@@ -821,6 +821,9 @@ Every other item below waits on the trigger it names.
   rp=outline is clean, so the census counts them against the outline (crops
   `.claude/probes/K1314/out/s7/after4x/spot_007.png`, `spot_008.png`); fix the reference as K1321 did, in
   `k1314_census.ts` / `form_b_fillet.ts` (K1314 s7 handoff)
+- **K1328** · A tracked fixture with a mirrored strip (K1314 s7 mirA/mirB) for `test/render/rec_tie.test.ts`:
+  today only the untracked muse_hash and g41_user_tw64 scenes cover the mirror, so CI never ties it (K1247
+  s26)
 
 ## Residuals (known, not fixed)
 
@@ -1888,6 +1891,11 @@ Every other item below waits on the trigger it names.
 - **K1326** · `.claude/probes/K1247/k1247s22_census.ts` still caches form B tiles unkeyed (`K1247/out/fb`,
   `fbf`, `FBDIR`), read back by size: a stale cache passes after a reference change. Key them by the reference
   code's hash as `k1314_census.ts` `refCacheDirs` does (0b10c10b), or retire the script
+- **K1327** · The record fill's GPU shader drifts from its CPU twin by up to 1.85 px on muse_hash (FLOOR
+  strips o375, o850, row 2) and 1.63 px on def, in whole-span rows, not the mirror (s19 measured 0.002 px); it
+  came in between K1247 s20 and s26 (s26 handoff in `docs/design/K1247_s26_rec_fill_specks.md`)
+- **K1330** · The K1314 census reference draws a thin paper crack between two arms of one junction group;
+  neither master nor K1247 s26 draws it (s26 handoff)
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2229,6 +2237,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   redraw only the fill (docs/design/K1291_s1.md handoff item 2)
 - **K1317** · An app scene-replay hook (load a captured physics scene into the app), so the app's paint can be
   compared same-state mid-drag across builds; K1247 s20 could compare only at rest.
+- **K1329** · One strip rule that both `fill_tri.ts` `fillFrame` and the record fill (`recStrip`) call, ending
+  the port-and-tie cycle each fillFrame change costs (K1247 s26)
 
 ## Done
 
