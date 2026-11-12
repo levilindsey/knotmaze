@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1313.
+Next free ID: K1314.
 
 ## Waiting on Levi
 
@@ -1831,6 +1831,9 @@ Every other item below waits on the trigger it names.
   but unmeasured; the probe's ring wrap crop never fired (k1291_reveal.mjs, cause unchecked)
 - **K1312** · K1278 s3's fan gate smoothstep(0, FAN_GATE, n w) leaves faint spokes that crease along triangle
   edges in rp=outline junction fans (branch worktree-agent-a0e0c69694779aaec, docs/design/K1278_s3.md)
+- **K1313** · rp=outline: where band_gpu.ts's 4 pass slots overflow (187 passes on muse_hash, 130 on
+  g41_user_tw64), the CPU and GPU bands disagree; the census also ignores contacts with a third thread (K1283
+  s11 handoff, docs/design/K1283_s11.md)
 
 ## Approved, to schedule (2026-10-11)
 
