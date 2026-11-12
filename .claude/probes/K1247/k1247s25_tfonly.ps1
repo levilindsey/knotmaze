@@ -1,5 +1,5 @@
 # K1247 s25: k1247s24_tfonly.mjs (the band placement alone, at rest, by timer query) on def and fat, ob=1, under the
-# perf lock.
+# perf lock. obt=1 turns the timer query on (off by default since s25).
 #   pwsh .claude/probes/K1247/k1247s25_tfonly.ps1 -Out <file.json> -Port <port>
 param([Parameter(Mandatory = $true)][string]$Out, [int]$Port = 5995, [string]$QA = "?b&am=instant&snd=none&fw=0&rp=outline", [string]$QF = "?p9ar6.FHFUnxp1_T-IDyQ9&am=instant&snd=none&fw=0&rp=outline")
 $lock = Join-Path $env:TEMP "claude-perf.lock"
@@ -13,7 +13,7 @@ while (Test-Path $lock) {
 }
 "$owner, $(Get-Date -Format s), k1247s25_tfonly ob=1 def + fat" | Out-File -Encoding ASCII $lock
 try {
-  & node (Join-Path $PSScriptRoot "k1247s24_tfonly.mjs") $Out "http://localhost:$Port/$QA&ob=1" "http://localhost:$Port/$QF&ob=1"
+  & node (Join-Path $PSScriptRoot "k1247s24_tfonly.mjs") $Out "http://localhost:$Port/$QA&ob=1&obt=1" "http://localhost:$Port/$QF&ob=1&obt=1"
   Write-Host "tfonly exit $LASTEXITCODE"
 } finally {
   $line = Get-Content $lock -Raw -ErrorAction SilentlyContinue

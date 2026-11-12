@@ -994,7 +994,8 @@ class OutlinePass {
    *  later), then the finished queries collected. */
   private placeBandTimed(): void {
     const gl = this.gl;
-    if (this.tq === undefined) this.tq = gl.getExtension("EXT_disjoint_timer_query_webgl2");
+    // K1247 s25: the query only when a probe asks (`obt=1`): on ANGLE D3D11 an empty query reads 0.94 ms.
+    if (this.tq === undefined) this.tq = (globalThis as { __knotBandTfTime?: boolean }).__knotBandTfTime ? gl.getExtension("EXT_disjoint_timer_query_webgl2") : null;
     const tq = this.tq;
     if (tq && this.tqPend.length) {
       const disjoint = gl.getParameter(tq.GPU_DISJOINT_EXT);
