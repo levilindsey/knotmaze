@@ -4797,6 +4797,9 @@ const kfCst: KfCst = {
   wCacheA: mkWalkCache(), wCacheB: mkWalkCache(),
 };
 const kfSv = { x: 0, y: 0 };
+// K1314 s4: the far root's feet, kept while cornersPhaseC tries the first meet.
+const nmFa: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 };
+const nmFb: FFoot = { d: 0, x: 0, y: 0, s: 0, k: 0, u: 0 };
 
 function footArmGlobal(C: FCache, ai: number, x: number, y: number, estD: number, out: FFoot, prune = Infinity): void {
   const a = C.armObj[ai];
@@ -6293,8 +6296,8 @@ function cornersPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): void {
     const sn = Math.sin(thC / 2) || 1;
     // Solve + the builder's acceptance checks. One cold solve from
     // the builder's guess: history must not pick a different root.
-    const trySolve = (warmCi: number): number => {
-      const okV = solveVC(C, warmCi, aiA, aiB, h, j.c[0] + (bx * h) / sn, j.c[1] + (by * h) / sn, h / Math.max(Math.tan(thC / 2), 1e-6), kfFa, kfFb, j.c[0], j.c[1]);
+    const trySolve = (warmCi: number, sx = j.c[0] + (bx * h) / sn, sy = j.c[1] + (by * h) / sn): number => {
+      const okV = solveVC(C, warmCi, aiA, aiB, h, sx, sy, h / Math.max(Math.tan(thC / 2), 1e-6), kfFa, kfFb, j.c[0], j.c[1]);
       if (!okV) return 1;
       const dVa = armDistC(C, aiA, kfFa.s); const dVb = armDistC(C, aiB, kfFb.s);
       const tol = 1e-9 * h;
@@ -6307,6 +6310,21 @@ function cornersPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): void {
       return 0;
     };
     let solveCode = trySolve(ci);
+    // K1314 s4: a corner's V is its borders' FIRST meet from the junction. Where two arms part and
+    // meet again around an eye (muse_hash j155/j156's lens, c61's loop past j73), the cold guess
+    // lands in the eye's paper and Newton can take the far meet, by the other junction; that
+    // corner's arc and its junction's polygon then span the eye and cover its paper (form B draws
+    // it open, ringed by ink). A V past the guess is solved again from halfway back to the
+    // junction, and that root is kept when it passes the same checks with both feet nearer
+    // (3 corners of the 12 census scenes, all muse_hash: j73's 222, j155's 471, j156's 475).
+    if (solveCode === 0 && Math.hypot(kfSv.x - j.c[0], kfSv.y - j.c[1]) > h / sn) {
+      const vx0 = kfSv.x; const vy0 = kfSv.y; copyFoot(nmFa, kfFa); copyFoot(nmFb, kfFb);
+      const dVa0 = armDistC(C, aiA, kfFa.s); const dVb0 = armDistC(C, aiB, kfFb.s);
+      const code = trySolve(ci, 0.5 * (j.c[0] + vx0), 0.5 * (j.c[1] + vy0));
+      if (!(code === 0 && armDistC(C, aiA, kfFa.s) < dVa0 - 1e-6 * h && armDistC(C, aiB, kfFb.s) < dVb0 - 1e-6 * h)) {
+        kfSv.x = vx0; kfSv.y = vy0; copyFoot(kfFa, nmFa); copyFoot(kfFb, nmFb);
+      }
+    }
     if (solveCode !== 0) {
       C.cWhy[ci] = solveCode === 1 ? "no V" : solveCode === 2 ? "V outside spans" : "V outside wedge";
       if (thru) { cornerDeadThruC(C, ci, aiA, aiB, j.c[0], j.c[1], C.cWhy[ci] as string); continue; }
