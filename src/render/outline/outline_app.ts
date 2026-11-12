@@ -1343,6 +1343,8 @@ export function createOutlineApp(ctx: SceneExportCtx, requestFrame: () => void):
     composites: 0,
     compositesAfter: 0,
     bandCount: 0,
+    /** K1247 s22: replies whose band vertex count differed from the reply before (the band restructured). */
+    bandResizes: 0,
     /** K1247 s18: the last reply's typed-array bytes (top level and one level down). */
     replyBytes: 0,
     /** K1247 s18: oe=1 is on (the fill's strips placed as records). */
@@ -1508,6 +1510,7 @@ export function createOutlineApp(ctx: SceneExportCtx, requestFrame: () => void):
         stats.replyMs.push([r.frameMs, stats.roundTripMs, stats.uploadMs, p?.frame ?? 0, p?.zChains ?? 0, p?.fill ?? 0, p?.paint ?? 0, p?.band ?? 0]);
         if (stats.replyMs.length > 512) stats.replyMs.shift();
       }
+      if (stats.bandCount > 0 && r.bandCount !== stats.bandCount) stats.bandResizes++;
       stats.bandCount = r.bandCount;
       stats.replyBytes = replyBytes(r);
       stats.triangles = pass.nIdx / 3;
