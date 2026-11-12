@@ -60,9 +60,15 @@ type Pin = { f0: { table: string; paint: string; band: string }; f1: { table: st
 // s (fill_tri footS, every 8 columns; CF_TIE, tried, is off and leaves ring unchanged),
 // and an untied run at a failed corner fades into its tail (runEndFade): table, paint and
 // band moved. Checked against form B (census, sweep, seam).
+// K1283 s11 re-pinned on purpose (2026-11-11): a run fades into its tail at a failed corner
+// whose end arm is B too (RUN_FADE_B: table and band), and a chain lying inside another's
+// tube with no crossing between them is tied there (draw.ts CONTACT_PASSES: band). Paint
+// is unchanged on ring; g41_ring_tw42's paint pins were already stale at master f1a39b95
+// (its scene is not committed, so the test skipped there) and take master's own digests.
+// Checked against form B (census, sweep, seam).
 const PINS: Record<string, Pin> = {
-  ring: { f0: { table: "4c2ac91c6888ecbe", paint: "5e4217ee69951e8f", band: "d0b0b9cba8a04152" }, f1: { table: "f642f5b062839e73", paint: "69d5380db966d331", band: "47a8b0d91600ce6a" } },
-  g41_ring_tw42: { f0: { table: "41e36980cea61e26", paint: "d396f4634638199e", band: "331b5a8c6fb97028" }, f1: { table: "4a97e69c9a8ecb4e", paint: "2a0bf5486b003cc4", band: "6d0d5de16c791081" } },
+  ring: { f0: { table: "0a5d816a0930b944", paint: "5e4217ee69951e8f", band: "9c1b3a98924d745c" }, f1: { table: "aa7e4a6ddaaf4ea2", paint: "69d5380db966d331", band: "6f0837c638f1c815" } },
+  g41_ring_tw42: { f0: { table: "7abc152b2c17e61a", paint: "fe6e5cd8fa6434c5", band: "745db7b9507eaa90" }, f1: { table: "e805423e64bb5ade", paint: "3b2f0873cfc48357", band: "3c67691dccf05395" } },
 };
 
 // The tool's second frame: every chain point rotated 0.3 rad and moved.
