@@ -552,10 +552,10 @@ Next free ID: K1331.
   most cases. But there are still plenty of unacceptable artifacts"): an artifact census (stray ink, hard
   colour edges inside fills, paper holes, broken ink) across scenes, then fix stages that drive its count to
   0; the look gate in docs/design/K1240_gate.md
-  - owner: agent `a321157f4e8ed2ebe` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 04:40, 2 h cap ~06:40)
-  - branch: `worktree-agent-a321157f4e8ed2ebe`, worktree `.claude/worktrees/agent-a321157f4e8ed2ebe`; last commit: `8c2dcf97`
+  - owner: nobody since 2026-11-12 06:08 (merged; agent `a321157f4e8ed2ebe` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `8f13a07d`
   - evidence: .claude/probes/K1314/ (census tools); untracked out/s1-s8/
-  - next: s8 running: j58 needles, j55 notch, x22 smear, j71 shade cut, c8 wedge, x15 inner step; baseline census_s7f (stray 11, hard 1, broken 13)
+  - next: s9: the j58a needle (a rule narrower than the ha/hb experiment), the j71 shade cut, the c8 quad (fill ownership in fill_tri: c8's strip owns c67's area), attribute the +4.3 ms worker frame on def (the cut search); x22 belongs to tieAlpha (draw.ts, K1247's lane)
   - brief: `docs/design/K1314_s8_needles_notches.md`
 
 ## Next, in order
