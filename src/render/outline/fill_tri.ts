@@ -850,11 +850,15 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
       const zm = reKey ? zAt1(c, (kL + kR) / 2) : 0;
       const z = !reKey ? zAt1(c, s) : matched ? zm : Math.max(zAt1(c, s), zm);
       const zl = reKey ? zAt1(c, kL) : z; const zr = reKey ? zAt1(c, kR) : z;
+      // K1247 s27 (K1332): fillFrame's FLOOR_EDGE, a sheared border row raised to put its edge's midpoint on the cone.
+      const fl = reKey && !matched;
+      const kl = fl ? Math.max(zl - zt, 2 * zAt1(c, (3 * kL + kR) / 4) - zt - z) : zl - zt;
+      const kr = fl ? Math.max(zr - zt, 2 * zAt1(c, (kL + 3 * kR) / 4) - zt - z) : zr - zt;
       const sL = ls === ls ? ls : kL; const sR = rs === rs ? rs : kR;
       const vL = b0 + i; const vC = vL + W; const vR = vC + W;
-      pos[2 * vL] = lx; pos[2 * vL + 1] = ly; key[vL] = zl - zt; sv[vL] = s;
+      pos[2 * vL] = lx; pos[2 * vL + 1] = ly; key[vL] = kl; sv[vL] = s;
       pos[2 * vC] = (lx + rx) / 2; pos[2 * vC + 1] = (ly + ry) / 2; key[vC] = z; sv[vC] = s;
-      pos[2 * vR] = rx; pos[2 * vR + 1] = ry; key[vR] = zr - zt; sv[vR] = s;
+      pos[2 * vR] = rx; pos[2 * vR + 1] = ry; key[vR] = kr; sv[vR] = s;
       s4[SLOTS * vL] = sL; s4[SLOTS * vC] = (sL + sR) / 2; s4[SLOTS * vR] = sR;
       across[vL] = 1; across[vR] = 1;
     };
@@ -1085,9 +1089,17 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
         const sR = mirR(i) ? sL0 : sR0;
         const zs = zAt(it.pi, s); const z = reKey ? (spL ? zAt(it.pi, (sL + sR) / 2) : Math.max(zs, zAt(it.pi, (sL + sR) / 2))) : zs;
         const zl = reKey ? zAt(it.pi, sL) : z; const zr = reKey ? zAt(it.pi, sR) : z;
-        set(it.base + i, lx, ly, zl - zt, s);
+        // K1247 s27 (K1332, FLOOR_EDGE): unmatched ranges that differ (a junction end's stage 5 rows)
+        // can shear a column by most of a tube's width in s, and the depth across that span is not
+        // linear: a border row in an under pass's dip, keyed by its own s, sank the whole triangle
+        // below its cone and a neighbour's edge won inside it (muse_hash c8's quad: c67's strip under
+        // c8's). Such a border row is raised, never lowered, to the key that puts the edge's
+        // midpoint (d = h / 2, s a quarter of the way to the other side) on its cone.
+        const kl = reKey && !spL ? Math.max(zl - zt, 2 * zAt(it.pi, (3 * sL + sR) / 4) - zt - z) : zl - zt;
+        const kr = reKey && !spL ? Math.max(zr - zt, 2 * zAt(it.pi, (sL + 3 * sR) / 4) - zt - z) : zr - zt;
+        set(it.base + i, lx, ly, kl, s);
         set(it.base + W + i, (lx + rx) / 2, (ly + ry) / 2, z, s);
-        set(it.base + 2 * W + i, rx, ry, zr - zt, s);
+        set(it.base + 2 * W + i, rx, ry, kr, s);
         s4[SLOTS * (it.base + i)] = sL; s4[SLOTS * (it.base + W + i)] = (sL + sR) / 2; s4[SLOTS * (it.base + 2 * W + i)] = sR;
         across[it.base + i] = 1; across[it.base + 2 * W + i] = 1;
       }

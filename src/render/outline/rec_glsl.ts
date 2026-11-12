@@ -174,7 +174,12 @@ void recPlace(inout vec2 P, inout float key, inout vec4 S) {
   float zs = md != ${REC_KEY_MID} ? recZ(b, n, L, t1.x + t1.y * float(i) / float(N)) : 0.0;
   if (r == 0) { P = cl.xy; key = (md == ${REC_KEY_ROW} ? zs : recZ(b, n, L, kL)) - uRecZt; S.x = cl.z; }
   else if (r == 2) { P = cr.xy; key = (md == ${REC_KEY_ROW} ? zs : recZ(b, n, L, kR)) - uRecZt; S.x = cr.z; }
-  else {
+  // K1247 s27 (K1332, fillFrame's FLOOR_EDGE): unmatched, a border row raised so its edge's midpoint sits on the cone.
+  if (md == ${REC_KEY_FLOOR} && r != 1) {
+    float kc = max(zs, recZ(b, n, L, (kL + kR) / 2.0));
+    key = max(key, 2.0 * recZ(b, n, L, r == 0 ? (3.0 * kL + kR) / 4.0 : (kL + 3.0 * kR) / 4.0) - uRecZt - kc);
+  }
+  if (r != 0 && r != 2) {
     float zm = md == ${REC_KEY_ROW} ? zs : recZ(b, n, L, (kL + kR) / 2.0);
     P = (cl.xy + cr.xy) / 2.0; key = md == ${REC_KEY_FLOOR} ? max(zs, zm) : zm; S.x = (cl.z + cr.z) / 2.0;
   }
