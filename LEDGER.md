@@ -519,11 +519,11 @@ Next free ID: K1333.
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: nobody since 2026-11-12 06:04 (merged; agent `aa4ea631c73c1c296` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `caceed3a`
-  - evidence: .claude/probes/K1247/ (k1247s26_mir, k1247s19_lib twin4), test/render/rec_tie.test.ts; untracked out/s26/, K1314 out/s1/census_s26b*
-  - next: K1324 narrowed: CONTACT_GROUPS is off (the skip added 20 stray finds; first step: census its finds by scene); K1327 GPU twin drift; then the phone A/B (K156 round) and the g41 residual (recSideOk)
-  - brief: `docs/design/K1247_s26_rec_fill_specks.md`
+  - owner: agent `ac9acd27cfb1cf144` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 06:10, 2 h cap ~08:10)
+  - branch: `worktree-agent-ac9acd27cfb1cf144`, worktree `.claude/worktrees/agent-ac9acd27cfb1cf144`; last commit: `337d785d`
+  - evidence: .claude/probes/K1247/ (k1247s26_bench.ps1, k1247s19_lib twin4), test/render/rec_tie.test.ts; untracked out/s27/
+  - next: s27 running: K1332 c8's quad in both fills, K1327 GPU twin drift, K1328 mirrored fixture; then the phone A/B (K156 round) and the g41 residual (recSideOk)
+  - brief: `docs/design/K1247_s27_c8_gpu_drift.md`
 - **K1278** · The outline's paint blends seamlessly across junctions (Levi 2026-11-10): section colour and pulses
   from per-pixel fields continuous across faces, triangles and junctions, gated by a seam test on every
   face edge, triangle edge and junction. Full text in docs/ledger_notes.md
@@ -552,11 +552,20 @@ Next free ID: K1333.
   most cases. But there are still plenty of unacceptable artifacts"): an artifact census (stray ink, hard
   colour edges inside fills, paper holes, broken ink) across scenes, then fix stages that drive its count to
   0; the look gate in docs/design/K1240_gate.md
-  - owner: nobody since 2026-11-12 06:08 (merged; agent `a321157f4e8ed2ebe` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `8f13a07d`
-  - evidence: .claude/probes/K1314/ (census tools); untracked out/s1-s8/
-  - next: s9: the j58a needle (a rule narrower than the ha/hb experiment), the j71 shade cut, the c8 quad (fill ownership in fill_tri: c8's strip owns c67's area), attribute the +4.3 ms worker frame on def (the cut search); x22 belongs to tieAlpha (draw.ts, K1247's lane)
-  - brief: `docs/design/K1314_s8_needles_notches.md`
+  - owner: agent `a88e9bc054f3e16da` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 06:10, 2 h cap ~08:10)
+  - branch: `worktree-agent-a88e9bc054f3e16da`, worktree `.claude/worktrees/agent-a88e9bc054f3e16da`; last commit: `337d785d`
+  - evidence: .claude/probes/K1314/ (census tools, k1314_s8_bench.ps1); untracked out/s1-s9/, baseline census_s8f
+  - next: s9 running: j58a needle, j71 shade cut, s8's +4.3 ms worker frame on def; baseline census_s8f (stray 9, hard 1, broken 13)
+  - brief: `docs/design/K1314_s9_needle_shade_cost.md`
+- **K1324** · draw.ts tieAlpha / contactPasses ties two arms of one form B junction group, so the band fades
+  ink there: specks inside the ink at def j174 (c71/c73, group 119), ring j12, g41_ring_tw42 j12,
+  g41_user_tw64 j28 (K1314 s6 handoff; crops `.claude/probes/K1314/out/s6/after4x/spot_016-019`). Make no
+  contact pass between arms of one group. After K1247 s25 merges (it owns draw.ts)
+  - owner: agent `aa00c89b1725519ea` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 06:10, 2 h cap ~08:10)
+  - branch: `worktree-agent-aa00c89b1725519ea`, worktree `.claude/worktrees/agent-aa00c89b1725519ea`; last commit: `337d785d`
+  - evidence: .claude/probes/K1324/; K1314 out/s1/census_s26b* and census_s26off*; K1247 out/s26/master4x, after4x
+  - next: s1 running: the four group specks without s26's 20 stray finds, and K1331 x22's twist-eye smear
+  - brief: `docs/design/K1324_s1_group_ties_x22.md`
 
 ## Next, in order
 
@@ -813,10 +822,6 @@ Every other item below waits on the trigger it names.
   sides on one s scale, centre at the mid s, JEND_GATE keeps s5's rows at junction ends): until then the
   record fill (default) and oe=0 may differ at g41_ring_tw64 x67/x68. After K1247 s25 merges (it owns
   fill_tri's record code); add a test tying the record fill to fillFrame
-- **K1324** · draw.ts tieAlpha / contactPasses ties two arms of one form B junction group, so the band fades
-  ink there: specks inside the ink at def j174 (c71/c73, group 119), ring j12, g41_ring_tw42 j12,
-  g41_user_tw64 j28 (K1314 s6 handoff; crops `.claude/probes/K1314/out/s6/after4x/spot_016-019`). Make no
-  contact pass between arms of one group. After K1247 s25 merges (it owns draw.ts)
 - **K1325** · K1314 census reference: form B draws stray ink at muse_hash x304 and g41_user_tw64 j30 where
   rp=outline is clean, so the census counts them against the outline (crops
   `.claude/probes/K1314/out/s7/after4x/spot_007.png`, `spot_008.png`); fix the reference as K1321 did, in
