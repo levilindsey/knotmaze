@@ -556,15 +556,6 @@ Next free ID: K1323.
   - evidence: .claude/probes/K1314/ (census tools); untracked out/s1-s5/
   - next: s6: x68 (form B picks c3 at (20.096,20.627)), x67 tongue, j71 tail fill, the class (a) joint specks, the j39 ticks, whether j78 is K1315's
   - brief: `docs/design/K1314_s6_faults.md`
-- **K1321** · K1314's census reference draws the approved look where form B is flawed: the class (a) and (c)
-  corners rounded per K1049 (Levi 2026-11-11: form B's open eye, rounded corner), and no V-merge artifacts
-  where the fillet yields (muse_hash j135, j78, j98; g41_user_tw64 j49). Tools only
-  (.claude/probes/K1314/k1314_census.ts, form_b_fillet.ts)
-  - owner: agent `a2a649168bc36da29` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 01:20, 2 h cap ~03:20)
-  - branch: `worktree-agent-a2a649168bc36da29`, worktree `.claude/worktrees/agent-a2a649168bc36da29`; last commit: `ae907f1d`
-  - evidence: .claude/probes/K1314/k1314_census.ts, form_b_fillet.ts; untracked out/s5/
-  - next: the reference rounds the class (a)/(c) corners and drops the yield blends (j135, j78, j98, user j49); reference crops for Claude
-  - brief: `docs/design/K1321_census_reference.md`
 
 ## Next, in order
 
@@ -2224,6 +2215,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1321** · the census reference draws the approved rounded look at classes (a)/(c) and the fillet yield (census_k1321c: stray_ink 25 -> 12, nothing new). Done in a8bab56a (2026-11-12).
 - **K1293** · outline_port.test.ts's second frame (a rigid 0.3 rad turn) leaves every corner degenerate, so its pins there exercise no arc; give it a frame with real corners (K1283 handoff, docs/design/K1283_junctions.md). Done in fe4dd895 (2026-11-10).
 - **K1290** · answered, not adopted: forward corner-arc ends cut def jump pairs 66 -> 4 (muse_hash 33 -> 14) but census vs form B +1.8%, frame() +6%, concentric corners (j55, j156) still switch roots, and the corner-foot bites stay; follow-up in K1281. Done in 97f4f2e2 (2026-11-10).
 - **K1280** · K1240 outline jumps where a station's s crosses a centreline vertex: the tie spread gives each tie run a continuous s; def j47 1.243, j146 1.007, j158 0.264 px -> no jump (K1247 s16). The jitter-check crossings (muse_hash x61, x182, ...) now 0 jump px in k1279_motion. Done in 541d22fb (2026-11-10).
