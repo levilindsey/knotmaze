@@ -4485,6 +4485,7 @@ function foldChevron(p: Poly, h: number, W: number, x: number, y: number, s: num
   put(x, y, n2x, n2y);
   return k;
 }
+const K1314X = (f: string): boolean => ((globalThis as unknown as { process?: { env: Record<string, string | undefined> } }).process?.env.EXP ?? "").split(",").includes(f);
 function cutFoldsC(C: FCache, pi: number, sig: number, B: FBord): void {
   const p = C.polys[pi];
   const h = C.h;
@@ -4512,7 +4513,8 @@ function cutFoldsC(C: FCache, pi: number, sig: number, B: FBord): void {
     const roots = C.chainRoots[pi];
     for (const sb of bendClusters) {
       let nearRoot = false; for (let r = 0; r < roots.length; r++) if (Math.abs(dS(p, roots[r], sb)) < h) nearRoot = true;
-      if (nearRoot) continue;
+      { const dbg = (globalThis as unknown as { __k1314dbg?: string[] }).__k1314dbg; if (dbg) { let dr = Infinity; for (let r = 0; r < roots.length; r++) dr = Math.min(dr, Math.abs(dS(p, roots[r], sb))); const q0 = pointAtInto(p, sb, ptScratch); dbg.push(`c${pi} sig${sig} sb ${sb.toFixed(3)} droot ${dr.toFixed(3)} at (${ptScratch[0].toFixed(2)},${ptScratch[1].toFixed(2)}) ${nearRoot ? "SKIP" : "cut?"}${q0 === undefined ? "" : ""}`); } }
+      if (nearRoot && !K1314X("nr")) continue;
       // Likewise a bend within h of a kink's station (a self-crossing of this chain): its border
       // crosses itself there because the thread does, and the crossing's gap draws it (muse_hash
       // x58 70.4 -> 18.6 px, x22 68.2 -> 43.3; cut, they were 43 and 21 px worse than master).
@@ -4555,6 +4557,7 @@ function cutFoldsC(C: FCache, pi: number, sig: number, B: FBord): void {
             // seq.splice(i + 1, j - i - 1, nid)
             seq[i + 1] = nid; seq.copyWithin(i + 2, j, m); m -= j - i - 2;
             diag.push(`fold ch${pi} side${sig} at s=${sb.toFixed(2)}`);
+            { const dbg = (globalThis as unknown as { __k1314dbg?: string[] }).__k1314dbg; if (dbg && nearRoot) dbg.push(`CUTNR c${pi} sig${sig} sb ${sb.toFixed(3)} X (${x.toFixed(2)},${y.toFixed(2)})`); }
             changed = true;
             break outer;
           }
@@ -4596,6 +4599,7 @@ function cutFoldsC(C: FCache, pi: number, sig: number, B: FBord): void {
       const ex = B.px[seq[iE]]; const ey = B.py[seq[iE]];
       if (atS) { foldNormal(hx - ex, hy - ey, sig, cfCut, q); foldNormal(-dx, -dy, sig, cfCut, q + 2); }
       else { foldNormal(dx, dy, sig, cfCut, q); foldNormal(ex - hx, ey - hy, sig, cfCut, q + 2); }
+      if (K1314X("ec")) { const qc = atS ? q : q + 2; if (cfCut[qc] * (cx - 0.5 * (hx + ex)) + cfCut[qc + 1] * (cy - 0.5 * (hy + ey)) < 0) { cfCut[qc] = -cfCut[qc]; cfCut[qc + 1] = -cfCut[qc + 1]; } }
       if (cfS2.length <= nid - nb) { const g = new Float64Array(2 * (nid - nb + 1)); g.set(cfS2); cfS2 = g; }
       cfS2[nid - nb] = hs;
       if (atS) { seq[1] = nid; seq.copyWithin(2, iIn + 1, m); m -= iIn - 1; }
@@ -4616,6 +4620,30 @@ function cutFoldsC(C: FCache, pi: number, sig: number, B: FBord): void {
           // K1283 s8: the chevron's s runs from the cut's s on the fold's first leg to its s on the
           // second (was the first leg's s throughout), and its ends know each other's (borderMeetC).
           const s1 = B.ps[id]; const ds = CF_S2 ? dS(p, s1, cfS2[id - nb]) : 0;
+          const s2 = cfS2[id - nb]; let rA = NaN; let rB = NaN;
+          if (K1314X("ha") && dS(p, s1, s2) > 1e-9) for (let r = 0; r < roots.length; r++) {
+            const a = dS(p, s2, roots[r]); if (a >= 0 && a < C.W) rA = roots[r];
+            const b = dS(p, roots[r], s1); if (b >= 0 && b < C.W) rB = roots[r];
+          }
+          if (rA === rA || rB === rB) {
+            // K1314 s8 (experiment): a fold whose one leg runs into an arm root within W.
+            const hb = K1314X("hb"); const kh = (k - 1) >> 1;
+            const r0 = hb || rA === rA ? 0 : k - 1 - kh; const r1 = hb || rB === rB ? k - 1 : kh;
+            const qn = 4 * (id - nb) + (rA === rA ? 0 : 2); const kx = cfCut[qn]; const ky = cfCut[qn + 1];
+            if (rB === rB && !hb) while (o > 0 && B.bcv[o - 1] === 0 && dS(p, rB, B.bsm[o - 1]) >= 0 && dS(p, B.bsm[o - 1], s1) > 0) o--;
+            if (rB === rB && hb) for (let oo = o - 1; oo >= 0 && B.bcv[oo] === 0 && dS(p, rB, B.bsm[oo]) >= 0; oo--) { B.bfx[oo] = B.bx[oo] + h * kx; B.bfy[oo] = B.by[oo] + h * ky; }
+            for (let r = r0; r <= r1; r++) {
+              B.bx[o] = cfChev[4 * r]; B.by[o] = cfChev[4 * r + 1]; B.bsm[o] = s1 + (k > 1 ? (ds * r) / (k - 1) : 0); B.bs[o] = CF_S2_PAINT ? B.bsm[o] : s1; B.bfx[o] = cfChev[4 * r + 2]; B.bfy[o] = cfChev[4 * r + 3];
+              if (hb && (rA === rA ? r > kh : r < kh)) { B.bfx[o] = B.bx[o] + h * kx; B.bfy[o] = B.by[o] + h * ky; }
+              B.bcv[o] = 0; B.bs2[o] = s1; o++;
+            }
+            if (rA === rA) while (i + 1 < m && seq[i + 1] < nb && dS(p, s2, B.ps[seq[i + 1]]) >= -1e-9 && dS(p, B.ps[seq[i + 1]], rA) >= 0) {
+              if (!hb) { i++; continue; }
+              const q = seq[++i]; B.bcv[o] = 0; B.bx[o] = B.px[q]; B.by[o] = B.py[q]; B.bs[o] = B.ps[q]; B.bsm[o] = B.ps[q];
+              B.bfx[o] = B.px[q] + h * kx; B.bfy[o] = B.py[q] + h * ky; o++;
+            }
+            continue;
+          }
           for (let r = 0; r < k; r++) {
             B.bx[o] = cfChev[4 * r]; B.by[o] = cfChev[4 * r + 1]; B.bsm[o] = s1 + (k > 1 ? (ds * r) / (k - 1) : 0); B.bs[o] = CF_S2_PAINT ? B.bsm[o] : s1; B.bfx[o] = cfChev[4 * r + 2]; B.bfy[o] = cfChev[4 * r + 3];
             B.bcv[o] = r === 0 ? 1 : r === k - 1 ? 2 : 0; B.bs2[o] = r === 0 ? s1 + ds : s1;
