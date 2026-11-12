@@ -513,10 +513,10 @@ Next free ID: K1319.
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: agent `a555ed905a6dda790` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-11 16:40, 2 h cap ~18:40)
-  - branch: `worktree-agent-a555ed905a6dda790`, worktree `.claude/worktrees/agent-a555ed905a6dda790`; last commit: `a6093589`
+  - owner: nobody since 2026-11-11 17:53 (merged; agent `a555ed905a6dda790` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `673b1cc0`
   - evidence: .claude/probes/K1247/ (tools); untracked out/s22/
-  - next: s22: the band keeps one topology between structures with ob=1, its vertices CPU-placed records; then fans, junctions and disks as records, zC, the first frame (frame step ~235 ms, cold fill ~122 ms)
+  - next: s23: shader placement of the band records (main places the columns from chainTex; removes ob=1's extra ~6 MB reply and 10-15 ms worker band time); the run-end column fidelity (max 1.155 px muse_hash c71); then fans, junctions and disks as records, zC, the first frame (frame ~235 ms, cold fill ~122 ms)
   - brief: `docs/design/K1247_s22_band_records.md`
 - **K1278** · The outline's paint blends seamlessly across junctions (Levi 2026-11-10): section colour and pulses
   from per-pixel fields continuous across faces, triangles and junctions, gated by a seam test on every
