@@ -179,7 +179,24 @@ export interface FBRas { ink: Float32Array; chain: Int32Array; s: Float32Array; 
 // sharp inner corner. form_b_fillet is form B with the corner loop's through-pair skip removed;
 // it is evaluated at every pixel whose corner cell (cornersNear) holds a corner stock form B skips
 // (thruCi), and replaces form B's value there. Everywhere else the two are the same field.
-export interface FBF { thruCi: Set<number>; corners: { j: number; a: number; b: number; ok: boolean; r: number; theta: number; Vx: number; Vy: number }[]; arms: { ei: number }[]; cornersNear(x: number, y: number): number[]; evalPoint(x: number, y: number): { ink: number; top: number; chain: number; s: number } }
+export interface FBF { thruCi: Set<number>; corners: { j: number; a: number; b: number; ok: boolean; r: number; theta: number; Vx: number; Vy: number }[]; arms: { ei: number }[]; cornersNear(x: number, y: number): number[]; inWedge(c: unknown, x: number, y: number): boolean; evalPoint(x: number, y: number): { ink: number; top: number; chain: number; s: number } }
+// K1314 s5: the fillet replaces form B only at its own bend. A bend's circle can be large (muse_hash j78's
+// r is 3.1 h) and form_b_fillet draws it with no end, so it ran on across the next junction (j77), a
+// translucent band across that junction's thread (out/s5 crops, j77/j78/j20/j154). Inside another
+// junction's own ok corner's wedge that corner rules, as the outline's s4 join at X has it: form B there.
+export const FILLET_YIELD = { on: !process.argv.includes("--noyield") };
+export function filletHere(f: FBF, x: number, y: number): boolean {
+  const near = f.cornersNear(x, y); const tj: number[] = [];
+  for (const ci of near) if (f.thruCi.has(ci)) tj.push(f.corners[ci].j);
+  if (tj.length === 0) return false;
+  if (!FILLET_YIELD.on) return true;
+  for (const ci of near) {
+    const c = f.corners[ci];
+    if (f.thruCi.has(ci) || !c.ok || tj.includes(c.j)) continue;
+    if (f.inWedge(c, x, y)) return false;
+  }
+  return true;
+}
 const FBF_CACHE = new WeakMap<object, FBF>();
 export function filletOf(m: Model): FBF {
   let f = FBF_CACHE.get(m);
@@ -213,7 +230,7 @@ export function rasterFormB(m: Model, c0: number, r0: number, Wd: number, Hd: nu
         ink = ink.slice(); chain = chain.slice(); s = s.slice();
         for (let r = 0; r < Hd; r++) for (let c = 0; c < Wd; c++) {
           const x = (c0 + c + 0.5) / ppu; const y = (r0 + r + 0.5) / ppu;
-          if (!fbf.cornersNear(x, y).some((ci) => fbf.thruCi.has(ci))) continue;
+          if (!filletHere(fbf, x, y)) continue;
           const ev = fbf.evalPoint(x, y); const o = r * Wd + c;
           ink[o] = Math.min(1, Math.max(0, ev.ink)); chain[o] = ev.top < 0 ? -1 : ev.chain; s[o] = ev.s;
         }

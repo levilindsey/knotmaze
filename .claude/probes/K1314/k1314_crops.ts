@@ -17,7 +17,7 @@ import { fileURLToPath } from "node:url";
 import { inflateSync, deflateSync } from "node:zlib";
 import { FormB } from "../../../src/render/field/form_b";
 import { runAt, runColour, type RGB } from "../../../src/render/outline/paint";
-import { buildModel, filletOf, rasterOutline, SCENE_DIR, type Art, type Model } from "./k1314_census";
+import { buildModel, filletHere, filletOf, rasterOutline, SCENE_DIR, type Art, type Model } from "./k1314_census";
 let BEFORE: string | undefined; // K1314 s3: the base commit's crops (--before)
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -78,7 +78,9 @@ export function cropRow(nm: string, x: number, y: number, rr: number, P: number,
   const col: RGB = [0, 0, 0];
   // form B
   for (let r = 0; r < P; r++) for (let c = 0; c < P; c++) {
-    const ev = (BEFORE ? filletOf(e.m) : e.fb).evalPoint((c0 + c + 0.5) / ppu, (r0 + r + 0.5) / ppu);
+    // s5: with --before, the census's own reference (the fillet only at its bend, filletHere)
+    const px = (c0 + c + 0.5) / ppu; const py = (r0 + r + 0.5) / ppu;
+    const ev = (BEFORE && filletHere(filletOf(e.m), px, py) ? filletOf(e.m) : e.fb).evalPoint(px, py);
     let fill: number[] | null = null;
     if (ev.top >= 0 && ev.chain >= 0) { const k = runAt(e.m.sp, ev.chain, ev.s); if (k >= 0) { runColour(e.m.sp.runs[k], ev.s, col); fill = [col[0], col[1], col[2]]; } }
     put(0, c, r, comp(fill, ev.ink));
