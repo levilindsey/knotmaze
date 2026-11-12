@@ -520,10 +520,10 @@ Next free ID: K1334.
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: agent `ac9acd27cfb1cf144` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 06:10, 2 h cap ~08:10)
-  - branch: `worktree-agent-ac9acd27cfb1cf144`, worktree `.claude/worktrees/agent-ac9acd27cfb1cf144`; last commit: `337d785d`
+  - owner: nobody since 2026-11-12 07:51 (merged; agent `ac9acd27cfb1cf144` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `1137a2ad`
   - evidence: .claude/probes/K1247/ (k1247s26_bench.ps1, k1247s19_lib twin4), test/render/rec_tie.test.ts; untracked out/s27/
-  - next: s27 running: K1332 c8's quad in both fills, K1327 GPU twin drift, K1328 mirrored fixture; then the phone A/B (K156 round) and the g41 residual (recSideOk)
+  - next: s28: the fan rule and FLOOR_EDGE made 7 and 25 junctions slightly worse vs the reference (muse_hash 1390 +47 cells; k1247s27_jmis.ts), none visible; the faint seam inside c8's under-pass (in master too)
   - brief: `docs/design/K1247_s27_c8_gpu_drift.md`
 - **K1278** · The outline's paint blends seamlessly across junctions (Levi 2026-11-10): section colour and pulses
   from per-pixel fields continuous across faces, triangles and junctions, gated by a seam test on every
