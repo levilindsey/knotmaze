@@ -220,6 +220,9 @@ export function bandRec(table: OutlineTable, scene: SceneIn, zz: ZZ, lay: BandLa
   const endFans = (p: OutlineTable["pieces"][number], C: ZChain, sgn: number, dS: number, N: number): void => {
     EF.fill(0); EF[0] = -1; EF[4] = -1; EF[8] = p.s0; EF[9] = dS;
     const np0 = p.pts.length / 2; const cp = p.cpts; const P = p.pts; const n = C.n; const L = C.len; const loop = C.closed && L > 0;
+    // A two-point piece is today's one quad: the columns between lerp its end columns (muse_hash c39 d338, a
+    // 0.003-unit cut where colAt's offset points ran 0.35 px off it). nS -1 marks it.
+    if (np0 === 2) { EF[3] = -1; return; }
     if (np0 < 2) return;
     // The vertex at (x, y) near s (-1: none).
     const vAt = (x: number, y: number, s: number): number => {
@@ -260,11 +263,7 @@ export function bandRec(table: OutlineTable, scene: SceneIn, zz: ZZ, lay: BandLa
     let kS = 1; while (kS < np0 && cp[2 * kS] === cp[0] && cp[2 * kS + 1] === cp[1]) kS++;
     if (kS === np0) {
       const v = vAt(cp[0], cp[1], p.s0);
-      if (v >= 0 && np0 === 2) {
-        // Two clip points (muse_hash c66 d754 f21): columns 1..N - 1 at point 0's angle, radius h, if it lies near it.
-        const r0 = Math.hypot(P[0] - C.xs[v], P[1] - C.ys[v]);
-        if (N >= 2 && Math.abs(r0 - h) < EF_OFF) { EF[0] = v; EF[1] = Math.atan2(P[1] - C.ys[v], P[0] - C.xs[v]); EF[3] = N - 1; EF[10] = sNear(v, p.s0); }
-      } else if (v >= 0 && N - 1 >= np0 - 2 && arcOf(v, 1, np0 - 2, 1)) {
+      if (v >= 0 && N - 1 >= np0 - 2 && arcOf(v, 1, np0 - 2, 1)) {
         EF[0] = v; EF[3] = np0 - 2; EF[4] = v; EF[5] = EF[1] + (np0 - 3) * EF[2]; EF[6] = 0; EF[7] = N - 1 - (np0 - 2);
         EF[10] = sNear(v, p.s0); EF[11] = EF[10];
       }
@@ -391,10 +390,11 @@ export function bandRec(table: OutlineTable, scene: SceneIn, zz: ZZ, lay: BandLa
       };
       for (let j = 1; j <= nS; j++) arcPt(EF[0], EF[1] + (j - 1) * EF[2], j, EF[10]);
       const jLo = nS > 0 ? 0 : 1; const jHi = nE > 0 ? NM : NM - 1;
-      if (jHi >= jLo) { colRow(C, T.pf, o, EF[8], EF[9], NM, sgn, h, jLo, jHi, RO.subarray(2 * oS), RS.subarray(oS)); colRow(C, T.pf, o, EF[8], EF[9], NM, sgn, h - W, jLo, jHi, RI.subarray(2 * oS), RS2.subarray(oS)); }
+      if (nS >= 0 && jHi >= jLo) { colRow(C, T.pf, o, EF[8], EF[9], NM, sgn, h, jLo, jHi, RO.subarray(2 * oS), RS.subarray(oS)); colRow(C, T.pf, o, EF[8], EF[9], NM, sgn, h - W, jLo, jHi, RI.subarray(2 * oS), RS2.subarray(oS)); }
       for (let j = 0; j < nE; j++) arcPt(EF[4], EF[5] + j * EF[6], N - nE + j, EF[11]);
       RO[2 * N] = p.pts[2 * np0 - 2]; RO[2 * N + 1] = p.pts[2 * np0 - 1]; innerOf(p.pts, p.cpts, np0, np0 - 1, RI, 2 * N);
       RS[N] = footS(C, p.cpts[2 * np0 - 2], p.cpts[2 * np0 - 1], p.s0 + dS, 2 * h);
+      if (nS < 0) for (let j = 1; j < N; j++) { const t = j / N; RO[2 * j] = RO[0] + (RO[2 * N] - RO[0]) * t; RO[2 * j + 1] = RO[1] + (RO[2 * N + 1] - RO[1]) * t; RI[2 * j] = RI[0] + (RI[2 * N] - RI[0]) * t; RI[2 * j + 1] = RI[1] + (RI[2 * N + 1] - RI[1]) * t; RS[j] = RS[0] + (RS[N] - RS[0]) * t; }
       P = RO; Ip = RI; sv = RS;
       // A faded run (runEndFade): today's per-point alpha, carried to each column by its arc-length fraction
       // along the outer border (the columns lie on today's polyline).
