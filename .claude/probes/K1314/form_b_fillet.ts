@@ -768,6 +768,12 @@ export class FormB {
         const b = ais[(i + 1) % n];
         let th = this.arms[b].ang - this.arms[a].ang;
         th = ((th % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+        // K1321: a near-straight or reflex pair (form B makes no corner) is recorded for the census.
+        if (th >= Math.PI - 1e-6 && th < 1.25 * Math.PI) {
+          const xa0 = j.arms[this.arms[a].ei];
+          const xb0 = j.arms[this.arms[b].ei];
+          if (!(xa0.chain === xb0.chain && xa0.kind === "through" && xb0.kind === "through" && Math.abs(xa0.s - xb0.s) < 1e-6)) this.recordFail(ji, a, b, th);
+        }
         if (th <= 1e-6 || th >= Math.PI - 1e-6) continue;
         const ea = this.arms[a].ei;
         const eb = this.arms[b].ei;
@@ -785,6 +791,7 @@ export class FormB {
         const style = st === "sharp" ? 0 : 1;
         const c = this.solveCorner(ji, a, b, th, style);
         if (c) { if (thruPair) this.thruCi.add(this.corners.length); this.addCorner(c); }
+        else if (!thruPair) this.recordFail(ji, a, b, th);
       }
     });
   }
@@ -862,6 +869,56 @@ export class FormB {
       }
     }
     return { x, y, fa: this.footArm(a, x, y), fb: this.footArm(b, x, y), ok: false };
+  }
+
+  /**
+   * K1321: the corners solveCorner drops because V's feet lie outside the arms' spans (V found, in the
+   * wedge). The census reference rounds their inner border with a disk of radius W about V
+   * (k1314_census refEval); nothing here reads this list.
+   */
+  readonly vfail: { ji: number; a: number; b: number; Vx: number; Vy: number; ca: number; cb: number }[] = [];
+  private recordFail(ji: number, a: number, b: number, th0: number): void {
+    const h = this.h;
+    const A = this.arms[a];
+    const B = this.arms[b];
+    if (!(A.L > 1e-9 && B.L > 1e-9)) return;
+    const j = this.scene.junctions[ji];
+    const reflex = th0 >= Math.PI - 1e-6;
+    let bx = A.ux + B.ux;
+    let by = A.uy + B.uy;
+    if (reflex) {
+      // The wedge's bisector: arm a's direction turned by θ/2 toward b.
+      const cs = Math.cos(th0 / 2);
+      const sn2 = Math.sin(th0 / 2);
+      bx = A.ux * cs - A.uy * sn2;
+      by = A.ux * sn2 + A.uy * cs;
+    }
+    const bl = Math.hypot(bx, by) || 1;
+    bx /= bl;
+    by /= bl;
+    const sn = Math.sin(th0 / 2);
+    const full: [number, number] = [0, Infinity];
+    const V = this.solveEq(a, b, h, j.c[0] + (bx * h) / sn, j.c[1] + (by * h) / sn, full, full);
+    if (!V.ok) return;
+    const dVa = this.armDist(a, V.fa.s);
+    const dVb = this.armDist(b, V.fb.s);
+    const tol = 1e-9 * h;
+    if (!reflex && dVa > tol && dVa < A.L - tol && dVb > tol && dVb < B.L - tol) return;
+    const crossA = A.ux * (V.y - j.c[1]) - A.uy * (V.x - j.c[0]);
+    const crossB = B.ux * (V.y - j.c[1]) - B.uy * (V.x - j.c[0]);
+    if (reflex) {
+      // Not inside the convex wedge from b to a.
+      if (crossB > 0 && crossA < 0) return;
+    } else {
+      const sgn = Math.sign(A.ux * B.uy - A.uy * B.ux);
+      if (!(crossA * sgn > 0 && crossB * sgn < 0)) return;
+    }
+    // V on the tubes' boundary: no other arm of the junction covers it.
+    for (let k = 0; k < this.arms.length; k++) {
+      if (k === a || k === b || this.arms[k].j !== ji) continue;
+      if (this.footArm(k, V.x, V.y).d < 0.95 * h) return;
+    }
+    this.vfail.push({ ji, a, b, Vx: V.x, Vy: V.y, ca: A.pi, cb: B.pi });
   }
 
   private solveCorner(ji: number, a: number, b: number, th0: number, style: number): Corner | null {

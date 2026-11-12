@@ -203,6 +203,57 @@ export function filletOf(m: Model): FBF {
   if (!f) { f = new FormBFillet(JSON.parse(JSON.stringify(m.scene)) as never, { dpr: 2 }) as unknown as FBF; FBF_CACHE.set(m, f); }
   return f;
 }
+const FB_CACHE = new WeakMap<object, EVF>();
+type EVF = { evalPoint(x: number, y: number): { ink: number; top: number; chain: number; s: number } };
+/** Plain form B (src/render/field/form_b.ts), one per model. */
+export function plainOf(m: Model): EVF {
+  let f = FB_CACHE.get(m);
+  if (!f) { f = new FormB(JSON.parse(JSON.stringify(m.scene)) as never, { dpr: 2 }) as unknown as EVF; FB_CACHE.set(m, f); }
+  return f;
+}
+/** The census reference at one point (what rasterFormB stores per pixel). */
+export function refEval(m: Model, x: number, y: number): { ink: number; top: number; chain: number; s: number } {
+  const fbf = filletOf(m);
+  const e = { ...(FILLET_REF.on && fbf.thruCi.size && filletHere(fbf, x, y) ? fbf.evalPoint(x, y) : plainOf(m).evalPoint(x, y)) };
+  e.ink = vroundInk(m, x, y, Math.min(1, Math.max(0, e.ink)), e.top < 0 ? -1 : e.chain);
+  return e;
+}
+// K1321: corners form B drops because V's feet lie outside the arms' spans (form_b_fillet's vfail; the
+// outline's table says "V outside spans" there too) get no corner fill, so form B leaves the ink's inner
+// border notched (class a: def j174, ring j12) or square (class c: g41_def_tw64 j45, j48). The approved
+// look rounds it: ink within W of V, inside the arms' tubes. That is the true inward offset of the tubes'
+// union about its concave corner V, built from form B's own V and arms, never from the outline.
+// --novround restores s5's reference.
+export const VROUND = { on: !process.argv.includes("--novround") };
+type VFail = { ji: number; a: number; b: number; Vx: number; Vy: number; ca: number; cb: number };
+type FBG = FBF & { vfail: VFail[]; h: number; W: number; aa: number; footArm(ai: number, x: number, y: number, d0?: number, d1?: number): { d: number } };
+const VGRID = new WeakMap<object, { cell: number; g: Map<string, VFail[]> }>();
+function vfailGrid(f: FBF): { cell: number; g: Map<string, VFail[]> } {
+  let G = VGRID.get(f);
+  if (G) return G;
+  const F = f as FBG; const cell = 0.5; const g = new Map<string, VFail[]>(); const R = F.W + 2 * F.aa;
+  for (const v of F.vfail ?? []) {
+    for (let i = Math.floor((v.Vx - R) / cell); i <= Math.floor((v.Vx + R) / cell); i++) for (let k = Math.floor((v.Vy - R) / cell); k <= Math.floor((v.Vy + R) / cell); k++) {
+      const key = `${i},${k}`; const l = g.get(key); if (l) l.push(v); else g.set(key, [v]);
+    }
+  }
+  G = { cell, g }; VGRID.set(f, G); return G;
+}
+const ssK = (a: number, b: number, x: number): number => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+/** The reference's ink at (x, y) given form B's (ink, chain): raised to the disk about a dropped corner's V. */
+export function vroundInk(m: Model, x: number, y: number, ink: number, chain: number): number {
+  if (!VROUND.on) return ink;
+  const F = filletOf(m) as FBG; const G = vfailGrid(F);
+  const l = G.g.get(`${Math.floor(x / G.cell)},${Math.floor(y / G.cell)}`); if (!l) return ink;
+  for (const v of l) {
+    const d = Math.hypot(x - v.Vx, y - v.Vy); if (d > F.W + F.aa) continue;
+    if (chain >= 0 && chain !== v.ca && chain !== v.cb) continue;
+    const dIn = Math.min(F.footArm(v.a, x, y).d, F.footArm(v.b, x, y).d);
+    const w = (1 - ssK(F.h - F.aa, F.h + F.aa, dIn)) * (1 - ssK(F.W - F.aa, F.W + F.aa, d));
+    if (w > ink) ink = w;
+  }
+  return ink;
+}
 /** --nofillet: s2's reference (form B everywhere, the s1/s2 k1049 detector). */
 export const FILLET_REF = { on: !process.argv.includes("--nofillet") };
 export function rasterFormB(m: Model, c0: number, r0: number, Wd: number, Hd: number, ppu: number, cacheFile?: string, filletFile?: string): FBRas {
@@ -237,6 +288,10 @@ export function rasterFormB(m: Model, c0: number, r0: number, Wd: number, Hd: nu
       }
       if (filletFile) writeFileSync(filletFile, Buffer.concat([Buffer.from(ink.buffer), Buffer.from(chain.buffer), Buffer.from(s.buffer)]));
     }
+  }
+  if (VROUND.on && ((filletOf(m) as FBG).vfail ?? []).length) {
+    ink = ink.slice();
+    for (let r = 0; r < Hd; r++) for (let c = 0; c < Wd; c++) { const o = r * Wd + c; ink[o] = vroundInk(m, (c0 + c + 0.5) / ppu, (r0 + r + 0.5) / ppu, ink[o], chain[o]); }
   }
   const rgb = new Float32Array(3 * n).fill(-1); const col: RGB = [0, 0, 0];
   for (let o = 0; o < n; o++) {
