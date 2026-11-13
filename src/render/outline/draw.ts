@@ -847,6 +847,34 @@ export function bandData(table: OutlineTable, scene: SceneIn, zz: ReturnType<typ
   const { zc, passes } = zz;
   const alphaAt = tieAlpha(zz, h, W, zt);
   const SUB = h / 8; const ROWS = 8;
+  // A tied band vertex: x, y, alpha, own s, dC (h - W u) and the piece's own alpha, all linear across a triangle
+  // (the app's quads interpolate s and dC the same way and take the tie per pixel).
+  type BV = [number, number, number, number, number, number];
+  const emit = (a: BV, b: BV, c: BV): void => {
+    bandPos.push(a[0], a[1], b[0], b[1], c[0], c[1]); bandAlpha.push(a[2], b[2], c[2]);
+    for (let m = 0; m < 3; m++) bandCol.push(ink[0], ink[1], ink[2]);
+  };
+  const mid = (ch: number, a: BV, b: BV): BV => {
+    const x = (a[0] + b[0]) / 2; const y = (a[1] + b[1]) / 2; const s = (a[3] + b[3]) / 2; const d = (a[4] + b[4]) / 2; const o = (a[5] + b[5]) / 2;
+    return [x, y, alphaAt(ch, x, y, s, d) * o, s, d, o];
+  };
+  // K1324 s3: the tie per vertex, interpolated, misses the fade's kinks (the partner's border, dC = h, cuts a
+  // cell at any angle): x22's lower join (muse_hash 31.57, 7.56) inked .97 where the app's per-pixel tie
+  // gives 1, a faint seam along the over border. A tied triangle with a fade at a vertex whose edge midpoints
+  // miss the tie by more than REFINE_TOL splits in four, to REFINE_DEPTH levels; a midpoint is a function of
+  // its edge alone, so neighbours that split an edge agree on it and the band stays watertight.
+  const REFINE_TOL = 0.01; const REFINE_DEPTH = 4;
+  const refine = (ch: number, a: BV, b: BV, c: BV, k: number): void => {
+    const ta = a[5] > 0 ? a[2] / a[5] : 1; const tb = b[5] > 0 ? b[2] / b[5] : 1; const tc = c[5] > 0 ? c[2] / c[5] : 1;
+    if (k < REFINE_DEPTH && !(Math.abs(ta - tb) < 1e-6 && Math.abs(ta - tc) < 1e-6)) {
+      const ab = mid(ch, a, b); const bc = mid(ch, b, c); const ca = mid(ch, c, a);
+      if (Math.max(Math.abs(ab[2] - (a[2] + b[2]) / 2), Math.abs(bc[2] - (b[2] + c[2]) / 2), Math.abs(ca[2] - (c[2] + a[2]) / 2)) > REFINE_TOL) {
+        refine(ch, a, ab, ca, k + 1); refine(ch, ab, b, bc, k + 1); refine(ch, ca, bc, c, k + 1); refine(ch, ab, bc, ca, k + 1);
+        return;
+      }
+    }
+    emit(a, b, c);
+  };
   for (const p of table.pieces) {
     const np = p.pts.length / 2;
     if (np < 2) continue;
@@ -902,24 +930,22 @@ export function bandData(table: OutlineTable, scene: SceneIn, zz: ReturnType<typ
         // untied band reads it: ignoring it inked the run's stretch from
         // the tail's start to V at 1, the black bars at muse_hash j78, j58.
         const oA = pa ? pa[2 * i] : 1; const iA = pa ? pa[2 * i + 1] : 1; const oB = pa ? pa[2 * i + 2] : 1; const iB = pa ? pa[2 * i + 3] : 1;
-        let prev: [number, number, number][] | null = null;
+        let prev: BV[] | null = null;
         for (const t of ts) {
           const ox = ax + (bx - ax) * t; const oy = ay + (by - ay) * t;
           const ix = ia[0] + (ib[0] - ia[0]) * t; const iy = ia[1] + (ib[1] - ia[1]) * t;
           const s = sa + (sb - sa) * t;
           const oT = oA + (oB - oA) * t; const iT = iA + (iB - iA) * t;
-          const cur: [number, number, number][] = [];
+          const cur: BV[] = [];
           for (let r = 0; r <= R; r++) {
             const u = r / R; const x = ox + (ix - ox) * u; const y = oy + (iy - oy) * u;
             const own = pa ? oT + (iT - oT) * u : 1;
-            cur.push([x, y, (tiedSeg ? alphaAt(p.chain, x, y, s, h - W * u) : 1) * own]);
+            cur.push([x, y, (tiedSeg ? alphaAt(p.chain, x, y, s, h - W * u) : 1) * own, s, h - W * u, own]);
           }
           if (prev) {
             for (let r = 0; r < R; r++) {
               const pO = prev[r]; const cO = cur[r]; const pI = prev[r + 1]; const cI = cur[r + 1];
-              bandPos.push(pO[0], pO[1], cO[0], cO[1], pI[0], pI[1], cO[0], cO[1], cI[0], cI[1], pI[0], pI[1]);
-              bandAlpha.push(pO[2], cO[2], pI[2], cO[2], cI[2], pI[2]);
-              for (let m = 0; m < 6; m++) bandCol.push(ink[0], ink[1], ink[2]);
+              if (tiedSeg) { refine(p.chain, pO, cO, pI, 0); refine(p.chain, cO, cI, pI, 0); } else { emit(pO, cO, pI); emit(cO, cI, pI); }
             }
           }
           prev = cur;
