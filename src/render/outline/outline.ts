@@ -3204,8 +3204,9 @@ export function diagramOf(scene: SceneIn): DiagramStructure {
     if (which < 0) return;
     piecesD.push({ kind: "tail", chain: which ? b.pi : a.pi, side: 0, corner: ci, interval: which, cap: -1 });
   });
-  // K1314 s12 (thruTail): the other arm's border under the end arm, interval = which + 2.
-  if (K1314S12.thruTail) corners.forEach((dc, ci) => {
+  // K1314 s12 (thruTail): the other arm's border under the end arm, interval = which + 2. K1314 s13: with
+  // thruGate the piece is in every structure and walks only where thruGateOk passes (per frame).
+  if (K1314S12.thruTail || K1314S13.thruGate) corners.forEach((dc, ci) => {
     const a = arms[dc.aArm]; const b = arms[dc.bArm];
     if (!a || !b) return;
     const which = b.kind === "end" ? 1 : a.kind === "end" ? 0 : -1;
@@ -8091,8 +8092,9 @@ export const K1314S12 = { tailJoin: true, thruTail: false, ownSide: false };
  *  runEndFade lifts the side rule (as ownSide) at an interior point with at least one inked neighbour, so
  *  piece 196's point 1 inks too and its band to the uninked point 0 ramps from there; liftOwn: the lifted
  *  entries are the band's own ink (fadeA 1), see runEndFade. j58a's box (4.62-4.86, 33.30-33.62) |d| vs form
- *  B: s12 17.73%, ownSide 14.17% (and its wedge), both flags 11.78%, no wedge. */
-export const K1314S13 = { liftOwn: true, liftEnd: true };
+ *  B: s12 17.73%, ownSide 14.17% (and its wedge), both flags 11.78%, no wedge. thruGate: the thru tails
+ *  (K1314S12.thruTail's pieces) walk only at corners form B leaves open (thruGateOk). */
+export const K1314S13 = { liftOwn: true, liftEnd: true, thruGate: true };
 /** K1314 s12 (thruTail, muse_hash j58's corner 176): a thru tail continues E's run past the corner, so it
  *  starts no darker than the run ends (run 371's root ramp ends at 0, the tail started at 0.18: a hard
  *  line across the band) and reaches its own alpha over THRU_END points. */
@@ -8445,7 +8447,7 @@ function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[])
           pX: C.polys[piX], xc: piX, sRX: C.armSR[aiX], dirX: C.armDir[aiX], LX: C.armL[aiX], LcutX: C.armLcut[aiX],
           zE: (s) => depthAtC(C, piE, s, depthWin), zX: (s) => depthAtC(C, piX, s, depthWin), h: C.h, zt: 0.1 * C.depthAmp, W: C.W,
         };
-        if (thru) thruTailPts(tin, pts, cpts, alpha);
+        if (thru) { if (K1314S12.thruTail || thruGateOk(C.cOk[ci], C.cR[ci], C.cTheta[ci], C.W)) thruTailPts(tin, pts, cpts, alpha); }
         else endTailPts(tin, pts, cpts, alpha, fill);
         tKey = aiE * 2 + (sideE === 1 ? 0 : 1);
         if (!thru && RUN_END_FADE && (RUN_FADE_B || !dp.interval) && !C.cOk[ci] && C.cTheta[ci] < RUN_FADE_TH) runFade.push({ a: tin, key: tKey });
@@ -9091,6 +9093,19 @@ const tgOk = new Uint8Array(TAIL_N + 1);
  *  the corner to E's root at THRU_N steps, alpha = form B's (tailAlpha, own: E's border), cut after its
  *  last inked point. */
 const THRU_N = 24;
+/** K1314 s13 (thruGate; c8's lost ink, j49's spike): form B's corner decides whether E's border runs on under
+ *  X. Where form B rounds the corner (ok, radius r, angle th) it fills the fillet between the arc and V, the
+ *  borders' meeting point, sag = r (1 / sin(th / 2) - 1) inside the arc, and inks only W in from the arc: E's
+ *  border from the tangent point to V and on under X is fill (g41_user_tw64 j63, sag 0.208 = 1.7 W: the
+ *  ungated walk's spike, out/s12/look/spk1.png). A corner it does not round (c8's, V outside the spans) or a
+ *  shallow one whose fillet is a sliver (j49: sag 0.050 = 0.33 W) leaves E's border showing under X's tube,
+ *  with the tie: there the walk runs. */
+const THRU_SAG = 0.5;
+function thruGateOk(ok: number, r: number, th: number, W: number): boolean {
+  if (!ok || !(r > 1e-9)) return true;
+  const sh = Math.sin(th / 2);
+  return sh > 1e-9 && r * (1 / sh - 1) < THRU_SAG * W;
+}
 /** The sE of the tailAlpha call in progress (a thruTail's ramp reads it). */
 let tailSE = 0;
 function thruTailPts(a: TailIn, pts: number[], cpts: number[], alpha: number[]): void {
