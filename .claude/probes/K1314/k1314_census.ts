@@ -35,11 +35,14 @@
 // crossing x<i> / junction j<i>), size, sub-shape, and the part that draws it
 // (the band piece with the most alpha there, or the fill item, with its file).
 // Writes out/s1/census_<tag>.json and prints counts per kind per scene.
-import { readFileSync, writeFileSync, mkdirSync, existsSync, statSync, readdirSync, rmSync, utimesSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, existsSync, statSync, readdirSync, rmSync, utimesSync, renameSync, type Dirent } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { createHash } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { FormB } from "../../../src/render/field/form_b";
+import { candidates, dS, normS, pointAt, zAt, type Cand, type Poly, type SegGrid } from "../../../src/render/field/geom";
+import { plateauDepth } from "../../../src/render/field/depth";
 import { FormB as FormBFillet } from "./form_b_fillet";
 import * as O from "../../../src/render/outline/outline";
 import * as D from "../../../src/render/outline/draw";
@@ -271,12 +274,97 @@ export function plainOf(m: Model): EVF {
   if (!f) { f = new FormB(JSON.parse(JSON.stringify(m.scene)) as never, { dpr: 2 }) as unknown as EVF; FB_CACHE.set(m, f); }
   return f;
 }
+// K1325 s1 (muse_hash x304): form B's depth is §3.3's hat, ±amp at a crossing's pin, 0 one depth window
+// (0.658) along each pass. Where two passes still overlap past that window, both sit at z = 0 and form B's
+// top surface goes to the nearer body, so the over pass's border fades out under the under pass instead of
+// running on to where the bands part (x304: chain 67's self-crossing, reach 0.85 and 0.80; the border fades
+// 0.76 along). The approved look keeps the diagram's order along the overlap: the oracle's K922 "overlap"
+// depth (oracle.ts passReach, depth.ts plateauDepth), each pin's ±amp held over its pass's overlap reach.
+// --plateau takes it at the crossings whose reach outruns the window, near those passes only (plateauOf's gate),
+// from a second plain form B whose z is re-solved there; everywhere else it is plain form B. It is OFF by default:
+// it mends x304 (the border runs on to the Y, as rp=outline draws it), but it also moves the reference at 66
+// crossings of muse_hash and 18 of g41_user_tw64 where rp=outline draws what plain form B draws (K1325 s1,
+// k1325_footprint.ts and k1325_vsoutline.ts: off the outline 14304 -> 85216 px in muse_hash), so which look is
+// approved there is Levi's call before the census takes it.
+export const PLATEAU = { on: process.argv.includes("--plateau") };
+type FBZ = EVF & {
+  h: number; W: number; aa: number; depthWin: number; polys: Poly[]; grid: SegGrid; idxOf: Map<number, number>;
+  depthChains: { closed: boolean; s0: number; len: number; pins: { s: number; z: number; rL?: number; rR?: number }[] }[];
+  corners: { a: number; b: number; sA: number; sB: number; zA: number; zB: number }[]; arms: { pi: number }[];
+};
+/** oracle.ts passReach, on form B's own polys and grid: how far along pa from s (direction dir) its tube still
+ * overlaps pb's tube near the other pass ob. */
+export function passReach(F: FBZ, pa: number, s: number, pb: number, ob: number, dir: number): number {
+  const h = F.h; const step = h / 8; const maxR = 10 * h; const P = F.polys[pa]; const Q = F.polys[pb]; const cs: Cand[] = []; let last = -1;
+  for (let d = 0; d <= maxR + 1e-9; d += step) {
+    const raw = s + dir * d; if (!P.closed && (raw < P.s0 || raw > P.s0 + P.len)) break;
+    const u = normS(P, raw); const at = pointAt(P, u); let hit = false;
+    for (let k = -4; k <= 4 && !hit; k++) {
+      const t = (k / 4) * h * 0.999; candidates(F.grid, at.x - at.ty * t, at.y + at.tx * t, h, cs, pb);
+      for (const c of cs) {
+        if (c.chain !== pb || !(c.d < h)) continue;
+        if (Math.abs(dS(Q, c.s, ob)) > maxR + 2 * h) continue;
+        if (pa === pb && Math.abs(dS(P, c.s, u)) <= Math.abs(dS(P, c.s, ob))) continue;
+        hit = true; break;
+      }
+    }
+    if (!hit) break; last = d;
+  }
+  return last < 0 ? 0 : last + step;
+}
+type PZ = { F: EVF; n: number; R: number; cell: number; g: Map<string, number[]>; xs: number[] };
+const PZ_CACHE = new WeakMap<object, PZ>();
+/** The plateau reference: form B with K922 depth at the crossings whose overlap reach outruns the depth
+ * window, and the gate (near) of pixels within R of a sample whose z it changed. */
+export function plateauOf(m: Model): PZ {
+  let P = PZ_CACHE.get(m);
+  if (P) return P;
+  const F = new FormB(JSON.parse(JSON.stringify(m.scene)) as never, { dpr: 2 }) as unknown as FBZ;
+  const win = F.depthWin; const hit = new Set<number>(); const xs: number[] = [];
+  m.scene.crossings.forEach((x: { a: { chain: number; s: number }; b: { chain: number; s: number } }, xi: number) => {
+    const ia = F.idxOf.get(x.a.chain); const ib = F.idxOf.get(x.b.chain); if (ia === undefined || ib === undefined) return;
+    const sa = normS(F.polys[ia], x.a.s); const sb = normS(F.polys[ib], x.b.s);
+    const r = [passReach(F, ia, sa, ib, sb, -1), passReach(F, ia, sa, ib, sb, 1), passReach(F, ib, sb, ia, sa, -1), passReach(F, ib, sb, ia, sa, 1)];
+    if (!(Math.max(...r) > win)) return;
+    const pa = F.depthChains[ia].pins.find((q) => q.s === sa); const pb = F.depthChains[ib].pins.find((q) => q.s === sb && q !== pa);
+    if (!pa || !pb) return;
+    pa.rL = r[0]; pa.rR = r[1]; pb.rL = r[2]; pb.rR = r[3]; hit.add(ia); hit.add(ib); xs.push(xi);
+  });
+  const pts: number[] = [];
+  for (const i of hit) {
+    const p = F.polys[i];
+    for (let k = 0; k < p.n; k++) {
+      const z = plateauDepth(F.depthChains[i], win, p.s[k], win);
+      if (z !== p.z[k]) { p.z[k] = z; pts.push(p.x[k], p.y[k]); }
+    }
+  }
+  for (const c of F.corners) { c.zA = zAt(F.polys[F.arms[c.a].pi], c.sA); c.zB = zAt(F.polys[F.arms[c.b].pi], c.sB); }
+  const R = 2.5 * F.h + F.W; const cell = R; const g = new Map<string, number[]>();
+  for (let i = 0; i < pts.length; i += 2) { const key = `${Math.floor(pts[i] / cell)},${Math.floor(pts[i + 1] / cell)}`; const l = g.get(key); if (l) l.push(pts[i], pts[i + 1]); else g.set(key, [pts[i], pts[i + 1]]); }
+  P = { F, n: pts.length / 2, R, cell, g, xs }; PZ_CACHE.set(m, P); return P;
+}
+/** Whether the plateau reference differs from plain form B's near (x, y). */
+export function plateauNear(P: PZ, x: number, y: number): boolean {
+  if (!P.n) return false;
+  const ci = Math.floor(x / P.cell); const ri = Math.floor(y / P.cell); const R2 = P.R * P.R;
+  for (let i = ci - 1; i <= ci + 1; i++) for (let k = ri - 1; k <= ri + 1; k++) {
+    const l = P.g.get(`${i},${k}`); if (!l) continue;
+    for (let q = 0; q < l.length; q += 2) if ((l[q] - x) ** 2 + (l[q + 1] - y) ** 2 < R2) return true;
+  }
+  return false;
+}
+/** Whether any changed sample lies within R of the box [x0, x1] x [y0, y1]. */
+export function plateauBox(P: PZ, x0: number, y0: number, x1: number, y1: number): boolean {
+  for (const l of P.g.values()) for (let q = 0; q < l.length; q += 2) if (l[q] > x0 - P.R && l[q] < x1 + P.R && l[q + 1] > y0 - P.R && l[q + 1] < y1 + P.R) return true;
+  return false;
+}
 /** The census reference at one point (what rasterFormB stores per pixel). */
 export function refEval(m: Model, x: number, y: number): { ink: number; top: number; chain: number; s: number } {
   const fbf = filletOf(m);
   const p = FILLET_REF.on && fbf.thruCi.size ? filletPick(fbf, x, y) : { ci: -1, yielded: false };
   const ci = p.yielded ? -1 : p.ci;
-  const e = { ...(ci >= 0 ? fbf.evalPoint(x, y) : plainOf(m).evalPoint(x, y)) };
+  const pz = FILLET_REF.on && PLATEAU.on && p.ci < 0 ? plateauOf(m) : null;
+  const e = { ...(ci >= 0 ? fbf.evalPoint(x, y) : pz && plateauNear(pz, x, y) ? pz.F.evalPoint(x, y) : plainOf(m).evalPoint(x, y)) };
   if (ci >= 0) e.ink = arcInk(fbf, ci, x, y, e);
   if (p.yielded) { const y2 = yieldInk(fbf, p.ci, x, y, { ink: Math.min(1, Math.max(0, e.ink)), chain: e.top < 0 ? -1 : e.chain, s: e.s }, (px, py) => plainOf(m).evalPoint(px, py)); e.ink = y2.ink; e.chain = y2.chain; e.s = y2.s; if (y2.chain >= 0) e.top = Math.max(e.top, 0); }
   e.ink = vroundInk(m, x, y, Math.min(1, Math.max(0, e.ink)), e.top < 0 ? -1 : e.chain);
@@ -333,9 +421,9 @@ export const FILLET_REF = { on: !process.argv.includes("--nofillet") };
 export function rasterFormB(m: Model, c0: number, r0: number, Wd: number, Hd: number, ppu: number, cacheFile?: string, filletFile?: string): FBRas {
   const n = Wd * Hd;
   let ink: Float32Array; let chain: Int32Array; let s: Float32Array;
-  if (cacheFile && existsSync(cacheFile) && readFileSync(cacheFile).length === 12 * n) {
-    const b = readFileSync(cacheFile); const ab = b.buffer.slice(b.byteOffset, b.byteOffset + b.length);
-    ink = new Float32Array(ab, 0, n); chain = new Int32Array(ab, 4 * n, n); s = new Float32Array(ab, 8 * n, n);
+  const hitFb = readTile(cacheFile, n);
+  if (hitFb) {
+    [ink, chain, s] = hitFb;
   } else {
     const fb = new FormB(JSON.parse(JSON.stringify(m.scene)) as never, { dpr: 2 }) as unknown as { evalPoint(x: number, y: number): { ink: number; top: number; chain: number; s: number } };
     ink = new Float32Array(n); chain = new Int32Array(n); s = new Float32Array(n);
@@ -343,25 +431,31 @@ export function rasterFormB(m: Model, c0: number, r0: number, Wd: number, Hd: nu
       const ev = fb.evalPoint((c0 + c + 0.5) / ppu, (r0 + r + 0.5) / ppu); const o = r * Wd + c;
       ink[o] = Math.min(1, Math.max(0, ev.ink)); chain[o] = ev.top < 0 ? -1 : ev.chain; s[o] = ev.s;
     }
-    if (cacheFile) writeFileSync(cacheFile, Buffer.concat([Buffer.from(ink.buffer), Buffer.from(chain.buffer), Buffer.from(s.buffer)]));
+    writeTile(cacheFile, ink, chain, s);
   }
   if (FILLET_REF.on) {
-    if (filletFile && existsSync(filletFile) && readFileSync(filletFile).length === 12 * n) {
-      const b = readFileSync(filletFile); const ab = b.buffer.slice(b.byteOffset, b.byteOffset + b.length);
-      ink = new Float32Array(ab, 0, n); chain = new Int32Array(ab, 4 * n, n); s = new Float32Array(ab, 8 * n, n);
+    const hitFbf = readTile(filletFile, n);
+    if (hitFbf) {
+      [ink, chain, s] = hitFbf;
     } else {
       const fbf = filletOf(m);
-      if (fbf.thruCi.size) {
+      const pz = PLATEAU.on ? plateauOf(m) : null;
+      const pzTile = pz !== null && pz.n > 0 && plateauBox(pz, c0 / ppu, r0 / ppu, (c0 + Wd) / ppu, (r0 + Hd) / ppu);
+      if (fbf.thruCi.size || pzTile) {
         ink = ink.slice(); chain = chain.slice(); s = s.slice();
         for (let r = 0; r < Hd; r++) for (let c = 0; c < Wd; c++) {
           const x = (c0 + c + 0.5) / ppu; const y = (r0 + r + 0.5) / ppu;
-          const p = filletPick(fbf, x, y); if (p.ci < 0) continue; const ci = p.ci; const o = r * Wd + c;
+          const p = fbf.thruCi.size ? filletPick(fbf, x, y) : { ci: -1, yielded: false }; const ci = p.ci; const o = r * Wd + c;
+          if (ci < 0) {
+            if (pzTile && plateauNear(pz!, x, y)) { const ev = pz!.F.evalPoint(x, y); ink[o] = Math.min(1, Math.max(0, ev.ink)); chain[o] = ev.top < 0 ? -1 : ev.chain; s[o] = ev.s; }
+            continue;
+          }
           if (p.yielded) { const y2 = yieldInk(fbf, ci, x, y, { ink: ink[o], chain: chain[o], s: s[o] }, (px, py) => plainOf(m).evalPoint(px, py)); ink[o] = y2.ink; chain[o] = y2.chain; s[o] = y2.s; continue; }
           const ev = fbf.evalPoint(x, y);
           ink[o] = arcInk(fbf, ci, x, y, ev); chain[o] = ev.top < 0 ? -1 : ev.chain; s[o] = ev.s;
         }
       }
-      if (filletFile) writeFileSync(filletFile, Buffer.concat([Buffer.from(ink.buffer), Buffer.from(chain.buffer), Buffer.from(s.buffer)]));
+      writeTile(filletFile, ink, chain, s);
     }
   }
   if (VROUND.on && ((filletOf(m) as FBG).vfail ?? []).length) {
@@ -414,26 +508,85 @@ const ITEM_FILE: Record<string, string> = { strip: "fill_tri.ts (strips)", cap: 
 
 // The form B caches are keyed by what draws them. They used to be read back by length alone, so a census run
 // after K1321 changed the reference read a cache built before it and found K1321's cleared spots again (K1314
-// s7, 2026-11-12). out/fb/<key> hashes src/render/field (plain form B) and the scene; out/fbf/<key> adds this
-// file, form_b_fillet.ts and the reference's --no* flags. A key unused for a day is deleted, as are the old
-// unkeyed caches.
+// s7, 2026-11-12). fb/<key> hashes src/render/field (plain form B; it imports nothing else) and the scene;
+// fbf/<key> adds this file, form_b_fillet.ts and the reference's --no* flags.
+// K1325 s1: one cache for every checkout, under the main checkout's .claude/probes/K1314/out (git's common dir
+// finds it from any worktree). A key names all the code that draws its tiles, so checkouts whose code differs
+// never share a key and checkouts whose code matches share every tile. A tile appears whole or not at all:
+// writeTile writes a temp file unique to its process and renames it onto the tile's name, and readTile takes
+// a file only at its full 12n bytes. A key dir unused for a day is pruned by renaming it aside first (an
+// atomic step that fails while a run holds a file in it open), then deleting the aside copy; a run still on
+// that key recreates the dir and rebuilds the tiles it misses, never reads half a dir. Temp files a dead run
+// left are deleted after an hour.
 const FIELD_SRC = join(here, "..", "..", "..", "src", "render", "field");
 const hashOf = (parts: (string | Buffer)[]): string => { const h = createHash("sha1"); for (const p of parts) h.update(p); return h.digest("hex").slice(0, 12); };
+function cacheRoot(): string {
+  try {
+    const g = execFileSync("git", ["rev-parse", "--path-format=absolute", "--git-common-dir"], { cwd: here, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+    if (g) return join(dirname(g), ".claude", "probes", "K1314", "out");
+  } catch { /* not in a git checkout: this checkout's own out/ */ }
+  return join(here, "out");
+}
+export const CACHE_ROOT = cacheRoot();
+const DAY = 24 * 3600e3;
+const TMP_AGE = 3600e3;
+const touch = (p: string): void => { try { const now = new Date(); utimesSync(p, now, now); } catch { /* pruned meanwhile */ } };
+/** A cached tile's (ink, chain, s), or null unless the file holds exactly 12n bytes. */
+export function readTile(file: string | undefined, n: number): [Float32Array, Int32Array, Float32Array] | null {
+  if (!file) return null;
+  let b: Buffer;
+  try { b = readFileSync(file); } catch { return null; }
+  if (b.length !== 12 * n) return null;
+  touch(dirname(file));
+  const ab = b.buffer.slice(b.byteOffset, b.byteOffset + b.length);
+  return [new Float32Array(ab, 0, n), new Int32Array(ab, 4 * n, n), new Float32Array(ab, 8 * n, n)];
+}
+/** Writes a tile whole or not at all (temp file + rename). A failed write leaves the tile uncached. */
+export function writeTile(file: string | undefined, ink: Float32Array, chain: Int32Array, s: Float32Array): void {
+  if (!file) return;
+  // The views' own bytes: a tile read from the fb cache is three views on one 12n buffer.
+  const buf = Buffer.concat([ink, chain, s].map((a) => Buffer.from(a.buffer, a.byteOffset, a.byteLength)));
+  const tmp = `${file}.${process.pid}.${randomBytes(6).toString("hex")}.tmp`;
+  try {
+    mkdirSync(dirname(file), { recursive: true });
+    writeFileSync(tmp, buf);
+    renameSync(tmp, file);
+  } catch {
+    // A full disk, a pruned dir, or (Windows EPERM) another run's rename onto the same name: that run's copy
+    // is whole, and this run keeps its tile in memory.
+    try { rmSync(tmp, { force: true }); } catch { /* the next prune deletes it */ }
+  }
+}
+function pruneRoot(root: string, keep: string): void {
+  const now = Date.now();
+  let es: Dirent[];
+  try { es = readdirSync(root, { withFileTypes: true }); } catch { return; }
+  for (const e of es) {
+    const p = join(root, e.name);
+    try {
+      // Pre-key unkeyed tiles, and temp files a dead run left.
+      if (e.isFile()) { if (e.name.endsWith(".bin") || (e.name.endsWith(".tmp") && now - statSync(p).mtimeMs > TMP_AGE)) rmSync(p, { force: true }); continue; }
+      if (!e.isDirectory()) continue;
+      if (e.name.includes(".del.")) { rmSync(p, { recursive: true, force: true }); continue; }
+      if (p !== keep && now - statSync(p).mtimeMs > DAY) {
+        const aside = `${p}.del.${process.pid}.${randomBytes(4).toString("hex")}`;
+        renameSync(p, aside);
+        rmSync(aside, { recursive: true, force: true });
+        continue;
+      }
+      for (const f of readdirSync(p)) if (f.endsWith(".tmp")) { const q = join(p, f); if (now - statSync(q).mtimeMs > TMP_AGE) rmSync(q, { force: true }); }
+    } catch { /* another run pruned it first, or holds a file in it open: the next run retries */ }
+  }
+}
 export function refCacheDirs(nm: string): { fbDir: string; fbfDir: string } {
   const field = readdirSync(FIELD_SRC).filter((f) => f.endsWith(".ts")).sort().map((f) => readFileSync(join(FIELD_SRC, f)));
   const fbKey = hashOf([...field, readFileSync(join(SCENE_DIR, `${nm}.json`))]);
-  const flags = process.argv.filter((a) => a.startsWith("--no")).sort().join(" ");
+  const flags = process.argv.filter((a) => a.startsWith("--no") || a === "--plateau").sort().join(" ");
   const fbfKey = hashOf([fbKey, readFileSync(fileURLToPath(import.meta.url)), readFileSync(join(here, "form_b_fillet.ts")), flags]);
-  const dirs = { fbDir: join(here, "out", "fb", `${nm}_${fbKey}`), fbfDir: join(here, "out", "fbf", `${nm}_${fbfKey}`) };
-  const now = new Date();
-  for (const [root, keep] of [[join(here, "out", "fb"), dirs.fbDir], [join(here, "out", "fbf"), dirs.fbfDir]]) {
-    mkdirSync(keep, { recursive: true }); utimesSync(keep, now, now);
-    for (const e of readdirSync(root, { withFileTypes: true })) {
-      const p = join(root, e.name);
-      // force: k1314_run.ps1's three jobs prune the same roots at once.
-      if (e.isFile() && e.name.endsWith(".bin")) rmSync(p, { force: true });
-      else if (e.isDirectory() && p !== keep && now.getTime() - statSync(p).mtimeMs > 24 * 3600e3) rmSync(p, { recursive: true, force: true });
-    }
+  const dirs = { fbDir: join(CACHE_ROOT, "fb", `${nm}_${fbKey}`), fbfDir: join(CACHE_ROOT, "fbf", `${nm}_${fbfKey}`) };
+  for (const [root, keep] of [[join(CACHE_ROOT, "fb"), dirs.fbDir], [join(CACHE_ROOT, "fbf"), dirs.fbfDir]]) {
+    mkdirSync(keep, { recursive: true }); touch(keep);
+    pruneRoot(root, keep);
   }
   return dirs;
 }

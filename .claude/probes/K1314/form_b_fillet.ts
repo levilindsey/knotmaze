@@ -875,7 +875,7 @@ export class FormB {
 
   /**
    * K1321: the corners solveCorner drops because V's feet lie outside the arms' spans (V found, in the
-   * wedge). The census reference rounds their inner border with a disk of radius W about V
+   * wedge), and (K1325 s1) those it drops for want of a V that a marched seed finds. The census reference rounds their inner border with a disk of radius W about V
    * (k1314_census refEval); nothing here reads this list.
    */
   readonly vfail: { ji: number; a: number; b: number; Vx: number; Vy: number; ca: number; cb: number }[] = [];
@@ -900,12 +900,28 @@ export class FormB {
     by /= bl;
     const sn = Math.sin(th0 / 2);
     const full: [number, number] = [0, Infinity];
-    const V = this.solveEq(a, b, h, j.c[0] + (bx * h) / sn, j.c[1] + (by * h) / sn, full, full);
+    let V = this.solveEq(a, b, h, j.c[0] + (bx * h) / sn, j.c[1] + (by * h) / sn, full, full);
+    // K1325 s1 (g41_user_tw64 j30): when the arms bend toward each other, the straight-arm seed lies past a
+    // narrow wedge's tip, the solve finds no V, and solveCorner drops the corner ("no V"), so form B leaves
+    // the two borders' butt ends notched where the approved look turns round the paper's tip. Seed again
+    // where the bisector first leaves both tubes (that tip in form B's own picture). A corner dropped for
+    // want of a V is a failed corner even when its feet lie inside the spans.
+    let marched = false;
+    if (!V.ok && !reflex) {
+      for (let t = h / 16; t <= (3 * h) / sn; t += h / 16) {
+        const x = j.c[0] + bx * t;
+        const y = j.c[1] + by * t;
+        if (Math.min(this.footArm(a, x, y).d, this.footArm(b, x, y).d) < h) continue;
+        V = this.solveEq(a, b, h, x, y, full, full);
+        marched = V.ok;
+        break;
+      }
+    }
     if (!V.ok) return;
     const dVa = this.armDist(a, V.fa.s);
     const dVb = this.armDist(b, V.fb.s);
     const tol = 1e-9 * h;
-    if (!reflex && dVa > tol && dVa < A.L - tol && dVb > tol && dVb < B.L - tol) return;
+    if (!marched && !reflex && dVa > tol && dVa < A.L - tol && dVb > tol && dVb < B.L - tol) return;
     const crossA = A.ux * (V.y - j.c[1]) - A.uy * (V.x - j.c[0]);
     const crossB = B.ux * (V.y - j.c[1]) - B.uy * (V.x - j.c[0]);
     if (reflex) {

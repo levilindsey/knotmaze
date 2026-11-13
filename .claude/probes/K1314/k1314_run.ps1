@@ -1,8 +1,14 @@
 # K1314 s1: the 12-scene census at --ppu=160 --min=40 in three parallel groups, then merged.
 #   pwsh .claude/probes/K1314/k1314_run.ps1 [-Tag s1] [-Lock]
-# Form B tiles are cached in out/fb/<scene>_<key>/ and out/fbf/<scene>_<key>/, keyed by a hash of the reference's
-# code (k1314_census.ts refCacheDirs), so a rerun after an outline change costs the outline raster only, and a
-# reference change rebuilds them. Never copy another checkout's caches.
+# Form B tiles live in ONE cache that every checkout shares (K1333): the main checkout's
+# .claude/probes/K1314/out/fb/<scene>_<key>/ and out/fbf/<scene>_<key>/ (k1314_census.ts CACHE_ROOT, found from any
+# worktree through git rev-parse --git-common-dir), keyed by a hash of the reference's code (refCacheDirs), so a rerun
+# after an outline change costs the outline raster only, a reference change builds a new key, and checkouts at one
+# key share its tiles. A tile is written to a unique .tmp and renamed into place, and a read takes only a whole tile
+# (12 bytes a pixel), so concurrent runs never leave or read a partial one. Pruning (pruneRoot) renames aside and
+# deletes only key directories untouched for a day (every read and run touches its own) and .tmp files over an hour
+# old, so it is safe while another checkout's census runs. A worktree's own out/fb and out/fbf are obsolete: delete
+# them. Never copy caches by hand.
 # The census waits before each scene while anyone holds $env:TEMP\claude-perf.lock. -Lock holds the lock for the
 # whole run: it waits for a free lock (one blocking loop; a lock older than 30 min is stale), writes its own owner
 # line, passes that line's prefix as $env:K1314_LOCK_OWNER (the census skips its own lock) and deletes the lock
