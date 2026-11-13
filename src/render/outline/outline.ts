@@ -8107,11 +8107,13 @@ export const K1314S12 = { tailJoin: true, thruTail: false, ownSide: false };
  *  4 -> 176 / 315, band:tail spikes at end-arm corners where form B is plain fill. ownEdge: liftOwn only at
  *  lifted points with an uninked neighbour (both flags alone take c8 7.67% -> 10.67%, census k1314s13d
  *  tail_look 175 -> 184; with ownEdge c8 8.24%, j58a 11.72%, census k1314s13e tail_look 174, bar kinds
- *  unchanged). The three lift flags are OFF: c8 (out/s13/fin_x4|fin_x8/c8.png) gains a hard vertical seam in
- *  the run band's shade where the lifted point's own ink stops. */
-export const K1314S13 = { liftOwn: false, liftEnd: false, ownEdge: false, thruGate: false, thruOk: false, thruUnion: false };
-/** K1314 s14 flags. liftChg: liftOwn marks only the lifted points whose alpha the lift moved (see runEndFade). */
-export const K1314S14 = { liftChg: true };
+ *  unchanged). s13 left the three lift flags OFF: c8 (out/s13/fin_x4|fin_x8/c8.png) gained a hard vertical
+ *  seam in the run band's shade where the lifted point's own ink stops. K1314 s14 turns them ON with
+ *  K1314S14.liftChg, which removes that seam (c8's box 5.71% = all flags off; j58a 17.73% -> 11.65%). */
+export const K1314S13 = { liftOwn: true, liftEnd: true, ownEdge: true, thruGate: false, thruOk: false, thruUnion: false };
+/** K1314 s14 flags. liftChg: liftOwn marks only the lifted points whose alpha the lift moved (see runEndFade).
+ *  rootTie: runRootRamp's ramp yields to the tie per point (see runRootRamp). */
+export const K1314S14 = { liftChg: true, rootTie: true };
 /** K1314 s12 (thruTail, muse_hash j58's corner 176): a thru tail continues E's run past the corner, so it
  *  starts no darker than the run ends (run 371's root ramp ends at 0, the tail started at 0.18: a hard
  *  line across the band) and reaches its own alpha over THRU_END points. */
@@ -8156,7 +8158,7 @@ const RUN_ROOT_RAMP = true;
 const RUN_RAMP_F = 0.5;
 const RUN_RAMP_F0 = 0.05;
 const RUN_RAMP_L = 0.35;
-const rampFt = new Float64Array(2);
+const rampFt = new Float64Array(2); const rampOwn = new Float64Array(2);
 function runRootRamp(C: FCache, st: DiagramStructure, pieces: OutlinePiece[], runAtArm: Map<number, number>): void {
   const h = C.h; const W = C.W; const zt = 0.1 * C.depthAmp; const depthWin = C.depthWindow * C.ctrlArc;
   if (!(zt > 0)) return;
@@ -8180,13 +8182,49 @@ function runRootRamp(C: FCache, st: DiagramStructure, pieces: OutlinePiece[], ru
     }
     if (!(f < fMax) || f < RUN_RAMP_F0) continue;
     const al = p.alpha ?? new Array<number>(2 * np).fill(1);
+    // K1314 s14 (rootTie, muse_hash j58a piece 371's chevron): the ramp only has to take the band to no ink at
+    // the root, where it cuts form B's tie. Past the root the band already takes the tie per pixel, so where
+    // the tie climbs back toward 1 within L the geometric ramp only dims ink form B draws at 1 (371's second
+    // leg, the fold back to its root). Each edge takes the larger of the ramp and (t - t0) / ((1 - t0) t), t
+    // the tie at the point (outline's root formula there, both edges: dC = h out, h - W in), t0 at the root's
+    // edge: the band reads (t - t0) / (1 - t0) there, no ink at the root, the tie where it is back at 1.
+    // Measured: 371's points 21, 22 0.55 / 0.28 -> 0.69 / 0.59 (outer), j58a's box 11.72% -> 11.65%. Points
+    // 19, 20 keep the ramp (their lift is below it), so 371 still reads 0.74 against form B's 1 at
+    // (4.752, 33.504): the soft chevron stays (K1314 s14 handoff).
+    const tie = K1314S14.rootTie && p.cpts.length === p.pts.length;
+    const sR = atEnd ? p.s1 : p.s0; const span = Math.abs(p.s1 - p.s0);
+    const ji = C.armObj[arm].ji;
+    const tieAt = (px: number, py: number, s: number, dC: number): number => {
+      const kC = depthAtC(C, p.chain, s, depthWin) - (dC * zt) / h;
+      let t = 1;
+      for (const aj of st.armsOfJ[ji]) {
+        const pj = C.armObj[aj].pi; if (pj === p.chain) continue;
+        tailFoot(C.polys[pj], C.armSR[aj] - 4 * h, C.armSR[aj] + 4 * h, px, py, rampFt, h);
+        const d = rampFt[1]; if (!(d < h)) continue;
+        const g = Math.min(1, (h - d) / W);
+        const u = Math.min(1, Math.max(0, (depthAtC(C, pj, rampFt[0], depthWin) - (d * zt) / h - kC + zt) / (2 * zt)));
+        t *= 1 - g * u * u * (3 - 2 * u);
+      }
+      return t;
+    };
+    const inX = (i: number, e: number): number => { const dx = p.cpts[2 * i] - p.pts[2 * i]; const dy = p.cpts[2 * i + 1] - p.pts[2 * i + 1]; const l = Math.sqrt(dx * dx + dy * dy) || 1; return p.pts[2 * i + e] + (W * (e === 0 ? dx : dy)) / l; };
+    const t0In = tie ? tieAt(inX(i0, 0), inX(i0, 1), sR, h - W) : 1;
+    const lift = (t: number, t0: number): number => (t0 < 1 - 1e-6 && t > t0 ? Math.min(1, (t - t0) / ((1 - t0) * t)) : 0);
     let cum = 0;
     for (let q = 0; q < np; q++) {
       const i = atEnd ? np - 1 - q : q;
       if (q > 0) { const j = atEnd ? i + 1 : i - 1; const dx = p.pts[2 * i] - p.pts[2 * j]; const dy = p.pts[2 * i + 1] - p.pts[2 * j + 1]; cum += Math.sqrt(dx * dx + dy * dy); }
       if (cum >= L) break;
       const t = cum / L; const w = t * t * (3 - 2 * t);
-      al[2 * i] *= w; al[2 * i + 1] *= w;
+      if (tie && q > 0) {
+        // Own s: the cpt's foot (band_gpu's sv), not the outer edge's length, which runs far ahead of s at a fold.
+        const sG = atEnd ? p.s1 - Math.min(cum, span) : p.s0 + Math.min(cum, span);
+        tailFoot(C.polys[p.chain], sG - 2 * h, sG + 2 * h, p.cpts[2 * i], p.cpts[2 * i + 1], rampOwn);
+        const s = rampOwn[1] < h ? rampOwn[0] : sG;
+        const wO = Math.max(w, lift(tieAt(p.pts[2 * i], p.pts[2 * i + 1], s, h), f));
+        const wI = Math.max(w, lift(tieAt(inX(i, 0), inX(i, 1), s, h - W), t0In));
+        al[2 * i] *= wO; al[2 * i + 1] *= wI;
+      } else { al[2 * i] *= w; al[2 * i + 1] *= w; }
     }
     p.alpha = al;
   }
