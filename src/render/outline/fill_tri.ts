@@ -311,6 +311,19 @@ export function recStrips(fs: FillStructure): Int32Array {
   }
   return r;
 }
+const FAN_ORDER = new WeakMap<FillStructure, Int32Array>();
+/** K1247 s28: the tail and disk items on a junction, grouped by junction (item order within one). */
+function fanOrder(fs: FillStructure): Int32Array {
+  let r = FAN_ORDER.get(fs);
+  if (!r) {
+    const a: number[] = [];
+    fs.items.forEach((it, i) => { if ((it.kind === "tail" || it.kind === "disk") && it.jItem >= 0) a.push(i); });
+    const jOf = (i: number): number => (fs.items[i] as { jItem: number }).jItem;
+    a.sort((p, q) => jOf(p) - jOf(q) || p - q);
+    r = Int32Array.from(a); FAN_ORDER.set(fs, r);
+  }
+  return r;
+}
 
 /** Each interval's strip resolution, measured once on frame 0's table. */
 export function fillResolution(st: DiagramStructure, table0: OutlineTable): Int32Array {
@@ -603,6 +616,9 @@ function zPointAt(c: ReturnType<typeof zChains>["zc"][number], s: number): [numb
 export const FILL_PROF = { on: false, t: {} as Record<string, number> };
 /** K1247 s28: the fan scan's triangle boxes (x0, x1, y0, y1 a triangle), reused across frames. */
 let FAN_TB = new Float64Array(64);
+/** K1247 s28: the fan scan's grid over the fan's box (CSR: cell starts, then triangle indices in
+ *  ascending order per cell; FAN_GC the fill cursor), reused across frames. */
+let FAN_GS = new Int32Array(64); let FAN_GC = new Int32Array(64); let FAN_GI = new Int32Array(256);
 
 export function fillFrame(fs: FillStructure, st: DiagramStructure, table: OutlineTable, scene: SceneIn, zcIn?: ReturnType<typeof zChains>): FillFrame {
   let tP = FILL_PROF.on ? performance.now() : 0;
@@ -1352,23 +1368,57 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
   // fan takes the fan's weights and s there (barycentric over the fan
   // triangle under it); one off the fan keeps its own s, on its arm's slot.
   if (FILL_PROF.on) tP = performance.now();
-  for (const it of fs.items) {
+  // K1247 s28 (perf): the fan scan visits only the triangles that can hold the point. Per junction
+  // (built once: the fan's vertices do not change in this loop; the items go grouped by junction,
+  // fanOrder, and an item writes only its own vertices and reads only its fan's, so the order
+  // changes nothing) each triangle gets a box and a run of angle buckets about the fan's centre a,
+  // both grown far past what the barycentric test's 1e-9 tolerance and its rounding allow; a point
+  // scans its bucket's triangles in ascending order (the same first triangle) or, within RHO of a,
+  // every triangle. A near-degenerate triangle (|A| < A_MIN D^2, D the fan box's side, where the
+  // computed barycentrics carry rounding past the tolerance) is in every bucket with an unbounded
+  // box. Angles are diamond angles (0..4, a half turn = 2, never steeper than the true angle), so a
+  // true angle off its triangle's cone by under FAN_DA lies within FAN_DA of it.
+  let fanJ = -1; let x0 = 0; let y0 = 0; let x1 = 0; let y1 = 0; let nB = 1; let cB = 0; let rho2 = 0;
+  const FAN_DA = 1e-3; const A_MIN = 1e-5; const RHO = 1e-4;
+  const dia = (x: number, y: number): number => y >= 0 ? (x >= 0 ? y / (x + y) : 1 - x / (y - x)) : (x < 0 ? 2 + y / (x + y) : 3 + x / (x - y));
+  for (const ii of fanOrder(fs)) {
+    const it = fs.items[ii];
     if ((it.kind !== "tail" && it.kind !== "disk") || it.jItem < 0) continue;
     const J = fs.items[it.jItem] as JuncItem; const h = J.base; const R = J.R;
-    let x0 = Infinity; let y0 = Infinity; let x1 = -Infinity; let y1 = -Infinity;
-    for (let v = h; v <= h + R; v++) { x0 = Math.min(x0, pos[2 * v]); x1 = Math.max(x1, pos[2 * v]); y0 = Math.min(y0, pos[2 * v + 1]); y1 = Math.max(y1, pos[2 * v + 1]); }
-    // K1247 s28 (perf): each fan triangle's box, grown by a margin far past the barycentric test's
-    // 1e-9 tolerance and its rounding. A point outside a box fails that triangle's test, so the scan
-    // skips it there and keeps the same first triangle (fan vertices that are NaN give a NaN box,
-    // which skips nothing).
-    if (FAN_TB.length < 4 * R) FAN_TB = new Float64Array(8 * R);
-    { const mg = 1e-6 * (1 + Math.max(x1 - x0, y1 - y0)); const TB = FAN_TB;
-      const ax = pos[2 * h]; const ay = pos[2 * h + 1];
+    if (it.jItem !== fanJ) {
+      fanJ = it.jItem;
+      x0 = Infinity; y0 = Infinity; x1 = -Infinity; y1 = -Infinity;
+      for (let v = h; v <= h + R; v++) { x0 = Math.min(x0, pos[2 * v]); x1 = Math.max(x1, pos[2 * v]); y0 = Math.min(y0, pos[2 * v + 1]); y1 = Math.max(y1, pos[2 * v + 1]); }
+      const D = Math.max(x1 - x0, y1 - y0); const fin = Number.isFinite(D);
+      // (a NaN fan vertex makes the fan's box NaN, and then no point is tested at all)
+      nB = fin ? Math.max(1, Math.min(256, 2 * R)) : 1; cB = nB / 4; rho2 = fin ? RHO * D * (RHO * D) : Infinity;
+      if (FAN_TB.length < 4 * R) { FAN_TB = new Float64Array(8 * R); FAN_GC = new Int32Array(4 * R); }
+      if (FAN_GS.length < nB + 1) FAN_GS = new Int32Array(2 * nB + 2);
+      const mg = 1e-6 * (1 + D); const TB = FAN_TB; const KS = FAN_GC; const GS = FAN_GS; GS.fill(0, 0, nB + 1);
+      const ax = pos[2 * h]; const ay = pos[2 * h + 1]; const aMin = A_MIN * D * D;
       for (let i = 0; i < R; i++) {
         const b = h + 1 + i; const c = h + 1 + ((i + 1) % R); const bx = pos[2 * b]; const by = pos[2 * b + 1]; const cx = pos[2 * c]; const cy = pos[2 * c + 1];
-        TB[4 * i] = Math.min(ax, bx, cx) - mg; TB[4 * i + 1] = Math.max(ax, bx, cx) + mg; TB[4 * i + 2] = Math.min(ay, by, cy) - mg; TB[4 * i + 3] = Math.max(ay, by, cy) + mg;
-      } }
-    const TB = FAN_TB;
+        const A = (bx - ax) * (cy - ay) - (by - ay) * (cx - ax);
+        let kS = 0; let kE = nB - 1;
+        if (fin && Math.abs(A) >= aMin) {
+          TB[4 * i] = Math.min(ax, bx, cx) - mg; TB[4 * i + 1] = Math.max(ax, bx, cx) + mg; TB[4 * i + 2] = Math.min(ay, by, cy) - mg; TB[4 * i + 3] = Math.max(ay, by, cy) + mg;
+          const tb = dia(bx - ax, by - ay); const tc = dia(cx - ax, cy - ay);
+          let d = tc - tb; if (d > 2) d -= 4; else if (d <= -2) d += 4;
+          const s = d >= 0 ? tb : tc;
+          kS = Math.floor((s - FAN_DA) * cB); kE = Math.floor((s + Math.abs(d) + FAN_DA) * cB);
+          if (!(kE - kS + 1 < nB)) { kS = 0; kE = nB - 1; }
+        } else if (Math.abs(A) < 1e-12) { kE = -1; } // the test computes this A the same way and always skips it: in no bucket
+        if (kE >= 0 && !(Math.abs(A) >= aMin && fin)) { TB[4 * i] = -Infinity; TB[4 * i + 1] = Infinity; TB[4 * i + 2] = -Infinity; TB[4 * i + 3] = Infinity; }
+        KS[2 * i] = kS; KS[2 * i + 1] = kE;
+        for (let k = kS; k <= kE; k++) GS[(k < 0 ? k + nB : k >= nB ? k - nB : k) + 1]++;
+      }
+      for (let k = 0; k < nB; k++) GS[k + 1] += GS[k];
+      if (FAN_GI.length < GS[nB] + nB) FAN_GI = new Int32Array(2 * (GS[nB] + nB));
+      // The fill cursors sit past the lists (FAN_GI[GS[nB] + k]), so KS stays whole.
+      const GI = FAN_GI; const cur = GS[nB]; for (let k = 0; k < nB; k++) GI[cur + k] = GS[k];
+      for (let i = 0; i < R; i++) for (let k = KS[2 * i]; k <= KS[2 * i + 1]; k++) { const kk = cur + (k < 0 ? k + nB : k >= nB ? k - nB : k); GI[GI[kk]++] = i; }
+    }
+    const TB = FAN_TB; const GS = FAN_GS; const GI = FAN_GI;
     for (let v = it.base; v < it.base + itemVerts(it); v++) {
       const o = SLOTS * v; const sOwn = s4[o];
       for (let k = 0; k < SLOTS; k++) { w4[o + k] = 0; s4[o + k] = s4[SLOTS * h + k]; }
@@ -1419,7 +1469,13 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
         continue;
       }
       let found = false;
-      if (px >= x0 && px <= x1 && py >= y0 && py <= y1) for (let i = 0; i < R; i++) {
+      let q0 = 0; let q1 = 0; let byB = false;
+      if (px >= x0 && px <= x1 && py >= y0 && py <= y1) {
+        const dx = px - pos[2 * h]; const dy = py - pos[2 * h + 1];
+        if (dx * dx + dy * dy > rho2) { let k = Math.floor(dia(dx, dy) * cB); k = ((k % nB) + nB) % nB; q0 = GS[k]; q1 = GS[k + 1]; byB = true; } else q1 = R;
+      }
+      for (let q = q0; q < q1; q++) {
+        const i = byB ? GI[q] : q;
         if (px < TB[4 * i] || px > TB[4 * i + 1] || py < TB[4 * i + 2] || py > TB[4 * i + 3]) continue;
         const b = h + 1 + i; const c = h + 1 + ((i + 1) % R);
         const ax = pos[2 * h]; const ay = pos[2 * h + 1]; const bx = pos[2 * b]; const by = pos[2 * b + 1]; const cx = pos[2 * c]; const cy = pos[2 * c + 1];
