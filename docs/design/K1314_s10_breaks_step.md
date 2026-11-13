@@ -85,3 +85,14 @@ Under 40 lines:
 
 End with `Ledger items` and K1314's handle fields.
 
+
+## Handoff (s10 agent, 2026-11-12, start 07:46:53 PT, stop 08:44 PT; stopped at its work, not the cap)
+
+- j71's step: FIXED by cutTailLoop (outline.ts, after endTailPts' border tailWalk, TAIL_LOOP_CUT): tail piece 912 (c32, corner 220 "V outside spans") folded into a swallowtail; cut at its legs' crossing. Crops out/s10/j71_after/spot_001, after4x/spot_004.
+- j36 (muse_hash, 2816 px): K1315 class. Self-crossing x77 sits 0.445 from the root, arm 111 has armL 0, corner 110 falls back "arm span 0", and its depth meet pulls c11's border (piece 146) back to the root, ending square at (30.093,20.305); c50's ramp fade is the smudge. Crops before4x/spot_001, wide/spot_001, plot_j36.png.
+- j97 (g41_def_tw64, 319 px): K1315 class (form B's round dot vs the outline's square end). Crops before4x/spot_002, wide/spot_002.
+- j49 (muse_hash, 44 px): not real: the census's cut sub (a crisp arc border where form B is tie-faded); just over minPx 40. Crops before/spot_003, before4x/spot_003.
+- j58a: NOT fixed. Run piece 371 (c43 side 1) ends at j58 in a fold chevron (out to the cusp (4.8,33.496), an exact retrace back, then (4.8,33.35)); corner 176 (c23 end / c43, "V outside spans", theta 1.815 < 0.75 pi) fires runEndFade, which lays 0.97->0 on the chevron's return leg, whose band paints its far side where form B is pale: the fade runs opposite to form B's. Cutting the return leg (tried, reverted) removed the fade but exposed fill seams and dropped the black V's ink (out/s10/j58a_try/spot_001). Next: the chevron or corner 176's meet should follow c43's offset round j58, or the return leg's alpha should follow form B by position; the seams under it involve fill_tri.ts (K1247's).
+- The ramp's cost: NOT recovered. The 50f51f91 quick reject (tailFoot cap h, keyC lazily) is frame-identical, but runRootRamp still measures 0.51 ms/frame on def's motion cycle (1126 run ends); tailFoot is most of it (1511 calls/frame, only 124 feet within h: the rest walk the 8h window to reject). fbench piecesCapsEtc: no ramp 12.65, master 13.32, branch 13.33. Next: an exact prefilter for the 92% that reject (a lower bound on the window's distance computed once per arm per frame), or a narrower window censused.
+- Census s10 (a6ed3ebb) = master census_s10m, all 2504 records: 7/1/0/12/0 = 20, owner_only 2300, tail_look 184; no moved finds. ABBA drag frame p50 master 65.1/72.6, branch 64.4/65.2 (load from other agents). npm test green, no pins moved.
+- Tools: .claude/probes/K1314/k1314_s10_{near,fbline,cpt,corner,piece,ramp}.ts, k1314_s10_bench.ps1; outputs out/s10/, out/s1/census_s10*.
