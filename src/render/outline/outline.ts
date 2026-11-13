@@ -7930,6 +7930,22 @@ function runEndFade(a: TailIn, p: OutlinePiece, atEnd: boolean): void {
  *  stays. */
 export const RUN_FADE_TIE = { on: true };
 
+/** K1314 s12 flags (each off = s11's look; the crops tool A/Bs them). tailJoin (c8's tail
+ *  line, muse_hash (19.47, 14.20)): a tail starts at its corner's tangent point x0 and its
+ *  last foot (pinTailFan's fanDrop), a hair (~0.004) from where the abutting run's chevron
+ *  ends; the two end edges, near parallel, overlap in a thin strip that inks twice: a faint
+ *  line along the run's end edge. The tail starts on the run's end edge instead. */
+export const K1314S12 = { tailJoin: true };
+
+function tailJoinRun(tail: OutlinePiece, run: OutlinePiece, atEnd: boolean): void {
+  const nr = run.pts.length >> 1; if (nr < 2 || tail.pts.length < 4 || run.cpts.length !== run.pts.length) return;
+  const q = atEnd ? 2 * (nr - 1) : 0;
+  if (Math.hypot(tail.pts[0] - run.pts[q], tail.pts[1] - run.pts[q + 1]) > TAIL_PIN) return;
+  if (Math.hypot(tail.cpts[0] - run.cpts[q], tail.cpts[1] - run.cpts[q + 1]) > 4 * TAIL_PIN) return;
+  tail.pts[0] = run.pts[q]; tail.pts[1] = run.pts[q + 1];
+  tail.cpts[0] = run.cpts[q]; tail.cpts[1] = run.cpts[q + 1];
+}
+
 /** K1314 s9 (g41_user_tw64 j71's shade): a run starts at its arm's root,
  *  which can lie inside another arm's tube of the junction. There form B's
  *  tie fades the run's border (draw.ts tieAlpha: 0.16 at j71) and carries it
@@ -8043,6 +8059,7 @@ function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[])
   const pieces: OutlinePiece[] = [];
   let runMiss = 0; let runPassed = 0;
   const runFade: { a: TailIn; key: number }[] = [];
+  const tailJoin: { p: number; key: number }[] = [];
   const runAtArm = new Map<number, number>();
   // Interval lookup for run regions: by (A slot, B slot) under K12_CSORDER;
   // by the A slot alone otherwise (K1247 s12: a crossOver station toggling
@@ -8224,7 +8241,7 @@ function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[])
       const ci = dp.corner;
       const dc = st.corners[ci];
       const pts: number[] = []; const cpts: number[] = []; const alpha: number[] = []; const fill = { pts: [] as number[], cpts: [] as number[] };
-      let sideE = 0; let sT = 0;
+      let sideE = 0; let sT = 0; let tKey = -1;
       if (dc) {
         const aiE = dp.interval ? dc.bArm : dc.aArm; const aiX = dp.interval ? dc.aArm : dc.bArm;
         const piE = C.armObj[aiE].pi; const piX = C.armObj[aiX].pi;
@@ -8254,8 +8271,10 @@ function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[])
           zE: (s) => depthAtC(C, piE, s, depthWin), zX: (s) => depthAtC(C, piX, s, depthWin), h: C.h, zt: 0.1 * C.depthAmp, W: C.W,
         };
         endTailPts(tin, pts, cpts, alpha, fill);
-        if (RUN_END_FADE && (RUN_FADE_B || !dp.interval) && !C.cOk[ci] && C.cTheta[ci] < RUN_FADE_TH) runFade.push({ a: tin, key: aiE * 2 + (sideE === 1 ? 0 : 1) });
+        tKey = aiE * 2 + (sideE === 1 ? 0 : 1);
+        if (RUN_END_FADE && (RUN_FADE_B || !dp.interval) && !C.cOk[ci] && C.cTheta[ci] < RUN_FADE_TH) runFade.push({ a: tin, key: tKey });
       }
+      if (K1314S12.tailJoin && tKey >= 0) tailJoin.push({ p: pieces.length, key: tKey });
       pieces.push({ kind: "tail", chain: dp.chain, side: sideE, s0: sT, s1: sT, pts, cpts, region: -1, corner: ci, alpha, fpts: fill.pts, fcpts: fill.cpts });
     } else {
       const capInfo = dp.cap;
@@ -8274,6 +8293,10 @@ function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[])
     const r = runAtArm.get(f.key);
     if (r === undefined) continue;
     runEndFade(f.a, pieces[r >> 1], (r & 1) === 1);
+  }
+  for (const t of tailJoin) {
+    const r = runAtArm.get(t.key);
+    if (r !== undefined) tailJoinRun(pieces[t.p], pieces[r >> 1], (r & 1) === 1);
   }
   if (RUN_ROOT_RAMP) runRootRamp(C, st, pieces, runAtArm);
   if (ARC_END_FEET) arcEndFeet(st, pieces, runAtArm);
