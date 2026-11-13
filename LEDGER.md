@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1367.
+Next free ID: K1369.
 
 ## Waiting on Levi
 
@@ -292,6 +292,9 @@ Next free ID: K1367.
   (his K928 plan: finish iterating, then hand-edit, then the pipeline reads his curves as drawn), or more look
   notes first? Every note so far is built (K1251). Sheets: .claude/probes/K863/trace/out38/png/; J3NV has no
   template SVG yet (out34/cursive_template.svg shows the export).
+- **K1367** · rp=gf at dpr 1 (411x753 on the Pixel, the only size under 8 ms so far: 6.9 / 7.3 ms with a
+  reduced program): it reads blurry and the outlines mostly vanish. Keep full resolution (recommended) or take
+  the blur for speed? Pictures: .claude/probes/K1362/out/s4/dpr1_def.png, dpr1_muse_hash.png (K1362 s4).
 
 ## In progress
 
@@ -551,11 +554,11 @@ Next free ID: K1367.
   tables the CPU builds in under 1 ms) instead of the outline mesh built on the CPU each frame (65-117 ms on
   def). Reverses the 2026-11-09 call (K1040 dropped for K1240). The main speed route (Levi, 2026-11-12: very bullish
   on it); dropped only on a proof it cannot work (brief: "How the result is judged"). Analysis in docs/ledger_notes.md.
-  - owner: nobody since 2026-11-13 02:02 (merged)
-  - branch: mainline; last commit: `d7906ed6`
+  - owner: claude agents af5206837da0ec88a (s5 shader tiles) and a161f441f698339ef (c1 CPU off main), started 2026-11-13 02:08; coordinating claude session 09c7a672-a414-402a-97da-b3176839a2e5
+  - branch: worktree-agent-af5206837da0ec88a at .claude/worktrees/agent-af5206837da0ec88a; worktree-agent-a161f441f698339ef at .claude/worktrees/agent-a161f441f698339ef; last commit: `13c997b5`
   - evidence: .claude/probes/K1362/ (k1362s3_*, k1362s4_*), out/s3/, out/s4/
-  - next: Stage 5 (brief to write): the CPU work off main (export ~22 + tables ~28 ms on the Pixel make the rp=gf drag frame 83.5 ms p50 vs 50.1 today), and the shader structurally (keys per tile instead of per pixel; s4 measured implementation fixes reaching only ~12 / 15 ms against 8); Levi's call on dpr 1 (out/s4/dpr1_*.png)
-  - brief: `docs/design/K1362_s4_shader.md`
+  - next: merge s5 (pass <= 8 ms on the Pixel by structure: geometry-routed tiles, keys per tile) and c1 (main CPU <= 3 ms desktop, tables bit-identical; export and build off main); Levi's call on dpr 1 is K1367
+  - brief: docs/design/K1362_s5_tiles.md and docs/design/K1362_c1_cpu_off_main.md
 
 ## Next, in order
 
@@ -2297,6 +2300,9 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K1365** · K156 kit: sample the Pixel GPU clock (devfreq cur_freq, read-only) beside every phone timing;
   K1362 s3 showed a short pass at one per frame runs at 460 MHz against 1286 back to back
   (.claude/probes/K1362/k1362s3_gpuclk.mjs could move into scripts/phone_pass/)
+- **K1368** · rp=gf's best small tier depends on the GPU (K1362 s4 picked p3/k2 with ramps for the Pixel; the
+  desktop differs): choose GF_TIERS per device at startup from a short timed probe, if the default ever costs
+  a device a pass.
 
 ## Done
 
