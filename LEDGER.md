@@ -572,10 +572,10 @@ Next free ID: K1344.
   rp=outline is clean, so the census counts them against the outline (crops
   `.claude/probes/K1314/out/s7/after4x/spot_007.png`, `spot_008.png`); fix the reference as K1321 did, in
   `k1314_census.ts` / `form_b_fillet.ts` (K1314 s7 handoff)
-  - owner: agent `a2d06b38666998b51` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 09:01, 2 h cap ~11:01)
-  - branch: `worktree-agent-a2d06b38666998b51`, worktree `.claude/worktrees/agent-a2d06b38666998b51`; last commit: `c2d3efbf`
+  - owner: nobody since 2026-11-12 09:49 (merged; agent `a2d06b38666998b51` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `3026bfc3`
   - evidence: .claude/probes/K1314/k1314_census.ts, form_b_fillet.ts; untracked .claude/probes/K1325/out/s2/, census m1
-  - next: s2 running: a census-reference rule for a chain crossing itself (x304, x22, x345, j116, x58), nothing else moving; baseline census m1 on master
+  - next: none queued: the census reference now handles x304, j30 and the five self-crossings; reopen when a census find is the reference's own flaw
   - brief: `docs/design/K1325_s2_self_crossing_reference.md`
 - **K1338** · The outline worker frame's frame() (64-71 ms p50, outline.ts) and band (16-26 ms, bandOf + band
   files) on def mid-drag, toward frame + band <= 10 ms, look unchanged; K1247's sibling stage (s28 takes fill
