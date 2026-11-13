@@ -620,17 +620,25 @@ let FAN_TB = new Float64Array(64);
  *  ascending order per cell; FAN_GC the fill cursor), reused across frames. */
 let FAN_GS = new Int32Array(64); let FAN_GC = new Int32Array(64); let FAN_GI = new Int32Array(256);
 
-export function fillFrame(fs: FillStructure, st: DiagramStructure, table: OutlineTable, scene: SceneIn, zcIn?: ReturnType<typeof zChains>): FillFrame {
+/** K1247 s28: a caller's per-vertex output arrays, reused from frame to frame (OutlineModel.update:
+ *  about 20 MB a frame on def, fresh pages and GC otherwise). A frame's arrays are then valid until
+ *  the next fillFrame with the same buffer; each is reset to what a fresh one holds (zeros, vW). */
+export interface FillBuf { pos?: Float64Array; key?: Float32Array; sv?: Float32Array; s4?: Float64Array; across?: Float32Array; w4?: Float32Array }
+function bufF64(a: Float64Array | undefined, n: number): Float64Array { return a && a.length === n ? a.fill(0) : new Float64Array(n); }
+function bufF32(a: Float32Array | undefined, n: number): Float32Array { return a && a.length === n ? a.fill(0) : new Float32Array(n); }
+
+export function fillFrame(fs: FillStructure, st: DiagramStructure, table: OutlineTable, scene: SceneIn, zcIn?: ReturnType<typeof zChains>, buf?: FillBuf): FillFrame {
   let tP = FILL_PROF.on ? performance.now() : 0;
   const zz = zcIn ?? zChains(scene);
   const zc = zz.zc;
   const zt = 0.1 * scene.look.depthAmp;
-  const pos = new Float64Array(2 * fs.nV);
-  const key = new Float32Array(fs.nV);
-  const sv = new Float32Array(fs.nV);
-  const s4 = new Float64Array(SLOTS * fs.nV);
-  const across = new Float32Array(fs.nV);
-  const w4 = fs.vW.slice(); const hW = scene.look.halfWidth;
+  const pos = bufF64(buf?.pos, 2 * fs.nV);
+  const key = bufF32(buf?.key, fs.nV);
+  const sv = bufF32(buf?.sv, fs.nV);
+  const s4 = bufF64(buf?.s4, SLOTS * fs.nV);
+  const across = bufF32(buf?.across, fs.nV);
+  const w4 = buf?.w4 && buf.w4.length === fs.vW.length ? buf.w4 : fs.vW.slice(); const hW = scene.look.halfWidth;
+  if (buf) { if (w4 === buf.w4) w4.set(fs.vW); Object.assign(buf, { pos, key, sv, s4, across, w4 }); }
   let fallbacks = 0;
   denseCount = 0;
   const zAt = (pi: number, s: number): number => (zc[pi] ? zAtC(zc[pi], s) : 0);

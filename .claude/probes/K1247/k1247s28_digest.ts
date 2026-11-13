@@ -25,6 +25,8 @@ const scenes = files.map(ld);
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const m = new OutlineModel(scenes[0]) as any;
 const out: string[] = [];
+// The model's reuse buffer (OutlineModel.update passes one; master's fillFrame ignores the argument).
+const buf = {};
 // Twice through the frames: the second pass checks the caches carried from frame to frame.
 for (let pass = 0; pass < 2; pass++) for (let i = 1; i < scenes.length; i++) {
   const scene = alignJunctionArms(m.st, scenes[i]);
@@ -32,7 +34,8 @@ for (let pass = 0; pass < 2; pass++) for (let i = 1; i < scenes.length; i++) {
   m.table = frame(m.st, scene);
   const zz = zChains(scene);
   const dz = digest({ zc: zz.zc, passes: zz.passes, idx: zz.idx });
-  const fr = fillFrame(m.fs, m.st, m.table, scene, zz);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const fr = (fillFrame as any)(m.fs, m.st, m.table, scene, zz, buf);
   const df = digest(fr);
   paintFrame(m.pd, fr, sectionPaint(scene, "app", m.baseHue), m.rec ? m.rec.nDyn : undefined);
   m.recFrame = fr.rec ?? null;

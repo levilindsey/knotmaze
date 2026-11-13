@@ -14,7 +14,7 @@
 // The first frame equals the prototype's page (buildOutline +
 // buildDrawData(..., "app")); test/render/outline_port.test.ts pins it.
 import { OB_DI, alignJunctionArms, frame, structure, type DiagramStructure, type OutlineTable, type SceneIn } from "./outline";
-import { SLOTS, fillFrame, fillResolution, fillStructure, keyScale, recStrips, type FillFrame, type FillStructure, type StripItem } from "./fill_tri";
+import { SLOTS, fillFrame, fillResolution, fillStructure, keyScale, recStrips, type FillBuf, type FillFrame, type FillStructure, type StripItem } from "./fill_tri";
 import { baseHueFor, paintData, paintFrame, zChains, type PaintData } from "./draw";
 import { bandGpu, type BandGpu } from "./band_gpu";
 import { BandRecState, type BandRecGpu } from "./band_rec";
@@ -66,6 +66,8 @@ export class OutlineModel {
   /** K1247 s19 (look.fillRec 2, oe=1): the record layout (null otherwise) and this frame's strip table. */
   readonly rec: RecLayout | null;
   recFrame: FillFrame["rec"] | null = null;
+  /** K1247 s28: fillFrame's per-vertex arrays, reused by update (paintFrame copies them out). */
+  private readonly fillBuf: FillBuf = {};
   /** Wall ms of the last frame's parts, in update's order (K1240 S4b). */
   parts = { frame: 0, zChains: 0, fill: 0, paint: 0, band: 0 };
   /** K1247 s22 (look.bandRec 1, ob=1): the band's fixed layout across frames (null: today's bandGpu). */
@@ -118,7 +120,7 @@ export class OutlineModel {
     const t1 = performance.now();
     const zz = zChains(scene);
     const t2 = performance.now();
-    const fr = fillFrame(this.fs, this.st, this.table, scene, zz);
+    const fr = fillFrame(this.fs, this.st, this.table, scene, zz, this.fillBuf);
     const t3 = performance.now();
     paintFrame(this.pd, fr, sectionPaint(scene, "app", this.baseHue), this.rec ? this.rec.nDyn : undefined);
     this.recFrame = fr.rec ?? null;
