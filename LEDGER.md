@@ -542,10 +542,10 @@ Next free ID: K1364.
   most cases. But there are still plenty of unacceptable artifacts"): an artifact census (stray ink, hard
   colour edges inside fills, paper holes, broken ink) across scenes, then fix stages that drive its count to
   0; the look gate in docs/design/K1240_gate.md
-  - owner: agent `ad90b8e20a29ae822` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 19:43, 2 h cap ~21:43)
-  - branch: `worktree-agent-ad90b8e20a29ae822`, worktree `.claude/worktrees/agent-ad90b8e20a29ae822`; last commit: `8ff2b01f`
+  - owner: nobody since 2026-11-12 20:51 (merged; agent `ad90b8e20a29ae822` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `6428d6eb`
   - evidence: .claude/probes/K1314/k1314s13_*, out/s13/ (s13 flags liftEnd/liftOwn/ownEdge); out/s14/ (untracked)
-  - next: s14: j58a with ownEdge minus c8 seam, then piece 371 chevron; coordinator views the crops before merging
+  - next: Waits on K1362 (Levi 2026-11-12: very bullish on the GPU distance route). If it holds, the census runs on it and the rest (j58a chevron, K1315 ends) is fixed there. If K1362 proves it cannot, s15: piece 196 run-end alpha per pixel (or split its first quad), rootTie skipping junction roots (j96), then the BAND_FS blend (K1314 s14 handoff)
   - brief: `docs/design/K1314_s14_j58a_seam.md`
 - **K1362** · Render split: per pixel on the GPU (form B's distance, from closed-form crossing and junction
   tables the CPU builds in under 1 ms) instead of the outline mesh built on the CPU each frame (65-117 ms on
