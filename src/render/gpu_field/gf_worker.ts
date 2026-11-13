@@ -46,7 +46,7 @@ const now = (): number => performance.now();
 
 // --- Slice pool -------------------------------------------------------------
 const hc = typeof navigator !== "undefined" ? navigator.hardwareConcurrency ?? 4 : 4;
-const POOL_MAX = hc >= 12 ? 6 : hc >= 6 ? 4 : hc >= 3 ? 2 : 0;
+const POOL_MAX = hc >= 16 ? 8 : hc >= 8 ? 5 : hc >= 4 ? 3 : hc >= 3 ? 2 : 0;
 let poolBroken = false;
 const slices: (Worker | null)[] = [];
 const sliceReady: boolean[] = [];
@@ -144,7 +144,21 @@ async function pooledBuild(id: number, scene: FieldScene, aa: number, n: number)
   const tc0 = now();
   const solveReplies = await Promise.all(jPad.map((jr, s) => {
     const qr = qPad[s];
-    return ask<SolveReply>(s, { kind: "solve", id, P, meta, jLo: jr[0], jHi: jr[1], qLo: qr[0], qHi: qr[1] });
+    // Trimmed slice prefix: only this range's arms/junctions (the cold
+    // prefix clone measured ~1.8 ms per slice), the big vertex arrays as
+    // transferred copies. The slice's solve is bit-identical (tables.ts).
+    const vx = P.vx.slice(); const vy = P.vy.slice(); const vs = P.vs.slice();
+    const chBox = meta.chBox.slice();
+    const P2 = {
+      ...P,
+      vx, vy, vs,
+      arms: P.arms.filter((A) => A.j >= jr[0] && A.j < jr[1]),
+      junctions: P.junctions.slice(jr[0], jr[1]),
+      jGroup: P.jGroup.slice(jr[0], jr[1]),
+      jBase: jr[0],
+    };
+    const meta2 = { nCh: meta.nCh, chV0: new Int32Array(0), chN: new Int32Array(0), chC: new Int32Array(0), chBox, gx0: meta.gx0, gy0: meta.gy0, G: meta.G, gW: meta.gW, gH: meta.gH };
+    return ask<SolveReply>(s, { kind: "solve", id, P: P2, meta: meta2, jLo: 0, jHi: jr[1] - jr[0], qLo: qr[0], qHi: qr[1] }, [vx.buffer as ArrayBuffer, vy.buffer as ArrayBuffer, vs.buffer as ArrayBuffer, chBox.buffer as ArrayBuffer]);
   }));
   const cornersMs = now() - tc0;
   let K: import("./tables").GfCorner[] = [];

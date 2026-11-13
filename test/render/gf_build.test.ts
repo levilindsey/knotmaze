@@ -15,7 +15,10 @@ import {
   type ExportChain,
   type SceneExportInput,
 } from "../../src/render/field/scene_export";
-import { buildTables, buildTablesPooled, partitionWeighted } from "../../src/render/gpu_field/tables";
+import {
+  assembleGfTables, buildGfPrefix, buildTables, buildTablesPooled, gfChunkBinPart,
+  gfChunkMeta, mergeGfChunkBins, partitionWeighted, solveGfCorners, type GfCorner,
+} from "../../src/render/gpu_field/tables";
 import { CTRL_ARC, gfBuild, tablesDiff, tablesTransfer } from "../../src/render/gpu_field/gf_build";
 
 const H = 0.2;
@@ -193,6 +196,38 @@ describe("gfBuild (K1362 c1)", () => {
       expect(tablesDiff(buildTablesPooled(leanScene, { aa: 0.005 }, n), leanCold)).toEqual([]);
     });
   }
+
+  // K1362 t2: the coordinator's trimmed slice prefixes (range-local arms,
+  // junctions and jGroup, jBase set) solve to the cold build's tables.
+  it("trimmed slice prefixes assemble to the cold build's tables", () => {
+    const input = fixture();
+    const { scene } = buildFieldScene(input);
+    scene.look.ctrlArc ??= CTRL_ARC;
+    const cold = buildTables(scene, { aa: 0.005 });
+    const P = buildGfPrefix(scene, { aa: 0.005 });
+    const meta = gfChunkMeta(P);
+    const n = 3;
+    const jRanges = partitionWeighted(scene.junctions.map((J) => J.arms.length), n);
+    const qRanges = partitionWeighted(new Array(meta.nCh).fill(1), n);
+    let K: GfCorner[] = [];
+    const parts = [];
+    for (let s = 0; s < n; s++) {
+      const jr = jRanges[s] ?? [scene.junctions.length, scene.junctions.length];
+      const qr = qRanges[s] ?? [meta.nCh, meta.nCh];
+      const P2 = {
+        ...P,
+        arms: P.arms.filter((A) => A.j >= jr[0] && A.j < jr[1]),
+        junctions: P.junctions.slice(jr[0], jr[1]),
+        jGroup: P.jGroup.slice(jr[0], jr[1]),
+        jBase: jr[0],
+      };
+      K = K.concat(solveGfCorners(P2, 0, jr[1] - jr[0]));
+      parts.push(gfChunkBinPart(P2, meta, qr[0], qr[1]));
+    }
+    const bins = mergeGfChunkBins(parts, meta.gW * meta.gH);
+    const pooled = assembleGfTables(P, K, { meta, bins }, { ...P.ms, corners: 0 }, 0);
+    expect(tablesDiff(pooled, cold)).toEqual([]);
+  });
 
   it("partitionWeighted covers its range contiguously, in order", () => {
     for (const [weights, parts] of [[[5, 1, 4, 1], 3], [[1], 4], [[], 2], [[2, 2, 2, 2], 4], [[0, 0, 7], 2]] as [number[], number][]) {

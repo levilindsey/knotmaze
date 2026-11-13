@@ -149,6 +149,9 @@ export interface GfPrefix {
   nV: number; vx: Float64Array; vy: Float64Array; vs: Float64Array; pinS: Float64Array; pinZ: Float64Array;
   nA: number; aSR: Float64Array; aDir: Float64Array; aL: Float64Array; aLcut: Float64Array; aG: Int32Array;
   arms: GfArm[]; junctions: FieldScene["junctions"]; jGroup: Int32Array;
+  /** Pool slices carry only their junction range: junctions/jGroup/arms are
+   * range-local and jBase is the range's first global junction index. */
+  jBase?: number;
   ms: { vtx: number; pins: number; arms: number };
 }
 export interface GfChunkMeta { nCh: number; chV0: Int32Array; chN: Int32Array; chC: Int32Array; chBox: Float64Array; gx0: number; gy0: number; G: number; gW: number; gH: number }
@@ -387,7 +390,7 @@ export function buildGfPrefix(scene: FieldScene, opts: GfOpts, rawMerged?: GfRaw
 export function solveGfCorners(P: GfPrefix, jLo: number, jHi: number): GfCorner[] {
   type ArmT = GfArm;
   const { h, W, aa, cr, cV0, cNV, cClosed, cLen, cS0, vx, vy, vs } = P;
-  const armsT = P.arms; const junctions = P.junctions; const jGroup = P.jGroup;
+  const armsT = P.arms; const junctions = P.junctions; const jGroup = P.jGroup; const jBase = P.jBase ?? 0;
   const norm = (c: number, s: number): number => {
     if (!cClosed[c]) return s;
     let u = (s - cS0[c]) % cLen[c]; if (u < 0) u += cLen[c]; return u + cS0[c];
@@ -407,7 +410,7 @@ export function solveGfCorners(P: GfPrefix, jLo: number, jHi: number): GfCorner[
   const rootTip = (th: number): number => { const s = Math.sin(th / 2); if (!(s > 0)) return 1; const t = 1 / s - 1; return t > 0 ? Math.min(1, t / tRef) : 0; };
   const K: GfCorner[] = [];
   const sibs: GfArm[][] = junctions.map(() => []);
-  for (const A of armsT) sibs[A.j].push(A);
+  for (const A of armsT) sibs[A.j - jBase].push(A);
   // K1362 t1: SP holds two arm points (x, y, tx, ty, s at 0 and 5); ptOf is armPt+chainAt inlined
   // (same arithmetic). With a hint it walks from the last segment instead of binary-searching:
   // the walk stops at the same segment (vs is non-decreasing), so results are identical.
@@ -603,7 +606,7 @@ export function solveGfCorners(P: GfPrefix, jLo: number, jHi: number): GfCorner[
       trackInto(QQB, J, A, B, pua, pub, h + r, TRACK + 1, 4 * dN / t2, hA, hB, snH, csH); const q = QQB;
       const rV = Math.hypot(V.x - q.x, V.y - q.y);
       const rmax = rV + (2 * aa) / Math.max(0.1, Math.sin(th / 2));
-      K.push({ thru, rv: rV, cx: q.x, cy: q.y, r, rmax, eax: -q.nax, eay: -q.nay, ebx: -q.nbx, eby: -q.nby, g, j: ji, a: A.ei, b: B.ei, theta: th, ca: A.c, cb: B.c, sa: q.sa, sb: q.sb });
+      K.push({ thru, rv: rV, cx: q.x, cy: q.y, r, rmax, eax: -q.nax, eay: -q.nay, ebx: -q.nbx, eby: -q.nby, g, j: jBase + ji, a: A.ei, b: B.ei, theta: th, ca: A.c, cb: B.c, sa: q.sa, sb: q.sb });
     }
   }
   return K;
