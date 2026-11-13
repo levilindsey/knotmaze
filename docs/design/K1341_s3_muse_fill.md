@@ -60,3 +60,40 @@ Fill on the def drag no slower than master, with zChains' gains kept and every o
 - When you stop: append a Handoff to this brief (start and stop times, the table, what changed, what is left),
   commit and push it, and report. A stopped run pushes only its finished part; keep unfinished code as a patch under
   `.claude/probes/K1341/` (untracked).
+
+## Handoff (Muse run, 2026-11-12, 17:03:53 to 18:12)
+
+**Verdict: the def fill slowdown was the harness, not the code. No `src/` change.**
+
+1. **Null test (s2 harness, two identical copies of HEAD):** fat zChains read -12.7% and -11.2% for the
+   branch copy in two runs (95% intervals far from zero) - a copy-position bias. Def fill read +2.2% / +0.6%
+   (intervals include zero), the same size and direction as s2's +1.0..+2.7%. Execution order already
+   alternated in s2's tool, so the bias follows the copy slot (directory / creation order), not the order.
+2. **Harness fix:** `k1341s3_ab.ts` randomizes pair order (seeded) and is only read as a swap-averaged
+   pair of builds: the same bundle run with the two code versions swapped between `src/render/outline`
+   and `src/render/outline_m`; code effect = (diff1 - diff2) / 2, which cancels the slot bias. Master =
+   `4db48931` versions of `draw.ts` / `fill_tri.ts` / `chain_frame.ts` (pre-K1341; `fill_tri.ts` is
+   identical to HEAD), everything else at HEAD. Three swap pairs (one def build voided by a load burst,
+   one earlier run likewise; other agents' node processes were on the machine throughout).
+3. **Interleaved table** (branch - master, ms, pooled 95% interval; R=16 per build):
+
+   | drag | zChains | fill | band |
+   |---|---|---|---|
+   | def | -3.11 +-0.13 (-23%) | +0.14 +-0.18 | +0.21 +-0.31 |
+   | muse_hash | -4.42 +-0.28 (-20%) | +0.33 +-0.26 | +0.65 +-0.37 |
+   | fat | -9.19 +-0.11 (-43%) | +0.06 +-0.07 | +0.06 +-0.05 |
+
+   Def fill's interval includes zero; def zChains keeps 23% (gate: 15%). Muse_hash fill/band pool
+   slightly positive (per-pair intervals include zero in 2 of 3 pairs; driven by the highest-load pair) -
+   left as a residual below, not chased: the Done gates are def's.
+4. **Identity:** `k1341s1_digest.ts` in this worktree vs a `git archive HEAD` export: files byte-equal
+   (`all b6a969a42170e155`, 385 lines; SHA256 of both outputs
+   CBD19DAFE14D74370194DC2E99C4CFB4502CAEB7BD89D9E8D6F0A2CE660C6DCF).
+5. **Tests:** `src/render/outline_m` deleted, then `npm test` green: 231 files, 2948 tests passed
+   (golden snapshots and the `outline_port` / `outline_inc` / `byte_identity` pins unchanged; no test
+   files touched).
+
+**What changed:** only `.claude/probes/K1341/k1341s3_ab.ts` (the fixed harness) and this handoff.
+**What is left:** the muse_hash fill/band residual above. If pursued, first suspects are `wrapL` call
+sites in the helpers fill and band share (`zAtC`, `footNear`, `dSC` in `draw.ts`) or s1's GC-shift
+(gcF rose while gcZ + gcF fell) - bisect with `k1341s3_ab.ts` swap pairs, not the s2 tool.

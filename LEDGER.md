@@ -1935,6 +1935,9 @@ Every other item below waits on the trigger it names.
   `.claude/probes/K1314/k1314s11_gpu.ts`); may share K1336's cause, needs a twin check of its own
 - **K1356** · K1247 s33's jlocal fixpoint costs 18.8 ms p50 / 88.6 ms p95 on def whenever the snap is on
   (inert while KF_INC.snap is off; s34 step 4 targets ~1 ms)
+- **K1357** · K1341 s3 residual: muse_hash fill/band pool +0.33+-0.26 / +0.65+-0.37 ms in swap-averaged A/B
+  (per-pair intervals include zero in 2 of 3 pairs; def gates hold). If pursued, bisect wrapL sites in
+  zAtC/footNear/dSC or the GC shift with k1341s3_ab.ts swap pairs, not the s2 tool.
 
 ## Approved, to schedule (2026-10-11)
 
