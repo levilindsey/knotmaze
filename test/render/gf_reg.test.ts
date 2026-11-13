@@ -66,6 +66,15 @@ describe("gf_reg", () => {
       let body = packed.slice(packed.indexOf("void main"));
       for (let k = 0; k < 4; k++) body = body.replace(/\b(pPF|pPI)\[((?:[^[\]]|\[[^[\]]*\])*)\]\.([xyzw])/g, (_a, n: string, i: string, c: string) => `${unpack.get(`${n}.${c}`)}[${i}]`);
       expect(body).toBe(plain.slice(plain.indexOf("void main")));
+      // the partial forms pack one group and leave the other's arrays as they were
+      const pf = gfFs(false, true, t, { pack: "f" });
+      const pi = gfFs(false, true, t, { pack: "i" });
+      expect(pf).toContain("vec4 pPF[");
+      expect(pf).not.toContain("pPI");
+      expect(pf).toMatch(/\bpc\s*\[/);
+      expect(pi).toContain("IQ ivec4 pPI[");
+      expect(pi).not.toContain("pPF");
+      expect(pi).toMatch(/\bpd\s*\[/);
     }
   });
 

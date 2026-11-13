@@ -87,7 +87,7 @@ Under 30 lines:
 
 End with `Ledger items` and K1362's handle fields.
 
-## Handoff (stage 6, 2026-11-13, start 03:28:33, stop 04:50:54)
+## Handoff (stage 6, 2026-11-13, start 03:28:33, stop 05:04)
 
 **Not done: def and muse_hash are still over 8 ms** (t32r at 822x1506, sync4: def 16.7-16.9, muse_hash 22.6-23.4).
 rp=gf stays off; `GF_TIERS` is still t32r. Keys per bin (lever 1) now feed every program, full included.
@@ -145,9 +145,13 @@ frame1, fat moves within the governor's noise. buildKeys' main-thread CPU at upl
      frame1 moved with the governor (def 23.3@1017 → 21.6@883, muse_hash 26.3@1286 → 28.9@883).
    - fullK (the full program packed) is slower on both GPUs.
 
+   - partial packs (36d7643f, s6g, same run against t32r 16.5 / 22.45 / 11.57):
+     - floats only (kf): 16.3 / 22.5 / 11.45, within noise;
+     - ints only (ki): 16.88 / 23.63 / 12.1, so the ivec4 group is what costs on the Pixel.
+     - On the desktop neither partial pack gains (t32r 1.02, kf 1.07, ki 1.05 on def); only the whole pack does.
+
    Not kept: pack stays a bench form. Inferred, not tested: the Pixel turns each component write into a vec4
-   read-modify-write. The two-pass split (scan + keys in one pass, layering in a second) is not built. Neither are
-   partial packs (floats only, ints only).
+   read-modify-write. The two-pass split (scan + keys in one pass, layering in a second) is not built.
 3. Layering once: not built. layers() groups pieces into surfaces by psurf, so entry order, burial and the sort
    all change with the configuration. An exact fold rewrites that grouping incrementally (each configuration
    flips at most two ramping pieces). Its routed form, t32 (a tier without ramps: one layering per pixel, with
@@ -163,6 +167,7 @@ frame1, fat moves within the governor's noise. buildKeys' main-thread CPU at upl
 - 42ede7fd: desktop 78 compare rows; Pixel 42 rows over def, muse_hash and fat at both sizes. 9824ab87's run also
   covered the 9 other scenes at 0 px. The CPU mirror holds: 54 Pixel and 60 desktop mirror rows, no miss.
 - c73c7745 (the pack forms): 27 rows on each GPU over the 12 scenes; 39 Pixel mirror rows, no miss.
+- 36d7643f (the partial packs): 30 rows on each GPU; 42 mirror rows on each, no miss.
 
 `npm test` passes (235 files, 2969 tests), and the goldens are unchanged.
 
@@ -190,6 +195,7 @@ Probes: `.claude/probes/K1362/k1362s6_*`:
 - cfg_phone3: the before/after;
 - cfg_cmp3: the 12 scenes;
 - cfg_phone4: t32 against t32r;
-- cfg_pack: the pack A/B, with the 12 scenes.
+- cfg_pack: the pack A/B, with the 12 scenes;
+- cfg_pack2: the partial packs (kf, ki) against t32r and t32rk.
 
 Outputs: `out/s6/` (untracked).
