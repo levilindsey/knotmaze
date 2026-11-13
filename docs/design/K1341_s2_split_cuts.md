@@ -73,3 +73,18 @@ Under 20 lines:
 - your last SHA.
 
 End with `Ledger items` and K1341's handle fields.
+
+## Handoff (stage 2 agent, 2026-11-12, 16:04:30 to 16:35)
+
+Branch `worktree-agent-ac63f135098807a15` (stage 1 rebased onto master 526003da, then c003ce8).
+Tools: `k1341s2_ab.ts` (master's src/render/outline copied untracked to src/render/outline_m, both run in one
+process, alternated per frame, paired diff with a 95% interval), `k1341s2_digest_m.ts` (the digest against that copy).
+Results in `.claude/probes/K1341/out/s2/` (untracked).
+
+Kept: all draw.ts cuts, wrapL (exported from chain_frame.ts, draw.ts uses it). Dropped: every fill_tri.ts cut
+(ringSegD box skip, memo wrappers, wrapL sites) and chain_frame.ts's span memo, csAt and wrapL call sites. With
+them fill read 3.6% / 5.0% slower on def / muse_hash (interval excludes zero on muse_hash); without them fill
+reads equal (v1: 0.9, 0.6). Open: def fill still reads +1.0 to +2.7% across three runs (interval touches zero in
+two, last +2.4 +-2.1): suspect GC shifting into the fill window now zChains allocates less, or draw's shared
+helpers (footNear NW, zAtC). Not bisected further.
+Identity: digest `all a53c2eacce4f8f95`, 0 diffs vs master. `npm test` green (231 files, 2945 tests).
