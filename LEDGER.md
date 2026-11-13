@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1338.
+Next free ID: K1339.
 
 ## Waiting on Levi
 
@@ -298,6 +298,7 @@ Next free ID: K1338.
   2026-11-11. Also muse_hash j78's hard edge (5.88, 8.50): c79's open start under c33 (K1314 s6 handoff),
   and muse_hash c8's open end (19.41, 14.16; `.claude/probes/K1314/out/s7/efafter/spot_005.png`).
   Since K1314 s9 (b9db678f) about 19 such ends fade in instead (`out/s9/after/spot_004.png`, `spot_011.png`); keep, or back to square.
+  K1314 s10 traced muse_hash j36 (2816 px; a self-crossing 0.445 from the root leaves arm 111 empty, c11's border ends square) and g41_def_tw64 j97 (319 px) to these ends (`.claude/probes/K1314/out/s10/before4x/spot_001-002.png`).
 - **K1319** · The K1045 open eye at muse_hash j73 in rp=outline: its ink ring closes round at the right tip,
   where form B cuts it off at an angle (form B's j73 corner takes the same far meet as j74's and never rounds
   it). Keep the round tip, or match form B? Census counts it as one stray_ink spike (262 px). Picture
@@ -556,7 +557,7 @@ Next free ID: K1338.
   - owner: nobody since 2026-11-12 08:47 (merged; agent `a8105bc6c8e6fc6d7` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
   - branch: mainline; last commit: `b0c52856`
   - evidence: .claude/probes/K1314/ (census tools, k1314_s8_bench.ps1); untracked out/s1-s10/, baseline census_s9
-  - next: K1314 s11: j58a's reversed fade (corner 176's meet, or the chevron's return-leg alpha against form B) and an exact prefilter for runRootRamp's rejecting tailFoot calls (0.51 ms)
+  - next: K1314 s11 after K1247 s29 frees outline.ts: j58a's reversed fade (corner 176's meet, or the chevron's return-leg alpha against form B); the ramp's reject cost moved to s29
   - brief: `docs/design/K1314_s10_breaks_step.md`
 - **K1324** · draw.ts tieAlpha / contactPasses ties two arms of one form B junction group, so the band fades
   ink there: specks inside the ink at def j174 (c71/c73, group 119), ring j12, g41_ring_tw42 j12,
@@ -585,6 +586,9 @@ Next free ID: K1338.
   - evidence: .claude/probes/K1314/k1314_census.ts, form_b_fillet.ts, k1314_run.ps1; untracked .claude/probes/K1325/out/s1/
   - next: s1 running: the reference at x304/j30 (K1325) and one shared form B cache in the main checkout (K1333)
   - brief: `docs/design/K1325_s1_reference_shared_cache.md`
+- **K1338** · The outline worker frame's frame() (64-71 ms p50, outline.ts) and band (16-26 ms, bandOf + band
+  files) on def mid-drag, toward frame + band <= 10 ms, look unchanged; K1247's sibling stage (s28 takes fill
+  and zChains); brief `docs/design/K1247_s29_frame_band_speed.md`
 
 ## Next, in order
 
