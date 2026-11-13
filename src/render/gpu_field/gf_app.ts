@@ -255,7 +255,10 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
         return [m, srt[Math.min(srt.length - 1, Math.floor(0.95 * srt.length))]];
       };
       const [sm, s95] = st(segs); const [km, k95] = st(ks);
-      return { px: segs.length, segMean: sm, segP95: s95, kMean: km, kP95: k95 };
+      // Over the pixels with any candidate segment (stage 1's floor counted pixels within reach).
+      const live = segs.filter((x) => x > 0);
+      const [lm, l95] = st(live);
+      return { px: segs.length, segMean: sm, segP95: s95, kMean: km, kP95: k95, livePx: live.length, liveMean: lm, liveP95: l95 };
     } finally {
       pp.dispose();
       tg.dispose();
