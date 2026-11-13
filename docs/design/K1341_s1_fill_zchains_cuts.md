@@ -75,7 +75,7 @@ Under 30 lines:
 
 End with `Ledger items` and K1341's handle fields.
 
-## Handoff (stage 1 agent, 2026-11-12, 14:40:45 to 16:10)
+## Handoff (stage 1 agent, 2026-11-12, 14:40:45 to 16:04)
 
 Branch `worktree-agent-a74fd2c72ec40ff48`, from af721b2f. Commits ab4edce7, 8a204649, ec231427,
 16e9b159 (code), 6f268f6d and this one (probes, handoff).
