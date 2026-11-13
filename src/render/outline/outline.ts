@@ -8093,8 +8093,12 @@ export const K1314S12 = { tailJoin: true, thruTail: false, ownSide: false };
  *  piece 196's point 1 inks too and its band to the uninked point 0 ramps from there; liftOwn: the lifted
  *  entries are the band's own ink (fadeA 1), see runEndFade. j58a's box (4.62-4.86, 33.30-33.62) |d| vs form
  *  B: s12 17.73%, ownSide 14.17% (and its wedge), both flags 11.78%, no wedge. thruGate: the thru tails
- *  (K1314S12.thruTail's pieces) walk only at corners form B leaves open (thruGateOk). */
-export const K1314S13 = { liftOwn: true, liftEnd: true, thruGate: true };
+ *  (K1314S12.thruTail's pieces) walk only at corners form B leaves open (thruGateOk): a fillet that failed
+ *  with "V outside spans" (c8, muse_hash (19.25, 14.43): box |d| 10.67% -> 4.11%; census tail_look
+ *  175 -> 107, bar kinds unchanged). OFF, measured: thruOk (also walk ok corners whose fillet sags under
+ *  THRU_SAG * W; j49) and thruUnion (E's border inks 1 where E is nearer): census k1314s13a/b, stray_ink
+ *  4 -> 176 / 315, band:tail spikes at end-arm corners where form B is plain fill. */
+export const K1314S13 = { liftOwn: true, liftEnd: true, thruGate: true, thruOk: false, thruUnion: false };
 /** K1314 s12 (thruTail, muse_hash j58's corner 176): a thru tail continues E's run past the corner, so it
  *  starts no darker than the run ends (run 371's root ramp ends at 0, the tail started at 0.18: a hard
  *  line across the band) and reaches its own alpha over THRU_END points. */
@@ -8447,7 +8451,12 @@ function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[])
           pX: C.polys[piX], xc: piX, sRX: C.armSR[aiX], dirX: C.armDir[aiX], LX: C.armL[aiX], LcutX: C.armLcut[aiX],
           zE: (s) => depthAtC(C, piE, s, depthWin), zX: (s) => depthAtC(C, piX, s, depthWin), h: C.h, zt: 0.1 * C.depthAmp, W: C.W,
         };
-        if (thru) { if (K1314S12.thruTail || thruGateOk(C.cOk[ci], C.cR[ci], C.cTheta[ci], C.W)) thruTailPts(tin, pts, cpts, alpha); }
+        if (thru) {
+          if (K1314S12.thruTail || thruGateOk(C.cOk[ci], C.cWhy[ci], C.cR[ci], C.cTheta[ci], C.W)) {
+            thruUnion = K1314S13.thruUnion && !!C.cOk[ci] && C.cR[ci] > 1e-9;
+            thruTailPts(tin, pts, cpts, alpha); thruUnion = false;
+          }
+        }
         else endTailPts(tin, pts, cpts, alpha, fill);
         tKey = aiE * 2 + (sideE === 1 ? 0 : 1);
         if (!thru && RUN_END_FADE && (RUN_FADE_B || !dp.interval) && !C.cOk[ci] && C.cTheta[ci] < RUN_FADE_TH) runFade.push({ a: tin, key: tKey });
@@ -9013,7 +9022,9 @@ function tailAlpha(a: TailIn, sE: number, x0: number, y0: number, out: Float64Ar
   // (X's depth changes steeply near a crossing): sample a quarter in from
   // each edge and extend the line through them to the edges (the least-
   // squares line of a profile that saturates inside the band).
+  tailDE = h - a.W * 0.25;
   const aQ = tailAlphaAt(a, x0 + nx * a.W * 0.25, y0 + ny * a.W * 0.25, zE - (a.zt * (h - a.W * 0.25)) / h, side, own);
+  tailDE = h - a.W * 0.75;
   const aR = tailAlphaAt(a, x0 + nx * a.W * 0.75, y0 + ny * a.W * 0.75, zE - (a.zt * (h - a.W * 0.75)) / h, side, own);
   const o0 = 1.5 * aQ - 0.5 * aR; const o1 = 1.5 * aR - 0.5 * aQ;
   out[0] = o0 < 0 ? 0 : o0 > 1 ? 1 : o0; out[1] = o1 < 0 ? 0 : o1 > 1 ? 1 : o1;
@@ -9052,6 +9063,7 @@ function tailAlphaAt(a: TailIn, x: number, y: number, keyE: number, side: boolea
   // own arcs draw; E's border there lies in fill form B leaves bare when X is
   // in the junction's group (stage 3's cut: (h - W - d_X) / h > 0).
   if (side && g < 1 && ramp >= 1) return 0;
+  if (thruUnion && g < 1 && tailDE <= dF) return 1;
   // One chain is one surface in form B: E's border never shows inside X's.
   if (a.pE === a.pX) return side && g < 1 ? (1 - ramp) * (1 - g) : 1 - g;
   const m = keyE - (a.zX(sF) - (a.zt * dF) / h);
@@ -9101,11 +9113,22 @@ const THRU_N = 24;
  *  shallow one whose fillet is a sliver (j49: sag 0.050 = 0.33 W) leaves E's border showing under X's tube,
  *  with the tie: there the walk runs. */
 const THRU_SAG = 0.5;
-function thruGateOk(ok: number, r: number, th: number, W: number): boolean {
-  if (!ok || !(r > 1e-9)) return true;
+function thruGateOk(ok: number, why: string | undefined, r: number, th: number, W: number): boolean {
+  if (!ok) return why === "V outside spans";
+  if (!K1314S13.thruOk) return false;
+  if (!(r > 1e-9)) return true;
   const sh = Math.sin(th / 2);
   return sh > 1e-9 && r * (1 / sh - 1) < THRU_SAG * W;
 }
+/** K1314 s13 (thruUnion; j49's cut, muse_hash#289): a thru walk at a corner form B rounds (ok, a sliver
+ *  fillet: thruGateOk) lies where the junction's group is one surface, whose border is where min(d_E, d_X)
+ *  lies in the border band and belongs to the nearer chain: where E is nearer (d_E <= d_X, tailDE the
+ *  sample's d_E) and X's band has not reached X's fill (g < 1), E's border shows at full ink, not faded by
+ *  1 - g across X's band (X's own border, which that fade leaves to, is cut there). j49 (22.54, 34.72):
+ *  d_E 0.274, d_X 0.318, form B ink 1, top c75; the fade gave 0.46. Where X is nearer (22.46, 34.72: d_E
+ *  0.351, d_X 0.319) form B's ink is X's, 0.44, and the fade's 0.3-0.4 stays. */
+let thruUnion = false;
+let tailDE = 0;
 /** The sE of the tailAlpha call in progress (a thruTail's ramp reads it). */
 let tailSE = 0;
 function thruTailPts(a: TailIn, pts: number[], cpts: number[], alpha: number[]): void {

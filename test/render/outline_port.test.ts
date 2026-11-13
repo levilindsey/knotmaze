@@ -117,9 +117,14 @@ type Pin = { f0: { table: string; paint: string; band: string }; f1: { table: st
 // abutting run's chevron end starts on the run's end edge (outline.ts K1314S12.tailJoin, c8's tail
 // line): table and band, f0 and f1, on ring. Paint unchanged; g41_ring_tw42 unchanged. Checked
 // against form B (census k1314s12b, crops in .claude/probes/K1314/out/s12).
+// K1314 s13 re-pinned on purpose (2026-11-12): a through corner whose fillet failed with "V outside
+// spans" walks E's border under X (outline.ts K1314S13.thruGate, thruGateOk; c8's lost ink): table,
+// paint and band, f0 and f1, on ring; table and paint, f0 and f1, on g41_ring_tw42 (band unchanged).
+// liftOwn/liftEnd move no pin. Checked against form B (census k1314s13c, crops in
+// .claude/probes/K1314/out/s13).
 const PINS: Record<string, Pin> = {
-  ring: { f0: { table: "e8ac3891c39b614b", paint: "e57b025dc17996ca", band: "e902b8b337c45697" }, f1: { table: "089000306503fc01", paint: "a32ea02671fd16bb", band: "5d8388f4afcb5512" } },
-  g41_ring_tw42: { f0: { table: "ec826d92cf6e7b95", paint: "c06a2bc79a0cc3d1", band: "9e610207c3e8630d" }, f1: { table: "0c32868cc5c8798b", paint: "cc9e773970557908", band: "ae0ad0cee9722d15" } },
+  ring: { f0: { table: "3433a477199498f1", paint: "9232bd4b0f619118", band: "9332cb79d217aa1a" }, f1: { table: "4538aa8c0143a63c", paint: "1d79bf947f17ce9c", band: "18bc3e49e238b721" } },
+  g41_ring_tw42: { f0: { table: "3956c79f8465d771", paint: "e248bd16dd5ca3f4", band: "9e610207c3e8630d" }, f1: { table: "83b8ed1c3227c3d2", paint: "375100b98bcacada", band: "ae0ad0cee9722d15" } },
 };
 
 // The tool's second frame: every chain point rotated 0.3 rad and moved.
