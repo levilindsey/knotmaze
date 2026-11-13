@@ -599,10 +599,23 @@ function nearVisit(c: ZChain, x: number, y: number, sC: number, r: number, sSkip
   const l2 = ex * ex + ey * ey;
   const t = l2 > 0 ? Math.min(1, Math.max(0, ((x - ax) * ex + (y - ay) * ey) / l2)) : 0;
   const px = x - ax - t * ex; const py = y - ay - t * ey;
-  if (px * px + py * py > nwBest2 * (1 + 1e-12)) return;
-  const d = Math.hypot(px, py);
-  if (d < nwBest) { nwBest = d; nwBest2 = d * d; nwBs = sk + t * lk; }
+  // K1247 s28 (perf): Math.hypot only on a near tie. Squared distances carry a few 1e-16 of
+  // rounding and hypot about one, so outside a 1e-12 relative margin d2 orders two candidates as
+  // their hypots do; inside it both hypots decide (strictly smaller wins), as footNear's scan.
+  // nearW takes the winner's hypot once (nwBest), and nwUb >= it bounds nearRange's skip.
+  const d2 = px * px + py * py;
+  if (d2 > nwBest2 * (1 + 1e-12)) return;
+  if (!(d2 < nwBest2 * (1 - 1e-12))) {
+    if (nwD !== nwD) nwD = Math.hypot(nwPx, nwPy);
+    const d = Math.hypot(px, py);
+    if (!(d < nwD)) return;
+    nwBest2 = d2; nwPx = px; nwPy = py; nwD = d; nwUb = Math.sqrt(d2) * (1 + 1e-12); nwBs = sk + t * lk;
+    return;
+  }
+  nwBest2 = d2; nwPx = px; nwPy = py; nwD = NaN; nwUb = Math.sqrt(d2) * (1 + 1e-12); nwBs = sk + t * lk;
 }
+/** K1247 s28: the best so far's offset, its hypot (NaN: not taken yet) and an upper bound on it. */
+let nwPx = 0; let nwPy = 0; let nwD = NaN; let nwUb = Infinity;
 // An upper bound on the foot's distance (a segment footNear accepts): segments
 // whose every point is farther, by the distance's 1-Lipschitz bound in arc
 // length from a vertex, are skipped. They cannot be the first minimum
@@ -613,7 +626,7 @@ function nearRange(c: ZChain, x: number, y: number, sC: number, r: number, sSkip
   let k = 0;
   if (ss[0] <= a) { let lo = 0; let hi = segs - 1; while (hi > lo) { const m = (lo + hi + 1) >> 1; if (ss[m] <= a) lo = m; else hi = m - 1; } k = lo; }
   while (k < segs && ss[k] <= b) {
-    const bd = nwBest < nwBound ? nwBest : nwBound;
+    const bd = nwUb < nwBound ? nwUb : nwBound;
     if (bd < Infinity) {
       const dx = x - xs[k]; const dy = y - ys[k];
       const reach = Math.sqrt(dx * dx + dy * dy) - bd * (1 + 1e-9) - 1e-12;
@@ -628,7 +641,11 @@ function nearRange(c: ZChain, x: number, y: number, sC: number, r: number, sSkip
   }
 }
 function nearW(c: ZChain, x: number, y: number, sC: number, r: number, sSkip: number, skipR: number): void {
-  nwBest = Infinity; nwBest2 = Infinity; nwBs = 0; nwBound = Infinity;
+  nearScan(c, x, y, sC, r, sSkip, skipR);
+  nwBest = nwBest2 < Infinity ? (nwD === nwD ? nwD : Math.hypot(nwPx, nwPy)) : Infinity;
+}
+function nearScan(c: ZChain, x: number, y: number, sC: number, r: number, sSkip: number, skipR: number): void {
+  nwBest = Infinity; nwBest2 = Infinity; nwBs = 0; nwBound = Infinity; nwD = NaN; nwUb = Infinity;
   const segs = c.closed ? c.n : c.n - 1;
   if (segs <= 0) return;
   // The bound: footNear's own test of the segment at sC (it accepts it unless a self pass skips it).
@@ -637,7 +654,7 @@ function nearW(c: ZChain, x: number, y: number, sC: number, r: number, sSkip: nu
     let k0 = 0;
     if (ss[0] <= u) { let lo = 0; let hi = segs - 1; while (hi > lo) { const m = (lo + hi + 1) >> 1; if (ss[m] <= u) lo = m; else hi = m - 1; } k0 = lo; }
     nearVisit(c, x, y, sC, r, sSkip, skipR, k0);
-    nwBound = nwBest; nwBest = Infinity; nwBest2 = Infinity; nwBs = 0;
+    nwBound = nwUb; nwBest = Infinity; nwBest2 = Infinity; nwBs = 0; nwD = NaN; nwUb = Infinity;
   }
   if (c.closed && c.len > 0) {
     if (2 * r >= c.len) { for (let k = 0; k < segs; k++) nearVisit(c, x, y, sC, r, sSkip, skipR, k); }
