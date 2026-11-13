@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1364.
+Next free ID: K1365.
 
 ## Waiting on Levi
 
@@ -542,15 +542,15 @@ Next free ID: K1364.
   most cases. But there are still plenty of unacceptable artifacts"): an artifact census (stray ink, hard
   colour edges inside fills, paper holes, broken ink) across scenes, then fix stages that drive its count to
   0; the look gate in docs/design/K1240_gate.md
-  - owner: nobody since 2026-11-12 20:51 (merged; agent `ad90b8e20a29ae822` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - owner: nobody since 2026-11-12 20:52 (stage 14 merged; the rest waits on K1362; agent `ad90b8e20a29ae822` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
   - branch: mainline; last commit: `6428d6eb`
   - evidence: .claude/probes/K1314/k1314s13_*, out/s13/ (s13 flags liftEnd/liftOwn/ownEdge); out/s14/ (untracked)
   - next: Waits on K1362 (Levi 2026-11-12: very bullish on the GPU distance route). If it holds, the census runs on it and the rest (j58a chevron, K1315 ends) is fixed there. If K1362 proves it cannot, s15: piece 196 run-end alpha per pixel (or split its first quad), rootTie skipping junction roots (j96), then the BAND_FS blend (K1314 s14 handoff)
   - brief: `docs/design/K1314_s14_j58a_seam.md`
 - **K1362** · Render split: per pixel on the GPU (form B's distance, from closed-form crossing and junction
   tables the CPU builds in under 1 ms) instead of the outline mesh built on the CPU each frame (65-117 ms on
-  def). Reverses the 2026-11-09 call (K1040 dropped for K1240); a 1-2 stage timing and census test would
-  decide. Analysis in docs/ledger_notes.md.
+  def). Reverses the 2026-11-09 call (K1040 dropped for K1240). The main speed route (Levi, 2026-11-12: very bullish
+  on it); dropped only on a proof it cannot work (brief: "How the result is judged"). Analysis in docs/ledger_notes.md.
   - owner: agent `aaac741afe100b3d2` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 20:32, 2 h cap ~22:32)
   - branch: `worktree-agent-aaac741afe100b3d2`, worktree `.claude/worktrees/agent-aaac741afe100b3d2`; last commit: `6d8a21ff`
   - evidence: `.claude/probes/K1362/`
@@ -583,7 +583,7 @@ Running agents are listed under In progress, each with its own next step.
   and muse_hash c8's open end (19.41, 14.16; `.claude/probes/K1314/out/s7/efafter/spot_005.png`).
   Since K1314 s9 (b9db678f) about 19 such ends fade in instead (`out/s9/after/spot_004.png`, `spot_011.png`); keep, or back to square.
   K1314 s10 traced muse_hash j36 (2816 px; a self-crossing 0.445 from the root leaves arm 111 empty, c11's border ends square) and g41_def_tw64 j97 (319 px) to these ends (`.claude/probes/K1314/out/s10/before4x/spot_001-002.png`).
-  - next: K1314 s15 after s14 merges (same builder files): fix the ends to the bar, form B no reference here. 15 of the 17 census bar finds (census_k1314s12b: the 12 broken_ink, j78's hard edge, g41_user_tw64 j63/j64's spikes) are these ends
+  - next: Waits on K1362 (Levi 2026-11-12: very bullish on the GPU distance route): its renderer must meet this bar (brief lists K1315); if K1362 proves it cannot, K1314 s15 fixes the ends in rp=outline. 15 of the 17 census bar finds (census_k1314s12b: the 12 broken_ink, j78 hard edge, g41_user_tw64 j63/j64 spikes) are these ends
 - **K1201** · S4b's joint step (K1139): a two-ended arm's ridge near its joint (xR < 0.5) steps the light.
   21F (8e0c5a1c): play meets it in every daily of a week, 2-6 arm-ends each, steps up to 0.77 after the reach
   window (CPU, lattice spans; notes). Fix (b) crossfaded the pulse bands K1211 S6 removed (13aab452); K1218 S2's crops at its eight spots show no step (5a12c51f).
@@ -1940,6 +1940,9 @@ Every other item below waits on the trigger it names.
 - **K1363** · draw.ts CONTACT_CACHE makes the outline's contacts depend on history: two workers fed the same
   scene differ in bandRec/passTex unless the cache is bypassed (K1247 s36 handoff). Matters only if outputs
   must be history-free (a pool, replays).
+- **K1364** · rp=outline's band blend: BAND_FS / draw.ts stack the two tie-dimmed run bands one over the other
+  where form B blends the two orders' ink; the last part of muse_hash j58a's chevron (4.752, 33.504) (K1314
+  s14 handoff in docs/design/K1314_s14_j58a_seam.md). Moot if K1362 replaces the band render.
 
 ## Approved, to schedule (2026-10-11)
 
