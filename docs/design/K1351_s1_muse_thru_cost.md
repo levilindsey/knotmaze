@@ -76,3 +76,69 @@ identity-checked parts with the flag off, and say which check failed.
 - When you stop: append a Handoff to this brief (start and stop times, the A/B table, the census line, what changed,
   what is left), commit and push it, and report. A stopped run pushes only its finished part; keep unfinished code
   as a patch under `.claude/probes/K1351/` (untracked).
+
+## Handoff (K1351 s1 Muse run, 2026-11-12, start 19:42:53 PT, stop 21:20:23 PT)
+
+**Outcome: thruGate stays off. The no-cost machinery is landed and identity-checked; Done 3 fails on
+three cells, so per the brief the flag was not flipped.** Landed (one commit, rebased on origin/master
+after K1314 s14 merged; npm test green before and after the rebase: 231 files, 2948 tests):
+
+- `piecesPhaseC` (outline.ts) reads the thru gate before building the TailIn: a gated-out thru tail
+  keeps its side/s and the shared `EMPTY_PTS` arrays, builds no bend search, depth closures or
+  TailIn, and enters neither tailJoin nor thruIn (both no-ops on an empty tail).
+- `fillStructure` (fill_tri.ts) gives a thru tail (interval >= 2) no fill item. Its piece's fpts is
+  always [] (thruTailPts writes pts only), so fillFrame could only ever set its 2*(TAIL_M+1)
+  vertices degenerate; def loses 354 items / 17700 vertices / 50976 indices vs s13's design.
+- draw.ts and chain_frame.ts needed no change: with the fill vertices gone, paintFrame's copy is
+  master-sized again; bandData already skipped sub-2-point pieces.
+
+**Done 1 (census): counts hold; the s13c file is stale vs current master.** Full census k1351s1:
+stray_ink 4, hard_edge 1, paper 0, broken_ink 12, k1049 0, tail_look 107 — equal to census_k1314s13c,
+and the 17 bar-kind finds are find-for-find identical. But 12 tail_look records (muse_hash: x134,
+j81, j58, j59, j102, j78 spots) and 18 owner_only records differ from s13c in px/bbox at the ~1%
+level. Attribution: pristine master at 8ff2b01f with only the flag flipped differs from s13c by the
+same 26 muse_hash records, and master == this stage's code find-for-find there (0 differing,
+census_k1351s1m vs k1351s1b; this stage's code also reproduces itself exactly on a rerun). So the
+differing records are master drift since s13c was generated (other stages merged in between), not
+this change. Crops for the differing finds were not generated (cap); their spots are named above.
+
+**Done 2 (off identity): holds.** k1341s1_digest in this worktree vs a git-archive export of master:
+byte-equal files, `all 1acaf41993fca0ff`, checked twice (before the shared-empty edit and with the
+final shipped code).
+
+**Done 3 (speed): FAILS on three cells.** Swap-averaged interleaved A/B
+(.claude/probes/K1351/k1351s1_ab.ts, k1341s3_ab extended with frame and paint; two builds with the
+code swapped between src/render/outline and src/render/outline_m, R=16, machine loaded by the s14/s36
+agents throughout). Code effect (mine - master, ms per frame) with pooled 95% interval:
+
+| drag | frame | zChains | fill | paint | band |
+|---|---|---|---|---|---|
+| def | +0.45 +-0.61 ok | -0.03 +-0.19 ok | +0.24 +-0.28 ok | +0.10 +-0.06 FAIL | +0.15 +-0.17 ok |
+| muse_hash | +2.48 +-0.99 FAIL | +0.38 +-0.42 ok | +0.07 +-0.52 ok | +0.01 +-0.05 ok | +0.10 +-0.63 ok |
+| fat | -0.38 +-0.36 ok | +0.71 +-0.17 FAIL | -0.01 +-0.11 ok | -0.01 +-0.02 ok | -0.04 +-0.09 ok |
+
+In the brief's own three-part view (zChains/fill/band) only fat zChains fails; zChains is scene-only
+code this stage never touches, so that cell is most likely GC/load correlation, not a code path.
+muse_hash frame (+4%) is the real residual: 322 extra piece objects a frame through piecesPhaseC.
+Next causes, in order: profile piecesCapsEtc on muse_hash with the AB bundle (k1351s1_prof.ts is a
+start, but run it bundled, not under run_node); try suppressing the per-frame piece object for
+gated-out pieces everywhere table.pieces is only read through di; re-run the pair at R=32 on a quiet
+machine before concluding the paint cell (+0.10 ms is inside the slot bias the two builds showed,
++0.05).
+
+**Done 4 (GPU twin): not run.** It is a flag-on check; with Done 3 red the flag stayed off. The band
+input (the table) is proven identical to master's thruGate-on table by Done 1's master comparison,
+so the mirror line is expected to tie as it did for s13.
+
+**Done 5 (tests/pins): holds with the flag off.** npm test green (231 files / 2948 tests, 2+9
+skipped), golden snapshots unchanged, no pin moved, no test file touched. Had the flag flipped,
+outline_port's pins would have needed the re-pin the brief allows (k1314s13_pins.ts with
+thruGate=1); not done, since it did not.
+
+**What is left:** flip `thruGate: true` in K1314S13 once a swap pair at higher R (or a quieter
+machine) clears the three cells above, or the muse_hash frame residual is profiled away; then run
+the GPU twin (k1314s13_gpu2.ts) and re-pin outline_port. The differing tail_look/owner_only records
+vs census_k1314s13c want a re-baselined census on current master before they can gate anything.
+Tools: .claude/probes/K1351/k1351s1_{count,ab,prep,prof,cmp}. Census outputs are under
+.claude/probes/K1314/out/s1/ (untracked): census_k1351s1 (full), k1351s1b/k1351s1c (muse_hash,
+this code), k1351s1m (muse_hash, pristine master with the flag flipped).
