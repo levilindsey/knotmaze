@@ -13,11 +13,11 @@
 //   chain's events), each arm's span ending a crossing reach before the
 //   next pin. O(crossings + arms).
 // - CORNER: one rolling-ball fillet per cyclically adjacent arm pair whose
-//   corner is concave (theta < pi) and round: centre C, radius r = form B's
-//   r0, the sector's two rays (C -> tangent points) and the material's far
-//   bound. Closed form: the straight model, then ONE re-solve against the
-//   arms' tangent lines at the straight model's tangent points (no search,
-//   no iteration). O(arms).
+//   corner is concave (theta < pi) and round: centre C, radius r (form B's
+//   rolling-ball integral at a FIXED 24 nodes, feet tracked along the real
+//   arms with exact local polyline projections, the margin gate read at
+//   fixed arm samples), the sector's two rays and the material's far bound.
+//   A fixed cost per corner (no adaptive step, no search). O(arms).
 // - BINS: a uniform grid (cell G) listing CHUNKS (runs of CH segments of one
 //   chain) whose bbox lies within RC of the cell, and the corners whose
 //   material reaches it. O(points / CH) inserts.
@@ -272,12 +272,15 @@ export function buildTables(scene: FieldScene, opts: GfOpts): GfTables {
   armsT.forEach((A, i) => { aSR[i] = A.sR; aDir[i] = A.dir; aL[i] = A.L; aLcut[i] = A.Lcut; aG[i] = A.g; if (cArmN[A.c] === 0) cArm0[A.c] = i; cArmN[A.c]++; });
   const t3 = now();
   // 4. Corners: form B's rolling-ball fillet per cyclically adjacent arm pair (ordered by the arms' chord
-  //    angle at 2h; no corner between the two arms of one through pass), in closed form. The radius is form B's
-  //    r = integral of S over rho from h to h + r0 (S the running minimum of w = the slack gate x the two root
-  //    gates), on the straight-arm model at 32 fixed nodes: the steep and margin gates read 1 on straight arms
-  //    and are not modelled, nor is the overlap gate omega. C and V come from one solve against each arm's
-  //    tangent line at its straight-model foot. The fill is bounded by rV = |C - V| as in form B's inFill.
-  const cr = look.cuspRadius ?? 3; const rootBand = 0.5;
+  //    angle at 2h; no corner between the two arms of one through pass). The ball's centre q(rho) sits at rho
+  //    from both arms; its feet are TRACKED along the real arms from V (rho = h) at NODES fixed nodes, each node
+  //    one predictor (the straight model's du = drho / tan(th/2)) and TRACK corrector steps (solve against the
+  //    two tangent lines, re-project each foot). r = integral of S over rho in [h, h + r0], S the running min
+  //    of form B's w: the steep, slack and two root gates and the margin gate (how much nearer another part of
+  //    either arm's [0, L] comes to q than its foot, outside the foot's basin), the arm read at fixed samples
+  //    no more than h/3 apart. A fixed cost per corner: no search, no adaptive step. Form B's overlap gate
+  //    omega is not modelled (it reads 1 wherever the margin gate stopped the ball, its S1d F4 note).
+  const cr = look.cuspRadius ?? 3; const rootBand = 0.5; const NODES = 24; const TRACK = 1;
   const ss01 = (x: number): number => { const t = Math.min(1, Math.max(0, x)); return t * t * (3 - 2 * t); };
   const tRef = 1 / Math.sin(1.0) - 1; // form B's ROOT_BAND_REF_THETA = 2
   const rootTip = (th: number): number => { const s = Math.sin(th / 2); if (!(s > 0)) return 1; const t = 1 / s - 1; return t > 0 ? Math.min(1, t / tRef) : 0; };
@@ -288,23 +291,73 @@ export function buildTables(scene: FieldScene, opts: GfOpts): GfTables {
     const s = cClosed[A.c] ? norm(A.c, A.sR + A.dir * u) : Math.max(cS0[A.c], Math.min(cS0[A.c] + cLen[A.c], A.sR + A.dir * u));
     const p = chainAt(TT, A.c, s); return { x: p.x, y: p.y, tx: p.tx * A.dir, ty: p.ty * A.dir, s };
   };
-  // The point at distance rho from both arms' tangent lines at their feet u (B ccw of A by th < pi: the corner
-  // lies on A's left and B's right); the straight model's point when the lines are near parallel or it lands far.
-  const solve2 = (J: { c: [number, number] | number[] }, A: ArmT, B: ArmT, th: number, u: number, rho: number): { x: number; y: number; nax: number; nay: number; nbx: number; nby: number; sa: number; sb: number } => {
-    const pa = armPt(A, u); const pb = armPt(B, u);
+  // Each arm's fixed samples over [0, L], for the margin gate.
+  const smp = new Map<ArmT, { n: number; du: number; x: Float64Array; y: Float64Array }>();
+  const smpOf = (A: ArmT): { n: number; du: number; x: Float64Array; y: Float64Array } => {
+    let S = smp.get(A);
+    if (!S) {
+      const n = Math.max(2, Math.min(48, Math.ceil(A.L / (h / 3)))); const x = new Float64Array(n + 1); const y = new Float64Array(n + 1);
+      for (let i = 0; i <= n; i++) { const p = armPt(A, (A.L * i) / n); x[i] = p.x; y[i] = p.y; }
+      S = { n, du: A.L / n, x, y }; smp.set(A, S);
+    }
+    return S;
+  };
+  const marginAt = (S: { n: number; du: number; x: Float64Array; y: Float64Array }, u: number, qx: number, qy: number, dc: number): number => {
+    const dk = (k: number): number => Math.sqrt((S.x[k] - qx) * (S.x[k] - qx) + (S.y[k] - qy) * (S.y[k] - qy));
+    const f = Math.min(S.n, Math.max(0, u / S.du)); let hi = Math.min(S.n, Math.ceil(f)); let lo = Math.max(0, Math.floor(f));
+    let dp = dk(hi); while (hi < S.n) { const dn = dk(hi + 1); if (dn < dp) break; dp = dn; hi++; }
+    dp = dk(lo); while (lo > 0) { const dn = dk(lo - 1); if (dn < dp) break; dp = dn; lo--; }
+    let d2 = Infinity; for (let k = hi + 1; k <= S.n; k++) d2 = Math.min(d2, dk(k)); for (let k = 0; k < lo; k++) d2 = Math.min(d2, dk(k));
+    return d2 - dc;
+  };
+  type Q = { x: number; y: number; ua: number; ub: number; nax: number; nay: number; nbx: number; nby: number; sa: number; sb: number; fax: number; fay: number; fbx: number; fby: number };
+  // The point at rho from A's tangent line at ua (on its left) and B's at ub (on its right); the straight
+  // model's point when the lines are near parallel or it lands farther than the straight model's reach.
+  const solveAt = (J: { c: [number, number] | number[] }, A: ArmT, B: ArmT, th: number, ua: number, ub: number, rho: number): Q => {
+    const pa = armPt(A, ua); const pb = armPt(B, ub);
     const nax = -pa.ty; const nay = pa.tx; const nbx = pb.ty; const nby = -pb.tx;
     let bx = A.ux + B.ux; let by = A.uy + B.uy; const bl = Math.hypot(bx, by) || 1; bx /= bl; by /= bl;
     const R0 = rho / Math.sin(th / 2); const x0 = J.c[0] + bx * R0; const y0 = J.c[1] + by * R0;
     const ax0 = pa.x + rho * nax; const ay0 = pa.y + rho * nay; const bx0 = pb.x + rho * nbx; const by0 = pb.y + rho * nby;
     const det = -pa.tx * pb.ty + pa.ty * pb.tx;
+    const base = { ua, ub, sa: pa.s, sb: pb.s, fax: pa.x, fay: pa.y, fbx: pb.x, fby: pb.y };
     if (Math.abs(det) > 1e-6) {
       const rx = bx0 - ax0; const ry = by0 - ay0; const t = (-rx * pb.ty + ry * pb.tx) / det;
       const qx = ax0 + t * pa.tx; const qy = ay0 + t * pa.ty;
-      if (Math.hypot(qx - x0, qy - y0) < R0) return { x: qx, y: qy, nax, nay, nbx, nby, sa: pa.s, sb: pb.s };
+      if (Math.hypot(qx - x0, qy - y0) < 4 * R0 + 2 * h) return { ...base, x: qx, y: qy, nax, nay, nbx, nby };
     }
-    // straight model: the rays from the point to the lines are -n along the bisector's normals
     const cs = Math.cos(th / 2); const sn = Math.sin(th / 2);
-    return { x: x0, y: y0, nax: bx * sn - by * cs, nay: bx * cs + by * sn, nbx: bx * sn + by * cs, nby: -bx * cs + by * sn, sa: pa.s, sb: pb.s };
+    return { ...base, x: x0, y: y0, nax: bx * sn - by * cs, nay: bx * cs + by * sn, nbx: bx * sn + by * cs, nby: -bx * cs + by * sn };
+  };
+  // A foot's exact local projection on the arm's polyline: from u's segment, step to a neighbour while the
+  // projection falls outside the segment (at most 6 steps; a reversal means the foot is the shared vertex).
+  const proj = (A: ArmT, u: number, x: number, y: number): number => {
+    const c = A.c; const v0 = cV0[c]; const nv = cNV[c]; const closed = cClosed[c] === 1;
+    const sRaw = A.sR + A.dir * u; const s = closed ? norm(c, sRaw) : Math.max(vs[v0], Math.min(vs[v0 + nv - 1], sRaw)); const off = sRaw - s;
+    let k = v0; let hi = v0 + nv - 1;
+    while (hi - k > 1) { const m = (k + hi) >> 1; if (vs[m] <= s) k = m; else hi = m; }
+    let wrap = 0; let mv = 0; let sf = s;
+    for (let it = 0; it < 7; it++) {
+      const ax = vx[k]; const ay = vy[k]; const dx = vx[k + 1] - ax; const dy = vy[k + 1] - ay; const l2 = dx * dx + dy * dy;
+      const tt = l2 > 0 ? ((x - ax) * dx + (y - ay) * dy) / l2 : 0;
+      if (tt < 0 && it < 6) {
+        if (mv === 1) { sf = vs[k] + wrap; break; }
+        if (k > v0) { k--; mv = -1; continue; }
+        if (closed) { k = v0 + nv - 2; wrap -= cLen[c]; mv = -1; continue; }
+      } else if (tt > 1 && it < 6) {
+        if (mv === -1) { sf = vs[k + 1] + wrap; break; }
+        if (k < v0 + nv - 2) { k++; mv = 1; continue; }
+        if (closed) { k = v0; wrap += cLen[c]; mv = 1; continue; }
+      }
+      const tc = Math.min(1, Math.max(0, tt)); sf = vs[k] + tc * (vs[k + 1] - vs[k]) + wrap; break;
+    }
+    return Math.min(A.L, Math.max(0, (sf + off - A.sR) * A.dir));
+  };  // Each corrector step moves a foot by at most lim (a node's straight-model step): a foot never jumps.
+  const track = (J: { c: [number, number] | number[] }, A: ArmT, B: ArmT, th: number, ua: number, ub: number, rho: number, it: number, lim = Infinity): Q => {
+    let q = solveAt(J, A, B, th, ua, ub, rho);
+    const cl = (u0: number, u1: number): number => Math.min(u0 + lim, Math.max(u0 - lim, u1));
+    for (let k = 0; k < it; k++) q = solveAt(J, A, B, th, cl(q.ua, proj(A, q.ua, q.x, q.y)), cl(q.ub, proj(B, q.ub, q.x, q.y)), rho);
+    return q;
   };
   scene.junctions.forEach((J, ji) => {
     const S = sibs[ji].sort((u, v) => u.ang - v.ang); const n = S.length; if (n < 2) return;
@@ -318,19 +371,34 @@ export function buildTables(scene: FieldScene, opts: GfOpts): GfTables {
       let st = styles[A.ei]?.style; if ((A.ei + 1) % ne !== B.ei && (B.ei + 1) % ne === A.ei) st = styles[B.ei]?.style;
       if (st === "sharp") continue;
       if (!(A.L > 1e-9 && B.L > 1e-9)) continue;
-      const t2 = Math.tan(th / 2); const uV = h / t2;
-      if (!(uV < A.L && uV < B.L)) continue; // form B: V's feet inside both arms
+      const t2 = Math.tan(th / 2); const uV0 = h / t2;
+      // form B: V's (tracked) feet inside both arms, checked below
       const r0 = (cr / 3) * Math.min(2 * h, 1.5 * h * t2);
-      const rb = Math.max(rootBand * h * rootTip(th), 1e-9 * h); const minL = Math.min(A.L, B.L);
-      const wOf = (rho: number): number => { const u = rho / t2; const fr = ss01(u / rb); return ss01((minL - W - u) / (0.5 * h)) * fr * fr; };
-      let r = 0;
-      if (r0 > 1e-9) {
-        const dN = r0 / 32; let sPrev = wOf(h);
-        for (let k = 1; k <= 32 && sPrev > 0; k++) { const sK = Math.min(sPrev, wOf(h + k * dN)); r += 0.5 * (sPrev + sK) * dN; sPrev = sK; }
+      if (!(r0 > 1e-9)) continue;
+      const rb = Math.max(rootBand * h * rootTip(th), 1e-9 * h);
+      const V = track(J, A, B, th, uV0, uV0, h, 8);
+      if (!(V.ua > 0 && V.ua < A.L && V.ub > 0 && V.ub < B.L)) continue;
+      const SA = smpOf(A); const SB = smpOf(B);
+      const denOf = (p: Q): number => { const ax = p.x - p.fax; const ay = p.y - p.fay; const bx = p.x - p.fbx; const by = p.y - p.fby; return 1 + (ax * bx + ay * by) / ((Math.sqrt(ax * ax + ay * ay) || 1) * (Math.sqrt(bx * bx + by * by) || 1)); };
+      const denV = denOf(V);
+      const wOf = (p: Q): number => {
+        const fSteep = ss01(((Math.abs(denV) > 1e-12 ? denOf(p) / denV : 0) - 0.3) / 0.4); if (fSteep === 0) return 0;
+        const fSlack = ss01(Math.min(A.L - W - p.ua, B.L - W - p.ub) / (0.5 * h)); if (fSlack === 0) return 0;
+        const fA = ss01(p.ua / rb); const fB = ss01(p.ub / rb); if (fA === 0 || fB === 0) return 0;
+        const mA = marginAt(SA, p.ua, p.x, p.y, Math.hypot(p.x - p.fax, p.y - p.fay)); if (mA <= -0.05 * h) return 0;
+        const mB = marginAt(SB, p.ub, p.x, p.y, Math.hypot(p.x - p.fbx, p.y - p.fby)); if (mB <= -0.05 * h) return 0;
+        return ss01(1 + Math.min(0, mA, mB) / (0.05 * h)) * fSteep * fSlack * fA * fB;
+      };
+      const dN = r0 / NODES; let sPrev = wOf(V); let r = 0; let p = V;
+      for (let k = 1; k <= NODES && sPrev > 0; k++) {
+        const du = dN / t2;
+        const pk = track(J, A, B, th, Math.min(A.L, p.ua + du), Math.min(B.L, p.ub + du), h + k * dN, TRACK, 4 * du);
+        const sK = Math.min(sPrev, wOf(pk)); const seg = 0.5 * (sPrev + sK) * dN;
+        if (sK < sPrev && sK === 0) { r += seg; break; }
+        r += seg; sPrev = sK; p = pk;
       }
       if (!(r > 1e-9)) continue;
-      const q = solve2(J, A, B, th, (h + r) / t2, h + r);
-      const V = solve2(J, A, B, th, uV, h);
+      const q = track(J, A, B, th, p.ua, p.ub, h + r, TRACK + 1, 4 * dN / t2);
       const rV = Math.hypot(V.x - q.x, V.y - q.y);
       const rmax = rV + (2 * aa) / Math.max(0.1, Math.sin(th / 2));
       K.push({ cx: q.x, cy: q.y, r, rmax, eax: -q.nax, eay: -q.nay, ebx: -q.nbx, eby: -q.nby, g, j: ji, a: A.ei, b: B.ei, theta: th, ca: A.c, cb: B.c, sa: q.sa, sb: q.sb });

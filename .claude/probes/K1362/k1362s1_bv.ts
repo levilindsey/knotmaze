@@ -1,0 +1,6 @@
+import { buildModel, plainOf } from "C:/Users/lsl/Repositories/knotmaze/.claude/probes/K1314/k1314_census.ts";
+const m = buildModel(process.argv[2]); const j = Number(process.argv[3]);
+const fb = plainOf(m) as unknown as { h: number; arms: { j: number; L: number; sR: number; dir: number; ux: number; uy: number }[]; corners: { j: number; a: number; b: number; Vx: number; Vy: number; dVa: number; dVb: number; dA: number; dB: number; r: number; theta: number }[] };
+const h = m.scene.look.halfWidth;
+for (const c of fb.corners) if (c.j === j) console.log(`B corner ${c.a},${c.b} V (${c.Vx.toFixed(3)},${c.Vy.toFixed(3)}) dVa/h ${(c.dVa / h).toFixed(3)} dVb/h ${(c.dVb / h).toFixed(3)} dA/h ${(c.dA / h).toFixed(3)} dB/h ${(c.dB / h).toFixed(3)} r/h ${(c.r / h).toFixed(3)} L/h ${(fb.arms[c.a].L / h).toFixed(3)},${(fb.arms[c.b].L / h).toFixed(3)} u (${fb.arms[c.a].ux.toFixed(3)},${fb.arms[c.a].uy.toFixed(3)}) (${fb.arms[c.b].ux.toFixed(3)},${fb.arms[c.b].uy.toFixed(3)})`);
+console.log("J", JSON.stringify(m.scene.junctions[j].c), JSON.stringify(m.scene.junctions[j].arms.map((a: { chain: number; s: number; kind: string }) => [a.chain, +a.s.toFixed(3), a.kind])));
