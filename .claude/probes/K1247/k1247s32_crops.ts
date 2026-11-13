@@ -88,23 +88,26 @@ function ring(p: Uint8Array, cx: number, cy: number, rp: number): void {
 }
 
 const { cap, raw } = loadDrag(dir, sub);
-const model = new OutlineModel(cap[0]); const st = (model as unknown as { st: O.DiagramStructure }).st;
 const dev = cap[0].camera.pxPerUnit * cap[0].camera.dpr;
 const snapOn = arg("snap", "0") === "1";
-const tables = new Map<number, O.OutlineTable>();
-if (snapOn) {
-  // the snapped tables the model draws (OutlineModel.update, KF_INC.snap as it is)
-  const last = Math.max(...frames);
-  for (let i = 1; i <= last; i++) { model.update(raw[i]); if (frames.includes(i)) tables.set(i, structuredClone((model as unknown as { table: O.OutlineTable }).table)); }
-}
+// Each frame on the structure the worker holds then: a model fed every frame up to it (the true input, or the
+// snapped one with snap=1), rebuilt where its update throws (muse_hash's drag outgrows cap[0]'s structure).
+const at = new Map<number, { st: O.DiagramStructure; table: O.OutlineTable }>();
+const snap0 = O.KF_INC.snap; O.KF_INC.snap = snapOn;
+let model = new OutlineModel(cap[0]); let nThrew = 0;
+const grab = (i: number): void => { const m = model as unknown as { st: O.DiagramStructure; table: O.OutlineTable }; at.set(i, { st: m.st, table: structuredClone(m.table) }); };
+if (frames.includes(0)) grab(0);
+for (let i = 1; i <= Math.max(...frames); i++) { try { model.update(raw[i], !snapOn); } catch { nThrew++; model = new OutlineModel(raw[i]); } if (frames.includes(i)) grab(i); }
+O.KF_INC.snap = snap0;
+console.log(`the model rebuilt ${nThrew} times up to f${Math.max(...frames)}`);
 for (const mag of mags) {
   const ppu = mag * dev; const c0 = Math.round(ax * ppu - P / 2); const r0 = Math.round(ay * ppu - P / 2);
   const panels: Uint8Array[] = []; lastInk = null; console.log(`${tag} ${mag}x:`);
-  const s0 = O.alignJunctionArms(st, raw[frames[0]]);
-  const fbp = panelFormB(modelOf(st, s0), c0, r0, ppu); ring(fbp, P / 2, P / 2, 3 * mag); panels.push(fbp);
+  const A0 = at.get(frames[0]) as { st: O.DiagramStructure }; const s0 = O.alignJunctionArms(A0.st, raw[frames[0]]);
+  const fbp = panelFormB(modelOf(A0.st, s0), c0, r0, ppu); ring(fbp, P / 2, P / 2, 3 * mag); panels.push(fbp);
   for (const f of frames) {
-    const s = O.alignJunctionArms(st, raw[f]);
-    const p = panelOutline(modelOf(st, s, tables.get(f)), c0, r0, ppu);
+    const A = at.get(f) as { st: O.DiagramStructure; table: O.OutlineTable }; const s = O.alignJunctionArms(A.st, raw[f]);
+    const p = panelOutline(modelOf(A.st, s, A.table), c0, r0, ppu);
     const name = `${tag}_f${f}_${mag}x.png`; writePng(join(out, name), p, P, P);
     const rp = new Uint8Array(p); ring(rp, P / 2, P / 2, 3 * mag); panels.push(rp);
     if (before && existsSync(join(before, name))) {

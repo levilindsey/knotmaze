@@ -50,7 +50,7 @@ function lerp(a: SceneIn, b: SceneIn, t: number): SceneIn {
   return s;
 }
 
-afterEach(() => { KF_INC.snap = false; KF_INC.cache = false; KF_INC.T = 0.5; });
+afterEach(() => { KF_INC.snap = false; KF_INC.cache = false; KF_INC.T = 0.5; KF_INC.border = true; });
 
 describe("K1338 / K1247 s31 incremental frame: the caches are exact", () => {
   it("ring (committed fixture): a synthetic drag, caches on = off every frame", () => {

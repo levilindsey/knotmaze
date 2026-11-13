@@ -4224,7 +4224,7 @@ function setupFrame(C: FCache, st: DiagramStructure, scene: SceneIn): void {
 // the model's; frameSnapped also holds the END-arm feet. The caches
 // (KF_INC.cache: borders, corners) are exact: the frame on a snapped scene is
 // byte-identical with them on or off (outline_inc.test.ts). Both off by default.
-export const KF_INC = { snap: false, cache: false, T: 0.5, hits: 0, misses: 0, cHits: 0, cMisses: 0, vAux: 0, vMiss: 0, cMissJ: 0, why: null as Record<string, number> | null };
+export const KF_INC = { snap: false, cache: false, T: 0.5, border: true, hits: 0, misses: 0, cHits: 0, cMisses: 0, vAux: 0, vMiss: 0, cMissJ: 0, why: null as Record<string, number> | null };
 let kfHoldFeet = false;
 
 export interface SnapState {
@@ -4234,7 +4234,9 @@ export interface SnapState {
 }
 export function newSnapState(): SnapState { return { chains: [], cross: [], junc: [], dChains: new Uint8Array(0), dCross: new Uint8Array(0), dJunc: new Uint8Array(0) }; }
 /** K1338: the scene with every chain that moved at most T device px since its
- *  last commit held at its committed points (see KF_INC). */
+ *  last commit held at its committed points (see KF_INC). K1247 s32: with
+ *  KF_INC.border (the default), "moved" is the chain's BORDERS' move (a segment's
+ *  ends plus halfWidth times the sine of its turn), not its points'. */
 export function snapScene(S: SnapState, scene: SceneIn, T = KF_INC.T): SceneIn {
   const px = scene.camera.pxPerUnit * scene.camera.dpr;
   const tw2 = (T / px) * (T / px);
@@ -4251,7 +4253,23 @@ export function snapScene(S: SnapState, scene: SceneIn, T = KF_INC.T): SceneIn {
     const pts = c.pts as ArrayLike<number>;
     if (old && old.length === pts.length) {
       let ok = true;
-      for (let k = 0; k < pts.length && ok; k += 2) { const dx = pts[k] - old[k]; const dy = pts[k + 1] - old[k + 1]; ok = dx * dx + dy * dy <= tw2; }
+      if (KF_INC.border) {
+        // K1247 s32: hold while the BORDERS move at most T. A border sits h off its centreline, so a segment
+        // that turns by dθ moves it by h·sin dθ on top of its ends' move (def's drag at T 0.5: the drawn
+        // borders ran 1.41 px off the true ones with the points held to 0.5).
+        const n = pts.length >> 1; const tw = T / px; const hw = scene.look.halfWidth;
+        for (let k = 0; k < n && ok; k++) {
+          const ax = pts[2 * k] - old[2 * k]; const ay = pts[2 * k + 1] - old[2 * k + 1]; let e = Math.sqrt(ax * ax + ay * ay);
+          const k1 = k + 1 < n ? k + 1 : c.closed ? 0 : -1;
+          if (k1 >= 0 && k1 !== k) {
+            const bx = pts[2 * k1] - old[2 * k1]; const by = pts[2 * k1 + 1] - old[2 * k1 + 1]; e = Math.max(e, Math.sqrt(bx * bx + by * by));
+            const ox = old[2 * k1] - old[2 * k]; const oy = old[2 * k1 + 1] - old[2 * k + 1]; const nx = pts[2 * k1] - pts[2 * k]; const ny = pts[2 * k1 + 1] - pts[2 * k + 1];
+            const l2 = (ox * ox + oy * oy) * (nx * nx + ny * ny);
+            if (l2 > 0) e += (hw * Math.abs(ox * ny - oy * nx)) / Math.sqrt(l2);
+          }
+          ok = e <= tw;
+        }
+      } else for (let k = 0; k < pts.length && ok; k += 2) { const dx = pts[k] - old[k]; const dy = pts[k + 1] - old[k + 1]; ok = dx * dx + dy * dy <= tw2; }
       if (ok) { held[i] = true; dC[i] = 0; return { ...c, pts: old }; }
     }
     S.chains[i] = Array.isArray(pts) ? (pts as number[]).slice() : Array.from(pts);
