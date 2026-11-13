@@ -562,10 +562,10 @@ Next free ID: K1348.
 - **K1338** · The outline worker frame's frame() (64-71 ms p50, outline.ts) and band (16-26 ms, bandOf + band
   files) on def mid-drag, toward frame + band <= 10 ms, look unchanged; K1247's sibling stage (s28 takes fill
   and zChains); brief `docs/design/K1247_s29_frame_band_speed.md`
-  - owner: agent `a644f27c6e57d73f2` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 09:36, 2 h cap ~11:36)
-  - branch: `worktree-agent-a644f27c6e57d73f2`, worktree `.claude/worktrees/agent-a644f27c6e57d73f2`; last commit: `9a50bb34`
+  - owner: nobody since 2026-11-12 11:40 (merged; agent `a644f27c6e57d73f2` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `8c31261b`
   - evidence: .claude/probes/K1247/k1247s29_*, k1247s30_* (tools); untracked out/s29/, out/s30/
-  - next: s30 running: what changes per frame mid-drag, the browser's 1.75x over Node, a prototype route on frame() behind a flag, the plan to the gate (138 ms def p50 after s29)
+  - next: plan stage 1 (hold + one dirty set in OutlineModel.update) after the plan's stages are filed; see docs/design/K1247_s30_path_to_gate.md
   - brief: `docs/design/K1247_s30_path_to_gate.md`
 - **K1344** · muse_hash j116's lower junction (~25.88-25.92, 14.21-14.35): rp=outline draws a dark wedge
   crease with a hard diagonal where the reference is smooth; the census books it only as tail_look (60 px), so
