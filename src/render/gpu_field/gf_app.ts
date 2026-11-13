@@ -174,6 +174,9 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
     const r = ctx.scene.renderer;
     const ps = ctx.scene.ps;
     if (!r || !ps) return;
+    // Before the renderer's first update there are no samples yet: wait
+    // for them (the export throws on a chain without any; outline_app's).
+    if (r.chainSamples.length < ps.chains.length || r.chainSamples.some((s) => !s)) return;
     try {
       const g = gl();
       if (!g) return fallback("no WebGL2 context");
