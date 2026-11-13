@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1339.
+Next free ID: K1344.
 
 ## Waiting on Levi
 
@@ -524,7 +524,7 @@ Next free ID: K1339.
   - owner: nobody since 2026-11-12 09:43 (merged; agent `a4625873239640993` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
   - branch: mainline; last commit: `3bf8d612`
   - evidence: .claude/probes/K1247/ (benches, profiles); untracked out/s28/; parts from .claude/probes/K1324/out/s2/bench_abba1.json
-  - next: K1247 s31 after s30's plan: zChains in a second worker beside frame (s28 ledger item), or what s30's plan orders first
+  - next: K1247 s31 after s30's plan (K1338): zChains in a second worker beside frame (K1339), fill on the GPU (K1340), the exact cuts (K1341), in the order s30's plan gives
   - brief: `docs/design/K1247_s28_fill_zchains_speed.md`
 - **K1278** · The outline's paint blends seamlessly across junctions (Levi 2026-11-10): section colour and pulses
   from per-pixel fields continuous across faces, triangles and junctions, gated by a seam test on every
@@ -840,6 +840,13 @@ Every other item below waits on the trigger it names.
 - **K1335** · g41_user_tw64 j28's right side: two faint shades beside the outline (form B draws a hairline
   sliver) are end tails p838/p839 drawn by outline.ts tailAlpha (K1324 s2); clear them in outline.ts, or fold
   them into K1315's end look (crop `.claude/probes/K1324/out/s2/j28r_after/spot_001.png`)
+- **K1339** · zChains (about 17 ms def drag p50) in a second worker beside frame: it reads only the scene, so
+  the critical path loses it with identical output (K1247 s28 handoff,
+  `docs/design/K1247_s28_fill_zchains_speed.md`)
+- **K1340** · fill's fans, disks and tails placed on the GPU like the record strips, with a twin test: fill
+  about 22 ms -> 5 ms def drag p50 (K1247 s28 handoff)
+- **K1341** · Three exact cuts K1247 s28 left: a squared pre-check before draw.ts nearRange's sqrt (zChains'
+  hottest line), hinted spanOf searches, a box bound in fill_tri.ts's disk scan (s28 handoff)
 
 ## Residuals (known, not fixed)
 
@@ -1914,6 +1921,9 @@ Every other item below waits on the trigger it names.
 - **K1337** · K1247 s27's fan rule and FLOOR_EDGE made 7 and 25 junctions slightly worse against the reference
   (muse_hash 1390, +47 cells; `.claude/probes/K1247/k1247s27_jmis.ts`), none visible; a faint seam inside c8's
   under-pass (in master too)
+- **K1343** · `k1247s29_bench.ps1`'s fat link `p9ar6.EihVJ8adf0_iA8kPQ0HgzAtI` is codec v9 and builds p9ar6 at
+  today's defaults, so s29's fat numbers are not fat; today's fat token is `p9ar6.FHFUnxp1_T-IDyQ9`
+  (`k1247s28_bench.ps1`). Old K1040/K1239 smoke scripts carry it too
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2257,6 +2267,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   compared same-state mid-drag across builds; K1247 s20 could compare only at rest.
 - **K1329** · One strip rule that both `fill_tri.ts` `fillFrame` and the record fill (`recStrip`) call, ending
   the port-and-tie cycle each fillFrame change costs (K1247 s26)
+- **K1342** · zChains' algorithm toward 2 ms: coarser walk steps refined near hits, or last frame's result as
+  a proven seed; about 100k nearest-segment calls a frame today (K1247 s28 handoff)
 
 ## Done
 
