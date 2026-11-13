@@ -640,11 +640,6 @@ function ringSegD(pos: Float64Array, h: number, R: number, i: number, px: number
 }
 
 export function fillFrame(fs: FillStructure, st: DiagramStructure, table: OutlineTable, scene: SceneIn, zcIn?: ReturnType<typeof zChains>, buf?: FillBuf): FillFrame {
-  // K1341 s1 (perf): chain_frame's span memo, on for this frame's chains only (fillFrame writes none).
-  spanMemo(true);
-  try { return fillFrameRun(fs, st, table, scene, zcIn, buf); } finally { spanMemo(false); }
-}
-function fillFrameRun(fs: FillStructure, st: DiagramStructure, table: OutlineTable, scene: SceneIn, zcIn?: ReturnType<typeof zChains>, buf?: FillBuf): FillFrame {
   let tP = FILL_PROF.on ? performance.now() : 0;
   const zz = zcIn ?? zChains(scene);
   const zc = zz.zc;
@@ -950,6 +945,14 @@ function fillFrameRun(fs: FillStructure, st: DiagramStructure, table: OutlineTab
     T[o + 16] = xc; T[o + 17] = yc; T[o + 18] = xd; T[o + 19] = yd;
     return true;
   };
+  // K1341 s1 (perf): chain_frame's span memo, on (and emptied) for one record: its sides ask for the same
+  // spans several times, on this frame's chain, which fillFrame never writes.
+  const memoRec2 = (it: Extract<FillItem, { kind: "strip" }>, ord: number, aSt: number, bSt: number, pl: OutlineTable["pieces"][number], pr: OutlineTable["pieces"][number]): boolean => {
+    spanMemo(true); try { return recStrip2(it, ord, aSt, bSt, pl, pr); } finally { spanMemo(false); }
+  };
+  const memoRec = (it: Extract<FillItem, { kind: "strip" }>, aSt: number, bSt: number, pl: OutlineTable["pieces"][number], pr: OutlineTable["pieces"][number]): boolean => {
+    spanMemo(true); try { return recStrip(it, aSt, bSt, pl, pr); } finally { spanMemo(false); }
+  };
   let bufM = new Float64Array(0); let bufMC = new Float64Array(0);
   let rowL = new Float64Array(0); let rowR = new Float64Array(0); let rowZ = new Float64Array(0); let rowSL = new Float64Array(0); let rowSR = new Float64Array(0);
   if (FILL_PROF.on) FILL_PROF.t.pre = (FILL_PROF.t.pre ?? 0) + performance.now() - tP;
@@ -965,9 +968,9 @@ function fillFrameRun(fs: FillStructure, st: DiagramStructure, table: OutlineTab
       // gpu: recStrip2 for N >= 2 (it places every column of a strip without a table row, N < 4).
       if (gpu && N >= 2) {
         const ord = rsOrd.get(ii) ?? -1;
-        if (pl && pr && pl.pts.length >= 4 && pr.pts.length >= 4 && zc[it.pi] && zc[it.pi].n > 1 && recStrip2(it, ord, I.aSt, I.bSt, pl, pr)) { pk = ord >= 0 ? "strip:rec" : "strip:short"; continue; }
+        if (pl && pr && pl.pts.length >= 4 && pr.pts.length >= 4 && zc[it.pi] && zc[it.pi].n > 1 && memoRec2(it, ord, I.aSt, I.bSt, pl, pr)) { pk = ord >= 0 ? "strip:rec" : "strip:short"; continue; }
         if (ord >= 0) { fbOrd.push(ord); pk = "strip:fb"; }
-      } else if (rec && pl && pr && pl.pts.length >= 4 && pr.pts.length >= 4 && tgAt(it.pi) && recStrip(it, I.aSt, I.bSt, pl, pr)) continue;
+      } else if (rec && pl && pr && pl.pts.length >= 4 && pr.pts.length >= 4 && tgAt(it.pi) && memoRec(it, I.aSt, I.bSt, pl, pr)) continue;
       if (bufCL.length < 2 * W) { bufCL = new Float64Array(2 * W); bufCR = new Float64Array(2 * W); }
       // A side's border, and (cOk) its centreline feet resampled alongside.
       let cOkL = false; let cOkR = false;
