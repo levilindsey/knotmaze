@@ -4221,7 +4221,7 @@ function setupFrame(C: FCache, st: DiagramStructure, scene: SceneIn): void {
 // the model's; frameSnapped also holds the END-arm feet. The caches
 // (KF_INC.cache: borders, corners) are exact: the frame on a snapped scene is
 // byte-identical with them on or off (outline_inc.test.ts). Both off by default.
-export const KF_INC = { snap: false, cache: false, T: 0.5, hits: 0, misses: 0, cHits: 0, cMisses: 0, why: null as Record<string, number> | null };
+export const KF_INC = { snap: false, cache: false, T: 0.5, hits: 0, misses: 0, cHits: 0, cMisses: 0, vAux: 0, vMiss: 0, cMissJ: 0, why: null as Record<string, number> | null };
 let kfHoldFeet = false;
 
 export interface SnapState {
@@ -4403,8 +4403,12 @@ function chainVersC(C: FCache): CInc {
     const len = auxKeyC(C, pi);
     const old = I.aux[pi];
     const same = !!old && old.length === len && bitEq(old, kfAux, len);
+    if (!same && KF_INC.why && old && old.length === len && bm[pi] === 0) {
+      const nd = C.depthN[pi]; const W = KF_INC.why;
+      for (let q = 0; q < len; q++) if (!sameBits(old[q], kfAux[q])) { const tag = q < 2 ? "n" : q < 2 + nd ? "depthS" : q < 2 + 2 * nd ? "depthZ" : ["SR", "Dir", "L", "Lcut", "Ux", "Uy", "Ang"][(q - 2 - 2 * nd) % 7]; W[tag] = (W[tag] ?? 0) + 1; }
+    }
     if (!same) I.aux[pi] = kfAux.slice(0, len);
-    if (!same || bm[pi] !== 0 || I.ver[pi] === undefined) I.ver[pi] = kfVerNext++;
+    if (!same || bm[pi] !== 0 || I.ver[pi] === undefined) { I.ver[pi] = kfVerNext++; if (!same) KF_INC.vAux++; else KF_INC.vMiss++; }
   }
   return I;
 }
@@ -4414,7 +4418,7 @@ function sameBits(a: number, b: number): boolean { return a === b && (a !== 0 ||
 function cornerHitC(C: FCache, I: CInc, ci: number, aiA: number, aiB: number, sideA: number, sideB: number, jx: number, jy: number): boolean {
   const e = I.ents[ci];
   const piA = C.armObj[aiA].pi; const piB = C.armObj[aiB].pi;
-  if (!e || e[0] !== I.ver[piA] || e[1] !== I.ver[piB] || !sameBits(e[2], jx) || !sameBits(e[3], jy)) { KF_INC.cMisses++; return false; }
+  if (!e || e[0] !== I.ver[piA] || e[1] !== I.ver[piB] || !sameBits(e[2], jx) || !sameBits(e[3], jy)) { KF_INC.cMisses++; if (e && e[0] === I.ver[piA] && e[1] === I.ver[piB]) KF_INC.cMissJ++; return false; }
   KF_INC.cHits++;
   C.cOk[ci] = 1;
   C.cVx[ci] = e[5]; C.cVy[ci] = e[6]; C.cQx[ci] = e[7]; C.cQy[ci] = e[8]; C.cR[ci] = e[9];
