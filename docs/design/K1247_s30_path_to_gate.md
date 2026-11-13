@@ -135,7 +135,12 @@ committed; `k1247s30_dirty.ts`, `k1247s30_spread.ts`):
   everything addressed by arc length (crossing s, arm s, passS, every `pointAt` of a partner) moves when ANY
   earlier span on that chain changes length. Span-exact work needs span-local addressing (span index + offset, or
   an arc-length re-base per released span that leaves held spans' s fixed) before stage 4's dependency map can be
-  exact; with it, the measured 9.7% should fall toward the 3.8% released (projected, not measured). Next: the
+  exact; with it, the measured 9.7% should fall toward the 3.8% released (projected, not measured). Across the
+  whole def drag (`spread_def_span32_crossrel.txt`): of the 295,390 new points on fully held chains, 95% (280,618)
+  are on a chain one hop from a released chain: 52% cross one, 85% share a junction with one (the sets overlap).
+  That is an association, not a per-point cause; with holdx holding junction centres and arm s, the junction
+  share must run through the corner and arm solves reading the released arm's polyline. So stage 4's dependency
+  map is one hop (a span's crossings and junctions) plus the arc-length fix, not a global closure. Next: the
   re-base in the probe (held spans keep their committed arc-length offsets; s inputs re-mapped through it) and
   the span=32 new-point share under it. Fat's piece points are few (piecesCapsEtc 1.4 ms), so its 1.4% new is small
   in time too. Purity held throughout (`again:*` 0%). Files: `out/s30/run/spread_*_new.txt`.

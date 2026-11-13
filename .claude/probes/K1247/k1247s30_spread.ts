@@ -63,6 +63,7 @@ let heldCh = 0; let relCh = 0; let heldResampled = 0;
 // and the captured frames (i % sub 0), where the camera and dead ends may change too.
 const newNear = [0, 0, 0, 0]; const newNearCap = [0, 0, 0, 0];
 let newOnRelChain = 0; let newOnHeldChain = 0; // new piece points on chains with a released span / with none
+let newHeldCrossRel = 0; let newHeldJuncRel = 0; let newHeldEither = 0; // of newOnHeldChain: crosses / shares a junction with / either, a released chain
 let newSide = 0; let newSideHeld = 0; // ... and absent from EVERY previous piece of the same chain side (key-proof)
 // span=K (K >= 0): this tool's own snap instead of frame()'s, per span of K points (0 = the whole chain): a span is
 // re-committed when any of its points drifts past T; a crossing end or junction arm is held while the span under it
@@ -139,6 +140,12 @@ for (let i = 0; i < raw.length; i++) {
     const sideSets = new Map<string, Set<string>>();
     for (const a of prevPieces.values()) { if (!a.pts) continue; const key = `${a.chain}:${a.side}`; let ss = sideSets.get(key); if (!ss) sideSets.set(key, (ss = new Set())); for (let q2 = 0; q2 + 1 < a.pts.length; q2 += 2) ss.add(`${a.pts[q2]},${a.pts[q2 + 1]}`); }
     push("chainsReleased", rel.size / sn.chains.length);
+    // Chains that cross a released chain (the partner arc-length path: armLcut's reachOf samples the partner by s).
+    const crossRel = new Set<number>();
+    for (const x of sn.crossings) { if (rel.has(x.a.chain)) crossRel.add(x.b.chain); if (rel.has(x.b.chain)) crossRel.add(x.a.chain); }
+    // Chains sharing a junction with a released chain (a junction's corners read every arm's chain).
+    const juncRel = new Set<number>();
+    for (const j of sn.junctions) if (j.arms.some((r) => rel.has(r.chain))) for (const r of j.arms) juncRel.add(r.chain);
     for (const [k, v] of s.pieces) {
       if (prev.s.pieces.get(k) === v) continue;
       const a = prevPieces.get(k); const b = pcs.get(k)!;
@@ -150,7 +157,7 @@ for (let i = 0; i < raw.length; i++) {
       // Set membership: points whose exact (x, y) the piece's previous version lacks (an index shift costs nothing).
       const had = new Set<string>(); if (a?.pts) for (let q2 = 0; q2 + 1 < a.pts.length; q2 += 2) had.add(`${a.pts[q2]},${a.pts[q2 + 1]}`);
       if (b.pts) for (let q2 = 0; q2 + 1 < b.pts.length; q2 += 2) if (!had.has(`${b.pts[q2]},${b.pts[q2 + 1]}`)) {
-        newCh++; if (isRel) newOnRelChain++; else newOnHeldChain++;
+        newCh++; if (isRel) newOnRelChain++; else { newOnHeldChain++; if (crossRel.has(b.chain)) newHeldCrossRel++; if (juncRel.has(b.chain)) newHeldJuncRel++; if (crossRel.has(b.chain) || juncRel.has(b.chain)) newHeldEither++; }
         if (!sideSets.get(`${b.chain}:${b.side}`)?.has(`${b.pts[q2]},${b.pts[q2 + 1]}`)) { newSide++; if (!isRel) newSideHeld++; }
         if (SPAN >= 0) {
           let d2 = Infinity; const x = b.pts[q2]; const y = b.pts[q2 + 1];
@@ -225,7 +232,7 @@ for (const k of Object.keys(R)) console.log(`  ${k.padEnd(24)} ${pct(q(R[k], 0.5
 const qs = (a: number[]): string => (a.length ? [0.5, 0.9, 0.99].map((p) => (q(a, p) === Infinity ? "inf" : q(a, p).toExponential(1))).join(" / ") : "-");
 console.log(`changed pieces on RELEASED chains ${relCh}, on HELD chains ${heldCh} (resampled ${heldResampled}); max |d| px p50/p90/p99: released ${qs(mv.relMaxPx)}; held ${qs(mv.heldMaxPx)}`);const over = (a: number[], t: number): string => `${(100 * a.filter((x) => x > t).length / Math.max(1, a.length)).toFixed(0)}%`;
 console.log(`held-chain changes above 0.01 / 0.05 / 0.1 / 0.5 px: ${[0.01, 0.05, 0.1, 0.5].map((t) => over(mv.heldMaxPx, t)).join(" / ")} (of ${mv.heldMaxPx.length}); per frame: released ${(relCh / (raw.length - 1)).toFixed(0)}, held ${(heldCh / (raw.length - 1)).toFixed(0)}, held > 0.05 px ${(mv.heldMaxPx.filter((x) => x > 0.05).length / (raw.length - 1)).toFixed(0)} pieces`);
-console.log(`new piece points on chains with a released span ${newOnRelChain}, on fully held chains ${newOnHeldChain}; absent from every previous piece of the chain side: ${newSide} (on fully held chains ${newSideHeld})`);
+console.log(`new piece points on chains with a released span ${newOnRelChain}, on fully held chains ${newOnHeldChain} (of which on a chain crossing a released chain ${newHeldCrossRel}, sharing a junction with one ${newHeldJuncRel}, either ${newHeldEither}); absent from every previous piece of the chain side: ${newSide} (on fully held chains ${newSideHeld})`);
 if (SPAN >= 0) {
   for (const [lab, a] of [["in-between frames", newNear], ["captured frames", newNearCap]] as const) {
     const nt = Math.max(1, a.reduce((s, x) => s + x, 0));
