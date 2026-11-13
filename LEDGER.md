@@ -554,10 +554,10 @@ Next free ID: K1355.
   most cases. But there are still plenty of unacceptable artifacts"): an artifact census (stray ink, hard
   colour edges inside fills, paper holes, broken ink) across scenes, then fix stages that drive its count to
   0; the look gate in docs/design/K1240_gate.md
-  - owner: agent `a2fd366dec3d37858` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 14:41, 2 h cap ~16:41)
-  - branch: `worktree-agent-a2fd366dec3d37858`, worktree `.claude/worktrees/agent-a2fd366dec3d37858`; last commit: `af721b2f`
+  - owner: nobody since 2026-11-12 16:21 (merged; agent `a2fd366dec3d37858` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `02c8ca8b`
   - evidence: .claude/probes/K1314/ (k1314s11_*), baseline out/s1/census_k1346s1b
-  - next: s11 running: j58a fade (runRootRamp) and c8 soft edge (K1351) to form B; census against census_k1346s1b
+  - next: s12: app ABBA of s11 ownAlpha (k1247s30_run.ps1); clip or tie tail 1781 against run 121 at c8 (faint hairline at 4x, fin_x4/c8.png) and c8 lost ink y 14.35-14.51; j58a (piece 196 side rule, piece 371 root ramp); census against k1314s11d
   - brief: `docs/design/K1314_s11_j58a_c8.md`
 - **K1341** · Three exact cuts K1247 s28 left: a squared pre-check before draw.ts nearRange's sqrt (zChains'
   hottest line), hinted spanOf searches, a box bound in fill_tri.ts's disk scan (s28 handoff)
