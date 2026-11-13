@@ -132,3 +132,29 @@ other route — build in the physics worker / read the sample buffers directly
 (outside this lane's files). A Newton warm start from the tracked V was
 considered and rejected (est. ~0.2 ms, gate-flip risk). No unfinished code;
 nothing left as a patch.
+
+## Handoff addendum (continuation, 2026-11-13 01:10 to 01:15)
+
+One more exact change, commit `224c6c75`: `marginAt` abandons its far scan
+once the running minimum reaches a guarded threshold below the caller's
+discard point (`wOf` returns 0 for any margin <= -0.05 h), so no output can
+change. All three Dones re-verified on the final code: digest bit-identical
+(`all ae1d2392...a85a27`, 0 differing lines); A/B 60 pairs — def total
+12.69 -> 9.30 (corners 9.06 -> 6.11, median -2.73), muse_hash 5.94 -> 4.48
+(every part faster or equal), fat total median -0.03 (unchanged); `npm test`
+green (232 files / 2953 tests, goldens unmoved).
+
+Why 2 ms is not reachable bit-identically (measured, instrumented copy,
+since deleted): on def, 484 candidates reach the V track, 75 fail it, 376
+corners are kept; the V Newton converges in 2.4 iterations per candidate
+(32,859 sample-segment evaluations per build — stage 1's Newton fixes target
+a cost that is already small). The residual corner cost is the fixed 24-node
+rolling-ball integral: 7,097 node evaluations per build, each 2 solves +
+2 projections + a gate evaluation, ~6 ms at ~0.85 us per node. And the
+non-corner parts alone (vtx 1.18 + pins 0.16 + arms 0.62 + bins 0.91 = 2.9 ms
+p50 in the same A/B) already exceed 2 ms: their floors are the 24,610
+arc-length `hypot`s and the 84k-entry bin lists the output itself requires.
+Reaching 2 ms therefore needs a different corner algorithm or relaxed
+float equality (the routes above), not further exact optimization. Final
+state: def 9.0-9.3 ms, muse_hash 4.4-4.5 ms, fat unchanged, output
+bit-identical. Stopping here at 01:15, inside the cap.
