@@ -563,11 +563,11 @@ Next free ID: K1344.
   ink there: specks inside the ink at def j174 (c71/c73, group 119), ring j12, g41_ring_tw42 j12,
   g41_user_tw64 j28 (K1314 s6 handoff; crops `.claude/probes/K1314/out/s6/after4x/spot_016-019`). Make no
   contact pass between arms of one group. After K1247 s25 merges (it owns draw.ts)
-  - owner: nobody since 2026-11-12 08:36 (merged; agent `ae09a2169bcb0030b` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `943ae592`
-  - evidence: .claude/probes/K1324/ (tools); untracked out/s1-s2/; baseline census_s9
-  - next: K1324 s3: the faint seam at x22's lower join (.claude/probes/K1324/out/s2/x8_after/spot_001.png)
-  - brief: `docs/design/K1324_s2_x22_burial.md`
+  - owner: agent `a5c6be8e47b5c2e6a` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 09:45, 2 h cap ~11:45)
+  - branch: `worktree-agent-a5c6be8e47b5c2e6a`, worktree `.claude/worktrees/agent-a5c6be8e47b5c2e6a`; last commit: `94a71fcd`
+  - evidence: .claude/probes/K1324/ (tools); untracked out/s1-s3/
+  - next: s3 running: the faint seams at muse_hash x22's lower join and in c8's under-pass (K1337)
+  - brief: `docs/design/K1324_s3_under_seams.md`
 - **K1325** · K1314 census reference: form B draws stray ink at muse_hash x304 and g41_user_tw64 j30 where
   rp=outline is clean, so the census counts them against the outline (crops
   `.claude/probes/K1314/out/s7/after4x/spot_007.png`, `spot_008.png`); fix the reference as K1321 did, in
