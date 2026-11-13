@@ -527,10 +527,10 @@ Next free ID: K1358.
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: agent `a8d93842a30bcb370` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 18:13, 2 h cap ~20:13)
-  - branch: `worktree-agent-a8d93842a30bcb370`, worktree `.claude/worktrees/agent-a8d93842a30bcb370`; last commit: `231756c0`
+  - owner: nobody since 2026-11-12 19:10 (merged; agent `a8d93842a30bcb370` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `e203f246`
   - evidence: .claude/probes/K1247/ (k1247s35_*), s34 handoff
-  - next: s35 running: route review (GPU placement with fixed topology, frame() cuts, per-frame deadline, mix), riskiest part prototyped in Chrome
+  - next: s36: the outline worker pool in outline_app.ts (s35 handoff outline), then an app ABBA on def, fat and muse_hash
   - brief: `docs/design/K1247_s35_route_review.md`
 - **K1278** · The outline's paint blends seamlessly across junctions (Levi 2026-11-10): section colour and pulses
   from per-pixel fields continuous across faces, triangles and junctions, gated by a seam test on every
