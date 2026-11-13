@@ -554,10 +554,10 @@ Next free ID: K1372.
   tables the CPU builds in under 1 ms) instead of the outline mesh built on the CPU each frame (65-117 ms on
   def). Reverses the 2026-11-09 call (K1040 dropped for K1240). The main speed route (Levi, 2026-11-12: very bullish
   on it); dropped only on a proof it cannot work (brief: "How the result is judged"). Analysis in docs/ledger_notes.md.
-  - owner: claude agent af5206837da0ec88a (s5 shader tiles), started 2026-11-13 02:06; coordinating claude session 09c7a672-a414-402a-97da-b3176839a2e5
-  - branch: worktree-agent-af5206837da0ec88a at .claude/worktrees/agent-af5206837da0ec88a; last commit: `813871b0`
+  - owner: nobody since 2026-11-13 03:27 (merged)
+  - branch: mainline; last commit: `95540d07`
   - evidence: .claude/probes/K1362/ (k1362s3_*, k1362s4_*), out/s3/, out/s4/
-  - next: c1 merged (rp=gf tables built in a worker from a lean export: main 1.64 ms/frame on the desktop def drag, Pixel drag 33.3 ms p50); s5 (shader tiles) still running; then the Pixel physics under rp=gf (K1369) and exact corner reuse (K1370)
+  - next: s5 merged (ee212872): every exact tile route is slower than t32r on the Pixel, which already sends 99.7% of inked px to its one tier, so routing is done; def 20.2 / muse 24.6 ms. Stage 6: the per-pixel footprint itself (two-pass split, keys per tile from a coarse GPU pass, layering once), measured on the Pixel
   - brief: docs/design/K1362_s5_tiles.md (running); c1 handoff at the end of docs/design/K1362_c1_cpu_off_main.md
 - **K1370** · rp=gf tables: reuse each corner exactly where its arms did not move (the Pixel's worker build is
   20 ms, about two frames of lag at 16 ms); output must stay bit-identical (k1362t1_digest.ts). K1362 c1
