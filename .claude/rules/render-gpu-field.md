@@ -44,6 +44,19 @@ not repeated here.
   slower; tile quads alone cost about 4 ms, and the route's CPU
   20-70 ms on the Pixel's main. Cuts now have to shrink the
   per-pixel program itself.
+- Keys per bin (stage 6, `gf_keys.ts`): each chain's u range is split
+  into bins holding pin search bounds and candidate arms, widened by
+  half a bin each side so a bin picked one off by float error is still
+  exact. Every program reads them; `#ifdef OLDKEYS` keeps the old full
+  ranges for A/Bs. keyBin's two rounded quotients are in K299's
+  registry (`paint_ring_lap.test.ts`).
+- Desktop gains do not predict the Pixel (stage 6): the register form,
+  constant trip counts and packed per-piece state (`gf_reg.ts`, bench
+  forms only) were all slower on the Pixel; the pack was faster on the
+  desktop, and its ivec4 group is what costs on the Pixel.
+- Ramps stay inside the tier: a tier without ramps (t32, ramping
+  pixels routed to full) was +5 to +9 ms against t32r on the Pixel, so
+  any layering-once fold has to be exact inside the tier.
 - mediump changes nothing on the Pixel.
 - ANGLE (D3D on the desktop): execution continues past `discard`
   (write `discard; return;`), and a `&& !flag` loop condition was

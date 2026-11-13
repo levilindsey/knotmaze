@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1375.
+Next free ID: K1376.
 
 ## Waiting on Levi
 
@@ -295,6 +295,8 @@ Next free ID: K1375.
 - **K1367** · rp=gf at dpr 1 (411x753 on the Pixel, the only size under 8 ms so far: 6.9 / 7.3 ms with a
   reduced program): it reads blurry and the outlines mostly vanish. Keep full resolution (recommended) or take
   the blur for speed? Pictures: .claude/probes/K1362/out/s4/dpr1_def.png, dpr1_muse_hash.png (K1362 s4).
+  Since s6: def is expected to reach 8 ms at full resolution after stage 7's fixes; muse_hash (22.6 now, ~13-15
+  after them) reaches 8 only at dpr <= ~1.5 (est. 7.3-8.6), so a middle size is the question for it.
 
 ## In progress
 
@@ -554,10 +556,10 @@ Next free ID: K1375.
   tables the CPU builds in under 1 ms) instead of the outline mesh built on the CPU each frame (65-117 ms on
   def). Reverses the 2026-11-09 call (K1040 dropped for K1240). The main speed route (Levi, 2026-11-12: very bullish
   on it); dropped only on a proof it cannot work (brief: "How the result is judged"). Analysis in docs/ledger_notes.md.
-  - owner: claude agent a1ed2d3aa4e9746fc (s6 tier footprint), started 2026-11-13 03:32; coordinating claude session 09c7a672-a414-402a-97da-b3176839a2e5
-  - branch: worktree-agent-a1ed2d3aa4e9746fc at .claude/worktrees/agent-a1ed2d3aa4e9746fc; last commit: `9e5101ba`
+  - owner: nobody since 2026-11-13 05:07 (merged)
+  - branch: mainline; last commit: `25c3efce`
   - evidence: .claude/probes/K1362/ (k1362s3_*, k1362s4_*), out/s3/, out/s4/
-  - next: s6 running: keys per tile, packed state or two-pass split, layering once; pass <= 8 ms on the Pixel, exact; then move the key-tile build into the gf worker (after K1370) and K1369
+  - next: s6 merged: keys per bin (gf_keys.ts) in every program, Pixel def 19.3 -> 16.7, muse_hash 24.5 -> 22.6 ms, exact; packed state slower on the Pixel; tile routes deleted. Stage 7: the two-pass split, then exact layering once inside the tier (s6 handoff); move buildKeys into the build worker
   - brief: `docs/design/K1362_s6_footprint.md`
 
 ## Next, in order
@@ -846,6 +848,9 @@ Every other item below waits on the trigger it names.
   remove it: partition pins by chain and the chunk merge by cell range, or transfer the scene to the slices as
   typed arrays, so the coordinator's 6-8 ms serial prefix goes. Today it engages only on junction-free builds
   (docs/design/K1362_t2_muse_build.md addendum).
+- **K1375** · rp=gf: move `buildKeys` (gf_keys.ts, 0.6 ms p50 on the Pixel main at upload, 0.2 desktop) out of
+  gf_pass.ts upload into the gf build worker (gf_build.ts / gf_worker.ts), its arrays transferred with the
+  tables (K1362 s6 handoff, next 4).
 
 ## Residuals (known, not fixed)
 
@@ -1957,9 +1962,6 @@ Every other item below waits on the trigger it names.
 - **K1371** · rp=gf's drawn tables trail the physics by one build (18-19 ms desktop, 34 ms Pixel) since they
   build in gf_worker.ts; and buildFieldSceneLean skips diag-only fields, so a buildTables read of one is
   caught only by gf_build.test.ts and the in-app verify, not the digest (K1362 c1).
-- **K1372** · rp=gf: stage 5's tile routes (gf_tiles.ts, the tile modes in gf_pass.ts, off by default) all
-  lose to t32r on the Pixel; kept so k1362s5_* reproduces the measurements. Remove them once stage 6 settles
-  whether keys per tile reuse gf_tiles.ts (K1362).
 - **K1373** · Pixel GPU: a program behind a stencil EQUAL class+1 test is not rejected before shading (EQUAL 0
   is); cause not isolated (docs/design/K1362_s5_tiles.md, lever 2).
 
@@ -2321,6 +2323,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1372** · rp=gf: stage 5 tile routes removed by s6 (keys per bin made per-tile bounds moot). Done in c55d015b (2026-11-13).
 - **K1370** · Muse t2: exact corner reuse is impossible (0.000 of vertices bit-identical between consecutive drag frames); a bit-identical slice-worker pool shipped, gated to junction-free builds because its serial prefix (6-8 ms) made muse_hash slower, so def/muse_hash/fat still run the single build (def 10.5 ms). Follow-up K1374. Done in 682a1afa (2026-11-13).
 - **K1366** · K1362 tables lane: buildTables (tables.ts) at or under 2 ms on def, output unchanged (digest vs master), beside K1362 s4's shader work (brief docs/design/K1362_t1_muse_tables.md). Done in e216acb0 (2026-11-13).
 - **K1357** · rp=outline's drag feel: Levi, 2026-11-12, 'unacceptable' at 9-10 Hz; the pool (s36) lags more (250-340 ms), so no clip re-ask; the route changes (K1362). Done in b3ea2ad4 (2026-11-12).
