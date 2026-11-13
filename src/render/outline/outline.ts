@@ -85,9 +85,9 @@ export interface OutlinePiece {
   di?: number;
   /** K1314 s11 (RUN_FADE_TIE): a run whose alpha holds runEndFade's fade
    *  against chain fadeX, and that fade per point (fadeA, 2 per point, before
-   *  runRootRamp's ramp). A tied band whose tie already carries a pass with
-   *  fadeX divides it back out where the tie fades more (band_gpu fadeOwn):
-   *  the band then draws min(fade, tie) once, not fade x tie. */
+   *  runRootRamp's ramp). A tied band whose tie has a pass with fadeX
+   *  divides the fade back out (band_gpu ownAlpha): the per-pixel tie
+   *  shades it once, as form B does, not fade x tie. */
   fadeX?: number;
   fadeA?: number[];
 }
@@ -7769,10 +7769,11 @@ function runEndFade(a: TailIn, p: OutlinePiece, atEnd: boolean): void {
 /** K1314 s11 (muse_hash c8, j58a): runEndFade's fade is form B's tie with X
  *  (tailAlpha), and a tied run's band multiplies its own alpha by the tie
  *  per pixel, which carries X's pass too wherever the pass's window reaches:
- *  there the band drew the fade twice (c8: 0.06 where form B is 0.25), and
- *  the untied tail beside it once, a straight soft edge along the corner's
- *  fan line. With this on the run records X (fadeX) and its fade (fadeA),
- *  and band_gpu's fadeOwn divides X's tie back out of the own alpha. */
+ *  there the band drew the fade twice (c8: 0.006 where form B is 0.025),
+ *  and the untied tail beside it once, a straight soft seam along the
+ *  corner's fan line. With this on the run records X (fadeX) and its fade
+ *  (fadeA), and band_gpu's ownAlpha divides the fade back out of a run
+ *  whose tie has X as a partner: the per-pixel tie alone shades it. */
 export const RUN_FADE_TIE = { on: true };
 
 /** K1314 s9 (g41_user_tw64 j71's shade): a run starts at its arm's root,

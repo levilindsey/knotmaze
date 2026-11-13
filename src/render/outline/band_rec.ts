@@ -11,7 +11,7 @@
 // The layout is rebuilt only for a new structure or when a piece outgrows its capacity (counted).
 // The output is bandGpu's (same arrays, same shader); ob=0 never calls this.
 import type { OutlineTable, SceneIn } from "./outline";
-import { dSC, footNear, parseColor, tieAlpha, zAtC } from "./draw";
+import { dSC, footNear, parseColor, zAtC } from "./draw";
 import { BAND_SLOTS, BAND_TEX_W, PT, footS, ownAlpha, windowRanges, type BandGpu, type ZChain, type ZZ } from "./band_gpu";
 import { colEnds, colRow, recSideOk, recTables } from "./chain_frame";
 import { BT } from "./band_place";
@@ -113,7 +113,6 @@ export function bandRec(table: OutlineTable, scene: SceneIn, zz: ZZ, lay: BandLa
   const { zc, passes } = zz;
   const h = table.h; const W = table.W;
   const zt = 0.1 * scene.look.depthAmp;
-  const tieMemo: { tie: ReturnType<typeof tieAlpha> | null } = { tie: null };
   const base: number[] = []; let nS = 0;
   for (const c of zc) { base.push(nS); nS += c.n; }
   const chainTexH = Math.max(1, Math.ceil(nS / BAND_TEX_W));
@@ -351,7 +350,7 @@ export function bandRec(table: OutlineTable, scene: SceneIn, zz: ZZ, lay: BandLa
     // Today's points, decimated to the range when they outgrow it (counted in stats.over).
     let pts: ArrayLike<number> = p.pts; let cpts: ArrayLike<number> = p.cpts; let npU = np0;
     // K1314 s11: ownAlpha divides runEndFade's fadeX tie back out (band_gpu.ts).
-    const al0: ArrayLike<number> | null = p.fadeX !== undefined && p.chain >= 0 && p.chain < zc.length ? ownAlpha(p, zc[p.chain], zz, h, W, zt, tieMemo) : p.alpha && p.alpha.length === 2 * np0 ? p.alpha : null;
+    const al0: ArrayLike<number> | null = p.chain >= 0 && p.chain < zc.length ? ownAlpha(p, zz) : p.alpha && p.alpha.length === 2 * np0 ? p.alpha : null;
     let al: ArrayLike<number> | null = al0;
     if (useR[pIdx] !== 1 && np0 - 1 > capQ) {
       const K = keepIdx(p.pts, np0, capQ + 1); npU = capQ + 1;
