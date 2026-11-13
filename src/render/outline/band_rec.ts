@@ -350,7 +350,7 @@ export function bandRec(table: OutlineTable, scene: SceneIn, zz: ZZ, lay: BandLa
     // Today's points, decimated to the range when they outgrow it (counted in stats.over).
     let pts: ArrayLike<number> = p.pts; let cpts: ArrayLike<number> = p.cpts; let npU = np0;
     // K1314 s11: ownAlpha divides runEndFade's fadeX tie back out (band_gpu.ts).
-    const al0: ArrayLike<number> | null = p.chain >= 0 && p.chain < zc.length ? ownAlpha(p, zz) : p.alpha && p.alpha.length === 2 * np0 ? p.alpha : null;
+    const al0: ArrayLike<number> | null = p.chain >= 0 && p.chain < zc.length ? ownAlpha(p, zz, h, W) : p.alpha && p.alpha.length === 2 * np0 ? p.alpha : null;
     let al: ArrayLike<number> | null = al0;
     if (useR[pIdx] !== 1 && np0 - 1 > capQ) {
       const K = keepIdx(p.pts, np0, capQ + 1); npU = capQ + 1;

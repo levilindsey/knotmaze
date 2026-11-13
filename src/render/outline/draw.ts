@@ -916,7 +916,7 @@ export function bandData(table: OutlineTable, scene: SceneIn, zz: ReturnType<typ
         if (l < 1e-12) { const j = Math.min(i + 1, np - 1); const ex = p.pts[2 * j] - x; const ey = p.pts[2 * j + 1] - y; const el = Math.hypot(ex, ey) || 1; dx = -ey / el; dy = ex / el; } else { dx /= l; dy /= l; }
         return [x + dx * W, y + dy * W];
       };
-      const pa = ownAlpha(p, zz);
+      const pa = ownAlpha(p, zz, h, W);
       let prevI = inn(0);
       for (let i = 0; i + 1 < np; i++) {
         const ax = p.pts[2 * i]; const ay = p.pts[2 * i + 1]; const bx = p.pts[2 * i + 2]; const by = p.pts[2 * i + 3];

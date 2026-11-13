@@ -102,25 +102,55 @@ export function footS(c: ZChain, x: number, y: number, sC: number, r: number): n
 
 /** K1314 s11 (outline.ts RUN_FADE_TIE): a tied run's own alpha, 2 per point
  *  (outer, inner). A run with fadeX holds runEndFade's fade against chain
- *  fadeX (fadeA) times runRootRamp's ramp. When fadeX is one of the run's tie
- *  partners, the band's per-pixel tie already shades the run under fadeX
- *  (form B's own rule), and the fade on top shaded it twice: a straight soft
- *  seam where the run met its once-faded tail (c8) and lost ink along the
- *  fade. So the fade is divided back out: own = alpha / fadeA (runRootRamp's
- *  ramp stays), except where the fade reached 0 (a border cut inside fadeX's
- *  tube stays cut). Every other piece keeps p.alpha. Measured against form B
- *  at c8 and nine census tail_look spots, this beat both the double fade and
- *  min(fade, the tie's fadeX part). The three band twins (bandData, bandGpu,
- *  bandRec) all read this. */
-export function ownAlpha(p: OutlinePiece, zz: ZZ): number[] | null {
+ *  fadeX (fadeA) times runRootRamp's ramp. Where the band's per-pixel tie
+ *  already shades the run under fadeX (form B's own rule), the fade on top
+ *  shaded it twice: a straight soft seam where the run met its once-faded
+ *  tail (c8) and lost ink along the fade. So the fade is divided back out by
+ *  the tie's reach there: cov = how far a fadeX pass's tube covers the
+ *  vertex, as tieAlpha gates and grades it (window, footNear, (h - d) / W),
+ *  and own = alpha * (cov / fadeA + 1 - cov) (runRootRamp's ramp stays).
+ *  Where no fadeX pass reaches (cov 0) the fade is the only shading of fadeX
+ *  and stays (dividing it out there inked a spike, g41_user_tw64 (12.70,
+ *  5.98)); where the fade reached 0 the border stays cut. Every other piece
+ *  keeps p.alpha. The three band twins (bandData, bandGpu, bandRec) all read
+ *  this. */
+export function ownAlpha(p: OutlinePiece, zz: ZZ, h: number, W: number): number[] | null {
   const np = p.pts.length / 2;
   const al = p.alpha && p.alpha.length === 2 * np ? p.alpha : null;
   const fa = p.fadeA; const X = p.fadeX;
-  if (!al || !fa || fa.length !== 2 * np || X === undefined) return al;
+  if (!al || !fa || fa.length !== 2 * np || X === undefined || !p.cpts || p.cpts.length !== p.pts.length) return al;
   const ps = zz.passes[p.chain];
-  if (!ps || !ps.some((P) => P.o === X)) return al;
+  const C = zz.zc[p.chain]; const O = zz.zc[X];
+  if (!ps || !C || !O) return al;
+  const PX = ps.filter((P) => P.o === X);
+  if (!PX.length) return al;
   const out = al.slice();
-  for (let k = 0; k < out.length; k++) if (fa[k] < 1) out[k] = Math.min(1, al[k] / Math.max(fa[k], 1e-6));
+  // Own s per point, as bandGpu's sv.
+  let L = 0;
+  for (let i = 1; i < np; i++) L += Math.sqrt((p.pts[2 * i] - p.pts[2 * i - 2]) ** 2 + (p.pts[2 * i + 1] - p.pts[2 * i - 1]) ** 2);
+  L = L || 1;
+  let cum = 0;
+  for (let i = 0; i < np; i++) {
+    if (i > 0) cum += Math.sqrt((p.pts[2 * i] - p.pts[2 * i - 2]) ** 2 + (p.pts[2 * i + 1] - p.pts[2 * i - 1]) ** 2);
+    if (!(fa[2 * i] < 1) && !(fa[2 * i + 1] < 1)) continue;
+    const s = footS(C, p.cpts[2 * i], p.cpts[2 * i + 1], p.s0 + ((p.s1 - p.s0) * cum) / L, 2 * h);
+    const x = p.pts[2 * i]; const y = p.pts[2 * i + 1];
+    let dx = p.cpts[2 * i] - x; let dy = p.cpts[2 * i + 1] - y;
+    const l = Math.sqrt(dx * dx + dy * dy);
+    if (l < 1e-12) { const j = Math.min(i + 1, np - 1); const ex = p.pts[2 * j] - x; const ey = p.pts[2 * j + 1] - y; const el = Math.sqrt(ex * ex + ey * ey) || 1; dx = -ey / el; dy = ex / el; } else { dx /= l; dy /= l; }
+    for (let e = 0; e < 2; e++) {
+      const k = 2 * i + e;
+      if (!(fa[k] < 1)) continue;
+      const vx = x + e * dx * W; const vy = y + e * dy * W;
+      let cov = 0;
+      for (const P of PX) {
+        const ds = dSC(C, P.s, s); if (ds < -P.lo || ds > P.hi) continue;
+        const f = footNear(O, vx, vy, P.so, P.rO, s, P.o === p.chain ? 3 * h : 0);
+        if (f.d < h) cov = Math.max(cov, Math.min(1, (h - f.d) / W));
+      }
+      if (cov > 0) out[k] = Math.min(1, al[k] * (cov / Math.max(fa[k], 1e-6) + 1 - cov));
+    }
+  }
   return out;
 }
 
@@ -245,7 +275,7 @@ export function bandGpu(table: OutlineTable, scene: SceneIn, zz: ZZ): BandGpu {
     // K1314 s3: a tied run's own alpha (runEndFade's fade at a failed corner)
     // multiplies the tie's, as bandData's tied branch reads it since K1314 s2.
     // K1314 s11: ownAlpha divides fadeX's tie back out of runEndFade's fade.
-    const paT = ownAlpha(p, zz);
+    const paT = ownAlpha(p, zz, h, W);
     let ia = inner(0);
     for (let i = 0; i + 1 < np; i++) {
       const ib = inner(i + 1);
