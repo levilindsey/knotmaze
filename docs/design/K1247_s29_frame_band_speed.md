@@ -77,3 +77,37 @@ Under 40 lines:
 - your last SHA.
 
 End with `Ledger items` and K1247's handle fields (this stage's).
+
+## Handoff (2026-11-12, start 08:48:44 PT, stop 2026-11-12 09:32 PT)
+
+Stopped with the stage's cuts done and the look byte-identical, well short of the goal: frame + band
+is 58.5 + 17.6 ms p50 in the browser on def (master 68.8 + 21.2). Only `src/render/outline/outline.ts`
+changed; `k1247s29_ident.ts` (7 scenes x 2 looks, chained digests) read "same" after each cut.
+
+Cuts (outline.ts):
+- 6cc6d3db: tailFoot's segment window is built once per (poly, lo, hi): the walk's segments in order,
+  grouped 8 to a box (`tailFootWin`), so a query rejects whole groups beyond its best (or its cap).
+- 7723b0d3: endTailPts's fill walk reads the band walk's grid feet (sE, sF, dF by grid index) instead of
+  searching again.
+- 0b5003e9: tailF and tailAlphaAt (no bend) cap tailFoot at h: past h only f's sign, or `own ? 1 : 0`,
+  is read, and both are the same at the true foot.
+
+Measured (`k1247s29_bench.ps1` ABBA, perf lock, `k1247s29_abba.mjs`; drag p50, mean of 2, spread):
+def master vs branch: worker 162.4 (12.4) vs 137.6 (13.4); frame 68.8 (1.2) vs 58.5 (0.4); zChains
+16.6 vs 16.6; fill 44.5 (1.9) vs 37.9 (7.9); paint 3.8 vs 3.9; band 21.2 (7.1) vs 17.6 (2.0);
+roundTrip 179.5 vs 164.0; upload 1.5 vs 1.65; page frameMs 6.7 vs 6.95 (both at the spread; fat reads
+1.7 vs 1.6 and 6.8 vs 6.8). Fat once: frame 71.3 vs 59.7, band 30.7 vs 18.6, worker 174.1 vs 153.8.
+Node mbench (def, 120 reps): frame 37.4 -> 33.6 p50.
+
+Left (Node profile of HEAD, def, ms per update; the browser runs about 1.75x Node):
+- frameFast 38.9: cornersPhaseC 10.0 (growCFC 7.35: cfAt/cfStep/cfNext 2.96, cfRefine 2.2, wOfC 1.75
+  with marginOfC 2.82 under it; trySolve 1.64), piecesPhaseC 9.36 (endTailPts' tailWalk 6.39: tailAlpha
+  2.27, f 1.99, the bisection 1.29), buildBorderC 6.43 (cutFoldsC 2.14, self 2.05, spreadTiesC 1.13),
+  regionsPhaseC 3.59, setupFrame 2.94, crossingsPhaseC 2.24, mergeBorders 1.45, eyesPhaseC 1.03.
+  Diffuse: the next cut is algorithmic (carry growCFC's and tailWalk's results frame to frame).
+- bandRec 11.7: self 4.45 (diffuse), recTables 1.78 (chain_frame.ts; fill_tri.ts computes the same
+  table, s28's files: compute once and pass it), footS 1.2 (band_gpu.ts: no segment boxes), quad 1.1,
+  endFans 0.87, rowShift 0.78.
+
+Next: merge; then a stage on growCFC and tailWalk (frame to frame), buildBorderC, bandRec's self and
+footS, and the recTables dedupe with fill's owner.
