@@ -260,7 +260,10 @@ None this stage, because the pool changes no look. Stage 36 asks one, with a cli
 - **The shared node_modules (main checkout) broke at about 18:34.**
   - Observed: `@puppeteer/browsers` is missing. Vite fails with "Cannot find native binding": at 19:03
     `@rolldown/binding-win32-x64-msvc` held its .node file but no package.json.
-  - Inferred cause: an npm install after d3ecf45d's happy-dom bump.
+  - Inferred cause: an npm install after d3ecf45d's happy-dom bump. [Coordinator, 19:10: wrong. The cause was
+    `git worktree remove` on Muse's K1341 s3 worktree at 18:34. It followed a junction nested in that worktree's
+    probe output into the main `node_modules` and deleted five scoped packages, `.bin` and
+    `.package-lock.json`. Restored from the lockfile's versions at 19:06; npm test green at the s35 merge.]
   - I left it untouched. `k1247s35_cdp.mjs` drives Chrome without puppeteer, and `nobuild=1` reuses the worker
     bundle built at 18:33:49 from this branch's src.
 - **Tools (tracked):** `k1247s35_topo.ts`, `_pool.html`, `_pool.mjs`, `_cdp.mjs`, `_pool_locked.ps1` and
