@@ -8,19 +8,23 @@
 // opt-in plateau reference (--plateau, K922's overlap depth), which mends x304 but is not the default (see the
 // handoff). Panels use the census's own evaluators (refEval, rasterOutline) and the app's section paint; a red
 // ring marks the find (r = 0.6 h).
+// K1325 s2: --w=<width in h> (default 4; K1324's 4x crops are --px=480 --w=2.5, 192 px per h), and --self with
+// --spots draws master's reference (SELF_REF and PLATEAU off) | the default reference (SELF_REF on) | outline.
+// Since s2 every s1 "before"/"default" panel is drawn with SELF_REF off, as s1 drew it.
 import { join } from "node:path";
-import { buildModel, refEval, rasterOutline, PLATEAU, type Model } from "../K1314/k1314_census";
+import { buildModel, refEval, rasterOutline, PLATEAU, SELF_REF, type Model } from "../K1314/k1314_census";
 import { MARCH } from "../K1314/form_b_fillet";
 import { runAt, runColour, type RGB } from "../../../src/render/outline/paint";
 import { writePng } from "../K1314/k1314_crops";
 
 const args = process.argv.slice(2);
 const opt = (k: string): string | undefined => args.find((a) => a.startsWith(`--${k}=`))?.slice(k.length + 3);
-const OUT = opt("out") ?? ".claude/probes/K1325/out/s1"; const P = Number(opt("px") ?? 360);
+const OUT = opt("out") ?? ".claude/probes/K1325/out/s1"; const P = Number(opt("px") ?? 360); const WH = Number(opt("w") ?? 4);
+const SELF = args.includes("--self"); SELF_REF.on = false;
 const col: RGB = [0, 0, 0];
 
 function crop(file: string, mBefore: Model, mAfter: Model, X: number, Y: number, before: () => void, after: () => void): void {
-  const h = mAfter.scene.look.halfWidth; const S = 4 * h; const ppu = P / S;
+  const h = mAfter.scene.look.halfWidth; const S = WH * h; const ppu = P / S;
   const c0 = Math.round(X * ppu - P / 2); const r0 = Math.round(Y * ppu - P / 2);
   const Wt = 3 * P + 8; const img = new Uint8Array(Wt * P * 3).fill(255);
   const put = (k: number, c: number, r: number, rgb: number[]): void => { const o = 3 * (r * Wt + k * (P + 4) + c); img[o] = rgb[0]; img[o + 1] = rgb[1]; img[o + 2] = rgb[2]; };
@@ -55,7 +59,8 @@ if (SP) {
   for (const s of SP.split(",")) {
     const [nm, x, y, label] = s.split(":"); let m = models.get(nm);
     if (!m) { m = buildModel(nm); models.set(nm, m); }
-    crop(`${label}.png`, m, m, +x, +y, () => { PLATEAU.on = false; }, () => { PLATEAU.on = true; });
+    if (SELF) crop(`${label}.png`, m, m, +x, +y, () => { PLATEAU.on = false; SELF_REF.on = false; }, () => { PLATEAU.on = false; SELF_REF.on = true; });
+    else crop(`${label}.png`, m, m, +x, +y, () => { PLATEAU.on = false; }, () => { PLATEAU.on = true; });
   }
   PLATEAU.on = false;
 } else {
