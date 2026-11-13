@@ -81,3 +81,38 @@ Under 40 lines:
 - your last SHA.
 
 End with `Ledger items` and K1344's handle fields.
+
+## Handoff (stage 1, 2026-11-12)
+
+Start 10:43:51, stop 11:51 (Done holds; no cap stop). Branch `worktree-agent-a42df6f917fe7a386`, rebased on
+master 903756d4; the fix is 12240470.
+
+- **Cause.** j116's crease is tail p1952's walk over E's final border: buildBorder's inner miter makes a
+  swallowtail narrower than the walk's step, so the walk turns back in a HOOK with no sampled crossing,
+  cutTailLoop found nothing to cut, and the folded quads inked one spot twice (the dark crease).
+- **Fix.** `src/render/outline/outline.ts` cutTailHooks, called at the end of cutTailLoop: a hook at point 1
+  drops point 1; elsewhere the cusp moves to where the out-leg, extended back by at most its back step, crosses
+  the in-leg (cpts and alpha along the in-leg), else the cusp point goes; up to 8 rounds; turn-backs with a step
+  under 0.001 world are ignored. Pins: outline_port ring table and band, f0 and f1 (paint and g41_ring_tw42
+  unchanged). Inside the lane bounds (a tail function; no phase driver, KF_INC, outline_model or worker code).
+- **g41_user_tw64 (5.19, 17.60)** is not this fault: it is run p427's per-vertex vs per-pixel tie gap (K1347);
+  the fix changes 0 px there.
+- **tail_look.** `k1344_tag.ts` on census_k1324s3b: 6 of 187 tail_look finds meet a folded tail (muse_hash
+  #210, #185, #183 = j116, #211 sub-pixel; muse_default_tw #39; g41_user_tw64 #1); on census_k1344s1: 0 of 188.
+  Sheets: `.claude/probes/K1344/out/s1/sheet/x4/tag_sheet_x4.png`, `sheet/x8/tag_sheet_x8.png`.
+- **Census k1344s1** (`.claude/probes/K1314/out/s1/census_k1344s1.*` in this worktree): stray_ink 4,
+  hard_edge 1, paper 0, broken_ink 12, k1049 0, all as k1324s3b; no bar find moved. tail_look 187 -> 188: one
+  new find, muse_hash 40 px at (25.979, 28.526) (j38), where the crops show master's two fold slivers gone;
+  form B's broader shade there is missing in master and after alike (general tail_look).
+- **Crops** (form B | master | after, app band): `.claude/probes/K1344/out/s1/x4/` and `x8/` (j116.png,
+  g41_user_tw64_5.19_17.60.png, muse_hash_new_j38.png and its _census twin).
+- **Twins:** rec_tie, self_bury and the GPU probes pass (the GPU path is unchanged; the fix is in the table).
+- **Speed.** Node ABBA of frame(), hook cut on - off: muse_hash -0.036 ms (spread 0.78), g41_user_tw64
+  +0.085 (0.60), def +0.218 (1.09). Browser ABBA (`k1344_bench.ps1`, master vs branch, perf lock 11:44-11:49):
+  def worker p50 100.5/101.5 vs 87.8/84.0, fat 107.7/107.7 vs 103.7/106.4; no part slower than the spread
+  (`out/s1/bench_def.json`, `bench_fat.json`).
+- **Tests.** `npm test` green, goldens unchanged, outline_inc.test.ts 3/3 (with K1247 s18's captured drags
+  copied into this worktree).
+- **Left.** The fill walk (fpts) gets no hook or loop cut; muse_hash still has 6 tails that turn back (sub-0.001
+  jogs or span-cut splices) and g41_ring_tw64 1, all sub-pixel; muse_hash #210's soft start-edge tone and j38's
+  missing form-B shade are general tail_look, not this crease.
