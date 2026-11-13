@@ -42,6 +42,24 @@ for (const nm of dl.split(",")) {
     console.log(`${nm} zf ${R} passes ${(performance.now() - t0).toFixed(0)} ms (cpu ${((cu.user + cu.system) / 1000).toFixed(0)})`);
     continue;
   }
+  if (mode === "fb") {
+    // fill and band alone: the tables computed once, zChains fresh each pass but outside the timed calls.
+    const pre = scenes.slice(1).map((s) => { const sc = alignJunctionArms(m.st, s); OB_DI.on = true; return { sc, table: frame(m.st, sc) }; });
+    const F: number[] = []; const B: number[] = [];
+    for (let r = 0; r < R + 2; r++) {
+      let tf = 0; let tb = 0;
+      for (const { sc, table } of pre) {
+        const zz = zChains(sc);
+        const a = performance.now(); const fr = fillFrame(m.fs, m.st, table, sc, zz, buf); const b = performance.now();
+        m.recFrame = fr.rec ?? null;
+        const c = performance.now(); m.band = m.bandOf(sc, zz); const d = performance.now();
+        tf += b - a; tb += d - c;
+      }
+      if (r >= 2) { F.push(tf / pre.length); B.push(tb / pre.length); }
+    }
+    console.log(`${nm.padEnd(9)} fb fill ${q(F, 0.5).toFixed(3)}/${mean(F).toFixed(3)} min ${Math.min(...F).toFixed(3)}  band ${q(B, 0.5).toFixed(3)}/${mean(B).toFixed(3)} min ${Math.min(...B).toFixed(3)} (per frame, ${R} passes)`);
+    continue;
+  }
   const P: Record<string, number[]> = { frame: [], zChains: [], fill: [], paint: [], band: [], gcZ: [], gcF: [] };
   for (let r = 0; r < R + 2; r++) for (let i = 1; i < scenes.length; i++) {
     const t0 = performance.now();

@@ -74,3 +74,53 @@ Under 30 lines:
 - your last SHA.
 
 End with `Ledger items` and K1341's handle fields.
+
+## Handoff (stage 1 agent, 2026-11-12, 14:40:45 to 16:10)
+
+Branch `worktree-agent-a74fd2c72ec40ff48`, from af721b2f. Commits ab4edce7, 8a204649, ec231427,
+16e9b159 (code), 6f268f6d and this one (probes, handoff).
+
+**Cuts (all exact).**
+- draw.ts zChains: tangent by bisection; nearVisit's j by a compare; nearRange's squared pre-check
+  (sqrt skipped when `D <= B*B*(1-1e-9)`); the NW Float64Array in place of the top-level `let`s
+  (HeapNumber boxing); posQ/PQ, WU, SPQ (walk and span without allocation); depthAt's hat at module
+  level; wrapL sites; nearLt (the walk decides d < lim from d² outside a 1e-9 band, hypot only inside);
+  rootBetween's circular prefilter.
+- chain_frame.ts: wrapL; the spanOf memo (spanMemo on only around recStrip2/recStrip); csAt in place
+  of colAt's per-call closure.
+- fill_tri.ts: wrapL sites; ringSegD plus the off-fan box skip (ringHint); the memoRec2/memoRec wrappers.
+
+**Identity.** `k1341s1_digest.ts` over the s18 drags (every frame) and the 12 census scenes: 0 diffs
+against master (`all a53c2eacce4f8f95`) at every build b3 to b6 (b6 = 16e9b159). `npm test` green
+(231 files, 2945 tests); golden snapshots and the outline_port / outline_inc / byte_identity pins
+unchanged.
+
+**Timings (all under load: other agents' node processes at 100-170% of a core).**
+`out/final/` (untracked) holds them.
+- Node ABBA, all parts (`node.txt`, R 6, p50 ms, A B B A): zChains def 10.00/10.41 → 7.93/7.54,
+  muse_hash 17.12/19.04 → 14.43/14.92, fat 19.54/19.93 → 11.85/11.58. Fill def 13.00/14.38 →
+  13.41/14.74, muse_hash 20.75/24.43 → 23.71/24.53, fat 6.08/6.98 → 6.37/5.91. Others within drift.
+- App ABBA (5761 master, 5762 branch, p50 means): round 1 def zChains 10.10 → 7.60, fill 14.60 →
+  14.20, band 7.65 → 7.60; fat zChains 11.10 → 8.45, fill 16.45 → 16.20, band 9.10 → 9.35 (spread
+  1.7). Round 2 def VOID (both branch runs 2x on every part, worker included: a load burst);
+  fat zChains 11.55 → 8.60, fill 15.95 → 16.25, band 8.55 → 9.60 (spread 0.9).
+- Fill and band alone (`node_fb.txt`, mode fb, A B B A A B, per-frame p50): def fill master 13.92,
+  12.64, 13.46 vs branch 14.70, 14.58, 13.67; def band 6.82, 6.24, 6.50 vs 7.38, 7.77, 6.42. The last
+  B run's muse_hash and fat read 2x (load) and are void.
+
+**Verdict.** zChains is faster well beyond the spread (about -25% def, -17% muse_hash, -40% fat).
+Fill is NOT faster beyond the spread, and on def it reads about 7% slower in the Node runs; band on
+def (Node fb) and fat (app round 2) reads slower by about the spread. Both are open.
+
+**What is left (next).**
+1. Bisect fill and band on a quiet machine: fb ABBAs with fill_tri.ts reverted to master's (the rest
+   kept), then each fill_tri cut (box skip, memo wrappers, wrapL) and the shared helpers band calls
+   (footNear's NW, zAtC, dSC; csAt). Drop any cut that reads slower. Watch gcF: zChains now allocates
+   less, so scavenges shift into the fill window (gcF rose while gcZ + gcF fell).
+2. Fill cuts not tried: fillFrame's per-call closures (its entry line holds 131 of 1117 ticks in
+   master's line profile), about 5 MB of allocation per frame, hinted posQ/nearScan searches, the
+   `(i+1)%R` compare in the disk scan, argument boxing in nearW-style calls. det_math `hypot2` is out:
+   it changes Firefox's bits.
+3. Tools: `k1341s1_run.ps1` (lock, Node ABBA, app rounds), `k1341s1_time.ts` (modes all, zf, fb),
+   `k1341s1_digest.ts`, `k1341s1_alloc.ts`; master bundles are built from a `git archive af721b2f`
+   copy with the probe .ts files copied in.
