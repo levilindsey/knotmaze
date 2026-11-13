@@ -3475,3 +3475,155 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 ## K1192 (Done 2026-11-04)
 
 - **K1192** · Muse batch 19 (`docs/design/K1192_muse_batch19.md`): K1186's flip count, K1182's biarc and Run F's look at its corners, K1191's examinations, K782's waiting follower. Done in 3ddaec22 (2026-11-04).
+
+## K1182 (Done 2026-11-05)
+
+- **K1182** · 19C's biarc rim, its rimCurveBiarc flag and their tests removed; the header beside K859's Hermite says why it stays out (the quadratic reads smooth, the biarc notched at all four targets). Done in b05e7a5a (2026-11-05).
+
+## K1199 (Done 2026-11-05)
+
+- **K1199** · Muse batch 20 (`docs/design/K1199_muse_batch20.md`): K1139 S5 (B), K1202's cause (C), K1186's crops (D), K1201's GPU step (E), K1196's timing (F), K1198's Plc1m and ij (G). Done in c3ab0a46 (2026-11-05).
+
+## K1202 (Done 2026-11-05)
+
+- **K1202** · cyc e210's kymograph step at the other band's cover edge: Muse's wider ramp (5e0d5914) changed nothing visible at 1x and stays off; the step is the two fields' mismatch, not the edge (K1190's fronts; notes). Done in 5e0d5914 (2026-11-05).
+
+## K1203 (Done 2026-11-05)
+
+- **K1203** · A pulse band ignored its child arm's end window: Run D's fix (a0f1d634, behind a switch) judged on by a GPU positive control, its `table_cyc.mjs` copy reads BAND EXTENT past the arm (notes); K1207 makes the window the only path. Done in a0f1d634 (2026-11-05).
+
+## K1206 (Done 2026-11-05)
+
+- **K1206** · Batch 22's Run A brief (`docs/design/K1208_muse_batch22_run_a.md`) has its draft check every path it cites, quote each number from the file that holds it, and list the paths in its report. Done in 76f3dbc6 (2026-11-05).
+
+## K1186 (Done 2026-11-05)
+
+- **K1186** · Fill look: no hold-and-fade, a layer-vote flip draws 0 px (21E). Done in 080d4b49 (2026-11-05).
+
+## K1204 (Done 2026-11-05)
+
+- **K1204** · Muse batch 21 (Runs B to G) ran through the chain, and Claude judged each run. Done in e43b2cfc (2026-11-05).
+
+## K1119 (Done 2026-11-05)
+
+- **K1119** · Cursive v7.0: Levi chose v6.8 on every sheet. Done in f7be8548 (2026-11-05).
+
+## K1197 (Done 2026-11-05)
+
+- **K1197** · Cursive c joins: Levi kept the old hand-set joins. Done in f7be8548 (2026-11-05).
+
+## K1207 (Done 2026-11-05)
+
+- **K1207** · In Muse batch 22 (K1208): remove Run C's switch (`setPulseCoverRamp`, 5e0d5914, off by K1202) and make Run D's end window (`setPulseBandEndWindow`, a0f1d634, on by K1203) the only path, re-freezing the pins it moves; it also says whether 21D's twin point is a fan pixel (K1203's notes). Done in 0af054cc (2026-11-05).
+
+## K1190 (Done 2026-11-05)
+
+- **K1190** · K1139 Stage 4's look calls (card `docs/asks/K1190.md`; sheets t4, t6 in `.claude/probes/K1139/out/s4/sheets/`): soften the sharp fronts (ji 33, ji 149); smooth ji 33's straight edges; ji 149's gold edge round again; fill the notch. Dropped: superseded by K1211 (Levi 2026-11-05: the light inside a junction must read as one seamless unit) (2026-11-05).
+
+## K1200 (Done 2026-11-05)
+
+- **K1200** · Light on loops (K1139 S4): pulses entering a loop from both ends meet halfway and fade out in pairs; Levi 2026-11-05: "Fine as is". Done in 4ac52bb0 (2026-11-05).
+
+## K1126 (Done 2026-11-05)
+
+- **K1126** · High contrast shows the ring ripple whatever ripple was picked (K368); Levi 2026-11-05: "It reads well". Done in 89836d3b (2026-11-05).
+
+## K1001 (Done 2026-11-05)
+
+- **K1001** · Corners where two threads split: Levi kept K830's rule (broad gaps round, narrow points sharp), so a split stays sharp. Done in 73186e5c (2026-11-05).
+
+## K1196 (Done 2026-11-05)
+
+- **K1196** · Two-ended pulses (K1139 S4) cost nothing measurable on the desktop (22E: head-base within the +0.22 ms drift between builds timed one after another; S4 alone +0.15 at rest, ~0 in play), so no Pixel run; the frame-tail watch is K1214 (notes). Done in 34d1e863 (2026-11-05).
+
+## K1198 (Done 2026-11-05)
+
+- **K1198** · Cursive ij: i and j on v6.8 (22G: the font's type-4 ligature lookups emptied, calt kept; only ij moved, 712 pieces equal); the six pins stay, each moves without it; the kit adopts it in K863's next stage (notes). Done in 5f5025de (2026-11-05).
+
+## K1120 (Done 2026-11-05)
+
+- **K1120** · Cursive v6.9 joins out of b, v and w (J3f): into b, f, h, k and l a straight climb to the 100 u attach limit, 53-57 u from the font (next: an entry rule after high exits); br, vr and wr meet r's cusp in a V; be and we show small repeated spikes; e after b/v/w has its own rule, landing up to 60 u into e (keep it, or fold it into K948's e-after-o rule, which moves oe) (`K1113_cursive_j3f.md` ## Handoff). Dropped: superseded: Levi kept v6.8's joins (K1119) and its c (K1197), so v6.9 to v7.2 are not used (2026-11-05).
+
+## K1121 (Done 2026-11-05)
+
+- **K1121** · Cursive v6.9 gates (J3f): locality fails, 157 of 1448 untouched pieces moved by up to 0.33 u (b's, v's and w's whole strokes were refitted; next: refit only the exit's stretch); seven rows newly fail rough (bt, vt, wt, ba, wa, and the ba and wa in bad and wave); 41 of the 78 joins sit at a bound; b/v/w font distance about 24 u (was about 3) (`K1113_cursive_j3f.md` ## Handoff). Dropped: superseded: Levi kept v6.8's joins (K1119) and its c (K1197), so v6.9 to v7.2 are not used (2026-11-05).
+
+## K1144 (Done 2026-11-05)
+
+- **K1144** · Cursive v7.0's leftovers (K1119's Handoff in `docs/design/K1119_cursive_j3g.md`): br, vr and wr dip into r as a tighter V (br newly fails roughness); five of six a/q joins fail it; q's low point is 0.4 u above the band; be, ve and we sit 40.8-42.0 u from the font (Levi: the v7.0 or the e60 column). Dropped: superseded: Levi kept v6.8's joins (K1119) and its c (K1197), so v6.9 to v7.2 are not used (2026-11-05).
+
+## K1193 (Done 2026-11-05)
+
+- **K1193** · Cursive c (v7.1, J3h): 14 of the 26 c joins sit at the 10 u bound of c's exit port (`docs/design/K1112_cursive_j3h.md`, Handoff). Dropped: superseded: Levi kept v6.8's joins (K1119) and its c (K1197), so v6.9 to v7.2 are not used (2026-11-05).
+
+## K1145 (Done 2026-11-05)
+
+- **K1145** · Cursive x5 (`R_DX=22 R_A1=-15 R_L1=10`): a steeper b, v and w exit (about -22 deg), if Levi wants v7.0's exits further down (K1119's Handoff). Dropped: superseded: Levi kept v6.8's joins (K1119) and its c (K1197), so v6.9 to v7.2 are not used (2026-11-05).
+
+## K1209 (Done 2026-11-05)
+
+- **K1209** · Retire the fillet layer vote (one fan layer; K1186), Muse Run I (22I): no pin moved; 0 px but the accepted fat11 ji104 drag3 (23/14 px). Done in cb5a7301 (2026-11-05).
+
+## K1212 (Done 2026-11-05)
+
+- **K1212** · K863's trace kit: g2 reads the angle, census rows keyed by id, word lists each id once (J3k). Done in 0136f455 (2026-11-05).
+
+## K647 (Done 2026-11-05)
+
+- **K647** · Path 8 (K336): Reset path during the winning move records the result but shows no card. Done in adee40a6 (2026-11-05).
+
+## K744 (Done 2026-11-05)
+
+- **K744** · Junction blips under the rule colors: gone on master at K749's junctions, alternate and cycle (desktop; Run K, 22K). Done in 0f63e3d5 (2026-11-05).
+
+## K734 (Done 2026-11-05)
+
+- **K734** · The hairline seam inside the i fork at xh 3: gone on master (Run K, 22K); the fork's pale disc and steps are K1220. Done in 0f63e3d5 (2026-11-05).
+
+## K15 (Done 2026-11-05)
+
+- **K15** · A joint's fan ahead of its arm during a reveal: gone, the fan follows the joint gate's knotFanAlpha (Run K, 22K). Done in 0f63e3d5 (2026-11-05).
+
+## K218 (Done 2026-11-05)
+
+- **K218** · Trail-mode junction caps' flat p step: gone at 7 stands, routed junctions skip the caps (Run K, 22K). Done in 0f63e3d5 (2026-11-05).
+
+## K678 (Done 2026-11-05)
+
+- **K678** · A K81 cover strip with fewer than 9 pairs of room drops a round join arc (falls back to the sample pair); no A/B scene reaches it (`RibbonMesh.coverPairs`, the joinery.ts cover loop; K580 s3). Dropped: unreachable today: cover strips exist only at routed fabric junctions, which carry no round join, and text scenes have joins but no routes (Run K, 22K: 50 seeds, 35,288 calls, 0 fallbacks) (2026-11-05).
+
+## K987 (Done 2026-11-05)
+
+- **K987** · Cursive: a G2 rule at a smooth node's retrace follower (n's kinks). Dropped: gone on v6.8: 22L (734c55b9) found n's smooth nodes at 0 deg turns and 0 jumps, 0 internal kinks in 713 census rows (2026-11-05).
+
+## K927 (Done 2026-11-05)
+
+- **K927** · Cursive fits stopping at nfev 600. Dropped: superseded: v6.8's bodies come from the few-node writer, with no trace fit (a 0.40, q 0.42 u off the trace; 22L, 734c55b9) (2026-11-05).
+
+## K912 (Done 2026-11-05)
+
+- **K912** · Cursive o and b exits per class, f's exit walk, per-left sets (K902). Dropped: superseded: v6.8 solves each join per pair from its port, no per-left sets or exit walk (22L, 734c55b9); ok's distance is K1090's (2026-11-05).
+
+## K938 (Done 2026-11-05)
+
+- **K938** · Cursive v5.2: zo at 142 u, five crossings into o. Dropped: gone on v6.8 (22L, 734c55b9): zo 2.96 u; ob, of, oh, ok and ol cross a body once each, as allowed (2026-11-05).
+
+## K948 (Done 2026-11-05)
+
+- **K948** · Cursive: the e after o, b, v and w (an elbow). Dropped: superseded on v6.8 (22L, 734c55b9): oe solved anew with no hook (its 12.69 u is K998's); be, we, ve keep the presets Levi kept (K1112) (2026-11-05).
+
+## K990 (Done 2026-11-05)
+
+- **K990** · Cursive f ends its lower loop in a corner into its exit, no curl (J3e, v6.8; 22L measured it, 734c55b9). Done in 636bd685 (2026-11-05).
+
+## K1219 (Done 2026-11-05)
+
+- **K1219** · Loop ji 12's dark triangle: slot 28's casing fade on ch5's gold (22O; `gap_mask.ts:802`, K1218 S1's). x4 ji 149's teal notch: not the mask, the fan's untraveled web past the gold band's round edge (`junction_field.ts:358`): after K1211 S5, in its file; notes `## K1218 (2026-11-05, 22O reviewed)`. Dropped: folded into K1218 S2 (docs/design/K1218_s2_fused_junctions.md) (2026-11-05).
+
+## K1208 (Done 2026-11-05)
+
+- **K1208** · Muse batch 22: runs B to P through the chain; Run D dropped, since K1211 S6 removed the pulse bands it crossfaded. Done in 27d103d1 (2026-11-05).
+
+## K1213 (Done 2026-11-05)
+
+- **K1213** · Cursive v6.8: word-final s and p run on in a flat tongue, the i and j dots are dashes, the q tail steps at 5x; J3k's S2, P1, D2 and Q1 follow the font, each local. Dropped: Levi answered 2026-11-05: "all word-end letters should have a tail, but both the s and p tails are currently bad. Tails should match the curvature they pass by and swoop up more. D2 for [the dots] is good. ... Q1 is good." K863 J3l builds it (docs/design/K863_cursive_j3l.md) (2026-11-05).
