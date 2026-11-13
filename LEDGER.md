@@ -845,6 +845,11 @@ Every other item below waits on the trigger it names.
 - **K1370** · rp=gf tables: reuse each corner exactly where its arms did not move (the Pixel's worker build is
   20 ms, about two frames of lag at 16 ms); output must stay bit-identical (k1362t1_digest.ts). K1362 c1
   handoff.
+  - owner: muse session 01a1d487-e3a7-7f01-8e38-331ec3a77a99 (paseo agent 84099412), started 2026-11-13 02:55; coordinating claude session 09c7a672-a414-402a-97da-b3176839a2e5
+  - branch: detached worktree .claude/worktrees/muse-k1362-t2; Muse pushes finished parts to master; last commit: `2b964a6c`
+  - evidence: .claude/probes/K1362/k1362t2_* (to come), k1362t1_digest.ts, k1362c1_bench.ps1
+  - next: Muse t2 running: pool the corner solve across workers, or reuse bit-identical corners; digest unchanged
+  - brief: `docs/design/K1362_t2_muse_build.md`
 
 ## Residuals (known, not fixed)
 
