@@ -78,3 +78,37 @@ Under 40 lines:
 - your last SHA.
 
 End with `Ledger items` and K1324's handle fields.
+
+## Handoff (stage 3 agent, 2026-11-12)
+
+Start 09:45:51, stop 10:39:25 (Done holds as far as this stage can take it; the rest is blocked, below).
+
+- **x22's lower join: fixed (draw.ts bandData).** The census band (bandData) took the tie per vertex and
+  interpolated it linearly across the partner's border kink (tieAlpha bends at d = h and d = h - W), so the
+  join inked .97 where the app's per-pixel tie (BAND_FS) gives 1: a faint seam along the over border. The app
+  band was clean; the seam lived in the census and crop raster. bandData now splits a tied triangle's EDGES
+  where the ends' ties differ and the midpoint misses the tie by more than REFINE_TOL 0.01, down to
+  REFINE_MIN 0.0015 (conforming: a test of the edge alone, so neighbours split a shared edge alike). A first
+  per-triangle depth cap left a staircase at g41_user_tw64 j68; the per-edge rule removed it. x22: max
+  |app - census| 0.077 -> 0.014 (k1324_s3_app). bandData is census/test-only (no app or worker caller), so no
+  worker part is slower; census bandData time muse_hash 4.0 -> 7.4 s, fat 16 -> 28.7 s.
+- **c8's hard edge: K1315's end, stopped on it.** The edge is tail p1781's first spoke (chain 8, s 8.185, the
+  under-tail's open end): alpha 0 at the corner -> .225 inside, beside run p121 tied at ~.02. Crops
+  out/s3/x4x, x8x spot_003.
+- **c8's dotted seam: cause found, not mine to fix.** The tail p1781's corner fan folds: its outer cluster
+  points jitter by 0.0003-0.0035 against the inner arc's sweep, so slivers overlap and ink twice. It is in
+  the APP band too (k1324_s3_appfold UNTIED=1: 76 px at 960 ppu; untied chain-8 triangles 115985-115989,
+  outer points (19.4082, 14.1646), (19.4080, 14.1652), (19.4077, 14.1657)). Cause: outline.ts's tail corner
+  cluster, plus the shared untied inner rule (inner = pt + W unit(cpt - pt): band_gpu.ts inner(), band_rec.ts
+  innerOfP, draw.ts bandData). Change for K1247 s30's files: make the corner cluster one exact point, or skip
+  or clamp a quad whose outer step runs against the inner sweep, in all three builders together.
+- **Census k1324s3b** (b530a1cb) vs census_k1325s2: bar kinds equal (stray_ink 4, hard_edge 1, paper 0,
+  broken_ink 12, k1049 0; each find's px unchanged); tail_look 185 -> 187, owner_only 1241. 22 moved and 2
+  new diagnostic finds (tail_look/faded, owner_only wedges); crops out/s3/moved4x, moved8x (7 largest).
+  App-vs-census pixels over .01 fell at all four checked: g41_ring_tw64 14622 -> 12267, g41_user_tw64
+  13428 -> 12004, muse_hash (4.96, 32.26) 15421 -> 570, (17.93, 29.03) 14434 -> 6057.
+- **Pins:** outline_port band f0, f1 on ring and g41_ring_tw42 (24ba08cc). npm test green, goldens unchanged.
+- **Left:** the dotted seam (K1247 s30's files); the hard edge (K1315, Levi); a residual own-alpha mismatch
+  between bandData and bandGpu at g41_user_tw64 (5.19, 17.60) (census .888 vs app 1.0, max 0.546 on master
+  and branch alike; the branch narrowed master's wedge to a needle, out/s3/moved8x spot_003); x22's faint
+  trace (16 px under .99 at 960 ppu).
