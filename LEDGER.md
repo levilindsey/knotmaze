@@ -551,10 +551,10 @@ Next free ID: K1367.
   tables the CPU builds in under 1 ms) instead of the outline mesh built on the CPU each frame (65-117 ms on
   def). Reverses the 2026-11-09 call (K1040 dropped for K1240). The main speed route (Levi, 2026-11-12: very bullish
   on it); dropped only on a proof it cannot work (brief: "How the result is judged"). Analysis in docs/ledger_notes.md.
-  - owner: agent `claude agent (Opus)` of claude session claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-13 00:33, 2 h cap ~02:33)
-  - branch: `worktree-agent-ae4baf2544e8d6065`, worktree `.claude/worktrees/agent-ae4baf2544e8d6065`; last commit: `a39af18b`
+  - owner: nobody since 2026-11-13 02:02 (merged)
+  - branch: mainline; last commit: `d7906ed6`
   - evidence: .claude/probes/K1362/ (k1362s3_*, k1362s4_*), out/s3/, out/s4/
-  - next: Stage 4 running: the pass under 8 ms on the Pixel with the look unchanged, the app frame interval under rp=gf. Then the table build: K1366 (Muse) made it bit-identical at 9.0 ms def on the desktop (corners 6.0, a fixed 24-node integral; the rest 2.9); 3 ms needs the corners on the GPU (one fragment per corner) or the build in the worker
+  - next: Stage 5 (brief to write): the CPU work off main (export ~22 + tables ~28 ms on the Pixel make the rp=gf drag frame 83.5 ms p50 vs 50.1 today), and the shader structurally (keys per tile instead of per pixel; s4 measured implementation fixes reaching only ~12 / 15 ms against 8); Levi's call on dpr 1 (out/s4/dpr1_*.png)
   - brief: `docs/design/K1362_s4_shader.md`
 
 ## Next, in order
