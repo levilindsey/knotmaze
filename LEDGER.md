@@ -565,13 +565,6 @@ Next free ID: K1358.
   - evidence: .claude/probes/K1314/ (k1314s13_*), baseline out/s1/census_k1314s12b
   - next: s13 running: j58a (start-arc fan alpha, then piece 371 root ramp), muse_hash j49 spike, c8 lost ink (gate thruTail)
   - brief: `docs/design/K1314_s13_j58a_j49_lost.md`
-- **K1341** · Three exact cuts K1247 s28 left: a squared pre-check before draw.ts nearRange's sqrt (zChains'
-  hottest line), hinted spanOf searches, a box bound in fill_tri.ts's disk scan (s28 handoff)
-  - owner: muse session debfa6ce-9fda-4156-9348-afbbf1716d9d (launched by claude session 09c7a672-a414-402a-97da-b3176839a2e5, 2026-11-12 17:04, cap 2 h)
-  - branch: detached worktree .claude/worktrees/muse-k1341-s3, pushes HEAD:master; last commit: 3756330f; last commit: `1da71a35`
-  - evidence: .claude/probes/K1341/ (k1341s1_*, k1341s2_*); stage 1 branch worktree-agent-a74fd2c72ec40ff48 at 109e621f (zChains -17..40%, fill/band unclear under load)
-  - next: s3 (Muse) running: null test of the A/B harness, then def fill no slower than master
-  - brief: `docs/design/K1341_s3_muse_fill.md`
 
 ## Next, in order
 
@@ -1935,7 +1928,7 @@ Every other item below waits on the trigger it names.
   `.claude/probes/K1314/k1314s11_gpu.ts`); may share K1336's cause, needs a twin check of its own
 - **K1356** · K1247 s33's jlocal fixpoint costs 18.8 ms p50 / 88.6 ms p95 on def whenever the snap is on
   (inert while KF_INC.snap is off; s34 step 4 targets ~1 ms)
-- **K1357** · K1341 s3 residual: muse_hash fill/band pool +0.33+-0.26 / +0.65+-0.37 ms in swap-averaged A/B
+- **K1358** · K1341 s3 residual: muse_hash fill/band pool +0.33+-0.26 / +0.65+-0.37 ms in swap-averaged A/B
   (per-pair intervals include zero in 2 of 3 pairs; def gates hold). If pursued, bisect wrapL sites in
   zAtC/footNear/dSC or the GC shift with k1341s3_ab.ts swap pairs, not the s2 tool.
 
@@ -2291,6 +2284,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1341** · K1247 s28's exact cuts: zChains 23% faster on def, 20% on muse_hash, 43% on fat, bit-identical (s2, 1da71a35); def fill's apparent +1-2.7% was a slot bias in the A/B harness (Muse s3: null test, swap-averaged k1341s3_ab.ts), no src change; muse_hash fill/band residual K1358. Done in 96edc35e (2026-11-12).
 - **K1350** · fill walk and sub-pixel turn-backs cut with K1346 (turn-backs 0, fill folds 0 in all 12 census scenes). Done in 48add3d8 (2026-11-12).
 - **K1346** · outline folds cut to 0 in all 12 census scenes (c8 fan seam, fill walk K1350, sub-pixel turn-backs); fold checks cost 0.5-0.7 ms per def frame. Done in 48add3d8 (2026-11-12).
 - **K1344** · j116's crease: cutTailHooks cuts a tail walk's hook at a swallowtail narrower than its step (6 of 187 tail_look finds were this fold, 0 after; bar kinds unchanged). Done in d49c248d (2026-11-12).
