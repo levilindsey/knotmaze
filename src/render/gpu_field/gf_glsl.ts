@@ -41,6 +41,12 @@ void main() {
   gl_Position = vec4(2.0 * fx / uView.x - 1.0, 2.0 * fy / uView.y - 1.0, 0.0, 1.0);
 }`;
 
+/** K1362 s5: the stencil mask's fragment shader (gf_pass.ts, GF_TILE_FALLBACK 3): color writes are masked off. */
+export const GF_MASK_FS = `#version 300 es
+precision highp float;
+out vec4 o;
+void main() { o = vec4(0.0); }`;
+
 /**
  * K1362 s4: a TIER is the same program with smaller per-pixel arrays (p pieces, k corners), drawn first under a
  * stencil route (gf_pass.ts): a pixel that would need more than the tier holds (a (p+1)th piece, a (k+1)th corner,

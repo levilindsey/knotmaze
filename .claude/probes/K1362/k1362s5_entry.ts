@@ -59,10 +59,13 @@ function makePass(gl: WebGL2RenderingContext, name: string, fullFs?: string): Gf
   if (name === "fx3") return new GfPass(gl, false, [], () => gfFs(false).replace(/\b[IF]Q /g, ""));
   if (name === "s3p") return new GfPass(gl, true, [], () => gfFsS3(true)); // the probe programs: o0 = ink, coverage, chain, s
   if (name === "fullp") return new GfPass(gl, true, []);
-  const gm = /^g(\d+)([fF]?)(?:_(.*))?$/.exec(name);
+  // g<tc>[f|F|m|M][_tiers]: the tile route; f / F the optimistic bound + the stencil fallback, m the stencil mask (fb 3),
+  // M the mask over the optimistic classes (fb 4, bench only, not exact)
+  const gm = /^g(\d+)([fFmM]?)(?:_(.*))?$/.exec(name);
   if (gm) {
     const list = gm[3] === undefined ? undefined : gm[3] === "" ? [] : parseTiers("t" + gm[3]);
-    return new GfPass(gl, false, list, undefined, +gm[1], gm[2] === "F" ? 2 : gm[2] === "f" ? 1 : 0);
+    const fbm: Record<string, number> = { M: 4, m: 3, F: 2, f: 1 };
+    return new GfPass(gl, false, list, undefined, +gm[1], fbm[gm[2]] ?? 0);
   }
   const tiers = parseTiers(name);
   return new GfPass(gl, false, tiers, (t) => (t ? gfFs(false, true, t) : fullFs ?? gfFs(false, true)));

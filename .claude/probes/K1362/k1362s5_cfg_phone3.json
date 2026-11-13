@@ -1,0 +1,3 @@
+{"benches":[
+ {"name":"c822","scenes":["def","muse_hash"],"w":822,"h":1506,"fit":0.917,"nPass":40,"warmMs":1000,"settleFrames":30,"variants":["empty","full","t32r","g4m","g8m","g2M","g4M","g8M"],"modes":["sync4","frame1"],"cover":false,"cmp":true,"ref":"full"}
+]}

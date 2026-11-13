@@ -6,7 +6,7 @@
 // Timing: EXT_disjoint_timer_query_webgl2 brackets the draw, and an empty
 // query (begin, end, no draw) right after it gives the floor the readings
 // subtract. Results arrive frames later (poll()).
-import { GF_TILE_VS, GF_VS, gfFs, type GfTier } from "./gf_glsl";
+import { GF_MASK_FS, GF_TILE_VS, GF_VS, gfFs, type GfTier } from "./gf_glsl";
 import { GF_TW, packTables, type GfPacked } from "./gf_pack";
 import type { GfTables } from "./tables";
 import { buildTileRoute, type GfTileRoute } from "./gf_tiles";
@@ -118,14 +118,20 @@ export const GF_TIERS: GfTier[] = [{ p: 3, k: 2, ramps: true }];
 /**
  * K1362 s5: the tile route (gf_tiles.ts). tc > 0 cuts the grid into world tiles of tc x tc cells and draws each tile,
  * as an instanced quad, with the first of the tiers that holds the tile's bound, else the full program; tiles nothing
- * reaches are not drawn. No stencil, and every pixel is drawn once. 0 = stage 4's stencil route over GF_TIERS. The
- * probe program always takes the stencil route (its counters are the full program's own).
+ * reaches are not drawn. With GF_TILE_FALLBACK 0 the bound is exact (no stencil, every pixel drawn once); otherwise see
+ * GF_TILE_FALLBACK. 0 = stage 4's stencil route over GF_TIERS. The probe program always takes the stencil route (its
+ * counters are the full program's own).
  */
 export const GF_TILE_CELLS = 0;
 /**
  * The fallback (buildTileRoute's opt: 0 none, the exact bound; 1 a group = one piece; 2 also no ramp test): tiles go to a tier by the optimistic bound, the tiers mark the pixels they draw in
  * the stencil, and the full program draws once over every reached tile with stencil EQUAL 0 and KEEP (tested before the
  * shader on the Pixel). Exact by the tiers' overflow discard (stage 4), not by the bound.
+ * 3 = the STENCIL MASK: the exact bound (opt 0); a trivial program draws the tiles and writes each one's class + 1 into
+ * the stencil (colors masked off), then every program draws FULLSCREEN with stencil EQUAL its class + 1 and KEEP, so no
+ * shading program writes the stencil and none draws a tile quad (s5b on the Pixel: the quads cost more than they save).
+ * 4 = BENCH ONLY, NOT EXACT: the mask over the optimistic classes (opt 2) with no fallback, so a tier's overflow pixels
+ * keep the empty output; it times what a tile bound as tight as the optimistic one would buy.
  */
 export const GF_TILE_FALLBACK = 2;
 export const GF_TILE_TIERS: GfTier[] = [{ p: 1, k: 1, ramps: false }, { p: 2, k: 2, ramps: false }, { p: 3, k: 2, ramps: true }];
@@ -159,6 +165,8 @@ export class GfPass {
   route: GfTileRoute | null = null;
   routeMs = 0;
   private tileBuf: WebGLBuffer | null = null;
+  /** GF_TILE_FALLBACK 3: the stencil mask's program. */
+  private maskProg: { prog: WebGLProgram; map: WebGLUniformLocation | null; view: WebGLUniformLocation | null } | null = null;
   /**
    * tiers: GF_TIERS (stencil route) or GF_TILE_TIERS (tile route) by default; [] draws the full program alone (stage 2's
    * pass). fs: a program's source override (benches). tc: GF_TILE_CELLS by default; the probe always routes by stencil.
@@ -169,7 +177,11 @@ export class GfPass {
     this.fb = this.tc > 0 ? fb : 0;
     // the tile route classifies against the tiers it draws: no half (mediump-index) tiers there, which depend on the tables
     this.tiers = (tiers ?? (this.tc > 0 ? GF_TILE_TIERS : GF_TIERS)).filter((t) => this.tc === 0 || !t.half);
-    const vs = this.tc > 0 ? GF_TILE_VS : GF_VS;
+    const vs = this.tc > 0 && this.fb < 3 ? GF_TILE_VS : GF_VS;
+    if (this.tc > 0 && this.fb >= 3) {
+      const prog = compileProgram(gl, GF_TILE_VS, GF_MASK_FS);
+      this.maskProg = { prog, map: gl.getUniformLocation(prog, "uMap"), view: gl.getUniformLocation(prog, "uView") };
+    }
     this.progs = [...this.tiers, null].map((tier) => {
       const prog = compileProgram(gl, vs, fs ? fs(tier) : gfFs(probe, true, tier ?? undefined));
       const u = new Map<string, WebGLUniformLocation | null>();
@@ -220,7 +232,7 @@ export class GfPass {
     if (this.tc > 0) {
       // the tiles are in world space: the classification follows the tables, not the camera
       const prevRects = this.route?.rects;
-      this.route = buildTileRoute(T, this.tiers, this.tc, this.route ?? undefined, undefined, this.fb);
+      this.route = buildTileRoute(T, this.tiers, this.tc, this.route ?? undefined, undefined, this.fb === 3 ? 0 : this.fb === 4 ? 2 : this.fb);
       this.routeMs = this.route.ms;
       gl.bindBuffer(gl.ARRAY_BUFFER, this.tileBuf);
       if (this.route.rects === prevRects) gl.bufferSubData(gl.ARRAY_BUFFER, 0, this.route.rects);
@@ -259,11 +271,12 @@ export class GfPass {
     if (this.tc > 0 && !route) return;
     const progs = route ? this.progs : this.progs.filter((g) => !g.tier || !g.tier.half || halfOk);
     const routed = !route && progs.length > 1;
-    const fb = !!route && this.fb > 0 && progs.length > 1;
-    if (routed || fb) target.ensureStencil();
+    const fb = !!route && this.fb > 0 && this.fb < 3 && progs.length > 1;
+    const mask = !!route && this.fb >= 3 && !!this.maskProg;
+    if (routed || fb || mask) target.ensureStencil();
     if (target.float) for (let i = 0; i < target.n; i++) gl.clearBufferfv(gl.COLOR, i, [0, 0, 0, 0]);
     else { gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT); }
-    if (routed || fb) { gl.stencilMask(0xff); gl.clearBufferfi(gl.DEPTH_STENCIL, 0, 1, 0); }
+    if (routed || fb || mask) { gl.stencilMask(0xff); gl.clearBufferfi(gl.DEPTH_STENCIL, 0, 1, 0); }
     const [x0, y0, x1, y1] = rect;
     if (x1 <= x0 || y1 <= y0) return;
     gl.enable(gl.SCISSOR_TEST);
@@ -294,8 +307,30 @@ export class GfPass {
       gl.stencilFunc(gl.ALWAYS, 1, 0xff);
       gl.stencilOp(gl.KEEP, gl.KEEP, gl.REPLACE);
     }
+    if (mask) {
+      // each reached tile's class + 1 into the stencil (empty tiles keep 0), no color; then the programs test it
+      const mp = this.maskProg!;
+      gl.enable(gl.STENCIL_TEST);
+      gl.stencilOp(gl.KEEP, gl.KEEP, gl.REPLACE);
+      gl.colorMask(false, false, false, false);
+      gl.useProgram(mp.prog);
+      gl.uniform4f(mp.map, map[0], map[1], map[2], map[3]);
+      gl.uniform2f(mp.view, target.w, target.h);
+      for (let c = 0; c < route.count.length; c++) {
+        if (route.count[c] === 0) continue;
+        gl.stencilFunc(gl.ALWAYS, c + 1, 0xff);
+        gl.vertexAttribPointer(0, 4, gl.FLOAT, false, 16, 16 * route.first[c]);
+        gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, route.count[c]);
+      }
+      gl.colorMask(true, true, true, true);
+      gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
+    }
     for (let pi = 0; pi < progs.length; pi++) {
       const g = progs[pi];
+      if (mask) {
+        if (route.count[pi] === 0) continue;
+        gl.stencilFunc(gl.EQUAL, pi + 1, 0xff);
+      }
       // with the fallback the full program covers every reached tile (the rects are in class order, from 0)
       const nInst = !route ? 0 : fb && pi === last ? reached : route.count[pi];
       const first = !route ? 0 : fb && pi === last ? 0 : route.first[pi];
@@ -314,14 +349,14 @@ export class GfPass {
       gl.uniform4f(u("uGrid"), T.gx0, T.gy0, T.G, 0);
       gl.uniform2i(u("uGDim"), T.gW, T.gH);
       gl.uniform4f(u("uMap"), map[0], map[1], map[2], map[3]);
-      if (route) {
+      if (route && !mask) {
         gl.uniform2f(u("uView"), target.w, target.h);
         gl.vertexAttribPointer(0, 4, gl.FLOAT, false, 16, 16 * first);
         gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, nInst);
       } else gl.drawArrays(gl.TRIANGLES, 0, 3);
     }
     if (route) gl.bindBuffer(gl.ARRAY_BUFFER, null);
-    if (routed || fb) {
+    if (routed || fb || mask) {
       gl.disable(gl.STENCIL_TEST);
       // the route is per pass: a tile-based GPU need not store it
       gl.invalidateFramebuffer(gl.FRAMEBUFFER, [gl.DEPTH_STENCIL_ATTACHMENT]);
@@ -363,6 +398,7 @@ export class GfPass {
     for (const g of this.progs) gl.deleteProgram(g.prog);
     gl.deleteVertexArray(this.vao);
     if (this.tileBuf) gl.deleteBuffer(this.tileBuf);
+    if (this.maskProg) gl.deleteProgram(this.maskProg.prog);
     gl.deleteTexture(this.tex);
   }
 }

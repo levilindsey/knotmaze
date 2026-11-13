@@ -1,0 +1,1 @@
+{"benches":[{"name":"desk","cover":false,"settleFrames":30,"h":1506,"scenes":["def","muse_hash","fat"],"variants":["empty","t32r","g2M","g4M","g8M"],"nPass":40,"modes":["sync4"],"cmp":true,"ref":"full","w":822,"warmMs":1000,"fit":0.917}]}
