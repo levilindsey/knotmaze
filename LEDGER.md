@@ -554,15 +554,8 @@ Next free ID: K1367.
   - owner: agent `claude agent (Opus)` of claude session claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-13 00:33, 2 h cap ~02:33)
   - branch: `worktree-agent-ae4baf2544e8d6065`, worktree `.claude/worktrees/agent-ae4baf2544e8d6065`; last commit: `a39af18b`
   - evidence: .claude/probes/K1362/ (k1362s3_*, k1362s4_*), out/s3/, out/s4/
-  - next: Stage 4 running: the pass under 8 ms on the Pixel with the look unchanged (s3 fixes made exact, fp16, a program per pixel class, two-pass split, no pass at rest), the app frame interval under rp=gf; then the table build off main or cut (18 ms through a drag on the Pixel, corners 12.3)
+  - next: Stage 4 running: the pass under 8 ms on the Pixel with the look unchanged, the app frame interval under rp=gf. Then the table build: K1366 (Muse) made it bit-identical at 9.0 ms def on the desktop (corners 6.0, a fixed 24-node integral; the rest 2.9); 3 ms needs the corners on the GPU (one fragment per corner) or the build in the worker
   - brief: `docs/design/K1362_s4_shader.md`
-- **K1366** · K1362 tables lane: buildTables (tables.ts) at or under 2 ms on def, output unchanged (digest vs
-  master), beside K1362 s4's shader work (brief docs/design/K1362_t1_muse_tables.md)
-  - owner: muse session 01a1d40c-4704-7c52-82eb-36249c96ae77 (Paseo agent 70feddb0), coordinated by claude session 09c7a672-a414-402a-97da-b3176839a2e5
-  - branch: detached, worktree .claude/worktrees/muse-k1362-t1; pushes finished parts to master; last commit: `de46d5cd`
-  - evidence: `.claude/probes/K1362/k1362t1_*`
-  - next: Muse t1 running (started 00:35, cap 2 h): digest + swap-averaged A/B; then the export (9-11.5 ms) off main with the worker stage
-  - brief: `docs/design/K1362_t1_muse_tables.md`
 
 ## Next, in order
 
@@ -2307,6 +2300,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1366** · K1362 tables lane: buildTables (tables.ts) at or under 2 ms on def, output unchanged (digest vs master), beside K1362 s4's shader work (brief docs/design/K1362_t1_muse_tables.md). Done in e216acb0 (2026-11-13).
 - **K1357** · rp=outline's drag feel: Levi, 2026-11-12, 'unacceptable' at 9-10 Hz; the pool (s36) lags more (250-340 ms), so no clip re-ask; the route changes (K1362). Done in b3ea2ad4 (2026-11-12).
 - **K1319** · The K1045 open eye at muse_hash j73 in rp=outline: its ink ring closes round at the right tip, where form B cuts it off at an angle (form B's j73 corner takes the same far meet as j74's and never rounds it). Dropped: Levi, 2026-11-12: 'the round version of course'. rp=outline already draws it round; no change. The census's j73 stray_ink spike (262 px) is form B's flaw, not a bar find (2026-11-12).
 - **K1356** · K1247 s33's jlocal fixpoint costs 18.8 ms p50 / 88.6 ms p95 on def whenever the snap is on (inert while KF_INC.snap is off; s34 step 4 targets ~1 ms). Dropped: superseded by K1359: the snap (KF_INC.snap) stays off and is being removed with the incremental route (K1247 s35) (2026-11-12).
