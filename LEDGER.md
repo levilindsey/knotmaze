@@ -561,10 +561,10 @@ Next free ID: K1362.
   most cases. But there are still plenty of unacceptable artifacts"): an artifact census (stray ink, hard
   colour edges inside fills, paper holes, broken ink) across scenes, then fix stages that drive its count to
   0; the look gate in docs/design/K1240_gate.md
-  - owner: agent `ad0f00e4c679dca72` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 17:51, 2 h cap ~19:51)
-  - branch: `worktree-agent-ad0f00e4c679dca72`, worktree `.claude/worktrees/agent-ad0f00e4c679dca72`; last commit: `286ad719`
+  - owner: nobody since 2026-11-12 19:40 (merged; agent `ad0f00e4c679dca72` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `39ad8186`
   - evidence: .claude/probes/K1314/ (k1314s13_*), baseline out/s1/census_k1314s12b
-  - next: s13 running: j58a (start-arc fan alpha, then piece 371 root ramp), muse_hash j49 spike, c8 lost ink (gate thruTail)
+  - next: s14: j58a (ownEdge seams c8: find the seam, narrow the lift), piece 371 chevron, muse_hash j49 lost border (thruOk + thruUnion spike where tails meet end arms); s13 handoff
   - brief: `docs/design/K1314_s13_j58a_j49_lost.md`
 
 ## Next, in order
