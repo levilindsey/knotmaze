@@ -6,6 +6,7 @@
 //   range's bin lists (gfChunkBinPart) over the broadcast prefix.
 // It holds no state between messages.
 import {
+  buildGfArms,
   gfChunkBinPart,
   gfRawChain,
   solveGfCorners,
@@ -44,10 +45,12 @@ scope.onmessage = (e: MessageEvent<Req>): void => {
       for (const b of blocks) transfer.push(b.vx.buffer, b.vy.buffer, b.vs.buffer);
       scope.postMessage({ kind: "raw", id: d.id, blocks }, { transfer });
     } else {
-      const K = solveGfCorners(d.P, d.jLo, d.jHi);
-      const part = gfChunkBinPart(d.P, d.meta, d.qLo, d.qHi);
+      const arms = buildGfArms(d.P, 0, d.P.junctions.length);
+      const P = { ...d.P, arms };
+      const K = solveGfCorners(P, d.jLo, d.jHi);
+      const part = gfChunkBinPart(P, d.meta, d.qLo, d.qHi);
       scope.postMessage(
-        { kind: "solve", id: d.id, K, cellChN: part.cellChN, cellChList: part.cellChList },
+        { kind: "solve", id: d.id, K, arms, cellChN: part.cellChN, cellChList: part.cellChList },
         { transfer: [part.cellChN.buffer as ArrayBuffer, part.cellChList.buffer as ArrayBuffer] }
       );
     }

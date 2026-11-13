@@ -147,6 +147,7 @@ export interface GfPrefix {
   nC: number; cV0: Int32Array; cNV: Int32Array; cClosed: Uint8Array; cLen: Float64Array; cS0: Float64Array;
   cPin0: Int32Array; cPinN: Int32Array; cArm0: Int32Array; cArmN: Int32Array;
   nV: number; vx: Float64Array; vy: Float64Array; vs: Float64Array; pinS: Float64Array; pinZ: Float64Array;
+  pinTheta: Float64Array; chainIds: Int32Array; rootsOff: Int32Array; rootsS: Float64Array; rootsJ: Int32Array;
   nA: number; aSR: Float64Array; aDir: Float64Array; aL: Float64Array; aLcut: Float64Array; aG: Int32Array;
   arms: GfArm[]; junctions: FieldScene["junctions"]; jGroup: Int32Array;
   /** Pool slices carry only their junction range: junctions/jGroup/arms are
@@ -208,7 +209,96 @@ export function partitionWeighted(weights: number[], parts: number): [number, nu
   return out;
 }
 
-export function buildGfPrefix(scene: FieldScene, opts: GfOpts, rawMerged?: GfRaw): GfPrefix {
+/** The arm table for junctions [jLo, jHi) (buildTables step 3's arm half):
+ * same arithmetic as the cold prefix, from flattened prefix data, so a pool
+ * slice builds its junctions' arms itself. A.j is global (jBase + local). */
+export function buildGfArms(P: Pick<GfPrefix, "junctions" | "jGroup" | "jBase" | "chainIds" | "cClosed" | "cLen" | "cS0" | "cV0" | "cNV" | "vx" | "vy" | "vs" | "cPin0" | "cPinN" | "pinS" | "pinTheta" | "rootsOff" | "rootsS" | "rootsJ" | "h">, jLo: number, jHi: number): GfArm[] {
+  const { h, cClosed, cLen, cS0 } = P;
+  const jBase = P.jBase ?? 0;
+  const idxOf = new Map<number, number>(); P.chainIds.forEach((id, i) => idxOf.set(id, i));
+  const norm = (c: number, s: number): number => {
+    if (!cClosed[c]) return s;
+    let u = (s - cS0[c]) % cLen[c]; if (u < 0) u += cLen[c]; return u + cS0[c];
+  };
+  const rootOf = (c: number, arm: { s: number; kind: string }): { sR: number; dir: number } => {
+    if (arm.kind === "end") {
+      const atStart = Math.abs(arm.s) < Math.abs(arm.s - (cS0[c] + cLen[c])) || Math.abs(arm.s - cS0[c]) < 1e-9;
+      return atStart ? { sR: cS0[c], dir: 1 } : { sR: cS0[c] + cLen[c], dir: -1 };
+    }
+    return { sR: norm(c, arm.s), dir: 0 };
+  };
+  const TT = { cV0: P.cV0, cNV: P.cNV, cClosed, cLen, cS0, vx: P.vx, vy: P.vy, vs: P.vs };
+  const CA1 = { x: 0, y: 0, tx: 0, ty: 0 }; const CA2 = { x: 0, y: 0, tx: 0, ty: 0 };
+  const rootsCache = new Map<number, { s: number; j: number }[]>();
+  const rootsFor = (c: number): { s: number; j: number }[] => {
+    let R = rootsCache.get(c);
+    if (!R) { R = []; for (let k = P.rootsOff[c]; k < P.rootsOff[c + 1]; k++) R.push({ s: P.rootsS[k], j: P.rootsJ[k] }); rootsCache.set(c, R); }
+    return R;
+  };
+  const pinsCache = new Map<number, { s: number; theta: number }[]>();
+  const pinsFor = (c: number): { s: number; theta: number }[] => {
+    let R = pinsCache.get(c);
+    if (!R) { R = []; const b = P.cPin0[c]; const n = P.cPinN[c]; for (let k = 0; k < n; k++) R.push({ s: P.pinS[b + k], theta: P.pinTheta[b + k] }); pinsCache.set(c, R); }
+    return R;
+  };
+  const armsT: GfArm[] = [];
+  for (let ji = jLo; ji < jHi; ji++) {
+    const J = P.junctions[ji];
+    J.arms.forEach((arm, ei) => {
+      const c = idxOf.get(arm.chain); if (c === undefined) return;
+      const r = rootOf(c, arm); const sR = r.sR; const dir = r.dir !== 0 ? r.dir : arm.dir;
+      const len = cLen[c];
+      const delta = (s: number): number => { let d = (s - sR) * dir; if (cClosed[c]) d = ((d % len) + len) % len; return d; };
+      let L = cClosed[c] ? len : dir > 0 ? cS0[c] + len - sR : sR - cS0[c];
+      for (const q of rootsFor(c)) { const d = delta(q.s); if (d > 1e-9 && d < L) L = d; }
+      let Lcut = Infinity; let uB = Infinity;
+      for (const x of pinsFor(c)) {
+        const d = delta(x.s);
+        if (cClosed[c] || d < -1e-12) uB = Math.min(uB, cClosed[c] ? len - d : -d);
+        if (d < -1e-12) continue;
+        const t = Math.tan(x.theta / 2); const reach = t > 1e-12 ? h / t : Infinity;
+        const cc = d - reach - h; if (cc < Lcut) Lcut = cc;
+      }
+      const sB = arm.kind === "end" ? norm(c, arm.s) : sR;
+      chainAtInto(TT, c, sB, CA1); chainAtInto(TT, c, cClosed[c] ? norm(c, sB + dir * 2 * h) : Math.max(cS0[c], Math.min(cS0[c] + len, sB + dir * 2 * h)), CA2); const a0 = CA1; const a1 = CA2;
+      armsT.push({ c, j: jBase + ji, ei, sR, dir, L0: L, L: Math.max(0, Math.min(L, Lcut)), Lcut, g: -1, ang: Math.atan2(a1.y - a0.y, a1.x - a0.x), ux: (a1.x - a0.x) / (Math.hypot(a1.x - a0.x, a1.y - a0.y) || 1), uy: (a1.y - a0.y) / (Math.hypot(a1.x - a0.x, a1.y - a0.y) || 1), uB });
+    });
+  }
+  const byJ = new Map<number, GfArm[]>();
+  for (const A of armsT) { const Gp = byJ.get(A.j); if (Gp) Gp.push(A); else byJ.set(A.j, [A]); }
+  for (const Gp of byJ.values()) Gp.sort((u, v) => u.ang - v.ang);
+  for (const A of armsT) {
+    if (!(A.uB < Infinity)) continue;
+    const sib = byJ.get(A.j)!; const n = sib.length; const at = sib.indexOf(A);
+    let gMax = 0;
+    for (const [a, b] of [[sib[(at + n - 1) % n], A], [A, sib[(at + 1) % n]]]) {
+      if (a === b) continue;
+      const xa = P.junctions[A.j - jBase].arms[a.ei]; const xb = P.junctions[A.j - jBase].arms[b.ei];
+      if (xa.chain === xb.chain && xa.kind === "through" && xb.kind === "through" && Math.abs(xa.s - xb.s) < 1e-6) continue;
+      let th = b.ang - a.ang; th = ((th % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+      if (th < Math.PI) gMax = Math.max(gMax, Math.tan((Math.PI - th) / 4));
+    }
+    const k = gMax > 0 ? Math.min(4, Math.max(1, 1 / gMax)) : 4;
+    const cc = k * A.uB; if (cc < A.Lcut) A.Lcut = cc;
+    A.L = Math.max(0, Math.min(A.L0, A.Lcut));
+  }
+  for (const A of armsT) A.g = P.jGroup[A.j - jBase];
+  return armsT;
+}
+
+/** The arm arrays from arms in junction order (stable sort by chain, as
+ * the cold prefix's in-place sort gives). */
+export function gfArmTable(nC: number, armsInJunctionOrder: GfArm[]): { nA: number; aSR: Float64Array; aDir: Float64Array; aL: Float64Array; aLcut: Float64Array; aG: Int32Array; cArm0: Int32Array; cArmN: Int32Array; arms: GfArm[] } {
+  const armsT = armsInJunctionOrder.slice();
+  armsT.sort((u, v) => u.c - v.c);
+  const nA = armsT.length;
+  const aSR = new Float64Array(nA); const aDir = new Float64Array(nA); const aL = new Float64Array(nA); const aLcut = new Float64Array(nA); const aG = new Int32Array(nA);
+  const cArm0 = new Int32Array(nC); const cArmN = new Int32Array(nC);
+  armsT.forEach((A, i) => { aSR[i] = A.sR; aDir[i] = A.dir; aL[i] = A.L; aLcut[i] = A.Lcut; aG[i] = A.g; if (cArmN[A.c] === 0) cArm0[A.c] = i; cArmN[A.c]++; });
+  return { nA, aSR, aDir, aL, aLcut, aG, cArm0, cArmN, arms: armsT };
+}
+
+export function buildGfPrefix(scene: FieldScene, opts: GfOpts, rawMerged?: GfRaw, skipArms = false): GfPrefix {
   const t0 = now();
   const look = scene.look;
   const h = look.halfWidth; const W = look.band; const aa = opts.aa;
@@ -297,8 +387,8 @@ export function buildGfPrefix(scene: FieldScene, opts: GfOpts, rawMerged?: GfRaw
     pinsOf[ib].push({ s: sb, z: x.over === "b" ? amp : -amp, theta });
   }
   let nPin = 0; for (const p of pinsOf) { p.sort((u, v) => u.s - v.s); nPin += p.length; }
-  const pinS = new Float64Array(nPin); const pinZ = new Float64Array(nPin); const cPin0 = new Int32Array(nC); const cPinN = new Int32Array(nC);
-  { let q = 0; pinsOf.forEach((P, c) => { cPin0[c] = q; cPinN[c] = P.length; for (const p of P) { pinS[q] = p.s; pinZ[q] = p.z; q++; } }); }
+  const pinS = new Float64Array(nPin); const pinZ = new Float64Array(nPin); const pinTheta = new Float64Array(nPin); const cPin0 = new Int32Array(nC); const cPinN = new Int32Array(nC);
+  { let q = 0; pinsOf.forEach((P, c) => { cPin0[c] = q; cPinN[c] = P.length; for (const p of P) { pinS[q] = p.s; pinZ[q] = p.z; pinTheta[q] = p.theta; q++; } }); }
   const t2 = now();
 
   // 3. Groups (union-find over junctions whose roots a crossing-free run joins) and the arm table:
@@ -325,62 +415,22 @@ export function buildGfPrefix(scene: FieldScene, opts: GfOpts, rawMerged?: GfRaw
     for (let i = 0; i + 1 < R.length; i++) if (!passBetween(c, R[i].s, R[i + 1].s)) par[find(R[i].j)] = find(R[i + 1].j);
     if (cClosed[c] && R.length > 1 && !passBetween(c, R[R.length - 1].s, R[0].s + cLen[c])) par[find(R[R.length - 1].j)] = find(R[0].j);
   });
-  type ArmT = GfArm;
-  const armsT: ArmT[] = [];
-  scene.junctions.forEach((J, ji) => {
-    J.arms.forEach((arm, ei) => {
-      const c = idxOf.get(arm.chain); if (c === undefined) return;
-      const r = rootOf(c, arm); const sR = r.sR; const dir = r.dir !== 0 ? r.dir : arm.dir;
-      const len = cLen[c];
-      const delta = (s: number): number => { let d = (s - sR) * dir; if (cClosed[c]) d = ((d % len) + len) % len; return d; };
-      let L = cClosed[c] ? len : dir > 0 ? cS0[c] + len - sR : sR - cS0[c];
-      for (const q of roots[c]) { const d = delta(q.s); if (d > 1e-9 && d < L) L = d; }
-      let Lcut = Infinity; let uB = Infinity;
-      for (const x of pinsOf[c]) {
-        const d = delta(x.s);
-        if (cClosed[c] || d < -1e-12) uB = Math.min(uB, cClosed[c] ? len - d : -d);
-        if (d < -1e-12) continue;
-        const t = Math.tan(x.theta / 2); const reach = t > 1e-12 ? h / t : Infinity;
-        const cc = d - reach - h; if (cc < Lcut) Lcut = cc;
-      }
-      const sB = arm.kind === "end" ? norm(c, arm.s) : sR;
-      chainAtInto(TT, c, sB, CA1); chainAtInto(TT, c, cClosed[c] ? norm(c, sB + dir * 2 * h) : Math.max(cS0[c], Math.min(cS0[c] + len, sB + dir * 2 * h)), CA2); const a0 = CA1; const a1 = CA2;
-      armsT.push({ c, j: ji, ei, sR, dir, L0: L, L: Math.max(0, Math.min(L, Lcut)), Lcut, g: -1, ang: Math.atan2(a1.y - a0.y, a1.x - a0.x), ux: (a1.x - a0.x) / (Math.hypot(a1.x - a0.x, a1.y - a0.y) || 1), uy: (a1.y - a0.y) / (Math.hypot(a1.x - a0.x, a1.y - a0.y) || 1), uB });
-    });
-  });
-  // the behind-pass cut (form B's dEdge "near" with dEdgeTip 1): c = k uB, k = clamp(1 / max tan((pi - theta)/4), 1, 4)
-  // K1362 t1: siblings grouped once (same members, same order as the per-arm filter+sort).
-  const byJ: ArmT[][] = scene.junctions.map(() => []);
-  for (const A of armsT) byJ[A.j].push(A);
-  for (const Gp of byJ) Gp.sort((u, v) => u.ang - v.ang);
-  for (const A of armsT) {
-    if (!(A.uB < Infinity)) continue;
-    const sib = byJ[A.j]; const n = sib.length; const at = sib.indexOf(A);
-    let gMax = 0;
-    for (const [a, b] of [[sib[(at + n - 1) % n], A], [A, sib[(at + 1) % n]]]) {
-      if (a === b) continue;
-      const xa = scene.junctions[A.j].arms[a.ei]; const xb = scene.junctions[A.j].arms[b.ei];
-      if (xa.chain === xb.chain && xa.kind === "through" && xb.kind === "through" && Math.abs(xa.s - xb.s) < 1e-6) continue;
-      let th = b.ang - a.ang; th = ((th % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
-      if (th < Math.PI) gMax = Math.max(gMax, Math.tan((Math.PI - th) / 4));
-    }
-    const k = gMax > 0 ? Math.min(4, Math.max(1, 1 / gMax)) : 4;
-    const cc = k * A.uB; if (cc < A.Lcut) A.Lcut = cc;
-    A.L = Math.max(0, Math.min(A.L0, A.Lcut));
-  }
-  for (const A of armsT) A.g = find(A.j);
-  armsT.sort((u, v) => u.c - v.c);
-  const nA = armsT.length;
-  const aSR = new Float64Array(nA); const aDir = new Float64Array(nA); const aL = new Float64Array(nA); const aLcut = new Float64Array(nA); const aG = new Int32Array(nA);
-  const cArm0 = new Int32Array(nC); const cArmN = new Int32Array(nC);
-  armsT.forEach((A, i) => { aSR[i] = A.sR; aDir[i] = A.dir; aL[i] = A.L; aLcut[i] = A.Lcut; aG[i] = A.g; if (cArmN[A.c] === 0) cArm0[A.c] = i; cArmN[A.c]++; });
+  const rootsOff = new Int32Array(nC + 1); let rootN = 0; for (let c = 0; c < nC; c++) { rootsOff[c] = rootN; rootN += roots[c].length; } rootsOff[nC] = rootN;
+  const rootsS = new Float64Array(rootN); const rootsJ = new Int32Array(rootN);
+  { let k = 0; for (const R of roots) for (const q of R) { rootsS[k] = q.s; rootsJ[k] = q.j; k++; } }
+  const jGroupA = new Int32Array(nJ); for (let ji = 0; ji < nJ; ji++) jGroupA[ji] = find(ji);
+  const chainIds = new Int32Array(nC); scene.chains.forEach((c, i) => { chainIds[i] = c.id; });
+  const armsBuilt: GfArm[] = skipArms ? [] : buildGfArms({ junctions: scene.junctions, jGroup: jGroupA, chainIds, cClosed, cLen, cS0, cV0, cNV, vx, vy, vs, cPin0, cPinN, pinS, pinTheta, rootsOff, rootsS, rootsJ, h }, 0, nJ);
+  const armTab = gfArmTable(nC, armsBuilt);
+  const { nA, aSR, aDir, aL, aLcut, aG, cArm0, cArmN } = armTab;
+  const armsT = armTab.arms;
   const t3 = now();
   const jGroup = new Int32Array(nJ); for (let ji = 0; ji < nJ; ji++) jGroup[ji] = find(ji);
   return {
     h, W, aa, sigma, zt, amp, win, rc, gridK: opts.gridK, cr: look.cuspRadius ?? 3,
     nC, cV0, cNV, cClosed, cLen, cS0, cPin0, cPinN, cArm0, cArmN,
     nV, vx, vy, vs, pinS, pinZ, nA, aSR, aDir, aL, aLcut, aG,
-    arms: armsT, junctions: scene.junctions, jGroup,
+    arms: armsT, junctions: scene.junctions, jGroup, pinTheta, chainIds, rootsOff, rootsS, rootsJ,
     ms: { vtx: t1 - t0, pins: t2 - t1, arms: t3 - t2 },
   };
 }
@@ -750,13 +800,20 @@ export function buildTablesPooled(scene: FieldScene, opts: GfOpts, nSlices: numb
   const blocks: { vx: Float64Array; vy: Float64Array; vs: Float64Array }[] = new Array(scene.chains.length);
   for (const [lo, hi] of partitionWeighted(scene.chains.map((c) => c.pts.length >> 1), n))
     for (let ci = lo; ci < hi; ci++) blocks[ci] = gfRawChain(scene.chains[ci].pts, scene.chains[ci].closed);
-  const P = buildGfPrefix(scene, opts, mergeGfRaw(scene, blocks));
+  const P = buildGfPrefix(scene, opts, mergeGfRaw(scene, blocks), true);
   const meta = gfChunkMeta(P);
   const tc0 = now();
   let K: GfCorner[] = [];
-  for (const [lo, hi] of partitionWeighted(scene.junctions.map((J) => J.arms.length), n)) K = K.concat(solveGfCorners(P, lo, hi));
+  let allArms: GfArm[] = [];
+  for (const [lo, hi] of partitionWeighted(scene.junctions.map((J) => J.arms.length), n)) {
+    const armsR = buildGfArms(P, lo, hi);
+    allArms = allArms.concat(armsR);
+    K = K.concat(solveGfCorners({ ...P, arms: armsR }, lo, hi));
+  }
+  const armTab = gfArmTable(P.nC, allArms);
+  const P2: GfPrefix = { ...P, nA: armTab.nA, aSR: armTab.aSR, aDir: armTab.aDir, aL: armTab.aL, aLcut: armTab.aLcut, aG: armTab.aG, cArm0: armTab.cArm0, cArmN: armTab.cArmN, arms: armTab.arms };
   const tc1 = now();
   const parts = partitionWeighted(new Array(meta.nCh).fill(1), n).map(([lo, hi]) => gfChunkBinPart(P, meta, lo, hi));
   const bins = mergeGfChunkBins(parts, meta.gW * meta.gH);
-  return assembleGfTables(P, K, { meta, bins }, { vtx: P.ms.vtx, pins: P.ms.pins, arms: P.ms.arms, corners: tc1 - tc0 }, t0);
+  return assembleGfTables(P2, K, { meta, bins }, { vtx: P.ms.vtx, pins: P.ms.pins, arms: P.ms.arms, corners: tc1 - tc0 }, t0);
 }

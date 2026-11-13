@@ -22,6 +22,7 @@ import {
   assembleGfTables,
   buildGfPrefix,
   buildTables,
+  gfArmTable,
   gfChunkMeta,
   mergeGfChunkBins,
   mergeGfRaw,
@@ -110,7 +111,7 @@ function ask<T>(slice: number, msg: unknown, transfer?: Transferable[]): Promise
 }
 
 interface RawReply { blocks: { ci: number; vx: Float64Array; vy: Float64Array; vs: Float64Array }[] }
-interface SolveReply { K: import("./tables").GfCorner[]; cellChN: Int32Array; cellChList: Int32Array }
+interface SolveReply { K: import("./tables").GfCorner[]; arms: import("./tables").GfArm[]; cellChN: Int32Array; cellChList: Int32Array }
 
 /** The pooled build: same tables as buildTables(scene), split across the
  * ready slices. Throws on any pool failure; the caller falls back. */
@@ -128,7 +129,7 @@ async function pooledBuild(id: number, scene: FieldScene, aa: number, n: number)
   }));
   const blocks: { vx: Float64Array; vy: Float64Array; vs: Float64Array }[] = new Array(scene.chains.length);
   for (const r of rawReplies) for (const b of r.blocks) blocks[b.ci] = b;
-  const P = buildGfPrefix(scene, { aa }, mergeGfRaw(scene, blocks));
+  const P = buildGfPrefix(scene, { aa }, mergeGfRaw(scene, blocks), true);
   const meta = gfChunkMeta(P);
   const jRanges = partitionWeighted(scene.junctions.map((J) => J.arms.length), n);
   const qRanges = partitionWeighted(new Array(meta.nCh).fill(1), n);
@@ -152,7 +153,7 @@ async function pooledBuild(id: number, scene: FieldScene, aa: number, n: number)
     const P2 = {
       ...P,
       vx, vy, vs,
-      arms: P.arms.filter((A) => A.j >= jr[0] && A.j < jr[1]),
+      arms: [],
       junctions: P.junctions.slice(jr[0], jr[1]),
       jGroup: P.jGroup.slice(jr[0], jr[1]),
       jBase: jr[0],
@@ -162,7 +163,10 @@ async function pooledBuild(id: number, scene: FieldScene, aa: number, n: number)
   }));
   const cornersMs = now() - tc0;
   let K: import("./tables").GfCorner[] = [];
-  for (const r of solveReplies) K = K.concat(r.K);
+  let allArms: import("./tables").GfArm[] = [];
+  for (const r of solveReplies) { K = K.concat(r.K); allArms = allArms.concat(r.arms); }
+  const armTab = gfArmTable(P.nC, allArms);
+  P.nA = armTab.nA; P.aSR = armTab.aSR; P.aDir = armTab.aDir; P.aL = armTab.aL; P.aLcut = armTab.aLcut; P.aG = armTab.aG; P.cArm0 = armTab.cArm0; P.cArmN = armTab.cArmN; P.arms = armTab.arms;
   const bins = mergeGfChunkBins(solveReplies.map((r) => ({ cellChN: r.cellChN, cellChList: r.cellChList })), meta.gW * meta.gH);
   const T = assembleGfTables(P, K, { meta, bins }, { vtx: P.ms.vtx, pins: P.ms.pins, arms: P.ms.arms, corners: cornersMs }, now());
   return { T, cornersMs };
@@ -197,7 +201,7 @@ async function run(req: Req): Promise<void> {
     // because the coordinator's serial prefix + merge floor exceeds the
     // corner slice saving there. Pool only large builds; the rest keep
     // the single build, so no small scene gets slower.
-    if (totalPts < 28000) {
+    if (totalPts < 6000) {
       const tt0 = now();
       const T = buildTables(scene, { aa });
       scope.postMessage(
