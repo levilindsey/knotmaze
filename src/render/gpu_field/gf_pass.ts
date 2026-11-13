@@ -224,7 +224,10 @@ export class GfPass {
     const ext = time ? this.ext : null;
     let q: WebGLQuery | null = null; let e: WebGLQuery | null = null;
     if (ext) { q = gl.createQuery()!; gl.beginQuery(ext.TIME_ELAPSED_EXT, q); }
-    for (const g of progs) {
+    for (let pi = 0; pi < progs.length; pi++) {
+      const g = progs[pi];
+      // the last program writes no route: KEEP lets the stencil test run before the shader even though it discards
+      if (routed && pi === progs.length - 1) gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
       gl.useProgram(g.prog);
       const u = (n: string): WebGLUniformLocation | null => g.u.get(n) ?? null;
       gl.uniform1i(u("uD"), 0);
