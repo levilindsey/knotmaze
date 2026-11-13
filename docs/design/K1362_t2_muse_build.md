@@ -139,3 +139,37 @@ slice in Node, the browser floor is export (~1.4) + prefix (~2-3) +
 merge/assembly (~1-2); only shrinking that floor moves def/fat toward
 a third. Reuse stays dead unless the solve's inputs stop changing
 every frame. No unfinished code; nothing left as a patch.
+
+## Handoff addendum (Muse t2 continuation, 2026-11-13 04:16 to 04:30)
+
+Two more commits after the handoff above: `453b8704` (slices build
+their junctions' arms: `buildGfArms`/`gfArmTable` in tables.ts, the
+coordinator keeps only export, final vertices, pins, roots/groups,
+chunk merge and assembly) and `34f519c4` (final pool gate). The digest
+is unchanged after the arms move (`all ae1d2392...a85a27`, 0
+mismatches; gf_build tests still 10/10) and `npm test` is green on
+the final code (234 files / 2967 tests, goldens unchanged). In-app
+VERIFY on the arms-partitioned pool build: 0 mismatches.
+
+Updated bench (same perf-lock tool; bench2 = pool ungated with arms in
+slices, bench3 = shipped gate; p50 worker wall per rebuild):
+
+| link | before | bench2 pool (arms in slices) | bench3 shipped |
+|---|---|---|---|
+| def | 11.8 | 11.3 | 10.5 (single) |
+| muse_hash | 6.7 | 9.8 | single (one load-disturbed span, phys-collapsed; single path as before) |
+| fat | 14.5 | 10.8 | 14.6 (single) |
+
+The shipped gate is now: pool only junction-free builds of >= 6000
+points. Live fat has junctions (its gated runs are single-speed), so
+today all three links run the single build at before-speed and main
+stays at 1.4-1.6 ms/frame; the pool's measured fat win (10.8) came
+with a muse_hash regression, which the gate refuses. The one-third
+goal remains unreached: even with arms in slices, the coordinator's
+serial remainder (export ~1.4, final vertices + pins + roots, chunk
+merge + assembly) plus slice dispatch is a ~6-8 ms floor in the
+browser against an 11.8 ms cold build on def. Next stage: partition
+pins by chain and the chunk-list merge by cell range, or move the
+whole prefix into slices with the scene broadcast as transferred
+typed arrays instead of cloned objects. Stopping at 04:30, inside
+the cap; HEAD is the last commit on this worktree.
