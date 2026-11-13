@@ -8029,6 +8029,7 @@ function fillPolyPP(p: Poly, pts: ArrayLike<number>, closed: boolean, s0: number
   finishPoly(p, n, closed, s0);
 }
 function finishPoly(p: Poly, n: number, closed: boolean, s0: number): void {
+  polyGen = (polyGen + 1) & 0x3fffffff;
   if (closed && n > 2 && Math.abs(p.x[0] - p.x[n - 1]) + Math.abs(p.y[0] - p.y[n - 1]) < 1e-12) n--;
   p.n = n; p.closed = closed;
   p.nseg = closed ? n : Math.max(0, n - 1);
@@ -8053,6 +8054,7 @@ function finishPoly(p: Poly, n: number, closed: boolean, s0: number): void {
 }
 
 function copyPoly(src: Poly, dst: Poly): void {
+  polyGen = (polyGen + 1) & 0x3fffffff;
   dst.n = src.n; dst.closed = src.closed; dst.nseg = src.nseg; dst.len = src.len; dst.s0 = src.s0;
   dst.x.set(src.x.subarray(0, src.n)); dst.y.set(src.y.subarray(0, src.n));
   dst.s.set(src.s.subarray(0, src.n)); dst.segLen.set(src.segLen.subarray(0, Math.max(0, src.nseg)));
@@ -8120,10 +8122,8 @@ const tailPt = new Float64Array(4); const tailCen = new Float64Array(4); const t
 function tailFoot(p: Poly, lo: number, hi: number, x: number, y: number, out: Float64Array, cap = Infinity): void {
   const nseg = p.nseg;
   if (nseg <= 0 || p.n < 2) { out[0] = lo; out[1] = Infinity; return; }
-  const span = Math.min(hi - lo, p.closed ? p.len : Infinity);
-  const u0 = normS(p, lo);
-  let k = segOfS(p, u0).k;
-  let walked = p.s[k] - u0;
+  if (tfwP !== p || tfwGen !== polyGen || tfwF[0] !== lo || tfwF[1] !== hi) tailFootWin(p, lo, hi);
+  const u0 = tfwF[2]; const span = tfwF[3]; const k = tfwK0;
   let best = cap * cap; let bs = u0; let bk = -1;
   // K1283 s4 (perf): seed the best with the last foot's segment when the walk below
   // visits it (the band's consecutive points sit on one stretch of X), so the box
@@ -8143,50 +8143,82 @@ function tailFoot(p: Poly, lo: number, hi: number, x: number, y: number, out: Fl
       if (d2 < best || cap === Infinity) { best = d2; bs = p.s[kw] + t * (p.segLen[kw] || 0); bk = kw; }
     }
   }
-  for (let guard = 0; guard <= nseg; guard++) {
-    // K1283 s4 (perf): a 32-segment block whose box is no nearer than the best has no
-    // winner: walk its lengths only (the same stop as below, sum for sum).
-    if ((k & 31) === 0) {
-      const bI = 4 * (k >> 5);
-      const gx = p.bk[bI] - x > 0 ? p.bk[bI] - x : x - p.bk[bI + 2] > 0 ? x - p.bk[bI + 2] : 0;
-      const gy = p.bk[bI + 1] - y > 0 ? p.bk[bI + 1] - y : y - p.bk[bI + 3] > 0 ? y - p.bk[bI + 3] : 0;
-      if (gx * gx + gy * gy >= best) {
-        const kEnd = Math.min(nseg, k + 32);
-        let stop = false;
-        for (;;) {
-          walked += p.segLen[k] || 0;
-          if (walked >= span) { stop = true; break; }
-          if (k + 1 >= kEnd || guard + 1 > nseg) break;
-          k++; guard++;
-        }
-        if (stop) break;
-        if (k + 1 >= nseg) { if (!p.closed) break; k = 0; } else k++;
-        continue;
+  // K1247 s29 (perf): the window's segments in the walk's order, 8 to a box. A group whose
+  // box is no nearer than the best holds only segments whose own boxes are no nearer (the
+  // group's box is their union: float min / max and subtraction are monotone), which the
+  // segment test below skips: the same projections, in the same order, the same feet.
+  const K = tfwK; const B = tfwB; const n = tfwN;
+  for (let j = 0, g = 0; j < n; j += TFW_G, g += 4) {
+    const gx = B[g] - x > 0 ? B[g] - x : x - B[g + 2] > 0 ? x - B[g + 2] : 0;
+    const gy = B[g + 1] - y > 0 ? B[g + 1] - y : y - B[g + 3] > 0 ? y - B[g + 3] : 0;
+    if (gx * gx + gy * gy >= best) continue;
+    const jEnd = j + TFW_G < n ? j + TFW_G : n;
+    for (let i = j; i < jEnd; i++) {
+      const kk = K[i];
+      // K1283 s4 (perf): the segment's box holds it, so a box no nearer than the best
+      // cannot win the strict < below; skip the projection (same feet, cheaper walk).
+      const qx = p.bx0[kk] - x > 0 ? p.bx0[kk] - x : x - p.bx1[kk] > 0 ? x - p.bx1[kk] : 0;
+      const qy = p.by0[kk] - y > 0 ? p.by0[kk] - y : y - p.by1[kk] > 0 ? y - p.by1[kk] : 0;
+      if (qx * qx + qy * qy < best) {
+        const b = kk + 1 === p.n ? 0 : kk + 1;
+        const ax = p.x[kk]; const ay = p.y[kk]; const ex = p.x[b] - ax; const ey = p.y[b] - ay;
+        const l2 = ex * ex + ey * ey;
+        let t = l2 > 1e-24 ? ((x - ax) * ex + (y - ay) * ey) / l2 : 0;
+        t = t < 0 ? 0 : t > 1 ? 1 : t;
+        const dx = ax + ex * t - x; const dy = ay + ey * t - y;
+        const d2 = dx * dx + dy * dy;
+        if (d2 < best) { best = d2; bs = p.s[kk] + t * (p.segLen[kk] || 0); bk = kk; }
       }
     }
-    // K1283 s4 (perf): the segment's box holds it, so a box no nearer than the best
-    // cannot win the strict < below; skip the projection (same feet, cheaper walk).
-    const qx = p.bx0[k] - x > 0 ? p.bx0[k] - x : x - p.bx1[k] > 0 ? x - p.bx1[k] : 0;
-    const qy = p.by0[k] - y > 0 ? p.by0[k] - y : y - p.by1[k] > 0 ? y - p.by1[k] : 0;
-    if (qx * qx + qy * qy < best) {
-      const b = k + 1 === p.n ? 0 : k + 1;
-      const ax = p.x[k]; const ay = p.y[k]; const ex = p.x[b] - ax; const ey = p.y[b] - ay;
-      const l2 = ex * ex + ey * ey;
-      let t = l2 > 1e-24 ? ((x - ax) * ex + (y - ay) * ey) / l2 : 0;
-      t = t < 0 ? 0 : t > 1 ? 1 : t;
-      const dx = ax + ex * t - x; const dy = ay + ey * t - y;
-      const d2 = dx * dx + dy * dy;
-      if (d2 < best) { best = d2; bs = p.s[k] + t * (p.segLen[k] || 0); bk = k; }
-    }
-    walked += p.segLen[k] || 0;
-    if (walked >= span) break;
-    if (k + 1 >= nseg) { if (!p.closed) break; k = 0; } else k++;
   }
   if (bk >= 0) { tailFootP = p; tailFootK = bk; }
   out[0] = normS(p, bs); out[1] = Math.sqrt(best);
 }
 let tailFootP: Poly | null = null;
 let tailFootK = 0;
+/** K1247 s29 (perf): tailFoot's window, built once per (poly, lo, hi). A tail's feet (tailF,
+ *  tailAlphaAt: lo .. lo + 8h on X, a few hundred per tail) and runRootRamp's (an arm's
+ *  +-4h) search one window of one poly, and the walk visits the same segments whatever the
+ *  point: tfwK lists them in the walk's order (its sum, stop and guard, step for step) and
+ *  tfwB boxes each TFW_G of them. polyGen (finishPoly, copyPoly) retires a refilled poly's. */
+let polyGen = 0;
+const TFW_G = 8;
+let tfwP: Poly | null = null; let tfwGen = -1; let tfwN = 0; let tfwK0 = 0;
+const tfwF = new Float64Array(4); // lo, hi, u0, span
+let tfwK = new Int32Array(256); let tfwB = new Float64Array(128);
+function tailFootWin(p: Poly, lo: number, hi: number): void {
+  const nseg = p.nseg;
+  const span = Math.min(hi - lo, p.closed ? p.len : Infinity);
+  const u0 = normS(p, lo);
+  let k = segOfS(p, u0).k;
+  let walked = p.s[k] - u0;
+  if (tfwK.length < nseg + 1) tfwK = new Int32Array(2 * (nseg + 1));
+  const K = tfwK; tfwK0 = k;
+  let n = 0;
+  for (let guard = 0; guard <= nseg; guard++) {
+    K[n++] = k;
+    walked += p.segLen[k] || 0;
+    if (walked >= span) break;
+    if (k + 1 >= nseg) { if (!p.closed) break; k = 0; } else k++;
+  }
+  const ng = Math.ceil(n / TFW_G);
+  if (tfwB.length < 4 * ng) tfwB = new Float64Array(8 * ng);
+  const B = tfwB;
+  for (let g = 0; g < ng; g++) {
+    let x0 = Infinity; let y0 = Infinity; let x1 = -Infinity; let y1 = -Infinity;
+    const jEnd = Math.min(n, (g + 1) * TFW_G);
+    for (let i = g * TFW_G; i < jEnd; i++) {
+      const kk = K[i];
+      if (p.bx0[kk] < x0) x0 = p.bx0[kk];
+      if (p.by0[kk] < y0) y0 = p.by0[kk];
+      if (p.bx1[kk] > x1) x1 = p.bx1[kk];
+      if (p.by1[kk] > y1) y1 = p.by1[kk];
+    }
+    B[4 * g] = x0; B[4 * g + 1] = y0; B[4 * g + 2] = x1; B[4 * g + 3] = y1;
+  }
+  tfwN = n; tfwP = p; tfwGen = polyGen;
+  tfwF[0] = lo; tfwF[1] = hi; tfwF[2] = u0; tfwF[3] = span;
+}
 function tailAt(a: TailIn, l1: number, u: number, out: Float64Array, cen: Float64Array, needCen = true): number {
   if (u <= l1) {
     const s = a.sT - a.dirE * u;
