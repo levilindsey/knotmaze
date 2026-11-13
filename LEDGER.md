@@ -521,10 +521,10 @@ Next free ID: K1356.
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: agent `ab58662face0c6b64` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 15:28, 2 h cap ~17:28)
-  - branch: `worktree-agent-ab58662face0c6b64`, worktree `.claude/worktrees/agent-ab58662face0c6b64`; last commit: `ae86cce4`
+  - owner: nobody since 2026-11-12 17:00 (merged; agent `ab58662face0c6b64` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `1f17fb8c`
   - evidence: .claude/probes/K1247/ (k1247s33_*; s32 checks k1247s32_*)
-  - next: s33 running: the hold ceiling first, then fat bookkeeping, a local junction closure and span-local L/Lcut; flags on only if faster than master and checks (a)-(c) hold
+  - next: s34 = s30 plan stage 4: span-granular dirty set (a span is dirty when its snapped points change; blended chains no longer release whole partners), K1352 span-local L/Lcut, a span-to-output dependency map, and the snap/jlocal fixpoint cut from 18.8 ms to about 1 ms (a grid for release centres); s33 ceiling: def frame 36.97 -> 8.36 ms
   - brief: `docs/design/K1247_s33_local_holds.md`
 - **K1278** · The outline's paint blends seamlessly across junctions (Levi 2026-11-10): section colour and pulses
   from per-pixel fields continuous across faces, triangles and junctions, gated by a seam test on every
