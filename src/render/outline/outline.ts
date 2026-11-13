@@ -3223,8 +3223,15 @@ export function structure(scene: SceneIn): DiagramStructure { return diagramOf(s
  *  the diagram's: one run piece per border segment, one arc piece per
  *  diagram corner, the caps' runs. */
 export function frame(st: DiagramStructure, scene: SceneIn, profile?: Record<string, number>): OutlineTable {
-  if (KF_INC.snap) { let S = kfSnap.get(st); if (!S) { S = newSnapState(); kfSnap.set(st, S); } scene = snapScene(S, scene); }
+  const C0 = fastCaches.get(st);
+  if (C0) kfFootHold.delete(C0); // an unsnapped frame recommits the held END-arm feet (frameSnapped)
   return frameFast(st, alignJunctionArms(st, scene), profile);
+}
+/** K1247 s31: frame() on a scene the caller snapped (OutlineModel.update, snapScene): it also holds the END-arm
+ *  extension feet within T (holdFootC), the one input the snap cannot reach from outside. */
+export function frameSnapped(st: DiagramStructure, scene: SceneIn, profile?: Record<string, number>): OutlineTable {
+  kfHoldFeet = true;
+  try { return frameFast(st, alignJunctionArms(st, scene), profile); } finally { kfHoldFeet = false; }
 }
 
 /** K1247 s17 (j154, j114 on muse_hash): the scene lists a junction's arms
@@ -3962,7 +3969,7 @@ function setupFrame(C: FCache, st: DiagramStructure, scene: SceneIn): void {
     }
     const atStart = Math.abs(xa.s - 0) < Math.abs(xa.s - rp.len);
     // K1338: with the snap on, the extension's foot is held while it moves at most T px.
-    if (KF_INC.snap) cp = holdFootC(C, scene, a.pi * 2 + (atStart ? 0 : 1), cp);
+    if (kfHoldFeet) cp = holdFootC(C, scene, a.pi * 2 + (atStart ? 0 : 1), cp);
     if (atStart) exts[a.pi].start = cp;
     else exts[a.pi].end = cp;
   });
@@ -4208,14 +4215,21 @@ function setupFrame(C: FCache, st: DiagramStructure, scene: SceneIn): void {
 // moves more than T device px, and holds a crossing's s (both chains held)
 // and a junction (all its arms' chains held) with it. On a held chain the
 // borders' inputs are bit-equal, and buildBorderInc reuses the last build.
-// The cache is exact (the frame on a snapped scene is byte-identical with it
-// on or off: outline_inc.test.ts); the snap moves the outline by up to T, and
-// fill, band and zChains still read the unsnapped scene, so the snap belongs in
-// OutlineModel.update before it is on in the app. Both off by default.
-export const KF_INC = { snap: false, cache: false, T: 0.5, hits: 0, misses: 0, why: null as Record<string, number> | null };
+// K1247 s31: the snap runs once, in OutlineModel.update (KF_INC.snap), so frame,
+// zChains, fill, paint and band all read the one snapped scene, and its dirty
+// set (SnapState.dChains / dCross / dJunc: what was released this frame) is
+// the model's; frameSnapped also holds the END-arm feet. The caches
+// (KF_INC.cache: borders, corners) are exact: the frame on a snapped scene is
+// byte-identical with them on or off (outline_inc.test.ts). Both off by default.
+export const KF_INC = { snap: false, cache: false, T: 0.5, hits: 0, misses: 0, cHits: 0, cMisses: 0, why: null as Record<string, number> | null };
+let kfHoldFeet = false;
 
-export interface SnapState { chains: (number[] | null)[]; cross: (SceneIn["crossings"][number] | null)[]; junc: (SceneIn["junctions"][number] | null)[] }
-export function newSnapState(): SnapState { return { chains: [], cross: [], junc: [] }; }
+export interface SnapState {
+  chains: (number[] | null)[]; cross: (SceneIn["crossings"][number] | null)[]; junc: (SceneIn["junctions"][number] | null)[];
+  /** The last snapScene's dirty set: 1 where a chain, crossing or junction was released (recommitted) this frame. */
+  dChains: Uint8Array; dCross: Uint8Array; dJunc: Uint8Array;
+}
+export function newSnapState(): SnapState { return { chains: [], cross: [], junc: [], dChains: new Uint8Array(0), dCross: new Uint8Array(0), dJunc: new Uint8Array(0) }; }
 /** K1338: the scene with every chain that moved at most T device px since its
  *  last commit held at its committed points (see KF_INC). */
 export function snapScene(S: SnapState, scene: SceneIn, T = KF_INC.T): SceneIn {
@@ -4223,6 +4237,11 @@ export function snapScene(S: SnapState, scene: SceneIn, T = KF_INC.T): SceneIn {
   const tw2 = (T / px) * (T / px);
   const idx = new Map<number, number>();
   const held: boolean[] = [];
+  const nC = scene.chains.length; const nX = scene.crossings.length; const nJ = scene.junctions.length;
+  if (S.dChains.length !== nC) S.dChains = new Uint8Array(nC);
+  if (S.dCross.length !== nX) S.dCross = new Uint8Array(nX);
+  if (S.dJunc.length !== nJ) S.dJunc = new Uint8Array(nJ);
+  const dC = S.dChains; const dX = S.dCross; const dJ = S.dJunc;
   const chains = scene.chains.map((c, i) => {
     idx.set(c.id, i);
     const old = S.chains[i];
@@ -4230,10 +4249,10 @@ export function snapScene(S: SnapState, scene: SceneIn, T = KF_INC.T): SceneIn {
     if (old && old.length === pts.length) {
       let ok = true;
       for (let k = 0; k < pts.length && ok; k += 2) { const dx = pts[k] - old[k]; const dy = pts[k + 1] - old[k + 1]; ok = dx * dx + dy * dy <= tw2; }
-      if (ok) { held[i] = true; return { ...c, pts: old }; }
+      if (ok) { held[i] = true; dC[i] = 0; return { ...c, pts: old }; }
     }
     S.chains[i] = Array.from(pts);
-    held[i] = false;
+    held[i] = false; dC[i] = 1;
     return { ...c, pts: S.chains[i] as number[] };
   });
   // An s along a held chain is held while it moves at most T px along it, so a
@@ -4244,13 +4263,13 @@ export function snapScene(S: SnapState, scene: SceneIn, T = KF_INC.T): SceneIn {
     const old = S.cross[xi];
     if (old && old.a.chain === x.a.chain && old.b.chain === x.b.chain && old.over === x.over) {
       const ka = keepS(x.a.chain, old.a.s, x.a.s); const kb = keepS(x.b.chain, old.b.s, x.b.s);
-      if (ka && kb) return old;
+      if (ka && kb) { dX[xi] = 0; return old; }
       const y = { ...x, a: { ...x.a, s: ka ? old.a.s : x.a.s }, b: { ...x.b, s: kb ? old.b.s : x.b.s } };
-      S.cross[xi] = y;
+      S.cross[xi] = y; dX[xi] = 1;
       return y;
     }
     const y = { ...x, a: { ...x.a }, b: { ...x.b } };
-    S.cross[xi] = y;
+    S.cross[xi] = y; dX[xi] = 1;
     return y;
   });
   const junctions = scene.junctions.map((j, ji) => {
@@ -4258,20 +4277,19 @@ export function snapScene(S: SnapState, scene: SceneIn, T = KF_INC.T): SceneIn {
     if (old && old.id === j.id && old.arms.length === j.arms.length && j.arms.every((a, k) => old.arms[k].chain === a.chain && old.arms[k].kind === a.kind)) {
       const kc = Math.hypot(j.c[0] - old.c[0], j.c[1] - old.c[1]) <= ts;
       const ks = j.arms.map((a, k) => keepS(a.chain, old.arms[k].s, a.s));
-      if (kc && ks.every(Boolean)) return old;
+      if (kc && ks.every(Boolean)) { dJ[ji] = 0; return old; }
       const y = structuredClone(j);
       if (kc) y.c = [old.c[0], old.c[1]];
       y.arms.forEach((a, k) => { if (ks[k]) a.s = old.arms[k].s; });
-      S.junc[ji] = y;
+      S.junc[ji] = y; dJ[ji] = 1;
       return y;
     }
     const y = structuredClone(j);
-    S.junc[ji] = y;
+    S.junc[ji] = y; dJ[ji] = 1;
     return y;
   });
   return { ...scene, chains, crossings, junctions };
 }
-const kfSnap = new WeakMap<DiagramStructure, SnapState>();
 const kfFootHold = new WeakMap<FCache, Map<number, [number, number]>>();
 function holdFootC(C: FCache, scene: SceneIn, key: number, cp: [number, number]): [number, number] {
   let M = kfFootHold.get(C); if (!M) { M = new Map(); kfFootHold.set(C, M); }
@@ -4284,7 +4302,7 @@ function holdFootC(C: FCache, scene: SceneIn, key: number, cp: [number, number])
 // The border cache: per chain, its inputs' bits (borderKeyC) and both
 // borders' outputs (the fields later phases read, up to nb) and fold notes.
 interface BEnt { nb: number; f: Float64Array; bcv: Int8Array; diag: string[] }
-interface BInc { keys: (Float64Array | null)[]; ents: (BEnt | null)[] }
+interface BInc { keys: (Float64Array | null)[]; ents: (BEnt | null)[]; miss: number[] }
 const kfBInc = new WeakMap<FCache, BInc>();
 let kfKey = new Float64Array(1024);
 function borderKeyC(C: FCache, pi: number): number {
@@ -4309,11 +4327,11 @@ function bitEq(a: Float64Array, b: Float64Array, n: number): boolean {
 const BINC_F = ["bx", "by", "bs", "bsm", "bfx", "bfy", "bs2", "be", "bc"] as const;
 function buildBorderInc(C: FCache, pi: number): void {
   let I = kfBInc.get(C);
-  if (!I) { I = { keys: [], ents: [] }; kfBInc.set(C, I); }
+  if (!I) { I = { keys: [], ents: [], miss: [] }; kfBInc.set(C, I); }
   const len = borderKeyC(C, pi);
   const old = I.keys[pi];
   if (old && old.length === len && bitEq(old, kfKey, len)) {
-    KF_INC.hits++;
+    KF_INC.hits++; I.miss[pi] = 0;
     const diag = (C as unknown as { __foldDiag: string[] }).__foldDiag;
     for (let side = 0; side < 2; side++) {
       const e = I.ents[pi * 2 + side] as BEnt; const B = C.bords[pi * 2 + side]; const nb = e.nb;
@@ -4329,7 +4347,7 @@ function buildBorderInc(C: FCache, pi: number): void {
     }
     return;
   }
-  KF_INC.misses++;
+  KF_INC.misses++; I.miss[pi] = 1;
   if (KF_INC.why && old) { const p = C.polys[pi]; const n = p.n; const cuts = [9, 9 + n, 9 + 2 * n, 9 + 3 * n, 9 + 3 * n + p.nseg, len - C.chainRoots[pi].length, len]; const names = ["head", "x", "y", "s", "segLen", "passes", "roots"]; let r = old.length !== len ? "len" : ""; if (!r) { let i = 0; while (i < len && old[i] === kfKey[i]) i++; let q = 0; while (q < cuts.length && i >= cuts[q]) q++; r = q === 0 ? ["h", "W", "n", "nseg", "closed", "s0", "len", "np", "nroots"][i] : names[q] ?? "?"; } KF_INC.why[r] = (KF_INC.why[r] ?? 0) + 1; }
   I.keys[pi] = kfKey.slice(0, len);
   const real = (C as unknown as { __foldDiag: string[] }).__foldDiag;
@@ -4348,6 +4366,74 @@ function buildBorderInc(C: FCache, pi: number): void {
 
 // --- borders ---------------------------------------------------------------
 const KF_COS_FAN2 = Math.cos((Math.PI / 16) * (1 - 1e-6)) ** 2;
+// K1247 s31: the corner cache. A corner on the main solve path (not a through
+// bend, not a fallback or dead corner) reads only its two arm chains (their
+// polylines, tangents and base borders: the border key; their depth table and
+// every arm on them: auxKeyC) and its junction's centre; insertions made by
+// earlier corners sit in a side list it never reads. chainVersC gives each
+// chain a version that changes (to a number never used before) whenever any of
+// that changes; a corner whose two versions and centre bits match its last
+// main-path solve restores that solve's outputs and replays its two border
+// insertions in the same order. The warm state (wV*, walk caches) is write-only.
+interface CInc { ver: number[]; aux: (Float64Array | null)[]; ents: (Float64Array | null)[] }
+const kfCInc = new WeakMap<FCache, CInc>();
+let kfCI: CInc | null = null; // this frame's chain versions while the cache is on (frameFast)
+let kfVerNext = 1;
+let kfAux = new Float64Array(256);
+function auxKeyC(C: FCache, pi: number): number {
+  const nd = C.depthN[pi]; const arms = C.armsOfChain[pi];
+  const need = 2 + 2 * nd + 7 * arms.length;
+  if (kfAux.length < need) kfAux = new Float64Array(2 * need);
+  const k = kfAux; let o = 0;
+  k[o++] = nd; k[o++] = arms.length;
+  k.set(C.depthS[pi].subarray(0, nd), o); o += nd; k.set(C.depthZ[pi].subarray(0, nd), o); o += nd;
+  for (let q = 0; q < arms.length; q++) {
+    const ai = arms[q];
+    k[o++] = C.armSR[ai]; k[o++] = C.armDir[ai]; k[o++] = C.armL[ai]; k[o++] = C.armLcut[ai];
+    k[o++] = C.armUx[ai]; k[o++] = C.armUy[ai]; k[o++] = C.armAng[ai];
+  }
+  return o;
+}
+/** Per chain, this frame's version (after setupFrame and the borders; KF_INC.cache only). */
+function chainVersC(C: FCache): CInc {
+  let I = kfCInc.get(C);
+  if (!I) { I = { ver: [], aux: [], ents: [] }; kfCInc.set(C, I); }
+  const bm = (kfBInc.get(C) as BInc).miss;
+  for (let pi = 0; pi < C.nCh; pi++) {
+    const len = auxKeyC(C, pi);
+    const old = I.aux[pi];
+    const same = !!old && old.length === len && bitEq(old, kfAux, len);
+    if (!same) I.aux[pi] = kfAux.slice(0, len);
+    if (!same || bm[pi] !== 0 || I.ver[pi] === undefined) I.ver[pi] = kfVerNext++;
+  }
+  return I;
+}
+const CE_N = 18;
+function sameBits(a: number, b: number): boolean { return a === b && (a !== 0 || 1 / a === 1 / b); }
+/** A main-path corner's outputs from the cache, when its key matches; false: solve it. */
+function cornerHitC(C: FCache, I: CInc, ci: number, aiA: number, aiB: number, sideA: number, sideB: number, jx: number, jy: number): boolean {
+  const e = I.ents[ci];
+  const piA = C.armObj[aiA].pi; const piB = C.armObj[aiB].pi;
+  if (!e || e[0] !== I.ver[piA] || e[1] !== I.ver[piB] || !sameBits(e[2], jx) || !sameBits(e[3], jy)) { KF_INC.cMisses++; return false; }
+  KF_INC.cHits++;
+  C.cOk[ci] = 1;
+  C.cVx[ci] = e[5]; C.cVy[ci] = e[6]; C.cQx[ci] = e[7]; C.cQy[ci] = e[8]; C.cR[ci] = e[9];
+  C.cTax[ci] = e[10]; C.cTay[ci] = e[11]; C.cTbx[ci] = e[12]; C.cTby[ci] = e[13];
+  C.cSA[ci] = e[14]; C.cSB[ci] = e[15]; C.cDA[ci] = e[16]; C.cDB[ci] = e[17];
+  C.cRefA[ci] = addPointAtC(C, piA, sideA, e[10], e[11], e[14]);
+  C.cRefB[ci] = addPointAtC(C, piB, sideB, e[12], e[13], e[15]);
+  C.armNextRef[aiA] = C.cRefA[ci]; C.armNextSide[aiA] = sideA;
+  C.armPrevRef[aiB] = C.cRefB[ci]; C.armPrevSide[aiB] = sideB;
+  return true;
+}
+function cornerStoreC(C: FCache, I: CInc, ci: number, aiA: number, aiB: number, jx: number, jy: number): void {
+  let e = I.ents[ci];
+  if (!e) { e = new Float64Array(CE_N); I.ents[ci] = e; }
+  e[0] = I.ver[C.armObj[aiA].pi]; e[1] = I.ver[C.armObj[aiB].pi]; e[2] = jx; e[3] = jy; e[4] = C.cTheta[ci];
+  e[5] = C.cVx[ci]; e[6] = C.cVy[ci]; e[7] = C.cQx[ci]; e[8] = C.cQy[ci]; e[9] = C.cR[ci];
+  e[10] = C.cTax[ci]; e[11] = C.cTay[ci]; e[12] = C.cTbx[ci]; e[13] = C.cTby[ci];
+  e[14] = C.cSA[ci]; e[15] = C.cSB[ci]; e[16] = C.cDA[ci]; e[17] = C.cDB[ci];
+}
 function buildBorderC(C: FCache, pi: number, sig: number): void {
   const p = C.polys[pi];
   const B = C.bords[pi * 2 + (sig === 1 ? 0 : 1)];
@@ -6481,6 +6567,7 @@ function cornersPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): void {
     const sideB = -C.armDir[aiB];
     if (!j) { C.cOk[ci] = 0; C.cWhy[ci] = "arm span 0"; continue; }
     const thru = dc.thru === 1;
+    if (kfCI && !thru && cornerHitC(C, kfCI, ci, aiA, aiB, sideA, sideB, j.c[0], j.c[1])) continue;
     if (thru && !(C.armL[aiA] > 1e-9 && C.armL[aiB] > 1e-9 && th < Math.PI)) {
       cornerDeadThruC(C, ci, aiA, aiB, j.c[0], j.c[1], th < Math.PI ? "arm span 0" : "reflex");
       continue;
@@ -6638,6 +6725,7 @@ function cornersPhaseC(C: FCache, st: DiagramStructure, scene: SceneIn): void {
     C.wVx[ci] = Vx; C.wVy[ci] = Vy;
     C.wFaS[ci] = kfFa.s; C.wFbS[ci] = kfFb.s; C.wFaK[ci] = kfFa.k; C.wFbK[ci] = kfFb.k;
     C.wQx[ci] = kfCst.qx; C.wQy[ci] = kfCst.qy; C.wR[ci] = r;
+    if (kfCI && !thru) cornerStoreC(C, kfCI, ci, aiA, aiB, j.c[0], j.c[1]);
     void A; void B;
   }
 }
@@ -7963,6 +8051,7 @@ function frameFast(st: DiagramStructure, scene: SceneIn, profile?: Record<string
   setupFrame(C, st, scene);
   if (KF_INC.cache) for (let pi = 0; pi < C.nCh; pi++) buildBorderInc(C, pi);
   else for (let pi = 0; pi < C.nCh; pi++) { buildBorderC(C, pi, 1); buildBorderC(C, pi, -1); }
+  kfCI = KF_INC.cache ? chainVersC(C) : null;
   profMark("setupBorders");
   cornersPhaseC(C, st, scene);
   profMark("corners");

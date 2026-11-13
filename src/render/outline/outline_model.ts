@@ -13,7 +13,7 @@
 // what test/render/outline_port.test.ts pins; band_gpu.test.ts ties the two.
 // The first frame equals the prototype's page (buildOutline +
 // buildDrawData(..., "app")); test/render/outline_port.test.ts pins it.
-import { OB_DI, alignJunctionArms, frame, structure, type DiagramStructure, type OutlineTable, type SceneIn } from "./outline";
+import { KF_INC, OB_DI, alignJunctionArms, frame, frameSnapped, newSnapState, snapScene, structure, type DiagramStructure, type OutlineTable, type SceneIn, type SnapState } from "./outline";
 import { SLOTS, fillFrame, fillResolution, fillStructure, keyScale, recStrips, type FillBuf, type FillFrame, type FillStructure, type StripItem } from "./fill_tri";
 import { baseHueFor, paintData, paintFrame, zChains, type PaintData } from "./draw";
 import { bandGpu, type BandGpu } from "./band_gpu";
@@ -69,7 +69,9 @@ export class OutlineModel {
   /** K1247 s28: fillFrame's per-vertex arrays, reused by update (paintFrame copies them out). */
   private readonly fillBuf: FillBuf = {};
   /** Wall ms of the last frame's parts, in update's order (K1240 S4b). */
-  parts = { frame: 0, zChains: 0, fill: 0, paint: 0, band: 0 };
+  parts = { snap: 0, frame: 0, zChains: 0, fill: 0, paint: 0, band: 0 };
+  /** K1247 s31 (KF_INC.snap): the snap's committed input and its dirty set (outline.ts snapScene). */
+  snap: SnapState = newSnapState();
   /** K1247 s22 (look.bandRec 1, ob=1): the band's fixed layout across frames (null: today's bandGpu). */
   readonly bandRec: BandRecState | null = null;
   /** K1247 s22: frames whose records failed and fell back to bandGpu (a piece without a key). */
@@ -111,12 +113,19 @@ export class OutlineModel {
   }
 
   /** A new frame of the same diagram (positions moved). */
-  update(scene0: SceneIn): void {
+  update(scene0: SceneIn, exact = false): void {
     const t0 = performance.now();
     // Every part reads the junctions in the structure's arm order.
-    const scene = alignJunctionArms(this.st, scene0);
+    let scene = alignJunctionArms(this.st, scene0);
+    // K1247 s31 (KF_INC.snap): one snap for every part, so frame, zChains, fill, paint and band read
+    // the same input, and snap.dChains / dCross / dJunc say what it released. exact: the true input
+    // (and every chain recommitted to it).
+    const snapped = KF_INC.snap && !exact;
+    if (snapped) scene = snapScene(this.snap, scene);
+    else if (KF_INC.snap) { this.snap = newSnapState(); snapScene(this.snap, scene); }
+    this.parts.snap = performance.now() - t0;
     OB_DI.on = this.bandRec !== null;
-    this.table = frame(this.st, scene);
+    this.table = snapped ? frameSnapped(this.st, scene) : frame(this.st, scene);
     const t1 = performance.now();
     const zz = zChains(scene);
     const t2 = performance.now();
@@ -127,7 +136,7 @@ export class OutlineModel {
     const t4 = performance.now();
     this.band = this.bandOf(scene, zz);
     const t5 = performance.now();
-    this.parts = { frame: t1 - t0, zChains: t2 - t1, fill: t3 - t2, paint: t4 - t3, band: t5 - t4 };
+    this.parts = { snap: this.parts.snap, frame: t1 - t0 - this.parts.snap, zChains: t2 - t1, fill: t3 - t2, paint: t4 - t3, band: t5 - t4 };
     this.frameMs = t5 - t0;
   }
 }
