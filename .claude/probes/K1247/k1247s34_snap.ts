@@ -29,7 +29,7 @@ const hashOf = (sc: SceneIn, S: ReturnType<typeof newSnapState>): string => {
   return h.digest("hex").slice(0, 16);
 };
 const times: number[] = []; const hashes: string[] = [];
-const dSpan: number[] = []; const cSpan: number[] = []; const dPt: number[] = [];
+const dSpan: number[] = []; const cSpan: number[] = []; const dPt: number[] = []; const dCh: number[] = [];
 for (let r = 0; r < rep; r++) {
   const S = newSnapState(); let prev: number[][] | null = null;
   // per-span own commit (the ceiling): the true points at the span's last release
@@ -40,6 +40,7 @@ for (let r = 0; r < rep; r++) {
     if (r > 0) times.push(dt);
     if (r !== rep - 1) continue;
     hashes.push(hashOf(sc, S));
+    { let a = 0; let b = 0; sc.chains.forEach((c, i) => { const n = (c.pts as ArrayLike<number>).length >> 1; b += n; if (S.dChains[i]) a += n; }); dCh.push(a / Math.max(1, b)); }
     const cur = sc.chains.map((c) => Array.from(c.pts as ArrayLike<number>));
     const tru = al.chains.map((c) => Array.from(c.pts as ArrayLike<number>));
     if (prev && own) {
@@ -70,5 +71,6 @@ console.log(`${dir} sub ${sub}: ${raw.length} frames, T ${T}, jlocal ${KF_INC.jl
 console.log(`  snap ms p50 ${q(times, 0.5).toFixed(2)} p95 ${q(times, 0.95).toFixed(2)} max ${Math.max(...times).toFixed(2)}`);
 console.log(`  dirty spans (snapped pts changed): ${pc(dSpan)}`);
 console.log(`  dirty points:                      ${pc(dPt)}`);
+console.log(`  dirty chains (point-weighted):     ${pc(dCh)}`);
 console.log(`  span ceiling (own move > T):       ${pc(cSpan)}`);
 if (out) writeFileSync(out, hashes.join("\n") + "\n");

@@ -4246,7 +4246,7 @@ function setupFrame(C: FCache, st: DiagramStructure, scene: SceneIn): void {
 // K1247 s33: jlocal (on whenever the snap is) holds spans, not whole chains: a
 // chain near a released junction or crossing recommits blended (jR, jM: the
 // ramp in half widths), so one moving chain no longer releases them all.
-export const KF_INC = { snap: false, cache: false, T: 0.25, border: false, jclose: true, jlocal: true, jR: 4, jM: 3, jx: true, jxw: true, jxs: false, hits: 0, misses: 0, cHits: 0, cMisses: 0, vAux: 0, vMiss: 0, cMissJ: 0, why: null as Record<string, number> | null };
+export const KF_INC = { snap: false, cache: false, T: 0.25, border: false, jclose: true, jlocal: true, jR: 4, jM: 3, jx: true, jxw: true, jxs: false, span: false, spanMax: 0.5, jxa: false, jxaTol: 1, hits: 0, misses: 0, cHits: 0, cMisses: 0, vAux: 0, vMiss: 0, cMissJ: 0, why: null as Record<string, number> | null };
 let kfHoldFeet = false;
 
 export interface SnapState {
@@ -4317,6 +4317,19 @@ export function snapScene(S: SnapState, scene: SceneIn, T = KF_INC.T): SceneIn {
   if (KF_INC.jclose && KF_INC.jlocal) {
     const hw = scene.look.halfWidth; const R = KF_INC.jR * hw; const M = Math.max(1e-9, KF_INC.jM * hw); const need = 2 * R + M;
     const own = okC.slice();
+    // K1247 s34 (KF_INC.span, span holds): a chain that fails its own test is released only around the points that
+    // moved more than T (each is a release centre, so w is 1 there and the blend ramps out over R + M), not whole,
+    // unless more than spanMax of its points moved. Every other point moved at most T, so a blended point stays
+    // within T of the truth as with a junction's centre.
+    const fail: (number[] | undefined)[] = [];
+    if (KF_INC.span && !KF_INC.border) for (let i = 0; i < nC; i++) {
+      const old = S.chains[i]; const pts = scene.chains[i].pts as ArrayLike<number>;
+      if (okC[i] || !old || old.length !== pts.length) continue;
+      const f: number[] = [];
+      for (let k = 0; k < pts.length; k += 2) { const dx = pts[k] - old[k]; const dy = pts[k + 1] - old[k + 1]; if (dx * dx + dy * dy > tw2) f.push(pts[k], pts[k + 1]); }
+      if (f.length > KF_INC.spanMax * pts.length) continue;
+      fail[i] = f; own[i] = true;
+    }
     const juncOf: number[][] = scene.chains.map(() => []);
     scene.junctions.forEach((j, ji) => { for (const a of j.arms) { const i = idx.get(a.chain); if (i !== undefined && !juncOf[i].includes(ji)) juncOf[i].push(ji); } });
     const whole = new Uint8Array(nJ); wholeJ = whole; const forced = new Uint8Array(nJ);
@@ -4386,6 +4399,44 @@ export function snapScene(S: SnapState, scene: SceneIn, T = KF_INC.T): SceneIn {
       }
       return p;
     };
+    // K1247 s34 (KF_INC.jxa, with jx): a crossing releases its passes when its DRAWN crossing point would sit more
+    // than jxaTol·T px off the true one, not whenever a pass moved. Each pass draws off its truth by r = (1 - w)(old -
+    // true) at the pass (0 on a released chain), and two lines shifted by ra and rb meet δ = ra + u·ta off the true
+    // point, u = ((rb - ra) × tb) / (ta × tb): a steep crossing tolerates a held pass beside a moved one, a grazing one
+    // (|δ| grows as 1/sin θ) does not. A new crossing (no commit) releases both.
+    const pg: ({ k: number; f: number } | null | undefined)[][] = [[], []];
+    const passAt = (side: 0 | 1, xi: number, i: number, s: number): { k: number; f: number } | null => {
+      let r = pg[side][xi];
+      if (r === undefined) {
+        const P = scene.chains[i].pts as ArrayLike<number>; const n = P.length >> 1; const cl = scene.chains[i].closed;
+        let L = tcum[i];
+        if (!L) { L = new Float64Array(n + 1); for (let k = 1; k < n; k++) L[k] = L[k - 1] + Math.hypot(P[2 * k] - P[2 * k - 2], P[2 * k + 1] - P[2 * k - 1]); L[n] = cl && n > 1 ? L[n - 1] + Math.hypot(P[0] - P[2 * n - 2], P[1] - P[2 * n - 1]) : L[n - 1]; tcum[i] = L; }
+        const m = cl ? n : n - 1;
+        if (m < 1) r = null;
+        else {
+          const s1 = Math.max(0, Math.min(L[m], s)); let lo = 0; let hi = m;
+          while (hi - lo > 1) { const q = (lo + hi) >> 1; if (L[q] <= s1) lo = q; else hi = q; }
+          const d = L[lo + 1] - L[lo]; r = { k: lo, f: d > 0 ? (s1 - L[lo]) / d : 0 };
+        }
+        pg[side][xi] = r;
+      }
+      return r;
+    };
+    const jxaTol = KF_INC.jxaTol * ts;
+    /** The true point, unit tangent and drawn residual (drawn - true) of a pass; null when it cannot be held. */
+    const passRes = (side: 0 | 1, xi: number, i: number, s: number): number[] | null => {
+      const g = passAt(side, xi, i, s); const o = S.chains[i]; const P = scene.chains[i].pts as ArrayLike<number>;
+      if (!g || (own[i] && (!o || o.length !== P.length))) return null;
+      const n = P.length >> 1; const k1 = g.k + 1 < n ? g.k + 1 : 0; const f = g.f;
+      const x = P[2 * g.k] + f * (P[2 * k1] - P[2 * g.k]); const y = P[2 * g.k + 1] + f * (P[2 * k1 + 1] - P[2 * g.k + 1]);
+      let tx = P[2 * k1] - P[2 * g.k]; let ty = P[2 * k1 + 1] - P[2 * g.k + 1]; const tl = Math.sqrt(tx * tx + ty * ty);
+      if (!(tl > 0)) return null;
+      tx /= tl; ty /= tl;
+      if (!own[i] || !o) return [x, y, tx, ty, 0, 0];
+      const w = wAt(i, x, y);
+      const ox = o[2 * g.k] + f * (o[2 * k1] - o[2 * g.k]); const oy = o[2 * g.k + 1] + f * (o[2 * k1 + 1] - o[2 * g.k + 1]);
+      return [x, y, tx, ty, (1 - w) * (ox - x), (1 - w) * (oy - y)];
+    };
     for (let changed = true; changed;) {
       changed = false;
       scene.junctions.forEach((j, ji) => {
@@ -4394,6 +4445,7 @@ export function snapScene(S: SnapState, scene: SceneIn, T = KF_INC.T): SceneIn {
           j.arms.every((a, k) => { const i = idx.get(a.chain); return old.arms[k].chain === a.chain && old.arms[k].kind === a.kind && i !== undefined && own[i] && Math.abs(a.s - old.arms[k].s) <= ts; }) ? 1 : 0;
       });
       cen = scene.chains.map(() => []); grid = [];
+      for (let i = 0; i < nC; i++) { const f = fail[i]; if (f) for (let q = 0; q < f.length; q += 2) addCen(i, f[q], f[q + 1]); }
       for (let i = 0; i < nC; i++) if (own[i]) for (const ji of juncOf[i]) if (!whole[ji]) addCen(i, scene.junctions[ji].c[0], scene.junctions[ji].c[1]);
       // s34: a crossing is evaluated again only when a centre was added on one of its chains since its last
       // evaluation (otherwise it would add nothing: its own centre already sits at d 0), in the same order, so
@@ -4409,6 +4461,21 @@ export function snapScene(S: SnapState, scene: SceneIn, T = KF_INC.T): SceneIn {
           const old = S.cross[xi]; const same = !!old && old.a.chain === x.a.chain && old.b.chain === x.b.chain && old.over === x.over;
           let p: number[] | null = null;
           const pt = (): number[] | null => (p ??= xPt(xi));
+          if (KF_INC.jxa) {
+            let bad = !same;
+            if (!bad) {
+              const A = passRes(0, xi, ia, x.a.s); const B = passRes(1, xi, ib, x.b.s);
+              if (!A || !B) bad = true;
+              else if (A[4] !== 0 || A[5] !== 0 || B[4] !== 0 || B[5] !== 0) {
+                const cr = A[2] * B[3] - A[3] * B[2]; const ex = B[4] - A[4]; const ey = B[5] - A[5];
+                if (Math.abs(cr) < 1e-6) bad = ex !== 0 || ey !== 0;
+                else { const u = (ex * B[3] - ey * B[2]) / cr; const dx = A[4] + u * A[2]; const dy = A[5] + u * A[3]; bad = dx * dx + dy * dy > jxaTol * jxaTol; }
+              }
+            }
+            if (bad) for (const i of [ia, ib]) { const q = pt(); if (q && own[i] && wAt(i, q[0], q[1]) < 1) { addCen(i, q[0], q[1]); more = true; } }
+            seenA[xi] = cen[ia].length; seenB[xi] = cen[ib].length;
+            continue;
+          }
           const mv = (i: number, s0: number | undefined, s1: number): boolean => {
             if (!own[i] || s0 === undefined || Math.abs(s1 - s0) > ts) return true;
             // jxw off: a pass on a blended (own) chain moved at most T, so it does not release its partner.
@@ -4435,7 +4502,7 @@ export function snapScene(S: SnapState, scene: SceneIn, T = KF_INC.T): SceneIn {
       }
     }
     for (let i = 0; i < nC; i++) {
-      if (!okC[i] || !cen[i].length) continue;
+      if (!own[i] || !cen[i].length) continue;
       okC[i] = false;
       const pts = scene.chains[i].pts as ArrayLike<number>; const n = pts.length >> 1; const w = new Float64Array(n);
       for (let k = 0; k < n; k++) w[k] = wAt(i, pts[2 * k], pts[2 * k + 1]);
