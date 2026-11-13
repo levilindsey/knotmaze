@@ -14,7 +14,9 @@
 # line, passes that line's prefix as $env:K1314_LOCK_OWNER (the census skips its own lock) and deletes the lock
 # afterwards only if the line is still its own. Never wrap a run in a lock of your own without -Lock: the census
 # then waits on it until it goes stale (K1314 s3's like-for-like census lost 24 min that way).
-param([string]$Tag = 's1', [switch]$Lock)
+# -Flags passes census flags to every scene's run (K1325 s1: -Flags --plateau); a --no* or --plateau flag keys its own
+# fbf tiles.
+param([string]$Tag = 's1', [switch]$Lock, [string[]]$Flags = @())
 $root = Resolve-Path "$PSScriptRoot/../../.."; Set-Location $root
 $lockFile = Join-Path $env:TEMP 'claude-perf.lock'; $owner = "K1314 census $Tag pid $PID"
 if ($Lock) {
@@ -23,7 +25,7 @@ if ($Lock) {
 }
 try {
   $groups = @('muse_hash,g41_def_tw42,g41_ring_tw64,user_tw42.lightpaper', 'def,fat,g41_def_tw64,g41_user_tw42', 'muse_default_tw,ring,g41_ring_tw42,g41_user_tw64')
-  $jobs = for ($i = 0; $i -lt 3; $i++) { $g = $groups[$i]; Start-Job -ScriptBlock { param($r, $t, $g) Set-Location $r; node scripts/run_node.mjs .claude/probes/K1314/k1314_census.ts $t --scene=$g --ppu=160 --min=40 2>&1 } -ArgumentList $root, "${Tag}_$i", $g }
+  $jobs = for ($i = 0; $i -lt 3; $i++) { $g = $groups[$i]; Start-Job -ScriptBlock { param($r, $t, $g, $f) Set-Location $r; node scripts/run_node.mjs .claude/probes/K1314/k1314_census.ts $t --scene=$g --ppu=160 --min=40 @f 2>&1 } -ArgumentList $root, "${Tag}_$i", $g, $Flags }
   $jobs | Wait-Job | Receive-Job | Select-String -Pattern 'px at|Error' | ForEach-Object { $_.Line }
   node scripts/run_node.mjs .claude/probes/K1314/k1314_census.ts $Tag --merge="${Tag}_0,${Tag}_1,${Tag}_2" --ppu=160 --min=40
 } finally {
