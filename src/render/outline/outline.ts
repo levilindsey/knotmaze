@@ -8818,8 +8818,7 @@ const FOLD_END_MAX = 3;
 export function trimFoldEnds(pts: ArrayLike<number>, cpts: ArrayLike<number>, W: number): { pts: number[]; cpts: number[] } | null {
   let np = pts.length >> 1;
   if (np < 4) return null;
-  let tot = 0;
-  for (let i = 0; i < np - 1; i++) tot += bandQuadArea(pts, cpts, W, i);
+  let tot = bandInnerTot(pts, cpts, W);
   let lo = 0; let hi = np - 1;
   for (let k = 0; k < FOLD_END_MAX && hi - lo >= 3; k++) {
     const a = bandQuadArea(pts, cpts, W, hi - 1);
@@ -8851,7 +8850,9 @@ const LOOP_EPS = 1e-7; const LOOP_SIN = 0.05; const LOOP_TOL = 0.002; const LOOP
  *  bandQuadOpp's arithmetic, bit for bit): whether any quad winds against the piece by LOOP_EPS. Nearly
  *  every piece has none, and returns before the loop, which recomputes each inner point four times. */
 let bhoIn = new Float64Array(64);
-function bandHasOpp(pts: ArrayLike<number>, cpts: ArrayLike<number>, W: number): boolean {
+/** The piece's signed band area, the sum of bandQuadArea over its quads bit for bit, with each inner point
+ *  computed once into bhoIn (trimFoldEnds and bandHasOpp read them). */
+function bandInnerTot(pts: ArrayLike<number>, cpts: ArrayLike<number>, W: number): number {
   const np = pts.length >> 1;
   if (bhoIn.length < 2 * np) bhoIn = new Float64Array(4 * np);
   const o = bhoIn;
@@ -8866,12 +8867,18 @@ function bandHasOpp(pts: ArrayLike<number>, cpts: ArrayLike<number>, W: number):
     const A0 = o[2 * i]; const A1 = o[2 * i + 1]; const B0 = o[2 * i + 2]; const B1 = o[2 * i + 3];
     tot += 0.5 * ((ax * by - bx * ay) + (bx * B1 - B0 * by) + (B0 * A1 - A0 * B1) + (A0 * ay - ax * A1));
   }
+  return tot;
+}
+function bandHasOpp(pts: ArrayLike<number>, cpts: ArrayLike<number>, W: number): boolean {
+  const np = pts.length >> 1;
+  const tot = bandInnerTot(pts, cpts, W);
+  const o = bhoIn;
   for (let i = 0; i < np - 1; i++) {
     const ax = pts[2 * i]; const ay = pts[2 * i + 1]; const bx = pts[2 * i + 2]; const by = pts[2 * i + 3];
     const A0 = o[2 * i]; const A1 = o[2 * i + 1]; const B0 = o[2 * i + 2]; const B1 = o[2 * i + 3];
     const t1 = 0.5 * ((bx - ax) * (A1 - ay) - (by - ay) * (A0 - ax));
     const t2 = 0.5 * ((B0 - bx) * (A1 - by) - (B1 - by) * (A0 - bx));
-    if ((t1 * tot < 0 ? Math.abs(t1) : 0) + (t2 * tot < 0 ? Math.abs(t2) : 0) >= LOOP_EPS) return true;
+    if (!((t1 * tot < 0 ? Math.abs(t1) : 0) + (t2 * tot < 0 ? Math.abs(t2) : 0) < LOOP_EPS)) return true;
   }
   return false;
 }
