@@ -572,10 +572,10 @@ Next free ID: K1339.
   rp=outline is clean, so the census counts them against the outline (crops
   `.claude/probes/K1314/out/s7/after4x/spot_007.png`, `spot_008.png`); fix the reference as K1321 did, in
   `k1314_census.ts` / `form_b_fillet.ts` (K1314 s7 handoff)
-  - owner: agent `ab310ce6484ab4f81` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 07:47, 2 h cap ~09:47)
-  - branch: `worktree-agent-ab310ce6484ab4f81`, worktree `.claude/worktrees/agent-ab310ce6484ab4f81`; last commit: `55aef041`
+  - owner: nobody since 2026-11-12 09:00 (merged; agent `ab310ce6484ab4f81` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `21dad33d`
   - evidence: .claude/probes/K1314/k1314_census.ts, form_b_fillet.ts, k1314_run.ps1; untracked .claude/probes/K1325/out/s1/
-  - next: s1 running: the reference at x304/j30 (K1325) and one shared form B cache in the main checkout (K1333)
+  - next: K1325 s2: a census-reference rule for a chain crossing itself (form B fades or smears the over pass there; the outline draws it whole): x304 (chain 67, depth window ends at 0.658 while the passes overlap), x22, x345, j116, x58 (K1334); the global --plateau is ruled out (+21 finds where the outline matches today's reference)
   - brief: `docs/design/K1325_s1_reference_shared_cache.md`
 - **K1333** · The K1314 census builds form B tiles per checkout (out/fb, out/fbf, ~7.8 GB each), and 11 agent
   worktrees filled C: on 2026-11-12 (06:43-06:55; the finished ones' caches were deleted). The keys are the
