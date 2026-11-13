@@ -198,6 +198,9 @@ export const DISK_M = 32;
 /** K1283 s6: rings of a round end (radii h k / DISK_R), so over its fan the
  *  disk samples the fan's paint field as finely as the tail beside it does. */
 export const DISK_R = 4;
+/** K1247 s28: the rim's cos and sin of 2 pi i / DISK_M, taken once (the same calls, so the same bits). */
+const DISK_COS = Float64Array.from({ length: DISK_M }, (_, i) => Math.cos((2 * Math.PI * i) / DISK_M));
+const DISK_SIN = Float64Array.from({ length: DISK_M }, (_, i) => Math.sin((2 * Math.PI * i) / DISK_M));
 /** K1283 s7: a round end is form B's end cap: centred at c', keyed by form
  *  B's cone about the segment term -> c', painting its own arm's slot at s_E
  *  (false: s6's disk at J.c under the fan, with the fan's paint).
@@ -1258,8 +1261,8 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
       for (let r = 0; r < DISK_R; r++) {
         const f = (r + 1) / DISK_R; const rr = hD * f;
         for (let i = 0; i < DISK_M; i++) {
-          const an = (2 * Math.PI * i) / DISK_M; const v = it.base + 1 + r * DISK_M + i;
-          const x = cx + rr * Math.cos(an); const y = cy + rr * Math.sin(an);
+          const v = it.base + 1 + r * DISK_M + i;
+          const x = cx + rr * DISK_COS[i]; const y = cy + rr * DISK_SIN[i];
           set(v, x, y, DISK_OWN ? coneZ(x, y) : z - f * zt, sE);
           s4[SLOTS * v] = sE; across[v] = f;
         }
