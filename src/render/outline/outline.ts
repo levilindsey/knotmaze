@@ -2466,6 +2466,7 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
           pts = [ax, ay]; cpts = [cw.qx, cw.qy];
         } else { pts = [cw.qx, cw.qy]; cpts = [cw.qx, cw.qy]; }
         const piece: OutlinePiece = { kind: "arc", chain: cw.aChain, side: 0, s0: cw.sA, s1: cw.sB, pts, cpts, region: rid, corner: dp.corner };
+        if (K1346.chevron) { const tr = trimFoldEnds(piece.pts, piece.cpts, W); if (tr) { piece.pts = tr.pts; piece.cpts = tr.cpts; } }
         pieces.push(piece);
         if (rid >= 0 && regions[rid]) regions[rid].pieces.push(pieces.length - 1);
       } else if (dp.kind === "tail") {
@@ -2694,6 +2695,7 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
     }
     const rid = junctionRegion.get(cw.ji) ?? -1;
     const piece: OutlinePiece = { kind: "arc", chain: cw.aChain, side: 0, s0: cw.sA, s1: cw.sB, pts, cpts, region: rid, corner: ci };
+    if (K1346.chevron) { const tr = trimFoldEnds(piece.pts, piece.cpts, W); if (tr) { piece.pts = tr.pts; piece.cpts = tr.cpts; } }
     pieces.push(piece);
     if (rid >= 0) regions[rid].pieces.push(pieces.length - 1);
   });
@@ -7640,7 +7642,11 @@ function thruJoinFan(C: FCache, ci: number, pts: number[], cpts: number[]): void
     if (thruJoins[k] !== ci) continue;
     const end = thruJoins[k + 1]; const nc = thruJoins[k + 2];
     const x = end === 0 ? C.cTax[ci] : C.cTbx[ci]; const y = end === 0 ? C.cTay[ci] : C.cTby[ci];
-    const aO = Math.atan2(y - C.cQy[ci], x - C.cQx[ci]);
+    // K1346 s1 (g41_user_tw64 arc 632 (3.60, 4.05)): the sweep starts at the arc's end foot. X - Q is that
+    // direction too, but noise when the arc's r is near 0 (X on Q), and the fan then swept back over the arc.
+    const je = end === 0 ? 0 : (pts.length >> 1) - 1;
+    const fx = cpts[2 * je] - pts[2 * je]; const fy = cpts[2 * je + 1] - pts[2 * je + 1];
+    const aO = K1346.fan && fx * fx + fy * fy > 1e-18 ? Math.atan2(fy, fx) : Math.atan2(y - C.cQy[ci], x - C.cQx[ci]);
     let da = Math.atan2(y - C.cQy[nc], x - C.cQx[nc]) - aO;
     while (da > Math.PI) da -= 2 * Math.PI;
     while (da < -Math.PI) da += 2 * Math.PI;
@@ -7793,7 +7799,29 @@ function arcEndFeet(st: DiagramStructure, pieces: OutlinePiece[], runAtArm: Map<
         break;
       }
     }
+    if (K1346.fan) resweepPointArc(p.pts, p.cpts);
   }
+}
+/** K1346 s1 (g41_user_tw64 arc 632 (3.60, 4.05)): an arc whose r is near 0 is a fan about one point,
+ *  and its sweep, the angle of X - Q, is noise there (-4 to -60 degrees, while the runs' end feet sit at
+ *  -4 and -6.5): its last step swept back over the fan and inked it twice (5502 px at 960 ppu). The
+ *  fan's feet sweep evenly, the short way, between the end feet arcEndFeet gave it. */
+const POINT_ARC = 0.02;
+function resweepPointArc(pts: number[], cpts: number[]): void {
+  const n = pts.length >> 1; if (n < 3) return;
+  // A near-point arc (g41_ring_tw42 arc 299 (5.15, 8.69): its points span 0.0026) is the same fan.
+  for (let i = 1; i < n; i++) if (Math.abs(pts[2 * i] - pts[0]) > POINT_ARC || Math.abs(pts[2 * i + 1] - pts[1]) > POINT_ARC) return;
+  const ang = (i: number): number => Math.atan2(cpts[2 * i + 1] - pts[2 * i + 1], cpts[2 * i] - pts[2 * i]);
+  const a0 = ang(0); const r0 = Math.hypot(cpts[0] - pts[0], cpts[1] - pts[1]);
+  const r1 = Math.hypot(cpts[2 * n - 2] - pts[2 * n - 2], cpts[2 * n - 1] - pts[2 * n - 1]);
+  let da = ang(n - 1) - a0;
+  while (da > Math.PI) da -= 2 * Math.PI;
+  while (da < -Math.PI) da += 2 * Math.PI;
+  // Already monotone in the short way: leave it.
+  let mono = true; let prev = a0;
+  for (let i = 1; i < n && mono; i++) { let d = ang(i) - prev; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; if (d * da < -1e-9) mono = false; prev += d; }
+  if (mono && Math.abs(prev - a0 - da) < 1e-6) return;
+  for (let i = 1; i < n - 1; i++) { const f = i / (n - 1); const a = a0 + da * f; const r = r0 + (r1 - r0) * f; cpts[2 * i] = pts[2 * i] + r * Math.cos(a); cpts[2 * i + 1] = pts[2 * i + 1] + r * Math.sin(a); }
 }
 
 function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[]): { pieces: OutlinePiece[]; runMiss: number; runPassed: number } {
@@ -7973,6 +8001,8 @@ function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[])
         pts = [ax, ay]; cpts = [C.cQx[ci], C.cQy[ci]];
       } else { pts = [C.cQx[ci], C.cQy[ci]]; cpts = [C.cQx[ci], C.cQy[ci]]; if (dc) sharpJoinFan(C, ci, dc.aArm, dc.bArm, pts, cpts); }
       const piece: OutlinePiece = { kind: "arc", chain: dc ? C.armObj[dc.aArm].pi : -1, side: 0, s0: C.cSA[ci], s1: C.cSB[ci], pts, cpts, region: rid, corner: ci };
+      // K1346 s1 (g41_user_tw64 arc 632 (3.60, 4.05)): a fan whose last foot sweeps back over it.
+      if (K1346.chevron) { const tr = trimFoldEnds(piece.pts, piece.cpts, C.W); if (tr) { piece.pts = tr.pts; piece.cpts = tr.cpts; } }
       pieces.push(piece);
       if (rid >= 0 && regions[rid]) regions[rid].pieces.push(pieces.length - 1);
     } else if (dp.kind === "tail") {
@@ -8755,7 +8785,7 @@ function cutTailHooks(pts: number[], cpts: number[], alpha: number[] | undefined
 /** K1346 s1: the signed area of a band piece's quad i (points i, i + 1), inner points by the band
  *  rule (band_gpu inner(), band_rec innerOfP, draw bandData: W along the foot; a point on its foot
  *  takes the next step's left normal). The sign is the quad's winding. */
-function bandQuadArea(pts: ArrayLike<number>, cpts: ArrayLike<number>, W: number, i: number): number {
+export function bandQuadArea(pts: ArrayLike<number>, cpts: ArrayLike<number>, W: number, i: number): number {
   const np = pts.length >> 1;
   const inn = (k: number, o: Float64Array): void => {
     const x = pts[2 * k]; const y = pts[2 * k + 1]; let dx = cpts[2 * k] - x; let dy = cpts[2 * k + 1] - y; const l = Math.sqrt(dx * dx + dy * dy);
@@ -8767,6 +8797,16 @@ function bandQuadArea(pts: ArrayLike<number>, cpts: ArrayLike<number>, W: number
   // Shoelace over pO_i, pO_i+1, pI_i+1, pI_i.
   return 0.5 * ((ax * by - bx * ay) + (bx * bqB[1] - bqB[0] * by) + (bqB[0] * bqA[1] - bqA[0] * bqB[1]) + (bqA[0] * ay - ax * bqA[1]));
 }
+/** K1346 s1: the area of quad i's two triangles (as the band draws them: pO_i, pO_i+1, pI_i and pO_i+1,
+ *  pI_i+1, pI_i) wound against sgn. A quad can keep the piece's sign while one triangle flips: an outer
+ *  loop whose feet sweep a corner (ghost 2574 (21.06, 33.53): points 16-20 close on point 16). */
+export function bandQuadOpp(pts: ArrayLike<number>, cpts: ArrayLike<number>, W: number, i: number, sgn: number): number {
+  bandQuadArea(pts, cpts, W, i);
+  const ax = pts[2 * i]; const ay = pts[2 * i + 1]; const bx = pts[2 * i + 2]; const by = pts[2 * i + 3];
+  const t1 = 0.5 * ((bx - ax) * (bqA[1] - ay) - (by - ay) * (bqA[0] - ax));
+  const t2 = 0.5 * ((bqB[0] - bx) * (bqA[1] - by) - (bqB[1] - by) * (bqA[0] - bx));
+  return (t1 * sgn < 0 ? Math.abs(t1) : 0) + (t2 * sgn < 0 ? Math.abs(t2) : 0);
+}
 const bqA = new Float64Array(2); const bqB = new Float64Array(2);
 /** K1346 s1: a run's end can land inside a cut fold's swallowtail, past its chevron (foldChevron): the
  *  border at the end's s lies on the cut-away part of the fold's second leg, so the last quad turns
@@ -8775,7 +8815,7 @@ const bqA = new Float64Array(2); const bqB = new Float64Array(2);
  *  quad winds against the rest of the piece, at most FOLD_END_MAX per end; the chevron's last point
  *  (X, its foot along the leg's normal) is then the end. Returns null when nothing is cut. */
 const FOLD_END_MAX = 3;
-function trimFoldEnds(pts: ArrayLike<number>, cpts: ArrayLike<number>, W: number): { pts: number[]; cpts: number[] } | null {
+export function trimFoldEnds(pts: ArrayLike<number>, cpts: ArrayLike<number>, W: number): { pts: number[]; cpts: number[] } | null {
   let np = pts.length >> 1;
   if (np < 4) return null;
   let tot = 0;
@@ -8806,43 +8846,83 @@ function trimFoldEnds(pts: ArrayLike<number>, cpts: ArrayLike<number>, W: number
  *  LOOP_WIN points), and the points between them are pinned to the crossing, keeping their feet: the
  *  quads fan around it as foldChevron's and sharpJoinFan's do. Returns the new points, or null. */
 const LOOP_WIN = 10;
-const LOOP_EPS = 1e-7;
-function pinBandLoops(src: ArrayLike<number>, cpts: ArrayLike<number>, W: number): number[] | null {
+const LOOP_EPS = 1e-7; const LOOP_SIN = 0.05; const LOOP_TOL = 0.002;
+export function pinBandLoops(src: ArrayLike<number>, cpts: ArrayLike<number>, W: number): number[] | null {
   const np = src.length >> 1;
   if (np < 4) return null;
   let pts: number[] | null = null;
   const P = (): ArrayLike<number> => pts ?? src;
+  let tot = 0;
   for (let round = 0; round < 4; round++) {
-    let tot = 0;
+    tot = 0;
     for (let i = 0; i < np - 1; i++) tot += bandQuadArea(P(), cpts, W, i);
     let hit = false;
     for (let a = 0; a < np - 1 && !hit; a++) {
-      if (!(bandQuadArea(P(), cpts, W, a) * tot < 0) || Math.abs(bandQuadArea(P(), cpts, W, a)) < LOOP_EPS) continue;
+      if (bandQuadOpp(P(), cpts, W, a, tot) < LOOP_EPS) continue;
       let b = a;
-      while (b + 1 < np - 1 && bandQuadArea(P(), cpts, W, b + 1) * tot < 0) b++;
+      while (b + 1 < np - 1 && bandQuadOpp(P(), cpts, W, b + 1, tot) >= LOOP_EPS) b++;
       const q = P();
       for (let span = 2; span <= 2 * LOOP_WIN && !hit; span++) {
-        for (let i = Math.max(0, b + 1 - span); i <= a && !hit; i++) {
+        for (let i = Math.max(0, b - span); i <= a && !hit; i++) {
           const k = i + span;
           if (k < b || k > np - 2) continue;
           const ax = q[2 * i]; const ay = q[2 * i + 1]; const ux = q[2 * i + 2] - ax; const uy = q[2 * i + 3] - ay;
           const bx = q[2 * k]; const by = q[2 * k + 1]; const vx = q[2 * k + 2] - bx; const vy = q[2 * k + 3] - by;
           const den = ux * vy - uy * vx;
-          if (Math.abs(den) < 1e-18) continue;
+          // A retrace (run 198 (1.40, 13.19): segments 1 and 3 nearly collinear) has no crossing to pin to.
+          if (Math.abs(den) < 1e-18 || Math.abs(den) < LOOP_SIN * Math.hypot(ux, uy) * Math.hypot(vx, vy)) continue;
           const wx = bx - ax; const wy = by - ay;
           const s = (wx * vy - wy * vx) / den; const t = (wx * uy - wy * ux) / den;
-          if (!(s >= -1e-9 && s <= 1 + 1e-9 && t >= -1e-9 && t <= 1 + 1e-9)) continue;
+          let xx = ax + s * ux; let xy = ay + s * uy;
+          if (!(s >= -1e-9 && s <= 1 + 1e-9 && t >= -1e-9 && t <= 1 + 1e-9)) {
+            // A loop that closes on itself without crossing (ghost 2574: point 20 lands on point 16): segment
+            // k's far end within LOOP_TOL of segment i.
+            // Tail 2012 (17.14, 3.22): segment 5 passes 1e-4 from segment 3's end. The nearest of the four
+            // end-to-segment approaches, pinned to its point on segment i.
+            let best = LOOP_TOL;
+            const near = (px: number, py: number, sx: number, sy: number, dx: number, dy: number, onI: boolean): void => {
+              const dd = dx * dx + dy * dy; const r = dd > 0 ? Math.min(1, Math.max(0, ((px - sx) * dx + (py - sy) * dy) / dd)) : 0;
+              const d = Math.hypot(sx + r * dx - px, sy + r * dy - py);
+              if (d <= best) { best = d; if (onI) { xx = sx + r * dx; xy = sy + r * dy; } else { xx = px; xy = py; } }
+            };
+            xx = NaN;
+            near(bx + vx, by + vy, ax, ay, ux, uy, true); near(bx, by, ax, ay, ux, uy, true);
+            near(ax + ux, ay + uy, bx, by, vx, vy, false); near(ax, ay, bx, by, vx, vy, false);
+            if (Number.isNaN(xx)) continue;
+          }
           if (!pts) pts = Array.from(src);
-          const xx = ax + s * ux; const xy = ay + s * uy;
+          let before = 0; for (let m = Math.max(0, i - 1); m < k + 2 && m < np - 1; m++) before -= bandQuadOpp(pts, cpts, W, m, tot);
+          const keep = pts.slice(2 * i + 2, 2 * k + 2);
           for (let m = i + 1; m <= k; m++) { pts[2 * m] = xx; pts[2 * m + 1] = xy; }
+          let after = 0; for (let m = Math.max(0, i - 1); m < k + 2 && m < np - 1; m++) after -= bandQuadOpp(pts, cpts, W, m, tot);
+          if (after <= before + LOOP_EPS) { for (let m = 0; m < keep.length; m++) pts[2 * i + 2 + m] = keep[m]; continue; }
           hit = true;
         }
       }
+      // A retrace hook (run 198 (1.40, 13.19)): the walk turns back along itself at p_a without crossing, then
+      // passes p_a again going forward. Pin the stretch between to p_a (or, mirrored, to p_{b+1}), feet kept.
+      for (let k = b + 1; k <= Math.min(np - 2, b + 2 * LOOP_WIN) && !hit; k++) hit = pinRetrace(a, a + 1, k, k);
+      for (let i = a - 1; i >= Math.max(0, a - 2 * LOOP_WIN) && !hit; i--) hit = pinRetrace(b + 1, i + 1, b, i);
       a = b;
     }
     if (!hit) break;
   }
   return pts;
+  /** Pins points lo..hi to point c when segment g passes within LOOP_TOL of it and that lowers the opposed area. */
+  function pinRetrace(c: number, lo: number, hi: number, g: number): boolean {
+    const q = P(); const cx = q[2 * c]; const cy = q[2 * c + 1];
+    const gx = q[2 * g]; const gy = q[2 * g + 1]; const dx = q[2 * g + 2] - gx; const dy = q[2 * g + 3] - gy;
+    const dd = dx * dx + dy * dy; const u = dd > 0 ? Math.min(1, Math.max(0, ((cx - gx) * dx + (cy - gy) * dy) / dd)) : 0;
+    if (Math.hypot(gx + u * dx - cx, gy + u * dy - cy) > LOOP_TOL) return false;
+    if (!pts) pts = Array.from(src);
+    const m0 = Math.min(lo, c) - 1; const m1 = Math.min(np - 2, Math.max(hi, c));
+    const opp = (): number => { let s = 0; for (let m = Math.max(0, m0); m <= m1 + 1 && m < np - 1; m++) s += bandQuadOpp(pts!, cpts, W, m, tot); return s; };
+    const before = opp(); const keep = pts.slice(2 * lo, 2 * hi + 2);
+    for (let m = lo; m <= hi; m++) { pts[2 * m] = cx; pts[2 * m + 1] = cy; }
+    if (opp() < before - LOOP_EPS) return true;
+    for (let m = 0; m < keep.length; m++) pts[2 * lo + m] = keep[m];
+    return false;
+  }
 }
 /** K1346 s1 (c8's dotted seam, muse_hash (19.41, 14.16)): a tail's walk can start in a cluster, its
  *  outer points jittering by 0.0003-0.0035 around the join while their feet sweep the corner, so the
