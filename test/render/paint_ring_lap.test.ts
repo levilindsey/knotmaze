@@ -384,6 +384,9 @@ const ROUNDED_QUOTIENTS: Record<string, [number, string]> = {
   "gpu_field/gf_glsl.ts: floor((y - uGrid.y) / uGrid.z)": [1, "the grid cell's row: as its column above"],
   "gpu_field/gf_glsl.ts: mod(d, len)": [2, "member()'s closed-chain distance along an arm: d lies in (-len, len), so a lap off happens only within the division's error (about 3e-7 len) of the arm's start across the seam; the first site then reads len for about 0 and drops the arm there, a membership edge moved by that error; the second folds into (-len/2, len/2] and gives the same d. GPU vs mirror on the 12 census scenes: winning term differs at 4289 of 347.6M px, census per scene equal to the mirror's"],
   "gpu_field/gf_glsl.ts: mod(s - C1.x, len)": [1, "depth()'s wrap of s onto the pin table's lap: a lap off gives u one len high or just under C1.x, and the closed branch takes its neighbours with +-len on both sides (the tent sum is periodic), so either representative reads the same two pins at the same distances"],
+  // K1362 s6: keyBin, the piece's key bin (gf_keys.ts).
+  "gpu_field/gf_glsl.ts: mod(s - C1.x, C0.w)": [1, "keyBin's wrap of s onto the lap (C0.w is the chain's len), as depth()'s: a lap off puts u past one end of the lap, and the clamp takes that end's bin; gf_keys.ts gives a closed chain's two end bins every pin and, on the circle, every arm within a bin of the seam, so the bin's answers hold for whichever representative either wrap gives (gf_keys.test.ts)"],
+  "gpu_field/gf_glsl.ts: floor((u - KC.w) / KC.z)": [1, "keyBin's bin pick: one off only within the division's error of a bin edge, far inside the half bin of slack every bin's pin bounds and arm list are built over (gf_keys.test.ts picks 0.4 bin either way); clamped to the chain's bins"],
 };
 
 const ROUNDERS = ["floor", "ceil", "trunc", "round", "roundEven", "fract", "mod", "int"];

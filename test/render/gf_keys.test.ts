@@ -77,6 +77,10 @@ describe("gf_keys", () => {
           const s = T.aSR[i] + T.aDir[i] * e;
           ss0.push(s, s - 1e-6, s + 1e-6);
         }
+        // a closed chain's end bins search every pin (either wrap may land a lap off at the seam)
+        if (closed && n > 0) for (const bi of [0, nb - 1]) {
+          expect([K.kb[4 * (b0 + bi)], K.kb[4 * (b0 + bi) + 1]]).toEqual([-1, n]);
+        }
         for (const sRaw of ss0) {
           const s = f(sRaw);
           const u = closed ? f(mod(s - s0, len) + s0) : s;

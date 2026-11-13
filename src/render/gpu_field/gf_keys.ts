@@ -86,6 +86,9 @@ export function buildKeys(T: GfTables): GfKeys {
       // depth(): lo = the last pin at or below ua (-1), hi = the first pin above ub (n)
       let lo = -1; while (lo + 1 < n && pins[lo + 1] <= ua) lo++;
       let hi = n; while (hi - 1 > lo && pins[hi - 1] > ub) hi--;
+      // a closed chain's end bins search every pin: keyBin and depth() each wrap s onto the lap, and a wrap one lap
+      // off (within the division's error of the seam) puts u past an end, where the clamp picks an end bin
+      if (closed && (bi === 0 || bi === nb - 1)) { lo = -1; hi = n; }
       // member(): the arms whose s set meets [ua, ub] (closed: on the circle)
       const k0 = nKA;
       for (let q = 0; q < an; q++) {
