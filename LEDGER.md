@@ -567,6 +567,14 @@ Next free ID: K1348.
   - evidence: .claude/probes/K1247/k1247s29_*, k1247s30_* (tools); untracked out/s29/, out/s30/
   - next: s30 running: what changes per frame mid-drag, the browser's 1.75x over Node, a prototype route on frame() behind a flag, the plan to the gate (138 ms def p50 after s29)
   - brief: `docs/design/K1247_s30_path_to_gate.md`
+- **K1344** · muse_hash j116's lower junction (~25.88-25.92, 14.21-14.35): rp=outline draws a dark wedge
+  crease with a hard diagonal where the reference is smooth; the census books it only as tail_look (60 px), so
+  it is uncounted (K1325 s2; crop `.claude/probes/K1325/out/s2/x4/j116_notch.png`)
+  - owner: agent `a42df6f917fe7a386` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 10:43, 2 h cap ~12:43)
+  - branch: `worktree-agent-a42df6f917fe7a386`, worktree `.claude/worktrees/agent-a42df6f917fe7a386`; last commit: `6a862f48`
+  - evidence: .claude/probes/K1344/ (tools); untracked out/s1/
+  - next: s1 running: the cause and fix of j116's crease, g41_user_tw64 (5.19, 17.60), how many tail_look finds are creases; outline.ts waits for K1247 s30's merge
+  - brief: `docs/design/K1344_s1_j116_crease.md`
 
 ## Next, in order
 
@@ -829,9 +837,6 @@ Every other item below waits on the trigger it names.
   about 22 ms -> 5 ms def drag p50 (K1247 s28 handoff)
 - **K1341** · Three exact cuts K1247 s28 left: a squared pre-check before draw.ts nearRange's sqrt (zChains'
   hottest line), hinted spanOf searches, a box bound in fill_tri.ts's disk scan (s28 handoff)
-- **K1344** · muse_hash j116's lower junction (~25.88-25.92, 14.21-14.35): rp=outline draws a dark wedge
-  crease with a hard diagonal where the reference is smooth; the census books it only as tail_look (60 px), so
-  it is uncounted (K1325 s2; crop `.claude/probes/K1325/out/s2/x4/j116_notch.png`)
 - **K1346** · A tail's corner fan folds: its outer corner points jitter 0.0003-0.0035 against the inner arc,
   so slivers overlap and ink twice (muse_hash c8's under-pass dotted seam at (19.41, 14.16); 76 px in the app
   at 960 px/unit). Make the corner cluster one exact point, or skip/clamp backward quads, in outline.ts and
