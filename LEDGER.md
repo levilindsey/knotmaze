@@ -522,10 +522,10 @@ Next free ID: K1357.
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: agent `a5270035b1b40a083` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 17:01, 2 h cap ~19:01)
-  - branch: `worktree-agent-a5270035b1b40a083`, worktree `.claude/worktrees/agent-a5270035b1b40a083`; last commit: `54637d48`
+  - owner: nobody since 2026-11-12 18:12 (merged; agent `a5270035b1b40a083` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `9b78ba17`
   - evidence: .claude/probes/K1247/ (k1247s33_*, k1247s34_*)
-  - next: s34 running: span-local addressing (K1352), per-span dirty set, dependency map, snap fixpoint to ~1 ms
+  - next: route review (s35): s34 showed the incremental route cannot reach the gate - holds cascade through jx/jxw to ~100% dirty spans, gentler rules break check (b) (muse_hash f63 2.36 px), flags-on app slower than master; and its ceiling (frame 8 ms, pipeline ~7-9 ms) is above the 3 ms bar anyway. s34 kept: snap 3x faster, bit-identical (2544f992), span/jxa options off. Brief handoff: docs/design/K1247_s34_span_holds.md
   - brief: `docs/design/K1247_s34_span_holds.md`
 - **K1278** · The outline's paint blends seamlessly across junctions (Levi 2026-11-10): section colour and pulses
   from per-pixel fields continuous across faces, triangles and junctions, gated by a seam test on every
