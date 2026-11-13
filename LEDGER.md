@@ -577,15 +577,6 @@ Next free ID: K1339.
   - evidence: .claude/probes/K1314/k1314_census.ts, form_b_fillet.ts, k1314_run.ps1; untracked .claude/probes/K1325/out/s1/
   - next: K1325 s2: a census-reference rule for a chain crossing itself (form B fades or smears the over pass there; the outline draws it whole): x304 (chain 67, depth window ends at 0.658 while the passes overlap), x22, x345, j116, x58 (K1334); the global --plateau is ruled out (+21 finds where the outline matches today's reference)
   - brief: `docs/design/K1325_s1_reference_shared_cache.md`
-- **K1333** · The K1314 census builds form B tiles per checkout (out/fb, out/fbf, ~7.8 GB each), and 11 agent
-  worktrees filled C: on 2026-11-12 (06:43-06:55; the finished ones' caches were deleted). The keys are the
-  reference's code hash, so share one cache in the main checkout with atomic writes (s26's EPERM) and lift the
-  briefs' no-copy rule (`k1314_run.ps1`); until then delete a worktree's caches at its merge
-  - owner: agent `ab310ce6484ab4f81` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 07:47, 2 h cap ~09:47)
-  - branch: `worktree-agent-ab310ce6484ab4f81`, worktree `.claude/worktrees/agent-ab310ce6484ab4f81`; last commit: `55aef041`
-  - evidence: .claude/probes/K1314/k1314_census.ts, form_b_fillet.ts, k1314_run.ps1; untracked .claude/probes/K1325/out/s1/
-  - next: s1 running: the reference at x304/j30 (K1325) and one shared form B cache in the main checkout (K1333)
-  - brief: `docs/design/K1325_s1_reference_shared_cache.md`
 - **K1338** · The outline worker frame's frame() (64-71 ms p50, outline.ts) and band (16-26 ms, bandOf + band
   files) on def mid-drag, toward frame + band <= 10 ms, look unchanged; K1247's sibling stage (s28 takes fill
   and zChains); brief `docs/design/K1247_s29_frame_band_speed.md`
@@ -846,10 +837,6 @@ Every other item below waits on the trigger it names.
 - **K1049** · Through-pass bends, DECIDED (Levi 2026-11-11: "Rounded corner", S1b/S1c's fillet); rp=outline must draw it in a K1314 fix stage: where a thread passes through a junction and bends, form B
   now draws today's sharp inner corner; S1b and S1c rounded it (`docs/design/K1040_s1d_corner.md` F2, and F6's Look
   with crops)
-- **K1334** · Census reference smears where a chain crosses itself: muse_hash x22 (414 px), x345 (19.996,
-  3.944) 225 px, j116 (25.518, 13.825) 696 px, x58 (0.113, 15.187) 527 px. rp=outline draws them whole since
-  943ae592, so census_k1324s2a counts form B's flaw (stray_ink 7 -> 10). Fix the reference as K1325 does
-  (crops `.claude/probes/K1324/out/s2/x4_after/spot_001.png`, `spot_003-005.png`)
 - **K1335** · g41_user_tw64 j28's right side: two faint shades beside the outline (form B draws a hairline
   sliver) are end tails p838/p839 drawn by outline.ts tailAlpha (K1324 s2); clear them in outline.ts, or fold
   them into K1315's end look (crop `.claude/probes/K1324/out/s2/j28r_after/spot_001.png`)
@@ -2273,6 +2260,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1334** · Census reference smears where a chain crosses itself: muse_hash x22 (414 px), x345 (19.996, 3.944) 225 px, j116 (25.518, 13.825) 696 px, x58 (0.113, 15.187) 527 px. rp=outline draws them whole since 943ae592, so census_k1324s2a counts form B's flaw (stray_ink 7 -> 10). Dropped: folded into K1325 s2 (docs/design/K1325_s2_self_crossing_reference.md) with x304 (2026-11-12).
+- **K1333** · one shared form B cache for every checkout in the main checkout's .claude/probes/K1314/out/fb, fbf (tmp + rename writes, length-checked reads, rename-aside pruning; two concurrent runs matched one run) (K1325 s1). Done in 21dad33d (2026-11-12).
 - **K1331** · muse_hash x22's twist-eye smear cleared by a self-pass burial rule in draw.ts tieAlpha and its BAND_FS twin (self_bury.test.ts); the census now counts form B's own smear there (K1324 s2). Done in 943ae592 (2026-11-12).
 - **K1328** · a tracked mirrored fixture in rec_tie (g41_user_tw64, c32's strip). Done in 7d4018a9 (2026-11-12).
 - **K1327** · the GPU record fill within 0.0016 px of its CPU twin on every census scene (span-end ties, exact column rule; brought in by 49afe511). Done in 45257b7e (2026-11-12).
