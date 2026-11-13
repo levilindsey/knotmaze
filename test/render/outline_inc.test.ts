@@ -10,7 +10,7 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { OutlineModel } from "../../src/render/outline/outline_model";
 import { frameSnapped, KF_INC, newSnapState, snapScene } from "../../src/render/outline/outline";
 import type { DiagramStructure, SceneIn } from "../../src/render/outline/outline";
@@ -50,7 +50,10 @@ function lerp(a: SceneIn, b: SceneIn, t: number): SceneIn {
   return s;
 }
 
-afterEach(() => { KF_INC.snap = true; KF_INC.cache = true; KF_INC.T = 0.25; KF_INC.border = false; KF_INC.jclose = true; });
+// The flags under test on (the structures in stOf are built with them, so frame 0 primes the caches, as the
+// worker's first frame does); then back to the module's defaults (K1247 s32: snap and cache off by default).
+beforeEach(() => { KF_INC.snap = true; KF_INC.cache = true; });
+afterEach(() => { KF_INC.snap = false; KF_INC.cache = false; KF_INC.T = 0.25; KF_INC.border = false; KF_INC.jclose = true; });
 
 describe("K1338 / K1247 s31 incremental frame: the caches are exact", () => {
   it("ring (committed fixture): a synthetic drag, caches on = off every frame", () => {
