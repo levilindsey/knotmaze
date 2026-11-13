@@ -4325,11 +4325,48 @@ export function snapScene(S: SnapState, scene: SceneIn, T = KF_INC.T): SceneIn {
     // def f41, a held chain's border 1.26 px off beside a released partner). A whole junction closer than 2R + M to
     // a release centre on one of its arm chains is released too (it would sit in the ramp), iterated.
     let cen: number[][] = [];
+    // K1247 s34: the same weights at a fraction of the cost (s33's fixpoint was 18.8 ms p50 on def). Only the
+    // nearest centre within R + M matters (beyond it w is 0, within R it is 1), so a centre is skipped when its
+    // squared distance is past (R + M)² (with a margin: hypot and sqrt differ in the last bits) and the scan stops
+    // at the first centre within R; the d of a centre that counts is still Math.hypot's, so every w keeps its bits.
+    // A chain with many centres finds them in a grid of (R + M) cells (any centre within R + M of a point lies in
+    // the point's 3 x 3 block). The snapped scene is bit-identical to s33's (k1247s34_snap.ts, def, muse_hash, fat).
+    const RM = R + M; const RM2 = RM * RM * (1 + 1e-9);
+    const GRID_MIN = 24; const gcell = RM;
+    let grid: (Map<number, number[]> | null)[] = [];
+    const gkey = (gx: number, gy: number): number => (gx + 1048576) * 2097152 + (gy + 1048576);
+    const gAdd = (G: Map<number, number[]>, x: number, y: number): void => {
+      const k = gkey(Math.floor(x / gcell), Math.floor(y / gcell)); const e = G.get(k); if (e) e.push(x, y); else G.set(k, [x, y]);
+    };
+    const addCen = (i: number, x: number, y: number): void => {
+      const c = cen[i]; c.push(x, y);
+      let G = grid[i];
+      if (!G && c.length >= 2 * GRID_MIN) { G = new Map(); for (let q = 0; q < c.length; q += 2) gAdd(G, c[q], c[q + 1]); grid[i] = G; }
+      else if (G) gAdd(G, x, y);
+    };
+    const wList = (c: number[], x: number, y: number, d0: number): number => {
+      let d = d0;
+      for (let q = 0; q < c.length; q += 2) {
+        const dx = x - c[q]; const dy = y - c[q + 1]; const e2 = dx * dx + dy * dy;
+        if (e2 > RM2) continue;
+        const e = Math.hypot(dx, dy); if (e < d) d = e;
+        if (d <= R) return -1;
+      }
+      return d;
+    };
     const wAt = (i: number, x: number, y: number): number => {
-      const c = cen[i]; let d = Infinity;
-      for (let q = 0; q < c.length; q += 2) d = Math.min(d, Math.hypot(x - c[q], y - c[q + 1]));
+      const c = cen[i]; if (!c.length) return 0;
+      const G = grid[i]; let d = Infinity;
+      if (!G) d = wList(c, x, y, d);
+      else {
+        const gx = Math.floor(x / gcell); const gy = Math.floor(y / gcell);
+        for (let ox = -1; ox <= 1 && d >= 0; ox++) for (let oy = -1; oy <= 1 && d >= 0; oy++) { const e = G.get(gkey(gx + ox, gy + oy)); if (e) d = wList(e, x, y, d); }
+      }
+      if (d < 0) return 1;
       return d <= R ? 1 : d >= R + M ? 0 : (R + M - d) / M;
     };
+    const xIa = new Int32Array(nX); const xIb = new Int32Array(nX); const seenA = new Int32Array(nX); const seenB = new Int32Array(nX);
+    for (let xi = 0; xi < nX; xi++) { const x = scene.crossings[xi]; xIa[xi] = idx.get(x.a.chain) ?? -1; xIb[xi] = idx.get(x.b.chain) ?? -1; }
     const tcum: (Float64Array | undefined)[] = [];
     const xp: (number[] | null | undefined)[] = [];
     const xPt = (xi: number): number[] | null => {
@@ -4356,13 +4393,19 @@ export function snapScene(S: SnapState, scene: SceneIn, T = KF_INC.T): SceneIn {
         whole[ji] = !forced[ji] && !!old && old.id === j.id && old.arms.length === j.arms.length && Math.hypot(j.c[0] - old.c[0], j.c[1] - old.c[1]) <= ts &&
           j.arms.every((a, k) => { const i = idx.get(a.chain); return old.arms[k].chain === a.chain && old.arms[k].kind === a.kind && i !== undefined && own[i] && Math.abs(a.s - old.arms[k].s) <= ts; }) ? 1 : 0;
       });
-      cen = scene.chains.map(() => []);
-      for (let i = 0; i < nC; i++) if (own[i]) for (const ji of juncOf[i]) if (!whole[ji]) cen[i].push(scene.junctions[ji].c[0], scene.junctions[ji].c[1]);
+      cen = scene.chains.map(() => []); grid = [];
+      for (let i = 0; i < nC; i++) if (own[i]) for (const ji of juncOf[i]) if (!whole[ji]) addCen(i, scene.junctions[ji].c[0], scene.junctions[ji].c[1]);
+      // s34: a crossing is evaluated again only when a centre was added on one of its chains since its last
+      // evaluation (otherwise it would add nothing: its own centre already sits at d 0), in the same order, so
+      // the sweeps add the same centres as s33's full sweeps.
+      seenA.fill(-1); seenB.fill(-1);
       if (KF_INC.jx) for (let more = true; more;) {
         more = false;
-        scene.crossings.forEach((x, xi) => {
-          const ia = idx.get(x.a.chain); const ib = idx.get(x.b.chain); if (ia === undefined || ib === undefined) return;
-          if (!own[ia] && !own[ib]) return;
+        for (let xi = 0; xi < nX; xi++) {
+          const x = scene.crossings[xi];
+          const ia = xIa[xi]; const ib = xIb[xi]; if (ia < 0 || ib < 0) continue;
+          if (!own[ia] && !own[ib]) continue;
+          if (seenA[xi] === cen[ia].length && seenB[xi] === cen[ib].length) continue;
           const old = S.cross[xi]; const same = !!old && old.a.chain === x.a.chain && old.b.chain === x.b.chain && old.over === x.over;
           let p: number[] | null = null;
           const pt = (): number[] | null => (p ??= xPt(xi));
@@ -4373,16 +4416,21 @@ export function snapScene(S: SnapState, scene: SceneIn, T = KF_INC.T): SceneIn {
             const q = pt(); return !!q && wAt(i, q[0], q[1]) > 0;
           };
           const ma = mv(ia, same ? old.a.s : undefined, x.a.s); const mb = mv(ib, same ? old.b.s : undefined, x.b.s);
-          const rel = (i: number): void => { const q = pt(); if (q && own[i] && wAt(i, q[0], q[1]) < 1) { cen[i].push(q[0], q[1]); more = true; } };
+          const rel = (i: number): void => { const q = pt(); if (q && own[i] && wAt(i, q[0], q[1]) < 1) { addCen(i, q[0], q[1]); more = true; } };
           // jxs: a pass whose own s moved past ts releases its own chain there (not its partner's).
           if (KF_INC.jxs) { if (ma) rel(ia); if (mb) rel(ib); } else { if (ma) rel(ib); if (mb) rel(ia); }
-        });
+          seenA[xi] = cen[ia].length; seenB[xi] = cen[ib].length;
+        }
       }
+      const need2 = need * need * (1 + 1e-9);
       for (let i = 0; i < nC; i++) {
         if (!own[i] || !cen[i].length) continue;
         for (const j2 of juncOf[i]) if (whole[j2]) {
           const b = scene.junctions[j2].c; const c = cen[i];
-          for (let q = 0; q < c.length; q += 2) if (Math.hypot(c[q] - b[0], c[q + 1] - b[1]) < need) { forced[j2] = 1; changed = true; break; }
+          for (let q = 0; q < c.length; q += 2) {
+            const dx = c[q] - b[0]; const dy = c[q + 1] - b[1];
+            if (dx * dx + dy * dy <= need2 && Math.hypot(dx, dy) < need) { forced[j2] = 1; changed = true; break; }
+          }
         }
       }
     }
