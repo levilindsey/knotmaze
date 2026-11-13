@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1358.
+Next free ID: K1362.
 
 ## Waiting on Levi
 
@@ -310,6 +310,7 @@ Next free ID: K1358.
   ?b&am=instant. The outline redraws at about 9-10 Hz mid-drag (worker ~105-117 ms per moved frame, K1247
   s34's ABBA). Acceptable, or how far off (choppy, lagging)? Asked 2026-11-12; K1247 s35
   (docs/design/K1247_s35_route_review.md) projects the gate and a relaxed bar
+  - next: K1247 s36 makes a side-by-side clip (pooled def drag next to master, about 50 Hz at about 85 ms latency) at .claude/probes/K1247/out/s36/clip/; re-ask with it
 
 ## In progress
 
@@ -527,11 +528,11 @@ Next free ID: K1358.
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: nobody since 2026-11-12 19:10 (merged; agent `a8d93842a30bcb370` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `e203f246`
-  - evidence: .claude/probes/K1247/ (k1247s35_*), s34 handoff
-  - next: s36: the outline worker pool in outline_app.ts (s35 handoff outline), then an app ABBA on def, fat and muse_hash
-  - brief: `docs/design/K1247_s35_route_review.md`
+  - owner: agent `ac12b65b77f80f097` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 19:13, 2 h cap ~21:13)
+  - branch: `worktree-agent-ac12b65b77f80f097`, worktree `.claude/worktrees/agent-ac12b65b77f80f097`; last commit: `a1e79d41`
+  - evidence: .claude/probes/K1247/k1247s35_* (the pool prototype); .claude/probes/K1247/out/s36/ (untracked)
+  - next: s36: the outline worker pool in outline_app.ts, identity, app ABBA on def, fat and muse_hash, and a side-by-side clip for K1357
+  - brief: `docs/design/K1247_s36_pool.md`
 - **K1278** · The outline's paint blends seamlessly across junctions (Levi 2026-11-10): section colour and pulses
   from per-pixel fields continuous across faces, triangles and junctions, gated by a seam test on every
   face edge, triangle edge and junction. Full text in docs/ledger_notes.md
@@ -826,14 +827,16 @@ Every other item below waits on the trigger it names.
   `docs/design/K1247_s28_fill_zchains_speed.md`)
 - **K1340** · fill's fans, disks and tails placed on the GPU like the record strips, with a twin test: fill
   about 22 ms -> 5 ms def drag p50 (K1247 s28 handoff)
-- **K1352** · Span-local L/Lcut addressing (s30 plan stage 4, first half): an arm's reach samples its crossing
-  partners by arc length (reachOf), so one moving chain re-dirties its partners' corners: corner cache hits
-  stay at 39% def, 19% muse_hash with the snap on (K1247 s31 handoff,
-  `docs/design/K1247_s31_snap_phase_caches.md`)
-  - next: waits on K1247 s35's route review (docs/design/K1247_s35_route_review.md): span-local addressing only matters if the incremental route survives
 - **K1353** · A pieces cache (pieces is the largest frame phase after s31, 11.6 ms def; its inputs are global
   tables, so split them per chain first), and skip held chains' setup and resampling with s31's dirty set
   (fat's border cache costs +0.44 ms) (K1247 s31 handoff)
+  - next: the held-chain half went with the incremental route (K1247 s35); the pieces cut is a frame() cut (s35 route R2), after R1 GPU placement inside the pool
+- **K1359** · Remove K1247's incremental options: KF_INC (snap, cache, jlocal, jx, jxw, span, jxa), SNAP_DBG
+  and the request's exact, in their own commit after K1314 s13 and K1247 s36 land. In s34's ABBA they cost def
+  +24.8 ms, and the incremental route stops (K1247 s35 handoff, docs/design/K1247_s35_route_review.md, Stop
+  doing)
+- **K1360** · Measure the outline worker pool on the Pixel at K = 2 and 3 (K1247 s35 projects 15-22 Hz from
+  the pool alone); rides the next phone round (K156), after K1247 s36 lands
 
 ## Residuals (known, not fixed)
 
@@ -1931,6 +1934,9 @@ Every other item below waits on the trigger it names.
 - **K1358** · K1341 s3 residual: muse_hash fill/band pool +0.33+-0.26 / +0.65+-0.37 ms in swap-averaged A/B
   (per-pair intervals include zero in 2 of 3 pairs; def gates hold). If pursued, bisect wrapL sites in
   zAtC/footNear/dSC or the GC shift with k1341s3_ab.ts swap pairs, not the s2 tool.
+- **K1361** · The outline update is memory-bound past about 6 workers (K1247 s35,
+  .claude/probes/K1247/k1247s35_contend.mjs: 51 updates/s at 6 Node workers, 32.5/s at 12, GC 8-16%), so
+  cutting its memory traffic widens the pool
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2284,6 +2290,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1352** · Span-local L/Lcut addressing (s30 plan stage 4, first half): an arm's reach samples its crossing partners by arc length (reachOf), so one moving chain re-dirties its partners' corners: corner cache hits stay at 39% def, 19% muse_hash with the snap on (K1247 s31 handoff, `docs/design/K1247_s31_snap_phase_caches.md`). Dropped: superseded by K1247 s35 (docs/design/K1247_s35_route_review.md): the incremental frame stops (its ceiling misses the bar, and under a pool each model sees only every Kth frame), so span-local addressing for its caches is not needed (2026-11-12).
 - **K1341** · K1247 s28's exact cuts: zChains 23% faster on def, 20% on muse_hash, 43% on fat, bit-identical (s2, 1da71a35); def fill's apparent +1-2.7% was a slot bias in the A/B harness (Muse s3: null test, swap-averaged k1341s3_ab.ts), no src change; muse_hash fill/band residual K1358. Done in 96edc35e (2026-11-12).
 - **K1350** · fill walk and sub-pixel turn-backs cut with K1346 (turn-backs 0, fill folds 0 in all 12 census scenes). Done in 48add3d8 (2026-11-12).
 - **K1346** · outline folds cut to 0 in all 12 census scenes (c8 fan seam, fill walk K1350, sub-pixel turn-backs); fold checks cost 0.5-0.7 ms per def frame. Done in 48add3d8 (2026-11-12).
