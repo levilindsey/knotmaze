@@ -4246,7 +4246,7 @@ function setupFrame(C: FCache, st: DiagramStructure, scene: SceneIn): void {
 // K1247 s33: jlocal (on whenever the snap is) holds spans, not whole chains: a
 // chain near a released junction or crossing recommits blended (jR, jM: the
 // ramp in half widths), so one moving chain no longer releases them all.
-export const KF_INC = { snap: true, cache: true, T: 0.25, border: false, jclose: true, jlocal: true, jR: 4, jM: 3, jx: true, jxw: true, jxs: false, span: false, spanMax: 0.5, jxa: false, jxaTol: 1, hits: 0, misses: 0, cHits: 0, cMisses: 0, vAux: 0, vMiss: 0, cMissJ: 0, why: null as Record<string, number> | null };
+export const KF_INC = { snap: false, cache: false, T: 0.25, border: false, jclose: true, jlocal: true, jR: 4, jM: 3, jx: true, jxw: true, jxs: false, span: false, spanMax: 0.5, jxa: false, jxaTol: 1, hits: 0, misses: 0, cHits: 0, cMisses: 0, vAux: 0, vMiss: 0, cMissJ: 0, why: null as Record<string, number> | null };
 let kfHoldFeet = false;
 
 export interface SnapState {
