@@ -66,6 +66,7 @@ if (timeIt) {
   const q = (a: number[], p: number): number => { const b = [...a].sort((x, y) => x - y); return b[Math.min(b.length - 1, Math.floor(p * b.length))]; };
   const R: number[] = []; const Fm: number[] = []; const Im: number[] = []; const Rb: number[] = []; const Fb: number[] = []; const Ib: number[] = [];
   const Rs = mk(); const Fs = mk(); const Is = mk();
+  const PR: Record<string, number[]> = {}; const PI: Record<string, number[]> = {};
   for (let c = 0; c < warm + 1; c++) {
     for (let i = 0; i < raw.length; i++) {
       const pr: Record<string, number> = {}; const pf: Record<string, number> = {}; const pi: Record<string, number> = {};
@@ -73,11 +74,18 @@ if (timeIt) {
       const r1 = (): number => run(Rs.st, raw[i], false, pr, false).ms; const f1 = (): number => run(Fs.st, raw[i], false, pf).ms; const i1 = (): number => run(Is.st, raw[i], true, pi).ms;
       let a = 0; let b = 0; let d = 0;
       if (order === 0) { a = r1(); b = f1(); d = i1(); } else if (order === 1) { b = f1(); d = i1(); a = r1(); } else { d = i1(); a = r1(); b = f1(); }
-      if (c >= warm) { R.push(a); Fm.push(b); Im.push(d); Rb.push(pr.setupBorders); Fb.push(pf.setupBorders); Ib.push(pi.setupBorders); }
+      if (c >= warm) {
+        R.push(a); Fm.push(b); Im.push(d); Rb.push(pr.setupBorders); Fb.push(pf.setupBorders); Ib.push(pi.setupBorders);
+        for (const [k, v] of Object.entries(pr)) (PR[k] ??= []).push(v);
+        for (const [k, v] of Object.entries(pi)) (PI[k] ??= []).push(v);
+      }
     }
   }
   const f = (a: number[]): string => `${q(a, 0.5).toFixed(2)}/${q(a, 0.95).toFixed(2)}`;
   console.log(`frame ms p50/p95: raw ${f(R)}  snapped ${f(Fm)}  snapped+cache ${f(Im)}`);
   console.log(`setupBorders ms p50/p95: raw ${f(Rb)}  snapped ${f(Fb)}  snapped+cache ${f(Ib)}`);
+  // Every phase frame() profiles (profMark), p50 raw -> snapped+cache: where the rest of frame's time is.
+  const ph = Object.keys(PR).filter((k) => q(PR[k], 0.5) >= 0.05).sort((x, y) => q(PR[y], 0.5) - q(PR[x], 0.5));
+  console.log(`phases p50 raw -> snap+cache: ${ph.map((k) => `${k} ${q(PR[k], 0.5).toFixed(2)}->${PI[k] ? q(PI[k], 0.5).toFixed(2) : "-"}`).join(", ")}`);
 }
 void st;
