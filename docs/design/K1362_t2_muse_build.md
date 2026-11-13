@@ -71,3 +71,71 @@ Candidates, in the order I'd try them:
 - When you stop: append a Handoff to this brief (start and stop times, the before/after table, the digest result,
   what changed, what is left), commit and push it, and report. A stopped run pushes only its finished part. Keep
   unfinished code as a patch under `.claude/probes/K1362/` (untracked).
+
+## Handoff (Muse t2, 2026-11-13 02:50:45 to 04:10, ~80 min of the 2 h cap)
+
+Commits on this worktree, to be pushed to master: `ebd0ccaa` (pool),
+`4e550786` (trimmed slice prefixes), `3a6f8d11` + `6cd88036` (measured
+pool gates; the shipped gate is >= 28000 scene points), plus this handoff.
+Files: `src/render/gpu_field/tables.ts`, `gf_worker.ts`,
+`gf_slice_worker.ts` (new), `gf_app.ts` (plumbing: `pool` opt + stat),
+`test/render/gf_build.test.ts`; tools `k1362t2_digest.ts`,
+`k1362t2_measure.ts`, `k1362t2_prof.ts`, `k1362t2_run.ps1`,
+`k1362t2_check.mjs`. `GfTables` fields/layout unchanged; the shader
+files untouched.
+
+**Done 1 (output unchanged): holds.** `k1362t2_digest.ts` builds every
+census scene and s18 drag frame with `buildTablesPooled` at slice counts
+1/3/6 and compares line by line with cold `buildTables`:
+`all ae1d23920dd9bd6f7614e7bf3ca3c1893537de7bd76640b41b34494865a85a27`,
+5445 lines, 297 pooled builds, 0 mismatches — the same digest as master.
+`gf_build.test.ts` extended (pooled = cold at slices 1/2/3/5 on the full
+and lean scenes; trimmed slice prefixes assemble to cold; partition
+coverage): 10 tests pass. In-app VERIFY=1 on the pooled build (bench
+step): verified with 0 mismatches. Corner-audit, as the brief asked: the
+corner solve's scratch (SP, Q buffers, the arm-sample map) is fresh per
+`solveGfCorners` call, every segment hint is per corner pair, and no
+result carries across corners; slices merge in enumeration order.
+
+**Done 2 (speed): the one-third goal is NOT reached; no link is slower.**
+Candidate 2 (exact reuse) was measured first and is dead: on every s18
+drag frame pair the fraction of bit-identical vertices is 0.000 (def,
+muse_hash, fat), so no corner's input bits survive a frame
+(`k1362t2_measure.ts`). Candidate 1 (pool) is built: the gf worker is a
+coordinator that splits raw chain vertices by chain, corners by junction
+range and chunk bins by chunk range across up to 8 slice workers
+(`hardwareConcurrency`-sized), merged in order. In the browser the
+coordinator's serial floor (lean export, the prefix's pins/arms/final
+vertices, chunk merge + assembly; ~1.8 ms per-slice prefix clone before
+trimming, `k1362t2_prof.ts`) eats the corner saving on corner-bound
+scenes. Desktop, perf lock, `k1362t2_run.ps1` driving c1's
+`k1362c1_bench.mjs` (before = master `2b964a6c` preview, after = this
+build; machine shared with other agents, load high throughout; p50,
+workMs = worker wall per rebuild as gf_app reports it):
+
+| link | before work p50/p95 | shipped after p50/p95 | pool ungated p50 | main ms/frame before -> after |
+|---|---|---|---|---|
+| def | 11.8 / 22.2 | 12.1 / 19.0 | 11.9 | 1.57 -> 1.56 |
+| muse_hash | 6.7 / 12.0 | 7.5 / — | 8.9 | 1.45 -> 1.51 |
+| fat | 14.5 / 20.3 | 14.4 / — | 11.2 | 1.70 -> 1.50 |
+
+Shipped, the pool engages only on builds with >= 28000 scene points
+(none of the three links today), so the shipped after column is the
+single build within noise of before and main stays <= 1.6 ms/frame
+(under the 3 ms bound). Ungated, the pool measured fat 14.5 -> 11.2 ms
+(-23%, the vertex/bin-bound win), def neutral, muse_hash slower
+(6.7 -> 8.9) — hence the gate rather than a regression. Frame interval
+and physics sim/wall were unchanged within noise in every run
+(physics-bound drags, ~0.62 sim/wall on def/fat).
+
+**Done 3: holds.** `npm test` green after the final edit: 233 files /
+2963 tests passed, 9 skipped; goldens unchanged.
+
+**What is left.** The one-third cut needs the coordinator's serial
+prefix partitioned too: pins and arms by chain (arms by junction once
+final vertices are broadcast), and the chunk-list merge off the
+coordinator (or per-cell merges in slices). With corners at ~1 ms per
+slice in Node, the browser floor is export (~1.4) + prefix (~2-3) +
+merge/assembly (~1-2); only shrinking that floor moves def/fat toward
+a third. Reuse stays dead unless the solve's inputs stop changing
+every frame. No unfinished code; nothing left as a patch.
