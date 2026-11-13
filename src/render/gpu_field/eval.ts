@@ -24,6 +24,7 @@ import { CH, MAXP, type GfTables } from "./tables";
 
 export const MAXR = 2; // ramping pieces mixed per pixel
 export const MAXK = 6; // corners per pixel
+const SELF_BURIAL = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_SELFBUR === "1";
 const MAXS = MAXP + MAXK; // surfaces
 
 export function ss(e0: number, e1: number, x: number): number {
@@ -301,8 +302,9 @@ export class GfEval {
           const wb2 = 1 - ss(h - 2 * aa, h, Math.sqrt(this.pieceD(m, qx, qy)));
           if (wb2 > bur) bur = wb2;
         }
-        // the piece's own tube elsewhere along its fold (a tight bend folded into one piece)
-        if (bur < 1 && this.phi[j] - this.plo[j] > 1) {
+        // the piece's own tube elsewhere along its fold (a tight bend folded into one piece): OFF, form B never
+        // buries a piece by its own fold (K1362 s1: 132 census finds were this self-burial)
+        if (SELF_BURIAL && bur < 1 && this.phi[j] - this.plo[j] > 1) {
           const wb2 = 1 - ss(h - 2 * aa, h, Math.sqrt(this.pieceD(j, qx, qy)));
           if (wb2 > bur) bur = wb2;
         }
