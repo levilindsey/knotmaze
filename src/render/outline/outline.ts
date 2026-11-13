@@ -7902,7 +7902,7 @@ const RUN_FADE_TH = 0.75 * Math.PI;
 function runEndFade(a: TailIn, p: OutlinePiece, atEnd: boolean): void {
   const np = p.pts.length / 2;
   if (np < 2 || p.kind !== "run") return;
-  let al: number[] | null = null;
+  let al: number[] | null = null; let alO: number[] | null = null;
   let cum = 0; let farCum = 0;
   const span = p.s1 - p.s0;
   for (let q = 0; q < np; q++) {
@@ -7920,7 +7920,23 @@ function runEndFade(a: TailIn, p: OutlinePiece, atEnd: boolean): void {
       if (!al) al = new Array<number>(2 * np).fill(1);
       al[2 * i] = tailA[0]; al[2 * i + 1] = tailA[1];
       farCum = cum;
+      if (K1314S12.ownSide) {
+        tailAlpha(a, sE, p.pts[2 * i], p.pts[2 * i + 1], tailA, false, true);
+        if (!alO) alO = new Array<number>(2 * np).fill(-1);
+        alO[2 * i] = tailA[0]; alO[2 * i + 1] = tailA[1];
+      }
     }
+  }
+  // K1314 s12 (ownSide, muse_hash j58a piece 196): the side rule zeroes the inner edge where it lies in X's
+  // border band deep in the junction's group, but form B inks E's border band there (c23 at 1). Without the
+  // rule, except at a point next to an uninked one (196's point 1: the band to its end point, 0.18 away,
+  // would sweep a wedge where form B is pale). OFF: 196's point 2 shares its cpts with points 1 and 3 (a
+  // vertex fan), so band_rec draws it in the start arc and its inner 0.93 sweeps a hard wedge at (4.67-4.69,
+  // 33.53) where form B is 0.07 (j58a |d| 10.23 -> 8.95%, but a new hard edge: out/s12/look/j58a5.png).
+  if (al && alO) {
+    const sel: number[] = [];
+    for (let i = 0; i < np; i++) if (alO[2 * i] >= 0 && i > 0 && i < np - 1 && al[2 * i - 2] > 1e-3 && al[2 * i + 2] > 1e-3) sel.push(i);
+    for (const i of sel) { al[2 * i] = alO[2 * i]; al[2 * i + 1] = alO[2 * i + 1]; }
   }
   if (al && farCum >= RUN_FADE_MIN * a.h) {
     p.alpha = al;
@@ -7944,7 +7960,21 @@ export const RUN_FADE_TIE = { on: true };
  *  last foot (pinTailFan's fanDrop), a hair (~0.004) from where the abutting run's chevron
  *  ends; the two end edges, near parallel, overlap in a thin strip that inks twice: a faint
  *  line along the run's end edge. The tail starts on the run's end edge instead. */
-export const K1314S12 = { tailJoin: true, thruTail: true };
+export const K1314S12 = { tailJoin: true, thruTail: true, ownSide: false };
+/** K1314 s12 (thruTail, muse_hash j58's corner 176): a thru tail continues E's run past the corner, so it
+ *  starts no darker than the run ends (run 371's root ramp ends at 0, the tail started at 0.18: a hard
+ *  line across the band) and reaches its own alpha over THRU_END points. */
+function thruTailIn(tail: OutlinePiece, run: OutlinePiece, atEnd: boolean): void {
+  const nt = tail.pts.length >> 1; const al = tail.alpha; const ra = run.alpha;
+  if (nt < 2 || !al || !ra) return;
+  const q = atEnd ? (run.pts.length >> 1) - 1 : 0;
+  const a0 = Math.max(ra[2 * q] ?? 1, ra[2 * q + 1] ?? 1);
+  if (!(a0 < 1)) return;
+  for (let j = 0; j < Math.min(THRU_END, nt); j++) {
+    const f = a0 + ((1 - a0) * j) / THRU_END;
+    al[2 * j] = Math.min(al[2 * j], al[2 * j] * f); al[2 * j + 1] = Math.min(al[2 * j + 1], al[2 * j + 1] * f);
+  }
+}
 
 function tailJoinRun(tail: OutlinePiece, run: OutlinePiece, atEnd: boolean): void {
   const nr = run.pts.length >> 1; if (nr < 2 || tail.pts.length < 4 || run.cpts.length !== run.pts.length) return;
@@ -8069,6 +8099,7 @@ function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[])
   let runMiss = 0; let runPassed = 0;
   const runFade: { a: TailIn; key: number }[] = [];
   const tailJoin: { p: number; key: number }[] = [];
+  const thruIn: { p: number; key: number }[] = [];
   const runAtArm = new Map<number, number>();
   // Interval lookup for run regions: by (A slot, B slot) under K12_CSORDER;
   // by the A slot alone otherwise (K1247 s12: a crossOver station toggling
@@ -8288,6 +8319,7 @@ function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[])
         if (!thru && RUN_END_FADE && (RUN_FADE_B || !dp.interval) && !C.cOk[ci] && C.cTheta[ci] < RUN_FADE_TH) runFade.push({ a: tin, key: tKey });
       }
       if (K1314S12.tailJoin && tKey >= 0) tailJoin.push({ p: pieces.length, key: tKey });
+      if (dp.interval >= 2 && tKey >= 0) thruIn.push({ p: pieces.length, key: tKey });
       pieces.push({ kind: "tail", chain: dp.chain, side: sideE, s0: sT, s1: sT, pts, cpts, region: -1, corner: ci, alpha, fpts: fill.pts, fcpts: fill.cpts });
     } else {
       const capInfo = dp.cap;
@@ -8312,6 +8344,7 @@ function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[])
     if (r !== undefined) tailJoinRun(pieces[t.p], pieces[r >> 1], (r & 1) === 1);
   }
   if (RUN_ROOT_RAMP) runRootRamp(C, st, pieces, runAtArm);
+  for (const t of thruIn) { const r = runAtArm.get(t.key); if (r !== undefined) thruTailIn(pieces[t.p], pieces[r >> 1], (r & 1) === 1); }
   if (ARC_END_FEET) arcEndFeet(st, pieces, runAtArm);
   return { pieces, runMiss, runPassed };
 }
@@ -8943,7 +8976,11 @@ function thruTailPts(a: TailIn, pts: number[], cpts: number[], alpha: number[]):
   }
   const keep = last < 0 ? 0 : Math.min(THRU_N, last + 1) + 1;
   pts.length = cpts.length = alpha.length = keep < 2 ? 0 : 2 * keep;
+  // A walk that reaches E's root still inked (muse_hash j58's corner 175: 0.08/0.14) would end in a hard
+  // edge across the band: its last THRU_END steps fade to 0 instead.
+  if (last === THRU_N) for (let j = 0; j < THRU_END; j++) { const f = j / THRU_END; alpha[2 * (THRU_N - j)] *= f; alpha[2 * (THRU_N - j) + 1] *= f; }
 }
+const THRU_END = 4;
 export function endTailPts(a: TailIn, pts: number[], cpts: number[], alpha?: number[], fill?: { pts: number[]; cpts: number[] }): void {
   if (!(a.h > 0) || !Number.isFinite(a.sT)) return;
   // K1283 s4: the band goes on past X's arm start (tailRamp's useAlt); the
