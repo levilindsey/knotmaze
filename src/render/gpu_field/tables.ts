@@ -67,6 +67,12 @@ const now = (): number => (typeof performance !== "undefined" ? performance.now(
 
 /** Point and unit tangent at arc length s on chain c of the built vertex table (s clamped / wrapped). */
 export function chainAt(T: Pick<GfTables, "cV0" | "cNV" | "cClosed" | "cLen" | "cS0" | "vx" | "vy" | "vs">, c: number, s: number): { x: number; y: number; tx: number; ty: number } {
+  const o = { x: 0, y: 0, tx: 0, ty: 0 };
+  chainAtInto(T, c, s, o);
+  return o;
+}
+// K1362 t1: chainAtInto writes chainAt's result into a caller scratch (same arithmetic, no allocation).
+function chainAtInto(T: Pick<GfTables, "cV0" | "cNV" | "cClosed" | "cLen" | "cS0" | "vx" | "vy" | "vs">, c: number, s: number, o: { x: number; y: number; tx: number; ty: number }): void {
   const v0 = T.cV0[c]; const nv = T.cNV[c];
   let u = s;
   if (T.cClosed[c]) { u = (s - T.cS0[c]) % T.cLen[c]; if (u < 0) u += T.cLen[c]; u += T.cS0[c]; }
@@ -78,7 +84,7 @@ export function chainAt(T: Pick<GfTables, "cV0" | "cNV" | "cClosed" | "cLen" | "
   const L = T.vs[hi] - T.vs[lo];
   const t = L > 0 ? Math.min(1, Math.max(0, (u - T.vs[lo]) / L)) : 0;
   const dx = bx - ax; const dy = by - ay; const l = Math.hypot(dx, dy) || 1;
-  return { x: ax + dx * t, y: ay + dy * t, tx: dx / l, ty: dy / l };
+  o.x = ax + dx * t; o.y = ay + dy * t; o.tx = dx / l; o.ty = dy / l;
 }
 
 /** Form B's diagram depth at (c, s): the two neighbouring pins' hats (depth.ts), each over min(win, the pin gap). */
@@ -104,15 +110,23 @@ export function depthAt(T: { cPin0: Int32Array; cPinN: Int32Array; pinS: Float64
 /** Nearest point of chain c to (x, y) within arc length [sLo, sHi] (a bounded scan of the vertex table). */
 function footNear(T: GfTables | Pick<GfTables, "cV0" | "cNV" | "vx" | "vy" | "vs">, c: number, x: number, y: number, sLo: number, sHi: number): { d: number; x: number; y: number } {
   const v0 = T.cV0[c]; const nv = T.cNV[c];
-  let best = { d: Infinity, x, y };
-  for (let k = v0; k < v0 + nv - 1; k++) {
-    if (T.vs[k + 1] < sLo || T.vs[k] > sHi) continue;
-    const ax = T.vx[k]; const ay = T.vy[k]; const dx = T.vx[k + 1] - ax; const dy = T.vy[k + 1] - ay;
-    const l2 = dx * dx + dy * dy; const u = l2 > 0 ? Math.min(1, Math.max(0, ((x - ax) * dx + (y - ay) * dy) / l2)) : 0;
-    const fx = ax + dx * u; const fy = ay + dy * u; const d = Math.hypot(x - fx, y - fy);
-    if (d < best.d) best = { d, x: fx, y: fy };
+  let bd = Infinity; let bx = x; let by = y;
+  if (nv > 1) {
+    const vsA = T.vs;
+    // First/last segment the full scan would not skip (vs is non-decreasing): same segments, same order.
+    let lo = v0; let hi = v0 + nv - 1;
+    while (lo < hi) { const m = (lo + hi) >> 1; if (vsA[m + 1] >= sLo) hi = m; else lo = m + 1; }
+    const k0 = lo;
+    lo = v0; hi = v0 + nv - 1;
+    while (lo < hi) { const m = (lo + hi) >> 1; if (vsA[m] <= sHi) lo = m + 1; else hi = m; }
+    for (let k = k0; k <= lo - 1; k++) {
+      const ax = T.vx[k]; const ay = T.vy[k]; const dx = T.vx[k + 1] - ax; const dy = T.vy[k + 1] - ay;
+      const l2 = dx * dx + dy * dy; const u = l2 > 0 ? Math.min(1, Math.max(0, ((x - ax) * dx + (y - ay) * dy) / l2)) : 0;
+      const fx = ax + dx * u; const fy = ay + dy * u; const d = Math.hypot(x - fx, y - fy);
+      if (d < bd) { bd = d; bx = fx; by = fy; }
+    }
   }
-  return best;
+  return { d: bd, x: bx, y: by };
 }
 
 export function buildTables(scene: FieldScene, opts: GfOpts): GfTables {
@@ -132,15 +146,17 @@ export function buildTables(scene: FieldScene, opts: GfOpts): GfTables {
   const rT = { cV0: new Int32Array(nC), cNV: new Int32Array(nC), vx: new Float64Array(nRaw), vy: new Float64Array(nRaw), vs: new Float64Array(nRaw) };
   {
     let v = 0;
-    raw.forEach((c, i) => {
-      rT.cV0[i] = v; const m = c.pts.length >> 1; let s = 0;
-      for (let k = 0; k < m + (c.closed ? 1 : 0); k++) {
-        const q = k % m; const x = c.pts[2 * q]; const y = c.pts[2 * q + 1];
-        if (k > 0) s += Math.hypot(x - rT.vx[v - 1], y - rT.vy[v - 1]);
-        rT.vx[v] = x; rT.vy[v] = y; rT.vs[v] = s; v++;
+    const rVx = rT.vx; const rVy = rT.vy; const rVs = rT.vs;
+    for (let i = 0; i < raw.length; i++) {
+      const c = raw[i]; rT.cV0[i] = v; const m = c.pts.length >> 1; const pts = c.pts; let s = 0;
+      const cnt = m + (c.closed ? 1 : 0);
+      for (let k = 0; k < cnt; k++) {
+        const q = k < m ? k : 0; const x = pts[2 * q]; const y = pts[2 * q + 1];
+        if (k > 0) s += Math.hypot(x - rVx[v - 1], y - rVy[v - 1]);
+        rVx[v] = x; rVy[v] = y; rVs[v] = s; v++;
       }
       rT.cNV[i] = v - rT.cV0[i];
-    });
+    }
   }
   const extS: ([number, number] | null)[] = new Array(nC).fill(null); const extE: ([number, number] | null)[] = new Array(nC).fill(null);
   for (const j of scene.junctions) for (const arm of j.arms) {
@@ -164,15 +180,16 @@ export function buildTables(scene: FieldScene, opts: GfOpts): GfTables {
   const cV0 = new Int32Array(nC); const cNV = new Int32Array(nC); const cClosed = new Uint8Array(nC); const cLen = new Float64Array(nC); const cS0 = new Float64Array(nC);
   {
     let v = 0;
+    const rVx = rT.vx; const rVy = rT.vy; const rVs = rT.vs;
     for (let i = 0; i < nC; i++) {
       cV0[i] = v; cClosed[i] = raw[i].closed ? 1 : 0;
       const a0 = rT.cV0[i]; const n = rT.cNV[i];
       let s0 = 0;
       if (extS[i]) {
-        const e = extS[i]!; const d = Math.hypot(rT.vx[a0] - e[0], rT.vy[a0] - e[1]);
+        const e = extS[i]!; const d = Math.hypot(rVx[a0] - e[0], rVy[a0] - e[1]);
         if (d > 1e-9) { vx[v] = e[0]; vy[v] = e[1]; vs[v] = -d; s0 = -d; v++; }
       }
-      for (let k = 0; k < n; k++) { vx[v] = rT.vx[a0 + k]; vy[v] = rT.vy[a0 + k]; vs[v] = rT.vs[a0 + k]; v++; }
+      for (let k = 0; k < n; k++) { vx[v] = rVx[a0 + k]; vy[v] = rVy[a0 + k]; vs[v] = rVs[a0 + k]; v++; }
       if (extE[i]) {
         const e = extE[i]!; const d = Math.hypot(vx[v - 1] - e[0], vy[v - 1] - e[1]);
         if (d > 1e-9) { vx[v] = e[0]; vy[v] = e[1]; vs[v] = vs[v - 1] + d; v++; }
@@ -190,12 +207,13 @@ export function buildTables(scene: FieldScene, opts: GfOpts): GfTables {
     let u = (s - cS0[c]) % cLen[c]; if (u < 0) u += cLen[c]; return u + cS0[c];
   };
   const TT = { cV0, cNV, cClosed, cLen, cS0, vx, vy, vs };
+  const CA1 = { x: 0, y: 0, tx: 0, ty: 0 }; const CA2 = { x: 0, y: 0, tx: 0, ty: 0 };
   for (const x of scene.crossings) {
     const ia = idxOf.get(x.a.chain); const ib = idxOf.get(x.b.chain);
     if (ia === undefined || ib === undefined) continue;
     const sa = norm(ia, x.a.s); const sb = norm(ib, x.b.s);
-    const ta = chainAt(TT, ia, sa); const tb = chainAt(TT, ib, sb);
-    const theta = Math.acos(Math.min(1, Math.abs(ta.tx * tb.tx + ta.ty * tb.ty)));
+    chainAtInto(TT, ia, sa, CA1); chainAtInto(TT, ib, sb, CA2);
+    const theta = Math.acos(Math.min(1, Math.abs(CA1.tx * CA2.tx + CA1.ty * CA2.ty)));
     pinsOf[ia].push({ s: sa, z: x.over === "a" ? amp : -amp, theta });
     pinsOf[ib].push({ s: sb, z: x.over === "b" ? amp : -amp, theta });
   }
@@ -247,14 +265,18 @@ export function buildTables(scene: FieldScene, opts: GfOpts): GfTables {
         const cc = d - reach - h; if (cc < Lcut) Lcut = cc;
       }
       const sB = arm.kind === "end" ? norm(c, arm.s) : sR;
-      const a0 = chainAt(TT, c, sB); const a1 = chainAt(TT, c, cClosed[c] ? norm(c, sB + dir * 2 * h) : Math.max(cS0[c], Math.min(cS0[c] + len, sB + dir * 2 * h)));
+      chainAtInto(TT, c, sB, CA1); chainAtInto(TT, c, cClosed[c] ? norm(c, sB + dir * 2 * h) : Math.max(cS0[c], Math.min(cS0[c] + len, sB + dir * 2 * h)), CA2); const a0 = CA1; const a1 = CA2;
       armsT.push({ c, j: ji, ei, sR, dir, L0: L, L: Math.max(0, Math.min(L, Lcut)), Lcut, g: -1, ang: Math.atan2(a1.y - a0.y, a1.x - a0.x), ux: (a1.x - a0.x) / (Math.hypot(a1.x - a0.x, a1.y - a0.y) || 1), uy: (a1.y - a0.y) / (Math.hypot(a1.x - a0.x, a1.y - a0.y) || 1), uB });
     });
   });
   // the behind-pass cut (form B's dEdge "near" with dEdgeTip 1): c = k uB, k = clamp(1 / max tan((pi - theta)/4), 1, 4)
+  // K1362 t1: siblings grouped once (same members, same order as the per-arm filter+sort).
+  const byJ: ArmT[][] = scene.junctions.map(() => []);
+  for (const A of armsT) byJ[A.j].push(A);
+  for (const Gp of byJ) Gp.sort((u, v) => u.ang - v.ang);
   for (const A of armsT) {
     if (!(A.uB < Infinity)) continue;
-    const sib = armsT.filter((q) => q.j === A.j).sort((u, v) => u.ang - v.ang); const n = sib.length; const at = sib.indexOf(A);
+    const sib = byJ[A.j]; const n = sib.length; const at = sib.indexOf(A);
     let gMax = 0;
     for (const [a, b] of [[sib[(at + n - 1) % n], A], [A, sib[(at + 1) % n]]]) {
       if (a === b) continue;
@@ -290,9 +312,30 @@ export function buildTables(scene: FieldScene, opts: GfOpts): GfTables {
   const K: { thru: number; rv: number; cx: number; cy: number; r: number; rmax: number; eax: number; eay: number; ebx: number; eby: number; g: number; j: number; a: number; b: number; theta: number; ca: number; cb: number; sa: number; sb: number }[] = [];
   const sibs: ArmT[][] = scene.junctions.map(() => []);
   for (const A of armsT) sibs[A.j].push(A);
-  const armPt = (A: ArmT, u: number): { x: number; y: number; tx: number; ty: number; s: number } => {
-    const s = cClosed[A.c] ? norm(A.c, A.sR + A.dir * u) : Math.max(cS0[A.c], Math.min(cS0[A.c] + cLen[A.c], A.sR + A.dir * u));
-    const p = chainAt(TT, A.c, s); return { x: p.x, y: p.y, tx: p.tx * A.dir, ty: p.ty * A.dir, s };
+  // K1362 t1: SP holds two arm points (x, y, tx, ty, s at 0 and 5); ptOf is armPt+chainAt inlined
+  // (same arithmetic). With a hint it walks from the last segment instead of binary-searching:
+  // the walk stops at the same segment (vs is non-decreasing), so results are identical.
+  const SP = new Float64Array(10);
+  const ptOf = (A: ArmT, u: number, o: number, hint?: { k: number }): void => {
+    const c = A.c; const v0 = cV0[c]; const nv = cNV[c];
+    const s = cClosed[c] ? norm(c, A.sR + A.dir * u) : Math.max(cS0[c], Math.min(cS0[c] + cLen[c], A.sR + A.dir * u));
+    let uu = s;
+    if (cClosed[c]) { uu = (s - cS0[c]) % cLen[c]; if (uu < 0) uu += cLen[c]; uu += cS0[c]; }
+    let lo = v0; let hi = v0 + nv - 1;
+    if (uu <= vs[lo]) hi = lo + 1;
+    else if (uu >= vs[hi]) lo = hi - 1;
+    else if (hint && hint.k >= v0 && hint.k < hi) {
+      lo = hint.k;
+      while (lo < hi - 1 && vs[lo + 1] <= uu) lo++;
+      while (vs[lo] > uu) lo--;
+      hi = lo + 1;
+    } else while (hi - lo > 1) { const m = (lo + hi) >> 1; if (vs[m] <= uu) lo = m; else hi = m; }
+    if (hint) hint.k = lo;
+    const ax = vx[lo]; const ay = vy[lo]; const bx = vx[hi]; const by = vy[hi];
+    const L = vs[hi] - vs[lo];
+    const t = L > 0 ? Math.min(1, Math.max(0, (uu - vs[lo]) / L)) : 0;
+    const dx = bx - ax; const dy = by - ay; const l = Math.hypot(dx, dy) || 1;
+    SP[o] = ax + dx * t; SP[o + 1] = ay + dy * t; SP[o + 2] = (dx / l) * A.dir; SP[o + 3] = (dy / l) * A.dir; SP[o + 4] = s;
   };
   // Each arm's fixed samples over [0, L], for the margin gate.
   const smp = new Map<ArmT, { n: number; du: number; x: Float64Array; y: Float64Array }>();
@@ -300,45 +343,56 @@ export function buildTables(scene: FieldScene, opts: GfOpts): GfTables {
     let S = smp.get(A);
     if (!S) {
       const n = Math.max(2, Math.min(48, Math.ceil(A.L / (h / 3)))); const x = new Float64Array(n + 1); const y = new Float64Array(n + 1);
-      for (let i = 0; i <= n; i++) { const p = armPt(A, (A.L * i) / n); x[i] = p.x; y[i] = p.y; }
+      const hint = { k: -1 };
+      for (let i = 0; i <= n; i++) { ptOf(A, (A.L * i) / n, 0, hint); x[i] = SP[0]; y[i] = SP[1]; }
       S = { n, du: A.L / n, x, y }; smp.set(A, S);
     }
     return S;
   };
   const marginAt = (S: { n: number; du: number; x: Float64Array; y: Float64Array }, u: number, qx: number, qy: number, dc: number): number => {
-    const dk = (k: number): number => Math.sqrt((S.x[k] - qx) * (S.x[k] - qx) + (S.y[k] - qy) * (S.y[k] - qy));
+    // K1362 t1: the far scan compares squared distances (sqrt once at the end; min commutes with sqrt exactly).
+    const X = S.x; const Y = S.y;
     const f = Math.min(S.n, Math.max(0, u / S.du)); let hi = Math.min(S.n, Math.ceil(f)); let lo = Math.max(0, Math.floor(f));
-    let dp = dk(hi); while (hi < S.n) { const dn = dk(hi + 1); if (dn < dp) break; dp = dn; hi++; }
-    dp = dk(lo); while (lo > 0) { const dn = dk(lo - 1); if (dn < dp) break; dp = dn; lo--; }
-    let d2 = Infinity; for (let k = hi + 1; k <= S.n; k++) d2 = Math.min(d2, dk(k)); for (let k = 0; k < lo; k++) d2 = Math.min(d2, dk(k));
-    return d2 - dc;
+    let ex = X[hi] - qx; let ey = Y[hi] - qy; let dp = Math.sqrt(ex * ex + ey * ey);
+    while (hi < S.n) { ex = X[hi + 1] - qx; ey = Y[hi + 1] - qy; const dn = Math.sqrt(ex * ex + ey * ey); if (dn < dp) break; dp = dn; hi++; }
+    ex = X[lo] - qx; ey = Y[lo] - qy; dp = Math.sqrt(ex * ex + ey * ey);
+    while (lo > 0) { ex = X[lo - 1] - qx; ey = Y[lo - 1] - qy; const dn = Math.sqrt(ex * ex + ey * ey); if (dn < dp) break; dp = dn; lo--; }
+    let d2 = Infinity;
+    for (let k = hi + 1; k <= S.n; k++) { ex = X[k] - qx; ey = Y[k] - qy; const dd = ex * ex + ey * ey; if (dd < d2) d2 = dd; }
+    for (let k = 0; k < lo; k++) { ex = X[k] - qx; ey = Y[k] - qy; const dd = ex * ex + ey * ey; if (dd < d2) d2 = dd; }
+    return Math.sqrt(d2) - dc;
   };
   type Q = { x: number; y: number; ua: number; ub: number; nax: number; nay: number; nbx: number; nby: number; sa: number; sb: number; fax: number; fay: number; fbx: number; fby: number };
   // The point at rho from A's tangent line at ua (on its left) and B's at ub (on its right); the straight
   // model's point when the lines are near parallel or it lands farther than the straight model's reach.
-  const solveAt = (J: { c: [number, number] | number[] }, A: ArmT, B: ArmT, th: number, ua: number, ub: number, rho: number): Q => {
-    const pa = armPt(A, ua); const pb = armPt(B, ub);
-    const nax = -pa.ty; const nay = pa.tx; const nbx = pb.ty; const nby = -pb.tx;
+  const solveAtInto = (out: Q, J: { c: [number, number] | number[] }, A: ArmT, B: ArmT, ua: number, ub: number, rho: number, hA: { k: number }, hB: { k: number }, snH: number, csH: number): void => {
+    ptOf(A, ua, 0, hA); ptOf(B, ub, 5, hB);
+    const nax = -SP[3]; const nay = SP[2]; const nbx = SP[8]; const nby = -SP[7];
     let bx = A.ux + B.ux; let by = A.uy + B.uy; const bl = Math.hypot(bx, by) || 1; bx /= bl; by /= bl;
-    const R0 = rho / Math.sin(th / 2); const x0 = J.c[0] + bx * R0; const y0 = J.c[1] + by * R0;
-    const ax0 = pa.x + rho * nax; const ay0 = pa.y + rho * nay; const bx0 = pb.x + rho * nbx; const by0 = pb.y + rho * nby;
-    const det = -pa.tx * pb.ty + pa.ty * pb.tx;
-    const base = { ua, ub, sa: pa.s, sb: pb.s, fax: pa.x, fay: pa.y, fbx: pb.x, fby: pb.y };
+    const R0 = rho / snH; const x0 = J.c[0] + bx * R0; const y0 = J.c[1] + by * R0;
+    const ax0 = SP[0] + rho * nax; const ay0 = SP[1] + rho * nay; const bx0 = SP[5] + rho * nbx; const by0 = SP[6] + rho * nby;
+    const det = -SP[2] * SP[8] + SP[3] * SP[7];
+    out.ua = ua; out.ub = ub; out.sa = SP[4]; out.sb = SP[9]; out.fax = SP[0]; out.fay = SP[1]; out.fbx = SP[5]; out.fby = SP[6];
     if (Math.abs(det) > 1e-6) {
-      const rx = bx0 - ax0; const ry = by0 - ay0; const t = (-rx * pb.ty + ry * pb.tx) / det;
-      const qx = ax0 + t * pa.tx; const qy = ay0 + t * pa.ty;
-      if (Math.hypot(qx - x0, qy - y0) < 4 * R0 + 2 * h) return { ...base, x: qx, y: qy, nax, nay, nbx, nby };
+      const rx = bx0 - ax0; const ry = by0 - ay0; const t = (-rx * SP[8] + ry * SP[7]) / det;
+      const qx = ax0 + t * SP[2]; const qy = ay0 + t * SP[3];
+      if (Math.hypot(qx - x0, qy - y0) < 4 * R0 + 2 * h) { out.x = qx; out.y = qy; out.nax = nax; out.nay = nay; out.nbx = nbx; out.nby = nby; return; }
     }
-    const cs = Math.cos(th / 2); const sn = Math.sin(th / 2);
-    return { ...base, x: x0, y: y0, nax: bx * sn - by * cs, nay: bx * cs + by * sn, nbx: bx * sn + by * cs, nby: -bx * cs + by * sn };
+    out.x = x0; out.y = y0; out.nax = bx * snH - by * csH; out.nay = bx * csH + by * snH; out.nbx = bx * snH + by * csH; out.nby = -bx * csH + by * snH;
   };
   // A foot's exact local projection on the arm's polyline: from u's segment, step to a neighbour while the
   // projection falls outside the segment (at most 6 steps; a reversal means the foot is the shared vertex).
-  const proj = (A: ArmT, u: number, x: number, y: number): number => {
+  const proj = (A: ArmT, u: number, x: number, y: number, hint: { k: number }): number => {
     const c = A.c; const v0 = cV0[c]; const nv = cNV[c]; const closed = cClosed[c] === 1;
     const sRaw = A.sR + A.dir * u; const s = closed ? norm(c, sRaw) : Math.max(vs[v0], Math.min(vs[v0 + nv - 1], sRaw)); const off = sRaw - s;
     let k = v0; let hi = v0 + nv - 1;
-    while (hi - k > 1) { const m = (k + hi) >> 1; if (vs[m] <= s) k = m; else hi = m; }
+    // K1362 t1: walk from the last call's segment (same segment the binary search finds; vs is sorted).
+    if (hint.k >= v0 && hint.k < hi) {
+      k = hint.k;
+      while (k < hi - 1 && vs[k + 1] <= s) k++;
+      while (k > v0 && vs[k] > s) k--;
+    } else while (hi - k > 1) { const m = (k + hi) >> 1; if (vs[m] <= s) k = m; else hi = m; }
+    hint.k = k;
     let wrap = 0; let mv = 0; let sf = s;
     for (let it = 0; it < 7; it++) {
       const ax = vx[k]; const ay = vy[k]; const dx = vx[k + 1] - ax; const dy = vy[k + 1] - ay; const l2 = dx * dx + dy * dy;
@@ -356,12 +410,18 @@ export function buildTables(scene: FieldScene, opts: GfOpts): GfTables {
     }
     return Math.min(A.L, Math.max(0, (sf + off - A.sR) * A.dir));
   };  // Each corrector step moves a foot by at most lim (a node's straight-model step): a foot never jumps.
-  const track = (J: { c: [number, number] | number[] }, A: ArmT, B: ArmT, th: number, ua: number, ub: number, rho: number, it: number, lim = Infinity): Q => {
-    let q = solveAt(J, A, B, th, ua, ub, rho);
-    const cl = (u0: number, u1: number): number => Math.min(u0 + lim, Math.max(u0 - lim, u1));
-    for (let k = 0; k < it; k++) q = solveAt(J, A, B, th, cl(q.ua, proj(A, q.ua, q.x, q.y)), cl(q.ub, proj(B, q.ub, q.x, q.y)), rho);
-    return q;
+  const trackInto = (out: Q, J: { c: [number, number] | number[] }, A: ArmT, B: ArmT, ua: number, ub: number, rho: number, it: number, lim: number, hA: { k: number }, hB: { k: number }, snH: number, csH: number): void => {
+    solveAtInto(out, J, A, B, ua, ub, rho, hA, hB, snH, csH);
+    for (let k = 0; k < it; k++) {
+      const oua = out.ua; const oub = out.ub; const ox = out.x; const oy = out.y;
+      const na = Math.min(oua + lim, Math.max(oua - lim, proj(A, oua, ox, oy, hA)));
+      const nb = Math.min(oub + lim, Math.max(oub - lim, proj(B, oub, ox, oy, hB)));
+      solveAtInto(out, J, A, B, na, nb, rho, hA, hB, snH, csH);
+    }
   };
+  const QVB: Q = { x: 0, y: 0, ua: 0, ub: 0, nax: 0, nay: 0, nbx: 0, nby: 0, sa: 0, sb: 0, fax: 0, fay: 0, fbx: 0, fby: 0 };
+  const QPB: Q = { x: 0, y: 0, ua: 0, ub: 0, nax: 0, nay: 0, nbx: 0, nby: 0, sa: 0, sb: 0, fax: 0, fay: 0, fbx: 0, fby: 0 };
+  const QQB: Q = { x: 0, y: 0, ua: 0, ub: 0, nax: 0, nay: 0, nbx: 0, nby: 0, sa: 0, sb: 0, fax: 0, fay: 0, fbx: 0, fby: 0 };
   scene.junctions.forEach((J, ji) => {
     const S = sibs[ji].sort((u, v) => u.ang - v.ang); const n = S.length; if (n < 2) return;
     const g = find(ji); const ne = J.arms.length; const styles = J.corners ?? [];
@@ -379,7 +439,9 @@ export function buildTables(scene: FieldScene, opts: GfOpts): GfTables {
       const r0 = (cr / 3) * Math.min(2 * h, 1.5 * h * t2);
       if (!(r0 > 1e-9)) continue;
       const rb = Math.max(rootBand * h * rootTip(th), 1e-9 * h);
-      const V = track(J, A, B, th, uV0, uV0, h, 8);
+      const hA = { k: -1 }; const hB = { k: -1 };
+      const snH = Math.sin(th / 2); const csH = Math.cos(th / 2);
+      trackInto(QVB, J, A, B, uV0, uV0, h, 8, Infinity, hA, hB, snH, csH); const V = QVB;
       if (!(V.ua > 0 && V.ua < A.L && V.ub > 0 && V.ub < B.L)) continue;
       { // form B's V gate, mirrored (solveEq): Newton on the TRUE distances to both arms from the straight
         // model's V, each foot clamped at its arm's root; a foot at the root (dV = 0) or no solution rejects.
@@ -400,8 +462,8 @@ export function buildTables(scene: FieldScene, opts: GfOpts): GfTables {
         };
         let ua = uV0; let ub = uV0; let ok = false;
         for (let it = 0; it < 60; it++) {
-          footW(SAw, x, y); ua = fw.u; const pa = { x: fw.x, y: fw.y }; footW(SBw, x, y); ub = fw.u; const pb = { x: fw.x, y: fw.y };
-          const dax = x - pa.x; const day = y - pa.y; const dbx = x - pb.x; const dby = y - pb.y;
+          footW(SAw, x, y); ua = fw.u; const pax = fw.x; const pay = fw.y; footW(SBw, x, y); ub = fw.u; const pbx = fw.x; const pby = fw.y;
+          const dax = x - pax; const day = y - pay; const dbx = x - pbx; const dby = y - pby;
           const da = Math.sqrt(dax * dax + day * day); const db = Math.sqrt(dbx * dbx + dby * dby);
           const Fa = da - h; const Fb = db - h;
           if (Math.abs(Fa) < 1e-9 * h && Math.abs(Fb) < 1e-9 * h) { ok = true; break; }
@@ -429,16 +491,16 @@ export function buildTables(scene: FieldScene, opts: GfOpts): GfTables {
         const mB = marginAt(SB, p.ub, p.x, p.y, Math.hypot(p.x - p.fbx, p.y - p.fby)); if (mB <= -0.05 * h) return 0;
         return ss01(1 + Math.min(0, mA, mB) / (0.05 * h)) * fSteep * fSlack * fA * fB;
       };
-      const dN = r0 / NODES; let sPrev = wOf(V); let r = 0; let p = V;
+      const dN = r0 / NODES; let sPrev = wOf(V); let r = 0; let pua = V.ua; let pub = V.ub;
       for (let k = 1; k <= NODES && sPrev > 0; k++) {
         const du = dN / t2;
-        const pk = track(J, A, B, th, Math.min(A.L, p.ua + du), Math.min(B.L, p.ub + du), h + k * dN, TRACK, 4 * du);
+        trackInto(QPB, J, A, B, Math.min(A.L, pua + du), Math.min(B.L, pub + du), h + k * dN, TRACK, 4 * du, hA, hB, snH, csH); const pk = QPB;
         const sK = Math.min(sPrev, wOf(pk)); const seg = 0.5 * (sPrev + sK) * dN;
         if (sK < sPrev && sK === 0) { r += seg; break; }
-        r += seg; sPrev = sK; p = pk;
+        r += seg; sPrev = sK; pua = pk.ua; pub = pk.ub;
       }
       if (!(r > 1e-9)) continue;
-      const q = track(J, A, B, th, p.ua, p.ub, h + r, TRACK + 1, 4 * dN / t2);
+      trackInto(QQB, J, A, B, pua, pub, h + r, TRACK + 1, 4 * dN / t2, hA, hB, snH, csH); const q = QQB;
       const rV = Math.hypot(V.x - q.x, V.y - q.y);
       const rmax = rV + (2 * aa) / Math.max(0.1, Math.sin(th / 2));
       K.push({ thru, rv: rV, cx: q.x, cy: q.y, r, rmax, eax: -q.nax, eay: -q.nay, ebx: -q.nbx, eby: -q.nby, g, j: ji, a: A.ei, b: B.ei, theta: th, ca: A.c, cb: B.c, sa: q.sa, sb: q.sb });
@@ -479,19 +541,29 @@ export function buildTables(scene: FieldScene, opts: GfOpts): GfTables {
   const gW = Math.max(1, Math.ceil((gx1 - gx0) / G)); const gH = Math.max(1, Math.ceil((gy1 - gy0) / G));
   const nCell = gW * gH;
   const cellChN = new Int32Array(nCell); const cellKN = new Int32Array(nCell);
-  const cellRange = (x0: number, y0: number, x1: number, y1: number, R: number): [number, number, number, number] => [
-    Math.max(0, Math.floor((x0 - R - gx0) / G)), Math.max(0, Math.floor((y0 - R - gy0) / G)),
-    Math.min(gW - 1, Math.floor((x1 + R - gx0) / G)), Math.min(gH - 1, Math.floor((y1 + R - gy0) / G)),
-  ];
-  for (let q = 0; q < nCh; q++) { const [a, b, c, d] = cellRange(chBox[4 * q], chBox[4 * q + 1], chBox[4 * q + 2], chBox[4 * q + 3], rc); for (let y = b; y <= d; y++) for (let x = a; x <= c; x++) cellChN[y * gW + x]++; }
-  for (let q = 0; q < nK; q++) { const [a, b, c, d] = cellRange(kCx[q], kCy[q], kCx[q], kCy[q], kRmax[q] + W + 3 * aa); for (let y = b; y <= d; y++) for (let x = a; x <= c; x++) cellKN[y * gW + x]++; }
+  // K1362 t1: each item's cell range computed once (same floors), reused by the count and fill passes.
+  const rngCh = new Int32Array(4 * nCh); const rngK = new Int32Array(4 * nK);
+  for (let q = 0; q < nCh; q++) {
+    const x0 = chBox[4 * q]; const y0 = chBox[4 * q + 1]; const x1 = chBox[4 * q + 2]; const y1 = chBox[4 * q + 3];
+    const a = Math.max(0, Math.floor((x0 - rc - gx0) / G)); const b = Math.max(0, Math.floor((y0 - rc - gy0) / G));
+    const c = Math.min(gW - 1, Math.floor((x1 + rc - gx0) / G)); const d = Math.min(gH - 1, Math.floor((y1 + rc - gy0) / G));
+    rngCh[4 * q] = a; rngCh[4 * q + 1] = b; rngCh[4 * q + 2] = c; rngCh[4 * q + 3] = d;
+    for (let y = b; y <= d; y++) { let i = y * gW + a; for (let x = a; x <= c; x++) cellChN[i++]++; }
+  }
+  for (let q = 0; q < nK; q++) {
+    const R = kRmax[q] + W + 3 * aa; const kx = kCx[q]; const ky = kCy[q];
+    const a = Math.max(0, Math.floor((kx - R - gx0) / G)); const b = Math.max(0, Math.floor((ky - R - gy0) / G));
+    const c = Math.min(gW - 1, Math.floor((kx + R - gx0) / G)); const d = Math.min(gH - 1, Math.floor((ky + R - gy0) / G));
+    rngK[4 * q] = a; rngK[4 * q + 1] = b; rngK[4 * q + 2] = c; rngK[4 * q + 3] = d;
+    for (let y = b; y <= d; y++) { let i = y * gW + a; for (let x = a; x <= c; x++) cellKN[i++]++; }
+  }
   const cellCh0 = new Int32Array(nCell); const cellK0 = new Int32Array(nCell);
   let sCh = 0; let sK = 0;
   for (let i = 0; i < nCell; i++) { cellCh0[i] = sCh; sCh += cellChN[i]; cellK0[i] = sK; sK += cellKN[i]; }
   const cellChList = new Int32Array(sCh); const cellKList = new Int32Array(sK);
   const fCh = new Int32Array(nCell); const fK = new Int32Array(nCell);
-  for (let q = 0; q < nCh; q++) { const [a, b, c, d] = cellRange(chBox[4 * q], chBox[4 * q + 1], chBox[4 * q + 2], chBox[4 * q + 3], rc); for (let y = b; y <= d; y++) for (let x = a; x <= c; x++) { const i = y * gW + x; cellChList[cellCh0[i] + fCh[i]++] = q; } }
-  for (let q = 0; q < nK; q++) { const [a, b, c, d] = cellRange(kCx[q], kCy[q], kCx[q], kCy[q], kRmax[q] + W + 3 * aa); for (let y = b; y <= d; y++) for (let x = a; x <= c; x++) { const i = y * gW + x; cellKList[cellK0[i] + fK[i]++] = q; } }
+  for (let q = 0; q < nCh; q++) { const a = rngCh[4 * q]; const b = rngCh[4 * q + 1]; const c = rngCh[4 * q + 2]; const d = rngCh[4 * q + 3]; for (let y = b; y <= d; y++) { const i0 = y * gW; for (let x = a; x <= c; x++) { const i = i0 + x; cellChList[cellCh0[i] + fCh[i]++] = q; } } }
+  for (let q = 0; q < nK; q++) { const a = rngK[4 * q]; const b = rngK[4 * q + 1]; const c = rngK[4 * q + 2]; const d = rngK[4 * q + 3]; for (let y = b; y <= d; y++) { const i0 = y * gW; for (let x = a; x <= c; x++) { const i = i0 + x; cellKList[cellK0[i] + fK[i]++] = q; } } }
   const t5 = now();
 
   return {
