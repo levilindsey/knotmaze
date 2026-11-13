@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1362.
+Next free ID: K1363.
 
 ## Waiting on Levi
 
@@ -292,14 +292,6 @@ Next free ID: K1362.
   (his K928 plan: finish iterating, then hand-edit, then the pipeline reads his curves as drawn), or more look
   notes first? Every note so far is built (K1251). Sheets: .claude/probes/K863/trace/out38/png/; J3NV has no
   template SVG yet (out34/cursive_template.svg shows the export).
-- **K1315** · Junction under-tail ends in rp=outline: form B's round dot, or keep the outline's square end?
-  K1314 group 1, 18 census finds (e.g. muse_default_tw j150, g41_user_tw64 j63/j64, x134); sheet
-  `.claude/probes/K1314/out/s1/crops/sheets/broken_ink_01.png` (form B | today | rp=outline). Asked
-  2026-11-11. Also muse_hash j78's hard edge (5.88, 8.50): c79's open start under c33 (K1314 s6 handoff),
-  and muse_hash c8's open end (19.41, 14.16; `.claude/probes/K1314/out/s7/efafter/spot_005.png`).
-  Since K1314 s9 (b9db678f) about 19 such ends fade in instead (`out/s9/after/spot_004.png`, `spot_011.png`); keep, or back to square.
-  K1314 s10 traced muse_hash j36 (2816 px; a self-crossing 0.445 from the root leaves arm 111 empty, c11's border ends square) and g41_def_tw64 j97 (319 px) to these ends (`.claude/probes/K1314/out/s10/before4x/spot_001-002.png`).
-  - next: re-asked 2026-11-12 with a current sheet: .claude/probes/K1314/out/ask_k1315/k1315_now.png (form B | rp=outline | rp=outline). 15 of the 17 census bar finds (census_k1314s12b: the 12 broken_ink, j78's hard edge, g41_user_tw64 j63/j64's spikes) hang on this answer
 - **K1319** · The K1045 open eye at muse_hash j73 in rp=outline: its ink ring closes round at the right tip,
   where form B cuts it off at an angle (form B's j73 corner takes the same far meet as j74's and never rounds
   it). Keep the round tip, or match form B? Census counts it as one stray_ink spike (262 px). Picture
@@ -311,6 +303,10 @@ Next free ID: K1362.
   s34's ABBA). Acceptable, or how far off (choppy, lagging)? Asked 2026-11-12; K1247 s35
   (docs/design/K1247_s35_route_review.md) projects the gate and a relaxed bar
   - next: K1247 s36 makes a side-by-side clip (pooled def drag next to master, about 50 Hz at about 85 ms latency) at .claude/probes/K1247/out/s36/clip/; re-ask with it
+- **K1362** · Render split: per pixel on the GPU (form B's distance, from closed-form crossing and junction
+  tables the CPU builds in under 1 ms) instead of the outline mesh built on the CPU each frame (65-117 ms on
+  def). Reverses the 2026-11-09 call (K1040 dropped for K1240); a 1-2 stage timing and census test would
+  decide. Analysis in docs/ledger_notes.md.
 
 ## In progress
 
@@ -585,6 +581,15 @@ Binding for every stage:
   new, and pause running agents with their WIP committed.
 
 Running agents are listed under In progress, each with its own next step.
+- **K1315** · Junction under-tail ends in rp=outline: a bug, not a choice. Levi, 2026-11-12, on k1315_now.png: "Not a
+  single tile in the image shows an acceptable scenario" (form B's round dots and the outline's square stubs both
+  fail). Bar: no ink past the over thread's outline, no dot, no stub. K1314 group 1, 18 census finds (e.g. muse_default_tw j150, g41_user_tw64 j63/j64, x134); sheet
+  `.claude/probes/K1314/out/s1/crops/sheets/broken_ink_01.png` (form B | today | rp=outline). Asked
+  2026-11-11. Also muse_hash j78's hard edge (5.88, 8.50): c79's open start under c33 (K1314 s6 handoff),
+  and muse_hash c8's open end (19.41, 14.16; `.claude/probes/K1314/out/s7/efafter/spot_005.png`).
+  Since K1314 s9 (b9db678f) about 19 such ends fade in instead (`out/s9/after/spot_004.png`, `spot_011.png`); keep, or back to square.
+  K1314 s10 traced muse_hash j36 (2816 px; a self-crossing 0.445 from the root leaves arm 111 empty, c11's border ends square) and g41_def_tw64 j97 (319 px) to these ends (`.claude/probes/K1314/out/s10/before4x/spot_001-002.png`).
+  - next: K1314 s15 after s14 merges (same builder files): fix the ends to the bar, form B no reference here. 15 of the 17 census bar finds (census_k1314s12b: the 12 broken_ink, j78's hard edge, g41_user_tw64 j63/j64's spikes) are these ends
 - **K1201** · S4b's joint step (K1139): a two-ended arm's ridge near its joint (xR < 0.5) steps the light.
   21F (8e0c5a1c): play meets it in every daily of a week, 2-6 arm-ends each, steps up to 0.77 after the reach
   window (CPU, lattice spans; notes). Fix (b) crossfaded the pulse bands K1211 S6 removed (13aab452); K1218 S2's crops at its eight spots show no step (5a12c51f).

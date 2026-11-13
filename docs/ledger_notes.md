@@ -4147,3 +4147,47 @@ Redesign junctions against form B: after K1279 every crossing that still differs
 ## K1278
 
 Paint on the outline must blend seamlessly across junctions (Levi 2026-11-10): colour per pixel from fields continuous across faces, triangles and junctions (chain + s, per-arm weights easing to an exact hand-off as in form B, a pulse's travel distance continuous through the junction), never per face or triangle. Gate: a seam test sampling section blends and pulses across every face edge, triangle edge and junction for steps and kinks, plus K1244's sheets (K1250).
+
+## K1362 (2026-11-12, Levi: "Fundamentally, why is it slow? What hypothetically would be an efficient approach?")
+
+Observed (measured):
+- def's outline worker: 65-66 ms p50 in the Node bench, 105-117 ms in the app under load (K1247 s35). frame() is
+  38 ms of it, and its solves about 29 (setup 2.9, borders 6.4, corners 10.0, crossings 2.2, eyes 1.0, tailWalk
+  6.4); fill, band, z and paint build the mesh from the rest.
+- A corner costs about 18 us, 45x K1310's assumption (10.0 ms / 563 corners). K1240's premise was that every cut
+  is a few local closed-form tests.
+- "Nothing flips" did not hold per frame: corner ok flips on 67% of def's frames, the band's per-piece mode on 68%,
+  point counts on 99% (s35's topology table). The piece set and the band layout are fixed, as designed.
+- The incremental route failed on coupling: a moved crossing releases its partner, and dirty spans reach ~100%
+  (s30-s34).
+- K1040's GPU field was slow on its CPU side too (the FieldModel's corner re-fits and h/8 walks, 256-474 ms), and
+  its label pass took 4.1-9.7 ms on the Pixel.
+
+Inferred (not measured as such):
+1. The CPU builds an explicit, exact outline of the whole scene every frame, then rasterizes it: offset borders,
+   cuts, fillet arcs, eyes, tails, regions, triangulated fill, band strips, z. Work and output scale with the
+   scene's points, not with what moved, and the output is uploaded again each frame.
+2. Explicit geometry is fragile at degenerate spots (near-tangent crossings, short arms, tight eyes, under-tails
+   at junctions). Each census fix added a case and often a per-frame search (tailWalk over 16600 tail borders,
+   reachOf, corner validity); outline.ts is ~470 KB. The cost and the artifacts share that cause.
+3. Single-threaded, branchy, allocation-heavy JS (the pool is memory-bound past ~6 workers).
+
+The efficient approach (a hypothesis):
+- CPU per frame: only O(crossings + junctions) closed-form records: each crossing's order and cut parameters;
+  each junction's arms, each fillet's rolling-ball centre and radius, and a fade weight for its existence. No
+  searches, walks or iterative fits: about 1-2k records, well under 1 ms.
+- GPU per pixel: form B's own definition, which is already a per-pixel distance (member sides whose foot is
+  outside every other member, exposed endpoints, rolling-ball fillets), against the few members a tile's bin names.
+  Union, crossing clips, round corners and caps come from the distance function, not from built geometry. Ink is
+  a band around the exposed-outline distance, fill is the union's inside, shading bands are functions of
+  (distance, arc length), and paint stays one GLSL (K1242 point 2). The shader is the one definition, so K1240's
+  seam goal holds; the census checks it against form B's float64 reference.
+- Expected: desktop GPU 1-3 ms, CPU under 1 ms, one frame of latency, no worker pool. Risks: the Pixel's fill
+  rate (K1040's 4.1-9.7 ms), and the discrete parts (fillet existence, membership, depth ties) still need fades,
+  as in any route.
+- Explicit geometry earns its cost only for something that runs around the outline (a dash, a pencil texture) or
+  reads it as data (hit tests). Nothing planned does.
+
+Test before switching: one stage renders the 12 census scenes with a GPU form B shader (no fades), runs the census
+on it, and times def's pass on desktop and the Pixel. Switch if it is under ~3 ms desktop and ~8 ms Pixel with no
+more census finds than rp=outline; otherwise the pool and R1/R2 go on.
