@@ -104,8 +104,13 @@ type Pin = { f0: { table: string; paint: string; band: string }; f1: { table: st
 // join; conforming per-edge splits down to REFINE_MIN): band only, f0 and f1, on ring and
 // g41_ring_tw42. Table and paint unchanged. Checked against form B (census k1324s3b, crops in
 // .claude/probes/K1324/out/s3).
+// K1344 s1 re-pinned on purpose (2026-11-12): a tail walk that turns back with no sampled crossing
+// (a hook: E's border's swallowtail narrower than the walk's step) has its hook cut (outline.ts
+// cutTailHooks, muse_hash j116's crease): table and band, f0 and f1, on ring (one tail). Paint
+// unchanged; g41_ring_tw42 unchanged (no hook). Checked against form B (census k1344s1, crops in
+// .claude/probes/K1344/out/s1).
 const PINS: Record<string, Pin> = {
-  ring: { f0: { table: "276636e58a693c3b", paint: "e57b025dc17996ca", band: "3b4e9d0c0f1c408e" }, f1: { table: "884b7cf4c709b5c6", paint: "a32ea02671fd16bb", band: "60229ac2dd831f76" } },
+  ring: { f0: { table: "a55c324f22093a90", paint: "e57b025dc17996ca", band: "698cb300eb87efff" }, f1: { table: "12f543afe16c0a90", paint: "a32ea02671fd16bb", band: "62a983b6e0759ed5" } },
   g41_ring_tw42: { f0: { table: "11c7cdb8da1b9891", paint: "c06a2bc79a0cc3d1", band: "0fecd8dcb0a739dc" }, f1: { table: "1f89393aff28b751", paint: "cc9e773970557908", band: "b40fae279b9f1b04" } },
 };
 
