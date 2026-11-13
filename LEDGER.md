@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1346.
+Next free ID: K1348.
 
 ## Waiting on Levi
 
@@ -559,15 +559,6 @@ Next free ID: K1346.
   - evidence: .claude/probes/K1314/ (census tools, k1314_s8_bench.ps1); untracked out/s1-s10/, baseline census_s9
   - next: K1314 s11 after K1247 s30 frees outline.ts: j58a's reversed fade (corner 176's meet, or the chevron's return-leg alpha against form B). Baseline census_k1325s2 (stray 4, hard 1, paper 0, broken 12, k1049 0; total 17)
   - brief: `docs/design/K1314_s10_breaks_step.md`
-- **K1324** · draw.ts tieAlpha / contactPasses ties two arms of one form B junction group, so the band fades
-  ink there: specks inside the ink at def j174 (c71/c73, group 119), ring j12, g41_ring_tw42 j12,
-  g41_user_tw64 j28 (K1314 s6 handoff; crops `.claude/probes/K1314/out/s6/after4x/spot_016-019`). Make no
-  contact pass between arms of one group. After K1247 s25 merges (it owns draw.ts)
-  - owner: nobody since 2026-11-12 10:42 (merged; agent `a5c6be8e47b5c2e6a` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `0a9119cd`
-  - evidence: .claude/probes/K1324/ (tools); untracked out/s1-s3/
-  - next: closing: x22 cleared (s2), its census lower-join seam fixed (s3); c8 hard edge is K1315, c8 dotted seam filed for the corner-fan fold
-  - brief: `docs/design/K1324_s3_under_seams.md`
 - **K1338** · The outline worker frame's frame() (64-71 ms p50, outline.ts) and band (16-26 ms, bandOf + band
   files) on def mid-drag, toward frame + band <= 10 ms, look unchanged; K1247's sibling stage (s28 takes fill
   and zChains); brief `docs/design/K1247_s29_frame_band_speed.md`
@@ -841,6 +832,11 @@ Every other item below waits on the trigger it names.
 - **K1344** · muse_hash j116's lower junction (~25.88-25.92, 14.21-14.35): rp=outline draws a dark wedge
   crease with a hard diagonal where the reference is smooth; the census books it only as tail_look (60 px), so
   it is uncounted (K1325 s2; crop `.claude/probes/K1325/out/s2/x4/j116_notch.png`)
+- **K1346** · A tail's corner fan folds: its outer corner points jitter 0.0003-0.0035 against the inner arc,
+  so slivers overlap and ink twice (muse_hash c8's under-pass dotted seam at (19.41, 14.16); 76 px in the app
+  at 960 px/unit). Make the corner cluster one exact point, or skip/clamp backward quads, in outline.ts and
+  the inner-point rule's three builders (band_gpu.ts inner(), band_rec.ts innerOfP, draw.ts bandData) together
+  (K1324 s3 handoff; `.claude/probes/K1324/k1324_s3_appfold*`, crops `out/s3/x8x/spot_003.png`)
 
 ## Residuals (known, not fixed)
 
@@ -1920,6 +1916,9 @@ Every other item below waits on the trigger it names.
   (`k1247s28_bench.ps1`). Old K1040/K1239 smoke scripts carry it too
 - **K1345** · Faint rp=outline residue beside the band at muse_hash x58 (up to 0.046 ink) and x345 (0.015),
   none above 0.05, below the census bar (K1325 s2; crops `.claude/probes/K1325/out/s2/x4/`)
+- **K1347** · Census vs app at g41_user_tw64 (5.19, 17.60): the census band gives .888 where the app gives 1.0
+  (on master before K1324 s3 too); the census crop shows a needle and a hard diagonal there
+  (`.claude/probes/K1324/out/s3/moved8x/spot_003.png`)
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2268,6 +2267,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1324** · no contact pass inside one junction group (s1), muse_hash x22's self pass buried whole (s2, selfBury + BAND_FS), and the census band's lower-join seam at x22 (s3, draw.ts bandData splits edges where the tie bends); c8's hard edge is K1315's end, c8's dotted seam is K1346. Done in 0a9119cd (2026-11-12).
 - **K1325** · the census reference draws x304, j30 and muse_hash's five self-crossings (x304, x22, x345, j116, x58) whole; census m1 -> k1325s2: stray_ink 9 -> 4, total 22 -> 17, nothing else moved. Done in 3026bfc3 (2026-11-12).
 - **K1334** · Census reference smears where a chain crosses itself: muse_hash x22 (414 px), x345 (19.996, 3.944) 225 px, j116 (25.518, 13.825) 696 px, x58 (0.113, 15.187) 527 px. rp=outline draws them whole since 943ae592, so census_k1324s2a counts form B's flaw (stray_ink 7 -> 10). Dropped: folded into K1325 s2 (docs/design/K1325_s2_self_crossing_reference.md) with x304 (2026-11-12).
 - **K1333** · one shared form B cache for every checkout in the main checkout's .claude/probes/K1314/out/fb, fbf (tmp + rename writes, length-checked reads, rename-aside pruning; two concurrent runs matched one run) (K1325 s1). Done in 21dad33d (2026-11-12).
