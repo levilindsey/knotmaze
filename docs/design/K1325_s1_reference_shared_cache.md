@@ -79,3 +79,44 @@ Under 40 lines:
 - your last SHA.
 
 End with `Ledger items` and K1325's and K1333's handle fields.
+
+## Handoff (K1325 s1 agent, 2026-11-12, start 07:46:54, stop 08:58)
+
+Branch `worktree-agent-ab310ce6484ab4f81` (worktree `.claude/worktrees/agent-ab310ce6484ab4f81`), commits
+a43412f3..HEAD, nothing pushed. Tools in `.claude/probes/K1325/`, outputs in `.claude/probes/K1325/out/s1/`
+(not committed), censuses in `.claude/probes/K1314/out/s1/census_k1325s1.*` (default) and `census_k1325s1p.*`
+(`--plateau`), compared with `k1325_compare.ps1 -Base s9 -Tag k1325s1`.
+
+- **j30 (fixed).** recordFail's V solve failed from its seed, so j30's corner never reached the vfail list
+  (vfailGrid, vroundInk) and the reference drew the tip notched: a 201 px stray_ink find. recordFail now marches
+  the V seed (`form_b_fillet.ts`, `MARCH`; `--nomarch` restores s9's reference). Census k1325s1 against s9:
+  stray 7 -> 6 (j30 gone), hard 1, paper 0, broken 12, k1049 0, owner_only 2300, tail_look 185; every other
+  counted find matched, px included. j30 keeps an informational 144 px band:tail tail_look; g41_user_tw64 j10's
+  tail_look left in every run, `--nomarch` too (s9 was written before K1314 s9's rebase onto 304d427a).
+- **x304 (not fixed by default: Levi's call).** Form B's depth hat ends at window 0.658 while chain 67's
+  self-crossing passes still overlap (reach 0.85 / 0.80), so past the window the z tie goes to the nearer body
+  and the over pass's border fades; rp=outline draws it crisp to the Y. The opt-in plateau reference
+  (`--plateau`: K922's overlap depth, `k1314_census.ts` PLATEAU, plateauOf) mends x304, but moves the reference
+  at 66 muse_hash and 18 g41_user_tw64 crossings, and its census (k1325s1p, `k1314_run.ps1 -Flags --plateau`)
+  reads stray 6 -> 12, hard 1 -> 4, broken 12 -> 22, owner_only 2303, tail_look 234: x304 goes, x22 (stray 148
+  px) becomes a tail_look, 21 finds are new (muse_hash 14, ring j4, g41_ring_tw64 x68, g41_user_tw64 5). In the
+  crops viewed (j116, j52, x68) the outline matches the default reference and the plateau draws another
+  over/under or a crisp border across a shallow overlap, so those finds would be the reference's. No gate found
+  that isolates x304. The outline also has a faint smear below x304's Y that plain form B shares
+  (`out/s1/diag/x304_smear_z3.png`); the census does not count it.
+- **Shared cache (K1333, done).** `CACHE_ROOT` = the main checkout's `.claude/probes/K1314/out/` (found through
+  `git rev-parse --git-common-dir`), `fb|fbf/<scene>_<key>/`. A tile is written to `<file>.<pid>.<rand>.tmp`
+  and renamed into place; a read takes only exactly 12 W H bytes and touches its dir; pruneRoot renames aside,
+  then deletes, only key dirs untouched for a day and .tmp files over an hour old. `k1314_run.ps1`'s header
+  says so (and `-Flags`). Two-run check (`k1325_cachecheck.ps1`, `out/s1/cachecheck.log`): my checkout and a
+  second worktree on g41_user_tw64 `--nomarch` at once, 155 s each, exit 0, both `3 0 0 2 0 5 137 21`, one fbf
+  key dir (15 files, 213.5 MB) and the main fb dir, one .tmp seen mid-run, none left, no short tile; a fresh
+  single run (cc_one) matched find by find (163 arts, 0 differences); worktree removed, main node_modules
+  intact, test and plateau key dirs deleted. Size: fb 12 keys 3.83 GB, fbf 24 keys 7.66 GB (12 from 04:21, 12
+  from k1325s1). This worktree has no `out/fb` or `out/fbf`.
+- **Checks.** `npm test` green (229 files, 2933 tests passed; 2 and 12 skipped), no golden diff.
+- **Crops (4x).** `out/s1/j30_before_after_outline.png`, `x304_before_plateau_outline.png` (default |
+  `--plateau` | outline), `plateau/` (the 21 new plateau finds and x22).
+- **Left.** Levi: adopt the plateau (then the outline needs K922's overlap depth too, or the 21 become outline
+  work) or keep plain form B and file x304 as a known reference fault. After the merge each worktree deletes
+  its own `out/fb` and `out/fbf`; K1314 s10's and K1247 s27's censuses keep their own caches until they rebase.
