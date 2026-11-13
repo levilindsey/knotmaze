@@ -554,10 +554,10 @@ Next free ID: K1357.
   most cases. But there are still plenty of unacceptable artifacts"): an artifact census (stray ink, hard
   colour edges inside fills, paper holes, broken ink) across scenes, then fix stages that drive its count to
   0; the look gate in docs/design/K1240_gate.md
-  - owner: agent `aafbd884214382d4f` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 16:24, 2 h cap ~18:24)
-  - branch: `worktree-agent-aafbd884214382d4f`, worktree `.claude/worktrees/agent-aafbd884214382d4f`; last commit: `91fff3ed`
+  - owner: nobody since 2026-11-12 17:49 (merged; agent `aafbd884214382d4f` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `435af9c4`
   - evidence: .claude/probes/K1314/ (k1314s12_*), baseline out/s1/census_k1314s11d
-  - next: s12 running: c8 tail line and lost ink, j58a, s11 app ABBA
+  - next: s13: j58a - give band_rec's start-arc fan its own alpha rule (or lift piece 196's side rule only outside that fan), then piece 371's root ramp; rerun s11's app ABBA (02c8ca8b vs 8675bb22) on a quiet machine. s12 fixed c8's tail line (tailJoin, ee1c3b35); thruTail and ownSide are off (census spikes, j58a5 wedge). Brief handoff: docs/design/K1314_s12_c8_tail_j58a.md
   - brief: `docs/design/K1314_s12_c8_tail_j58a.md`
 - **K1341** · Three exact cuts K1247 s28 left: a squared pre-check before draw.ts nearRange's sqrt (zChains'
   hottest line), hinted spanOf searches, a box bound in fill_tri.ts's disk scan (s28 handoff)
