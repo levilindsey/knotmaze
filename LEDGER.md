@@ -561,10 +561,10 @@ Next free ID: K1356.
   - brief: `docs/design/K1314_s12_c8_tail_j58a.md`
 - **K1341** · Three exact cuts K1247 s28 left: a squared pre-check before draw.ts nearRange's sqrt (zChains'
   hottest line), hinted spanOf searches, a box bound in fill_tri.ts's disk scan (s28 handoff)
-  - owner: agent `ac63f135098807a15` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (sonnet, started 2026-11-12 16:04, 1 h cap ~17:04)
-  - branch: `worktree-agent-ac63f135098807a15`, worktree `.claude/worktrees/agent-ac63f135098807a15`; last commit: `526003da`
+  - owner: nobody since 2026-11-12 16:41 (merged; agent `ac63f135098807a15` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `1da71a35`
   - evidence: .claude/probes/K1341/ (k1341s1_*, k1341s2_*); stage 1 branch worktree-agent-a74fd2c72ec40ff48 at 109e621f (zChains -17..40%, fill/band unclear under load)
-  - next: s2 running: interleaved Node A/B of fill, band, zChains; drop cuts that read slower; then merge
+  - next: null test (outline_m vs an identical outline) for order bias in k1341s2_ab.ts, then bisect def fill +1..2.7% (GC shift, or draw.ts footNear/zAtC)
   - brief: `docs/design/K1341_s2_split_cuts.md`
 
 ## Next, in order
