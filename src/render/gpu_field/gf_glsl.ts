@@ -22,21 +22,37 @@ void main() {
   gl_Position = vec4(id == 1 ? 3.0 : -1.0, id == 2 ? 3.0 : -1.0, 0.0, 1.0);
 }`;
 
-export function gfFs(probe: boolean, tangentTerms = true): string {
+/**
+ * K1362 s4: a TIER is the same program with smaller per-pixel arrays (p pieces, k corners), drawn first under a
+ * stencil route (gf_pass.ts): a pixel that would need more than the tier holds (a (p+1)th piece, a (k+1)th corner,
+ * or, without `ramps`, a ramping piece) is DISCARDED, and a later tier or the full program draws it. Where a tier
+ * writes, its state is the full program's state step for step, so its output is the full program's (the mirror's).
+ * `half`: the tier keeps its integer and [0, 1] per-pixel state in mediump (fp16 on mobile; ignored by desktop GPUs).
+ */
+export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean }
+
+export function gfFs(probe: boolean, tangentTerms = true, tier?: GfTier): string {
+  const mp = tier ? tier.p : MAXP;
+  const mk = tier ? tier.k : MAXK;
+  const half = !!(tier && tier.half);
   return `#version 300 es
 precision highp float;
 precision highp int;
 precision highp sampler2D;
-#define MAXP ${MAXP}
-#define MAXK ${MAXK}
+#define MAXP ${mp}
+#define MAXK ${mk}
 #define MAXR ${MAXR}
-#define MAXS ${MAXP + MAXK}
+#define MAXS ${mp + mk}
 #define LOG ${GF_LOG}
 #define TWM ${(1 << GF_LOG) - 1}
 #define BIG 1e30
 #define BIGT 1e29
+#define IQ ${half ? "mediump" : "highp"}
+#define FQ ${half ? "mediump" : "highp"}
 ${probe ? "#define PROBE 1" : ""}
 ${tangentTerms ? "#define TANGENT 1" : ""}
+${tier ? "#define TIER 1" : ""}
+${tier && !tier.ramps ? "#define NORAMP 1" : ""}
 uniform sampler2D uD;
 uniform int uOCh, uOV, uOPin, uOArm, uOK, uOChk, uOCell, uOChL, uOKL;
 uniform float uH, uW, uAA, uSigma, uZt, uWin, uRc;
@@ -50,21 +66,33 @@ layout(location = 2) out vec4 o2;
 #else
 out vec4 o0;
 #endif
+#ifdef PROBE
+#define PR(x) x
+#else
+#define PR(x)
+#endif
 
 vec4 F(int i) { return texelFetch(uD, ivec2(i & TWM, i >> LOG), 0); }
 float L4(int base, int i) { vec4 t = F(base + (i >> 2)); int c = i & 3; return c == 0 ? t.x : c == 1 ? t.y : c == 2 ? t.z : t.w; }
 float ss(float e0, float e1, float x) { float t = clamp((x - e0) / (e1 - e0), 0.0, 1.0); return t * t * (3.0 - 2.0 * t); }
 int pmod(int k, int n) { int r = k - n * int(floor(float(k) / float(n))); if (r < 0) r += n; if (r >= n) r -= n; return r; }
 
-// pieces
-int pc[MAXP]; float ps[MAXP]; float pd[MAXP]; float pfx[MAXP]; float pfy[MAXP]; int plo[MAXP]; int phi[MAXP];
-float pz[MAXP]; float pkey[MAXP]; int pg[MAXP]; float pramp[MAXP]; float ptx[MAXP]; float pty[MAXP]; bool pend[MAXP];
-int psurf[MAXP]; int np;
+// pieces (ptx, pty, pend, the surfaces' scs / swk / swa / swb and cWk / cWa / cWb feed only the probe's label
+// and winner outputs, never ink or coverage: the app's program, without PROBE, does not carry them)
+IQ int pc[MAXP]; float ps[MAXP]; float pd[MAXP]; float pfx[MAXP]; float pfy[MAXP]; IQ int plo[MAXP]; IQ int phi[MAXP];
+float pkey[MAXP]; IQ int pg[MAXP]; FQ float pramp[MAXP];
+#ifdef PROBE
+float ptx[MAXP]; float pty[MAXP]; bool pend[MAXP];
+#endif
+IQ int psurf[MAXP]; int np;
 // corners near p
-int kk[MAXK]; float krho[MAXK]; int kIn[MAXK]; bool kSec[MAXK]; int nk;
+IQ int kk[MAXK]; float krho[MAXK]; IQ int kIn[MAXK]; bool kSec[MAXK]; int nk;
 // surfaces
-int sid[MAXS]; float skey[MAXS]; float sckey[MAXS]; int scch[MAXS]; float scs[MAXS]; bool scov[MAXS];
-float sv[MAXS]; float sa[MAXS]; int swk[MAXS]; int swa[MAXS]; int swb[MAXS]; int sord[MAXS]; int ns;
+IQ int sid[MAXS]; float skey[MAXS]; float sckey[MAXS]; IQ int scch[MAXS]; bool scov[MAXS];
+FQ float sv[MAXS]; FQ float sa[MAXS]; IQ int sord[MAXS]; int ns;
+#ifdef PROBE
+float scs[MAXS]; int swk[MAXS]; int swa[MAXS]; int swb[MAXS];
+#endif
 int labC; float labS; int cWk; int cWa; int cWb; float cCov;
 
 int mg; float mramp;
@@ -146,7 +174,7 @@ bool outsideArms(int k, int own, vec2 p) {
 
 int entry(int id) {
   for (int i = 0; i < ns; i++) if (sid[i] == id) return i;
-  int i = ns++; sid[i] = id; skey[i] = -BIG; sckey[i] = -BIG; scch[i] = -1; scs[i] = 0.0; scov[i] = false; return i;
+  int i = ns++; sid[i] = id; skey[i] = -BIG; sckey[i] = -BIG; scch[i] = -1; PR(scs[i] = 0.0;) scov[i] = false; return i;
 }
 float band2(float D) { return (1.0 - ss(uW - uAA, uW + uAA, D)) * ss(-uAA, uAA, D); }
 
@@ -157,7 +185,7 @@ void layers(vec2 p) {
     if (!(pd[j] < h + aa)) continue;
     int e = entry(psurf[j]);
     if (pkey[j] > skey[e]) skey[e] = pkey[j];
-    if (pd[j] < h) { scov[e] = true; if (pkey[j] > sckey[e]) { sckey[e] = pkey[j]; scch[e] = pc[j]; scs[e] = ps[j]; } }
+    if (pd[j] < h) { scov[e] = true; if (pkey[j] > sckey[e]) { sckey[e] = pkey[j]; scch[e] = pc[j]; PR(scs[e] = ps[j];) } }
   }
   float zt = uZt;
   for (int i = 0; i < nk; i++) {
@@ -168,12 +196,12 @@ void layers(vec2 p) {
     float z = nearerA ? K4.x : K4.y; float key = z - zt;
     int e = entry(int(K1.z));
     if (key > skey[e]) skey[e] = key;
-    if (krho[i] > K0.z) { scov[e] = true; if (key > sckey[e]) { sckey[e] = key; scch[e] = nearerA ? int(K3.x) : int(K3.y); scs[e] = nearerA ? K3.z : K3.w; } }
+    if (krho[i] > K0.z) { scov[e] = true; if (key > sckey[e]) { sckey[e] = key; scch[e] = nearerA ? int(K3.x) : int(K3.y); PR(scs[e] = nearerA ? K3.z : K3.w;) } }
   }
   for (int i = 0; i < ns; i++) sord[i] = i;
   for (int i = 1; i < ns; i++) { int v = sord[i]; int m = i - 1; while (m >= 0 && skey[sord[m]] < skey[v]) { sord[m + 1] = sord[m]; m--; } sord[m + 1] = v; }
   for (int e = 0; e < ns; e++) {
-    int S = sid[e]; float D = -BIG; float v = 0.0; int wk = 0; int wa = -1; int wb = 0;
+    int S = sid[e]; float D = -BIG; float v = 0.0; PR(int wk = 0; int wa = -1; int wb = 0;)
     for (int j = 0; j < np; j++) {
       if (psurf[j] != S || !(pd[j] < h + aa)) continue;
       float X = pd[j]; if (h - X > D) D = h - X;
@@ -192,7 +220,7 @@ void layers(vec2 p) {
         if (rq > K0.z && rq < K0.w && inSector(k, q) && outsideArms(k, pc[j], q)) bur = 1.0;
       }
       float val = (1.0 - bur) * band2(h - X);
-      if (val > v) { v = val; wk = pend[j] ? 3 : 1; wa = pc[j]; wb = ptx[j] * (p.y - pfy[j]) - pty[j] * (p.x - pfx[j]) >= 0.0 ? 1 : -1; }
+      if (val > v) { v = val; PR(wk = pend[j] ? 3 : 1; wa = pc[j]; wb = ptx[j] * (p.y - pfy[j]) - pty[j] * (p.x - pfx[j]) >= 0.0 ? 1 : -1;) }
     }
     for (int i = 0; i < nk; i++) {
       int k = kk[i]; vec4 K0 = F(uOK + 6 * k); vec4 K1 = F(uOK + 6 * k + 1); if (int(K1.z) != S || !kSec[i]) continue;
@@ -207,7 +235,7 @@ void layers(vec2 p) {
         if (wb2 > bur) bur = wb2;
       }
       float val = (1.0 - bur) * band2(Dk);
-      if (val > v) { v = val; wk = 2; wa = k; wb = 0; }
+      if (val > v) { v = val; PR(wk = 2; wa = k; wb = 0;) }
     }
 #ifdef TANGENT
     for (int i = 0; i < nk; i++) {
@@ -223,15 +251,15 @@ void layers(vec2 p) {
           if (wb2 > bur) bur = wb2;
         }
         float val = (1.0 - bur) * band2(dT) * ss(-aa, aa, D);
-        if (val > v) { v = val; wk = 4; wa = k; wb = t; }
+        if (val > v) { v = val; PR(wk = 4; wa = k; wb = t;) }
       }
     }
 #endif
-    sv[e] = v; sa[e] = ss(-aa, aa, D); swk[e] = wk; swa[e] = wa; swb[e] = wb;
+    sv[e] = v; sa[e] = ss(-aa, aa, D); PR(swk[e] = wk; swa[e] = wa; swb[e] = wb;)
   }
   int top = -1;
   for (int i = 0; i < ns; i++) if (scov[i] && (top < 0 || sckey[i] > sckey[top])) top = i;
-  labC = top >= 0 ? scch[top] : -1; labS = top >= 0 ? scs[top] : 0.0;
+  labC = top >= 0 ? scch[top] : -1; PR(labS = top >= 0 ? scs[top] : 0.0;)
 }
 
 float comp(int sw) {
@@ -239,7 +267,7 @@ float comp(int sw) {
   for (int i = 0; i < ns; i++) {
     int e = sord[i]; if (sw >= 0 && i == sw) e = sord[i + 1]; else if (sw >= 0 && i == sw + 1) e = sord[i - 1];
     float c = Tt * sv[e];
-    if (c > 0.0) { ink += c; if (c > best && sw < 0) { best = c; cWk = swk[e]; cWa = swa[e]; cWb = swb[e]; } }
+    if (c > 0.0) { ink += c; PR(if (c > best && sw < 0) { best = c; cWk = swk[e]; cWa = swa[e]; cWb = swb[e]; }) }
     Tt *= 1.0 - sa[e];
     if (!(Tt > 0.0)) break;
   }
@@ -269,13 +297,13 @@ void main() {
   float h = uH; float aa = uAA; float W = uW;
   int nSeg = 0; int nK = 0;
   float oInk = 0.0; float oCov = 0.0; int oCh = -1; float oS = 0.0; int oWk = 0; int oWa = -1; int oWb = 0;
-  np = 0; nk = 0; ns = 0;
+  np = 0; nk = 0; ns = 0; bool ovf = false;
   int gx = int(floor((x - uGrid.x) / uGrid.z)); int gy = int(floor((y - uGrid.y) / uGrid.z));
   if (gx >= 0 && gy >= 0 && gx < uGDim.x && gy < uGDim.y) {
     int cell = gy * uGDim.x + gx; float rc = uRc; float rc2 = rc * rc;
     vec4 CE = F(uOCell + cell);
     int c0 = int(CE.x); int cn = int(CE.y);
-    for (int q = c0; q < c0 + cn; q++) {
+    for (int q = c0; q < c0 + cn && !ovf; q++) {
       int ch = int(L4(uOChL, q));
       vec4 H0 = F(uOChk + 2 * ch); vec4 BX = F(uOChk + 2 * ch + 1);
       float bx = max(max(BX.x - x, 0.0), x - BX.z); float by = max(max(BX.y - y, 0.0), y - BX.w);
@@ -301,25 +329,35 @@ void main() {
           int q2 = k;
           if (closed) { int ref = plo[j]; float hn = float(nseg) / 2.0; while (float(q2 - ref) > hn) q2 -= nseg; while (float(ref - q2) > hn) q2 += nseg; }
           if (q2 < plo[j]) plo[j] = q2; if (q2 > phi[j]) phi[j] = q2;
-          if (d < pd[j]) { pd[j] = d; ps[j] = s; pfx[j] = fx; pfy[j] = fy; ptx[j] = dx; pty[j] = dy; pend[j] = isEnd; }
+          if (d < pd[j]) { pd[j] = d; ps[j] = s; pfx[j] = fx; pfy[j] = fy; PR(ptx[j] = dx; pty[j] = dy; pend[j] = isEnd;) }
           continue;
         }
         if (np < MAXP) j = np++;
+#ifdef TIER
+        else { ovf = true; break; } // the full program keeps this piece: it draws the pixel
+#else
         else { int far = 0; for (int m = 1; m < MAXP; m++) if (pd[m] > pd[far]) far = m; if (pd[far] <= d) continue; j = far; }
-        pc[j] = c; pd[j] = d; ps[j] = s; pfx[j] = fx; pfy[j] = fy; plo[j] = k; phi[j] = k; ptx[j] = dx; pty[j] = dy; pend[j] = isEnd;
+#endif
+        pc[j] = c; pd[j] = d; ps[j] = s; pfx[j] = fx; pfy[j] = fy; plo[j] = k; phi[j] = k; PR(ptx[j] = dx; pty[j] = dy; pend[j] = isEnd;)
       }
     }
+#ifdef TIER
+    if (ovf) discard;
+#endif
     // keys and membership
     float zK = uZt / h;
     int nr = 0; int rIdx0 = 0; int rIdx1 = 0;
     for (int j = 0; j < np; j++) {
-      pz[j] = depth(pc[j], ps[j]); pkey[j] = pz[j] - pd[j] * zK;
+      float pz = depth(pc[j], ps[j]); pkey[j] = pz - pd[j] * zK;
       member(pc[j], ps[j]); pg[j] = mg; pramp[j] = mramp;
       if (mg >= 0 && mramp > 0.0 && mramp < 1.0) {
         if (nr < MAXR) { if (nr == 0) rIdx0 = j; else rIdx1 = j; nr++; }
         else pramp[j] = mramp >= 0.5 ? 1.0 : 0.0;
       }
     }
+#ifdef NORAMP
+    if (nr > 0) discard; // ramping pieces: the configurations below; a later program draws the pixel
+#endif
     // corners near p
     int k0 = int(CE.z); int kn = int(CE.w);
     int thruK = -1; float thruQ = 0.0; bool yielded = false; int nTj = 0; int tj[8];
@@ -336,7 +374,11 @@ void main() {
         if (!same && inSector(k, p)) yielded = true;
       }
     }
+#ifdef TIER
+    for (int q = k0; q < k0 + kn; q++) {
+#else
     for (int q = k0; q < k0 + kn && nk < MAXK; q++) {
+#endif
       int k = int(L4(uOKL, q)); nK++;
       vec4 K0 = F(uOK + 6 * k); vec4 K1 = F(uOK + 6 * k + 1);
       if (K1.x > 0.5) {
@@ -347,11 +389,20 @@ void main() {
       float rx = x - K0.x; float ry = y - K0.y; float rho = sqrt(rx * rx + ry * ry);
       if (!(rho > K0.z - aa - W) || rho > K0.w + W + 2.0 * aa) continue;
       bool sec = inSector(k, p); bool inR = rho <= K0.w && sec;
+#ifdef TIER
+      if (nk == MAXK) discard; // the full program keeps this corner: it draws the pixel
+#endif
       kSec[nk] = sec; kk[nk] = k; krho[nk] = rho; kIn[nk] = !inR ? 0 : rho > K0.z - aa ? 2 : 1; nk++;
     }
     // configurations over the ramping pieces
     if (nr == 2 && pramp[rIdx0] < pramp[rIdx1]) { int t = rIdx0; rIdx0 = rIdx1; rIdx1 = t; }
-    float ink = 0.0; float cov = 0.0; int lab = -1; float labSv = 0.0; int wk = 0; int wa = -1; int wb = 0; float bestW = -1.0;
+    float ink = 0.0; float cov = 0.0; int lab = -1; PR(float labSv = 0.0; int wk = 0; int wa = -1; int wb = 0;) float bestW = -1.0;
+#ifdef NORAMP
+    // nr == 0: the one configuration (cfg 0, weight 1) of the loop below
+    for (int j = 0; j < np; j++) psurf[j] = pg[j] >= 0 && pramp[j] >= 1.0 ? pg[j] : -1 - j;
+    layers(p);
+    ink = composite(); cov = cCov; lab = labC; PR(labSv = labS; wk = cWk; wa = cWa; wb = cWb;)
+#else
     for (int cfg = 0; cfg <= nr; cfg++) {
       float hiR = cfg == 0 ? 1.0 : pramp[cfg == 1 ? rIdx0 : rIdx1];
       float loR = cfg == nr ? 0.0 : pramp[cfg == 0 ? rIdx0 : rIdx1];
@@ -365,15 +416,16 @@ void main() {
       float r = composite();
       float w = nr == 0 ? 1.0 : wgt;
       ink += w * r; cov += w * cCov;
-      if (w > bestW) { bestW = w; lab = labC; labSv = labS; wk = cWk; wa = cWa; wb = cWb; }
+      if (w > bestW) { bestW = w; lab = labC; PR(labSv = labS; wk = cWk; wa = cWa; wb = cWb;) }
     }
+#endif
     if (thruK >= 0) {
       vec4 K0 = F(uOK + 6 * thruK); vec4 K3 = F(uOK + 6 * thruK + 3);
       int own = int(K3.x); float r = K0.z; float outv = 1.0 - ss(r + W - aa, r + W + aa, thruQ);
-      if (!yielded) { if (lab < 0 || lab == own) { ink = ss(r - aa, r + aa, thruQ) * outv; if (lab < 0 && ink > 0.0) { lab = own; labSv = K3.z; } wk = 5; wa = thruK; } }
+      if (!yielded) { if (lab < 0 || lab == own) { ink = ss(r - aa, r + aa, thruQ) * outv; if (lab < 0 && ink > 0.0) { lab = own; PR(labSv = K3.z;) } PR(wk = 5; wa = thruK;) } }
       else if (lab == own) ink = min(ink, outv);
     }
-    oInk = min(1.0, ink); oCov = min(1.0, cov); oCh = lab; oS = labSv; oWk = wk; oWa = wa; oWb = wb;
+    oInk = min(1.0, ink); oCov = min(1.0, cov); PR(oCh = lab; oS = labSv; oWk = wk; oWa = wa; oWb = wb;)
   }
 #ifdef PROBE
   o0 = vec4(oInk, oCov, float(oCh), oS);

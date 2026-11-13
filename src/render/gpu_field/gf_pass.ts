@@ -6,7 +6,7 @@
 // Timing: EXT_disjoint_timer_query_webgl2 brackets the draw, and an empty
 // query (begin, end, no draw) right after it gives the floor the readings
 // subtract. Results arrive frames later (poll()).
-import { GF_VS, gfFs } from "./gf_glsl";
+import { GF_VS, gfFs, type GfTier } from "./gf_glsl";
 import { GF_TW, packTables, type GfPacked } from "./gf_pack";
 import type { GfTables } from "./tables";
 
@@ -45,6 +45,8 @@ export class GfTarget {
   readonly tex: WebGLTexture[] = [];
   readonly n: number;
   readonly float: boolean;
+  /** K1362 s4: the depth-stencil the tiers' route needs (GfPass.draw adds it on first use). */
+  private ds: WebGLRenderbuffer | null = null;
   w = 0; h = 0;
   constructor(gl: WebGL2RenderingContext, n: number, float: boolean) {
     this.gl = gl; this.n = n; this.float = float;
@@ -69,8 +71,24 @@ export class GfTarget {
       bufs.push(gl.COLOR_ATTACHMENT0 + i);
     }
     gl.drawBuffers(bufs);
+    if (this.ds) this.sizeStencil();
     const st = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
     if (st !== gl.FRAMEBUFFER_COMPLETE) throw new Error(`gf target incomplete (${st})`);
+  }
+  /** Attach a depth-stencil renderbuffer (once); the framebuffer must be bound. */
+  ensureStencil(): void {
+    if (this.ds) return;
+    this.ds = this.gl.createRenderbuffer()!;
+    this.sizeStencil();
+    const st = this.gl.checkFramebufferStatus(this.gl.FRAMEBUFFER);
+    if (st !== this.gl.FRAMEBUFFER_COMPLETE) throw new Error(`gf target incomplete with stencil (${st})`);
+  }
+  private sizeStencil(): void {
+    const gl = this.gl;
+    gl.bindRenderbuffer(gl.RENDERBUFFER, this.ds);
+    gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH24_STENCIL8, Math.max(1, this.w), Math.max(1, this.h));
+    gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, this.ds);
   }
   /** Read colour attachment i (RGBA32F targets) into out (w*h*4). */
   read(i: number, out: Float32Array): void {
@@ -82,16 +100,26 @@ export class GfTarget {
   dispose(): void {
     const gl = this.gl;
     gl.deleteFramebuffer(this.fbo);
+    if (this.ds) gl.deleteRenderbuffer(this.ds);
     for (const t of this.tex) gl.deleteTexture(t);
   }
 }
 
+/**
+ * K1362 s4: the tiers drawn before the full program (gf_glsl.ts GfTier). Each pixel is drawn by the first program
+ * that holds it; the stencil (0 = not drawn yet) routes the rest on. Stage 4 measured them on the Pixel
+ * (docs/design/K1362_s4_shader.md, handoff).
+ */
+export const GF_TIERS: GfTier[] = [{ p: 4, k: 3, ramps: false }];
+const UNIFORMS = ["uD", "uOCh", "uOV", "uOPin", "uOArm", "uOK", "uOChk", "uOCell", "uOChL", "uOKL", "uH", "uW", "uAA", "uSigma", "uZt", "uWin", "uRc", "uGrid", "uGDim", "uMap"];
+interface GfProg { prog: WebGLProgram; u: Map<string, WebGLUniformLocation | null>; tier: GfTier | null }
+
 export class GfPass {
   readonly gl: WebGL2RenderingContext;
-  private prog: WebGLProgram;
+  /** The tiers' programs, then the full program (last; it draws whatever no tier held). */
+  private progs: GfProg[];
   private vao: WebGLVertexArrayObject;
   private tex: WebGLTexture;
-  private u = new Map<string, WebGLUniformLocation | null>();
   private packed: GfPacked | null = null;
   private T: GfTables | null = null;
   private texRows = 0;
@@ -105,14 +133,18 @@ export class GfPass {
   uploadMs = 0;
 
   readonly probe: boolean;
-  constructor(gl: WebGL2RenderingContext, probe: boolean) {
+  /** tiers: GF_TIERS by default; [] draws the full program alone (stage 2's pass). fs: a program's source override (benches). */
+  constructor(gl: WebGL2RenderingContext, probe: boolean, tiers: GfTier[] = GF_TIERS, fs?: (tier: GfTier | null) => string) {
     this.gl = gl; this.probe = probe;
-    this.prog = compileProgram(gl, GF_VS, gfFs(probe));
+    this.progs = [...tiers, null].map((tier) => {
+      const prog = compileProgram(gl, GF_VS, fs ? fs(tier) : gfFs(probe, true, tier ?? undefined));
+      const u = new Map<string, WebGLUniformLocation | null>();
+      for (const n of UNIFORMS) u.set(n, gl.getUniformLocation(prog, n));
+      return { prog, u, tier };
+    });
     this.vao = gl.createVertexArray()!;
     this.tex = gl.createTexture()!;
     this.ext = gl.getExtension("EXT_disjoint_timer_query_webgl2") as TimerExt | null;
-    for (const n of ["uD", "uOCh", "uOV", "uOPin", "uOArm", "uOK", "uOChk", "uOCell", "uOChL", "uOKL", "uH", "uW", "uAA", "uSigma", "uZt", "uWin", "uRc", "uGrid", "uGDim", "uMap"])
-      this.u.set(n, gl.getUniformLocation(this.prog, n));
   }
 
   get timed(): boolean { return !!this.ext; }
@@ -168,30 +200,49 @@ export class GfPass {
     gl.disable(gl.STENCIL_TEST);
     gl.disable(gl.CULL_FACE);
     gl.colorMask(true, true, true, true);
+    // The programs to draw: a half (mediump-int) tier only while every index fits mediump's 16 bits.
+    const halfOk = Math.max(T.nV, T.nK, T.nA, T.nCh) < 32000;
+    const progs = this.progs.filter((g) => !g.tier || !g.tier.half || halfOk);
+    const routed = progs.length > 1;
+    if (routed) target.ensureStencil();
     if (target.float) for (let i = 0; i < target.n; i++) gl.clearBufferfv(gl.COLOR, i, [0, 0, 0, 0]);
     else { gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT); }
+    if (routed) { gl.stencilMask(0xff); gl.clearBufferfi(gl.DEPTH_STENCIL, 0, 1, 0); }
     const [x0, y0, x1, y1] = rect;
     if (x1 <= x0 || y1 <= y0) return;
     gl.enable(gl.SCISSOR_TEST);
     gl.scissor(x0, y0, x1 - x0, y1 - y0);
-    gl.useProgram(this.prog);
+    if (routed) {
+      // stencil 0 = no program has drawn the pixel yet; a program that draws it (does not discard) moves it to 1
+      gl.enable(gl.STENCIL_TEST);
+      gl.stencilFunc(gl.EQUAL, 0, 0xff);
+      gl.stencilOp(gl.KEEP, gl.KEEP, gl.INCR);
+    }
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.tex);
-    const u = (n: string): WebGLUniformLocation | null => this.u.get(n) ?? null;
-    gl.uniform1i(u("uD"), 0);
-    const o = P.o;
-    gl.uniform1i(u("uOCh"), o.ch); gl.uniform1i(u("uOV"), o.v); gl.uniform1i(u("uOPin"), o.pin); gl.uniform1i(u("uOArm"), o.arm);
-    gl.uniform1i(u("uOK"), o.k); gl.uniform1i(u("uOChk"), o.chk); gl.uniform1i(u("uOCell"), o.cell); gl.uniform1i(u("uOChL"), o.chl); gl.uniform1i(u("uOKL"), o.kl);
-    gl.uniform1f(u("uH"), T.h); gl.uniform1f(u("uW"), T.W); gl.uniform1f(u("uAA"), T.aa); gl.uniform1f(u("uSigma"), T.sigma);
-    gl.uniform1f(u("uZt"), T.zt); gl.uniform1f(u("uWin"), T.win); gl.uniform1f(u("uRc"), T.rc);
-    gl.uniform4f(u("uGrid"), T.gx0, T.gy0, T.G, 0);
-    gl.uniform2i(u("uGDim"), T.gW, T.gH);
-    gl.uniform4f(u("uMap"), map[0], map[1], map[2], map[3]);
     gl.bindVertexArray(this.vao);
     const ext = time ? this.ext : null;
     let q: WebGLQuery | null = null; let e: WebGLQuery | null = null;
     if (ext) { q = gl.createQuery()!; gl.beginQuery(ext.TIME_ELAPSED_EXT, q); }
-    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    for (const g of progs) {
+      gl.useProgram(g.prog);
+      const u = (n: string): WebGLUniformLocation | null => g.u.get(n) ?? null;
+      gl.uniform1i(u("uD"), 0);
+      const o = P.o;
+      gl.uniform1i(u("uOCh"), o.ch); gl.uniform1i(u("uOV"), o.v); gl.uniform1i(u("uOPin"), o.pin); gl.uniform1i(u("uOArm"), o.arm);
+      gl.uniform1i(u("uOK"), o.k); gl.uniform1i(u("uOChk"), o.chk); gl.uniform1i(u("uOCell"), o.cell); gl.uniform1i(u("uOChL"), o.chl); gl.uniform1i(u("uOKL"), o.kl);
+      gl.uniform1f(u("uH"), T.h); gl.uniform1f(u("uW"), T.W); gl.uniform1f(u("uAA"), T.aa); gl.uniform1f(u("uSigma"), T.sigma);
+      gl.uniform1f(u("uZt"), T.zt); gl.uniform1f(u("uWin"), T.win); gl.uniform1f(u("uRc"), T.rc);
+      gl.uniform4f(u("uGrid"), T.gx0, T.gy0, T.G, 0);
+      gl.uniform2i(u("uGDim"), T.gW, T.gH);
+      gl.uniform4f(u("uMap"), map[0], map[1], map[2], map[3]);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+    }
+    if (routed) {
+      gl.disable(gl.STENCIL_TEST);
+      // the route is per pass: a tile-based GPU need not store it
+      gl.invalidateFramebuffer(gl.FRAMEBUFFER, [gl.DEPTH_STENCIL_ATTACHMENT]);
+    }
     if (ext && q) {
       gl.endQuery(ext.TIME_ELAPSED_EXT);
       e = gl.createQuery()!;
@@ -226,7 +277,7 @@ export class GfPass {
     const gl = this.gl;
     for (const { q, e } of this.pending) { gl.deleteQuery(q); gl.deleteQuery(e); }
     this.pending = [];
-    gl.deleteProgram(this.prog);
+    for (const g of this.progs) gl.deleteProgram(g.prog);
     gl.deleteVertexArray(this.vao);
     gl.deleteTexture(this.tex);
   }
