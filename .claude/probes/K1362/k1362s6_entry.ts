@@ -17,6 +17,7 @@ import { buildTables, type GfTables } from "../../../src/render/gpu_field/tables
 import { GfPass, GfTarget, type GfMap } from "../../../src/render/gpu_field/gf_pass";
 import { gfFs, type GfTier } from "../../../src/render/gpu_field/gf_glsl";
 import { GfEval } from "../../../src/render/gpu_field/eval";
+import { buildKeys } from "../../../src/render/gpu_field/gf_keys";
 import type { FieldScene } from "../../../src/render/field/scene";
 
 type Rect = [number, number, number, number];
@@ -43,9 +44,9 @@ void main() { discard; }`;
 
 function parseTiers(name: string): GfTier[] {
   return name.slice(1).split("_").map((t) => {
-    const m = /^(\d)(\d)(r?)(h?)(s?)(u?)$/.exec(t);
+    const m = /^(\d)(\d)(r?)(h?)(s?)(u?)(o?)$/.exec(t);
     if (!m) throw new Error("bad tier " + t);
-    return { p: +m[1], k: +m[2], ramps: m[3] === "r", half: m[4] === "h", reg: m[5] === "s", unroll: m[6] === "u" };
+    return { p: +m[1], k: +m[2], ramps: m[3] === "r", half: m[4] === "h", reg: m[5] === "s", unroll: m[6] === "u", oldKeys: m[7] === "o" } as GfTier & { oldKeys?: boolean };
   });
 }
 function makePass(gl: WebGL2RenderingContext, name: string, fullFs?: string): GfPass {
@@ -53,10 +54,12 @@ function makePass(gl: WebGL2RenderingContext, name: string, fullFs?: string): Gf
   if (name === "full") return new GfPass(gl, false, []);
   if (name === "fullS") return new GfPass(gl, false, [], () => gfFs(false, true, undefined, { reg: true })); // K1362 s6: the full program, register form
   if (name === "fullU") return new GfPass(gl, false, [], () => gfFs(false, true, undefined, { unroll: true })); // K1362 s6: constant trip counts
+  if (name === "fullO") return new GfPass(gl, false, [], () => gfFs(false, true, undefined, { oldKeys: true })); // K1362 s6: the keys before gf_keys.ts
   if (name === "fullp") return new GfPass(gl, true, []);
   // t<tiers>[_...]: each tier "<p><k>[r][h][s]" (s = register form, gf_reg.ts), then the full program
   const tiers = parseTiers(name);
-  return new GfPass(gl, false, tiers, (t) => (t ? gfFs(false, true, t) : fullFs ?? gfFs(false, true)));
+  const ok = tiers.some((t) => (t as { oldKeys?: boolean }).oldKeys); // o: every program of the variant on the old keys
+  return new GfPass(gl, false, tiers, (t) => (t ? gfFs(false, true, t, { reg: t.reg, unroll: t.unroll, oldKeys: ok }) : fullFs ?? gfFs(false, true, undefined, { oldKeys: ok })));
 }
 
 function info(gl: WebGL2RenderingContext): Record<string, unknown> {
@@ -225,7 +228,7 @@ export async function bench(cfg: BenchCfg): Promise<Record<string, unknown>> {
       const draw = (j = 0): void => pass.draw(targets[j & 3], map, rect, false);
       draw(); sync(rect);
       const r: Record<string, unknown> = { firstMs: +(performance.now() - tc).toFixed(1) };
-      { const um: number[] = []; for (let i = 0; i < 5; i++) { const t0 = performance.now(); pass.upload(T); um.push(performance.now() - t0); } r.upload = st(um); } // K1362 s6: pack + texture upload (+ any key table) on main
+      { const um: number[] = []; for (let i = 0; i < 5; i++) { const t0 = performance.now(); pass.upload(T); um.push(performance.now() - t0); } r.upload = st(um); const km: number[] = []; let nKA = 0; let nB = 0; for (let i = 0; i < 5; i++) { const t0 = performance.now(); const K = buildKeys(T); km.push(performance.now() - t0); nKA = K.nKA; nB = K.nB; } r.keys = { ms: st(km), nB, nKA, nA: T.nA }; } // K1362 s6: pack + texture upload (+ any key table) on main
       for (const mode of cfg.modes) {
         const ms: number[] = [];
         const t0 = Date.now();

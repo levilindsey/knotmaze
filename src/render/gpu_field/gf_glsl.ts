@@ -36,10 +36,12 @@ void main() {
 export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean }
 
 /** The program's source forms (gf_reg.ts); a tier's own flags set them by default. The probe keeps the plain form. */
-export interface GfForm { reg?: boolean; unroll?: boolean }
+/** oldKeys: the keys over the chain's whole pin and arm lists (before gf_keys.ts's bins; a bench's A/B). */
+export interface GfForm { reg?: boolean; unroll?: boolean; oldKeys?: boolean }
 
 export function gfFs(probe: boolean, tangentTerms = true, tier?: GfTier, form: GfForm = { reg: tier?.reg, unroll: tier?.unroll }): string {
   let src = gfSrc(probe, tangentTerms, tier);
+  if (form.oldKeys) src = src.replace("precision highp float;\n", "precision highp float;\n#define OLDKEYS 1\n");
   if (probe) return src;
   const mp = tier ? tier.p : MAXP;
   const mk = tier ? tier.k : MAXK;
@@ -71,7 +73,7 @@ ${tangentTerms ? "#define TANGENT 1" : ""}
 ${tier ? "#define TIER 1" : ""}
 ${tier && !tier.ramps ? "#define NORAMP 1" : ""}
 uniform sampler2D uD;
-uniform int uOCh, uOV, uOPin, uOArm, uOK, uOChk, uOCell, uOChL, uOKL;
+uniform int uOCh, uOV, uOPin, uOArm, uOK, uOChk, uOCell, uOChL, uOKL, uOKC, uOKB, uOKA;
 uniform float uH, uW, uAA, uSigma, uZt, uWin, uRc;
 uniform vec4 uGrid; // gx0, gy0, G, 0
 uniform ivec2 uGDim; // gW, gH
@@ -112,23 +114,40 @@ float scs[MAXS]; int swk[MAXS]; int swa[MAXS]; int swb[MAXS];
 #endif
 int labC; float labS; int cWk; int cWa; int cWb; float cCov;
 
+// K1362 s6 keys per bin (gf_keys.ts): the piece's bin on its chain, (pin search lo, hi, first candidate arm, count).
+// u is depth()'s own u; the bin's bounds and candidates hold for any u within half a bin of it.
+#ifdef OLDKEYS
+#define KAB uOArm
+vec4 keyBin(int c, float s) { vec4 C1 = F(uOCh + 3 * c + 1); return vec4(-1.0, C1.z, C1.w, F(uOCh + 3 * c + 2).x); }
+#else
+#define KAB uOKA
+vec4 keyBin(int c, float s) {
+  vec4 C0 = F(uOCh + 3 * c); vec4 C1 = F(uOCh + 3 * c + 1);
+  float u = s;
+  if (C0.z > 0.5) { u = mod(s - C1.x, C0.w); u += C1.x; }
+  vec4 KC = F(uOKC + c);
+  float bi = clamp(floor((u - KC.w) / KC.z), 0.0, KC.y - 1.0);
+  return F(uOKB + int(KC.x) + int(bi));
+}
+#endif
+
 int mg; float mramp;
-void member(int c, float s) {
-  vec4 C0 = F(uOCh + 3 * c); vec4 C1 = F(uOCh + 3 * c + 1); vec4 C2 = F(uOCh + 3 * c + 2);
-  int a0 = int(C1.w); int an = int(C2.x); float lam = uH; bool closed = C0.z > 0.5; float len = C0.w;
+void member(int c, float s, vec4 KB) {
+  vec4 C0 = F(uOCh + 3 * c);
+  int a0 = int(KB.z); int an = int(KB.w); float lam = uH; bool closed = C0.z > 0.5; float len = C0.w;
   int g = -1; float ramp = 0.0;
   for (int i = a0; i < a0 + an; i++) {
-    vec4 A = F(uOArm + 2 * i);
+    vec4 A = F(KAB + 2 * i);
     float d = (s - A.x) * A.y; if (closed) d = mod(d, len);
     if (d < -1e-12 || d > A.z + 1e-12) continue;
     float Lc = A.w;
     float rp = Lc >= BIGT ? 1.0 : ss(Lc, Lc - lam, d);
-    if (g < 0 || rp > ramp) { g = int(F(uOArm + 2 * i + 1).x); ramp = rp; }
+    if (g < 0 || rp > ramp) { g = int(F(KAB + 2 * i + 1).x); ramp = rp; }
   }
   if (g >= 0 && ramp > 0.0) {
     for (int i = a0; i < a0 + an; i++) {
-      vec4 A = F(uOArm + 2 * i); float Lc = A.w;
-      if (int(F(uOArm + 2 * i + 1).x) != g || Lc >= BIGT) continue;
+      vec4 A = F(KAB + 2 * i); float Lc = A.w;
+      if (int(F(KAB + 2 * i + 1).x) != g || Lc >= BIGT) continue;
       float d = (s - A.x) * A.y; if (closed) { d = mod(d, len); if (d > len / 2.0) d -= len; }
       if (!(d < 1e-12 && d > Lc - lam)) continue;
       ramp = min(ramp, ss(Lc, Lc - lam, d));
@@ -138,13 +157,13 @@ void member(int c, float s) {
 }
 
 float hat(float z, float d, float w) { return w <= 1e-12 ? (d <= 0.0 ? z : 0.0) : d >= w ? 0.0 : z * (1.0 - d / w); }
-float depth(int c, float s) {
+float depth(int c, float s, vec4 KB) {
   vec4 C0 = F(uOCh + 3 * c); vec4 C1 = F(uOCh + 3 * c + 1);
   int n = int(C1.z); if (n == 0) return 0.0;
   int b = uOPin + int(C1.y); float win = uWin; bool closed = C0.z > 0.5; float len = C0.w;
   float u = s;
   if (closed) { u = mod(s - C1.x, len); u += C1.x; }
-  int lo = -1; int hi = n;
+  int lo = int(KB.x); int hi = int(KB.y);
   while (hi - lo > 1) { int m = (lo + hi) >> 1; if (F(b + m).x <= u) lo = m; else hi = m; }
   float zL = 0.0; float dL = 0.0; float zR = 0.0; float dR = 0.0; float w = win;
   if (closed) {
@@ -368,8 +387,9 @@ void main() {
     float zK = uZt / h;
     int nr = 0; int rIdx0 = 0; int rIdx1 = 0;
     for (int j = 0; j < np; j++) {
-      float pz = depth(pc[j], ps[j]); pkey[j] = pz - pd[j] * zK;
-      member(pc[j], ps[j]); pg[j] = mg; pramp[j] = mramp;
+      vec4 KB = keyBin(pc[j], ps[j]);
+      float pz = depth(pc[j], ps[j], KB); pkey[j] = pz - pd[j] * zK;
+      member(pc[j], ps[j], KB); pg[j] = mg; pramp[j] = mramp;
       if (mg >= 0 && mramp > 0.0 && mramp < 1.0) {
         if (nr < MAXR) { if (nr == 0) rIdx0 = j; else rIdx1 = j; nr++; }
         else pramp[j] = mramp >= 0.5 ? 1.0 : 0.0;

@@ -8,6 +8,7 @@
 // subtract. Results arrive frames later (poll()).
 import { GF_VS, gfFs, type GfTier } from "./gf_glsl";
 import { GF_TW, packTables, type GfPacked } from "./gf_pack";
+import { buildKeys } from "./gf_keys";
 import type { GfTables } from "./tables";
 
 export type GfMap = [number, number, number, number];
@@ -114,7 +115,7 @@ export class GfTarget {
  * so its stencil test runs late), so one tier is the default.
  */
 export const GF_TIERS: GfTier[] = [{ p: 3, k: 2, ramps: true }];
-const UNIFORMS = ["uD", "uOCh", "uOV", "uOPin", "uOArm", "uOK", "uOChk", "uOCell", "uOChL", "uOKL", "uH", "uW", "uAA", "uSigma", "uZt", "uWin", "uRc", "uGrid", "uGDim", "uMap"];
+const UNIFORMS = ["uD", "uOCh", "uOV", "uOPin", "uOArm", "uOK", "uOChk", "uOCell", "uOChL", "uOKL", "uOKC", "uOKB", "uOKA", "uH", "uW", "uAA", "uSigma", "uZt", "uWin", "uRc", "uGrid", "uGDim", "uMap"];
 interface GfProg { prog: WebGLProgram; u: Map<string, WebGLUniformLocation | null>; tier: GfTier | null }
 
 export class GfPass {
@@ -155,7 +156,7 @@ export class GfPass {
   upload(T: GfTables): void {
     const gl = this.gl;
     const t0 = performance.now();
-    this.packed = packTables(T, this.packed ?? undefined);
+    this.packed = packTables(T, this.packed ?? undefined, buildKeys(T));
     const t1 = performance.now();
     this.T = T;
     const { data, rows } = this.packed;
@@ -237,6 +238,7 @@ export class GfPass {
       const o = P.o;
       gl.uniform1i(u("uOCh"), o.ch); gl.uniform1i(u("uOV"), o.v); gl.uniform1i(u("uOPin"), o.pin); gl.uniform1i(u("uOArm"), o.arm);
       gl.uniform1i(u("uOK"), o.k); gl.uniform1i(u("uOChk"), o.chk); gl.uniform1i(u("uOCell"), o.cell); gl.uniform1i(u("uOChL"), o.chl); gl.uniform1i(u("uOKL"), o.kl);
+      gl.uniform1i(u("uOKC"), o.kc); gl.uniform1i(u("uOKB"), o.kb); gl.uniform1i(u("uOKA"), o.ka);
       gl.uniform1f(u("uH"), T.h); gl.uniform1f(u("uW"), T.W); gl.uniform1f(u("uAA"), T.aa); gl.uniform1f(u("uSigma"), T.sigma);
       gl.uniform1f(u("uZt"), T.zt); gl.uniform1f(u("uWin"), T.win); gl.uniform1f(u("uRc"), T.rc);
       gl.uniform4f(u("uGrid"), T.gx0, T.gy0, T.G, 0);

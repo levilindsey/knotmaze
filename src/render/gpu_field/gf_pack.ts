@@ -11,9 +11,13 @@
 //   CHK  2 per chunk:  (chV0, chN, chC, 0) (box x0, y0, x1, y1)
 //   CELL 1 per cell:   (cellCh0, cellChN, cellK0, cellKN)
 //   CHL  cellChList, 4 per texel;  KL  cellKList, 4 per texel
+//   KC   1 per chain:  (first bin, bins, bin width, s origin)              (gf_keys.ts, K1362 s6)
+//   KB   1 per bin:    (pin search lo, hi, first candidate, candidates)
+//   KA   2 per candidate: the candidate arm's two ARM texels, copied
 // Integers ride as floats (exact below 2^24). A non-finite value is stored
 // as +-GF_BIG (the shader tests `>= GF_BIG_TEST`): Infinity is aLcut's "no cap".
 import type { GfTables } from "./tables";
+import { buildKeys, type GfKeys } from "./gf_keys";
 
 export const GF_LOG = 11;
 export const GF_TW = 1 << GF_LOG;
@@ -23,13 +27,13 @@ export interface GfPacked {
   data: Float32Array;
   rows: number;
   /** Section bases, texels. */
-  o: { ch: number; v: number; pin: number; arm: number; k: number; chk: number; cell: number; chl: number; kl: number };
+  o: { ch: number; v: number; pin: number; arm: number; k: number; chk: number; cell: number; chl: number; kl: number; kc: number; kb: number; ka: number };
 }
 
 const fin = (v: number): number => (v === Infinity ? GF_BIG : v === -Infinity ? -GF_BIG : v);
 
-export function packTables(T: GfTables, reuse?: GfPacked): GfPacked {
-  const o = { ch: 0, v: 0, pin: 0, arm: 0, k: 0, chk: 0, cell: 0, chl: 0, kl: 0 };
+export function packTables(T: GfTables, reuse?: GfPacked, keys: GfKeys = buildKeys(T)): GfPacked {
+  const o = { ch: 0, v: 0, pin: 0, arm: 0, k: 0, chk: 0, cell: 0, chl: 0, kl: 0, kc: 0, kb: 0, ka: 0 };
   let n = 0;
   o.ch = n; n += 3 * T.nC;
   o.v = n; n += T.nV;
@@ -40,6 +44,9 @@ export function packTables(T: GfTables, reuse?: GfPacked): GfPacked {
   o.cell = n; n += T.gW * T.gH;
   o.chl = n; n += Math.ceil(T.cellChList.length / 4);
   o.kl = n; n += Math.ceil(T.cellKList.length / 4);
+  o.kc = n; n += T.nC;
+  o.kb = n; n += keys.nB;
+  o.ka = n; n += 2 * keys.nKA;
   const rows = Math.max(1, Math.ceil(n / GF_TW));
   const need = rows * GF_TW * 4;
   const data = reuse && reuse.data.length >= need ? reuse.data : new Float32Array(need);
@@ -73,5 +80,12 @@ export function packTables(T: GfTables, reuse?: GfPacked): GfPacked {
   for (let i = 0; i < T.gW * T.gH; i++) put(o.cell + i, T.cellCh0[i], T.cellChN[i], T.cellK0[i], T.cellKN[i]);
   for (let i = 0; i < T.cellChList.length; i++) data[4 * o.chl + i] = T.cellChList[i];
   for (let i = 0; i < T.cellKList.length; i++) data[4 * o.kl + i] = T.cellKList[i];
+  for (let c = 0; c < T.nC; c++) put(o.kc + c, keys.kc[4 * c], keys.kc[4 * c + 1], keys.kc[4 * c + 2], keys.kc[4 * c + 3]);
+  for (let b = 0; b < keys.nB; b++) put(o.kb + b, keys.kb[4 * b], keys.kb[4 * b + 1], keys.kb[4 * b + 2], keys.kb[4 * b + 3]);
+  for (let q = 0; q < keys.nKA; q++) {
+    const a = keys.ka[q];
+    put(o.ka + 2 * q, T.aSR[a], T.aDir[a], T.aL[a], T.aLcut[a]);
+    put(o.ka + 2 * q + 1, T.aG[a], 0, 0, 0);
+  }
   return { data, rows, o };
 }
