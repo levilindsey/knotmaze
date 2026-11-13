@@ -1921,9 +1921,10 @@ Every other item below waits on the trigger it names.
 - **K1351** · c8's under-pass after K1346 s1's fan fix: the dotted seam is gone, a straight soft diagonal
   shading edge remains where form B shades smoothly (muse_hash (19.41, 14.16);
   `.claude/probes/K1346/out/s1/final8x/c8.png`)
-  - owner: muse session 8174321c-6bbe-4b7e-88d2-61a7cbfdff23 (Paseo), launched by claude session 09c7a672-a414-402a-97da-b3176839a2e5 at 19:47
-  - branch: detached worktree .claude/worktrees/muse-k1351-s1; Muse pushes finished parts to master
-  - next: Muse s1: thruGate at no cost (empty pieces skipped or per-frame thru list), census = census_k1314s13c, then on by default
+  - owner: nobody since 2026-11-12 21:32 (Muse s1 done: no-cost machinery landed at bd43324e, thruGate still off; the rest waits on K1362)
+  - branch: mainline; last commit: `5ec049e1`
+  - evidence: .claude/probes/K1351/k1351s1_*; census_k1351s1 in .claude/probes/K1314/out/s1/ (untracked)
+  - next: Waits on K1362 (the GPU route replaces the CPU outline). If K1362 proves it cannot: cut muse_hash frame +2.5 ms (322 extra piece objects a frame in piecesPhaseC), a clean swap pair, then thruGate on and re-pin outline_port (s1 handoff); re-baseline census_k1314s13c on master first
   - brief: `docs/design/K1351_s1_muse_thru_cost.md`
 - **K1354** · K1346's fold checks (bandFoldScan, bandFoldsClean) cost 0.5-0.7 ms per def frame; the fast exit
   could reuse the band builder's inner points (about 0.5 ms). One app ABBA (K1346 s2 run 2) put def band +0.85
