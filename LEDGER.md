@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1344.
+Next free ID: K1346.
 
 ## Waiting on Levi
 
@@ -557,7 +557,7 @@ Next free ID: K1344.
   - owner: nobody since 2026-11-12 08:47 (merged; agent `a8105bc6c8e6fc6d7` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
   - branch: mainline; last commit: `b0c52856`
   - evidence: .claude/probes/K1314/ (census tools, k1314_s8_bench.ps1); untracked out/s1-s10/, baseline census_s9
-  - next: K1314 s11 after K1247 s29 frees outline.ts: j58a's reversed fade (corner 176's meet, or the chevron's return-leg alpha against form B); the ramp's reject cost moved to s29
+  - next: K1314 s11 after K1247 s30 frees outline.ts: j58a's reversed fade (corner 176's meet, or the chevron's return-leg alpha against form B). Baseline census_k1325s2 (stray 4, hard 1, paper 0, broken 12, k1049 0; total 17)
   - brief: `docs/design/K1314_s10_breaks_step.md`
 - **K1324** · draw.ts tieAlpha / contactPasses ties two arms of one form B junction group, so the band fades
   ink there: specks inside the ink at def j174 (c71/c73, group 119), ring j12, g41_ring_tw42 j12,
@@ -568,15 +568,6 @@ Next free ID: K1344.
   - evidence: .claude/probes/K1324/ (tools); untracked out/s1-s3/
   - next: s3 running: the faint seams at muse_hash x22's lower join and in c8's under-pass (K1337)
   - brief: `docs/design/K1324_s3_under_seams.md`
-- **K1325** · K1314 census reference: form B draws stray ink at muse_hash x304 and g41_user_tw64 j30 where
-  rp=outline is clean, so the census counts them against the outline (crops
-  `.claude/probes/K1314/out/s7/after4x/spot_007.png`, `spot_008.png`); fix the reference as K1321 did, in
-  `k1314_census.ts` / `form_b_fillet.ts` (K1314 s7 handoff)
-  - owner: nobody since 2026-11-12 09:49 (merged; agent `a2d06b38666998b51` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `3026bfc3`
-  - evidence: .claude/probes/K1314/k1314_census.ts, form_b_fillet.ts; untracked .claude/probes/K1325/out/s2/, census m1
-  - next: none queued: the census reference now handles x304, j30 and the five self-crossings; reopen when a census find is the reference's own flaw
-  - brief: `docs/design/K1325_s2_self_crossing_reference.md`
 - **K1338** · The outline worker frame's frame() (64-71 ms p50, outline.ts) and band (16-26 ms, bandOf + band
   files) on def mid-drag, toward frame + band <= 10 ms, look unchanged; K1247's sibling stage (s28 takes fill
   and zChains); brief `docs/design/K1247_s29_frame_band_speed.md`
@@ -847,6 +838,9 @@ Every other item below waits on the trigger it names.
   about 22 ms -> 5 ms def drag p50 (K1247 s28 handoff)
 - **K1341** · Three exact cuts K1247 s28 left: a squared pre-check before draw.ts nearRange's sqrt (zChains'
   hottest line), hinted spanOf searches, a box bound in fill_tri.ts's disk scan (s28 handoff)
+- **K1344** · muse_hash j116's lower junction (~25.88-25.92, 14.21-14.35): rp=outline draws a dark wedge
+  crease with a hard diagonal where the reference is smooth; the census books it only as tail_look (60 px), so
+  it is uncounted (K1325 s2; crop `.claude/probes/K1325/out/s2/x4/j116_notch.png`)
 
 ## Residuals (known, not fixed)
 
@@ -1924,6 +1918,8 @@ Every other item below waits on the trigger it names.
 - **K1343** · `k1247s29_bench.ps1`'s fat link `p9ar6.EihVJ8adf0_iA8kPQ0HgzAtI` is codec v9 and builds p9ar6 at
   today's defaults, so s29's fat numbers are not fat; today's fat token is `p9ar6.FHFUnxp1_T-IDyQ9`
   (`k1247s28_bench.ps1`). Old K1040/K1239 smoke scripts carry it too
+- **K1345** · Faint rp=outline residue beside the band at muse_hash x58 (up to 0.046 ink) and x345 (0.015),
+  none above 0.05, below the census bar (K1325 s2; crops `.claude/probes/K1325/out/s2/x4/`)
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2272,6 +2268,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1325** · the census reference draws x304, j30 and muse_hash's five self-crossings (x304, x22, x345, j116, x58) whole; census m1 -> k1325s2: stray_ink 9 -> 4, total 22 -> 17, nothing else moved. Done in 3026bfc3 (2026-11-12).
 - **K1334** · Census reference smears where a chain crosses itself: muse_hash x22 (414 px), x345 (19.996, 3.944) 225 px, j116 (25.518, 13.825) 696 px, x58 (0.113, 15.187) 527 px. rp=outline draws them whole since 943ae592, so census_k1324s2a counts form B's flaw (stray_ink 7 -> 10). Dropped: folded into K1325 s2 (docs/design/K1325_s2_self_crossing_reference.md) with x304 (2026-11-12).
 - **K1333** · one shared form B cache for every checkout in the main checkout's .claude/probes/K1314/out/fb, fbf (tmp + rename writes, length-checked reads, rename-aside pruning; two concurrent runs matched one run) (K1325 s1). Done in 21dad33d (2026-11-12).
 - **K1331** · muse_hash x22's twist-eye smear cleared by a self-pass burial rule in draw.ts tieAlpha and its BAND_FS twin (self_bury.test.ts); the census now counts form B's own smear there (K1324 s2). Done in 943ae592 (2026-11-12).
