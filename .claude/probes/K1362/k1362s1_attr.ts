@@ -28,10 +28,10 @@ for (const nm of [...new Set(arts.map((a) => a.scene))]) {
     else if (g.winKind === 5) b = "K1049 through-pass corner (mine)";
     else if (a.dNear > 3 * h) b = "away from junctions (> 3h)";
     else if (g.chain !== f.chain && g.chain >= 0 && f.chain >= 0) b = "label differs";
-    else if (CORNER.has(rk) && g.winKind !== 2) b = "form B corner term, mine side/none";
-    else if (!CORNER.has(rk) && g.winKind === 2) b = "mine corner term, form B side/none";
+    else if (CORNER.has(rk) && !(g.winKind === 2 || g.winKind === 4)) b = "form B corner term, mine side/none";
+    else if (!CORNER.has(rk) && (g.winKind === 2 || g.winKind === 4)) b = "mine corner term, form B side/none";
     else if (rk === 1 && g.winKind === 1) b = dInk < 0 ? "same side term, mine lighter (burial)" : "same side term, mine darker (burial)";
-    else if (CORNER.has(rk) && g.winKind === 2) b = "same corner term, ink differs (r/q)";
+    else if (CORNER.has(rk) && (g.winKind === 2 || g.winKind === 4)) b = "same corner term, ink differs (r/q)";
     else b = `other (B term ${rk}, mine ${g.winKind})`;
     const e = buckets.get(b) ?? { n: 0, byKind: {}, ex: [] }; e.n++; e.byKind[a.kind] = (e.byKind[a.kind] ?? 0) + 1;
     if (e.ex.length < EX) e.ex.push(`${a.scene}:${a.x.toFixed(3)}:${a.y.toFixed(3)} ${a.kind}/${a.sub} ${a.px}px ${a.near} d/h ${(a.dNear / h).toFixed(1)} me ${g.ink.toFixed(2)} B ${f.ink.toFixed(2)}`);

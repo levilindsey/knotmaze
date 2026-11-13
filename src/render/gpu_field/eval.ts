@@ -24,7 +24,8 @@ import { CH, MAXP, type GfTables } from "./tables";
 
 export const MAXR = 2; // ramping pieces mixed per pixel
 export const MAXK = 6; // corners per pixel
-const SELF_BURIAL = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_SELFBUR === "1";
+const TANGENT_TERMS = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_TANG !== "0";
+const SELF_BURIAL =(globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_SELFBUR === "1";
 const MAXS = MAXP + MAXK; // surfaces
 
 export function ss(e0: number, e1: number, x: number): number {
@@ -37,7 +38,7 @@ export interface GfPixel {
   /** Label chain index (scene order), -1 for paper. */
   chain: number;
   s: number;
-  /** Winning outline term: 0 none, 1 a side (winA = chain, winB = +-1 side), 2 a fillet arc (winA = corner), 3 a cap/end (side at an open end). */
+  /** Winning outline term: 0 none, 1 a side (winA = chain, winB = +-1 side), 2 a fillet arc (winA = corner), 3 a cap/end (side at an open end), 4 a fillet tangent point (winA = corner, winB = 0 A / 1 B), 5 a K1049 through-pass arc. */
   winKind: number; winA: number; winB: number;
   /** Candidates tested: segments and corners. */
   nSeg: number; nK: number;
@@ -330,6 +331,24 @@ export class GfEval {
         }
         const val = (1 - bur) * band2(Dk);
         if (val > v) { v = val; wk = 2; wa = k; wb = 0; }
+      }
+      // form B's T_TA / T_TB: a fillet's tangent points are points of the trimmed outline, so their distance
+      // bounds the true one from above (never ink outside the true band); they close the wedge between a side
+      // cut at the fillet and the arc's sector, which neither covers (the hairline seams of K1362 s1's census)
+      if (TANGENT_TERMS) for (let i = 0; i < this.nk; i++) {
+        const k = this.kk[i]; if (T.kG[k] !== S || T.kThru[k]) continue;
+        for (let t = 0; t < 2; t++) {
+          const tx = t ? T.kTbx[k] : T.kTax[k]; const ty = t ? T.kTby[k] : T.kTay[k];
+          const dT = Math.sqrt((x - tx) * (x - tx) + (y - ty) * (y - ty)); if (!(dT < W + aa)) continue;
+          let bur = 0;
+          for (let m = 0; m < this.np && bur < 1; m++) {
+            if (this.psurf[m] !== S) continue;
+            const wb2 = 1 - ss(h - 2 * aa, h, Math.sqrt(this.pieceD(m, tx, ty)));
+            if (wb2 > bur) bur = wb2;
+          }
+          const val = (1 - bur) * band2(dT) * ss(-aa, aa, D);
+          if (val > v) { v = val; wk = 4; wa = k; wb = t; }
+        }
       }
       this.sv[e] = v; this.sa[e] = ss(-aa, aa, D); this.swk[e] = wk; this.swa[e] = wa; this.swb[e] = wb;
     }
