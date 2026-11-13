@@ -61,7 +61,7 @@ Fill on the def drag no slower than master, with zChains' gains kept and every o
   commit and push it, and report. A stopped run pushes only its finished part; keep unfinished code as a patch under
   `.claude/probes/K1341/` (untracked).
 
-## Handoff (Muse run, 2026-11-12, 17:03:53 to 18:12)
+## Handoff (Muse run, 2026-11-12, 17:03:53 to 18:20)
 
 **Verdict: the def fill slowdown was the harness, not the code. No `src/` change.**
 
