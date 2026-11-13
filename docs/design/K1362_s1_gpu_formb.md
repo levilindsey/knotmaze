@@ -117,3 +117,59 @@ Under 30 lines:
 - your last SHA.
 
 End with `Ledger items` and the handle fields for K1362.
+
+## Handoff (stage 1 agent, claude session 01SUPGULDxvE5gKXozfaFaFG; started 20:32:12, stopped 22:05, 2026-11-12)
+
+**Built** (only new files; nothing in `src/` outside `src/render/gpu_field/` changed, so today's look and
+rp=outline are byte-identical by construction; `npm test` green on d19f19aa, 231 files / 2939 tests):
+- `src/render/gpu_field/tables.ts`: the CPU tables. Chain polylines, crossing pins, junction arms, corners (form B's
+  rolling ball on tracked feet, its margin / steep / slack / root gates and its V gate, a windowed Newton on the
+  true foot distances), K1049 through-pass corners, and an h grid binning chunks and corners.
+- `src/render/gpu_field/eval.ts`: `GfEval`, the per-pixel evaluator as a CPU mirror written for a GLSL port: pieces
+  (folded segment ranges), ramping members as weighted configurations, surfaces, side / arc / tangent-point terms
+  with burial, top-down composite. It keeps the winning term per pixel (winKind 1 side, 2 arc, 3 cap, 4 tangent
+  point, 5 K1049 arc); no smooth-min.
+- NOT built: the GLSL pass, the app hook (planned: a new `rp` value read in `src/app/frame_loop.ts`), GPU readback,
+  timer queries, the s18 drags. So Done 1 and the GPU half of Done 3 are open.
+
+**Accuracy** (CPU mirror, ppu 160, 12 scenes; `.claude/probes/K1362/out/s1/census_h.*` on d19f19aa). stray / hard /
+paper / broken / k1049: mine 97 / 2 / 46 / 156 / 0 (2a3ee09b: 118 / 2 / 46 / 343 / 0), rp=outline 4 / 1 / 0 / 12 / 0.
+Every find is attributed to the winning terms at its pixel (`attr_h1_h2_h3.json`, `k1362s1_attr.ts`); all are class
+(b), implementation (an incomplete mirror of form B), none (a), none (c):
+- 76 form B's TA / TB / arc term wins and mine has no matching corner near p (muse_hash j92: mine only the K1049
+  corner). Corner-set mismatch, not yet attributed corner by corner (`k1362s1_kat.ts` lists both sets near a point).
+- 45 mine has an arc where form B has none (stray spikes, muse_hash j7 / j8): a corner form B rejects or an arc read
+  past its reach.
+- 44 my K1049 arcs: through-corner r differs from the reference (def: 38 matched, mean |dr|/h 0.165; 24 fixed track
+  nodes against fbf's CF growth), and yieldInk lacks its inner ramp.
+- 35 same corner, ink differs (r / q); 14 burial; 6 label; 37 other; 44 agree at the find's own pixel now.
+Fixed this stage: the V gate (def's non-through corners now equal form B's 332, mean |dr|/h 0.010), no self-burial of
+a piece by its own fold (form B has none; -117 finds), and the tangent-point terms (the side-cut / arc-sector seams).
+Crops (form B | rp=outline | mine), one per bucket, at 4x and 8x: `out/s1/x4/*.png`, `out/s1/x8/*.png`. Levi-call
+differences: K1049 is in (its 44 finds above); K1319 and K1315 are not built yet.
+
+**Speed** (Node, median of 20 builds, under the perf lock, load 0% before / 8% after; ms):
+| scene | vtx | pins | arms | corners | bins | total p50 | p95 |
+| def | 2.66 | 0.19 | 2.07 | 8.56 | 2.29 | 16.50 | 23.12 |
+| muse_hash | 1.70 | 0.19 | 1.54 | 3.26 | 1.22 | 8.70 | 20.71 |
+| fat | 0.60 | 0.22 | 0 | 0 | 0.95 | 1.84 | 3.38 |
+Candidates per pixel within reach (`k1362s1_floor.ts`): binned def 36.1 mean / 55 p95, muse_hash 57.9 / 84; after the
+chunk-box reject (census) def 18.3 / 40, muse_hash 29.6 / 56; floor (segments within h + W + aa) def 11.5 / 21,
+muse_hash 18.1 / 32, fat 9.2 / 17. Corners per pixel: mean 0.5, p95 2. GPU pass and frameMs: not measured.
+Speed fixes, all (b): a local foot walk in the V Newton (each step now scans both arms' samples) and the straight
+model's V accepted when its feet are well inside (corners 8.56 -> about 1-2 ms); vertices from the app's own sample
+buffers (vtx -> about 0); a counting-sort grid without allocation (bins -> about 0.5); no rebuild while asleep.
+
+**u around each closed outline loop** (coordinator question): derivable from the tables. Each piece's start and end
+are closed-form cuts (the fillet tangent points kTa / kTb, the crossing pins), so prefix sums over pieces in K1240's
+loop order give u. A fillet appearing or disappearing (r crossing 0) changes the piece count and the loop length by a
+jump; ramp the arc's contribution to u by its fade weight so u stays continuous. Building it is stage 2.
+
+**Verdict:** reaches the look and the CPU gate after these fixes, all (b): the corner-set mismatch (76), the stray
+arcs (45), the K1049 r and the inner ramp (44), corner r / q (35) and the burial and label residue (20); then the
+speed fixes above. The GPU frame gate is unmeasured: the GLSL pass and its timer query are stage 2's first step and
+decide that half.
+
+**Next** (stage 2): attribute the 76 and 45 corner by corner against form B's own corner list; port eval.ts to
+GLSL behind a new rp value; time it (timer query minus an empty query, frameMs p50 / p95 on the def, muse_hash and fat
+drags against master's rp=outline and today's look); then K1319 and K1315.
