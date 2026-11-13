@@ -69,6 +69,8 @@ let newSide = 0; let newSideHeld = 0; // ... and absent from EVERY previous piec
 // is held and its s moved at most T; a junction centre while it moved at most T (no END-arm foot hold). frame()
 // then runs with KF_INC.snap off on that scene. span=0 is the control for the method; compare span=32 against it.
 const SPAN = +arg("span", "-1"); const HOLDX = arg("holdx", "0") === "1";
+// holdc=<chain id> (attribution only): that chain never releases a span (its points stay committed throughout).
+const HOLDC = arg("holdc", "");
 const ts = T / px;
 const SS = { C: [] as number[][], rel: [] as boolean[][], cross: [] as SceneIn["crossings"], junc: [] as SceneIn["junctions"] };
 const spanOf = (C: number[], K: number, s: number): number => {
@@ -84,7 +86,7 @@ function spanSnap(al: SceneIn, K: number): { sc: SceneIn; ptsRel: number; chainR
     const p = c.pts as number[]; const n = p.length >> 1; nP += n; const span = K || n; const ns = Math.ceil(n / span);
     let C = SS.C[i]; const rel: boolean[] = new Array(ns).fill(false);
     if (!C || C.length !== p.length) { C = SS.C[i] = Array.from(p); rel.fill(true); nR += n; }
-    else for (let q = 0; q < ns; q++) {
+    else if (String(c.id) !== HOLDC) for (let q = 0; q < ns; q++) {
       const s0 = q * span; const s1 = Math.min(n, s0 + span); let m = false;
       for (let k = s0; k < s1 && !m; k++) m = Math.hypot(p[2 * k] - C[2 * k], p[2 * k + 1] - C[2 * k + 1]) * px > T;
       if (m) { rel[q] = true; nR += s1 - s0; for (let k = 2 * s0; k < 2 * s1; k++) C[k] = p[k]; }

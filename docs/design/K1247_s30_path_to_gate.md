@@ -110,7 +110,7 @@ committed; `k1247s30_dirty.ts`, `k1247s30_spread.ts`):
   arc, `buildBorder`'s arc steps) shifts every index after it. Counted by set membership (`piecePtsNew`, the
   exact x,y missing from the piece's last version), the work at 32-point spans on def is 9.7% of piece points,
   2.6x the 3.8% released; at chain granularity 11.4%, 0.7x. Observed: `buildBorder` offsets each vertex from
-  its own two segments, so a held vertex's own offset point cannot move. The 2.6x, attributed but not traced
+  its own two segments, so a held vertex's own offset point cannot move. The 2.6x, traced on one piece below
   (`spread_def_span32_near.txt`, `_holdx.txt`): 55% of the new points are on chains with NO released span; only
   11% lie within 10 device px of a released point and 24% lie 160 px or more from any; 98.7% are absent from
   every previous piece of their chain side (not a piece-key artifact); the captured frames (camera, dead ends)
@@ -122,9 +122,22 @@ committed; `k1247s30_dirty.ts`, `k1247s30_spread.ts`):
   from any released point; its 11 points move as a linear ramp, 1e-4 px at point 0 to 0 at point 10. Holding
   every crossing and junction input whole cuts that to 7e-6 px, but it still moves: with its points, crossing
   ends, junction centre and arms all bit-identical, something inside frame() still reads other chains.
-  Next: diff the cache values `endTailPts` reads for corner 544 (cTax/cTay, armSR/armL/armLcut, the polys,
-  depthAtC) between two such frames, and follow the first that differs back to the chain it comes from. Whatever
-  it is decides whether span work can be exact. Fat's piece points are few (piecesCapsEtc 1.4 ms), so its 1.4% new is small
+  Observed: the tail reads its arms' `armLcut` (outline.ts ~4105-4125: the minimum, over every pass ahead on the
+  arm's chain, of `d - reachOf(...) - h`), and `reachOf` samples the crossing PARTNER's polyline by arc length
+  (`pointAtInto(pq, sq + sb * ek)`). Junction 178's end arm (chain 75, s 0) meets its first pass at s 1.344, whose
+  partner is chain 61 at s 181.47, and chain 61 is one of the four released at frame 55. Tested (`holdc=61`,
+  `spread_def_span32_trace55_holdx_holdc61.txt`): with chain 61 held whole as well, the tail no longer changes
+  (the farthest changed held-chain piece becomes `arc:61:0:262`, 527 px out, at a chain-61 junction: the same
+  pattern one chain over). The crossing is ~60 px from the tail and every released point is >= 886 px away, so
+  chain 61's points near s 181.47 were held: what moved is chain 61's ARC LENGTH, changed by a released span
+  earlier along it, under a held crossing s (inferred from the geometry; the only path left once points and s are
+  held). Without holdx the crossing s itself moves too (1e-4 px, `holdc=61` alone). So the spread is structural:
+  everything addressed by arc length (crossing s, arm s, passS, every `pointAt` of a partner) moves when ANY
+  earlier span on that chain changes length. Span-exact work needs span-local addressing (span index + offset, or
+  an arc-length re-base per released span that leaves held spans' s fixed) before stage 4's dependency map can be
+  exact; with it, the measured 9.7% should fall toward the 3.8% released (projected, not measured). Next: the
+  re-base in the probe (held spans keep their committed arc-length offsets; s inputs re-mapped through it) and
+  the span=32 new-point share under it. Fat's piece points are few (piecesCapsEtc 1.4 ms), so its 1.4% new is small
   in time too. Purity held throughout (`again:*` 0%). Files: `out/s30/run/spread_*_new.txt`.
 
 - Spread: an exact incremental frame redoes about 2x the released points (pieces on held chains change where
@@ -171,12 +184,13 @@ The extra overhead (snap, dirty sets, the worker's own ~1 ms) is in the worker c
 | 1 | snap in OutlineModel.update, one dirty set for every part; snap <= 0.3 ms | 35 | 13.9 | 6.9 | 9.85 | 2.15 | ~68 |
 | 2 | exact caches for frame's phases, chain granularity (closure = 33.5% of piece points) | ~14 | 13.9 | 6.9 | 9.85 | 2.15 | ~47 |
 | 3 | zChains in a second worker (reads only the scene; same output) | ~14 | 13.9 | 6.9 | 0 | 2.15 | ~37 |
-| 4 | 32-point spans, exact: a dependency map from each span to the outputs it reaches (9.7-13.6% of points) | 3.7-5.2 | 13.9 | 6.9 | 0 | 2.15 | ~28-29 |
+| 4 | 32-point spans, exact: span-local arc-length addressing first (the spread's measured cause), then a dependency map from each span to the outputs it reaches (9.7-13.6% of points; toward 3.8% with the addressing, projected) | 3.7-5.2 | 13.9 | 6.9 | 0 | 2.15 | ~28-29 |
 | 5 | fill, band, paint per dirty span (never per face: 61-97% of faces change a frame) | 3.7-5.2 | ~1.4 | ~0.7 | 0 | ~0.2 | ~7-9 |
 | 6 | zChains incremental in its worker | - | - | - | 0 (side ~1-2) | - | ~7-9 |
 
 - Desktop gate 3 ms p50 / 6 ms p95: stage 5 lands at ~7-9 ms p50 at T 0.5, exact. The rest is, in order of
-  certainty: tracing the 2.6x span spread to a tighter dependency map (if it reaches ~1x, frame ~1.5-2 ms);
+  certainty: span-local arc-length addressing, the 2.6x spread's traced cause (if the spread reaches ~1x, frame
+  ~1.5-2 ms);
   T = 1 px (halves the released share: ~4-5 ms; Levi's call, a look question with a picture); GPU placement of
   fill and band (K1310). p95 (16.4% new points, ~6.3 ms frame) needs a per-frame budget: a deadline scheduler
   that recomputes dirty spans up to the budget and carries the rest, with a bounded extra lag.
@@ -186,8 +200,8 @@ The extra overhead (snap, dirty sets, the worker's own ~1 ms) is in the worker c
   cuts the closure from ~300 to ~162 pieces a frame.
 - Pixel (16 ms p50): the only measured CPU ratio is K544's 1.7x the desktop median (designs searched in a worker,
   2026-10-20); K1247_fast_frame.md's "several times slower" is unmeasured. At 1.7x the gate is ~9.4 ms of
-  desktop work: stage 5's ~7-9 ms desktop is ~12-15 ms Pixel, under 16 but thin; the 2.6x trace or T = 1 px
-gives the margin. On top it needs: (a) this code's own
+  desktop work: stage 5's ~7-9 ms desktop is ~12-15 ms Pixel, under 16 but thin; span-local addressing or
+  T = 1 px gives the margin. On top it needs: (a) this code's own
   ratio (`k1247s30_engine.html` on the phone: the coordinator's run); (b) stage 6 before stage 3 ships there:
   a second worker may land on a little core (zChains 9.85 x 1.7 x ~2.5 = ~42 ms a frame would lag the drag);
   (c) a sustained 30 s drag for thermal throttling; (d) nothing for T, which is in device px on both (the
