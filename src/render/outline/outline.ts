@@ -3223,6 +3223,7 @@ export function structure(scene: SceneIn): DiagramStructure { return diagramOf(s
  *  the diagram's: one run piece per border segment, one arc piece per
  *  diagram corner, the caps' runs. */
 export function frame(st: DiagramStructure, scene: SceneIn, profile?: Record<string, number>): OutlineTable {
+  if (KF_INC.snap) { let S = kfSnap.get(st); if (!S) { S = newSnapState(); kfSnap.set(st, S); } scene = snapScene(S, scene); }
   return frameFast(st, alignJunctionArms(st, scene), profile);
 }
 
@@ -3959,7 +3960,10 @@ function setupFrame(C: FCache, st: DiagramStructure, scene: SceneIn): void {
       if (footBlendInto(tp, term.x, term.y, kfFootW[4], kfFootW[5], kfFootB)) { kfFootW[0] = kfFootB[0]; kfFootW[1] = kfFootB[1]; kfFootW[2] = kfFootB[2]; }
       if (kfFootW[0] < best) { best = kfFootW[0]; cp = [kfFootW[1], kfFootW[2]]; }
     }
-    if (Math.abs(xa.s - 0) < Math.abs(xa.s - rp.len)) exts[a.pi].start = cp;
+    const atStart = Math.abs(xa.s - 0) < Math.abs(xa.s - rp.len);
+    // K1338: with the snap on, the extension's foot is held while it moves at most T px.
+    if (KF_INC.snap) cp = holdFootC(C, scene, a.pi * 2 + (atStart ? 0 : 1), cp);
+    if (atStart) exts[a.pi].start = cp;
     else exts[a.pi].end = cp;
   });
   for (let i = 0; i < C.nCh; i++) {
@@ -4194,6 +4198,151 @@ function setupFrame(C: FCache, st: DiagramStructure, scene: SceneIn): void {
       const kin = i > 0 ? i - 1 : p.closed ? p.nseg - 1 : -1;
       gB[i] = kin >= 0 ? p.x[i] * tx[kin] + p.y[i] * ty[kin] : 0;
     }
+  }
+}
+
+// --- the incremental frame (K1247 s30, K1338) --------------------------------
+// No input is bit-equal from one drag frame to the next (every chain creeps by
+// hundredths of a px), so a cache keyed on exact inputs needs a snap first:
+// snapScene holds each chain at its last committed points until one of them
+// moves more than T device px, and holds a crossing's s (both chains held)
+// and a junction (all its arms' chains held) with it. On a held chain the
+// borders' inputs are bit-equal, and buildBorderInc reuses the last build.
+// The cache is exact (the frame on a snapped scene is byte-identical with it
+// on or off: outline_inc.test.ts); the snap moves the outline by up to T, and
+// fill, band and zChains still read the unsnapped scene, so the snap belongs in
+// OutlineModel.update before it is on in the app. Both off by default.
+export const KF_INC = { snap: false, cache: false, T: 0.5, hits: 0, misses: 0, why: null as Record<string, number> | null };
+
+export interface SnapState { chains: (number[] | null)[]; cross: (SceneIn["crossings"][number] | null)[]; junc: (SceneIn["junctions"][number] | null)[] }
+export function newSnapState(): SnapState { return { chains: [], cross: [], junc: [] }; }
+/** K1338: the scene with every chain that moved at most T device px since its
+ *  last commit held at its committed points (see KF_INC). */
+export function snapScene(S: SnapState, scene: SceneIn, T = KF_INC.T): SceneIn {
+  const px = scene.camera.pxPerUnit * scene.camera.dpr;
+  const tw2 = (T / px) * (T / px);
+  const idx = new Map<number, number>();
+  const held: boolean[] = [];
+  const chains = scene.chains.map((c, i) => {
+    idx.set(c.id, i);
+    const old = S.chains[i];
+    const pts = c.pts as ArrayLike<number>;
+    if (old && old.length === pts.length) {
+      let ok = true;
+      for (let k = 0; k < pts.length && ok; k += 2) { const dx = pts[k] - old[k]; const dy = pts[k + 1] - old[k + 1]; ok = dx * dx + dy * dy <= tw2; }
+      if (ok) { held[i] = true; return { ...c, pts: old }; }
+    }
+    S.chains[i] = Array.from(pts);
+    held[i] = false;
+    return { ...c, pts: S.chains[i] as number[] };
+  });
+  // An s along a held chain is held while it moves at most T px along it, so a
+  // chain beside a moving one keeps its passes (each end is held on its own).
+  const ts = T / px;
+  const keepS = (chain: number, s0: number, s1: number): boolean => { const i = idx.get(chain); return i !== undefined && held[i] && Math.abs(s1 - s0) <= ts; };
+  const crossings = scene.crossings.map((x, xi) => {
+    const old = S.cross[xi];
+    if (old && old.a.chain === x.a.chain && old.b.chain === x.b.chain && old.over === x.over) {
+      const ka = keepS(x.a.chain, old.a.s, x.a.s); const kb = keepS(x.b.chain, old.b.s, x.b.s);
+      if (ka && kb) return old;
+      const y = { ...x, a: { ...x.a, s: ka ? old.a.s : x.a.s }, b: { ...x.b, s: kb ? old.b.s : x.b.s } };
+      S.cross[xi] = y;
+      return y;
+    }
+    const y = { ...x, a: { ...x.a }, b: { ...x.b } };
+    S.cross[xi] = y;
+    return y;
+  });
+  const junctions = scene.junctions.map((j, ji) => {
+    const old = S.junc[ji];
+    if (old && old.id === j.id && old.arms.length === j.arms.length && j.arms.every((a, k) => old.arms[k].chain === a.chain && old.arms[k].kind === a.kind)) {
+      const kc = Math.hypot(j.c[0] - old.c[0], j.c[1] - old.c[1]) <= ts;
+      const ks = j.arms.map((a, k) => keepS(a.chain, old.arms[k].s, a.s));
+      if (kc && ks.every(Boolean)) return old;
+      const y = structuredClone(j);
+      if (kc) y.c = [old.c[0], old.c[1]];
+      y.arms.forEach((a, k) => { if (ks[k]) a.s = old.arms[k].s; });
+      S.junc[ji] = y;
+      return y;
+    }
+    const y = structuredClone(j);
+    S.junc[ji] = y;
+    return y;
+  });
+  return { ...scene, chains, crossings, junctions };
+}
+const kfSnap = new WeakMap<DiagramStructure, SnapState>();
+const kfFootHold = new WeakMap<FCache, Map<number, [number, number]>>();
+function holdFootC(C: FCache, scene: SceneIn, key: number, cp: [number, number]): [number, number] {
+  let M = kfFootHold.get(C); if (!M) { M = new Map(); kfFootHold.set(C, M); }
+  const old = M.get(key); const tw = KF_INC.T / (scene.camera.pxPerUnit * scene.camera.dpr);
+  if (old && Math.hypot(cp[0] - old[0], cp[1] - old[1]) <= tw) return old;
+  M.set(key, cp);
+  return cp;
+}
+
+// The border cache: per chain, its inputs' bits (borderKeyC) and both
+// borders' outputs (the fields later phases read, up to nb) and fold notes.
+interface BEnt { nb: number; f: Float64Array; bcv: Int8Array; diag: string[] }
+interface BInc { keys: (Float64Array | null)[]; ents: (BEnt | null)[] }
+const kfBInc = new WeakMap<FCache, BInc>();
+let kfKey = new Float64Array(1024);
+function borderKeyC(C: FCache, pi: number): number {
+  const p = C.polys[pi]; const n = p.n; const nseg = p.nseg; const np = C.passN[pi]; const roots = C.chainRoots[pi];
+  const need = 9 + 3 * n + nseg + 3 * np + roots.length;
+  if (kfKey.length < need) kfKey = new Float64Array(2 * need);
+  const k = kfKey; let o = 0;
+  k[o++] = C.h; k[o++] = C.W; k[o++] = n; k[o++] = nseg; k[o++] = p.closed ? 1 : 0; k[o++] = p.s0; k[o++] = p.len; k[o++] = np; k[o++] = roots.length;
+  k.set(p.x.subarray(0, n), o); o += n; k.set(p.y.subarray(0, n), o); o += n; k.set(p.s.subarray(0, n), o); o += n;
+  k.set(p.segLen.subarray(0, nseg), o); o += nseg;
+  const ps = C.passS[pi]; const psq = C.passSq[pi]; const pxi = C.passXi[pi];
+  // The border reads a pass's other s and its crossing only to ask whether it is a self-crossing (cutFoldsC's nearKink).
+  for (let e = 0; e < np; e++) { const xi = pxi[e]; const self = C.crossAPi[xi] === C.crossBPi[xi]; k[o++] = ps[e]; k[o++] = self ? 1 : 0; k[o++] = self ? psq[e] : 0; }
+  k.set(roots, o); o += roots.length;
+  return o;
+}
+function bitEq(a: Float64Array, b: Float64Array, n: number): boolean {
+  const ia = new Int32Array(a.buffer, a.byteOffset, 2 * n); const ib = new Int32Array(b.buffer, b.byteOffset, 2 * n);
+  for (let i = 0; i < 2 * n; i++) if (ia[i] !== ib[i]) return false;
+  return true;
+}
+const BINC_F = ["bx", "by", "bs", "bsm", "bfx", "bfy", "bs2", "be", "bc"] as const;
+function buildBorderInc(C: FCache, pi: number): void {
+  let I = kfBInc.get(C);
+  if (!I) { I = { keys: [], ents: [] }; kfBInc.set(C, I); }
+  const len = borderKeyC(C, pi);
+  const old = I.keys[pi];
+  if (old && old.length === len && bitEq(old, kfKey, len)) {
+    KF_INC.hits++;
+    const diag = (C as unknown as { __foldDiag: string[] }).__foldDiag;
+    for (let side = 0; side < 2; side++) {
+      const e = I.ents[pi * 2 + side] as BEnt; const B = C.bords[pi * 2 + side]; const nb = e.nb;
+      if (B.bcv.length < nb) { B.bcv = new Int8Array(2 * nb); B.bs2 = new Float64Array(2 * nb); }
+      for (let f = 0; f < BINC_F.length; f++) {
+        const key = BINC_F[f];
+        if (key !== "bs2" && B[key].length < nb) B[key] = growF(B[key], nb);
+        B[key].set(e.f.subarray(f * nb, (f + 1) * nb));
+      }
+      B.bcv.set(e.bcv);
+      B.nb = nb;
+      for (const s of e.diag) if (diag.length < CF_DIAG_N) diag.push(s);
+    }
+    return;
+  }
+  KF_INC.misses++;
+  if (KF_INC.why && old) { const p = C.polys[pi]; const n = p.n; const cuts = [9, 9 + n, 9 + 2 * n, 9 + 3 * n, 9 + 3 * n + p.nseg, len - C.chainRoots[pi].length, len]; const names = ["head", "x", "y", "s", "segLen", "passes", "roots"]; let r = old.length !== len ? "len" : ""; if (!r) { let i = 0; while (i < len && old[i] === kfKey[i]) i++; let q = 0; while (q < cuts.length && i >= cuts[q]) q++; r = q === 0 ? ["h", "W", "n", "nseg", "closed", "s0", "len", "np", "nroots"][i] : names[q] ?? "?"; } KF_INC.why[r] = (KF_INC.why[r] ?? 0) + 1; }
+  I.keys[pi] = kfKey.slice(0, len);
+  const real = (C as unknown as { __foldDiag: string[] }).__foldDiag;
+  for (let side = 0; side < 2; side++) {
+    const mine: string[] = [];
+    (C as unknown as { __foldDiag: string[] }).__foldDiag = mine;
+    buildBorderC(C, pi, side === 0 ? 1 : -1);
+    (C as unknown as { __foldDiag: string[] }).__foldDiag = real;
+    for (const s of mine) if (real.length < CF_DIAG_N) real.push(s);
+    const B = C.bords[pi * 2 + side]; const nb = B.nb;
+    const f = new Float64Array(BINC_F.length * nb);
+    for (let q = 0; q < BINC_F.length; q++) f.set(B[BINC_F[q]].subarray(0, nb), q * nb);
+    I.ents[pi * 2 + side] = { nb, f, bcv: B.bcv.slice(0, nb), diag: mine };
   }
 }
 
@@ -7812,7 +7961,8 @@ function frameFast(st: DiagramStructure, scene: SceneIn, profile?: Record<string
   kfFrameNo++;
 
   setupFrame(C, st, scene);
-  for (let pi = 0; pi < C.nCh; pi++) { buildBorderC(C, pi, 1); buildBorderC(C, pi, -1); }
+  if (KF_INC.cache) for (let pi = 0; pi < C.nCh; pi++) buildBorderInc(C, pi);
+  else for (let pi = 0; pi < C.nCh; pi++) { buildBorderC(C, pi, 1); buildBorderC(C, pi, -1); }
   profMark("setupBorders");
   cornersPhaseC(C, st, scene);
   profMark("corners");
