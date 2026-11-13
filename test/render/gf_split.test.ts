@@ -4,7 +4,7 @@
 // scan's own lines (a reworded copy could round differently and move pixels).
 import { describe, expect, it } from "vitest";
 import { gfFs, type GfTier } from "../../src/render/gpu_field/gf_glsl";
-import { GF_SPLIT_BYTES, GF_SPLIT_TARGETS } from "../../src/render/gpu_field/gf_split";
+import { gfSplitBytes } from "../../src/render/gpu_field/gf_split";
 
 const T: GfTier = { p: 3, k: 2, ramps: true };
 const count = (s: string, sub: string): number => s.split(sub).length - 1;
@@ -19,10 +19,10 @@ describe("gf_split", () => {
     expect(b).toContain("#define SPLIT2 1\n");
     expect(c).toContain("#define SPLITSKIP 1\n");
     expect(a).toContain("#define TIER 1");
-    expect(a).toContain("layout(location = 3) out uvec2 o3;");
+    expect(a).toContain("layout(location = MAXP) out uvec2 o3;");
     expect(b).toContain("uniform highp usampler2D uP0, uP1, uP2, uP3;");
-    expect(GF_SPLIT_TARGETS).toBe(4);
-    expect(GF_SPLIT_BYTES).toBe(56);
+    expect(gfSplitBytes(3)).toBe(56);
+    expect(gfSplitBytes(2)).toBe(40);
   });
 
   it("refuses the probe, no tier, and tiers wider than its fields", () => {

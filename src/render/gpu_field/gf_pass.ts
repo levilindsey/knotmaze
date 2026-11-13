@@ -164,7 +164,7 @@ export class GfPass {
       for (const n of UNIFORMS) u.set(n, gl.getUniformLocation(prog, n));
       return { prog, u, tier, split: s };
     });
-    if (split) this.pieces = new GfPieces(gl);
+    if (split) this.pieces = new GfPieces(gl, tiers[0].p);
     this.vao = gl.createVertexArray()!;
     this.tex = gl.createTexture()!;
     this.ext = gl.getExtension("EXT_disjoint_timer_query_webgl2") as TimerExt | null;
@@ -238,7 +238,7 @@ export class GfPass {
       // K1362 s7: pass 1 draws into the pieces (over the target's depth-stencil): their old contents are never read
       // (pass 2 reads only the pixels pass 1 just wrote), so a tile-based GPU need not load them
       pieces.bind(target.w, target.h, target.depthStencil!);
-      gl.invalidateFramebuffer(gl.FRAMEBUFFER, [0, 1, 2, 3].map((i) => gl.COLOR_ATTACHMENT0 + i));
+      gl.invalidateFramebuffer(gl.FRAMEBUFFER, pieces.tex.map((_, i) => gl.COLOR_ATTACHMENT0 + i));
       gl.stencilMask(0xff); gl.depthMask(true); gl.clearBufferfi(gl.DEPTH_STENCIL, 0, 1, 0);
     }
     gl.enable(gl.SCISSOR_TEST);
@@ -271,7 +271,9 @@ export class GfPass {
         gl.bindFramebuffer(gl.FRAMEBUFFER, target.fbo);
         gl.stencilFunc(gl.EQUAL, 1, 0xff); gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
         if (this.skip) { gl.disable(gl.STENCIL_TEST); gl.depthFunc(gl.GREATER); gl.depthMask(false); }
-        for (let i = 0; i < 4; i++) { gl.activeTexture(gl.TEXTURE1 + i); gl.bindTexture(gl.TEXTURE_2D, pieces!.tex[i]); }
+        // piece j at unit 1 + j, the corners at unit 4 (uP3); a piece the tier does not hold, nothing
+        const pt = pieces!.tex; const np = pieces!.np;
+        for (let i = 0; i < 4; i++) { gl.activeTexture(gl.TEXTURE1 + i); gl.bindTexture(gl.TEXTURE_2D, i === 3 ? pt[np] : i < np ? pt[i] : null); }
         gl.activeTexture(gl.TEXTURE0);
       }
       gl.useProgram(g.prog);

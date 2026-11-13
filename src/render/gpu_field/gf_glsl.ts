@@ -99,10 +99,15 @@ layout(location = 0) out vec4 o0;
 layout(location = 1) out vec4 o1;
 layout(location = 2) out vec4 o2;
 #elif defined(SPLIT1)
+// one target per piece the tier holds, then the corners (gf_split.ts)
 layout(location = 0) out uvec4 o0;
+#if MAXP > 1
 layout(location = 1) out uvec4 o1;
+#endif
+#if MAXP > 2
 layout(location = 2) out uvec4 o2;
-layout(location = 3) out uvec2 o3;
+#endif
+layout(location = MAXP) out uvec2 o3;
 #else
 out vec4 o0;
 #endif
@@ -559,7 +564,13 @@ void main() {
   o1 = vec4(float(oWk), float(oWa), float(oWb), float(nSeg));
   o2 = vec4(float(nK), float(np), float(ns), 0.0);
 #elif defined(SPLIT1)
-  o0 = e0; o1 = e1; o2 = e2; o3 = uvec2(s3x, s3y);
+  o0 = e0; o3 = uvec2(s3x, s3y);
+#if MAXP > 1
+  o1 = e1;
+#endif
+#if MAXP > 2
+  o2 = e2;
+#endif
 #ifdef SPLITSKIP
   // no piece, corner or through corner (s3y == 0): the pixel's output is (0, 0), the target's clear; depth 1 keeps
   // pass 2 off it (pass 2 draws depth 0.5 GREATER), depth 0 lets it draw
