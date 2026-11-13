@@ -8266,7 +8266,10 @@ function tailF(a: TailIn, l1: number, u: number, rampCut: number, marginCut: num
   else {
     sE = tailAt(a, l1, u, tailPt, tailCen, false);
     const lo = a.dirX > 0 ? a.sRX - 2 * h : a.sRX - 6 * h;
-    tailFoot(a.pX, lo, lo + 8 * h, tailPt[0], tailPt[1], tailFt);
+    // K1247 s29: capped at h. Below the cap the foot is the uncapped one (the first segment in
+    // walk order to reach the minimum); at or past it dF reads h, and every reader of f takes
+    // only its sign, which is <= 0 there either way (fW = (h - W - dF) / h < 0).
+    tailFoot(a.pX, lo, lo + 8 * h, tailPt[0], tailPt[1], tailFt, h);
     sF = tailFt[0]; dF = tailFt[1];
     if (gi >= 0 && tgMode === 1) { tgS[3 * gi] = sE; tgS[3 * gi + 1] = sF; tgS[3 * gi + 2] = dF; tgOk[gi] = 1; }
   }
@@ -8327,7 +8330,9 @@ function bendDist(a: TailIn, b: NonNullable<TailIn["bend"]>, x: number, y: numbe
 function tailAlphaAt(a: TailIn, x: number, y: number, keyE: number, side: boolean, own = false): number {
   const h = a.h;
   const lo = a.dirX > 0 ? a.sRX - 2 * h : a.sRX - 6 * h;
-  tailFoot(a.pX, lo, lo + 8 * h, x, y, tailFt);
+  // K1247 s29: capped at h without a bend: past h the alpha is `own ? 1 : 0` whatever the foot
+  // (g = 0); a bend reads sF, so it keeps the true foot.
+  tailFoot(a.pX, lo, lo + 8 * h, x, y, tailFt, a.bend ? Infinity : h);
   const sF = tailFt[0]; const dF = a.bend ? bendDist(a, a.bend, x, y, sF, tailFt[1]) : tailFt[1];
   const ramp = tailRamp(a, sF, true);
   // K1283 s9: `own` = a run's point (runEndFade): outside X's tube, or past
