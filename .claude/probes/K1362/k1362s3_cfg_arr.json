@@ -1,0 +1,6 @@
+{"benches":[{"name":"arr","scenes":["def","muse_hash"],"w":822,"h":1506,"fit":0.917,"nTables":3,"nPass":40,"warmMs":1000,"settleFrames":30,
+  "variants":["full","empty","small","smallonce","tinyonce"],"modes":["sync4"],"counts":false,
+  "surgery":{
+    "smallonce":[["#define MAXP 8","#define MAXP 4"],["#define MAXK 6","#define MAXK 3"],["#define MAXS 14","#define MAXS 7"],["for (int cfg = 0; cfg <= nr; cfg++) {","for (int cfg = 0; cfg <= 0; cfg++) {"]],
+    "tinyonce":[["#define MAXP 8","#define MAXP 2"],["#define MAXK 6","#define MAXK 2"],["#define MAXS 14","#define MAXS 4"],["for (int cfg = 0; cfg <= nr; cfg++) {","for (int cfg = 0; cfg <= 0; cfg++) {"]]
+  }}]}

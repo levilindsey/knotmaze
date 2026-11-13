@@ -16,12 +16,16 @@
 import { buildTables, type GfTables } from "../../../src/render/gpu_field/tables";
 import { GfPass, GfTarget, compileProgram, type GfMap } from "../../../src/render/gpu_field/gf_pass";
 import { GF_VS, gfFs } from "../../../src/render/gpu_field/gf_glsl";
+import { MAXP } from "../../../src/render/gpu_field/tables";
+import { MAXK } from "../../../src/render/gpu_field/eval";
 import type { FieldScene } from "../../../src/render/field/scene";
 
 type Rect = [number, number, number, number];
 export interface BenchCfg {
   scenes: string[]; base: string; w: number; h: number; fit: number;
   nTables: number; nPass: number; warmMs: number; settleFrames: number; variants: string[]; modes: string[]; counts: boolean;
+  /** extra variants by name: [find, replace] pairs applied in turn to the shipped app shader (no rebuild needed) */
+  surgery?: Record<string, [string, string][]>;
 }
 
 const sortN = (a: number[]): number[] => a.slice().sort((x, y) => x - y);
@@ -30,7 +34,7 @@ const st = (a: number[]): { n: number; p50: number; p90: number; min: number; ma
   ({ n: a.length, p50: +q(a, 0.5).toFixed(3), p90: +q(a, 0.9).toFixed(3), min: +q(a, 0).toFixed(3), max: +q(a, 1).toFixed(3) });
 const raf = (): Promise<number> => new Promise((r) => requestAnimationFrame((t) => r(t)));
 
-function variants(): Record<string, string> {
+function variants(surgery: Record<string, [string, string][]> = {}): Record<string, string> {
   const src = gfFs(false);
   const rep = (s: string, a: string, b: string): string => { if (!s.includes(a)) throw new Error("surgery: missing " + a); return s.replace(a, b); };
   const early = (s: string, v: string): string => rep(s, "    // keys and membership", `    o0 = ${v}; return;\n    // keys and membership`);
@@ -42,6 +46,13 @@ function variants(): Record<string, string> {
     cells: early(rep(src, "for (int i = 0; i < chn; i++) {", "nSeg += chn + v0; for (int i = 0; i < 0; i++) {"), "vec4(float(nSeg), 0.0, 0.0, 1.0)"),
     once: rep(src, "for (int cfg = 0; cfg <= nr; cfg++) {", "for (int cfg = 0; cfg <= 0; cfg++) {"),
     empty: rep(src, "void main() {", "void main() {\n  o0 = vec4(gl_FragCoord.xy * 1e-4, 0.0, 1.0); return;"),
+    // the post-scan body split (s3 breakdown): keys = scan + keys/membership + corners near p (stops before the
+    // configurations); lay1 = once without composite() (layers once; its outputs kept live); small = full with the
+    // per-pixel arrays halved (MAXP 4, MAXK 3: the 4 nearest pieces, 3 corners; a register-pressure probe, not the look)
+    keys: rep(src, "    // configurations over the ramping pieces", "    o0 = vec4(float(np + nk + pg[0]), pkey[0] + pramp[0], krho[0] + float(kIn[0]), 1.0); return;\n    // configurations over the ramping pieces"),
+    lay1: rep(rep(src, "for (int cfg = 0; cfg <= nr; cfg++) {", "for (int cfg = 0; cfg <= 0; cfg++) {"), "float r = composite();", "float r = sv[0] + skey[0] + sa[0] + float(ns + sord[0] + swk[0]);"),
+    small: rep(rep(rep(src, `#define MAXP ${MAXP}`, "#define MAXP 4"), `#define MAXK ${MAXK}`, "#define MAXK 3"), `#define MAXS ${MAXP + MAXK}`, "#define MAXS 7"),
+    ...Object.fromEntries(Object.entries(surgery).map(([k, reps]) => [k, reps.reduce((s, [a, b]) => rep(s, a, b), src)])),
   };
 }
 
@@ -63,7 +74,7 @@ export async function bench(cfg: BenchCfg): Promise<Record<string, unknown>> {
   const gl = canvas.getContext("webgl2", { antialias: false, alpha: true, preserveDrawingBuffer: false, powerPreference: "high-performance" })!;
   if (!gl) throw new Error("no WebGL2");
   const out: Record<string, unknown> = { info: info(gl), cfg, scenes: {} as Record<string, unknown> };
-  const V = variants();
+  const V = variants(cfg.surgery);
   const px = new Uint8Array(4);
   for (const name of cfg.scenes) {
     const rec: Record<string, unknown> = {};
@@ -168,13 +179,20 @@ export async function bench(cfg: BenchCfg): Promise<Record<string, unknown>> {
         pp.draw(tg, map, rect, false);
         const a1 = new Float32Array(cfg.w * cfg.h * 4); const a2 = new Float32Array(cfg.w * cfg.h * 4);
         tg.read(1, a1); tg.read(2, a2);
-        const segs: number[] = []; const ks: number[] = [];
+        const segs: number[] = []; const ks: number[] = []; const nps: number[] = []; const nss: number[] = [];
         for (let y = rect[1]; y < rect[3]; y++)
-          for (let x = rect[0]; x < rect[2]; x++) { const i = 4 * (y * cfg.w + x); segs.push(a1[i + 3]); ks.push(a2[i]); }
+          for (let x = rect[0]; x < rect[2]; x++) { const i = 4 * (y * cfg.w + x); segs.push(a1[i + 3]); ks.push(a2[i]); nps.push(a2[i + 1]); nss.push(a2[i + 2]); }
         const mean = (v: number[]): number => v.reduce((a, b) => a + b, 0) / Math.max(1, v.length);
         const live = segs.filter((x) => x > 0);
+        const frac = (v: number[], t: number): number => +(v.filter((x) => x > t).length / Math.max(1, v.length)).toFixed(4);
         rec.counts = { px: segs.length, segMean: +mean(segs).toFixed(2), segP95: q(segs, 0.95), kMean: +mean(ks).toFixed(2), kP95: q(ks, 0.95),
-          livePx: live.length, liveMean: +mean(live).toFixed(2), liveP95: q(live, 0.95) };
+          livePx: live.length, liveMean: +mean(live).toFixed(2), liveP95: q(live, 0.95),
+          // pieces / surfaces per pixel, and the share over the "small" variant's caps (MAXP 4, MAXK 3)
+          npMean: +mean(nps).toFixed(2), npP95: q(nps, 0.95), npOver4: frac(nps, 4), nsMean: +mean(nss).toFixed(2), kOver3: frac(ks, 3),
+          npHist: [0, 1, 2, 3, 4].map((n) => +(nps.filter((x) => x === n).length / Math.max(1, nps.length)).toFixed(4)),
+          kHist: [0, 1, 2, 3].map((n) => +(ks.filter((x) => x === n).length / Math.max(1, ks.length)).toFixed(4)),
+          // pixels with at most one piece and no corner (the "skip1" variant's early-out set)
+          simple: +(nps.filter((x, i) => x <= 1 && ks[i] === 0).length / Math.max(1, nps.length)).toFixed(4) };
         pp.dispose(); tg.dispose();
       } catch (err) { rec.counts = { error: String(err) }; }
     }

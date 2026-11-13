@@ -1,0 +1,1 @@
+{"benches":[{"name":"brk","scenes":["def","muse_hash"],"w":822,"h":1506,"fit":0.917,"nTables":3,"nPass":40,"warmMs":1000,"settleFrames":30,"variants":["full","empty","scan","keys","lay1","once","small"],"modes":["sync4","sync1"],"counts":false}]}

@@ -1,0 +1,7 @@
+{"benches":[{"name":"skip","scenes":["def","muse_hash","fat"],"w":822,"h":1506,"fit":0.917,"nTables":3,"nPass":40,"warmMs":1000,"settleFrames":30,
+  "variants":["full","empty","skip1","skip1so","smallonce"],"modes":["sync4"],"counts":true,
+  "surgery":{
+    "skip1":[["    // configurations over the ramping pieces","    if (np <= 1 && nk == 0) { o0 = vec4(float(np), pkey[0] + pramp[0], pd[0], 1.0); return; }\n    // configurations over the ramping pieces"]],
+    "skip1so":[["#define MAXP 8","#define MAXP 4"],["#define MAXK 6","#define MAXK 3"],["#define MAXS 14","#define MAXS 7"],["for (int cfg = 0; cfg <= nr; cfg++) {","for (int cfg = 0; cfg <= 0; cfg++) {"],["    // configurations over the ramping pieces","    if (np <= 1 && nk == 0) { o0 = vec4(float(np), pkey[0] + pramp[0], pd[0], 1.0); return; }\n    // configurations over the ramping pieces"]],
+    "smallonce":[["#define MAXP 8","#define MAXP 4"],["#define MAXK 6","#define MAXK 3"],["#define MAXS 14","#define MAXS 7"],["for (int cfg = 0; cfg <= nr; cfg++) {","for (int cfg = 0; cfg <= 0; cfg++) {"]]
+  }}]}
