@@ -1475,6 +1475,15 @@ export function createOutlineApp(ctx: SceneExportCtx, requestFrame: () => void):
   // update events and the knot uniforms' last drawn values (an overlay
   // change redraws on the next frame, no worker build).
   let sentMaps: ({ chain: number; arcLo: number; scale: number } | undefined)[] = [];
+  // K1247 s32: the request in flight, its maps and whether it asked for an
+  // exact frame. onReply takes only that request's reply (any other is
+  // dropped), and only then do its maps become sentMaps: the shown frame's.
+  // shownExact: the shown frame is the full frame on its true input (with
+  // KF_INC.snap a mid-drag frame is not; once nothing moves, frame() asks
+  // for the exact one, so the rest frame never stays snapped).
+  let reqId = 0;
+  let reqMaps: typeof sentMaps = [];
+  let shownExact = true;
   let rvSeen = -1;
   const paintSources = [kStatic(), kGeom(), kReveal(), kPaint()].map((r) => r.source);
   const onPaint = (): void => {
@@ -1589,6 +1598,8 @@ export function createOutlineApp(ctx: SceneExportCtx, requestFrame: () => void):
     worker?.terminate();
     worker = null;
     inFlight = false;
+    reqId = 0;
+    shownExact = true;
     pass?.dispose();
     pass = null;
     detach();
@@ -1649,8 +1660,11 @@ export function createOutlineApp(ctx: SceneExportCtx, requestFrame: () => void):
   };
 
   const onReply = (e: MessageEvent<OutlineReply>): void => {
-    inFlight = false;
     const r = e.data;
+    // K1247 s32: only the reply to the request in flight; a stale or
+    // unsolicited one would draw with another request's maps.
+    if (r.id !== reqId) return;
+    inFlight = false;
     if (off) return;
     stats.replies++;
     stats.roundTripMs = performance.now() - sentAt;
@@ -1661,6 +1675,8 @@ export function createOutlineApp(ctx: SceneExportCtx, requestFrame: () => void):
     }
     const g = gl();
     if (!g) return fallback("no WebGL2 context");
+    sentMaps = reqMaps;
+    shownExact = r.exact !== false;
     try {
       if (!pass) {
         pass = new OutlinePass(g);
@@ -1703,7 +1719,7 @@ export function createOutlineApp(ctx: SceneExportCtx, requestFrame: () => void):
     requestFrame();
   };
 
-  const send = (): void => {
+  const send = (exact = false): void => {
     const ps = ctx.scene.ps;
     if (!ps) return;
     const t0 = performance.now();
@@ -1722,7 +1738,7 @@ export function createOutlineApp(ctx: SceneExportCtx, requestFrame: () => void):
     // array gets every sent scene as JSON (the drag's frames, replayed in Node).
     const cap = (globalThis as { __knotOutlineCapture?: string[] }).__knotOutlineCapture;
     if (Array.isArray(cap)) cap.push(JSON.stringify(scene));
-    sentMaps = scene.chains.map((sc, i) => {
+    reqMaps = scene.chains.map((sc, i) => {
       const ch = input.chains[i];
       return ch ? { chain: sc.id, ...chainArcMap(ch, sc.pts, input.look.halfWidth) } : undefined;
     });
@@ -1735,7 +1751,8 @@ export function createOutlineApp(ctx: SceneExportCtx, requestFrame: () => void):
       worker.onerror = (ev) => fallback(`worker error (${ev.message})`);
     }
     const t1 = performance.now();
-    const req: OutlineRequest = { id: nextId++, scene: scene as unknown as SceneIn };
+    const req: OutlineRequest = { id: nextId++, scene: scene as unknown as SceneIn, exact };
+    reqId = req.id;
     worker.postMessage(req);
     stats.postMs = performance.now() - t1;
     stats.posts++;
@@ -1762,6 +1779,9 @@ export function createOutlineApp(ctx: SceneExportCtx, requestFrame: () => void):
         if (r.chainSamples.length < ctx.scene.ps.chains.length || r.chainSamples.some((s) => !s)) seenCount = -1;
         else if (drawn.length === 0 || moved()) send();
       }
+      // K1247 s32: the last move has settled on a snapped frame: frame the
+      // same input exactly (onReply's requestFrame brings us here).
+      if (!inFlight && !shownExact && drawn.length > 0 && !moved()) send(true);
       if (!pass) return;
       // K1291 s2: the reveal's width masks as the ribbon computed them this
       // update (reveal_fx.ts widthMulFor), on the GPU the same frame.
@@ -1844,7 +1864,7 @@ export function createOutlineApp(ctx: SceneExportCtx, requestFrame: () => void):
   const api = {
     stats,
     get settled(): boolean {
-      return !inFlight && !dirty && drawn.length > 0 && !moved();
+      return !inFlight && !dirty && shownExact && drawn.length > 0 && !moved();
     },
     resend(): void {
       drawn = [];

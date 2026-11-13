@@ -6,19 +6,24 @@
 // Why a worker of its own and not main or K7's physics worker:
 // outline_app.ts's header.
 import { OutlineModel, diagramKey } from "./outline_model";
-import type { SceneIn } from "./outline";
+import { KF_INC, type SceneIn } from "./outline";
 import { SLOTS } from "./fill_tri";
 import { SAG } from "./chain_frame";
 
 export interface OutlineRequest {
   id: number;
   scene: SceneIn;
+  /** K1247 s32: frame this input exactly (no snap). The app asks for it once a drag settles, so the rest frame
+   *  is the full frame on the true input. */
+  exact?: boolean;
 }
 
 /** One frame's draw data. idx and run come only with a new structure. */
 export interface OutlineReply {
   id: number;
   error?: string;
+  /** K1247 s32: this frame is the full frame on its true input (no snap applied). */
+  exact?: boolean;
   restructured: boolean;
   /** Why it restructured (null when it did not): "first", "key: <part>
    *  <old> -> <new>" or "update threw: <message>". */
@@ -99,7 +104,7 @@ const scope = self as unknown as Scope;
 let model: OutlineModel | null = null;
 
 scope.onmessage = (e: MessageEvent<OutlineRequest>): void => {
-  const { id, scene } = e.data;
+  const { id, scene, exact } = e.data;
   const t0 = performance.now();
   try {
     let cause: string | null = null;
@@ -109,7 +114,7 @@ scope.onmessage = (e: MessageEvent<OutlineRequest>): void => {
       model = new OutlineModel(scene);
     } else {
       try {
-        model.update(scene);
+        model.update(scene, exact === true);
       } catch (err) {
         cause = `update threw: ${err instanceof Error ? err.message : String(err)}`;
         model = new OutlineModel(scene);
@@ -124,6 +129,8 @@ scope.onmessage = (e: MessageEvent<OutlineRequest>): void => {
     // place): copies go; the band is new each frame and goes itself.
     const r: OutlineReply = {
       id,
+      // a restructure frames its input exactly (a new model), and so does every frame with the snap off
+      exact: restructured || exact === true || !KF_INC.snap,
       restructured,
       cause,
       key: m.key,
