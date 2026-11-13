@@ -113,8 +113,12 @@ type Pin = { f0: { table: string; paint: string; band: string }; f1: { table: st
 // they are built (outline.ts pinBandLoops on runs, ghosts and tails, trimFoldEnds on runs and arcs,
 // resweepPointArc in arcEndFeet, thruJoinFan's sweep from the arc's end foot, pinTailFan): table and band,
 // f0 and f1, on ring and g41_ring_tw42. Paint unchanged. Fold detector .claude/probes/K1346/k1346_folds.ts.
+// K1314 s12 re-pinned on purpose (2026-11-12): a tail whose first point lies within TAIL_PIN of its
+// abutting run's chevron end starts on the run's end edge (outline.ts K1314S12.tailJoin, c8's tail
+// line): table and band, f0 and f1, on ring. Paint unchanged; g41_ring_tw42 unchanged. Checked
+// against form B (census k1314s12b, crops in .claude/probes/K1314/out/s12).
 const PINS: Record<string, Pin> = {
-  ring: { f0: { table: "2641e38d0f1f07d5", paint: "e57b025dc17996ca", band: "f2489cc7bb61f2de" }, f1: { table: "a8aca96cda061202", paint: "a32ea02671fd16bb", band: "8c866a5005fb46b6" } },
+  ring: { f0: { table: "e8ac3891c39b614b", paint: "e57b025dc17996ca", band: "e902b8b337c45697" }, f1: { table: "089000306503fc01", paint: "a32ea02671fd16bb", band: "5d8388f4afcb5512" } },
   g41_ring_tw42: { f0: { table: "ec826d92cf6e7b95", paint: "c06a2bc79a0cc3d1", band: "9e610207c3e8630d" }, f1: { table: "0c32868cc5c8798b", paint: "cc9e773970557908", band: "ae0ad0cee9722d15" } },
 };
 
