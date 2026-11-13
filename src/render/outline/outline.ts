@@ -8847,9 +8847,38 @@ export function trimFoldEnds(pts: ArrayLike<number>, cpts: ArrayLike<number>, W:
  *  quads fan around it as foldChevron's and sharpJoinFan's do. Returns the new points, or null. */
 const LOOP_WIN = 10;
 const LOOP_EPS = 1e-7; const LOOP_SIN = 0.05; const LOOP_TOL = 0.002; const LOOP_STEP = 0.01;
+/** K1346 s1 (perf): pinBandLoops' first round with each inner point computed once (bandQuadArea and
+ *  bandQuadOpp's arithmetic, bit for bit): whether any quad winds against the piece by LOOP_EPS. Nearly
+ *  every piece has none, and returns before the loop, which recomputes each inner point four times. */
+let bhoIn = new Float64Array(64);
+function bandHasOpp(pts: ArrayLike<number>, cpts: ArrayLike<number>, W: number): boolean {
+  const np = pts.length >> 1;
+  if (bhoIn.length < 2 * np) bhoIn = new Float64Array(4 * np);
+  const o = bhoIn;
+  for (let k = 0; k < np; k++) {
+    const x = pts[2 * k]; const y = pts[2 * k + 1]; let dx = cpts[2 * k] - x; let dy = cpts[2 * k + 1] - y; const l = Math.sqrt(dx * dx + dy * dy);
+    if (l < 1e-12) { const j = Math.min(k + 1, np - 1); const ex = pts[2 * j] - x; const ey = pts[2 * j + 1] - y; const el = Math.sqrt(ex * ex + ey * ey) || 1; dx = -ey / el; dy = ex / el; } else { dx /= l; dy /= l; }
+    o[2 * k] = x + W * dx; o[2 * k + 1] = y + W * dy;
+  }
+  let tot = 0;
+  for (let i = 0; i < np - 1; i++) {
+    const ax = pts[2 * i]; const ay = pts[2 * i + 1]; const bx = pts[2 * i + 2]; const by = pts[2 * i + 3];
+    const A0 = o[2 * i]; const A1 = o[2 * i + 1]; const B0 = o[2 * i + 2]; const B1 = o[2 * i + 3];
+    tot += 0.5 * ((ax * by - bx * ay) + (bx * B1 - B0 * by) + (B0 * A1 - A0 * B1) + (A0 * ay - ax * A1));
+  }
+  for (let i = 0; i < np - 1; i++) {
+    const ax = pts[2 * i]; const ay = pts[2 * i + 1]; const bx = pts[2 * i + 2]; const by = pts[2 * i + 3];
+    const A0 = o[2 * i]; const A1 = o[2 * i + 1]; const B0 = o[2 * i + 2]; const B1 = o[2 * i + 3];
+    const t1 = 0.5 * ((bx - ax) * (A1 - ay) - (by - ay) * (A0 - ax));
+    const t2 = 0.5 * ((B0 - bx) * (A1 - by) - (B1 - by) * (A0 - bx));
+    if ((t1 * tot < 0 ? Math.abs(t1) : 0) + (t2 * tot < 0 ? Math.abs(t2) : 0) >= LOOP_EPS) return true;
+  }
+  return false;
+}
 export function pinBandLoops(src: ArrayLike<number>, cpts: ArrayLike<number>, W: number): number[] | null {
   const np = src.length >> 1;
   if (np < 4) return null;
+  if (!bandHasOpp(src, cpts, W)) return null;
   let pts: number[] | null = null;
   const P = (): ArrayLike<number> => pts ?? src;
   let tot = 0;
