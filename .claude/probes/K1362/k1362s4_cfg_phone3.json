@@ -1,0 +1,1 @@
+{"benches":[{"name":"r411","scenes":["def","muse_hash"],"w":411,"h":753,"fit":0.917,"nPass":40,"warmMs":1000,"settleFrames":30,"variants":["empty","full","t32r","t22r"],"modes":["sync4","frame1"],"cover":true,"cmp":true,"ref":"full"}]}
