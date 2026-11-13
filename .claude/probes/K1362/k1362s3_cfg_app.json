@@ -1,0 +1,1 @@
+{"benches":[{"name":"app","scenes":["def","muse_hash","fat"],"w":822,"h":1506,"fit":0.917,"nTables":40,"nPass":40,"warmMs":1500,"settleFrames":90,"variants":["full","empty","once","notan","dist","cells","scan"],"modes":["sync1","sync4","frame1","busy"],"counts":true}],"drag":{"reps":3}}
