@@ -48,7 +48,7 @@ try {
     const t0 = Date.now();
     const th = thermal();
     const r = await run("bench", { base: "scenes", ...b });
-    r.thermalBefore = th; r.thermalAfter = thermal();
+    r.thermalBefore = th; r.thermalAfter = thermal(); r.t0 = t0; r.t1 = Date.now(); // host ms, for k1362s3_gpuclk.mjs
     out.benches.push(r); save();
     console.log(`${b.w}x${b.h} done in ${((Date.now() - t0) / 1000).toFixed(0)} s; thermal ${JSON.stringify(r.thermalAfter)}`);
   }

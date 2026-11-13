@@ -1,0 +1,7 @@
+{"benches":[
+ {"name":"full_sync4","scenes":["def"],"w":822,"h":1506,"fit":0.917,"nTables":3,"nPass":120,"warmMs":2000,"settleFrames":30,"variants":["full"],"modes":["sync4"],"counts":false},
+ {"name":"full_frame1","scenes":["def"],"w":822,"h":1506,"fit":0.917,"nTables":3,"nPass":150,"warmMs":2000,"settleFrames":60,"variants":["full"],"modes":["frame1"],"counts":false},
+ {"name":"scan_sync4","scenes":["def"],"w":822,"h":1506,"fit":0.917,"nTables":3,"nPass":400,"warmMs":2000,"settleFrames":30,"variants":["scan"],"modes":["sync4"],"counts":false},
+ {"name":"scan_frame1","scenes":["def"],"w":822,"h":1506,"fit":0.917,"nTables":3,"nPass":300,"warmMs":2000,"settleFrames":60,"variants":["scan"],"modes":["frame1"],"counts":false},
+ {"name":"scan_busy","scenes":["def"],"w":822,"h":1506,"fit":0.917,"nTables":3,"nPass":300,"warmMs":2000,"settleFrames":60,"variants":["scan"],"modes":["busy"],"counts":false}
+]}
