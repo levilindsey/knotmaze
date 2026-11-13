@@ -58,8 +58,9 @@ describe("K1324 s2 the self-pass burial rule", () => {
     const pts = spot(31.6, 7.3, 0.6);
     const runs = pts.filter((p) => p.kind === "run");
     expect(runs.length).toBeGreaterThan(5);
-    // The rule off is master: the over border (s 15.6-15.8) fades to 0.46 mid-tie.
-    expect(Math.min(...runs.map((p) => p.off))).toBeLessThan(0.5);
+    // The rule off is master: the over border (s 15.6-15.8) fades to 0.46 mid-tie (0.54 since K1346 s1 pinned
+    // run 47's fold loop here, 3455 px opposed at 960 ppu: its 0.46 point sat inside the loop).
+    expect(Math.min(...runs.map((p) => p.off))).toBeLessThan(0.6);
     expect(Math.min(...runs.map((p) => p.on))).toBeGreaterThan(0.999);
     // The under pass's ghost past the tube's feather (s 11.1): 0.20 and 0.15 with the rule off.
     const g = pts.filter((p) => p.kind === "ghost" && Math.hypot(p.x - 31.81, p.y - 7.58) < 0.03);

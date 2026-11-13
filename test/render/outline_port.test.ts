@@ -109,9 +109,13 @@ type Pin = { f0: { table: string; paint: string; band: string }; f1: { table: st
 // cutTailHooks, muse_hash j116's crease): table and band, f0 and f1, on ring (one tail). Paint
 // unchanged; g41_ring_tw42 unchanged (no hook). Checked against form B (census k1344s1, crops in
 // .claude/probes/K1344/out/s1).
+// K1346 s1 re-pinned on purpose (2026-11-12): band pieces that fold back over themselves are fixed where
+// they are built (outline.ts pinBandLoops on runs, ghosts and tails, trimFoldEnds on runs and arcs,
+// resweepPointArc in arcEndFeet, thruJoinFan's sweep from the arc's end foot, pinTailFan): table and band,
+// f0 and f1, on ring and g41_ring_tw42. Paint unchanged. Fold detector .claude/probes/K1346/k1346_folds.ts.
 const PINS: Record<string, Pin> = {
-  ring: { f0: { table: "a55c324f22093a90", paint: "e57b025dc17996ca", band: "698cb300eb87efff" }, f1: { table: "12f543afe16c0a90", paint: "a32ea02671fd16bb", band: "62a983b6e0759ed5" } },
-  g41_ring_tw42: { f0: { table: "11c7cdb8da1b9891", paint: "c06a2bc79a0cc3d1", band: "0fecd8dcb0a739dc" }, f1: { table: "1f89393aff28b751", paint: "cc9e773970557908", band: "b40fae279b9f1b04" } },
+  ring: { f0: { table: "2641e38d0f1f07d5", paint: "e57b025dc17996ca", band: "f2489cc7bb61f2de" }, f1: { table: "a8aca96cda061202", paint: "a32ea02671fd16bb", band: "8c866a5005fb46b6" } },
+  g41_ring_tw42: { f0: { table: "ec826d92cf6e7b95", paint: "c06a2bc79a0cc3d1", band: "9e610207c3e8630d" }, f1: { table: "0c32868cc5c8798b", paint: "cc9e773970557908", band: "ae0ad0cee9722d15" } },
 };
 
 // The tool's second frame: every chain point rotated 0.3 rad and moved.
