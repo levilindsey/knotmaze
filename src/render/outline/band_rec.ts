@@ -11,8 +11,8 @@
 // The layout is rebuilt only for a new structure or when a piece outgrows its capacity (counted).
 // The output is bandGpu's (same arrays, same shader); ob=0 never calls this.
 import type { OutlineTable, SceneIn } from "./outline";
-import { dSC, footNear, parseColor, zAtC } from "./draw";
-import { BAND_SLOTS, BAND_TEX_W, PT, footS, windowRanges, type BandGpu, type ZChain, type ZZ } from "./band_gpu";
+import { dSC, footNear, parseColor, tieAlpha, zAtC } from "./draw";
+import { BAND_SLOTS, BAND_TEX_W, PT, footS, ownAlpha, windowRanges, type BandGpu, type ZChain, type ZZ } from "./band_gpu";
 import { colEnds, colRow, recSideOk, recTables } from "./chain_frame";
 import { BT } from "./band_place";
 
@@ -113,6 +113,7 @@ export function bandRec(table: OutlineTable, scene: SceneIn, zz: ZZ, lay: BandLa
   const { zc, passes } = zz;
   const h = table.h; const W = table.W;
   const zt = 0.1 * scene.look.depthAmp;
+  const tieMemo: { tie: ReturnType<typeof tieAlpha> | null } = { tie: null };
   const base: number[] = []; let nS = 0;
   for (const c of zc) { base.push(nS); nS += c.n; }
   const chainTexH = Math.max(1, Math.ceil(nS / BAND_TEX_W));
@@ -349,7 +350,9 @@ export function bandRec(table: OutlineTable, scene: SceneIn, zz: ZZ, lay: BandLa
     v = gpu ? 6 * fbQ : 6 * lay.off[d]; const vStart = v; const vEnd = v + 6 * capQ;
     // Today's points, decimated to the range when they outgrow it (counted in stats.over).
     let pts: ArrayLike<number> = p.pts; let cpts: ArrayLike<number> = p.cpts; let npU = np0;
-    let al: ArrayLike<number> | null = p.alpha && p.alpha.length === 2 * np0 ? p.alpha : null;
+    // K1314 s11: ownAlpha divides runEndFade's fadeX tie back out (band_gpu.ts).
+    const al0: ArrayLike<number> | null = p.fadeX !== undefined && p.chain >= 0 && p.chain < zc.length ? ownAlpha(p, zc[p.chain], zz, h, W, zt, tieMemo) : p.alpha && p.alpha.length === 2 * np0 ? p.alpha : null;
+    let al: ArrayLike<number> | null = al0;
     if (useR[pIdx] !== 1 && np0 - 1 > capQ) {
       const K = keepIdx(p.pts, np0, capQ + 1); npU = capQ + 1;
       const a = new Float64Array(2 * npU); const b = new Float64Array(2 * npU); const c = al ? new Float64Array(2 * npU) : null;
@@ -388,7 +391,7 @@ export function bandRec(table: OutlineTable, scene: SceneIn, zz: ZZ, lay: BandLa
       continue;
     }
     const C = zc[p.chain]; const PS = passes[p.chain]; const pb = passBase[p.chain];
-    const paT = p.alpha && p.alpha.length === 2 * np0 ? p.alpha : null;
+    const paT = al0;
     // The records: N = capQ columns on [s0, s1] along the side (s1 - s0 > 0; a loop's wraps).
     let dS = p.s1 - p.s0; if (C.closed && C.len > 0 && dS <= 0) dS += C.len;
     const sgn = p.side; const N = capQ;

@@ -15,8 +15,8 @@
 // own chain's depth zAtC(C, s) (exact at the vertex, linear between).
 // alphaCpu below is the shader's CPU twin; test/render/band_gpu.test.ts
 // checks it against bandData's alphas at bandData's own vertices.
-import type { OutlineTable, SceneIn } from "./outline";
-import { dSC, footNear, parseColor, sstep, zAtC, type zChains } from "./draw";
+import type { OutlinePiece, OutlineTable, SceneIn } from "./outline";
+import { dSC, footNear, parseColor, sstep, tieAlpha, zAtC, type zChains } from "./draw";
 
 export type ZZ = ReturnType<typeof zChains>;
 export type ZChain = ZZ["zc"][number];
@@ -100,10 +100,48 @@ export function footS(c: ZChain, x: number, y: number, sC: number, r: number): n
   return bs;
 }
 
+/** K1314 s11 (outline.ts RUN_FADE_TIE): a tied run's own alpha, 2 per point
+ *  (outer, inner). A run with fadeX holds runEndFade's fade against chain
+ *  fadeX (fadeA) times runRootRamp's ramp; the band multiplies its own alpha
+ *  by the tie per pixel, which carries fadeX's pass wherever its window
+ *  reaches the point. There the fade is divided back out down to the tie's
+ *  part with fadeX alone (t): own = alpha / max(fadeA, t), so own x tie holds
+ *  min(fade, t) once (c8: 0.25 as form B where the two made 0.06). Points
+ *  outside the fade (fadeA 1), and every piece without fadeX, keep p.alpha.
+ *  The three band twins (bandData, bandGpu, bandRec) all read this; tie is
+ *  draw.ts tieAlpha's closure, made once per band (memo). */
+export function ownAlpha(p: OutlinePiece, C: ZChain, zz: ZZ, h: number, W: number, zt: number, memo: { tie: ReturnType<typeof tieAlpha> | null }): ArrayLike<number> | null {
+  const np = p.pts.length / 2;
+  const al = p.alpha && p.alpha.length === 2 * np ? p.alpha : null;
+  const fa = p.fadeA; const X = p.fadeX;
+  if (!al || !fa || fa.length !== 2 * np || X === undefined) return al;
+  const tie = memo.tie ?? (memo.tie = tieAlpha(zz, h, W, zt));
+  const out = al.slice();
+  let L = 0;
+  for (let i = 1; i < np; i++) L += Math.sqrt((p.pts[2 * i] - p.pts[2 * i - 2]) ** 2 + (p.pts[2 * i + 1] - p.pts[2 * i - 1]) ** 2);
+  L = L || 1;
+  const span = p.s1 - p.s0;
+  let cum = 0;
+  for (let i = 0; i < np; i++) {
+    if (i > 0) cum += Math.sqrt((p.pts[2 * i] - p.pts[2 * i - 2]) ** 2 + (p.pts[2 * i + 1] - p.pts[2 * i - 1]) ** 2);
+    if (fa[2 * i] >= 1 && fa[2 * i + 1] >= 1) continue;
+    const s = footS(C, p.cpts[2 * i], p.cpts[2 * i + 1], p.s0 + (span * cum) / L, 2 * h);
+    const x = p.pts[2 * i]; const y = p.pts[2 * i + 1];
+    let dx = p.cpts[2 * i] - x; let dy = p.cpts[2 * i + 1] - y;
+    const l = Math.sqrt(dx * dx + dy * dy);
+    if (l < 1e-12) { const j = Math.min(i + 1, np - 1); const ex = p.pts[2 * j] - x; const ey = p.pts[2 * j + 1] - y; const el = Math.sqrt(ex * ex + ey * ey) || 1; dx = -ey / el; dy = ex / el; } else { dx /= l; dy /= l; }
+    const tO = tie(p.chain, x, y, s, h, X); const tI = tie(p.chain, x + dx * W, y + dy * W, s, h - W, X);
+    out[2 * i] = Math.min(1, al[2 * i] / Math.max(fa[2 * i], tO, 1e-6));
+    out[2 * i + 1] = Math.min(1, al[2 * i + 1] / Math.max(fa[2 * i + 1], tI, 1e-6));
+  }
+  return out;
+}
+
 export function bandGpu(table: OutlineTable, scene: SceneIn, zz: ZZ): BandGpu {
   const { zc, passes } = zz;
   const h = table.h; const W = table.W;
   const zt = 0.1 * scene.look.depthAmp;
+  const tieMemo: { tie: ReturnType<typeof tieAlpha> | null } = { tie: null };
   // Chain samples.
   const base: number[] = []; let nS = 0;
   for (const c of zc) { base.push(nS); nS += c.n; }
@@ -220,7 +258,8 @@ export function bandGpu(table: OutlineTable, scene: SceneIn, zz: ZZ): BandGpu {
     }
     // K1314 s3: a tied run's own alpha (runEndFade's fade at a failed corner)
     // multiplies the tie's, as bandData's tied branch reads it since K1314 s2.
-    const paT = p.alpha && p.alpha.length === 2 * np ? p.alpha : null;
+    // K1314 s11: ownAlpha divides fadeX's tie back out of runEndFade's fade.
+    const paT = ownAlpha(p, C, zz, h, W, zt, tieMemo);
     let ia = inner(0);
     for (let i = 0; i + 1 < np; i++) {
       const ib = inner(i + 1);

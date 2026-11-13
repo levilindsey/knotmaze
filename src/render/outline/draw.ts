@@ -24,6 +24,7 @@ import type { DiagramStructure, OutlineTable, SceneIn } from "./outline";
 import { structure } from "./outline";
 import { fillFrame, fillResolution, fillRuns, fillStructure, keyScale, SLOTS, type FillFrame, type FillStructure } from "./fill_tri";
 import { runTexture, sectionPaint, type PaintMode, type SectionPaint } from "./paint";
+import { ownAlpha } from "./band_gpu";
 
 export function parseColor(s: string): [number, number, number] {
   const m = /^#([0-9a-f]{6})$/i.exec(s.trim());
@@ -804,18 +805,20 @@ export function selfBury(dAnchor: number, zCs: number, zOf: number, zt: number):
 }
 /** The tie alpha of a band point of chain c at (x, y), own foot s, own
  *  distance dC (bandData's, taken out of it as is for band_gpu's twin test). */
-export function tieAlpha(zz: ReturnType<typeof zChains>, h: number, W: number, zt: number): (c: number, x: number, y: number, s: number, dC: number) => number {
+export function tieAlpha(zz: ReturnType<typeof zChains>, h: number, W: number, zt: number): (c: number, x: number, y: number, s: number, dC: number, only?: number) => number {
   const { zc, passes } = zz;
   const seen: { o: number; s: number; d: number; f: number }[] = [];
   // K1324 s2: each self-pass's anchor order D (burial rule above), once per frame.
   const anchorD = new Map<Pass, number>();
   passes.forEach((ps, c) => { for (const P of ps) if (P.o === c) anchorD.set(P, zAtC(zc[c], P.so) - zAtC(zc[c], P.s)); });
-  return (c: number, x: number, y: number, s: number, dC: number): number => {
+  // K1314 s11: only >= 0 = the passes with that partner alone (band_gpu ownAlpha).
+  return (c: number, x: number, y: number, s: number, dC: number, only = -1): number => {
     seen.length = 0;
     const C = zc[c];
     const zCs = zAtC(C, s);
     const keyC = zCs - (dC * zt) / h;
     for (const P of passes[c]) {
+      if (only >= 0 && P.o !== only) continue;
       const ds = dSC(C, P.s, s); if (ds < -P.lo || ds > P.hi) continue;
       const O = zc[P.o];
       const f = footNear(O, x, y, P.so, P.rO, s, P.o === c ? 3 * h : 0);
@@ -846,6 +849,7 @@ export function bandData(table: OutlineTable, scene: SceneIn, zz: ReturnType<typ
   const zt = 0.1 * scene.look.depthAmp;
   const { zc, passes } = zz;
   const alphaAt = tieAlpha(zz, h, W, zt);
+  const tieMemo = { tie: alphaAt };
   const SUB = h / 8; const ROWS = 8;
   // A tied band vertex: x, y, alpha, own s, dC (h - W u) and the piece's own alpha, all linear across a triangle
   // (the app's quads interpolate s and dC the same way and take the tie per pixel).
@@ -915,7 +919,7 @@ export function bandData(table: OutlineTable, scene: SceneIn, zz: ReturnType<typ
         if (l < 1e-12) { const j = Math.min(i + 1, np - 1); const ex = p.pts[2 * j] - x; const ey = p.pts[2 * j + 1] - y; const el = Math.hypot(ex, ey) || 1; dx = -ey / el; dy = ex / el; } else { dx /= l; dy /= l; }
         return [x + dx * W, y + dy * W];
       };
-      const pa = p.alpha && p.alpha.length === 2 * np ? p.alpha : null;
+      const pa = ownAlpha(p, C, zz, h, W, zt, tieMemo);
       let prevI = inn(0);
       for (let i = 0; i + 1 < np; i++) {
         const ax = p.pts[2 * i]; const ay = p.pts[2 * i + 1]; const bx = p.pts[2 * i + 2]; const by = p.pts[2 * i + 3];

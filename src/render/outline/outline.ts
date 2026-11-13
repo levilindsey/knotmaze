@@ -83,6 +83,13 @@ export interface OutlinePiece {
   fcpts?: number[];
   /** K1247 s22 (ob=1, OB_DI.on): the piece's index in st.piecesD, the band's fixed layout's key. */
   di?: number;
+  /** K1314 s11 (RUN_FADE_TIE): a run whose alpha holds runEndFade's fade
+   *  against chain fadeX, and that fade per point (fadeA, 2 per point, before
+   *  runRootRamp's ramp). A tied band whose tie already carries a pass with
+   *  fadeX divides it back out where the tie fades more (band_gpu fadeOwn):
+   *  the band then draws min(fade, tie) once, not fade x tie. */
+  fadeX?: number;
+  fadeA?: number[];
 }
 /** K1247 s22: when on, piecesPhaseC tags each piece with its piecesD index (di). Off: nothing changes. */
 export const OB_DI = { on: false };
@@ -7754,8 +7761,19 @@ function runEndFade(a: TailIn, p: OutlinePiece, atEnd: boolean): void {
       farCum = cum;
     }
   }
-  if (al && farCum >= RUN_FADE_MIN * a.h) p.alpha = al;
+  if (al && farCum >= RUN_FADE_MIN * a.h) {
+    p.alpha = al;
+    if (RUN_FADE_TIE.on && a.xc !== undefined) { p.fadeX = a.xc; p.fadeA = al.slice(); }
+  }
 }
+/** K1314 s11 (muse_hash c8, j58a): runEndFade's fade is form B's tie with X
+ *  (tailAlpha), and a tied run's band multiplies its own alpha by the tie
+ *  per pixel, which carries X's pass too wherever the pass's window reaches:
+ *  there the band drew the fade twice (c8: 0.06 where form B is 0.25), and
+ *  the untied tail beside it once, a straight soft edge along the corner's
+ *  fan line. With this on the run records X (fadeX) and its fade (fadeA),
+ *  and band_gpu's fadeOwn divides X's tie back out of the own alpha. */
+export const RUN_FADE_TIE = { on: true };
 
 /** K1314 s9 (g41_user_tw64 j71's shade): a run starts at its arm's root,
  *  which can lie inside another arm's tube of the junction. There form B's
@@ -8077,7 +8095,7 @@ function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[])
           pE: C.polys[piE], dirE: C.armDir[aiE], endS: C.armSR[aiE], sT,
           x0: dp.interval ? C.cTbx[ci] : C.cTax[ci], y0: dp.interval ? C.cTby[ci] : C.cTay[ci],
           bp: (s, out) => borderPointAtFinal(C, piE, sideE, s, out),
-          pX: C.polys[piX], sRX: C.armSR[aiX], dirX: C.armDir[aiX], LX: C.armL[aiX], LcutX: C.armLcut[aiX],
+          pX: C.polys[piX], xc: piX, sRX: C.armSR[aiX], dirX: C.armDir[aiX], LX: C.armL[aiX], LcutX: C.armLcut[aiX],
           zE: (s) => depthAtC(C, piE, s, depthWin), zX: (s) => depthAtC(C, piX, s, depthWin), h: C.h, zt: 0.1 * C.depthAmp, W: C.W,
         };
         endTailPts(tin, pts, cpts, alpha, fill);
@@ -8432,6 +8450,8 @@ export interface TailIn {
   pE: Poly; dirE: number; endS: number; sT: number; x0: number; y0: number;
   bp: (s: number, out: Float64Array) => void;
   pX: Poly; sRX: number; dirX: number; LX: number; LcutX: number;
+  /** K1314 s11: X's chain index (runEndFade's fadeX). */
+  xc?: number;
   zE: (s: number) => number; zX: (s: number) => number; h: number; zt: number; W: number;
   /** K1283 s4: X's other arm at the junction (X runs through), or null. */
   alt?: { sRX: number; dirX: number; LX: number; LcutX: number } | null;
