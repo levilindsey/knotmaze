@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1365.
+Next free ID: K1366.
 
 ## Waiting on Levi
 
@@ -551,11 +551,11 @@ Next free ID: K1365.
   tables the CPU builds in under 1 ms) instead of the outline mesh built on the CPU each frame (65-117 ms on
   def). Reverses the 2026-11-09 call (K1040 dropped for K1240). The main speed route (Levi, 2026-11-12: very bullish
   on it); dropped only on a proof it cannot work (brief: "How the result is judged"). Analysis in docs/ledger_notes.md.
-  - owner: nobody since 2026-11-13 00:28 (merged)
-  - branch: mainline; last commit: `d85e3b02`
-  - evidence: .claude/probes/K1362/ (k1362s3_*), out/s3/
-  - next: Stage 4: the shader fixes in src/render/gpu_field/ (arrays sized to need, layering once, smaller per-pixel footprint, and a split so simple pixels skip the heavy shader), re-timed on the Pixel at both pacings with the clock sampler; the dpr-1 picture; the table build off main or cut (s3 handoff)
-  - brief: `docs/design/K1362_s3_pixel.md`
+  - owner: agent `claude agent (Opus)` of claude session claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-13 00:33, 2 h cap ~02:33)
+  - branch: `worktree-agent-ae4baf2544e8d6065`, worktree `.claude/worktrees/agent-ae4baf2544e8d6065`; last commit: `a39af18b`
+  - evidence: .claude/probes/K1362/ (k1362s3_*, k1362s4_*), out/s3/, out/s4/
+  - next: Stage 4 running: the pass under 8 ms on the Pixel with the look unchanged (s3 fixes made exact, fp16, a program per pixel class, two-pass split, no pass at rest), the app frame interval under rp=gf; then the table build off main or cut (18 ms through a drag on the Pixel, corners 12.3)
+  - brief: `docs/design/K1362_s4_shader.md`
 
 ## Next, in order
 
@@ -2294,6 +2294,9 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   positions, max px error mid-drag); ask Levi with a picture only if it shows (K1247 s30 plan)
 - **K1349** · A per-frame budget scheduler for the outline worker's p95: recompute dirty spans up to a
   deadline, carry the rest with a bounded lag (K1247 s30 plan; def p95 16.4% new points)
+- **K1365** · K156 kit: sample the Pixel GPU clock (devfreq cur_freq, read-only) beside every phone timing;
+  K1362 s3 showed a short pass at one per frame runs at 460 MHz against 1286 back to back
+  (.claude/probes/K1362/k1362s3_gpuclk.mjs could move into scripts/phone_pass/)
 
 ## Done
 
