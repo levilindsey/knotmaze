@@ -297,7 +297,7 @@ Next free ID: K1363.
   ?b&am=instant. The outline redraws at about 9-10 Hz mid-drag (worker ~105-117 ms per moved frame, K1247
   s34's ABBA). Acceptable, or how far off (choppy, lagging)? Asked 2026-11-12; K1247 s35
   (docs/design/K1247_s35_route_review.md) projects the gate and a relaxed bar
-  - next: K1247 s36 makes a side-by-side clip (pooled def drag next to master, about 50 Hz at about 85 ms latency) at .claude/probes/K1247/out/s36/clip/; re-ask with it
+  - next: Levi, 2026-11-12: today's drag (9-10 Hz) is 'unacceptable'. Re-ask with K1247 s36's clip (pool, about 50 Hz at about 85 ms behind the threads; .claude/probes/K1247/out/s36/clip/): is that enough, or only a near-one-frame route (K1362) will do?
 - **K1362** · Render split: per pixel on the GPU (form B's distance, from closed-form crossing and junction
   tables the CPU builds in under 1 ms) instead of the outline mesh built on the CPU each frame (65-117 ms on
   def). Reverses the 2026-11-09 call (K1040 dropped for K1240); a 1-2 stage timing and census test would
