@@ -8020,7 +8020,7 @@ const RUN_FADE_TH = 0.75 * Math.PI;
 function runEndFade(a: TailIn, p: OutlinePiece, atEnd: boolean): void {
   const np = p.pts.length / 2;
   if (np < 2 || p.kind !== "run") return;
-  let al: number[] | null = null; let alO: number[] | null = null;
+  let al: number[] | null = null; let alO: number[] | null = null; let lifted: number[] = [];
   let cum = 0; let farCum = 0;
   const span = p.s1 - p.s0;
   for (let q = 0; q < np; q++) {
@@ -8038,7 +8038,7 @@ function runEndFade(a: TailIn, p: OutlinePiece, atEnd: boolean): void {
       if (!al) al = new Array<number>(2 * np).fill(1);
       al[2 * i] = tailA[0]; al[2 * i + 1] = tailA[1];
       farCum = cum;
-      if (K1314S12.ownSide) {
+      if (K1314S12.ownSide || K1314S13.liftEnd) {
         tailAlpha(a, sE, p.pts[2 * i], p.pts[2 * i + 1], tailA, false, true);
         if (!alO) alO = new Array<number>(2 * np).fill(-1);
         alO[2 * i] = tailA[0]; alO[2 * i + 1] = tailA[1];
@@ -8053,12 +8053,20 @@ function runEndFade(a: TailIn, p: OutlinePiece, atEnd: boolean): void {
   // 33.53) where form B is 0.07 (j58a |d| 10.23 -> 8.95%, but a new hard edge: out/s12/look/j58a5.png).
   if (al && alO) {
     const sel: number[] = [];
-    for (let i = 0; i < np; i++) if (alO[2 * i] >= 0 && i > 0 && i < np - 1 && al[2 * i - 2] > 1e-3 && al[2 * i + 2] > 1e-3) sel.push(i);
+    const one = K1314S13.liftEnd;
+    for (let i = 0; i < np; i++) if (alO[2 * i] >= 0 && i > 0 && i < np - 1 && (one ? al[2 * i - 2] > 1e-3 || al[2 * i + 2] > 1e-3 : al[2 * i - 2] > 1e-3 && al[2 * i + 2] > 1e-3)) sel.push(i);
     for (const i of sel) { al[2 * i] = alO[2 * i]; al[2 * i + 1] = alO[2 * i + 1]; }
+    lifted = sel;
   }
   if (al && farCum >= RUN_FADE_MIN * a.h) {
     p.alpha = al;
-    if (RUN_FADE_TIE.on && a.xc !== undefined) { p.fadeX = a.xc; p.fadeA = al.slice(); }
+    if (RUN_FADE_TIE.on && a.xc !== undefined) {
+      p.fadeX = a.xc; p.fadeA = al.slice();
+      // K1314 s13 (liftOwn, muse_hash j58a): an entry ownSide lifted is the band's own ink, not a fade of X to
+      // divide back out: fadeA 1 there, so ownAlpha keeps it and does not carry its ramp across the side rule's
+      // zeros to the run's start (that ramp, raised by X's cover, swept the wedge at (4.64-4.69, 33.47-33.53)).
+      if (K1314S13.liftOwn) for (const i of lifted) { p.fadeA[2 * i] = 1; p.fadeA[2 * i + 1] = 1; }
+    }
   }
 }
 /** K1314 s11 (muse_hash c8, j58a): runEndFade's fade is form B's tie with X
@@ -8079,6 +8087,12 @@ export const RUN_FADE_TIE = { on: true };
  *  ends; the two end edges, near parallel, overlap in a thin strip that inks twice: a faint
  *  line along the run's end edge. The tail starts on the run's end edge instead. */
 export const K1314S12 = { tailJoin: true, thruTail: false, ownSide: false };
+/** K1314 s13 flags (all off = s12's look; k1314s13_crops and k1314s13_ab A/B them). liftEnd (muse_hash j58a):
+ *  runEndFade lifts the side rule (as ownSide) at an interior point with at least one inked neighbour, so
+ *  piece 196's point 1 inks too and its band to the uninked point 0 ramps from there; liftOwn: the lifted
+ *  entries are the band's own ink (fadeA 1), see runEndFade. j58a's box (4.62-4.86, 33.30-33.62) |d| vs form
+ *  B: s12 17.73%, ownSide 14.17% (and its wedge), both flags 11.78%, no wedge. */
+export const K1314S13 = { liftOwn: true, liftEnd: true };
 /** K1314 s12 (thruTail, muse_hash j58's corner 176): a thru tail continues E's run past the corner, so it
  *  starts no darker than the run ends (run 371's root ramp ends at 0, the tail started at 0.18: a hard
  *  line across the band) and reaches its own alpha over THRU_END points. */
