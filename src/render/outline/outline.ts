@@ -4234,7 +4234,10 @@ function setupFrame(C: FCache, st: DiagramStructure, scene: SceneIn): void {
 // the model's; frameSnapped also holds the END-arm feet. The caches
 // (KF_INC.cache: borders, corners) are exact: the frame on a snapped scene is
 // byte-identical with them on or off (outline_inc.test.ts). Both off by default.
-export const KF_INC = { snap: false, cache: false, T: 0.25, border: false, jclose: true, jlocal: false, jR: 4, jM: 3, jx: true, hits: 0, misses: 0, cHits: 0, cMisses: 0, vAux: 0, vMiss: 0, cMissJ: 0, why: null as Record<string, number> | null };
+// K1247 s33: jlocal (on whenever the snap is) holds spans, not whole chains: a
+// chain near a released junction or crossing recommits blended (jR, jM: the
+// ramp in half widths), so one moving chain no longer releases them all.
+export const KF_INC = { snap: false, cache: false, T: 0.25, border: false, jclose: true, jlocal: true, jR: 4, jM: 3, jx: true, hits: 0, misses: 0, cHits: 0, cMisses: 0, vAux: 0, vMiss: 0, cMissJ: 0, why: null as Record<string, number> | null };
 let kfHoldFeet = false;
 
 export interface SnapState {
