@@ -521,11 +521,11 @@ Next free ID: K1355.
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: nobody since 2026-11-12 15:27 (merged; agent `a0b7ae19795e37c2f` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `68ef574c`
-  - evidence: .claude/probes/K1247/ (k1247s31_inc.ts, k1247s31_run.ps1; out/s31, out/s32)
-  - next: stage 33: a local junction closure (span granularity, s30 stage 4) so holds pay on maze links (def and muse_hash hold 0 chains today); profile the snap and cache bookkeeping on fat (6 ms over master with flags on); flags on only behind checks (a), (b), (c) and an app ABBA
-  - brief: `docs/design/K1247_s32_snap_valid.md`
+  - owner: agent `ab58662face0c6b64` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 15:28, 2 h cap ~17:28)
+  - branch: `worktree-agent-ab58662face0c6b64`, worktree `.claude/worktrees/agent-ab58662face0c6b64`; last commit: `ae86cce4`
+  - evidence: .claude/probes/K1247/ (k1247s33_*; s32 checks k1247s32_*)
+  - next: s33 running: the hold ceiling first, then fat bookkeeping, a local junction closure and span-local L/Lcut; flags on only if faster than master and checks (a)-(c) hold
+  - brief: `docs/design/K1247_s33_local_holds.md`
 - **K1278** · The outline's paint blends seamlessly across junctions (Levi 2026-11-10): section colour and pulses
   from per-pixel fields continuous across faces, triangles and junctions, gated by a seam test on every
   face edge, triangle edge and junction. Full text in docs/ledger_notes.md
@@ -831,6 +831,7 @@ Every other item below waits on the trigger it names.
   partners by arc length (reachOf), so one moving chain re-dirties its partners' corners: corner cache hits
   stay at 39% def, 19% muse_hash with the snap on (K1247 s31 handoff,
   `docs/design/K1247_s31_snap_phase_caches.md`)
+  - next: in K1247 s33 (docs/design/K1247_s33_local_holds.md)
 - **K1353** · A pieces cache (pieces is the largest frame phase after s31, 11.6 ms def; its inputs are global
   tables, so split them per chain first), and skip held chains' setup and resampling with s31's dirty set
   (fat's border cache costs +0.44 ms) (K1247 s31 handoff)
