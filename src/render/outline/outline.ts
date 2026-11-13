@@ -8254,12 +8254,22 @@ function rampOn(pX: Poly, sRX: number, dirX: number, LX: number, LcutX: number, 
   let t = (ad - LcutX) / -h; t = t < 0 ? 0 : t > 1 ? 1 : t;
   return t * t * (3 - 2 * t);
 }
-function tailF(a: TailIn, l1: number, u: number, rampCut: number, marginCut: number, useAlt = false, wCut = a.W): number {
-  const sE = tailAt(a, l1, u, tailPt, tailCen, false);
+// K1247 s29 (perf): endTailPts's two walks sample f on one grid (u = U i / TAIL_N, the same
+// a and l1), and a grid point's E position (tailAt) and foot on X (tailFoot: a function of
+// the point and the window, see its seed's note) do not depend on the walk's cuts. The band
+// walk records them by grid index (tgMode 1) and the fill walk reads them (tgMode 2): the
+// same sE, sF and dF, without the second tailAt and tailFoot (tgMode, tgS, tgOk: after TAIL_N).
+function tailF(a: TailIn, l1: number, u: number, rampCut: number, marginCut: number, useAlt = false, wCut = a.W, gi = -1): number {
   const h = a.h;
-  const lo = a.dirX > 0 ? a.sRX - 2 * h : a.sRX - 6 * h;
-  tailFoot(a.pX, lo, lo + 8 * h, tailPt[0], tailPt[1], tailFt);
-  const sF = tailFt[0]; const dF = tailFt[1];
+  let sE: number; let sF: number; let dF: number;
+  if (gi >= 0 && tgMode === 2 && tgOk[gi] === 1) { sE = tgS[3 * gi]; sF = tgS[3 * gi + 1]; dF = tgS[3 * gi + 2]; }
+  else {
+    sE = tailAt(a, l1, u, tailPt, tailCen, false);
+    const lo = a.dirX > 0 ? a.sRX - 2 * h : a.sRX - 6 * h;
+    tailFoot(a.pX, lo, lo + 8 * h, tailPt[0], tailPt[1], tailFt);
+    sF = tailFt[0]; dF = tailFt[1];
+    if (gi >= 0 && tgMode === 1) { tgS[3 * gi] = sE; tgS[3 * gi + 1] = sF; tgS[3 * gi + 2] = dF; tgOk[gi] = 1; }
+  }
   const ramp = tailRamp(a, sF, useAlt);
   if (ramp < 0) return -1;
   // Callers read only f's sign, so a term at or below 0 settles it before
@@ -8358,6 +8368,10 @@ const TAIL_N = 16;
 const TAIL_BISECT = 12;
 const TAIL_BLEND = 0.5;
 const tailA = new Float64Array(2);
+// tailF's grid record: tgS holds sE, sF, dF per grid index.
+let tgMode = 0;
+const tgS = new Float64Array(3 * (TAIL_N + 1));
+const tgOk = new Uint8Array(TAIL_N + 1);
 /** A tail's border points (pts, cpts, alpha: its band) and, given `fill`,
  *  the stretch its fill covers (fill_tri reads OutlinePiece.fpts). */
 export function endTailPts(a: TailIn, pts: number[], cpts: number[], alpha?: number[], fill?: { pts: number[]; cpts: number[] }): void {
@@ -8365,9 +8379,11 @@ export function endTailPts(a: TailIn, pts: number[], cpts: number[], alpha?: num
   // K1283 s4: the band goes on past X's arm start (tailRamp's useAlt); the
   // fill keeps stage 2's cut (fill_tri's round end, DiskItem, covers it).
   const o = pts.length;
+  tgOk.fill(0); tgMode = fill ? 1 : 0;
   tailWalk(a, TAIL_BAND_RAMP_CUT, TAIL_BAND_MARGIN, pts, cpts, alpha, true, 0);
   if (TAIL_LOOP_CUT) cutTailLoop(pts, cpts, alpha, o);
-  if (fill) tailWalk(a, TAIL_FILL_RAMP_CUT, TAIL_FILL_MARGIN, fill.pts, fill.cpts);
+  if (fill) { tgMode = 2; tailWalk(a, TAIL_FILL_RAMP_CUT, TAIL_FILL_MARGIN, fill.pts, fill.cpts); }
+  tgMode = 0;
 }
 /** K1314 s10 (j71's step): the tail's walk along E's border is E's offset
  *  curve, which folds into a swallowtail where E's centreline turns tighter
@@ -8416,7 +8432,8 @@ function cutTailLoop(pts: number[], cpts: number[], alpha: number[] | undefined,
 function tailWalk(a: TailIn, rampCut: number, marginCut: number, pts: number[], cpts: number[], alpha?: number[], useAlt = false, wCut = a.W): void {
   const l1 = Math.max(0, a.dirE * (a.sT - a.endS));
   const U = l1 + 0.5 * Math.PI * a.h;
-  const f = (u: number): number => tailF(a, l1, u, rampCut, marginCut, useAlt, wCut);
+  // gi: u's grid index (u = U gi / TAIL_N), -1 off the grid (tailF's tgMode).
+  const f = (u: number, gi = -1): number => tailF(a, l1, u, rampCut, marginCut, useAlt, wCut, gi);
   // Bisect a sign change of f on [u0, u1]; want = the side f > 0 is on (0: u0, 1: u1).
   const cut = (u0: number, u1: number, posAt1: boolean): number => {
     let lo = u0; let hi = u1;
@@ -8445,10 +8462,10 @@ function tailWalk(a: TailIn, rampCut: number, marginCut: number, pts: number[], 
   };
   let i = 0;
   let prevU = 0;
-  if (!(f(0) > 0)) {
+  if (!(f(0, 0) > 0)) {
     for (i = 1; i <= TAIL_N; i++) {
       const u = (U * i) / TAIL_N;
-      if (f(u) > 0) break;
+      if (f(u, i) > 0) break;
       prevU = u;
     }
     if (i > TAIL_N) return;
@@ -8458,7 +8475,7 @@ function tailWalk(a: TailIn, rampCut: number, marginCut: number, pts: number[], 
   for (i = Math.max(1, i); i <= TAIL_N; i++) {
     const u = (U * i) / TAIL_N;
     if (u <= prevU) continue;
-    if (!(f(u) > 0)) { push(cut(prevU, u, false)); return; }
+    if (!(f(u, i) > 0)) { push(cut(prevU, u, false)); return; }
     push(u);
     prevU = u;
   }
