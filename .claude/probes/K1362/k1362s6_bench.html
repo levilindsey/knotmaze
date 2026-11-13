@@ -1,0 +1,18 @@
+<!doctype html>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width">
+<title>k1362s6</title>
+<body style="margin:0;background:#111;color:#ccc;font:12px monospace">
+<pre id="log">k1362s6 bench</pre>
+<script type="module">
+// K1362 s6 (from s5): loads the bundled bench (k1362s6_entry.ts) and exposes it; k1362s6_run.mjs (desktop) and
+// k1362s6_phone.mjs (the Pixel's pass tab) start a run with window.__start(kind, args) and poll window.__res.
+import { bench } from "./k1362s6_bundle.mjs";
+window.__res = null; window.__err = null;
+window.__start = (kind, args) => {
+  window.__res = null; window.__err = null;
+  const p = bench(args);
+  p.then((r) => { window.__res = r; }, (e) => { window.__err = String(e && e.stack || e); });
+  return true;
+};
+window.__ready = true;
+</script>

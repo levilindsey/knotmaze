@@ -15,6 +15,7 @@
 import { GF_LOG } from "./gf_pack";
 import { MAXP } from "./tables";
 import { MAXK, MAXR } from "./eval";
+import { scalarizeArrays } from "./gf_reg";
 
 export const GF_VS = `#version 300 es
 void main() {
@@ -53,10 +54,20 @@ void main() { o = vec4(0.0); }`;
  * or, without `ramps`, a ramping piece) is DISCARDED, and a later tier or the full program draws it. Where a tier
  * writes, its state is the full program's state step for step, so its output is the full program's (the mirror's).
  * `half`: the tier keeps its integer and [0, 1] per-pixel state in mediump (fp16 on mobile; ignored by desktop GPUs).
+ * `reg` (K1362 s6): the tier's arrays become scalars read through selects (gf_reg.ts), so they stay in registers.
  */
-export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean }
+export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean }
 
-export function gfFs(probe: boolean, tangentTerms = true, tier?: GfTier): string {
+/** reg: the register-resident form (gf_reg.ts) of the program; a tier's own `reg` sets it too. Not for the probe. */
+export function gfFs(probe: boolean, tangentTerms = true, tier?: GfTier, reg = !!tier?.reg): string {
+  const src = gfSrc(probe, tangentTerms, tier);
+  if (!reg || probe) return src;
+  const mp = tier ? tier.p : MAXP;
+  const mk = tier ? tier.k : MAXK;
+  return scalarizeArrays(src, { MAXP: mp, MAXK: mk, MAXS: mp + mk });
+}
+
+function gfSrc(probe: boolean, tangentTerms: boolean, tier?: GfTier): string {
   const mp = tier ? tier.p : MAXP;
   const mk = tier ? tier.k : MAXK;
   const half = !!(tier && tier.half);
