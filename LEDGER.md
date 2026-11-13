@@ -554,11 +554,11 @@ Next free ID: K1374.
   tables the CPU builds in under 1 ms) instead of the outline mesh built on the CPU each frame (65-117 ms on
   def). Reverses the 2026-11-09 call (K1040 dropped for K1240). The main speed route (Levi, 2026-11-12: very bullish
   on it); dropped only on a proof it cannot work (brief: "How the result is judged"). Analysis in docs/ledger_notes.md.
-  - owner: nobody since 2026-11-13 03:27 (merged)
-  - branch: mainline; last commit: `95540d07`
+  - owner: claude agent a1ed2d3aa4e9746fc (s6 tier footprint), started 2026-11-13 03:32; coordinating claude session 09c7a672-a414-402a-97da-b3176839a2e5
+  - branch: worktree-agent-a1ed2d3aa4e9746fc at .claude/worktrees/agent-a1ed2d3aa4e9746fc; last commit: `9e5101ba`
   - evidence: .claude/probes/K1362/ (k1362s3_*, k1362s4_*), out/s3/, out/s4/
-  - next: s5 merged (ee212872): every exact tile route is slower than t32r on the Pixel, which already sends 99.7% of inked px to its one tier, so routing is done; def 20.2 / muse 24.6 ms. Stage 6: the per-pixel footprint itself (two-pass split, keys per tile from a coarse GPU pass, layering once), measured on the Pixel
-  - brief: docs/design/K1362_s5_tiles.md (running); c1 handoff at the end of docs/design/K1362_c1_cpu_off_main.md
+  - next: s6 running: keys per tile, packed state or two-pass split, layering once; pass <= 8 ms on the Pixel, exact; then move the key-tile build into the gf worker (after K1370) and K1369
+  - brief: `docs/design/K1362_s6_footprint.md`
 - **K1370** · rp=gf tables: reuse each corner exactly where its arms did not move (the Pixel's worker build is
   20 ms, about two frames of lag at 16 ms); output must stay bit-identical (k1362t1_digest.ts). K1362 c1
   handoff.
