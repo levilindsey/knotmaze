@@ -553,10 +553,10 @@ Next free ID: K1338.
   most cases. But there are still plenty of unacceptable artifacts"): an artifact census (stray ink, hard
   colour edges inside fills, paper holes, broken ink) across scenes, then fix stages that drive its count to
   0; the look gate in docs/design/K1240_gate.md
-  - owner: agent `a8105bc6c8e6fc6d7` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 07:47, 2 h cap ~09:47)
-  - branch: `worktree-agent-a8105bc6c8e6fc6d7`, worktree `.claude/worktrees/agent-a8105bc6c8e6fc6d7`; last commit: `55aef041`
+  - owner: nobody since 2026-11-12 08:47 (merged; agent `a8105bc6c8e6fc6d7` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `b0c52856`
   - evidence: .claude/probes/K1314/ (census tools, k1314_s8_bench.ps1); untracked out/s1-s10/, baseline census_s9
-  - next: s10 running: muse_hash j36 and j49, g41_def_tw64 j97, j71 step, j58a dark fade, runRootRamp 0.6 ms; baseline census_s9 (stray 7, hard 1, broken 12)
+  - next: K1314 s11: j58a's reversed fade (corner 176's meet, or the chevron's return-leg alpha against form B) and an exact prefilter for runRootRamp's rejecting tailFoot calls (0.51 ms)
   - brief: `docs/design/K1314_s10_breaks_step.md`
 - **K1324** · draw.ts tieAlpha / contactPasses ties two arms of one form B junction group, so the band fades
   ink there: specks inside the ink at def j174 (c71/c73, group 119), ring j12, g41_ring_tw42 j12,
