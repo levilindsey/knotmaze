@@ -443,14 +443,14 @@ export function buildTables(scene: FieldScene, opts: GfOpts): GfTables {
     Math.min(gW - 1, Math.floor((x1 + R - gx0) / G)), Math.min(gH - 1, Math.floor((y1 + R - gy0) / G)),
   ];
   for (let q = 0; q < nCh; q++) { const [a, b, c, d] = cellRange(chBox[4 * q], chBox[4 * q + 1], chBox[4 * q + 2], chBox[4 * q + 3], rc); for (let y = b; y <= d; y++) for (let x = a; x <= c; x++) cellChN[y * gW + x]++; }
-  for (let q = 0; q < nK; q++) { const [a, b, c, d] = cellRange(kCx[q], kCy[q], kCx[q], kCy[q], kRmax[q] + 2 * aa); for (let y = b; y <= d; y++) for (let x = a; x <= c; x++) cellKN[y * gW + x]++; }
+  for (let q = 0; q < nK; q++) { const [a, b, c, d] = cellRange(kCx[q], kCy[q], kCx[q], kCy[q], kRmax[q] + W + 3 * aa); for (let y = b; y <= d; y++) for (let x = a; x <= c; x++) cellKN[y * gW + x]++; }
   const cellCh0 = new Int32Array(nCell); const cellK0 = new Int32Array(nCell);
   let sCh = 0; let sK = 0;
   for (let i = 0; i < nCell; i++) { cellCh0[i] = sCh; sCh += cellChN[i]; cellK0[i] = sK; sK += cellKN[i]; }
   const cellChList = new Int32Array(sCh); const cellKList = new Int32Array(sK);
   const fCh = new Int32Array(nCell); const fK = new Int32Array(nCell);
   for (let q = 0; q < nCh; q++) { const [a, b, c, d] = cellRange(chBox[4 * q], chBox[4 * q + 1], chBox[4 * q + 2], chBox[4 * q + 3], rc); for (let y = b; y <= d; y++) for (let x = a; x <= c; x++) { const i = y * gW + x; cellChList[cellCh0[i] + fCh[i]++] = q; } }
-  for (let q = 0; q < nK; q++) { const [a, b, c, d] = cellRange(kCx[q], kCy[q], kCx[q], kCy[q], kRmax[q] + 2 * aa); for (let y = b; y <= d; y++) for (let x = a; x <= c; x++) { const i = y * gW + x; cellKList[cellK0[i] + fK[i]++] = q; } }
+  for (let q = 0; q < nK; q++) { const [a, b, c, d] = cellRange(kCx[q], kCy[q], kCx[q], kCy[q], kRmax[q] + W + 3 * aa); for (let y = b; y <= d; y++) for (let x = a; x <= c; x++) { const i = y * gW + x; cellKList[cellK0[i] + fK[i]++] = q; } }
   const t5 = now();
 
   return {

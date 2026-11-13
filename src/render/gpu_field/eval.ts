@@ -183,14 +183,17 @@ export class GfEval {
         else { /* past MAXR: rounds to the nearer configuration */ this.pramp[j] = this.mramp >= 0.5 ? 1 : 0; }
       }
     }
-    // corners near p (in sector, inside the far bound, past the ball's AA)
+    // corners near p. kIn: 2 = p in the fill region (in sector, inside the far bound) past the ball's AA,
+    // 1 = in the region inside it, 0 = only a burier (its fill may hold the foot of a side term, which lies
+    // within W + aa of p).
     let nk = 0;
     const k0 = T.cellK0[cell]; const kn = T.cellKN[cell];
     for (let q = k0; q < k0 + kn && nk < MAXK; q++) {
       const k = T.cellKList[q]; o.nK++;
       const rx = x - T.kCx[k]; const ry = y - T.kCy[k]; const rho = Math.sqrt(rx * rx + ry * ry);
-      if (!(rho > T.kR[k] - aa - W) || rho > T.kRmax[k] || !this.inSector(k, x, y)) continue;
-      this.kk[nk] = k; this.krho[nk] = rho; this.kIn[nk] = rho > T.kR[k] - aa ? 1 : 0; nk++;
+      if (!(rho > T.kR[k] - aa - W) || rho > T.kRmax[k] + W + 2 * aa) continue;
+      const inR = rho <= T.kRmax[k] && this.inSector(k, x, y);
+      this.kk[nk] = k; this.krho[nk] = rho; this.kIn[nk] = !inR ? 0 : rho > T.kR[k] - aa ? 2 : 1; nk++;
     }
     this.nk = nk;
     // 3. configurations over the ramping pieces
@@ -234,7 +237,7 @@ export class GfEval {
     }
     const zt = T.zt;
     for (let i = 0; i < this.nk; i++) {
-      const k = this.kk[i]; if (!this.kIn[i]) continue;
+      const k = this.kk[i]; if (this.kIn[i] !== 2) continue;
       const nearerA = (x - T.kTax[k]) ** 2 + (y - T.kTay[k]) ** 2 <= (x - T.kTbx[k]) ** 2 + (y - T.kTby[k]) ** 2;
       const z = nearerA ? T.kZa[k] : T.kZb[k]; const key = z - zt;
       const e = entry(T.kG[k]);
@@ -274,9 +277,9 @@ export class GfEval {
         if (val > v) { v = val; wk = this.pend[j] ? 3 : 1; wa = this.pc[j]; wb = this.ptx[j] * (y - this.pfy[j]) - this.pty[j] * (x - this.pfx[j]) >= 0 ? 1 : -1; }
       }
       for (let i = 0; i < this.nk; i++) {
-        const k = this.kk[i]; if (T.kG[k] !== S) continue;
+        const k = this.kk[i]; if (T.kG[k] !== S || !this.kIn[i]) continue;
         const rho = this.krho[i]; const Dk = rho - T.kR[k];
-        if (this.kIn[i] && Dk > D) D = Dk;
+        if (this.kIn[i] === 2 && Dk > D) D = Dk;
         if (!(rho > 1e-12)) continue;
         const qx = T.kCx[k] + (T.kR[k] * (x - T.kCx[k])) / rho; const qy = T.kCy[k] + (T.kR[k] * (y - T.kCy[k])) / rho;
         let bur = 0;
