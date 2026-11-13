@@ -35,6 +35,15 @@ not repeated here.
   the middle writes its route through a discard, so the Pixel tests
   late and shades every remaining pixel: a whole extra pass. Hence
   one tier in front of full, not more.
+- Only an EQUAL 0 stencil test rejects early on the Pixel: a program
+  behind EQUAL class+1 shades everywhere (stage 5; cause not
+  isolated).
+- Routing is spent (stage 5, `K1362_s5_tiles.md`): t32r's tier
+  already takes 99.7% (def) / 100% (muse_hash) of inked pixels, and
+  every exact tile route (quads per class, stencil masks) was
+  slower; tile quads alone cost about 4 ms, and the route's CPU
+  20-70 ms on the Pixel's main. Cuts now have to shrink the
+  per-pixel program itself.
 - mediump changes nothing on the Pixel.
 - ANGLE (D3D on the desktop): execution continues past `discard`
   (write `discard; return;`), and a `&& !flag` loop condition was

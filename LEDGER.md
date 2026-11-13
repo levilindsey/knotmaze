@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1372.
+Next free ID: K1374.
 
 ## Waiting on Levi
 
@@ -1961,6 +1961,11 @@ Every other item below waits on the trigger it names.
 - **K1371** · rp=gf's drawn tables trail the physics by one build (18-19 ms desktop, 34 ms Pixel) since they
   build in gf_worker.ts; and buildFieldSceneLean skips diag-only fields, so a buildTables read of one is
   caught only by gf_build.test.ts and the in-app verify, not the digest (K1362 c1).
+- **K1372** · rp=gf: stage 5's tile routes (gf_tiles.ts, the tile modes in gf_pass.ts, off by default) all
+  lose to t32r on the Pixel; kept so k1362s5_* reproduces the measurements. Remove them once stage 6 settles
+  whether keys per tile reuse gf_tiles.ts (K1362).
+- **K1373** · Pixel GPU: a program behind a stencil EQUAL class+1 test is not rejected before shading (EQUAL 0
+  is); cause not isolated (docs/design/K1362_s5_tiles.md, lever 2).
 
 ## Approved, to schedule (2026-10-11)
 
