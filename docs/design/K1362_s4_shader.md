@@ -94,3 +94,107 @@ Under 30 lines:
 - your last SHA.
 
 End with `Ledger items` and K1362's handle fields.
+
+## Handoff (stage 4, 2026-11-13 00:33:07 to 01:59:21)
+
+**Not done: def and muse_hash are still over 8 ms.** Stopped about 30 min before the cap: each lever left (packed state, the two-pass split, layering once inside the program) needs more than the time left for a build, the exactness check and a phone batch. One exact lever landed, and it takes 40 to 45% off the pass;
+rp=gf is still off by default.
+
+**What landed** (`src/render/gpu_field/`, commits b09440eb..edbc61aa):
+- `gf_glsl.ts`, tier builds: the same program with smaller arrays (MAXP/MAXK per tier, ramps on or off, an optional
+  mediump variant). A tier is exact by construction: on any overflow it sets a flag, breaks and discards, and the
+  full program (MAXP 8 / MAXK 6), always drawn last, shades those pixels.
+- The ANGLE/D3D traps it hit:
+  - execution continues past a `discard` (so it is `discard; return;`);
+  - a `&& !ovf` loop condition was mistranslated (it is now a `break`);
+  - an inlined NORAMP build failed at draw.
+- `gf_pass.ts`, routing by stencil (EQUAL 0, INCR). The last program uses KEEP, so the Pixel tests its stencil before
+  the shader. The default `GF_TIERS` is `[{p:3,k:2,ramps:true}]` (p3/k2 with ramps, then full: "t32r").
+- On fallback, full shades 0.19% of def's pixels and 0.10% of muse_hash's (1079x1977: 0.12% / 0.07%; 411x753: 0.8% /
+  0.3%).
+
+**Pass, Pixel sync4 (ms, the empty pass subtracted), with the GPU clock:**
+
+| | s3 (before) | full | **t32r (after)** | desktop s3 → t32r |
+|---|---|---|---|---|
+| 822x1506, def | 33.8 @1286 | 33.0 @1286 | **19.65 @1286** | 1.2 → 1.2 |
+| 822x1506, muse_hash | 44.7 @1286 | 42.3 @1286 | **24.6 @1286** | 1.7 → 1.77 |
+| 822x1506, fat | 22.3 @1286 | 21.2 @1286 | **11.8 @1286** | 0.88 → 0.78 |
+| 1079x1977, def | 47.7 @1286 | 45.7 @1286 | **26.7 @1286** | 1.85 → 1.65 |
+| 1079x1977, muse_hash | 62.5 @1286 | 59.6 @1286 | **33.75 @1286** | 2.48 → 2.25 |
+| 411x753 (dpr 1), def / muse | | 16.7 / 19.75 @1286 | **12.1 / 13.8 @1286** | |
+
+**Frame1 (one pass per frame):**
+- 822x1506:
+  - s3: def 39.3 @1190, muse 49.7 @1286, fat 28.0 @1190;
+  - t32r: def 24.3 @940, muse 29.2 @1094, fat 17.5 @825.
+- 1079x1977:
+  - s3: def 54.1, muse 68.8, both @1286;
+  - t32r: def 31.1 @1017, muse 37.5 @1286.
+- 411x753, t32r: def 18.7, muse 19.3, both @825.
+- At the app's pacing the GPU drops to 825-1100 MHz; the empty pass reads 460.
+- Desktop frame1 (822x1506): s3 5.9 / 8.3 / 4.3, t32r 5.7 / 8.6 / 3.7.
+
+**Levers** (Pixel, 822x1506, sync4 @1286; def / muse / fat):
+1. **Arrays sized to need (exact by routing):** t32r against full saves 13.3 / 17.7 / 9.7 ms, and against s3 14.2 /
+   20.1 / 10.5. Every variant differs from full on 0 px, on the Pixel and on the desktop. The other tiers:
+   - t22r: 17.85 / 26.8-27.65 / 10.3 (muse falls back on 3.7%);
+   - t33r: 19.63 / 25.03 / 12.27;
+   - t42r: 22.28 / 28.23 / 14.2;
+   - t43r: 21.85 / 28.25 / 13.95.
+2. **Layering once over the ramp configurations:** built as a routed NORAMP tier in front of the ramp tier, it costs
+   19 to 21 ms more (t43_43r: 41.2 / 51.9 / 27.2; t22r_43r: 40.9 / 52.2 / 26.5).
+   - A middle routed program writes the route with a discard, so the Pixel runs its stencil test late and shades
+     every remaining pixel: a whole pass.
+   - So only one tier sits in front of full.
+   - Layering once inside one program was not built.
+3. **mediump** (t43rh against t43r): 22.2 / 28.4 / 14.43 against 22.0 / 28.4 / 14.2, nothing. The output is
+   bit-identical on both GPUs: the driver kept highp, or what it lowered did not matter.
+4. **A separate program for simple pixels:** this is what t22r is, a small program first. It is the best for def
+   and worse for muse_hash. A second small program in front costs a pass (lever 2).
+5. **Packed state, and the two-pass split:** not built (time).
+6. **No pass when nothing moved:** `gf_app.ts` already skips the pass (its dirty flag plus the camera key).
+
+**The app's frame interval:**
+- Setup: the Pixel, the app built at 8e133d39, an 822x1506 canvas, at 1286 MHz.
+- Drag: a 3 s DevTools touch drag in `k1362s4_drag.mjs`, ABAB x2, `?b.J&am=instant&snd=none` with and without
+  `&rp=gf`. This is not the K156 kit's replay.
+- Today's look: p50 50.1, p90 50.2 (max 66.8).
+- rp=gf: p50 83.5, p90 116.9 (max 283 to 367).
+- gf's main-thread CPU per frame: export 21.5-23.4 ms, tables 27.7-28.7 ms, pack 0.7 ms, upload 0.2 ms.
+- So about 50 ms of CPU on main bounds the frame, not the 20 to 25 ms pass.
+
+**Mirror check:**
+- Read-back against the CPU mirror: 0 of about 3000 sampled px per scene over 1e-2 (max 9e-5 to 2.3e-4), for every
+  variant, on the Pixel and on the desktop.
+- The stage 2 census over the 12 scenes (`k1362s4_census.ps1` → `out/s2/census_s4*`) equals stage 2's table row for
+  row (total 301).
+- `npm test` is green (2944 passed, 18 skipped, at edbc61aa) and the goldens are unchanged.
+
+**What remains (def at t32r, 822x1506):**
+- Stage 3's breakdown, rescaled: about 1 fixed + 4.5 scan + 3.7 keys + 10.5 layering = 19.65.
+- The footprint floor proxy (stage 3's tinyonce, MAXP 2 / MAXK 2, layering once) is 14.0 / 16.8 at 822x1506 and
+  6.9 / 7.3 at 411x753.
+- So at the app's canvas, this per-pixel structure is over 8 ms even at its proxy floor.
+
+**Next fixes, in stage 1's verdicts:**
+- **(b) implementation:**
+  - layering once inside the program (about -1.8);
+  - packed state or the two-pass split, towards the proxy floor (about -5 to -7);
+  - scan and keys cut to stage 1's floor (about -0.8 / -1.0).
+  - Together these give about 12 / 15 ms at 822x1506. The 8 ms goal needs a structural change on top: for example,
+    keys per tile instead of per pixel, or a distance pass that is not per pixel.
+- **(b) the app's frame:** the per-frame export and tables (about 50 ms on main) must move off main or become
+  incremental. That is the larger lever for what the app gets.
+- **(a) definition:** dpr 1 gives t32r 12.1 / 13.8 now, and a proxy floor of about 7. This is a look change and Levi's
+  call.
+  - Pictures: `out/s4/dpr1_def.png`, `dpr1_muse_hash.png` (untracked; full resolution beside dpr 1, two crops at
+    x4).
+  - At dpr 1 the dark outline lines mostly vanish and the edges blur.
+- **(c) inherent:** the clock drop at frame pacing (825-1100 MHz) is the governor's, not the shader's; no proof yet.
+
+**Evidence:**
+- tools: `.claude/probes/K1362/k1362s4_*` (bench, run, phone, gpuclk, drag, census, configs, and `pic` in
+  `k1362s4_entry.ts`);
+- outputs: `.claude/probes/K1362/out/s4/` (`phone_p1..p3`, `gpuclk_p1..p3`, `desk_ab`, `desk_desk`, `drag_d1`,
+  `drag_d2`, the dpr 1 PNGs).
