@@ -12,6 +12,7 @@
 //   node scripts/run_node.mjs .claude/probes/K1247/k1247s31_inc.ts <dragDir> [sub=10] [T=0.5] [warm=1] [time=1]
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
+import { createHash } from "node:crypto";
 import { OutlineModel } from "../../../src/render/outline/outline_model";
 import { frame, frameSnapped, alignJunctionArms, KF_INC, newSnapState, snapScene } from "../../../src/render/outline/outline";
 import type { SceneIn, DiagramStructure, OutlineTable } from "../../../src/render/outline/outline";
@@ -47,14 +48,16 @@ const A0 = mk();
 for (const s of raw) { const a = alignJunctionArms(A0, s); al.push(a); const t0 = performance.now(); snapped.push(snapScene(S, a, T)); snapMs.push(performance.now() - t0); }
 
 // Identity and hit rates.
-const F = mk(); const I = mk(); let same = 0; let diff = 0; let firstDiff = -1;
+const F = mk(); const I = mk(); let same = 0; let diff = 0; let firstDiff = -1; const trace = createHash("sha256"); const sTrace = createHash("sha256");
 KF_INC.hits = 0; KF_INC.misses = 0; KF_INC.cHits = 0; KF_INC.cMisses = 0; KF_INC.vAux = 0; KF_INC.vMiss = 0; KF_INC.cMissJ = 0; KF_INC.why = {};
 for (let i = 0; i < snapped.length; i++) {
   KF_INC.cache = false; const a = digest(frameSnapped(F, snapped[i]));
   KF_INC.cache = true; const b = digest(frameSnapped(I, snapped[i]));
   KF_INC.cache = false;
   if (a === b) same++; else { diff++; if (firstDiff < 0) firstDiff = i; }
+  trace.update(a); sTrace.update(JSON.stringify(snapped[i]));
 }
+console.log(`snapped tables' trace (every frame's digest, caches off): ${trace.digest("hex").slice(0, 16)}; snapped scenes' trace ${sTrace.digest("hex").slice(0, 16)}`);
 const name = dir.split(/[\\/]/).filter(Boolean).pop();
 console.log(`${name}: ${raw.length} frames (sub ${sub}), T ${T} px, chains ${cap[0].chains.length}, junctions ${cap[0].junctions.length}`);
 console.log(`identity caches on/off: same ${same}, differ ${diff}${diff ? ` (first at ${firstDiff})` : ""}`);
@@ -85,6 +88,7 @@ const hd = (a: OutlineTable, b: OutlineTable): number => {
   return m * px;
 };
 const stride = +arg("bstride", "1");
+if (arg("b", "1") === "1") {
 const Bs = mk(); const Rt = mk(); const C0 = mk(); const S0 = newSnapState();
 const offs: number[] = []; const ctl: number[] = []; let n05 = 0; let worst = -1; let wv = 0;
 for (let i = 0; i < raw.length; i++) {
@@ -97,6 +101,10 @@ console.log(`check (b) drawn border offset px (every ${stride} frames): p50 ${q(
 const last = raw.length - 1;
 const ex = digest(frame(mk(), al[last])); KF_INC.cache = true; const exC = digest(frame(I, al[last])); KF_INC.cache = false;
 console.log(`check (a) at rest (last frame held, no exact frame): offset ${offs[offs.length - 1].toFixed(3)} px; update(exact)'s frame (caches on) = the true frame: ${ex === exC}`);
+}
+// The snap alone, repeated (rep=N passes over the drag, fresh state each; p50/p95 over every call).
+const rep = +arg("rep", "0");
+if (rep > 0) { const ms: number[] = []; for (let r = 0; r < rep; r++) { const S2 = newSnapState(); for (const a of al) { const t0 = performance.now(); snapScene(S2, a, T); ms.push(performance.now() - t0); } } console.log(`snap alone ms p50/p95 over ${rep} passes: ${f2(ms)}`); }
 if (timeIt) {
   const R: number[] = []; const Fm: number[] = []; const Im: number[] = [];
   const Rs = mk(); const Fs = mk(); const Is = mk();

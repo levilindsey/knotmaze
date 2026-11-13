@@ -4251,7 +4251,7 @@ export function snapScene(S: SnapState, scene: SceneIn, T = KF_INC.T): SceneIn {
       for (let k = 0; k < pts.length && ok; k += 2) { const dx = pts[k] - old[k]; const dy = pts[k + 1] - old[k + 1]; ok = dx * dx + dy * dy <= tw2; }
       if (ok) { held[i] = true; dC[i] = 0; return { ...c, pts: old }; }
     }
-    S.chains[i] = Array.from(pts);
+    S.chains[i] = Array.isArray(pts) ? (pts as number[]).slice() : Array.from(pts);
     held[i] = false; dC[i] = 1;
     return { ...c, pts: S.chains[i] as number[] };
   });
@@ -4278,17 +4278,25 @@ export function snapScene(S: SnapState, scene: SceneIn, T = KF_INC.T): SceneIn {
       const kc = Math.hypot(j.c[0] - old.c[0], j.c[1] - old.c[1]) <= ts;
       const ks = j.arms.map((a, k) => keepS(a.chain, old.arms[k].s, a.s));
       if (kc && ks.every(Boolean)) { dJ[ji] = 0; return old; }
-      const y = structuredClone(j);
+      const y = cloneJunction(j);
       if (kc) y.c = [old.c[0], old.c[1]];
       y.arms.forEach((a, k) => { if (ks[k]) a.s = old.arms[k].s; });
       S.junc[ji] = y; dJ[ji] = 1;
       return y;
     }
-    const y = structuredClone(j);
+    const y = cloneJunction(j);
     S.junc[ji] = y; dJ[ji] = 1;
     return y;
   });
   return { ...scene, chains, crossings, junctions };
+}
+/** A junction's own copy (its fields are flat: c, arms and corners hold numbers and strings), as structuredClone
+ *  copies it but without its cost (K1247 s31: with the chains' slice for Array.from, the snap on def's drag went
+ *  from 0.52 to 0.19 ms p50, the snapped scenes byte-identical). */
+function cloneJunction(j: SceneIn["junctions"][number]): SceneIn["junctions"][number] {
+  const y = { ...j, c: [j.c[0], j.c[1]] as [number, number], arms: j.arms.map((a) => ({ ...a })) };
+  if (j.corners) y.corners = j.corners.map((q) => ({ ...q }));
+  return y;
 }
 const kfFootHold = new WeakMap<FCache, Map<number, [number, number]>>();
 function holdFootC(C: FCache, scene: SceneIn, key: number, cp: [number, number]): [number, number] {
