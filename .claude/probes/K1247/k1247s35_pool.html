@@ -1,0 +1,87 @@
+<!doctype html><meta charset="utf-8"><title>k1247s35 pool</title>
+<script type="module">
+// K1247 s35: a POOL of K outline workers (the app's own outline_worker.ts, bundled) fed a drag at 60 Hz. Each
+// tick makes the drag's next frame the newest scene; any idle worker takes the newest scene not yet sent
+// (latest wins, as the app's one worker does). Replies apply in id order (an older reply than the last applied
+// is dropped). Measures the applied rate and pacing, each update's worker ms under K-way load, the latency
+// (post -> reply) and staleness (the scene's tick -> its reply), and main's post (structured clone) cost.
+const q = new URLSearchParams(location.search);
+const urls = JSON.parse(q.get("urls")); const sub = +q.get("sub");
+// an s that jumps more than JUMP between capture frames wrapped a closed chain: take the later value, not a lerp
+const JUMP = +(q.get("jump") ?? 2);
+const ls = (x, y, t) => (Math.abs(y - x) > JUMP ? y : x + (y - x) * t);
+const lerp = (a, b, t) => {
+  const s = structuredClone(b);
+  s.chains.forEach((c, i) => { const p = a.chains[i].pts; if (p.length === c.pts.length) for (let k = 0; k < p.length; k++) c.pts[k] = p[k] + (c.pts[k] - p[k]) * t; });
+  s.crossings.forEach((x, i) => { const y = a.crossings[i]; if (y) { x.a.s = ls(y.a.s, x.a.s, t); x.b.s = ls(y.b.s, x.b.s, t); } });
+  s.junctions.forEach((j, i) => { const k = a.junctions[i]; if (k) { j.c = [k.c[0] + (j.c[0] - k.c[0]) * t, k.c[1] + (j.c[1] - k.c[1]) * t]; j.arms.forEach((r, n) => { if (k.arms[n]) r.s = ls(k.arms[n].s, r.s, t); }); } });
+  return s;
+};
+const cap = await Promise.all(urls.map((u) => fetch(u).then((r) => r.json())));
+for (const S of cap) { S.look.ctrlArc ??= 0.47; S.look.fillRec = 2; S.look.bandRec = 1; S.look.bandRecGpu = 1; }
+const raw = [cap[0]];
+for (let i = 1; i < cap.length; i++) { for (let k = 1; k < sub; k++) raw.push(lerp(cap[i - 1], cap[i], k / sub)); raw.push(cap[i]); }
+const seq = [...raw, ...raw.slice(1, -1).reverse()]; // ping-pong: no wrap jump
+const qt = (a, p) => { if (!a.length) return NaN; const b = [...a].sort((x, y) => x - y); return b[Math.min(b.length - 1, Math.floor(p * b.length))]; };
+const TICK = 1000 / 60;
+window.__run = async (K, seconds, warmS) => {
+  const ws = [];
+  for (let k = 0; k < K; k++) ws.push(new Worker("./out/s35/pool/outline_worker_bundle.mjs", { type: "module" }));
+  // structure: every worker builds on frame 0
+  const t0s = performance.now();
+  await Promise.all(ws.map((w, k) => new Promise((res) => { w.onmessage = (e) => res(e.data); w.postMessage({ id: -1 - k, scene: seq[0] }); })));
+  const structureWall = performance.now() - t0s;
+  const busy = new Array(K).fill(false);
+  const sentAt = new Map(); const tickOf = new Map();
+  let nextId = 0, lastApplied = -1, pending = null, measuring = false, stop = false;
+  const M = { applied: [], dropped: 0, ms: [], frame: [], lat: [], stale: [], post: [], restr: 0, causes: {}, posts: 0, errors: 0, appliedAt: [] };
+  const tickTime = (i) => tStart + i * TICK;
+  const dispatch = () => {
+    if (!pending) return;
+    const k = busy.indexOf(false); if (k < 0) return;
+    const id = nextId++; const tp = performance.now();
+    ws[k].postMessage({ id, scene: seq[pending.i % seq.length] });
+    const pc = performance.now() - tp;
+    busy[k] = true; sentAt.set(id, tp); tickOf.set(id, pending.i); pending = null;
+    if (measuring) { M.post.push(pc); M.posts++; }
+  };
+  ws.forEach((w, k) => {
+    w.onmessage = (e) => {
+      const r = e.data; const now = performance.now(); busy[k] = false;
+      if (r.error) { M.errors++; } else if (measuring) {
+        if (r.restructured) { M.restr++; const c = (r.cause ?? "").slice(0, 40); M.causes[c] = (M.causes[c] ?? 0) + 1; }
+        M.ms.push(r.ms); if (r.parts) M.frame.push(r.parts.frame);
+        if (r.id > lastApplied) {
+          M.applied.push(r.id); M.appliedAt.push(now);
+          M.lat.push(now - sentAt.get(r.id)); M.stale.push(now - tickTime(tickOf.get(r.id)));
+        } else M.dropped++;
+      }
+      if (r.id > lastApplied) lastApplied = r.id;
+      sentAt.delete(r.id); tickOf.delete(r.id);
+      if (!stop) dispatch();
+    };
+  });
+  const tStart = performance.now();
+  const total = Math.round((warmS + seconds) * 60); const warmT = Math.round(warmS * 60);
+  await new Promise((res) => {
+    let i = 0;
+    const tick = () => {
+      if (i === warmT) measuring = true;
+      if (i >= total) { stop = true; res(); return; }
+      pending = { i }; dispatch(); i++;
+      setTimeout(tick, Math.max(0, tickTime(i) - performance.now()));
+    };
+    tick();
+  });
+  // wait for the in-flight replies (not measured past the window)
+  measuring = false;
+  await new Promise((res) => { const chk = () => (busy.some((b) => b) ? setTimeout(chk, 5) : res()); chk(); });
+  ws.forEach((w) => w.terminate());
+  const iv = []; for (let i = 1; i < M.appliedAt.length; i++) iv.push(M.appliedAt[i] - M.appliedAt[i - 1]);
+  const s = (a) => [qt(a, 0.5), qt(a, 0.95)];
+  return { K, seconds, structureWall, rateHz: M.applied.length / seconds, dropped: M.dropped, posts: M.posts, errors: M.errors,
+    interval: s(iv), ms: s(M.ms), frame: s(M.frame), lat: s(M.lat), stale: s(M.stale), post: s(M.post), restr: M.restr, causes: M.causes,
+    iv95over33: iv.filter((x) => x > 33.4).length / Math.max(1, iv.length) };
+};
+window.__ready = true;
+</script>
