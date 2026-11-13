@@ -2,6 +2,7 @@
 #   load    - the machine's CPU load and its top processes (before and after the batch: other agents' load)
 #   capture - today's def drag on port A's build (k1247s30_capture.mjs; needs outline_app's capture hook)
 #   engine  - k1247s30_engine.mjs (one bundle: Node, Chrome worker, Chrome main) on s18's def frames and today's
+#   engcold - the same, cold: warm=0 reps=1, fresh Workers (the app's drag is about frame()'s first ~40 calls)
 #   def/fat - k1240s4b_bench.mjs over the ports A B C C B A (master, flags off, flags on), summarised by k1247s30_abba.mjs
 #   inc     - k1247s30_inc.ts in Node on s30's def, muse_hash and fat drags (sub 10, T 0.5): identity, hits, phases
 # Waits for another owner's lock inside this one call (a lock older than 30 min is stale), takes it with this
@@ -47,6 +48,13 @@ try {
   if ($S -contains "engine") {
     node .claude/probes/K1247/k1247s30_engine.mjs .claude/probes/K1247/out/s18/drag/def 2 3 2>&1 | Tee-Object -FilePath "$Out\engine_s18def.txt" | Select-Object -Last 12
     if (Test-Path "$Out\drag_now\def") { node .claude/probes/K1247/k1247s30_engine.mjs "$Out/drag_now/def" 2 3 2>&1 | Tee-Object -FilePath "$Out\engine_nowdef.txt" | Select-Object -Last 12 }
+  }
+  if ($S -contains "engcold") {
+    # Cold JIT: no warm-up, one rep, a fresh Worker (and the first Node call) per run - as the app's drag, whose
+    # ~40 frames are about the first frame() calls the worker ever makes.
+    foreach ($d in ".claude/probes/K1247/out/s18/drag/def", "$Out/drag_now/def") {
+      if (Test-Path $d) { node .claude/probes/K1247/k1247s30_engine.mjs $d warm=0 reps=1 order=worker,node,worker 2>&1 | Tee-Object -FilePath "$Out\engcold_$((Split-Path (Split-Path $d -Parent) -Leaf)).txt" | Select-Object -Last 8 }
+    }
   }
   foreach ($k in "def", "fat") {
     if ($S -notcontains $k) { continue }
