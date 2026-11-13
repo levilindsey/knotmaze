@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1369.
+Next free ID: K1372.
 
 ## Waiting on Levi
 
@@ -554,11 +554,11 @@ Next free ID: K1369.
   tables the CPU builds in under 1 ms) instead of the outline mesh built on the CPU each frame (65-117 ms on
   def). Reverses the 2026-11-09 call (K1040 dropped for K1240). The main speed route (Levi, 2026-11-12: very bullish
   on it); dropped only on a proof it cannot work (brief: "How the result is judged"). Analysis in docs/ledger_notes.md.
-  - owner: claude agents af5206837da0ec88a (s5 shader tiles) and a161f441f698339ef (c1 CPU off main), started 2026-11-13 02:08; coordinating claude session 09c7a672-a414-402a-97da-b3176839a2e5
-  - branch: worktree-agent-af5206837da0ec88a at .claude/worktrees/agent-af5206837da0ec88a; worktree-agent-a161f441f698339ef at .claude/worktrees/agent-a161f441f698339ef; last commit: `13c997b5`
+  - owner: claude agent af5206837da0ec88a (s5 shader tiles), started 2026-11-13 02:06; coordinating claude session 09c7a672-a414-402a-97da-b3176839a2e5
+  - branch: worktree-agent-af5206837da0ec88a at .claude/worktrees/agent-af5206837da0ec88a; last commit: `813871b0`
   - evidence: .claude/probes/K1362/ (k1362s3_*, k1362s4_*), out/s3/, out/s4/
-  - next: merge s5 (pass <= 8 ms on the Pixel by structure: geometry-routed tiles, keys per tile) and c1 (main CPU <= 3 ms desktop, tables bit-identical; export and build off main); Levi's call on dpr 1 is K1367
-  - brief: docs/design/K1362_s5_tiles.md and docs/design/K1362_c1_cpu_off_main.md
+  - next: c1 merged (rp=gf tables built in a worker from a lean export: main 1.64 ms/frame on the desktop def drag, Pixel drag 33.3 ms p50); s5 (shader tiles) still running; then the Pixel physics under rp=gf (K1369) and exact corner reuse (K1370)
+  - brief: docs/design/K1362_s5_tiles.md (running); c1 handoff at the end of docs/design/K1362_c1_cpu_off_main.md
 
 ## Next, in order
 
@@ -839,6 +839,12 @@ Every other item below waits on the trigger it names.
   doing)
 - **K1360** · Measure the outline worker pool on the Pixel at K = 2 and 3 (K1247 s35 projects 15-22 Hz from
   the pool alone); rides the next phone round (K156), after K1247 s36 lands
+- **K1369** · rp=gf: on the Pixel the physics runs at half its sim rate during a drag (sim/wall 0.29-0.32
+  against 0.62-0.71 for today's look), on master and on K1362 c1 alike; not diagnosed. Record the CPU clocks
+  beside the GPU clock through the kit's drag (docs/design/K1362_c1_cpu_off_main.md handoff).
+- **K1370** · rp=gf tables: reuse each corner exactly where its arms did not move (the Pixel's worker build is
+  20 ms, about two frames of lag at 16 ms); output must stay bit-identical (k1362t1_digest.ts). K1362 c1
+  handoff.
 
 ## Residuals (known, not fixed)
 
@@ -1947,6 +1953,9 @@ Every other item below waits on the trigger it names.
 - **K1364** · rp=outline's band blend: BAND_FS / draw.ts stack the two tie-dimmed run bands one over the other
   where form B blends the two orders' ink; the last part of muse_hash j58a's chevron (4.752, 33.504) (K1314
   s14 handoff in docs/design/K1314_s14_j58a_seam.md). Moot if K1362 replaces the band render.
+- **K1371** · rp=gf's drawn tables trail the physics by one build (18-19 ms desktop, 34 ms Pixel) since they
+  build in gf_worker.ts; and buildFieldSceneLean skips diag-only fields, so a buildTables read of one is
+  caught only by gf_build.test.ts and the in-app verify, not the digest (K1362 c1).
 
 ## Approved, to schedule (2026-10-11)
 
