@@ -158,3 +158,21 @@ Reaching 2 ms therefore needs a different corner algorithm or relaxed
 float equality (the routes above), not further exact optimization. Final
 state: def 9.0-9.3 ms, muse_hash 4.4-4.5 ms, fat unchanged, output
 bit-identical. Stopping here at 01:15, inside the cap.
+
+## Handoff addendum 2 (the 1e-9 route, measured 2026-11-13 01:16 to 01:18)
+
+The 1e-9 allowance was tested and is closed. New tool
+`.claude/probes/K1362/k1362t1_tol.ts` compares this build against master's
+export on the full digest corpus (integer fields exact, float fields'
+largest difference reported). Replacing `Math.hypot` with
+`sqrt(x*x + y*y)` at the hot sites drifts the arc-length table by at most
+1.14e-13 — and the corner track still amplifies that past 1e-9: corner
+float fields move by up to 0.105 (kEbx), kR by 1.6e-4, because a 1e-13
+foot drift flips discrete projection segment steps at particular corners.
+With sqrt also in the solve path, one drag frame's bin indices changed
+(`drag def/f005.json` cellKList length 10902 vs 10907), which Done 1
+forbids outright. All sqrt substitutions were reverted; the digest is
+bit-identical again (0 differing lines) and `src/` matches commit
+`224c6c75` exactly. Any future speed work in this lane must preserve the
+corner solve's input bits exactly, or change the solve itself under a
+fresh gate-equality argument. Stopping at 01:18, inside the cap.
