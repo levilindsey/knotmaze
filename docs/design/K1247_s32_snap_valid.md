@@ -98,3 +98,29 @@ Under 40 lines:
 - your last SHA.
 
 End with `Ledger items` and K1247's handle fields.
+
+## Handoff (stage 32 agent, 2026-11-12 13:47:07 to 15:25 PT)
+
+Outputs in `.claude/probes/K1247/out/s32/` (untracked), tools `.claude/probes/K1247/k1247s32_*` (committed).
+- **j83's flip: not visible.** `after/def_j83_f{13,14,26,27}_{4,8}x_ba.png` (form B | the true frame | snapped; at
+  f14 8x true and snapped match and follow form B). Nothing to fix there.
+- **(a) passes** on def, muse_hash and fat: after `update(exact)` no part differs from the true frame. The race:
+  replies were not matched to requests, so a late snapped reply could replace the exact one and the app settled on
+  it. Replies now carry an id and `exact`; the app drops stale ids, asks for an exact frame once nothing moves, and
+  `settled` needs `shownExact` (76be9b7b).
+- **(b) passes at T 0.25 with the junction closure `KF_INC.jclose`** (a chain is held only while every junction it is
+  an arm of holds whole; no END-foot hold under it), stride 1: def max 0.290 px, muse_hash 0.399, fat 0.247, no frame
+  over 0.5 (`checks/bG_*.txt`). The old error was the corner solve mixing held and released arms, the END-foot hold
+  (muse_hash tails 1.19 px), and the corners and tails amplifying 0.5 px input holds.
+- **(c) passes**: the census moves no bar find (`checks/c_census2.txt`).
+- **The ABBA fails with the flags on**, so `KF_INC.snap` and `.cache` are OFF by default (54e25617; T 0.25,
+  jclose on, border off). Flags on against master, p50 ms: def worker 75.95 vs 70.85, frame 41.95 vs 37.95; fat
+  worker 82.00 vs 75.75, frame 42.10 vs 38.00 (`run_on/`, load 12% then 6%). Flags off: within the spread on
+  every part (`run_off/`, load 22% then 8%).
+- **Why it does not pay:** the closure is transitive over the junction graph, so on maze links one moving chain
+  releases them all. def holds 0 of 92 chains at f5..f60, muse_hash 0 of 86 (86 at f30) (`checks/held_*.txt`).
+  fat (no junctions) holds 3 of 6 and is still 6 ms slower, so the snap and cache bookkeeping costs more than the
+  holds save.
+- **Next:** make holds pay without breaking (b). That means a local closure (hold a junction's arms only near the
+  junction, s30's span granularity, stage 4) and profiling the snap and cache overhead on fat (snapScene, the
+  border keys). Then turn the flags on again behind the same three checks and the ABBA. s30's stages 3-6 remain.
