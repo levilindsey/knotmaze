@@ -561,11 +561,11 @@ Next free ID: K1355.
   - brief: `docs/design/K1314_s11_j58a_c8.md`
 - **K1341** · Three exact cuts K1247 s28 left: a squared pre-check before draw.ts nearRange's sqrt (zChains'
   hottest line), hinted spanOf searches, a box bound in fill_tri.ts's disk scan (s28 handoff)
-  - owner: agent `a74fd2c72ec40ff48` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 14:41, 2 h cap ~16:41)
-  - branch: `worktree-agent-a74fd2c72ec40ff48`, worktree `.claude/worktrees/agent-a74fd2c72ec40ff48`; last commit: `af721b2f`
-  - evidence: .claude/probes/K1341/ (k1341s1_*)
-  - next: stage 1 running: the three s28 cuts, then profile hotspots; output bit-identical; app ABBA twice
-  - brief: `docs/design/K1341_s1_fill_zchains_cuts.md`
+  - owner: agent `ac63f135098807a15` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (sonnet, started 2026-11-12 16:04, 1 h cap ~17:04)
+  - branch: `worktree-agent-ac63f135098807a15`, worktree `.claude/worktrees/agent-ac63f135098807a15`; last commit: `526003da`
+  - evidence: .claude/probes/K1341/ (k1341s1_*, k1341s2_*); stage 1 branch worktree-agent-a74fd2c72ec40ff48 at 109e621f (zChains -17..40%, fill/band unclear under load)
+  - next: s2 running: interleaved Node A/B of fill, band, zChains; drop cuts that read slower; then merge
+  - brief: `docs/design/K1341_s2_split_cuts.md`
 
 ## Next, in order
 
