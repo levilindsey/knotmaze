@@ -125,6 +125,20 @@ export function ownAlpha(p: OutlinePiece, zz: ZZ, h: number, W: number): number[
   const PX = ps.filter((P) => P.o === X);
   if (!PX.length) return al;
   const out = al.slice();
+  // runRootRamp's ramp per entry: alpha / fadeA where the fade leaves enough to divide by, else the nearest
+  // such entry's on the same edge (1 if none), so the result stays continuous where the fade reaches 0.
+  const ramp = new Float64Array(2 * np).fill(1);
+  for (let e = 0; e < 2; e++) {
+    const prev = new Int32Array(np).fill(-1);
+    let lv = -1;
+    for (let i = 0; i < np; i++) { if (fa[2 * i + e] >= 0.05) lv = i; prev[i] = lv; }
+    let nv = -1;
+    for (let i = np - 1; i >= 0; i--) {
+      if (fa[2 * i + e] >= 0.05) nv = i;
+      const j = prev[i] < 0 ? nv : nv < 0 ? prev[i] : i - prev[i] <= nv - i ? prev[i] : nv;
+      if (j >= 0) ramp[2 * i + e] = Math.min(1, al[2 * j + e] / fa[2 * j + e]);
+    }
+  }
   // Own s per point, as bandGpu's sv.
   let L = 0;
   for (let i = 1; i < np; i++) L += Math.sqrt((p.pts[2 * i] - p.pts[2 * i - 2]) ** 2 + (p.pts[2 * i + 1] - p.pts[2 * i - 1]) ** 2);
@@ -148,7 +162,7 @@ export function ownAlpha(p: OutlinePiece, zz: ZZ, h: number, W: number): number[
         const f = footNear(O, vx, vy, P.so, P.rO, s, P.o === p.chain ? 3 * h : 0);
         if (f.d < h) cov = Math.max(cov, Math.min(1, (h - f.d) / W));
       }
-      if (cov > 0) out[k] = Math.min(1, al[k] * (cov / Math.max(fa[k], 1e-6) + 1 - cov));
+      if (cov > 0) out[k] = Math.min(1, ramp[k] * (cov + (1 - cov) * fa[k]));
     }
   }
   return out;
