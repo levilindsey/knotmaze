@@ -116,12 +116,18 @@ export class GfTarget {
  */
 export const GF_TIERS: GfTier[] = [{ p: 3, k: 2, ramps: true }];
 /**
- * K1362 s5: the tile route (gf_tiles.ts). sub > 0 cuts each grid cell into sub x sub world tiles and draws each tile,
+ * K1362 s5: the tile route (gf_tiles.ts). tc > 0 cuts the grid into world tiles of tc x tc cells and draws each tile,
  * as an instanced quad, with the first of the tiers that holds the tile's bound, else the full program; tiles nothing
  * reaches are not drawn. No stencil, and every pixel is drawn once. 0 = stage 4's stencil route over GF_TIERS. The
  * probe program always takes the stencil route (its counters are the full program's own).
  */
-export const GF_TILE_SUB = 0;
+export const GF_TILE_CELLS = 0;
+/**
+ * The fallback (buildTileRoute's opt: 0 none, the exact bound; 1 a group = one piece; 2 also no ramp test): tiles go to a tier by the optimistic bound, the tiers mark the pixels they draw in
+ * the stencil, and the full program draws once over every reached tile with stencil EQUAL 0 and KEEP (tested before the
+ * shader on the Pixel). Exact by the tiers' overflow discard (stage 4), not by the bound.
+ */
+export const GF_TILE_FALLBACK = 2;
 export const GF_TILE_TIERS: GfTier[] = [{ p: 1, k: 1, ramps: false }, { p: 2, k: 2, ramps: false }, { p: 3, k: 2, ramps: true }];
 const UNIFORMS = ["uD", "uOCh", "uOV", "uOPin", "uOArm", "uOK", "uOChk", "uOCell", "uOChL", "uOKL", "uH", "uW", "uAA", "uSigma", "uZt", "uWin", "uRc", "uGrid", "uGDim", "uMap", "uView"];
 interface GfProg { prog: WebGLProgram; u: Map<string, WebGLUniformLocation | null>; tier: GfTier | null }
@@ -145,22 +151,25 @@ export class GfPass {
   uploadMs = 0;
 
   readonly probe: boolean;
-  /** The tile route's subdivision (0 = the stencil route), its tiers, and the last upload's classification. */
-  readonly sub: number;
+  /** The tile route's cells per tile side (0 = the stencil route), its tiers, and the last upload's classification. */
+  readonly tc: number;
+  /** The tile route classifies optimistically and the full program redraws, by stencil, what the tiers discarded. */
+  readonly fb: number;
   readonly tiers: GfTier[];
   route: GfTileRoute | null = null;
   routeMs = 0;
   private tileBuf: WebGLBuffer | null = null;
   /**
    * tiers: GF_TIERS (stencil route) or GF_TILE_TIERS (tile route) by default; [] draws the full program alone (stage 2's
-   * pass). fs: a program's source override (benches). sub: GF_TILE_SUB by default; the probe always routes by stencil.
+   * pass). fs: a program's source override (benches). tc: GF_TILE_CELLS by default; the probe always routes by stencil.
    */
-  constructor(gl: WebGL2RenderingContext, probe: boolean, tiers?: GfTier[], fs?: (tier: GfTier | null) => string, sub = GF_TILE_SUB) {
+  constructor(gl: WebGL2RenderingContext, probe: boolean, tiers?: GfTier[], fs?: (tier: GfTier | null) => string, tc = GF_TILE_CELLS, fb = GF_TILE_FALLBACK) {
     this.gl = gl; this.probe = probe;
-    this.sub = probe ? 0 : sub;
+    this.tc = probe ? 0 : tc;
+    this.fb = this.tc > 0 ? fb : 0;
     // the tile route classifies against the tiers it draws: no half (mediump-index) tiers there, which depend on the tables
-    this.tiers = (tiers ?? (this.sub > 0 ? GF_TILE_TIERS : GF_TIERS)).filter((t) => this.sub === 0 || !t.half);
-    const vs = this.sub > 0 ? GF_TILE_VS : GF_VS;
+    this.tiers = (tiers ?? (this.tc > 0 ? GF_TILE_TIERS : GF_TIERS)).filter((t) => this.tc === 0 || !t.half);
+    const vs = this.tc > 0 ? GF_TILE_VS : GF_VS;
     this.progs = [...this.tiers, null].map((tier) => {
       const prog = compileProgram(gl, vs, fs ? fs(tier) : gfFs(probe, true, tier ?? undefined));
       const u = new Map<string, WebGLUniformLocation | null>();
@@ -168,7 +177,7 @@ export class GfPass {
       return { prog, u, tier };
     });
     this.vao = gl.createVertexArray()!;
-    if (this.sub > 0) {
+    if (this.tc > 0) {
       this.tileBuf = gl.createBuffer()!;
       gl.bindVertexArray(this.vao);
       gl.bindBuffer(gl.ARRAY_BUFFER, this.tileBuf);
@@ -208,10 +217,10 @@ export class GfPass {
     } else gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, GF_TW, rows, gl.RGBA, gl.FLOAT, view);
     this.packMs = t1 - t0;
     this.uploadMs = performance.now() - t1;
-    if (this.sub > 0) {
+    if (this.tc > 0) {
       // the tiles are in world space: the classification follows the tables, not the camera
       const prevRects = this.route?.rects;
-      this.route = buildTileRoute(T, this.tiers, this.sub, this.route ?? undefined);
+      this.route = buildTileRoute(T, this.tiers, this.tc, this.route ?? undefined, undefined, this.fb);
       this.routeMs = this.route.ms;
       gl.bindBuffer(gl.ARRAY_BUFFER, this.tileBuf);
       if (this.route.rects === prevRects) gl.bufferSubData(gl.ARRAY_BUFFER, 0, this.route.rects);
@@ -246,14 +255,15 @@ export class GfPass {
     gl.colorMask(true, true, true, true);
     // The programs to draw: a half (mediump-int) tier only while every index fits mediump's 16 bits.
     const halfOk = Math.max(T.nV, T.nK, T.nA, T.nCh) < 32000;
-    const route = this.sub > 0 ? this.route : null;
-    if (this.sub > 0 && !route) return;
+    const route = this.tc > 0 ? this.route : null;
+    if (this.tc > 0 && !route) return;
     const progs = route ? this.progs : this.progs.filter((g) => !g.tier || !g.tier.half || halfOk);
     const routed = !route && progs.length > 1;
-    if (routed) target.ensureStencil();
+    const fb = !!route && this.fb > 0 && progs.length > 1;
+    if (routed || fb) target.ensureStencil();
     if (target.float) for (let i = 0; i < target.n; i++) gl.clearBufferfv(gl.COLOR, i, [0, 0, 0, 0]);
     else { gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT); }
-    if (routed) { gl.stencilMask(0xff); gl.clearBufferfi(gl.DEPTH_STENCIL, 0, 1, 0); }
+    if (routed || fb) { gl.stencilMask(0xff); gl.clearBufferfi(gl.DEPTH_STENCIL, 0, 1, 0); }
     const [x0, y0, x1, y1] = rect;
     if (x1 <= x0 || y1 <= y0) return;
     gl.enable(gl.SCISSOR_TEST);
@@ -276,11 +286,23 @@ export class GfPass {
       else { gl.clearColor(0, 0, 0, 1); gl.clear(gl.COLOR_BUFFER_BIT); gl.clearColor(0, 0, 0, 0); }
       gl.bindBuffer(gl.ARRAY_BUFFER, this.tileBuf);
     }
+    const last = progs.length - 1;
+    let reached = 0; if (route) for (const n of route.count) reached += n;
+    if (fb) {
+      // the tiers mark what they draw (1); a discard (overflow, or a ramp in a NORAMP tier) leaves 0 for the full program
+      gl.enable(gl.STENCIL_TEST);
+      gl.stencilFunc(gl.ALWAYS, 1, 0xff);
+      gl.stencilOp(gl.KEEP, gl.KEEP, gl.REPLACE);
+    }
     for (let pi = 0; pi < progs.length; pi++) {
       const g = progs[pi];
-      if (route && route.count[pi] === 0) continue;
+      // with the fallback the full program covers every reached tile (the rects are in class order, from 0)
+      const nInst = !route ? 0 : fb && pi === last ? reached : route.count[pi];
+      const first = !route ? 0 : fb && pi === last ? 0 : route.first[pi];
+      if (route && nInst === 0) continue;
       // the last program writes no route: KEEP lets the stencil test run before the shader even though it discards
-      if (routed && pi === progs.length - 1) gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
+      if (routed && pi === last) gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
+      if (fb && pi === last) { gl.stencilFunc(gl.EQUAL, 0, 0xff); gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP); }
       gl.useProgram(g.prog);
       const u = (n: string): WebGLUniformLocation | null => g.u.get(n) ?? null;
       gl.uniform1i(u("uD"), 0);
@@ -294,12 +316,12 @@ export class GfPass {
       gl.uniform4f(u("uMap"), map[0], map[1], map[2], map[3]);
       if (route) {
         gl.uniform2f(u("uView"), target.w, target.h);
-        gl.vertexAttribPointer(0, 4, gl.FLOAT, false, 16, 16 * route.first[pi]);
-        gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, route.count[pi]);
+        gl.vertexAttribPointer(0, 4, gl.FLOAT, false, 16, 16 * first);
+        gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, nInst);
       } else gl.drawArrays(gl.TRIANGLES, 0, 3);
     }
     if (route) gl.bindBuffer(gl.ARRAY_BUFFER, null);
-    if (routed) {
+    if (routed || fb) {
       gl.disable(gl.STENCIL_TEST);
       // the route is per pass: a tile-based GPU need not store it
       gl.invalidateFramebuffer(gl.FRAMEBUFFER, [gl.DEPTH_STENCIL_ATTACHMENT]);
