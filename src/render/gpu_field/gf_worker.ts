@@ -192,7 +192,12 @@ async function run(req: Req): Promise<void> {
     const exportMs = now() - te0;
     let totalPts = 0;
     for (const c of scene.chains) totalPts += c.pts.length >> 1;
-    if (totalPts < 6000) {
+    // Measured (k1362t2 bench): the pool wins where the build is vertex/bin
+    // bound (no junctions: fat), and loses where corners dominate, because
+    // the coordinator's serial prefix + merge floor exceeds the corner
+    // slice saving. Pool only the scenes it speeds up; the rest keep the
+    // single build, so no scene gets slower.
+    if (totalPts < 6000 || scene.junctions.length > 0) {
       const tt0 = now();
       const T = buildTables(scene, { aa });
       scope.postMessage(
