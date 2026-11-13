@@ -196,12 +196,13 @@ async function run(req: Req): Promise<void> {
     const exportMs = now() - te0;
     let totalPts = 0;
     for (const c of scene.chains) totalPts += c.pts.length >> 1;
-    // Measured (k1362t2 bench): the pool wins on large vertex/bin-bound
-    // builds (fat) and loses on smaller corner-bound ones (muse_hash),
-    // because the coordinator's serial prefix + merge floor exceeds the
-    // corner slice saving there. Pool only large builds; the rest keep
-    // the single build, so no small scene gets slower.
-    if (totalPts < 6000) {
+    // Measured (k1362t2 bench): the pool wins where the build is vertex/bin
+    // bound (no junctions: fat, 14.5 -> 10.8) and loses where corners
+    // dominate (def neutral, muse_hash slower), because the coordinator's
+    // remaining serial floor exceeds the corner slice saving there. Pool
+    // only junction-free builds; the rest keep the single build, so no
+    // corner-bound scene gets slower.
+    if (totalPts < 6000 || scene.junctions.length > 0) {
       const tt0 = now();
       const T = buildTables(scene, { aa });
       scope.postMessage(
