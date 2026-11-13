@@ -142,3 +142,20 @@ vs census_k1314s13c want a re-baselined census on current master before they can
 Tools: .claude/probes/K1351/k1351s1_{count,ab,prep,prof,cmp}. Census outputs are under
 .claude/probes/K1314/out/s1/ (untracked): census_k1351s1 (full), k1351s1b/k1351s1c (muse_hash,
 this code), k1351s1m (muse_hash, pristine master with the flag flipped).
+
+**Addendum (21:32 PT, same run): Done 4 now run and holds; Done 3 re-measured in a second swap pair.**
+
+Done 4 (k1314s13_gpu2.ts, thruGate on via K1314S13_SET vs master K1314S13_OFF=1, perf lock held):
+the mirror line (gpu vs attr.w * alphaCpu, slots honoured) is identical at all three spots —
+c8 (19.25,14.43): max 0.0000, >0.01: 0 on both (1416 vs 1280 samples); j58a (4.74,33.46): max
+0.1988 (#689), >0.01: 9 on both (that nonzero is master's too); j49 (22.54,34.72): max 0.0000,
+>0.01: 0 on both. So four of the brief's five Done now hold (1 as counts + bar finds with the
+s13c-staleness note, 2, 4, 5); only Done 3 stands between here and the flag.
+
+Second swap pair (same bundles, machine quieter, no other census running): def paint -0.03 +-0.06
+and fat zChains +0.03 +-0.17 — neither pair-1 failure reproduces (load/GC correlation, as suspected
+for zChains, which this stage never touches). muse_hash frame reproduces: +2.52 +-1.00 (pair 1:
++2.48 +-0.99), and muse_hash band reads +0.67 +-0.59 this pair (pair 1: +0.10 +-0.63). Pooled over
+both pairs the failing cells are muse_hash frame (+2.50, solid) and, marginally, muse_hash band
+and def band (+0.27). The remaining work is the muse_hash frame residual in piecesPhaseC (322 extra
+piece objects a frame), then a fresh pair; the flag stays off until that pair is clean.
