@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1334.
+Next free ID: K1337.
 
 ## Waiting on Levi
 
@@ -585,14 +585,6 @@ Next free ID: K1334.
   - evidence: .claude/probes/K1314/k1314_census.ts, form_b_fillet.ts, k1314_run.ps1; untracked .claude/probes/K1325/out/s1/
   - next: s1 running: the reference at x304/j30 (K1325) and one shared form B cache in the main checkout (K1333)
   - brief: `docs/design/K1325_s1_reference_shared_cache.md`
-- **K1331** · muse_hash x22's smear at a twist eye: the depth tents cancel, the keys tie and the ghost half fades
-  in; fix the tie or the ghost's alpha at kinks in draw.ts, not by dropping ghosts (K1314 s8 handoff; crop
-  `.claude/probes/K1314/out/s8/after4x/spot_004.png`)
-  - owner: agent `ae09a2169bcb0030b` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 07:52, 2 h cap ~09:52)
-  - branch: `worktree-agent-ae09a2169bcb0030b`, worktree `.claude/worktrees/agent-ae09a2169bcb0030b`; last commit: `efd82460`
-  - evidence: .claude/probes/K1324/ (tools); untracked out/s1-s2/; baseline census_s9
-  - next: s2 running: x22 self-pass burial rule in draw.ts tieAlpha + outline_app.ts GLSL twin; j28 right-side shades
-  - brief: `docs/design/K1324_s2_x22_burial.md`
 
 ## Next, in order
 
@@ -845,6 +837,13 @@ Every other item below waits on the trigger it names.
 - **K1049** · Through-pass bends, DECIDED (Levi 2026-11-11: "Rounded corner", S1b/S1c's fillet); rp=outline must draw it in a K1314 fix stage: where a thread passes through a junction and bends, form B
   now draws today's sharp inner corner; S1b and S1c rounded it (`docs/design/K1040_s1d_corner.md` F2, and F6's Look
   with crops)
+- **K1334** · Census reference smears where a chain crosses itself: muse_hash x22 (414 px), x345 (19.996,
+  3.944) 225 px, j116 (25.518, 13.825) 696 px, x58 (0.113, 15.187) 527 px. rp=outline draws them whole since
+  943ae592, so census_k1324s2a counts form B's flaw (stray_ink 7 -> 10). Fix the reference as K1325 does
+  (crops `.claude/probes/K1324/out/s2/x4_after/spot_001.png`, `spot_003-005.png`)
+- **K1335** · g41_user_tw64 j28's right side: two faint shades beside the outline (form B draws a hairline
+  sliver) are end tails p838/p839 drawn by outline.ts tailAlpha (K1324 s2); clear them in outline.ts, or fold
+  them into K1315's end look (crop `.claude/probes/K1324/out/s2/j28r_after/spot_001.png`)
 
 ## Residuals (known, not fixed)
 
@@ -1914,6 +1913,8 @@ Every other item below waits on the trigger it names.
   code's hash as `k1314_census.ts` `refCacheDirs` does (0b10c10b), or retire the script
 - **K1330** · The K1314 census reference draws a thin paper crack between two arms of one junction group;
   neither master nor K1247 s26 draws it (s26 handoff)
+- **K1336** · band_gpu.ts alphaCpu lacks K1324 s2's self-pass burial term (draw.ts selfBury, BAND_FS zAtS), so
+  that CPU mirror disagrees with the GPU at self-crossings like muse_hash x22 (943ae592)
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2260,6 +2261,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1331** · muse_hash x22's twist-eye smear cleared by a self-pass burial rule in draw.ts tieAlpha and its BAND_FS twin (self_bury.test.ts); the census now counts form B's own smear there (K1324 s2). Done in 943ae592 (2026-11-12).
 - **K1328** · a tracked mirrored fixture in rec_tie (g41_user_tw64, c32's strip). Done in 7d4018a9 (2026-11-12).
 - **K1327** · the GPU record fill within 0.0016 px of its CPU twin on every census scene (span-end ties, exact column rule; brought in by 49afe511). Done in 45257b7e (2026-11-12).
 - **K1332** · c8's quad and stair edge cleared in both fills (fan mid-mouth key + FLOOR_EDGE, K1247 s27, with 5b345bd9). Done in 809d8421 (2026-11-12).
