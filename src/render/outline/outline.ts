@@ -7960,7 +7960,7 @@ export const RUN_FADE_TIE = { on: true };
  *  last foot (pinTailFan's fanDrop), a hair (~0.004) from where the abutting run's chevron
  *  ends; the two end edges, near parallel, overlap in a thin strip that inks twice: a faint
  *  line along the run's end edge. The tail starts on the run's end edge instead. */
-export const K1314S12 = { tailJoin: true, thruTail: true, ownSide: false };
+export const K1314S12 = { tailJoin: true, thruTail: false, ownSide: false };
 /** K1314 s12 (thruTail, muse_hash j58's corner 176): a thru tail continues E's run past the corner, so it
  *  starts no darker than the run ends (run 371's root ramp ends at 0, the tail started at 0.18: a hard
  *  line across the band) and reaches its own alpha over THRU_END points. */
