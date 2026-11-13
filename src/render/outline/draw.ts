@@ -238,6 +238,18 @@ export function zChains(scene: SceneIn): { zc: ZChain[]; passes: Pass[][]; idx: 
   }
   const rootBetween = (i: number, a: number, b: number): boolean => {
     const c = zc[i]; const d = dSC(c, a, b); const R = roots[i];
+    // K1341 s1 (perf): on a closed chain, a root whose circular distance from a (from the wrapped a,
+    // no fmod per root) is past |d| by a relative 1e-9 cannot give 0 < |e| <= |d|; e's roundings are
+    // about 1e-16 of the chain's length. Roots lie in [0, len]; one outside (or a NaN) is never skipped.
+    if (c.closed && c.len > 0 && R.length > 1) {
+      const L = c.len; const aw = wrapL(a, L); const m = Math.abs(d) + 1e-9 * (L + Math.abs(a) + Math.abs(b)) + 1e-12;
+      for (let q = 0; q < R.length; q++) {
+        let x = R[q] - aw; if (x < 0) x = -x; if (L - x < x) x = L - x;
+        if (x > m) continue;
+        const e = dSC(c, a, R[q]); if (d >= 0 ? e > 0 && e <= d : e < 0 && e >= d) return true;
+      }
+      return false;
+    }
     for (let q = 0; q < R.length; q++) { const e = dSC(c, a, R[q]); if (d >= 0 ? e > 0 && e <= d : e < 0 && e >= d) return true; }
     return false;
   };
@@ -252,8 +264,7 @@ export function zChains(scene: SceneIn): { zc: ZChain[]; passes: Pass[][]; idx: 
       if (!C.closed && (s < 0 || s > C.len)) break;
       posQ(C, s);
       // K1283 s10 (perf): footNear's foot, allocation-free (zChains ran 11 ms a frame on def).
-      nearW(O, PQ[0], PQ[1], so, 2 * h, s, ib === ia ? 3 * h : 0);
-      if (!(NW[0] < 2.2 * h)) break;
+      if (!nearLt(O, PQ[0], PQ[1], so, 2 * h, s, ib === ia ? 3 * h : 0, 2.2 * h)) break;
       if (rootBetween(ia, sPrev, s) || rootBetween(ib, so, NW[2])) { WU[0] = un; return true; }
       u = un; so = NW[2]; sPrev = s;
     }
@@ -599,7 +610,7 @@ export function zAtC(c: ZChain, s: number): number {
  *  frame on def. */
 // K1341 s1 (perf): the scan's state in one Float64Array, not module lets: a double stored to a
 // top-level let is boxed in a fresh HeapNumber on every write (about 100k winners a frame on def).
-// [0] best d, [1] best d^2, [2] best s, [3] px, [4] py, [5] the best's hypot (NaN: not taken yet),
+// [0] best d (unused since nearLt), [1] best d^2, [2] best s, [3] px, [4] py, [5] the best's hypot (NaN: not taken yet),
 // [6] an upper bound on it (K1247 s28: [3]-[6]), [7] nearRange's bound (below).
 const NW = new Float64Array([Infinity, Infinity, 0, 0, 0, NaN, Infinity, Infinity]);
 function nearVisit(c: ZChain, x: number, y: number, sC: number, r: number, sSkip: number, skipR: number, k: number): void {
@@ -660,9 +671,17 @@ function nearRange(c: ZChain, x: number, y: number, sC: number, r: number, sSkip
     k++;
   }
 }
-function nearW(c: ZChain, x: number, y: number, sC: number, r: number, sSkip: number, skipR: number): void {
+/** K1341 s1 (perf): whether the foot's d (footNear's) is below lim, its foot's s in NW[2] (walk reads
+ *  nothing else; NW[0] is no longer written). d = hypot(px, py) is taken only when d^2 sits within a
+ *  relative 1e-9 of lim^2: outside it d^2's and hypot's roundings (a few 1e-16) cannot reorder them. */
+function nearLt(c: ZChain, x: number, y: number, sC: number, r: number, sSkip: number, skipR: number, lim: number): boolean {
   nearScan(c, x, y, sC, r, sSkip, skipR);
-  NW[0] = NW[1] < Infinity ? (NW[5] === NW[5] ? NW[5] : Math.hypot(NW[3], NW[4])) : Infinity;
+  const d2 = NW[1];
+  if (!(d2 < Infinity)) return Infinity < lim;
+  if (NW[5] === NW[5]) return NW[5] < lim;
+  const l2 = lim * lim;
+  if (l2 > 1e-200 && l2 < 1e200) { if (d2 < l2 * (1 - 1e-9)) return true; if (d2 > l2 * (1 + 1e-9)) return false; }
+  return Math.hypot(NW[3], NW[4]) < lim;
 }
 function nearScan(c: ZChain, x: number, y: number, sC: number, r: number, sSkip: number, skipR: number): void {
   NW[0] = Infinity; NW[1] = Infinity; NW[2] = 0; NW[7] = Infinity; NW[5] = NaN; NW[6] = Infinity;
