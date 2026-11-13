@@ -214,8 +214,11 @@ The extra overhead (snap, dirty sets, the worker's own ~1 ms) is in the worker c
 
 ## Handoff (s30)
 
-Start 09:36:11 PT; stop: see the report. Branch `worktree-agent-a644f27c6e57d73f2`; the ABBA builds were
-62a74126 (flags off) and f806add8 (flags on), build-only commits on no branch. Next: stage 1 above (the snap and
+Start 09:36:11 PT; stop 11:36:23 PT (2 h cap). Branch `worktree-agent-a644f27c6e57d73f2`, last code-bearing WIP
+e63171a2 (this handoff is the commit after it); `npm test` green at 11:23 (231 files, 2944 tests; no snapshot or
+pin rewrites); the branch's src/test diff is outline.ts and outline_inc.test.ts only. The ABBA builds were
+62a74126 (flags off) and f806add8 (flags on), build-only commits on no branch. The span spread's cause is traced
+(Findings (1), the spread bullet: arc-length addressing of crossing partners, plus the one-hop junction path). Next: stage 1 above (the snap and
 its dirty set move into OutlineModel.update: s28's file), then stage 2 phase by phase, each with
 `outline_inc.test.ts`-style identity on def, muse_hash and fat and a Node timing (`k1247s30_inc.ts`), and an app
 ABBA (`k1247s30_run.ps1 -Steps load,def,fat`) at each stage.
