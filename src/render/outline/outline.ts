@@ -8846,7 +8846,7 @@ export function trimFoldEnds(pts: ArrayLike<number>, cpts: ArrayLike<number>, W:
  *  LOOP_WIN points), and the points between them are pinned to the crossing, keeping their feet: the
  *  quads fan around it as foldChevron's and sharpJoinFan's do. Returns the new points, or null. */
 const LOOP_WIN = 10;
-const LOOP_EPS = 1e-7; const LOOP_SIN = 0.05; const LOOP_TOL = 0.002;
+const LOOP_EPS = 1e-7; const LOOP_SIN = 0.05; const LOOP_TOL = 0.002; const LOOP_STEP = 0.01;
 export function pinBandLoops(src: ArrayLike<number>, cpts: ArrayLike<number>, W: number): number[] | null {
   const np = src.length >> 1;
   if (np < 4) return null;
@@ -8903,17 +8903,35 @@ export function pinBandLoops(src: ArrayLike<number>, cpts: ArrayLike<number>, W:
       // passes p_a again going forward. Pin the stretch between to p_a (or, mirrored, to p_{b+1}), feet kept.
       for (let k = b + 1; k <= Math.min(np - 2, b + 2 * LOOP_WIN) && !hit; k++) hit = pinRetrace(a, a + 1, k, k);
       for (let i = a - 1; i >= Math.max(0, a - 2 * LOOP_WIN) && !hit; i--) hit = pinRetrace(b + 1, i + 1, b, i);
+      // An end corner (g41_user_tw64 run 159 (3.54, 4.09)): the run's end is the junction's corner, inside the
+      // tube, and the last outer step turns past the previous point's foot ray. Pin the points before the end
+      // to it, feet kept: the quads fan around the corner (mirrored at the start).
+      if (b === np - 2) for (let lo = np - 2; lo >= Math.max(1, a - 1, np - 1 - LOOP_WIN) && !hit; lo--) hit = pinRetrace(np - 1, lo, np - 2, -1);
+      if (a === 0) for (let hi = 1; hi <= Math.min(np - 2, b + 2, LOOP_WIN) && !hit; hi++) hit = pinRetrace(0, 1, hi, -1);
+      // A foot that steps back along the chain (muse_hash run 491 (23.56, 16.76): foot 88 behind foot 87 across
+      // a 0.006 step): one of the quad's points merges into a neighbour less than LOOP_STEP away, feet kept
+      // (there, 88 onto 89: the quads fan around it the right way).
+      for (let i = a; i <= b && !hit; i++) {
+        for (const m of [i + 1, i]) for (const c of [m + 1, m - 1]) {
+          if (hit || c < 0 || c > np - 1) continue;
+          const q = P();
+          if (Math.hypot(q[2 * c] - q[2 * m], q[2 * c + 1] - q[2 * m + 1]) < LOOP_STEP) hit = pinRetrace(c, m, m, -1);
+        }
+      }
       a = b;
     }
     if (!hit) break;
   }
   return pts;
-  /** Pins points lo..hi to point c when segment g passes within LOOP_TOL of it and that lowers the opposed area. */
+  /** Pins points lo..hi to point c when segment g passes within LOOP_TOL of it (any g < 0: an end corner, no
+   *  test) and that lowers the opposed area. */
   function pinRetrace(c: number, lo: number, hi: number, g: number): boolean {
     const q = P(); const cx = q[2 * c]; const cy = q[2 * c + 1];
-    const gx = q[2 * g]; const gy = q[2 * g + 1]; const dx = q[2 * g + 2] - gx; const dy = q[2 * g + 3] - gy;
-    const dd = dx * dx + dy * dy; const u = dd > 0 ? Math.min(1, Math.max(0, ((cx - gx) * dx + (cy - gy) * dy) / dd)) : 0;
-    if (Math.hypot(gx + u * dx - cx, gy + u * dy - cy) > LOOP_TOL) return false;
+    if (g >= 0) {
+      const gx = q[2 * g]; const gy = q[2 * g + 1]; const dx = q[2 * g + 2] - gx; const dy = q[2 * g + 3] - gy;
+      const dd = dx * dx + dy * dy; const u = dd > 0 ? Math.min(1, Math.max(0, ((cx - gx) * dx + (cy - gy) * dy) / dd)) : 0;
+      if (Math.hypot(gx + u * dx - cx, gy + u * dy - cy) > LOOP_TOL) return false;
+    }
     if (!pts) pts = Array.from(src);
     const m0 = Math.min(lo, c) - 1; const m1 = Math.min(np - 2, Math.max(hi, c));
     const opp = (): number => { let s = 0; for (let m = Math.max(0, m0); m <= m1 + 1 && m < np - 1; m++) s += bandQuadOpp(pts!, cpts, W, m, tot); return s; };
