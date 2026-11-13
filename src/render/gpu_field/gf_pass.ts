@@ -108,9 +108,12 @@ export class GfTarget {
 /**
  * K1362 s4: the tiers drawn before the full program (gf_glsl.ts GfTier). Each pixel is drawn by the first program
  * that holds it; the stencil (0 = not drawn yet) routes the rest on. Stage 4 measured them on the Pixel
- * (docs/design/K1362_s4_shader.md, handoff).
+ * (docs/design/K1362_s4_shader.md, handoff): p3/k2 with ramps, then the full program on the rest (0.2% of def's px,
+ * 0.1% of muse_hash's), is def 19.7 / muse 24.6 / fat 11.8 ms against the full program's 33.0 / 42.3 / 21.5 (sync4,
+ * 822x1506, 1286 MHz); same pixels. A routed middle program costs a whole pass (it writes the route with a discard,
+ * so its stencil test runs late), so one tier is the default.
  */
-export const GF_TIERS: GfTier[] = [{ p: 4, k: 3, ramps: false }];
+export const GF_TIERS: GfTier[] = [{ p: 3, k: 2, ramps: true }];
 const UNIFORMS = ["uD", "uOCh", "uOV", "uOPin", "uOArm", "uOK", "uOChk", "uOCell", "uOChL", "uOKL", "uH", "uW", "uAA", "uSigma", "uZt", "uWin", "uRc", "uGrid", "uGDim", "uMap"];
 interface GfProg { prog: WebGLProgram; u: Map<string, WebGLUniformLocation | null>; tier: GfTier | null }
 

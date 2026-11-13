@@ -77,7 +77,75 @@ function readRect(gl: WebGL2RenderingContext, tg: GfTarget, r: Rect): Float32Arr
   return out;
 }
 
+// The dpr 1 picture for Levi: one scene's field (fill under ink, GfComposite's formula, over a dark backdrop) at
+// the phone's full resolution (cfg.w x cfg.h) beside the same frame drawn at dpr 1 (cfg.w1 x cfg.h1, aa one dpr-1 px)
+// and upscaled to the screen bilinearly as the browser shows a low-resolution canvas; then the two crops with the
+// most partly inked px, both versions, at x4 (nearest). Returns a PNG data URL.
+async function pic(cfg: BenchCfg & { w1: number; h1: number; crop: number }): Promise<Record<string, unknown>> {
+  const canvas = document.createElement("canvas"); canvas.width = 64; canvas.height = 64;
+  const gl = canvas.getContext("webgl2", { antialias: false })!;
+  const scene = (await (await fetch(`${cfg.base}/${cfg.scenes[0]}.json`)).json()) as FieldScene;
+  (scene.look as { ctrlArc?: number }).ctrlArc ??= 0.47;
+  const FILL = [0.96, 0.93, 0.86]; const INK = [0.12, 0.11, 0.09]; const BG = [0.16, 0.17, 0.21];
+  const render = (w: number, h: number): { img: ImageData; ink: Float32Array } => {
+    let T: GfTables = buildTables(scene, { aa: 0.01 }); let s = 1; let cx = 0; let cy = 0;
+    for (let k = 0; k < 2; k++) {
+      const bw = T.gW * T.G; const bh = T.gH * T.G;
+      s = cfg.fit * Math.min(cfg.w / bw, cfg.h / bh) * (w / cfg.w);
+      cx = T.gx0 + bw / 2; cy = T.gy0 + bh / 2;
+      T = buildTables(scene, { aa: 0.5 / s });
+    }
+    const e = w / 2 - s * cx; const f = h / 2 - s * cy;
+    const map: GfMap = [1 / s, -e / s, -1 / s, (h - f) / s];
+    const pass = new GfPass(gl, false); pass.upload(T);
+    const tg = new GfTarget(gl, 1, true); tg.resize(w, h);
+    pass.draw(tg, map, pass.gridRect(map, w, h), false);
+    const raw = readRect(gl, tg, [0, 0, w, h]);
+    const img = new ImageData(w, h); const ink = new Float32Array(w * h);
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      const i = ((h - 1 - y) * w + x) * 4; const o = (y * w + x) * 4; // readPixels is bottom-up
+      const a = Math.min(1, Math.max(0, raw[i])); const c = Math.min(1, Math.max(0, raw[i + 1]));
+      ink[y * w + x] = a;
+      for (let ch = 0; ch < 3; ch++) {
+        const pre = INK[ch] * a + FILL[ch] * c * (1 - a); const al = a + (1 - a) * c;
+        img.data[o + ch] = Math.round(255 * (pre + BG[ch] * (1 - al))); // sRGB values, blended as the app's premultiplied composite
+      }
+      img.data[o + 3] = 255;
+    }
+    return { img, ink };
+  };
+  const W = cfg.w; const H = cfg.h;
+  const A = render(W, H); const B = render(cfg.w1, cfg.h1);
+  const cv = (w: number, h: number): [HTMLCanvasElement, CanvasRenderingContext2D] => { const c = document.createElement("canvas"); c.width = w; c.height = h; return [c, c.getContext("2d")!]; };
+  const [ca, xa] = cv(W, H); xa.putImageData(A.img, 0, 0);
+  const [cb0, xb0] = cv(cfg.w1, cfg.h1); xb0.putImageData(B.img, 0, 0);
+  const [cb, xb] = cv(W, H); xb.imageSmoothingEnabled = true; xb.imageSmoothingQuality = "low"; xb.drawImage(cb0, 0, 0, W, H);
+  const C = cfg.crop; const cand: [number, number, number][] = [];
+  for (let y = 0; y + C <= H; y += C / 4) for (let x = 0; x + C <= W; x += C / 4) {
+    let n = 0; for (let yy = y; yy < y + C; yy += 2) for (let xx = x; xx < x + C; xx += 2) { const v = A.ink[yy * W + xx]; if (v > 0.05 && v < 0.95) n++; }
+    cand.push([n, x, y]);
+  }
+  cand.sort((p, q) => q[0] - p[0]);
+  const crops = [cand[0]]; for (const c of cand) if (Math.hypot(c[1] - crops[0][1], c[2] - crops[0][2]) > 3 * C) { crops.push(c); break; }
+  const half = Math.round(W / 2); const hh = Math.round(H / 2); const g = 16; const z = 4 * C;
+  const outW = Math.max(2 * half + g, 2 * z + g); const outH = 28 + hh + g + crops.length * (z + g + 22);
+  const [co, xo] = cv(outW, outH); xo.fillStyle = "#fff"; xo.fillRect(0, 0, outW, outH); xo.fillStyle = "#000"; xo.font = "18px sans-serif";
+  xo.fillText(`${cfg.scenes[0]}: left full resolution ${W}x${H}, right dpr 1 (${cfg.w1}x${cfg.h1}) shown upscaled`, 4, 20);
+  xo.imageSmoothingEnabled = true; xo.drawImage(ca, 0, 28, half, hh); xo.drawImage(cb, half + g, 28, half, hh);
+  xo.strokeStyle = "#e33"; xo.lineWidth = 2;
+  let y0 = 28 + hh + g;
+  crops.forEach((c, k) => {
+    for (const dx of [0, half + g]) xo.strokeRect(dx + c[1] / 2, 28 + c[2] / 2, C / 2, C / 2);
+    xo.fillText(`crop ${k + 1} at x4: full resolution | dpr 1`, 4, y0 + 16); y0 += 22;
+    xo.imageSmoothingEnabled = false;
+    xo.drawImage(ca, c[1], c[2], C, C, 0, y0, z, z); xo.drawImage(cb, c[1], c[2], C, C, z + g, y0, z, z);
+    y0 += z + g;
+  });
+  return { png: co.toDataURL("image/png"), crops };
+}
+
 export async function bench(cfg: BenchCfg): Promise<Record<string, unknown>> {
+  if ((cfg as { pic?: boolean }).pic) return pic(cfg as BenchCfg & { w1: number; h1: number; crop: number });
   const canvas = document.createElement("canvas");
   canvas.width = 64; canvas.height = 64;
   document.body.appendChild(canvas);
