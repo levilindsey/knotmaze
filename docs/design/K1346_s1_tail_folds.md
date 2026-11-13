@@ -89,3 +89,33 @@ Under 40 lines:
 - your last SHA.
 
 End with `Ledger items` and the handle fields for K1346, K1350 and K1314.
+
+## Handoff (K1346 s1, 2026-11-12)
+
+Start 11:55:19 -08:00, stop 13:21:26 -08:00. Branch `worktree-agent-a686e24ad31e738a0` (worktree
+`.claude/worktrees/agent-a686e24ad31e738a0`), last commit 4ed0cc79 (code; this handoff is the commit after it). Outputs (untracked) in
+`.claude/probes/K1346/out/s1/`; tools committed in `.claude/probes/K1346/`.
+
+- **Detector** `k1346_folds.ts`: a band piece's quads (or a fill tail item's triangles) wound against the piece,
+  in px at 960 ppu. Master: muse_hash 33 (160461 px), muse_default_tw 2 (1143), def 1 (1466) + fill tail 1
+  (2376, #1043), fat 6 (9611), g41_def_tw42 1 (125), g41_def_tw64 6 (13372), g41_ring_tw42 1 (166),
+  g41_ring_tw64 1 (160), g41_user_tw64 6 (23584); ring, user_tw42.lightpaper, g41_user_tw42 0. After: 0 everywhere.
+- **Fixes** (all in outline.ts, switches `K1346` {fill, chevron, fan, loops, fanDrop}): run start/end hooks
+  inside cut swallowtails (`trimFoldEnds`); band loops, crossings, retrace hooks (run 198), closing loops (ghost
+  2574), near touches (tail 2012), end corners (g41_user_tw64 run 159) and short-step merges (muse_hash run 491,
+  LOOP_STEP 0.01) pinned by triangle (`pinBandLoops`, per frame in piecesPhaseC, with the `bandHasOpp` pre-pass);
+  degenerate point arcs (`resweepPointArc` in arcEndFeet; thruJoinFan sweeps from the arc's end foot); c8's tail
+  fan (`pinTailFan` + fanDrop); the fill walk (K1350: `cutTailLoop` on fill.pts). K1350's turn-backs: 0
+  (`tag_b.txt`).
+- **Census** k1346s1b against census_k1344s1: every bar kind equal; 8 moved finds, px only (`cdiff_b.txt`):
+  muse_hash #39, #167, #217 (owner_only wedge), #250 (tail_look); muse_default_tw #116; def #75; g41_def_tw64
+  #40, #109; crops cA-cH. outline_port re-pinned in c1ae6e33 (ring and g41_ring_tw42, table and band, f0 and f1;
+  paint unchanged); self_bury's x22 precondition is < 0.6 (run 47's fold loop pinned there).
+- **Crops** `final4x/` and `final8x/` (+ sheet.png): c8, j58a, m01-m13 (the largest master folds), r_* (folds
+  the later rounds found), cA-cH.
+- **Left:** j58a is not done. Run 371's fade there is runRootRamp's (K1314 s9 root ramp, RUN_RAMP_L), not
+  runEndFade's; flipping it (`look7/j58a.png`) left a hard slab at the cusp and a seam in the V, so it was
+  reverted. A j58a fix must also add its switch to k1346_crops.ts lines 88-89 (master/after panels). c8: the
+  dotted seam is gone, a straight soft shading edge remains (`final8x/c8.png`).
+- **Speed:** fails. App ABBA (k1247s28_bench under the perf lock, drag `frame` part p50, master | branch): first +11 ms (`abba.log`); with the `bandHasOpp` pre-pass (2fa15572) def 53.4/54.3 | 61.8/58.1, fat 53.5/56.1 | 58.9/59.6 (`abba2.log`); with `bandInnerTot` in trimFoldEnds (4ed0cc79) def 52.2/52.1 | 57.2/61.6, fat 55.6/56.3 | 62.1/62.0 (`abba3.log`): +5 to +7 ms against a 0.1-4.4 ms spread; band, fill and paint parts flat. Node `k1346_time.ts` on fat: switches all on 43.3, all off 39.1 ms; loops 3.3, fill 2.4, fan 2.4 each (noisy: K1247 s31 was running). Both speedups are bit-identical (`k1346_hash.ts`: all 12 scenes equal `hash_head.txt`). A CPU profile of master's outline.ts (51cc6e5f, as a temporary module) against the branch's in one Node process (`k1346_ab.ts` under `--cpu-prof`, `prof_ab/`): outline.ts self time 1541 | 1526 ms, the K1346 functions about 25 ms in all, so the app's +6 ms is not outline.ts arithmetic. Next: profile the worker in the app on def under drag (allocation and GC from the per-frame arrays trimFoldEnds, pinBandLoops and cutTailLoop return; deopts), then reuse buffers or the pins across frames (the caching is K1247's code).
+- **Twins and tests:** `rec_tie.test.ts`, `self_bury.test.ts` green; `k1324_s2_gpu.ts` muse_hash x22: 1071 samples, max |gpu - cpu| 0.0000 with burial on and off, the rule moves 86 on both (`gpu_twin.log`). `npm test` green at 4ed0cc79 (231 files, 2944 tests; `npm_test2.log`); golden snapshots unchanged.
