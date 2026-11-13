@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1351.
+Next free ID: K1352.
 
 ## Waiting on Levi
 
@@ -557,18 +557,18 @@ Next free ID: K1351.
   - owner: nobody since 2026-11-12 08:47 (merged; agent `a8105bc6c8e6fc6d7` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
   - branch: mainline; last commit: `b0c52856`
   - evidence: .claude/probes/K1314/ (census tools, k1314_s8_bench.ps1); untracked out/s1-s10/, baseline census_s9
-  - next: j58a is in K1346 s1 (folds). The bar after K1344 (census_k1344s1: stray 4, hard 1, paper 0, broken 12, k1049 0) is 16 of 17 on Levi: broken_ink 12 + j63/j64 stray + j78 hard are K1315 ends, j73 spike is K1319; j49 (44 px) is the census reading form B tie-fade as cut (s10)
+  - next: j58a stage: its fade is runRootRamp's (K1314 s9 root ramp), not runEndFade; flipping it gave a hard slab at the cusp and a seam in the V (K1346 s1 handoff, out/s1/look7/j58a.png). The bar after K1344: 16 of 17 wait on K1315/K1319; j49 is the census reading form B's tie fade as cut
   - brief: `docs/design/K1314_s10_breaks_step.md`
 - **K1346** · A tail's corner fan folds: its outer corner points jitter 0.0003-0.0035 against the inner arc,
   so slivers overlap and ink twice (muse_hash c8's under-pass dotted seam at (19.41, 14.16); 76 px in the app
   at 960 px/unit). Make the corner cluster one exact point, or skip/clamp backward quads, in outline.ts and
   the inner-point rule's three builders (band_gpu.ts inner(), band_rec.ts innerOfP, draw.ts bandData) together
   (K1324 s3 handoff; `.claude/probes/K1324/k1324_s3_appfold*`, crops `out/s3/x8x/spot_003.png`)
-  - owner: agent `a686e24ad31e738a0` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 11:55, 2 h cap ~13:55)
-  - branch: `worktree-agent-a686e24ad31e738a0`, worktree `.claude/worktrees/agent-a686e24ad31e738a0`; last commit: `51cc6e5f`
-  - evidence: `.claude/probes/K1346/`
-  - next: K1346 s1 (fold detector; c8 fan, fill walk, turn-backs, j58a) running; then view crops and merge
-  - brief: `docs/design/K1346_s1_tail_folds.md`
+  - owner: agent `a71bd8850e0bc2f5e` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 13:24, 2 h cap ~15:24)
+  - branch: `worktree-agent-a71bd8850e0bc2f5e`, worktree `.claude/worktrees/agent-a71bd8850e0bc2f5e`; last commit: `e2ae723b`
+  - evidence: .claude/probes/K1346/ (stage 1 tools and out/s1 in .claude/worktrees/agent-a686e24ad31e738a0, last commit 4edbd1c3)
+  - next: K1346 s2 running: find and remove the fold fixes' +5-7 ms frame cost (stage 1 folds 58 to 0, crops viewed), output identical; then merge (closes K1350)
+  - brief: `docs/design/K1346_s2_fold_speed.md`
 
 ## Next, in order
 
@@ -1917,6 +1917,10 @@ Every other item below waits on the trigger it names.
 - **K1350** · Tail turn-backs left after K1344 s1: the fill walk (fpts) gets no hook or loop cut, and
   sub-pixel turn-backs remain (muse_hash 6, g41_ring_tw64 1; jogs under 0.001 or span-cut splices). Tagger
   `.claude/probes/K1344/k1344_tag.ts`, handoff in `docs/design/K1344_s1_j116_crease.md`
+  - next: fixed on the K1346 branch (27a075e4: cutTailLoop on fill.pts, turn-backs 0, out/s1/tag_b.txt); close with K1346 merge
+- **K1351** · c8's under-pass after K1346 s1's fan fix: the dotted seam is gone, a straight soft diagonal
+  shading edge remains where form B shades smoothly (muse_hash (19.41, 14.16);
+  `.claude/probes/K1346/out/s1/final8x/c8.png`)
 
 ## Approved, to schedule (2026-10-11)
 
