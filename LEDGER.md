@@ -520,11 +520,11 @@ Next free ID: K1338.
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: nobody since 2026-11-12 07:51 (merged; agent `ac9acd27cfb1cf144` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `1137a2ad`
-  - evidence: .claude/probes/K1247/ (k1247s26_bench.ps1, k1247s19_lib twin4), test/render/rec_tie.test.ts; untracked out/s27/
-  - next: s28: the fan rule and FLOOR_EDGE made 7 and 25 junctions slightly worse vs the reference (muse_hash 1390 +47 cells; k1247s27_jmis.ts), none visible; the faint seam inside c8's under-pass (in master too)
-  - brief: `docs/design/K1247_s27_c8_gpu_drift.md`
+  - owner: agent `a4625873239640993` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 08:39, 2 h cap ~10:39)
+  - branch: `worktree-agent-a4625873239640993`, worktree `.claude/worktrees/agent-a4625873239640993`; last commit: `76090c0a`
+  - evidence: .claude/probes/K1247/ (benches, profiles); untracked out/s28/; parts from .claude/probes/K1324/out/s2/bench_abba1.json
+  - next: s28 running: fill (~40 ms) and zChains (~16 ms) of the ~150 ms def worker frame, toward 5 / 2 ms, look unchanged; then frame (67 ms) and band (18-26 ms) after K1314 s10
+  - brief: `docs/design/K1247_s28_fill_zchains_speed.md`
 - **K1278** · The outline's paint blends seamlessly across junctions (Levi 2026-11-10): section colour and pulses
   from per-pixel fields continuous across faces, triangles and junctions, gated by a seam test on every
   face edge, triangle edge and junction. Full text in docs/ledger_notes.md
