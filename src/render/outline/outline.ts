@@ -8100,9 +8100,13 @@ export const K1314S12 = { tailJoin: true, thruTail: false, ownSide: false };
  *  B: s12 17.73%, ownSide 14.17% (and its wedge), both flags 11.78%, no wedge. thruGate: the thru tails
  *  (K1314S12.thruTail's pieces) walk only at corners form B leaves open (thruGateOk): a fillet that failed
  *  with "V outside spans" (c8, muse_hash (19.25, 14.43): box |d| 10.67% -> 4.11%; census k1314s13c
- *  tail_look 175 -> 107, bar kinds unchanged). OFF for its cost: a thru piece per through corner (def: 354
- *  more tail pieces, most empty, +513 points) costs def's paint +3.1 ms, frame +0.9, fill +0.6 per drag
- *  (Node ABBA, .claude/probes/K1314/out/s13/abba_run.txt). Also OFF, measured: thruOk (also walk ok corners whose fillet sags under
+ *  tail_look 175 -> 107, bar kinds unchanged). Still OFF after K1351 s1 (was off for its cost: a thru piece per through corner,
+ *  def 354, most empty, +513 points, at def paint +3.1 ms, frame +0.9, fill +0.6 per drag; Node ABBA,
+ *  .claude/probes/K1314/out/s13/abba_run.txt): K1351 s1 made a gated-out piece nearly free (piecesPhaseC reads
+ *  the gate before building its TailIn, and fill_tri gives it no fill item: its fpts is always
+ *  [], so its fill could only ever be degenerate), and the look is master's thruGate-on look, but
+ *  its swap-averaged A/B still showed def paint, muse_hash frame and fat zChains over master, so the
+ *  flag stays off (docs/design/K1351_s1_muse_thru_cost.md). Also OFF, measured: thruOk (also walk ok corners whose fillet sags under
  *  THRU_SAG * W; j49) and thruUnion (E's border inks 1 where E is nearer): census k1314s13a/b, stray_ink
  *  4 -> 176 / 315, band:tail spikes at end-arm corners where form B is plain fill. ownEdge: liftOwn only at
  *  lifted points with an uninked neighbour (both flags alone take c8 7.67% -> 10.67%, census k1314s13d
@@ -8286,6 +8290,9 @@ function resweepPointArc(pts: number[], cpts: number[]): void {
   for (let i = 1; i < n - 1; i++) { const f = i / (n - 1); const a = a0 + da * f; const r = r0 + (r1 - r0) * f; cpts[2 * i] = pts[2 * i] + r * Math.cos(a); cpts[2 * i + 1] = pts[2 * i + 1] + r * Math.sin(a); }
 }
 
+/** K1351 s1: the shared empty point list of a gated-out thru tail's piece (never mutated:
+ *  every consumer skips a piece with fewer than 2 points). */
+const EMPTY_PTS: number[] = [];
 function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[]): { pieces: OutlinePiece[]; runMiss: number; runPassed: number } {
   const pieces: OutlinePiece[] = [];
   let runMiss = 0; let runPassed = 0;
@@ -8472,15 +8479,23 @@ function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[])
     } else if (dp.kind === "tail") {
       const ci = dp.corner;
       const dc = st.corners[ci];
-      const pts: number[] = []; const cpts: number[] = []; const alpha: number[] = []; const fill = { pts: [] as number[], cpts: [] as number[] };
       let sideE = 0; let sT = 0; let tKey = -1;
       // K1314 s12: interval >= 2 is a thruTail (E = the through arm, X = the end arm); eB = E is the corner's B arm.
       const thru = dp.interval >= 2; const eB = thru ? (dp.interval & 1) === 0 : dp.interval === 1;
+      // K1351 s1: a gated-out thru tail's piece holds the shared empty arrays, not five fresh ones.
+      const gatedOut = thru && !!dc && !K1314S12.thruTail && !thruGateOk(C.cOk[ci], C.cWhy[ci], C.cR[ci], C.cTheta[ci], C.W);
+      const pts: number[] = gatedOut ? EMPTY_PTS : []; const cpts: number[] = gatedOut ? EMPTY_PTS : []; const alpha: number[] = gatedOut ? EMPTY_PTS : []; const fill = { pts: gatedOut ? EMPTY_PTS : [] as number[], cpts: gatedOut ? EMPTY_PTS : [] as number[] };
       if (dc) {
         const aiE = eB ? dc.bArm : dc.aArm; const aiX = eB ? dc.aArm : dc.bArm;
         const piE = C.armObj[aiE].pi; const piX = C.armObj[aiX].pi;
         sideE = eB ? -C.armDir[dc.bArm] : C.armDir[dc.aArm];
         sT = eB ? C.cSB[ci] : C.cSA[ci];
+        // K1351 s1: a thru tail whose gate is closed this frame stays empty, and nothing below
+        // (the bend search, the TailIn, its depth closures) is built for it: the gate reads only
+        // the corner solve (cornersPhaseC, already done). The piece keeps its side and s, and
+        // tKey stays -1, so tailJoin / thruIn skip it (both are no-ops on an empty tail).
+        const walk = !thru || K1314S12.thruTail || thruGateOk(C.cOk[ci], C.cWhy[ci], C.cR[ci], C.cTheta[ci], C.W);
+        if (walk) {
         const depthWin = C.depthWindow * C.ctrlArc;
         // K1283 s4: X's other arm at the junction, if X runs through it.
         let aiX2 = -1;
@@ -8506,14 +8521,13 @@ function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[])
           zE: (s) => depthAtC(C, piE, s, depthWin), zX: (s) => depthAtC(C, piX, s, depthWin), h: C.h, zt: 0.1 * C.depthAmp, W: C.W,
         };
         if (thru) {
-          if (K1314S12.thruTail || thruGateOk(C.cOk[ci], C.cWhy[ci], C.cR[ci], C.cTheta[ci], C.W)) {
-            thruUnion = K1314S13.thruUnion && !!C.cOk[ci] && C.cR[ci] > 1e-9;
-            thruTailPts(tin, pts, cpts, alpha); thruUnion = false;
-          }
+          thruUnion = K1314S13.thruUnion && !!C.cOk[ci] && C.cR[ci] > 1e-9;
+          thruTailPts(tin, pts, cpts, alpha); thruUnion = false;
         }
         else endTailPts(tin, pts, cpts, alpha, fill);
         tKey = aiE * 2 + (sideE === 1 ? 0 : 1);
         if (!thru && RUN_END_FADE && (RUN_FADE_B || !dp.interval) && !C.cOk[ci] && C.cTheta[ci] < RUN_FADE_TH) runFade.push({ a: tin, key: tKey });
+        }
       }
       if (K1314S12.tailJoin && tKey >= 0) tailJoin.push({ p: pieces.length, key: tKey });
       if (dp.interval >= 2 && tKey >= 0) thruIn.push({ p: pieces.length, key: tKey });

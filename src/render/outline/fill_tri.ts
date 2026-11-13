@@ -395,8 +395,12 @@ export function fillStructure(st: DiagramStructure, res: Int32Array): FillStruct
     items.push({ kind: "cap", pi: d.chain, piece: k, atEnd: cp ? cp.atEnd : false, base });
   });
   // 4. tails: row 0 the tail's border points, row 1 their centreline feet.
+  // K1351 s1: a thru tail (interval >= 2) owns no fill item: its piece's fpts is always [] (the
+  // walk writes pts only), so fillFrame could only ever set its 2 * (TAIL_M + 1) vertices
+  // degenerate, while fillFrame's buffers and paintFrame's copy paid for them every frame
+  // (def: 354 pieces, 17700 vertices). The census is unchanged (k1351s1 vs master, find for find).
   st.piecesD.forEach((d, k) => {
-    if (d.kind !== "tail") return;
+    if (d.kind !== "tail" || d.interval >= 2) return;
     const base = nV; const W = TAIL_M + 1;
     for (let i = 0; i < 2 * W; i++) { vChain.push(d.chain); vW.push(1, 0, 0, 0); }
     nV += 2 * W;
