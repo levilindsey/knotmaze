@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1376.
+Next free ID: K1378.
 
 ## Waiting on Levi
 
@@ -295,8 +295,13 @@ Next free ID: K1376.
 - **K1367** · rp=gf at dpr 1 (411x753 on the Pixel, the only size under 8 ms so far: 6.9 / 7.3 ms with a
   reduced program): it reads blurry and the outlines mostly vanish. Keep full resolution (recommended) or take
   the blur for speed? Pictures: .claude/probes/K1362/out/s4/dpr1_def.png, dpr1_muse_hash.png (K1362 s4).
-  Since s6: def is expected to reach 8 ms at full resolution after stage 7's fixes; muse_hash (22.6 now, ~13-15
-  after them) reaches 8 only at dpr <= ~1.5 (est. 7.3-8.6), so a middle size is the question for it.
+  Since s7: def may reach 8 ms at full resolution after the split and layering fixes (unmeasured on the Pixel).
+  muse_hash does not scale with pixels alone (fit 11.3 ms + 9.5 per Mpx): ~10-12 at dpr 1.5 after the fixes,
+  so no middle size reaches 8 for it yet; hold this until the fixed cost (K1376) is understood.
+- **K1377** · The Pixel went screen-locked during the night (locked at every check 05:24-06:47 on 2026-11-13,
+  after s6 used it until 05:04), so stage 7's split has no Pixel numbers. Unlock it when convenient; Claude
+  never unlocks it. If it should stay unlocked on the charger overnight, that is a phone setting only Levi can
+  change (K1362).
 
 ## In progress
 
@@ -556,10 +561,10 @@ Next free ID: K1376.
   tables the CPU builds in under 1 ms) instead of the outline mesh built on the CPU each frame (65-117 ms on
   def). Reverses the 2026-11-09 call (K1040 dropped for K1240). The main speed route (Levi, 2026-11-12: very bullish
   on it); dropped only on a proof it cannot work (brief: "How the result is judged"). Analysis in docs/ledger_notes.md.
-  - owner: claude session 09c7a672-a414-402a-97da-b3176839a2e5 (stage 7 agent, Opus, from 05:15, cap 2 h)
-  - branch: worktree-agent-a7db5c378b38360f3 at .claude/worktrees/agent-a7db5c378b38360f3; last commit: `23bad74d`
+  - owner: nobody since 2026-11-13 06:44 (merged)
+  - branch: mainline; last commit: `10fd905a`
   - evidence: .claude/probes/K1362/ (k1362s3_*, k1362s4_*), out/s3/, out/s4/
-  - next: stage 7 running: the two-pass split on the Pixel, then exact layering once in the tier; merge at its report
+  - next: s7 merged: the two-pass split (gf_split.ts; x22rke best) built, exact on the desktop 12 scenes, desktop 12-22% faster sync4 / 25-37% frame1; NOT measured on the Pixel (phone locked 05:24-06:47). Next: run k1362s7_cfg_phone1 (or phone2) + cfg_dpr15 on the Pixel with the clock; replace t32r only if a split form wins on def, muse_hash and fat; then layering once inside pass 2 (s7 handoff)
   - brief: `docs/design/K1362_s7_two_pass.md`
 
 ## Next, in order
@@ -1964,6 +1969,9 @@ Every other item below waits on the trigger it names.
   caught only by gf_build.test.ts and the in-app verify, not the digest (K1362 c1).
 - **K1373** · Pixel GPU: a program behind a stencil EQUAL class+1 test is not rejected before shading (EQUAL 0
   is); cause not isolated (docs/design/K1362_s5_tiles.md, lever 2).
+- **K1376** · rp=gf pass: a fixed per-size cost of unknown cause, about 39% of def's time on the desktop
+  (617x1130 keeps 74% of the 822 time at 56% of the pixels) and about 52% on the Pixel fit (muse_hash 11.3 ms
+  + 9.5 per Mpx). Find it before trading resolution for speed (K1362 s7 handoff, K1367).
 
 ## Approved, to schedule (2026-10-11)
 
