@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1363.
+Next free ID: K1364.
 
 ## Waiting on Levi
 
@@ -292,16 +292,6 @@ Next free ID: K1363.
   (his K928 plan: finish iterating, then hand-edit, then the pipeline reads his curves as drawn), or more look
   notes first? Every note so far is built (K1251). Sheets: .claude/probes/K863/trace/out38/png/; J3NV has no
   template SVG yet (out34/cursive_template.svg shows the export).
-- **K1357** · rp=outline's drag feel on desktop, which calibrates the speed gate (K1240 gate: 3 / 6 ms per
-  moved frame): drag at https://levi.dev/knotmaze/?b&am=instant&rp=outline against today's look at
-  ?b&am=instant. The outline redraws at about 9-10 Hz mid-drag (worker ~105-117 ms per moved frame, K1247
-  s34's ABBA). Acceptable, or how far off (choppy, lagging)? Asked 2026-11-12; K1247 s35
-  (docs/design/K1247_s35_route_review.md) projects the gate and a relaxed bar
-  - next: Levi, 2026-11-12: today's drag (9-10 Hz) is 'unacceptable'. Re-ask with K1247 s36's clip (pool, about 50 Hz at about 85 ms behind the threads; .claude/probes/K1247/out/s36/clip/): is that enough, or only a near-one-frame route (K1362) will do?
-- **K1362** · Render split: per pixel on the GPU (form B's distance, from closed-form crossing and junction
-  tables the CPU builds in under 1 ms) instead of the outline mesh built on the CPU each frame (65-117 ms on
-  def). Reverses the 2026-11-09 call (K1040 dropped for K1240); a 1-2 stage timing and census test would
-  decide. Analysis in docs/ledger_notes.md.
 
 ## In progress
 
@@ -519,10 +509,10 @@ Next free ID: K1363.
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: agent `ac12b65b77f80f097` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 19:13, 2 h cap ~21:13)
-  - branch: `worktree-agent-ac12b65b77f80f097`, worktree `.claude/worktrees/agent-ac12b65b77f80f097`; last commit: `a1e79d41`
-  - evidence: .claude/probes/K1247/k1247s35_* (the pool prototype); .claude/probes/K1247/out/s36/ (untracked)
-  - next: s36: the outline worker pool in outline_app.ts, identity, app ABBA on def, fat and muse_hash, and a side-by-side clip for K1357
+  - owner: nobody since 2026-11-12 20:30 (s36 stopped; the route waits on K1362)
+  - branch: worktree-agent-ac12b65b77f80f097, worktree .claude/worktrees/agent-ac12b65b77f80f097 (not merged: the pool fails latency on every drag, 250-340 ms vs master's 103-134, and fat's frame p95); last commit: `1fd68bfa`
+  - evidence: .claude/probes/K1247/k1247s36_* (branch), out/s36/ (untracked, in the worktree)
+  - next: If K1362's per-pixel route holds, drop the pool and K1359's flag removal goes with the outline worker; if not, cut the 35-50 ms main pays to draw each new outline (OutlinePass upload, transform-feedback passes), then rerun k1247s36_run.ps1
   - brief: `docs/design/K1247_s36_pool.md`
 - **K1278** · The outline's paint blends seamlessly across junctions (Levi 2026-11-10): section colour and pulses
   from per-pixel fields continuous across faces, triangles and junctions, gated by a seam test on every
@@ -557,6 +547,15 @@ Next free ID: K1363.
   - evidence: .claude/probes/K1314/k1314s13_*, out/s13/ (s13 flags liftEnd/liftOwn/ownEdge); out/s14/ (untracked)
   - next: s14: j58a with ownEdge minus c8 seam, then piece 371 chevron; coordinator views the crops before merging
   - brief: `docs/design/K1314_s14_j58a_seam.md`
+- **K1362** · Render split: per pixel on the GPU (form B's distance, from closed-form crossing and junction
+  tables the CPU builds in under 1 ms) instead of the outline mesh built on the CPU each frame (65-117 ms on
+  def). Reverses the 2026-11-09 call (K1040 dropped for K1240); a 1-2 stage timing and census test would
+  decide. Analysis in docs/ledger_notes.md.
+  - owner: agent `aaac741afe100b3d2` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 20:32, 2 h cap ~22:32)
+  - branch: `worktree-agent-aaac741afe100b3d2`, worktree `.claude/worktrees/agent-aaac741afe100b3d2`; last commit: `6d8a21ff`
+  - evidence: `.claude/probes/K1362/`
+  - next: Stage 1 running (started ~20:40): GPU per-pixel renderer by a new rp value; census and desktop timing vs rp=outline
+  - brief: `docs/design/K1362_s1_gpu_formb.md`
 
 ## Next, in order
 
@@ -1938,6 +1937,9 @@ Every other item below waits on the trigger it names.
 - **K1361** · The outline update is memory-bound past about 6 workers (K1247 s35,
   .claude/probes/K1247/k1247s35_contend.mjs: 51 updates/s at 6 Node workers, 32.5/s at 12, GC 8-16%), so
   cutting its memory traffic widens the pool
+- **K1363** · draw.ts CONTACT_CACHE makes the outline's contacts depend on history: two workers fed the same
+  scene differ in bandRec/passTex unless the cache is bypassed (K1247 s36 handoff). Matters only if outputs
+  must be history-free (a pool, replays).
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2291,6 +2293,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1357** · rp=outline's drag feel: Levi, 2026-11-12, 'unacceptable' at 9-10 Hz; the pool (s36) lags more (250-340 ms), so no clip re-ask; the route changes (K1362). Done in b3ea2ad4 (2026-11-12).
 - **K1319** · The K1045 open eye at muse_hash j73 in rp=outline: its ink ring closes round at the right tip, where form B cuts it off at an angle (form B's j73 corner takes the same far meet as j74's and never rounds it). Dropped: Levi, 2026-11-12: 'the round version of course'. rp=outline already draws it round; no change. The census's j73 stray_ink spike (262 px) is form B's flaw, not a bar find (2026-11-12).
 - **K1356** · K1247 s33's jlocal fixpoint costs 18.8 ms p50 / 88.6 ms p95 on def whenever the snap is on (inert while KF_INC.snap is off; s34 step 4 targets ~1 ms). Dropped: superseded by K1359: the snap (KF_INC.snap) stays off and is being removed with the incremental route (K1247 s35) (2026-11-12).
 - **K1352** · Span-local L/Lcut addressing (s30 plan stage 4, first half): an arm's reach samples its crossing partners by arc length (reachOf), so one moving chain re-dirties its partners' corners: corner cache hits stay at 39% def, 19% muse_hash with the snap on (K1247 s31 handoff, `docs/design/K1247_s31_snap_phase_caches.md`). Dropped: superseded by K1247 s35 (docs/design/K1247_s35_route_review.md): the incremental frame stops (its ceiling misses the bar, and under a pool each model sees only every Kth frame), so span-local addressing for its caches is not needed (2026-11-12).
