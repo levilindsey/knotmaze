@@ -521,10 +521,10 @@ Next free ID: K1355.
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: agent `a0b7ae19795e37c2f` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 13:47, 2 h cap ~15:47)
-  - branch: `worktree-agent-a0b7ae19795e37c2f`, worktree `.claude/worktrees/agent-a0b7ae19795e37c2f`; last commit: `e7e6991b`
+  - owner: nobody since 2026-11-12 15:27 (merged; agent `a0b7ae19795e37c2f` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `68ef574c`
   - evidence: .claude/probes/K1247/ (k1247s31_inc.ts, k1247s31_run.ps1; out/s31, out/s32)
-  - next: K1247 s32 running: the snap valid (exact rest frame in outline_app.ts; junction self corners continuous, def j83's 38 px flip), then snap + caches on by default; then K1352 / K1353
+  - next: stage 33: a local junction closure (span granularity, s30 stage 4) so holds pay on maze links (def and muse_hash hold 0 chains today); profile the snap and cache bookkeeping on fat (6 ms over master with flags on); flags on only behind checks (a), (b), (c) and an app ABBA
   - brief: `docs/design/K1247_s32_snap_valid.md`
 - **K1278** · The outline's paint blends seamlessly across junctions (Levi 2026-11-10): section colour and pulses
   from per-pixel fields continuous across faces, triangles and junctions, gated by a seam test on every
