@@ -559,16 +559,6 @@ Next free ID: K1354.
   - evidence: .claude/probes/K1314/ (census tools, k1314_s8_bench.ps1); untracked out/s1-s10/, baseline census_s9
   - next: j58a stage: its fade is runRootRamp's (K1314 s9 root ramp), not runEndFade; flipping it gave a hard slab at the cusp and a seam in the V (K1346 s1 handoff, out/s1/look7/j58a.png). The bar after K1344: 16 of 17 wait on K1315/K1319; j49 is the census reading form B's tie fade as cut
   - brief: `docs/design/K1314_s10_breaks_step.md`
-- **K1346** · A tail's corner fan folds: its outer corner points jitter 0.0003-0.0035 against the inner arc,
-  so slivers overlap and ink twice (muse_hash c8's under-pass dotted seam at (19.41, 14.16); 76 px in the app
-  at 960 px/unit). Make the corner cluster one exact point, or skip/clamp backward quads, in outline.ts and
-  the inner-point rule's three builders (band_gpu.ts inner(), band_rec.ts innerOfP, draw.ts bandData) together
-  (K1324 s3 handoff; `.claude/probes/K1324/k1324_s3_appfold*`, crops `out/s3/x8x/spot_003.png`)
-  - owner: agent `a71bd8850e0bc2f5e` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 13:24, 2 h cap ~15:24)
-  - branch: `worktree-agent-a71bd8850e0bc2f5e`, worktree `.claude/worktrees/agent-a71bd8850e0bc2f5e`; last commit: `e2ae723b`
-  - evidence: .claude/probes/K1346/ (stage 1 tools and out/s1 in .claude/worktrees/agent-a686e24ad31e738a0, last commit 4edbd1c3)
-  - next: K1346 s2 running: find and remove the fold fixes' +5-7 ms frame cost (stage 1 folds 58 to 0, crops viewed), output identical; then merge (closes K1350)
-  - brief: `docs/design/K1346_s2_fold_speed.md`
 
 ## Next, in order
 
@@ -2281,6 +2271,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1346** · outline folds cut to 0 in all 12 census scenes (c8 fan seam, fill walk K1350, sub-pixel turn-backs); fold checks cost 0.5-0.7 ms per def frame. Done in 48add3d8 (2026-11-12).
 - **K1344** · j116's crease: cutTailHooks cuts a tail walk's hook at a swallowtail narrower than its step (6 of 187 tail_look finds were this fold, 0 after; bar kinds unchanged). Done in d49c248d (2026-11-12).
 - **K1338** · frame/band speed (s29: tailFoot boxes, fill reuses band feet; s30: what changes per frame, the 1.75x was machine load (quiet master def worker 72 ms, frame 38.2), KF_INC prototype off by default, the six-stage plan to ~7-9 ms in docs/design/K1247_s30_path_to_gate.md). Done in 8c31261b (2026-11-12).
 - **K1324** · no contact pass inside one junction group (s1), muse_hash x22's self pass buried whole (s2, selfBury + BAND_FS), and the census band's lower-join seam at x22 (s3, draw.ts bandData splits edges where the tie bends); c8's hard edge is K1315's end, c8's dotted seam is K1346. Done in 0a9119cd (2026-11-12).
