@@ -27,10 +27,22 @@ for (const nm of names) {
     const r = on[i];
     if (!same(p.pts, r.pts) || !same(p.cpts, r.cpts) || !same(p.alpha, r.alpha)) {
       changed++;
-      let k = -1; let d = 0; for (let j = 0; j < p.pts.length; j += 2) { const e = Math.hypot(p.pts[j] - r.pts[j], p.pts[j + 1] - r.pts[j + 1]); if (e > d) { d = e; k = j / 2; } }
-      rows.push(`  p${i} ${p.kind} corner ${p.corner} pt ${k} (${p.pts[2 * k].toFixed(3)}, ${p.pts[2 * k + 1].toFixed(3)}) moved ${d.toFixed(4)}`);
+      // how far src's walk strays from the fixed walk: each src point's distance to the fixed polyline (the most cut)
+      const seg = (x: number, y: number): number => { let b = Infinity; for (let j = 0; j + 3 < r.pts.length; j += 2) { const ax = r.pts[j]; const ay = r.pts[j + 1]; const ux = r.pts[j + 2] - ax; const uy = r.pts[j + 3] - ay; const L = ux * ux + uy * uy; const t = L > 0 ? Math.max(0, Math.min(1, ((x - ax) * ux + (y - ay) * uy) / L)) : 0; b = Math.min(b, Math.hypot(x - ax - t * ux, y - ay - t * uy)); } return b; };
+      let k = -1; let d = 0; for (let j = 0; j < p.pts.length; j += 2) { const e = seg(p.pts[j], p.pts[j + 1]); if (e > d) { d = e; k = j / 2; } }
+      rows.push(`  p${i} ${p.kind} corner ${p.corner} n ${p.pts.length / 2} -> ${r.pts.length / 2} pt ${k} (${p.pts[2 * k].toFixed(3)}, ${p.pts[2 * k + 1].toFixed(3)}) cut ${d.toFixed(4)}`);
     }
   });
   console.log(`${nm}: pieces ${src.length} off-vs-src diff ${diffOff} (miss ${missOff}) | fix: hooks ${P.K1344.hooks} miss ${P.K1344.miss} changed ${changed} | tails turning back ${tB} -> ${tA}`);
   if (LIST) for (const r of rows) console.log(r);
+  // --left: the tails still turning back after the fix: index, the turn's point, its steps and n.
+  if (a.includes("--left")) on.forEach((p, i) => {
+    if (p.kind !== "tail") return; const n = p.pts.length / 2;
+    for (let j = 1; j + 1 < n; j++) {
+      const q = 2 * j; const d = (p.pts[q] - p.pts[q - 2]) * (p.pts[q + 2] - p.pts[q]) + (p.pts[q + 1] - p.pts[q - 1]) * (p.pts[q + 3] - p.pts[q + 1]);
+      if (d >= 0) continue;
+      const s1 = Math.hypot(p.pts[q] - p.pts[q - 2], p.pts[q + 1] - p.pts[q - 1]); const s2 = Math.hypot(p.pts[q + 2] - p.pts[q], p.pts[q + 3] - p.pts[q + 1]);
+      console.log(`  left p${i} corner ${p.corner} pt ${j}/${n} (${p.pts[q].toFixed(3)}, ${p.pts[q + 1].toFixed(3)}) steps ${s1.toFixed(4)} ${s2.toFixed(4)} cos ${(d / (s1 * s2)).toFixed(2)}`);
+    }
+  });
 }

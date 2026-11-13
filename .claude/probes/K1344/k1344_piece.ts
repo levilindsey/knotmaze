@@ -4,10 +4,11 @@
 // majority, is folded).
 //   node scripts/run_node.mjs .claude/probes/K1344/k1344_piece.ts <scene> <piece index> [--from=i] [--to=j]
 import { buildModel } from "../K1314/k1314_census";
+import { protoModel } from "./k1344_model";
 
 const a = process.argv.slice(2);
 const opt = (k: string): string | undefined => a.find((x) => x.startsWith(`--${k}=`))?.slice(k.length + 3);
-const m = buildModel(a[0]); const p = m.table.pieces[Number(a[1])]; const W = m.table.W;
+const m = a.includes("--proto") ? protoModel(a[0]) : buildModel(a[0]); const p = m.table.pieces[Number(a[1])]; const W = m.table.W;
 const np = p.pts.length / 2;
 console.log(`piece ${a[1]}: ${p.kind} ch${p.chain} side${p.side} s ${p.s0}..${p.s1} corner ${p.corner} region ${p.region} np ${np} W ${W} h ${m.table.h} alpha ${p.alpha ? p.alpha.length : "-"} fpts ${p.fpts ? p.fpts.length / 2 : "-"}`);
 const inner: number[][] = [];

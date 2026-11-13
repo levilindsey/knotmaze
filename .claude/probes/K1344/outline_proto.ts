@@ -8435,25 +8435,53 @@ function cutTailLoop(pts: number[], cpts: number[], alpha: number[] | undefined,
       return;
     }
   }
-  // K1344 s1 (proto): no sampled crossing: a hook (the loop is narrower than the walk's step). The cusp
-  // becomes the crossing of the leg into it (cusp - 1, cusp) and the leg out of it (cusp + 1, cusp + 2)
-  // extended back, if that lies on the first and behind cusp + 1 by at most the cusp's step.
-  if (!K1344.fix || cusp + 2 >= n) return;
-  {
-    const a0 = o + 2 * (cusp - 1); const b0 = o + 2 * (cusp + 1);
-    const ax = pts[a0]; const ay = pts[a0 + 1]; const ux = pts[a0 + 2] - ax; const uy = pts[a0 + 3] - ay;
-    const bx = pts[b0]; const by = pts[b0 + 1]; const vx = pts[b0 + 2] - bx; const vy = pts[b0 + 3] - by;
-    const den = ux * vy - uy * vx;
-    if (Math.abs(den) < 1e-18) return;
-    const wx = bx - ax; const wy = by - ay;
-    const s = (wx * vy - wy * vx) / den; const t = (wx * uy - wy * ux) / den;
-    const back = Math.hypot(pts[b0] - pts[b0 - 2], pts[b0 + 1] - pts[b0 - 1]);
-    if (!(s >= 0 && s <= 1 && t <= 0 && -t * Math.hypot(vx, vy) <= back)) { K1344.miss++; return; }
-    const q = a0 + 2;
-    pts[q] = ax + s * ux; pts[q + 1] = ay + s * uy;
-    cpts[q] = cpts[a0] + s * (cpts[q] - cpts[a0]); cpts[q + 1] = cpts[a0 + 1] + s * (cpts[q + 1] - cpts[a0 + 1]);
-    if (alpha) { alpha[q] = alpha[a0] + s * (alpha[q] - alpha[a0]); alpha[q + 1] = alpha[a0 + 1] + s * (alpha[q + 1] - alpha[a0 + 1]); }
+  // K1344 s1 (proto): no sampled crossing: the walk turns back in a hook (E's border's swallowtail is
+  // narrower than the walk's step, so its legs never cross between samples). cutTailHooks cuts it.
+  if (K1344.fix) cutTailHooks(pts, cpts, alpha, o, cusp);
+}
+/** K1344: a hook's turn-back counts when both steps are at least this (world; 0.16 px at 160 ppu): the
+ *  crossing splice above leaves sub-pixel jogs, which fold nothing visible. */
+const TAIL_HOOK_MIN = 0.001;
+/** K1344: cut the hooks of a tail walk, first at cusp, then each later turn-back, at most 8. A hook at
+ *  point 1 (point 0, the join, lies ahead of it: point 1 sampled the swallowtail E's border makes at sT)
+ *  loses point 1. Elsewhere the cusp moves to where the out-leg (cusp + 1, cusp + 2), extended back by at
+ *  most the back step, crosses the in-leg (cusp - 1, cusp), cpts and alpha along the in-leg; failing that,
+ *  the cusp point goes. Either way the walk then runs forward through the hook, as form B's iso-line does. */
+function cutTailHooks(pts: number[], cpts: number[], alpha: number[] | undefined, o: number, cusp: number): void {
+  const at = (i: number): number => o + 2 * i;
+  const back = (i: number): boolean => {
+    const q = at(i); const ax = pts[q] - pts[q - 2]; const ay = pts[q + 1] - pts[q - 1]; const bx = pts[q + 2] - pts[q]; const by = pts[q + 3] - pts[q + 1];
+    return ax * bx + ay * by < 0 && Math.min(Math.hypot(ax, ay), Math.hypot(bx, by)) >= TAIL_HOOK_MIN;
+  };
+  const drop = (i: number): void => { pts.splice(at(i), 2); cpts.splice(at(i), 2); if (alpha) alpha.splice(at(i), 2); };
+  let c = cusp;
+  for (let round = 0; round < 8; round++) {
+    const n = (pts.length - o) >> 1;
+    while (c < n - 1 && !back(c)) c++;
+    if (c >= n - 1 || n < 4) return;
+    if (c === 1) { drop(1); K1344.hooks++; c = 1; continue; }
+    let cut = false;
+    if (c + 2 < n) {
+      const a0 = at(c - 1); const b0 = at(c + 1);
+      const ax = pts[a0]; const ay = pts[a0 + 1]; const ux = pts[a0 + 2] - ax; const uy = pts[a0 + 3] - ay;
+      const bx = pts[b0]; const by = pts[b0 + 1]; const vx = pts[b0 + 2] - bx; const vy = pts[b0 + 3] - by;
+      const den = ux * vy - uy * vx;
+      if (Math.abs(den) > 1e-18) {
+        const wx = bx - ax; const wy = by - ay;
+        const s = (wx * vy - wy * vx) / den; const t = (wx * uy - wy * ux) / den;
+        const bk = Math.hypot(pts[b0] - pts[b0 - 2], pts[b0 + 1] - pts[b0 - 1]);
+        if (s >= 0 && s < 1 - 1e-6 && t <= 0 && -t * Math.hypot(vx, vy) <= bk) {
+          const q = a0 + 2;
+          pts[q] = ax + s * ux; pts[q + 1] = ay + s * uy;
+          cpts[q] = cpts[a0] + s * (cpts[q] - cpts[a0]); cpts[q + 1] = cpts[a0 + 1] + s * (cpts[q + 1] - cpts[a0 + 1]);
+          if (alpha) { alpha[q] = alpha[a0] + s * (alpha[q] - alpha[a0]); alpha[q + 1] = alpha[a0 + 1] + s * (alpha[q + 1] - alpha[a0 + 1]); }
+          cut = true;
+        }
+      }
+    }
+    if (!cut) { if (n <= 4) { K1344.miss++; return; } drop(c); }
     K1344.hooks++;
+    c = Math.max(1, c - 1);
   }
 }
 function tailWalk(a: TailIn, rampCut: number, marginCut: number, pts: number[], cpts: number[], alpha?: number[], useAlt = false, wCut = a.W): void {
