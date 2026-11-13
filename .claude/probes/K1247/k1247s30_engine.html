@@ -1,0 +1,18 @@
+<!doctype html><meta charset="utf-8"><title>k1247s30 engine</title>
+<script type="module">
+// K1247 s30 (2): the bundled bench in a module worker, then on this page's main thread.
+import { bench } from "./out/s30/engine/engine_bundle.mjs";
+const q = new URLSearchParams(location.search);
+const urls = JSON.parse(q.get("urls")); const warm = +q.get("warm"); const reps = +q.get("reps");
+window.__run = async (where) => {
+  if (where === "main") {
+    const frames = await Promise.all(urls.map((u) => fetch(u).then((r) => r.json())));
+    return bench(frames, warm, reps);
+  }
+  const w = new Worker("./k1247s30_engine_worker.mjs", { type: "module" });
+  const r = await new Promise((res) => { w.onmessage = (e) => res(e.data); w.postMessage({ urls, warm, reps }); });
+  w.terminate();
+  return r;
+};
+window.__ready = true;
+</script>
