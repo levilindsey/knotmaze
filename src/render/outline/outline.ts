@@ -4237,7 +4237,7 @@ function setupFrame(C: FCache, st: DiagramStructure, scene: SceneIn): void {
 // K1247 s33: jlocal (on whenever the snap is) holds spans, not whole chains: a
 // chain near a released junction or crossing recommits blended (jR, jM: the
 // ramp in half widths), so one moving chain no longer releases them all.
-export const KF_INC = { snap: true, cache: true, T: 0.25, border: false, jclose: true, jlocal: true, jR: 4, jM: 3, jx: true, hits: 0, misses: 0, cHits: 0, cMisses: 0, vAux: 0, vMiss: 0, cMissJ: 0, why: null as Record<string, number> | null };
+export const KF_INC = { snap: true, cache: true, T: 0.25, border: false, jclose: true, jlocal: true, jR: 4, jM: 3, jx: true, jxw: true, jxs: false, hits: 0, misses: 0, cHits: 0, cMisses: 0, vAux: 0, vMiss: 0, cMissJ: 0, why: null as Record<string, number> | null };
 let kfHoldFeet = false;
 
 export interface SnapState {
@@ -4359,13 +4359,14 @@ export function snapScene(S: SnapState, scene: SceneIn, T = KF_INC.T): SceneIn {
           const pt = (): number[] | null => (p ??= xPt(xi));
           const mv = (i: number, s0: number | undefined, s1: number): boolean => {
             if (!own[i] || s0 === undefined || Math.abs(s1 - s0) > ts) return true;
-            if (!cen[i].length) return false;
+            // jxw off: a pass on a blended (own) chain moved at most T, so it does not release its partner.
+            if (!KF_INC.jxw || !cen[i].length) return false;
             const q = pt(); return !!q && wAt(i, q[0], q[1]) > 0;
           };
           const ma = mv(ia, same ? old.a.s : undefined, x.a.s); const mb = mv(ib, same ? old.b.s : undefined, x.b.s);
           const rel = (i: number): void => { const q = pt(); if (q && own[i] && wAt(i, q[0], q[1]) < 1) { cen[i].push(q[0], q[1]); more = true; } };
-          if (ma) rel(ib);
-          if (mb) rel(ia);
+          // jxs: a pass whose own s moved past ts releases its own chain there (not its partner's).
+          if (KF_INC.jxs) { if (ma) rel(ia); if (mb) rel(ib); } else { if (ma) rel(ib); if (mb) rel(ia); }
         });
       }
       for (let i = 0; i < nC; i++) {
