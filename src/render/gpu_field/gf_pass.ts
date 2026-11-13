@@ -10,6 +10,8 @@ import { GF_VS, gfFs, type GfTier } from "./gf_glsl";
 import { GF_TW, packTables, type GfPacked } from "./gf_pack";
 import { buildKeys } from "./gf_keys";
 import { GfPieces } from "./gf_split";
+/** K1362 s7: the split's options. skip: empty pixels skip pass 2 (depth); keys: the keys run in pass 2 (gf_glsl.ts SPLITK). */
+export interface GfSplitForm { skip?: boolean; keys?: boolean }
 import type { GfTables } from "./tables";
 
 export type GfMap = [number, number, number, number];
@@ -151,20 +153,21 @@ export class GfPass {
    * tiers: GF_TIERS by default; [] draws the full program alone (stage 2's pass). fs: a program's source override
    * (benches; split programs get their pass as the second argument). split (K1362 s7): the one tier as two passes.
    */
-  constructor(gl: WebGL2RenderingContext, probe: boolean, tiers: GfTier[] = GF_TIERS, fs?: (tier: GfTier | null, split?: 1 | 2) => string, split: boolean | "skip" = false) {
+  constructor(gl: WebGL2RenderingContext, probe: boolean, tiers: GfTier[] = GF_TIERS, fs?: (tier: GfTier | null, split?: 1 | 2) => string, split: boolean | "skip" | GfSplitForm = false) {
     this.gl = gl; this.probe = probe;
     if (split && (probe || tiers.length !== 1)) throw new Error("GfPass: split needs one tier and no probe");
-    this.skip = split === "skip";
+    const sf: GfSplitForm = split === "skip" ? { skip: true } : typeof split === "object" ? split : {};
+    this.skip = !!sf.skip; const keys = !!sf.keys;
     const plan: { tier: GfTier | null; split?: 1 | 2 }[] = split ? [{ tier: tiers[0], split: 1 }, { tier: tiers[0], split: 2 }, { tier: null }]
       : [...tiers, null].map((tier) => ({ tier }));
     this.progs = plan.map(({ tier, split: s }) => {
-      const src = fs ? fs(tier, s) : gfFs(probe, true, tier ?? undefined, s ? { reg: tier?.reg, unroll: tier?.unroll, pack: tier?.pack, split: s, splitSkip: this.skip } : undefined);
+      const src = fs ? fs(tier, s) : gfFs(probe, true, tier ?? undefined, s ? { reg: tier?.reg, unroll: tier?.unroll, pack: tier?.pack, split: s, splitSkip: this.skip, splitKeys: keys } : undefined);
       const prog = compileProgram(gl, GF_VS, src);
       const u = new Map<string, WebGLUniformLocation | null>();
       for (const n of UNIFORMS) u.set(n, gl.getUniformLocation(prog, n));
       return { prog, u, tier, split: s };
     });
-    if (split) this.pieces = new GfPieces(gl, tiers[0].p);
+    if (split) this.pieces = new GfPieces(gl, tiers[0].p, keys);
     this.vao = gl.createVertexArray()!;
     this.tex = gl.createTexture()!;
     this.ext = gl.getExtension("EXT_disjoint_timer_query_webgl2") as TimerExt | null;
@@ -272,8 +275,7 @@ export class GfPass {
         gl.stencilFunc(gl.EQUAL, 1, 0xff); gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
         if (this.skip) { gl.disable(gl.STENCIL_TEST); gl.depthFunc(gl.GREATER); gl.depthMask(false); }
         // piece j at unit 1 + j, the corners at unit 4 (uP3); a piece the tier does not hold, nothing
-        const pt = pieces!.tex; const np = pieces!.np;
-        for (let i = 0; i < 4; i++) { gl.activeTexture(gl.TEXTURE1 + i); gl.bindTexture(gl.TEXTURE_2D, i === 3 ? pt[np] : i < np ? pt[i] : null); }
+        for (let i = 0; i < 4; i++) { gl.activeTexture(gl.TEXTURE1 + i); gl.bindTexture(gl.TEXTURE_2D, pieces!.unit(i)); }
         gl.activeTexture(gl.TEXTURE0);
       }
       gl.useProgram(g.prog);

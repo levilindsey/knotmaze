@@ -13,21 +13,32 @@
 //   y = (thru corner + 1) | yielded << 16 | nk << 17 | np << 19
 // A value outside its field discards in pass 1, so the full program draws it.
 
-/** The targets' formats: one RGBA32UI per piece the tier holds (np), then one RG32UI (corners and counts). */
-export const gfSplitBytes = (np: number): number => np * 16 + 8;
+//
+// keys (SPLITK, the keys in pass 2): two RGBA32UI targets, 32 bytes a pixel. A piece is (chain, y above): pieces 0
+// and 1 in target 0 (xy, zw), piece 2 in target 1's xy and the corners in its zw.
+
+/** The targets' bytes a pixel: one RGBA32UI per piece the tier holds (np), then one RG32UI; keys: 32. */
+export const gfSplitBytes = (np: number, keys = false): number => (keys ? 32 : np * 16 + 8);
 
 export class GfPieces {
   readonly gl: WebGL2RenderingContext;
   readonly fbo: WebGLFramebuffer;
-  /** The pieces' targets (np of them), then the corners' (tex[np]). */
+  /** The pieces' targets (np of them), then the corners' (tex[np]); keys: the two targets. */
   readonly tex: WebGLTexture[] = [];
   readonly np: number;
+  readonly keys: boolean;
   private ds: WebGLRenderbuffer | null = null;
   w = 0; h = 0;
-  constructor(gl: WebGL2RenderingContext, np: number) {
-    this.gl = gl; this.np = np;
+  constructor(gl: WebGL2RenderingContext, np: number, keys = false) {
+    this.gl = gl; this.np = np; this.keys = keys;
     this.fbo = gl.createFramebuffer()!;
-    for (let i = 0; i <= np; i++) this.tex.push(gl.createTexture()!);
+    for (let i = 0; i < (keys ? 2 : np + 1); i++) this.tex.push(gl.createTexture()!);
+  }
+
+  /** The texture pass 2's sampler uP<i> reads (units 1 + i), or null where the layout has none. */
+  unit(i: number): WebGLTexture | null {
+    if (this.keys) return i < 2 ? this.tex[i] : null;
+    return i === 3 ? this.tex[this.np] : i < this.np ? this.tex[i] : null;
   }
 
   /** Bind the pieces' framebuffer at w x h over ds (the target's depth-stencil, already sized w x h). */
@@ -37,9 +48,9 @@ export class GfPieces {
     let changed = false;
     if (w !== this.w || h !== this.h) {
       this.w = w; this.h = h; changed = true;
-      for (let i = 0; i <= this.np; i++) {
+      for (let i = 0; i < this.tex.length; i++) {
         gl.bindTexture(gl.TEXTURE_2D, this.tex[i]);
-        if (i < this.np) gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32UI, w, h, 0, gl.RGBA_INTEGER, gl.UNSIGNED_INT, null);
+        if (this.keys || i < this.np) gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32UI, w, h, 0, gl.RGBA_INTEGER, gl.UNSIGNED_INT, null);
         else gl.texImage2D(gl.TEXTURE_2D, 0, gl.RG32UI, w, h, 0, gl.RG_INTEGER, gl.UNSIGNED_INT, null);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);

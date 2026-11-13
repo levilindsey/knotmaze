@@ -44,15 +44,19 @@ export type GfPackForm = boolean | "f" | "i";
  * targets (RGBA32UI x3 for the pieces, RG32UI for the corners and counts; a value that does not fit discards, so
  * the full program draws that pixel); 2 = layers() and composite() from them, rebuilding pd, pfx, pfy, the corner
  * radii and thruQ from their indices with the scan's own lines. Needs a tier (its p and k size the targets' use).
+ * splitKeys: the keys move to pass 2 (SPLITK): pass 1 stores only each piece's chain and segments (8 bytes) in two
+ * RGBA32UI targets (32 bytes a pixel), and pass 2 rebuilds ps with the scan's line and runs the keys' own loop.
  */
-export interface GfForm { reg?: boolean; unroll?: boolean; pack?: GfPackForm; oldKeys?: boolean; split?: 1 | 2; splitSkip?: boolean }
+export interface GfForm { reg?: boolean; unroll?: boolean; pack?: GfPackForm; oldKeys?: boolean; split?: 1 | 2; splitSkip?: boolean; splitKeys?: boolean }
 
 export function gfFs(probe: boolean, tangentTerms = true, tier?: GfTier, form: GfForm = { reg: tier?.reg, unroll: tier?.unroll, pack: tier?.pack }): string {
   let src = gfSrc(probe, tangentTerms, tier);
   if (form.oldKeys) src = src.replace("precision highp float;\n", "precision highp float;\n#define OLDKEYS 1\n");
   if (form.split) {
     if (probe || !tier || tier.p > 3 || tier.k > 2) throw new Error("gfFs: split needs a non-probe tier of at most p3/k2");
-    src = src.replace("precision highp float;\n", `precision highp float;\n#define SPLIT${form.split} 1\n${form.splitSkip ? "#define SPLITSKIP 1\n" : ""}`);
+    // a tier without ramps discards ramping pixels after the keys: pass 2 cannot route, so its keys stay in pass 1
+    if (form.splitKeys && !tier.ramps) throw new Error("gfFs: splitKeys needs a tier with ramps");
+    src = src.replace("precision highp float;\n", `precision highp float;\n#define SPLIT${form.split} 1\n${form.splitSkip ? "#define SPLITSKIP 1\n" : ""}${form.splitKeys ? "#define SPLITK 1\n" : ""}`);
   }
   if (probe) return src;
   const mp = tier ? tier.p : MAXP;
@@ -98,6 +102,10 @@ uniform vec4 uMap;
 layout(location = 0) out vec4 o0;
 layout(location = 1) out vec4 o1;
 layout(location = 2) out vec4 o2;
+#elif defined(SPLIT1) && defined(SPLITK)
+// pieces 0 and 1, then piece 2 and the corners (gf_split.ts, 32 bytes)
+layout(location = 0) out uvec4 o0;
+layout(location = 1) out uvec4 o1;
 #elif defined(SPLIT1)
 // one target per piece the tier holds, then the corners (gf_split.ts)
 layout(location = 0) out uvec4 o0;
@@ -382,16 +390,27 @@ void main() {
     // (ps, the scan's state) is not needed below, and pd, pfx, pfy, krho, kSec, kIn and thruQ are rebuilt from
     // their indices by the same lines that made them.
     ivec2 pix = ivec2(gl_FragCoord.xy);
+#ifdef SPLITK
+    uvec4 T0 = texelFetch(uP0, pix, 0); uvec4 T1 = texelFetch(uP1, pix, 0); uvec2 S3 = T1.zw;
+#else
     uvec2 S3 = texelFetch(uP3, pix, 0).xy;
+#endif
     np = int((S3.y >> 19) & 3u); nk = int((S3.y >> 17) & 3u);
     int thruK = int(S3.y & 0xffffu) - 1; bool yielded = ((S3.y >> 16) & 1u) != 0u; float thruQ = 0.0;
     if (thruK >= 0) { vec4 K0 = F(uOK + 6 * thruK); float rx = x - K0.x; float ry = y - K0.y; float d2 = rx * rx + ry * ry; thruQ = sqrt(d2); }
     int nr = 0; int rIdx0 = 0; int rIdx1 = 0;
     for (int j = 0; j < np; j++) {
+#ifdef SPLITK
+      uvec2 E = j == 0 ? T0.xy : j == 1 ? T0.zw : T1.xy;
+      int c = int(E.x); pc[j] = c;
+#else
       uvec4 E = j == 0 ? texelFetch(uP0, pix, 0) : j == 1 ? texelFetch(uP1, pix, 0) : texelFetch(uP2, pix, 0);
       int c = int(E.x & 0xffffu); pc[j] = c; pg[j] = int(E.x >> 16) - 1;
+#endif
       plo[j] = int(E.y & 0xffffu) - 32768; phi[j] = plo[j] + int((E.y >> 16) & 0xffu); int kq = plo[j] + int(E.y >> 24);
+#ifndef SPLITK
       pkey[j] = uintBitsToFloat(E.z); pramp[j] = uintBitsToFloat(E.w);
+#endif
       vec4 C0 = F(uOCh + 3 * c); int cV0 = int(C0.x); int nseg = int(C0.y) - 1; bool closed = C0.z > 0.5;
       int v = cV0 + (closed ? pmod(kq, nseg) : kq);
       vec4 A = F(uOV + v); vec4 B = F(uOV + v + 1);
@@ -399,8 +418,25 @@ void main() {
       float l2 = dx * dx + dy * dy; float u = l2 > 0.0 ? clamp(((x - ax) * dx + (y - ay) * dy) / l2, 0.0, 1.0) : 0.0;
       float fx = ax + dx * u; float fy = ay + dy * u; float ex = x - fx; float ey = y - fy; float d2 = ex * ex + ey * ey;
       pd[j] = sqrt(d2); pfx[j] = fx; pfy[j] = fy;
+#ifdef SPLITK
+      float s = A.z + u * (B.z - A.z); ps[j] = s;
+#else
       if (pg[j] >= 0 && pramp[j] > 0.0 && pramp[j] < 1.0) { if (nr == 0) rIdx0 = j; else rIdx1 = j; nr++; }
+#endif
     }
+#ifdef SPLITK
+    // the keys, pass 1's loop line for line (gf_split.test.ts counts it)
+    float zK = uZt / h;
+    for (int j = 0; j < np; j++) {
+      vec4 KB = keyBin(pc[j], ps[j]);
+      float pz = depth(pc[j], ps[j], KB); pkey[j] = pz - pd[j] * zK;
+      member(pc[j], ps[j], KB); pg[j] = mg; pramp[j] = mramp;
+      if (mg >= 0 && mramp > 0.0 && mramp < 1.0) {
+        if (nr < MAXR) { if (nr == 0) rIdx0 = j; else rIdx1 = j; nr++; }
+        else pramp[j] = mramp >= 0.5 ? 1.0 : 0.0;
+      }
+    }
+#endif
     if (nk > 0) kk[0] = int(S3.x & 0xffffu);
     if (nk > 1) kk[1] = int(S3.x >> 16);
     for (int i = 0; i < nk; i++) {
@@ -457,6 +493,7 @@ void main() {
 #ifdef TIER
     if (ovf) { discard; return; } // D3D (ANGLE on Windows) runs on past a discard: end the pixel outright
 #endif
+#if !(defined(SPLIT1) && defined(SPLITK))
     // keys and membership
     float zK = uZt / h;
     int nr = 0; int rIdx0 = 0; int rIdx1 = 0;
@@ -469,6 +506,7 @@ void main() {
         else pramp[j] = mramp >= 0.5 ? 1.0 : 0.0;
       }
     }
+#endif
 #ifdef NORAMP
     if (nr > 0) { discard; return; } // ramping pieces: the configurations below; a later program draws the pixel
 #endif
@@ -518,17 +556,30 @@ void main() {
     bool bad = thruK + 1 >= 65536;
     for (int j = 0; j < np; j++) {
       int span = phi[j] - plo[j]; int ko = pkq[j] - plo[j];
+#ifdef SPLITK
+      if (plo[j] < -32768 || plo[j] >= 32768 || span >= 256 || ko < 0 || ko >= 256) bad = true;
+#else
       if (pc[j] >= 65535 || pg[j] + 1 >= 65536 || plo[j] < -32768 || plo[j] >= 32768 || span >= 256 || ko < 0 || ko >= 256) bad = true;
+#endif
     }
     for (int i = 0; i < nk; i++) if (kk[i] >= 65535) bad = true;
     if (bad) { discard; return; }
+    s3x = nk > 0 ? uint(kk[0]) | (nk > 1 ? uint(kk[1]) << 16 : 0u) : 0u;
+    s3y = uint(thruK + 1) | (yielded ? 1u << 16 : 0u) | (uint(nk) << 17) | (uint(np) << 19);
+#ifdef SPLITK
+    // pieces 0 and 1 in target 0, piece 2 and the corners in target 1: the chain and the segments, 8 bytes a piece
+    e1.zw = uvec2(s3x, s3y);
+    for (int j = 0; j < np; j++) {
+      uvec2 E = uvec2(uint(pc[j]), uint(plo[j] + 32768) | (uint(phi[j] - plo[j]) << 16) | (uint(pkq[j] - plo[j]) << 24));
+      if (j == 0) e0.xy = E; else if (j == 1) e0.zw = E; else e1.xy = E;
+    }
+#else
     for (int j = 0; j < np; j++) {
       uvec4 E = uvec4(uint(pc[j]) | (uint(pg[j] + 1) << 16), uint(plo[j] + 32768) | (uint(phi[j] - plo[j]) << 16) | (uint(pkq[j] - plo[j]) << 24),
         floatBitsToUint(pkey[j]), floatBitsToUint(pramp[j]));
       if (j == 0) e0 = E; else if (j == 1) e1 = E; else e2 = E;
     }
-    s3x = nk > 0 ? uint(kk[0]) | (nk > 1 ? uint(kk[1]) << 16 : 0u) : 0u;
-    s3y = uint(thruK + 1) | (yielded ? 1u << 16 : 0u) | (uint(nk) << 17) | (uint(np) << 19);
+#endif
 #else
     // configurations over the ramping pieces
     if (nr == 2 && pramp[rIdx0] < pramp[rIdx1]) { int t = rIdx0; rIdx0 = rIdx1; rIdx1 = t; }
@@ -563,6 +614,8 @@ void main() {
   o0 = vec4(oInk, oCov, float(oCh), oS);
   o1 = vec4(float(oWk), float(oWa), float(oWb), float(nSeg));
   o2 = vec4(float(nK), float(np), float(ns), 0.0);
+#elif defined(SPLIT1) && defined(SPLITK)
+  o0 = e0; o1 = e1;
 #elif defined(SPLIT1)
   o0 = e0; o3 = uvec2(s3x, s3y);
 #if MAXP > 1
@@ -571,13 +624,13 @@ void main() {
 #if MAXP > 2
   o2 = e2;
 #endif
-#ifdef SPLITSKIP
+#else
+  o0 = vec4(oInk, oCov, 0.0, 1.0);
+#endif
+#if defined(SPLIT1) && defined(SPLITSKIP)
   // no piece, corner or through corner (s3y == 0): the pixel's output is (0, 0), the target's clear; depth 1 keeps
   // pass 2 off it (pass 2 draws depth 0.5 GREATER), depth 0 lets it draw
   gl_FragDepth = s3y == 0u ? 1.0 : 0.0;
-#endif
-#else
-  o0 = vec4(oInk, oCov, 0.0, 1.0);
 #endif
 }
 `;

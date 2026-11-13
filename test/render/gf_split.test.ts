@@ -23,6 +23,11 @@ describe("gf_split", () => {
     expect(b).toContain("uniform highp usampler2D uP0, uP1, uP2, uP3;");
     expect(gfSplitBytes(3)).toBe(56);
     expect(gfSplitBytes(2)).toBe(40);
+    expect(gfSplitBytes(3, true)).toBe(32);
+    const k = gfFs(false, true, T, { split: 1, splitKeys: true });
+    expect(k).toContain("#define SPLITK 1\n");
+    expect(k).toContain("#if !(defined(SPLIT1) && defined(SPLITK))");
+    expect(() => gfFs(false, true, { p: 3, k: 2, ramps: false }, { split: 1, splitKeys: true })).toThrow();
   });
 
   it("refuses the probe, no tier, and tiers wider than its fields", () => {
@@ -40,6 +45,17 @@ describe("gf_split", () => {
       "float fx = ax + dx * u; float fy = ay + dy * u; float ex = x - fx; float ey = y - fy; float d2 = ex * ex + ey * ey;",
       "float rx = x - K0.x; float ry = y - K0.y; float rho = sqrt(rx * rx + ry * ry);",
       "bool sec = inSector(k, p); bool inR = rho <= K0.w && sec;",
+    ]) expect(count(src, line)).toBeGreaterThanOrEqual(2);
+    // SPLITK: ps and the keys' loop, in pass 2 too
+    for (const line of [
+      "float s = A.z + u * (B.z - A.z);",
+      "float zK = uZt / h;",
+      "vec4 KB = keyBin(pc[j], ps[j]);",
+      "float pz = depth(pc[j], ps[j], KB); pkey[j] = pz - pd[j] * zK;",
+      "member(pc[j], ps[j], KB); pg[j] = mg; pramp[j] = mramp;",
+      "if (mg >= 0 && mramp > 0.0 && mramp < 1.0) {",
+      "if (nr < MAXR) { if (nr == 0) rIdx0 = j; else rIdx1 = j; nr++; }",
+      "else pramp[j] = mramp >= 0.5 ? 1.0 : 0.0;",
     ]) expect(count(src, line)).toBeGreaterThanOrEqual(2);
     expect(count(src, "kIn[i] = !inR ? 0 : rho > K0.z - aa ? 2 : 1;")).toBe(1);
     expect(count(src, "kIn[nk] = !inR ? 0 : rho > K0.z - aa ? 2 : 1;")).toBe(1);
