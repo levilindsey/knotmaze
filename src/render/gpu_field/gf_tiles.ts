@@ -46,7 +46,7 @@ export interface GfTileRoute {
 }
 
 const UNBOUNDED = 1 << 20;
-/** Per tile (row-major, ceil(gW / tc) wide): the pieces and corners bounds and the ramp flag (benches). */
+/** Per tile (row-major, nx = gW / tc rounded up, wide): the pieces and corners bounds and the ramp flag (benches). */
 export interface GfTileDiag { nx?: number; np?: Int32Array; nk?: Int32Array; ramp?: Uint8Array }
 
 /** Squared distance between segments ab and cd (0 when they cross). */
