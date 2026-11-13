@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1366.
+Next free ID: K1367.
 
 ## Waiting on Levi
 
@@ -556,6 +556,13 @@ Next free ID: K1366.
   - evidence: .claude/probes/K1362/ (k1362s3_*, k1362s4_*), out/s3/, out/s4/
   - next: Stage 4 running: the pass under 8 ms on the Pixel with the look unchanged (s3 fixes made exact, fp16, a program per pixel class, two-pass split, no pass at rest), the app frame interval under rp=gf; then the table build off main or cut (18 ms through a drag on the Pixel, corners 12.3)
   - brief: `docs/design/K1362_s4_shader.md`
+- **K1366** · K1362 tables lane: buildTables (tables.ts) at or under 2 ms on def, output unchanged (digest vs
+  master), beside K1362 s4's shader work (brief docs/design/K1362_t1_muse_tables.md)
+  - owner: muse session 01a1d40c-4704-7c52-82eb-36249c96ae77 (Paseo agent 70feddb0), coordinated by claude session 09c7a672-a414-402a-97da-b3176839a2e5
+  - branch: detached, worktree .claude/worktrees/muse-k1362-t1; pushes finished parts to master; last commit: `de46d5cd`
+  - evidence: `.claude/probes/K1362/k1362t1_*`
+  - next: Muse t1 running (started 00:35, cap 2 h): digest + swap-averaged A/B; then the export (9-11.5 ms) off main with the worker stage
+  - brief: `docs/design/K1362_t1_muse_tables.md`
 
 ## Next, in order
 
