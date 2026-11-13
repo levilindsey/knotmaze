@@ -561,11 +561,11 @@ Next free ID: K1362.
   most cases. But there are still plenty of unacceptable artifacts"): an artifact census (stray ink, hard
   colour edges inside fills, paper holes, broken ink) across scenes, then fix stages that drive its count to
   0; the look gate in docs/design/K1240_gate.md
-  - owner: nobody since 2026-11-12 19:40 (merged; agent `ad0f00e4c679dca72` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `39ad8186`
-  - evidence: .claude/probes/K1314/ (k1314s13_*), baseline out/s1/census_k1314s12b
-  - next: s14: j58a (ownEdge seams c8: find the seam, narrow the lift), piece 371 chevron, muse_hash j49 lost border (thruOk + thruUnion spike where tails meet end arms); s13 handoff
-  - brief: `docs/design/K1314_s13_j58a_j49_lost.md`
+  - owner: agent `ad90b8e20a29ae822` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 19:43, 2 h cap ~21:43)
+  - branch: `worktree-agent-ad90b8e20a29ae822`, worktree `.claude/worktrees/agent-ad90b8e20a29ae822`; last commit: `8ff2b01f`
+  - evidence: .claude/probes/K1314/k1314s13_*, out/s13/ (s13 flags liftEnd/liftOwn/ownEdge); out/s14/ (untracked)
+  - next: s14: j58a with ownEdge minus c8 seam, then piece 371 chevron; coordinator views the crops before merging
+  - brief: `docs/design/K1314_s14_j58a_seam.md`
 
 ## Next, in order
 
@@ -1922,15 +1922,16 @@ Every other item below waits on the trigger it names.
 - **K1351** · c8's under-pass after K1346 s1's fan fix: the dotted seam is gone, a straight soft diagonal
   shading edge remains where form B shades smoothly (muse_hash (19.41, 14.16);
   `.claude/probes/K1346/out/s1/final8x/c8.png`)
-  - next: K1314 s13 (docs/design/K1314_s13_j58a_j49_lost.md): the tail line is fixed (s12 tailJoin, ee1c3b35); the lost ink at y 14.35-14.51 is left: gate thruTail's walk to where form B inks the through arm's border under the crossing tube (out/s12/look/spk1.png, spk2.png)
+  - owner: muse session 8174321c-6bbe-4b7e-88d2-61a7cbfdff23 (Paseo), launched by claude session 09c7a672-a414-402a-97da-b3176839a2e5 at 19:47
+  - branch: detached worktree .claude/worktrees/muse-k1351-s1; Muse pushes finished parts to master
+  - next: Muse s1: thruGate at no cost (empty pieces skipped or per-frame thru list), census = census_k1314s13c, then on by default
+  - brief: `docs/design/K1351_s1_muse_thru_cost.md`
 - **K1354** · K1346's fold checks (bandFoldScan, bandFoldsClean) cost 0.5-0.7 ms per def frame; the fast exit
   could reuse the band builder's inner points (about 0.5 ms). One app ABBA (K1346 s2 run 2) put def band +0.85
   ms over a 0.5 spread while Node's band is equal; one quiet app ABBA settles it
   (docs/design/K1346_s2_fold_speed.md handoff)
 - **K1355** · GPU vs CPU band tie differs by 0.49 at muse_hash (19.75,14.76), on master too (K1314 s11
   `.claude/probes/K1314/k1314s11_gpu.ts`); may share K1336's cause, needs a twin check of its own
-- **K1356** · K1247 s33's jlocal fixpoint costs 18.8 ms p50 / 88.6 ms p95 on def whenever the snap is on
-  (inert while KF_INC.snap is off; s34 step 4 targets ~1 ms)
 - **K1358** · K1341 s3 residual: muse_hash fill/band pool +0.33+-0.26 / +0.65+-0.37 ms in swap-averaged A/B
   (per-pair intervals include zero in 2 of 3 pairs; def gates hold). If pursued, bisect wrapL sites in
   zAtC/footNear/dSC or the GC shift with k1341s3_ab.ts swap pairs, not the s2 tool.
@@ -2290,6 +2291,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1356** · K1247 s33's jlocal fixpoint costs 18.8 ms p50 / 88.6 ms p95 on def whenever the snap is on (inert while KF_INC.snap is off; s34 step 4 targets ~1 ms). Dropped: superseded by K1359: the snap (KF_INC.snap) stays off and is being removed with the incremental route (K1247 s35) (2026-11-12).
 - **K1352** · Span-local L/Lcut addressing (s30 plan stage 4, first half): an arm's reach samples its crossing partners by arc length (reachOf), so one moving chain re-dirties its partners' corners: corner cache hits stay at 39% def, 19% muse_hash with the snap on (K1247 s31 handoff, `docs/design/K1247_s31_snap_phase_caches.md`). Dropped: superseded by K1247 s35 (docs/design/K1247_s35_route_review.md): the incremental frame stops (its ceiling misses the bar, and under a pool each model sees only every Kth frame), so span-local addressing for its caches is not needed (2026-11-12).
 - **K1341** · K1247 s28's exact cuts: zChains 23% faster on def, 20% on muse_hash, 43% on fat, bit-identical (s2, 1da71a35); def fill's apparent +1-2.7% was a slot bias in the A/B harness (Muse s3: null test, swap-averaged k1341s3_ab.ts), no src change; muse_hash fill/band residual K1358. Done in 96edc35e (2026-11-12).
 - **K1350** · fill walk and sub-pixel turn-backs cut with K1346 (turn-backs 0, fill folds 0 in all 12 census scenes). Done in 48add3d8 (2026-11-12).
