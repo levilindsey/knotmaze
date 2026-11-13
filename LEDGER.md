@@ -521,11 +521,11 @@ Next free ID: K1350.
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: nobody since 2026-11-12 09:43 (merged; agent `a4625873239640993` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `3bf8d612`
-  - evidence: .claude/probes/K1247/ (benches, profiles); untracked out/s28/; parts from .claude/probes/K1324/out/s2/bench_abba1.json
-  - next: K1247 s31 after s30's plan (K1338): zChains in a second worker beside frame (K1339), fill on the GPU (K1340), the exact cuts (K1341), in the order s30's plan gives
-  - brief: `docs/design/K1247_s28_fill_zchains_speed.md`
+  - owner: agent `a871cf40ae634204d` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 11:43, 2 h cap ~13:43)
+  - branch: `worktree-agent-a871cf40ae634204d`, worktree `.claude/worktrees/agent-a871cf40ae634204d`; last commit: `b7b79e54`
+  - evidence: .claude/probes/K1247/ (k1247s31_*)
+  - next: K1247 s31 (plan stages 1+2: the snap in OutlineModel.update, one dirty set, exact phase caches at chain granularity) running; then merge (view the snap checks) and launch plan stage 3 (K1339) or stage 4
+  - brief: `docs/design/K1247_s31_snap_phase_caches.md`
 - **K1278** · The outline's paint blends seamlessly across junctions (Levi 2026-11-10): section colour and pulses
   from per-pixel fields continuous across faces, triangles and junctions, gated by a seam test on every
   face edge, triangle edge and junction. Full text in docs/ledger_notes.md
