@@ -9,7 +9,10 @@ import type { FieldScene } from "../../src/render/field/scene";
 import { buildTables } from "../../src/render/gpu_field/tables";
 import { buildTileRoute } from "../../src/render/gpu_field/gf_tiles";
 import { GF_TILE_TIERS } from "../../src/render/gpu_field/gf_pass";
-import { GfEval } from "../../src/render/gpu_field/eval";
+import { GfEval, type GfPixel } from "../../src/render/gpu_field/eval";
+
+// the mirror's per-pixel counts are private: read them through a structural view (an intersection with the class is never)
+type EvalView = { eval(x: number, y: number): GfPixel; np: number; nk: number; pg: Int32Array; pramp: Float64Array };
 
 const dir = join(__dirname, "field", "scenes");
 const load = (n: string): FieldScene => {
@@ -22,7 +25,7 @@ describe("gf_tiles route", () => {
   for (const name of ["k42.json", "x4_ends.json", "kink.json", "j_pair_cross.json"]) {
     it(name, () => {
       const T = buildTables(load(name), { aa: 0.5 / 320 });
-      const ev = new GfEval(T) as unknown as GfEval & { np: number; nk: number; pg: Int32Array; pramp: Float64Array };
+      const ev = new GfEval(T) as unknown as EvalView;
       // the samples: a third of a cell apart, off the tile edges
       const step = T.G / 3; const nxs = Math.floor((T.gW * T.G) / step); const nys = Math.floor((T.gH * T.G) / step);
       const P = new Int32Array(nxs * nys); const K = new Int32Array(nxs * nys); const R = new Uint8Array(nxs * nys); const E = new Uint8Array(nxs * nys);
