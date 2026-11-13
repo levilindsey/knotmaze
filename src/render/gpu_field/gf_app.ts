@@ -85,10 +85,11 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
   let gen = 0;
   let pending: { T: GfTables; main: number } | null = null;
   const refs = new Map<number, GfTables>();
-  const verifying = (): boolean => !!api.verify;
-  const wantWorker = (): boolean =>
-    typeof Worker !== "undefined" &&
-    (globalThis as unknown as { __knotGfOpts?: { worker?: boolean } }).__knotGfOpts?.worker !== false;
+  let force = false;
+  const opts = (): { worker?: boolean; verify?: boolean } =>
+    (globalThis as unknown as { __knotGfOpts?: { worker?: boolean; verify?: boolean } }).__knotGfOpts ?? {};
+  const verifying = (): boolean => !!api.verify || !!opts().verify;
+  const wantWorker = (): boolean => typeof Worker !== "undefined" && opts().worker !== false;
 
   const dropWorker = (why: string): void => {
     if (worker) {
@@ -354,11 +355,12 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
       }
       const cam = camera();
       const count = r.updateCount;
-      if (count !== builtCount || cam.scale !== builtScale || !T) {
-        if (!T || cam.scale !== builtScale || moved()) {
+      if (force || count !== builtCount || cam.scale !== builtScale || !T) {
+        if (force || !T || cam.scale !== builtScale || moved()) {
           if (rebuild(cam.scale)) {
             builtCount = count;
             builtScale = cam.scale;
+            force = false;
             snapshot();
           }
         } else builtCount = count;
@@ -445,8 +447,11 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
     get rect() { return rect; },
     counts,
     redraw() { dirty = true; requestFrame(); },
-    /** c1: when true, every build is also made the old way and compared. */
+    /** c1: when true (or `__knotGfOpts.verify`), every build is also made
+     * the old way and compared. */
     verify: false,
+    /** c1: build again from the current state (in the worker when ready). */
+    rebuild() { force = true; requestFrame(); },
   };
   (globalThis as unknown as Record<string, unknown>).__knotGf = api;
   return { frame, after, dispose };
