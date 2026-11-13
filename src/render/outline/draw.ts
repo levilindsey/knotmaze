@@ -860,20 +860,35 @@ export function bandData(table: OutlineTable, scene: SceneIn, zz: ReturnType<typ
   };
   // K1324 s3: the tie per vertex, interpolated, misses the fade's kinks (the partner's border, dC = h, cuts a
   // cell at any angle): x22's lower join (muse_hash 31.57, 7.56) inked .97 where the app's per-pixel tie
-  // gives 1, a faint seam along the over border. A tied triangle with a fade at a vertex whose edge midpoints
-  // miss the tie by more than REFINE_TOL splits in four, to REFINE_DEPTH levels; a midpoint is a function of
-  // its edge alone, so neighbours that split an edge agree on it and the band stays watertight.
-  const REFINE_TOL = 0.01; const REFINE_DEPTH = 4;
+  // gives 1, a faint seam along the over border. An EDGE of a tied triangle splits when its ends' ties differ,
+  // it is longer than REFINE_MIN and its midpoint misses the tie by more than REFINE_TOL; the triangle splits
+  // in two, three or four by its split edges. Every test is a function of the edge alone, so neighbours split
+  // a shared edge alike and the band stays conforming (no T-junction, no alpha step along an edge). A cap of
+  // levels counted per triangle (four-way splits of skinny cells along a straight run) stopped at a staircase
+  // where the fade bends (g41_user_tw64 j68).
+  const REFINE_TOL = 0.01; const REFINE_MIN = 0.0015; const REFINE_CAP = 24;
+  const d2 = (a: BV, b: BV): number => (b[0] - a[0]) * (b[0] - a[0]) + (b[1] - a[1]) * (b[1] - a[1]);
+  const tieOf = (v: BV): number => (v[5] > 0 ? v[2] / v[5] : 1);
+  const split = (ch: number, a: BV, b: BV): BV | null => {
+    if (Math.abs(tieOf(a) - tieOf(b)) < 1e-6 || d2(a, b) <= REFINE_MIN * REFINE_MIN) return null;
+    const m = mid(ch, a, b);
+    return Math.abs(m[2] - (a[2] + b[2]) / 2) > REFINE_TOL ? m : null;
+  };
   const refine = (ch: number, a: BV, b: BV, c: BV, k: number): void => {
-    const ta = a[5] > 0 ? a[2] / a[5] : 1; const tb = b[5] > 0 ? b[2] / b[5] : 1; const tc = c[5] > 0 ? c[2] / c[5] : 1;
-    if (k < REFINE_DEPTH && !(Math.abs(ta - tb) < 1e-6 && Math.abs(ta - tc) < 1e-6)) {
-      const ab = mid(ch, a, b); const bc = mid(ch, b, c); const ca = mid(ch, c, a);
-      if (Math.max(Math.abs(ab[2] - (a[2] + b[2]) / 2), Math.abs(bc[2] - (b[2] + c[2]) / 2), Math.abs(ca[2] - (c[2] + a[2]) / 2)) > REFINE_TOL) {
-        refine(ch, a, ab, ca, k + 1); refine(ch, ab, b, bc, k + 1); refine(ch, ca, bc, c, k + 1); refine(ch, ab, bc, ca, k + 1);
-        return;
-      }
-    }
-    emit(a, b, c);
+    if (k >= REFINE_CAP) { emit(a, b, c); return; }
+    const ab = split(ch, a, b); const bc = split(ch, b, c); const ca = split(ch, c, a);
+    const n = (ab ? 1 : 0) + (bc ? 1 : 0) + (ca ? 1 : 0);
+    if (n === 0) { emit(a, b, c); return; }
+    const k1 = k + 1;
+    if (n === 3) { refine(ch, a, ab!, ca!, k1); refine(ch, ab!, b, bc!, k1); refine(ch, ca!, bc!, c, k1); refine(ch, ab!, bc!, ca!, k1); return; }
+    // Rotate so the split edges start at p: (p, q, r) with pq split, and qr too when two are.
+    const [p, q, r, m1, m2]: [BV, BV, BV, BV, BV | null] = ab ? (bc ? [a, b, c, ab, bc] : ca ? [c, a, b, ca, ab] : [a, b, c, ab, null])
+      : bc ? (ca ? [b, c, a, bc, ca] : [b, c, a, bc, null]) : [c, a, b, ca!, null];
+    if (!m2) { refine(ch, p, m1, r, k1); refine(ch, m1, q, r, k1); return; }
+    // pq and qr split: the corner (m1, q, m2), then the quad (p, m1, m2, r) by its shorter diagonal.
+    refine(ch, m1, q, m2, k1);
+    if (d2(p, m2) <= d2(m1, r)) { refine(ch, p, m1, m2, k1); refine(ch, p, m2, r, k1); }
+    else { refine(ch, p, m1, r, k1); refine(ch, m1, m2, r, k1); }
   };
   for (const p of table.pieces) {
     const np = p.pts.length / 2;
