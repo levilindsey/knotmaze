@@ -125,18 +125,23 @@ export function ownAlpha(p: OutlinePiece, zz: ZZ, h: number, W: number): number[
   const PX = ps.filter((P) => P.o === X);
   if (!PX.length) return al;
   const out = al.slice();
-  // runRootRamp's ramp per entry: alpha / fadeA where the fade leaves enough to divide by, else the nearest
-  // such entry's on the same edge (1 if none), so the result stays continuous where the fade reaches 0.
-  const ramp = new Float64Array(2 * np).fill(1);
+  // runRootRamp's ramp per entry: alpha / fadeA where the fade leaves enough to divide by (fadeA >= 0.05), else
+  // the nearest such entry's on the same edge across the gap, but only one still inside the fade (fadeA < 1): a gap
+  // that the fade reached 0 in keeps the ramp continuous (c8's notch), while a gap bounded by unfaded entries is a cut
+  // (the run ends against X), whose ramp is 0 so the cut stays (muse_hash 5.94,8.51's stray spike).
+  const ramp = new Float64Array(2 * np);
   for (let e = 0; e < 2; e++) {
     const prev = new Int32Array(np).fill(-1);
     let lv = -1;
     for (let i = 0; i < np; i++) { if (fa[2 * i + e] >= 0.05) lv = i; prev[i] = lv; }
     let nv = -1;
     for (let i = np - 1; i >= 0; i--) {
-      if (fa[2 * i + e] >= 0.05) nv = i;
-      const j = prev[i] < 0 ? nv : nv < 0 ? prev[i] : i - prev[i] <= nv - i ? prev[i] : nv;
-      if (j >= 0) ramp[2 * i + e] = Math.min(1, al[2 * j + e] / fa[2 * j + e]);
+      const k = 2 * i + e;
+      if (fa[k] >= 0.05) { nv = i; ramp[k] = Math.min(1, al[k] / fa[k]); continue; }
+      const a = prev[i] >= 0 && fa[2 * prev[i] + e] < 1 ? prev[i] : -1;
+      const b = nv >= 0 && fa[2 * nv + e] < 1 ? nv : -1;
+      const j = a < 0 ? b : b < 0 ? a : i - a <= b - i ? a : b;
+      ramp[k] = j >= 0 ? Math.min(1, al[2 * j + e] / fa[2 * j + e]) : 0;
     }
   }
   // Own s per point, as bandGpu's sv.
