@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1356.
+Next free ID: K1357.
 
 ## Waiting on Levi
 
@@ -521,11 +521,11 @@ Next free ID: K1356.
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: nobody since 2026-11-12 17:00 (merged; agent `ab58662face0c6b64` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `1f17fb8c`
-  - evidence: .claude/probes/K1247/ (k1247s33_*; s32 checks k1247s32_*)
-  - next: s34 = s30 plan stage 4: span-granular dirty set (a span is dirty when its snapped points change; blended chains no longer release whole partners), K1352 span-local L/Lcut, a span-to-output dependency map, and the snap/jlocal fixpoint cut from 18.8 ms to about 1 ms (a grid for release centres); s33 ceiling: def frame 36.97 -> 8.36 ms
-  - brief: `docs/design/K1247_s33_local_holds.md`
+  - owner: agent `a5270035b1b40a083` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 17:01, 2 h cap ~19:01)
+  - branch: `worktree-agent-a5270035b1b40a083`, worktree `.claude/worktrees/agent-a5270035b1b40a083`; last commit: `54637d48`
+  - evidence: .claude/probes/K1247/ (k1247s33_*, k1247s34_*)
+  - next: s34 running: span-local addressing (K1352), per-span dirty set, dependency map, snap fixpoint to ~1 ms
+  - brief: `docs/design/K1247_s34_span_holds.md`
 - **K1278** · The outline's paint blends seamlessly across junctions (Levi 2026-11-10): section colour and pulses
   from per-pixel fields continuous across faces, triangles and junctions, gated by a seam test on every
   face edge, triangle edge and junction. Full text in docs/ledger_notes.md
@@ -831,7 +831,7 @@ Every other item below waits on the trigger it names.
   partners by arc length (reachOf), so one moving chain re-dirties its partners' corners: corner cache hits
   stay at 39% def, 19% muse_hash with the snap on (K1247 s31 handoff,
   `docs/design/K1247_s31_snap_phase_caches.md`)
-  - next: in K1247 s33 (docs/design/K1247_s33_local_holds.md)
+  - next: in K1247 s34 step 1 (docs/design/K1247_s34_span_holds.md)
 - **K1353** · A pieces cache (pieces is the largest frame phase after s31, 11.6 ms def; its inputs are global
   tables, so split them per chain first), and skip held chains' setup and resampling with s31's dirty set
   (fat's border cache costs +0.44 ms) (K1247 s31 handoff)
@@ -1927,6 +1927,8 @@ Every other item below waits on the trigger it names.
   (docs/design/K1346_s2_fold_speed.md handoff)
 - **K1355** · GPU vs CPU band tie differs by 0.49 at muse_hash (19.75,14.76), on master too (K1314 s11
   `.claude/probes/K1314/k1314s11_gpu.ts`); may share K1336's cause, needs a twin check of its own
+- **K1356** · K1247 s33's jlocal fixpoint costs 18.8 ms p50 / 88.6 ms p95 on def whenever the snap is on
+  (inert while KF_INC.snap is off; s34 step 4 targets ~1 ms)
 
 ## Approved, to schedule (2026-10-11)
 
