@@ -8109,11 +8109,14 @@ export const K1314S12 = { tailJoin: true, thruTail: false, ownSide: false };
  *  tail_look 175 -> 184; with ownEdge c8 8.24%, j58a 11.72%, census k1314s13e tail_look 174, bar kinds
  *  unchanged). s13 left the three lift flags OFF: c8 (out/s13/fin_x4|fin_x8/c8.png) gained a hard vertical
  *  seam in the run band's shade where the lifted point's own ink stops. K1314 s14 turns them ON with
- *  K1314S14.liftChg, which removes that seam (c8's box 5.71% = all flags off; j58a 17.73% -> 11.65%). */
+ *  K1314S14.liftChg, which removes that seam (c8's box 5.71% = all flags off; j58a 17.73% -> 11.72%). */
 export const K1314S13 = { liftOwn: true, liftEnd: true, ownEdge: true, thruGate: false, thruOk: false, thruUnion: false };
 /** K1314 s14 flags. liftChg: liftOwn marks only the lifted points whose alpha the lift moved (see runEndFade).
- *  rootTie: runRootRamp's ramp yields to the tie per point (see runRootRamp). */
-export const K1314S14 = { liftChg: true, rootTie: true };
+ *  rootTie: runRootRamp's ramp yields to the tie per point (see runRootRamp). OFF, measured: census
+ *  k1314s14 broken_ink 12 -> 13 (muse_hash j96 (11.563, 26.963): it fades the dark tail under a junction
+ *  root's round cap, so the census reads the junction fill unbordered, though j96's box |d| falls 26.40% ->
+ *  24.41%; out/s14/fin_x4/j96.png), against j58a's 11.72% -> 11.65%. */
+export const K1314S14 = { liftChg: true, rootTie: false };
 /** K1314 s12 (thruTail, muse_hash j58's corner 176): a thru tail continues E's run past the corner, so it
  *  starts no darker than the run ends (run 371's root ramp ends at 0, the tail started at 0.18: a hard
  *  line across the band) and reaches its own alpha over THRU_END points. */
@@ -8190,7 +8193,7 @@ function runRootRamp(C: FCache, st: DiagramStructure, pieces: OutlinePiece[], ru
     // edge: the band reads (t - t0) / (1 - t0) there, no ink at the root, the tie where it is back at 1.
     // Measured: 371's points 21, 22 0.55 / 0.28 -> 0.69 / 0.59 (outer), j58a's box 11.72% -> 11.65%. Points
     // 19, 20 keep the ramp (their lift is below it), so 371 still reads 0.74 against form B's 1 at
-    // (4.752, 33.504): the soft chevron stays (K1314 s14 handoff).
+    // (4.752, 33.504): the soft chevron stays (K1314 s14 handoff). Off: K1314S14's comment (a broken_ink at j96).
     const tie = K1314S14.rootTie && p.cpts.length === p.pts.length;
     const sR = atEnd ? p.s1 : p.s0; const span = Math.abs(p.s1 - p.s0);
     const ji = C.armObj[arm].ji;
