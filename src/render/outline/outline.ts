@@ -2481,7 +2481,8 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
         const pts: number[] = []; const cpts: number[] = []; const alpha: number[] = []; const fill = { pts: [] as number[], cpts: [] as number[] };
         const E = cw ? arms[dp.interval ? cw.bArm : cw.aArm] : undefined;
         const X = cw ? arms[dp.interval ? cw.aArm : cw.bArm] : undefined;
-        if (cw && E && X) {
+        // K1314 s12: a thruTail (interval >= 2) is the frame path's only (piecesPhaseC); empty here.
+        if (cw && E && X && dp.interval < 2) {
           const sideE = dp.interval ? cw.sideB : cw.sideA;
           const Bd = borders[E.pi][bIdx(sideE)];
           const pE = polys[E.pi];
@@ -3202,6 +3203,14 @@ export function diagramOf(scene: SceneIn): DiagramStructure {
     const which = b.kind === "end" ? 1 : a.kind === "end" ? 0 : -1;
     if (which < 0) return;
     piecesD.push({ kind: "tail", chain: which ? b.pi : a.pi, side: 0, corner: ci, interval: which, cap: -1 });
+  });
+  // K1314 s12 (thruTail): the other arm's border under the end arm, interval = which + 2.
+  if (K1314S12.thruTail) corners.forEach((dc, ci) => {
+    const a = arms[dc.aArm]; const b = arms[dc.bArm];
+    if (!a || !b) return;
+    const which = b.kind === "end" ? 1 : a.kind === "end" ? 0 : -1;
+    if (which < 0 || (which ? a : b).kind === "end") return;
+    piecesD.push({ kind: "tail", chain: which ? a.pi : b.pi, side: 0, corner: ci, interval: which + 2, cap: -1 });
   });
   // K1279: a ghost per side of every crossing's discarded interval (in -> out
   // of one crossing), last so no earlier piece moves.
@@ -7935,7 +7944,7 @@ export const RUN_FADE_TIE = { on: true };
  *  last foot (pinTailFan's fanDrop), a hair (~0.004) from where the abutting run's chevron
  *  ends; the two end edges, near parallel, overlap in a thin strip that inks twice: a faint
  *  line along the run's end edge. The tail starts on the run's end edge instead. */
-export const K1314S12 = { tailJoin: true };
+export const K1314S12 = { tailJoin: true, thruTail: true };
 
 function tailJoinRun(tail: OutlinePiece, run: OutlinePiece, atEnd: boolean): void {
   const nr = run.pts.length >> 1; if (nr < 2 || tail.pts.length < 4 || run.cpts.length !== run.pts.length) return;
@@ -8242,11 +8251,13 @@ function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[])
       const dc = st.corners[ci];
       const pts: number[] = []; const cpts: number[] = []; const alpha: number[] = []; const fill = { pts: [] as number[], cpts: [] as number[] };
       let sideE = 0; let sT = 0; let tKey = -1;
+      // K1314 s12: interval >= 2 is a thruTail (E = the through arm, X = the end arm); eB = E is the corner's B arm.
+      const thru = dp.interval >= 2; const eB = thru ? (dp.interval & 1) === 0 : dp.interval === 1;
       if (dc) {
-        const aiE = dp.interval ? dc.bArm : dc.aArm; const aiX = dp.interval ? dc.aArm : dc.bArm;
+        const aiE = eB ? dc.bArm : dc.aArm; const aiX = eB ? dc.aArm : dc.bArm;
         const piE = C.armObj[aiE].pi; const piX = C.armObj[aiX].pi;
-        sideE = dp.interval ? -C.armDir[dc.bArm] : C.armDir[dc.aArm];
-        sT = dp.interval ? C.cSB[ci] : C.cSA[ci];
+        sideE = eB ? -C.armDir[dc.bArm] : C.armDir[dc.aArm];
+        sT = eB ? C.cSB[ci] : C.cSA[ci];
         const depthWin = C.depthWindow * C.ctrlArc;
         // K1283 s4: X's other arm at the junction, if X runs through it.
         let aiX2 = -1;
@@ -8265,14 +8276,16 @@ function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[])
           bend,
           alt: aiX2 >= 0 ? { sRX: C.armSR[aiX2], dirX: C.armDir[aiX2], LX: C.armL[aiX2], LcutX: C.armLcut[aiX2] } : null,
           pE: C.polys[piE], dirE: C.armDir[aiE], endS: C.armSR[aiE], sT,
-          x0: dp.interval ? C.cTbx[ci] : C.cTax[ci], y0: dp.interval ? C.cTby[ci] : C.cTay[ci],
+          thruR: thru ? { LE: C.armL[aiE], LcutE: C.armLcut[aiE] } : undefined,
+          x0: eB ? C.cTbx[ci] : C.cTax[ci], y0: eB ? C.cTby[ci] : C.cTay[ci],
           bp: (s, out) => borderPointAtFinal(C, piE, sideE, s, out),
           pX: C.polys[piX], xc: piX, sRX: C.armSR[aiX], dirX: C.armDir[aiX], LX: C.armL[aiX], LcutX: C.armLcut[aiX],
           zE: (s) => depthAtC(C, piE, s, depthWin), zX: (s) => depthAtC(C, piX, s, depthWin), h: C.h, zt: 0.1 * C.depthAmp, W: C.W,
         };
-        endTailPts(tin, pts, cpts, alpha, fill);
+        if (thru) thruTailPts(tin, pts, cpts, alpha);
+        else endTailPts(tin, pts, cpts, alpha, fill);
         tKey = aiE * 2 + (sideE === 1 ? 0 : 1);
-        if (RUN_END_FADE && (RUN_FADE_B || !dp.interval) && !C.cOk[ci] && C.cTheta[ci] < RUN_FADE_TH) runFade.push({ a: tin, key: tKey });
+        if (!thru && RUN_END_FADE && (RUN_FADE_B || !dp.interval) && !C.cOk[ci] && C.cTheta[ci] < RUN_FADE_TH) runFade.push({ a: tin, key: tKey });
       }
       if (K1314S12.tailJoin && tKey >= 0) tailJoin.push({ p: pieces.length, key: tKey });
       pieces.push({ kind: "tail", chain: dp.chain, side: sideE, s0: sT, s1: sT, pts, cpts, region: -1, corner: ci, alpha, fpts: fill.pts, fcpts: fill.cpts });
@@ -8626,6 +8639,8 @@ function pointAtInto(p: Poly, s: number, out: Float64Array): void {
  */
 export interface TailIn {
   pE: Poly; dirE: number; endS: number; sT: number; x0: number; y0: number;
+  /** K1314 s12: a thruTail's E arm (L, Lcut): its ramp is E's at the point's s, not X's (the end arm's). */
+  thruR?: { LE: number; LcutE: number };
   bp: (s: number, out: Float64Array) => void;
   pX: Poly; sRX: number; dirX: number; LX: number; LcutX: number;
   /** K1314 s11: X's chain index (runEndFade's fadeX). */
@@ -8823,7 +8838,7 @@ function tailF(a: TailIn, l1: number, u: number, rampCut: number, marginCut: num
  *  tail start at alpha 1 inside X's fill (def j45, j54: a dark blot where
  *  form B has nothing). */
 function tailAlpha(a: TailIn, sE: number, x0: number, y0: number, out: Float64Array, side: boolean, own = false): void {
-  const h = a.h; const zE = a.zE(sE);
+  const h = a.h; const zE = a.zE(sE); tailSE = sE;
   let nx = tailCen[0] - x0; let ny = tailCen[1] - y0; const nl = Math.sqrt(nx * nx + ny * ny);
   if (nl > 1e-12) { nx /= nl; ny /= nl; } else { nx = 0; ny = 0; }
   // The band interpolates its two edges' alphas linearly, while form B's
@@ -8857,7 +8872,7 @@ function tailAlphaAt(a: TailIn, x: number, y: number, keyE: number, side: boolea
   // (g = 0); a bend reads sF, so it keeps the true foot.
   tailFoot(a.pX, lo, lo + 8 * h, x, y, tailFt, a.bend ? Infinity : h);
   const sF = tailFt[0]; const dF = a.bend ? bendDist(a, a.bend, x, y, sF, tailFt[1]) : tailFt[1];
-  const ramp = tailRamp(a, sF, true);
+  const ramp = a.thruR ? rampOn(a.pE, a.endS, a.dirE, a.thruR.LE, a.thruR.LcutE, h, tailSE) : tailRamp(a, sF, true);
   // K1283 s9: `own` = a run's point (runEndFade): outside X's tube, or past
   // X's arm, it is E's own border, at 1.
   if (ramp < 0) return own ? 1 : 0;
@@ -8904,6 +8919,31 @@ const tgS = new Float64Array(3 * (TAIL_N + 1));
 const tgOk = new Uint8Array(TAIL_N + 1);
 /** A tail's border points (pts, cpts, alpha: its band) and, given `fill`,
  *  the stretch its fill covers (fill_tri reads OutlinePiece.fpts). */
+/** K1314 s12 (thruTail; c8's lost ink, muse_hash (19.15-19.35, 14.35-14.51)): at a corner of an end arm X
+ *  and a through arm E, E's border runs on from the corner under X's tube, toward the junction. Form B
+ *  draws it there with the tie (E over X near the corner on a shallow T: c67's side-1 border under c8's
+ *  last 2 h), and the app had no piece for it (tails are the end arm's only). The walk is E's border from
+ *  the corner to E's root at THRU_N steps, alpha = form B's (tailAlpha, own: E's border), cut after its
+ *  last inked point. */
+const THRU_N = 24;
+/** The sE of the tailAlpha call in progress (a thruTail's ramp reads it). */
+let tailSE = 0;
+function thruTailPts(a: TailIn, pts: number[], cpts: number[], alpha: number[]): void {
+  if (!(a.h > 0) || !Number.isFinite(a.sT)) return;
+  const l1 = Math.max(0, a.dirE * (a.sT - a.endS));
+  if (!(l1 > 1e-9)) return;
+  let last = -1;
+  for (let i = 0; i <= THRU_N; i++) {
+    const u = (l1 * i) / THRU_N; let sE: number; let px: number; let py: number;
+    if (i === 0) { pointAtInto(a.pE, a.sT, tailCen); sE = a.sT; px = a.x0; py = a.y0; }
+    else { sE = tailAt(a, l1, u, tailPt, tailCen); px = tailPt[0]; py = tailPt[1]; }
+    tailAlpha(a, sE, px, py, tailA, false, true);
+    pts.push(px, py); cpts.push(tailCen[0], tailCen[1]); alpha.push(tailA[0], tailA[1]);
+    if (tailA[0] > 1e-3 || tailA[1] > 1e-3) last = i;
+  }
+  const keep = last < 0 ? 0 : Math.min(THRU_N, last + 1) + 1;
+  pts.length = cpts.length = alpha.length = keep < 2 ? 0 : 2 * keep;
+}
 export function endTailPts(a: TailIn, pts: number[], cpts: number[], alpha?: number[], fill?: { pts: number[]; cpts: number[] }): void {
   if (!(a.h > 0) || !Number.isFinite(a.sT)) return;
   // K1283 s4: the band goes on past X's arm start (tailRamp's useAlt); the
