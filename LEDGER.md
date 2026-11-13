@@ -580,11 +580,11 @@ Next free ID: K1339.
 - **K1338** · The outline worker frame's frame() (64-71 ms p50, outline.ts) and band (16-26 ms, bandOf + band
   files) on def mid-drag, toward frame + band <= 10 ms, look unchanged; K1247's sibling stage (s28 takes fill
   and zChains); brief `docs/design/K1247_s29_frame_band_speed.md`
-  - owner: nobody since 2026-11-12 09:35 (merged; agent `ae54518a925be4103` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `1463742d`
-  - evidence: .claude/probes/K1247/k1247s29_* (tools); untracked out/s29/; parts in .claude/probes/K1314/out/s10/bench/abba1.json
-  - next: frame + band at 76 ms p50 on def (goal 10): the next cut is algorithmic (carry growCFC's and tailWalk's results frame to frame; buildBorderC; bandRec's own code; footS segment boxes); recTables is built twice (fill and band); the browser worker runs ~1.75x Node on the same code (cause unknown)
-  - brief: `docs/design/K1247_s29_frame_band_speed.md`
+  - owner: agent `a644f27c6e57d73f2` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 09:36, 2 h cap ~11:36)
+  - branch: `worktree-agent-a644f27c6e57d73f2`, worktree `.claude/worktrees/agent-a644f27c6e57d73f2`; last commit: `9a50bb34`
+  - evidence: .claude/probes/K1247/k1247s29_*, k1247s30_* (tools); untracked out/s29/, out/s30/
+  - next: s30 running: what changes per frame mid-drag, the browser's 1.75x over Node, a prototype route on frame() behind a flag, the plan to the gate (138 ms def p50 after s29)
+  - brief: `docs/design/K1247_s30_path_to_gate.md`
 
 ## Next, in order
 
