@@ -84,3 +84,85 @@ Under 30 lines:
 - your last SHA.
 
 End with `Ledger items` and K1362's handle fields.
+
+## Handoff (c1, 2026-11-13: start 02:06:38, stop 02:47; branch `worktree-agent-a161f441f698339ef`)
+
+All four Done items hold.
+
+**What was built:**
+- **A lean export.** `buildFieldSceneLean` is in `scene_export.ts`, and `gatherSceneInputLean` is in
+  `scene_export_hook.ts`. Both are additive; the full export is untouched. The lean pair skips everything only the
+  diagnostics read: the particle mean, end offsets, z, the depth tent and field-at-arc. It reads none of zPos,
+  physics positions or junction particles, and takes only the length of each chain's particle list. The tables
+  read only the look, the chains (id, pts, closed), the crossings and the junctions.
+- **A second module worker.** `gf_worker.ts` runs `gf_build.ts`'s `gfBuild` (lean scene, then `buildTables`, then
+  the tables' buffers transferred back). The physics worker is untouched. It can't build the tables, because the
+  chain samples are made on main from the interpolated mirror.
+- **`gf_app.ts`:**
+  - It keeps one build in flight and uploads the tables on the frame after they arrive (about a one-frame latency).
+  - The first build after a renderer change runs in-thread, so no frame is stale or blank.
+  - It falls back to the same `gfBuild` in-thread when the worker is not ready or fails, or when
+    `__knotGfOpts.worker === false`.
+  - `__knotGfOpts.verify` (or `__knotGf.verify`) checks every build against the old full path, bit for bit.
+    `__knotGf.rebuild()` forces a build.
+  - `GfTables` and the pass are unchanged.
+
+**Output unchanged:**
+- The digest (`k1362t1_digest.ts`, 12 scenes plus every s18 drag frame) gives
+  `all ae1d2392...85a27`, 5445 lines, the same as master's.
+- `test/render/gf_build.test.ts` checks that lean tables equal the full tables bit for bit, that the lean input
+  reads nothing it skips, and that the tables survive a transfer.
+- In the app (`VERIFY=1`), worker builds were checked against the in-thread full path on def, muse_hash and fat: at
+  rest with a forced rebuild, then through the drag. Over 958 builds there were 0 mismatches.
+
+**Desktop** (perf lock; `k1362c1_run.ps1`, `k1362c1_table.mjs`). Master 13c997b5 is "before", d3712a82 is "after",
+p50 of the drag:
+
+| link | main ms/frame (rp=gf) | per rebuild: main + worker | export | iv rp=gf | iv today's look | phys ms/substep, sim/wall (rp=gf) |
+|---|---|---|---|---|---|---|
+| def | 31.4 → 1.64 | 33.6 → 2.2 + 11.2 | 18.7 → 1.3 | 76.5 → 43.8 | 37.2 / 36.6 | 13.28 → 13.27, 0.62 → 0.62 |
+| muse_hash | 18.4 → 1.48 | 18.0 → 1.5 + 7.0 | 11.3 → 1.3 | 61.3 → 44.3 | 50.1 / 46.5 | 22.5 → 22.8, 0.37 → 0.36 |
+| fat | 29.3 → 1.43 | 30.4 → 1.8 + 14.9 | 18.7 → 1.8 | 70.2 → 38.9 | 40.9 / 40.4 | 13.1 → 13.1, 0.63 → 0.63 |
+
+- With the worker off (`GFOPTS={"worker":false}`), the lean build in-thread costs 15.0 / 7.7 / 14.4 ms of main per
+  frame. The lean export alone saves about 90% of the export.
+- The physics worker runs flat out in every drag, at 982-992 ms per wall second. A drag is physics-bound on the
+  desktop.
+- Ms per worker frame falls from 71.8 to 41.1 on def only because main's frames got shorter: a frame grants more sim
+  the longer it is.
+
+**Pixel** (`k1362c1_phone.ps1` runs `k1362c1_drag.mjs`: one K156 pass, both builds, s4's 3 s CDP touch drag on
+`?b.J`, ABAB x2, GPU at 1286 MHz, thermal status 0 throughout). It is not the K156 kit's replay, which has no drag.
+
+| | today's look p50 | rp=gf p50 / p90 | gf main ms/frame | worker build (export + tables) | phys sim/wall rp=gf (today's look) |
+|---|---|---|---|---|---|
+| master | 50.0 / 50.0 | 50.3, 66.6 / 66.8 | 31.9, 33.0 | (on main: 16.5-17.2 + 12.2-12.7) | 0.30, 0.29 (0.71, 0.62) |
+| branch | 50.0 / 50.0 | 33.3, 33.3 / 33.4 | 0.97, 1.25 | 22.7 (2.7 + 20.0), latency 34 | 0.32, 0.32 (0.67, 0.63) |
+
+**Residuals:**
+- **The Pixel's physics.** It runs at half its sim rate under rp=gf on both builds (sim/wall 0.29-0.32 against
+  0.62-0.71 for today's look), with the GPU at 1286 MHz and no thermal throttling. On the branch the physics worker
+  steps about 790 ms per wall second against about 930 under today's look, so each sim second costs it about 1.8
+  times the CPU. These are estimates from the frame sums. Not diagnosed.
+  The CPU clocks weren't recorded; that is the next cheap check (`/sys/devices/system/cpu/cpu*/cpufreq/scaling_cur_freq`
+  beside the GPU clock). On the desktop the same comparison moves 0.67 to 0.62.
+- **The tables in the worker.** On the Pixel they take 20 ms against 12.5 on main, likely a slower core; that is
+  inferred, not measured. On the desktop they take 9.8 on def. At a 16 ms frame the tables would lag two frames.
+  Corners only where their arms moved, done as an exact reuse, is the remaining CPU lever.
+- **Display latency.** The drawn tables trail the physics by one build: p50 18-19 ms on the desktop, 34 on the
+  Pixel.
+- **The lean export's coverage.** If `buildTables` ever reads a scene field the lean export skips (z, the particle
+  mean, field-at-arc), only the test fixture and the in-app verify would catch it, not the digest. The digest reads
+  the full export.
+
+**Next stage needs:**
+- **On the Pixel the gate is now the GPU pass plus the physics,** not main's CPU. The branch's 33.3 p50 is two vsyncs
+  at a 20-25 ms pass.
+- **The physics slowdown under rp=gf** needs a cause before its fix.
+- **The tables' corners** are what shrinks the worker build.
+
+**Rerun:**
+- `pwsh -NoProfile -File .claude/probes/K1362/k1362c1_run.ps1 -OutDir <dir> -Before <master preview> -After <branch
+  preview> [-Steps verify,before,after,thread]`. The previews listen on `localhost`, not 127.0.0.1.
+- Then `node .claude/probes/K1362/k1362c1_table.mjs <dir>`.
+- The phone: `pwsh -NoProfile -File .claude/probes/K1362/k1362c1_phone.ps1 -Base <sha> -Head <sha>`.
