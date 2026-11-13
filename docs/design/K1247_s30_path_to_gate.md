@@ -110,9 +110,21 @@ committed; `k1247s30_dirty.ts`, `k1247s30_spread.ts`):
   arc, `buildBorder`'s arc steps) shifts every index after it. Counted by set membership (`piecePtsNew`, the
   exact x,y missing from the piece's last version), the work at 32-point spans on def is 9.7% of piece points,
   2.6x the 3.8% released; at chain granularity 11.4%, 0.7x. Observed: `buildBorder` offsets each vertex from
-  its own two segments, so a held vertex's own offset point cannot move. The 2.6x is untraced: the candidates
-  are cut and corner points placed from the other thread's border at a crossing, corner rounding, and the
-  vertices next to a released span. Fat's piece points are few (piecesCapsEtc 1.4 ms), so its 1.4% new is small
+  its own two segments, so a held vertex's own offset point cannot move. The 2.6x, attributed but not traced
+  (`spread_def_span32_near.txt`, `_holdx.txt`): 55% of the new points are on chains with NO released span; only
+  11% lie within 10 device px of a released point and 24% lie 160 px or more from any; 98.7% are absent from
+  every previous piece of their chain side (not a piece-key artifact); the captured frames (camera, dead ends)
+  show the same mix; and holding every crossing end and junction input whole (`holdx=1`) leaves it at 9.4%. So
+  the coupling runs inside frame() from one chain's points to other chains' pieces, mostly by sub-0.05 px (held
+  max |d| p50 0.004 px). Not a global origin (outline.ts's only bboxes prune, exactly). One piece traced
+  (`trace=55`, `trace=123`, `spread_def_span32_trace*.txt`): the farthest changed held-chain piece is a junction
+  tail on chain 75 (corner 544, junction 178, every arm on chain 75, which has no released span), 886-904 px
+  from any released point; its 11 points move as a linear ramp, 1e-4 px at point 0 to 0 at point 10. Holding
+  every crossing and junction input whole cuts that to 7e-6 px, but it still moves: with its points, crossing
+  ends, junction centre and arms all bit-identical, something inside frame() still reads other chains.
+  Next: diff the cache values `endTailPts` reads for corner 544 (cTax/cTay, armSR/armL/armLcut, the polys,
+  depthAtC) between two such frames, and follow the first that differs back to the chain it comes from. Whatever
+  it is decides whether span work can be exact. Fat's piece points are few (piecesCapsEtc 1.4 ms), so its 1.4% new is small
   in time too. Purity held throughout (`again:*` 0%). Files: `out/s30/run/spread_*_new.txt`.
 
 - Spread: an exact incremental frame redoes about 2x the released points (pieces on held chains change where
