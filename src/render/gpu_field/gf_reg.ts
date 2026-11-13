@@ -143,20 +143,20 @@ function packAccess(s: string, where: Map<string, string>): string {
  * same, so the output is the same bit for bit; only the register and indexing layout changes. Every packed array
  * must be declared with its group's qualifier, type and size.
  */
-export function packArrays(src: string): string {
+export function packArrays(src: string, groups = GF_PACK): string {
   const where = new Map<string, string>();
-  for (const g of GF_PACK) g.fields.forEach((f, i) => where.set(f, `${g.name}[@].${"xyzw"[i]}`));
+  for (const g of groups) g.fields.forEach((f, i) => where.set(f, `${g.name}[@].${"xyzw"[i]}`));
   const seen = new Set<string>();
   let size = "";
   const first = src.search(DECL);
   const body = src.replace(DECL, (all, q: string, t: string, name: string, n: string) => {
-    const g = GF_PACK.find((x) => x.fields.includes(name));
+    const g = groups.find((x) => x.fields.includes(name));
     if (!g) return all;
     if (q !== g.q || t !== g.of || (size && n !== size)) throw new Error(`gf_reg: ${name} is not ${g.q}${g.of}[${size}]`);
     size = n; seen.add(name);
     return "";
   });
-  for (const g of GF_PACK) for (const f of g.fields) if (!seen.has(f)) throw new Error(`gf_reg: no array ${f}`);
-  const decl = GF_PACK.map((g) => `${g.q}${g.t} ${g.name}[${size}];`).join(" ") + "\n";
+  for (const g of groups) for (const f of g.fields) if (!seen.has(f)) throw new Error(`gf_reg: no array ${f}`);
+  const decl = groups.map((g) => `${g.q}${g.t} ${g.name}[${size}];`).join(" ") + "\n";
   return body.slice(0, first) + decl + packAccess(body.slice(first), where);
 }

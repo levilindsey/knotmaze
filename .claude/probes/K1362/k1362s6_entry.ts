@@ -44,9 +44,10 @@ void main() { discard; }`;
 
 function parseTiers(name: string): GfTier[] {
   return name.slice(1).split("_").map((t) => {
-    const m = /^(\d)(\d)(r?)(h?)(s?)(u?)(k?)(o?)$/.exec(t);
+    const m = /^(\d)(\d)(r?)(h?)(s?)(u?)(k[fi]?|)(o?)$/.exec(t);
     if (!m) throw new Error("bad tier " + t);
-    return { p: +m[1], k: +m[2], ramps: m[3] === "r", half: m[4] === "h", reg: m[5] === "s", unroll: m[6] === "u", pack: m[7] === "k", oldKeys: m[8] === "o" } as GfTier & { oldKeys?: boolean };
+    const pack = m[7] === "k" ? true : m[7] === "kf" ? "f" : m[7] === "ki" ? "i" : false; // K1362 s6: k, kf, ki
+    return { p: +m[1], k: +m[2], ramps: m[3] === "r", half: m[4] === "h", reg: m[5] === "s", unroll: m[6] === "u", pack, oldKeys: m[8] === "o" } as GfTier & { oldKeys?: boolean };
   });
 }
 function makePass(gl: WebGL2RenderingContext, name: string, fullFs?: string): GfPass {

@@ -15,7 +15,7 @@
 import { GF_LOG } from "./gf_pack";
 import { MAXP } from "./tables";
 import { MAXK, MAXR } from "./eval";
-import { constantLoops, packArrays, scalarizeArrays } from "./gf_reg";
+import { constantLoops, GF_PACK, packArrays, scalarizeArrays } from "./gf_reg";
 
 export const GF_VS = `#version 300 es
 void main() {
@@ -32,13 +32,14 @@ void main() {
  * `reg` (K1362 s6): the tier's arrays become scalars read through selects (gf_reg.ts). `unroll` (K1362 s6): every
  * loop over the per-pixel lists gets a constant trip count (the list's capacity) and breaks at the list's end, so a
  * compiler can unroll it and index the arrays by constants. `pack` (K1362 s6): the per-piece arrays share one vec4
- * and one ivec4 array (gf_reg.ts packArrays).
+ * and one ivec4 array (gf_reg.ts packArrays); "f" packs only the floats, "i" only the ints.
  */
-export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: boolean }
+export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm }
+export type GfPackForm = boolean | "f" | "i";
 
 /** The program's source forms (gf_reg.ts); a tier's own flags set them by default. The probe keeps the plain form. */
 /** oldKeys: the keys over the chain's whole pin and arm lists (before gf_keys.ts's bins; a bench's A/B). */
-export interface GfForm { reg?: boolean; unroll?: boolean; pack?: boolean; oldKeys?: boolean }
+export interface GfForm { reg?: boolean; unroll?: boolean; pack?: GfPackForm; oldKeys?: boolean }
 
 export function gfFs(probe: boolean, tangentTerms = true, tier?: GfTier, form: GfForm = { reg: tier?.reg, unroll: tier?.unroll, pack: tier?.pack }): string {
   let src = gfSrc(probe, tangentTerms, tier);
@@ -47,7 +48,10 @@ export function gfFs(probe: boolean, tangentTerms = true, tier?: GfTier, form: G
   const mp = tier ? tier.p : MAXP;
   const mk = tier ? tier.k : MAXK;
   if (form.unroll) src = constantLoops(src, { np: mp, nk: mk, ns: mp + mk, nr: MAXR, nTj: 8 });
-  if (form.pack) src = packArrays(src);
+  if (form.pack) {
+    const pick = form.pack === "f" ? "pPF" : form.pack === "i" ? "pPI" : "";
+    src = packArrays(src, pick ? GF_PACK.filter((g) => g.name === pick) : GF_PACK);
+  }
   if (form.reg) src = scalarizeArrays(src, { MAXP: mp, MAXK: mk, MAXS: mp + mk });
   return src;
 }
