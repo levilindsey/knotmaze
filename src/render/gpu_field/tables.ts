@@ -381,8 +381,40 @@ export function buildTables(scene: FieldScene, opts: GfOpts): GfTables {
       const rb = Math.max(rootBand * h * rootTip(th), 1e-9 * h);
       const V = track(J, A, B, th, uV0, uV0, h, 8);
       if (!(V.ua > 0 && V.ua < A.L && V.ub > 0 && V.ub < B.L)) continue;
-      { // form B: V lies in the wedge between the arms' chords (the facing sides)
-        const crA = A.ux * (V.y - J.c[1]) - A.uy * (V.x - J.c[0]); const crB = B.ux * (V.y - J.c[1]) - B.uy * (V.x - J.c[0]);
+      { // form B's V gate, mirrored (solveEq): Newton on the TRUE distances to both arms from the straight
+        // model's V, each foot clamped at its arm's root; a foot at the root (dV = 0) or no solution rejects.
+        // Then V lies in the wedge between the arms' chords (the facing sides).
+        let bx = A.ux + B.ux; let by = A.uy + B.uy; const bl = Math.sqrt(bx * bx + by * by) || 1; bx /= bl; by /= bl;
+        const sn = Math.sin(th / 2); let x = J.c[0] + (bx * h) / sn; let y = J.c[1] + (by * h) / sn;
+        // The foot is windowed to the arm's own [0, L] (its fixed samples): a walk along the chain would cross
+        // the root into a through pass's other arm, which form B's windowed foot never reaches.
+        const SAw = smpOf(A); const SBw = smpOf(B); const fw = { u: 0, x: 0, y: 0 };
+        const footW = (S: { n: number; du: number; x: Float64Array; y: Float64Array }, px: number, py: number): void => {
+          let best = Infinity;
+          for (let i = 0; i < S.n; i++) {
+            const ax = S.x[i]; const ay = S.y[i]; const dx = S.x[i + 1] - ax; const dy = S.y[i + 1] - ay; const l2 = dx * dx + dy * dy;
+            const t = l2 > 0 ? Math.min(1, Math.max(0, ((px - ax) * dx + (py - ay) * dy) / l2)) : 0;
+            const fx = ax + t * dx; const fy = ay + t * dy; const d2 = (px - fx) * (px - fx) + (py - fy) * (py - fy);
+            if (d2 < best) { best = d2; fw.u = (i + t) * S.du; fw.x = fx; fw.y = fy; }
+          }
+        };
+        let ua = uV0; let ub = uV0; let ok = false;
+        for (let it = 0; it < 60; it++) {
+          footW(SAw, x, y); ua = fw.u; const pa = { x: fw.x, y: fw.y }; footW(SBw, x, y); ub = fw.u; const pb = { x: fw.x, y: fw.y };
+          const dax = x - pa.x; const day = y - pa.y; const dbx = x - pb.x; const dby = y - pb.y;
+          const da = Math.sqrt(dax * dax + day * day); const db = Math.sqrt(dbx * dbx + dby * dby);
+          const Fa = da - h; const Fb = db - h;
+          if (Math.abs(Fa) < 1e-9 * h && Math.abs(Fb) < 1e-9 * h) { ok = true; break; }
+          if (!(da > 1e-12 && db > 1e-12)) break;
+          const gax = dax / da; const gay = day / da; const gbx = dbx / db; const gby = dby / db; const det = gax * gby - gay * gbx;
+          if (Math.abs(det) < 1e-12) break;
+          let dx = (-Fa * gby + Fb * gay) / det; let dy = (-Fb * gax + Fa * gbx) / det; const dl = Math.sqrt(dx * dx + dy * dy);
+          if (dl > h) { dx *= h / dl; dy *= h / dl; }
+          x += dx; y += dy;
+        }
+        const tol = 1e-9 * h;
+        if (!(ok && ua > tol && ua < A.L - tol && ub > tol && ub < B.L - tol)) continue;
+        const crA = A.ux * (y - J.c[1]) - A.uy * (x - J.c[0]); const crB = B.ux * (y - J.c[1]) - B.uy * (x - J.c[0]);
         const sgn = Math.sign(A.ux * B.uy - A.uy * B.ux);
         if (!(crA * sgn > 0 && crB * sgn < 0)) continue;
       }
