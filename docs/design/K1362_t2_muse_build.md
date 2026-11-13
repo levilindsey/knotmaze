@@ -116,8 +116,8 @@ workMs = worker wall per rebuild as gf_app reports it):
 | link | before work p50/p95 | shipped after p50/p95 | pool ungated p50 | main ms/frame before -> after |
 |---|---|---|---|---|
 | def | 11.8 / 22.2 | 12.1 / 19.0 | 11.9 | 1.57 -> 1.56 |
-| muse_hash | 6.7 / 12.0 | 7.5 / — | 8.9 | 1.45 -> 1.51 |
-| fat | 14.5 / 20.3 | 14.4 / — | 11.2 | 1.70 -> 1.50 |
+| muse_hash | 6.7 / 12.0 | 7.5 / 14.7 | 8.9 | 1.45 -> 1.51 |
+| fat | 14.5 / 20.3 | 14.4 / 21.3 | 11.2 | 1.70 -> 1.50 |
 
 Shipped, the pool engages only on builds with >= 28000 scene points
 (none of the three links today), so the shipped after column is the
