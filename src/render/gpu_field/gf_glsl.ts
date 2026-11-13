@@ -45,14 +45,14 @@ export type GfPackForm = boolean | "f" | "i";
  * the full program draws that pixel); 2 = layers() and composite() from them, rebuilding pd, pfx, pfy, the corner
  * radii and thruQ from their indices with the scan's own lines. Needs a tier (its p and k size the targets' use).
  */
-export interface GfForm { reg?: boolean; unroll?: boolean; pack?: GfPackForm; oldKeys?: boolean; split?: 1 | 2 }
+export interface GfForm { reg?: boolean; unroll?: boolean; pack?: GfPackForm; oldKeys?: boolean; split?: 1 | 2; splitSkip?: boolean }
 
 export function gfFs(probe: boolean, tangentTerms = true, tier?: GfTier, form: GfForm = { reg: tier?.reg, unroll: tier?.unroll, pack: tier?.pack }): string {
   let src = gfSrc(probe, tangentTerms, tier);
   if (form.oldKeys) src = src.replace("precision highp float;\n", "precision highp float;\n#define OLDKEYS 1\n");
   if (form.split) {
     if (probe || !tier || tier.p > 3 || tier.k > 2) throw new Error("gfFs: split needs a non-probe tier of at most p3/k2");
-    src = src.replace("precision highp float;\n", `precision highp float;\n#define SPLIT${form.split} 1\n`);
+    src = src.replace("precision highp float;\n", `precision highp float;\n#define SPLIT${form.split} 1\n${form.splitSkip ? "#define SPLITSKIP 1\n" : ""}`);
   }
   if (probe) return src;
   const mp = tier ? tier.p : MAXP;
@@ -560,6 +560,11 @@ void main() {
   o2 = vec4(float(nK), float(np), float(ns), 0.0);
 #elif defined(SPLIT1)
   o0 = e0; o1 = e1; o2 = e2; o3 = uvec2(s3x, s3y);
+#ifdef SPLITSKIP
+  // no piece, corner or through corner (s3y == 0): the pixel's output is (0, 0), the target's clear; depth 1 keeps
+  // pass 2 off it (pass 2 draws depth 0.5 GREATER), depth 0 lets it draw
+  gl_FragDepth = s3y == 0u ? 1.0 : 0.0;
+#endif
 #else
   o0 = vec4(oInk, oCov, 0.0, 1.0);
 #endif

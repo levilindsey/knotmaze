@@ -58,8 +58,8 @@ function makePass(gl: WebGL2RenderingContext, name: string, fullFs?: string): Gf
   if (name === "fullK") return new GfPass(gl, false, [], () => gfFs(false, true, undefined, { pack: true })); // K1362 s6: packed state
   if (name === "fullO") return new GfPass(gl, false, [], () => gfFs(false, true, undefined, { oldKeys: true })); // K1362 s6: the keys before gf_keys.ts
   if (name === "fullp") return new GfPass(gl, true, []);
-  // K1362 s7: x<tier> = that one tier as the two-pass split (gf_split.ts), then the full program
-  if (/^x\d\d/.test(name)) { const [t] = parseTiers(name); return new GfPass(gl, false, [t], (tt, s) => (tt ? gfFs(false, true, tt, { reg: tt.reg, unroll: tt.unroll, pack: tt.pack, split: s }) : fullFs ?? gfFs(false, true)), true); }
+  // K1362 s7: x<tier>[e][1] = that one tier as the two-pass split (gf_split.ts), then the full program; e: empties skip pass 2 (depth); 1: pass 1 alone (pass 2 and full discard)
+  { const m = /^x(\d\d[a-z]*?)(e?)(1?)$/.exec(name); if (m) { const skip = m[2] === "e"; const only1 = m[3] === "1"; const [t] = parseTiers("t" + m[1]); return new GfPass(gl, false, [t], (tt, s) => (only1 && s !== 1 ? DISCARD : tt ? gfFs(false, true, tt, { reg: tt.reg, unroll: tt.unroll, pack: tt.pack, split: s, splitSkip: skip }) : fullFs ?? gfFs(false, true)), skip ? "skip" : true); } }
   // t<tiers>[_...]: each tier "<p><k>[r][h][s]" (s = register form, gf_reg.ts), then the full program
   const tiers = parseTiers(name);
   const ok = tiers.some((t) => (t as { oldKeys?: boolean }).oldKeys); // o: every program of the variant on the old keys

@@ -143,16 +143,22 @@ export class GfPass {
   /** K1362 s7: the split's pieces (gf_split.ts), when the one tier runs as two passes. */
   private pieces: GfPieces | null = null;
   /**
+   * K1362 s7 "skip": pass 1 also writes depth (1 where the pixel has nothing to draw, 0 elsewhere) and pass 2 is
+   * routed by depth alone (0.5 GREATER, no stencil test), so pass 2 never runs on an empty pixel.
+   */
+  private skip = false;
+  /**
    * tiers: GF_TIERS by default; [] draws the full program alone (stage 2's pass). fs: a program's source override
    * (benches; split programs get their pass as the second argument). split (K1362 s7): the one tier as two passes.
    */
-  constructor(gl: WebGL2RenderingContext, probe: boolean, tiers: GfTier[] = GF_TIERS, fs?: (tier: GfTier | null, split?: 1 | 2) => string, split = false) {
+  constructor(gl: WebGL2RenderingContext, probe: boolean, tiers: GfTier[] = GF_TIERS, fs?: (tier: GfTier | null, split?: 1 | 2) => string, split: boolean | "skip" = false) {
     this.gl = gl; this.probe = probe;
     if (split && (probe || tiers.length !== 1)) throw new Error("GfPass: split needs one tier and no probe");
+    this.skip = split === "skip";
     const plan: { tier: GfTier | null; split?: 1 | 2 }[] = split ? [{ tier: tiers[0], split: 1 }, { tier: tiers[0], split: 2 }, { tier: null }]
       : [...tiers, null].map((tier) => ({ tier }));
     this.progs = plan.map(({ tier, split: s }) => {
-      const src = fs ? fs(tier, s) : gfFs(probe, true, tier ?? undefined, s ? { reg: tier?.reg, unroll: tier?.unroll, pack: tier?.pack, split: s } : undefined);
+      const src = fs ? fs(tier, s) : gfFs(probe, true, tier ?? undefined, s ? { reg: tier?.reg, unroll: tier?.unroll, pack: tier?.pack, split: s, splitSkip: this.skip } : undefined);
       const prog = compileProgram(gl, GF_VS, src);
       const u = new Map<string, WebGLUniformLocation | null>();
       for (const n of UNIFORMS) u.set(n, gl.getUniformLocation(prog, n));
@@ -233,7 +239,7 @@ export class GfPass {
       // (pass 2 reads only the pixels pass 1 just wrote), so a tile-based GPU need not load them
       pieces.bind(target.w, target.h, target.depthStencil!);
       gl.invalidateFramebuffer(gl.FRAMEBUFFER, [0, 1, 2, 3].map((i) => gl.COLOR_ATTACHMENT0 + i));
-      gl.stencilMask(0xff); gl.clearBufferfi(gl.DEPTH_STENCIL, 0, 1, 0);
+      gl.stencilMask(0xff); gl.depthMask(true); gl.clearBufferfi(gl.DEPTH_STENCIL, 0, 1, 0);
     }
     gl.enable(gl.SCISSOR_TEST);
     gl.scissor(x0, y0, x1 - x0, y1 - y0);
@@ -252,14 +258,19 @@ export class GfPass {
     for (let pi = 0; pi < progs.length; pi++) {
       const g = progs[pi];
       // the last program writes no route: KEEP lets the stencil test run before the shader even though it discards
-      if (routed && pi === progs.length - 1) { gl.stencilFunc(gl.EQUAL, 0, 0xff); gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP); }
+      if (routed && pi === progs.length - 1) {
+        gl.stencilFunc(gl.EQUAL, 0, 0xff); gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
+        if (this.skip) { gl.enable(gl.STENCIL_TEST); gl.disable(gl.DEPTH_TEST); gl.depthMask(true); gl.depthFunc(gl.LESS); }
+      }
       if (g.split === 1) {
         // pass 1 keeps a pixel (stencil 1) unless it discards; it runs on every pixel of the rect
         gl.stencilFunc(gl.ALWAYS, 1, 0xff); gl.stencilOp(gl.KEEP, gl.KEEP, gl.REPLACE);
+        if (this.skip) { gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.ALWAYS); gl.depthMask(true); }
       } else if (g.split === 2) {
         // pass 2 draws exactly pass 1's pixels into the target, reading their pieces
         gl.bindFramebuffer(gl.FRAMEBUFFER, target.fbo);
         gl.stencilFunc(gl.EQUAL, 1, 0xff); gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
+        if (this.skip) { gl.disable(gl.STENCIL_TEST); gl.depthFunc(gl.GREATER); gl.depthMask(false); }
         for (let i = 0; i < 4; i++) { gl.activeTexture(gl.TEXTURE1 + i); gl.bindTexture(gl.TEXTURE_2D, pieces!.tex[i]); }
         gl.activeTexture(gl.TEXTURE0);
       }
