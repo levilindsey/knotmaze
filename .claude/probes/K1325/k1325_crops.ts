@@ -1,6 +1,7 @@
 // K1325 s1: the brief's crops at its two spots, reference before | reference after | rp=outline, 4 h world wide.
 //
 //   node scripts/run_node.mjs .claude/probes/K1325/k1325_crops.ts [--out=.claude/probes/K1325/out/s1] [--px=360]
+//        [--spots=scene:x:y:label,...]   (default | --plateau | outline at each spot, e.g. the plateau census's finds)
 //
 // j30 (g41_user_tw64 7.55, 3.15): before = s9's reference (MARCH off: recordFail's marched V seed, --nomarch),
 // after = this stage's (MARCH on). x304 (muse_hash 28.51, 18.01): before = the default reference, after = the
@@ -47,11 +48,23 @@ function crop(file: string, mBefore: Model, mAfter: Model, X: number, Y: number,
   console.log(`${file}: ${Wt}x${P}, ${S.toFixed(3)} world wide`);
 }
 
-// j30: separate models, since the fillet (and recordFail's vfail list) is built once per model.
-MARCH.on = false; const j0 = buildModel("g41_user_tw64");
-MARCH.on = true; const j1 = buildModel("g41_user_tw64");
-crop("j30_before_after_outline.png", j0, j1, 7.55, 3.15, () => { MARCH.on = false; }, () => { MARCH.on = true; });
-// x304: one model; refEval reads PLATEAU.on per call.
-const mx = buildModel("muse_hash");
-crop("x304_before_plateau_outline.png", mx, mx, 28.51, 18.01, () => { PLATEAU.on = false; }, () => { PLATEAU.on = true; });
-PLATEAU.on = false;
+// --spots=scene:x:y:label,... crops only those spots, default | --plateau | outline (the plateau census's finds).
+const SP = opt("spots");
+if (SP) {
+  const models = new Map<string, Model>();
+  for (const s of SP.split(",")) {
+    const [nm, x, y, label] = s.split(":"); let m = models.get(nm);
+    if (!m) { m = buildModel(nm); models.set(nm, m); }
+    crop(`${label}.png`, m, m, +x, +y, () => { PLATEAU.on = false; }, () => { PLATEAU.on = true; });
+  }
+  PLATEAU.on = false;
+} else {
+  // j30: separate models, since the fillet (and recordFail's vfail list) is built once per model.
+  MARCH.on = false; const j0 = buildModel("g41_user_tw64");
+  MARCH.on = true; const j1 = buildModel("g41_user_tw64");
+  crop("j30_before_after_outline.png", j0, j1, 7.55, 3.15, () => { MARCH.on = false; }, () => { MARCH.on = true; });
+  // x304: one model; refEval reads PLATEAU.on per call.
+  const mx = buildModel("muse_hash");
+  crop("x304_before_plateau_outline.png", mx, mx, 28.51, 18.01, () => { PLATEAU.on = false; }, () => { PLATEAU.on = true; });
+  PLATEAU.on = false;
+}
