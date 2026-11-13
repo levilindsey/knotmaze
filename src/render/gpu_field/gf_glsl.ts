@@ -15,7 +15,7 @@
 import { GF_LOG } from "./gf_pack";
 import { MAXP } from "./tables";
 import { MAXK, MAXR } from "./eval";
-import { constantLoops, scalarizeArrays } from "./gf_reg";
+import { constantLoops, packArrays, scalarizeArrays } from "./gf_reg";
 
 export const GF_VS = `#version 300 es
 void main() {
@@ -31,21 +31,23 @@ void main() {
  * `half`: the tier keeps its integer and [0, 1] per-pixel state in mediump (fp16 on mobile; ignored by desktop GPUs).
  * `reg` (K1362 s6): the tier's arrays become scalars read through selects (gf_reg.ts). `unroll` (K1362 s6): every
  * loop over the per-pixel lists gets a constant trip count (the list's capacity) and breaks at the list's end, so a
- * compiler can unroll it and index the arrays by constants.
+ * compiler can unroll it and index the arrays by constants. `pack` (K1362 s6): the per-piece arrays share one vec4
+ * and one ivec4 array (gf_reg.ts packArrays).
  */
-export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean }
+export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: boolean }
 
 /** The program's source forms (gf_reg.ts); a tier's own flags set them by default. The probe keeps the plain form. */
 /** oldKeys: the keys over the chain's whole pin and arm lists (before gf_keys.ts's bins; a bench's A/B). */
-export interface GfForm { reg?: boolean; unroll?: boolean; oldKeys?: boolean }
+export interface GfForm { reg?: boolean; unroll?: boolean; pack?: boolean; oldKeys?: boolean }
 
-export function gfFs(probe: boolean, tangentTerms = true, tier?: GfTier, form: GfForm = { reg: tier?.reg, unroll: tier?.unroll }): string {
+export function gfFs(probe: boolean, tangentTerms = true, tier?: GfTier, form: GfForm = { reg: tier?.reg, unroll: tier?.unroll, pack: tier?.pack }): string {
   let src = gfSrc(probe, tangentTerms, tier);
   if (form.oldKeys) src = src.replace("precision highp float;\n", "precision highp float;\n#define OLDKEYS 1\n");
   if (probe) return src;
   const mp = tier ? tier.p : MAXP;
   const mk = tier ? tier.k : MAXK;
   if (form.unroll) src = constantLoops(src, { np: mp, nk: mk, ns: mp + mk, nr: MAXR, nTj: 8 });
+  if (form.pack) src = packArrays(src);
   if (form.reg) src = scalarizeArrays(src, { MAXP: mp, MAXK: mk, MAXS: mp + mk });
   return src;
 }

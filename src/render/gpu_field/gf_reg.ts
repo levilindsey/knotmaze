@@ -114,3 +114,49 @@ export function scalarizeArrays(src: string, sizes: Record<string, number>): str
   body = head + lines.join("\n") + "\n" + rest;
   return body;
 }
+
+/** K1362 s6, lever 2 (packed state): per-piece arrays packed into one vec4 and one ivec4 array, a component each. */
+export const GF_PACK: { name: string; q: string; t: string; of: string; fields: string[] }[] = [
+  { name: "pPF", q: "", t: "vec4", of: "float", fields: ["pd", "pfx", "pfy", "pkey"] },
+  { name: "pPI", q: "IQ ", t: "ivec4", of: "int", fields: ["pc", "plo", "phi", "pg"] },
+];
+
+function packAccess(s: string, where: Map<string, string>): string {
+  const re = /\b(\w+)\s*\[/g;
+  let out = "";
+  let at = 0;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(s))) {
+    const to = where.get(m[1]);
+    if (to === undefined) continue;
+    const open = m.index + m[0].length - 1;
+    const close = matchClose(s, open, "[", "]");
+    out += s.slice(at, m.index) + to.replace("@", packAccess(s.slice(open + 1, close), where));
+    at = close + 1;
+    re.lastIndex = close + 1;
+  }
+  return out + s.slice(at);
+}
+
+/**
+ * Packs GF_PACK's arrays: `pd[i]` reads and writes `pPF[i].x`, and so on. The values and the arithmetic are the
+ * same, so the output is the same bit for bit; only the register and indexing layout changes. Every packed array
+ * must be declared with its group's qualifier, type and size.
+ */
+export function packArrays(src: string): string {
+  const where = new Map<string, string>();
+  for (const g of GF_PACK) g.fields.forEach((f, i) => where.set(f, `${g.name}[@].${"xyzw"[i]}`));
+  const seen = new Set<string>();
+  let size = "";
+  const first = src.search(DECL);
+  const body = src.replace(DECL, (all, q: string, t: string, name: string, n: string) => {
+    const g = GF_PACK.find((x) => x.fields.includes(name));
+    if (!g) return all;
+    if (q !== g.q || t !== g.of || (size && n !== size)) throw new Error(`gf_reg: ${name} is not ${g.q}${g.of}[${size}]`);
+    size = n; seen.add(name);
+    return "";
+  });
+  for (const g of GF_PACK) for (const f of g.fields) if (!seen.has(f)) throw new Error(`gf_reg: no array ${f}`);
+  const decl = GF_PACK.map((g) => `${g.q}${g.t} ${g.name}[${size}];`).join(" ") + "\n";
+  return body.slice(0, first) + decl + packAccess(body.slice(first), where);
+}

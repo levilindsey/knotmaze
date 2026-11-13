@@ -1,0 +1,4 @@
+{"benches":[
+ {"name":"c822","scenes":["def","muse_hash","fat"],"w":822,"h":1506,"fit":0.917,"nPass":40,"warmMs":1000,"settleFrames":30,"variants":["empty","full","t32r","t32rk","fullK"],"modes":["sync4","frame1"],"cover":false,"cmp":true,"ref":"full"},
+ {"name":"cmp12","scenes":["g41_ring_tw64","g41_def_tw64","user_tw42.lightpaper","g41_user_tw42","muse_default_tw","ring","g41_def_tw42","g41_user_tw64","g41_ring_tw42"],"w":822,"h":1506,"fit":0.917,"nPass":4,"warmMs":0,"settleFrames":0,"variants":["full","t32rk","fullK"],"modes":[],"cover":false,"cmp":true,"ref":"full"}
+]}

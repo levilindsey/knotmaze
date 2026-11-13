@@ -44,9 +44,9 @@ void main() { discard; }`;
 
 function parseTiers(name: string): GfTier[] {
   return name.slice(1).split("_").map((t) => {
-    const m = /^(\d)(\d)(r?)(h?)(s?)(u?)(o?)$/.exec(t);
+    const m = /^(\d)(\d)(r?)(h?)(s?)(u?)(k?)(o?)$/.exec(t);
     if (!m) throw new Error("bad tier " + t);
-    return { p: +m[1], k: +m[2], ramps: m[3] === "r", half: m[4] === "h", reg: m[5] === "s", unroll: m[6] === "u", oldKeys: m[7] === "o" } as GfTier & { oldKeys?: boolean };
+    return { p: +m[1], k: +m[2], ramps: m[3] === "r", half: m[4] === "h", reg: m[5] === "s", unroll: m[6] === "u", pack: m[7] === "k", oldKeys: m[8] === "o" } as GfTier & { oldKeys?: boolean };
   });
 }
 function makePass(gl: WebGL2RenderingContext, name: string, fullFs?: string): GfPass {
@@ -54,12 +54,13 @@ function makePass(gl: WebGL2RenderingContext, name: string, fullFs?: string): Gf
   if (name === "full") return new GfPass(gl, false, []);
   if (name === "fullS") return new GfPass(gl, false, [], () => gfFs(false, true, undefined, { reg: true })); // K1362 s6: the full program, register form
   if (name === "fullU") return new GfPass(gl, false, [], () => gfFs(false, true, undefined, { unroll: true })); // K1362 s6: constant trip counts
+  if (name === "fullK") return new GfPass(gl, false, [], () => gfFs(false, true, undefined, { pack: true })); // K1362 s6: packed state
   if (name === "fullO") return new GfPass(gl, false, [], () => gfFs(false, true, undefined, { oldKeys: true })); // K1362 s6: the keys before gf_keys.ts
   if (name === "fullp") return new GfPass(gl, true, []);
   // t<tiers>[_...]: each tier "<p><k>[r][h][s]" (s = register form, gf_reg.ts), then the full program
   const tiers = parseTiers(name);
   const ok = tiers.some((t) => (t as { oldKeys?: boolean }).oldKeys); // o: every program of the variant on the old keys
-  return new GfPass(gl, false, tiers, (t) => (t ? gfFs(false, true, t, { reg: t.reg, unroll: t.unroll, oldKeys: ok }) : fullFs ?? gfFs(false, true, undefined, { oldKeys: ok })));
+  return new GfPass(gl, false, tiers, (t) => (t ? gfFs(false, true, t, { reg: t.reg, unroll: t.unroll, pack: t.pack, oldKeys: ok }) : fullFs ?? gfFs(false, true, undefined, { oldKeys: ok })));
 }
 
 function info(gl: WebGL2RenderingContext): Record<string, unknown> {
