@@ -287,6 +287,15 @@ export function plainOf(m: Model): EVF {
 // k1325_footprint.ts and k1325_vsoutline.ts: off the outline 14304 -> 85216 px in muse_hash), so which look is
 // approved there is Levi's call before the census takes it.
 export const PLATEAU = { on: process.argv.includes("--plateau") };
+// K1325 s2: the same flaw at a chain's SELF-crossing (muse_hash x304, x22, x345, j116's x225, x58): past the
+// window the two passes of one chain tie by distance and the over pass smears, while rp=outline's self burial
+// (K1324 s2, draw.ts selfBury) shifts a self pair's key by up to 2 zt toward the diagram's order and draws the
+// over pass whole. SELF_REF (on by default; --noself turns it off) takes the plateau at the flagged crossings whose
+// two passes are one chain only (plateauOf(m, "self")), with each sample's z change capped at SELF_CAP zt: enough
+// to order the tie (form B's tie mix spans ±zt), never a reorder against another chain by more than that. Where
+// both are on, --plateau (every flagged crossing, uncapped) wins.
+export const SELF_REF = { on: !process.argv.includes("--noself") };
+export const SELF_CAP = 2;
 type FBZ = EVF & {
   h: number; W: number; aa: number; depthWin: number; polys: Poly[]; grid: SegGrid; idxOf: Map<number, number>;
   depthChains: { closed: boolean; s0: number; len: number; pins: { s: number; z: number; rL?: number; rR?: number }[] }[];
@@ -313,15 +322,18 @@ export function passReach(F: FBZ, pa: number, s: number, pb: number, ob: number,
   return last < 0 ? 0 : last + step;
 }
 type PZ = { F: EVF; n: number; R: number; cell: number; g: Map<string, number[]>; xs: number[] };
-const PZ_CACHE = new WeakMap<object, PZ>();
+const PZ_CACHE = { all: new WeakMap<object, PZ>(), self: new WeakMap<object, PZ>() };
 /** The plateau reference: form B with K922 depth at the crossings whose overlap reach outruns the depth
- * window, and the gate (near) of pixels within R of a sample whose z it changed. */
-export function plateauOf(m: Model): PZ {
-  let P = PZ_CACHE.get(m);
+ * window, and the gate (near) of pixels within R of a sample whose z it changed. gate "self" (K1325 s2, SELF_REF)
+ * takes only the crossings of a chain with itself and caps each sample's z change at SELF_CAP zt. */
+export function plateauOf(m: Model, gate: "all" | "self" = "all"): PZ {
+  let P = PZ_CACHE[gate].get(m);
   if (P) return P;
   const F = new FormB(JSON.parse(JSON.stringify(m.scene)) as never, { dpr: 2 }) as unknown as FBZ;
   const win = F.depthWin; const hit = new Set<number>(); const xs: number[] = [];
+  const zc = gate === "self" ? SELF_CAP * (F as unknown as { zt: number }).zt : Infinity;
   m.scene.crossings.forEach((x: { a: { chain: number; s: number }; b: { chain: number; s: number } }, xi: number) => {
+    if (gate === "self" && x.a.chain !== x.b.chain) return;
     const ia = F.idxOf.get(x.a.chain); const ib = F.idxOf.get(x.b.chain); if (ia === undefined || ib === undefined) return;
     const sa = normS(F.polys[ia], x.a.s); const sb = normS(F.polys[ib], x.b.s);
     const r = [passReach(F, ia, sa, ib, sb, -1), passReach(F, ia, sa, ib, sb, 1), passReach(F, ib, sb, ia, sa, -1), passReach(F, ib, sb, ia, sa, 1)];
@@ -334,14 +346,18 @@ export function plateauOf(m: Model): PZ {
   for (const i of hit) {
     const p = F.polys[i];
     for (let k = 0; k < p.n; k++) {
-      const z = plateauDepth(F.depthChains[i], win, p.s[k], win);
+      const z0 = p.z[k]; const z = z0 + Math.max(-zc, Math.min(zc, plateauDepth(F.depthChains[i], win, p.s[k], win) - z0));
       if (z !== p.z[k]) { p.z[k] = z; pts.push(p.x[k], p.y[k]); }
     }
   }
   for (const c of F.corners) { c.zA = zAt(F.polys[F.arms[c.a].pi], c.sA); c.zB = zAt(F.polys[F.arms[c.b].pi], c.sB); }
   const R = 2.5 * F.h + F.W; const cell = R; const g = new Map<string, number[]>();
   for (let i = 0; i < pts.length; i += 2) { const key = `${Math.floor(pts[i] / cell)},${Math.floor(pts[i + 1] / cell)}`; const l = g.get(key); if (l) l.push(pts[i], pts[i + 1]); else g.set(key, [pts[i], pts[i + 1]]); }
-  P = { F, n: pts.length / 2, R, cell, g, xs }; PZ_CACHE.set(m, P); return P;
+  P = { F, n: pts.length / 2, R, cell, g, xs }; PZ_CACHE[gate].set(m, P); return P;
+}
+/** The reference's plateau, if any: --plateau's (every flagged crossing), else SELF_REF's (self-crossings). */
+export function refPlateau(m: Model): PZ | null {
+  return PLATEAU.on ? plateauOf(m, "all") : SELF_REF.on ? plateauOf(m, "self") : null;
 }
 /** Whether the plateau reference differs from plain form B's near (x, y). */
 export function plateauNear(P: PZ, x: number, y: number): boolean {
@@ -363,7 +379,7 @@ export function refEval(m: Model, x: number, y: number): { ink: number; top: num
   const fbf = filletOf(m);
   const p = FILLET_REF.on && fbf.thruCi.size ? filletPick(fbf, x, y) : { ci: -1, yielded: false };
   const ci = p.yielded ? -1 : p.ci;
-  const pz = FILLET_REF.on && PLATEAU.on && p.ci < 0 ? plateauOf(m) : null;
+  const pz = FILLET_REF.on && p.ci < 0 ? refPlateau(m) : null;
   const e = { ...(ci >= 0 ? fbf.evalPoint(x, y) : pz && plateauNear(pz, x, y) ? pz.F.evalPoint(x, y) : plainOf(m).evalPoint(x, y)) };
   if (ci >= 0) e.ink = arcInk(fbf, ci, x, y, e);
   if (p.yielded) { const y2 = yieldInk(fbf, p.ci, x, y, { ink: Math.min(1, Math.max(0, e.ink)), chain: e.top < 0 ? -1 : e.chain, s: e.s }, (px, py) => plainOf(m).evalPoint(px, py)); e.ink = y2.ink; e.chain = y2.chain; e.s = y2.s; if (y2.chain >= 0) e.top = Math.max(e.top, 0); }
@@ -439,7 +455,7 @@ export function rasterFormB(m: Model, c0: number, r0: number, Wd: number, Hd: nu
       [ink, chain, s] = hitFbf;
     } else {
       const fbf = filletOf(m);
-      const pz = PLATEAU.on ? plateauOf(m) : null;
+      const pz = refPlateau(m);
       const pzTile = pz !== null && pz.n > 0 && plateauBox(pz, c0 / ppu, r0 / ppu, (c0 + Wd) / ppu, (r0 + Hd) / ppu);
       if (fbf.thruCi.size || pzTile) {
         ink = ink.slice(); chain = chain.slice(); s = s.slice();
