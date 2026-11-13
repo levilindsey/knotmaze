@@ -99,3 +99,55 @@ Under 30 lines:
 - your last SHA.
 
 End with `Ledger items` and the handle fields for K1247 and K1352.
+
+## Handoff (s34 agent, 2026-11-12, start 17:00:53, stop 18:08 PT)
+
+Result: the snap fixpoint is 3x faster and bit-identical, but the hold still dirties about 100% of the scene, so
+the flags stay OFF (`KF_INC.snap`, `.cache` false). K1352 (step 1) and the span-to-output map (step 3) were not
+started: step 2's cascade, named below, has to be fixed first.
+
+- **Step 4 first (2544f992, bit-identical on def, muse_hash and fat).** jlocal's `wAt` gets a squared-distance
+  prefilter with a (1+1e-9) margin and a grid of centres; the jx sweep gets a worklist skip; the forced check is
+  prefiltered. Snap p50/p95 ms: def 22.36/48.13 -> 7.15/11.43, muse_hash 13.12/23.08 -> 5.51/7.86, fat
+  0.79/71.15 -> 0.61/6.53. Not 1 ms: the remainder is blending the whole scene, because nearly all of it is dirty.
+- **Step 2, the dirty share against the ceiling** (`k1247s34_snap.ts`, rep 2, `out/s34/shares.txt`, ms taken under load):
+
+  | drag | dirty spans p50 | ceiling p50 | span + jxa dirty p50 |
+  |---|---|---|---|
+  | def | 100% | 7.2% | 33.7% (but 69% of chains) |
+  | muse_hash | 99.2% | 13.6% | 80.1% |
+  | fat | 100% | 23.5% | 48.8% |
+- **The cascade is jx + jxw.** A blended pass counts as moved and releases its partner. The partner's ramp then
+  covers its other crossings, and so on through every crossing. `KF_INC.span` (f24e0728) releases only around a
+  failing chain's moved points. `.jxa` releases a crossing only when its drawn point would sit more than
+  jxaTol·T off the true one. Both are off by default.
+- **(b) fails with span + jxa:**
+  - muse_hash: f63 2.356 px, f67 2.142, f50 1.715 near jj113; 0.87 near jj58.
+  - def: f41 1.258 near jj61.
+  - With jR 8, muse_hash passes (0.467) but def fails (0.698).
+  - With cache=0, muse_hash f63 is the same 2.356 px, so the caches are not the cause.
+- **The f63 site** (`k1247s34_site.ts`, `SNAP_DBG`): within 30 px of the site, every point of the four nearest
+  chains matches truth exactly (w 1). Crossing s is within 0.25 px and junction 113's arm s is exact. So the snap's
+  output is exact near the site, and the 2.4 px comes from somewhere else.
+  - Inferred, not tested: a non-local dependency in the frame. A run's width taper or fade is measured along its
+    arc length, and that length includes held stretches elsewhere on the run (K1352's global s).
+- **The checks with the default flags on in the tools:** `outline_inc` + `outline_port` 9/9.
+  - (b) max: def 0.277, muse_hash 0.399, fat 0.232 px.
+  - (a): none differ.
+  - (c), census (`k1247s34_census.ts`, -Lock): no bar exists only in the snapped scene at def f80 or f244 (0 chains
+    held there, so a weak check) or at muse_hash f26 (86/86 held). Bars per frame, true/snapped: 0/0, 1/1, 3/3.
+  - `npm test` was green at 02371dde. tsc and the inc/port tests were green after the SNAP_DBG hook.
+- **App ABBA, taken UNDER LOAD** (other agents' node processes at 99-148% of a core, plus my own census):
+  - Ports: A = master 54637d48, B = flags off 02371dde, C = flags on af809d4f.
+  - def worker means: A 104.2, B 144.65, C 167.95 (spread 74, so the middle passes were disturbed). On the first
+    clean pass: A 107.4, B 107.3, C 131.7.
+  - fat: A 117.6, B 113.95, C 122.35 (spreads 6-7).
+  - Node book on def: off 92.02, on 102.76 ms (+10.75: snap 8.26, frame +2.28). Border-cache hits 7.4%, corner 6.9%.
+  - Node book on fat: +2.42 ms; border hits 10.9%, corner 0.
+  - C is slower than master on both drags, which is why the flags stay off.
+- **Next:**
+  1. Test the f63 inference: diff the model's per-run widths, fades and s ranges between the snapped and true scenes
+     at f63, then find the run feature that reads far points.
+  2. Then pick a hold rule that passes (b) without the jx/jxw cascade (span + jxa, plus whatever step 1 shows).
+  3. Then K1352 span addressing and the span-level caches.
+  4. Flip the flags on only when an unloaded ABBA shows C beating A on def by more than the spread, with fat no slower.

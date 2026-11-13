@@ -21,14 +21,26 @@ for (let f = 0; f <= F; f++) {
   const sc = snapScene(S, al);
   if (f !== F) continue;
   const near = (c: number[], x: number, y: number): [number, number] => { let b = -1; let d = Infinity; for (let q = 0; q < c.length; q += 2) { const e = Math.hypot(c[q] - x, c[q + 1] - y); if (e < d) { d = e; b = q >> 1; } } return [b, d]; };
+  // chains=near: the four chains nearest the site
+  if (!ids.length) ids.push(...al.chains.map((c, i) => [c.id, near(Array.from(c.pts as ArrayLike<number>), X, Y)[1]] as const).sort((a, b) => a[1] - b[1]).slice(0, 4).map((e) => e[0]));
   for (const id of ids) {
     const i = al.chains.findIndex((c) => c.id === id); const t = Array.from(al.chains[i].pts as ArrayLike<number>); const s = Array.from(sc.chains[i].pts as ArrayLike<number>);
     const [k, d] = near(t, X, Y); const w = SNAP_DBG.part[i]; const cn = SNAP_DBG.cen[i] ?? [];
     const [, dc] = near(cn, t[2 * k], t[2 * k + 1]);
+    let mo = 0; for (let q = 0; q < t.length; q += 2) if (Math.hypot(t[q] - X, t[q + 1] - Y) * px < 30) mo = Math.max(mo, Math.hypot(s[q] - t[q], s[q + 1] - t[q + 1]) * px);
+    console.log(`  chain ${id}: max snapped off truth within 30 px of the site ${mo.toFixed(3)} px`);
     console.log(`chain ${id} (i ${i}): own ${SNAP_DBG.own[i]} dC ${S.dChains[i]} centres ${cn.length / 2}; nearest pt ${k} ${(d * px).toFixed(1)} px off the site: w ${w ? w[k].toFixed(3) : "-"}, snapped off truth ${(Math.hypot(s[2 * k] - t[2 * k], s[2 * k + 1] - t[2 * k + 1]) * px).toFixed(3)} px, nearest centre ${(dc * px).toFixed(1)} px`);
   }
+  // the crossings on those chains whose snapped s differs from the true s (px of arc): where a gap would end elsewhere
+  for (let xi = 0; xi < al.crossings.length; xi++) {
+    const x = al.crossings[xi]; const y = sc.crossings[xi];
+    if (!ids.includes(x.a.chain) && !ids.includes(x.b.chain)) continue;
+    const da = Math.abs(y.a.s - x.a.s) * px; const db = Math.abs(y.b.s - x.b.s) * px;
+    if (da > 0.05 || db > 0.05 || y.a.chain !== x.a.chain || y.b.chain !== x.b.chain) console.log(`crossing ${xi} (${x.a.chain} x ${x.b.chain}, over ${x.over}/${y.over}): dX ${S.dCross[xi]}, s off truth a ${da.toFixed(3)} px, b ${db.toFixed(3)} px`);
+  }
   if (J >= 0) {
-    const j = al.junctions[J];
+    const j = al.junctions[J]; const js = sc.junctions[J];
+    js.arms.forEach((a, k) => { const d = Math.abs(a.s - j.arms[k].s) * px; if (d > 0.05) console.log(`junction ${J} arm ${k} (chain ${a.chain}): s off truth ${d.toFixed(3)} px`); });
     console.log(`junction ${J} (id ${j.id}): whole ${SNAP_DBG.whole[J]} forced ${SNAP_DBG.forced[J]} dJ ${S.dJunc[J]}, centre ${(Math.hypot(j.c[0] - X, j.c[1] - Y) * px).toFixed(1)} px off the site`);
     for (const a of j.arms) {
       const i = al.chains.findIndex((c) => c.id === a.chain); const cn = SNAP_DBG.cen[i] ?? [];
