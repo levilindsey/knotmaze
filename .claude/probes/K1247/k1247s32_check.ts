@@ -5,7 +5,7 @@
 //   "keyed" = s31's (same chain and side only). The worst five frames by "drawn", where, and the nearest junction.
 // (a): after the drag, update(last, exact=true), and its every output (table digest, paint pos/key/w, band, rec
 //   frame) against a model with the snap off framing the same input: byte for byte.
-//   node scripts/run_node.mjs .claude/probes/K1247/k1247s32_check.ts <dragDir> [sub=10] [stride=1] [cache=1] [snap=1] [T=0.5] [border=1]
+//   node scripts/run_node.mjs .claude/probes/K1247/k1247s32_check.ts <dragDir> [sub=10] [stride=1] [cache=1] [snap=1] [T=0.5] [border=0] [jclose=1]
 import { createHash } from "node:crypto";
 import { OutlineModel } from "../../../src/render/outline/outline_model";
 import { frame, alignJunctionArms, KF_INC } from "../../../src/render/outline/outline";
@@ -18,7 +18,7 @@ const dir = process.argv[2]; const sub = +arg("sub", "10"); const stride = +arg(
 const { cap, raw } = loadDrag(dir, sub);
 const px = cap[0].camera.pxPerUnit * cap[0].camera.dpr; const last = raw.length - 1;
 const snap0 = KF_INC.snap; const cache0 = KF_INC.cache;
-KF_INC.snap = arg("snap", "1") === "1"; KF_INC.cache = arg("cache", "1") === "1"; const T0 = KF_INC.T; KF_INC.T = +arg("T", String(T0)); const B0 = KF_INC.border; KF_INC.border = arg("border", "1") === "1";
+KF_INC.snap = arg("snap", "1") === "1"; KF_INC.cache = arg("cache", "1") === "1"; const T0 = KF_INC.T; KF_INC.T = +arg("T", String(T0)); const B0 = KF_INC.border; KF_INC.border = arg("border", "0") === "1"; const J0 = KF_INC.jclose; KF_INC.jclose = arg("jclose", "1") === "1";
 let M = new OutlineModel(cap[0]); let Mi = M as unknown as { table: OutlineTable; st: DiagramStructure }; const threw: string[] = []; let rb = 0;
 // The TRUE frame is what the worker shows with the snap off: a model fed the true input (update exact, check (a)),
 // rebuilt where its update throws. (Not frame() on cap[0]'s structure: muse_hash's drag outgrows it, and that
@@ -44,7 +44,7 @@ console.log(`updates that threw (the worker restructures): snapped ${threw.lengt
 const name = dir.split(/[\\/]/).filter(Boolean).pop();
 const q = (a: number[], p: number): number => { const b = [...a].sort((x, y) => x - y); return b[Math.min(b.length - 1, Math.floor(p * b.length))]; };
 const D = rows.map((r) => r.d); const K = rows.map((r) => r.k);
-console.log(`${name}: ${rows.length} frames (sub ${sub}, stride ${stride}), snap ${KF_INC.snap} (T ${KF_INC.T} px, border ${KF_INC.border}) cache ${KF_INC.cache}, ${((performance.now() - t0) / 1000).toFixed(1)} s`);
+console.log(`${name}: ${rows.length} frames (sub ${sub}, stride ${stride}), snap ${KF_INC.snap} (T ${KF_INC.T} px, border ${KF_INC.border}, jclose ${KF_INC.jclose}) cache ${KF_INC.cache}, ${((performance.now() - t0) / 1000).toFixed(1)} s`);
 console.log(`check (b) drawn px: p50 ${q(D, 0.5).toFixed(3)} p95 ${q(D, 0.95).toFixed(3)} max ${Math.max(...D).toFixed(3)}; over 0.5: ${D.filter((d) => d > 0.5).length}; keyed (s31) max ${Math.max(...K).toFixed(3)}, over 0.5: ${K.filter((d) => d > 0.5).length}`);
 for (const r of [...rows].sort((a, b) => b.d - a.d).slice(0, 5)) console.log(`  f${r.f}: drawn ${r.d.toFixed(3)} px at (${r.x.toFixed(3)}, ${r.y.toFixed(3)}) near ${r.j}; keyed ${r.k.toFixed(3)}`);
 const S = rows.map((r) => r.s).filter((d) => Number.isFinite(d));
@@ -67,4 +67,4 @@ const snapWas = KF_INC.snap; KF_INC.snap = false; // the reference: the snap off
 const N = new OutlineModel(raw[rb]); if (rb !== last) N.update(raw[last]); const ref = parts(N); const fresh = parts(new OutlineModel(raw[last])); KF_INC.snap = snapWas;
 const diff = (a: Record<string, string>, b = ref): string => Object.keys(b).filter((k) => a[k] !== b[k]).join(",") || "none";
 console.log(`check (a): held (no exact frame) differs from the true frame in: ${diff(held)}; after update(exact): ${diff(ex)} (vs a fresh model on the last input: ${diff(ex, fresh)}; last rebuilt at f${rb})`);
-KF_INC.snap = snap0; KF_INC.cache = cache0; KF_INC.T = T0; KF_INC.border = B0;
+KF_INC.snap = snap0; KF_INC.cache = cache0; KF_INC.T = T0; KF_INC.border = B0; KF_INC.jclose = J0;

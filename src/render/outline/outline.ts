@@ -3231,9 +3231,12 @@ export function frame(st: DiagramStructure, scene: SceneIn, profile?: Record<str
   return frameFast(st, alignJunctionArms(st, scene), profile);
 }
 /** K1247 s31: frame() on a scene the caller snapped (OutlineModel.update, snapScene): it also holds the END-arm
- *  extension feet within T (holdFootC), the one input the snap cannot reach from outside. */
+ *  extension feet within T (holdFootC), the one input the snap cannot reach from outside. K1247 s32: not with
+ *  KF_INC.jclose, where a junction's arm chains are held or released together, so a held junction's feet are
+ *  bit-equal already and a released one's must follow (muse_hash's drag, every chain released: the held feet put
+ *  END-arm tails 1.19 px off the true ones). */
 export function frameSnapped(st: DiagramStructure, scene: SceneIn, profile?: Record<string, number>): OutlineTable {
-  kfHoldFeet = true;
+  kfHoldFeet = !KF_INC.jclose;
   try { return frameFast(st, alignJunctionArms(st, scene), profile); } finally { kfHoldFeet = false; }
 }
 
@@ -4224,7 +4227,7 @@ function setupFrame(C: FCache, st: DiagramStructure, scene: SceneIn): void {
 // the model's; frameSnapped also holds the END-arm feet. The caches
 // (KF_INC.cache: borders, corners) are exact: the frame on a snapped scene is
 // byte-identical with them on or off (outline_inc.test.ts). Both off by default.
-export const KF_INC = { snap: false, cache: false, T: 0.5, border: true, hits: 0, misses: 0, cHits: 0, cMisses: 0, vAux: 0, vMiss: 0, cMissJ: 0, why: null as Record<string, number> | null };
+export const KF_INC = { snap: true, cache: true, T: 0.25, border: false, jclose: true, hits: 0, misses: 0, cHits: 0, cMisses: 0, vAux: 0, vMiss: 0, cMissJ: 0, why: null as Record<string, number> | null };
 let kfHoldFeet = false;
 
 export interface SnapState {
@@ -4235,7 +4238,7 @@ export interface SnapState {
 export function newSnapState(): SnapState { return { chains: [], cross: [], junc: [], dChains: new Uint8Array(0), dCross: new Uint8Array(0), dJunc: new Uint8Array(0) }; }
 /** K1338: the scene with every chain that moved at most T device px since its
  *  last commit held at its committed points (see KF_INC). K1247 s32: with
- *  KF_INC.border (the default), "moved" is the chain's BORDERS' move (a segment's
+ *  KF_INC.border (off by default), "moved" is the chain's BORDERS' move (a segment's
  *  ends plus halfWidth times the sine of its turn), not its points'. */
 export function snapScene(S: SnapState, scene: SceneIn, T = KF_INC.T): SceneIn {
   const px = scene.camera.pxPerUnit * scene.camera.dpr;
@@ -4247,12 +4250,15 @@ export function snapScene(S: SnapState, scene: SceneIn, T = KF_INC.T): SceneIn {
   if (S.dCross.length !== nX) S.dCross = new Uint8Array(nX);
   if (S.dJunc.length !== nJ) S.dJunc = new Uint8Array(nJ);
   const dC = S.dChains; const dX = S.dCross; const dJ = S.dJunc;
-  const chains = scene.chains.map((c, i) => {
+  const ts = T / px;
+  // each chain's own test
+  const okC: boolean[] = scene.chains.map((c, i) => {
     idx.set(c.id, i);
     const old = S.chains[i];
     const pts = c.pts as ArrayLike<number>;
+    let ok = false;
     if (old && old.length === pts.length) {
-      let ok = true;
+      ok = true;
       if (KF_INC.border) {
         // K1247 s32: hold while the BORDERS move at most T. A border sits h off its centreline, so a segment
         // that turns by dθ moves it by h·sin dθ on top of its ends' move (def's drag at T 0.5: the drawn
@@ -4270,15 +4276,33 @@ export function snapScene(S: SnapState, scene: SceneIn, T = KF_INC.T): SceneIn {
           ok = e <= tw;
         }
       } else for (let k = 0; k < pts.length && ok; k += 2) { const dx = pts[k] - old[k]; const dy = pts[k + 1] - old[k + 1]; ok = dx * dx + dy * dy <= tw2; }
-      if (ok) { held[i] = true; dC[i] = 0; return { ...c, pts: old }; }
     }
+    return ok;
+  });
+  // K1247 s32 (KF_INC.jclose): a junction's corners and its END arms' tails are solved from every arm chain, its
+  // centre and its arms' s together, so a chain is held only while every junction it is an arm of holds whole
+  // (def's drag: held chains' tails and arcs ran 0.9-1.3 px off where a neighbour arm or the centre had moved).
+  if (KF_INC.jclose) {
+    for (let changed = true; changed;) {
+      changed = false;
+      scene.junctions.forEach((j, ji) => {
+        const old = S.junc[ji];
+        const whole = !!old && old.id === j.id && old.arms.length === j.arms.length && Math.hypot(j.c[0] - old.c[0], j.c[1] - old.c[1]) <= ts &&
+          j.arms.every((a, k) => { const i = idx.get(a.chain); return old.arms[k].chain === a.chain && old.arms[k].kind === a.kind && i !== undefined && okC[i] && Math.abs(a.s - old.arms[k].s) <= ts; });
+        if (whole) return;
+        for (const a of j.arms) { const i = idx.get(a.chain); if (i !== undefined && okC[i]) { okC[i] = false; changed = true; } }
+      });
+    }
+  }
+  const chains = scene.chains.map((c, i) => {
+    if (okC[i]) { held[i] = true; dC[i] = 0; return { ...c, pts: S.chains[i] as number[] }; }
+    const pts = c.pts as ArrayLike<number>;
     S.chains[i] = Array.isArray(pts) ? (pts as number[]).slice() : Array.from(pts);
     held[i] = false; dC[i] = 1;
     return { ...c, pts: S.chains[i] as number[] };
   });
   // An s along a held chain is held while it moves at most T px along it, so a
   // chain beside a moving one keeps its passes (each end is held on its own).
-  const ts = T / px;
   const keepS = (chain: number, s0: number, s1: number): boolean => { const i = idx.get(chain); return i !== undefined && held[i] && Math.abs(s1 - s0) <= ts; };
   const crossings = scene.crossings.map((x, xi) => {
     const old = S.cross[xi];
@@ -4300,7 +4324,7 @@ export function snapScene(S: SnapState, scene: SceneIn, T = KF_INC.T): SceneIn {
       const ks = j.arms.map((a, k) => keepS(a.chain, old.arms[k].s, a.s));
       if (kc && ks.every(Boolean)) { dJ[ji] = 0; return old; }
       const y = cloneJunction(j);
-      if (kc) y.c = [old.c[0], old.c[1]];
+      if (kc && !KF_INC.jclose) y.c = [old.c[0], old.c[1]];
       y.arms.forEach((a, k) => { if (ks[k]) a.s = old.arms[k].s; });
       S.junc[ji] = y; dJ[ji] = 1;
       return y;
