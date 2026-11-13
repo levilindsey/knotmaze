@@ -292,11 +292,6 @@ Next free ID: K1363.
   (his K928 plan: finish iterating, then hand-edit, then the pipeline reads his curves as drawn), or more look
   notes first? Every note so far is built (K1251). Sheets: .claude/probes/K863/trace/out38/png/; J3NV has no
   template SVG yet (out34/cursive_template.svg shows the export).
-- **K1319** · The K1045 open eye at muse_hash j73 in rp=outline: its ink ring closes round at the right tip,
-  where form B cuts it off at an angle (form B's j73 corner takes the same far meet as j74's and never rounds
-  it). Keep the round tip, or match form B? Census counts it as one stray_ink spike (262 px). Picture
-  `.claude/probes/K1314/out/s4/dbg/spike73.png` (form B | difference | rp=outline);
-  `out/s4/after/spot_006.png`. Asked 2026-11-11.
 - **K1357** · rp=outline's drag feel on desktop, which calibrates the speed gate (K1240 gate: 3 / 6 ms per
   moved frame): drag at https://levi.dev/knotmaze/?b&am=instant&rp=outline against today's look at
   ?b&am=instant. The outline redraws at about 9-10 Hz mid-drag (worker ~105-117 ms per moved frame, K1247
@@ -2296,6 +2291,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1319** · The K1045 open eye at muse_hash j73 in rp=outline: its ink ring closes round at the right tip, where form B cuts it off at an angle (form B's j73 corner takes the same far meet as j74's and never rounds it). Dropped: Levi, 2026-11-12: 'the round version of course'. rp=outline already draws it round; no change. The census's j73 stray_ink spike (262 px) is form B's flaw, not a bar find (2026-11-12).
 - **K1356** · K1247 s33's jlocal fixpoint costs 18.8 ms p50 / 88.6 ms p95 on def whenever the snap is on (inert while KF_INC.snap is off; s34 step 4 targets ~1 ms). Dropped: superseded by K1359: the snap (KF_INC.snap) stays off and is being removed with the incremental route (K1247 s35) (2026-11-12).
 - **K1352** · Span-local L/Lcut addressing (s30 plan stage 4, first half): an arm's reach samples its crossing partners by arc length (reachOf), so one moving chain re-dirties its partners' corners: corner cache hits stay at 39% def, 19% muse_hash with the snap on (K1247 s31 handoff, `docs/design/K1247_s31_snap_phase_caches.md`). Dropped: superseded by K1247 s35 (docs/design/K1247_s35_route_review.md): the incremental frame stops (its ceiling misses the bar, and under a pool each model sees only every Kth frame), so span-local addressing for its caches is not needed (2026-11-12).
 - **K1341** · K1247 s28's exact cuts: zChains 23% faster on def, 20% on muse_hash, 43% on fat, bit-identical (s2, 1da71a35); def fill's apparent +1-2.7% was a slot bias in the A/B harness (Muse s3: null test, swap-averaged k1341s3_ab.ts), no src change; muse_hash fill/band residual K1358. Done in 96edc35e (2026-11-12).
