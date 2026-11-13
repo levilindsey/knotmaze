@@ -157,9 +157,26 @@ export async function bench(cfg: BenchCfg): Promise<Record<string, unknown>> {
   const canvas = document.createElement("canvas");
   canvas.width = 64; canvas.height = 64;
   document.body.appendChild(canvas);
-  const gl = canvas.getContext("webgl2", { antialias: false, alpha: true, preserveDrawingBuffer: false, powerPreference: "high-performance" })!;
-  if (!gl) throw new Error("no WebGL2");
-  const out: Record<string, unknown> = { info: info(gl), cfg, scenes: {} as Record<string, unknown> };
+  const gl0 = canvas.getContext("webgl2", { antialias: false, alpha: true, preserveDrawingBuffer: false, powerPreference: "high-performance" })!;
+  if (!gl0) throw new Error("no WebGL2");
+  // cfg.glTrace: a Proxy checks getError after every call and records the first few calls that raised one (timings void)
+  const glErrs: string[] = []; let nProg = 0;
+  const gl: WebGL2RenderingContext = (cfg as { glTrace?: boolean }).glTrace
+    ? new Proxy(gl0, {
+        get(t, k) {
+          const v = Reflect.get(t, k, t);
+          if (typeof v !== "function" || k === "getError") return typeof v === "function" ? v.bind(t) : v;
+          return (...a: unknown[]) => {
+            const r = (v as (...x: unknown[]) => unknown).apply(t, a);
+            const e = t.getError();
+            if (k === "useProgram") nProg++;
+            if (e && glErrs.length < 8) glErrs.push(`${String(k)} -> ${e} (after useProgram #${nProg}, fbo ${t.getParameter(t.FRAMEBUFFER_BINDING) === null ? "default" : "bound"}, drawBuffers ${t.getParameter(t.DRAW_BUFFER0)}/${t.getParameter(t.DRAW_BUFFER1)})`);
+            return r;
+          };
+        },
+      })
+    : gl0;
+  const out: Record<string, unknown> = { info: info(gl), cfg, scenes: {} as Record<string, unknown>, glErrs };
   const px = new Uint8Array(4);
   if ((cfg as { dbg?: boolean }).dbg) {
     // each variant compiled and drawn alone on a small rect: its GL error, context loss and time

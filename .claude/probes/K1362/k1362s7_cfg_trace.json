@@ -1,0 +1,1 @@
+{"benches":[{"name":"tr","glTrace":true,"scenes":["def"],"w":822,"h":1506,"fit":0.917,"nPass":2,"warmMs":0,"settleFrames":0,"variants":["x32re1"],"modes":["sync4"],"cover":false,"cmp":false,"ref":"full"}]}
