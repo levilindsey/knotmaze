@@ -210,10 +210,12 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
   // K1240 S4: with the link flag `rp=outline` the same slot runs the
   // redesign (src/render/outline/outline_app.ts) in every look.
   let labelApp: { frame(): void; after(): void; dispose(): void } | null = null;
-  let labelKind: "label" | "field" | "outline" | null = null;
+  let labelKind: "label" | "field" | "outline" | "gf" | null = null;
   let labelLoading = false;
   const outlineFlag =
     typeof location !== "undefined" && new URLSearchParams(location.search).get("rp") === "outline";
+  // K1362 s2: `rp=gf`, form B's look per pixel on the GPU (src/render/gpu_field/gf_app.ts).
+  const gfFlag = typeof location !== "undefined" && new URLSearchParams(location.search).get("rp") === "gf";
   // K1247 s18: the fill's records, read here because the link rewrite drops
   // the key before outline_app.ts loads. K1247 s20: on by default under
   // `rp=outline`; `oe=0` turns them off (today's resampled fill).
@@ -225,8 +227,8 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
   if (outlineFlag && new URLSearchParams(location.search).get("obt") === "1") (globalThis as { __knotBandTfTime?: boolean }).__knotBandTfTime = true;
   const labelFrame = (): void => {
     const r = scene.renderer;
-    const kind = outlineFlag ? "outline" : params.fieldBand ? "field" : "label";
-    const on = !!r && (outlineFlag || (r.threadLook === 1 && r.labelInk));
+    const kind = gfFlag ? "gf" : outlineFlag ? "outline" : params.fieldBand ? "field" : "label";
+    const on = !!r && (gfFlag || outlineFlag || (r.threadLook === 1 && r.labelInk));
     if (!on || (labelApp && labelKind !== kind)) {
       labelApp?.dispose();
       labelApp = null;
@@ -238,7 +240,9 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
       labelLoading = true;
       const ctx = { scene, app, root, params, host, physicsTuning };
       const again = (): void => flags.push(Flag.GEOM);
-      const load = kind === "outline"
+      const load = kind === "gf"
+        ? import("../render/gpu_field/gf_app").then((m) => m.createGfApp(ctx, again))
+        : kind === "outline"
         ? import("../render/outline/outline_app").then((m) => m.createOutlineApp(ctx, again))
         : kind === "field"
         ? import("../render/field/field_b_app").then((m) => m.createFieldBApp(ctx, again))

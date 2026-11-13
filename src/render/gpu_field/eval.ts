@@ -35,6 +35,8 @@ export function ss(e0: number, e1: number, x: number): number {
 
 export interface GfPixel {
   ink: number;
+  /** Fill coverage (K1362 s2): the configurations' weighted 1 - T after the top-down composite. */
+  cov: number;
   /** Label chain index (scene order), -1 for paper. */
   chain: number;
   s: number;
@@ -61,7 +63,7 @@ export class GfEval {
   private scch = new Int32Array(MAXS); private scs = new Float64Array(MAXS); private scov = new Uint8Array(MAXS);
   private sv = new Float64Array(MAXS); private sa = new Float64Array(MAXS); private swk = new Int32Array(MAXS); private swa = new Int32Array(MAXS); private swb = new Int32Array(MAXS);
   private sord = new Int32Array(MAXS); private ns = 0;
-  readonly out: GfPixel = { ink: 0, chain: -1, s: 0, winKind: 0, winA: -1, winB: 0, nSeg: 0, nK: 0 };
+  readonly out: GfPixel = { ink: 0, cov: 0, chain: -1, s: 0, winKind: 0, winA: -1, winB: 0, nSeg: 0, nK: 0 };
 
   constructor(T: GfTables) { this.T = T; }
 
@@ -145,7 +147,7 @@ export class GfEval {
 
   eval(x: number, y: number): GfPixel {
     const T = this.T; const h = T.h; const aa = T.aa; const W = T.W; const o = this.out;
-    o.ink = 0; o.chain = -1; o.s = 0; o.winKind = 0; o.winA = -1; o.winB = 0; o.nSeg = 0; o.nK = 0;
+    o.ink = 0; o.cov = 0; o.chain = -1; o.s = 0; o.winKind = 0; o.winA = -1; o.winB = 0; o.nSeg = 0; o.nK = 0;
     const gx = Math.floor((x - T.gx0) / T.G); const gy = Math.floor((y - T.gy0) / T.G);
     if (gx < 0 || gy < 0 || gx >= T.gW || gy >= T.gH) return o;
     const cell = gy * T.gW + gx; const rc = T.rc; const rc2 = rc * rc;
@@ -233,7 +235,7 @@ export class GfEval {
     this.nk = nk;
     // 3. configurations over the ramping pieces
     if (nr === 2 && this.pramp[rIdx[0]] < this.pramp[rIdx[1]]) { const t = rIdx[0]; rIdx[0] = rIdx[1]; rIdx[1] = t; }
-    let ink = 0; let lab = -1; let labS = 0; let wk = 0; let wa = -1; let wb = 0; let bestW = -1;
+    let ink = 0; let cov = 0; let lab = -1; let labS = 0; let wk = 0; let wa = -1; let wb = 0; let bestW = -1;
     for (let cfg = 0; cfg <= nr; cfg++) {
       // cfg: the first cfg ramping pieces (by ramp, descending) are members
       const hiR = cfg === 0 ? 1 : this.pramp[rIdx[cfg - 1]];
@@ -247,7 +249,7 @@ export class GfEval {
       this.layers(x, y);
       const r = this.composite();
       const w = nr === 0 ? 1 : wgt;
-      ink += w * r;
+      ink += w * r; cov += w * this.cCov;
       if (w > bestW) { bestW = w; lab = this.labC; labS = this.labS; wk = this.cWk; wa = this.cWa; wb = this.cWb; }
     }
     if (thruK >= 0) {
@@ -255,11 +257,11 @@ export class GfEval {
       if (!yielded) { if (lab < 0 || lab === own) { ink = ss(r - aa, r + aa, thruQ) * out; if (lab < 0 && ink > 0) { lab = own; labS = T.kSa[thruK]; } wk = 5; wa = thruK; } }
       else if (lab === own) ink = Math.min(ink, out);
     }
-    o.ink = Math.min(1, ink); o.chain = lab; o.s = labS; o.winKind = wk; o.winA = wa; o.winB = wb;
+    o.ink = Math.min(1, ink); o.cov = Math.min(1, cov); o.chain = lab; o.s = labS; o.winKind = wk; o.winA = wa; o.winB = wb;
     return o;
   }
 
-  private labC = -1; private labS = 0; private cWk = 0; private cWa = -1; private cWb = 0;
+  private labC = -1; private labS = 0; private cCov = 0; private cWk = 0; private cWa = -1; private cWb = 0;
 
   /** Surfaces of the current configuration, their keys, cover, labels, coverage and ink. */
   private layers(x: number, y: number): void {
@@ -370,6 +372,7 @@ export class GfEval {
         Tt *= 1 - this.sa[e];
         if (!(Tt > 0)) break;
       }
+      if (sw < 0) this.cCov = 1 - Math.max(Tt, 0);
       return Math.min(1, ink);
     };
     this.cWk = 0; this.cWa = -1; this.cWb = 0;
