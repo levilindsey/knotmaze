@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1357.
+Next free ID: K1358.
 
 ## Waiting on Levi
 
@@ -305,6 +305,11 @@ Next free ID: K1357.
   it). Keep the round tip, or match form B? Census counts it as one stray_ink spike (262 px). Picture
   `.claude/probes/K1314/out/s4/dbg/spike73.png` (form B | difference | rp=outline);
   `out/s4/after/spot_006.png`. Asked 2026-11-11.
+- **K1357** · rp=outline's drag feel on desktop, which calibrates the speed gate (K1240 gate: 3 / 6 ms per
+  moved frame): drag at https://levi.dev/knotmaze/?b&am=instant&rp=outline against today's look at
+  ?b&am=instant. The outline redraws at about 9-10 Hz mid-drag (worker ~105-117 ms per moved frame, K1247
+  s34's ABBA). Acceptable, or how far off (choppy, lagging)? Asked 2026-11-12; K1247 s35
+  (docs/design/K1247_s35_route_review.md) projects the gate and a relaxed bar
 
 ## In progress
 
@@ -522,11 +527,11 @@ Next free ID: K1357.
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: nobody since 2026-11-12 18:12 (merged; agent `a5270035b1b40a083` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `9b78ba17`
-  - evidence: .claude/probes/K1247/ (k1247s33_*, k1247s34_*)
-  - next: route review (s35): s34 showed the incremental route cannot reach the gate - holds cascade through jx/jxw to ~100% dirty spans, gentler rules break check (b) (muse_hash f63 2.36 px), flags-on app slower than master; and its ceiling (frame 8 ms, pipeline ~7-9 ms) is above the 3 ms bar anyway. s34 kept: snap 3x faster, bit-identical (2544f992), span/jxa options off. Brief handoff: docs/design/K1247_s34_span_holds.md
-  - brief: `docs/design/K1247_s34_span_holds.md`
+  - owner: agent `a8d93842a30bcb370` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 18:13, 2 h cap ~20:13)
+  - branch: `worktree-agent-a8d93842a30bcb370`, worktree `.claude/worktrees/agent-a8d93842a30bcb370`; last commit: `231756c0`
+  - evidence: .claude/probes/K1247/ (k1247s35_*), s34 handoff
+  - next: s35 running: route review (GPU placement with fixed topology, frame() cuts, per-frame deadline, mix), riskiest part prototyped in Chrome
+  - brief: `docs/design/K1247_s35_route_review.md`
 - **K1278** · The outline's paint blends seamlessly across junctions (Levi 2026-11-10): section colour and pulses
   from per-pixel fields continuous across faces, triangles and junctions, gated by a seam test on every
   face edge, triangle edge and junction. Full text in docs/ledger_notes.md
@@ -832,7 +837,7 @@ Every other item below waits on the trigger it names.
   partners by arc length (reachOf), so one moving chain re-dirties its partners' corners: corner cache hits
   stay at 39% def, 19% muse_hash with the snap on (K1247 s31 handoff,
   `docs/design/K1247_s31_snap_phase_caches.md`)
-  - next: in K1247 s34 step 1 (docs/design/K1247_s34_span_holds.md)
+  - next: waits on K1247 s35's route review (docs/design/K1247_s35_route_review.md): span-local addressing only matters if the incremental route survives
 - **K1353** · A pieces cache (pieces is the largest frame phase after s31, 11.6 ms def; its inputs are global
   tables, so split them per chain first), and skip held chains' setup and resampling with s31's dirty set
   (fat's border cache costs +0.44 ms) (K1247 s31 handoff)
