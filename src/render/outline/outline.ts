@@ -8056,7 +8056,11 @@ function runEndFade(a: TailIn, p: OutlinePiece, atEnd: boolean): void {
     const sel: number[] = [];
     const one = K1314S13.liftEnd;
     for (let i = 0; i < np; i++) if (alO[2 * i] >= 0 && i > 0 && i < np - 1 && (one ? al[2 * i - 2] > 1e-3 || al[2 * i + 2] > 1e-3 : al[2 * i - 2] > 1e-3 && al[2 * i + 2] > 1e-3)) sel.push(i);
-    const edge = K1314S13.ownEdge ? sel.filter((i) => !(al![2 * i - 2] > 1e-3 && al![2 * i + 2] > 1e-3)) : sel;
+    let edge = K1314S13.ownEdge ? sel.filter((i) => !(al![2 * i - 2] > 1e-3 && al![2 * i + 2] > 1e-3)) : sel;
+    // K1314 s14 (liftChg, muse_hash c8): own ink only where the lift moved the alpha, i.e. where the side rule
+    // had cut it. c8's run 121 (points 90, 91, 100) met liftEnd's test with the side rule idle (alO = al):
+    // marking them own kept their fade in ownAlpha, the seam at x 19.33 and 19.40 in the run band's shade.
+    if (K1314S14.liftChg) edge = edge.filter((i) => Math.abs(alO![2 * i] - al![2 * i]) > 1e-6 || Math.abs(alO![2 * i + 1] - al![2 * i + 1]) > 1e-6);
     for (const i of sel) { al[2 * i] = alO[2 * i]; al[2 * i + 1] = alO[2 * i + 1]; }
     lifted = edge;
   }
@@ -8106,6 +8110,8 @@ export const K1314S12 = { tailJoin: true, thruTail: false, ownSide: false };
  *  unchanged). The three lift flags are OFF: c8 (out/s13/fin_x4|fin_x8/c8.png) gains a hard vertical seam in
  *  the run band's shade where the lifted point's own ink stops. */
 export const K1314S13 = { liftOwn: false, liftEnd: false, ownEdge: false, thruGate: false, thruOk: false, thruUnion: false };
+/** K1314 s14 flags. liftChg: liftOwn marks only the lifted points whose alpha the lift moved (see runEndFade). */
+export const K1314S14 = { liftChg: true };
 /** K1314 s12 (thruTail, muse_hash j58's corner 176): a thru tail continues E's run past the corner, so it
  *  starts no darker than the run ends (run 371's root ramp ends at 0, the tail started at 0.18: a hard
  *  line across the band) and reaches its own alpha over THRU_END points. */
