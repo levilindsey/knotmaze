@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1352.
+Next free ID: K1354.
 
 ## Waiting on Levi
 
@@ -521,11 +521,11 @@ Next free ID: K1352.
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: nobody since 2026-11-12 13:46 (merged; agent `a871cf40ae634204d` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `aa622bb9`
-  - evidence: .claude/probes/K1247/ (k1247s31_*)
-  - next: K1247 s32: make the snap valid (it holds every cache's hit rate): an exact frame once a drag settles (check a), and junction self corners that flip between solved and fallback within 0.5 px of input, popping a corner ~38 px (def j83; check b); s31's caches stay off by default until then (s31 handoff)
-  - brief: `docs/design/K1247_s31_snap_phase_caches.md`
+  - owner: agent `a0b7ae19795e37c2f` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 13:47, 2 h cap ~15:47)
+  - branch: `worktree-agent-a0b7ae19795e37c2f`, worktree `.claude/worktrees/agent-a0b7ae19795e37c2f`; last commit: `e7e6991b`
+  - evidence: .claude/probes/K1247/ (k1247s31_inc.ts, k1247s31_run.ps1; out/s31, out/s32)
+  - next: K1247 s32 running: the snap valid (exact rest frame in outline_app.ts; junction self corners continuous, def j83's 38 px flip), then snap + caches on by default; then K1352 / K1353
+  - brief: `docs/design/K1247_s32_snap_valid.md`
 - **K1278** · The outline's paint blends seamlessly across junctions (Levi 2026-11-10): section colour and pulses
   from per-pixel fields continuous across faces, triangles and junctions, gated by a seam test on every
   face edge, triangle edge and junction. Full text in docs/ledger_notes.md
@@ -832,6 +832,13 @@ Every other item below waits on the trigger it names.
   about 22 ms -> 5 ms def drag p50 (K1247 s28 handoff)
 - **K1341** · Three exact cuts K1247 s28 left: a squared pre-check before draw.ts nearRange's sqrt (zChains'
   hottest line), hinted spanOf searches, a box bound in fill_tri.ts's disk scan (s28 handoff)
+- **K1352** · Span-local L/Lcut addressing (s30 plan stage 4, first half): an arm's reach samples its crossing
+  partners by arc length (reachOf), so one moving chain re-dirties its partners' corners: corner cache hits
+  stay at 39% def, 19% muse_hash with the snap on (K1247 s31 handoff,
+  `docs/design/K1247_s31_snap_phase_caches.md`)
+- **K1353** · A pieces cache (pieces is the largest frame phase after s31, 11.6 ms def; its inputs are global
+  tables, so split them per chain first), and skip held chains' setup and resampling with s31's dirty set
+  (fat's border cache costs +0.44 ms) (K1247 s31 handoff)
 
 ## Residuals (known, not fixed)
 
