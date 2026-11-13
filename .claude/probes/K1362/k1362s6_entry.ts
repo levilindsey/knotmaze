@@ -44,15 +44,16 @@ void main() { discard; }`;
 
 function parseTiers(name: string): GfTier[] {
   return name.slice(1).split("_").map((t) => {
-    const m = /^(\d)(\d)(r?)(h?)(s?)$/.exec(t);
+    const m = /^(\d)(\d)(r?)(h?)(s?)(u?)$/.exec(t);
     if (!m) throw new Error("bad tier " + t);
-    return { p: +m[1], k: +m[2], ramps: m[3] === "r", half: m[4] === "h", reg: m[5] === "s" };
+    return { p: +m[1], k: +m[2], ramps: m[3] === "r", half: m[4] === "h", reg: m[5] === "s", unroll: m[6] === "u" };
   });
 }
 function makePass(gl: WebGL2RenderingContext, name: string, fullFs?: string): GfPass {
   if (name === "empty") return new GfPass(gl, false, [], () => EMPTY);
   if (name === "full") return new GfPass(gl, false, []);
-  if (name === "fullS") return new GfPass(gl, false, [], () => gfFs(false, true, undefined, true)); // K1362 s6: the full program, register form
+  if (name === "fullS") return new GfPass(gl, false, [], () => gfFs(false, true, undefined, { reg: true })); // K1362 s6: the full program, register form
+  if (name === "fullU") return new GfPass(gl, false, [], () => gfFs(false, true, undefined, { unroll: true })); // K1362 s6: constant trip counts
   if (name === "fullp") return new GfPass(gl, true, []);
   // t<tiers>[_...]: each tier "<p><k>[r][h][s]" (s = register form, gf_reg.ts), then the full program
   const tiers = parseTiers(name);

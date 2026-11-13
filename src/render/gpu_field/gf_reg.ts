@@ -64,6 +64,24 @@ function rewrite(s: string, names: Set<string>, re: RegExp): string {
   return out + s.slice(at);
 }
 
+const FOR = /for \(int (\w+) = ([^;]+); ([^;]+); \1\+\+\)/g;
+
+/**
+ * Constant trip counts: a loop whose condition starts with `X < n`, `X + 1 < n` or `X <= n`, n one of the per-pixel
+ * counts (np, nk, ns, ...), becomes `for (X = start; X < cap; X++) if (!(condition)) break; else <body>`, cap the
+ * count's capacity (+1 for `<=`). The condition is tested before every iteration as before, so the loop runs the same
+ * iterations; a compiler may now unroll it and index the arrays by constants. caps: each count's largest value.
+ */
+export function constantLoops(src: string, caps: Record<string, number>): string {
+  return src.replace(FOR, (all, x: string, start: string, cond: string) => {
+    const first = cond.split(" && ")[0].trim();
+    const m = new RegExp(`^${x}( \\+ 1)? (<|<=) (\\w+)$`).exec(first);
+    if (!m || !(m[3] in caps)) return all;
+    const cap = caps[m[3]] + (m[2] === "<=" ? 1 : 0);
+    return `for (int ${x} = ${start}; ${x} < ${cap}; ${x}++) if (!(${cond})) break; else`;
+  });
+}
+
 /**
  * The register-resident form of a program from gfFs. sizes: each array size macro's value (MAXP, MAXK, MAXS) or a
  * literal size. Only the arrays the program declares are converted; it must be a program without PROBE.
