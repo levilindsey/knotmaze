@@ -349,8 +349,10 @@ export function buildTables(scene: FieldScene, opts: GfOpts): GfTables {
     }
     return S;
   };
-  const marginAt = (S: { n: number; du: number; x: Float64Array; y: Float64Array }, u: number, qx: number, qy: number, dc: number): number => {
+  const marginAt = (S: { n: number; du: number; x: Float64Array; y: Float64Array }, u: number, qx: number, qy: number, dc: number, cutSq: number): number => {
     // K1362 t1: the far scan compares squared distances (sqrt once at the end; min commutes with sqrt exactly).
+    // Early abandon at cutSq: the caller (wOf) discards any result <= -0.05 h, and cutSq is set a guard
+    // below that threshold, so abandoning once the running min reaches it cannot change the caller's output.
     const X = S.x; const Y = S.y;
     const f = Math.min(S.n, Math.max(0, u / S.du)); let hi = Math.min(S.n, Math.ceil(f)); let lo = Math.max(0, Math.floor(f));
     let ex = X[hi] - qx; let ey = Y[hi] - qy; let dp = Math.sqrt(ex * ex + ey * ey);
@@ -358,8 +360,8 @@ export function buildTables(scene: FieldScene, opts: GfOpts): GfTables {
     ex = X[lo] - qx; ey = Y[lo] - qy; dp = Math.sqrt(ex * ex + ey * ey);
     while (lo > 0) { ex = X[lo - 1] - qx; ey = Y[lo - 1] - qy; const dn = Math.sqrt(ex * ex + ey * ey); if (dn < dp) break; dp = dn; lo--; }
     let d2 = Infinity;
-    for (let k = hi + 1; k <= S.n; k++) { ex = X[k] - qx; ey = Y[k] - qy; const dd = ex * ex + ey * ey; if (dd < d2) d2 = dd; }
-    for (let k = 0; k < lo; k++) { ex = X[k] - qx; ey = Y[k] - qy; const dd = ex * ex + ey * ey; if (dd < d2) d2 = dd; }
+    for (let k = hi + 1; k <= S.n; k++) { ex = X[k] - qx; ey = Y[k] - qy; const dd = ex * ex + ey * ey; if (dd < d2) { d2 = dd; if (d2 <= cutSq) return Math.sqrt(d2) - dc; } }
+    for (let k = 0; k < lo; k++) { ex = X[k] - qx; ey = Y[k] - qy; const dd = ex * ex + ey * ey; if (dd < d2) { d2 = dd; if (d2 <= cutSq) return Math.sqrt(d2) - dc; } }
     return Math.sqrt(d2) - dc;
   };
   type Q = { x: number; y: number; ua: number; ub: number; nax: number; nay: number; nbx: number; nby: number; sa: number; sb: number; fax: number; fay: number; fbx: number; fby: number };
@@ -483,12 +485,13 @@ export function buildTables(scene: FieldScene, opts: GfOpts): GfTables {
       const SA = smpOf(A); const SB = smpOf(B);
       const denOf = (p: Q): number => { const ax = p.x - p.fax; const ay = p.y - p.fay; const bx = p.x - p.fbx; const by = p.y - p.fby; return 1 + (ax * bx + ay * by) / ((Math.sqrt(ax * ax + ay * ay) || 1) * (Math.sqrt(bx * bx + by * by) || 1)); };
       const denV = denOf(V);
+      const mCut = (dc: number): number => { const c0 = dc - 0.05 * h - 1e-12 * (1 + dc); return c0 > 0 ? c0 * c0 : -1; };
       const wOf = (p: Q): number => {
         const fSteep = ss01(((Math.abs(denV) > 1e-12 ? denOf(p) / denV : 0) - 0.3) / 0.4); if (fSteep === 0) return 0;
         const fSlack = ss01(Math.min(A.L - W - p.ua, B.L - W - p.ub) / (0.5 * h)); if (fSlack === 0) return 0;
         const fA = ss01(p.ua / rb); const fB = ss01(p.ub / rb); if (fA === 0 || fB === 0) return 0;
-        const mA = marginAt(SA, p.ua, p.x, p.y, Math.hypot(p.x - p.fax, p.y - p.fay)); if (mA <= -0.05 * h) return 0;
-        const mB = marginAt(SB, p.ub, p.x, p.y, Math.hypot(p.x - p.fbx, p.y - p.fby)); if (mB <= -0.05 * h) return 0;
+        const dcA = Math.hypot(p.x - p.fax, p.y - p.fay); const mA = marginAt(SA, p.ua, p.x, p.y, dcA, mCut(dcA)); if (mA <= -0.05 * h) return 0;
+        const dcB = Math.hypot(p.x - p.fbx, p.y - p.fby); const mB = marginAt(SB, p.ub, p.x, p.y, dcB, mCut(dcB)); if (mB <= -0.05 * h) return 0;
         return ss01(1 + Math.min(0, mA, mB) / (0.05 * h)) * fSteep * fSlack * fA * fB;
       };
       const dN = r0 / NODES; let sPrev = wOf(V); let r = 0; let pua = V.ua; let pub = V.ub;
