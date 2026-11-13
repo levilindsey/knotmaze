@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1354.
+Next free ID: K1355.
 
 ## Waiting on Levi
 
@@ -554,11 +554,18 @@ Next free ID: K1354.
   most cases. But there are still plenty of unacceptable artifacts"): an artifact census (stray ink, hard
   colour edges inside fills, paper holes, broken ink) across scenes, then fix stages that drive its count to
   0; the look gate in docs/design/K1240_gate.md
-  - owner: nobody since 2026-11-12 08:47 (merged; agent `a8105bc6c8e6fc6d7` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `b0c52856`
-  - evidence: .claude/probes/K1314/ (census tools, k1314_s8_bench.ps1); untracked out/s1-s10/, baseline census_s9
-  - next: j58a stage: its fade is runRootRamp's (K1314 s9 root ramp), not runEndFade; flipping it gave a hard slab at the cusp and a seam in the V (K1346 s1 handoff, out/s1/look7/j58a.png). The bar after K1344: 16 of 17 wait on K1315/K1319; j49 is the census reading form B's tie fade as cut
-  - brief: `docs/design/K1314_s10_breaks_step.md`
+  - owner: agent `a2fd366dec3d37858` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 14:41, 2 h cap ~16:41)
+  - branch: `worktree-agent-a2fd366dec3d37858`, worktree `.claude/worktrees/agent-a2fd366dec3d37858`; last commit: `af721b2f`
+  - evidence: .claude/probes/K1314/ (k1314s11_*), baseline out/s1/census_k1346s1b
+  - next: s11 running: j58a fade (runRootRamp) and c8 soft edge (K1351) to form B; census against census_k1346s1b
+  - brief: `docs/design/K1314_s11_j58a_c8.md`
+- **K1341** · Three exact cuts K1247 s28 left: a squared pre-check before draw.ts nearRange's sqrt (zChains'
+  hottest line), hinted spanOf searches, a box bound in fill_tri.ts's disk scan (s28 handoff)
+  - owner: agent `a74fd2c72ec40ff48` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 14:41, 2 h cap ~16:41)
+  - branch: `worktree-agent-a74fd2c72ec40ff48`, worktree `.claude/worktrees/agent-a74fd2c72ec40ff48`; last commit: `af721b2f`
+  - evidence: .claude/probes/K1341/ (k1341s1_*)
+  - next: stage 1 running: the three s28 cuts, then profile hotspots; output bit-identical; app ABBA twice
+  - brief: `docs/design/K1341_s1_fill_zchains_cuts.md`
 
 ## Next, in order
 
@@ -820,8 +827,6 @@ Every other item below waits on the trigger it names.
   `docs/design/K1247_s28_fill_zchains_speed.md`)
 - **K1340** · fill's fans, disks and tails placed on the GPU like the record strips, with a twin test: fill
   about 22 ms -> 5 ms def drag p50 (K1247 s28 handoff)
-- **K1341** · Three exact cuts K1247 s28 left: a squared pre-check before draw.ts nearRange's sqrt (zChains'
-  hottest line), hinted spanOf searches, a box bound in fill_tri.ts's disk scan (s28 handoff)
 - **K1352** · Span-local L/Lcut addressing (s30 plan stage 4, first half): an arm's reach samples its crossing
   partners by arc length (reachOf), so one moving chain re-dirties its partners' corners: corner cache hits
   stay at 39% def, 19% muse_hash with the snap on (K1247 s31 handoff,
@@ -1911,13 +1916,14 @@ Every other item below waits on the trigger it names.
 - **K1347** · Census vs app at g41_user_tw64 (5.19, 17.60): the census band gives .888 where the app gives 1.0
   (on master before K1324 s3 too); the census crop shows a needle and a hard diagonal there
   (`.claude/probes/K1324/out/s3/moved8x/spot_003.png`)
-- **K1350** · Tail turn-backs left after K1344 s1: the fill walk (fpts) gets no hook or loop cut, and
-  sub-pixel turn-backs remain (muse_hash 6, g41_ring_tw64 1; jogs under 0.001 or span-cut splices). Tagger
-  `.claude/probes/K1344/k1344_tag.ts`, handoff in `docs/design/K1344_s1_j116_crease.md`
-  - next: fixed on the K1346 branch (27a075e4: cutTailLoop on fill.pts, turn-backs 0, out/s1/tag_b.txt); close with K1346 merge
 - **K1351** · c8's under-pass after K1346 s1's fan fix: the dotted seam is gone, a straight soft diagonal
   shading edge remains where form B shades smoothly (muse_hash (19.41, 14.16);
   `.claude/probes/K1346/out/s1/final8x/c8.png`)
+  - next: in K1314 s11 (docs/design/K1314_s11_j58a_c8.md)
+- **K1354** · K1346's fold checks (bandFoldScan, bandFoldsClean) cost 0.5-0.7 ms per def frame; the fast exit
+  could reuse the band builder's inner points (about 0.5 ms). One app ABBA (K1346 s2 run 2) put def band +0.85
+  ms over a 0.5 spread while Node's band is equal; one quiet app ABBA settles it
+  (docs/design/K1346_s2_fold_speed.md handoff)
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2271,6 +2277,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1350** · fill walk and sub-pixel turn-backs cut with K1346 (turn-backs 0, fill folds 0 in all 12 census scenes). Done in 48add3d8 (2026-11-12).
 - **K1346** · outline folds cut to 0 in all 12 census scenes (c8 fan seam, fill walk K1350, sub-pixel turn-backs); fold checks cost 0.5-0.7 ms per def frame. Done in 48add3d8 (2026-11-12).
 - **K1344** · j116's crease: cutTailHooks cuts a tail walk's hook at a swallowtail narrower than its step (6 of 187 tail_look finds were this fold, 0 after; bar kinds unchanged). Done in d49c248d (2026-11-12).
 - **K1338** · frame/band speed (s29: tailFoot boxes, fill reuses band feet; s30: what changes per frame, the 1.75x was machine load (quiet master def worker 72 ms, frame 38.2), KF_INC prototype off by default, the six-stage plan to ~7-9 ms in docs/design/K1247_s30_path_to_gate.md). Done in 8c31261b (2026-11-12).
