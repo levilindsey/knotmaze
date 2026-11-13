@@ -77,3 +77,42 @@ Under 30 lines:
 - your last SHA.
 
 End with `Ledger items` and the handle fields for K1346 and K1350.
+
+## Handoff (stage 2 agent, 2026-11-12 13:24:15 to 14:34 -08:00)
+
+Done holds. Branch `worktree-agent-a71bd8850e0bc2f5e` (worktree `.claude/worktrees/agent-a71bd8850e0bc2f5e`).
+
+- **The cost was real, all in frame(), and in the gates alone.** Stage 1 ran up to three bandInnerTot-style
+  passes per band piece (trimFoldEnds' and pinBandLoops' gates, bandHasOpp): about 79k points per def frame in
+  2,898 calls, 57.5k per fat frame, about 10 ns a point (a square root and divides each). Node (k1346s2_sw.ts):
+  +37 ms per 28-frame drag on def and fat, all in the chevron and loops switches.
+- **Fix (output unchanged):** `bandFoldScan` (79b064f2) gives both gates in one store-free pass with
+  bandInnerTot's arithmetic and order; the exact functions still decide. `bandFoldsClean` (8dbcfa30) is its
+  fast exit without a square root or division: each quad's two triangles certainly wind the piece's way by a
+  1e-8 margin, so nearly every piece leaves there. Gate self time per 8 drags: 179/149 ms (scan) to 124/88 ms
+  (fast exit), def/fat. A squared-radius bound and hoisted sign in bandFoldsClean hashed equal but profiled no
+  faster (160/88 ms) and were dropped.
+- **Node ABBAs (frame(), M B B M, 8 rounds, GC inside the frames):** node_ab4.log, quiet: def drag sums about
+  1271 vs 1276 ms, GC 52.6 vs 53.9 ms per drag; fat about 1014 vs 1021, GC 27.9 vs 28.3. Band part
+  (k1346s2_band.ts, under load: other agents' node at 130-150%): def p50 10.13 vs 9.98 ms, fat 4.38 vs 4.22, same
+  relayouts and quad counts, no GC. Allocation (k1346s2_heap.mjs, def, 3 drags): 4772.7 vs 4729.8 MB (+0.9%).
+- **App ABBAs (k1346s2_run.ps1, master e2ae723b on 5971 vs 8dbcfa30 on 5973; out/s2/app1..app4):**
+  1. M B B B B M, UNDER LOAD (msmpeng 113% after): def frame part 55.10 vs 54.72 (spread 5.2); fat inconclusive.
+  2. B M M M M B, quiet before, other agents' node at 210-300% after: def frame 39.80 vs 38.05 (spread 2.6),
+     worker 74.85 vs 71.48 (5.7); band 7.50 vs 6.65 (spread 0.5: over); fat frame 40.50 vs 39.45, band 9.10 vs
+     8.57 (1.0): within.
+  3. M B B B B M, quiet: branch slower in every part, zChains (identical code and input) too; def frame 43.00
+     vs 37.35.
+  4. M B B B B M, quiet: the first pair equal (frame 37.40 vs 37.50), then positions 3-6 all near 43 with
+     master's last run among them (42.90): a mid-run machine step, the same one run 3 shows. Means within the
+     spread: def frame 40.15 vs 41.90 (5.5), band 7.40 vs 7.73 (1.0), worker 74.70 vs 77.90 (11.6); fat's
+     first master run spiked (worker 181.6), and its spread covers the branch.
+  Read: the code's remaining cost is the fast exit, 0.5-0.7 ms per def frame and 0.4 per fat (CPU profile),
+  under 2% of frame(); the app's bigger gaps follow position and time, not the build.
+- **Identity:** k1346_hash.ts equals stage 1's (out/s1/hash_head.txt) in all 12 scenes at HEAD
+  (out/s2/hash_s2_final.txt); k1346_folds.ts 0 band and 0 fill folds in all 12 (out/s2/folds_final.txt);
+  `npm test` green (231 files, 2944 tests), tests as stage 1 left them.
+- **Left:** if the 0.5 ms matters, the fast exit could read the band's inner points where the band builder
+  already makes them instead of recomputing per point; an app ABBA on a machine with no other agents would
+  settle the def band +0.85 of run 2. Probes: `.claude/probes/K1346/k1346s2_*` (ab, sw, band, proc, heap,
+  prof, locked, run); outputs untracked in `out/s2/`.
