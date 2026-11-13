@@ -81,7 +81,7 @@ Under 40 lines:
 
 End with `Ledger items` and K1247's handle fields.
 
-## Handoff (s31, 2026-11-12; start 11:43:17 PT, stop STOP_TIME PT)
+## Handoff (s31, 2026-11-12; start 11:43:17 PT, stop 13:43:21 PT)
 
 Branch `worktree-agent-a871cf40ae634204d` (worktree `.claude/worktrees/agent-a871cf40ae634204d`). Flags: `KF_INC.snap`
 and `KF_INC.cache` both stay **off** by default; today's look (no `rp=outline`) is untouched. `npm test` green.
@@ -150,6 +150,9 @@ No part is slower than the spread. Fat's gain is within its spread (7.7 ms), and
   The cause is ill-conditioned self corners. Def's j83 (chain 31, θ 2.67) flips between solved and fallback within
   0.5 px of input, moving V about 38 px; its pieces are zero-length arcs. A plain drag crossing that threshold pops
   the same way, so this is a look residual, not only a snap one. END tails add about 1.2 px.
+  Fat has no junctions, and there the snap holds: p50 0.23 and max 0.43 px over 11 sampled frames (0 over 0.5 px), and
+  0.19 px at rest. Every sampled frame costs about a minute (the distance is quadratic in a group's points); the
+  stride-5 run was stopped after 50 minutes. So the snap fails only through junction corners.
 - (c) not run, since (a) and (b) already decide. The K1314 census renders a scene's first frame (`frame`, not
   `frameSnapped`) against form B. Censusing snapped mid-drag frames needs them written out as scenes, plus form B for
   each.
