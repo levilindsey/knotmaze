@@ -95,3 +95,118 @@ Under 30 lines:
 - your last SHA.
 
 End with `Ledger items` and the handle fields for K1247 and K1352.
+
+## Handoff (s33 agent, 2026-11-12, 15:28:19 to 16:57 PT)
+
+The checks were done by 16:57. That left 31 minutes before the cap, 25 of them set aside for the checks, so I stopped there.
+
+Branch `worktree-agent-ab58662face0c6b64`. Tools are `.claude/probes/K1247/k1247s33_*` (committed). Outputs are in
+`out/s33/` (untracked).
+
+**The ceiling** (`k1247s33_ceiling.ts`, s18 drags, sub 10). This rebuilds only the output units that move past
+eps. def's frame goes from 36.97 ms to 8.36 (eps 0.25) or 7.08 (eps 0.5); muse_hash from 50.03 to 19.90 or
+16.32; fat from 22.97 to 12.18. On the input side at T 0.25, the chains released at p50 are:
+
+| drag | own test | one-hop closure | transitive (s32) |
+|---|---|---|---|
+| def | 9.8% | 38% | 100% |
+| muse_hash | 19.8% | 50% | 100% |
+| fat | 50% | 50% | 50% |
+
+The room is real.
+
+**The bookkeeping cut** (measured with `k1247s33_book.ts`). On fat, the cost of the caches alone fell from +2.25 to
++0.51 ms frame p50. Two changes did it:
+- border keys and entries no longer allocate (BInc klen and miss; buildBorderInc reuses its key and entry buffers);
+- chainVersC reuses its aux buffer (CInc alen).
+
+**The local closure** (`KF_INC.jlocal`). It is on by default now, but does nothing while the snap is off.
+- A chain that passes its own test but has release centres recommits blended: `old + w·(true − old)`. w is 1 within
+  jR·hw of a centre and ramps to 0 over jM·hw.
+- Release centres are the junctions that are not whole, plus (jx) the crossings where the partner pass moved. jx is
+  needed: without it, def f41's held chain 61 was 1.26 px off.
+- A whole junction within 2R+M of a centre is released too (iterated).
+- On blended chains, s is re-addressed (sNew in snapScene). Without this, sectionPaint's cuts shift and paintFrame
+  throws "run count changed".
+
+The checks all pass with it:
+- **Identity:** `outline_inc.test.ts` 7/7 (both closures on def, muse_hash and fat; fat is the knot).
+- **(a):** after update(exact), nothing differs on def or muse_hash.
+- **(b):** max drawn px on def 0.277, muse_hash 0.399, fat 0.232. No frame is over 0.5 (`out/s33/checks/bX_*.txt`).
+- **(c):** the census on def f80 and f244 and muse_hash f26 finds no bar that exists only in the snapped scene
+  (`k1247s33_census.ts`, `out/s33/census/run.txt`).
+
+**But it holds almost nothing** (`k1247s33_spread.ts`):
+
+| drag | recommitted points p50 | dirty chains p50 | border hits | corner hits |
+|---|---|---|---|---|
+| def | 99.7% | 100% | 7.7% | 7.2% |
+| muse_hash | 98.5% | 100% | 14.1% | 7.8% |
+| fat | 100% | 100% | 11.1% | 0 |
+
+jx causes the cascade. A moved pass releases its partner at the crossing, a blended pass counts as moved, and the
+crossings connect the whole drawing.
+
+The variants (KF_INC flags; the defaults are the passing rule):
+
+| variant | def dirty p50 / border hits | (b) def | (b) muse_hash |
+|---|---|---|---|
+| jx off | 60.9% / - | 1.26 px (f41) | - |
+| jxw off (a blended pass does not release its partner), jR 4 jM 3 | 71.7% / 35.7% | 0.341 | 2.356 (f63, near jj113) |
+| jxw off, jR 1 jM 1 | 56.5% / 46.6% | 1.171 | 2.731 |
+| jxs (a pass whose own s slid releases its own chain), jR 4 jM 3 | 59.8% / 43.7% | 0.617 | 2.356 (f63) |
+| jxs, jR 1 jM 1 | 42.4% / 58.1% | 1.174 | - |
+
+Only fat improves with jxs, at jR 1 jM 1: 50% dirty, 58.6% border hits, (b) 0.247.
+
+**The ABBA** (`k1247s33_run.ps1`, log in `out/s33/run/abba.log`, run 16:40 to 16:46). Under load at the start: the
+machine was at 19% total, with three node processes at 100% that were not this agent's. At the end it was at 6%.
+- Ports: A = master ae86cce4, B = flags off 4ece0ac8, C = flags on 71dd1d60 (the passing rule).
+- Worker p50 (A / B / C): def 72.90 / 73.05 / 97.70 (spread at most 2.5); fat 81.00 / 77.20 / 95.15 (spread up to
+  3.7).
+- def by part (A / B / C):
+
+  | part | A | B | C |
+  |---|---|---|---|
+  | frame | 39.15 | 39.35 | 44.05 |
+  | zChains | 9.85 | 9.80 | 10.40 |
+  | fill | 13.65 | 13.85 | 15.20 |
+  | paint | 2.10 | 2.20 | 2.35 |
+  | band | 7.35 | 7.05 | 8.30 |
+
+- fat by part (A / B / C):
+
+  | part | A | B | C |
+  |---|---|---|---|
+  | frame | 41.80 | 39.25 | 41.50 |
+  | fill | 15.85 | 15.80 | 16.20 |
+  | band | 9.05 | 8.85 | 9.20 |
+
+- Flags on lose by 24.8 ms on def and 14 ms on fat. On def, worker minus parts is 0.8 ms on master and 17.4 ms with
+  the flags on.
+- The snap itself takes most of that loss. I measured it in Node under the perf lock, with CPU at 12% at the start
+  and 8% at the end (`k1247s33_book.ts` on def, sub 10, rep 2; `out/s33/book/def_final.txt`):
+
+  | flags | snap p50 / p95 (ms) | frame p50 (ms) | total p50 (ms) |
+  |---|---|---|---|
+  | off | 0.02 / 0.03 | 40.18 | 85.97 |
+  | on | 18.78 / 88.57 | 41.64 | 107.83 |
+
+  The snap is jlocal's fixpoint over centres × crossings.
+- The flags stay off by default (ed624182).
+
+**Not done:** K1352 (L and Lcut per span; `reachOf` samples its partner by global arc length, which accounts for the
+corner misses).
+
+**Next** (pick one direction; neither fits in a stage alongside the other):
+1. Per-span border caches, keyed on a span's committed points and its crossing cuts, so a blended span costs only
+   itself. This makes jx's cascade cheap rather than global.
+2. A release rule bounded by the error. jxs at jR 1 is the best hold so far. Fix its two faults first:
+   - muse_hash f63 near jj113 (2.36 px; the jxw variant has it too);
+   - def f41 (1.17 px).
+
+   Diagnose them with `node scripts/run_node.mjs .claude/probes/K1247/k1247s33_diag.ts <drag> f=63 kf.jxs=true
+   kf.jxw=false kf.jR=1 kf.jM=1`.
+
+Either way, the snap's own cost has to come down from 18.8 ms p50 to about 1 ms (a grid for the centres, and only the
+crossings near a centre) before any hold can pay. Then rerun the ABBA.
