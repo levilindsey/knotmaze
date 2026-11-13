@@ -6,6 +6,16 @@
 
 export interface FrameChain { closed: boolean; len: number; xs: Float64Array; ys: Float64Array; s: Float64Array; n: number }
 
+/** K1341 s1 (perf): ((d % L) + L) % L bit for bit for a finite L > 0, without V8's fmod runtime call
+ *  in the common case. fmod is exact, so d % L is d itself when |d| < L (signed zero included); then
+ *  t = r + L rounds exactly as before and lies in (0, 2L], where t % L is t below L, t - L (exact,
+ *  Sterbenz; +0 at t = L) for L <= t < 2L and +0 at t = 2L. NaN passes through. */
+export function wrapL(d: number, L: number): number {
+  const r = d > -L && d < L ? d : d % L;
+  const t = r + L;
+  return t >= L ? (t < 2 * L ? t - L : 0) : t;
+}
+
 /** Per-sample tangents and signed curvature of one chain, rebuilt each frame. */
 export interface ChainTangents { tx: Float64Array; ty: Float64Array; k: Float64Array }
 
@@ -31,7 +41,7 @@ export function chainTangents(c: FrameChain): ChainTangents {
 export function frameAt(c: FrameChain, t: ChainTangents, s: number, hint: number, out: Float64Array): number {
   const m = c.n - 1;
   const loop = c.closed && c.len > 0;
-  const u = loop ? ((s % c.len) + c.len) % c.len : Math.min(Math.max(s, 0), c.s[m]);
+  const u = loop ? wrapL(s, c.len) : Math.min(Math.max(s, 0), c.s[m]);
   let k = hint < 0 || hint > m ? 0 : hint;
   const segEnd = (q: number): number => (q < m ? c.s[q + 1] : loop ? c.len : c.s[m]);
   let guard = 0;
@@ -89,7 +99,7 @@ export function offsetRow(c: FrameChain, t: ChainTangents, sA: number, dS: numbe
   let k = -1;
   for (let i = 1; i < N; i++) {
     let u = us ? us[i] : sA + (dS * i) / N;
-    if (loop) { if (u < 0 || u >= L) u = ((u % L) + L) % L; } else u = u < 0 ? 0 : u > ss[m] ? ss[m] : u;
+    if (loop) { if (u < 0 || u >= L) u = wrapL(u, L); } else u = u < 0 ? 0 : u > ss[m] ? ss[m] : u;
     if (k < 0 || u < ss[k] || u > (k < m ? ss[k + 1] : L)) {
       if (k >= 0 && k < m && u > ss[k + 1] && (k + 1 >= m || u <= ss[k + 2])) k++;
       else { let lo = 0; let hi = m; while (hi - lo > 1) { const q = (lo + hi) >> 1; if (ss[q] <= u) lo = q; else hi = q; } k = u >= ss[m] ? (loop ? m : m - 1) : lo; }
@@ -115,7 +125,7 @@ export function zRow(c: FrameChain & { z: Float64Array }, sA: number, dS: number
   let k = -1;
   for (let i = 0; i <= N; i++) {
     let u = sA + (dS * i) / N;
-    if (loop) { if (u < 0 || u >= L) u = ((u % L) + L) % L; } else u = u < 0 ? 0 : u > ss[m] ? ss[m] : u;
+    if (loop) { if (u < 0 || u >= L) u = wrapL(u, L); } else u = u < 0 ? 0 : u > ss[m] ? ss[m] : u;
     if (!loop && u >= ss[m]) { out[i] = z[m]; continue; }
     if (k < 0 || u < ss[k] || u > (k < m ? ss[k + 1] : L)) {
       if (k >= 0 && k < m && u > ss[k + 1] && (k + 1 >= m || u <= ss[k + 2])) k++;
@@ -200,7 +210,7 @@ export function polyRow(c: FrameChain, sA: number, dS: number, N: number, sgn: n
   const xs = c.xs; const ys = c.ys; const ss = c.s;
   const segEnd = (k: number): number => (k < m ? ss[k + 1] : L);
   let a = sA; let base = 0;
-  if (loop) { const w = ((a % L) + L) % L; base = a - w; a = w; } else a = a < 0 ? 0 : a > ss[m] ? ss[m] : a;
+  if (loop) { const w = wrapL(a, L); base = a - w; a = w; } else a = a < 0 ? 0 : a > ss[m] ? ss[m] : a;
   const sB = loop ? sA + dS : Math.min(Math.max(sA + dS, 0), ss[m]);
   let k: number;
   if (a >= ss[m]) k = loop ? m : m - 1;
@@ -399,10 +409,29 @@ export function recTables(zc: readonly FrameChain[], h: number): RecTables {
 // (2e-4 against an ulp of 4e-6 at s 40) and far below a column (h / 8), and recSpan uses the same one.
 export const SPAN_EPS = 2e-4;
 const SPN = new Float64Array(8);
+// K1341 s1 (perf): spanOf's last results while fillFrame runs (spanMemo(true) .. spanMemo(false)). A record's
+// two sides ask for the same span four to eight times (fill_tri's sides(), recSideOk, sideAt), on chains
+// fillFrame never writes; a hit is the same chain object and the same sA and dS, signed zeros included,
+// so the same SPN.
+const SPM = 4; let SP_ON = false; let SPI = 0;
+const SPC: (FrameChain | null)[] = [null, null, null, null]; const SPA = new Float64Array(SPM); const SPD = new Float64Array(SPM);
+const SPV = new Float64Array(8 * SPM);
+export function spanMemo(on: boolean): void { SP_ON = on; SPC.fill(null); SPI = 0; }
+const sameF = (x: number, y: number): boolean => x === y && (x !== 0 || 1 / x === 1 / y);
 function spanOf(c: FrameChain, sA: number, dS: number): Float64Array {
+  if (!SP_ON) return spanCalc(c, sA, dS);
+  for (let e = 0; e < SPM; e++) {
+    if (SPC[e] === c && sameF(SPA[e], sA) && sameF(SPD[e], dS)) { const o = 8 * e; for (let i = 0; i < 8; i++) SPN[i] = SPV[o + i]; return SPN; }
+  }
+  spanCalc(c, sA, dS);
+  const e = SPI; SPI = SPI + 1 === SPM ? 0 : SPI + 1; SPC[e] = c; SPA[e] = sA; SPD[e] = dS;
+  const o = 8 * e; for (let i = 0; i < 8; i++) SPV[o + i] = SPN[i];
+  return SPN;
+}
+function spanCalc(c: FrameChain, sA: number, dS: number): Float64Array {
   const n = c.n; const m = n - 1; const loop = c.closed && c.len > 0; const L = c.len; const ss = c.s;
   let a = sA; let base = 0;
-  if (loop) { const w = ((a % L) + L) % L; base = a - w; a = w; } else a = a < 0 ? 0 : a > ss[m] ? ss[m] : a;
+  if (loop) { const w = wrapL(a, L); base = a - w; a = w; } else a = a < 0 ? 0 : a > ss[m] ? ss[m] : a;
   const sB = (loop ? sA + dS : Math.min(Math.max(sA + dS, 0), ss[m])) - base;
   let k: number;
   if (a + SPAN_EPS >= ss[m]) k = loop ? m : m - 1;
@@ -557,7 +586,7 @@ export function colEnds(c: FrameChain, pf: ArrayLike<number>, o: number, sA: num
 function segOf(c: FrameChain, u0: number, kf: Float64Array): void {
   const m = c.n - 1; const loop = c.closed && c.len > 0; const L = c.len; const ss = c.s;
   let u = u0;
-  if (loop) { if (u < 0 || u >= L) u = ((u % L) + L) % L; } else u = u < 0 ? 0 : u > ss[m] ? ss[m] : u;
+  if (loop) { if (u < 0 || u >= L) u = wrapL(u, L); } else u = u < 0 ? 0 : u > ss[m] ? ss[m] : u;
   let k: number;
   if (u >= ss[m]) k = loop ? m : m - 1;
   else { let lo = 0; let hi = m; while (hi - lo > 1) { const q = (lo + hi) >> 1; if (ss[q] <= u) lo = q; else hi = q; } k = lo; }
@@ -591,7 +620,7 @@ export function pointAt(c: FrameChain, s: number, out: Float64Array): void {
 export function zAt1(c: FrameChain & { z: Float64Array }, u0: number): number {
   const m = c.n - 1; const loop = c.closed && c.len > 0; const ss = c.s;
   let u = u0;
-  if (loop) { if (u < 0 || u >= c.len) u = ((u % c.len) + c.len) % c.len; } else u = u < 0 ? 0 : u > ss[m] ? ss[m] : u;
+  if (loop) { if (u < 0 || u >= c.len) u = wrapL(u, c.len); } else u = u < 0 ? 0 : u > ss[m] ? ss[m] : u;
   if (!loop && u >= ss[m]) return c.z[m];
   segOf(c, u, KF); const k = KF[0]; const j = k < m ? k + 1 : 0;
   return c.z[k] + (c.z[j] - c.z[k]) * KF[1];

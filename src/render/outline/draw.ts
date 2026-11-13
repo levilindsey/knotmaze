@@ -25,6 +25,7 @@ import { structure } from "./outline";
 import { fillFrame, fillResolution, fillRuns, fillStructure, keyScale, SLOTS, type FillFrame, type FillStructure } from "./fill_tri";
 import { runTexture, sectionPaint, type PaintMode, type SectionPaint } from "./paint";
 import { ownAlpha } from "./band_gpu";
+import { wrapL } from "./chain_frame";
 
 export function parseColor(s: string): [number, number, number] {
   const m = /^#([0-9a-f]{6})$/i.exec(s.trim());
@@ -200,9 +201,12 @@ export function zChains(scene: SceneIn): { zc: ZChain[]; passes: Pass[][]; idx: 
   });
   const pins: { s: number; z: number }[][] = scene.chains.map(() => []);
   const passes: Pass[][] = scene.chains.map(() => []);
-  const norm = (c: ZChain, s: number): number => (c.closed && c.len > 0 ? ((s % c.len) + c.len) % c.len : s);
+  const norm = (c: ZChain, s: number): number => (c.closed && c.len > 0 ? wrapL(s, c.len) : s);
   const tan = (c: ZChain, s: number): [number, number] => {
-    const u = norm(c, s); let k = 0; while (k + 2 < c.n && c.s[k + 1] <= u) k++;
+    // K1341 s1 (perf): the scan's k (while k + 2 < n and s[k + 1] <= u: k++) by bisection. s is
+    // nondecreasing, so s[k] <= u holds on a prefix and both find its last index, capped at n - 2.
+    const u = norm(c, s); let k = 0;
+    { const ss = c.s; let hi = c.n - 2; while (hi > k) { const m = (k + hi + 1) >> 1; if (ss[m] <= u) k = m; else hi = m - 1; } }
     const j = c.closed ? (k + 1) % c.n : Math.min(k + 1, c.n - 1);
     const dx = c.xs[j] - c.xs[k]; const dy = c.ys[j] - c.ys[k]; const l = Math.hypot(dx, dy) || 1; return [dx / l, dy / l];
   };
@@ -354,7 +358,7 @@ export function groupArms(scene: SceneIn, zc: ZChain[], idx: Map<number, number>
   });
   const crossBetween = (i: number, a: number, b: number): boolean => {
     const c = zc[i]; const len = b - a;
-    for (const P of passes[i]) { let u = P.s - a; if (c.closed && c.len > 0) u = ((u % c.len) + c.len) % c.len; if (u > 1e-9 && u < len - 1e-9) return true; }
+    for (const P of passes[i]) { let u = P.s - a; if (c.closed && c.len > 0) u = wrapL(u, c.len); if (u > 1e-9 && u < len - 1e-9) return true; }
     return false;
   };
   rt.forEach((R, i) => {
@@ -382,7 +386,7 @@ export function groupArms(scene: SceneIn, zc: ZChain[], idx: Map<number, number>
   const out = rt.map((R, i) => {
     const c = zc[i];
     return R.map((A) => {
-      const delta = (s: number): number => { let d = (s - A.s) * A.dir; if (c.closed && c.len > 0) d = ((d % c.len) + c.len) % c.len; return d; };
+      const delta = (s: number): number => { let d = (s - A.s) * A.dir; if (c.closed && c.len > 0) d = wrapL(d, c.len); return d; };
       let L = c.closed ? c.len : A.dir > 0 ? c.len - A.s : A.s;
       for (const q of R) { const d = delta(q.s); if (d > 1e-9 && d < L) L = d; }
       let Lcut = Infinity; let uB = Infinity;
@@ -429,7 +433,7 @@ export function groupArms(scene: SceneIn, zc: ZChain[], idx: Map<number, number>
  *  ss(Lcut, Lcut - h, d) (1 inside the arm, 0 at its cut; form B's capw = h), the largest ramp over the
  *  arms it lies on; a cut nearer its root than h reaches back past the root. g -1: on no arm. */
 export function groupMember(A: GroupArm[], c: ZChain, s: number, h: number): { g: number; ramp: number } {
-  const dOf = (X: GroupArm): number => { let d = (s - X.s) * X.dir; if (c.closed && c.len > 0) d = ((d % c.len) + c.len) % c.len; return d; };
+  const dOf = (X: GroupArm): number => { let d = (s - X.s) * X.dir; if (c.closed && c.len > 0) d = wrapL(d, c.len); return d; };
   const rp = (X: GroupArm, d: number): number => { if (X.Lcut === Infinity) return 1; const t = Math.min(1, Math.max(0, (d - X.Lcut) / -h)); return t * t * (3 - 2 * t); };
   let g = -1; let ramp = 0;
   for (const X of A) {
@@ -536,8 +540,8 @@ function contactPasses(zc: ZChain[], passes: Pass[][], h: number, arms: GroupArm
         if (!(dm2 < DEEP2)) return;
         for (let u = a + 3; u < b; u += 3) span += dSC(C, H[u - 3], H[u]);
         for (let u = a; u < b; u += 3) { const dm = dSC(O, H[a + 1], H[u + 1]); if (dm < mLo) mLo = dm; if (dm > mHi) mHi = dm; }
-        let s = H[a] + span / 2; if (C.closed && C.len > 0) s = ((s % C.len) + C.len) % C.len;
-        let so = H[a + 1] + (mLo + mHi) / 2; if (O.closed && O.len > 0) so = ((so % O.len) + O.len) % O.len;
+        let s = H[a] + span / 2; if (C.closed && C.len > 0) s = wrapL(s, C.len);
+        let so = H[a + 1] + (mLo + mHi) / 2; if (O.closed && O.len > 0) so = wrapL(so, O.len);
         const hs = Math.abs(span) / 2;
         passes[i].push({ s, o: j, so, lo: hs + h, hi: hs + h, rO: (mHi - mLo) / 2 + 2 * h });
       };
@@ -560,13 +564,13 @@ export function zPastC(c: ZChain, s: number): number {
 /** Signed arc distance b - a on a chain (wrapped into (-len/2, len/2] when closed). */
 export function dSC(c: ZChain, a: number, b: number): number {
   let d = b - a;
-  if (c.closed && c.len > 0) { d = ((d % c.len) + c.len) % c.len; if (d > c.len / 2) d -= c.len; }
+  if (c.closed && c.len > 0) { d = wrapL(d, c.len); if (d > c.len / 2) d -= c.len; }
   return d;
 }
 
 export function zAtC(c: ZChain, s: number): number {
   if (c.n === 0) return 0;
-  const u = c.closed && c.len > 0 ? ((s % c.len) + c.len) % c.len : Math.min(Math.max(s, 0), c.s[c.n - 1]);
+  const u = c.closed && c.len > 0 ? wrapL(s, c.len) : Math.min(Math.max(s, 0), c.s[c.n - 1]);
   let lo = 0; let hi = c.n - 1;
   if (u >= c.s[c.n - 1]) {
     if (!c.closed) return c.z[c.n - 1];
@@ -585,15 +589,15 @@ export function zAtC(c: ZChain, s: number): number {
  *  frame on def. */
 let nwBest = Infinity; let nwBest2 = Infinity; let nwBs = 0;
 function nearVisit(c: ZChain, x: number, y: number, sC: number, r: number, sSkip: number, skipR: number, k: number): void {
-  const j = (k + 1) % c.n; const sk = c.s[k]; const lk = j === 0 ? c.len - sk : c.s[j] - sk;
+  const j = k + 1 === c.n ? 0 : k + 1; const sk = c.s[k]; const lk = j === 0 ? c.len - sk : c.s[j] - sk;
   const mid = sk + lk / 2;
   const cl = c.closed && c.len > 0;
   let dA = mid - sC;
-  if (cl) { dA = ((dA % c.len) + c.len) % c.len; if (dA > c.len / 2) dA -= c.len; }
+  if (cl) { dA = wrapL(dA, c.len); if (dA > c.len / 2) dA -= c.len; }
   if (Math.abs(dA) > r + lk / 2) return;
   if (skipR > 0) {
     let dB = mid - sSkip;
-    if (cl) { dB = ((dB % c.len) + c.len) % c.len; if (dB > c.len / 2) dB -= c.len; }
+    if (cl) { dB = wrapL(dB, c.len); if (dB > c.len / 2) dB -= c.len; }
     if (Math.abs(dB) < skipR) return;
   }
   const ax = c.xs[k]; const ay = c.ys[k]; const ex = c.xs[j] - ax; const ey = c.ys[j] - ay;
@@ -630,7 +634,11 @@ function nearRange(c: ZChain, x: number, y: number, sC: number, r: number, sSkip
     const bd = nwUb < nwBound ? nwUb : nwBound;
     if (bd < Infinity) {
       const dx = x - xs[k]; const dy = y - ys[k];
-      const reach = Math.sqrt(dx * dx + dy * dy) - bd * (1 + 1e-9) - 1e-12;
+      // K1341 s1 (perf): the square root only when it can give a positive reach. D <= B^2 (1 - 1e-9)
+      // puts sqrt(D) below B by a relative 5e-10, far past the roundings (and the 1e-12 covers
+      // subnormal B), so reach would be negative; an overflowed D (or B^2) takes the old path.
+      const D = dx * dx + dy * dy; const B = bd * (1 + 1e-9);
+      const reach = D <= B * B * (1 - 1e-9) && D < Infinity ? -1 : Math.sqrt(D) - B - 1e-12;
       if (reach > 0) {
         const sv = ss[k]; let kk = k;
         while (kk < segs && ss[kk] <= b && (kk + 1 < c.n ? ss[kk + 1] : c.len) - sv <= reach) kk++;
@@ -651,7 +659,7 @@ function nearScan(c: ZChain, x: number, y: number, sC: number, r: number, sSkip:
   if (segs <= 0) return;
   // The bound: footNear's own test of the segment at sC (it accepts it unless a self pass skips it).
   {
-    const u = c.closed && c.len > 0 ? (((sC % c.len) + c.len) % c.len) : sC; const ss = c.s;
+    const u = c.closed && c.len > 0 ? wrapL(sC, c.len) : sC; const ss = c.s;
     let k0 = 0;
     if (ss[0] <= u) { let lo = 0; let hi = segs - 1; while (hi > lo) { const m = (lo + hi + 1) >> 1; if (ss[m] <= u) lo = m; else hi = m - 1; } k0 = lo; }
     nearVisit(c, x, y, sC, r, sSkip, skipR, k0);
@@ -659,7 +667,7 @@ function nearScan(c: ZChain, x: number, y: number, sC: number, r: number, sSkip:
   }
   if (c.closed && c.len > 0) {
     if (2 * r >= c.len) { for (let k = 0; k < segs; k++) nearVisit(c, x, y, sC, r, sSkip, skipR, k); }
-    else { const a = (((sC - r) % c.len) + c.len) % c.len; const b = a + 2 * r; if (b <= c.len) nearRange(c, x, y, sC, r, sSkip, skipR, a, b); else { nearRange(c, x, y, sC, r, sSkip, skipR, a, c.len); nearRange(c, x, y, sC, r, sSkip, skipR, 0, b - c.len); } }
+    else { const a = wrapL(sC - r, c.len); const b = a + 2 * r; if (b <= c.len) nearRange(c, x, y, sC, r, sSkip, skipR, a, b); else { nearRange(c, x, y, sC, r, sSkip, skipR, a, c.len); nearRange(c, x, y, sC, r, sSkip, skipR, 0, b - c.len); } }
   } else nearRange(c, x, y, sC, r, sSkip, skipR, sC - r, sC + r);
 }
 
@@ -685,7 +693,7 @@ export function footNear(c: ZChain, x: number, y: number, sC: number, r: number,
   const range = (a: number, b: number): void => { for (let k = first(a); k < segs && c.s[k] <= b; k++) visit(k); };
   if (c.closed && c.len > 0) {
     if (2 * r >= c.len) { for (let k = 0; k < segs; k++) visit(k); }
-    else { const a = (((sC - r) % c.len) + c.len) % c.len; const b = a + 2 * r; if (b <= c.len) range(a, b); else { range(a, c.len); range(0, b - c.len); } }
+    else { const a = wrapL(sC - r, c.len); const b = a + 2 * r; if (b <= c.len) range(a, b); else { range(a, c.len); range(0, b - c.len); } }
   } else range(sC - r, sC + r);
   return { d: best, s: bs };
 }
