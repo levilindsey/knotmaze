@@ -4191,6 +4191,12 @@ The efficient approach (a hypothesis):
 Test before switching: one stage renders the 12 census scenes with a GPU form B shader (no fades), runs the census
 on it, and times def's pass on desktop and the Pixel. Switch if it is under ~3 ms desktop and ~8 ms Pixel with no
 more census finds than rp=outline; otherwise the pool and R1/R2 go on.
+That bar is when to switch, not when to give up (Levi, 2026-11-12: "not discard it without being completely sure it
+proves the approach cannot work"). Stage 1 is a first prototype with no binning or fades, so its numbers are not a
+verdict. Each census find gets a class: definition (the per-pixel rule), implementation (precision, bins, tables,
+bugs), or inherent (no closed-form table can carry it, with an argument). Each slow number gets a breakdown and a
+floor (the cost at the fewest candidates the scene allows). Only a proven inherent limit, or a floor over the gate,
+ends the route. A miss with fixable causes goes to a diagnosed stage 2.
 
 Correction (Levi, 2026-11-12: "I DEFINITELY have plans to build on usages of the outline in the future"). The
 analysis's line "explicit geometry earns its cost only for ... nothing planned does" was wrong. Per pixel replaces

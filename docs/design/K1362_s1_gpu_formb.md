@@ -59,8 +59,30 @@ was slow from its corner re-fits and h/8 walks, so do not carry those over.
 4. Today's look and rp=outline are byte-identical with your `rp` value off, the golden snapshots don't move, and
    `npm test` is green.
 
-A failing check is work to do, not a reason to stop. If accuracy and speed cannot both hold, say which one breaks,
-where, and why, with numbers.
+A failing check is work to do, not a reason to stop.
+
+## How the result is judged
+
+Levi, 2026-11-12: "be careful to evaluate this correctly and not discard it without being completely sure it proves
+the approach cannot work". This stage measures. Nothing in it rules the approach out; only a proof can.
+- **Every census find gets a class.**
+  - **(a) Definition:** the per-pixel rule at that spot (form B's rule, or one of Levi's calls not yet built). The
+    fix is in the rule.
+  - **(b) Implementation:** precision, a bin too small, a missing table entry, a bug. The fix is in the code.
+  - **(c) Inherent:** the right pixel needs information that no closed-form per-frame table can carry. A (c) needs
+    an argument, not a guess; until it has one, it counts as (a) or (b).
+- **Every slow number gets a breakdown:** CPU tables, binning, and the GPU pass (pixels shaded, and candidates tested
+  per pixel, mean and p95). It also gets a floor: the cost at the fewest candidates the scene allows (from the
+  tables). That separates "this prototype is slow" from "per pixel cannot be fast". A pass over budget is work to
+  find the floor, not a verdict.
+- **Name every shortcut that biases the result toward failure,** with its expected gain: no binning, testing every
+  member per pixel, full-screen passes where a bound would do, no early-out, float32 where it matters.
+- **The verdict is one of:**
+  - "reaches the look and the gate";
+  - "reaches them after these fixes", each classed, each with its expected effect;
+  - "cannot, because <proof>".
+
+  Never "probably not".
 
 ## Rules
 
