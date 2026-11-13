@@ -106,6 +106,8 @@ rules file or its `paths:` change. Not auto-loaded.
   paths: `src/render/junction_routes.ts`, `src/render/junction_field.ts`, `test/render/junction_routes.test.ts`
 - `render-field.md`: the field scene, form B, the CPU oracle and the label pass (K868, K1040)
   paths: `src/render/field/**`, `test/render/field/**`
+- `render-gpu-field.md`: rp=gf, the per-pixel field on the GPU (K1362)
+  paths: `src/render/gpu_field/**`, `test/render/gf_*`
 - `render-web-fade.md`: THE FULLY TRAVELED WEB FADES IN (K169)
   paths: `src/render/web_fade.ts`, `test/render/web_fade.test.ts`
 - `render-confetti.md`: FINISH CONFETTI (K140)
