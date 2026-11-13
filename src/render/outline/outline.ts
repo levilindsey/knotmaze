@@ -4234,7 +4234,7 @@ function setupFrame(C: FCache, st: DiagramStructure, scene: SceneIn): void {
 // the model's; frameSnapped also holds the END-arm feet. The caches
 // (KF_INC.cache: borders, corners) are exact: the frame on a snapped scene is
 // byte-identical with them on or off (outline_inc.test.ts). Both off by default.
-export const KF_INC = { snap: false, cache: false, T: 0.25, border: false, jclose: true, hits: 0, misses: 0, cHits: 0, cMisses: 0, vAux: 0, vMiss: 0, cMissJ: 0, why: null as Record<string, number> | null };
+export const KF_INC = { snap: false, cache: false, T: 0.25, border: false, jclose: true, jlocal: false, jR: 4, jM: 3, jx: true, hits: 0, misses: 0, cHits: 0, cMisses: 0, vAux: 0, vMiss: 0, cMissJ: 0, why: null as Record<string, number> | null };
 let kfHoldFeet = false;
 
 export interface SnapState {
@@ -4289,7 +4289,98 @@ export function snapScene(S: SnapState, scene: SceneIn, T = KF_INC.T): SceneIn {
   // K1247 s32 (KF_INC.jclose): a junction's corners and its END arms' tails are solved from every arm chain, its
   // centre and its arms' s together, so a chain is held only while every junction it is an arm of holds whole
   // (def's drag: held chains' tails and arcs ran 0.9-1.3 px off where a neighbour arm or the centre had moved).
-  if (KF_INC.jclose) {
+  // K1247 s33 (KF_INC.jlocal): one hop. A junction is whole when its centre and every arm pass their OWN tests;
+  // a chain is released when it moved or is an arm of a junction that is not whole, and a chain released only
+  // through a junction does not release the arms of its other junctions (def's drag at T 0.25: the transitive
+  // closure released 100% of the chains a frame, one hop 38%).
+  // K1247 s33 (KF_INC.jlocal, span-local holds): a chain that passes its own test but is an arm of a junction J1
+  // that is not whole is recommitted only NEAR J1: point k takes old + w_k (true - old), w 1 within jR halfWidths
+  // of J1's centre, ramping to 0 over jM more. Its other junctions (J2) then still see its committed points, so a
+  // whole J2 holds whole (centre, every arm's s and points: no commit mixing, which put def's drawn borders 1.17 px
+  // off with one hop). Each blended point stays within T of the truth (it lies between the commit and the true
+  // point, and the chain passed its own test). A chain whose J1 and J2 sit too close for the ramp is released
+  // whole, which makes J2 not whole in turn (iterated). jlocal off: s32's transitive closure.
+  const part: (Float64Array | null)[] = [];
+  let wholeJ: Uint8Array | null = null;
+  if (KF_INC.jclose && KF_INC.jlocal) {
+    const hw = scene.look.halfWidth; const R = KF_INC.jR * hw; const M = Math.max(1e-9, KF_INC.jM * hw); const need = 2 * R + M;
+    const own = okC.slice();
+    const juncOf: number[][] = scene.chains.map(() => []);
+    scene.junctions.forEach((j, ji) => { for (const a of j.arms) { const i = idx.get(a.chain); if (i !== undefined && !juncOf[i].includes(ji)) juncOf[i].push(ji); } });
+    const whole = new Uint8Array(nJ); wholeJ = whole; const forced = new Uint8Array(nJ);
+    // Release centres per chain (flat x, y): the centres of its junctions that are not whole and (KF_INC.jx) the
+    // crossings where its partner's pass moves (a held pass beside a moved one mixes commits as a junction does:
+    // def f41, a held chain's border 1.26 px off beside a released partner). A whole junction closer than 2R + M to
+    // a release centre on one of its arm chains is released too (it would sit in the ramp), iterated.
+    let cen: number[][] = [];
+    const wAt = (i: number, x: number, y: number): number => {
+      const c = cen[i]; let d = Infinity;
+      for (let q = 0; q < c.length; q += 2) d = Math.min(d, Math.hypot(x - c[q], y - c[q + 1]));
+      return d <= R ? 1 : d >= R + M ? 0 : (R + M - d) / M;
+    };
+    const tcum: (Float64Array | undefined)[] = [];
+    const xp: (number[] | null | undefined)[] = [];
+    const xPt = (xi: number): number[] | null => {
+      let p = xp[xi];
+      if (p === undefined) {
+        const x = scene.crossings[xi]; const i = idx.get(x.a.chain); p = null;
+        if (i !== undefined) {
+          const P = scene.chains[i].pts as ArrayLike<number>; const n = P.length >> 1; const cl = scene.chains[i].closed;
+          let L = tcum[i];
+          if (!L) { L = new Float64Array(n + 1); for (let k = 1; k < n; k++) L[k] = L[k - 1] + Math.hypot(P[2 * k] - P[2 * k - 2], P[2 * k + 1] - P[2 * k - 1]); L[n] = cl && n > 1 ? L[n - 1] + Math.hypot(P[0] - P[2 * n - 2], P[1] - P[2 * n - 1]) : L[n - 1]; tcum[i] = L; }
+          const m = cl ? n : n - 1; const s = Math.max(0, Math.min(L[m], x.a.s)); let lo = 0; let hi = Math.max(1, m);
+          while (hi - lo > 1) { const q = (lo + hi) >> 1; if (L[q] <= s) lo = q; else hi = q; }
+          const k1 = lo + 1 < n ? lo + 1 : 0; const d = L[lo + 1] - L[lo]; const t = d > 0 ? (s - L[lo]) / d : 0;
+          p = [P[2 * lo] + t * (P[2 * k1] - P[2 * lo]), P[2 * lo + 1] + t * (P[2 * k1 + 1] - P[2 * lo + 1])];
+        }
+        xp[xi] = p;
+      }
+      return p;
+    };
+    for (let changed = true; changed;) {
+      changed = false;
+      scene.junctions.forEach((j, ji) => {
+        const old = S.junc[ji];
+        whole[ji] = !forced[ji] && !!old && old.id === j.id && old.arms.length === j.arms.length && Math.hypot(j.c[0] - old.c[0], j.c[1] - old.c[1]) <= ts &&
+          j.arms.every((a, k) => { const i = idx.get(a.chain); return old.arms[k].chain === a.chain && old.arms[k].kind === a.kind && i !== undefined && own[i] && Math.abs(a.s - old.arms[k].s) <= ts; }) ? 1 : 0;
+      });
+      cen = scene.chains.map(() => []);
+      for (let i = 0; i < nC; i++) if (own[i]) for (const ji of juncOf[i]) if (!whole[ji]) cen[i].push(scene.junctions[ji].c[0], scene.junctions[ji].c[1]);
+      if (KF_INC.jx) for (let more = true; more;) {
+        more = false;
+        scene.crossings.forEach((x, xi) => {
+          const ia = idx.get(x.a.chain); const ib = idx.get(x.b.chain); if (ia === undefined || ib === undefined) return;
+          if (!own[ia] && !own[ib]) return;
+          const old = S.cross[xi]; const same = !!old && old.a.chain === x.a.chain && old.b.chain === x.b.chain && old.over === x.over;
+          let p: number[] | null = null;
+          const pt = (): number[] | null => (p ??= xPt(xi));
+          const mv = (i: number, s0: number | undefined, s1: number): boolean => {
+            if (!own[i] || s0 === undefined || Math.abs(s1 - s0) > ts) return true;
+            if (!cen[i].length) return false;
+            const q = pt(); return !!q && wAt(i, q[0], q[1]) > 0;
+          };
+          const ma = mv(ia, same ? old.a.s : undefined, x.a.s); const mb = mv(ib, same ? old.b.s : undefined, x.b.s);
+          const rel = (i: number): void => { const q = pt(); if (q && own[i] && wAt(i, q[0], q[1]) < 1) { cen[i].push(q[0], q[1]); more = true; } };
+          if (ma) rel(ib);
+          if (mb) rel(ia);
+        });
+      }
+      for (let i = 0; i < nC; i++) {
+        if (!own[i] || !cen[i].length) continue;
+        for (const j2 of juncOf[i]) if (whole[j2]) {
+          const b = scene.junctions[j2].c; const c = cen[i];
+          for (let q = 0; q < c.length; q += 2) if (Math.hypot(c[q] - b[0], c[q + 1] - b[1]) < need) { forced[j2] = 1; changed = true; break; }
+        }
+      }
+    }
+    for (let i = 0; i < nC; i++) {
+      if (!okC[i] || !cen[i].length) continue;
+      okC[i] = false;
+      const pts = scene.chains[i].pts as ArrayLike<number>; const n = pts.length >> 1; const w = new Float64Array(n);
+      for (let k = 0; k < n; k++) w[k] = wAt(i, pts[2 * k], pts[2 * k + 1]);
+      part[i] = w;
+    }
+  } else if (KF_INC.jclose) {
     for (let changed = true; changed;) {
       changed = false;
       scene.junctions.forEach((j, ji) => {
@@ -4301,22 +4392,72 @@ export function snapScene(S: SnapState, scene: SceneIn, T = KF_INC.T): SceneIn {
       });
     }
   }
+  const oldP: (number[] | undefined)[] = [];
   const chains = scene.chains.map((c, i) => {
     if (okC[i]) { held[i] = true; dC[i] = 0; return { ...c, pts: S.chains[i] as number[] }; }
     const pts = c.pts as ArrayLike<number>;
-    S.chains[i] = Array.isArray(pts) ? (pts as number[]).slice() : Array.from(pts);
+    const w = part[i]; const o = S.chains[i];
+    if (w && o) { oldP[i] = o; const b = new Array<number>(pts.length); for (let k = 0; k < pts.length; k++) { const wk = w[k >> 1]; b[k] = wk === 0 ? o[k] : wk === 1 ? pts[k] : o[k] + wk * (pts[k] - o[k]); } S.chains[i] = b; }
+    else { part[i] = null; S.chains[i] = Array.isArray(pts) ? (pts as number[]).slice() : Array.from(pts); }
     held[i] = false; dC[i] = 1;
     return { ...c, pts: S.chains[i] as number[] };
   });
   // An s along a held chain is held while it moves at most T px along it, so a
   // chain beside a moving one keeps its passes (each end is held on its own).
-  const keepS = (chain: number, s0: number, s1: number): boolean => { const i = idx.get(chain); return i !== undefined && held[i] && Math.abs(s1 - s0) <= ts; };
+  // s33: an s is arc length along its chain's polyline, and a span-held chain's blended points have their own arc
+  // length, so every s on one is re-addressed: located (segment, fraction) on the polyline it came from (the commit
+  // for a held s: w 0 there and within T; the true points otherwise) and taken to the same place on the blended
+  // points. A held s before the first blended point keeps its bits. Arms that coincide stay coincident, an open
+  // chain's end arm stays at its end, and order is kept (sectionPaint's cuts; the paint's run count).
+  const cumOf = (P: ArrayLike<number>, closed: boolean): Float64Array => {
+    const n = P.length >> 1; const m = closed ? n : n - 1; const L = new Float64Array(m + 1);
+    for (let k = 1; k < n; k++) L[k] = L[k - 1] + Math.hypot(P[2 * k] - P[2 * k - 2], P[2 * k + 1] - P[2 * k - 1]);
+    if (closed && n > 1) L[n] = L[n - 1] + Math.hypot(P[0] - P[2 * n - 2], P[1] - P[2 * n - 1]);
+    return L;
+  };
+  const cums: ({ o: Float64Array; t: Float64Array; b: Float64Array; k0: number } | undefined)[] = [];
+  const cumsOf = (i: number): { o: Float64Array; t: Float64Array; b: Float64Array; k0: number } => {
+    let r = cums[i];
+    if (!r) {
+      const cl = scene.chains[i].closed; const w = part[i] as Float64Array; let k0 = 0; while (k0 < w.length && w[k0] === 0) k0++;
+      r = { o: cumOf(oldP[i] as number[], cl), t: cumOf(scene.chains[i].pts as ArrayLike<number>, cl), b: cumOf(S.chains[i] as number[], cl), k0 };
+      cums[i] = r;
+    }
+    return r;
+  };
+  /** The segment and fraction of arc length s along cumulative lengths L. */
+  const locate = (L: Float64Array, s: number): [number, number] => {
+    const m = L.length - 1; if (m <= 0) return [0, 0];
+    if (s <= 0) return [0, 0];
+    if (s >= L[m]) return [m - 1, 1];
+    let lo = 0; let hi = m;
+    while (hi - lo > 1) { const q = (lo + hi) >> 1; if (L[q] <= s) lo = q; else hi = q; }
+    const d = L[lo + 1] - L[lo];
+    return [lo, d > 0 ? (s - L[lo]) / d : 0];
+  };
+  const sNew = (chain: number, s0: number, s1: number): number => {
+    const i = idx.get(chain);
+    if (i === undefined) return s1;
+    const near = Math.abs(s1 - s0) <= ts;
+    if (held[i]) return near ? s0 : s1;
+    const w = part[i]; if (!w) return s1;
+    const C = cumsOf(i); const n = w.length;
+    if (near) {
+      const [k, t] = locate(C.o, s0); const k1 = k + 1 < n ? k + 1 : 0;
+      if (w[k] === 0 && w[k1] === 0) {
+        if (k + 1 < C.k0) return s0;
+        return t >= 1 ? C.b[k + 1] : C.b[k] + t * (C.b[k + 1] - C.b[k]);
+      }
+    }
+    const [k, t] = locate(C.t, s1);
+    return t >= 1 ? C.b[k + 1] : C.b[k] + t * (C.b[k + 1] - C.b[k]);
+  };
   const crossings = scene.crossings.map((x, xi) => {
     const old = S.cross[xi];
     if (old && old.a.chain === x.a.chain && old.b.chain === x.b.chain && old.over === x.over) {
-      const ka = keepS(x.a.chain, old.a.s, x.a.s); const kb = keepS(x.b.chain, old.b.s, x.b.s);
-      if (ka && kb) { dX[xi] = 0; return old; }
-      const y = { ...x, a: { ...x.a, s: ka ? old.a.s : x.a.s }, b: { ...x.b, s: kb ? old.b.s : x.b.s } };
+      const sa = sNew(x.a.chain, old.a.s, x.a.s); const sb = sNew(x.b.chain, old.b.s, x.b.s);
+      if (sa === old.a.s && sb === old.b.s) { dX[xi] = 0; return old; }
+      const y = { ...x, a: { ...x.a, s: sa }, b: { ...x.b, s: sb } };
       S.cross[xi] = y; dX[xi] = 1;
       return y;
     }
@@ -4328,11 +4469,12 @@ export function snapScene(S: SnapState, scene: SceneIn, T = KF_INC.T): SceneIn {
     const old = S.junc[ji];
     if (old && old.id === j.id && old.arms.length === j.arms.length && j.arms.every((a, k) => old.arms[k].chain === a.chain && old.arms[k].kind === a.kind)) {
       const kc = Math.hypot(j.c[0] - old.c[0], j.c[1] - old.c[1]) <= ts;
-      const ks = j.arms.map((a, k) => keepS(a.chain, old.arms[k].s, a.s));
-      if (kc && ks.every(Boolean)) { dJ[ji] = 0; return old; }
-      const y = cloneJunction(j);
+      const ns = j.arms.map((a, k) => sNew(a.chain, old.arms[k].s, a.s));
+      if (kc && ns.every((v, k) => v === old.arms[k].s)) { dJ[ji] = 0; return old; }
+      // s33: a whole junction on a span-held chain keeps its commit; only its arms' s are re-addressed.
+      const y = KF_INC.jlocal && wholeJ && wholeJ[ji] ? cloneJunction(old) : cloneJunction(j);
       if (kc && !KF_INC.jclose) y.c = [old.c[0], old.c[1]];
-      y.arms.forEach((a, k) => { if (ks[k]) a.s = old.arms[k].s; });
+      y.arms.forEach((a, k) => { a.s = ns[k]; });
       S.junc[ji] = y; dJ[ji] = 1;
       return y;
     }
@@ -4362,7 +4504,7 @@ function holdFootC(C: FCache, scene: SceneIn, key: number, cp: [number, number])
 // The border cache: per chain, its inputs' bits (borderKeyC) and both
 // borders' outputs (the fields later phases read, up to nb) and fold notes.
 interface BEnt { nb: number; f: Float64Array; bcv: Int8Array; diag: string[] }
-interface BInc { keys: (Float64Array | null)[]; ents: (BEnt | null)[]; miss: number[] }
+interface BInc { keys: (Float64Array | null)[]; klen: number[]; ents: (BEnt | null)[]; miss: number[] }
 const kfBInc = new WeakMap<FCache, BInc>();
 let kfKey = new Float64Array(1024);
 function borderKeyC(C: FCache, pi: number): number {
@@ -4387,10 +4529,11 @@ function bitEq(a: Float64Array, b: Float64Array, n: number): boolean {
 const BINC_F = ["bx", "by", "bs", "bsm", "bfx", "bfy", "bs2", "be", "bc"] as const;
 function buildBorderInc(C: FCache, pi: number): void {
   let I = kfBInc.get(C);
-  if (!I) { I = { keys: [], ents: [], miss: [] }; kfBInc.set(C, I); }
+  if (!I) { I = { keys: [], klen: [], ents: [], miss: [] }; kfBInc.set(C, I); }
   const len = borderKeyC(C, pi);
   const old = I.keys[pi];
-  if (old && old.length === len && bitEq(old, kfKey, len)) {
+  // K1247 s33: keys and entries are per-chain buffers that only grow (klen = the key's length): no allocation a frame.
+  if (old && I.klen[pi] === len && bitEq(old, kfKey, len)) {
     KF_INC.hits++; I.miss[pi] = 0;
     const diag = (C as unknown as { __foldDiag: string[] }).__foldDiag;
     for (let side = 0; side < 2; side++) {
@@ -4401,26 +4544,31 @@ function buildBorderInc(C: FCache, pi: number): void {
         if (key !== "bs2" && B[key].length < nb) B[key] = growF(B[key], nb);
         B[key].set(e.f.subarray(f * nb, (f + 1) * nb));
       }
-      B.bcv.set(e.bcv);
+      B.bcv.set(e.bcv.subarray(0, nb));
       B.nb = nb;
       for (const s of e.diag) if (diag.length < CF_DIAG_N) diag.push(s);
     }
     return;
   }
   KF_INC.misses++; I.miss[pi] = 1;
-  if (KF_INC.why && old) { const p = C.polys[pi]; const n = p.n; const cuts = [9, 9 + n, 9 + 2 * n, 9 + 3 * n, 9 + 3 * n + p.nseg, len - C.chainRoots[pi].length, len]; const names = ["head", "x", "y", "s", "segLen", "passes", "roots"]; let r = old.length !== len ? "len" : ""; if (!r) { let i = 0; while (i < len && old[i] === kfKey[i]) i++; let q = 0; while (q < cuts.length && i >= cuts[q]) q++; r = q === 0 ? ["h", "W", "n", "nseg", "closed", "s0", "len", "np", "nroots"][i] : names[q] ?? "?"; } KF_INC.why[r] = (KF_INC.why[r] ?? 0) + 1; }
-  I.keys[pi] = kfKey.slice(0, len);
+  if (KF_INC.why && old) { const p = C.polys[pi]; const n = p.n; const cuts = [9, 9 + n, 9 + 2 * n, 9 + 3 * n, 9 + 3 * n + p.nseg, len - C.chainRoots[pi].length, len]; const names = ["head", "x", "y", "s", "segLen", "passes", "roots"]; let r = I.klen[pi] !== len ? "len" : ""; if (!r) { let i = 0; while (i < len && old[i] === kfKey[i]) i++; let q = 0; while (q < cuts.length && i >= cuts[q]) q++; r = q === 0 ? ["h", "W", "n", "nseg", "closed", "s0", "len", "np", "nroots"][i] : names[q] ?? "?"; } KF_INC.why[r] = (KF_INC.why[r] ?? 0) + 1; }
+  let kb = old; if (!kb || kb.length < len) { kb = new Float64Array(len + (len >> 1)); I.keys[pi] = kb; }
+  kb.set(kfKey.subarray(0, len)); I.klen[pi] = len;
   const real = (C as unknown as { __foldDiag: string[] }).__foldDiag;
   for (let side = 0; side < 2; side++) {
-    const mine: string[] = [];
+    let e = I.ents[pi * 2 + side];
+    if (!e) { e = { nb: 0, f: new Float64Array(0), bcv: new Int8Array(0), diag: [] }; I.ents[pi * 2 + side] = e; }
+    const mine = e.diag; mine.length = 0;
     (C as unknown as { __foldDiag: string[] }).__foldDiag = mine;
     buildBorderC(C, pi, side === 0 ? 1 : -1);
     (C as unknown as { __foldDiag: string[] }).__foldDiag = real;
     for (const s of mine) if (real.length < CF_DIAG_N) real.push(s);
     const B = C.bords[pi * 2 + side]; const nb = B.nb;
-    const f = new Float64Array(BINC_F.length * nb);
-    for (let q = 0; q < BINC_F.length; q++) f.set(B[BINC_F[q]].subarray(0, nb), q * nb);
-    I.ents[pi * 2 + side] = { nb, f, bcv: B.bcv.slice(0, nb), diag: mine };
+    // Entry layout: field q at [q * nb, (q + 1) * nb) of f (nb is this entry's, so a regrown f keeps no stale stride).
+    if (e.f.length < BINC_F.length * nb) e.f = new Float64Array(BINC_F.length * (nb + (nb >> 1)));
+    if (e.bcv.length < nb) e.bcv = new Int8Array(nb + (nb >> 1));
+    for (let q = 0; q < BINC_F.length; q++) e.f.set(B[BINC_F[q]].subarray(0, nb), q * nb);
+    e.bcv.set(B.bcv.subarray(0, nb)); e.nb = nb;
   }
 }
 
@@ -4435,7 +4583,7 @@ const KF_COS_FAN2 = Math.cos((Math.PI / 16) * (1 - 1e-6)) ** 2;
 // that changes; a corner whose two versions and centre bits match its last
 // main-path solve restores that solve's outputs and replays its two border
 // insertions in the same order. The warm state (wV*, walk caches) is write-only.
-interface CInc { ver: number[]; aux: (Float64Array | null)[]; ents: (Float64Array | null)[] }
+interface CInc { ver: number[]; aux: (Float64Array | null)[]; alen: number[]; ents: (Float64Array | null)[] }
 const kfCInc = new WeakMap<FCache, CInc>();
 let kfCI: CInc | null = null; // this frame's chain versions while the cache is on (frameFast)
 let kfVerNext = 1;
@@ -4457,17 +4605,17 @@ function auxKeyC(C: FCache, pi: number): number {
 /** Per chain, this frame's version (after setupFrame and the borders; KF_INC.cache only). */
 function chainVersC(C: FCache): CInc {
   let I = kfCInc.get(C);
-  if (!I) { I = { ver: [], aux: [], ents: [] }; kfCInc.set(C, I); }
+  if (!I) { I = { ver: [], aux: [], alen: [], ents: [] }; kfCInc.set(C, I); }
   const bm = (kfBInc.get(C) as BInc).miss;
   for (let pi = 0; pi < C.nCh; pi++) {
     const len = auxKeyC(C, pi);
     const old = I.aux[pi];
-    const same = !!old && old.length === len && bitEq(old, kfAux, len);
-    if (!same && KF_INC.why && old && old.length === len && bm[pi] === 0) {
+    const same = !!old && I.alen[pi] === len && bitEq(old, kfAux, len);
+    if (!same && KF_INC.why && old && I.alen[pi] === len && bm[pi] === 0) {
       const nd = C.depthN[pi]; const W = KF_INC.why;
       for (let q = 0; q < len; q++) if (!sameBits(old[q], kfAux[q])) { const tag = q < 2 ? "n" : q < 2 + nd ? "depthS" : q < 2 + 2 * nd ? "depthZ" : ["SR", "Dir", "L", "Lcut", "Ux", "Uy", "Ang"][(q - 2 - 2 * nd) % 7]; W[tag] = (W[tag] ?? 0) + 1; }
     }
-    if (!same) I.aux[pi] = kfAux.slice(0, len);
+    if (!same) { let ab = old; if (!ab || ab.length < len) { ab = new Float64Array(len + (len >> 1)); I.aux[pi] = ab; } ab.set(kfAux.subarray(0, len)); I.alen[pi] = len; }
     if (!same || bm[pi] !== 0 || I.ver[pi] === undefined) { I.ver[pi] = kfVerNext++; if (!same) KF_INC.vAux++; else KF_INC.vMiss++; }
   }
   return I;

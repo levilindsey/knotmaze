@@ -53,7 +53,8 @@ function lerp(a: SceneIn, b: SceneIn, t: number): SceneIn {
 // The flags under test on (the structures in stOf are built with them, so frame 0 primes the caches, as the
 // worker's first frame does); then back to the module's defaults (K1247 s32: snap and cache off by default).
 beforeEach(() => { KF_INC.snap = true; KF_INC.cache = true; });
-afterEach(() => { KF_INC.snap = false; KF_INC.cache = false; KF_INC.T = 0.25; KF_INC.border = false; KF_INC.jclose = true; });
+const kfDefaults = { ...KF_INC };
+afterEach(() => { Object.assign(KF_INC, { snap: kfDefaults.snap, cache: kfDefaults.cache, T: kfDefaults.T, border: kfDefaults.border, jclose: kfDefaults.jclose, jlocal: kfDefaults.jlocal, jR: kfDefaults.jR, jM: kfDefaults.jM, jx: kfDefaults.jx }); });
 
 describe("K1338 / K1247 s31 incremental frame: the caches are exact", () => {
   it("ring (committed fixture): a synthetic drag, caches on = off every frame", () => {
@@ -82,9 +83,11 @@ describe("K1338 / K1247 s31 incremental frame: the caches are exact", () => {
 
   const dragDir = fileURLToPath(new URL("../../.claude/probes/K1247/out/s18/drag/", import.meta.url));
   const SUB = 4;
-  for (const [name, nCap] of [["def", 6], ["muse_hash", 6], ["fat", 6]] as const) {
+  // K1247 s33: both junction closures (jlocal: span-local holds, blended commits near a released junction).
+  for (const [name, nCap] of [["def", 6], ["muse_hash", 6], ["fat", 6]] as const) for (const jlocal of [false, true]) {
     const d = join(dragDir, name);
-    it.skipIf(!existsSync(d))(`${name} (captured drag on disk, ${SUB} frames per pair): caches on = off every frame`, () => {
+    it.skipIf(!existsSync(d))(`${name} (captured drag on disk, ${SUB} frames per pair, jlocal ${jlocal}): caches on = off every frame`, () => {
+      KF_INC.jlocal = jlocal;
       const files = readdirSync(d).filter((f) => /^f\d+\.json$/.test(f)).sort().slice(0, nCap);
       const cap = files.map((f) => appLook(JSON.parse(readFileSync(join(d, f), "utf8")) as SceneIn));
       const frames: SceneIn[] = [cap[0]];
