@@ -41,7 +41,7 @@ export function chainTangents(c: FrameChain): ChainTangents {
 export function frameAt(c: FrameChain, t: ChainTangents, s: number, hint: number, out: Float64Array): number {
   const m = c.n - 1;
   const loop = c.closed && c.len > 0;
-  const u = loop ? wrapL(s, c.len) : Math.min(Math.max(s, 0), c.s[m]);
+  const u = loop ? ((s % c.len) + c.len) % c.len : Math.min(Math.max(s, 0), c.s[m]);
   let k = hint < 0 || hint > m ? 0 : hint;
   const segEnd = (q: number): number => (q < m ? c.s[q + 1] : loop ? c.len : c.s[m]);
   let guard = 0;
@@ -99,7 +99,7 @@ export function offsetRow(c: FrameChain, t: ChainTangents, sA: number, dS: numbe
   let k = -1;
   for (let i = 1; i < N; i++) {
     let u = us ? us[i] : sA + (dS * i) / N;
-    if (loop) { if (u < 0 || u >= L) u = wrapL(u, L); } else u = u < 0 ? 0 : u > ss[m] ? ss[m] : u;
+    if (loop) { if (u < 0 || u >= L) u = ((u % L) + L) % L; } else u = u < 0 ? 0 : u > ss[m] ? ss[m] : u;
     if (k < 0 || u < ss[k] || u > (k < m ? ss[k + 1] : L)) {
       if (k >= 0 && k < m && u > ss[k + 1] && (k + 1 >= m || u <= ss[k + 2])) k++;
       else { let lo = 0; let hi = m; while (hi - lo > 1) { const q = (lo + hi) >> 1; if (ss[q] <= u) lo = q; else hi = q; } k = u >= ss[m] ? (loop ? m : m - 1) : lo; }
@@ -125,7 +125,7 @@ export function zRow(c: FrameChain & { z: Float64Array }, sA: number, dS: number
   let k = -1;
   for (let i = 0; i <= N; i++) {
     let u = sA + (dS * i) / N;
-    if (loop) { if (u < 0 || u >= L) u = wrapL(u, L); } else u = u < 0 ? 0 : u > ss[m] ? ss[m] : u;
+    if (loop) { if (u < 0 || u >= L) u = ((u % L) + L) % L; } else u = u < 0 ? 0 : u > ss[m] ? ss[m] : u;
     if (!loop && u >= ss[m]) { out[i] = z[m]; continue; }
     if (k < 0 || u < ss[k] || u > (k < m ? ss[k + 1] : L)) {
       if (k >= 0 && k < m && u > ss[k + 1] && (k + 1 >= m || u <= ss[k + 2])) k++;
@@ -210,7 +210,7 @@ export function polyRow(c: FrameChain, sA: number, dS: number, N: number, sgn: n
   const xs = c.xs; const ys = c.ys; const ss = c.s;
   const segEnd = (k: number): number => (k < m ? ss[k + 1] : L);
   let a = sA; let base = 0;
-  if (loop) { const w = wrapL(a, L); base = a - w; a = w; } else a = a < 0 ? 0 : a > ss[m] ? ss[m] : a;
+  if (loop) { const w = ((a % L) + L) % L; base = a - w; a = w; } else a = a < 0 ? 0 : a > ss[m] ? ss[m] : a;
   const sB = loop ? sA + dS : Math.min(Math.max(sA + dS, 0), ss[m]);
   let k: number;
   if (a >= ss[m]) k = loop ? m : m - 1;
@@ -409,29 +409,10 @@ export function recTables(zc: readonly FrameChain[], h: number): RecTables {
 // (2e-4 against an ulp of 4e-6 at s 40) and far below a column (h / 8), and recSpan uses the same one.
 export const SPAN_EPS = 2e-4;
 const SPN = new Float64Array(8);
-// K1341 s1 (perf): spanOf's last results while fillFrame runs (spanMemo(true) .. spanMemo(false)). A record's
-// two sides ask for the same span four to eight times (fill_tri's sides(), recSideOk, sideAt), on chains
-// fillFrame never writes; a hit is the same chain object and the same sA and dS, signed zeros included,
-// so the same SPN.
-const SPM = 4; let SP_ON = false; let SPI = 0;
-const SPC: (FrameChain | null)[] = [null, null, null, null]; const SPA = new Float64Array(SPM); const SPD = new Float64Array(SPM);
-const SPV = new Float64Array(8 * SPM);
-export function spanMemo(on: boolean): void { SP_ON = on; SPC.fill(null); SPI = 0; }
-const sameF = (x: number, y: number): boolean => x === y && (x !== 0 || 1 / x === 1 / y);
 function spanOf(c: FrameChain, sA: number, dS: number): Float64Array {
-  if (!SP_ON) return spanCalc(c, sA, dS);
-  for (let e = 0; e < SPM; e++) {
-    if (SPC[e] === c && sameF(SPA[e], sA) && sameF(SPD[e], dS)) { const o = 8 * e; for (let i = 0; i < 8; i++) SPN[i] = SPV[o + i]; return SPN; }
-  }
-  spanCalc(c, sA, dS);
-  const e = SPI; SPI = SPI + 1 === SPM ? 0 : SPI + 1; SPC[e] = c; SPA[e] = sA; SPD[e] = dS;
-  const o = 8 * e; for (let i = 0; i < 8; i++) SPV[o + i] = SPN[i];
-  return SPN;
-}
-function spanCalc(c: FrameChain, sA: number, dS: number): Float64Array {
   const n = c.n; const m = n - 1; const loop = c.closed && c.len > 0; const L = c.len; const ss = c.s;
   let a = sA; let base = 0;
-  if (loop) { const w = wrapL(a, L); base = a - w; a = w; } else a = a < 0 ? 0 : a > ss[m] ? ss[m] : a;
+  if (loop) { const w = ((a % L) + L) % L; base = a - w; a = w; } else a = a < 0 ? 0 : a > ss[m] ? ss[m] : a;
   const sB = (loop ? sA + dS : Math.min(Math.max(sA + dS, 0), ss[m])) - base;
   let k: number;
   if (a + SPAN_EPS >= ss[m]) k = loop ? m : m - 1;
@@ -486,25 +467,21 @@ export function recSideOk(c: FrameChain, T: RecTables, ci: number, sA: number, d
  *  length, B = N - F the straight columns); the straight parts take the columns between, evenly in s; a
  *  later fan wins a shared column. Every polygon vertex of the border (outline.ts buildBorder) lands on a
  *  column, so no chord between two columns cuts a corner. The shader's recCol is this, line for line. */
-function csAt(c: FrameChain, pf: ArrayLike<number>, o: number, V: number, a32: number, B: number, S32: number, p0: number): number {
-  return colR(c, V, a32, B, S32) + pfU(c, pf, o, V - 1) - p0;
-}
 export function colAt(c: FrameChain, pf: ArrayLike<number>, o: number, sA: number, dS: number, N: number, sgn: number, h: number, i: number, out: Float64Array, oi: number): number {
   const sp = spanOf(c, sA, dS); const a = sp[0]; const sB = sp[1]; const k = sp[2]; const V1 = sp[3]; const V2 = sp[4];
   const p0 = pfU(c, pf, o, V1 - 1); const B = N - (pfU(c, pf, o, V2) - p0);
-  // K1341 s1 (perf): cs(V) is csAt (the closure made per call was 64 MB over 2 def passes).
-  const a32 = sp[6]; const S32 = sp[7];
+  const a32 = sp[6]; const S32 = sp[7]; const cs = (V: number): number => colR(c, V, a32, B, S32) + pfU(c, pf, o, V - 1) - p0;
   // The last interior V with cs(V) <= i (V1 - 1: none).
   let lo = V1 - 1; let hi = V2 + 1;
-  while (hi - lo > 1) { const q = (lo + hi) >> 1; if (csAt(c, pf, o, q, a32, B, S32, p0) <= i) lo = q; else hi = q; }
+  while (hi - lo > 1) { const q = (lo + hi) >> 1; if (cs(q) <= i) lo = q; else hi = q; }
   const V = lo; let s: number; let K: number;
   if (V >= V1) {
-    const st = pfU(c, pf, o, V) - pfU(c, pf, o, V - 1); const c0 = csAt(c, pf, o, V, a32, B, S32, p0); const g = i - c0;
+    const st = pfU(c, pf, o, V) - pfU(c, pf, o, V - 1); const c0 = cs(V); const g = i - c0;
     if (g <= st) { fanPt(c, V % c.n, sgn, h, st, g, out, oi); return sOfV(c, V) + sp[5]; }
-    const ce = c0 + st; const sv = sOfV(c, V); const cn = V < V2 ? csAt(c, pf, o, V + 1, a32, B, S32, p0) : N; const sn = V < V2 ? sOfV(c, V + 1) : sB;
+    const ce = c0 + st; const sv = sOfV(c, V); const cn = V < V2 ? cs(V + 1) : N; const sn = V < V2 ? sOfV(c, V + 1) : sB;
     s = sv + ((sn - sv) * (i - ce)) / (cn - ce); K = V;
   } else {
-    const cn = V2 >= V1 ? csAt(c, pf, o, V1, a32, B, S32, p0) : N; const sn = V2 >= V1 ? sOfV(c, V1) : sB;
+    const cn = V2 >= V1 ? cs(V1) : N; const sn = V2 >= V1 ? sOfV(c, V1) : sB;
     s = a + ((sn - a) * i) / cn; K = k;
   }
   edgePt(c, K, s, sgn, h, out, oi);
@@ -590,7 +567,7 @@ export function colEnds(c: FrameChain, pf: ArrayLike<number>, o: number, sA: num
 function segOf(c: FrameChain, u0: number, kf: Float64Array): void {
   const m = c.n - 1; const loop = c.closed && c.len > 0; const L = c.len; const ss = c.s;
   let u = u0;
-  if (loop) { if (u < 0 || u >= L) u = wrapL(u, L); } else u = u < 0 ? 0 : u > ss[m] ? ss[m] : u;
+  if (loop) { if (u < 0 || u >= L) u = ((u % L) + L) % L; } else u = u < 0 ? 0 : u > ss[m] ? ss[m] : u;
   let k: number;
   if (u >= ss[m]) k = loop ? m : m - 1;
   else { let lo = 0; let hi = m; while (hi - lo > 1) { const q = (lo + hi) >> 1; if (ss[q] <= u) lo = q; else hi = q; } k = lo; }
@@ -624,7 +601,7 @@ export function pointAt(c: FrameChain, s: number, out: Float64Array): void {
 export function zAt1(c: FrameChain & { z: Float64Array }, u0: number): number {
   const m = c.n - 1; const loop = c.closed && c.len > 0; const ss = c.s;
   let u = u0;
-  if (loop) { if (u < 0 || u >= c.len) u = wrapL(u, c.len); } else u = u < 0 ? 0 : u > ss[m] ? ss[m] : u;
+  if (loop) { if (u < 0 || u >= c.len) u = ((u % c.len) + c.len) % c.len; } else u = u < 0 ? 0 : u > ss[m] ? ss[m] : u;
   if (!loop && u >= ss[m]) return c.z[m];
   segOf(c, u, KF); const k = KF[0]; const j = k < m ? k + 1 : 0;
   return c.z[k] + (c.z[j] - c.z[k]) * KF[1];

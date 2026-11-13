@@ -71,7 +71,7 @@
 // run's span follows the frame.
 import type { DiagramStructure, OutlineTable, SceneIn } from "./outline";
 import { zChains, zAtC, zPastC, footNear } from "./draw";
-import { chainTangents, colAt, colRow, frameAt, offsetAt, offsetRow, POLY, pointAt, recSideOk, recTables, spanMemo, wrapL, zAt1, zRow } from "./chain_frame";
+import { chainTangents, colAt, colRow, frameAt, offsetAt, offsetRow, POLY, pointAt, recSideOk, recTables, zAt1, zRow } from "./chain_frame";
 import { paintAt, runAt, type SectionPaint } from "./paint";
 import { REC_KEY_FLOOR, REC_KEY_MID, REC_KEY_ROW, REC_TEXELS } from "./rec_glsl";
 
@@ -126,7 +126,7 @@ function footS(c: FootChain, x: number, y: number, sC: number, r: number): numbe
   const n = c.n; const segs = c.closed ? n : n - 1;
   if (segs <= 0) return NaN;
   const L = c.len; const ring = c.closed && L > 0; const xs = c.xs; const ys = c.ys; const ss = c.s;
-  const u = ring ? wrapL(sC, L) : sC;
+  const u = ring ? ((sC % L) + L) % L : sC;
   let k0 = footK < segs ? footK : segs - 1;
   if (ss[0] > u) k0 = 0;
   else if (ss[k0] <= u) {
@@ -604,7 +604,7 @@ function resample(pts: number[], par: number[] | null, n: number, out: Float64Ar
 /** K1283 s7: a z-chain's point at s (a closed chain wraps, an open one clamps). */
 function zPointAt(c: ReturnType<typeof zChains>["zc"][number], s: number): [number, number] {
   const n = c.n;
-  const u = c.closed && c.len > 0 ? wrapL(s, c.len) : Math.min(Math.max(s, c.s[0]), c.s[n - 1]);
+  const u = c.closed && c.len > 0 ? ((s % c.len) + c.len) % c.len : Math.min(Math.max(s, c.s[0]), c.s[n - 1]);
   if (c.closed && u >= c.s[n - 1]) {
     const l = c.len - c.s[n - 1]; const t = l > 0 ? (u - c.s[n - 1]) / l : 0;
     return [c.xs[n - 1] + (c.xs[0] - c.xs[n - 1]) * t, c.ys[n - 1] + (c.ys[0] - c.ys[n - 1]) * t];
@@ -629,15 +629,6 @@ let FAN_GS = new Int32Array(64); let FAN_GC = new Int32Array(64); let FAN_GI = n
 export interface FillBuf { pos?: Float64Array; key?: Float32Array; sv?: Float32Array; s4?: Float64Array; across?: Float32Array; w4?: Float32Array }
 function bufF64(a: Float64Array | undefined, n: number): Float64Array { return a && a.length === n ? a.fill(0) : new Float64Array(n); }
 function bufF32(a: Float32Array | undefined, n: number): Float32Array { return a && a.length === n ? a.fill(0) : new Float32Array(n); }
-
-/** K1341 s1: the disk off-fan scan's squared distance from (px, py) to ring segment i of the fan at h,
- *  computed as the scan computes it. */
-function ringSegD(pos: Float64Array, h: number, R: number, i: number, px: number, py: number): number {
-  const b = h + 1 + i; const c = h + 1 + ((i + 1) % R);
-  const bx = pos[2 * b]; const by = pos[2 * b + 1]; const vx = pos[2 * c] - bx; const vy = pos[2 * c + 1] - by;
-  const l2 = vx * vx + vy * vy; let u = l2 > 0 ? ((px - bx) * vx + (py - by) * vy) / l2 : 0; u = u < 0 ? 0 : u > 1 ? 1 : u;
-  const dx = bx + vx * u - px; const dy = by + vy * u - py; return dx * dx + dy * dy;
-}
 
 export function fillFrame(fs: FillStructure, st: DiagramStructure, table: OutlineTable, scene: SceneIn, zcIn?: ReturnType<typeof zChains>, buf?: FillBuf): FillFrame {
   let tP = FILL_PROF.on ? performance.now() : 0;
@@ -721,7 +712,7 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
     // A border past an open chain's end (it wraps round the cap: muse_hash's 25 px) has no s to be a
     // record at: today's path keeps it.
     if (!loop) for (const q of [pl.s0, pl.s1, pr.s0, pr.s1]) if (q < -1e-6 || q > c.len + 1e-6) return false;
-    const wrap = (d: number): number => (loop ? wrapL(d, c.len) : d);
+    const wrap = (d: number): number => (loop ? ((d % c.len) + c.len) % c.len : d);
     const s0 = pl.s0; let ds = wrap(pl.s1 - pl.s0);
     if (loop && aSt === bSt && ds < 1e-9) ds = c.len;
     const rL: [number, number] = [pl.s0, wrap(pl.s1 - pl.s0)]; const rR: [number, number] = [pr.s0, wrap(pr.s1 - pr.s0)];
@@ -786,7 +777,7 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
     const N = it.N; const W = N + 1; const c = zc[it.pi];
     const loop = c.closed && c.len > 0;
     if (!loop) for (const q of [pl.s0, pl.s1, pr.s0, pr.s1]) if (q < -1e-6 || q > c.len + 1e-6) return false;
-    const wrap = (d: number): number => (loop ? wrapL(d, c.len) : d);
+    const wrap = (d: number): number => (loop ? ((d % c.len) + c.len) % c.len : d);
     const s0 = pl.s0; let ds = wrap(pl.s1 - pl.s0);
     if (loop && aSt === bSt && ds < 1e-9) ds = c.len;
     const rL0 = pl.s0; const rL1 = wrap(pl.s1 - pl.s0); let rR0 = pr.s0; const rR1 = wrap(pr.s1 - pr.s0);
@@ -945,14 +936,6 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
     T[o + 16] = xc; T[o + 17] = yc; T[o + 18] = xd; T[o + 19] = yd;
     return true;
   };
-  // K1341 s1 (perf): chain_frame's span memo, on (and emptied) for one record: its sides ask for the same
-  // spans several times, on this frame's chain, which fillFrame never writes.
-  const memoRec2 = (it: Extract<FillItem, { kind: "strip" }>, ord: number, aSt: number, bSt: number, pl: OutlineTable["pieces"][number], pr: OutlineTable["pieces"][number]): boolean => {
-    spanMemo(true); try { return recStrip2(it, ord, aSt, bSt, pl, pr); } finally { spanMemo(false); }
-  };
-  const memoRec = (it: Extract<FillItem, { kind: "strip" }>, aSt: number, bSt: number, pl: OutlineTable["pieces"][number], pr: OutlineTable["pieces"][number]): boolean => {
-    spanMemo(true); try { return recStrip(it, aSt, bSt, pl, pr); } finally { spanMemo(false); }
-  };
   let bufM = new Float64Array(0); let bufMC = new Float64Array(0);
   let rowL = new Float64Array(0); let rowR = new Float64Array(0); let rowZ = new Float64Array(0); let rowSL = new Float64Array(0); let rowSR = new Float64Array(0);
   if (FILL_PROF.on) FILL_PROF.t.pre = (FILL_PROF.t.pre ?? 0) + performance.now() - tP;
@@ -968,9 +951,9 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
       // gpu: recStrip2 for N >= 2 (it places every column of a strip without a table row, N < 4).
       if (gpu && N >= 2) {
         const ord = rsOrd.get(ii) ?? -1;
-        if (pl && pr && pl.pts.length >= 4 && pr.pts.length >= 4 && zc[it.pi] && zc[it.pi].n > 1 && memoRec2(it, ord, I.aSt, I.bSt, pl, pr)) { pk = ord >= 0 ? "strip:rec" : "strip:short"; continue; }
+        if (pl && pr && pl.pts.length >= 4 && pr.pts.length >= 4 && zc[it.pi] && zc[it.pi].n > 1 && recStrip2(it, ord, I.aSt, I.bSt, pl, pr)) { pk = ord >= 0 ? "strip:rec" : "strip:short"; continue; }
         if (ord >= 0) { fbOrd.push(ord); pk = "strip:fb"; }
-      } else if (rec && pl && pr && pl.pts.length >= 4 && pr.pts.length >= 4 && tgAt(it.pi) && memoRec(it, I.aSt, I.bSt, pl, pr)) continue;
+      } else if (rec && pl && pr && pl.pts.length >= 4 && pr.pts.length >= 4 && tgAt(it.pi) && recStrip(it, I.aSt, I.bSt, pl, pr)) continue;
       if (bufCL.length < 2 * W) { bufCL = new Float64Array(2 * W); bufCR = new Float64Array(2 * W); }
       // A side's border, and (cOk) its centreline feet resampled alongside.
       let cOkL = false; let cOkR = false;
@@ -986,7 +969,7 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
       // own foot, c71 sank under c18). The strip's outline is the same two
       // borders and end columns; only where the samples sit along them.
       const cz = zc[it.pi];
-      const wrapZ = (d: number): number => (cz && cz.closed && cz.len > 0 ? wrapL(d, cz.len) : d);
+      const wrapZ = (d: number): number => (cz && cz.closed && cz.len > 0 ? ((d % cz.len) + cz.len) % cz.len : d);
       let spL: [number, number] | null = null; let spR: [number, number] | null = null; let mU0 = 0; let mUl = 0; let mirA = false; let mirB = false;
       if (pl && pr && pl.pts.length >= 4 && pr.pts.length >= 4 && N >= 2) {
         const a0 = pl.s0; const a1 = wrapZ(pl.s1 - pl.s0); let b0 = pr.s0; const b1 = wrapZ(pr.s1 - pr.s0);
@@ -1098,14 +1081,14 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
       const c = zc[it.pi];
       if (!P) { const sa = stationS(I.aSt); const sb = stationS(I.bSt); if (sa !== null && sb !== null) { s0 = sa; ds = sb - sa; } }
       if (c && c.closed && c.len > 0) {
-        ds = wrapL(ds, c.len);
+        ds = ((ds % c.len) + c.len) % c.len;
         if (I.aSt === I.bSt && ds < 1e-9) ds = c.len; // a loop's one run, seam to seam
       }
       if (!okL) { fallbacks++; for (let r = 0; r < 3; r++) for (let i = 0; i <= N; i++) { set(it.base + r * W + i, 0, 0, -1e3, s0); s4[SLOTS * (it.base + r * W + i)] = s0; } continue; }
       // K1278: the paint's s, per border row from its own piece's feet (a
       // mirrored or missing side takes the other's), the centre row their
       // mean; on a closed chain the R row unwraps to the L row's copy.
-      const wrap = (d: number): number => (c && c.closed && c.len > 0 ? wrapL(d, c.len) : d);
+      const wrap = (d: number): number => (c && c.closed && c.len > 0 ? ((d % c.len) + c.len) % c.len : d);
       const range = (p: typeof pl): [number, number] | null => (p && p.pts.length >= 4 ? [p.s0, wrap(p.s1 - p.s0)] : null);
       const rL = range(pl) ?? range(pr) ?? [s0, ds]; const rR = range(pr) ?? rL;
       if (c && c.closed && c.len > 0) rR[0] += c.len * Math.round((rL[0] - rR[0]) / c.len);
@@ -1447,7 +1430,6 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
       for (let i = 0; i < R; i++) for (let k = KS[2 * i]; k <= KS[2 * i + 1]; k++) { const kk = cur + (k < 0 ? k + nB : k >= nB ? k - nB : k); GI[GI[kk]++] = i; }
     }
     const TB = FAN_TB; const GS = FAN_GS; const GI = FAN_GI;
-    let ringHint = -1; // K1341 s1: the previous off-fan point's nearest ring segment
     for (let v = it.base; v < it.base + itemVerts(it); v++) {
       const o = SLOTS * v; const sOwn = s4[o];
       for (let k = 0; k < SLOTS; k++) { w4[o + k] = 0; s4[o + k] = s4[SLOTS * h + k]; }
@@ -1501,7 +1483,7 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
       let q0 = 0; let q1 = 0; let byB = false;
       if (px >= x0 && px <= x1 && py >= y0 && py <= y1) {
         const dx = px - pos[2 * h]; const dy = py - pos[2 * h + 1];
-        if (dx * dx + dy * dy > rho2) { let k = Math.floor(dia(dx, dy) * cB); k = wrapL(k, nB); q0 = GS[k]; q1 = GS[k + 1]; byB = true; } else q1 = R;
+        if (dx * dx + dy * dy > rho2) { let k = Math.floor(dia(dx, dy) * cB); k = ((k % nB) + nB) % nB; q0 = GS[k]; q1 = GS[k + 1]; byB = true; } else q1 = R;
       }
       for (let q = q0; q < q1; q++) {
         const i = byB ? GI[q] : q;
@@ -1532,27 +1514,15 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
       // the strip continues): its own arm's slot alone stepped against a
       // through arm's strip beside it (user_tw42 j14: 15/255).
       if (found || it.kind !== "disk") continue;
-      // K1341 s1 (perf): the scan keeps the first segment at the least d. One whose box gap bb (squared)
-      // is past cap has d above the least for certain: cap is d (1 + 1e-6) + 1e-8 for the best so far and
-      // for the previous point's segment (ringHint, computed as the loop does), a margin far past the
-      // roundings of bb and d at pixel coordinates. So it skips the projection, and the first minimum
-      // stays the same segment, with the same u.
       let bd = Infinity; let bi = -1; let bu = 0;
-      let cap = ringHint >= 0 && ringHint < R ? ringSegD(pos, h, R, ringHint, px, py) * (1 + 1e-6) + 1e-8 : Infinity;
-      if (!(cap === cap)) cap = Infinity;
       for (let i = 0; i < R; i++) {
         const b = h + 1 + i; const c = h + 1 + ((i + 1) % R);
-        const bx = pos[2 * b]; const by = pos[2 * b + 1]; const cx = pos[2 * c]; const cy = pos[2 * c + 1];
-        const gx = px < bx ? (px < cx ? (bx < cx ? bx : cx) - px : 0) : px > bx && px > cx ? px - (bx > cx ? bx : cx) : 0;
-        const gy = py < by ? (py < cy ? (by < cy ? by : cy) - py : 0) : py > by && py > cy ? py - (by > cy ? by : cy) : 0;
-        if (gx * gx + gy * gy > cap) continue;
-        const vx = cx - bx; const vy = cy - by;
+        const bx = pos[2 * b]; const by = pos[2 * b + 1]; const vx = pos[2 * c] - bx; const vy = pos[2 * c + 1] - by;
         const l2 = vx * vx + vy * vy; let u = l2 > 0 ? ((px - bx) * vx + (py - by) * vy) / l2 : 0; u = u < 0 ? 0 : u > 1 ? 1 : u;
         const dx = bx + vx * u - px; const dy = by + vy * u - py; const d = dx * dx + dy * dy;
-        if (d < bd) { bd = d; bi = i; bu = u; const cp = d * (1 + 1e-6) + 1e-8; if (cp < cap) cap = cp; }
+        if (d < bd) { bd = d; bi = i; bu = u; }
       }
       if (bi < 0) continue;
-      ringHint = bi;
       const b = h + 1 + bi; const c = h + 1 + ((bi + 1) % R);
       for (let k = 0; k < SLOTS; k++) {
         w4[o + k] = (1 - bu) * w4[SLOTS * b + k] + bu * w4[SLOTS * c + k];
