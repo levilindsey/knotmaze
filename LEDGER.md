@@ -521,10 +521,10 @@ Next free ID: K1352.
 - **K1247** · K1240 frame cost: def frame ≤3 ms median / ≤6 ms p95. S3d's decide-once frame took 12.4-13.2 ms (corners
   7.3), S3e's per-frame rebuild 327-328 ms (exposure 266); the cost stage starts from S3f's points-only frame()
   (`docs/design/K1240_s3d_cheap_frame.md`; `.claude/probes/K1240/s3d_out/`, `s3e_out/`; notes).
-  - owner: agent `a871cf40ae634204d` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 11:43, 2 h cap ~13:43)
-  - branch: `worktree-agent-a871cf40ae634204d`, worktree `.claude/worktrees/agent-a871cf40ae634204d`; last commit: `b7b79e54`
+  - owner: nobody since 2026-11-12 13:46 (merged; agent `a871cf40ae634204d` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `aa622bb9`
   - evidence: .claude/probes/K1247/ (k1247s31_*)
-  - next: K1247 s31 (plan stages 1+2: the snap in OutlineModel.update, one dirty set, exact phase caches at chain granularity) running; then merge (view the snap checks) and launch plan stage 3 (K1339) or stage 4
+  - next: K1247 s32: make the snap valid (it holds every cache's hit rate): an exact frame once a drag settles (check a), and junction self corners that flip between solved and fallback within 0.5 px of input, popping a corner ~38 px (def j83; check b); s31's caches stay off by default until then (s31 handoff)
   - brief: `docs/design/K1247_s31_snap_phase_caches.md`
 - **K1278** · The outline's paint blends seamlessly across junctions (Levi 2026-11-10): section colour and pulses
   from per-pixel fields continuous across faces, triangles and junctions, gated by a seam test on every
