@@ -580,10 +580,10 @@ Next free ID: K1339.
 - **K1338** · The outline worker frame's frame() (64-71 ms p50, outline.ts) and band (16-26 ms, bandOf + band
   files) on def mid-drag, toward frame + band <= 10 ms, look unchanged; K1247's sibling stage (s28 takes fill
   and zChains); brief `docs/design/K1247_s29_frame_band_speed.md`
-  - owner: agent `ae54518a925be4103` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 08:48, 2 h cap ~10:48)
-  - branch: `worktree-agent-ae54518a925be4103`, worktree `.claude/worktrees/agent-ae54518a925be4103`; last commit: `b50298ff`
+  - owner: nobody since 2026-11-12 09:35 (merged; agent `ae54518a925be4103` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `1463742d`
   - evidence: .claude/probes/K1247/k1247s29_* (tools); untracked out/s29/; parts in .claude/probes/K1314/out/s10/bench/abba1.json
-  - next: s29 running: frame (~67 ms) and band (~16-26 ms) of the def worker frame, plus runRootRamp's rejects, toward frame + band <= 10 ms, look unchanged
+  - next: frame + band at 76 ms p50 on def (goal 10): the next cut is algorithmic (carry growCFC's and tailWalk's results frame to frame; buildBorderC; bandRec's own code; footS segment boxes); recTables is built twice (fill and band); the browser worker runs ~1.75x Node on the same code (cause unknown)
   - brief: `docs/design/K1247_s29_frame_band_speed.md`
 
 ## Next, in order
