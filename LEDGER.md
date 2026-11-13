@@ -563,10 +563,10 @@ Next free ID: K1346.
   ink there: specks inside the ink at def j174 (c71/c73, group 119), ring j12, g41_ring_tw42 j12,
   g41_user_tw64 j28 (K1314 s6 handoff; crops `.claude/probes/K1314/out/s6/after4x/spot_016-019`). Make no
   contact pass between arms of one group. After K1247 s25 merges (it owns draw.ts)
-  - owner: agent `a5c6be8e47b5c2e6a` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 09:45, 2 h cap ~11:45)
-  - branch: `worktree-agent-a5c6be8e47b5c2e6a`, worktree `.claude/worktrees/agent-a5c6be8e47b5c2e6a`; last commit: `94a71fcd`
+  - owner: nobody since 2026-11-12 10:42 (merged; agent `a5c6be8e47b5c2e6a` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `0a9119cd`
   - evidence: .claude/probes/K1324/ (tools); untracked out/s1-s3/
-  - next: s3 running: the faint seams at muse_hash x22's lower join and in c8's under-pass (K1337)
+  - next: closing: x22 cleared (s2), its census lower-join seam fixed (s3); c8 hard edge is K1315, c8 dotted seam filed for the corner-fan fold
   - brief: `docs/design/K1324_s3_under_seams.md`
 - **K1338** · The outline worker frame's frame() (64-71 ms p50, outline.ts) and band (16-26 ms, bandOf + band
   files) on def mid-drag, toward frame + band <= 10 ms, look unchanged; K1247's sibling stage (s28 takes fill
