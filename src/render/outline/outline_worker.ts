@@ -175,7 +175,9 @@ scope.onmessage = (e: MessageEvent<OutlineRequest>): void => {
     if (r.recFb) tr.push(r.recFb.buffer);
     if (r.recPf) tr.push(r.recPf.buffer);
     if (r.bandRec) tr.push(r.bandRec.tab.buffer, r.bandRec.fb.buffer, r.bandRec.fbSl.buffer, r.bandRec.pf.buffer);
-    scope.postMessage(r, tr);
+    // K1247 s28: the fill and the band share one recTables per frame (recPf is bandRec.pf), and a
+    // buffer listed twice is a DataCloneError.
+    scope.postMessage(r, [...new Set(tr)]);
   } catch (err) {
     model = null;
     scope.postMessage({ id, error: err instanceof Error ? err.message : String(err) }, []);

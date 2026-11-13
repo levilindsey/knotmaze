@@ -344,34 +344,48 @@ function stepsAt(c: FrameChain, v: number, h: number, o: Float64Array): void {
   ax /= la; ay /= la; bx /= lb; by /= lb;
   const cr = ax * by - ay * bx; const dt = ax * bx + ay * by;
   if (Math.abs(cr) < 1e-12) return;
-  o[0] = Math.max(1, Math.ceil(Math.abs(Math.atan2(cr, dt)) / FAN_STEP)); o[1] = (h * Math.abs(cr)) / (1 + dt); o[2] = cr > 0 ? 1 : -1;
+  // K1247 s28 (perf): a turn under FAN_STEP is one step without Math.atan2 (most samples of a smooth
+  // chain). TAN_STEP sits 1e-9 (relative) inside tan(FAN_STEP), far past atan2's and the product's
+  // rounding, so atan2 / FAN_STEP is below 1 there and the ceil would give 1 too: the same steps.
+  o[0] = dt > 0 && Math.abs(cr) <= dt * TAN_STEP ? 1 : Math.max(1, Math.ceil(Math.abs(Math.atan2(cr, dt)) / FAN_STEP));
+  o[1] = (h * Math.abs(cr)) / (1 + dt); o[2] = cr > 0 ? 1 : -1;
 }
+const TAN_STEP = Math.tan(FAN_STEP) * (1 - 1e-9);
 
 /** K1247 s20: the record placement's chain tables, one entry a chain sample in band_gpu's chainTex
  *  layout (chains back to back): pf the fan steps of samples 0..v (inclusive prefix; the shader's
  *  uRecPf), fp / fm the folds on side +1 / -1 of segments 0..v (segment v runs from sample v to v + 1;
- *  a fold: the two miters' trims overlap on it). */
+ *  a fold: the two miters' trims overlap on it).
+ *  K1247 s28 (perf): the last call's tables are reused for the same chains and h (fillFrame and the
+ *  band both ask for them each frame, on one zChains); nobody writes them, and the outline worker
+ *  transfers a buffer the two share once. */
 export interface RecTables { pf: Float32Array; fp: Int32Array; fm: Int32Array; base: number[] }
+let RT_ZC: readonly FrameChain[] | null = null; let RT_H = NaN; let RT_T: RecTables | null = null;
 export function recTables(zc: readonly FrameChain[], h: number): RecTables {
+  if (zc === RT_ZC && h === RT_H && RT_T && RT_T.pf.length > 0) return RT_T;
   const base: number[] = []; let nS = 0;
   for (const c of zc) { base.push(nS); nS += c.n; }
   const pf = new Float32Array(Math.max(1, nS)); const fp = new Int32Array(Math.max(1, nS)); const fm = new Int32Array(Math.max(1, nS));
-  const A = new Float64Array(3); const Bc = new Float64Array(3);
+  // Each sample's steps once (the fold test reads a segment's two ends: the next segment's first is this one's last).
+  let A = new Float64Array(3); let Bc = new Float64Array(3); const A0 = new Float64Array(3);
   zc.forEach((c, ci) => {
     const o = base[ci]; const n = c.n; const m = n - 1; const loop = c.closed && c.len > 0;
     let sp = 0; let cp = 0; let cm = 0;
+    if (n > 0) { stepsAt(c, 0, h, A); A0[0] = A[0]; A0[1] = A[1]; A0[2] = A[2]; }
     for (let v = 0; v < n; v++) {
-      stepsAt(c, v, h, A); sp += A[0]; pf[o + v] = sp;
+      sp += A[0]; pf[o + v] = sp;
       if (v < m || loop) {
-        const j = v < m ? v + 1 : 0; stepsAt(c, j, h, Bc);
+        if (v < m) stepsAt(c, v + 1, h, Bc); else { Bc[0] = A0[0]; Bc[1] = A0[1]; Bc[2] = A0[2]; }
         const len = (v < m ? c.s[v + 1] : c.len) - c.s[v];
         if ((A[2] > 0 ? A[1] : 0) + (Bc[2] > 0 ? Bc[1] : 0) > len) cp++;
         if ((A[2] < 0 ? A[1] : 0) + (Bc[2] < 0 ? Bc[1] : 0) > len) cm++;
+        const t = A; A = Bc; Bc = t;
       }
       fp[o + v] = cp; fm[o + v] = cm;
     }
   });
-  return { pf, fp, fm, base };
+  RT_ZC = zc; RT_H = h; RT_T = { pf, fp, fm, base };
+  return RT_T;
 }
 
 // A record side's span: [a (the start, wrapped into [0, L) on a loop), sB (the end, same frame), k (the

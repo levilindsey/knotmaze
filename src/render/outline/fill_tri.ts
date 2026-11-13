@@ -601,6 +601,8 @@ function zPointAt(c: ReturnType<typeof zChains>["zc"][number], s: number): [numb
 
 /** K1247 s18: opt-in section timings of fillFrame (ms, summed over calls). */
 export const FILL_PROF = { on: false, t: {} as Record<string, number> };
+/** K1247 s28: the fan scan's triangle boxes (x0, x1, y0, y1 a triangle), reused across frames. */
+let FAN_TB = new Float64Array(64);
 
 export function fillFrame(fs: FillStructure, st: DiagramStructure, table: OutlineTable, scene: SceneIn, zcIn?: ReturnType<typeof zChains>): FillFrame {
   let tP = FILL_PROF.on ? performance.now() : 0;
@@ -612,7 +614,7 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
   const sv = new Float32Array(fs.nV);
   const s4 = new Float64Array(SLOTS * fs.nV);
   const across = new Float32Array(fs.nV);
-  const w4 = Float32Array.from(fs.vW); const hW = scene.look.halfWidth;
+  const w4 = fs.vW.slice(); const hW = scene.look.halfWidth;
   let fallbacks = 0;
   denseCount = 0;
   const zAt = (pi: number, s: number): number => (zc[pi] ? zAtC(zc[pi], s) : 0);
@@ -1355,6 +1357,18 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
     const J = fs.items[it.jItem] as JuncItem; const h = J.base; const R = J.R;
     let x0 = Infinity; let y0 = Infinity; let x1 = -Infinity; let y1 = -Infinity;
     for (let v = h; v <= h + R; v++) { x0 = Math.min(x0, pos[2 * v]); x1 = Math.max(x1, pos[2 * v]); y0 = Math.min(y0, pos[2 * v + 1]); y1 = Math.max(y1, pos[2 * v + 1]); }
+    // K1247 s28 (perf): each fan triangle's box, grown by a margin far past the barycentric test's
+    // 1e-9 tolerance and its rounding. A point outside a box fails that triangle's test, so the scan
+    // skips it there and keeps the same first triangle (fan vertices that are NaN give a NaN box,
+    // which skips nothing).
+    if (FAN_TB.length < 4 * R) FAN_TB = new Float64Array(8 * R);
+    { const mg = 1e-6 * (1 + Math.max(x1 - x0, y1 - y0)); const TB = FAN_TB;
+      const ax = pos[2 * h]; const ay = pos[2 * h + 1];
+      for (let i = 0; i < R; i++) {
+        const b = h + 1 + i; const c = h + 1 + ((i + 1) % R); const bx = pos[2 * b]; const by = pos[2 * b + 1]; const cx = pos[2 * c]; const cy = pos[2 * c + 1];
+        TB[4 * i] = Math.min(ax, bx, cx) - mg; TB[4 * i + 1] = Math.max(ax, bx, cx) + mg; TB[4 * i + 2] = Math.min(ay, by, cy) - mg; TB[4 * i + 3] = Math.max(ay, by, cy) + mg;
+      } }
+    const TB = FAN_TB;
     for (let v = it.base; v < it.base + itemVerts(it); v++) {
       const o = SLOTS * v; const sOwn = s4[o];
       for (let k = 0; k < SLOTS; k++) { w4[o + k] = 0; s4[o + k] = s4[SLOTS * h + k]; }
@@ -1406,6 +1420,7 @@ export function fillFrame(fs: FillStructure, st: DiagramStructure, table: Outlin
       }
       let found = false;
       if (px >= x0 && px <= x1 && py >= y0 && py <= y1) for (let i = 0; i < R; i++) {
+        if (px < TB[4 * i] || px > TB[4 * i + 1] || py < TB[4 * i + 2] || py > TB[4 * i + 3]) continue;
         const b = h + 1 + i; const c = h + 1 + ((i + 1) % R);
         const ax = pos[2 * h]; const ay = pos[2 * h + 1]; const bx = pos[2 * b]; const by = pos[2 * b + 1]; const cx = pos[2 * c]; const cy = pos[2 * c + 1];
         const A = (bx - ax) * (cy - ay) - (by - ay) * (cx - ax); if (Math.abs(A) < 1e-12) continue;
