@@ -18,7 +18,7 @@ for (const r of b.runs) {
     const c = g.counts;
     line += ` | gpu ${f(g.gpu?.net)} (raw ${f(g.gpu?.raw)}, empty ${f(g.gpu?.empty)}, n ${g.gpu?.arrived}/${g.gpu?.passes}, dj ${g.gpu?.disjoint})`;
     line += ` | build ${f(g.buildTotalMs)} = exp ${f(g.exportMs)} tab ${f(g.tablesMs)} pack ${f(g.packMs)} up ${f(g.uploadMs)}`;
-    line += ` | px ${g.px ? `${(g.px.p50 / 1e6).toFixed(2)}M` : "-"} | seg ${c ? `${c.segMean.toFixed(1)}/${c.segP95}` : "-"} k ${c ? `${c.kMean.toFixed(2)}/${c.kP95}` : "-"}`;
+    line += ` | px ${g.px ? `${(g.px.p50 / 1e6).toFixed(2)}M` : "-"} | seg ${c ? `${c.segMean.toFixed(1)}/${c.segP95}` : "-"} k ${c ? `${c.kMean.toFixed(2)}/${c.kP95}` : "-"} live ${c && c.liveMean !== undefined ? `${c.liveMean.toFixed(1)}/${c.liveP95} on ${(c.livePx / 1e6).toFixed(2)}M` : "-"}`;
     line += ` | rebuilds ${g.rebuilds} passes ${g.passes}${g.fallback ? ` FALLBACK ${g.fallback}` : ""}`;
   }
   if (r.errors?.length) line += ` | errors ${r.errors.length}`;
