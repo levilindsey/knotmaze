@@ -8882,16 +8882,54 @@ function bandHasOpp(pts: ArrayLike<number>, cpts: ArrayLike<number>, W: number):
   }
   return false;
 }
+/** K1346 s2 (perf): bandFoldScan's fast exit, with no square root or division: true when every quad's two
+ *  triangles (pO_i, pO_i+1, pI_i and pO_i+1, pI_i+1, pI_i: bandHasOpp's t1 and t2, which sum to the
+ *  quad's area) certainly wind the same way, each by more than FOLD_QUICK_M. Then every quad's area, tot
+ *  and both end quads share that sign: trimFoldEnds cuts nothing and bandHasOpp finds nothing. With
+ *  u = c - p unnormalised and d = b - a: t1 = W/2 cross(d, u_a)/|u_a| and t2 = W/2 (X + W Y/|u_a|)/|u_b|,
+ *  X = cross(d, u_b), Y = cross(u_b, u_a), tested through squares with a factor of 2 or more to spare. The
+ *  margin is far above the exact pass's rounding (under about 5e-10 for coordinates within 256); a point
+ *  outside that box, a foot within 1e-10 of its point, or a triangle short of the margin returns false and
+ *  the exact pass decides. */
+const FOLD_QUICK_M = 1e-8;
+function bandFoldsClean(pts: ArrayLike<number>, cpts: ArrayLike<number>, W: number): boolean {
+  const np = pts.length >> 1;
+  if (!(W > 0)) return false;
+  const K = 4 * (2 * FOLD_QUICK_M / W) * (2 * FOLD_QUICK_M / W); const W4 = 4 * W * W;
+  let ax = pts[0]; let ay = pts[1];
+  if (!(ax <= 256 && ax >= -256 && ay <= 256 && ay >= -256)) return false;
+  let uax = cpts[0] - ax; let uay = cpts[1] - ay; let uua = uax * uax + uay * uay;
+  if (!(uua >= 1e-20)) return false;
+  let s = 0;
+  for (let i = 1; i < np; i++) {
+    const bx = pts[2 * i]; const by = pts[2 * i + 1];
+    if (!(bx <= 256 && bx >= -256 && by <= 256 && by >= -256)) return false;
+    const ubx = cpts[2 * i] - bx; const uby = cpts[2 * i + 1] - by; const uub = ubx * ubx + uby * uby;
+    if (!(uub >= 1e-20)) return false;
+    const dx = bx - ax; const dy = by - ay;
+    const c1 = dx * uay - dy * uax;
+    if (s === 0) s = c1 > 0 ? 1 : -1;
+    if (!(s * c1 > 0 && c1 * c1 >= K * uua)) return false;
+    const X = dx * uby - dy * ubx;
+    if (!(s * X > 0 && X * X >= 4 * K * uub)) return false;
+    const Y = ubx * uay - uby * uax;
+    if (s * Y < 0 && !(X * X * uua >= W4 * Y * Y)) return false;
+    ax = bx; ay = by; uax = ubx; uay = uby; uua = uub;
+  }
+  return true;
+}
 /** K1346 s2 (perf): trimFoldEnds' and pinBandLoops' gates in one pass with nothing stored, so the frame
  *  pays for the fold fixes only on the pieces that fold (nearly none): each inner point is computed once,
  *  as bandInnerTot computes it, and the quads are summed in its order, so tot is its value bit for bit.
  *  Bit 1: trimFoldEnds cuts (it returns null unless its first test passes at an end, and both first tests
  *  read this tot and quad np-2 or 0, bandQuadArea's value). Bit 2 (with opp): bandHasOpp holds; both
  *  windings are tracked through the pass and tot's sign picks one (t * tot < 0 is t's sign against tot's;
- *  a |tot| under 1e-200, where that product could underflow, sets the bit and bandHasOpp decides). */
+ *  a |tot| under 1e-200, where that product could underflow, sets the bit and bandHasOpp decides).
+ *  Most pieces leave through bandFoldsClean first. */
 export function bandFoldScan(pts: ArrayLike<number>, cpts: ArrayLike<number>, W: number, opp: boolean): number {
   const np = pts.length >> 1;
   if (np < 4) return 0;
+  if (bandFoldsClean(pts, cpts, W)) return 0;
   let ax = pts[0]; let ay = pts[1];
   let dx = cpts[0] - ax; let dy = cpts[1] - ay; let l = Math.sqrt(dx * dx + dy * dy);
   if (l < 1e-12) { const ex = pts[2] - ax; const ey = pts[3] - ay; const el = Math.sqrt(ex * ex + ey * ey) || 1; dx = -ey / el; dy = ex / el; } else { dx /= l; dy /= l; }
