@@ -557,8 +557,18 @@ Next free ID: K1351.
   - owner: nobody since 2026-11-12 08:47 (merged; agent `a8105bc6c8e6fc6d7` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
   - branch: mainline; last commit: `b0c52856`
   - evidence: .claude/probes/K1314/ (census tools, k1314_s8_bench.ps1); untracked out/s1-s10/, baseline census_s9
-  - next: K1314 s11 after K1247 s30 frees outline.ts: j58a's reversed fade (corner 176's meet, or the chevron's return-leg alpha against form B). Baseline census_k1325s2 (stray 4, hard 1, paper 0, broken 12, k1049 0; total 17)
+  - next: j58a is in K1346 s1 (folds). The bar after K1344 (census_k1344s1: stray 4, hard 1, paper 0, broken 12, k1049 0) is 16 of 17 on Levi: broken_ink 12 + j63/j64 stray + j78 hard are K1315 ends, j73 spike is K1319; j49 (44 px) is the census reading form B tie-fade as cut (s10)
   - brief: `docs/design/K1314_s10_breaks_step.md`
+- **K1346** · A tail's corner fan folds: its outer corner points jitter 0.0003-0.0035 against the inner arc,
+  so slivers overlap and ink twice (muse_hash c8's under-pass dotted seam at (19.41, 14.16); 76 px in the app
+  at 960 px/unit). Make the corner cluster one exact point, or skip/clamp backward quads, in outline.ts and
+  the inner-point rule's three builders (band_gpu.ts inner(), band_rec.ts innerOfP, draw.ts bandData) together
+  (K1324 s3 handoff; `.claude/probes/K1324/k1324_s3_appfold*`, crops `out/s3/x8x/spot_003.png`)
+  - owner: agent `a686e24ad31e738a0` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 11:55, 2 h cap ~13:55)
+  - branch: `worktree-agent-a686e24ad31e738a0`, worktree `.claude/worktrees/agent-a686e24ad31e738a0`; last commit: `51cc6e5f`
+  - evidence: `.claude/probes/K1346/`
+  - next: K1346 s1 (fold detector; c8 fan, fill walk, turn-backs, j58a) running; then view crops and merge
+  - brief: `docs/design/K1346_s1_tail_folds.md`
 
 ## Next, in order
 
@@ -822,11 +832,6 @@ Every other item below waits on the trigger it names.
   about 22 ms -> 5 ms def drag p50 (K1247 s28 handoff)
 - **K1341** · Three exact cuts K1247 s28 left: a squared pre-check before draw.ts nearRange's sqrt (zChains'
   hottest line), hinted spanOf searches, a box bound in fill_tri.ts's disk scan (s28 handoff)
-- **K1346** · A tail's corner fan folds: its outer corner points jitter 0.0003-0.0035 against the inner arc,
-  so slivers overlap and ink twice (muse_hash c8's under-pass dotted seam at (19.41, 14.16); 76 px in the app
-  at 960 px/unit). Make the corner cluster one exact point, or skip/clamp backward quads, in outline.ts and
-  the inner-point rule's three builders (band_gpu.ts inner(), band_rec.ts innerOfP, draw.ts bandData) together
-  (K1324 s3 handoff; `.claude/probes/K1324/k1324_s3_appfold*`, crops `out/s3/x8x/spot_003.png`)
 
 ## Residuals (known, not fixed)
 
