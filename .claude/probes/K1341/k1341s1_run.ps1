@@ -4,9 +4,13 @@
 # Waits for another owner's lock inside this one call (a lock older than 30 min is stale), takes it with this
 # agent's owner line, and deletes it only if it is still this owner's. Serve the two builds first
 # (scripts/preview.ps1 -Port <p> -Ref <sha> -Root <short dir>).
-#   pwsh .claude/probes/K1341/k1341s1_run.ps1 -Out <dir> [-Steps load,def,fat] [-Ports 5751,5752]
+# Step node: the Node ABBA (k1341s1_time.mjs bundles -NodeA, -NodeB, run as separate processes A B B A, -NodeR
+# passes over def, muse_hash, fat) into <Out>\node.txt. -Rounds n repeats the app ABBA (def, fat) n times, round r
+# into abba_<k>_r<r>.*, all under one hold of the lock.
+#   pwsh .claude/probes/K1341/k1341s1_run.ps1 -Out <dir> [-Steps load,node,def,fat] [-Ports 5761,5762] [-Rounds 2]
 param([string]$Out = ".claude/probes/K1341/out/app1", [string]$Steps = "load,def,fat",
-  [string]$Ports = "5751,5752", [int]$WaitMin = 90)
+  [string]$Ports = "5761,5762", [int]$WaitMin = 90, [int]$Rounds = 1,
+  [string]$NodeA = ".claude/probes/K1341/out/tm_master", [string]$NodeB = ".claude/probes/K1341/out/tm_final", [int]$NodeR = 6)
 $ErrorActionPreference = "Continue"
 $lock = Join-Path $env:TEMP "claude-perf.lock"
 $owner = "K1341 s1 agent (worktree agent-a74fd2c72ec40ff48)"
@@ -38,13 +42,24 @@ function Load([string]$tag) {
 }
 try {
   if ($S -contains "load") { Load "before" }
-  foreach ($k in "def", "fat") {
-    if ($S -notcontains $k) { continue }
-    $urls = @($P[0], $P[1], $P[1], $P[0]) | ForEach-Object { "http://localhost:$_/$($q[$k])" }
-    node $bench "$Out\abba_$k.json" @urls 2>&1 | Select-Object -Last 3
-    node .claude/probes/K1247/k1247s30_abba.mjs "$Out\abba_$k.json" 2>&1 | Tee-Object -FilePath "$Out\abba_$k.txt"
+  if ($S -contains "node") {
+    foreach ($t in @("A", "B", "B", "A")) {
+      $dir = if ($t -eq "A") { $NodeA } else { $NodeB }
+      $r = node "$dir/k1341s1_time.mjs" .claude/probes/K1247/out/s18/drag $NodeR def,muse_hash,fat all 2>&1
+      "== $t $dir $(Get-Date -Format s)" | Tee-Object -FilePath "$Out\node.txt" -Append
+      $r | Tee-Object -FilePath "$Out\node.txt" -Append | Where-Object { $_ -notmatch '^JSON' }
+    }
+    if ($S -contains "load") { Load "after node" }
   }
-  if ($S -contains "load") { Load "after" }
+  for ($rd = 1; $rd -le $Rounds; $rd++) {
+    foreach ($k in "def", "fat") {
+      if ($S -notcontains $k) { continue }
+      $urls = @($P[0], $P[1], $P[1], $P[0]) | ForEach-Object { "http://localhost:$_/$($q[$k])" }
+      node $bench "$Out\abba_${k}_r$rd.json" @urls 2>&1 | Select-Object -Last 3
+      node .claude/probes/K1247/k1247s30_abba.mjs "$Out\abba_${k}_r$rd.json" 2>&1 | Tee-Object -FilePath "$Out\abba_${k}_r$rd.txt"
+    }
+    if ($S -contains "load") { Load "after round $rd" }
+  }
 } finally {
   $line = Get-Content $lock -Raw -ErrorAction SilentlyContinue
   if ($line -and $line.StartsWith($owner)) { [System.IO.File]::Delete($lock); Write-Host "lock released $(Get-Date -Format s)" }
