@@ -2438,7 +2438,7 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
         }
         if (ghost) { runMiss = missAt; runPassed = passAt; }
         const piece: OutlinePiece = { kind: dp.kind, chain: pi, side, s0, s1, pts, cpts, region: rid, corner: -1 };
-        if (K1346.chevron) { const tr = trimFoldEnds(piece.pts, piece.cpts, W); if (tr) { piece.pts = tr.pts; piece.cpts = tr.cpts; } } if (K1346.loops) { const lp = pinBandLoops(piece.pts, piece.cpts, W); if (lp) piece.pts = lp; }
+        if (K1346.chevron || K1346.loops) { const fs = bandFoldScan(piece.pts, piece.cpts, W, K1346.loops); let cut = false; if (K1346.chevron && (fs & 1)) { const tr = trimFoldEnds(piece.pts, piece.cpts, W); if (tr) { piece.pts = tr.pts; piece.cpts = tr.cpts; cut = true; } } if (K1346.loops && ((fs & 2) || cut)) { const lp = pinBandLoops(piece.pts, piece.cpts, W); if (lp) piece.pts = lp; } }
         pieces.push(piece);
         if (rid >= 0 && regions[rid]) regions[rid].pieces.push(pieces.length - 1);
       } else if (dp.kind === "arc") {
@@ -2466,7 +2466,7 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
           pts = [ax, ay]; cpts = [cw.qx, cw.qy];
         } else { pts = [cw.qx, cw.qy]; cpts = [cw.qx, cw.qy]; }
         const piece: OutlinePiece = { kind: "arc", chain: cw.aChain, side: 0, s0: cw.sA, s1: cw.sB, pts, cpts, region: rid, corner: dp.corner };
-        if (K1346.chevron) { const tr = trimFoldEnds(piece.pts, piece.cpts, W); if (tr) { piece.pts = tr.pts; piece.cpts = tr.cpts; } }
+        if (K1346.chevron && (bandFoldScan(piece.pts, piece.cpts, W, false) & 1)) { const tr = trimFoldEnds(piece.pts, piece.cpts, W); if (tr) { piece.pts = tr.pts; piece.cpts = tr.cpts; } }
         pieces.push(piece);
         if (rid >= 0 && regions[rid]) regions[rid].pieces.push(pieces.length - 1);
       } else if (dp.kind === "tail") {
@@ -2695,7 +2695,7 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
     }
     const rid = junctionRegion.get(cw.ji) ?? -1;
     const piece: OutlinePiece = { kind: "arc", chain: cw.aChain, side: 0, s0: cw.sA, s1: cw.sB, pts, cpts, region: rid, corner: ci };
-    if (K1346.chevron) { const tr = trimFoldEnds(piece.pts, piece.cpts, W); if (tr) { piece.pts = tr.pts; piece.cpts = tr.cpts; } }
+    if (K1346.chevron && (bandFoldScan(piece.pts, piece.cpts, W, false) & 1)) { const tr = trimFoldEnds(piece.pts, piece.cpts, W); if (tr) { piece.pts = tr.pts; piece.cpts = tr.cpts; } }
     pieces.push(piece);
     if (rid >= 0) regions[rid].pieces.push(pieces.length - 1);
   });
@@ -7961,7 +7961,7 @@ function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[])
       }
       if (ghost) { runMiss = missAt; runPassed = passAt; }
       const piece: OutlinePiece = { kind: dp.kind, chain: pi, side, s0, s1, pts: viewPts ? (viewPts as unknown as number[]) : pts, cpts: viewCpts ? (viewCpts as unknown as number[]) : cpts, region: rid, corner: -1 };
-      if (K1346.chevron) { const tr = trimFoldEnds(piece.pts, piece.cpts, C.W); if (tr) { piece.pts = tr.pts; piece.cpts = tr.cpts; } } if (K1346.loops) { const lp = pinBandLoops(piece.pts, piece.cpts, C.W); if (lp) { piece.pts = lp; if (!Array.isArray(piece.cpts)) piece.cpts = Array.from(piece.cpts); } }
+      if (K1346.chevron || K1346.loops) { const fs = bandFoldScan(piece.pts, piece.cpts, C.W, K1346.loops); let cut = false; if (K1346.chevron && (fs & 1)) { const tr = trimFoldEnds(piece.pts, piece.cpts, C.W); if (tr) { piece.pts = tr.pts; piece.cpts = tr.cpts; cut = true; } } if (K1346.loops && ((fs & 2) || cut)) { const lp = pinBandLoops(piece.pts, piece.cpts, C.W); if (lp) { piece.pts = lp; if (!Array.isArray(piece.cpts)) piece.cpts = Array.from(piece.cpts); } } }
       pieces.push(piece);
       if (rid >= 0 && regions[rid]) regions[rid].pieces.push(pieces.length - 1);
       if (RUN_END_FADE && !ghost) {
@@ -8002,7 +8002,7 @@ function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[])
       } else { pts = [C.cQx[ci], C.cQy[ci]]; cpts = [C.cQx[ci], C.cQy[ci]]; if (dc) sharpJoinFan(C, ci, dc.aArm, dc.bArm, pts, cpts); }
       const piece: OutlinePiece = { kind: "arc", chain: dc ? C.armObj[dc.aArm].pi : -1, side: 0, s0: C.cSA[ci], s1: C.cSB[ci], pts, cpts, region: rid, corner: ci };
       // K1346 s1 (g41_user_tw64 arc 632 (3.60, 4.05)): a fan whose last foot sweeps back over it.
-      if (K1346.chevron) { const tr = trimFoldEnds(piece.pts, piece.cpts, C.W); if (tr) { piece.pts = tr.pts; piece.cpts = tr.cpts; } }
+      if (K1346.chevron && (bandFoldScan(piece.pts, piece.cpts, C.W, false) & 1)) { const tr = trimFoldEnds(piece.pts, piece.cpts, C.W); if (tr) { piece.pts = tr.pts; piece.cpts = tr.cpts; } }
       pieces.push(piece);
       if (rid >= 0 && regions[rid]) regions[rid].pieces.push(pieces.length - 1);
     } else if (dp.kind === "tail") {
@@ -8882,10 +8882,48 @@ function bandHasOpp(pts: ArrayLike<number>, cpts: ArrayLike<number>, W: number):
   }
   return false;
 }
+/** K1346 s2 (perf): trimFoldEnds' and pinBandLoops' gates in one pass with nothing stored, so the frame
+ *  pays for the fold fixes only on the pieces that fold (nearly none): each inner point is computed once,
+ *  as bandInnerTot computes it, and the quads are summed in its order, so tot is its value bit for bit.
+ *  Bit 1: trimFoldEnds cuts (it returns null unless its first test passes at an end, and both first tests
+ *  read this tot and quad np-2 or 0, bandQuadArea's value). Bit 2 (with opp): bandHasOpp holds; both
+ *  windings are tracked through the pass and tot's sign picks one (t * tot < 0 is t's sign against tot's;
+ *  a |tot| under 1e-200, where that product could underflow, sets the bit and bandHasOpp decides). */
+export function bandFoldScan(pts: ArrayLike<number>, cpts: ArrayLike<number>, W: number, opp: boolean): number {
+  const np = pts.length >> 1;
+  if (np < 4) return 0;
+  let ax = pts[0]; let ay = pts[1];
+  let dx = cpts[0] - ax; let dy = cpts[1] - ay; let l = Math.sqrt(dx * dx + dy * dy);
+  if (l < 1e-12) { const ex = pts[2] - ax; const ey = pts[3] - ay; const el = Math.sqrt(ex * ex + ey * ey) || 1; dx = -ey / el; dy = ex / el; } else { dx /= l; dy /= l; }
+  let A0 = ax + W * dx; let A1 = ay + W * dy;
+  let tot = 0; let q0 = 0; let qL = 0; let oppP = false; let oppN = false;
+  for (let i = 0; i < np - 1; i++) {
+    const k = i + 1;
+    const bx = pts[2 * k]; const by = pts[2 * k + 1];
+    dx = cpts[2 * k] - bx; dy = cpts[2 * k + 1] - by; l = Math.sqrt(dx * dx + dy * dy);
+    if (l < 1e-12) { const j = Math.min(k + 1, np - 1); const ex = pts[2 * j] - bx; const ey = pts[2 * j + 1] - by; const el = Math.sqrt(ex * ex + ey * ey) || 1; dx = -ey / el; dy = ex / el; } else { dx /= l; dy /= l; }
+    const B0 = bx + W * dx; const B1 = by + W * dy;
+    const q = 0.5 * ((ax * by - bx * ay) + (bx * B1 - B0 * by) + (B0 * A1 - A0 * B1) + (A0 * ay - ax * A1));
+    tot += q;
+    if (i === 0) q0 = q;
+    qL = q;
+    if (opp) {
+      const t1 = 0.5 * ((bx - ax) * (A1 - ay) - (by - ay) * (A0 - ax));
+      const t2 = 0.5 * ((B0 - bx) * (A1 - by) - (B1 - by) * (A0 - bx));
+      if (!oppP && !((t1 < 0 ? -t1 : 0) + (t2 < 0 ? -t2 : 0) < LOOP_EPS)) oppP = true;
+      if (!oppN && !((t1 > 0 ? t1 : 0) + (t2 > 0 ? t2 : 0) < LOOP_EPS)) oppN = true;
+    }
+    ax = bx; ay = by; A0 = B0; A1 = B1;
+  }
+  let f = 0;
+  if ((qL * tot < 0 && !(Math.abs(qL) < 1e-12)) || (q0 * tot < 0 && !(Math.abs(q0) < 1e-12))) f |= 1;
+  if (opp && ((tot > 0 && oppP) || (tot < 0 && oppN) || (tot !== 0 && Math.abs(tot) < 1e-200))) f |= 2;
+  return f;
+}
 export function pinBandLoops(src: ArrayLike<number>, cpts: ArrayLike<number>, W: number): number[] | null {
   const np = src.length >> 1;
   if (np < 4) return null;
-  if (!bandHasOpp(src, cpts, W)) return null;
+  if (!(bandFoldScan(src, cpts, W, true) & 2) || !bandHasOpp(src, cpts, W)) return null;
   let pts: number[] | null = null;
   const P = (): ArrayLike<number> => pts ?? src;
   let tot = 0;
