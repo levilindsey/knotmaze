@@ -2438,6 +2438,7 @@ export function buildOutlineFull(scene: SceneIn, dg?: DiagramStructure | null, p
         }
         if (ghost) { runMiss = missAt; runPassed = passAt; }
         const piece: OutlinePiece = { kind: dp.kind, chain: pi, side, s0, s1, pts, cpts, region: rid, corner: -1 };
+        if (K1346.chevron) { const tr = trimFoldEnds(piece.pts, piece.cpts, W); if (tr) { piece.pts = tr.pts; piece.cpts = tr.cpts; } } if (K1346.loops) { const lp = pinBandLoops(piece.pts, piece.cpts, W); if (lp) piece.pts = lp; }
         pieces.push(piece);
         if (rid >= 0 && regions[rid]) regions[rid].pieces.push(pieces.length - 1);
       } else if (dp.kind === "arc") {
@@ -7932,6 +7933,7 @@ function piecesPhaseC(C: FCache, st: DiagramStructure, regions: OutlineRegion[])
       }
       if (ghost) { runMiss = missAt; runPassed = passAt; }
       const piece: OutlinePiece = { kind: dp.kind, chain: pi, side, s0, s1, pts: viewPts ? (viewPts as unknown as number[]) : pts, cpts: viewCpts ? (viewCpts as unknown as number[]) : cpts, region: rid, corner: -1 };
+      if (K1346.chevron) { const tr = trimFoldEnds(piece.pts, piece.cpts, C.W); if (tr) { piece.pts = tr.pts; piece.cpts = tr.cpts; } } if (K1346.loops) { const lp = pinBandLoops(piece.pts, piece.cpts, C.W); if (lp) { piece.pts = lp; if (!Array.isArray(piece.cpts)) piece.cpts = Array.from(piece.cpts); } }
       pieces.push(piece);
       if (rid >= 0 && regions[rid]) regions[rid].pieces.push(pieces.length - 1);
       if (RUN_END_FADE && !ghost) {
@@ -8620,6 +8622,8 @@ const TAIL_BAND_RAMP_CUT = 2;
 const TAIL_BAND_MARGIN = -Infinity;
 const TAIL_FILL_RAMP_CUT = 0.5;
 const TAIL_FILL_MARGIN = 0.4;
+/** K1346 s1: the fold fixes, each switchable (off = master's geometry) for the probes' A/B crops. */
+export const K1346 = { fill: true, chevron: true, fan: true, loops: true, fanDrop: true };
 const TAIL_N = 16;
 const TAIL_BISECT = 12;
 const TAIL_BLEND = 0.5;
@@ -8638,7 +8642,14 @@ export function endTailPts(a: TailIn, pts: number[], cpts: number[], alpha?: num
   tgOk.fill(0); tgMode = fill ? 1 : 0;
   tailWalk(a, TAIL_BAND_RAMP_CUT, TAIL_BAND_MARGIN, pts, cpts, alpha, true, 0);
   if (TAIL_LOOP_CUT) cutTailLoop(pts, cpts, alpha, o);
-  if (fill) { tgMode = 2; tailWalk(a, TAIL_FILL_RAMP_CUT, TAIL_FILL_MARGIN, fill.pts, fill.cpts); }
+  if (K1346.fan) pinTailFan(pts, cpts, alpha, o);
+  if (K1346.loops && o === 0) { const lp = pinBandLoops(pts, cpts, a.W); if (lp) for (let i = 0; i < lp.length; i++) pts[i] = lp[i]; }
+  if (fill) {
+    tgMode = 2; const fo = fill.pts.length;
+    tailWalk(a, TAIL_FILL_RAMP_CUT, TAIL_FILL_MARGIN, fill.pts, fill.cpts);
+    // K1346 (K1350): the fill's walk is E's offset curve too, so it folds where the band's does.
+    if (TAIL_LOOP_CUT && K1346.fill) cutTailLoop(fill.pts, fill.cpts, undefined, fo);
+  }
   tgMode = 0;
 }
 /** K1314 s10 (j71's step): the tail's walk along E's border is E's offset
@@ -8739,6 +8750,120 @@ function cutTailHooks(pts: number[], cpts: number[], alpha: number[] | undefined
     }
     if (!cut) { if (n <= 4) return; drop(c); }
     c = Math.max(1, c - 1);
+  }
+}
+/** K1346 s1: the signed area of a band piece's quad i (points i, i + 1), inner points by the band
+ *  rule (band_gpu inner(), band_rec innerOfP, draw bandData: W along the foot; a point on its foot
+ *  takes the next step's left normal). The sign is the quad's winding. */
+function bandQuadArea(pts: ArrayLike<number>, cpts: ArrayLike<number>, W: number, i: number): number {
+  const np = pts.length >> 1;
+  const inn = (k: number, o: Float64Array): void => {
+    const x = pts[2 * k]; const y = pts[2 * k + 1]; let dx = cpts[2 * k] - x; let dy = cpts[2 * k + 1] - y; const l = Math.sqrt(dx * dx + dy * dy);
+    if (l < 1e-12) { const j = Math.min(k + 1, np - 1); const ex = pts[2 * j] - x; const ey = pts[2 * j + 1] - y; const el = Math.sqrt(ex * ex + ey * ey) || 1; dx = -ey / el; dy = ex / el; } else { dx /= l; dy /= l; }
+    o[0] = x + W * dx; o[1] = y + W * dy;
+  };
+  inn(i, bqA); inn(i + 1, bqB);
+  const ax = pts[2 * i]; const ay = pts[2 * i + 1]; const bx = pts[2 * i + 2]; const by = pts[2 * i + 3];
+  // Shoelace over pO_i, pO_i+1, pI_i+1, pI_i.
+  return 0.5 * ((ax * by - bx * ay) + (bx * bqB[1] - bqB[0] * by) + (bqB[0] * bqA[1] - bqA[0] * bqB[1]) + (bqA[0] * ay - ax * bqA[1]));
+}
+const bqA = new Float64Array(2); const bqB = new Float64Array(2);
+/** K1346 s1: a run's end can land inside a cut fold's swallowtail, past its chevron (foldChevron): the
+ *  border at the end's s lies on the cut-away part of the fold's second leg, so the last quad turns
+ *  the band's inner side over and inks the chevron's kite again, wound the other way (muse_hash run
+ *  15 (30.67, 0.56): 14490 px at 960 ppu; run 121's end at c8 (19.41, 14.16)). Drop end points whose
+ *  quad winds against the rest of the piece, at most FOLD_END_MAX per end; the chevron's last point
+ *  (X, its foot along the leg's normal) is then the end. Returns null when nothing is cut. */
+const FOLD_END_MAX = 3;
+function trimFoldEnds(pts: ArrayLike<number>, cpts: ArrayLike<number>, W: number): { pts: number[]; cpts: number[] } | null {
+  let np = pts.length >> 1;
+  if (np < 4) return null;
+  let tot = 0;
+  for (let i = 0; i < np - 1; i++) tot += bandQuadArea(pts, cpts, W, i);
+  let lo = 0; let hi = np - 1;
+  for (let k = 0; k < FOLD_END_MAX && hi - lo >= 3; k++) {
+    const a = bandQuadArea(pts, cpts, W, hi - 1);
+    if (!(a * tot < 0) || Math.abs(a) < 1e-12) break;
+    tot -= a; hi--;
+  }
+  for (let k = 0; k < FOLD_END_MAX && hi - lo >= 3; k++) {
+    const a = bandQuadArea(pts, cpts, W, lo);
+    if (!(a * tot < 0) || Math.abs(a) < 1e-12) break;
+    tot -= a; lo++;
+  }
+  if (lo === 0 && hi === np - 1) return null;
+  np = hi - lo + 1;
+  const P: number[] = new Array(2 * np); const Cp: number[] = new Array(2 * np);
+  for (let i = 0; i < 2 * np; i++) { P[i] = pts[2 * lo + i]; Cp[i] = cpts[2 * lo + i]; }
+  return { pts: P, cpts: Cp };
+}
+/** K1346 s1: a border stretch can still loop or hook where the centreline turns tighter than h
+ *  (muse_hash ghost 2718 (19.39, 4.50): the walk circles back to its own point, 25879 px at 960 ppu;
+ *  run 183 (33.03, 22.99): a hook back onto the border two points before the end). The loop's quads
+ *  wind against the piece's and ink over its neighbours. Form B's border is the iso-line d = h, which
+ *  passes the loop's crossing once: each stretch of quads wound against the piece (more than
+ *  LOOP_EPS) is closed by the smallest pair of segments around it that cross or touch (within
+ *  LOOP_WIN points), and the points between them are pinned to the crossing, keeping their feet: the
+ *  quads fan around it as foldChevron's and sharpJoinFan's do. Returns the new points, or null. */
+const LOOP_WIN = 10;
+const LOOP_EPS = 1e-7;
+function pinBandLoops(src: ArrayLike<number>, cpts: ArrayLike<number>, W: number): number[] | null {
+  const np = src.length >> 1;
+  if (np < 4) return null;
+  let pts: number[] | null = null;
+  const P = (): ArrayLike<number> => pts ?? src;
+  for (let round = 0; round < 4; round++) {
+    let tot = 0;
+    for (let i = 0; i < np - 1; i++) tot += bandQuadArea(P(), cpts, W, i);
+    let hit = false;
+    for (let a = 0; a < np - 1 && !hit; a++) {
+      if (!(bandQuadArea(P(), cpts, W, a) * tot < 0) || Math.abs(bandQuadArea(P(), cpts, W, a)) < LOOP_EPS) continue;
+      let b = a;
+      while (b + 1 < np - 1 && bandQuadArea(P(), cpts, W, b + 1) * tot < 0) b++;
+      const q = P();
+      for (let span = 2; span <= 2 * LOOP_WIN && !hit; span++) {
+        for (let i = Math.max(0, b + 1 - span); i <= a && !hit; i++) {
+          const k = i + span;
+          if (k < b || k > np - 2) continue;
+          const ax = q[2 * i]; const ay = q[2 * i + 1]; const ux = q[2 * i + 2] - ax; const uy = q[2 * i + 3] - ay;
+          const bx = q[2 * k]; const by = q[2 * k + 1]; const vx = q[2 * k + 2] - bx; const vy = q[2 * k + 3] - by;
+          const den = ux * vy - uy * vx;
+          if (Math.abs(den) < 1e-18) continue;
+          const wx = bx - ax; const wy = by - ay;
+          const s = (wx * vy - wy * vx) / den; const t = (wx * uy - wy * ux) / den;
+          if (!(s >= -1e-9 && s <= 1 + 1e-9 && t >= -1e-9 && t <= 1 + 1e-9)) continue;
+          if (!pts) pts = Array.from(src);
+          const xx = ax + s * ux; const xy = ay + s * uy;
+          for (let m = i + 1; m <= k; m++) { pts[2 * m] = xx; pts[2 * m + 1] = xy; }
+          hit = true;
+        }
+      }
+      a = b;
+    }
+    if (!hit) break;
+  }
+  return pts;
+}
+/** K1346 s1 (c8's dotted seam, muse_hash (19.41, 14.16)): a tail's walk can start in a cluster, its
+ *  outer points jittering by 0.0003-0.0035 around the join while their feet sweep the corner, so the
+ *  cluster's quads turn back and forth and ink slivers twice (tail p1781: 163 px at 960 ppu). The
+ *  cluster is the fan around one point: pin each point within TAIL_PIN of the first to it, so the
+ *  quads fan around it as sharpJoinFan's do. */
+const TAIL_PIN = 0.005;
+function pinTailFan(pts: number[], cpts: number[], alpha: number[] | undefined, o: number): void {
+  const n = (pts.length - o) >> 1;
+  const x0 = pts[o]; const y0 = pts[o + 1];
+  let k = 1;
+  for (; k < n - 1; k++) {
+    const q = o + 2 * k;
+    if (Math.hypot(pts[q] - x0, pts[q + 1] - y0) >= TAIL_PIN) break;
+    pts[q] = x0; pts[q + 1] = y0;
+  }
+  // The fan sweeps the corner's wedge, which the run's fold chevron at the same join already inks
+  // (c8: run 121's chevron, the same alpha), so it inked twice: the tail starts at its last foot.
+  if (K1346.fanDrop && k >= 3 && (!alpha || alpha.length === pts.length)) {
+    pts.splice(o, 2 * (k - 1)); cpts.splice(o, 2 * (k - 1));
+    if (alpha) alpha.splice(o, 2 * (k - 1));
   }
 }
 function tailWalk(a: TailIn, rampCut: number, marginCut: number, pts: number[], cpts: number[], alpha?: number[], useAlt = false, wCut = a.W): void {
