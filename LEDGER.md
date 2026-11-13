@@ -556,11 +556,11 @@ Next free ID: K1376.
   tables the CPU builds in under 1 ms) instead of the outline mesh built on the CPU each frame (65-117 ms on
   def). Reverses the 2026-11-09 call (K1040 dropped for K1240). The main speed route (Levi, 2026-11-12: very bullish
   on it); dropped only on a proof it cannot work (brief: "How the result is judged"). Analysis in docs/ledger_notes.md.
-  - owner: nobody since 2026-11-13 05:07 (merged)
-  - branch: mainline; last commit: `25c3efce`
+  - owner: claude session 09c7a672-a414-402a-97da-b3176839a2e5 (stage 7 agent, Opus, from 05:15, cap 2 h)
+  - branch: worktree-agent-a7db5c378b38360f3 at .claude/worktrees/agent-a7db5c378b38360f3; last commit: `23bad74d`
   - evidence: .claude/probes/K1362/ (k1362s3_*, k1362s4_*), out/s3/, out/s4/
-  - next: s6 merged: keys per bin (gf_keys.ts) in every program, Pixel def 19.3 -> 16.7, muse_hash 24.5 -> 22.6 ms, exact; packed state slower on the Pixel; tile routes deleted. Stage 7: the two-pass split, then exact layering once inside the tier (s6 handoff); move buildKeys into the build worker
-  - brief: `docs/design/K1362_s6_footprint.md`
+  - next: stage 7 running: the two-pass split on the Pixel, then exact layering once in the tier; merge at its report
+  - brief: `docs/design/K1362_s7_two_pass.md`
 
 ## Next, in order
 
