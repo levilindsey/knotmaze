@@ -551,10 +551,10 @@ Next free ID: K1365.
   tables the CPU builds in under 1 ms) instead of the outline mesh built on the CPU each frame (65-117 ms on
   def). Reverses the 2026-11-09 call (K1040 dropped for K1240). The main speed route (Levi, 2026-11-12: very bullish
   on it); dropped only on a proof it cannot work (brief: "How the result is judged"). Analysis in docs/ledger_notes.md.
-  - owner: agent `a80434341b018b024` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 22:09, 2 h cap ~00:09)
-  - branch: `worktree-agent-a80434341b018b024`, worktree `.claude/worktrees/agent-a80434341b018b024`; last commit: `4f052b6d`
+  - owner: nobody since 2026-11-12 23:27 (merged; agent `a80434341b018b024` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `68baf0d1`
   - evidence: src/render/gpu_field/, .claude/probes/K1362/
-  - next: Stage 2 running: eval.ts in GLSL behind a new rp value; readback = mirror; desktop GPU pass, tables and frameMs timed; Pixel estimate
+  - next: Stage 3 (tonight, phone on its charger): the Pixel numbers for rp=gf - the GPU pass at full clock by sync timing, the table build and the CPU ratio, on def/muse_hash/fat; then the build fix (sample buffers, corner warm start, bins, or the worker) with an in-app re-time, candidates to the floor, section colour, the specks (stage 2 handoff)
   - brief: `docs/design/K1362_s2_glsl.md`
 
 ## Next, in order
