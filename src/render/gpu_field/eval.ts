@@ -53,7 +53,7 @@ export class GfEval {
   private psurf = new Int32Array(MAXP);
   private np = 0;
   // corners near p
-  private kk = new Int32Array(MAXK); private krho = new Float64Array(MAXK); private kIn = new Uint8Array(MAXK); private nk = 0;
+  private kk = new Int32Array(MAXK); private krho = new Float64Array(MAXK); private kIn = new Uint8Array(MAXK); private nk = 0; private tj = new Int32Array(8); private kSec = new Uint8Array(MAXK);
   // surfaces
   private sid = new Int32Array(MAXS); private skey = new Float64Array(MAXS); private sckey = new Float64Array(MAXS);
   private scch = new Int32Array(MAXS); private scs = new Float64Array(MAXS); private scov = new Uint8Array(MAXS);
@@ -108,6 +108,17 @@ export class GfEval {
   }
 
   /** Squared distance from (x, y) to piece j's segments (its fold range). */
+  /** form B's inFill arm test: (x, y) lies outside both arms' tubes (deeper than h - 2aa inside one is not
+   * the fill), the arm on the foot's own chain skipped; the arms read through the gathered pieces. */
+  private outsideArms(k: number, own: number, x: number, y: number): boolean {
+    const T = this.T; const lim = T.h - 2 * T.aa; const lim2 = lim * lim;
+    for (let side = 0; side < 2; side++) {
+      const c = side === 0 ? T.kCa[k] : T.kCb[k]; if (c === own) continue;
+      for (let m = 0; m < this.np; m++) if (this.pc[m] === c && this.pieceD(m, x, y) < lim2) return false;
+    }
+    return true;
+  }
+
   private pieceD(j: number, x: number, y: number): number {
     const T = this.T; const c = this.pc[j]; const v0 = T.cV0[c]; const nseg = T.cNV[c] - 1; const closed = T.cClosed[c] === 1;
     let d2 = Infinity;
@@ -188,11 +199,33 @@ export class GfEval {
     // within W + aa of p).
     let nk = 0;
     const k0 = T.cellK0[cell]; const kn = T.cellKN[cell];
+    // K1049: a through pass's bend corner counts only inside its cone (in its sector, within rV + W + 4aa),
+    // where the open eye is the arc's band; a non-through corner of another junction whose sector holds p
+    // yields it (the census reference's filletPick, arcInk and yieldInk, less yieldInk's inner ramp).
+    let thruK = -1; let thruQ = 0; let yielded = false; let nTj = 0;
+    for (let q = k0; q < k0 + kn; q++) {
+      const k = T.cellKList[q]; if (!T.kThru[k]) continue;
+      const rx = x - T.kCx[k]; const ry = y - T.kCy[k]; const d2 = rx * rx + ry * ry; const lim = T.kRV[k] + W + 4 * aa;
+      if (d2 <= lim * lim && this.inSector(k, x, y)) { if (thruK < 0) { thruK = k; thruQ = Math.sqrt(d2); } if (nTj < 8) this.tj[nTj++] = T.kJ[k]; }
+    }
+    if (thruK >= 0) {
+      for (let q = k0; q < k0 + kn && !yielded; q++) {
+        const k = T.cellKList[q]; if (T.kThru[k]) continue;
+        let same = false; for (let i = 0; i < nTj; i++) if (this.tj[i] === T.kJ[k]) same = true;
+        if (!same && this.inSector(k, x, y)) yielded = true;
+      }
+    }
     for (let q = k0; q < k0 + kn && nk < MAXK; q++) {
       const k = T.cellKList[q]; o.nK++;
+      if (T.kThru[k]) {
+        if (yielded) continue;
+        const tx = x - T.kCx[k]; const ty = y - T.kCy[k]; const lim = T.kRV[k] + W + 4 * aa;
+        if (!(tx * tx + ty * ty <= lim * lim) || !this.inSector(k, x, y)) continue;
+      }
       const rx = x - T.kCx[k]; const ry = y - T.kCy[k]; const rho = Math.sqrt(rx * rx + ry * ry);
       if (!(rho > T.kR[k] - aa - W) || rho > T.kRmax[k] + W + 2 * aa) continue;
-      const inR = rho <= T.kRmax[k] && this.inSector(k, x, y);
+      const sec = this.inSector(k, x, y); const inR = rho <= T.kRmax[k] && sec;
+      this.kSec[nk] = sec ? 1 : 0; // form B's arc term reads the wedge alone, not the fill's far bound rV
       this.kk[nk] = k; this.krho[nk] = rho; this.kIn[nk] = !inR ? 0 : rho > T.kR[k] - aa ? 2 : 1; nk++;
     }
     this.nk = nk;
@@ -214,6 +247,11 @@ export class GfEval {
       const w = nr === 0 ? 1 : wgt;
       ink += w * r;
       if (w > bestW) { bestW = w; lab = this.labC; labS = this.labS; wk = this.cWk; wa = this.cWa; wb = this.cWb; }
+    }
+    if (thruK >= 0) {
+      const own = T.kCa[thruK]; const r = T.kR[thruK]; const out = 1 - ss(r + W - aa, r + W + aa, thruQ);
+      if (!yielded) { if (lab < 0 || lab === own) { ink = ss(r - aa, r + aa, thruQ) * out; if (lab < 0 && ink > 0) { lab = own; labS = T.kSa[thruK]; } wk = 5; wa = thruK; } }
+      else if (lab === own) ink = Math.min(ink, out);
     }
     o.ink = Math.min(1, ink); o.chain = lab; o.s = labS; o.winKind = wk; o.winA = wa; o.winB = wb;
     return o;
@@ -271,13 +309,13 @@ export class GfEval {
         for (let i = 0; i < this.nk && bur < 1; i++) {
           const k = this.kk[i]; if (T.kG[k] !== S) continue;
           const rq = Math.hypot(qx - T.kCx[k], qy - T.kCy[k]);
-          if (rq > T.kR[k] && rq < T.kRmax[k] && this.inSector(k, qx, qy)) bur = 1;
+          if (rq > T.kR[k] && rq < T.kRmax[k] && this.inSector(k, qx, qy) && this.outsideArms(k, this.pc[j], qx, qy)) bur = 1;
         }
         const val = (1 - bur) * band2(h - X);
         if (val > v) { v = val; wk = this.pend[j] ? 3 : 1; wa = this.pc[j]; wb = this.ptx[j] * (y - this.pfy[j]) - this.pty[j] * (x - this.pfx[j]) >= 0 ? 1 : -1; }
       }
       for (let i = 0; i < this.nk; i++) {
-        const k = this.kk[i]; if (T.kG[k] !== S || !this.kIn[i]) continue;
+        const k = this.kk[i]; if (T.kG[k] !== S || !this.kSec[i]) continue;
         const rho = this.krho[i]; const Dk = rho - T.kR[k];
         if (this.kIn[i] === 2 && Dk > D) D = Dk;
         if (!(rho > 1e-12)) continue;

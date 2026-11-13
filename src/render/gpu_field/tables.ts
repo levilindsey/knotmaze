@@ -47,6 +47,9 @@ export interface GfTables {
   nA: number; aSR: Float64Array; aDir: Float64Array; aL: Float64Array; aLcut: Float64Array; aG: Int32Array;
   nK: number;
   kCx: Float64Array; kCy: Float64Array; kR: Float64Array; kRmax: Float64Array;
+  /** K1049: 1 = the bend corner of one through pass (the rounded open eye, drawn only inside its cone as
+   * the arc's band r..r+W around q); rV = |V - q| bounds the cone. */
+  kThru: Uint8Array; kRV: Float64Array;
   kEax: Float64Array; kEay: Float64Array; kEbx: Float64Array; kEby: Float64Array; kG: Int32Array;
   /** For the census's K1049 check and the report: junction index, arm indices, the corner angle. */
   kJ: Int32Array; kA: Int32Array; kB: Int32Array; kTheta: Float64Array;
@@ -284,7 +287,7 @@ export function buildTables(scene: FieldScene, opts: GfOpts): GfTables {
   const ss01 = (x: number): number => { const t = Math.min(1, Math.max(0, x)); return t * t * (3 - 2 * t); };
   const tRef = 1 / Math.sin(1.0) - 1; // form B's ROOT_BAND_REF_THETA = 2
   const rootTip = (th: number): number => { const s = Math.sin(th / 2); if (!(s > 0)) return 1; const t = 1 / s - 1; return t > 0 ? Math.min(1, t / tRef) : 0; };
-  const K: { cx: number; cy: number; r: number; rmax: number; eax: number; eay: number; ebx: number; eby: number; g: number; j: number; a: number; b: number; theta: number; ca: number; cb: number; sa: number; sb: number }[] = [];
+  const K: { thru: number; rv: number; cx: number; cy: number; r: number; rmax: number; eax: number; eay: number; ebx: number; eby: number; g: number; j: number; a: number; b: number; theta: number; ca: number; cb: number; sa: number; sb: number }[] = [];
   const sibs: ArmT[][] = scene.junctions.map(() => []);
   for (const A of armsT) sibs[A.j].push(A);
   const armPt = (A: ArmT, u: number): { x: number; y: number; tx: number; ty: number; s: number } => {
@@ -367,7 +370,7 @@ export function buildTables(scene: FieldScene, opts: GfOpts): GfTables {
       let th = B.ang - A.ang; th = ((th % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
       if (th <= 1e-6 || th >= Math.PI - 1e-6) continue;
       const xa = J.arms[A.ei]; const xb = J.arms[B.ei];
-      if (xa.chain === xb.chain && xa.kind === "through" && xb.kind === "through" && Math.abs(xa.s - xb.s) < 1e-6) continue;
+      const thru = xa.chain === xb.chain && xa.kind === "through" && xb.kind === "through" && Math.abs(xa.s - xb.s) < 1e-6 ? 1 : 0;
       let st = styles[A.ei]?.style; if ((A.ei + 1) % ne !== B.ei && (B.ei + 1) % ne === A.ei) st = styles[B.ei]?.style;
       if (st === "sharp") continue;
       if (!(A.L > 1e-9 && B.L > 1e-9)) continue;
@@ -378,6 +381,11 @@ export function buildTables(scene: FieldScene, opts: GfOpts): GfTables {
       const rb = Math.max(rootBand * h * rootTip(th), 1e-9 * h);
       const V = track(J, A, B, th, uV0, uV0, h, 8);
       if (!(V.ua > 0 && V.ua < A.L && V.ub > 0 && V.ub < B.L)) continue;
+      { // form B: V lies in the wedge between the arms' chords (the facing sides)
+        const crA = A.ux * (V.y - J.c[1]) - A.uy * (V.x - J.c[0]); const crB = B.ux * (V.y - J.c[1]) - B.uy * (V.x - J.c[0]);
+        const sgn = Math.sign(A.ux * B.uy - A.uy * B.ux);
+        if (!(crA * sgn > 0 && crB * sgn < 0)) continue;
+      }
       const SA = smpOf(A); const SB = smpOf(B);
       const denOf = (p: Q): number => { const ax = p.x - p.fax; const ay = p.y - p.fay; const bx = p.x - p.fbx; const by = p.y - p.fby; return 1 + (ax * bx + ay * by) / ((Math.sqrt(ax * ax + ay * ay) || 1) * (Math.sqrt(bx * bx + by * by) || 1)); };
       const denV = denOf(V);
@@ -401,7 +409,7 @@ export function buildTables(scene: FieldScene, opts: GfOpts): GfTables {
       const q = track(J, A, B, th, p.ua, p.ub, h + r, TRACK + 1, 4 * dN / t2);
       const rV = Math.hypot(V.x - q.x, V.y - q.y);
       const rmax = rV + (2 * aa) / Math.max(0.1, Math.sin(th / 2));
-      K.push({ cx: q.x, cy: q.y, r, rmax, eax: -q.nax, eay: -q.nay, ebx: -q.nbx, eby: -q.nby, g, j: ji, a: A.ei, b: B.ei, theta: th, ca: A.c, cb: B.c, sa: q.sa, sb: q.sb });
+      K.push({ thru, rv: rV, cx: q.x, cy: q.y, r, rmax, eax: -q.nax, eay: -q.nay, ebx: -q.nbx, eby: -q.nby, g, j: ji, a: A.ei, b: B.ei, theta: th, ca: A.c, cb: B.c, sa: q.sa, sb: q.sb });
     }
   });
   const nK = K.length;
@@ -409,10 +417,11 @@ export function buildTables(scene: FieldScene, opts: GfOpts): GfTables {
   const kEax = new Float64Array(nK); const kEay = new Float64Array(nK); const kEbx = new Float64Array(nK); const kEby = new Float64Array(nK); const kG = new Int32Array(nK);
   const kJ = new Int32Array(nK); const kA = new Int32Array(nK); const kB = new Int32Array(nK); const kTheta = new Float64Array(nK);
   const kCa = new Int32Array(nK); const kCb = new Int32Array(nK); const kSa = new Float64Array(nK); const kSb = new Float64Array(nK); const kZa = new Float64Array(nK); const kZb = new Float64Array(nK);
+  const kThru = new Uint8Array(nK); const kRV = new Float64Array(nK);
   const kTax = new Float64Array(nK); const kTay = new Float64Array(nK); const kTbx = new Float64Array(nK); const kTby = new Float64Array(nK);
   const PZ = { cPin0, cPinN, pinS, pinZ, cClosed, cLen, cS0, win };
   K.forEach((q, i) => { kCa[i] = q.ca; kCb[i] = q.cb; kSa[i] = q.sa; kSb[i] = q.sb; kZa[i] = depthAt(PZ, q.ca, q.sa); kZb[i] = depthAt(PZ, q.cb, q.sb); kTax[i] = q.cx + q.r * q.eax; kTay[i] = q.cy + q.r * q.eay; kTbx[i] = q.cx + q.r * q.ebx; kTby[i] = q.cy + q.r * q.eby; });
-  K.forEach((q, i) => { kCx[i] = q.cx; kCy[i] = q.cy; kR[i] = q.r; kRmax[i] = q.rmax; kEax[i] = q.eax; kEay[i] = q.eay; kEbx[i] = q.ebx; kEby[i] = q.eby; kG[i] = q.g; kJ[i] = q.j; kA[i] = q.a; kB[i] = q.b; kTheta[i] = q.theta; });
+  K.forEach((q, i) => { kCx[i] = q.cx; kCy[i] = q.cy; kR[i] = q.r; kRmax[i] = q.rmax; kEax[i] = q.eax; kEay[i] = q.eay; kEbx[i] = q.ebx; kEby[i] = q.eby; kG[i] = q.g; kJ[i] = q.j; kA[i] = q.a; kB[i] = q.b; kTheta[i] = q.theta; kThru[i] = q.thru; kRV[i] = q.rv; });
   const t4 = now();
 
   // 5. Chunks and bins.
@@ -456,7 +465,7 @@ export function buildTables(scene: FieldScene, opts: GfOpts): GfTables {
   return {
     h, W, aa, sigma, zt, amp, win, rc, nC, cV0, cNV, cClosed, cLen, cS0, cPin0, cPinN, cArm0, cArmN,
     nV, vx, vy, vs, pinS, pinZ, nA, aSR, aDir, aL, aLcut, aG,
-    nK, kCx, kCy, kR, kRmax, kEax, kEay, kEbx, kEby, kG, kJ, kA, kB, kTheta, kCa, kCb, kSa, kSb, kZa, kZb, kTax, kTay, kTbx, kTby,
+    nK, kCx, kCy, kR, kRmax, kThru, kRV, kEax, kEay, kEbx, kEby, kG, kJ, kA, kB, kTheta, kCa, kCb, kSa, kSb, kZa, kZb, kTax, kTay, kTbx, kTby,
     nCh, chV0, chN, chC, chBox, gx0, gy0, G, gW, gH, cellCh0, cellChN, cellChList, cellK0, cellKN, cellKList,
     ms: { vtx: t1 - t0, pins: t2 - t1, arms: t3 - t2, corners: t4 - t3, bins: t5 - t4, total: t5 - t0 },
   };
