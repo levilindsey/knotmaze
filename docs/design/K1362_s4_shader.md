@@ -60,8 +60,9 @@ Report each lever's measured effect, including the ones that did nothing.
 - **The phone:**
   - Never wake it, unlock it, rotate it, or send it input, and never restart Chrome on it.
   - Open and close only your own tabs, through DevTools, as stage 3 did.
-  - Run `scripts/phone_pass.ps1 -Phase check` first. If the phone is not ready, wait inside one blocking command
-    (poll every few minutes, up to 30 minutes).
+  - Run `scripts/phone_pass.ps1 -Phase check -AllowChrome` first. Stage 3's cleanup left Chrome in front, as the
+    kit's cleanup does, and at 00:32 the check passed with `-AllowChrome`. If the phone is not ready, wait inside one
+    blocking command (poll every few minutes, up to 30 minutes).
   - Hold the phone lock (`.claude/probes/agents/phone_lock_take.ps1` / `phone_lock_release.ps1`) for each phone part.
   - Keep device serials, IP addresses and Tailscale names out of every tracked file, commit and report.
 - PowerShell. Read code through the shell (Select-String, then 40-80 line ranges of Get-Content); never print a
