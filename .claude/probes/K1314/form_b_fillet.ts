@@ -83,6 +83,8 @@ export function ss(e0: number, e1: number, x: number): number {
  * ink a null at that angle would move; t(2.0) ≈ 0.188395.
  */
 export const ROOT_BAND_REF_THETA = 2.0;
+/** K1325 s1: recordFail's marched V seed (j30); --nomarch turns it off (a --no flag, so it keys the fbf cache). */
+export const MARCH = { on: !process.argv.includes("--nomarch") };
 
 /** The tip factor's scale at θ: min(1, t(θ)/t(ROOT_BAND_REF_THETA)); 1 at and below the reference angle. */
 function rootTipScale(theta: number): number {
@@ -906,8 +908,9 @@ export class FormB {
     // the two borders' butt ends notched where the approved look turns round the paper's tip. Seed again
     // where the bisector first leaves both tubes (that tip in form B's own picture). A corner dropped for
     // want of a V is a failed corner even when its feet lie inside the spans.
+    // --nomarch (or MARCH.on = false before the model is built) restores s9's reference.
     let marched = false;
-    if (!V.ok && !reflex) {
+    if (!V.ok && !reflex && MARCH.on) {
       for (let t = h / 16; t <= (3 * h) / sn; t += h / 16) {
         const x = j.c[0] + bx * t;
         const y = j.c[1] + by * t;
