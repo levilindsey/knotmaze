@@ -8332,8 +8332,54 @@ export function endTailPts(a: TailIn, pts: number[], cpts: number[], alpha?: num
   if (!(a.h > 0) || !Number.isFinite(a.sT)) return;
   // K1283 s4: the band goes on past X's arm start (tailRamp's useAlt); the
   // fill keeps stage 2's cut (fill_tri's round end, DiskItem, covers it).
+  const o = pts.length;
   tailWalk(a, TAIL_BAND_RAMP_CUT, TAIL_BAND_MARGIN, pts, cpts, alpha, true, 0);
+  if (TAIL_LOOP_CUT) cutTailLoop(pts, cpts, alpha, o);
   if (fill) tailWalk(a, TAIL_FILL_RAMP_CUT, TAIL_FILL_MARGIN, fill.pts, fill.cpts);
+}
+/** K1314 s10 (j71's step): the tail's walk along E's border is E's offset
+ *  curve, which folds into a swallowtail where E's centreline turns tighter
+ *  than h (near E's end): the walk runs past the cusp and back, its legs
+ *  cross, and the band paints the loop between them as a hard-edged kite
+ *  (g41_user_tw64 j71, (5.06-5.19, 7.79-7.95)). Form B's border is the
+ *  iso-line d = h, which has no loop: cut the loop out at the legs' crossing
+ *  (cpts and alpha taken along the first leg there). Only a walk that turns
+ *  back (two segments with a negative dot) is searched. */
+const TAIL_LOOP_CUT = true;
+function cutTailLoop(pts: number[], cpts: number[], alpha: number[] | undefined, o: number): void {
+  const n = (pts.length - o) >> 1;
+  if (n < 4) return;
+  let cusp = -1;
+  for (let i = 1; i < n - 1 && cusp < 0; i++) {
+    const q = o + 2 * i;
+    if ((pts[q] - pts[q - 2]) * (pts[q + 2] - pts[q]) + (pts[q + 1] - pts[q - 1]) * (pts[q + 3] - pts[q + 1]) < 0) cusp = i;
+  }
+  if (cusp < 0 || (alpha && alpha.length !== pts.length)) return;
+  // The smallest loop around the cusp: segment i (points i, i + 1) before it
+  // against segment k after it, by span k - i.
+  for (let span = 2; span < n - 1; span++) {
+    for (let i = Math.max(0, cusp - span); i < cusp && i + span <= n - 2; i++) {
+      const k = i + span;
+      if (k < cusp) continue;
+      const a0 = o + 2 * i; const b0 = o + 2 * k;
+      const ax = pts[a0]; const ay = pts[a0 + 1]; const ux = pts[a0 + 2] - ax; const uy = pts[a0 + 3] - ay;
+      const bx = pts[b0]; const by = pts[b0 + 1]; const vx = pts[b0 + 2] - bx; const vy = pts[b0 + 3] - by;
+      const den = ux * vy - uy * vx;
+      if (Math.abs(den) < 1e-18) continue;
+      const wx = bx - ax; const wy = by - ay;
+      const s = (wx * vy - wy * vx) / den; const t = (wx * uy - wy * ux) / den;
+      if (!(s >= 0 && s <= 1 && t >= 0 && t <= 1)) continue;
+      const cx = cpts[a0] + s * (cpts[a0 + 2] - cpts[a0]); const cy = cpts[a0 + 1] + s * (cpts[a0 + 3] - cpts[a0 + 1]);
+      // Points i + 1 .. k become the crossing.
+      pts.splice(a0 + 2, 2 * span, ax + s * ux, ay + s * uy);
+      cpts.splice(a0 + 2, 2 * span, cx, cy);
+      if (alpha) {
+        const p0 = alpha[a0] + s * (alpha[a0 + 2] - alpha[a0]); const p1 = alpha[a0 + 1] + s * (alpha[a0 + 3] - alpha[a0 + 1]);
+        alpha.splice(a0 + 2, 2 * span, p0, p1);
+      }
+      return;
+    }
+  }
 }
 function tailWalk(a: TailIn, rampCut: number, marginCut: number, pts: number[], cpts: number[], alpha?: number[], useAlt = false, wCut = a.W): void {
   const l1 = Math.max(0, a.dirE * (a.sT - a.endS));
