@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1355.
+Next free ID: K1356.
 
 ## Waiting on Levi
 
@@ -554,11 +554,11 @@ Next free ID: K1355.
   most cases. But there are still plenty of unacceptable artifacts"): an artifact census (stray ink, hard
   colour edges inside fills, paper holes, broken ink) across scenes, then fix stages that drive its count to
   0; the look gate in docs/design/K1240_gate.md
-  - owner: nobody since 2026-11-12 16:21 (merged; agent `a2fd366dec3d37858` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `02c8ca8b`
-  - evidence: .claude/probes/K1314/ (k1314s11_*), baseline out/s1/census_k1346s1b
-  - next: s12: app ABBA of s11 ownAlpha (k1247s30_run.ps1); clip or tie tail 1781 against run 121 at c8 (faint hairline at 4x, fin_x4/c8.png) and c8 lost ink y 14.35-14.51; j58a (piece 196 side rule, piece 371 root ramp); census against k1314s11d
-  - brief: `docs/design/K1314_s11_j58a_c8.md`
+  - owner: agent `aafbd884214382d4f` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 16:24, 2 h cap ~18:24)
+  - branch: `worktree-agent-aafbd884214382d4f`, worktree `.claude/worktrees/agent-aafbd884214382d4f`; last commit: `91fff3ed`
+  - evidence: .claude/probes/K1314/ (k1314s12_*), baseline out/s1/census_k1314s11d
+  - next: s12 running: c8 tail line and lost ink, j58a, s11 app ABBA
+  - brief: `docs/design/K1314_s12_c8_tail_j58a.md`
 - **K1341** · Three exact cuts K1247 s28 left: a squared pre-check before draw.ts nearRange's sqrt (zChains'
   hottest line), hinted spanOf searches, a box bound in fill_tri.ts's disk scan (s28 handoff)
   - owner: agent `ac63f135098807a15` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (sonnet, started 2026-11-12 16:04, 1 h cap ~17:04)
@@ -1920,11 +1920,13 @@ Every other item below waits on the trigger it names.
 - **K1351** · c8's under-pass after K1346 s1's fan fix: the dotted seam is gone, a straight soft diagonal
   shading edge remains where form B shades smoothly (muse_hash (19.41, 14.16);
   `.claude/probes/K1346/out/s1/final8x/c8.png`)
-  - next: in K1314 s11 (docs/design/K1314_s11_j58a_c8.md)
+  - next: K1314 s12 (docs/design/K1314_s12_c8_tail_j58a.md): s11 took c8 |d| 5.34 -> 2.15%; left a faint tail line (tail 1781 over run 121) and lost ink at y 14.35-14.51
 - **K1354** · K1346's fold checks (bandFoldScan, bandFoldsClean) cost 0.5-0.7 ms per def frame; the fast exit
   could reuse the band builder's inner points (about 0.5 ms). One app ABBA (K1346 s2 run 2) put def band +0.85
   ms over a 0.5 spread while Node's band is equal; one quiet app ABBA settles it
   (docs/design/K1346_s2_fold_speed.md handoff)
+- **K1355** · GPU vs CPU band tie differs by 0.49 at muse_hash (19.75,14.76), on master too (K1314 s11
+  `.claude/probes/K1314/k1314s11_gpu.ts`); may share K1336's cause, needs a twin check of its own
 
 ## Approved, to schedule (2026-10-11)
 
