@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1348.
+Next free ID: K1350.
 
 ## Waiting on Levi
 
@@ -389,7 +389,7 @@ Next free ID: K1348.
   - owner: nobody since 2026-11-11 15:21 (merged; agent `a785e71cf6c686198` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
   - branch: mainline; last commit: `cbc32d02`
   - evidence: `.claude/probes/rounds/2026-11-11/`
-  - next: rerun round 2026-11-11 (steps 1-7) when Levi leaves the phone unlocked on its charger with the launcher in front; step 3 first ports k1240s4b_bench.mjs to the pass tab as k1310_phone_bench.mjs, and adds rp=outline ob=0 vs the default (ob on since K1247 s25, e69fa795)
+  - next: rerun round 2026-11-11 (steps 1-7) when Levi leaves the phone unlocked on its charger with the launcher in front; step 3 first ports k1240s4b_bench.mjs to the pass tab as k1310_phone_bench.mjs, and adds rp=outline ob=0 vs the default (ob on since K1247 s25, e69fa795); also run .claude/probes/K1247/k1247s30_engine.html there for the outline code's own phone/desktop CPU ratio (K1247 s30 plan)
   - brief: docs/design/K156.md (Round 2026-11-11)
   - env: the phone on its charger, reached over adb 5555 through Tailscale (`adb connect`; not the desktop's USB, Levi 2026-11-02); the pass builds and serves both builds itself (ports 5480-5489); nobody else uses the phone during the pass (K234)
 - **K268** · Shaped crossing gaps under thread reveal (K76; Levi, 2026-10-14):
@@ -559,14 +559,6 @@ Next free ID: K1348.
   - evidence: .claude/probes/K1314/ (census tools, k1314_s8_bench.ps1); untracked out/s1-s10/, baseline census_s9
   - next: K1314 s11 after K1247 s30 frees outline.ts: j58a's reversed fade (corner 176's meet, or the chevron's return-leg alpha against form B). Baseline census_k1325s2 (stray 4, hard 1, paper 0, broken 12, k1049 0; total 17)
   - brief: `docs/design/K1314_s10_breaks_step.md`
-- **K1338** · The outline worker frame's frame() (64-71 ms p50, outline.ts) and band (16-26 ms, bandOf + band
-  files) on def mid-drag, toward frame + band <= 10 ms, look unchanged; K1247's sibling stage (s28 takes fill
-  and zChains); brief `docs/design/K1247_s29_frame_band_speed.md`
-  - owner: nobody since 2026-11-12 11:40 (merged; agent `a644f27c6e57d73f2` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `8c31261b`
-  - evidence: .claude/probes/K1247/k1247s29_*, k1247s30_* (tools); untracked out/s29/, out/s30/
-  - next: plan stage 1 (hold + one dirty set in OutlineModel.update) after the plan's stages are filed; see docs/design/K1247_s30_path_to_gate.md
-  - brief: `docs/design/K1247_s30_path_to_gate.md`
 - **K1344** · muse_hash j116's lower junction (~25.88-25.92, 14.21-14.35): rp=outline draws a dark wedge
   crease with a hard diagonal where the reference is smooth; the census books it only as tail_look (60 px), so
   it is uncounted (K1325 s2; crop `.claude/probes/K1325/out/s2/x4/j116_notch.png`)
@@ -831,7 +823,8 @@ Every other item below waits on the trigger it names.
   sliver) are end tails p838/p839 drawn by outline.ts tailAlpha (K1324 s2); clear them in outline.ts, or fold
   them into K1315's end look (crop `.claude/probes/K1324/out/s2/j28r_after/spot_001.png`)
 - **K1339** · zChains (about 17 ms def drag p50) in a second worker beside frame: it reads only the scene, so
-  the critical path loses it with identical output (K1247 s28 handoff,
+  the critical path loses it with identical output; s30 plan stage 3, and on the Pixel only after incremental
+  zChains (stage 6): a second worker may land on a little core (K1247 s28 handoff,
   `docs/design/K1247_s28_fill_zchains_speed.md`)
 - **K1340** · fill's fans, disks and tails placed on the GPU like the record strips, with a twin test: fill
   about 22 ms -> 5 ms def drag p50 (K1247 s28 handoff)
@@ -2269,9 +2262,15 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   the port-and-tie cycle each fillFrame change costs (K1247 s26)
 - **K1342** · zChains' algorithm toward 2 ms: coarser walk steps refined near hits, or last frame's result as
   a proven seed; about 100k nearest-segment calls a frame today (K1247 s28 handoff)
+- **K1348** · The outline hold's tolerance: T = 1 device px (halves the released share, ~4-5 ms on def) or a
+  0.05 px skip for held-chain pieces (closure ~300 -> ~162 pieces). Decide by checks (census at held
+  positions, max px error mid-drag); ask Levi with a picture only if it shows (K1247 s30 plan)
+- **K1349** · A per-frame budget scheduler for the outline worker's p95: recompute dirty spans up to a
+  deadline, carry the rest with a bounded lag (K1247 s30 plan; def p95 16.4% new points)
 
 ## Done
 
+- **K1338** · frame/band speed (s29: tailFoot boxes, fill reuses band feet; s30: what changes per frame, the 1.75x was machine load (quiet master def worker 72 ms, frame 38.2), KF_INC prototype off by default, the six-stage plan to ~7-9 ms in docs/design/K1247_s30_path_to_gate.md). Done in 8c31261b (2026-11-12).
 - **K1324** · no contact pass inside one junction group (s1), muse_hash x22's self pass buried whole (s2, selfBury + BAND_FS), and the census band's lower-join seam at x22 (s3, draw.ts bandData splits edges where the tie bends); c8's hard edge is K1315's end, c8's dotted seam is K1346. Done in 0a9119cd (2026-11-12).
 - **K1325** · the census reference draws x304, j30 and muse_hash's five self-crossings (x304, x22, x345, j116, x58) whole; census m1 -> k1325s2: stray_ink 9 -> 4, total 22 -> 17, nothing else moved. Done in 3026bfc3 (2026-11-12).
 - **K1334** · Census reference smears where a chain crosses itself: muse_hash x22 (414 px), x345 (19.996, 3.944) 225 px, j116 (25.518, 13.825) 696 px, x58 (0.113, 15.187) 527 px. rp=outline draws them whole since 943ae592, so census_k1324s2a counts form B's flaw (stray_ink 7 -> 10). Dropped: folded into K1325 s2 (docs/design/K1325_s2_self_crossing_reference.md) with x304 (2026-11-12).
