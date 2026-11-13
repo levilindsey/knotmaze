@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1350.
+Next free ID: K1351.
 
 ## Waiting on Levi
 
@@ -1909,6 +1909,9 @@ Every other item below waits on the trigger it names.
 - **K1347** · Census vs app at g41_user_tw64 (5.19, 17.60): the census band gives .888 where the app gives 1.0
   (on master before K1324 s3 too); the census crop shows a needle and a hard diagonal there
   (`.claude/probes/K1324/out/s3/moved8x/spot_003.png`)
+- **K1350** · Tail turn-backs left after K1344 s1: the fill walk (fpts) gets no hook or loop cut, and
+  sub-pixel turn-backs remain (muse_hash 6, g41_ring_tw64 1; jogs under 0.001 or span-cut splices). Tagger
+  `.claude/probes/K1344/k1344_tag.ts`, handoff in `docs/design/K1344_s1_j116_crease.md`
 
 ## Approved, to schedule (2026-10-11)
 
