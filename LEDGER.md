@@ -559,14 +559,6 @@ Next free ID: K1350.
   - evidence: .claude/probes/K1314/ (census tools, k1314_s8_bench.ps1); untracked out/s1-s10/, baseline census_s9
   - next: K1314 s11 after K1247 s30 frees outline.ts: j58a's reversed fade (corner 176's meet, or the chevron's return-leg alpha against form B). Baseline census_k1325s2 (stray 4, hard 1, paper 0, broken 12, k1049 0; total 17)
   - brief: `docs/design/K1314_s10_breaks_step.md`
-- **K1344** · muse_hash j116's lower junction (~25.88-25.92, 14.21-14.35): rp=outline draws a dark wedge
-  crease with a hard diagonal where the reference is smooth; the census books it only as tail_look (60 px), so
-  it is uncounted (K1325 s2; crop `.claude/probes/K1325/out/s2/x4/j116_notch.png`)
-  - owner: agent `a42df6f917fe7a386` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 10:43, 2 h cap ~12:43)
-  - branch: `worktree-agent-a42df6f917fe7a386`, worktree `.claude/worktrees/agent-a42df6f917fe7a386`; last commit: `6a862f48`
-  - evidence: .claude/probes/K1344/ (tools); untracked out/s1/
-  - next: s1 running: the cause and fix of j116's crease, g41_user_tw64 (5.19, 17.60), how many tail_look finds are creases; outline.ts waits for K1247 s30's merge
-  - brief: `docs/design/K1344_s1_j116_crease.md`
 
 ## Next, in order
 
@@ -2270,6 +2262,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1344** · j116's crease: cutTailHooks cuts a tail walk's hook at a swallowtail narrower than its step (6 of 187 tail_look finds were this fold, 0 after; bar kinds unchanged). Done in d49c248d (2026-11-12).
 - **K1338** · frame/band speed (s29: tailFoot boxes, fill reuses band feet; s30: what changes per frame, the 1.75x was machine load (quiet master def worker 72 ms, frame 38.2), KF_INC prototype off by default, the six-stage plan to ~7-9 ms in docs/design/K1247_s30_path_to_gate.md). Done in 8c31261b (2026-11-12).
 - **K1324** · no contact pass inside one junction group (s1), muse_hash x22's self pass buried whole (s2, selfBury + BAND_FS), and the census band's lower-join seam at x22 (s3, draw.ts bandData splits edges where the tie bends); c8's hard edge is K1315's end, c8's dotted seam is K1346. Done in 0a9119cd (2026-11-12).
 - **K1325** · the census reference draws x304, j30 and muse_hash's five self-crossings (x304, x22, x345, j116, x58) whole; census m1 -> k1325s2: stray_ink 9 -> 4, total 22 -> 17, nothing else moved. Done in 3026bfc3 (2026-11-12).
