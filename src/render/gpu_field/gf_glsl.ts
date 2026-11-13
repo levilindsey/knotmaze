@@ -39,11 +39,21 @@ export type GfPackForm = boolean | "f" | "i";
 
 /** The program's source forms (gf_reg.ts); a tier's own flags set them by default. The probe keeps the plain form. */
 /** oldKeys: the keys over the chain's whole pin and arm lists (before gf_keys.ts's bins; a bench's A/B). */
-export interface GfForm { reg?: boolean; unroll?: boolean; pack?: GfPackForm; oldKeys?: boolean }
+/**
+ * split (K1362 s7, gf_split.ts): the tier in two passes. 1 = the scan, keys and corners, packed into four unsigned
+ * targets (RGBA32UI x3 for the pieces, RG32UI for the corners and counts; a value that does not fit discards, so
+ * the full program draws that pixel); 2 = layers() and composite() from them, rebuilding pd, pfx, pfy, the corner
+ * radii and thruQ from their indices with the scan's own lines. Needs a tier (its p and k size the targets' use).
+ */
+export interface GfForm { reg?: boolean; unroll?: boolean; pack?: GfPackForm; oldKeys?: boolean; split?: 1 | 2 }
 
 export function gfFs(probe: boolean, tangentTerms = true, tier?: GfTier, form: GfForm = { reg: tier?.reg, unroll: tier?.unroll, pack: tier?.pack }): string {
   let src = gfSrc(probe, tangentTerms, tier);
   if (form.oldKeys) src = src.replace("precision highp float;\n", "precision highp float;\n#define OLDKEYS 1\n");
+  if (form.split) {
+    if (probe || !tier || tier.p > 3 || tier.k > 2) throw new Error("gfFs: split needs a non-probe tier of at most p3/k2");
+    src = src.replace("precision highp float;\n", `precision highp float;\n#define SPLIT${form.split} 1\n`);
+  }
   if (probe) return src;
   const mp = tier ? tier.p : MAXP;
   const mk = tier ? tier.k : MAXK;
@@ -88,13 +98,26 @@ uniform vec4 uMap;
 layout(location = 0) out vec4 o0;
 layout(location = 1) out vec4 o1;
 layout(location = 2) out vec4 o2;
+#elif defined(SPLIT1)
+layout(location = 0) out uvec4 o0;
+layout(location = 1) out uvec4 o1;
+layout(location = 2) out uvec4 o2;
+layout(location = 3) out uvec2 o3;
 #else
 out vec4 o0;
+#endif
+#ifdef SPLIT2
+uniform highp usampler2D uP0, uP1, uP2, uP3;
 #endif
 #ifdef PROBE
 #define PR(x) x
 #else
 #define PR(x)
+#endif
+#ifdef SPLIT1
+#define S1(x) x
+#else
+#define S1(x)
 #endif
 
 vec4 F(int i) { return texelFetch(uD, ivec2(i & TWM, i >> LOG), 0); }
@@ -106,6 +129,9 @@ int pmod(int k, int n) { int r = k - n * int(floor(float(k) / float(n))); if (r 
 // and winner outputs, never ink or coverage: the app's program, without PROBE, does not carry them)
 IQ int pc[MAXP]; float ps[MAXP]; float pd[MAXP]; float pfx[MAXP]; float pfy[MAXP]; IQ int plo[MAXP]; IQ int phi[MAXP];
 float pkey[MAXP]; IQ int pg[MAXP]; FQ float pramp[MAXP];
+#ifdef SPLIT1
+IQ int pkq[MAXP]; // K1362 s7: the nearest segment's index as the scan unwrapped it (plo <= pkq <= phi): pass 2 rebuilds pd, pfx, pfy from it
+#endif
 #ifdef PROBE
 float ptx[MAXP]; float pty[MAXP]; bool pend[MAXP];
 #endif
@@ -341,7 +367,44 @@ void main() {
   float oInk = 0.0; float oCov = 0.0; int oCh = -1; float oS = 0.0; int oWk = 0; int oWa = -1; int oWb = 0;
   np = 0; nk = 0; ns = 0; bool ovf = false;
   int gx = int(floor((x - uGrid.x) / uGrid.z)); int gy = int(floor((y - uGrid.y) / uGrid.z));
+#ifdef SPLIT1
+  uint s3x = 0u; uint s3y = 0u; // K1362 s7: pass 1's corners and counts (outside the grid: none)
+  uvec4 e0 = uvec4(0u); uvec4 e1 = uvec4(0u); uvec4 e2 = uvec4(0u);
+#endif
   if (gx >= 0 && gy >= 0 && gx < uGDim.x && gy < uGDim.y) {
+#ifdef SPLIT2
+    // K1362 s7 pass 2 (gf_split.ts): pass 1's pieces, keys and corners, read back; everything pass 1 dropped
+    // (ps, the scan's state) is not needed below, and pd, pfx, pfy, krho, kSec, kIn and thruQ are rebuilt from
+    // their indices by the same lines that made them.
+    ivec2 pix = ivec2(gl_FragCoord.xy);
+    uvec2 S3 = texelFetch(uP3, pix, 0).xy;
+    np = int((S3.y >> 19) & 3u); nk = int((S3.y >> 17) & 3u);
+    int thruK = int(S3.y & 0xffffu) - 1; bool yielded = ((S3.y >> 16) & 1u) != 0u; float thruQ = 0.0;
+    if (thruK >= 0) { vec4 K0 = F(uOK + 6 * thruK); float rx = x - K0.x; float ry = y - K0.y; float d2 = rx * rx + ry * ry; thruQ = sqrt(d2); }
+    int nr = 0; int rIdx0 = 0; int rIdx1 = 0;
+    for (int j = 0; j < np; j++) {
+      uvec4 E = j == 0 ? texelFetch(uP0, pix, 0) : j == 1 ? texelFetch(uP1, pix, 0) : texelFetch(uP2, pix, 0);
+      int c = int(E.x & 0xffffu); pc[j] = c; pg[j] = int(E.x >> 16) - 1;
+      plo[j] = int(E.y & 0xffffu) - 32768; phi[j] = plo[j] + int((E.y >> 16) & 0xffu); int kq = plo[j] + int(E.y >> 24);
+      pkey[j] = uintBitsToFloat(E.z); pramp[j] = uintBitsToFloat(E.w);
+      vec4 C0 = F(uOCh + 3 * c); int cV0 = int(C0.x); int nseg = int(C0.y) - 1; bool closed = C0.z > 0.5;
+      int v = cV0 + (closed ? pmod(kq, nseg) : kq);
+      vec4 A = F(uOV + v); vec4 B = F(uOV + v + 1);
+      float ax = A.x; float ay = A.y; float dx = B.x - ax; float dy = B.y - ay;
+      float l2 = dx * dx + dy * dy; float u = l2 > 0.0 ? clamp(((x - ax) * dx + (y - ay) * dy) / l2, 0.0, 1.0) : 0.0;
+      float fx = ax + dx * u; float fy = ay + dy * u; float ex = x - fx; float ey = y - fy; float d2 = ex * ex + ey * ey;
+      pd[j] = sqrt(d2); pfx[j] = fx; pfy[j] = fy;
+      if (pg[j] >= 0 && pramp[j] > 0.0 && pramp[j] < 1.0) { if (nr == 0) rIdx0 = j; else rIdx1 = j; nr++; }
+    }
+    if (nk > 0) kk[0] = int(S3.x & 0xffffu);
+    if (nk > 1) kk[1] = int(S3.x >> 16);
+    for (int i = 0; i < nk; i++) {
+      int k = kk[i]; vec4 K0 = F(uOK + 6 * k);
+      float rx = x - K0.x; float ry = y - K0.y; float rho = sqrt(rx * rx + ry * ry);
+      bool sec = inSector(k, p); bool inR = rho <= K0.w && sec;
+      kSec[i] = sec; krho[i] = rho; kIn[i] = !inR ? 0 : rho > K0.z - aa ? 2 : 1;
+    }
+#else
     int cell = gy * uGDim.x + gx; float rc = uRc; float rc2 = rc * rc;
     vec4 CE = F(uOCell + cell);
     int c0 = int(CE.x); int cn = int(CE.y);
@@ -374,7 +437,7 @@ void main() {
           int q2 = k;
           if (closed) { int ref = plo[j]; float hn = float(nseg) / 2.0; while (float(q2 - ref) > hn) q2 -= nseg; while (float(ref - q2) > hn) q2 += nseg; }
           if (q2 < plo[j]) plo[j] = q2; if (q2 > phi[j]) phi[j] = q2;
-          if (d < pd[j]) { pd[j] = d; ps[j] = s; pfx[j] = fx; pfy[j] = fy; PR(ptx[j] = dx; pty[j] = dy; pend[j] = isEnd;) }
+          if (d < pd[j]) { pd[j] = d; ps[j] = s; pfx[j] = fx; pfy[j] = fy; PR(ptx[j] = dx; pty[j] = dy; pend[j] = isEnd;) S1(pkq[j] = q2;) }
           continue;
         }
         if (np < MAXP) j = np++;
@@ -383,7 +446,7 @@ void main() {
 #else
         else { int far = 0; for (int m = 1; m < MAXP; m++) if (pd[m] > pd[far]) far = m; if (pd[far] <= d) continue; j = far; }
 #endif
-        pc[j] = c; pd[j] = d; ps[j] = s; pfx[j] = fx; pfy[j] = fy; plo[j] = k; phi[j] = k; PR(ptx[j] = dx; pty[j] = dy; pend[j] = isEnd;)
+        pc[j] = c; pd[j] = d; ps[j] = s; pfx[j] = fx; pfy[j] = fy; plo[j] = k; phi[j] = k; PR(ptx[j] = dx; pty[j] = dy; pend[j] = isEnd;) S1(pkq[j] = k;)
       }
     }
 #ifdef TIER
@@ -443,6 +506,25 @@ void main() {
 #ifdef TIER
     if (ovf) { discard; return; } // never past the arrays: D3D runs on past a discard
 #endif
+#endif
+#ifdef SPLIT1
+    // K1362 s7 pass 1: pack the pieces and corners for pass 2. A value that does not fit its field discards, so
+    // the stencil stays 0 and the full program draws the pixel (exact by construction, like the tier's overflow).
+    bool bad = thruK + 1 >= 65536;
+    for (int j = 0; j < np; j++) {
+      int span = phi[j] - plo[j]; int ko = pkq[j] - plo[j];
+      if (pc[j] >= 65535 || pg[j] + 1 >= 65536 || plo[j] < -32768 || plo[j] >= 32768 || span >= 256 || ko < 0 || ko >= 256) bad = true;
+    }
+    for (int i = 0; i < nk; i++) if (kk[i] >= 65535) bad = true;
+    if (bad) { discard; return; }
+    for (int j = 0; j < np; j++) {
+      uvec4 E = uvec4(uint(pc[j]) | (uint(pg[j] + 1) << 16), uint(plo[j] + 32768) | (uint(phi[j] - plo[j]) << 16) | (uint(pkq[j] - plo[j]) << 24),
+        floatBitsToUint(pkey[j]), floatBitsToUint(pramp[j]));
+      if (j == 0) e0 = E; else if (j == 1) e1 = E; else e2 = E;
+    }
+    s3x = nk > 0 ? uint(kk[0]) | (nk > 1 ? uint(kk[1]) << 16 : 0u) : 0u;
+    s3y = uint(thruK + 1) | (yielded ? 1u << 16 : 0u) | (uint(nk) << 17) | (uint(np) << 19);
+#else
     // configurations over the ramping pieces
     if (nr == 2 && pramp[rIdx0] < pramp[rIdx1]) { int t = rIdx0; rIdx0 = rIdx1; rIdx1 = t; }
     float ink = 0.0; float cov = 0.0; int lab = -1; PR(float labSv = 0.0; int wk = 0; int wa = -1; int wb = 0;) float bestW = -1.0;
@@ -470,11 +552,14 @@ void main() {
       else if (lab == own) ink = min(ink, outv);
     }
     oInk = min(1.0, ink); oCov = min(1.0, cov); PR(oCh = lab; oS = labSv; oWk = wk; oWa = wa; oWb = wb;)
+#endif
   }
 #ifdef PROBE
   o0 = vec4(oInk, oCov, float(oCh), oS);
   o1 = vec4(float(oWk), float(oWa), float(oWb), float(nSeg));
   o2 = vec4(float(nK), float(np), float(ns), 0.0);
+#elif defined(SPLIT1)
+  o0 = e0; o1 = e1; o2 = e2; o3 = uvec2(s3x, s3y);
 #else
   o0 = vec4(oInk, oCov, 0.0, 1.0);
 #endif

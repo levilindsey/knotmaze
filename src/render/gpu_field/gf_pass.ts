@@ -9,6 +9,7 @@
 import { GF_VS, gfFs, type GfTier } from "./gf_glsl";
 import { GF_TW, packTables, type GfPacked } from "./gf_pack";
 import { buildKeys } from "./gf_keys";
+import { GfPieces } from "./gf_split";
 import type { GfTables } from "./tables";
 
 export type GfMap = [number, number, number, number];
@@ -76,6 +77,8 @@ export class GfTarget {
     const st = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
     if (st !== gl.FRAMEBUFFER_COMPLETE) throw new Error(`gf target incomplete (${st})`);
   }
+  /** K1362 s7: the depth-stencil (after ensureStencil), shared with the split's pieces (gf_split.ts). */
+  get depthStencil(): WebGLRenderbuffer | null { return this.ds; }
   /** Attach a depth-stencil renderbuffer (once); the framebuffer must be bound. */
   ensureStencil(): void {
     if (this.ds) return;
@@ -115,8 +118,8 @@ export class GfTarget {
  * so its stencil test runs late), so one tier is the default.
  */
 export const GF_TIERS: GfTier[] = [{ p: 3, k: 2, ramps: true }];
-const UNIFORMS = ["uD", "uOCh", "uOV", "uOPin", "uOArm", "uOK", "uOChk", "uOCell", "uOChL", "uOKL", "uOKC", "uOKB", "uOKA", "uH", "uW", "uAA", "uSigma", "uZt", "uWin", "uRc", "uGrid", "uGDim", "uMap"];
-interface GfProg { prog: WebGLProgram; u: Map<string, WebGLUniformLocation | null>; tier: GfTier | null }
+const UNIFORMS = ["uD", "uOCh", "uOV", "uOPin", "uOArm", "uOK", "uOChk", "uOCell", "uOChL", "uOKL", "uOKC", "uOKB", "uOKA", "uH", "uW", "uAA", "uSigma", "uZt", "uWin", "uRc", "uGrid", "uGDim", "uMap", "uP0", "uP1", "uP2", "uP3"];
+interface GfProg { prog: WebGLProgram; u: Map<string, WebGLUniformLocation | null>; tier: GfTier | null; split?: 1 | 2 }
 
 export class GfPass {
   readonly gl: WebGL2RenderingContext;
@@ -137,15 +140,25 @@ export class GfPass {
   uploadMs = 0;
 
   readonly probe: boolean;
-  /** tiers: GF_TIERS by default; [] draws the full program alone (stage 2's pass). fs: a program's source override (benches). */
-  constructor(gl: WebGL2RenderingContext, probe: boolean, tiers: GfTier[] = GF_TIERS, fs?: (tier: GfTier | null) => string) {
+  /** K1362 s7: the split's pieces (gf_split.ts), when the one tier runs as two passes. */
+  private pieces: GfPieces | null = null;
+  /**
+   * tiers: GF_TIERS by default; [] draws the full program alone (stage 2's pass). fs: a program's source override
+   * (benches; split programs get their pass as the second argument). split (K1362 s7): the one tier as two passes.
+   */
+  constructor(gl: WebGL2RenderingContext, probe: boolean, tiers: GfTier[] = GF_TIERS, fs?: (tier: GfTier | null, split?: 1 | 2) => string, split = false) {
     this.gl = gl; this.probe = probe;
-    this.progs = [...tiers, null].map((tier) => {
-      const prog = compileProgram(gl, GF_VS, fs ? fs(tier) : gfFs(probe, true, tier ?? undefined));
+    if (split && (probe || tiers.length !== 1)) throw new Error("GfPass: split needs one tier and no probe");
+    const plan: { tier: GfTier | null; split?: 1 | 2 }[] = split ? [{ tier: tiers[0], split: 1 }, { tier: tiers[0], split: 2 }, { tier: null }]
+      : [...tiers, null].map((tier) => ({ tier }));
+    this.progs = plan.map(({ tier, split: s }) => {
+      const src = fs ? fs(tier, s) : gfFs(probe, true, tier ?? undefined, s ? { reg: tier?.reg, unroll: tier?.unroll, pack: tier?.pack, split: s } : undefined);
+      const prog = compileProgram(gl, GF_VS, src);
       const u = new Map<string, WebGLUniformLocation | null>();
       for (const n of UNIFORMS) u.set(n, gl.getUniformLocation(prog, n));
-      return { prog, u, tier };
+      return { prog, u, tier, split: s };
     });
+    if (split) this.pieces = new GfPieces(gl);
     this.vao = gl.createVertexArray()!;
     this.tex = gl.createTexture()!;
     this.ext = gl.getExtension("EXT_disjoint_timer_query_webgl2") as TimerExt | null;
@@ -208,12 +221,20 @@ export class GfPass {
     const halfOk = Math.max(T.nV, T.nK, T.nA, T.nCh) < 32000;
     const progs = this.progs.filter((g) => !g.tier || !g.tier.half || halfOk);
     const routed = progs.length > 1;
+    const pieces = this.pieces;
     if (routed) target.ensureStencil();
     if (target.float) for (let i = 0; i < target.n; i++) gl.clearBufferfv(gl.COLOR, i, [0, 0, 0, 0]);
     else { gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT); }
-    if (routed) { gl.stencilMask(0xff); gl.clearBufferfi(gl.DEPTH_STENCIL, 0, 1, 0); }
+    if (routed && !pieces) { gl.stencilMask(0xff); gl.clearBufferfi(gl.DEPTH_STENCIL, 0, 1, 0); }
     const [x0, y0, x1, y1] = rect;
     if (x1 <= x0 || y1 <= y0) return;
+    if (pieces) {
+      // K1362 s7: pass 1 draws into the pieces (over the target's depth-stencil): their old contents are never read
+      // (pass 2 reads only the pixels pass 1 just wrote), so a tile-based GPU need not load them
+      pieces.bind(target.w, target.h, target.depthStencil!);
+      gl.invalidateFramebuffer(gl.FRAMEBUFFER, [0, 1, 2, 3].map((i) => gl.COLOR_ATTACHMENT0 + i));
+      gl.stencilMask(0xff); gl.clearBufferfi(gl.DEPTH_STENCIL, 0, 1, 0);
+    }
     gl.enable(gl.SCISSOR_TEST);
     gl.scissor(x0, y0, x1 - x0, y1 - y0);
     if (routed) {
@@ -231,10 +252,21 @@ export class GfPass {
     for (let pi = 0; pi < progs.length; pi++) {
       const g = progs[pi];
       // the last program writes no route: KEEP lets the stencil test run before the shader even though it discards
-      if (routed && pi === progs.length - 1) gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
+      if (routed && pi === progs.length - 1) { gl.stencilFunc(gl.EQUAL, 0, 0xff); gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP); }
+      if (g.split === 1) {
+        // pass 1 keeps a pixel (stencil 1) unless it discards; it runs on every pixel of the rect
+        gl.stencilFunc(gl.ALWAYS, 1, 0xff); gl.stencilOp(gl.KEEP, gl.KEEP, gl.REPLACE);
+      } else if (g.split === 2) {
+        // pass 2 draws exactly pass 1's pixels into the target, reading their pieces
+        gl.bindFramebuffer(gl.FRAMEBUFFER, target.fbo);
+        gl.stencilFunc(gl.EQUAL, 1, 0xff); gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
+        for (let i = 0; i < 4; i++) { gl.activeTexture(gl.TEXTURE1 + i); gl.bindTexture(gl.TEXTURE_2D, pieces!.tex[i]); }
+        gl.activeTexture(gl.TEXTURE0);
+      }
       gl.useProgram(g.prog);
       const u = (n: string): WebGLUniformLocation | null => g.u.get(n) ?? null;
       gl.uniform1i(u("uD"), 0);
+      if (g.split === 2) for (let i = 0; i < 4; i++) gl.uniform1i(u(`uP${i}`), 1 + i);
       const o = P.o;
       gl.uniform1i(u("uOCh"), o.ch); gl.uniform1i(u("uOV"), o.v); gl.uniform1i(u("uOPin"), o.pin); gl.uniform1i(u("uOArm"), o.arm);
       gl.uniform1i(u("uOK"), o.k); gl.uniform1i(u("uOChk"), o.chk); gl.uniform1i(u("uOCell"), o.cell); gl.uniform1i(u("uOChL"), o.chl); gl.uniform1i(u("uOKL"), o.kl);
@@ -250,6 +282,10 @@ export class GfPass {
       gl.disable(gl.STENCIL_TEST);
       // the route is per pass: a tile-based GPU need not store it
       gl.invalidateFramebuffer(gl.FRAMEBUFFER, [gl.DEPTH_STENCIL_ATTACHMENT]);
+    }
+    if (pieces) {
+      for (let i = 0; i < 4; i++) { gl.activeTexture(gl.TEXTURE1 + i); gl.bindTexture(gl.TEXTURE_2D, null); }
+      gl.activeTexture(gl.TEXTURE0);
     }
     if (ext && q) {
       gl.endQuery(ext.TIME_ELAPSED_EXT);
@@ -286,6 +322,7 @@ export class GfPass {
     for (const { q, e } of this.pending) { gl.deleteQuery(q); gl.deleteQuery(e); }
     this.pending = [];
     for (const g of this.progs) gl.deleteProgram(g.prog);
+    this.pieces?.dispose();
     gl.deleteVertexArray(this.vao);
     gl.deleteTexture(this.tex);
   }
