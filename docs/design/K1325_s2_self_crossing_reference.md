@@ -76,3 +76,31 @@ Under 40 lines:
 - your last SHA.
 
 End with `Ledger items` and K1325's handle fields.
+
+## Handoff (2026-11-12, start 09:00:59, stop 09:46:00; Done holds)
+
+- **The rule** (`.claude/probes/K1314/k1314_census.ts`, `plateauEval`, `selfTie`, the SELF_REF comment): at a
+  flagged self-crossing (overlap reach > window), the reference takes the self plateau's eval (plateauDepth's
+  ±amp over the reach, z change capped at 2 zt) only where (a) the pixel lies inside both of that chain's
+  passes' tubes (max(h, W) + aa around the pass segments within reach + window), (b) plain form B there mixes a
+  tie (F_TIE) or the fill label's runner-up sits within zt, and (c) plain and plateau both show that chain on
+  top (or plain shows no top). Everywhere else plain form B. Ungated (s2a), the z change ran along the chain into
+  five junction fills of other chains (five new stray_ink finds); the tie-only gate mirrors outline's selfBury
+  (K1324 s2): only the self pair's order changes.
+- **Census** (`k1314_run.ps1 -Lock`; `.claude/probes/K1314/out/s1/census_{m1,k1325s2}.*`, compare in
+  `.claude/probes/K1325/out/s2/compare_m1_k1325s2.txt`): m1 stray_ink 9, hard_edge 1, paper 0, broken_ink 12,
+  k1049 0 (22); after 4, 1, 0, 12, 0 (17); owner_only 1241 and tail_look 185 in both. Gone: muse_hash stray_ink
+  x345, j116, x22, x58, x304. New: none. Moved (same match, px changed): none. `npm test` green (2938 passed);
+  no src/ change, so the golden snapshots are untouched.
+- **x304's smear below the Y** is form B's: plain form B and master's reference draw it
+  (`out/s2/x4/x304_belowY.png`, panel 1); rp=outline leaves at most 0.045 ink over the gated reference there,
+  0 px above 0.05 at 1000 px/unit (`k1325_s2_smudge.ts`).
+- **Crops** (reference before | after | rp=outline, `--px=480 --w=2.5`): `.claude/probes/K1325/out/s2/x4/`
+  {x304,x22,x345,j116,x58}.png, x304_belowY.png, j116_notch.png.
+- **Left / outline notes (not counted):** a dark wedge crease in rp=outline at j116's lower junction,
+  about (25.88-25.92, 14.21-14.35), where the reference is smooth (j116_notch.png; the census books it only as
+  tail_look 60 px at (25.987, 14.299)); faint outline residues below the band at x58 (≤0.046 ink) and x345
+  (≤0.015), none above 0.05. x318 (chain 71 near j50) is also re-ordered by the gate, with no find. All measured
+  on c2d3efbf's outline; master has since taken K1247 s28's outline change (3bf8d612), not re-censused here.
+  The stray fbf cache dir `muse_hash_48f27ddb3bce` (a stopped run, keyed by a pre-edit census file) in the
+  main checkout's `.claude/probes/K1314/out/fbf` can be pruned.
