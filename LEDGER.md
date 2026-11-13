@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1337.
+Next free ID: K1338.
 
 ## Waiting on Levi
 
@@ -1915,6 +1915,9 @@ Every other item below waits on the trigger it names.
   neither master nor K1247 s26 draws it (s26 handoff)
 - **K1336** · band_gpu.ts alphaCpu lacks K1324 s2's self-pass burial term (draw.ts selfBury, BAND_FS zAtS), so
   that CPU mirror disagrees with the GPU at self-crossings like muse_hash x22 (943ae592)
+- **K1337** · K1247 s27's fan rule and FLOOR_EDGE made 7 and 25 junctions slightly worse against the reference
+  (muse_hash 1390, +47 cells; `.claude/probes/K1247/k1247s27_jmis.ts`), none visible; a faint seam inside c8's
+  under-pass (in master too)
 
 ## Approved, to schedule (2026-10-11)
 
