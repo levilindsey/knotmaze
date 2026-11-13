@@ -763,23 +763,51 @@ export function paintFrame(pd: PaintData, fr: FillFrame, sp?: SectionPaint, n?: 
 /** The border ink's band of one frame (form B's tie alpha per vertex). The
  *  app rebuilds it every frame: its vertex count follows the pieces. */
 export interface BandData { bandPos: Float32Array; bandCol: Float32Array; bandAlpha: Float32Array; bandCount: number }
+/** K1324 s2 (K1331): the self-pass burial rule. A pass of a chain against
+ *  ITSELF that a self-crossing made (its two anchors' depths differ by over
+ *  the depth amplitude: one pin +amp, the other -amp) keeps the crossing's
+ *  order where the two passes' depths tie: at a shallow self-crossing the
+ *  tubes overlap far past the depth window (muse_hash x22: 0.8 from the
+ *  crossing, window 0.66), both depths are back to 0 there, and form B's
+ *  sstep(-zt, zt, keyO - keyC) sat mid-ramp, so the under pass's ghost
+ *  half faded in and the over pass's border half faded out (a smear). The
+ *  key gap gains sign(D) 2 zt lam, D = z(partner anchor) - z(own anchor),
+ *  lam = 1 - min(1, |zO - zC| / 2zt): 0 wherever the depths already decide
+ *  (near the crossing they agree with D, so it never flips one), 1 at a
+ *  full tie, where the gap then decides by D; continuous throughout. The
+ *  GLSL twin is in outline_app.ts BAND_FS (selfBury; own chain = partner
+ *  chain, so the pass table's partner samples serve both anchors);
+ *  test/render/self_bury.test.ts ties them. */
+export const buryOpts = { on: true };
+/** sign(D) 2 zt lam of the burial rule, or 0 (zCs own depth at s, zOf the partner's at the foot). */
+export function selfBury(dAnchor: number, zCs: number, zOf: number, zt: number): number {
+  if (!buryOpts.on || !(Math.abs(dAnchor) > 10 * zt)) return 0;
+  const lam = 1 - Math.min(1, Math.abs(zOf - zCs) / (2 * zt));
+  return lam > 0 ? Math.sign(dAnchor) * 2 * zt * lam : 0;
+}
 /** The tie alpha of a band point of chain c at (x, y), own foot s, own
  *  distance dC (bandData's, taken out of it as is for band_gpu's twin test). */
 export function tieAlpha(zz: ReturnType<typeof zChains>, h: number, W: number, zt: number): (c: number, x: number, y: number, s: number, dC: number) => number {
   const { zc, passes } = zz;
   const seen: { o: number; s: number; d: number; f: number }[] = [];
+  // K1324 s2: each self-pass's anchor order D (burial rule above), once per frame.
+  const anchorD = new Map<Pass, number>();
+  passes.forEach((ps, c) => { for (const P of ps) if (P.o === c) anchorD.set(P, zAtC(zc[c], P.so) - zAtC(zc[c], P.s)); });
   return (c: number, x: number, y: number, s: number, dC: number): number => {
     seen.length = 0;
     const C = zc[c];
-    const keyC = zAtC(C, s) - (dC * zt) / h;
+    const zCs = zAtC(C, s);
+    const keyC = zCs - (dC * zt) / h;
     for (const P of passes[c]) {
       const ds = dSC(C, P.s, s); if (ds < -P.lo || ds > P.hi) continue;
       const O = zc[P.o];
       const f = footNear(O, x, y, P.so, P.rO, s, P.o === c ? 3 * h : 0);
       if (!(f.d < h)) continue;
       const g = Math.min(1, Math.max(0, (h - f.d) / W));
-      const keyO = zAtC(O, f.s) - (f.d * zt) / h;
-      const e = { o: P.o, s: f.s, d: f.d, f: 1 - g * sstep(-zt, zt, keyO - keyC) };
+      const zOf = zAtC(O, f.s);
+      const keyO = zOf - (f.d * zt) / h;
+      const bury = P.o === c ? selfBury(anchorD.get(P) ?? 0, zCs, zOf, zt) : 0;
+      const e = { o: P.o, s: f.s, d: f.d, f: 1 - g * sstep(-zt, zt, keyO - keyC + bury) };
       // Two passes can reach the same stretch of the partner (neighbouring
       // crossings of one pair): it counts once, by its strongest fade (a pass
       // whose window stops short of the true foot finds a farther, weaker
