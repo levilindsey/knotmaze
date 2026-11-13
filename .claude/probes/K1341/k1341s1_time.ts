@@ -36,9 +36,10 @@ for (const nm of dl.split(",")) {
   const buf = {};
   if (mode === "zf") {
     const pre = scenes.slice(1).map((s) => { const sc = alignJunctionArms(m.st, s); OB_DI.on = true; return { sc, table: frame(m.st, sc) }; });
-    const t0 = performance.now();
+    const t0 = performance.now(); const c0 = process.cpuUsage();
     for (let r = 0; r < R; r++) for (const { sc, table } of pre) fillFrame(m.fs, m.st, table, sc, zChains(sc), buf);
-    console.log(`${nm} zf ${R} passes ${(performance.now() - t0).toFixed(0)} ms`);
+    const cu = process.cpuUsage(c0);
+    console.log(`${nm} zf ${R} passes ${(performance.now() - t0).toFixed(0)} ms (cpu ${((cu.user + cu.system) / 1000).toFixed(0)})`);
     continue;
   }
   const P: Record<string, number[]> = { frame: [], zChains: [], fill: [], paint: [], band: [], gcZ: [], gcF: [] };

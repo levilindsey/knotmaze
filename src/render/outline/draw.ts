@@ -166,10 +166,11 @@ export function sstep(e0: number, e1: number, x: number): number {
 }
 
 /** form B's diagramDepth (src/render/field/depth.ts), mirrored. */
+// K1341 s1 (perf): hat at module level (a closure made per depthAt call was 100 MB over 2 def passes).
+const hat = (z: number, d: number, w: number): number => (w <= 1e-12 ? (d <= 0 ? z : 0) : d >= w ? 0 : z * (1 - d / w));
 function depthAt(pins: { s: number; z: number }[], closed: boolean, len: number, win: number, s: number): number {
   const n = pins.length;
   if (n === 0) return 0;
-  const hat = (z: number, d: number, w: number): number => (w <= 1e-12 ? (d <= 0 ? z : 0) : d >= w ? 0 : z * (1 - d / w));
   let u = s;
   if (closed && len > 0) { u = s % len; if (u < 0) u += len; }
   let lo = -1; let hi = n;
@@ -210,19 +211,24 @@ export function zChains(scene: SceneIn): { zc: ZChain[]; passes: Pass[][]; idx: 
     const j = c.closed ? (k + 1) % c.n : Math.min(k + 1, c.n - 1);
     const dx = c.xs[j] - c.xs[k]; const dy = c.ys[j] - c.ys[k]; const l = Math.hypot(dx, dy) || 1; return [dx / l, dy / l];
   };
-  const posAt = (c: ZChain, s: number): [number, number] => {
+  // K1341 s1 (perf): the point into PQ, allocation-free for walk (its per-step [x, y] arrays, walk's
+  // { u, root } and span's pairs were about 230 MB over 2 def passes); posAt copies it out.
+  const PQ = new Float64Array(2);
+  const posQ = (c: ZChain, s: number): void => {
     const m = c.n - 1;
     const u = c.closed && c.len > 0 ? norm(c, s) : Math.min(Math.max(s, 0), c.s[m]);
     if (u >= c.s[m]) {
-      if (!c.closed) return [c.xs[m], c.ys[m]];
+      if (!c.closed) { PQ[0] = c.xs[m]; PQ[1] = c.ys[m]; return; }
       const l = c.len - c.s[m]; const t = l > 0 ? (u - c.s[m]) / l : 0;
-      return [c.xs[m] + (c.xs[0] - c.xs[m]) * t, c.ys[m] + (c.ys[0] - c.ys[m]) * t];
+      PQ[0] = c.xs[m] + (c.xs[0] - c.xs[m]) * t; PQ[1] = c.ys[m] + (c.ys[0] - c.ys[m]) * t;
+      return;
     }
     let lo = 0; let hi = m;
     while (hi - lo > 1) { const k = (lo + hi) >> 1; if (c.s[k] <= u) lo = k; else hi = k; }
     const l = c.s[lo + 1] - c.s[lo]; const t = l > 0 ? (u - c.s[lo]) / l : 0;
-    return [c.xs[lo] + (c.xs[lo + 1] - c.xs[lo]) * t, c.ys[lo] + (c.ys[lo + 1] - c.ys[lo]) * t];
+    PQ[0] = c.xs[lo] + (c.xs[lo + 1] - c.xs[lo]) * t; PQ[1] = c.ys[lo] + (c.ys[lo + 1] - c.ys[lo]) * t;
   };
+  const posAt = (c: ZChain, s: number): [number, number] => { posQ(c, s); return [PQ[0], PQ[1]]; };
   // Junction roots per chain: a through arm's s, an end arm's chain end.
   const roots: number[][] = scene.chains.map(() => []);
   for (const j of scene.junctions) for (const arm of j.arms) {
@@ -236,24 +242,28 @@ export function zChains(scene: SceneIn): { zc: ZChain[]; passes: Pass[][]; idx: 
     return false;
   };
   /** Walk chain ia from sa in direction dir while chain ib (tracked from sb) stays within 2.2h. */
-  const walk = (ia: number, sa: number, ib: number, sb: number, dir: number): { u: number; root: boolean } => {
+  // Returns root; u goes to WU[0].
+  const WU = new Float64Array(1);
+  const walk = (ia: number, sa: number, ib: number, sb: number, dir: number): boolean => {
     const C = zc[ia]; const O = zc[ib]; const step = h / 4;
     let u = 0; let so = sb; let sPrev = sa;
     while (u < 64 * h) {
       const un = u + step; const s = sa + dir * un;
       if (!C.closed && (s < 0 || s > C.len)) break;
-      const [x, y] = posAt(C, s);
+      posQ(C, s);
       // K1283 s10 (perf): footNear's foot, allocation-free (zChains ran 11 ms a frame on def).
-      nearW(O, x, y, so, 2 * h, s, ib === ia ? 3 * h : 0);
-      if (!(nwBest < 2.2 * h)) break;
-      if (rootBetween(ia, sPrev, s) || rootBetween(ib, so, nwBs)) return { u: un, root: true };
-      u = un; so = nwBs; sPrev = s;
+      nearW(O, PQ[0], PQ[1], so, 2 * h, s, ib === ia ? 3 * h : 0);
+      if (!(NW[0] < 2.2 * h)) break;
+      if (rootBetween(ia, sPrev, s) || rootBetween(ib, so, NW[2])) { WU[0] = un; return true; }
+      u = un; so = NW[2]; sPrev = s;
     }
-    return { u, root: false };
+    WU[0] = u; return false;
   };
-  const span = (ia: number, sa: number, ib: number, sb: number, base: number): [number, number] => {
-    const f = walk(ia, sa, ib, sb, 1); const b = walk(ia, sa, ib, sb, -1);
-    return [b.root ? base : Math.max(base, b.u + h), f.root ? base : Math.max(base, f.u + h)];
+  // [lo, hi] into SPQ[o], SPQ[o + 1].
+  const SPQ = new Float64Array(4);
+  const span = (ia: number, sa: number, ib: number, sb: number, base: number, o: number): void => {
+    const fRoot = walk(ia, sa, ib, sb, 1); const fU = WU[0]; const bRoot = walk(ia, sa, ib, sb, -1); const bU = WU[0];
+    SPQ[o] = bRoot ? base : Math.max(base, bU + h); SPQ[o + 1] = fRoot ? base : Math.max(base, fU + h);
   };
   for (const x of scene.crossings) {
     const ia = idx.get(x.a.chain); const ib = idx.get(x.b.chain);
@@ -265,8 +275,8 @@ export function zChains(scene: SceneIn): { zc: ZChain[]; passes: Pass[][]; idx: 
     const sin = Math.abs(ta[0] * tb[1] - ta[1] * tb[0]);
     // How far along each pass the other's tube can reach on straight threads: 2h / sin, plus h.
     const base = Math.min(2 * h / Math.max(sin, 0.05) + h, 48 * h);
-    const [loA, hiA] = span(ia, sa, ib, sb, base);
-    const [loB, hiB] = span(ib, sb, ia, sa, base);
+    span(ia, sa, ib, sb, base, 0); span(ib, sb, ia, sa, base, 2);
+    const loA = SPQ[0]; const hiA = SPQ[1]; const loB = SPQ[2]; const hiB = SPQ[3];
     passes[ia].push({ s: sa, o: ib, so: sb, lo: loA, hi: hiA, rO: Math.max(loB, hiB) });
     passes[ib].push({ s: sb, o: ia, so: sa, lo: loB, hi: hiB, rO: Math.max(loA, hiA) });
   }
@@ -581,13 +591,17 @@ export function zAtC(c: ZChain, s: number): number {
   return c.z[lo] + (c.z[lo + 1] - c.z[lo]) * t;
 }
 
-/** K1283 s10 (perf): footNear(c, x, y, sC, r, sSkip, skipR) into nwBest (d)
- *  and nwBs (s), allocation-free, the same foot bit for bit: a segment whose
+/** K1283 s10 (perf): footNear(c, x, y, sC, r, sSkip, skipR) into NW[0] (d)
+ *  and NW[2] (s), allocation-free, the same foot bit for bit: a segment whose
  *  squared distance is past the best's square (with a 1e-12 margin over
  *  hypot's rounding) cannot win footNear's hypot comparison, so only the
  *  rest pay for Math.hypot. zChains' pass walks call it about 100k times a
  *  frame on def. */
-let nwBest = Infinity; let nwBest2 = Infinity; let nwBs = 0;
+// K1341 s1 (perf): the scan's state in one Float64Array, not module lets: a double stored to a
+// top-level let is boxed in a fresh HeapNumber on every write (about 100k winners a frame on def).
+// [0] best d, [1] best d^2, [2] best s, [3] px, [4] py, [5] the best's hypot (NaN: not taken yet),
+// [6] an upper bound on it (K1247 s28: [3]-[6]), [7] nearRange's bound (below).
+const NW = new Float64Array([Infinity, Infinity, 0, 0, 0, NaN, Infinity, Infinity]);
 function nearVisit(c: ZChain, x: number, y: number, sC: number, r: number, sSkip: number, skipR: number, k: number): void {
   const j = k + 1 === c.n ? 0 : k + 1; const sk = c.s[k]; const lk = j === 0 ? c.len - sk : c.s[j] - sk;
   const mid = sk + lk / 2;
@@ -609,29 +623,26 @@ function nearVisit(c: ZChain, x: number, y: number, sC: number, r: number, sSkip
   // their hypots do; inside it both hypots decide (strictly smaller wins), as footNear's scan.
   // nearW takes the winner's hypot once (nwBest), and nwUb >= it bounds nearRange's skip.
   const d2 = px * px + py * py;
-  if (d2 > nwBest2 * (1 + 1e-12)) return;
-  if (!(d2 < nwBest2 * (1 - 1e-12))) {
-    if (nwD !== nwD) nwD = Math.hypot(nwPx, nwPy);
+  if (d2 > NW[1] * (1 + 1e-12)) return;
+  if (!(d2 < NW[1] * (1 - 1e-12))) {
+    if (NW[5] !== NW[5]) NW[5] = Math.hypot(NW[3], NW[4]);
     const d = Math.hypot(px, py);
-    if (!(d < nwD)) return;
-    nwBest2 = d2; nwPx = px; nwPy = py; nwD = d; nwUb = Math.sqrt(d2) * (1 + 1e-12); nwBs = sk + t * lk;
+    if (!(d < NW[5])) return;
+    NW[1] = d2; NW[3] = px; NW[4] = py; NW[5] = d; NW[6] = Math.sqrt(d2) * (1 + 1e-12); NW[2] = sk + t * lk;
     return;
   }
-  nwBest2 = d2; nwPx = px; nwPy = py; nwD = NaN; nwUb = Math.sqrt(d2) * (1 + 1e-12); nwBs = sk + t * lk;
+  NW[1] = d2; NW[3] = px; NW[4] = py; NW[5] = NaN; NW[6] = Math.sqrt(d2) * (1 + 1e-12); NW[2] = sk + t * lk;
 }
-/** K1247 s28: the best so far's offset, its hypot (NaN: not taken yet) and an upper bound on it. */
-let nwPx = 0; let nwPy = 0; let nwD = NaN; let nwUb = Infinity;
-// An upper bound on the foot's distance (a segment footNear accepts): segments
+// NW[7], an upper bound on the foot's distance (a segment footNear accepts): segments
 // whose every point is farther, by the distance's 1-Lipschitz bound in arc
 // length from a vertex, are skipped. They cannot be the first minimum
 // footNear's index-order scan keeps, so the scan of the rest keeps it.
-let nwBound = Infinity;
 function nearRange(c: ZChain, x: number, y: number, sC: number, r: number, sSkip: number, skipR: number, a: number, b: number): void {
   const segs = c.closed ? c.n : c.n - 1; const ss = c.s; const xs = c.xs; const ys = c.ys;
   let k = 0;
   if (ss[0] <= a) { let lo = 0; let hi = segs - 1; while (hi > lo) { const m = (lo + hi + 1) >> 1; if (ss[m] <= a) lo = m; else hi = m - 1; } k = lo; }
   while (k < segs && ss[k] <= b) {
-    const bd = nwUb < nwBound ? nwUb : nwBound;
+    const bd = NW[6] < NW[7] ? NW[6] : NW[7];
     if (bd < Infinity) {
       const dx = x - xs[k]; const dy = y - ys[k];
       // K1341 s1 (perf): the square root only when it can give a positive reach. D <= B^2 (1 - 1e-9)
@@ -651,10 +662,10 @@ function nearRange(c: ZChain, x: number, y: number, sC: number, r: number, sSkip
 }
 function nearW(c: ZChain, x: number, y: number, sC: number, r: number, sSkip: number, skipR: number): void {
   nearScan(c, x, y, sC, r, sSkip, skipR);
-  nwBest = nwBest2 < Infinity ? (nwD === nwD ? nwD : Math.hypot(nwPx, nwPy)) : Infinity;
+  NW[0] = NW[1] < Infinity ? (NW[5] === NW[5] ? NW[5] : Math.hypot(NW[3], NW[4])) : Infinity;
 }
 function nearScan(c: ZChain, x: number, y: number, sC: number, r: number, sSkip: number, skipR: number): void {
-  nwBest = Infinity; nwBest2 = Infinity; nwBs = 0; nwBound = Infinity; nwD = NaN; nwUb = Infinity;
+  NW[0] = Infinity; NW[1] = Infinity; NW[2] = 0; NW[7] = Infinity; NW[5] = NaN; NW[6] = Infinity;
   const segs = c.closed ? c.n : c.n - 1;
   if (segs <= 0) return;
   // The bound: footNear's own test of the segment at sC (it accepts it unless a self pass skips it).
@@ -663,7 +674,7 @@ function nearScan(c: ZChain, x: number, y: number, sC: number, r: number, sSkip:
     let k0 = 0;
     if (ss[0] <= u) { let lo = 0; let hi = segs - 1; while (hi > lo) { const m = (lo + hi + 1) >> 1; if (ss[m] <= u) lo = m; else hi = m - 1; } k0 = lo; }
     nearVisit(c, x, y, sC, r, sSkip, skipR, k0);
-    nwBound = nwUb; nwBest = Infinity; nwBest2 = Infinity; nwBs = 0; nwD = NaN; nwUb = Infinity;
+    NW[7] = NW[6]; NW[0] = Infinity; NW[1] = Infinity; NW[2] = 0; NW[5] = NaN; NW[6] = Infinity;
   }
   if (c.closed && c.len > 0) {
     if (2 * r >= c.len) { for (let k = 0; k < segs; k++) nearVisit(c, x, y, sC, r, sSkip, skipR, k); }

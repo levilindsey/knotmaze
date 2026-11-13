@@ -486,21 +486,25 @@ export function recSideOk(c: FrameChain, T: RecTables, ci: number, sA: number, d
  *  length, B = N - F the straight columns); the straight parts take the columns between, evenly in s; a
  *  later fan wins a shared column. Every polygon vertex of the border (outline.ts buildBorder) lands on a
  *  column, so no chord between two columns cuts a corner. The shader's recCol is this, line for line. */
+function csAt(c: FrameChain, pf: ArrayLike<number>, o: number, V: number, a32: number, B: number, S32: number, p0: number): number {
+  return colR(c, V, a32, B, S32) + pfU(c, pf, o, V - 1) - p0;
+}
 export function colAt(c: FrameChain, pf: ArrayLike<number>, o: number, sA: number, dS: number, N: number, sgn: number, h: number, i: number, out: Float64Array, oi: number): number {
   const sp = spanOf(c, sA, dS); const a = sp[0]; const sB = sp[1]; const k = sp[2]; const V1 = sp[3]; const V2 = sp[4];
   const p0 = pfU(c, pf, o, V1 - 1); const B = N - (pfU(c, pf, o, V2) - p0);
-  const a32 = sp[6]; const S32 = sp[7]; const cs = (V: number): number => colR(c, V, a32, B, S32) + pfU(c, pf, o, V - 1) - p0;
+  // K1341 s1 (perf): cs(V) is csAt (the closure made per call was 64 MB over 2 def passes).
+  const a32 = sp[6]; const S32 = sp[7];
   // The last interior V with cs(V) <= i (V1 - 1: none).
   let lo = V1 - 1; let hi = V2 + 1;
-  while (hi - lo > 1) { const q = (lo + hi) >> 1; if (cs(q) <= i) lo = q; else hi = q; }
+  while (hi - lo > 1) { const q = (lo + hi) >> 1; if (csAt(c, pf, o, q, a32, B, S32, p0) <= i) lo = q; else hi = q; }
   const V = lo; let s: number; let K: number;
   if (V >= V1) {
-    const st = pfU(c, pf, o, V) - pfU(c, pf, o, V - 1); const c0 = cs(V); const g = i - c0;
+    const st = pfU(c, pf, o, V) - pfU(c, pf, o, V - 1); const c0 = csAt(c, pf, o, V, a32, B, S32, p0); const g = i - c0;
     if (g <= st) { fanPt(c, V % c.n, sgn, h, st, g, out, oi); return sOfV(c, V) + sp[5]; }
-    const ce = c0 + st; const sv = sOfV(c, V); const cn = V < V2 ? cs(V + 1) : N; const sn = V < V2 ? sOfV(c, V + 1) : sB;
+    const ce = c0 + st; const sv = sOfV(c, V); const cn = V < V2 ? csAt(c, pf, o, V + 1, a32, B, S32, p0) : N; const sn = V < V2 ? sOfV(c, V + 1) : sB;
     s = sv + ((sn - sv) * (i - ce)) / (cn - ce); K = V;
   } else {
-    const cn = V2 >= V1 ? cs(V1) : N; const sn = V2 >= V1 ? sOfV(c, V1) : sB;
+    const cn = V2 >= V1 ? csAt(c, pf, o, V1, a32, B, S32, p0) : N; const sn = V2 >= V1 ? sOfV(c, V1) : sB;
     s = a + ((sn - a) * i) / cn; K = k;
   }
   edgePt(c, K, s, sgn, h, out, oi);
