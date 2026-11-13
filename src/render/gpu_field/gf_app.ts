@@ -36,6 +36,7 @@ interface GfReply {
   exportMs?: number;
   tablesMs?: number;
   workMs?: number;
+  pool?: number;
   error?: string;
 }
 const FILL: [number, number, number] = [0.96, 0.93, 0.86];
@@ -68,7 +69,7 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
     // c1: where builds ran, main's share per rebuild (gather + post, then
     // pack + upload; in-thread builds add the export and tables), the
     // worker's whole build and the post-to-arrival latency.
-    worker: "none", workerBuilds: 0, threadBuilds: 0, stale: 0,
+    worker: "none", workerBuilds: 0, threadBuilds: 0, stale: 0, pool: 0,
     gatherMs: [] as number[], mainMs: [] as number[], workMs: [] as number[], latencyMs: [] as number[],
     verified: 0, mismatch: [] as string[], verifyMs: [] as number[],
   };
@@ -86,8 +87,8 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
   let pending: { T: GfTables; main: number } | null = null;
   const refs = new Map<number, GfTables>();
   let force = false;
-  const opts = (): { worker?: boolean; verify?: boolean } =>
-    (globalThis as unknown as { __knotGfOpts?: { worker?: boolean; verify?: boolean } }).__knotGfOpts ?? {};
+  const opts = (): { worker?: boolean; verify?: boolean; pool?: boolean } =>
+    (globalThis as unknown as { __knotGfOpts?: { worker?: boolean; verify?: boolean; pool?: boolean } }).__knotGfOpts ?? {};
   const verifying = (): boolean => !!api.verify || !!opts().verify;
   const wantWorker = (): boolean => typeof Worker !== "undefined" && opts().worker !== false;
 
@@ -145,6 +146,7 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
       stats.workMs.push(d.workMs ?? 0);
       stats.latencyMs.push(performance.now() - flightT0);
       stats.workerBuilds++;
+      stats.pool = d.pool ?? 0;
       if (ref) check(d.T, ref);
       pending = { T: d.T, main: flightMain };
       requestFrame();
@@ -301,7 +303,7 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
       flightGen = gen;
       flightT0 = t0;
       inFlight = true;
-      worker!.postMessage({ id: flightId, input, aa }, transfer);
+      worker!.postMessage({ id: flightId, input, aa, pool: opts().pool !== false }, transfer);
       flightMain = performance.now() - t0;
       stats.gatherMs.push(flightMain);
       // The reference reads the same state now (outside main's share).

@@ -15,7 +15,7 @@ import {
   type ExportChain,
   type SceneExportInput,
 } from "../../src/render/field/scene_export";
-import { buildTables } from "../../src/render/gpu_field/tables";
+import { buildTables, buildTablesPooled, partitionWeighted } from "../../src/render/gpu_field/tables";
 import { CTRL_ARC, gfBuild, tablesDiff, tablesTransfer } from "../../src/render/gpu_field/gf_build";
 
 const H = 0.2;
@@ -174,6 +174,33 @@ describe("gfBuild (K1362 c1)", () => {
     expect(tablesDiff(gfBuild(lean, 0.005).T, full(f32, 0.005))).toEqual([]);
     const scene = buildFieldSceneLean(lean);
     expect(scene.chains.every((c) => c.z.every((z) => z === 0))).toBe(true);
+  });
+
+  // K1362 t2: the pool path (partitioned raw vertices, corner slices,
+  // chunk-bin slices, merged in order) gives the cold build's tables,
+  // bit for bit, at every slice count — on the full and the lean scene.
+  for (const n of [1, 2, 3, 5]) {
+    it(`pooled tables equal the cold build's, bit for bit (slices ${n})`, () => {
+      const input = fixture();
+      const { scene } = buildFieldScene(input);
+      scene.look.ctrlArc ??= CTRL_ARC;
+      const cold = buildTables(scene, { aa: 0.005 });
+      expect(cold.nV).toBeGreaterThan(0);
+      expect(tablesDiff(buildTablesPooled(scene, { aa: 0.005 }, n), cold)).toEqual([]);
+      const leanScene = buildFieldSceneLean(leanOf(fixture()));
+      leanScene.look.ctrlArc ??= CTRL_ARC;
+      const leanCold = buildTables(leanScene, { aa: 0.005 });
+      expect(tablesDiff(buildTablesPooled(leanScene, { aa: 0.005 }, n), leanCold)).toEqual([]);
+    });
+  }
+
+  it("partitionWeighted covers its range contiguously, in order", () => {
+    for (const [weights, parts] of [[[5, 1, 4, 1], 3], [[1], 4], [[], 2], [[2, 2, 2, 2], 4], [[0, 0, 7], 2]] as [number[], number][]) {
+      const ranges = partitionWeighted(weights, parts);
+      let at = 0;
+      for (const [lo, hi] of ranges) { expect(lo).toBe(at); expect(hi).toBeGreaterThanOrEqual(lo); at = hi; }
+      expect(at).toBe(weights.length);
+    }
   });
 
   it("survives the worker's transfer, and the diff sees one flipped bit", () => {

@@ -129,7 +129,83 @@ function footNear(T: GfTables | Pick<GfTables, "cV0" | "cNV" | "vx" | "vy" | "vs
   return { d: bd, x: bx, y: by };
 }
 
-export function buildTables(scene: FieldScene, opts: GfOpts): GfTables {
+// K1362 t2: the table build in poolable phases. buildTables (below) is the
+// cold single-thread build: prefix (vertices, pins, arms), corners, bins.
+// The pool path runs the same code partitioned: raw chain vertices by chain
+// (gfRawChain/mergeGfRaw), corners by contiguous junction ranges
+// (solveGfCorners), chunk bins by contiguous chunk ranges (gfChunkBinPart),
+// merged in order (mergeGfChunkBins, assembleGfTables). Corner solves share
+// no state across corners: the SP/Q scratch and the arm-sample map are fresh
+// per solveGfCorners call and every hint is per corner pair, so a slice's
+// corners are bit-identical to the cold build's (the t1 rule: the solve's
+// input bits are unchanged, only who runs them).
+export interface GfArm { c: number; j: number; ei: number; sR: number; dir: number; L: number; Lcut: number; g: number; ang: number; ux: number; uy: number; uB: number; L0: number }
+export interface GfCorner { thru: number; rv: number; cx: number; cy: number; r: number; rmax: number; eax: number; eay: number; ebx: number; eby: number; g: number; j: number; a: number; b: number; theta: number; ca: number; cb: number; sa: number; sb: number }
+export interface GfRaw { cV0: Int32Array; cNV: Int32Array; vx: Float64Array; vy: Float64Array; vs: Float64Array }
+export interface GfPrefix {
+  h: number; W: number; aa: number; sigma: number; zt: number; amp: number; win: number; rc: number; gridK?: number; cr: number;
+  nC: number; cV0: Int32Array; cNV: Int32Array; cClosed: Uint8Array; cLen: Float64Array; cS0: Float64Array;
+  cPin0: Int32Array; cPinN: Int32Array; cArm0: Int32Array; cArmN: Int32Array;
+  nV: number; vx: Float64Array; vy: Float64Array; vs: Float64Array; pinS: Float64Array; pinZ: Float64Array;
+  nA: number; aSR: Float64Array; aDir: Float64Array; aL: Float64Array; aLcut: Float64Array; aG: Int32Array;
+  arms: GfArm[]; junctions: FieldScene["junctions"]; jGroup: Int32Array;
+  ms: { vtx: number; pins: number; arms: number };
+}
+export interface GfChunkMeta { nCh: number; chV0: Int32Array; chN: Int32Array; chC: Int32Array; chBox: Float64Array; gx0: number; gy0: number; G: number; gW: number; gH: number }
+
+/** One chain's raw vertex table (buildTables step 1 before the c' feet):
+ * the chain's points with cumulative arc length, a closed chain's first
+ * point repeated at the end. Bit-identical to the cold loop's slice. */
+export function gfRawChain(pts: ArrayLike<number>, closed: boolean): { vx: Float64Array; vy: Float64Array; vs: Float64Array } {
+  const m = pts.length >> 1; const cnt = m + (closed ? 1 : 0);
+  const vx = new Float64Array(cnt); const vy = new Float64Array(cnt); const vs = new Float64Array(cnt);
+  let s = 0;
+  for (let k = 0; k < cnt; k++) {
+    const q = k < m ? k : 0; const x = pts[2 * q]; const y = pts[2 * q + 1];
+    if (k > 0) s += Math.hypot(x - vx[k - 1], y - vy[k - 1]);
+    vx[k] = x; vy[k] = y; vs[k] = s;
+  }
+  return { vx, vy, vs };
+}
+
+/** Concatenate per-chain raw blocks (chain order) into one raw table. */
+export function mergeGfRaw(scene: FieldScene, blocks: { vx: Float64Array; vy: Float64Array; vs: Float64Array }[]): GfRaw {
+  const nC = scene.chains.length;
+  let nRaw = 0; for (const b of blocks) nRaw += b.vx.length;
+  const cV0 = new Int32Array(nC); const cNV = new Int32Array(nC);
+  const vx = new Float64Array(nRaw); const vy = new Float64Array(nRaw); const vs = new Float64Array(nRaw);
+  let v = 0;
+  for (let i = 0; i < nC; i++) {
+    const b = blocks[i]; cV0[i] = v; cNV[i] = b.vx.length;
+    vx.set(b.vx, v); vy.set(b.vy, v); vs.set(b.vs, v); v += b.vx.length;
+  }
+  return { cV0, cNV, vx, vy, vs };
+}
+
+/** Contiguous [lo, hi) ranges covering [0, weights.length), balanced by
+ * cumulative weight (a range boundary never splits an item). */
+export function partitionWeighted(weights: number[], parts: number): [number, number][] {
+  const n = weights.length;
+  const p = Math.max(1, Math.min(parts, Math.max(1, n)));
+  let total = 0; for (const w of weights) total += w;
+  const out: [number, number][] = [];
+  let lo = 0; let acc = 0;
+  for (let s = 0; s < p; s++) {
+    if (s === p - 1) { out.push([lo, n]); break; }
+    const target = (total * (s + 1)) / p;
+    let hi = lo;
+    while (hi < n && acc + weights[hi] <= target) { acc += weights[hi]; hi++; }
+    if (hi === lo && hi < n) { acc += weights[hi]; hi++; }
+    if (hi >= n) { out.push([lo, n]); lo = n; break; }
+    out.push([lo, hi]); lo = hi;
+  }
+  while (out.length > 1 && out[out.length - 1][0] >= n) out.pop();
+  if (!out.length) out.push([0, n]);
+  out[out.length - 1][1] = n;
+  return out;
+}
+
+export function buildGfPrefix(scene: FieldScene, opts: GfOpts, rawMerged?: GfRaw): GfPrefix {
   const t0 = now();
   const look = scene.look;
   const h = look.halfWidth; const W = look.band; const aa = opts.aa;
@@ -143,8 +219,8 @@ export function buildTables(scene: FieldScene, opts: GfOpts): GfTables {
   const raw: { pts: ArrayLike<number>; closed: boolean }[] = scene.chains.map((c) => ({ pts: c.pts, closed: c.closed }));
   // raw vertex tables first (for the c' feet)
   let nRaw = 0; for (const c of raw) nRaw += (c.pts.length >> 1) + (c.closed ? 1 : 0);
-  const rT = { cV0: new Int32Array(nC), cNV: new Int32Array(nC), vx: new Float64Array(nRaw), vy: new Float64Array(nRaw), vs: new Float64Array(nRaw) };
-  {
+  const rT: GfRaw = rawMerged ?? { cV0: new Int32Array(nC), cNV: new Int32Array(nC), vx: new Float64Array(nRaw), vy: new Float64Array(nRaw), vs: new Float64Array(nRaw) };
+  if (!rawMerged) {
     let v = 0;
     const rVx = rT.vx; const rVy = rT.vy; const rVs = rT.vs;
     for (let i = 0; i < raw.length; i++) {
@@ -246,7 +322,7 @@ export function buildTables(scene: FieldScene, opts: GfOpts): GfTables {
     for (let i = 0; i + 1 < R.length; i++) if (!passBetween(c, R[i].s, R[i + 1].s)) par[find(R[i].j)] = find(R[i + 1].j);
     if (cClosed[c] && R.length > 1 && !passBetween(c, R[R.length - 1].s, R[0].s + cLen[c])) par[find(R[R.length - 1].j)] = find(R[0].j);
   });
-  type ArmT = { c: number; j: number; ei: number; sR: number; dir: number; L: number; Lcut: number; g: number; ang: number; ux: number; uy: number; uB: number; L0: number };
+  type ArmT = GfArm;
   const armsT: ArmT[] = [];
   scene.junctions.forEach((J, ji) => {
     J.arms.forEach((arm, ei) => {
@@ -296,6 +372,26 @@ export function buildTables(scene: FieldScene, opts: GfOpts): GfTables {
   const cArm0 = new Int32Array(nC); const cArmN = new Int32Array(nC);
   armsT.forEach((A, i) => { aSR[i] = A.sR; aDir[i] = A.dir; aL[i] = A.L; aLcut[i] = A.Lcut; aG[i] = A.g; if (cArmN[A.c] === 0) cArm0[A.c] = i; cArmN[A.c]++; });
   const t3 = now();
+  const jGroup = new Int32Array(nJ); for (let ji = 0; ji < nJ; ji++) jGroup[ji] = find(ji);
+  return {
+    h, W, aa, sigma, zt, amp, win, rc, gridK: opts.gridK, cr: look.cuspRadius ?? 3,
+    nC, cV0, cNV, cClosed, cLen, cS0, cPin0, cPinN, cArm0, cArmN,
+    nV, vx, vy, vs, pinS, pinZ, nA, aSR, aDir, aL, aLcut, aG,
+    arms: armsT, junctions: scene.junctions, jGroup,
+    ms: { vtx: t1 - t0, pins: t2 - t1, arms: t3 - t2 },
+  };
+}
+
+/** Corners for junctions [jLo, jHi) of the prefix, in enumeration order:
+ * the cold build's corner loop over that range, with fresh scratch. */
+export function solveGfCorners(P: GfPrefix, jLo: number, jHi: number): GfCorner[] {
+  type ArmT = GfArm;
+  const { h, W, aa, cr, cV0, cNV, cClosed, cLen, cS0, vx, vy, vs } = P;
+  const armsT = P.arms; const junctions = P.junctions; const jGroup = P.jGroup;
+  const norm = (c: number, s: number): number => {
+    if (!cClosed[c]) return s;
+    let u = (s - cS0[c]) % cLen[c]; if (u < 0) u += cLen[c]; return u + cS0[c];
+  };
   // 4. Corners: form B's rolling-ball fillet per cyclically adjacent arm pair (ordered by the arms' chord
   //    angle at 2h; no corner between the two arms of one through pass). The ball's centre q(rho) sits at rho
   //    from both arms; its feet are TRACKED along the real arms from V (rho = h) at NODES fixed nodes, each node
@@ -305,12 +401,12 @@ export function buildTables(scene: FieldScene, opts: GfOpts): GfTables {
   //    either arm's [0, L] comes to q than its foot, outside the foot's basin), the arm read at fixed samples
   //    no more than h/3 apart. A fixed cost per corner: no search, no adaptive step. Form B's overlap gate
   //    omega is not modelled (it reads 1 wherever the margin gate stopped the ball, its S1d F4 note).
-  const cr = look.cuspRadius ?? 3; const rootBand = 0.5; const NODES = 24; const TRACK = 1;
+  const rootBand = 0.5; const NODES = 24; const TRACK = 1;
   const ss01 = (x: number): number => { const t = Math.min(1, Math.max(0, x)); return t * t * (3 - 2 * t); };
   const tRef = 1 / Math.sin(1.0) - 1; // form B's ROOT_BAND_REF_THETA = 2
   const rootTip = (th: number): number => { const s = Math.sin(th / 2); if (!(s > 0)) return 1; const t = 1 / s - 1; return t > 0 ? Math.min(1, t / tRef) : 0; };
-  const K: { thru: number; rv: number; cx: number; cy: number; r: number; rmax: number; eax: number; eay: number; ebx: number; eby: number; g: number; j: number; a: number; b: number; theta: number; ca: number; cb: number; sa: number; sb: number }[] = [];
-  const sibs: ArmT[][] = scene.junctions.map(() => []);
+  const K: GfCorner[] = [];
+  const sibs: GfArm[][] = junctions.map(() => []);
   for (const A of armsT) sibs[A.j].push(A);
   // K1362 t1: SP holds two arm points (x, y, tx, ty, s at 0 and 5); ptOf is armPt+chainAt inlined
   // (same arithmetic). With a hint it walks from the last segment instead of binary-searching:
@@ -424,9 +520,10 @@ export function buildTables(scene: FieldScene, opts: GfOpts): GfTables {
   const QVB: Q = { x: 0, y: 0, ua: 0, ub: 0, nax: 0, nay: 0, nbx: 0, nby: 0, sa: 0, sb: 0, fax: 0, fay: 0, fbx: 0, fby: 0 };
   const QPB: Q = { x: 0, y: 0, ua: 0, ub: 0, nax: 0, nay: 0, nbx: 0, nby: 0, sa: 0, sb: 0, fax: 0, fay: 0, fbx: 0, fby: 0 };
   const QQB: Q = { x: 0, y: 0, ua: 0, ub: 0, nax: 0, nay: 0, nbx: 0, nby: 0, sa: 0, sb: 0, fax: 0, fay: 0, fbx: 0, fby: 0 };
-  scene.junctions.forEach((J, ji) => {
-    const S = sibs[ji].sort((u, v) => u.ang - v.ang); const n = S.length; if (n < 2) return;
-    const g = find(ji); const ne = J.arms.length; const styles = J.corners ?? [];
+  for (let ji = jLo; ji < jHi; ji++) {
+    const J = junctions[ji];
+    const S = sibs[ji].sort((u, v) => u.ang - v.ang); const n = S.length; if (n < 2) continue;
+    const g = jGroup[ji]; const ne = J.arms.length; const styles = J.corners ?? [];
     for (let i = 0; i < n; i++) {
       const A = S[i]; const B = S[(i + 1) % n];
       let th = B.ang - A.ang; th = ((th % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
@@ -508,20 +605,13 @@ export function buildTables(scene: FieldScene, opts: GfOpts): GfTables {
       const rmax = rV + (2 * aa) / Math.max(0.1, Math.sin(th / 2));
       K.push({ thru, rv: rV, cx: q.x, cy: q.y, r, rmax, eax: -q.nax, eay: -q.nay, ebx: -q.nbx, eby: -q.nby, g, j: ji, a: A.ei, b: B.ei, theta: th, ca: A.c, cb: B.c, sa: q.sa, sb: q.sb });
     }
-  });
-  const nK = K.length;
-  const kCx = new Float64Array(nK); const kCy = new Float64Array(nK); const kR = new Float64Array(nK); const kRmax = new Float64Array(nK);
-  const kEax = new Float64Array(nK); const kEay = new Float64Array(nK); const kEbx = new Float64Array(nK); const kEby = new Float64Array(nK); const kG = new Int32Array(nK);
-  const kJ = new Int32Array(nK); const kA = new Int32Array(nK); const kB = new Int32Array(nK); const kTheta = new Float64Array(nK);
-  const kCa = new Int32Array(nK); const kCb = new Int32Array(nK); const kSa = new Float64Array(nK); const kSb = new Float64Array(nK); const kZa = new Float64Array(nK); const kZb = new Float64Array(nK);
-  const kThru = new Uint8Array(nK); const kRV = new Float64Array(nK);
-  const kTax = new Float64Array(nK); const kTay = new Float64Array(nK); const kTbx = new Float64Array(nK); const kTby = new Float64Array(nK);
-  const PZ = { cPin0, cPinN, pinS, pinZ, cClosed, cLen, cS0, win };
-  K.forEach((q, i) => { kCa[i] = q.ca; kCb[i] = q.cb; kSa[i] = q.sa; kSb[i] = q.sb; kZa[i] = depthAt(PZ, q.ca, q.sa); kZb[i] = depthAt(PZ, q.cb, q.sb); kTax[i] = q.cx + q.r * q.eax; kTay[i] = q.cy + q.r * q.eay; kTbx[i] = q.cx + q.r * q.ebx; kTby[i] = q.cy + q.r * q.eby; });
-  K.forEach((q, i) => { kCx[i] = q.cx; kCy[i] = q.cy; kR[i] = q.r; kRmax[i] = q.rmax; kEax[i] = q.eax; kEay[i] = q.eay; kEbx[i] = q.ebx; kEby[i] = q.eby; kG[i] = q.g; kJ[i] = q.j; kA[i] = q.a; kB[i] = q.b; kTheta[i] = q.theta; kThru[i] = q.thru; kRV[i] = q.rv; });
-  const t4 = now();
+  }
+  return K;
+}
 
-  // 5. Chunks and bins.
+/** Chunk boxes and the bin grid (buildTables step 5's geometry). */
+export function gfChunkMeta(P: GfPrefix): GfChunkMeta {
+  const { rc, h, nC, cV0, cNV, vx, vy } = P;
   let nCh = 0; for (let c = 0; c < nC; c++) nCh += Math.ceil(Math.max(0, cNV[c] - 1) / CH);
   const chV0 = new Int32Array(nCh); const chN = new Int32Array(nCh); const chC = new Int32Array(nCh); const chBox = new Float64Array(4 * nCh);
   let gx0 = Infinity; let gy0 = Infinity; let gx1 = -Infinity; let gy1 = -Infinity;
@@ -539,20 +629,76 @@ export function buildTables(scene: FieldScene, opts: GfOpts): GfTables {
       }
     }
   }
-  const G = (opts.gridK ?? 1) * h;
+  const G = (P.gridK ?? 1) * h;
   gx0 -= rc + G; gy0 -= rc + G; gx1 += rc + G; gy1 += rc + G;
   const gW = Math.max(1, Math.ceil((gx1 - gx0) / G)); const gH = Math.max(1, Math.ceil((gy1 - gy0) / G));
+  return { nCh, chV0, chN, chC, chBox, gx0, gy0, G, gW, gH };
+}
+
+/** One slice's chunk-bin counts and list (cells in grid order, chunk
+ * indices ascending within a cell, as the cold fill gives for its range). */
+export function gfChunkBinPart(P: GfPrefix, meta: GfChunkMeta, qLo: number, qHi: number): { cellChN: Int32Array; cellChList: Int32Array } {
+  const { rc } = P; const { chBox, gx0, gy0, G, gW, gH } = meta;
   const nCell = gW * gH;
-  const cellChN = new Int32Array(nCell); const cellKN = new Int32Array(nCell);
-  // K1362 t1: each item's cell range computed once (same floors), reused by the count and fill passes.
-  const rngCh = new Int32Array(4 * nCh); const rngK = new Int32Array(4 * nK);
-  for (let q = 0; q < nCh; q++) {
+  const cellChN = new Int32Array(nCell);
+  const rng = new Int32Array(4 * Math.max(0, qHi - qLo));
+  for (let q = qLo; q < qHi; q++) {
     const x0 = chBox[4 * q]; const y0 = chBox[4 * q + 1]; const x1 = chBox[4 * q + 2]; const y1 = chBox[4 * q + 3];
     const a = Math.max(0, Math.floor((x0 - rc - gx0) / G)); const b = Math.max(0, Math.floor((y0 - rc - gy0) / G));
     const c = Math.min(gW - 1, Math.floor((x1 + rc - gx0) / G)); const d = Math.min(gH - 1, Math.floor((y1 + rc - gy0) / G));
-    rngCh[4 * q] = a; rngCh[4 * q + 1] = b; rngCh[4 * q + 2] = c; rngCh[4 * q + 3] = d;
+    rng[4 * (q - qLo)] = a; rng[4 * (q - qLo) + 1] = b; rng[4 * (q - qLo) + 2] = c; rng[4 * (q - qLo) + 3] = d;
     for (let y = b; y <= d; y++) { let i = y * gW + a; for (let x = a; x <= c; x++) cellChN[i++]++; }
   }
+  const off = new Int32Array(nCell);
+  let s = 0; for (let i = 0; i < nCell; i++) { off[i] = s; s += cellChN[i]; }
+  const cellChList = new Int32Array(s);
+  const f = new Int32Array(nCell);
+  for (let q = qLo; q < qHi; q++) { const a = rng[4 * (q - qLo)]; const b = rng[4 * (q - qLo) + 1]; const c = rng[4 * (q - qLo) + 2]; const d = rng[4 * (q - qLo) + 3]; for (let y = b; y <= d; y++) { const i0 = y * gW; for (let x = a; x <= c; x++) { const i = i0 + x; cellChList[off[i] + f[i]++] = q; } } }
+  return { cellChN, cellChList };
+}
+
+/** Merge chunk-bin slices (in chunk order) into the cold build's lists. */
+export function mergeGfChunkBins(parts: { cellChN: Int32Array; cellChList: Int32Array }[], nCell: number): { cellCh0: Int32Array; cellChN: Int32Array; cellChList: Int32Array } {
+  const cellChN = new Int32Array(nCell);
+  for (const p of parts) for (let i = 0; i < nCell; i++) cellChN[i] += p.cellChN[i];
+  const cellCh0 = new Int32Array(nCell);
+  let s = 0; for (let i = 0; i < nCell; i++) { cellCh0[i] = s; s += cellChN[i]; }
+  const cellChList = new Int32Array(s);
+  const cur = Int32Array.from(cellCh0);
+  for (const p of parts) {
+    let off = 0;
+    for (let i = 0; i < nCell; i++) {
+      const cnt = p.cellChN[i];
+      for (let k = 0; k < cnt; k++) cellChList[cur[i]++] = p.cellChList[off + k];
+      off += cnt;
+    }
+  }
+  return { cellCh0, cellChN, cellChList };
+}
+
+/** The tables from a prefix and its corners (all of them, in order).
+ * With a merged chunk-bin slice set, bins take it; else bins run whole. */
+export function assembleGfTables(P: GfPrefix, K: GfCorner[], chunk: { meta: GfChunkMeta; bins: { cellCh0: Int32Array; cellChN: Int32Array; cellChList: Int32Array } } | null, ms: { vtx: number; pins: number; arms: number; corners: number }, t0: number): GfTables {
+  const { h, W, aa, sigma, zt, amp, win, rc, nC, cV0, cNV, cClosed, cLen, cS0, cPin0, cPinN, cArm0, cArmN, nV, vx, vy, vs, pinS, pinZ, nA, aSR, aDir, aL, aLcut, aG } = P;
+  const nK = K.length;
+  const kCx = new Float64Array(nK); const kCy = new Float64Array(nK); const kR = new Float64Array(nK); const kRmax = new Float64Array(nK);
+  const kEax = new Float64Array(nK); const kEay = new Float64Array(nK); const kEbx = new Float64Array(nK); const kEby = new Float64Array(nK); const kG = new Int32Array(nK);
+  const kJ = new Int32Array(nK); const kA = new Int32Array(nK); const kB = new Int32Array(nK); const kTheta = new Float64Array(nK);
+  const kCa = new Int32Array(nK); const kCb = new Int32Array(nK); const kSa = new Float64Array(nK); const kSb = new Float64Array(nK); const kZa = new Float64Array(nK); const kZb = new Float64Array(nK);
+  const kThru = new Uint8Array(nK); const kRV = new Float64Array(nK);
+  const kTax = new Float64Array(nK); const kTay = new Float64Array(nK); const kTbx = new Float64Array(nK); const kTby = new Float64Array(nK);
+  const PZ = { cPin0, cPinN, pinS, pinZ, cClosed, cLen, cS0, win };
+  K.forEach((q, i) => { kCa[i] = q.ca; kCb[i] = q.cb; kSa[i] = q.sa; kSb[i] = q.sb; kZa[i] = depthAt(PZ, q.ca, q.sa); kZb[i] = depthAt(PZ, q.cb, q.sb); kTax[i] = q.cx + q.r * q.eax; kTay[i] = q.cy + q.r * q.eay; kTbx[i] = q.cx + q.r * q.ebx; kTby[i] = q.cy + q.r * q.eby; });
+  K.forEach((q, i) => { kCx[i] = q.cx; kCy[i] = q.cy; kR[i] = q.r; kRmax[i] = q.rmax; kEax[i] = q.eax; kEay[i] = q.eay; kEbx[i] = q.ebx; kEby[i] = q.eby; kG[i] = q.g; kJ[i] = q.j; kA[i] = q.a; kB[i] = q.b; kTheta[i] = q.theta; kThru[i] = q.thru; kRV[i] = q.rv; });
+  const t4 = now();
+
+  // 5. Chunks and bins.
+  const meta = chunk?.meta ?? gfChunkMeta(P);
+  const { nCh, chV0, chN, chC, chBox, gx0, gy0, G, gW, gH } = meta;
+  const nCell = gW * gH;
+  const cellKN = new Int32Array(nCell);
+  // K1362 t1: each item's cell range computed once (same floors), reused by the count and fill passes.
+  const rngK = new Int32Array(4 * nK);
   for (let q = 0; q < nK; q++) {
     const R = kRmax[q] + W + 3 * aa; const kx = kCx[q]; const ky = kCy[q];
     const a = Math.max(0, Math.floor((kx - R - gx0) / G)); const b = Math.max(0, Math.floor((ky - R - gy0) / G));
@@ -560,12 +706,18 @@ export function buildTables(scene: FieldScene, opts: GfOpts): GfTables {
     rngK[4 * q] = a; rngK[4 * q + 1] = b; rngK[4 * q + 2] = c; rngK[4 * q + 3] = d;
     for (let y = b; y <= d; y++) { let i = y * gW + a; for (let x = a; x <= c; x++) cellKN[i++]++; }
   }
-  const cellCh0 = new Int32Array(nCell); const cellK0 = new Int32Array(nCell);
-  let sCh = 0; let sK = 0;
-  for (let i = 0; i < nCell; i++) { cellCh0[i] = sCh; sCh += cellChN[i]; cellK0[i] = sK; sK += cellKN[i]; }
-  const cellChList = new Int32Array(sCh); const cellKList = new Int32Array(sK);
-  const fCh = new Int32Array(nCell); const fK = new Int32Array(nCell);
-  for (let q = 0; q < nCh; q++) { const a = rngCh[4 * q]; const b = rngCh[4 * q + 1]; const c = rngCh[4 * q + 2]; const d = rngCh[4 * q + 3]; for (let y = b; y <= d; y++) { const i0 = y * gW; for (let x = a; x <= c; x++) { const i = i0 + x; cellChList[cellCh0[i] + fCh[i]++] = q; } } }
+  let cellCh0: Int32Array; let cellChN: Int32Array; let cellChList: Int32Array;
+  if (chunk) {
+    ({ cellCh0, cellChN, cellChList } = chunk.bins);
+  } else {
+    const merged = mergeGfChunkBins([gfChunkBinPart(P, meta, 0, nCh)], nCell);
+    ({ cellCh0, cellChN, cellChList } = merged);
+  }
+  const cellK0 = new Int32Array(nCell);
+  let sK = 0;
+  for (let i = 0; i < nCell; i++) { cellK0[i] = sK; sK += cellKN[i]; }
+  const cellKList = new Int32Array(sK);
+  const fK = new Int32Array(nCell);
   for (let q = 0; q < nK; q++) { const a = rngK[4 * q]; const b = rngK[4 * q + 1]; const c = rngK[4 * q + 2]; const d = rngK[4 * q + 3]; for (let y = b; y <= d; y++) { const i0 = y * gW; for (let x = a; x <= c; x++) { const i = i0 + x; cellKList[cellK0[i] + fK[i]++] = q; } } }
   const t5 = now();
 
@@ -574,6 +726,34 @@ export function buildTables(scene: FieldScene, opts: GfOpts): GfTables {
     nV, vx, vy, vs, pinS, pinZ, nA, aSR, aDir, aL, aLcut, aG,
     nK, kCx, kCy, kR, kRmax, kThru, kRV, kEax, kEay, kEbx, kEby, kG, kJ, kA, kB, kTheta, kCa, kCb, kSa, kSb, kZa, kZb, kTax, kTay, kTbx, kTby,
     nCh, chV0, chN, chC, chBox, gx0, gy0, G, gW, gH, cellCh0, cellChN, cellChList, cellK0, cellKN, cellKList,
-    ms: { vtx: t1 - t0, pins: t2 - t1, arms: t3 - t2, corners: t4 - t3, bins: t5 - t4, total: t5 - t0 },
+    ms: { vtx: ms.vtx, pins: ms.pins, arms: ms.arms, corners: ms.corners, bins: t5 - t4, total: t5 - t0 },
   };
+}
+
+export function buildTables(scene: FieldScene, opts: GfOpts): GfTables {
+  const t0 = now();
+  const P = buildGfPrefix(scene, opts);
+  const tc0 = now();
+  const K = solveGfCorners(P, 0, P.junctions.length);
+  const tc1 = now();
+  return assembleGfTables(P, K, null, { vtx: P.ms.vtx, pins: P.ms.pins, arms: P.ms.arms, corners: tc1 - tc0 }, t0);
+}
+
+/** The pool path in-process: the worker pool's partitions and merges,
+ * run sequentially. Bit-identical to buildTables by construction. */
+export function buildTablesPooled(scene: FieldScene, opts: GfOpts, nSlices: number): GfTables {
+  const t0 = now();
+  const n = Math.max(1, nSlices);
+  const blocks: { vx: Float64Array; vy: Float64Array; vs: Float64Array }[] = new Array(scene.chains.length);
+  for (const [lo, hi] of partitionWeighted(scene.chains.map((c) => c.pts.length >> 1), n))
+    for (let ci = lo; ci < hi; ci++) blocks[ci] = gfRawChain(scene.chains[ci].pts, scene.chains[ci].closed);
+  const P = buildGfPrefix(scene, opts, mergeGfRaw(scene, blocks));
+  const meta = gfChunkMeta(P);
+  const tc0 = now();
+  let K: GfCorner[] = [];
+  for (const [lo, hi] of partitionWeighted(scene.junctions.map((J) => J.arms.length), n)) K = K.concat(solveGfCorners(P, lo, hi));
+  const tc1 = now();
+  const parts = partitionWeighted(new Array(meta.nCh).fill(1), n).map(([lo, hi]) => gfChunkBinPart(P, meta, lo, hi));
+  const bins = mergeGfChunkBins(parts, meta.gW * meta.gH);
+  return assembleGfTables(P, K, { meta, bins }, { vtx: P.ms.vtx, pins: P.ms.pins, arms: P.ms.arms, corners: tc1 - tc0 }, t0);
 }
