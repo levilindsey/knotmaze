@@ -2,7 +2,7 @@
 // nesting exactly; on the real programs (every tier shape, the full program) no converted array is left indexed, and
 // the probe program is refused (it keeps its arrays). Exactness on the GPU is the cmp bench's (0 px against full).
 import { describe, expect, it } from "vitest";
-import { constantLoops, scalarizeArrays } from "../../src/render/gpu_field/gf_reg";
+import { constantLoops, GF_PACK, packArrays, scalarizeArrays } from "../../src/render/gpu_field/gf_reg";
 import { gfFs, type GfTier } from "../../src/render/gpu_field/gf_glsl";
 
 describe("gf_reg", () => {
@@ -44,6 +44,28 @@ describe("gf_reg", () => {
     for (const t of [undefined, { p: 3, k: 2, ramps: true }]) {
       const src = gfFs(false, true, t, { unroll: true, reg: true });
       expect(src).not.toMatch(/for \(int \w+ = [^;]+; \w+( \+ 1)? <=? (np|nk|ns|nr|nTj)\b/);
+    }
+  });
+
+  it("packs the per-piece arrays into one vec4 and one ivec4 array, access for access", () => {
+    const toy = "IQ int pc[N]; float pd[N]; float pfx[N]; float pfy[N]; float pkey[N]; IQ int plo[N]; IQ int phi[N]; IQ int pg[N]; float q[N];\n" +
+      "void main() { pd[pc[0]] = pfx[1] + q[2]; pg[1] = plo[phi[0]]; pkey[0] = pfy[0]; }";
+    expect(packArrays(toy)).toBe(
+      "vec4 pPF[N]; IQ ivec4 pPI[N];\n        float q[N];\n" +
+        "void main() { pPF[pPI[0].x].x = pPF[1].y + q[2]; pPI[1].w = pPI[pPI[0].z].y; pPF[0].w = pPF[0].z; }",
+    );
+    expect(() => packArrays(toy.replace("float pd[N]", "float pd[M]"))).toThrow(/pd/);
+    expect(() => packArrays(toy.replace("IQ int pg[N];", ""))).toThrow(/pg/);
+    // the real programs: no packed field left indexed, and unpacking by text gives back the plain program's body
+    const unpack = new Map<string, string>();
+    for (const g of GF_PACK) g.fields.forEach((f, i) => unpack.set(`${g.name}.${"xyzw"[i]}`, f));
+    for (const t of [undefined, { p: 3, k: 2, ramps: true }, { p: 2, k: 2, ramps: false }]) {
+      const plain = gfFs(false, true, t, {});
+      const packed = gfFs(false, true, t, { pack: true });
+      for (const g of GF_PACK) for (const f of g.fields) expect(packed).not.toMatch(new RegExp(`\\b${f}\\s*\\[`));
+      let body = packed.slice(packed.indexOf("void main"));
+      for (let k = 0; k < 4; k++) body = body.replace(/\b(pPF|pPI)\[((?:[^[\]]|\[[^[\]]*\])*)\]\.([xyzw])/g, (_a, n: string, i: string, c: string) => `${unpack.get(`${n}.${c}`)}[${i}]`);
+      expect(body).toBe(plain.slice(plain.indexOf("void main")));
     }
   });
 

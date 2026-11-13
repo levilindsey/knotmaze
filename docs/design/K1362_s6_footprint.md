@@ -87,7 +87,7 @@ Under 30 lines:
 
 End with `Ledger items` and K1362's handle fields.
 
-## Handoff (stage 6, 2026-11-13, start 03:28:33, stop STOPTIME)
+## Handoff (stage 6, 2026-11-13, start 03:28:33, stop 04:50:54)
 
 **Not done: def and muse_hash are still over 8 ms** (t32r at 822x1506, sync4: def 16.7-16.9, muse_hash 22.6-23.4).
 rp=gf stays off; `GF_TIERS` is still t32r. Keys per bin (lever 1) now feed every program, full included.
@@ -102,8 +102,8 @@ rp=gf stays off; `GF_TIERS` is still t32r. Keys per bin (lever 1) now feed every
   `test/render/gf_keys.test.ts` emulates depth()'s search and member() on float32 values. On every test scene,
   chain and pin, and at every arm edge, it checks that the binned answers equal the full ones, with the bin also
   picked 0.4 bin either way.
-- `gf_reg.ts` (register form `reg`, constant trip counts `unroll`): opt-in tier forms, off by default, tested by
-  `gf_reg.test.ts`. Both are slower on the Pixel (below).
+- `gf_reg.ts` (register form `reg`, constant trip counts `unroll`, packed per-piece state `pack`): opt-in tier
+  forms, off by default, tested by `gf_reg.test.ts`. On the Pixel, all three are slower (below).
 - Outside my file list: `test/render/paint_ring_lap.test.ts` (K299's registry) gained keyBin's two rounded
   quotients (`mod(s - C1.x, C0.w)` and `floor((u - KC.w) / KC.z)`), each with its reason.
 - Stage 5's tile route was **deleted** (5d4db0f7: `gf_tiles.ts`, its test, gf_pass's tile modes and shaders), not
@@ -137,33 +137,59 @@ frame1, fat moves within the governor's noise. buildKeys' main-thread CPU at upl
 **Levers:**
 1. Keys per bin: def -2.5 to -2.6 ms (822 sync4) and -3.3 to -3.5 (1079); muse_hash -1.6 to -2.0 and -2.8;
    fat -0.0 to -0.3 and -0.5 (fat has no arms, so only depth()'s search gains). Kept.
-2. Packed state / two-pass split: not built (no time after levers 1 and 4's attempts).
+2. Packed state (`pack`, bench letter k; gf_reg.ts `packArrays`). pd/pfx/pfy/pkey become one vec4 array and
+   pc/plo/phi/pg one ivec4 array: the same values and arithmetic, so it is exact by construction. Measured at 822
+   sync4, t32r → t32rk, same run:
+   - desktop: faster (def 1.02 → 0.85, muse_hash 1.65 → 1.40, fat 0.75 → 0.60);
+   - Pixel (c73c7745, s6f): slower, def 16.82 → 17.72, muse_hash 22.88 → 24.27, fat 12.15 → 12.70, all @1286.
+     frame1 moved with the governor (def 23.3@1017 → 21.6@883, muse_hash 26.3@1286 → 28.9@883).
+   - fullK (the full program packed) is slower on both GPUs.
+
+   Not kept: pack stays a bench form. Inferred, not tested: the Pixel turns each component write into a vec4
+   read-modify-write. The two-pass split (scan + keys in one pass, layering in a second) is not built. Neither are
+   partial packs (floats only, ints only).
 3. Layering once: not built. layers() groups pieces into surfaces by psurf, so entry order, burial and the sort
    all change with the configuration. An exact fold rewrites that grouping incrementally (each configuration
-   flips at most two ramping pieces). PART5
+   flips at most two ramping pieces). Its routed form, t32 (a tier without ramps: one layering per pixel, with
+   ramping pixels sent to full), is slower than t32r on the Pixel (part 5): +5.1 on def and +9.1 on muse_hash at
+   sync4. 6.7% / 10.4% of the rect ramps and goes to the full program, while t32r's tier takes 99.81% / 99.9%. So
+   layering once has to happen inside the tier.
 4. Scan and keys toward stage 1's floor. Tried, and both did nothing or worse:
    - the register form (`reg`, gf_reg.ts): +10 / +16 / +8 ms on def / muse_hash / fat;
    - constant trip counts (`unroll`): +0.65 / +0.77 / +0.75 (t32ru against t32r), and t22ru was mixed.
    The keys themselves reached their part of the floor (stage 5 put keys at 3.7 of def's 19.7).
 
-**Exactness** (42ede7fd): 0 px against the full program on 12 scenes on the desktop (78 compare rows) and on the
-Pixel (42 rows over def, muse_hash and fat at both sizes; 9824ab87's run also covered the 9 other scenes, 0 px). The
-CPU mirror holds (54 Pixel and 60 desktop mirror rows with no miss). `npm test` passes (235 files, 2968 tests), and
-the goldens are unchanged.
+**Exactness**: 0 px against the full program on 12 scenes, on both GPUs.
+- 42ede7fd: desktop 78 compare rows; Pixel 42 rows over def, muse_hash and fat at both sizes. 9824ab87's run also
+  covered the 9 other scenes at 0 px. The CPU mirror holds: 54 Pixel and 60 desktop mirror rows, no miss.
+- c73c7745 (the pack forms): 27 rows on each GPU over the 12 scenes; 39 Pixel mirror rows, no miss.
+
+`npm test` passes (235 files, 2969 tests), and the goldens are unchanged.
 
 **Verdict.** def reaches after these fixes, all (b). Stage 5's split, with lever 1 applied, is about 1 fixed + 4.5
 scan + 1.2 keys + 10.5 layering:
-- lever 2, packed state or a two-pass split: est. -5 to -7;
-- lever 3, layering once: at most PART5C;
+- lever 2, now the two-pass split (packing as built lost): est. -5 to -7. Each pass then holds only its own
+  state: scan + keys, then layering;
+- lever 3, layering once inside the tier: at most -1.8 (stage 5's measure of the work it removes);
 - the scan to its floor: -0.8.
-These give def an expected EXPECTDEF; it reaches 8 if lever 2 lands at -6 or better.
+These give def (16.7-16.9) an expected 7.1-9.5. It reaches 8 if the split lands at -6 or better.
 
-muse_hash (22.6-23.4) reaches after the same fixes (expected about MUSEEXP) plus (a) a smaller canvas: the pass
-scales with pixels, so dpr 1.5 (0.56 of 822x1506's pixels) gives about MUSEDPR, and dpr 1 about a quarter. That
-is Levi's call. No (c): the desktop runs the same program at 1.18 / 1.67 ms.
+muse_hash (22.6-23.4) reaches after the same fixes (expected about 13-15) plus (a) a smaller canvas. The pass scales
+with pixels, so dpr 1.5 (0.56 of 822x1506's pixels) gives about 7.3-8.6, and dpr 1 about a quarter. That is
+Levi's call. No (c): the desktop runs the same program at 1.18 / 1.67 ms.
 
-**Next stage:** build lever 2 (packed per-piece state, or a two-pass split of scan + keys from layering) and
-measure it on the Pixel; then lever 3 exactly (the incremental surface grouping), with the same 12-scene and
-mirror checks. Move buildKeys into the build worker once the Muse lane (`gf_build.ts`, `gf_worker.ts`) is merged.
-Probes: `.claude/probes/K1362/k1362s6_*` (run, entry, sum, gpuclk, keystats; cfg_phone3 is the before/after,
-cfg_cmp3 the 12 scenes, cfg_phone4 t32 against t32r). Outputs: `out/s6/` (untracked).
+**Next stage:**
+1. Build the two-pass split: pass 1 writes each pixel's pieces and keys to a float target, and pass 2 runs layers()
+   + composite() from it. Measure it on the Pixel.
+2. Then lever 3 exactly: the incremental surface grouping inside the tier.
+3. Both with the same 12-scene and mirror checks.
+4. Move buildKeys into the build worker once the Muse lane (`gf_build.ts`, `gf_worker.ts`) is merged.
+
+Probes: `.claude/probes/K1362/k1362s6_*`:
+- run, entry, sum, gpuclk, keystats, packcheck;
+- cfg_phone3: the before/after;
+- cfg_cmp3: the 12 scenes;
+- cfg_phone4: t32 against t32r;
+- cfg_pack: the pack A/B, with the 12 scenes.
+
+Outputs: `out/s6/` (untracked).
