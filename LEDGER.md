@@ -554,11 +554,11 @@ Next free ID: K1357.
   most cases. But there are still plenty of unacceptable artifacts"): an artifact census (stray ink, hard
   colour edges inside fills, paper holes, broken ink) across scenes, then fix stages that drive its count to
   0; the look gate in docs/design/K1240_gate.md
-  - owner: nobody since 2026-11-12 17:49 (merged; agent `aafbd884214382d4f` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
-  - branch: mainline; last commit: `435af9c4`
-  - evidence: .claude/probes/K1314/ (k1314s12_*), baseline out/s1/census_k1314s11d
-  - next: s13: j58a - give band_rec's start-arc fan its own alpha rule (or lift piece 196's side rule only outside that fan), then piece 371's root ramp; rerun s11's app ABBA (02c8ca8b vs 8675bb22) on a quiet machine. s12 fixed c8's tail line (tailJoin, ee1c3b35); thruTail and ownSide are off (census spikes, j58a5 wedge). Brief handoff: docs/design/K1314_s12_c8_tail_j58a.md
-  - brief: `docs/design/K1314_s12_c8_tail_j58a.md`
+  - owner: agent `ad0f00e4c679dca72` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-12 17:51, 2 h cap ~19:51)
+  - branch: `worktree-agent-ad0f00e4c679dca72`, worktree `.claude/worktrees/agent-ad0f00e4c679dca72`; last commit: `286ad719`
+  - evidence: .claude/probes/K1314/ (k1314s13_*), baseline out/s1/census_k1314s12b
+  - next: s13 running: j58a (start-arc fan alpha, then piece 371 root ramp), muse_hash j49 spike, c8 lost ink (gate thruTail)
+  - brief: `docs/design/K1314_s13_j58a_j49_lost.md`
 - **K1341** · Three exact cuts K1247 s28 left: a squared pre-check before draw.ts nearRange's sqrt (zChains'
   hottest line), hinted spanOf searches, a box bound in fill_tri.ts's disk scan (s28 handoff)
   - owner: muse session debfa6ce-9fda-4156-9348-afbbf1716d9d (launched by claude session 09c7a672-a414-402a-97da-b3176839a2e5, 2026-11-12 17:04, cap 2 h)
@@ -1920,7 +1920,7 @@ Every other item below waits on the trigger it names.
 - **K1351** · c8's under-pass after K1346 s1's fan fix: the dotted seam is gone, a straight soft diagonal
   shading edge remains where form B shades smoothly (muse_hash (19.41, 14.16);
   `.claude/probes/K1346/out/s1/final8x/c8.png`)
-  - next: K1314 s12 (docs/design/K1314_s12_c8_tail_j58a.md): s11 took c8 |d| 5.34 -> 2.15%; left a faint tail line (tail 1781 over run 121) and lost ink at y 14.35-14.51
+  - next: K1314 s13 (docs/design/K1314_s13_j58a_j49_lost.md): the tail line is fixed (s12 tailJoin, ee1c3b35); the lost ink at y 14.35-14.51 is left: gate thruTail's walk to where form B inks the through arm's border under the crossing tube (out/s12/look/spk1.png, spk2.png)
 - **K1354** · K1346's fold checks (bandFoldScan, bandFoldsClean) cost 0.5-0.7 ms per def frame; the fast exit
   could reuse the band builder's inner points (about 0.5 ms). One app ABBA (K1346 s2 run 2) put def band +0.85
   ms over a 0.5 spread while Node's band is equal; one quiet app ABBA settles it
