@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1374.
+Next free ID: K1375.
 
 ## Waiting on Levi
 
@@ -559,14 +559,6 @@ Next free ID: K1374.
   - evidence: .claude/probes/K1362/ (k1362s3_*, k1362s4_*), out/s3/, out/s4/
   - next: s6 running: keys per tile, packed state or two-pass split, layering once; pass <= 8 ms on the Pixel, exact; then move the key-tile build into the gf worker (after K1370) and K1369
   - brief: `docs/design/K1362_s6_footprint.md`
-- **K1370** · rp=gf tables: reuse each corner exactly where its arms did not move (the Pixel's worker build is
-  20 ms, about two frames of lag at 16 ms); output must stay bit-identical (k1362t1_digest.ts). K1362 c1
-  handoff.
-  - owner: muse session 01a1d487-e3a7-7f01-8e38-331ec3a77a99 (paseo agent 84099412), started 2026-11-13 02:55; coordinating claude session 09c7a672-a414-402a-97da-b3176839a2e5
-  - branch: detached worktree .claude/worktrees/muse-k1362-t2; Muse pushes finished parts to master; last commit: `2b964a6c`
-  - evidence: .claude/probes/K1362/k1362t2_* (to come), k1362t1_digest.ts, k1362c1_bench.ps1
-  - next: Muse t2 running: pool the corner solve across workers, or reuse bit-identical corners; digest unchanged
-  - brief: `docs/design/K1362_t2_muse_build.md`
 
 ## Next, in order
 
@@ -850,6 +842,10 @@ Every other item below waits on the trigger it names.
 - **K1369** · rp=gf: on the Pixel the physics runs at half its sim rate during a drag (sim/wall 0.29-0.32
   against 0.62-0.71 for today's look), on master and on K1362 c1 alike; not diagnosed. Record the CPU clocks
   beside the GPU clock through the kit's drag (docs/design/K1362_c1_cpu_off_main.md handoff).
+- **K1374** · rp=gf build worker: make the slice pool (gf_slice_worker.ts, Muse t2) win on junction builds, or
+  remove it: partition pins by chain and the chunk merge by cell range, or transfer the scene to the slices as
+  typed arrays, so the coordinator's 6-8 ms serial prefix goes. Today it engages only on junction-free builds
+  (docs/design/K1362_t2_muse_build.md addendum).
 
 ## Residuals (known, not fixed)
 
@@ -2325,6 +2321,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1370** · Muse t2: exact corner reuse is impossible (0.000 of vertices bit-identical between consecutive drag frames); a bit-identical slice-worker pool shipped, gated to junction-free builds because its serial prefix (6-8 ms) made muse_hash slower, so def/muse_hash/fat still run the single build (def 10.5 ms). Follow-up K1374. Done in 682a1afa (2026-11-13).
 - **K1366** · K1362 tables lane: buildTables (tables.ts) at or under 2 ms on def, output unchanged (digest vs master), beside K1362 s4's shader work (brief docs/design/K1362_t1_muse_tables.md). Done in e216acb0 (2026-11-13).
 - **K1357** · rp=outline's drag feel: Levi, 2026-11-12, 'unacceptable' at 9-10 Hz; the pool (s36) lags more (250-340 ms), so no clip re-ask; the route changes (K1362). Done in b3ea2ad4 (2026-11-12).
 - **K1319** · The K1045 open eye at muse_hash j73 in rp=outline: its ink ring closes round at the right tip, where form B cuts it off at an angle (form B's j73 corner takes the same far meet as j74's and never rounds it). Dropped: Levi, 2026-11-12: 'the round version of course'. rp=outline already draws it round; no change. The census's j73 stray_ink spike (262 px) is form B's flaw, not a bar find (2026-11-12).
