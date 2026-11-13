@@ -494,6 +494,22 @@ vec4 T(int q, int k) { int i = q * 4 + k; return texelFetch(uPass, ivec2(i % TW,
 vec4 S(int i) { return texelFetch(uChain, ivec2(i % TW, i / TW), 0); }
 float dS(float len, float a, float c) { float d = c - a; if (len > 0.0) { d = mod(d, len); if (d > 0.5 * len) d -= len; } return d; }
 float sst(float e0, float e1, float x) { float t = clamp((x - e0) / (e1 - e0), 0.0, 1.0); return t * t * (3.0 - 2.0 * t); }
+// K1324 s2: draw.ts zAtC on one chain's samples (base b, count n; len > 0 when closed).
+float zAtS(int b, int n, float len, float s) {
+  if (n <= 0) return 0.0;
+  float last = S(b + n - 1).z;
+  float u = len > 0.0 ? mod(s, len) : clamp(s, 0.0, last);
+  if (u >= last) {
+    if (!(len > 0.0)) return S(b + n - 1).w;
+    float l = len - last; float t = l > 0.0 ? (u - last) / l : 0.0;
+    return S(b + n - 1).w + (S(b).w - S(b + n - 1).w) * t;
+  }
+  int lo = 0; int hi = n - 1;
+  while (hi - lo > 1) { int m = (lo + hi) >> 1; if (S(b + m).z <= u) lo = m; else hi = m; }
+  vec4 A = S(b + lo); vec4 B = S(b + lo + 1);
+  float l = B.z - A.z; float t = l > 0.0 ? (u - A.z) / l : 0.0;
+  return A.w + (B.w - A.w) * t;
+}
 void main() {
   float s = vA.x;
 #if KRV
@@ -557,7 +573,18 @@ void main() {
 #endif
     float g = clamp((hO - best) / uW, 0.0, 1.0) * vO;
     float keyO = bz - best * uZt / uH;
-    float f = 1.0 - g * sst(-uZt, uZt, keyO - keyC);
+    // K1324 s2 (K1331): the self-pass burial rule, draw.ts selfBury's twin
+    // (test/render/self_bury.test.ts). A self pass's partner samples are
+    // the own chain's, so both anchors read the same table.
+    float bury = 0.0;
+    if (vCh >= 0 && int(t1.w + 0.5) == vCh) {
+      float lam = 1.0 - min(1.0, abs(bz - vA.z) / (2.0 * uZt));
+      if (lam > 0.0) {
+        float dA = zAtS(ob, on, oLen, so) - zAtS(ob, on, oLen, t0.x);
+        if (abs(dA) > 10.0 * uZt) bury = sign(dA) * 2.0 * uZt * lam;
+      }
+    }
+    float f = 1.0 - g * sst(-uZt, uZt, keyO - keyC + bury);
     int m = -1;
     for (int u = 0; u < 4; u++) if (m < 0 && u < n && seenO[u] == t1.w && abs(dS(seenL[u], seenS[u], bs)) < uH) m = u;
     if (m < 0) { seenO[n] = t1.w; seenS[n] = bs; seenL[n] = oLen; seenF[n] = f; n++; }
