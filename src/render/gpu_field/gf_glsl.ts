@@ -303,7 +303,10 @@ void main() {
     int cell = gy * uGDim.x + gx; float rc = uRc; float rc2 = rc * rc;
     vec4 CE = F(uOCell + cell);
     int c0 = int(CE.x); int cn = int(CE.y);
-    for (int q = c0; q < c0 + cn && !ovf; q++) {
+    for (int q = c0; q < c0 + cn; q++) {
+#ifdef TIER
+      if (ovf) break; // not in the loop's condition: ANGLE's D3D translation of "q < c0 + cn && !ovf" lost pieces (K1362 s4)
+#endif
       int ch = int(L4(uOChL, q));
       vec4 H0 = F(uOChk + 2 * ch); vec4 BX = F(uOChk + 2 * ch + 1);
       float bx = max(max(BX.x - x, 0.0), x - BX.z); float by = max(max(BX.y - y, 0.0), y - BX.w);
@@ -342,7 +345,7 @@ void main() {
       }
     }
 #ifdef TIER
-    if (ovf) discard;
+    if (ovf) { discard; return; } // D3D (ANGLE on Windows) runs on past a discard: end the pixel outright
 #endif
     // keys and membership
     float zK = uZt / h;
@@ -356,7 +359,7 @@ void main() {
       }
     }
 #ifdef NORAMP
-    if (nr > 0) discard; // ramping pieces: the configurations below; a later program draws the pixel
+    if (nr > 0) { discard; return; } // ramping pieces: the configurations below; a later program draws the pixel
 #endif
     // corners near p
     int k0 = int(CE.z); int kn = int(CE.w);
@@ -390,19 +393,18 @@ void main() {
       if (!(rho > K0.z - aa - W) || rho > K0.w + W + 2.0 * aa) continue;
       bool sec = inSector(k, p); bool inR = rho <= K0.w && sec;
 #ifdef TIER
-      if (nk == MAXK) discard; // the full program keeps this corner: it draws the pixel
+      if (nk == MAXK) { ovf = true; break; } // the full program keeps this corner: it draws the pixel
 #endif
       kSec[nk] = sec; kk[nk] = k; krho[nk] = rho; kIn[nk] = !inR ? 0 : rho > K0.z - aa ? 2 : 1; nk++;
     }
+#ifdef TIER
+    if (ovf) { discard; return; } // never past the arrays: D3D runs on past a discard
+#endif
     // configurations over the ramping pieces
     if (nr == 2 && pramp[rIdx0] < pramp[rIdx1]) { int t = rIdx0; rIdx0 = rIdx1; rIdx1 = t; }
     float ink = 0.0; float cov = 0.0; int lab = -1; PR(float labSv = 0.0; int wk = 0; int wa = -1; int wb = 0;) float bestW = -1.0;
-#ifdef NORAMP
-    // nr == 0: the one configuration (cfg 0, weight 1) of the loop below
-    for (int j = 0; j < np; j++) psurf[j] = pg[j] >= 0 && pramp[j] >= 1.0 ? pg[j] : -1 - j;
-    layers(p);
-    ink = composite(); cov = cCov; lab = labC; PR(labSv = labS; wk = cWk; wa = cWa; wb = cWb;)
-#else
+    // Under NORAMP nr == 0 here (the discard above), so the loop runs once: one layering, weight 1. It stays a loop
+    // on a runtime bound: inlined straight-line, D3D's compiler (ANGLE on Windows) failed the program at draw.
     for (int cfg = 0; cfg <= nr; cfg++) {
       float hiR = cfg == 0 ? 1.0 : pramp[cfg == 1 ? rIdx0 : rIdx1];
       float loR = cfg == nr ? 0.0 : pramp[cfg == 0 ? rIdx0 : rIdx1];
@@ -418,7 +420,6 @@ void main() {
       ink += w * r; cov += w * cCov;
       if (w > bestW) { bestW = w; lab = labC; PR(labSv = labS; wk = cWk; wa = cWa; wb = cWb;) }
     }
-#endif
     if (thruK >= 0) {
       vec4 K0 = F(uOK + 6 * thruK); vec4 K3 = F(uOK + 6 * thruK + 3);
       int own = int(K3.x); float r = K0.z; float outv = 1.0 - ss(r + W - aa, r + W + aa, thruQ);
