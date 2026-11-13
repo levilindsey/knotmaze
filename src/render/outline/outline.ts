@@ -4248,6 +4248,8 @@ function setupFrame(C: FCache, st: DiagramStructure, scene: SceneIn): void {
 // ramp in half widths), so one moving chain no longer releases them all.
 export const KF_INC = { snap: false, cache: false, T: 0.25, border: false, jclose: true, jlocal: true, jR: 4, jM: 3, jx: true, jxw: true, jxs: false, span: false, spanMax: 0.5, jxa: false, jxaTol: 1, hits: 0, misses: 0, cHits: 0, cMisses: 0, vAux: 0, vMiss: 0, cMissJ: 0, why: null as Record<string, number> | null };
 let kfHoldFeet = false;
+/** K1247 s34 probes only: with on, snapScene's jlocal block leaves its state here (own, whole, forced, centres, w). */
+export const SNAP_DBG = { on: false, own: [] as boolean[], whole: new Uint8Array(0), forced: new Uint8Array(0), cen: [] as number[][], part: [] as (Float64Array | null)[] };
 
 export interface SnapState {
   chains: (number[] | null)[]; cross: (SceneIn["crossings"][number] | null)[]; junc: (SceneIn["junctions"][number] | null)[];
@@ -4508,6 +4510,7 @@ export function snapScene(S: SnapState, scene: SceneIn, T = KF_INC.T): SceneIn {
       for (let k = 0; k < n; k++) w[k] = wAt(i, pts[2 * k], pts[2 * k + 1]);
       part[i] = w;
     }
+    if (SNAP_DBG.on) { SNAP_DBG.own = own.slice(); SNAP_DBG.whole = whole.slice(); SNAP_DBG.forced = forced.slice(); SNAP_DBG.cen = cen.map((c) => c.slice()); SNAP_DBG.part = part.slice(); }
   } else if (KF_INC.jclose) {
     for (let changed = true; changed;) {
       changed = false;
