@@ -24,31 +24,6 @@ void main() {
 }`;
 
 /**
- * K1362 s5: the tile route's vertex shader (gf_tiles.ts). One instance per tile, its world rect in aR; two triangles
- * mapped to clip space by the inverse of uMap (fragment = (world - b) / a). Adjacent tiles share corner values bit for
- * bit and the position is invariant across the route's programs, so the tiles meet without gaps or overlaps.
- */
-export const GF_TILE_VS = `#version 300 es
-invariant gl_Position;
-layout(location = 0) in vec4 aR;
-uniform vec4 uMap;
-uniform vec2 uView;
-void main() {
-  int id = gl_VertexID;
-  bool ix = id == 1 || id == 2 || id == 4;
-  bool iy = id == 2 || id == 4 || id == 5;
-  float wx = ix ? aR.z : aR.x; float wy = iy ? aR.w : aR.y;
-  float fx = (wx - uMap.y) / uMap.x; float fy = (wy - uMap.w) / uMap.z;
-  gl_Position = vec4(2.0 * fx / uView.x - 1.0, 2.0 * fy / uView.y - 1.0, 0.0, 1.0);
-}`;
-
-/** K1362 s5: the stencil mask's fragment shader (gf_pass.ts, GF_TILE_FALLBACK 3): color writes are masked off. */
-export const GF_MASK_FS = `#version 300 es
-precision highp float;
-out vec4 o;
-void main() { o = vec4(0.0); }`;
-
-/**
  * K1362 s4: a TIER is the same program with smaller per-pixel arrays (p pieces, k corners), drawn first under a
  * stencil route (gf_pass.ts): a pixel that would need more than the tier holds (a (p+1)th piece, a (k+1)th corner,
  * or, without `ramps`, a ramping piece) is DISCARDED, and a later tier or the full program draws it. Where a tier

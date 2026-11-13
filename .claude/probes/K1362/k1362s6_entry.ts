@@ -1,7 +1,6 @@
-// K1362 s6 (from s5) (from k1362s4_entry.ts): adds the TILE route (gf_tiles.ts). A variant "g<tc>[f|F][_<tiers>]" (f = the optimistic bound plus the stencil fallback, F = that without the ramp test) draws through
-// it: tiles of tc x tc grid cells, the tiers "<p><k>[r]" joined by "_" (none given: GF_TILE_TIERS; "g2_" alone: the
-// full program on every reached tile), e.g. g2_11_22_32r. Its record gains route (tiles per class, empty, total, the
-// classification's CPU ms over 5 uploads).
+// K1362 s6 (from s5, s4): stage 5's tile route is gone (gf_tiles.ts deleted). A tier "<p><k>[r][h][s][u]" adds s (the
+// register form: arrays as scalars behind selects) and u (constant trip counts); fullS / fullU are the full program in
+// those forms. Each record gains upload: pass.upload's main-thread ms over 5 uploads (packing, texture, key tables).
 // From s4: the routed pass (gf_pass.ts GF_TIERS) against stage 3's program, timed WITHOUT a timer query so the same
 // bundle runs on the desktop and the Pixel (k1362s3_entry.ts's method: sync4 = 4 targets rotated, a 1-px readPixels
 // sync; frame1 = one pass per rAF; the "empty" variant is subtracted by the summary). Per scene (a K868 scene JSON):
@@ -226,12 +225,7 @@ export async function bench(cfg: BenchCfg): Promise<Record<string, unknown>> {
       const draw = (j = 0): void => pass.draw(targets[j & 3], map, rect, false);
       draw(); sync(rect);
       const r: Record<string, unknown> = { firstMs: +(performance.now() - tc).toFixed(1) };
-      if (pass.tc > 0 && pass.route) {
-        const um: number[] = []; for (let i = 0; i < 5; i++) { pass.upload(T); um.push(pass.routeMs); }
-        const R0 = pass.route;
-        r.route = { tiers: pass.tiers.map((t) => `${t.p}${t.k}${t.ramps ? "r" : ""}`), count: R0.count, empty: R0.empty, total: R0.total,
-          share: R0.count.map((c) => +(c / R0.total).toFixed(4)), ms: st(um) };
-      }
+      { const um: number[] = []; for (let i = 0; i < 5; i++) { const t0 = performance.now(); pass.upload(T); um.push(performance.now() - t0); } r.upload = st(um); } // K1362 s6: pack + texture upload (+ any key table) on main
       for (const mode of cfg.modes) {
         const ms: number[] = [];
         const t0 = Date.now();
