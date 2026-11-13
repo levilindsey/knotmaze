@@ -674,3 +674,142 @@ export function buildFieldScene(input: SceneExportInput): {
   };
   return { scene, diag };
 }
+
+/** K1362 c1: buildFieldScene's scene without its diag, for rp=gf's
+ * per-frame table build (`src/render/gpu_field/gf_build.ts`). The chains'
+ * pts, the crossings, the junctions, the dead ends and the POIs come from
+ * the same helpers in the same order, so they equal buildFieldScene's bit
+ * for bit; what it skips is diag-only (the sorted spacing, the depth tent,
+ * the end offsets, the particle means). Each chain's z is all 0: the gf
+ * tables read none, and rp=gf passes a zero zPos (its z was 0 anyway).
+ * It reads no `input.zPos`, `input.physPositions` or `junctions[].particles`,
+ * and of each chain's `particles` only the length. buildFieldScene is
+ * unchanged (form B and the census read it). */
+export function buildFieldSceneLean(input: SceneExportInput): FieldScene {
+  const h = input.look.halfWidth;
+  const maps = input.chains.map((ch) => mapChain(ch, h));
+  const chains: SceneChain[] = [];
+  for (let c = 0; c < maps.length; c++) {
+    const m = maps[c];
+    const pos = m.ch.positions;
+    const kept = m.kept;
+    const n = kept.length;
+    const pts = new Array<number>(2 * n);
+    for (let i = 0; i < n; i++) {
+      const k = kept[i];
+      pts[2 * i] = pos[k * 2];
+      pts[2 * i + 1] = pos[k * 2 + 1];
+    }
+    chains.push({ id: c, closed: m.ch.closed, pts, z: new Array<number>(n).fill(0) });
+  }
+
+  const crossings: SceneCrossing[] = [];
+  const centres: Vec2[] = [];
+  const passS = (p: ExportPass): number => {
+    const m = maps[p.chain];
+    return arcToS(m, ctrlToArc(m, renderCtrl(p)));
+  };
+  const passPt = (p: ExportPass): Vec2 => {
+    const m = maps[p.chain];
+    return posAtArc(m, ctrlToArc(m, renderCtrl(p)));
+  };
+  for (const x of input.crossings) {
+    crossings.push({
+      a: { chain: x.over.chain, s: passS(x.over) },
+      b: { chain: x.under.chain, s: passS(x.under) },
+      over: "a",
+    });
+    centres.push(passPt(x.over));
+  }
+  for (const x of input.emergent) {
+    const p = passPt(x.over);
+    if (
+      input.dedupeEmergent !== false &&
+      centres.some((q) => Math.hypot(q[0] - p[0], q[1] - p[1]) < EMERGENT_DUP)) {
+      continue;
+    }
+    centres.push(p);
+    crossings.push({
+      a: { chain: x.over.chain, s: passS(x.over) },
+      b: { chain: x.under.chain, s: passS(x.under) },
+      over: "a",
+      emergent: true,
+    });
+  }
+
+  const candidates = new Map<string, { key: string; pin?: unknown }>();
+  for (const cand of input.corners.candidates) candidates.set(cand.key, cand);
+  const junctions: SceneJunction[] = [];
+  const pois: ScenePoi[] = [];
+  input.junctions.forEach((jn, ji) => {
+    let jx = 0;
+    let jy = 0;
+    for (const a of jn.arms) {
+      const m = maps[a.chain];
+      const p = posAtArcSafe(m, ctrlToArc(m, a.slot));
+      jx += p[0];
+      jy += p[1];
+    }
+    jx /= jn.arms.length;
+    jy /= jn.arms.length;
+    const arms = jn.arms.map((a) => {
+      const m = maps[a.chain];
+      const L = m.ch.particles.length;
+      const end =
+        !m.ch.closed &&
+        ((a.slot === 0 && a.dir === 1) || (a.slot === L - 1 && a.dir === -1));
+      const s = end ? (a.dir === 1 ? 0 : m.total) : arcToS(m, ctrlToArc(m, a.slot));
+      const q = posAtArcSafe(m, ctrlToArc(m, a.slot + a.dir * ARM_PROBE_CTRL));
+      const dx = q[0] - jx;
+      const dy = q[1] - jy;
+      const arm: SceneArm = { chain: a.chain, s, dir: a.dir, kind: end ? "end" : "through" };
+      return { ref: a, arm, ang: Math.atan2(dy, dx) };
+    });
+    arms.sort((p, q) => p.ang - q.ang);
+    const corners: SceneCorner[] = arms.map((x, i): SceneCorner => {
+      const y = arms[(i + 1) % arms.length];
+      const key = wedgeKey(ji, x.ref, y.ref);
+      const cand = candidates.get(key);
+      const round = candidates.size === 0 || input.corners.rounded.has(key);
+      return { style: round ? "round" : "sharp", pinned: cand?.pin !== undefined };
+    });
+    const id = `j${ji}`;
+    junctions.push({ id, c: [jx, jy], arms: arms.map((x) => x.arm), corners });
+    pois.push({ name: id, at: [jx, jy], radius: POI_RADIUS_H * h });
+  });
+
+  const cam = input.camera.worldToCss;
+  const onScreen = (p: Vec2): boolean => {
+    const sx = cam[0] * p[0] + cam[2] * p[1] + cam[4];
+    const sy = cam[1] * p[0] + cam[3] * p[1] + cam[5];
+    return sx >= 0 && sy >= 0 && sx <= input.camera.viewport[0] && sy <= input.camera.viewport[1];
+  };
+  const tipPt = (t: ExportTip): Vec2 => {
+    const ch = chains[t.chain];
+    const k = t.atEnd ? ch.pts.length / 2 - 1 : 0;
+    return [ch.pts[k * 2], ch.pts[k * 2 + 1]];
+  };
+  const deadEnds: SceneDeadEnd[] = [];
+  input.freeTips.forEach((t, i) => {
+    deadEnds.push({ chain: t.chain, s: t.atEnd ? maps[t.chain].total : 0 });
+    pois.push({ name: `t${i}`, at: tipPt(t), radius: POI_RADIUS_H * h });
+  });
+  for (const t of input.anchoredTips) {
+    const off = !onScreen(tipPt(t));
+    if (off) deadEnds.push({ chain: t.chain, s: t.atEnd ? maps[t.chain].total : 0, offscreen: true });
+    else deadEnds.push({ chain: t.chain, s: t.atEnd ? maps[t.chain].total : 0 });
+  }
+
+  return {
+    version: SCENE_VERSION,
+    name: input.name,
+    source: input.source,
+    camera: input.camera,
+    look: input.look,
+    chains,
+    crossings,
+    junctions,
+    deadEnds,
+    pois,
+  };
+}

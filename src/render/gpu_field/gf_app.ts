@@ -7,16 +7,37 @@
 // stage) under the ink. The ribbon's base and fillets (root children 0, 1)
 // are hidden while it runs, as outline_app.ts hides them.
 //
+// K1362 c1: the build leaves main. A frame whose samples moved gathers a lean
+// input (`gatherSceneInputLean`: copies of the sample buffers, the crossing
+// and junction slots; no diag) and posts it to the gf build worker
+// (gf_worker.ts), which runs `gfBuild` (gf_build.ts: the lean scene and
+// `buildTables`) and transfers the tables back; the frame after they arrive
+// uploads them. One build in flight; a renderer change drops the one in
+// flight. The first build after a renderer change, and every build without a
+// worker (none, failed, or `__knotGfOpts.worker === false`), runs the same
+// `gfBuild` in-thread. `__knotGf.verify = true` also builds each frame's
+// tables the old way (the full export) in-thread and compares them bit for
+// bit with what the pass receives (stats.verified, stats.mismatch).
+//
 // Probe access: globalThis.__knotGf (stats: build, pack, upload ms on main;
 // the GPU pass's timer-query ms and the empty query's; pixels shaded; and
 // counts(), the probe variant's candidates per pixel at the current frame).
 import { RenderContainer, type Container, type WebGLRenderer } from "pixi.js";
-import { buildFieldScene } from "../field/scene_export";
-import { gatherSceneInput, type SceneExportCtx } from "../field/scene_export_hook";
+import { buildFieldScene, type SceneExportInput } from "../field/scene_export";
+import { gatherSceneInput, gatherSceneInputLean, type SceneExportCtx } from "../field/scene_export_hook";
 import { buildTables, type GfTables } from "./tables";
+import { CTRL_ARC, gfBuild, tablesDiff } from "./gf_build";
 import { GfComposite, GfPass, GfTarget, type GfMap } from "./gf_pass";
 
-const CTRL_ARC = 0.47;
+interface GfReply {
+  hello?: boolean;
+  id?: number;
+  T?: GfTables;
+  exportMs?: number;
+  tablesMs?: number;
+  workMs?: number;
+  error?: string;
+}
 const FILL: [number, number, number] = [0.96, 0.93, 0.86];
 const INK_AUTO: [number, number, number] = [0.12, 0.11, 0.09];
 
@@ -44,6 +65,111 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
     rebuilds: 0, passes: 0, composites: 0, fallback: "",
     exportMs: [] as number[], tablesMs: [] as number[], packMs: [] as number[], uploadMs: [] as number[],
     px: [] as number[], cpuPassMs: [] as number[],
+    // c1: where builds ran, main's share per rebuild (gather + post, then
+    // pack + upload; in-thread builds add the export and tables), the
+    // worker's whole build and the post-to-arrival latency.
+    worker: "none", workerBuilds: 0, threadBuilds: 0, stale: 0,
+    gatherMs: [] as number[], mainMs: [] as number[], workMs: [] as number[], latencyMs: [] as number[],
+    verified: 0, mismatch: [] as string[], verifyMs: [] as number[],
+  };
+
+  // The build worker: started on the first frame; until it says hello (and
+  // after it fails) builds run in-thread.
+  let worker: Worker | null = null;
+  let ready = false;
+  let inFlight = false;
+  let flightId = 0;
+  let flightGen = 0;
+  let flightT0 = 0;
+  let flightMain = 0;
+  let gen = 0;
+  let pending: { T: GfTables; main: number } | null = null;
+  const refs = new Map<number, GfTables>();
+  const verifying = (): boolean => !!api.verify;
+  const wantWorker = (): boolean =>
+    typeof Worker !== "undefined" &&
+    (globalThis as unknown as { __knotGfOpts?: { worker?: boolean } }).__knotGfOpts?.worker !== false;
+
+  const dropWorker = (why: string): void => {
+    if (worker) {
+      worker.onmessage = null;
+      worker.onerror = null;
+      worker.onmessageerror = null;
+      worker.terminate();
+    }
+    worker = null;
+    ready = false;
+    inFlight = false;
+    stats.worker = why;
+    requestFrame();
+  };
+
+  const startWorker = (): void => {
+    if (worker || stats.worker !== "none") return;
+    if (!wantWorker()) {
+      stats.worker = "off";
+      return;
+    }
+    try {
+      worker = new Worker(new URL("./gf_worker.ts", import.meta.url), { type: "module", name: "knot-gf-build" });
+    } catch (e) {
+      stats.worker = `failed (${e instanceof Error ? e.message : String(e)})`;
+      return;
+    }
+    stats.worker = "starting";
+    worker.onerror = (e) => dropWorker(`failed (onerror: ${e.message || "worker failed to load"})`);
+    worker.onmessageerror = () => dropWorker("failed (messageerror)");
+    worker.onmessage = (e: MessageEvent<GfReply>) => {
+      const d = e.data;
+      if (d.hello) {
+        ready = true;
+        stats.worker = "ready";
+        return;
+      }
+      if (d.id !== flightId) return;
+      inFlight = false;
+      const ref = refs.get(d.id);
+      refs.delete(d.id);
+      if (flightGen !== gen || off) {
+        stats.stale++;
+        requestFrame();
+        return;
+      }
+      if (d.error !== undefined || !d.T) {
+        fallback(`failed (worker: ${d.error ?? "no tables"})`);
+        return;
+      }
+      stats.exportMs.push(d.exportMs ?? 0);
+      stats.tablesMs.push(d.tablesMs ?? 0);
+      stats.workMs.push(d.workMs ?? 0);
+      stats.latencyMs.push(performance.now() - flightT0);
+      stats.workerBuilds++;
+      if (ref) check(d.T, ref);
+      pending = { T: d.T, main: flightMain };
+      requestFrame();
+    };
+  };
+
+  // The old path (s2's): the full export of the same state, in-thread.
+  const reference = (aa: number): GfTables => {
+    const t0 = performance.now();
+    const ps = ctx.scene.ps!;
+    const { input } = gatherSceneInput(
+      ctx,
+      { zPos: new Float64Array(ps.positions.length / 2), positions: ps.positions, simTime: 0 },
+      "field",
+      "field"
+    );
+    const { scene } = buildFieldScene(input);
+    scene.look.ctrlArc ??= CTRL_ARC;
+    const R = buildTables(scene, { aa });
+    stats.verifyMs.push(performance.now() - t0);
+    return R;
+  };
+  const check = (got: GfTables, ref: GfTables): void => {
+    const bad = tablesDiff(got, ref);
+    if (bad.length) stats.mismatch.push(`${stats.rebuilds}:${bad.join("+")}`);
+    else stats.verified++;
   };
 
   const snapshot = (): void => {
@@ -120,6 +246,8 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
     comp?.dispose();
     comp = null;
     T = null;
+    pending = null;
+    gen++;
     detach();
   };
 
@@ -146,27 +274,49 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
     return { a: root.scale.x * sx, d: root.scale.y * sy, e: root.position.x * sx, f: root.position.y * sy, w, h, scale: root.scale.x * sx };
   };
 
-  const rebuild = (scale: number): void => {
+  // Pack and upload a build's tables (main's last share of a rebuild).
+  const install = (next: GfTables, mainSoFar: number): void => {
     const t0 = performance.now();
-    const ps = ctx.scene.ps!;
-    const { input } = gatherSceneInput(
-      ctx,
-      { zPos: new Float64Array(ps.positions.length / 2), positions: ps.positions, simTime: 0 },
-      "field",
-      "field"
-    );
-    const { scene } = buildFieldScene(input);
-    scene.look.ctrlArc ??= CTRL_ARC;
-    const t1 = performance.now();
-    T = buildTables(scene, { aa: 0.5 / scale });
-    const t2 = performance.now();
+    T = next;
     pass!.upload(T);
-    stats.exportMs.push(t1 - t0);
-    stats.tablesMs.push(t2 - t1);
     stats.packMs.push(pass!.packMs);
     stats.uploadMs.push(pass!.uploadMs);
+    stats.mainMs.push(mainSoFar + performance.now() - t0);
     stats.rebuilds++;
     dirty = true;
+  };
+
+  // Gather this frame's input; build it in the worker when one is ready and
+  // the tables already show something (else in-thread, now). Returns false
+  // when a build is already in flight (the caller retries next frame).
+  const rebuild = (scale: number): boolean => {
+    const aa = 0.5 / scale;
+    const useWorker = !!worker && ready && !!T;
+    if (useWorker && inFlight) return false;
+    const t0 = performance.now();
+    const { input, transfer }: { input: SceneExportInput; transfer: ArrayBuffer[] } = gatherSceneInputLean(ctx, "field");
+    if (useWorker) {
+      flightId++;
+      flightGen = gen;
+      flightT0 = t0;
+      inFlight = true;
+      worker!.postMessage({ id: flightId, input, aa }, transfer);
+      flightMain = performance.now() - t0;
+      stats.gatherMs.push(flightMain);
+      // The reference reads the same state now (outside main's share).
+      if (verifying()) refs.set(flightId, reference(aa));
+      return true;
+    }
+    const tg = performance.now() - t0;
+    const r = gfBuild(input, aa);
+    stats.gatherMs.push(tg);
+    stats.exportMs.push(r.exportMs);
+    stats.tablesMs.push(r.tablesMs);
+    stats.threadBuilds++;
+    const mainSoFar = performance.now() - t0;
+    if (verifying()) check(r.T, reference(aa));
+    install(r.T, mainSoFar);
+    return true;
   };
 
   const frame = (): void => {
@@ -185,21 +335,33 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
         target = new GfTarget(g, 1, false);
         comp = new GfComposite(g);
       }
+      startWorker();
       if (r !== lastR) {
         lastR = r;
         builtCount = -1;
         drawn = [];
+        // A build in flight read the old renderer: drop it, and build the
+        // new one's first tables in-thread (no stale or empty frame).
+        gen++;
+        pending = null;
+        T = null;
         attach();
+      }
+      if (pending) {
+        const p = pending;
+        pending = null;
+        install(p.T, p.main);
       }
       const cam = camera();
       const count = r.updateCount;
       if (count !== builtCount || cam.scale !== builtScale || !T) {
-        builtCount = count;
         if (!T || cam.scale !== builtScale || moved()) {
-          rebuild(cam.scale);
-          builtScale = cam.scale;
-          snapshot();
-        }
+          if (rebuild(cam.scale)) {
+            builtCount = count;
+            builtScale = cam.scale;
+            snapshot();
+          }
+        } else builtCount = count;
       }
       if (!T || !target) return;
       const key = `${cam.a},${cam.d},${cam.e},${cam.f},${cam.w},${cam.h}`;
@@ -269,6 +431,7 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
   const dispose = (): void => {
     release();
     off = true;
+    if (worker) dropWorker("disposed");
     const G = globalThis as unknown as Record<string, unknown>;
     if (G.__knotGf === api) delete G.__knotGf;
   };
@@ -282,6 +445,8 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
     get rect() { return rect; },
     counts,
     redraw() { dirty = true; requestFrame(); },
+    /** c1: when true, every build is also made the old way and compared. */
+    verify: false,
   };
   (globalThis as unknown as Record<string, unknown>).__knotGf = api;
   return { frame, after, dispose };

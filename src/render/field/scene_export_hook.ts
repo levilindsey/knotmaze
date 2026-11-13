@@ -228,6 +228,118 @@ export function gatherSceneInput(
     return { input, em };
 }
 
+/** K1362 c1: what `buildFieldSceneLean` reads of gatherSceneInput's input,
+ * gathered the same way, for rp=gf's per-frame build: no physics arrays
+ * (zPos and physPositions empty, junction particles empty, each chain's
+ * particles only its length), and every field structured-cloneable, so the
+ * input can be posted to a worker (`transfer` lists the sample buffers,
+ * fresh copies). The chains' samples are copied as Float32 (the renderer's
+ * own type; gatherSceneInput's Float64 copy holds the same values). */
+export function gatherSceneInputLean(
+  ctx: SceneExportCtx,
+  name: string
+): { input: SceneExportInput; transfer: ArrayBuffer[] } {
+  const r = ctx.scene.renderer;
+  const ps = ctx.scene.ps;
+  if (!r || !ps) throw new Error("gatherSceneInputLean: no scene");
+  const rp = r as unknown as RendererPrivates;
+  const chains: ExportChain[] = [];
+  const transfer: ArrayBuffer[] = [];
+  const missing: number[] = [];
+  for (let c = 0; c < ps.chains.length; c++) {
+    const s = r.chainSamples[c];
+    if (!s) {
+      missing.push(c);
+      continue;
+    }
+    const fused = rp.chainTipFused[c] ?? [false, false];
+    const positions = s.positions.slice(0, s.count * 2);
+    const controlArcLengths = Float64Array.from(s.controlArcLengths);
+    transfer.push(positions.buffer, controlArcLengths.buffer);
+    chains.push({
+      closed: s.closed,
+      count: s.count,
+      positions,
+      totalLength: s.totalLength,
+      controlArcLengths,
+      particles: { length: ps.chains[c].length },
+      tucked: [fused[0], fused[1]],
+    });
+  }
+  if (missing.length) {
+    throw new Error(`gatherSceneInputLean: chains without samples: ${missing.join(",")}`);
+  }
+  const crossings: ExportCrossing[] = ps.crossings.map((x) => ({
+    over: pass(x.over),
+    under: pass(x.under),
+  }));
+  const em = slottedEmergent(r, ps);
+  const freeTips: ExportTip[] = r.freeTips.map((t) => ({ chain: t.chain, atEnd: t.atEnd }));
+  const isFree = new Set(freeTips.map((t) => `${t.chain}:${t.atEnd}`));
+  const isEndArm = new Set<string>();
+  for (const jn of r.junctionArms) {
+    for (const a of jn.arms) {
+      const L = ps.chains[a.chain].length;
+      if (ps.chainBreakAfter[a.chain] >= 0) {
+        if (a.slot === 0 && a.dir === 1) isEndArm.add(`${a.chain}:false`);
+        if (a.slot === L - 1 && a.dir === -1) isEndArm.add(`${a.chain}:true`);
+      }
+    }
+  }
+  const anchoredTips: ExportTip[] = [];
+  for (let c = 0; c < chains.length; c++) {
+    if (chains[c].closed) continue;
+    for (const atEnd of [false, true]) {
+      const k = `${c}:${atEnd}`;
+      if (chains[c].tucked[atEnd ? 1 : 0] || isFree.has(k) || isEndArm.has(k)) continue;
+      anchoredTips.push({ chain: c, atEnd });
+    }
+  }
+  const root = ctx.root;
+  const sc = root.scale.x;
+  const params = ctx.params;
+  const h = r.style.threadWidth / 2;
+  const input: SceneExportInput = {
+    name,
+    source: { kind: "app" as const, url: "", build: `v${APP_VERSION} · ${BUILD_SHA}`, simTime: 0, physHash: name },
+    camera: {
+      worldToCss: [sc, 0, 0, sc, root.position.x, root.position.y] as [
+        number, number, number, number, number, number,
+      ],
+      pxPerUnit: sc,
+      dpr: ctx.app.renderer.resolution,
+      viewport: [ctx.app.screen.width, ctx.app.screen.height] as [number, number],
+    },
+    look: {
+      halfWidth: h,
+      band: r.borderWidth * h,
+      cornerRoundShare: r.cornerRoundShare,
+      cuspRadius: params.cuspRadius,
+      depthAmp: ctx.physicsTuning().threadWidth * COLLISION_MARGIN * DEPTH_AMP_FACTOR,
+      depthWindow: DEPTH_WINDOW,
+      paper: params.backgroundBase,
+      ink: params.borderColor,
+    },
+    chains,
+    zPos: new Float64Array(0),
+    physPositions: new Float64Array(0),
+    crossings,
+    emergent: em.list,
+    dedupeEmergent: false,
+    junctions: r.junctionArms.map((j) => ({
+      particles: [],
+      arms: j.arms.map((a) => ({ chain: a.chain, slot: a.slot, dir: a.dir as 1 | -1 })),
+    })),
+    corners: {
+      candidates: rp.cornerCandidates.map((c) => (c.pin === undefined ? { key: c.key } : { key: c.key, pin: true })),
+      rounded: new Set(rp.cornerRounded),
+    },
+    freeTips,
+    anchoredTips,
+  };
+  return { input, transfer };
+}
+
 export function installSceneExport(ctx: SceneExportCtx): void {
   (window as unknown as Record<string, unknown>).__knotSceneExport = async (
     opts: { name?: string } = {}
