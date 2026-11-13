@@ -4191,3 +4191,17 @@ The efficient approach (a hypothesis):
 Test before switching: one stage renders the 12 census scenes with a GPU form B shader (no fades), runs the census
 on it, and times def's pass on desktop and the Pixel. Switch if it is under ~3 ms desktop and ~8 ms Pixel with no
 more census finds than rp=outline; otherwise the pool and R1/R2 go on.
+
+Correction (Levi, 2026-11-12: "I DEFINITELY have plans to build on usages of the outline in the future"). The
+analysis's line "explicit geometry earns its cost only for ... nothing planned does" was wrong. Per pixel replaces
+rebuilding every point of the outline every frame, not the outline's structure:
+- Across-the-outline effects (ink, fill, glow, rim, shading across the thread) need only the distance.
+- Along-the-outline effects (dashes, stitching, pencil or brush flow, a pulse or reveal travelling the edge) need a
+  coordinate u around each closed loop. That takes the loop's piece order, which is fixed per diagram (K1240's
+  structure; s35: the piece set changes on 0% of drag frames), and per frame each piece's ends in closed form (the
+  cuts, the fillet tangents), prefix-summed into offsets: O(pieces), well under 1 ms. The shader knows which piece
+  wins a pixel and adds the arc length within it. A fillet that appears or disappears changes its loop's length,
+  so u needs the same fade the look does (or a pattern anchored per piece).
+- Data uses (hit tests, edge rules in play, export, particles on the edge) run the same tables on the CPU on
+  demand, locally or at a lower rate, not the whole scene each frame.
+K1362 s1 keeps piece identity per pixel and reports whether u follows; building u is stage 2.

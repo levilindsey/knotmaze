@@ -30,6 +30,13 @@ look follows Levi's calls, not form B's flaws:
 - **K1315:** at a junction's under-tail end, no round dot, no square stub, and no ink past the over thread's outline.
   Form B's dots fail there too.
 
+Levi plans to build on the outline: dashes, pencil textures, things travelling along it, and using it as data.
+So keep, per pixel, which term of the definition wins (which member side, fillet or exposed endpoint, that is,
+which outline piece), never a blend that loses it. Say in the report whether a continuous coordinate u around
+each outline loop follows from your tables (per-piece ends from the closed-form cuts and fillet tangents,
+prefix-summed per loop in K1240's fixed piece order), and what breaks it when a fillet appears or disappears.
+Building u is stage 2. (Added 2026-11-12 after launch; sent to the agent.)
+
 Ink and fill come first. Section paint goes through the existing GLSL (`paint_glsl.ts`), and the run bands' shading
 waits for stage 2. The technique is yours. The GPU field code K1040 left in `src/render/field/` and
 `src/render/junction_field.ts`, and the SDF tables in `samp_table.ts` / `fabric_sdf.ts`, may help. K1040's CPU side
