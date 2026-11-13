@@ -3,7 +3,7 @@
 // as BAND_FS; k1324_s3_app's raster). master = src's outline; after = outline_proto.ts with K1344.fix on
 // (--after=src: src's outline too, once the fix is in place; --master=proto-off: the proto with the fix off).
 //   node scripts/run_node.mjs .claude/probes/K1344/k1344_crops.ts --spots=scene:x:y:label,... [--px=480] [--w=2.5]
-//        [--out=.claude/probes/K1344/out/s1/x4] [--app] [--after=src|proto] [--master=src|proto-off]
+//        [--out=.claude/probes/K1344/out/s1/x4] [--app] [--after=src|proto] [--master=src|proto-off] [--sheet=<name>]
 // 4x = --px=480 --w=2.5 (192 px per h), 8x = --px=480 --w=1.25. A red ring marks the spot (r = 0.6 h).
 import { join } from "node:path";
 import { mkdirSync } from "node:fs";
@@ -20,6 +20,8 @@ const OUT = opt("out") ?? ".claude/probes/K1344/out/s1/x4"; const P = Number(opt
 const APP = args.includes("--app"); const AFTER = opt("after") ?? "proto"; const MASTER = opt("master") ?? "src";
 mkdirSync(OUT, { recursive: true });
 const col: RGB = [0, 0, 0];
+// --sheet=<name>: also stack every crop of this run, top to bottom, into <out>/<name> (a 6 px grey rule between).
+const SHEET: Uint8Array[] = []; const SHEET_NAME = opt("sheet");
 
 /** The app's band ink over a window (band_gpu, tie per pixel). */
 export function appInk(m: Model, c0: number, r0: number, W: number, H: number, ppu: number): Float32Array {
@@ -74,7 +76,7 @@ function crop(file: string, mM: Model, mA: Model, X: number, Y: number): void {
     const c = Math.round(cx + rr * Math.cos(t * Math.PI / 360)); const r = Math.round(cy + rr * Math.sin(t * Math.PI / 360));
     if (c >= 0 && c < P && r >= 0 && r < P) put(k, c, r, [230, 0, 0]);
   }
-  writePng(join(OUT, file), img, Wt, P);
+  writePng(join(OUT, file), img, Wt, P); SHEET.push(img);
   console.log(`${file}: ${S.toFixed(3)} world wide, ${APP ? "app" : "census"} band; master vs after: max |d ink| ${dmax.toFixed(3)}, ${nd} px > .02`);
 }
 
@@ -87,4 +89,9 @@ for (const s of (opt("spots") ?? "").split(",").filter(Boolean)) {
     mm = [mM, mA]; models.set(nm, mm);
   }
   crop(`${label}.png`, mm[0], mm[1], +x, +y);
+}
+if (SHEET_NAME && SHEET.length) {
+  const Wt = 3 * P + 8; const H = SHEET.length * (P + 6) - 6; const all = new Uint8Array(Wt * H * 3).fill(128);
+  SHEET.forEach((im, k) => all.set(im, k * (P + 6) * Wt * 3));
+  writePng(join(OUT, SHEET_NAME), all, Wt, H); console.log(`${SHEET_NAME}: ${SHEET.length} crops`);
 }
