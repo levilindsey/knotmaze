@@ -8056,8 +8056,9 @@ function runEndFade(a: TailIn, p: OutlinePiece, atEnd: boolean): void {
     const sel: number[] = [];
     const one = K1314S13.liftEnd;
     for (let i = 0; i < np; i++) if (alO[2 * i] >= 0 && i > 0 && i < np - 1 && (one ? al[2 * i - 2] > 1e-3 || al[2 * i + 2] > 1e-3 : al[2 * i - 2] > 1e-3 && al[2 * i + 2] > 1e-3)) sel.push(i);
+    const edge = K1314S13.ownEdge ? sel.filter((i) => !(al![2 * i - 2] > 1e-3 && al![2 * i + 2] > 1e-3)) : sel;
     for (const i of sel) { al[2 * i] = alO[2 * i]; al[2 * i + 1] = alO[2 * i + 1]; }
-    lifted = sel;
+    lifted = edge;
   }
   if (al && farCum >= RUN_FADE_MIN * a.h) {
     p.alpha = al;
@@ -8094,11 +8095,17 @@ export const K1314S12 = { tailJoin: true, thruTail: false, ownSide: false };
  *  entries are the band's own ink (fadeA 1), see runEndFade. j58a's box (4.62-4.86, 33.30-33.62) |d| vs form
  *  B: s12 17.73%, ownSide 14.17% (and its wedge), both flags 11.78%, no wedge. thruGate: the thru tails
  *  (K1314S12.thruTail's pieces) walk only at corners form B leaves open (thruGateOk): a fillet that failed
- *  with "V outside spans" (c8, muse_hash (19.25, 14.43): box |d| 10.67% -> 4.11%; census tail_look
- *  175 -> 107, bar kinds unchanged). OFF, measured: thruOk (also walk ok corners whose fillet sags under
+ *  with "V outside spans" (c8, muse_hash (19.25, 14.43): box |d| 10.67% -> 4.11%; census k1314s13c
+ *  tail_look 175 -> 107, bar kinds unchanged). OFF for its cost: a thru piece per through corner (def: 354
+ *  more tail pieces, most empty, +513 points) costs def's paint +3.1 ms, frame +0.9, fill +0.6 per drag
+ *  (Node ABBA, .claude/probes/K1314/out/s13/abba_run.txt). Also OFF, measured: thruOk (also walk ok corners whose fillet sags under
  *  THRU_SAG * W; j49) and thruUnion (E's border inks 1 where E is nearer): census k1314s13a/b, stray_ink
- *  4 -> 176 / 315, band:tail spikes at end-arm corners where form B is plain fill. */
-export const K1314S13 = { liftOwn: true, liftEnd: true, thruGate: true, thruOk: false, thruUnion: false };
+ *  4 -> 176 / 315, band:tail spikes at end-arm corners where form B is plain fill. ownEdge: liftOwn only at
+ *  lifted points with an uninked neighbour (both flags alone take c8 7.67% -> 10.67%, census k1314s13d
+ *  tail_look 175 -> 184; with ownEdge c8 8.24%, j58a 11.72%, census k1314s13e tail_look 174, bar kinds
+ *  unchanged). The three lift flags are OFF: c8 (out/s13/fin_x4|fin_x8/c8.png) gains a hard vertical seam in
+ *  the run band's shade where the lifted point's own ink stops. */
+export const K1314S13 = { liftOwn: false, liftEnd: false, ownEdge: false, thruGate: false, thruOk: false, thruUnion: false };
 /** K1314 s12 (thruTail, muse_hash j58's corner 176): a thru tail continues E's run past the corner, so it
  *  starts no darker than the run ends (run 371's root ramp ends at 0, the tail started at 0.18: a hard
  *  line across the band) and reaches its own alpha over THRU_END points. */
