@@ -1,7 +1,7 @@
 // K1362 s15: write the default tier's two programs (cornerPlan's free and corner forms) and any extra form.
 //   node scripts/run_node.mjs .claude/probes/K1362/k1362s15_dumpfs.ts <outDir> [extras as k=v,k=v (v: true|false|string)]
 import { writeFileSync } from "node:fs";
-import { gfFs, type GfTier } from "../../../src/render/gpu_field/gf_glsl";
+import { gfFs, GF_VS, type GfTier } from "../../../src/render/gpu_field/gf_glsl";
 import { GF_TIERS, cornerPlan } from "../../../src/render/gpu_field/gf_pass";
 
 const out = process.argv[2];
@@ -17,6 +17,7 @@ for (const { tier } of cornerPlan(base)) {
   writeFileSync(f, src);
   console.log(`${f}: ${src.length} chars, ${src.split("\n").length} lines, pieceD calls ${(src.match(/pieceD\(/g) ?? []).length}`);
 }
+writeFileSync(`${out}/gf.vert`, GF_VS);
 const full = gfFs(false, true);
 writeFileSync(`${out}/full.frag`, full);
 console.log(`${out}/full.glsl: ${full.split("\n").length} lines`);

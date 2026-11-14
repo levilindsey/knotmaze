@@ -90,7 +90,7 @@ void main() {
  * `kh` (K1362 s14, cornerThru below; needs kg): kk also carries the thru bit, so the tangent loop fetches no K1.
  */
 export type GfCornerForm = "route" | "frame" | "free" | "corner";
-export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm; one?: boolean; bx?: boolean; fast?: boolean; s?: number; lab?: boolean; grp?: boolean; kq?: boolean; ks?: boolean; kl?: boolean; kr?: boolean; lh?: boolean; so?: boolean; cs?: boolean; vs?: boolean; ga?: boolean; sc?: boolean; kc?: boolean; kz?: GfCornerForm; fj?: boolean | "s"; lz?: boolean; fs?: boolean | "c"; kp?: boolean; kt?: boolean; ko?: boolean; kg?: boolean; ki?: boolean; km?: boolean; kd?: boolean | "g"; kh?: boolean; zc?: boolean }
+export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm; one?: boolean; bx?: boolean; fast?: boolean; s?: number; lab?: boolean; grp?: boolean; kq?: boolean; ks?: boolean; kl?: boolean; kr?: boolean; lh?: boolean; so?: boolean; cs?: boolean; vs?: boolean; ga?: boolean; sc?: boolean; kc?: boolean; kz?: GfCornerForm; fj?: boolean | "s"; lz?: boolean; fs?: boolean | "c"; kp?: boolean; kt?: boolean; ko?: boolean; kg?: boolean; ki?: boolean; km?: boolean; kd?: boolean | "g"; kh?: boolean; zc?: boolean; zb?: boolean }
 export type GfPackForm = boolean | "f" | "i";
 
 /** The program's source forms (gf_reg.ts); a tier's own flags set them by default. The probe keeps the plain form. */
@@ -178,6 +178,7 @@ export function gfFs(probe: boolean, tangentTerms = true, tier?: GfTier, form: G
   if (tier?.zc && !probe) {
     if (tier.ramps || tier.one || tier.bx || tier.fast || form.split || form.reg || form.pack || form.unroll) throw new Error("gfFs: zc is a plain-form tier without ramps (no one, bx, fast, split, reg, pack or unroll)");
     src = zClass(src);
+    if (tier.zb) src = zBur(src);
   }
   if (probe) return src;
   const mp = tier ? tier.p : MAXP;
@@ -286,6 +287,40 @@ function zClass(src: string): string {
   src = src.replace(CFG_LOOP, "    for (int cfg = 0; cfg <= 0; cfg++) { // K1362 s15 zc: one configuration (nr == 0, or P1's cfg 0 overflow check)\n");
   src = src.split("discard; return;").join("gl_FragDepth = 1.0; return;");
   return src.replace(ZC_MAIN, `${ZC_MAIN}  gl_FragDepth = 0.5; // K1362 s15 zc: drawn here unless a route below says otherwise\n`);
+}
+
+/**
+ * K1362 s15 `zb` (on zc's P0): no burial code. Every burial loop becomes a bound check: a face is buried only by a
+ * piece m on its surface within h of the face's point q (or, for a piece face, a corner key on that surface whose ring
+ * holds q), and |q - p| is known (|h - X| for a piece face, |Dk| for a corner face, dT for a tangent), so
+ * |q - piece m| >= pd[m] - |q - p| (pd[m] is p's distance to m's visited segments; a segment of m's range the scan did
+ * not visit is beyond the candidate reach h + W + 2aa of p, and |q - p| < W + aa wherever the face's band is above 0,
+ * which the face skip before it has checked). A face whose bound clears h (plus a margin far above float error) has
+ * burial exactly 0, and P0 keeps the face's band; any other face sends the pixel to P1 (depth 0), whose ramp tier
+ * computes the burial (sOvf is settled before the face loop, so an overflowing pixel still goes to full).
+ */
+const ZB_MARGIN = "(0.25 * uAA)";
+const ZB_LOOPS: [RegExp, (m: string) => string][] = [
+  [/for \(int m = 0; m < np && bur < 1\.0; m\+\+\) \{\s*if \(m == j \|\| PSURF\(m\) != S\) continue;\s*float wb2 = 1\.0 - ss\(h - 2\.0 \* aa, h, sqrt\(pieceD\(m, q\)\)\);\s*if \(wb2 > bur\) bur = wb2;\s*\}/,
+    () => `for (int m = 0; m < np; m++) { if (m == j || PSURF(m) != S) continue; if (!(pd[m] - (abs(h - X) + ${ZB_MARGIN}) >= h)) { zbR = true; break; } } // K1362 s15 zb`],
+  [/for \(int i = 0; i < nk && bur < 1\.0; i\+\+\) \{\s*(int k = kk\[i\]; vec4 K0 = F\(uOK \+ 6 \* k\); vec4 K1 = F\(uOK \+ 6 \* k \+ 1\); if \(int\(K1\.z\) != S\) continue;)\s*float rq = length\(q - K0\.xy\);\s*if \(rq > K0\.z && rq < K0\.w && inSector\(k, q\) && outsideArms\(k, PC\(j\), q\)\) bur = 1\.0;\s*\}/,
+    (m) => `for (int i = 0; i < nk; i++) { ${/\{\s*(int k[^\n]*continue;)/.exec(m)![1]} float rp = length(p - K0.xy); float zr = abs(h - X) + ${ZB_MARGIN}; if (rp + zr > K0.z && rp - zr < K0.w) { zbR = true; break; } } // K1362 s15 zb`],
+  [/for \(int m = 0; m < np && bur < 1\.0; m\+\+\) \{\s*if \(PSURF\(m\) != S\) continue;\s*float wb2 = 1\.0 - ss\(h - 2\.0 \* aa, h, sqrt\(pieceD\(m, q\)\)\);\s*if \(wb2 > bur\) bur = wb2;\s*\}/,
+    () => `for (int m = 0; m < np; m++) { if (PSURF(m) != S) continue; if (!(pd[m] - (abs(Dk) + ${ZB_MARGIN}) >= h)) { zbR = true; break; } } // K1362 s15 zb`],
+  [/for \(int m = 0; m < np && bur < 1\.0; m\+\+\) \{\s*if \(PSURF\(m\) != S\) continue;\s*float wb2 = 1\.0 - ss\(h - 2\.0 \* aa, h, sqrt\(pieceD\(m, T\)\)\);\s*if \(wb2 > bur\) bur = wb2;\s*\}/,
+    () => `for (int m = 0; m < np; m++) { if (PSURF(m) != S) continue; if (!(pd[m] - (dT + ${ZB_MARGIN}) >= h)) { zbR = true; break; } } // K1362 s15 zb`],
+];
+const ZB_OVF = "if (sOvf) { gl_FragDepth = 1.0; return; }";
+function zBur(src: string): string {
+  for (const [re, f] of ZB_LOOPS) {
+    const m = re.exec(src); if (!m) { if (re === ZB_LOOPS[0][0]) throw new Error("gfFs zb: the piece faces' burial loop moved"); continue; }
+    src = src.replace(re, f(m[0]));
+    if (re.exec(src)) throw new Error("gfFs zb: a burial loop appears twice");
+  }
+  if (src.split(ZB_OVF).length !== 2) throw new Error("gfFs zb: the overflow route moved");
+  src = src.replace(ZB_OVF, `${ZB_OVF} if (zbR) { gl_FragDepth = 0.0; return; } // K1362 s15 zb: a face P0 cannot prove unburied`);
+  src = src.replace("float band2(float D)", "bool zbR; // K1362 s15 zb\nfloat band2(float D)");
+  return src.replace(ZC_MAIN, `${ZC_MAIN}  zbR = false;\n`);
 }
 
 /**
