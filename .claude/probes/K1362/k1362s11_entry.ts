@@ -141,6 +141,16 @@ const ATT: Record<string, [string, string][]> = {
   nokey: [["  for (int i = 0; i < nk; i++) {\n#ifdef KLEAN\n    int k = kk[i]; float krI;", "  for (int i = 0; i < 0; i++) {\n#ifdef KLEAN\n    int k = kk[i]; float krI;"]],
   // the brief's probe 1: every 2x2 block evaluates one world point (no divergence inside a quad, the fetches shared)
   quad: [["vec2 p = vec2(uMap.x * gl_FragCoord.x + uMap.y, uMap.z * gl_FragCoord.y + uMap.w);", "vec2 fc2 = floor(gl_FragCoord.xy * 0.5) * 2.0 + 0.5; vec2 p = vec2(uMap.x * fc2.x + uMap.y, uMap.z * fc2.y + uMap.w);"]],
+  // s11 (EXACT, a candidate): the scan's tj[8] array as two scalars; a third passing thru corner overflows to full
+  tj: [["int nTj = 0; int tj[8];", "int nTj = 0; int tj0 = 0; int tj1 = 0;"],
+    ["if (nTj < 8) tj[nTj++] = int(K1.w); }", "if (nTj == 0) tj0 = int(K1.w); else if (nTj == 1) tj1 = int(K1.w); else ovf = true; nTj++; }"],
+    ["bool same = false; for (int i = 0; i < nTj; i++) if (tj[i] == int(K1.w)) same = true;", "bool same = (nTj > 0 && tj0 == int(K1.w)) || (nTj > 1 && tj1 == int(K1.w));"]],
+  // s11 (EXACT, a candidate): one scalar; a passing thru corner of a second chain overflows to full
+  tjo: [["int nTj = 0; int tj[8];", "int nTj = 0; int tj0 = 0;"],
+    ["if (nTj < 8) tj[nTj++] = int(K1.w); }", "if (nTj == 0) tj0 = int(K1.w); else if (tj0 != int(K1.w)) ovf = true; nTj++; }"],
+    ["bool same = false; for (int i = 0; i < nTj; i++) if (tj[i] == int(K1.w)) same = true;", "bool same = tj0 == int(K1.w);"]],
+  // the identity (the same program under a second name): a bench lists a variant once, so this is a true repeat
+  id: [["vec2 q = f + (h * (p - f)) / X;", "vec2 q = f + (h * (p - f)) / X;"]],
 };
 function attFs(t: GfTier, parts: string[]): string {
   let s = gfFs(false, true, t);
@@ -423,11 +433,12 @@ export async function bench(cfg: BenchCfg): Promise<Record<string, unknown>> {
     const ft = new GfTarget(gl, 1, true); ft.resize(cfg.w, cfg.h);
     if (cfg.cover) {
       const cov: Record<string, number[]> = {};
-      for (const vn of cfg.variants.filter((v) => /^t\d/.test(v))) {
-        const tiers = parseTiers(vn);
+      for (const vn of cfg.variants.filter((v) => /^t\d/.test(v) || /^a[a-z+]+@t\d/.test(v))) {
+        const at = vn.indexOf("@"); const parts = at > 0 ? vn.slice(1, at).split("+") : [];
+        const tiers = parseTiers(at > 0 ? vn.slice(at + 1) : vn);
         cov[vn] = [];
         for (let i = 1; i <= tiers.length; i++) {
-          const pp = new GfPass(gl, false, tiers.slice(0, i), (t) => (t ? gfFs(false, true, t) : DISCARD));
+          const pp = new GfPass(gl, false, tiers.slice(0, i), (t) => (t ? (parts.length ? attFs(t, parts) : gfFs(false, true, t)) : DISCARD));
           pp.upload(T); pp.draw(ft, map, rect, false);
           const a = readRect(gl, ft, rect);
           let n = 0; for (let k = 3; k < a.length; k += 4) if (a[k] > 0) n++;

@@ -1,0 +1,1 @@
+{"benches":[{"name":"cov","scenes":["def"],"w":822,"h":1506,"fit":0.917,"nPass":2,"warmMs":0,"settleFrames":0,"variants":["full","t32rlgyc3"],"modes":[],"cover":true,"ref":"full","cmp":true},{"name":"nocov","scenes":["def"],"w":822,"h":1506,"fit":0.917,"nPass":2,"warmMs":0,"settleFrames":0,"variants":["full","t31rlgyc3"],"modes":[],"cover":false,"ref":"full","cmp":true}]}
