@@ -127,7 +127,19 @@ export class GfTarget {
  */
 export const GF_TIERS: GfTier[] = [{ p: 3, k: 2, ramps: true, s: 3, lab: true, grp: true, ks: true }];
 const UNIFORMS = ["uD", "uOCh", "uOV", "uOPin", "uOArm", "uOK", "uOChk", "uOCell", "uOChL", "uOKL", "uOKC", "uOKB", "uOKA", "uH", "uW", "uAA", "uSigma", "uZt", "uWin", "uRc", "uGrid", "uGDim", "uMap", "uP0", "uP1", "uP2", "uP3"];
-interface GfProg { prog: WebGLProgram; u: Map<string, WebGLUniformLocation | null>; tier: GfTier | null; split?: 1 | 2 }
+/** K1362 s12: a program drawn only in frames where some cell lists a corner ("corners") or none does ("none"). */
+type GfWhen = "corners" | "none";
+interface GfProg { prog: WebGLProgram; u: Map<string, WebGLUniformLocation | null>; tier: GfTier | null; split?: 1 | 2; when?: GfWhen }
+/**
+ * K1362 s12 kz (gf_glsl.ts cornerRoute): a tier's programs. "route" is free for the corner-free cells, then the tier
+ * for the cells with corners (only in a frame where some cell has one); "frame" is free in a frame where no cell has
+ * a corner, else the plain tier. Either way a pixel is drawn by a program that computes it as the tier does.
+ */
+export function cornerPlan(t: GfTier): { tier: GfTier; when?: GfWhen }[] {
+  if (t.kz === "route") return [{ tier: { ...t, kz: "free" } }, { tier: { ...t, kz: "corner" }, when: "corners" }];
+  if (t.kz === "frame") return [{ tier: { ...t, kz: "free" }, when: "none" }, { tier: { ...t, kz: undefined }, when: "corners" }];
+  return [{ tier: t }];
+}
 
 export class GfPass {
   readonly gl: WebGL2RenderingContext;
@@ -137,6 +149,8 @@ export class GfPass {
   private tex: WebGLTexture;
   private packed: GfPacked | null = null;
   private T: GfTables | null = null;
+  /** K1362 s12: whether some grid cell of the uploaded tables lists a corner (cornerPlan's per-frame choice). */
+  private cellCorners = true;
   private texRows = 0;
   private ext: TimerExt | null;
   private pending: { q: WebGLQuery; e: WebGLQuery }[] = [];
@@ -164,14 +178,14 @@ export class GfPass {
     if (split && (probe || tiers.length !== 1)) throw new Error("GfPass: split needs one tier and no probe");
     const sf: GfSplitForm = split === "skip" ? { skip: true } : typeof split === "object" ? split : {};
     this.skip = !!sf.skip; const keys = !!sf.keys;
-    const plan: { tier: GfTier | null; split?: 1 | 2 }[] = split ? [{ tier: tiers[0], split: 1 }, { tier: tiers[0], split: 2 }, { tier: null }]
-      : [...tiers, null].map((tier) => ({ tier }));
-    this.progs = plan.map(({ tier, split: s }) => {
+    const plan: { tier: GfTier | null; split?: 1 | 2; when?: GfWhen }[] = split ? [{ tier: tiers[0], split: 1 }, { tier: tiers[0], split: 2 }, { tier: null }]
+      : [...tiers.flatMap((t) => cornerPlan(t)), { tier: null }];
+    this.progs = plan.map(({ tier, split: s, when }) => {
       const src = fs ? fs(tier, s) : gfFs(probe, true, tier ?? undefined, s ? { reg: tier?.reg, unroll: tier?.unroll, pack: tier?.pack, split: s, splitSkip: this.skip, splitKeys: keys } : undefined);
       const prog = compileProgram(gl, GF_VS, src);
       const u = new Map<string, WebGLUniformLocation | null>();
       for (const n of UNIFORMS) u.set(n, gl.getUniformLocation(prog, n));
-      return { prog, u, tier, split: s };
+      return { prog, u, tier, split: s, when };
     });
     if (split) this.pieces = new GfPieces(gl, tiers[0].p, keys);
     this.vao = gl.createVertexArray()!;
@@ -187,6 +201,8 @@ export class GfPass {
     this.packed = packTables(T, this.packed ?? undefined, buildKeys(T));
     const t1 = performance.now();
     this.T = T;
+    let kc = false; for (let i = 0; i < T.cellKN.length && !kc; i++) kc = T.cellKN[i] > 0;
+    this.cellCorners = kc;
     const { data, rows } = this.packed;
     gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, null);
     gl.pixelStorei(gl.UNPACK_ALIGNMENT, 4);
@@ -234,7 +250,9 @@ export class GfPass {
     gl.colorMask(true, true, true, true);
     // The programs to draw: a half (mediump-int) tier only while every index fits mediump's 16 bits.
     const halfOk = Math.max(T.nV, T.nK, T.nA, T.nCh) < 32000;
-    const progs = this.progs.filter((g) => !g.tier || !g.tier.half || halfOk);
+    // K1362 s12 kz: a program for frames with (or without) a corner in some cell (cornerPlan).
+    const corners = this.cellCorners;
+    const progs = this.progs.filter((g) => (!g.tier || !g.tier.half || halfOk) && (!g.when || (g.when === "corners") === corners));
     const routed = progs.length > 1;
     const pieces = this.pieces;
     if (routed) target.ensureStencil();

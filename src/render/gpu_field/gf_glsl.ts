@@ -67,8 +67,14 @@ void main() {
  * order). kc: the corners keep kk and krho, a corner outside its sector as rho -1 (rho is a square root), and the
  * ring class is the scan's own two comparisons on it (kSG; kr rebuilt the sector with inSector). No float
  * arithmetic changes.
+ *
+ * `kz` (K1362 s12, the corner-free cells; cornerRoute below): "free" is the tier for the pixels whose cell lists
+ * no corner, with the corner code compiled out; "corner" is the tier itself for the pixels whose cell lists one.
+ * GfPass expands the other two: "route" draws free, then corner (skipped while no cell lists a corner), then full;
+ * "frame" draws free then full while no cell lists a corner, else the plain tier then full.
  */
-export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm; one?: boolean; bx?: boolean; fast?: boolean; s?: number; lab?: boolean; grp?: boolean; kq?: boolean; ks?: boolean; kl?: boolean; kr?: boolean; lh?: boolean; so?: boolean; cs?: boolean; vs?: boolean; ga?: boolean; sc?: boolean; kc?: boolean }
+export type GfCornerForm = "route" | "frame" | "free" | "corner";
+export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm; one?: boolean; bx?: boolean; fast?: boolean; s?: number; lab?: boolean; grp?: boolean; kq?: boolean; ks?: boolean; kl?: boolean; kr?: boolean; lh?: boolean; so?: boolean; cs?: boolean; vs?: boolean; ga?: boolean; sc?: boolean; kc?: boolean; kz?: GfCornerForm }
 export type GfPackForm = boolean | "f" | "i";
 
 /** The program's source forms (gf_reg.ts); a tier's own flags set them by default. The probe keeps the plain form. */
@@ -101,6 +107,11 @@ export function gfFs(probe: boolean, tangentTerms = true, tier?: GfTier, form: G
     if (form.splitKeys && !tier.ramps) throw new Error("gfFs: splitKeys needs a tier with ramps");
     src = src.replace("precision highp float;\n", `precision highp float;\n#define SPLIT${form.split} 1\n${form.splitSkip ? "#define SPLITSKIP 1\n" : ""}${form.splitKeys ? "#define SPLITK 1\n" : ""}`);
   }
+  if (tier?.kz) {
+    if (probe || form.split || form.reg || form.pack || form.unroll) throw new Error("gfFs: kz is a plain-form tier (no probe, split, reg, pack or unroll)");
+    if (tier.kz !== "free" && tier.kz !== "corner") throw new Error(`gfFs: kz "${tier.kz}" is GfPass's to expand into its programs (free, corner)`);
+    src = cornerRoute(src, tier.kz);
+  }
   if (probe) return src;
   const mp = tier ? tier.p : MAXP;
   const mk = tier ? tier.k : MAXK;
@@ -111,6 +122,31 @@ export function gfFs(probe: boolean, tangentTerms = true, tier?: GfTier, form: G
   }
   if (form.reg) src = scalarizeArrays(src, { MAXP: mp, MAXK: mk, MAXS: mp + mk });
   return src;
+}
+
+/**
+ * K1362 s12 `kz`: the corner-free cells. A cell whose list holds no corner (kn == 0) runs none of the scan's corner
+ * loops, so every pixel in it has thruK = -1, yielded = false and nk = 0, and layers() and the composite make no
+ * corner trip. "free" compiles that in: nk a constant 0, the corner scan gone, and a pixel whose cell lists a corner
+ * discarded right after the cell fetch (its stencil stays 0, so the next program draws it). Every other statement is
+ * the tier's, on the same values, so a pixel it draws is the tier's pixel. "corner" is the tier plus the opposite
+ * guard: a middle program's stencil test runs late, so on the pixels free drew it costs a fetch and a discard; a
+ * corner-free pixel free discarded (piece or surface overflow) passes on to full.
+ */
+const KZ_CELL = "    vec4 CE = F(uOCell + cell);\n";
+const KZ_SCAN = "    // corners near p\n    int k0 = int(CE.z); int kn = int(CE.w);\n";
+const KZ_SCAN_END = "#ifdef TIER\n    if (ovf) { discard; return; } // never past the arrays: D3D runs on past a discard\n#endif\n";
+function cornerRoute(src: string, form: "free" | "corner"): string {
+  const count = (what: string) => src.split(what).length - 1;
+  const need = (what: string, n: number) => { if (count(what) !== n) throw new Error(`gfFs kz: expected ${n} of ${JSON.stringify(what.slice(0, 48))}, found ${count(what)}`); };
+  need(KZ_CELL, 1);
+  if (form === "corner") return src.replace(KZ_CELL, `${KZ_CELL}    if (int(CE.w) == 0) { discard; return; } // K1362 s12 kz: the corner-free program drew this pixel\n`);
+  need(KZ_SCAN, 1); need(" int nk;", 2); need("np = 0; nk = 0; ns = 0;", 1);
+  const i0 = src.indexOf(KZ_SCAN); const i1 = src.indexOf(KZ_SCAN_END, i0);
+  if (i1 < 0) throw new Error("gfFs kz: the corner scan's end not found");
+  src = src.slice(0, i0) + "    int thruK = -1; float thruQ = 0.0; bool yielded = false; // K1362 s12 kz: no corner in this cell\n" + src.slice(i1);
+  src = src.replace(KZ_CELL, `${KZ_CELL}    if (int(CE.w) > 0) { discard; return; } // K1362 s12 kz: a cell with corners is the next program's\n`);
+  return src.split(" int nk;").join(" const int nk = 0;").replace("np = 0; nk = 0; ns = 0;", "np = 0; ns = 0;");
 }
 
 /**
