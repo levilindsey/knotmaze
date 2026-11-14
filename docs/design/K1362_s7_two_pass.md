@@ -167,3 +167,29 @@ on this fit dpr 1.5 alone does not reach 8.. A smaller canvas is class (a), Levi
 2. Lever 2 exactly in pass 2 (the incremental surface grouping), with the same 12-scene and mirror checks.
 3. If the split wins on the Pixel: replace t32r in `GF_TIERS` with it (needs the app's GfPass call to pass `split`,
    and `gf_app.ts`, which this stage stayed out of).
+
+## Pixel results (coordinator, 2026-11-13 12:21-12:29)
+
+`k1362s7_phone_run.ps1` (cfg phone2 twice, dpr15 once; outputs `out/s7/gpuclk_phone2*.json`, `gpuclk_dpr15.json`).
+sync4 net ms, run 1 / run 2, GPU clock 1286 MHz unless noted:
+
+| scene, canvas | t32r | x32re | x22rke | pass 1 alone (x32rke1) |
+|---|---|---|---|---|
+| def 822 | 15.95 / 16.32 | 15.62 / 16.15 | 14.38 / 14.98 | 7.92 (748) / 8.8 (883) |
+| muse_hash 822 | 22.45 / 22.70 | 20.40 / 20.48 | 22.07 / 23.32 | 10.60 / 10.93 |
+| fat 822 | 11.35 / 11.70 | 10.28 / 10.90 | 9.48 / 9.88 (1017) | 7.80 / 7.95 (1094) |
+| def 1079 | 22.43 / 21.77 | | 18.75 / 19.13 | |
+| muse_hash 1079 | 31.05 / 30.92 | | 29.73 / 29.72 | |
+| fat 1079 | 16.00 / 15.95 | | 12.50 / 12.03 (1017) | |
+| def 617 | 12.57 | | 11.95 | |
+| muse_hash 617 | 16.38 | | 18.75 | |
+| fat 617 (1190) | 7.67 | | 7.92 | |
+
+Exact on the Pixel: 0 px against full on def, muse_hash, fat and the nine cmp12 scenes for t32r, x32re and x22rke.
+The split saves 1-2 ms on the Pixel against 12-37% on the desktop; x22rke ties t32r on muse_hash at 822 and loses at
+617; x32re wins all three at 822 but def by 1-2% (run noise) at 56 B/px of targets (69 MB at 822). **t32r stays.**
+
+**Size.** t32r over three sizes is linear in pixels with a large intercept: def about 8.0 ms + 6.6 per Mpx (0.70 /
+1.24 / 2.13 Mpx: 12.57 / ~16.1 / ~22.1), muse_hash about 9-10 + 9.4-11.5, fat about 3-4 + 5-7. The timed loop
+excludes uploads (4 draws and a 1-px readPixels; the empty variant, about 0.85 ms, is subtracted), so half of def's
+822 time is in the program's work but does not scale with the canvas. Unexplained (K1376); stage 8 starts there.

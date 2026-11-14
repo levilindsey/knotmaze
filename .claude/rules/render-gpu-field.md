@@ -57,6 +57,12 @@ not repeated here.
 - Ramps stay inside the tier: a tier without ramps (t32, ramping
   pixels routed to full) was +5 to +9 ms against t32r on the Pixel, so
   any layering-once fold has to be exact inside the tier.
+- The two-pass split (stage 7, `gf_split.ts`, bench forms only) is
+  exact on the Pixel but gains only 1-2 ms there (12-37% on the
+  desktop), and pass 1 alone (the scan) is 8-11 ms at 822. t32r is
+  linear in canvas pixels with a large intercept (def about 8 ms +
+  6.6 per Mpx): half of def's time does not scale with the canvas
+  (K1376).
 - mediump changes nothing on the Pixel.
 - ANGLE (D3D on the desktop): execution continues past `discard`
   (write `discard; return;`), and a `&& !flag` loop condition was

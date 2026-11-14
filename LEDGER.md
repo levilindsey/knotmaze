@@ -295,9 +295,9 @@ Next free ID: K1378.
 - **K1367** · rp=gf at dpr 1 (411x753 on the Pixel, the only size under 8 ms so far: 6.9 / 7.3 ms with a
   reduced program): it reads blurry and the outlines mostly vanish. Keep full resolution (recommended) or take
   the blur for speed? Pictures: .claude/probes/K1362/out/s4/dpr1_def.png, dpr1_muse_hash.png (K1362 s4).
-  Since s7: def may reach 8 ms at full resolution after the split and layering fixes (unmeasured on the Pixel).
-  muse_hash does not scale with pixels alone (fit 11.3 ms + 9.5 per Mpx): ~10-12 at dpr 1.5 after the fixes,
-  so no middle size reaches 8 for it yet; hold this until the fixed cost (K1376) is understood.
+  Measured at dpr 1.5 (617x1130, 2026-11-13, t32r): def 12.6, muse_hash 16.4, fat 7.7 ms; the s7 split
+  did not help there. Half of def's time does not scale with pixels (K1376), so a smaller canvas buys less
+  than its pixel count; hold this until s8 explains that fixed cost.
 - **K1377** · The Pixel went screen-locked during the night (locked at every check 05:24-06:47 on 2026-11-13,
   after s6 used it until 05:04), so stage 7's split has no Pixel numbers. Unlock it when convenient; Claude
   never unlocks it. If it should stay unlocked on the charger overnight, that is a phone setting only Levi can
@@ -564,9 +564,9 @@ Next free ID: K1378.
   on it); dropped only on a proof it cannot work (brief: "How the result is judged"). Analysis in docs/ledger_notes.md.
   - owner: nobody since 2026-11-13 06:44 (merged)
   - branch: mainline; last commit: `10fd905a`
-  - evidence: .claude/probes/K1362/ (k1362s3_*, k1362s4_*), out/s3/, out/s4/
-  - next: s7 merged: the two-pass split (gf_split.ts; x22rke best) built, exact on the desktop 12 scenes, desktop 12-22% faster sync4 / 25-37% frame1; NOT measured on the Pixel (phone locked 05:24-06:47; 10:34-10:57 an app stayed in front). Next: `pwsh -NoProfile -File .claude/probes/K1362/k1362s7_phone_run.ps1` (rebuilds out/s7/site, waits up to -WaitMin for the phone, runs cfg phone2 + dpr15 with the clock, ~15 min; in the background), then read out/s7/gpuclk_*.json; replace t32r only if a split form wins on def, muse_hash and fat; then layering once inside pass 2 (s7 handoff)
-  - brief: `docs/design/K1362_s7_two_pass.md`
+  - evidence: .claude/probes/K1362/ (k1362s7_*, k1362s7_phone_run.ps1), out/s7/ (gpuclk_phone2*.json, gpuclk_dpr15.json)
+  - next: s7 measured on the Pixel (2026-11-13 12:21-12:29): exact, split only 1-2 ms faster, pass 1 alone 8-11 ms, so t32r stays; t32r is linear in Mpx with an ~8 ms def intercept (K1376). Next: s8, find the intercept, then cut what dominates (brief)
+  - brief: `docs/design/K1362_s8_intercept.md`
 
 ## Next, in order
 
@@ -1970,9 +1970,9 @@ Every other item below waits on the trigger it names.
   caught only by gf_build.test.ts and the in-app verify, not the digest (K1362 c1).
 - **K1373** · Pixel GPU: a program behind a stencil EQUAL class+1 test is not rejected before shading (EQUAL 0
   is); cause not isolated (docs/design/K1362_s5_tiles.md, lever 2).
-- **K1376** · rp=gf pass: a fixed per-size cost of unknown cause, about 39% of def's time on the desktop
-  (617x1130 keeps 74% of the 822 time at 56% of the pixels) and about 52% on the Pixel fit (muse_hash 11.3 ms
-  + 9.5 per Mpx). Find it before trading resolution for speed (K1362 s7 handoff, K1367).
+- **K1376** · rp=gf pass: a fixed per-size cost of unknown cause. Pixel t32r over three sizes (2026-11-13): def
+  about 8 ms + 6.6 per Mpx, muse_hash 9-10 + 10, fat 3-4 + 6; desktop 617 keeps 74% of 822's time at 56% of
+  the pixels. K1362 s8 starts here (docs/design/K1362_s8_intercept.md; s7 addendum "Pixel results").
 
 ## Approved, to schedule (2026-10-11)
 
