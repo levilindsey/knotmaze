@@ -133,6 +133,12 @@ const ATT: Record<string, [string, string][]> = {
   noface: [["for (int e = 0; e < ns; e++) {", "for (int e = 0; e < ns; e++) { SVW(e, 0.5) SAW(e, 0.5) } for (int e = 0; e < 0; e++) {"]],
   nofoot: [["vec2 f = vec2(pfx[j], pfy[j]);", "vec2 f = p;"]],
   nocorn: [["kSec[nk] = sec; kk[nk] = k; krho[nk] = rho; kIn[nk] = !inR ? 0 : rho > K0.z - aa ? 2 : 1; nk++;", ""], ["kk[nk] = k; KR(krho[nk] = KSV(rho, sec);) nk++;", ""]],
+  // no corner burial of a piece's face (the ring, sector and arm tests per piece), and the arm test alone
+  nokb: [["for (int i = 0; i < nk && bur < 1.0; i++) {", "for (int i = 0; i < 0; i++) {"]],
+  noarm: [["inSector(k, q) && outsideArms(k, PC(j), q)", "inSector(k, q)"]],
+  // the scan keeps its corners (and overflows on them), but layers() sees none; and layers() without the corner keys
+  nolk: [["  ns = 0;\n#ifdef SCAP\n  sOvf = false;", "  ns = 0; nk = 0;\n#ifdef SCAP\n  sOvf = false;"]],
+  nokey: [["  for (int i = 0; i < nk; i++) {\n#ifdef KLEAN\n    int k = kk[i]; float krI;", "  for (int i = 0; i < 0; i++) {\n#ifdef KLEAN\n    int k = kk[i]; float krI;"]],
   // the brief's probe 1: every 2x2 block evaluates one world point (no divergence inside a quad, the fetches shared)
   quad: [["vec2 p = vec2(uMap.x * gl_FragCoord.x + uMap.y, uMap.z * gl_FragCoord.y + uMap.w);", "vec2 fc2 = floor(gl_FragCoord.xy * 0.5) * 2.0 + 0.5; vec2 p = vec2(uMap.x * fc2.x + uMap.y, uMap.z * fc2.y + uMap.w);"]],
 };
