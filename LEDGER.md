@@ -562,10 +562,10 @@ Next free ID: K1379.
   tables the CPU builds in under 1 ms) instead of the outline mesh built on the CPU each frame (65-117 ms on
   def). Reverses the 2026-11-09 call (K1040 dropped for K1240). The main speed route (Levi, 2026-11-12: very bullish
   on it); dropped only on a proof it cannot work (brief: "How the result is judged"). Analysis in docs/ledger_notes.md.
-  - owner: agent `a1b8e615d3284b37e` of claude session 01SUPGULDxvE5gKXozfaFaFG (opus, started 2026-11-13 21:17, 2 h cap ~23:17)
-  - branch: `worktree-agent-a1b8e615d3284b37e`, worktree `.claude/worktrees/agent-a1b8e615d3284b37e`; last commit: `31d87122`
+  - owner: nobody since 2026-11-13 22:26 (merged; agent `a1b8e615d3284b37e` of claude session 01SUPGULDxvE5gKXozfaFaFG)
+  - branch: mainline; last commit: `b8f988db`
   - evidence: .claude/probes/K1362/ (k1362s10_*, k1362s11_*), out/s10/
-  - next: stage 11 agent running (the layering's per-pixel state); merge with agent_merge.ps1, set GF_TIERS only on a Pixel win at 0 px
+  - next: GF_TIERS stays t32rlgyc3 (Pixel def 12.0-12.9 ms at 822, goal 8). Stage 11: per-surface state costs nothing; corners cost 3.1-3.8 ms of def (layers() 2.25, scan corner loop 1.6), the face loop ~4.2, divergence 1.1-1.7. Brief stage 12 on the corners (K1362_s11_layer_state.md handoff)
   - brief: `docs/design/K1362_s11_layer_state.md`
 
 ## Next, in order
