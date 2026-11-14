@@ -562,11 +562,11 @@ Next free ID: K1379.
   tables the CPU builds in under 1 ms) instead of the outline mesh built on the CPU each frame (65-117 ms on
   def). Reverses the 2026-11-09 call (K1040 dropped for K1240). The main speed route (Levi, 2026-11-12: very bullish
   on it); dropped only on a proof it cannot work (brief: "How the result is judged"). Analysis in docs/ledger_notes.md.
-  - owner: nobody since 2026-11-13 21:13 (merged; agent `ae1c1c11c03a6a07f` of claude session 01SUPGULDxvE5gKXozfaFaFG)
-  - branch: mainline; last commit: `dd959bdc`
-  - evidence: .claude/probes/K1362/ (k1362s9_*, k1362s10_*), out/s9/
-  - next: GF_TIERS is t32rlgyc3 (Pixel def 11.5-11.7 ms at 822, goal 8). Brief stage 11: the layering is ~6.2 ms of def (5.5 without it): its per-pixel state (4 surface arrays x 3 slots, 8 corner slots), the 2x2 divergence (aquad saves 1.0 / 1.7 / 0.6 ms) or the scan; numbers in K1362_s10_piece_arrays.md's handoff
-  - brief: `docs/design/K1362_s10_piece_arrays.md`
+  - owner: agent `a1b8e615d3284b37e` of claude session 01SUPGULDxvE5gKXozfaFaFG (opus, started 2026-11-13 21:17, 2 h cap ~23:17)
+  - branch: `worktree-agent-a1b8e615d3284b37e`, worktree `.claude/worktrees/agent-a1b8e615d3284b37e`; last commit: `31d87122`
+  - evidence: .claude/probes/K1362/ (k1362s10_*, k1362s11_*), out/s10/
+  - next: stage 11 agent running (the layering's per-pixel state); merge with agent_merge.ps1, set GF_TIERS only on a Pixel win at 0 px
+  - brief: `docs/design/K1362_s11_layer_state.md`
 
 ## Next, in order
 
