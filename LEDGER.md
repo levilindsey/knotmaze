@@ -562,11 +562,11 @@ Next free ID: K1382.
   tables the CPU builds in under 1 ms) instead of the outline mesh built on the CPU each frame (65-117 ms on
   def). Reverses the 2026-11-09 call (K1040 dropped for K1240). The main speed route (Levi, 2026-11-12: very bullish
   on it); dropped only on a proof it cannot work (brief: "How the result is judged"). Analysis in docs/ledger_notes.md.
-  - owner: nobody since 2026-11-14 14:25 (stage 14 closed by claude session 01SUPGULDxvE5gKXozfaFaFG; no agent running)
-  - branch: mainline; last commit: `c455399a`
-  - evidence: .claude/probes/K1362/ (k1362s14_*, cfg p14f and p14h), out/s14/phone_p14f.json, out/s14/phone_p14h.json
-  - next: GF_TIERS t32rlgyjfFkDc3 (s14 kd; Pixel def 11.97 ms at 822, goal 8). The corner levers are spent: P T O G I M H and their stacks are exact on the Pixel but level or slower. Next: stage 15 on the corner-free half (def 55% of pixels, 5.7 ms), mainly its face loop (K1362_s14_corner_loops.md handoff)
-  - brief: `docs/design/K1362_s14_corner_loops.md`
+  - owner: agent `a692a6d29bd0fd421` of claude session 01SUPGULDxvE5gKXozfaFaFG (opus, started 2026-11-14 14:27, 2 h cap ~16:27)
+  - branch: `worktree-agent-a692a6d29bd0fd421`, worktree `.claude/worktrees/agent-a692a6d29bd0fd421`; last commit: `c96006bb`
+  - evidence: .claude/probes/K1362/ (k1362s14_*, k1362s15_*), out/s14/, out/s15/
+  - next: Stage 15 (a smaller per-pixel program by structure, def under 8 ms on the Pixel) running; merge its branch when it reports
+  - brief: `docs/design/K1362_s15_program_shape.md`
 
 ## Next, in order
 
