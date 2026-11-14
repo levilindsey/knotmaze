@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1378.
+Next free ID: K1379.
 
 ## Waiting on Levi
 
@@ -566,7 +566,7 @@ Next free ID: K1378.
   - branch: mainline; last commit: `332a7cf3`
   - evidence: .claude/probes/K1362/ (k1362s7_*, k1362s8_*), out/s7/
   - next: s8 merged: the fixed cost is ~1-2 ms per pass plus per-pixel cost rising at coarse density (2.0x per px at half density on the Pixel); no exact in-shader cut wins, so t32r stays. Even with no layering def is 5.95 ms, so 8 ms needs layering ~2 ms (5x cut). Next: s9, each bin's layer order and burial resolved on the CPU into new tables, the shader reads them
-  - brief: `docs/design/K1362_s8_intercept.md`
+  - brief: `docs/design/K1362_s9_layer_tables.md`
 
 ## Next, in order
 
@@ -2329,6 +2329,9 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K1368** · rp=gf's best small tier depends on the GPU (K1362 s4 picked p3/k2 with ramps for the Pixel; the
   desktop differs): choose GF_TIERS per device at startup from a short timed probe, if the default ever costs
   a device a pass.
+- **K1378** · rp=gf: s8's burial early exit (bx, t32rb) with a conservative margin in its check might be exact
+  on the Pixel (it was 8-97 px off on 11 of 12 scenes there, 0 px on the desktop); gain only 0.1-1.2 ms at 822
+  (K1362 s8 handoff, gf_glsl.ts burialExit)
 
 ## Done
 
