@@ -129,6 +129,10 @@ const ATT: Record<string, [string, string][]> = {
   // s11 (inexact, timing only): the layering without its sa array (D folded into sv) or its sv array (v folded into sa)
   nosa: [["#define SAW(e, x) sa[e] = x;", "#define SAW(e, x) sv[e] = max(sv[e], x);"], ["#define SAR(e) sa[e]", "#define SAR(e) sv[e]"]],
   nosv: [["#define SVW(e, x) sv[e] = x;", "#define SVW(e, x) float vv_ = x;"], ["#define SAW(e, x) sa[e] = x;", "#define SAW(e, x) sa[e] = max(x, vv_);"], ["#define SVR(e) sv[e]", "#define SVR(e) sa[e]"]],
+  // s11 (inexact, timing only): no face loop (each surface gets fixed v and a), no foot arrays (q = p), no corner keys
+  noface: [["for (int e = 0; e < ns; e++) {", "for (int e = 0; e < ns; e++) { SVW(e, 0.5) SAW(e, 0.5) } for (int e = 0; e < 0; e++) {"]],
+  nofoot: [["vec2 f = vec2(pfx[j], pfy[j]);", "vec2 f = p;"]],
+  nocorn: [["kSec[nk] = sec; kk[nk] = k; krho[nk] = rho; kIn[nk] = !inR ? 0 : rho > K0.z - aa ? 2 : 1; nk++;", ""], ["kk[nk] = k; KR(krho[nk] = KSV(rho, sec);) nk++;", ""]],
   // the brief's probe 1: every 2x2 block evaluates one world point (no divergence inside a quad, the fetches shared)
   quad: [["vec2 p = vec2(uMap.x * gl_FragCoord.x + uMap.y, uMap.z * gl_FragCoord.y + uMap.w);", "vec2 fc2 = floor(gl_FragCoord.xy * 0.5) * 2.0 + 0.5; vec2 p = vec2(uMap.x * fc2.x + uMap.y, uMap.z * fc2.y + uMap.w);"]],
 };
