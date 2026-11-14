@@ -57,6 +57,14 @@ not repeated here.
   is slower with corner code and gains only on fat without it. Alone,
   def's corner-free cells (55% of pixels) cost 5.72 ms, its corner cells
   8.17: both halves need less per-pixel work.
+- Stage 13: a per-cell layering order is provable on only 81-99.9% of
+  ink (def 94.5%, muse_hash 81.2%), and dropping the per-surface state
+  saves only 0.2-0.4 ms on the Pixel: the cell order is closed, and the
+  face loop's work is the cost. Stopping the face loop at the first
+  opaque surface (`lz`) is exact but slower (dynamic array indexing).
+  Skipping a face that cannot beat its surface's running maximum (`fs`,
+  exact since every factor is in [0, 1]) pays in the corner program
+  only: `GF_TIERS` t32rlgyjfFkc3, def 12.55 -> 12.01 ms at 822.
 - A tier is exact by construction: on overflow it sets a flag,
   breaks and discards, and the next program draws that pixel.
 - Routing is by stencil (EQUAL 0, INCR). The LAST program uses KEEP,
