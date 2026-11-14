@@ -562,11 +562,11 @@ Next free ID: K1379.
   tables the CPU builds in under 1 ms) instead of the outline mesh built on the CPU each frame (65-117 ms on
   def). Reverses the 2026-11-09 call (K1040 dropped for K1240). The main speed route (Levi, 2026-11-12: very bullish
   on it); dropped only on a proof it cannot work (brief: "How the result is judged"). Analysis in docs/ledger_notes.md.
-  - owner: claude session 01SUPGULDxvE5gKXozfaFaFG (coordinator; Pixel benches only, no agent running)
-  - branch: mainline; last commit: `be627d55`
-  - evidence: .claude/probes/K1362/ (k1362s8_*, k1362s9_*), out/s8/
-  - next: GF_TIERS is now t32rlc3 (Pixel def 13.95 ms at 822, goal 8). Run the benches the 20:01 touch cut: pwsh -NoProfile -File .claude/probes/K1362/k1362s9_phone_run.ps1 -Cfgs p9e -WaitMin 25 (f1080, att822; ~6 min on a ready phone); then brief stage 10: cut the per-piece arrays (11 per piece, 33 slots in the tier) or what att822 names; settle t32rlc2 vs lc3 with repeated runs
-  - brief: `docs/design/K1362_s9_layer_tables.md`
+  - owner: agent `ae1c1c11c03a6a07f` of claude session 01SUPGULDxvE5gKXozfaFaFG (opus, started 2026-11-13 20:31, 2 h cap ~22:31)
+  - branch: `worktree-agent-ae1c1c11c03a6a07f`, worktree `.claude/worktrees/agent-ae1c1c11c03a6a07f`; last commit: `1bb2d0c9`
+  - evidence: .claude/probes/K1362/ (k1362s9_*, k1362s10_*), out/s9/
+  - next: stage 10 agent running (per-piece arrays; runs p9e on the Pixel when ready); merge with agent_merge.ps1, set GF_TIERS only on a Pixel win at 0 px
+  - brief: `docs/design/K1362_s10_piece_arrays.md`
 
 ## Next, in order
 
