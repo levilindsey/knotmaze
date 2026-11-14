@@ -334,7 +334,7 @@ describe("gf tier forms, s12 corner-free cells", () => {
     for (const kz of ["route", "frame", "free", "corner"] as const) expect(gfFs(true, true, { ...L, kz })).toBe(gfFs(true, true, L));
     // the app's default is the per-frame choice (stage 12) with the exact face skip in the corner program (stage 13):
     // the gf_app counts probe builds GF_TIERS too
-    expect(GF_TIERS).toEqual([{ p: 3, k: 2, ramps: true, s: 3, lab: true, grp: true, ks: true, kz: "frame", fs: "c" }]);
+    expect(GF_TIERS).toEqual([{ p: 3, k: 2, ramps: true, s: 3, lab: true, grp: true, ks: true, kz: "frame", fs: "c", kd: true }]);
     for (const kz of ["route", "frame"] as const) expect(() => gfFs(false, true, { ...L, kz })).toThrow(/GfPass's to expand/);
     expect(cornerPlan({ ...L, kz: "route" })).toEqual([{ tier: { ...L, kz: "free" } }, { tier: { ...L, kz: "corner" }, when: "corners" }]);
     expect(cornerPlan({ ...L, kz: "frame" })).toEqual([{ tier: { ...L, kz: "free" }, when: "none" }, { tier: { ...L, kz: undefined }, when: "corners" }]);
@@ -467,6 +467,9 @@ describe("gf tier forms, s13 lazy faces", () => {
 // K1362 s13 `fs`: stage 8's face skip made exact (one band2 per face into fb, skipped when !(fb > v), no break in
 // the burial loops). The text: only the fb lines differ and each value multiplies that fb; the rounding fact is
 // "bx rests on" above.
+// The s13 default (no kd): the s13 and s14 form tests compare their forms against it, kd included.
+const S13: GfTier = { ...GF_TIERS[0], kd: undefined };
+
 describe("gf tier forms, s13 exact face skip", () => {
   const L: GfTier = { ...T, s: 3, lab: true, grp: true, ks: true };
   const FB = /\n *float fb = band2\(([^;]*)\); if \(!\(fb > v\)\) continue; \/\/ K1362 s13 fs/g;
@@ -488,7 +491,7 @@ describe("gf tier forms, s13 exact face skip", () => {
 
   it('fs "c": the corner programs skip, the corner-free program is the plain tier\'s text', () => {
     for (const kz of ["frame", "route"] as const) {
-      const base: GfTier = { ...GF_TIERS[0], kz, fs: undefined };
+      const base: GfTier = { ...S13, kz, fs: undefined };
       const plan = cornerPlan({ ...base, fs: "c" }); const ref = cornerPlan(base);
       expect(plan.map((p) => p.when)).toEqual(ref.map((p) => p.when));
       for (const tangent of [true, false]) {
@@ -506,7 +509,7 @@ describe("gf tier forms, s13 exact face skip", () => {
 // corner program, the corner-free program and the probe are untouched, kt undoes to the plain text and ko only
 // reorders lines.
 describe("gf tier forms, s14 corner loops", () => {
-  const [free0, corners0] = cornerPlan(GF_TIERS[0]);
+  const [free0, corners0] = cornerPlan(S13);
   const KT: [string, string][] = [
     ["int tj[8];\n", "int tjA = -1; int tjB = -1; // K1362 s14 kt\n"],
     ["if (nTj < 8) tj[nTj++] = int(K1.w); }", "if (nTj == 0) tjA = int(K1.w); else if (nTj == 1) tjB = int(K1.w); else ovf = true; nTj++; }"],
@@ -514,7 +517,7 @@ describe("gf tier forms, s14 corner loops", () => {
   ];
 
   it("only the corner program changes; the corner-free tier drops the forms; the probe is untouched", () => {
-    const [free, corners] = cornerPlan({ ...GF_TIERS[0], kp: true, kt: true, ko: true });
+    const [free, corners] = cornerPlan({ ...S13, kp: true, kt: true, ko: true });
     expect([free.when, corners.when]).toEqual([free0.when, corners0.when]);
     expect([free.tier.kp, free.tier.kt, free.tier.ko]).toEqual([undefined, undefined, undefined]);
     for (const tangent of [true, false]) {
@@ -556,7 +559,7 @@ describe("gf tier forms, s14 corner loops", () => {
   });
 
   it("kg: kk carries the surface; layers() tests it before a fetch, and the K1 fetches kept only for it go", () => {
-    const [free, corners] = cornerPlan({ ...GF_TIERS[0], kg: true });
+    const [free, corners] = cornerPlan({ ...S13, kg: true });
     expect(free.tier.kg).toBeUndefined();
     for (const tangent of [true, false]) {
       expect(gfFs(false, tangent, free.tier)).toBe(gfFs(false, tangent, free0.tier));
@@ -581,7 +584,7 @@ describe("gf tier forms, s14 corner loops", () => {
   });
 
   it("ki: the scan files rho > K0.z as kIn 3; the first corner loop fetches no K0, and K3 only for a new label", () => {
-    const [free] = cornerPlan({ ...GF_TIERS[0], ki: true, kg: true });
+    const [free] = cornerPlan({ ...S13, ki: true, kg: true });
     expect([free.tier.ki, free.tier.kg]).toEqual([undefined, undefined]);
     for (const tangent of [true, false]) {
       expect(gfFs(true, tangent, { ...corners0.tier, ki: true })).toBe(gfFs(true, tangent, corners0.tier));
@@ -602,7 +605,7 @@ describe("gf tier forms, s14 corner loops", () => {
   });
 
   it("km: the ring and tangent faces share one corner loop and one burial; the D factor multiplies the best tangent once", () => {
-    const [free] = cornerPlan({ ...GF_TIERS[0], km: true });
+    const [free] = cornerPlan({ ...S13, km: true });
     expect(free.tier.km).toBeUndefined();
     for (const tangent of [true, false]) {
       expect(gfFs(true, tangent, { ...corners0.tier, km: true })).toBe(gfFs(true, tangent, corners0.tier));
@@ -624,7 +627,7 @@ describe("gf tier forms, s14 corner loops", () => {
   });
 
   it("kd: the tangent faces' skip includes their D factor, hoisted once; the loop runs only while it is positive", () => {
-    const [free] = cornerPlan({ ...GF_TIERS[0], kd: true });
+    const [free] = cornerPlan({ ...S13, kd: true });
     expect(free.tier.kd).toBeUndefined();
     expect(gfFs(true, true, { ...corners0.tier, kd: true })).toBe(gfFs(true, true, corners0.tier));
     for (const extra of [{}, { kg: true, ki: true }, { kg: true, ki: true, kt: true, ko: true, kp: true }]) {
@@ -645,7 +648,7 @@ describe("gf tier forms, s14 corner loops", () => {
   });
 
   it("kh: kk carries the thru bit too, so the tangent loop fetches no K1; it needs kg", () => {
-    const [free] = cornerPlan({ ...GF_TIERS[0], kg: true, kh: true });
+    const [free] = cornerPlan({ ...S13, kg: true, kh: true });
     expect(free.tier.kh).toBeUndefined();
     for (const extra of [{ kg: true }, { kg: true, ki: true, kt: true, ko: true }, { kg: true, ki: true, kt: true, ko: true, kp: true, kd: true }]) {
       const kh = gfFs(false, true, { ...corners0.tier, ...extra, kh: true });

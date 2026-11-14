@@ -131,8 +131,11 @@ export class GfTarget {
  * surface's running maximum (fs "c"): def 12.01 / muse 16.50 ms against 12.55 / 17.03 at 822x1506 and 16.35 / 22.76
  * against 16.66 / 23.25 at 1079x1977 (sync4, 1286 MHz, means of 7 runs over three benches); fat's frames draw the
  * corner-free program unchanged (7.07 / 7.03, 9.73 / 9.79). 0 px on its 12 scenes on the Pixel and the desktop.
+ * Stage 14 (docs/design/K1362_s14_corner_loops.md) folds the tangent faces' D factor into that skip and bounds their
+ * loop by it (kd): def 11.97 / muse 16.45 / fat 7.13 ms against 12.17 / 16.68 / 7.10 at 822x1506 (sync4, 1286 MHz,
+ * means of 10 runs over three benches, p14f and p14h); level on the desktop. 0 px on its 12 scenes on both.
  */
-export const GF_TIERS: GfTier[] = [{ p: 3, k: 2, ramps: true, s: 3, lab: true, grp: true, ks: true, kz: "frame", fs: "c" }];
+export const GF_TIERS: GfTier[] = [{ p: 3, k: 2, ramps: true, s: 3, lab: true, grp: true, ks: true, kz: "frame", fs: "c", kd: true }];
 const UNIFORMS = ["uD", "uOCh", "uOV", "uOPin", "uOArm", "uOK", "uOChk", "uOCell", "uOChL", "uOKL", "uOKC", "uOKB", "uOKA", "uOKP", "uH", "uW", "uAA", "uSigma", "uZt", "uWin", "uRc", "uGrid", "uGDim", "uMap", "uP0", "uP1", "uP2", "uP3"];
 /** K1362 s12: a program drawn only in frames where some cell lists a corner ("corners") or none does ("none"). */
 type GfWhen = "corners" | "none";

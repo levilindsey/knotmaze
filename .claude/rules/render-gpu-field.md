@@ -68,9 +68,11 @@ not repeated here.
 - Stage 14: corner-cell pixels keep 0/1/2/3+ corners on 44/49/7/0.5%,
   so the corner code costs by its compile shape, not its trip count. A
   pruned corner list (`P`, 2.85 -> 1.21 walks per corner-cell pixel) is
-  level on the Pixel; merging the two corner loops (`M`) is 14-23%
-  slower on the desktop. The other exact corner forms (T O G I D H)
-  were not timed on the Pixel (`K1362_s14_corner_loops.md`).
+  level on the Pixel, and so are T O G I M H and their stacks (all
+  exact there, 12 scenes). Only the tangent faces' D factor in the skip
+  (`kd`) pays, about 0.2 ms on def and muse_hash: `GF_TIERS`
+  t32rlgyjfFkDc3, def 12.17 -> 11.97 ms at 822. The corner levers are
+  spent (`K1362_s14_corner_loops.md`).
 - A tier is exact by construction: on overflow it sets a flag,
   breaks and discards, and the next program draws that pixel.
 - Routing is by stencil (EQUAL 0, INCR). The LAST program uses KEEP,
