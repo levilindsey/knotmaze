@@ -31,7 +31,12 @@ not repeated here.
 - Stage 9 confirmed it on the Pixel: capping the tier's surfaces at 3
   (`s`) and keeping the label as a running best (`lab`) cut def,
   muse_hash and fat by 17-19%, while cutting work without shrinking
-  arrays (`fast`) gained nothing. `GF_TIERS` is that form, t32rlc3.
+  arrays (`fast`) gained nothing.
+- Stage 10: dropping a per-piece array pays on the Pixel (the ramp
+  group and value folded into psurf, the key reusing ps: 33 slots to
+  24, -8 to -11%); packing two arrays into one (lh, cs) or rebuilding
+  values from the segment index (kq) is slower. `GF_TIERS` is
+  t32rlgyc3. The layering is about 6.2 of def's 11.7 ms.
 - A tier is exact by construction: on overflow it sets a flag,
   breaks and discards, and the next program draws that pixel.
 - Routing is by stencil (EQUAL 0, INCR). The LAST program uses KEEP,
