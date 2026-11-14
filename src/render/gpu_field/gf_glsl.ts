@@ -37,8 +37,12 @@ void main() {
  * trip count of one (a second copy of the body), the rest the loop; the same statements on the same values.
  * `bx` (K1362 s8): the burial loops stop once their face cannot beat the surface's best value (see burialExit);
  * bench only, inexact on the Pixel.
+ * `fast` (K1362 s9): a pixel with at most one piece, no corner and no ramping piece (np <= 1, nk == 0, nr == 0) runs
+ * layers1() for layers(): one surface of one face with no sort and no burial, the same statements on the same values;
+ * composite() and the accumulation stay shared. (A written-out composite was 1 ulp off in coverage on 0.2-0.4% of
+ * the canvas on D3D, probably the compiler regrouping the straight-line form; cause not isolated.)
  */
-export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm; one?: boolean; bx?: boolean }
+export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm; one?: boolean; bx?: boolean; fast?: boolean }
 export type GfPackForm = boolean | "f" | "i";
 
 /** The program's source forms (gf_reg.ts); a tier's own flags set them by default. The probe keeps the plain form. */
@@ -147,6 +151,7 @@ ${probe ? "#define PROBE 1" : ""}
 ${tangentTerms ? "#define TANGENT 1" : ""}
 ${tier ? "#define TIER 1" : ""}
 ${tier && !tier.ramps ? "#define NORAMP 1" : ""}
+${tier && tier.fast && !probe ? "#define FAST 1" : ""}
 uniform sampler2D uD;
 uniform int uOCh, uOV, uOPin, uOArm, uOK, uOChk, uOCell, uOChL, uOKL, uOKC, uOKB, uOKA;
 uniform float uH, uW, uAA, uSigma, uZt, uWin, uRc;
@@ -397,6 +402,24 @@ void layers(vec2 p) {
   for (int i = 0; i < ns; i++) if (scov[i] && (top < 0 || sckey[i] > sckey[top])) top = i;
   labC = top >= 0 ? scch[top] : -1; PR(labS = top >= 0 ? scs[top] : 0.0;)
 }
+#ifdef FAST
+
+// K1362 s9: layers() for a pixel with at most one piece, no corner and no ramp. There is at most one surface, so no
+// sort, no burial (the burial loops skip the piece itself and there is no corner) and no corner face; v, D and the
+// label are layers()'s statements on the same values, and composite() and the accumulation stay shared.
+void layers1() {
+  float h = uH; float aa = uAA; float W = uW;
+  ns = 0; labC = -1;
+  if (np == 1 && pd[0] < h + aa) {
+    ns = 1; sord[0] = 0;
+    float D = -BIG; float v = 0.0;
+    float X = pd[0]; if (h - X > D) D = h - X;
+    if (X > h - W - aa && X > 1e-12) { float bur = 0.0; float val = (1.0 - bur) * band2(h - X); if (val > v) v = val; }
+    sv[0] = v; sa[0] = ss(-aa, aa, D);
+    if (pd[0] < h) labC = pc[0];
+  }
+}
+#endif
 
 float comp(int sw) {
   float Tt = 1.0; float ink = 0.0; float best = 0.0;
@@ -641,6 +664,9 @@ void main() {
     float ink = 0.0; float cov = 0.0; int lab = -1; PR(float labSv = 0.0; int wk = 0; int wa = -1; int wb = 0;) float bestW = -1.0;
     // Under NORAMP nr == 0 here (the discard above), so the loop runs once: one layering, weight 1. It stays a loop
     // on a runtime bound: inlined straight-line, D3D's compiler (ANGLE on Windows) failed the program at draw.
+#ifdef FAST
+    bool fast = np <= 1 && nk == 0 && nr == 0;
+#endif
     for (int cfg = 0; cfg <= nr; cfg++) {
       float hiR = cfg == 0 ? 1.0 : pramp[cfg == 1 ? rIdx0 : rIdx1];
       float loR = cfg == nr ? 0.0 : pramp[cfg == 0 ? rIdx0 : rIdx1];
@@ -650,6 +676,9 @@ void main() {
         if (pg[j] >= 0 && pramp[j] > 0.0 && pramp[j] < 1.0) { mem = (cfg >= 1 && rIdx0 == j) || (cfg >= 2 && rIdx1 == j); }
         psurf[j] = mem ? pg[j] : -1 - j;
       }
+#ifdef FAST
+      if (fast) layers1(); else
+#endif
       layers(p);
       float r = composite();
       float w = nr == 0 ? 1.0 : wgt;

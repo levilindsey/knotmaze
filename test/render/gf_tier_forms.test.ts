@@ -45,6 +45,19 @@ describe("gf tier forms", () => {
     expect(count(gfFs(false, true, { ...T, bx: true }, { split: 2 }), BREAK)).toBe(4);
   });
 
+  it("fast (s9): only the define differs; layers1 is called for layers() alone and composite() stays shared", () => {
+    for (const tangent of [true, false]) {
+      const plain = gfFs(false, tangent, T);
+      const fast = gfFs(false, tangent, { ...T, fast: true });
+      expect(plain).not.toContain("#define FAST 1");
+      expect(count(fast, "#define FAST 1\n")).toBe(1);
+      expect(fast.replace("#define FAST 1\n", "\n")).toBe(plain);
+      expect(gfFs(true, tangent, { ...T, fast: true })).toBe(gfFs(true, tangent, T));
+      expect(count(fast, "if (fast) layers1(); else\n#endif\n      layers(p);\n      float r = composite();")).toBe(1);
+      expect(count(fast, "layers1()")).toBe(2);
+    }
+  });
+
   it("bx rests on: a rounded product of values in [0, 1] is at most each factor", () => {
     let s = 0x9e3779b9;
     const rnd = (): number => { s = (Math.imul(s, 1664525) + 1013904223) >>> 0; const u = s / 2 ** 32; return Math.fround(u < 0.1 ? 0 : u > 0.9 ? 1 : u); };
