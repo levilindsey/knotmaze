@@ -562,10 +562,10 @@ Next free ID: K1378.
   tables the CPU builds in under 1 ms) instead of the outline mesh built on the CPU each frame (65-117 ms on
   def). Reverses the 2026-11-09 call (K1040 dropped for K1240). The main speed route (Levi, 2026-11-12: very bullish
   on it); dropped only on a proof it cannot work (brief: "How the result is judged"). Analysis in docs/ledger_notes.md.
-  - owner: nobody since 2026-11-13 06:44 (merged)
-  - branch: mainline; last commit: `10fd905a`
-  - evidence: .claude/probes/K1362/ (k1362s7_*, k1362s7_phone_run.ps1), out/s7/ (gpuclk_phone2*.json, gpuclk_dpr15.json)
-  - next: s7 measured on the Pixel (2026-11-13 12:21-12:29): exact, split only 1-2 ms faster, pass 1 alone 8-11 ms, so t32r stays; t32r is linear in Mpx with an ~8 ms def intercept (K1376). Next: s8, find the intercept, then cut what dominates (brief)
+  - owner: agent `a70c6f51ced4c8d0e` of claude session 01SUPGULDxvE5gKXozfaFaFG (opus, started 2026-11-13 12:35, 2 h cap ~14:35)
+  - branch: `worktree-agent-a70c6f51ced4c8d0e`, worktree `.claude/worktrees/agent-a70c6f51ced4c8d0e`; last commit: `636ef0c1`
+  - evidence: .claude/probes/K1362/ (k1362s7_*, k1362s8_*), out/s7/
+  - next: s8 running (from 12:37): the fixed cost first (desktop trip counts, then a crop test on the Pixel), then the cut
   - brief: `docs/design/K1362_s8_intercept.md`
 
 ## Next, in order
