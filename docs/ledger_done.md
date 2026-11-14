@@ -3627,3 +3627,23 @@ ledger keeps as a one-line entry. New entries go at the bottom.
 ## K1213 (Done 2026-11-05)
 
 - **K1213** · Cursive v6.8: word-final s and p run on in a flat tongue, the i and j dots are dashes, the q tail steps at 5x; J3k's S2, P1, D2 and Q1 follow the font, each local. Dropped: Levi answered 2026-11-05: "all word-end letters should have a tail, but both the s and p tails are currently bad. Tails should match the curvature they pass by and swoop up more. D2 for [the dots] is good. ... Q1 is good." K863 J3l builds it (docs/design/K863_cursive_j3l.md) (2026-11-05).
+
+## K1218 (Done 2026-11-06)
+
+- **K1218** · Every junction one fused unit (Levi, window 84): S2 fused the gold, S3 smoothed the gap edges, S4 the gold path's edge, and S5-S7's swept arcs (a web paints each arm at its own ribbon's arc) took out the lines, creases and staircases inside the junctions; K1227-K1231 hold what is left. Done in e4075024 (2026-11-06).
+
+## K1225 (Done 2026-11-06)
+
+- **K1225** · Cursive word-end tails: s and p as J3l or J3lc, and the new b, v, w, o and f tails (`docs/asks/K1225.md`; K863 J3l, 6c4ae88b). Dropped: Levi answered 2026-11-06: J3l for s and p; b, v and w should turn out of their cusp about ESE and swoop up (at a word's end and into high-entry letters; into low-entry ones the sharp cusp stays, the swoop starts later); o's tail hugs the o about 10 deg further; f's tail reaches the baseline and leaves along its pre-cusp stroke, to fuse into a spur. K863 J3m builds it (docs/design/K863_cursive_j3m.md) (2026-11-06).
+
+## K1228 (Done 2026-11-06)
+
+- **K1228** · Cross ji 51's inner-turn notch: a run of folding samples collapses its inner vertices onto the legs' inner-offset crossing, so R < h turns cover the half-width (0 background px, 0 strip flips on cross, loop and x4; pinned by test/render/ribbon_inner.test.ts). Done in ffbd64f3 (2026-11-06).
+
+## K1239 (Done 2026-11-06)
+
+- **K1239** · K868's scene export checked against the old ink: accurate. On-screen anchored ends now get their caps. The field's crossings differ from the old ink by K868's design (no gaps), so IoU against the old ink was the wrong target; the one stroke the field drops went to K1040 S4d. Done in b5d9c9c5 (2026-11-06).
+
+## K1246 (Done 2026-11-06)
+
+- **K1246** · Corner radius now follows the frame: V feet are the builder's global footArm (estD ± 4h) search and r is the 32-node gate integral recomputed per frame (margin/steep/slack/root). Moved def: 386 corners, 0 with |Δr|/|Δq| > 0.005 vs fresh (was 132); frame integral matches builder r bit-for-bit on the diagnosed corner. Residual moved over2 is exposure partition, filed separately. Done in 4db4a713 (2026-11-06).
