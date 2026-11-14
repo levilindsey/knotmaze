@@ -127,8 +127,12 @@ export class GfTarget {
  * no corner with the corner code compiled out (kz "frame"): fat 6.80 ms against t32rlgyc3's 7.95-8.17 at 822x1506 and
  * 8.68 against 10.82-11.05 at 1079x1977 (sync4, 1286 MHz); def and muse_hash have corners and draw t32rlgyc3 itself.
  * 0 px on its 12 scenes on the Pixel and the desktop. Routing per cell (kz "route") was 3 ms slower on def.
+ * Stage 13 (docs/design/K1362_s13_cell_order.md) skips, in the corner program, a face whose band cannot beat its
+ * surface's running maximum (fs "c"): def 12.01 / muse 16.50 ms against 12.55 / 17.03 at 822x1506 and 16.35 / 22.76
+ * against 16.66 / 23.25 at 1079x1977 (sync4, 1286 MHz, means of 7 runs over three benches); fat's frames draw the
+ * corner-free program unchanged (7.07 / 7.03, 9.73 / 9.79). 0 px on its 12 scenes on the Pixel and the desktop.
  */
-export const GF_TIERS: GfTier[] = [{ p: 3, k: 2, ramps: true, s: 3, lab: true, grp: true, ks: true, kz: "frame" }];
+export const GF_TIERS: GfTier[] = [{ p: 3, k: 2, ramps: true, s: 3, lab: true, grp: true, ks: true, kz: "frame", fs: "c" }];
 const UNIFORMS = ["uD", "uOCh", "uOV", "uOPin", "uOArm", "uOK", "uOChk", "uOCell", "uOChL", "uOKL", "uOKC", "uOKB", "uOKA", "uH", "uW", "uAA", "uSigma", "uZt", "uWin", "uRc", "uGrid", "uGDim", "uMap", "uP0", "uP1", "uP2", "uP3"];
 /** K1362 s12: a program drawn only in frames where some cell lists a corner ("corners") or none does ("none"). */
 type GfWhen = "corners" | "none";
