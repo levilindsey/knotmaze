@@ -562,11 +562,11 @@ Next free ID: K1382.
   tables the CPU builds in under 1 ms) instead of the outline mesh built on the CPU each frame (65-117 ms on
   def). Reverses the 2026-11-09 call (K1040 dropped for K1240). The main speed route (Levi, 2026-11-12: very bullish
   on it); dropped only on a proof it cannot work (brief: "How the result is judged"). Analysis in docs/ledger_notes.md.
-  - owner: nobody since 2026-11-13 23:45 (merged; agent `a31b4af5e23a7ec03` of claude session 01SUPGULDxvE5gKXozfaFaFG)
-  - branch: mainline; last commit: `258ccf44`
-  - evidence: .claude/probes/K1362/ (k1362s11_*, k1362s12_*), out/s12/
-  - next: GF_TIERS is t32rlgyjfc3 (a corner-free frame drops the corner code: Pixel fat 7.95 -> 6.80 ms at 822; def 12.1, muse_hash 17.0 unchanged, goal 8). Stage 12: per-cell routing slower; the one-pass face loop fj pays only on fat. Brief stage 13 on per-pixel work in both halves of def (K1362_s12_corners_faces.md handoff)
-  - brief: `docs/design/K1362_s12_corners_faces.md`
+  - owner: agent `afe832471aec3d743` of claude session 01SUPGULDxvE5gKXozfaFaFG (opus, started 2026-11-13 23:47, 2 h cap ~01:47)
+  - branch: `worktree-agent-afe832471aec3d743`, worktree `.claude/worktrees/agent-afe832471aec3d743`; last commit: `427d43e1`
+  - evidence: .claude/probes/K1362/ (k1362s12_*, k1362s13_*), out/s13/
+  - next: Stage 13 running: the layering resolved per cell into additive tables (coverage first, CPU mirror), then a tier form with no sort or surface arrays; merge on a Pixel win on all three at 0 px
+  - brief: `docs/design/K1362_s13_cell_order.md`
 
 ## Next, in order
 
