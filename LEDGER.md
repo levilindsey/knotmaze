@@ -562,10 +562,10 @@ Next free ID: K1379.
   tables the CPU builds in under 1 ms) instead of the outline mesh built on the CPU each frame (65-117 ms on
   def). Reverses the 2026-11-09 call (K1040 dropped for K1240). The main speed route (Levi, 2026-11-12: very bullish
   on it); dropped only on a proof it cannot work (brief: "How the result is judged"). Analysis in docs/ledger_notes.md.
-  - owner: nobody since 2026-11-13 13:40 (merged; agent `a70c6f51ced4c8d0e` of claude session 01SUPGULDxvE5gKXozfaFaFG)
-  - branch: mainline; last commit: `332a7cf3`
-  - evidence: .claude/probes/K1362/ (k1362s7_*, k1362s8_*), out/s7/
-  - next: s8 merged: the fixed cost is ~1-2 ms per pass plus per-pixel cost rising at coarse density (2.0x per px at half density on the Pixel); no exact in-shader cut wins, so t32r stays. Even with no layering def is 5.95 ms, so 8 ms needs layering ~2 ms (5x cut). Next: s9, each bin's layer order and burial resolved on the CPU into new tables, the shader reads them
+  - owner: agent `a9f562d4c9f0e4356` of claude session 01SUPGULDxvE5gKXozfaFaFG (opus, started 2026-11-13 13:42, 2 h cap ~15:42)
+  - branch: `worktree-agent-a9f562d4c9f0e4356`, worktree `.claude/worktrees/agent-a9f562d4c9f0e4356`; last commit: `7c31a8ad`
+  - evidence: .claude/probes/K1362/ (k1362s8_*, k1362s9_*), out/s8/
+  - next: s9 running (from 13:43): layering resolved per bin on the CPU into new additive tables, the shader reads them; old fields bit-identical
   - brief: `docs/design/K1362_s9_layer_tables.md`
 
 ## Next, in order
