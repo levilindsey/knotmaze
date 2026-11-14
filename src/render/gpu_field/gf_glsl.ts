@@ -85,9 +85,10 @@ void main() {
  * thruScalars, burialOrder below): the scan's thru chain ids as two scalars; a piece face's corner burial first.
  * `kg` (K1362 s14, cornerSurfaces below): kk carries each corner's surface, so layers() tests it before fetching.
  * `ki` (K1362 s14, cornerInside below): kIn 3 files rho > K0.z, so layers()'s first corner loop fetches no K0.
+ * `km` (K1362 s14, cornerMerge below): the ring faces and the tangent faces share one corner loop and one burial.
  */
 export type GfCornerForm = "route" | "frame" | "free" | "corner";
-export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm; one?: boolean; bx?: boolean; fast?: boolean; s?: number; lab?: boolean; grp?: boolean; kq?: boolean; ks?: boolean; kl?: boolean; kr?: boolean; lh?: boolean; so?: boolean; cs?: boolean; vs?: boolean; ga?: boolean; sc?: boolean; kc?: boolean; kz?: GfCornerForm; fj?: boolean | "s"; lz?: boolean; fs?: boolean | "c"; kp?: boolean; kt?: boolean; ko?: boolean; kg?: boolean; ki?: boolean }
+export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm; one?: boolean; bx?: boolean; fast?: boolean; s?: number; lab?: boolean; grp?: boolean; kq?: boolean; ks?: boolean; kl?: boolean; kr?: boolean; lh?: boolean; so?: boolean; cs?: boolean; vs?: boolean; ga?: boolean; sc?: boolean; kc?: boolean; kz?: GfCornerForm; fj?: boolean | "s"; lz?: boolean; fs?: boolean | "c"; kp?: boolean; kt?: boolean; ko?: boolean; kg?: boolean; ki?: boolean; km?: boolean }
 export type GfPackForm = boolean | "f" | "i";
 
 /** The program's source forms (gf_reg.ts); a tier's own flags set them by default. The probe keeps the plain form. */
@@ -153,6 +154,12 @@ export function gfFs(probe: boolean, tangentTerms = true, tier?: GfTier, form: G
   if (tier?.fs && !probe) {
     if (form.split || form.reg || form.pack || form.unroll || tier.fj || tier.bx) throw new Error("gfFs: fs is a plain-form tier (no split, reg, pack, unroll, fj or bx)");
     src = faceSkip(src);
+  }
+  if (tier && tier.km && !probe && tier.kz !== "free") {
+    if (!tier.fs || form.split || form.reg || form.pack || form.unroll || tier.bx || tier.fj || tier.half || tier.kl || tier.kr || tier.kc || tier.kg || tier.ki) {
+      throw new Error("gfFs: km is a plain-form fs tier (fs; no split, reg, pack, unroll, bx, fj, half, kl, kr, kc, kg or ki)");
+    }
+    src = cornerMerge(src);
   }
   if (tier?.fj && !probe) {
     if (form.split || form.reg || form.pack || form.unroll || tier.kq || tier.kl || tier.kr || tier.kc || tier.vs || tier.ga || tier.one || tier.bx) throw new Error("gfFs: fj is a plain-form tier (no split, reg, pack, unroll, kq, kl, kr, kc, vs, ga, one or bx)");
@@ -403,6 +410,63 @@ function cornerSurfaces(src: string): string {
   rep("vec4 K1 = F(uOK + 6 * k + 1); if (int(K1.z) != S || K1.x > 0.5) continue;", "if (kS != S) continue; vec4 K1 = F(uOK + 6 * k + 1); if (K1.x > 0.5) continue;");
   if (src.includes("int(K1.z) != S")) throw new Error("gfFs kg: a corner surface test still fetches K1");
   return src;
+}
+
+/**
+ * K1362 s14 `km` (tier letter M): layers()'s ring-face loop and tangent-face loop become one loop over the corners
+ * with one burial (one inlined pieceD fewer, K1 fetched once). Exact: a ring face's value does not read D; a tangent
+ * face's value is round(a * c) with a = (1 - bur) * fb and c = ss(-aa, aa, D) in [0, 1] taken from the final D, and a
+ * float product by a fixed c >= 0 is monotone, so max_t round(a_t * c) = round(max_t a_t * c): the loop keeps the
+ * best a (tv) and multiplies once after D is final. A tangent face is skipped when fb <= max(v, tv): then a <= fb, so
+ * it can neither raise tv nor (a * c <= a <= v) the final v. The face's identity (PR) is the probe's only, and the
+ * probe never takes a tier.
+ */
+function cornerMerge(src: string): string {
+  const svw = "    SVW(e, v) SAW(e, ss(-aa, aa, D))";
+  const end = src.indexOf(svw);
+  const start = src.lastIndexOf("    for (int i = 0; i < nk; i++) {\n#ifdef KLEAN\n", end);
+  if (end < 0 || src.indexOf(svw, end + 1) >= 0 || start < 0) throw new Error("gfFs: km found no ring-face loop");
+  const old = src.slice(start, end);
+  if (old.split("// K1362 s13 fs").length !== 3 || !old.includes("#ifdef TANGENT\n") || !old.includes("float val = (1.0 - bur) * fb * ss(-aa, aa, D);")) {
+    throw new Error("gfFs: km expects the fs ring and tangent loops");
+  }
+  const merged = `    float tv = 0.0; // K1362 s14 km: the best tangent face before its D factor
+    for (int i = 0; i < nk; i++) {
+      int k = kk[i]; vec4 K0 = F(uOK + 6 * k); vec4 K1 = F(uOK + 6 * k + 1); if (int(K1.z) != S) continue;
+      float rho = krho[i]; float Dk = rho - K0.z; bool ring = kSec[i];
+      if (ring && kIn[i] == 2 && Dk > D) D = Dk;
+      ring = ring && rho > 1e-12;
+#ifdef TANGENT
+      bool tng = !(K1.x > 0.5); vec4 K4 = vec4(0.0); vec4 K5 = vec4(0.0);
+      if (tng) { K4 = F(uOK + 6 * k + 4); K5 = F(uOK + 6 * k + 5); }
+      int nf = tng ? 3 : 1;
+#else
+      int nf = 1;
+#endif
+      for (int f = 0; f < nf; f++) {
+        vec2 q; float fb;
+        if (f == 0) {
+          if (!ring) continue;
+          fb = band2(Dk); if (!(fb > v)) continue;
+          q = K0.xy + (K0.z * (p - K0.xy)) / rho;
+        } else {
+          q = f == 2 ? K5.xy : K4.zw;
+          float dT = length(p - q); if (!(dT < W + aa)) continue;
+          fb = band2(dT); if (!(fb > max(v, tv))) continue;
+        }
+        float bur = 0.0;
+        for (int m = 0; m < np && bur < 1.0; m++) {
+          if (PSURF(m) != S) continue;
+          float wb2 = 1.0 - ss(h - 2.0 * aa, h, sqrt(pieceD(m, q)));
+          if (wb2 > bur) bur = wb2;
+        }
+        float val = (1.0 - bur) * fb;
+        if (f == 0) { if (val > v) v = val; } else if (val > tv) tv = val;
+      }
+    }
+    float tvD = tv * ss(-aa, aa, D); if (tvD > v) v = tvD;
+`;
+  return src.slice(0, start) + merged + src.slice(end);
 }
 
 /**

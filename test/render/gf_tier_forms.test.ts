@@ -600,4 +600,26 @@ describe("gf tier forms, s14 corner loops", () => {
     for (const f of [{ bx: true }, { half: true }, { kl: true }]) expect(() => gfFs(false, true, { ...base, ...f })).toThrow(/plain-form/);
     for (const form of [{ reg: true }, { unroll: true }, { pack: true }]) expect(() => gfFs(false, true, base, form)).toThrow(/plain-form/);
   });
+
+  it("km: the ring and tangent faces share one corner loop and one burial; the D factor multiplies the best tangent once", () => {
+    const [free] = cornerPlan({ ...GF_TIERS[0], km: true });
+    expect(free.tier.km).toBeUndefined();
+    for (const tangent of [true, false]) {
+      expect(gfFs(true, tangent, { ...corners0.tier, km: true })).toBe(gfFs(true, tangent, corners0.tier));
+      for (const extra of [{}, { kt: true, ko: true, kp: true }]) {
+        const km = gfFs(false, tangent, { ...corners0.tier, ...extra, km: true });
+        const base = gfFs(false, tangent, { ...corners0.tier, ...extra });
+        expect(count(base, "pieceD(") - count(km, "pieceD(")).toBe(1);
+        expect(count(base, "F(uOK + 6 * k + 1)") - count(km, "F(uOK + 6 * k + 1)")).toBe(2); // the tangent loop's, and the dropped KLEAN branch's text
+        expect(count(km, "float tvD = tv * ss(-aa, aa, D); if (tvD > v) v = tvD;")).toBe(1);
+        expect(count(km, "fb = band2(dT); if (!(fb > max(v, tv))) continue;")).toBe(1);
+        expect(km).not.toContain("* fb * ss(-aa, aa, D)");
+        expect(count(base, "// K1362 s13 fs") - count(km, "// K1362 s13 fs")).toBe(2);
+      }
+    }
+    const base: GfTier = { ...corners0.tier, km: true };
+    expect(() => gfFs(false, true, { ...base, fs: undefined })).toThrow(/km is a plain-form fs tier/);
+    for (const f of [{ bx: true }, { half: true }, { kl: true }, { kg: true }, { ki: true }]) expect(() => gfFs(false, true, { ...base, ...f })).toThrow(/plain-form/);
+    for (const form of [{ reg: true }, { unroll: true }, { pack: true }]) expect(() => gfFs(false, true, base, form)).toThrow(/plain-form/);
+  });
 });
