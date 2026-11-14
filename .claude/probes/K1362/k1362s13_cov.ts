@@ -7,7 +7,8 @@
 // - empO: every pixel's surfaces appear in one cell-wide order (by surface id; lone pieces by chain) and no pixel
 //   reaches a tie swap;
 // - else the cell needs the per-pixel order.
-// These are the ceiling (observed, not proved). The conservative bound (proveCell) is the shippable number.
+// These are the ceiling (observed, not proved). A conservative bound (an optional k1362s13_prove.ts, proveCells) would be
+// the shippable number; stage 13 wrote none, since the ceiling already stays below the 100% a per-frame choice needs.
 import { readFileSync, writeFileSync } from "node:fs";
 import { buildTables, type GfTables } from "../../../src/render/gpu_field/tables";
 import { GfEval } from "../../../src/render/gpu_field/eval";

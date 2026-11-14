@@ -138,10 +138,12 @@ interface GfProg { prog: WebGLProgram; u: Map<string, WebGLUniformLocation | nul
  * for the cells with corners (only in a frame where some cell has one); "frame" is free in a frame where no cell has
  * a corner, else the plain tier. Either way a pixel is drawn by a program that computes it as the tier does. Under
  * "frame", fj (the one-pass face loop) goes to the corner-free program only: with corners it was slower on the Pixel.
+ * fs "c" (K1362 s13, the exact face skip) goes to the corner programs only: without corners (fat) it was slower.
  */
 export function cornerPlan(t: GfTier): { tier: GfTier; when?: GfWhen }[] {
-  if (t.kz === "route") return [{ tier: { ...t, kz: "free" } }, { tier: { ...t, kz: "corner" }, when: "corners" }];
-  if (t.kz === "frame") return [{ tier: { ...t, kz: "free" }, when: "none" }, { tier: { ...t, kz: undefined, fj: undefined }, when: "corners" }];
+  const free: GfTier = t.fs === "c" ? { ...t, kz: "free", fs: undefined } : { ...t, kz: "free" };
+  if (t.kz === "route") return [{ tier: free }, { tier: { ...t, kz: "corner" }, when: "corners" }];
+  if (t.kz === "frame") return [{ tier: free, when: "none" }, { tier: { ...t, kz: undefined, fj: undefined }, when: "corners" }];
   return [{ tier: t }];
 }
 

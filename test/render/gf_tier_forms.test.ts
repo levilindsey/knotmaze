@@ -484,4 +484,17 @@ describe("gf tier forms, s13 exact face skip", () => {
     }
     for (const f of [{ fj: true }, { bx: true }]) expect(() => gfFs(false, true, { ...L, ...f, fs: true })).toThrow(/fs is a plain-form/);
   });
+
+  it('fs "c": the corner programs skip, the corner-free program is the plain tier\'s text', () => {
+    for (const kz of ["frame", "route"] as const) {
+      const base: GfTier = { ...GF_TIERS[0], kz, fs: undefined };
+      const plan = cornerPlan({ ...base, fs: "c" }); const ref = cornerPlan(base);
+      expect(plan.map((p) => p.when)).toEqual(ref.map((p) => p.when));
+      for (const tangent of [true, false]) {
+        expect(gfFs(false, tangent, plan[0].tier)).toBe(gfFs(false, tangent, ref[0].tier));
+        expect(gfFs(false, tangent, plan[1].tier)).toBe(gfFs(false, tangent, { ...ref[1].tier, fs: true }));
+        expect(gfFs(false, tangent, plan[1].tier)).not.toBe(gfFs(false, tangent, ref[1].tier));
+      }
+    }
+  });
 });

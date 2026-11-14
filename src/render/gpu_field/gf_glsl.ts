@@ -76,9 +76,13 @@ void main() {
  * `fj` (K1362 s12, the face loop; faceJoin below): one pass over the pieces, then the corners, then the tangent
  * points, each face updating its own surface's slot (v in sv, D in sa until the end), in place of a pass over every
  * piece per surface. The same faces on the same values; v and D are running maxima, so the order cannot change them.
+ *
+ * `lz` and `fs` (K1362 s13; lazyFaces, faceSkip below): lz runs the face loop in sorted order up to the first
+ * opaque place; fs skips a face whose band cannot beat its surface's running maximum. fs "c" is fs in the corner
+ * program only (GfPass cornerPlan); gfFs reads any truthy fs as fs.
  */
 export type GfCornerForm = "route" | "frame" | "free" | "corner";
-export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm; one?: boolean; bx?: boolean; fast?: boolean; s?: number; lab?: boolean; grp?: boolean; kq?: boolean; ks?: boolean; kl?: boolean; kr?: boolean; lh?: boolean; so?: boolean; cs?: boolean; vs?: boolean; ga?: boolean; sc?: boolean; kc?: boolean; kz?: GfCornerForm; fj?: boolean | "s"; lz?: boolean; fs?: boolean }
+export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm; one?: boolean; bx?: boolean; fast?: boolean; s?: number; lab?: boolean; grp?: boolean; kq?: boolean; ks?: boolean; kl?: boolean; kr?: boolean; lh?: boolean; so?: boolean; cs?: boolean; vs?: boolean; ga?: boolean; sc?: boolean; kc?: boolean; kz?: GfCornerForm; fj?: boolean | "s"; lz?: boolean; fs?: boolean | "c" }
 export type GfPackForm = boolean | "f" | "i";
 
 /** The program's source forms (gf_reg.ts); a tier's own flags set them by default. The probe keeps the plain form. */
