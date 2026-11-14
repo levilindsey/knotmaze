@@ -562,10 +562,10 @@ Next free ID: K1382.
   tables the CPU builds in under 1 ms) instead of the outline mesh built on the CPU each frame (65-117 ms on
   def). Reverses the 2026-11-09 call (K1040 dropped for K1240). The main speed route (Levi, 2026-11-12: very bullish
   on it); dropped only on a proof it cannot work (brief: "How the result is judged"). Analysis in docs/ledger_notes.md.
-  - owner: nobody since 2026-11-14 03:02 (merged; agent `a523f744a0007e4e9` of claude session 01SUPGULDxvE5gKXozfaFaFG)
-  - branch: mainline; last commit: `67eeae4c`
-  - evidence: .claude/probes/K1362/ (k1362s13_*, k1362s14_*), out/s14/
-  - next: GF_TIERS stays t32rlgyjfFkc3 (Pixel def ~12.0 ms at 822, goal 8). Stage 14 built 8 exact corner bench forms (P T O G I D H M); only P was timed on the Pixel (level), the phone slept. Next: on an awake Pixel run pwsh -NoProfile -File .claude/probes/K1362/k1362s14_phone_run.ps1 -Cfgs p14f -WaitMin 30 (or p14g, shorter); if none pays, target the corner-free half face loop (K1362_s14_corner_loops.md handoff)
+  - owner: nobody since 2026-11-14 14:25 (stage 14 closed by claude session 01SUPGULDxvE5gKXozfaFaFG; no agent running)
+  - branch: mainline; last commit: `c455399a`
+  - evidence: .claude/probes/K1362/ (k1362s14_*, cfg p14f and p14h), out/s14/phone_p14f.json, out/s14/phone_p14h.json
+  - next: GF_TIERS t32rlgyjfFkDc3 (s14 kd; Pixel def 11.97 ms at 822, goal 8). The corner levers are spent: P T O G I M H and their stacks are exact on the Pixel but level or slower. Next: stage 15 on the corner-free half (def 55% of pixels, 5.7 ms), mainly its face loop (K1362_s14_corner_loops.md handoff)
   - brief: `docs/design/K1362_s14_corner_loops.md`
 
 ## Next, in order
