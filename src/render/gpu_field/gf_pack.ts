@@ -14,6 +14,7 @@
 //   KC   1 per chain:  (first bin, bins, bin width, s origin)              (gf_keys.ts, K1362 s6)
 //   KB   1 per bin:    (pin search lo, hi, first candidate, candidates)
 //   KA   2 per candidate: the candidate arm's two ARM texels, copied
+//   KP   1 per cellKList entry: cellKPList, 4 per texel (a cell's at texel cellK0; K1362 s14, a `kp` tier's)
 // Integers ride as floats (exact below 2^24). A non-finite value is stored
 // as +-GF_BIG (the shader tests `>= GF_BIG_TEST`): Infinity is aLcut's "no cap".
 import type { GfTables } from "./tables";
@@ -27,13 +28,13 @@ export interface GfPacked {
   data: Float32Array;
   rows: number;
   /** Section bases, texels. */
-  o: { ch: number; v: number; pin: number; arm: number; k: number; chk: number; cell: number; chl: number; kl: number; kc: number; kb: number; ka: number };
+  o: { ch: number; v: number; pin: number; arm: number; k: number; chk: number; cell: number; chl: number; kl: number; kc: number; kb: number; ka: number; kp: number };
 }
 
 const fin = (v: number): number => (v === Infinity ? GF_BIG : v === -Infinity ? -GF_BIG : v);
 
 export function packTables(T: GfTables, reuse?: GfPacked, keys: GfKeys = buildKeys(T)): GfPacked {
-  const o = { ch: 0, v: 0, pin: 0, arm: 0, k: 0, chk: 0, cell: 0, chl: 0, kl: 0, kc: 0, kb: 0, ka: 0 };
+  const o = { ch: 0, v: 0, pin: 0, arm: 0, k: 0, chk: 0, cell: 0, chl: 0, kl: 0, kc: 0, kb: 0, ka: 0, kp: 0 };
   let n = 0;
   o.ch = n; n += 3 * T.nC;
   o.v = n; n += T.nV;
@@ -47,6 +48,7 @@ export function packTables(T: GfTables, reuse?: GfPacked, keys: GfKeys = buildKe
   o.kc = n; n += T.nC;
   o.kb = n; n += keys.nB;
   o.ka = n; n += 2 * keys.nKA;
+  o.kp = n; n += T.cellKList.length;
   const rows = Math.max(1, Math.ceil(n / GF_TW));
   const need = rows * GF_TW * 4;
   const data = reuse && reuse.data.length >= need ? reuse.data : new Float32Array(need);
@@ -87,5 +89,6 @@ export function packTables(T: GfTables, reuse?: GfPacked, keys: GfKeys = buildKe
     put(o.ka + 2 * q, T.aSR[a], T.aDir[a], T.aL[a], T.aLcut[a]);
     put(o.ka + 2 * q + 1, T.aG[a], 0, 0, 0);
   }
+  for (let i = 0; i < T.cellKPList.length; i++) data[4 * o.kp + i] = T.cellKPList[i];
   return { data, rows, o };
 }

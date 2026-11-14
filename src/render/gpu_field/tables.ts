@@ -59,8 +59,15 @@ export interface GfTables {
   gx0: number; gy0: number; G: number; gW: number; gH: number;
   cellCh0: Int32Array; cellChN: Int32Array; cellChList: Int32Array;
   cellK0: Int32Array; cellKN: Int32Array; cellKList: Int32Array;
+  /**
+   * K1362 s14 (additive; only a `kp` tier reads it): each corner cell's lists pruned by an exact bound, 4 slots per
+   * entry of its cellKList at slot 4 * cellK0: (nThru, nKeep), the thru corners whose reach (kRV + W + 4aa) can
+   * touch the cell, then the corners whose ring test (kR - aa - W < rho <= kRmax + W + 2aa) and, thru, reach can pass
+   * somewhere in it, each in cellKList order (2 + nThru + nKeep <= 4 kn); unused slots are -1.
+   */
+  cellKPList: Int32Array;
   /** Build time per part, ms. */
-  ms: { vtx: number; pins: number; arms: number; corners: number; bins: number; total: number };
+  ms: { vtx: number; pins: number; arms: number; corners: number; bins: number; kp: number; total: number };
 }
 
 const now = (): number => (typeof performance !== "undefined" ? performance.now() : Date.now());
@@ -773,14 +780,55 @@ export function assembleGfTables(P: GfPrefix, K: GfCorner[], chunk: { meta: GfCh
   const fK = new Int32Array(nCell);
   for (let q = 0; q < nK; q++) { const a = rngK[4 * q]; const b = rngK[4 * q + 1]; const c = rngK[4 * q + 2]; const d = rngK[4 * q + 3]; for (let y = b; y <= d; y++) { const i0 = y * gW; for (let x = a; x <= c; x++) { const i = i0 + x; cellKList[cellK0[i] + fK[i]++] = q; } } }
   const t5 = now();
+  const cellKPList = prunedCornerLists(kCx, kCy, kR, kRmax, kThru, kRV, W, aa, gx0, gy0, G, gW, gH, cellK0, cellKN, cellKList);
+  const t6 = now();
 
   return {
     h, W, aa, sigma, zt, amp, win, rc, nC, cV0, cNV, cClosed, cLen, cS0, cPin0, cPinN, cArm0, cArmN,
     nV, vx, vy, vs, pinS, pinZ, nA, aSR, aDir, aL, aLcut, aG,
     nK, kCx, kCy, kR, kRmax, kThru, kRV, kEax, kEay, kEbx, kEby, kG, kJ, kA, kB, kTheta, kCa, kCb, kSa, kSb, kZa, kZb, kTax, kTay, kTbx, kTby,
-    nCh, chV0, chN, chC, chBox, gx0, gy0, G, gW, gH, cellCh0, cellChN, cellChList, cellK0, cellKN, cellKList,
-    ms: { vtx: ms.vtx, pins: ms.pins, arms: ms.arms, corners: ms.corners, bins: t5 - t4, total: t5 - t0 },
+    nCh, chV0, chN, chC, chBox, gx0, gy0, G, gW, gH, cellCh0, cellChN, cellChList, cellK0, cellKN, cellKList, cellKPList,
+    ms: { vtx: ms.vtx, pins: ms.pins, arms: ms.arms, corners: ms.corners, bins: t5 - t4, kp: t6 - t5, total: t6 - t0 },
   };
+}
+
+/**
+ * K1362 s14: GfTables.cellKPList. A corner is dropped from a cell's thru list only when its reach test fails at
+ * every point of the cell, and from its keep list only when the keep loop's ring or reach test does; the cell is
+ * padded by 1% of G, far above float32's error in a pixel's world position and in its cell pick, so the scan's thru
+ * search and keep loop over these lists see the same corners pass, in the same order, as over cellKList: thruK,
+ * thruQ, tj, kk and the overflow are the same. The yielded search (a sector test, no distance) keeps cellKList.
+ */
+function prunedCornerLists(kCx: Float64Array, kCy: Float64Array, kR: Float64Array, kRmax: Float64Array, kThru: Uint8Array, kRV: Float64Array, W: number, aa: number,
+  gx0: number, gy0: number, G: number, gW: number, gH: number, cellK0: Int32Array, cellKN: Int32Array, cellKList: Int32Array): Int32Array {
+  const out = new Int32Array(4 * cellKList.length).fill(-1);
+  const pad = 0.01 * G;
+  for (let gy = 0; gy < gH; gy++) {
+    const y0 = gy0 + gy * G - pad; const y1 = gy0 + (gy + 1) * G + pad;
+    for (let gx = 0; gx < gW; gx++) {
+      const i = gy * gW + gx; const kn = cellKN[i]; if (kn === 0) continue;
+      const x0 = gx0 + gx * G - pad; const x1 = gx0 + (gx + 1) * G + pad;
+      const k0 = cellK0[i]; const b = 4 * k0; let n = b + 2;
+      for (let q = k0; q < k0 + kn; q++) { // thru: the reach test can pass in the cell
+        const k = cellKList[q]; if (!(kThru[k] > 0.5)) continue;
+        const dx = Math.max(x0 - kCx[k], 0, kCx[k] - x1); const dy = Math.max(y0 - kCy[k], 0, kCy[k] - y1);
+        if (Math.sqrt(dx * dx + dy * dy) <= kRV[k] + W + 4 * aa) out[n++] = k;
+      }
+      const nThru = n - b - 2;
+      for (let q = k0; q < k0 + kn; q++) { // keep: the ring test (and, thru, the reach test) can pass in the cell
+        const k = cellKList[q];
+        const dx = Math.max(x0 - kCx[k], 0, kCx[k] - x1); const dy = Math.max(y0 - kCy[k], 0, kCy[k] - y1);
+        const dmin = Math.sqrt(dx * dx + dy * dy);
+        const fx = Math.max(Math.abs(kCx[k] - x0), Math.abs(kCx[k] - x1)); const fy = Math.max(Math.abs(kCy[k] - y0), Math.abs(kCy[k] - y1));
+        const dmax = Math.sqrt(fx * fx + fy * fy);
+        if (!(dmax > kR[k] - aa - W) || dmin > kRmax[k] + W + 2 * aa) continue;
+        if (kThru[k] > 0.5 && dmin > kRV[k] + W + 4 * aa) continue;
+        out[n++] = k;
+      }
+      out[b] = nThru; out[b + 1] = n - b - 2 - nThru;
+    }
+  }
+  return out;
 }
 
 export function buildTables(scene: FieldScene, opts: GfOpts): GfTables {

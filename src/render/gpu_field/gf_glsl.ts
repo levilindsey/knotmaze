@@ -80,9 +80,11 @@ void main() {
  * `lz` and `fs` (K1362 s13; lazyFaces, faceSkip below): lz runs the face loop in sorted order up to the first
  * opaque place; fs skips a face whose band cannot beat its surface's running maximum. fs "c" is fs in the corner
  * program only (GfPass cornerPlan); gfFs reads any truthy fs as fs.
+ * `kp` (K1362 s14, cornerLists below): the scan's thru search and keep loop walk the cell's pruned corner lists
+ * (tables.ts cellKPList); the corner program only (cornerPlan drops it from the free one).
  */
 export type GfCornerForm = "route" | "frame" | "free" | "corner";
-export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm; one?: boolean; bx?: boolean; fast?: boolean; s?: number; lab?: boolean; grp?: boolean; kq?: boolean; ks?: boolean; kl?: boolean; kr?: boolean; lh?: boolean; so?: boolean; cs?: boolean; vs?: boolean; ga?: boolean; sc?: boolean; kc?: boolean; kz?: GfCornerForm; fj?: boolean | "s"; lz?: boolean; fs?: boolean | "c" }
+export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm; one?: boolean; bx?: boolean; fast?: boolean; s?: number; lab?: boolean; grp?: boolean; kq?: boolean; ks?: boolean; kl?: boolean; kr?: boolean; lh?: boolean; so?: boolean; cs?: boolean; vs?: boolean; ga?: boolean; sc?: boolean; kc?: boolean; kz?: GfCornerForm; fj?: boolean | "s"; lz?: boolean; fs?: boolean | "c"; kp?: boolean }
 export type GfPackForm = boolean | "f" | "i";
 
 /** The program's source forms (gf_reg.ts); a tier's own flags set them by default. The probe keeps the plain form. */
@@ -123,6 +125,10 @@ export function gfFs(probe: boolean, tangentTerms = true, tier?: GfTier, form: G
   if (tier?.lz && !probe) {
     if (form.split || form.reg || form.pack || form.unroll || tier.fj || tier.ga) throw new Error("gfFs: lz is a plain-form tier (no split, reg, pack, unroll, fj or ga)");
     src = lazyFaces(src);
+  }
+  if (tier?.kp && !probe && tier.kz !== "free") { // the free program has no corner scan (cornerPlan drops kp)
+    if (form.split || form.reg || form.pack || form.unroll) throw new Error("gfFs: kp is a plain-form tier (no split, reg, pack or unroll)");
+    src = cornerLists(src);
   }
   if (tier?.fs && !probe) {
     if (form.split || form.reg || form.pack || form.unroll || tier.fj || tier.bx) throw new Error("gfFs: fs is a plain-form tier (no split, reg, pack, unroll, fj or bx)");
@@ -302,8 +308,31 @@ function faceSkip(src: string): string {
   return src;
 }
 
-function gfSrc(probe: boolean, tangentTerms: boolean, tier?: GfTier): string {
-  const mp = tier ? tier.p : MAXP;
+/**
+ * K1362 s14 `kp` (tier letter P): the scan's thru search and keep loop walk the cell's pruned lists (tables.ts
+ * cellKPList, at texel cellK0: (nThru, nKeep), then the thru list, then the keep list) instead of its whole corner
+ * list. Exact: a pruned corner fails that loop's test at every pixel of the cell (prunedCornerLists' bound), and
+ * both lists keep cellKList's order, so thruK, thruQ, tj, kk and the overflow are unchanged. The yielded search (a
+ * sector test without distance) still walks the whole list. A cell without corners skips the header fetch.
+ */
+const KP_THRU = "    for (int q = k0; q < k0 + kn; q++) {\n      int k = int(L4(uOKL, q)); vec4 K1 = F(uOK + 6 * k + 1); if (K1.x < 0.5) continue;\n";
+const KP_KEEP = "#ifdef TIER\n    for (int q = k0; q < k0 + kn; q++) {\n#else\n    for (int q = k0; q < k0 + kn && nk < MAXK; q++) {\n#endif\n      int k = int(L4(uOKL, q)); nK++;\n";
+const KP_UNI = "uniform int uOCh, uOV, uOPin, uOArm, uOK, uOChk, uOCell, uOChL, uOKL, uOKC, uOKB, uOKA;\n";
+function cornerLists(src: string): string {
+  const rep = (a: string, b: string): void => {
+    const parts = src.split(a);
+    if (parts.length !== 2) throw new Error(`gfFs kp: expected one "${a.trim().slice(0, 48)}", found ${parts.length - 1}`);
+    src = parts.join(b);
+  };
+  rep(KP_UNI, KP_UNI + "uniform int uOKP; // K1362 s14 kp\n");
+  rep(KP_THRU, "    int kpB = 4 * k0 + 2; int kpT = 0; int kpN = 0; // K1362 s14 kp: the cell's pruned lists\n"
+    + "    if (kn > 0) { vec4 KH = F(uOKP + k0); kpT = int(KH.x); kpN = int(KH.y); }\n"
+    + "    for (int q = kpB; q < kpB + kpT; q++) {\n      int k = int(L4(uOKP, q)); vec4 K1 = F(uOK + 6 * k + 1);\n");
+  rep(KP_KEEP, "#ifdef TIER\n    for (int q = kpB + kpT; q < kpB + kpT + kpN; q++) {\n#else\n    for (int q = kpB + kpT; q < kpB + kpT + kpN && nk < MAXK; q++) {\n#endif\n      int k = int(L4(uOKP, q)); nK++;\n");
+  return src;
+}
+
+function gfSrc(probe: boolean, tangentTerms: boolean, tier?: GfTier): string {  const mp = tier ? tier.p : MAXP;
   const mk = tier ? tier.k : MAXK;
   const half = !!(tier && tier.half);
   return `#version 300 es
