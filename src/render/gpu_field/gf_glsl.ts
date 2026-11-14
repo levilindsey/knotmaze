@@ -78,7 +78,7 @@ void main() {
  * piece per surface. The same faces on the same values; v and D are running maxima, so the order cannot change them.
  */
 export type GfCornerForm = "route" | "frame" | "free" | "corner";
-export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm; one?: boolean; bx?: boolean; fast?: boolean; s?: number; lab?: boolean; grp?: boolean; kq?: boolean; ks?: boolean; kl?: boolean; kr?: boolean; lh?: boolean; so?: boolean; cs?: boolean; vs?: boolean; ga?: boolean; sc?: boolean; kc?: boolean; kz?: GfCornerForm; fj?: boolean | "s" }
+export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm; one?: boolean; bx?: boolean; fast?: boolean; s?: number; lab?: boolean; grp?: boolean; kq?: boolean; ks?: boolean; kl?: boolean; kr?: boolean; lh?: boolean; so?: boolean; cs?: boolean; vs?: boolean; ga?: boolean; sc?: boolean; kc?: boolean; kz?: GfCornerForm; fj?: boolean | "s"; lz?: boolean }
 export type GfPackForm = boolean | "f" | "i";
 
 /** The program's source forms (gf_reg.ts); a tier's own flags set them by default. The probe keeps the plain form. */
@@ -115,6 +115,10 @@ export function gfFs(probe: boolean, tangentTerms = true, tier?: GfTier, form: G
     if (form.split || form.reg || form.pack || form.unroll) throw new Error("gfFs: kz is a plain-form tier (no split, reg, pack or unroll)");
     if (tier.kz !== "free" && tier.kz !== "corner") throw new Error(`gfFs: kz "${tier.kz}" is GfPass's to expand into its programs (free, corner)`);
     src = cornerRoute(src, tier.kz);
+  }
+  if (tier?.lz && !probe) {
+    if (form.split || form.reg || form.pack || form.unroll || tier.fj || tier.ga) throw new Error("gfFs: lz is a plain-form tier (no split, reg, pack, unroll, fj or ga)");
+    src = lazyFaces(src);
   }
   if (tier?.fj && !probe) {
     if (form.split || form.reg || form.pack || form.unroll || tier.kq || tier.kl || tier.kr || tier.kc || tier.vs || tier.ga || tier.one || tier.bx) throw new Error("gfFs: fj is a plain-form tier (no split, reg, pack, unroll, kq, kl, kr, kc, vs, ga, one or bx)");
@@ -236,6 +240,31 @@ function burialExit(src: string): string {
     rep(`        float dT = length(p - T); if (!(dT < W + aa)) continue;\n        float bur = 0.0;\n        ${LOOP_M}`,
       `        float dT = length(p - T); if (!(dT < W + aa)) continue;\n        float bx2 = band2(dT); if (!(bx2 > v)) continue;\n        float bur = 0.0;\n        ${LOOP_M}          ${BX_CHECK}\n`);
   }
+  return src;
+}
+
+/**
+ * K1362 s13 `lz`: layers()'s faces only for the surfaces composite() reads. The face loop runs in sorted order (e =
+ * SORD(i), the sort is before it) and stops after the first place whose D > 2 aa: there ss(-aa, aa, D) clamps to
+ * exactly 1 in any precision, so comp() multiplies Tt by exactly 0 and breaks at that place or earlier. comp(-1)
+ * then reads no later place; comp(i) for i below it permutes places up to it; comp(i) above it repeats comp(-1)'s
+ * reads (r2 == r). Only comp(i) AT it reads the next place, so when the next gap is not >= 2 zt (composite's tie
+ * test is gap < zt) that place is computed too. Each computed surface is the same statements on the same values;
+ * an uncomputed one is never read. Not with ga (the gaps are then taken from skey after the face loop writes it).
+ */
+function lazyFaces(src: string): string {
+  const rep = (a: string, b: string): void => {
+    const parts = src.split(a);
+    if (parts.length !== 2) throw new Error(`gfFs lz: expected one "${a.trim().slice(0, 48)}", found ${parts.length - 1}`);
+    src = parts.join(b);
+  };
+  rep("  for (int e = 0; e < ns; e++) {\n    int S = sid[e]; float D = -BIG; float v = 0.0; PR(int wk = 0; int wa = -1; int wb = 0;)\n",
+    "  bool lzX = false; // K1362 s13 lz: the faces in sorted order, up to the first opaque place (plus the next on a near tie)\n" +
+    "  for (int lzI = 0; lzI < ns; lzI++) {\n    int e = SORD(lzI);\n    int S = sid[e]; float D = -BIG; float v = 0.0; PR(int wk = 0; int wa = -1; int wb = 0;)\n");
+  rep("    SVW(e, v) SAW(e, ss(-aa, aa, D)) PR(swk[e] = wk; swa[e] = wa; swb[e] = wb;)\n  }\n",
+    "    SVW(e, v) SAW(e, ss(-aa, aa, D)) PR(swk[e] = wk; swa[e] = wa; swb[e] = wb;)\n" +
+    "    if (lzX) break;\n" +
+    "    if (D > 2.0 * aa) { if (!(lzI + 1 < ns) || skey[SORD(lzI)] - skey[SORD(lzI + 1)] >= 2.0 * uZt) break; lzX = true; }\n  }\n");
   return src;
 }
 

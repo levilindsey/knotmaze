@@ -394,3 +394,71 @@ describe("gf tier forms, s12 face loop", () => {
     }
   });
 });
+
+// K1362 s13 `lz`: the face loop runs in sorted order and stops after the first opaque place (plus the next on a
+// near tie). Here the text (only the loop's head and the stop differ) and the argument: composite() reads no place
+// the stop left uncomputed, run on float32 values with exact ties, the 2 zt edge and D at the 2 aa edge.
+describe("gf tier forms, s13 lazy faces", () => {
+  const L: GfTier = { ...T, s: 3, lab: true, grp: true, ks: true };
+  const HEAD = "  for (int e = 0; e < ns; e++) {\n    int S = sid[e];";
+  const LZ_HEAD = "  bool lzX = false; // K1362 s13 lz: the faces in sorted order, up to the first opaque place (plus the next on a near tie)\n" +
+    "  for (int lzI = 0; lzI < ns; lzI++) {\n    int e = SORD(lzI);\n    int S = sid[e];";
+  const LZ_STOP = "    if (lzX) break;\n    if (D > 2.0 * aa) { if (!(lzI + 1 < ns) || skey[SORD(lzI)] - skey[SORD(lzI + 1)] >= 2.0 * uZt) break; lzX = true; }\n";
+
+  it("lz: only the loop's head and its stop differ; the probe is untouched; fj and ga refuse it", () => {
+    const BASES: GfTier[] = [L, { ...L, kz: "free" }, { ...L, kz: "corner" }, { ...L, sc: true }, { ...L, so: true }, { ...L, vs: true }, { ...L, one: true }];
+    for (const tangent of [true, false]) for (const base of BASES) {
+      const plain = gfFs(false, tangent, base); const lz = gfFs(false, tangent, { ...base, lz: true });
+      expect(count(plain, HEAD)).toBe(1); expect(count(lz, LZ_HEAD)).toBe(1); expect(count(lz, LZ_STOP)).toBe(1);
+      expect(lz.replace(LZ_HEAD, HEAD).replace(LZ_STOP, "")).toBe(plain);
+      expect(gfFs(true, tangent, { ...base, lz: true })).toBe(gfFs(true, tangent, base));
+    }
+    for (const f of [{ fj: true }, { ga: true }]) expect(() => gfFs(false, true, { ...L, ...f, lz: true })).toThrow(/lz is a plain-form/);
+    expect(cornerPlan({ ...GF_TIERS[0], lz: true }).every((p) => p.tier?.lz)).toBe(true);
+  });
+
+  it("lz: composite() reads no surface the stop left uncomputed", () => {
+    const f = Math.fround; const aa = f(0.02518); const zt = f(0.06032);
+    const ss = (e0: number, e1: number, x: number): number => { const t = Math.min(1, Math.max(0, f(f(x - e0) / f(e1 - e0)))); return f(f(t * t) * f(3 - 2 * t)); };
+    const DS = [-1e30, -1, -aa, 0, aa, f(2 * aa), f(2 * aa * (1 + 2 ** -22)), f(3 * aa), 0.5, NaN];
+    const KS = [0, zt, f(2 * zt), f(0.03), f(0.1), f(0.2), f(1)];
+    const VS = [0, 0.25, 0.5, 1];
+    let s = 0x13a2b5;
+    const rnd = (n: number): number => { s = (Math.imul(s, 1664525) + 1013904223) >>> 0; return s % n; };
+    let reads = 0; let stops = 0;
+    for (let n = 0; n < 40000; n++) {
+      const ns = 1 + rnd(3);
+      const key = Array.from({ length: ns }, () => KS[rnd(KS.length)]);
+      const D = Array.from({ length: ns }, () => DS[rnd(DS.length)]);
+      const v = Array.from({ length: ns }, () => VS[rnd(VS.length)]);
+      const ord = key.map((_, i) => i);
+      for (let i = 1; i < ns; i++) { const x = ord[i]; let m = i - 1; while (m >= 0 && key[ord[m]] < key[x]) { ord[m + 1] = ord[m]; m--; } ord[m + 1] = x; }
+      const done = new Set<number>(); let lzX = false;
+      for (let i = 0; i < ns; i++) {
+        done.add(ord[i]);
+        if (lzX) break;
+        if (D[ord[i]] > f(2 * aa)) { if (!(i + 1 < ns) || f(key[ord[i]] - key[ord[i + 1]]) >= f(2 * zt)) break; lzX = true; }
+      }
+      if (done.size < ns) stops++;
+      const rd = (e: number): void => { if (!done.has(e)) reads++; };
+      const comp = (sw: number): number => {
+        let Tt = 1; let ink = 0;
+        for (let i = 0; i < ns; i++) {
+          let e = ord[i]; if (sw >= 0 && i === sw) e = ord[i + 1]; else if (sw >= 0 && i === sw + 1) e = ord[i - 1];
+          rd(e); const c = f(Tt * v[e]); if (c > 0) ink = f(ink + c);
+          Tt = f(Tt * f(1 - ss(-aa, aa, D[e]))); if (!(Tt > 0)) break;
+        }
+        return Math.min(1, ink);
+      };
+      let r = comp(-1);
+      for (let i = 0; i + 1 < ns; i++) {
+        const gap = f(key[ord[i]] - key[ord[i + 1]]);
+        if (!(gap < zt)) continue;
+        const r2 = comp(i); if (r2 === r) continue;
+        const t = ss(-zt, zt, gap); r = f(f(t * r) + f(f(1 - t) * r2)); break;
+      }
+    }
+    expect(reads).toBe(0);
+    expect(stops).toBeGreaterThan(5000);
+  });
+});
