@@ -120,9 +120,12 @@ export class GfTarget {
  * so its stencil test runs late), so one tier is the default. Stage 9 (docs/design/K1362_s9_layer_tables.md) capped
  * its surfaces at 3 (s; a pixel with more goes to full) and keeps the label's top surface as a running best (lab):
  * t32rlc3, def 13.95 / muse 18.38 / fat 9.33 ms against t32r's 16.85 / 22.45 / 11.5 on the Pixel (same bench), 0 px
- * on its 12 scenes there and on the desktop.
+ * on its 12 scenes there and on the desktop. Stage 10 (docs/design/K1362_s10_piece_arrays.md) keeps fewer per-piece
+ * values: the ramp membership rides psurf (grp) and pkey reuses ps (ks), 33 piece slots down to 24: t32rlgyc3, def
+ * 11.47 / muse 16.3 / fat 7.85 ms against t32rlc3's 12.9 / 17.65 / 8.82 on the Pixel (same bench), 0 px on its 12
+ * scenes there and on the desktop.
  */
-export const GF_TIERS: GfTier[] = [{ p: 3, k: 2, ramps: true, s: 3, lab: true }];
+export const GF_TIERS: GfTier[] = [{ p: 3, k: 2, ramps: true, s: 3, lab: true, grp: true, ks: true }];
 const UNIFORMS = ["uD", "uOCh", "uOV", "uOPin", "uOArm", "uOK", "uOChk", "uOCell", "uOChL", "uOKL", "uOKC", "uOKB", "uOKA", "uH", "uW", "uAA", "uSigma", "uZt", "uWin", "uRc", "uGrid", "uGDim", "uMap", "uP0", "uP1", "uP2", "uP3"];
 interface GfProg { prog: WebGLProgram; u: Map<string, WebGLUniformLocation | null>; tier: GfTier | null; split?: 1 | 2 }
 

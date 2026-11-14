@@ -124,7 +124,8 @@ const ATT: Record<string, [string, string][]> = {
   nokf: [["float val = (1.0 - bur) * band2(Dk);", "float val = 0.0;"]],
   nopb: [["float val = (1.0 - bur) * band2(h - X);", "float val = band2(h - X);"]],
   nogap: [["if (!(gap < zt)) continue;", "continue;"]],
-  nokey: [["float pz = depth(pc[j], ps[j], KB);", "float pz = 0.0;"]],
+  // s10: PC(j) reads pc[j]; the grp / ks keys loop takes ps[j] as sj (the source holds both #if branches)
+  nokey: [["float pz = depth(PC(j), ps[j], KB);", "float pz = 0.0;"], ["float pz = depth(PC(j), sj, KB);", "float pz = 0.0;"]],
   // the brief's probe 1: every 2x2 block evaluates one world point (no divergence inside a quad, the fetches shared)
   quad: [["vec2 p = vec2(uMap.x * gl_FragCoord.x + uMap.y, uMap.z * gl_FragCoord.y + uMap.w);", "vec2 fc2 = floor(gl_FragCoord.xy * 0.5) * 2.0 + 0.5; vec2 p = vec2(uMap.x * fc2.x + uMap.y, uMap.z * fc2.y + uMap.w);"]],
 };
