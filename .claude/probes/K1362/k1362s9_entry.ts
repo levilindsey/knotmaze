@@ -106,10 +106,10 @@ void main() { discard; }`;
 
 function parseTiers(name: string): GfTier[] {
   return name.slice(1).split("_").map((t) => {
-    const m = /^(\d)(\d)(r?)(h?)(s?)(u?)(k[fi]?|)(o?)(1?)(b?)(f?)$/.exec(t);
+    const m = /^(\d)(\d)(r?)(h?)(s?)(u?)(k[fi]?|)(o?)(1?)(b?)(f?)(?:c(\d))?$/.exec(t);
     if (!m) throw new Error("bad tier " + t);
     const pack = m[7] === "k" ? true : m[7] === "kf" ? "f" : m[7] === "ki" ? "i" : false; // K1362 s6: k, kf, ki
-    return { p: +m[1], k: +m[2], ramps: m[3] === "r", half: m[4] === "h", reg: m[5] === "s", unroll: m[6] === "u", pack, oldKeys: m[8] === "o", one: m[9] === "1", bx: m[10] === "b", fast: m[11] === "f" } as GfTier & { oldKeys?: boolean };
+    return { p: +m[1], k: +m[2], ramps: m[3] === "r", half: m[4] === "h", reg: m[5] === "s", unroll: m[6] === "u", pack, oldKeys: m[8] === "o", one: m[9] === "1", bx: m[10] === "b", fast: m[11] === "f", s: m[12] ? +m[12] : undefined } as GfTier & { oldKeys?: boolean };
   });
 }
 // K1362 s8 attribution (NOT exact, timing only): the t32r tier program with one part cut, a<part>[+<part>...]
@@ -119,6 +119,12 @@ const ATT: Record<string, [string, string][]> = {
   once: [["for (int cfg = 0; cfg <= nr; cfg++) {", "for (int cfg = 0; cfg <= 0; cfg++) {"]],
   nolay: [["layers(p);", "sv[0] = 0.0;"]],
   oncer: [["for (int cfg = 0; cfg <= nr; cfg++) {", "for (int cfg = 0; cfg <= min(nr, int(uAA)); cfg++) {"]],
+  // K1362 s9: which part of the layering's code sets the cost (each cut lets the compiler drop that part's code)
+  notan: [["#define TANGENT 1", ""]],
+  nokf: [["float val = (1.0 - bur) * band2(Dk);", "float val = 0.0;"]],
+  nopb: [["float val = (1.0 - bur) * band2(h - X);", "float val = band2(h - X);"]],
+  nogap: [["if (!(gap < zt)) continue;", "continue;"]],
+  nokey: [["float pz = depth(pc[j], ps[j], KB);", "float pz = 0.0;"]],
 };
 function attFs(t: GfTier, parts: string[]): string {
   let s = gfFs(false, true, t);

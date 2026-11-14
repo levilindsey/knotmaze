@@ -53,8 +53,25 @@ describe("gf tier forms", () => {
       expect(count(fast, "#define FAST 1\n")).toBe(1);
       expect(fast.replace("#define FAST 1\n", "\n")).toBe(plain);
       expect(gfFs(true, tangent, { ...T, fast: true })).toBe(gfFs(true, tangent, T));
-      expect(count(fast, "if (fast) layers1(); else\n#endif\n      layers(p);\n      float r = composite();")).toBe(1);
+      expect(count(fast, "if (fast) layers1(); else\n#endif\n      layers(p);\n")).toBe(1);
       expect(count(fast, "layers1()")).toBe(2);
+    }
+  });
+
+  it("s (s9): a surface cap below p + k changes only MAXS and adds SCAP; at or above p + k it is the plain source", () => {
+    for (const probe of [false, true]) for (const tangent of [true, false]) {
+      const plain = gfFs(probe, tangent, T);
+      expect(plain).not.toContain("#define SCAP");
+      expect(count(plain, "#define MAXS 5\n\n")).toBe(1);
+      expect(count(plain, "#ifdef SCAP\n")).toBe(5);
+      expect(plain).toContain("  if (ns == MAXS) { sOvf = true; return MAXS - 1; }\n");
+      expect(plain).toContain("      if (sOvf) { discard; return; }\n");
+      for (const s of [5, 6]) expect(gfFs(probe, tangent, { ...T, s })).toBe(plain);
+      for (const s of [1, 2, 3, 4]) {
+        const cap = gfFs(probe, tangent, { ...T, s });
+        expect(count(cap, `#define MAXS ${s}\n#define SCAP 1\n`)).toBe(1);
+        expect(cap.replace(`#define MAXS ${s}\n#define SCAP 1\n`, "#define MAXS 5\n\n")).toBe(plain);
+      }
     }
   });
 

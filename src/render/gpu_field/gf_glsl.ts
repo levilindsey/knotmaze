@@ -41,8 +41,10 @@ void main() {
  * layers1() for layers(): one surface of one face with no sort and no burial, the same statements on the same values;
  * composite() and the accumulation stay shared. (A written-out composite was 1 ulp off in coverage on 0.2-0.4% of
  * the canvas on D3D, probably the compiler regrouping the straight-line form; cause not isolated.)
+ * `s` (K1362 s9): surface slots (MAXS) below p + k. A pixel that needs one more discards to the next program, exact by
+ * overflow like the piece and corner caps (not with `reg`, whose scalarized arrays assume p + k).
  */
-export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm; one?: boolean; bx?: boolean; fast?: boolean }
+export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm; one?: boolean; bx?: boolean; fast?: boolean; s?: number }
 export type GfPackForm = boolean | "f" | "i";
 
 /** The program's source forms (gf_reg.ts); a tier's own flags set them by default. The probe keeps the plain form. */
@@ -140,7 +142,8 @@ precision highp sampler2D;
 #define MAXP ${mp}
 #define MAXK ${mk}
 #define MAXR ${MAXR}
-#define MAXS ${mp + mk}
+#define MAXS ${tier && tier.s && tier.s < mp + mk ? tier.s : mp + mk}
+${tier && tier.s && tier.s < mp + mk ? "#define SCAP 1" : ""}
 #define LOG ${GF_LOG}
 #define TWM ${(1 << GF_LOG) - 1}
 #define BIG 1e30
@@ -313,8 +316,14 @@ bool outsideArms(int k, int own, vec2 p) {
   return true;
 }
 
+#ifdef SCAP
+bool sOvf; // K1362 s9: a tier with fewer surface slots than pieces + corners: a pixel that needs one more goes to full
+#endif
 int entry(int id) {
   for (int i = 0; i < ns; i++) if (sid[i] == id) return i;
+#ifdef SCAP
+  if (ns == MAXS) { sOvf = true; return MAXS - 1; }
+#endif
   int i = ns++; sid[i] = id; skey[i] = -BIG; sckey[i] = -BIG; scch[i] = -1; PR(scs[i] = 0.0;) scov[i] = false; return i;
 }
 float band2(float D) { return (1.0 - ss(uW - uAA, uW + uAA, D)) * ss(-uAA, uAA, D); }
@@ -322,6 +331,9 @@ float band2(float D) { return (1.0 - ss(uW - uAA, uW + uAA, D)) * ss(-uAA, uAA, 
 void layers(vec2 p) {
   float h = uH; float aa = uAA; float W = uW;
   ns = 0;
+#ifdef SCAP
+  sOvf = false;
+#endif
   for (int j = 0; j < np; j++) {
     if (!(pd[j] < h + aa)) continue;
     int e = entry(psurf[j]);
@@ -410,6 +422,9 @@ void layers(vec2 p) {
 void layers1() {
   float h = uH; float aa = uAA; float W = uW;
   ns = 0; labC = -1;
+#ifdef SCAP
+  sOvf = false;
+#endif
   if (np == 1 && pd[0] < h + aa) {
     ns = 1; sord[0] = 0;
     float D = -BIG; float v = 0.0;
@@ -680,6 +695,9 @@ void main() {
       if (fast) layers1(); else
 #endif
       layers(p);
+#ifdef SCAP
+      if (sOvf) { discard; return; }
+#endif
       float r = composite();
       float w = nr == 0 ? 1.0 : wgt;
       ink += w * r; cov += w * cCov;

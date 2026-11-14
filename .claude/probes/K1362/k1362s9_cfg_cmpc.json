@@ -1,0 +1,1 @@
+{"benches":[{"name":"cmp12","cover":false,"settleFrames":0,"h":1506,"scenes":["def","muse_hash","fat","g41_ring_tw64","g41_def_tw64","user_tw42.lightpaper","g41_user_tw42","muse_default_tw","ring","g41_def_tw42","g41_user_tw64","g41_ring_tw42"],"variants":["full","t32rc2","t32rc3","t32rc1","t32rfc2"],"nPass":4,"modes":[],"cmp":true,"ref":"full","w":822,"warmMs":0,"fit":0.917}]}
