@@ -197,6 +197,53 @@ describe("gfBuild (K1362 c1)", () => {
     });
   }
 
+  // K1362 s14: cellKPList, a corner cell's pruned lists for the `kp` tier: at slot 4 * cellK0 the header (nThru,
+  // nKeep), then the thru list, then the keep list, -1 elsewhere. Each list is an order-preserving subsequence of
+  // the cell's cellKList, and at any point of the cell the thru corners passing reach, and the corners passing the
+  // keep loop's ring (and, thru, reach) test, are the same sequence as over the whole list (the probe
+  // k1362s14_kpcheck.ts checks every bench pixel of the 12 scenes).
+  it("cellKPList: layout, subsequences, and the same corners pass at every point", () => {
+    const T = full(fixture(), 0.005);
+    const L = T.cellKPList; const aa = T.aa; const W = T.W; const G = T.G;
+    expect(L.length).toBe(4 * T.cellKList.length);
+    const reach = (k: number, x: number, y: number): boolean => {
+      const lim = T.kRV[k] + W + 4 * aa; const dx = x - T.kCx[k]; const dy = y - T.kCy[k];
+      return dx * dx + dy * dy <= lim * lim;
+    };
+    const keep = (k: number, x: number, y: number): boolean => {
+      const rho = Math.hypot(x - T.kCx[k], y - T.kCy[k]);
+      if (!(rho > T.kR[k] - aa - W) || rho > T.kRmax[k] + W + 2 * aa) return false;
+      return !(T.kThru[k] > 0.5) || reach(k, x, y);
+    };
+    let cells = 0; let used = 0; let points = 0; let passing = 0;
+    for (let c = 0; c < T.cellKN.length; c++) {
+      const k0 = T.cellK0[c]; const kn = T.cellKN[c];
+      if (kn === 0) continue;
+      cells++;
+      const b = 4 * k0; const nT = L[b]; const nK = L[b + 1];
+      expect(nT).toBeGreaterThanOrEqual(0); expect(nK).toBeGreaterThanOrEqual(0);
+      expect(2 + nT + nK).toBeLessThanOrEqual(4 * kn);
+      used += 2 + nT + nK;
+      const list = Array.from(T.cellKList.subarray(k0, k0 + kn));
+      const thru = Array.from(L.subarray(b + 2, b + 2 + nT)); const kept = Array.from(L.subarray(b + 2 + nT, b + 2 + nT + nK));
+      const sub = (s: number[]): boolean => { let i = 0; for (const k of list) if (i < s.length && s[i] === k) i++; return i === s.length; };
+      expect(sub(thru) && sub(kept)).toBe(true);
+      expect(thru.every((k) => T.kThru[k] > 0.5)).toBe(true);
+      const x0 = T.gx0 + (c % T.gW) * G; const y0 = T.gy0 + Math.floor(c / T.gW) * G;
+      for (let i = 0; i <= 16; i++) for (let j = 0; j <= 16; j++) {
+        const x = x0 + (G * i) / 16; const y = y0 + (G * j) / 16;
+        const a1 = list.filter((k) => T.kThru[k] > 0.5 && reach(k, x, y)); const a2 = list.filter((k) => keep(k, x, y));
+        expect(thru.filter((k) => reach(k, x, y))).toEqual(a1);
+        expect(kept.filter((k) => keep(k, x, y))).toEqual(a2);
+        points++; passing += a2.length;
+      }
+    }
+    expect(cells).toBeGreaterThan(0);
+    expect(passing).toBeGreaterThan(0);
+    expect(L.filter((v) => v === -1).length).toBe(L.length - used);
+    expect(points).toBe(cells * 289);
+  });
+
   // K1362 t2: the coordinator's trimmed slice prefixes (range-local arms,
   // junctions and jGroup, jBase set) solve to the cold build's tables.
   it("trimmed slice prefixes assemble to the cold build's tables", () => {

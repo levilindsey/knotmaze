@@ -111,10 +111,10 @@ void main() { discard; }`;
 
 function parseTiers(name: string): GfTier[] {
   return name.slice(1).split("_").map((t) => {
-    const m = /^(\d)(\d)(r?)(h?)(s?)(u?)(k[fi]?|)(o?)(1?)(b?)(f?)(l?)(g?)(q?)(y?)(z?)(x?)(w?)([nm]?)(v?)(a?)(d?)(e?)(ps?|)(j[fcx]?|)(L?)(Fk?|)(P?)(T?)(O?)(?:c(\d))?$/.exec(t);
+    const m = /^(\d)(\d)(r?)(h?)(s?)(u?)(k[fi]?|)(o?)(1?)(b?)(f?)(l?)(g?)(q?)(y?)(z?)(x?)(w?)([nm]?)(v?)(a?)(d?)(e?)(ps?|)(j[fcx]?|)(L?)(Fk?|)(P?)(T?)(O?)(G?)(?:c(\d))?$/.exec(t);
     if (!m) throw new Error("bad tier " + t);
     const pack = m[7] === "k" ? true : m[7] === "kf" ? "f" : m[7] === "ki" ? "i" : false; // K1362 s6: k, kf, ki
-    return { p: +m[1], k: +m[2], ramps: m[3] === "r", half: m[4] === "h", reg: m[5] === "s", unroll: m[6] === "u", pack, oldKeys: m[8] === "o", one: m[9] === "1", bx: m[10] === "b", fast: m[11] === "f", lab: m[12] === "l", grp: m[13] === "g", kq: m[14] === "q", ks: m[15] === "y", lh: m[16] === "z", so: m[17] === "x", cs: m[18] === "w", kl: m[19] === "n", kr: m[19] === "m", vs: m[20] === "v", ga: m[21] === "a", sc: m[22] === "d", kc: m[23] === "e", fj: m[24] === "ps" ? "s" : m[24] === "p", kz: m[25] === "j" ? "route" : m[25] === "jf" ? "frame" : m[25] === "jc" ? "corner" : m[25] === "jx" ? "free" : undefined, lz: m[26] === "L", fs: m[27] === "Fk" ? "c" : m[27] === "F", kp: m[28] === "P", kt: m[29] === "T", ko: m[30] === "O", s: m[31] ? +m[31] : undefined } as GfTier & { oldKeys?: boolean };
+    return { p: +m[1], k: +m[2], ramps: m[3] === "r", half: m[4] === "h", reg: m[5] === "s", unroll: m[6] === "u", pack, oldKeys: m[8] === "o", one: m[9] === "1", bx: m[10] === "b", fast: m[11] === "f", lab: m[12] === "l", grp: m[13] === "g", kq: m[14] === "q", ks: m[15] === "y", lh: m[16] === "z", so: m[17] === "x", cs: m[18] === "w", kl: m[19] === "n", kr: m[19] === "m", vs: m[20] === "v", ga: m[21] === "a", sc: m[22] === "d", kc: m[23] === "e", fj: m[24] === "ps" ? "s" : m[24] === "p", kz: m[25] === "j" ? "route" : m[25] === "jf" ? "frame" : m[25] === "jc" ? "corner" : m[25] === "jx" ? "free" : undefined, lz: m[26] === "L", fs: m[27] === "Fk" ? "c" : m[27] === "F", kp: m[28] === "P", kt: m[29] === "T", ko: m[30] === "O", kg: m[31] === "G", s: m[32] ? +m[32] : undefined } as GfTier & { oldKeys?: boolean };
   });
 }
 // K1362 s8 attribution (NOT exact, timing only): the t32r tier program with one part cut, a<part>[+<part>...]

@@ -499,3 +499,84 @@ describe("gf tier forms, s13 exact face skip", () => {
     }
   });
 });
+
+// K1362 s14 corner-program forms: `kp` (the scan's thru and keep loops walk the cell's pruned lists, tables.ts
+// cellKPList), `kt` (the passing thru corners' kJ in two scalars, a third overflows to full) and `ko` (a piece face's
+// burial tests the corners first). Exactness on the GPU is the cmp bench's; here the text: each lands only in the
+// corner program, the corner-free program and the probe are untouched, kt undoes to the plain text and ko only
+// reorders lines.
+describe("gf tier forms, s14 corner loops", () => {
+  const [free0, corners0] = cornerPlan(GF_TIERS[0]);
+  const KT: [string, string][] = [
+    ["int tj[8];\n", "int tjA = -1; int tjB = -1; // K1362 s14 kt\n"],
+    ["if (nTj < 8) tj[nTj++] = int(K1.w); }", "if (nTj == 0) tjA = int(K1.w); else if (nTj == 1) tjB = int(K1.w); else ovf = true; nTj++; }"],
+    ["bool same = false; for (int i = 0; i < nTj; i++) if (tj[i] == int(K1.w)) same = true;", "int cJ = int(K1.w); bool same = (nTj > 0 && tjA == cJ) || (nTj > 1 && tjB == cJ);"],
+  ];
+
+  it("only the corner program changes; the corner-free tier drops the forms; the probe is untouched", () => {
+    const [free, corners] = cornerPlan({ ...GF_TIERS[0], kp: true, kt: true, ko: true });
+    expect([free.when, corners.when]).toEqual([free0.when, corners0.when]);
+    expect([free.tier.kp, free.tier.kt, free.tier.ko]).toEqual([undefined, undefined, undefined]);
+    for (const tangent of [true, false]) {
+      expect(gfFs(false, tangent, free.tier)).toBe(gfFs(false, tangent, free0.tier));
+      expect(gfFs(false, tangent, corners.tier)).not.toBe(gfFs(false, tangent, corners0.tier));
+      expect(gfFs(false, tangent, { ...free0.tier, kp: true, kt: true, ko: true })).toBe(gfFs(false, tangent, free0.tier));
+      for (const f of [{ kp: true }, { kt: true }, { ko: true }]) expect(gfFs(true, tangent, { ...corners0.tier, ...f })).toBe(gfFs(true, tangent, corners0.tier));
+    }
+  });
+
+  it("kp: the thru and keep loops read uOKP, the yielded loop keeps the whole list", () => {
+    for (const tangent of [true, false]) {
+      const plain = gfFs(false, tangent, corners0.tier); const kp = gfFs(false, tangent, { ...corners0.tier, kp: true });
+      expect(count(plain, "L4(uOKL, q)")).toBe(3);
+      expect([count(kp, "L4(uOKL, q)"), count(kp, "L4(uOKP, q)"), count(kp, "uniform int uOKP;")]).toEqual([1, 2, 1]);
+    }
+  });
+
+  it("kt undoes to the plain text; ko has the plain text's lines, reordered", () => {
+    for (const tangent of [true, false]) {
+      const plain = gfFs(false, tangent, corners0.tier);
+      const kt = gfFs(false, tangent, { ...corners0.tier, kt: true });
+      expect(kt).not.toContain("tj[");
+      let back = kt;
+      for (const [a, b] of KT) { expect(count(back, b)).toBe(1); back = back.replace(b, a); }
+      expect(back).toBe(plain);
+      const ko = gfFs(false, tangent, { ...corners0.tier, ko: true });
+      expect(ko).not.toBe(plain);
+      expect(ko.split("\n").sort()).toEqual(plain.split("\n").sort());
+    }
+  });
+
+  it("kt and ko refuse the bench forms", () => {
+    const base: GfTier = { ...corners0.tier, fs: undefined };
+    for (const f of ["kt", "ko"] as const) {
+      expect(() => gfFs(false, true, { ...base, [f]: true, bx: true })).toThrow(/plain-form/);
+      for (const form of [{ reg: true }, { unroll: true }, { pack: true }]) expect(() => gfFs(false, true, { ...base, [f]: true }, form)).toThrow(/plain-form/);
+    }
+  });
+
+  it("kg: kk carries the surface; layers() tests it before a fetch, and the K1 fetches kept only for it go", () => {
+    const [free, corners] = cornerPlan({ ...GF_TIERS[0], kg: true });
+    expect(free.tier.kg).toBeUndefined();
+    for (const tangent of [true, false]) {
+      expect(gfFs(false, tangent, free.tier)).toBe(gfFs(false, tangent, free0.tier));
+      expect(gfFs(true, tangent, { ...corners0.tier, kg: true })).toBe(gfFs(true, tangent, corners0.tier));
+      const plain = gfFs(false, tangent, corners0.tier);
+      for (const extra of [{}, { kp: true }, { kt: true, ko: true }, { kp: true, kt: true, ko: true }]) {
+        const kg = gfFs(false, tangent, { ...corners.tier, ...extra });
+        expect(kg).not.toContain("int(K1.z) != S");
+        expect(count(kg, "kk[nk] = k + 65536 * int(K1.z);")).toBe(1);
+        expect(count(kg, "if (k > 65535 || !(K1.z >= 0.0 && K1.z < 32767.5)) { ovf = true; break; }")).toBe(1);
+        expect(count(kg, "int e = entry(kS);")).toBe(1);
+        expect(count(plain, "F(uOK + 6 * k + 1)") - count(kg, "F(uOK + 6 * k + 1)")).toBe(4);
+      }
+    }
+  });
+
+  it("kg refuses the bench forms and half", () => {
+    const base: GfTier = { ...corners0.tier, fs: undefined, kg: true };
+    expect(() => gfFs(false, true, { ...base, bx: true })).toThrow(/plain-form/);
+    expect(() => gfFs(false, true, { ...base, half: true })).toThrow(/plain-form/);
+    for (const form of [{ reg: true }, { unroll: true }, { pack: true }]) expect(() => gfFs(false, true, base, form)).toThrow(/plain-form/);
+  });
+});

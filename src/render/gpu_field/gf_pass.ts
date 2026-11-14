@@ -146,7 +146,7 @@ interface GfProg { prog: WebGLProgram; u: Map<string, WebGLUniformLocation | nul
  */
 export function cornerPlan(t: GfTier): { tier: GfTier; when?: GfWhen }[] {
   const free: GfTier = t.fs === "c" ? { ...t, kz: "free", fs: undefined } : { ...t, kz: "free" };
-  if (free.kp || free.kt || free.ko) { free.kp = undefined; free.kt = undefined; free.ko = undefined; } // K1362 s14: corner-program forms (the free program has no corner code)
+  if (free.kp || free.kt || free.ko || free.kg) { free.kp = undefined; free.kt = undefined; free.ko = undefined; free.kg = undefined; } // K1362 s14: corner-program forms (the free program has no corner code)
   if (t.kz === "route") return [{ tier: free }, { tier: { ...t, kz: "corner" }, when: "corners" }];
   if (t.kz === "frame") return [{ tier: free, when: "none" }, { tier: { ...t, kz: undefined, fj: undefined }, when: "corners" }];
   return [{ tier: t }];

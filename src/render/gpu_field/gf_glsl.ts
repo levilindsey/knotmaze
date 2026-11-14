@@ -83,9 +83,10 @@ void main() {
  * `kp` (K1362 s14, cornerLists below): the scan's thru search and keep loop walk the cell's pruned corner lists
  * (tables.ts cellKPList); the corner program only (cornerPlan drops it from the free one). `kt` and `ko` (K1362 s14,
  * thruScalars, burialOrder below): the scan's thru chain ids as two scalars; a piece face's corner burial first.
+ * `kg` (K1362 s14, cornerSurfaces below): kk carries each corner's surface, so layers() tests it before fetching.
  */
 export type GfCornerForm = "route" | "frame" | "free" | "corner";
-export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm; one?: boolean; bx?: boolean; fast?: boolean; s?: number; lab?: boolean; grp?: boolean; kq?: boolean; ks?: boolean; kl?: boolean; kr?: boolean; lh?: boolean; so?: boolean; cs?: boolean; vs?: boolean; ga?: boolean; sc?: boolean; kc?: boolean; kz?: GfCornerForm; fj?: boolean | "s"; lz?: boolean; fs?: boolean | "c"; kp?: boolean; kt?: boolean; ko?: boolean }
+export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm; one?: boolean; bx?: boolean; fast?: boolean; s?: number; lab?: boolean; grp?: boolean; kq?: boolean; ks?: boolean; kl?: boolean; kr?: boolean; lh?: boolean; so?: boolean; cs?: boolean; vs?: boolean; ga?: boolean; sc?: boolean; kc?: boolean; kz?: GfCornerForm; fj?: boolean | "s"; lz?: boolean; fs?: boolean | "c"; kp?: boolean; kt?: boolean; ko?: boolean; kg?: boolean }
 export type GfPackForm = boolean | "f" | "i";
 
 /** The program's source forms (gf_reg.ts); a tier's own flags set them by default. The probe keeps the plain form. */
@@ -135,6 +136,12 @@ export function gfFs(probe: boolean, tangentTerms = true, tier?: GfTier, form: G
     if (form.split || form.reg || form.pack || form.unroll || tier.bx) throw new Error("gfFs: kt and ko are plain-form tiers (no split, reg, pack, unroll or bx)");
     if (tier.kt) src = thruScalars(src);
     if (tier.ko) src = burialOrder(src);
+  }
+  if (tier && tier.kg && !probe && tier.kz !== "free") {
+    if (form.split || form.reg || form.pack || form.unroll || tier.bx || tier.fj || tier.half || tier.kl || tier.kr || tier.kc) {
+      throw new Error("gfFs: kg is a plain-form tier (no split, reg, pack, unroll, bx, fj, half, kl, kr or kc)");
+    }
+    src = cornerSurfaces(src);
   }
   if (tier?.fs && !probe) {
     if (form.split || form.reg || form.pack || form.unroll || tier.fj || tier.bx) throw new Error("gfFs: fs is a plain-form tier (no split, reg, pack, unroll, fj or bx)");
@@ -366,6 +373,29 @@ function burialOrder(src: string): string {
   const parts = src.split(KO_PIECES + KO_CORNERS);
   if (parts.length !== 2) throw new Error(`gfFs ko: expected one piece-face burial, found ${parts.length - 1}`);
   return parts.join(KO_CORNERS + KO_PIECES);
+}
+
+/**
+ * K1362 s14 `kg` (tier letter G): the scan keeps each kept corner's surface in kk (k + 65536 * surface; a corner
+ * index over 65535 or a surface outside [0, 32767] overflows to full), so layers() tests a corner's surface before
+ * any fetch, and drops the K1 fetches it made only for that test. Every other statement reads the same values.
+ */
+function cornerSurfaces(src: string): string {
+  const rep = (a: string, b: string, n?: number): void => {
+    const parts = src.split(a);
+    if (n !== undefined && parts.length - 1 !== n) throw new Error(`gfFs kg: expected ${n} "${a.trim().slice(0, 48)}", found ${parts.length - 1}`);
+    src = parts.join(b);
+  };
+  rep("kSec[nk] = sec; kk[nk] = k; krho[nk] = rho;",
+    "if (k > 65535 || !(K1.z >= 0.0 && K1.z < 32767.5)) { ovf = true; break; } kSec[nk] = sec; kk[nk] = k + 65536 * int(K1.z); krho[nk] = rho;", 1);
+  rep("int k = kk[i];", "int k = kk[i] & 65535; int kS = kk[i] >> 16;");
+  rep("vec4 K0 = F(uOK + 6 * k); vec4 K1 = F(uOK + 6 * k + 1); vec4 K3 = F(uOK + 6 * k + 3);", "vec4 K0 = F(uOK + 6 * k); vec4 K3 = F(uOK + 6 * k + 3);", 1);
+  rep("int e = entry(int(K1.z));", "int e = entry(kS);", 1);
+  rep("vec4 K0 = F(uOK + 6 * k); vec4 K1 = F(uOK + 6 * k + 1); if (int(K1.z) != S) continue;", "if (kS != S) continue; vec4 K0 = F(uOK + 6 * k);");
+  rep("vec4 K0 = F(uOK + 6 * k); vec4 K1 = F(uOK + 6 * k + 1); if (int(K1.z) != S || !kSec[i]) continue;", "if (kS != S || !kSec[i]) continue; vec4 K0 = F(uOK + 6 * k);", 1);
+  rep("vec4 K1 = F(uOK + 6 * k + 1); if (int(K1.z) != S || K1.x > 0.5) continue;", "if (kS != S) continue; vec4 K1 = F(uOK + 6 * k + 1); if (K1.x > 0.5) continue;");
+  if (src.includes("int(K1.z) != S")) throw new Error("gfFs kg: a corner surface test still fetches K1");
+  return src;
 }
 
 function gfSrc(probe: boolean, tangentTerms: boolean, tier?: GfTier): string {
