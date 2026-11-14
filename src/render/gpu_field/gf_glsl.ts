@@ -78,7 +78,7 @@ void main() {
  * piece per surface. The same faces on the same values; v and D are running maxima, so the order cannot change them.
  */
 export type GfCornerForm = "route" | "frame" | "free" | "corner";
-export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm; one?: boolean; bx?: boolean; fast?: boolean; s?: number; lab?: boolean; grp?: boolean; kq?: boolean; ks?: boolean; kl?: boolean; kr?: boolean; lh?: boolean; so?: boolean; cs?: boolean; vs?: boolean; ga?: boolean; sc?: boolean; kc?: boolean; kz?: GfCornerForm; fj?: boolean }
+export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm; one?: boolean; bx?: boolean; fast?: boolean; s?: number; lab?: boolean; grp?: boolean; kq?: boolean; ks?: boolean; kl?: boolean; kr?: boolean; lh?: boolean; so?: boolean; cs?: boolean; vs?: boolean; ga?: boolean; sc?: boolean; kc?: boolean; kz?: GfCornerForm; fj?: boolean | "s" }
 export type GfPackForm = boolean | "f" | "i";
 
 /** The program's source forms (gf_reg.ts); a tier's own flags set them by default. The probe keeps the plain form. */
@@ -118,7 +118,7 @@ export function gfFs(probe: boolean, tangentTerms = true, tier?: GfTier, form: G
   }
   if (tier?.fj && !probe) {
     if (form.split || form.reg || form.pack || form.unroll || tier.kq || tier.kl || tier.kr || tier.kc || tier.vs || tier.ga || tier.one || tier.bx) throw new Error("gfFs: fj is a plain-form tier (no split, reg, pack, unroll, kq, kl, kr, kc, vs, ga, one or bx)");
-    src = faceJoin(src);
+    src = faceJoin(src, tier.fj === "s");
   }
   if (probe) return src;
   const mp = tier ? tier.p : MAXP;
@@ -148,9 +148,10 @@ export function gfFs(probe: boolean, tangentTerms = true, tier?: GfTier, form: G
  * own surface (slotOf: the first sid entry equal to it; sid is unique, and a surface outside it is skipped as the
  * old loop skipped it), then sa[e] = ss(-aa, aa, sa[e]). Every face is the same statements on the same values, each
  * (surface, face) pair is visited once either way, D is final before the tangent points read it, and v and D are
- * strict running maxima (a NaN never enters), so the order cannot change them.
+ * strict running maxima (a NaN never enters), so the order cannot change them. `fj: "s"` reads sv[e] once per face
+ * into a scalar v and writes it back where it rises (v and sv[e] stay equal), in place of sv[e] at every comparison.
  */
-function faceJoin(src: string): string {
+function faceJoin(src: string, scalar: boolean): string {
   const START = "  for (int e = 0; e < ns; e++) {\n    int S = sid[e]; float D = -BIG; float v = 0.0; PR(int wk = 0; int wa = -1; int wb = 0;)\n";
   const END = "    SVW(e, v) SAW(e, ss(-aa, aa, D)) PR(swk[e] = wk; swa[e] = wa; swb[e] = wb;)\n  }\n";
   const swap = (s: string, from: string, to: string, n: number) => {
@@ -161,12 +162,13 @@ function faceJoin(src: string): string {
   const i0 = src.indexOf(START); const i1 = src.indexOf(END, i0);
   if (i0 < 0 || i1 < 0 || src.indexOf(START, i0 + 1) >= 0) throw new Error("gfFs fj: the face loop not found once");
   let b = src.slice(i0 + START.length, i1);
+  const V = scalar ? " float v = sv[e];" : "";
   b = swap(b, "      if (PSURF(j) != S || !(pd[j] < h + aa)) continue;\n      float X = pd[j]; if (h - X > D) D = h - X;\n",
-    "      if (!(pd[j] < h + aa)) continue;\n      int S = PSURF(j); int e = slotOf(S); if (e < 0) continue;\n      float X = pd[j]; if (h - X > sa[e]) sa[e] = h - X;\n", 1);
+    `      if (!(pd[j] < h + aa)) continue;\n      int S = PSURF(j); int e = slotOf(S); if (e < 0) continue;${V}\n      float X = pd[j]; if (h - X > sa[e]) sa[e] = h - X;\n`, 1);
   b = swap(b, "if (int(K1.z) != S || !kSec[i]) continue;\n      float rho = krho[i]; float Dk = rho - K0.z;\n      if (kIn[i] == 2 && Dk > D) D = Dk;\n",
-    "if (!kSec[i]) continue; int S = int(K1.z); int e = slotOf(S); if (e < 0) continue;\n      float rho = krho[i]; float Dk = rho - K0.z;\n      if (kIn[i] == 2 && Dk > sa[e]) sa[e] = Dk;\n", 1);
-  b = swap(b, "if (int(K1.z) != S || K1.x > 0.5) continue;\n", "if (K1.x > 0.5) continue; int S = int(K1.z); int e = slotOf(S); if (e < 0) continue; float D = sa[e];\n", 1);
-  b = swap(b, "if (val > v) { v = val;", "if (val > sv[e]) { sv[e] = val;", 3);
+    `if (!kSec[i]) continue; int S = int(K1.z); int e = slotOf(S); if (e < 0) continue;${V}\n      float rho = krho[i]; float Dk = rho - K0.z;\n      if (kIn[i] == 2 && Dk > sa[e]) sa[e] = Dk;\n`, 1);
+  b = swap(b, "if (int(K1.z) != S || K1.x > 0.5) continue;\n", `if (K1.x > 0.5) continue; int S = int(K1.z); int e = slotOf(S); if (e < 0) continue; float D = sa[e];${V}\n`, 1);
+  b = swap(b, "if (val > v) { v = val;", scalar ? "if (val > v) { v = val; sv[e] = val;" : "if (val > sv[e]) { sv[e] = val;", 3);
   src = src.slice(0, i0) + "  for (int e = 0; e < ns; e++) { sv[e] = 0.0; sa[e] = -BIG; } // K1362 s12 fj: v and D per surface slot\n" + b
     + "  for (int e = 0; e < ns; e++) sa[e] = ss(-aa, aa, sa[e]);\n" + src.slice(i1 + END.length);
   return swap(src, "void layers(vec2 p) {\n", "int slotOf(int id) { for (int i = 0; i < ns; i++) if (sid[i] == id) return i; return -1; }\nvoid layers(vec2 p) {\n", 1);

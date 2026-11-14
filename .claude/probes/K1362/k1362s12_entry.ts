@@ -13,7 +13,7 @@
 //   cover    per tiered variant, the share of the rect each prefix of its tiers draws (the rest goes to full)
 //   cmp      every variant read back in RGBA32F against cfg.ref: ink (r) and coverage (g) differences
 // K1362 s12: a tier letter j (after e, before c<n>) is kz: j route, jf frame, jc the corner program alone, jx free alone (gf_glsl.ts cornerRoute).
-// K1362 s12: a tier letter p (after e, before j) is fj, the one-pass face loop (gf_glsl.ts faceJoin).
+// K1362 s12: a tier letter p (after e, before j) is fj, the one-pass face loop (ps: fj "s", v a scalar per face) (gf_glsl.ts faceJoin).
 // Each (variant, mode) records its phone-side Date.now() window, so k1362s12_gpuclk.mjs puts the clock beside it.
 import { buildTables, type GfTables } from "../../../src/render/gpu_field/tables";
 import { GfPass, GfTarget, type GfMap } from "../../../src/render/gpu_field/gf_pass";
@@ -108,10 +108,10 @@ void main() { discard; }`;
 
 function parseTiers(name: string): GfTier[] {
   return name.slice(1).split("_").map((t) => {
-    const m = /^(\d)(\d)(r?)(h?)(s?)(u?)(k[fi]?|)(o?)(1?)(b?)(f?)(l?)(g?)(q?)(y?)(z?)(x?)(w?)([nm]?)(v?)(a?)(d?)(e?)(p?)(j[fcx]?|)(?:c(\d))?$/.exec(t);
+    const m = /^(\d)(\d)(r?)(h?)(s?)(u?)(k[fi]?|)(o?)(1?)(b?)(f?)(l?)(g?)(q?)(y?)(z?)(x?)(w?)([nm]?)(v?)(a?)(d?)(e?)(ps?|)(j[fcx]?|)(?:c(\d))?$/.exec(t);
     if (!m) throw new Error("bad tier " + t);
     const pack = m[7] === "k" ? true : m[7] === "kf" ? "f" : m[7] === "ki" ? "i" : false; // K1362 s6: k, kf, ki
-    return { p: +m[1], k: +m[2], ramps: m[3] === "r", half: m[4] === "h", reg: m[5] === "s", unroll: m[6] === "u", pack, oldKeys: m[8] === "o", one: m[9] === "1", bx: m[10] === "b", fast: m[11] === "f", lab: m[12] === "l", grp: m[13] === "g", kq: m[14] === "q", ks: m[15] === "y", lh: m[16] === "z", so: m[17] === "x", cs: m[18] === "w", kl: m[19] === "n", kr: m[19] === "m", vs: m[20] === "v", ga: m[21] === "a", sc: m[22] === "d", kc: m[23] === "e", fj: m[24] === "p", kz: m[25] === "j" ? "route" : m[25] === "jf" ? "frame" : m[25] === "jc" ? "corner" : m[25] === "jx" ? "free" : undefined, s: m[26] ? +m[26] : undefined } as GfTier & { oldKeys?: boolean };
+    return { p: +m[1], k: +m[2], ramps: m[3] === "r", half: m[4] === "h", reg: m[5] === "s", unroll: m[6] === "u", pack, oldKeys: m[8] === "o", one: m[9] === "1", bx: m[10] === "b", fast: m[11] === "f", lab: m[12] === "l", grp: m[13] === "g", kq: m[14] === "q", ks: m[15] === "y", lh: m[16] === "z", so: m[17] === "x", cs: m[18] === "w", kl: m[19] === "n", kr: m[19] === "m", vs: m[20] === "v", ga: m[21] === "a", sc: m[22] === "d", kc: m[23] === "e", fj: m[24] === "ps" ? "s" : m[24] === "p", kz: m[25] === "j" ? "route" : m[25] === "jf" ? "frame" : m[25] === "jc" ? "corner" : m[25] === "jx" ? "free" : undefined, s: m[26] ? +m[26] : undefined } as GfTier & { oldKeys?: boolean };
   });
 }
 // K1362 s8 attribution (NOT exact, timing only): the t32r tier program with one part cut, a<part>[+<part>...]

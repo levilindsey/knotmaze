@@ -355,12 +355,14 @@ describe("gf tier forms, s12 face loop", () => {
   };
 
   it("fj rewrites only layers() (and adds slotOf before it), alone and with kz free", () => {
-    for (const t of [L, { ...L, kz: "free" as const }, T]) {
-      const [p0, plain, p2] = parts(gfFs(false, true, t)); const [f0, body, f2] = parts(gfFs(false, true, { ...t, fj: true }));
+    for (const t of [L, { ...L, kz: "free" as const }, T]) for (const fj of [true, "s"] as const) {
+      const [p0, plain, p2] = parts(gfFs(false, true, t)); const [f0, body, f2] = parts(gfFs(false, true, { ...t, fj }));
       expect(f0).toBe(p0 + SLOT); expect(f2).toBe(p2);
       expect(count(plain, "    int S = sid[e];")).toBe(1); expect(body).not.toContain("int S = sid[e];"); // no pass per surface
       expect(count(body, "int e = slotOf(S); if (e < 0) continue;")).toBe(3); // pieces, corners, tangent points: each once
-      expect(count(body, "if (val > sv[e]) { sv[e] = val;")).toBe(3); expect(count(body, "if (val > v) {")).toBe(0);
+      if (fj === true) { expect(count(body, "if (val > sv[e]) { sv[e] = val;")).toBe(3); expect(count(body, "if (val > v) {")).toBe(0); }
+      // "s": v loaded from the slot as each face starts, written back wherever it rises, so v == sv[e] throughout
+      else { expect(count(body, " float v = sv[e];")).toBe(3); expect(count(body, "if (val > v) { v = val; sv[e] = val;")).toBe(3); expect(count(body, "if (val > v) {")).toBe(3); }
       // D finished (pieces and corners) before the tangent points read it, smoothed once at the end
       const iT = body.indexOf("if (K1.x > 0.5) continue; int S = int(K1.z);"); const iK = body.indexOf("if (!kSec[i]) continue; int S = int(K1.z);");
       expect(body.indexOf("if (h - X > sa[e]) sa[e] = h - X;")).toBeLessThan(iK); expect(iK).toBeLessThan(iT);
@@ -369,7 +371,7 @@ describe("gf tier forms, s12 face loop", () => {
   });
 
   it("the probe is untouched; fj is a plain-form tier", () => {
-    expect(gfFs(true, true, { ...L, fj: true })).toBe(gfFs(true, true, L));
+    for (const fj of [true, "s"] as const) expect(gfFs(true, true, { ...L, fj })).toBe(gfFs(true, true, L));
     for (const f of [{ kq: true }, { kl: true }, { kr: true }, { kc: true }, { vs: true }, { ga: true }, { one: true }, { bx: true }]) expect(() => gfFs(false, true, { ...L, ...f, fj: true })).toThrow(/fj is a plain-form tier/);
     for (const f of [{ reg: true }, { pack: true as const }, { unroll: true }, { split: 1 as const }]) expect(() => gfFs(false, true, { ...L, fj: true }, f)).toThrow();
   });
