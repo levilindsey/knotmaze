@@ -338,6 +338,12 @@ describe("gf tier forms, s12 corner-free cells", () => {
     expect(cornerPlan({ ...L, kz: "route" })).toEqual([{ tier: { ...L, kz: "free" } }, { tier: { ...L, kz: "corner" }, when: "corners" }]);
     expect(cornerPlan({ ...L, kz: "frame" })).toEqual([{ tier: { ...L, kz: "free" }, when: "none" }, { tier: { ...L, kz: undefined }, when: "corners" }]);
     expect(cornerPlan(L)).toEqual([{ tier: L }]);
+    // fj under "frame" is the corner-free program's alone; the frames with corners draw the plain tier
+    for (const fj of [true, "s"] as const) {
+      const [free, corners] = cornerPlan({ ...L, kz: "frame", fj });
+      expect(free).toEqual({ tier: { ...L, kz: "free", fj }, when: "none" }); expect(corners.tier.fj).toBeUndefined();
+      expect(gfFs(false, true, corners.tier)).toBe(gfFs(false, true, L));
+    }
   });
 });
 
