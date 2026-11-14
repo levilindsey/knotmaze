@@ -49,7 +49,7 @@ void main() {
  * maximum, then the first covered surface with the greatest one; -BIG and NaN keys leave labC at -1 both ways). No
  * float arithmetic changes. Ignored in the probe program (it keeps scs for labS).
  */
-export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm; one?: boolean; bx?: boolean; fast?: boolean; s?: number; lab?: boolean }
+export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm; one?: boolean; bx?: boolean; fast?: boolean; s?: number; lab?: boolean; grp?: boolean; kq?: boolean; ks?: boolean; kl?: boolean; kr?: boolean }
 export type GfPackForm = boolean | "f" | "i";
 
 /** The program's source forms (gf_reg.ts); a tier's own flags set them by default. The probe keeps the plain form. */
@@ -69,6 +69,7 @@ export function gfFs(probe: boolean, tangentTerms = true, tier?: GfTier, form: G
   if (tier?.one) src = oneConfig(src);
   if (tier?.bx) src = burialExit(src);
   if (form.oldKeys) src = src.replace("precision highp float;\n", "precision highp float;\n#define OLDKEYS 1\n");
+  if ((tier?.grp || tier?.kq || tier?.ks || tier?.kl || tier?.kr) && !probe && (form.split || form.reg || form.pack)) throw new Error("gfFs: grp, kq, ks and kl are plain-form tiers (no split, reg or pack)");
   if (form.split) {
     if (probe || !tier || tier.p > 3 || tier.k > 2) throw new Error("gfFs: split needs a non-probe tier of at most p3/k2");
     // a tier without ramps discards ramping pixels after the keys: pass 2 cannot route, so its keys stay in pass 1
@@ -161,6 +162,11 @@ ${tier ? "#define TIER 1" : ""}
 ${tier && !tier.ramps ? "#define NORAMP 1" : ""}
 ${tier && tier.fast && !probe ? "#define FAST 1" : ""}
 ${tier && tier.lab && !probe ? "#define LABRUN 1" : ""}
+${tier && tier.grp && !probe ? "#define PGRP 1" : ""}
+${tier && tier.kq && !probe ? "#define PKQ 1" : ""}
+${tier && tier.ks && !probe ? "#define PKS 1" : ""}
+${tier && (tier.kl || tier.kr) && !probe ? "#define KLEAN 1" : ""}
+${tier && tier.kr && !probe ? "#define KRHO 1" : ""}
 uniform sampler2D uD;
 uniform int uOCh, uOV, uOPin, uOArm, uOK, uOChk, uOCell, uOChL, uOKL, uOKC, uOKB, uOKA;
 uniform float uH, uW, uAA, uSigma, uZt, uWin, uRc;
@@ -196,10 +202,15 @@ uniform highp usampler2D uP0, uP1, uP2, uP3;
 #else
 #define PR(x)
 #endif
-#ifdef SPLIT1
+#if defined(SPLIT1) || defined(PKQ)
 #define S1(x) x
 #else
 #define S1(x)
+#endif
+#ifdef PKQ
+#define FXY(x)
+#else
+#define FXY(x) x
 #endif
 
 vec4 F(int i) { return texelFetch(uD, ivec2(i & TWM, i >> LOG), 0); }
@@ -209,9 +220,19 @@ int pmod(int k, int n) { int r = k - n * int(floor(float(k) / float(n))); if (r 
 
 // pieces (ptx, pty, pend, the surfaces' scs / swk / swa / swb and cWk / cWa / cWb feed only the probe's label
 // and winner outputs, never ink or coverage: the app's program, without PROBE, does not carry them)
-IQ int pc[MAXP]; float ps[MAXP]; float pd[MAXP]; float pfx[MAXP]; float pfy[MAXP]; IQ int plo[MAXP]; IQ int phi[MAXP];
-float pkey[MAXP]; IQ int pg[MAXP]; FQ float pramp[MAXP];
-#ifdef SPLIT1
+IQ int pc[MAXP]; float ps[MAXP]; float pd[MAXP]; IQ int plo[MAXP]; IQ int phi[MAXP];
+#ifndef PKQ
+float pfx[MAXP]; float pfy[MAXP];
+#endif
+#ifdef PKS
+#define pkey ps // K1362 s10: the keys overwrite the scan's ps (dead after them) in place
+#else
+float pkey[MAXP];
+#endif
+#ifndef PGRP
+IQ int pg[MAXP]; FQ float pramp[MAXP];
+#endif
+#if defined(SPLIT1) || defined(PKQ)
 IQ int pkq[MAXP]; // K1362 s7: the nearest segment's index as the scan unwrapped it (plo <= pkq <= phi): pass 2 rebuilds pd, pfx, pfy from it
 #endif
 #ifdef PROBE
@@ -219,7 +240,14 @@ float ptx[MAXP]; float pty[MAXP]; bool pend[MAXP];
 #endif
 IQ int psurf[MAXP]; int np;
 // corners near p
+#ifdef KLEAN
+IQ int kk[MAXK]; int nk; // K1362 s10: rho, the sector and the ring class rebuilt by KST()
+#ifdef KRHO
+float krho[MAXK];
+#endif
+#else
 IQ int kk[MAXK]; float krho[MAXK]; IQ int kIn[MAXK]; bool kSec[MAXK]; int nk;
+#endif
 // surfaces
 #ifdef LABRUN
 IQ int sid[MAXS]; float skey[MAXS];
@@ -307,6 +335,20 @@ float pieceD(int j, vec2 p) {
   }
   return d2;
 }
+#ifdef PKQ
+// K1362 s10: piece j's foot point, rebuilt from its nearest segment (pkq) by the scan's own lines (as stage 7's
+// pass 2 rebuilds it), in place of the scan's pfx / pfy arrays
+vec2 footQ(int j, float x, float y) {
+  int c = pc[j]; vec4 C0 = F(uOCh + 3 * c); int cV0 = int(C0.x); int nseg = int(C0.y) - 1; bool closed = C0.z > 0.5;
+  int kq = pkq[j];
+  int v = cV0 + (closed ? pmod(kq, nseg) : kq);
+  vec4 A = F(uOV + v); vec4 B = F(uOV + v + 1);
+  float ax = A.x; float ay = A.y; float dx = B.x - ax; float dy = B.y - ay;
+  float l2 = dx * dx + dy * dy; float u = l2 > 0.0 ? clamp(((x - ax) * dx + (y - ay) * dy) / l2, 0.0, 1.0) : 0.0;
+  float fx = ax + dx * u; float fy = ay + dy * u;
+  return vec2(fx, fy);
+}
+#endif
 
 bool inSector(int k, vec2 p) {
   vec4 K0 = F(uOK + 6 * k); vec4 K2 = F(uOK + 6 * k + 2);
@@ -315,6 +357,27 @@ bool inSector(int k, vec2 p) {
   float c1 = K2.x * ry - K2.y * rx; float c2 = rx * K2.w - ry * K2.z;
   return cab >= 0.0 ? c1 >= 0.0 && c2 >= 0.0 : c1 <= 0.0 && c2 <= 0.0;
 }
+
+#ifdef KLEAN
+// K1362 s10: corner k's rho, sector and ring class at p, the scan's own lines (in place of krho, kSec, kIn)
+void kSK(int k, vec2 p, float rho, out bool sec, out int kin) {
+  vec4 K0 = F(uOK + 6 * k);
+  sec = inSector(k, p); bool inR = rho <= K0.w && sec;
+  kin = !inR ? 0 : rho > K0.z - uAA ? 2 : 1;
+}
+void kState(int k, vec2 p, out float rho, out bool sec, out int kin) {
+  vec4 K0 = F(uOK + 6 * k);
+  float rx = p.x - K0.x; float ry = p.y - K0.y; rho = sqrt(rx * rx + ry * ry);
+  kSK(k, p, rho, sec, kin);
+}
+#ifdef KRHO // the scan's rho kept, the sector and the ring class rebuilt
+#define KR(x) x
+#define KST(i, k, r, s, n) r = krho[i]; kSK(k, p, r, s, n);
+#else
+#define KR(x)
+#define KST(i, k, r, s, n) kState(k, p, r, s, n);
+#endif
+#endif
 
 bool outsideArms(int k, int own, vec2 p) {
   float lim = uH - 2.0 * uAA; float lim2 = lim * lim;
@@ -363,7 +426,13 @@ void layers(vec2 p) {
   }
   float zt = uZt;
   for (int i = 0; i < nk; i++) {
+#ifdef KLEAN
+    int k = kk[i]; float krI; bool ksI; int kiI; KST(i, k, krI, ksI, kiI) if (kiI != 2) continue;
+#define KRI krI
+#else
     int k = kk[i]; if (kIn[i] != 2) continue;
+#define KRI krho[i]
+#endif
     vec4 K0 = F(uOK + 6 * k); vec4 K1 = F(uOK + 6 * k + 1); vec4 K3 = F(uOK + 6 * k + 3); vec4 K4 = F(uOK + 6 * k + 4); vec4 K5 = F(uOK + 6 * k + 5);
     vec2 ta = p - K4.zw; vec2 tb = p - K5.xy;
     bool nearerA = dot(ta, ta) <= dot(tb, tb);
@@ -371,9 +440,9 @@ void layers(vec2 p) {
     int e = entry(int(K1.z));
     if (key > skey[e]) skey[e] = key;
 #ifdef LABRUN
-    if (krho[i] > K0.z && (key > labK || (key == labK && e < labE))) { labK = key; labE = e; labC = nearerA ? int(K3.x) : int(K3.y); }
+    if (KRI > K0.z && (key > labK || (key == labK && e < labE))) { labK = key; labE = e; labC = nearerA ? int(K3.x) : int(K3.y); }
 #else
-    if (krho[i] > K0.z) { scov[e] = true; if (key > sckey[e]) { sckey[e] = key; scch[e] = nearerA ? int(K3.x) : int(K3.y); PR(scs[e] = nearerA ? K3.z : K3.w;) } }
+    if (KRI > K0.z) { scov[e] = true; if (key > sckey[e]) { sckey[e] = key; scch[e] = nearerA ? int(K3.x) : int(K3.y); PR(scs[e] = nearerA ? K3.z : K3.w;) } }
 #endif
   }
   for (int i = 0; i < ns; i++) sord[i] = i;
@@ -384,7 +453,11 @@ void layers(vec2 p) {
       if (psurf[j] != S || !(pd[j] < h + aa)) continue;
       float X = pd[j]; if (h - X > D) D = h - X;
       if (!(X > h - W - aa && X > 1e-12)) continue;
+#ifdef PKQ
+      vec2 f = footQ(j, p.x, p.y);
+#else
       vec2 f = vec2(pfx[j], pfy[j]);
+#endif
       vec2 q = f + (h * (p - f)) / X;
       float bur = 0.0;
       for (int m = 0; m < np && bur < 1.0; m++) {
@@ -401,9 +474,15 @@ void layers(vec2 p) {
       if (val > v) { v = val; PR(wk = pend[j] ? 3 : 1; wa = pc[j]; wb = ptx[j] * (p.y - pfy[j]) - pty[j] * (p.x - pfx[j]) >= 0.0 ? 1 : -1;) }
     }
     for (int i = 0; i < nk; i++) {
+#ifdef KLEAN
+      int k = kk[i]; vec4 K0 = F(uOK + 6 * k); vec4 K1 = F(uOK + 6 * k + 1); if (int(K1.z) != S) continue;
+      float rho; bool ksJ; int kiJ; KST(i, k, rho, ksJ, kiJ) if (!ksJ) continue; float Dk = rho - K0.z;
+      if (kiJ == 2 && Dk > D) D = Dk;
+#else
       int k = kk[i]; vec4 K0 = F(uOK + 6 * k); vec4 K1 = F(uOK + 6 * k + 1); if (int(K1.z) != S || !kSec[i]) continue;
       float rho = krho[i]; float Dk = rho - K0.z;
       if (kIn[i] == 2 && Dk > D) D = Dk;
+#endif
       if (!(rho > 1e-12)) continue;
       vec2 q = K0.xy + (K0.z * (p - K0.xy)) / rho;
       float bur = 0.0;
@@ -598,7 +677,7 @@ void main() {
           int q2 = k;
           if (closed) { int ref = plo[j]; float hn = float(nseg) / 2.0; while (float(q2 - ref) > hn) q2 -= nseg; while (float(ref - q2) > hn) q2 += nseg; }
           if (q2 < plo[j]) plo[j] = q2; if (q2 > phi[j]) phi[j] = q2;
-          if (d < pd[j]) { pd[j] = d; ps[j] = s; pfx[j] = fx; pfy[j] = fy; PR(ptx[j] = dx; pty[j] = dy; pend[j] = isEnd;) S1(pkq[j] = q2;) }
+          if (d < pd[j]) { pd[j] = d; ps[j] = s; FXY(pfx[j] = fx; pfy[j] = fy;) PR(ptx[j] = dx; pty[j] = dy; pend[j] = isEnd;) S1(pkq[j] = q2;) }
           continue;
         }
         if (np < MAXP) j = np++;
@@ -607,7 +686,7 @@ void main() {
 #else
         else { int far = 0; for (int m = 1; m < MAXP; m++) if (pd[m] > pd[far]) far = m; if (pd[far] <= d) continue; j = far; }
 #endif
-        pc[j] = c; pd[j] = d; ps[j] = s; pfx[j] = fx; pfy[j] = fy; plo[j] = k; phi[j] = k; PR(ptx[j] = dx; pty[j] = dy; pend[j] = isEnd;) S1(pkq[j] = k;)
+        pc[j] = c; pd[j] = d; ps[j] = s; FXY(pfx[j] = fx; pfy[j] = fy;) plo[j] = k; phi[j] = k; PR(ptx[j] = dx; pty[j] = dy; pend[j] = isEnd;) S1(pkq[j] = k;)
       }
     }
 #ifdef TIER
@@ -617,6 +696,35 @@ void main() {
     // keys and membership
     float zK = uZt / h;
     int nr = 0; int rIdx0 = 0; int rIdx1 = 0;
+#if defined(PGRP) || defined(PKS)
+    // K1362 s10: the same keys and membership. PKS: s read once (pkey overwrites ps); PGRP: no pg / pramp arrays.
+    // A piece's cfg-0 surface goes to psurf here; a ramping piece's id there is a singleton that still carries its
+    // group (-1 - j - MAXP * (g + 1)), and the configuration loop makes it a member when its configuration comes.
+#ifdef PGRP
+    float r0 = 0.0; float r1 = 0.0;
+#endif
+    for (int j = 0; j < np; j++) {
+      float sj = ps[j];
+      vec4 KB = keyBin(pc[j], sj);
+      float pz = depth(pc[j], sj, KB);
+      member(pc[j], sj, KB);
+      pkey[j] = pz - pd[j] * zK;
+#ifdef PGRP
+      float pr = mramp; bool rmp = false;
+      if (mg >= 0 && mramp > 0.0 && mramp < 1.0) {
+        if (nr < MAXR) { if (nr == 0) { rIdx0 = j; r0 = mramp; } else { rIdx1 = j; r1 = mramp; } nr++; rmp = true; }
+        else pr = mramp >= 0.5 ? 1.0 : 0.0;
+      }
+      psurf[j] = rmp ? -1 - j - MAXP * (mg + 1) : mg >= 0 && pr >= 1.0 ? mg : -1 - j;
+#else
+      pg[j] = mg; pramp[j] = mramp;
+      if (mg >= 0 && mramp > 0.0 && mramp < 1.0) {
+        if (nr < MAXR) { if (nr == 0) rIdx0 = j; else rIdx1 = j; nr++; }
+        else pramp[j] = mramp >= 0.5 ? 1.0 : 0.0;
+      }
+#endif
+    }
+#else
     for (int j = 0; j < np; j++) {
       vec4 KB = keyBin(pc[j], ps[j]);
       float pz = depth(pc[j], ps[j], KB); pkey[j] = pz - pd[j] * zK;
@@ -626,6 +734,7 @@ void main() {
         else pramp[j] = mramp >= 0.5 ? 1.0 : 0.0;
       }
     }
+#endif
 #endif
 #ifdef NORAMP
     if (nr > 0) { discard; return; } // ramping pieces: the configurations below; a later program draws the pixel
@@ -664,7 +773,11 @@ void main() {
 #ifdef TIER
       if (nk == MAXK) { ovf = true; break; } // the full program keeps this corner: it draws the pixel
 #endif
+#ifdef KLEAN
+      kk[nk] = k; KR(krho[nk] = rho;) nk++;
+#else
       kSec[nk] = sec; kk[nk] = k; krho[nk] = rho; kIn[nk] = !inR ? 0 : rho > K0.z - aa ? 2 : 1; nk++;
+#endif
     }
 #ifdef TIER
     if (ovf) { discard; return; } // never past the arrays: D3D runs on past a discard
@@ -702,7 +815,11 @@ void main() {
 #endif
 #else
     // configurations over the ramping pieces
+#ifdef PGRP
+    if (nr == 2 && r0 < r1) { int t = rIdx0; rIdx0 = rIdx1; rIdx1 = t; float tr = r0; r0 = r1; r1 = tr; }
+#else
     if (nr == 2 && pramp[rIdx0] < pramp[rIdx1]) { int t = rIdx0; rIdx0 = rIdx1; rIdx1 = t; }
+#endif
     float ink = 0.0; float cov = 0.0; int lab = -1; PR(float labSv = 0.0; int wk = 0; int wa = -1; int wb = 0;) float bestW = -1.0;
     // Under NORAMP nr == 0 here (the discard above), so the loop runs once: one layering, weight 1. It stays a loop
     // on a runtime bound: inlined straight-line, D3D's compiler (ANGLE on Windows) failed the program at draw.
@@ -710,6 +827,13 @@ void main() {
     bool fast = np <= 1 && nk == 0 && nr == 0;
 #endif
     for (int cfg = 0; cfg <= nr; cfg++) {
+#ifdef PGRP
+      // configuration cfg makes the first cfg ramping pieces members (they stay members in the later ones)
+      if (cfg >= 1) { int jr = cfg == 1 ? rIdx0 : rIdx1; int id = psurf[jr]; if (id < -MAXP) psurf[jr] = (-1 - jr - id) / MAXP - 1; }
+      float hiR = cfg == 0 ? 1.0 : cfg == 1 ? r0 : r1;
+      float loR = cfg == nr ? 0.0 : cfg == 0 ? r0 : r1;
+      float wgt = hiR - loR; if (!(wgt > 0.0) && nr > 0) continue;
+#else
       float hiR = cfg == 0 ? 1.0 : pramp[cfg == 1 ? rIdx0 : rIdx1];
       float loR = cfg == nr ? 0.0 : pramp[cfg == 0 ? rIdx0 : rIdx1];
       float wgt = hiR - loR; if (!(wgt > 0.0) && nr > 0) continue;
@@ -718,6 +842,7 @@ void main() {
         if (pg[j] >= 0 && pramp[j] > 0.0 && pramp[j] < 1.0) { mem = (cfg >= 1 && rIdx0 == j) || (cfg >= 2 && rIdx1 == j); }
         psurf[j] = mem ? pg[j] : -1 - j;
       }
+#endif
 #ifdef FAST
       if (fast) layers1(); else
 #endif
