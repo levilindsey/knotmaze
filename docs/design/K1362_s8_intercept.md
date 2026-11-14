@@ -91,3 +91,85 @@ Under 30 lines:
 - your last SHA.
 
 End with `Ledger items` and K1362's handle fields.
+
+## Handoff (stage 8 agent, started 2026-11-13 12:35:22, stopped 13:37)
+
+Stopped at Done items 1, 3 and 4. Item 2 has no cut: nothing exact was faster on all three scenes on the Pixel, so
+t32r stays (`GF_TIERS` unchanged, rp=gf off by default, tables untouched). The goal (def <= 8 ms) is missed.
+
+**The intercept is not a fixed cost: it is mostly density.** On the Pixel, a pass has a real fixed cost of about
+1-2 ms. Most of the rest of the "8 ms" comes from per-pixel cost that rises as pixels get coarser in world space.
+- *Crops at the same density* (Pixel, 822, sync4, net of empty's crop). def's whole frame is 15.9 ms. Its four
+  quadrants sum to 21.5 and its two halves to 18.1, so each extra pass costs about 1.9 ms (muse_hash 2.2, fat 1.9).
+  A quadrant is 0.31 Mpx at 822's density and costs about 5.4 ms. The whole 411 frame, with the same pixel count
+  at half the density, costs 10.2. After the per-pass cost, a pixel at half density costs 2.0x as much. The desktop
+  shows the same at 1.7x (411 whole 0.60 ms, an 822 quadrant 0.35).
+- *Tiny crops* (8x7 px, cfg p8c) measure the per-pass cost directly: t32r about 1.1-1.3 ms at 822 (noisy, +-0.5).
+  - The route alone (`emptyS`: depth-stencil clear and two discarding draws) is 0.4-1.0, at the idle 460 MHz clock.
+  - The full program's draw adds about 0.1-0.6 per pass (`tE`, the tier with a discarding last program: def 15.6
+    against t32r 16.3, muse_hash 21.6 against 22.5, fat equal).
+  - On the desktop the per-pass cost is 0.1-0.15 ms.
+- *Counts* (desktop, `cnt`, at 617 / 822 / 1079). The trips per lane barely move with density: nSeg 21.4 / 20.4 /
+  19.7. The 8x8-tile maxima do move: nSeg 33.2 / 30.1 / 27.7, nL 3.07 / 2.52 / 2.12, nPd (burial) 12.1 / 8.3 / 6.2.
+  - Under a group-max cost model, nPd's total is about 60% intercept and nL's about 30%, against about 7% for the
+    per-lane counts.
+  - So the divergence of the burial and layer loops grows with each group's world span. Fetch locality (a coarse
+    tile touches more table texels) would give the same constant-in-pixels term. It is not separated from
+    divergence here.
+- *Attribution across sizes* (Pixel, def, sync4; the `a*` variants are inexact, for timing only).
+  - Layering (t32r minus `anolay`) is 5.4 ms at 411, 10.0 at 822 and 14.0 at 1079: about 3.9 ms + 4.7 per Mpx.
+  - Everything else (`anolay`) is 4.8 / 6.0 / 7.7 ms, which is mostly intercept. Its clocks were 883 / 1094 / 1286,
+    so the clock inflates the small sizes.
+
+**The Pixel table** (net ms @ GPU MHz; the empty pass runs at 460). The 822 figures are from p8a and the 1079x1977
+ones from p8b. Desktop figures are from the RX 6800 XT under ANGLE D3D11, with `dtab` on the same build.
+
+| scene, mode | 822 t32r (before = after) | 822 t32r1 | 822 t32rb | 1079 t32r | 1079 t32r1 | 1079 t32rb | desktop t32r 822 / 1079 |
+|---|---|---|---|---|---|---|---|
+| def sync4 | 15.95@1286 | 16.48@1286 | 15.82@1286 | 21.65@1286 | 22.50@1286 | 21.20@1286 | 1.025 / 1.425 |
+| def frame1 | 19.60@883 | 18.80@1017 | 19.20@883 | 26.90@1190 | 26.70@1094 | 24.80@1094 | 5.0 / 6.9 |
+| muse_hash sync4 | 22.35@1286 | 23.57@1286 | 22.05@1286 | 30.70@1286 | 31.02@1286 | 30.13@1286 | 1.65 / 2.05 |
+| muse_hash frame1 | 26.30@1094 | 26.50@1286 | 25.20@1286 | 34.10@1286 | 34.50@1286 | 33.00@1190 | 7.9 / 10.2 |
+| fat sync4 | 11.57@1286 | 11.50@1286 | 11.42@1286 | 16.20@1286 | 16.25@1286 | 16.43@1286 | 0.75 / 1.05 |
+| fat frame1 | 16.80@825 | 15.40@883 | 14.80@748 | 18.70@940 | 17.70@1094 | 18.80@1190 | 3.4 / 5.1 |
+
+More sizes, all t32r at sync4:
+- 411x753: def 10.17, muse_hash 12.20, fat 5.35@1094.
+- 617x1130: def 12.15, muse_hash 16.57, fat 7.88.
+- Pixel fit for def: about 8.2 ms + 6.2 per Mpx.
+
+**What was tried** (the tier forms are in `gf_glsl.ts`, bench only; the tests are in `test/render/gf_tier_forms.test.ts`):
+- `one` (t32r1): pixels with nr == 0 run a copy of the configuration loop's body under a constant trip count.
+  - Exact: 0 px against full on all 12 scenes on both GPUs.
+  - Slower at sync4 on def and muse_hash on the Pixel (+0.5 and +1.2 ms at 822), and +0.05 on the desktop.
+  - The loop's copy still sets the program's registers. The compile-time single configuration (`aonce`, inexact)
+    saves 2.35 ms (def) and 3.7 (muse_hash) at 822, while a runtime single trip (`aoncer`, the bound on stage 7's
+    layering-once fold) saves only 0.75 and 1.6. So most of the "once" gain is code shape, not trips.
+- `bx` (t32rb): the burial's early exit.
+  - Desktop: exact, 0 px on 12 scenes.
+  - Pixel: 8-97 px against full on 11 of 12 scenes. Its compiler evidently forms the value and the check
+    differently (fused or reordered).
+  - Gain: 0.1-1.2 ms at 822, but fat is +0.2 at 1079 sync4.
+  - Not adoptable. A conservative relative margin in the check might make it exact, but the gain is too small to
+    chase.
+- Bounds at 822 (inexact cuts): no burial (`anobur`) -1.9 (def) / -2.2 (muse_hash); no layering (`anolay`) leaves
+  5.95 / 8.65.
+
+**Verdict.** In-shader tweaks cannot reach 8 ms for def; this is (c) for the per-pixel layering as written. With the
+layering removed entirely (`anolay`), def is 5.95 ms at 822. So 8 ms needs layering at about 2 ms, against 10 now: a
+5x cut. Every measured cut (once, burial, the fold, bx, one) bounds at a few ms together. The remaining (b) is
+structural: take the layering out of the per-pixel program. Resolve each bin's or cell's face order and burial on the
+CPU into the tables (the per-cell work is constant in pixels, which is the intercept's own shape), and have the shader
+read the order. That touches `tables.ts`, `gf_pack.ts` and `gf_build.ts`, under the tables' bit-identity gate (a new
+gate argument, `K1362_t1_muse_tables.md` addendum 2). A cheaper first probe for the next stage: separate fetch
+locality from divergence on the Pixel with a 2x2-replicated map at 822 (each 2x2 block evaluates one world point).
+
+**Runner** (one call; it waits up to -WaitMin for the phone, holds the phone lock and releases it):
+`pwsh -NoProfile -File .claude/probes/K1362/k1362s8_phone_run.ps1 -Cfgs p8a,p8b -WaitMin 25`. The cfgs are
+`k1362s8_cfg_*.json`:
+- p8a: 822 with crops, attribution and 411 / 617.
+- p8b: 1079 and cmp12.
+- p8c: per-pass, with tiny crops.
+- dtab: the desktop table, run through `k1362s8_run.mjs desktop <label> <cfg>`.
+
+Outputs go to `out/s8/` (untracked).
