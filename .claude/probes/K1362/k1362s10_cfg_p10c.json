@@ -1,0 +1,1 @@
+{"benches":[{"name":"att822","scenes":["def","muse_hash","fat"],"w":822,"h":1506,"fit":0.917,"nPass":40,"warmMs":1000,"settleFrames":30,"variants":["empty","t32rlc3","anolay@t32rlc3","anotan@t32rlc3","anokf@t32rlc3","anopb@t32rlc3","anogap@t32rlc3","anokey@t32rlc3","anotan+nokf+nogap@t32rlc3","aquad@t32rlc3","t32rlc3"],"modes":["sync4"],"cover":false}]}
