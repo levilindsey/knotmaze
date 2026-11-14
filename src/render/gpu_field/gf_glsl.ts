@@ -86,9 +86,10 @@ void main() {
  * `kg` (K1362 s14, cornerSurfaces below): kk carries each corner's surface, so layers() tests it before fetching.
  * `ki` (K1362 s14, cornerInside below): kIn 3 files rho > K0.z, so layers()'s first corner loop fetches no K0.
  * `km` (K1362 s14, cornerMerge below): the ring faces and the tangent faces share one corner loop and one burial.
+ * `kd` (K1362 s14, tangentSkip below): fs's skip for the tangent faces includes their D factor.
  */
 export type GfCornerForm = "route" | "frame" | "free" | "corner";
-export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm; one?: boolean; bx?: boolean; fast?: boolean; s?: number; lab?: boolean; grp?: boolean; kq?: boolean; ks?: boolean; kl?: boolean; kr?: boolean; lh?: boolean; so?: boolean; cs?: boolean; vs?: boolean; ga?: boolean; sc?: boolean; kc?: boolean; kz?: GfCornerForm; fj?: boolean | "s"; lz?: boolean; fs?: boolean | "c"; kp?: boolean; kt?: boolean; ko?: boolean; kg?: boolean; ki?: boolean; km?: boolean }
+export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm; one?: boolean; bx?: boolean; fast?: boolean; s?: number; lab?: boolean; grp?: boolean; kq?: boolean; ks?: boolean; kl?: boolean; kr?: boolean; lh?: boolean; so?: boolean; cs?: boolean; vs?: boolean; ga?: boolean; sc?: boolean; kc?: boolean; kz?: GfCornerForm; fj?: boolean | "s"; lz?: boolean; fs?: boolean | "c"; kp?: boolean; kt?: boolean; ko?: boolean; kg?: boolean; ki?: boolean; km?: boolean; kd?: boolean | "g" }
 export type GfPackForm = boolean | "f" | "i";
 
 /** The program's source forms (gf_reg.ts); a tier's own flags set them by default. The probe keeps the plain form. */
@@ -160,6 +161,12 @@ export function gfFs(probe: boolean, tangentTerms = true, tier?: GfTier, form: G
       throw new Error("gfFs: km is a plain-form fs tier (fs; no split, reg, pack, unroll, bx, fj, half, kl, kr, kc, kg or ki)");
     }
     src = cornerMerge(src);
+  }
+  if (tier && tier.kd && !probe && tier.kz !== "free") {
+    if (!tier.fs || tier.km || form.split || form.reg || form.pack || form.unroll || tier.bx || tier.fj || tier.half) {
+      throw new Error("gfFs: kd is a plain-form fs tier (fs; no km, split, reg, pack, unroll, bx, fj or half)");
+    }
+    src = tangentSkip(src, tier.kd === "g");
   }
   if (tier?.fj && !probe) {
     if (form.split || form.reg || form.pack || form.unroll || tier.kq || tier.kl || tier.kr || tier.kc || tier.vs || tier.ga || tier.one || tier.bx) throw new Error("gfFs: fj is a plain-form tier (no split, reg, pack, unroll, kq, kl, kr, kc, vs, ga, one or bx)");
@@ -409,6 +416,27 @@ function cornerSurfaces(src: string): string {
   rep("vec4 K0 = F(uOK + 6 * k); vec4 K1 = F(uOK + 6 * k + 1); if (int(K1.z) != S || !kSec[i]) continue;", "if (kS != S || !kSec[i]) continue; vec4 K0 = F(uOK + 6 * k);", 1);
   rep("vec4 K1 = F(uOK + 6 * k + 1); if (int(K1.z) != S || K1.x > 0.5) continue;", "if (kS != S) continue; vec4 K1 = F(uOK + 6 * k + 1); if (K1.x > 0.5) continue;");
   if (src.includes("int(K1.z) != S")) throw new Error("gfFs kg: a corner surface test still fetches K1");
+  return src;
+}
+
+/**
+ * K1362 s14 `kd` (tier letter D): the tangent faces' fs skip tests fb * cD > v, with cD = ss(-aa, aa, D) hoisted
+ * before the loop (the same expression the value used), and the loop runs only when cD > 0. Exact: the value is
+ * round(round((1 - bur) * fb) * cD) <= round(fb * cD) (rounding is monotone and (1 - bur) * fb <= fb), so a skipped
+ * face cannot beat v; at cD = 0 every tangent value is 0 and v starts at 0. The guard is a loop BOUND
+ * (nkT = cD > 0 ? nk : 0): written as `i < nk && cD > 0.0` in the loop condition, D and Dg alike were 2-29 px off
+ * full on 6 of 12 scenes on the desktop (ANGLE's `&&` loop condition again, render-gpu-field.md), and the bound form
+ * is 0 px on all 12. `kd: "g"` (letter Dg) keeps only the guard, the skip test and the value as fs wrote them.
+ */
+function tangentSkip(src: string, guardOnly: boolean): string {
+  const rep = (a: string, b: string): void => {
+    if (src.split(a).length !== 2) throw new Error("gfFs: kd expects exactly one " + JSON.stringify(a.slice(0, 50)));
+    src = src.replace(a, () => b);
+  };
+  rep("#ifdef TANGENT\n    for (int i = 0; i < nk; i++) {\n", "#ifdef TANGENT\n    float cD = ss(-aa, aa, D); int nkT = cD > 0.0 ? nk : 0; // K1362 s14 kd\n    for (int i = 0; i < nkT; i++) {\n");
+  if (guardOnly) return src;
+  rep("float fb = band2(dT); if (!(fb > v)) continue; // K1362 s13 fs", "float fb = band2(dT); if (!(fb * cD > v)) continue; // K1362 s14 kd");
+  rep("float val = (1.0 - bur) * fb * ss(-aa, aa, D);", "float val = (1.0 - bur) * fb * cD;");
   return src;
 }
 

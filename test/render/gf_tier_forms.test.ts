@@ -622,4 +622,25 @@ describe("gf tier forms, s14 corner loops", () => {
     for (const f of [{ bx: true }, { half: true }, { kl: true }, { kg: true }, { ki: true }]) expect(() => gfFs(false, true, { ...base, ...f })).toThrow(/plain-form/);
     for (const form of [{ reg: true }, { unroll: true }, { pack: true }]) expect(() => gfFs(false, true, base, form)).toThrow(/plain-form/);
   });
+
+  it("kd: the tangent faces' skip includes their D factor, hoisted once; the loop runs only while it is positive", () => {
+    const [free] = cornerPlan({ ...GF_TIERS[0], kd: true });
+    expect(free.tier.kd).toBeUndefined();
+    expect(gfFs(true, true, { ...corners0.tier, kd: true })).toBe(gfFs(true, true, corners0.tier));
+    for (const extra of [{}, { kg: true, ki: true }, { kg: true, ki: true, kt: true, ko: true, kp: true }]) {
+      const kd = gfFs(false, true, { ...corners0.tier, ...extra, kd: true });
+      const base = gfFs(false, true, { ...corners0.tier, ...extra });
+      expect(count(kd, "float cD = ss(-aa, aa, D); int nkT = cD > 0.0 ? nk : 0; // K1362 s14 kd\n    for (int i = 0; i < nkT; i++) {")).toBe(1);
+      expect(count(kd, "if (!(fb * cD > v)) continue;")).toBe(1);
+      expect(count(kd, "float val = (1.0 - bur) * fb * cD;")).toBe(1);
+      expect(count(base, "ss(-aa, aa, D)")).toBe(count(kd, "ss(-aa, aa, D)"));
+      expect(count(base, "// K1362 s13 fs") - count(kd, "// K1362 s13 fs")).toBe(1);
+      const g = gfFs(false, true, { ...corners0.tier, ...extra, kd: "g" });
+      expect(g.replace("    float cD = ss(-aa, aa, D); int nkT = cD > 0.0 ? nk : 0; // K1362 s14 kd\n", "").replace("i < nkT; i++", "i < nk; i++")).toBe(base);
+    }
+    const base: GfTier = { ...corners0.tier, kd: true };
+    expect(() => gfFs(false, true, { ...base, fs: undefined })).toThrow(/kd is a plain-form fs tier/);
+    for (const f of [{ km: true }, { bx: true }, { half: true }]) expect(() => gfFs(false, true, { ...base, ...f })).toThrow(/plain-form/);
+    for (const form of [{ reg: true }, { unroll: true }, { pack: true }]) expect(() => gfFs(false, true, base, form)).toThrow(/plain-form/);
+  });
 });
