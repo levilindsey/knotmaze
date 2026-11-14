@@ -206,3 +206,86 @@ describe("gf tier forms, s10 lean arrays", () => {
     }
   });
 });
+
+// K1362 s11: the layering's per-pixel state. Each form lets one slot hold two values whose lifetimes do not overlap
+// (sv in sid, sa in skey, the sector in krho's sign) or packs the sort order into one int; the models replay the GLSL.
+describe("gf tier forms, s11 layering state", () => {
+  const L: GfTier = { ...T, s: 3, lab: true, grp: true, ks: true };
+  const FLAGS: [Partial<GfTier>, string[]][] = [
+    [{ vs: true }, ["SVSID"]], [{ ga: true }, ["SGAP"]], [{ sc: true }, ["SCODE"]], [{ kc: true }, ["KLEAN", "KRHO", "KSGN"]],
+    [{ vs: true, ga: true, sc: true, kc: true }, ["KLEAN", "KRHO", "KSGN", "SVSID", "SGAP", "SCODE"]],
+  ];
+  let s = 0x51ed2711;
+  const rnd = (n: number): number => { s = (Math.imul(s, 1664525) + 1013904223) >>> 0; return s % n; };
+
+  it("each flag adds only its defines; the probe is untouched; reg refuses them; the caps hold", () => {
+    for (const tangent of [true, false]) {
+      const plain = gfFs(false, tangent, L);
+      for (const [f, defs] of FLAGS) {
+        let src = gfFs(false, tangent, { ...L, ...f });
+        for (const d of defs) { expect(src).toContain(`#define ${d} 1\n`); src = src.replace(`#define ${d} 1\n`, "\n"); }
+        expect(src).toBe(plain);
+        expect(gfFs(true, tangent, { ...L, ...f })).toBe(gfFs(true, tangent, L));
+        expect(() => gfFs(false, tangent, { ...L, ...f, reg: true })).toThrow(/plain-form/);
+      }
+    }
+    expect(() => gfFs(false, true, { ...L, s: 4, ga: true })).toThrow(/ga keeps two gaps/);
+    expect(() => gfFs(false, true, { ...L, s: undefined, ga: true })).toThrow(/ga keeps two gaps/);
+    expect(() => gfFs(false, true, { ...L, s: 4, sc: true })).not.toThrow();
+    expect(() => gfFs(false, true, { ...L, so: true, sc: true })).toThrow(/sc packs the order/);
+    expect(() => gfFs(false, true, { ...L, kc: true, kr: true })).toThrow(/kc is its own corner form/);
+  });
+
+  it("sc: the insertion sort on the order packed 2 bits an entry is sord's, ties and NaN included", () => {
+    const KEYS = [-1e30, NaN, -1, 0, 0.5, 0.5, 2, Math.fround(0.1)];
+    for (let it = 0; it < 20000; it++) {
+      const ns = 1 + rnd(4); const skey = Array.from({ length: ns }, () => KEYS[rnd(KEYS.length)]);
+      const sord = skey.map((_, i) => i);
+      for (let i = 1; i < ns; i++) { const v = sord[i]; let m = i - 1; while (m >= 0 && skey[sord[m]] < skey[v]) { sord[m + 1] = sord[m]; m--; } sord[m + 1] = v; }
+      let sordc = 228;
+      const SORD = (i: number): number => (sordc >> (2 * i)) & 3;
+      const SCSET = (i: number, v: number): void => { sordc = (sordc & ~(3 << (2 * i))) | (v << (2 * i)); };
+      for (let i = 1; i < ns; i++) { const v = SORD(i); let m = i - 1; while (m >= 0 && skey[SORD(m)] < skey[v]) { SCSET(m + 1, SORD(m)); m--; } SCSET(m + 1, v); }
+      expect(sord.map((_, i) => SORD(i))).toEqual(sord);
+    }
+  });
+
+  it("vs, ga: the face loop reads each slot's old value before it writes the new one; composite gets the same gaps", () => {
+    const buf = new ArrayBuffer(4); const fv = new Float32Array(buf); const iv = new Int32Array(buf);
+    const bits = (x: number): number => { fv[0] = x; return iv[0]; }; const flt = (i: number): number => { iv[0] = i; return fv[0]; };
+    const VALS = [0, -0, 1, 0.5, Math.fround(0.1), 1e-40, -3.5, Infinity];
+    for (let it = 0; it < 20000; it++) {
+      const ns = 1 + rnd(3);
+      const sid = Array.from({ length: ns }, (_, i) => 7 * i - 5 + rnd(3)); const skey = Array.from({ length: ns }, () => Math.fround((rnd(9) - 4) * 0.25));
+      const fV = sid.map(() => VALS[rnd(VALS.length)]); const fA = sid.map(() => VALS[rnd(VALS.length)]);
+      const face = (S: number): [number, number] => [fV[sid.indexOf(S)], fA[sid.indexOf(S)]]; // v and D's ramp come from S alone
+      // the arrays: sv and sa beside sid and skey; composite takes its gaps from skey
+      const sv: number[] = []; const sa: number[] = [];
+      for (let e = 0; e < ns; e++) { const [v, a] = face(sid[e]); sv[e] = v; sa[e] = a; }
+      const gaps = Array.from({ length: ns - 1 }, (_, i) => skey[i] - skey[i + 1]);
+      // SVSID + SGAP: the gaps first, then sid[e] takes v's bits and skey[e] takes sa
+      const id2 = [...sid]; const k2 = [...skey];
+      const gp0 = ns > 1 ? k2[0] - k2[1] : 0; const gp1 = ns > 2 ? k2[1] - k2[2] : 0;
+      for (let e = 0; e < ns; e++) { const S = id2[e]; const [v, a] = face(S); id2[e] = bits(v); k2[e] = a; }
+      expect(id2.map(flt)).toEqual(sv.map((v) => flt(bits(v))));
+      expect(k2).toEqual(sa);
+      expect(gaps.map((_, i) => (i === 0 ? gp0 : gp1))).toEqual(gaps);
+    }
+  });
+
+  it("kc: the scan's rho, or -1 outside the sector, gives back the sector, the ring class and rho where it is read", () => {
+    const aa = Math.fround(0.75);
+    for (let it = 0; it < 20000; it++) {
+      const z = Math.fround(rnd(40) * 0.25); const w = Math.fround(z + rnd(12) * 0.25);
+      const RH = [0, z, w, Math.fround(z - aa), Math.fround(w + 0.25), Math.fround(rnd(80) * 0.125), Math.sqrt(rnd(1000))];
+      const rho = RH[rnd(RH.length)]; const sec = rnd(2) === 0;
+      // the scan
+      const inR = rho <= w && sec; const kin = !inR ? 0 : rho > z - aa ? 2 : 1;
+      // KSV, then kSG
+      const kr = sec ? rho : -1.0;
+      const sec2 = kr >= 0; const inR2 = kr <= w && sec2; const kin2 = !inR2 ? 0 : kr > z - aa ? 2 : 1;
+      expect([sec2, kin2]).toEqual([sec, kin]);
+      if (sec2 || kin2 === 2) expect(kr).toBe(rho); // rho is read only past `if (!ksJ) continue` or `kiI != 2`
+    }
+  });
+});
