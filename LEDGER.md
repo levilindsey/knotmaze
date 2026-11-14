@@ -562,10 +562,10 @@ Next free ID: K1380.
   tables the CPU builds in under 1 ms) instead of the outline mesh built on the CPU each frame (65-117 ms on
   def). Reverses the 2026-11-09 call (K1040 dropped for K1240). The main speed route (Levi, 2026-11-12: very bullish
   on it); dropped only on a proof it cannot work (brief: "How the result is judged"). Analysis in docs/ledger_notes.md.
-  - owner: agent `a31b4af5e23a7ec03` of claude session 01SUPGULDxvE5gKXozfaFaFG (opus, started 2026-11-13 22:31, 2 h cap ~00:31)
-  - branch: `worktree-agent-a31b4af5e23a7ec03`, worktree `.claude/worktrees/agent-a31b4af5e23a7ec03`; last commit: `f9cd9900`
+  - owner: nobody since 2026-11-13 23:45 (merged; agent `a31b4af5e23a7ec03` of claude session 01SUPGULDxvE5gKXozfaFaFG)
+  - branch: mainline; last commit: `258ccf44`
   - evidence: .claude/probes/K1362/ (k1362s11_*, k1362s12_*), out/s12/
-  - next: Stage 12 running: the face loop (~4.2 ms of def), the corners in the tier (3.1-3.8), a cornerless frame program (fat 0.8-1.2); merge on a Pixel win on all three at 0 px
+  - next: GF_TIERS is t32rlgyjfc3 (a corner-free frame drops the corner code: Pixel fat 7.95 -> 6.80 ms at 822; def 12.1, muse_hash 17.0 unchanged, goal 8). Stage 12: per-cell routing slower; the one-pass face loop fj pays only on fat. Brief stage 13 on per-pixel work in both halves of def (K1362_s12_corners_faces.md handoff)
   - brief: `docs/design/K1362_s12_corners_faces.md`
 
 ## Next, in order
