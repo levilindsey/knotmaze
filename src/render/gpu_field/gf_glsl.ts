@@ -35,7 +35,8 @@ void main() {
  * and one ivec4 array (gf_reg.ts packArrays); "f" packs only the floats, "i" only the ints.
  * `one` (K1362 s8): a pixel without ramping pieces (nr == 0) runs the configuration loop's body under a constant
  * trip count of one (a second copy of the body), the rest the loop; the same statements on the same values.
- * `bx` (K1362 s8): the burial loops stop once their face cannot beat the surface's best value (see burialExit).
+ * `bx` (K1362 s8): the burial loops stop once their face cannot beat the surface's best value (see burialExit);
+ * bench only, inexact on the Pixel.
  */
 export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm; one?: boolean; bx?: boolean }
 export type GfPackForm = boolean | "f" | "i";
@@ -98,8 +99,10 @@ function oneConfig(src: string): string {
  * grows, so once (1 - bur) * band2(...) <= v the face cannot replace v: the face is skipped before its loops when
  * band2 <= v (bur = 0 there), and each burial loop breaks when its next trip could not change the outcome. The
  * check is the value's own leading product (the same expression), so the value is at most v whenever the check
- * says so, and nothing else reads bur. Exact; the burial is the most divergent loop (an 8x8 tile's max trips 4-5x
- * the mean, desktop counts).
+ * says so, and nothing else reads bur. The burial is the most divergent loop (an 8x8 tile's max trips 4-5x the mean,
+ * desktop counts). BENCH ONLY: exact on the desktop (0 px on 12 scenes) but NOT on the Pixel (8-97 px on 11 of 12
+ * scenes at 822): its compiler evidently forms the value and the check differently (a fused or reordered product
+ * rounds the other way), so the argument holds only where both are the same rounded expression.
  */
 const BX_CHECK = "if (!((1.0 - bur) * bx2 > v)) break;";
 function burialExit(src: string): string {

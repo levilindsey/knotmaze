@@ -1,7 +1,7 @@
 // K1362 s8: the tier's source forms `one` (the configuration loop's body under a constant trip count when nr == 0)
 // and `bx` (the burial loops stop once a face cannot beat the surface's best value). Exactness on the GPU is the cmp
-// bench's (0 px against full on 12 scenes); here the text: each form only adds what it says, the copy is the loop's
-// own body, and the rounding fact bx rests on.
+// bench's (0 px against full on 12 scenes: `one` on both GPUs; `bx` on the desktop only, 8-97 px on the Pixel); here
+// the text: each form only adds what it says, the copy is the loop's own body, and the rounding fact bx rests on.
 import { describe, expect, it } from "vitest";
 import { gfFs, type GfTier } from "../../src/render/gpu_field/gf_glsl";
 

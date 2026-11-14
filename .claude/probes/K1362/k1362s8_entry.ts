@@ -128,6 +128,10 @@ function attFs(t: GfTier, parts: string[]): string {
 function makePass(gl: WebGL2RenderingContext, name: string, fullFs?: string): GfPass {
   { const m = /^a([a-z+]+)$/.exec(name); if (m) { const [t] = parseTiers("t32r"); const parts = m[1].split("+"); return new GfPass(gl, false, [t], (tt) => (tt ? attFs(tt, parts) : gfFs(false, true))); } }
   if (name === "empty") return new GfPass(gl, false, [], () => EMPTY);
+  // K1362 s8, the per-pass cost: emptyS = the route alone (depth-stencil clear, stencil test, two discarding draws);
+  // tE = the tier, then a discarding last program in place of full (inexact: what full's draw adds)
+  if (name === "emptyS") { const [t] = parseTiers("t32r"); return new GfPass(gl, false, [t], () => EMPTY); }
+  if (name === "tE") { const [t] = parseTiers("t32r"); return new GfPass(gl, false, [t], (tt) => (tt ? gfFs(false, true, tt) : EMPTY)); }
   if (name === "full") return new GfPass(gl, false, []);
   if (name === "fullS") return new GfPass(gl, false, [], () => gfFs(false, true, undefined, { reg: true })); // K1362 s6: the full program, register form
   if (name === "fullU") return new GfPass(gl, false, [], () => gfFs(false, true, undefined, { unroll: true })); // K1362 s6: constant trip counts
