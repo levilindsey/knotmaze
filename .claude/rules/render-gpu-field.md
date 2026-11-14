@@ -28,6 +28,10 @@ not repeated here.
   the work done: the register footprint sets occupancy. A smaller
   program in front ("tier") handles most pixels; `GF_TIERS` default
   p3/k2 with ramps, then the full program.
+- Stage 9 confirmed it on the Pixel: capping the tier's surfaces at 3
+  (`s`) and keeping the label as a running best (`lab`) cut def,
+  muse_hash and fat by 17-19%, while cutting work without shrinking
+  arrays (`fast`) gained nothing. `GF_TIERS` is that form, t32rlc3.
 - A tier is exact by construction: on overflow it sets a flag,
   breaks and discards, and the next program draws that pixel.
 - Routing is by stencil (EQUAL 0, INCR). The LAST program uses KEEP,

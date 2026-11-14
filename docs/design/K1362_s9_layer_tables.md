@@ -156,3 +156,28 @@ above on a ready phone (`-Cfgs p9c`, about 10 min). If c3 or lc3 is faster on al
 as it ignored FAST's work cut, the next cuts are the per-piece arrays (11 per piece, 33 slots in the tier) and probe
 1 (`aquad`) decides whether divergence is worth the per-bin tables; only `anolay` matters on the desktop, so the
 Pixel's att822 rows say which part of the layering to move first.
+
+## Addendum: the Pixel A/B (coordinator, 2026-11-13 19:58)
+
+`-Cfgs p9c` ran at 19:58. A touch on the phone at 20:01:24 tripped the watchdog after c822 and cmp12, so f1080
+and att822 did not run; they are `k1362s9_cfg_p9d.json` (`-Cfgs p9d`). 822x1506, sync4, one run, ms at the clock
+shown (`out/s9/phone_p9c.json`):
+
+| | def | muse_hash | fat |
+|---|---|---|---|
+| t32r | 16.85 @1286 | 22.45 @1286 | 11.5 @1190 |
+| t32rc3 | 14.85 | 20.07 | 9.98 |
+| t32rc2 | 13.9 | 19.65 | 9.43 |
+| t32rl | 14.88 | 20.27 | 10.05 @1190 |
+| t32rlc3 | 13.95 | 18.38 | 9.33 |
+| t32rlc2 | 12.78 | 19.07 | 7.98 |
+
+frame1 (app pacing, clocks 556-1017) orders them the same way: def t32r 20.5 / t32rlc3 19.1, muse_hash 25.9 /
+21.9, fat 17.6 / 14.4. Exactness: every variant 0 px and 0 unwritten against full on all 12 scenes (def, muse_hash
+and fat in c822; the other nine in cmp12). t32r's def read 15.75 in the stage's own run and 16.85 here: about 7%
+between runs.
+
+So the Pixel does follow the surface footprint (unlike FAST's work cut), as stage 4's register rule says. t32rlc3
+wins all three (-17 / -18 / -19%) and the pre-set rule picked it: `GF_TIERS` is now
+`[{ p: 3, k: 2, ramps: true, s: 3, lab: true }]`, npm test green (2993). t32rlc2 is faster on def and fat but
+slower than lc3 on muse_hash; one run does not separate them. Def is 13.95 ms, still not 8.

@@ -117,9 +117,12 @@ export class GfTarget {
  * (docs/design/K1362_s4_shader.md, handoff): p3/k2 with ramps, then the full program on the rest (0.2% of def's px,
  * 0.1% of muse_hash's), is def 19.7 / muse 24.6 / fat 11.8 ms against the full program's 33.0 / 42.3 / 21.5 (sync4,
  * 822x1506, 1286 MHz); same pixels. A routed middle program costs a whole pass (it writes the route with a discard,
- * so its stencil test runs late), so one tier is the default.
+ * so its stencil test runs late), so one tier is the default. Stage 9 (docs/design/K1362_s9_layer_tables.md) capped
+ * its surfaces at 3 (s; a pixel with more goes to full) and keeps the label's top surface as a running best (lab):
+ * t32rlc3, def 13.95 / muse 18.38 / fat 9.33 ms against t32r's 16.85 / 22.45 / 11.5 on the Pixel (same bench), 0 px
+ * on its 12 scenes there and on the desktop.
  */
-export const GF_TIERS: GfTier[] = [{ p: 3, k: 2, ramps: true }];
+export const GF_TIERS: GfTier[] = [{ p: 3, k: 2, ramps: true, s: 3, lab: true }];
 const UNIFORMS = ["uD", "uOCh", "uOV", "uOPin", "uOArm", "uOK", "uOChk", "uOCell", "uOChL", "uOKL", "uOKC", "uOKB", "uOKA", "uH", "uW", "uAA", "uSigma", "uZt", "uWin", "uRc", "uGrid", "uGDim", "uMap", "uP0", "uP1", "uP2", "uP3"];
 interface GfProg { prog: WebGLProgram; u: Map<string, WebGLUniformLocation | null>; tier: GfTier | null; split?: 1 | 2 }
 
