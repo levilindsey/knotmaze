@@ -65,6 +65,12 @@ not repeated here.
   Skipping a face that cannot beat its surface's running maximum (`fs`,
   exact since every factor is in [0, 1]) pays in the corner program
   only: `GF_TIERS` t32rlgyjfFkc3, def 12.55 -> 12.01 ms at 822.
+- Stage 14: corner-cell pixels keep 0/1/2/3+ corners on 44/49/7/0.5%,
+  so the corner code costs by its compile shape, not its trip count. A
+  pruned corner list (`P`, 2.85 -> 1.21 walks per corner-cell pixel) is
+  level on the Pixel; merging the two corner loops (`M`) is 14-23%
+  slower on the desktop. The other exact corner forms (T O G I D H)
+  were not timed on the Pixel (`K1362_s14_corner_loops.md`).
 - A tier is exact by construction: on overflow it sets a flag,
   breaks and discards, and the next program draws that pixel.
 - Routing is by stencil (EQUAL 0, INCR). The LAST program uses KEEP,
@@ -103,7 +109,9 @@ not repeated here.
 - mediump changes nothing on the Pixel.
 - ANGLE (D3D on the desktop): execution continues past `discard`
   (write `discard; return;`), and a `&& !flag` loop condition was
-  mistranslated (use `break`).
+  mistranslated (use `break`). So was a float `i < nk && cD > 0.0`
+  (stage 14, 2-29 px off on 6 of 12 scenes): keep the loop bound alone
+  and test the rest in a `break`.
 - The GPU governor: a short pass at one per frame runs near 460 MHz
   against 1286 max; at the app's pacing the clock sits at 825-1100.
   Time passes back to back (sync4) and at frame pacing (frame1), and
