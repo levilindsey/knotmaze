@@ -89,8 +89,8 @@ void main() {
  * `kd` (K1362 s14, tangentSkip below): fs's skip for the tangent faces includes their D factor.
  * `kh` (K1362 s14, cornerThru below; needs kg): kk also carries the thru bit, so the tangent loop fetches no K1.
  */
-export type GfCornerForm = "route" | "frame" | "free" | "corner";
-export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm; one?: boolean; bx?: boolean; fast?: boolean; s?: number; lab?: boolean; grp?: boolean; kq?: boolean; ks?: boolean; kl?: boolean; kr?: boolean; lh?: boolean; so?: boolean; cs?: boolean; vs?: boolean; ga?: boolean; sc?: boolean; kc?: boolean; kz?: GfCornerForm; fj?: boolean | "s"; lz?: boolean; fs?: boolean | "c"; kp?: boolean; kt?: boolean; ko?: boolean; kg?: boolean; ki?: boolean; km?: boolean; kd?: boolean | "g"; kh?: boolean; zc?: boolean; zb?: boolean }
+export type GfCornerForm = "route" | "frame" | "free" | "corner" | "zk";
+export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm; one?: boolean; bx?: boolean; fast?: boolean; s?: number; lab?: boolean; grp?: boolean; kq?: boolean; ks?: boolean; kl?: boolean; kr?: boolean; lh?: boolean; so?: boolean; cs?: boolean; vs?: boolean; ga?: boolean; sc?: boolean; kc?: boolean; kz?: GfCornerForm; fj?: boolean | "s"; lz?: boolean; fs?: boolean | "c"; kp?: boolean; kt?: boolean; ko?: boolean; kg?: boolean; ki?: boolean; km?: boolean; kd?: boolean | "g"; kh?: boolean; zc?: boolean; zb?: boolean; zk?: boolean }
 export type GfPackForm = boolean | "f" | "i";
 
 /** The program's source forms (gf_reg.ts); a tier's own flags set them by default. The probe keeps the plain form. */
@@ -125,7 +125,8 @@ export function gfFs(probe: boolean, tangentTerms = true, tier?: GfTier, form: G
   }
   if (tier?.kz && !probe) { // the probe draws the tier's own pixels: kz leaves it untouched, like the other flags
     if (form.split || form.reg || form.pack || form.unroll) throw new Error("gfFs: kz is a plain-form tier (no split, reg, pack or unroll)");
-    if (tier.kz !== "free" && tier.kz !== "corner") throw new Error(`gfFs: kz "${tier.kz}" is GfPass's to expand into its programs (free, corner)`);
+    if (tier.kz !== "free" && tier.kz !== "corner" && tier.kz !== "zk") throw new Error(`gfFs: kz "${tier.kz}" is GfPass's to expand into its programs (free, corner)`);
+    if (tier.kz === "zk" && !tier.zc) throw new Error("gfFs: kz zk is a zc P0 form");
     src = cornerRoute(src, tier.kz);
   }
   if (tier?.lz && !probe) {
@@ -237,7 +238,26 @@ function faceJoin(src: string, scalar: boolean): string {
 const KZ_CELL = "    vec4 CE = F(uOCell + cell);\n";
 const KZ_SCAN = "    // corners near p\n    int k0 = int(CE.z); int kn = int(CE.w);\n";
 const KZ_SCAN_END = "#ifdef TIER\n    if (ovf) { discard; return; } // never past the arrays: D3D runs on past a discard\n#endif\n";
-function cornerRoute(src: string, form: "free" | "corner"): string {
+/**
+ * K1362 s15 `zk` (a zc P0 on corner frames): the corner-free program, with the corner scan cut to a route. A pixel
+ * the tier would keep a corner for, or take a through corner at, goes to P1 (depth 0); the rest have nk 0, thruK -1
+ * and yielded false in the tier, which are the free program's constants, so P0 draws them the same. The count is the
+ * tier's keep test without the yield (a superset), so a pixel it puts past MAXK goes to full; P1 runs uncapped
+ * surfaces (cornerPlan), since P0 cannot see the corners' surfaces.
+ */
+const ZK_SCAN = `    int thruK = -1; float thruQ = 0.0; bool yielded = false; // K1362 s15 zk: P0 holds no corner
+    int zkN = 0; bool zkR = false;
+    for (int q = int(CE.z); q < int(CE.z) + int(CE.w); q++) {
+      int k = int(L4(uOKL, q)); vec4 K0 = F(uOK + 6 * k); vec4 K1 = F(uOK + 6 * k + 1);
+      float rx = x - K0.x; float ry = y - K0.y; float d2 = rx * rx + ry * ry; float rho = sqrt(d2);
+      bool keep = rho > K0.z - aa - W && !(rho > K0.w + W + 2.0 * aa);
+      if (K1.x > 0.5) { float lim = K1.y + W + 4.0 * aa; if (d2 <= lim * lim && inSector(k, p)) zkR = true; else keep = false; }
+      if (keep) { zkR = true; zkN++; }
+    }
+    if (zkN > MAXK) ovf = true;
+`;
+const ZK_ROUTE = "    if (zkR) { gl_FragDepth = 0.0; return; } // K1362 s15 zk: a corner pixel: P1 (the corner tier) draws it\n";
+function cornerRoute(src: string, form: "free" | "corner" | "zk"): string {
   const count = (what: string) => src.split(what).length - 1;
   const need = (what: string, n: number) => { if (count(what) !== n) throw new Error(`gfFs kz: expected ${n} of ${JSON.stringify(what.slice(0, 48))}, found ${count(what)}`); };
   need(KZ_CELL, 1);
@@ -245,7 +265,11 @@ function cornerRoute(src: string, form: "free" | "corner"): string {
   need(KZ_SCAN, 1); need(" int nk;", 2); need("np = 0; nk = 0; ns = 0;", 1);
   const i0 = src.indexOf(KZ_SCAN); const i1 = src.indexOf(KZ_SCAN_END, i0);
   if (i1 < 0) throw new Error("gfFs kz: the corner scan's end not found");
-  src = src.slice(0, i0) + "    int thruK = -1; float thruQ = 0.0; bool yielded = false; // K1362 s12 kz: no corner in this cell\n" + src.slice(i1);
+  if (form === "zk") {
+    src = src.slice(0, i0) + ZK_SCAN + KZ_SCAN_END + ZK_ROUTE + src.slice(i1 + KZ_SCAN_END.length);
+    return src.split(" int nk;").join(" const int nk = 0;").replace("np = 0; nk = 0; ns = 0;", "np = 0; ns = 0;");
+  }
+  src = src.slice(0, i0) +"    int thruK = -1; float thruQ = 0.0; bool yielded = false; // K1362 s12 kz: no corner in this cell\n" + src.slice(i1);
   src = src.replace(KZ_CELL, `${KZ_CELL}    if (int(CE.w) > 0) { discard; return; } // K1362 s12 kz: a cell with corners is the next program's\n`);
   return src.split(" int nk;").join(" const int nk = 0;").replace("np = 0; nk = 0; ns = 0;", "np = 0; ns = 0;");
 }
@@ -296,8 +320,10 @@ function zClass(src: string): string {
  * |q - piece m| >= pd[m] - |q - p| (pd[m] is p's distance to m's visited segments; a segment of m's range the scan did
  * not visit is beyond the candidate reach h + W + 2aa of p, and |q - p| < W + aa wherever the face's band is above 0,
  * which the face skip before it has checked). A face whose bound clears h (plus a margin far above float error) has
- * burial exactly 0, and P0 keeps the face's band; any other face sends the pixel to P1 (depth 0), whose ramp tier
- * computes the burial (sOvf is settled before the face loop, so an overflowing pixel still goes to full).
+ * burial exactly 0, and P0 keeps the face's band; any other face sets zbR and breaks, and main sends the pixel to P1
+ * (depth 0), whose ramp tier computes the burial (main tests sOvf first, so an overflowing pixel still goes to full).
+ * A flag and a break, never a return from inside layers()'s loops: that linked on ANGLE D3D11 but lost the WebGL
+ * context when drawn (and it doubled the program on the PowerVR compiler, 1942 against 3863 instructions).
  */
 const ZB_MARGIN = "(0.25 * uAA)";
 const ZB_LOOPS: [RegExp, (m: string) => string][] = [

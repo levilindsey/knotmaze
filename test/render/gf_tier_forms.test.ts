@@ -703,4 +703,25 @@ describe("gf tier forms, s15 depth classes", () => {
       expect(count(zb, "  zbR = false;\n")).toBe(1);
     }
   });
+  it("zk: a corner frame's P0 is the free program with a corner route; its P1 is the corner tier, surfaces uncapped", () => {
+    const free = plan.find((e) => e.when === "none")!;
+    const z = cornerPlan({ ...GF_TIERS[0], zc: true, zb: true, zk: true });
+    expect(z.length).toBe(2 * plan.length);
+    plan.forEach((e, i) => {
+      if (e.when === "corners") {
+        expect(z[2 * i].tier).toEqual({ ...free.tier, ramps: false, zc: true, zb: true, kz: "zk" });
+        expect(z[2 * i + 1]).toEqual({ ...e, tier: { ...e.tier, s: undefined } });
+      } else {
+        expect(z[2 * i].tier).toEqual({ ...e.tier, ramps: false, zc: true, zb: true });
+        expect(z[2 * i + 1]).toEqual(e);
+      }
+    });
+    const p0 = gfFs(false, true, { ...free.tier, ramps: false, zc: true, zb: true, kz: "zk" });
+    expect(count(p0, "discard;")).toBe(0);
+    expect(count(p0, "if (zkR) { gl_FragDepth = 0.0; return; }")).toBe(1);
+    expect(count(p0, "if (zkN > MAXK) ovf = true;")).toBe(1);
+    expect(count(p0, "const int nk = 0;")).toBe(count(gfFs(false, true, free.tier), "const int nk = 0;"));
+    expect(count(p0, " int nk;")).toBe(0);
+    expect(() => gfFs(false, true, { ...free.tier, ramps: false, kz: "zk" })).toThrow(/kz zk is a zc P0 form/);
+  });
 });

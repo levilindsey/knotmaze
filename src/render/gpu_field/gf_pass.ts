@@ -150,7 +150,15 @@ interface GfProg { prog: WebGLProgram; u: Map<string, WebGLUniformLocation | nul
 export function cornerPlan(t: GfTier): { tier: GfTier; when?: GfWhen }[] {
   // K1362 s15 zc: each program becomes its one-configuration form without ramps (P0, writes the depth class) and the
   // ramp tier itself (P1, drawn only on the pixels P0 classed as ramping); gf_glsl.ts zClass. zb (P0 only): zBur
-  if (t.zc) return cornerPlan({ ...t, zc: undefined, zb: undefined }).flatMap((e) => [{ ...e, tier: { ...e.tier, ramps: false, zc: true, zb: t.zb } }, e]);
+  if (t.zc) {
+    const plan = cornerPlan({ ...t, zc: undefined, zb: undefined, zk: undefined });
+    // zk: on corner frames P0 is the free program with the corner scan cut to a route (gf_glsl.ts ZK_SCAN), and P1
+    // runs uncapped surfaces (P0 cannot see the corners' surfaces, so it cannot see P1's surface overflow)
+    const free = plan.find((e) => e.when === "none");
+    return plan.flatMap((e) => t.zk && e.when === "corners" && free
+      ? [{ ...e, tier: { ...free.tier, ramps: false, zc: true, zb: t.zb, kz: "zk" as const } }, { ...e, tier: { ...e.tier, s: undefined } }]
+      : [{ ...e, tier: { ...e.tier, ramps: false, zc: true, zb: t.zb } }, e]);
+  }
   const free: GfTier = t.fs === "c" ? { ...t, kz: "free", fs: undefined } : { ...t, kz: "free" };
   if (free.kp || free.kt || free.ko || free.kg || free.ki || free.km || free.kd || free.kh) { free.kh = undefined; free.kp = undefined; free.kt = undefined; free.ko = undefined; free.kg = undefined; free.ki = undefined; free.km = undefined; free.kd = undefined; } // K1362 s14: corner-program forms (the free program has no corner code)
   if (t.kz === "route") return [{ tier: free }, { tier: { ...t, kz: "corner" }, when: "corners" }];
