@@ -37,6 +37,18 @@ not repeated here.
   24, -8 to -11%); packing two arrays into one (lh, cs) or rebuilding
   values from the segment index (kq) is slower. `GF_TIERS` is
   t32rlgyc3. The layering is about 6.2 of def's 11.7 ms.
+- Stage 11: per-surface and corner-key state folds (`v`, `a`, `d`, `e`)
+  are within noise on the Pixel. What costs is the corner code (def
+  3.1-3.8 ms: layers()'s use about 2.25, the scan's keep loop 1.6; fat
+  0.8-1.2 though it has no corners, so that part is compile shape), the
+  face loop (about 4.2 of the 6.2 ms of layering) and divergence (1.1 /
+  1.7 / 0.4 ms on def / muse_hash / fat). Cutting layers()'s corner key
+  loop alone is slower: measure every cut. A MAXK 1 tier routes 2.7% of
+  def to full and costs 3.75 ms; MAXK 0 does not compile (compile the
+  corner code out instead). Stage 8's burial exit (`bx`) is 8-97 px off
+  full on 11 of 12 scenes on the Pixel: do not revive it. Run noise is
+  about ±0.5 ms on def; the bench keys on the variant name, so repeat
+  one as `aid@<tier>`.
 - A tier is exact by construction: on overflow it sets a flag,
   breaks and discards, and the next program draws that pixel.
 - Routing is by stencil (EQUAL 0, INCR). The LAST program uses KEEP,

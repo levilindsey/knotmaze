@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1379.
+Next free ID: K1380.
 
 ## Waiting on Levi
 
@@ -1973,6 +1973,9 @@ Every other item below waits on the trigger it names.
 - **K1376** · rp=gf pass: a fixed per-size cost of unknown cause. Pixel t32r over three sizes (2026-11-13): def
   about 8 ms + 6.6 per Mpx, muse_hash 9-10 + 10, fat 3-4 + 6; desktop 617 keeps 74% of 822's time at 56% of
   the pixels. K1362 s8 starts here (docs/design/K1362_s8_intercept.md; s7 addendum "Pixel results").
+- **K1379** · rp=gf probes: a K1362 bench cfg with `cover: true` leaves GL error 1282 at the scene level on
+  the desktop (t32rlgyc3 alone shows it; every pass reads 0, the cmp is unaffected). Not chased
+  (K1362_s11_layer_state.md handoff, Checks).
 
 ## Approved, to schedule (2026-10-11)
 
