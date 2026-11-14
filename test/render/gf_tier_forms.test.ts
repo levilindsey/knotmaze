@@ -663,3 +663,44 @@ describe("gf tier forms, s14 corner loops", () => {
     expect(() => gfFs(false, true, { ...corners0.tier, kh: true })).toThrow(/kh needs kg/);
   });
 });
+
+// K1362 s15 zc + zb: the ramp tier split by a depth class (P0 writes 0.5 drawn / 0 ramp or zb route / 1 overflow; P1
+// is the plain tier at depth 0, full at depth 1). Exactness on the GPU is the cmp bench's (0 px against full on 12
+// scenes); here the text: each P0 form changes only what it says.
+describe("gf tier forms, s15 depth classes", () => {
+  const plan = cornerPlan(GF_TIERS[0]);
+  it("zc: each program of the plan becomes a P0 (no ramps, zc) in front of itself; zb goes to P0 only", () => {
+    for (const zb of [undefined, true]) {
+      const z = cornerPlan({ ...GF_TIERS[0], zc: true, zb });
+      expect(z.length).toBe(2 * plan.length);
+      plan.forEach((e, i) => {
+        expect(z[2 * i + 1]).toEqual(e);
+        expect(z[2 * i].tier).toEqual({ ...e.tier, ramps: false, zc: true, zb });
+      });
+    }
+  });
+  it("zc P0: one configuration, a depth per class, no discard", () => {
+    for (const { tier } of plan) {
+      const p0 = gfFs(false, true, { ...tier, ramps: false, zc: true });
+      expect(count(p0, "discard;")).toBe(0);
+      expect(count(p0, "gl_FragDepth = 0.5;")).toBe(1);
+      expect(count(p0, "if (nr > 0) gl_FragDepth = 0.0;")).toBe(1);
+      expect(count(p0, "cfg <= nr")).toBe(0);
+      expect(count(p0, "gl_FragDepth = 1.0; return;")).toBe(count(gfFs(false, true, { ...tier, ramps: false }), "discard; return;") - 1); // all but the ramp exit
+    }
+    expect(() => gfFs(false, true, { ...plan[0].tier, zc: true })).toThrow(/zc is a plain-form tier without ramps/);
+  });
+  it("zb P0: no burial distance, a flag per burial loop, its route after the overflow's", () => {
+    for (const { tier } of plan) {
+      const zc = gfFs(false, true, { ...tier, ramps: false, zc: true });
+      const zb = gfFs(false, true, { ...tier, ramps: false, zc: true, zb: true });
+      const loops = count(zb, "{ zbR = true; break; }");
+      expect(loops).toBe(4); // piece faces: pieces and keys; corner faces; tangents (free: nk is const 0, the loops stay)
+      expect(count(zb, "pieceD(m, q)") + count(zb, "pieceD(m, T)")).toBe(0);
+      expect(count(zc, "pieceD(m, q)") + count(zc, "pieceD(m, T)")).toBe(3);
+      expect(count(zb, "bur = 1.0;")).toBe(count(zc, "bur = 1.0;") - 1);
+      expect(count(zb, "if (sOvf) { gl_FragDepth = 1.0; return; } if (zbR) { gl_FragDepth = 0.0; return; }")).toBe(1);
+      expect(count(zb, "  zbR = false;\n")).toBe(1);
+    }
+  });
+});
