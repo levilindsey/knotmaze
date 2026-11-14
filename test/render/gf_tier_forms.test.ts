@@ -462,3 +462,26 @@ describe("gf tier forms, s13 lazy faces", () => {
     expect(stops).toBeGreaterThan(5000);
   });
 });
+
+// K1362 s13 `fs`: stage 8's face skip made exact (one band2 per face into fb, skipped when !(fb > v), no break in
+// the burial loops). The text: only the fb lines differ and each value multiplies that fb; the rounding fact is
+// "bx rests on" above.
+describe("gf tier forms, s13 exact face skip", () => {
+  const L: GfTier = { ...T, s: 3, lab: true, grp: true, ks: true };
+  const FB = /\n *float fb = band2\(([^;]*)\); if \(!\(fb > v\)\) continue; \/\/ K1362 s13 fs/g;
+
+  it("fs: one skip per face kind, each value on its fb, nothing else; the probe is untouched; fj and bx refuse it", () => {
+    const BASES: GfTier[] = [L, { ...L, kz: "free" }, { ...L, kz: "corner" }, { ...L, lz: true }, { ...L, kc: true }, { ...L, one: true }];
+    for (const tangent of [true, false]) for (const base of BASES) {
+      const plain = gfFs(false, tangent, base); const fs = gfFs(false, tangent, { ...base, fs: true });
+      const args = [...fs.matchAll(FB)].map((m) => m[1]);
+      expect(args).toEqual(plain.includes("#ifdef TANGENT\n    for (int i = 0; i < nk; i++) {") ? ["h - X", "Dk", "dT"] : ["h - X", "Dk"]);
+      expect(count(fs, "(1.0 - bur) * fb")).toBe(args.length);
+      let back = fs.replace(FB, "");
+      for (const a of args) back = back.replace("(1.0 - bur) * fb", `(1.0 - bur) * band2(${a})`);
+      expect(back).toBe(plain);
+      expect(gfFs(true, tangent, { ...base, fs: true })).toBe(gfFs(true, tangent, base));
+    }
+    for (const f of [{ fj: true }, { bx: true }]) expect(() => gfFs(false, true, { ...L, ...f, fs: true })).toThrow(/fs is a plain-form/);
+  });
+});

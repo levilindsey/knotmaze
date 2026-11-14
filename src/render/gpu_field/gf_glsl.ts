@@ -78,7 +78,7 @@ void main() {
  * piece per surface. The same faces on the same values; v and D are running maxima, so the order cannot change them.
  */
 export type GfCornerForm = "route" | "frame" | "free" | "corner";
-export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm; one?: boolean; bx?: boolean; fast?: boolean; s?: number; lab?: boolean; grp?: boolean; kq?: boolean; ks?: boolean; kl?: boolean; kr?: boolean; lh?: boolean; so?: boolean; cs?: boolean; vs?: boolean; ga?: boolean; sc?: boolean; kc?: boolean; kz?: GfCornerForm; fj?: boolean | "s"; lz?: boolean }
+export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm; one?: boolean; bx?: boolean; fast?: boolean; s?: number; lab?: boolean; grp?: boolean; kq?: boolean; ks?: boolean; kl?: boolean; kr?: boolean; lh?: boolean; so?: boolean; cs?: boolean; vs?: boolean; ga?: boolean; sc?: boolean; kc?: boolean; kz?: GfCornerForm; fj?: boolean | "s"; lz?: boolean; fs?: boolean }
 export type GfPackForm = boolean | "f" | "i";
 
 /** The program's source forms (gf_reg.ts); a tier's own flags set them by default. The probe keeps the plain form. */
@@ -119,6 +119,10 @@ export function gfFs(probe: boolean, tangentTerms = true, tier?: GfTier, form: G
   if (tier?.lz && !probe) {
     if (form.split || form.reg || form.pack || form.unroll || tier.fj || tier.ga) throw new Error("gfFs: lz is a plain-form tier (no split, reg, pack, unroll, fj or ga)");
     src = lazyFaces(src);
+  }
+  if (tier?.fs && !probe) {
+    if (form.split || form.reg || form.pack || form.unroll || tier.fj || tier.bx) throw new Error("gfFs: fs is a plain-form tier (no split, reg, pack, unroll, fj or bx)");
+    src = faceSkip(src);
   }
   if (tier?.fj && !probe) {
     if (form.split || form.reg || form.pack || form.unroll || tier.kq || tier.kl || tier.kr || tier.kc || tier.vs || tier.ga || tier.one || tier.bx) throw new Error("gfFs: fj is a plain-form tier (no split, reg, pack, unroll, kq, kl, kr, kc, vs, ga, one or bx)");
@@ -265,6 +269,32 @@ function lazyFaces(src: string): string {
     "    SVW(e, v) SAW(e, ss(-aa, aa, D)) PR(swk[e] = wk; swa[e] = wa; swb[e] = wb;)\n" +
     "    if (lzX) break;\n" +
     "    if (D > 2.0 * aa) { if (!(lzI + 1 < ns) || skey[SORD(lzI)] - skey[SORD(lzI + 1)] >= 2.0 * uZt) break; lzX = true; }\n  }\n");
+  return src;
+}
+
+/**
+ * K1362 s13 `fs`: stage 8's face skip made exact. Each face's band2 is taken once into fb, right after D's update and
+ * the face's own guard, and the face is skipped when !(fb > v); its value then multiplies that same fb by the burial
+ * term (and, for a tangent point, by ss(-aa, aa, D)). Every factor is in [0, 1], and a rounded product of such
+ * factors, in any order, fused or not (no sums), is at most each factor, so the value is at most fb <= v and could
+ * not have passed `val > v` (a tie keeps v either way; a NaN fb skips, as a NaN value never passes). Unlike bx there
+ * is no break inside the burial loops (bur is not final there) and no second band2 call.
+ */
+function faceSkip(src: string): string {
+  const rep = (a: string, b: string): void => {
+    const parts = src.split(a);
+    if (parts.length !== 2) throw new Error(`gfFs fs: expected one "${a.trim().slice(0, 48)}", found ${parts.length - 1}`);
+    src = parts.join(b);
+  };
+  const SKIP = " if (!(fb > v)) continue; // K1362 s13 fs\n";
+  rep("      if (!(X > h - W - aa && X > 1e-12)) continue;\n", "      if (!(X > h - W - aa && X > 1e-12)) continue;\n      float fb = band2(h - X);" + SKIP);
+  rep("      float val = (1.0 - bur) * band2(h - X);\n", "      float val = (1.0 - bur) * fb;\n");
+  rep("      if (!(rho > 1e-12)) continue;\n      vec2 q = K0.xy", "      if (!(rho > 1e-12)) continue;\n      float fb = band2(Dk);" + SKIP + "      vec2 q = K0.xy");
+  rep("      float val = (1.0 - bur) * band2(Dk);\n", "      float val = (1.0 - bur) * fb;\n");
+  if (src.includes("#ifdef TANGENT\n    for (int i = 0; i < nk; i++) {")) {
+    rep("        float dT = length(p - T); if (!(dT < W + aa)) continue;\n", "        float dT = length(p - T); if (!(dT < W + aa)) continue;\n        float fb = band2(dT);" + SKIP);
+    rep("        float val = (1.0 - bur) * band2(dT) * ss(-aa, aa, D);\n", "        float val = (1.0 - bur) * fb * ss(-aa, aa, D);\n");
+  }
   return src;
 }
 
