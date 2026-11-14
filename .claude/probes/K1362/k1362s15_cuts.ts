@@ -25,7 +25,8 @@ for (const { tier } of cornerPlan({ ...GF_TIERS[0], ...extra } as GfTier)) {
   for (const [name, reps] of Object.entries(CUTS)) {
     let s = src; let miss = 0;
     for (const [a, b] of reps) { const t = s.replace(a as string, b); if (t === s) miss++; s = t; }
-    writeFileSync(`${out}/${tier.kz ?? "corner"}_${name}.frag`, s);
+    if (tier.zc === undefined && extra.zc) continue; // zc: P0 only (P1 is the plain tier)
+    writeFileSync(`${out}/${tier.kz ?? "corner"}${tier.zc ? "Z" : ""}_${name}.frag`, s);
     if (miss) console.log(`${tier.kz ?? "corner"}_${name}: ${miss} replacement(s) missed`);
   }
 }
