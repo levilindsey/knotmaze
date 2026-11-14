@@ -84,3 +84,49 @@ Under 30 lines:
 - your last SHA.
 
 End with `Ledger items` and K1362's handle fields.
+
+## Handoff (stage 10, 2026-11-13, 20:30:58 to 21:10, agent worktree-agent-ae1c1c11c03a6a07f)
+
+**What landed.** `GF_TIERS` is t32rlgyc3: t32rlc3 plus `grp` and `ks` (gf_glsl.ts GfTier), 11 per-piece arrays to 8
+(33 slots to 24). `grp`: pg and pramp go into psurf, written once in the keys loop (a member's group; a ramping
+piece's `-1 - j - MAXP (g + 1)` until its configuration takes it, then its group; else `-1 - j`), and the ramp
+values ride the rIdx swap as r0 / r1. `ks`: pkey reuses ps, which nothing outside the probe reads after the key is
+taken. Same statements on the same values, no float arithmetic changed; each flag only adds its define to the source
+text (test/render/gf_tier_forms.test.ts, which also models the grp membership per configuration against pg / pramp).
+
+**Measured and not taken** (bench forms, the same file): `kq` (pfx, pfy rebuilt from the nearest segment: slower,
+footQ costs more than the two arrays), `lh` (plo, phi packed in one int: slower), `cs` (psurf in pc's high bits:
+slower), `so` (the sort moves sid / skey in place of sord: equal within noise), `kr` (kIn, kSec rebuilt from kk,
+krho: equal), `kl` (rho too: 1-2 px off on D3D, bench only). On the Pixel, dropping an array pays; packing one into
+another does not, because the unpack runs in the hot loops.
+
+**Before / after on the Pixel** (t32rlc3 -> t32rlgyc3, ms net of the empty pass, value@MHz; p10d unless marked):
+
+| canvas, mode | def | muse_hash | fat |
+|---|---|---|---|
+| 822x1506 sync4 | 12.9@1286 -> 11.47@1286 | 17.65@1286 -> 16.3@1286 | 8.82@1286 -> 7.85@1094 |
+| 822x1506 sync4 (p10f) | 12.7@1286 -> 11.68@1286 | 17.42@1286 -> 16.17@1286 | 9.13@1286 -> 8.27@1286 |
+| 822x1506 sync4 (p10e) | 12.75@1286 -> 12.07@1190 | 18.08@1286 -> 16.43@1286 | 8.7@1190 -> 8.1@1190 |
+| 822x1506 frame1 | 18.9@1190 -> 14.7@825 | 19.8@1190 -> 18.8@1190 | 15.1@691 -> 14.9@499 |
+| 1079x1977 sync4 | 17.6@1286 -> 16.13@1286 | 24.15@1286 -> 22.13@1286 | 12.88@1286 -> 11.63@1286 |
+| 1079x1977 frame1 | 17.9@1017 -> 16.5@1094 | 25.5@1286 -> 25.4@1094 | 18@825 -> 16.4@748 |
+| desktop 822 sync4 / frame1 | 0.8 / 4.2 -> 0.7 / 3.7 | 1.25 / 6.5 -> 1.13 / 5.8 | 0.53 / 3.0 -> 0.43 / 2.5 |
+| desktop 1079 sync4 / frame1 | 1.0 / 5.5 -> 0.85 / 4.7 | 1.52 / 8.0 -> 1.3 / 6.9 | 0.75 / 4.0 -> 0.6 / 3.4 |
+
+Desktop (dtab2): sync4 net, frame1 gross (its empty pass is 0.4-0.5 ms). Thermal status 0 on every phone run.
+
+**att822 on the Pixel** (sync4, def / muse_hash / fat): t32rlc3 (p10c) base 13.0 / 17.73 / 8.63, nolay 5.72 / 8.38 /
+4.55, quad 11.6 / 16.13 / 7.85, notan 12.28 / 17.15 / 8.55, nokf 12.85 / 17.83 / 8.63, nopb 13.05 / 17.5 / 8.88,
+nogap 12.82 / 17.63 / 8.65, nokey 12.55 / 17.23 / 8.47, notan+nokf+nogap 12.07 / 16.8 / 8.47. t32rlgyc3 (p10f) base
+11.68 / 16.17 / 8.27, nolay 5.52@1190 / 8.03@1190 / 5.4@1094, quad 10.68 / 14.5 / 7.7, nokey 11.7 / 16.02 / 8.1,
+notan+nokf+nogap 10.88 / 15.72 / 8.3.
+
+**Exactness.** 0 px and 0 unwritten against full on the 12 scenes on the Pixel (p10d: 111 rows, every candidate) and
+the desktop (cmp runs); the CPU mirror column equals t32rlc3's everywhere. `npm test` green (2988), goldens
+unchanged. Tables digest identical on 1bb2d0c9 and this branch (`all ae1d2392...`, 5445 lines, 0 diffs).
+
+**Verdict.** def 11.5-11.7 ms at 822, not 8. The layering is still about 6.2 ms of it (nolay 5.5), so 8 ms needs the
+layering under about 2.5 ms or a cheaper scan; the per-piece arrays have little left to give (8 arrays, every further
+merge measured slower). Next stage: the layering's own state (sid, skey, sv, sa at MAXS 3, corners 8 slots) and its
+divergence (`aquad` saves 1.0 / 1.7 / 0.6 ms), or the scan, which alone is 5.5 ms on def. Runner:
+`pwsh -NoProfile -File .claude/probes/K1362/k1362s10_phone_run.ps1 -Cfgs <cfg> -WaitMin 25`.
