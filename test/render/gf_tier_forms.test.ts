@@ -579,4 +579,25 @@ describe("gf tier forms, s14 corner loops", () => {
     expect(() => gfFs(false, true, { ...base, half: true })).toThrow(/plain-form/);
     for (const form of [{ reg: true }, { unroll: true }, { pack: true }]) expect(() => gfFs(false, true, base, form)).toThrow(/plain-form/);
   });
+
+  it("ki: the scan files rho > K0.z as kIn 3; the first corner loop fetches no K0, and K3 only for a new label", () => {
+    const [free] = cornerPlan({ ...GF_TIERS[0], ki: true, kg: true });
+    expect([free.tier.ki, free.tier.kg]).toEqual([undefined, undefined]);
+    for (const tangent of [true, false]) {
+      expect(gfFs(true, tangent, { ...corners0.tier, ki: true })).toBe(gfFs(true, tangent, corners0.tier));
+      const plain = gfFs(false, tangent, corners0.tier);
+      for (const extra of [{}, { kg: true }, { kg: true, kt: true, ko: true, kp: true }]) {
+        const ki = gfFs(false, tangent, { ...corners0.tier, ...extra, ki: true });
+        const base = gfFs(false, tangent, { ...corners0.tier, ...extra });
+        expect(ki).not.toMatch(/kIn\[\w+\] [!=]= 2|KRI > K0\.z/);
+        expect(count(ki, "kIn[nk] = !inR ? 0 : rho > K0.z ? 3 : rho > K0.z - aa ? 2 : 1;")).toBe(1);
+        expect(count(ki, "if (kIn[i] < 2) continue;")).toBe(1);
+        expect(count(base, "F(uOK + 6 * k)") - count(ki, "F(uOK + 6 * k)")).toBe(1);
+        expect(count(plain, "kIn[i] == 2 && Dk > D")).toBe(count(ki, "kIn[i] >= 2 && Dk > D"));
+      }
+    }
+    const base: GfTier = { ...corners0.tier, fs: undefined, ki: true };
+    for (const f of [{ bx: true }, { half: true }, { kl: true }]) expect(() => gfFs(false, true, { ...base, ...f })).toThrow(/plain-form/);
+    for (const form of [{ reg: true }, { unroll: true }, { pack: true }]) expect(() => gfFs(false, true, base, form)).toThrow(/plain-form/);
+  });
 });

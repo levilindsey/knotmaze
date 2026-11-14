@@ -84,9 +84,10 @@ void main() {
  * (tables.ts cellKPList); the corner program only (cornerPlan drops it from the free one). `kt` and `ko` (K1362 s14,
  * thruScalars, burialOrder below): the scan's thru chain ids as two scalars; a piece face's corner burial first.
  * `kg` (K1362 s14, cornerSurfaces below): kk carries each corner's surface, so layers() tests it before fetching.
+ * `ki` (K1362 s14, cornerInside below): kIn 3 files rho > K0.z, so layers()'s first corner loop fetches no K0.
  */
 export type GfCornerForm = "route" | "frame" | "free" | "corner";
-export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm; one?: boolean; bx?: boolean; fast?: boolean; s?: number; lab?: boolean; grp?: boolean; kq?: boolean; ks?: boolean; kl?: boolean; kr?: boolean; lh?: boolean; so?: boolean; cs?: boolean; vs?: boolean; ga?: boolean; sc?: boolean; kc?: boolean; kz?: GfCornerForm; fj?: boolean | "s"; lz?: boolean; fs?: boolean | "c"; kp?: boolean; kt?: boolean; ko?: boolean; kg?: boolean }
+export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm; one?: boolean; bx?: boolean; fast?: boolean; s?: number; lab?: boolean; grp?: boolean; kq?: boolean; ks?: boolean; kl?: boolean; kr?: boolean; lh?: boolean; so?: boolean; cs?: boolean; vs?: boolean; ga?: boolean; sc?: boolean; kc?: boolean; kz?: GfCornerForm; fj?: boolean | "s"; lz?: boolean; fs?: boolean | "c"; kp?: boolean; kt?: boolean; ko?: boolean; kg?: boolean; ki?: boolean }
 export type GfPackForm = boolean | "f" | "i";
 
 /** The program's source forms (gf_reg.ts); a tier's own flags set them by default. The probe keeps the plain form. */
@@ -142,6 +143,12 @@ export function gfFs(probe: boolean, tangentTerms = true, tier?: GfTier, form: G
       throw new Error("gfFs: kg is a plain-form tier (no split, reg, pack, unroll, bx, fj, half, kl, kr or kc)");
     }
     src = cornerSurfaces(src);
+  }
+  if (tier && tier.ki && !probe && tier.kz !== "free") {
+    if (form.split || form.reg || form.pack || form.unroll || tier.bx || tier.fj || tier.half || tier.kl || tier.kr || tier.kc) {
+      throw new Error("gfFs: ki is a plain-form tier (no split, reg, pack, unroll, bx, fj, half, kl, kr or kc)");
+    }
+    src = cornerInside(src);
   }
   if (tier?.fs && !probe) {
     if (form.split || form.reg || form.pack || form.unroll || tier.fj || tier.bx) throw new Error("gfFs: fs is a plain-form tier (no split, reg, pack, unroll, fj or bx)");
@@ -395,6 +402,32 @@ function cornerSurfaces(src: string): string {
   rep("vec4 K0 = F(uOK + 6 * k); vec4 K1 = F(uOK + 6 * k + 1); if (int(K1.z) != S || !kSec[i]) continue;", "if (kS != S || !kSec[i]) continue; vec4 K0 = F(uOK + 6 * k);", 1);
   rep("vec4 K1 = F(uOK + 6 * k + 1); if (int(K1.z) != S || K1.x > 0.5) continue;", "if (kS != S) continue; vec4 K1 = F(uOK + 6 * k + 1); if (K1.x > 0.5) continue;");
   if (src.includes("int(K1.z) != S")) throw new Error("gfFs kg: a corner surface test still fetches K1");
+  return src;
+}
+
+/**
+ * K1362 s14 `ki` (tier letter I): the scan files a kept corner whose rho is past its ring radius (rho > K0.z, the
+ * same rho krho keeps and the same texel) as kIn 3, a subset of class 2 since K0.z - aa <= K0.z in floats; every
+ * class-2 test reads >= 2. layers()'s first corner loop then reads `KRI > K0.z` as kIn 3 and fetches neither K0 nor
+ * (until a label changes) K3.
+ */
+function cornerInside(src: string): string {
+  const rep = (a: string, b: string, n?: number): void => {
+    const parts = src.split(a);
+    if (n !== undefined ? parts.length - 1 !== n : parts.length < 2) throw new Error(`gfFs ki: expected ${n ?? "some"} "${a.trim().slice(0, 48)}", found ${parts.length - 1}`);
+    src = parts.join(b);
+  };
+  rep("kIn[nk] = !inR ? 0 : rho > K0.z - aa ? 2 : 1;", "kIn[nk] = !inR ? 0 : rho > K0.z ? 3 : rho > K0.z - aa ? 2 : 1;", 1);
+  rep("kIn[i] = !inR ? 0 : rho > K0.z - aa ? 2 : 1;", "kIn[i] = !inR ? 0 : rho > K0.z ? 3 : rho > K0.z - aa ? 2 : 1;");
+  rep("if (kIn[i] != 2) continue;", "if (kIn[i] < 2) continue;", 1);
+  rep("if (kIn[i] == 2 && Dk > D) D = Dk;", "if (kIn[i] >= 2 && Dk > D) D = Dk;");
+  if (src.includes("vec4 K0 = F(uOK + 6 * k); vec4 K3 = F(uOK + 6 * k + 3); vec4 K4")) rep("vec4 K0 = F(uOK + 6 * k); vec4 K3 = F(uOK + 6 * k + 3); vec4 K4", "vec4 K4", 1);
+  else rep("vec4 K0 = F(uOK + 6 * k); vec4 K1 = F(uOK + 6 * k + 1); vec4 K3 = F(uOK + 6 * k + 3); vec4 K4", "vec4 K1 = F(uOK + 6 * k + 1); vec4 K4", 1);
+  rep("if (KRI > K0.z && (key > labK || (key == labK && e < labE))) { labK = key; labE = e; labC =",
+    "if (kIn[i] == 3 && (key > labK || (key == labK && e < labE))) { labK = key; labE = e; vec4 K3 = F(uOK + 6 * k + 3); labC =", 1);
+  rep("if (KRI > K0.z) { scov[e] = true; if (key > sckey[e]) { sckey[e] = key; scch[e] =",
+    "if (kIn[i] == 3) { scov[e] = true; if (key > sckey[e]) { sckey[e] = key; vec4 K3 = F(uOK + 6 * k + 3); scch[e] =", 1);
+  if (src.includes("KRI > K0.z") || /kIn\[\w+\] [!=]= 2/.test(src)) throw new Error("gfFs ki: a class-2 test is left");
   return src;
 }
 
