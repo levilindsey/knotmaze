@@ -72,9 +72,13 @@ void main() {
  * no corner, with the corner code compiled out; "corner" is the tier itself for the pixels whose cell lists one.
  * GfPass expands the other two: "route" draws free, then corner (skipped while no cell lists a corner), then full;
  * "frame" draws free then full while no cell lists a corner, else the plain tier then full.
+ *
+ * `fj` (K1362 s12, the face loop; faceJoin below): one pass over the pieces, then the corners, then the tangent
+ * points, each face updating its own surface's slot (v in sv, D in sa until the end), in place of a pass over every
+ * piece per surface. The same faces on the same values; v and D are running maxima, so the order cannot change them.
  */
 export type GfCornerForm = "route" | "frame" | "free" | "corner";
-export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm; one?: boolean; bx?: boolean; fast?: boolean; s?: number; lab?: boolean; grp?: boolean; kq?: boolean; ks?: boolean; kl?: boolean; kr?: boolean; lh?: boolean; so?: boolean; cs?: boolean; vs?: boolean; ga?: boolean; sc?: boolean; kc?: boolean; kz?: GfCornerForm }
+export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm; one?: boolean; bx?: boolean; fast?: boolean; s?: number; lab?: boolean; grp?: boolean; kq?: boolean; ks?: boolean; kl?: boolean; kr?: boolean; lh?: boolean; so?: boolean; cs?: boolean; vs?: boolean; ga?: boolean; sc?: boolean; kc?: boolean; kz?: GfCornerForm; fj?: boolean }
 export type GfPackForm = boolean | "f" | "i";
 
 /** The program's source forms (gf_reg.ts); a tier's own flags set them by default. The probe keeps the plain form. */
@@ -112,6 +116,10 @@ export function gfFs(probe: boolean, tangentTerms = true, tier?: GfTier, form: G
     if (tier.kz !== "free" && tier.kz !== "corner") throw new Error(`gfFs: kz "${tier.kz}" is GfPass's to expand into its programs (free, corner)`);
     src = cornerRoute(src, tier.kz);
   }
+  if (tier?.fj && !probe) {
+    if (form.split || form.reg || form.pack || form.unroll || tier.kq || tier.kl || tier.kr || tier.kc || tier.vs || tier.ga || tier.one || tier.bx) throw new Error("gfFs: fj is a plain-form tier (no split, reg, pack, unroll, kq, kl, kr, kc, vs, ga, one or bx)");
+    src = faceJoin(src);
+  }
   if (probe) return src;
   const mp = tier ? tier.p : MAXP;
   const mk = tier ? tier.k : MAXK;
@@ -133,6 +141,37 @@ export function gfFs(probe: boolean, tangentTerms = true, tier?: GfTier, form: G
  * guard: a middle program's stencil test runs late, so on the pixels free drew it costs a fetch and a discard; a
  * corner-free pixel free discarded (piece or surface overflow) passes on to full.
  */
+/**
+ * K1362 s12 `fj`: layers()'s faces in one pass. Before: for each surface e, every piece (those of other surfaces
+ * skipped), then every corner, then every tangent point, v and D scalars written to sv[e] / sa[e] at the end. After:
+ * sv[e] = 0 and sa[e] = -BIG for every surface, then each piece, corner and tangent point updates the slot of its
+ * own surface (slotOf: the first sid entry equal to it; sid is unique, and a surface outside it is skipped as the
+ * old loop skipped it), then sa[e] = ss(-aa, aa, sa[e]). Every face is the same statements on the same values, each
+ * (surface, face) pair is visited once either way, D is final before the tangent points read it, and v and D are
+ * strict running maxima (a NaN never enters), so the order cannot change them.
+ */
+function faceJoin(src: string): string {
+  const START = "  for (int e = 0; e < ns; e++) {\n    int S = sid[e]; float D = -BIG; float v = 0.0; PR(int wk = 0; int wa = -1; int wb = 0;)\n";
+  const END = "    SVW(e, v) SAW(e, ss(-aa, aa, D)) PR(swk[e] = wk; swa[e] = wa; swb[e] = wb;)\n  }\n";
+  const swap = (s: string, from: string, to: string, n: number) => {
+    const c = s.split(from).length - 1;
+    if (c !== n) throw new Error(`gfFs fj: expected ${n} of ${JSON.stringify(from.slice(0, 48))}, found ${c}`);
+    return s.split(from).join(to);
+  };
+  const i0 = src.indexOf(START); const i1 = src.indexOf(END, i0);
+  if (i0 < 0 || i1 < 0 || src.indexOf(START, i0 + 1) >= 0) throw new Error("gfFs fj: the face loop not found once");
+  let b = src.slice(i0 + START.length, i1);
+  b = swap(b, "      if (PSURF(j) != S || !(pd[j] < h + aa)) continue;\n      float X = pd[j]; if (h - X > D) D = h - X;\n",
+    "      if (!(pd[j] < h + aa)) continue;\n      int S = PSURF(j); int e = slotOf(S); if (e < 0) continue;\n      float X = pd[j]; if (h - X > sa[e]) sa[e] = h - X;\n", 1);
+  b = swap(b, "if (int(K1.z) != S || !kSec[i]) continue;\n      float rho = krho[i]; float Dk = rho - K0.z;\n      if (kIn[i] == 2 && Dk > D) D = Dk;\n",
+    "if (!kSec[i]) continue; int S = int(K1.z); int e = slotOf(S); if (e < 0) continue;\n      float rho = krho[i]; float Dk = rho - K0.z;\n      if (kIn[i] == 2 && Dk > sa[e]) sa[e] = Dk;\n", 1);
+  b = swap(b, "if (int(K1.z) != S || K1.x > 0.5) continue;\n", "if (K1.x > 0.5) continue; int S = int(K1.z); int e = slotOf(S); if (e < 0) continue; float D = sa[e];\n", 1);
+  b = swap(b, "if (val > v) { v = val;", "if (val > sv[e]) { sv[e] = val;", 3);
+  src = src.slice(0, i0) + "  for (int e = 0; e < ns; e++) { sv[e] = 0.0; sa[e] = -BIG; } // K1362 s12 fj: v and D per surface slot\n" + b
+    + "  for (int e = 0; e < ns; e++) sa[e] = ss(-aa, aa, sa[e]);\n" + src.slice(i1 + END.length);
+  return swap(src, "void layers(vec2 p) {\n", "int slotOf(int id) { for (int i = 0; i < ns; i++) if (sid[i] == id) return i; return -1; }\nvoid layers(vec2 p) {\n", 1);
+}
+
 const KZ_CELL = "    vec4 CE = F(uOCell + cell);\n";
 const KZ_SCAN = "    // corners near p\n    int k0 = int(CE.z); int kn = int(CE.w);\n";
 const KZ_SCAN_END = "#ifdef TIER\n    if (ovf) { discard; return; } // never past the arrays: D3D runs on past a discard\n#endif\n";

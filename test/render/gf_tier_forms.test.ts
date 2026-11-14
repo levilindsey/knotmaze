@@ -340,3 +340,49 @@ describe("gf tier forms, s12 corner-free cells", () => {
     expect(cornerPlan(L)).toEqual([{ tier: L }]);
   });
 });
+
+// K1362 s12 fj: the one-pass face loop (gf_glsl.ts faceJoin). Exactness on the GPU is the cmp bench's (0 px against
+// full on 12 scenes); here the text (only layers() changes, each face kind once, each face on its own surface's slot)
+// and the order fact it rests on: one pass visits each surface's faces in the order the per-surface pass did.
+describe("gf tier forms, s12 face loop", () => {
+  const L: GfTier = { ...T, s: 3, lab: true, grp: true, ks: true };
+  const HEAD = "void layers(vec2 p) {\n"; const NEXT = "void layers1() {";
+  const SLOT = "int slotOf(int id) { for (int i = 0; i < ns; i++) if (sid[i] == id) return i; return -1; }\n";
+  const parts = (src: string): string[] => {
+    const a = src.indexOf(HEAD); const b = src.indexOf(NEXT, a);
+    expect(a).toBeGreaterThan(0); expect(b).toBeGreaterThan(a);
+    return [src.slice(0, a), src.slice(a, b), src.slice(b)];
+  };
+
+  it("fj rewrites only layers() (and adds slotOf before it), alone and with kz free", () => {
+    for (const t of [L, { ...L, kz: "free" as const }, T]) {
+      const [p0, plain, p2] = parts(gfFs(false, true, t)); const [f0, body, f2] = parts(gfFs(false, true, { ...t, fj: true }));
+      expect(f0).toBe(p0 + SLOT); expect(f2).toBe(p2);
+      expect(count(plain, "    int S = sid[e];")).toBe(1); expect(body).not.toContain("int S = sid[e];"); // no pass per surface
+      expect(count(body, "int e = slotOf(S); if (e < 0) continue;")).toBe(3); // pieces, corners, tangent points: each once
+      expect(count(body, "if (val > sv[e]) { sv[e] = val;")).toBe(3); expect(count(body, "if (val > v) {")).toBe(0);
+      // D finished (pieces and corners) before the tangent points read it, smoothed once at the end
+      const iT = body.indexOf("if (K1.x > 0.5) continue; int S = int(K1.z);"); const iK = body.indexOf("if (!kSec[i]) continue; int S = int(K1.z);");
+      expect(body.indexOf("if (h - X > sa[e]) sa[e] = h - X;")).toBeLessThan(iK); expect(iK).toBeLessThan(iT);
+      expect(body.indexOf("  for (int e = 0; e < ns; e++) sa[e] = ss(-aa, aa, sa[e]);\n")).toBeGreaterThan(iT);
+    }
+  });
+
+  it("the probe is untouched; fj is a plain-form tier", () => {
+    expect(gfFs(true, true, { ...L, fj: true })).toBe(gfFs(true, true, L));
+    for (const f of [{ kq: true }, { kl: true }, { kr: true }, { kc: true }, { vs: true }, { ga: true }, { one: true }, { bx: true }]) expect(() => gfFs(false, true, { ...L, ...f, fj: true })).toThrow(/fj is a plain-form tier/);
+    for (const f of [{ reg: true }, { pack: true as const }, { unroll: true }, { split: 1 as const }]) expect(() => gfFs(false, true, { ...L, fj: true }, f)).toThrow();
+  });
+
+  it("one pass keeps each surface's faces in order, so a strict running max picks the same face, ties included", () => {
+    let seed = 7; const rnd = (n: number): number => { seed = (seed * 1103515245 + 12345) >>> 0; return seed % n; };
+    for (let trial = 0; trial < 200; trial++) {
+      const ns = 1 + rnd(3); const sid = [5, 2, 9].slice(0, ns);
+      const faces = Array.from({ length: rnd(12) }, (_, i) => ({ i, S: [5, 2, 9, 4][rnd(4)], val: rnd(4) / 4 })); // 4: a surface not in sid
+      const per = sid.map((S) => { let v = 0, at = -1; for (const f of faces) { if (f.S !== S) continue; if (f.val > v) { v = f.val; at = f.i; } } return [v, at]; });
+      const one = sid.map(() => [0, -1]);
+      for (const f of faces) { const e = sid.indexOf(f.S); if (e < 0) continue; if (f.val > one[e][0]) one[e] = [f.val, f.i]; }
+      expect(one).toEqual(per);
+    }
+  });
+});
