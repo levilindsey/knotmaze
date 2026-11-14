@@ -43,8 +43,13 @@ void main() {
  * the canvas on D3D, probably the compiler regrouping the straight-line form; cause not isolated.)
  * `s` (K1362 s9): surface slots (MAXS) below p + k. A pixel that needs one more discards to the next program, exact by
  * overflow like the piece and corner caps (not with `reg`, whose scalarized arrays assume p + k).
+ * `lab` (K1362 s9): the label's top covered surface tracked as it is found (labK, labE, labC) in place of the
+ * per-surface sckey / scch / scov arrays. Exact by construction: a covered contribution replaces the running best
+ * when its key is greater, or equal on a lower surface index, which is the arrays' choice (each surface's first
+ * maximum, then the first covered surface with the greatest one; -BIG and NaN keys leave labC at -1 both ways). No
+ * float arithmetic changes. Ignored in the probe program (it keeps scs for labS).
  */
-export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm; one?: boolean; bx?: boolean; fast?: boolean; s?: number }
+export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm; one?: boolean; bx?: boolean; fast?: boolean; s?: number; lab?: boolean }
 export type GfPackForm = boolean | "f" | "i";
 
 /** The program's source forms (gf_reg.ts); a tier's own flags set them by default. The probe keeps the plain form. */
@@ -155,6 +160,7 @@ ${tangentTerms ? "#define TANGENT 1" : ""}
 ${tier ? "#define TIER 1" : ""}
 ${tier && !tier.ramps ? "#define NORAMP 1" : ""}
 ${tier && tier.fast && !probe ? "#define FAST 1" : ""}
+${tier && tier.lab && !probe ? "#define LABRUN 1" : ""}
 uniform sampler2D uD;
 uniform int uOCh, uOV, uOPin, uOArm, uOK, uOChk, uOCell, uOChL, uOKL, uOKC, uOKB, uOKA;
 uniform float uH, uW, uAA, uSigma, uZt, uWin, uRc;
@@ -215,7 +221,11 @@ IQ int psurf[MAXP]; int np;
 // corners near p
 IQ int kk[MAXK]; float krho[MAXK]; IQ int kIn[MAXK]; bool kSec[MAXK]; int nk;
 // surfaces
+#ifdef LABRUN
+IQ int sid[MAXS]; float skey[MAXS];
+#else
 IQ int sid[MAXS]; float skey[MAXS]; float sckey[MAXS]; IQ int scch[MAXS]; bool scov[MAXS];
+#endif
 FQ float sv[MAXS]; FQ float sa[MAXS]; IQ int sord[MAXS]; int ns;
 #ifdef PROBE
 float scs[MAXS]; int swk[MAXS]; int swa[MAXS]; int swb[MAXS];
@@ -324,7 +334,11 @@ int entry(int id) {
 #ifdef SCAP
   if (ns == MAXS) { sOvf = true; return MAXS - 1; }
 #endif
+#ifdef LABRUN
+  int i = ns++; sid[i] = id; skey[i] = -BIG; return i;
+#else
   int i = ns++; sid[i] = id; skey[i] = -BIG; sckey[i] = -BIG; scch[i] = -1; PR(scs[i] = 0.0;) scov[i] = false; return i;
+#endif
 }
 float band2(float D) { return (1.0 - ss(uW - uAA, uW + uAA, D)) * ss(-uAA, uAA, D); }
 
@@ -334,11 +348,18 @@ void layers(vec2 p) {
 #ifdef SCAP
   sOvf = false;
 #endif
+#ifdef LABRUN
+  labC = -1; float labK = -BIG; int labE = -1;
+#endif
   for (int j = 0; j < np; j++) {
     if (!(pd[j] < h + aa)) continue;
     int e = entry(psurf[j]);
     if (pkey[j] > skey[e]) skey[e] = pkey[j];
+#ifdef LABRUN
+    if (pd[j] < h && (pkey[j] > labK || (pkey[j] == labK && e < labE))) { labK = pkey[j]; labE = e; labC = pc[j]; }
+#else
     if (pd[j] < h) { scov[e] = true; if (pkey[j] > sckey[e]) { sckey[e] = pkey[j]; scch[e] = pc[j]; PR(scs[e] = ps[j];) } }
+#endif
   }
   float zt = uZt;
   for (int i = 0; i < nk; i++) {
@@ -349,7 +370,11 @@ void layers(vec2 p) {
     float z = nearerA ? K4.x : K4.y; float key = z - zt;
     int e = entry(int(K1.z));
     if (key > skey[e]) skey[e] = key;
+#ifdef LABRUN
+    if (krho[i] > K0.z && (key > labK || (key == labK && e < labE))) { labK = key; labE = e; labC = nearerA ? int(K3.x) : int(K3.y); }
+#else
     if (krho[i] > K0.z) { scov[e] = true; if (key > sckey[e]) { sckey[e] = key; scch[e] = nearerA ? int(K3.x) : int(K3.y); PR(scs[e] = nearerA ? K3.z : K3.w;) } }
+#endif
   }
   for (int i = 0; i < ns; i++) sord[i] = i;
   for (int i = 1; i < ns; i++) { int v = sord[i]; int m = i - 1; while (m >= 0 && skey[sord[m]] < skey[v]) { sord[m + 1] = sord[m]; m--; } sord[m + 1] = v; }
@@ -410,9 +435,11 @@ void layers(vec2 p) {
 #endif
     sv[e] = v; sa[e] = ss(-aa, aa, D); PR(swk[e] = wk; swa[e] = wa; swb[e] = wb;)
   }
+#ifndef LABRUN
   int top = -1;
   for (int i = 0; i < ns; i++) if (scov[i] && (top < 0 || sckey[i] > sckey[top])) top = i;
   labC = top >= 0 ? scch[top] : -1; PR(labS = top >= 0 ? scs[top] : 0.0;)
+#endif
 }
 #ifdef FAST
 

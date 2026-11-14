@@ -106,10 +106,10 @@ void main() { discard; }`;
 
 function parseTiers(name: string): GfTier[] {
   return name.slice(1).split("_").map((t) => {
-    const m = /^(\d)(\d)(r?)(h?)(s?)(u?)(k[fi]?|)(o?)(1?)(b?)(f?)(?:c(\d))?$/.exec(t);
+    const m = /^(\d)(\d)(r?)(h?)(s?)(u?)(k[fi]?|)(o?)(1?)(b?)(f?)(l?)(?:c(\d))?$/.exec(t);
     if (!m) throw new Error("bad tier " + t);
     const pack = m[7] === "k" ? true : m[7] === "kf" ? "f" : m[7] === "ki" ? "i" : false; // K1362 s6: k, kf, ki
-    return { p: +m[1], k: +m[2], ramps: m[3] === "r", half: m[4] === "h", reg: m[5] === "s", unroll: m[6] === "u", pack, oldKeys: m[8] === "o", one: m[9] === "1", bx: m[10] === "b", fast: m[11] === "f", s: m[12] ? +m[12] : undefined } as GfTier & { oldKeys?: boolean };
+    return { p: +m[1], k: +m[2], ramps: m[3] === "r", half: m[4] === "h", reg: m[5] === "s", unroll: m[6] === "u", pack, oldKeys: m[8] === "o", one: m[9] === "1", bx: m[10] === "b", fast: m[11] === "f", lab: m[12] === "l", s: m[13] ? +m[13] : undefined } as GfTier & { oldKeys?: boolean };
   });
 }
 // K1362 s8 attribution (NOT exact, timing only): the t32r tier program with one part cut, a<part>[+<part>...]

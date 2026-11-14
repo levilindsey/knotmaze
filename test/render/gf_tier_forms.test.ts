@@ -75,6 +75,35 @@ describe("gf tier forms", () => {
     }
   });
 
+  it("lab (s9): only the define differs, the probe is untouched, and the running label picks what the arrays pick", () => {
+    for (const tangent of [true, false]) {
+      const plain = gfFs(false, tangent, T);
+      const lab = gfFs(false, tangent, { ...T, lab: true });
+      expect(plain).not.toContain("#define LABRUN 1");
+      expect(lab.replace("#define LABRUN 1\n", "\n")).toBe(plain);
+      expect(gfFs(true, tangent, { ...T, lab: true })).toBe(gfFs(true, tangent, T));
+      expect(count(lab, "labK = ")).toBe(3);
+    }
+    // The arrays' choice (sckey / scch / scov, then the first covered surface with the greatest key) against the
+    // running one, on random contribution lists with ties, -BIG and NaN keys. Keys are float32s; no arithmetic.
+    const BIG = 1e30;
+    let s = 0x2545f491;
+    const rnd = (n: number): number => { s = (Math.imul(s, 1664525) + 1013904223) >>> 0; return s % n; };
+    const KEYS = [-BIG, NaN, -1, 0, 0.5, 0.5, 2, Math.fround(0.1)];
+    for (let it = 0; it < 20000; it++) {
+      const n = 1 + rnd(6); const ns = 1 + rnd(4);
+      const cs = Array.from({ length: n }, () => ({ e: rnd(ns), key: KEYS[rnd(KEYS.length)], cov: rnd(3) > 0, ch: rnd(9) }));
+      const sck = new Array(ns).fill(-BIG); const sch = new Array(ns).fill(-1); const scv = new Array(ns).fill(false);
+      for (const c of cs) if (c.cov) { scv[c.e] = true; if (c.key > sck[c.e]) { sck[c.e] = c.key; sch[c.e] = c.ch; } }
+      let top = -1;
+      for (let i = 0; i < ns; i++) if (scv[i] && (top < 0 || sck[i] > sck[top])) top = i;
+      const want = top >= 0 ? sch[top] : -1;
+      let labC = -1; let labK = -BIG; let labE = -1;
+      for (const c of cs) if (c.cov && (c.key > labK || (c.key === labK && c.e < labE))) { labK = c.key; labE = c.e; labC = c.ch; }
+      expect(labC).toBe(want);
+    }
+  });
+
   it("bx rests on: a rounded product of values in [0, 1] is at most each factor", () => {
     let s = 0x9e3779b9;
     const rnd = (): number => { s = (Math.imul(s, 1664525) + 1013904223) >>> 0; const u = s / 2 ** 32; return Math.fround(u < 0.1 ? 0 : u > 0.9 ? 1 : u); };
