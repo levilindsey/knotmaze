@@ -35,8 +35,9 @@ void main() {
  * and one ivec4 array (gf_reg.ts packArrays); "f" packs only the floats, "i" only the ints.
  * `one` (K1362 s8): a pixel without ramping pieces (nr == 0) runs the configuration loop's body under a constant
  * trip count of one (a second copy of the body), the rest the loop; the same statements on the same values.
+ * `bx` (K1362 s8): the burial loops stop once their face cannot beat the surface's best value (see burialExit).
  */
-export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm; one?: boolean }
+export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm; one?: boolean; bx?: boolean }
 export type GfPackForm = boolean | "f" | "i";
 
 /** The program's source forms (gf_reg.ts); a tier's own flags set them by default. The probe keeps the plain form. */
@@ -54,6 +55,7 @@ export interface GfForm { reg?: boolean; unroll?: boolean; pack?: GfPackForm; ol
 export function gfFs(probe: boolean, tangentTerms = true, tier?: GfTier, form: GfForm = { reg: tier?.reg, unroll: tier?.unroll, pack: tier?.pack }): string {
   let src = gfSrc(probe, tangentTerms, tier);
   if (tier?.one) src = oneConfig(src);
+  if (tier?.bx) src = burialExit(src);
   if (form.oldKeys) src = src.replace("precision highp float;\n", "precision highp float;\n#define OLDKEYS 1\n");
   if (form.split) {
     if (probe || !tier || tier.p > 3 || tier.k > 2) throw new Error("gfFs: split needs a non-probe tier of at most p3/k2");
@@ -76,7 +78,8 @@ export function gfFs(probe: boolean, tangentTerms = true, tier?: GfTier, form: G
 /**
  * K1362 s8 `one`: the configuration loop as `if (nr == 0) { <body, cfg = 0..0> } else { <the loop> }`. With nr == 0
  * the loop runs once with cfg = 0, so the copy is the same statements on the same values; a constant trip count
- * lets a compiler unroll it and keep layers()'s state out of a loop (the desktop's D3D: -25% for the pass).
+ * lets a compiler unroll it. A single compiled configuration (inexact, timing only) was 0.3 of def's 1.05 ms on the
+ * desktop, but this split measured no gain there: the loop's copy still sets the program's registers.
  */
 const CFG_LOOP = "    for (int cfg = 0; cfg <= nr; cfg++) {\n";
 const CFG_END = "\n    }\n    if (thruK >= 0) {";
@@ -86,6 +89,37 @@ function oneConfig(src: string): string {
   const body = src.slice(a + CFG_LOOP.length, b);
   const one = `    if (nr == 0) {\n    for (int cfg = 0; cfg <= 0; cfg++) {\n${body}\n    }\n    } else {\n${CFG_LOOP}${body}\n    }\n    }`;
   return src.slice(0, a) + one + src.slice(b + "\n    }".length);
+}
+
+/**
+ * K1362 s8 `bx`: layers() keeps, per surface, the best face value v (replaced only by a larger one), and a face's
+ * value is (1 - bur) * band2(...) (the tangent face's times one more ss), with bur the max over its burial loop's
+ * terms; every factor is in [0, 1]. A rounded product of values in [0, 1] is at most each factor, and bur only
+ * grows, so once (1 - bur) * band2(...) <= v the face cannot replace v: the face is skipped before its loops when
+ * band2 <= v (bur = 0 there), and each burial loop breaks when its next trip could not change the outcome. The
+ * check is the value's own leading product (the same expression), so the value is at most v whenever the check
+ * says so, and nothing else reads bur. Exact; the burial is the most divergent loop (an 8x8 tile's max trips 4-5x
+ * the mean, desktop counts).
+ */
+const BX_CHECK = "if (!((1.0 - bur) * bx2 > v)) break;";
+function burialExit(src: string): string {
+  const rep = (a: string, b: string): void => {
+    const parts = src.split(a);
+    if (parts.length !== 2) throw new Error(`gfFs bx: expected one "${a.trim().slice(0, 48)}", found ${parts.length - 1}`);
+    src = parts.join(b);
+  };
+  const LOOP_M = "for (int m = 0; m < np && bur < 1.0; m++) {\n";
+  rep(`      vec2 q = f + (h * (p - f)) / X;\n      float bur = 0.0;\n      ${LOOP_M}`,
+    `      vec2 q = f + (h * (p - f)) / X;\n      float bx2 = band2(h - X); if (!(bx2 > v)) continue;\n      float bur = 0.0;\n      ${LOOP_M}        ${BX_CHECK}\n`);
+  rep("      for (int i = 0; i < nk && bur < 1.0; i++) {\n",
+    `      for (int i = 0; i < nk && bur < 1.0; i++) {\n        ${BX_CHECK}\n`);
+  rep(`      vec2 q = K0.xy + (K0.z * (p - K0.xy)) / rho;\n      float bur = 0.0;\n      ${LOOP_M}`,
+    `      vec2 q = K0.xy + (K0.z * (p - K0.xy)) / rho;\n      float bx2 = band2(Dk); if (!(bx2 > v)) continue;\n      float bur = 0.0;\n      ${LOOP_M}        ${BX_CHECK}\n`);
+  if (src.includes("#ifdef TANGENT\n    for (int i = 0; i < nk; i++) {")) {
+    rep(`        float dT = length(p - T); if (!(dT < W + aa)) continue;\n        float bur = 0.0;\n        ${LOOP_M}`,
+      `        float dT = length(p - T); if (!(dT < W + aa)) continue;\n        float bx2 = band2(dT); if (!(bx2 > v)) continue;\n        float bur = 0.0;\n        ${LOOP_M}          ${BX_CHECK}\n`);
+  }
+  return src;
 }
 
 function gfSrc(probe: boolean, tangentTerms: boolean, tier?: GfTier): string {
