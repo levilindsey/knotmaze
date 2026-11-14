@@ -562,10 +562,10 @@ Next free ID: K1379.
   tables the CPU builds in under 1 ms) instead of the outline mesh built on the CPU each frame (65-117 ms on
   def). Reverses the 2026-11-09 call (K1040 dropped for K1240). The main speed route (Levi, 2026-11-12: very bullish
   on it); dropped only on a proof it cannot work (brief: "How the result is judged"). Analysis in docs/ledger_notes.md.
-  - owner: nobody since 2026-11-13 15:08 (merged; agent `a9f562d4c9f0e4356` of claude session 01SUPGULDxvE5gKXozfaFaFG)
-  - branch: mainline; last commit: `bb49bb4a`
+  - owner: claude session 01SUPGULDxvE5gKXozfaFaFG (coordinator; Pixel benches only, no agent running)
+  - branch: mainline; last commit: `be627d55`
   - evidence: .claude/probes/K1362/ (k1362s8_*, k1362s9_*), out/s8/
-  - next: Pixel A/B: pwsh -NoProfile -File .claude/probes/K1362/k1362s9_phone_run.ps1 -Cfgs p9c -WaitMin 25 on a ready phone (~10 min); set GF_TIERS to t32rc3 or t32rlc3 only if it wins def, muse_hash and fat at 0 px; else cut the per-piece arrays (33 slots) or what the Pixel attribution names
+  - next: GF_TIERS is now t32rlc3 (Pixel def 13.95 ms at 822, goal 8). Run the benches the 20:01 touch cut: pwsh -NoProfile -File .claude/probes/K1362/k1362s9_phone_run.ps1 -Cfgs p9e -WaitMin 25 (f1080, att822; ~6 min on a ready phone); then brief stage 10: cut the per-piece arrays (11 per piece, 33 slots in the tier) or what att822 names; settle t32rlc2 vs lc3 with repeated runs
   - brief: `docs/design/K1362_s9_layer_tables.md`
 
 ## Next, in order
