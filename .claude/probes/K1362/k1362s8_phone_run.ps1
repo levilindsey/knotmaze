@@ -7,6 +7,8 @@
 # phone lock scripts are the main checkout's .claude/probes/agents (untracked; they write only $env:TEMP\claude-phone.lock).
 param([string[]]$Cfgs = @("p8a", "p8b"), [int]$WaitMin = 25, [string]$Sha = "c73c7745")
 $ErrorActionPreference = "Continue"
+# pwsh -File passes "-Cfgs p8a,p8b" as ONE string: split it (the first s8 run asked gpuclk for cfg "p8a,p8b")
+$Cfgs = @($Cfgs | ForEach-Object { $_ -split "," } | ForEach-Object { $_.Trim() } | Where-Object { $_ })
 $repo = (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path
 Set-Location $repo
 $main = "C:\Users\lsl\Repositories\knotmaze"
