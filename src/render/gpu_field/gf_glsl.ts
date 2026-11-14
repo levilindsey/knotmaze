@@ -59,8 +59,14 @@ void main() {
  * 65535 or a surface outside int16 discards).
  * kr: the corners keep kk and krho and rebuild the sector and ring class from them (kSK). kl: rho too (bench
  * only: the rebuilt rho rounds differently on D3D, 1-2 px).
+ * K1362 s11, the layering's per-surface arrays, by lifetime (a slot a value no longer needs takes the next one):
+ * vs: sv rides in sid (floatBitsToInt): a surface's id is read once, at the top of its face loop, and its v is
+ * written at the bottom. ga (MAXS <= 3): composite()'s gaps are taken right after the sort (the same subtractions on
+ * the same keys) into two scalars, and sa then rides in skey, which nothing reads after them. sc (MAXS <= 4, not
+ * so): the sort order as 2 bits an entry in one int (the same insertion sort, the same comparisons in the same
+ * order). No float arithmetic changes.
  */
-export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm; one?: boolean; bx?: boolean; fast?: boolean; s?: number; lab?: boolean; grp?: boolean; kq?: boolean; ks?: boolean; kl?: boolean; kr?: boolean; lh?: boolean; so?: boolean; cs?: boolean }
+export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm; one?: boolean; bx?: boolean; fast?: boolean; s?: number; lab?: boolean; grp?: boolean; kq?: boolean; ks?: boolean; kl?: boolean; kr?: boolean; lh?: boolean; so?: boolean; cs?: boolean; vs?: boolean; ga?: boolean; sc?: boolean }
 export type GfPackForm = boolean | "f" | "i";
 
 /** The program's source forms (gf_reg.ts); a tier's own flags set them by default. The probe keeps the plain form. */
@@ -80,7 +86,10 @@ export function gfFs(probe: boolean, tangentTerms = true, tier?: GfTier, form: G
   if (tier?.one) src = oneConfig(src);
   if (tier?.bx) src = burialExit(src);
   if (form.oldKeys) src = src.replace("precision highp float;\n", "precision highp float;\n#define OLDKEYS 1\n");
-  if ((tier?.grp || tier?.kq || tier?.ks || tier?.kl || tier?.kr || tier?.lh || tier?.so || tier?.cs) && !probe && (form.split || form.reg || form.pack)) throw new Error("gfFs: grp, kq, ks, kl, kr, lh, so and cs are plain-form tiers (no split, reg or pack)");
+  if ((tier?.grp || tier?.kq || tier?.ks || tier?.kl || tier?.kr || tier?.lh || tier?.so || tier?.cs || tier?.vs || tier?.ga || tier?.sc) && !probe && (form.split || form.reg || form.pack)) throw new Error("gfFs: grp, kq, ks, kl, kr, lh, so, cs, vs, ga and sc are plain-form tiers (no split, reg or pack)");
+  const nS = tier ? (tier.s && tier.s < tier.p + tier.k ? tier.s : tier.p + tier.k) : MAXP + MAXK;
+  if (tier?.ga && nS > 3 && !probe) throw new Error("gfFs: ga keeps two gaps, so it needs at most 3 surface slots");
+  if (tier?.sc && (nS > 4 || tier.so) && !probe) throw new Error("gfFs: sc packs the order 2 bits an entry, so it needs at most 4 surface slots and not so");
   if (tier?.so && !tier.lab && !probe) throw new Error("gfFs: so sorts sid and skey in place, so it needs lab (no scov, sckey or scch to carry)");
   if (tier?.cs && !tier.grp && !probe) throw new Error("gfFs: cs packs the surface into pc, so it needs grp (no pg)");
   if (form.split) {
@@ -183,6 +192,9 @@ ${tier && tier.cs && !probe ? "#define PCS 1" : ""}
 ${tier && tier.ks && !probe ? "#define PKS 1" : ""}
 ${tier && (tier.kl || tier.kr) && !probe ? "#define KLEAN 1" : ""}
 ${tier && tier.kr && !probe ? "#define KRHO 1" : ""}
+${tier && tier.vs && !probe ? "#define SVSID 1" : ""}
+${tier && tier.ga && !probe ? "#define SGAP 1" : ""}
+${tier && tier.sc && !probe ? "#define SCODE 1" : ""}
 uniform sampler2D uD;
 uniform int uOCh, uOV, uOPin, uOArm, uOK, uOChk, uOCell, uOChL, uOKL, uOKC, uOKB, uOKA;
 uniform float uH, uW, uAA, uSigma, uZt, uWin, uRc;
@@ -289,7 +301,29 @@ IQ int sid[MAXS]; float skey[MAXS];
 #else
 IQ int sid[MAXS]; float skey[MAXS]; float sckey[MAXS]; IQ int scch[MAXS]; bool scov[MAXS];
 #endif
+#if defined(SVSID) || defined(SGAP) || defined(SCODE)
+// K1362 s11: sv in sid, sa in skey (after the gaps), the order in one int; each slot holds one value at a time
+#ifndef SVSID
+FQ float sv[MAXS];
+#endif
+#ifndef SGAP
+FQ float sa[MAXS];
+#endif
+int ns;
 #ifdef SORTIN
+#define SORD(i) (i)
+#define SO1(x)
+#elif defined(SCODE)
+int sordc; // entry of sorted place i in bits 2i, 2i + 1 (228 = 0, 1, 2, 3: the identity)
+#define SORD(i) ((sordc >> (2 * (i))) & 3)
+#define SCSET(i, v) sordc = (sordc & ~(3 << (2 * (i)))) | ((v) << (2 * (i)));
+#define SO1(x) sordc = 228;
+#else
+IQ int sord[MAXS];
+#define SORD(i) sord[i]
+#define SO1(x) x
+#endif
+#elif defined(SORTIN)
 FQ float sv[MAXS]; FQ float sa[MAXS]; int ns; // K1362 s10: no sord, the surfaces are sorted in place (sid, skey)
 #define SORD(i) (i)
 #define SO1(x)
@@ -297,6 +331,21 @@ FQ float sv[MAXS]; FQ float sa[MAXS]; int ns; // K1362 s10: no sord, the surface
 FQ float sv[MAXS]; FQ float sa[MAXS]; IQ int sord[MAXS]; int ns;
 #define SORD(i) sord[i]
 #define SO1(x) x
+#endif
+#ifdef SVSID
+#define SVW(e, x) sid[e] = floatBitsToInt(x);
+#define SVR(e) intBitsToFloat(sid[e])
+#else
+#define SVW(e, x) sv[e] = x;
+#define SVR(e) sv[e]
+#endif
+#ifdef SGAP
+float gp0; float gp1;
+#define SAW(e, x) skey[e] = x;
+#define SAR(e) skey[e]
+#else
+#define SAW(e, x) sa[e] = x;
+#define SAR(e) sa[e]
 #endif
 #ifdef PROBE
 float scs[MAXS]; int swk[MAXS]; int swa[MAXS]; int swb[MAXS];
@@ -496,9 +545,19 @@ void layers(vec2 p) {
 #ifdef SORTIN
   // the same insertion sort, the same comparisons in the same order, moving (sid, skey) in place of an order array
   for (int i = 1; i < ns; i++) { int vid = sid[i]; float vk = skey[i]; int m = i - 1; while (m >= 0 && skey[m] < vk) { sid[m + 1] = sid[m]; skey[m + 1] = skey[m]; m--; } sid[m + 1] = vid; skey[m + 1] = vk; }
+#elif defined(SCODE)
+  // K1362 s11: the same insertion sort on the order packed 2 bits an entry
+  sordc = 228;
+  for (int i = 1; i < ns; i++) { int v = SORD(i); int m = i - 1; while (m >= 0 && skey[SORD(m)] < skey[v]) { SCSET(m + 1, SORD(m)) m--; } SCSET(m + 1, v) }
 #else
   for (int i = 0; i < ns; i++) sord[i] = i;
   for (int i = 1; i < ns; i++) { int v = sord[i]; int m = i - 1; while (m >= 0 && skey[sord[m]] < skey[v]) { sord[m + 1] = sord[m]; m--; } sord[m + 1] = v; }
+#endif
+#ifdef SGAP
+  // K1362 s11: composite()'s gaps, its own subtractions, taken before sa overwrites skey
+  gp0 = 0.0; gp1 = 0.0;
+  if (ns > 1) gp0 = skey[SORD(0)] - skey[SORD(1)];
+  if (ns > 2) gp1 = skey[SORD(1)] - skey[SORD(2)];
 #endif
   for (int e = 0; e < ns; e++) {
     int S = sid[e]; float D = -BIG; float v = 0.0; PR(int wk = 0; int wa = -1; int wb = 0;)
@@ -565,7 +624,7 @@ void layers(vec2 p) {
       }
     }
 #endif
-    sv[e] = v; sa[e] = ss(-aa, aa, D); PR(swk[e] = wk; swa[e] = wa; swb[e] = wb;)
+    SVW(e, v) SAW(e, ss(-aa, aa, D)) PR(swk[e] = wk; swa[e] = wa; swb[e] = wb;)
   }
 #ifndef LABRUN
   int top = -1;
@@ -589,7 +648,7 @@ void layers1() {
     float D = -BIG; float v = 0.0;
     float X = pd[0]; if (h - X > D) D = h - X;
     if (X > h - W - aa && X > 1e-12) { float bur = 0.0; float val = (1.0 - bur) * band2(h - X); if (val > v) v = val; }
-    sv[0] = v; sa[0] = ss(-aa, aa, D);
+    SVW(0, v) SAW(0, ss(-aa, aa, D))
     if (pd[0] < h) labC = PC(0);
   }
 }
@@ -599,9 +658,9 @@ float comp(int sw) {
   float Tt = 1.0; float ink = 0.0; float best = 0.0;
   for (int i = 0; i < ns; i++) {
     int e = SORD(i); if (sw >= 0 && i == sw) e = SORD(i + 1); else if (sw >= 0 && i == sw + 1) e = SORD(i - 1);
-    float c = Tt * sv[e];
+    float c = Tt * SVR(e);
     if (c > 0.0) { ink += c; PR(if (c > best && sw < 0) { best = c; cWk = swk[e]; cWa = swa[e]; cWb = swb[e]; }) }
-    Tt *= 1.0 - sa[e];
+    Tt *= 1.0 - SAR(e);
     if (!(Tt > 0.0)) break;
   }
   if (sw < 0) cCov = 1.0 - max(Tt, 0.0);
@@ -613,7 +672,11 @@ float composite() {
   cWk = 0; cWa = -1; cWb = 0;
   float r = comp(-1);
   for (int i = 0; i + 1 < ns; i++) {
+#ifdef SGAP
+    float gap = i == 0 ? gp0 : gp1;
+#else
     float gap = skey[SORD(i)] - skey[SORD(i + 1)];
+#endif
     if (!(gap < zt)) continue;
     float r2 = comp(i);
     if (r2 == r) continue;
