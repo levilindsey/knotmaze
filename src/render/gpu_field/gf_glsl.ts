@@ -48,6 +48,17 @@ void main() {
  * when its key is greater, or equal on a lower surface index, which is the arrays' choice (each surface's first
  * maximum, then the first covered surface with the greatest one; -BIG and NaN keys leave labC at -1 both ways). No
  * float arithmetic changes. Ignored in the probe program (it keeps scs for labS).
+ * K1362 s10, the tier's per-pixel arrays (the Pixel's cost follows them). Plain form only (no split, reg or pack), and
+ * ignored in the probe program. Each moves the same values through fewer slots; no float arithmetic changes:
+ * grp: the ramp membership (pg, pramp) goes into psurf, written once in the keys loop: a member's group, a ramping
+ * piece's -1 - j - MAXP (g + 1) until its configuration takes it, else -1 - j; rIdx and r ride the swap.
+ * ks: pkey reuses ps (ps is dead once the key is taken). kq: footQ re-derives the foot from pkq (slower on the Pixel).
+ * lh: plo, phi (and pkq with kq) pack into one int; a span over 255 segments, or lo below -32768, discards.
+ * so (needs lab): the insertion sort moves sid and skey in place of building sord; the same comparisons in the same
+ * order, so the same order, ties and NaN included. cs (needs grp): psurf rides pc's high 16 bits (a chain over
+ * 65535 or a surface outside int16 discards).
+ * kr: the corners keep kk and krho and rebuild the sector and ring class from them (kSK). kl: rho too (bench
+ * only: the rebuilt rho rounds differently on D3D, 1-2 px).
  */
 export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm; one?: boolean; bx?: boolean; fast?: boolean; s?: number; lab?: boolean; grp?: boolean; kq?: boolean; ks?: boolean; kl?: boolean; kr?: boolean; lh?: boolean; so?: boolean; cs?: boolean }
 export type GfPackForm = boolean | "f" | "i";

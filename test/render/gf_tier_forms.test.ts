@@ -118,3 +118,91 @@ describe("gf tier forms", () => {
     }
   });
 });
+
+// K1362 s10: tier forms that keep fewer per-pixel values (the Pixel's cost follows the arrays). Each changes only its
+// defines in the source text; the models below replay the GLSL statements on the values they move.
+describe("gf tier forms, s10 lean arrays", () => {
+  const L: GfTier = { ...T, s: 3, lab: true };
+  const FLAGS: [Partial<GfTier>, string[]][] = [
+    [{ grp: true }, ["PGRP"]], [{ ks: true }, ["PKS"]], [{ kq: true }, ["PKQ"]], [{ lh: true }, ["PLH"]],
+    [{ so: true }, ["SORTIN"]], [{ grp: true, cs: true }, ["PGRP", "PCS"]], [{ kr: true }, ["KLEAN", "KRHO"]], [{ kl: true }, ["KLEAN"]],
+  ];
+  let s = 0x51ed2701;
+  const rnd = (n: number): number => { s = (Math.imul(s, 1664525) + 1013904223) >>> 0; return s % n; };
+
+  it("each flag adds only its defines; the probe is untouched; split, reg and pack refuse them", () => {
+    for (const tangent of [true, false]) {
+      const plain = gfFs(false, tangent, L);
+      for (const [f, defs] of FLAGS) {
+        let src = gfFs(false, tangent, { ...L, ...f });
+        for (const d of defs) { expect(src).toContain(`#define ${d} 1\n`); src = src.replace(`#define ${d} 1\n`, "\n"); }
+        expect(src).toBe(plain);
+        expect(gfFs(true, tangent, { ...L, ...f })).toBe(gfFs(true, tangent, L));
+        expect(() => gfFs(false, tangent, { ...L, ...f, reg: true })).toThrow(/plain-form/);
+      }
+    }
+    expect(() => gfFs(false, true, { ...T, s: 3, so: true })).toThrow(/needs lab/);
+    expect(() => gfFs(false, true, { ...L, cs: true })).toThrow(/needs grp/);
+  });
+
+  it("grp: psurf written once and decoded per configuration is the pg / pramp membership, with the same weights", () => {
+    const MAXP = 3; const MAXR = 2;
+    const RAMPS = [0, 0.25, 0.5, 0.75, 1, Math.fround(0.1), Math.fround(0.9), 0.5];
+    for (let it = 0; it < 20000; it++) {
+      const np = 1 + rnd(MAXP);
+      const mg = Array.from({ length: np }, () => rnd(5) - 1); const mr = Array.from({ length: np }, () => RAMPS[rnd(RAMPS.length)]);
+      // the arrays (the #else form)
+      const pg = [...mg]; const pr = [...mr]; let nr = 0; let i0 = 0; let i1 = 0;
+      for (let j = 0; j < np; j++) if (mg[j] >= 0 && mr[j] > 0 && mr[j] < 1) { if (nr < MAXR) { if (nr === 0) i0 = j; else i1 = j; nr++; } else pr[j] = mr[j] >= 0.5 ? 1 : 0; }
+      if (nr === 2 && pr[i0] < pr[i1]) { const t = i0; i0 = i1; i1 = t; }
+      // PGRP
+      const ps: number[] = []; let gnr = 0; let g0 = 0; let g1 = 0; let r0 = 0; let r1 = 0;
+      for (let j = 0; j < np; j++) {
+        let p = mr[j]; let rmp = false;
+        if (mg[j] >= 0 && mr[j] > 0 && mr[j] < 1) { if (gnr < MAXR) { if (gnr === 0) { g0 = j; r0 = mr[j]; } else { g1 = j; r1 = mr[j]; } gnr++; rmp = true; } else p = mr[j] >= 0.5 ? 1 : 0; }
+        ps[j] = rmp ? -1 - j - MAXP * (mg[j] + 1) : mg[j] >= 0 && p >= 1 ? mg[j] : -1 - j;
+      }
+      if (gnr === 2 && r0 < r1) { let t = g0; g0 = g1; g1 = t; t = r0; r0 = r1; r1 = t; }
+      expect([gnr, g0, g1]).toEqual([nr, i0, i1]);
+      for (let cfg = 0; cfg <= nr; cfg++) {
+        if (cfg >= 1) { const jr = cfg === 1 ? g0 : g1; const id = ps[jr]; if (id < -MAXP) ps[jr] = Math.trunc((-1 - jr - id) / MAXP) - 1; }
+        const hi = cfg === 0 ? 1 : pr[cfg === 1 ? i0 : i1]; const lo = cfg === nr ? 0 : pr[cfg === 0 ? i0 : i1];
+        expect([cfg === 0 ? 1 : cfg === 1 ? r0 : r1, cfg === nr ? 0 : cfg === 0 ? r0 : r1]).toEqual([hi, lo]);
+        for (let j = 0; j < np; j++) {
+          let mem = pg[j] >= 0 && pr[j] >= 1;
+          if (pg[j] >= 0 && pr[j] > 0 && pr[j] < 1) mem = (cfg >= 1 && i0 === j) || (cfg >= 2 && i1 === j);
+          // a member carries its group; a non-member is a surface of its own (a negative id no other piece holds)
+          if (mem) expect(ps[j]).toBe(pg[j]);
+          else { expect(ps[j]).toBeLessThan(0); expect(ps.filter((v) => v === ps[j]).length).toBe(1); }
+        }
+      }
+    }
+  });
+
+  it("so: sorting (sid, skey) in place is the sord order, ties and NaN included", () => {
+    const KEYS = [-1e30, NaN, -1, 0, 0.5, 0.5, 2, Math.fround(0.1)];
+    for (let it = 0; it < 20000; it++) {
+      const ns = 1 + rnd(4);
+      const sid = Array.from({ length: ns }, (_, i) => 10 + i); const skey = Array.from({ length: ns }, () => KEYS[rnd(KEYS.length)]);
+      const sord = sid.map((_, i) => i);
+      for (let i = 1; i < ns; i++) { const v = sord[i]; let m = i - 1; while (m >= 0 && skey[sord[m]] < skey[v]) { sord[m + 1] = sord[m]; m--; } sord[m + 1] = v; }
+      const id2 = [...sid]; const k2 = [...skey];
+      for (let i = 1; i < ns; i++) { const vid = id2[i]; const vk = k2[i]; let m = i - 1; while (m >= 0 && k2[m] < vk) { id2[m + 1] = id2[m]; k2[m + 1] = k2[m]; m--; } id2[m + 1] = vid; k2[m + 1] = vk; }
+      expect(id2).toEqual(sord.map((e) => sid[e]));
+      expect(k2).toEqual(sord.map((e) => skey[e]));
+    }
+  });
+
+  it("lh and cs: the packed ints round-trip every value they accept (GLSL int ops are JS's int32 ops)", () => {
+    const PLO = (v: number): number => (v & 0xffff) - 32768;
+    for (let it = 0; it < 20000; it++) {
+      const lo = rnd(65536) - 32768; const span = rnd(256); const ko = rnd(span + 1);
+      const v = (lo + 32768) | (span << 16) | (ko << 24);
+      expect([PLO(v), PLO(v) + ((v >> 16) & 0xff), PLO(v) + ((v >> 24) & 0xff)]).toEqual([lo, lo + span, lo + ko]);
+      const c = rnd(65536); const surf = rnd(65536) - 32768; const surf2 = rnd(65536) - 32768;
+      const set = (pc: number, sv: number): number => ((pc >>> 0) & 0xffff) | (((sv + 32768) >>> 0) << 16);
+      const p1 = set(c, surf); const p2 = set(p1, surf2);
+      expect([p1 & 0xffff, (p1 >>> 16) - 32768, p2 & 0xffff, (p2 >>> 16) - 32768]).toEqual([c, surf, c, surf2]);
+    }
+  });
+});

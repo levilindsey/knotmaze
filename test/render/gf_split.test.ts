@@ -46,13 +46,13 @@ describe("gf_split", () => {
       "float rx = x - K0.x; float ry = y - K0.y; float rho = sqrt(rx * rx + ry * ry);",
       "bool sec = inSector(k, p); bool inR = rho <= K0.w && sec;",
     ]) expect(count(src, line)).toBeGreaterThanOrEqual(2);
-    // SPLITK: ps and the keys' loop, in pass 2 too
+    // SPLITK: ps and the keys' loop, in pass 2 too (PC(j) is pc[j] outside the s10 cs tier, which split refuses)
     for (const line of [
       "float s = A.z + u * (B.z - A.z);",
       "float zK = uZt / h;",
-      "vec4 KB = keyBin(pc[j], ps[j]);",
-      "float pz = depth(pc[j], ps[j], KB); pkey[j] = pz - pd[j] * zK;",
-      "member(pc[j], ps[j], KB); pg[j] = mg; pramp[j] = mramp;",
+      "vec4 KB = keyBin(PC(j), ps[j]);",
+      "float pz = depth(PC(j), ps[j], KB); pkey[j] = pz - pd[j] * zK;",
+      "member(PC(j), ps[j], KB); pg[j] = mg; pramp[j] = mramp;",
       "if (mg >= 0 && mramp > 0.0 && mramp < 1.0) {",
       "if (nr < MAXR) { if (nr == 0) rIdx0 = j; else rIdx1 = j; nr++; }",
       "else pramp[j] = mramp >= 0.5 ? 1.0 : 0.0;",
