@@ -301,7 +301,8 @@ Next free ID: K1378.
 - **K1377** · The Pixel went screen-locked during the night (locked at every check 05:24-06:47 on 2026-11-13,
   after s6 used it until 05:04), so stage 7's split has no Pixel numbers. Unlock it when convenient; Claude
   never unlocks it. If it should stay unlocked on the charger overnight, that is a phone setting only Levi can
-  change (K1362).
+  change (K1362). 2026-11-13 10:34-10:57: unlocked, but the Claude app stayed in front, so the run never
+  started: the pass needs the HOME SCREEN in front and the phone untouched for 2 min (Claude never presses Home).
 
 ## In progress
 
@@ -564,7 +565,7 @@ Next free ID: K1378.
   - owner: nobody since 2026-11-13 06:44 (merged)
   - branch: mainline; last commit: `10fd905a`
   - evidence: .claude/probes/K1362/ (k1362s3_*, k1362s4_*), out/s3/, out/s4/
-  - next: s7 merged: the two-pass split (gf_split.ts; x22rke best) built, exact on the desktop 12 scenes, desktop 12-22% faster sync4 / 25-37% frame1; NOT measured on the Pixel (phone locked 05:24-06:47). Next: run k1362s7_cfg_phone1 (or phone2) + cfg_dpr15 on the Pixel with the clock; replace t32r only if a split form wins on def, muse_hash and fat; then layering once inside pass 2 (s7 handoff)
+  - next: s7 merged: the two-pass split (gf_split.ts; x22rke best) built, exact on the desktop 12 scenes, desktop 12-22% faster sync4 / 25-37% frame1; NOT measured on the Pixel (phone locked 05:24-06:47; 10:34-10:57 an app stayed in front). Next: `pwsh -NoProfile -File .claude/probes/K1362/k1362s7_phone_run.ps1` (rebuilds out/s7/site, waits up to -WaitMin for the phone, runs cfg phone2 + dpr15 with the clock, ~15 min; in the background), then read out/s7/gpuclk_*.json; replace t32r only if a split form wins on def, muse_hash and fat; then layering once inside pass 2 (s7 handoff)
   - brief: `docs/design/K1362_s7_two_pass.md`
 
 ## Next, in order
