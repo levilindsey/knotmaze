@@ -64,9 +64,11 @@ void main() {
  * written at the bottom. ga (MAXS <= 3): composite()'s gaps are taken right after the sort (the same subtractions on
  * the same keys) into two scalars, and sa then rides in skey, which nothing reads after them. sc (MAXS <= 4, not
  * so): the sort order as 2 bits an entry in one int (the same insertion sort, the same comparisons in the same
- * order). No float arithmetic changes.
+ * order). kc: the corners keep kk and krho, a corner outside its sector as rho -1 (rho is a square root), and the
+ * ring class is the scan's own two comparisons on it (kSG; kr rebuilt the sector with inSector). No float
+ * arithmetic changes.
  */
-export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm; one?: boolean; bx?: boolean; fast?: boolean; s?: number; lab?: boolean; grp?: boolean; kq?: boolean; ks?: boolean; kl?: boolean; kr?: boolean; lh?: boolean; so?: boolean; cs?: boolean; vs?: boolean; ga?: boolean; sc?: boolean }
+export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm; one?: boolean; bx?: boolean; fast?: boolean; s?: number; lab?: boolean; grp?: boolean; kq?: boolean; ks?: boolean; kl?: boolean; kr?: boolean; lh?: boolean; so?: boolean; cs?: boolean; vs?: boolean; ga?: boolean; sc?: boolean; kc?: boolean }
 export type GfPackForm = boolean | "f" | "i";
 
 /** The program's source forms (gf_reg.ts); a tier's own flags set them by default. The probe keeps the plain form. */
@@ -86,11 +88,12 @@ export function gfFs(probe: boolean, tangentTerms = true, tier?: GfTier, form: G
   if (tier?.one) src = oneConfig(src);
   if (tier?.bx) src = burialExit(src);
   if (form.oldKeys) src = src.replace("precision highp float;\n", "precision highp float;\n#define OLDKEYS 1\n");
-  if ((tier?.grp || tier?.kq || tier?.ks || tier?.kl || tier?.kr || tier?.lh || tier?.so || tier?.cs || tier?.vs || tier?.ga || tier?.sc) && !probe && (form.split || form.reg || form.pack)) throw new Error("gfFs: grp, kq, ks, kl, kr, lh, so, cs, vs, ga and sc are plain-form tiers (no split, reg or pack)");
+  if ((tier?.grp || tier?.kq || tier?.ks || tier?.kl || tier?.kr || tier?.lh || tier?.so || tier?.cs || tier?.vs || tier?.ga || tier?.sc || tier?.kc) && !probe && (form.split || form.reg || form.pack)) throw new Error("gfFs: grp, kq, ks, kl, kr, lh, so, cs, vs, ga, sc and kc are plain-form tiers (no split, reg or pack)");
   const nS = tier ? (tier.s && tier.s < tier.p + tier.k ? tier.s : tier.p + tier.k) : MAXP + MAXK;
   if (tier?.ga && nS > 3 && !probe) throw new Error("gfFs: ga keeps two gaps, so it needs at most 3 surface slots");
   if (tier?.sc && (nS > 4 || tier.so) && !probe) throw new Error("gfFs: sc packs the order 2 bits an entry, so it needs at most 4 surface slots and not so");
   if (tier?.so && !tier.lab && !probe) throw new Error("gfFs: so sorts sid and skey in place, so it needs lab (no scov, sckey or scch to carry)");
+  if (tier?.kc && (tier.kl || tier.kr) && !probe) throw new Error("gfFs: kc is its own corner form (not with kl or kr)");
   if (tier?.cs && !tier.grp && !probe) throw new Error("gfFs: cs packs the surface into pc, so it needs grp (no pg)");
   if (form.split) {
     if (probe || !tier || tier.p > 3 || tier.k > 2) throw new Error("gfFs: split needs a non-probe tier of at most p3/k2");
@@ -190,8 +193,9 @@ ${tier && tier.lh && !probe ? "#define PLH 1" : ""}
 ${tier && tier.so && !probe ? "#define SORTIN 1" : ""}
 ${tier && tier.cs && !probe ? "#define PCS 1" : ""}
 ${tier && tier.ks && !probe ? "#define PKS 1" : ""}
-${tier && (tier.kl || tier.kr) && !probe ? "#define KLEAN 1" : ""}
-${tier && tier.kr && !probe ? "#define KRHO 1" : ""}
+${tier && (tier.kl || tier.kr || tier.kc) && !probe ? "#define KLEAN 1" : ""}
+${tier && (tier.kr || tier.kc) && !probe ? "#define KRHO 1" : ""}
+${tier && tier.kc && !probe ? "#define KSGN 1" : ""}
 ${tier && tier.vs && !probe ? "#define SVSID 1" : ""}
 ${tier && tier.ga && !probe ? "#define SGAP 1" : ""}
 ${tier && tier.sc && !probe ? "#define SCODE 1" : ""}
@@ -467,8 +471,20 @@ void kState(int k, vec2 p, out float rho, out bool sec, out int kin) {
   float rx = p.x - K0.x; float ry = p.y - K0.y; rho = sqrt(rx * rx + ry * ry);
   kSK(k, p, rho, sec, kin);
 }
-#ifdef KRHO // the scan's rho kept, the sector and the ring class rebuilt
+#ifdef KSGN
+// K1362 s11: the scan keeps rho for a corner in its sector and -1 for one outside (rho is a square root, never
+// negative or NaN here); the ring class is the scan's own two comparisons on that rho
+void kSG(int k, float rho, out bool sec, out int kin) {
+  vec4 K0 = F(uOK + 6 * k);
+  sec = rho >= 0.0; bool inR = rho <= K0.w && sec;
+  kin = !inR ? 0 : rho > K0.z - uAA ? 2 : 1;
+}
 #define KR(x) x
+#define KSV(r, s) (s ? r : -1.0)
+#define KST(i, k, r, s, n) r = krho[i]; kSG(k, r, s, n);
+#elif defined(KRHO) // the scan's rho kept, the sector and the ring class rebuilt
+#define KR(x) x
+#define KSV(r, s) r
 #define KST(i, k, r, s, n) r = krho[i]; kSK(k, p, r, s, n);
 #else
 #define KR(x)
@@ -911,7 +927,7 @@ void main() {
       if (nk == MAXK) { ovf = true; break; } // the full program keeps this corner: it draws the pixel
 #endif
 #ifdef KLEAN
-      kk[nk] = k; KR(krho[nk] = rho;) nk++;
+      kk[nk] = k; KR(krho[nk] = KSV(rho, sec);) nk++;
 #else
       kSec[nk] = sec; kk[nk] = k; krho[nk] = rho; kIn[nk] = !inR ? 0 : rho > K0.z - aa ? 2 : 1; nk++;
 #endif
