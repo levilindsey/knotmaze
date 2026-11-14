@@ -562,10 +562,10 @@ Next free ID: K1379.
   tables the CPU builds in under 1 ms) instead of the outline mesh built on the CPU each frame (65-117 ms on
   def). Reverses the 2026-11-09 call (K1040 dropped for K1240). The main speed route (Levi, 2026-11-12: very bullish
   on it); dropped only on a proof it cannot work (brief: "How the result is judged"). Analysis in docs/ledger_notes.md.
-  - owner: agent `a9f562d4c9f0e4356` of claude session 01SUPGULDxvE5gKXozfaFaFG (opus, started 2026-11-13 13:42, 2 h cap ~15:42)
-  - branch: `worktree-agent-a9f562d4c9f0e4356`, worktree `.claude/worktrees/agent-a9f562d4c9f0e4356`; last commit: `7c31a8ad`
+  - owner: nobody since 2026-11-13 15:08 (merged; agent `a9f562d4c9f0e4356` of claude session 01SUPGULDxvE5gKXozfaFaFG)
+  - branch: mainline; last commit: `bb49bb4a`
   - evidence: .claude/probes/K1362/ (k1362s8_*, k1362s9_*), out/s8/
-  - next: s9 running (from 13:43): layering resolved per bin on the CPU into new additive tables, the shader reads them; old fields bit-identical
+  - next: Pixel A/B: pwsh -NoProfile -File .claude/probes/K1362/k1362s9_phone_run.ps1 -Cfgs p9c -WaitMin 25 on a ready phone (~10 min); set GF_TIERS to t32rc3 or t32rlc3 only if it wins def, muse_hash and fat at 0 px; else cut the per-piece arrays (33 slots) or what the Pixel attribution names
   - brief: `docs/design/K1362_s9_layer_tables.md`
 
 ## Next, in order
