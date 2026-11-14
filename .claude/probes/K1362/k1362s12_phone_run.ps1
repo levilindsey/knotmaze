@@ -2,10 +2,10 @@
 # phone to be ready (read-only check; the pass never wakes, unlocks or touches it), take the phone lock, start the K156
 # pass on an existing app build (its start waits up to -WaitMin for the phone to be ready and quiet) (only its k1362s12/ folder is used), run k1362s12_gpuclk.mjs on each cfg in turn, then
 # clean up and release the lock whatever happened.
-#   pwsh -NoProfile -File .claude/probes/K1362/k1362s12_phone_run.ps1 [-Cfgs p9a,p9b] [-WaitMin 25]
+#   pwsh -NoProfile -File .claude/probes/K1362/k1362s12_phone_run.ps1 [-Cfgs p12a] [-WaitMin 25]
 # The app build it serves is stage 7's (the MAIN checkout's untracked out/s7/pass/builds/<Sha>, copied, read only); the
 # phone lock scripts are the main checkout's .claude/probes/agents (untracked; they write only $env:TEMP\claude-phone.lock).
-param([string[]]$Cfgs = @("p9a"), [int]$WaitMin = 25, [string]$Sha = "c73c7745")
+param([string[]]$Cfgs = @("p12a"), [int]$WaitMin = 25, [string]$Sha = "c73c7745")
 $ErrorActionPreference = "Continue"
 # pwsh -File passes "-Cfgs p8a,p8b" as ONE string: split it (the first s8 run asked gpuclk for cfg "p8a,p8b")
 $Cfgs = @($Cfgs | ForEach-Object { $_ -split "," } | ForEach-Object { $_.Trim() } | Where-Object { $_ })

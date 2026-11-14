@@ -4,6 +4,7 @@
 // the text: each form only adds what it says, the copy is the loop's own body, and the rounding fact bx rests on.
 import { describe, expect, it } from "vitest";
 import { gfFs, type GfTier } from "../../src/render/gpu_field/gf_glsl";
+import { cornerPlan } from "../../src/render/gpu_field/gf_pass";
 
 const T: GfTier = { p: 3, k: 2, ramps: true };
 const count = (s: string, sub: string): number => s.split(sub).length - 1;
@@ -287,5 +288,53 @@ describe("gf tier forms, s11 layering state", () => {
       expect([sec2, kin2]).toEqual([sec, kin]);
       if (sec2 || kin2 === 2) expect(kr).toBe(rho); // rho is read only past `if (!ksJ) continue` or `kiI != 2`
     }
+  });
+});
+
+// K1362 s12 kz: the corner-free cell programs (gf_glsl.ts cornerRoute, gf_pass.ts cornerPlan). Exactness on the GPU
+// is the cmp bench's (0 px against full on 12 scenes); here the text: free differs from the tier only by the corner
+// scan (whose loops make no trip in a cell listing no corner), nk's constant and its guard; corner only by its guard.
+describe("gf tier forms, s12 corner-free cells", () => {
+  const L: GfTier = { ...T, s: 3, lab: true, grp: true, ks: true };
+  const CELL = "    vec4 CE = F(uOCell + cell);\n";
+  const SCAN = "    // corners near p\n    int k0 = int(CE.z); int kn = int(CE.w);\n";
+  const END = "#ifdef TIER\n    if (ovf) { discard; return; } // never past the arrays: D3D runs on past a discard\n#endif\n";
+  const guardLine = (src: string, op: string): string => { const i = src.indexOf(CELL) + CELL.length; const line = src.slice(i, src.indexOf("\n", i) + 1); expect(line.startsWith(`    if (int(CE.w) ${op} 0) { discard; return; }`)).toBe(true); return line; };
+
+  it("corner is the tier plus one guard after the cell fetch", () => {
+    for (const t of [L, { ...L, kc: true }, T]) {
+      const plain = gfFs(false, true, t); const src = gfFs(false, true, { ...t, kz: "corner" });
+      expect(src.replace(guardLine(src, "=="), "")).toBe(plain);
+    }
+  });
+
+  it("free drops only the corner scan, whose loops run k0 .. k0 + kn: none when the cell lists no corner", () => {
+    for (const t of [L, { ...L, kc: true }, T]) {
+      const plain = gfFs(false, true, t); const src = gfFs(false, true, { ...t, kz: "free" });
+      const i0 = plain.indexOf(SCAN); const i1 = plain.indexOf(END, i0);
+      const scan = plain.slice(i0, i1);
+      // every corner loop in the scan is bounded by kn, and the only state it leaves is thruK, thruQ, yielded, nk
+      // (and nk's arrays, nK, tj): with kn == 0 those keep the values the declaration line gives them
+      expect(count(scan, "for (int q = k0; q < k0 + kn")).toBe(4); // thru, yielded, keep (TIER and full forms)
+      expect(count(scan, "for (")).toBe(5); // the fifth is the tj check inside the yielded loop
+      expect(scan).toContain("    int thruK = -1; float thruQ = 0.0; bool yielded = false; int nTj = 0; int tj[8];\n");
+      const back = src.replace(guardLine(src, ">"), "").split(" const int nk = 0;").join(" int nk;").replace("np = 0; ns = 0;", "np = 0; nk = 0; ns = 0;");
+      const thru = "    int thruK = -1; float thruQ = 0.0; bool yielded = false; // K1362 s12 kz: no corner in this cell\n";
+      expect(back.split(thru).join(scan)).toBe(plain);
+      // nothing writes nk but split pass 2 (under #ifdef SPLIT2, which a kz tier refuses)
+      const writes = [...src.split(" const int nk = 0;").join("").matchAll(/\bnk\s*(\+\+|=[^=])/g)].map((m) => src.split(" const int nk = 0;").join("").slice(m.index, m.index + 28));
+      expect(writes).toEqual(["nk = int((S3.y >> 17) & 3u);"]);
+      const sp = src.indexOf("#ifdef SPLIT2\n"); expect(sp).toBeGreaterThan(0); expect(src.indexOf("nk = int((S3.y >> 17)")).toBeGreaterThan(sp);
+      expect(count(src, " const int nk = 0;")).toBe(2);
+    }
+  });
+
+  it("only plain-form, non-probe tiers; route and frame are GfPass's to expand", () => {
+    for (const f of [{ reg: true }, { pack: true as const }, { unroll: true }, { split: 1 as const }]) expect(() => gfFs(false, true, { ...T, kz: "free" }, f)).toThrow(/kz is a plain-form tier|split needs/);
+    expect(() => gfFs(true, true, { ...L, kz: "free" })).toThrow(/kz is a plain-form tier/);
+    for (const kz of ["route", "frame"] as const) expect(() => gfFs(false, true, { ...L, kz })).toThrow(/GfPass's to expand/);
+    expect(cornerPlan({ ...L, kz: "route" })).toEqual([{ tier: { ...L, kz: "free" } }, { tier: { ...L, kz: "corner" }, when: "corners" }]);
+    expect(cornerPlan({ ...L, kz: "frame" })).toEqual([{ tier: { ...L, kz: "free" }, when: "none" }, { tier: { ...L, kz: undefined }, when: "corners" }]);
+    expect(cornerPlan(L)).toEqual([{ tier: L }]);
   });
 });
