@@ -27,7 +27,7 @@ for (const file of readdirSync(dir).filter((f) => f.endsWith(".json")).sort()) {
     if (!(rho > T.kR[k] - aa - Wd) || rho > T.kRmax[k] + Wd + 2 * aa) return false;
     return !(T.kThru[k] > 0.5) || reach(k, x, y);
   };
-  let pixK = 0, walkOld = 0, walkNew = 0, nBad = 0;
+  let pixK = 0, walkOld = 0, walkNew = 0, nBad = 0; const thruHist = [0, 0, 0, 0];
   const check = (cell: number, x: number, y: number, count: boolean) => {
     const k0 = T.cellK0[cell], kn = T.cellKN[cell]; if (kn === 0) return;
     const b = 4 * k0, nT = L[b], nKp = L[b + 1];
@@ -36,7 +36,7 @@ for (const file of readdirSync(dir).filter((f) => f.endsWith(".json")).sort()) {
     for (let j = 0; j < nT; j++) { const k = L[b + 2 + j]; if (reach(k, x, y)) b1.push(k); }
     for (let j = 0; j < nKp; j++) { const k = L[b + 2 + nT + j]; if (keep(k, x, y)) b2.push(k); }
     if (a1.join() !== b1.join() || a2.join() !== b2.join()) { nBad++; if (nBad < 4) console.log(`  BAD ${file} cell ${cell} at ${x},${y}: thru ${a1}|${b1} keep ${a2}|${b2}`); }
-    if (count) { pixK++; walkOld += 2 * kn; walkNew += kn > 0 ? nT + nKp : 0; }
+    if (count) { thruHist[Math.min(3, a1.length)]++; pixK++; walkOld += 2 * kn; walkNew += kn > 0 ? nT + nKp : 0; }
   };
   for (let py = 0; py < H; py++) {
     const y = -(py + 0.5) / s + (H - f) / s;
@@ -50,6 +50,6 @@ for (const file of readdirSync(dir).filter((f) => f.endsWith(".json")).sort()) {
   for (let gy = 0; gy < T.gH; gy++) for (let gx = 0; gx < T.gW; gx++) for (const [u, v] of [[0, 0], [1, 0], [0, 1], [1, 1]]) check(gy * T.gW + gx, T.gx0 + (gx + u) * G, T.gy0 + (gy + v) * G, false);
   bad += nBad;
   const r = (v: number) => (pixK ? v / pixK : 0).toFixed(3);
-  console.log(`${file.replace(".json", "").padEnd(14)} nK ${String(T.nK).padStart(4)} slots ${String(L.length).padStart(6)} (${(16 * T.cellKList.length / 1024).toFixed(0)} KB) kp ${T.ms.kp.toFixed(2)} ms | walks/px ${r(walkOld)} -> ${r(walkNew)} | bad ${nBad}`);
+  console.log(`${file.replace(".json", "").padEnd(14)} nK ${String(T.nK).padStart(4)} slots ${String(L.length).padStart(6)} (${(16 * T.cellKList.length / 1024).toFixed(0)} KB) kp ${T.ms.kp.toFixed(2)} ms | walks/px ${r(walkOld)} -> ${r(walkNew)} | thru passing (reach) 1/2/3+: ${thruHist[1]}/${thruHist[2]}/${thruHist[3]} | bad ${nBad}`);
 }
 console.log(bad === 0 ? "kpcheck: all equal" : `kpcheck: ${bad} mismatches`);

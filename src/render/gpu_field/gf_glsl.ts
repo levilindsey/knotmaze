@@ -81,10 +81,11 @@ void main() {
  * opaque place; fs skips a face whose band cannot beat its surface's running maximum. fs "c" is fs in the corner
  * program only (GfPass cornerPlan); gfFs reads any truthy fs as fs.
  * `kp` (K1362 s14, cornerLists below): the scan's thru search and keep loop walk the cell's pruned corner lists
- * (tables.ts cellKPList); the corner program only (cornerPlan drops it from the free one).
+ * (tables.ts cellKPList); the corner program only (cornerPlan drops it from the free one). `kt` and `ko` (K1362 s14,
+ * thruScalars, burialOrder below): the scan's thru chain ids as two scalars; a piece face's corner burial first.
  */
 export type GfCornerForm = "route" | "frame" | "free" | "corner";
-export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm; one?: boolean; bx?: boolean; fast?: boolean; s?: number; lab?: boolean; grp?: boolean; kq?: boolean; ks?: boolean; kl?: boolean; kr?: boolean; lh?: boolean; so?: boolean; cs?: boolean; vs?: boolean; ga?: boolean; sc?: boolean; kc?: boolean; kz?: GfCornerForm; fj?: boolean | "s"; lz?: boolean; fs?: boolean | "c"; kp?: boolean }
+export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm; one?: boolean; bx?: boolean; fast?: boolean; s?: number; lab?: boolean; grp?: boolean; kq?: boolean; ks?: boolean; kl?: boolean; kr?: boolean; lh?: boolean; so?: boolean; cs?: boolean; vs?: boolean; ga?: boolean; sc?: boolean; kc?: boolean; kz?: GfCornerForm; fj?: boolean | "s"; lz?: boolean; fs?: boolean | "c"; kp?: boolean; kt?: boolean; ko?: boolean }
 export type GfPackForm = boolean | "f" | "i";
 
 /** The program's source forms (gf_reg.ts); a tier's own flags set them by default. The probe keeps the plain form. */
@@ -129,6 +130,11 @@ export function gfFs(probe: boolean, tangentTerms = true, tier?: GfTier, form: G
   if (tier?.kp && !probe && tier.kz !== "free") { // the free program has no corner scan (cornerPlan drops kp)
     if (form.split || form.reg || form.pack || form.unroll) throw new Error("gfFs: kp is a plain-form tier (no split, reg, pack or unroll)");
     src = cornerLists(src);
+  }
+  if ((tier?.kt || tier?.ko) && !probe && tier.kz !== "free") {
+    if (form.split || form.reg || form.pack || form.unroll || tier.bx) throw new Error("gfFs: kt and ko are plain-form tiers (no split, reg, pack, unroll or bx)");
+    if (tier.kt) src = thruScalars(src);
+    if (tier.ko) src = burialOrder(src);
   }
   if (tier?.fs && !probe) {
     if (form.split || form.reg || form.pack || form.unroll || tier.fj || tier.bx) throw new Error("gfFs: fs is a plain-form tier (no split, reg, pack, unroll, fj or bx)");
@@ -332,7 +338,38 @@ function cornerLists(src: string): string {
   return src;
 }
 
-function gfSrc(probe: boolean, tangentTerms: boolean, tier?: GfTier): string {  const mp = tier ? tier.p : MAXP;
+/**
+ * K1362 s14 `kt` (tier letter T): the scan keeps the passing thru corners' kJ in two scalars instead of tj[8] (an
+ * array written at a dynamic index); a third passing thru corner overflows the tier, so the full program draws that
+ * pixel (none of the 12 scenes has a pixel where more than two pass reach). The yielded test reads the scalars.
+ */
+function thruScalars(src: string): string {
+  const rep = (a: string, b: string): void => {
+    const parts = src.split(a);
+    if (parts.length !== 2) throw new Error(`gfFs kt: expected one "${a.trim().slice(0, 48)}", found ${parts.length - 1}`);
+    src = parts.join(b);
+  };
+  rep("bool yielded = false; int nTj = 0; int tj[8];\n", "bool yielded = false; int nTj = 0; int tjA = -1; int tjB = -1; // K1362 s14 kt\n");
+  rep("if (nTj < 8) tj[nTj++] = int(K1.w); }", "if (nTj == 0) tjA = int(K1.w); else if (nTj == 1) tjB = int(K1.w); else ovf = true; nTj++; }");
+  rep("bool same = false; for (int i = 0; i < nTj; i++) if (tj[i] == int(K1.w)) same = true;", "int cJ = int(K1.w); bool same = (nTj > 0 && tjA == cJ) || (nTj > 1 && tjB == cJ);");
+  return src;
+}
+
+/**
+ * K1362 s14 `ko` (tier letter O): a piece face's burial tests the corners before the pieces. bur is the maximum of
+ * the pieces' wb2 and the corners' 1.0, each loop leaving at 1.0, so the order cannot change it; a corner that
+ * buries the face skips every pieceD.
+ */
+const KO_PIECES = "      for (int m = 0; m < np && bur < 1.0; m++) {\n        if (m == j || PSURF(m) != S) continue;\n        float wb2 = 1.0 - ss(h - 2.0 * aa, h, sqrt(pieceD(m, q)));\n        if (wb2 > bur) bur = wb2;\n      }\n";
+const KO_CORNERS = "      for (int i = 0; i < nk && bur < 1.0; i++) {\n        int k = kk[i]; vec4 K0 = F(uOK + 6 * k); vec4 K1 = F(uOK + 6 * k + 1); if (int(K1.z) != S) continue;\n        float rq = length(q - K0.xy);\n        if (rq > K0.z && rq < K0.w && inSector(k, q) && outsideArms(k, PC(j), q)) bur = 1.0;\n      }\n";
+function burialOrder(src: string): string {
+  const parts = src.split(KO_PIECES + KO_CORNERS);
+  if (parts.length !== 2) throw new Error(`gfFs ko: expected one piece-face burial, found ${parts.length - 1}`);
+  return parts.join(KO_CORNERS + KO_PIECES);
+}
+
+function gfSrc(probe: boolean, tangentTerms: boolean, tier?: GfTier): string {
+  const mp = tier ? tier.p : MAXP;
   const mk = tier ? tier.k : MAXK;
   const half = !!(tier && tier.half);
   return `#version 300 es
