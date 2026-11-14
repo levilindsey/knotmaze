@@ -33,8 +33,10 @@ void main() {
  * loop over the per-pixel lists gets a constant trip count (the list's capacity) and breaks at the list's end, so a
  * compiler can unroll it and index the arrays by constants. `pack` (K1362 s6): the per-piece arrays share one vec4
  * and one ivec4 array (gf_reg.ts packArrays); "f" packs only the floats, "i" only the ints.
+ * `one` (K1362 s8): a pixel without ramping pieces (nr == 0) runs the configuration loop's body under a constant
+ * trip count of one (a second copy of the body), the rest the loop; the same statements on the same values.
  */
-export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm }
+export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm; one?: boolean }
 export type GfPackForm = boolean | "f" | "i";
 
 /** The program's source forms (gf_reg.ts); a tier's own flags set them by default. The probe keeps the plain form. */
@@ -51,6 +53,7 @@ export interface GfForm { reg?: boolean; unroll?: boolean; pack?: GfPackForm; ol
 
 export function gfFs(probe: boolean, tangentTerms = true, tier?: GfTier, form: GfForm = { reg: tier?.reg, unroll: tier?.unroll, pack: tier?.pack }): string {
   let src = gfSrc(probe, tangentTerms, tier);
+  if (tier?.one) src = oneConfig(src);
   if (form.oldKeys) src = src.replace("precision highp float;\n", "precision highp float;\n#define OLDKEYS 1\n");
   if (form.split) {
     if (probe || !tier || tier.p > 3 || tier.k > 2) throw new Error("gfFs: split needs a non-probe tier of at most p3/k2");
@@ -68,6 +71,21 @@ export function gfFs(probe: boolean, tangentTerms = true, tier?: GfTier, form: G
   }
   if (form.reg) src = scalarizeArrays(src, { MAXP: mp, MAXK: mk, MAXS: mp + mk });
   return src;
+}
+
+/**
+ * K1362 s8 `one`: the configuration loop as `if (nr == 0) { <body, cfg = 0..0> } else { <the loop> }`. With nr == 0
+ * the loop runs once with cfg = 0, so the copy is the same statements on the same values; a constant trip count
+ * lets a compiler unroll it and keep layers()'s state out of a loop (the desktop's D3D: -25% for the pass).
+ */
+const CFG_LOOP = "    for (int cfg = 0; cfg <= nr; cfg++) {\n";
+const CFG_END = "\n    }\n    if (thruK >= 0) {";
+function oneConfig(src: string): string {
+  const a = src.indexOf(CFG_LOOP); const b = src.indexOf(CFG_END, a);
+  if (a < 0 || b < 0 || src.indexOf(CFG_LOOP, a + 1) >= 0) throw new Error("gfFs one: the configuration loop moved");
+  const body = src.slice(a + CFG_LOOP.length, b);
+  const one = `    if (nr == 0) {\n    for (int cfg = 0; cfg <= 0; cfg++) {\n${body}\n    }\n    } else {\n${CFG_LOOP}${body}\n    }\n    }`;
+  return src.slice(0, a) + one + src.slice(b + "\n    }".length);
 }
 
 function gfSrc(probe: boolean, tangentTerms: boolean, tier?: GfTier): string {
