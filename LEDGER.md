@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1380.
+Next free ID: K1382.
 
 ## Waiting on Levi
 
@@ -1976,6 +1976,9 @@ Every other item below waits on the trigger it names.
 - **K1379** · rp=gf probes: a K1362 bench cfg with `cover: true` leaves GL error 1282 at the scene level on
   the desktop (t32rlgyc3 alone shows it; every pass reads 0, the cmp is unaffected). Not chased
   (K1362_s11_layer_state.md handoff, Checks).
+- **K1380** · rp=gf: the per-frame program choice (GF_TIERS t32rlgyjfc3, K1362 s12) compiles one more program
+  at startup. Measure the Pixel's first-frame compile before rp=gf goes on by default
+  (K1362_s12_corners_faces.md handoff).
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2335,6 +2338,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K1378** · rp=gf: s8's burial early exit (bx, t32rb) with a conservative margin in its check might be exact
   on the Pixel (it was 8-97 px off on 11 of 12 scenes there, 0 px on the desktop); gain only 0.1-1.2 ms at 822
   (K1362 s8 handoff, gf_glsl.ts burialExit)
+- **K1381** · rp=gf: t32rlgypjfc3, the one-pass face loop (fj) in the corner-free program only. Exact;
+  fat-only, -0.1 to -0.2 ms at 822 and -0.4 to -0.9 at 1079 on the Pixel (K1362_s12_corners_faces.md handoff).
 
 ## Done
 

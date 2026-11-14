@@ -49,6 +49,14 @@ not repeated here.
   full on 11 of 12 scenes on the Pixel: do not revive it. Run noise is
   about ±0.5 ms on def; the bench keys on the variant name, so repeat
   one as `aid@<tier>`.
+- Stage 12: choosing the program per frame pays. `GF_TIERS`
+  t32rlgyjfc3 draws a frame whose cells list no corners with the corner
+  code compiled out (fat 7.95 -> 6.80 ms at 822); other frames draw
+  t32rlgyc3. Routing corner-free CELLS to that program is exact but
+  about 3 ms slower on def and muse_hash. The one-pass face loop (`fj`)
+  is slower with corner code and gains only on fat without it. Alone,
+  def's corner-free cells (55% of pixels) cost 5.72 ms, its corner cells
+  8.17: both halves need less per-pixel work.
 - A tier is exact by construction: on overflow it sets a flag,
   breaks and discards, and the next program draws that pixel.
 - Routing is by stencil (EQUAL 0, INCR). The LAST program uses KEEP,
