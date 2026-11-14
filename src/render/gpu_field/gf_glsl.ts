@@ -90,7 +90,7 @@ void main() {
  * `kh` (K1362 s14, cornerThru below; needs kg): kk also carries the thru bit, so the tangent loop fetches no K1.
  */
 export type GfCornerForm = "route" | "frame" | "free" | "corner";
-export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm; one?: boolean; bx?: boolean; fast?: boolean; s?: number; lab?: boolean; grp?: boolean; kq?: boolean; ks?: boolean; kl?: boolean; kr?: boolean; lh?: boolean; so?: boolean; cs?: boolean; vs?: boolean; ga?: boolean; sc?: boolean; kc?: boolean; kz?: GfCornerForm; fj?: boolean | "s"; lz?: boolean; fs?: boolean | "c"; kp?: boolean; kt?: boolean; ko?: boolean; kg?: boolean; ki?: boolean; km?: boolean; kd?: boolean | "g"; kh?: boolean }
+export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm; one?: boolean; bx?: boolean; fast?: boolean; s?: number; lab?: boolean; grp?: boolean; kq?: boolean; ks?: boolean; kl?: boolean; kr?: boolean; lh?: boolean; so?: boolean; cs?: boolean; vs?: boolean; ga?: boolean; sc?: boolean; kc?: boolean; kz?: GfCornerForm; fj?: boolean | "s"; lz?: boolean; fs?: boolean | "c"; kp?: boolean; kt?: boolean; ko?: boolean; kg?: boolean; ki?: boolean; km?: boolean; kd?: boolean | "g"; kh?: boolean; zc?: boolean }
 export type GfPackForm = boolean | "f" | "i";
 
 /** The program's source forms (gf_reg.ts); a tier's own flags set them by default. The probe keeps the plain form. */
@@ -174,6 +174,10 @@ export function gfFs(probe: boolean, tangentTerms = true, tier?: GfTier, form: G
   if (tier?.fj && !probe) {
     if (form.split || form.reg || form.pack || form.unroll || tier.kq || tier.kl || tier.kr || tier.kc || tier.vs || tier.ga || tier.one || tier.bx) throw new Error("gfFs: fj is a plain-form tier (no split, reg, pack, unroll, kq, kl, kr, kc, vs, ga, one or bx)");
     src = faceJoin(src, tier.fj === "s");
+  }
+  if (tier?.zc && !probe) {
+    if (tier.ramps || tier.one || tier.bx || tier.fast || form.split || form.reg || form.pack || form.unroll) throw new Error("gfFs: zc is a plain-form tier without ramps (no one, bx, fast, split, reg, pack or unroll)");
+    src = zClass(src);
   }
   if (probe) return src;
   const mp = tier ? tier.p : MAXP;
@@ -259,6 +263,29 @@ function oneConfig(src: string): string {
   const body = src.slice(a + CFG_LOOP.length, b);
   const one = `    if (nr == 0) {\n    for (int cfg = 0; cfg <= 0; cfg++) {\n${body}\n    }\n    } else {\n${CFG_LOOP}${body}\n    }\n    }`;
   return src.slice(0, a) + one + src.slice(b + "\n    }".length);
+}
+
+/**
+ * K1362 s15 `zc`: the ramp tier split in two by a depth class, so the program most pixels run compiles one
+ * configuration. P0 (this form, on a tier without ramps) draws every pixel and writes the pixel's class as its depth:
+ * 0.5 drawn here, 0 ramping (nr > 0: the ramp tier P1 draws it, depth-tested GEQUAL at 0), 1 overflow (every
+ * discard of the tier: the full program draws it, LEQUAL at 1). Its configuration loop is the constant cfg 0 only:
+ * on nr == 0 the tier runs exactly that, the same statements on the same values. A ramping pixel still runs cfg 0
+ * here so that P0 sees every overflow P1 could hit: the scan is the same, and configuration cfg >= 1 merges some of
+ * cfg 0's surfaces (a ramping piece joins its group), so it never needs more surface slots than cfg 0. P1 and full
+ * write no depth, so their test can run before the shader (stage 4's KEEP argument); P0 runs everywhere anyway.
+ */
+const ZC_RAMP = "    if (nr > 0) { discard; return; } // ramping pieces: the configurations below; a later program draws the pixel\n";
+const ZC_MAIN = "void main() {\n";
+function zClass(src: string): string {
+  const a = src.indexOf(CFG_LOOP);
+  if (src.indexOf(ZC_RAMP) < 0 || a < 0 || src.indexOf(CFG_LOOP, a + 1) >= 0 || src.split(ZC_MAIN).length !== 2) {
+    throw new Error("gfFs zc: the ramp discard, configuration loop or main moved");
+  }
+  src = src.replace(ZC_RAMP, "    if (nr > 0) gl_FragDepth = 0.0; // K1362 s15 zc: the ramp tier (P1) draws this pixel\n");
+  src = src.replace(CFG_LOOP, "    for (int cfg = 0; cfg <= 0; cfg++) { // K1362 s15 zc: one configuration (nr == 0, or P1's cfg 0 overflow check)\n");
+  src = src.split("discard; return;").join("gl_FragDepth = 1.0; return;");
+  return src.replace(ZC_MAIN, `${ZC_MAIN}  gl_FragDepth = 0.5; // K1362 s15 zc: drawn here unless a route below says otherwise\n`);
 }
 
 /**

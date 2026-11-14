@@ -148,6 +148,9 @@ interface GfProg { prog: WebGLProgram; u: Map<string, WebGLUniformLocation | nul
  * fs "c" (K1362 s13, the exact face skip) goes to the corner programs only: without corners (fat) it was slower.
  */
 export function cornerPlan(t: GfTier): { tier: GfTier; when?: GfWhen }[] {
+  // K1362 s15 zc: each program becomes its one-configuration form without ramps (P0, writes the depth class) and the
+  // ramp tier itself (P1, drawn only on the pixels P0 classed as ramping); gf_glsl.ts zClass
+  if (t.zc) return cornerPlan({ ...t, zc: undefined }).flatMap((e) => [{ ...e, tier: { ...e.tier, ramps: false, zc: true } }, e]);
   const free: GfTier = t.fs === "c" ? { ...t, kz: "free", fs: undefined } : { ...t, kz: "free" };
   if (free.kp || free.kt || free.ko || free.kg || free.ki || free.km || free.kd || free.kh) { free.kh = undefined; free.kp = undefined; free.kt = undefined; free.ko = undefined; free.kg = undefined; free.ki = undefined; free.km = undefined; free.kd = undefined; } // K1362 s14: corner-program forms (the free program has no corner code)
   if (t.kz === "route") return [{ tier: free }, { tier: { ...t, kz: "corner" }, when: "corners" }];
@@ -193,7 +196,7 @@ export class GfPass {
     const sf: GfSplitForm = split === "skip" ? { skip: true } : typeof split === "object" ? split : {};
     this.skip = !!sf.skip; const keys = !!sf.keys;
     const plan: { tier: GfTier | null; split?: 1 | 2; when?: GfWhen }[] = split ? [{ tier: tiers[0], split: 1 }, { tier: tiers[0], split: 2 }, { tier: null }]
-      : [...tiers.flatMap((t) => (probe ? [{ tier: t }] : cornerPlan(t))), { tier: null }]; // the probe ignores kz (gfFs)
+      : [...tiers.flatMap((t) => (probe ? [{ tier: t.zc ? { ...t, zc: undefined } : t }] : cornerPlan(t))), { tier: null }]; // the probe ignores kz and zc (gfFs)
     this.progs = plan.map(({ tier, split: s, when }) => {
       const src = fs ? fs(tier, s) : gfFs(probe, true, tier ?? undefined, s ? { reg: tier?.reg, unroll: tier?.unroll, pack: tier?.pack, split: s, splitSkip: this.skip, splitKeys: keys } : undefined);
       const prog = compileProgram(gl, GF_VS, src);
@@ -272,7 +275,7 @@ export class GfPass {
     if (routed) target.ensureStencil();
     if (target.float) for (let i = 0; i < target.n; i++) gl.clearBufferfv(gl.COLOR, i, [0, 0, 0, 0]);
     else { gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT); }
-    if (routed && !pieces) { gl.stencilMask(0xff); gl.clearBufferfi(gl.DEPTH_STENCIL, 0, 1, 0); }
+    if (routed && !pieces) { gl.stencilMask(0xff); gl.depthMask(true); gl.clearBufferfi(gl.DEPTH_STENCIL, 0, 1, 0); }
     const [x0, y0, x1, y1] = rect;
     if (x1 <= x0 || y1 <= y0) return;
     if (pieces) {
@@ -284,7 +287,11 @@ export class GfPass {
     }
     gl.enable(gl.SCISSOR_TEST);
     gl.scissor(x0, y0, x1 - x0, y1 - y0);
-    if (routed) {
+    // K1362 s15 zc: the route is the depth class P0 writes (gf_glsl.ts zClass), with no stencil: P0 always, then the
+    // ramp tier at depth 0 (GEQUAL: class 0 only) and full at depth 1 (LEQUAL: class 1 only), neither writing depth
+    const zc = progs.some((g) => g.tier?.zc === true);
+    if (zc) gl.enable(gl.DEPTH_TEST);
+    if (routed && !zc) {
       // stencil 0 = no program has drawn the pixel yet; a program that draws it (does not discard) moves it to 1
       gl.enable(gl.STENCIL_TEST);
       gl.stencilFunc(gl.EQUAL, 0, 0xff);
@@ -298,8 +305,12 @@ export class GfPass {
     if (ext) { q = gl.createQuery()!; gl.beginQuery(ext.TIME_ELAPSED_EXT, q); }
     for (let pi = 0; pi < progs.length; pi++) {
       const g = progs[pi];
-      // the last program writes no route: KEEP lets the stencil test run before the shader even though it discards
-      if (routed && pi === progs.length - 1) {
+      if (zc) {
+        if (g.tier?.zc) { gl.depthFunc(gl.ALWAYS); gl.depthMask(true); gl.depthRange(0, 1); }
+        else if (g.tier) { gl.depthFunc(gl.GEQUAL); gl.depthMask(false); gl.depthRange(0, 0); }
+        else { gl.depthFunc(gl.LEQUAL); gl.depthMask(false); gl.depthRange(1, 1); }
+      } else if (routed && pi === progs.length - 1) {
+        // the last program writes no route: KEEP lets the stencil test run before the shader even though it discards
         gl.stencilFunc(gl.EQUAL, 0, 0xff); gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
         if (this.skip) { gl.enable(gl.STENCIL_TEST); gl.disable(gl.DEPTH_TEST); gl.depthMask(true); gl.depthFunc(gl.LESS); }
       }
@@ -333,6 +344,7 @@ export class GfPass {
     }
     if (routed) {
       gl.disable(gl.STENCIL_TEST);
+      if (zc) { gl.disable(gl.DEPTH_TEST); gl.depthRange(0, 1); gl.depthMask(true); gl.depthFunc(gl.LESS); }
       // the route is per pass: a tile-based GPU need not store it
       gl.invalidateFramebuffer(gl.FRAMEBUFFER, [gl.DEPTH_STENCIL_ATTACHMENT]);
     }
