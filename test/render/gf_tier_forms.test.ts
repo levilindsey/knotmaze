@@ -643,4 +643,20 @@ describe("gf tier forms, s14 corner loops", () => {
     for (const f of [{ km: true }, { bx: true }, { half: true }]) expect(() => gfFs(false, true, { ...base, ...f })).toThrow(/plain-form/);
     for (const form of [{ reg: true }, { unroll: true }, { pack: true }]) expect(() => gfFs(false, true, base, form)).toThrow(/plain-form/);
   });
+
+  it("kh: kk carries the thru bit too, so the tangent loop fetches no K1; it needs kg", () => {
+    const [free] = cornerPlan({ ...GF_TIERS[0], kg: true, kh: true });
+    expect(free.tier.kh).toBeUndefined();
+    for (const extra of [{ kg: true }, { kg: true, ki: true, kt: true, ko: true }, { kg: true, ki: true, kt: true, ko: true, kp: true, kd: true }]) {
+      const kh = gfFs(false, true, { ...corners0.tier, ...extra, kh: true });
+      const base = gfFs(false, true, { ...corners0.tier, ...extra });
+      expect(count(kh, "kk[nk] = k + (K1.x > 0.5 ? 32768 : 0) + 65536 * int(K1.z);")).toBe(1);
+      expect(count(kh, "if (k > 32767 || ")).toBe(1);
+      expect(count(kh, "if (kS != S || (kk[i] & 32768) != 0) continue;")).toBe(1);
+      expect(count(kh, "& 65535")).toBe(0);
+      expect(count(kh, "F(uOK + 6 * k + 1)")).toBe(count(base, "F(uOK + 6 * k + 1)") - 1);
+      expect(count(kh, "int k = kk[i] & 32767;")).toBe(count(base, "int k = kk[i] & 65535;"));
+    }
+    expect(() => gfFs(false, true, { ...corners0.tier, kh: true })).toThrow(/kh needs kg/);
+  });
 });

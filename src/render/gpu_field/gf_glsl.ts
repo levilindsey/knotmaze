@@ -87,9 +87,10 @@ void main() {
  * `ki` (K1362 s14, cornerInside below): kIn 3 files rho > K0.z, so layers()'s first corner loop fetches no K0.
  * `km` (K1362 s14, cornerMerge below): the ring faces and the tangent faces share one corner loop and one burial.
  * `kd` (K1362 s14, tangentSkip below): fs's skip for the tangent faces includes their D factor.
+ * `kh` (K1362 s14, cornerThru below; needs kg): kk also carries the thru bit, so the tangent loop fetches no K1.
  */
 export type GfCornerForm = "route" | "frame" | "free" | "corner";
-export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm; one?: boolean; bx?: boolean; fast?: boolean; s?: number; lab?: boolean; grp?: boolean; kq?: boolean; ks?: boolean; kl?: boolean; kr?: boolean; lh?: boolean; so?: boolean; cs?: boolean; vs?: boolean; ga?: boolean; sc?: boolean; kc?: boolean; kz?: GfCornerForm; fj?: boolean | "s"; lz?: boolean; fs?: boolean | "c"; kp?: boolean; kt?: boolean; ko?: boolean; kg?: boolean; ki?: boolean; km?: boolean; kd?: boolean | "g" }
+export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm; one?: boolean; bx?: boolean; fast?: boolean; s?: number; lab?: boolean; grp?: boolean; kq?: boolean; ks?: boolean; kl?: boolean; kr?: boolean; lh?: boolean; so?: boolean; cs?: boolean; vs?: boolean; ga?: boolean; sc?: boolean; kc?: boolean; kz?: GfCornerForm; fj?: boolean | "s"; lz?: boolean; fs?: boolean | "c"; kp?: boolean; kt?: boolean; ko?: boolean; kg?: boolean; ki?: boolean; km?: boolean; kd?: boolean | "g"; kh?: boolean }
 export type GfPackForm = boolean | "f" | "i";
 
 /** The program's source forms (gf_reg.ts); a tier's own flags set them by default. The probe keeps the plain form. */
@@ -145,7 +146,9 @@ export function gfFs(probe: boolean, tangentTerms = true, tier?: GfTier, form: G
       throw new Error("gfFs: kg is a plain-form tier (no split, reg, pack, unroll, bx, fj, half, kl, kr or kc)");
     }
     src = cornerSurfaces(src);
+    if (tier.kh) src = cornerThru(src);
   }
+  if (tier && tier.kh && !tier.kg) throw new Error("gfFs: kh needs kg");
   if (tier && tier.ki && !probe && tier.kz !== "free") {
     if (form.split || form.reg || form.pack || form.unroll || tier.bx || tier.fj || tier.half || tier.kl || tier.kr || tier.kc) {
       throw new Error("gfFs: ki is a plain-form tier (no split, reg, pack, unroll, bx, fj, half, kl, kr or kc)");
@@ -401,6 +404,24 @@ function burialOrder(src: string): string {
  * index over 65535 or a surface outside [0, 32767] overflows to full), so layers() tests a corner's surface before
  * any fetch, and drops the K1 fetches it made only for that test. Every other statement reads the same values.
  */
+/**
+ * K1362 s14 `kh` (tier letter H, after kg): the scan also packs the corner's thru bit (K1.x > 0.5) into kk as bit 15
+ * (k + 32768 * thru + 65536 * surface; a corner index past 32767 overflows to full), so the tangent loop skips a thru
+ * corner, or one of another surface, without fetching K1. Every other decode masks k with 32767.
+ */
+function cornerThru(src: string): string {
+  const rep = (a: string, b: string, n?: number): void => {
+    const parts = src.split(a);
+    if (n !== undefined && parts.length - 1 !== n) throw new Error(`gfFs kh: expected ${n} "${a.trim().slice(0, 48)}", found ${parts.length - 1}`);
+    src = parts.join(b);
+  };
+  rep("if (k > 65535 || ", "if (k > 32767 || ", 1);
+  rep("kk[nk] = k + 65536 * int(K1.z);", "kk[nk] = k + (K1.x > 0.5 ? 32768 : 0) + 65536 * int(K1.z);", 1);
+  rep("int k = kk[i] & 65535;", "int k = kk[i] & 32767;");
+  rep("if (kS != S) continue; vec4 K1 = F(uOK + 6 * k + 1); if (K1.x > 0.5) continue;", "if (kS != S || (kk[i] & 32768) != 0) continue;", 1);
+  if (src.includes("& 65535")) throw new Error("gfFs kh: a 16-bit corner decode is left");
+  return src;
+}
 function cornerSurfaces(src: string): string {
   const rep = (a: string, b: string, n?: number): void => {
     const parts = src.split(a);
