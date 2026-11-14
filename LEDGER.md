@@ -562,10 +562,10 @@ Next free ID: K1382.
   tables the CPU builds in under 1 ms) instead of the outline mesh built on the CPU each frame (65-117 ms on
   def). Reverses the 2026-11-09 call (K1040 dropped for K1240). The main speed route (Levi, 2026-11-12: very bullish
   on it); dropped only on a proof it cannot work (brief: "How the result is judged"). Analysis in docs/ledger_notes.md.
-  - owner: agent `afe832471aec3d743` of claude session 01SUPGULDxvE5gKXozfaFaFG (opus, started 2026-11-13 23:47, 2 h cap ~01:47)
-  - branch: `worktree-agent-afe832471aec3d743`, worktree `.claude/worktrees/agent-afe832471aec3d743`; last commit: `427d43e1`
+  - owner: nobody since 2026-11-14 00:58 (merged; agent `afe832471aec3d743` of claude session 01SUPGULDxvE5gKXozfaFaFG)
+  - branch: mainline; last commit: `2bd957e5`
   - evidence: .claude/probes/K1362/ (k1362s12_*, k1362s13_*), out/s13/
-  - next: Stage 13 running: the layering resolved per cell into additive tables (coverage first, CPU mirror), then a tier form with no sort or surface arrays; merge on a Pixel win on all three at 0 px
+  - next: GF_TIERS is t32rlgyjfFkc3 (exact face skip in the corner program: Pixel def 12.55 -> 12.01 ms at 822, muse_hash 17.03 -> 16.50, fat unchanged; goal 8). Stage 13: the per-cell order covers only 81-99.9% of ink (needs 100%), so it is closed; the face loop is the cost, not the state. Brief stage 14 on the corner cells own loops (K1362_s13_cell_order.md handoff)
   - brief: `docs/design/K1362_s13_cell_order.md`
 
 ## Next, in order
