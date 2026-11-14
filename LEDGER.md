@@ -562,10 +562,10 @@ Next free ID: K1382.
   tables the CPU builds in under 1 ms) instead of the outline mesh built on the CPU each frame (65-117 ms on
   def). Reverses the 2026-11-09 call (K1040 dropped for K1240). The main speed route (Levi, 2026-11-12: very bullish
   on it); dropped only on a proof it cannot work (brief: "How the result is judged"). Analysis in docs/ledger_notes.md.
-  - owner: agent `a523f744a0007e4e9` of claude session 01SUPGULDxvE5gKXozfaFaFG (opus, started 2026-11-14 00:59, 2 h cap ~02:59)
-  - branch: `worktree-agent-a523f744a0007e4e9`, worktree `.claude/worktrees/agent-a523f744a0007e4e9`; last commit: `230e3d4b`
+  - owner: nobody since 2026-11-14 03:02 (merged; agent `a523f744a0007e4e9` of claude session 01SUPGULDxvE5gKXozfaFaFG)
+  - branch: mainline; last commit: `67eeae4c`
   - evidence: .claude/probes/K1362/ (k1362s13_*, k1362s14_*), out/s14/
-  - next: Stage 14 running: the corner cells own loops (scan keep loop ~1.6 ms of def, layers() corner faces ~2.25; kprune); merge on a Pixel win on def and muse_hash at 0 px, fat no slower
+  - next: GF_TIERS stays t32rlgyjfFkc3 (Pixel def ~12.0 ms at 822, goal 8). Stage 14 built 8 exact corner bench forms (P T O G I D H M); only P was timed on the Pixel (level), the phone slept. Next: on an awake Pixel run pwsh -NoProfile -File .claude/probes/K1362/k1362s14_phone_run.ps1 -Cfgs p14f -WaitMin 30 (or p14g, shorter); if none pays, target the corner-free half face loop (K1362_s14_corner_loops.md handoff)
   - brief: `docs/design/K1362_s14_corner_loops.md`
 
 ## Next, in order
