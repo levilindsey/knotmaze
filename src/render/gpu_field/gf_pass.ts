@@ -123,9 +123,12 @@ export class GfTarget {
  * on its 12 scenes there and on the desktop. Stage 10 (docs/design/K1362_s10_piece_arrays.md) keeps fewer per-piece
  * values: the ramp membership rides psurf (grp) and pkey reuses ps (ks), 33 piece slots down to 24: t32rlgyc3, def
  * 11.47 / muse 16.3 / fat 7.85 ms against t32rlc3's 12.9 / 17.65 / 8.82 on the Pixel (same bench), 0 px on its 12
- * scenes there and on the desktop.
+ * scenes there and on the desktop. Stage 12 (docs/design/K1362_s12_corners_faces.md) draws a frame whose cells list
+ * no corner with the corner code compiled out (kz "frame"): fat 6.80 ms against t32rlgyc3's 7.95-8.17 at 822x1506 and
+ * 8.68 against 10.82-11.05 at 1079x1977 (sync4, 1286 MHz); def and muse_hash have corners and draw t32rlgyc3 itself.
+ * 0 px on its 12 scenes on the Pixel and the desktop. Routing per cell (kz "route") was 3 ms slower on def.
  */
-export const GF_TIERS: GfTier[] = [{ p: 3, k: 2, ramps: true, s: 3, lab: true, grp: true, ks: true }];
+export const GF_TIERS: GfTier[] = [{ p: 3, k: 2, ramps: true, s: 3, lab: true, grp: true, ks: true, kz: "frame" }];
 const UNIFORMS = ["uD", "uOCh", "uOV", "uOPin", "uOArm", "uOK", "uOChk", "uOCell", "uOChL", "uOKL", "uOKC", "uOKB", "uOKA", "uH", "uW", "uAA", "uSigma", "uZt", "uWin", "uRc", "uGrid", "uGDim", "uMap", "uP0", "uP1", "uP2", "uP3"];
 /** K1362 s12: a program drawn only in frames where some cell lists a corner ("corners") or none does ("none"). */
 type GfWhen = "corners" | "none";
@@ -179,7 +182,7 @@ export class GfPass {
     const sf: GfSplitForm = split === "skip" ? { skip: true } : typeof split === "object" ? split : {};
     this.skip = !!sf.skip; const keys = !!sf.keys;
     const plan: { tier: GfTier | null; split?: 1 | 2; when?: GfWhen }[] = split ? [{ tier: tiers[0], split: 1 }, { tier: tiers[0], split: 2 }, { tier: null }]
-      : [...tiers.flatMap((t) => cornerPlan(t)), { tier: null }];
+      : [...tiers.flatMap((t) => (probe ? [{ tier: t }] : cornerPlan(t))), { tier: null }]; // the probe ignores kz (gfFs)
     this.progs = plan.map(({ tier, split: s, when }) => {
       const src = fs ? fs(tier, s) : gfFs(probe, true, tier ?? undefined, s ? { reg: tier?.reg, unroll: tier?.unroll, pack: tier?.pack, split: s, splitSkip: this.skip, splitKeys: keys } : undefined);
       const prog = compileProgram(gl, GF_VS, src);

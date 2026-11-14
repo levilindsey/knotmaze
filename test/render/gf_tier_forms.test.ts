@@ -4,7 +4,7 @@
 // the text: each form only adds what it says, the copy is the loop's own body, and the rounding fact bx rests on.
 import { describe, expect, it } from "vitest";
 import { gfFs, type GfTier } from "../../src/render/gpu_field/gf_glsl";
-import { cornerPlan } from "../../src/render/gpu_field/gf_pass";
+import { cornerPlan, GF_TIERS } from "../../src/render/gpu_field/gf_pass";
 
 const T: GfTier = { p: 3, k: 2, ramps: true };
 const count = (s: string, sub: string): number => s.split(sub).length - 1;
@@ -329,9 +329,11 @@ describe("gf tier forms, s12 corner-free cells", () => {
     }
   });
 
-  it("only plain-form, non-probe tiers; route and frame are GfPass's to expand", () => {
+  it("only plain-form tiers, the probe untouched; route and frame are GfPass's to expand", () => {
     for (const f of [{ reg: true }, { pack: true as const }, { unroll: true }, { split: 1 as const }]) expect(() => gfFs(false, true, { ...T, kz: "free" }, f)).toThrow(/kz is a plain-form tier|split needs/);
-    expect(() => gfFs(true, true, { ...L, kz: "free" })).toThrow(/kz is a plain-form tier/);
+    for (const kz of ["route", "frame", "free", "corner"] as const) expect(gfFs(true, true, { ...L, kz })).toBe(gfFs(true, true, L));
+    // the app's default is the per-frame choice (stage 12): the gf_app counts probe builds GF_TIERS too
+    expect(GF_TIERS).toEqual([{ p: 3, k: 2, ramps: true, s: 3, lab: true, grp: true, ks: true, kz: "frame" }]);
     for (const kz of ["route", "frame"] as const) expect(() => gfFs(false, true, { ...L, kz })).toThrow(/GfPass's to expand/);
     expect(cornerPlan({ ...L, kz: "route" })).toEqual([{ tier: { ...L, kz: "free" } }, { tier: { ...L, kz: "corner" }, when: "corners" }]);
     expect(cornerPlan({ ...L, kz: "frame" })).toEqual([{ tier: { ...L, kz: "free" }, when: "none" }, { tier: { ...L, kz: undefined }, when: "corners" }]);

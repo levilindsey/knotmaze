@@ -107,8 +107,8 @@ export function gfFs(probe: boolean, tangentTerms = true, tier?: GfTier, form: G
     if (form.splitKeys && !tier.ramps) throw new Error("gfFs: splitKeys needs a tier with ramps");
     src = src.replace("precision highp float;\n", `precision highp float;\n#define SPLIT${form.split} 1\n${form.splitSkip ? "#define SPLITSKIP 1\n" : ""}${form.splitKeys ? "#define SPLITK 1\n" : ""}`);
   }
-  if (tier?.kz) {
-    if (probe || form.split || form.reg || form.pack || form.unroll) throw new Error("gfFs: kz is a plain-form tier (no probe, split, reg, pack or unroll)");
+  if (tier?.kz && !probe) { // the probe draws the tier's own pixels: kz leaves it untouched, like the other flags
+    if (form.split || form.reg || form.pack || form.unroll) throw new Error("gfFs: kz is a plain-form tier (no split, reg, pack or unroll)");
     if (tier.kz !== "free" && tier.kz !== "corner") throw new Error(`gfFs: kz "${tier.kz}" is GfPass's to expand into its programs (free, corner)`);
     src = cornerRoute(src, tier.kz);
   }
