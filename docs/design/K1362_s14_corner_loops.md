@@ -86,7 +86,7 @@ End with `Ledger items` and K1362's handle fields.
 
 ## Handoff (stage 14, 2026-11-14)
 
-Started 2026-11-14 00:59:32 PT, stopped STOPTIME PT. Branch `worktree-agent-a523f744a0007e4e9` (from d32ebc13); the
+Started 2026-11-14 00:59:32 PT, stopped 2026-11-14 02:59:35 PT. Branch `worktree-agent-a523f744a0007e4e9` (from d32ebc13); the
 last commit is in the report. GF_TIERS is unchanged (t32rlgyjfFkc3) and Done's 8 ms is not met. One Pixel bench ran
 (p14a, 01:15-01:20: kp). From about 01:20 to the stop the phone's screen stayed off, and four more runner attempts
 (p14b-p14e, then p14f) waited without a ready phone. T, O, G, I, M, D and H therefore have desktop numbers only. p14f
