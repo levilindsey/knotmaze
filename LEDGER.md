@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1382.
+Next free ID: K1383.
 
 ## Waiting on Levi
 
@@ -303,6 +303,11 @@ Next free ID: K1382.
   never unlocks it. If it should stay unlocked on the charger overnight, that is a phone setting only Levi can
   change (K1362). 2026-11-13 10:34-10:57: unlocked, but the Claude app stayed in front, so the run never
   started: the pass needs the HOME SCREEN in front and the phone untouched for 2 min (Claude never presses Home).
+- **K1382** · K1362 course check (2026-11-14): measure against the real Pixel drag frame (rp=gf 33.3 ms p50
+  against 50.0 for today's look; gate 16), not the pass bench. The pass is one of three costs: in-app pass
+  20-25 ms, worker tables 20 ms, physics at 0.3 sim/wall (K1369). Proposed after s15: one drag-frame run with
+  CPU clocks, the K1314 census on rp=gf, and Levi's call on the Pixel drag target (30 or 60 fps)
+  (docs/design/K1362_c1_cpu_off_main.md)
 
 ## In progress
 
