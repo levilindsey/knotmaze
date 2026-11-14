@@ -90,7 +90,7 @@ void main() {
  * `kh` (K1362 s14, cornerThru below; needs kg): kk also carries the thru bit, so the tangent loop fetches no K1.
  */
 export type GfCornerForm = "route" | "frame" | "free" | "corner" | "zk";
-export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm; one?: boolean; bx?: boolean; fast?: boolean; s?: number; lab?: boolean; grp?: boolean; kq?: boolean; ks?: boolean; kl?: boolean; kr?: boolean; lh?: boolean; so?: boolean; cs?: boolean; vs?: boolean; ga?: boolean; sc?: boolean; kc?: boolean; kz?: GfCornerForm; fj?: boolean | "s"; lz?: boolean; fs?: boolean | "c"; kp?: boolean; kt?: boolean; ko?: boolean; kg?: boolean; ki?: boolean; km?: boolean; kd?: boolean | "g"; kh?: boolean; zc?: boolean; zb?: boolean; zk?: boolean }
+export interface GfTier { p: number; k: number; ramps: boolean; half?: boolean; reg?: boolean; unroll?: boolean; pack?: GfPackForm; one?: boolean; bx?: boolean; fast?: boolean; s?: number; lab?: boolean; grp?: boolean; kq?: boolean; ks?: boolean; kl?: boolean; kr?: boolean; lh?: boolean; so?: boolean; cs?: boolean; vs?: boolean; ga?: boolean; sc?: boolean; kc?: boolean; kz?: GfCornerForm; fj?: boolean | "s"; lz?: boolean; fs?: boolean | "c"; kp?: boolean; kt?: boolean; ko?: boolean; kg?: boolean; ki?: boolean; km?: boolean; kd?: boolean | "g"; kh?: boolean; zc?: boolean; zb?: boolean; zk?: boolean; zf?: boolean }
 export type GfPackForm = boolean | "f" | "i";
 
 /** The program's source forms (gf_reg.ts); a tier's own flags set them by default. The probe keeps the plain form. */
@@ -180,6 +180,7 @@ export function gfFs(probe: boolean, tangentTerms = true, tier?: GfTier, form: G
     if (tier.ramps || tier.one || tier.bx || tier.fast || form.split || form.reg || form.pack || form.unroll) throw new Error("gfFs: zc is a plain-form tier without ramps (no one, bx, fast, split, reg, pack or unroll)");
     src = zClass(src);
     if (tier.zb) src = zBur(src);
+    if (tier.zf) src = zFast(src);
   }
   if (probe) return src;
   const mp = tier ? tier.p : MAXP;
@@ -347,6 +348,15 @@ function zBur(src: string): string {
   src = src.replace(ZB_OVF, `${ZB_OVF} if (zbR) { gl_FragDepth = 0.0; return; } // K1362 s15 zb: a face P0 cannot prove unburied`);
   src = src.replace("float band2(float D)", "bool zbR; // K1362 s15 zb\nfloat band2(float D)");
   return src.replace(ZC_MAIN, `${ZC_MAIN}  zbR = false;\n`);
+}
+// K1362 s15 zf: P0 keeps only stage 9's layers1() (one piece, no corner, no ramp: the same statements on the same
+// values as layers()) and routes every other pixel to P1 at depth 0, so P0 compiles without layers() at all. Exact
+// by routing: P1 draws what P0 does not. P1's surface cap must still hold on what it gets: on a free frame np <= p
+// and nk == 0, so ns <= p = s; a corner frame's P1 runs uncapped (cornerPlan).
+const ZF_LAYERS = "#ifdef FAST\n      if (fast) layers1(); else\n#endif\n      layers(p);\n";
+function zFast(src: string): string {
+  if (src.split(ZF_LAYERS).length !== 2) throw new Error("gfFs zf: the layering call moved");
+  return src.replace(ZF_LAYERS, "      if (!fast) { gl_FragDepth = 0.0; return; } // K1362 s15 zf: more than one piece: P1\n      layers1();\n");
 }
 
 /**
@@ -655,7 +665,7 @@ ${probe ? "#define PROBE 1" : ""}
 ${tangentTerms ? "#define TANGENT 1" : ""}
 ${tier ? "#define TIER 1" : ""}
 ${tier && !tier.ramps ? "#define NORAMP 1" : ""}
-${tier && tier.fast && !probe ? "#define FAST 1" : ""}
+${tier && (tier.fast || tier.zf) && !probe ? "#define FAST 1" : ""}
 ${tier && tier.lab && !probe ? "#define LABRUN 1" : ""}
 ${tier && tier.grp && !probe ? "#define PGRP 1" : ""}
 ${tier && tier.kq && !probe ? "#define PKQ 1" : ""}

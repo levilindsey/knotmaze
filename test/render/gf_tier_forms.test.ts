@@ -724,4 +724,23 @@ describe("gf tier forms, s15 depth classes", () => {
     expect(count(p0, " int nk;")).toBe(0);
     expect(() => gfFs(false, true, { ...free.tier, ramps: false, kz: "zk" })).toThrow(/kz zk is a zc P0 form/);
   });
+  it("zf: P0 keeps layers1() only and routes the rest; a corner frame's P1 runs uncapped, a free frame's keeps its cap", () => {
+    const free = plan.find((e) => e.when === "none")!;
+    expect(free.tier!.k === 0 || free.tier!.kz === "free").toBe(true);
+    expect(free.tier!.s).toBe(free.tier!.p); // np <= p = s on a free frame: P1's cap holds on what P0 routes
+    for (const zk of [undefined, true]) {
+      const z = cornerPlan({ ...GF_TIERS[0], zc: true, zb: true, zk, zf: true });
+      plan.forEach((e, i) => {
+        expect(z[2 * i].tier!.zf).toBe(true);
+        expect(z[2 * i + 1]).toEqual(e.when === "corners" ? { ...e, tier: { ...e.tier, s: undefined } } : e);
+      });
+    }
+    for (const kz of ["free", "zk"] as const) {
+      const p0 = gfFs(false, true, { ...free.tier!, ramps: false, zc: true, zb: true, zf: true, kz });
+      expect(count(p0, "if (!fast) { gl_FragDepth = 0.0; return; }")).toBe(1);
+      expect(count(p0, "      layers1();\n")).toBe(1);
+      expect(count(p0, "layers(p);")).toBe(0);
+      expect(count(p0, "#define FAST 1")).toBe(1);
+    }
+  });
 });

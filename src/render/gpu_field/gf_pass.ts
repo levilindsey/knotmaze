@@ -151,13 +151,16 @@ export function cornerPlan(t: GfTier): { tier: GfTier; when?: GfWhen }[] {
   // K1362 s15 zc: each program becomes its one-configuration form without ramps (P0, writes the depth class) and the
   // ramp tier itself (P1, drawn only on the pixels P0 classed as ramping); gf_glsl.ts zClass. zb (P0 only): zBur
   if (t.zc) {
-    const plan = cornerPlan({ ...t, zc: undefined, zb: undefined, zk: undefined });
+    const plan = cornerPlan({ ...t, zc: undefined, zb: undefined, zk: undefined, zf: undefined });
     // zk: on corner frames P0 is the free program with the corner scan cut to a route (gf_glsl.ts ZK_SCAN), and P1
-    // runs uncapped surfaces (P0 cannot see the corners' surfaces, so it cannot see P1's surface overflow)
+    // runs uncapped surfaces (P0 cannot see the corners' surfaces, so it cannot see P1's surface overflow). zf (P0
+    // keeps one-piece pixels only, gf_glsl.ts zFast): a corner frame's P1 runs uncapped too; a free frame's P1 keeps
+    // its cap, since there np <= p = s and nk == 0
     const free = plan.find((e) => e.when === "none");
+    const zf = t.zf ? { zf: true } : {};
     return plan.flatMap((e) => t.zk && e.when === "corners" && free
-      ? [{ ...e, tier: { ...free.tier, ramps: false, zc: true, zb: t.zb, kz: "zk" as const } }, { ...e, tier: { ...e.tier, s: undefined } }]
-      : [{ ...e, tier: { ...e.tier, ramps: false, zc: true, zb: t.zb } }, e]);
+      ? [{ ...e, tier: { ...free.tier, ramps: false, zc: true, zb: t.zb, ...zf, kz: "zk" as const } }, { ...e, tier: { ...e.tier, s: undefined } }]
+      : [{ ...e, tier: { ...e.tier, ramps: false, zc: true, zb: t.zb, ...zf } }, t.zf && e.when === "corners" ? { ...e, tier: { ...e.tier, s: undefined } } : e]);
   }
   const free: GfTier = t.fs === "c" ? { ...t, kz: "free", fs: undefined } : { ...t, kz: "free" };
   if (free.kp || free.kt || free.ko || free.kg || free.ki || free.km || free.kd || free.kh) { free.kh = undefined; free.kp = undefined; free.kt = undefined; free.ko = undefined; free.kg = undefined; free.ki = undefined; free.km = undefined; free.kd = undefined; } // K1362 s14: corner-program forms (the free program has no corner code)
