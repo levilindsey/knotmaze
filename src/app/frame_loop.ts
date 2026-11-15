@@ -209,7 +209,7 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
   // (src/render/field/field_b_app.ts) instead; a flip swaps the two.
   // K1240 S4: with the link flag `rp=outline` the same slot runs the
   // redesign (src/render/outline/outline_app.ts) in every look.
-  let labelApp: { frame(): void; after(): void; dispose(): void } | null = null;
+  let labelApp: { frame(): void; after(): void; dispose(): void; busy?(): boolean } | null = null;
   let labelKind: "label" | "field" | "outline" | "gf" | null = null;
   let labelLoading = false;
   const outlineFlag =
@@ -886,12 +886,19 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
       );
       return;
     }
-    handRendererLook(); // K239: a toggle between frames is worn at once.
-    scene.renderer.update();
-    renderDirty = false;
-    // Keep the gameplay overlay locked to the deforming knot.
-    if (params.mazeFabric && scene.fabric && scene.fabricController) {
-      scene.fabric.update(scene.fabricController);
+    // K1369 s2: under rp=gf the ribbon's CPU update only feeds the gf build
+    // (gf draws from its own tables). While the gf app can neither install
+    // a build nor start one, skip it and the fabric overlay's (which then
+    // follows the knot gf shows); main's frame leaves the big core to the
+    // physics worker. Off rp=gf this is one boolean test.
+    if (!(gfFlag && labelKind === "gf" && labelApp?.busy?.())) {
+      handRendererLook(); // K239: a toggle between frames is worn at once.
+      scene.renderer.update();
+      renderDirty = false;
+      // Keep the gameplay overlay locked to the deforming knot.
+      if (params.mazeFabric && scene.fabric && scene.fabricController) {
+        scene.fabric.update(scene.fabricController);
+      }
     }
     fabricTick();
     const t2 = performance.now();

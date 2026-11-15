@@ -42,7 +42,9 @@ interface GfReply {
 const FILL: [number, number, number] = [0.96, 0.93, 0.86];
 const INK_AUTO: [number, number, number] = [0.12, 0.11, 0.09];
 
-export interface GfApp { frame(): void; after(): void; dispose(): void }
+export interface GfApp { frame(): void; after(): void; dispose(): void; busy(): boolean }
+// K1369 s2: builds in flight by default (`__knotGfOpts.depth` overrides).
+const DEPTH = 1;
 
 let warned = false;
 
@@ -72,27 +74,36 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
     worker: "none", workerBuilds: 0, threadBuilds: 0, stale: 0, pool: 0,
     gatherMs: [] as number[], mainMs: [] as number[], workMs: [] as number[], latencyMs: [] as number[],
     verified: 0, mismatch: [] as string[], verifyMs: [] as number[],
+    // K1369 s2: post to install (the frame that uploads it), the replies a
+    // newer one replaced before install, and the frames busy() let main skip
+    // the ribbon update on.
+    showMs: [] as number[], superseded: 0, gated: 0,
   };
 
   // The build worker: started on the first frame; until it says hello (and
   // after it fails) builds run in-thread.
   let worker: Worker | null = null;
   let ready = false;
-  let inFlight = false;
+  // K1369 s2: the builds in flight (id -> its generation, post time and
+  // main's share), up to `depth` at once; the worker queues them in order.
+  const flights = new Map<number, { gen: number; t0: number; main: number }>();
   let flightId = 0;
-  let flightGen = 0;
-  let flightT0 = 0;
-  let flightMain = 0;
   let gen = 0;
-  let pending: { T: GfTables; main: number } | null = null;
+  let pending: { T: GfTables; main: number; t0: number } | null = null;
   const refs = new Map<number, GfTables>();
   let force = false;
   // Probe-only knobs (K1369 A/Bs, all off by default): `freeze` stops
   // rebuilding once tables exist (the pass keeps the last ones), `redraw`
   // draws the pass every frame even when nothing changed (the GPU's load
-  // without the build's CPU).
-  type GfOpts = { worker?: boolean; verify?: boolean; pool?: boolean; freeze?: boolean; redraw?: boolean; cap?: number };
+  // without the build's CPU). K1369 s2: `depth` is the builds in flight
+  // (default DEPTH); `gate: false` keeps main's ribbon update on every frame
+  // (frame_loop.ts asks busy()).
+  type GfOpts = {
+    worker?: boolean; verify?: boolean; pool?: boolean; freeze?: boolean; redraw?: boolean; cap?: number;
+    depth?: number; gate?: boolean;
+  };
   const opts = (): GfOpts => (globalThis as unknown as { __knotGfOpts?: GfOpts }).__knotGfOpts ?? {};
+  const depth = (): number => Math.max(1, Math.floor(opts().depth ?? DEPTH));
   const verifying = (): boolean => !!api.verify || !!opts().verify;
   const wantWorker = (): boolean => typeof Worker !== "undefined" && opts().worker !== false;
 
@@ -105,7 +116,7 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
     }
     worker = null;
     ready = false;
-    inFlight = false;
+    flights.clear();
     stats.worker = why;
     requestFrame();
   };
@@ -132,11 +143,12 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
         stats.worker = "ready";
         return;
       }
-      if (d.id !== flightId) return;
-      inFlight = false;
+      const fl = d.id === undefined ? undefined : flights.get(d.id);
+      if (!fl || d.id === undefined) return;
+      flights.delete(d.id);
       const ref = refs.get(d.id);
       refs.delete(d.id);
-      if (flightGen !== gen || off) {
+      if (fl.gen !== gen || off) {
         stats.stale++;
         requestFrame();
         return;
@@ -148,11 +160,13 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
       stats.exportMs.push(d.exportMs ?? 0);
       stats.tablesMs.push(d.tablesMs ?? 0);
       stats.workMs.push(d.workMs ?? 0);
-      stats.latencyMs.push(performance.now() - flightT0);
+      stats.latencyMs.push(performance.now() - fl.t0);
       stats.workerBuilds++;
       stats.pool = d.pool ?? 0;
       if (ref) check(d.T, ref);
-      pending = { T: d.T, main: flightMain };
+      // Replies come in post order: a newer one replaces a pending older one.
+      if (pending) stats.superseded++;
+      pending = { T: d.T, main: fl.main, t0: fl.t0 };
       requestFrame();
     };
   };
@@ -299,17 +313,15 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
   const rebuild = (scale: number): boolean => {
     const aa = 0.5 / scale;
     const useWorker = !!worker && ready && !!T;
-    if (useWorker && inFlight) return false;
+    if (useWorker && flights.size >= depth()) return false;
     const t0 = performance.now();
     const { input, transfer }: { input: SceneExportInput; transfer: ArrayBuffer[] } = gatherSceneInputLean(ctx, "field");
     if (useWorker) {
       flightId++;
-      flightGen = gen;
-      flightT0 = t0;
-      inFlight = true;
       worker!.postMessage({ id: flightId, input, aa, pool: opts().pool !== false }, transfer);
-      flightMain = performance.now() - t0;
-      stats.gatherMs.push(flightMain);
+      const main = performance.now() - t0;
+      flights.set(flightId, { gen, t0, main });
+      stats.gatherMs.push(main);
       // The reference reads the same state now (outside main's share).
       if (verifying()) refs.set(flightId, reference(aa));
       return true;
@@ -367,6 +379,7 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
         const p = pending;
         pending = null;
         install(p.T, p.main);
+        stats.showMs.push(performance.now() - p.t0);
       }
       const cam = camera();
       const count = r.updateCount;
@@ -408,6 +421,17 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
   };
 
   const after = (): void => {};
+
+  // K1369 s2: true when this frame's gf work can neither install a build nor
+  // start one (worker builds at depth, none waiting): the ribbon's CPU update
+  // would feed nothing gf draws, so frame_loop.ts skips it (main's frame then
+  // leaves the big core to the physics worker). Asked once per awake frame.
+  const busy = (): boolean => {
+    if (off || !worker || !ready || !T || pending || force || opts().gate === false) return false;
+    if (flights.size < depth()) return false;
+    stats.gated++;
+    return true;
+  };
 
   // Probe: the candidates per pixel at the current frame (the probe variant
   // over the same rect, read back): segments and corners, mean and p95 over
@@ -473,5 +497,5 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
     rebuild() { force = true; requestFrame(); },
   };
   (globalThis as unknown as Record<string, unknown>).__knotGf = api;
-  return { frame, after, dispose };
+  return { frame, after, dispose, busy };
 }
