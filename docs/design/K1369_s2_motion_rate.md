@@ -149,6 +149,9 @@ End with `Ledger items` and K1369's handle fields.
   - Observed: the physics worker's ms per substep moves with it: gf2l 14.3-14.9, today 14.0-14.1, gfl 13.4-13.5.
   - Inferred, not isolated: two builds in flight compete with the physics worker for the CPU. The Pixel has fewer
     big cores, so check this there first.
+  - Not the slice pool: `gf_worker.ts` pools only junction-free builds. This link has 185 junction arms (read by
+    `k1369s2_pool.mjs`), so every build runs whole on the one gf worker. At depth 2 that worker never idles: about
+    17 ms of work per build at 45 builds/s, about 765 ms/s.
 
 **Pixel table:** PIXELTABLE
 
