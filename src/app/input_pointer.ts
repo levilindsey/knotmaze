@@ -868,11 +868,12 @@ export function createPointerInput(deps: PointerInputDeps, scene: SceneRef) {
       // junction core it would not, so the release plays no note under
       // either pluck style and, in the string style, starts no vibration or
       // ripple (beginRelease). Hot, held and pluckSize 0 are not asked and
-      // keep their sound, as before.
+      // keep their sound, as before. K1388: through the renderer, which
+      // refreshes the footprints first when the last update was lean (rp=gf).
       const pluckable =
         chain >= 0 &&
         !!scene.renderer &&
-        scene.renderer.plucks.siteTester()(chain, slot);
+        scene.renderer.pluckSiteTester()(chain, slot);
       if (!settings.muted && params.soundMode !== "none" && pluckable) {
         synth.pluck(freq, Math.max(0.35, Math.min(1, dragVel / 25)));
       }

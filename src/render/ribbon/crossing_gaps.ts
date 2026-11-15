@@ -152,6 +152,45 @@ export const JOINT_CLEAR_REACH_SCALE = 0.55;
 const JOINT_MARGIN_FLOOR = 0.5;
 const FADE_JOINT_FLOOR = 0.45;
 
+// K1387: one slot's setup and under march (solveUnder), as the full solve
+// (computeGapSlot) and lean mode's (leanSlot) read it. One per CrossingGaps,
+// overwritten per slot.
+class UnderMarch {
+  underNb!: PassNeighbors;
+  overSamples!: SplineSamples;
+  underSamples!: SplineSamples;
+  overCenter = 0;
+  underCenter = 0;
+  totalO = 0;
+  totalU = 0;
+  exploreVis = 1;
+  uwShown = true;
+  shown = true;
+  selfCross = false;
+  splitFwd = Infinity;
+  splitBwd = Infinity;
+  selfDist = -1;
+  margin = 0;
+  fade = 0;
+  perp = true;
+  exitD = 0;
+  selfEx = 0;
+  per = 0;
+  oCapPos = 0;
+  oCapNeg = 0;
+  uCapPos = 0;
+  uCapNeg = 0;
+  overlapD = 0;
+  cutPos = 0;
+  cutNeg = 0;
+  silPos = 0;
+  silNeg = 0;
+  winPos = 0;
+  winNeg = 0;
+  allPos = 0;
+  allNeg = 0;
+}
+
 export class CrossingGaps {
   readonly r: RibbonRenderer;
   private coarseO = new Float32Array(COARSE_MAX * 2);
@@ -186,6 +225,8 @@ export class CrossingGaps {
   // (diagnostic; should stay 0).
   gapOverflow = 0;
   private g3Accepted: number[] = [];
+  // K1387: solveUnder's results for the slot being solved.
+  private readonly march = new UnderMarch();
 
   constructor(r: RibbonRenderer) {
     this.r = r;
@@ -323,20 +364,19 @@ export class CrossingGaps {
     return nbOther.chain === other.chain;
   }
 
-  // Solve one crossing's GAP SLOT: the under thread's arc window, the
-  // over thread's local polyline, and the under centerline's hidden span
-  // (underWindows). slot = the table row; index = the registered crossing
-  // (-1 for emergent ones: no neighbor lists, no diagnostics).
-  computeGapSlot(
+  // K1387: one slot's setup and UNDER MARCH, moved out of computeGapSlot
+  // unchanged (less the protect reset, which only the full solve redoes):
+  // the slot's explore bookkeeping, the caps and the coarse over polyline,
+  // then the cut, silhouette, window and all-lanes arcs per side. The
+  // results go to `march`, which computeGapSlot and leanSlot read.
+  private solveUnder(
     slot: number,
     crossing: { over: CrossingPass; under: CrossingPass; sign?: number },
-    index: number,
     overNbIn: PassNeighbors | null,
     underNbIn: PassNeighbors | null,
     fillHalf: number,
     gap: number,
-    strength: number,
-    shown = true
+    shown: boolean
   ): void {
     const overNb = overNbIn ?? { prev: crossing.over, next: crossing.over };
     const underNb =
@@ -362,8 +402,6 @@ export class CrossingGaps {
     // K430: this solve's window push below is provisional; applyExploreGaps
     // owns the ramped windows and re-derives them in the same update().
     this.r.slotUwRamp[slot] = Number.NaN;
-    this.r.slotProtChain[slot * 2] = -1;
-    this.r.slotProtChain[slot * 2 + 1] = -1;
     // K76 2b: the over pass's visibility (1 with the reveal off). The pluck
     // footprints stay binary at 0.5 (shown = false below); the under window
     // RAMPS with it instead (K430: uwShown, at the window push).
@@ -645,6 +683,155 @@ export class CrossingGaps {
         allNeg = allX;
       }
     }
+    const m = this.march;
+    m.underNb = underNb;
+    m.overSamples = overSamples;
+    m.underSamples = underSamples;
+    m.overCenter = overCenter;
+    m.underCenter = underCenter;
+    m.totalO = totalO;
+    m.totalU = totalU;
+    m.exploreVis = exploreVis;
+    m.uwShown = uwShown;
+    m.shown = shown;
+    m.selfCross = selfCross;
+    m.splitFwd = splitFwd;
+    m.splitBwd = splitBwd;
+    m.selfDist = selfDist;
+    m.margin = margin;
+    m.fade = fade;
+    m.perp = perp;
+    m.exitD = exitD;
+    m.selfEx = selfEx;
+    m.per = per;
+    m.oCapPos = oCapPos;
+    m.oCapNeg = oCapNeg;
+    m.uCapPos = uCapPos;
+    m.uCapNeg = uCapNeg;
+    m.overlapD = overlapD;
+    m.cutPos = cutPos;
+    m.cutNeg = cutNeg;
+    m.silPos = silPos;
+    m.silNeg = silNeg;
+    m.winPos = winPos;
+    m.winNeg = winNeg;
+    m.allPos = allPos;
+    m.allNeg = allNeg;
+  }
+
+  // K1387: LEAN MODE's slot (RibbonRenderer.lean, rp=gf; the façade's
+  // computeGapSlot calls this instead of computeGapSlot while lean). The
+  // full solve's own setup and under march (solveUnder), then only what the
+  // under-gap consumers read, written as computeGapSlot writes it: the
+  // slot's cut and all-lanes arcs (applyExploreGaps rebuilds the reveal's
+  // windows from them), the K466 chainCuts entry (underCutCtrls), the
+  // underWindows push (underGapVisibility, underClipBand, the fans'
+  // armReach) and, for a registered crossing, diagData's x, y (gf's gather
+  // reads the binding point). Skipped: the over march, the protect and
+  // junction clearance solves, the slot row (writeSlot), chainWins and the
+  // pluck footprints, which leanFresh() refreshes before a pluck or a site
+  // test reads them.
+  leanSlot(
+    slot: number,
+    crossing: { over: CrossingPass; under: CrossingPass; sign?: number },
+    index: number,
+    overNbIn: PassNeighbors | null,
+    underNbIn: PassNeighbors | null,
+    fillHalf: number,
+    gap: number,
+    shown = true
+  ): void {
+    this.solveUnder(slot, crossing, overNbIn, underNbIn, fillHalf, gap, shown);
+    const m = this.march;
+    this.r.slotAllNeg[slot] = m.allNeg;
+    this.r.slotAllPos[slot] = m.allPos;
+    this.r.slotCutNeg[slot] = m.cutNeg;
+    this.r.slotCutPos[slot] = m.cutPos;
+    let cuts = this.r.chainCuts.get(crossing.under.chain);
+    if (!cuts) {
+      cuts = [];
+      this.r.chainCuts.set(crossing.under.chain, cuts);
+    }
+    cuts.push(slot, m.underCenter, m.allNeg, m.allPos);
+    if (m.uwShown && m.exploreVis > 0) {
+      let uw = this.r.underWindows.get(crossing.under.chain);
+      if (!uw) {
+        uw = [];
+        this.r.underWindows.set(crossing.under.chain, uw);
+      }
+      uw.push(
+        m.underCenter,
+        m.cutNeg * m.exploreVis,
+        m.cutPos * m.exploreVis
+      );
+    }
+    if (index >= 0) {
+      if (this.r.diagData.length < this.r.ps.crossings.length * 5) {
+        this.r.diagData = new Float32Array(this.r.ps.crossings.length * 5);
+      }
+      const sc4 = this.r.sampleScratch;
+      this.r.ps.bindingPoint(crossing.over, sc4, 0);
+      this.r.diagData[index * 5] = sc4[0];
+      this.r.diagData[index * 5 + 1] = sc4[1];
+    }
+  }
+
+  // Solve one crossing's GAP SLOT: the under thread's arc window, the
+  // over thread's local polyline, and the under centerline's hidden span
+  // (underWindows). slot = the table row; index = the registered crossing
+  // (-1 for emergent ones: no neighbor lists, no diagnostics).
+  computeGapSlot(
+    slot: number,
+    crossing: { over: CrossingPass; under: CrossingPass; sign?: number },
+    index: number,
+    overNbIn: PassNeighbors | null,
+    underNbIn: PassNeighbors | null,
+    fillHalf: number,
+    gap: number,
+    strength: number,
+    shown = true
+  ): void {
+    // K1387: the setup and the UNDER MARCH live in solveUnder, which lean
+    // mode's leanSlot shares, so the two solves cannot drift apart.
+    this.solveUnder(slot, crossing, overNbIn, underNbIn, fillHalf, gap, shown);
+    this.r.slotProtChain[slot * 2] = -1;
+    this.r.slotProtChain[slot * 2 + 1] = -1;
+    const m = this.march;
+    shown = m.shown;
+    const {
+      underNb,
+      overSamples,
+      underSamples,
+      overCenter,
+      underCenter,
+      totalO,
+      totalU,
+      exploreVis,
+      uwShown,
+      selfCross,
+      splitFwd,
+      splitBwd,
+      selfDist,
+      margin,
+      fade,
+      perp,
+      exitD,
+      selfEx,
+      per,
+      oCapPos,
+      oCapNeg,
+      uCapPos,
+      uCapNeg,
+      overlapD,
+      cutPos,
+      cutNeg,
+      silPos,
+      silNeg,
+      allPos,
+      allNeg,
+    } = m;
+    let { winPos, winNeg } = m;
+    const sc4 = this.r.sampleScratch;
 
     // OVER MARCH against the window's centerline: the polyline must hold
     // every over point within the hide reach of the window's footprint (a

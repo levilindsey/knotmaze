@@ -111,7 +111,8 @@ export function createAutoAudio(deps: AutoAudioDeps, scene: SceneRef) {
     const ps = scene.ps;
     const renderer = scene.renderer;
     if (!ps || !renderer) return null;
-    const test = renderer.plucks.siteTester();
+    // K1388: fresh footprints first when the last update was lean (rp=gf).
+    const test = renderer.pluckSiteTester();
     const memo = new Map<number, AutoSite | null>();
     return (seg: number): AutoSite | null => {
       const known = memo.get(seg);

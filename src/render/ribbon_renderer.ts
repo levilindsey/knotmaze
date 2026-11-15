@@ -488,21 +488,21 @@ export class RibbonRenderer {
   // rp=gf sets `lean` while it is attached (gpu_field/gf_app.ts;
   // `__knotGfOpts.lean = false` keeps it off for A/Bs). gf hides the base
   // fills and the fans, and of update()'s gap solve its gather reads only
-  // diagData's x, y (slottedEmergent's dedupe). So a lean update writes
-  // the binding point alone for each registered crossing (the façade's
-  // computeGapSlot), skips the emergent solves (index < 0) and skips the
-  // base fill mesh's extrude (strip_pass.ts). The gap slots, KGEOM's gap
-  // windows, the fill meshes and the pluck footprints keep their last full
-  // values, and underWindows is empty (update() clears it; only the full
-  // solve refills it). While a pluck is live (activeCount counts a fading
-  // one too) update() runs the full solve, so a pluck looks as it does
-  // without lean; pickThread and pluck() first run one full update when
-  // the last one was lean, so a tap picks and plucks on fresh windows,
-  // footprints and gap ids. Off by default; nothing else sets it.
+  // diagData's x, y (slottedEmergent's dedupe). So a lean update solves
+  // each slot's under march alone (the façade's computeGapSlot ->
+  // crossing_gaps.ts leanSlot, K1387): the binding point for gf, and the
+  // under-gap hiding the maze's overlays read (underWindows, chainCuts),
+  // as the full solve writes them; and it skips the base fill mesh's
+  // extrude (strip_pass.ts). The gap slots, KGEOM's gap windows, chainWins,
+  // the fill meshes and the pluck footprints keep their last full values.
+  // While a pluck is live (activeCount counts a fading one too) update()
+  // runs the full solve, so a pluck looks as it does without lean;
+  // pickThread, pluck() and pluckSiteTester() first run one full update
+  // when the last one was lean, so a tap picks, tests and plucks on fresh
+  // windows, footprints and gap ids. Off by default; nothing else sets it.
   lean = false;
   /** @internal ribbon */ leanNow = false;
   private leanStale = false;
-  private readonly leanPoint = new Float32Array(2);
   /** @internal ribbon */ leanFresh(): void {
     if (!this.leanStale) return;
     const was = this.lean;
@@ -533,6 +533,16 @@ export class RibbonRenderer {
   }): boolean {
     this.leanFresh();
     return this.pluckHost.pluck(req);
+  }
+  // K1388: the plucks' site tester (PluckOverlay.siteTester) on fresh
+  // footprints: a lean update leaves the pluck footprints at the last full
+  // solve's, so this runs that solve first when the last update was lean
+  // (a pluck that follows finds it fresh and does not run it again). The
+  // callers (a release's tap test, an auto pluck's site) ask for one per
+  // decision.
+  pluckSiteTester(): (chain: number, ctrl: number) => boolean {
+    this.leanFresh();
+    return this.pluckHost.plucks.siteTester();
   }
   pluckPoint(chain: number, at: { ctrl?: number; arc?: number }): { x: number; y: number } | null {
     return this.pluckHost.pluckPoint(chain, at);
@@ -2006,17 +2016,21 @@ export class RibbonRenderer {
     strength: number,
     shown = true
   ): void {
-    // K1369 s3: a lean update writes only what gf reads, diagData's x, y,
-    // exactly as the full solve writes them (crossing_gaps.ts, index >= 0).
+    // K1369 s3 + K1387: a lean update solves the under march alone, for what
+    // gf (diagData's x, y) and the under-gap consumers (underWindows,
+    // chainCuts) read, exactly as the full solve writes them
+    // (crossing_gaps.ts leanSlot), emergent slots (index < 0) included.
     if (this.leanNow) {
-      if (index < 0) return;
-      if (this.diagData.length < this.ps.crossings.length * 5) {
-        this.diagData = new Float32Array(this.ps.crossings.length * 5);
-      }
-      const p = this.leanPoint;
-      this.ps.bindingPoint(crossing.over, p, 0);
-      this.diagData[index * 5] = p[0];
-      this.diagData[index * 5 + 1] = p[1];
+      this.crossing.leanSlot(
+        slot,
+        crossing,
+        index,
+        overNbIn,
+        underNbIn,
+        fillHalf,
+        gap,
+        shown
+      );
       return;
     }
     this.crossing.computeGapSlot(

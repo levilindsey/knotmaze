@@ -86,6 +86,7 @@ function harness(tugOn: boolean): Harness {
       return true;
     },
     plucks: { resetSkip: () => {}, lastSkip: "", siteTester: () => () => true },
+    pluckSiteTester: () => () => true,
     pluckPoint: () => ({ x: 2, y: 0 }),
     tugSpan: () => null,
   };
