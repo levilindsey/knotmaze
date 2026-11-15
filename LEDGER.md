@@ -570,11 +570,11 @@ Next free ID: K1385.
 - **K1369** · rp=gf: on the Pixel the physics runs at half its sim rate during a drag (sim/wall 0.29-0.32
   against 0.62-0.71 for today's look), on master and on K1362 c1 alike; not diagnosed. Record the CPU clocks
   beside the GPU clock through the kit's drag (docs/design/K1362_c1_cpu_off_main.md handoff).
-  - owner: nobody since 2026-11-14 18:42 (merged; agent `a06ace508b237f65f` of claude session 01SUPGULDxvE5gKXozfaFaFG)
-  - branch: mainline; last commit: `6c616a03`
+  - owner: agent `a595a3d177a7c0d29` of claude session 01SUPGULDxvE5gKXozfaFaFG (opus, started 2026-11-14 18:44, 2 h cap ~20:44)
+  - branch: `worktree-agent-a595a3d177a7c0d29`, worktree `.claude/worktrees/agent-a595a3d177a7c0d29`; last commit: `4ba24cde`
   - evidence: `.claude/probes/K1369/`
-  - next: Stage 1 merged: the Pixel motion table (rp=gf moves the knot only at its build rate, 9-14/s, against today's 17.6-23.7 fps; main and the physics worker share cpu6). Stage 2: cut main's ribbon work gf does not use and pipeline gf's builds
-  - brief: `docs/design/K1369_s1_motion_budget.md`
+  - next: Stage 2 running: cut main's ribbon work gf does not use and pipeline gf's builds, so rp=gf moves the knot at least as often as today's look draws (Pixel intro + drag, ABBA); then toward 30/s
+  - brief: `docs/design/K1369_s2_motion_rate.md`
 
 ## Next, in order
 
