@@ -26,8 +26,9 @@ const LINK = { def: "b.FMKB4DIQ", bj: "b.J" };
 // gfc / gfq: rp=gf with the ticker capped (gf_app's probe-only `cap`): 31 = 30 fps, 21 = 20 fps (today's drag rate).
 const SETQ = { today: "", gf: "&rp=gf", gfo: "&rp=gf", gf2: "&rp=gf", gfo2: "&rp=gf", gf3: "&rp=gf" };
 // K1369 s2: gf = the gate at the default depth; gfo = no gate (stage 1's gf, depth 1); gf2 / gf3 = the gate at depth 2 / 3.
-const SETO = { gf1: { depth: 1 }, gfo: { gate: false, depth: 1 }, gf2: { depth: 2 }, gfo2: { gate: false, depth: 2 }, gf3: { depth: 3 } };
-SETQ.gf1 = "&rp=gf";
+// gff / gf2f: gf / gf2 with the joinery's fan rebuild kept (695f19e9 switched it off under gf).
+const SETO = { gf1: { depth: 1 }, gfo: { gate: false, depth: 1 }, gf2: { depth: 2 }, gfo2: { gate: false, depth: 2 }, gf3: { depth: 3 }, gff: { fillets: true }, gf2f: { depth: 2, fillets: true } };
+SETQ.gf1 = "&rp=gf"; SETQ.gff = "&rp=gf"; SETQ.gf2f = "&rp=gf";
 // K1369 s2: installs per second (from __knotGf.stats.showAt, [post, install] pairs) and touch-to-pixels: per touch event
 // of the drag, the time to the first install of a build posted after it (gf), or to the end of the first rAF frame after
 // it (today: the rAF time plus the drag's mean main ms per frame). Both exclude the physics worker's lag (shared) and

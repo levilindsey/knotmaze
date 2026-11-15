@@ -10,8 +10,8 @@ import { rmSync } from "node:fs";
 
 const [, , base, setArg, linkArg] = process.argv;
 const link = linkArg ?? "b.FMKB4DIQ";
-const SETQ = { today: "", gf: "&rp=gf", gfo: "&rp=gf", gf2: "&rp=gf" };
-const SETO = { gfo: { gate: false }, gf2: { depth: 2 } };
+const SETQ = { today: "", gf: "&rp=gf", gfo: "&rp=gf", gf2: "&rp=gf", gff: "&rp=gf" };
+const SETO = { gfo: { gate: false }, gf2: { depth: 2 }, gff: { fillets: true } };
 const profileDir = join(tmpdir(), `k1369s2-attr-${process.pid}`);
 const browser = await puppeteer.launch({
   executablePath: "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe", headless: false, userDataDir: profileDir,

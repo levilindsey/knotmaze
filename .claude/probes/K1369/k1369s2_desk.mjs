@@ -17,8 +17,9 @@ const reps = +(repsArg ?? 1);
 const here = dirname(fileURLToPath(import.meta.url));
 const outDir = join(here, "out");
 mkdirSync(outDir, { recursive: true });
-const SETQ = { today: "", gf: "&rp=gf", gfo: "&rp=gf", gf2: "&rp=gf", gfo2: "&rp=gf", gf3: "&rp=gf" };
-const SETO = { gfo: { gate: false }, gf2: { depth: 2 }, gfo2: { gate: false, depth: 2 }, gf3: { depth: 3 } };
+const SETQ = { today: "", gf: "&rp=gf", gfo: "&rp=gf", gf2: "&rp=gf", gfo2: "&rp=gf", gf3: "&rp=gf", gff: "&rp=gf", gf2f: "&rp=gf" };
+// gff / gf2f: gf / gf2 with the joinery's fan rebuild kept (695f19e9 switched it off under gf).
+const SETO = { gfo: { gate: false }, gf2: { depth: 2 }, gfo2: { gate: false, depth: 2 }, gf3: { depth: 3 }, gff: { fillets: true }, gf2f: { depth: 2, fillets: true } };
 const sets = setArg.split(",");
 const profileDir = join(tmpdir(), `k1369s2-desk-${process.pid}`);
 const browser = await puppeteer.launch({
