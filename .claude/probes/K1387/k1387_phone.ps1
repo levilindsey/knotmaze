@@ -28,8 +28,10 @@ if ($LASTEXITCODE -ne 0) { Say "phone not ready (check exit $LASTEXITCODE); no r
 & pwsh -NoProfile -File (Join-Path $lockDir "phone_lock_take.ps1") -Owner $owner -What "K1387 s2 Pixel ABBA (base vs branch, rp=gf, intro-d + drag)" -MaxWaitMin $MaxWaitMin
 if ($LASTEXITCODE -ne 0) { Say "no phone lock; no run"; exit 4 }
 try {
-  $dst = Join-Path $out "builds\$Sha"
-  if ($Builds -and -not (Test-Path (Join-Path $dst "index.html"))) { New-Item $dst -ItemType Directory -Force | Out-Null; Copy-Item (Join-Path $Builds "$Sha\*") $dst -Recurse -Force }
+  foreach ($sha in @($Base, $Head)) {   # s2: both builds (the s1 line copied an undefined $Sha)
+    $dst = Join-Path $out "builds\$sha"
+    if ($Builds -and -not (Test-Path (Join-Path $dst "index.html"))) { New-Item $dst -ItemType Directory -Force | Out-Null; Copy-Item (Join-Path $Builds "$sha\*") $dst -Recurse -Force }
+  }
   & pwsh -NoProfile -File $pass -Phase start -Base $Base -Head $Head -Out $out -AllowChrome -PortRange "5481-5489" -Reps 1 -WaitReady $WaitReady
   if ($LASTEXITCODE -ne 0) { Say "pass start failed (exit $LASTEXITCODE); see $out\logs" }
   else {
