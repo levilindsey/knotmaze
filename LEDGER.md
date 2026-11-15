@@ -578,6 +578,21 @@ Next free ID: K1398.
   - evidence: `.claude/probes/K1369/`
   - next: Stage 5 (not launched): cut the 16-28 ms build or split it across workers for 60/s (K1386); the channel through the reveal (K1390-K1392). Depth stays by gesture: K1383 s1 measured depth 1 outside the reveal at 19.5 builds/s vs 50-54
   - brief: `docs/design/K1369_s4_snapshot_channel.md`
+- **K1389** · rp=gf ignores the thread look ('border' and the section colors): on b.FMKB4DIQ every today-vs-gf
+  A/B compares outlines with filled threads, so the rows are not like for like (K1369 s3)
+  - owner: agent `a9f0346320932ed36` of claude session 01SUPGULDxvE5gKXozfaFaFG (opus, started 2026-11-14 23:25, 2 h cap ~01:25)
+  - branch: `worktree-agent-a9f0346320932ed36`, worktree `.claude/worktrees/agent-a9f0346320932ed36`; last commit: `2b1cffe1`
+  - evidence: `.claude/probes/K1389/`
+  - next: Stage 1 running: section colours and the border/both looks under rp=gf at rest, sheets + Pixel bench
+  - brief: `docs/design/K1389_s1_gf_thread_look.md`
+- **K1387** · rp=gf lean (K1369 s3): underWindows stay empty, so under rp=gf the maze's under-gap hiding stops
+  for reveal sparks, telegraph rim ends, burn sparks, the yarn, underClipBand (fabric_maze_renderer.ts) and
+  joinery.ts:1575; needed before rp=gf default-on (K1369_s3_lean_default.md handoff)
+  - owner: agent `a5853a421264cb113` of claude session 01SUPGULDxvE5gKXozfaFaFG (opus, started 2026-11-14 23:25, 2 h cap ~01:25)
+  - branch: `worktree-agent-a5853a421264cb113`, worktree `.claude/worktrees/agent-a5853a421264cb113`; last commit: `2b1cffe1`
+  - evidence: `.claude/probes/K1387/`
+  - next: Stage 1 running (with K1388): under-gap hiding and site-tester widths under lean, Pixel cost
+  - brief: `docs/design/K1387_s1_lean_consumers.md`
 
 ## Next, in order
 
@@ -1993,13 +2008,8 @@ Every other item below waits on the trigger it names.
 - **K1385** · rp=gf: after gf detaches (a failed attach or a fallback), a sleeping knot can show stale fans,
   gaps and fill meshes until its next awake update, because gf turned the fans off and skipped
   renderer.update() while attached (K1369 s2 handoff, docs/design/K1369_s2_motion_rate.md)
-- **K1387** · rp=gf lean (K1369 s3): underWindows stay empty, so under rp=gf the maze's under-gap hiding stops
-  for reveal sparks, telegraph rim ends, burn sparks, the yarn, underClipBand (fabric_maze_renderer.ts) and
-  joinery.ts:1575; needed before rp=gf default-on (K1369_s3_lean_default.md handoff)
 - **K1388** · rp=gf lean (K1369 s3): the site tester (input_pointer.ts:875, auto_audio.ts:114) reads stale
   footprint widths (K1369_s3_lean_default.md handoff)
-- **K1389** · rp=gf ignores the thread look ('border' and the section colors): on b.FMKB4DIQ every today-vs-gf
-  A/B compares outlines with filled threads, so the rows are not like for like (K1369 s3)
 - **K1390** · rp=gf snapshot channel (K1369 s4, opt-in __knotGfOpts.chan): it builds every crossing, while
   main's path skips crossings the reveal has not shown (GATE_LEAD), so tables may differ during a reveal; the
   exact check ran only at am=instant
