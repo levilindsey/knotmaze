@@ -111,3 +111,89 @@ Under 30 lines:
 - your last SHA.
 
 End with `Ledger items` and K1362's handle fields.
+
+## Handoff (stage 15, 2026-11-14)
+
+Started 14:27:04 PT, stopped 16:08 PT. Done is NOT met: every lever is exact on the desktop, none is measured on
+the Pixel (the phone was never ready: in use through all three attempts). `GF_TIERS` is unchanged (t32rlgyjfFkDc3); every new form is a
+bench form behind a tier flag, off by default.
+
+**The structure: depth classes (`zc`, tier suffix `Z`).** The tier splits into two programs per frame plan entry
+(`cornerPlan`, gf_pass.ts): P0 is the tier without ramps and with one configuration, drawn first over every pixel
+(depth ALWAYS, depth write on); it writes `gl_FragDepth` 0.5 where it drew, 0 for a pixel P1 must draw (ramping, or
+a lever's route below), 1 for an overflow. P1 (the unchanged tier, depthRange(0,0), GEQUAL, no depth write) draws
+only the depth-0 pixels; full (depthRange(1,1), LEQUAL) only the depth-1 ones. Exact by routing: every pixel is
+drawn by exactly one program, and P0 sees every overflow P1 could hit (cfg >= 1 only merges surfaces). Three P0
+levers on top, each exact by the same routing:
+- `zb` (`B`): P0's burial loops become bound checks (`pd[m] - |h - X| - 0.25 aa >= h`, a ring overlap for keys:
+  the triangle inequality says the face is unburied); a failed check sets `zbR` and breaks, and main routes it to
+  P1 after the overflow test. P0 loses pieceD() at burial: PVR corner P0 86 -> 76 temps, 4715 -> 3079 cycles.
+- `zk` (`K`): on a corner frame P0 is the FREE program with the corner scan cut to a route loop (a kept or
+  through key routes the pixel; more than MAXK sets ovf); P1 there is the corner tier with surfaces uncapped,
+  since P0 cannot see the corners' surfaces. Non-routed pixels have nk 0, no through key and no yield, the free
+  program's constants. PVR P0 59 temps / 1778 cycles.
+- `zf` (`S`): P0 keeps only stage 9's `layers1()` (one piece, no key, no ramp) and routes every other pixel, so
+  layers() leaves P0: PVR free P0 38 temps / 1113 cycles, zk P0 41 / 1297. A free frame's P1 keeps s = p (np <= p
+  there), a corner frame's runs uncapped.
+- ANGLE lesson: a `return` inside layers()'s nested loops lost the context at draw (36061 FRAMEBUFFER_UNSUPPORTED).
+  Route with a flag and `break`, and return from main.
+
+**Attribution (PVR offline compiler, register footprint and static cycles; temps / cycles).** The compiler is
+Imagination's free PVR compiler (Series B, BVNC 35.3.408.101), run by `k1362s15_pvr.ps1 -Dir <unpacked> <frags>`;
+`k1362s15_cuts.ts <dir> [k=v,...]` writes inexact cut variants (footprint only, never drawn), `k1362s15_dumpfs.ts`
+the real programs, `k1362s15_compile.mjs` links them on ANGLE.
+
+| program | temps | cycles |
+|---|---|---|
+| today corner / free / full | 99 / 79 / 254 | 4881 / 1969 / 5419 |
+| zc P0 corner / free | 86 / - | 4715 / - |
+| zb P0 corner / free | 76 / 56 | 3079 / 1595 |
+| zk P0 / its P1 (corner, uncapped) | 59 / 108 | 1778 / 4833 |
+| zf P0 free / zk | 38 / 41 | 1113 / 1297 |
+
+Cuts on zb P0 (temps, corner / free): no layering 48 / 38, no composite 72 / 52, no ring 72 / -, no tangents 74 /
+-, no keys 74 / 56; on the zk P0 no layering 41, no keys 58 (cycles 1778 -> 1193). Layering is still the footprint
+(76 -> 48); zf takes it out and pays in routed pixels.
+
+**Routed share on the desktop (822x1506, the zm bench: pixels P1 draws).**
+
+| | def | muse_hash | fat |
+|---|---|---|---|
+| DZc3 (ramps only) | 6.7% | 10.4% | 0 |
+| DZBc3 | 12.0% | 13.3% | 0 |
+| DZBKc3 | 28.1% | 24.7% | 0 |
+| DZBKSc3 | 45.4% | 59.6% | 23.2% |
+
+**Desktop (ANGLE D3D11, sync4 / frame1 ms; `desk_dtab1`, `desk_dtabK`, `desk_dtabS`; aid@ repeats equal).**
+
+| variant | 822 def | 822 muse | 822 fat | 1080 def | 1080 muse | 1080 fat |
+|---|---|---|---|---|---|---|
+| Dc3 (default) | 0.65 / 3.50 | 1.07 / 5.60 | 0.40 / 2.30 | 0.80 / 4.50 | 1.23 / 6.60 | 0.55 / 3.10 |
+| DZc3 | 0.72 / 3.80 | 1.20 / 6.10 | 0.45 / 2.50 | 0.93 / 5.00 | 1.43 / 7.40 | 0.60 / 3.30 |
+| DZBc3 | 0.63 / 3.30 | 1.00 / 5.30 | 0.30 / 1.80 | 0.80 / 4.40 | 1.18 / 6.30 | 0.38 / 2.30 |
+| DZBKc3 | 0.70 / 3.70 | 1.13 / 5.80 | 0.28 / 1.80 | 0.90 / 4.90 | 1.27 / 6.70 | 0.38 / 2.30 |
+| DZBSc3 | 0.85 / 4.40 | 1.52 / 7.90 | 0.47 / 2.60 | 1.15 / 6.10 | 1.90 / 9.80 | 0.60 / 3.50 |
+
+zb is the only form at or under the default everywhere on the desktop (fat -25%); the desktop does not predict
+the Pixel (stage 6), and the PVR cycles favour zk (estimated per pixel, weighted by routed share: zb about 3665, zk
+about 3131 against today's 4881 on a corner frame).
+
+**Exactness.** cmp3 + cmp12 (`desk_cmp1`, `desk_cmpB`, `desk_cmpK`, `desk_cmpS`): DZc3, DZBc3, DZBKc3, DZBSc3 and
+DZBKSc3 are 0 px and 0 unwritten against full on all 12 scenes, and the CPU mirror rows are unchanged. Not run on
+the Pixel (queued in p15b). `npm test` green (tier-form tests for zc, zb, zk, zf in `gf_tier_forms.test.ts`),
+goldens unchanged. The table digest is unchanged by construction: tables.ts, gf_pack and the gf worker are
+untouched, and no lever adds a table.
+
+**Pixel.** Not measured. Three runner attempts waited for the phone: p15a and p15b (to 15:48) and p15c (15:50-15:59,
+a short cut: b822 Dc3 / DZBc3 / DZBKc3 / DZBKSc3 with an aid@Dc3, and cmp3). Each ended PHONE NOT READY (touches and an
+app in front throughout); the runner released the phone lock each time, and no bench or tab ran. The s14 baselines
+the forms must beat stand (sync4, 1286 MHz): 822 def 12.08 / muse_hash 16.80 / fat 6.72; 1079 16.65 / 22.03 / 9.63.
+
+**Verdict and next.** The program now has a structure that can drop work per pixel class exactly; whether it pays
+is a Pixel question. Next: run `pwsh -NoProfile -File .claude/probes/K1362/k1362s15_phone_run.ps1 -Cfgs p15b
+-WaitMin 30` (Dc3, DZc3, DZBc3, DZBKc3, DZBKSc3 at 822 and 1079 with the clock, aid@ repeats of Dc3 and DZBc3, and
+cmp3 / cmp12 on the Pixel for the zc forms; summarize with `k1362s15_tab2.cjs`). If a form beats Dc3 on def and
+muse_hash at 1286 MHz with fat no slower and is 12/12 exact there, set it in `GF_TIERS[0]` (`zc: true, zb: true`,
+plus `zk` / `zf` if they win). If none pays, the next lever is a P0 whose layering handles two pieces without the
+general face loop (zf shows layering is the footprint, 76 -> 38-48 temps, but routing 45-60% of the canvas to P1
+costs more than it saves on the desktop).
