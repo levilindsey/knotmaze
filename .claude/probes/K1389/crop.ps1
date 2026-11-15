@@ -1,10 +1,6 @@
-param([string]$src, [string]$dst, [int]$x, [int]$y, [int]$w, [int]$h, [int]$scale = 4)
-Add-Type -AssemblyName System.Drawing
-$im = [System.Drawing.Bitmap]::FromFile($src)
-$out = New-Object System.Drawing.Bitmap ($w * $scale), ($h * $scale)
-$g = [System.Drawing.Graphics]::FromImage($out)
-$g.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::NearestNeighbor
-$g.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::Half
-$g.DrawImage($im, (New-Object System.Drawing.Rectangle 0, 0, ($w * $scale), ($h * $scale)), (New-Object System.Drawing.Rectangle $x, $y, $w, $h), [System.Drawing.GraphicsUnit]::Pixel)
-$g.Dispose(); $im.Dispose()
-$out.Save($dst, [System.Drawing.Imaging.ImageFormat]::Png); $out.Dispose()
+param([string]$FileList,[int]$X,[int]$Y,[int]$S=120,[int]$Z=4,[string]$Out)
+Add-Type -AssemblyName System.Drawing; $Files = $FileList -split ";"
+$n=$Files.Count; $bmp=[System.Drawing.Bitmap]::new($S*$Z*$n+8*($n-1),$S*$Z); $g=[System.Drawing.Graphics]::FromImage($bmp); $g.InterpolationMode='NearestNeighbor'; $g.PixelOffsetMode='Half'; $g.Clear([System.Drawing.Color]::White)
+for($i=0;$i -lt $n;$i++){ $src=[System.Drawing.Bitmap]::new($Files[$i]); $g.DrawImage($src,[System.Drawing.Rectangle]::new($i*($S*$Z+8),0,$S*$Z,$S*$Z),[System.Drawing.Rectangle]::new($X,$Y,$S,$S),'Pixel'); $src.Dispose() }
+$bmp.Save($Out); "saved $Out"
+
