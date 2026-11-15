@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1387.
+Next free ID: K1390.
 
 ## Waiting on Levi
 
@@ -1993,6 +1993,13 @@ Every other item below waits on the trigger it names.
 - **K1385** · rp=gf: after gf detaches (a failed attach or a fallback), a sleeping knot can show stale fans,
   gaps and fill meshes until its next awake update, because gf turned the fans off and skipped
   renderer.update() while attached (K1369 s2 handoff, docs/design/K1369_s2_motion_rate.md)
+- **K1387** · rp=gf lean (K1369 s3): underWindows stay empty, so under rp=gf the maze's under-gap hiding stops
+  for reveal sparks, telegraph rim ends, burn sparks, the yarn, underClipBand (fabric_maze_renderer.ts) and
+  joinery.ts:1575; needed before rp=gf default-on (K1369_s3_lean_default.md handoff)
+- **K1388** · rp=gf lean (K1369 s3): the site tester (input_pointer.ts:875, auto_audio.ts:114) reads stale
+  footprint widths (K1369_s3_lean_default.md handoff)
+- **K1389** · rp=gf ignores the thread look ('border' and the section colors): on b.FMKB4DIQ every today-vs-gf
+  A/B compares outlines with filled threads, so the rows are not like for like (K1369 s3)
 
 ## Approved, to schedule (2026-10-11)
 

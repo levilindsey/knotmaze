@@ -100,6 +100,14 @@ not repeated here.
   Sim/wall is .015 lower: the physics' cost per substep tracks main
   plus the gf worker's busy time (inferred). The slice pool takes only
   junction-free builds, so def (185 arms) builds whole on one worker.
+- K1369 s3 (`K1369_s3_lean_default.md`): lean is gf's default (the
+  `RibbonRenderer.lean` flag), and a live pluck runs the full solve.
+  On the Pixel, depth 2 installs 51-54 builds a second in the intros,
+  against today's 18-33 fps, with sim/wall intact. In the drag it
+  installs 40-44, but sim/wall falls to .49-.51, against today's
+  .67-.71 and depth 1's .74-.81: the physics worker waits 239-335 ms a
+  second for a core. So `DEPTH` stays 1. Lean leaves `underWindows`
+  empty (K1387) and the footprint widths stale (K1388).
 - A tier is exact by construction: on overflow it sets a flag,
   breaks and discards, and the next program draws that pixel.
 - Routing is by stencil (EQUAL 0, INCR). The LAST program uses KEEP,
