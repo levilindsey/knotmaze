@@ -38,6 +38,22 @@ export const LOOK_DS = 0.02;
 /** The look's mode numbers (renderer.threadLook: 0 fill, 1 border, 2 both). */
 export type GfLookMode = 0 | 1 | 2;
 
+let keyView: Uint32Array | null = null;
+const keyF = new Float32Array(1);
+const keyU = new Uint32Array(keyF.buffer);
+/** A hash of what knotSection reads (KSTATIC, the run base, the blend, the gamut): with the samples fixed, the
+ *  colours change only with it (a scheme or palette change rebuilds no tables). */
+export function lookKey(r: GfLookSource): number {
+  const U = knotUniformValues();
+  const S = r.kd.stat;
+  if (!keyView || keyView.buffer !== S.buffer || keyView.length !== S.length) keyView = new Uint32Array(S.buffer, S.byteOffset, S.length);
+  let h = 2166136261;
+  const W = keyView;
+  for (let i = 0; i < W.length; i++) h = Math.imul(h ^ W[i], 16777619);
+  for (const v of [U.uKBase?.[0] ?? 0, U.uKSect?.[0] ?? 0, ...(U.uKGamut ?? [])]) { keyF[0] = v; h = Math.imul(h ^ keyU[0], 16777619); }
+  return h >>> 0;
+}
+
 export class GfLookTable {
   data = new Float32Array(GF_TW * 4);
   rows = 0;
@@ -211,6 +227,12 @@ float lkGap(float key) {
 }
 `;
 const SITES: [string | RegExp, string, number][] = [
+  // the ink band takes today's stroke profile (ribbon_shader.ts, K797b: edge = smoothstep(1 - bw, 1 - bw + fwA, e),
+  // fwA = max(3 fwidth(vUV.y), 0.02), e = 1 - D / h): full from the edge to W - r, gone at W, r = max(1.5 px, 0.02 h)
+  // (uAA is half a pixel), so on a thin thread the rim never reaches full, as today's. It ends at W, inside form B's
+  // reach (W + aa): the tables' bins stay exact. The outer ramp is form B's (the fill's edge).
+  ["float band2(float D) { return (1.0 - ss(uW - uAA, uW + uAA, D)) * ss(-uAA, uAA, D); }",
+    "float band2(float D) { return (1.0 - ss(uW - max(3.0 * uAA, 0.02 * uH), uW, D)) * ss(-uAA, uAA, D); }", 1],
   // layers(), LABRUN: a piece label, then a corner's
   ["labE = e; labC = PC(j); }", "labE = e; labC = PC(j); lkJ = j; lkK = pkey[j]; }", 1],
   ["labC = nearerA ? int(K3.x) : int(K3.y); }", "labC = nearerA ? int(K3.x) : int(K3.y); lkJ = -1; lkS = nearerA ? K3.z : K3.w; lkK = key; }", 1],
@@ -242,7 +264,7 @@ export function lookForm(src: string): string {
     if (n === 1) out = out.replace(s, b);
   }
   // the sites every program carries
-  for (const must of ["lkJb = lkJ;", "lkIo = 0.0;", "floor(lkIo / 256.0)"]) if (!out.includes(must)) throw new Error(`gf look: ${must} missing`);
+  for (const must of ["lkJb = lkJ;", "lkIo = 0.0;", "floor(lkIo / 256.0)", "ss(uW - max(3.0 * uAA, 0.02 * uH), uW, D)"]) if (!out.includes(must)) throw new Error(`gf look: ${must} missing`);
   return out;
 }
 

@@ -29,7 +29,7 @@ import { splineBend, type SplineSamples } from "../../geometry/spline_generator"
 import { buildTables, type GfTables } from "./tables";
 import { CTRL_ARC, gfBuild, gfDepth, tablesDiff } from "./gf_build";
 import { GfRevealTable, gfRevealing } from "./gf_reveal";
-import { GfLookTable, lookGap } from "./gf_look";
+import { GfLookTable, lookGap, lookKey } from "./gf_look";
 import { GfComposite, GfPass, GfTarget, type GfMap } from "./gf_pass";
 
 interface GfReply {
@@ -86,6 +86,10 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
   let lkT: GfTables | null = null;
   let lkAge = 0;
   let lkGap = -1;
+  // the colour key last built with, the tables seen last frame and the frames they have held
+  let lkKey = 0;
+  let lkSeenT: GfTables | null = null;
+  let lkStill = 0;
   const stats = {
     rebuilds: 0, passes: 0, composites: 0, fallback: "",
     exportMs: [] as number[], tablesMs: [] as number[], packMs: [] as number[], uploadMs: [] as number[],
@@ -643,12 +647,16 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
         rvDrawn = false;
         dirty = true;
       }
-      // K1389 s1: today's thread look: the colour table beside the tables (rebuilt with them, and every 30 frames
-      // for a scheme change that builds no tables), its gap today's crossing gap
+      // K1389 s1: today's thread look: the colour table beside the tables, its gap today's crossing gap. Rebuilt
+      // for new tables once they hold still for 3 frames (rest) or at most every 12 frames in motion (a build costs
+      // ms of main), and at once when what the colours read changes (a scheme change builds no tables).
       if (pass.lookable && o.look !== false) {
         lkTab ??= new GfLookTable();
-        if (lkT !== T || ++lkAge >= 30) {
-          lkT = T; lkAge = 0;
+        lkStill = T === lkSeenT ? lkStill + 1 : 0;
+        lkSeenT = T;
+        const go = lkT !== T ? lkStill >= 3 || ++lkAge >= 12 || lkT === null : lookKey(r) !== lkKey;
+        if (go) {
+          lkT = T; lkAge = 0; lkKey = lookKey(r);
           if (lkTab.build(r)) dirty = true;
           stats.lkMs.push(lkTab.ms); stats.lkColors = lkTab.nColors;
         }

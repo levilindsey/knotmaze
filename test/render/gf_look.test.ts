@@ -29,6 +29,9 @@ describe("K1389 s1 look form", () => {
         expect(f).toContain("lkIo = lkIdx(lab,");
         expect(f).toContain("o0 = vec4(oInk, oCov, floor(lkIo / 256.0) / 255.0, mod(lkIo, 256.0) / 255.0);");
         expect(f).not.toContain("o0 = vec4(oInk, oCov, 0.0, 1.0);");
+        // the ink band takes today's stroke profile, ending at W (inside form B's reach)
+        expect(f).toContain("(1.0 - ss(uW - max(3.0 * uAA, 0.02 * uH), uW, D)) * ss(-uAA, uAA, D)");
+        expect(f).not.toContain("ss(uW - uAA, uW + uAA, D)");
         // every label write records the label's piece or corner
         const labs = f.split(/labC = (?!-1)/).length - 1;
         const recs = f.split(/lkJ = /).length - 1;
