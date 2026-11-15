@@ -39,7 +39,7 @@ describe("gf tier forms", () => {
       expect(bx.split("\n").filter((l) => !l.includes("bx2")).join("\n")).toBe(plain);
       expect(bx).toContain("float bx2 = band2(h - X); " + SKIP);
       expect(bx).toContain("float bx2 = band2(Dk); " + SKIP);
-      expect(bx).toContain("float bx2 = band2(dT); " + SKIP);
+      expect(bx).toContain("float bx2 = band(dT); " + SKIP); // K1407 23A: the tangent's bound is band
     }
     const both = gfFs(false, true, { ...T, one: true, bx: true });
     expect(count(both, BREAK)).toBe(4);
@@ -472,7 +472,7 @@ const S13: GfTier = { ...GF_TIERS[0], kd: undefined };
 
 describe("gf tier forms, s13 exact face skip", () => {
   const L: GfTier = { ...T, s: 3, lab: true, grp: true, ks: true };
-  const FB = /\n *float fb = band2\(([^;]*)\); if \(!\(fb > v\)\) continue; \/\/ K1362 s13 fs/g;
+  const FB = /\n *float fb = band2?\(([^;]*)\); if \(!\(fb > v\)\) continue; \/\/ K1362 s13 fs/g; // K1407 23A: the tangent's fb is band
 
   it("fs: one skip per face kind, each value on its fb, nothing else; the probe is untouched; fj and bx refuse it", () => {
     const BASES: GfTier[] = [L, { ...L, kz: "free" }, { ...L, kz: "corner" }, { ...L, lz: true }, { ...L, kc: true }, { ...L, one: true }];
@@ -480,9 +480,11 @@ describe("gf tier forms, s13 exact face skip", () => {
       const plain = gfFs(false, tangent, base); const fs = gfFs(false, tangent, { ...base, fs: true });
       const args = [...fs.matchAll(FB)].map((m) => m[1]);
       expect(args).toEqual(plain.includes("#ifdef TANGENT\n    for (int i = 0; i < nk; i++) {") ? ["h - X", "Dk", "dT"] : ["h - X", "Dk"]);
-      expect(count(fs, "(1.0 - bur) * fb")).toBe(args.length);
+      expect(count(fs, "(1.0 - bur) * fb")).toBe(1); // K1407 23A: only the piece face keeps its burial
       let back = fs.replace(FB, "");
-      for (const a of args) back = back.replace("(1.0 - bur) * fb", `(1.0 - bur) * band2(${a})`);
+      back = back.replace("(1.0 - bur) * fb", `(1.0 - bur) * band2(${args[0]})`); // K1407 23A: arc/tangent values below
+      if (args.length > 1) back = back.replace("float val = fb;", `float val = band2(${args[1]});`);
+      if (args.length > 2) back = back.replace("float val = fb * ss(-aa, aa, D);", `float val = band(${args[2]}) * ss(-aa, aa, D);`);
       expect(back).toBe(plain);
       expect(gfFs(true, tangent, { ...base, fs: true })).toBe(gfFs(true, tangent, base));
     }
@@ -615,7 +617,7 @@ describe("gf tier forms, s14 corner loops", () => {
         expect(count(base, "pieceD(") - count(km, "pieceD(")).toBe(1);
         expect(count(base, "F(uOK + 6 * k + 1)") - count(km, "F(uOK + 6 * k + 1)")).toBe(2); // the tangent loop's, and the dropped KLEAN branch's text
         expect(count(km, "float tvD = tv * ss(-aa, aa, D); if (tvD > v) v = tvD;")).toBe(1);
-        expect(count(km, "fb = band2(dT); if (!(fb > max(v, tv))) continue;")).toBe(1);
+        expect(count(km, "fb = band(dT); if (!(fb > max(v, tv))) continue;")).toBe(1); // K1407 23A: band
         expect(km).not.toContain("* fb * ss(-aa, aa, D)");
         expect(count(base, "// K1362 s13 fs") - count(km, "// K1362 s13 fs")).toBe(2);
       }
@@ -635,7 +637,7 @@ describe("gf tier forms, s14 corner loops", () => {
       const base = gfFs(false, true, { ...corners0.tier, ...extra });
       expect(count(kd, "float cD = ss(-aa, aa, D); int nkT = cD > 0.0 ? nk : 0; // K1362 s14 kd\n    for (int i = 0; i < nkT; i++) {")).toBe(1);
       expect(count(kd, "if (!(fb * cD > v)) continue;")).toBe(1);
-      expect(count(kd, "float val = (1.0 - bur) * fb * cD;")).toBe(1);
+      expect(count(kd, "float val = fb * cD;")).toBe(1); // K1407 23A: unburied
       expect(count(base, "ss(-aa, aa, D)")).toBe(count(kd, "ss(-aa, aa, D)"));
       expect(count(base, "// K1362 s13 fs") - count(kd, "// K1362 s13 fs")).toBe(1);
       const g = gfFs(false, true, { ...corners0.tier, ...extra, kd: "g" });

@@ -227,7 +227,7 @@ function faceJoin(src: string, scalar: boolean): string {
   const V = scalar ? " float v = sv[e];" : "";
   b = swap(b, "      if (PSURF(j) != S || !(pd[j] < h + aa)) continue;\n      float X = pd[j]; if (h - X > D) D = h - X;\n",
     `      if (!(pd[j] < h + aa)) continue;\n      int S = PSURF(j); int e = slotOf(S); if (e < 0) continue;${V}\n      float X = pd[j]; if (h - X > sa[e]) sa[e] = h - X;\n`, 1);
-  b = swap(b, "if (int(K1.z) != S || !kSec[i]) continue;\n      float rho = krho[i]; float Dk = rho - K0.z;\n      if (kIn[i] == 2 && Dk > D) D = Dk;\n",
+  b = swap(b, "if (int(K1.z) != S || !kSec[i] || !(K0.z > 0.0)) continue;\n      float rho = krho[i]; float Dk = rho - K0.z;\n      if (kIn[i] == 2 && Dk > D) D = Dk;\n",
     `if (!kSec[i]) continue; int S = int(K1.z); int e = slotOf(S); if (e < 0) continue;${V}\n      float rho = krho[i]; float Dk = rho - K0.z;\n      if (kIn[i] == 2 && Dk > sa[e]) sa[e] = Dk;\n`, 1);
   b = swap(b, "if (int(K1.z) != S || K1.x > 0.5) continue;\n", `if (K1.x > 0.5) continue; int S = int(K1.z); int e = slotOf(S); if (e < 0) continue; float D = sa[e];${V}\n`, 1);
   b = swap(b, "if (val > v) { v = val;", scalar ? "if (val > v) { v = val; sv[e] = val;" : "if (val > sv[e]) { sv[e] = val;", 3);
@@ -387,7 +387,7 @@ function burialExit(src: string): string {
     `      vec2 q = K0.xy + (K0.z * (p - K0.xy)) / rho;\n      float bx2 = band2(Dk); if (!(bx2 > v)) continue;\n      float bur = 0.0;\n      ${LOOP_M}        ${BX_CHECK}\n`);
   if (src.includes("#ifdef TANGENT\n    for (int i = 0; i < nk; i++) {")) {
     rep(`        float dT = length(p - T); if (!(dT < W + aa)) continue;\n        float bur = 0.0;\n        ${LOOP_M}`,
-      `        float dT = length(p - T); if (!(dT < W + aa)) continue;\n        float bx2 = band2(dT); if (!(bx2 > v)) continue;\n        float bur = 0.0;\n        ${LOOP_M}          ${BX_CHECK}\n`);
+      `        float dT = length(p - T); if (!(dT < W + aa)) continue;\n        float bx2 = band(dT); if (!(bx2 > v)) continue; // K1407 23A: band\n        float bur = 0.0;\n        ${LOOP_M}          ${BX_CHECK}\n`);
   }
   return src;
 }
@@ -435,10 +435,10 @@ function faceSkip(src: string): string {
   rep("      if (!(X > h - W - aa && X > 1e-12)) continue;\n", "      if (!(X > h - W - aa && X > 1e-12)) continue;\n      float fb = band2(h - X);" + SKIP);
   rep("      float val = (1.0 - bur) * band2(h - X);\n", "      float val = (1.0 - bur) * fb;\n");
   rep("      if (!(rho > 1e-12)) continue;\n      vec2 q = K0.xy", "      if (!(rho > 1e-12)) continue;\n      float fb = band2(Dk);" + SKIP + "      vec2 q = K0.xy");
-  rep("      float val = (1.0 - bur) * band2(Dk);\n", "      float val = (1.0 - bur) * fb;\n");
+  rep("      float val = band2(Dk);\n", "      float val = fb;\n"); // K1407 23A: the arc is unburied
   if (src.includes("#ifdef TANGENT\n    for (int i = 0; i < nk; i++) {")) {
-    rep("        float dT = length(p - T); if (!(dT < W + aa)) continue;\n", "        float dT = length(p - T); if (!(dT < W + aa)) continue;\n        float fb = band2(dT);" + SKIP);
-    rep("        float val = (1.0 - bur) * band2(dT) * ss(-aa, aa, D);\n", "        float val = (1.0 - bur) * fb * ss(-aa, aa, D);\n");
+    rep("        float dT = length(p - T); if (!(dT < W + aa)) continue;\n", "        float dT = length(p - T); if (!(dT < W + aa)) continue;\n        float fb = band(dT);" + SKIP); // K1407 23A: the tangent's bound is band, not band2
+    rep("        float val = band(dT) * ss(-aa, aa, D);\n", "        float val = fb * ss(-aa, aa, D);\n"); // K1407 23A: form B's tangent term
   }
   return src;
 }
@@ -532,7 +532,7 @@ function cornerSurfaces(src: string): string {
   rep("vec4 K0 = F(uOK + 6 * k); vec4 K1 = F(uOK + 6 * k + 1); vec4 K3 = F(uOK + 6 * k + 3);", "vec4 K0 = F(uOK + 6 * k); vec4 K3 = F(uOK + 6 * k + 3);", 1);
   rep("int e = entry(int(K1.z));", "int e = entry(kS);", 1);
   rep("vec4 K0 = F(uOK + 6 * k); vec4 K1 = F(uOK + 6 * k + 1); if (int(K1.z) != S) continue;", "if (kS != S) continue; vec4 K0 = F(uOK + 6 * k);");
-  rep("vec4 K0 = F(uOK + 6 * k); vec4 K1 = F(uOK + 6 * k + 1); if (int(K1.z) != S || !kSec[i]) continue;", "if (kS != S || !kSec[i]) continue; vec4 K0 = F(uOK + 6 * k);", 1);
+  rep("vec4 K0 = F(uOK + 6 * k); vec4 K1 = F(uOK + 6 * k + 1); if (int(K1.z) != S || !kSec[i] || !(K0.z > 0.0)) continue;", "if (kS != S || !kSec[i]) continue; vec4 K0 = F(uOK + 6 * k); if (!(K0.z > 0.0)) continue;", 1); // K1407 23A: the r > 0 arc gate rides along
   rep("vec4 K1 = F(uOK + 6 * k + 1); if (int(K1.z) != S || K1.x > 0.5) continue;", "if (kS != S) continue; vec4 K1 = F(uOK + 6 * k + 1); if (K1.x > 0.5) continue;");
   if (src.includes("int(K1.z) != S")) throw new Error("gfFs kg: a corner surface test still fetches K1");
   return src;
@@ -554,15 +554,15 @@ function tangentSkip(src: string, guardOnly: boolean): string {
   };
   rep("#ifdef TANGENT\n    for (int i = 0; i < nk; i++) {\n", "#ifdef TANGENT\n    float cD = ss(-aa, aa, D); int nkT = cD > 0.0 ? nk : 0; // K1362 s14 kd\n    for (int i = 0; i < nkT; i++) {\n");
   if (guardOnly) return src;
-  rep("float fb = band2(dT); if (!(fb > v)) continue; // K1362 s13 fs", "float fb = band2(dT); if (!(fb * cD > v)) continue; // K1362 s14 kd");
-  rep("float val = (1.0 - bur) * fb * ss(-aa, aa, D);", "float val = (1.0 - bur) * fb * cD;");
+  rep("float fb = band(dT); if (!(fb > v)) continue; // K1362 s13 fs", "float fb = band(dT); if (!(fb * cD > v)) continue; // K1362 s14 kd"); // K1407 23A: band
+  rep("float val = fb * ss(-aa, aa, D);", "float val = fb * cD;"); // K1407 23A: unburied
   return src;
 }
 
 /**
  * K1362 s14 `km` (tier letter M): layers()'s ring-face loop and tangent-face loop become one loop over the corners
  * with one burial (one inlined pieceD fewer, K1 fetched once). Exact: a ring face's value does not read D; a tangent
- * face's value is round(a * c) with a = (1 - bur) * fb and c = ss(-aa, aa, D) in [0, 1] taken from the final D, and a
+ * face's value is round(a * c) with a = fb and c = ss(-aa, aa, D) in [0, 1] taken from the final D, and a
  * float product by a fixed c >= 0 is monotone, so max_t round(a_t * c) = round(max_t a_t * c): the loop keeps the
  * best a (tv) and multiplies once after D is final. A tangent face is skipped when fb <= max(v, tv): then a <= fb, so
  * it can neither raise tv nor (a * c <= a <= v) the final v. The face's identity (PR) is the probe's only, and the
@@ -574,7 +574,7 @@ function cornerMerge(src: string): string {
   const start = src.lastIndexOf("    for (int i = 0; i < nk; i++) {\n#ifdef KLEAN\n", end);
   if (end < 0 || src.indexOf(svw, end + 1) >= 0 || start < 0) throw new Error("gfFs: km found no ring-face loop");
   const old = src.slice(start, end);
-  if (old.split("// K1362 s13 fs").length !== 3 || !old.includes("#ifdef TANGENT\n") || !old.includes("float val = (1.0 - bur) * fb * ss(-aa, aa, D);")) {
+  if (old.split("// K1362 s13 fs").length !== 3 || !old.includes("#ifdef TANGENT\n") || !old.includes("float val = fb * ss(-aa, aa, D);")) {
     throw new Error("gfFs: km expects the fs ring and tangent loops");
   }
   const merged = `    float tv = 0.0; // K1362 s14 km: the best tangent face before its D factor
@@ -582,7 +582,7 @@ function cornerMerge(src: string): string {
       int k = kk[i]; vec4 K0 = F(uOK + 6 * k); vec4 K1 = F(uOK + 6 * k + 1); if (int(K1.z) != S) continue;
       float rho = krho[i]; float Dk = rho - K0.z; bool ring = kSec[i];
       if (ring && kIn[i] == 2 && Dk > D) D = Dk;
-      ring = ring && rho > 1e-12;
+      ring = ring && rho > 1e-12 && K0.z > 0.0;
 #ifdef TANGENT
       bool tng = !(K1.x > 0.5); vec4 K4 = vec4(0.0); vec4 K5 = vec4(0.0);
       if (tng) { K4 = F(uOK + 6 * k + 4); K5 = F(uOK + 6 * k + 5); }
@@ -599,7 +599,7 @@ function cornerMerge(src: string): string {
         } else {
           q = f == 2 ? K5.xy : K4.zw;
           float dT = length(p - q); if (!(dT < W + aa)) continue;
-          fb = band2(dT); if (!(fb > max(v, tv))) continue;
+          fb = band(dT); if (!(fb > max(v, tv))) continue; // K1407 23A: band
         }
         float bur = 0.0;
         for (int m = 0; m < np && bur < 1.0; m++) {
@@ -607,7 +607,7 @@ function cornerMerge(src: string): string {
           float wb2 = 1.0 - ss(h - 2.0 * aa, h, sqrt(pieceD(m, q)));
           if (wb2 > bur) bur = wb2;
         }
-        float val = (1.0 - bur) * fb;
+        float val = fb; // K1407 23A: both faces unburied (bur no longer read)
         if (f == 0) { if (val > v) v = val; } else if (val > tv) tv = val;
       }
     }
@@ -943,7 +943,7 @@ bool inSector(int k, vec2 p) {
 // K1362 s10: corner k's rho, sector and ring class at p, the scan's own lines (in place of krho, kSec, kIn)
 void kSK(int k, vec2 p, float rho, out bool sec, out int kin) {
   vec4 K0 = F(uOK + 6 * k);
-  sec = inSector(k, p); bool inR = rho <= K0.w && sec;
+  sec = inSector(k, p); bool inR = rho <= K0.w && sec && K0.z > 0.0;
   kin = !inR ? 0 : rho > K0.z - uAA ? 2 : 1;
 }
 void kState(int k, vec2 p, out float rho, out bool sec, out int kin) {
@@ -956,7 +956,7 @@ void kState(int k, vec2 p, out float rho, out bool sec, out int kin) {
 // negative or NaN here); the ring class is the scan's own two comparisons on that rho
 void kSG(int k, float rho, out bool sec, out int kin) {
   vec4 K0 = F(uOK + 6 * k);
-  sec = rho >= 0.0; bool inR = rho <= K0.w && sec;
+  sec = rho >= 0.0; bool inR = rho <= K0.w && sec && K0.z > 0.0;
   kin = !inR ? 0 : rho > K0.z - uAA ? 2 : 1;
 }
 #define KR(x) x
@@ -996,6 +996,7 @@ int entry(int id) {
   int i = ns++; sid[i] = id; skey[i] = -BIG; sckey[i] = -BIG; scch[i] = -1; PR(scs[i] = 0.0;) scov[i] = false; return i;
 #endif
 }
+float band(float D) { return 1.0 - ss(uW - uAA, uW + uAA, D); } // K1407 23A: form B's band (its arc and tangent terms are unburied)
 float band2(float D) { return (1.0 - ss(uW - uAA, uW + uAA, D)) * ss(-uAA, uAA, D); }
 
 void layers(vec2 p) {
@@ -1084,10 +1085,10 @@ void layers(vec2 p) {
     for (int i = 0; i < nk; i++) {
 #ifdef KLEAN
       int k = kk[i]; vec4 K0 = F(uOK + 6 * k); vec4 K1 = F(uOK + 6 * k + 1); if (int(K1.z) != S) continue;
-      float rho; bool ksJ; int kiJ; KST(i, k, rho, ksJ, kiJ) if (!ksJ) continue; float Dk = rho - K0.z;
+      float rho; bool ksJ; int kiJ; KST(i, k, rho, ksJ, kiJ) if (!ksJ || !(K0.z > 0.0)) continue; float Dk = rho - K0.z;
       if (kiJ == 2 && Dk > D) D = Dk;
 #else
-      int k = kk[i]; vec4 K0 = F(uOK + 6 * k); vec4 K1 = F(uOK + 6 * k + 1); if (int(K1.z) != S || !kSec[i]) continue;
+      int k = kk[i]; vec4 K0 = F(uOK + 6 * k); vec4 K1 = F(uOK + 6 * k + 1); if (int(K1.z) != S || !kSec[i] || !(K0.z > 0.0)) continue;
       float rho = krho[i]; float Dk = rho - K0.z;
       if (kIn[i] == 2 && Dk > D) D = Dk;
 #endif
@@ -1099,7 +1100,7 @@ void layers(vec2 p) {
         float wb2 = 1.0 - ss(h - 2.0 * aa, h, sqrt(pieceD(m, q)));
         if (wb2 > bur) bur = wb2;
       }
-      float val = (1.0 - bur) * band2(Dk);
+      float val = band2(Dk);
       if (val > v) { v = val; PR(wk = 2; wa = k; wb = 0;) }
     }
 #ifdef TANGENT
@@ -1115,7 +1116,7 @@ void layers(vec2 p) {
           float wb2 = 1.0 - ss(h - 2.0 * aa, h, sqrt(pieceD(m, T)));
           if (wb2 > bur) bur = wb2;
         }
-        float val = (1.0 - bur) * band2(dT) * ss(-aa, aa, D);
+        float val = band(dT) * ss(-aa, aa, D);
         if (val > v) { v = val; PR(wk = 4; wa = k; wb = t;) }
       }
     }
@@ -1253,7 +1254,7 @@ void main() {
     for (int i = 0; i < nk; i++) {
       int k = kk[i]; vec4 K0 = F(uOK + 6 * k);
       float rx = x - K0.x; float ry = y - K0.y; float rho = sqrt(rx * rx + ry * ry);
-      bool sec = inSector(k, p); bool inR = rho <= K0.w && sec;
+      bool sec = inSector(k, p); bool inR = rho <= K0.w && sec && K0.z > 0.0;
       kSec[i] = sec; krho[i] = rho; kIn[i] = !inR ? 0 : rho > K0.z - aa ? 2 : 1;
     }
 #else
@@ -1402,7 +1403,7 @@ void main() {
       }
       float rx = x - K0.x; float ry = y - K0.y; float rho = sqrt(rx * rx + ry * ry);
       if (!(rho > K0.z - aa - W) || rho > K0.w + W + 2.0 * aa) continue;
-      bool sec = inSector(k, p); bool inR = rho <= K0.w && sec;
+      bool sec = inSector(k, p); bool inR = rho <= K0.w && sec && K0.z > 0.0;
 #ifdef TIER
       if (nk == MAXK) { ovf = true; break; } // the full program keeps this corner: it draws the pixel
 #endif

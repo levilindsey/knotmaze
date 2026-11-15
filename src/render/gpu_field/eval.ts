@@ -228,7 +228,7 @@ export class GfEval {
       }
       const rx = x - T.kCx[k]; const ry = y - T.kCy[k]; const rho = Math.sqrt(rx * rx + ry * ry);
       if (!(rho > T.kR[k] - aa - W) || rho > T.kRmax[k] + W + 2 * aa) continue;
-      const sec = this.inSector(k, x, y); const inR = rho <= T.kRmax[k] && sec;
+      const sec = this.inSector(k, x, y); const inR = rho <= T.kRmax[k] && sec && T.kR[k] > 0; // K1407 23A: a null corner fills nothing (form B)
       this.kSec[nk] = sec ? 1 : 0; // form B's arc term reads the wedge alone, not the fill's far bound rV
       this.kk[nk] = k; this.krho[nk] = rho; this.kIn[nk] = !inR ? 0 : rho > T.kR[k] - aa ? 2 : 1; nk++;
     }
@@ -291,7 +291,8 @@ export class GfEval {
     for (let i = 0; i < ns; i++) this.sord[i] = i;
     for (let i = 1; i < ns; i++) { const v = this.sord[i]; let m = i - 1; while (m >= 0 && this.skey[this.sord[m]] < this.skey[v]) { this.sord[m + 1] = this.sord[m]; m--; } this.sord[m + 1] = v; }
     // per surface: coverage a and ink v (max over exposed terms, the winner kept)
-    const band2 = (D: number): number => (1 - ss(W - aa, W + aa, D)) * ss(-aa, aa, D);
+    const band = (D: number): number => 1 - ss(W - aa, W + aa, D);
+    const band2 = (D: number): number => band(D) * ss(-aa, aa, D);
     for (let e = 0; e < ns; e++) {
       const S = this.sid[e]; let D = -Infinity; let v = 0; let wk = 0; let wa = -1; let wb = 0;
       for (let j = 0; j < this.np; j++) {
@@ -320,7 +321,7 @@ export class GfEval {
         if (val > v) { v = val; wk = this.pend[j] ? 3 : 1; wa = this.pc[j]; wb = this.ptx[j] * (y - this.pfy[j]) - this.pty[j] * (x - this.pfx[j]) >= 0 ? 1 : -1; }
       }
       for (let i = 0; i < this.nk; i++) {
-        const k = this.kk[i]; if (T.kG[k] !== S || !this.kSec[i]) continue;
+        const k = this.kk[i]; if (T.kG[k] !== S || !this.kSec[i] || !(T.kR[k] > 0)) continue; // K1407 23A: no arc at r = 0
         const rho = this.krho[i]; const Dk = rho - T.kR[k];
         if (this.kIn[i] === 2 && Dk > D) D = Dk;
         if (!(rho > 1e-12)) continue;
@@ -331,7 +332,7 @@ export class GfEval {
           const wb2 = 1 - ss(h - 2 * aa, h, Math.sqrt(this.pieceD(m, qx, qy)));
           if (wb2 > bur) bur = wb2;
         }
-        const val = (1 - bur) * band2(Dk);
+        const val = band2(Dk); // K1407 23A: form B's arc is unburied (its own arms cover the arc point near the tangents)
         if (val > v) { v = val; wk = 2; wa = k; wb = 0; }
       }
       // form B's T_TA / T_TB: a fillet's tangent points are points of the trimmed outline, so their distance
@@ -348,7 +349,7 @@ export class GfEval {
             const wb2 = 1 - ss(h - 2 * aa, h, Math.sqrt(this.pieceD(m, tx, ty)));
             if (wb2 > bur) bur = wb2;
           }
-          const val = (1 - bur) * band2(dT) * ss(-aa, aa, D);
+          const val = band(dT) * ss(-aa, aa, D); // K1407 23A: form B's tangent term (om * aS * band(dT), unburied)
           if (val > v) { v = val; wk = 4; wa = k; wb = t; }
         }
       }

@@ -319,6 +319,9 @@ const SITES: [string | RegExp, string, number][] = [
   // reach (W + aa): the tables' bins stay exact. The outer ramp is form B's (the fill's edge).
   ["float band2(float D) { return (1.0 - ss(uW - uAA, uW + uAA, D)) * ss(-uAA, uAA, D); }",
     "float band2(float D) { return (1.0 - ss(uW - max(3.0 * uAA, 0.02 * uH), uW, D)) * ss(-uAA, uAA, D); }", 1],
+  // K1407 23A: band (the tangent terms' ramp) widens with band2
+  ["float band(float D) { return 1.0 - ss(uW - uAA, uW + uAA, D); }",
+    "float band(float D) { return 1.0 - ss(uW - max(3.0 * uAA, 0.02 * uH), uW, D); }", 1],
   // layers(), LABRUN: a piece label, then a corner's
   ["labE = e; labC = PC(j); }", "labE = e; labC = PC(j); lkJ = j; lkK = pkey[j]; }", 1],
   ["labC = nearerA ? int(K3.x) : int(K3.y); }", "labC = nearerA ? int(K3.x) : int(K3.y); lkJ = -1; lkS = nearerA ? K3.z : K3.w; lkK = key; }", 1],

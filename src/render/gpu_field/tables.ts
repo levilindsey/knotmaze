@@ -580,6 +580,48 @@ export function solveGfCorners(P: GfPrefix, jLo: number, jHi: number): GfCorner[
   const QVB: Q = { x: 0, y: 0, ua: 0, ub: 0, nax: 0, nay: 0, nbx: 0, nby: 0, sa: 0, sb: 0, fax: 0, fay: 0, fbx: 0, fby: 0 };
   const QPB: Q = { x: 0, y: 0, ua: 0, ub: 0, nax: 0, nay: 0, nbx: 0, nby: 0, sa: 0, sb: 0, fax: 0, fay: 0, fbx: 0, fby: 0 };
   const QQB: Q = { x: 0, y: 0, ua: 0, ub: 0, nax: 0, nay: 0, nbx: 0, nby: 0, sa: 0, sb: 0, fax: 0, fay: 0, fbx: 0, fby: 0 };
+  const QNB: Q = { x: 0, y: 0, ua: 0, ub: 0, nax: 0, nay: 0, nbx: 0, nby: 0, sa: 0, sb: 0, fax: 0, fay: 0, fbx: 0, fby: 0 };
+  // K1407 23A: form B's solveEq V (the V gate's Newton on the arms' fixed samples), returning the point.
+  // Where the tracked V lands past a short arm's end and sticks at its boundary, this still finds the V
+  // form B grows from (or nulls at); where it finds none, form B has no corner either.
+  const newtonV = (J: { c: [number, number] | number[] }, A: ArmT, B: ArmT, th: number): Q | null => {
+    let bx = A.ux + B.ux; let by = A.uy + B.uy; const bl = Math.sqrt(bx * bx + by * by) || 1; bx /= bl; by /= bl;
+    const sn = Math.sin(th / 2); let x = J.c[0] + (bx * h) / sn; let y = J.c[1] + (by * h) / sn;
+    const SAw = smpOf(A); const SBw = smpOf(B); const fw = { u: 0, x: 0, y: 0 };
+    const footW = (S: { n: number; du: number; x: Float64Array; y: Float64Array }, px: number, py: number): void => {
+      let best = Infinity;
+      for (let i = 0; i < S.n; i++) {
+        const ax = S.x[i]; const ay = S.y[i]; const dx = S.x[i + 1] - ax; const dy = S.y[i + 1] - ay; const l2 = dx * dx + dy * dy;
+        const t = l2 > 0 ? Math.min(1, Math.max(0, ((px - ax) * dx + (py - ay) * dy) / l2)) : 0;
+        const fx = ax + t * dx; const fy = ay + t * dy; const d2 = (px - fx) * (px - fx) + (py - fy) * (py - fy);
+        if (d2 < best) { best = d2; fw.u = (i + t) * S.du; fw.x = fx; fw.y = fy; }
+      }
+    };
+    let ua = 0; let ub = 0; let fax = 0; let fay = 0; let fbx = 0; let fby = 0; let ok = false;
+    for (let it = 0; it < 60; it++) {
+      footW(SAw, x, y); ua = fw.u; fax = fw.x; fay = fw.y; footW(SBw, x, y); ub = fw.u; fbx = fw.x; fby = fw.y;
+      const dax = x - fax; const day = y - fay; const dbx = x - fbx; const dby = y - fby;
+      const da = Math.sqrt(dax * dax + day * day); const db = Math.sqrt(dbx * dbx + dby * dby);
+      const Fa = da - h; const Fb = db - h;
+      if (Math.abs(Fa) < 1e-9 * h && Math.abs(Fb) < 1e-9 * h) { ok = true; break; }
+      if (!(da > 1e-12 && db > 1e-12)) break;
+      const gax = dax / da; const gay = day / da; const gbx = dbx / db; const gby = dby / db; const det = gax * gby - gay * gbx;
+      if (Math.abs(det) < 1e-12) break;
+      let dx = (-Fa * gby + Fb * gay) / det; let dy = (-Fb * gax + Fa * gbx) / det; const dl = Math.sqrt(dx * dx + dy * dy);
+      if (dl > h) { dx *= h / dl; dy *= h / dl; }
+      x += dx; y += dy;
+    }
+    const tol = 1e-9 * h;
+    if (!(ok && ua > tol && ua < A.L - tol && ub > tol && ub < B.L - tol)) return null;
+    const crA = A.ux * (y - J.c[1]) - A.uy * (x - J.c[0]); const crB = B.ux * (y - J.c[1]) - B.uy * (x - J.c[0]);
+    const sgn = Math.sign(A.ux * B.uy - A.uy * B.ux);
+    if (!(crA * sgn > 0 && crB * sgn < 0)) return null;
+    const da = Math.sqrt((x - fax) * (x - fax) + (y - fay) * (y - fay)) || 1; const db = Math.sqrt((x - fbx) * (x - fbx) + (y - fby) * (y - fby)) || 1;
+    QNB.x = x; QNB.y = y; QNB.ua = ua; QNB.ub = ub; QNB.fax = fax; QNB.fay = fay; QNB.fbx = fbx; QNB.fby = fby;
+    QNB.nax = (x - fax) / da; QNB.nay = (y - fay) / da; QNB.nbx = (x - fbx) / db; QNB.nby = (y - fby) / db;
+    QNB.sa = norm(A.c, A.sR + A.dir * ua); QNB.sb = norm(B.c, B.sR + B.dir * ub);
+    return QNB;
+  };
   for (let ji = jLo; ji < jHi; ji++) {
     const J = junctions[ji];
     const S = sibs[ji].sort((u, v) => u.ang - v.ang); const n = S.length; if (n < 2) continue;
@@ -600,9 +642,11 @@ export function solveGfCorners(P: GfPrefix, jLo: number, jHi: number): GfCorner[
       const rb = Math.max(rootBand * h * rootTip(th), 1e-9 * h);
       const hA = { k: -1 }; const hB = { k: -1 };
       const snH = Math.sin(th / 2); const csH = Math.cos(th / 2);
-      trackInto(QVB, J, A, B, uV0, uV0, h, 8, Infinity, hA, hB, snH, csH); const V = QVB;
-      if (!(V.ua > 0 && V.ua < A.L && V.ub > 0 && V.ub < B.L)) continue;
-      { // form B's V gate, mirrored (solveEq): Newton on the TRUE distances to both arms from the straight
+      trackInto(QVB, J, A, B, uV0, uV0, h, 8, Infinity, hA, hB, snH, csH);
+      let V: Q = QVB;
+      const vTracked = V.ua > 0 && V.ua < A.L && V.ub > 0 && V.ub < B.L;
+      if (!vTracked) { const NV = newtonV(J, A, B, th); if (!NV) continue; V = NV; } // K1407 23A: solveEq fallback
+      if (vTracked) { // form B's V gate, mirrored (solveEq): Newton on the TRUE distances to both arms from the straight
         // model's V, each foot clamped at its arm's root; a foot at the root (dV = 0) or no solution rejects.
         // Then V lies in the wedge between the arms' chords (the facing sides).
         let bx = A.ux + B.ux; let by = A.uy + B.uy; const bl = Math.sqrt(bx * bx + by * by) || 1; bx /= bl; by /= bl;
@@ -659,7 +703,13 @@ export function solveGfCorners(P: GfPrefix, jLo: number, jHi: number): GfCorner[
         if (sK < sPrev && sK === 0) { r += seg; break; }
         r += seg; sPrev = sK; pua = pk.ua; pub = pk.ub;
       }
-      if (!(r > 1e-9)) continue;
+      if (!(r > 1e-9)) { // K1407 23A: form B keeps a null corner (r = 0): its tangent terms ink a disc at V.
+        // A through pair's null is not kept: the reference's fillet pick requires r > 0, so a null through
+        // corner draws nothing (its eye band would ink the open eye).
+        if (!thru) K.push({ thru, rv: 0, cx: V.x, cy: V.y, r: 0, rmax: (2 * aa) / Math.max(0.1, Math.sin(th / 2)), eax: -V.nax, eay: -V.nay, ebx: -V.nbx, eby: -V.nby, g, j: jBase + ji, a: A.ei, b: B.ei, theta: th, ca: A.c, cb: B.c, sa: V.sa, sb: V.sb });
+        continue;
+      }
+      if (thru && r < 0.16 * h) continue; // K1407 23A: a through radius this small is the integral's noise (form B's reads 0-0.05h there); its pick passes, so the eye stays open
       trackInto(QQB, J, A, B, pua, pub, h + r, TRACK + 1, 4 * dN / t2, hA, hB, snH, csH); const q = QQB;
       const rV = Math.hypot(V.x - q.x, V.y - q.y);
       const rmax = rV + (2 * aa) / Math.max(0.1, Math.sin(th / 2));
