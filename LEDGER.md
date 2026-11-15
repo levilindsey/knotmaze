@@ -585,10 +585,10 @@ Next free ID: K1404.
 - **K1387** · rp=gf lean (K1369 s3): underWindows stay empty, so under rp=gf the maze's under-gap hiding stops
   for reveal sparks, telegraph rim ends, burn sparks, the yarn, underClipBand (fabric_maze_renderer.ts) and
   joinery.ts:1575; needed before rp=gf default-on (K1369_s3_lean_default.md handoff)
-  - owner: agent `ac4acaf6a0d8a3088` of claude session 01SUPGULDxvE5gKXozfaFaFG (opus; started 2026-11-15 07:35, stop by 2 h)
-  - branch: `worktree-agent-ac4acaf6a0d8a3088`, worktree `.claude/worktrees/agent-ac4acaf6a0d8a3088`; last commit: `e2354e4a` (brief)
+  - owner: nobody since 2026-11-15 09:06 (merged; agent `ac4acaf6a0d8a3088` of claude session 01SUPGULDxvE5gKXozfaFaFG)
+  - branch: mainline; last commit: `e12eba40`
   - evidence: `.claude/probes/K1387/`
-  - next: Stage 2 running: lean's under march only where read (win back +1.0 ms intro-d on the Pixel), exact, plus the crops under rp=gf
+  - next: the Pixel ABBA (k1387_phone.ps1; base 2b1cffe1 against the s2 merge, rp=gf) when the phone's screen is on: main ms/frame, gf builds/s, the drag's sim/wall (s2 handoff, Next)
   - brief: `docs/design/K1387_s2_lazy_march.md` (s1: `K1387_s1_lean_consumers.md`)
 
 ## Next, in order
