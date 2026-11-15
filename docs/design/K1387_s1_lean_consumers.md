@@ -89,3 +89,48 @@ Under 30 lines:
 - your last SHA.
 
 End with `Ledger items` and K1387's handle fields (owner, branch and worktree, last commit, evidence, next, brief).
+
+## Handoff (s1, 2026-11-15)
+
+Start 23:25 PT 2026-11-14. The Claude Code process exited at 00:12:02. Resumed at 07:23 and stopped at 07:28, well
+inside the coordinator's 08:30 stop. The lazy march (Next) was judged too broad to land and re-verify by then.
+
+- **What changed (f05c14fd).**
+  - `crossing_gaps.ts`: the full solve's setup and under march moved into `solveUnder` (results in an `UnderMarch`).
+    Lean mode's new `leanSlot` shares it and writes only what the consumers read:
+    - slotAll*/slotCut* and `slotLive`;
+    - the chainCuts quad (underCutCtrls);
+    - the underWindows triple (underGapVisibility, underClipBand, the joinery reader);
+    - diagData x,y.
+  - `ribbon_renderer.ts`: `pluckSiteTester()` runs `leanFresh()` first. `input_pointer.ts` (the release) and
+    `auto_audio.ts` call it. Tests are in `test/render/lean_mode.test.ts`, and the fake in `test/app/tug_toggle.test.ts`
+    gains the method.
+- **Done 1, numeric (no crops).** `node .claude/probes/K1387/k1387_exact.mjs <origin> <label>` compares
+  full/lean/full bitwise per consumer on `b.FMKB4DIQ&snd=none&rp=gf&phw=0`.
+  - Branch (`out/exact_branch.log`): F/L = 0 in every scenario.
+    - Intro: 22 checks, windows 1 to 353.
+    - Rest and mid-drag: hiddenVis 2846 and bands 3652.
+    - Release: footprintsWrong 0.
+    - xp=threads 6/6, fi=fuse 350/350.
+  - Base 2b1cffe1 (`out/exact_base*.log`):
+    - Intro F/L up to 3598, with lean windows 0 against full 353.
+    - Release footprintsWrong 1400.
+- **Done 2, Pixel ABBA (`k1387_phone.ps1`, `out/motion_p1.json`).**
+  - Run 00:05:04 to 00:07:57 PT 2026-11-15, base 2b1cffe1 against head f05c14fd, rp=gf, 2 reps.
+  - The fix costs main-thread time, and the cost is recorded:
+    - intro-d: main ms/frame 12.09/12.18 base vs 13.17/13.07 head (+1.0);
+    - drag: 5.59/5.38 vs 5.85/5.89 (+0.4).
+  - gf builds per second are within noise: intro-d 51.5/47.2 vs 51.9/48.3, drag 20.0/18.6 vs 18.8/19.1.
+  - Drag sim/wall: .886/.807 base vs .825/.784 head. Frame p50 is 16.7 ms everywhere.
+  - Desktop (`k1387_cost.mjs`, `out/cost_desktop.log`, 00:09:48 to 00:11:29, perf lock held): the lean update's median
+    is 4.50 ms base vs 6.40 ms branch, and the full update's is 11.80 vs 11.90.
+  - The cost is the under march, which base's lean skipped. Base also left `slotLive` unset in the intro.
+- **Done 3.** `npm test` is green at 875c95fb (07:27: 241 files, 3042 passed, 18 skipped; `out/npm_test_final.log`). byte_identity and the goldens pass, and rp=gf stays off
+  by default (pinned in `lean_mode.test.ts`).
+- **Next.** Win back lean's +1.9 ms with a lazy, per-under-chain march. There are many readers, and each needs a flush
+  point:
+  - `explore_gaps.ts` reads slotLive and slotAll*/slotCut* every frame;
+  - the pluck footprints;
+  - underGapVisibility, underClipBand and underCutCtrls;
+  - the joinery underWindows reader.
+  - Gate: k1387_exact F/L = 0, then re-run the cost probe and the Pixel ABBA.
