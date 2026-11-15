@@ -76,8 +76,8 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
     verified: 0, mismatch: [] as string[], verifyMs: [] as number[],
     // K1369 s2: post to install (the frame that uploads it), the replies a
     // newer one replaced before install, and the frames busy() let main skip
-    // the ribbon update on.
-    showMs: [] as number[], superseded: 0, gated: 0,
+    // the ribbon update on. showAt: [post, install] time pairs, flat.
+    showMs: [] as number[], showAt: [] as number[], superseded: 0, gated: 0,
   };
 
   // The build worker: started on the first frame; until it says hello (and
@@ -379,7 +379,9 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
         const p = pending;
         pending = null;
         install(p.T, p.main);
-        stats.showMs.push(performance.now() - p.t0);
+        const now = performance.now();
+        stats.showMs.push(now - p.t0);
+        stats.showAt.push(p.t0, now);
       }
       const cam = camera();
       const count = r.updateCount;
