@@ -567,7 +567,7 @@ Next free ID: K1383.
   tables the CPU builds in under 1 ms) instead of the outline mesh built on the CPU each frame (65-117 ms on
   def). Reverses the 2026-11-09 call (K1040 dropped for K1240). The main speed route (Levi, 2026-11-12: very bullish
   on it); dropped only on a proof it cannot work (brief: "How the result is judged"). Analysis in docs/ledger_notes.md.
-  - owner: nobody since 2026-11-14 16:03 (merged; agent `a692a6d29bd0fd421` of claude session 01SUPGULDxvE5gKXozfaFaFG)
+  - owner: claude session 01SUPGULDxvE5gKXozfaFaFG (coordinator, running p15b on the Pixel)
   - branch: mainline; last commit: `71bf979e`
   - evidence: .claude/probes/K1362/ (k1362s14_*, k1362s15_*), out/s14/, out/s15/
   - next: Stage 15 merged (depth-class tiers zc/zb/zk/zf, bench-only, exact on the desktop). Run p15b on the Pixel (pwsh -NoProfile -File .claude/probes/K1362/k1362s15_phone_run.ps1 -Cfgs p15b -WaitMin 30); set GF_TIERS[0] if zb or zk pays and is 12/12 exact there, else build a two-piece layering P0. Check the PVR compiler (k1362s15_pvr.ps1) ranks the s14 forms as the Pixel did before trusting it
