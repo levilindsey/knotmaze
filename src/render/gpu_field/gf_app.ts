@@ -81,8 +81,8 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
     // newer one replaced before install, and the frames busy() let main skip
     // the ribbon update on. showAt: [post, install] time pairs, flat.
     showMs: [] as number[], showAt: [] as number[], superseded: 0, gated: 0,
-    // K1369 s4: worker posts by the depth in force when posted ([1], [2], [3+]).
-    postsAt: [0, 0, 0, 0],
+    // K1369 s4: each worker post's depth in force (a probe's window slices it).
+    postDepth: [] as number[],
   };
 
   // The build worker: started on the first frame; until it says hello (and
@@ -356,7 +356,7 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
     const useWorker = !!worker && ready && !!T;
     const d = depth();
     if (useWorker && flights.size >= d) return false;
-    if (useWorker) stats.postsAt[Math.min(3, d)]++;
+    if (useWorker) stats.postDepth.push(d);
     const t0 = performance.now();
     const { input, transfer }: { input: SceneExportInput; transfer: ArrayBuffer[] } = gatherSceneInputLean(ctx, "field");
     if (useWorker) {
