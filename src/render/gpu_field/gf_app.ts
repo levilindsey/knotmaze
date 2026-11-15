@@ -29,7 +29,7 @@ import { splineBend, type SplineSamples } from "../../geometry/spline_generator"
 import { buildTables, type GfTables } from "./tables";
 import { CTRL_ARC, gfBuild, gfDepth, tablesDiff } from "./gf_build";
 import { GfRevealTable, gfRevealing } from "./gf_reveal";
-import { GfLookTable, lookGap, lookKey } from "./gf_look";
+import { GfLookGate, GfLookTable, lookGap, lookKey } from "./gf_look";
 import { GfComposite, GfPass, GfTarget, type GfMap } from "./gf_pass";
 
 interface GfReply {
@@ -81,15 +81,16 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
   let drawn: (Float32Array | null)[] = [];
   let rvTab: GfRevealTable | null = null;
   let rvDrawn = false;
-  // K1389 s1: today's thread look: the colour table, the tables it was built beside, frames since, the gap drawn
+  // K1389 s1: today's thread look. s2: the static colour table, its gate and the key it was built with; the
+  // installed tables' sample positions (taken when their build was gathered) and their version; spare position
+  // arrays; the gap drawn
   let lkTab: GfLookTable | null = null;
-  let lkT: GfTables | null = null;
-  let lkAge = 0;
+  const lkGate = new GfLookGate();
+  let lkKey = -1;
+  let lkP: Float32Array | null = null;
+  let lkPVer = 0;
+  const lkPool: Float32Array[] = [];
   let lkGap = -1;
-  // the colour key last built with, the tables seen last frame and the frames they have held
-  let lkKey = 0;
-  let lkSeenT: GfTables | null = null;
-  let lkStill = 0;
   const stats = {
     rebuilds: 0, passes: 0, composites: 0, fallback: "",
     exportMs: [] as number[], tablesMs: [] as number[], packMs: [] as number[], uploadMs: [] as number[],
@@ -97,8 +98,9 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
     // K1383 s1: the reveal table's CPU build per drawn reveal frame, its knots and active chains, the reveal
     // frames drawn and the frame the reveal form was last drawn on (performance.now()).
     rvMs: [] as number[], rvKnots: [] as number[], rvActive: [] as number[], rvPasses: 0, rvLast: 0,
-    // K1389 s1: the look table's CPU builds (ms) and its colour texels
-    lkMs: [] as number[], lkColors: 0,
+    // K1389 s1: the look table's CPU builds (ms) and its colour texels. s2: the hashes the gate let through, the
+    // table's rows and positions, each build's positions walk and each positions upload (ms)
+    lkMs: [] as number[], lkColors: 0, lkKeys: 0, lkRows: 0, lkPos: 0, lkPosMs: [] as number[], lkUpMs: [] as number[],
     // c1: where builds ran, main's share per rebuild (gather + post, then
     // pack + upload; in-thread builds add the export and tables), the
     // worker's whole build and the post-to-arrival latency.
@@ -123,10 +125,10 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
   let ready = false;
   // K1369 s2: the builds in flight (id -> its generation, post time and
   // main's share), up to `depth` at once; the worker queues them in order.
-  const flights = new Map<number, { gen: number; t0: number; main: number }>();
+  const flights = new Map<number, { gen: number; t0: number; main: number; lk: Float32Array | null }>();
   let flightId = 0;
   let gen = 0;
-  let pending: { T: GfTables; main: number; t0: number; samples?: SplineSamples[] } | null = null;
+  let pending: { T: GfTables; main: number; t0: number; samples?: SplineSamples[]; lk?: Float32Array | null } | null = null;
   // K1369 s4: THE SNAPSHOT CHANNEL (`__knotGfOpts.chan`, off by default).
   // Once the first tables exist, gf_app asks the physics host for a port to
   // the physics worker (worker_host.ts gfPort) and hands it to the gf
@@ -266,7 +268,7 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
       if (ref) check(d.T, ref);
       // Replies come in post order: a newer one replaces a pending older one.
       if (pending) stats.superseded++;
-      pending = { T: d.T, main: fl.main, t0: fl.t0 };
+      pending = { T: d.T, main: fl.main, t0: fl.t0, lk: fl.lk };
       requestFrame();
     };
   };
@@ -359,10 +361,10 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
         try {
           const bc = ctx.scene.renderer?.borderColor ?? 0;
           const ink: [number, number, number] = bc ? [((bc >> 16) & 255) / 255, ((bc >> 8) & 255) / 255, (bc & 255) / 255] : INK_AUTO;
-          const lt = pass?.lookTex;
+          const lt = !!pass?.looking;
           const lr = ctx.scene.renderer;
           // K1389 s1: today's thread look (gf_look.ts): the section colours by fill / border / both
-          comp.draw(target, FILL, ink, lt && lkTab && lr ? { tex: lt, oK: lkTab.oK, mode: lr.threadLook, bd: bc ? [ink[0], ink[1], ink[2], 1] : [0, 0, 0, 0] } : null);
+          comp.draw(target, FILL, ink, lt && lr ? { mode: lr.threadLook, bd: bc ? [ink[0], ink[1], ink[2], 1] : [0, 0, 0, 0] } : null);
           stats.composites++;
         } finally {
           const wr = renderer as unknown as WebGLRenderer;
@@ -430,10 +432,30 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
     return { a: root.scale.x * sx, d: root.scale.y * sy, e: root.position.x * sx, f: root.position.y * sy, w, h, scale: root.scale.x * sx };
   };
 
+  // K1389 s2: the sample positions of this frame's state (gf_look.ts positions), into a spare array; null while the
+  // look is off or its table not built. Taken when a build is gathered, so they match its samples.
+  const lkSnap = (): Float32Array | null => {
+    const r = ctx.scene.renderer;
+    if (!r || !lkTab || lkKey < 0 || !pass?.lookable || opts().look === false) return null;
+    const t0 = performance.now();
+    const P = lkTab.positions(r, lkPool.pop());
+    stats.lkPosMs.push(performance.now() - t0);
+    return P;
+  };
+  // the positions to draw from now on (the old array back to the spares)
+  const lkShow = (P: Float32Array | null): void => {
+    if (!P) return;
+    if (lkP && lkP !== P && lkPool.length < 4) lkPool.push(lkP);
+    lkP = P;
+    lkPVer++;
+  };
+
   // Pack and upload a build's tables (main's last share of a rebuild).
-  const install = (next: GfTables, mainSoFar: number): void => {
+  const install = (next: GfTables, mainSoFar: number, lkNext?: Float32Array | null): void => {
     const t0 = performance.now();
     T = next;
+    // K1389 s2: the positions gathered with this build (else this frame's: an in-thread or channel build)
+    lkShow(lkNext ?? lkSnap());
     pass!.upload(T);
     stats.packMs.push(pass!.packMs);
     stats.uploadMs.push(pass!.uploadMs);
@@ -457,7 +479,7 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
       flightId++;
       worker!.postMessage({ id: flightId, input, aa, pool: opts().pool !== false }, transfer);
       const main = performance.now() - t0;
-      flights.set(flightId, { gen, t0, main });
+      flights.set(flightId, { gen, t0, main, lk: lkSnap() });
       stats.gatherMs.push(main);
       // The reference reads the same state now (outside main's share).
       if (verifying()) refs.set(flightId, reference(aa));
@@ -581,7 +603,8 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
       if (!g) return fallback("no WebGL2 context");
       if (!pass) {
         pass = new GfPass(g, false);
-        target = new GfTarget(g, 1, false);
+        // K1389 s2: the look writes its colours to a second attachment
+        target = new GfTarget(g, pass.lookable ? 2 : 1, false);
         comp = new GfComposite(g);
       }
       startWorker();
@@ -610,7 +633,7 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
           stats.chanBuilds++;
           worker?.postMessage({ chan: "ack", done: chanDone, depth: depth() });
         }
-        install(p.T, p.main);
+        install(p.T, p.main, p.lk);
         const now = performance.now();
         stats.showMs.push(now - p.t0);
         stats.showAt.push(p.t0, now);
@@ -647,22 +670,28 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
         rvDrawn = false;
         dirty = true;
       }
-      // K1389 s1: today's thread look: the colour table beside the tables, its gap today's crossing gap. Rebuilt
-      // for new tables once they hold still for 3 frames (rest) or at most every 12 frames in motion (a build costs
-      // ms of main), and at once when what the colours read changes (a scheme change builds no tables).
+      // K1389 s1: today's thread look. s2: the colour table is static: rebuilt only when what knotSection reads
+      // changes (the gate's revisions, then the hash), and the positions with it; each build's positions arrive
+      // with its tables (install).
       if (pass.lookable && o.look !== false) {
         lkTab ??= new GfLookTable();
-        lkStill = T === lkSeenT ? lkStill + 1 : 0;
-        lkSeenT = T;
-        const go = lkT !== T ? lkStill >= 3 || ++lkAge >= 12 || lkT === null : lookKey(r) !== lkKey;
-        if (go) {
-          lkT = T; lkAge = 0; lkKey = lookKey(r);
-          if (lkTab.build(r)) dirty = true;
-          stats.lkMs.push(lkTab.ms); stats.lkColors = lkTab.nColors;
+        if (lkGate.changed(r)) {
+          stats.lkKeys++;
+          const key = lookKey(r);
+          if (key !== lkKey) {
+            lkKey = key;
+            if (lkTab.build(r)) dirty = true;
+            stats.lkMs.push(lkTab.ms); stats.lkColors = lkTab.nColors; stats.lkRows = lkTab.rows; stats.lkPos = lkTab.nPos;
+            lkShow(lkSnap());
+            dirty = true;
+          }
         }
+        if (!lkP) lkShow(lkSnap());
         const gap = lookGap(r);
         if (gap !== lkGap) { lkGap = gap; dirty = true; }
-        pass.setLook(lkTab, gap);
+        const up = pass.lkPMs;
+        pass.setLook(lkTab, gap, lkP, lkPVer);
+        if (pass.lkPMs !== up) stats.lkUpMs.push(pass.lkPMs);
       } else if (lkGap >= 0) {
         pass.setLook(null);
         lkGap = -1;

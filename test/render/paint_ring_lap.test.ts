@@ -389,10 +389,6 @@ const ROUNDED_QUOTIENTS: Record<string, [number, string]> = {
   "gpu_field/gf_glsl.ts: floor((u - KC.w) / KC.z)": [1, "keyBin's bin pick: one off only within the division's error of a bin edge, far inside the half bin of slack every bin's pin bounds and arm list are built over (gf_keys.test.ts picks 0.4 bin either way); clamped to the chain's bins"],
   // K1383 s1: rvM, the appearance reveal's mask lookup under rp=gf (gf_reveal.ts).
   "gpu_field/gf_reveal.ts: floor(s / H.w)": [1, "rvM's wrap of s onto a ring's lap (H.w is the ring's length): a ring's knot table closes with a knot at s = ring carrying the first knot's mask (GfRevealTable: S[count] = ring, M[count] = M[0]), so a lap one low puts s just past ring and one high just under 0, and both clamp to that same seam mask (gf_reveal.test.ts wraps a ring)"],
-  // K1389 s1: today's thread look under rp=gf (gf_look.ts): the colour index and its two-byte write.
-  "gpu_field/gf_look.ts: floor((s - H.z) / H.w + 0.5)": [1, "lkIdx's nearest colour sample (H.w the table's uniform step ds, 0.02 world): one off only within the division's error of a half-step, where it reads the neighbouring sample of the same chain, the colour lerped 0.02 world away; clamped to the chain's samples, which close a ring on sample 0's colour (gf_look.test.ts)"],
-  "gpu_field/gf_look.ts: floor(lkIo / 256.0)": [2, "the colour index's high byte (lkIo an integer-valued float in [0, 65535]): division by a power of two is exact, so the floor is too; the second count is the form's own check that the write is present"],
-  "gpu_field/gf_look.ts: mod(lkIo, 256.0)": [1, "the colour index's low byte: lkIo - 256 floor(lkIo / 256), exact for an integer below 2^24 over a power of two"],
 };
 
 const ROUNDERS = ["floor", "ceil", "trunc", "round", "roundEven", "fract", "mod", "int"];
