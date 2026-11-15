@@ -303,11 +303,6 @@ Next free ID: K1383.
   never unlocks it. If it should stay unlocked on the charger overnight, that is a phone setting only Levi can
   change (K1362). 2026-11-13 10:34-10:57: unlocked, but the Claude app stayed in front, so the run never
   started: the pass needs the HOME SCREEN in front and the phone untouched for 2 min (Claude never presses Home).
-- **K1382** · K1362 course check (2026-11-14): measure against the real Pixel drag frame (rp=gf 33.3 ms p50
-  against 50.0 for today's look; gate 16), not the pass bench. The pass is one of three costs: in-app pass
-  20-25 ms, worker tables 20 ms, physics at 0.3 sim/wall (K1369). Proposed after s15: one drag-frame run with
-  CPU clocks, the K1314 census on rp=gf, and Levi's call on the Pixel drag target (30 or 60 fps)
-  (docs/design/K1362_c1_cpu_off_main.md)
 
 ## In progress
 
@@ -567,11 +562,19 @@ Next free ID: K1383.
   tables the CPU builds in under 1 ms) instead of the outline mesh built on the CPU each frame (65-117 ms on
   def). Reverses the 2026-11-09 call (K1040 dropped for K1240). The main speed route (Levi, 2026-11-12: very bullish
   on it); dropped only on a proof it cannot work (brief: "How the result is judged"). Analysis in docs/ledger_notes.md.
-  - owner: nobody since 2026-11-14 16:32 PT (p15b waits for the phone: its screen was off; never wake it)
+  - owner: nobody since 2026-11-14 16:32 PT; p15b queued inside K1369 s1's first phone window (its agent runs it, the coordinator reads it)
   - branch: mainline; last commit: `71bf979e`
   - evidence: .claude/probes/K1362/ (k1362s14_*, k1362s15_*), out/s14/, out/s15/
   - next: Stage 15 merged (depth-class tiers zc/zb/zk/zf, bench-only, exact on the desktop). Run p15b on the Pixel (pwsh -NoProfile -File .claude/probes/K1362/k1362s15_phone_run.ps1 -Cfgs p15b -WaitMin 30); set GF_TIERS[0] if zb or zk pays and is 12/12 exact there, else build a two-piece layering P0. Check the PVR compiler (k1362s15_pvr.ps1) ranks the s14 forms as the Pixel did before trusting it
   - brief: `docs/design/K1362_s15_program_shape.md`
+- **K1369** · rp=gf: on the Pixel the physics runs at half its sim rate during a drag (sim/wall 0.29-0.32
+  against 0.62-0.71 for today's look), on master and on K1362 c1 alike; not diagnosed. Record the CPU clocks
+  beside the GPU clock through the kit's drag (docs/design/K1362_c1_cpu_off_main.md handoff).
+  - owner: agent `a06ace508b237f65f` of claude session 01SUPGULDxvE5gKXozfaFaFG (opus, started 2026-11-14 17:10, 2 h cap ~19:10)
+  - branch: `worktree-agent-a06ace508b237f65f`, worktree `.claude/worktrees/agent-a06ace508b237f65f`; last commit: `1b69ce1b`
+  - evidence: `.claude/probes/K1369/`
+  - next: Stage 1 (the Pixel motion table: intro settle + drag, rp=gf vs today's look, CPU clocks; why the physics halves) running; merge its branch when it reports
+  - brief: `docs/design/K1369_s1_motion_budget.md`
 
 ## Next, in order
 
@@ -852,9 +855,6 @@ Every other item below waits on the trigger it names.
   doing)
 - **K1360** · Measure the outline worker pool on the Pixel at K = 2 and 3 (K1247 s35 projects 15-22 Hz from
   the pool alone); rides the next phone round (K156), after K1247 s36 lands
-- **K1369** · rp=gf: on the Pixel the physics runs at half its sim rate during a drag (sim/wall 0.29-0.32
-  against 0.62-0.71 for today's look), on master and on K1362 c1 alike; not diagnosed. Record the CPU clocks
-  beside the GPU clock through the kit's drag (docs/design/K1362_c1_cpu_off_main.md handoff).
 - **K1374** · rp=gf build worker: make the slice pool (gf_slice_worker.ts, Muse t2) win on junction builds, or
   remove it: partition pins by chain and the chunk merge by cell range, or transfer the scene to the slices as
   typed arrays, so the coordinator's 6-8 ms serial prefix goes. Today it engages only on junction-free builds
@@ -2348,6 +2348,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1382** · K1362 course check answered: Levi (2026-11-14) - 30 fps in motion acceptable, 60 better, the intro physics first; next is K1369 s1 (intro settle + drag on the Pixel, CPU clocks). Done in 1b69ce1b (2026-11-14).
 - **K1372** · rp=gf: stage 5 tile routes removed by s6 (keys per bin made per-tile bounds moot). Done in c55d015b (2026-11-13).
 - **K1370** · Muse t2: exact corner reuse is impossible (0.000 of vertices bit-identical between consecutive drag frames); a bit-identical slice-worker pool shipped, gated to junction-free builds because its serial prefix (6-8 ms) made muse_hash slower, so def/muse_hash/fat still run the single build (def 10.5 ms). Follow-up K1374. Done in 682a1afa (2026-11-13).
 - **K1366** · K1362 tables lane: buildTables (tables.ts) at or under 2 ms on def, output unchanged (digest vs master), beside K1362 s4's shader work (brief docs/design/K1362_t1_muse_tables.md). Done in e216acb0 (2026-11-13).
