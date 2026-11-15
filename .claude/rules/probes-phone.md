@@ -220,3 +220,11 @@ and something plays (`gameplay-audio.md`), so on a build with K720 no
 context after a touch also means silent (`window.__knotSynth` stays
 undefined). Still check the sound mode at each load. Read the media
 session's real state before a sitting; a brief's numbers go stale.
+
+THERMALS (K1369 s1, 2026-11-14): the Pixel reaches thermal status 1
+within three motion cells and stays above 39 C after a 4-minute rest;
+the big core (cpu6) falls from about 4100 to 1800-2800 MHz as it warms,
+and the motion rates fall with it (intro sim/wall 0.80 cool, 0.63
+warm). A motion A/B runs ABBA with equal rests and records the thermal
+status, skin temperature and every core's clock beside each cell
+(`.claude/probes/K1369/k1369_phone.ps1`).

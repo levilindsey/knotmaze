@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1383.
+Next free ID: K1385.
 
 ## Waiting on Levi
 
@@ -562,10 +562,10 @@ Next free ID: K1383.
   tables the CPU builds in under 1 ms) instead of the outline mesh built on the CPU each frame (65-117 ms on
   def). Reverses the 2026-11-09 call (K1040 dropped for K1240). The main speed route (Levi, 2026-11-12: very bullish
   on it); dropped only on a proof it cannot work (brief: "How the result is judged"). Analysis in docs/ledger_notes.md.
-  - owner: nobody since 2026-11-14 16:32 PT; p15b queued inside K1369 s1's first phone window (its agent runs it, the coordinator reads it)
+  - owner: nobody since 2026-11-14 18:37 PT (s15's depth classes lost on the Pixel: def +1.65, muse_hash +1.8, fat -1.25 ms at 822, p15b; GF_TIERS unchanged)
   - branch: mainline; last commit: `71bf979e`
   - evidence: .claude/probes/K1362/ (k1362s14_*, k1362s15_*), out/s14/, out/s15/
-  - next: Stage 15 merged (depth-class tiers zc/zb/zk/zf, bench-only, exact on the desktop). Run p15b on the Pixel (pwsh -NoProfile -File .claude/probes/K1362/k1362s15_phone_run.ps1 -Cfgs p15b -WaitMin 30); set GF_TIERS[0] if zb or zk pays and is 12/12 exact there, else build a two-piece layering P0. Check the PVR compiler (k1362s15_pvr.ps1) ranks the s14 forms as the Pixel did before trusting it
+  - next: Paused behind K1369: in motion the Pixel is CPU-bound (the knot moves at gf's build rate, the GPU idles at 499-748 MHz). Revisit the pass after K1369 s2 lifts the build rate
   - brief: `docs/design/K1362_s15_program_shape.md`
 - **K1369** · rp=gf: on the Pixel the physics runs at half its sim rate during a drag (sim/wall 0.29-0.32
   against 0.62-0.71 for today's look), on master and on K1362 c1 alike; not diagnosed. Record the CPU clocks
@@ -862,6 +862,12 @@ Every other item below waits on the trigger it names.
 - **K1375** · rp=gf: move `buildKeys` (gf_keys.ts, 0.6 ms p50 on the Pixel main at upload, 0.2 desktop) out of
   gf_pass.ts upload into the gf build worker (gf_build.ts / gf_worker.ts), its arrays transferred with the
   tables (K1362 s6 handoff, next 4).
+- **K1383** · rp=gf has no intro: no trace, burn or thread reveal; the whole unsettled lattice shows from the
+  first frame, and the trace effect ghosts on top at about 15 s (desktop captures,
+  .claude/probes/K1369/out/intro/sheet.png; K1369 s1 handoff). Needed before rp=gf goes on by default
+- **K1384** · rp=gf's shader compiles synchronously: a cold desktop profile freezes the loader about 6.7 s
+  (K1369 s1). Compile in parallel (KHR_parallel_shader_compile) or warm it up (render-shaders.md, K307);
+  measure the Pixel's cold compile too
 
 ## Residuals (known, not fixed)
 

@@ -73,6 +73,20 @@ not repeated here.
   (`kd`) pays, about 0.2 ms on def and muse_hash: `GF_TIERS`
   t32rlgyjfFkDc3, def 12.17 -> 11.97 ms at 822. The corner levers are
   spent (`K1362_s14_corner_loops.md`).
+- Stage 15: depth classes (`zc` `zb` `zk` `zf`: a small P0 writes
+  `gl_FragDepth` to route each pixel to P1 or full) cut the PVR offline
+  compiler's temps from 99 to 41-76 (`k1362s15_pvr.ps1`) and are exact
+  on the desktop, but on the Pixel they are 1.6-1.8 ms slower on def and
+  muse_hash (fat 1.2 faster; p15b, 822). Fewer temps did not pay there;
+  the depth write may cost the tiler more (inferred, not isolated). Do
+  not rank Pixel forms by the compiler alone.
+- In motion the pass is not the Pixel's limit (K1369 s1,
+  `K1369_s1_motion_budget.md`). rp=gf moves the knot only at its build
+  rate, 9-14 per second (one build in flight, a frame-locked round
+  trip), against today's look's 17.6-23.7 fps; its higher frame rate
+  redraws the same tables. Main keeps running the ribbon pipeline gf does
+  not draw, and under gf shares the big core with the physics worker,
+  which halves the drag's sim/wall. The GPU idles at 499-748 MHz.
 - A tier is exact by construction: on overflow it sets a flag,
   breaks and discards, and the next program draws that pixel.
 - Routing is by stencil (EQUAL 0, INCR). The LAST program uses KEEP,
