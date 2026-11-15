@@ -570,10 +570,10 @@ Next free ID: K1390.
 - **K1369** · rp=gf: on the Pixel the physics runs at half its sim rate during a drag (sim/wall 0.29-0.32
   against 0.62-0.71 for today's look), on master and on K1362 c1 alike; not diagnosed. Record the CPU clocks
   beside the GPU clock through the kit's drag (docs/design/K1362_c1_cpu_off_main.md handoff).
-  - owner: agent `a8a51a9e8bd8bb6e7` of claude session 01SUPGULDxvE5gKXozfaFaFG (opus, started 2026-11-14 20:58, 2 h cap ~22:58)
-  - branch: `worktree-agent-a8a51a9e8bd8bb6e7`, worktree `.claude/worktrees/agent-a8a51a9e8bd8bb6e7`; last commit: `85b0d1b7`
+  - owner: nobody since 2026-11-14 22:12 (merged; agent `a8a51a9e8bd8bb6e7` of claude session 01SUPGULDxvE5gKXozfaFaFG)
+  - branch: mainline; last commit: `25a0ff19`
   - evidence: `.claude/probes/K1369/`
-  - next: Stage 4 running: depth 2 with no finger down / 1 during a drag, then the physics-to-gf snapshot channel so main only uploads; Pixel table incl. depth-1 intro cells
+  - next: Stage 4 merged (depth by gesture: 2 at rest, 1 while grabbed; the physics-to-gf snapshot channel, exact, opt-in __knotGfOpts.chan). Pixel: channel intro-d 45/s vs today 33, drag 25-28 vs 17, intro-i sim/wall -.03. Stage 5: depth by the reveal, gate the channel's tables by the reveal (exact during intro-d), cut the 16-28 ms build or split it across two workers
   - brief: `docs/design/K1369_s4_snapshot_channel.md`
 
 ## Next, in order
