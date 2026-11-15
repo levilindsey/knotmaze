@@ -198,3 +198,44 @@ export function normArc(a: number, total: number, closed: boolean): number {
   if (closed) return ((a % total) + total) % total;
   return Math.max(0, Math.min(total, a));
 }
+
+// K1369 s4: a fused tip's tuck (moved from StripPass.tuck, which keeps its
+// glyph-only copy of the untucked stroke): the gf worker's snapshot channel
+// samples and tucks the chains off main with the same code.
+/** How far a fused tip tucks back: 3/4 of the way to the host's near edge
+ * (the remaining overlap hides under the fillets, so no background sliver
+ * can open between the tucked cap and the curved host edge). */
+export function tuckTrim(threadWidth: number, total: number): number {
+  return Math.min((threadWidth / 2) * 0.75, total * 0.25);
+}
+
+/** Collapse the samples within `trim` of a fused terminal onto the tuck
+ * point. `scratch` is a Float32Array(4): the point and tangent go through
+ * it, rounded to float32, as the renderer's own scratch rounds them. */
+export function tuckClamp(
+  samples: SplineSamples,
+  atStart: boolean,
+  atEnd: boolean,
+  trim: number,
+  scratch: Float32Array
+): void {
+  const total = samples.totalLength;
+  const arcPer = total / (samples.count - 1);
+  const clamp = (arc: number, from: number, to: number): void => {
+    sampleAt(samples, arc, scratch, 0);
+    const [x, y, tx, ty] = scratch;
+    for (let k = from; k < to; k++) {
+      samples.positions[k * 2] = x;
+      samples.positions[k * 2 + 1] = y;
+      samples.tangents[k * 2] = tx;
+      samples.tangents[k * 2 + 1] = ty;
+    }
+  };
+  if (atStart) {
+    clamp(trim, 0, Math.min(samples.count - 1, Math.ceil(trim / arcPer)));
+  }
+  if (atEnd) {
+    const k0 = Math.max(1, samples.count - Math.ceil(trim / arcPer));
+    clamp(total - trim, k0, samples.count);
+  }
+}

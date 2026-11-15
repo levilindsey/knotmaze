@@ -112,7 +112,7 @@ export class StripPass implements ThreadPass {
     // Tuck 3/4 of the way to the host's near edge: the remaining overlap
     // hides under the fillets, so no background sliver can open between
     // the tucked cap and the (curved) host edge.
-    const trim = Math.min((this.style.threadWidth / 2) * 0.75, total * 0.25);
+    const trim = sampling.tuckTrim(this.style.threadWidth, total);
     const arcPer = total / (samples.count - 1);
     // K580 s5: a glyph chain keeps each tucked end's untucked stroke, J to
     // T, for the stadium cap cover (joinery.ts), copied before any clamp.
@@ -145,22 +145,6 @@ export class StripPass implements ThreadPass {
         this.glyphTipStroke[chain * 2 + 1] = buf;
       }
     }
-    const clamp = (arc: number, from: number, to: number): void => {
-      this.sampleAt(samples, arc, this.sampleScratch, 0);
-      const [x, y, tx, ty] = this.sampleScratch;
-      for (let k = from; k < to; k++) {
-        samples.positions[k * 2] = x;
-        samples.positions[k * 2 + 1] = y;
-        samples.tangents[k * 2] = tx;
-        samples.tangents[k * 2 + 1] = ty;
-      }
-    };
-    if (atStart) {
-      clamp(trim, 0, Math.min(samples.count - 1, Math.ceil(trim / arcPer)));
-    }
-    if (atEnd) {
-      const k0 = Math.max(1, samples.count - Math.ceil(trim / arcPer));
-      clamp(total - trim, k0, samples.count);
-    }
+    sampling.tuckClamp(samples, atStart, atEnd, trim, this.sampleScratch);
   }
 }

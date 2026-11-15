@@ -12,15 +12,14 @@
 
 import type { ProbeCtx } from "../../app/probe_hooks";
 import { APP_VERSION, BUILD_SHA } from "../../build_info";
-import type { CrossingPass, ParticleSystem } from "../../physics/particle_system";
+import type { ParticleSystem } from "../../physics/particle_system";
 import { hashDump } from "../../physics/probe_dump";
 import type { RibbonRenderer } from "../ribbon_renderer";
-import { EMERGENT_POOL, isJointPair } from "../ribbon/crossing_gaps";
+import { assembleLeanInput, exportChain, exportPass, slotEmergent, type LeanSkeleton } from "./lean_input";
 import {
   buildFieldScene,
   type ExportChain,
   type ExportCrossing,
-  type ExportPass,
   type ExportTip,
   type SceneExportInput,
 } from "./scene_export";
@@ -42,61 +41,24 @@ interface RendererPrivates {
   cornerRounded: ReadonlySet<string>;
 }
 
-function pass(p: CrossingPass): ExportPass {
-  return p.displayF === undefined
-    ? { chain: p.chain, ctrl: p.ctrl }
-    : { chain: p.chain, ctrl: p.ctrl, displayF: p.displayF };
-}
+// K1369 s4: moved to lean_input.ts (exportPass).
+const pass = exportPass;
 
-/** The emergent crossings master gives a gap slot this frame
- * (crossing_gaps.ts renderEmergent, gate aside): joint pairs skipped,
- * physics binding points deduped within 0.8 of a registered crossing's
- * drawn centre (diagData) or of one already taken, at most EMERGENT_POOL. */
+/** The emergent crossings master gives a gap slot this frame: lean_input.ts
+ * slotEmergent (K1369 s4 moved its body there for the gf worker). */
 function slottedEmergent(
   r: RibbonRenderer,
   ps: ParticleSystem
 ): { list: ExportCrossing[]; jointPairs: number; dups: number; overPool: number } {
-  const chainLen = (c: number): number => ps.chains[c].length;
-  const closed = (c: number): boolean => ps.chainBreakAfter[c] < 0;
-  const scratch = new Float32Array(2);
-  const used: number[] = [];
-  const list: ExportCrossing[] = [];
-  let jointPairs = 0;
-  let dups = 0;
-  let overPool = 0;
-  for (const em of ps.emergentCrossings) {
-    if (
-      r.skipJointPairs &&
-      isJointPair(em.over, em.under, r.junctionArcCtrls, chainLen, closed)
-    ) {
-      jointPairs++;
-      continue;
-    }
-    ps.bindingPoint(em.over, scratch, 0);
-    const ex = scratch[0];
-    const ey = scratch[1];
-    let dup = false;
-    for (let c = 0; c * 5 < r.diagData.length; c++) {
-      if (Math.hypot(r.diagData[c * 5] - ex, r.diagData[c * 5 + 1] - ey) < 0.8) {
-        dup = true;
-        break;
-      }
-    }
-    for (let k = 0; !dup && k < used.length; k += 2) {
-      if (Math.hypot(used[k] - ex, used[k + 1] - ey) < 0.8) dup = true;
-    }
-    if (dup) {
-      dups++;
-      continue;
-    }
-    if (list.length >= EMERGENT_POOL) {
-      overPool++;
-      continue;
-    }
-    used.push(ex, ey);
-    list.push({ over: pass(em.over), under: pass(em.under) });
-  }
-  return { list, jointPairs, dups, overPool };
+  return slotEmergent(
+    ps.emergentCrossings,
+    (p, out, offset) => ps.bindingPoint(p, out, offset),
+    r.diagData,
+    r.skipJointPairs,
+    r.junctionArcCtrls,
+    (c) => ps.chains[c].length,
+    (c) => ps.chainBreakAfter[c] < 0
+  );
 }
 
 /** K868 S3a2: one frame's SceneExportInput, gathered synchronously. The
@@ -242,7 +204,7 @@ export function gatherSceneInputLean(
   const r = ctx.scene.renderer;
   const ps = ctx.scene.ps;
   if (!r || !ps) throw new Error("gatherSceneInputLean: no scene");
-  const rp = r as unknown as RendererPrivates;
+  const sk = gatherLeanSkeleton(ctx, name);
   const chains: ExportChain[] = [];
   const transfer: ArrayBuffer[] = [];
   const missing: number[] = [];
@@ -252,19 +214,9 @@ export function gatherSceneInputLean(
       missing.push(c);
       continue;
     }
-    const fused = rp.chainTipFused[c] ?? [false, false];
-    const positions = s.positions.slice(0, s.count * 2);
-    const controlArcLengths = Float64Array.from(s.controlArcLengths);
-    transfer.push(positions.buffer, controlArcLengths.buffer);
-    chains.push({
-      closed: s.closed,
-      count: s.count,
-      positions,
-      totalLength: s.totalLength,
-      controlArcLengths,
-      particles: { length: ps.chains[c].length },
-      tucked: [fused[0], fused[1]],
-    });
+    const ch = exportChain(s, ps.chains[c].length, sk.tucked[c]);
+    transfer.push((ch.positions as Float32Array).buffer as ArrayBuffer, (ch.controlArcLengths as Float64Array).buffer as ArrayBuffer);
+    chains.push(ch);
   }
   if (missing.length) {
     throw new Error(`gatherSceneInputLean: chains without samples: ${missing.join(",")}`);
@@ -274,6 +226,24 @@ export function gatherSceneInputLean(
     under: pass(x.under),
   }));
   const em = slottedEmergent(r, ps);
+  return { input: assembleLeanInput(sk, chains, crossings, em.list), transfer };
+}
+
+/** K1369 s4: the lean input's parts that do not move with the physics (the
+ * camera, the look, the tips, junctions and corners, each chain's particle
+ * count and tucks, the emergent slotting's renderer state): main gathers
+ * them; gatherSceneInputLean (above) and the gf worker's snapshot channel
+ * (gf_worker.ts) add one frame's chains, crossings and emergent slots
+ * (lean_input.ts assembleLeanInput). Structured-cloneable. */
+export function gatherLeanSkeleton(ctx: SceneExportCtx, name: string): LeanSkeleton {
+  const r = ctx.scene.renderer;
+  const ps = ctx.scene.ps;
+  if (!r || !ps) throw new Error("gatherLeanSkeleton: no scene");
+  const rp = r as unknown as RendererPrivates;
+  const tucked: [boolean, boolean][] = ps.chains.map((_, c) => {
+    const f = rp.chainTipFused[c] ?? [false, false];
+    return [f[0], f[1]];
+  });
   const freeTips: ExportTip[] = r.freeTips.map((t) => ({ chain: t.chain, atEnd: t.atEnd }));
   const isFree = new Set(freeTips.map((t) => `${t.chain}:${t.atEnd}`));
   const isEndArm = new Set<string>();
@@ -287,11 +257,12 @@ export function gatherSceneInputLean(
     }
   }
   const anchoredTips: ExportTip[] = [];
-  for (let c = 0; c < chains.length; c++) {
-    if (chains[c].closed) continue;
+  for (let c = 0; c < ps.chains.length; c++) {
+    // A chain's samples are closed exactly when it has no break.
+    if (ps.chainBreakAfter[c] < 0) continue;
     for (const atEnd of [false, true]) {
       const k = `${c}:${atEnd}`;
-      if (chains[c].tucked[atEnd ? 1 : 0] || isFree.has(k) || isEndArm.has(k)) continue;
+      if (tucked[c][atEnd ? 1 : 0] || isFree.has(k) || isEndArm.has(k)) continue;
       anchoredTips.push({ chain: c, atEnd });
     }
   }
@@ -299,45 +270,49 @@ export function gatherSceneInputLean(
   const sc = root.scale.x;
   const params = ctx.params;
   const h = r.style.threadWidth / 2;
-  const input: SceneExportInput = {
-    name,
-    source: { kind: "app" as const, url: "", build: `v${APP_VERSION} · ${BUILD_SHA}`, simTime: 0, physHash: name },
-    camera: {
-      worldToCss: [sc, 0, 0, sc, root.position.x, root.position.y] as [
-        number, number, number, number, number, number,
-      ],
-      pxPerUnit: sc,
-      dpr: ctx.app.renderer.resolution,
-      viewport: [ctx.app.screen.width, ctx.app.screen.height] as [number, number],
+  const joints = new Map<number, { ctrl: number; jn: number }[]>();
+  for (const [c, list] of r.junctionArcCtrls) joints.set(c, list.map((x) => ({ ctrl: x.ctrl, jn: x.jn })));
+  return {
+    rest: {
+      name,
+      source: { kind: "app" as const, url: "", build: `v${APP_VERSION} · ${BUILD_SHA}`, simTime: 0, physHash: name },
+      camera: {
+        worldToCss: [sc, 0, 0, sc, root.position.x, root.position.y] as [
+          number, number, number, number, number, number,
+        ],
+        pxPerUnit: sc,
+        dpr: ctx.app.renderer.resolution,
+        viewport: [ctx.app.screen.width, ctx.app.screen.height] as [number, number],
+      },
+      look: {
+        halfWidth: h,
+        band: r.borderWidth * h,
+        cornerRoundShare: r.cornerRoundShare,
+        cuspRadius: params.cuspRadius,
+        depthAmp: ctx.physicsTuning().threadWidth * COLLISION_MARGIN * DEPTH_AMP_FACTOR,
+        depthWindow: DEPTH_WINDOW,
+        paper: params.backgroundBase,
+        ink: params.borderColor,
+      },
+      zPos: new Float64Array(0),
+      physPositions: new Float64Array(0),
+      dedupeEmergent: false,
+      junctions: r.junctionArms.map((j) => ({
+        particles: [],
+        arms: j.arms.map((a) => ({ chain: a.chain, slot: a.slot, dir: a.dir as 1 | -1 })),
+      })),
+      corners: {
+        candidates: rp.cornerCandidates.map((c) => (c.pin === undefined ? { key: c.key } : { key: c.key, pin: true })),
+        rounded: new Set(rp.cornerRounded),
+      },
+      freeTips,
+      anchoredTips,
     },
-    look: {
-      halfWidth: h,
-      band: r.borderWidth * h,
-      cornerRoundShare: r.cornerRoundShare,
-      cuspRadius: params.cuspRadius,
-      depthAmp: ctx.physicsTuning().threadWidth * COLLISION_MARGIN * DEPTH_AMP_FACTOR,
-      depthWindow: DEPTH_WINDOW,
-      paper: params.backgroundBase,
-      ink: params.borderColor,
-    },
-    chains,
-    zPos: new Float64Array(0),
-    physPositions: new Float64Array(0),
-    crossings,
-    emergent: em.list,
-    dedupeEmergent: false,
-    junctions: r.junctionArms.map((j) => ({
-      particles: [],
-      arms: j.arms.map((a) => ({ chain: a.chain, slot: a.slot, dir: a.dir as 1 | -1 })),
-    })),
-    corners: {
-      candidates: rp.cornerCandidates.map((c) => (c.pin === undefined ? { key: c.key } : { key: c.key, pin: true })),
-      rounded: new Set(rp.cornerRounded),
-    },
-    freeTips,
-    anchoredTips,
+    particles: ps.chains.map((ch) => ch.length),
+    tucked,
+    skipJointPairs: r.skipJointPairs,
+    joints,
   };
-  return { input, transfer };
 }
 
 export function installSceneExport(ctx: SceneExportCtx): void {

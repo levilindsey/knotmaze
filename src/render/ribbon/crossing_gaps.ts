@@ -133,50 +133,10 @@ const GAP_EXIT_PAD = 0.05;
 // Visible margin bias, kept from the erase era for gap-width parity: the
 // gap reads as `gap + CUT_BIAS` of arc along the under thread.
 export const CUT_BIAS = 0.03;
-// Gap slots for emergent (tunneled) crossings discovered by the physics.
-// Sized for taut knots: at slack ~0 dozens of real emergent crossings can
-// coexist, and a starved pool renders some overlaps gap-less.
-export const EMERGENT_POOL = 64;
-
-// A FUSED JOINT IS NOT A CROSSING (K397 stage 3). A tucked tip's end
-// particle is fused to its host's, so the tip's last segment and the
-// host's next one share an endpoint, and the physics' emergent collector
-// (a proper intersection, sin > 0.25, no junction exclusion) finds an
-// "emergent crossing" right at the tuck. Its slot cut the under thread
-// around the over one's footprint: stub over host left a dark round-ended
-// ring inside the host, cut square at the host's edge, with host color on
-// both sides (Levi's knuckle U, levi_0801); host over stub left a dark
-// band across the stub's root past the cap cover's reach (stage 1's
-// node_12 sliver). The joint's own covers (the cap cover, the seal disc,
-// the fans) own that overlap, so renderEmergent gives no slot to a pair
-// whose two passes both lie within JOINT_PAIR_REACH ctrl of one fused
-// junction (junctionArcCtrls). Physics keeps the pair.
-export const JOINT_PAIR_REACH = 2;
-
-export function isJointPair(
-  a: { chain: number; ctrl: number },
-  b: { chain: number; ctrl: number },
-  joints: ReadonlyMap<number, ReadonlyArray<{ ctrl: number; jn: number }>>,
-  chainLen: (chain: number) => number,
-  closed: (chain: number) => boolean
-): boolean {
-  if (a.chain === b.chain) return false;
-  const ja = joints.get(a.chain);
-  const jb = joints.get(b.chain);
-  if (!ja || !jb) return false;
-  const near = (chain: number, ctrl: number, at: number): boolean => {
-    let d = Math.abs(ctrl - at);
-    if (closed(chain)) d = Math.min(d, chainLen(chain) - d);
-    return d < JOINT_PAIR_REACH;
-  };
-  for (const x of ja) {
-    if (!near(a.chain, a.ctrl, x.ctrl)) continue;
-    for (const y of jb) {
-      if (y.jn === x.jn && near(b.chain, b.ctrl, y.ctrl)) return true;
-    }
-  }
-  return false;
-}
+// K1369 s4: EMERGENT_POOL, JOINT_PAIR_REACH and isJointPair moved to
+// field/lean_input.ts (the gf worker imports them without this module).
+import { EMERGENT_POOL, isJointPair } from "../field/lean_input";
+export { EMERGENT_POOL, JOINT_PAIR_REACH, isJointPair } from "../field/lean_input";
 // Gap slots for marker discs (start/exit dots).
 export const MARKER_SLOTS = 4;
 

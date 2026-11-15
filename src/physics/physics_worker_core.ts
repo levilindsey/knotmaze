@@ -113,8 +113,25 @@ export class ChannelScheduler implements Scheduler {
 }
 
 // Main to worker. Inputs carry the gen they were meant for.
+// K1369 s4: THE GF CHANNEL. Under rp=gf, main hands this worker one end of a
+// MessageChannel whose other end the gf build worker holds
+// (src/render/gpu_field/gf_worker.ts): every state main gets a snapshot of
+// also goes there, `{ type: "snap", gen, buf }`, from a pool of GF_POOL
+// buffers of its own that the gf worker returns over the same port
+// (`{ type: "give", buf }`), so the gf worker samples and builds without
+// main in the path. Main's snapshots, their pool and the stepping are
+// unchanged; a scene of another size drops the old buffers as main's do.
+export const GF_POOL = 2;
+export interface GfPortLike {
+  postMessage(msg: unknown, transfer: Transferable[]): void;
+  onmessage: ((e: { data: unknown }) => void) | null;
+  close?(): void;
+}
+
 export type MainToWorker =
   | { type: "init"; gen: number; params: SceneParams; tuning: PhysicsTuning }
+  // K1369 s4: rp=gf's snapshot channel (see GF_POOL); null closes it.
+  | { type: "gfPort"; port: GfPortLike | null }
   | { type: "frame"; gen: number; dt: number; ignoreTemp?: boolean }
   | { type: "grab"; gen: number; particle: number; x: number; y: number }
   | { type: "drag"; gen: number; x: number; y: number }
@@ -321,8 +338,22 @@ export class PhysicsWorkerCore {
   // Snapshot buffers back from main, all snapshotBytes(n, c) long.
   private pool: ArrayBuffer[] = [];
   private bytes = 0;
-  // The system changed since the last snapshot posted.
-  private dirty = false;
+  // The system changed since the last snapshot posted (to main; setting it
+  // also marks the gf channel's state stale, K1369 s4).
+  private dirtyMain = false;
+  private get dirty(): boolean {
+    return this.dirtyMain;
+  }
+  private set dirty(v: boolean) {
+    this.dirtyMain = v;
+    if (v) this.gfDirty = true;
+  }
+  // K1369 s4: the gf channel (THE GF CHANNEL above): its port, its own
+  // buffers and dirty flag, and its snapshots' sequence.
+  private gfPort: GfPortLike | null = null;
+  private gfPool: ArrayBuffer[] = [];
+  private gfDirty = false;
+  private gfSeq = 0;
   // Counters since init (the snapshot header's).
   private seq = 0;
   private substeps = 0;
@@ -411,6 +442,9 @@ export class PhysicsWorkerCore {
     switch (msg.type) {
       case "give":
         this.give(msg.buf);
+        return;
+      case "gfPort":
+        this.setGfPort(msg.port);
         return;
       case "pause":
         this.paused = true;
@@ -508,6 +542,9 @@ export class PhysicsWorkerCore {
     this.bytes = snapshotBytes(ps.particleCount, ps.crossings.length);
     this.pool = [];
     for (let k = 0; k < SNAPSHOT_POOL; k++) this.pool.push(new ArrayBuffer(this.bytes));
+    this.gfPool = [];
+    for (let k = 0; k < GF_POOL; k++) this.gfPool.push(new ArrayBuffer(this.bytes));
+    this.gfDirty = true;
     this.post({
       type: "ready",
       gen,
@@ -693,6 +730,55 @@ export class PhysicsWorkerCore {
     }
   }
 
+  // K1369 s4: the gf channel's end of the port (THE GF CHANNEL above).
+  private setGfPort(port: GfPortLike | null): void {
+    if (this.gfPort) {
+      this.gfPort.onmessage = null;
+      this.gfPort.close?.();
+    }
+    this.gfPort = port;
+    if (!port) return;
+    // A new port starts with a full pool: buffers lent over an old one are
+    // gone with it.
+    this.gfPool = [];
+    if (this.bytes > 0) for (let k = 0; k < GF_POOL; k++) this.gfPool.push(new ArrayBuffer(this.bytes));
+    port.onmessage = (e): void => {
+      try {
+        const d = e.data as { type?: string; buf?: ArrayBuffer };
+        if (d.type !== "give" || !(d.buf instanceof ArrayBuffer)) return;
+        if (d.buf.byteLength !== this.bytes || this.gfPool.length >= GF_POOL) return;
+        this.gfPool.push(d.buf);
+        this.gfFlush();
+      } catch (err) {
+        this.fail(err);
+      }
+    };
+    this.gfDirty = true;
+    this.gfFlush();
+  }
+
+  // The gf channel's flush: main's, over the port, from its own pool.
+  private gfFlush(): void {
+    const ps = this.core.ps;
+    const port = this.gfPort;
+    if (!this.gfDirty || !ps || !port) return;
+    const buf = this.gfPool.pop();
+    if (!buf) return;
+    this.gfDirty = false;
+    writeSnapshot(ps, buf, {
+      gen: this.core.gen,
+      seq: this.gfSeq++,
+      substeps: this.substeps,
+      lag: this.lag,
+      wallAt: performance.timeOrigin + performance.now(),
+      asleep: this.core.asleep,
+      inputs: this.inputs,
+      frames: this.frames,
+      stepMs: this.stepMs,
+    });
+    port.postMessage({ type: "snap", gen: this.core.gen, buf }, [buf]);
+  }
+
   private give(buf: ArrayBuffer): void {
     // A buffer of an older build's size is let go.
     if (buf.byteLength !== this.bytes || this.pool.length >= SNAPSHOT_POOL) return;
@@ -704,6 +790,7 @@ export class PhysicsWorkerCore {
   // it goes out when a buffer comes back (give), so the latest state, an
   // asleep flag included, always reaches main.
   private flush(): void {
+    this.gfFlush();
     const ps = this.core.ps;
     if (!this.dirty || !ps) return;
     const buf = this.pool.pop();

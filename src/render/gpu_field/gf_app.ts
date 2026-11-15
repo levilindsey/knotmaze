@@ -24,7 +24,8 @@
 // counts(), the probe variant's candidates per pixel at the current frame).
 import { RenderContainer, type Container, type WebGLRenderer } from "pixi.js";
 import { buildFieldScene, type SceneExportInput } from "../field/scene_export";
-import { gatherSceneInput, gatherSceneInputLean, type SceneExportCtx } from "../field/scene_export_hook";
+import { gatherLeanSkeleton, gatherSceneInput, gatherSceneInputLean, type SceneExportCtx } from "../field/scene_export_hook";
+import { splineBend, type SplineSamples } from "../../geometry/spline_generator";
 import { buildTables, type GfTables } from "./tables";
 import { CTRL_ARC, gfBuild, gfDepth, tablesDiff } from "./gf_build";
 import { GfComposite, GfPass, GfTarget, type GfMap } from "./gf_pass";
@@ -38,6 +39,15 @@ interface GfReply {
   workMs?: number;
   pool?: number;
   error?: string;
+  // K1369 s4: a channel build (its channel's id) and what it carries; or,
+  // with `why`, the worker closed that channel.
+  chan?: number | "closed";
+  cid?: number;
+  why?: string;
+  samples?: SplineSamples[];
+  snapSeq?: number;
+  snapAbs?: number;
+  gatherMs?: number;
 }
 const FILL: [number, number, number] = [0.96, 0.93, 0.86];
 const INK_AUTO: [number, number, number] = [0.12, 0.11, 0.09];
@@ -83,6 +93,10 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
     showMs: [] as number[], showAt: [] as number[], superseded: 0, gated: 0,
     // K1369 s4: each worker post's depth in force (a probe's window slices it).
     postDepth: [] as number[],
+    // K1369 s4, the snapshot channel: its state, opens, builds installed,
+    // the gf worker's sample + gather ms per build, and the replies dropped
+    // (an older channel's).
+    chan: "", chanOpens: 0, chanBuilds: 0, chanGatherMs: [] as number[], chanStale: 0,
   };
 
   // The build worker: started on the first frame; until it says hello (and
@@ -94,7 +108,22 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
   const flights = new Map<number, { gen: number; t0: number; main: number }>();
   let flightId = 0;
   let gen = 0;
-  let pending: { T: GfTables; main: number; t0: number } | null = null;
+  let pending: { T: GfTables; main: number; t0: number; samples?: SplineSamples[] } | null = null;
+  // K1369 s4: THE SNAPSHOT CHANNEL (`__knotGfOpts.chan`, off by default).
+  // Once the first tables exist, gf_app asks the physics host for a port to
+  // the physics worker (worker_host.ts gfPort) and hands it to the gf
+  // worker, which then builds from the physics' own snapshots (gf_worker.ts)
+  // and returns the samples with the tables: main skips the ribbon update
+  // (busy() is true), installs both and updates the fabric overlay from the
+  // installed samples. Off, back to the posted path (force), while a pluck
+  // is live (it draws from the full update), with flow (a displaced copy
+  // of the controls) or the bend bound on, and without a port (phw=0).
+  let chanOn = false;
+  let chanId = 0;
+  let chanDone = 0;
+  let chanDepth = 0;
+  let chanKey = "";
+  let chanRefused: unknown = null;
   const refs = new Map<number, GfTables>();
   let force = false;
   // Probe-only knobs (K1369 A/Bs, all off by default): `freeze` stops
@@ -108,7 +137,7 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
   // which attach() otherwise switches off (see there).
   type GfOpts = {
     worker?: boolean; verify?: boolean; pool?: boolean; freeze?: boolean; redraw?: boolean; cap?: number;
-    depth?: number; gate?: boolean; fillets?: boolean; lean?: boolean; gesture?: boolean;
+    depth?: number; gate?: boolean; fillets?: boolean; lean?: boolean; gesture?: boolean; chan?: boolean;
   };
   const opts = (): GfOpts => (globalThis as unknown as { __knotGfOpts?: GfOpts }).__knotGfOpts ?? {};
   // K1369 s4: by gesture (a thread grabbed or not); an A/B's `depth` wins.
@@ -126,6 +155,7 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
     worker = null;
     ready = false;
     flights.clear();
+    chanOn = false;
     stats.worker = why;
     requestFrame();
   };
@@ -150,6 +180,45 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
       if (d.hello) {
         ready = true;
         stats.worker = "ready";
+        return;
+      }
+      if (d.chan === "closed") {
+        // The gf worker gave up the channel (a mirror or snapshot error):
+        // back to posted builds, and no reopen for this renderer.
+        if (chanOn && d.cid === chanId) {
+          chanOn = false;
+          chanRefused = lastR;
+          stats.chan = `closed (${d.why ?? "worker"})`;
+          force = true;
+          requestFrame();
+        }
+        return;
+      }
+      if (typeof d.chan === "number") {
+        if (!chanOn || d.chan !== chanId || off) {
+          stats.chanStale++;
+          return;
+        }
+        if (d.error !== undefined || !d.T || !d.samples) {
+          fallback(`failed (worker channel: ${d.error ?? "no tables"})`);
+          return;
+        }
+        stats.exportMs.push(d.exportMs ?? 0);
+        stats.tablesMs.push(d.tablesMs ?? 0);
+        stats.workMs.push(d.workMs ?? 0);
+        stats.chanGatherMs.push(d.gatherMs ?? 0);
+        stats.workerBuilds++;
+        stats.pool = d.pool ?? 0;
+        // A newer reply replaces a pending older one: consumed, uninstalled.
+        if (pending) {
+          stats.superseded++;
+          if (pending.samples) chanDone++;
+        }
+        // t0: the snapshot's arrival at the gf worker, on main's clock.
+        const t0 = d.snapAbs !== undefined ? d.snapAbs - performance.timeOrigin : performance.now();
+        stats.latencyMs.push(performance.now() - t0);
+        pending = { T: d.T, main: 0, t0, samples: d.samples };
+        requestFrame();
         return;
       }
       const fl = d.id === undefined ? undefined : flights.get(d.id);
@@ -389,6 +458,88 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
     ctx.app.ticker.maxFPS = fps;
     capped = fps;
   };
+  // K1369 s4: the snapshot channel's open, close, and what its skeleton
+  // depends on per frame (the camera and the look; the rest is per scene).
+  type Rnd = NonNullable<SceneExportCtx["scene"]["renderer"]>;
+  const chanWanted = (r: Rnd): boolean =>
+    !!opts().chan && !!worker && ready && !!T && chanRefused !== r &&
+    r.pluckHost.plucks.activeCount === 0 && !(r.flowStrength > 0) && !splineBend.enabled;
+  const skelKey = (r: Rnd, scale: number): string => {
+    const root = ctx.root;
+    const p = ctx.params;
+    return [root.scale.x, root.position.x, root.position.y, ctx.app.screen.width, ctx.app.screen.height,
+      ctx.app.renderer.resolution, scale, r.style.threadWidth, r.borderWidth, r.cornerRoundShare,
+      p.cuspRadius, p.backgroundBase, p.borderColor].join(",");
+  };
+  const chanClose = (why: string): void => {
+    if (!chanOn) return;
+    chanOn = false;
+    try { worker?.postMessage({ chan: "close" }); } catch { /* worker gone */ }
+    stats.chan = why;
+    // A pending channel build is dropped: the ribbon update's samples
+    // follow from here, and the next frame builds the posted way.
+    if (pending?.samples) pending = null;
+    force = true;
+  };
+  const chanOpen = (r: Rnd, scale: number): void => {
+    const host = ctx.host as unknown as { gfPort?: () => { port: MessagePort; gen: number; graph: unknown } | null };
+    const h = host.gfPort?.() ?? null;
+    if (!h) {
+      chanRefused = r;
+      stats.chan = "unavailable";
+      return;
+    }
+    chanId++;
+    try {
+      worker!.postMessage({
+        chan: "open", cid: chanId, port: h.port, gen: h.gen, graph: h.graph,
+        skel: gatherLeanSkeleton(ctx, "field"),
+        passCounts: (r as unknown as { passCounts: number[] }).passCounts.slice(),
+        threadWidth: r.style.threadWidth, aa: 0.5 / scale, pool: opts().pool !== false, depth: depth(),
+      }, [h.port]);
+    } catch (e) {
+      chanRefused = r;
+      stats.chan = `failed (${e instanceof Error ? e.message : String(e)})`;
+      try { h.port.close(); } catch { /* gone */ }
+      return;
+    }
+    chanOn = true;
+    chanDone = 0;
+    chanDepth = depth();
+    chanKey = skelKey(r, scale);
+    stats.chan = "open";
+    stats.chanOpens++;
+  };
+  const chanFrame = (r: Rnd, scale: number): void => {
+    if (!opts().chan) {
+      if (chanOn) chanClose("off");
+      return;
+    }
+    const want = chanWanted(r);
+    if (chanOn && !want) chanClose("closed (pluck, flow or bend)");
+    else if (!chanOn && want) chanOpen(r, scale);
+    else if (chanOn) {
+      const k = skelKey(r, scale);
+      if (k !== chanKey) {
+        chanKey = k;
+        worker!.postMessage({ chan: "skel", skel: gatherLeanSkeleton(ctx, "field"), aa: 0.5 / scale });
+      }
+      const d = depth();
+      if (d !== chanDepth) {
+        chanDepth = d;
+        worker!.postMessage({ chan: "ack", done: chanDone, depth: d });
+      }
+    }
+  };
+  // The gameplay overlay follows the installed samples (frame_loop.ts runs
+  // it after the ribbon update, which the channel skips).
+  const fabricFollow = (): void => {
+    const sc = ctx.scene as unknown as { fabric?: { update(c: unknown): void } | null; fabricController?: unknown };
+    if ((ctx.params as unknown as { mazeFabric?: boolean }).mazeFabric && sc.fabric && sc.fabricController) {
+      sc.fabric.update(sc.fabricController);
+    }
+  };
+
   const frame = (): void => {
     if (off) return;
     applyCap(opts().cap ?? 0);
@@ -414,6 +565,8 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
         // A build in flight read the old renderer: drop it, and build the
         // new one's first tables in-thread (no stale or empty frame).
         gen++;
+        if (chanOn) chanClose("renderer changed");
+        chanRefused = null;
         pending = null;
         T = null;
         attach();
@@ -421,6 +574,15 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
       if (pending) {
         const p = pending;
         pending = null;
+        if (p.samples) {
+          // K1369 s4: the channel build's samples become the renderer's.
+          const ss = r.chainSamples;
+          for (let c = 0; c < p.samples.length; c++) ss[c] = p.samples[c];
+          fabricFollow();
+          chanDone++;
+          stats.chanBuilds++;
+          worker?.postMessage({ chan: "ack", done: chanDone, depth: depth() });
+        }
         install(p.T, p.main);
         const now = performance.now();
         stats.showMs.push(now - p.t0);
@@ -430,7 +592,9 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
       const count = r.updateCount;
       const o = opts();
       if (o.redraw) dirty = true;
-      if (o.freeze && T && !force) builtCount = count;
+      chanFrame(r, cam.scale);
+      if (chanOn) builtCount = count;
+      else if (o.freeze && T && !force) builtCount = count;
       else if (force || count !== builtCount || cam.scale !== builtScale || !T) {
         if (force || !T || cam.scale !== builtScale || moved()) {
           if (rebuild(cam.scale)) {
@@ -472,6 +636,12 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
   // would feed nothing gf draws, so frame_loop.ts skips it (main's frame then
   // leaves the big core to the physics worker). Asked once per awake frame.
   const busy = (): boolean => {
+    // K1369 s4: with the channel open the gf worker samples; main never
+    // runs the ribbon update (a pick or pluck still refreshes it).
+    if (chanOn && !off) {
+      stats.gated++;
+      return true;
+    }
     if (off || !worker || !ready || !T || pending || force || opts().gate === false) return false;
     if (flights.size < depth()) return false;
     stats.gated++;
@@ -533,6 +703,8 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
     get timed() { return !!pass?.timed; },
     get disjoint() { return pass?.disjoint ?? 0; },
     get rect() { return rect; },
+    /** K1369 s4: the tables the pass holds (a probe compares them). */
+    get tables() { return T; },
     counts,
     redraw() { dirty = true; requestFrame(); },
     /** c1: when true (or `__knotGfOpts.verify`), every build is also made

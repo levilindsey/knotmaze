@@ -20,7 +20,7 @@ import {
   sameTuning,
   workerNameOf,
 } from "./physics_worker_core";
-import type { MainToWorker, NameBuild, WorkerToMain } from "./physics_worker_core";
+import type { GfPortLike, MainToWorker, NameBuild, WorkerToMain } from "./physics_worker_core";
 import { VisibleClock } from "./settle_budget";
 import type { TangleGraph } from "../core/types";
 import type { SceneParams } from "../core/scene_graph";
@@ -267,6 +267,8 @@ export class WorkerHost implements PhysicsHost {
   private readonly grabExactDefault: boolean;
 
   private mirror: MirrorSystem | null = null;
+  // K1369 s4: the graph the mirror was built from (gfPort hands it on).
+  private graph: TangleGraph | null = null;
   private genN = 0;
   private asleepFlag = false;
   private expect: { fp: Fingerprint; bytes: number } | null = null;
@@ -432,6 +434,7 @@ export class WorkerHost implements PhysicsHost {
     this.early = null;
     const mirror = new MirrorSystem(graph);
     this.mirror = mirror;
+    this.graph = graph;
     if (!adopt) this.genN++;
     // As in-thread, the asleep flag carries over: main's settle or a wake
     // follows every build.
@@ -847,6 +850,21 @@ export class WorkerHost implements PhysicsHost {
     const o = (globalThis as { __knotHostOpts?: ProbeOpts }).__knotHostOpts;
     if (o && typeof o.grabExact === "boolean") return o.grabExact;
     return this.grabExactDefault;
+  }
+
+  /** K1369 s4: rp=gf's snapshot channel (physics_worker_core.ts THE GF
+   * CHANNEL): a MessageChannel whose one end goes to the physics worker and
+   * whose other end, with this build's gen and graph (a gf worker builds its
+   * own MirrorSystem from it), is returned for the gf build worker. Null
+   * while the host runs in-thread or has no build: the caller keeps main's
+   * path. A later call replaces the channel; a new build needs a new one. */
+  gfPort(): { port: MessagePort; gen: number; graph: TangleGraph } | null {
+    if (this.inThread || !this.worker || !this.mirror || !this.graph) return null;
+    if (typeof MessageChannel === "undefined") return null;
+    const ch = new MessageChannel();
+    this.postRaw({ type: "gfPort", port: ch.port1 as unknown as GfPortLike }, [ch.port1]);
+    if (this.inThread) return null;
+    return { port: ch.port2, gen: this.genN, graph: this.graph };
   }
 
   private postRaw(msg: MainToWorker, transfer: Transferable[] = []): void {
