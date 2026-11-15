@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1386.
+Next free ID: K1387.
 
 ## Waiting on Levi
 
@@ -2354,6 +2354,11 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   (K1362 s8 handoff, gf_glsl.ts burialExit)
 - **K1381** · rp=gf: t32rlgypjfc3, the one-pass face loop (fj) in the corner-free program only. Exact;
   fat-only, -0.1 to -0.2 ms at 822 and -0.4 to -0.9 at 1079 on the Pixel (K1362_s12_corners_faces.md handoff).
+- **K1386** · rp=gf at 60 moves/s on the Pixel (after K1369 s3): a build is 22.7 ms in the worker (tables
+  20.0, 12.5 on main: a slower core, inferred), so one worker caps near 44/s. Levers: round-robin whole builds
+  across two gf workers on the idle mid cores (throughput, not latency); the K1369 snapshot channel so main
+  stops sampling splines; faster tables (the corner solve) under a new digest gate. Also bounded by main's
+  per-frame cost, the physics' own sim/wall and thermals (K1362_c1_cpu_off_main.md, K1369_s2_motion_rate.md)
 
 ## Done
 
