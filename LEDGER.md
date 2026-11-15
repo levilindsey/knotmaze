@@ -577,18 +577,18 @@ Next free ID: K1398.
   - brief: `docs/design/K1369_s4_snapshot_channel.md`
 - **K1389** · rp=gf ignores the thread look ('border' and the section colors): on b.FMKB4DIQ every today-vs-gf
   A/B compares outlines with filled threads, so the rows are not like for like (K1369 s3)
-  - owner: agent `a9f0346320932ed36` of claude session 01SUPGULDxvE5gKXozfaFaFG (opus, started 2026-11-14 23:25, 2 h cap ~01:25)
-  - branch: `worktree-agent-a9f0346320932ed36`, worktree `.claude/worktrees/agent-a9f0346320932ed36`; last commit: `2b1cffe1`
+  - owner: agent `a9f0346320932ed36` of claude session 01SUPGULDxvE5gKXozfaFaFG (opus; ran 2026-11-14 23:25 to 11-15 00:12, when the Claude Code process exited; resumed 06:58, cap 07:55 for the weekly budget)
+  - branch: `worktree-agent-a9f0346320932ed36`, worktree `.claude/worktrees/agent-a9f0346320932ed36`; last commit: `a1c30e74` (WIP, plus uncommitted edits it commits first)
   - evidence: `.claude/probes/K1389/`
-  - next: Stage 1 running: section colours and the border/both looks under rp=gf at rest, sheets + Pixel bench
+  - next: Stage 1 resumed, desktop part only (section colours, border/both under rp=gf at rest, sheets, tests); the Pixel bench is the next run's first step
   - brief: `docs/design/K1389_s1_gf_thread_look.md`
 - **K1387** · rp=gf lean (K1369 s3): underWindows stay empty, so under rp=gf the maze's under-gap hiding stops
   for reveal sparks, telegraph rim ends, burn sparks, the yarn, underClipBand (fabric_maze_renderer.ts) and
   joinery.ts:1575; needed before rp=gf default-on (K1369_s3_lean_default.md handoff)
-  - owner: agent `a5853a421264cb113` of claude session 01SUPGULDxvE5gKXozfaFaFG (opus, started 2026-11-14 23:25, 2 h cap ~01:25)
-  - branch: `worktree-agent-a5853a421264cb113`, worktree `.claude/worktrees/agent-a5853a421264cb113`; last commit: `2b1cffe1`
+  - owner: nobody since 2026-11-15 00:12 (the Claude Code process exited mid-run, about 48 min into the 2 h cap); paused for the weekly budget (95%, stop 96%) until the Nov 16 reset; agent `a5853a421264cb113` of claude session 01SUPGULDxvE5gKXozfaFaFG is resumable
+  - branch: `worktree-agent-a5853a421264cb113`, worktree `.claude/worktrees/agent-a5853a421264cb113`; last commit: `4e413b06` (WIP: the exact probe and the Pixel ABBA runner; tree clean)
   - evidence: `.claude/probes/K1387/`
-  - next: Stage 1 running (with K1388): under-gap hiding and site-tester widths under lean, Pixel cost
+  - next: after the reset, resume the agent (SendMessage) for the rest of stage 1 (with K1388): it was mid an ABBA timing run (lean vs full) at the exit
   - brief: `docs/design/K1387_s1_lean_consumers.md`
 
 ## Next, in order
