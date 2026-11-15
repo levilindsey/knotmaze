@@ -44,7 +44,10 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const q = (a, p) => { const s = [...a].sort((x, y) => x - y); return s.length ? +s[Math.min(s.length - 1, Math.floor(p * s.length))].toFixed(1) : null; };
 const PERF = () => { const p = window.__knotPerf?.(1); return p ? { now: performance.now(), physMs: p.physMs, substeps: p.substeps, asleep: p.asleep, state: p.state,
   frames: p.totalFrames, cost: p.totalCostMs, sim: p.host?.snapSim ?? null, stamp: document.querySelector("#stamp, .stamp")?.textContent ?? null } : null; };
-const GS = () => { const g = globalThis.__knotGf; if (!g) return null; const s = g.stats;
+const GS = () => { const g = globalThis.__knotGf;
+  // before the gf app exists (the intro's start): a zero baseline, so the intro's look counters count from load
+  if (!g) return { installs: 0, show: [], lat: [], work: [], gated: 0, superseded: 0, stale: 0, worker: null, lkMs: [], lkPosMs: [], lkUpMs: [], lkColors: null, lkRows: null, lkPos: null, lkKeys: 0 };
+  const s = g.stats;
   return { installs: s.mainMs.length, show: s.showMs.slice(), lat: s.latencyMs.slice(), work: s.workMs.slice(), gated: s.gated ?? 0, superseded: s.superseded ?? 0, stale: s.stale, worker: s.worker,
     lkMs: (s.lkMs ?? []).slice(), lkPosMs: (s.lkPosMs ?? []).slice(), lkUpMs: (s.lkUpMs ?? []).slice(), lkColors: s.lkColors ?? null, lkRows: s.lkRows ?? null,
     lkPos: s.lkPos ?? null, lkKeys: s.lkKeys ?? null }; };
