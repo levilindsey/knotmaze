@@ -31,7 +31,9 @@ const CHECK = () => {
     tuck: JSON.stringify(r.chainTipFused), free: JSON.stringify(r.freeTips.map((t) => [t.chain, t.atEnd])),
     dd: Array.from({ length: nx * 2 }, (_, i) => r.diagData[Math.floor(i / 2) * 5 + (i % 2)]),
   });
-  const full = () => { delete r.computeGapSlot; r.update(); r.computeGapSlot = lean; };
+  // Lean also replaces the strip pass's extrude (own property; builds before it lack it): full restores both.
+  const sp = r.stripPass; const leanX = sp && Object.prototype.hasOwnProperty.call(sp, "extrude") ? sp.extrude : null;
+  const full = () => { delete r.computeGapSlot; if (leanX) delete sp.extrude; r.update(); r.computeGapSlot = lean; if (leanX) sp.extrude = leanX; };
   const leanUp = () => { r.update(); };
   const diff = (a, b) => {
     let n = 0, first = null;
@@ -48,7 +50,7 @@ const CHECK = () => {
   r.diagData.fill(NaN); leanUp(); const L2 = cap();
   full(); const F2 = cap();
   const nan = (x) => x.dd.filter((v) => Number.isNaN(v)).length;
-  return { crossings: nx, chains: r.chainSamples.length, ctrl: diff(F, F2), FL: diff(F, L), F2L2: diff(F2, L2), nanL: nan(L), nanL2: nan(L2), leanOwn: true };
+  return { crossings: nx, chains: r.chainSamples.length, ctrl: diff(F, F2), FL: diff(F, L), F2L2: diff(F2, L2), nanL: nan(L), nanL2: nan(L2), leanOwn: true, leanExtrude: !!leanX };
 };
 let bad = false;
 try {

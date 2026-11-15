@@ -50,6 +50,8 @@ type LeanR = {
   ps: { crossings: unknown[]; bindingPoint(p: unknown, out: Float32Array, o: number): void };
   diagData: Float32Array;
   computeGapSlot: (slot: number, crossing: { over: unknown }, index: number, ...rest: unknown[]) => void;
+  pluckHost: { withPluckCollapse(chain: number, count: number, width: Float32Array | null): Float32Array | null };
+  stripPass: { extrude: (chain: number, samples: { count: number }, width: Float32Array | null, ...rest: unknown[]) => Float32Array | null };
 };
 
 let warned = false;
@@ -72,7 +74,7 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
   let filletsOff: { r: { filletLayer: Container | null }; layer: Container } | null = null;
   // K1369 s2 (`lean: true`, probe-only): the renderer whose gap solve
   // attach() replaced, and whether it had an own property before.
-  let leanOff: { r: LeanR; own: boolean; prev: LeanR["computeGapSlot"] } | null = null;
+  let leanOff: { r: LeanR; own: boolean; prev: LeanR["computeGapSlot"]; spOwn: boolean; spPrev: LeanR["stripPass"]["extrude"] } | null = null;
   let rc: RenderContainer | null = null;
   let drawn: (Float32Array | null)[] = [];
   const stats = {
@@ -260,10 +262,17 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
     // rest (gap slots, KGEOM, pluck footprints) goes stale: the base ribbons
     // are hidden, but a pluck under gf reads its footprint from it, hence
     // off by default. detach() restores the solve; the next update re-solves.
+    // Lean also skips the base fill mesh's extrude (strip_pass extrude, ~2.5
+    // ms of a desktop drag update): gf hides those meshes and reads none of
+    // them. It still returns the same multiplier (the pluck collapse), which
+    // update()'s G3 chain write reads.
     if (opts().lean) {
       const lr = r as unknown as LeanR;
       const sc = new Float32Array(2);
-      leanOff = { r: lr, own: Object.prototype.hasOwnProperty.call(lr, "computeGapSlot"), prev: lr.computeGapSlot };
+      const sp = lr.stripPass;
+      leanOff = { r: lr, own: Object.prototype.hasOwnProperty.call(lr, "computeGapSlot"), prev: lr.computeGapSlot,
+        spOwn: Object.prototype.hasOwnProperty.call(sp, "extrude"), spPrev: sp.extrude };
+      sp.extrude = (chain, samples, width) => lr.pluckHost.withPluckCollapse(chain, samples.count, width);
       lr.computeGapSlot = (_slot, crossing, index) => {
         if (index < 0) return;
         if (lr.diagData.length < lr.ps.crossings.length * 5) lr.diagData = new Float32Array(lr.ps.crossings.length * 5);
@@ -304,6 +313,9 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
     if (leanOff) {
       if (leanOff.own) leanOff.r.computeGapSlot = leanOff.prev;
       else delete (leanOff.r as Partial<LeanR>).computeGapSlot;
+      const sp = leanOff.r.stripPass;
+      if (leanOff.spOwn) sp.extrude = leanOff.spPrev;
+      else delete (sp as Partial<LeanR["stripPass"]>).extrude;
       leanOff = null;
     }
     if (rc) {
