@@ -102,7 +102,7 @@ Under 30 lines:
 
 End with `Ledger items` and K1369's handle fields.
 
-## Handoff (stage 2 agent, 2026-11-14, start 18:43:33, stop STOPTIME)
+## Handoff (stage 2 agent, 2026-11-14, start 18:43:33, stop 20:01)
 
 **What changed: everything below applies only while rp=gf is attached.** rp=gf off runs the same code as before.
 - **Gate** (189d38cf): while gf's builds are at depth, main skips `renderer.update()`, the ribbon pipeline gf does
@@ -171,7 +171,11 @@ installs/s at 546-551 ms/s, sim/wall .536 / .540, against today's .550 / .556.
     `k1369s2_pool.mjs`), so every build runs whole on the one gf worker. At depth 2 that worker never idles: about
     17 ms of work per build at 45 builds/s, about 765 ms/s.
 
-**Pixel table:** PIXELTABLE
+**Pixel table: not measured.** Two attempts (19:23-19:43 at b89f4e46, 19:42-19:58 at 174e604a) waited out their
+ready windows: the phone was in use (an app, then Chrome, in front, touched every few seconds) or its screen was off.
+No phone cell ran. The runner call below runs it in one call. Expectation, inferred and untested: stage 1 measured
+22.7 ms per Pixel build on one worker, so depth 1 caps near 1000 / (22.7 + a frame) builds/s and depth 2 near 44,
+before the contention for cpu6 (main and the physics worker) that stage 1 measured.
 
 **Checks:**
 - `npm test` green at b89f4e46 and again at 174e604a: 237 files, 3018 tests. The goldens and `byte_identity` are in
