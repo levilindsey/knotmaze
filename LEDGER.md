@@ -570,10 +570,10 @@ Next free ID: K1387.
 - **K1369** · rp=gf: on the Pixel the physics runs at half its sim rate during a drag (sim/wall 0.29-0.32
   against 0.62-0.71 for today's look), on master and on K1362 c1 alike; not diagnosed. Record the CPU clocks
   beside the GPU clock through the kit's drag (docs/design/K1362_c1_cpu_off_main.md handoff).
-  - owner: agent `a4f5c0060ad52e4d4` of claude session 01SUPGULDxvE5gKXozfaFaFG (opus, started 2026-11-14 20:03, 2 h cap ~22:03)
-  - branch: `worktree-agent-a4f5c0060ad52e4d4`, worktree `.claude/worktrees/agent-a4f5c0060ad52e4d4`; last commit: `1a3db8ad`
+  - owner: nobody since 2026-11-14 20:57 (merged; agent `a4f5c0060ad52e4d4` of claude session 01SUPGULDxvE5gKXozfaFaFG)
+  - branch: mainline; last commit: `bbdb28d2`
   - evidence: `.claude/probes/K1369/`
-  - next: Stage 3 running: lean as a renderer mode flag under gf (full solve while a pluck is live), the Pixel table (today / gf2l / gfl, ABBA), then DEPTH decided by it
+  - next: Stage 3 merged (lean is rp=gf's default; Pixel: depth 2 gives 52-54 builds/s in the intros with physics intact, but halves the drag's sim/wall, .496 vs today's .689, so DEPTH stays 1). Stage 4: depth 2 with no finger down, and the physics-to-gf snapshot channel so main only uploads; Pixel table with depth-1 intro cells
   - brief: `docs/design/K1369_s3_lean_default.md`
 
 ## Next, in order
