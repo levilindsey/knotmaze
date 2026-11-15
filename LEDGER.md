@@ -303,9 +303,6 @@ Next free ID: K1398.
   never unlocks it. If it should stay unlocked on the charger overnight, that is a phone setting only Levi can
   change (K1362). 2026-11-13 10:34-10:57: unlocked, but the Claude app stayed in front, so the run never
   started: the pass needs the HOME SCREEN in front and the phone untouched for 2 min (Claude never presses Home).
-- **K1395** · rp=gf reveal look: gf draws the reveal's widths and fronts but not its colours (burn tint,
-  rainbow stripes, materialize alpha) or the rainbow's swell and white bulb; carry them, or keep the plain
-  fill (sheets .claude/probes/K1383/out/b_J_*_sheet.png; docs/design/K1383_s1_gf_reveal.md handoff)
 
 ## In progress
 
@@ -883,6 +880,9 @@ Every other item below waits on the trigger it names.
 - **K1384** · rp=gf's shader compiles synchronously: a cold desktop profile freezes the loader about 6.7 s
   (K1369 s1). Compile in parallel (KHR_parallel_shader_compile) or warm it up (render-shaders.md, K307);
   measure the Pixel's cold compile too
+- **K1395** · rp=gf reveal look: gf draws the reveal's widths and fronts but not its colours (burn tint,
+  rainbow stripes, materialize alpha) or the rainbow's swell and white bulb; carry them, or keep the plain
+  fill (sheets .claude/probes/K1383/out/b_J_*_sheet.png; docs/design/K1383_s1_gf_reveal.md handoff)
 
 ## Residuals (known, not fixed)
 
