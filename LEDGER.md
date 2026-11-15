@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1409.
+Next free ID: K1412.
 
 ## Waiting on Levi
 
@@ -623,6 +623,8 @@ Running agents are listed under In progress, each with its own next step.
   tables bit-identical. Re-run k1362s2_census.ps1 on master, then fix stages under a new digest; K1315's ends
   join the same bar. Levi (2026-11-15): getting these spots truly correct is the most important thing now; the
   bar is the look he approves, not form B's (form B fails K1315's ends and jumps under K1267's jitter)
+  - evidence: Run A (K1408 batch 23, commit bb4a74f1): baseline GPU census on master 281 (broken 148, stray 90, paper 41, hard 2); broken_ink fixed-category read after: 90 broken (CPU mirror full census fix23a + fix23b subset; GPU re-run died on probe-page navigations after mid-run edits). Crops: .claude/probes/K1407/out/23A/sheet.png (master gf | new gf | form B | outline, 8 spots). Digest ae1d2392 -> 382ae026. Bench def/fat worker tables p50 9.5/9.1 -> 9.8/9.8 ms. npm test 3062 passed.
+  - next: Broken residuals (90): r-divergence vs form B's CF growth (largest), foot burial/selfW, through-eye overwrites r>=0.16h, plateau self-tie spots (14), vround (6); stray +1 x3 scenes + paper +1 x1 (filed separately). Then stray_ink (90) is the next category.
 - **K1315** · Junction under-tail ends in rp=outline: a bug, not a choice. Levi, 2026-11-12, on k1315_now.png: "Not a
   single tile in the image shows an acceptable scenario" (form B's round dots and the outline's square stubs both
   fail). Bar: no ink past the over thread's outline, no dot, no stub. K1314 group 1, 18 census finds (e.g. muse_default_tw j150, g41_user_tw64 j63/j64, x134); sheet
@@ -897,6 +899,15 @@ Every other item below waits on the trigger it names.
 - **K1395** · rp=gf reveal look: gf draws the reveal's widths and fronts but not its colours (burn tint,
   rainbow stripes, materialize alpha) or the rainbow's swell and white bulb; carry them, or keep the plain
   fill (sheets .claude/probes/K1383/out/b_J_*_sheet.png; docs/design/K1383_s1_gf_reveal.md handoff)
+- **K1409** · K1407 residual (from run 23A): rp=gf broken_ink at 90 - port form B's closed-form corner growth
+  (corner_cf) into the gf tables or close the r gap, foot-term burial/selfW weights, through-eye (win=5)
+  overwrites at r>=0.16h, plateau self-tie depth at self-crossings (14 finds), vround discs (6). Census reads:
+  .claude/probes/K1362/out/s1/census_fix23a.txt (+fix23b), baseline census_base23a.txt; attribution
+  .claude/probes/K1407/k1407_attr2.ts.
+- **K1410** · K1407 residual (from run 23A): stray_ink rose +1 on muse_default_tw / g41_ring_tw42 /
+  g41_ring_tw64 and paper +1 on g41_ring_tw64 vs master-CPU census after the null-corner fix (single 40-55px
+  finds; not through eyes - the 0.16h floor cleared g41_def_tw64). Find their mechanism before the stray_ink
+  category run (K1407 order: broken, then stray).
 
 ## Residuals (known, not fixed)
 
@@ -2058,6 +2069,10 @@ Every other item below waits on the trigger it names.
   (`.claude/probes/K1387/out/play7_gf_head.png` against `play7_today_head.png`)
 - **K1406** · Lean under xp=threads and fi=fuse: applyExploreGaps flushes every chain, so lean pays s1's full
   under-march cost there (K1387 s2 handoff, `docs/design/K1387_s2_lazy_march.md`)
+- **K1411** · GPU census (k1362s2_census.ps1) probe pages die with 'Execution context was destroyed
+  (navigation)' when src/ files change mid-run (Vite full reload); two fix23a runs died this way. Census reads
+  for K1407 run 23A used the CPU mirror (s1; proven equal to GPU in K1362 s2). Run the GPU census with no
+  other work in flight; check the dev server + perf lock first.
 
 ## Approved, to schedule (2026-10-11)
 
