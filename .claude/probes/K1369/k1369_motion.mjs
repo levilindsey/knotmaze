@@ -22,8 +22,9 @@ const reps = +(process.argv[5] || 1);
 mkdirSync(join(here, "out"), { recursive: true });
 const file = join(here, `out/motion_${label}.json`);
 const LINK = { def: "b.FMKB4DIQ", bj: "b.J" };
-const SETQ = { today: "", gf: "&rp=gf", gff: "&rp=gf", gfr: "&rp=gf", gft: "&rp=gf", gfc: "&rp=gf" };
-const SETO = { gff: { freeze: true }, gfr: { freeze: true, redraw: true }, gft: { worker: false }, gfc: { cap: 31 } };
+// gfc / gfq: rp=gf with the ticker capped (gf_app's probe-only `cap`): 31 = 30 fps, 21 = 20 fps (today's drag rate).
+const SETQ = { today: "", gf: "&rp=gf", gff: "&rp=gf", gfr: "&rp=gf", gft: "&rp=gf", gfc: "&rp=gf", gfq: "&rp=gf" };
+const SETO = { gff: { freeze: true }, gfr: { freeze: true, redraw: true }, gft: { worker: false }, gfc: { cap: 31 }, gfq: { cap: 21 } };
 // K1369_COOL=<skin C> waits before each cell (on about:blank) for thermal status 0 and VIRTUAL-SKIN at or under it, up to
 // K1369_COOLMAX s (default 300); the wait and the start's thermal go in the row (coolWaitS, thermal0).
 const COOL = process.env.K1369_COOL ? +process.env.K1369_COOL : null, COOLMAX = +(process.env.K1369_COOLMAX || 300);
