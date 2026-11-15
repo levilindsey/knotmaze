@@ -59,11 +59,13 @@ try {
   for (let rep = 0; rep < reps; rep++) for (const st of rep % 2 ? [...sets].reverse() : sets) {
     if (initId) await page.removeScriptToEvaluateOnNewDocument(initId).catch(() => {});
     ({ identifier: initId } = await page.evaluateOnNewDocument((o) => { if (o) globalThis.__knotGfOpts = o; }, SETO[st] ?? null));
-    const url = `${base}/?${link}&am=instant&snd=none${SETQ[st]}`;
+    // env K1369_AM=default: the default appearance (the brief's intro-d cell) instead of am=instant.
+    const amd = process.env.K1369_AM === "default";
+    const url = `${base}/?${link}${amd ? "" : "&am=instant"}&snd=none${SETQ[st]}`;
     await page.goto(url, { waitUntil: "load", timeout: 60000 });
     await page.bringToFront();
     const t0 = Date.now(); let live = null, slept = null, g0 = null;
-    while (Date.now() - t0 < 45000) {
+    while (Date.now() - t0 < (amd ? 90000 : 45000)) {
       const p = await page.evaluate(PERF);
       if (p && !live && p.substeps > 0) { live = p; g0 = await page.evaluate(GS); }
       if (p && p.asleep && p.state !== "loading" && p.frames > 30) { slept = p; break; }
