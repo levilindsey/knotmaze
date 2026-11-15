@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1401.
+Next free ID: K1404.
 
 ## Waiting on Levi
 
@@ -577,11 +577,11 @@ Next free ID: K1401.
   - brief: `docs/design/K1369_s4_snapshot_channel.md`
 - **K1389** · rp=gf ignores the thread look ('border' and the section colors): on b.FMKB4DIQ every today-vs-gf
   A/B compares outlines with filled threads, so the rows are not like for like (K1369 s3)
-  - owner: nobody since 2026-11-15 08:46 (merged; agent `a92bd55f0b968e13e` of claude session 01SUPGULDxvE5gKXozfaFaFG)
-  - branch: mainline; last commit: `38b73e87`
-  - evidence: `.claude/probes/K1389/`
-  - next: the Pixel run (k1389s2_phone.ps1 -Shas 2b1cffe1,377ccdd0) when the phone's screen is on, never waking it; then a look-form path in the K1362 bench
-  - brief: `docs/design/K1389_s2_colour_table.md` (s1: `K1389_s1_gf_thread_look.md`)
+  - owner: nobody since 2026-11-15 08:42: s2 done on the desktop, the Pixel part waits for the phone's screen to be on (never wake it)
+  - branch: mainline (s2 merged at 38b73e87); last commit: `38b73e87`
+  - evidence: `.claude/probes/K1389/` (`k1389s2_desk.mjs`, `k1389s2_phone.ps1`, `out/crop_s2drag_r1.png`)
+  - next: the Pixel run (`k1389s2_phone.ps1 -Shas 2b1cffe1,38b73e87`) when the phone's screen is on; then a look-form path (second target, composite) in the K1362 bench and its numbers, fill and border
+  - brief: `docs/design/K1389_s2_colour_table.md` (handoff appended)
 - **K1387** · rp=gf lean (K1369 s3): underWindows stay empty, so under rp=gf the maze's under-gap hiding stops
   for reveal sparks, telegraph rim ends, burn sparks, the yarn, underClipBand (fabric_maze_renderer.ts) and
   joinery.ts:1575; needed before rp=gf default-on (K1369_s3_lean_default.md handoff)
@@ -2029,12 +2029,14 @@ Every other item below waits on the trigger it names.
   the border look gf's outline reads redder and fainter (today 11k-21k pixels darker than the background, gf
   about 1.4k), and in fill today shades the under-thread softly where gf draws a crisp line (K1389 s1 handoff,
   .claude/probes/K1389/out/z_pair.png)
-- **K1399** · rp=gf's section colour table is rebuilt per frame: 4-5 ms a build on the desktop, about 65,300
-  colours against the 65,535 cap, colours lag up to 12 frames in motion; a static per-ctrl table would fix all
-  three (K1389 s1 handoff)
 - **K1400** · rp=gf: a form B fillet joining arms of different sections takes the nearer arm's colour; today
   has no counterpart; and at muse_hash the both look outlines every thread with smudges at crossings, where
   today outlines merged junction silhouettes (K1389 s1 handoff)
+- **K1401** · rp=gf: a frozen state can show the previous build: the frame loop skips the update while a build
+  is in flight and nothing marks the frame for redraw (b.J fill at SIMT=20, 29k px; K1389 s2 handoff)
+- **K1402** · rp=gf look (K1389 s2): in channel mode the colour positions are computed on main at install; the
+  colour target is 8-bit (1/255 steps); a layout change between gather and install indexes the previous
+  build's positions for one frame (not seen) (K1389_s2_colour_table.md handoff)
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2401,9 +2403,12 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   across two gf workers on the idle mid cores (throughput, not latency); the K1369 snapshot channel so main
   stops sampling splines; faster tables (the corner solve) under a new digest gate. Also bounded by main's
   per-frame cost, the physics' own sim/wall and thermals (K1362_c1_cpu_off_main.md, K1369_s2_motion_rate.md)
+- **K1403** · rp=gf look: move the per-build colour position compute (0.4 ms on the desktop, now the look's
+  main cost) to the gf worker (K1389 s2 handoff)
 
 ## Done
 
+- **K1399** · rp=gf's colour table is static (rebuilt only when colour inputs change): 27,081 colours (41% of the cap), no lag, look 0.19-0.21 ms/frame in the drag (K1389 s2). Done in 38b73e87 (2026-11-15).
 - **K1388** · the site tester refreshes lean first (pluckSiteTester), footprintsWrong 0 in k1387_exact (K1387 s1). Done in 119249c0 (2026-11-15).
 - **K1383** · rp=gf reveals the intro (gf_reveal.ts mask table + reveal program variants; channel closed until the reveal ends). Done in 03102199 (2026-11-14).
 - **K1382** · K1362 course check answered: Levi (2026-11-14) - 30 fps in motion acceptable, 60 better, the intro physics first; next is K1369 s1 (intro settle + drag on the Pixel, CPU clocks). Done in 1b69ce1b (2026-11-14).
