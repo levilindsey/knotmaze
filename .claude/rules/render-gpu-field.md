@@ -108,6 +108,17 @@ not repeated here.
   .67-.71 and depth 1's .74-.81: the physics worker waits 239-335 ms a
   second for a core. So `DEPTH` stays 1. Lean leaves `underWindows`
   empty (K1387) and the footprint widths stale (K1388).
+- K1369 s4 (`K1369_s4_snapshot_channel.md`): depth follows the gesture
+  (2 at rest, 1 while a thread is grabbed). The opt-in snapshot channel
+  (`__knotGfOpts.chan`) sends the physics' state straight to the gf
+  worker, which samples, gathers and builds. Its output matches main's
+  path exactly. Pixel results:
+  - intro-d: 45 builds a second, against today's 33 fps;
+  - the drag: 25-28, against today's 17.
+  Sim/wall follows the physics worker's share of cpu6: a busy gf worker
+  lands there 15-50% of the time. One build takes 16-19 ms at full
+  mid-core clocks and 23-28 ms when they drop, so 60 a second needs a
+  build under about 12 ms, or a split across workers (K1386).
 - A tier is exact by construction: on overflow it sets a flag,
   breaks and discards, and the next program draws that pixel.
 - Routing is by stencil (EQUAL 0, INCR). The LAST program uses KEEP,

@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1390.
+Next free ID: K1395.
 
 ## Waiting on Levi
 
@@ -2000,6 +2000,18 @@ Every other item below waits on the trigger it names.
   footprint widths (K1369_s3_lean_default.md handoff)
 - **K1389** · rp=gf ignores the thread look ('border' and the section colors): on b.FMKB4DIQ every today-vs-gf
   A/B compares outlines with filled threads, so the rows are not like for like (K1369 s3)
+- **K1390** · rp=gf snapshot channel (K1369 s4, opt-in __knotGfOpts.chan): it builds every crossing, while
+  main's path skips crossings the reveal has not shown (GATE_LEAD), so tables may differ during a reveal; the
+  exact check ran only at am=instant
+- **K1391** · rp=gf snapshot channel (K1369 s4): builds use the newest physics snapshot, not main's
+  interpolated state; while it is open, main's updateCount and the reveal effects' lifecycle stop advancing
+- **K1392** · rp=gf snapshot channel (K1369 s4): closes for a live pluck, flow above 0 and splineBend (those
+  fall back to main's path)
+- **K1393** · rp=gf depth 2 (K1369 s4): intro-i sim/wall 0.03-0.07 below today's on the Pixel (the gf worker
+  lands on cpu6 15-50% of the time); depth 2 only while the reveal runs passes every measured cell, unmeasured
+  as a whole
+- **K1394** · Pixel A/B rests: 120 s rests left the second rep at thermal 1 in two of four K1369 s4 runs (s4b,
+  s4d); rest longer or to a skin temperature (.claude/rules/probes-phone.md)
 
 ## Approved, to schedule (2026-10-11)
 
