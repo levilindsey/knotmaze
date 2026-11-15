@@ -87,8 +87,12 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
   let pending: { T: GfTables; main: number } | null = null;
   const refs = new Map<number, GfTables>();
   let force = false;
-  const opts = (): { worker?: boolean; verify?: boolean; pool?: boolean } =>
-    (globalThis as unknown as { __knotGfOpts?: { worker?: boolean; verify?: boolean; pool?: boolean } }).__knotGfOpts ?? {};
+  // Probe-only knobs (K1369 A/Bs, all off by default): `freeze` stops
+  // rebuilding once tables exist (the pass keeps the last ones), `redraw`
+  // draws the pass every frame even when nothing changed (the GPU's load
+  // without the build's CPU).
+  type GfOpts = { worker?: boolean; verify?: boolean; pool?: boolean; freeze?: boolean; redraw?: boolean };
+  const opts = (): GfOpts => (globalThis as unknown as { __knotGfOpts?: GfOpts }).__knotGfOpts ?? {};
   const verifying = (): boolean => !!api.verify || !!opts().verify;
   const wantWorker = (): boolean => typeof Worker !== "undefined" && opts().worker !== false;
 
@@ -357,7 +361,10 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
       }
       const cam = camera();
       const count = r.updateCount;
-      if (force || count !== builtCount || cam.scale !== builtScale || !T) {
+      const o = opts();
+      if (o.redraw) dirty = true;
+      if (o.freeze && T && !force) builtCount = count;
+      else if (force || count !== builtCount || cam.scale !== builtScale || !T) {
         if (force || !T || cam.scale !== builtScale || moved()) {
           if (rebuild(cam.scale)) {
             builtCount = count;
