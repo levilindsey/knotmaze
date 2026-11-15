@@ -56,6 +56,10 @@ export class StripPass implements ThreadPass {
     lean?: Float32Array | null
   ): Float32Array | null {
     const mul = this.r.pluckHost.withPluckCollapse(chain, samples.count, width);
+    // K1369 s3: a LEAN update (rp=gf attached, no pluck live; the façade's
+    // `lean`) skips the fill mesh, which gf hides and never reads. The
+    // multiplier is still returned for update()'s G3 chain write.
+    if (this.r.leanNow) return mul;
     this.fills[chain].update(
       samples.positions,
       samples.tangents,

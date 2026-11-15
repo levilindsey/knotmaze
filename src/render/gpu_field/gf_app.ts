@@ -45,15 +45,6 @@ const INK_AUTO: [number, number, number] = [0.12, 0.11, 0.09];
 export interface GfApp { frame(): void; after(): void; dispose(): void; busy(): boolean }
 // K1369 s2: builds in flight by default (`__knotGfOpts.depth` overrides).
 const DEPTH = 1;
-// K1369 s2: the renderer's parts the `lean` option touches (see attach).
-type LeanR = {
-  ps: { crossings: unknown[]; bindingPoint(p: unknown, out: Float32Array, o: number): void };
-  diagData: Float32Array;
-  computeGapSlot: (slot: number, crossing: { over: unknown }, index: number, ...rest: unknown[]) => void;
-  pluckHost: { withPluckCollapse(chain: number, count: number, width: Float32Array | null): Float32Array | null };
-  stripPass: { extrude: (chain: number, samples: { count: number }, width: Float32Array | null, ...rest: unknown[]) => Float32Array | null };
-};
-
 let warned = false;
 
 export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfApp {
@@ -72,9 +63,8 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
   let hidden: Container[] = [];
   // K1369 s2: the renderer whose fillet layer attach() took, and the layer.
   let filletsOff: { r: { filletLayer: Container | null }; layer: Container } | null = null;
-  // K1369 s2 (`lean: true`, probe-only): the renderer whose gap solve
-  // attach() replaced, and whether it had an own property before.
-  let leanOff: { r: LeanR; own: boolean; prev: LeanR["computeGapSlot"]; spOwn: boolean; spPrev: LeanR["stripPass"]["extrude"] } | null = null;
+  // K1369 s3: the renderer attach() put in lean mode.
+  let leanOn: { lean: boolean } | null = null;
   let rc: RenderContainer | null = null;
   let drawn: (Float32Array | null)[] = [];
   const stats = {
@@ -111,8 +101,9 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
   // without the build's CPU). K1369 s2: `depth` is the builds in flight
   // (default DEPTH); `gate: false` keeps main's ribbon update on every frame
   // (frame_loop.ts asks busy()); `fillets: true` keeps the joinery's fan
-  // rebuild, which attach() otherwise switches off (see there). `lean: true`
-  // swaps the renderer's gap solve for the binding point alone (see attach).
+  // rebuild, which attach() otherwise switches off (see there). K1369 s3:
+  // `lean: false` keeps the renderer's full gap solve and fill extrude,
+  // which attach() otherwise switches off (see there).
   type GfOpts = {
     worker?: boolean; verify?: boolean; pool?: boolean; freeze?: boolean; redraw?: boolean; cap?: number;
     depth?: number; gate?: boolean; fillets?: boolean; lean?: boolean;
@@ -253,33 +244,18 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
       filletsOff = { r, layer: r.filletLayer };
       r.filletLayer = null;
     }
-    // K1369 s2, probe-only (`lean: true`): of update()'s per-crossing gap
-    // solve (crossing_gaps computeGapSlot, ~8.8 ms of a desktop drag
-    // update), gf's gather reads only diagData's x, y (slottedEmergent's
-    // dedupe), which the solve writes as ps.bindingPoint(over) for index >= 0
-    // (emergent slots pass -1 and write none). update() skips a gated
-    // crossing before the call, so this honours the reveal's gates too. The
-    // rest (gap slots, KGEOM, pluck footprints) goes stale: the base ribbons
-    // are hidden, but a pluck under gf reads its footprint from it, hence
-    // off by default. detach() restores the solve; the next update re-solves.
-    // Lean also skips the base fill mesh's extrude (strip_pass extrude, ~2.5
-    // ms of a desktop drag update): gf hides those meshes and reads none of
-    // them. It still returns the same multiplier (the pluck collapse), which
-    // update()'s G3 chain write reads.
-    if (opts().lean) {
-      const lr = r as unknown as LeanR;
-      const sc = new Float32Array(2);
-      const sp = lr.stripPass;
-      leanOff = { r: lr, own: Object.prototype.hasOwnProperty.call(lr, "computeGapSlot"), prev: lr.computeGapSlot,
-        spOwn: Object.prototype.hasOwnProperty.call(sp, "extrude"), spPrev: sp.extrude };
-      sp.extrude = (chain, samples, width) => lr.pluckHost.withPluckCollapse(chain, samples.count, width);
-      lr.computeGapSlot = (_slot, crossing, index) => {
-        if (index < 0) return;
-        if (lr.diagData.length < lr.ps.crossings.length * 5) lr.diagData = new Float32Array(lr.ps.crossings.length * 5);
-        lr.ps.bindingPoint(crossing.over, sc, 0);
-        lr.diagData[index * 5] = sc[0];
-        lr.diagData[index * 5 + 1] = sc[1];
-      };
+    // K1369 s3: the renderer's LEAN mode (ribbon_renderer.ts `lean`) by
+    // default. Of update()'s per-crossing gap solve (~8.8 ms of a desktop
+    // drag update) gf's gather reads only diagData's x, y (slottedEmergent's
+    // dedupe), and it reads none of the base fill meshes (~2.5 ms), which
+    // it hides; lean computes only the former and skips both. The renderer
+    // runs the full solve while a pluck is live and refreshes before a pick
+    // or a pluck, so a pluck looks as it does without lean. `lean: false`
+    // keeps it off for A/Bs; detach() turns it off, and the next update
+    // re-solves.
+    if (opts().lean !== false) {
+      r.lean = true;
+      leanOn = r;
     }
     rc = new RenderContainer({
       render: (renderer) => {
@@ -310,13 +286,9 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
       if (filletsOff.r.filletLayer === null) filletsOff.r.filletLayer = filletsOff.layer;
       filletsOff = null;
     }
-    if (leanOff) {
-      if (leanOff.own) leanOff.r.computeGapSlot = leanOff.prev;
-      else delete (leanOff.r as Partial<LeanR>).computeGapSlot;
-      const sp = leanOff.r.stripPass;
-      if (leanOff.spOwn) sp.extrude = leanOff.spPrev;
-      else delete (sp as Partial<LeanR["stripPass"]>).extrude;
-      leanOff = null;
+    if (leanOn) {
+      leanOn.lean = false;
+      leanOn = null;
     }
     if (rc) {
       rc.parent?.removeChild(rc);

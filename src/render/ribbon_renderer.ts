@@ -484,6 +484,36 @@ export class RibbonRenderer {
     g3Flush();
   }
 
+  // --- LEAN MODE (K1369 s3) ---
+  // rp=gf sets `lean` while it is attached (gpu_field/gf_app.ts;
+  // `__knotGfOpts.lean = false` keeps it off for A/Bs). gf hides the base
+  // fills and the fans, and of update()'s gap solve its gather reads only
+  // diagData's x, y (slottedEmergent's dedupe). So a lean update writes
+  // the binding point alone for each registered crossing (the façade's
+  // computeGapSlot), skips the emergent solves (index < 0) and skips the
+  // base fill mesh's extrude (strip_pass.ts). The gap slots, KGEOM's gap
+  // windows, the fill meshes and the pluck footprints keep their last full
+  // values, and underWindows is empty (update() clears it; only the full
+  // solve refills it). While a pluck is live (activeCount counts a fading
+  // one too) update() runs the full solve, so a pluck looks as it does
+  // without lean; pickThread and pluck() first run one full update when
+  // the last one was lean, so a tap picks and plucks on fresh windows,
+  // footprints and gap ids. Off by default; nothing else sets it.
+  lean = false;
+  /** @internal ribbon */ leanNow = false;
+  private leanStale = false;
+  private readonly leanPoint = new Float32Array(2);
+  /** @internal ribbon */ leanFresh(): void {
+    if (!this.leanStale) return;
+    const was = this.lean;
+    this.lean = false;
+    try {
+      this.update();
+    } finally {
+      this.lean = was;
+    }
+  }
+
   // --- PLUCK façade (K5 R4): the names other code calls, delegated ---
   get plucks(): PluckOverlay {
     return this.pluckHost.plucks;
@@ -501,6 +531,7 @@ export class RibbonRenderer {
     delay?: number;
     avoidCtrl?: number;
   }): boolean {
+    this.leanFresh();
     return this.pluckHost.pluck(req);
   }
   pluckPoint(chain: number, at: { ctrl?: number; arc?: number }): { x: number; y: number } | null {
@@ -1804,6 +1835,8 @@ export class RibbonRenderer {
 
   update(): void {
     const { positions } = this.ps;
+    // K1369 s3: lean while no pluck is live (see `lean`).
+    this.leanNow = this.lean && this.pluckHost.plucks.activeCount === 0;
     this.updateCount++;
     // Mirror arrays may have been swapped by a texture growth (ensure()).
     this.kd = kData();
@@ -1956,6 +1989,8 @@ export class RibbonRenderer {
     this.paintScene.flushGeom();
     if (this.g3Data) g3Flush();
     this.revealFx.drawRevealTips();
+    this.leanStale = this.leanNow;
+    this.leanNow = false;
   }
 
   // Lives in ribbon/crossing_gaps.ts (K5 R2). update(), renderEmergent and
@@ -1971,6 +2006,19 @@ export class RibbonRenderer {
     strength: number,
     shown = true
   ): void {
+    // K1369 s3: a lean update writes only what gf reads, diagData's x, y,
+    // exactly as the full solve writes them (crossing_gaps.ts, index >= 0).
+    if (this.leanNow) {
+      if (index < 0) return;
+      if (this.diagData.length < this.ps.crossings.length * 5) {
+        this.diagData = new Float32Array(this.ps.crossings.length * 5);
+      }
+      const p = this.leanPoint;
+      this.ps.bindingPoint(crossing.over, p, 0);
+      this.diagData[index * 5] = p[0];
+      this.diagData[index * 5 + 1] = p[1];
+      return;
+    }
     this.crossing.computeGapSlot(
       slot,
       crossing,
@@ -2012,6 +2060,8 @@ export class RibbonRenderer {
     side: number;
     dist: number;
   } | null {
+    // K1369 s3: the under-gap test below reads underWindows.
+    this.leanFresh();
     const r2 = radius * radius;
     const hits: Array<{ chain: number; k: number; d2: number }> = [];
     const reveal = this.explorePieces !== null;
