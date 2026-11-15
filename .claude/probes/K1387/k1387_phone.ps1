@@ -19,13 +19,13 @@ param([Parameter(Mandatory = $true)][string]$Base, [Parameter(Mandatory = $true)
   [string]$Builds = "", [int]$WaitReady = 30, [int]$MaxWaitMin = 20)
 $repo = (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path
 $lockDir = "C:\Users\lsl\Repositories\knotmaze\.claude\probes\agents"   # the main checkout's lock scripts (run, never written)
-$owner = "K1387 s1 agent (claude session 01SUPGULDxvE5gKXozfaFaFG)"
+$owner = "K1387 s2 agent (claude session 01SUPGULDxvE5gKXozfaFaFG)"
 $out = Join-Path $PSScriptRoot "out\pass"
 $pass = Join-Path $repo "scripts\phone_pass.ps1"
 function Say($m) { Write-Host "$(Get-Date -Format HH:mm:ss) $m" }
 & pwsh -NoProfile -File $pass -Phase check -AllowChrome -WaitReady $WaitReady
 if ($LASTEXITCODE -ne 0) { Say "phone not ready (check exit $LASTEXITCODE); no run"; exit 3 }
-& pwsh -NoProfile -File (Join-Path $lockDir "phone_lock_take.ps1") -Owner $owner -What "K1387 s1 Pixel ABBA (base vs branch, rp=gf, intro-d + drag)" -MaxWaitMin $MaxWaitMin
+& pwsh -NoProfile -File (Join-Path $lockDir "phone_lock_take.ps1") -Owner $owner -What "K1387 s2 Pixel ABBA (base vs branch, rp=gf, intro-d + drag)" -MaxWaitMin $MaxWaitMin
 if ($LASTEXITCODE -ne 0) { Say "no phone lock; no run"; exit 4 }
 try {
   $dst = Join-Path $out "builds\$Sha"
@@ -35,7 +35,7 @@ try {
   else {
     $perf = Join-Path $env:TEMP "claude-perf.lock"; $tw = Get-Date
     while ((Test-Path $perf) -and ((Get-Date) - $tw).TotalMinutes -lt $MaxWaitMin) { Start-Sleep 15 }
-    Set-Content $perf "$owner, $(Get-Date -Format s), K1387 s1 Pixel ABBA motion run" -Encoding ASCII
+    Set-Content $perf "$owner, $(Get-Date -Format s), K1387 s2 Pixel ABBA motion run" -Encoding ASCII
     try { & node (Join-Path $PSScriptRoot "k1387_motion.mjs") (Join-Path $out "config.json") $Label $Cells $Reps } finally { if ((Get-Content $perf -TotalCount 1) -like "$owner*") { [IO.File]::Delete($perf) } }
     Say "motion exit $LASTEXITCODE"
   }
