@@ -577,19 +577,19 @@ Next free ID: K1401.
   - brief: `docs/design/K1369_s4_snapshot_channel.md`
 - **K1389** · rp=gf ignores the thread look ('border' and the section colors): on b.FMKB4DIQ every today-vs-gf
   A/B compares outlines with filled threads, so the rows are not like for like (K1369 s3)
-  - owner: nobody since 2026-11-15 07:32 (merged)
-  - branch: mainline; last commit: `e09e1ff7`
-  - evidence: `.claude/probes/K1389/` (sheets and crops in `out/`, `k1389_sheet.mjs`, `pxdiff.ps1`); differences filed as K1398-K1400
-  - next: s2: the Pixel K1362 bench (def, 822, sync4, ABBA), 2b1cffe1 vs head, fill and border
-  - brief: `docs/design/K1389_s1_gf_thread_look.md`
+  - owner: agent `a92bd55f0b968e13e` of claude session 01SUPGULDxvE5gKXozfaFaFG (opus; started 2026-11-15 07:35, stop by 2 h)
+  - branch: `worktree-agent-a92bd55f0b968e13e`, worktree `.claude/worktrees/agent-a92bd55f0b968e13e`; last commit: `e2354e4a` (brief)
+  - evidence: `.claude/probes/K1389/`
+  - next: Stage 2 running: the colour table built per scene, not per frame (K1399), then the Pixel look cost (fill, border)
+  - brief: `docs/design/K1389_s2_colour_table.md` (s1: `K1389_s1_gf_thread_look.md`)
 - **K1387** · rp=gf lean (K1369 s3): underWindows stay empty, so under rp=gf the maze's under-gap hiding stops
   for reveal sparks, telegraph rim ends, burn sparks, the yarn, underClipBand (fabric_maze_renderer.ts) and
   joinery.ts:1575; needed before rp=gf default-on (K1369_s3_lean_default.md handoff)
-  - owner: nobody since 2026-11-15 07:34 (merged; agent `a5853a421264cb113` of claude session 01SUPGULDxvE5gKXozfaFaFG)
-  - branch: mainline; last commit: `119249c0`
+  - owner: agent `ac4acaf6a0d8a3088` of claude session 01SUPGULDxvE5gKXozfaFaFG (opus; started 2026-11-15 07:35, stop by 2 h)
+  - branch: `worktree-agent-ac4acaf6a0d8a3088`, worktree `.claude/worktrees/agent-ac4acaf6a0d8a3088`; last commit: `e2354e4a` (brief)
   - evidence: `.claude/probes/K1387/`
-  - next: s2: a lazy per-under-chain march with flush points (explore_gaps, pluck footprints, underGapVisibility, underClipBand, underCutCtrls, joinery's underWindows), gated by k1387_exact zero diffs, then cost + Pixel ABBA (s1 cost main +1.0 ms intro-d, +0.4 drag)
-  - brief: `docs/design/K1387_s1_lean_consumers.md`
+  - next: Stage 2 running: lean's under march only where read (win back +1.0 ms intro-d on the Pixel), exact, plus the crops under rp=gf
+  - brief: `docs/design/K1387_s2_lazy_march.md` (s1: `K1387_s1_lean_consumers.md`)
 
 ## Next, in order
 
@@ -2008,8 +2008,6 @@ Every other item below waits on the trigger it names.
 - **K1385** · rp=gf: after gf detaches (a failed attach or a fallback), a sleeping knot can show stale fans,
   gaps and fill meshes until its next awake update, because gf turned the fans off and skipped
   renderer.update() while attached (K1369 s2 handoff, docs/design/K1369_s2_motion_rate.md)
-- **K1388** · rp=gf lean (K1369 s3): the site tester (input_pointer.ts:875, auto_audio.ts:114) reads stale
-  footprint widths (K1369_s3_lean_default.md handoff)
 - **K1390** · rp=gf snapshot channel (K1369 s4, opt-in __knotGfOpts.chan): it builds every crossing, while
   main's path skips crossings the reveal has not shown (GATE_LEAD), so tables may differ during a reveal; the
   exact check ran only at am=instant
@@ -2406,6 +2404,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1388** · the site tester refreshes lean first (pluckSiteTester), footprintsWrong 0 in k1387_exact (K1387 s1). Done in 119249c0 (2026-11-15).
 - **K1383** · rp=gf reveals the intro (gf_reveal.ts mask table + reveal program variants; channel closed until the reveal ends). Done in 03102199 (2026-11-14).
 - **K1382** · K1362 course check answered: Levi (2026-11-14) - 30 fps in motion acceptable, 60 better, the intro physics first; next is K1369 s1 (intro settle + drag on the Pixel, CPU clocks). Done in 1b69ce1b (2026-11-14).
 - **K1372** · rp=gf: stage 5 tile routes removed by s6 (keys per bin made per-tile bounds moot). Done in c55d015b (2026-11-13).
