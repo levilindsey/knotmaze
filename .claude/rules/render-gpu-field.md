@@ -87,6 +87,19 @@ not repeated here.
   redraws the same tables. Main keeps running the ribbon pipeline gf does
   not draw, and under gf shares the big core with the physics worker,
   which halves the drag's sim/wall. The GPU idles at 499-748 MHz.
+- K1369 s2 (`K1369_s2_motion_rate.md`): under gf, main skips
+  `renderer.update()` while builds are in flight, and the hidden fans
+  are off. Two more cuts are exact (`k1369s2_lean.mjs`) but were
+  probe-only at merge, because the pluck reads the full solve's
+  `eraseExtentPos` / `overHalfPos`:
+  - `lean`: the gap solve writes only `bindingPoint(over)`, the one
+    output gf's gather reads;
+  - the fill extrude is skipped.
+  On the desktop drag, two builds in flight plus lean install 47 a
+  second, against today's 35-37 fps; main falls from 930 to 525 ms/s.
+  Sim/wall is .015 lower: the physics' cost per substep tracks main
+  plus the gf worker's busy time (inferred). The slice pool takes only
+  junction-free builds, so def (185 arms) builds whole on one worker.
 - A tier is exact by construction: on overflow it sets a flag,
   breaks and discards, and the next program draws that pixel.
 - Routing is by stencil (EQUAL 0, INCR). The LAST program uses KEEP,

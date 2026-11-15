@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1385.
+Next free ID: K1386.
 
 ## Waiting on Levi
 
@@ -1990,6 +1990,9 @@ Every other item below waits on the trigger it names.
 - **K1380** · rp=gf: the per-frame program choice (GF_TIERS t32rlgyjfc3, K1362 s12) compiles one more program
   at startup. Measure the Pixel's first-frame compile before rp=gf goes on by default
   (K1362_s12_corners_faces.md handoff).
+- **K1385** · rp=gf: after gf detaches (a failed attach or a fallback), a sleeping knot can show stale fans,
+  gaps and fill meshes until its next awake update, because gf turned the fans off and skipped
+  renderer.update() while attached (K1369 s2 handoff, docs/design/K1369_s2_motion_rate.md)
 
 ## Approved, to schedule (2026-10-11)
 
