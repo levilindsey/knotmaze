@@ -165,8 +165,8 @@ export class GfLookTable {
   }
 
   /**
-   * Each sample's place in its chain's colours (slot * (LOOK_R + 1) + fraction * LOOK_R) from r's current arcs, in
-   * build()'s layout (a closed chain repeats sample 0). paint_math kCtrlOfArc's map, as a walk: the sample's arc
+   * Each pass vertex's place in its chain's colours (slot * (LOOK_R + 1) + fraction * LOOK_R) from r's current arcs, in
+   * build()'s layout (a closed chain repeats its first). paint_math kCtrlOfArc's map, as a walk: the sample's arc
    * k * arcPer (kSectionAtArc's), the largest slot whose arc is at or before it, the clamped fraction to the next.
    */
   positions(r: GfLookSource, out?: Float32Array): Float32Array {
@@ -193,8 +193,20 @@ export class GfLookTable {
         const v = slot * (R + 1) + f * R;
         P[pb + k] = Number.isFinite(v) ? v : 0;
       }
-      if (c.closed) P[pb + count] = P[pb];
-      pb += count + (c.closed ? 1 : 0);
+      // The pass's vertex k is the field scene's KEPT sample k (scene_export mapChain drops a sample equal to the last
+      // kept one, and a ring's last kept one equal to its first): compact to the kept samples, then fill the chain's
+      // tail with its end (open: the clamp) or its wrap (closed: the closing vertex is sample 0).
+      const xy = r.chainSamples[ch]!.positions;
+      let kv = 0; let l = -1;
+      for (let k = 0; k < count; k++) {
+        if (l >= 0 && xy[2 * k] === xy[2 * l] && xy[2 * k + 1] === xy[2 * l + 1]) continue;
+        P[pb + kv++] = P[pb + k]; l = k;
+      }
+      if (c.closed && kv > 1 && xy[2 * l] === xy[0] && xy[2 * l + 1] === xy[1]) kv--;
+      const end = count + (c.closed ? 1 : 0);
+      const pad = c.closed ? P[pb] : P[pb + kv - 1];
+      for (let k = kv; k < end; k++) P[pb + k] = pad;
+      pb += end;
     }
     return P;
   }

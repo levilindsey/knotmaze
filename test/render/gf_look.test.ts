@@ -129,6 +129,20 @@ describe("K1389 s2 colour table", () => {
     expect(lookColour(L, P2, 0, 1, 0)![0]).toBeCloseTo(1 + 1 / 3, 5);
     expect(lookColour(L, P2, 0, 0, 0.5)![0]).toBeCloseTo((0 + 1 + 1 / 3) / 2, 5);
   });
+  it("indexes the field scene's kept samples (scene_export mapChain), not every sample", () => {
+    // chain 0's sample 2 repeats sample 1: the pass's vertices are samples 0, 1, 3, 4, and the tail holds the end;
+    // the ring's last sample repeats its first: no vertex, and the closing vertex is sample 0
+    const cs2 = [
+      { positions: new Float32Array([0, 0, 1, 0, 1, 0, 3, 0, 4, 0]), count: 5 },
+      { positions: new Float32Array([0, 0, 1, 0, 1, 1, 0, 0]), count: 4 },
+    ];
+    const L = new GfLookTable();
+    L.build({ kd, kcv, chainSamples: cs2 });
+    const P = L.positions({ kd, kcv, chainSamples: cs2 });
+    expect(Array.from(P.subarray(0, 10))).toEqual([0, R1, 3 * R1, 4 * R1, 4 * R1, 0, R1, 2 * R1, 0, 0]);
+    // vertex 2 (sample 3) halfway to vertex 3 (sample 4): ctrl 3.5
+    expect(lookColour(L, P, 0, 2, 0.5)![0]).toBeCloseTo(3.5, 6);
+  });
   it("gives a chain without controls no label", () => {
     const L = new GfLookTable();
     const kc2 = [kcv[0], { ...kcv[1], nCtrl: 0 }] as unknown as KChain[];
