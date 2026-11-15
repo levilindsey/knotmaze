@@ -85,3 +85,62 @@ Under 30 lines:
 - `npm test`; your last SHA.
 
 End with `Ledger items` and K1387's handle fields (owner, branch and worktree, last commit, evidence, next, brief).
+
+## Handoff (s2, 2026-11-15)
+
+Start 07:35 PT, stop 09:05. Outputs are under `.claude/probes/K1387/out/` (untracked).
+
+- **What changed (46438e0e).** Lean's under march now runs only where something reads it.
+  - `leanSlot` still runs the setup and writes diagData x,y. Each crossing's march waits in a queue on its under
+    chain (`lazyByChain` in `crossing_gaps.ts`, pooled `UnderMarch`es).
+  - `leanReset()` drops the queue at the start of each update(), after `underWindows.clear()`.
+  - Every reader flushes its chain first:
+    - the façade's underClipBand, underGapVisibility and underCutCtrls (`leanFlushChain`);
+    - joinery's gapNearOf (`leanFlush(arm.chain)`);
+    - explore_gaps' applyExploreGaps (each live slot's under chain).
+  - Pluck sites and footprints keep `leanFresh()`, a full update whenever lean is stale.
+  - `leanMarchStats` reports `{queued, marched, pending}`.
+  - Tests (`test/render/lean_mode.test.ts`): flushAll against leanReset, and a source scan that fails when a reader
+    of the lazy outputs does not flush first.
+- **Done 1, exact.** `k1387_exact.mjs` on head (`exact_s2head.txt`): full/lean differ by 0 in intro, rest, mid-drag,
+  xp=threads and fi=fuse. verdictsWrong and footprintsWrong are both 0.
+  - Marches run (queued to marched): intro 9449 to 4095, 26304 to 7192 and 19599 to 521; mid-drag 5648 to 0.
+- **Done 2, cost.**
+  - Desktop lean update median (`k1387_cost.mjs`, perf lock held). Head is back to base:
+    - base 2b1cffe1 4.80 ms against head 4.90 (full 12.40/12.00; `cost_s2_2b1c_vs_head.txt`, 08:02 to 08:05);
+    - s1 119249c0 6.40 against head 4.70 (full 12.10/11.90; `cost_s2_1192_vs_head_2.txt`, 08:29 to 08:33).
+    - The first 119249c0 run (`cost_s2_1192_vs_head.txt`) ran under outside load: 10.60/7.60.
+  - Pixel: NOT RUN. The phone's screen stayed off through two ready-checks, 08:28 to 08:36 and 08:42 to 09:01 (26 min;
+    the check never wakes it), so the phone lock was never taken. It is the one open Done item; see Next.
+- **Done 3, pictures.**
+  - Play, same-state (`k1387_play.mjs 7 4`: seed 7, mt=hunter, four moves, every clock pinned, perf lock held
+    08:23 to 08:26; `play7_*.png` and `_head.png`, diffs by `k1387_pngdiff.mjs`). These are whole-frame diffs, so
+    every consumer drawn in the frame counts: the telegraph, the yarn, the under clip band and the junction webs.
+    Beyond the 480x360 crop around the head, no consumer has a zoomed crop of its own.
+    - Head gf against a head gf control: 0 px.
+    - s1 gf against head gf: 286 px, all in the build stamp's text; the head crops differ by 0 px.
+    - Today against gf: 88,867 px. gf draws no gold traveled path. The same happens on s1, so it predates s2; it is
+      K1389's colour-table area.
+  - Intro sheets (`k1387_sheet.mjs`, `b.FMKB4DIQ&phw=0&fw=0`: `s2h_def_sheet.png`, `s2h_burn_sheet.png`). Today's
+    row shows ribbons through the reveal, plus its sparks. The gf row shows only the sparks, on s1 too. Both rows'
+    end+2s frames are blank (the link's own reveal).
+    - s1 gf against head gf differs by 2k to 77k px along the reveal front. That pair is not same-state: the pinned
+      clocks land 0.02 to 0.17 s apart between loads, and fxAlive differs by a few percent. Done 1 is the exactness
+      evidence for the intro.
+  - gf's `rvPasses` read 473 on head against 723 on s1 at t=14. It counts dirty frames, so it depends on the frame
+    rate, and these runs shared the desktop with K1389's captures. The Pixel's builds/s is the figure to trust.
+- **Done 4.** `npm test` is green on 46438e0e (07:50: 242 files, 3049 tests). byte_identity and the goldens pass, and
+  rp=gf stays off by default. Later commits touch only `.claude/probes/K1387/`.
+- **Residual.** Under xp=threads and fi=fuse, applyExploreGaps flushes every live slot's chain. Lean marches
+  everything there, so those modes keep s1's cost.
+- **Tools added.** `k1387_play.mjs` (same-state play A/B), `k1387_pngdiff.mjs` (a PNG diff with no dependencies),
+  `k1387_sheet.mjs` (K1383's intro sheet) and `serve_builds.mjs` (a static server for built folders).
+  `k1387_phone.ps1` now copies both `-Base` and `-Head`; s1's line copied an undefined `$Sha`.
+- **Next.** Run the Pixel ABBA once the phone is awake and idle, then merge. It needs about 3 min of phone time,
+  as s1's did:
+  `pwsh -NoProfile -File .claude/probes/K1387/k1387_phone.ps1 -Base 2b1cffe1 -Head 46438e0e -Label s2p1 -Cells
+  def:gfg:intro-d,def:gfg@b:intro-d,def:gfg:drag,def:gfg@b:drag`.
+  - Without `-Builds`, phone_pass builds both commits. Alternatively, `scripts/preview.ps1 -Ref <sha> -Root <dir>
+    -BuildOnly` builds them and `-Builds <dir>` copies them in.
+  - Read `out/motion_s2p1.json`: main ms/frame and gf builds/s in intro-d and the drag, and the drag's sim/wall.
+  - The desktop says head matches base. If the Pixel disagrees, record the remainder against s1's +1.0/+0.4 ms.
