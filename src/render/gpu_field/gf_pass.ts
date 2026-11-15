@@ -10,6 +10,7 @@ import { GF_VS, gfFs, type GfTier } from "./gf_glsl";
 import { GF_TW, packTables, type GfPacked } from "./gf_pack";
 import { buildKeys } from "./gf_keys";
 import { GfPieces } from "./gf_split";
+import { revealForm, type GfRevealTable } from "./gf_reveal";
 /** K1362 s7: the split's options. skip: empty pixels skip pass 2 (depth); keys: the keys run in pass 2 (gf_glsl.ts SPLITK). */
 export interface GfSplitForm { skip?: boolean; keys?: boolean }
 import type { GfTables } from "./tables";
@@ -136,7 +137,7 @@ export class GfTarget {
  * means of 10 runs over three benches, p14f and p14h); level on the desktop. 0 px on its 12 scenes on both.
  */
 export const GF_TIERS: GfTier[] = [{ p: 3, k: 2, ramps: true, s: 3, lab: true, grp: true, ks: true, kz: "frame", fs: "c", kd: true }];
-const UNIFORMS = ["uD", "uOCh", "uOV", "uOPin", "uOArm", "uOK", "uOChk", "uOCell", "uOChL", "uOKL", "uOKC", "uOKB", "uOKA", "uOKP", "uH", "uW", "uAA", "uSigma", "uZt", "uWin", "uRc", "uGrid", "uGDim", "uMap", "uP0", "uP1", "uP2", "uP3"];
+const UNIFORMS = ["uD", "uOCh", "uOV", "uOPin", "uOArm", "uOK", "uOChk", "uOCell", "uOChL", "uOKL", "uOKC", "uOKB", "uOKA", "uOKP", "uH", "uW", "uAA", "uSigma", "uZt", "uWin", "uRc", "uGrid", "uGDim", "uMap", "uP0", "uP1", "uP2", "uP3", "uRv", "uORvK"];
 /** K1362 s12: a program drawn only in frames where some cell lists a corner ("corners") or none does ("none"). */
 type GfWhen = "corners" | "none";
 interface GfProg { prog: WebGLProgram; u: Map<string, WebGLUniformLocation | null>; tier: GfTier | null; split?: 1 | 2; when?: GfWhen }
@@ -173,6 +174,15 @@ export class GfPass {
   readonly gl: WebGL2RenderingContext;
   /** The tiers' programs, then the full program (last; it draws whatever no tier held). */
   private progs: GfProg[];
+  /**
+   * K1383 s1: the same programs in their reveal form (gf_reveal.ts revealForm), compiled on the first reveal and
+   * drawn only while one runs (setReveal); otherwise the rest frame draws `progs`, unchanged.
+   */
+  private rprogs: GfProg[] | null = null;
+  private rplan: (() => GfProg[]) | null = null;
+  private rvTex: WebGLTexture | null = null;
+  private rvRows = 0;
+  private rv: { oK: number } | null = null;
   private vao: WebGLVertexArrayObject;
   private tex: WebGLTexture;
   private packed: GfPacked | null = null;
@@ -208,13 +218,16 @@ export class GfPass {
     this.skip = !!sf.skip; const keys = !!sf.keys;
     const plan: { tier: GfTier | null; split?: 1 | 2; when?: GfWhen }[] = split ? [{ tier: tiers[0], split: 1 }, { tier: tiers[0], split: 2 }, { tier: null }]
       : [...tiers.flatMap((t) => (probe ? [{ tier: t.zc ? { ...t, zc: undefined } : t }] : cornerPlan(t))), { tier: null }]; // the probe ignores kz and zc (gfFs)
-    this.progs = plan.map(({ tier, split: s, when }) => {
+    const make = (form: (src: string) => string): GfProg[] => plan.map(({ tier, split: s, when }) => {
       const src = fs ? fs(tier, s) : gfFs(probe, true, tier ?? undefined, s ? { reg: tier?.reg, unroll: tier?.unroll, pack: tier?.pack, split: s, splitSkip: this.skip, splitKeys: keys } : undefined);
-      const prog = compileProgram(gl, GF_VS, src);
+      const prog = compileProgram(gl, GF_VS, form(src));
       const u = new Map<string, WebGLUniformLocation | null>();
       for (const n of UNIFORMS) u.set(n, gl.getUniformLocation(prog, n));
       return { prog, u, tier, split: s, when };
     });
+    this.progs = make((src) => src);
+    // K1383 s1: the reveal form exists for the app's programs only (no probe, split or source override)
+    if (!probe && !split && !fs) this.rplan = () => make(revealForm);
     if (split) this.pieces = new GfPieces(gl, tiers[0].p, keys);
     this.vao = gl.createVertexArray()!;
     this.tex = gl.createTexture()!;
@@ -222,6 +235,39 @@ export class GfPass {
   }
 
   get timed(): boolean { return !!this.ext; }
+
+  /** K1383 s1: whether the reveal form can draw (the app's programs). */
+  get revealable(): boolean { return !!this.rplan; }
+
+  /**
+   * K1383 s1: draw the reveal form over this reveal table until the next call; null draws the original programs.
+   * The table rides texture unit 5 (the split's pieces use 1-4).
+   */
+  setReveal(R: GfRevealTable | null): void {
+    if (!R || !this.rplan) { this.rv = null; return; }
+    const gl = this.gl;
+    if (!this.rprogs) this.rprogs = this.rplan();
+    if (!this.rvTex) this.rvTex = gl.createTexture()!;
+    gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, null);
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 4);
+    gl.pixelStorei(gl.UNPACK_ROW_LENGTH, 0);
+    gl.pixelStorei(gl.UNPACK_SKIP_ROWS, 0);
+    gl.pixelStorei(gl.UNPACK_SKIP_PIXELS, 0);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+    gl.activeTexture(gl.TEXTURE5);
+    gl.bindTexture(gl.TEXTURE_2D, this.rvTex);
+    const view = R.data.subarray(0, R.rows * GF_TW * 4);
+    if (R.rows !== this.rvRows) {
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, GF_TW, R.rows, 0, gl.RGBA, gl.FLOAT, view);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+      this.rvRows = R.rows;
+    } else gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, GF_TW, R.rows, gl.RGBA, gl.FLOAT, view);
+    gl.bindTexture(gl.TEXTURE_2D, null);
+    gl.activeTexture(gl.TEXTURE0);
+    this.rv = { oK: R.oK };
+  }
 
   upload(T: GfTables): void {
     const gl = this.gl;
@@ -280,7 +326,8 @@ export class GfPass {
     const halfOk = Math.max(T.nV, T.nK, T.nA, T.nCh) < 32000;
     // K1362 s12 kz: a program for frames with (or without) a corner in some cell (cornerPlan).
     const corners = this.cellCorners;
-    const progs = this.progs.filter((g) => (!g.tier || !g.tier.half || halfOk) && (!g.when || (g.when === "corners") === corners));
+    const rv = this.rv;
+    const progs = (rv ? this.rprogs! : this.progs).filter((g) => (!g.tier || !g.tier.half || halfOk) && (!g.when || (g.when === "corners") === corners));
     const routed = progs.length > 1;
     const pieces = this.pieces;
     if (routed) target.ensureStencil();
@@ -308,6 +355,7 @@ export class GfPass {
       gl.stencilFunc(gl.EQUAL, 0, 0xff);
       gl.stencilOp(gl.KEEP, gl.KEEP, gl.INCR);
     }
+    if (rv) { gl.activeTexture(gl.TEXTURE5); gl.bindTexture(gl.TEXTURE_2D, this.rvTex); }
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.tex);
     gl.bindVertexArray(this.vao);
@@ -342,6 +390,7 @@ export class GfPass {
       const u = (n: string): WebGLUniformLocation | null => g.u.get(n) ?? null;
       gl.uniform1i(u("uD"), 0);
       if (g.split === 2) for (let i = 0; i < 4; i++) gl.uniform1i(u(`uP${i}`), 1 + i);
+      if (rv) { gl.uniform1i(u("uRv"), 5); gl.uniform1i(u("uORvK"), rv.oK); }
       const o = P.o;
       gl.uniform1i(u("uOCh"), o.ch); gl.uniform1i(u("uOV"), o.v); gl.uniform1i(u("uOPin"), o.pin); gl.uniform1i(u("uOArm"), o.arm);
       gl.uniform1i(u("uOK"), o.k); gl.uniform1i(u("uOChk"), o.chk); gl.uniform1i(u("uOCell"), o.cell); gl.uniform1i(u("uOChL"), o.chl); gl.uniform1i(u("uOKL"), o.kl);
@@ -363,6 +412,7 @@ export class GfPass {
       for (let i = 0; i < 4; i++) { gl.activeTexture(gl.TEXTURE1 + i); gl.bindTexture(gl.TEXTURE_2D, null); }
       gl.activeTexture(gl.TEXTURE0);
     }
+    if (rv) { gl.activeTexture(gl.TEXTURE5); gl.bindTexture(gl.TEXTURE_2D, null); gl.activeTexture(gl.TEXTURE0); }
     if (ext && q) {
       gl.endQuery(ext.TIME_ELAPSED_EXT);
       e = gl.createQuery()!;
@@ -398,6 +448,8 @@ export class GfPass {
     for (const { q, e } of this.pending) { gl.deleteQuery(q); gl.deleteQuery(e); }
     this.pending = [];
     for (const g of this.progs) gl.deleteProgram(g.prog);
+    for (const g of this.rprogs ?? []) gl.deleteProgram(g.prog);
+    if (this.rvTex) gl.deleteTexture(this.rvTex);
     this.pieces?.dispose();
     gl.deleteVertexArray(this.vao);
     gl.deleteTexture(this.tex);

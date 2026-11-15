@@ -28,6 +28,7 @@ import { gatherLeanSkeleton, gatherSceneInput, gatherSceneInputLean, type SceneE
 import { splineBend, type SplineSamples } from "../../geometry/spline_generator";
 import { buildTables, type GfTables } from "./tables";
 import { CTRL_ARC, gfBuild, gfDepth, tablesDiff } from "./gf_build";
+import { GfRevealTable, gfRevealing } from "./gf_reveal";
 import { GfComposite, GfPass, GfTarget, type GfMap } from "./gf_pass";
 
 interface GfReply {
@@ -77,10 +78,15 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
   let leanOn: { lean: boolean } | null = null;
   let rc: RenderContainer | null = null;
   let drawn: (Float32Array | null)[] = [];
+  let rvTab: GfRevealTable | null = null;
+  let rvDrawn = false;
   const stats = {
     rebuilds: 0, passes: 0, composites: 0, fallback: "",
     exportMs: [] as number[], tablesMs: [] as number[], packMs: [] as number[], uploadMs: [] as number[],
     px: [] as number[], cpuPassMs: [] as number[],
+    // K1383 s1: the reveal table's CPU build per drawn reveal frame, its knots and active chains, the reveal
+    // frames drawn and the frame the reveal form was last drawn on (performance.now()).
+    rvMs: [] as number[], rvKnots: [] as number[], rvActive: [] as number[], rvPasses: 0, rvLast: 0,
     // c1: where builds ran, main's share per rebuild (gather + post, then
     // pack + upload; in-thread builds add the export and tables), the
     // worker's whole build and the post-to-arrival latency.
@@ -138,10 +144,13 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
   type GfOpts = {
     worker?: boolean; verify?: boolean; pool?: boolean; freeze?: boolean; redraw?: boolean; cap?: number;
     depth?: number; gate?: boolean; fillets?: boolean; lean?: boolean; gesture?: boolean; chan?: boolean;
+    /** K1383 s1: false draws no reveal (the pre-K1383 gf look, for A/Bs). */
+    reveal?: boolean;
   };
   const opts = (): GfOpts => (globalThis as unknown as { __knotGfOpts?: GfOpts }).__knotGfOpts ?? {};
   // K1369 s4: by gesture (a thread grabbed or not); an A/B's `depth` wins.
-  const depth = (): number => gfDepth(opts(), (ctx.scene.ps?.grabbedParticle ?? -1) >= 0);
+  // K1383 s1: and by the reveal (gf_build.ts gfDepth): 2 only while it runs.
+  const depth = (): number => gfDepth(opts(), (ctx.scene.ps?.grabbedParticle ?? -1) >= 0, gfRevealing(ctx.scene.renderer));
   const verifying = (): boolean => !!api.verify || !!opts().verify;
   const wantWorker = (): boolean => typeof Worker !== "undefined" && opts().worker !== false;
 
@@ -463,7 +472,9 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
   type Rnd = NonNullable<SceneExportCtx["scene"]["renderer"]>;
   const chanWanted = (r: Rnd): boolean =>
     !!opts().chan && !!worker && ready && !!T && chanRefused !== r &&
-    r.pluckHost.plucks.activeCount === 0 && !(r.flowStrength > 0) && !splineBend.enabled;
+    r.pluckHost.plucks.activeCount === 0 && !(r.flowStrength > 0) && !splineBend.enabled &&
+    // K1383 s1: closed until the reveal ends (its masks follow main's samples: the reveal table reads them)
+    !gfRevealing(r);
   const skelKey = (r: Rnd, scale: number): string => {
     const root = ctx.root;
     const p = ctx.params;
@@ -516,7 +527,7 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
       return;
     }
     const want = chanWanted(r);
-    if (chanOn && !want) chanClose("closed (pluck, flow or bend)");
+    if (chanOn && !want) chanClose(gfRevealing(r) ? "closed (reveal)" : "closed (pluck, flow or bend)");
     else if (!chanOn && want) chanOpen(r, scale);
     else if (chanOn) {
       const k = skelKey(r, scale);
@@ -606,6 +617,20 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
         } else builtCount = count;
       }
       if (!T || !target) return;
+      // K1383 s1: while the appearance reveal runs, draw its form over this frame's masks (gf_reveal.ts); the
+      // frame it ends, the original programs again
+      if (pass.revealable && o.reveal !== false && gfRevealing(r)) {
+        rvTab ??= new GfRevealTable();
+        rvTab.build(r, T);
+        pass.setReveal(rvTab);
+        rvDrawn = true;
+        dirty = true;
+        stats.rvMs.push(rvTab.ms); stats.rvKnots.push(rvTab.nKnots); stats.rvActive.push(rvTab.nActive);
+      } else if (rvDrawn) {
+        pass.setReveal(null);
+        rvDrawn = false;
+        dirty = true;
+      }
       const key = `${cam.a},${cam.d},${cam.e},${cam.f},${cam.w},${cam.h}`;
       if (key !== drawnKey) dirty = true;
       pass.poll();
@@ -617,6 +642,7 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
       const t0 = performance.now();
       pass.draw(target, map, rect);
       stats.cpuPassMs.push(performance.now() - t0);
+      if (rvDrawn) { stats.rvPasses++; stats.rvLast = performance.now(); }
       stats.px.push((rect[2] - rect[0]) * (rect[3] - rect[1]));
       stats.passes++;
       drawnKey = key;

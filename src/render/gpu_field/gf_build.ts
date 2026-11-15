@@ -16,11 +16,17 @@ export const CTRL_ARC = 0.47;
 // is (depth 2 there costs the physics a third of its sim/wall: it waits for
 // a core). An A/B's fixed `depth` wins; `gesture: false` is stage 3's one
 // depth (GF_DEPTH_DRAG throughout).
+// K1383 s1: BY THE REVEAL: GF_DEPTH_IDLE only while the appearance reveal
+// runs (and no thread is grabbed), GF_DEPTH_DRAG otherwise, settled knot
+// included (K1393: after the reveal, depth 2 cost intro-i 0.03-0.07 of
+// sim/wall on the Pixel; depth 2 only while the reveal runs passed every
+// measured cell). The reveal's own state (gf_reveal.ts gfRevealing) tells
+// gf when it ends.
 export const GF_DEPTH_IDLE = 2;
 export const GF_DEPTH_DRAG = 1;
-export function gfDepth(o: { depth?: number; gesture?: boolean }, grabbed: boolean): number {
+export function gfDepth(o: { depth?: number; gesture?: boolean }, grabbed: boolean, revealing = false): number {
   if (o.depth !== undefined) return Math.max(1, Math.floor(o.depth));
-  if (o.gesture === false || grabbed) return GF_DEPTH_DRAG;
+  if (o.gesture === false || grabbed || !revealing) return GF_DEPTH_DRAG;
   return GF_DEPTH_IDLE;
 }
 

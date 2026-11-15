@@ -899,6 +899,12 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
       if (params.mazeFabric && scene.fabric && scene.fabricController) {
         scene.fabric.update(scene.fabricController);
       }
+    } else if (scene.renderer.revealFx.revealOn) {
+      // K1383 s1: the reveal's lifecycle lives in update(); skipped, its end
+      // would wait for the next update frame (the appear FX emit while
+      // revealOn holds, and the tip glow would stand). Keep both current.
+      scene.renderer.revealFx.lifecycle();
+      scene.renderer.revealFx.drawRevealTips();
     }
     fabricTick();
     const t2 = performance.now();
