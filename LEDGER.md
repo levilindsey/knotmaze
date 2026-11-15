@@ -578,10 +578,10 @@ Next free ID: K1395.
 - **K1383** · rp=gf has no intro: no trace, burn or thread reveal; the whole unsettled lattice shows from the
   first frame, and the trace effect ghosts on top at about 15 s (desktop captures,
   .claude/probes/K1369/out/intro/sheet.png; K1369 s1 handoff). Needed before rp=gf goes on by default
-  - owner: agent `a3fb7c2d4d206aade` of claude session 01SUPGULDxvE5gKXozfaFaFG (opus, started 2026-11-14 22:14, 2 h cap ~00:14)
-  - branch: `worktree-agent-a3fb7c2d4d206aade`, worktree `.claude/worktrees/agent-a3fb7c2d4d206aade`; last commit: `23db0dcb`
+  - owner: nobody since 2026-11-14 23:20 (merged; agent `a3fb7c2d4d206aade` of claude session 01SUPGULDxvE5gKXozfaFaFG)
+  - branch: mainline; last commit: `03102199`
   - evidence: `.claude/probes/K1383/`
-  - next: Stage 1 running: every appearance mode reveals under rp=gf as today's look does (sheets vs today), pass exact and unchanged after the reveal, depth 2 only while the reveal runs
+  - next: Look decision: should gf carry the reveal colours (burn tint, rainbow stripes, fade alpha) and the rainbow swell/bulb; then K1384 (cold compile freeze)
   - brief: `docs/design/K1383_s1_gf_reveal.md`
 
 ## Next, in order
