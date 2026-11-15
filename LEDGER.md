@@ -577,10 +577,10 @@ Next free ID: K1401.
   - brief: `docs/design/K1369_s4_snapshot_channel.md`
 - **K1389** · rp=gf ignores the thread look ('border' and the section colors): on b.FMKB4DIQ every today-vs-gf
   A/B compares outlines with filled threads, so the rows are not like for like (K1369 s3)
-  - owner: agent `a92bd55f0b968e13e` of claude session 01SUPGULDxvE5gKXozfaFaFG (opus; started 2026-11-15 07:35, stop by 2 h)
-  - branch: `worktree-agent-a92bd55f0b968e13e`, worktree `.claude/worktrees/agent-a92bd55f0b968e13e`; last commit: `e2354e4a` (brief)
+  - owner: nobody since 2026-11-15 08:46 (merged; agent `a92bd55f0b968e13e` of claude session 01SUPGULDxvE5gKXozfaFaFG)
+  - branch: mainline; last commit: `38b73e87`
   - evidence: `.claude/probes/K1389/`
-  - next: Stage 2 running: the colour table built per scene, not per frame (K1399), then the Pixel look cost (fill, border)
+  - next: the Pixel run (k1389s2_phone.ps1 -Shas 2b1cffe1,377ccdd0) when the phone's screen is on, never waking it; then a look-form path in the K1362 bench
   - brief: `docs/design/K1389_s2_colour_table.md` (s1: `K1389_s1_gf_thread_look.md`)
 - **K1387** · rp=gf lean (K1369 s3): underWindows stay empty, so under rp=gf the maze's under-gap hiding stops
   for reveal sparks, telegraph rim ends, burn sparks, the yarn, underClipBand (fabric_maze_renderer.ts) and
