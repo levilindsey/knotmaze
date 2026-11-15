@@ -62,6 +62,8 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
   let rect: [number, number, number, number] = [0, 0, 0, 0];
   let map: GfMap = [1, 0, 1, 0];
   let hidden: Container[] = [];
+  // K1369 s2: the renderer whose fillet layer attach() took, and the layer.
+  let filletsOff: { r: { filletLayer: Container | null }; layer: Container } | null = null;
   let rc: RenderContainer | null = null;
   let drawn: (Float32Array | null)[] = [];
   const stats = {
@@ -97,10 +99,11 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
   // draws the pass every frame even when nothing changed (the GPU's load
   // without the build's CPU). K1369 s2: `depth` is the builds in flight
   // (default DEPTH); `gate: false` keeps main's ribbon update on every frame
-  // (frame_loop.ts asks busy()).
+  // (frame_loop.ts asks busy()); `fillets: true` keeps the joinery's fan
+  // rebuild, which attach() otherwise switches off (see there).
   type GfOpts = {
     worker?: boolean; verify?: boolean; pool?: boolean; freeze?: boolean; redraw?: boolean; cap?: number;
-    depth?: number; gate?: boolean;
+    depth?: number; gate?: boolean; fillets?: boolean;
   };
   const opts = (): GfOpts => (globalThis as unknown as { __knotGfOpts?: GfOpts }).__knotGfOpts ?? {};
   const depth = (): number => Math.max(1, Math.floor(opts().depth ?? DEPTH));
@@ -227,6 +230,17 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
     const root = r.root;
     hidden = [root.children[0], root.children[1]].filter((c): c is Container => !!c && c.visible);
     for (const c of hidden) c.visible = false;
+    // K1369 s2: the fan layer (child 1) is hidden, so its rebuild (joinery
+    // rebuildFillets, on every geometry change: ~7 ms of main's ~30 per
+    // build on the desktop) draws nothing. A null layer is the renderer's
+    // own no-fillets state (rebuildFillets returns at once); gf's tables
+    // read none of what it writes (junctionCutEntries and recBaseByJn feed
+    // the ribbon's RANGES and paint, jointGate the fans). detach() puts the
+    // layer back and the next paint tick rebuilds it.
+    if (!opts().fillets && r.filletLayer) {
+      filletsOff = { r, layer: r.filletLayer };
+      r.filletLayer = null;
+    }
     rc = new RenderContainer({
       render: (renderer) => {
         if (!comp || !target || off || !T) return;
@@ -252,6 +266,10 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
   const detach = (): void => {
     for (const c of hidden) c.visible = true;
     hidden = [];
+    if (filletsOff) {
+      if (filletsOff.r.filletLayer === null) filletsOff.r.filletLayer = filletsOff.layer;
+      filletsOff = null;
+    }
     if (rc) {
       rc.parent?.removeChild(rc);
       rc.destroy();
