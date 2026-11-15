@@ -1572,6 +1572,7 @@ export class Joinery {
     // Nearest under-gap near edge ahead along an arm (mid-lane extents of
     // underWindows), or Infinity.
     const gapNearOf = (arm: JArm): number => {
+      this.r.leanFlush(arm.chain); // K1387 s2: the lazy march.
       const win = this.r.underWindows.get(arm.chain);
       if (!win) return Infinity;
       let near = Infinity;

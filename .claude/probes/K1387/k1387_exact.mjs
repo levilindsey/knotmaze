@@ -33,11 +33,8 @@ const CHECK = () => {
   const nC = r.chainSamples.length; const nx = ps.crossings.length;
   const call = (f) => { try { return f(); } catch (e) { return "ERR " + e.message; } };
   const cap = () => {
-    const mapOf = (m) => [...m.entries()].filter(([, v]) => v.length).sort((a, b) => a[0] - b[0]).map(([k, v]) => [k, Array.from(v)]);
-    const uw = mapOf(r.underWindows); const cc = mapOf(r.chainCuts);
-    const slots = [];
-    for (let s = 0; s < r.slotLive.length; s++) if (r.slotLive[s]) slots.push([s, r.slotUnderChain[s], r.slotUnderCenter[s], r.slotCutNeg[s], r.slotCutPos[s], r.slotAllNeg[s], r.slotAllPos[s], r.slotUwRamp[s]]);
-    const dd = Array.from({ length: nx * 2 }, (_, i) => r.diagData[Math.floor(i / 2) * 5 + (i % 2)]);
+    // K1387 s2: the consumers first, as the app asks them (each flushes its own chain's lazy march), then every chain
+    // flushed (leanFlushAll, absent on older builds) and the fields read. Maps compare order-independently by key.
     const vis = []; const band = []; const cuts = [];
     for (let c = 0; c < nC; c++) {
       const s = r.chainSamples[c]; if (!s) continue; const T = s.totalLength;
@@ -45,6 +42,12 @@ const CHECK = () => {
       for (let a = 0; a < T; a += 0.2) band.push(JSON.stringify(call(() => r.underClipBand(c, a, 0.4))));
       cuts.push(JSON.stringify(call(() => r.underCutCtrls(c, 0.3))), JSON.stringify(call(() => r.underCutCtrls(c, 0.3, true))));
     }
+    r.leanFlushAll?.();
+    const mapOf = (m) => [...m.entries()].filter(([, v]) => v.length).sort((a, b) => a[0] - b[0]).map(([k, v]) => [k, Array.from(v)]);
+    const uw = mapOf(r.underWindows); const cc = mapOf(r.chainCuts);
+    const slots = [];
+    for (let s = 0; s < r.slotLive.length; s++) if (r.slotLive[s]) slots.push([s, r.slotUnderChain[s], r.slotUnderCenter[s], r.slotCutNeg[s], r.slotCutPos[s], r.slotAllNeg[s], r.slotAllPos[s], r.slotUwRamp[s]]);
+    const dd = Array.from({ length: nx * 2 }, (_, i) => r.diagData[Math.floor(i / 2) * 5 + (i % 2)]);
     return { uw: JSON.stringify(uw), uwN: uw.reduce((n, e) => n + e[1].length / 3, 0), cc: JSON.stringify(cc), slots, dd, vis, band, cuts };
   };
   const diff = (a, b) => {
@@ -58,12 +61,18 @@ const CHECK = () => {
     out.n = Object.values(out).reduce((s, v) => s + v, 0); out.first = first; return out;
   };
   const full = () => { r.lean = false; r.update(); r.lean = true; };
+  // The check's own consumer calls and marches stay out of the between-check counts (TAKE).
+  const n0 = r.__k1387n ? { ...r.__k1387n } : null; const st = () => (r.leanMarchStats ? { ...r.leanMarchStats } : null);
+  const s0 = st();
   full(); const F = cap();
-  r.update(); const leanNow = r.leanNow; const stale = r.leanStale; const L = cap();
+  const s1 = st(); r.update(); const leanNow = r.leanNow; const stale = r.leanStale; const s2 = st(); const L = cap(); const s3 = st();
   full(); const F2 = cap();
+  if (n0) Object.assign(r.__k1387n, n0);
+  const s4 = st(); if (s4 && r.__k1387s) { r.__k1387s.queued += s4.queued - s0.queued; r.__k1387s.marched += s4.marched - s0.marched; }
+  const march = s1 && { queued: s2.queued - s1.queued, inUpdate: s2.marched - s1.marched, byReaders: s3.marched - s2.marched, pendingAfter: s3.pending };
   const hidden = F.vis.filter((v) => v < 0.5).length; const bands = F.band.filter((v) => v !== "null").length;
   return { chains: nC, crossings: nx, windows: F.uwN, liveSlots: F.slots.length, visHidden: hidden, bands, leanNow, staleAfterLean: stale,
-    ctrl: diff(F, F2), FL: diff(F, L), leanWindows: L.uwN };
+    ctrl: diff(F, F2), FL: diff(F, L), leanWindows: L.uwN, march };
 };
 
 // Count the consumers' calls between checks (instance patches; the app calls them through the instance).
@@ -73,9 +82,16 @@ const COUNT = () => {
   for (const [k, name] of [["vis", "underGapVisibility"], ["band", "underClipBand"], ["cuts", "underCutCtrls"]]) {
     const orig = r[name]; r[name] = function (...a) { r.__k1387n[k]++; return orig.apply(this, a); };
   }
+  // K1387 s2: the lazy march's counters (slots queued by lean updates, slots the app's readers marched).
+  r.__k1387s = r.leanMarchStats ? { ...r.leanMarchStats } : null;
   return true;
 };
-const TAKE = () => { const r = window.__knotRenderer(); const n = { ...r.__k1387n }; for (const k in r.__k1387n) r.__k1387n[k] = 0; return n; };
+const TAKE = () => {
+  const r = window.__knotRenderer(); const n = { ...r.__k1387n }; for (const k in r.__k1387n) r.__k1387n[k] = 0;
+  const st = r.leanMarchStats;
+  if (st && r.__k1387s) { n.queued = st.queued - r.__k1387s.queued; n.marched = st.marched - r.__k1387s.marched; r.__k1387s = { ...st }; }
+  return n;
+};
 
 // K1388: the spy on the overlay's siteTester (what both the base's direct call and the branch's pluckSiteTester reach).
 const SPY = () => {
@@ -111,7 +127,7 @@ const load = async (page, url, settle = true) => {
 };
 const report = (name, x, n) => {
   const s = (d) => `${d.n}${d.first ? ` (${d.first.slice(0, 140)})` : ""}`;
-  say(`${name}: chains ${x.chains} crossings ${x.crossings} windows ${x.windows} (lean ${x.leanWindows}) live ${x.liveSlots} hiddenVis ${x.visHidden} bands ${x.bands} leanRan ${x.staleAfterLean} | ctrl F/F2 ${s(x.ctrl)} | F/L ${s(x.FL)} | slots ${x.FL.slots} vis ${x.FL.vis} band ${x.FL.band} cuts ${x.FL.cuts} dd ${x.FL.dd}${n ? ` | calls ${JSON.stringify(n)}` : ""}`);
+  say(`${name}: chains ${x.chains} crossings ${x.crossings} windows ${x.windows} (lean ${x.leanWindows}) live ${x.liveSlots} hiddenVis ${x.visHidden} bands ${x.bands} leanRan ${x.staleAfterLean} | ctrl F/F2 ${s(x.ctrl)} | F/L ${s(x.FL)} | slots ${x.FL.slots} vis ${x.FL.vis} band ${x.FL.band} cuts ${x.FL.cuts} dd ${x.FL.dd}${x.march ? ` | march ${JSON.stringify(x.march)}` : ""}${n ? ` | calls ${JSON.stringify(n)}` : ""}`);
   if (x.err) say(name, "ERR", x.err);
   return x;
 };

@@ -607,6 +607,8 @@ export class ExploreGaps {
         // the pluck footprints (registered slots: slot == crossing index)
         // and the under chain's windows (rebuilt below, once per chain).
         this.r.slotExploreHid[s] = hid;
+        // K1387 s2: a lean update's march for this slot may still wait.
+        this.r.leanFlush(this.r.slotUnderChain[s]);
         if (s < this.r.ps.crossings.length) {
           this.r.pluckHost.overHalfNeg[s] = hid ? 0 : this.r.slotCoverNeg[s];
           this.r.pluckHost.overHalfPos[s] = hid ? 0 : this.r.slotCoverPos[s];
@@ -619,6 +621,9 @@ export class ExploreGaps {
     }
     // K430: rebuilt once per dirty chain, ramped windows (uwRampScale).
     for (const uc of dirtyUnder) {
+      // K1387 s2: march the chain's pending slots (their raw windows land
+      // first, as the eager solve's did, and are replaced just below).
+      this.r.leanFlush(uc);
       const win: number[] = [];
       for (let s = 0; s < this.r.markerBase; s++) {
         if (!this.r.slotLive[s]) continue;

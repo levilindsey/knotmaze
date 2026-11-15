@@ -503,6 +503,21 @@ export class RibbonRenderer {
   lean = false;
   /** @internal ribbon */ leanNow = false;
   private leanStale = false;
+  // K1387 s2: a lean update defers each slot's under march until a reader
+  // asks for its under chain (crossing_gaps.ts, the lazy march). The ribbon
+  // parts that read underWindows, chainCuts or the slots' cut / all-lanes
+  // arcs directly (joinery, explore_gaps) flush through these first.
+  /** @internal ribbon */ leanFlush(chain: number): void {
+    this.crossing.leanFlushChain(chain);
+  }
+  /** @internal ribbon */ leanFlushAll(): void {
+    this.crossing.leanFlushAll();
+  }
+  // Probe counters: slots queued and marched (cumulative), and pending now.
+  get leanMarchStats(): { queued: number; marched: number; pending: number } {
+    const s = this.crossing.leanStats;
+    return { queued: s.queued, marched: s.marched, pending: this.crossing.leanPending };
+  }
   /** @internal ribbon */ leanFresh(): void {
     if (!this.leanStale) return;
     const was = this.lean;
@@ -1723,6 +1738,7 @@ export class RibbonRenderer {
   // where K842's whole-marker alpha dip used to fade it. Null when
   // no under crossing is within reach of a marker of radius rWorld.
   underClipBand(chain: number, arc: number, rWorld: number): ClipBand | null {
+    this.crossing.leanFlushChain(chain); // K1387 s2: reads underWindows.
     const samples = this.chainSamples[chain];
     if (!samples) return null;
     const total = samples.totalLength;
@@ -1802,6 +1818,7 @@ export class RibbonRenderer {
   // fadeLength 0 still cuts without pixel-popping. 1 where the chain is
   // the over pass (no window on this chain there).
   underGapVisibility(chain: number, arc: number): number {
+    this.crossing.leanFlushChain(chain); // K1387 s2: the lazy march.
     const win = this.underWindows.get(chain);
     if (!win) return 1;
     const samples = this.chainSamples[chain];
@@ -1855,6 +1872,8 @@ export class RibbonRenderer {
     // Under-gap windows are rebuilt from scratch by this frame's
     // crossing solves (renderCrossing appends).
     this.underWindows.clear();
+    // K1387 s2: the last lean update's unread marches are moot now.
+    this.crossing.leanReset();
 
     // Reveal lifecycle (ribbon/reveal_fx.ts): refresh the active flag,
     // and on the completion frame restore the full render exactly once.
@@ -2182,6 +2201,7 @@ export class RibbonRenderer {
   // count). `shownOnly` keeps the crossings whose over pass shows (vis >=
   // 0.5 at the over pass, the 2b gate's line).
   underCutCtrls(chain: number, pad: number, shownOnly = false): number[] {
+    this.crossing.leanFlushChain(chain); // K1387 s2: the lazy march.
     const out: number[] = [];
     const cuts = this.chainCuts.get(chain);
     const samples = this.chainSamples[chain];

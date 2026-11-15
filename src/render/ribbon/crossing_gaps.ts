@@ -153,9 +153,14 @@ const JOINT_MARGIN_FLOOR = 0.5;
 const FADE_JOINT_FLOOR = 0.45;
 
 // K1387: one slot's setup and under march (solveUnder), as the full solve
-// (computeGapSlot) and lean mode's (leanSlot) read it. One per CrossingGaps,
-// overwritten per slot.
+// (computeGapSlot) and lean mode's (leanSlot) read it. The full solve keeps
+// one per CrossingGaps, overwritten per slot; lean mode keeps one per
+// pending slot (s2's lazy march: setupUnder fills it at the solve,
+// marchUnder at the flush).
 class UnderMarch {
+  slot = 0;
+  underChain = 0;
+  fillHalf = 0;
   underNb!: PassNeighbors;
   overSamples!: SplineSamples;
   underSamples!: SplineSamples;
@@ -227,6 +232,22 @@ export class CrossingGaps {
   private g3Accepted: number[] = [];
   // K1387: solveUnder's results for the slot being solved.
   private readonly march = new UnderMarch();
+  // K1387 s2: LEAN MODE's LAZY MARCH. leanSlot runs a slot's setup now and
+  // queues its under march on the under chain; the first reader of that
+  // chain's under-gap outputs marches the chain's queue in solve order
+  // (leanFlushChain, through the façade's leanFlush), so a lean frame
+  // nobody reads marches nothing. Entries are pooled; update() drops the
+  // queue at its start (leanReset). The march runs on its own scratch
+  // (lazyCo, lazySc): a flush inside a reader never touches the caller's
+  // sampleScratch or a solve's polylines.
+  private readonly lazyPool: UnderMarch[] = [];
+  private lazyUsed = 0;
+  private lazyPending = 0;
+  private readonly lazyByChain = new Map<number, UnderMarch[]>();
+  private readonly lazyCo = new Float32Array(COARSE_MAX * 2);
+  private readonly lazySc = new Float32Array(4);
+  // Probe counters (cumulative): slots queued, slots marched.
+  readonly leanStats = { queued: 0, marched: 0 };
 
   constructor(r: RibbonRenderer) {
     this.r = r;
@@ -243,19 +264,15 @@ export class CrossingGaps {
     neg: number,
     pos: number,
     spacing: number,
-    maxPts: number
+    maxPts: number,
+    sc: Float32Array = this.r.sampleScratch
   ): number {
     const span = Math.max(0, neg + pos);
     const n = Math.max(2, Math.min(maxPts, Math.ceil(span / spacing) + 1));
     for (let m = 0; m < n; m++) {
-      sampling.sampleAt(
-        samples,
-        center - neg + (span * m) / (n - 1),
-        this.r.sampleScratch,
-        0
-      );
-      poly[m * 2] = this.r.sampleScratch[0];
-      poly[m * 2 + 1] = this.r.sampleScratch[1];
+      sampling.sampleAt(samples, center - neg + (span * m) / (n - 1), sc, 0);
+      poly[m * 2] = sc[0];
+      poly[m * 2 + 1] = sc[1];
     }
     return n;
   }
@@ -368,8 +385,25 @@ export class CrossingGaps {
   // unchanged (less the protect reset, which only the full solve redoes):
   // the slot's explore bookkeeping, the caps and the coarse over polyline,
   // then the cut, silhouette, window and all-lanes arcs per side. The
-  // results go to `march`, which computeGapSlot and leanSlot read.
+  // results go to `march`, which computeGapSlot reads. K1387 s2: two parts,
+  // the setup (setupUnder: the slot's bookkeeping and caps) and the march
+  // (marchUnder), which lean mode defers (leanSlot).
   private solveUnder(
+    slot: number,
+    crossing: { over: CrossingPass; under: CrossingPass; sign?: number },
+    overNbIn: PassNeighbors | null,
+    underNbIn: PassNeighbors | null,
+    fillHalf: number,
+    gap: number,
+    shown: boolean
+  ): void {
+    const m = this.march;
+    this.setupUnder(m, slot, crossing, overNbIn, underNbIn, fillHalf, gap, shown);
+    this.marchUnder(m, this.coarseO, this.r.sampleScratch);
+  }
+
+  private setupUnder(
+    m: UnderMarch,
     slot: number,
     crossing: { over: CrossingPass; under: CrossingPass; sign?: number },
     overNbIn: PassNeighbors | null,
@@ -526,7 +560,56 @@ export class CrossingGaps {
         room(underSamples, underCenter, -1)
       )
     );
+    m.slot = slot;
+    m.underChain = crossing.under.chain;
+    m.fillHalf = fillHalf;
+    m.underNb = underNb;
+    m.overSamples = overSamples;
+    m.underSamples = underSamples;
+    m.overCenter = overCenter;
+    m.underCenter = underCenter;
+    m.totalO = totalO;
+    m.totalU = totalU;
+    m.exploreVis = exploreVis;
+    m.uwShown = uwShown;
+    m.shown = shown;
+    m.selfCross = selfCross;
+    m.splitFwd = splitFwd;
+    m.splitBwd = splitBwd;
+    m.selfDist = selfDist;
+    m.margin = margin;
+    m.fade = fade;
+    m.perp = perp;
+    m.exitD = exitD;
+    m.selfEx = selfEx;
+    m.per = per;
+    m.oCapPos = oCapPos;
+    m.oCapNeg = oCapNeg;
+    m.uCapPos = uCapPos;
+    m.uCapNeg = uCapNeg;
+  }
 
+  // The UNDER MARCH of a slot setupUnder prepared, on the polyline buffer
+  // `co` and the 4-float scratch `sc4` (the full solve passes its own,
+  // lean mode's flush its private pair). Pure in its inputs: the same `m`
+  // marches to the same arcs whenever it runs within the update.
+  private marchUnder(m: UnderMarch, co: Float32Array, sc4: Float32Array): void {
+    const {
+      overSamples,
+      underSamples,
+      overCenter,
+      underCenter,
+      fillHalf,
+      margin,
+      fade,
+      perp,
+      selfEx,
+      per,
+      oCapNeg,
+      oCapPos,
+      uCapNeg,
+      uCapPos,
+    } = m;
     // UNDER MARCH (each direction) against the coarse over polyline, for
     // two arcs along the under centerline:
     //  - the CUT: where its own mask excess first turns >= 0 - the hidden
@@ -543,16 +626,15 @@ export class CrossingGaps {
     //    lane, to the crossing core (the erase grid's first-exit lanes had
     //    this property by construction).
     const nO = this.buildPoly(
-      this.coarseO,
+      co,
       overSamples,
       overCenter,
       oCapNeg,
       oCapPos,
       COARSE_SPACING,
-      COARSE_MAX
+      COARSE_MAX,
+      sc4
     );
-    const co = this.coarseO;
-    const sc4 = this.r.sampleScratch;
     const oS0 = overCenter - oCapNeg;
     const oSt = (oCapNeg + oCapPos) / (nO - 1);
     const overlapD = 2 * fillHalf;
@@ -683,31 +765,6 @@ export class CrossingGaps {
         allNeg = allX;
       }
     }
-    const m = this.march;
-    m.underNb = underNb;
-    m.overSamples = overSamples;
-    m.underSamples = underSamples;
-    m.overCenter = overCenter;
-    m.underCenter = underCenter;
-    m.totalO = totalO;
-    m.totalU = totalU;
-    m.exploreVis = exploreVis;
-    m.uwShown = uwShown;
-    m.shown = shown;
-    m.selfCross = selfCross;
-    m.splitFwd = splitFwd;
-    m.splitBwd = splitBwd;
-    m.selfDist = selfDist;
-    m.margin = margin;
-    m.fade = fade;
-    m.perp = perp;
-    m.exitD = exitD;
-    m.selfEx = selfEx;
-    m.per = per;
-    m.oCapPos = oCapPos;
-    m.oCapNeg = oCapNeg;
-    m.uCapPos = uCapPos;
-    m.uCapNeg = uCapNeg;
     m.overlapD = overlapD;
     m.cutPos = cutPos;
     m.cutNeg = cutNeg;
@@ -730,7 +787,10 @@ export class CrossingGaps {
   // reads the binding point). Skipped: the over march, the protect and
   // junction clearance solves, the slot row (writeSlot), chainWins and the
   // pluck footprints, which leanFresh() refreshes before a pluck or a site
-  // test reads them.
+  // test reads them. K1387 s2: the march and the four outputs it feeds wait
+  // for a reader (the lazy march above): the setup runs now (its slot
+  // bookkeeping is read unflushed: slotLive, slotUnderChain, slotOverCtrl,
+  // ...), diagData's x, y too (gf reads it every frame).
   leanSlot(
     slot: number,
     crossing: { over: CrossingPass; under: CrossingPass; sign?: number },
@@ -741,30 +801,21 @@ export class CrossingGaps {
     gap: number,
     shown = true
   ): void {
-    this.solveUnder(slot, crossing, overNbIn, underNbIn, fillHalf, gap, shown);
-    const m = this.march;
-    this.r.slotAllNeg[slot] = m.allNeg;
-    this.r.slotAllPos[slot] = m.allPos;
-    this.r.slotCutNeg[slot] = m.cutNeg;
-    this.r.slotCutPos[slot] = m.cutPos;
-    let cuts = this.r.chainCuts.get(crossing.under.chain);
-    if (!cuts) {
-      cuts = [];
-      this.r.chainCuts.set(crossing.under.chain, cuts);
+    let m = this.lazyPool[this.lazyUsed];
+    if (!m) {
+      m = new UnderMarch();
+      this.lazyPool.push(m);
     }
-    cuts.push(slot, m.underCenter, m.allNeg, m.allPos);
-    if (m.uwShown && m.exploreVis > 0) {
-      let uw = this.r.underWindows.get(crossing.under.chain);
-      if (!uw) {
-        uw = [];
-        this.r.underWindows.set(crossing.under.chain, uw);
-      }
-      uw.push(
-        m.underCenter,
-        m.cutNeg * m.exploreVis,
-        m.cutPos * m.exploreVis
-      );
+    this.lazyUsed++;
+    this.setupUnder(m, slot, crossing, overNbIn, underNbIn, fillHalf, gap, shown);
+    let q = this.lazyByChain.get(m.underChain);
+    if (!q) {
+      q = [];
+      this.lazyByChain.set(m.underChain, q);
     }
+    q.push(m);
+    this.lazyPending++;
+    this.leanStats.queued++;
     if (index >= 0) {
       if (this.r.diagData.length < this.r.ps.crossings.length * 5) {
         this.r.diagData = new Float32Array(this.r.ps.crossings.length * 5);
@@ -774,6 +825,68 @@ export class CrossingGaps {
       this.r.diagData[index * 5] = sc4[0];
       this.r.diagData[index * 5 + 1] = sc4[1];
     }
+  }
+
+  // K1387 s2: march one pending slot and write what the full solve writes
+  // for the under-gap consumers: the slot's cut and all-lanes arcs, the
+  // K466 chainCuts entry, the underWindows push.
+  private leanFinish(m: UnderMarch): void {
+    this.marchUnder(m, this.lazyCo, this.lazySc);
+    this.leanStats.marched++;
+    const slot = m.slot;
+    this.r.slotAllNeg[slot] = m.allNeg;
+    this.r.slotAllPos[slot] = m.allPos;
+    this.r.slotCutNeg[slot] = m.cutNeg;
+    this.r.slotCutPos[slot] = m.cutPos;
+    let cuts = this.r.chainCuts.get(m.underChain);
+    if (!cuts) {
+      cuts = [];
+      this.r.chainCuts.set(m.underChain, cuts);
+    }
+    cuts.push(slot, m.underCenter, m.allNeg, m.allPos);
+    if (m.uwShown && m.exploreVis > 0) {
+      let uw = this.r.underWindows.get(m.underChain);
+      if (!uw) {
+        uw = [];
+        this.r.underWindows.set(m.underChain, uw);
+      }
+      uw.push(
+        m.underCenter,
+        m.cutNeg * m.exploreVis,
+        m.cutPos * m.exploreVis
+      );
+    }
+  }
+
+  // K1387 s2: march every slot queued on `chain` (as under thread), in solve
+  // order, so its outputs read as the eager lean solve left them. Every
+  // reader of a chain's underWindows, chainCuts, slotCut* or slotAll* calls
+  // this first (through RibbonRenderer.leanFlush).
+  leanFlushChain(chain: number): void {
+    if (this.lazyPending === 0) return;
+    const q = this.lazyByChain.get(chain);
+    if (!q || q.length === 0) return;
+    for (let k = 0; k < q.length; k++) this.leanFinish(q[k]);
+    this.lazyPending -= q.length;
+    q.length = 0;
+  }
+
+  leanFlushAll(): void {
+    if (this.lazyPending === 0) return;
+    for (const chain of this.lazyByChain.keys()) this.leanFlushChain(chain);
+  }
+
+  // Drop the queue (update() calls this before it solves anew).
+  leanReset(): void {
+    if (this.lazyUsed === 0) return;
+    for (const q of this.lazyByChain.values()) q.length = 0;
+    this.lazyUsed = 0;
+    this.lazyPending = 0;
+  }
+
+  // Slots queued and not yet marched (probes).
+  get leanPending(): number {
+    return this.lazyPending;
   }
 
   // Solve one crossing's GAP SLOT: the under thread's arc window, the
