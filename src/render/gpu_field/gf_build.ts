@@ -10,6 +10,20 @@ import { buildTables, type GfTables } from "./tables";
 /** The ctrl-arc the tables' depth window scales by (gf_app.ts's since s2). */
 export const CTRL_ARC = 0.47;
 
+// K1369 s4: the builds in flight BY GESTURE: GF_DEPTH_IDLE while no thread
+// is grabbed (the intros: on the Pixel, depth 2 installs 51-54 builds a
+// second with the physics within noise of today's), GF_DEPTH_DRAG while one
+// is (depth 2 there costs the physics a third of its sim/wall: it waits for
+// a core). An A/B's fixed `depth` wins; `gesture: false` is stage 3's one
+// depth (GF_DEPTH_DRAG throughout).
+export const GF_DEPTH_IDLE = 2;
+export const GF_DEPTH_DRAG = 1;
+export function gfDepth(o: { depth?: number; gesture?: boolean }, grabbed: boolean): number {
+  if (o.depth !== undefined) return Math.max(1, Math.floor(o.depth));
+  if (o.gesture === false || grabbed) return GF_DEPTH_DRAG;
+  return GF_DEPTH_IDLE;
+}
+
 export interface GfBuilt {
   T: GfTables;
   exportMs: number;

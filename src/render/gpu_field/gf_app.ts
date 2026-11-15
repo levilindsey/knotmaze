@@ -26,7 +26,7 @@ import { RenderContainer, type Container, type WebGLRenderer } from "pixi.js";
 import { buildFieldScene, type SceneExportInput } from "../field/scene_export";
 import { gatherSceneInput, gatherSceneInputLean, type SceneExportCtx } from "../field/scene_export_hook";
 import { buildTables, type GfTables } from "./tables";
-import { CTRL_ARC, gfBuild, tablesDiff } from "./gf_build";
+import { CTRL_ARC, gfBuild, gfDepth, tablesDiff } from "./gf_build";
 import { GfComposite, GfPass, GfTarget, type GfMap } from "./gf_pass";
 
 interface GfReply {
@@ -43,8 +43,8 @@ const FILL: [number, number, number] = [0.96, 0.93, 0.86];
 const INK_AUTO: [number, number, number] = [0.12, 0.11, 0.09];
 
 export interface GfApp { frame(): void; after(): void; dispose(): void; busy(): boolean }
-// K1369 s2: builds in flight by default (`__knotGfOpts.depth` overrides).
-const DEPTH = 1;
+// K1369 s4: the builds in flight by gesture (gf_build.ts gfDepth; the
+// `__knotGfOpts` knobs `depth` and `gesture` override it).
 let warned = false;
 
 export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfApp {
@@ -81,6 +81,8 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
     // newer one replaced before install, and the frames busy() let main skip
     // the ribbon update on. showAt: [post, install] time pairs, flat.
     showMs: [] as number[], showAt: [] as number[], superseded: 0, gated: 0,
+    // K1369 s4: worker posts by the depth in force when posted ([1], [2], [3+]).
+    postsAt: [0, 0, 0, 0],
   };
 
   // The build worker: started on the first frame; until it says hello (and
@@ -106,10 +108,11 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
   // which attach() otherwise switches off (see there).
   type GfOpts = {
     worker?: boolean; verify?: boolean; pool?: boolean; freeze?: boolean; redraw?: boolean; cap?: number;
-    depth?: number; gate?: boolean; fillets?: boolean; lean?: boolean;
+    depth?: number; gate?: boolean; fillets?: boolean; lean?: boolean; gesture?: boolean;
   };
   const opts = (): GfOpts => (globalThis as unknown as { __knotGfOpts?: GfOpts }).__knotGfOpts ?? {};
-  const depth = (): number => Math.max(1, Math.floor(opts().depth ?? DEPTH));
+  // K1369 s4: by gesture (a thread grabbed or not); an A/B's `depth` wins.
+  const depth = (): number => gfDepth(opts(), (ctx.scene.ps?.grabbedParticle ?? -1) >= 0);
   const verifying = (): boolean => !!api.verify || !!opts().verify;
   const wantWorker = (): boolean => typeof Worker !== "undefined" && opts().worker !== false;
 
@@ -351,7 +354,9 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
   const rebuild = (scale: number): boolean => {
     const aa = 0.5 / scale;
     const useWorker = !!worker && ready && !!T;
-    if (useWorker && flights.size >= depth()) return false;
+    const d = depth();
+    if (useWorker && flights.size >= d) return false;
+    if (useWorker) stats.postsAt[Math.min(3, d)]++;
     const t0 = performance.now();
     const { input, transfer }: { input: SceneExportInput; transfer: ArrayBuffer[] } = gatherSceneInputLean(ctx, "field");
     if (useWorker) {
