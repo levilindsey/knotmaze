@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1408.
+Next free ID: K1409.
 
 ## Waiting on Levi
 
@@ -306,6 +306,14 @@ Next free ID: K1408.
 
 ## In progress
 
+- **K1408** · Muse batch 23 (overnight 2026-11-15): six runs through the K1053 chain in the main checkout, in
+  order K1407 (census, then the largest category), K1404, K1407 again, K1405, K1398, K1374
+  (docs/design/K1408_muse_batch23.md)
+  - owner: muse batch 23 through the K1053 chain, started by claude session 01SUPGULDxvE5gKXozfaFaFG; each run's Paseo agent id is in .claude/probes/K1053/chain.log
+  - branch: mainline; last commit: `7b97289d`
+  - evidence: .claude/probes/K1053/ (queue.txt, chain.log, done.txt); .claude/probes/K1407/out/
+  - next: the chain runs 23A-23F (start.ps1); Claude checks each run's handoff, crops and census against primary records, then files follow-ups
+  - brief: `docs/design/K1408_muse_batch23.md`
 - **K1310** · Redesign course check (assessment 2026-11-11): (1) write the gate for making rp=outline the
   default; (2) a crop sheet, outline vs form B at the worst spots, so Levi says which differences still
   matter; (3) put speed first: the worker frame on def is ~120-185 ms during a drag vs K1247's 3 ms target;
