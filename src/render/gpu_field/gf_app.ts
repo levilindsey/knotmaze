@@ -149,8 +149,7 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
   };
   const opts = (): GfOpts => (globalThis as unknown as { __knotGfOpts?: GfOpts }).__knotGfOpts ?? {};
   // K1369 s4: by gesture (a thread grabbed or not); an A/B's `depth` wins.
-  // K1383 s1: and by the reveal (gf_build.ts gfDepth): 2 only while it runs.
-  const depth = (): number => gfDepth(opts(), (ctx.scene.ps?.grabbedParticle ?? -1) >= 0, gfRevealing(ctx.scene.renderer));
+  const depth = (): number => gfDepth(opts(), (ctx.scene.ps?.grabbedParticle ?? -1) >= 0);
   const verifying = (): boolean => !!api.verify || !!opts().verify;
   const wantWorker = (): boolean => typeof Worker !== "undefined" && opts().worker !== false;
 

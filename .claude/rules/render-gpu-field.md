@@ -119,6 +119,18 @@ not repeated here.
   lands there 15-50% of the time. One build takes 16-19 ms at full
   mid-core clocks and 23-28 ms when they drop, so 60 a second needs a
   build under about 12 ms, or a split across workers (K1386).
+- K1383 s1 (`K1383_s1_gf_reveal.md`): the appearance reveal under gf.
+  `gf_reveal.ts` packs today's masks (`RevealFx.widthMulFor`) into a
+  per-chain knot table (knots only where the mask changes: exact under
+  the linear interpolation both use), and `revealForm` derives a reveal
+  variant of each program (`d /= rvm`; a corner shows only when both
+  arms are full), compiled on the first revealing frame. Outside the
+  reveal the pass draws the original programs, and the tables digest is
+  untouched. The channel stays closed until the reveal ends. On the
+  Pixel it costs +0.4 ms of main per frame (the table build). Depth 1
+  outside the reveal cut intro-i to 19.5 builds a second (sim/wall
+  .87-.91) against depth 2's 50-54 (.81; today's look 17.8 fps at .84),
+  so the depth rule stays by gesture alone.
 - A tier is exact by construction: on overflow it sets a flag,
   breaks and discards, and the next program draws that pixel.
 - Routing is by stencil (EQUAL 0, INCR). The LAST program uses KEEP,

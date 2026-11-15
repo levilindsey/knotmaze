@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1395.
+Next free ID: K1398.
 
 ## Waiting on Levi
 
@@ -303,6 +303,9 @@ Next free ID: K1395.
   never unlocks it. If it should stay unlocked on the charger overnight, that is a phone setting only Levi can
   change (K1362). 2026-11-13 10:34-10:57: unlocked, but the Claude app stayed in front, so the run never
   started: the pass needs the HOME SCREEN in front and the phone untouched for 2 min (Claude never presses Home).
+- **K1395** · rp=gf reveal look: gf draws the reveal's widths and fronts but not its colours (burn tint,
+  rainbow stripes, materialize alpha) or the rainbow's swell and white bulb; carry them, or keep the plain
+  fill (sheets .claude/probes/K1383/out/b_J_*_sheet.png; docs/design/K1383_s1_gf_reveal.md handoff)
 
 ## In progress
 
@@ -573,16 +576,8 @@ Next free ID: K1395.
   - owner: nobody since 2026-11-14 22:12 (merged; agent `a8a51a9e8bd8bb6e7` of claude session 01SUPGULDxvE5gKXozfaFaFG)
   - branch: mainline; last commit: `25a0ff19`
   - evidence: `.claude/probes/K1369/`
-  - next: Stage 4 merged (depth by gesture: 2 at rest, 1 while grabbed; the physics-to-gf snapshot channel, exact, opt-in __knotGfOpts.chan). Pixel: channel intro-d 45/s vs today 33, drag 25-28 vs 17, intro-i sim/wall -.03. Stage 5: depth by the reveal, gate the channel's tables by the reveal (exact during intro-d), cut the 16-28 ms build or split it across two workers
+  - next: Stage 5 (not launched): cut the 16-28 ms build or split it across workers for 60/s (K1386); the channel through the reveal (K1390-K1392). Depth stays by gesture: K1383 s1 measured depth 1 outside the reveal at 19.5 builds/s vs 50-54
   - brief: `docs/design/K1369_s4_snapshot_channel.md`
-- **K1383** · rp=gf has no intro: no trace, burn or thread reveal; the whole unsettled lattice shows from the
-  first frame, and the trace effect ghosts on top at about 15 s (desktop captures,
-  .claude/probes/K1369/out/intro/sheet.png; K1369 s1 handoff). Needed before rp=gf goes on by default
-  - owner: nobody since 2026-11-14 23:20 (merged; agent `a3fb7c2d4d206aade` of claude session 01SUPGULDxvE5gKXozfaFaFG)
-  - branch: mainline; last commit: `03102199`
-  - evidence: `.claude/probes/K1383/`
-  - next: Look decision: should gf carry the reveal colours (burn tint, rainbow stripes, fade alpha) and the rainbow swell/bulb; then K1384 (cold compile freeze)
-  - brief: `docs/design/K1383_s1_gf_reveal.md`
 
 ## Next, in order
 
@@ -2013,10 +2008,15 @@ Every other item below waits on the trigger it names.
 - **K1392** · rp=gf snapshot channel (K1369 s4): closes for a live pluck, flow above 0 and splineBend (those
   fall back to main's path)
 - **K1393** · rp=gf depth 2 (K1369 s4): intro-i sim/wall 0.03-0.07 below today's on the Pixel (the gf worker
-  lands on cpu6 15-50% of the time); depth 2 only while the reveal runs passes every measured cell, unmeasured
-  as a whole
+  lands on cpu6 15-50% of the time). Depth 1 outside the reveal (K1383 s1) fixed sim/wall (.87-.91) but cut
+  intro-i to 19.5 builds/s against 50-54, so depth stays 2 at rest; the fix is a cheaper build (K1386)
 - **K1394** · Pixel A/B rests: 120 s rests left the second rep at thermal 1 in two of four K1369 s4 runs (s4b,
   s4d); rest longer or to a skin temperature (.claude/rules/probes-phone.md)
+- **K1396** · rp=gf: the K76 thread reveal (explore view) is not handled; only the appearance reveal is
+  (docs/design/K1383_s1_gf_reveal.md handoff)
+- **K1397** · rp=gf reveal approximations: the tables lag the masks by the build depth; pieceD unscaled in the
+  ko forms; tip glow from the live mirror; a corner shows only once both arms are full; edge AA scales with
+  the mask; the Pixel runner (k1383_motion.mjs) stops at sim sleep (K1383 s1 handoff)
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2386,6 +2386,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1383** · rp=gf reveals the intro (gf_reveal.ts mask table + reveal program variants; channel closed until the reveal ends). Done in 03102199 (2026-11-14).
 - **K1382** · K1362 course check answered: Levi (2026-11-14) - 30 fps in motion acceptable, 60 better, the intro physics first; next is K1369 s1 (intro settle + drag on the Pixel, CPU clocks). Done in 1b69ce1b (2026-11-14).
 - **K1372** · rp=gf: stage 5 tile routes removed by s6 (keys per bin made per-tile bounds moot). Done in c55d015b (2026-11-13).
 - **K1370** · Muse t2: exact corner reuse is impossible (0.000 of vertices bit-identical between consecutive drag frames); a bit-identical slice-worker pool shipped, gated to junction-free builds because its serial prefix (6-8 ms) made muse_hash slower, so def/muse_hash/fat still run the single build (def 10.5 ms). Follow-up K1374. Done in 682a1afa (2026-11-13).
