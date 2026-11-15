@@ -55,7 +55,8 @@ thrS.stdout.on("data", (d) => { tbuf += d; const l = tbuf.split(/\r?\n/); tbuf =
 const threads = (t0, t1) => {
   const a = thr.filter((s) => s.t >= t0 && s.t <= t1); if (a.length < 2) return null;
   const s0 = a[0], s1 = a[a.length - 1], w = (s1.t - s0.t) / 1000; const rows = [];
-  for (const [tid, x1] of Object.entries(s1.th)) { const x0 = s0.th[tid]; if (!x0) continue;
+  // A thread born inside the window (the gf build worker during an intro) counts from 0.
+  for (const [tid, x1] of Object.entries(s1.th)) { const x0 = s0.th[tid] ?? { run: 0, wait: 0 };
     const run = (x1.run - x0.run) / 1e6 / w, wait = (x1.wait - x0.wait) / 1e6 / w; if (run < 20) continue;
     const cores = {}; for (const s of a) { const y = s.th[tid]; if (y) cores[y.cpu] = (cores[y.cpu] || 0) + 1; }
     rows.push({ tid: +tid, p: x1.p, comm: x1.comm, run: +run.toFixed(0), wait: +wait.toFixed(0), cores }); }
