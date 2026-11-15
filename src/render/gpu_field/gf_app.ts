@@ -91,7 +91,7 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
   // rebuilding once tables exist (the pass keeps the last ones), `redraw`
   // draws the pass every frame even when nothing changed (the GPU's load
   // without the build's CPU).
-  type GfOpts = { worker?: boolean; verify?: boolean; pool?: boolean; freeze?: boolean; redraw?: boolean };
+  type GfOpts = { worker?: boolean; verify?: boolean; pool?: boolean; freeze?: boolean; redraw?: boolean; cap?: number };
   const opts = (): GfOpts => (globalThis as unknown as { __knotGfOpts?: GfOpts }).__knotGfOpts ?? {};
   const verifying = (): boolean => !!api.verify || !!opts().verify;
   const wantWorker = (): boolean => typeof Worker !== "undefined" && opts().worker !== false;
@@ -326,8 +326,17 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
     return true;
   };
 
+  // K1369: `cap` (probe-only) is the Pixi ticker's maxFPS while gf runs (0 = none; restored on dispose). Pixi
+  // truncates the frame delta to whole ms, so 31 keeps a 30 Hz pair of 60 Hz vsyncs (33 ms) and 30 would not.
+  let capped = 0;
+  const applyCap = (fps: number): void => {
+    if (fps === capped) return;
+    ctx.app.ticker.maxFPS = fps;
+    capped = fps;
+  };
   const frame = (): void => {
     if (off) return;
+    applyCap(opts().cap ?? 0);
     const r = ctx.scene.renderer;
     const ps = ctx.scene.ps;
     if (!r || !ps) return;
@@ -441,6 +450,7 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
 
   const dispose = (): void => {
     release();
+    applyCap(0);
     off = true;
     if (worker) dropWorker("disposed");
     const G = globalThis as unknown as Record<string, unknown>;

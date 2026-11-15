@@ -22,8 +22,12 @@ const reps = +(process.argv[5] || 1);
 mkdirSync(join(here, "out"), { recursive: true });
 const file = join(here, `out/motion_${label}.json`);
 const LINK = { def: "b.FMKB4DIQ", bj: "b.J" };
-const SETQ = { today: "", gf: "&rp=gf", gff: "&rp=gf", gfr: "&rp=gf", gft: "&rp=gf" };
-const SETO = { gff: { freeze: true }, gfr: { freeze: true, redraw: true }, gft: { worker: false } };
+const SETQ = { today: "", gf: "&rp=gf", gff: "&rp=gf", gfr: "&rp=gf", gft: "&rp=gf", gfc: "&rp=gf" };
+const SETO = { gff: { freeze: true }, gfr: { freeze: true, redraw: true }, gft: { worker: false }, gfc: { cap: 31 } };
+// K1369_COOL=<skin C> waits before each cell (on about:blank) for thermal status 0 and VIRTUAL-SKIN at or under it, up to
+// K1369_COOLMAX s (default 300); the wait and the start's thermal go in the row (coolWaitS, thermal0).
+const COOL = process.env.K1369_COOL ? +process.env.K1369_COOL : null, COOLMAX = +(process.env.K1369_COOLMAX || 300);
+const skin = (th) => +((th?.temps ?? []).find((x) => x.startsWith("VIRTUAL-SKIN"))?.split(" ")[1] ?? NaN);
 const adb = (cmd) => execFileSync(CFG.adb, ["-s", CFG.serial, "shell", cmd], { encoding: "utf8" });
 const gnode = adb("ls -d /sys/class/devfreq/*gpu*").trim().split(/\s+/)[0];
 const ncpu = adb("ls -d /sys/devices/system/cpu/cpu[0-9]*").trim().split(/\s+/).length;
@@ -79,7 +83,7 @@ const gfSum = (gs, nFrames) => { if (!gs) return null; const mainR = gs.mainMs ?
     workMs: q(gs.workMs ?? [], 0.5), latencyMs: q(gs.latencyMs ?? [], 0.5), passes: gs.passes ?? null, worker: gs.worker ?? null, workerBuilds: gs.workerBuilds ?? null, threadBuilds: gs.threadBuilds ?? null, fallback: gs.fallback ?? null }; };
 const phys = (a, b, wall) => { const ds = b.substeps - a.substeps, dms = b.physMs - a.physMs;
   return { kind: b.kind, busyPerS: +(dms / wall).toFixed(0), msPerSubstep: ds > 0 ? +(dms / ds).toFixed(2) : null, substeps: ds,
-    simPerWall: a.sim !== null && b.sim !== null ? +((b.sim - a.sim) / wall).toFixed(3) : null, mainPerFrame: b.frames > a.frames ? +((b.cost - a.cost) / (b.frames - a.frames)).toFixed(2) : null }; };
+    simPerWall: a.sim !== null && b.sim !== null ? +((b.sim - a.sim) / wall).toFixed(3) : null, appFps: +((b.frames - a.frames) / wall).toFixed(1), mainPerFrame: b.frames > a.frames ? +((b.cost - a.cost) / (b.frames - a.frames)).toFixed(2) : null }; };
 
 const browser = await connect();
 const page = await myPage(browser);
@@ -98,6 +102,13 @@ const arm = async (opts) => {
 try {
   for (let r = 0; r < reps; r++) for (const [lk, st, sc] of r % 2 ? [...cells].reverse() : cells) {
     assertFree();
+    let coolWaitS = null, thermal0 = null;
+    if (COOL !== null) {
+      await page.goto("about:blank").catch(() => {});
+      const tc = Date.now();
+      for (;;) { assertFree(); thermal0 = thermal(); if ((thermal0?.status === 0 && skin(thermal0) <= COOL) || Date.now() - tc > COOLMAX * 1000) break; await sleep(10000); }
+      coolWaitS = +((Date.now() - tc) / 1000).toFixed(0);
+    }
     await ensureViewport(page);
     await arm(st);
     const url = `${CFG.hostA}/?${LINK[lk] ?? lk}${sc === "intro-d" ? "" : "&am=instant"}&snd=none${SETQ[st]}`;
@@ -113,7 +124,7 @@ try {
       await sleep(300);
     }
     const tw1 = Date.now();
-    const run = { rep: r, link: lk, setting: st, scen: sc, url: url.replace(CFG.hostA, ""), thermal: thermal() };
+    const run = { rep: r, link: lk, setting: st, scen: sc, url: url.replace(CFG.hostA, ""), thermal: thermal(), thermal0, coolWaitS };
     const live = polls.find((p) => p.substeps > 0);
     if (sc.startsWith("intro")) {
       const fr = (await page.evaluate(() => globalThis.__k1369)) || [];
