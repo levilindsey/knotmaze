@@ -567,10 +567,10 @@ Next free ID: K1383.
   tables the CPU builds in under 1 ms) instead of the outline mesh built on the CPU each frame (65-117 ms on
   def). Reverses the 2026-11-09 call (K1040 dropped for K1240). The main speed route (Levi, 2026-11-12: very bullish
   on it); dropped only on a proof it cannot work (brief: "How the result is judged"). Analysis in docs/ledger_notes.md.
-  - owner: agent `a692a6d29bd0fd421` of claude session 01SUPGULDxvE5gKXozfaFaFG (opus, started 2026-11-14 14:27, 2 h cap ~16:27)
-  - branch: `worktree-agent-a692a6d29bd0fd421`, worktree `.claude/worktrees/agent-a692a6d29bd0fd421`; last commit: `c96006bb`
+  - owner: nobody since 2026-11-14 16:03 (merged; agent `a692a6d29bd0fd421` of claude session 01SUPGULDxvE5gKXozfaFaFG)
+  - branch: mainline; last commit: `71bf979e`
   - evidence: .claude/probes/K1362/ (k1362s14_*, k1362s15_*), out/s14/, out/s15/
-  - next: Stage 15 (a smaller per-pixel program by structure, def under 8 ms on the Pixel) running; merge its branch when it reports
+  - next: Stage 15 merged (depth-class tiers zc/zb/zk/zf, bench-only, exact on the desktop). Run p15b on the Pixel (pwsh -NoProfile -File .claude/probes/K1362/k1362s15_phone_run.ps1 -Cfgs p15b -WaitMin 30); set GF_TIERS[0] if zb or zk pays and is 12/12 exact there, else build a two-piece layering P0. Check the PVR compiler (k1362s15_pvr.ps1) ranks the s14 forms as the Pixel did before trusting it
   - brief: `docs/design/K1362_s15_program_shape.md`
 
 ## Next, in order
