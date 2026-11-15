@@ -33,9 +33,12 @@ SETQ.gf1 = "&rp=gf"; SETQ.gff = "&rp=gf"; SETQ.gf2f = "&rp=gf";
 SETO.gfl = { lean: true }; SETO.gf2l = { depth: 2, lean: true }; SETQ.gfl = "&rp=gf"; SETQ.gf2l = "&rp=gf";
 // K1369 s4 (k1369s4_motion.mjs, k1369s2_motion.mjs plus these settings): gfd1 / gfd2 = rp=gf at a fixed depth 1 / 2
 // (stage 3's gfl / gf2l; lean is the default); gfg = rp=gf as shipped (depth by gesture: 2 at rest, 1 while a thread
-// is grabbed); gfc = gfg plus the snapshot channel (`chan`: the physics worker feeds the gf worker directly).
+// is grabbed); gfc = gfg plus the snapshot channel (`chan`: the physics worker feeds the gf worker directly);
+// gfc1 = gfc at depth 1 everywhere (does a lower intro build rate give the physics its sim/wall back?); gfc2 = gfc at
+// depth 2 everywhere (with main out of the path, does the drag afford two builds in flight?).
 SETO.gfd1 = { depth: 1 }; SETO.gfd2 = { depth: 2 }; SETO.gfg = {}; SETO.gfc = { chan: true };
-for (const k of ["gfd1", "gfd2", "gfg", "gfc"]) SETQ[k] = "&rp=gf";
+SETO.gfc1 = { chan: true, depth: 1 }; SETO.gfc2 = { chan: true, depth: 2 };
+for (const k of ["gfd1", "gfd2", "gfg", "gfc", "gfc1", "gfc2"]) SETQ[k] = "&rp=gf";
 // K1369 s2: installs per second (from __knotGf.stats.showAt, [post, install] pairs) and touch-to-pixels: per touch event
 // of the drag, the time to the first install of a build posted after it (gf), or to the end of the first rAF frame after
 // it (today: the rAF time plus the drag's mean main ms per frame). Both exclude the physics worker's lag (shared) and
