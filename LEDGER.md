@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1398.
+Next free ID: K1401.
 
 ## Waiting on Levi
 
@@ -577,18 +577,18 @@ Next free ID: K1398.
   - brief: `docs/design/K1369_s4_snapshot_channel.md`
 - **K1389** · rp=gf ignores the thread look ('border' and the section colors): on b.FMKB4DIQ every today-vs-gf
   A/B compares outlines with filled threads, so the rows are not like for like (K1369 s3)
-  - owner: agent `a9f0346320932ed36` of claude session 01SUPGULDxvE5gKXozfaFaFG (opus; ran 2026-11-14 23:25 to 11-15 00:12, when the Claude Code process exited; resumed 06:58, cap 07:55 for the weekly budget)
-  - branch: `worktree-agent-a9f0346320932ed36`, worktree `.claude/worktrees/agent-a9f0346320932ed36`; last commit: `a1c30e74` (WIP, plus uncommitted edits it commits first)
-  - evidence: `.claude/probes/K1389/`
-  - next: Stage 1 resumed, desktop part only (section colours, border/both under rp=gf at rest, sheets, tests); the Pixel bench is the next run's first step
+  - owner: claude session 01SUPGULDxvE5gKXozfaFaFG (coordinator; agent `a9f0346320932ed36` finished s1's desktop part 2026-11-15 07:22)
+  - branch: `worktree-agent-a9f0346320932ed36`, worktree `.claude/worktrees/agent-a9f0346320932ed36`; last commit: `a9490dab`
+  - evidence: `.claude/probes/K1389/` (sheets and crops in `out/`, `k1389_sheet.mjs`, `pxdiff.ps1`); differences filed as K1398-K1400
+  - next: look at the sheets and merge s1; then s2: the Pixel K1362 bench (def, 822, sync4, ABBA), 2b1cffe1 vs head, fill and border
   - brief: `docs/design/K1389_s1_gf_thread_look.md`
 - **K1387** · rp=gf lean (K1369 s3): underWindows stay empty, so under rp=gf the maze's under-gap hiding stops
   for reveal sparks, telegraph rim ends, burn sparks, the yarn, underClipBand (fabric_maze_renderer.ts) and
   joinery.ts:1575; needed before rp=gf default-on (K1369_s3_lean_default.md handoff)
-  - owner: nobody since 2026-11-15 00:12 (the Claude Code process exited mid-run, about 48 min into the 2 h cap); paused for the weekly budget (95%, stop 96%) until the Nov 16 reset; agent `a5853a421264cb113` of claude session 01SUPGULDxvE5gKXozfaFaFG is resumable
+  - owner: agent `a5853a421264cb113` of claude session 01SUPGULDxvE5gKXozfaFaFG (opus; ran 2026-11-14 23:25 to 11-15 00:12, when the Claude Code process exited; resumed 07:23, stop 08:30, write-up by 08:45)
   - branch: `worktree-agent-a5853a421264cb113`, worktree `.claude/worktrees/agent-a5853a421264cb113`; last commit: `4e413b06` (WIP: the exact probe and the Pixel ABBA runner; tree clean)
   - evidence: `.claude/probes/K1387/`
-  - next: after the reset, resume the agent (SendMessage) for the rest of stage 1 (with K1388): it was mid an ABBA timing run (lean vs full) at the exit
+  - next: Stage 1 resumed (with K1388): it was mid an ABBA timing run (lean vs full) at the exit
   - brief: `docs/design/K1387_s1_lean_consumers.md`
 
 ## Next, in order
@@ -2027,6 +2027,16 @@ Every other item below waits on the trigger it names.
 - **K1397** · rp=gf reveal approximations: the tables lag the masks by the build depth; pieceD unscaled in the
   ko forms; tip glow from the live mirror; a corner shows only once both arms are full; edge AA scales with
   the mask; the Pixel runner (k1383_motion.mjs) stops at sim sleep (K1383 s1 handoff)
+- **K1398** · rp=gf crossing gaps clear to the background where today's paint a flat dark casing colour: in
+  the border look gf's outline reads redder and fainter (today 11k-21k pixels darker than the background, gf
+  about 1.4k), and in fill today shades the under-thread softly where gf draws a crisp line (K1389 s1 handoff,
+  .claude/probes/K1389/out/z_pair.png)
+- **K1399** · rp=gf's section colour table is rebuilt per frame: 4-5 ms a build on the desktop, about 65,300
+  colours against the 65,535 cap, colours lag up to 12 frames in motion; a static per-ctrl table would fix all
+  three (K1389 s1 handoff)
+- **K1400** · rp=gf: a form B fillet joining arms of different sections takes the nearer arm's colour; today
+  has no counterpart; and at muse_hash the both look outlines every thread with smudges at crossings, where
+  today outlines merged junction silhouettes (K1389 s1 handoff)
 
 ## Approved, to schedule (2026-10-11)
 
