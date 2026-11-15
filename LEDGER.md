@@ -575,6 +575,14 @@ Next free ID: K1395.
   - evidence: `.claude/probes/K1369/`
   - next: Stage 4 merged (depth by gesture: 2 at rest, 1 while grabbed; the physics-to-gf snapshot channel, exact, opt-in __knotGfOpts.chan). Pixel: channel intro-d 45/s vs today 33, drag 25-28 vs 17, intro-i sim/wall -.03. Stage 5: depth by the reveal, gate the channel's tables by the reveal (exact during intro-d), cut the 16-28 ms build or split it across two workers
   - brief: `docs/design/K1369_s4_snapshot_channel.md`
+- **K1383** · rp=gf has no intro: no trace, burn or thread reveal; the whole unsettled lattice shows from the
+  first frame, and the trace effect ghosts on top at about 15 s (desktop captures,
+  .claude/probes/K1369/out/intro/sheet.png; K1369 s1 handoff). Needed before rp=gf goes on by default
+  - owner: agent `a3fb7c2d4d206aade` of claude session 01SUPGULDxvE5gKXozfaFaFG (opus, started 2026-11-14 22:14, 2 h cap ~00:14)
+  - branch: `worktree-agent-a3fb7c2d4d206aade`, worktree `.claude/worktrees/agent-a3fb7c2d4d206aade`; last commit: `23db0dcb`
+  - evidence: `.claude/probes/K1383/`
+  - next: Stage 1 running: every appearance mode reveals under rp=gf as today's look does (sheets vs today), pass exact and unchanged after the reveal, depth 2 only while the reveal runs
+  - brief: `docs/design/K1383_s1_gf_reveal.md`
 
 ## Next, in order
 
@@ -862,9 +870,6 @@ Every other item below waits on the trigger it names.
 - **K1375** · rp=gf: move `buildKeys` (gf_keys.ts, 0.6 ms p50 on the Pixel main at upload, 0.2 desktop) out of
   gf_pass.ts upload into the gf build worker (gf_build.ts / gf_worker.ts), its arrays transferred with the
   tables (K1362 s6 handoff, next 4).
-- **K1383** · rp=gf has no intro: no trace, burn or thread reveal; the whole unsettled lattice shows from the
-  first frame, and the trace effect ghosts on top at about 15 s (desktop captures,
-  .claude/probes/K1369/out/intro/sheet.png; K1369 s1 handoff). Needed before rp=gf goes on by default
 - **K1384** · rp=gf's shader compiles synchronously: a cold desktop profile freezes the loader about 6.7 s
   (K1369 s1). Compile in parallel (KHR_parallel_shader_compile) or warm it up (render-shaders.md, K307);
   measure the Pixel's cold compile too
