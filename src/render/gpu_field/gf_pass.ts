@@ -11,6 +11,7 @@ import { GF_TW, packTables, type GfPacked } from "./gf_pack";
 import { buildKeys } from "./gf_keys";
 import { GfPieces } from "./gf_split";
 import { revealForm, type GfRevealTable } from "./gf_reveal";
+import { lookForm, LOOK_COMP_FS, type GfLookTable } from "./gf_look";
 /** K1362 s7: the split's options. skip: empty pixels skip pass 2 (depth); keys: the keys run in pass 2 (gf_glsl.ts SPLITK). */
 export interface GfSplitForm { skip?: boolean; keys?: boolean }
 import type { GfTables } from "./tables";
@@ -137,7 +138,7 @@ export class GfTarget {
  * means of 10 runs over three benches, p14f and p14h); level on the desktop. 0 px on its 12 scenes on both.
  */
 export const GF_TIERS: GfTier[] = [{ p: 3, k: 2, ramps: true, s: 3, lab: true, grp: true, ks: true, kz: "frame", fs: "c", kd: true }];
-const UNIFORMS = ["uD", "uOCh", "uOV", "uOPin", "uOArm", "uOK", "uOChk", "uOCell", "uOChL", "uOKL", "uOKC", "uOKB", "uOKA", "uOKP", "uH", "uW", "uAA", "uSigma", "uZt", "uWin", "uRc", "uGrid", "uGDim", "uMap", "uP0", "uP1", "uP2", "uP3", "uRv", "uORvK"];
+const UNIFORMS = ["uD", "uOCh", "uOV", "uOPin", "uOArm", "uOK", "uOChk", "uOCell", "uOChL", "uOKL", "uOKC", "uOKB", "uOKA", "uOKP", "uH", "uW", "uAA", "uSigma", "uZt", "uWin", "uRc", "uGrid", "uGDim", "uMap", "uP0", "uP1", "uP2", "uP3", "uRv", "uORvK", "uLk", "uLkG"];
 /** K1362 s12: a program drawn only in frames where some cell lists a corner ("corners") or none does ("none"). */
 type GfWhen = "corners" | "none";
 interface GfProg { prog: WebGLProgram; u: Map<string, WebGLUniformLocation | null>; tier: GfTier | null; split?: 1 | 2; when?: GfWhen }
@@ -180,6 +181,16 @@ export class GfPass {
    */
   private rprogs: GfProg[] | null = null;
   private rplan: (() => GfProg[]) | null = null;
+  /**
+   * K1389 s1: the look forms (gf_look.ts lookForm; index 0 plain, 1 over the reveal form), compiled on the first
+   * frame that draws the look; the look table rides texture unit 6.
+   */
+  private lprogs: (GfProg[] | null)[] = [null, null];
+  private lplan: ((reveal: boolean) => GfProg[]) | null = null;
+  private lkTex: WebGLTexture | null = null;
+  private lkRows = 0;
+  private lkVer = -1;
+  private lk: { gap: number } | null = null;
   private rvTex: WebGLTexture | null = null;
   private rvRows = 0;
   private rv: { oK: number } | null = null;
@@ -228,6 +239,7 @@ export class GfPass {
     this.progs = make((src) => src);
     // K1383 s1: the reveal form exists for the app's programs only (no probe, split or source override)
     if (!probe && !split && !fs) this.rplan = () => make(revealForm);
+    if (!probe && !split && !fs) this.lplan = (reveal) => make(reveal ? (src) => lookForm(revealForm(src)) : lookForm);
     if (split) this.pieces = new GfPieces(gl, tiers[0].p, keys);
     this.vao = gl.createVertexArray()!;
     this.tex = gl.createTexture()!;
@@ -267,6 +279,43 @@ export class GfPass {
     gl.bindTexture(gl.TEXTURE_2D, null);
     gl.activeTexture(gl.TEXTURE0);
     this.rv = { oK: R.oK };
+  }
+
+  /** K1389 s1: whether the look form can draw (the app's programs). */
+  get lookable(): boolean { return !!this.lplan; }
+  /** K1389 s1: the look table's texture (the composite reads the colours), null while the look is off. */
+  get lookTex(): WebGLTexture | null { return this.lk ? this.lkTex : null; }
+
+  /**
+   * K1389 s1: draw the look form (o0.zw = the label's colour index, today's crossing gaps of width gap) over this
+   * colour table until the next call; null draws the original programs. Uploads only when the table changed.
+   */
+  setLook(L: GfLookTable | null, gap = 0): void {
+    if (!L || !this.lplan) { this.lk = null; return; }
+    const gl = this.gl;
+    if (!this.lkTex) this.lkTex = gl.createTexture()!;
+    if (L.version !== this.lkVer || L.rows !== this.lkRows) {
+      gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, null);
+      gl.pixelStorei(gl.UNPACK_ALIGNMENT, 4);
+      gl.pixelStorei(gl.UNPACK_ROW_LENGTH, 0);
+      gl.pixelStorei(gl.UNPACK_SKIP_ROWS, 0);
+      gl.pixelStorei(gl.UNPACK_SKIP_PIXELS, 0);
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+      gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+      gl.activeTexture(gl.TEXTURE6);
+      gl.bindTexture(gl.TEXTURE_2D, this.lkTex);
+      const view = L.data.subarray(0, L.rows * GF_TW * 4);
+      if (L.rows !== this.lkRows) {
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, GF_TW, L.rows, 0, gl.RGBA, gl.FLOAT, view);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        this.lkRows = L.rows;
+      } else gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, GF_TW, L.rows, gl.RGBA, gl.FLOAT, view);
+      gl.bindTexture(gl.TEXTURE_2D, null);
+      gl.activeTexture(gl.TEXTURE0);
+      this.lkVer = L.version;
+    }
+    this.lk = { gap };
   }
 
   upload(T: GfTables): void {
@@ -327,7 +376,9 @@ export class GfPass {
     // K1362 s12 kz: a program for frames with (or without) a corner in some cell (cornerPlan).
     const corners = this.cellCorners;
     const rv = this.rv;
-    const progs = (rv ? this.rprogs! : this.progs).filter((g) => (!g.tier || !g.tier.half || halfOk) && (!g.when || (g.when === "corners") === corners));
+    const lk = this.lk;
+    if (lk && !this.lprogs[rv ? 1 : 0]) this.lprogs[rv ? 1 : 0] = this.lplan!(!!rv);
+    const progs = (lk ? this.lprogs[rv ? 1 : 0]! : rv ? this.rprogs! : this.progs).filter((g) => (!g.tier || !g.tier.half || halfOk) && (!g.when || (g.when === "corners") === corners));
     const routed = progs.length > 1;
     const pieces = this.pieces;
     if (routed) target.ensureStencil();
@@ -356,6 +407,7 @@ export class GfPass {
       gl.stencilOp(gl.KEEP, gl.KEEP, gl.INCR);
     }
     if (rv) { gl.activeTexture(gl.TEXTURE5); gl.bindTexture(gl.TEXTURE_2D, this.rvTex); }
+    if (lk) { gl.activeTexture(gl.TEXTURE6); gl.bindTexture(gl.TEXTURE_2D, this.lkTex); }
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.tex);
     gl.bindVertexArray(this.vao);
@@ -391,6 +443,7 @@ export class GfPass {
       gl.uniform1i(u("uD"), 0);
       if (g.split === 2) for (let i = 0; i < 4; i++) gl.uniform1i(u(`uP${i}`), 1 + i);
       if (rv) { gl.uniform1i(u("uRv"), 5); gl.uniform1i(u("uORvK"), rv.oK); }
+      if (lk) { gl.uniform1i(u("uLk"), 6); gl.uniform1f(u("uLkG"), lk.gap); }
       const o = P.o;
       gl.uniform1i(u("uOCh"), o.ch); gl.uniform1i(u("uOV"), o.v); gl.uniform1i(u("uOPin"), o.pin); gl.uniform1i(u("uOArm"), o.arm);
       gl.uniform1i(u("uOK"), o.k); gl.uniform1i(u("uOChk"), o.chk); gl.uniform1i(u("uOCell"), o.cell); gl.uniform1i(u("uOChL"), o.chl); gl.uniform1i(u("uOKL"), o.kl);
@@ -413,6 +466,7 @@ export class GfPass {
       gl.activeTexture(gl.TEXTURE0);
     }
     if (rv) { gl.activeTexture(gl.TEXTURE5); gl.bindTexture(gl.TEXTURE_2D, null); gl.activeTexture(gl.TEXTURE0); }
+    if (lk) { gl.activeTexture(gl.TEXTURE6); gl.bindTexture(gl.TEXTURE_2D, null); gl.activeTexture(gl.TEXTURE0); }
     if (ext && q) {
       gl.endQuery(ext.TIME_ELAPSED_EXT);
       e = gl.createQuery()!;
@@ -470,8 +524,16 @@ void main() {
   o = vec4(uInk * ink + uFill * cov * (1.0 - ink), ink + (1.0 - ink) * cov);
 }`;
 
+/**
+ * K1389 s1: the look's composite inputs: the colour table's texture and first colour texel (GfLookTable.oK), the
+ * thread look (0 fill, 1 border, 2 both) and the border colour (w 1 when one is set, else the section's own stroke).
+ */
+export interface GfLookComp { tex: WebGLTexture; oK: number; mode: number; bd: [number, number, number, number] }
+
 export class GfComposite {
   private prog: WebGLProgram;
+  private lprog: WebGLProgram | null = null;
+  private lu = new Map<string, WebGLUniformLocation | null>();
   private vao: WebGLVertexArrayObject;
   private uC: WebGLUniformLocation | null; private uFill: WebGLUniformLocation | null; private uInk: WebGLUniformLocation | null;
   readonly gl: WebGL2RenderingContext;
@@ -484,7 +546,7 @@ export class GfComposite {
     this.uInk = gl.getUniformLocation(this.prog, "uInk");
   }
   /** Into the currently bound framebuffer (the canvas), viewport w x h. */
-  draw(src: GfTarget, fill: [number, number, number], ink: [number, number, number]): void {
+  draw(src: GfTarget, fill: [number, number, number], ink: [number, number, number], look?: GfLookComp | null): void {
     const gl = this.gl;
     gl.viewport(0, 0, src.w, src.h);
     gl.disable(gl.SCISSOR_TEST);
@@ -495,6 +557,31 @@ export class GfComposite {
     gl.enable(gl.BLEND);
     gl.blendEquation(gl.FUNC_ADD);
     gl.blendFuncSeparate(gl.ONE, gl.ONE_MINUS_SRC_ALPHA, gl.ZERO, gl.ONE);
+    if (look) {
+      if (!this.lprog) {
+        this.lprog = compileProgram(gl, GF_VS, LOOK_COMP_FS);
+        for (const n of ["uC", "uLk", "uLkO", "uLook", "uBd", "uFill"]) this.lu.set(n, gl.getUniformLocation(this.lprog, n));
+      }
+      const u = (n: string): WebGLUniformLocation | null => this.lu.get(n) ?? null;
+      gl.useProgram(this.lprog);
+      gl.activeTexture(gl.TEXTURE1);
+      gl.bindTexture(gl.TEXTURE_2D, look.tex);
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, src.tex[0]);
+      gl.uniform1i(u("uC"), 0);
+      gl.uniform1i(u("uLk"), 1);
+      gl.uniform1i(u("uLkO"), look.oK - 1);
+      gl.uniform1i(u("uLook"), look.mode);
+      gl.uniform4f(u("uBd"), look.bd[0], look.bd[1], look.bd[2], look.bd[3]);
+      gl.uniform3f(u("uFill"), fill[0], fill[1], fill[2]);
+      gl.bindVertexArray(this.vao);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      gl.bindVertexArray(null);
+      gl.activeTexture(gl.TEXTURE1);
+      gl.bindTexture(gl.TEXTURE_2D, null);
+      gl.activeTexture(gl.TEXTURE0);
+      return;
+    }
     gl.useProgram(this.prog);
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, src.tex[0]);
@@ -507,6 +594,7 @@ export class GfComposite {
   }
   dispose(): void {
     this.gl.deleteProgram(this.prog);
+    if (this.lprog) this.gl.deleteProgram(this.lprog);
     this.gl.deleteVertexArray(this.vao);
   }
 }

@@ -29,6 +29,7 @@ import { splineBend, type SplineSamples } from "../../geometry/spline_generator"
 import { buildTables, type GfTables } from "./tables";
 import { CTRL_ARC, gfBuild, gfDepth, tablesDiff } from "./gf_build";
 import { GfRevealTable, gfRevealing } from "./gf_reveal";
+import { GfLookTable, lookGap } from "./gf_look";
 import { GfComposite, GfPass, GfTarget, type GfMap } from "./gf_pass";
 
 interface GfReply {
@@ -80,6 +81,11 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
   let drawn: (Float32Array | null)[] = [];
   let rvTab: GfRevealTable | null = null;
   let rvDrawn = false;
+  // K1389 s1: today's thread look: the colour table, the tables it was built beside, frames since, the gap drawn
+  let lkTab: GfLookTable | null = null;
+  let lkT: GfTables | null = null;
+  let lkAge = 0;
+  let lkGap = -1;
   const stats = {
     rebuilds: 0, passes: 0, composites: 0, fallback: "",
     exportMs: [] as number[], tablesMs: [] as number[], packMs: [] as number[], uploadMs: [] as number[],
@@ -87,6 +93,8 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
     // K1383 s1: the reveal table's CPU build per drawn reveal frame, its knots and active chains, the reveal
     // frames drawn and the frame the reveal form was last drawn on (performance.now()).
     rvMs: [] as number[], rvKnots: [] as number[], rvActive: [] as number[], rvPasses: 0, rvLast: 0,
+    // K1389 s1: the look table's CPU builds (ms) and its colour texels
+    lkMs: [] as number[], lkColors: 0,
     // c1: where builds ran, main's share per rebuild (gather + post, then
     // pack + upload; in-thread builds add the export and tables), the
     // worker's whole build and the post-to-arrival latency.
@@ -146,6 +154,8 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
     depth?: number; gate?: boolean; fillets?: boolean; lean?: boolean; gesture?: boolean; chan?: boolean;
     /** K1383 s1: false draws no reveal (the pre-K1383 gf look, for A/Bs). */
     reveal?: boolean;
+    /** K1389 s1: false draws the pre-K1389 look (cream fill, ink outlines) in place of today's thread look. */
+    look?: boolean;
   };
   const opts = (): GfOpts => (globalThis as unknown as { __knotGfOpts?: GfOpts }).__knotGfOpts ?? {};
   // K1369 s4: by gesture (a thread grabbed or not); an A/B's `depth` wins.
@@ -345,7 +355,10 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
         try {
           const bc = ctx.scene.renderer?.borderColor ?? 0;
           const ink: [number, number, number] = bc ? [((bc >> 16) & 255) / 255, ((bc >> 8) & 255) / 255, (bc & 255) / 255] : INK_AUTO;
-          comp.draw(target, FILL, ink);
+          const lt = pass?.lookTex;
+          const lr = ctx.scene.renderer;
+          // K1389 s1: today's thread look (gf_look.ts): the section colours by fill / border / both
+          comp.draw(target, FILL, ink, lt && lkTab && lr ? { tex: lt, oK: lkTab.oK, mode: lr.threadLook, bd: bc ? [ink[0], ink[1], ink[2], 1] : [0, 0, 0, 0] } : null);
           stats.composites++;
         } finally {
           const wr = renderer as unknown as WebGLRenderer;
@@ -628,6 +641,23 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
       } else if (rvDrawn) {
         pass.setReveal(null);
         rvDrawn = false;
+        dirty = true;
+      }
+      // K1389 s1: today's thread look: the colour table beside the tables (rebuilt with them, and every 30 frames
+      // for a scheme change that builds no tables), its gap today's crossing gap
+      if (pass.lookable && o.look !== false) {
+        lkTab ??= new GfLookTable();
+        if (lkT !== T || ++lkAge >= 30) {
+          lkT = T; lkAge = 0;
+          if (lkTab.build(r)) dirty = true;
+          stats.lkMs.push(lkTab.ms); stats.lkColors = lkTab.nColors;
+        }
+        const gap = lookGap(r);
+        if (gap !== lkGap) { lkGap = gap; dirty = true; }
+        pass.setLook(lkTab, gap);
+      } else if (lkGap >= 0) {
+        pass.setLook(null);
+        lkGap = -1;
         dirty = true;
       }
       const key = `${cam.a},${cam.d},${cam.e},${cam.f},${cam.w},${cam.h}`;
