@@ -119,6 +119,9 @@ End with `Ledger items` and K1369's handle fields.
     (353 crossings, control 0). Exact.
   - Why it is not the default: the pluck footprint reads `eraseExtentPos` / `overHalfPos`, which only the full solve
     writes.
+  - Since 174e604a lean also skips the base fill mesh's extrude (strip_pass `extrude` becomes the pluck collapse
+    alone; it returns the same multiplier the G3 chain write reads). Still exact by the same check, which now restores
+    both patches for its full solve.
 - **Not built:** the physics-to-gf snapshot channel (MessageChannel). The workers are unchanged.
 
 **Where main's update() time goes** (desktop gf drag, ms per build, `k1369s2_attr.mjs`): gap solves 8.8, extrude
@@ -134,6 +137,12 @@ End with `Ledger items` and K1369's handle fields.
 | gf2 | 36.7-38.1 | 848-890 | .544-.565 | 27-28 ms |
 | gfl | 24.9-25.4 | 352-373 | .577-.584 | 19.5 ms |
 | gf2l | 44.5-45.2 | 638 | .543-.547 | 22-23 ms |
+| gfl + extrude skip (174e604a) | 25.6-25.8 | 315-326 | .584 | 19.8 ms |
+| gf2l + extrude skip | 46.5-48.0 | 520-526 | .538-.547 | 23.3 ms |
+| today, same run | 35.0-37.2 | 926-935 | .552-.563 | - |
+
+The extrude-skip rows are `out/s2desk_leanx.json`; a second run (`out/s2desk_introdlx.json`) read gf2l 46.9 / 47.3
+installs/s at 546-551 ms/s, sim/wall .536 / .540, against today's .550 / .556.
 
 - **Intro with the default appearance:**
   - today: 38.8-41.9 fps, sim/wall .565-.577;
@@ -142,13 +151,22 @@ End with `Ledger items` and K1369's handle fields.
   - gfl: 25.5 / 25.5 installs/s, sim/wall .625 / .607, at 381-394 main ms/s;
   - gf2l: 42.2 / 43.5 installs/s, sim/wall .573 / .576, at 674-681 main ms/s. Paired with that run's today (40.1 /
     41.9 fps, sim/wall .566 / .577; `out/s2desk_introdl.json`), **gf2l passes this cell on the desktop.**
-- **Intro with am=instant:** today 32.9-35.4 fps; gf, gfl and gf2l draw 53-54 fps.
+  - gf2l with the extrude skip: 46.0 / 46.7 installs/s at 595-597 ms/s, sim/wall .562 / .553, against today's
+    38.7 / 40.9 fps and .553 / .577 (`out/s2desk_introdlx.json`). The rate passes; sim/wall passes rep 0 and misses
+    rep 1, inside the run-to-run spread (about +-.015).
+- **Intro with am=instant:** today 32.4-35.4 fps; gf, gfl and gf2l draw 53-56 fps; gf2l installs 47.4 builds/s
+  with the extrude skip, sim/wall .574-.583 against today's .567-.594.
 - **Depth 2's sim/wall dip:**
   - Observed: in the drag, sim/wall at depth 2 sits 0.01-0.03 below today's (gf2l .535-.559 against .563-.566), so
     gf2l misses the drag bar on sim/wall alone.
   - Observed: the physics worker's ms per substep moves with it: gf2l 14.3-14.9, today 14.0-14.1, gfl 13.4-13.5.
   - Inferred, not isolated: two builds in flight compete with the physics worker for the CPU. The Pixel has fewer
     big cores, so check this there first.
+  - Observed: the extrude skip cut gf2l's main by about 100 ms/s and did not lift its sim/wall. Across the drag rows,
+    ms per substep tracks main plus the gf worker's busy time (gfl about 770 ms/s: 13.7; today about 930: 14.3; gf2l
+    about 1340: 14.8). On the desktop the drag is physics-bound (sim/wall about .55 at 14 ms a substep), so any
+    extra CPU load costs it; on the Pixel main and the physics worker share cpu6 (stage 1), so cutting main may
+    matter more there (inferred).
   - Not the slice pool: `gf_worker.ts` pools only junction-free builds. This link has 185 junction arms (read by
     `k1369s2_pool.mjs`), so every build runs whole on the one gf worker. At depth 2 that worker never idles: about
     17 ms of work per build at 45 builds/s, about 765 ms/s.
@@ -156,7 +174,9 @@ End with `Ledger items` and K1369's handle fields.
 **Pixel table:** PIXELTABLE
 
 **Checks:**
-- `npm test` green at b89f4e46: 237 files, 3018 tests. The goldens and `byte_identity` are in it. tsc is clean.
+- `npm test` green at b89f4e46 and again at 174e604a: 237 files, 3018 tests. The goldens and `byte_identity` are in
+  it. tsc is clean.
+- `k1369s2_lean.mjs` exact at 174e604a (gap solve and extrude both lean; rest and mid-drag, 353 crossings).
 - The K1362 tables digest is bit-identical: 5446 lines, 0 differ, at 695f19e9. Since then only `gf_app.ts` and probes
   have changed.
 - The pass program is unchanged: no diff to tables, `gf_glsl`, `gf_pass` or `gf_pack`.
@@ -164,8 +184,9 @@ End with `Ledger items` and K1369's handle fields.
 - Today's desktop main ms per frame is unchanged: the today rows above match stage 1's.
 
 **Next stage:**
-1. **Make lean the default under gf.** Land it in `ribbon_renderer.ts` as a mode flag rather than an instance patch.
-   Run the full solve whenever a pluck is live, so the footprint stays fresh. Keep `k1369s2_lean.mjs` as the gate.
+1. **Make lean the default under gf** (the gap solve and the extrude skip). Land it in `ribbon_renderer.ts` and
+   `strip_pass.ts` as a mode flag rather than instance patches. Run the full solve whenever a pluck is live, so the
+   footprint stays fresh. Keep `k1369s2_lean.mjs` as the gate.
 2. **Run the Pixel table** for today, gf2l and gf2 (the runner call is below).
 3. **Decide `DEPTH = 2`:** it wins on rate, but sim/wall dips.
 4. **Then the snapshot channel,** so main only uploads.
@@ -173,6 +194,6 @@ End with `Ledger items` and K1369's handle fields.
 
 Runner call:
 `$env:K1369_COOL = "37.5"; $env:K1369_COOLMAX = "120"; pwsh -NoProfile -File .claude/probes/K1369/k1369s2_phone.ps1
--Sha <sha> -Label <l> -Cells "def:today:intro-i,def:gf2l:intro-i,def:gf2:intro-i,def:today:drag,def:gf2l:drag,
-def:gf2:drag,def:today:intro-d,def:gf2l:intro-d" -WaitReady 20`, then
+-Sha <sha> -Label <l> -Cells "def:today:intro-d,def:gf2l:intro-d,def:today:intro-i,def:gf2l:intro-i,
+def:today:drag,def:gf2l:drag,def:gfl:drag" -WaitReady 20` (gfl / gf2l need lean in the build: 174e604a or later), then
 `node .claude/probes/K1369/k1369s2_table.mjs .claude/probes/K1369/out/pass/motion_<l>.json`.
