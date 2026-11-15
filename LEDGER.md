@@ -585,10 +585,10 @@ Next free ID: K1401.
 - **K1387** · rp=gf lean (K1369 s3): underWindows stay empty, so under rp=gf the maze's under-gap hiding stops
   for reveal sparks, telegraph rim ends, burn sparks, the yarn, underClipBand (fabric_maze_renderer.ts) and
   joinery.ts:1575; needed before rp=gf default-on (K1369_s3_lean_default.md handoff)
-  - owner: agent `a5853a421264cb113` of claude session 01SUPGULDxvE5gKXozfaFaFG (opus; ran 2026-11-14 23:25 to 11-15 00:12, when the Claude Code process exited; resumed 07:23, stop 08:30, write-up by 08:45)
-  - branch: `worktree-agent-a5853a421264cb113`, worktree `.claude/worktrees/agent-a5853a421264cb113`; last commit: `4e413b06` (WIP: the exact probe and the Pixel ABBA runner; tree clean)
+  - owner: nobody since 2026-11-15 07:34 (merged; agent `a5853a421264cb113` of claude session 01SUPGULDxvE5gKXozfaFaFG)
+  - branch: mainline; last commit: `119249c0`
   - evidence: `.claude/probes/K1387/`
-  - next: Stage 1 resumed (with K1388): it was mid an ABBA timing run (lean vs full) at the exit
+  - next: s2: a lazy per-under-chain march with flush points (explore_gaps, pluck footprints, underGapVisibility, underClipBand, underCutCtrls, joinery's underWindows), gated by k1387_exact zero diffs, then cost + Pixel ABBA (s1 cost main +1.0 ms intro-d, +0.4 drag)
   - brief: `docs/design/K1387_s1_lean_consumers.md`
 
 ## Next, in order
