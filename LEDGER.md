@@ -577,10 +577,10 @@ Next free ID: K1401.
   - brief: `docs/design/K1369_s4_snapshot_channel.md`
 - **K1389** · rp=gf ignores the thread look ('border' and the section colors): on b.FMKB4DIQ every today-vs-gf
   A/B compares outlines with filled threads, so the rows are not like for like (K1369 s3)
-  - owner: claude session 01SUPGULDxvE5gKXozfaFaFG (coordinator; agent `a9f0346320932ed36` finished s1's desktop part 2026-11-15 07:22)
-  - branch: `worktree-agent-a9f0346320932ed36`, worktree `.claude/worktrees/agent-a9f0346320932ed36`; last commit: `a9490dab`
+  - owner: nobody since 2026-11-15 07:32 (merged)
+  - branch: mainline; last commit: `e09e1ff7`
   - evidence: `.claude/probes/K1389/` (sheets and crops in `out/`, `k1389_sheet.mjs`, `pxdiff.ps1`); differences filed as K1398-K1400
-  - next: look at the sheets and merge s1; then s2: the Pixel K1362 bench (def, 822, sync4, ABBA), 2b1cffe1 vs head, fill and border
+  - next: s2: the Pixel K1362 bench (def, 822, sync4, ABBA), 2b1cffe1 vs head, fill and border
   - brief: `docs/design/K1389_s1_gf_thread_look.md`
 - **K1387** · rp=gf lean (K1369 s3): underWindows stay empty, so under rp=gf the maze's under-gap hiding stops
   for reveal sparks, telegraph rim ends, burn sparks, the yarn, underClipBand (fabric_maze_renderer.ts) and
