@@ -27,7 +27,7 @@ describe("K1389 look form", () => {
       for (const f of [lookForm(src), lookForm(revealForm(src))]) {
         expect(f).toContain("uniform highp sampler2D uLk; uniform highp sampler2D uLkP;");
         expect(f).toContain("lkJb = lkJ; lkSb = lkS; lkKb = lkK;");
-        expect(f).toContain("lkCo = lkColour(lab, lkJb >= 0 ? lookQ(lkJb, p) : lookQs(lab, lkSb));");
+        expect(f).toContain("lkCo = lkColour(lab, lq); lkCo.rgb = mix(lkCo.rgb, uGold, lkPaint(lab, lq));");
         // the colour rides a second target; o0 keeps (ink, coverage)
         expect(f).toContain("o0 = vec4(oInk, oCov, 0.0, 1.0); o1 = lkCo;");
         expect(f).toContain("layout(location = 0) out vec4 o0;\nlayout(location = 1) out vec4 o1;");

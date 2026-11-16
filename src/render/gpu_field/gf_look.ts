@@ -26,8 +26,9 @@
  * the ink band (the interior clear); both = the stroke mixed 0.9 over the ink band. The stroke is ribbon_shader's:
  * mix(section * 0.30, (0.09, 0.085, 0.08), 0.5), or the border colour when one is set. A pixel with coverage but
  * no label (the antialiased fringe outside h) takes its nearest labelled neighbour's colour.
+ * K1405: the label's colour is mixed toward gold (uGold) by its baked paint amount (lkPaint over uPt, GfPaintTable below).
  */
-import { kCA, knotSection, type KChain, type KData } from "../paint_math";
+import { kArcOfCtrl, kCA, knotSection, type KChain, type KData } from "../paint_math";
 import { kStatic, knotUniformValues } from "../paint_model";
 import { CUT_BIAS } from "../ribbon/crossing_gaps";
 import { GF_TW } from "./gf_pack";
@@ -212,6 +213,133 @@ export class GfLookTable {
   }
 }
 
+/**
+ * K1405: the gold traveled path under the look. GfPaintTable bakes the fabric's paint declaration
+ * (RibbonRenderer.setPaint's traveled spans and junction caps - walked gold, and in trail mode
+ * trail_paint's fading spans, which arrive as the same spans) to one gold amount per kept sample,
+ * in GfLookTable.positions' layout (same chains, same duplicate compaction, same end pad), from
+ * paint_math kPaintAt's SPAN/CAP rules at zero pixel ramp (spans assign in declaration order,
+ * caps never darken, in goldUOf's order). Pulse arms, the hover rim and the telegraph are not
+ * baked: they animate off uniforms today's shader reads per frame. gf_app snapshots the values
+ * with each tables build (they follow the samples' arcs, like the look positions) and re-snapshots
+ * when paintKey moves, so a walk's gold lands the frame the declaration changes.
+ */
+export interface GfPaintSpan { chain: number; c0: number; c1: number; p0?: number; p1?: number }
+export interface GfPaintCap { chain: number; ctrl: number; radius: number; p?: number }
+export interface GfPaintSource extends GfLookSource {
+  paintSpans: readonly GfPaintSpan[];
+  paintCaps: readonly GfPaintCap[];
+}
+
+// paint_math's goldUOf and ringDist, mirrored (ordering only, as there).
+function paintGoldU(p: number): number {
+  return p >= 1 ? 121 / 256 : p <= 0 ? 115 / 256 : (115 + 6 * p) / 256;
+}
+function paintRingDist(a: number, b: number, total: number, closed: boolean): number {
+  let d = Math.abs(a - b);
+  if (closed) d = Math.min(d, total - d);
+  return d;
+}
+
+/** A hash of the paint declaration the table bakes (spans, then caps, in declaration order). */
+export function paintKey(r: { paintSpans: readonly GfPaintSpan[]; paintCaps: readonly GfPaintCap[] }): number {
+  let h = 2166136261;
+  const mix = (v: number): void => { keyF[0] = v; h = Math.imul(h ^ keyU[0], 16777619); };
+  mix(r.paintSpans.length); mix(r.paintCaps.length);
+  for (const s of r.paintSpans) { mix(s.chain); mix(s.c0); mix(s.c1); mix(s.p0 ?? 1); mix(s.p1 ?? 1); }
+  for (const c of r.paintCaps) { mix(c.chain); mix(c.ctrl); mix(c.radius); mix(c.p ?? 1); }
+  return h >>> 0;
+}
+
+/** Chain c's baked gold at segment k and fraction u (the GLSL lkPaint's twin; paintPAt in tests). */
+export function paintPAt(V: ArrayLike<number>, b: number, n: number, closed: boolean, k: number, u: number): number {
+  const last = closed ? n : n - 1;
+  if (k < 0) { k = 0; u = 0; }
+  if (k >= last) { k = last; u = 0; }
+  const A = V[b + k];
+  const B = V[b + Math.min(k + 1, last)];
+  return A + (B - A) * u;
+}
+
+export class GfPaintTable {
+  /** The baked entries (samples, plus one a closed chain), in positions()' layout. */
+  nPos = 0;
+  ms = 0;
+  private tmp = new Float32Array(0);
+
+  /** Each kept sample's gold amount from the declaration, in GfLookTable.positions' layout. */
+  values(r: GfPaintSource, out?: Float32Array): Float32Array {
+    const t0 = performance.now();
+    const D = r.kd;
+    const G = D.geom;
+    const nC = r.chainSamples.length;
+    const spans: GfPaintSpan[][] = Array.from({ length: nC }, () => []);
+    const caps: GfPaintCap[][] = Array.from({ length: nC }, () => []);
+    for (const s of r.paintSpans) if (s.chain >= 0 && s.chain < nC) spans[s.chain].push(s);
+    for (const c of r.paintCaps) if (c.chain >= 0 && c.chain < nC) caps[c.chain].push(c);
+    let nPos = 0;
+    for (let ch = 0; ch < nC; ch++) if (lookValid(r, ch)) nPos += r.chainSamples[ch]!.count + (r.kcv[ch].closed ? 1 : 0);
+    const len = Math.max(1, Math.ceil(nPos / GF_TW)) * GF_TW;
+    const V = out && out.length >= len ? out : new Float32Array(len);
+    V.fill(0, 0, len);
+    let pb = 0;
+    for (let ch = 0; ch < nC; ch++) {
+      if (!lookValid(r, ch)) continue;
+      const c = r.kcv[ch];
+      const count = r.chainSamples[ch]!.count;
+      const total = G[c.geom * 4];
+      const arcPer = G[c.geom * 4 + 1];
+      if (this.tmp.length < count) this.tmp = new Float32Array(count);
+      const tmp = this.tmp;
+      const ss = spans[ch];
+      const cc = caps[ch];
+      for (let k = 0; k < count; k++) {
+        const arc = k * arcPer;
+        let p = 0;
+        for (const s of ss) {
+          const a0 = kArcOfCtrl(D, c, s.c0);
+          const a1 = kArcOfCtrl(D, c, s.c1);
+          const wraps = c.closed && a1 <= a0 && s.c1 > s.c0;
+          const inside = wraps ? arc >= a0 || arc <= a1 : arc >= a0 && arc <= a1;
+          if (!inside) continue;
+          const p0 = s.p0 ?? 1;
+          const p1 = s.p1 ?? 1;
+          if (p0 < 1 || p1 < 1) {
+            const spanLen = Math.max(wraps ? total - a0 + a1 : a1 - a0, 1e-9);
+            const da = wraps && arc < a0 ? total - a0 + arc : arc - a0;
+            const t = Math.min(1, Math.max(0, da / spanLen));
+            p = p0 + (p1 - p0) * t;
+          } else p = 1;
+        }
+        for (const cap of cc) {
+          const pc = cap.p ?? 1;
+          if (!(paintGoldU(pc) > paintGoldU(p))) continue;
+          const d = paintRingDist(arc, kArcOfCtrl(D, c, cap.ctrl), total, c.closed);
+          if (d <= cap.radius) p = pc;
+        }
+        tmp[k] = p;
+      }
+      // compact to the kept samples and pad the tail, exactly as positions() does
+      const xy = r.chainSamples[ch]!.positions;
+      let kv = 0;
+      let l = -1;
+      for (let k = 0; k < count; k++) {
+        if (l >= 0 && xy[2 * k] === xy[2 * l] && xy[2 * k + 1] === xy[2 * l + 1]) continue;
+        V[pb + kv++] = tmp[k];
+        l = k;
+      }
+      if (c.closed && kv > 1 && xy[2 * l] === xy[0] && xy[2 * l + 1] === xy[1]) kv--;
+      const end = count + (c.closed ? 1 : 0);
+      const pad = c.closed ? V[pb] : V[pb + kv - 1];
+      for (let k = kv; k < end; k++) V[pb + k] = pad;
+      pb += end;
+    }
+    this.nPos = nPos;
+    this.ms = performance.now() - t0;
+    return V;
+  }
+}
+
 /** Today's crossing gap beyond the over thread's edge (world units): the casing's margin plus crossing_gaps' CUT_BIAS. */
 export function lookGap(r: { style: { casingWidth: number; threadWidth: number } }): number {
   return Math.max(0, (r.style.casingWidth - r.style.threadWidth) / 2) + CUT_BIAS;
@@ -247,6 +375,7 @@ int lkj[MAXS]; float lks[MAXS];
 const M_ANCHOR = "\nvoid main() {\n";
 const M_LOOK = `
 uniform highp sampler2D uLk; uniform highp sampler2D uLkP; uniform float uLkG;
+uniform highp sampler2D uPt; uniform vec3 uGold;
 vec4 LKT(int i) { return texelFetch(uLk, ivec2(i & TWM, i >> LOG), 0); }
 float LKP(int i) { return texelFetch(uLkP, ivec2(i & TWM, i >> LOG), 0).x; }
 #ifdef PLH
@@ -300,6 +429,20 @@ vec4 lkColour(int c, vec2 q) {
   vec3 A = lkAt(O, LKP(b + k)); vec3 B = lkAt(O, LKP(b + min(k + 1, last)));
   return vec4(mix(A, B, u), 1.0);
 }
+float PT(int i) { return texelFetch(uPt, ivec2(i & TWM, i >> LOG), 0).x; }
+// K1405: chain c's gold amount at segment q (gf_look.ts paintPAt): the baked paint table, lerped
+float lkPaint(int c, vec2 q) {
+  vec4 H = LKT(c);
+  if (H.z < 1.0) return 0.0;
+  bool closed = H.w > 0.5;
+  int k = int(q.x); float u = q.y;
+  if (!closed && F(uOV + int(F(uOCh + 3 * c).x)).z < 0.0) k -= 1;
+  int last = closed ? int(H.z) : int(H.z) - 1;
+  if (k < 0) { k = 0; u = 0.0; }
+  if (k >= last) { k = last; u = 0.0; }
+  int b = int(H.y);
+  return mix(PT(b + k), PT(b + min(k + 1, last)), u);
+}
 // K1389 s1: today's crossing gap: a piece above the label (key past zt) within h + gap of p, outside its own edge
 float lkGap(float key) {
   float g = 0.0;
@@ -336,7 +479,7 @@ const SITES: [string | RegExp, string, number][] = [
   ["if (lab < 0 && ink > 0.0) { lab = own;", "if (lab < 0 && ink > 0.0) { lab = own; lkJb = -1; lkSb = K3.z; lkKb = BIG;", 1],
   // the output: the gap cut and the colour
   ["    oInk = min(1.0, ink); oCov = min(1.0, cov);",
-    "    lkCo = vec4(0.0);\n    if (lab >= 0) { lkCo = lkColour(lab, lkJb >= 0 ? lookQ(lkJb, p) : lookQs(lab, lkSb)); float lkg = lkKb < BIG ? lkGap(lkKb) : 0.0; ink *= 1.0 - lkg; cov *= 1.0 - lkg; }\n    oInk = min(1.0, ink); oCov = min(1.0, cov);", 1],
+    "    lkCo = vec4(0.0);\n    if (lab >= 0) { vec2 lq = lkJb >= 0 ? lookQ(lkJb, p) : lookQs(lab, lkSb); lkCo = lkColour(lab, lq); lkCo.rgb = mix(lkCo.rgb, uGold, lkPaint(lab, lq)); float lkg = lkKb < BIG ? lkGap(lkKb) : 0.0; ink *= 1.0 - lkg; cov *= 1.0 - lkg; }\n    oInk = min(1.0, ink); oCov = min(1.0, cov);", 1],
   ["  o0 = vec4(oInk, oCov, 0.0, 1.0);\n#endif", "  o0 = vec4(oInk, oCov, 0.0, 1.0); o1 = lkCo;\n#endif", 1],
 ];
 

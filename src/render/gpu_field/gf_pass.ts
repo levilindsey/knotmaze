@@ -11,6 +11,7 @@ import { GF_TW, packTables, type GfPacked } from "./gf_pack";
 import { buildKeys } from "./gf_keys";
 import { GfPieces } from "./gf_split";
 import { revealForm, type GfRevealTable } from "./gf_reveal";
+import { knotUniformValues } from "../paint_model";
 import { lookForm, LOOK_COMP_FS, type GfLookTable } from "./gf_look";
 /** K1362 s7: the split's options. skip: empty pixels skip pass 2 (depth); keys: the keys run in pass 2 (gf_glsl.ts SPLITK). */
 export interface GfSplitForm { skip?: boolean; keys?: boolean }
@@ -138,7 +139,7 @@ export class GfTarget {
  * means of 10 runs over three benches, p14f and p14h); level on the desktop. 0 px on its 12 scenes on both.
  */
 export const GF_TIERS: GfTier[] = [{ p: 3, k: 2, ramps: true, s: 3, lab: true, grp: true, ks: true, kz: "frame", fs: "c", kd: true }];
-const UNIFORMS = ["uD", "uOCh", "uOV", "uOPin", "uOArm", "uOK", "uOChk", "uOCell", "uOChL", "uOKL", "uOKC", "uOKB", "uOKA", "uOKP", "uH", "uW", "uAA", "uSigma", "uZt", "uWin", "uRc", "uGrid", "uGDim", "uMap", "uP0", "uP1", "uP2", "uP3", "uRv", "uORvK", "uLk", "uLkP", "uLkG"];
+const UNIFORMS = ["uD", "uOCh", "uOV", "uOPin", "uOArm", "uOK", "uOChk", "uOCell", "uOChL", "uOKL", "uOKC", "uOKB", "uOKA", "uOKP", "uH", "uW", "uAA", "uSigma", "uZt", "uWin", "uRc", "uGrid", "uGDim", "uMap", "uP0", "uP1", "uP2", "uP3", "uRv", "uORvK", "uLk", "uLkP", "uLkG", "uPt", "uGold"];
 /** K1362 s12: a program drawn only in frames where some cell lists a corner ("corners") or none does ("none"). */
 type GfWhen = "corners" | "none";
 interface GfProg { prog: WebGLProgram; u: Map<string, WebGLUniformLocation | null>; tier: GfTier | null; split?: 1 | 2; when?: GfWhen }
@@ -195,6 +196,10 @@ export class GfPass {
   private lkPTex: WebGLTexture | null = null;
   private lkPRows = 0;
   private lkPVer = -1;
+  // K1405: the baked gold paint (R32F, texture unit 8), in the positions' layout
+  private ptTex: WebGLTexture | null = null;
+  private ptRows = 0;
+  private ptVer = -1;
   /** K1389 s2: the last positions upload's ms. */
   lkPMs = 0;
   private rvTex: WebGLTexture | null = null;
@@ -297,7 +302,7 @@ export class GfPass {
    * colour table and these sample positions (s2: gf_look.ts positions, pVer bumped with each new array) until the
    * next call; null draws the original programs. Each uploads only when it changed.
    */
-  setLook(L: GfLookTable | null, gap = 0, P: Float32Array | null = null, pVer = 0): void {
+  setLook(L: GfLookTable | null, gap = 0, P: Float32Array | null = null, pVer = 0, Pt: Float32Array | null = null, ptVer = 0): void {
     if (!L || !P || !this.lplan) { this.lk = null; return; }
     const gl = this.gl;
     if (!this.lkTex) this.lkTex = gl.createTexture()!;
@@ -325,6 +330,30 @@ export class GfPass {
       gl.activeTexture(gl.TEXTURE0);
       this.lkPVer = pVer;
       this.lkPMs = performance.now() - t0;
+    }
+    // K1405: the baked gold paint rides unit 8 in the positions' layout (gf_look.ts GfPaintTable)
+    if (!this.ptTex) this.ptTex = gl.createTexture()!;
+    if (Pt && ptVer !== this.ptVer) {
+      const rows = Math.max(1, Math.ceil(Math.max(1, L.nPos) / GF_TW));
+      gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, null);
+      gl.pixelStorei(gl.UNPACK_ALIGNMENT, 4);
+      gl.pixelStorei(gl.UNPACK_ROW_LENGTH, 0);
+      gl.pixelStorei(gl.UNPACK_SKIP_ROWS, 0);
+      gl.pixelStorei(gl.UNPACK_SKIP_PIXELS, 0);
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+      gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+      gl.activeTexture(gl.TEXTURE8);
+      gl.bindTexture(gl.TEXTURE_2D, this.ptTex);
+      const view = Pt.subarray(0, rows * GF_TW);
+      if (rows !== this.ptRows) {
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.R32F, GF_TW, rows, 0, gl.RED, gl.FLOAT, view);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        this.ptRows = rows;
+      } else gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, GF_TW, rows, gl.RED, gl.FLOAT, view);
+      gl.bindTexture(gl.TEXTURE_2D, null);
+      gl.activeTexture(gl.TEXTURE0);
+      this.ptVer = ptVer;
     }
     if (L.version !== this.lkVer || L.rows !== this.lkRows) {
       gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, null);
@@ -441,7 +470,7 @@ export class GfPass {
       gl.stencilOp(gl.KEEP, gl.KEEP, gl.INCR);
     }
     if (rv) { gl.activeTexture(gl.TEXTURE5); gl.bindTexture(gl.TEXTURE_2D, this.rvTex); }
-    if (lk) { gl.activeTexture(gl.TEXTURE6); gl.bindTexture(gl.TEXTURE_2D, this.lkTex); gl.activeTexture(gl.TEXTURE7); gl.bindTexture(gl.TEXTURE_2D, this.lkPTex); }
+    if (lk) { gl.activeTexture(gl.TEXTURE6); gl.bindTexture(gl.TEXTURE_2D, this.lkTex); gl.activeTexture(gl.TEXTURE7); gl.bindTexture(gl.TEXTURE_2D, this.lkPTex); gl.activeTexture(gl.TEXTURE8); gl.bindTexture(gl.TEXTURE_2D, this.ptTex); }
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.tex);
     gl.bindVertexArray(this.vao);
@@ -477,7 +506,7 @@ export class GfPass {
       gl.uniform1i(u("uD"), 0);
       if (g.split === 2) for (let i = 0; i < 4; i++) gl.uniform1i(u(`uP${i}`), 1 + i);
       if (rv) { gl.uniform1i(u("uRv"), 5); gl.uniform1i(u("uORvK"), rv.oK); }
-      if (lk) { gl.uniform1i(u("uLk"), 6); gl.uniform1i(u("uLkP"), 7); gl.uniform1f(u("uLkG"), lk.gap); }
+      if (lk) { gl.uniform1i(u("uLk"), 6); gl.uniform1i(u("uLkP"), 7); gl.uniform1f(u("uLkG"), lk.gap); gl.uniform1i(u("uPt"), 8); const G = knotUniformValues().uKGold; gl.uniform3f(u("uGold"), G ? G[0] : 1, G ? G[1] : 0.8235, G ? G[2] : 0.2902); }
       const o = P.o;
       gl.uniform1i(u("uOCh"), o.ch); gl.uniform1i(u("uOV"), o.v); gl.uniform1i(u("uOPin"), o.pin); gl.uniform1i(u("uOArm"), o.arm);
       gl.uniform1i(u("uOK"), o.k); gl.uniform1i(u("uOChk"), o.chk); gl.uniform1i(u("uOCell"), o.cell); gl.uniform1i(u("uOChL"), o.chl); gl.uniform1i(u("uOKL"), o.kl);

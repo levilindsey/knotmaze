@@ -29,7 +29,7 @@ import { splineBend, type SplineSamples } from "../../geometry/spline_generator"
 import { buildTables, type GfTables } from "./tables";
 import { CTRL_ARC, gfBuild, gfDepth, gfLookDraws, tablesDiff } from "./gf_build";
 import { GfRevealTable, gfRevealing } from "./gf_reveal";
-import { GfLookGate, GfLookTable, lookGap, lookKey } from "./gf_look";
+import { GfLookGate, GfLookTable, GfPaintTable, lookGap, lookKey, paintKey, type GfPaintSource } from "./gf_look";
 import { GfComposite, GfPass, GfTarget, type GfMap } from "./gf_pass";
 
 interface GfReply {
@@ -91,6 +91,12 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
   let lkPVer = 0;
   const lkPool: Float32Array[] = [];
   let lkGap = -1;
+  // K1405: the baked gold paint (gf_look.ts GfPaintTable), snapshotted like the look positions
+  let ptTab: GfPaintTable | null = null;
+  let ptP: Float32Array | null = null;
+  let ptVer = 0;
+  let ptKey = -1;
+  const ptPool: Float32Array[] = [];
   const stats = {
     rebuilds: 0, passes: 0, composites: 0, fallback: "",
     exportMs: [] as number[], tablesMs: [] as number[], packMs: [] as number[], uploadMs: [] as number[],
@@ -101,6 +107,8 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
     // K1389 s1: the look table's CPU builds (ms) and its colour texels. s2: the hashes the gate let through, the
     // table's rows and positions, each build's positions walk and each positions upload (ms)
     lkMs: [] as number[], lkColors: 0, lkKeys: 0, lkRows: 0, lkPos: 0, lkPosMs: [] as number[], lkUpMs: [] as number[],
+    // K1405: the paint table's CPU bakes per snapshot (ms)
+    ptMs: [] as number[],
     // c1: where builds ran, main's share per rebuild (gather + post, then
     // pack + upload; in-thread builds add the export and tables), the
     // worker's whole build and the post-to-arrival latency.
@@ -125,10 +133,10 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
   let ready = false;
   // K1369 s2: the builds in flight (id -> its generation, post time and
   // main's share), up to `depth` at once; the worker queues them in order.
-  const flights = new Map<number, { gen: number; t0: number; main: number; lk: Float32Array | null }>();
+  const flights = new Map<number, { gen: number; t0: number; main: number; lk: Float32Array | null; pt: Float32Array | null }>();
   let flightId = 0;
   let gen = 0;
-  let pending: { T: GfTables; main: number; t0: number; samples?: SplineSamples[]; lk?: Float32Array | null } | null = null;
+  let pending: { T: GfTables; main: number; t0: number; samples?: SplineSamples[]; lk?: Float32Array | null; pt?: Float32Array | null } | null = null;
   // K1369 s4: THE SNAPSHOT CHANNEL (`__knotGfOpts.chan`, off by default).
   // Once the first tables exist, gf_app asks the physics host for a port to
   // the physics worker (worker_host.ts gfPort) and hands it to the gf
@@ -268,7 +276,7 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
       if (ref) check(d.T, ref);
       // Replies come in post order: a newer one replaces a pending older one.
       if (pending) stats.superseded++;
-      pending = { T: d.T, main: fl.main, t0: fl.t0, lk: fl.lk };
+      pending = { T: d.T, main: fl.main, t0: fl.t0, lk: fl.lk, pt: fl.pt };
       requestFrame();
     };
   };
@@ -450,12 +458,32 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
     lkPVer++;
   };
 
+  // K1405: this frame's baked gold paint (gf_look.ts GfPaintTable), into a spare array; null on
+  // the same gates as lkSnap (the layout is the look positions', so it needs the look table).
+  const ptSnap = (): Float32Array | null => {
+    const r = ctx.scene.renderer;
+    if (!r || !ptTab || lkKey < 0 || !pass?.lookable || opts().look === false) return null;
+    const t0 = performance.now();
+    const ps = (r as unknown as { paintState: { paintSpans: GfPaintSource["paintSpans"]; paintCaps: GfPaintSource["paintCaps"] } }).paintState;
+    const src = r as unknown as GfPaintSource;
+    const P = ptTab.values({ kd: src.kd, kcv: src.kcv, chainSamples: src.chainSamples, paintSpans: ps.paintSpans, paintCaps: ps.paintCaps }, ptPool.pop());
+    stats.ptMs.push(performance.now() - t0);
+    return P;
+  };
+  const ptShow = (P: Float32Array | null): void => {
+    if (!P) return;
+    if (ptP && ptP !== P && ptPool.length < 4) ptPool.push(ptP);
+    ptP = P;
+    ptVer++;
+  };
+
   // Pack and upload a build's tables (main's last share of a rebuild).
-  const install = (next: GfTables, mainSoFar: number, lkNext?: Float32Array | null): void => {
+  const install = (next: GfTables, mainSoFar: number, lkNext?: Float32Array | null, ptNext?: Float32Array | null): void => {
     const t0 = performance.now();
     T = next;
     // K1389 s2: the positions gathered with this build (else this frame's: an in-thread or channel build)
     lkShow(lkNext ?? lkSnap());
+    ptShow(ptNext ?? ptSnap());
     pass!.upload(T);
     stats.packMs.push(pass!.packMs);
     stats.uploadMs.push(pass!.uploadMs);
@@ -479,7 +507,7 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
       flightId++;
       worker!.postMessage({ id: flightId, input, aa, pool: opts().pool !== false }, transfer);
       const main = performance.now() - t0;
-      flights.set(flightId, { gen, t0, main, lk: lkSnap() });
+      flights.set(flightId, { gen, t0, main, lk: lkSnap(), pt: ptSnap() });
       stats.gatherMs.push(main);
       // The reference reads the same state now (outside main's share).
       if (verifying()) refs.set(flightId, reference(aa));
@@ -633,7 +661,7 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
           stats.chanBuilds++;
           worker?.postMessage({ chan: "ack", done: chanDone, depth: depth() });
         }
-        install(p.T, p.main, p.lk);
+        install(p.T, p.main, p.lk, p.pt);
         const now = performance.now();
         stats.showMs.push(now - p.t0);
         stats.showAt.push(p.t0, now);
@@ -675,6 +703,7 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
       // with its tables (install).
       if (pass.lookable && o.look !== false) {
         lkTab ??= new GfLookTable();
+        ptTab ??= new GfPaintTable();
         if (lkGate.changed(r)) {
           stats.lkKeys++;
           const key = lookKey(r);
@@ -687,6 +716,11 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
           }
         }
         if (!lkP) lkShow(lkSnap());
+        if (!ptP) ptShow(ptSnap());
+        // K1405: a moved paint declaration (a walk, a trail shift) re-bakes and redraws at once,
+        // even at rest, when no tables build follows it
+        const pk = paintKey(r.paintState);
+        if (pk !== ptKey) { ptKey = pk; ptShow(ptSnap()); dirty = true; }
         const gap = lookGap(r);
         if (gap !== lkGap) { lkGap = gap; dirty = true; }
         // K1404: while the appearance reveal runs, the pass draws its K1383 form (the plain reveal
@@ -697,12 +731,13 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
           if (pass.looking) { pass.setLook(null); dirty = true; }
         } else {
           const up = pass.lkPMs;
-          pass.setLook(lkTab, gap, lkP, lkPVer);
+          pass.setLook(lkTab, gap, lkP, lkPVer, ptP, ptVer);
           if (pass.lkPMs !== up) stats.lkUpMs.push(pass.lkPMs);
         }
       } else if (lkGap >= 0) {
         pass.setLook(null);
         lkGap = -1;
+        ptKey = -1;
         dirty = true;
       }
       const key = `${cam.a},${cam.d},${cam.e},${cam.f},${cam.w},${cam.h}`;
