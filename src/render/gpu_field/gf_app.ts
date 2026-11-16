@@ -29,7 +29,7 @@ import { splineBend, type SplineSamples } from "../../geometry/spline_generator"
 import { buildTables, type GfTables } from "./tables";
 import { CTRL_ARC, gfBuild, gfDepth, gfLookDraws, tablesDiff } from "./gf_build";
 import { GfRevealTable, gfRevealing } from "./gf_reveal";
-import { GfLookGate, GfLookTable, GfPaintTable, lookGap, lookKey, paintKey, type GfPaintSource } from "./gf_look";
+import { GfLookGate, GfLookTable, GfPaintTable, lookFade, lookGap, lookKey, paintKey, type GfPaintSource } from "./gf_look";
 import { GfComposite, GfPass, GfTarget, type GfMap } from "./gf_pass";
 
 interface GfReply {
@@ -91,6 +91,7 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
   let lkPVer = 0;
   const lkPool: Float32Array[] = [];
   let lkGap = -1;
+  let lkFadeV = -1;
   // K1405: the baked gold paint (gf_look.ts GfPaintTable), snapshotted like the look positions
   let ptTab: GfPaintTable | null = null;
   let ptP: Float32Array | null = null;
@@ -722,7 +723,8 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
         const pk = paintKey(r.paintState);
         if (pk !== ptKey) { ptKey = pk; ptShow(ptSnap()); dirty = true; }
         const gap = lookGap(r);
-        if (gap !== lkGap) { lkGap = gap; dirty = true; }
+        const fade = lookFade(r);
+        if (gap !== lkGap || fade !== lkFadeV) { lkGap = gap; lkFadeV = fade; dirty = true; }
         // K1404: while the appearance reveal runs, the pass draws its K1383 form (the plain reveal
         // programs and composite), not the look: the look border stroke is sub-pixel at fabric
         // scales and its interior is clear, so the ribbons vanish (the sheet at 03102199 is the
@@ -731,12 +733,13 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
           if (pass.looking) { pass.setLook(null); dirty = true; }
         } else {
           const up = pass.lkPMs;
-          pass.setLook(lkTab, gap, lkP, lkPVer, ptP, ptVer);
+          pass.setLook(lkTab, gap, lkP, lkPVer, ptP, ptVer, fade);
           if (pass.lkPMs !== up) stats.lkUpMs.push(pass.lkPMs);
         }
       } else if (lkGap >= 0) {
         pass.setLook(null);
         lkGap = -1;
+        lkFadeV = -1;
         ptKey = -1;
         dirty = true;
       }

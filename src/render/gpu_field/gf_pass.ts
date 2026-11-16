@@ -139,7 +139,7 @@ export class GfTarget {
  * means of 10 runs over three benches, p14f and p14h); level on the desktop. 0 px on its 12 scenes on both.
  */
 export const GF_TIERS: GfTier[] = [{ p: 3, k: 2, ramps: true, s: 3, lab: true, grp: true, ks: true, kz: "frame", fs: "c", kd: true }];
-const UNIFORMS = ["uD", "uOCh", "uOV", "uOPin", "uOArm", "uOK", "uOChk", "uOCell", "uOChL", "uOKL", "uOKC", "uOKB", "uOKA", "uOKP", "uH", "uW", "uAA", "uSigma", "uZt", "uWin", "uRc", "uGrid", "uGDim", "uMap", "uP0", "uP1", "uP2", "uP3", "uRv", "uORvK", "uLk", "uLkP", "uLkG", "uPt", "uGold"];
+const UNIFORMS = ["uD", "uOCh", "uOV", "uOPin", "uOArm", "uOK", "uOChk", "uOCell", "uOChL", "uOKL", "uOKC", "uOKB", "uOKA", "uOKP", "uH", "uW", "uAA", "uSigma", "uZt", "uWin", "uRc", "uGrid", "uGDim", "uMap", "uP0", "uP1", "uP2", "uP3", "uRv", "uORvK", "uLk", "uLkP", "uLkG", "uLkF", "uPt", "uGold"];
 /** K1362 s12: a program drawn only in frames where some cell lists a corner ("corners") or none does ("none"). */
 type GfWhen = "corners" | "none";
 interface GfProg { prog: WebGLProgram; u: Map<string, WebGLUniformLocation | null>; tier: GfTier | null; split?: 1 | 2; when?: GfWhen }
@@ -191,7 +191,7 @@ export class GfPass {
   private lkTex: WebGLTexture | null = null;
   private lkRows = 0;
   private lkVer = -1;
-  private lk: { gap: number } | null = null;
+  private lk: { gap: number; fade: number } | null = null;
   // K1389 s2: the sample positions (R32F, texture unit 7)
   private lkPTex: WebGLTexture | null = null;
   private lkPRows = 0;
@@ -302,7 +302,7 @@ export class GfPass {
    * colour table and these sample positions (s2: gf_look.ts positions, pVer bumped with each new array) until the
    * next call; null draws the original programs. Each uploads only when it changed.
    */
-  setLook(L: GfLookTable | null, gap = 0, P: Float32Array | null = null, pVer = 0, Pt: Float32Array | null = null, ptVer = 0): void {
+  setLook(L: GfLookTable | null, gap = 0, P: Float32Array | null = null, pVer = 0, Pt: Float32Array | null = null, ptVer = 0, fade = 0): void {
     if (!L || !P || !this.lplan) { this.lk = null; return; }
     const gl = this.gl;
     if (!this.lkTex) this.lkTex = gl.createTexture()!;
@@ -376,7 +376,7 @@ export class GfPass {
       gl.activeTexture(gl.TEXTURE0);
       this.lkVer = L.version;
     }
-    this.lk = { gap };
+    this.lk = { gap, fade };
   }
 
   upload(T: GfTables): void {
@@ -506,7 +506,7 @@ export class GfPass {
       gl.uniform1i(u("uD"), 0);
       if (g.split === 2) for (let i = 0; i < 4; i++) gl.uniform1i(u(`uP${i}`), 1 + i);
       if (rv) { gl.uniform1i(u("uRv"), 5); gl.uniform1i(u("uORvK"), rv.oK); }
-      if (lk) { gl.uniform1i(u("uLk"), 6); gl.uniform1i(u("uLkP"), 7); gl.uniform1f(u("uLkG"), lk.gap); gl.uniform1i(u("uPt"), 8); const G = knotUniformValues().uKGold; gl.uniform3f(u("uGold"), G ? G[0] : 1, G ? G[1] : 0.8235, G ? G[2] : 0.2902); }
+      if (lk) { gl.uniform1i(u("uLk"), 6); gl.uniform1i(u("uLkP"), 7); gl.uniform1f(u("uLkG"), lk.gap); gl.uniform1f(u("uLkF"), lk.fade); gl.uniform1i(u("uPt"), 8); const G = knotUniformValues().uKGold; gl.uniform3f(u("uGold"), G ? G[0] : 1, G ? G[1] : 0.8235, G ? G[2] : 0.2902); }
       const o = P.o;
       gl.uniform1i(u("uOCh"), o.ch); gl.uniform1i(u("uOV"), o.v); gl.uniform1i(u("uOPin"), o.pin); gl.uniform1i(u("uOArm"), o.arm);
       gl.uniform1i(u("uOK"), o.k); gl.uniform1i(u("uOChk"), o.chk); gl.uniform1i(u("uOCell"), o.cell); gl.uniform1i(u("uOChL"), o.chl); gl.uniform1i(u("uOKL"), o.kl);
