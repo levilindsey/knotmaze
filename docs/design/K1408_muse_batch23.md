@@ -77,6 +77,49 @@ every sheet frame where today's look shows ribbons, gf shows them, its ribbon pi
 03102199's sheet for that frame (counts in the handoff). 3. A test that fails on the regression, where one can
 (a Node test of whatever broke). 4. The am=instant look and the tables digest unchanged. 5. `npm test` green.
 
+### Handoff 23B
+
+Started 2026-11-15 15:51 PT, stopped 17:12 PT. Fix commit f1e70048 (master, pushed; deploy watched).
+
+**First bad commit: fda03a5c** (K1389 s1 WIP: today's thread look under rp=gf). Bisect with the sheet
+(`k1387_sheet.mjs`, link `b.FMKB4DIQ`, MODES=gf, ribbon ink = px differing from frame 0 by >24;
+good/bad judged at frames 5-7): 03102199 good (85k), 37e421c8 good (85184), fda03a5c bad (~1.2k),
+a576e016 / c75b0f0a / master bad. Note: my first four sheet runs hit a foreign K1362 vite server
+already listening on 5481 and tested the same code four times; the bisect above ran on verified
+servers (owner cmdline + build dir checked per port). That foreign server (pid 29852) was left alone.
+
+**Mechanism.** The look itself is the regression: from fda03a5c, a revealing frame draws
+`lookForm(revealForm(src))` and the LOOK composite. In border mode (FMKB4DIQ threadLook=1) the
+composite paints only `S * ink`: ink is form B's edge band (T.W = 0.38 * h = 0.0988 world) cut by
+today's stroke ramp `max(3*uAA, 0.02*uH)` = 0.129 world > W, so at this scale (aa 0.043) the band
+peaks at ~0.4 on a ~1 px line and the interior is clear by design. Net screen effect: nothing.
+Proof chain: the pass target holds ink 21504 / cov 54580 / colour 49276 px mid-reveal (readback);
+ink-viz composite shows coverage with ink ~0; colour-viz shows section colours reading fine; the
+isolated pass bridge (`.claude/probes/K1404/k1404_bridge.ts`) draws look+reveal correctly on fat
+census tables, where W >> the ramp. Today's border keeps an interior fill
+(ribbon_shader: `lookA = max(edge, hiA * (1.0 - edge))`); gf's border drops it. Rest-state
+faintness of the same kind is K1398 / K1395 territory, not touched here.
+
+**Fix.** While the appearance reveal runs, gf_app holds the look off
+(`gfLookDraws(o.look, rvDrawn)` in gf_build.ts) and draws the K1383 reveal form; the look resumes
+the frame the reveal ends. gf_look/gf_pass/gf_glsl/tables untouched.
+
+**Checks.**
+- Sheet fix23b (fixed build, both modes; `.claude/probes/K1387/out/fix23b_sheet.png`, crops in
+  `.claude/probes/K1404/out/`): gf ink per frame 0 1427 5714 26073 51453 79518 85297 85272 630
+  vs 03102199's 0 1321 5725 26941 50748 80031 85273 85299 85096: every reveal frame 97-108%
+  (Done 2 holds; end+2s is the fog frame: today 691, fixed gf 630, parity).
+- am=instant unchanged: code path identical when not revealing; instant A/Bs differ by the usual
+  load-to-load settle variance (fixed-vs-fixed 40553 px / max 45, master-vs-fixed same range).
+- Tables digest bit-identical (`k1362t1_digest.ts`, 5446 lines, fc no differences).
+- Test: `gfLookDraws` rule + gf_app wiring pinned in `test/render/gf_depth.test.ts` (fails if the
+  gate is removed); `npm test` green: 242 files, 3065 tests.
+
+**Left.** K1395 (reveal colours under gf) and K1398 (border faintness at rest, Run E) still stand;
+the reveal now draws cream until it ends, then the look takes over, which is exactly the seam
+K1395 names. Crops for review: `.claude/probes/K1404/out/{fix23b_sheet.png, before_gf_t10.16.png,
+after_gf_t10.16.png, ref03102199_gf_t10.16.png, today_t10.16.png}`.
+
 ## Run D (23D): K1405, rp=gf draws no gold traveled path in play
 
 In play under rp=gf the gold traveled path is missing; today's look draws it (`.claude/probes/K1387/out/

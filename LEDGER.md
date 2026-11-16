@@ -2062,9 +2062,6 @@ Every other item below waits on the trigger it names.
 - **K1402** · rp=gf look (K1389 s2): in channel mode the colour positions are computed on main at install; the
   colour target is 8-bit (1/255 steps); a layout change between gather and install indexes the previous
   build's positions for one frame (not seen) (K1389_s2_colour_table.md handoff)
-- **K1404** · rp=gf's default intro draws the reveal sparks but no ribbons, while today's look draws them (at
-  rest both show the fog, so the empty end is parity); K1383's 11-14 sheet drew ribbons through it, so a later
-  stage regressed it, also on s1 119249c0 (`.claude/probes/K1387/out/s2h_def_sheet.png`, `k1387_sheet.mjs`)
 - **K1405** · rp=gf in play draws no gold traveled path (today's look does), also on s1
   (`.claude/probes/K1387/out/play7_gf_head.png` against `play7_today_head.png`)
 - **K1406** · Lean under xp=threads and fi=fuse: applyExploreGaps flushes every chain, so lean pays s1's full
@@ -2444,6 +2441,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1404** · rp=gf's default intro draws the reveal sparks but no ribbons, while today's look draws them (at rest both show the fog, so the empty end is parity); K1383's 11-14 sheet drew ribbons through it, so a later stage regressed it, also on s1 119249c0 (`.claude/probes/K1387/out/s2h_def_sheet.png`, `k1387_sheet.mjs`). Done in f1e70048 (2026-11-15).
 - **K1399** · rp=gf's colour table is static (rebuilt only when colour inputs change): 27,081 colours (41% of the cap), no lag, look 0.19-0.21 ms/frame in the drag (K1389 s2). Done in 38b73e87 (2026-11-15).
 - **K1388** · the site tester refreshes lean first (pluckSiteTester), footprintsWrong 0 in k1387_exact (K1387 s1). Done in 119249c0 (2026-11-15).
 - **K1383** · rp=gf reveals the intro (gf_reveal.ts mask table + reveal program variants; channel closed until the reveal ends). Done in 03102199 (2026-11-14).
