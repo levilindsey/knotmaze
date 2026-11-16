@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1412.
+Next free ID: K1414.
 
 ## Waiting on Levi
 
@@ -623,8 +623,8 @@ Running agents are listed under In progress, each with its own next step.
   tables bit-identical. Re-run k1362s2_census.ps1 on master, then fix stages under a new digest; K1315's ends
   join the same bar. Levi (2026-11-15): getting these spots truly correct is the most important thing now; the
   bar is the look he approves, not form B's (form B fails K1315's ends and jumps under K1267's jitter)
-  - evidence: Run A (K1408 batch 23, commit bb4a74f1): baseline GPU census on master 281 (broken 148, stray 90, paper 41, hard 2); broken_ink fixed-category read after: 90 broken (CPU mirror full census fix23a + fix23b subset; GPU re-run died on probe-page navigations after mid-run edits). Crops: .claude/probes/K1407/out/23A/sheet.png (master gf | new gf | form B | outline, 8 spots). Digest ae1d2392 -> 382ae026. Bench def/fat worker tables p50 9.5/9.1 -> 9.8/9.8 ms. npm test 3062 passed.
-  - next: Broken residuals (90): r-divergence vs form B's CF growth (largest), foot burial/selfW, through-eye overwrites r>=0.16h, plateau self-tie spots (14), vround (6); stray +1 x3 scenes + paper +1 x1 (filed separately). Then stray_ink (90) is the next category.
+  - evidence: Run C (23C): CPU mirror census base23c on master 55ddf68c: 239 total (stray 100, hard 2, paper 47, broken 90) -> fix23c 61 total (stray 23, hard 0, paper 14, broken 24); every scene x category down or 0. Exact V (solveEq on true feet) + form B corner_cf closed-form growth ported into gpu_field tables (w read at CF q/feet; tracked integral fallback; CF attrs: baseline 100 stray = arc 47 / thru 20 / side 20 / tangent 1). Crops .claude/probes/K1407/out/23C/sheet.png (8 spots). Digest 382ae026 -> c1be0e90 (5445). Bench (5483, same session): master tables p50 def 14.5/fat 10.4 -> new 17.8-18.5/16.9-17.0 ms. npm test exit 0 on rerun, 3065 passed. Residuals filed: K1412 stray (23) and K1413 speed.
+  - next: Claude checks this run's handoff, crops and census (.claude/probes/K1407/out/23C/handoff.md) against the primary records and decides done. Then the next category by K1407 order (Claude's pick from the remaining: stray 23, broken 24, paper 14), or K1412's reach/margin port first, since it feeds those residuals and is speed-bound by K1413.
 - **K1315** · Junction under-tail ends in rp=outline: a bug, not a choice. Levi, 2026-11-12, on k1315_now.png: "Not a
   single tile in the image shows an acceptable scenario" (form B's round dots and the outline's square stubs both
   fail). Bar: no ink past the over thread's outline, no dot, no stub. K1314 group 1, 18 census finds (e.g. muse_default_tw j150, g41_user_tw64 j63/j64, x134); sheet
@@ -2070,6 +2070,20 @@ Every other item below waits on the trigger it names.
   (navigation)' when src/ files change mid-run (Vite full reload); two fix23a runs died this way. Census reads
   for K1407 run 23A used the CPU mirror (s1; proven equal to GPU in K1362 s2). Run the GPU census with no
   other work in flight; check the dev server + perf lock first.
+- **K1412** · K1407 stray residual (23C): 23 stray remain (census fix23c total 61 vs base 239). By kind/owner:
+  9 arc (7 r/q still off, 2 same-r) + 10 side + 4 thru; the side block cluster is g41_user_tw64 j54/j55 (9 of
+  23 there, 7 'side B term none' + foot) tied to gf's straight-reach aLcut vs form B's quad reach (arm a=2 of
+  j55: aLcut -19.0 / aL 0 vs form B 2.74 / 2.13: member2's ramp is poisoned to 0 so pieces split into own
+  surfaces unburied), and the arc remainder to CF reading gf's w (sample marginAt, straight-reach arm windows)
+  where form B reads marginOf exact over arm windows + quad lengths. References:
+  .claude/probes/K1407/out/23C/handoff.md. Next: port quad reach + arm hosting into gf (or give CF w an exact
+  marginOf) and re-attribute; the bench-speed constraint binds that work.
+- **K1413** · K1407 corner speed residual (23C): the exact-V + closed-form growth (corner_cf in
+  gpu_field tables) costs more per rebuild than the tracked integral it replaced. Same-server (5483)
+  k1362c1_bench.mjs drag spans: master tables p50 def 14.5 / fat 10.4 -> new 17.8-18.5 / 16.9-17.0 (work p50
+  16.3/12.4 -> 19.5-20.2/18.7-18.8), over Done 4's +10%. Node phase medians (def census scene): corners 14.4
+  master -> 18.0 new (solveV 3 + CF grow 7 ms warm; w memo + w(V)=0 skip already in, digest unchanged). Next:
+  cut CF per-corner cost (arm-piece reuse across a junction's corners, or a cheaper w) and re-bench.
 
 ## Approved, to schedule (2026-10-11)
 

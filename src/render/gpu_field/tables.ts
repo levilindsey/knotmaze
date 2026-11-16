@@ -14,16 +14,18 @@
 //   next pin. O(crossings + arms).
 // - CORNER: one rolling-ball fillet per cyclically adjacent arm pair whose
 //   corner is concave (theta < pi) and round: centre C, radius r (form B's
-//   rolling-ball integral at a FIXED 24 nodes, feet tracked along the real
-//   arms with exact local polyline projections, the margin gate read at
-//   fixed arm samples), the sector's two rays and the material's far bound.
-//   A fixed cost per corner (no adaptive step, no search). O(arms).
+//   exact V from solveEq on the true feet, then its closed-form growth
+//   corner_cf with form B's w read at the growth's q/feet; the tracked
+//   fixed-node integral remains only where that growth cannot start), the
+//   sector's two rays and the material's far bound. O(arms).
 // - BINS: a uniform grid (cell G) listing CHUNKS (runs of CH segments of one
 //   chain) whose bbox lies within RC of the cell, and the corners whose
 //   material reaches it. O(points / CH) inserts.
 // Nothing here walks, searches or fits per frame beyond those.
 
 import type { FieldScene } from "../field/scene";
+import { CornerGrowth, polyTangents, type CfArmIn } from "../field/corner_cf";
+import { footInWindow, segOfS, type Foot, type Poly } from "../field/geom";
 
 export const CH = 8; // segments per chunk
 export const MAXP = 8; // pieces kept per pixel
@@ -452,6 +454,58 @@ export function solveGfCorners(P: GfPrefix, jLo: number, jHi: number): GfCorner[
     if (!cClosed[c]) return s;
     let u = (s - cS0[c]) % cLen[c]; if (u < 0) u += cLen[c]; return u + cS0[c];
   };
+  // K1407 23C: each chain as form B's Poly (from the built vertex table, extension included), for the
+  // exact V solve and the closed-form growth below. A closed chain's repeated first vertex is dropped.
+  const polyCache = new Map<number, { p: Poly; tx: Float64Array; ty: Float64Array } | null>();
+  const polyOf = (c: number): { p: Poly; tx: Float64Array; ty: Float64Array } | null => {
+    let r = polyCache.get(c);
+    if (r !== undefined) return r;
+    const v0 = cV0[c]; const nv = cNV[c]; const closed = cClosed[c] === 1;
+    const n = closed ? nv - 1 : nv;
+    if (n < 2) { polyCache.set(c, null); return null; }
+    const x = new Float64Array(n); const y = new Float64Array(n); const s = new Float64Array(n);
+    for (let k = 0; k < n; k++) { x[k] = vx[v0 + k]; y[k] = vy[v0 + k]; s[k] = vs[v0 + k]; }
+    const nseg = closed ? n : n - 1;
+    const segLen = new Float64Array(Math.max(1, nseg));
+    for (let k = 0; k < nseg; k++) { const b = k + 1 < n ? k + 1 : 0; segLen[k] = Math.sqrt((x[b] - x[k]) ** 2 + (y[b] - y[k]) ** 2); }
+    const p: Poly = { id: c, n, x, y, s, z: new Float64Array(n), segLen, closed, nseg, len: closed ? vs[v0 + nv - 1] - s[0] : s[n - 1] - s[0], s0: s[0] };
+    const t = polyTangents(p);
+    r = { p, tx: t.tx, ty: t.ty };
+    polyCache.set(c, r);
+    return r;
+  };
+  const armWin = (A: ArmT): [number, number] => (A.dir > 0 ? [A.sR, A.sR + A.L] : [A.sR - A.L, A.sR]);
+  const armDistOf = (A: ArmT, s: number): number => {
+    let d = (s - A.sR) * A.dir;
+    if (cClosed[A.c]) d = ((d % cLen[A.c]) + cLen[A.c]) % cLen[A.c];
+    return d;
+  };
+  const CF = new CornerGrowth();
+  // Form B's solveEq at rho = h: Newton on the true feet (footInWindow over each arm's window).
+  const solveV = (J: { c: [number, number] | number[] }, A: ArmT, B: ArmT, pa: Poly, pb: Poly, th: number): { x: number; y: number; fa: Foot; fb: Foot } | null => {
+    let bx = A.ux + B.ux; let by = A.uy + B.uy; const bl = Math.hypot(bx, by) || 1; bx /= bl; by /= bl;
+    const sn = Math.sin(th / 2);
+    let x = J.c[0] + (bx * h) / sn; let y = J.c[1] + (by * h) / sn;
+    const wa = armWin(A); const wb = armWin(B);
+    for (let it = 0; it < 60; it++) {
+      const fa = footInWindow(pa, x, y, wa[0], wa[1]);
+      const fb = footInWindow(pb, x, y, wb[0], wb[1]);
+      const Fa = fa.d - h; const Fb = fb.d - h;
+      if (Math.abs(Fa) < 1e-13 * Math.max(1, h) && Math.abs(Fb) < 1e-13 * Math.max(1, h)) return { x, y, fa, fb };
+      if (!(fa.d > 1e-12 && fb.d > 1e-12)) return null;
+      const gax = (x - fa.x) / fa.d; const gay = (y - fa.y) / fa.d; const gbx = (x - fb.x) / fb.d; const gby = (y - fb.y) / fb.d;
+      const det = gax * gby - gay * gbx;
+      if (Math.abs(det) < 1e-12) return null;
+      let dx = (-Fa * gby + Fb * gay) / det; let dy = (-Fb * gax + Fa * gbx) / det; const dl = Math.hypot(dx, dy);
+      if (dl > h) { dx *= h / dl; dy *= h / dl; }
+      x += dx; y += dy;
+      if (it === 59) {
+        const ga = footInWindow(pa, x, y, wa[0], wa[1]); const gb = footInWindow(pb, x, y, wb[0], wb[1]);
+        return Math.abs(ga.d - h) < 1e-9 * h && Math.abs(gb.d - h) < 1e-9 * h ? { x, y, fa: ga, fb: gb } : null;
+      }
+    }
+    return null;
+  };
   // 4. Corners: form B's rolling-ball fillet per cyclically adjacent arm pair (ordered by the arms' chord
   //    angle at 2h; no corner between the two arms of one through pass). The ball's centre q(rho) sits at rho
   //    from both arms; its feet are TRACKED along the real arms from V (rho = h) at NODES fixed nodes, each node
@@ -580,48 +634,7 @@ export function solveGfCorners(P: GfPrefix, jLo: number, jHi: number): GfCorner[
   const QVB: Q = { x: 0, y: 0, ua: 0, ub: 0, nax: 0, nay: 0, nbx: 0, nby: 0, sa: 0, sb: 0, fax: 0, fay: 0, fbx: 0, fby: 0 };
   const QPB: Q = { x: 0, y: 0, ua: 0, ub: 0, nax: 0, nay: 0, nbx: 0, nby: 0, sa: 0, sb: 0, fax: 0, fay: 0, fbx: 0, fby: 0 };
   const QQB: Q = { x: 0, y: 0, ua: 0, ub: 0, nax: 0, nay: 0, nbx: 0, nby: 0, sa: 0, sb: 0, fax: 0, fay: 0, fbx: 0, fby: 0 };
-  const QNB: Q = { x: 0, y: 0, ua: 0, ub: 0, nax: 0, nay: 0, nbx: 0, nby: 0, sa: 0, sb: 0, fax: 0, fay: 0, fbx: 0, fby: 0 };
-  // K1407 23A: form B's solveEq V (the V gate's Newton on the arms' fixed samples), returning the point.
-  // Where the tracked V lands past a short arm's end and sticks at its boundary, this still finds the V
-  // form B grows from (or nulls at); where it finds none, form B has no corner either.
-  const newtonV = (J: { c: [number, number] | number[] }, A: ArmT, B: ArmT, th: number): Q | null => {
-    let bx = A.ux + B.ux; let by = A.uy + B.uy; const bl = Math.sqrt(bx * bx + by * by) || 1; bx /= bl; by /= bl;
-    const sn = Math.sin(th / 2); let x = J.c[0] + (bx * h) / sn; let y = J.c[1] + (by * h) / sn;
-    const SAw = smpOf(A); const SBw = smpOf(B); const fw = { u: 0, x: 0, y: 0 };
-    const footW = (S: { n: number; du: number; x: Float64Array; y: Float64Array }, px: number, py: number): void => {
-      let best = Infinity;
-      for (let i = 0; i < S.n; i++) {
-        const ax = S.x[i]; const ay = S.y[i]; const dx = S.x[i + 1] - ax; const dy = S.y[i + 1] - ay; const l2 = dx * dx + dy * dy;
-        const t = l2 > 0 ? Math.min(1, Math.max(0, ((px - ax) * dx + (py - ay) * dy) / l2)) : 0;
-        const fx = ax + t * dx; const fy = ay + t * dy; const d2 = (px - fx) * (px - fx) + (py - fy) * (py - fy);
-        if (d2 < best) { best = d2; fw.u = (i + t) * S.du; fw.x = fx; fw.y = fy; }
-      }
-    };
-    let ua = 0; let ub = 0; let fax = 0; let fay = 0; let fbx = 0; let fby = 0; let ok = false;
-    for (let it = 0; it < 60; it++) {
-      footW(SAw, x, y); ua = fw.u; fax = fw.x; fay = fw.y; footW(SBw, x, y); ub = fw.u; fbx = fw.x; fby = fw.y;
-      const dax = x - fax; const day = y - fay; const dbx = x - fbx; const dby = y - fby;
-      const da = Math.sqrt(dax * dax + day * day); const db = Math.sqrt(dbx * dbx + dby * dby);
-      const Fa = da - h; const Fb = db - h;
-      if (Math.abs(Fa) < 1e-9 * h && Math.abs(Fb) < 1e-9 * h) { ok = true; break; }
-      if (!(da > 1e-12 && db > 1e-12)) break;
-      const gax = dax / da; const gay = day / da; const gbx = dbx / db; const gby = dby / db; const det = gax * gby - gay * gbx;
-      if (Math.abs(det) < 1e-12) break;
-      let dx = (-Fa * gby + Fb * gay) / det; let dy = (-Fb * gax + Fa * gbx) / det; const dl = Math.sqrt(dx * dx + dy * dy);
-      if (dl > h) { dx *= h / dl; dy *= h / dl; }
-      x += dx; y += dy;
-    }
-    const tol = 1e-9 * h;
-    if (!(ok && ua > tol && ua < A.L - tol && ub > tol && ub < B.L - tol)) return null;
-    const crA = A.ux * (y - J.c[1]) - A.uy * (x - J.c[0]); const crB = B.ux * (y - J.c[1]) - B.uy * (x - J.c[0]);
-    const sgn = Math.sign(A.ux * B.uy - A.uy * B.ux);
-    if (!(crA * sgn > 0 && crB * sgn < 0)) return null;
-    const da = Math.sqrt((x - fax) * (x - fax) + (y - fay) * (y - fay)) || 1; const db = Math.sqrt((x - fbx) * (x - fbx) + (y - fby) * (y - fby)) || 1;
-    QNB.x = x; QNB.y = y; QNB.ua = ua; QNB.ub = ub; QNB.fax = fax; QNB.fay = fay; QNB.fbx = fbx; QNB.fby = fby;
-    QNB.nax = (x - fax) / da; QNB.nay = (y - fay) / da; QNB.nbx = (x - fbx) / db; QNB.nby = (y - fby) / db;
-    QNB.sa = norm(A.c, A.sR + A.dir * ua); QNB.sb = norm(B.c, B.sR + B.dir * ub);
-    return QNB;
-  };
+
   for (let ji = jLo; ji < jHi; ji++) {
     const J = junctions[ji];
     const S = sibs[ji].sort((u, v) => u.ang - v.ang); const n = S.length; if (n < 2) continue;
@@ -635,54 +648,34 @@ export function solveGfCorners(P: GfPrefix, jLo: number, jHi: number): GfCorner[
       let st = styles[A.ei]?.style; if ((A.ei + 1) % ne !== B.ei && (B.ei + 1) % ne === A.ei) st = styles[B.ei]?.style;
       if (st === "sharp") continue;
       if (!(A.L > 1e-9 && B.L > 1e-9)) continue;
-      const t2 = Math.tan(th / 2); const uV0 = h / t2;
+      const t2 = Math.tan(th / 2);
       // form B: V's (tracked) feet inside both arms, checked below
       const r0 = (cr / 3) * Math.min(2 * h, 1.5 * h * t2);
       if (!(r0 > 1e-9)) continue;
       const rb = Math.max(rootBand * h * rootTip(th), 1e-9 * h);
       const hA = { k: -1 }; const hB = { k: -1 };
       const snH = Math.sin(th / 2); const csH = Math.cos(th / 2);
-      trackInto(QVB, J, A, B, uV0, uV0, h, 8, Infinity, hA, hB, snH, csH);
-      let V: Q = QVB;
-      const vTracked = V.ua > 0 && V.ua < A.L && V.ub > 0 && V.ub < B.L;
-      if (!vTracked) { const NV = newtonV(J, A, B, th); if (!NV) continue; V = NV; } // K1407 23A: solveEq fallback
-      if (vTracked) { // form B's V gate, mirrored (solveEq): Newton on the TRUE distances to both arms from the straight
-        // model's V, each foot clamped at its arm's root; a foot at the root (dV = 0) or no solution rejects.
-        // Then V lies in the wedge between the arms' chords (the facing sides).
-        let bx = A.ux + B.ux; let by = A.uy + B.uy; const bl = Math.sqrt(bx * bx + by * by) || 1; bx /= bl; by /= bl;
-        const sn = Math.sin(th / 2); let x = J.c[0] + (bx * h) / sn; let y = J.c[1] + (by * h) / sn;
-        // The foot is windowed to the arm's own [0, L] (its fixed samples): a walk along the chain would cross
-        // the root into a through pass's other arm, which form B's windowed foot never reaches.
-        const SAw = smpOf(A); const SBw = smpOf(B); const fw = { u: 0, x: 0, y: 0 };
-        const footW = (S: { n: number; du: number; x: Float64Array; y: Float64Array }, px: number, py: number): void => {
-          let best = Infinity;
-          for (let i = 0; i < S.n; i++) {
-            const ax = S.x[i]; const ay = S.y[i]; const dx = S.x[i + 1] - ax; const dy = S.y[i + 1] - ay; const l2 = dx * dx + dy * dy;
-            const t = l2 > 0 ? Math.min(1, Math.max(0, ((px - ax) * dx + (py - ay) * dy) / l2)) : 0;
-            const fx = ax + t * dx; const fy = ay + t * dy; const d2 = (px - fx) * (px - fx) + (py - fy) * (py - fy);
-            if (d2 < best) { best = d2; fw.u = (i + t) * S.du; fw.x = fx; fw.y = fy; }
-          }
-        };
-        let ua = uV0; let ub = uV0; let ok = false;
-        for (let it = 0; it < 60; it++) {
-          footW(SAw, x, y); ua = fw.u; const pax = fw.x; const pay = fw.y; footW(SBw, x, y); ub = fw.u; const pbx = fw.x; const pby = fw.y;
-          const dax = x - pax; const day = y - pay; const dbx = x - pbx; const dby = y - pby;
-          const da = Math.sqrt(dax * dax + day * day); const db = Math.sqrt(dbx * dbx + dby * dby);
-          const Fa = da - h; const Fb = db - h;
-          if (Math.abs(Fa) < 1e-9 * h && Math.abs(Fb) < 1e-9 * h) { ok = true; break; }
-          if (!(da > 1e-12 && db > 1e-12)) break;
-          const gax = dax / da; const gay = day / da; const gbx = dbx / db; const gby = dby / db; const det = gax * gby - gay * gbx;
-          if (Math.abs(det) < 1e-12) break;
-          let dx = (-Fa * gby + Fb * gay) / det; let dy = (-Fb * gax + Fa * gbx) / det; const dl = Math.sqrt(dx * dx + dy * dy);
-          if (dl > h) { dx *= h / dl; dy *= h / dl; }
-          x += dx; y += dy;
-        }
-        const tol = 1e-9 * h;
-        if (!(ok && ua > tol && ua < A.L - tol && ub > tol && ub < B.L - tol)) continue;
-        const crA = A.ux * (y - J.c[1]) - A.uy * (x - J.c[0]); const crB = B.ux * (y - J.c[1]) - B.uy * (x - J.c[0]);
+      // K1407 23C: V exactly as form B's solveCorner (solveV above): a foot at a root/end, no solution, or
+      // V outside the arms' chord wedge rejects the corner (the tracked/sample feet kept such corners, e.g.
+      // a through pair whose true feet both sit at the root: stray thru arcs at def j85).
+      const PCa = polyOf(A.c); const PCb = polyOf(B.c);
+      if (!PCa || !PCb) continue;
+      const vsol = solveV(J, A, B, PCa.p, PCb.p, th);
+      if (!vsol) continue;
+      const dVa = armDistOf(A, vsol.fa.s); const dVb = armDistOf(B, vsol.fb.s);
+      const tolV = 1e-9 * h;
+      if (!(dVa > tolV && dVa < A.L - tolV && dVb > tolV && dVb < B.L - tolV)) continue;
+      {
+        const crA = A.ux * (vsol.y - J.c[1]) - A.uy * (vsol.x - J.c[0]); const crB = B.ux * (vsol.y - J.c[1]) - B.uy * (vsol.x - J.c[0]);
         const sgn = Math.sign(A.ux * B.uy - A.uy * B.ux);
         if (!(crA * sgn > 0 && crB * sgn < 0)) continue;
       }
+      QVB.x = vsol.x; QVB.y = vsol.y; QVB.ua = dVa; QVB.ub = dVb;
+      QVB.fax = vsol.fa.x; QVB.fay = vsol.fa.y; QVB.fbx = vsol.fb.x; QVB.fby = vsol.fb.y;
+      QVB.nax = (vsol.x - vsol.fa.x) / (vsol.fa.d || 1); QVB.nay = (vsol.y - vsol.fa.y) / (vsol.fa.d || 1);
+      QVB.nbx = (vsol.x - vsol.fb.x) / (vsol.fb.d || 1); QVB.nby = (vsol.y - vsol.fb.y) / (vsol.fb.d || 1);
+      QVB.sa = vsol.fa.s; QVB.sb = vsol.fb.s;
+      const V: Q = QVB;
       const SA = smpOf(A); const SB = smpOf(B);
       const denOf = (p: Q): number => { const ax = p.x - p.fax; const ay = p.y - p.fay; const bx = p.x - p.fbx; const by = p.y - p.fby; return 1 + (ax * bx + ay * by) / ((Math.sqrt(ax * ax + ay * ay) || 1) * (Math.sqrt(bx * bx + by * by) || 1)); };
       const denV = denOf(V);
@@ -695,13 +688,51 @@ export function solveGfCorners(P: GfPrefix, jLo: number, jHi: number): GfCorner[
         const dcB = Math.hypot(p.x - p.fbx, p.y - p.fby); const mB = marginAt(SB, p.ub, p.x, p.y, dcB, mCut(dcB)); if (mB <= -0.05 * h) return 0;
         return ss01(1 + Math.min(0, mA, mB) / (0.05 * h)) * fSteep * fSlack * fA * fB;
       };
-      const dN = r0 / NODES; let sPrev = wOf(V); let r = 0; let pua = V.ua; let pub = V.ub;
-      for (let k = 1; k <= NODES && sPrev > 0; k++) {
-        const du = dN / t2;
-        trackInto(QPB, J, A, B, Math.min(A.L, pua + du), Math.min(B.L, pub + du), h + k * dN, TRACK, 4 * du, hA, hB, snH, csH); const pk = QPB;
-        const sK = Math.min(sPrev, wOf(pk)); const seg = 0.5 * (sPrev + sK) * dN;
-        if (sK < sPrev && sK === 0) { r += seg; break; }
-        r += seg; sPrev = sK; pua = pk.ua; pub = pk.ub;
+      const dN = r0 / NODES; let r = 0; let pua = V.ua; let pub = V.ub; let qCF: Q | null = null; let cfZero = false;
+      // The growth's integral is zero when w(V) is: skip its piece building then (its r is 0 either way).
+      if (r0 > 1e-9 && wOf(V) <= 0) cfZero = true;
+      // K1407 23C: form B's closed-form growth (CornerGrowth) on the exact V, with wOf read at its q/feet
+      // (ua from the feet's u domain, as form B's wOf reads (fa.u - sR) * dir). This replaces the tracked
+      // integral's r/q where it can start; its branch, radii and tangent feet are form B's own.
+      if (r0 > 1e-9 && !cfZero) {
+        const cfArm = (Aarm: ArmT, foot: Foot, dV: number): CfArmIn => {
+          const pc = polyOf(Aarm.c)!; const sg = segOfS(pc.p, foot.s);
+          const win = armWin(Aarm);
+          return { p: pc.p, tx: pc.tx, ty: pc.ty, lo: win[0], hi: win[1], foot: { d: foot.d, x: foot.x, y: foot.y, s: foot.s, k: sg.k, t: sg.t }, u0: Aarm.sR + Aarm.dir * dV };
+        };
+        const faV: Foot = { d: vsol.fa.d, x: vsol.fa.x, y: vsol.fa.y, s: vsol.fa.s, k: vsol.fa.k, t: vsol.fa.t };
+        const fbV: Foot = { d: vsol.fb.d, x: vsol.fb.x, y: vsol.fb.y, s: vsol.fb.s, k: vsol.fb.k, t: vsol.fb.t };
+        const QCF: Q = { x: 0, y: 0, ua: 0, ub: 0, nax: 0, nay: 0, nbx: 0, nby: 0, sa: 0, sb: 0, fax: 0, fay: 0, fbx: 0, fby: 0 };
+        const wMemo = new Map<number, number>();
+        const rr = CF.grow(h, V.x, V.y, r0, denV, cfArm(A, faV, dVa), cfArm(B, fbV, dVb), () => {
+          const got = wMemo.get(CF.rhoCur);
+          if (got !== undefined) return got;
+          QCF.x = CF.qx; QCF.y = CF.qy;
+          QCF.ua = (CF.fa.u - A.sR) * A.dir; QCF.ub = (CF.fb.u - B.sR) * B.dir;
+          QCF.fax = CF.fa.x; QCF.fay = CF.fa.y; QCF.fbx = CF.fb.x; QCF.fby = CF.fb.y;
+          const wv = wOf(QCF);
+          wMemo.set(CF.rhoCur, wv);
+          return wv;
+        });
+        if (rr >= 0) {
+          r = rr;
+          QPB.x = CF.qx; QPB.y = CF.qy; QPB.ua = (CF.fa.u - A.sR) * A.dir; QPB.ub = (CF.fb.u - B.sR) * B.dir;
+          QPB.fax = CF.fa.x; QPB.fay = CF.fa.y; QPB.fbx = CF.fb.x; QPB.fby = CF.fb.y;
+          QPB.nax = (CF.qx - CF.fa.x) / (CF.fa.d || 1); QPB.nay = (CF.qy - CF.fa.y) / (CF.fa.d || 1);
+          QPB.nbx = (CF.qx - CF.fb.x) / (CF.fb.d || 1); QPB.nby = (CF.qy - CF.fb.y) / (CF.fb.d || 1);
+          QPB.sa = CF.fa.s; QPB.sb = CF.fb.s;
+          qCF = QPB;
+        }
+      }
+      if (!qCF && !cfZero) {
+        let sPrev = wOf(V);
+        for (let k = 1; k <= NODES && sPrev > 0; k++) {
+          const du = dN / t2;
+          trackInto(QPB, J, A, B, Math.min(A.L, pua + du), Math.min(B.L, pub + du), h + k * dN, TRACK, 4 * du, hA, hB, snH, csH); const pk = QPB;
+          const sK = Math.min(sPrev, wOf(pk)); const seg = 0.5 * (sPrev + sK) * dN;
+          if (sK < sPrev && sK === 0) { r += seg; break; }
+          r += seg; sPrev = sK; pua = pk.ua; pub = pk.ub;
+        }
       }
       if (!(r > 1e-9)) { // K1407 23A: form B keeps a null corner (r = 0): its tangent terms ink a disc at V.
         // A through pair's null is not kept: the reference's fillet pick requires r > 0, so a null through
@@ -710,7 +741,9 @@ export function solveGfCorners(P: GfPrefix, jLo: number, jHi: number): GfCorner[
         continue;
       }
       if (thru && r < 0.16 * h) continue; // K1407 23A: a through radius this small is the integral's noise (form B's reads 0-0.05h there); its pick passes, so the eye stays open
-      trackInto(QQB, J, A, B, pua, pub, h + r, TRACK + 1, 4 * dN / t2, hA, hB, snH, csH); const q = QQB;
+      let q: Q;
+      if (qCF) q = qCF;
+      else { trackInto(QQB, J, A, B, pua, pub, h + r, TRACK + 1, 4 * dN / t2, hA, hB, snH, csH); q = QQB; }
       const rV = Math.hypot(V.x - q.x, V.y - q.y);
       const rmax = rV + (2 * aa) / Math.max(0.1, Math.sin(th / 2));
       K.push({ thru, rv: rV, cx: q.x, cy: q.y, r, rmax, eax: -q.nax, eay: -q.nay, ebx: -q.nbx, eby: -q.nby, g, j: jBase + ji, a: A.ei, b: B.ei, theta: th, ca: A.c, cb: B.c, sa: q.sa, sb: q.sb });

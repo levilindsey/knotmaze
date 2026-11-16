@@ -153,3 +153,18 @@ the s18 drags (take the digest master has after 23A and 23C). 2. The worker's ms
 drags (`k1362c1_bench.ps1`, perf lock) p50 at least 25% under master's; if no variant reaches it, remove the pool
 and its code, and show the removal costs nothing. 3. `test/render/gf_build.test.ts` covers the new path.
 4. `npm test` green.
+
+## Handoff 23C (written by Muse Run C, the 23C session)
+
+Done. **Run C (23C) session id `01a1e1ee-7313-7322-9f36-fbe154749da0`.**
+
+Full record: `.claude/probes/K1407/out/23C/handoff.md`. Actual numbers: census `base23c`
+(CPU mirror, ppu 160) on master `55ddf68c` read 239 total (stray 100, hard 2, paper 47,
+broken 90); after this run's commit read 61 total (stray 23, hard 0, paper 14, broken 24),
+every scene and category down or zero. The fix is exact V (solveEq on each arm's true
+feet) plus form B's closed-form growth (`corner_cf`) with gf's w read at the growth's
+q/feet, in `src/render/gpu_field/tables.ts`. Sheet:
+`.claude/probes/K1407/out/23C/sheet.png` (8 spots, master gf | new gf | form B | outline).
+Digest `382ae026` -> `c1be0e90`. `npm test` green (exit 0, 3065 passed). Speed gate not
+met: same-session bench tables p50 def 14.5 -> 17.8-18.5, fat 10.4 -> 16.9-17.0 ms
+(K1413). Remaining stray (23) is filed as K1412.
