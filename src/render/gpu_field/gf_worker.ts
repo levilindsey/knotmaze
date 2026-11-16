@@ -7,13 +7,16 @@
 // worker is untouched: this is a second module worker, rp=gf only.
 //
 // K1362 t2: this worker is the pool coordinator. It builds the lean scene,
-// then splits buildTables across a small pool of slice workers
-// (gf_slice_worker.ts): raw chain vertices by chain, corners by junction
-// range, chunk bins by chunk range, merged in order (tables.ts) — every
-// frame's tables bit-identical to a cold buildTables of the same scene.
-// Until the pool is ready, if it fails, for small scenes, or with
-// `pool: false` in the request, the same build runs whole here (gfBuild's
-// path: buildFieldSceneLean + buildTables), so the reply is unchanged.
+// computes the raw vertices and the prefix here, then splits the rest of
+// buildTables across a small pool of slice workers (gf_slice_worker.ts):
+// arms and corners by junction range, chunk bins by chunk range, merged
+// in order (tables.ts) — every frame's tables bit-identical to a cold
+// buildTables of the same scene. Until the pool is ready, if it fails, for
+// small scenes, or with `pool: false` in the request, the same build
+// runs whole here (gfBuild's path: buildFieldSceneLean + buildTables), so
+// the reply is unchanged. K1374 (23F): the pool also takes junction
+// builds: since 23C the corner solve (exact V + closed-form growth) is
+// the build's dominant cost and slices win it (see run()).
 //
 // K1369 s4: THE SNAPSHOT CHANNEL. `{ chan: "open" }` hands this worker a
 // MessagePort whose other end the PHYSICS worker holds (worker_host.ts
@@ -41,6 +44,7 @@ import {
   buildTables,
   gfArmTable,
   gfChunkMeta,
+  gfRawChain,
   mergeGfChunkBins,
   mergeGfRaw,
   partitionWeighted,
@@ -148,25 +152,16 @@ function ask<T>(slice: number, msg: unknown, transfer?: Transferable[]): Promise
   });
 }
 
-interface RawReply { blocks: { ci: number; vx: Float64Array; vy: Float64Array; vs: Float64Array }[] }
 interface SolveReply { K: import("./tables").GfCorner[]; arms: import("./tables").GfArm[]; cellChN: Int32Array; cellChList: Int32Array }
 
 /** The pooled build: same tables as buildTables(scene), split across the
  * ready slices. Throws on any pool failure; the caller falls back. */
 async function pooledBuild(id: number, scene: FieldScene, aa: number, n: number): Promise<{ T: GfTables; cornersMs: number }> {
-  const chainRanges = partitionWeighted(scene.chains.map((c) => c.pts.length >> 1), n);
-  const rawReplies = await Promise.all(chainRanges.map((range, s) => {
-    const chains = [];
-    const transfer: Transferable[] = [];
-    for (let ci = range[0]; ci < range[1]; ci++) {
-      const pts = Float64Array.from(scene.chains[ci].pts);
-      chains.push({ ci, pts, closed: scene.chains[ci].closed });
-      transfer.push(pts.buffer);
-    }
-    return ask<RawReply>(s, { kind: "raw", id, chains }, transfer);
-  }));
+  // Raw vertices on the coordinator: gfRawChain over 24k points is ~1 ms,
+  // cheaper than a pool round trip that copies every chain's points to a
+  // slice and back (t2's two-phase split paid that latency per build).
   const blocks: { vx: Float64Array; vy: Float64Array; vs: Float64Array }[] = new Array(scene.chains.length);
-  for (const r of rawReplies) for (const b of r.blocks) blocks[b.ci] = b;
+  for (let ci = 0; ci < scene.chains.length; ci++) blocks[ci] = gfRawChain(scene.chains[ci].pts, scene.chains[ci].closed);
   const P = buildGfPrefix(scene, { aa }, mergeGfRaw(scene, blocks), true);
   const meta = gfChunkMeta(P);
   const jRanges = partitionWeighted(scene.junctions.map((J) => J.arms.length), n);
@@ -397,13 +392,15 @@ async function run(req: Req): Promise<void> {
     const exportMs = now() - te0;
     let totalPts = 0;
     for (const c of scene.chains) totalPts += c.pts.length >> 1;
-    // Measured (k1362t2 bench): the pool wins where the build is vertex/bin
-    // bound (no junctions: fat, 14.5 -> 10.8) and loses where corners
-    // dominate (def neutral, muse_hash slower), because the coordinator's
-    // remaining serial floor exceeds the corner slice saving there. Pool
-    // only junction-free builds; the rest keep the single build, so no
-    // corner-bound scene gets slower.
-    if (totalPts < 6000 || scene.junctions.length > 0) {
+    // K1374 (23F): pool every build with >= 6000 scene points, junction
+    // builds included. At t2's bench the corner solve was cheap enough
+    // that the coordinator's serial prefix ate the slice gain on them
+    // (def neutral, muse_hash slower); 23C's exact-V + closed-form
+    // corner solve made corners dominant, and the same bench now reads
+    // def 19.5 -> 11.7, fat 18.9 -> 11.7, muse_hash 12.8 -> 9.5 ms p50
+    // (k1362c1_bench, pool off vs on in one session). Small builds keep
+    // the single build, where the pool's round trip cannot pay.
+    if (totalPts < 6000) {
       const tt0 = now();
       const T = buildTables(scene, { aa });
       reply(req, { id, T, exportMs, tablesMs: now() - tt0, workMs: now() - t0, pool: 0 }, tablesTransfer(T));

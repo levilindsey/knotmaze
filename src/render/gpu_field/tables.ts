@@ -140,8 +140,9 @@ function footNear(T: GfTables | Pick<GfTables, "cV0" | "cNV" | "vx" | "vy" | "vs
 
 // K1362 t2: the table build in poolable phases. buildTables (below) is the
 // cold single-thread build: prefix (vertices, pins, arms), corners, bins.
-// The pool path runs the same code partitioned: raw chain vertices by chain
-// (gfRawChain/mergeGfRaw), corners by contiguous junction ranges
+// The pool path runs the same code partitioned: raw chain vertices on
+// the coordinator (gfRawChain/mergeGfRaw; K1374: a slice round trip for
+// them cost more than they save), arms and corners by contiguous junction ranges
 // (solveGfCorners), chunk bins by contiguous chunk ranges (gfChunkBinPart),
 // merged in order (mergeGfChunkBins, assembleGfTables). Corner solves share
 // no state across corners: the SP/Q scratch and the arm-sample map are fresh
@@ -929,8 +930,7 @@ export function buildTablesPooled(scene: FieldScene, opts: GfOpts, nSlices: numb
   const t0 = now();
   const n = Math.max(1, nSlices);
   const blocks: { vx: Float64Array; vy: Float64Array; vs: Float64Array }[] = new Array(scene.chains.length);
-  for (const [lo, hi] of partitionWeighted(scene.chains.map((c) => c.pts.length >> 1), n))
-    for (let ci = lo; ci < hi; ci++) blocks[ci] = gfRawChain(scene.chains[ci].pts, scene.chains[ci].closed);
+  for (let ci = 0; ci < scene.chains.length; ci++) blocks[ci] = gfRawChain(scene.chains[ci].pts, scene.chains[ci].closed);
   const P = buildGfPrefix(scene, opts, mergeGfRaw(scene, blocks), true);
   const meta = gfChunkMeta(P);
   const tc0 = now();

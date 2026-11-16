@@ -179,7 +179,7 @@ describe("gfBuild (K1362 c1)", () => {
     expect(scene.chains.every((c) => c.z.every((z) => z === 0))).toBe(true);
   });
 
-  // K1362 t2: the pool path (partitioned raw vertices, corner slices,
+  // K1362 t2 / K1374 (23F): the pool path (coordinator raw vertices, arm+corner slices,
   // chunk-bin slices, merged in order) gives the cold build's tables,
   // bit for bit, at every slice count — on the full and the lean scene.
   for (const n of [1, 2, 3, 5]) {
@@ -188,6 +188,9 @@ describe("gfBuild (K1362 c1)", () => {
       const { scene } = buildFieldScene(input);
       scene.look.ctrlArc ??= CTRL_ARC;
       const cold = buildTables(scene, { aa: 0.005 });
+      // K1374: the fixture carries a junction, so this covers the pool on
+      // junction builds (the worker's only remaining gate is scene size).
+      expect(scene.junctions.length).toBeGreaterThan(0);
       expect(cold.nV).toBeGreaterThan(0);
       expect(tablesDiff(buildTablesPooled(scene, { aa: 0.005 }, n), cold)).toEqual([]);
       const leanScene = buildFieldSceneLean(leanOf(fixture()));
