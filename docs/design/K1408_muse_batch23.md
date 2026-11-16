@@ -223,6 +223,51 @@ drags (`k1362c1_bench.ps1`, perf lock) p50 at least 25% under master's; if no va
 and its code, and show the removal costs nothing. 3. `test/render/gf_build.test.ts` covers the new path.
 4. `npm test` green.
 
+### Handoff 23F
+
+Started 2026-11-15 19:46 PT, stopped 20:19 PT. Fix commit 84863c99 (master, pushed; deploy deploy 43802626959 success).
+Ledger K1374 closed with ledger.mjs done --commit 84863c99 (the LEDGER.md move lands with this handoff).
+
+**Mechanism.** The t2 gate pooled only junction-free builds, because the
+coordinator's serial prefix ate the corner-slice gain when corners were
+cheap. 23C's exact-V + closed-form corner solve made corners the dominant
+cost (Node, def drag scene: corners ~9-32 ms of a 15-57 ms cold build), so
+the same slices now win on junction builds. The coordinator's remaining
+serial floor also carried a second pool round trip for raw vertices:
+gfRawChain over ~24k points is ~1 ms on the coordinator, cheaper than
+copying every chain's points to a slice and back.
+
+**Fix.** The pool gate is scene size only (>= 6000 points, as before);
+junction builds pool like the rest. Raw vertices are computed on the
+coordinator (gf_worker.ts pooledBuild, tables.ts buildTablesPooled
+mirrors it in-process); slices take only "solve" work (arms + corners by
+junction range, chunk bins by chunk range, merged in order). The dead
+"raw" slice kind is removed (gf_slice_worker.ts). Cap-4-slices and
+chunk-merge variants were measured and rejected (cap 4: def 12.4 /
+fat 12.6 vs 11.7 / 11.7 at the shipped slice count). Pins stay on the
+coordinator (0.2-1.0 ms in Node; partitioning them cannot pay a round
+trip), as does the chunk-bin merge (~0.6 ms Node).
+
+**Checks** (perf lock held for every bench; own vite server on 5487,
+verified mine; foreign servers on 5481/5483 left alone). Work = the gf
+worker's ms per rebuild (workMs, k1362c1_bench.mjs drag spans; single =
+same code with pool off, one session):
+- def (`b.FMKB4DIQ`): single p50 19.5 -> pooled 11.6 ms (-41%; p95 30.8 -> 15.7)
+- fat (`p9ar6.FMKB4DIQ`): single p50 18.9 -> pooled 12.0 ms (-37%; p95 30.0 -> 16.2)
+- muse_hash (`3.FGH1HtvQeDjm6e4BII`): single p50 12.8 -> pooled 9.5 ms (-26%)
+- Main's share per rebuild did not rise (p50 1.9-2.6 ms, as single's 2.3-2.4).
+- Bit-identical: cold digest and pooled digest both
+  `c1be0e90e689850ce0a9bfe43bcc58684181fa784393a9b5f37779ebfcb40dd0`
+  (5445 lines, the post-23C master digest; k1362t2_digest: 297 pooled
+  builds at slices 1/3/6, 0 mismatches). Browser VERIFY=1 (worker tables
+  vs the in-thread full reference, every build): def / fat / muse_hash
+  verified with 0 mismatches.
+- Test: gf_build.test.ts pooled cases now assert the fixture carries a
+  junction (the worker's only remaining gate is scene size); `npm test`
+  green: 243 files, 3074 tests.
+
+**Left.** Nothing for K1374. K1407 and K1408 left open for Claude.
+
 ## Handoff 23C (written by Muse Run C, the 23C session)
 
 Done. **Run C (23C) session id `01a1e1ee-7313-7322-9f36-fbe154749da0`.**

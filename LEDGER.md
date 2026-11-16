@@ -886,10 +886,6 @@ Every other item below waits on the trigger it names.
   doing)
 - **K1360** · Measure the outline worker pool on the Pixel at K = 2 and 3 (K1247 s35 projects 15-22 Hz from
   the pool alone); rides the next phone round (K156), after K1247 s36 lands
-- **K1374** · rp=gf build worker: make the slice pool (gf_slice_worker.ts, Muse t2) win on junction builds, or
-  remove it: partition pins by chain and the chunk merge by cell range, or transfer the scene to the slices as
-  typed arrays, so the coordinator's 6-8 ms serial prefix goes. Today it engages only on junction-free builds
-  (docs/design/K1362_t2_muse_build.md addendum).
 - **K1375** · rp=gf: move `buildKeys` (gf_keys.ts, 0.6 ms p50 on the Pixel main at upload, 0.2 desktop) out of
   gf_pass.ts upload into the gf build worker (gf_build.ts / gf_worker.ts), its arrays transferred with the
   tables (K1362 s6 handoff, next 4).
@@ -2455,6 +2451,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1374** · rp=gf build worker: make the slice pool (gf_slice_worker.ts, Muse t2) win on junction builds, or remove it: partition pins by chain and the chunk merge by cell range, or transfer the scene to the slices as typed arrays, so the coordinator's 6-8 ms serial prefix goes. Done in 84863c99 (2026-11-15).
 - **K1398** · rp=gf crossing gaps clear to the background where today's paint a flat dark casing colour: in the border look gf's outline reads redder and fainter (today 11k-21k pixels darker than the background, gf about 1.4k), and in fill today shades the under-thread softly where gf draws a crisp line (K1389 s1 handoff, .claude/probes/K1389/out/z_pair.png). Done in 2830d103 (2026-11-15).
 - **K1405** · rp=gf in play draws no gold traveled path (today's look does), also on s1 (`.claude/probes/K1387/out/play7_gf_head.png` against `play7_today_head.png`). Done in 58f8a9ca (2026-11-15).
 - **K1404** · rp=gf's default intro draws the reveal sparks but no ribbons, while today's look draws them (at rest both show the fog, so the empty end is parity); K1383's 11-14 sheet drew ribbons through it, so a later stage regressed it, also on s1 119249c0 (`.claude/probes/K1387/out/s2h_def_sheet.png`, `k1387_sheet.mjs`). Done in f1e70048 (2026-11-15).
