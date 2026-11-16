@@ -29,6 +29,15 @@ export function gfDepth(o: { depth?: number; gesture?: boolean }, grabbed: boole
   return GF_DEPTH_IDLE;
 }
 
+/** K1404: whether the look (K1389) draws this frame: never while the appearance reveal runs.
+ * The look border stroke is sub-pixel at fabric scales and its interior is clear, so under the
+ * look the reveal drew sparks but no ribbons (the K1383 sheet at 03102199 is the reference);
+ * the reveal form draws instead, and the look resumes the frame the reveal ends. An A/Bs
+ * look: false wins at all times. */
+export function gfLookDraws(lookOpt: boolean | undefined, revealing: boolean): boolean {
+  return lookOpt !== false && !revealing;
+}
+
 export interface GfBuilt {
   T: GfTables;
   exportMs: number;

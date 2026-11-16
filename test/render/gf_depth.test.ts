@@ -5,7 +5,7 @@
 // keeps stage 3's one depth.
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { GF_DEPTH_DRAG, GF_DEPTH_IDLE, gfDepth } from "../../src/render/gpu_field/gf_build";
+import { GF_DEPTH_DRAG, GF_DEPTH_IDLE, gfDepth, gfLookDraws } from "../../src/render/gpu_field/gf_build";
 
 describe("K1369 s4 depth by gesture", () => {
   it("is 2 at rest, 1 during a drag", () => {
@@ -30,5 +30,23 @@ describe("K1369 s4 depth by gesture", () => {
     expect(src).toContain("gfDepth(opts(), (ctx.scene.ps?.grabbedParticle ?? -1) >= 0)");
     // busy() and rebuild() both read depth(), never a constant.
     expect(src.match(/flights\.size (<|>=) (d|depth\(\))/g)?.length).toBe(2);
+  });
+});
+
+describe("K1404: the look never draws over the appearance reveal", () => {
+  it("suppresses the look while revealing, and only then", () => {
+    expect(gfLookDraws(undefined, true)).toBe(false);
+    expect(gfLookDraws(true, true)).toBe(false);
+    expect(gfLookDraws(undefined, false)).toBe(true);
+    expect(gfLookDraws(true, false)).toBe(true);
+  });
+  it("look: false wins at all times", () => {
+    expect(gfLookDraws(false, false)).toBe(false);
+    expect(gfLookDraws(false, true)).toBe(false);
+  });
+  it("gf_app gates setLook on it, so a revealing frame draws the K1383 reveal form", () => {
+    const src = readFileSync(new URL("../../src/render/gpu_field/gf_app.ts", import.meta.url), "utf8");
+    expect(src).toContain("if (!gfLookDraws(o.look, rvDrawn))");
+    expect(src).toContain("if (pass.looking) { pass.setLook(null); dirty = true; }");
   });
 });

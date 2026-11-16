@@ -27,7 +27,7 @@ import { buildFieldScene, type SceneExportInput } from "../field/scene_export";
 import { gatherLeanSkeleton, gatherSceneInput, gatherSceneInputLean, type SceneExportCtx } from "../field/scene_export_hook";
 import { splineBend, type SplineSamples } from "../../geometry/spline_generator";
 import { buildTables, type GfTables } from "./tables";
-import { CTRL_ARC, gfBuild, gfDepth, tablesDiff } from "./gf_build";
+import { CTRL_ARC, gfBuild, gfDepth, gfLookDraws, tablesDiff } from "./gf_build";
 import { GfRevealTable, gfRevealing } from "./gf_reveal";
 import { GfLookGate, GfLookTable, lookGap, lookKey } from "./gf_look";
 import { GfComposite, GfPass, GfTarget, type GfMap } from "./gf_pass";
@@ -689,9 +689,17 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
         if (!lkP) lkShow(lkSnap());
         const gap = lookGap(r);
         if (gap !== lkGap) { lkGap = gap; dirty = true; }
-        const up = pass.lkPMs;
-        pass.setLook(lkTab, gap, lkP, lkPVer);
-        if (pass.lkPMs !== up) stats.lkUpMs.push(pass.lkPMs);
+        // K1404: while the appearance reveal runs, the pass draws its K1383 form (the plain reveal
+        // programs and composite), not the look: the look border stroke is sub-pixel at fabric
+        // scales and its interior is clear, so the ribbons vanish (the sheet at 03102199 is the
+        // reference). The look resumes the frame the reveal ends (rvDrawn clears above first).
+        if (!gfLookDraws(o.look, rvDrawn)) {
+          if (pass.looking) { pass.setLook(null); dirty = true; }
+        } else {
+          const up = pass.lkPMs;
+          pass.setLook(lkTab, gap, lkP, lkPVer);
+          if (pass.lkPMs !== up) stats.lkUpMs.push(pass.lkPMs);
+        }
       } else if (lkGap >= 0) {
         pass.setLook(null);
         lkGap = -1;
