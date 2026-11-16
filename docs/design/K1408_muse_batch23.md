@@ -177,7 +177,7 @@ under-thread shading's profile across a gap within 15% of today's at its midpoin
 
 ### Handoff 23E
 
-Started 2026-11-15 18:59 PT, stopped 19:50 PT. Fix commit 2830d103 (master, pushed; deploy watched).
+Started 2026-11-15 18:59 PT, stopped 19:45 PT. Fix commit 2830d103 (master, pushed; deploy watched).
 Ledger K1398 done in that commit; residual K1415 filed.
 
 **Mechanism.** gf's look cut the under thread crisply at h + gap (one-pixel ramps in lkGap) and cleared
