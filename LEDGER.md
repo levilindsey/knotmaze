@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1415.
+Next free ID: K1416.
 
 ## Waiting on Levi
 
@@ -2050,10 +2050,6 @@ Every other item below waits on the trigger it names.
 - **K1397** · rp=gf reveal approximations: the tables lag the masks by the build depth; pieceD unscaled in the
   ko forms; tip glow from the live mirror; a corner shows only once both arms are full; edge AA scales with
   the mask; the Pixel runner (k1383_motion.mjs) stops at sim sleep (K1383 s1 handoff)
-- **K1398** · rp=gf crossing gaps clear to the background where today's paint a flat dark casing colour: in
-  the border look gf's outline reads redder and fainter (today 11k-21k pixels darker than the background, gf
-  about 1.4k), and in fill today shades the under-thread softly where gf draws a crisp line (K1389 s1 handoff,
-  .claude/probes/K1389/out/z_pair.png)
 - **K1400** · rp=gf: a form B fillet joining arms of different sections takes the nearer arm's colour; today
   has no counterpart; and at muse_hash the both look outlines every thread with smudges at crossings, where
   today outlines merged junction silhouettes (K1389 s1 handoff)
@@ -2084,6 +2080,10 @@ Every other item below waits on the trigger it names.
   cut CF per-corner cost (arm-piece reuse across a junction's corners, or a cheaper w) and re-bench.
 - **K1414** · rp=gf look bakes only the traveled spans+caps gold (K1405, 58f8a9ca): pulse crests, the hover
   rim, the telegraph and the K81 junction route bands (beyond the caps' discs) still draw only in today's look
+- **K1415** · K1398 residual: gf's crossing-gap fade uses the full fadeLength (sin=1) and only on
+  under-labelled pixels; today's fadeP is fade*max(sin,0.2) by per-side scale, so at shallow crossings gf's
+  ramp width can differ (measured one shallow edge: a=0.5 position within 0.34 px, amount at today's midpoint
+  pixel 0.74 vs 0.50). Angle/side-aware fade in lkGap (gf_look.ts) is the follow-up.
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2455,6 +2455,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1398** · rp=gf crossing gaps clear to the background where today's paint a flat dark casing colour: in the border look gf's outline reads redder and fainter (today 11k-21k pixels darker than the background, gf about 1.4k), and in fill today shades the under-thread softly where gf draws a crisp line (K1389 s1 handoff, .claude/probes/K1389/out/z_pair.png). Done in 2830d103 (2026-11-15).
 - **K1405** · rp=gf in play draws no gold traveled path (today's look does), also on s1 (`.claude/probes/K1387/out/play7_gf_head.png` against `play7_today_head.png`). Done in 58f8a9ca (2026-11-15).
 - **K1404** · rp=gf's default intro draws the reveal sparks but no ribbons, while today's look draws them (at rest both show the fog, so the empty end is parity); K1383's 11-14 sheet drew ribbons through it, so a later stage regressed it, also on s1 119249c0 (`.claude/probes/K1387/out/s2h_def_sheet.png`, `k1387_sheet.mjs`). Done in f1e70048 (2026-11-15).
 - **K1399** · rp=gf's colour table is static (rebuilt only when colour inputs change): 27,081 colours (41% of the cap), no lag, look 0.19-0.21 ms/frame in the drag (K1389 s2). Done in 38b73e87 (2026-11-15).

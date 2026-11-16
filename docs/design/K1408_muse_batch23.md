@@ -175,6 +175,41 @@ border look gf's outline reads redder and fainter (pixels darker than the backgr
 under-thread shading's profile across a gap within 15% of today's at its midpoint (measure it; say how). 3. Crops,
 4x, today | master gf | new gf. 4. `npm test` green.
 
+### Handoff 23E
+
+Started 2026-11-15 18:59 PT, stopped 19:50 PT. Fix commit 2830d103 (master, pushed; deploy watched).
+Ledger K1398 done in that commit; residual K1415 filed.
+
+**Mechanism.** gf's look cut the under thread crisply at h + gap (one-pixel ramps in lkGap) and cleared
+the cut to the background. Today hides the under within h + margin, then fades it in over fadeLength
+(gap_mask.ts: keep over fadeP), and in the border look the gap reads as a flat dark casing band.
+
+**Fix.** lkGap (gf_look.ts) now returns (cut, casing): the cut ramps over today's fade (new uLkF =
+renderer.fadeLength, via gf_app lookFade -> GfPass.setLook), and the casing band (h..h + gap, pixel
+ramp at its outer edge) rides o0.z to LOOK_COMP_FS, which in the border look paints it under the
+surviving ink in the flat dark casing colour (0.09, 0.085, 0.08, today's stroke constant). Fill and
+both keep clearing the gap (today's fill gap measures as background), with the soft fade on the under.
+Tables untouched, so the K1362 digest cannot see it.
+
+**Checks** (perf lock held; own server on 5486, verified mine; sheet k1389_sheet.mjs, b.FMKB4DIQ,
+SIMT=20, phw=0; background = mode colour (21,27,40), lum 26.7).
+- Border, darker-than-background (520x520): lum < mode-4: today 2393, master gf 342, new gf 2546
+  (1.06x today, range 1914-2872). lum < mode: today 65632, master 49740, new 53401 (0.81x).
+- Fill profile (scanline along the under thread through a crossing, under amount = projection of
+  (pixel - bg) on (under - bg), bg (24,28,42)): at the gap midpoint the amount is 0 in today, master
+  and new. The a=0.5 ramp positions: dpr1 fall today 72.10 vs new 72.07, rise 80.01 vs 79.67 (0.34 px
+  on a 7.9 px gap, 4%); dpr2 re-emergence edge (y=340): today midpoint x=392.0, new 391.7. Whole-frame
+  fill diff to today (>24, dpr2): master 46368 px, new 42294 px (-8.8%).
+- Test: K1398 case in test/render/gf_look.test.ts (fade formula, casing channel, composite casing,
+  lookGap/lookFade values); npm test green: 243 files, 3074 tests.
+
+**Crops for review:** .claude/probes/K1398/out/{crop_border_150.png, crop_border_270.png,
+crop_fill_150.png, crop_fill_270.png} (4x, today | master gf | new gf, untracked).
+
+**Left.** K1415 (angle/side-aware fade: gf uses the full fadeLength where today's fadeP scales by
+sin and per-side clearance; at one shallow measured edge the amount at today's midpoint pixel is
+0.74 vs today's 0.50, position within 0.34 px). K1407 and K1408 left open for Claude.
+
 ## Run F (23F): K1374, the slice pool on junction builds
 
 The slice pool (`gf_slice_worker.ts`, `gf_split.ts`, Muse t2) engages only on junction-free builds: the
