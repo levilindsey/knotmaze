@@ -130,6 +130,40 @@ Carry the traveled path's paint (`paintTraveled`, `trail_paint.ts`, the memory t
 runs (same-state recipe: `probes.md`, K83 and K550). 2. Before/after crops. 3. Nothing else in the frame moves
 (the same A/B with no walk: 0 px beyond the K83 control). 4. `npm test` green.
 
+### Handoff 23D
+
+Started 2026-11-15 18:28 PT, stopped 18:57 PT. Session `01a1e22f-2c73-7fa3-bbf0-98e3e7d73792`. Fix commit
+58f8a9ca (master, pushed; deploy 43794271828 success). Ledger K1405 done in that commit.
+
+**Mechanism.** gf's look (K1389) had section colours only: the fabric's paint declaration
+(`RibbonRenderer.setPaint` spans + caps) is evaluated per pixel by today's shader (`kPaintAt`) and
+never reached gf, so walked gold and the trail fade drew nothing.
+
+**Fix.** `GfPaintTable` (gf_look.ts) bakes the declaration per kept sample in the look positions'
+layout, from kPaintAt's SPAN/CAP rules at zero pixel ramp (spans assign in declaration order; caps
+never darken, in goldUOf's order; trail mode arrives as the same fading spans). The look form mixes
+the label's colour toward `uKGold` by the baked amount (new `uPt` texture, unit 8; `gf_pass.ts`).
+`gf_app.ts` snapshots the bake with each tables build (with the look positions, at gather/install)
+and re-bakes when `paintKey` moves, so gold lands the frame a walk declares it, even at rest.
+Pulses, the hover rim, the telegraph and the K81 route bands beyond the caps are not baked
+(they animate off uniforms in today's shader): filed as K1414.
+
+**Checks** (perf lock held; own server on 5485, verified mine; the foreign K1362 servers on
+5481/5483 left alone). Gold = warm-yellow mask (`.claude/probes/K1405/gold_count.mjs`).
+- Baseline (master): seed 7, walk 0,220,203,173, head mnode_122: today 2485 gold px, gf 0.
+- Fixed, same walk/state: gf 2698 (ratio 1.086, within 15%), mask IoU 0.913 (same runs);
+  gf-vs-gf2 control 0 px.
+- Trail mode (`pv=trail`, 6 moves, head mnode_27): today 1312, gf 1407 (ratio 1.072, IoU 0.930).
+- No walk: gold 0 in both; fixed gf vs master gf (stash A/B) 0 px, max 0 - nothing else moves.
+- Tables untouched (`tables.ts` unchanged; the paint texture rides beside the look table, as the
+  colour table does, so the K1362 digest cannot see it). `npm test` green: 243 files, 3073 tests
+  (new `test/render/gf_paint.test.ts`, 8 tests; one gf_look assertion updated to the new output line).
+
+**Crops for review:** `.claude/probes/K1405/out/{before_gf_head.png, after_gf_head.png, today_head.png,
+before_today_head.png, trail_gf_head.png, trail_today_head.png}` (480x360 head crops, untracked).
+
+**Left.** K1414 (pulses/rim/telegraph/route bands under gf). K1407 and K1408 left open for Claude.
+
 ## Run E (23E): K1398, rp=gf crossing gaps clear to the background
 
 Where today's look paints a crossing's gap in a flat dark casing colour, gf clears it to the background: in the

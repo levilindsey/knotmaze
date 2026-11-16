@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1414.
+Next free ID: K1415.
 
 ## Waiting on Levi
 
@@ -2062,8 +2062,6 @@ Every other item below waits on the trigger it names.
 - **K1402** · rp=gf look (K1389 s2): in channel mode the colour positions are computed on main at install; the
   colour target is 8-bit (1/255 steps); a layout change between gather and install indexes the previous
   build's positions for one frame (not seen) (K1389_s2_colour_table.md handoff)
-- **K1405** · rp=gf in play draws no gold traveled path (today's look does), also on s1
-  (`.claude/probes/K1387/out/play7_gf_head.png` against `play7_today_head.png`)
 - **K1406** · Lean under xp=threads and fi=fuse: applyExploreGaps flushes every chain, so lean pays s1's full
   under-march cost there (K1387 s2 handoff, `docs/design/K1387_s2_lazy_march.md`)
 - **K1411** · GPU census (k1362s2_census.ps1) probe pages die with 'Execution context was destroyed
@@ -2084,6 +2082,8 @@ Every other item below waits on the trigger it names.
   16.3/12.4 -> 19.5-20.2/18.7-18.8), over Done 4's +10%. Node phase medians (def census scene): corners 14.4
   master -> 18.0 new (solveV 3 + CF grow 7 ms warm; w memo + w(V)=0 skip already in, digest unchanged). Next:
   cut CF per-corner cost (arm-piece reuse across a junction's corners, or a cheaper w) and re-bench.
+- **K1414** · rp=gf look bakes only the traveled spans+caps gold (K1405, 58f8a9ca): pulse crests, the hover
+  rim, the telegraph and the K81 junction route bands (beyond the caps' discs) still draw only in today's look
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2455,6 +2455,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1405** · rp=gf in play draws no gold traveled path (today's look does), also on s1 (`.claude/probes/K1387/out/play7_gf_head.png` against `play7_today_head.png`). Done in 58f8a9ca (2026-11-15).
 - **K1404** · rp=gf's default intro draws the reveal sparks but no ribbons, while today's look draws them (at rest both show the fog, so the empty end is parity); K1383's 11-14 sheet drew ribbons through it, so a later stage regressed it, also on s1 119249c0 (`.claude/probes/K1387/out/s2h_def_sheet.png`, `k1387_sheet.mjs`). Done in f1e70048 (2026-11-15).
 - **K1399** · rp=gf's colour table is static (rebuilt only when colour inputs change): 27,081 colours (41% of the cap), no lag, look 0.19-0.21 ms/frame in the drag (K1389 s2). Done in 38b73e87 (2026-11-15).
 - **K1388** · the site tester refreshes lean first (pluckSiteTester), footprintsWrong 0 in k1387_exact (K1387 s1). Done in 119249c0 (2026-11-15).
