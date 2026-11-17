@@ -1,0 +1,1006 @@
+{
+ "when": "2026-11-16T22:10:56.977Z",
+ "host": "desktop 1600x900@2 d3d11",
+ "runs": [
+  {
+   "url": "http://localhost:5503/?p9ar6.FMKB4DIQ&am=instant&snd=none&rp=gf",
+   "errors": [],
+   "gfOpts": null,
+   "restWaitMs": 9805,
+   "stamp": "P4 v0.4.0 0947d714 2026-11-16 21:41 | sim 5.0s / wall 84.0s | lag 4.7s | asleep",
+   "loadC1": {
+    "worker": "ready",
+    "workerBuilds": 437,
+    "threadBuilds": 1,
+    "stale": 0,
+    "verified": 0,
+    "mismatch": [],
+    "nMismatch": 0,
+    "rebuilds": 435,
+    "fallback": ""
+   },
+   "rest": {
+    "frameMs": {
+     "n": 280,
+     "p50": 1.9,
+     "p95": 2.1,
+     "max": 2.5
+    },
+    "intervalMs": {
+     "n": 278,
+     "p50": 17.9,
+     "p95": 18.2,
+     "max": 18.6
+    },
+    "phys": {
+     "kind": "worker",
+     "stepMs": 0,
+     "substeps": 0,
+     "workerFrames": 0,
+     "msPerWorkerFrame": null,
+     "msPerSec": 0,
+     "simPerWall": 0,
+     "lagS": 4.658733333333239,
+     "asleep": true
+    },
+    "gf": {
+     "fallback": "",
+     "timed": true,
+     "disjoint": 0,
+     "rebuilds": 435,
+     "passes": 461,
+     "exportMs": null,
+     "tablesMs": null,
+     "packMs": null,
+     "uploadMs": null,
+     "cpuPassMs": null,
+     "px": null,
+     "gatherMs": null,
+     "mainMs": null,
+     "workMs": null,
+     "latencyMs": null,
+     "verifyMs": null,
+     "buildTotalMs": null,
+     "mainPerRebuild": null,
+     "mainSum": 0,
+     "frames": 280,
+     "mainPerFrame": 0,
+     "c1": {
+      "worker": "ready",
+      "workerBuilds": 437,
+      "threadBuilds": 1,
+      "stale": 0,
+      "verified": 0,
+      "mismatch": [],
+      "nMismatch": 0
+     },
+     "p0": 461,
+     "p1": 461,
+     "gq0": 461,
+     "gpu": {
+      "passes": 0,
+      "arrived": 0,
+      "raw": null,
+      "empty": null,
+      "net": null,
+      "disjoint": 0
+     }
+    }
+   },
+   "drag": {
+    "frameMs": {
+     "n": 234,
+     "p50": 13.7,
+     "p95": 14.3,
+     "max": 15.4
+    },
+    "intervalMs": {
+     "n": 232,
+     "p50": 18.6,
+     "p95": 30.1,
+     "max": 46.3
+    },
+    "phys": {
+     "kind": "worker",
+     "stepMs": 4878.9,
+     "substeps": 328,
+     "workerFrames": 231,
+     "msPerWorkerFrame": 21.121,
+     "msPerSec": 974.57,
+     "simPerWall": 0.546,
+     "lagS": 7.123299999999932,
+     "asleep": false
+    },
+    "gf": {
+     "fallback": "",
+     "timed": true,
+     "disjoint": 0,
+     "rebuilds": 565,
+     "passes": 682,
+     "exportMs": {
+      "n": 114,
+      "p50": 2.3,
+      "p95": 2.9,
+      "max": 4.4
+     },
+     "tablesMs": {
+      "n": 114,
+      "p50": 16.6,
+      "p95": 23.3,
+      "max": 28.5
+     },
+     "packMs": {
+      "n": 114,
+      "p50": 1.1,
+      "p95": 1.4,
+      "max": 1.4
+     },
+     "uploadMs": {
+      "n": 114,
+      "p50": 0.2,
+      "p95": 0.3,
+      "max": 0.3
+     },
+     "cpuPassMs": {
+      "n": 191,
+      "p50": 0.1,
+      "p95": 0.2,
+      "max": 2.7
+     },
+     "px": {
+      "n": 191,
+      "p50": 2775520,
+      "p95": 2777192,
+      "max": 2777192
+     },
+     "gatherMs": {
+      "n": 114,
+      "p50": 1.1,
+      "p95": 1.4,
+      "max": 5
+     },
+     "mainMs": {
+      "n": 114,
+      "p50": 2.4,
+      "p95": 2.8,
+      "max": 6.5
+     },
+     "workMs": {
+      "n": 114,
+      "p50": 19,
+      "p95": 25.6,
+      "max": 30.6
+     },
+     "latencyMs": {
+      "n": 114,
+      "p50": 34.7,
+      "p95": 39.2,
+      "max": 61.3
+     },
+     "verifyMs": null,
+     "buildTotalMs": {
+      "n": 114,
+      "p50": 20.4,
+      "p95": 27.4,
+      "max": null
+     },
+     "mainPerRebuild": {
+      "n": 114,
+      "p50": 2.4,
+      "p95": 2.8,
+      "max": 6.5
+     },
+     "mainSum": 269.4,
+     "frames": 234,
+     "mainPerFrame": 1.151,
+     "c1": {
+      "worker": "ready",
+      "workerBuilds": 567,
+      "threadBuilds": 1,
+      "stale": 0,
+      "verified": 0,
+      "mismatch": [],
+      "nMismatch": 0
+     },
+     "p0": 491,
+     "p1": 682,
+     "gq0": 489,
+     "counts": {
+      "px": 2757128,
+      "segMean": 18.509446423960004,
+      "segP95": 40,
+      "kMean": 0.4646070113538436,
+      "kP95": 2,
+      "livePx": 2096986,
+      "liveMean": 24.336315550032285,
+      "liveP95": 40
+     },
+     "gpu": {
+      "passes": 191,
+      "arrived": 191,
+      "raw": {
+       "n": 191,
+       "p50": 10.759,
+       "p95": 10.901,
+       "max": 11.821
+      },
+      "empty": {
+       "n": 191,
+       "p50": 0,
+       "p95": 0.001,
+       "max": 0.001
+      },
+      "net": {
+       "n": 191,
+       "p50": 10.758,
+       "p95": 10.9,
+       "max": 11.82
+      },
+      "disjoint": 0
+     }
+    }
+   },
+   "endC1": {
+    "worker": "ready",
+    "workerBuilds": 634,
+    "threadBuilds": 1,
+    "stale": 0,
+    "verified": 0,
+    "mismatch": [],
+    "nMismatch": 0,
+    "rebuilds": 631,
+    "fallback": ""
+   }
+  },
+  {
+   "url": "http://localhost:5502/?p9ar6.FMKB4DIQ&am=instant&snd=none&rp=gf",
+   "errors": [],
+   "gfOpts": null,
+   "restWaitMs": 50996,
+   "stamp": "P4 v0.4.0 e8011efe 2026-11-16 21:40 | sim 5.0s / wall 51.5s | lag 4.5s | asleep",
+   "loadC1": {
+    "worker": "ready",
+    "workerBuilds": 417,
+    "threadBuilds": 3,
+    "stale": 0,
+    "verified": 0,
+    "mismatch": [],
+    "nMismatch": 0,
+    "rebuilds": 418,
+    "fallback": ""
+   },
+   "rest": {
+    "frameMs": {
+     "n": 281,
+     "p50": 2.1,
+     "p95": 2.4,
+     "max": 2.8
+    },
+    "intervalMs": {
+     "n": 279,
+     "p50": 18,
+     "p95": 18.2,
+     "max": 18.7
+    },
+    "phys": {
+     "kind": "worker",
+     "stepMs": 0,
+     "substeps": 0,
+     "workerFrames": 0,
+     "msPerWorkerFrame": null,
+     "msPerSec": 0,
+     "simPerWall": 0,
+     "lagS": 4.452499999999992,
+     "asleep": true
+    },
+    "gf": {
+     "fallback": "",
+     "timed": true,
+     "disjoint": 0,
+     "rebuilds": 418,
+     "passes": 444,
+     "exportMs": null,
+     "tablesMs": null,
+     "packMs": null,
+     "uploadMs": null,
+     "cpuPassMs": null,
+     "px": null,
+     "gatherMs": null,
+     "mainMs": null,
+     "workMs": null,
+     "latencyMs": null,
+     "verifyMs": null,
+     "buildTotalMs": null,
+     "mainPerRebuild": null,
+     "mainSum": 0,
+     "frames": 281,
+     "mainPerFrame": 0,
+     "c1": {
+      "worker": "ready",
+      "workerBuilds": 417,
+      "threadBuilds": 3,
+      "stale": 0,
+      "verified": 0,
+      "mismatch": [],
+      "nMismatch": 0
+     },
+     "p0": 444,
+     "p1": 444,
+     "gq0": 444,
+     "gpu": {
+      "passes": 0,
+      "arrived": 0,
+      "raw": null,
+      "empty": null,
+      "net": null,
+      "disjoint": 0
+     }
+    }
+   },
+   "drag": {
+    "frameMs": {
+     "n": 227,
+     "p50": 13.7,
+     "p95": 14.4,
+     "max": 15.5
+    },
+    "intervalMs": {
+     "n": 225,
+     "p50": 18.7,
+     "p95": 32.3,
+     "max": 37.3
+    },
+    "phys": {
+     "kind": "worker",
+     "stepMs": 4955.3,
+     "substeps": 327,
+     "workerFrames": 228,
+     "msPerWorkerFrame": 21.734,
+     "msPerSec": 987.76,
+     "simPerWall": 0.543,
+     "lagS": 7.213699999999976,
+     "asleep": false
+    },
+    "gf": {
+     "fallback": "",
+     "timed": true,
+     "disjoint": 0,
+     "rebuilds": 541,
+     "passes": 664,
+     "exportMs": {
+      "n": 110,
+      "p50": 2.4,
+      "p95": 3.1,
+      "max": 4
+     },
+     "tablesMs": {
+      "n": 110,
+      "p50": 16.6,
+      "p95": 24,
+      "max": 29.2
+     },
+     "packMs": {
+      "n": 110,
+      "p50": 2,
+      "p95": 2.2,
+      "max": 2.4
+     },
+     "uploadMs": {
+      "n": 110,
+      "p50": 0.2,
+      "p95": 0.3,
+      "max": 0.8
+     },
+     "cpuPassMs": {
+      "n": 185,
+      "p50": 0.1,
+      "p95": 0.2,
+      "max": 0.3
+     },
+     "px": {
+      "n": 185,
+      "p50": 2775520,
+      "p95": 2777192,
+      "max": 2777192
+     },
+     "gatherMs": {
+      "n": 110,
+      "p50": 1.2,
+      "p95": 1.5,
+      "max": 1.6
+     },
+     "mainMs": {
+      "n": 110,
+      "p50": 3.3,
+      "p95": 3.8,
+      "max": 4
+     },
+     "workMs": {
+      "n": 110,
+      "p50": 19,
+      "p95": 26.5,
+      "max": 31.1
+     },
+     "latencyMs": {
+      "n": 110,
+      "p50": 35.4,
+      "p95": 41.3,
+      "max": 79.7
+     },
+     "verifyMs": null,
+     "buildTotalMs": {
+      "n": 110,
+      "p50": 21.1,
+      "p95": 31,
+      "max": null
+     },
+     "mainPerRebuild": {
+      "n": 110,
+      "p50": 3.3,
+      "p95": 3.8,
+      "max": 4
+     },
+     "mainSum": 356.4,
+     "frames": 227,
+     "mainPerFrame": 1.57,
+     "c1": {
+      "worker": "ready",
+      "workerBuilds": 540,
+      "threadBuilds": 3,
+      "stale": 0,
+      "verified": 0,
+      "mismatch": [],
+      "nMismatch": 0
+     },
+     "p0": 479,
+     "p1": 664,
+     "gq0": 477,
+     "counts": {
+      "px": 2777192,
+      "segMean": 18.375557397543993,
+      "segP95": 40,
+      "kMean": 0.4641396777752492,
+      "kP95": 2,
+      "livePx": 2097083,
+      "liveMean": 24.334969574404067,
+      "liveP95": 40
+     },
+     "gpu": {
+      "passes": 185,
+      "arrived": 185,
+      "raw": {
+       "n": 185,
+       "p50": 10.768,
+       "p95": 10.893,
+       "max": 12.034
+      },
+      "empty": {
+       "n": 185,
+       "p50": 0.001,
+       "p95": 0.001,
+       "max": 0.001
+      },
+      "net": {
+       "n": 185,
+       "p50": 10.767,
+       "p95": 10.892,
+       "max": 12.033
+      },
+      "disjoint": 0
+     }
+    }
+   },
+   "endC1": {
+    "worker": "ready",
+    "workerBuilds": 604,
+    "threadBuilds": 3,
+    "stale": 0,
+    "verified": 0,
+    "mismatch": [],
+    "nMismatch": 0,
+    "rebuilds": 604,
+    "fallback": ""
+   }
+  },
+  {
+   "url": "http://localhost:5503/?b.FMKB4DIQ&am=instant&snd=none&rp=gf",
+   "errors": [],
+   "gfOpts": null,
+   "restWaitMs": 8877,
+   "stamp": "P4 v0.4.0 0947d714 2026-11-16 21:41 | sim 5.0s / wall 9.6s | lag 4.0s | asleep",
+   "loadC1": {
+    "worker": "ready",
+    "workerBuilds": 413,
+    "threadBuilds": 3,
+    "stale": 0,
+    "verified": 0,
+    "mismatch": [],
+    "nMismatch": 0,
+    "rebuilds": 400,
+    "fallback": ""
+   },
+   "rest": {
+    "frameMs": {
+     "n": 280,
+     "p50": 2.3,
+     "p95": 4.4,
+     "max": 6.4
+    },
+    "intervalMs": {
+     "n": 278,
+     "p50": 17.9,
+     "p95": 18.3,
+     "max": 21.1
+    },
+    "phys": {
+     "kind": "worker",
+     "stepMs": 0,
+     "substeps": 0,
+     "workerFrames": 0,
+     "msPerWorkerFrame": null,
+     "msPerSec": 0,
+     "simPerWall": 0,
+     "lagS": 3.987666666666653,
+     "asleep": true
+    },
+    "gf": {
+     "fallback": "",
+     "timed": true,
+     "disjoint": 0,
+     "rebuilds": 400,
+     "passes": 424,
+     "exportMs": null,
+     "tablesMs": null,
+     "packMs": null,
+     "uploadMs": null,
+     "cpuPassMs": null,
+     "px": null,
+     "gatherMs": null,
+     "mainMs": null,
+     "workMs": null,
+     "latencyMs": null,
+     "verifyMs": null,
+     "buildTotalMs": null,
+     "mainPerRebuild": null,
+     "mainSum": 0,
+     "frames": 280,
+     "mainPerFrame": 0,
+     "c1": {
+      "worker": "ready",
+      "workerBuilds": 413,
+      "threadBuilds": 3,
+      "stale": 0,
+      "verified": 0,
+      "mismatch": [],
+      "nMismatch": 0
+     },
+     "p0": 424,
+     "p1": 424,
+     "gq0": 424,
+     "gpu": {
+      "passes": 0,
+      "arrived": 0,
+      "raw": null,
+      "empty": null,
+      "net": null,
+      "disjoint": 0
+     }
+    }
+   },
+   "drag": {
+    "frameMs": {
+     "n": 214,
+     "p50": 13.9,
+     "p95": 18.3,
+     "max": 18.8
+    },
+    "intervalMs": {
+     "n": 212,
+     "p50": 21.5,
+     "p95": 33.7,
+     "max": 38.7
+    },
+    "phys": {
+     "kind": "worker",
+     "stepMs": 4949.4,
+     "substeps": 323,
+     "workerFrames": 214,
+     "msPerWorkerFrame": 23.128,
+     "msPerSec": 987.41,
+     "simPerWall": 0.537,
+     "lagS": 6.557533333333325,
+     "asleep": false
+    },
+    "gf": {
+     "fallback": "",
+     "timed": true,
+     "disjoint": 0,
+     "rebuilds": 544,
+     "passes": 622,
+     "exportMs": {
+      "n": 126,
+      "p50": 2,
+      "p95": 2.6,
+      "max": 4.2
+     },
+     "tablesMs": {
+      "n": 126,
+      "p50": 16,
+      "p95": 20.3,
+      "max": 22.1
+     },
+     "packMs": {
+      "n": 126,
+      "p50": 2,
+      "p95": 2.2,
+      "max": 2.5
+     },
+     "uploadMs": {
+      "n": 126,
+      "p50": 0.2,
+      "p95": 0.3,
+      "max": 0.8
+     },
+     "cpuPassMs": {
+      "n": 171,
+      "p50": 0.1,
+      "p95": 0.2,
+      "max": 0.4
+     },
+     "px": {
+      "n": 171,
+      "p50": 2801747,
+      "p95": 2801747,
+      "max": 2801747
+     },
+     "gatherMs": {
+      "n": 126,
+      "p50": 1,
+      "p95": 1.3,
+      "max": 2.4
+     },
+     "mainMs": {
+      "n": 126,
+      "p50": 3.1,
+      "p95": 3.6,
+      "max": 4.8
+     },
+     "workMs": {
+      "n": 126,
+      "p50": 17.9,
+      "p95": 22.5,
+      "max": 23.8
+     },
+     "latencyMs": {
+      "n": 126,
+      "p50": 23.3,
+      "p95": 38.8,
+      "max": 63.1
+     },
+     "verifyMs": null,
+     "buildTotalMs": {
+      "n": 126,
+      "p50": 20.8,
+      "p95": null,
+      "max": null
+     },
+     "mainPerRebuild": {
+      "n": 126,
+      "p50": 3.1,
+      "p95": 3.6,
+      "max": 4.8
+     },
+     "mainSum": 382.2,
+     "frames": 214,
+     "mainPerFrame": 1.786,
+     "c1": {
+      "worker": "ready",
+      "workerBuilds": 557,
+      "threadBuilds": 3,
+      "stale": 0,
+      "verified": 0,
+      "mismatch": [],
+      "nMismatch": 0
+     },
+     "p0": 451,
+     "p1": 622,
+     "gq0": 450,
+     "counts": {
+      "px": 2801747,
+      "segMean": 18.661406615229712,
+      "segP95": 40,
+      "kMean": 0.5250274203916342,
+      "kP95": 2,
+      "livePx": 2149172,
+      "liveMean": 24.327759713973567,
+      "liveP95": 40
+     },
+     "gpu": {
+      "passes": 171,
+      "arrived": 171,
+      "raw": {
+       "n": 171,
+       "p50": 10.902,
+       "p95": 11.038,
+       "max": 11.212
+      },
+      "empty": {
+       "n": 171,
+       "p50": 0.001,
+       "p95": 0.001,
+       "max": 0.001
+      },
+      "net": {
+       "n": 171,
+       "p50": 10.901,
+       "p95": 11.038,
+       "max": 11.211
+      },
+      "disjoint": 0
+     }
+    }
+   },
+   "endC1": {
+    "worker": "ready",
+    "workerBuilds": 623,
+    "threadBuilds": 3,
+    "stale": 0,
+    "verified": 0,
+    "mismatch": [],
+    "nMismatch": 0,
+    "rebuilds": 610,
+    "fallback": ""
+   }
+  },
+  {
+   "url": "http://localhost:5502/?b.FMKB4DIQ&am=instant&snd=none&rp=gf",
+   "errors": [],
+   "gfOpts": null,
+   "restWaitMs": 8899,
+   "stamp": "P4 v0.4.0 e8011efe 2026-11-16 21:40 | sim 5.0s / wall 10.0s | lag 4.1s | asleep",
+   "loadC1": {
+    "worker": "ready",
+    "workerBuilds": 415,
+    "threadBuilds": 3,
+    "stale": 0,
+    "verified": 0,
+    "mismatch": [],
+    "nMismatch": 0,
+    "rebuilds": 409,
+    "fallback": ""
+   },
+   "rest": {
+    "frameMs": {
+     "n": 285,
+     "p50": 1.5,
+     "p95": 1.9,
+     "max": 3.6
+    },
+    "intervalMs": {
+     "n": 283,
+     "p50": 17.7,
+     "p95": 18.2,
+     "max": 18.6
+    },
+    "phys": {
+     "kind": "worker",
+     "stepMs": 0,
+     "substeps": 0,
+     "workerFrames": 0,
+     "msPerWorkerFrame": null,
+     "msPerSec": 0,
+     "simPerWall": 0,
+     "lagS": 4.1427666666666525,
+     "asleep": true
+    },
+    "gf": {
+     "fallback": "",
+     "timed": true,
+     "disjoint": 0,
+     "rebuilds": 409,
+     "passes": 435,
+     "exportMs": null,
+     "tablesMs": null,
+     "packMs": null,
+     "uploadMs": null,
+     "cpuPassMs": null,
+     "px": null,
+     "gatherMs": null,
+     "mainMs": null,
+     "workMs": null,
+     "latencyMs": null,
+     "verifyMs": null,
+     "buildTotalMs": null,
+     "mainPerRebuild": null,
+     "mainSum": 0,
+     "frames": 285,
+     "mainPerFrame": 0,
+     "c1": {
+      "worker": "ready",
+      "workerBuilds": 415,
+      "threadBuilds": 3,
+      "stale": 0,
+      "verified": 0,
+      "mismatch": [],
+      "nMismatch": 0
+     },
+     "p0": 435,
+     "p1": 435,
+     "gq0": 435,
+     "gpu": {
+      "passes": 0,
+      "arrived": 0,
+      "raw": null,
+      "empty": null,
+      "net": null,
+      "disjoint": 0
+     }
+    }
+   },
+   "drag": {
+    "frameMs": {
+     "n": 234,
+     "p50": 13.2,
+     "p95": 13.7,
+     "max": 13.9
+    },
+    "intervalMs": {
+     "n": 232,
+     "p50": 21.2,
+     "p95": 29.2,
+     "max": 35.5
+    },
+    "phys": {
+     "kind": "worker",
+     "stepMs": 4975.7,
+     "substeps": 365,
+     "workerFrames": 234,
+     "msPerWorkerFrame": 21.264,
+     "msPerSec": 988.58,
+     "simPerWall": 0.604,
+     "lagS": 6.333199999999977,
+     "asleep": false
+    },
+    "gf": {
+     "fallback": "",
+     "timed": true,
+     "disjoint": 0,
+     "rebuilds": 567,
+     "passes": 654,
+     "exportMs": {
+      "n": 140,
+      "p50": 1.8,
+      "p95": 2.3,
+      "max": 2.5
+     },
+     "tablesMs": {
+      "n": 140,
+      "p50": 13.9,
+      "p95": 18.6,
+      "max": 20.6
+     },
+     "packMs": {
+      "n": 141,
+      "p50": 1.8,
+      "p95": 2.1,
+      "max": 4.6
+     },
+     "uploadMs": {
+      "n": 141,
+      "p50": 0.2,
+      "p95": 0.2,
+      "max": 0.3
+     },
+     "cpuPassMs": {
+      "n": 190,
+      "p50": 0.1,
+      "p95": 0.2,
+      "max": 0.2
+     },
+     "px": {
+      "n": 190,
+      "p50": 2801747,
+      "p95": 2801747,
+      "max": 2801747
+     },
+     "gatherMs": {
+      "n": 141,
+      "p50": 0.9,
+      "p95": 1.2,
+      "max": 3.1
+     },
+     "mainMs": {
+      "n": 141,
+      "p50": 2.8,
+      "p95": 3.3,
+      "max": 5.9
+     },
+     "workMs": {
+      "n": 140,
+      "p50": 15.8,
+      "p95": 20.5,
+      "max": 22.3
+     },
+     "latencyMs": {
+      "n": 140,
+      "p50": 21.4,
+      "p95": 33.8,
+      "max": 41.6
+     },
+     "verifyMs": null,
+     "buildTotalMs": {
+      "n": 140,
+      "p50": 17.7,
+      "p95": null,
+      "max": null
+     },
+     "mainPerRebuild": {
+      "n": 141,
+      "p50": 2.8,
+      "p95": 3.3,
+      "max": 5.9
+     },
+     "mainSum": 383.9,
+     "frames": 234,
+     "mainPerFrame": 1.641,
+     "c1": {
+      "worker": "ready",
+      "workerBuilds": 573,
+      "threadBuilds": 3,
+      "stale": 0,
+      "verified": 0,
+      "mismatch": [],
+      "nMismatch": 0
+     },
+     "p0": 464,
+     "p1": 654,
+     "gq0": 462,
+     "counts": {
+      "px": 2801747,
+      "segMean": 18.66027660598905,
+      "segP95": 40,
+      "kMean": 0.5248432495867756,
+      "kP95": 2,
+      "livePx": 2149314,
+      "liveMean": 24.32467940933712,
+      "liveP95": 40
+     },
+     "gpu": {
+      "passes": 190,
+      "arrived": 190,
+      "raw": {
+       "n": 190,
+       "p50": 10.877,
+       "p95": 10.949,
+       "max": 11.233
+      },
+      "empty": {
+       "n": 190,
+       "p50": 0.001,
+       "p95": 0.001,
+       "max": 0.001
+      },
+      "net": {
+       "n": 190,
+       "p50": 10.877,
+       "p95": 10.948,
+       "max": 11.232
+      },
+      "disjoint": 0
+     }
+    }
+   },
+   "endC1": {
+    "worker": "ready",
+    "workerBuilds": 639,
+    "threadBuilds": 3,
+    "stale": 0,
+    "verified": 0,
+    "mismatch": [],
+    "nMismatch": 0,
+    "rebuilds": 632,
+    "fallback": ""
+   }
+  }
+ ]
+}
