@@ -13,7 +13,7 @@ rep("  constructor(T: GfTables) { this.T = T; }",
    * the piece always over / always under (look variants). tgx = tg, and two own pieces whose graph signs differ.
    * tgm = a home piece whose depth is still 0 joins its group (membership by interval; the cut applies only where
    * the crossing's depth has started), with tg's order for the rest. tgn = tgm's membership alone, master's order. */
-  static MODE = "master";
+  static MODE = "master"; static RZ = 3; // tgr / tgs: membership ramps 1 -> 0 as |depth| goes 0 -> RZ * zt (tgr master's order, tgs tg's)
   aSig!: Int8Array; aHome!: Float64Array;
   phome = new Int32Array(MAXP); psig = new Int8Array(MAXP); pnsig = new Int8Array(MAXP);
   sfix = new Uint8Array(MAXS); nForced = 0; nTie = 0; nHomeP = 0; nPix = 0;
@@ -57,10 +57,11 @@ rep("      this.member(this.pc[j], this.ps[j]); this.pg[j] = this.mg; this.pramp
       if (GfEval.MODE !== "master") {
         this.home(this.pc[j], this.ps[j]); this.phome[j] = this.hg; this.psig[j] = this.hs; this.pnsig[j] = GfEval.MODE === "tgx" ? this.nearSig(this.pc[j], this.ps[j]) : 0;
         if ((GfEval.MODE === "tgm" || GfEval.MODE === "tgn") && this.hg >= 0 && this.pz[j] === 0 && !(this.mg >= 0 && this.mramp >= 1)) { this.pg[j] = this.hg; this.pramp[j] = 1; this.mg = this.hg; this.mramp = 1; }
+        if ((GfEval.MODE === "tgr" || GfEval.MODE === "tgs") && this.hg >= 0 && !(this.mg >= 0 && this.mramp >= 1)) { const r = 1 - ss(0, GfEval.RZ * this.T.zt, Math.abs(this.pz[j])); if (r > 0 && !(this.mg === this.hg && this.mramp >= r)) { this.pg[j] = this.hg; this.pramp[j] = r; this.mg = this.hg; this.mramp = r; } }
       }`);
 rep("    this.cWk = 0; this.cWa = -1; this.cWb = 0;\n    let r = comp(-1);",
 `    const M = GfEval.MODE;
-    if (M !== "master" && M !== "tgn") {
+    if (M !== "master" && M !== "tgn" && M !== "tgr") {
       // K1435: graph order. An own piece against its home junction's group (and, tgx, against another own piece).
       for (let i = 0; i < ns; i++) this.sfix[i] = 0;
       for (let pass = 0; pass < 2; pass++) for (let i = 0; i + 1 < ns; i++) {
@@ -81,7 +82,7 @@ rep("    this.cWk = 0; this.cWa = -1; this.cWb = 0;\n    let r = comp(-1);",
     let r = comp(-1);`);
 rep("      if (!(gap < zt)) continue;\n      const r2 = comp(i);",
 `      if (!(gap < zt)) continue;
-      if (M !== "master" && M !== "tgn" && this.sfix[i]) continue;
+      if (M !== "master" && M !== "tgn" && M !== "tgr" && this.sfix[i]) continue;
       const r2 = comp(i);`);
 writeFileSync(D + "eval_t.ts", s);
 for (const f of ["spots", "scan"]) {

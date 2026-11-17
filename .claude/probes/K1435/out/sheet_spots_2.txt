@@ -1,4 +1,4 @@
-columns: master | tgm | ol
+columns: master | tgr | ol
 row 1: muse_default_tw:24.50:10.58
 row 2: muse_default_tw:22.90:2.44
 row 3: muse_default_tw:22.42:2.92

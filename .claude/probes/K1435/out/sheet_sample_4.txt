@@ -1,0 +1,6 @@
+columns: master | tgm | tgr | ol
+row 1: g41_ring_tw64:19.26:19.87
+row 2: muse_default_tw:25.05:18.53
+row 3: g41_def_tw42:12.70:11.63
+row 4: muse_hash:28.43:18.05
+row 5: g41_def_tw64:1.20:13.42
