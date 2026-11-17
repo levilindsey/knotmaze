@@ -1,0 +1,4 @@
+tag       stray   hard  paper  broken  k1049  total  excepted
+c3a          19      0     11      14      0     44        25
+c5a          16      0     11      14      0     41        57
+c5g          16      0     11      14      0     41        57
