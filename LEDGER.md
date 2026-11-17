@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1446.
+Next free ID: K1447.
 
 ## Waiting on Levi
 
@@ -2113,10 +2113,6 @@ Every other item below waits on the trigger it names.
   / 2,398 pass; 2830d103 0.14): dashes gone, outline faint; centre-sampled field ink speckles against today's
   MSAA mesh coverage, so 0.5 likely needs area-averaged sampling (wider outline sample, MSAA chain), not
   another threshold (.claude/probes/K1417/out/24A/)
-- **K1423** · K1415 residual (24A): rp=gf shallow-crossing fade still off at eye walls (seed3 ci346 err 0.110,
-  seed5 ci248 0.481; ci77 0.033, ci345 0.063 pass): window-end and along-eye behaviour plus section-colour
-  contamination of the scan, not fadeP width; needs a window-aware gap or a direct edge scan
-  (.claude/probes/K1417/out/24A/fade_*.txt)
 - **K1424** · K1414 bands: gf route-band same-state mask still misses the bar after 24F (gf 1121 px vs today
   747, ratio 1.50, IoU 0.276; seed 7 walk, out/24F). 24F measured per junction first (all 8 routed junctions
   have fan records and one fan band each - the no-record suspect does not apply here): ji0 287 vs 110 gf/today,
@@ -2165,6 +2161,10 @@ Every other item below waits on the trigger it names.
   0.14, one unexamined): maybe keep a tiny ramp at 0; parity not cross-checked with gpucensus_cmp; Pixel cost
   unmeasured (desktop GPU net pins at 13 ms); the census g41 link settles in two different physics states
   across loads (0d51331b / c1b63637)
+- **K1446** · K1423 follow-up: gf's baked gap window (GfGapTable) carries no junction-clearance scales
+  (margin/fade per side), no protect waiver and no joint window cap - the measured shallow slots carried
+  scales of 1, and junction-adjacent fades are the K1407 lane; bake them if a junction-adjacent shallow
+  crossing measures off (.claude/probes/K1417/out/24G/)
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2536,6 +2536,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1423** · K1415 residual (24A): rp=gf shallow-crossing fade still off at eye walls (seed3 ci346 err 0.110, seed5 ci248 0.481; ci77 0.033, ci345 0.063 pass): window-end and along-eye behaviour plus section-colour contamination of the scan, not fadeP width; needs a window-aware gap or a direct edge scan (.claude/probes/K1417/out/24A/fade_*.txt). Done in 72620196 (2026-11-17).
 - **K1439** · rp=gf home membership mirrored in the shader behind gfh=1 (off by default, acts only with rp=gf); fade follows fadeLength live with no rebuild; GPU = mirror on def, 3 px past 1e-2 on muse_hash (float ties); flag off pinned by shader/keys/pack digests; no measurable frame cost on the desktop. Done in c11be7ae (2026-11-16).
 - **K1438** · rp=gf junction membership from the arms' home intervals in tables.ts + eval.ts, behind a switch that is off (GF_HOME / buildTables home:true); the fade follows fadeLength live; CPU scan tie+ramp 1797 -> 435 finds, 28 of 29 spots clean; table size unchanged, off = master's digest. Done in ca42a4de (2026-11-16).
 - **K1427** · rp=gf spot 16 and spot 6 (form B's demoted-arm V): member()'s second loop skips an arm rooted with the first loop's arm (the other half of a through pass); both match rp=outline at 4x (Claude checked), census 16/0/11/14 with 32 new exceptions (form B's V), bench within 5%. Done in e3297511 (2026-11-16).
