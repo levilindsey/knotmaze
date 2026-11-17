@@ -321,9 +321,9 @@ Next free ID: K1425.
   parity with today: K1417+K1415 gap casing and fade, K1414 route bands + hover rim, K1414 pulses + telegraph,
   K1395 reveal look, K1396 explore view (docs/design/K1418_muse_batch24.md)
   - owner: muse batch 24 through the K1053 chain, started by claude session 09c7a672-a414-402a-97da-b3176839a2e5; each run's Paseo agent id is in .claude/probes/K1053/chain.log
-  - branch: mainline; last commit: `24ae5489`
+  - branch: mainline; last commit: `69bc9120`
   - evidence: .claude/probes/K1053/ (queue.txt, chain.log, done.txt); .claude/probes/<ID>/out/24<X>/
-  - next: chain runs 24B-24E in order (queue.txt); Claude reviews each handoff and its crops against today, files the follow-ups
+  - next: chain runs 24C-24E, then 24F (rim from 24B's patch, then bands, K1424; queue.txt); Claude reviews each handoff and its crops against today, files the follow-ups
   - brief: `docs/design/K1418_muse_batch24.md`
 - **K1310** · Redesign course check (assessment 2026-11-11): (1) write the gate for making rp=outline the
   default; (2) a crop sheet, outline vs form B at the worst spots, so Levi says which differences still
@@ -907,11 +907,9 @@ Every other item below waits on the trigger it names.
   g41_ring_tw64 and paper +1 on g41_ring_tw64 vs master-CPU census after the null-corner fix (single 40-55px
   finds; not through eyes - the 0.16h floor cleared g41_def_tw64). Find their mechanism before the stray_ink
   category run (K1407 order: broken, then stray).
-- **K1419** · rp=gf paint at junction spots: hard-edged run-colour wedges where batch 23's dots were
-  (.claude/probes/K1407/out/c2/c2_sheet_fixed.png rows 1-4, 11, 13), where today's paint is smooth. Source
-  (K1407 Handoff c2): gf_look.ts copies the top surface's highest-key colour label and lookQ gives a corner one
-  flat chain position, so the colour steps hard between chains; blend the label across the switch. After Muse
-  batch 24 (its file). The smudges moved to K1407 c3
+- **K1419** · rp=gf paint at junction spots: hard run-colour wedges where the dots were (.claude/probes/K1407/out/c2/
+  c2_sheet_fixed.png rows 1-4, 11, 13), where today's is smooth: gf_look.ts steps the colour label between chains
+  (K1407 Handoff c2); blend it across the switch, after Muse batch 24
 
 ## Residuals (known, not fixed)
 

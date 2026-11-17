@@ -136,3 +136,16 @@ gf handles the appearance reveal only; the explore view's hidden and growing pie
 
 **Done:** 1. On a walk in the explore view, at three states, gf's visible-thread mask against today's: IoU at
 least 0.9. 2. Outside the explore view, 0 px against master gf. 3. Crops. 4. `npm test` green.
+
+## Run F (24F): K1414 part 1 again, land the hover rim, then the route bands (K1424)
+
+24B kept its work as `.claude/probes/K1414/k1414_part1_full.patch` and landed nothing (Handoff 24B): the rim passed
+(gf 456 px against today's 470, IoU 0.929), the bands did not (1,721 against 747, IoU 0.147). Use 24B's state recipe
+and probe (`.claude/probes/K1414/k1414_ab.mjs`, with its warm-up capture, background re-pin and hover-before-pin).
+
+**Done:** 1. The hover rim lands as its own commit, pushed and deployed green: mask count within 15% of today's and
+IoU at least 0.8. 2. The route bands: count within 15% and IoU at least 0.8, measured per junction against today's
+fan first (24B's suspects: junctions today's fan has no record for, such as turnstiles and stubs, and a disc wider
+than the fan and cover strips). If the bands miss at the stop line, the rim stays landed and you report the
+per-junction numbers. 3. With neither feature showing, 0 px against master gf in the thread area. 4. Crops under
+`.claude/probes/K1414/out/24F/` (today | master gf | new gf). 5. `npm test` green.
