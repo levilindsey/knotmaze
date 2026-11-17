@@ -303,10 +303,6 @@ Next free ID: K1442.
   never unlocks it. If it should stay unlocked on the charger overnight, that is a phone setting only Levi can
   change (K1362). 2026-11-13 10:34-10:57: unlocked, but the Claude app stayed in front, so the run never
   started: the pass needs the HOME SCREEN in front and the phone untouched for 2 min (Claude never presses Home).
-- **K1440** · rp=gf look: where a thread dives under a junction, K1435's membership ramp fades it in softly;
-  rp=outline cuts it crisply, and the crisp variants (tgm) leave stubs elsewhere. Soft or crisp, and the ramp
-  width (.claude/probes/K1435/out/sheet_variants_open.png, sheet_variants_worst_1.png: master | tgr soft | tgm
-  | tgn | outline)
 
 ## In progress
 
@@ -2524,6 +2520,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1440** · rp=gf look: where a thread dives under a junction, K1435's membership ramp fades it in softly; rp=outline cuts it crisply, and the crisp variants (tgm) leave stubs elsewhere. Dropped: answered by Levi 2026-11-16: not a fixed look; the fade where a thread dives under a junction follows the crossing fade parameter (fadeLength), adjustable live, 0 = crisp. A Done of K1438's brief (2026-11-16).
 - **K1435** · rp=gf table-time grouping probe: membership from each junction arm's home interval with a depth ramp (mode tgr) removes the ghost threads and smudges (tie+ramp finds 2030 to 547 over 12 scenes; spot 16 and smudge 1 clean, 25 spots unchanged; Claude checked sheet_spots_1 and sheet_variants_worst_1); order stays per pixel (crisp graph order leaves stubs); src stages K1438, K1439. Done in 02c2e598 (2026-11-16).
 - **K1433** · rp=gf step back trial: the union field is not the fix (every variant draws stray ink or turns the corner into a deep V; no spot better by eye); step 4 stays; the open spots and about 2,030 smudges come from per-pixel grouping and tie order, which the graph knows at table time (K1435; test v2 K1436). Done in eee0b835 (2026-11-16).
 - **K1396** · rp=gf: the K76 thread reveal (explore view) is not handled; only the appearance reveal is (docs/design/K1383_s1_gf_reveal.md handoff). Done in 0a5e2d1c (2026-11-16).
