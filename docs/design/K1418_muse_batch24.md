@@ -206,3 +206,27 @@ neither inside the cleared interior, because `o1` carries no indication coverage
 100.45 / 101.3) with `tlk=border`: pulse and telegraph masks within 15% of today's count and IoU at least 0.8 at all
 three times. 2. The fill look unchanged: 0 px against master gf with both features showing. 3. Crops under
 `.claude/probes/K1414/out/24H/` (today | master gf | new gf). 4. `npm test` green.
+
+## Run I (24I): K1431, the reveal's colours to today's bars
+
+24D (01411434) brought the reveal's colours to gf but missed Run D's bars (Handoff 24D, K1431). Claude's look at its
+crops (`.claude/probes/K1395/out/24D/crop_def_f5_150_60.png`, `crop_trace-rainbow_f5_60_300.png`; today | master gf
+| new gf) shows three differences from today:
+- In the burn, a faint dashed purple outline of every not-yet-revealed thread runs across the whole maze, where
+  today shows only background.
+- The rainbow's stripes are about twice today's width and fill the whole thread with saturated red and purple, where
+  today shows narrower stripes.
+- Threads read slightly wider than today's.
+
+Measure with `.claude/probes/K1395/k1395_sheet.mjs` (the patient waits) against a vite preview build.
+
+**Done:**
+1. For burn (the default) and trace-rainbow on `b.FMKB4DIQ`'s sheet frames, in every frame:
+   - gf's ink pixels within 15% of today's;
+   - the mean ink colour within 10 levels per channel.
+2. The ghost: in each frame, gf pixels that are background in today's frame but differ from it by more than 8 levels
+   cover under 1% of today's background.
+3. ink-dust, bloom-comet and trace-roots measured with bar 1, each reported as passing or not.
+4. `am=instant` measured at 0 px against master gf.
+5. Crops under `.claude/probes/K1395/out/24I/` (today | master gf | new gf).
+6. `npm test` green.
