@@ -230,3 +230,22 @@ Measure with `.claude/probes/K1395/k1395_sheet.mjs` (the patient waits) against 
 4. `am=instant` measured at 0 px against master gf.
 5. Crops under `.claude/probes/K1395/out/24I/` (today | master gf | new gf).
 6. `npm test` green.
+
+## Every run from F on: measure the floor first, and share the GPU
+
+Added by Claude after 24D. Two lessons from Runs A-D apply to every run from F on.
+
+**Bars.** Several of this batch's pixel bars were never measured against what an exact match would score. 24A's IoU
+0.5 on a 1 px casing is an example: a centre-sampled field cannot match today's MSAA mesh pixel for pixel. So
+before working to a pixel bar (count, IoU, mean colour, fade amount):
+1. Measure its floor. Use two captures of today on the same state and frame, or today at dpr 1 against dpr 2 where
+   the bar compares across them.
+2. Report the floor next to the result.
+3. If the floor already misses the bar, the bar becomes the floor plus half the bar's margin; say so in the handoff.
+   The crops still decide by eye: a result that meets a loosened bar but looks wrong next to today's is not Done.
+
+**GPU.** A Claude agent's census (K1407) runs on the same GPU as your captures. 24D lost an hour to starved 60 s
+waits, and the agents lost WebGL contexts twice. So:
+- Take `$env:TEMP\claude-perf.lock` while capturing sheets or crops: one line with owner, start time and what.
+- If another owner holds the lock, wait inside one blocking command. A lock older than 30 minutes is stale.
+- Delete the lock when the captures are done.
