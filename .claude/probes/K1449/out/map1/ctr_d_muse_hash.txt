@@ -1,0 +1,1 @@
+muse_hash	ctr_d	finds 624	{"dbreak:tie":18,"dstray:tie":18,"dstray:ramp":1,"rbreak:tie":8,"rstray:plain":17,"rstray:tie":9,"rstray:ramp":2,"rthin:ramp":123,"rthin:plain":371,"rthin:tie":55,"rthin:thru":2}	{"px":14876088,"act":10100660,"msPerMpx":1616,"usPerAct":2.38,"pcallsPerAct":0.32,"segsPerAct":3.69,"cfgsPerAct":1.043,"nSegPerAct":39.2,"nKPerAct":0.59}

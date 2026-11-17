@@ -1,13 +1,13 @@
 // K1449: a spot's 4x panel (480 px of 2.5 h, k1438_spots.ts's frame) with K1433's flagged pixels tinted by kind
 // (rthin red, rstray green, rbreak orange, dbreak blue, dstray magenta; a ramp/tie pixel's tint is full, a plain one
-// half), beside the plain panel. Evaluator: k1438_ev.ts's loadEv (env GF_HOME, K1438_FL, K1438_EV).
+// half), beside the plain panel. Evaluator: k1449_ev.ts's loadEv (env GF_HOME, K1438_FL, K1438_EV, K1449_MAP).
 //   node scripts/run_node.mjs .claude/probes/K1449/k1449_mark.ts <tag> <scene:x:y,...> <outDir>
 import { join } from "node:path";
 import { mkdirSync } from "node:fs";
 import { writePng } from "../K1314/k1314_crops.ts";
 import { runAt, runColour, type RGB } from "../../../src/render/outline/paint.ts";
 import { makeJudge, modelOf, tablesOf, rasterJudge, analyze } from "../K1433/k1433_lib.ts";
-import { loadEv } from "../K1438/k1438_ev.ts";
+import { loadEv } from "./k1449_ev.ts";
 
 const [tag, list, outDir] = process.argv.slice(2);
 mkdirSync(outDir, { recursive: true });

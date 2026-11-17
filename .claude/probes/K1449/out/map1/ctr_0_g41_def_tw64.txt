@@ -1,0 +1,1 @@
+g41_def_tw64	ctr_0	finds 376	{"dbreak:tie":21,"rbreak:plain":3,"rbreak:tie":1,"rthin:plain":349,"rthin:tie":1,"rthin:thru":1}	{"px":14041776,"act":8356431,"msPerMpx":1272,"usPerAct":2.14,"pcallsPerAct":0.305,"segsPerAct":3.12,"cfgsPerAct":1,"nSegPerAct":32.9,"nKPerAct":0.51}
