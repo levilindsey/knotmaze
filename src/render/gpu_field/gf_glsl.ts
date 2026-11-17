@@ -124,9 +124,9 @@ export function homeForm(src: string): string {
   rep("uniform float uH, uW, uAA, uSigma, uZt, uWin, uRc;\n", "uniform float uH, uW, uAA, uSigma, uZt, uWin, uRc;\nuniform float uHomeZ; // K1439: home membership's fade depth\n", 1);
   rep("void member(int c, float s, vec4 KB) {\n", "void member(int c, float s, vec4 KB, float z) {\n", 1);
   rep("  int g = -1; float ramp = 0.0; float sRa = 0.0;\n", "  int g = -1; float ramp = 0.0; float sRa = 0.0; int hg = -1; float hb = 1e30;\n", 1);
+  // loop 1's arm test, right after its d (the anchor text holds no wrap: K299's registry counts each mod site once)
   rep(
-    "    float d = (s - A.x) * A.y; if (closed) d = mod(d, len);\n    if (d < -1e-12 || d > A.z + 1e-12) continue;\n",
-    "    float d = (s - A.x) * A.y; if (closed) d = mod(d, len);\n" +
+    "    if (d < -1e-12 || d > A.z + 1e-12) continue;\n",
     "    if (!(d < -1e-12 || d >= hb)) { vec4 A1 = F(KAB + 2 * i + 1); if (d <= A1.y + 1e-12) { hb = d; hg = int(A1.x); } }\n" +
     "    if (d < -1e-12 || d > A.z + 1e-12) continue;\n",
     1,
