@@ -613,6 +613,14 @@ Next free ID: K1445.
   - evidence: `.claude/probes/K1387/`
   - next: the Pixel ABBA (k1387_phone.ps1; base 2b1cffe1 against the s2 merge, rp=gf) when the phone's screen is on: main ms/frame, gf builds/s, the drag's sim/wall (s2 handoff, Next)
   - brief: `docs/design/K1387_s2_lazy_march.md` (s1: `K1387_s1_lean_consumers.md`)
+- **K1439** · rp=gf stage B of K1435: the GLSL mirror of K1438 (member() in gf_glsl.ts) and the pins (gf_pack,
+  gf_build, gf_keys, gf_tier_forms, gf_split, gf_look); bar: GPU = CPU mirror, frame cost on muse_hash and def
+  within noise under the perf lock; blocked on K1438
+  - owner: agent `ab538fa67ad6c86dd` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-16 21:06, 2 h cap ~23:06)
+  - branch: `worktree-agent-ab538fa67ad6c86dd`, worktree `.claude/worktrees/agent-ab538fa67ad6c86dd`; last commit: `cfb1f30b`
+  - evidence: `.claude/probes/K1439/`
+  - next: stage running (GLSL mirror behind a URL flag, off by default): on its report Claude checks the sheets and parity, merges, and gives Levi the link for K1444's look calls
+  - brief: `docs/design/K1439_home_membership_glsl.md`
 
 ## Next, in order
 
@@ -933,9 +941,6 @@ Every other item below waits on the trigger it names.
   dips shallower than about 0.4 (the d547dab6 def notches) and its plain class is 0 of 9 real; add a
   band-profile check along each exposed edge and a crossing exemption, then replace the form-B census bars
   with it (Handoff K1433)
-- **K1439** · rp=gf stage B of K1435: the GLSL mirror of K1438 (member() in gf_glsl.ts) and the pins (gf_pack,
-  gf_build, gf_keys, gf_tier_forms, gf_split, gf_look); bar: GPU = CPU mirror, frame cost on muse_hash and def
-  within noise under the perf lock; blocked on K1438
 
 ## Residuals (known, not fixed)
 
