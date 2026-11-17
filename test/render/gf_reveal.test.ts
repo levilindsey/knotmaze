@@ -2,11 +2,12 @@
 // exact under the linear interpolation the ribbon mesh and the shader both
 // use; the lookup wraps rings and clamps open ends; the reveal form finds
 // its anchors in every program the pass draws and leaves the originals as
-// they were.
+// they were. K1395 (24D): a knot also carries the width (mask x rainbow
+// swell); revealAt reads the mask, revealWidthAt the width.
 import { describe, expect, it } from "vitest";
 import { gfFs } from "../../src/render/gpu_field/gf_glsl";
 import { cornerPlan, GF_TIERS } from "../../src/render/gpu_field/gf_pass";
-import { gfRevealing, revealAt, revealForm, revealKnots } from "../../src/render/gpu_field/gf_reveal";
+import { gfRevealing, revealAt, revealForm, revealKnots, revealWidthAt } from "../../src/render/gpu_field/gf_reveal";
 
 /** The dense reference: linear interpolation over every sample (a duplicate run draws its last/first point). */
 function dense(s: number[], m: number[], x: number): number {
@@ -28,10 +29,11 @@ describe("K1383 s1 reveal knots", () => {
       m.push(k < 15 ? 1 : k < 20 ? 1 - (k - 15) / 5 : 0);
     }
     const out: number[] = [];
-    revealKnots(s, m, s.length, false, out);
-    expect(out.length / 2).toBeLessThan(12);
+    revealKnots(s, m, m, s.length, false, out);
+    expect(out.length / 3).toBeLessThan(12);
     for (let x = -1; x <= 21; x += 0.037) {
-      expect(revealAt(out, 0, out.length / 2, 0, x)).toBeCloseTo(dense(s, m, x), 12);
+      expect(revealAt(out, 0, out.length / 3, 0, x)).toBeCloseTo(dense(s, m, x), 12);
+      expect(revealWidthAt(out, 0, out.length / 3, 0, x)).toBeCloseTo(dense(s, m, x), 12);
     }
   });
   it("collapse a tucked end's duplicate runs to the point the ribbon draws", () => {
@@ -39,24 +41,36 @@ describe("K1383 s1 reveal knots", () => {
     const s = [0, 0, 0, 1, 2, 3, 4, 5, 5, 5];
     const m = [0.2, 0.4, 0.6, 0.7, 0.8, 0.9, 1, 0.5, 0.3, 0.1];
     const out: number[] = [];
-    revealKnots(s, m, s.length, false, out);
-    expect(out.slice(0, 2)).toEqual([0, 0.6]);
-    expect(out.slice(-2)).toEqual([5, 0.5]);
-    expect(revealAt(out, 0, out.length / 2, 0, -1)).toBe(0.6);
-    expect(revealAt(out, 0, out.length / 2, 0, 9)).toBe(0.5);
+    revealKnots(s, m, m, s.length, false, out);
+    expect(out.slice(0, 3)).toEqual([0, 0.6, 0.6]);
+    expect(out.slice(-3)).toEqual([5, 0.5, 0.5]);
+    expect(revealAt(out, 0, out.length / 3, 0, -1)).toBe(0.6);
+    expect(revealAt(out, 0, out.length / 3, 0, 9)).toBe(0.5);
   });
   it("keep a mid-chain duplicate pair (a step) as two knots", () => {
     const s = [0, 1, 2, 2, 3, 4];
     const m = [1, 1, 1, 0, 0, 0];
     const out: number[] = [];
-    revealKnots(s, m, s.length, true, out);
-    expect(revealAt(out, 0, out.length / 2, 0, 1.999)).toBe(1);
-    expect(revealAt(out, 0, out.length / 2, 0, 2.001)).toBe(0);
+    revealKnots(s, m, m, s.length, true, out);
+    expect(revealAt(out, 0, out.length / 3, 0, 1.999)).toBe(1);
+    expect(revealAt(out, 0, out.length / 3, 0, 2.001)).toBe(0);
+  });
+  it("K1395: keeps where only the width (swell) changes, the mask flat", () => {
+    const s = [0, 1, 2, 3, 4];
+    const m = [1, 1, 1, 1, 1];
+    const w = [2, 1.6, 1.3, 1.1, 1];
+    const out: number[] = [];
+    revealKnots(s, m, w, s.length, false, out);
+    expect(out.length / 3).toBe(5);
+    for (let x = 0; x <= 4; x += 0.11) {
+      expect(revealWidthAt(out, 0, out.length / 3, 0, x)).toBeCloseTo(dense(s, w, x), 12);
+      expect(revealAt(out, 0, out.length / 3, 0, x)).toBe(1);
+    }
   });
 });
 
 describe("K1383 s1 revealAt", () => {
-  const K = [9, 9, 0, 0, 2, 1, 4, 0.5]; // a leading foreign knot, then this chain's (0,0) (2,1) (4,.5)
+  const K = [9, 9, 9, 0, 0, 0, 2, 1, 1, 4, 0.5, 0.5]; // a leading foreign knot, then this chain's (0,0,0) (2,1,1) (4,.5,.5)
   it("clamps an open chain's ends", () => {
     expect(revealAt(K, 1, 3, 0, -3)).toBe(0);
     expect(revealAt(K, 1, 3, 0, 7)).toBe(0.5);

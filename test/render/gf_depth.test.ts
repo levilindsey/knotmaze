@@ -33,10 +33,10 @@ describe("K1369 s4 depth by gesture", () => {
   });
 });
 
-describe("K1404: the look never draws over the appearance reveal", () => {
-  it("suppresses the look while revealing, and only then", () => {
-    expect(gfLookDraws(undefined, true)).toBe(false);
-    expect(gfLookDraws(true, true)).toBe(false);
+describe("K1395: the look draws over the appearance reveal", () => {
+  it("draws while revealing (the FX interior fills the border look), as at rest", () => {
+    expect(gfLookDraws(undefined, true)).toBe(true);
+    expect(gfLookDraws(true, true)).toBe(true);
     expect(gfLookDraws(undefined, false)).toBe(true);
     expect(gfLookDraws(true, false)).toBe(true);
   });
@@ -44,7 +44,7 @@ describe("K1404: the look never draws over the appearance reveal", () => {
     expect(gfLookDraws(false, false)).toBe(false);
     expect(gfLookDraws(false, true)).toBe(false);
   });
-  it("gf_app gates setLook on it, so a revealing frame draws the K1383 reveal form", () => {
+  it("gf_app gates setLook on it, so a revealing frame draws the look over the K1383 reveal form", () => {
     const src = readFileSync(new URL("../../src/render/gpu_field/gf_app.ts", import.meta.url), "utf8");
     expect(src).toContain("if (!gfLookDraws(o.look, rvDrawn))");
     expect(src).toContain("if (pass.looking) { pass.setLook(null); dirty = true; }");

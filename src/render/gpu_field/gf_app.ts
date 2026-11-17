@@ -29,7 +29,7 @@ import { splineBend, type SplineSamples } from "../../geometry/spline_generator"
 import { buildTables, type GfTables } from "./tables";
 import { CTRL_ARC, gfBuild, gfDepth, gfLookDraws, tablesDiff } from "./gf_build";
 import { GfRevealTable, gfRevealing } from "./gf_reveal";
-import { GfDynTable, GfLookGate, GfLookTable, GfPaintTable, dynKey, lookFade, lookGap, lookKey, paintKey, type GfDynSource, type GfPaintSource } from "./gf_look";
+import { GfDynTable, GfFxTable, GfLookGate, GfLookTable, GfPaintTable, dynKey, lookFade, lookGap, lookKey, paintKey, type GfDynSource, type GfPaintSource } from "./gf_look";
 import { kArcU, kWrap } from "../paint_math";
 import { GfComposite, GfPass, GfTarget, type GfMap } from "./gf_pass";
 
@@ -106,6 +106,11 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
   let dynKeyV = -1;
   const dynPool: Float32Array[] = [];
   let teleAtU = 0;
+  // K1395 (24D): the baked reveal FX (gf_look.ts GfFxTable), re-baked every revealing frame
+  let fxTab: GfFxTable | null = null;
+  let fxP: Float32Array | null = null;
+  let fxVer = 0;
+  const fxPool: Float32Array[] = [];
   const stats = {
     rebuilds: 0, passes: 0, composites: 0, fallback: "",
     exportMs: [] as number[], tablesMs: [] as number[], packMs: [] as number[], uploadMs: [] as number[],
@@ -383,7 +388,7 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
           const lt = !!pass?.looking;
           const lr = ctx.scene.renderer;
           // K1389 s1: today's thread look (gf_look.ts): the section colours by fill / border / both
-          comp.draw(target, FILL, ink, lt && lr ? { mode: lr.threadLook, bd: bc ? [ink[0], ink[1], ink[2], 1] : [0, 0, 0, 0] } : null);
+          comp.draw(target, FILL, ink, lt && lr ? { mode: lr.threadLook, bd: bc ? [ink[0], ink[1], ink[2], 1] : [0, 0, 0, 0], fx: rvDrawn } : null);
           stats.composites++;
         } finally {
           const wr = renderer as unknown as WebGLRenderer;
@@ -499,6 +504,19 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
     const P = dynTab.values({ kd: src.kd, kcv: src.kcv, chainSamples: src.chainSamples, paintSpans: ps.paintSpans, paintCaps: ps.paintCaps, paintPulses: ps.paintPulses, paintTele: ps.paintTele, teleGap: ps.rimGap() }, dynPool.pop());
     stats.dynMs.push(performance.now() - t0);
     return P;
+  };
+  // K1395 (24D): this frame's baked reveal FX (gf_look.ts GfFxTable), in the look positions' layout
+  const fxSnap = (): Float32Array | null => {
+    const r = ctx.scene.renderer;
+    if (!r || !fxTab || lkKey < 0 || !pass?.lookable || opts().look === false) return null;
+    const src = r as unknown as GfPaintSource;
+    return fxTab.values({ kd: src.kd, kcv: src.kcv, chainSamples: src.chainSamples }, fxPool.pop());
+  };
+  const fxShow = (P: Float32Array | null): void => {
+    if (!P) return;
+    if (fxP && fxP !== P && fxPool.length < 4) fxPool.push(fxP);
+    fxP = P;
+    fxVer++;
   };
   const dynShow = (P: Float32Array | null): void => {
     if (!P) return;
@@ -747,6 +765,7 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
         lkTab ??= new GfLookTable();
         ptTab ??= new GfPaintTable();
         dynTab ??= new GfDynTable();
+        fxTab ??= new GfFxTable();
         if (lkGate.changed(r)) {
           stats.lkKeys++;
           const key = lookKey(r);
@@ -761,6 +780,7 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
         if (!lkP) lkShow(lkSnap());
         if (!ptP) ptShow(ptSnap());
         if (!dynP) dynShow(dynSnap());
+        if (!fxP) fxShow(fxSnap());
         // K1405: a moved paint declaration (a walk, a trail shift) re-bakes and redraws at once,
         // even at rest, when no tables build follows it
         const pk = paintKey(r.paintState);
@@ -775,15 +795,16 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
         const gap = lookGap(r);
         const fade = lookFade(r);
         if (gap !== lkGap || fade !== lkFadeV) { lkGap = gap; lkFadeV = fade; dirty = true; }
-        // K1404: while the appearance reveal runs, the pass draws its K1383 form (the plain reveal
-        // programs and composite), not the look: the look border stroke is sub-pixel at fabric
-        // scales and its interior is clear, so the ribbons vanish (the sheet at 03102199 is the
-        // reference). The look resumes the frame the reveal ends (rvDrawn clears above first).
+        // K1395 (24D): the look draws over the reveal form while the reveal runs, shaded by the
+        // FX baked above (fxShow per revealing frame); gfLookDraws holds it off only for an A/B's
+        // look: false. (K1404 held the look off here: its border interior was clear, so the ribbons
+        // vanished at fabric scales; the FX interior fills it now, LOOK_COMP_FS's uRvFx.)
         if (!gfLookDraws(o.look, rvDrawn)) {
           if (pass.looking) { pass.setLook(null); dirty = true; }
         } else {
           const up = pass.lkPMs;
-          pass.setLook(lkTab, gap, lkP, lkPVer, ptP, ptVer, fade, dynP, dynVer, teleAtU);
+          if (rvDrawn) fxShow(fxSnap());
+          pass.setLook(lkTab, gap, lkP, lkPVer, ptP, ptVer, fade, dynP, dynVer, teleAtU, fxP, fxVer, rvDrawn);
           if (pass.lkPMs !== up) stats.lkUpMs.push(pass.lkPMs);
         }
       } else if (lkGap >= 0) {

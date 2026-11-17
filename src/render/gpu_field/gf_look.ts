@@ -30,11 +30,14 @@
  * mix(section * 0.30, (0.09, 0.085, 0.08), 0.5), or the border colour when one is set. A pixel with coverage but
  * no label (the antialiased fringe outside h) takes its nearest labelled neighbour's colour.
  * K1405: the label's colour is mixed toward gold (uGold) by its baked paint amount (lkPaint over uPt, GfPaintTable below).
+ * K1395 (24D): while the appearance reveal runs, the look draws over the reveal form and the site shades the
+ * label by the baked FX (lkFx over uFx, GfFxTable: burn/roots tint, rainbow stripes, materialize alpha,
+ * frontier glow; o0.z carries the border interior's solidity to LOOK_COMP_FS's uRvFx branch).
  * K1414 part 2 (24C): the same site then brightens by the label's pulse field (lkPulse over uDyn, GfDynTable:
  * paint_glsl kPulseCrest over the reduced clocks) toward the pulse colour, and mixes toward the telegraph
  * colour by its rims (lkTele, shaped across by the foot's distance over uH), in ribbon_shader's order.
  */
-import { kArcOfCtrl, kArcU, kCA, kWrap, knotSection, type KChain, type KData } from "../paint_math";
+import { kArcOfCtrl, kArcU, kBurnAge, kCA, kFxColor, kFxTail, kGlow, kIgnition, kSampleArc, kWall, kWrap, knotSection, type KChain, type KData, type KIgn } from "../paint_math";
 import { PAINT_CONST, PULSE_RIDGE_FADE } from "../paint_const";
 import { kStatic, knotUniformValues } from "../paint_model";
 import { CUT_BIAS } from "../ribbon/crossing_gaps";
@@ -550,6 +553,123 @@ export class GfDynTable {
   }
 }
 
+/**
+ * K1395 (24D): the appearance reveal's colours under the look. GfFxTable bakes, per kept sample in
+ * GfLookTable.positions' layout (two RGBA texels a sample), what paint_math's kFxColor / kGlow give
+ * today's shader at that sample this frame: texel 0 = (rainbow progress, materialize alpha, burn age,
+ * interior solidity), texel 1 = (sample index, frontier glow, 0, 0). The burn age rides to the shader,
+ * which runs kBurn's envelope over the label's section colour with the live flicker phases (uFxPh);
+ * the rainbow's stripes and white wash run there too (their across coordinate is the pixel's own).
+ * Interior solidity (kComposePaint's hiA over an empty base: the stronger of the glow and, while the
+ * chain's FX live, the materialize alpha) rides o0.z to the composite, which in the border look fills
+ * the interior with the FX colour while the reveal runs (today's border branch does the same).
+ * gf_app re-bakes it every revealing frame (the FX clocks move), beside the reveal table.
+ */
+export class GfFxTable {
+  /** The baked entries (samples, plus one a closed chain), in positions()' layout. */
+  nPos = 0;
+  ms = 0;
+  private tmp = new Float32Array(0);
+  private ign: KIgn = { hit: false, tA: 0, cFrom: 0, dir: 1, t0: 0, rate: 1, tEnd: 0, span: 0 };
+  private rgb = [0, 0, 0];
+  private pOut = { pRain: 0, alpha: 1 };
+
+  /** Each kept sample's FX fields from the renderer's reveal state, in GfLookTable.positions' layout. */
+  values(r: GfLookSource, out?: Float32Array): Float32Array {
+    const t0 = performance.now();
+    const U = knotUniformValues();
+    const D = r.kd;
+    const nC = r.chainSamples.length;
+    const st = Math.round(U.uKFx[0]);
+    let nPos = 0;
+    for (let ch = 0; ch < nC; ch++) if (lookValid(r, ch)) nPos += r.chainSamples[ch]!.count + (r.kcv[ch].closed ? 1 : 0);
+    const rows = Math.max(1, Math.ceil((nPos * 2) / GF_TW));
+    const len = rows * GF_TW * 4;
+    const V = out && out.length >= len ? out : new Float32Array(len);
+    V.fill(0, 0, len);
+    let pb = 0;
+    for (let ch = 0; ch < nC; ch++) {
+      if (!lookValid(r, ch)) continue;
+      const c = r.kcv[ch];
+      const count = r.chainSamples[ch]!.count;
+      const n = c.nCtrl;
+      if (this.tmp.length < count * 8) this.tmp = new Float32Array(count * 8);
+      const tmp = this.tmp;
+      tmp.fill(0, 0, count * 8);
+      const fxHere = U.uKFx[3] > 0.5 && st > 0 && U.uKFx[2] < c.fxDone;
+      let slot = 0;
+      for (let k = 0; k < count; k++) {
+        const a = kSampleArc(c, k);
+        while (slot < n - 1 && kCA(D, c, slot + 1) <= a) slot++;
+        const a0 = kCA(D, c, slot);
+        const a1 = slot < n - 1 ? kCA(D, c, slot + 1) : c.total;
+        const ctrl = slot + (a1 > a0 ? Math.min(1, (a - a0) / (a1 - a0)) : 0);
+        const o = k * 8;
+        this.rgb[0] = 0; this.rgb[1] = 0; this.rgb[2] = 0;
+        this.pOut.pRain = 0; this.pOut.alpha = 1;
+        kFxColor(D, U, c, ctrl, k, this.rgb, this.pOut);
+        // the burn age, under kFxColor's own skips (identity there bakes the recovered age 9)
+        let burnAge = 9;
+        if ((st === 4 || st === 5) && fxHere) {
+          let settled = false;
+          if (U.uKInk[1] < 0.5) {
+            const sl = Math.max(0, Math.min(n - 1, Math.floor(ctrl)));
+            if (U.uKFx[2] >= kWall(U, D.stat[(c.idx + sl) * 4 + 3]) + kFxTail(st)) settled = true;
+          }
+          if (!settled) {
+            const g = kIgnition(D, U, c, ctrl, this.ign);
+            if (g.hit && U.uKFx[1] >= g.tA) burnAge = kBurnAge(D, U, c, g, ctrl);
+          }
+        }
+        const glow = kGlow(D, U, c, ctrl);
+        tmp[o] = this.pOut.pRain;
+        tmp[o + 1] = this.pOut.alpha;
+        tmp[o + 2] = burnAge;
+        tmp[o + 3] = Math.max(glow, fxHere ? this.pOut.alpha : 0);
+        tmp[o + 4] = k;
+        tmp[o + 5] = glow;
+      }
+      // compact to the kept samples and pad the tail, exactly as positions() does
+      const xy = r.chainSamples[ch]!.positions;
+      let kv = 0;
+      let l = -1;
+      for (let k = 0; k < count; k++) {
+        if (l >= 0 && xy[2 * k] === xy[2 * l] && xy[2 * k + 1] === xy[2 * l + 1]) continue;
+        const so = (pb + kv) * 8;
+        const ko = k * 8;
+        for (let j = 0; j < 8; j++) V[so + j] = tmp[ko + j];
+        kv++;
+        l = k;
+      }
+      if (c.closed && kv > 1 && xy[2 * l] === xy[0] && xy[2 * l + 1] === xy[1]) kv--;
+      const end = count + (c.closed ? 1 : 0);
+      const po = (pb + (c.closed ? 0 : kv - 1)) * 8;
+      for (let k = kv; k < end; k++) {
+        const eo = (pb + k) * 8;
+        for (let j = 0; j < 8; j++) V[eo + j] = V[po + j];
+      }
+      pb += end;
+    }
+    this.nPos = nPos;
+    this.ms = performance.now() - t0;
+    return V;
+  }
+}
+
+/** CPU twin of the look shader's lkFx over one baked sample (segment k, fraction u): (pRain, alpha, burnAge, hiA, kSample, glow). */
+export function fxAt(V: ArrayLike<number>, b: number, n: number, closed: boolean, k: number, u: number): number[] {
+  const last = closed ? n : n - 1;
+  if (k < 0) { k = 0; u = 0; }
+  if (k >= last) { k = last; u = 0; }
+  const out: number[] = [];
+  for (let j = 0; j < 6; j++) {
+    const A = V[(b + k) * 8 + j];
+    const B = V[(b + Math.min(k + 1, last)) * 8 + j];
+    out.push(A + (B - A) * u);
+  }
+  return out;
+}
+
 /** Today's crossing gap beyond the over thread's edge (world units): the casing's margin plus crossing_gaps' CUT_BIAS. */
 export function lookGap(r: { style: { casingWidth: number; threadWidth: number } }): number {
   return Math.max(0, (r.style.casingWidth - r.style.threadWidth) / 2) + CUT_BIAS;
@@ -584,7 +704,7 @@ export function lookColour(T: Pick<GfLookTable, "data">, P: ArrayLike<number>, c
 const G_ANCHOR = "int labC; float labS; int cWk; int cWa; int cWb; float cCov;\n";
 const G_LOOK = `// K1389 s1: the label's piece (-1: a corner, whose s rides lkS) and key, as each site sets labC; the best
 // configuration's copies; the output colour (K1389 s2)
-int lkJ; float lkS; float lkK; int lkJb; float lkSb; float lkKb; vec4 lkCo = vec4(0.0);
+int lkJ; float lkS; float lkK; int lkJb; float lkSb; float lkKb; vec4 lkCo = vec4(0.0); float lkHi = 0.0;
 int lkj[MAXS]; float lks[MAXS];
 `;
 const M_ANCHOR = "\nvoid main() {\n";
@@ -706,6 +826,54 @@ float lkTele(int c, vec2 q) {
 }
 vec2 lkFoot(int c, vec2 q) { vec4 C0 = F(uOCh + 3 * c); int v = int(C0.x) + int(q.x); vec4 A = F(uOV + v); vec4 B = F(uOV + v + 1); return mix(A.xy, B.xy, q.y); }
 float lkTeleAcross(float e) { return 1.0 - lkSmooth((1.0 - e) / ${lkF(PAINT_CONST.RIM_EDGE)} * uTeleScale); }
+uniform highp sampler2D uFx; uniform float uFxStyle; uniform vec4 uFxPh; uniform float uFxLive;
+vec4 FT(int i) { return texelFetch(uFx, ivec2(i & TWM, i >> LOG), 0); }
+// K1395: chain c's baked FX at segment q (gf_look.ts GfFxTable / fxAt, lkDyn's walk over the 2-texel groups)
+vec4 lkFx(int c, vec2 q, int sub) {
+  vec4 H = LKT(c);
+  if (H.z < 1.0) return sub == 0 ? vec4(0.0, 1.0, 9.0, 0.0) : vec4(0.0);
+  bool closed = H.w > 0.5;
+  int k = int(q.x); float u = q.y;
+  if (!closed && F(uOV + int(F(uOCh + 3 * c).x)).z < 0.0) k -= 1;
+  int last = closed ? int(H.z) : int(H.z) - 1;
+  if (k < 0) { k = 0; u = 0.0; }
+  if (k >= last) { k = last; u = 0.0; }
+  int b = int(H.y);
+  return mix(FT((b + k) * 2 + sub), FT((b + min(k + 1, last)) * 2 + sub), u);
+}
+// paint_glsl kBurn over the baked age (flicker phases live in uFxPh, as advanceClocks reduces them)
+vec3 lkBurn(vec3 rgb, float t, float k, bool roots) {
+  if (t >= ${lkF(PAINT_CONST.BURN_RECOVER_END)}) return rgb;
+  if (roots) {
+    float brown = 1.0 - lkSmooth((t - ${lkF(PAINT_CONST.ROOTS_START)}) / ${lkF(PAINT_CONST.ROOTS_FADE)});
+    if (brown > 0.004) rgb += (vec3(0.35, 0.25, 0.18) - rgb) * brown;
+    return rgb;
+  }
+  float heatW = 1.0 - lkSmooth((t - 0.015) / 0.05);
+  float heatY = lkSmooth(t / 0.02) * (1.0 - lkSmooth((t - 0.1) / 0.12));
+  float ember = lkSmooth(t / 0.08) * (1.0 - lkSmooth((t - ${lkF(PAINT_CONST.BURN_EMBER_END)}) / 0.25));
+  float chr = lkSmooth((t - ${lkF(PAINT_CONST.BURN_EMBER_END)} * 0.55) / 0.25) * (1.0 - lkSmooth((t - ${lkF(PAINT_CONST.BURN_CHAR_END)}) / (${lkF(PAINT_CONST.BURN_RECOVER_END)} - ${lkF(PAINT_CONST.BURN_CHAR_END)})));
+  rgb += (vec3(0.14, 0.11, 0.1) - rgb) * (chr * 0.92);
+  if (ember > 0.01) {
+    float spatial = 1.0 - chr;
+    float fl = 0.5 + spatial * (0.3 * sin(uFxPh.x + k * 0.31) + 0.2 * sin(uFxPh.y + k * 0.83)) + (1.0 - spatial) * uFxPh.w;
+    float e = ember * 0.85 * (1.0 - heatW * 0.7);
+    rgb += (vec3(1.0 - 0.3 * fl, 0.54 - 0.35 * fl, 0.16 - 0.08 * fl) - rgb) * e;
+  }
+  if (heatY > 0.001) rgb += (vec3(1.0, 0.84, 0.3) - rgb) * heatY;
+  if (heatW > 0.001) rgb += (vec3(1.0, 0.97, 0.88) - rgb) * heatW;
+  return rgb;
+}
+// paint_glsl kRainbowBlend: the 6 stripes across the thread (side 0..1), then the white wash (the bulb)
+vec3 lkRainbow(vec3 base, float pIn, float side) {
+  float p = min(pIn, 1.0);
+  int bi = int(min(side, 0.99999) * 6.0);
+  vec3 stripe = bi == 0 ? vec3(0.92, 0.15, 0.18) : bi == 1 ? vec3(1.0, 0.55, 0.08) : bi == 2 ? vec3(1.0, 0.88, 0.12) : bi == 3 ? vec3(0.12, 0.78, 0.3) : bi == 4 ? vec3(0.15, 0.42, 1.0) : vec3(0.58, 0.25, 0.95);
+  float rb = smoothstep(0.30, 0.52, p);
+  float wh = smoothstep(0.06, 0.26, p) * (1.0 - smoothstep(0.38, 0.60, p));
+  base = mix(base, stripe, rb);
+  return mix(base, vec3(0.93, 0.93, 0.95), wh * 0.6);
+}
 // K1389 s1: today's crossing gap: a piece above the label (key past zt) within h + gap of p, outside its own edge.
 // K1398: the cut ramps over today's fade (uLkF = fadeLength, world units) instead of one pixel, so the
 // under thread shades softly. K1415: the width is today's fadeP at p (gap_mask.ts's keep): fade scaled by
@@ -758,8 +926,8 @@ const SITES: [string | RegExp, string, number][] = [
   ["if (lab < 0 && ink > 0.0) { lab = own;", "if (lab < 0 && ink > 0.0) { lab = own; lkJb = -1; lkSb = K3.z; lkKb = BIG;", 1],
   // the output: the gap cut and the colour
   ["    oInk = min(1.0, ink); oCov = min(1.0, cov);",
-    "    lkCo = vec4(0.0);\n    if (lab >= 0) { vec2 lq = lkJb >= 0 ? lookQ(lkJb, p) : lookQs(lab, lkSb); lkCo = lkColour(lab, lq); lkCo.rgb = mix(lkCo.rgb, uGold, lkPaint(lab, lq)); float lke = clamp(length(p - lkFoot(lab, lq)) / uH, 0.0, 1.0); float lkv = lkPulse(lab, lq); if (lkv > 0.0) { if (uPulseW < 1.0) lkv *= clamp((uPulseW - lke) / max(3.0 * uAA / uH, 0.02) + 0.5, 0.0, 1.0); lkCo.rgb += (uPulseCol - lkCo.rgb) * (0.9315315315315316 * clamp(lkv, 0.0, 1.0)); } float lkt = lkTele(lab, lq); if (lkt > 0.0) lkCo.rgb += (uTeleU.rgb - lkCo.rgb) * clamp(lkt * lkTeleAcross(lke) * uTeleU.w, 0.0, 1.0); float lkg = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : 0.0; ink *= 1.0 - lkg; cov *= 1.0 - lkg; }\n    oInk = min(1.0, ink); oCov = min(1.0, cov);", 1],
-  ["  o0 = vec4(oInk, oCov, 0.0, 1.0);\n#endif", "  o0 = vec4(oInk, oCov, 0.0, 1.0); o1 = lkCo;\n#endif", 1],
+    "    lkCo = vec4(0.0);\n    if (lab >= 0) { vec2 lq = lkJb >= 0 ? lookQ(lkJb, p) : lookQs(lab, lkSb); lkCo = lkColour(lab, lq); lkCo.rgb = mix(lkCo.rgb, uGold, lkPaint(lab, lq)); float lke = clamp(length(p - lkFoot(lab, lq)) / uH, 0.0, 1.0); float lkv = lkPulse(lab, lq); if (lkv > 0.0) { if (uPulseW < 1.0) lkv *= clamp((uPulseW - lke) / max(3.0 * uAA / uH, 0.02) + 0.5, 0.0, 1.0); lkCo.rgb += (uPulseCol - lkCo.rgb) * (0.9315315315315316 * clamp(lkv, 0.0, 1.0)); } float lkt = lkTele(lab, lq); if (lkt > 0.0) lkCo.rgb += (uTeleU.rgb - lkCo.rgb) * clamp(lkt * lkTeleAcross(lke) * uTeleU.w, 0.0, 1.0); if (uFxLive > 0.5) { vec4 f0 = lkFx(lab, lq, 0); vec4 f1 = lkFx(lab, lq, 1); if (uFxStyle > 3.5) lkCo.rgb = lkBurn(lkCo.rgb, f0.z, f1.x, uFxStyle > 4.5); else if (uFxStyle > 0.5 && uFxStyle < 1.5 && f0.x > 0.0) { vec2 tn = lkTan(lab, lq.x); float sd = clamp(dot(p - lkFoot(lab, lq), vec2(-tn.y, tn.x)) / uH, -1.0, 1.0); lkCo.rgb = lkRainbow(lkCo.rgb, f0.x, 0.5 + 0.5 * sd); } if (f1.y > 0.0) lkCo.rgb += (vec3(1.0) - lkCo.rgb) * (0.9315315315315316 * clamp(f1.y, 0.0, 1.0)); ink *= f0.y; cov *= f0.y; lkHi = f0.w; } float lkg = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : 0.0; ink *= 1.0 - lkg; cov *= 1.0 - lkg; }\n    oInk = min(1.0, ink); oCov = min(1.0, cov);", 1],
+  ["  o0 = vec4(oInk, oCov, 0.0, 1.0);\n#endif", "  o0 = vec4(oInk, oCov, lkHi, 1.0); o1 = lkCo;\n#endif", 1],
 ];
 
 /** A gf program's look form (see the header); throws when an anchor is missing or repeats. */
@@ -775,7 +943,7 @@ export function lookForm(src: string): string {
     if (n === 1) out = out.replace(s, b);
   }
   // the sites every program carries
-  for (const must of ["lkJb = lkJ;", "lkCo = vec4(0.0);\n", "lkPulse(lab, lq)", "lkTele(lab, lq)", "o0 = vec4(oInk, oCov, 0.0, 1.0); o1 = lkCo;", "layout(location = 1) out vec4 o1;", "ss(uW - max(3.0 * uAA, 0.02 * uH), uW, D)"]) if (!out.includes(must)) throw new Error(`gf look: ${must} missing`);
+  for (const must of ["lkJb = lkJ;", "lkCo = vec4(0.0);\n", "lkPulse(lab, lq)", "lkTele(lab, lq)", "lkBurn(lkCo.rgb", "lkRainbow(lkCo.rgb", "o0 = vec4(oInk, oCov, lkHi, 1.0); o1 = lkCo;", "layout(location = 1) out vec4 o1;", "ss(uW - max(3.0 * uAA, 0.02 * uH), uW, D)"]) if (!out.includes(must)) throw new Error(`gf look: ${must} missing`);
   return out;
 }
 
@@ -787,6 +955,7 @@ uniform sampler2D uCo;
 uniform int uLook;
 uniform vec4 uBd;
 uniform vec3 uFill;
+uniform float uRvFx;
 out vec4 o;
 void main() {
   ivec2 q = ivec2(gl_FragCoord.xy);
@@ -810,6 +979,6 @@ void main() {
   // is the background between its outlines). The border alpha strengthens form B's centre-sampled band
   // to today's area-averaged stroke (the pass target has no MSAA) and darkens S toward today's dark edge colour, so the faint continuous outline reads at today's darkness; fill and both keep the band and S as they are.
   if (uLook == 0) o = vec4(C * cov, cov);
-  else if (uLook == 1) { vec3 Sb = mix(S, vec3(0.055, 0.07, 0.10), 0.85); float a = clamp((ink - 0.36) * 3.5, 0.0, 1.0); o = vec4(Sb * a, a); }
+  else if (uLook == 1) { vec3 Sb = mix(S, vec3(0.055, 0.07, 0.10), 0.85); float a = clamp((ink - 0.36) * 3.5, 0.0, 1.0); if (uRvFx > 0.5) { float ia = clamp(c.z, 0.0, 1.0) * cov * (1.0 - a); o = vec4(Sb * a + C * ia, max(a, ia)); } else o = vec4(Sb * a, a); }
   else { float a = ink + (1.0 - ink) * cov; o = vec4(S * (0.9 * ink) + C * (a - 0.9 * ink), a); }
 }`;

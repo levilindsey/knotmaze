@@ -29,7 +29,7 @@ describe("K1389 look form", () => {
         expect(f).toContain("lkJb = lkJ; lkSb = lkS; lkKb = lkK;");
         expect(f).toContain("lkCo = lkColour(lab, lq); lkCo.rgb = mix(lkCo.rgb, uGold, lkPaint(lab, lq));");
         // the colour rides a second target; o0 keeps (ink, coverage)
-        expect(f).toContain("o0 = vec4(oInk, oCov, 0.0, 1.0); o1 = lkCo;");
+        expect(f).toContain("o0 = vec4(oInk, oCov, lkHi, 1.0); o1 = lkCo;");
         expect(f).toContain("layout(location = 0) out vec4 o0;\nlayout(location = 1) out vec4 o1;");
         expect(f).not.toMatch(/\nout vec4 o0;/);
         // the ink band takes today's stroke profile, ending at W (inside form B's reach)
@@ -73,8 +73,8 @@ describe("K1389 look form", () => {
     }
     expect(LOOK_COMP_FS).toContain("if (!(ink > 0.0) && !(cov > 0.0))");
     expect(LOOK_COMP_FS).not.toContain("CASE");
-    expect(LOOK_COMP_FS).toContain("vec3 Sb = mix(S, vec3(0.055, 0.07, 0.10), 0.85); float a = clamp((ink - 0.36) * 3.5, 0.0, 1.0); o = vec4(Sb * a, a);");
-    expect(LOOK_COMP_FS).not.toContain("c.z");
+    expect(LOOK_COMP_FS).toContain("vec3 Sb = mix(S, vec3(0.055, 0.07, 0.10), 0.85); float a = clamp((ink - 0.36) * 3.5, 0.0, 1.0); if (uRvFx > 0.5) { float ia = clamp(c.z, 0.0, 1.0) * cov * (1.0 - a); o = vec4(Sb * a + C * ia, max(a, ia)); } else o = vec4(Sb * a, a);");
+    expect(LOOK_COMP_FS).toContain("uniform float uRvFx;");
     expect(lookGap({ style: { casingWidth: 0.34, threadWidth: 0.26 } })).toBeCloseTo(0.07, 9);
     expect(lookFade({ fadeLength: 0.14 })).toBe(0.14);
     expect(lookFade({ fadeLength: -1 })).toBe(0);
