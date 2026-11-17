@@ -1,0 +1,1 @@
+g41_def_tw64	tgrfl	finds 343	{"dbreak:tie":1,"rstray:tie":21,"rstray:ramp":6,"rthin:plain":265,"rthin:ramp":48,"rthin:tie":1,"rthin:thru":1}	{"px":14041776,"act":8356431,"msPerMpx":2349,"usPerAct":3.95,"pcallsPerAct":0.321,"segsPerAct":3.28,"cfgsPerAct":1.052,"nSegPerAct":32.9,"nKPerAct":0.51}

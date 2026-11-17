@@ -22,15 +22,17 @@ try {
   $work | ForEach-Object -ThrottleLimit $Throttle -Parallel {
     $v = $_.v; $s = $_.s
     Set-Location $using:root
-    $env:GF_HOME = $null; $env:K1438_EV = $null; $env:K1438_FL = $null
-    if ($v -eq "new") { $env:GF_HOME = "1" }
-    elseif ($v -eq "tgrfl") { $env:GF_HOME = "1"; $env:K1438_FL = "tgr" }
-    elseif ($v -match '^fl(.+)$') { $env:GF_HOME = "1"; $env:K1438_FL = $Matches[1] }
-    elseif ($v -eq "m") { $env:K1438_EV = "m" }
-    elseif ($v -eq "tgr") { $env:K1438_EV = "tgr" }
+    # Env per child through cmd's set: $env: is process-wide, shared by every parallel runspace (a race, 2026-11-16).
+    $e = "set GF_HOME=&& set K1438_EV=&& set K1438_FL="
+    if ($v -eq "new") { $e = "set GF_HOME=1&& set K1438_EV=&& set K1438_FL=" }
+    elseif ($v -eq "tgrfl") { $e = "set GF_HOME=1&& set K1438_EV=&& set K1438_FL=tgr" }
+    elseif ($v -match '^fl(.+)$') { $e = "set GF_HOME=1&& set K1438_EV=&& set K1438_FL=$($Matches[1])" }
+    elseif ($v -eq "m") { $e = "set GF_HOME=&& set K1438_EV=m&& set K1438_FL=" }
+    elseif ($v -eq "tgr") { $e = "set GF_HOME=&& set K1438_EV=tgr&& set K1438_FL=" }
     $o = Join-Path $using:out "$($v)_$($s)"
-    node scripts/run_node.mjs .claude/probes/K1438/k1438_scan.ts $v $s $using:Ppu "$o.json" 2>&1 | Out-File -Encoding utf8 "$o.txt"
+    cmd /c "$e&& node scripts/run_node.mjs .claude/probes/K1438/k1438_scan.ts $v $s $($using:Ppu) `"$o.json`"" 2>&1 | Out-File -Encoding utf8 "$o.txt"
   }
   Write-Host "scan done in $([int]((Get-Date) - $t0).TotalSeconds) s"
 }
 finally { [System.IO.File]::Delete($lock) }
+

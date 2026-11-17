@@ -1,0 +1,1 @@
+def	off,new,tgrfl	finds 175	{"dbreak:tie":8,"dstray:tie":33,"rbreak:tie":4,"rstray:tie":29,"rthin:plain":96,"rthin:ramp":3,"rthin:tie":2}	{"px":13809720,"act":7084305,"msPerMpx":1096,"usPerAct":2.14,"pcallsPerAct":0.287,"segsPerAct":2.53,"cfgsPerAct":1.088,"nSegPerAct":27.8,"nKPerAct":0.59}

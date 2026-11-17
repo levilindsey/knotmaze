@@ -1,0 +1,1 @@
+muse_hash	fl1.2	finds 586	{"dbreak:tie":18,"dstray:tie":18,"dstray:ramp":2,"rbreak:tie":8,"rstray:plain":16,"rstray:ramp":7,"rstray:tie":2,"rthin:ramp":239,"rthin:plain":248,"rthin:tie":26,"rthin:thru":2}	{"px":14876088,"act":10100660,"msPerMpx":1951,"usPerAct":2.87,"pcallsPerAct":0.352,"segsPerAct":4.05,"cfgsPerAct":1.195,"nSegPerAct":39.2,"nKPerAct":0.59}
