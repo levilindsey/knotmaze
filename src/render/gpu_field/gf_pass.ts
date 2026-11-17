@@ -572,7 +572,7 @@ export class GfPass {
     const rv = this.rv;
     const lk = this.lk;
     // K1389 s2: the look form writes its colour to the target's second attachment; the original programs only o0
-    if (!target.float && target.n > 1) gl.drawBuffers(lk ? [gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1] : [gl.COLOR_ATTACHMENT0, gl.NONE]);
+    if (!target.float && target.n > 1) gl.drawBuffers(lk ? (target.n > 2 ? [gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1, gl.COLOR_ATTACHMENT2] : [gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]) : [gl.COLOR_ATTACHMENT0, gl.NONE]);
     if (lk && !this.lprogs[rv ? 1 : 0]) this.lprogs[rv ? 1 : 0] = this.lplan!(!!rv);
     const progs = (lk ? this.lprogs[rv ? 1 : 0]! : rv ? this.rprogs! : this.progs).filter((g) => (!g.tier || !g.tier.half || halfOk) && (!g.when || (g.when === "corners") === corners));
     const routed = progs.length > 1;
@@ -759,17 +759,20 @@ export class GfComposite {
     if (look) {
       if (!this.lprog) {
         this.lprog = compileProgram(gl, GF_VS, LOOK_COMP_FS);
-        for (const n of ["uC", "uCo", "uLook", "uBd", "uFill", "uRvFx"]) this.lu.set(n, gl.getUniformLocation(this.lprog, n));
+        for (const n of ["uC", "uCo", "uHi", "uLook", "uBd", "uFill", "uRvFx"]) this.lu.set(n, gl.getUniformLocation(this.lprog, n));
       }
       const u = (n: string): WebGLUniformLocation | null => this.lu.get(n) ?? null;
       gl.useProgram(this.lprog);
-      // K1389 s2: the pass's second attachment holds the colours
+      // K1389 s2: the pass's second attachment holds the colours; K1425: the third holds the border indication
       gl.activeTexture(gl.TEXTURE1);
       gl.bindTexture(gl.TEXTURE_2D, src.tex[1]);
+      gl.activeTexture(gl.TEXTURE2);
+      gl.bindTexture(gl.TEXTURE_2D, src.tex[2] ?? src.tex[0]);
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, src.tex[0]);
       gl.uniform1i(u("uC"), 0);
       gl.uniform1i(u("uCo"), 1);
+      gl.uniform1i(u("uHi"), 2);
       gl.uniform1i(u("uLook"), look.mode);
       gl.uniform4f(u("uBd"), look.bd[0], look.bd[1], look.bd[2], look.bd[3]);
       gl.uniform3f(u("uFill"), fill[0], fill[1], fill[2]);
@@ -777,6 +780,8 @@ export class GfComposite {
       gl.bindVertexArray(this.vao);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
       gl.bindVertexArray(null);
+      gl.activeTexture(gl.TEXTURE2);
+      gl.bindTexture(gl.TEXTURE_2D, null);
       gl.activeTexture(gl.TEXTURE1);
       gl.bindTexture(gl.TEXTURE_2D, null);
       gl.activeTexture(gl.TEXTURE0);

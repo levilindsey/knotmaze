@@ -83,7 +83,7 @@ describe("K1405 gf paint table", () => {
     for (const s of programs) {
       const f = lookForm(s);
       expect(f).toContain("uniform highp sampler2D uPt; uniform vec3 uGold;");
-      expect(f).toContain("lkCo.rgb = mix(lkCo.rgb, uGold, lkPaint(lab, lq));");
+      expect(f).toContain("lkCo.rgb = mix(lkCo.rgb, uGold, lkgp);");
       expect(s).not.toContain("uPt");
     }
   });

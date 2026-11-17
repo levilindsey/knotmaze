@@ -16,8 +16,8 @@ vi.mock("../../src/render/paint_model", async (orig) => ({
 import { gfFs } from "../../src/render/gpu_field/gf_glsl";
 import { cornerPlan, GF_TIERS } from "../../src/render/gpu_field/gf_pass";
 import { revealForm } from "../../src/render/gpu_field/gf_reveal";
-import { GfLookGate, GfLookTable, lookColour, lookFade, lookForm, lookGap, lookKey, LOOK_COMP_FS, LOOK_R } from "../../src/render/gpu_field/gf_look";
-import type { KChain, KData } from "../../src/render/paint_math";
+import { GfLookGate, GfLookTable, lookColour, lookFade, lookForm, lookGap, lookHi, lookKey, LOOK_COMP_FS, LOOK_R } from "../../src/render/gpu_field/gf_look";
+import { kComposePaint, kRimOver, kTeleOver, type KChain, type KData, type KPaintState, type KUniforms } from "../../src/render/paint_math";
 
 describe("K1389 look form", () => {
   const T = GF_TIERS[0];
@@ -27,10 +27,10 @@ describe("K1389 look form", () => {
       for (const f of [lookForm(src), lookForm(revealForm(src))]) {
         expect(f).toContain("uniform highp sampler2D uLk; uniform highp sampler2D uLkP;");
         expect(f).toContain("lkJb = lkJ; lkSb = lkS; lkKb = lkK;");
-        expect(f).toContain("lkCo = lkColour(lab, lq); lkCo.rgb = mix(lkCo.rgb, uGold, lkPaint(lab, lq));");
+        expect(f).toContain("lkCo = lkColour(lab, lq); float lkgp = lkPaint(lab, lq); lkCo.rgb = mix(lkCo.rgb, uGold, lkgp);");
         // the colour rides a second target; o0 keeps (ink, coverage)
-        expect(f).toContain("o0 = vec4(oInk, oCov, lkHi, 1.0); o1 = lkCo;");
-        expect(f).toContain("layout(location = 0) out vec4 o0;\nlayout(location = 1) out vec4 o1;");
+        expect(f).toContain("o0 = vec4(oInk, oCov, lkHi, lkE); o1 = lkCo; o2 = vec4(lkHiC, lkHiA);");
+        expect(f).toContain("layout(location = 0) out vec4 o0;\nlayout(location = 1) out vec4 o1;\nlayout(location = 2) out vec4 o2;");
         expect(f).not.toMatch(/\nout vec4 o0;/);
         // the ink band takes today's stroke profile, ending at W (inside form B's reach)
         expect(f).toContain("(1.0 - ss(uW - max(3.0 * uAA, 0.02 * uH), uW, D)) * ss(-uAA, uAA, D)");
@@ -74,7 +74,7 @@ describe("K1389 look form", () => {
     }
     expect(LOOK_COMP_FS).toContain("if (!(ink > 0.0) && !(cov > 0.0))");
     expect(LOOK_COMP_FS).not.toContain("CASE");
-    expect(LOOK_COMP_FS).toContain("vec3 Sb = mix(S, vec3(0.055, 0.07, 0.10), 0.85); float a = clamp((ink - 0.36) * 3.5, 0.0, 1.0); if (uRvFx > 0.5) { float ia = clamp(c.z, 0.0, 1.0) * cov * (1.0 - a); o = vec4(Sb * a + C * ia, max(a, ia)); } else o = vec4(Sb * a, a);");
+    expect(LOOK_COMP_FS).toContain("vec3 Sb = mix(S, vec3(0.055, 0.07, 0.10), 0.85); float a = clamp((ink - 0.36) * 3.5, 0.0, 1.0); if (uRvFx > 0.5) { float ia = clamp(c.z, 0.0, 1.0) * cov * (1.0 - a); o = vec4(Sb * a + C * ia, max(a, ia)); } else { float ia = clamp(hh.a, 0.0, 1.0) * cov * (1.0 - clamp(c.w, 0.0, 1.0)); o = vec4(hh.rgb * ia + Sb * a * (1.0 - ia), ia + a * (1.0 - ia)); }");
     expect(LOOK_COMP_FS).toContain("uniform float uRvFx;");
     expect(lookGap({ style: { casingWidth: 0.34, threadWidth: 0.26 } })).toBeCloseTo(0.07, 9);
     expect(lookFade({ fadeLength: 0.14 })).toBe(0.14);
@@ -169,6 +169,38 @@ describe("K1389 s2 colour table", () => {
     const P = L.positions({ kd, kcv: kc2, chainSamples });
     expect(lookColour(L, P, 1, 0, 0)).toBeNull();
     expect(lookColour(L, P, 0, 2, 0)![0]).toBeCloseTo(2, 6);
+  });
+  it("K1425: the border indication over black matches today's hi composition", () => {
+    const U = {
+      uKGold: new Float32Array([1, 0.82, 0.29]),
+      uKHlPulse: new Float32Array([1, 1, 1]),
+      uKTele: new Float32Array([0.9, 0.7, 0.2, 1]),
+      uKHlHover: new Float32Array([1, 1, 1]),
+    } as unknown as KUniforms;
+    const cases: [number, number, number, number][] = [
+      [0, 0, 0, 0], [1, 0, 0, 0], [0.4, 0.7, 0, 0], [0, 0, 0.8, 0], [0.2, 0.5, 0.6, 0.3], [0, 0.9, 0, 0.4],
+    ];
+    for (const [gp, pv, tt, rv] of cases) {
+      const S = [0, 0, 0];
+      const st: KPaintState = { p: gp, band: pv > 0, v: pv, rim: 0, tele: 0 };
+      kComposePaint(U, S, st, 0);
+      if (tt > 0) kTeleOver(U, S, tt);
+      if (rv > 0) kRimOver(S, rv, U);
+      const hi = lookHi([1, 0.82, 0.29], gp, [1, 1, 1], pv, [0.9, 0.7, 0.2], tt, [1, 1, 1], rv);
+      expect(hi[0]).toBeCloseTo(S[0], 6);
+      expect(hi[1]).toBeCloseTo(S[1], 6);
+      expect(hi[2]).toBeCloseTo(S[2], 6);
+      expect(hi[3]).toBeCloseTo(Math.max(gp, pv, tt, rv), 6);
+    }
+    // the look form carries the indication to a third target; the composite's
+    // fill branch never reads it (the fill look stays byte-identical)
+    const f = lookForm(gfFs(false, true));
+    expect(f).toContain("lkHiC = uGold * lkgp;");
+    expect(f).toContain("lkE = 0.7 * ss(0.62, 0.85, lke);");
+    expect(f).toContain("lkHiA = clamp(max(max(lkgp, lkPulseHi), max(lkRimV, lkTeleHi)), 0.0, 1.0);");
+    expect(LOOK_COMP_FS).toContain("uniform sampler2D uHi;");
+    expect(LOOK_COMP_FS).toContain("vec4 hh = texelFetch(uHi, q, 0);");
+    expect(LOOK_COMP_FS).toContain("if (uLook == 0) o = vec4(C * cov, cov);");
   });
   it("lets the hash decide when the source has no revision", () => {
     const G = new GfLookGate();

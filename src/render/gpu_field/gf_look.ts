@@ -42,6 +42,10 @@
  * uExLive is set), lkGap's cut scales by the over piece's visibility at its foot, and at the label the
  * visibility reshaped by the end look (lkExploreLook, explore_glsl.ts kExploreLook's port: the glow tint,
  * fray and dots/beacon shapes included) multiplies ink and coverage after the paint, pulses and FX. K1423: lkGap's cut is windowed by the baked winM (GfGapTable, uGw), as today's gap shader windows it.
+ * K1425: the label site also composes today's border indication over black (the gold, the pulse,
+ * the unshaped telegraph, the rim; lookHi) into a third target o2 = (hiRgb, hiA), which the
+ * composite's border branch draws in the cleared interior under the stroke; fill and both never
+ * read it, so the fill look is unchanged.
  */
 import { kArcOfCtrl, kArcU, kBurnAge, kCA, kFxColor, kFxTail, kGlow, kIgnition, kSampleArc, kWall, kWrap, knotSection, type KChain, type KData, type KIgn } from "../paint_math";
 import { PAINT_CONST, PULSE_RIDGE_FADE } from "../paint_const";
@@ -620,6 +624,32 @@ export function dynPulseV(gA: number, gB: number, flags: number, endWin: number,
   return v > PAINT_CONST.PULSE_MIN_V ? v : 0;
 }
 
+/**
+ * CPU twin of the look shader's border indication (lkHiC / lkHiA, K1425): today's
+ * border hi over an empty base (ribbon_shader: kComposePaintAcross over black,
+ * then the telegraph and rim overs) and its coverage (the strongest of the gold
+ * amount, the pulse, the scaled telegraph and the rim). teleT is the telegraph
+ * field already scaled by its strength (lkTele x uTeleU.w, no across shaping:
+ * today's hi branch composes the telegraph unshaped).
+ */
+export function lookHi(gold: ArrayLike<number>, gp: number, pulseCol: ArrayLike<number>, pulseV: number, teleCol: ArrayLike<number>, teleT: number, hov: ArrayLike<number>, rimV: number): [number, number, number, number] {
+  const kb = PAINT_CONST.K_BAND;
+  let r = gold[0] * gp, g = gold[1] * gp, b = gold[2] * gp;
+  if (pulseV > 0) {
+    const w = kb * Math.min(1, Math.max(0, pulseV));
+    r += (pulseCol[0] - r) * w; g += (pulseCol[1] - g) * w; b += (pulseCol[2] - b) * w;
+  }
+  if (teleT > 0) {
+    const k = Math.min(1, Math.max(0, teleT));
+    r += (teleCol[0] - r) * k; g += (teleCol[1] - g) * k; b += (teleCol[2] - b) * k;
+  }
+  if (rimV > 0) {
+    const w = kb * Math.min(1, Math.max(0, rimV));
+    r += (hov[0] - r) * w; g += (hov[1] - g) * w; b += (hov[2] - b) * w;
+  }
+  return [r, g, b, Math.min(1, Math.max(0, Math.max(gp, pulseV, rimV, teleT)))];
+}
+
 /** CPU twin of the look shader's lkTele over the baked telegraph texels; atU = the riding end's arc. */
 export function dynTeleG(u: number, u0: number, u1: number, alpha: number, gap0: number, gap1: number, fade0: number, fade1: number, atU: number): number {
   const e0 = fade0 < 0 ? atU : u0;
@@ -965,7 +995,7 @@ export function lookColour(T: Pick<GfLookTable, "data">, P: ArrayLike<number>, c
 const G_ANCHOR = "int labC; float labS; int cWk; int cWa; int cWb; float cCov;\n";
 const G_LOOK = `// K1389 s1: the label's piece (-1: a corner, whose s rides lkS) and key, as each site sets labC; the best
 // configuration's copies; the output colour (K1389 s2)
-int lkJ; float lkS; float lkK; int lkJb; float lkSb; float lkKb; vec4 lkCo = vec4(0.0); float lkHi = 0.0;
+int lkJ; float lkS; float lkK; int lkJb; float lkSb; float lkKb; vec4 lkCo = vec4(0.0); float lkHi = 0.0; vec3 lkHiC = vec3(0.0); float lkHiA = 0.0; float lkE = 1.0;
 int lkj[MAXS]; float lks[MAXS];
 `;
 const M_ANCHOR = "\nvoid main() {\n";
@@ -1205,24 +1235,28 @@ vec2 lkFoot(int c, vec2 q, vec2 p) {
 // run end, hover point) in sample floats, uRimB = (end gap, strength, length, end fade) in world
 // arc, uRimC = (rim scale, K_BAND, arc per sample, closed). Not on webs: the end gap keeps the
 // junction reach dark, as today's arm strips carry no across coordinate.
-vec3 lkRim(vec3 col, int lab, vec2 lq, vec2 p) {
+float lkRimF(int lab, vec2 lq, vec2 p) {
   int rc = int(uRimA.x + 0.5);
   // (the run's range check follows)
-  if (rc < 0 || rc != lab || !(uRimB.y > 0.0)) return col;
+  if (rc < 0 || rc != lab || !(uRimB.y > 0.0)) return 0.0;
   vec2 ft = lkFoot(lab, lq, p);
   float s0 = uRimA.y; float s1 = uRimA.z;
   float s = ft.x;
   if (uRimC.w > 0.5) s = s0 + mod(s - s0, max(LKT(lab).z, 1.0));
-  if (s < s0 || s > s1) return col;
+  if (s < s0 || s > s1) return 0.0;
   float arcPer = uRimC.z;
   float d = abs(s - uRimA.w) * arcPer;
   float dEnd = min(s - s0, s1 - s) * arcPer;
   float span = (s1 - s0) * arcPer;
   float fade = min(max(uRimB.w, 1e-4), max(1e-4, 0.6 * (0.5 * span - uRimB.x)));
   float g = uRimB.y * (1.0 - ss(0.0, 1.0, d / max(uRimB.z, 1e-4))) * ss(0.0, 1.0, (dEnd - uRimB.x) / fade);
-  if (!(g > 0.0)) return col;
+  if (!(g > 0.0)) return 0.0;
   float e = clamp(ft.y / uH, 0.0, 1.0);
   float rim = g * (1.0 - ss(0.0, 1.0, ((1.0 - e) / 0.85) * uRimC.x));
+  return rim > 0.0 ? rim : 0.0;
+}
+vec3 lkRim(vec3 col, int lab, vec2 lq, vec2 p) {
+  float rim = lkRimF(lab, lq, p);
   if (!(rim > 0.0)) return col;
   return col + (uHov - col) * (uRimC.y * clamp(rim, 0.0, 1.0));
 }
@@ -1262,7 +1296,7 @@ float lkGap(float key, vec2 p, vec2 qU, int cU) {
 `;
 const SITES: [string | RegExp, string, number][] = [
   // the second target (K1389 s2): the colour
-  ["#else\nout vec4 o0;\n#endif", "#else\nlayout(location = 0) out vec4 o0;\nlayout(location = 1) out vec4 o1;\n#endif", 1],
+  ["#else\nout vec4 o0;\n#endif", "#else\nlayout(location = 0) out vec4 o0;\nlayout(location = 1) out vec4 o1;\nlayout(location = 2) out vec4 o2;\n#endif", 1],
   // the ink band takes today's stroke profile (ribbon_shader.ts, K797b: edge = smoothstep(1 - bw, 1 - bw + fwA, e),
   // fwA = max(3 fwidth(vUV.y), 0.02), e = 1 - D / h): full from the edge to W - r, gone at W, r = max(1.5 px, 0.02 h)
   // (uAA is half a pixel), so on a thin thread the rim never reaches full, as today's. It ends at W, inside form B's
@@ -1286,8 +1320,8 @@ const SITES: [string | RegExp, string, number][] = [
   ["if (lab < 0 && ink > 0.0) { lab = own;", "if (lab < 0 && ink > 0.0) { lab = own; lkJb = -1; lkSb = K3.z; lkKb = BIG;", 1],
   // the output: the gap cut and the colour
   ["    oInk = min(1.0, ink); oCov = min(1.0, cov);",
-    "    lkCo = vec4(0.0);\n    if (lab >= 0) { vec2 lq = lkJb >= 0 ? lookQ(lkJb, p) : lookQs(lab, lkSb); lkCo = lkColour(lab, lq); lkCo.rgb = mix(lkCo.rgb, uGold, lkPaint(lab, lq)); lkCo.rgb = lkRim(lkCo.rgb, lab, lq, p); float lke = clamp(length(p - lkFoot(lab, lq)) / uH, 0.0, 1.0); float lkv = lkPulse(lab, lq); if (lkv > 0.0) { if (uPulseW < 1.0) lkv *= clamp((uPulseW - lke) / max(3.0 * uAA / uH, 0.02) + 0.5, 0.0, 1.0); lkCo.rgb += (uPulseCol - lkCo.rgb) * (0.9315315315315316 * clamp(lkv, 0.0, 1.0)); } float lkt = lkTele(lab, lq); if (lkt > 0.0) lkCo.rgb += (uTeleU.rgb - lkCo.rgb) * clamp(lkt * lkTeleAcross(lke) * uTeleU.w, 0.0, 1.0); if (uFxLive > 0.5) { vec4 f0 = lkFx(lab, lq, 0); vec4 f1 = lkFx(lab, lq, 1); if (uFxStyle > 3.5) lkCo.rgb = lkBurn(lkCo.rgb, f0.z, f1.x, uFxStyle > 4.5); else if (uFxStyle > 0.5 && uFxStyle < 1.5 && f0.x > 0.0) { vec2 tn = lkTan(lab, lq.x); float sd = clamp(dot(p - lkFoot(lab, lq), vec2(-tn.y, tn.x)) / uH, -1.0, 1.0); lkCo.rgb = lkRainbow(lkCo.rgb, f0.x, 0.5 + 0.5 * sd); } if (f1.y > 0.0) lkCo.rgb += (vec3(1.0) - lkCo.rgb) * (0.9315315315315316 * clamp(f1.y, 0.0, 1.0)); ink *= f0.y; cov *= f0.y; lkHi = f0.w; } float lkg = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : 0.0; ink *= 1.0 - lkg; cov *= 1.0 - lkg; if (uExLive > 0.5) { vec4 exs = exAt(lab, lkArc(lab, lq)); float evv = exs.x; if (exs.y >= 0.0 && uExLook > 1) { vec2 etn = lkTan(lab, lq.x); float elat = dot(p - lkFoot(lab, lq), vec2(-etn.y, etn.x)); if (uExLook == 2) { float eg = lkSmooth(exs.y / 0.3) * (1.0 - lkSmooth((exs.y - 0.55) / 0.45)); lkCo.rgb = mix(lkCo.rgb, vec3(0.78, 0.94, 1.0), 0.85 * eg * uExBr); } evv = lkExploreLook(uExLook, exs.x, exs.y, exs.y * exs.z, exs.z, elat, (2.0 * uAA) / max(uExTw, 1e-6), 2.0 * uAA); if (uExOn > 1.5) lkCo.rgb = mix(lkCo.rgb, vec3(1.0), lkExDot); } ink *= evv; cov *= evv; } }\n    oInk = min(1.0, ink); oCov = min(1.0, cov);", 1],
-  ["  o0 = vec4(oInk, oCov, 0.0, 1.0);\n#endif", "  o0 = vec4(oInk, oCov, lkHi, 1.0); o1 = lkCo;\n#endif", 1],
+    "    lkCo = vec4(0.0); lkHiC = vec3(0.0); lkHiA = 0.0;\n    if (lab >= 0) { vec2 lq = lkJb >= 0 ? lookQ(lkJb, p) : lookQs(lab, lkSb); lkCo = lkColour(lab, lq); float lkgp = lkPaint(lab, lq); lkCo.rgb = mix(lkCo.rgb, uGold, lkgp); float lkRimV = lkRimF(lab, lq, p); lkCo.rgb = lkRim(lkCo.rgb, lab, lq, p); float lkD = length(p - lkFoot(lab, lq)); float lke = clamp(lkD / uH, 0.0, 1.0); lkE = 0.7 * ss(0.62, 0.85, lke); float lkv = lkPulse(lab, lq); if (lkv > 0.0) { if (uPulseW < 1.0) lkv *= clamp((uPulseW - lke) / max(3.0 * uAA / uH, 0.02) + 0.5, 0.0, 1.0); lkCo.rgb += (uPulseCol - lkCo.rgb) * (0.9315315315315316 * clamp(lkv, 0.0, 1.0)); } float lkt = lkTele(lab, lq); if (lkt > 0.0) lkCo.rgb += (uTeleU.rgb - lkCo.rgb) * clamp(lkt * lkTeleAcross(lke) * uTeleU.w, 0.0, 1.0); lkHiC = uGold * lkgp; float lkPulseHi = lkJb >= 0 ? lkv : 0.0; if (lkPulseHi > 0.0) lkHiC += (uPulseCol - lkHiC) * (0.9315315315315316 * clamp(lkPulseHi, 0.0, 1.0)); float lkTeleHi = lkt * uTeleU.w; if (lkTeleHi > 0.0) lkHiC += (uTeleU.rgb - lkHiC) * clamp(lkTeleHi, 0.0, 1.0); if (lkRimV > 0.0) lkHiC += (uHov - lkHiC) * (uRimC.y * clamp(lkRimV, 0.0, 1.0)); lkHiA = clamp(max(max(lkgp, lkPulseHi), max(lkRimV, lkTeleHi)), 0.0, 1.0); if (uFxLive > 0.5) { vec4 f0 = lkFx(lab, lq, 0); vec4 f1 = lkFx(lab, lq, 1); if (uFxStyle > 3.5) lkCo.rgb = lkBurn(lkCo.rgb, f0.z, f1.x, uFxStyle > 4.5); else if (uFxStyle > 0.5 && uFxStyle < 1.5 && f0.x > 0.0) { vec2 tn = lkTan(lab, lq.x); float sd = clamp(dot(p - lkFoot(lab, lq), vec2(-tn.y, tn.x)) / uH, -1.0, 1.0); lkCo.rgb = lkRainbow(lkCo.rgb, f0.x, 0.5 + 0.5 * sd); } if (f1.y > 0.0) lkCo.rgb += (vec3(1.0) - lkCo.rgb) * (0.9315315315315316 * clamp(f1.y, 0.0, 1.0)); ink *= f0.y; cov *= f0.y; lkHi = f0.w; } float lkg = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : 0.0; ink *= 1.0 - lkg; cov *= 1.0 - lkg; lkHiA *= 1.0 - lkg; if (uExLive > 0.5) { vec4 exs = exAt(lab, lkArc(lab, lq)); float evv = exs.x; if (exs.y >= 0.0 && uExLook > 1) { vec2 etn = lkTan(lab, lq.x); float elat = dot(p - lkFoot(lab, lq), vec2(-etn.y, etn.x)); if (uExLook == 2) { float eg = lkSmooth(exs.y / 0.3) * (1.0 - lkSmooth((exs.y - 0.55) / 0.45)); lkCo.rgb = mix(lkCo.rgb, vec3(0.78, 0.94, 1.0), 0.85 * eg * uExBr); } evv = lkExploreLook(uExLook, exs.x, exs.y, exs.y * exs.z, exs.z, elat, (2.0 * uAA) / max(uExTw, 1e-6), 2.0 * uAA); if (uExOn > 1.5) lkCo.rgb = mix(lkCo.rgb, vec3(1.0), lkExDot); } ink *= evv; cov *= evv; lkHiA *= evv; } }\n    oInk = min(1.0, ink); oCov = min(1.0, cov);", 1],
+  ["  o0 = vec4(oInk, oCov, 0.0, 1.0);\n#endif", "  o0 = vec4(oInk, oCov, lkHi, lkE); o1 = lkCo; o2 = vec4(lkHiC, lkHiA);\n#endif", 1],
 ];
 
 // K1396: the explore table's fetch (gf_explore.ts's layout; the JS twin is its exAt)
@@ -1337,7 +1371,7 @@ export function lookForm(src: string): string {
   else throw new Error("gf look: explore scan anchor missing");
   out = out.replace(CORNER_RE, (m) => `${m} if (uExLive > 0.5 && EX(uOExK + k).x < 0.5) continue;`);
   // the sites every program carries
-  for (const must of ["lkJb = lkJ;", "lkCo = vec4(0.0);\n", "lkPulse(lab, lq)", "lkTele(lab, lq)", "lkBurn(lkCo.rgb", "lkRainbow(lkCo.rgb", "lkExploreLook(uExLook", "exAt(c, s)", "o0 = vec4(oInk, oCov, lkHi, 1.0); o1 = lkCo;", "layout(location = 1) out vec4 o1;", "ss(uW - max(3.0 * uAA, 0.02 * uH), uW, D)"]) if (!out.includes(must)) throw new Error(`gf look: ${must} missing`);
+  for (const must of ["lkJb = lkJ;", "lkCo = vec4(0.0); lkHiC = vec3(0.0); lkHiA = 0.0;\n", "lkPulse(lab, lq)", "lkTele(lab, lq)", "lkBurn(lkCo.rgb", "lkRainbow(lkCo.rgb", "lkExploreLook(uExLook", "exAt(c, s)", "o0 = vec4(oInk, oCov, lkHi, lkE); o1 = lkCo; o2 = vec4(lkHiC, lkHiA);", "layout(location = 1) out vec4 o1;", "layout(location = 2) out vec4 o2;", "lkHiC = uGold * lkgp;", "ss(uW - max(3.0 * uAA, 0.02 * uH), uW, D)"]) if (!out.includes(must)) throw new Error(`gf look: ${must} missing`);
   return out;
 }
 
@@ -1346,6 +1380,7 @@ export const LOOK_COMP_FS = `#version 300 es
 precision highp float;
 uniform sampler2D uC;
 uniform sampler2D uCo;
+uniform sampler2D uHi;
 uniform int uLook;
 uniform vec4 uBd;
 uniform vec3 uFill;
@@ -1357,6 +1392,7 @@ void main() {
   float ink = c.x; float cov = c.y;
   if (!(ink > 0.0) && !(cov > 0.0)) { o = vec4(0.0); return; }
   vec4 k = texelFetch(uCo, q, 0);
+  vec4 hh = texelFetch(uHi, q, 0);
   if (!(k.a > 0.0)) {
     // the fringe outside h has no label: its nearest labelled neighbour's
     ivec2 sz = textureSize(uCo, 0); float bd = 1e9;
@@ -1364,7 +1400,7 @@ void main() {
       ivec2 r = clamp(q + ivec2(dx, dy), ivec2(0), sz - 1);
       vec4 j = texelFetch(uCo, r, 0);
       float dd = float(dx * dx + dy * dy);
-      if (j.a > 0.0 && dd < bd) { bd = dd; k = j; }
+      if (j.a > 0.0 && dd < bd) { bd = dd; k = j; hh = texelFetch(uHi, r, 0); }
     }
   }
   vec3 C = k.a > 0.0 ? k.rgb : uFill;
@@ -1373,6 +1409,6 @@ void main() {
   // is the background between its outlines). The border alpha strengthens form B's centre-sampled band
   // to today's area-averaged stroke (the pass target has no MSAA) and darkens S toward today's dark edge colour, so the faint continuous outline reads at today's darkness; fill and both keep the band and S as they are.
   if (uLook == 0) o = vec4(C * cov, cov);
-  else if (uLook == 1) { vec3 Sb = mix(S, vec3(0.055, 0.07, 0.10), 0.85); float a = clamp((ink - 0.36) * 3.5, 0.0, 1.0); if (uRvFx > 0.5) { float ia = clamp(c.z, 0.0, 1.0) * cov * (1.0 - a); o = vec4(Sb * a + C * ia, max(a, ia)); } else o = vec4(Sb * a, a); }
+  else if (uLook == 1) { vec3 Sb = mix(S, vec3(0.055, 0.07, 0.10), 0.85); float a = clamp((ink - 0.36) * 3.5, 0.0, 1.0); if (uRvFx > 0.5) { float ia = clamp(c.z, 0.0, 1.0) * cov * (1.0 - a); o = vec4(Sb * a + C * ia, max(a, ia)); } else { float ia = clamp(hh.a, 0.0, 1.0) * cov * (1.0 - clamp(c.w, 0.0, 1.0)); o = vec4(hh.rgb * ia + Sb * a * (1.0 - ia), ia + a * (1.0 - ia)); } }
   else { float a = ink + (1.0 - ink) * cov; o = vec4(S * (0.9 * ink) + C * (a - 0.9 * ink), a); }
 }`;
