@@ -1016,9 +1016,12 @@ float band2(float D) { return (1.0 - ss(uW - uAA, uW + uAA, D)) * ss(-uAA, uAA, 
 // fills of its surface. q is tested a step aa toward k's own ball; when a fill k2 covers it, the paper next to k's
 // circle there is the lens of the two balls, which ends where the circles cross: the face keeps only band(|p - X|),
 // X the crossing nearest q, and nothing when the circles do not cross or X lies inside a tube of the surface.
+// K1407 c4: X is where the test switches (k2's circle against the circle iq runs on, pushed out onto k's circle),
+// and the burial is 1 - band(|p - X|) / band(|p - q|): at the switch the face keeps its unburied value.
 // eval.ts's fillBur, line for line.
 float fillBur(int k, vec2 q, vec2 p, int S) {
   vec4 Q0 = F(uOK + 6 * k); float inF = Q0.z > 0.0 ? min(uAA, 0.5 * Q0.z) / Q0.z : 0.0; vec2 iq = q + (Q0.xy - q) * inF;
+  float ri = Q0.z - Q0.z * inF; float sX = ri > 0.0 ? Q0.z / ri : 1.0; float bq = band(length(p - q));
   float lim = uH - 2.0 * uAA; float lim2 = lim * lim;
   float fbur = 0.0;
   for (int i2 = 0; i2 < nk; i2++) {
@@ -1028,14 +1031,14 @@ float fillBur(int k, vec2 q, vec2 p, int S) {
     float b = 1.0;
     vec2 dv = L0.xy - Q0.xy; float d2 = dot(dv, dv); float d = sqrt(d2);
     if (d > 1e-9) {
-      float a = (Q0.z * Q0.z - L0.z * L0.z + d2) / (2.0 * d); float hh2 = Q0.z * Q0.z - a * a;
+      float a = (ri * ri - L0.z * L0.z + d2) / (2.0 * d); float hh2 = ri * ri - a * a;
       if (hh2 >= 0.0) {
         vec2 u = dv / d; vec2 bc = Q0.xy + a * u; float hh = sqrt(hh2);
         float sg = (q.x - bc.x) * -u.y + (q.y - bc.y) * u.x >= 0.0 ? hh : -hh;
-        vec2 xc = vec2(bc.x - u.y * sg, bc.y + u.x * sg);
+        vec2 xc = Q0.xy + (vec2(bc.x - u.y * sg, bc.y + u.x * sg) - Q0.xy) * sX;
         bool inTube = false;
         for (int m = 0; m < np; m++) { if (PSURF(m) == S && pieceD(m, xc) < lim2) { inTube = true; break; } }
-        if (!inTube) b = ss(uW - uAA, uW + uAA, length(p - xc));
+        if (!inTube) { float bX = band(length(p - xc)); b = bq > bX ? 1.0 - bX / bq : 0.0; }
       }
     }
     if (b > fbur) fbur = b;

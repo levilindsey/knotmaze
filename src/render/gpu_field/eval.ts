@@ -151,11 +151,18 @@ export class GfEval {
    * only band(|p - X|), X the crossing nearest q (the lens corner's round cap), and nothing when the circles do not
    * cross or X lies inside a tube of the surface. c1 tested a step W deep and buried whole, so an arc whose paper
    * side was the lens ran on past X into k2's fill: the pointed stubs at K1315's under-tail ends (c1 rows 5-10).
+   * K1407 c4: the cap's centre X is where the test itself switches, the crossing of k2's circle with the circle i
+   * runs on (radius r - r * inF), pushed out radially onto k's circle; the burial is 1 - band(|p - X|) / band(|p - q|),
+   * so the face keeps min(band(|p - q|), band(|p - X|)). At the switch q = X, so the face's value is the unburied
+   * one: c3 capped at the circles' own crossing and multiplied, and the face dropped where i entered the fill (up to
+   * 0.33 of ink across the inner edge where two near-coincident arcs hand over: the def seam notches).
    * Returns the burial, max over the fills. gf_glsl.ts's fillBur, line for line. */
   private fillBur(k: number, qx: number, qy: number, x: number, y: number, S: number): number {
     const T = this.T; const r = T.kR[k]; const cx = T.kCx[k]; const cy = T.kCy[k]; const aa = T.aa; const W = T.W;
     const inF = r > 0 ? Math.min(aa, 0.5 * r) / r : 0;
     const ix = qx + (cx - qx) * inF; const iy = qy + (cy - qy) * inF;
+    const ri = r - r * inF; const sX = ri > 0 ? r / ri : 1;
+    const bq = 1 - ss(W - aa, W + aa, Math.sqrt((x - qx) * (x - qx) + (y - qy) * (y - qy)));
     const lim = T.h - 2 * aa; const lim2 = lim * lim;
     let fbur = 0;
     for (let i2 = 0; i2 < this.nk; i2++) {
@@ -166,14 +173,17 @@ export class GfEval {
       let b = 1;
       const dx = c2x - cx; const dy = c2y - cy; const d2 = dx * dx + dy * dy; const d = Math.sqrt(d2);
       if (d > 1e-9) {
-        const a = (r * r - r2 * r2 + d2) / (2 * d); const hh2 = r * r - a * a;
+        const a = (ri * ri - r2 * r2 + d2) / (2 * d); const hh2 = ri * ri - a * a;
         if (hh2 >= 0) {
           const hh = Math.sqrt(hh2); const ux = dx / d; const uy = dy / d; const bx = cx + a * ux; const by = cy + a * uy;
           const sg = (qx - bx) * -uy + (qy - by) * ux >= 0 ? hh : -hh;
-          const Xx = bx - uy * sg; const Xy = by + ux * sg;
+          const Xx = cx + (bx - uy * sg - cx) * sX; const Xy = cy + (by + ux * sg - cy) * sX;
           let inTube = false;
           for (let m = 0; m < this.np; m++) if (this.psurf[m] === S && this.pieceD(m, Xx, Xy) < lim2) { inTube = true; break; }
-          if (!inTube) { const dX = Math.sqrt((x - Xx) * (x - Xx) + (y - Xy) * (y - Xy)); b = ss(W - aa, W + aa, dX); }
+          if (!inTube) {
+            const bX = 1 - ss(W - aa, W + aa, Math.sqrt((x - Xx) * (x - Xx) + (y - Xy) * (y - Xy)));
+            b = bq > bX ? 1 - bX / bq : 0;
+          }
         }
       }
       if (b > fbur) fbur = b;

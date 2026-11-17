@@ -788,7 +788,9 @@ export async function runJob(browser, job) {
     const basePx = ex.scene.camera.pxPerUnit;
     const pois = ex.scene.pois;
     const zoomTo = async (poiName, tgt) => {
-      const poi = pois.find((p) => p.name === poiName);
+      // K1407 c4: "xy:<x>,<y>" zooms on a world point (a census spot) instead of a named POI
+      const xy = /^xy:(-?[\d.]+),(-?[\d.]+)$/.exec(poiName);
+      const poi = xy ? { name: poiName, at: [+xy[1], +xy[2]] } : pois.find((p) => p.name === poiName);
       if (!poi) throw new Error(`no POI ${poiName} (have ${pois.map((p) => p.name).join(",")})`);
       const target = parseTarget(tgt, basePx);
       const z = await page.evaluate((at, t) => window.__k868.zoomTo(at, t), poi.at, target);
