@@ -871,19 +871,20 @@ int mg; float mramp;
 void member(int c, float s, vec4 KB) {
   vec4 C0 = F(uOCh + 3 * c);
   int a0 = int(KB.z); int an = int(KB.w); float lam = uH; bool closed = C0.z > 0.5; float len = C0.w;
-  int g = -1; float ramp = 0.0;
+  int g = -1; float ramp = 0.0; float sRa = 0.0;
   for (int i = a0; i < a0 + an; i++) {
     vec4 A = F(KAB + 2 * i);
     float d = (s - A.x) * A.y; if (closed) d = mod(d, len);
     if (d < -1e-12 || d > A.z + 1e-12) continue;
     float Lc = A.w;
     float rp = Lc >= BIGT ? 1.0 : ss(Lc, Lc - lam, d);
-    if (g < 0 || rp > ramp) { g = int(F(KAB + 2 * i + 1).x); ramp = rp; }
+    if (g < 0 || rp > ramp) { g = int(F(KAB + 2 * i + 1).x); ramp = rp; sRa = A.x; }
   }
   if (g >= 0 && ramp > 0.0) {
     for (int i = a0; i < a0 + an; i++) {
       vec4 A = F(KAB + 2 * i); float Lc = A.w;
-      if (int(F(KAB + 2 * i + 1).x) != g || Lc >= BIGT) continue;
+      // K1407 c5: not the arms rooted where loop 1's arm is (eval.ts member's comment)
+      if (int(F(KAB + 2 * i + 1).x) != g || Lc >= BIGT || abs(A.x - sRa) < 1e-4) continue;
       float d = (s - A.x) * A.y; if (closed) { d = mod(d, len); if (d > len / 2.0) d -= len; }
       if (!(d < 1e-12 && d > Lc - lam)) continue;
       ramp = min(ramp, ss(Lc, Lc - lam, d));
