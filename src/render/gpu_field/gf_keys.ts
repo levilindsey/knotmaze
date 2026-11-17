@@ -72,8 +72,9 @@ export function buildKeys(T: GfTables): GfKeys {
       const dir = f(T.aDir[i]); const sR = f(T.aSR[i]); const L = f(T.aL[i]);
       const Lc = T.aLcut[i] === Infinity ? 1e30 : f(T.aLcut[i]);
       // loop 1: d in [-1e-12, L + 1e-12]; loop 2: d in (Lc - lam, 1e-12) when Lc < BIGT
+      // K1439: with T.homeOn, loop 1's home test also reads d in [-1e-12, aHome + 1e-12]
       const dLo = Math.min(0, Lc < BIGT ? Lc - lam : 0) - mD;
-      const dHi = Math.max(L, 0) + mD;
+      const dHi = (T.homeOn ? Math.max(L, f(T.aHome[i]), 0) : Math.max(L, 0)) + mD;
       if ((dir !== 1 && dir !== -1) || !(dHi - dLo < (closed ? len : Infinity))) { aAll[q] = 1; continue; }
       aLo[q] = dir > 0 ? sR + dLo : sR - dHi;
       aHi[q] = dir > 0 ? sR + dHi : sR - dLo;

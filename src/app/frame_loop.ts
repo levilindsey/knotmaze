@@ -225,6 +225,9 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
   if (outlineFlag && new URLSearchParams(location.search).get("ob") !== "0") (globalThis as { __knotOutlineBandRec?: boolean }).__knotOutlineBandRec = true;
   // K1247 s25: `obt=1` times the band placement pass by GPU timer query (probes only; a query costs frame time).
   if (outlineFlag && new URLSearchParams(location.search).get("obt") === "1") (globalThis as { __knotBandTfTime?: boolean }).__knotBandTfTime = true;
+  // K1439: `gfh=1` under `rp=gf` draws junction membership from the arms' home intervals (K1438; gf_glsl.ts homeForm),
+  // its fade following the fadeLength slider live. Off by default: without it the programs and tables are master's.
+  if (gfFlag && new URLSearchParams(location.search).get("gfh") === "1") (globalThis as { __knotGfHome?: boolean }).__knotGfHome = true;
   const labelFrame = (): void => {
     const r = scene.renderer;
     const kind = gfFlag ? "gf" : outlineFlag ? "outline" : params.fieldBand ? "field" : "label";
