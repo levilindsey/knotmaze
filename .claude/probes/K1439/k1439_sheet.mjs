@@ -24,10 +24,14 @@ const here = dirname(fileURLToPath(import.meta.url));
 const outDir = join(here, "out", tag);
 mkdirSync(outDir, { recursive: true });
 const TAIL = "&am=instant&snd=none&stb=0&fw=0&phw=0";
+// The census scenes' own capture links (K868 scenes' diag urls): the census look (muse_hash on the light wash) and,
+// for g41, the census state. K1362's token for g41 (1471kin.FGH0yfoS9h8PAZC) settles elsewhere (hash 9f56c2c4,
+// 2026-11-16 22:06 run), so the worse site is not at 17.8,9.55 there; muse_hash's token drops only the backdrop.
 const SCENES = [
-  { name: "muse_hash", link: "3.FGH1HtvQeDjm6e4BII", hash: "733ee14a",
+  { name: "muse_hash", link: "3&tlk=border&tw=1.1&cr=6&bg=wash&bgcm=custom&bgc0=e6e9ee", hash: "733ee14a",
     spots: [["s22", 22.56, 34.84], ["s29", 29.74, 20.26], ["s5", 5.88, 8.5], ["s19", 19.41, 14.16]] },
-  { name: "g41_user_tw64", link: "1471kin.FGH0yfoS9h8PAZC", hash: "0d51331b", spots: [["worse", 17.8, 9.55]] },
+  { name: "g41_user_tw64", link: "s=1471kin&gs=12&rep=1&bd=1&sm=.25&ga=0&tw=.64&gap=.12&cr=3&fl=0&fv=1.15&vol=.18&hs=312&pal=moss&pc=6c644c&as=2.1&tlk=border",
+    hash: "0d51331b", spots: [["worse", 17.8, 9.55]] },
 ];
 const FLS = [0, 0.14, 1.2];
 const ZOOM = 8;
@@ -122,7 +126,14 @@ function pageLib() {
   // Wait until the gf pass has drawn and no build has landed for `quiet` ms (frames continuous).
   L.gfQuiet = async (quiet = 600) => {
     const g0 = L.gf();
-    if (!g0) { await L.sleep(quiet); return null; }
+    if (!g0) {
+      // rp=outline: wait for the outline worker's reply at this view, then hold
+      const o = window.__knotOutline;
+      const r0 = o?.stats?.replies ?? 0;
+      for (let i = 0; o && i < 100; i++) { await L.sleep(100); if (o.stats.replies > r0 && o.settled) break; }
+      await L.sleep(quiet);
+      return o ? { replies: o.stats.replies, settled: o.settled } : null;
+    }
     let last = L.gf(), t = performance.now();
     for (let i = 0; i < 100; i++) {
       await L.sleep(100);
@@ -158,6 +169,14 @@ try {
         await window.__knotPhysFreeze(true);
         const d2 = await window.__knotPhysDump();
         window.__knotLoop?.({ continuous: true });
+        // every clock pinned (probes.md, K83 / k1362s2_ab.mjs): paint pulses and the background drift
+        const r = window.__knotRenderer(), proto = Object.getPrototypeOf(r);
+        r.advanceClocks = function () {}; r.paintClock = 100; r.pulseBorn = 0;
+        r.tickPaint = function () { return proto.tickPaint.call(this, 0); };
+        try {
+          const B = window.__knotBackgroundLayer && window.__knotBackgroundLayer();
+          if (B) { B.tick = function () { return false; }; B.clock.time = 40; if (B.active) B.renderTexture(); }
+        } catch (e) { /* no background layer */ }
         return { simTime: d1.simTime, hash: d1.hashes.all, frozenHash: d2.hashes.all };
       });
       const P = (R.pages[mode] = { url: base + "/" + q, step, hashOk: step.hash === sc.hash && step.frozenHash === sc.hash,
@@ -222,8 +241,8 @@ try {
   }
   // the sheets
   const sp = await browser.newPage();
-  await sp.setViewport({ width: 1800, height: 900, deviceScaleFactor: 1 });
-  const img = (f) => (f ? `<img src="data:image/png;base64,${readFileSync(f).toString("base64")}" width="340" height="340">` : "");
+  await sp.setViewport({ width: 2700, height: 900, deviceScaleFactor: 1 });
+  const img = (f) => (f ? `<img src="data:image/png;base64,${readFileSync(f).toString("base64")}" width="400" height="400">` : "");
   const sheet = async (name, title, cols, rowsOf) => {
     const html = `<html><body style="margin:8px;font:13px sans-serif;background:#fff"><div>${title}</div><table cellspacing="4">
       <tr><td></td>${cols.map(([, h]) => `<td>${h}</td>`).join("")}</tr>
