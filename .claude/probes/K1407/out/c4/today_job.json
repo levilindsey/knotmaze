@@ -1,0 +1,34 @@
+[
+  {
+    "out": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\agent-ae59dc67f72d13811\\.claude\\probes\\K1407\\out\\c4\\today_base",
+    "zooms": [
+      {
+        "poi": "xy:5.88,8.50",
+        "target": "8x",
+        "out": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\agent-ae59dc67f72d13811\\.claude\\probes\\K1407\\out\\c4\\today_s4",
+        "masterOnly": true
+      },
+      {
+        "poi": "xy:19.41,14.16",
+        "target": "8x",
+        "out": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\agent-ae59dc67f72d13811\\.claude\\probes\\K1407\\out\\c4\\today_s5",
+        "masterOnly": true
+      },
+      {
+        "poi": "xy:22.56,34.84",
+        "target": "8x",
+        "out": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\agent-ae59dc67f72d13811\\.claude\\probes\\K1407\\out\\c4\\today_s16",
+        "masterOnly": true
+      },
+      {
+        "poi": "xy:5.53,14.97",
+        "target": "8x",
+        "out": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\agent-ae59dc67f72d13811\\.claude\\probes\\K1407\\out\\c4\\today_eye",
+        "masterOnly": true
+      }
+    ],
+    "masterOnly": true,
+    "expectHash": "733ee14a",
+    "url": "http://127.0.0.1:5503/?3&tw=1.1&cr=6&bg=wash&bgcm=custom&bgc0=e6e9ee&am=instant&snd=none&stb=0&fw=0&phw=0"
+  }
+]

@@ -151,17 +151,16 @@ export class GfEval {
    * only band(|p - X|), X the crossing nearest q (the lens corner's round cap), and nothing when the circles do not
    * cross or X lies inside a tube of the surface. c1 tested a step W deep and buried whole, so an arc whose paper
    * side was the lens ran on past X into k2's fill: the pointed stubs at K1315's under-tail ends (c1 rows 5-10).
-   * K1407 c4: the cap's centre X is where the test itself switches, the crossing of k2's circle with the circle i
-   * runs on (radius r - r * inF), pushed out radially onto k's circle; the burial is 1 - band(|p - X|) / band(|p - q|),
-   * so the face keeps min(band(|p - q|), band(|p - X|)). At the switch q = X, so the face's value is the unburied
-   * one: c3 capped at the circles' own crossing and multiplied, and the face dropped where i entered the fill (up to
-   * 0.33 of ink across the inner edge where two near-coincident arcs hand over: the def seam notches).
+   * K1407 c4: the burial is 1 - band(|p - X|) / band(|p - q|), so the face keeps min(band(|p - q|), band(|p - X|)),
+   * and it starts where q itself leaves k2's ball when the circles cross (the inset test alone switched aa / tan of
+   * the crossing angle past X), so at the switch q = X and the face's value is the unburied one. c3 multiplied the
+   * cap in where i entered the fill: up to 0.33 of ink dropped across the outer edge where two near-coincident arcs
+   * hand over (the def seam notches). Capping at that switch instead left a bulge (out/c4 sheet_c4_notches, c4a).
    * Returns the burial, max over the fills. gf_glsl.ts's fillBur, line for line. */
   private fillBur(k: number, qx: number, qy: number, x: number, y: number, S: number): number {
     const T = this.T; const r = T.kR[k]; const cx = T.kCx[k]; const cy = T.kCy[k]; const aa = T.aa; const W = T.W;
     const inF = r > 0 ? Math.min(aa, 0.5 * r) / r : 0;
     const ix = qx + (cx - qx) * inF; const iy = qy + (cy - qy) * inF;
-    const ri = r - r * inF; const sX = ri > 0 ? r / ri : 1;
     const bq = 1 - ss(W - aa, W + aa, Math.sqrt((x - qx) * (x - qx) + (y - qy) * (y - qy)));
     const lim = T.h - 2 * aa; const lim2 = lim * lim;
     let fbur = 0;
@@ -169,15 +168,16 @@ export class GfEval {
       const k2 = this.kk[i2]; if (k2 === k || T.kG[k2] !== S) continue;
       const c2x = T.kCx[k2]; const c2y = T.kCy[k2]; const r2 = T.kR[k2];
       const rq = Math.sqrt((ix - c2x) * (ix - c2x) + (iy - c2y) * (iy - c2y));
-      if (!(rq > r2 && rq < T.kRmax[k2] && this.inSector(k2, ix, iy) && this.outsideArms(k2, -1, ix, iy))) continue;
-      let b = 1;
+      const rqq = Math.sqrt((qx - c2x) * (qx - c2x) + (qy - c2y) * (qy - c2y));
+      if (!((rq > r2 || rqq > r2) && rq < T.kRmax[k2] && this.inSector(k2, ix, iy) && this.outsideArms(k2, -1, ix, iy))) continue;
+      let b = rq > r2 ? 1 : 0;
       const dx = c2x - cx; const dy = c2y - cy; const d2 = dx * dx + dy * dy; const d = Math.sqrt(d2);
       if (d > 1e-9) {
-        const a = (ri * ri - r2 * r2 + d2) / (2 * d); const hh2 = ri * ri - a * a;
+        const a = (r * r - r2 * r2 + d2) / (2 * d); const hh2 = r * r - a * a;
         if (hh2 >= 0) {
           const hh = Math.sqrt(hh2); const ux = dx / d; const uy = dy / d; const bx = cx + a * ux; const by = cy + a * uy;
           const sg = (qx - bx) * -uy + (qy - by) * ux >= 0 ? hh : -hh;
-          const Xx = cx + (bx - uy * sg - cx) * sX; const Xy = cy + (by + ux * sg - cy) * sX;
+          const Xx = bx - uy * sg; const Xy = by + ux * sg;
           let inTube = false;
           for (let m = 0; m < this.np; m++) if (this.psurf[m] === S && this.pieceD(m, Xx, Xy) < lim2) { inTube = true; break; }
           if (!inTube) {
