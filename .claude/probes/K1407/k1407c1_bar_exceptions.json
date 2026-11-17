@@ -1,0 +1,12 @@
+{
+ "note": "K1407 c1 bar exceptions: spots where form B (the census reference) is known wrong against Levi's bar (K1315: no ink past the over thread's outline, no dot, no stub). A census find of a listed kind within r of a listed spot is a difference from form B that the bar wants, so k1407c1_bar.ps1 counts it apart. Sheets: out/c1/c1_sheet_fixed.png (master gf | c1 gf | form B | rp=outline).",
+ "spots": [
+  { "scene": "muse_default_tw", "x": 22.68, "y": 2.70, "r": 0.35, "kinds": ["broken_ink"], "junction": "j129", "reason": "K1315 under-tail ends (brief spots 7, 8): form B draws a round dot at each end, and the under thread's border crosses the over thread's colour; c1 draws neither" },
+  { "scene": "muse_default_tw", "x": 24.07, "y": 10.47, "r": 0.2, "kinds": ["broken_ink"], "junction": "j11", "reason": "K1315 under-tail end (brief spot 9): form B's round dot" },
+  { "scene": "muse_default_tw", "x": 24.70, "y": 10.66, "r": 0.35, "kinds": ["broken_ink"], "junction": "j150", "reason": "K1315 under-tail end (brief spot 1, K1315's muse_default_tw j150): form B's round dot" },
+  { "scene": "muse_default_tw", "x": 23.46, "y": 27.30, "r": 0.25, "kinds": ["broken_ink"], "junction": "j162/j163", "reason": "Same mechanism, found by the c1 census: form B's round dots at two under-tail ends (out/c1/new1_0.png rows 3-4)" },
+  { "scene": "def", "x": 19.85, "y": 30.79, "r": 0.25, "kinds": ["broken_ink"], "junction": "j20/j76", "reason": "K1315 under-tail ends (brief spots 10, 11): form B's round dots" },
+  { "scene": "g41_def_tw64", "x": 19.76, "y": 30.74, "r": 0.25, "kinds": ["broken_ink", "stray_ink"], "junction": "j20/j76", "reason": "K1315 under-tail ends (brief spots 2, 13; K1314 s10's g41_def_tw64 j97 group): form B's round dots; c1's stray 'cut' is the arc ink ending where the other tube starts, where form B has the dot" },
+  { "scene": "g41_user_tw64", "x": 8.94, "y": 18.42, "r": 0.3, "kinds": ["broken_ink", "stray_ink"], "junction": "j63/j64", "reason": "K1315 under-tail ends (brief spots 14, 15, K1315's g41_user_tw64 j63/j64): form B's round dots; c1's stray 'cut' finds are the arc ends where form B has the dots" }
+ ]
+}

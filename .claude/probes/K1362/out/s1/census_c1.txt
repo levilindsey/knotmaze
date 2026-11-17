@@ -1,0 +1,14 @@
+scene                   stray_ink  hard_edge      paper broken_ink      k1049      total owner_only  tail_look
+muse_hash                       6          0          5         11          0         22         13          0
+muse_default_tw                 0          0          1          6          0          7          5          0
+def                             0          0          0          3          0          3          5          0
+fat                             0          0          0          0          0          0          0          0
+ring                            0          0          0          1          0          1          1          0
+user_tw42.lightpaper            2          0          1          1          0          4          2          0
+g41_def_tw42                    0          0          0          0          0          0          3          0
+g41_def_tw64                    1          0          0          2          0          3          6          0
+g41_ring_tw42                   0          0          0          0          0          0          0          0
+g41_ring_tw64                   0          0          0          0          0          0          2          0
+g41_user_tw42                   2          0          1          1          0          4          2          0
+g41_user_tw64                  11          0          3          6          0         20          4          0
+TOTAL                          22          0         11         31          0         64         43          0
