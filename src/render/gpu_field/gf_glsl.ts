@@ -14,7 +14,7 @@
 // camera, the probe maps its tile rows bottom-up (readPixels' row order).
 import { GF_LOG } from "./gf_pack";
 import { MAXP } from "./tables";
-import { MAXK, MAXR, TIE_AA } from "./eval";
+import { MAXK, MAXR } from "./eval";
 import { constantLoops, GF_PACK, packArrays, scalarizeArrays } from "./gf_reg";
 
 export const GF_VS = `#version 300 es
@@ -405,8 +405,8 @@ function burialExit(src: string): string {
  * SORD(i), the sort is before it) and stops after the first place whose D > 2 aa: there ss(-aa, aa, D) clamps to
  * exactly 1 in any precision, so comp() multiplies Tt by exactly 0 and breaks at that place or earlier. comp(-1)
  * then reads no later place; comp(i) for i below it permutes places up to it; comp(i) above it repeats comp(-1)'s
- * reads (r2 == r). Only comp(i) AT it reads the next place, so when the next gap is not >= 2 ZTIE (composite's tie
- * test is gap < ZTIE, K1407 c4) that place is computed too. Each computed surface is the same statements on the same values;
+ * reads (r2 == r). Only comp(i) AT it reads the next place, so when the next gap is not >= 2 zt (composite's tie
+ * test is gap < zt) that place is computed too. Each computed surface is the same statements on the same values;
  * an uncomputed one is never read. Not with ga (the gaps are then taken from skey after the face loop writes it).
  */
 function lazyFaces(src: string): string {
@@ -421,7 +421,7 @@ function lazyFaces(src: string): string {
   rep("    SVW(e, v) SAW(e, ss(-aa, aa, D)) PR(swk[e] = wk; swa[e] = wa; swb[e] = wb;)\n  }\n",
     "    SVW(e, v) SAW(e, ss(-aa, aa, D)) PR(swk[e] = wk; swa[e] = wa; swb[e] = wb;)\n" +
     "    if (lzX) break;\n" +
-    "    if (D > 2.0 * aa) { if (!(lzI + 1 < ns) || skey[SORD(lzI)] - skey[SORD(lzI + 1)] >= 2.0 * ZTIE) break; lzX = true; }\n  }\n");
+    "    if (D > 2.0 * aa) { if (!(lzI + 1 < ns) || skey[SORD(lzI)] - skey[SORD(lzI + 1)] >= 2.0 * uZt) break; lzX = true; }\n  }\n");
   return src;
 }
 
@@ -667,7 +667,6 @@ precision highp sampler2D;
 #define MAXP ${mp}
 #define MAXK ${mk}
 #define MAXR ${MAXR}
-#define ZTIE (uZt * min(1.0, ${TIE_AA.toFixed(6)} * uAA / uH))
 #define MAXS ${tier && tier.s && tier.s < mp + mk ? tier.s : mp + mk}
 ${tier && tier.s && tier.s < mp + mk ? "#define SCAP 1" : ""}
 #define LOG ${GF_LOG}
@@ -1288,7 +1287,7 @@ float comp(int sw) {
 }
 
 float composite() {
-  float zt = ZTIE; // K1407 c4: eval.ts's composite(), the tie window zt aa / h
+  float zt = uZt;
   cWk = 0; cWa = -1; cWb = 0;
   float r = comp(-1);
   for (int i = 0; i + 1 < ns; i++) {
