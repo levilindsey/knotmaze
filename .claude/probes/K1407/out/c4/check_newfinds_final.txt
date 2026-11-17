@@ -1,0 +1,8 @@
+def:6.32:6.82  extra 0 px (max ink 0.00)  broken 0 px (min ink -)  notch 0 px (max deficit -)  seam 0 px (max dip -)
+g41_user_tw64:2.05:8.06  extra 2217 px (max ink 0.43)  broken 0 px (min ink -)  notch 0 px (max deficit -)  seam 204 px (max dip 0.48, box c172-310 r186-326)
+g41_user_tw64:2.72:6.45  extra 1486 px (max ink 0.44)  broken 0 px (min ink -)  notch 0 px (max deficit -)  seam 100 px (max dip 0.09, box c119-237 r81-273)
+muse_hash:1.52:13.30  extra 3575 px (max ink 0.50)  broken 0 px (min ink -)  notch 0 px (max deficit -)  seam 0 px (max dip -)
+muse_hash:29.57:20.15  extra 357 px (max ink 0.36)  broken 0 px (min ink -)  notch 0 px (max deficit -)  seam 204 px (max dip 0.32, box c218-368 r253-288)
+muse_hash:31.51:7.39  extra 2191 px (max ink 0.50)  broken 0 px (min ink -)  notch 0 px (max deficit -)  seam 0 px (max dip -)
+muse_hash:6.01:8.45  extra 1226 px (max ink 0.41)  broken 0 px (min ink -)  notch 0 px (max deficit -)  seam 0 px (max dip -)
+ring:16.51:2.85  extra 64 px (max ink 0.44)  broken 0 px (min ink -)  notch 0 px (max deficit -)  seam 58 px (max dip 0.07, box c143-411 r199-305)
