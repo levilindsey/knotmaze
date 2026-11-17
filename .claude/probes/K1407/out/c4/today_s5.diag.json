@@ -1,0 +1,1310 @@
+{
+ "job": {
+  "out": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\agent-ae59dc67f72d13811\\.claude\\probes\\K1407\\out\\c4\\today_base",
+  "zooms": [
+   {
+    "poi": "xy:5.88,8.50",
+    "target": "8x",
+    "out": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\agent-ae59dc67f72d13811\\.claude\\probes\\K1407\\out\\c4\\today_s4",
+    "masterOnly": true
+   },
+   {
+    "poi": "xy:19.41,14.16",
+    "target": "8x",
+    "out": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\agent-ae59dc67f72d13811\\.claude\\probes\\K1407\\out\\c4\\today_s5",
+    "masterOnly": true
+   },
+   {
+    "poi": "xy:22.56,34.84",
+    "target": "8x",
+    "out": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\agent-ae59dc67f72d13811\\.claude\\probes\\K1407\\out\\c4\\today_s16",
+    "masterOnly": true
+   },
+   {
+    "poi": "xy:5.53,14.97",
+    "target": "8x",
+    "out": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\agent-ae59dc67f72d13811\\.claude\\probes\\K1407\\out\\c4\\today_eye",
+    "masterOnly": true
+   }
+  ],
+  "masterOnly": true,
+  "expectHash": "733ee14a",
+  "url": "http://127.0.0.1:5503/?3&tw=1.1&cr=6&bg=wash&bgcm=custom&bgc0=e6e9ee&am=instant&snd=none&stb=0&fw=0&phw=0"
+ },
+ "shot": {
+  "out": "C:\\Users\\lsl\\Repositories\\knotmaze\\.claude\\worktrees\\agent-ae59dc67f72d13811\\.claude\\probes\\K1407\\out\\c4\\today_s5",
+  "kind": "zoom",
+  "zoom": {
+   "poi": "xy:19.41,14.16",
+   "at": [
+    19.41,
+    14.16
+   ],
+   "basePxPerUnit": 21.29684154574573,
+   "target": 170.37473236596583,
+   "s": 170.3747323659658,
+   "x": -2686.9735552233956,
+   "y": -1962.5062103020762,
+   "poiCss": [
+    620.0000000000005,
+    449.9999999999998
+   ],
+   "offCentreCss": [
+    4.547473508864641e-13,
+    -2.2737367544323206e-13
+   ],
+   "wheels": [
+    [
+     "pan",
+     -2305.170128911517,
+     -964.3209851913666
+    ]
+   ]
+  },
+  "set": null
+ },
+ "pageUrl": "http://127.0.0.1:5503/?3.FCx9R7b0Hkh6LIKXm6e4geDM",
+ "step": {
+  "t1": 40.01666666666504,
+  "simTime": 40.01666666666504,
+  "hash": "733ee14a",
+  "frozenHash": "733ee14a",
+  "frozenSim": 40.01666666666504,
+  "freeze": {
+   "frozen": true,
+   "simTime": 40.01666666666504,
+   "kind": "in-thread"
+  },
+  "ms": 107957
+ },
+ "viewStill": {
+  "x": 237.23900362594543,
+  "y": 67.92988790707254,
+  "s": 21.29684154574573,
+  "zoom": 1,
+  "panX": 0,
+  "panY": 0,
+  "panel": {
+   "left": 910,
+   "mazeRight": 1034.5642413558908,
+   "open": 1
+  },
+  "mazeRight": 1034.5642413558908,
+  "range": {
+   "loX": -134.56424135589077,
+   "hiX": 0,
+   "loY": 0,
+   "hiY": 0
+  },
+  "allow": {
+   "loX": 0,
+   "hiX": 0,
+   "loY": 0,
+   "hiY": 0
+  },
+  "panelT": 1,
+  "ms": 4941
+ },
+ "chrome": {
+  "canvases": [
+   [
+    "canvas",
+    0,
+    0,
+    1240,
+    900,
+    "visible"
+   ],
+   [
+    "tp-svpv_c",
+    0,
+    0,
+    0,
+    0,
+    "hidden"
+   ],
+   [
+    "tp-svpv_c",
+    0,
+    0,
+    0,
+    0,
+    "hidden"
+   ],
+   [
+    "tp-svpv_c",
+    0,
+    0,
+    0,
+    0,
+    "hidden"
+   ],
+   [
+    "tp-svpv_c",
+    0,
+    0,
+    0,
+    0,
+    "hidden"
+   ],
+   [
+    "tp-svpv_c",
+    0,
+    0,
+    0,
+    0,
+    "hidden"
+   ],
+   [
+    "tp-svpv_c",
+    0,
+    0,
+    0,
+    0,
+    "hidden"
+   ],
+   [
+    "tp-svpv_c",
+    0,
+    0,
+    0,
+    0,
+    "hidden"
+   ],
+   [
+    "tp-svpv_c",
+    0,
+    0,
+    0,
+    0,
+    "hidden"
+   ],
+   [
+    "tp-svpv_c",
+    0,
+    0,
+    0,
+    0,
+    "hidden"
+   ],
+   [
+    "tp-svpv_c",
+    0,
+    0,
+    0,
+    0,
+    "hidden"
+   ],
+   [
+    "tp-svpv_c",
+    0,
+    0,
+    0,
+    0,
+    "hidden"
+   ],
+   [
+    "tp-svpv_c",
+    0,
+    0,
+    0,
+    0,
+    "hidden"
+   ]
+  ],
+  "main": {
+   "left": 0,
+   "top": 0,
+   "width": 1240,
+   "height": 900
+  },
+  "dpr": 1.0000000298023224,
+  "inner": [
+   1240,
+   900
+  ]
+ },
+ "rendererResolution": 1.0000000298023224,
+ "params": {
+  "threadWidth": 0.8,
+  "gap": 0.04,
+  "fadeLength": 0.14,
+  "cuspRadius": 6,
+  "cornerRoundShare": 1,
+  "flowStrength": 0,
+  "threadLook": "fill",
+  "borderWidth": 0.38,
+  "borderColor": "#000000",
+  "backgroundBase": "#e6e9ee",
+  "mazeFabric": true
+ },
+ "geomHash": "12836a3333fb",
+ "masterSha": "6e24195db513",
+ "camera": {
+  "worldToCss": [
+   170.3747323659658,
+   0,
+   0,
+   170.3747323659658,
+   -2686.9735552233956,
+   -1962.5062103020762
+  ],
+  "pxPerUnit": 170.3747323659658,
+  "dpr": 1,
+  "viewport": [
+   1240,
+   900
+  ]
+ },
+ "exportDiag": {
+  "chains": 86,
+  "samplesDrawn": 24148,
+  "samplesKept": 23273,
+  "tuckDuplicates": 875,
+  "spacing": {
+   "min": 0.000095367431640625,
+   "median": 0.06596766043189817,
+   "max": 0.10104160890296776
+  },
+  "zMethod": "physics zPos, linear in renderer arc between control slots (tucked samples at their tucked arc)",
+  "maxAbsZ": 1.3094959542499935,
+  "zVsTentParticles": 0.750504673412868,
+  "zVsTentSamples": 0.7500711134910544,
+  "registered": 350,
+  "emergent": 0,
+  "emergentDuplicates": 0,
+  "junctions": 166,
+  "arms": 503,
+  "cornerKeysMissing": 0,
+  "shortArmProbes": 0,
+  "centreVsParticleMean": 0.10243810584015757,
+  "endOffsets": [
+   {
+    "junction": "j0",
+    "chain": 0,
+    "tucked": 0.29500595462987794,
+    "particle": 0.0005316908564715129
+   },
+   {
+    "junction": "j1",
+    "chain": 0,
+    "tucked": 0.298609165474765,
+    "particle": 0.0002801537381569844
+   },
+   {
+    "junction": "j2",
+    "chain": 1,
+    "tucked": 0.2586041551542042,
+    "particle": 0.00005670429816420126
+   },
+   {
+    "junction": "j3",
+    "chain": 1,
+    "tucked": 0.3002780984020501,
+    "particle": 0.0006185391263807421
+   },
+   {
+    "junction": "j4",
+    "chain": 2,
+    "tucked": 0.3037714512639583,
+    "particle": 0.004155876932133061
+   },
+   {
+    "junction": "j5",
+    "chain": 42,
+    "tucked": 0.2995712439784403,
+    "particle": 0.0011634095034750403
+   },
+   {
+    "junction": "j6",
+    "chain": 37,
+    "tucked": 0.2815745416380156,
+    "particle": 0.00001958819189029755
+   },
+   {
+    "junction": "j8",
+    "chain": 37,
+    "tucked": 0.2928741370127505,
+    "particle": 0.00021251750455277801
+   },
+   {
+    "junction": "j9",
+    "chain": 21,
+    "tucked": 0.29996604880648353,
+    "particle": 0.00010050499595941712
+   },
+   {
+    "junction": "j10",
+    "chain": 58,
+    "tucked": 0.2991061402663454,
+    "particle": 0.0004211865547820953
+   },
+   {
+    "junction": "j11",
+    "chain": 3,
+    "tucked": 0.29412293721287325,
+    "particle": 0.0009118520530109015
+   },
+   {
+    "junction": "j12",
+    "chain": 4,
+    "tucked": 0.19005381323371598,
+    "particle": 0.001415121958111984
+   },
+   {
+    "junction": "j13",
+    "chain": 4,
+    "tucked": 0.27352688512491713,
+    "particle": 0.000018601052567815224
+   },
+   {
+    "junction": "j14",
+    "chain": 5,
+    "tucked": 0.29799716824118927,
+    "particle": 0.0005365736636286688
+   },
+   {
+    "junction": "j15",
+    "chain": 70,
+    "tucked": 0.21082118373859834,
+    "particle": 0.0034581385882135984
+   },
+   {
+    "junction": "j16",
+    "chain": 65,
+    "tucked": 0.21557019469283767,
+    "particle": 0.0004200474425050872
+   },
+   {
+    "junction": "j17",
+    "chain": 13,
+    "tucked": 0.28625999202856617,
+    "particle": 0.0013084254774743845
+   },
+   {
+    "junction": "j18",
+    "chain": 13,
+    "tucked": 0.2836445992088111,
+    "particle": 0.00006107501202437614
+   },
+   {
+    "junction": "j19",
+    "chain": 45,
+    "tucked": 0.2713744065009406,
+    "particle": 0.0019244640055714852
+   },
+   {
+    "junction": "j20",
+    "chain": 5,
+    "tucked": 0.2979805763115417,
+    "particle": 0.000010573778212841358
+   },
+   {
+    "junction": "j21",
+    "chain": 6,
+    "tucked": 0.18394045359738312,
+    "particle": 0.0007547805969871985
+   },
+   {
+    "junction": "j22",
+    "chain": 24,
+    "tucked": 0.25725503627518553,
+    "particle": 0.00002966231480691802
+   },
+   {
+    "junction": "j23",
+    "chain": 9,
+    "tucked": 0.256027630642464,
+    "particle": 0.003069269687800558
+   },
+   {
+    "junction": "j24",
+    "chain": 24,
+    "tucked": 0.30262283108745963,
+    "particle": 0.003236116169657152
+   },
+   {
+    "junction": "j25",
+    "chain": 6,
+    "tucked": 0.2795966682678501,
+    "particle": 0.0006883204144033441
+   },
+   {
+    "junction": "j26",
+    "chain": 7,
+    "tucked": 0.29986565660200426,
+    "particle": 0.0007558483799081675
+   },
+   {
+    "junction": "j27",
+    "chain": 7,
+    "tucked": 0.29956639785387684,
+    "particle": 0.00003292826074475604
+   },
+   {
+    "junction": "j28",
+    "chain": 8,
+    "tucked": 0.292417637875778,
+    "particle": 0.0007588001200609555
+   },
+   {
+    "junction": "j29",
+    "chain": 8,
+    "tucked": 0.19576182580323254,
+    "particle": 0.0010233338463635506
+   },
+   {
+    "junction": "j30",
+    "chain": 9,
+    "tucked": 0.2723023825220716,
+    "particle": 0.00018602462296332773
+   },
+   {
+    "junction": "j31",
+    "chain": 32,
+    "tucked": 0.3001677643146264,
+    "particle": 0.0003811417346189812
+   },
+   {
+    "junction": "j32",
+    "chain": 27,
+    "tucked": 0.2779651498307987,
+    "particle": 0.0035335371187488487
+   },
+   {
+    "junction": "j33",
+    "chain": 27,
+    "tucked": 0.2995943770542546,
+    "particle": 0.00032098915972003644
+   },
+   {
+    "junction": "j34",
+    "chain": 10,
+    "tucked": 0.28837568701236255,
+    "particle": 0.000009554653896247845
+   },
+   {
+    "junction": "j35",
+    "chain": 10,
+    "tucked": 0.2985976633011326,
+    "particle": 0.00001960610262477204
+   },
+   {
+    "junction": "j36",
+    "chain": 50,
+    "tucked": 0.298696399809104,
+    "particle": 0.0015979387631529238
+   },
+   {
+    "junction": "j37",
+    "chain": 63,
+    "tucked": 0.2998345659182585,
+    "particle": 0.000040254623522365424
+   },
+   {
+    "junction": "j38",
+    "chain": 12,
+    "tucked": 0.25923483955399673,
+    "particle": 0.002190192460141199
+   },
+   {
+    "junction": "j39",
+    "chain": 12,
+    "tucked": 0.2979120228887799,
+    "particle": 0.00043761229234489567
+   },
+   {
+    "junction": "j40",
+    "chain": 14,
+    "tucked": 0.29656132310030936,
+    "particle": 0.0007086138119897853
+   },
+   {
+    "junction": "j41",
+    "chain": 31,
+    "tucked": 0.2933296931554075,
+    "particle": 0.00009391370607147667
+   },
+   {
+    "junction": "j42",
+    "chain": 14,
+    "tucked": 0.2757801264717358,
+    "particle": 0.0007357112445993479
+   },
+   {
+    "junction": "j43",
+    "chain": 15,
+    "tucked": 0.23937955458436497,
+    "particle": 0.000039415359678480374
+   },
+   {
+    "junction": "j44",
+    "chain": 15,
+    "tucked": 0.2661336197454632,
+    "particle": 0.0007599916914759093
+   },
+   {
+    "junction": "j45",
+    "chain": 16,
+    "tucked": 0.28997759243447035,
+    "particle": 0.0018855610384955635
+   },
+   {
+    "junction": "j46",
+    "chain": 16,
+    "tucked": 0.25177548661010574,
+    "particle": 0.0008769037216665379
+   },
+   {
+    "junction": "j47",
+    "chain": 17,
+    "tucked": 0.2702256133230168,
+    "particle": 0.00017524768009927267
+   },
+   {
+    "junction": "j48",
+    "chain": 17,
+    "tucked": 0.29758370525375366,
+    "particle": 0.000017961735643019116
+   },
+   {
+    "junction": "j49",
+    "chain": 18,
+    "tucked": 0.29624625960058854,
+    "particle": 0.005347296500036255
+   },
+   {
+    "junction": "j50",
+    "chain": 18,
+    "tucked": 0.3012815348929005,
+    "particle": 0.0013949534391898418
+   },
+   {
+    "junction": "j51",
+    "chain": 19,
+    "tucked": 0.30008123893416006,
+    "particle": 0.00016155104866342744
+   },
+   {
+    "junction": "j52",
+    "chain": 19,
+    "tucked": 0.296092373787638,
+    "particle": 0.0029186576850931375
+   },
+   {
+    "junction": "j53",
+    "chain": 20,
+    "tucked": 0.23706371982860178,
+    "particle": 0.00042124595525108705
+   },
+   {
+    "junction": "j54",
+    "chain": 20,
+    "tucked": 0.2998721120471694,
+    "particle": 0.001981811072157498
+   },
+   {
+    "junction": "j55",
+    "chain": 21,
+    "tucked": 0.30401346656724276,
+    "particle": 0.0048182280430821844
+   },
+   {
+    "junction": "j56",
+    "chain": 22,
+    "tucked": 0.29804546468669574,
+    "particle": 0.0002928834465837607
+   },
+   {
+    "junction": "j57",
+    "chain": 22,
+    "tucked": 0.2769617538369385,
+    "particle": 0.002675251516326599
+   },
+   {
+    "junction": "j58",
+    "chain": 23,
+    "tucked": 0.28399008108587726,
+    "particle": 0.005039845518751378
+   },
+   {
+    "junction": "j59",
+    "chain": 23,
+    "tucked": 0.2932128011170876,
+    "particle": 0.000584894564980658
+   },
+   {
+    "junction": "j60",
+    "chain": 25,
+    "tucked": 0.23030477792530799,
+    "particle": 0.00047504285847612125
+   },
+   {
+    "junction": "j61",
+    "chain": 25,
+    "tucked": 0.30235246318502784,
+    "particle": 0.004179243589372318
+   },
+   {
+    "junction": "j62",
+    "chain": 26,
+    "tucked": 0.3022032358462376,
+    "particle": 0.002344802908847376
+   },
+   {
+    "junction": "j63",
+    "chain": 26,
+    "tucked": 0.2937717099961307,
+    "particle": 0.0005838068915838966
+   },
+   {
+    "junction": "j64",
+    "chain": 56,
+    "tucked": 0.2985404153511163,
+    "particle": 0.0001174370523198735
+   },
+   {
+    "junction": "j65",
+    "chain": 28,
+    "tucked": 0.2977226567781072,
+    "particle": 0.0011581184536708143
+   },
+   {
+    "junction": "j66",
+    "chain": 29,
+    "tucked": 0.298023673666729,
+    "particle": 0.00006305998908755662
+   },
+   {
+    "junction": "j67",
+    "chain": 29,
+    "tucked": 0.28891120359598205,
+    "particle": 0.00021499974289099878
+   },
+   {
+    "junction": "j68",
+    "chain": 30,
+    "tucked": 0.2938205689824899,
+    "particle": 0.001527047344912869
+   },
+   {
+    "junction": "j69",
+    "chain": 66,
+    "tucked": 0.29682396881107703,
+    "particle": 0.00028381266784264716
+   },
+   {
+    "junction": "j70",
+    "chain": 60,
+    "tucked": 0.27568841913832187,
+    "particle": 0.0012429496056253616
+   },
+   {
+    "junction": "j71",
+    "chain": 30,
+    "tucked": 0.2731900048849129,
+    "particle": 0.001522107522870499
+   },
+   {
+    "junction": "j72",
+    "chain": 32,
+    "tucked": 0.292042266469292,
+    "particle": 0.0006167209112740734
+   },
+   {
+    "junction": "j73",
+    "chain": 33,
+    "tucked": 0.2992558422156243,
+    "particle": 0.00008547201678884226
+   },
+   {
+    "junction": "j74",
+    "chain": 61,
+    "tucked": 0.2992980039766217,
+    "particle": 0.0004987242068680614
+   },
+   {
+    "junction": "j75",
+    "chain": 48,
+    "tucked": 0.2813886405051421,
+    "particle": 0.002993471414078418
+   },
+   {
+    "junction": "j76",
+    "chain": 41,
+    "tucked": 0.2920521563952258,
+    "particle": 0.0016248962584039638
+   },
+   {
+    "junction": "j77",
+    "chain": 64,
+    "tucked": 0.2999437326142858,
+    "particle": 0.00028750884312864883
+   },
+   {
+    "junction": "j78",
+    "chain": 79,
+    "tucked": 0.2982359379689546,
+    "particle": 0.00258266393324444
+   },
+   {
+    "junction": "j79",
+    "chain": 33,
+    "tucked": 0.2955743501371873,
+    "particle": 0.0003920027537773691
+   },
+   {
+    "junction": "j80",
+    "chain": 34,
+    "tucked": 0.28562049525292166,
+    "particle": 0.0003094076948016181
+   },
+   {
+    "junction": "j81",
+    "chain": 34,
+    "tucked": 0.2810722204231322,
+    "particle": 0.00005639273680505904
+   },
+   {
+    "junction": "j82",
+    "chain": 35,
+    "tucked": 0.2996324733038501,
+    "particle": 0.0002680801830686484
+   },
+   {
+    "junction": "j83",
+    "chain": 36,
+    "tucked": 0.2962874883118498,
+    "particle": 0.00148692110602219
+   },
+   {
+    "junction": "j84",
+    "chain": 36,
+    "tucked": 0.285433447223006,
+    "particle": 0.0009315091832341692
+   },
+   {
+    "junction": "j85",
+    "chain": 38,
+    "tucked": 0.26835220904351004,
+    "particle": 0.0015213314302873903
+   },
+   {
+    "junction": "j86",
+    "chain": 69,
+    "tucked": 0.29848542068288886,
+    "particle": 0.0005595625739326281
+   },
+   {
+    "junction": "j87",
+    "chain": 38,
+    "tucked": 0.2886822111730226,
+    "particle": 0.00002472301422957512
+   },
+   {
+    "junction": "j88",
+    "chain": 39,
+    "tucked": 0.2995406340657476,
+    "particle": 0.00015723901510931608
+   },
+   {
+    "junction": "j89",
+    "chain": 39,
+    "tucked": 0.2987103746942715,
+    "particle": 0.00045936274860558236
+   },
+   {
+    "junction": "j90",
+    "chain": 40,
+    "tucked": 0.28914734963853433,
+    "particle": 0.0006985733929539063
+   },
+   {
+    "junction": "j91",
+    "chain": 40,
+    "tucked": 0.29251807942221825,
+    "particle": 0.0008616597777025027
+   },
+   {
+    "junction": "j92",
+    "chain": 79,
+    "tucked": 0.2592582999677569,
+    "particle": 0.00038628230439941865
+   },
+   {
+    "junction": "j93",
+    "chain": 41,
+    "tucked": 0.28407323199954937,
+    "particle": 0.00023559582531403641
+   },
+   {
+    "junction": "j94",
+    "chain": 42,
+    "tucked": 0.29308751056673144,
+    "particle": 0.00019027313560973874
+   },
+   {
+    "junction": "j95",
+    "chain": 43,
+    "tucked": 0.2961591978339182,
+    "particle": 0.0007911867088220278
+   },
+   {
+    "junction": "j98",
+    "chain": 44,
+    "tucked": 0.29877454733284126,
+    "particle": 0.003047781267208861
+   },
+   {
+    "junction": "j99",
+    "chain": 45,
+    "tucked": 0.3006622411972951,
+    "particle": 0.0007404303324805931
+   },
+   {
+    "junction": "j101",
+    "chain": 76,
+    "tucked": 0.24770330053136058,
+    "particle": 0.00003820676727406601
+   },
+   {
+    "junction": "j102",
+    "chain": 62,
+    "tucked": 0.27325723045680483,
+    "particle": 0.0002497838131187587
+   },
+   {
+    "junction": "j103",
+    "chain": 81,
+    "tucked": 0.2934698946119512,
+    "particle": 0.001910946904882833
+   },
+   {
+    "junction": "j104",
+    "chain": 81,
+    "tucked": 0.2821231312656747,
+    "particle": 0.0014623231539349336
+   },
+   {
+    "junction": "j105",
+    "chain": 46,
+    "tucked": 0.2979638293326873,
+    "particle": 0.0014665494846261467
+   },
+   {
+    "junction": "j106",
+    "chain": 53,
+    "tucked": 0.2865603413441027,
+    "particle": 0.0001272947007189594
+   },
+   {
+    "junction": "j107",
+    "chain": 82,
+    "tucked": 0.29644531502469273,
+    "particle": 0.0004771702664592547
+   },
+   {
+    "junction": "j108",
+    "chain": 47,
+    "tucked": 0.2973860953829077,
+    "particle": 0.00008582890907026665
+   },
+   {
+    "junction": "j109",
+    "chain": 52,
+    "tucked": 0.29996363932946646,
+    "particle": 0.00007985585905802295
+   },
+   {
+    "junction": "j110",
+    "chain": 46,
+    "tucked": 0.2816514900482726,
+    "particle": 0.0019504059107770767
+   },
+   {
+    "junction": "j111",
+    "chain": 47,
+    "tucked": 0.27890250981212333,
+    "particle": 0.0022456868108121394
+   },
+   {
+    "junction": "j112",
+    "chain": 48,
+    "tucked": 0.2866483816690343,
+    "particle": 0.00033224740542739443
+   },
+   {
+    "junction": "j113",
+    "chain": 49,
+    "tucked": 0.2287260157099811,
+    "particle": 0.001428203143084887
+   },
+   {
+    "junction": "j114",
+    "chain": 49,
+    "tucked": 0.2078490544512548,
+    "particle": 0.0013126243842533872
+   },
+   {
+    "junction": "j115",
+    "chain": 67,
+    "tucked": 0.2897602890234922,
+    "particle": 0.0010921043737488843
+   },
+   {
+    "junction": "j116",
+    "chain": 72,
+    "tucked": 0.2900341304448762,
+    "particle": 0.00015435954668774392
+   },
+   {
+    "junction": "j117",
+    "chain": 60,
+    "tucked": 0.2462085612332852,
+    "particle": 0.00009639572201031983
+   },
+   {
+    "junction": "j118",
+    "chain": 50,
+    "tucked": 0.28595891176929317,
+    "particle": 0.0004940930554689674
+   },
+   {
+    "junction": "j119",
+    "chain": 51,
+    "tucked": 0.24159156769857787,
+    "particle": 0.0038098538917869886
+   },
+   {
+    "junction": "j120",
+    "chain": 51,
+    "tucked": 0.30000470144468155,
+    "particle": 0.0015146805626397486
+   },
+   {
+    "junction": "j121",
+    "chain": 83,
+    "tucked": 0.2982202720415792,
+    "particle": 0.0004465905990960536
+   },
+   {
+    "junction": "j122",
+    "chain": 52,
+    "tucked": 0.2826021882701192,
+    "particle": 0.001036469673260616
+   },
+   {
+    "junction": "j123",
+    "chain": 53,
+    "tucked": 0.2565071585361101,
+    "particle": 0.001580557774874957
+   },
+   {
+    "junction": "j124",
+    "chain": 54,
+    "tucked": 0.1258510942388361,
+    "particle": 0.00002397145673954056
+   },
+   {
+    "junction": "j125",
+    "chain": 54,
+    "tucked": 0.2903160351300328,
+    "particle": 0.0008467535837190464
+   },
+   {
+    "junction": "j126",
+    "chain": 55,
+    "tucked": 0.29887340428178444,
+    "particle": 0.000007685645217215034
+   },
+   {
+    "junction": "j127",
+    "chain": 55,
+    "tucked": 0.29913389218051756,
+    "particle": 0.000009925721724923198
+   },
+   {
+    "junction": "j128",
+    "chain": 56,
+    "tucked": 0.2998474247534754,
+    "particle": 0.00034194964687075263
+   },
+   {
+    "junction": "j129",
+    "chain": 57,
+    "tucked": 0.30000775686868136,
+    "particle": 0.0006539415162806561
+   },
+   {
+    "junction": "j130",
+    "chain": 57,
+    "tucked": 0.2798217865435412,
+    "particle": 0.000012320453723549343
+   },
+   {
+    "junction": "j131",
+    "chain": 77,
+    "tucked": 0.29791474899076736,
+    "particle": 0.0008410571378193713
+   },
+   {
+    "junction": "j132",
+    "chain": 59,
+    "tucked": 0.299597882690199,
+    "particle": 0.00037060284739545707
+   },
+   {
+    "junction": "j133",
+    "chain": 59,
+    "tucked": 0.28167183261182216,
+    "particle": 0.000386691031035954
+   },
+   {
+    "junction": "j134",
+    "chain": 61,
+    "tucked": 0.298951607334826,
+    "particle": 0.00010947727356974056
+   },
+   {
+    "junction": "j135",
+    "chain": 84,
+    "tucked": 0.28248048664370556,
+    "particle": 0.002919602523318491
+   },
+   {
+    "junction": "j136",
+    "chain": 63,
+    "tucked": 0.27962965552483726,
+    "particle": 0.0009181306514632749
+   },
+   {
+    "junction": "j137",
+    "chain": 65,
+    "tucked": 0.2815598513281048,
+    "particle": 0.0005213308595329817
+   },
+   {
+    "junction": "j138",
+    "chain": 71,
+    "tucked": 0.25892093278441214,
+    "particle": 0.0006330469021589018
+   },
+   {
+    "junction": "j139",
+    "chain": 77,
+    "tucked": 0.3012707859826727,
+    "particle": 0.0015499145020261673
+   },
+   {
+    "junction": "j140",
+    "chain": 84,
+    "tucked": 0.2511824290716266,
+    "particle": 0.00011717448953106369
+   },
+   {
+    "junction": "j141",
+    "chain": 69,
+    "tucked": 0.2817551217628089,
+    "particle": 0.0001272281441490401
+   },
+   {
+    "junction": "j142",
+    "chain": 66,
+    "tucked": 0.2860371282527351,
+    "particle": 0.001584975156886435
+   },
+   {
+    "junction": "j143",
+    "chain": 67,
+    "tucked": 0.2641999015614861,
+    "particle": 0.00008117397511879462
+   },
+   {
+    "junction": "j145",
+    "chain": 75,
+    "tucked": 0.2979958158884335,
+    "particle": 0.0005682835037779558
+   },
+   {
+    "junction": "j147",
+    "chain": 71,
+    "tucked": 0.2962728875955852,
+    "particle": 0.00002049829732037743
+   },
+   {
+    "junction": "j148",
+    "chain": 68,
+    "tucked": 0.29444392504514916,
+    "particle": 0.00018093092807105852
+   },
+   {
+    "junction": "j149",
+    "chain": 82,
+    "tucked": 0.2503184508072447,
+    "particle": 0.00037513724911272583
+   },
+   {
+    "junction": "j150",
+    "chain": 68,
+    "tucked": 0.2958953755560896,
+    "particle": 0.0009779489102904658
+   },
+   {
+    "junction": "j151",
+    "chain": 80,
+    "tucked": 0.26398307520335323,
+    "particle": 0.0014341271660669602
+   },
+   {
+    "junction": "j152",
+    "chain": 85,
+    "tucked": 0.2922484100766789,
+    "particle": 0.00022554190587999802
+   },
+   {
+    "junction": "j153",
+    "chain": 70,
+    "tucked": 0.2766351821063203,
+    "particle": 0.0015120140875407037
+   },
+   {
+    "junction": "j154",
+    "chain": 85,
+    "tucked": 0.2973587448525815,
+    "particle": 8.773744600144856e-7
+   },
+   {
+    "junction": "j155",
+    "chain": 72,
+    "tucked": 0.29677566371317204,
+    "particle": 0.0004032965077948358
+   },
+   {
+    "junction": "j156",
+    "chain": 74,
+    "tucked": 0.2997619660720832,
+    "particle": 0.000038194567665505525
+   },
+   {
+    "junction": "j157",
+    "chain": 83,
+    "tucked": 0.3000515282069871,
+    "particle": 0.0007140014002759309
+   },
+   {
+    "junction": "j158",
+    "chain": 73,
+    "tucked": 0.2876332844331974,
+    "particle": 0.00041010003736683895
+   },
+   {
+    "junction": "j159",
+    "chain": 73,
+    "tucked": 0.29948047590571936,
+    "particle": 0.00020139073749935094
+   },
+   {
+    "junction": "j160",
+    "chain": 74,
+    "tucked": 0.2967133777630996,
+    "particle": 0.00011426568029805569
+   },
+   {
+    "junction": "j161",
+    "chain": 75,
+    "tucked": 0.29935046442673985,
+    "particle": 0.0002616783462444083
+   },
+   {
+    "junction": "j162",
+    "chain": 78,
+    "tucked": 0.29826437022461055,
+    "particle": 0.0001865051039058711
+   },
+   {
+    "junction": "j163",
+    "chain": 78,
+    "tucked": 0.29976697366230803,
+    "particle": 0.0005109416445535025
+   },
+   {
+    "junction": "j164",
+    "chain": 80,
+    "tucked": 0.27202721822292447,
+    "particle": 0.0001897422174217791
+   },
+   {
+    "junction": "j165",
+    "chain": 76,
+    "tucked": 0.23728359747631333,
+    "particle": 0.00021304522922283335
+   }
+  ],
+  "maxEndTucked": 0.30401346656724276,
+  "maxEndParticle": 0.005347296500036255,
+  "freeTips": 7,
+  "anchoredTips": 2,
+  "anchoredOnScreen": 0,
+  "hashes": {
+   "all": "733ee14a",
+   "positions": "11901dcf",
+   "prev": "713413d8",
+   "zPos": "204a1c6c",
+   "passes": "8705e288"
+  },
+  "cameraWorldTransform": [
+   170.3747323659658,
+   0,
+   0,
+   170.3747323659658,
+   -2686.9735552233956,
+   -1962.5062103020762
+  ],
+  "inkAuto": true,
+  "borderWidth": 0.38,
+  "threadWidthParam": 0.8,
+  "emergentRaw": 0,
+  "emergentJointPairs": 0,
+  "emergentMasterDups": 0,
+  "emergentOverPool": 0,
+  "skipJointPairs": true
+ },
+ "align": {
+  "image": [
+   1240,
+   900
+  ],
+  "imgPxPerCss": 1,
+  "imgPxPerWorld": 170.3747323659658,
+  "halfWidthImgPx": 68.14989294638632,
+  "bandImgPx": 25.896959319626806,
+  "exclusion": {
+   "junctionR": 3.8,
+   "crossingR": 1.6,
+   "endArc": 1.2000000000000002,
+   "maxCurvatureTimesH": 0.5,
+   "neighbourPx": 1.5
+  },
+  "rays": 46546,
+  "measured": 0,
+  "skip": {
+   "end": 6908,
+   "junction": 38368,
+   "crossing": 1202,
+   "curvature": 14,
+   "offscreen": 54,
+   "neighbour": 0,
+   "contrast": 0,
+   "noEdge": 0
+  },
+  "meanSignedImgPx": null,
+  "absP50ImgPx": null,
+  "absP95ImgPx": null,
+  "absP99ImgPx": null,
+  "absMaxImgPx": null,
+  "absMaxCssPx": null,
+  "hist": {},
+  "worst": []
+ },
+ "pageErrors": []
+}

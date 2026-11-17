@@ -1,0 +1,4 @@
+columns: .claude/probes/K1407/out/c4/master:gf | .claude/probes/K1407/out/c4/c4:gf | .claude/probes/K1407/out/c4/master:fb | .claude/probes/K1407/out/c4/master:ol
+row 1: g41_def_tw64_30.84_12.46
+row 2: g41_def_tw64_30.93_12.33
+row 3: g41_def_tw64_31.05_12.20

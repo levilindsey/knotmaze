@@ -2,6 +2,7 @@
 // experiment (eval.ts only; the GLSL is untouched, so GPU-side probes do not see it):
 //   TIE=min   the two orders' ink is min(r, r2) inside the window (an outline shows only where both orders show it)
 //   TIE=minb  min where the swapped order has more ink, the blend where it has less
+//   TIE=n<k>  the blend over a window narrowed to zt min(1, k aa / h) (c4c's dfdc756c was n1)
 //   node scripts/run_node.mjs .claude/probes/K1407/k1407c4_tie_run.ts <script.ts> [args...]
 import { pathToFileURL } from "node:url";
 import { resolve } from "node:path";
@@ -10,7 +11,7 @@ const MODE = process.env.TIE ?? "min";
 const ss = (a: number, b: number, v: number): number => { const t = Math.min(1, Math.max(0, (v - a) / (b - a))); return t * t * (3 - 2 * t); };
 const P = GfEval.prototype as any;
 P.composite = function (this: any): number {
-  const ns = this.ns; const zt = this.T.zt;
+  const ns = this.ns; const zt = MODE[0] === "n" ? this.T.zt * Math.min(1, (+MODE.slice(1) * this.T.aa) / this.T.h) : this.T.zt;
   const comp = (sw: number): number => {
     let Tt = 1; let ink = 0; let best = 0;
     for (let i = 0; i < ns; i++) {
