@@ -7,7 +7,7 @@ param([string]$Tag = 'c1g', [string]$Base = 'http://127.0.0.1:5501/', [string[]]
 $root = (Resolve-Path "$PSScriptRoot/../../..").Path
 Set-Location $root
 $lock = Join-Path $env:TEMP 'claude-perf.lock'
-$owner = 'K1407 c2 agent (claude session 01SUPGULDxvE5gKXozfaFaFG)'
+$owner = 'K1407 c3 agent (claude session 01SUPGULDxvE5gKXozfaFaFG)'
 while ((Test-Path $lock) -and ((Get-Date) - (Get-Item $lock).LastWriteTime).TotalMinutes -lt 30) { Start-Sleep 10 }
 "$owner $(Get-Date -Format o) GPU census readback (k1407c1_gpucensus.ps1)" | Out-File -Encoding ASCII $lock
 try {

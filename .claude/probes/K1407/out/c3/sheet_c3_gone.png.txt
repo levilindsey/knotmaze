@@ -1,0 +1,7 @@
+columns: .claude/probes/K1407/out/c3/gone:gf | .claude/probes/K1407/out/c3/gone:fb | .claude/probes/K1407/out/c3/gone:ol
+row 1: def_6.86_25.66
+row 2: ring_9.73_0.99
+row 3: g41_def_tw64_28.43_20.42
+row 4: g41_user_tw64_2.97_3.36
+row 5: g41_user_tw64_7.57_3.16
+row 6: g41_user_tw64_3.60_18.97
