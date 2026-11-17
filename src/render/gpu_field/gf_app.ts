@@ -965,6 +965,8 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
     get timed() { return !!pass?.timed; },
     get disjoint() { return pass?.disjoint ?? 0; },
     get rect() { return rect; },
+    /** K1439: whether the pass draws home membership (`gfh=1`) and the fade it last fed uHomeZ. */
+    get home() { return { on: !!pass?.home, fade: pass?.homeFade ?? null }; },
     /** K1369 s4: the tables the pass holds (a probe compares them). */
     get tables() { return T; },
     counts,
