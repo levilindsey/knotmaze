@@ -181,3 +181,24 @@ fan first (24B's suspects: junctions today's fan has no record for, such as turn
 than the fan and cover strips). If the bands miss at the stop line, the rim stays landed and you report the
 per-junction numbers. 3. With neither feature showing, 0 px against master gf in the thread area. 4. Crops under
 `.claude/probes/K1414/out/24F/` (today | master gf | new gf). 5. `npm test` green.
+
+## Run G (24G): K1423, the shallow-crossing fade at eye walls
+
+24A brought the fill look's fade to today's at ci77 and ci345 but not at the eye walls (seed3 ci346 err 0.110, seed5
+ci248 0.481; `.claude/probes/K1417/out/24A/fade_*.txt`, `fade_probe.mjs`). Its handoff names window-end and along-eye
+behaviour, plus section colour leaking into the scan. First make the scan read the fade alone (for example by A/B with
+one section colour, or by reading alpha directly) and report the corrected numbers; then fix what is still off.
+
+**Done:** 1. At 5 or more shallow crossings (sin < 0.5), including seed3 ci346 and seed5 ci248, the fade amount at
+today's a=0.5 pixel is within 0.1 of today's. 2. Steep crossings (sin > 0.8, 5 or more) no worse than master. 3.
+Crops (today | master gf | new gf) under `.claude/probes/K1417/out/24G/`. 4. `npm test` green.
+
+## Run H (24H): K1425, the pulses and telegraph in the border look
+
+24C drew the pulses and the telegraph under rp=gf in the fill look; in the border look (`tlk=border`) gf draws
+neither inside the cleared interior, because `o1` carries no indication coverage (K1425).
+
+**Done:** 1. 24C's probe and state (`.claude/probes/K1414/k1414c_ab.mjs`, seed 7, 10 cheapest moves, clocks at 100 /
+100.45 / 101.3) with `tlk=border`: pulse and telegraph masks within 15% of today's count and IoU at least 0.8 at all
+three times. 2. The fill look unchanged: 0 px against master gf with both features showing. 3. Crops under
+`.claude/probes/K1414/out/24H/` (today | master gf | new gf). 4. `npm test` green.
