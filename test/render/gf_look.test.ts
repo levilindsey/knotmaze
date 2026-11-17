@@ -74,7 +74,7 @@ describe("K1389 look form", () => {
     }
     expect(LOOK_COMP_FS).toContain("if (!(ink > 0.0) && !(cov > 0.0))");
     expect(LOOK_COMP_FS).not.toContain("CASE");
-    expect(LOOK_COMP_FS).toContain("vec3 Sb = mix(S, vec3(0.055, 0.07, 0.10), 0.85); float a = clamp((ink - 0.36) * 3.5, 0.0, 1.0); if (uRvFx > 0.5) { float ia = clamp(c.z, 0.0, 1.0) * cov * (1.0 - a); o = vec4(Sb * a + C * ia, max(a, ia)); } else { float ia = clamp(hh.a, 0.0, 1.0) * cov * (1.0 - clamp(c.w, 0.0, 1.0)); o = vec4(hh.rgb * ia + Sb * a * (1.0 - ia), ia + a * (1.0 - ia)); }");
+    expect(LOOK_COMP_FS).toContain("vec3 Sb = mix(S, vec3(0.055, 0.07, 0.10), 0.85); float a = clamp((ink - 0.36) * 3.5, 0.0, 1.0); if (uRvFx > 0.5) { float ia = clamp(c.z, 0.0, 1.0) * cov * (1.0 - a); o = vec4(C * ia + Sb * a * (1.0 - ia), ia + a * (1.0 - ia)); } else { float ia = clamp(hh.a, 0.0, 1.0) * cov * (1.0 - clamp(c.w, 0.0, 1.0)); o = vec4(hh.rgb * ia + Sb * a * (1.0 - ia), ia + a * (1.0 - ia)); }");
     expect(LOOK_COMP_FS).toContain("uniform float uRvFx;");
     expect(lookGap({ style: { casingWidth: 0.34, threadWidth: 0.26 } })).toBeCloseTo(0.07, 9);
     expect(lookFade({ fadeLength: 0.14 })).toBe(0.14);

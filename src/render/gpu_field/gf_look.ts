@@ -1370,6 +1370,14 @@ export function lookForm(src: string): string {
   else if (out.includes(SEG_PLAIN)) out = out.split(SEG_PLAIN).join(SEG_PLAIN.replace("int k = v - cV0;", EX_DROP + "int k = v - cV0;"));
   else throw new Error("gf look: explore scan anchor missing");
   out = out.replace(CORNER_RE, (m) => `${m} if (uExLive > 0.5 && EX(uOExK + k).x < 0.5) continue;`);
+  // K1431: in the reveal form the thread's drawn halfwidth is uH x the reveal width (mask x swell,
+  // rvM at the label's foot), and today's rainbow stripes run across that drawn width (the mesh's
+  // vUV.y over the widthMul-grown strip), so the across coordinate divides by it, not by uH alone.
+  if (out.includes("float rvM")) {
+    const sdPlain = "float sd = clamp(dot(p - lkFoot(lab, lq), vec2(-tn.y, tn.x)) / uH, -1.0, 1.0);";
+    if (!out.includes(sdPlain)) throw new Error("gf look: rainbow side anchor missing");
+    out = out.replace(sdPlain, "float sd = clamp(dot(p - lkFoot(lab, lq), vec2(-tn.y, tn.x)) / (uH * max(rvM(lab, lkArc(lab, lq)), 1e-6)), -1.0, 1.0);");
+  }
   // the sites every program carries
   for (const must of ["lkJb = lkJ;", "lkCo = vec4(0.0); lkHiC = vec3(0.0); lkHiA = 0.0;\n", "lkPulse(lab, lq)", "lkTele(lab, lq)", "lkBurn(lkCo.rgb", "lkRainbow(lkCo.rgb", "lkExploreLook(uExLook", "exAt(c, s)", "o0 = vec4(oInk, oCov, lkHi, lkE); o1 = lkCo; o2 = vec4(lkHiC, lkHiA);", "layout(location = 1) out vec4 o1;", "layout(location = 2) out vec4 o2;", "lkHiC = uGold * lkgp;", "ss(uW - max(3.0 * uAA, 0.02 * uH), uW, D)"]) if (!out.includes(must)) throw new Error(`gf look: ${must} missing`);
   return out;
@@ -1409,6 +1417,6 @@ void main() {
   // is the background between its outlines). The border alpha strengthens form B's centre-sampled band
   // to today's area-averaged stroke (the pass target has no MSAA) and darkens S toward today's dark edge colour, so the faint continuous outline reads at today's darkness; fill and both keep the band and S as they are.
   if (uLook == 0) o = vec4(C * cov, cov);
-  else if (uLook == 1) { vec3 Sb = mix(S, vec3(0.055, 0.07, 0.10), 0.85); float a = clamp((ink - 0.36) * 3.5, 0.0, 1.0); if (uRvFx > 0.5) { float ia = clamp(c.z, 0.0, 1.0) * cov * (1.0 - a); o = vec4(Sb * a + C * ia, max(a, ia)); } else { float ia = clamp(hh.a, 0.0, 1.0) * cov * (1.0 - clamp(c.w, 0.0, 1.0)); o = vec4(hh.rgb * ia + Sb * a * (1.0 - ia), ia + a * (1.0 - ia)); } }
+  else if (uLook == 1) { vec3 Sb = mix(S, vec3(0.055, 0.07, 0.10), 0.85); float a = clamp((ink - 0.36) * 3.5, 0.0, 1.0); if (uRvFx > 0.5) { float ia = clamp(c.z, 0.0, 1.0) * cov * (1.0 - a); o = vec4(C * ia + Sb * a * (1.0 - ia), ia + a * (1.0 - ia)); } else { float ia = clamp(hh.a, 0.0, 1.0) * cov * (1.0 - clamp(c.w, 0.0, 1.0)); o = vec4(hh.rgb * ia + Sb * a * (1.0 - ia), ia + a * (1.0 - ia)); } }
   else { float a = ink + (1.0 - ink) * cov; o = vec4(S * (0.9 * ink) + C * (a - 0.9 * ink), a); }
 }`;

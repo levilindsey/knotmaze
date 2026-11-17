@@ -124,6 +124,15 @@ describe("K1395 gf FX table", () => {
     }
     expect(LOOK_COMP_FS).toContain("uniform float uRvFx;");
     expect(LOOK_COMP_FS).toContain("float ia = clamp(c.z, 0.0, 1.0) * cov * (1.0 - a);");
+    // K1431: the rainbow's across coordinate divides by the reveal width at the label's foot
+    // (the reveal form only; the plain form has no rvM).
+    const rf = lookForm(revealForm(gfFs(false, true)));
+    // The baked word is (pRain, alpha, burnAge, solidity): alpha (f0.y) scales ink/cov,
+    // burn reads the age (f0.z), solidity rides f0.w.
+    expect(rf).toContain("ink *= f0.y; cov *= f0.y; lkHi = f0.w;");
+    expect(rf).toContain("lkBurn(lkCo.rgb, f0.z, f1.x");
+    expect(rf).toContain("max(rvM(lab, lkArc(lab, lq)), 1e-6)");
+    expect(lookForm(gfFs(false, true))).not.toContain("rvM(lab, lkArc");
     const app = readFileSync(new URL("../../src/render/gpu_field/gf_app.ts", import.meta.url), "utf8");
     expect(app).toContain("new GfFxTable()");
     expect(app).toContain("fxShow(fxSnap())");
