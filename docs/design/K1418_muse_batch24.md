@@ -199,6 +199,36 @@ than the fan and cover strips). If the bands miss at the stop line, the rim stay
 per-junction numbers. 3. With neither feature showing, 0 px against master gf in the thread area. 4. Crops under
 `.claude/probes/K1414/out/24F/` (today | master gf | new gf). 5. `npm test` green.
 
+### Run F as run (2026-11-16, Muse)
+
+Landed: the hover rim as its own commit 52891e5e, pushed, deploy run 44007108624 green. Extracted from 71c2f3e6
+onto c389d824 (24C/24D/24E had moved the same files; the tables digest is untouched - no tables.ts, gf_glsl field
+or census change). Measured on preview builds under the perf lock (.claude/probes/K1414/out/24F/, probe
+k1414f_ab.mjs - its asleep wait now polls by evaluate; waitForFunction starved in the off-screen window and timed
+out): floor today-vs-today rim 470/470 IoU 1.000 and bands 747/747 IoU 1.000; new gf rim 456 vs 470 (0.970,
+IoU 0.929), master gf rim 0 and bands 0 as before.
+
+Not landed: the route bands miss the bar (gf 1121 vs today 747, ratio 1.50, IoU 0.276) and were restored, per
+Done 2 - the rim stays. Per-junction (mask_jn.mjs; fan census k1414f_jn.mjs: all 8 routed junctions have fan
+records, one band each - the no-record suspect does not apply on this state): ji0 287 gf vs 110 today, ji156
+96 vs 231 and ji80 32 vs 80 (both same-chain through-routes, worst), ji155/169 near parity (IoU 0.78/0.54);
+gf-only clusters near ji80 (203+130+69 px) survive the disc fix - caps or band arm material is the next suspect.
+Two real bugs found in 24B's implementation and fixed in the kept one: band vertices packed 3 floats per vertex
+while lkRoute fetches RGBA texels (likely 24B's speckle and part of its 2.30 overdraw), and - in this run's first
+merge, not in 24B's patch - the uRt texture bind landed on the setLook line instead of the draw bind, leaving
+lkRoute inert until fixed. Bands then also took the fan's own resolved routes (d/m via fieldProbe) and the
+suppression disc shrank to the fan polygon's inscribed circle (1391 -> 1121). Kept as
+.claude/probes/K1414/k1414_part1_bands_24f.patch on 52891e5e (applies on the rim commit; includes its unit tests);
+K1424 carries the numbers and the next step.
+
+Neither-feature frame: new gf vs master gf (c389d824) hover-off frames differ by 0 px in the thread area
+(146 px in the full frame, all in the panel's build-stamp text). Crops today | master gf | new gf at 4x are
+out/24F/cmp_today_mastergf_newgf_{bands,hover}.png. npm test was green before the rim commit (247 files,
+3094 passed); after the bands restore the tree is the rim commit plus this handoff, rechecked with tsc and the
+focused gf tests. K1414 stays open for the pulse crests and the telegraph (24C noted the one state that shows
+them, which batch 25 must capture); K1424 stays open for the bands. Perf lock released; preview servers
+(5493-5501) stopped.
+
 ## Run G (24G): K1423, the shallow-crossing fade at eye walls
 
 24A brought the fill look's fade to today's at ci77 and ci345 but not at the eye walls (seed3 ci346 err 0.110, seed5

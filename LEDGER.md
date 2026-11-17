@@ -2109,8 +2109,9 @@ Every other item below waits on the trigger it names.
   16.3/12.4 -> 19.5-20.2/18.7-18.8), over Done 4's +10%. Node phase medians (def census scene): corners 14.4
   master -> 18.0 new (solveV 3 + CF grow 7 ms warm; w memo + w(V)=0 skip already in, digest unchanged). Next:
   cut CF per-corner cost (arm-piece reuse across a junction's corners, or a cheaper w) and re-bench.
-- **K1414** · rp=gf look bakes only the traveled spans+caps gold (K1405, 58f8a9ca): pulse crests, the hover
-  rim, the telegraph and the K81 junction route bands (beyond the caps' discs) still draw only in today's look
+- **K1414** · rp=gf look bakes only the traveled spans+caps gold (K1405, 58f8a9ca): pulse crests and the
+  telegraph still draw only in today's look; the hover rim landed under gf in 52891e5e (24F) and the K81
+  junction route bands are K1424 (not landed)
 - **K1420** · rp=gf bench baseline: preview builds read p50 def 15.7 / fat 15.45 ms per rebuild on master
   (K1407 c1, out/c1/bench_c1*.json) against 23F's dev-server 11.6 / 12.0; cause not measured (matters for
   K1413)
@@ -2124,12 +2125,17 @@ Every other item below waits on the trigger it names.
   seed5 ci248 0.481; ci77 0.033, ci345 0.063 pass): window-end and along-eye behaviour plus section-colour
   contamination of the scan, not fadeP width; needs a window-aware gap or a direct edge scan
   (.claude/probes/K1417/out/24A/fade_*.txt)
-- **K1424** · K1414 bands (24B): gf route-band same-state mask misses the bar (gf 1721 px vs today 747, ratio
-  2.30, IoU 0.147; settled warm captures, seed 7 walk) - extra solid gold near the start/turnstiles (e.g.
-  270,111) and speckle at band/disc boundaries; the hover-rim half passes (456 vs 470, 0.97, IoU 0.929). Full
-  implementation kept as .claude/probes/K1414/k1414_part1_full.patch (applies cleanly on 1a1a72e6); fast path:
-  extract the rim commit, then re-measure bands per-junction against the fan (turnstile/stub junctions joinery
-  has no record for are the prime suspect).
+- **K1424** · K1414 bands: gf route-band same-state mask still misses the bar after 24F (gf 1121 px vs today
+  747, ratio 1.50, IoU 0.276; seed 7 walk, out/24F). 24F measured per junction first (all 8 routed junctions
+  have fan records and one fan band each - the no-record suspect does not apply here): ji0 287 vs 110 gf/today,
+  ji156 96 vs 231, ji80 32 vs 80 (same-chain bands worst), ji155/169 near parity (IoU 0.78/0.54); gf-only
+  clusters along arms near ji80 (203+130+69 px, unchanged by the disc fix - caps or band arm material, next
+  suspect). Two real fixes are in the kept implementation: band vertices were packed 3 floats per vertex
+  while lkRoute fetches RGBA texels (present since 24B's patch - likely its speckle/overdraw), and bands now
+  take the fan's own resolved routes (d/m via fieldProbe) with the suppression disc shrunk to the fan
+  polygon's inscribed circle. Implementation kept as .claude/probes/K1414/k1414_part1_bands_24f.patch
+  (on 52891e5e; the rim half landed separately in 52891e5e). Remaining: per-junction geometry - band arm
+  coverage vs the fan's cover strips and the caps - then re-measure
 - **K1425** · rp=gf in the border look (tlk=border) does not draw the pulse/telegraph indications in the
   cleared interior: today's border branch composes them over an empty base with their own coverage
   (ribbon_shader hiRgb/hiA), while gf's LOOK_COMP_FS border draws only the stroke over form B ink, and o1
