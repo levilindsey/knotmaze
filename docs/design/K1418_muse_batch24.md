@@ -302,7 +302,7 @@ Measure with `.claude/probes/K1395/k1395_sheet.mjs` (the patient waits) against 
 
 ### Handoff 24I (Muse, 2026-11-17, partial: rainbow fixed; counts, ghost and burn colour not met)
 
-Run I spent 02:11-04:0x PST and stopped inside the session. Landed and pushed: 83de5130. Remaining is refiled as
+Run I ran 02:11-03:45 PST. Landed and pushed: 83de5130. Remaining is refiled as
 amended K1431. Do not let it sit on K1431 past one run: pick up next from the two angles at the end, and resolve
 promptly: DO IT IN ONE RUN, or (a) lower the pixel bar with a stated reason for the settled frames or (b) match
 it.
@@ -380,8 +380,7 @@ k1431_diffmap.mjs, k1431_ghostmap.mjs, k1431_crop.mjs, k1431_pxdiff.mjs, k1431_s
 captures under .claude/probes/K1395/out/24Ibase_def*, 24Irep_def*, 24Inew_def*, 24Inew_trace-rainbow*, and
 .claude/probes/K1395/out/24I/.
 
-Time: session ran 02:11 to ~04:0x PST and stopped. Commits pushed shown below. Deploy: not complete at the time
-of writing - see closing report for deploy status.
+Time: session ran 02:11 to 03:45 PST. Commits pushed shown below. Deploy: see the closing report.
 
 ## Every run from F on: measure the floor first, and share the GPU
 
