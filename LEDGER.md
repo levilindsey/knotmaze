@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1438.
+Next free ID: K1442.
 
 ## Waiting on Levi
 
@@ -303,6 +303,10 @@ Next free ID: K1438.
   never unlocks it. If it should stay unlocked on the charger overnight, that is a phone setting only Levi can
   change (K1362). 2026-11-13 10:34-10:57: unlocked, but the Claude app stayed in front, so the run never
   started: the pass needs the HOME SCREEN in front and the phone untouched for 2 min (Claude never presses Home).
+- **K1440** · rp=gf look: where a thread dives under a junction, K1435's membership ramp fades it in softly;
+  rp=outline cuts it crisply, and the crisp variants (tgm) leave stubs elsewhere. Soft or crisp, and the ramp
+  width (.claude/probes/K1435/out/sheet_variants_open.png, sheet_variants_worst_1.png: master | tgr soft | tgm
+  | tgn | outline)
 
 ## In progress
 
@@ -609,16 +613,6 @@ Next free ID: K1438.
   - evidence: `.claude/probes/K1387/`
   - next: the Pixel ABBA (k1387_phone.ps1; base 2b1cffe1 against the s2 merge, rp=gf) when the phone's screen is on: main ms/frame, gf builds/s, the drag's sim/wall (s2 handoff, Next)
   - brief: `docs/design/K1387_s2_lazy_march.md` (s1: `K1387_s1_lean_consumers.md`)
-- **K1435** · rp=gf grouping and over/under from the knot's graph at table time (K1433's recommendation): a
-  probe copy of eval.ts with membership from a table-built arc-length interval list and tie order from the
-  graph; bar: tie-class finds fall on all 12 scenes, spots 16 and 6 and both smudges clean, the 25 clean spots
-  stay clean, sheets for Levi; then 2-3 days in src with the GLSL mirror
-  (docs/design/K1435_table_grouping_probe.md)
-  - owner: agent `ac8bed9f161713472` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (fable, started 2026-11-16 19:06, 2 h cap ~21:06)
-  - branch: `worktree-agent-ac8bed9f161713472`, worktree `.claude/worktrees/agent-ac8bed9f161713472`; last commit: `da8158b0`
-  - evidence: `.claude/probes/K1435/`
-  - next: probe running (no src): on its report Claude checks its sheets, shows Levi, and briefs the src stages (after K1407 c5 leaves eval.ts/gf_glsl.ts/tables.ts)
-  - brief: `docs/design/K1435_table_grouping_probe.md`
 
 ## Next, in order
 
@@ -638,6 +632,10 @@ Binding for every stage:
   new, and pause running agents with their WIP committed.
 
 Running agents are listed under In progress, each with its own next step.
+- **K1438** · rp=gf stage A of K1435: home-interval membership with a depth ramp in tables.ts and eval.ts
+  (CPU), after K1407 c5 leaves those files; bar: 27 of 29 spots clean with the 25 unchanged, K1433 scan
+  tie+ramp at most 547 finds / 19287 px, table size unchanged (docs/design/K1435_table_grouping_probe.md
+  Handoff; probe .claude/probes/K1435/k1435_mkprobe.mjs)
 - **K1315** · Junction under-tail ends in rp=outline: a bug, not a choice. Levi, 2026-11-12, on k1315_now.png: "Not a
   single tile in the image shows an acceptable scenario" (form B's round dots and the outline's square stubs both
   fail). Bar: no ink past the over thread's outline, no dot, no stub. K1314 group 1, 18 census finds (e.g. muse_default_tw j150, g41_user_tw64 j63/j64, x134); sheet
@@ -942,6 +940,9 @@ Every other item below waits on the trigger it names.
   dips shallower than about 0.4 (the d547dab6 def notches) and its plain class is 0 of 9 real; add a
   band-profile check along each exposed edge and a crossing exemption, then replace the form-B census bars
   with it (Handoff K1433)
+- **K1439** · rp=gf stage B of K1435: the GLSL mirror of K1438 (member() in gf_glsl.ts) and the pins (gf_pack,
+  gf_build, gf_keys, gf_tier_forms, gf_split, gf_look); bar: GPU = CPU mirror, frame cost on muse_hash and def
+  within noise under the perf lock; blocked on K1438
 
 ## Residuals (known, not fixed)
 
@@ -2148,6 +2149,10 @@ Every other item below waits on the trigger it names.
 - **K1437** · rp=gf: about 2,030 tie- and ramp-class smudge finds on master over the 12 census scenes (11 of
   11 sampled real by eye; 431 dstray:tie in muse_hash alone); per-scene counts in
   .claude/probes/K1433/out/scan/summary.txt; K1435 is the fix path
+- **K1441** · rp=gf after K1435's tgr: lie-along and overlap sites unchanged (ring 19.63,20.34; g41_ring_tw64
+  19.78,20.37; muse_hash 22.09,34.40); worse than master at g41_user_tw64 17.80,9.55 (soft dark band); a new
+  soft nub at muse_hash 34.29,18.93; smudge 2's 6 px wedge (same on master and rp=outline); thin ramp finds 20
+  to 285, mostly invisible at 4x
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2519,6 +2524,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1435** · rp=gf table-time grouping probe: membership from each junction arm's home interval with a depth ramp (mode tgr) removes the ghost threads and smudges (tie+ramp finds 2030 to 547 over 12 scenes; spot 16 and smudge 1 clean, 25 spots unchanged; Claude checked sheet_spots_1 and sheet_variants_worst_1); order stays per pixel (crisp graph order leaves stubs); src stages K1438, K1439. Done in 02c2e598 (2026-11-16).
 - **K1433** · rp=gf step back trial: the union field is not the fix (every variant draws stray ink or turns the corner into a deep V; no spot better by eye); step 4 stays; the open spots and about 2,030 smudges come from per-pixel grouping and tie order, which the graph knows at table time (K1435; test v2 K1436). Done in eee0b835 (2026-11-16).
 - **K1396** · rp=gf: the K76 thread reveal (explore view) is not handled; only the appearance reveal is (docs/design/K1383_s1_gf_reveal.md handoff). Done in 0a5e2d1c (2026-11-16).
 - **K1416** · rp=gf against Levi's bar at K1315 ends: c1's six stubs (rows 5-10) and spots 2, 12, 13 now end at the over thread's outline (K1407 c2's fillBur); the eye continues under K1407 c3. Done in 46c4f05b (2026-11-16).
