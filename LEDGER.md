@@ -614,6 +614,11 @@ Next free ID: K1438.
   graph; bar: tie-class finds fall on all 12 scenes, spots 16 and 6 and both smudges clean, the 25 clean spots
   stay clean, sheets for Levi; then 2-3 days in src with the GLSL mirror
   (docs/design/K1435_table_grouping_probe.md)
+  - owner: agent `ac8bed9f161713472` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (fable, started 2026-11-16 19:06, 2 h cap ~21:06)
+  - branch: `worktree-agent-ac8bed9f161713472`, worktree `.claude/worktrees/agent-ac8bed9f161713472`; last commit: `da8158b0`
+  - evidence: `.claude/probes/K1435/`
+  - next: probe running (no src): on its report Claude checks its sheets, shows Levi, and briefs the src stages (after K1407 c5 leaves eval.ts/gf_glsl.ts/tables.ts)
+  - brief: `docs/design/K1435_table_grouping_probe.md`
 
 ## Next, in order
 
