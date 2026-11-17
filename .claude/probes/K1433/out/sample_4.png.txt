@@ -1,0 +1,6 @@
+columns: .claude/probes/K1433/out/sample:master | .claude/probes/K1433/out/sample:dbg
+row 1: g41_user_tw64_1.39_17.11
+row 2: g41_user_tw64_4.04_3.81
+row 3: g41_def_tw64_11.74_21.80
+row 4: g41_user_tw42_9.97_12.16
+row 5: muse_hash_4.95_12.94

@@ -1,0 +1,6 @@
+columns: .claude/probes/K1433/out/spots:master | .claude/probes/K1433/out/spots:fill | .claude/probes/K1433/out/spots:tubes | .claude/probes/K1433/out/spots:smooth | .claude/probes/K1433/out/spots:ol
+row 1: muse_default_tw_24.50_10.58
+row 2: muse_default_tw_22.90_2.44
+row 3: muse_default_tw_22.42_2.92
+row 4: muse_default_tw_24.05_10.43
+row 5: muse_default_tw_23.59_27.19

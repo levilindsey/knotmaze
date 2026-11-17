@@ -1,0 +1,6 @@
+columns: .claude/probes/K1433/out/spots:master | .claude/probes/K1433/out/spots:fill | .claude/probes/K1433/out/spots:tubes | .claude/probes/K1433/out/spots:smooth | .claude/probes/K1433/out/spots:ol
+row 1: muse_hash_5.53_14.97
+row 2: muse_hash_22.56_34.84
+row 3: muse_hash_29.74_20.26
+row 4: muse_hash_5.88_8.50
+row 5: muse_hash_19.41_14.16

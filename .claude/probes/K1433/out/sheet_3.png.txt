@@ -1,0 +1,6 @@
+columns: .claude/probes/K1433/out/spots:master | .claude/probes/K1433/out/spots:fill | .claude/probes/K1433/out/spots:tubes | .claude/probes/K1433/out/spots:smooth | .claude/probes/K1433/out/spots:ol
+row 1: muse_default_tw_23.32_27.41
+row 2: def_19.96_30.66
+row 3: def_19.71_30.93
+row 4: g41_user_tw64_9.13_18.25
+row 5: g41_user_tw64_8.73_18.59

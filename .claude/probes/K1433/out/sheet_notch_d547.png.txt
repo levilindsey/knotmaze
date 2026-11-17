@@ -1,0 +1,6 @@
+columns: .claude/probes/K1433/out/spots:d547 | .claude/probes/K1433/out/spots:master | .claude/probes/K1433/out/spots:smooth
+row 1: def_30.88_12.42
+row 2: def_3.60_13.52
+row 3: def_3.69_34.42
+row 4: g41_def_tw64_30.84_12.46
+row 5: g41_def_tw64_30.93_12.33
