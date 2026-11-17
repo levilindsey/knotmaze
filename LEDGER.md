@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1435.
+Next free ID: K1438.
 
 ## Waiting on Levi
 
@@ -609,16 +609,11 @@ Next free ID: K1435.
   - evidence: `.claude/probes/K1387/`
   - next: the Pixel ABBA (k1387_phone.ps1; base 2b1cffe1 against the s2 merge, rp=gf) when the phone's screen is on: main ms/frame, gf builds/s, the drag's sim/wall (s2 handoff, Next)
   - brief: `docs/design/K1387_s2_lazy_march.md` (s1: `K1387_s1_lean_consumers.md`)
-- **K1433** · rp=gf step back (Levi, 2026-11-16 'go'): a one-day trial, CPU only and in probes, of (1) a
-  direct test of the bar (outline breaks and stray ink, no reference image) and (2) the outline as the contour
-  of one union distance field per surface, replacing the per-piece outline terms and burial rules; plus a
-  written assessment of deciding grouping and over/under at table time; decides whether K1407 keeps patching
-  rules (docs/design/K1433_union_field_trial.md)
-  - owner: agent `a7321f7b7a14be25c` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (fable, started 2026-11-16 18:30, 2 h cap ~20:30)
-  - branch: `worktree-agent-a7321f7b7a14be25c`, worktree `.claude/worktrees/agent-a7321f7b7a14be25c`; last commit: `8da4efef`
-  - evidence: `.claude/probes/K1433/`
-  - next: trial running (probes only, no src): on its report Claude checks its sheets, tells Levi the recommendation with pictures, and briefs K1407's next stage from it (union field for step 4, or more rule patches)
-  - brief: `docs/design/K1433_union_field_trial.md`
+- **K1435** · rp=gf grouping and over/under from the knot's graph at table time (K1433's recommendation): a
+  probe copy of eval.ts with membership from a table-built arc-length interval list and tie order from the
+  graph; bar: tie-class finds fall on all 12 scenes, spots 16 and 6 and both smudges clean, the 25 clean spots
+  stay clean, sheets for Levi; then 2-3 days in src with the GLSL mirror
+  (docs/design/K1435_table_grouping_probe.md)
 
 ## Next, in order
 
@@ -938,6 +933,10 @@ Every other item below waits on the trigger it names.
 - **K1432** · rp=gf smudges (muse_hash 5.88,8.50 extra 1243; 19.41,14.16 extra 752): composite()'s equal-depth
   tie blend smears dark into the fill where today's fill shows none; narrowing the window everywhere fails the
   bar (37 new wedges), so it needs a discriminator (K1407 c5; docs/design/K1407_c4_bar.md Handoff c4)
+- **K1436** · rp=gf bar test v2: K1433's reference-free test (.claude/probes/K1433/k1433_scan.ts) misses ink
+  dips shallower than about 0.4 (the d547dab6 def notches) and its plain class is 0 of 9 real; add a
+  band-profile check along each exposed edge and a crossing exemption, then replace the form-B census bars
+  with it (Handoff K1433)
 
 ## Residuals (known, not fixed)
 
@@ -2141,6 +2140,9 @@ Every other item below waits on the trigger it names.
 - **K1434** · rp=gf: under a burn (K290) the explore shader's char/ember/smolder shading is not ported, and
   corner gates read the declared pieces rather than the burn gate pieces; gf draws the pieces' visibility
   (burnt-gone holes included) but no char darkening (K1396 24E handoff)
+- **K1437** · rp=gf: about 2,030 tie- and ramp-class smudge finds on master over the 12 census scenes (11 of
+  11 sampled real by eye; 431 dstray:tie in muse_hash alone); per-scene counts in
+  .claude/probes/K1433/out/scan/summary.txt; K1435 is the fix path
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2512,6 +2514,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1433** · rp=gf step back trial: the union field is not the fix (every variant draws stray ink or turns the corner into a deep V; no spot better by eye); step 4 stays; the open spots and about 2,030 smudges come from per-pixel grouping and tie order, which the graph knows at table time (K1435; test v2 K1436). Done in eee0b835 (2026-11-16).
 - **K1396** · rp=gf: the K76 thread reveal (explore view) is not handled; only the appearance reveal is (docs/design/K1383_s1_gf_reveal.md handoff). Done in 0a5e2d1c (2026-11-16).
 - **K1416** · rp=gf against Levi's bar at K1315 ends: c1's six stubs (rows 5-10) and spots 2, 12, 13 now end at the over thread's outline (K1407 c2's fillBur); the eye continues under K1407 c3. Done in 46c4f05b (2026-11-16).
 - **K1415** · rp=gf crossing-gap fade scaled by the crossing angle, today's max(sin, 0.2) (24A). Done in 24ae5489 (2026-11-16).
