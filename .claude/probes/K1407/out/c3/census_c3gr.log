@@ -1,0 +1,16 @@
+g41_def_tw64: 6168x6026 px at 160 px/unit, 535.1 s
+user_tw42.lightpaper: 4354x3902 px at 160 px/unit, 212.7 s
+scene                   stray_ink  hard_edge      paper broken_ink      k1049      total owner_only  tail_look
+muse_hash                       0          0          0          0          0          0          0          0
+muse_default_tw                 0          0          0          0          0          0          0          0
+def                             0          0          0          0          0          0          0          0
+fat                             0          0          0          0          0          0          0          0
+ring                            0          0          0          0          0          0          0          0
+user_tw42.lightpaper            2          0          1          1          0          4          2          0
+g41_def_tw42                    0          0          0          0          0          0          0          0
+g41_def_tw64                    2          0          0          5          0          7          6          0
+g41_ring_tw42                   0          0          0          0          0          0          0          0
+g41_ring_tw64                   0          0          0          0          0          0          0          0
+g41_user_tw42                   0          0          0          0          0          0          0          0
+g41_user_tw64                   0          0          0          0          0          0          0          0
+TOTAL                           4          0          1          6          0         11          8          0

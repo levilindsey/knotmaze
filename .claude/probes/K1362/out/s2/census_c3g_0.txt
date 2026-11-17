@@ -1,0 +1,4 @@
+scene                   stray_ink  hard_edge      paper broken_ink      k1049      total owner_only  tail_look
+muse_hash                       7          0          5         12          0         24         13          0
+g41_ring_tw64                   0          0          0          0          0          0          2          0
+TOTAL                           7          0          5         12          0         24         15          0

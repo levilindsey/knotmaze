@@ -1,0 +1,4 @@
+scene                   stray_ink  hard_edge      paper broken_ink      k1049      total owner_only  tail_look
+def                             0          0          0          6          0          6          5          0
+g41_user_tw42                   2          0          1          1          0          4          2          0
+TOTAL                           2          0          1          7          0         10          7          0

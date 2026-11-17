@@ -8,7 +8,9 @@ $ex = (Get-Content (Join-Path $PSScriptRoot 'k1407c1_bar_exceptions.json') -Raw 
 $cats = 'stray_ink', 'hard_edge', 'paper', 'broken_ink', 'k1049'
 '{0,-8} {1,6} {2,6} {3,6} {4,7} {5,6} {6,6} {7,9}' -f 'tag', 'stray', 'hard', 'paper', 'broken', 'k1049', 'total', 'excepted'
 foreach ($t in $Tags) {
-  $arts = @((Get-Content (Join-Path $dir "census_$t.json") -Raw | ConvertFrom-Json).arts) | Where-Object { $cats -contains $_.kind }
+  # a CPU census (s1) or, failing that, a GPU one (s2: k1407c1_gpucensus.ps1's merged tag, c2g / c3g)
+  $jf = Join-Path $dir "census_$t.json"; if (-not (Test-Path $jf)) { $jf = Join-Path $PSScriptRoot "../K1362/out/s2/census_$t.json" }
+  $arts = @((Get-Content $jf -Raw | ConvertFrom-Json).arts) | Where-Object { $cats -contains $_.kind }
   $n = @{}; foreach ($c in $cats) { $n[$c] = 0 }; $exc = 0
   foreach ($a in $arts) {
     $hit = $false

@@ -1,0 +1,604 @@
+{
+ "ppu": 160,
+ "minPx": 40,
+ "scenes": [
+  "muse_default_tw",
+  "ring"
+ ],
+ "arts": [
+  {
+   "id": "muse_default_tw#0",
+   "scene": "muse_default_tw",
+   "kind": "owner_only",
+   "sub": "wedge",
+   "x": 2.576,
+   "y": 6.902,
+   "px": 50,
+   "sizePx": 18,
+   "bbox": [
+    2.531,
+    6.856,
+    2.638,
+    6.969
+   ],
+   "near": "j76",
+   "dNear": 0.109,
+   "part": "fill:none",
+   "file": "src/render/gpu_field",
+   "detail": "app colour diff 0.002"
+  },
+  {
+   "id": "muse_default_tw#1",
+   "scene": "muse_default_tw",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 22.677,
+   "y": 2.701,
+   "px": 2615,
+   "sizePx": 106,
+   "bbox": [
+    22.337,
+    2.362,
+    23,
+    3.019
+   ],
+   "near": "j129",
+   "dNear": 0.527,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_default_tw#2",
+   "scene": "muse_default_tw",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 25.155,
+   "y": 10.399,
+   "px": 341,
+   "sizePx": 32,
+   "bbox": [
+    25.056,
+    10.338,
+    25.256,
+    10.481
+   ],
+   "near": "j66",
+   "dNear": 0.552,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_default_tw#3",
+   "scene": "muse_default_tw",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 24.252,
+   "y": 10.565,
+   "px": 1898,
+   "sizePx": 95,
+   "bbox": [
+    23.962,
+    10.35,
+    24.556,
+    10.75
+   ],
+   "near": "j150",
+   "dNear": 0.444,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_default_tw#4",
+   "scene": "muse_default_tw",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 24.992,
+   "y": 10.642,
+   "px": 377,
+   "sizePx": 37,
+   "bbox": [
+    24.938,
+    10.519,
+    25.044,
+    10.75
+   ],
+   "near": "j150",
+   "dNear": 0.521,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_default_tw#5",
+   "scene": "muse_default_tw",
+   "kind": "owner_only",
+   "sub": "wedge",
+   "x": 33.453,
+   "y": 9.274,
+   "px": 55,
+   "sizePx": 13,
+   "bbox": [
+    33.413,
+    9.256,
+    33.494,
+    9.294
+   ],
+   "near": "j51",
+   "dNear": 0.196,
+   "part": "fill:none",
+   "file": "src/render/gpu_field",
+   "detail": "app colour diff 0.003"
+  },
+  {
+   "id": "muse_default_tw#6",
+   "scene": "muse_default_tw",
+   "kind": "owner_only",
+   "sub": "wedge",
+   "x": 17.215,
+   "y": 16.913,
+   "px": 57,
+   "sizePx": 11,
+   "bbox": [
+    17.188,
+    16.875,
+    17.256,
+    16.944
+   ],
+   "near": "j139",
+   "dNear": 0.144,
+   "part": "fill:none",
+   "file": "src/render/gpu_field",
+   "detail": "app colour diff 0.011"
+  },
+  {
+   "id": "muse_default_tw#7",
+   "scene": "muse_default_tw",
+   "kind": "owner_only",
+   "sub": "wedge",
+   "x": 17.293,
+   "y": 17.038,
+   "px": 70,
+   "sizePx": 19,
+   "bbox": [
+    17.275,
+    16.981,
+    17.313,
+    17.1
+   ],
+   "near": "j139",
+   "dNear": 0.193,
+   "part": "fill:none",
+   "file": "src/render/gpu_field",
+   "detail": "app colour diff 0.011"
+  },
+  {
+   "id": "muse_default_tw#8",
+   "scene": "muse_default_tw",
+   "kind": "paper",
+   "sub": "covered",
+   "x": 29.33,
+   "y": 22.943,
+   "px": 28,
+   "sizePx": 35,
+   "bbox": [
+    29.238,
+    22.919,
+    29.456,
+    22.95
+   ],
+   "near": "j62",
+   "dNear": 0.409,
+   "part": "fill:none",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_default_tw#9",
+   "scene": "muse_default_tw",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 23.468,
+   "y": 27.307,
+   "px": 784,
+   "sizePx": 63,
+   "bbox": [
+    23.244,
+    27.106,
+    23.637,
+    27.456
+   ],
+   "near": "j162",
+   "dNear": 0.575,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_default_tw#10",
+   "scene": "muse_default_tw",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 23.976,
+   "y": 27.414,
+   "px": 246,
+   "sizePx": 31,
+   "bbox": [
+    23.875,
+    27.363,
+    24.069,
+    27.481
+   ],
+   "near": "j163",
+   "dNear": 0.365,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_default_tw#11",
+   "scene": "muse_default_tw",
+   "kind": "broken_ink",
+   "sub": "missing",
+   "x": 23.749,
+   "y": 27.627,
+   "px": 315,
+   "sizePx": 34,
+   "bbox": [
+    23.694,
+    27.519,
+    23.831,
+    27.731
+   ],
+   "near": "j162",
+   "dNear": 0.606,
+   "part": "fill:none unbordered",
+   "file": "src/render/gpu_field",
+   "detail": ""
+  },
+  {
+   "id": "muse_default_tw#12",
+   "scene": "muse_default_tw",
+   "kind": "owner_only",
+   "sub": "wedge",
+   "x": 23.601,
+   "y": 25.272,
+   "px": 149,
+   "sizePx": 17,
+   "bbox": [
+    23.544,
+    25.225,
+    23.65,
+    25.319
+   ],
+   "near": "j84",
+   "dNear": 0.157,
+   "part": "fill:none",
+   "file": "src/render/gpu_field",
+   "detail": "app colour diff 0.002"
+  },
+  {
+   "id": "ring#0",
+   "scene": "ring",
+   "kind": "owner_only",
+   "sub": "wedge",
+   "x": 6.541,
+   "y": 7.55,
+   "px": 44,
+   "sizePx": 13,
+   "bbox": [
+    6.506,
+    7.525,
+    6.588,
+    7.575
+   ],
+   "near": "j4",
+   "dNear": 0.159,
+   "part": "fill:none",
+   "file": "src/render/gpu_field",
+   "detail": "app colour diff 0.004"
+  }
+ ],
+ "stats": {
+  "muse_default_tw": {
+   "diff": {
+    "px": 39439850,
+    "ink": {
+     "max": 0.0727201961213948,
+     "p99": 0.00005623413251903491,
+     "p999": 0.00014125375446227554,
+     "at": [
+      18.5906,
+      16.3906
+     ],
+     "n": 39439850
+    },
+    "cov": {
+     "max": 0.0727201961213948,
+     "p99": 0.000031622776601683795,
+     "p999": 0.00011220184543019653,
+     "at": [
+      18.5906,
+      16.3906
+     ],
+     "n": 39439850
+    },
+    "s": {
+     "max": 29.88648562755216,
+     "p99": 0.0000035481338923357534,
+     "p999": 0.00022387211385683378,
+     "at": [
+      7.7469,
+      34.9406
+     ],
+     "n": 18826089
+    },
+    "chainMis": 206,
+    "chainMisAt": [
+     [
+      6.0031,
+      3.8031,
+      46,
+      -1
+     ],
+     [
+      2.6594,
+      6.9781,
+      33,
+      41
+     ],
+     [
+      10.1281,
+      0.9031,
+      52,
+      46
+     ],
+     [
+      13.4531,
+      1.5906,
+      83,
+      28
+     ],
+     [
+      11.2656,
+      2.4281,
+      1,
+      52
+     ],
+     [
+      14.5406,
+      3.6469,
+      47,
+      46
+     ],
+     [
+      14.5219,
+      3.6906,
+      47,
+      46
+     ],
+     [
+      14.5031,
+      3.7344,
+      47,
+      46
+     ],
+     [
+      14.4844,
+      3.7781,
+      47,
+      46
+     ],
+     [
+      13.2031,
+      5.4844,
+      40,
+      52
+     ],
+     [
+      14.9531,
+      5.9344,
+      68,
+      82
+     ],
+     [
+      8.8219,
+      6.7719,
+      52,
+      79
+     ]
+    ],
+    "winMis": 859,
+    "segMis": 158,
+    "kMis": 0,
+    "inkOver1e3_1e2_1e1": [
+     26,
+     6,
+     0
+    ]
+   },
+   "gpu": {
+    "renderer": "ANGLE (AMD, AMD Radeon RX 6800 XT (0x000073BF) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "tiles": 25,
+    "readMs": 250917,
+    "lost": 0
+   },
+   "px": 39439850,
+   "evalMs": 159465,
+   "seg": {
+    "mean": 17.89596687107076,
+    "p95": 40,
+    "max": 64
+   },
+   "corners": {
+    "mean": 0.730863682290881,
+    "p95": 2,
+    "max": 6
+   },
+   "tables": {
+    "vtx": 6.940300000002026,
+    "pins": 1.4275999999954365,
+    "arms": 7.750599999999395,
+    "corners": 60.62830000000395,
+    "bins": 13.007999999994354,
+    "kp": 4.418600000004517,
+    "total": 96.54060000000027
+   },
+   "nCh": 2994,
+   "nK": 338,
+   "nA": 503,
+   "cells": 20878
+  },
+  "ring": {
+   "diff": {
+    "px": 18032256,
+    "ink": {
+     "max": 0.007530031461097653,
+     "p99": 0.000031622776601683795,
+     "p999": 0.00011220184543019653,
+     "at": [
+      19.9219,
+      20.4531
+     ],
+     "n": 18032256
+    },
+    "cov": {
+     "max": 0.0002750348708686623,
+     "p99": 0.000004466835921509635,
+     "p999": 0.00007943282347242821,
+     "at": [
+      19.4406,
+      16.9719
+     ],
+     "n": 18032256
+    },
+    "s": {
+     "max": 94.23554420471191,
+     "p99": 0.000005011872336272725,
+     "p999": 0.00009999999999999999,
+     "at": [
+      13.6094,
+      23.6031
+     ],
+     "n": 5427118
+    },
+    "chainMis": 26,
+    "chainMisAt": [
+     [
+      9.2531,
+      1.0844,
+      1,
+      8
+     ],
+     [
+      9.2781,
+      1.0906,
+      8,
+      1
+     ],
+     [
+      9.3219,
+      1.1031,
+      1,
+      8
+     ],
+     [
+      10.5469,
+      2.2656,
+      8,
+      1
+     ],
+     [
+      11.8156,
+      4.3531,
+      -1,
+      1
+     ],
+     [
+      11.8156,
+      4.3656,
+      1,
+      13
+     ],
+     [
+      11.7406,
+      4.4219,
+      13,
+      1
+     ],
+     [
+      11.2531,
+      5.7281,
+      1,
+      -1
+     ],
+     [
+      16.6531,
+      2.7031,
+      1,
+      0
+     ],
+     [
+      19.9031,
+      7.2844,
+      3,
+      1
+     ],
+     [
+      5.7281,
+      13.4156,
+      9,
+      2
+     ],
+     [
+      19.9031,
+      7.2844,
+      3,
+      1
+     ]
+    ],
+    "winMis": 93,
+    "segMis": 8,
+    "kMis": 0,
+    "inkOver1e3_1e2_1e1": [
+     2,
+     0,
+     0
+    ]
+   },
+   "gpu": {
+    "renderer": "ANGLE (AMD, AMD Radeon RX 6800 XT (0x000073BF) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "tiles": 41,
+    "readMs": 335041,
+    "lost": 0
+   },
+   "px": 18032256,
+   "evalMs": 33792,
+   "seg": {
+    "mean": 10.337698455478893,
+    "p95": 32,
+    "max": 59
+   },
+   "corners": {
+    "mean": 0.146985213608325,
+    "p95": 1,
+    "max": 3
+   },
+   "tables": {
+    "vtx": 0.9945000000298023,
+    "pins": 0.19890000007580966,
+    "arms": 1.3684999999823049,
+    "corners": 9.257099999929778,
+    "bins": 3.29120000009425,
+    "kp": 1.0220999999437481,
+    "total": 16.439200000022538
+   },
+   "nCh": 575,
+   "nK": 51,
+   "nA": 76,
+   "cells": 7482
+  }
+ }
+}

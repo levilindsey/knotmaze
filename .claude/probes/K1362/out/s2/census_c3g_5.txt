@@ -1,0 +1,3 @@
+scene                   stray_ink  hard_edge      paper broken_ink      k1049      total owner_only  tail_look
+fat                             0          0          0          0          0          0          0          0
+TOTAL                           0          0          0          0          0          0          0          0

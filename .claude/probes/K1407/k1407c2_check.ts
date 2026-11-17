@@ -69,7 +69,7 @@ for (const spec of list.split(",")) {
     }
   }
   // seam (K1407 c3): a valley across the outline's outer anti-aliased edge (the j97/j135 seam: ink 30 -> 20 -> 31
-  // across ~10 px): pixels within 12 px of paper, inked 0.03..0.97, whose ink sits more than SEAM below the mean of
+  // across ~10 px): pixels inside R, inked 0.03..0.97, whose ink sits more than SEAM below the mean of
   // their two opposite neighbours in any of 4 directions (1 px; diagonals sqrt 2). A smooth ss ramp's 1 px second
   // difference is about 1.5 / (2 aa ppu)^2 <= 0.011 at these scales.
   const SEAM = 0.05;
