@@ -608,6 +608,19 @@ Next free ID: K1450.
 - **K1448** · Muse batch 25 (rp=gf look leftovers in gf_look.ts, one run after another in the main checkout):
   25A K1447 pulse fan, 25B K1431 reveal counts and ghost, 25C K1424 route bands, 25D K1434 burn char in
   explore view; brief docs/design/K1448_muse_batch25.md
+  - owner: muse session via the K1053 chain (.claude/probes/K1053/chain.log), started by claude session 09c7a672-a414-402a-97da-b3176839a2e5 on 2026-11-17 05:58
+  - branch: mainline; last commit: `5285760f`
+  - evidence: .claude/probes/K1053/chain.log, each run's .claude/probes/<ID>/out/25<X>/
+  - next: 25A running, then 25B, 25C, 25D; after each handoff Claude views its crops against today and files follow-ups; restart with .claude/probes/K1053/start.ps1 if the chain stops on a gate
+  - brief: `docs/design/K1448_muse_batch25.md`
+- **K1449** · rp=gf home membership (gfh=1), what is left: flag-off pixel A/B (K1445) first, then classify the
+  remaining tie/ramp finds and the K1441/K1443 sites with the flag on and fix the largest classes in tables.ts
+  / eval.ts / gf_glsl.ts; brief docs/design/K1449_home_leftovers.md
+  - owner: agent `a02a2023ec92cd84f` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-17 05:58, 2 h cap ~07:58)
+  - branch: `worktree-agent-a02a2023ec92cd84f`, worktree `.claude/worktrees/agent-a02a2023ec92cd84f`; last commit: `5285760f`
+  - evidence: `.claude/probes/K1449/`
+  - next: stage running (flag-off pixel check, then classify and fix what is left with gfh=1): on its report Claude checks the sheets and merges
+  - brief: `docs/design/K1449_home_leftovers.md`
 
 ## Next, in order
 
@@ -627,9 +640,6 @@ Binding for every stage:
   new, and pause running agents with their WIP committed.
 
 Running agents are listed under In progress, each with its own next step.
-- **K1449** · rp=gf home membership (gfh=1), what is left: flag-off pixel A/B (K1445) first, then classify the
-  remaining tie/ramp finds and the K1441/K1443 sites with the flag on and fix the largest classes in tables.ts
-  / eval.ts / gf_glsl.ts; brief docs/design/K1449_home_leftovers.md
 - **K1315** · Junction under-tail ends in rp=outline: a bug, not a choice. Levi, 2026-11-12, on k1315_now.png: "Not a
   single tile in the image shows an acceptable scenario" (form B's round dots and the outline's square stubs both
   fail). Bar: no ink past the over thread's outline, no dot, no stub. K1314 group 1, 18 census finds (e.g. muse_default_tw j150, g41_user_tw64 j63/j64, x134); sheet
