@@ -390,6 +390,7 @@ const ROUNDED_QUOTIENTS: Record<string, [number, string]> = {
   "gpu_field/gf_glsl.ts: floor((u - KC.w) / KC.z)": [1, "keyBin's bin pick: one off only within the division's error of a bin edge, far inside the half bin of slack every bin's pin bounds and arm list are built over (gf_keys.test.ts picks 0.4 bin either way); clamped to the chain's bins"],
   // K1383 s1: rvM, the appearance reveal's mask lookup under rp=gf (gf_reveal.ts).
   "gpu_field/gf_reveal.ts: floor(s / H.w)": [1, "rvM's wrap of s onto a ring's lap (H.w is the ring's length): a ring's knot table closes with a knot at s = ring carrying the first knot's mask (GfRevealTable: S[count] = ring, M[count] = M[0]), so a lap one low puts s just past ring and one high just under 0, and both clamp to that same seam mask (gf_reveal.test.ts wraps a ring)"],
+  "gpu_field/gf_look.ts: floor(s / H.w)": [1, "exAt's wrap of s onto a ring's lap (K1396, gf_explore.ts's table): a ring's knot table closes with a knot at s = ring carrying the first knot's state, so a lap one low puts s just past ring and one high just under 0, and both clamp to that same seam state"],
 };
 
 const ROUNDERS = ["floor", "ceil", "trunc", "round", "roundEven", "fract", "mod", "int"];

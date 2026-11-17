@@ -29,6 +29,8 @@ import { splineBend, type SplineSamples } from "../../geometry/spline_generator"
 import { buildTables, type GfTables } from "./tables";
 import { CTRL_ARC, gfBuild, gfDepth, gfLookDraws, tablesDiff } from "./gf_build";
 import { GfRevealTable, gfRevealing } from "./gf_reveal";
+import { GfExploreTable, gfExploring } from "./gf_explore";
+import { knotUniformValues } from "../paint_model";
 import { GfDynTable, GfFxTable, GfLookGate, GfLookTable, GfPaintTable, dynKey, lookFade, lookGap, lookKey, paintKey, type GfDynSource, type GfPaintSource } from "./gf_look";
 import { kArcU, kWrap } from "../paint_math";
 import { GfComposite, GfPass, GfTarget, type GfMap } from "./gf_pass";
@@ -80,6 +82,10 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
   let leanOn: { lean: boolean } | null = null;
   let rc: RenderContainer | null = null;
   let drawn: (Float32Array | null)[] = [];
+  // K1396 (24E): the explore table (gf_explore.ts), rebuilt when the declaration or the installed positions move
+  let exTab: GfExploreTable | null = null;
+  let exDrawn = false;
+  let exKey = "";
   let rvTab: GfRevealTable | null = null;
   let rvDrawn = false;
   // K1389 s1: today's thread look. s2: the static colour table, its gate and the key it was built with; the
@@ -123,6 +129,8 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
     lkMs: [] as number[], lkColors: 0, lkKeys: 0, lkRows: 0, lkPos: 0, lkPosMs: [] as number[], lkUpMs: [] as number[],
     // K1405: the paint table's CPU bakes per snapshot (ms)
     ptMs: [] as number[],
+    // K1396 (24E): the explore table's CPU builds per declaration change (ms, knots)
+    exMs: [] as number[], exKnots: [] as number[],
     // K1414 part 2 (24C): the dyn table's CPU bakes per snapshot (ms)
     dynMs: [] as number[],
     // c1: where builds ran, main's share per rebuild (gather + post, then
@@ -781,6 +789,28 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
         if (!ptP) ptShow(ptSnap());
         if (!dynP) dynShow(dynSnap());
         if (!fxP) fxShow(fxSnap());
+        // K1396 (24E): while the renderer declares explore pieces, keep the explore table beside
+        // the look (rebuilt when the declaration or the installed sample positions move)
+        if (gfExploring(r) && T) {
+          exTab ??= new GfExploreTable();
+          const E = knotUniformValues().uKExplore ?? [0, 0, 1, 0];
+          const pieces = r.explorePieces ?? [];
+          let ekey = `${lkPVer}|${E[0]},${E[1]},${E[2]},${E[3]}|${pieces.length}`;
+          for (const p of pieces) ekey += `|${p.chain},${p.c0},${p.c1},${p.f0},${p.f1},${p.tip0 ? 1 : 0}${p.tip1 ? 1 : 0}`;
+          if (ekey !== exKey || !exDrawn) {
+            exKey = ekey;
+            exTab.build(r, T);
+            pass.setExplore(exTab, E[0] ?? 1, Math.round(E[1] ?? 0), E[2] ?? 1, E[3] ?? 0);
+            exDrawn = true;
+            dirty = true;
+            stats.exMs.push(exTab.ms); stats.exKnots.push(exTab.nKnots);
+          }
+        } else if (exDrawn) {
+          pass.setExplore(null);
+          exDrawn = false;
+          exKey = "";
+          dirty = true;
+        }
         // K1405: a moved paint declaration (a walk, a trail shift) re-bakes and redraws at once,
         // even at rest, when no tables build follows it
         const pk = paintKey(r.paintState);

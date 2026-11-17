@@ -36,10 +36,16 @@
  * K1414 part 2 (24C): the same site then brightens by the label's pulse field (lkPulse over uDyn, GfDynTable:
  * paint_glsl kPulseCrest over the reduced clocks) toward the pulse colour, and mixes toward the telegraph
  * colour by its rims (lkTele, shaped across by the foot's distance over uH), in ribbon_shader's order.
+ * K1396 (24E): the K76 thread reveal rides the same form (gf_explore.ts's table, unit 11): the segment scan
+ * drops a hidden segment and a corner draws only under its gate flag (both in exAt's sites, live only while
+ * uExLive is set), lkGap's cut scales by the over piece's visibility at its foot, and at the label the
+ * visibility reshaped by the end look (lkExploreLook, explore_glsl.ts kExploreLook's port: the glow tint,
+ * fray and dots/beacon shapes included) multiplies ink and coverage after the paint, pulses and FX.
  */
 import { kArcOfCtrl, kArcU, kBurnAge, kCA, kFxColor, kFxTail, kGlow, kIgnition, kSampleArc, kWall, kWrap, knotSection, type KChain, type KData, type KIgn } from "../paint_math";
 import { PAINT_CONST, PULSE_RIDGE_FADE } from "../paint_const";
 import { kStatic, knotUniformValues } from "../paint_model";
+import { EXPLORE_DOT_AT, EXPLORE_DOT_R, EXPLORE_DOTS_SPAN } from "../explore_glsl";
 import { CUT_BIAS } from "../ribbon/crossing_gaps";
 import { GF_TW } from "./gf_pack";
 
@@ -825,6 +831,8 @@ float lkTele(int c, vec2 q) {
   return T1.w * min(lkSmooth((u - u0 - T2.x) / f0), lkSmooth((u1 - u - T2.y) / f1));
 }
 vec2 lkFoot(int c, vec2 q) { vec4 C0 = F(uOCh + 3 * c); int v = int(C0.x) + int(q.x); vec4 A = F(uOV + v); vec4 B = F(uOV + v + 1); return mix(A.xy, B.xy, q.y); }
+// K1396: chain c's arc at segment q (the vertex arcs the scan's s interpolates)
+float lkArc(int c, vec2 q) { vec4 C0 = F(uOCh + 3 * c); int v = int(C0.x) + int(q.x); vec4 A = F(uOV + v); vec4 B = F(uOV + v + 1); return mix(A.z, B.z, q.y); }
 float lkTeleAcross(float e) { return 1.0 - lkSmooth((1.0 - e) / ${lkF(PAINT_CONST.RIM_EDGE)} * uTeleScale); }
 uniform highp sampler2D uFx; uniform float uFxStyle; uniform vec4 uFxPh; uniform float uFxLive;
 vec4 FT(int i) { return texelFetch(uFx, ivec2(i & TWM, i >> LOG), 0); }
@@ -879,6 +887,40 @@ vec3 lkRainbow(vec3 base, float pIn, float side) {
 // under thread shades softly. K1415: the width is today's fadeP at p (gap_mask.ts's keep): fade scaled by
 // max(sin, 0.2) between the under tangent at its foot (qU on chain cU) and the over piece's tangent at its
 // foot, floored at one pixel (2 * uAA); the per-side junction-clearance scales (fadeScaleNeg/Pos) have no tables counterpart and stay 1. K1417: no casing band (the gap clears to the background in every look).
+// K1396: explore_glsl.ts kExDotsSd (the dots/beacon end shape; lkExDot = the nearest shape is a dot)
+float lkExDot;
+float lkExDotsSd(float s, float la, float lf) {
+  float tw = uExTw;
+  float g = clamp(lf / (${lkF(EXPLORE_DOTS_SPAN)} * tw), 1e-3, 1.0);
+  float ca = 0.5 * tw * g;
+  float cb = 0.5 * tw;
+  float k0 = length(vec2(s / ca, la / cb));
+  float k1 = length(vec2(s / (ca * ca), la / (cb * cb)));
+  float dCap = k1 > 1e-6 ? k0 * (k0 - 1.0) / k1 : -ca;
+  float dDot = min(length(vec2(s - ${lkF(EXPLORE_DOT_AT[0])} * lf, la)) - ${lkF(EXPLORE_DOT_R[0])} * tw * g, length(vec2(s - ${lkF(EXPLORE_DOT_AT[1])} * lf, la)) - ${lkF(EXPLORE_DOT_R[1])} * tw * g);
+  lkExDot = dDot < dCap ? 1.0 : 0.0;
+  return min(dCap, dDot);
+}
+// K1396: explore_glsl.ts kExploreLook (la = the point's signed world distance from the centreline)
+float lkExploreLook(int look, float v, float u, float s, float lf, float la, float sideFw, float pxW) {
+  lkExDot = 0.0;
+  if (u < 0.0 || look < 2) return v;
+  if (look == 2) return 1.0 - lkSmooth((u - 0.4) / 0.6);
+  if (look == 4) {
+    float fl = la / max(uH, 1e-6);
+    float cov = 0.0;
+    for (int i = -1; i <= 1; i++) {
+      float fi = float(i);
+      float cf = fi * (0.5 + 0.3 * u) + 0.12 * u * sin(s * 7.0 + fi * 2.1);
+      float wf = mix(0.34, 0.1, u);
+      cov = max(cov, clamp((wf - abs(fl - cf)) / max(4.0 * sideFw, 1e-4) + 0.5, 0.0, 1.0));
+    }
+    cov = mix(1.0, cov, lkSmooth(u / 0.12));
+    return cov * (1.0 - lkSmooth((u - 0.5) / 0.5));
+  }
+  float dd = lkExDotsSd(s, la, lf);
+  return clamp(-dd / pxW + 0.5, 0.0, 1.0) * (uExOn > 1.5 ? 1.0 : 1.0 - 0.55 * u * u);
+}
 vec2 lkTan(int c, float q) {
   vec4 C0 = F(uOCh + 3 * c); int v = int(C0.x) + int(q);
   vec4 A = F(uOV + v); vec4 B = F(uOV + v + 1);
@@ -894,7 +936,8 @@ float lkGap(float key, vec2 p, vec2 qU, int cU) {
     vec2 to = lkTan(PC(j), lookQ(j, p).x);
     float sinT = abs(tu.x * to.y - tu.y * to.x);
     float fw = max(uLkF * max(sinT, 0.2), 2.0 * uAA);
-    g = max(g, (1.0 - ss(uH + uLkG, uH + uLkG + fw, pd[j])) * inner);
+    float exg = uExLive > 0.5 ? exAt(PC(j), lkArc(PC(j), lookQ(j, p))).x : 1.0;
+    g = max(g, (1.0 - ss(uH + uLkG, uH + uLkG + fw, pd[j])) * inner * exg);
     // K1417: no casing term (the composite clears the gap to the background in every look).
   }
   return g;
@@ -926,15 +969,44 @@ const SITES: [string | RegExp, string, number][] = [
   ["if (lab < 0 && ink > 0.0) { lab = own;", "if (lab < 0 && ink > 0.0) { lab = own; lkJb = -1; lkSb = K3.z; lkKb = BIG;", 1],
   // the output: the gap cut and the colour
   ["    oInk = min(1.0, ink); oCov = min(1.0, cov);",
-    "    lkCo = vec4(0.0);\n    if (lab >= 0) { vec2 lq = lkJb >= 0 ? lookQ(lkJb, p) : lookQs(lab, lkSb); lkCo = lkColour(lab, lq); lkCo.rgb = mix(lkCo.rgb, uGold, lkPaint(lab, lq)); float lke = clamp(length(p - lkFoot(lab, lq)) / uH, 0.0, 1.0); float lkv = lkPulse(lab, lq); if (lkv > 0.0) { if (uPulseW < 1.0) lkv *= clamp((uPulseW - lke) / max(3.0 * uAA / uH, 0.02) + 0.5, 0.0, 1.0); lkCo.rgb += (uPulseCol - lkCo.rgb) * (0.9315315315315316 * clamp(lkv, 0.0, 1.0)); } float lkt = lkTele(lab, lq); if (lkt > 0.0) lkCo.rgb += (uTeleU.rgb - lkCo.rgb) * clamp(lkt * lkTeleAcross(lke) * uTeleU.w, 0.0, 1.0); if (uFxLive > 0.5) { vec4 f0 = lkFx(lab, lq, 0); vec4 f1 = lkFx(lab, lq, 1); if (uFxStyle > 3.5) lkCo.rgb = lkBurn(lkCo.rgb, f0.z, f1.x, uFxStyle > 4.5); else if (uFxStyle > 0.5 && uFxStyle < 1.5 && f0.x > 0.0) { vec2 tn = lkTan(lab, lq.x); float sd = clamp(dot(p - lkFoot(lab, lq), vec2(-tn.y, tn.x)) / uH, -1.0, 1.0); lkCo.rgb = lkRainbow(lkCo.rgb, f0.x, 0.5 + 0.5 * sd); } if (f1.y > 0.0) lkCo.rgb += (vec3(1.0) - lkCo.rgb) * (0.9315315315315316 * clamp(f1.y, 0.0, 1.0)); ink *= f0.y; cov *= f0.y; lkHi = f0.w; } float lkg = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : 0.0; ink *= 1.0 - lkg; cov *= 1.0 - lkg; }\n    oInk = min(1.0, ink); oCov = min(1.0, cov);", 1],
+    "    lkCo = vec4(0.0);\n    if (lab >= 0) { vec2 lq = lkJb >= 0 ? lookQ(lkJb, p) : lookQs(lab, lkSb); lkCo = lkColour(lab, lq); lkCo.rgb = mix(lkCo.rgb, uGold, lkPaint(lab, lq)); float lke = clamp(length(p - lkFoot(lab, lq)) / uH, 0.0, 1.0); float lkv = lkPulse(lab, lq); if (lkv > 0.0) { if (uPulseW < 1.0) lkv *= clamp((uPulseW - lke) / max(3.0 * uAA / uH, 0.02) + 0.5, 0.0, 1.0); lkCo.rgb += (uPulseCol - lkCo.rgb) * (0.9315315315315316 * clamp(lkv, 0.0, 1.0)); } float lkt = lkTele(lab, lq); if (lkt > 0.0) lkCo.rgb += (uTeleU.rgb - lkCo.rgb) * clamp(lkt * lkTeleAcross(lke) * uTeleU.w, 0.0, 1.0); if (uFxLive > 0.5) { vec4 f0 = lkFx(lab, lq, 0); vec4 f1 = lkFx(lab, lq, 1); if (uFxStyle > 3.5) lkCo.rgb = lkBurn(lkCo.rgb, f0.z, f1.x, uFxStyle > 4.5); else if (uFxStyle > 0.5 && uFxStyle < 1.5 && f0.x > 0.0) { vec2 tn = lkTan(lab, lq.x); float sd = clamp(dot(p - lkFoot(lab, lq), vec2(-tn.y, tn.x)) / uH, -1.0, 1.0); lkCo.rgb = lkRainbow(lkCo.rgb, f0.x, 0.5 + 0.5 * sd); } if (f1.y > 0.0) lkCo.rgb += (vec3(1.0) - lkCo.rgb) * (0.9315315315315316 * clamp(f1.y, 0.0, 1.0)); ink *= f0.y; cov *= f0.y; lkHi = f0.w; } float lkg = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : 0.0; ink *= 1.0 - lkg; cov *= 1.0 - lkg; if (uExLive > 0.5) { vec4 exs = exAt(lab, lkArc(lab, lq)); float evv = exs.x; if (exs.y >= 0.0 && uExLook > 1) { vec2 etn = lkTan(lab, lq.x); float elat = dot(p - lkFoot(lab, lq), vec2(-etn.y, etn.x)); if (uExLook == 2) { float eg = lkSmooth(exs.y / 0.3) * (1.0 - lkSmooth((exs.y - 0.55) / 0.45)); lkCo.rgb = mix(lkCo.rgb, vec3(0.78, 0.94, 1.0), 0.85 * eg * uExBr); } evv = lkExploreLook(uExLook, exs.x, exs.y, exs.y * exs.z, exs.z, elat, (2.0 * uAA) / max(uExTw, 1e-6), 2.0 * uAA); if (uExOn > 1.5) lkCo.rgb = mix(lkCo.rgb, vec3(1.0), lkExDot); } ink *= evv; cov *= evv; } }\n    oInk = min(1.0, ink); oCov = min(1.0, cov);", 1],
   ["  o0 = vec4(oInk, oCov, 0.0, 1.0);\n#endif", "  o0 = vec4(oInk, oCov, lkHi, 1.0); o1 = lkCo;\n#endif", 1],
 ];
+
+// K1396: the explore table's fetch (gf_explore.ts's layout; the JS twin is its exAt)
+const F_DEF = "vec4 F(int i) { return texelFetch(uD, ivec2(i & TWM, i >> LOG), 0); }\n";
+const EX_FN = `
+uniform highp sampler2D uEx; uniform int uOExK; uniform float uExLive; uniform int uExLook; uniform float uExTw; uniform float uExOn; uniform float uExBr;
+vec4 EX(int i) { return texelFetch(uEx, ivec2(i & TWM, i >> LOG), 0); }
+// K1396: the explore state (vis, tip, lf) at arc s of chain c (gf_explore.ts exAt)
+vec4 exAt(int c, float s) {
+  vec4 H = EX(c);
+  if (H.x < 0.5) return vec4(0.0, -1.0, 0.0, 0.0);
+  if (H.x < 1.5) return vec4(1.0, -1.0, 0.0, 0.0);
+  int lo = int(H.y); int n = int(H.z);
+  if (H.w > 0.0) s -= H.w * floor(s / H.w);
+  vec4 P = EX(lo);
+  if (s <= P.x) return vec4(P.y, P.z, P.w, 0.0);
+  vec4 Q = EX(lo + n - 1);
+  if (s >= Q.x) return vec4(Q.y, Q.z, Q.w, 0.0);
+  int a = 0; int b = n - 1;
+  for (int it = 0; it < 24; it++) { if (b - a <= 1) break; int h = (a + b) >> 1; if (EX(lo + h).x <= s) a = h; else b = h; }
+  P = EX(lo + a); Q = EX(lo + b);
+  float t = Q.x > P.x ? (s - P.x) / (Q.x - P.x) : 0.0;
+  return vec4(mix(P.y, Q.y, t), mix(P.z, Q.z, t), mix(P.w, Q.w, t), 0.0);
+}
+`;
+const SEG_PLAIN = "float d = sqrt(d2); float s = A.z + u * (B.z - A.z); int k = v - cV0;";
+const SEG_REVEAL = "float d = sqrt(d2); float s = A.z + u * (B.z - A.z); float rvm = rvM(c, s); if (rvm <= 0.0) continue; d /= rvm; if (d >= uRc) continue; int k = v - cV0;";
+const EX_DROP = "float exv = uExLive > 0.5 ? exAt(c, s).x : 1.0; if (exv <= 0.0) continue; ";
+const CORNER_RE = /int k = int\(L4\(uOKL, q\)\);/g;
 
 /** A gf program's look form (see the header); throws when an anchor is missing or repeats. */
 export function lookForm(src: string): string {
   const count = (a: string): number => src.split(a).length - 1;
   if (count(G_ANCHOR) !== 1 || count(M_ANCHOR) !== 1) throw new Error(`gf look: anchors G ${count(G_ANCHOR)}, main ${count(M_ANCHOR)}`);
-  let out = src.replace(G_ANCHOR, G_ANCHOR + G_LOOK).replace(M_ANCHOR, M_LOOK + M_ANCHOR);
+  if (count(F_DEF) !== 1) throw new Error(`gf look: explore anchor F ${count(F_DEF)}`);
+  let out = src.replace(F_DEF, F_DEF + EX_FN).replace(G_ANCHOR, G_ANCHOR + G_LOOK).replace(M_ANCHOR, M_LOOK + M_ANCHOR);
   for (const [a, b] of SITES) {
     const s = a as string;
     const n = out.split(s).length - 1;
@@ -942,8 +1014,13 @@ export function lookForm(src: string): string {
     if (n > 1) throw new Error(`gf look: site repeats (${s})`);
     if (n === 1) out = out.replace(s, b);
   }
+  // K1396: the explore scan drop and corner gate (the reveal form's segment text when composed over it)
+  if (out.includes(SEG_REVEAL)) out = out.split(SEG_REVEAL).join(SEG_REVEAL.replace("int k = v - cV0;", EX_DROP + "int k = v - cV0;"));
+  else if (out.includes(SEG_PLAIN)) out = out.split(SEG_PLAIN).join(SEG_PLAIN.replace("int k = v - cV0;", EX_DROP + "int k = v - cV0;"));
+  else throw new Error("gf look: explore scan anchor missing");
+  out = out.replace(CORNER_RE, (m) => `${m} if (uExLive > 0.5 && EX(uOExK + k).x < 0.5) continue;`);
   // the sites every program carries
-  for (const must of ["lkJb = lkJ;", "lkCo = vec4(0.0);\n", "lkPulse(lab, lq)", "lkTele(lab, lq)", "lkBurn(lkCo.rgb", "lkRainbow(lkCo.rgb", "o0 = vec4(oInk, oCov, lkHi, 1.0); o1 = lkCo;", "layout(location = 1) out vec4 o1;", "ss(uW - max(3.0 * uAA, 0.02 * uH), uW, D)"]) if (!out.includes(must)) throw new Error(`gf look: ${must} missing`);
+  for (const must of ["lkJb = lkJ;", "lkCo = vec4(0.0);\n", "lkPulse(lab, lq)", "lkTele(lab, lq)", "lkBurn(lkCo.rgb", "lkRainbow(lkCo.rgb", "lkExploreLook(uExLook", "exAt(c, s)", "o0 = vec4(oInk, oCov, lkHi, 1.0); o1 = lkCo;", "layout(location = 1) out vec4 o1;", "ss(uW - max(3.0 * uAA, 0.02 * uH), uW, D)"]) if (!out.includes(must)) throw new Error(`gf look: ${must} missing`);
   return out;
 }
 
