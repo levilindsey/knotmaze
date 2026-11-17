@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1424.
+Next free ID: K1425.
 
 ## Waiting on Levi
 
@@ -2097,6 +2097,12 @@ Every other item below waits on the trigger it names.
   seed5 ci248 0.481; ci77 0.033, ci345 0.063 pass): window-end and along-eye behaviour plus section-colour
   contamination of the scan, not fadeP width; needs a window-aware gap or a direct edge scan
   (.claude/probes/K1417/out/24A/fade_*.txt)
+- **K1424** · K1414 bands (24B): gf route-band same-state mask misses the bar (gf 1721 px vs today 747, ratio
+  2.30, IoU 0.147; settled warm captures, seed 7 walk) - extra solid gold near the start/turnstiles (e.g.
+  270,111) and speckle at band/disc boundaries; the hover-rim half passes (456 vs 470, 0.97, IoU 0.929). Full
+  implementation kept as .claude/probes/K1414/k1414_part1_full.patch (applies cleanly on 1a1a72e6); fast path:
+  extract the rim commit, then re-measure bands per-junction against the fan (turnstile/stub junctions joinery
+  has no record for are the prime suspect).
 
 ## Approved, to schedule (2026-10-11)
 

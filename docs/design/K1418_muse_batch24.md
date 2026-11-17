@@ -50,6 +50,69 @@ Today's shader draws these off uniforms; gf draws neither (K1405's handoff in K1
 within 15%, IoU at least 0.8. 2. With neither feature showing, gf moves 0 px against master gf. 3. Crops.
 4. `npm test` green.
 
+### Handoff 24B (stopped, not landed: kept as a patch)
+
+2026-11-16 13:23 → 15:05 PST (main checkout, started level at ba3cac81; origin
+moved under the run — K1407 c2/c3 landed (9f38d587, 46c4f05b), so the
+implementation was committed on ba3cac81, rebased clean onto 1a1a72e6 as
+71c2f3e6, measured there, then reverted whole per this batch's stop rule;
+nothing of Run B is on master. The full work — `gf_look.ts` GfRouteTable +
+lkRoute + routed-cap drop + lkRim, `gf_pass.ts` unit 9, `gf_app.ts`
+snapshots, tests in `test/render/gf_route.test.ts`, `gf_paint.test.ts`,
+`paint_ring_lap.test.ts` — is `.claude/probes/K1414/k1414_part1_full.patch`
+(56,806 bytes, `git apply --check` clean on 1a1a72e6; also in reflog at
+71c2f3e6). K1414 stays open; the band follow-up is K1424. No `tables.ts`,
+`gf_glsl.ts` field or `eval.ts` change is in the patch, so the tables digest
+is bit-identical by construction.
+
+State recipe (`.claude/probes/K1414/k1414_ab.mjs`, ports 5488/5489, both
+killed after; perf lock held 13:40 → end): seed 7 `am=instant&mt=hunter
+&snd=none&fw=0&phw=0`, cheapest-choice walk (edges 0,220,203,173,172,171,209,
+273, head node_248), `__knotPinClocks(100)`. Three probe traps cost most of
+the run; all are now in the probe: (1) the first capture after the walk is
+pre-settle in gf (a final-pose build lands across it) — take and discard a
+warm-up capture, or every mask is inflated by the settle shift (an early
+bands pass, 37,372 vs 34,232 = ratio 1.09, IoU 0.886, was exactly this
+artifact in both renderers, matched); (2) re-pin the background before every
+shot (a pinned background asked to re-render comes back black); (3) today's
+rim only renders if the hover lands before the clock pin freezes its paint
+tick (K145's recipe), and a gf capture wants `__knotGf.stats` rebuild
+counters still.
+
+Done, against settled (post-warm) captures on the rebased tree:
+
+1. Hover rim: passes inside the patch. Mask (on−off, hover edge 0 verified by
+   `glowEdge`, rim chain 0 ctrl 0–36 at 12.60 in both renderers): today 470
+   px, gf 456, ratio 0.970, IoU 0.929. `master2` gf (1a1a72e6 via a temp
+   worktree server, removed after): 0 px.
+   Route bands: fail. Today 747 px, gf 1,721, ratio 2.30, IoU 0.147.
+   Gf-only pixels are solid gold strips on section-coloured thread near the
+   start (e.g. (270,111), on gold (236,204,65) vs today section (193,122,180))
+   plus speckle at band/disc boundaries on the through-route's gold thread
+   (see `cmp_junction.png`). Prime suspects for the next run: junctions
+   today's fan has no record for (turnstiles, stubs — joinery skips them,
+   the patch's table builds a band for every `routesByJn` entry) and the
+   disc still being wider than the fan + cover strips. The band geometry
+   otherwise reads right by eye (`crop_bands.png`: through-route gold and
+   the untraveled wedge match today; the master's gold wedge is the wider,
+   wrong one).
+2. Neither feature showing: `master2_gf_bands_off` vs the patch's
+   `new2_gf_bands_off` — 0 px in the thread area; 501 px total, all inside a
+   panel strip (x 1081–1179, y 110–116, UI noise). Pre-rebase the same pair
+   was 0 px whole-frame.
+3. Crops (today | master2 gf | patch gf) at 3–4x under
+   `.claude/probes/K1414/out/24B/`: `crop_bands.png`, `crop_rim.png`, plus
+   the per-mode captures (`new2_*`, `new3_gf_*`, `master2_gf_*`) and
+   `cmp_junction.png` (today on | off | gf on | off).
+4. `npm test` green on the full implementation after the rebase (3081
+   passed, 244 files; the later band label-gate + disc-shrink got typecheck
+   + the focused 25 tests only). The patch's own commits were never pushed.
+
+Left for the next run: extract the rim as its own commit from the patch (it
+needs no band machinery; a rim-only split was attempted at the stop line,
+broke `gf_app.ts` surgery, and was restored rather than shipped broken),
+then close the band mask per-junction against the fan before re-measuring.
+
 ## Run C (24C): K1414 part 2, the pulses and the telegraph
 
 **Done:** 1. At three fixed sim times on the same state, each feature's mask against today's: count within 15%,
