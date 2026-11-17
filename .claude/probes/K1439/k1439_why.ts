@@ -36,6 +36,27 @@ for (const p of pts) {
     segs.sort((a, b) => a.d - b.d);
     console.log(`    nearest segs: ${segs.slice(0, 3).map((g) => `k ${g.k} d ${g.d.toFixed(7)} s ${g.s.toFixed(6)} z ${P.depth.call(E, c, g.s).toExponential(4)}`).join(" | ")}`);
     console.log(`    z at s -+2e-6, -+1e-4: ${[-2e-6, 2e-6, -1e-4, 1e-4].map((e) => P.depth.call(E, c, s + e).toExponential(3)).join(", ")}`);
+    if (z === 0) for (const sg of [1, -1]) {
+      // the depth tent's foot: the nearest s on this side where z leaves 0 (bisection inside 1e-2)
+      if (P.depth.call(E, c, s + sg * 1e-2) === 0) { console.log(`    foot ${sg > 0 ? "+" : "-"}: none within 1e-2`); continue; }
+      let lo = 0; let hi = 1e-2;
+      for (let it = 0; it < 80; it++) { const mid = (lo + hi) / 2; if (P.depth.call(E, c, s + sg * mid) === 0) lo = mid; else hi = mid; }
+      console.log(`    foot ${sg > 0 ? "+" : "-"}: ${hi.toExponential(3)} from s (f32 ulp of s ${(Math.abs(Math.fround(s)) * 2 ** -23).toExponential(2)})`);
+    }
+    if (z === 0) {
+      // float32 projection onto the nearest segment, the pixel point moved by up to +-4 ulps: how far s32 strays from s
+      const f = Math.fround; const k = segs[0].k; const v = Th.cV0[c] + k;
+      const ux = 2 ** -23 * 2 ** Math.floor(Math.log2(Math.abs(x))); const uy = 2 ** -23 * 2 ** Math.floor(Math.log2(Math.abs(y)));
+      let lo = Infinity; let hi = -Infinity;
+      for (let i = -4; i <= 4; i++) for (let j = -4; j <= 4; j++) {
+        const px = f(x + i * ux); const py = f(y + j * uy);
+        const dx = f(Th.vx[v + 1] - Th.vx[v]); const dy = f(Th.vy[v + 1] - Th.vy[v]);
+        const l2 = f(f(dx * dx) + f(dy * dy)); const dot = f(f(f(px - Th.vx[v]) * dx) + f(f(py - Th.vy[v]) * dy));
+        const u = Math.min(1, Math.max(0, f(dot / l2))); const s32 = f(Th.vs[v] + f(u * f(Th.vs[v + 1] - Th.vs[v])));
+        lo = Math.min(lo, s32 - s); hi = Math.max(hi, s32 - s);
+      }
+      console.log(`    f32 s - s over +-4 ulps of the point: [${lo.toExponential(2)}, ${hi.toExponential(2)}]`);
+    }
     const a0 = Th.cArm0[c]; const an = Th.cArmN[c]; const len = Th.cLen[c]; const closed = Th.cClosed[c] === 1;
     for (let i = a0; i < a0 + an; i++) {
       let d = (s - Th.aSR[i]) * Th.aDir[i]; if (closed) d = ((d % len) + len) % len;
