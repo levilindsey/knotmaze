@@ -30,6 +30,7 @@
  * mix(section * 0.30, (0.09, 0.085, 0.08), 0.5), or the border colour when one is set. A pixel with coverage but
  * no label (the antialiased fringe outside h) takes its nearest labelled neighbour's colour.
  * K1405: the label's colour is mixed toward gold (uGold) by its baked paint amount (lkPaint over uPt, GfPaintTable below).
+ * K1414 part 1 (24F): lkRim adds the hover rim (uRimA/B/C, uHov) along the rim run (paint_math kPaintAt RIM).
  * K1395 (24D): while the appearance reveal runs, the look draws over the reveal form and the site shades the
  * label by the baked FX (lkFx over uFx, GfFxTable: burn/roots tint, rainbow stripes, materialize alpha,
  * frontier glow; o0.z carries the border interior's solidity to LOOK_COMP_FS's uRvFx branch).
@@ -46,6 +47,7 @@ import { kArcOfCtrl, kArcU, kBurnAge, kCA, kFxColor, kFxTail, kGlow, kIgnition, 
 import { PAINT_CONST, PULSE_RIDGE_FADE } from "../paint_const";
 import { kStatic, knotUniformValues } from "../paint_model";
 import { EXPLORE_DOT_AT, EXPLORE_DOT_R, EXPLORE_DOTS_SPAN } from "../explore_glsl";
+import { kRimScale } from "../paint_math";
 import { CUT_BIAS } from "../ribbon/crossing_gaps";
 import { GF_TW } from "./gf_pack";
 
@@ -275,6 +277,14 @@ export function paintPAt(V: ArrayLike<number>, b: number, n: number, closed: boo
   const A = V[b + k];
   const B = V[b + Math.min(k + 1, last)];
   return A + (B - A) * u;
+}
+
+/** A walk ctrl's particle slot on its chain (paint_state routeArmSlot): wrapped on closed chains, clamped on open ones. */
+export function paintSlot(c: { nCtrl: number; closed: boolean }, ctrl: number): number {
+  const len = c.nCtrl;
+  if (!(len > 0)) return -1;
+  const s = Math.round(ctrl);
+  return c.closed ? ((s % len) + len) % len : Math.max(0, Math.min(len - 1, s));
 }
 
 export class GfPaintTable {
@@ -675,6 +685,63 @@ export function fxAt(V: ArrayLike<number>, b: number, n: number, closed: boolean
   }
   return out;
 }
+const smooth01 = (x: number): number => { const t = Math.min(1, Math.max(0, x)); return t * t * (3 - 2 * t); };
+
+/**
+ * K1414: the hover rim's along-thread strength (paint_math kPaintAt's RIM, the lkRim GLSL's twin):
+ * strength at the hover point, falling to 0 at `len` from it, and fading in from each end's gap
+ * over the end fade (clamped to RIM_END_SHARE of the stretch from the gap to the run's middle).
+ * All distances in world arc; span = the run's arc length.
+ */
+export function rimAlong(strength: number, d: number, dEnd: number, gap: number, len: number, fade: number, span: number): number {
+  const f = Math.min(Math.max(fade, 1e-4), Math.max(1e-4, PAINT_CONST.RIM_END_SHARE * (0.5 * span - gap)));
+  return strength * (1 - smooth01(d / Math.max(len, 1e-4))) * smooth01((dEnd - gap) / f);
+}
+
+/** The rim across the ribbon (paint_math kRimAcross): e = |2 side - 1| (0 centre, 1 edge), scale = kRimScale(width). */
+export function rimAcross(e: number, scale: number): number {
+  return 1 - smooth01(((1 - e) / PAINT_CONST.RIM_EDGE) * scale);
+}
+
+export interface GfRimSource extends GfLookSource {
+  paintRim: { chain: number; c0: number; c1: number; at: number } | null;
+  rimAt: number;
+  rimGap: number;
+  hoverGlow: number;
+  hoverGlowLength: number;
+  hoverGlowFade: number;
+  hoverGlowWidth: number;
+}
+
+/** The lkRim uniforms: A = (chain, run start, run end, hover point) in sample floats; B = (gap, strength, length, fade) in world arc; C = (rim scale, K_BAND, arc per sample, closed). */
+export interface GfRimUniforms { a: [number, number, number, number]; b: [number, number, number, number]; c: [number, number, number, number]; hov: [number, number, number] }
+
+export function rimUniforms(r: GfRimSource): GfRimUniforms {
+  const H = knotUniformValues().uKHlHover;
+  const hov: [number, number, number] = H ? [H[0], H[1], H[2]] : [1, 1, 1];
+  const off: GfRimUniforms = { a: [-1, 0, 0, 0], b: [0, 0, 1, 0], c: [1, PAINT_CONST.K_BAND, 1, 0], hov };
+  const rim = r.paintRim;
+  if (!rim || rim.chain < 0 || rim.chain >= r.kcv.length || !r.kcv[rim.chain]) return off;
+  const c = r.kcv[rim.chain];
+  const D = r.kd;
+  const arcPer = Math.max(1e-9, D.geom[c.geom * 4 + 1]);
+  return {
+    a: [rim.chain, kArcU(D, c, rim.c0) / arcPer, kArcU(D, c, rim.c1) / arcPer, kArcU(D, c, r.rimAt) / arcPer],
+    b: [r.rimGap, Math.max(0, r.hoverGlow), Math.max(1e-4, r.hoverGlowLength), r.hoverGlowFade],
+    c: [kRimScale(r.hoverGlowWidth), PAINT_CONST.K_BAND, arcPer, c.closed ? 1 : 0],
+    hov,
+  };
+}
+
+/** A hash of the rim declaration and its uniforms' sources (gf_app's redraw key). */
+export function rimKey(r: GfRimSource): number {
+  let h = 2166136261;
+  const mix = (v: number): void => { keyF[0] = v; h = Math.imul(h ^ keyU[0], 16777619); };
+  const rim = r.paintRim;
+  mix(rim ? rim.chain : -1); mix(rim ? rim.c0 : 0); mix(rim ? rim.c1 : 0); mix(r.rimAt);
+  mix(r.rimGap); mix(r.hoverGlow); mix(r.hoverGlowLength); mix(r.hoverGlowFade); mix(r.hoverGlowWidth);
+  return h >>> 0;
+}
 
 /** Today's crossing gap beyond the over thread's edge (world units): the casing's margin plus crossing_gaps' CUT_BIAS. */
 export function lookGap(r: { style: { casingWidth: number; threadWidth: number } }): number {
@@ -718,6 +785,7 @@ function lkF(v: number): string { const s = String(v); return /[.eE]/.test(s) ? 
 const M_LOOK = `
 uniform highp sampler2D uLk; uniform highp sampler2D uLkP; uniform float uLkG; uniform float uLkF;
 uniform highp sampler2D uPt; uniform vec3 uGold;
+uniform vec4 uRimA; uniform vec4 uRimB; uniform vec4 uRimC; uniform vec3 uHov;
 vec4 LKT(int i) { return texelFetch(uLk, ivec2(i & TWM, i >> LOG), 0); }
 float LKP(int i) { return texelFetch(uLkP, ivec2(i & TWM, i >> LOG), 0).x; }
 #ifdef PLH
@@ -921,6 +989,40 @@ float lkExploreLook(int look, float v, float u, float s, float lf, float la, flo
   float dd = lkExDotsSd(s, la, lf);
   return clamp(-dd / pxW + 0.5, 0.0, 1.0) * (uExOn > 1.5 ? 1.0 : 1.0 - 0.55 * u * u);
 }
+// K1414: the label foot's sample float and the pixel's distance from the foot point (the rim's across)
+vec2 lkFoot(int c, vec2 q, vec2 p) {
+  vec4 C0 = F(uOCh + 3 * c); int v = int(C0.x) + int(q.x);
+  vec4 A = F(uOV + v); vec4 B = F(uOV + v + 1);
+  float sf = q.x + q.y;
+  if (!(C0.z > 0.5) && F(uOV + int(C0.x)).z < 0.0) sf -= 1.0;
+  return vec2(sf, length(p - mix(A.xy, B.xy, q.y)));
+}
+// K1414: the hover rim over the label's colour (paint_math kPaintAt's RIM along the run, shaped
+// across by kRimAcross from the foot distance; kRimOver's whitening). uRimA = (chain, run start,
+// run end, hover point) in sample floats, uRimB = (end gap, strength, length, end fade) in world
+// arc, uRimC = (rim scale, K_BAND, arc per sample, closed). Not on webs: the end gap keeps the
+// junction reach dark, as today's arm strips carry no across coordinate.
+vec3 lkRim(vec3 col, int lab, vec2 lq, vec2 p) {
+  int rc = int(uRimA.x + 0.5);
+  // (the run's range check follows)
+  if (rc < 0 || rc != lab || !(uRimB.y > 0.0)) return col;
+  vec2 ft = lkFoot(lab, lq, p);
+  float s0 = uRimA.y; float s1 = uRimA.z;
+  float s = ft.x;
+  if (uRimC.w > 0.5) s = s0 + mod(s - s0, max(LKT(lab).z, 1.0));
+  if (s < s0 || s > s1) return col;
+  float arcPer = uRimC.z;
+  float d = abs(s - uRimA.w) * arcPer;
+  float dEnd = min(s - s0, s1 - s) * arcPer;
+  float span = (s1 - s0) * arcPer;
+  float fade = min(max(uRimB.w, 1e-4), max(1e-4, 0.6 * (0.5 * span - uRimB.x)));
+  float g = uRimB.y * (1.0 - ss(0.0, 1.0, d / max(uRimB.z, 1e-4))) * ss(0.0, 1.0, (dEnd - uRimB.x) / fade);
+  if (!(g > 0.0)) return col;
+  float e = clamp(ft.y / uH, 0.0, 1.0);
+  float rim = g * (1.0 - ss(0.0, 1.0, ((1.0 - e) / 0.85) * uRimC.x));
+  if (!(rim > 0.0)) return col;
+  return col + (uHov - col) * (uRimC.y * clamp(rim, 0.0, 1.0));
+}
 vec2 lkTan(int c, float q) {
   vec4 C0 = F(uOCh + 3 * c); int v = int(C0.x) + int(q);
   vec4 A = F(uOV + v); vec4 B = F(uOV + v + 1);
@@ -969,7 +1071,7 @@ const SITES: [string | RegExp, string, number][] = [
   ["if (lab < 0 && ink > 0.0) { lab = own;", "if (lab < 0 && ink > 0.0) { lab = own; lkJb = -1; lkSb = K3.z; lkKb = BIG;", 1],
   // the output: the gap cut and the colour
   ["    oInk = min(1.0, ink); oCov = min(1.0, cov);",
-    "    lkCo = vec4(0.0);\n    if (lab >= 0) { vec2 lq = lkJb >= 0 ? lookQ(lkJb, p) : lookQs(lab, lkSb); lkCo = lkColour(lab, lq); lkCo.rgb = mix(lkCo.rgb, uGold, lkPaint(lab, lq)); float lke = clamp(length(p - lkFoot(lab, lq)) / uH, 0.0, 1.0); float lkv = lkPulse(lab, lq); if (lkv > 0.0) { if (uPulseW < 1.0) lkv *= clamp((uPulseW - lke) / max(3.0 * uAA / uH, 0.02) + 0.5, 0.0, 1.0); lkCo.rgb += (uPulseCol - lkCo.rgb) * (0.9315315315315316 * clamp(lkv, 0.0, 1.0)); } float lkt = lkTele(lab, lq); if (lkt > 0.0) lkCo.rgb += (uTeleU.rgb - lkCo.rgb) * clamp(lkt * lkTeleAcross(lke) * uTeleU.w, 0.0, 1.0); if (uFxLive > 0.5) { vec4 f0 = lkFx(lab, lq, 0); vec4 f1 = lkFx(lab, lq, 1); if (uFxStyle > 3.5) lkCo.rgb = lkBurn(lkCo.rgb, f0.z, f1.x, uFxStyle > 4.5); else if (uFxStyle > 0.5 && uFxStyle < 1.5 && f0.x > 0.0) { vec2 tn = lkTan(lab, lq.x); float sd = clamp(dot(p - lkFoot(lab, lq), vec2(-tn.y, tn.x)) / uH, -1.0, 1.0); lkCo.rgb = lkRainbow(lkCo.rgb, f0.x, 0.5 + 0.5 * sd); } if (f1.y > 0.0) lkCo.rgb += (vec3(1.0) - lkCo.rgb) * (0.9315315315315316 * clamp(f1.y, 0.0, 1.0)); ink *= f0.y; cov *= f0.y; lkHi = f0.w; } float lkg = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : 0.0; ink *= 1.0 - lkg; cov *= 1.0 - lkg; if (uExLive > 0.5) { vec4 exs = exAt(lab, lkArc(lab, lq)); float evv = exs.x; if (exs.y >= 0.0 && uExLook > 1) { vec2 etn = lkTan(lab, lq.x); float elat = dot(p - lkFoot(lab, lq), vec2(-etn.y, etn.x)); if (uExLook == 2) { float eg = lkSmooth(exs.y / 0.3) * (1.0 - lkSmooth((exs.y - 0.55) / 0.45)); lkCo.rgb = mix(lkCo.rgb, vec3(0.78, 0.94, 1.0), 0.85 * eg * uExBr); } evv = lkExploreLook(uExLook, exs.x, exs.y, exs.y * exs.z, exs.z, elat, (2.0 * uAA) / max(uExTw, 1e-6), 2.0 * uAA); if (uExOn > 1.5) lkCo.rgb = mix(lkCo.rgb, vec3(1.0), lkExDot); } ink *= evv; cov *= evv; } }\n    oInk = min(1.0, ink); oCov = min(1.0, cov);", 1],
+    "    lkCo = vec4(0.0);\n    if (lab >= 0) { vec2 lq = lkJb >= 0 ? lookQ(lkJb, p) : lookQs(lab, lkSb); lkCo = lkColour(lab, lq); lkCo.rgb = mix(lkCo.rgb, uGold, lkPaint(lab, lq)); lkCo.rgb = lkRim(lkCo.rgb, lab, lq, p); float lke = clamp(length(p - lkFoot(lab, lq)) / uH, 0.0, 1.0); float lkv = lkPulse(lab, lq); if (lkv > 0.0) { if (uPulseW < 1.0) lkv *= clamp((uPulseW - lke) / max(3.0 * uAA / uH, 0.02) + 0.5, 0.0, 1.0); lkCo.rgb += (uPulseCol - lkCo.rgb) * (0.9315315315315316 * clamp(lkv, 0.0, 1.0)); } float lkt = lkTele(lab, lq); if (lkt > 0.0) lkCo.rgb += (uTeleU.rgb - lkCo.rgb) * clamp(lkt * lkTeleAcross(lke) * uTeleU.w, 0.0, 1.0); if (uFxLive > 0.5) { vec4 f0 = lkFx(lab, lq, 0); vec4 f1 = lkFx(lab, lq, 1); if (uFxStyle > 3.5) lkCo.rgb = lkBurn(lkCo.rgb, f0.z, f1.x, uFxStyle > 4.5); else if (uFxStyle > 0.5 && uFxStyle < 1.5 && f0.x > 0.0) { vec2 tn = lkTan(lab, lq.x); float sd = clamp(dot(p - lkFoot(lab, lq), vec2(-tn.y, tn.x)) / uH, -1.0, 1.0); lkCo.rgb = lkRainbow(lkCo.rgb, f0.x, 0.5 + 0.5 * sd); } if (f1.y > 0.0) lkCo.rgb += (vec3(1.0) - lkCo.rgb) * (0.9315315315315316 * clamp(f1.y, 0.0, 1.0)); ink *= f0.y; cov *= f0.y; lkHi = f0.w; } float lkg = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : 0.0; ink *= 1.0 - lkg; cov *= 1.0 - lkg; if (uExLive > 0.5) { vec4 exs = exAt(lab, lkArc(lab, lq)); float evv = exs.x; if (exs.y >= 0.0 && uExLook > 1) { vec2 etn = lkTan(lab, lq.x); float elat = dot(p - lkFoot(lab, lq), vec2(-etn.y, etn.x)); if (uExLook == 2) { float eg = lkSmooth(exs.y / 0.3) * (1.0 - lkSmooth((exs.y - 0.55) / 0.45)); lkCo.rgb = mix(lkCo.rgb, vec3(0.78, 0.94, 1.0), 0.85 * eg * uExBr); } evv = lkExploreLook(uExLook, exs.x, exs.y, exs.y * exs.z, exs.z, elat, (2.0 * uAA) / max(uExTw, 1e-6), 2.0 * uAA); if (uExOn > 1.5) lkCo.rgb = mix(lkCo.rgb, vec3(1.0), lkExDot); } ink *= evv; cov *= evv; } }\n    oInk = min(1.0, ink); oCov = min(1.0, cov);", 1],
   ["  o0 = vec4(oInk, oCov, 0.0, 1.0);\n#endif", "  o0 = vec4(oInk, oCov, lkHi, 1.0); o1 = lkCo;\n#endif", 1],
 ];
 

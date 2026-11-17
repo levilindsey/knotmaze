@@ -31,7 +31,7 @@ import { CTRL_ARC, gfBuild, gfDepth, gfLookDraws, tablesDiff } from "./gf_build"
 import { GfRevealTable, gfRevealing } from "./gf_reveal";
 import { GfExploreTable, gfExploring } from "./gf_explore";
 import { knotUniformValues } from "../paint_model";
-import { GfDynTable, GfFxTable, GfLookGate, GfLookTable, GfPaintTable, dynKey, lookFade, lookGap, lookKey, paintKey, type GfDynSource, type GfPaintSource } from "./gf_look";
+import { GfDynTable, GfFxTable, GfLookGate, GfLookTable, GfPaintTable, dynKey, lookFade, lookGap, lookKey, paintKey, rimKey, rimUniforms, type GfDynSource, type GfPaintSource, type GfRimSource } from "./gf_look";
 import { kArcU, kWrap } from "../paint_math";
 import { GfComposite, GfPass, GfTarget, type GfMap } from "./gf_pass";
 
@@ -117,6 +117,7 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
   let fxP: Float32Array | null = null;
   let fxVer = 0;
   const fxPool: Float32Array[] = [];
+  let rimKeyV = -1;
   const stats = {
     rebuilds: 0, passes: 0, composites: 0, fallback: "",
     exportMs: [] as number[], tablesMs: [] as number[], packMs: [] as number[], uploadMs: [] as number[],
@@ -545,6 +546,19 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
   };
 
   // Pack and upload a build's tables (main's last share of a rebuild).
+  const rimSrc = (r: NonNullable<typeof ctx.scene.renderer>): GfRimSource => {
+    const x = r as unknown as {
+      kd: GfRimSource["kd"]; kcv: GfRimSource["kcv"]; chainSamples: GfRimSource["chainSamples"];
+      paintState: { paintRim: GfRimSource["paintRim"]; rimAt: number; rimGap: () => number };
+      hoverGlow: number; hoverGlowLength: number; hoverGlowFade: number; hoverGlowWidth: number;
+    };
+    return {
+      kd: x.kd, kcv: x.kcv, chainSamples: x.chainSamples,
+      paintRim: x.paintState.paintRim, rimAt: x.paintState.rimAt, rimGap: x.paintState.rimGap(),
+      hoverGlow: x.hoverGlow, hoverGlowLength: x.hoverGlowLength, hoverGlowFade: x.hoverGlowFade, hoverGlowWidth: x.hoverGlowWidth,
+    };
+  };
+  // K1414: this frame's route bands, snapshotted like the paint (they follow the samples' arcs)
   const install = (next: GfTables, mainSoFar: number, lkNext?: Float32Array | null, ptNext?: Float32Array | null, dynNext?: Float32Array | null): void => {
     const t0 = performance.now();
     T = next;
@@ -822,6 +836,8 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
         if (r.paintState.paintPulses.length > 0) dirty = true;
         const atU = dynTeleAtU();
         if (atU !== teleAtU) { teleAtU = atU; dirty = true; }
+        const rmk = rimKey(rimSrc(r));
+        if (rmk !== rimKeyV) { rimKeyV = rmk; dirty = true; }
         const gap = lookGap(r);
         const fade = lookFade(r);
         if (gap !== lkGap || fade !== lkFadeV) { lkGap = gap; lkFadeV = fade; dirty = true; }
@@ -834,7 +850,7 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
         } else {
           const up = pass.lkPMs;
           if (rvDrawn) fxShow(fxSnap());
-          pass.setLook(lkTab, gap, lkP, lkPVer, ptP, ptVer, fade, dynP, dynVer, teleAtU, fxP, fxVer, rvDrawn);
+          pass.setLook(lkTab, gap, lkP, lkPVer, ptP, ptVer, fade, dynP, dynVer, teleAtU, fxP, fxVer, rvDrawn, rimUniforms(rimSrc(r)));
           if (pass.lkPMs !== up) stats.lkUpMs.push(pass.lkPMs);
         }
       } else if (lkGap >= 0) {
@@ -843,6 +859,7 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
         lkFadeV = -1;
         ptKey = -1;
         dynKeyV = -1;
+        rimKeyV = -1;
         dirty = true;
       }
       const key = `${cam.a},${cam.d},${cam.e},${cam.f},${cam.w},${cam.h}`;

@@ -391,6 +391,8 @@ const ROUNDED_QUOTIENTS: Record<string, [number, string]> = {
   // K1383 s1: rvM, the appearance reveal's mask lookup under rp=gf (gf_reveal.ts).
   "gpu_field/gf_reveal.ts: floor(s / H.w)": [1, "rvM's wrap of s onto a ring's lap (H.w is the ring's length): a ring's knot table closes with a knot at s = ring carrying the first knot's mask (GfRevealTable: S[count] = ring, M[count] = M[0]), so a lap one low puts s just past ring and one high just under 0, and both clamp to that same seam mask (gf_reveal.test.ts wraps a ring)"],
   "gpu_field/gf_look.ts: floor(s / H.w)": [1, "exAt's wrap of s onto a ring's lap (K1396, gf_explore.ts's table): a ring's knot table closes with a knot at s = ring carrying the first knot's state, so a lap one low puts s just past ring and one high just under 0, and both clamp to that same seam state"],
+  // K1414: the look form's route bands and hover rim (gf_look.ts).
+  "gpu_field/gf_look.ts: mod(s - s0, max(LKT(lab).z, 1.0))": [1, "lkRim's unwrap of the foot's sample float into the rim run's lap on a closed chain: a lap off puts the foot the other side of the seam, and the range and distance terms then read the run's other end's fade, the same falloff kPaintAt gives the representative it unwraps to"],
 };
 
 const ROUNDERS = ["floor", "ceil", "trunc", "round", "roundEven", "fract", "mod", "int"];
