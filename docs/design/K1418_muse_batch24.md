@@ -118,6 +118,38 @@ then close the band mask per-junction against the fan before re-measuring.
 **Done:** 1. At three fixed sim times on the same state, each feature's mask against today's: count within 15%,
 IoU at least 0.7. 2. With neither feature showing, 0 px against master gf. 3. Crops. 4. `npm test` green.
 
+### Handoff 24C (Muse, 2026-11-16, done: every Done holds)
+
+Started 15:06 PST, code on master in c688b198 (deploy watched). The pulses and the telegraph now
+draw under rp=gf. `GfDynTable` (`gf_look.ts`) bakes each pulse arm's field (gA/gB/flags/endWin) and
+the telegraph's strongest piece (unwrapped arc span, gaps, signed fades) per kept sample in the look
+positions' layout; `lkPulse`/`lkTele` in the look form evaluate `kPulseCrest` from the clocks
+`gf_pass.ts` reduces to uniforms (travel, reach, hover breath, head, pulse colour, telegraph
+colour/strength/scale, the riding spot's arc), composed in ribbon order after the gold mix, the
+telegraph shaped across by the foot's distance over uH. `gf_app.ts` snapshots the bake with each
+build, re-bakes on `dynKey`, and redraws while pulses live or the telegraph end rides. No
+`tables.ts`, field-evaluation or census change, so the tables digest is bit-identical by construction.
+
+Checks (perf lock held; own server on 5491; `.claude/probes/K1414/k1414c_ab.mjs`: seed 7, 10
+cheapest moves - at 8 the telegraph's run is under two rim gaps and today draws nothing, at 10 it is
+9.2 world - `mt=hunter&fw=0&phw=0`, clocks pinned at 100 / 100.45 / 101.3; mask = on minus off by
+>8, the off frames re-declared with the feature removed and `pulseBorn` re-pinned):
+
+1. Pulses: today 1475 / 921 / 1396 px against gf 1410 / 888 / 1337 (ratio 0.956-0.964), IoU
+   0.938 / 0.931 / 0.937. Telegraph: today 961 against gf 928 (0.966), IoU 0.958 at all three times.
+2. Neither feature showing: new gf against master gf (stash A/B on the same server) 0 px whole frame;
+   master gf's own feature mask is 0, the new gf's is 2338 px.
+3. Crops (today | master gf | new gf, 4x): `.claude/probes/K1414/out/24C/crop_pulse_t100.png`,
+   `crop_tele_t100.png`, beside the per-mode captures (`new_*`, `master_gf_*`).
+4. `npm test` green: 244 files, 3080 passed. New `test/render/gf_dyn.test.ts` (6 tests) pins the
+   bake against `kPulseV` / `kPulseV2` / `kPaintAt` including a riding end; the K299 quotient
+   scanner gained `gf_look.ts`'s crest phase as a reviewed benign site, twin to `paint_glsl`'s.
+
+Left. K1414 stays open (route bands K1424 and the rim landing are Run F's). Filed K1425: in the
+border look the pulse/telegraph indications do not draw in gf's cleared interior (today composes
+them over an empty base with their own coverage; gf's `o1` carries no indication-coverage channel).
+The fill look, the default and the measured state, is unaffected.
+
 ## Run D (24D): K1395, the appearance reveal's look
 
 gf draws the reveal's widths and fronts but not its colours: the burn tint, the rainbow stripes and its swell

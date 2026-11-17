@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1425.
+Next free ID: K1426.
 
 ## Waiting on Levi
 
@@ -2101,6 +2101,11 @@ Every other item below waits on the trigger it names.
   implementation kept as .claude/probes/K1414/k1414_part1_full.patch (applies cleanly on 1a1a72e6); fast path:
   extract the rim commit, then re-measure bands per-junction against the fan (turnstile/stub junctions joinery
   has no record for are the prime suspect).
+- **K1425** · rp=gf in the border look (tlk=border) does not draw the pulse/telegraph indications in the
+  cleared interior: today's border branch composes them over an empty base with their own coverage
+  (ribbon_shader hiRgb/hiA), while gf's LOOK_COMP_FS border draws only the stroke over form B ink, and o1
+  carries colour with no indication-coverage channel (24C, K1414 part 2). Fill (the default) matches today; a
+  fix needs the pulse/tele strength in a coverage channel through the look pass and composite.
 
 ## Approved, to schedule (2026-10-11)
 
