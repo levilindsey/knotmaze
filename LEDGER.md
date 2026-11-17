@@ -919,13 +919,18 @@ Every other item below waits on the trigger it names.
   change; inferred, not profiled) (docs/design/K1407_c3_bar.md Handoff c3)
 - **K1430** · Phone pass for rp=gf after K1407 c3: the vertex cap's shader compiles and its cost on the Pixel
   (scripts/phone.ps1; d547dab6 onward)
-- **K1431** · rp=gf reveal bars (K1395 leftovers, 24D): on b.FMKB4DIQ sheet frames gf ink counts run
-  1.08-1.29x today (Done wants within 15 percent every frame) and rainbow R/B means +14-26 (want within 10);
-  gf-only pixels spread over the whole maze (thicker/brighter threads, settled-chain border stroke strength,
-  f8 rest-border stroke width 1239 vs 698). ink-dust, bloom-comet and trace-roots sheets unmeasured on the new
-  build; am=instant 0 px vs master gf argued by construction (uFxLive/uRvFx gate every new path), not
-  measured. Sheets: .claude/probes/K1395/out/24Dnew_*, crops out/24D/, tool k1395_sheet.mjs (patient waits;
-  the stock k1387_sheet 60 s waits starve under current load, master included)
+- **K1431** · rp=gf reveal bars (K1395 leftovers; 24I partial): rainbow stripes fixed in 83de5130 (see
+  docs/design/K1418_muse_batch24.md Run I handoff). Residual: sheet ink counts 1.10-1.31x at f4-f7 (bar
+  within 15 percent), ghost (Done 2 sense) 2.2-5.9% vs floor 1.39% at f5, burn R +13-17 on all-ink
+  means at f2-f3. gfOnly sits mostly within 4 px of today's ink, concentrated at junctions/crossings
+  (f4 diffmap Y-blobs) and bright edges. ink-dust/trace-roots pins (t=10.16, phw=0): counts 1.23-1.25x,
+  colours pass; bloom-comet unmeasured (its reveal ends before that pin time; needs its sheet). Ruled
+  out (measured, no movement): composite premult form (fixed anyway), burn-age shifts, and the FX word's
+  component order - the baked word is (pRain, alpha, burnAge, solidity) (GfFxTable.values) and the
+  shader reads (lkBurn f0.z, ink *= f0.y, lkHi f0.w) match it; do not swap them. Next angles: corner
+  surfaces vs today's fan gate (jointGate tOn + knotFanAlpha), and the field's edge profile vs the
+  border stroke ramp. Sheets/pins/crops: .claude/probes/K1395/out/24I*, tools k1431_*.mjs there;
+  patient tool k1395_sheet.mjs (the stock k1387_sheet 60 s waits starve under current load)
 - **K1432** · rp=gf smudges (muse_hash 5.88,8.50 extra 1243; 19.41,14.16 extra 752): composite()'s equal-depth
   tie blend smears dark into the fill where today's fill shows none; narrowing the window everywhere fails the
   bar (37 new wedges), so it needs a discriminator (K1407 c5; docs/design/K1407_c4_bar.md Handoff c4)

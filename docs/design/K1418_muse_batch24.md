@@ -300,6 +300,89 @@ Measure with `.claude/probes/K1395/k1395_sheet.mjs` (the patient waits) against 
 5. Crops under `.claude/probes/K1395/out/24I/` (today | master gf | new gf).
 6. `npm test` green.
 
+### Handoff 24I (Muse, 2026-11-17, partial: rainbow fixed; counts, ghost and burn colour not met)
+
+Run I spent 02:11-04:0x PST and stopped inside the session. Landed and pushed: 83de5130. Remaining is refiled as
+amended K1431. Do not let it sit on K1431 past one run: pick up next from the two angles at the end, and resolve
+promptly: DO IT IN ONE RUN, or (a) lower the pixel bar with a stated reason for the settled frames or (b) match
+it.
+
+- **Fixed (rainbow, Done 1's colour for rainbow, and Done 5's eye):** the across coordinate in the field shader
+  divided by uH alone, so stripes were measured on the unswollen thread and clamped red/purple over the outer
+  half of the RAINBOW_SWELL 2x strip; the reveal form now divides by uH * rvM at the label's foot (today's
+  vUV.y over the widthMul-grown mesh). The border composite's uRvFx branch also wrote
+  Sb*a + C*ia against alpha max(a, ia) (not premultiplied-consistent); it now uses the non-rvFx branch's
+  union form. Tests pin both.
+
+- **Done 1, burn (not met):** counts 0.91 / 1.04 / 1.04 / 1.27 / 1.26 / 1.31 / 1.19 / 1.72 by frame on
+  24Inew_def. The excess turns on at f4 and sits at junctions/crossings (f4 diffmap:
+  k1431_diffmap.mjs output is Y-shaped blobs at nearly every junction) and in a 1-4 px bright fringe
+  around today's ink. Mean colour passes f4-f8 (max deviation 8.5 on shared pixels at f4) but the red
+  channel runs +13-17 at f2-f3 (all-ink means; 12.5 on shared pixels).
+
+- **Done 1, trace-rainbow (colour met within deviations below; counts not met):** counts 1.04 / 1.24 / 1.26
+  / 1.24 / 1.22 / 1.17 / 1.00 / 1.27 on 24Inew_trace-rainbow. Colour improved from run D's R/B +14-26:
+  worst all-ink mean deviation dropping from 26 to 13.3 (B at f3) and f5 reads 11.7 / 7.9 / 7.8. Deviation
+  is 13.3 worst-case, so the strict "within 10 in every frame" is answered NOT MET, narrowly, with the
+  component fixed.
+
+- **Done 2, ghost (not met):** on 24Inew_def ghost runs 0.01-5.91%. On 24Inew_trace-rainbow it runs up to
+  6.94%. Measured as today-within-8-of-frame-0 pixels where gf differs from today by >8 - matching Done 2's
+  sense where today's f0 is the background reference. The floor of 1.39% at f5 exceeds the 1% bar itself
+  (see floor section below).
+
+- **Done 3 (reported):** at t=10.16, ink-dust counts 1.23x (not passing); colours pass, worst all-ink
+  deviations 5.9 / 3.7 / 5.0 (passing). trace-roots counts 1.25x (not passing); colours pass, worst
+  deviations 5.9 / 3.5 / 5.1 (passing). bloom-comet is unmeasured: its reveal ends before the pin time its
+  duration places before t=10.16 s, so it needs its sheet. These are pin measurements (k1431_pin.mjs,
+  phw=0/fw=0), not sheets; only the bar-1 numbers for those two modes are claimed.
+
+- **Done 4 (measured, met):** am=instant gives 0 px difference against master gf (k1431_pxdiff.mjs on
+  inst_gf_master.png vs inst_gf_new.png, am=instant link pins; those frames are fog-covered, so this is a
+  regression check, not a look comparison).
+
+- **Done 5 (met):** crops under .claude/probes/K1395/out/24I/ (crop_def_f5_150_60.png,
+  crop_def_f4_60_60.png, crop_trace-rainbow_f5_60_300.png). By eye: the new gf rainbow's stripes now read
+  at today's width, with the wide saturated red/purple edges gone. The burn ghost is still visible in the
+  new gf crop as a faint dotted outline across unrevealed area - Done 2's residue, plain to see.
+
+- **Done 6 (met):** npm test fully green (250 test files / 3113 tests passed).
+
+- **Floor:** Two identical master sheets (24Ibase_def vs 24Irep_def, master build at start) gave ink
+  ratios 0.988-1.016, mean colour deviations at most 1.7 per channel, ghost 0.18-1.39% (floor exceeding
+  the 1% bar at f5). At f5 the adjusted ghost bar is 1.89%; gf exceeds it at 5.91%.
+
+- **Attribution for the next attempt:** ruled out with measurements, not inspection - the composite's
+  premult form (fixed; burn changed materially only with the combined attempt), a constant 0.6 burn age,
+  shifting burn age by +0.35, and the FX word's component order.
+  CONFIRMED by the bake's own write order in GfFxTable.values (gf_look.ts): the word is (pRain, alpha,
+  burnAge, solidity), where shaders read as f0 = (pRain, alpha, burnAge, solidity) and use f0.y for alpha
+  (ink/cov scale), f0.z as burnAge and f0.w as solidity. Internal bake layout matches entry layout -
+  there was no component swap in the layout. Ruled-in: the junction/crossing accumulation and edge fringe
+  named above.
+
+Next two angles, in order:
+1. **Fixed simulation on the same state** at frames f4-f5 (24Inew_def gf excess turns on at f4): recompute
+   gf's per-thread count contribution from the same truck - decomposing the gfOnly count into the border
+   stroke, interior fill and junction/corner surfaces, or A/B OPTS disabling corner surfaces in the reveal
+   form - until the Y-blob source is named in numbers, not by eye.
+2. **The interior fill's coverage source during reveal:** the fill uses field rv coverage; compare it
+   against today's per-pixel alpha from the mesh on the same state (the same frame, fragment by fragment),
+   especially within one thread width of crossings and along edges where gfOnly concentrates. The comparison
+   is the difference between form-B coverage and MSAA coverage - it needs a fragment-level A/B, not another
+   full-frame count.
+
+Environment: worked in the main checkout on master directly. Baseline was today's master (514ed145) for
+master. Builds: npm run build; vite preview on port 5495/5498; dev pins on port 5497. Captures were held
+under %TEMP%\claude-perf.lock. No Claude-agent GPU work ran concurrently during sheets. Probe tooling
+written for this run (not committed): .claude/probes/K1395/k1431_pin.mjs, k1431_pair.mjs, k1431_stats.mjs,
+k1431_diffmap.mjs, k1431_ghostmap.mjs, k1431_crop.mjs, k1431_pxdiff.mjs, k1431_scan.mjs, k1431_ghostpx.mjs;
+captures under .claude/probes/K1395/out/24Ibase_def*, 24Irep_def*, 24Inew_def*, 24Inew_trace-rainbow*, and
+.claude/probes/K1395/out/24I/.
+
+Time: session ran 02:11 to ~04:0x PST and stopped. Commits pushed shown below. Deploy: not complete at the time
+of writing - see closing report for deploy status.
+
 ## Every run from F on: measure the floor first, and share the GPU
 
 Added by Claude after 24D. Two lessons from Runs A-D apply to every run from F on.
