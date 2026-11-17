@@ -312,10 +312,10 @@ Next free ID: K1443.
   tables bit-identical. Re-run k1362s2_census.ps1 on master, then fix stages under a new digest; K1315's ends
   join the same bar. Levi (2026-11-15): getting these spots truly correct is the most important thing now; the
   bar is the look he approves, not form B's (form B fails K1315's ends and jumps under K1267's jitter)
-  - owner: agent `ae6e6ae2a52900882` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-16 18:13, 2 h cap ~20:13)
-  - branch: `worktree-agent-ae6e6ae2a52900882`, worktree `.claude/worktrees/agent-ae6e6ae2a52900882`; last commit: `50dcfef1`
+  - owner: nobody since 2026-11-16 20:12: c5 merged (36e63c4b); the remaining work moved to K1438/K1439 (membership from the tables), which supersede patching the tie rules
+  - branch: `worktree-agent-ae6e6ae2a52900882`, worktree `.claude/worktrees/agent-ae6e6ae2a52900882`; last commit: `36e63c4b`
   - evidence: .claude/probes/K1407/out/c5/; c4: .claude/probes/K1407/out/c4/
-  - next: c5 running (c4 merged at 9775e8d3: the def seam notches fixed by fillBur, Claude checked all 29 spots at 4x; census 19/0/11/14): spot 16 + spot 6 (K1427, demoted arms), then the smudges (K1432, tie discriminator); on its report Claude checks the sheet spot by spot and merges; then the vertex cap's GPU cost (K1426)
+  - next: after K1439 lands: re-run K1433's scan and the 29 spots, then the two smudges (K1432) and the lie-along sites (K1441) against what is left; then K1426 (vertex cap GPU cost) and K1430 (phone)
   - brief: `docs/design/K1407_c5_bar.md`
 - **K1418** · Muse batch 24 (2026-11-16): five runs through the K1053 chain in the main checkout, rp=gf look
   parity with today: K1417+K1415 gap casing and fade, K1414 route bands + hover rim, K1414 pulses + telegraph,
@@ -609,6 +609,15 @@ Next free ID: K1443.
   - evidence: `.claude/probes/K1387/`
   - next: the Pixel ABBA (k1387_phone.ps1; base 2b1cffe1 against the s2 merge, rp=gf) when the phone's screen is on: main ms/frame, gf builds/s, the drag's sim/wall (s2 handoff, Next)
   - brief: `docs/design/K1387_s2_lazy_march.md` (s1: `K1387_s1_lean_consumers.md`)
+- **K1438** · rp=gf stage A of K1435: home-interval membership with a depth ramp in tables.ts and eval.ts
+  (CPU), after K1407 c5 leaves those files; bar: 27 of 29 spots clean with the 25 unchanged, K1433 scan
+  tie+ramp at most 547 finds / 19287 px, table size unchanged (docs/design/K1435_table_grouping_probe.md
+  Handoff; probe .claude/probes/K1435/k1435_mkprobe.mjs)
+  - owner: agent `a7c0706af46760bde` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-16 20:17, 2 h cap ~22:17)
+  - branch: `worktree-agent-a7c0706af46760bde`, worktree `.claude/worktrees/agent-a7c0706af46760bde`; last commit: `36e63c4b`
+  - evidence: `.claude/probes/K1438/`
+  - next: stage running (tables.ts + eval.ts behind a switch; fade follows fadeLength): on its report Claude checks the sheets, merges, and launches K1439 (the GLSL mirror, which turns it on)
+  - brief: `docs/design/K1438_home_membership.md`
 
 ## Next, in order
 
@@ -628,10 +637,6 @@ Binding for every stage:
   new, and pause running agents with their WIP committed.
 
 Running agents are listed under In progress, each with its own next step.
-- **K1438** · rp=gf stage A of K1435: home-interval membership with a depth ramp in tables.ts and eval.ts
-  (CPU), after K1407 c5 leaves those files; bar: 27 of 29 spots clean with the 25 unchanged, K1433 scan
-  tie+ramp at most 547 finds / 19287 px, table size unchanged (docs/design/K1435_table_grouping_probe.md
-  Handoff; probe .claude/probes/K1435/k1435_mkprobe.mjs)
 - **K1315** · Junction under-tail ends in rp=outline: a bug, not a choice. Levi, 2026-11-12, on k1315_now.png: "Not a
   single tile in the image shows an acceptable scenario" (form B's round dots and the outline's square stubs both
   fail). Bar: no ink past the over thread's outline, no dot, no stub. K1314 group 1, 18 census finds (e.g. muse_default_tw j150, g41_user_tw64 j63/j64, x134); sheet
