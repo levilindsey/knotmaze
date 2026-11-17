@@ -614,7 +614,7 @@ function cornerMerge(src: string): string {
           float wb2 = 1.0 - ss(h - 2.0 * aa, h, sqrt(pieceD(m, q)));
           if (wb2 > bur) bur = wb2;
         }
-        if (bur < 1.0) bur = max(bur, fillBur(k, q, S));
+        if (bur < 1.0) bur = max(bur, fillBur(k, q, p, S));
         float val = (1.0 - bur) * fb; // K1407 c1: both faces buried by other arms and other corners' fills
         if (f == 0) { if (val > v) v = val; } else if (val > tv) tv = val;
       }
@@ -1006,15 +1006,34 @@ int entry(int id) {
 }
 float band(float D) { return 1.0 - ss(uW - uAA, uW + uAA, D); } // K1407 23A: form B's band
 float band2(float D) { return (1.0 - ss(uW - uAA, uW + uAA, D)) * ss(-uAA, uAA, D); }
-// K1407 c1: a corner face (arc or tangent point q of corner k) is buried by another corner's fill of its surface,
-// tested a step toward k's own ball (the paper side of q), so a fill that only touches q's outline does not bury it.
-float fillBur(int k, vec2 q, int S) {
-  vec4 Q0 = F(uOK + 6 * k); float inF = Q0.z > 0.0 ? min(uW, 0.5 * Q0.z) / Q0.z : 0.0; vec2 iq = q + (Q0.xy - q) * inF;
+// K1407 c2: a corner face (arc or tangent point q of corner k, seen from the pixel p) against the other corners'
+// fills of its surface. q is tested a step aa toward k's own ball; when a fill k2 covers it, the paper next to k's
+// circle there is the lens of the two balls, which ends where the circles cross: the face keeps only band(|p - X|),
+// X the crossing nearest q, and nothing when the circles do not cross or X lies inside a tube of the surface.
+// eval.ts's fillBur, line for line.
+float fillBur(int k, vec2 q, vec2 p, int S) {
+  vec4 Q0 = F(uOK + 6 * k); float inF = Q0.z > 0.0 ? min(uAA, 0.5 * Q0.z) / Q0.z : 0.0; vec2 iq = q + (Q0.xy - q) * inF;
+  float lim = uH - 2.0 * uAA; float lim2 = lim * lim;
   float fbur = 0.0;
   for (int i2 = 0; i2 < nk; i2++) {
     int k2 = kk[i2]; if (k2 == k) continue; vec4 L0 = F(uOK + 6 * k2); vec4 L1 = F(uOK + 6 * k2 + 1); if (int(L1.z) != S) continue;
     float rq = length(iq - L0.xy);
-    if (rq > L0.z && rq < L0.w && inSector(k2, iq) && outsideArms(k2, -1, iq)) { fbur = 1.0; break; }
+    if (!(rq > L0.z && rq < L0.w && inSector(k2, iq) && outsideArms(k2, -1, iq))) continue;
+    float b = 1.0;
+    vec2 dv = L0.xy - Q0.xy; float d2 = dot(dv, dv); float d = sqrt(d2);
+    if (d > 1e-9) {
+      float a = (Q0.z * Q0.z - L0.z * L0.z + d2) / (2.0 * d); float hh2 = Q0.z * Q0.z - a * a;
+      if (hh2 >= 0.0) {
+        vec2 u = dv / d; vec2 bc = Q0.xy + a * u; float hh = sqrt(hh2);
+        float sg = (q.x - bc.x) * -u.y + (q.y - bc.y) * u.x >= 0.0 ? hh : -hh;
+        vec2 xc = vec2(bc.x - u.y * sg, bc.y + u.x * sg);
+        bool inTube = false;
+        for (int m = 0; m < np; m++) { if (PSURF(m) == S && pieceD(m, xc) < lim2) { inTube = true; break; } }
+        if (!inTube) b = ss(uW - uAA, uW + uAA, length(p - xc));
+      }
+    }
+    if (b > fbur) fbur = b;
+    if (fbur >= 1.0) break;
   }
   return fbur;
 }
@@ -1121,7 +1140,7 @@ void layers(vec2 p) {
         float wb2 = 1.0 - ss(h - 2.0 * aa, h, sqrt(pieceD(m, q)));
         if (wb2 > bur) bur = wb2;
       }
-      if (bur < 1.0) bur = max(bur, fillBur(k, q, S));
+      if (bur < 1.0) bur = max(bur, fillBur(k, q, p, S));
       float val = (1.0 - bur) * band2(Dk); // K1407 c1: buried by other arms' tubes and other corners' fills
       if (val > v) { v = val; PR(wk = 2; wa = k; wb = 0;) }
     }
@@ -1139,7 +1158,7 @@ void layers(vec2 p) {
           float wb2 = 1.0 - ss(h - 2.0 * aa, h, sqrt(pieceD(m, T)));
           if (wb2 > bur) bur = wb2;
         }
-        if (bur < 1.0) bur = max(bur, fillBur(k, T, S));
+        if (bur < 1.0) bur = max(bur, fillBur(k, T, p, S));
         float val = (1.0 - bur) * band(dT) * ss(-aa, aa, D); // K1407 c1: buried as the arc
         if (val > v) { v = val; PR(wk = 4; wa = k; wb = t;) }
       }

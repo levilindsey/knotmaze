@@ -2,8 +2,8 @@
 //   node scripts/run_node.mjs .claude/probes/K1407/k1407_crops.ts <outDir> <scene:x:y,...>
 import { join } from "node:path";
 import { mkdirSync, writeFileSync } from "node:fs";
-import { buildModel, refEval, rasterOutline, type Model } from "C:/Users/lsl/Repositories/knotmaze/.claude/probes/K1314/k1314_census.ts";
-import { writePng } from "C:/Users/lsl/Repositories/knotmaze/.claude/probes/K1314/k1314_crops.ts";
+import { buildModel, refEval, rasterOutline, type Model } from "../K1314/k1314_census.ts";
+import { writePng } from "../K1314/k1314_crops.ts";
 import { runAt, runColour, type RGB } from "../../../src/render/outline/paint.ts";
 import { rasterGf } from "../K1362/k1362s1_census.ts";
 

@@ -3,7 +3,7 @@
 //   node scripts/run_node.mjs .claude/probes/K1407/k1407_sheet_half.ts <outPng> <dir:sfx,dir:sfx,...> <base1,base2,...>
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { writePng } from "C:/Users/lsl/Repositories/knotmaze/.claude/probes/K1314/k1314_crops.ts";
+import { writePng } from "../K1314/k1314_crops.ts";
 
 const [outPng, colsArg, list] = process.argv.slice(2);
 const cols = colsArg.split(",").map((s) => { const i = s.lastIndexOf(":"); return { dir: s.slice(0, i), sfx: s.slice(i + 1) }; });

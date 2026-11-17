@@ -1,6 +1,6 @@
 // K1407 c1: the gf winning term at crop pixels (k1407_crops' 480 px frame, WH=2.5h around the spot).
 //   node scripts/run_node.mjs .claude/probes/K1407/k1407c1_px.ts <scene> <x> <y> <c:r,c:r,...>
-import { buildModel } from "C:/Users/lsl/Repositories/knotmaze/.claude/probes/K1314/k1314_census.ts";
+import { buildModel } from "../K1314/k1314_census.ts";
 import { gfTablesOf } from "../K1362/k1362s1_census.ts";
 import { GfEval } from "../../../src/render/gpu_field/eval.ts";
 const [nm, xs, ys, list] = process.argv.slice(2);

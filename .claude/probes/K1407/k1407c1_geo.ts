@@ -2,8 +2,8 @@
 // chain's centreline (coloured by chain), ribbon edges at +-h (gray), corners (centre dot, r circle, tangent
 // points as squares) and arm roots / L / Lcut ticks; prints chains, arms and corners near the spot.
 //   node scripts/run_node.mjs .claude/probes/K1407/k1407c1_geo.ts <scene> <x> <y> [whH=4] [outPng]
-import { buildModel } from "C:/Users/lsl/Repositories/knotmaze/.claude/probes/K1314/k1314_census.ts";
-import { writePng } from "C:/Users/lsl/Repositories/knotmaze/.claude/probes/K1314/k1314_crops.ts";
+import { buildModel } from "../K1314/k1314_census.ts";
+import { writePng } from "../K1314/k1314_crops.ts";
 import { gfTablesOf } from "../K1362/k1362s1_census.ts";
 import { GfEval } from "../../../src/render/gpu_field/eval.ts";
 import { chainAt } from "../../../src/render/gpu_field/tables.ts";

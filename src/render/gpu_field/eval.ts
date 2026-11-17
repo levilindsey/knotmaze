@@ -145,17 +145,39 @@ export class GfEval {
     return cab >= 0 ? c1 >= 0 && c2 >= 0 : c1 <= 0 && c2 <= 0;
   }
 
-  /** K1407 c1: a corner face (arc or tangent point (qx, qy) of corner k) is buried by another corner's fill of its
-   * surface, tested a step toward k's own ball (the paper side of q), so a fill that only touches q's outline does
-   * not bury it. gf_glsl.ts's fillBur, line for line. */
-  private fillBur(k: number, qx: number, qy: number, S: number): number {
-    const T = this.T; const r = T.kR[k]; const inF = r > 0 ? Math.min(T.W, 0.5 * r) / r : 0;
-    const ix = qx + (T.kCx[k] - qx) * inF; const iy = qy + (T.kCy[k] - qy) * inF;
+  /** K1407 c2: a corner face (arc or tangent point (qx, qy) of corner k, seen from the pixel (x, y)) against the
+   * other corners' fills of its surface. q is tested a step aa toward k's own ball; when a fill k2 covers it, the
+   * paper next to k's circle there is the lens of the two balls, which ends where the circles cross. The face keeps
+   * only band(|p - X|), X the crossing nearest q (the lens corner's round cap), and nothing when the circles do not
+   * cross or X lies inside a tube of the surface. c1 tested a step W deep and buried whole, so an arc whose paper
+   * side was the lens ran on past X into k2's fill: the pointed stubs at K1315's under-tail ends (c1 rows 5-10).
+   * Returns the burial, max over the fills. gf_glsl.ts's fillBur, line for line. */
+  private fillBur(k: number, qx: number, qy: number, x: number, y: number, S: number): number {
+    const T = this.T; const r = T.kR[k]; const cx = T.kCx[k]; const cy = T.kCy[k]; const aa = T.aa; const W = T.W;
+    const inF = r > 0 ? Math.min(aa, 0.5 * r) / r : 0;
+    const ix = qx + (cx - qx) * inF; const iy = qy + (cy - qy) * inF;
+    const lim = T.h - 2 * aa; const lim2 = lim * lim;
     let fbur = 0;
     for (let i2 = 0; i2 < this.nk; i2++) {
       const k2 = this.kk[i2]; if (k2 === k || T.kG[k2] !== S) continue;
-      const rq = Math.sqrt((ix - T.kCx[k2]) * (ix - T.kCx[k2]) + (iy - T.kCy[k2]) * (iy - T.kCy[k2]));
-      if (rq > T.kR[k2] && rq < T.kRmax[k2] && this.inSector(k2, ix, iy) && this.outsideArms(k2, -1, ix, iy)) { fbur = 1; break; }
+      const c2x = T.kCx[k2]; const c2y = T.kCy[k2]; const r2 = T.kR[k2];
+      const rq = Math.sqrt((ix - c2x) * (ix - c2x) + (iy - c2y) * (iy - c2y));
+      if (!(rq > r2 && rq < T.kRmax[k2] && this.inSector(k2, ix, iy) && this.outsideArms(k2, -1, ix, iy))) continue;
+      let b = 1;
+      const dx = c2x - cx; const dy = c2y - cy; const d2 = dx * dx + dy * dy; const d = Math.sqrt(d2);
+      if (d > 1e-9) {
+        const a = (r * r - r2 * r2 + d2) / (2 * d); const hh2 = r * r - a * a;
+        if (hh2 >= 0) {
+          const hh = Math.sqrt(hh2); const ux = dx / d; const uy = dy / d; const bx = cx + a * ux; const by = cy + a * uy;
+          const sg = (qx - bx) * -uy + (qy - by) * ux >= 0 ? hh : -hh;
+          const Xx = bx - uy * sg; const Xy = by + ux * sg;
+          let inTube = false;
+          for (let m = 0; m < this.np; m++) if (this.psurf[m] === S && this.pieceD(m, Xx, Xy) < lim2) { inTube = true; break; }
+          if (!inTube) { const dX = Math.sqrt((x - Xx) * (x - Xx) + (y - Xy) * (y - Xy)); b = ss(W - aa, W + aa, dX); }
+        }
+      }
+      if (b > fbur) fbur = b;
+      if (fbur >= 1) break;
     }
     return fbur;
   }
@@ -348,7 +370,7 @@ export class GfEval {
           const wb2 = 1 - ss(h - 2 * aa, h, Math.sqrt(this.pieceD(m, qx, qy)));
           if (wb2 > bur) bur = wb2;
         }
-        if (bur < 1) bur = Math.max(bur, this.fillBur(k, qx, qy, S));
+        if (bur < 1) bur = Math.max(bur, this.fillBur(k, qx, qy, x, y, S));
         const val = (1 - bur) * band2(Dk); // K1407 c1: buried by other arms' tubes and other corners' fills
         if (val > v) { v = val; wk = 2; wa = k; wb = 0; }
       }
@@ -367,7 +389,7 @@ export class GfEval {
             const wb2 = 1 - ss(h - 2 * aa, h, Math.sqrt(this.pieceD(m, tx, ty)));
             if (wb2 > bur) bur = wb2;
           }
-          if (bur < 1) bur = Math.max(bur, this.fillBur(k, tx, ty, S));
+          if (bur < 1) bur = Math.max(bur, this.fillBur(k, tx, ty, x, y, S));
           const val = (1 - bur) * band(dT) * ss(-aa, aa, D); // K1407 c1: form B's tangent term, buried as the arc
           if (val > v) { v = val; wk = 4; wa = k; wb = t; }
         }
