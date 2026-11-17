@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1443.
+Next free ID: K1445.
 
 ## Waiting on Levi
 
@@ -303,6 +303,10 @@ Next free ID: K1443.
   never unlocks it. If it should stay unlocked on the charger overnight, that is a phone setting only Levi can
   change (K1362). 2026-11-13 10:34-10:57: unlocked, but the Claude app stayed in front, so the run never
   started: the pass needs the HOME SCREEN in front and the phone untouched for 2 min (Claude never presses Home).
+- **K1444** · rp=gf home membership looks (after K1439 makes it live behind a flag): (1) on by default? (2)
+  spot 4 (muse_hash 5.88,8.50) rounds the corner where rp=outline draws a dive shadow; (3) g41_user_tw64
+  17.80,9.55: soft band at the default fadeLength, no line at 1.2, where master and rp=outline draw a fading
+  stub; sheets .claude/probes/K1438/out/sheet_fl_1..2.png, sheet_worse.png
 
 ## In progress
 
@@ -609,15 +613,6 @@ Next free ID: K1443.
   - evidence: `.claude/probes/K1387/`
   - next: the Pixel ABBA (k1387_phone.ps1; base 2b1cffe1 against the s2 merge, rp=gf) when the phone's screen is on: main ms/frame, gf builds/s, the drag's sim/wall (s2 handoff, Next)
   - brief: `docs/design/K1387_s2_lazy_march.md` (s1: `K1387_s1_lean_consumers.md`)
-- **K1438** · rp=gf stage A of K1435: home-interval membership with a depth ramp in tables.ts and eval.ts
-  (CPU), after K1407 c5 leaves those files; bar: 27 of 29 spots clean with the 25 unchanged, K1433 scan
-  tie+ramp at most 547 finds / 19287 px, table size unchanged (docs/design/K1435_table_grouping_probe.md
-  Handoff; probe .claude/probes/K1435/k1435_mkprobe.mjs)
-  - owner: agent `a7c0706af46760bde` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-16 20:17, 2 h cap ~22:17)
-  - branch: `worktree-agent-a7c0706af46760bde`, worktree `.claude/worktrees/agent-a7c0706af46760bde`; last commit: `36e63c4b`
-  - evidence: `.claude/probes/K1438/`
-  - next: stage running (tables.ts + eval.ts behind a switch; fade follows fadeLength): on its report Claude checks the sheets, merges, and launches K1439 (the GLSL mirror, which turns it on)
-  - brief: `docs/design/K1438_home_membership.md`
 
 ## Next, in order
 
@@ -2156,6 +2151,11 @@ Every other item below waits on the trigger it names.
   g41_user_tw64 1.63,17.29, extra ink at def 20.75,33.19 and g41_def_tw64 20.58,28.72, and seams in
   g41_ring_tw64; K1436's reference-free test should replace the census (Handoff c5); also an unexplained bench
   reading (p9ar6 round 2, 4.78 ms GPU over 271 frames)
+- **K1443** · rp=gf home membership (K1438) leftovers: fadeLength 0 brings back tie bands (690 finds vs 435 at
+  default); muse_hash 31.56,7.41 untouched in every variant, plus test flags at g41_def_tw64 11.21,8.29, def
+  9.06,6.41, g41_ring_tw64 16.43,2.90, muse_hash 33.64,9.23; spot 5 (muse_hash 19.41,14.16) keeps 6 px of tie
+  that rp=outline also shows; probe-only option: start the fade at the tie depth (K1438_Z0 in
+  .claude/probes/K1438/)
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2527,6 +2527,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1438** · rp=gf junction membership from the arms' home intervals in tables.ts + eval.ts, behind a switch that is off (GF_HOME / buildTables home:true); the fade follows fadeLength live; CPU scan tie+ramp 1797 -> 435 finds, 28 of 29 spots clean; table size unchanged, off = master's digest. Done in ca42a4de (2026-11-16).
 - **K1427** · rp=gf spot 16 and spot 6 (form B's demoted-arm V): member()'s second loop skips an arm rooted with the first loop's arm (the other half of a through pass); both match rp=outline at 4x (Claude checked), census 16/0/11/14 with 32 new exceptions (form B's V), bench within 5%. Done in e3297511 (2026-11-16).
 - **K1440** · rp=gf look: where a thread dives under a junction, K1435's membership ramp fades it in softly; rp=outline cuts it crisply, and the crisp variants (tgm) leave stubs elsewhere. Dropped: answered by Levi 2026-11-16: not a fixed look; the fade where a thread dives under a junction follows the crossing fade parameter (fadeLength), adjustable live, 0 = crisp. A Done of K1438's brief (2026-11-16).
 - **K1435** · rp=gf table-time grouping probe: membership from each junction arm's home interval with a depth ramp (mode tgr) removes the ghost threads and smudges (tie+ramp finds 2030 to 547 over 12 scenes; spot 16 and smudge 1 clean, 25 spots unchanged; Claude checked sheet_spots_1 and sheet_variants_worst_1); order stays per pixel (crisp graph order leaves stubs); src stages K1438, K1439. Done in 02c2e598 (2026-11-16).
