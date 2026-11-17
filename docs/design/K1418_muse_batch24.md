@@ -32,6 +32,16 @@ masks of gf and today (lum < mode - 4) overlap with IoU at least 0.5 after a 1 p
 are within 20%. Report 2830d103's IoU as the baseline. 2. Fill: at 5 or more shallow crossings (sin < 0.5), the fade
 amount at today's a=0.5 pixel within 0.1 of today's. 3. Crops. 4. `npm test` green.
 
+### Handoff 24A (Muse, 2026-11-16, partial: Done 1 and 2 not met)
+
+What landed (finished part, still to commit when this handoff is reviewed with the code): `src/render/gpu_field/gf_look.ts` removes the 2830d103 gap-band casing paint in all looks (the composite clears the gap to the background; no CASE paint), changes `lkGap` to compute per-pixel fadeP `max(fadeLength * max(sin, 0.2), 1 px)` from under/over tangents at the feet (side scales stay 1; there is no per-side table in gf), and re-aims the border composite at the faint continuous outline. `test/render/gf_look.test.ts` updated to the new shader text. Tables digest after change: SHA-256 `7004D6E3B44759323D2EC848322C81940EA99107A6E130CF94745DDDE9FDC106` (5446 lines), bit-identical to `.claude/probes/K1362/out/t1_digest_fix23c.txt`; census untouched, `npm test` green (243 passed).
+
+Border (Done 1, not met): baseline 2830d103 dpr1 dilated IoU **0.1413** (counts 2,546 / 2,398). After: counts **2,268 / 2,398 (pass, within 20%)**, dilated IoU **0.2141 (fail, needs 0.5)**. The dash artifact is gone and the remaining mismatch is centre-sampled field ink speckling against today's MSAA mesh coverage, not dash placement. No dpr2 pair was run because dpr1 already fails the IoU clause. Fix direction filed as K1422.
+
+Fade (Done 2, not met): sin-scaled fade is in; seed3 ci77 improved (gf amount error 0.048 to 0.033), ci345 holds 0.063, ci346 is 0.110 (just outside), seed5 ci248 is 0.481 and is dominated by window-end / along-eye behaviour plus section-colour scan contamination, not fadeP width. Only two clean task crossings are inside 0.1, so the 5-crossing clause is not met. Filed as K1423.
+
+Evidence: `.claude/probes/K1417/out/24A/crop_border_150.png`, `crop_border_270.png`, `crop_fill_150.png`, `crop_fill_270.png` (today | master gf | new gf), `.claude/probes/K1417/out/24A/fade_base_seed3.txt`, `fade_new_seed3.txt`, `fade_base_seed5.txt`, `fade_new_seed5.txt`, `.claude/probes/K1389/out/24A_base_border_today.png`, `.claude/probes/K1389/out/24A_new6_border_gf.png`. K1417, K1415, and K1418 stay open; K1407 and K1416 untouched.
+
 ## Run B (24B): K1414 part 1, the K81 route bands and the hover rim
 
 Today's shader draws these off uniforms; gf draws neither (K1405's handoff in K1408's brief).

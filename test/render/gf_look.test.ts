@@ -29,7 +29,7 @@ describe("K1389 look form", () => {
         expect(f).toContain("lkJb = lkJ; lkSb = lkS; lkKb = lkK;");
         expect(f).toContain("lkCo = lkColour(lab, lq); lkCo.rgb = mix(lkCo.rgb, uGold, lkPaint(lab, lq));");
         // the colour rides a second target; o0 keeps (ink, coverage)
-        expect(f).toContain("o0 = vec4(oInk, oCov, lkG2, 1.0); o1 = lkCo;");
+        expect(f).toContain("o0 = vec4(oInk, oCov, 0.0, 1.0); o1 = lkCo;");
         expect(f).toContain("layout(location = 0) out vec4 o0;\nlayout(location = 1) out vec4 o1;");
         expect(f).not.toMatch(/\nout vec4 o0;/);
         // the ink band takes today's stroke profile, ending at W (inside form B's reach)
@@ -61,18 +61,20 @@ describe("K1389 look form", () => {
     expect(LOOK_COMP_FS).toContain("vec4 k = texelFetch(uCo, q, 0);");
     expect(LOOK_COMP_FS).toContain("vec3 C = k.a > 0.0 ? k.rgb : uFill;");
   });
-  it("K1398: the gap cut ramps over today's fade and rides o0.z to a casing paint in the composite", () => {
+  it("K1415/K1417: the gap cut ramps over fadeP at the pixel and the gap clears to the background", () => {
     for (const src of programs) {
       const f = lookForm(src);
       expect(f).toContain("uniform float uLkF;");
-      expect(f).toContain("1.0 - ss(uH + uLkG, uH + uLkG + max(uLkF, uAA), pd[j])");
-      expect(f).toContain("g.y = max(g.y, (1.0 - ss(uH + uLkG - 0.25 * uAA, uH + uLkG + 0.75 * uAA, pd[j])) * inner);");
-      expect(f).toContain("vec2 lkg2 = lkKb < BIG ? lkGap(lkKb) : vec2(0.0); lkG2 = lkg2.y; ink *= 1.0 - lkg2.x; cov *= 1.0 - lkg2.x;");
+      expect(f).toContain("float lkGap(float key, vec2 p, vec2 qU, int cU)");
+      expect(f).toContain("float fw = max(uLkF * max(sinT, 0.2), 2.0 * uAA);");
+      expect(f).toContain("1.0 - ss(uH + uLkG, uH + uLkG + fw, pd[j])");
+      expect(f).not.toContain("CASE");
+      expect(f).toContain("float lkg = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : 0.0; ink *= 1.0 - lkg; cov *= 1.0 - lkg;");
     }
-    expect(LOOK_COMP_FS).toContain("if (!(ink > 0.0) && !(cov > 0.0) && !(c.z > 0.0))");
-    expect(LOOK_COMP_FS).toContain("float gap = c.z; vec3 CASE = vec3(0.09, 0.085, 0.08);");
-    expect(LOOK_COMP_FS).toContain("CASE * gap * (1.0 - ink)");
-    expect(LOOK_COMP_FS).not.toContain("CASE * gap * (1.0 - cov)");
+    expect(LOOK_COMP_FS).toContain("if (!(ink > 0.0) && !(cov > 0.0))");
+    expect(LOOK_COMP_FS).not.toContain("CASE");
+    expect(LOOK_COMP_FS).toContain("vec3 Sb = mix(S, vec3(0.055, 0.07, 0.10), 0.85); float a = clamp((ink - 0.36) * 3.5, 0.0, 1.0); o = vec4(Sb * a, a);");
+    expect(LOOK_COMP_FS).not.toContain("c.z");
     expect(lookGap({ style: { casingWidth: 0.34, threadWidth: 0.26 } })).toBeCloseTo(0.07, 9);
     expect(lookFade({ fadeLength: 0.14 })).toBe(0.14);
     expect(lookFade({ fadeLength: -1 })).toBe(0);

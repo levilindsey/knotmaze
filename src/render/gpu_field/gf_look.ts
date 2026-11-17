@@ -21,9 +21,9 @@
  * written to a second target, o1 = (rgb, 1); o1 = 0 is no label. It also cuts today's crossing gap: a piece whose
  * key is above the label's by more than zt and whose centre line is nearer than h + gap takes ink and coverage (the
  * under thread's backdrop gap beyond the over thread's edge, crossing_gaps.ts's margin). K1398: the cut ramps
- * over today's fade (fadeLength; gap_mask.ts's keep over fadeP) instead of one pixel, and the crisp casing
- * band (h..h + gap) rides o0.z to the composite, which paints it in the border look in the flat dark casing
- * colour (today's stroke's dark constant) instead of clearing it to the background.
+ * over today's fade (fadeLength; gap_mask.ts's keep over fadeP) instead of one pixel. K1415: the ramp width
+ * is fadeP at the pixel (fade * max(sin, 0.2) between the two threads' tangents at their feet, one-pixel
+ * floor), not the full fadeLength. K1417: the gap clears to the background in every look (no casing band is painted: today draws only its faint continuous outline there; see LOOK_COMP_FS).
  *
  * THE COMPOSITE (LOOK_COMP_FS): fill = the section colour over the coverage (no outline); border = the stroke over
  * the ink band (the interior clear); both = the stroke mixed 0.9 over the ink band. The stroke is ribbon_shader's:
@@ -377,7 +377,7 @@ export function lookColour(T: Pick<GfLookTable, "data">, P: ArrayLike<number>, c
 const G_ANCHOR = "int labC; float labS; int cWk; int cWa; int cWb; float cCov;\n";
 const G_LOOK = `// K1389 s1: the label's piece (-1: a corner, whose s rides lkS) and key, as each site sets labC; the best
 // configuration's copies; the output colour (K1389 s2)
-int lkJ; float lkS; float lkK; int lkJb; float lkSb; float lkKb; vec4 lkCo = vec4(0.0); float lkG2;
+int lkJ; float lkS; float lkK; int lkJb; float lkSb; float lkKb; vec4 lkCo = vec4(0.0);
 int lkj[MAXS]; float lks[MAXS];
 `;
 const M_ANCHOR = "\nvoid main() {\n";
@@ -452,17 +452,27 @@ float lkPaint(int c, vec2 q) {
   return mix(PT(b + k), PT(b + min(k + 1, last)), u);
 }
 // K1389 s1: today's crossing gap: a piece above the label (key past zt) within h + gap of p, outside its own edge.
-// K1398: (the under cut, the casing band). The cut ramps over today's fade (uLkF = fadeLength, world units;
-// gap_mask.ts's keep over fadeP at sin 1) instead of one pixel, so the under thread shades softly; the casing
-// band is the margin (h..h + gap) plus half the fade (where today's stroke is still near-opaque), painted
-// by the composite in the border look.
-vec2 lkGap(float key) {
-  vec2 g = vec2(0.0);
+// K1398: the cut ramps over today's fade (uLkF = fadeLength, world units) instead of one pixel, so the
+// under thread shades softly. K1415: the width is today's fadeP at p (gap_mask.ts's keep): fade scaled by
+// max(sin, 0.2) between the under tangent at its foot (qU on chain cU) and the over piece's tangent at its
+// foot, floored at one pixel (2 * uAA); the per-side junction-clearance scales (fadeScaleNeg/Pos) have no tables counterpart and stay 1. K1417: no casing band (the gap clears to the background in every look).
+vec2 lkTan(int c, float q) {
+  vec4 C0 = F(uOCh + 3 * c); int v = int(C0.x) + int(q);
+  vec4 A = F(uOV + v); vec4 B = F(uOV + v + 1);
+  vec2 t = B.xy - A.xy; float l = length(t);
+  return l > 0.0 ? t / l : vec2(1.0, 0.0);
+}
+float lkGap(float key, vec2 p, vec2 qU, int cU) {
+  float g = 0.0;
+  vec2 tu = lkTan(cU, qU.x);
   for (int j = 0; j < np; j++) {
     if (!(pkey[j] > key + uZt)) continue;
     float inner = ss(uH - uAA, uH + uAA, pd[j]);
-    g.x = max(g.x, (1.0 - ss(uH + uLkG, uH + uLkG + max(uLkF, uAA), pd[j])) * inner);
-    g.y = max(g.y, (1.0 - ss(uH + uLkG - 0.25 * uAA, uH + uLkG + 0.75 * uAA, pd[j])) * inner);
+    vec2 to = lkTan(PC(j), lookQ(j, p).x);
+    float sinT = abs(tu.x * to.y - tu.y * to.x);
+    float fw = max(uLkF * max(sinT, 0.2), 2.0 * uAA);
+    g = max(g, (1.0 - ss(uH + uLkG, uH + uLkG + fw, pd[j])) * inner);
+    // K1417: no casing term (the composite clears the gap to the background in every look).
   }
   return g;
 }
@@ -493,8 +503,8 @@ const SITES: [string | RegExp, string, number][] = [
   ["if (lab < 0 && ink > 0.0) { lab = own;", "if (lab < 0 && ink > 0.0) { lab = own; lkJb = -1; lkSb = K3.z; lkKb = BIG;", 1],
   // the output: the gap cut and the colour
   ["    oInk = min(1.0, ink); oCov = min(1.0, cov);",
-    "    lkCo = vec4(0.0); lkG2 = 0.0;\n    if (lab >= 0) { vec2 lq = lkJb >= 0 ? lookQ(lkJb, p) : lookQs(lab, lkSb); lkCo = lkColour(lab, lq); lkCo.rgb = mix(lkCo.rgb, uGold, lkPaint(lab, lq)); vec2 lkg2 = lkKb < BIG ? lkGap(lkKb) : vec2(0.0); lkG2 = lkg2.y; ink *= 1.0 - lkg2.x; cov *= 1.0 - lkg2.x; }\n    oInk = min(1.0, ink); oCov = min(1.0, cov);", 1],
-  ["  o0 = vec4(oInk, oCov, 0.0, 1.0);\n#endif", "  o0 = vec4(oInk, oCov, lkG2, 1.0); o1 = lkCo;\n#endif", 1],
+    "    lkCo = vec4(0.0);\n    if (lab >= 0) { vec2 lq = lkJb >= 0 ? lookQ(lkJb, p) : lookQs(lab, lkSb); lkCo = lkColour(lab, lq); lkCo.rgb = mix(lkCo.rgb, uGold, lkPaint(lab, lq)); float lkg = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : 0.0; ink *= 1.0 - lkg; cov *= 1.0 - lkg; }\n    oInk = min(1.0, ink); oCov = min(1.0, cov);", 1],
+  ["  o0 = vec4(oInk, oCov, 0.0, 1.0);\n#endif", "  o0 = vec4(oInk, oCov, 0.0, 1.0); o1 = lkCo;\n#endif", 1],
 ];
 
 /** A gf program's look form (see the header); throws when an anchor is missing or repeats. */
@@ -510,7 +520,7 @@ export function lookForm(src: string): string {
     if (n === 1) out = out.replace(s, b);
   }
   // the sites every program carries
-  for (const must of ["lkJb = lkJ;", "lkCo = vec4(0.0); lkG2 = 0.0;\n", "o0 = vec4(oInk, oCov, lkG2, 1.0); o1 = lkCo;", "layout(location = 1) out vec4 o1;", "ss(uW - max(3.0 * uAA, 0.02 * uH), uW, D)"]) if (!out.includes(must)) throw new Error(`gf look: ${must} missing`);
+  for (const must of ["lkJb = lkJ;", "lkCo = vec4(0.0);\n", "o0 = vec4(oInk, oCov, 0.0, 1.0); o1 = lkCo;", "layout(location = 1) out vec4 o1;", "ss(uW - max(3.0 * uAA, 0.02 * uH), uW, D)"]) if (!out.includes(must)) throw new Error(`gf look: ${must} missing`);
   return out;
 }
 
@@ -527,7 +537,7 @@ void main() {
   ivec2 q = ivec2(gl_FragCoord.xy);
   vec4 c = texelFetch(uC, q, 0);
   float ink = c.x; float cov = c.y;
-  if (!(ink > 0.0) && !(cov > 0.0) && !(c.z > 0.0)) { o = vec4(0.0); return; }
+  if (!(ink > 0.0) && !(cov > 0.0)) { o = vec4(0.0); return; }
   vec4 k = texelFetch(uCo, q, 0);
   if (!(k.a > 0.0)) {
     // the fringe outside h has no label: its nearest labelled neighbour's
@@ -541,10 +551,10 @@ void main() {
   }
   vec3 C = k.a > 0.0 ? k.rgb : uFill;
   vec3 S = mix(mix(C * 0.30, vec3(0.09, 0.085, 0.08), 0.5), uBd.rgb, uBd.w);
-  // K1398: in the border look the crossing gap (o0.z, the look form's crisp casing band) paints today's
-  // flat dark casing colour under whatever ink survives the cut, instead of clearing to the background.
-  float gap = c.z; vec3 CASE = vec3(0.09, 0.085, 0.08);
+  // K1417: the crossing gap clears to the background in every look (no casing paint: today's border gap
+  // is the background between its outlines). The border alpha strengthens form B's centre-sampled band
+  // to today's area-averaged stroke (the pass target has no MSAA) and darkens S toward today's dark edge colour, so the faint continuous outline reads at today's darkness; fill and both keep the band and S as they are.
   if (uLook == 0) o = vec4(C * cov, cov);
-  else if (uLook == 1) o = vec4(S * ink + CASE * gap * (1.0 - ink), ink + gap * (1.0 - ink));
+  else if (uLook == 1) { vec3 Sb = mix(S, vec3(0.055, 0.07, 0.10), 0.85); float a = clamp((ink - 0.36) * 3.5, 0.0, 1.0); o = vec4(Sb * a, a); }
   else { float a = ink + (1.0 - ink) * cov; o = vec4(S * (0.9 * ink) + C * (a - 0.9 * ink), a); }
 }`;
