@@ -19,5 +19,5 @@ const fs = allFinds(R, T, c0, r0, 3);
 const cnt: Record<string, number> = {}; const px: Record<string, number> = {};
 for (const f of fs) { const k = `${f.kind}:${f.cls}`; cnt[k] = (cnt[k] ?? 0) + 1; px[k] = (px[k] ?? 0) + f.px; }
 const cost = { px: w * h, act, msPerMpx: +(ms / (w * h / 1e6)).toFixed(0), usPerAct: +(1000 * ms / act).toFixed(2), pcallsPerAct: +(pcalls / act).toFixed(3), segsPerAct: +(segs / act).toFixed(2), cfgsPerAct: +(cfgs / act).toFixed(3), nSegPerAct: +(nSeg / act).toFixed(1), nKPerAct: +(nK / act).toFixed(2) };
-writeFileSync(out, JSON.stringify({ scene: nm, sfx, ev: process.env.K1438_EV ?? "src", home: process.env.GF_HOME ?? "", fl: process.env.K1438_FL ?? "", ppu, w, h, cnt, px, cost, finds: fs }));
+writeFileSync(out, JSON.stringify({ scene: nm, sfx, ev: process.env.K1438_EV ?? "src", home: process.env.GF_HOME ?? "", fl: process.env.K1438_FL ?? "", z0: process.env.K1438_Z0 ?? "", ppu, w, h, cnt, px, cost, finds: fs }));
 console.log(`${nm}\t${sfx}\tfinds ${fs.length}\t${JSON.stringify(cnt)}\t${JSON.stringify(cost)}`);

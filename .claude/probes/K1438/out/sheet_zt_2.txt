@@ -1,0 +1,6 @@
+columns: m | new | zt | zt0 | ol
+row 1: muse_hash:31.56:7.41
+row 2: g41_def_tw64:11.21:8.29
+row 3: def:9.06:6.41
+row 4: g41_ring_tw64:16.43:2.90
+row 5: muse_hash:33.64:9.23
