@@ -30,8 +30,12 @@
  * mix(section * 0.30, (0.09, 0.085, 0.08), 0.5), or the border colour when one is set. A pixel with coverage but
  * no label (the antialiased fringe outside h) takes its nearest labelled neighbour's colour.
  * K1405: the label's colour is mixed toward gold (uGold) by its baked paint amount (lkPaint over uPt, GfPaintTable below).
+ * K1414 part 2 (24C): the same site then brightens by the label's pulse field (lkPulse over uDyn, GfDynTable:
+ * paint_glsl kPulseCrest over the reduced clocks) toward the pulse colour, and mixes toward the telegraph
+ * colour by its rims (lkTele, shaped across by the foot's distance over uH), in ribbon_shader's order.
  */
-import { kArcOfCtrl, kCA, knotSection, type KChain, type KData } from "../paint_math";
+import { kArcOfCtrl, kArcU, kCA, kWrap, knotSection, type KChain, type KData } from "../paint_math";
+import { PAINT_CONST, PULSE_RIDGE_FADE } from "../paint_const";
 import { kStatic, knotUniformValues } from "../paint_model";
 import { CUT_BIAS } from "../ribbon/crossing_gaps";
 import { GF_TW } from "./gf_pack";
@@ -343,6 +347,209 @@ export class GfPaintTable {
   }
 }
 
+/**
+ * K1414 part 2 (24C): the pulses and the telegraph under the look. Their geometry is baked per kept
+ * sample in the look positions' layout (three RGBA texels a sample, GfDynTable); the animated clocks
+ * (paint_glsl kPulseCrest's uniforms, the telegraph's strength and riding spot) stay uniforms, so the
+ * gf shader evaluates the trains per pixel exactly as paint_math kPaintAt does at the label's foot.
+ * Texel 0 (pulse): (gA, gB, flags, endWin) - gA = dist0 + d along the arm, gB a two-ended arm's far
+ * field, flags 1 inward / 2 hovered / 4 two / 8 inwardB / 16 present, endWin the far-end window.
+ * Texels 1-2 (telegraph): (u, u0, u1, alpha), (gap0, gap1, fade0, fade1) in unwrapped arc; a negative
+ * fade marks the end that rides uTeleAtU (gf_app reduces the spot's ctrl to this frame's arc).
+ */
+export interface GfPulseArm { chain: number; cJunction: number; cFar: number; inward: boolean; hovered: boolean; dist0?: number; cont?: boolean; two?: boolean; dB?: number; inwardB?: boolean }
+export interface GfTelePiece { chain: number; c0: number; c1: number; alpha: number; j0: boolean; j1: boolean; ride?: 0 | 1 }
+export interface GfDynSource extends GfPaintSource {
+  paintPulses: readonly GfPulseArm[];
+  paintTele: readonly GfTelePiece[] | null;
+  /** paint_state rimGap(): the junction web's reach a telegraph junction end skips. */
+  teleGap: number;
+}
+// paint_state.ts's telegraph end fades (world arc); a junction end's fade past the web's reach.
+const TELE_JUNCTION_FADE = 0.2;
+const TELE_MID_FADE = 0.3;
+
+const dynSmooth = (x: number): number => { const t = Math.min(1, Math.max(0, x)); return t * t * (3 - 2 * t); };
+
+/** A hash of the pulse/telegraph declaration the dyn table bakes (declaration order). */
+export function dynKey(r: { paintPulses: readonly GfPulseArm[]; paintTele: readonly GfTelePiece[] | null; teleGap: number }): number {
+  let h = 2166136261;
+  const mix = (v: number): void => { keyF[0] = v; h = Math.imul(h ^ keyU[0], 16777619); };
+  mix(r.paintPulses.length); mix(r.paintTele?.length ?? -1); mix(r.teleGap);
+  for (const p of r.paintPulses) { mix(p.chain); mix(p.cJunction); mix(p.cFar); mix(p.dist0 ?? 0); mix(p.dB ?? 0); mix((p.inward ? 1 : 0) | (p.hovered ? 2 : 0) | (p.cont ? 4 : 0) | (p.two ? 8 : 0) | (p.inwardB ? 16 : 0)); }
+  for (const t of r.paintTele ?? []) { mix(t.chain); mix(t.c0); mix(t.c1); mix(t.alpha); mix((t.j0 ? 1 : 0) | (t.j1 ? 2 : 0) | ((t.ride ?? -1) + 1) * 4); }
+  return h >>> 0;
+}
+
+/** The pulse clocks reduced to numbers (paint_model knotUniformValues: uKPulse, uKReach, uKPaint.w, uKHead). */
+export interface DynUniforms { travelIn: number; travelOut: number; spacing: number; fadeIn: number; reach: number; reachFade: number; hoverBreath: number; head: number }
+
+/** CPU twin of the look shader's lkCrest (paint_math kPulseCrest, the non-prototype look). */
+export function dynPulseCrest(dG: number, inward: boolean, hovered: boolean, endWin: number, bumpK: number, U: DynUniforms): number {
+  const C = PAINT_CONST;
+  const f = Math.max(U.reachFade, 1e-4);
+  const reachWin = 1 - dynSmooth((dG - (U.reach - f)) / f);
+  if (hovered) return endWin * U.hoverBreath * reachWin;
+  const s = U.spacing;
+  const raw = inward ? dG + U.travelIn : dG - U.travelOut;
+  const ph = raw - s * Math.floor(raw / s);
+  const dist = Math.min(ph, s - ph);
+  const dC = Math.max(0, dG - (ph <= s - ph ? ph : ph - s));
+  const bump = Math.max(0, 1 - dist / C.CREST_WIDTH) * (U.head > 0.5 ? 1 : Math.min(1, dC / C.CREST_RAMP)) * bumpK;
+  const fl = (C.PULSE_FLOOR + C.PULSE_CORE_BOOST * Math.max(0, 1 - dG / C.PULSE_CORE_RADIUS)) * Math.max(0, 1 - dG / C.PULSE_FLOOR_REACH);
+  return Math.min(1, (fl + bump * 0.9) * endWin) * U.fadeIn * reachWin;
+}
+
+/** CPU twin of the look shader's lkPulse over one baked pulse texel (gA, gB, flags, endWin). */
+export function dynPulseV(gA: number, gB: number, flags: number, endWin: number, U: DynUniforms): number {
+  if (!(flags & 16)) return 0;
+  const inward = (flags & 1) !== 0;
+  const hovered = (flags & 2) !== 0;
+  let v: number;
+  if (flags & 4) {
+    const bK = Math.min(1, Math.abs(gA - gB) * (0.5 / PULSE_RIDGE_FADE));
+    v = gA <= gB ? dynPulseCrest(gA, inward, hovered, 1, bK, U) : dynPulseCrest(gB, (flags & 8) !== 0, hovered, 1, bK, U);
+  } else v = dynPulseCrest(gA, inward, hovered, endWin, 1, U);
+  return v > PAINT_CONST.PULSE_MIN_V ? v : 0;
+}
+
+/** CPU twin of the look shader's lkTele over the baked telegraph texels; atU = the riding end's arc. */
+export function dynTeleG(u: number, u0: number, u1: number, alpha: number, gap0: number, gap1: number, fade0: number, fade1: number, atU: number): number {
+  const e0 = fade0 < 0 ? atU : u0;
+  const e1 = fade1 < 0 ? atU : u1;
+  if (!(alpha > 0) || u < e0 || u > e1) return 0;
+  const hl = 0.5 * (e1 - e0);
+  const f0 = Math.min(Math.max(PAINT_CONST.RIM_END_SHARE * (hl - gap0), 1e-4), Math.max(Math.abs(fade0), 1e-4));
+  const f1 = Math.min(Math.max(PAINT_CONST.RIM_END_SHARE * (hl - gap1), 1e-4), Math.max(Math.abs(fade1), 1e-4));
+  return alpha * Math.min(dynSmooth((u - e0 - gap0) / f0), dynSmooth((e1 - u - gap1) / f1));
+}
+
+export class GfDynTable {
+  /** The baked entries (samples, plus one a closed chain), in positions()' layout. */
+  nPos = 0;
+  ms = 0;
+  /** The riding telegraph piece's chain and frame (gf_app turns its spot ctrl into an arc); -1 = none. */
+  rideChain = -1;
+  rideA0 = 0;
+  rideTotal = 0;
+  rideClosed = false;
+  private tmp = new Float32Array(0);
+
+  /** Each kept sample's pulse + telegraph geometry (3 RGBA texels a sample), in GfLookTable.positions' layout. */
+  values(r: GfDynSource, out?: Float32Array): Float32Array {
+    const t0 = performance.now();
+    const D = r.kd;
+    const G = D.geom;
+    const nC = r.chainSamples.length;
+    const pulses: GfPulseArm[][] = Array.from({ length: nC }, () => []);
+    const tele: GfTelePiece[][] = Array.from({ length: nC }, () => []);
+    for (const p of r.paintPulses) if (p.chain >= 0 && p.chain < nC) pulses[p.chain].push(p);
+    for (const t of r.paintTele ?? []) if (t.chain >= 0 && t.chain < nC) tele[t.chain].push(t);
+    this.rideChain = -1;
+    for (const t of r.paintTele ?? []) {
+      if (t.ride === undefined || t.chain < 0 || t.chain >= nC || !lookValid(r, t.chain)) continue;
+      const c = r.kcv[t.chain];
+      this.rideChain = t.chain;
+      this.rideA0 = kArcU(D, c, t.c0);
+      this.rideTotal = G[c.geom * 4];
+      this.rideClosed = c.closed;
+      break;
+    }
+    let nPos = 0;
+    for (let ch = 0; ch < nC; ch++) if (lookValid(r, ch)) nPos += r.chainSamples[ch]!.count + (r.kcv[ch].closed ? 1 : 0);
+    const rows = Math.max(1, Math.ceil((nPos * 3) / GF_TW));
+    const len = rows * GF_TW * 4;
+    const V = out && out.length >= len ? out : new Float32Array(len);
+    V.fill(0, 0, len);
+    let pb = 0;
+    for (let ch = 0; ch < nC; ch++) {
+      if (!lookValid(r, ch)) continue;
+      const c = r.kcv[ch];
+      const count = r.chainSamples[ch]!.count;
+      const total = G[c.geom * 4];
+      const arcPer = G[c.geom * 4 + 1];
+      if (this.tmp.length < count * 12) this.tmp = new Float32Array(count * 12);
+      const tmp = this.tmp;
+      tmp.fill(0, 0, count * 12);
+      const pp = pulses[ch];
+      const tt = tele[ch];
+      const gap = r.teleGap;
+      for (let k = 0; k < count; k++) {
+        const arc = k * arcPer;
+        const o = k * 12;
+        // pulses: the last covering arm wins, as kPaintAt overwrites the band (paint_math PULSE)
+        for (const p of pp) {
+          const aJ = kArcOfCtrl(D, c, p.cJunction);
+          const aF = kArcOfCtrl(D, c, p.cFar);
+          let span: number;
+          let d: number;
+          if (c.closed) {
+            const dirPos = p.cFar > p.cJunction;
+            const uJ = kArcU(D, c, p.cJunction);
+            const uF = kArcU(D, c, p.cFar);
+            span = dirPos ? uF - uJ : uJ - uF;
+            if (span <= 1e-6) continue;
+            d = kWrap(dirPos ? arc - aJ : aJ - arc, total);
+          } else {
+            const dirPos = aF >= aJ;
+            span = Math.abs(aF - aJ);
+            if (span <= 1e-6) continue;
+            d = dirPos ? arc - aJ : aJ - arc;
+          }
+          if (d < 0 || d > span) continue;
+          const gA = (p.dist0 ?? 0) + d;
+          tmp[o] = gA;
+          tmp[o + 1] = p.two ? (p.dB ?? 0) + span - d : gA;
+          tmp[o + 2] = (p.inward ? 1 : 0) | (p.hovered ? 2 : 0) | (p.two ? 4 : 0) | (p.two && p.inwardB ? 8 : 0) | 16;
+          tmp[o + 3] = p.cont ? 1 : Math.min(1, Math.max(0, (span - d) / PAINT_CONST.PULSE_END_WINDOW));
+        }
+        // telegraph: the strongest piece at the sample wins, as kPaintAt takes the max (paint_math TELE)
+        let bestG = -1;
+        for (const t of tt) {
+          if (!(t.c1 > t.c0)) continue;
+          const a0 = kArcU(D, c, t.c0);
+          const a1 = kArcU(D, c, t.c1);
+          let u = arc;
+          if (c.closed) u = a0 + kWrap(arc - a0, total);
+          if (u < a0 || u > a1) continue;
+          const gap0 = t.j0 ? gap : 0;
+          const gap1 = t.j1 ? gap : 0;
+          const f0s = t.ride === 0 ? -TELE_MID_FADE : t.j0 ? TELE_JUNCTION_FADE : TELE_MID_FADE;
+          const f1s = t.ride === 1 ? -TELE_MID_FADE : t.j1 ? TELE_JUNCTION_FADE : TELE_MID_FADE;
+          const g = dynTeleG(u, a0, a1, t.alpha, gap0, gap1, f0s, f1s, t.ride === 0 ? a0 : a1);
+          if (g <= bestG) continue;
+          bestG = g;
+          tmp[o + 4] = u; tmp[o + 5] = a0; tmp[o + 6] = a1; tmp[o + 7] = t.alpha;
+          tmp[o + 8] = gap0; tmp[o + 9] = gap1; tmp[o + 10] = f0s; tmp[o + 11] = f1s;
+        }
+      }
+      // compact to the kept samples and pad the tail, exactly as positions() does
+      const xy = r.chainSamples[ch]!.positions;
+      let kv = 0;
+      let l = -1;
+      for (let k = 0; k < count; k++) {
+        if (l >= 0 && xy[2 * k] === xy[2 * l] && xy[2 * k + 1] === xy[2 * l + 1]) continue;
+        const so = (pb + kv) * 12;
+        const ko = k * 12;
+        for (let j = 0; j < 12; j++) V[so + j] = tmp[ko + j];
+        kv++;
+        l = k;
+      }
+      if (c.closed && kv > 1 && xy[2 * l] === xy[0] && xy[2 * l + 1] === xy[1]) kv--;
+      const end = count + (c.closed ? 1 : 0);
+      const po = (pb + (c.closed ? 0 : kv - 1)) * 12;
+      for (let k = kv; k < end; k++) {
+        const eo = (pb + k) * 12;
+        for (let j = 0; j < 12; j++) V[eo + j] = V[po + j];
+      }
+      pb += end;
+    }
+    this.nPos = nPos;
+    this.ms = performance.now() - t0;
+    return V;
+  }
+}
+
 /** Today's crossing gap beyond the over thread's edge (world units): the casing's margin plus crossing_gaps' CUT_BIAS. */
 export function lookGap(r: { style: { casingWidth: number; threadWidth: number } }): number {
   return Math.max(0, (r.style.casingWidth - r.style.threadWidth) / 2) + CUT_BIAS;
@@ -381,6 +588,7 @@ int lkJ; float lkS; float lkK; int lkJb; float lkSb; float lkKb; vec4 lkCo = vec
 int lkj[MAXS]; float lks[MAXS];
 `;
 const M_ANCHOR = "\nvoid main() {\n";
+function lkF(v: number): string { const s = String(v); return /[.eE]/.test(s) ? s : s + ".0"; }
 const M_LOOK = `
 uniform highp sampler2D uLk; uniform highp sampler2D uLkP; uniform float uLkG; uniform float uLkF;
 uniform highp sampler2D uPt; uniform vec3 uGold;
@@ -451,6 +659,53 @@ float lkPaint(int c, vec2 q) {
   int b = int(H.y);
   return mix(PT(b + k), PT(b + min(k + 1, last)), u);
 }
+uniform highp sampler2D uDyn; uniform vec4 uKPulseU; uniform vec4 uKReachU; uniform vec3 uPulseCol; uniform vec4 uTeleU; uniform float uTeleAtU; uniform float uTeleScale; uniform float uPulseW;
+vec4 DT(int i) { return texelFetch(uDyn, ivec2(i & TWM, i >> LOG), 0); }
+float lkSmooth(float x) { return ss(0.0, 1.0, x); }
+float lkReachWin(float d) { float f = max(uKReachU.y, 1e-4); return 1.0 - lkSmooth((d - (uKReachU.x - f)) / f); }
+// paint_glsl kPulseCrestK (the non-prototype look), over the clocks gf_pass reduces to uniforms
+float lkCrest(float dG, bool inward, bool hovered, float endWin, float bumpK) {
+  if (hovered) return endWin * uKReachU.z * lkReachWin(dG);
+  float s = uKPulseU.z; float raw = inward ? dG + uKPulseU.x : dG - uKPulseU.y;
+  float ph = raw - s * floor(raw / s); float dist = min(ph, s - ph);
+  float dC = max(0.0, dG - (ph <= s - ph ? ph : ph - s));
+  float bump = max(0.0, 1.0 - dist / ${lkF(PAINT_CONST.CREST_WIDTH)}) * (uKReachU.w > 0.5 ? 1.0 : min(1.0, dC / ${lkF(PAINT_CONST.CREST_RAMP)})) * bumpK;
+  float fl = (${lkF(PAINT_CONST.PULSE_FLOOR)} + ${lkF(PAINT_CONST.PULSE_CORE_BOOST)} * max(0.0, 1.0 - dG / ${lkF(PAINT_CONST.PULSE_CORE_RADIUS)})) * max(0.0, 1.0 - dG / ${lkF(PAINT_CONST.PULSE_FLOOR_REACH)});
+  return min(1.0, (fl + bump * 0.9) * endWin) * uKPulseU.w * lkReachWin(dG);
+}
+// gf_look.ts GfDynTable at segment q (lkPaint's walk over the 3-texel groups)
+vec4 lkDyn(int c, vec2 q, int sub) {
+  vec4 H = LKT(c);
+  if (H.z < 1.0) return vec4(0.0);
+  bool closed = H.w > 0.5;
+  int k = int(q.x); float u = q.y;
+  if (!closed && F(uOV + int(F(uOCh + 3 * c).x)).z < 0.0) k -= 1;
+  int last = closed ? int(H.z) : int(H.z) - 1;
+  if (k < 0) { k = 0; u = 0.0; }
+  if (k >= last) { k = last; u = 0.0; }
+  int b = int(H.y);
+  return mix(DT((b + k) * 3 + sub), DT((b + min(k + 1, last)) * 3 + sub), u);
+}
+float lkPulse(int c, vec2 q) {
+  vec4 A = lkDyn(c, q, 0); int fl = int(A.z + 0.5);
+  if (fl < 16) return 0.0;
+  bool inw = (fl & 1) != 0; bool hov = (fl & 2) != 0; float v;
+  if ((fl & 4) != 0) { float bK = min(1.0, abs(A.x - A.y) * ${lkF(0.5 / PULSE_RIDGE_FADE)}); v = A.x <= A.y ? lkCrest(A.x, inw, hov, 1.0, bK) : lkCrest(A.y, (fl & 8) != 0, hov, 1.0, bK); }
+  else v = lkCrest(A.x, inw, hov, A.w, 1.0);
+  return v > ${lkF(PAINT_CONST.PULSE_MIN_V)} ? v : 0.0;
+}
+float lkTele(int c, vec2 q) {
+  vec4 T1 = lkDyn(c, q, 1); vec4 T2 = lkDyn(c, q, 2);
+  if (!(T1.w > 0.0)) return 0.0;
+  float u0 = T2.z < 0.0 ? uTeleAtU : T1.y; float u1 = T2.w < 0.0 ? uTeleAtU : T1.z; float u = T1.x;
+  if (u < u0 || u > u1) return 0.0;
+  float hl = 0.5 * (u1 - u0);
+  float f0 = min(max(${lkF(PAINT_CONST.RIM_END_SHARE)} * (hl - T2.x), 1e-4), max(abs(T2.z), 1e-4));
+  float f1 = min(max(${lkF(PAINT_CONST.RIM_END_SHARE)} * (hl - T2.y), 1e-4), max(abs(T2.w), 1e-4));
+  return T1.w * min(lkSmooth((u - u0 - T2.x) / f0), lkSmooth((u1 - u - T2.y) / f1));
+}
+vec2 lkFoot(int c, vec2 q) { vec4 C0 = F(uOCh + 3 * c); int v = int(C0.x) + int(q.x); vec4 A = F(uOV + v); vec4 B = F(uOV + v + 1); return mix(A.xy, B.xy, q.y); }
+float lkTeleAcross(float e) { return 1.0 - lkSmooth((1.0 - e) / ${lkF(PAINT_CONST.RIM_EDGE)} * uTeleScale); }
 // K1389 s1: today's crossing gap: a piece above the label (key past zt) within h + gap of p, outside its own edge.
 // K1398: the cut ramps over today's fade (uLkF = fadeLength, world units) instead of one pixel, so the
 // under thread shades softly. K1415: the width is today's fadeP at p (gap_mask.ts's keep): fade scaled by
@@ -503,7 +758,7 @@ const SITES: [string | RegExp, string, number][] = [
   ["if (lab < 0 && ink > 0.0) { lab = own;", "if (lab < 0 && ink > 0.0) { lab = own; lkJb = -1; lkSb = K3.z; lkKb = BIG;", 1],
   // the output: the gap cut and the colour
   ["    oInk = min(1.0, ink); oCov = min(1.0, cov);",
-    "    lkCo = vec4(0.0);\n    if (lab >= 0) { vec2 lq = lkJb >= 0 ? lookQ(lkJb, p) : lookQs(lab, lkSb); lkCo = lkColour(lab, lq); lkCo.rgb = mix(lkCo.rgb, uGold, lkPaint(lab, lq)); float lkg = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : 0.0; ink *= 1.0 - lkg; cov *= 1.0 - lkg; }\n    oInk = min(1.0, ink); oCov = min(1.0, cov);", 1],
+    "    lkCo = vec4(0.0);\n    if (lab >= 0) { vec2 lq = lkJb >= 0 ? lookQ(lkJb, p) : lookQs(lab, lkSb); lkCo = lkColour(lab, lq); lkCo.rgb = mix(lkCo.rgb, uGold, lkPaint(lab, lq)); float lke = clamp(length(p - lkFoot(lab, lq)) / uH, 0.0, 1.0); float lkv = lkPulse(lab, lq); if (lkv > 0.0) { if (uPulseW < 1.0) lkv *= clamp((uPulseW - lke) / max(3.0 * uAA / uH, 0.02) + 0.5, 0.0, 1.0); lkCo.rgb += (uPulseCol - lkCo.rgb) * (0.9315315315315316 * clamp(lkv, 0.0, 1.0)); } float lkt = lkTele(lab, lq); if (lkt > 0.0) lkCo.rgb += (uTeleU.rgb - lkCo.rgb) * clamp(lkt * lkTeleAcross(lke) * uTeleU.w, 0.0, 1.0); float lkg = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : 0.0; ink *= 1.0 - lkg; cov *= 1.0 - lkg; }\n    oInk = min(1.0, ink); oCov = min(1.0, cov);", 1],
   ["  o0 = vec4(oInk, oCov, 0.0, 1.0);\n#endif", "  o0 = vec4(oInk, oCov, 0.0, 1.0); o1 = lkCo;\n#endif", 1],
 ];
 
@@ -520,7 +775,7 @@ export function lookForm(src: string): string {
     if (n === 1) out = out.replace(s, b);
   }
   // the sites every program carries
-  for (const must of ["lkJb = lkJ;", "lkCo = vec4(0.0);\n", "o0 = vec4(oInk, oCov, 0.0, 1.0); o1 = lkCo;", "layout(location = 1) out vec4 o1;", "ss(uW - max(3.0 * uAA, 0.02 * uH), uW, D)"]) if (!out.includes(must)) throw new Error(`gf look: ${must} missing`);
+  for (const must of ["lkJb = lkJ;", "lkCo = vec4(0.0);\n", "lkPulse(lab, lq)", "lkTele(lab, lq)", "o0 = vec4(oInk, oCov, 0.0, 1.0); o1 = lkCo;", "layout(location = 1) out vec4 o1;", "ss(uW - max(3.0 * uAA, 0.02 * uH), uW, D)"]) if (!out.includes(must)) throw new Error(`gf look: ${must} missing`);
   return out;
 }
 
