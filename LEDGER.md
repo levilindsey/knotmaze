@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1416.
+Next free ID: K1419.
 
 ## Waiting on Levi
 
@@ -306,14 +306,25 @@ Next free ID: K1416.
 
 ## In progress
 
-- **K1408** · Muse batch 23 (overnight 2026-11-15): six runs through the K1053 chain in the main checkout, in
-  order K1407 (census, then the largest category), K1404, K1407 again, K1405, K1398, K1374
-  (docs/design/K1408_muse_batch23.md)
-  - owner: muse batch 23 through the K1053 chain, started by claude session 01SUPGULDxvE5gKXozfaFaFG; each run's Paseo agent id is in .claude/probes/K1053/chain.log
-  - branch: mainline; last commit: `7b97289d`
-  - evidence: .claude/probes/K1053/ (queue.txt, chain.log, done.txt); .claude/probes/K1407/out/
-  - next: the chain runs 23A-23F (start.ps1); Claude checks each run's handoff, crops and census against primary records, then files follow-ups
-  - brief: `docs/design/K1408_muse_batch23.md`
+- **K1407** · rp=gf look to zero artifacts: K1362 s1's census against form B reads 301 finds on 12 scenes
+  (rp=outline then: 17), every one an incomplete port of form B (corner set, stray arcs, K1049 radii, burial;
+  docs/design/K1362_s1_gpu_formb.md, Accuracy). No stage has fixed one since 11-12: the speed stages held the
+  tables bit-identical. Re-run k1362s2_census.ps1 on master, then fix stages under a new digest; K1315's ends
+  join the same bar. Levi (2026-11-15): getting these spots truly correct is the most important thing now; the
+  bar is the look he approves, not form B's (form B fails K1315's ends and jumps under K1267's jitter)
+  - owner: agent `af329931f13d74be7` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-16 11:19, 2 h cap ~13:19)
+  - branch: `worktree-agent-af329931f13d74be7`, worktree `.claude/worktrees/agent-af329931f13d74be7`; last commit: `cf73b721`
+  - evidence: .claude/probes/K1407/ (review23/sheet.png, 23A/ and 23C/ handoffs); untracked .claude/probes/K1407/out/c1/
+  - next: c1 running: K1315 ends and the cut eye (K1416) to the bar, census bar-exception list; on its report Claude checks the c1 sheet spot by spot, merges, then K1409/K1410/K1412 and K1413 speed
+  - brief: `docs/design/K1407_c1_bar.md`
+- **K1418** · Muse batch 24 (2026-11-16): five runs through the K1053 chain in the main checkout, rp=gf look
+  parity with today: K1417+K1415 gap casing and fade, K1414 route bands + hover rim, K1414 pulses + telegraph,
+  K1395 reveal look, K1396 explore view (docs/design/K1418_muse_batch24.md)
+  - owner: muse batch 24 through the K1053 chain, started by claude session 09c7a672-a414-402a-97da-b3176839a2e5; each run's Paseo agent id is in .claude/probes/K1053/chain.log
+  - branch: mainline; last commit: `cf73b721`
+  - evidence: .claude/probes/K1053/ (queue.txt, chain.log, done.txt); .claude/probes/<ID>/out/24<X>/
+  - next: the chain runs 24A-24E; Claude checks each handoff and crops against today's look, then files follow-ups
+  - brief: `docs/design/K1418_muse_batch24.md`
 - **K1310** · Redesign course check (assessment 2026-11-11): (1) write the gate for making rp=outline the
   default; (2) a crop sheet, outline vs form B at the worst spots, so Levi says which differences still
   matter; (3) put speed first: the worker frame on def is ~120-185 ms during a drag vs K1247's 3 ms target;
@@ -617,14 +628,6 @@ Binding for every stage:
   new, and pause running agents with their WIP committed.
 
 Running agents are listed under In progress, each with its own next step.
-- **K1407** · rp=gf look to zero artifacts: K1362 s1's census against form B reads 301 finds on 12 scenes
-  (rp=outline then: 17), every one an incomplete port of form B (corner set, stray arcs, K1049 radii, burial;
-  docs/design/K1362_s1_gpu_formb.md, Accuracy). No stage has fixed one since 11-12: the speed stages held the
-  tables bit-identical. Re-run k1362s2_census.ps1 on master, then fix stages under a new digest; K1315's ends
-  join the same bar. Levi (2026-11-15): getting these spots truly correct is the most important thing now; the
-  bar is the look he approves, not form B's (form B fails K1315's ends and jumps under K1267's jitter)
-  - evidence: Run C (23C): CPU mirror census base23c on master 55ddf68c: 239 total (stray 100, hard 2, paper 47, broken 90) -> fix23c 61 total (stray 23, hard 0, paper 14, broken 24); every scene x category down or 0. Exact V (solveEq on true feet) + form B corner_cf closed-form growth ported into gpu_field tables (w read at CF q/feet; tracked integral fallback; CF attrs: baseline 100 stray = arc 47 / thru 20 / side 20 / tangent 1). Crops .claude/probes/K1407/out/23C/sheet.png (8 spots). Digest 382ae026 -> c1be0e90 (5445). Bench (5483, same session): master tables p50 def 14.5/fat 10.4 -> new 17.8-18.5/16.9-17.0 ms. npm test exit 0 on rerun, 3065 passed. Residuals filed: K1412 stray (23) and K1413 speed.
-  - next: Claude checks this run's handoff, crops and census (.claude/probes/K1407/out/23C/handoff.md) against the primary records and decides done. Then the next category by K1407 order (Claude's pick from the remaining: stray 23, broken 24, paper 14), or K1412's reach/margin port first, since it feeds those residuals and is speed-bound by K1413.
 - **K1315** · Junction under-tail ends in rp=outline: a bug, not a choice. Levi, 2026-11-12, on k1315_now.png: "Not a
   single tile in the image shows an acceptable scenario" (form B's round dots and the outline's square stubs both
   fail). Bar: no ink past the over thread's outline, no dot, no stub. K1314 group 1, 18 census finds (e.g. muse_default_tw j150, g41_user_tw64 j63/j64, x134); sheet
@@ -904,6 +907,13 @@ Every other item below waits on the trigger it names.
   g41_ring_tw64 and paper +1 on g41_ring_tw64 vs master-CPU census after the null-corner fix (single 40-55px
   finds; not through eyes - the 0.16h floor cleared g41_def_tw64). Find their mechanism before the stray_ink
   category run (K1407 order: broken, then stray).
+- **K1416** · rp=gf regressions from Muse batch 23 against Levi's bar: form B's round dots at K1315 under-tail
+  ends (bb4a74f1; muse_default_tw 24.50,10.58, g41_def_tw64 19.60,30.87) and the muse_hash 5.53,14.97 eye cut
+  open (45f0e838); smudges at K1315's muse_hash ends (.claude/probes/K1407/out/review23/sheet.png; K1407 c1
+  fixes)
+- **K1417** · rp=gf border look: 2830d103 (K1398) paints the casing only in the gap band, a dark dash at every
+  crossing where today draws a faint continuous casing (.claude/probes/K1398/out/crop_border_150.png, _270;
+  Muse 24A)
 
 ## Residuals (known, not fixed)
 
@@ -2451,6 +2461,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1408** · Muse batch 23: six runs landed, all deploys green: K1407 census 239 -> 61 (bb4a74f1, 45f0e838; regressions vs Levi's bar K1416), K1404 (f1e70048), K1405 (58f8a9ca), K1398 (2830d103; dashes K1417), K1374 pool -41%/-37% on junction builds (84863c99). Done in 9f23f7d1 (2026-11-16).
 - **K1374** · rp=gf build worker: make the slice pool (gf_slice_worker.ts, Muse t2) win on junction builds, or remove it: partition pins by chain and the chunk merge by cell range, or transfer the scene to the slices as typed arrays, so the coordinator's 6-8 ms serial prefix goes. Done in 84863c99 (2026-11-15).
 - **K1398** · rp=gf crossing gaps clear to the background where today's paint a flat dark casing colour: in the border look gf's outline reads redder and fainter (today 11k-21k pixels darker than the background, gf about 1.4k), and in fill today shades the under-thread softly where gf draws a crisp line (K1389 s1 handoff, .claude/probes/K1389/out/z_pair.png). Done in 2830d103 (2026-11-15).
 - **K1405** · rp=gf in play draws no gold traveled path (today's look does), also on s1 (`.claude/probes/K1387/out/play7_gf_head.png` against `play7_today_head.png`). Done in 58f8a9ca (2026-11-15).
