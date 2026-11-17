@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1419.
+Next free ID: K1422.
 
 ## Waiting on Levi
 
@@ -312,11 +312,11 @@ Next free ID: K1419.
   tables bit-identical. Re-run k1362s2_census.ps1 on master, then fix stages under a new digest; K1315's ends
   join the same bar. Levi (2026-11-15): getting these spots truly correct is the most important thing now; the
   bar is the look he approves, not form B's (form B fails K1315's ends and jumps under K1267's jitter)
-  - owner: agent `af329931f13d74be7` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-16 11:19, 2 h cap ~13:19)
-  - branch: `worktree-agent-af329931f13d74be7`, worktree `.claude/worktrees/agent-af329931f13d74be7`; last commit: `cf73b721`
-  - evidence: .claude/probes/K1407/ (review23/sheet.png, 23A/ and 23C/ handoffs); untracked .claude/probes/K1407/out/c1/
-  - next: c1 running: K1315 ends and the cut eye (K1416) to the bar, census bar-exception list; on its report Claude checks the c1 sheet spot by spot, merges, then K1409/K1410/K1412 and K1413 speed
-  - brief: `docs/design/K1407_c1_bar.md`
+  - owner: agent `af52b1a95572b7c1a` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-16 12:36, 2 h cap ~14:36)
+  - branch: `worktree-agent-af52b1a95572b7c1a`, worktree `.claude/worktrees/agent-af52b1a95572b7c1a`; last commit: `e8011efe`
+  - evidence: .claude/probes/K1407/out/c1/ (c1_sheet_fixed.png, c1_sheet_open.png), k1407c1_* census tools + bar exceptions; untracked .claude/probes/K1407/out/c2/
+  - next: c2 running: c1 rows 5-10 stubs, spots 2/13/12/16/6 and the eye to the bar; on its report Claude checks the c2 sheet spot by spot against k1315_now.png, merges, then K1419 paint and K1409/K1410/K1412/K1413
+  - brief: `docs/design/K1407_c2_bar.md`
 - **K1418** · Muse batch 24 (2026-11-16): five runs through the K1053 chain in the main checkout, rp=gf look
   parity with today: K1417+K1415 gap casing and fade, K1414 route bands + hover rim, K1414 pulses + telegraph,
   K1395 reveal look, K1396 explore view (docs/design/K1418_muse_batch24.md)
@@ -907,13 +907,16 @@ Every other item below waits on the trigger it names.
   g41_ring_tw64 and paper +1 on g41_ring_tw64 vs master-CPU census after the null-corner fix (single 40-55px
   finds; not through eyes - the 0.16h floor cleared g41_def_tw64). Find their mechanism before the stray_ink
   category run (K1407 order: broken, then stray).
-- **K1416** · rp=gf regressions from Muse batch 23 against Levi's bar: form B's round dots at K1315 under-tail
-  ends (bb4a74f1; muse_default_tw 24.50,10.58, g41_def_tw64 19.60,30.87) and the muse_hash 5.53,14.97 eye cut
-  open (45f0e838); smudges at K1315's muse_hash ends (.claude/probes/K1407/out/review23/sheet.png; K1407 c1
-  fixes)
+- **K1416** · rp=gf against Levi's bar at K1315 ends: c1 (3a79c999) removed batch 23's dots, but 6 ends now draw
+  today's rejected stub (c1_sheet_fixed.png rows 5-10), and the muse_hash 5.53,14.97 eye is still cut (45f0e838);
+  K1407 c2 fixes (docs/design/K1407_c2_bar.md); the paint is K1419
 - **K1417** · rp=gf border look: 2830d103 (K1398) paints the casing only in the gap band, a dark dash at every
   crossing where today draws a faint continuous casing (.claude/probes/K1398/out/crop_border_150.png, _270;
   Muse 24A)
+- **K1419** · rp=gf paint at junction spots: hard-edged run-colour wedges where batch 23's dots were
+  (.claude/probes/K1407/out/c1/c1_sheet_fixed.png rows 1, 2, 4) and the muse_hash smudges (5.88,8.50;
+  19.41,14.16), where today's paint is smooth; likely gf_look.ts, after Muse batch 24 (K1407 c2 reports the
+  source)
 
 ## Residuals (known, not fixed)
 
@@ -2090,6 +2093,11 @@ Every other item below waits on the trigger it names.
   under-labelled pixels; today's fadeP is fade*max(sin,0.2) by per-side scale, so at shallow crossings gf's
   ramp width can differ (measured one shallow edge: a=0.5 position within 0.34 px, amount at today's midpoint
   pixel 0.74 vs 0.50). Angle/side-aware fade in lkGap (gf_look.ts) is the follow-up.
+- **K1420** · rp=gf bench baseline: preview builds read p50 def 15.7 / fat 15.45 ms per rebuild on master
+  (K1407 c1, out/c1/bench_c1*.json) against 23F's dev-server 11.6 / 12.0; cause not measured (matters for
+  K1413)
+- **K1421** · test/render/field/g2.test.ts exceeds its 120 s timeout when the machine is loaded (K1407 c1,
+  during two censuses); 67 s alone
 
 ## Approved, to schedule (2026-10-11)
 
