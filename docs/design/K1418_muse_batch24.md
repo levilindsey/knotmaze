@@ -262,6 +262,20 @@ neither inside the cleared interior, because `o1` carries no indication coverage
 three times. 2. The fill look unchanged: 0 px against master gf with both features showing. 3. Crops under
 `.claude/probes/K1414/out/24H/` (today | master gf | new gf). 4. `npm test` green.
 
+### Handoff 24H (Muse, 2026-11-17, partial: telegraph Done, pulse not at bar)
+
+Started 00:35 PST, stopped 01:53 PST. Code on master in 5394edc5 (deploy watched). The border look under rp=gf now draws the indications: the look label site composes today's border hi over black (gold, pulse, the unshaped telegraph, rim; new lookHi twin in gf_look.ts) into a third pass target o2 = (hiRgb, hiA), the label's across edge rides o0.w, and LOOK_COMP_FS's border branch draws it in the cleared interior under the stroke (gf_pass binds unit 2 / drawBuffers 3; gf_app target is 3 attachments when lookable). No tables.ts, gf_glsl field or census change, so the tables digest is bit-identical by construction. Fill and both never read o2.
+
+Checks (perf lock held; own vite server on 5494; .claude/probes/K1414/k1414h_ab.mjs = 24C's probe + tlk=border, seed 7, 10 cheapest moves 0,220,203,173,172,171,209,273,272,271, clocks 100 / 100.45 / 101.3; mask = on minus feature-off by >8). Floor first: today against a second today load is ratio 1.000, IoU 1.000 for both features at all three times, so the bars stand as written. Baseline master gf: pulse 0 / tele 0 against today 547-737 / 1211.
+
+1. Telegraph Done: gf 1231 against today 1211 (ratio 1.017), IoU 0.958 at all three times. Pulse not at bar: t100 796/702 (1.134, IoU 0.679), t100.45 731/547 (1.336, IoU 0.612), t101.3 753/737 (1.022, IoU 0.795). The excess is the head junction fan: the field label there is an arm piece whose crest runs to the junction (white X, gf-only 246 px at t100.45), where today's fan fills dark with no border pulse; a corner-label suppression did not cover it (the fan pixels are piece-labelled). Filed K1447.
+2. Fill unchanged: new gf against master gf (stash A/B, fill look, both features showing) 0 px, max 0 at all three times.
+3. Crops (today | master gf | new gf, 4x) under .claude/probes/K1414/out/24H/: crop_pulse_t100.png, crop_tele_t100.png, beside the per-mode captures (base_*, base2_*, new6_*, fmaster/fnew fill).
+4. npm test green: 250 files, 3113 passed (new K1425 case in test/render/gf_look.test.ts: lookHi against kComposePaint over black + kTeleOver + kRimOver, the o2 sites, the composite branch).
+
+Left. K1425 stays open for the pulse fan area (K1447). K1407, K1416 and K1418 untouched and open. Perf lock released.
+
+
 ## Run I (24I): K1431, the reveal's colours to today's bars
 
 24D (01411434) brought the reveal's colours to gf but missed Run D's bars (Handoff 24D, K1431). Claude's look at its

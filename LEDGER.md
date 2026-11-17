@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1447.
+Next free ID: K1448.
 
 ## Waiting on Levi
 
@@ -2165,6 +2165,12 @@ Every other item below waits on the trigger it names.
   (margin/fade per side), no protect waiver and no joint window cap - the measured shallow slots carried
   scales of 1, and junction-adjacent fades are the K1407 lane; bake them if a junction-adjacent shallow
   crossing measures off (.claude/probes/K1417/out/24G/)
+- **K1447** · K1425 pulse residual (24H): in the border look gf's pulse mask still misses today's at the head
+  junction fan (IoU 0.61-0.80 vs bar 0.8; t100_45 count 1.34x): the field label at fan pixels is an arm piece
+  whose crest runs to the junction, where today's fan fills dark with no pulse in border. Needs a fan-area
+  pulse suppression in the look (corner/fan reach), not more window tuning. Telegraph in border is done
+  (1.017, IoU 0.958). Probe: .claude/probes/K1414/k1414h_ab.mjs + mask_h.mjs, state seed 7 10 moves clocks
+  100/100.45/101.3 tlk=border.
 
 ## Approved, to schedule (2026-10-11)
 
