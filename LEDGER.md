@@ -312,11 +312,11 @@ Next free ID: K1424.
   tables bit-identical. Re-run k1362s2_census.ps1 on master, then fix stages under a new digest; K1315's ends
   join the same bar. Levi (2026-11-15): getting these spots truly correct is the most important thing now; the
   bar is the look he approves, not form B's (form B fails K1315's ends and jumps under K1267's jitter)
-  - owner: agent `af52b1a95572b7c1a` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-16 12:36, 2 h cap ~14:36)
-  - branch: `worktree-agent-af52b1a95572b7c1a`, worktree `.claude/worktrees/agent-af52b1a95572b7c1a`; last commit: `e8011efe`
-  - evidence: .claude/probes/K1407/out/c1/ (c1_sheet_fixed.png, c1_sheet_open.png), k1407c1_* census tools + bar exceptions; untracked .claude/probes/K1407/out/c2/
-  - next: c2 running: c1 rows 5-10 stubs, spots 2/13/12/16/6 and the eye to the bar; on its report Claude checks the c2 sheet spot by spot against k1315_now.png, merges, then K1419 paint and K1409/K1410/K1412/K1413
-  - brief: `docs/design/K1407_c2_bar.md`
+  - owner: agent `ac7b27c256860477e` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-16 14:30, 2 h cap ~16:30)
+  - branch: `worktree-agent-ac7b27c256860477e`, worktree `.claude/worktrees/agent-ac7b27c256860477e`; last commit: `13365909`
+  - evidence: .claude/probes/K1407/out/c2/ (c2_sheet_fixed.png, c2_sheet_newsites.png: 23 spots fixed, checked by Claude; c2_sheet_open.png), k1407c2_check.ts / _sheet.ts / _why.ts; untracked .claude/probes/K1407/out/c3/
+  - next: c3 running (c2 merged at 9f38d587, fix 46c4f05b): the muse_hash eye, spots 16 and 6, the ~2 px outline notches (def 30.88,12.42; 3.60,13.52; g41 30.84,12.46) and the two smudges to today's paint; on its report Claude checks the c3 sheet spot by spot, merges, then K1419 paint after Muse batch 24
+  - brief: `docs/design/K1407_c3_bar.md`
 - **K1418** · Muse batch 24 (2026-11-16): five runs through the K1053 chain in the main checkout, rp=gf look
   parity with today: K1417+K1415 gap casing and fade, K1414 route bands + hover rim, K1414 pulses + telegraph,
   K1395 reveal look, K1396 explore view (docs/design/K1418_muse_batch24.md)
@@ -907,13 +907,11 @@ Every other item below waits on the trigger it names.
   g41_ring_tw64 and paper +1 on g41_ring_tw64 vs master-CPU census after the null-corner fix (single 40-55px
   finds; not through eyes - the 0.16h floor cleared g41_def_tw64). Find their mechanism before the stray_ink
   category run (K1407 order: broken, then stray).
-- **K1416** · rp=gf against Levi's bar at K1315 ends: c1 (3a79c999) removed batch 23's dots, but 6 ends now draw
-  today's rejected stub (c1_sheet_fixed.png rows 5-10), and the muse_hash 5.53,14.97 eye is still cut (45f0e838);
-  K1407 c2 fixes (docs/design/K1407_c2_bar.md); the paint is K1419
 - **K1419** · rp=gf paint at junction spots: hard-edged run-colour wedges where batch 23's dots were
-  (.claude/probes/K1407/out/c1/c1_sheet_fixed.png rows 1, 2, 4) and the muse_hash smudges (5.88,8.50;
-  19.41,14.16), where today's paint is smooth; likely gf_look.ts, after Muse batch 24 (K1407 c2 reports the
-  source)
+  (.claude/probes/K1407/out/c2/c2_sheet_fixed.png rows 1-4, 11, 13), where today's paint is smooth. Source
+  (K1407 Handoff c2): gf_look.ts copies the top surface's highest-key colour label and lookQ gives a corner one
+  flat chain position, so the colour steps hard between chains; blend the label across the switch. After Muse
+  batch 24 (its file). The smudges moved to K1407 c3
 
 ## Residuals (known, not fixed)
 
@@ -2470,6 +2468,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1416** · rp=gf against Levi's bar at K1315 ends: c1's six stubs (rows 5-10) and spots 2, 12, 13 now end at the over thread's outline (K1407 c2's fillBur); the eye continues under K1407 c3. Done in 46c4f05b (2026-11-16).
 - **K1415** · rp=gf crossing-gap fade scaled by the crossing angle, today's max(sin, 0.2) (24A). Done in 24ae5489 (2026-11-16).
 - **K1417** · rp=gf border look: the gap-band casing dashes removed; the border draws the faint outline (24A). Done in 24ae5489 (2026-11-16).
 - **K1408** · Muse batch 23: six runs landed, all deploys green: K1407 census 239 -> 61 (bb4a74f1, 45f0e838; regressions vs Levi's bar K1416), K1404 (f1e70048), K1405 (58f8a9ca), K1398 (2830d103; dashes K1417), K1374 pool -41%/-37% on junction builds (84863c99). Done in 9f23f7d1 (2026-11-16).
