@@ -1,0 +1,2 @@
+columns: .claude/probes/K1407/out/c5/wide:gf | .claude/probes/K1407/out/c5/wide:ol
+row 1: muse_hash_29.90_20.70

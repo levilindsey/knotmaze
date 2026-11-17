@@ -1,0 +1,3 @@
+columns: .claude/probes/K1407/out/c5/master:gf | .claude/probes/K1407/out/c5/master:fb | .claude/probes/K1407/out/c5/master:ol
+row 1: muse_hash_5.88_8.50
+row 2: muse_hash_19.41_14.16

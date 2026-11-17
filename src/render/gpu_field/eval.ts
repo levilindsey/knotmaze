@@ -67,21 +67,26 @@ export class GfEval {
 
   constructor(T: GfTables) { this.T = T; }
 
-  /** Membership of (c, s): group (-1 none) and cap ramp (form B's member()). */
+  /** Membership of (c, s): group (-1 none) and cap ramp (form B's member()). K1407 c5: loop 2 skips the arms rooted
+   * where loop 1's arm is (a through pass's other half). Their cut reaches back past the root by the straight reach
+   * h / tan(theta / 2), which a shallow crossing on curved threads stretches over the whole of loop 1's arm (muse_hash
+   * 29.74,20.26: 14 degrees, reach 3.2, the arm 1.18 long), demoting it and drawing an outline inside the junction's
+   * fill, or burying a corner fill's other arm (22.56,34.84). A pass behind loop 1's arm's root already bounds it
+   * through tables' k uB. Roots compare within 1e-4 (the GLSL reads them as float32). */
   private member(c: number, s: number): void {
     const T = this.T; const a0 = T.cArm0[c]; const an = T.cArmN[c]; const lam = T.h;
     const closed = T.cClosed[c] === 1; const len = T.cLen[c];
-    let g = -1; let ramp = 0;
+    let g = -1; let ramp = 0; let sRa = 0;
     for (let i = a0; i < a0 + an; i++) {
       let d = (s - T.aSR[i]) * T.aDir[i]; if (closed) d = ((d % len) + len) % len;
       if (d < -1e-12 || d > T.aL[i] + 1e-12) continue;
       const Lc = T.aLcut[i];
       const rp = Lc === Infinity ? 1 : ss(Lc, Lc - lam, d);
-      if (g < 0 || rp > ramp) { g = T.aG[i]; ramp = rp; }
+      if (g < 0 || rp > ramp) { g = T.aG[i]; ramp = rp; sRa = T.aSR[i]; }
     }
     if (g >= 0 && ramp > 0) {
       for (let i = a0; i < a0 + an; i++) {
-        const Lc = T.aLcut[i]; if (T.aG[i] !== g || Lc === Infinity) continue;
+        const Lc = T.aLcut[i]; if (T.aG[i] !== g || Lc === Infinity || Math.abs(T.aSR[i] - sRa) < 1e-4) continue;
         let d = (s - T.aSR[i]) * T.aDir[i]; if (closed) { d = ((d % len) + len) % len; if (d > len / 2) d -= len; }
         if (!(d < 1e-12 && d > Lc - lam)) continue;
         ramp = Math.min(ramp, ss(Lc, Lc - lam, d));

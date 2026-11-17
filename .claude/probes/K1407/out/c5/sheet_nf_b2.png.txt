@@ -1,0 +1,9 @@
+columns: .claude/probes/K1407/out/c5/nf_master:gf | .claude/probes/K1407/out/c5/nf_c5a:gf | .claude/probes/K1407/out/c5/nf_c5a:fb | .claude/probes/K1407/out/c5/nf_c5a:ol
+row 1: g41_def_tw64_20.81_33.34
+row 2: g41_ring_tw64_10.90_5.42
+row 3: g41_ring_tw64_4.70_12.80
+row 4: g41_user_tw42_16.68_5.59
+row 5: g41_user_tw64_16.06_5.08
+row 6: g41_user_tw64_22.44_14.07
+row 7: g41_user_tw64_1.63_17.29
+row 8: g41_user_tw64_8.80_21.26

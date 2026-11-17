@@ -1,0 +1,11 @@
+columns: .claude/probes/K1407/out/c5/m29:gf | .claude/probes/K1407/out/c5/s29:gf | .claude/probes/K1407/out/c5/s29:fb | .claude/probes/K1407/out/c5/s29:ol
+row 1: muse_default_tw_23.32_27.41
+row 2: def_19.96_30.66
+row 3: def_19.71_30.93
+row 4: g41_user_tw64_9.13_18.25
+row 5: g41_user_tw64_8.73_18.59
+row 6: g41_def_tw64_19.60_30.87
+row 7: g41_def_tw64_19.96_30.53
+row 8: g41_def_tw64_31.05_12.20
+row 9: muse_hash_21.99_2.97
+row 10: muse_default_tw_25.16_10.40

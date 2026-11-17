@@ -1,0 +1,9 @@
+columns: .claude/probes/K1407/out/c5/nf_master:gf | .claude/probes/K1407/out/c5/nf_c5a:gf | .claude/probes/K1407/out/c5/nf_c5a:fb | .claude/probes/K1407/out/c5/nf_c5a:ol
+row 1: muse_hash_5.29_4.19
+row 2: muse_hash_22.36_5.68
+row 3: muse_hash_26.37_5.71
+row 4: muse_hash_2.38_6.35
+row 5: muse_hash_0.41_12.98
+row 6: muse_hash_34.76_10.64
+row 7: muse_hash_16.87_17.27
+row 8: muse_hash_17.12_18.03
