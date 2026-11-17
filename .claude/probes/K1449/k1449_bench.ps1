@@ -2,8 +2,8 @@
 # `vite preview` (builds from scripts/preview.ps1 -BuildOnly under $env:TEMP\k1439pv), runs K1362's
 # k1362c1_bench.ps1 (it takes the perf lock itself) in two rounds, the second in reverse order, over
 # the bench's two links: base gfh=1 | branch gfh=1 | branch flag off. Stops both servers after.
-#   pwsh -NoProfile -File .claude/probes/K1449/k1449_bench.ps1 -Branch <sha>
-param([string]$Master = "963029e8", [Parameter(Mandatory = $true)][string]$Branch, [string]$Tag = "bench")
+#   pwsh -NoProfile -File .claude/probes/K1449/k1449_bench.ps1 -Branch <sha> [-Master <sha>] [-Tag bench] [-NoOff: gfh=1 pairs only]
+param([string]$Master = "963029e8", [Parameter(Mandatory = $true)][string]$Branch, [string]$Tag = "bench", [switch]$NoOff)
 $ErrorActionPreference = "Stop"
 $root = Join-Path $env:TEMP "k1439pv"
 $vite = "C:\Users\lsl\Repositories\knotmaze\node_modules\vite\bin\vite.js"
@@ -26,7 +26,7 @@ try {
   }
   $links = "?b.FMKB4DIQ&am=instant&snd=none&rp=gf", "?p9ar6.FMKB4DIQ&am=instant&snd=none&rp=gf"
   $urls = @()
-  foreach ($l in $links) { $urls += "http://127.0.0.1:5543/$l&gfh=1", "http://127.0.0.1:5544/$l&gfh=1", "http://127.0.0.1:5544/$l" }
+  foreach ($l in $links) { $urls += "http://127.0.0.1:5543/$l&gfh=1", "http://127.0.0.1:5544/$l&gfh=1"; if (-not $NoOff) { $urls += "http://127.0.0.1:5544/$l" } }
   $r1 = Join-Path $out "$($Tag)_r1.json"
   $r2 = Join-Path $out "$($Tag)_r2.json"
   & (Join-Path $PSScriptRoot "..\K1362\k1362c1_bench.ps1") -Base "" -Out $r1 -Q $urls
