@@ -1,0 +1,2 @@
+columns: base_0 | clip_0 | base_d | clip_d | base_1.2 | clip_1.2 | ol
+row 1: ring:19.63:20.34

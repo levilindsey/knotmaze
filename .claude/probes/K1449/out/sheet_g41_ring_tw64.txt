@@ -1,0 +1,3 @@
+columns: base_0 | clip_0 | base_d | clip_d | base_1.2 | clip_1.2 | ol
+row 1: g41_ring_tw64:19.78:20.37
+row 2: g41_ring_tw64:16.43:2.90

@@ -12,6 +12,7 @@ $list = "$spots,$named"
 $Variants -split ',' | ForEach-Object -ThrottleLimit $Throttle -Parallel {
   $v = $_; Set-Location $using:root
   if ($v -eq "ol") { $nm = "ol"; $e = "set GF_HOME=&& set K1438_FL=&& set K1449_MAP=" }
+  elseif ($v -eq "off") { $nm = "off"; $e = "set GF_HOME=&& set K1438_EV=&& set K1438_FL=&& set K1449_MAP=" }
   else { $nm, $spec = $v -split '='; if ($spec -notmatch '^(\w+)_(.+)$') { throw "variant $v" }; $fl = if ($Matches[2] -eq 'd') { '' } else { $Matches[2] }; $e = "set GF_HOME=1&& set K1438_EV=&& set K1438_FL=$fl&& set K1449_MAP=$($Matches[1])" }
   cmd /c "$e&& node scripts/run_node.mjs .claude/probes/K1449/k1449_spots.ts $nm $($using:list) `"$($using:out)`"" 2>&1 | Out-File -Encoding utf8 (Join-Path $using:out "spots_$nm.txt")
 }
