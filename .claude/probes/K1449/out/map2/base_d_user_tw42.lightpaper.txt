@@ -1,0 +1,1 @@
+user_tw42.lightpaper	base_d	finds 128	{"rbreak:plain":50,"rbreak:ramp":1,"rstray:tie":6,"rstray:ramp":7,"rthin:plain":63,"rthin:ramp":1}	{"px":6426640,"act":2463396,"msPerMpx":1375,"usPerAct":3.59,"pcallsPerAct":0.217,"segsPerAct":1.58,"cfgsPerAct":1.057,"nSegPerAct":23.9,"nKPerAct":0.47}

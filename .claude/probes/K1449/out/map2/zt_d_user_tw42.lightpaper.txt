@@ -1,0 +1,1 @@
+user_tw42.lightpaper	zt_d	finds 127	{"rbreak:plain":50,"rbreak:ramp":1,"rstray:ramp":13,"rthin:plain":62,"rthin:ramp":1}	{"px":6426640,"act":2463396,"msPerMpx":1517,"usPerAct":3.96,"pcallsPerAct":0.218,"segsPerAct":1.59,"cfgsPerAct":1.041,"nSegPerAct":23.9,"nKPerAct":0.47}

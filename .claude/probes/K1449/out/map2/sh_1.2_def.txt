@@ -1,0 +1,1 @@
+def	sh_1.2	finds 92	{"rthin:plain":71,"rthin:ramp":21}	{"px":13809720,"act":7084305,"msPerMpx":2246,"usPerAct":4.38,"pcallsPerAct":0.297,"segsPerAct":2.61,"cfgsPerAct":1.121,"nSegPerAct":27.8,"nKPerAct":0.59}

@@ -1,0 +1,1 @@
+muse_default_tw	sh_1.2	finds 77	{"rbreak:plain":1,"rthin:plain":57,"rthin:ramp":19}	{"px":13866240,"act":7050389,"msPerMpx":2192,"usPerAct":4.31,"pcallsPerAct":0.282,"segsPerAct":2.4,"cfgsPerAct":1.105,"nSegPerAct":27.3,"nKPerAct":0.87}

@@ -1,0 +1,1 @@
+muse_hash	clip_d	finds 627	{"dbreak:tie":18,"dstray:tie":18,"dstray:plain":2,"rbreak:tie":8,"rstray:plain":19,"rstray:ramp":1,"rthin:plain":420,"rthin:ramp":96,"rthin:tie":43,"rthin:thru":2}	{"px":14876088,"act":10100660,"msPerMpx":2704,"usPerAct":3.98,"pcallsPerAct":0.32,"segsPerAct":3.7,"cfgsPerAct":1.023,"nSegPerAct":39.2,"nKPerAct":0.59}

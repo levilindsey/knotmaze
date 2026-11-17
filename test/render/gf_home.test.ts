@@ -1,6 +1,7 @@
 // K1438: junction membership from each arm's home interval (tables.ts aHome, eval.ts member()), behind the
-// GF_HOME switch. The fade where a thread dives out of its junction follows `fadeLength` live: the ramp's extent
-// along the arm is fadeLength (a full-window hat), a hard step at 0, and changing it needs no table rebuild.
+// GF_HOME switch. The fade where a thread dives out of its junction follows `fadeLength` live: full membership down
+// to the tie depth zt, the ramp's end fadeLength along the arm (a full-window hat), a hard step at zt for small
+// fadeLengths and 0, and changing it needs no table rebuild (K1449).
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -71,34 +72,41 @@ describe("K1438 home membership", () => {
     expect(P.filter((p) => p.d > T.aL[ARM] + 1e-6 && p.g === g && p.ramp > 0)).toEqual([]);
   });
 
-  it("the fade's extent along the arm is fadeLength, set live on one table", () => {
+  // K1449: a full member down to the tie depth zt (0.1 amp: 0.1 win of arc into a full-window hat), then the fade
+  // to fadeLength of arc; a fadeLength at or under 0.1 win (j_cross's win is 1.41) is a hard step at zt.
+  it("the fade runs from the tie depth to fadeLength along the arm, set live on one table", () => {
     const T = buildTables(load("j_cross.json"), { aa: AA, home: true });
     const E = new GfEval(T);
     const g = T.aG[ARM];
     const step = (T.aHome[ARM] - T.aL[ARM]) / 2400;
     const dive = T.aHome[ARM] - T.win; // the crossing's hat starts here (one pin ahead, full window)
+    expect(T.zt).toBeCloseTo(0.1 * T.amp, 12);
+    const full = (T.zt * T.win) / T.amp; // the arc at which the hat reaches zt
     for (const fl of [0.05, 0.14, 0.4, 0.8, 1.2]) {
       const X = extent(profile(T, fl, E), g);
-      expect(X.start).toBeGreaterThan(dive - 2 * step);
-      expect(X.start).toBeLessThanOrEqual(dive + step);
-      expect(X.end - dive).toBeGreaterThan(fl - 2 * step);
-      expect(X.end - dive).toBeLessThanOrEqual(fl + step);
+      expect(X.start - dive).toBeGreaterThan(full - 2 * step);
+      expect(X.start - dive).toBeLessThanOrEqual(full + step);
+      const end = Math.max(fl, full);
+      expect(X.end - dive).toBeGreaterThan(end - 2 * step);
+      expect(X.end - dive).toBeLessThanOrEqual(end + step);
+      if (fl <= full) expect(X.ramping).toBe(0);
+      else expect(X.ramping).toBeGreaterThan(0);
     }
   });
 
-  it("fadeLength 0 is a hard step at the dive's start", () => {
+  it("fadeLength 0 is a hard step at the tie depth, past the tent's foot", () => {
     const T = buildTables(load("j_cross.json"), { aa: AA, home: true });
     const g = T.aG[ARM];
     const P = profile(T, 0);
     const X = extent(P, g);
     expect(X.ramping).toBe(0);
     const step = (T.aHome[ARM] - T.aL[ARM]) / 2400;
-    const dive = T.aHome[ARM] - T.win;
-    expect(Math.abs(X.end - dive)).toBeLessThanOrEqual(step);
-    // Full member up to the dive, not a member after it.
+    const cut = T.aHome[ARM] - T.win + (T.zt * T.win) / T.amp;
+    expect(Math.abs(X.end - cut)).toBeLessThanOrEqual(step);
+    // Full member up to the cut (the tent's foot included), not a member after it.
     for (const p of P) {
-      if (p.d < dive - 1e-9) expect(p.g === g && p.ramp === 1).toBe(true);
-      if (p.d > dive + step) expect(p.g === g && p.ramp > 0).toBe(false);
+      if (p.d < cut - step) expect(p.g === g && p.ramp === 1).toBe(true);
+      if (p.d > cut + step) expect(p.g === g && p.ramp > 0).toBe(false);
     }
   });
 

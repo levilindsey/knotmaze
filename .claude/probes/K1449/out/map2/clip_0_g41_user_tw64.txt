@@ -1,0 +1,1 @@
+g41_user_tw64	clip_0	finds 327	{"dbreak:tie":11,"rbreak:plain":51,"rbreak:tie":3,"rthin:plain":261,"rthin:thru":1}	{"px":6482592,"act":3474290,"msPerMpx":2335,"usPerAct":4.36,"pcallsPerAct":0.265,"segsPerAct":2.63,"cfgsPerAct":1,"nSegPerAct":33.9,"nKPerAct":0.4}
