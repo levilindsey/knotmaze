@@ -45,7 +45,8 @@
  * K1425: the label site also composes today's border indication over black (the gold, the pulse,
  * the unshaped telegraph, the rim; lookHi) into a third target o2 = (hiRgb, hiA), which the
  * composite's border branch draws in the cleared interior under the stroke; fill and both never
- * read it, so the fill look is unchanged.
+ * read it, so the fill look is unchanged. K1447: the pulse hi is gated by lkFanWin (no pulse
+ * inside a junction fan, where today's fan fills dark).
  */
 import { kArcOfCtrl, kArcU, kBurnAge, kCA, kFxColor, kFxTail, kGlow, kIgnition, kSampleArc, kWall, kWrap, knotSection, type KChain, type KData, type KIgn } from "../paint_math";
 import { PAINT_CONST, PULSE_RIDGE_FADE } from "../paint_const";
@@ -567,6 +568,8 @@ export class GfGapTable {
  * field, flags 1 inward / 2 hovered / 4 two / 8 inwardB / 16 present, endWin the far-end window.
  * Texels 1-2 (telegraph): (u, u0, u1, alpha), (gap0, gap1, fade0, fade1) in unwrapped arc; a negative
  * fade marks the end that rides uTeleAtU (gf_app reduces the spot's ctrl to this frame's arc).
+ * Texel 3 (K1447): (fanD, 0, 0, 0) - the sample's arc distance from the junction end its crest
+ * comes from (d, or span - d for a two-ended arm's far end); the border fan gate reads it.
  */
 export interface GfPulseArm { chain: number; cJunction: number; cFar: number; inward: boolean; hovered: boolean; dist0?: number; cont?: boolean; two?: boolean; dB?: number; inwardB?: boolean }
 export interface GfTelePiece { chain: number; c0: number; c1: number; alpha: number; j0: boolean; j1: boolean; ride?: 0 | 1 }
@@ -694,7 +697,7 @@ export class GfDynTable {
     }
     let nPos = 0;
     for (let ch = 0; ch < nC; ch++) if (lookValid(r, ch)) nPos += r.chainSamples[ch]!.count + (r.kcv[ch].closed ? 1 : 0);
-    const rows = Math.max(1, Math.ceil((nPos * 3) / GF_TW));
+    const rows = Math.max(1, Math.ceil((nPos * 4) / GF_TW));
     const len = rows * GF_TW * 4;
     const V = out && out.length >= len ? out : new Float32Array(len);
     V.fill(0, 0, len);
@@ -705,15 +708,15 @@ export class GfDynTable {
       const count = r.chainSamples[ch]!.count;
       const total = G[c.geom * 4];
       const arcPer = G[c.geom * 4 + 1];
-      if (this.tmp.length < count * 12) this.tmp = new Float32Array(count * 12);
+      if (this.tmp.length < count * 16) this.tmp = new Float32Array(count * 16);
       const tmp = this.tmp;
-      tmp.fill(0, 0, count * 12);
+      tmp.fill(0, 0, count * 16);
       const pp = pulses[ch];
       const tt = tele[ch];
       const gap = r.teleGap;
       for (let k = 0; k < count; k++) {
         const arc = k * arcPer;
-        const o = k * 12;
+        const o = k * 16;
         // pulses: the last covering arm wins, as kPaintAt overwrites the band (paint_math PULSE)
         for (const p of pp) {
           const aJ = kArcOfCtrl(D, c, p.cJunction);
@@ -739,6 +742,7 @@ export class GfDynTable {
           tmp[o + 1] = p.two ? (p.dB ?? 0) + span - d : gA;
           tmp[o + 2] = (p.inward ? 1 : 0) | (p.hovered ? 2 : 0) | (p.two ? 4 : 0) | (p.two && p.inwardB ? 8 : 0) | 16;
           tmp[o + 3] = p.cont ? 1 : Math.min(1, Math.max(0, (span - d) / PAINT_CONST.PULSE_END_WINDOW));
+          tmp[o + 12] = p.two ? (gA <= (p.dB ?? 0) + span - d ? d : span - d) : d;
         }
         // telegraph: the strongest piece at the sample wins, as kPaintAt takes the max (paint_math TELE)
         let bestG = -1;
@@ -766,18 +770,18 @@ export class GfDynTable {
       let l = -1;
       for (let k = 0; k < count; k++) {
         if (l >= 0 && xy[2 * k] === xy[2 * l] && xy[2 * k + 1] === xy[2 * l + 1]) continue;
-        const so = (pb + kv) * 12;
-        const ko = k * 12;
-        for (let j = 0; j < 12; j++) V[so + j] = tmp[ko + j];
+        const so = (pb + kv) * 16;
+        const ko = k * 16;
+        for (let j = 0; j < 16; j++) V[so + j] = tmp[ko + j];
         kv++;
         l = k;
       }
       if (c.closed && kv > 1 && xy[2 * l] === xy[0] && xy[2 * l + 1] === xy[1]) kv--;
       const end = count + (c.closed ? 1 : 0);
-      const po = (pb + (c.closed ? 0 : kv - 1)) * 12;
+      const po = (pb + (c.closed ? 0 : kv - 1)) * 16;
       for (let k = kv; k < end; k++) {
-        const eo = (pb + k) * 12;
-        for (let j = 0; j < 12; j++) V[eo + j] = V[po + j];
+        const eo = (pb + k) * 16;
+        for (let j = 0; j < 16; j++) V[eo + j] = V[po + j];
       }
       pb += end;
     }
@@ -1111,7 +1115,7 @@ vec4 lkDyn(int c, vec2 q, int sub) {
   if (k < 0) { k = 0; u = 0.0; }
   if (k >= last) { k = last; u = 0.0; }
   int b = int(H.y);
-  return mix(DT((b + k) * 3 + sub), DT((b + min(k + 1, last)) * 3 + sub), u);
+  return mix(DT((b + k) * 4 + sub), DT((b + min(k + 1, last)) * 4 + sub), u);
 }
 float lkPulse(int c, vec2 q) {
   vec4 A = lkDyn(c, q, 0); int fl = int(A.z + 0.5);
@@ -1135,6 +1139,14 @@ vec2 lkFoot(int c, vec2 q) { vec4 C0 = F(uOCh + 3 * c); int v = int(C0.x) + int(
 // K1396: chain c's arc at segment q (the vertex arcs the scan's s interpolates)
 float lkArc(int c, vec2 q) { vec4 C0 = F(uOCh + 3 * c); int v = int(C0.x) + int(q.x); vec4 A = F(uOV + v); vec4 B = F(uOV + v + 1); return mix(A.z, B.z, q.y); }
 float lkTeleAcross(float e) { return 1.0 - lkSmooth((1.0 - e) / ${lkF(PAINT_CONST.RIM_EDGE)} * uTeleScale); }
+// K1447: today's border fan fills its interior with the dark stroke and draws
+// no pulse indication there; the field labels the fan's pixels by the arm
+// piece whose crest runs to the junction, so the pulse hi would paint the
+// fan (a white X at the head). The bake carries each sample's arc distance
+// from its crest's junction (dyn texel 3); suppress the hi within the fan's
+// reach of the junction, ramping back over half a halfwidth so the arm's
+// pulse starts at the fan's rim, as today's ribbon pulse does.
+float lkFanWin(int c, vec2 q) { return ss(${lkF(2.5)} * uH, ${lkF(3.0)} * uH, lkDyn(c, q, 3).x); }
 uniform highp sampler2D uFx; uniform float uFxStyle; uniform vec4 uFxPh; uniform float uFxLive;
 vec4 FT(int i) { return texelFetch(uFx, ivec2(i & TWM, i >> LOG), 0); }
 // K1395: chain c's baked FX at segment q (gf_look.ts GfFxTable / fxAt, lkDyn's walk over the 2-texel groups)
@@ -1320,7 +1332,7 @@ const SITES: [string | RegExp, string, number][] = [
   ["if (lab < 0 && ink > 0.0) { lab = own;", "if (lab < 0 && ink > 0.0) { lab = own; lkJb = -1; lkSb = K3.z; lkKb = BIG;", 1],
   // the output: the gap cut and the colour
   ["    oInk = min(1.0, ink); oCov = min(1.0, cov);",
-    "    lkCo = vec4(0.0); lkHiC = vec3(0.0); lkHiA = 0.0;\n    if (lab >= 0) { vec2 lq = lkJb >= 0 ? lookQ(lkJb, p) : lookQs(lab, lkSb); lkCo = lkColour(lab, lq); float lkgp = lkPaint(lab, lq); lkCo.rgb = mix(lkCo.rgb, uGold, lkgp); float lkRimV = lkRimF(lab, lq, p); lkCo.rgb = lkRim(lkCo.rgb, lab, lq, p); float lkD = length(p - lkFoot(lab, lq)); float lke = clamp(lkD / uH, 0.0, 1.0); lkE = 0.7 * ss(0.62, 0.85, lke); float lkv = lkPulse(lab, lq); if (lkv > 0.0) { if (uPulseW < 1.0) lkv *= clamp((uPulseW - lke) / max(3.0 * uAA / uH, 0.02) + 0.5, 0.0, 1.0); lkCo.rgb += (uPulseCol - lkCo.rgb) * (0.9315315315315316 * clamp(lkv, 0.0, 1.0)); } float lkt = lkTele(lab, lq); if (lkt > 0.0) lkCo.rgb += (uTeleU.rgb - lkCo.rgb) * clamp(lkt * lkTeleAcross(lke) * uTeleU.w, 0.0, 1.0); lkHiC = uGold * lkgp; float lkPulseHi = lkJb >= 0 ? lkv : 0.0; if (lkPulseHi > 0.0) lkHiC += (uPulseCol - lkHiC) * (0.9315315315315316 * clamp(lkPulseHi, 0.0, 1.0)); float lkTeleHi = lkt * uTeleU.w; if (lkTeleHi > 0.0) lkHiC += (uTeleU.rgb - lkHiC) * clamp(lkTeleHi, 0.0, 1.0); if (lkRimV > 0.0) lkHiC += (uHov - lkHiC) * (uRimC.y * clamp(lkRimV, 0.0, 1.0)); lkHiA = clamp(max(max(lkgp, lkPulseHi), max(lkRimV, lkTeleHi)), 0.0, 1.0); if (uFxLive > 0.5) { vec4 f0 = lkFx(lab, lq, 0); vec4 f1 = lkFx(lab, lq, 1); if (uFxStyle > 3.5) lkCo.rgb = lkBurn(lkCo.rgb, f0.z, f1.x, uFxStyle > 4.5); else if (uFxStyle > 0.5 && uFxStyle < 1.5 && f0.x > 0.0) { vec2 tn = lkTan(lab, lq.x); float sd = clamp(dot(p - lkFoot(lab, lq), vec2(-tn.y, tn.x)) / uH, -1.0, 1.0); lkCo.rgb = lkRainbow(lkCo.rgb, f0.x, 0.5 + 0.5 * sd); } if (f1.y > 0.0) lkCo.rgb += (vec3(1.0) - lkCo.rgb) * (0.9315315315315316 * clamp(f1.y, 0.0, 1.0)); ink *= f0.y; cov *= f0.y; lkHi = f0.w; } float lkg = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : 0.0; ink *= 1.0 - lkg; cov *= 1.0 - lkg; lkHiA *= 1.0 - lkg; if (uExLive > 0.5) { vec4 exs = exAt(lab, lkArc(lab, lq)); float evv = exs.x; if (exs.y >= 0.0 && uExLook > 1) { vec2 etn = lkTan(lab, lq.x); float elat = dot(p - lkFoot(lab, lq), vec2(-etn.y, etn.x)); if (uExLook == 2) { float eg = lkSmooth(exs.y / 0.3) * (1.0 - lkSmooth((exs.y - 0.55) / 0.45)); lkCo.rgb = mix(lkCo.rgb, vec3(0.78, 0.94, 1.0), 0.85 * eg * uExBr); } evv = lkExploreLook(uExLook, exs.x, exs.y, exs.y * exs.z, exs.z, elat, (2.0 * uAA) / max(uExTw, 1e-6), 2.0 * uAA); if (uExOn > 1.5) lkCo.rgb = mix(lkCo.rgb, vec3(1.0), lkExDot); } ink *= evv; cov *= evv; lkHiA *= evv; } }\n    oInk = min(1.0, ink); oCov = min(1.0, cov);", 1],
+    "    lkCo = vec4(0.0); lkHiC = vec3(0.0); lkHiA = 0.0;\n    if (lab >= 0) { vec2 lq = lkJb >= 0 ? lookQ(lkJb, p) : lookQs(lab, lkSb); lkCo = lkColour(lab, lq); float lkgp = lkPaint(lab, lq); lkCo.rgb = mix(lkCo.rgb, uGold, lkgp); float lkRimV = lkRimF(lab, lq, p); lkCo.rgb = lkRim(lkCo.rgb, lab, lq, p); float lkD = length(p - lkFoot(lab, lq)); float lke = clamp(lkD / uH, 0.0, 1.0); lkE = 0.7 * ss(0.62, 0.85, lke); float lkv = lkPulse(lab, lq); if (lkv > 0.0) { if (uPulseW < 1.0) lkv *= clamp((uPulseW - lke) / max(3.0 * uAA / uH, 0.02) + 0.5, 0.0, 1.0); lkCo.rgb += (uPulseCol - lkCo.rgb) * (0.9315315315315316 * clamp(lkv, 0.0, 1.0)); } float lkt = lkTele(lab, lq); if (lkt > 0.0) lkCo.rgb += (uTeleU.rgb - lkCo.rgb) * clamp(lkt * lkTeleAcross(lke) * uTeleU.w, 0.0, 1.0); lkHiC = uGold * lkgp; float lkPulseHi = lkJb >= 0 ? lkv * lkFanWin(lab, lq) : 0.0; if (lkPulseHi > 0.0) lkHiC += (uPulseCol - lkHiC) * (0.9315315315315316 * clamp(lkPulseHi, 0.0, 1.0)); float lkTeleHi = lkt * uTeleU.w; if (lkTeleHi > 0.0) lkHiC += (uTeleU.rgb - lkHiC) * clamp(lkTeleHi, 0.0, 1.0); if (lkRimV > 0.0) lkHiC += (uHov - lkHiC) * (uRimC.y * clamp(lkRimV, 0.0, 1.0)); lkHiA = clamp(max(max(lkgp, lkPulseHi), max(lkRimV, lkTeleHi)), 0.0, 1.0); if (uFxLive > 0.5) { vec4 f0 = lkFx(lab, lq, 0); vec4 f1 = lkFx(lab, lq, 1); if (uFxStyle > 3.5) lkCo.rgb = lkBurn(lkCo.rgb, f0.z, f1.x, uFxStyle > 4.5); else if (uFxStyle > 0.5 && uFxStyle < 1.5 && f0.x > 0.0) { vec2 tn = lkTan(lab, lq.x); float sd = clamp(dot(p - lkFoot(lab, lq), vec2(-tn.y, tn.x)) / uH, -1.0, 1.0); lkCo.rgb = lkRainbow(lkCo.rgb, f0.x, 0.5 + 0.5 * sd); } if (f1.y > 0.0) lkCo.rgb += (vec3(1.0) - lkCo.rgb) * (0.9315315315315316 * clamp(f1.y, 0.0, 1.0)); ink *= f0.y; cov *= f0.y; lkHi = f0.w; } float lkg = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : 0.0; ink *= 1.0 - lkg; cov *= 1.0 - lkg; lkHiA *= 1.0 - lkg; if (uExLive > 0.5) { vec4 exs = exAt(lab, lkArc(lab, lq)); float evv = exs.x; if (exs.y >= 0.0 && uExLook > 1) { vec2 etn = lkTan(lab, lq.x); float elat = dot(p - lkFoot(lab, lq), vec2(-etn.y, etn.x)); if (uExLook == 2) { float eg = lkSmooth(exs.y / 0.3) * (1.0 - lkSmooth((exs.y - 0.55) / 0.45)); lkCo.rgb = mix(lkCo.rgb, vec3(0.78, 0.94, 1.0), 0.85 * eg * uExBr); } evv = lkExploreLook(uExLook, exs.x, exs.y, exs.y * exs.z, exs.z, elat, (2.0 * uAA) / max(uExTw, 1e-6), 2.0 * uAA); if (uExOn > 1.5) lkCo.rgb = mix(lkCo.rgb, vec3(1.0), lkExDot); } ink *= evv; cov *= evv; lkHiA *= evv; } }\n    oInk = min(1.0, ink); oCov = min(1.0, cov);", 1],
   ["  o0 = vec4(oInk, oCov, 0.0, 1.0);\n#endif", "  o0 = vec4(oInk, oCov, lkHi, lkE); o1 = lkCo; o2 = vec4(lkHiC, lkHiA);\n#endif", 1],
 ];
 

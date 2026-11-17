@@ -50,12 +50,13 @@ describe("K1414 part 2 gf dyn table", () => {
     expect(T.nPos).toBe(10);
     // chain 0 samples at arcs 0..4: gA = 0.5 + arc, present, endWin clamped at the far end
     for (let k = 0; k < 5; k++) {
-      const o = k * 12;
+      const o = k * 16;
       expect(V[o + 2]).toBe(16);
       expect(dynPulseV(V[o], V[o + 1], V[o + 2], V[o + 3], U)).toBeCloseTo(kPulseV(kU, k, 4, false, false, 0.5, false), 6);
+      expect(V[o + 12]).toBe(k); // K1447: fanD = arc distance from the junction
     }
     // chain 1 carries no arm
-    expect(V[5 * 12 + 2]).toBe(0);
+    expect(V[5 * 16 + 2]).toBe(0);
     expect(dynPulseV(0, 0, 0, 0, U)).toBe(0);
   });
 
@@ -63,9 +64,10 @@ describe("K1414 part 2 gf dyn table", () => {
     const T = new GfDynTable();
     const V = T.values(src({ paintPulses: [{ chain: 0, cJunction: 0, cFar: 4, inward: true, hovered: false, dist0: 0.25, two: true, dB: 1.5, inwardB: false }] }));
     for (let k = 0; k < 5; k++) {
-      const o = k * 12;
+      const o = k * 16;
       expect(V[o + 2]).toBe(16 | 1 | 4);
       expect(dynPulseV(V[o], V[o + 1], V[o + 2], V[o + 3], U)).toBeCloseTo(kPulseV2(kU, k, 4, 0.25, 1.5, true, false, false), 6);
+      expect(V[o + 12]).toBe(0.25 + k <= 1.5 + 4 - k ? k : 4 - k); // K1447: from the crest's own end
     }
   });
 
@@ -81,19 +83,19 @@ describe("K1414 part 2 gf dyn table", () => {
     const UU = { ...kU, uKPaint: new Float32Array([1, 0, 10, 0.5]) } as unknown as KUniforms;
     const st: KPaintState = { p: 0, band: false, v: 0, rim: 0, tele: 0 };
     kPaintAt(D, UU, kcv[0], 2, 2, 0, st);
-    const o = 2 * 12;
+    const o = 2 * 16;
     expect(V[o + 7]).toBeCloseTo(0.8, 6);
     expect(dynTeleG(V[o + 4], V[o + 5], V[o + 6], V[o + 7], V[o + 8], V[o + 9], V[o + 10], V[o + 11], 0)).toBeCloseTo(st.tele, 6);
     expect(st.tele).toBeGreaterThan(0);
     // outside the piece: nothing baked
-    expect(V[0 * 12 + 7]).toBe(0);
+    expect(V[0 * 16 + 7]).toBe(0);
   });
 
   it("a riding telegraph end follows the spot arc (dynTeleG vs kPaintAt with uKTeleAt)", () => {
     const T = new GfDynTable();
     const V = T.values(src({ paintTele: [{ chain: 0, c0: 0, c1: 4, alpha: 1, j0: false, j1: true, ride: 0 }] }));
     expect(T.rideChain).toBe(0);
-    const o = 3 * 12; // sample at arc 3
+    const o = 3 * 16; // sample at arc 3
     expect(V[o + 10]).toBeLessThan(0); // fade0 negative: end 0 rides
     const paint = new Float32Array(256);
     const D = { ...kd, paint } as KData;

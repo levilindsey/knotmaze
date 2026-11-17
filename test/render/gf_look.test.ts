@@ -198,6 +198,9 @@ describe("K1389 s2 colour table", () => {
     expect(f).toContain("lkHiC = uGold * lkgp;");
     expect(f).toContain("lkE = 0.7 * ss(0.62, 0.85, lke);");
     expect(f).toContain("lkHiA = clamp(max(max(lkgp, lkPulseHi), max(lkRimV, lkTeleHi)), 0.0, 1.0);");
+    // K1447: no pulse hi inside a junction fan (today's fan fills dark there)
+    expect(f).toContain("float lkFanWin(int c, vec2 q)");
+    expect(f).toContain("lkPulseHi = lkJb >= 0 ? lkv * lkFanWin(lab, lq) : 0.0;");
     expect(LOOK_COMP_FS).toContain("uniform sampler2D uHi;");
     expect(LOOK_COMP_FS).toContain("vec4 hh = texelFetch(uHi, q, 0);");
     expect(LOOK_COMP_FS).toContain("if (uLook == 0) o = vec4(C * cov, cov);");

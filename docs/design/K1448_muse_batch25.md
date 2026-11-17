@@ -21,6 +21,14 @@ the floor first, and share the GPU") and batch 23's hold in full, with these cha
 
 **Done:** 1. Pulse mask within 15% of today's count and IoU at least 0.8 at clocks 100 / 100.45 / 101.3.
 2. Telegraph unchanged from 24H (ratio 1.017, IoU 0.958) and the fill look 0 px against master gf.
+
+### Handoff 25A (Muse, 2026-11-17, partial: counts and telegraph/fill Done, pulse IoU short at two clocks)
+
+Started 05:58 PST, stopped 07:53 PST. The border pulse hi is now gated at junction fans: `GfDynTable` bakes a fourth texel per sample (fanD, the sample's arc distance from the junction end its crest comes from; dyn stride 3 -> 4 texels in `gf_look.ts`/`gf_pass.ts`), and the label site's `lkPulseHi` is scaled by `lkFanWin` = ss(2.5 uH, 3.0 uH, fanD). Fill never reads the hi target, so the fill look is unchanged by construction. No `tables.ts`, `eval.ts`, `gf_keys.ts` or `gf_glsl.ts` field change; `gf_home_glsl.test.ts` green.
+
+Floor first (25at vs 25at2, two today loads): ratio 1.000, IoU 1.000 for pulse and telegraph at all three clocks, so the bars stand as written. Baseline (master gf, 24H numbers reproduced exactly on 25at/25an): pulse 1.134/IoU 0.679, 1.336/0.612, 1.022/0.795. After: **0.942/0.786, 1.033/0.748, 0.969/0.823** — every count within 15% (100.45's count now passes), IoU up at every clock, but 0.8 holds only at 101.3. Telegraph unchanged: 1.017, IoU 0.958 at all three times. Fill (25af9 vs fmaster): 552 px whole-frame, all in the panel stamp strip (x 1071-1169, y 110-116); 0 px in the thread area at all three times.
+
+Why IoU stalls: the gf-only residue (61/89/59 px, r 12-20 px from the head) is crest bar inside the fan whose foot sits past the gate (fanD up to ~3.7 uH at the fan's rim wedges), while today's bars at the same clocks begin at the rim — a single arc-distance gate cannot separate them; wider gates (2.9-3.7 uH: IoU 0.815/0.719/0.844, count 0.832 at 100.45) and sharper (3.3-3.6: 0.830/0.706) trade gf-only for today-only at the rim, worst at 100.45 where the crest phase sits on the rim. Two dead ends measured: a piece-end-vertex gate in the shader (plo/phi are scan-local windows, not piece spans, so it never fired) and a lateral (lkD) gate (the fan X runs along the centrelines, lkD ~ 0). The per-arm rim (corner tangent arcs) is tables-side and hands-off this batch. Crops (today | master gf | new gf, 4x) under `.claude/probes/K1414/out/25A/crop_pulse_t100_45.png`: by eye the fan X is gone and the dashes sit where today's sit. `npm test` green: 250 files, 3113 passed. K1447 stays open for the IoU residue; K1448 and K1449 untouched.
 3. Crops. 4. `npm test` green.
 
 ## Run B (25B): K1431, the reveal's ink counts and ghost

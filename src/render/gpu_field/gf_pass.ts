@@ -412,11 +412,11 @@ export class GfPass {
       gl.activeTexture(gl.TEXTURE0);
       this.ptVer = ptVer;
     }
-    // K1414 part 2 (24C): the pulse/telegraph geometry rides unit 9 in the positions' layout (3 texels a sample)
+    // K1414 part 2 (24C): the pulse/telegraph geometry rides unit 9 in the positions' layout (4 texels a sample, K1447)
     if (!this.dynTex) this.dynTex = gl.createTexture()!;
     this.teleAtU = teleAtU;
     if (Dyn && dynVer !== this.dynVer) {
-      const rows = Math.max(1, Math.ceil((Math.max(1, L.nPos) * 3) / GF_TW));
+      const rows = Math.max(1, Math.ceil((Math.max(1, L.nPos) * 4) / GF_TW));
       gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, null);
       gl.pixelStorei(gl.UNPACK_ALIGNMENT, 4);
       gl.pixelStorei(gl.UNPACK_ROW_LENGTH, 0);
