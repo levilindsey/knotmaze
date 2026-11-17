@@ -1,0 +1,1 @@
+g41_def_tw64	zt	finds 350	{"dbreak:tie":1,"rstray:ramp":15,"rstray:tie":2,"rthin:plain":260,"rthin:ramp":70,"rthin:tie":1,"rthin:thru":1}	{"px":14041776,"act":8356431,"msPerMpx":1564,"usPerAct":2.63,"pcallsPerAct":0.322,"segsPerAct":3.29,"cfgsPerAct":1.036,"nSegPerAct":32.9,"nKPerAct":0.51}

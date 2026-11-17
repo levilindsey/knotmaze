@@ -1,0 +1,68 @@
+
+scene                K1435tgr off       off all    new      new all   fl0      fl0 all   fl1.2    fl1.2 all
+-----                -------- ---       -------    ---      -------   ---      -------   -----    ---------
+def                  29/2426  79/2254   175/2671   17/1381  110/1775  63/2024  160/2450  21/77    92/391
+fat                  0/0      0/0       401/2343   0/0      401/2343  0/0      401/2343  0/0      401/2343
+g41_def_tw42         7/146    6/183     7/200      6/176    7/193     6/183    7/200     0/0      0/0
+g41_def_tw64         77/2957  373/10455 688/12224  46/1104  344/2754  159/5172 503/7498  123/746  311/1767
+g41_ring_tw42        1/7      2/10      33/137     1/7      33/137    1/7      33/137    1/7      33/137
+g41_ring_tw64        21/1340  74/3062   203/3946   21/1345  146/2168  43/1859  177/2934  31/1093  142/1836
+g41_user_tw42        17/821   19/621    131/1098   15/576   127/1053  19/621   131/1098  9/37     106/446
+g41_user_tw64        72/1407  229/7909  521/11133  52/816   327/3717  83/2199  401/5990  87/1267  292/3069
+muse_default_tw      21/1702  45/728    126/1107   12/487   94/875    36/628   117/1007  19/72    77/367
+muse_hash            275/6682 898/42061 1418/48368 241/6454 628/11100 243/9742 820/18874 320/6243 586/9423
+ring                 10/976   53/1897   129/2434   9/813    86/1340   18/1191  101/1805  12/740   84/1245
+user_tw42.lightpaper 17/823   19/623    132/1121   15/577   128/1075  19/623   132/1121  9/37     108/472
+
+totals (tie+ramp n/px ; all n/px):
+  off    1797/69803 ; 3964/86782
+  new    435/13736 ; 2431/28530
+  fl0    690/24249 ; 2983/45457
+  fl1.2  632/10319 ; 2232/21496
+  tgrfl  545/19007 ; 2440/32715
+  K1435 tgr 547/19287 ; K1435 master 2030/82296 (master before K1407 c5)
+
+tie+ramp by kind:
+  fl0|dbreak:tie 170
+  fl0|dstray:tie 225
+  fl0|rbreak:ramp 3
+  fl0|rbreak:tie 159
+  fl0|rstray:ramp 14
+  fl0|rstray:tie 71
+  fl0|rthin:ramp 7
+  fl0|rthin:tie 41
+  fl1.2|dbreak:tie 23
+  fl1.2|dstray:ramp 2
+  fl1.2|dstray:tie 24
+  fl1.2|rbreak:ramp 5
+  fl1.2|rbreak:tie 13
+  fl1.2|rstray:ramp 10
+  fl1.2|rstray:tie 2
+  fl1.2|rthin:ramp 520
+  fl1.2|rthin:tie 33
+  new|dbreak:tie 23
+  new|dstray:ramp 1
+  new|dstray:tie 24
+  new|rbreak:ramp 4
+  new|rbreak:tie 13
+  new|rstray:ramp 17
+  new|rstray:tie 74
+  new|rthin:ramp 178
+  new|rthin:tie 101
+  off|dbreak:tie 170
+  off|dstray:tie 710
+  off|rbreak:ramp 17
+  off|rbreak:tie 236
+  off|rstray:ramp 16
+  off|rstray:tie 336
+  off|rthin:ramp 20
+  off|rthin:tie 292
+  tgrfl|dbreak:tie 23
+  tgrfl|dstray:ramp 1
+  tgrfl|dstray:tie 24
+  tgrfl|rbreak:ramp 4
+  tgrfl|rbreak:tie 13
+  tgrfl|rstray:ramp 60
+  tgrfl|rstray:tie 96
+  tgrfl|rthin:ramp 284
+  tgrfl|rthin:tie 40

@@ -30,11 +30,21 @@ import { footInWindow, segOfS, type Foot, type Poly } from "../field/geom";
 export const CH = 8; // segments per chunk
 export const MAXP = 8; // pieces kept per pixel
 
+/**
+ * K1438: junction membership from each arm's HOME interval (K1435's probe mode tgr). Off in the shipped build
+ * until K1439 mirrors it in gf_glsl.ts; `GfOpts.home` overrides it per build, env GF_HOME=1 for Node probes.
+ * The table always carries `aHome`; only `homeOn` (and gf_pack's write of it) follows the switch, so with the
+ * switch off the packed texture, the digest and every pin are master's.
+ */
+export const GF_HOME: boolean = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_HOME === "1";
+
 export interface GfOpts {
   /** Half the AA ramp, world units. */
   aa: number;
   /** Cell size factor (G = gridK * h). */
   gridK?: number;
+  /** K1438: home membership on (default GF_HOME). */
+  home?: boolean;
 }
 
 export interface GfTables {
@@ -47,6 +57,12 @@ export interface GfTables {
   pinS: Float64Array; pinZ: Float64Array;
   /** Arms, sorted by chain: root s, direction, span L, cap Lcut (Infinity = none), group. */
   nA: number; aSR: Float64Array; aDir: Float64Array; aL: Float64Array; aLcut: Float64Array; aG: Int32Array;
+  /**
+   * K1438: each arm's home extent from its root: aL, or for a capped arm (finite aLcut) max(aL, min(the nearest
+   * crossing ahead, 4h)). A piece in it whose depth is still near 0 joins the arm's group, fading as the thread
+   * dives (eval.ts member()). `homeOn` = the switch this build took (GF_HOME / GfOpts.home).
+   */
+  aHome: Float64Array; homeOn: boolean;
   nK: number;
   kCx: Float64Array; kCy: Float64Array; kR: Float64Array; kRmax: Float64Array;
   /** K1049: 1 = the bend corner of one through pass (the rounded open eye, drawn only inside its cone as
@@ -149,7 +165,7 @@ function footNear(T: GfTables | Pick<GfTables, "cV0" | "cNV" | "vx" | "vy" | "vs
 // per solveGfCorners call and every hint is per corner pair, so a slice's
 // corners are bit-identical to the cold build's (the t1 rule: the solve's
 // input bits are unchanged, only who runs them).
-export interface GfArm { c: number; j: number; ei: number; sR: number; dir: number; L: number; Lcut: number; g: number; ang: number; ux: number; uy: number; uB: number; L0: number }
+export interface GfArm { c: number; j: number; ei: number; sR: number; dir: number; L: number; Lcut: number; g: number; ang: number; ux: number; uy: number; uB: number; L0: number; ahead: number; home: number }
 export interface GfCorner { thru: number; rv: number; cx: number; cy: number; r: number; rmax: number; eax: number; eay: number; ebx: number; eby: number; g: number; j: number; a: number; b: number; theta: number; ca: number; cb: number; sa: number; sb: number }
 export interface GfRaw { cV0: Int32Array; cNV: Int32Array; vx: Float64Array; vy: Float64Array; vs: Float64Array }
 export interface GfPrefix {
@@ -160,6 +176,8 @@ export interface GfPrefix {
   pinTheta: Float64Array; chainIds: Int32Array; rootsOff: Int32Array; rootsS: Float64Array; rootsJ: Int32Array;
   nA: number; aSR: Float64Array; aDir: Float64Array; aL: Float64Array; aLcut: Float64Array; aG: Int32Array;
   arms: GfArm[]; junctions: FieldScene["junctions"]; jGroup: Int32Array;
+  /** K1438: the build's home switch (GfOpts.home ?? GF_HOME). */
+  homeOn: boolean;
   /** Pool slices carry only their junction range: junctions/jGroup/arms are
    * range-local and jBase is the range's first global junction index. */
   jBase?: number;
@@ -261,17 +279,18 @@ export function buildGfArms(P: Pick<GfPrefix, "junctions" | "jGroup" | "jBase" |
       const delta = (s: number): number => { let d = (s - sR) * dir; if (cClosed[c]) d = ((d % len) + len) % len; return d; };
       let L = cClosed[c] ? len : dir > 0 ? cS0[c] + len - sR : sR - cS0[c];
       for (const q of rootsFor(c)) { const d = delta(q.s); if (d > 1e-9 && d < L) L = d; }
-      let Lcut = Infinity; let uB = Infinity;
+      let Lcut = Infinity; let uB = Infinity; let ahead = Infinity;
       for (const x of pinsFor(c)) {
         const d = delta(x.s);
         if (cClosed[c] || d < -1e-12) uB = Math.min(uB, cClosed[c] ? len - d : -d);
+        if (d >= 0 && d < ahead) ahead = d;
         if (d < -1e-12) continue;
         const t = Math.tan(x.theta / 2); const reach = t > 1e-12 ? h / t : Infinity;
         const cc = d - reach - h; if (cc < Lcut) Lcut = cc;
       }
       const sB = arm.kind === "end" ? norm(c, arm.s) : sR;
       chainAtInto(TT, c, sB, CA1); chainAtInto(TT, c, cClosed[c] ? norm(c, sB + dir * 2 * h) : Math.max(cS0[c], Math.min(cS0[c] + len, sB + dir * 2 * h)), CA2); const a0 = CA1; const a1 = CA2;
-      armsT.push({ c, j: jBase + ji, ei, sR, dir, L0: L, L: Math.max(0, Math.min(L, Lcut)), Lcut, g: -1, ang: Math.atan2(a1.y - a0.y, a1.x - a0.x), ux: (a1.x - a0.x) / (Math.hypot(a1.x - a0.x, a1.y - a0.y) || 1), uy: (a1.y - a0.y) / (Math.hypot(a1.x - a0.x, a1.y - a0.y) || 1), uB });
+      armsT.push({ c, j: jBase + ji, ei, sR, dir, L0: L, L: Math.max(0, Math.min(L, Lcut)), Lcut, g: -1, ang: Math.atan2(a1.y - a0.y, a1.x - a0.x), ux: (a1.x - a0.x) / (Math.hypot(a1.x - a0.x, a1.y - a0.y) || 1), uy: (a1.y - a0.y) / (Math.hypot(a1.x - a0.x, a1.y - a0.y) || 1), uB, ahead, home: 0 });
     });
   }
   const byJ = new Map<number, GfArm[]>();
@@ -293,6 +312,9 @@ export function buildGfArms(P: Pick<GfPrefix, "junctions" | "jGroup" | "jBase" |
     A.L = Math.max(0, Math.min(A.L0, A.Lcut));
   }
   for (const A of armsT) A.g = P.jGroup[A.j - jBase];
+  // K1438: the home extent (K1435 tgr): a capped arm keeps its junction's membership to the crossing that cut
+  // it, at most 4h; eval.ts fades it out by depth. Uses the final L / Lcut, so it follows the uB cap above.
+  for (const A of armsT) A.home = A.Lcut === Infinity ? A.L : Math.max(A.L, Math.min(A.ahead, 4 * h));
   return armsT;
 }
 
@@ -441,6 +463,7 @@ export function buildGfPrefix(scene: FieldScene, opts: GfOpts, rawMerged?: GfRaw
     nC, cV0, cNV, cClosed, cLen, cS0, cPin0, cPinN, cArm0, cArmN,
     nV, vx, vy, vs, pinS, pinZ, nA, aSR, aDir, aL, aLcut, aG,
     arms: armsT, junctions: scene.junctions, jGroup, pinTheta, chainIds, rootsOff, rootsS, rootsJ,
+    homeOn: opts.home ?? GF_HOME,
     ms: { vtx: t1 - t0, pins: t2 - t1, arms: t3 - t2 },
   };
 }
@@ -866,10 +889,13 @@ export function assembleGfTables(P: GfPrefix, K: GfCorner[], chunk: { meta: GfCh
   const t5 = now();
   const cellKPList = prunedCornerLists(kCx, kCy, kR, kRmax, kThru, kRV, W, aa, gx0, gy0, G, gW, gH, cellK0, cellKN, cellKList);
   const t6 = now();
+  // K1438: from the arms themselves (P.arms is armTab.arms on every path: cold, pooled, the worker's), so no
+  // caller copies a new field.
+  const aHome = new Float64Array(nA); for (let i = 0; i < nA; i++) aHome[i] = P.arms[i].home;
 
   return {
     h, W, aa, sigma, zt, amp, win, rc, nC, cV0, cNV, cClosed, cLen, cS0, cPin0, cPinN, cArm0, cArmN,
-    nV, vx, vy, vs, pinS, pinZ, nA, aSR, aDir, aL, aLcut, aG,
+    nV, vx, vy, vs, pinS, pinZ, nA, aSR, aDir, aL, aLcut, aG, aHome, homeOn: P.homeOn === true,
     nK, kCx, kCy, kR, kRmax, kThru, kRV, kEax, kEay, kEbx, kEby, kG, kJ, kA, kB, kTheta, kCa, kCb, kSa, kSb, kZa, kZb, kTax, kTay, kTbx, kTby,
     nCh, chV0, chN, chC, chBox, gx0, gy0, G, gW, gH, cellCh0, cellChN, cellChList, cellK0, cellKN, cellKList, cellKPList,
     ms: { vtx: ms.vtx, pins: ms.pins, arms: ms.arms, corners: ms.corners, bins: t5 - t4, kp: t6 - t5, total: t6 - t0 },
