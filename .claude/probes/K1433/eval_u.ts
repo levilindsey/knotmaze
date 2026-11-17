@@ -123,6 +123,9 @@ export class GfEval {
     return true;
   }
 
+  /** K1433 ring: is chain c an arm of a gathered corner of surface S? */
+  private armOf(S: number, c: number): boolean { const T = this.T; for (let i = 0; i < this.nk; i++) { const k = this.kk[i]; if (T.kG[k] === S && (T.kCa[k] === c || T.kCb[k] === c)) return true; } return false; }
+
   private pieceD(j: number, x: number, y: number): number {
     const T = this.T; const c = this.pc[j]; const v0 = T.cV0[c]; const nseg = T.cNV[c] - 1; const closed = T.cClosed[c] === 1;
     let d2 = Infinity;
@@ -516,7 +519,7 @@ export class GfEval {
         for (let q = 0; q < nT && E < aa; q++) {
           const ang = (2 * Math.PI * (q + (ring ? 0.5 : 0))) / nT; const tx = x + rad * Math.cos(ang); const ty = y + rad * Math.sin(ang);
           let Dt = -Infinity;
-          for (let j = 0; j < this.np; j++) { if (this.psurf[j] !== S) continue; const d = h - Math.sqrt(this.pieceD(j, tx, ty)); if (d > Dt) Dt = d; if (Dt > aa) break; }
+          for (let j = 0; j < this.np; j++) { if (this.psurf[j] !== S && !this.armOf(S, this.pc[j])) continue; const d = h - Math.sqrt(this.pieceD(j, tx, ty)); if (d > Dt) Dt = d; if (Dt > aa) break; }
           if (Dt <= aa) for (let i = 0; i < this.nk; i++) {
             const kq = this.kk[i]; if (T.kG[kq] !== S || !(T.kR[kq] > 0)) continue;
             const rho = Math.hypot(tx - T.kCx[kq], ty - T.kCy[kq]); if (rho > T.kRmax[kq] || !(rho > T.kR[kq] - aa) || !this.inSector(kq, tx, ty)) continue;

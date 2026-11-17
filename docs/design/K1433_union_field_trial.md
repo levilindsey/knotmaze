@@ -87,3 +87,96 @@ crossings, the cap ramps), and what it would cost to try. No code.
 comes first. A compaction is not a stop: re-read this brief and `git log`. On stopping: commit WIP, append
 `### Handoff K1433` here, commit, and report. End the report with the recommendation, the sheet paths, the
 numbers, a `Ledger items` list and K1433's handle fields.
+
+### Handoff K1433
+
+Stopped at 19:10 on 2026-11-16 (started 18:30:48). Nothing under `src/` or `test/` changed. Everything is in
+`.claude/probes/K1433/` (scripts and small results force-added).
+
+**Recommendation: a mix. Keep step 4 as it is, stop patching the membership and tie rules, and try deciding
+grouping and over/under from the knot's graph when the tables are built (steps 2, 3 and 5).**
+
+- Do not replace step 4 with a union field. A max (or smooth max) of member depths is exact outside the shape and
+  wrong inside it wherever a member's nearest edge is buried in another member. Master's burial rules, arc terms
+  and vertex cap are that missing inside distance, not accidents. Every union variant I built either draws stray
+  ink (fillets as members), or changes the junction's shape and pools ink in the corner (tubes only, smooth union).
+- The four open spots are not step 4's. They look the same in every union variant, and the test's tie-class counts
+  over 12 scenes are the same with and without step 4 (829 vs 825 stray, 174 vs 171 breaks).
+- What the 12-scene scan shows that the 29 spots do not: the smudge family is large. Master has about 2,000
+  tie-class finds, and all 11 I looked at were real dark smudges in a fill. That is where the work is.
+
+**For Levi to judge by eye** (all under `.claude/probes/K1433/out/`):
+- `sheet_1.png` to `sheet_6.png`: the 29 spots in `spots.txt` order, 5 per sheet, columns master gf | fillets as
+  members | tubes only (sharp corner) | smooth union (k = 0.4 h) | rp=outline. The question: is the deep V of
+  columns 3 and 4 a corner he would want at all, in place of master's fillet? If not, the union idea is closed.
+- `sample_1.png` to `sample_4.png`: 20 finds of the test on master (left) with the flagged pixels in blue and the
+  exposed edges in red (right). Rows 4-5 of `sample_2`, and all of `sample_3` and `sample_4` rows 1-4: are these
+  smudges the defect he means? They are the bulk of what the test finds.
+- `sheet_notch_d547.png`: the def notches on d547dab6 | master | smooth, which the test cannot see (below).
+- c4's today-fill captures were not added to these sheets; they are in `.claude/probes/K1407/out/c4/sheet_c4b_tie_today.png`.
+
+**Part 1: the test** (`k1433_lib.ts`; `k1433_spots.ts` per spot, `k1433_scan.ts` per scene). It reads the
+evaluator's own coverage, labels and ink, no reference. Two halves: a depth half (ink against the ideal band from
+each surface's own depth, single-member zones only) and a raster half (exposed edges = coverage or surface label
+changes; a break = no ink of 0.6 within aa of an edge; thin = ink under 0.5 within 0.8 (W - 2aa) on the inked side;
+stray = ink over 0.25 farther than W + aa + 1.5 px from every edge). Each find carries a class: plain, ramp, tie, thru.
+
+| validation (measured, 480 px crops, R 0.28) | result |
+|---|---|
+| 1. open spots on master (16, 6, both smudges) | all four flag (`spots_table.txt`) |
+| 2a. the eye on 13365909, not on d547dab6 | pass (`dbreak:plain 7`, `rthin:plain 1295`; clean on d547dab6) |
+| 2b. the def seam notches on d547dab6, not on master | FAIL: clean on both |
+| 3. the 23 c2 spots, the eye and the notch spots on master | all 25 clean |
+| 4. 12 scenes on master at 100 px/unit | 4,187 finds at 2,703 sites (`scan/summary.txt`) |
+
+- 2b, why: c4 measured those notches as an ink dip of 0.10 to 0.22 over 31-35 px. The test's thresholds need ink
+  to fall below 0.5-0.6, so shallow dips in a band pass. Lowering the bar to catch them was not tried; it would
+  need the band's profile along the edge, not a threshold per pixel.
+- Precision by eye on a seeded sample of 20 (`sample20.txt`): tie and ramp classes 11 of 11 real (smudges, a
+  smeared band); plain class 0 of 9 (5 thin finds are the fill beside an ordinary crossing, 3 breaks show nothing
+  at 4x and do not repeat at 480 px/unit, 1 stray unclear). So: use the tie and ramp classes (2,030 finds on
+  master: stray 829 + 411 + 15, breaks 174 + 236 + 16, thin 329 + 20), and ignore plain at this resolution.
+- Other limits: it cannot see a wrong fill, and a label flip at a membership ramp counts as an edge.
+
+**Part 2: the union** (`eval_u.ts`, `GfEval.MODE`; steps 1, 2, 3, 5 untouched).
+
+| variant | concave corner | seen at the 24 non-open spots |
+|---|---|---|
+| fill (fillets as members) | master's fillet | worse: a stray black triangle or sliver in the fill wherever the corner fill is in frame |
+| tubes (no fillets) | sharp V, paper notch much deeper | different shape; ink mitred at the inside corner |
+| smooth (smooth max, k 0.4 h) | rounded V, same deep notch | different shape; ink pooled at the inside corner; small glitches at spots 1 and 4 |
+| ring (16 + 8 taps on circles W and W/2) | meant to be exact | not usable: taps leave the pixel's gathered pieces and draw wedges; dropped |
+
+- The 29 spots by eye: none better in any variant. Spots 2-5 (16, 6, both smudges) keep their smudges in every
+  variant; spot 6's black wedge is absent in tubes and smooth only because the coverage there changed.
+- The test on 12 scenes: master 4,187 finds, tubes 5,353, smooth 5,524. The increase is `rstray:plain` (10 ->
+  956 / 1,122), the corner pools; one checked in a picture (`dbg/muse_default_tw_22.42_2.92_dbgs.png`), the rest inferred.
+- Cost proxy per covered pixel (muse_hash, def): step 4's extra piece-distance calls are 0.23 and 0.29 on master
+  (2.6 and 2.5 segment tests) against 39 and 28 segment tests in the gather; the union has 0. Wall time per pixel
+  was noise under parallel load (2.3-3.7 us either way). Step 4 is about a tenth of the segment work.
+- Rules a union would remove: side-foot burial, corner-fill burial (`outsideArms`), the arc terms and their burial,
+  `fillBur`, the tangent-point terms, the vertex cap. Only tubes and smooth remove them, at the price of the corner.
+  Keeping master's fillet needs all of them back. Not touched by any union: spots 16, 6 and both smudges.
+
+**Part 3: assessment (inference from the c3-c5 handoffs and `eval.ts`; no code run).**
+- Spot 16: step 3 gives corner k50's fill no gathered member piece against arm c75, so the fill and the arm are two
+  surfaces and step 5 tie-blends them. Spot 6: `member()`'s second loop ramps arm 54 to 0 through arm 55's cut, so
+  chain c11 becomes its own surface and ties with group g36. Smudges: step 5 blends two surfaces whose keys differ
+  by less than zt (c33 / c79, c67 / c8). All three are one decision made per pixel from whichever pieces happen to
+  be gathered: "are these two the same surface, and if not which is on top".
+- The graph knows both answers. Which arms belong to a junction and where each arm's cut lies are table facts
+  already (`kG`, `kCa`, `kCb`, the cuts). A table of arc-length intervals per chain -> surface id would make
+  membership a lookup that is the same for every pixel, and a fixed order per junction and per crossing would
+  replace the tie blend between surfaces the graph can order.
+- Still per pixel: which crossing a pixel belongs to as crossings slide (the order is per crossing, its place
+  moves), the key's interpolation along arc length between pins, cap and reveal ramps, and anti-aliasing where
+  two surfaces really meet.
+- Cost to try: one day in a probe copy (replace `member()` with the interval lookup, order ties by the table,
+  judge by tie-class counts and the 29 spots); then two to three days in `src/` with the GLSL mirror and the pins.
+
+**Next two stages to brief**
+1. Probe: membership from a table-built interval list and tie order from the graph, in a copy of `eval.ts`.
+   Bar: the tie-class counts above fall on all 12 scenes, the 25 clean spots stay clean, spots 16 and 6 and both
+   smudges go clean, sheets for Levi.
+2. Tighten the test: a band-profile check along each exposed edge so the d547dab6 notches flag, and a crossing
+   exemption so the plain class stops firing; then it can replace the reference-based census bars.
