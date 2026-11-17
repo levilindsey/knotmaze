@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1422.
+Next free ID: K1424.
 
 ## Waiting on Levi
 
@@ -321,9 +321,9 @@ Next free ID: K1422.
   parity with today: K1417+K1415 gap casing and fade, K1414 route bands + hover rim, K1414 pulses + telegraph,
   K1395 reveal look, K1396 explore view (docs/design/K1418_muse_batch24.md)
   - owner: muse batch 24 through the K1053 chain, started by claude session 09c7a672-a414-402a-97da-b3176839a2e5; each run's Paseo agent id is in .claude/probes/K1053/chain.log
-  - branch: mainline; last commit: `cf73b721`
+  - branch: mainline; last commit: `24ae5489`
   - evidence: .claude/probes/K1053/ (queue.txt, chain.log, done.txt); .claude/probes/<ID>/out/24<X>/
-  - next: the chain runs 24A-24E; Claude checks each handoff and crops against today's look, then files follow-ups
+  - next: chain runs 24B-24E in order (queue.txt); Claude reviews each handoff and its crops against today, files the follow-ups
   - brief: `docs/design/K1418_muse_batch24.md`
 - **K1310** · Redesign course check (assessment 2026-11-11): (1) write the gate for making rp=outline the
   default; (2) a crop sheet, outline vs form B at the worst spots, so Levi says which differences still
@@ -910,9 +910,6 @@ Every other item below waits on the trigger it names.
 - **K1416** · rp=gf against Levi's bar at K1315 ends: c1 (3a79c999) removed batch 23's dots, but 6 ends now draw
   today's rejected stub (c1_sheet_fixed.png rows 5-10), and the muse_hash 5.53,14.97 eye is still cut (45f0e838);
   K1407 c2 fixes (docs/design/K1407_c2_bar.md); the paint is K1419
-- **K1417** · rp=gf border look: 2830d103 (K1398) paints the casing only in the gap band, a dark dash at every
-  crossing where today draws a faint continuous casing (.claude/probes/K1398/out/crop_border_150.png, _270;
-  Muse 24A)
 - **K1419** · rp=gf paint at junction spots: hard-edged run-colour wedges where batch 23's dots were
   (.claude/probes/K1407/out/c1/c1_sheet_fixed.png rows 1, 2, 4) and the muse_hash smudges (5.88,8.50;
   19.41,14.16), where today's paint is smooth; likely gf_look.ts, after Muse batch 24 (K1407 c2 reports the
@@ -2089,15 +2086,19 @@ Every other item below waits on the trigger it names.
   cut CF per-corner cost (arm-piece reuse across a junction's corners, or a cheaper w) and re-bench.
 - **K1414** · rp=gf look bakes only the traveled spans+caps gold (K1405, 58f8a9ca): pulse crests, the hover
   rim, the telegraph and the K81 junction route bands (beyond the caps' discs) still draw only in today's look
-- **K1415** · K1398 residual: gf's crossing-gap fade uses the full fadeLength (sin=1) and only on
-  under-labelled pixels; today's fadeP is fade*max(sin,0.2) by per-side scale, so at shallow crossings gf's
-  ramp width can differ (measured one shallow edge: a=0.5 position within 0.34 px, amount at today's midpoint
-  pixel 0.74 vs 0.50). Angle/side-aware fade in lkGap (gf_look.ts) is the follow-up.
 - **K1420** · rp=gf bench baseline: preview builds read p50 def 15.7 / fat 15.45 ms per rebuild on master
   (K1407 c1, out/c1/bench_c1*.json) against 23F's dev-server 11.6 / 12.0; cause not measured (matters for
   K1413)
 - **K1421** · test/render/field/g2.test.ts exceeds its 120 s timeout when the machine is loaded (K1407 c1,
   during two censuses); 67 s alone
+- **K1422** · K1417 residual (24A): rp=gf border look, dark-mask dilated IoU 0.21 against today (counts 2,268
+  / 2,398 pass; 2830d103 0.14): dashes gone, outline faint; centre-sampled field ink speckles against today's
+  MSAA mesh coverage, so 0.5 likely needs area-averaged sampling (wider outline sample, MSAA chain), not
+  another threshold (.claude/probes/K1417/out/24A/)
+- **K1423** · K1415 residual (24A): rp=gf shallow-crossing fade still off at eye walls (seed3 ci346 err 0.110,
+  seed5 ci248 0.481; ci77 0.033, ci345 0.063 pass): window-end and along-eye behaviour plus section-colour
+  contamination of the scan, not fadeP width; needs a window-aware gap or a direct edge scan
+  (.claude/probes/K1417/out/24A/fade_*.txt)
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2469,6 +2470,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1415** · rp=gf crossing-gap fade scaled by the crossing angle, today's max(sin, 0.2) (24A). Done in 24ae5489 (2026-11-16).
+- **K1417** · rp=gf border look: the gap-band casing dashes removed; the border draws the faint outline (24A). Done in 24ae5489 (2026-11-16).
 - **K1408** · Muse batch 23: six runs landed, all deploys green: K1407 census 239 -> 61 (bb4a74f1, 45f0e838; regressions vs Levi's bar K1416), K1404 (f1e70048), K1405 (58f8a9ca), K1398 (2830d103; dashes K1417), K1374 pool -41%/-37% on junction builds (84863c99). Done in 9f23f7d1 (2026-11-16).
 - **K1374** · rp=gf build worker: make the slice pool (gf_slice_worker.ts, Muse t2) win on junction builds, or remove it: partition pins by chain and the chunk merge by cell range, or transfer the scene to the slices as typed arrays, so the coordinator's 6-8 ms serial prefix goes. Done in 84863c99 (2026-11-15).
 - **K1398** · rp=gf crossing gaps clear to the background where today's paint a flat dark casing colour: in the border look gf's outline reads redder and fainter (today 11k-21k pixels darker than the background, gf about 1.4k), and in fill today shades the under-thread softly where gf draws a crisp line (K1389 s1 handoff, .claude/probes/K1389/out/z_pair.png). Done in 2830d103 (2026-11-15).
