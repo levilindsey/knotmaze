@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1431.
+Next free ID: K1432.
 
 ## Waiting on Levi
 
@@ -918,6 +918,13 @@ Every other item below waits on the trigger it names.
   demote an arm (form B is not the bar); c5 after c4 (Handoff c3)
 - **K1430** · Phone pass for rp=gf after K1407 c3: the vertex cap's shader compiles and its cost on the Pixel
   (scripts/phone.ps1; d547dab6 onward)
+- **K1431** · rp=gf reveal bars (K1395 leftovers, 24D): on b.FMKB4DIQ sheet frames gf ink counts run
+  1.08-1.29x today (Done wants within 15 percent every frame) and rainbow R/B means +14-26 (want within 10);
+  gf-only pixels spread over the whole maze (thicker/brighter threads, settled-chain border stroke strength,
+  f8 rest-border stroke width 1239 vs 698). ink-dust, bloom-comet and trace-roots sheets unmeasured on the new
+  build; am=instant 0 px vs master gf argued by construction (uFxLive/uRvFx gate every new path), not
+  measured. Sheets: .claude/probes/K1395/out/24Dnew_*, crops out/24D/, tool k1395_sheet.mjs (patient waits;
+  the stock k1387_sheet 60 s waits starve under current load, master included)
 
 ## Residuals (known, not fixed)
 

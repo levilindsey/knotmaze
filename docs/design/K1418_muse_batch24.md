@@ -20,6 +20,10 @@ Batch 23's How to work (`docs/design/K1408_muse_batch23.md`) holds in full, with
   state (`probes.md`'s same-state recipe, K83 and K550). Crops at 4x go under `.claude/probes/<ID>/out/24<X>/`
   (today | master gf | new gf).
 
+### Handoff 24D (Run D, written last, read first)
+
+Run D (K1395, the reveal's colours) landed in 01411434 and is pushed: the look draws over the reveal form, the reveal table carries widthMulFor's width (the rainbow swell), GfFxTable bakes the FX per sample each revealing frame (burn/roots age, rainbow progress, materialize alpha, interior solidity, glow), the look shades the label with ported lkBurn/lkRainbow, and the border composite fills the FX interior while the reveal runs. Full suite green (3085 tests). It is NOT Done by the brief's bars: on b.FMKB4DIQ, burn mean colour went from 40-80 levels off to ~1-11 mid-reveal but counts run 1.08-1.29x today (want within 15% every frame), rainbow R/B means run +14-26 (want within 10), and ink-dust/bloom-comet/trace-roots are unmeasured on the new build. The leftovers are filed as K1431. The t=10.16 answer: master gf drew widths in one cream fill with the look held off, so cooled burn threads read as full cream where today shows char-dark section colours with only the hot fronts bright. One environmental note that cost an hour: the stock k1387_sheet.mjs 60 s waits starve on this machine right now (master gf blocks ~56 s in its first frame too); Run D measured with a patient copy (.claude/probes/K1395/k1395_sheet.mjs, 300 s waits) against a vite preview build. Remaining: Runs E, F, G, H as written below.
+
 ## Run A (24A): K1417 and K1415, the gap casing and fade
 
 2830d103 (K1398) paints the casing only in the gap band, so the border look shows a dark dash at every
