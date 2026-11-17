@@ -31,7 +31,7 @@ import { CTRL_ARC, gfBuild, gfDepth, gfLookDraws, tablesDiff } from "./gf_build"
 import { GfRevealTable, gfRevealing } from "./gf_reveal";
 import { GfExploreTable, gfExploring } from "./gf_explore";
 import { knotUniformValues } from "../paint_model";
-import { GfDynTable, GfFxTable, GfLookGate, GfLookTable, GfPaintTable, dynKey, lookFade, lookGap, lookKey, paintKey, rimKey, rimUniforms, type GfDynSource, type GfPaintSource, type GfRimSource } from "./gf_look";
+import { GfDynTable, GfFxTable, GfGapTable, GfLookGate, GfLookTable, GfPaintTable, dynKey, lookFade, lookGap, lookKey, paintKey, rimKey, rimUniforms, type GfDynSource, type GfGapSource, type GfPaintSource, type GfRimSource } from "./gf_look";
 import { kArcU, kWrap } from "../paint_math";
 import { GfComposite, GfPass, GfTarget, type GfMap } from "./gf_pass";
 
@@ -105,6 +105,12 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
   let ptVer = 0;
   let ptKey = -1;
   const ptPool: Float32Array[] = [];
+  // K1423: the baked gap window (gf_look.ts GfGapTable), snapshotted at install like the positions
+  // (the channel path snapshots the paint the same way: from the followed samples)
+  let gwTab: GfGapTable | null = null;
+  let gwP: Float32Array | null = null;
+  let gwVer = 0;
+  const gwPool: Float32Array[] = [];
   // K1414 part 2 (24C): the baked pulse/telegraph geometry (gf_look.ts GfDynTable), snapshotted like the paint
   let dynTab: GfDynTable | null = null;
   let dynP: Float32Array | null = null;
@@ -130,6 +136,8 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
     lkMs: [] as number[], lkColors: 0, lkKeys: 0, lkRows: 0, lkPos: 0, lkPosMs: [] as number[], lkUpMs: [] as number[],
     // K1405: the paint table's CPU bakes per snapshot (ms)
     ptMs: [] as number[],
+    // K1423: the gap window table's CPU bakes per snapshot (ms)
+    gwMs: [] as number[],
     // K1396 (24E): the explore table's CPU builds per declaration change (ms, knots)
     exMs: [] as number[], exKnots: [] as number[],
     // K1414 part 2 (24C): the dyn table's CPU bakes per snapshot (ms)
@@ -504,6 +512,36 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
     ptVer++;
   };
 
+  // K1423: this build's baked gap window (gf_look.ts GfGapTable), into a spare array; null on
+  // the same gates as ptSnap. The crossings come from the particle system's current passes.
+  const gwSnap = (): Float32Array | null => {
+    const r = ctx.scene.renderer;
+    if (!r || !gwTab || lkKey < 0 || !pass?.lookable || opts().look === false) return null;
+    const t0 = performance.now();
+    const xr = r as unknown as {
+      ps: { crossings: readonly { over: { chain: number }; under: { chain: number } }[] };
+      renderCtrl: (p: never) => number;
+      style: { threadWidth: number };
+    };
+    const src = r as unknown as GfGapSource;
+    const P = gwTab.values({
+      kd: src.kd, kcv: src.kcv, chainSamples: src.chainSamples,
+      crossings: xr.ps.crossings.map((c) => ({
+        overChain: c.over.chain, overCtrl: xr.renderCtrl(c.over as never),
+        underChain: c.under.chain, underCtrl: xr.renderCtrl(c.under as never),
+      })),
+      fillHalf: xr.style.threadWidth / 2, margin: lookGap(r), fade: lookFade(r),
+    }, gwPool.pop());
+    stats.gwMs.push(performance.now() - t0);
+    return P;
+  };
+  const gwShow = (P: Float32Array | null): void => {
+    if (!P) return;
+    if (gwP && gwP !== P && gwPool.length < 4) gwPool.push(gwP);
+    gwP = P;
+    gwVer++;
+  };
+
   // K1414 part 2 (24C): this frame's baked pulse/telegraph geometry, into a spare array; null on
   // the same gates as ptSnap (the layout is the look positions', so it needs the look table).
   const dynSnap = (): Float32Array | null => {
@@ -567,6 +605,7 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
     // K1389 s2: the positions gathered with this build (else this frame's: an in-thread or channel build)
     lkShow(lkNext ?? lkSnap());
     ptShow(ptNext ?? ptSnap());
+    gwShow(gwSnap());
     dynShow(dynNext ?? dynSnap());
     pass!.upload(T);
     stats.packMs.push(pass!.packMs);
@@ -790,6 +829,7 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
       if (pass.lookable && o.look !== false) {
         lkTab ??= new GfLookTable();
         ptTab ??= new GfPaintTable();
+        gwTab ??= new GfGapTable();
         dynTab ??= new GfDynTable();
         fxTab ??= new GfFxTable();
         if (lkGate.changed(r)) {
@@ -854,7 +894,7 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
         } else {
           const up = pass.lkPMs;
           if (rvDrawn) fxShow(fxSnap());
-          pass.setLook(lkTab, gap, lkP, lkPVer, ptP, ptVer, fade, dynP, dynVer, teleAtU, fxP, fxVer, rvDrawn, rimUniforms(rimSrc(r)));
+          pass.setLook(lkTab, gap, lkP, lkPVer, ptP, ptVer, fade, dynP, dynVer, teleAtU, fxP, fxVer, rvDrawn, rimUniforms(rimSrc(r)), gwP, gwVer);
           if (pass.lkPMs !== up) stats.lkUpMs.push(pass.lkPMs);
         }
       } else if (lkGap >= 0) {

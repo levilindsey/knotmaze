@@ -67,7 +67,8 @@ describe("K1389 look form", () => {
       expect(f).toContain("uniform float uLkF;");
       expect(f).toContain("float lkGap(float key, vec2 p, vec2 qU, int cU)");
       expect(f).toContain("float fw = max(uLkF * max(sinT, 0.2), 2.0 * uAA);");
-      expect(f).toContain("1.0 - ss(uH + uLkG, uH + uLkG + fw, pd[j])");
+      expect(f).toContain("float kk = clamp((e + 0.5 * pxw) / max(fw, pxw), 0.0, 1.0);");
+      expect(f).toContain("float cut = (1.0 - kk * kk * (3.0 - 2.0 * kk)) * inner * exg;");
       expect(f).not.toContain("CASE");
       expect(f).toContain("float lkg = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : 0.0; ink *= 1.0 - lkg; cov *= 1.0 - lkg;");
     }

@@ -41,7 +41,7 @@
  * drops a hidden segment and a corner draws only under its gate flag (both in exAt's sites, live only while
  * uExLive is set), lkGap's cut scales by the over piece's visibility at its foot, and at the label the
  * visibility reshaped by the end look (lkExploreLook, explore_glsl.ts kExploreLook's port: the glow tint,
- * fray and dots/beacon shapes included) multiplies ink and coverage after the paint, pulses and FX.
+ * fray and dots/beacon shapes included) multiplies ink and coverage after the paint, pulses and FX. K1423: lkGap's cut is windowed by the baked winM (GfGapTable, uGw), as today's gap shader windows it.
  */
 import { kArcOfCtrl, kArcU, kBurnAge, kCA, kFxColor, kFxTail, kGlow, kIgnition, kSampleArc, kWall, kWrap, knotSection, type KChain, type KData, type KIgn } from "../paint_math";
 import { PAINT_CONST, PULSE_RIDGE_FADE } from "../paint_const";
@@ -359,6 +359,194 @@ export class GfPaintTable {
       const pad = c.closed ? V[pb] : V[pb + kv - 1];
       for (let k = kv; k < end; k++) V[pb + k] = pad;
       pb += end;
+    }
+    this.nPos = nPos;
+    this.ms = performance.now() - t0;
+    return V;
+  }
+}
+
+/**
+ * K1423 (24G): today's crossing-gap WINDOW for gf. Today's shader (gap_mask.ts gapKeepAt) cuts the under
+ * thread only inside a window marched along it (ribbon/crossing_gaps.ts marchUnder, perp look): the window
+ * ends where the centreline distance clears both half-widths + margin + fade, or fade / max(sin, 0.2) of arc
+ * past the all-lanes exit (the eye-wall limit), capped by the room to the neighbouring passes (a twist twin
+ * at half the gap); at its end the fade dissolves over the last half fade of arc (the window-end ramp).
+ * lkGap had no window, so along an eye wall (centreline distance inside the fade band for the whole wall)
+ * it cut the under thread end to end (seed5 ci248: gf amount 0.02 at today's 0.5 pixel). This bake marches
+ * the same window per crossing on the sample polylines and stores, per kept under sample in the look
+ * positions' layout, winM: the signed arc distance to the nearest window end (positive inside), the max
+ * over the chain's crossings - gapKeepAt's m for the slot whose window ends soonest, which is the slot
+ * lkGap's cut at that foot belongs to wherever an over pass is inside its fade band. lkGap applies today's
+ * inWin and window-end fs to its cut. Not baked: the junction-clearance scales and protect (the measured
+ * slots carry scales of 1), and the joint's own window cap (the junction lane, K1407).
+ */
+export interface GapSamples { positions: ArrayLike<number>; count: number; closed: boolean; total: number; arcPer: number }
+export interface GfGapCrossing { overChain: number; overCtrl: number; underChain: number; underCtrl: number }
+export interface GfGapSource extends GfLookSource {
+  crossings: readonly GfGapCrossing[];
+  fillHalf: number; margin: number; fade: number;
+}
+// crossing_gaps.ts's march constants, kept by value here (MARCH_STEP, GAP_EXIT_PAD, the uCap floors/reach).
+const GAP_MARCH_STEP = 0.07;
+const GAP_EXIT_PAD = 0.05;
+const GAP_FAR = 64; // winM far outside any window
+
+function gapPointAt(S: GapSamples, arc: number, o: { x: number; y: number }): void {
+  const a = S.closed ? ((arc % S.total) + S.total) % S.total : Math.max(0, Math.min(S.total, arc));
+  const fi = Math.max(0, Math.min(S.closed ? S.count : S.count - 1, a / S.arcPer));
+  const i0 = Math.floor(fi) % S.count;
+  const i1 = S.closed ? (i0 + 1) % S.count : Math.min(i0 + 1, S.count - 1);
+  const u = fi - Math.floor(fi);
+  const P = S.positions;
+  o.x = P[i0 * 2] + (P[i1 * 2] - P[i0 * 2]) * u;
+  o.y = P[i0 * 2 + 1] + (P[i1 * 2 + 1] - P[i0 * 2 + 1]) * u;
+}
+
+/**
+ * One crossing's window along the under thread (marchUnder's perp branch on the sample polylines):
+ * [winNeg, winPos] of arc from the under centre. capNeg/capPos bound the march (the caller's neighbour
+ * caps); a side whose distance never clears runs to its cap, as the solve's does.
+ */
+export function gapWindow(su: GapSamples, so: GapSamples, uC: number, oC: number, fillHalf: number, margin: number, fade: number, capNeg: number, capPos: number): [number, number] {
+  const R = 3.4; // the over polyline's reach around the crossing (the march's caps stay inside it)
+  const stepO = Math.max(1, Math.round(0.1 / so.arcPer)) * so.arcPer; // today's coarse march spacing
+  const nO = Math.max(2, Math.round((2 * R) / stepO) + 1);
+  const ox = new Float64Array(nO), oy = new Float64Array(nO);
+  const pt = { x: 0, y: 0 }, p0 = { x: 0, y: 0 }, p1 = { x: 0, y: 0 };
+  for (let i = 0; i < nO; i++) { gapPointAt(so, oC - R + i * stepO, pt); ox[i] = pt.x; oy[i] = pt.y; }
+  const dAt = (arcU: number): { d: number; sin: number } => {
+    gapPointAt(su, arcU, pt);
+    let bd = Infinity, bi = 0;
+    for (let i = 0; i + 1 < nO; i++) {
+      const ax = ox[i], ay = oy[i], dx = ox[i + 1] - ax, dy = oy[i + 1] - ay;
+      const l2 = dx * dx + dy * dy;
+      const u = l2 > 0 ? Math.max(0, Math.min(1, ((pt.x - ax) * dx + (pt.y - ay) * dy) / l2)) : 0;
+      const ex = pt.x - ax - dx * u, ey = pt.y - ay - dy * u, d2 = ex * ex + ey * ey;
+      if (d2 < bd) { bd = d2; bi = i; }
+    }
+    gapPointAt(su, arcU - su.arcPer, p0); gapPointAt(su, arcU + su.arcPer, p1);
+    let tux = p1.x - p0.x, tuy = p1.y - p0.y;
+    const lu = Math.hypot(tux, tuy) || 1; tux /= lu; tuy /= lu;
+    const oi = Math.max(0, Math.min(nO - 2, bi));
+    let tox = ox[oi + 1] - ox[oi], toy = oy[oi + 1] - oy[oi];
+    const lo = Math.hypot(tox, toy) || 1; tox /= lo; toy /= lo;
+    return { d: Math.sqrt(bd), sin: Math.abs(tux * toy - tuy * tox) };
+  };
+  const march = (dir: number, cap: number): number => {
+    const allD = 2 * fillHalf + margin, exitD = allD + fade;
+    let all = Number.NaN, allSin = 1, win = Number.NaN, prevS = 0, prevD = Number.NaN;
+    for (let s = 0; ; s += GAP_MARCH_STEP) {
+      const sc = Math.min(s, cap);
+      const { d, sin } = dAt(uC + dir * sc);
+      const cross = (lvl: number): number => Number.isNaN(prevD) || d === prevD ? sc : prevS + (sc - prevS) * ((lvl - prevD) / (d - prevD));
+      if (Number.isNaN(all) && d >= allD) { all = cross(allD); allSin = sin; }
+      if (Number.isNaN(win) && d >= exitD) win = Math.min(cap, cross(exitD) + GAP_MARCH_STEP + GAP_EXIT_PAD);
+      if (Number.isNaN(win) && !Number.isNaN(all) && sc >= all + fade / Math.max(allSin, 0.2) + GAP_MARCH_STEP) win = Math.min(cap, sc + GAP_EXIT_PAD);
+      if (!Number.isNaN(win) || sc >= cap) break;
+      prevD = d; prevS = sc;
+    }
+    return Number.isNaN(win) ? cap : win;
+  };
+  return [march(-1, capNeg), march(1, capPos)];
+}
+
+export class GfGapTable {
+  /** The baked entries (samples, plus one a closed chain), in positions()' layout. */
+  nPos = 0;
+  ms = 0;
+
+  /** Each kept under sample's winM (see the header), in GfLookTable.positions' layout. */
+  values(r: GfGapSource, out?: Float32Array): Float32Array {
+    const t0 = performance.now();
+    const D = r.kd;
+    const G = D.geom;
+    const nC = r.chainSamples.length;
+    const sam = (ch: number): GapSamples | null => {
+      if (ch < 0 || ch >= nC || !lookValid(r, ch)) return null;
+      const c = r.kcv[ch]; const sm = r.chainSamples[ch]!;
+      return { positions: sm.positions, count: sm.count, closed: c.closed, total: G[c.geom * 4], arcPer: G[c.geom * 4 + 1] };
+    };
+    const cents = r.crossings.map((x) => {
+      const so = sam(x.overChain), su = sam(x.underChain);
+      if (!so || !su) return null;
+      return { x, so, su, oC: kArcOfCtrl(D, r.kcv[x.overChain], x.overCtrl), uC: kArcOfCtrl(D, r.kcv[x.underChain], x.underCtrl) };
+    });
+    // per under chain: sample index -> winM (the max over its crossings)
+    const byChain = new Map<number, Float32Array>();
+    const CUT_REACH = Math.max(1.35, r.fillHalf * 6.5, 4.5);
+    for (const e of cents) {
+      if (!e) continue;
+      const { x, su, so, uC, oC } = e;
+      const self = x.overChain === x.underChain;
+      // the neighbouring passes on the under chain (setupUnder's uCaps: NB_CLEAR, twins at half)
+      let gapN = Infinity, gapP = Infinity, twinN = false, twinP = false;
+      for (const o of cents) {
+        if (!o) continue;
+        const passes = [
+          { ch: o.x.overChain, arc: o.oC, ownOver: o === e, other: o.x.underChain },
+          { ch: o.x.underChain, arc: o.uC, ownOver: false, other: o.x.overChain },
+        ];
+        for (const p of passes) {
+          if (p.ch !== x.underChain || (o === e && !p.ownOver)) continue;
+          let fwd = p.arc - uC;
+          if (su.closed) fwd = ((fwd % su.total) + su.total) % su.total;
+          const bwd = su.closed ? su.total - fwd : -fwd;
+          const twin = p.ownOver || p.other === x.overChain;
+          if (fwd > 1e-9 && fwd < gapP) { gapP = fwd; twinP = twin; }
+          if (bwd > 1e-9 && bwd < gapN) { gapN = bwd; twinN = twin; }
+        }
+      }
+      let splitP = Infinity, splitN = Infinity;
+      if (self) {
+        let fwd = uC - oC, bwd = oC - uC;
+        if (su.closed) { fwd = ((fwd % su.total) + su.total) % su.total; bwd = su.total - fwd; }
+        else { if (!(fwd > 0)) fwd = Infinity; if (!(bwd > 0)) bwd = Infinity; }
+        splitP = Math.max(0.12, bwd / 2 - 0.08); // setupUnder: uCapPos takes splitBwd
+        splitN = Math.max(0.12, fwd / 2 - 0.08);
+      }
+      const roomP = su.closed ? su.total / 4 : su.total - uC;
+      const roomN = su.closed ? su.total / 4 : uC;
+      const capP = Math.max(0.15, Math.min(CUT_REACH, (twinP ? 0.5 : 0.8) * gapP, splitP, roomP));
+      const capN = Math.max(0.15, Math.min(CUT_REACH, (twinN ? 0.5 : 0.8) * gapN, splitN, roomN));
+      const [wn, wp] = gapWindow(su, so, uC, oC, r.fillHalf, r.margin, r.fade, capN, capP);
+      let tmp = byChain.get(x.underChain);
+      if (!tmp) { tmp = new Float32Array(su.count).fill(-GAP_FAR); byChain.set(x.underChain, tmp); }
+      for (let k = 0; k < su.count; k++) {
+        const arc = k * su.arcPer;
+        let off = arc - uC;
+        if (su.closed) { off = ((off % su.total) + su.total) % su.total; if (off > su.total / 2) off -= su.total; }
+        const v = (off >= 0 ? wp : wn) - Math.abs(off);
+        if (v > tmp[k]) tmp[k] = v;
+      }
+    }
+    let nPos = 0;
+    for (let ch = 0; ch < nC; ch++) if (lookValid(r, ch)) nPos += r.chainSamples[ch]!.count + (r.kcv[ch].closed ? 1 : 0);
+    const len = Math.max(1, Math.ceil(nPos / GF_TW)) * GF_TW;
+    const V = out && out.length >= len ? out : new Float32Array(len);
+    V.fill(-GAP_FAR, 0, len);
+    let pb = 0;
+    for (let ch = 0; ch < nC; ch++) {
+      if (!lookValid(r, ch)) continue;
+      const c = r.kcv[ch];
+      const count = r.chainSamples[ch]!.count;
+      const tmp = byChain.get(ch);
+      if (tmp) {
+        // compact to the kept samples and pad the tail, exactly as positions() does
+        const xy = r.chainSamples[ch]!.positions;
+        let kv = 0;
+        let l = -1;
+        for (let k = 0; k < count; k++) {
+          if (l >= 0 && xy[2 * k] === xy[2 * l] && xy[2 * k + 1] === xy[2 * l + 1]) continue;
+          V[pb + kv++] = tmp[k];
+          l = k;
+        }
+        if (c.closed && kv > 1 && xy[2 * l] === xy[0] && xy[2 * l + 1] === xy[1]) kv--;
+        const end = count + (c.closed ? 1 : 0);
+        const pad = c.closed ? V[pb] : V[pb + kv - 1];
+        for (let k = kv; k < end; k++) V[pb + k] = pad;
+      }
+      pb += count + (c.closed ? 1 : 0);
     }
     this.nPos = nPos;
     this.ms = performance.now() - t0;
@@ -785,6 +973,7 @@ function lkF(v: number): string { const s = String(v); return /[.eE]/.test(s) ? 
 const M_LOOK = `
 uniform highp sampler2D uLk; uniform highp sampler2D uLkP; uniform float uLkG; uniform float uLkF;
 uniform highp sampler2D uPt; uniform vec3 uGold;
+uniform highp sampler2D uGw; uniform float uGwLive;
 uniform vec4 uRimA; uniform vec4 uRimB; uniform vec4 uRimC; uniform vec3 uHov;
 vec4 LKT(int i) { return texelFetch(uLk, ivec2(i & TWM, i >> LOG), 0); }
 float LKP(int i) { return texelFetch(uLkP, ivec2(i & TWM, i >> LOG), 0).x; }
@@ -852,6 +1041,20 @@ float lkPaint(int c, vec2 q) {
   if (k >= last) { k = last; u = 0.0; }
   int b = int(H.y);
   return mix(PT(b + k), PT(b + min(k + 1, last)), u);
+}
+float GW(int i) { return texelFetch(uGw, ivec2(i & TWM, i >> LOG), 0).x; }
+// K1423: chain c's gap-window winM at segment q (gf_look.ts GfGapTable's bake, lkPaint's walk)
+float lkWinM(int c, vec2 q) {
+  vec4 H = LKT(c);
+  if (H.z < 1.0) return -64.0;
+  bool closed = H.w > 0.5;
+  int k = int(q.x); float u = q.y;
+  if (!closed && F(uOV + int(F(uOCh + 3 * c).x)).z < 0.0) k -= 1;
+  int last = closed ? int(H.z) : int(H.z) - 1;
+  if (k < 0) { k = 0; u = 0.0; }
+  if (k >= last) { k = last; u = 0.0; }
+  int b = int(H.y);
+  return mix(GW(b + k), GW(b + min(k + 1, last)), u);
 }
 uniform highp sampler2D uDyn; uniform vec4 uKPulseU; uniform vec4 uKReachU; uniform vec3 uPulseCol; uniform vec4 uTeleU; uniform float uTeleAtU; uniform float uTeleScale; uniform float uPulseW;
 vec4 DT(int i) { return texelFetch(uDyn, ivec2(i & TWM, i >> LOG), 0); }
@@ -1032,6 +1235,8 @@ vec2 lkTan(int c, float q) {
 float lkGap(float key, vec2 p, vec2 qU, int cU) {
   float g = 0.0;
   vec2 tu = lkTan(cU, qU.x);
+  float wm = uGwLive > 0.5 ? lkWinM(cU, qU) : 1e3;
+  float pxw = 2.0 * uAA;
   for (int j = 0; j < np; j++) {
     if (!(pkey[j] > key + uZt)) continue;
     float inner = ss(uH - uAA, uH + uAA, pd[j]);
@@ -1039,7 +1244,17 @@ float lkGap(float key, vec2 p, vec2 qU, int cU) {
     float sinT = abs(tu.x * to.y - tu.y * to.x);
     float fw = max(uLkF * max(sinT, 0.2), 2.0 * uAA);
     float exg = uExLive > 0.5 ? exAt(PC(j), lkArc(PC(j), lookQ(j, p))).x : 1.0;
-    g = max(g, (1.0 - ss(uH + uLkG, uH + uLkG + fw, pd[j])) * inner * exg);
+    float e = pd[j] - uH - uLkG;
+    float kk = clamp((e + 0.5 * pxw) / max(fw, pxw), 0.0, 1.0);
+    float cut = (1.0 - kk * kk * (3.0 - 2.0 * kk)) * inner * exg;
+    // K1423: today's window (gap_mask.ts gapKeepAt): the cut lives only inside the window marched
+    // along the under thread, and its fade part dissolves over the window's last half fade of arc
+    if (uGwLive > 0.5) {
+      float fs = clamp(wm / max(0.5 * uLkF, pxw), 0.0, 1.0);
+      fs = mix(1.0, fs * fs * (3.0 - 2.0 * fs), clamp(e / pxw, 0.0, 1.0));
+      cut *= clamp(wm / pxw + 0.5, 0.0, 1.0) * fs;
+    }
+    g = max(g, cut);
     // K1417: no casing term (the composite clears the gap to the background in every look).
   }
   return g;
