@@ -1,0 +1,6 @@
+columns: master | tgr | ol
+row 1: g41_user_tw64:17.80:9.55
+row 2: muse_hash:20.02:3.95
+row 3: g41_def_tw64:32.40:1.90
+row 4: muse_hash:2.22:23.59
+row 5: g41_def_tw64:25.22:17.71

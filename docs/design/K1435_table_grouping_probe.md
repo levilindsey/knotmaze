@@ -60,3 +60,28 @@ comes first. A compaction is not a stop: re-read this brief and `git log`. On st
 `### Handoff K1435` here, commit, and report. Lead the report with the verdict in plain words (move grouping to
 the tables, or not), then the sheet paths, the numbers, the stages to brief, a `Ledger items` list and K1435's
 handle fields.
+
+### Handoff K1435
+
+Stopped 2026-11-16 about 19:45 (started 19:06:44), all five Done items answered. Probe only: nothing under `src/` or `test/` changed.
+
+**Verdict.** Move MEMBERSHIP to the tables, not the order. A piece inside a junction arm's home interval (arm root to the crossing that cuts it, a per-arm table fact) belongs to that junction's group, and the per-pixel part that must stay is one ramp: membership fades 1 -> 0 as the piece's own depth goes 0 -> 3 zt (probe mode `tgr`). Order from the graph with no blend (`tg`, `tgm`) is not the look: it trades the smears for crisp cut stubs, slivers and wedges. Fairly sure of the mechanism (measured on 12 scenes); the remaining look (a thread that fades in softly out of the fill) is Levi's call.
+
+**Measured.**
+- 29 spots, `tgr`: 27 clean by K1433's test. Spot 16 and smudge 1 clean by test and by eye. Spot 6 (muse_hash:29.74:20.26) flags `rstray:tie 2549`: by eye the fill is clean and the thread fades in softly (no smear, no cut end). Smudge 2 (muse_hash:19.41:14.16) flags `dstray:tie 6`, the same 6 px as master: a small soft wedge under the top thread, also on master and rp=outline. The 25 others: clean by the test, and identical to master by eye at 4x (all six sheets viewed).
+- Scan, 12 scenes, tie+ramp finds / px: master 2030 / 82296; `tgm` 308 / 14854; `tgn` 695 / 24554; `tgr` 547 / 19287. Per scene: `out/scan_tgm.txt`, `scan_tgn.txt`, `scan_tgr.txt`. `tgr` by kind: dbreak:tie 174->23, dstray:tie 829->24, rbreak:tie 236->13, rstray:tie 411->99, rthin:tie 329->40, but rthin:ramp 20->285 and rstray:ramp 15->58 (the new membership ramp is itself flagged).
+- Seeded sample of 20 of tgr's remaining finds, viewed at 4x (`out/sheet_sampletgr_1..4.png`): 9 show nothing visible (rthin:ramp of 3-22 px); 5 are a thread end fading softly out of a fill or a soft shadow where a thread dives under, the same on master; 2 are the multi-thread overlap sites (muse_hash:22.09:34.40, 20.02:3.95) where tgr removes the ghosts but leaves soft bands and a small crisp notch at an outline; 1 is tgr-only: a small soft dark nub on an outline (muse_hash:34.29:18.93); 1 is WORSE than master: g41_user_tw64:17.80:9.55, a soft dark band across the fill; 2 are faint soft creases weaker than master's.
+- Worst 10 master tie sites (`out/sheet_worst_1..2.png`): tgr removes the ghost threads in 8; ring:19.63:20.34 and g41_ring_tw64:19.78:20.37 are unchanged in every mode (two threads lying along each other, not a demoted arm).
+- Per-pixel work (scan `cost`, per active pixel; master -> tgr): muse_hash segment tests offered 39.2 -> 39.2, segments kept 2.6 -> 3.8, piece calls 0.23 -> 0.33, configurations 1.125 -> 1.063; def 27.8 -> 27.8, 2.5 -> 2.6, 0.29 -> 0.29, 1.09 -> 1.053. The probe's `home()` is one more pass over the chain's arms per piece (not in those counts); in `src/` it folds into `member()`'s arm loop. Timings in the JSONs were taken under load without the lock: do not quote them.
+
+**Inferred, not verified.** The probe paints debug run colours; smudges are judged on ink, so the app's look should match, but it was not rendered in the app. RZ = 3 was the only ramp width tried; `tgs` (tgr + graph order) was scanned on spots only and not viewed.
+
+**What `src/` takes.**
+- Tables: per arm a home extent (`max(aL, min(dist to the next pin ahead, 4h))`, or aL when uncut). The arm record (`gf_pack.ts`, 2 texels) has three free floats, so zero growth; the `o.ka` key-arm records likewise. Filled in `tables.ts` next to aSR/aDir/aL/aLcut/aG (line ~307).
+- Evaluator and shader: `member()` (eval.ts; gf_glsl.ts:871, called at 1367, 1466, 1487) gains the home test and the depth ramp. More pieces ramp, so the zc "no ramps" P0 depth class and MAXR = 2 need a look.
+- Pins that move: `gf_pack.test.ts` (layout), `gf_build.test.ts` (tables bit for bit), `gf_keys.test.ts`, `gf_tier_forms.test.ts` (the grp / zc / zb / zk / zf text forms), `gf_split`, `gf_look`, and any gf census or golden.
+- Stages: (A) tables + eval.ts on the CPU. Bar: 29 spots at least 27 clean with the 25 unchanged; scan tie+ramp at most 547 / 19287; table size unchanged. (B) GLSL mirror and tier forms. Bar: CPU-vs-GPU parity as today's gf tests; frame cost on muse_hash and def within noise under the perf lock. (C) Levi's look call on sheets: soft fade-in vs master, and RZ. (D) separate items: the lie-along sites no mode changes; the tgr-worse site g41_user_tw64:17.80:9.55; the rthin:ramp rise.
+
+**Pictures** (`.claude/probes/K1435/out/`, columns in each `.txt`): `sheet_spots_1..6.png` (29 spots: master | tgr | rp=outline; the four open spots are rows 2-5 of sheet 1), `sheet_worst_1..2.png` (worst 10), `sheet_variants_open.png` and `sheet_variants_worst_1..2.png` (master | tgr | tgm | tgn | outline: soft vs crisp), `sheet_sampletgr_1..4.png` (tgr's sample), `sheet_sample_1..4.png` (tgm's sample: master | tgm | tgr | outline).
+
+**Rebuild.** `node .claude/probes/K1435/k1435_mkprobe.mjs` regenerates `eval_t.ts`, `k1435_spots.ts`, `k1435_scan.ts` from the tracked sources; modes are `GfEval.MODE` (master, tg, tgo, tgu, tgx, tgm, tgn, tgr, tgs).
