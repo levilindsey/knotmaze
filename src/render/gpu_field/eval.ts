@@ -26,6 +26,8 @@ export const MAXR = 2; // ramping pieces mixed per pixel
 export const MAXK = 6; // corners per pixel
 const TANGENT_TERMS = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_TANG !== "0";
 const SELF_BURIAL =(globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_SELFBUR === "1";
+const ARC_BURIAL = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_ARCBUR === "1";
+const IN_F = (r: number, W: number): number => (r > 0 ? Math.min(W, 0.5 * r) / r : 0); // K1407 c1: the paper-side probe's step, a fraction of r
 const MAXS = MAXP + MAXK; // surfaces
 
 export function ss(e0: number, e1: number, x: number): number {
@@ -328,11 +330,17 @@ export class GfEval {
         const qx = T.kCx[k] + (T.kR[k] * (x - T.kCx[k])) / rho; const qy = T.kCy[k] + (T.kR[k] * (y - T.kCy[k])) / rho;
         let bur = 0;
         for (let m = 0; m < this.np && bur < 1; m++) {
-          if (this.psurf[m] !== S) continue;
+          if (this.psurf[m] !== S || (ARC_BURIAL && (this.pc[m] === T.kCa[k] || this.pc[m] === T.kCb[k]))) continue;
           const wb2 = 1 - ss(h - 2 * aa, h, Math.sqrt(this.pieceD(m, qx, qy)));
           if (wb2 > bur) bur = wb2;
         }
-        const val = band2(Dk); // K1407 23A: form B's arc is unburied (its own arms cover the arc point near the tangents)
+        if (ARC_BURIAL) for (let i2 = 0; i2 < this.nk && bur < 1; i2++) {
+          const k2 = this.kk[i2]; if (k2 === k || T.kG[k2] !== S) continue;
+          const ix = qx + (T.kCx[k] - qx) * IN_F(T.kR[k], W); const iy = qy + (T.kCy[k] - qy) * IN_F(T.kR[k], W);
+          const rq = Math.hypot(ix - T.kCx[k2], iy - T.kCy[k2]);
+          if (rq > T.kR[k2] && rq < T.kRmax[k2] && this.inSector(k2, ix, iy) && this.outsideArms(k2, -1, ix, iy)) bur = 1;
+        }
+        const val = (ARC_BURIAL ? 1 - bur : 1) * band2(Dk); // K1407 23A: form B's arc is unburied (its own arms cover the arc point near the tangents)
         if (val > v) { v = val; wk = 2; wa = k; wb = 0; }
       }
       // form B's T_TA / T_TB: a fillet's tangent points are points of the trimmed outline, so their distance
@@ -345,11 +353,17 @@ export class GfEval {
           const dT = Math.sqrt((x - tx) * (x - tx) + (y - ty) * (y - ty)); if (!(dT < W + aa)) continue;
           let bur = 0;
           for (let m = 0; m < this.np && bur < 1; m++) {
-            if (this.psurf[m] !== S) continue;
+            if (this.psurf[m] !== S || (ARC_BURIAL && (this.pc[m] === T.kCa[k] || this.pc[m] === T.kCb[k]))) continue;
             const wb2 = 1 - ss(h - 2 * aa, h, Math.sqrt(this.pieceD(m, tx, ty)));
             if (wb2 > bur) bur = wb2;
           }
-          const val = band(dT) * ss(-aa, aa, D); // K1407 23A: form B's tangent term (om * aS * band(dT), unburied)
+          if (ARC_BURIAL) for (let i2 = 0; i2 < this.nk && bur < 1; i2++) {
+            const k2 = this.kk[i2]; if (k2 === k || T.kG[k2] !== S) continue;
+            const ix = tx + (T.kCx[k] - tx) * IN_F(T.kR[k], W); const iy = ty + (T.kCy[k] - ty) * IN_F(T.kR[k], W);
+            const rq = Math.hypot(ix - T.kCx[k2], iy - T.kCy[k2]);
+            if (rq > T.kR[k2] && rq < T.kRmax[k2] && this.inSector(k2, ix, iy) && this.outsideArms(k2, -1, ix, iy)) bur = 1;
+          }
+          const val = (ARC_BURIAL ? 1 - bur : 1) * band(dT) * ss(-aa, aa, D); // K1407 23A: form B's tangent term (om * aS * band(dT), unburied)
           if (val > v) { v = val; wk = 4; wa = k; wb = t; }
         }
       }
