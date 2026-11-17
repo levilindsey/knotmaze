@@ -24,6 +24,8 @@ import { CH, MAXP, type GfTables } from "./tables";
 
 export const MAXR = 2; // ramping pieces mixed per pixel
 export const MAXK = 6; // corners per pixel
+/** K1438: GfEval.fadeLength's default, url_state's `fadeLength` default (a test pins the two equal). */
+export const GF_FADE_LENGTH = 0.14;
 const TANGENT_TERMS = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_TANG !== "0";
 const SELF_BURIAL =(globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_SELFBUR === "1";
 const MAXS = MAXP + MAXK; // surfaces
@@ -65,20 +67,48 @@ export class GfEval {
   private sord = new Int32Array(MAXS); private ns = 0;
   readonly out: GfPixel = { ink: 0, cov: 0, chain: -1, s: 0, winKind: 0, winA: -1, winB: 0, nSeg: 0, nK: 0 };
 
+  /**
+   * K1438: the crossing fade (`fadeLength`, world units; url_state's default, pinned by a test), read per pixel
+   * like a uniform: set it at any time, no table rebuild. With home membership on (T.homeOn), a piece inside an
+   * arm's home interval stays in the arm's junction group while its depth is near 0 and leaves it as the thread
+   * dives: membership 1 - ss(0, Z, |z|), Z = fadeLength * amp / win, the depth a full-window hat (slope amp / win)
+   * reaches over fadeLength of arc. So the fade runs over fadeLength of arc as the dive starts (less where two pins
+   * share a shorter window), the same length the look's crossing gap ramps over (gf_look.ts lkGap); 0 is a hard step
+   * at the dive's first sample (membership only where |z| is exactly 0). K1435's tgr (3 zt) is fadeLength 0.3 win.
+   */
+  fadeLength = GF_FADE_LENGTH;
+
   constructor(T: GfTables) { this.T = T; }
+
+  /** K1438: the home membership's ramp at depth |z| = az (1 = full member). */
+  homeRamp(az: number): number {
+    const Z = (this.fadeLength * this.T.amp) / this.T.win;
+    if (!(Z > 0)) return az > 0 ? 0 : 1;
+    return 1 - ss(0, Z, az);
+  }
+
+  /** Membership of (c, s) as eval() takes it (group -1 = none; ramp 1 = full): for tests and probes. */
+  memberAt(c: number, s: number): { g: number; ramp: number } {
+    this.member(c, s, this.depth(c, s));
+    return { g: this.mg, ramp: this.mramp };
+  }
 
   /** Membership of (c, s): group (-1 none) and cap ramp (form B's member()). K1407 c5: loop 2 skips the arms rooted
    * where loop 1's arm is (a through pass's other half). Their cut reaches back past the root by the straight reach
    * h / tan(theta / 2), which a shallow crossing on curved threads stretches over the whole of loop 1's arm (muse_hash
    * 29.74,20.26: 14 degrees, reach 3.2, the arm 1.18 long), demoting it and drawing an outline inside the junction's
    * fill, or burying a corner fill's other arm (22.56,34.84). A pass behind loop 1's arm's root already bounds it
-   * through tables' k uB. Roots compare within 1e-4 (the GLSL reads them as float32). */
-  private member(c: number, s: number): void {
+   * through tables' k uB. Roots compare within 1e-4 (the GLSL reads them as float32).
+   * K1438 (T.homeOn): the same loop finds the home arm, the nearest root whose home interval (aHome) holds s; a
+   * piece that is not already a full member takes that arm's group at homeRamp(|z|) when that is more than it has. */
+  private member(c: number, s: number, z: number): void {
     const T = this.T; const a0 = T.cArm0[c]; const an = T.cArmN[c]; const lam = T.h;
     const closed = T.cClosed[c] === 1; const len = T.cLen[c];
+    const home = T.homeOn; let hg = -1; let hb = Infinity;
     let g = -1; let ramp = 0; let sRa = 0;
     for (let i = a0; i < a0 + an; i++) {
       let d = (s - T.aSR[i]) * T.aDir[i]; if (closed) d = ((d % len) + len) % len;
+      if (home && !(d < -1e-12 || d > T.aHome[i] + 1e-12 || d >= hb)) { hb = d; hg = T.aG[i]; }
       if (d < -1e-12 || d > T.aL[i] + 1e-12) continue;
       const Lc = T.aLcut[i];
       const rp = Lc === Infinity ? 1 : ss(Lc, Lc - lam, d);
@@ -92,7 +122,12 @@ export class GfEval {
         ramp = Math.min(ramp, ss(Lc, Lc - lam, d));
       }
     }
-    this.mg = g; this.mramp = g < 0 ? 1 : ramp;
+    if (g < 0) ramp = 1;
+    if (hg >= 0 && !(g >= 0 && ramp >= 1)) {
+      const r = this.homeRamp(Math.abs(z));
+      if (r > 0 && !(g === hg && ramp >= r)) { g = hg; ramp = r; }
+    }
+    this.mg = g; this.mramp = ramp;
   }
   private mg = -1; private mramp = 1;
 
@@ -313,7 +348,7 @@ export class GfEval {
     let nr = 0; const rIdx = [0, 0]; // the ramping pieces
     for (let j = 0; j < np; j++) {
       this.pz[j] = this.depth(this.pc[j], this.ps[j]); this.pkey[j] = this.pz[j] - this.pd[j] * zK;
-      this.member(this.pc[j], this.ps[j]); this.pg[j] = this.mg; this.pramp[j] = this.mramp;
+      this.member(this.pc[j], this.ps[j], this.pz[j]); this.pg[j] = this.mg; this.pramp[j] = this.mramp;
       if (this.mg >= 0 && this.mramp > 0 && this.mramp < 1) {
         if (nr < MAXR) rIdx[nr++] = j;
         else { /* past MAXR: rounds to the nearer configuration */ this.pramp[j] = this.mramp >= 0.5 ? 1 : 0; }
