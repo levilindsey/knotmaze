@@ -26,8 +26,6 @@ export const MAXR = 2; // ramping pieces mixed per pixel
 export const MAXK = 6; // corners per pixel
 const TANGENT_TERMS = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_TANG !== "0";
 const SELF_BURIAL =(globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_SELFBUR === "1";
-const ARC_BURIAL = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_ARCBUR === "1";
-const IN_F = (r: number, W: number): number => (r > 0 ? Math.min(W, 0.5 * r) / r : 0); // K1407 c1: the paper-side probe's step, a fraction of r
 const MAXS = MAXP + MAXK; // surfaces
 
 export function ss(e0: number, e1: number, x: number): number {
@@ -145,6 +143,21 @@ export class GfEval {
     const cab = ax * by - ay * bx; // orientation of a -> b
     const c1 = ax * ry - ay * rx; const c2 = rx * by - ry * bx;
     return cab >= 0 ? c1 >= 0 && c2 >= 0 : c1 <= 0 && c2 <= 0;
+  }
+
+  /** K1407 c1: a corner face (arc or tangent point (qx, qy) of corner k) is buried by another corner's fill of its
+   * surface, tested a step toward k's own ball (the paper side of q), so a fill that only touches q's outline does
+   * not bury it. gf_glsl.ts's fillBur, line for line. */
+  private fillBur(k: number, qx: number, qy: number, S: number): number {
+    const T = this.T; const r = T.kR[k]; const inF = r > 0 ? Math.min(T.W, 0.5 * r) / r : 0;
+    const ix = qx + (T.kCx[k] - qx) * inF; const iy = qy + (T.kCy[k] - qy) * inF;
+    let fbur = 0;
+    for (let i2 = 0; i2 < this.nk; i2++) {
+      const k2 = this.kk[i2]; if (k2 === k || T.kG[k2] !== S) continue;
+      const rq = Math.sqrt((ix - T.kCx[k2]) * (ix - T.kCx[k2]) + (iy - T.kCy[k2]) * (iy - T.kCy[k2]));
+      if (rq > T.kR[k2] && rq < T.kRmax[k2] && this.inSector(k2, ix, iy) && this.outsideArms(k2, -1, ix, iy)) { fbur = 1; break; }
+    }
+    return fbur;
   }
 
   eval(x: number, y: number): GfPixel {
@@ -328,19 +341,15 @@ export class GfEval {
         if (this.kIn[i] === 2 && Dk > D) D = Dk;
         if (!(rho > 1e-12)) continue;
         const qx = T.kCx[k] + (T.kR[k] * (x - T.kCx[k])) / rho; const qy = T.kCy[k] + (T.kR[k] * (y - T.kCy[k])) / rho;
+        const cA = T.kCa[k]; const cB = T.kCb[k]; // K1407 c1: the corner's own arms never bury its faces
         let bur = 0;
         for (let m = 0; m < this.np && bur < 1; m++) {
-          if (this.psurf[m] !== S || (ARC_BURIAL && (this.pc[m] === T.kCa[k] || this.pc[m] === T.kCb[k]))) continue;
+          if (this.psurf[m] !== S || this.pc[m] === cA || this.pc[m] === cB) continue;
           const wb2 = 1 - ss(h - 2 * aa, h, Math.sqrt(this.pieceD(m, qx, qy)));
           if (wb2 > bur) bur = wb2;
         }
-        if (ARC_BURIAL) for (let i2 = 0; i2 < this.nk && bur < 1; i2++) {
-          const k2 = this.kk[i2]; if (k2 === k || T.kG[k2] !== S) continue;
-          const ix = qx + (T.kCx[k] - qx) * IN_F(T.kR[k], W); const iy = qy + (T.kCy[k] - qy) * IN_F(T.kR[k], W);
-          const rq = Math.hypot(ix - T.kCx[k2], iy - T.kCy[k2]);
-          if (rq > T.kR[k2] && rq < T.kRmax[k2] && this.inSector(k2, ix, iy) && this.outsideArms(k2, -1, ix, iy)) bur = 1;
-        }
-        const val = (ARC_BURIAL ? 1 - bur : 1) * band2(Dk); // K1407 23A: form B's arc is unburied (its own arms cover the arc point near the tangents)
+        if (bur < 1) bur = Math.max(bur, this.fillBur(k, qx, qy, S));
+        const val = (1 - bur) * band2(Dk); // K1407 c1: buried by other arms' tubes and other corners' fills
         if (val > v) { v = val; wk = 2; wa = k; wb = 0; }
       }
       // form B's T_TA / T_TB: a fillet's tangent points are points of the trimmed outline, so their distance
@@ -348,22 +357,18 @@ export class GfEval {
       // cut at the fillet and the arc's sector, which neither covers (the hairline seams of K1362 s1's census)
       if (TANGENT_TERMS) for (let i = 0; i < this.nk; i++) {
         const k = this.kk[i]; if (T.kG[k] !== S || T.kThru[k]) continue;
+        const cA = T.kCa[k]; const cB = T.kCb[k]; // K1407 c1: as the arc
         for (let t = 0; t < 2; t++) {
           const tx = t ? T.kTbx[k] : T.kTax[k]; const ty = t ? T.kTby[k] : T.kTay[k];
           const dT = Math.sqrt((x - tx) * (x - tx) + (y - ty) * (y - ty)); if (!(dT < W + aa)) continue;
           let bur = 0;
           for (let m = 0; m < this.np && bur < 1; m++) {
-            if (this.psurf[m] !== S || (ARC_BURIAL && (this.pc[m] === T.kCa[k] || this.pc[m] === T.kCb[k]))) continue;
+            if (this.psurf[m] !== S || this.pc[m] === cA || this.pc[m] === cB) continue;
             const wb2 = 1 - ss(h - 2 * aa, h, Math.sqrt(this.pieceD(m, tx, ty)));
             if (wb2 > bur) bur = wb2;
           }
-          if (ARC_BURIAL) for (let i2 = 0; i2 < this.nk && bur < 1; i2++) {
-            const k2 = this.kk[i2]; if (k2 === k || T.kG[k2] !== S) continue;
-            const ix = tx + (T.kCx[k] - tx) * IN_F(T.kR[k], W); const iy = ty + (T.kCy[k] - ty) * IN_F(T.kR[k], W);
-            const rq = Math.hypot(ix - T.kCx[k2], iy - T.kCy[k2]);
-            if (rq > T.kR[k2] && rq < T.kRmax[k2] && this.inSector(k2, ix, iy) && this.outsideArms(k2, -1, ix, iy)) bur = 1;
-          }
-          const val = (ARC_BURIAL ? 1 - bur : 1) * band(dT) * ss(-aa, aa, D); // K1407 23A: form B's tangent term (om * aS * band(dT), unburied)
+          if (bur < 1) bur = Math.max(bur, this.fillBur(k, tx, ty, S));
+          const val = (1 - bur) * band(dT) * ss(-aa, aa, D); // K1407 c1: form B's tangent term, buried as the arc
           if (val > v) { v = val; wk = 4; wa = k; wb = t; }
         }
       }

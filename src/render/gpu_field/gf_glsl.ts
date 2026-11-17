@@ -332,9 +332,11 @@ const ZB_LOOPS: [RegExp, (m: string) => string][] = [
     () => `for (int m = 0; m < np; m++) { if (m == j || PSURF(m) != S) continue; if (!(pd[m] - (abs(h - X) + ${ZB_MARGIN}) >= h)) { zbR = true; break; } } // K1362 s15 zb`],
   [/for \(int i = 0; i < nk && bur < 1\.0; i\+\+\) \{\s*(int k = kk\[i\]; vec4 K0 = F\(uOK \+ 6 \* k\); vec4 K1 = F\(uOK \+ 6 \* k \+ 1\); if \(int\(K1\.z\) != S\) continue;)\s*float rq = length\(q - K0\.xy\);\s*if \(rq > K0\.z && rq < K0\.w && inSector\(k, q\) && outsideArms\(k, PC\(j\), q\)\) bur = 1\.0;\s*\}/,
     (m) => `for (int i = 0; i < nk; i++) { ${/\{\s*(int k[^\n]*continue;)/.exec(m)![1]} float rp = length(p - K0.xy); float zr = abs(h - X) + ${ZB_MARGIN}; if (rp + zr > K0.z && rp - zr < K0.w) { zbR = true; break; } } // K1362 s15 zb`],
-  [/for \(int m = 0; m < np && bur < 1\.0; m\+\+\) \{\s*if \(PSURF\(m\) != S\) continue;\s*float wb2 = 1\.0 - ss\(h - 2\.0 \* aa, h, sqrt\(pieceD\(m, q\)\)\);\s*if \(wb2 > bur\) bur = wb2;\s*\}/,
+  // K1407 c1: the corner faces' loops skip the corner's own arms; P0 still routes on every piece of the surface (a
+  // superset, so exact), and the other corners' fills (fillBur) are computed in P0 as in full
+  [/for \(int m = 0; m < np && bur < 1\.0; m\+\+\) \{\s*if \(PSURF\(m\) != S(?: \|\| PC\(m\) == cA \|\| PC\(m\) == cB)?\) continue;\s*float wb2 = 1\.0 - ss\(h - 2\.0 \* aa, h, sqrt\(pieceD\(m, q\)\)\);\s*if \(wb2 > bur\) bur = wb2;\s*\}/,
     () => `for (int m = 0; m < np; m++) { if (PSURF(m) != S) continue; if (!(pd[m] - (abs(Dk) + ${ZB_MARGIN}) >= h)) { zbR = true; break; } } // K1362 s15 zb`],
-  [/for \(int m = 0; m < np && bur < 1\.0; m\+\+\) \{\s*if \(PSURF\(m\) != S\) continue;\s*float wb2 = 1\.0 - ss\(h - 2\.0 \* aa, h, sqrt\(pieceD\(m, T\)\)\);\s*if \(wb2 > bur\) bur = wb2;\s*\}/,
+  [/for \(int m = 0; m < np && bur < 1\.0; m\+\+\) \{\s*if \(PSURF\(m\) != S(?: \|\| PC\(m\) == cA \|\| PC\(m\) == cB)?\) continue;\s*float wb2 = 1\.0 - ss\(h - 2\.0 \* aa, h, sqrt\(pieceD\(m, T\)\)\);\s*if \(wb2 > bur\) bur = wb2;\s*\}/,
     () => `for (int m = 0; m < np; m++) { if (PSURF(m) != S) continue; if (!(pd[m] - (dT + ${ZB_MARGIN}) >= h)) { zbR = true; break; } } // K1362 s15 zb`],
 ];
 const ZB_OVF = "if (sOvf) { gl_FragDepth = 1.0; return; }";
@@ -383,8 +385,9 @@ function burialExit(src: string): string {
     `      vec2 q = f + (h * (p - f)) / X;\n      float bx2 = band2(h - X); if (!(bx2 > v)) continue;\n      float bur = 0.0;\n      ${LOOP_M}        ${BX_CHECK}\n`);
   rep("      for (int i = 0; i < nk && bur < 1.0; i++) {\n",
     `      for (int i = 0; i < nk && bur < 1.0; i++) {\n        ${BX_CHECK}\n`);
-  rep(`      vec2 q = K0.xy + (K0.z * (p - K0.xy)) / rho;\n      float bur = 0.0;\n      ${LOOP_M}`,
-    `      vec2 q = K0.xy + (K0.z * (p - K0.xy)) / rho;\n      float bx2 = band2(Dk); if (!(bx2 > v)) continue;\n      float bur = 0.0;\n      ${LOOP_M}        ${BX_CHECK}\n`);
+  const C3A = "      vec4 C3 = F(uOK + 6 * k + 3); int cA = int(C3.x); int cB = int(C3.y); // K1407 c1: the corner's own arms never bury its faces\n";
+  rep(`      vec2 q = K0.xy + (K0.z * (p - K0.xy)) / rho;\n${C3A}      float bur = 0.0;\n      ${LOOP_M}`,
+    `      vec2 q = K0.xy + (K0.z * (p - K0.xy)) / rho;\n      float bx2 = band2(Dk); if (!(bx2 > v)) continue;\n${C3A}      float bur = 0.0;\n      ${LOOP_M}        ${BX_CHECK}\n`);
   if (src.includes("#ifdef TANGENT\n    for (int i = 0; i < nk; i++) {")) {
     rep(`        float dT = length(p - T); if (!(dT < W + aa)) continue;\n        float bur = 0.0;\n        ${LOOP_M}`,
       `        float dT = length(p - T); if (!(dT < W + aa)) continue;\n        float bx2 = band(dT); if (!(bx2 > v)) continue; // K1407 23A: band\n        float bur = 0.0;\n        ${LOOP_M}          ${BX_CHECK}\n`);
@@ -435,10 +438,10 @@ function faceSkip(src: string): string {
   rep("      if (!(X > h - W - aa && X > 1e-12)) continue;\n", "      if (!(X > h - W - aa && X > 1e-12)) continue;\n      float fb = band2(h - X);" + SKIP);
   rep("      float val = (1.0 - bur) * band2(h - X);\n", "      float val = (1.0 - bur) * fb;\n");
   rep("      if (!(rho > 1e-12)) continue;\n      vec2 q = K0.xy", "      if (!(rho > 1e-12)) continue;\n      float fb = band2(Dk);" + SKIP + "      vec2 q = K0.xy");
-  rep("      float val = band2(Dk);\n", "      float val = fb;\n"); // K1407 23A: the arc is unburied
+  rep("      float val = (1.0 - bur) * band2(Dk);", "      float val = (1.0 - bur) * fb;"); // K1407 c1: the arc is buried again (by other arms and fills)
   if (src.includes("#ifdef TANGENT\n    for (int i = 0; i < nk; i++) {")) {
     rep("        float dT = length(p - T); if (!(dT < W + aa)) continue;\n", "        float dT = length(p - T); if (!(dT < W + aa)) continue;\n        float fb = band(dT);" + SKIP); // K1407 23A: the tangent's bound is band, not band2
-    rep("        float val = band(dT) * ss(-aa, aa, D);\n", "        float val = fb * ss(-aa, aa, D);\n"); // K1407 23A: form B's tangent term
+    rep("        float val = (1.0 - bur) * band(dT) * ss(-aa, aa, D);", "        float val = (1.0 - bur) * fb * ss(-aa, aa, D);"); // K1407 c1: buried as the arc
   }
   return src;
 }
@@ -516,6 +519,7 @@ function cornerThru(src: string): string {
   rep("if (k > 65535 || ", "if (k > 32767 || ", 1);
   rep("kk[nk] = k + 65536 * int(K1.z);", "kk[nk] = k + (K1.x > 0.5 ? 32768 : 0) + 65536 * int(K1.z);", 1);
   rep("int k = kk[i] & 65535;", "int k = kk[i] & 32767;");
+  rep("int k2 = kk[i2] & 65535;", "int k2 = kk[i2] & 32767;", 1); // K1407 c1: fillBur's decode
   rep("if (kS != S) continue; vec4 K1 = F(uOK + 6 * k + 1); if (K1.x > 0.5) continue;", "if (kS != S || (kk[i] & 32768) != 0) continue;", 1);
   if (src.includes("& 65535")) throw new Error("gfFs kh: a 16-bit corner decode is left");
   return src;
@@ -529,6 +533,8 @@ function cornerSurfaces(src: string): string {
   rep("kSec[nk] = sec; kk[nk] = k; krho[nk] = rho;",
     "if (k > 65535 || !(K1.z >= 0.0 && K1.z < 32767.5)) { ovf = true; break; } kSec[nk] = sec; kk[nk] = k + 65536 * int(K1.z); krho[nk] = rho;", 1);
   rep("int k = kk[i];", "int k = kk[i] & 65535; int kS = kk[i] >> 16;");
+  rep("int k2 = kk[i2]; if (k2 == k) continue; vec4 L0 = F(uOK + 6 * k2); vec4 L1 = F(uOK + 6 * k2 + 1); if (int(L1.z) != S) continue;",
+    "int k2 = kk[i2] & 65535; if (k2 == k || (kk[i2] >> 16) != S) continue; vec4 L0 = F(uOK + 6 * k2);", 1); // K1407 c1: fillBur
   rep("vec4 K0 = F(uOK + 6 * k); vec4 K1 = F(uOK + 6 * k + 1); vec4 K3 = F(uOK + 6 * k + 3);", "vec4 K0 = F(uOK + 6 * k); vec4 K3 = F(uOK + 6 * k + 3);", 1);
   rep("int e = entry(int(K1.z));", "int e = entry(kS);", 1);
   rep("vec4 K0 = F(uOK + 6 * k); vec4 K1 = F(uOK + 6 * k + 1); if (int(K1.z) != S) continue;", "if (kS != S) continue; vec4 K0 = F(uOK + 6 * k);");
@@ -555,7 +561,7 @@ function tangentSkip(src: string, guardOnly: boolean): string {
   rep("#ifdef TANGENT\n    for (int i = 0; i < nk; i++) {\n", "#ifdef TANGENT\n    float cD = ss(-aa, aa, D); int nkT = cD > 0.0 ? nk : 0; // K1362 s14 kd\n    for (int i = 0; i < nkT; i++) {\n");
   if (guardOnly) return src;
   rep("float fb = band(dT); if (!(fb > v)) continue; // K1362 s13 fs", "float fb = band(dT); if (!(fb * cD > v)) continue; // K1362 s14 kd"); // K1407 23A: band
-  rep("float val = fb * ss(-aa, aa, D);", "float val = fb * cD;"); // K1407 23A: unburied
+  rep("float val = (1.0 - bur) * fb * ss(-aa, aa, D);", "float val = (1.0 - bur) * fb * cD;"); // K1407 c1: buried again
   return src;
 }
 
@@ -574,7 +580,7 @@ function cornerMerge(src: string): string {
   const start = src.lastIndexOf("    for (int i = 0; i < nk; i++) {\n#ifdef KLEAN\n", end);
   if (end < 0 || src.indexOf(svw, end + 1) >= 0 || start < 0) throw new Error("gfFs: km found no ring-face loop");
   const old = src.slice(start, end);
-  if (old.split("// K1362 s13 fs").length !== 3 || !old.includes("#ifdef TANGENT\n") || !old.includes("float val = fb * ss(-aa, aa, D);")) {
+  if (old.split("// K1362 s13 fs").length !== 3 || !old.includes("#ifdef TANGENT\n") || !old.includes("float val = (1.0 - bur) * fb * ss(-aa, aa, D);")) {
     throw new Error("gfFs: km expects the fs ring and tangent loops");
   }
   const merged = `    float tv = 0.0; // K1362 s14 km: the best tangent face before its D factor
@@ -590,6 +596,7 @@ function cornerMerge(src: string): string {
 #else
       int nf = 1;
 #endif
+      vec4 C3 = F(uOK + 6 * k + 3); int cA = int(C3.x); int cB = int(C3.y); // K1407 c1: the corner's own arms never bury its faces
       for (int f = 0; f < nf; f++) {
         vec2 q; float fb;
         if (f == 0) {
@@ -603,11 +610,12 @@ function cornerMerge(src: string): string {
         }
         float bur = 0.0;
         for (int m = 0; m < np && bur < 1.0; m++) {
-          if (PSURF(m) != S) continue;
+          if (PSURF(m) != S || PC(m) == cA || PC(m) == cB) continue;
           float wb2 = 1.0 - ss(h - 2.0 * aa, h, sqrt(pieceD(m, q)));
           if (wb2 > bur) bur = wb2;
         }
-        float val = fb; // K1407 23A: both faces unburied (bur no longer read)
+        if (bur < 1.0) bur = max(bur, fillBur(k, q, S));
+        float val = (1.0 - bur) * fb; // K1407 c1: both faces buried by other arms and other corners' fills
         if (f == 0) { if (val > v) v = val; } else if (val > tv) tv = val;
       }
     }
@@ -996,8 +1004,20 @@ int entry(int id) {
   int i = ns++; sid[i] = id; skey[i] = -BIG; sckey[i] = -BIG; scch[i] = -1; PR(scs[i] = 0.0;) scov[i] = false; return i;
 #endif
 }
-float band(float D) { return 1.0 - ss(uW - uAA, uW + uAA, D); } // K1407 23A: form B's band (its arc and tangent terms are unburied)
+float band(float D) { return 1.0 - ss(uW - uAA, uW + uAA, D); } // K1407 23A: form B's band
 float band2(float D) { return (1.0 - ss(uW - uAA, uW + uAA, D)) * ss(-uAA, uAA, D); }
+// K1407 c1: a corner face (arc or tangent point q of corner k) is buried by another corner's fill of its surface,
+// tested a step toward k's own ball (the paper side of q), so a fill that only touches q's outline does not bury it.
+float fillBur(int k, vec2 q, int S) {
+  vec4 Q0 = F(uOK + 6 * k); float inF = Q0.z > 0.0 ? min(uW, 0.5 * Q0.z) / Q0.z : 0.0; vec2 iq = q + (Q0.xy - q) * inF;
+  float fbur = 0.0;
+  for (int i2 = 0; i2 < nk; i2++) {
+    int k2 = kk[i2]; if (k2 == k) continue; vec4 L0 = F(uOK + 6 * k2); vec4 L1 = F(uOK + 6 * k2 + 1); if (int(L1.z) != S) continue;
+    float rq = length(iq - L0.xy);
+    if (rq > L0.z && rq < L0.w && inSector(k2, iq) && outsideArms(k2, -1, iq)) { fbur = 1.0; break; }
+  }
+  return fbur;
+}
 
 void layers(vec2 p) {
   float h = uH; float aa = uAA; float W = uW;
@@ -1094,29 +1114,33 @@ void layers(vec2 p) {
 #endif
       if (!(rho > 1e-12)) continue;
       vec2 q = K0.xy + (K0.z * (p - K0.xy)) / rho;
+      vec4 C3 = F(uOK + 6 * k + 3); int cA = int(C3.x); int cB = int(C3.y); // K1407 c1: the corner's own arms never bury its faces
       float bur = 0.0;
       for (int m = 0; m < np && bur < 1.0; m++) {
-        if (PSURF(m) != S) continue;
+        if (PSURF(m) != S || PC(m) == cA || PC(m) == cB) continue;
         float wb2 = 1.0 - ss(h - 2.0 * aa, h, sqrt(pieceD(m, q)));
         if (wb2 > bur) bur = wb2;
       }
-      float val = band2(Dk);
+      if (bur < 1.0) bur = max(bur, fillBur(k, q, S));
+      float val = (1.0 - bur) * band2(Dk); // K1407 c1: buried by other arms' tubes and other corners' fills
       if (val > v) { v = val; PR(wk = 2; wa = k; wb = 0;) }
     }
 #ifdef TANGENT
     for (int i = 0; i < nk; i++) {
       int k = kk[i]; vec4 K1 = F(uOK + 6 * k + 1); if (int(K1.z) != S || K1.x > 0.5) continue;
       vec4 K4 = F(uOK + 6 * k + 4); vec4 K5 = F(uOK + 6 * k + 5);
+      vec4 C3 = F(uOK + 6 * k + 3); int cA = int(C3.x); int cB = int(C3.y); // K1407 c1: as the arc
       for (int t = 0; t < 2; t++) {
         vec2 T = t == 1 ? K5.xy : K4.zw;
         float dT = length(p - T); if (!(dT < W + aa)) continue;
         float bur = 0.0;
         for (int m = 0; m < np && bur < 1.0; m++) {
-          if (PSURF(m) != S) continue;
+          if (PSURF(m) != S || PC(m) == cA || PC(m) == cB) continue;
           float wb2 = 1.0 - ss(h - 2.0 * aa, h, sqrt(pieceD(m, T)));
           if (wb2 > bur) bur = wb2;
         }
-        float val = band(dT) * ss(-aa, aa, D);
+        if (bur < 1.0) bur = max(bur, fillBur(k, T, S));
+        float val = (1.0 - bur) * band(dT) * ss(-aa, aa, D); // K1407 c1: buried as the arc
         if (val > v) { v = val; PR(wk = 4; wa = k; wb = t;) }
       }
     }

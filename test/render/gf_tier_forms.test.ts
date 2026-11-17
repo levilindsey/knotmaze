@@ -480,11 +480,11 @@ describe("gf tier forms, s13 exact face skip", () => {
       const plain = gfFs(false, tangent, base); const fs = gfFs(false, tangent, { ...base, fs: true });
       const args = [...fs.matchAll(FB)].map((m) => m[1]);
       expect(args).toEqual(plain.includes("#ifdef TANGENT\n    for (int i = 0; i < nk; i++) {") ? ["h - X", "Dk", "dT"] : ["h - X", "Dk"]);
-      expect(count(fs, "(1.0 - bur) * fb")).toBe(1); // K1407 23A: only the piece face keeps its burial
+      expect(count(fs, "(1.0 - bur) * fb")).toBe(args.length); // K1407 c1: every face is buried again
       let back = fs.replace(FB, "");
-      back = back.replace("(1.0 - bur) * fb", `(1.0 - bur) * band2(${args[0]})`); // K1407 23A: arc/tangent values below
-      if (args.length > 1) back = back.replace("float val = fb;", `float val = band2(${args[1]});`);
-      if (args.length > 2) back = back.replace("float val = fb * ss(-aa, aa, D);", `float val = band(${args[2]}) * ss(-aa, aa, D);`);
+      back = back.replace("(1.0 - bur) * fb", `(1.0 - bur) * band2(${args[0]})`); // the piece face comes first
+      if (args.length > 1) back = back.replace("float val = (1.0 - bur) * fb;", `float val = (1.0 - bur) * band2(${args[1]});`);
+      if (args.length > 2) back = back.replace("float val = (1.0 - bur) * fb * ss(-aa, aa, D);", `float val = (1.0 - bur) * band(${args[2]}) * ss(-aa, aa, D);`);
       expect(back).toBe(plain);
       expect(gfFs(true, tangent, { ...base, fs: true })).toBe(gfFs(true, tangent, base));
     }
@@ -637,7 +637,7 @@ describe("gf tier forms, s14 corner loops", () => {
       const base = gfFs(false, true, { ...corners0.tier, ...extra });
       expect(count(kd, "float cD = ss(-aa, aa, D); int nkT = cD > 0.0 ? nk : 0; // K1362 s14 kd\n    for (int i = 0; i < nkT; i++) {")).toBe(1);
       expect(count(kd, "if (!(fb * cD > v)) continue;")).toBe(1);
-      expect(count(kd, "float val = fb * cD;")).toBe(1); // K1407 23A: unburied
+      expect(count(kd, "float val = (1.0 - bur) * fb * cD;")).toBe(1); // K1407 c1: buried again
       expect(count(base, "ss(-aa, aa, D)")).toBe(count(kd, "ss(-aa, aa, D)"));
       expect(count(base, "// K1362 s13 fs") - count(kd, "// K1362 s13 fs")).toBe(1);
       const g = gfFs(false, true, { ...corners0.tier, ...extra, kd: "g" });
