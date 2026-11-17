@@ -1,0 +1,13 @@
+lock taken 06:00:08 after 0 s
+  muse_hash A attempt 0: live after 102254 ms; [{"t":1031,"st":{"ready":true,"state":"loading","vis":"visible","focus":true,"raf":true}},{"t":102254,"st":{"ready":true,"state":"live","vis":"visible","focus":true,"raf":true}}]
+  muse_hash B attempt 0: live after 874 ms; [{"t":874,"st":{"ready":true,"state":"live","vis":"visible","focus":true,"raf":true}}]
+  muse_hash A2 attempt 0: live after 713 ms; [{"t":713,"st":{"ready":true,"state":"live","vis":"visible","focus":true,"raf":true}}]
+muse_hash: A null hash 733ee14a | B null hash 733ee14a | A2 hash 733ee14a (want 733ee14a); B gfHome null home {"on":false,"fade":0}; lost 0/0/0
+  A vs B: {"w":2480,"h":1800,"px":0,"max":0,"first":null}   control A vs A2: {"w":2480,"h":1800,"px":0,"max":0,"first":null}
+  def A attempt 0: live after 1112 ms; [{"t":1112,"st":{"ready":true,"state":"live","vis":"visible","focus":true,"raf":true}}]
+  def B attempt 0: live after 784 ms; [{"t":784,"st":{"ready":true,"state":"live","vis":"visible","focus":true,"raf":true}}]
+  def A2 attempt 0: live after 808 ms; [{"t":808,"st":{"ready":true,"state":"live","vis":"visible","focus":true,"raf":true}}]
+def: A null hash 910ff135 | B null hash 910ff135 | A2 hash 910ff135 (want 910ff135); B gfHome null home {"on":false,"fade":0}; lost 0/0/0
+  A vs B: {"w":2480,"h":1800,"px":0,"max":0,"first":null}   control A vs A2: {"w":2480,"h":1800,"px":0,"max":0,"first":null}
+lock released 06:10:21
+servers stopped
