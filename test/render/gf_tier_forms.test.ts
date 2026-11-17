@@ -404,7 +404,7 @@ describe("gf tier forms, s13 lazy faces", () => {
   const HEAD = "  for (int e = 0; e < ns; e++) {\n    int S = sid[e];";
   const LZ_HEAD = "  bool lzX = false; // K1362 s13 lz: the faces in sorted order, up to the first opaque place (plus the next on a near tie)\n" +
     "  for (int lzI = 0; lzI < ns; lzI++) {\n    int e = SORD(lzI);\n    int S = sid[e];";
-  const LZ_STOP = "    if (lzX) break;\n    if (D > 2.0 * aa) { if (!(lzI + 1 < ns) || skey[SORD(lzI)] - skey[SORD(lzI + 1)] >= 2.0 * uZt) break; lzX = true; }\n";
+  const LZ_STOP = "    if (lzX) break;\n    if (D > 2.0 * aa) { if (!(lzI + 1 < ns) || skey[SORD(lzI)] - skey[SORD(lzI + 1)] >= 2.0 * ZTIE) break; lzX = true; }\n";
 
   it("lz: only the loop's head and its stop differ; the probe is untouched; fj and ga refuse it", () => {
     const BASES: GfTier[] = [L, { ...L, kz: "free" }, { ...L, kz: "corner" }, { ...L, sc: true }, { ...L, so: true }, { ...L, vs: true }, { ...L, one: true }];

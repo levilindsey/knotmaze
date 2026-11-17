@@ -23,6 +23,7 @@
 import { CH, MAXP, type GfTables } from "./tables";
 
 export const MAXR = 2; // ramping pieces mixed per pixel
+export const TIE_AA = 1; // K1407 c4: composite()'s tie window, in aa of the key's distance term (zt per h)
 export const MAXK = 6; // corners per pixel
 const TANGENT_TERMS = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_TANG !== "0";
 const SELF_BURIAL =(globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_SELFBUR === "1";
@@ -485,9 +486,16 @@ export class GfEval {
     this.labC = top >= 0 ? this.scch[top] : -1; this.labS = top >= 0 ? this.scs[top] : 0;
   }
 
-  /** Top-down composite; one adjacent swap mixed where keys tie within zt. */
+  /**
+   * Top-down composite; one adjacent swap mixed where keys tie within zt' = zt aa / h. K1407 c4: the tie window
+   * was zt, and a piece's key falls zt over its half-width, so two equal-depth surfaces mixed both orders across
+   * their whole overlap: the lower one's outline showed through the upper one's fill as a dark smear (the smudges
+   * at muse_hash 5.88,8.50 and 19.41,14.16, spot 16's shading), where today's fill look shows none. At zt' the order
+   * flips across about aa, where the nearer centreline takes the pixel, so no outline shows through. Where a piece's
+   * tent term lets the other surface's interior out-key its band, the flip is a crisp edge (19.41,14.16's wedge).
+   */
   private composite(): number {
-    const ns = this.ns; const zt = this.T.zt;
+    const ns = this.ns; const zt = this.T.zt * Math.min(1, TIE_AA * this.T.aa / this.T.h);
     const comp = (sw: number): number => {
       let Tt = 1; let ink = 0; let best = 0;
       for (let i = 0; i < ns; i++) {
