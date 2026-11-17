@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1433.
+Next free ID: K1434.
 
 ## Waiting on Levi
 
@@ -609,6 +609,16 @@ Next free ID: K1433.
   - evidence: `.claude/probes/K1387/`
   - next: the Pixel ABBA (k1387_phone.ps1; base 2b1cffe1 against the s2 merge, rp=gf) when the phone's screen is on: main ms/frame, gf builds/s, the drag's sim/wall (s2 handoff, Next)
   - brief: `docs/design/K1387_s2_lazy_march.md` (s1: `K1387_s1_lean_consumers.md`)
+- **K1433** · rp=gf step back (Levi, 2026-11-16 'go'): a one-day trial, CPU only and in probes, of (1) a
+  direct test of the bar (outline breaks and stray ink, no reference image) and (2) the outline as the contour
+  of one union distance field per surface, replacing the per-piece outline terms and burial rules; plus a
+  written assessment of deciding grouping and over/under at table time; decides whether K1407 keeps patching
+  rules (docs/design/K1433_union_field_trial.md)
+  - owner: agent `a7321f7b7a14be25c` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (fable, started 2026-11-16 18:30, 2 h cap ~20:30)
+  - branch: `worktree-agent-a7321f7b7a14be25c`, worktree `.claude/worktrees/agent-a7321f7b7a14be25c`; last commit: `8da4efef`
+  - evidence: `.claude/probes/K1433/`
+  - next: trial running (probes only, no src): on its report Claude checks its sheets, tells Levi the recommendation with pictures, and briefs K1407's next stage from it (union field for step 4, or more rule patches)
+  - brief: `docs/design/K1433_union_field_trial.md`
 
 ## Next, in order
 
