@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1445.
+Next free ID: K1446.
 
 ## Waiting on Levi
 
@@ -613,14 +613,6 @@ Next free ID: K1445.
   - evidence: `.claude/probes/K1387/`
   - next: the Pixel ABBA (k1387_phone.ps1; base 2b1cffe1 against the s2 merge, rp=gf) when the phone's screen is on: main ms/frame, gf builds/s, the drag's sim/wall (s2 handoff, Next)
   - brief: `docs/design/K1387_s2_lazy_march.md` (s1: `K1387_s1_lean_consumers.md`)
-- **K1439** · rp=gf stage B of K1435: the GLSL mirror of K1438 (member() in gf_glsl.ts) and the pins (gf_pack,
-  gf_build, gf_keys, gf_tier_forms, gf_split, gf_look); bar: GPU = CPU mirror, frame cost on muse_hash and def
-  within noise under the perf lock; blocked on K1438
-  - owner: agent `ab538fa67ad6c86dd` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-16 21:06, 2 h cap ~23:06)
-  - branch: `worktree-agent-ab538fa67ad6c86dd`, worktree `.claude/worktrees/agent-ab538fa67ad6c86dd`; last commit: `cfb1f30b`
-  - evidence: `.claude/probes/K1439/`
-  - next: stage running (GLSL mirror behind a URL flag, off by default): on its report Claude checks the sheets and parity, merges, and gives Levi the link for K1444's look calls
-  - brief: `docs/design/K1439_home_membership_glsl.md`
 
 ## Next, in order
 
@@ -2167,6 +2159,12 @@ Every other item below waits on the trigger it names.
   9.06,6.41, g41_ring_tw64 16.43,2.90, muse_hash 33.64,9.23; spot 5 (muse_hash 19.41,14.16) keeps 6 px of tie
   that rp=outline also shows; probe-only option: start the fade at the tie depth (K1438_Z0 in
   .claude/probes/K1438/)
+- **K1445** · rp=gf gfh=1 (K1439) open checks: flag-off pixels against master never compared (rerun
+  .claude/probes/K1439/k1439_offab.ps1 -Branch 963029e8 under the perf lock; first try sat in 'loading' 120 s,
+  cause unknown); fadeLength 0's hard step is float-sensitive at a depth tent's foot (1 px muse_hash; 2 px at
+  0.14, one unexamined): maybe keep a tiny ramp at 0; parity not cross-checked with gpucensus_cmp; Pixel cost
+  unmeasured (desktop GPU net pins at 13 ms); the census g41 link settles in two different physics states
+  across loads (0d51331b / c1b63637)
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2538,6 +2536,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1439** · rp=gf home membership mirrored in the shader behind gfh=1 (off by default, acts only with rp=gf); fade follows fadeLength live with no rebuild; GPU = mirror on def, 3 px past 1e-2 on muse_hash (float ties); flag off pinned by shader/keys/pack digests; no measurable frame cost on the desktop. Done in c11be7ae (2026-11-16).
 - **K1438** · rp=gf junction membership from the arms' home intervals in tables.ts + eval.ts, behind a switch that is off (GF_HOME / buildTables home:true); the fade follows fadeLength live; CPU scan tie+ramp 1797 -> 435 finds, 28 of 29 spots clean; table size unchanged, off = master's digest. Done in ca42a4de (2026-11-16).
 - **K1427** · rp=gf spot 16 and spot 6 (form B's demoted-arm V): member()'s second loop skips an arm rooted with the first loop's arm (the other half of a through pass); both match rp=outline at 4x (Claude checked), census 16/0/11/14 with 32 new exceptions (form B's V), bench within 5%. Done in e3297511 (2026-11-16).
 - **K1440** · rp=gf look: where a thread dives under a junction, K1435's membership ramp fades it in softly; rp=outline cuts it crisply, and the crisp variants (tgm) leave stubs elsewhere. Dropped: answered by Levi 2026-11-16: not a fixed look; the fade where a thread dives under a junction follows the crossing fade parameter (fadeLength), adjustable live, 0 = crisp. A Done of K1438's brief (2026-11-16).
