@@ -105,6 +105,49 @@ export type GfPackForm = boolean | "f" | "i";
  */
 export interface GfForm { reg?: boolean; unroll?: boolean; pack?: GfPackForm; oldKeys?: boolean; split?: 1 | 2; splitSkip?: boolean; splitKeys?: boolean }
 
+/**
+ * K1439: HOME MEMBERSHIP (K1438's eval.ts member(), T.homeOn) as a text form of any program gfFs makes, applied by
+ * GfPass only behind the `gfh=1` render flag (gf_app.ts): without it no program changes, byte for byte
+ * (gf_home_glsl.test.ts). member() takes the piece's depth z; loop 1 also finds the home arm, the nearest root
+ * (smallest d) whose home interval [0, aHome] holds s (aHome rides the arm record's second texel .y, gf_pack.ts with
+ * T.homeOn); a piece that is not already a full member takes that arm's group at 1 - ss(0, Z, |z|) when that is
+ * more than it has, Z = uHomeZ = fadeLength * amp / win (GfPass.homeFade, fed per frame: no table rebuild), a hard
+ * step at Z = 0. The keys widen each arm's s set to aHome (gf_keys.ts). The depth classes (zc's P0 and P1, NORAMP)
+ * call the same member() in the same keys loop, so a ramp still routes the pixel exactly as before.
+ */
+export function homeForm(src: string): string {
+  const rep = (a: string, b: string, n: number): void => {
+    const parts = src.split(a);
+    if (parts.length - 1 !== n) throw new Error(`gfFs home: expected ${n} "${a.trim().slice(0, 48)}", found ${parts.length - 1}`);
+    src = parts.join(b);
+  };
+  rep("uniform float uH, uW, uAA, uSigma, uZt, uWin, uRc;\n", "uniform float uH, uW, uAA, uSigma, uZt, uWin, uRc;\nuniform float uHomeZ; // K1439: home membership's fade depth\n", 1);
+  rep("void member(int c, float s, vec4 KB) {\n", "void member(int c, float s, vec4 KB, float z) {\n", 1);
+  rep("  int g = -1; float ramp = 0.0; float sRa = 0.0;\n", "  int g = -1; float ramp = 0.0; float sRa = 0.0; int hg = -1; float hb = 1e30;\n", 1);
+  // loop 1's arm test, right after its d (the anchor text holds no wrap: K299's registry counts each mod site once)
+  rep(
+    "    if (d < -1e-12 || d > A.z + 1e-12) continue;\n",
+    "    if (!(d < -1e-12 || d >= hb)) { vec4 A1 = F(KAB + 2 * i + 1); if (d <= A1.y + 1e-12) { hb = d; hg = int(A1.x); } }\n" +
+    "    if (d < -1e-12 || d > A.z + 1e-12) continue;\n",
+    1,
+  );
+  rep(
+    "  mg = g; mramp = g < 0 ? 1.0 : ramp;\n}\n",
+    "  if (g < 0) ramp = 1.0;\n" +
+    "  if (hg >= 0 && !(g >= 0 && ramp >= 1.0)) {\n" +
+    "    float az = abs(z);\n" +
+    "    float r = uHomeZ > 0.0 ? 1.0 - ss(0.0, uHomeZ, az) : (az > 0.0 ? 0.0 : 1.0);\n" +
+    "    if (r > 0.0 && !(g == hg && ramp >= r)) { g = hg; ramp = r; }\n" +
+    "  }\n" +
+    "  mg = g; mramp = ramp;\n}\n",
+    1,
+  );
+  rep("member(PC(j), ps[j], KB);", "member(PC(j), ps[j], KB, pz);", 2);
+  rep("member(PC(j), sj, KB);", "member(PC(j), sj, KB, pz);", 1);
+  if (/member\(PC\(j\), [\w[\]]+, KB\)/.test(src)) throw new Error("gfFs home: a member() call without its depth is left");
+  return src;
+}
+
 export function gfFs(probe: boolean, tangentTerms = true, tier?: GfTier, form: GfForm = { reg: tier?.reg, unroll: tier?.unroll, pack: tier?.pack }): string {
   let src = gfSrc(probe, tangentTerms, tier);
   if (tier?.one) src = oneConfig(src);

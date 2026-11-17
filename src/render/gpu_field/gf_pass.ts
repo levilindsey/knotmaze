@@ -6,7 +6,7 @@
 // Timing: EXT_disjoint_timer_query_webgl2 brackets the draw, and an empty
 // query (begin, end, no draw) right after it gives the floor the readings
 // subtract. Results arrive frames later (poll()).
-import { GF_VS, gfFs, type GfTier } from "./gf_glsl";
+import { GF_VS, gfFs, homeForm, type GfTier } from "./gf_glsl";
 import { GF_TW, packTables, type GfPacked } from "./gf_pack";
 import { buildKeys } from "./gf_keys";
 import { GfPieces } from "./gf_split";
@@ -238,6 +238,10 @@ export class GfPass {
   uploadMs = 0;
 
   readonly probe: boolean;
+  /** K1439: home membership (the `gfh=1` flag): homeForm on every program, the tables uploaded as T.homeOn, the fade
+   * depth uHomeZ from homeFade (world units, the live fadeLength; no rebuild). Off: nothing here changes a program. */
+  readonly home: boolean;
+  homeFade = 0;
   /** K1362 s7: the split's pieces (gf_split.ts), when the one tier runs as two passes. */
   private pieces: GfPieces | null = null;
   /**
@@ -249,18 +253,20 @@ export class GfPass {
    * tiers: GF_TIERS by default; [] draws the full program alone (stage 2's pass). fs: a program's source override
    * (benches; split programs get their pass as the second argument). split (K1362 s7): the one tier as two passes.
    */
-  constructor(gl: WebGL2RenderingContext, probe: boolean, tiers: GfTier[] = GF_TIERS, fs?: (tier: GfTier | null, split?: 1 | 2) => string, split: boolean | "skip" | GfSplitForm = false) {
-    this.gl = gl; this.probe = probe;
+  constructor(gl: WebGL2RenderingContext, probe: boolean, tiers: GfTier[] = GF_TIERS, fs?: (tier: GfTier | null, split?: 1 | 2) => string, split: boolean | "skip" | GfSplitForm = false, opts: { home?: boolean } = {}) {
+    this.gl = gl; this.probe = probe; this.home = !!opts.home;
+    const hf = this.home ? homeForm : (src: string): string => src; // K1439
     if (split && (probe || tiers.length !== 1)) throw new Error("GfPass: split needs one tier and no probe");
     const sf: GfSplitForm = split === "skip" ? { skip: true } : typeof split === "object" ? split : {};
     this.skip = !!sf.skip; const keys = !!sf.keys;
     const plan: { tier: GfTier | null; split?: 1 | 2; when?: GfWhen }[] = split ? [{ tier: tiers[0], split: 1 }, { tier: tiers[0], split: 2 }, { tier: null }]
       : [...tiers.flatMap((t) => (probe ? [{ tier: t.zc ? { ...t, zc: undefined } : t }] : cornerPlan(t))), { tier: null }]; // the probe ignores kz and zc (gfFs)
     const make = (form: (src: string) => string): GfProg[] => plan.map(({ tier, split: s, when }) => {
-      const src = fs ? fs(tier, s) : gfFs(probe, true, tier ?? undefined, s ? { reg: tier?.reg, unroll: tier?.unroll, pack: tier?.pack, split: s, splitSkip: this.skip, splitKeys: keys } : undefined);
+      const src = hf(fs ? fs(tier, s) : gfFs(probe, true, tier ?? undefined, s ? { reg: tier?.reg, unroll: tier?.unroll, pack: tier?.pack, split: s, splitSkip: this.skip, splitKeys: keys } : undefined));
       const prog = compileProgram(gl, GF_VS, form(src));
       const u = new Map<string, WebGLUniformLocation | null>();
       for (const n of UNIFORMS) u.set(n, gl.getUniformLocation(prog, n));
+      if (this.home) u.set("uHomeZ", gl.getUniformLocation(prog, "uHomeZ"));
       return { prog, u, tier, split: s, when };
     });
     this.progs = make((src) => src);
@@ -478,7 +484,8 @@ export class GfPass {
   upload(T: GfTables): void {
     const gl = this.gl;
     const t0 = performance.now();
-    this.packed = packTables(T, this.packed ?? undefined, buildKeys(T));
+    const Th = this.home && !T.homeOn ? { ...T, homeOn: true } : T; // K1439: the build differs from home: true only there
+    this.packed = packTables(Th, this.packed ?? undefined, buildKeys(Th));
     const t1 = performance.now();
     this.T = T;
     let kc = false; for (let i = 0; i < T.cellKN.length && !kc; i++) kc = T.cellKN[i] > 0;
@@ -609,6 +616,7 @@ export class GfPass {
       gl.uniform1i(u("uOKC"), o.kc); gl.uniform1i(u("uOKB"), o.kb); gl.uniform1i(u("uOKA"), o.ka); gl.uniform1i(u("uOKP"), o.kp);
       gl.uniform1f(u("uH"), T.h); gl.uniform1f(u("uW"), T.W); gl.uniform1f(u("uAA"), T.aa); gl.uniform1f(u("uSigma"), T.sigma);
       gl.uniform1f(u("uZt"), T.zt); gl.uniform1f(u("uWin"), T.win); gl.uniform1f(u("uRc"), T.rc);
+      if (this.home) gl.uniform1f(u("uHomeZ"), (Math.max(0, this.homeFade) * T.amp) / T.win);
       gl.uniform4f(u("uGrid"), T.gx0, T.gy0, T.G, 0);
       gl.uniform2i(u("uGDim"), T.gW, T.gH);
       gl.uniform4f(u("uMap"), map[0], map[1], map[2], map[3]);

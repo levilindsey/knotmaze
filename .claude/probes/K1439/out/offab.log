@@ -1,0 +1,6 @@
+K1439 flag-off pixel A/B (k1439_offab.ps1 -Branch 963029e8): NOT RUN TO COMPLETION.
+Attempt 1 (lock 22:27:54-22:29:55): the first page (master cfb1f30b preview, muse_hash census link + &rp=gf) never left
+__knotPerf().state "loading" within 120 s; puppeteer TimeoutError at k1439_offab.mjs:41. Cause not found: the same link on
+the same build, loaded by k1439_loaddiag.mjs at 22:32, was "live" within 8 s with no page errors or failed requests.
+Attempt 2 (started 22:33): waited on the perf lock (held by Muse, K1423 fade_probe2, since 22:32) and was stopped at 22:43
+for the stage's 2 h cap; it took no lock and loaded no page. out/offab/offab.json is empty ([]).

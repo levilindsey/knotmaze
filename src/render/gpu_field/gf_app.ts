@@ -197,6 +197,8 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
     look?: boolean;
   };
   const opts = (): GfOpts => (globalThis as unknown as { __knotGfOpts?: GfOpts }).__knotGfOpts ?? {};
+// K1439: home membership, the `gfh=1` render flag (frame_loop.ts reads it before the URL rewrite)
+const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotGfHome === true;
   // K1369 s4: by gesture (a thread grabbed or not); an A/B's `depth` wins.
   const depth = (): number => gfDepth(opts(), (ctx.scene.ps?.grabbedParticle ?? -1) >= 0);
   const verifying = (): boolean => !!api.verify || !!opts().verify;
@@ -712,7 +714,7 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
       const g = gl();
       if (!g) return fallback("no WebGL2 context");
       if (!pass) {
-        pass = new GfPass(g, false);
+        pass = new GfPass(g, false, undefined, undefined, false, { home: gfHome() });
         // K1389 s2: the look writes its colours to a second attachment
         target = new GfTarget(g, pass.lookable ? 2 : 1, false);
         comp = new GfComposite(g);
@@ -766,6 +768,8 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
         } else builtCount = count;
       }
       if (!T || !target) return;
+      // K1439: the home fade follows fadeLength live (a uniform: no table rebuild)
+      if (pass.home) { const hf = lookFade(r); if (hf !== pass.homeFade) { pass.homeFade = hf; dirty = true; } }
       // K1383 s1: while the appearance reveal runs, draw its form over this frame's masks (gf_reveal.ts); the
       // frame it ends, the original programs again
       if (pass.revealable && o.reveal !== false && gfRevealing(r)) {
@@ -911,7 +915,8 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
   const counts = (): Record<string, number> | null => {
     const g = gl();
     if (!g || !T || !target) return null;
-    const pp = new GfPass(g, true);
+    const pp = new GfPass(g, true, undefined, undefined, false, { home: pass?.home });
+    pp.homeFade = pass?.homeFade ?? 0;
     const tg = new GfTarget(g, 3, true);
     try {
       pp.upload(T);
@@ -960,6 +965,8 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
     get timed() { return !!pass?.timed; },
     get disjoint() { return pass?.disjoint ?? 0; },
     get rect() { return rect; },
+    /** K1439: whether the pass draws home membership (`gfh=1`) and the fade it last fed uHomeZ. */
+    get home() { return { on: !!pass?.home, fade: pass?.homeFade ?? null }; },
     /** K1369 s4: the tables the pass holds (a probe compares them). */
     get tables() { return T; },
     counts,

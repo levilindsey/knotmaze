@@ -1,0 +1,41 @@
+lock taken 22:14:46 after 0 s
+muse_hash off: hash 733ee14a (want 733ee14a) end 733ee14a lost 0 home {"on":false,"fade":0} errors 0
+  s22 fl 0 (live 1.0408340855860843e-17): rebuilds +0, passes +43, home {"on":false,"fade":0}
+  s22 fl 0.14 (live 0.14): rebuilds +0, passes +43, home {"on":false,"fade":0}
+  s22 fl 1.2 (live 1.2): rebuilds +0, passes +43, home {"on":false,"fade":0}
+  s29 fl 0 (live 1.0408340855860843e-17): rebuilds +0, passes +43, home {"on":false,"fade":0}
+  s29 fl 0.14 (live 0.14): rebuilds +0, passes +43, home {"on":false,"fade":0}
+  s29 fl 1.2 (live 1.2): rebuilds +0, passes +42, home {"on":false,"fade":0}
+  s5 fl 0 (live 1.0408340855860843e-17): rebuilds +0, passes +42, home {"on":false,"fade":0}
+  s5 fl 0.14 (live 0.14): rebuilds +0, passes +42, home {"on":false,"fade":0}
+  s5 fl 1.2 (live 1.2): rebuilds +0, passes +43, home {"on":false,"fade":0}
+  s19 fl 0 (live 1.0408340855860843e-17): rebuilds +0, passes +43, home {"on":false,"fade":0}
+  s19 fl 0.14 (live 0.14): rebuilds +0, passes +42, home {"on":false,"fade":0}
+  s19 fl 1.2 (live 1.2): rebuilds +0, passes +43, home {"on":false,"fade":0}
+muse_hash on: hash 733ee14a (want 733ee14a) end 733ee14a lost 0 home {"on":true,"fade":0.14} errors 0
+  s22 sweep: rebuilds +0, passes +109
+  s22 fl 0 (live 1.0408340855860843e-17): rebuilds +0, passes +43, home {"on":true,"fade":1.0408340855860843e-17}
+  s22 fl 0.14 (live 0.14): rebuilds +0, passes +42, home {"on":true,"fade":0.14}
+  s22 fl 1.2 (live 1.2): rebuilds +0, passes +43, home {"on":true,"fade":1.2}
+  s29 fl 0 (live 1.0408340855860843e-17): rebuilds +0, passes +42, home {"on":true,"fade":1.0408340855860843e-17}
+  s29 fl 0.14 (live 0.14): rebuilds +0, passes +42, home {"on":true,"fade":0.14}
+  s29 fl 1.2 (live 1.2): rebuilds +0, passes +43, home {"on":true,"fade":1.2}
+  s5 fl 0 (live 1.0408340855860843e-17): rebuilds +0, passes +43, home {"on":true,"fade":1.0408340855860843e-17}
+  s5 fl 0.14 (live 0.14): rebuilds +0, passes +43, home {"on":true,"fade":0.14}
+  s5 fl 1.2 (live 1.2): rebuilds +0, passes +41, home {"on":true,"fade":1.2}
+  s19 fl 0 (live 1.0408340855860843e-17): rebuilds +0, passes +43, home {"on":true,"fade":1.0408340855860843e-17}
+  s19 fl 0.14 (live 0.14): rebuilds +0, passes +42, home {"on":true,"fade":0.14}
+  s19 fl 1.2 (live 1.2): rebuilds +0, passes +42, home {"on":true,"fade":1.2}
+muse_hash outline: hash 733ee14a (want 733ee14a) end 733ee14a lost 0 home null errors 0
+g41_user_tw64 off: hash c1b63637 (want 0d51331b) end c1b63637 lost 0 home {"on":false,"fade":0} errors 0
+  worse fl 0 (live 0): rebuilds +0, passes +42, home {"on":false,"fade":0}
+  worse fl 0.14 (live 0.14): rebuilds +0, passes +43, home {"on":false,"fade":0}
+  worse fl 1.2 (live 1.2): rebuilds +0, passes +43, home {"on":false,"fade":0}
+g41_user_tw64 on: hash 0d51331b (want 0d51331b) end 0d51331b lost 0 home {"on":true,"fade":0} errors 0
+  worse sweep: rebuilds +0, passes +107
+  worse fl 0 (live 0): rebuilds +0, passes +42, home {"on":true,"fade":0}
+  worse fl 0.14 (live 0.14): rebuilds +0, passes +42, home {"on":true,"fade":0.14}
+  worse fl 1.2 (live 1.2): rebuilds +0, passes +42, home {"on":true,"fade":1.2}
+g41_user_tw64 outline: hash c1b63637 (want 0d51331b) end c1b63637 lost 0 home null errors 0
+sheets: C:\Users\lsl\Repositories\knotmaze\.claude\worktrees\agent-ab538fa67ad6c86dd\.claude\probes\K1439\out\sheets\sheet_muse_hash.png C:\Users\lsl\Repositories\knotmaze\.claude\worktrees\agent-ab538fa67ad6c86dd\.claude\probes\K1439\out\sheets\sheet_offfl_muse_hash.png C:\Users\lsl\Repositories\knotmaze\.claude\worktrees\agent-ab538fa67ad6c86dd\.claude\probes\K1439\out\sheets\sheet_g41_user_tw64.png C:\Users\lsl\Repositories\knotmaze\.claude\worktrees\agent-ab538fa67ad6c86dd\.claude\probes\K1439\out\sheets\sheet_offfl_g41_user_tw64.png
+lock released 22:27:28
