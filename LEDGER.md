@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1432.
+Next free ID: K1433.
 
 ## Waiting on Levi
 
@@ -312,18 +312,18 @@ Next free ID: K1432.
   tables bit-identical. Re-run k1362s2_census.ps1 on master, then fix stages under a new digest; K1315's ends
   join the same bar. Levi (2026-11-15): getting these spots truly correct is the most important thing now; the
   bar is the look he approves, not form B's (form B fails K1315's ends and jumps under K1267's jitter)
-  - owner: agent `ae59dc67f72d13811` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-16 16:24, 2 h cap ~18:24)
-  - branch: `worktree-agent-ae59dc67f72d13811`, worktree `.claude/worktrees/agent-ae59dc67f72d13811`; last commit: `34c65214`
-  - evidence: .claude/probes/K1407/out/c4/; c3: .claude/probes/K1407/out/c3/
-  - next: c4 running (c3 merged at d547dab6: the muse_hash eye closed by the vertex cap, 23 c2 spots held, census 19/0/11/14): the def seam notches, spot 16 and the smudges (against today's fill look); on its report Claude checks the c4 sheet spot by spot and merges; then c5 (spot 6, the vertex cap's GPU cost: K1426, K1427)
-  - brief: `docs/design/K1407_c4_bar.md`
+  - owner: agent `ae6e6ae2a52900882` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-16 18:13, 2 h cap ~20:13)
+  - branch: `worktree-agent-ae6e6ae2a52900882`, worktree `.claude/worktrees/agent-ae6e6ae2a52900882`; last commit: `50dcfef1`
+  - evidence: .claude/probes/K1407/out/c5/; c4: .claude/probes/K1407/out/c4/
+  - next: c5 running (c4 merged at 9775e8d3: the def seam notches fixed by fillBur, Claude checked all 29 spots at 4x; census 19/0/11/14): spot 16 + spot 6 (K1427, demoted arms), then the smudges (K1432, tie discriminator); on its report Claude checks the sheet spot by spot and merges; then the vertex cap's GPU cost (K1426)
+  - brief: `docs/design/K1407_c5_bar.md`
 - **K1418** · Muse batch 24 (2026-11-16): five runs through the K1053 chain in the main checkout, rp=gf look
   parity with today: K1417+K1415 gap casing and fade, K1414 route bands + hover rim, K1414 pulses + telegraph,
   K1395 reveal look, K1396 explore view (docs/design/K1418_muse_batch24.md)
   - owner: muse batch 24 through the K1053 chain, started by claude session 09c7a672-a414-402a-97da-b3176839a2e5; each run's Paseo agent id is in .claude/probes/K1053/chain.log
-  - branch: mainline; last commit: `3ae7ee93`
+  - branch: mainline; last commit: `33252bcc`
   - evidence: .claude/probes/K1053/ (queue.txt, chain.log, done.txt); .claude/probes/<ID>/out/24<X>/
-  - next: 24D running (started 16:16), then 24E, 24F (rim, then bands K1424), 24G (K1423 fade at eye walls), 24H (K1425 border indications) (queue.txt); Claude reviews each handoff and its crops against today, files the follow-ups. 24C landed c688b198 (pulses + telegraph match today); 24B landed nothing
+  - next: 24E running (since 18:03), then 24F (rim, then bands K1424), 24G (K1423), 24H (K1425), 24I (K1431: 24D's reveal colours to today's bars; Claude saw a dashed ghost of unrevealed threads in the burn and rainbow stripes ~2x today's width) (queue.txt); Claude reviews each handoff's crops against today. 24D landed 01411434 (reveal colours, much closer than master gf's cream, bars unmet)
   - brief: `docs/design/K1418_muse_batch24.md`
 - **K1310** · Redesign course check (assessment 2026-11-11): (1) write the gate for making rp=outline the
   default; (2) a crop sheet, outline vs form B at the worst spots, so Levi says which differences still
@@ -913,9 +913,9 @@ Every other item below waits on the trigger it names.
 - **K1426** · rp=gf vertex cap (K1407 c3, d547dab6) costs GPU: net p50 +14-15% over 13365909 on def and fat
   drag (11.0 -> 12.6 ms; work p50 level); c5 after c4: cut it to within 10% (the cap is the only shader
   change; inferred, not profiled) (docs/design/K1407_c3_bar.md Handoff c3)
-- **K1427** · rp=gf spot 6 (muse_hash 29.74,20.26): j36 inks inside its own fill where rp=outline draws no
-  thread; a shallow front pass (arm 55, Lcut -3.166) ramps c11's arm 54 to 0, so bound how far a pass can
-  demote an arm (form B is not the bar); c5 after c4 (Handoff c3)
+- **K1427** · rp=gf demoted arms: spot 6 (muse_hash 29.74,20.26, j36 inks inside its own fill: arm 55 Lcut -3.166
+  ramps c11 arm 54 to 0) and spot 16 (22.56,34.84, the V at j49: corner k50 buried whole against demoted arm c75);
+  ramp the burial, bound the demotion (form B is not the bar); K1407 c5 (Handoffs c3, c4)
 - **K1430** · Phone pass for rp=gf after K1407 c3: the vertex cap's shader compiles and its cost on the Pixel
   (scripts/phone.ps1; d547dab6 onward)
 - **K1431** · rp=gf reveal bars (K1395 leftovers, 24D): on b.FMKB4DIQ sheet frames gf ink counts run
@@ -925,6 +925,9 @@ Every other item below waits on the trigger it names.
   build; am=instant 0 px vs master gf argued by construction (uFxLive/uRvFx gate every new path), not
   measured. Sheets: .claude/probes/K1395/out/24Dnew_*, crops out/24D/, tool k1395_sheet.mjs (patient waits;
   the stock k1387_sheet 60 s waits starve under current load, master included)
+- **K1432** · rp=gf smudges (muse_hash 5.88,8.50 extra 1243; 19.41,14.16 extra 752): composite()'s equal-depth
+  tie blend smears dark into the fill where today's fill shows none; narrowing the window everywhere fails the
+  bar (37 new wedges), so it needs a discriminator (K1407 c5; docs/design/K1407_c4_bar.md Handoff c4)
 
 ## Residuals (known, not fixed)
 
