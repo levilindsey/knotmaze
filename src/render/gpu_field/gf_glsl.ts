@@ -213,6 +213,8 @@ export function gfFs(probe: boolean, tangentTerms = true, tier?: GfTier, form: G
  * strict running maxima (a NaN never enters), so the order cannot change them. `fj: "s"` reads sv[e] once per face
  * into a scalar v and writes it back where it rises (v and sv[e] stay equal), in place of sv[e] at every comparison.
  */
+/** K1407 c3: layers()'s vertex-cap line, last before the per-surface write (fj and km move it). */
+const VTX_LINE = "    if (v < 1.0 && D > -aa) { vec3 VX = vtx(S, p); float vxv = VX.x * ss(-aa, aa, D); if (vxv > v) { v = vxv; PR(wk = 6; wa = int(VX.y); wb = int(VX.z);) } } // K1407 c3: the vertex cap\n";
 function faceJoin(src: string, scalar: boolean): string {
   const START = "  for (int e = 0; e < ns; e++) {\n    int S = sid[e]; float D = -BIG; float v = 0.0; PR(int wk = 0; int wa = -1; int wb = 0;)\n";
   const END = "    SVW(e, v) SAW(e, ss(-aa, aa, D)) PR(swk[e] = wk; swa[e] = wa; swb[e] = wb;)\n  }\n";
@@ -231,7 +233,10 @@ function faceJoin(src: string, scalar: boolean): string {
     `if (!kSec[i]) continue; int S = int(K1.z); int e = slotOf(S); if (e < 0) continue;${V}\n      float rho = krho[i]; float Dk = rho - K0.z;\n      if (kIn[i] == 2 && Dk > sa[e]) sa[e] = Dk;\n`, 1);
   b = swap(b, "if (int(K1.z) != S || K1.x > 0.5) continue;\n", `if (K1.x > 0.5) continue; int S = int(K1.z); int e = slotOf(S); if (e < 0) continue; float D = sa[e];${V}\n`, 1);
   b = swap(b, "if (val > v) { v = val;", scalar ? "if (val > v) { v = val; sv[e] = val;" : "if (val > sv[e]) { sv[e] = val;", 3);
+  // K1407 c3: the vertex cap reads its surface's final v and D, so it runs per slot after every face
+  b = swap(b, VTX_LINE, "", 1);
   src = src.slice(0, i0) + "  for (int e = 0; e < ns; e++) { sv[e] = 0.0; sa[e] = -BIG; } // K1362 s12 fj: v and D per surface slot\n" + b
+    + "  for (int e = 0; e < ns; e++) if (sv[e] < 1.0 && sa[e] > -aa) { vec3 VX = vtx(sid[e], p); float vxv = VX.x * ss(-aa, aa, sa[e]); if (vxv > sv[e]) sv[e] = vxv; } // K1407 c3 fj\n"
     + "  for (int e = 0; e < ns; e++) sa[e] = ss(-aa, aa, sa[e]);\n" + src.slice(i1 + END.length);
   return swap(src, "void layers(vec2 p) {\n", "int slotOf(int id) { for (int i = 0; i < ns; i++) if (sid[i] == id) return i; return -1; }\nvoid layers(vec2 p) {\n", 1);
 }
@@ -621,7 +626,8 @@ function cornerMerge(src: string): string {
     }
     float tvD = tv * ss(-aa, aa, D); if (tvD > v) v = tvD;
 `;
-  return src.slice(0, start) + merged + src.slice(end);
+  if (old.split(VTX_LINE).length !== 2) throw new Error("gfFs: km expects the vertex cap once"); // K1407 c3: kept last
+  return src.slice(0, start) + merged + VTX_LINE + src.slice(end);
 }
 
 /**
@@ -1037,6 +1043,75 @@ float fillBur(int k, vec2 q, vec2 p, int S) {
   }
   return fbur;
 }
+// K1407 c3: pieceD, and the nearest point in g. eval.ts's pieceF, line for line.
+float pieceF(int j, vec2 p, out vec2 g) {
+  int c = PC(j); vec4 C0 = F(uOCh + 3 * c); int v0 = int(C0.x); int nseg = int(C0.y) - 1; bool closed = C0.z > 0.5;
+  float d2 = BIG; g = p;
+#ifdef PLH
+  int glo = PLO(j); int ghi = PHI(j);
+#else
+  int glo = plo[j]; int ghi = phi[j];
+#endif
+  for (int q = glo; q <= ghi; q++) {
+    int k = q; if (closed) k = pmod(k, nseg); else if (k < 0 || k >= nseg) continue;
+    vec4 A = F(uOV + v0 + k); vec4 B = F(uOV + v0 + k + 1);
+    vec2 a = A.xy; vec2 dd = B.xy - a;
+    float l2 = dot(dd, dd); float u = l2 > 0.0 ? clamp(dot(p - a, dd) / l2, 0.0, 1.0) : 0.0;
+    vec2 e = p - a - dd * u; float e2 = dot(e, e);
+    if (e2 < d2) { d2 = e2; g = a + dd * u; }
+  }
+  return d2;
+}
+#ifdef PKQ
+#define VFOOT(j) footQ(j, p.x, p.y)
+#else
+#define VFOOT(j) vec2(pfx[j], pfy[j])
+#endif
+// K1407 c3: the vertex cap, eval.ts's vtx line for line (its comment is the why): where two of surface S's member
+// tubes cross, both side bands stop at their burial lines and the outline broke at two straight cuts; V, the
+// outlines' crossing, is a point of the outline, so band(|p - V|) bounds the band from above. Returns (the term,
+// its two chains).
+vec3 vtx(int S, vec2 p) {
+  float vh = uH; float va = uAA; float vW = uW;
+  float best = 0.0; float bA = -1.0; float bB = -1.0;
+  for (int j = 0; j < np; j++) {
+    float Xj = pd[j]; if (PSURF(j) != S || !(Xj < vh + vW + va && Xj > 1e-12)) continue;
+    vec2 nj = (p - VFOOT(j)) / Xj; float cj = vh - Xj;
+    for (int m = j + 1; m < np; m++) {
+      float Xm = pd[m]; if (PSURF(m) != S || !(Xm < vh + vW + va && Xm > 1e-12)) continue;
+      vec2 nm = (p - VFOOT(m)) / Xm; float cm = vh - Xm;
+      float det = nj.x * nm.y - nj.y * nm.x; if (!(abs(det) > 1e-6)) continue;
+      vec2 r0 = vec2(cj * nm.y - cm * nj.y, nj.x * cm - nm.x * cj) / det;
+      if (!(dot(r0, r0) < 4.0 * (vW + va) * (vW + va))) continue;
+      vec2 V0 = p + r0;
+      vec2 gj; float ej = pieceF(j, V0, gj); vec2 gm; float em = pieceF(m, V0, gm);
+      if (!(ej > 1e-24 && em > 1e-24)) continue;
+      vec2 uj = (V0 - gj) / sqrt(ej); float kj = vh + dot(uj, gj - p);
+      vec2 um = (V0 - gm) / sqrt(em); float km = vh + dot(um, gm - p);
+      float det2 = uj.x * um.y - uj.y * um.x; if (!(abs(det2) > 1e-6)) continue;
+      vec2 V = p + vec2(kj * um.y - km * uj.y, uj.x * km - um.x * kj) / det2;
+      float dV = length(p - V); if (!(dV < vW + va)) continue;
+      float fV = 1.0 - ss(vW - va, vW + va, dV); if (!(fV > best)) continue;
+      if (!(abs(sqrt(pieceD(j, V)) - vh) < va && abs(sqrt(pieceD(m, V)) - vh) < va)) continue;
+      float vb = 0.0;
+      for (int n2 = 0; n2 < np; n2++) {
+        if (n2 == j || n2 == m || PSURF(n2) != S) continue;
+        float b2 = 1.0 - ss(vh - 2.0 * va, vh, sqrt(pieceD(n2, V)));
+        if (b2 > vb) vb = b2;
+        if (vb >= 1.0) break;
+      }
+      for (int i3 = 0; i3 < nk; i3++) {
+        if (vb >= 1.0) break;
+        int k3 = kk[i3]; vec4 G0 = F(uOK + 6 * k3); vec4 G1 = F(uOK + 6 * k3 + 1); if (int(G1.z) != S) continue;
+        float rV = length(V - G0.xy);
+        if (rV > G0.z && rV < G0.w && inSector(k3, V) && outsideArms(k3, -1, V)) vb = 1.0;
+      }
+      float val = (1.0 - vb) * fV;
+      if (val > best) { best = val; bA = float(PC(j)); bB = float(PC(m)); }
+    }
+  }
+  return vec3(best, bA, bB);
+}
 
 void layers(vec2 p) {
   float h = uH; float aa = uAA; float W = uW;
@@ -1164,6 +1239,7 @@ void layers(vec2 p) {
       }
     }
 #endif
+    if (v < 1.0 && D > -aa) { vec3 VX = vtx(S, p); float vxv = VX.x * ss(-aa, aa, D); if (vxv > v) { v = vxv; PR(wk = 6; wa = int(VX.y); wb = int(VX.z);) } } // K1407 c3: the vertex cap
     SVW(e, v) SAW(e, ss(-aa, aa, D)) PR(swk[e] = wk; swa[e] = wa; swb[e] = wb;)
   }
 #ifndef LABRUN

@@ -182,6 +182,75 @@ export class GfEval {
     return fbur;
   }
 
+  private fX = 0; private fY = 0;
+  /** pieceD, and the nearest point in (fX, fY). gf_glsl.ts's pieceF, line for line. */
+  private pieceF(j: number, x: number, y: number): number {
+    const T = this.T; const c = this.pc[j]; const v0 = T.cV0[c]; const nseg = T.cNV[c] - 1; const closed = T.cClosed[c] === 1;
+    let d2 = Infinity; this.fX = x; this.fY = y;
+    for (let kk = this.plo[j]; kk <= this.phi[j]; kk++) {
+      let k = kk; if (closed) k = ((k % nseg) + nseg) % nseg; else if (k < 0 || k >= nseg) continue;
+      const v = v0 + k; const ax = T.vx[v]; const ay = T.vy[v]; const dx = T.vx[v + 1] - ax; const dy = T.vy[v + 1] - ay;
+      const l2 = dx * dx + dy * dy; const u = l2 > 0 ? Math.min(1, Math.max(0, ((x - ax) * dx + (y - ay) * dy) / l2)) : 0;
+      const ex = x - ax - dx * u; const ey = y - ay - dy * u; const e2 = ex * ex + ey * ey;
+      if (e2 < d2) { d2 = e2; this.fX = ax + dx * u; this.fY = ay + dy * u; }
+    }
+    return d2;
+  }
+
+  private vtxA = -1; private vtxB = -1;
+  /** K1407 c3: the vertices of surface S's outline where two of its members' tubes cross. Each side band stops
+   * where its foot is buried by the other tube, so in the normal cone at the vertex V (the pixels whose feet on
+   * both outlines are buried) no side term draws, and the band broke at two straight cuts (the muse_hash eye). V is
+   * a point of the outline, so band(|p - V|) bounds the true band from above, as the tangent points do. V is where
+   * the two outline lines through the pixel's feet meet, kept only when it lies on both tubes' boundaries (within
+   * aa: a far V, or one past a piece's end, is not) and nothing else of S covers it: another member's tube, as a
+   * side face is buried, or a corner's fill (the fillet replaces the vertex). Returns band(|p - V|) times the
+   * burial's complement, max over the pairs; vtxA / vtxB are the pair's chains. gf_glsl.ts's vtx, line for line. */
+  private vtx(S: number, x: number, y: number): number {
+    const T = this.T; const h = T.h; const aa = T.aa; const W = T.W;
+    let best = 0; this.vtxA = -1; this.vtxB = -1;
+    for (let j = 0; j < this.np; j++) {
+      const Xj = this.pd[j]; if (this.psurf[j] !== S || !(Xj < h + W + aa && Xj > 1e-12)) continue;
+      // the outline line n . q = h + n . f, in coordinates relative to p (n . (f - p) = -X): well conditioned in fp32
+      const njx = (x - this.pfx[j]) / Xj; const njy = (y - this.pfy[j]) / Xj; const cj = h - Xj;
+      for (let m = j + 1; m < this.np; m++) {
+        const Xm = this.pd[m]; if (this.psurf[m] !== S || !(Xm < h + W + aa && Xm > 1e-12)) continue;
+        const nmx = (x - this.pfx[m]) / Xm; const nmy = (y - this.pfy[m]) / Xm; const cm = h - Xm;
+        const det = njx * nmy - njy * nmx; if (!(Math.abs(det) > 1e-6)) continue;
+        const r0x = (cj * nmy - cm * njy) / det; const r0y = (njx * cm - nmx * cj) / det;
+        if (!(r0x * r0x + r0y * r0y < 4 * (W + aa) * (W + aa))) continue;
+        const V0x = x + r0x; const V0y = y + r0y;
+        // once more from the vertex's own feet: the lines through p's feet are the outlines' tangents there, not at
+        // V, so on a bend V moved with p and the term's edge came out ragged (the eye's cap, first try)
+        const ej = this.pieceF(j, V0x, V0y); const gjx = this.fX; const gjy = this.fY;
+        const em = this.pieceF(m, V0x, V0y); const gmx = this.fX; const gmy = this.fY;
+        if (!(ej > 1e-24 && em > 1e-24)) continue;
+        const rj = Math.sqrt(ej); const rm = Math.sqrt(em);
+        const ujx = (V0x - gjx) / rj; const ujy = (V0y - gjy) / rj; const kj = h + ujx * (gjx - x) + ujy * (gjy - y);
+        const umx = (V0x - gmx) / rm; const umy = (V0y - gmy) / rm; const km = h + umx * (gmx - x) + umy * (gmy - y);
+        const det2 = ujx * umy - ujy * umx; if (!(Math.abs(det2) > 1e-6)) continue;
+        const Vx = x + (kj * umy - km * ujy) / det2; const Vy = y + (ujx * km - umx * kj) / det2;
+        const dV = Math.sqrt((x - Vx) * (x - Vx) + (y - Vy) * (y - Vy)); if (!(dV < W + aa)) continue;
+        const fV = 1 - ss(W - aa, W + aa, dV); if (!(fV > best)) continue;
+        if (!(Math.abs(Math.sqrt(this.pieceD(j, Vx, Vy)) - h) < aa && Math.abs(Math.sqrt(this.pieceD(m, Vx, Vy)) - h) < aa)) continue;
+        let vb = 0;
+        for (let n = 0; n < this.np && vb < 1; n++) {
+          if (n === j || n === m || this.psurf[n] !== S) continue;
+          const b2 = 1 - ss(h - 2 * aa, h, Math.sqrt(this.pieceD(n, Vx, Vy)));
+          if (b2 > vb) vb = b2;
+        }
+        for (let i = 0; i < this.nk && vb < 1; i++) {
+          const k = this.kk[i]; if (T.kG[k] !== S) continue;
+          const rV = Math.sqrt((Vx - T.kCx[k]) * (Vx - T.kCx[k]) + (Vy - T.kCy[k]) * (Vy - T.kCy[k]));
+          if (rV > T.kR[k] && rV < T.kRmax[k] && this.inSector(k, Vx, Vy) && this.outsideArms(k, -1, Vx, Vy)) vb = 1;
+        }
+        const val = (1 - vb) * fV;
+        if (val > best) { best = val; this.vtxA = this.pc[j]; this.vtxB = this.pc[m]; }
+      }
+    }
+    return best;
+  }
+
   eval(x: number, y: number): GfPixel {
     const T = this.T; const h = T.h; const aa = T.aa; const W = T.W; const o = this.out;
     o.ink = 0; o.cov = 0; o.chain = -1; o.s = 0; o.winKind = 0; o.winA = -1; o.winB = 0; o.nSeg = 0; o.nK = 0;
@@ -393,6 +462,10 @@ export class GfEval {
           const val = (1 - bur) * band(dT) * ss(-aa, aa, D); // K1407 c1: form B's tangent term, buried as the arc
           if (val > v) { v = val; wk = 4; wa = k; wb = t; }
         }
+      }
+      if (v < 1 && D > -aa) { // K1407 c3: the vertex cap (vtx); it cannot raise v elsewhere
+        const vxv = this.vtx(S, x, y) * ss(-aa, aa, D);
+        if (vxv > v) { v = vxv; wk = 6; wa = this.vtxA; wb = this.vtxB; }
       }
       this.sv[e] = v; this.sa[e] = ss(-aa, aa, D); this.swk[e] = wk; this.swa[e] = wa; this.swb[e] = wb;
     }
