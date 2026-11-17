@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1442.
+Next free ID: K1443.
 
 ## Waiting on Levi
 
@@ -917,9 +917,6 @@ Every other item below waits on the trigger it names.
 - **K1426** · rp=gf vertex cap (K1407 c3, d547dab6) costs GPU: net p50 +14-15% over 13365909 on def and fat
   drag (11.0 -> 12.6 ms; work p50 level); c5 after c4: cut it to within 10% (the cap is the only shader
   change; inferred, not profiled) (docs/design/K1407_c3_bar.md Handoff c3)
-- **K1427** · rp=gf demoted arms: spot 6 (muse_hash 29.74,20.26, j36 inks inside its own fill: arm 55 Lcut -3.166
-  ramps c11 arm 54 to 0) and spot 16 (22.56,34.84, the V at j49: corner k50 buried whole against demoted arm c75);
-  ramp the burial, bound the demotion (form B is not the bar); K1407 c5 (Handoffs c3, c4)
 - **K1430** · Phone pass for rp=gf after K1407 c3: the vertex cap's shader compiles and its cost on the Pixel
   (scripts/phone.ps1; d547dab6 onward)
 - **K1431** · rp=gf reveal bars (K1395 leftovers, 24D): on b.FMKB4DIQ sheet frames gf ink counts run
@@ -2149,6 +2146,11 @@ Every other item below waits on the trigger it names.
   19.78,20.37; muse_hash 22.09,34.40); worse than master at g41_user_tw64 17.80,9.55 (soft dark band); a new
   soft nub at muse_hash 34.29,18.93; smudge 2's 6 px wedge (same on master and rp=outline); thin ramp finds 20
   to 285, mostly invisible at 4x
+- **K1442** · rp=gf census: K1407 c5's 32 new exceptions (form B's demoted-arm V) now hide a sliver at
+  g41_def_tw64 21.27,10.81, a wedge at user_tw42.lightpaper / g41_user_tw42 16.68,5.59, a tick at
+  g41_user_tw64 1.63,17.29, extra ink at def 20.75,33.19 and g41_def_tw64 20.58,28.72, and seams in
+  g41_ring_tw64; K1436's reference-free test should replace the census (Handoff c5); also an unexplained bench
+  reading (p9ar6 round 2, 4.78 ms GPU over 271 frames)
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2520,6 +2522,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1427** · rp=gf spot 16 and spot 6 (form B's demoted-arm V): member()'s second loop skips an arm rooted with the first loop's arm (the other half of a through pass); both match rp=outline at 4x (Claude checked), census 16/0/11/14 with 32 new exceptions (form B's V), bench within 5%. Done in e3297511 (2026-11-16).
 - **K1440** · rp=gf look: where a thread dives under a junction, K1435's membership ramp fades it in softly; rp=outline cuts it crisply, and the crisp variants (tgm) leave stubs elsewhere. Dropped: answered by Levi 2026-11-16: not a fixed look; the fade where a thread dives under a junction follows the crossing fade parameter (fadeLength), adjustable live, 0 = crisp. A Done of K1438's brief (2026-11-16).
 - **K1435** · rp=gf table-time grouping probe: membership from each junction arm's home interval with a depth ramp (mode tgr) removes the ghost threads and smudges (tie+ramp finds 2030 to 547 over 12 scenes; spot 16 and smudge 1 clean, 25 spots unchanged; Claude checked sheet_spots_1 and sheet_variants_worst_1); order stays per pixel (crisp graph order leaves stubs); src stages K1438, K1439. Done in 02c2e598 (2026-11-16).
 - **K1433** · rp=gf step back trial: the union field is not the fix (every variant draws stray ink or turns the corner into a deep V; no spot better by eye); step 4 stays; the open spots and about 2,030 smudges come from per-pixel grouping and tie order, which the graph knows at table time (K1435; test v2 K1436). Done in eee0b835 (2026-11-16).
