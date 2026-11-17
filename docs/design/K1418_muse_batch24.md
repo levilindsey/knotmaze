@@ -173,6 +173,19 @@ gf handles the appearance reveal only; the explore view's hidden and growing pie
 **Done:** 1. On a walk in the explore view, at three states, gf's visible-thread mask against today's: IoU at
 least 0.9. 2. Outside the explore view, 0 px against master gf. 3. Crops. 4. `npm test` green.
 
+### Handoff 24E (Muse, 2026-11-16, done: every Done holds)
+
+Started 18:03 PST, stopped 18:37 PST. Code on master in 0a5e2d1c (rebased over 648d3df9; deploy watched). The explore view now draws under rp=gf. `GfExploreTable` (`src/render/gpu_field/gf_explore.ts`) bakes the renderer's visibility pieces into a knots table beside the K1362 tables (per sample vis / frontier tip / fade length at its drawn arc, whole and hidden chain headers, a gate flag per corner: both arms past the joint gate's 0.002 at their slots). The look form reads it (unit 11, `gf_pass.ts` `setExplore`): the segment scan drops a hidden segment, a corner draws only under its flag, `lkGap`'s cut scales by the over piece's visibility at its foot, and at the label `lkExploreLook` (the glow tint, fray and dots/beacon shapes) reshapes the visibility over ink and coverage. `gf_app.ts` rebuilds the table when the declaration or the installed sample positions move. No `tables.ts`, `gf_glsl.ts` field-evaluation or census-tool change, so the tables digest is bit-identical by construction (the commit touches gf_app/gf_look/gf_pass plus the new file only).
+
+Checks (perf lock held; own vite preview on 5492; `.claude/probes/K1396/k1396_ab.mjs`: seed 7 `xp=threads&am=instant&snd=none&fw=0&phw=0`, cheapest-choice walk 0,220,203,173,172,171,209,273,272,271, clocks pinned by `__knotPinClocks` with growth full; mask = any channel > 24 from the frame's mode colour, as in the reveal sheets):
+
+1. Visible-thread mask against today's: at 0 / 5 / 10 moves, master gf read 68,236 vs 126,235 px (IoU 0.540), 84,600 vs 234,928 (0.354), 74,209 vs 246,639 (0.297). New gf: 68,232 (ratio 1.000, IoU 0.996), 84,363 (0.997, 0.992), 73,967 (0.997, 0.992). Bar 0.9 holds at all three states.
+2. Outside the explore view (explore off after the walk): new gf against master gf differs by 449 px whole-frame, 0 px in the thread area (every differing pixel inside the panel strip x 1071–1169, y 110–116, the same UI noise 24B recorded).
+3. Crops (today | master gf | new gf, 4x) under `.claude/probes/K1396/out/24E/`: `crop_s0.png`, `crop_s5.png`, `crop_s10.png`, beside the per-mode captures (`base_today_*`, `base_gf_*`, `new_gf_*`).
+4. `npm test` green: 246 files, 3091 passed. New `test/render/gf_explore.test.ts` (6 tests: the bake against `pieceVis`, knots, corner gates, headers, the look form's sites); the K299 quotient registry gains `exAt`'s ring wrap.
+
+Left. K1396 closes here. Filed K1434: under a burn the explore shader's char/ember/smolder shading is not ported (the burnt-gone holes already cut through the pieces), and corner gates read the declared pieces rather than the burn gate pieces. The look-off gf programs (the `look: false` A/B) do not carry the explore sites, as they carry no look at all. K1407, K1416 and K1418 stay open.
+
 ## Run F (24F): K1414 part 1 again, land the hover rim, then the route bands (K1424)
 
 24B kept its work as `.claude/probes/K1414/k1414_part1_full.patch` and landed nothing (Handoff 24B): the rim passed

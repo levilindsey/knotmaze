@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1434.
+Next free ID: K1435.
 
 ## Waiting on Levi
 
@@ -2075,8 +2075,6 @@ Every other item below waits on the trigger it names.
   intro-i to 19.5 builds/s against 50-54, so depth stays 2 at rest; the fix is a cheaper build (K1386)
 - **K1394** · Pixel A/B rests: 120 s rests left the second rep at thermal 1 in two of four K1369 s4 runs (s4b,
   s4d); rest longer or to a skin temperature (.claude/rules/probes-phone.md)
-- **K1396** · rp=gf: the K76 thread reveal (explore view) is not handled; only the appearance reveal is
-  (docs/design/K1383_s1_gf_reveal.md handoff)
 - **K1397** · rp=gf reveal approximations: the tables lag the masks by the build depth; pieceD unscaled in the
   ko forms; tip glow from the live mirror; a corner shows only once both arms are full; edge AA scales with
   the mask; the Pixel runner (k1383_motion.mjs) stops at sim sleep (K1383 s1 handoff)
@@ -2140,6 +2138,9 @@ Every other item below waits on the trigger it names.
 - **K1429** · K1407 c3's GPU census lost its WebGL context once (GL error 37442, group 1) while preview builds
   ran on the machine; inferred cause, not isolated; the group re-run alone was clean
   (.claude/probes/K1407/out/c3/census_c3g.log)
+- **K1434** · rp=gf: under a burn (K290) the explore shader's char/ember/smolder shading is not ported, and
+  corner gates read the declared pieces rather than the burn gate pieces; gf draws the pieces' visibility
+  (burnt-gone holes included) but no char darkening (K1396 24E handoff)
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2511,6 +2512,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1396** · rp=gf: the K76 thread reveal (explore view) is not handled; only the appearance reveal is (docs/design/K1383_s1_gf_reveal.md handoff). Done in 0a5e2d1c (2026-11-16).
 - **K1416** · rp=gf against Levi's bar at K1315 ends: c1's six stubs (rows 5-10) and spots 2, 12, 13 now end at the over thread's outline (K1407 c2's fillBur); the eye continues under K1407 c3. Done in 46c4f05b (2026-11-16).
 - **K1415** · rp=gf crossing-gap fade scaled by the crossing angle, today's max(sin, 0.2) (24A). Done in 24ae5489 (2026-11-16).
 - **K1417** · rp=gf border look: the gap-band casing dashes removed; the border draws the faint outline (24A). Done in 24ae5489 (2026-11-16).
