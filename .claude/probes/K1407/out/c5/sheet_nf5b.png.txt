@@ -1,0 +1,9 @@
+columns: .claude/probes/K1407/out/c5/nf5b_a:gf | .claude/probes/K1407/out/c5/nf5b_b:gf | .claude/probes/K1407/out/c5/nf5b_a:fb | .claude/probes/K1407/out/c5/nf5b_a:ol
+row 1: muse_hash_1.52_13.30
+row 2: muse_hash_5.12_8.33
+row 3: muse_hash_22.40_10.74
+row 4: ring_16.51_2.86
+row 5: g41_ring_tw64_16.44_2.86
+row 6: muse_hash_3.90_21.47
+row 7: muse_hash_2.13_9.75
+row 8: g41_def_tw64_11.22_8.33

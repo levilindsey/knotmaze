@@ -1,0 +1,16 @@
+lock taken 18:43:45 after 150 s
+scene                   stray_ink  hard_edge      paper broken_ink      k1049      total owner_only  tail_look
+muse_hash                       7          0          5         66          0         78         13          0
+muse_default_tw                 0          0          1         12          0         13          5          0
+def                             0          0          0         21          0         21          5          0
+fat                             0          0          0          0          0          0          0          0
+ring                            0          0          0          2          0          2          1          0
+user_tw42.lightpaper            2          0          1          2          0          5          2          0
+g41_def_tw42                    0          0          0          0          0          0          3          0
+g41_def_tw64                    2          0          0         41          0         43          6          0
+g41_ring_tw42                   0          0          0          0          0          0          0          0
+g41_ring_tw64                   0          0          0          7          0          7          2          0
+g41_user_tw42                   2          0          1          2          0          5          2          0
+g41_user_tw64                   8          0          3         18          0         29          4          0
+TOTAL                          21          0         11        171          0        203         43          0
+lock released 18:53:27
