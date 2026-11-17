@@ -1,0 +1,6 @@
+columns: master | tgr | ol
+row 1: def:1.85:17.43
+row 2: def:32.46:1.77
+row 3: g41_ring_tw64:19.78:20.37
+row 4: g41_def_tw64:11.22:8.33
+row 5: g41_ring_tw64:16.08:18.57
