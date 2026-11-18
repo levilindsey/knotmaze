@@ -1,0 +1,9 @@
+f0 master~mine 0 today~master 0
+f1 master~mine 70 today~master 965
+f2 master~mine 217 today~master 9012
+f3 master~mine 596 today~master 24734
+f4 master~mine 624 today~master 40077
+f5 master~mine 429 today~master 48230
+f6 master~mine 40 today~master 43381
+f7 master~mine 53 today~master 36448
+rest master~mine 0 today~master 59

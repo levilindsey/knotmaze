@@ -1,0 +1,12 @@
+1 reveal duration 12.549 pin true
+2 gf {"c":0,"i":0,"r":0,"sw":false,"rv":0,"fb":"","lost":0}
+3 gf {"c":8,"i":5,"r":5,"sw":true,"rv":8,"fb":"","lost":0}
+4 gf {"c":27,"i":12,"r":12,"sw":true,"rv":27,"fb":"","lost":0}
+25 gf all compiled {"c":394,"i":12,"r":12,"sw":true,"rv":394,"fb":"","lost":0}
+36 asleep, phys {"gen":1,"simTime":5.000000000000038,"n":2951,"c":350,"kind":"in-thread","hashes":{"all":"15294c37","positions":"59b0a172","prev":"d56de51f","zPos":"105ffe57","passes":"8705e288"}}
+38 f0 t=4.518 (0.36) {"c":4.517645321615245,"done":false} {"c":739,"i":12,"r":12,"sw":true,"rv":739,"fb":"","lost":0}
+40 f1 t=4.769 (0.38) {"c":4.768625617260536,"done":false} {"c":849,"i":12,"r":12,"sw":true,"rv":849,"fb":"","lost":0}
+42 f2 t=5.271 (0.42) {"c":5.270586208551119,"done":false} {"c":954,"i":12,"r":12,"sw":true,"rv":954,"fb":"","lost":0}
+44 f3 t=5.522 (0.44) {"c":5.521566504196411,"done":false} {"c":1067,"i":12,"r":12,"sw":true,"rv":1067,"fb":"","lost":0}
+47 f4 t=6.024 (0.48) {"c":6.023527095486993,"done":false} {"c":1180,"i":12,"r":12,"sw":true,"rv":1180,"fb":"","lost":0}
+56 rest {"c":1587,"i":12,"r":12,"sw":true,"rv":1344,"fb":"","lost":0}

@@ -1,0 +1,643 @@
+{
+ "url": "http://localhost:5641/?3.FGH1HtvQeDjm6e4BII&rp=gf&gfh=1",
+ "events": [
+  {
+   "t": 0.14,
+   "what": "issue",
+   "prog": "P/59075"
+  },
+  {
+   "t": 0.14,
+   "what": "issue",
+   "prog": "P/37348"
+  },
+  {
+   "t": 0.14,
+   "what": "issue",
+   "prog": "P/35637"
+  },
+  {
+   "t": 0.14,
+   "what": "issue",
+   "prog": "P/5837"
+  },
+  {
+   "t": 0.14,
+   "what": "issue",
+   "prog": "C-small/1820"
+  },
+  {
+   "t": 0.14,
+   "what": "issue",
+   "prog": "C-small/2767"
+  },
+  {
+   "t": 0.14,
+   "what": "issue",
+   "prog": "C-small/2192"
+  },
+  {
+   "t": 0.14,
+   "what": "issue",
+   "prog": "C-small/1637"
+  },
+  {
+   "t": 0.14,
+   "what": "issue",
+   "prog": "C-small/419"
+  },
+  {
+   "t": 0.14,
+   "what": "issue",
+   "prog": "C-small/468"
+  },
+  {
+   "t": 0.39,
+   "what": "ready",
+   "prog": "P/59075"
+  },
+  {
+   "t": 0.39,
+   "what": "ready",
+   "prog": "P/37348"
+  },
+  {
+   "t": 0.39,
+   "what": "ready",
+   "prog": "P/35637"
+  },
+  {
+   "t": 0.39,
+   "what": "ready",
+   "prog": "P/5837"
+  },
+  {
+   "t": 0.39,
+   "what": "ready",
+   "prog": "C-small/1820"
+  },
+  {
+   "t": 0.39,
+   "what": "issue",
+   "prog": "C-small/1820"
+  },
+  {
+   "t": 0.39,
+   "what": "ready",
+   "prog": "C-small/2767"
+  },
+  {
+   "t": 0.39,
+   "what": "ready",
+   "prog": "C-small/2192"
+  },
+  {
+   "t": 0.39,
+   "what": "ready",
+   "prog": "C-small/1637"
+  },
+  {
+   "t": 0.39,
+   "what": "issue",
+   "prog": "C-small/1637"
+  },
+  {
+   "t": 0.39,
+   "what": "ready",
+   "prog": "C-small/419"
+  },
+  {
+   "t": 0.39,
+   "what": "issue",
+   "prog": "C-small/419"
+  },
+  {
+   "t": 0.39,
+   "what": "ready",
+   "prog": "C-small/468"
+  },
+  {
+   "t": 0.42,
+   "what": "issue",
+   "prog": "C-small/2767"
+  },
+  {
+   "t": 0.42,
+   "what": "ready",
+   "prog": "C-small/2767"
+  },
+  {
+   "t": 0.42,
+   "what": "issue",
+   "prog": "C-small/468"
+  },
+  {
+   "t": 0.42,
+   "what": "ready",
+   "prog": "C-small/468"
+  },
+  {
+   "t": 0.43,
+   "what": "issue",
+   "prog": "C-small/1637"
+  },
+  {
+   "t": 0.43,
+   "what": "ready",
+   "prog": "C-small/1637"
+  },
+  {
+   "t": 0.43,
+   "what": "issue",
+   "prog": "C-small/1637"
+  },
+  {
+   "t": 0.96,
+   "what": "issue",
+   "prog": "C-small/3915"
+  },
+  {
+   "t": 0.96,
+   "what": "issue",
+   "prog": "C-look/5574"
+  },
+  {
+   "t": 1.11,
+   "what": "ready",
+   "prog": "C-small/3915"
+  },
+  {
+   "t": 1.11,
+   "what": "ready",
+   "prog": "C-look/5574"
+  },
+  {
+   "t": 1.12,
+   "what": "issue",
+   "prog": "C-small/1820"
+  },
+  {
+   "t": 1.12,
+   "what": "ready",
+   "prog": "C-small/1820"
+  },
+  {
+   "t": 1.12,
+   "what": "issue",
+   "prog": "C-small/1820"
+  },
+  {
+   "t": 1.12,
+   "what": "issue",
+   "prog": "P/59075"
+  },
+  {
+   "t": 1.16,
+   "what": "ready",
+   "prog": "P/59075"
+  },
+  {
+   "t": 1.16,
+   "what": "issue",
+   "prog": "P/5837"
+  },
+  {
+   "t": 1.17,
+   "what": "ready",
+   "prog": "P/5837"
+  },
+  {
+   "t": 1.17,
+   "what": "issue",
+   "prog": "C-small/2192"
+  },
+  {
+   "t": 1.17,
+   "what": "ready",
+   "prog": "C-small/2192"
+  },
+  {
+   "t": 1.29,
+   "what": "issue",
+   "prog": "P/35637"
+  },
+  {
+   "t": 1.31,
+   "what": "ready",
+   "prog": "P/35637"
+  },
+  {
+   "t": 1.31,
+   "what": "issue",
+   "prog": "P/37348"
+  },
+  {
+   "t": 1.33,
+   "what": "ready",
+   "prog": "P/37348"
+  },
+  {
+   "t": 1.34,
+   "what": "issue",
+   "prog": "C-small/419"
+  },
+  {
+   "t": 1.34,
+   "what": "ready",
+   "prog": "C-small/419"
+  },
+  {
+   "t": 1.34,
+   "what": "issue",
+   "prog": "C-small/419"
+  },
+  {
+   "t": 1.76,
+   "what": "issue",
+   "prog": "L/78173"
+  },
+  {
+   "t": 1.87,
+   "what": "ready",
+   "prog": "L/78173"
+  },
+  {
+   "t": 1.93,
+   "what": "issue",
+   "prog": "L+R/79182"
+  },
+  {
+   "t": 2.06,
+   "what": "ready",
+   "prog": "L+R/79182"
+  },
+  {
+   "t": 2.09,
+   "what": "issue",
+   "prog": "L+R/79510"
+  },
+  {
+   "t": 2.23,
+   "what": "ready",
+   "prog": "L+R/79510"
+  },
+  {
+   "t": 2.27,
+   "what": "issue",
+   "prog": "L+R/77317"
+  },
+  {
+   "t": 2.35,
+   "what": "ready",
+   "prog": "L+R/77317"
+  },
+  {
+   "t": 2.4,
+   "what": "issue",
+   "prog": "P/43587"
+  },
+  {
+   "t": 2.43,
+   "what": "ready",
+   "prog": "P/43587"
+  },
+  {
+   "t": 2.48,
+   "what": "issue",
+   "prog": "P/41995"
+  },
+  {
+   "t": 2.52,
+   "what": "ready",
+   "prog": "P/41995"
+  },
+  {
+   "t": 2.58,
+   "what": "issue",
+   "prog": "P/43915"
+  },
+  {
+   "t": 2.63,
+   "what": "ready",
+   "prog": "P/43915"
+  },
+  {
+   "t": 2.67,
+   "what": "issue",
+   "prog": "R/44556"
+  },
+  {
+   "t": 2.7,
+   "what": "ready",
+   "prog": "R/44556"
+  },
+  {
+   "t": 2.75,
+   "what": "issue",
+   "prog": "R/42853"
+  },
+  {
+   "t": 2.78,
+   "what": "ready",
+   "prog": "R/42853"
+  },
+  {
+   "t": 2.83,
+   "what": "issue",
+   "prog": "R/44884"
+  },
+  {
+   "t": 2.87,
+   "what": "ready",
+   "prog": "R/44884"
+  },
+  {
+   "t": 2.9,
+   "what": "issue",
+   "prog": "L/76419"
+  },
+  {
+   "t": 3,
+   "what": "ready",
+   "prog": "L/76419"
+  },
+  {
+   "t": 3.05,
+   "what": "issue",
+   "prog": "L/78501"
+  },
+  {
+   "t": 3.17,
+   "what": "ready",
+   "prog": "L/78501"
+  },
+  {
+   "t": 6.93,
+   "what": "issue",
+   "prog": "P/78142"
+  },
+  {
+   "t": 6.93,
+   "what": "issue",
+   "prog": "P/75545"
+  },
+  {
+   "t": 6.93,
+   "what": "issue",
+   "prog": "P/61958"
+  },
+  {
+   "t": 6.93,
+   "what": "issue",
+   "prog": "P/47074"
+  },
+  {
+   "t": 6.93,
+   "what": "issue",
+   "prog": "P/41646"
+  },
+  {
+   "t": 6.93,
+   "what": "issue",
+   "prog": "P/29812"
+  },
+  {
+   "t": 6.93,
+   "what": "issue",
+   "prog": "P/20595"
+  },
+  {
+   "t": 6.93,
+   "what": "issue",
+   "prog": "C-small/3132"
+  },
+  {
+   "t": 6.93,
+   "what": "issue",
+   "prog": "C-small/2993"
+  },
+  {
+   "t": 6.93,
+   "what": "issue",
+   "prog": "C-small/2965"
+  },
+  {
+   "t": 6.93,
+   "what": "issue",
+   "prog": "C-small/2927"
+  },
+  {
+   "t": 6.93,
+   "what": "issue",
+   "prog": "C-small/2874"
+  },
+  {
+   "t": 6.93,
+   "what": "issue",
+   "prog": "C-small/2859"
+  },
+  {
+   "t": 6.93,
+   "what": "issue",
+   "prog": "C-small/2806"
+  },
+  {
+   "t": 6.93,
+   "what": "issue",
+   "prog": "C-small/2768"
+  },
+  {
+   "t": 6.93,
+   "what": "issue",
+   "prog": "C-small/2737"
+  },
+  {
+   "t": 6.93,
+   "what": "issue",
+   "prog": "C-small/2721"
+  },
+  {
+   "t": 6.93,
+   "what": "issue",
+   "prog": "C-small/2682"
+  },
+  {
+   "t": 6.93,
+   "what": "issue",
+   "prog": "C-small/2585"
+  },
+  {
+   "t": 6.93,
+   "what": "issue",
+   "prog": "C-small/2524"
+  },
+  {
+   "t": 6.93,
+   "what": "issue",
+   "prog": "C-small/2438"
+  },
+  {
+   "t": 6.93,
+   "what": "issue",
+   "prog": "C-small/713"
+  },
+  {
+   "t": 6.93,
+   "what": "issue",
+   "prog": "C-small/868"
+  },
+  {
+   "t": 7.02,
+   "what": "ready",
+   "prog": "P/78142"
+  },
+  {
+   "t": 7.02,
+   "what": "ready",
+   "prog": "P/75545"
+  },
+  {
+   "t": 7.02,
+   "what": "ready",
+   "prog": "P/61958"
+  },
+  {
+   "t": 7.02,
+   "what": "ready",
+   "prog": "P/47074"
+  }
+ ],
+ "revealStart": 1.89,
+ "revealEnd": 7.04,
+ "sw": {
+  "t": 8.69,
+  "rv": {
+   "c": 12.58752,
+   "d": 12.54901478226457,
+   "done": true
+  },
+  "gf": {
+   "c": 10,
+   "i": 12,
+   "r": 12,
+   "sw": 8442.600000023842,
+   "fb": "",
+   "w": "done:12"
+  },
+  "pageSwitchS": 8.44
+ },
+ "log": [
+  "0 rv=null gf=null",
+  "  page 0.14s issue P/59075",
+  "  page 0.14s issue P/37348",
+  "  page 0.14s issue P/35637",
+  "  page 0.14s issue P/5837",
+  "  page 0.14s issue C-small/1820",
+  "  page 0.14s issue C-small/2767",
+  "  page 0.14s issue C-small/2192",
+  "  page 0.14s issue C-small/1637",
+  "  page 0.14s issue C-small/419",
+  "  page 0.14s issue C-small/468",
+  "  page 0.39s ready P/59075",
+  "  page 0.39s ready P/37348",
+  "  page 0.39s ready P/35637",
+  "  page 0.39s ready P/5837",
+  "  page 0.39s ready C-small/1820",
+  "  page 0.39s issue C-small/1820",
+  "  page 0.39s ready C-small/2767",
+  "  page 0.39s ready C-small/2192",
+  "  page 0.39s ready C-small/1637",
+  "  page 0.39s issue C-small/1637",
+  "  page 0.39s ready C-small/419",
+  "  page 0.39s issue C-small/419",
+  "  page 0.39s ready C-small/468",
+  "  page 0.42s issue C-small/2767",
+  "  page 0.42s ready C-small/2767",
+  "  page 0.42s issue C-small/468",
+  "  page 0.42s ready C-small/468",
+  "  page 0.43s issue C-small/1637",
+  "  page 0.43s ready C-small/1637",
+  "  page 0.43s issue C-small/1637",
+  "0.42 rv=null gf=i0 r0 sw=false c=false fb= w=:0",
+  "  page 0.96s issue C-small/3915",
+  "  page 0.96s issue C-look/5574",
+  "  page 1.11s ready C-small/3915",
+  "  page 1.11s ready C-look/5574",
+  "  page 1.12s issue C-small/1820",
+  "  page 1.12s ready C-small/1820",
+  "  page 1.12s issue C-small/1820",
+  "  page 1.12s issue P/59075",
+  "  page 1.16s ready P/59075",
+  "  page 1.16s issue P/5837",
+  "  page 1.17s ready P/5837",
+  "  page 1.17s issue C-small/2192",
+  "  page 1.17s ready C-small/2192",
+  "1.07 rv=0.0/12.5 gf=i0 r0 sw=false c=false fb= w=compiling:0",
+  "  page 1.29s issue P/35637",
+  "  page 1.31s ready P/35637",
+  "  page 1.31s issue P/37348",
+  "  page 1.33s ready P/37348",
+  "  page 1.34s issue C-small/419",
+  "  page 1.34s ready C-small/419",
+  "  page 1.34s issue C-small/419",
+  "  page 1.76s issue L/78173",
+  "  page 1.87s ready L/78173",
+  "  page 1.93s issue L+R/79182",
+  "1.89 reveal clock running 1.68 / 12.55",
+  "1.89 rv=1.7/12.5 gf=i2 r1 sw=false c=false fb= w=compiling:2",
+  "  page 2.06s ready L+R/79182",
+  "  page 2.09s issue L+R/79510",
+  "  page 2.23s ready L+R/79510",
+  "  page 2.27s issue L+R/77317",
+  "  page 2.35s ready L+R/77317",
+  "  page 2.4s issue P/43587",
+  "  page 2.43s ready P/43587",
+  "  page 2.48s issue P/41995",
+  "  page 2.52s ready P/41995",
+  "2.43 rv=2.9/12.5 gf=i6 r6 sw=false c=false fb= w=compiling:7",
+  "  page 2.58s issue P/43915",
+  "  page 2.63s ready P/43915",
+  "  page 2.67s issue R/44556",
+  "  page 2.7s ready R/44556",
+  "  page 2.75s issue R/42853",
+  "  page 2.78s ready R/42853",
+  "  page 2.83s issue R/44884",
+  "  page 2.87s ready R/44884",
+  "  page 2.9s issue L/76419",
+  "  page 3s ready L/76419",
+  "  page 3.05s issue L/78501",
+  "  page 3.17s ready L/78501",
+  "3.07 rv=4.2/12.5 gf=i12 r12 sw=false c=false fb= w=done:12",
+  "  page 6.93s issue P/78142",
+  "  page 6.93s issue P/75545",
+  "  page 6.93s issue P/61958",
+  "  page 6.93s issue P/47074",
+  "  page 6.93s issue P/41646",
+  "  page 6.93s issue P/29812",
+  "  page 6.93s issue P/20595",
+  "  page 6.93s issue C-small/3132",
+  "  page 6.93s issue C-small/2993",
+  "  page 6.93s issue C-small/2965",
+  "  page 6.93s issue C-small/2927",
+  "  page 6.93s issue C-small/2874",
+  "  page 6.93s issue C-small/2859",
+  "  page 6.93s issue C-small/2806",
+  "  page 6.93s issue C-small/2768",
+  "  page 6.93s issue C-small/2737",
+  "  page 6.93s issue C-small/2721",
+  "  page 6.93s issue C-small/2682",
+  "  page 6.93s issue C-small/2585",
+  "  page 6.93s issue C-small/2524",
+  "  page 6.93s issue C-small/2438",
+  "  page 6.93s issue C-small/713",
+  "  page 6.93s issue C-small/868",
+  "  page 7.02s ready P/78142",
+  "  page 7.02s ready P/75545",
+  "  page 7.02s ready P/61958",
+  "  page 7.02s ready P/47074",
+  "7.04 reveal done",
+  "8.69 rv=12.6/12.5d gf=i12 r12 sw=true c=true fb= w=done:12",
+  "9.58 SWITCH {\"t\":8.69,\"rv\":{\"c\":12.58752,\"d\":12.54901478226457,\"done\":true},\"gf\":{\"c\":10,\"i\":12,\"r\":12,\"sw\":8442.600000023842,\"fb\":\"\",\"w\":\"done:12\"},\"pageSwitchS\":8.44} pre shots 8.02,8.57",
+  "9.58 all compiled, switched, worker over"
+ ]
+}

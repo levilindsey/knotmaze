@@ -18,7 +18,7 @@ const say = (...a) => { const s = a.join(" "); console.log(s); log.push(s); };
 try {
   const p = await b.newPage();
   await p.setViewport({ width: VW, height: VH, deviceScaleFactor: 1 });
-  await p.evaluateOnNewDocument(() => { try { localStorage.setItem("knotmaze.panelOpen", "0"); } catch {} window.__lost = 0; window.addEventListener("webglcontextlost", () => { window.__lost++; }, true); });
+  await p.evaluateOnNewDocument(() => { try { localStorage.setItem("knotmaze.panelOpen", "0"); } catch {} window.__knotGfOpts = Object.assign(window.__knotGfOpts ?? {}, { midReveal: true }); window.__lost = 0; window.addEventListener("webglcontextlost", () => { window.__lost++; }, true); });
   p.on("pageerror", (e) => say("pageerror", e.message.slice(0, 200)));
   const url = `${base}/?${link}&snd=none&phw=0&fw=0${mode === "gf" ? "&rp=gf" : ""}`;
   const t0 = Date.now(); const T = () => ((Date.now() - t0) / 1000).toFixed(0);
@@ -40,6 +40,15 @@ try {
       await sleep(1000);
     }
     say(T(), "gf all compiled", JSON.stringify(await gfs()));
+  }
+  // K1472 s3: the knot keeps settling under a pinned reveal, and gf's compile wait made its shots
+  // later than today's: s2's sheets compared a mid-settle knot (today) with a settled one (gf).
+  // Shoot both at the slept state (phw=0: one state every load) and record its hash.
+  if (process.env.SLEEP !== "0") {
+    await p.waitForFunction(() => window.__knotPerf?.().asleep === true, { timeout: 180000, polling: 250 }).catch(() => say("not asleep in 180 s"));
+    await sleep(1000);
+    const h = await p.evaluate(async () => { const d = await window.__knotPhysDump?.({}); return d ? JSON.stringify(d).slice(0, 300) : null; });
+    say(T(), "asleep, phys", h);
   }
   const shots = [];
   for (let i = 0; i < FR.length; i++) {

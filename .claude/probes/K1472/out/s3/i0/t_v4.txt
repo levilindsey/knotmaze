@@ -1,0 +1,108 @@
+0 rv=null gf=null
+  page 0.12s issue P/59075
+  page 0.12s issue P/37348
+  page 0.12s issue P/35637
+  page 0.12s issue P/5837
+  page 0.12s issue C-small/1820
+  page 0.12s issue C-small/2767
+  page 0.12s issue C-small/2192
+  page 0.12s issue C-small/1637
+  page 0.12s issue C-small/419
+  page 0.12s issue C-small/468
+  page 0.37s ready P/59075
+  page 0.37s ready P/37348
+  page 0.37s ready P/35637
+  page 0.37s ready P/5837
+  page 0.37s ready C-small/1820
+  page 0.37s issue C-small/1820
+  page 0.38s ready C-small/2767
+  page 0.38s ready C-small/2192
+  page 0.38s ready C-small/1637
+  page 0.38s issue C-small/1637
+  page 0.38s ready C-small/419
+  page 0.38s issue C-small/419
+  page 0.38s ready C-small/468
+  page 0.39s issue C-small/2767
+  page 0.4s ready C-small/2767
+  page 0.4s issue C-small/468
+  page 0.4s ready C-small/468
+  page 0.4s issue C-small/1637
+  page 0.4s ready C-small/1637
+  page 0.4s issue C-small/1637
+0.39 rv=null gf=i0 r0 sw=false c=false fb= w=:0
+  page 0.94s issue C-small/3915
+  page 0.94s issue C-look/5574
+  page 1.07s ready C-small/3915
+  page 1.08s ready C-look/5574
+  page 1.08s issue C-small/1820
+  page 1.08s ready C-small/1820
+  page 1.08s issue C-small/1820
+  page 1.08s issue P/59075
+  page 1.12s ready P/59075
+  page 1.12s issue P/5837
+  page 1.13s ready P/5837
+  page 1.13s issue C-small/2192
+  page 1.13s ready C-small/2192
+1.05 rv=0.0/12.5 gf=i0 r0 sw=false c=false fb= w=compiling:0
+  page 1.25s issue P/35637
+  page 1.27s ready P/35637
+  page 1.27s issue P/37348
+  page 1.29s ready P/37348
+  page 1.3s issue C-small/419
+  page 1.3s ready C-small/419
+  page 1.3s issue C-small/419
+  page 1.67s issue L/78173
+  page 1.77s ready L/78173
+  page 1.81s issue L+R/79182
+1.77 reveal clock running 1.52 / 12.55
+1.77 rv=1.5/12.5 gf=i2 r1 sw=false c=false fb= w=compiling:2
+  page 1.98s ready L+R/79182
+  page 2.03s issue L+R/79510
+  page 2.14s ready L+R/79510
+  page 2.18s issue L+R/77317
+  page 2.27s ready L+R/77317
+  page 2.31s issue P/43587
+  page 2.36s ready P/43587
+  page 2.4s issue P/41995
+  page 2.44s ready P/41995
+2.36 rv=2.8/12.5 gf=i6 r6 sw=false c=false fb= w=compiling:7
+  page 2.5s issue P/43915
+  page 2.54s ready P/43915
+  page 2.59s issue R/44556
+  page 2.62s ready R/44556
+  page 2.66s issue R/42853
+  page 2.7s ready R/42853
+  page 2.75s issue R/44884
+  page 2.79s ready R/44884
+  page 2.83s issue L/76419
+  page 2.93s ready L/76419
+  page 2.97s issue L/78501
+  page 3.09s ready L/78501
+3.01 rv=4.1/12.5 gf=i12 r12 sw=false c=false fb= w=done:12
+  page 6.9s issue P/78142
+  page 6.9s issue P/75545
+  page 6.9s issue P/61958
+  page 6.9s issue P/47074
+  page 6.9s issue P/41646
+  page 6.9s issue P/29812
+  page 6.9s issue P/20595
+  page 6.9s issue C-small/3132
+  page 6.9s issue C-small/2993
+  page 6.9s issue C-small/2965
+  page 6.9s issue C-small/2927
+  page 6.9s issue C-small/2874
+  page 6.9s issue C-small/2859
+  page 6.9s issue C-small/2806
+  page 6.9s issue C-small/2768
+  page 6.9s issue C-small/2737
+  page 6.9s issue C-small/2721
+  page 6.9s issue C-small/2682
+  page 6.9s issue C-small/2585
+  page 6.9s issue C-small/2524
+  page 6.9s issue C-small/2438
+  page 6.9s issue C-small/713
+  page 6.9s issue C-small/868
+6.89 reveal done
+6.89 rv=12.7/12.5d gf=i12 r12 sw=true c=true fb= w=done:12
+7.69 SWITCH {"t":6.89,"rv":{"c":12.657039999999999,"d":12.54901478226457,"done":true},"gf":{"c":1,"i":12,"r":12,"sw":6919.900000095367,"fb":"","w":"done:12"},"pageSwitchS":6.92} pre shots 6.23,6.76
+7.69 all compiled, switched, worker over

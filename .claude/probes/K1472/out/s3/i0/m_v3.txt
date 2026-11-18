@@ -1,0 +1,107 @@
+0.01 rv=null gf=null
+  page 0.12s issue P/59075
+  page 0.12s issue P/37348
+  page 0.12s issue P/35637
+  page 0.12s issue P/5837
+  page 0.12s issue C-small/1820
+  page 0.12s issue C-small/2767
+  page 0.12s issue C-small/2192
+  page 0.12s issue C-small/1637
+  page 0.12s issue C-small/419
+  page 0.12s issue C-small/468
+  page 0.36s ready P/59075
+  page 0.36s ready P/37348
+  page 0.36s ready P/35637
+  page 0.36s ready P/5837
+  page 0.36s ready C-small/1820
+  page 0.36s issue C-small/1820
+  page 0.36s ready C-small/2767
+  page 0.36s ready C-small/2192
+  page 0.36s ready C-small/1637
+  page 0.36s issue C-small/1637
+  page 0.36s ready C-small/419
+  page 0.36s issue C-small/419
+  page 0.36s ready C-small/468
+  page 0.37s issue C-small/2767
+  page 0.37s ready C-small/2767
+  page 0.38s issue C-small/468
+  page 0.38s ready C-small/468
+  page 0.38s issue C-small/1637
+  page 0.38s ready C-small/1637
+  page 0.38s issue C-small/1637
+0.41 rv=null gf=i0 r0 sw=false c=false fb= w=:0
+  page 0.93s issue C-small/3915
+  page 0.93s issue C-look/5574
+  page 1.07s ready C-small/3915
+  page 1.07s ready C-look/5574
+  page 1.07s issue C-small/1820
+  page 1.07s ready C-small/1820
+  page 1.07s issue C-small/1820
+  page 1.08s issue P/59075
+  page 1.11s ready P/59075
+  page 1.11s issue P/5837
+  page 1.12s ready P/5837
+  page 1.12s issue C-small/2192
+  page 1.12s ready C-small/2192
+1.03 rv=0.0/12.5 gf=i0 r0 sw=false c=false fb= w=compiling:0
+  page 1.28s issue P/35637
+  page 1.29s ready P/35637
+  page 1.3s issue P/37348
+  page 1.31s ready P/37348
+  page 1.32s issue C-small/419
+  page 1.32s ready C-small/419
+  page 1.32s issue C-small/419
+  page 1.72s issue L/78173
+  page 1.81s ready L/78173
+  page 1.88s issue L+R/79182
+1.8 reveal clock running 1.48 / 12.55
+1.8 rv=1.5/12.5 gf=i2 r1 sw=false c=false fb= w=compiling:2
+  page 2.02s ready L+R/79182
+  page 2.06s issue L+R/79510
+  page 2.17s ready L+R/79510
+  page 2.22s issue L+R/77317
+  page 2.31s ready L+R/77317
+  page 2.34s issue P/43587
+  page 2.4s ready P/43587
+  page 2.43s issue P/41995
+  page 2.47s ready P/41995
+2.39 rv=2.8/12.5 gf=i6 r6 sw=true c=true fb= w=compiling:7
+3.24 SWITCH {"t":2.39,"rv":{"c":2.8089600000000012,"d":12.54901478226457,"done":false},"gf":{"c":13,"i":6,"r":6,"sw":2036.4000000953674,"fb":"","w":"compiling:7"},"pageSwitchS":2.04} pre shots 1.69,2.27
+  page 2.5s issue P/43915
+  page 2.53s ready P/43915
+  page 2.57s issue R/44556
+  page 2.6s ready R/44556
+  page 2.65s issue R/42853
+  page 2.69s ready R/42853
+  page 2.72s issue R/44884
+  page 2.75s ready R/44884
+  page 2.81s issue L/76419
+  page 2.88s ready L/76419
+  page 2.92s issue L/78501
+  page 3.03s ready L/78501
+3.36 rv=5.0/12.5 gf=i12 r12 sw=true c=true fb= w=done:12
+  page 6.89s issue P/78142
+  page 6.89s issue P/75545
+  page 6.89s issue P/61958
+  page 6.89s issue P/47074
+  page 6.89s issue P/41646
+  page 6.89s issue P/29812
+  page 6.89s issue P/20595
+  page 6.89s issue C-small/3132
+  page 6.89s issue C-small/2993
+  page 6.89s issue C-small/2965
+  page 6.89s issue C-small/2927
+  page 6.89s issue C-small/2874
+  page 6.89s issue C-small/2859
+  page 6.89s issue C-small/2806
+  page 6.89s issue C-small/2768
+  page 6.89s issue C-small/2737
+  page 6.89s issue C-small/2721
+  page 6.89s issue C-small/2682
+  page 6.89s issue C-small/2585
+  page 6.89s issue C-small/2524
+  page 6.89s issue C-small/2438
+  page 6.89s issue C-small/713
+  page 6.89s issue C-small/868
+6.92 reveal done
+6.92 all compiled, switched, worker over
