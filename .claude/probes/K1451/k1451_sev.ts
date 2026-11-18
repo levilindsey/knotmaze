@@ -7,6 +7,7 @@ export async function loadEv(): Promise<(T: any) => any> {
   const F = process.env.K1451_F; const mode = process.env.K1451_MODE ?? "";
   return (T) => {
     const E: any = new GfEval(T);
+    if (process.env.K1438_FL) E.fadeLength = +process.env.K1438_FL; // K1451 s2: the scan's fade length (was read by nothing)
     const wk = process.env.K1451_WIN ? +process.env.K1451_WIN : 0;
     if (wk > 0) {
       // per-pin depth window: max(win, wk * the overlap reach at the pin's crossing, h (1/tan + 1/sin)); probe only
@@ -41,8 +42,10 @@ export async function loadEv(): Promise<(T: any) => any> {
         else { pw[a] = Math.max(T.win, wk * T.h * (cs / sn + 1 / sn)); pwR[a] = pw[a]; }
       }
       if (process.env.K1451_WINLOG) console.error(`pins ${nP} paired ${paired} win ${T.win} max ${Math.max(...pw).toFixed(3)} widened ${Array.from(pw).filter((x) => x > T.win).length}+${Array.from(pwR).filter((x) => x > T.win).length} maxR ${Math.max(...pwR).toFixed(3)}`);
-      if (process.env.K1451_WINK === "1") { const od = GfEval.prototype["depth"]; const om = GfEval.prototype["member"]; E.member = function (c: number, s: number): void { om.call(this, c, s, od.call(this, c, s)); }; }
-      E.depth = function (c: number, s: number): number {
+      // K1451 s2: depth() also leaves mz (the membership depth); src sets it to the fixed-window depth. Keys only (WINK=1): keep src's mz; otherwise mz = this window's depth too.
+      const wkKeys = process.env.K1451_WINK === "1"; const sd = GfEval.prototype["depth"];
+      E.depth = function (c: number, s: number): number { sd.call(this, c, s); const r = dep(c, s); if (!wkKeys) this.mz = r; return r; };
+      const dep = function (c: number, s: number): number {
         const n = T.cPinN[c]; if (n === 0) return 0;
         const b = T.cPin0[c]; let u = s; const len = T.cLen[c];
         if (T.cClosed[c]) { u = (s - T.cS0[c]) % len; if (u < 0) u += len; u += T.cS0[c]; }

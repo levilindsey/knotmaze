@@ -66,3 +66,53 @@ spots 5 and 7 change a nearby group patch's shape.
 whichever comes first. A compaction is not a stop: re-read this brief and `git log`. On stopping: commit WIP,
 append `### Handoff K1451 s2` here, commit, and report: what holds, the sheets' paths (each spot named fixed
 or open), the numbers, a `Ledger items` list and K1451's handle fields.
+
+### Handoff K1451 s2
+
+Agent: claude session 01SUPGULDxvE5gKXozfaFaFG (worktree agent-a53218bf2f47c89c2, branch
+`worktree-agent-a53218bf2f47c89c2`), 12:04-13:55 on 2026-11-17. Commits: 153f8db9 (windows in tables, eval,
+glsl, pack), f32b820d (re-pin), 3857450c (sheet and matcher probes, sheets), c8f6c396 (home-only gate),
+plus the handoff commit.
+
+**What is in src.** `tables.ts` builds `pinWL` / `pinWR` per pin, per side: max(win, 1.15 x the arc over which
+the partner pass stays within 2h) (`GF_REACH_K`, `pinReach`). `eval.ts` and `gf_glsl.ts` cut each key's hat at
+its side's window; `gf_pack.ts` carries them in the PIN texel's z/w. member() / homeRamp keep today's depth.
+The windows apply only with home membership (`opts.home ?? GF_HOME`, i.e. `gfh=1`). With home off, the shipped
+default, every window is `win` and the keys are master's: the first cut applied them in both modes, and the
+home-off bar census went stray 16 -> 231, hard 0 -> 6 (member() without home splits a crossing's ribbons into
+blocks the wider hat re-orders); c5's spot muse_hash:5.88:8.50 went 1243 -> 5450 px.
+
+**Done items.**
+1. Scan at gfh=1, flag off: src 2351/35/253 (all/tie/ramp) = the probe rck1.15 exactly; master 2434/176/192.
+   Find by find (`k1451_match.ts`): 0 new finds, 83 gone, no tie find worse. Holds.
+   The home-off run before the gate read 3196/894/120 against the probe's 3198/901/115 (ramp 4.3% off), with 2
+   new tie finds the probe shows too; with the gate home off is master's scan.
+2. Sheet (home on, 4x GPU, columns today | master gf | this gf): `.claude/probes/K1451/out/s2/sheet_a.png`
+   (spots 1-8), `sheet_b.png` (9-12), `sheet_57.png` (close-ups of 5 and 7). Spots 1, 2, 3, 4, 5, 6, 8 fixed
+   (master's grey smudge gone, the crossing reads as master's over/under). Spot 7: the ink is fixed, the chain
+   colour is open (pink -> lilac with a leftover pink fragment). Spots 9-12 open (relabels: dark wedges where
+   master had grey slivers). GPU vs mirror on these tiles reads 1.0 in master and mine alike (pre-existing).
+3. Fades (home on): fade 0 2408/32/21 vs master 2523/182/21; fade 1.2 2150/0/493 vs master 2236/86/496. No class
+   above master. But fade 0 has 16 new plain rthin finds (the probe has the same); the GPU crops (`new_fl0.png`)
+   show larger dark crescents than master at g41_def_tw64:34.66:13.94 and :6.26:32.46 and a notch at
+   g41_user_tw64:16.20:5.30. Holds by count, open by look.
+4. Bar census. Home off (shipped): 16/0/11/14 = master's, 141 = 141 finds, identical; c5's 29 spots identical to
+   master (`check29_mine_gated.txt`). Home on (GF_HOME=1, `bar_home_k1451mh_k1451s2h.txt`): master 14/0/11/399,
+   mine 21/11/11/393: does NOT hold. 7 new stray (ring and g41_ring_tw64 near x68: 1987 and 3687 px;
+   muse_hash near j50 2943, j36 1911, x301, j78) and 11 new hard edges (muse_hash j149, j126, j78, j124, j152,
+   j53; g41_def_tw64 j118, j119; g41_user_tw64 j71, j35): list in `bar_home_new.txt`. Master's own home-on
+   census has 399 broken, so the home flag is not at the bar yet either. GPU census (home off, `k1407c1_gpucensus.ps1 -Tag k1451s2g`): only group 1 (g41_def_tw64, user_tw42.lightpaper) wrote output (4/0/1/13, `.claude/probes/K1362/out/s2/census_k1451s2g_1.txt`); the other five groups wrote nothing and the merge did not run (cause not looked at). Not done. Home off builds master's tables, so it should equal c5g.
+5. Tables digest: all b0fc8ce3... (297 pooled builds, 0 mismatches). Pins: flag-off pack j_cross db23c268...,
+   k42 93cc931f... (the PIN texel's z/w hold win where master had 0). Holds.
+6. Hold: 60/60 on both links (`?3&xp=off&am=instant&rp=gf` and the gfh=1 link). `npm test` green (251 files,
+   3114 tests). Holds.
+7. Bench: not done. One try (`k1362c1_bench.ps1`, master build on 5542 vs c8f6c396 on 5543, local `vite build`s in `$env:TEMP\k1451s2_prev2`) failed on its first URL at the 120 s "leave loading" wait; the same URL loaded fine in `diag_screenshot.mjs` after. Out of time for a second try. With home off the shipped path differs from master only by the window fill and the packed z/w, so a change is unlikely, but it is unmeasured. Tables build time (`k1451_buildtime.ts`, home on, 12 scenes, median of 7): 156.8 -> 218.6 ms
+   (+39%); fat 4.4 -> 17.5 ms. Home off adds only the window fill.
+
+**Tried and fell short.** Windows in both modes (bar census, above). Nothing learned on the cfg cause.
+
+**Next.** Find why the wider hat makes stray / hard ink at home-on crossings near x68 (ring scenes) and the
+muse_hash junctions above: crop them on the GPU against master home-on; then decide whether the windows need
+member()'s depth to match (the brief kept member() at today's depth) or a narrower reach. Cut pinReach's cost
+(fat +295%) before home goes default.
+

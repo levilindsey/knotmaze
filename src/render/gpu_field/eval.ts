@@ -93,7 +93,7 @@ export class GfEval {
 
   /** Membership of (c, s) as eval() takes it (group -1 = none; ramp 1 = full): for tests and probes. */
   memberAt(c: number, s: number): { g: number; ramp: number } {
-    this.member(c, s, this.depth(c, s));
+    this.depth(c, s); this.member(c, s, this.mz);
     return { g: this.mg, ramp: this.mramp };
   }
 
@@ -135,24 +135,34 @@ export class GfEval {
   }
   private mg = -1; private mramp = 1;
 
-  /** Diagram depth (tables.depthAt, inlined for the shader). */
+  /** member()'s depth at the last depth() call: today's window (tables.depthAt). */
+  private mz = 0;
+
+  /** K1451: the KEY depth (gf_glsl.ts depth()): the neighbouring pins' hats, each over min(its own window on the
+   * facing side, T.pinWL / pinWR, the pin gap). Also leaves the diagram depth over min(win, the gap) in mz
+   * (tables.depthAt, inlined for the shader), which member() and the corners keep. */
   private depth(c: number, s: number): number {
-    const T = this.T; const n = T.cPinN[c]; if (n === 0) return 0;
+    const T = this.T; const n = T.cPinN[c]; if (n === 0) { this.mz = 0; return 0; }
     const b = T.cPin0[c]; const win = T.win;
     let u = s; const len = T.cLen[c];
     if (T.cClosed[c]) { u = (s - T.cS0[c]) % len; if (u < 0) u += len; u += T.cS0[c]; }
     let lo = -1; let hi = n;
     while (hi - lo > 1) { const m = (lo + hi) >> 1; if (T.pinS[b + m] <= u) lo = m; else hi = m; }
-    let zL = 0; let dL = 0; let zR = 0; let dR = 0; let w = win;
+    let zL = 0; let dL = 0; let zR = 0; let dR = 0; let w = win; let wL = win; let wR = win;
     if (T.cClosed[c]) {
       const iL = lo < 0 ? n - 1 : lo; const sL = lo < 0 ? T.pinS[b + iL] - len : T.pinS[b + iL];
       const iR = lo + 1 >= n ? 0 : lo + 1; const sR = lo + 1 >= n ? T.pinS[b + iR] + len : T.pinS[b + iR];
-      w = Math.min(win, sR - sL); zL = T.pinZ[b + iL]; dL = u - sL; zR = T.pinZ[b + iR]; dR = sR - u;
-    } else if (lo < 0) { zR = T.pinZ[b]; dR = T.pinS[b] - u; dL = Infinity; }
-    else if (lo + 1 >= n) { zL = T.pinZ[b + n - 1]; dL = u - T.pinS[b + n - 1]; dR = Infinity; }
-    else { w = Math.min(win, T.pinS[b + lo + 1] - T.pinS[b + lo]); zL = T.pinZ[b + lo]; dL = u - T.pinS[b + lo]; zR = T.pinZ[b + lo + 1]; dR = T.pinS[b + lo + 1] - u; }
-    const hat = (z: number, d: number): number => (w <= 1e-12 ? (d <= 0 ? z : 0) : d >= w ? 0 : z * (1 - d / w));
-    return hat(zL, dL) + hat(zR, dR);
+      const g = sR - sL; w = Math.min(win, g); wL = Math.min(T.pinWR[b + iL], g); wR = Math.min(T.pinWL[b + iR], g);
+      zL = T.pinZ[b + iL]; dL = u - sL; zR = T.pinZ[b + iR]; dR = sR - u;
+    } else if (lo < 0) { zR = T.pinZ[b]; dR = T.pinS[b] - u; dL = Infinity; wR = T.pinWL[b]; }
+    else if (lo + 1 >= n) { zL = T.pinZ[b + n - 1]; dL = u - T.pinS[b + n - 1]; dR = Infinity; wL = T.pinWR[b + n - 1]; }
+    else {
+      const g = T.pinS[b + lo + 1] - T.pinS[b + lo]; w = Math.min(win, g); wL = Math.min(T.pinWR[b + lo], g); wR = Math.min(T.pinWL[b + lo + 1], g);
+      zL = T.pinZ[b + lo]; dL = u - T.pinS[b + lo]; zR = T.pinZ[b + lo + 1]; dR = T.pinS[b + lo + 1] - u;
+    }
+    const hat = (z: number, d: number, ww: number): number => (ww <= 1e-12 ? (d <= 0 ? z : 0) : d >= ww ? 0 : z * (1 - d / ww));
+    this.mz = hat(zL, dL, w) + hat(zR, dR, w);
+    return hat(zL, dL, wL) + hat(zR, dR, wR);
   }
 
   /** Squared distance from (x, y) to piece j's segments (its fold range). */
@@ -352,7 +362,7 @@ export class GfEval {
     let nr = 0; const rIdx = [0, 0]; // the ramping pieces
     for (let j = 0; j < np; j++) {
       this.pz[j] = this.depth(this.pc[j], this.ps[j]); this.pkey[j] = this.pz[j] - this.pd[j] * zK;
-      this.member(this.pc[j], this.ps[j], this.pz[j]); this.pg[j] = this.mg; this.pramp[j] = this.mramp;
+      this.member(this.pc[j], this.ps[j], this.mz); this.pg[j] = this.mg; this.pramp[j] = this.mramp;
       if (this.mg >= 0 && this.mramp > 0 && this.mramp < 1) {
         if (nr < MAXR) rIdx[nr++] = j;
         else { /* past MAXR: rounds to the nearer configuration */ this.pramp[j] = this.mramp >= 0.5 ? 1 : 0; }

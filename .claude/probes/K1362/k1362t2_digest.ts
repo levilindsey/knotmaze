@@ -19,7 +19,7 @@ const sliceCounts = (process.argv[4] ?? "1,3,6").split(",").map((x) => parseInt(
 const CENSUS = ["muse_hash", "g41_def_tw42", "g41_ring_tw64", "user_tw42.lightpaper", "def", "fat", "g41_def_tw64", "g41_user_tw42", "muse_default_tw", "ring", "g41_ring_tw42", "g41_user_tw64"];
 const FIELDS: (keyof GfTables)[] = [
   "cV0", "cNV", "cClosed", "cLen", "cS0", "cPin0", "cPinN", "cArm0", "cArmN",
-  "vx", "vy", "vs", "pinS", "pinZ",
+  "vx", "vy", "vs", "pinS", "pinZ", "pinWL", "pinWR",
   "aSR", "aDir", "aL", "aLcut", "aG",
   "kCx", "kCy", "kR", "kRmax", "kThru", "kRV", "kEax", "kEay", "kEbx", "kEby", "kG", "kJ", "kA", "kB", "kTheta", "kCa", "kCb", "kSa", "kSb", "kZa", "kZb", "kTax", "kTay", "kTbx", "kTby",
   "chV0", "chN", "chC", "chBox", "cellCh0", "cellChN", "cellChList", "cellK0", "cellKN", "cellKList",

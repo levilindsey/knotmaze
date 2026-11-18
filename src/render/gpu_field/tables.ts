@@ -55,6 +55,13 @@ export interface GfTables {
   /** Original scene chain index -> same index (kept for clarity: tables index chains as the scene orders them). */
   nV: number; vx: Float64Array; vy: Float64Array; vs: Float64Array;
   pinS: Float64Array; pinZ: Float64Array;
+  /**
+   * K1451: each pin's KEY depth window on its left (s below the pin) and right side: max(win, GF_REACH_K x the arc
+   * over which the crossing's other pass stays within GF_REACH_SEP h of this pass), so the keys' depth hat spans the
+   * whole ribbon overlap of a shallow or curved crossing (pinReach). Only the piece keys read it (eval.ts keyDepth,
+   * gf_glsl.ts depth()); membership and the corner depths keep win (depthAt). Home off: win everywhere (master's keys).
+   */
+  pinWL: Float64Array; pinWR: Float64Array;
   /** Arms, sorted by chain: root s, direction, span L, cap Lcut (Infinity = none), group. */
   nA: number; aSR: Float64Array; aDir: Float64Array; aL: Float64Array; aLcut: Float64Array; aG: Int32Array;
   /**
@@ -110,6 +117,90 @@ function chainAtInto(T: Pick<GfTables, "cV0" | "cNV" | "cClosed" | "cLen" | "cS0
   const t = L > 0 ? Math.min(1, Math.max(0, (u - T.vs[lo]) / L)) : 0;
   const dx = bx - ax; const dy = by - ay; const l = Math.hypot(dx, dy) || 1;
   o.x = ax + dx * t; o.y = ay + dy * t; o.tx = dx / l; o.ty = dy / l;
+}
+
+/** K1451: a pin's key window is max(win, GF_REACH_K x its reach): the hat ends just above the tie depth zt
+ * (0.13 amp > 0.1 amp) where the overlap ends. */
+export const GF_REACH_K = 1.15;
+/** K1451: the overlap's end: the other pass's centreline farther than GF_REACH_SEP h (the two ribbons part). */
+export const GF_REACH_SEP = 2;
+/** K1451: the reach walk's step and cap, in h. */
+export const GF_REACH_STEP = 0.1;
+export const GF_REACH_CAP = 10;
+
+/**
+ * K1451: the reach of a crossing's overlap from one pass. Walks chain c from s0 in direction dir (+-1) in steps of
+ * GF_REACH_STEP h, and keeps the partner pass's foot (chain p, from its pin at sp) by a hill climb over p's
+ * segments, so each step costs a few segment distances; stops where the partner's centreline is farther than
+ * GF_REACH_SEP h, at the GF_REACH_CAP h cap, or at `gap` (the next pin: a window past it is cut there anyway, so
+ * the walk returns gap). An open chain's walk holds its end point past the end (chainAt clamps), as the probe did.
+ * Returns the last arc still inside (0 = the first step is out).
+ */
+export function pinReach(T: Pick<GfTables, "cV0" | "cNV" | "cClosed" | "cLen" | "cS0" | "vx" | "vy" | "vs">, c: number, s0: number, dir: number, p: number, sp: number, h: number, gap: number, from = 0): number {
+  const step = GF_REACH_STEP * h; const cap = GF_REACH_CAP * h; const sep = GF_REACH_SEP * h; const sep2 = sep * sep;
+  const v0 = T.cV0[p]; const nseg = T.cNV[p] - 1; const closed = T.cClosed[p] === 1;
+  if (nseg < 1) return 0;
+  // the partner's segment holding sp
+  let u = sp;
+  if (closed) { u = (sp - T.cS0[p]) % T.cLen[p]; if (u < 0) u += T.cLen[p]; u += T.cS0[p]; }
+  let lo = v0; let hi = v0 + nseg;
+  if (u <= T.vs[lo]) hi = lo + 1; else if (u >= T.vs[hi]) lo = hi - 1;
+  else while (hi - lo > 1) { const m = (lo + hi) >> 1; if (T.vs[m] <= u) lo = m; else hi = m; }
+  let kp = lo - v0;
+  const Q = { x: 0, y: 0, tx: 0, ty: 0 };
+  const segD2 = (k: number): number => {
+    const v = v0 + k; const ax = T.vx[v]; const ay = T.vy[v]; const dx = T.vx[v + 1] - ax; const dy = T.vy[v + 1] - ay;
+    const l2 = dx * dx + dy * dy; const t = l2 > 0 ? Math.min(1, Math.max(0, ((Q.x - ax) * dx + (Q.y - ay) * dy) / l2)) : 0;
+    const ex = ax + dx * t - Q.x; const ey = ay + dy * t - Q.y; return ex * ex + ey * ey;
+  };
+  const prev = (k: number): number => (k > 0 ? k - 1 : closed ? nseg - 1 : -1);
+  const next = (k: number): number => (k + 1 < nseg ? k + 1 : closed ? 0 : -1);
+  const lim = Math.min(cap, gap);
+  let r = 0;
+  // K1451 s3 (build time): a reach short of `from` gives the caller the same window as none, so the walk starts at
+  // the first step at or past it (0 when the walk is out there; an overlap that left and came back before it counts
+  // as staying), and returns 0 without walking when the limit falls short of it.
+  const i0 = Math.max(1, Math.ceil(from / step - 1e-9));
+  if (from > 0 && i0 * step > lim) return 0;
+  for (let i = i0; ; i++) {
+    const t = i * step;
+    if (t > lim) return lim < cap ? gap : r;
+    chainAtInto(T, c, s0 + dir * t, Q);
+    let d = segD2(kp);
+    for (let guard = 0; guard < nseg; guard++) {
+      const km = prev(kp); const kn = next(kp);
+      const dm = km >= 0 ? segD2(km) : Infinity; const dn = kn >= 0 ? segD2(kn) : Infinity;
+      if (dm < d && dm <= dn) { kp = km; d = dm; } else if (dn < d) { kp = kn; d = dn; } else break;
+    }
+    if (d > sep2) {
+      // the hill climb can sit in a local minimum while the partner's nearest point jumps (a twist eye's far
+      // strand, a self-crossing's own pass): before calling the step out, search the partner's whole stretch,
+      // cap + sep of arc each way of its pin (the stage 1 probe's partner search). A self-crossing's stretch can
+      // hold this pass itself: a kink loop shorter than it reads as overlapping throughout.
+      const span = cap + sep; const ub = sp - span; const ue = sp + span;
+      // the segment holding ub (wrapped on a closed chain; off = ub's frame minus the wrapped one), found once, then
+      // the following segments in turn (K1451 s3: the search used to re-find each one)
+      let w = ub; let off = 0;
+      if (closed) { w = (ub - T.cS0[p]) % T.cLen[p]; if (w < 0) w += T.cLen[p]; w += T.cS0[p]; off = ub - w; }
+      else if (w < T.vs[v0]) w = T.vs[v0];
+      let a = v0; let z = v0 + nseg;
+      if (w <= T.vs[a]) z = a + 1; else if (w >= T.vs[z]) a = z - 1;
+      else while (z - a > 1) { const m = (a + z) >> 1; if (T.vs[m] <= w) a = m; else z = m; }
+      for (let guard = 0; guard <= nseg; guard++) {
+        const s0a = T.vs[a] + off; if (s0a >= ue) break;
+        const L = T.vs[a + 1] - T.vs[a];
+        const ta = L > 0 ? Math.max(0, (ub - s0a) / L) : 0; const tb = L > 0 ? Math.min(1, (ue - s0a) / L) : 1;
+        const ax = T.vx[a]; const ay = T.vy[a]; const dx = T.vx[a + 1] - ax; const dy = T.vy[a + 1] - ay; const l2 = dx * dx + dy * dy;
+        const tt = l2 > 0 ? Math.min(tb, Math.max(ta, ((Q.x - ax) * dx + (Q.y - ay) * dy) / l2)) : 0;
+        const ex = ax + dx * tt - Q.x; const ey = ay + dy * tt - Q.y; const dd = ex * ex + ey * ey;
+        if (dd < d) { d = dd; kp = a - v0; }
+        if (a + 1 < v0 + nseg) a++;
+        else if (closed) { a = v0; off += T.cLen[p]; }
+        else break;
+      }
+    }    if (d > sep2) return r;
+    r = t;
+  }
 }
 
 /** Form B's diagram depth at (c, s): the two neighbouring pins' hats (depth.ts), each over min(win, the pin gap). */
@@ -173,6 +264,7 @@ export interface GfPrefix {
   nC: number; cV0: Int32Array; cNV: Int32Array; cClosed: Uint8Array; cLen: Float64Array; cS0: Float64Array;
   cPin0: Int32Array; cPinN: Int32Array; cArm0: Int32Array; cArmN: Int32Array;
   nV: number; vx: Float64Array; vy: Float64Array; vs: Float64Array; pinS: Float64Array; pinZ: Float64Array;
+  pinWL: Float64Array; pinWR: Float64Array;
   pinTheta: Float64Array; chainIds: Int32Array; rootsOff: Int32Array; rootsS: Float64Array; rootsJ: Int32Array;
   nA: number; aSR: Float64Array; aDir: Float64Array; aL: Float64Array; aLcut: Float64Array; aG: Int32Array;
   arms: GfArm[]; junctions: FieldScene["junctions"]; jGroup: Int32Array;
@@ -402,7 +494,7 @@ export function buildGfPrefix(scene: FieldScene, opts: GfOpts, rawMerged?: GfRaw
   const t1 = now();
 
   // 2. Pins (form B step 2): z = +-amp at each crossing's pass.
-  const pinsOf: { s: number; z: number; theta: number }[][] = scene.chains.map(() => []);
+  const pinsOf: { s: number; z: number; theta: number; pc: number; ps: number }[][] = scene.chains.map(() => []);
   const norm = (c: number, s: number): number => {
     if (!cClosed[c]) return s;
     let u = (s - cS0[c]) % cLen[c]; if (u < 0) u += cLen[c]; return u + cS0[c];
@@ -415,12 +507,32 @@ export function buildGfPrefix(scene: FieldScene, opts: GfOpts, rawMerged?: GfRaw
     const sa = norm(ia, x.a.s); const sb = norm(ib, x.b.s);
     chainAtInto(TT, ia, sa, CA1); chainAtInto(TT, ib, sb, CA2);
     const theta = Math.acos(Math.min(1, Math.abs(CA1.tx * CA2.tx + CA1.ty * CA2.ty)));
-    pinsOf[ia].push({ s: sa, z: x.over === "a" ? amp : -amp, theta });
-    pinsOf[ib].push({ s: sb, z: x.over === "b" ? amp : -amp, theta });
+    pinsOf[ia].push({ s: sa, z: x.over === "a" ? amp : -amp, theta, pc: ib, ps: sb });
+    pinsOf[ib].push({ s: sb, z: x.over === "b" ? amp : -amp, theta, pc: ia, ps: sa });
   }
   let nPin = 0; for (const p of pinsOf) { p.sort((u, v) => u.s - v.s); nPin += p.length; }
   const pinS = new Float64Array(nPin); const pinZ = new Float64Array(nPin); const pinTheta = new Float64Array(nPin); const cPin0 = new Int32Array(nC); const cPinN = new Int32Array(nC);
   { let q = 0; pinsOf.forEach((P, c) => { cPin0[c] = q; cPinN[c] = P.length; for (const p of P) { pinS[q] = p.s; pinZ[q] = p.z; pinTheta[q] = p.theta; q++; } }); }
+  // K1451: each pin's key window per side, from the reach of its crossing's overlap. Home membership only (K1451
+  // s2): with home off (the shipped default) the wider keys raised the bar census's stray ink 16 -> 231 (member()
+  // without home splits a crossing's ribbons into blocks the wider hat re-orders), so home off keeps win.
+  const pinWL = new Float64Array(nPin).fill(win); const pinWR = new Float64Array(nPin).fill(win);
+  if (opts.home ?? GF_HOME) {
+    const RW = { cV0, cNV, cClosed, cLen, cS0, vx, vy, vs };
+    let q = 0;
+    pinsOf.forEach((P, c) => {
+      const n = P.length;
+      for (let i = 0; i < n; i++, q++) {
+        const p = P[i];
+        // the arc to the next pin each way (a window past it is cut at the pin gap anyway); open chain: no limit
+        let gL = Infinity; let gR = Infinity;
+        if (cClosed[c]) { gL = n > 1 ? p.s - P[(i + n - 1) % n].s : cLen[c]; if (gL <= 0) gL += cLen[c]; gR = n > 1 ? P[(i + 1) % n].s - p.s : cLen[c]; if (gR <= 0) gR += cLen[c]; }
+        else { if (i > 0) gL = p.s - P[i - 1].s; if (i + 1 < n) gR = P[i + 1].s - p.s; }
+        pinWL[q] = Math.max(win, GF_REACH_K * pinReach(RW, c, p.s, -1, p.pc, p.ps, h, gL, win / GF_REACH_K));
+        pinWR[q] = Math.max(win, GF_REACH_K * pinReach(RW, c, p.s, 1, p.pc, p.ps, h, gR, win / GF_REACH_K));
+      }
+    });
+  }
   const t2 = now();
 
   // 3. Groups (union-find over junctions whose roots a crossing-free run joins) and the arm table:
@@ -461,7 +573,7 @@ export function buildGfPrefix(scene: FieldScene, opts: GfOpts, rawMerged?: GfRaw
   return {
     h, W, aa, sigma, zt, amp, win, rc, gridK: opts.gridK, cr: look.cuspRadius ?? 3,
     nC, cV0, cNV, cClosed, cLen, cS0, cPin0, cPinN, cArm0, cArmN,
-    nV, vx, vy, vs, pinS, pinZ, nA, aSR, aDir, aL, aLcut, aG,
+    nV, vx, vy, vs, pinS, pinZ, pinWL, pinWR, nA, aSR, aDir, aL, aLcut, aG,
     arms: armsT, junctions: scene.junctions, jGroup, pinTheta, chainIds, rootsOff, rootsS, rootsJ,
     homeOn: opts.home ?? GF_HOME,
     ms: { vtx: t1 - t0, pins: t2 - t1, arms: t3 - t2 },
@@ -843,10 +955,40 @@ export function mergeGfChunkBins(parts: { cellChN: Int32Array; cellChList: Int32
   return { cellCh0, cellChN, cellChList };
 }
 
+const GF_NOCLIP: boolean = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_NOCLIP === "1";
+
+/** K1451 s3: pinWL / pinWR cut at the nearest arm interval [aSR, aSR + aDir max(aL, aHome)] on the pin's chain
+ * each way (0 inside one), never below win. */
+function clipPinWindows(P: Pick<GfPrefix, "nC" | "cClosed" | "cLen" | "cPin0" | "cPinN" | "pinS" | "pinWL" | "pinWR" | "win" | "cArm0" | "cArmN" | "aSR" | "aDir" | "aL">, aHome: Float64Array): [Float64Array, Float64Array] {
+  const { nC, cClosed, cLen, cPin0, cPinN, pinS, win, cArm0, cArmN, aSR, aDir, aL } = P;
+  const wL = Float64Array.from(P.pinWL); const wR = Float64Array.from(P.pinWR);
+  for (let c = 0; c < nC; c++) {
+    const a0 = cArm0[c]; const an = cArmN[c]; if (an === 0) continue;
+    const closed = cClosed[c] === 1; const len = cLen[c];
+    for (let q = cPin0[c]; q < cPin0[c] + cPinN[c]; q++) {
+      if (!(wL[q] > win) && !(wR[q] > win)) continue;
+      const s = pinS[q]; let dR = Infinity; let dL = Infinity;
+      for (let i = a0; i < a0 + an; i++) {
+        const ext = Math.max(aL[i], aHome[i]); if (!(ext > 0)) continue;
+        const e2 = aSR[i] + aDir[i] * ext; const lo = Math.min(aSR[i], e2); const hi = Math.max(aSR[i], e2);
+        if (closed) {
+          const md = (v: number): number => ((v % len) + len) % len;
+          if (md(s - lo) <= hi - lo) { dR = 0; dL = 0; break; }
+          dR = Math.min(dR, md(lo - s)); dL = Math.min(dL, md(s - hi));
+        } else {
+          if (s >= lo && s <= hi) { dR = 0; dL = 0; break; }
+          if (lo > s) dR = Math.min(dR, lo - s); else dL = Math.min(dL, s - hi);
+        }
+      }
+      wR[q] = Math.max(win, Math.min(wR[q], dR)); wL[q] = Math.max(win, Math.min(wL[q], dL));
+    }
+  }
+  return [wL, wR];
+}
 /** The tables from a prefix and its corners (all of them, in order).
  * With a merged chunk-bin slice set, bins take it; else bins run whole. */
 export function assembleGfTables(P: GfPrefix, K: GfCorner[], chunk: { meta: GfChunkMeta; bins: { cellCh0: Int32Array; cellChN: Int32Array; cellChList: Int32Array } } | null, ms: { vtx: number; pins: number; arms: number; corners: number }, t0: number): GfTables {
-  const { h, W, aa, sigma, zt, amp, win, rc, nC, cV0, cNV, cClosed, cLen, cS0, cPin0, cPinN, cArm0, cArmN, nV, vx, vy, vs, pinS, pinZ, nA, aSR, aDir, aL, aLcut, aG } = P;
+  const { h, W, aa, sigma, zt, amp, win, rc, nC, cV0, cNV, cClosed, cLen, cS0, cPin0, cPinN, cArm0, cArmN, nV, vx, vy, vs, pinS, pinZ, pinWL, pinWR, nA, aSR, aDir, aL, aLcut, aG } = P;
   const nK = K.length;
   const kCx = new Float64Array(nK); const kCy = new Float64Array(nK); const kR = new Float64Array(nK); const kRmax = new Float64Array(nK);
   const kEax = new Float64Array(nK); const kEay = new Float64Array(nK); const kEbx = new Float64Array(nK); const kEby = new Float64Array(nK); const kG = new Int32Array(nK);
@@ -892,10 +1034,13 @@ export function assembleGfTables(P: GfPrefix, K: GfCorner[], chunk: { meta: GfCh
   // K1438: from the arms themselves (P.arms is armTab.arms on every path: cold, pooled, the worker's), so no
   // caller copies a new field.
   const aHome = new Float64Array(nA); for (let i = 0; i < nA; i++) aHome[i] = P.arms[i].home;
+  // K1451 s3: a pin's reach window stops where a junction's arm or home begins on its chain (and stays win when the
+  // pin lies inside one), so the key depth equals member()'s depth wherever membership splits ribbons into blocks.
+  const [wL2, wR2] = P.homeOn === true && !GF_NOCLIP ? clipPinWindows(P, aHome) : [pinWL, pinWR];
 
   return {
     h, W, aa, sigma, zt, amp, win, rc, nC, cV0, cNV, cClosed, cLen, cS0, cPin0, cPinN, cArm0, cArmN,
-    nV, vx, vy, vs, pinS, pinZ, nA, aSR, aDir, aL, aLcut, aG, aHome, homeOn: P.homeOn === true,
+    nV, vx, vy, vs, pinS, pinZ, pinWL: wL2, pinWR: wR2, nA, aSR, aDir, aL, aLcut, aG, aHome, homeOn: P.homeOn === true,
     nK, kCx, kCy, kR, kRmax, kThru, kRV, kEax, kEay, kEbx, kEby, kG, kJ, kA, kB, kTheta, kCa, kCb, kSa, kSb, kZa, kZb, kTax, kTay, kTbx, kTby,
     nCh, chV0, chN, chC, chBox, gx0, gy0, G, gW, gH, cellCh0, cellChN, cellChList, cellK0, cellKN, cellKList, cellKPList,
     ms: { vtx: ms.vtx, pins: ms.pins, arms: ms.arms, corners: ms.corners, bins: t5 - t4, kp: t6 - t5, total: t6 - t0 },
