@@ -910,6 +910,12 @@ vec4 keyBin(int c, float s) {
 }
 #endif
 
+// K1482 s2: an open chain's end cap (the foot clamped to the chain's tip) sinks one pass (amp = 10 zt) when the piece
+// belongs to a junction group: a fused tail's cap yields to the thread it meets (eval.ts tipSink mirrors it)
+float tipSink(int c, float s) {
+  vec4 C0 = F(uOCh + 3 * c); if (C0.z > 0.5) return 0.0;
+  int v0 = int(C0.x); return s <= F(uOV + v0).z || s >= F(uOV + v0 + int(C0.y) - 1).z ? 10.0 * uZt : 0.0;
+}
 int mg; float mramp;
 void member(int c, float s, vec4 KB) {
   vec4 C0 = F(uOCh + 3 * c);
@@ -1413,7 +1419,7 @@ void main() {
     for (int j = 0; j < np; j++) {
       vec4 KB = keyBin(PC(j), ps[j]);
       float pz = depth(PC(j), ps[j], KB); pkey[j] = pz - pd[j] * zK;
-      member(PC(j), ps[j], KB); pg[j] = mg; pramp[j] = mramp;
+      member(PC(j), ps[j], KB); pg[j] = mg; pramp[j] = mramp; if (mg >= 0) pkey[j] -= tipSink(PC(j), ps[j]);
       if (mg >= 0 && mramp > 0.0 && mramp < 1.0) {
         if (nr < MAXR) { if (nr == 0) rIdx0 = j; else rIdx1 = j; nr++; }
         else pramp[j] = mramp >= 0.5 ? 1.0 : 0.0;
@@ -1513,7 +1519,7 @@ void main() {
       vec4 KB = keyBin(PC(j), sj);
       float pz = depth(PC(j), sj, KB);
       member(PC(j), sj, KB);
-      pkey[j] = pz - pd[j] * zK;
+      pkey[j] = pz - pd[j] * zK; if (mg >= 0) pkey[j] -= tipSink(PC(j), sj);
 #ifdef PGRP
       float pr = mramp; bool rmp = false;
       if (mg >= 0 && mramp > 0.0 && mramp < 1.0) {
@@ -1533,7 +1539,7 @@ void main() {
     for (int j = 0; j < np; j++) {
       vec4 KB = keyBin(PC(j), ps[j]);
       float pz = depth(PC(j), ps[j], KB); pkey[j] = pz - pd[j] * zK;
-      member(PC(j), ps[j], KB); pg[j] = mg; pramp[j] = mramp;
+      member(PC(j), ps[j], KB); pg[j] = mg; pramp[j] = mramp; if (mg >= 0) pkey[j] -= tipSink(PC(j), ps[j]);
       if (mg >= 0 && mramp > 0.0 && mramp < 1.0) {
         if (nr < MAXR) { if (nr == 0) rIdx0 = j; else rIdx1 = j; nr++; }
         else pramp[j] = mramp >= 0.5 ? 1.0 : 0.0;

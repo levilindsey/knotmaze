@@ -79,3 +79,67 @@ whichever comes first; not before, while a fix is still untried. A compaction is
 brief and `git log`. On stopping: commit WIP, append `### Handoff K1482 s2` here, commit, and report: what
 holds, the sheets' paths (each site named), the numbers, which commits are confirmed on screen, a `Ledger
 items` list and K1482's handle fields.
+
+### Handoff K1482 s2
+
+Agent worktree `agent-a8d924c8a5107064c`, branch `worktree-agent-a8d924c8a5107064c`, rebased on origin/master
+7c739b42. The fix is 0a84d3d1 (was 8afa59e9 before the rebase): in form B, an END piece whose foot is the open
+chain's first or last vertex and which belongs to a junction group (`mg >= 0`) sinks its key by `10 * zt` (= amp,
+one full pass), so a fused tail's round cap passes UNDER the thread it meets instead of drawing its outline over
+it. `tipSink()` in `gf_glsl.ts` (three key loops: SPLITK, default, PGRP/PKS) and its mirror in `eval.ts`. The
+digests in `test/render/gf_home_glsl.test.ts` were re-frozen: app sources 96a8eb14... -> 9064f282..., probe sources
+4390c49c... -> eca8fee6.... Confirmed on real screens (link A, 1600x900 DSF 2, hash fff8c9e5, master 056e1e0e vs
+the tip's preview, tables identical apart from timing).
+
+**The gate** (`mirror_caps.py`, screen + frozen-table mirror; `out/s2/scr/mirror_caps_{master,tip}.tsv`): sites with
+>= 20 px of on-screen cap ink, master -> tip: sliver 23 -> 0, clean 10 -> 3, wedge 9 -> 0, break 1 -> 0, dash 1 -> 0,
+dot 1 -> 0, notch 2 -> 0 (stub, tick 0 -> 0). Sites with any cap ink on screen: sliver 32 -> 13, clean 155 -> 146,
+wedge 13 -> 4.
+
+**The sweep, the scoreboard** (`out/s2/classes_tip.txt`: stage 1's eye classes minus the sites the sheets show
+fixed; only sites whose screen changed can change class, and every one of them was looked at): **85 -> 54 of 327
+faulted.** By class (stage 1 -> tip): sliver 33 -> 14, wedge 19 -> 11, notch 11 -> 9, dot 7 -> 6, break 3 -> 2,
+dash 4 -> 4, stub 3 -> 3, tick 5 -> 5.
+
+**Sheets** (`.claude/probes/K1482/out/s2/`, master | tip | diff, 4x, red = tip darker, green = tip lighter):
+- `sliver_00..04.png` (gfh=1). Fixed (19): j0 j3 j21 j61 j62 j76 j120 j139 j157 t0s t1e t6s t25e t26s t36e t41s t51e
+  t77s t83e. Open, improved (a hairline stays where the cap was): j77/t64e, j102/t62e. Same as master, not a cap:
+  j71 j95 j138 j147 t30e t43s t56s t70s; j126 and t55s shortened, still open (j138, t70s are K1477's).
+- `wedge_00..02.png`. Fixed (8): j6 j52 j101 t19e t36s t42s t53e t76e. Open, improved: t81s (a small step stays).
+  Same as master: j15 j50 j81 j82 j143 j158 t23e t59s t73e t84e (j81 is K1477's).
+- `changed_other_00.png`: the 12 other sites whose screen changed. Fixed: j5 (break), t37e and j123 (notch), j54
+  (dot); t20e (dash) shorter, still open; j84 j83 t19s j51 j103 t14e j42 clean on master and still clean (a
+  tail-cap merge removed). No master-clean site turned faulty.
+- Carry-across: `nogfh_fl0_00..02.png`, `nogfh_fl1.2_00..02.png` (gfh off, Crossing fade 0 and 1.2; 2014 and 2894
+  px changed): the same fixes at the same sites, nothing new. `s3_sites_00.png`: the bare `?3&xp=off&am=instant&
+  rp=gf` design moves between captures (master vs master differs 146k px), so its third column is the frozen-table
+  mirror's ink diff; 30 of 327 sites change, cap ink 750 -> 36 px, ink only REMOVED (0 px added anywhere); on screen
+  the tail's dark cap no longer crosses the over thread at j76 j139 j103 j3 j84 j126 j101 t36s j83 j0 j95 j157 t81s,
+  and j51's stray speck is gone.
+
+**Checks.** `hold.mjs` on link A against the tip: 60/60 cold and 60/60 warm (min 7108 edges, max 8862). `npm test`
+green after the rebase (254 files, 3169 tests). **K1436 bar (STRICT=1, -Ref 0a84d3d1 -Base 7c739b42, ring + def):
+FAIL, new 3, grown 0, gone 9** (`.claude/probes/K1436/out/bar/k1482s2/bar.txt`, `sheet.png`), all three looked at:
+- def (9.01, 6.44) 49 px and def (31.22, 28.59) 52 px, `rstray:ramp`: the same spots as two GONE `rstray:tie` finds
+  (98 and 89 px). On screen the tail's tapered dark tongue across the over thread is gone and the tail ends short
+  with a round end (fill look); the border look's stray is shorter. Better, relabelled, not a regression.
+- **ring (1.77, 15.26) 17 px, `rstray:ramp`: a REGRESSION in the fill look.** Base had a soft dark band across the
+  thread there (a gone `vdip:plain`, 15 px); the tip shows a hard-edged rectangle of background cut into the thread's
+  fill. The border look is the same on both. Traced as far as the stop line allowed (`ring_cut.ts`, GfEval with and
+  without tipSink on the census `ring` tables, GF_HOME=1): coverage does NOT change (no hole in the mirror); the
+  tail (chain 6) used to run up through chain 2 as a band of its own, and with the sink chain 2 covers it, while
+  the tail's last few pixels at the find's centre still win. So the dark block is shading, not a cut. Inferred, not
+  checked: the composite blends two surfaces only while their key gap is under zt (`if (!(gap < zt)) continue`
+  near gf_glsl.ts:1354); the sink pushes the gap past zt in one step, so base's soft band becomes a hard edge.
+  Next: print the composite's layers and gap at that pixel on both, then either taper the sink in over the end
+  piece's last stretch (so the gap grows smoothly) or leave the gap test on the unsunk key; rerun the gate, the
+  tiles' changed sites and the bar. Fix before merging, or merge with it named.
+
+**Look question for Levi.** Where a tail used to fuse into the thread it meets, its border now stops just short of
+that thread, like an ordinary under pass (j76, j3, t25e, t26s). That is what the fix is, but it changes how a
+dead end reads.
+
+**Next.** The open slivers and wedges are no longer cap faults: on the tip each carries 0-4 px of cap ink (the
+tsv's `cap_px`), and the remnants at j77/t64e (1 px), j102/t62e (0) and t81s (0) are not cap pixels either: what draws the hairline is untraced (inferred, not checked: the under
+pass's border end where it meets the junction group); it needs its own trace (`tail_geom.ts` + the mirror's winKind per pixel, as stage 1 did for the cap). Then the 10 non-cap
+wedges and the notch class (9 left), same method.
