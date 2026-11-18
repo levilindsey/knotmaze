@@ -1,0 +1,1 @@
+g41_def_tw42	rck1.15	finds 4	{"rbreak:plain":1,"rstray:tie":2,"rstray:ramp":1}	{"px":13616484,"act":5978087,"msPerMpx":1002,"usPerAct":2.28,"pcallsPerAct":0.26,"segsPerAct":1.93,"cfgsPerAct":1.048,"nSegPerAct":23.8,"nKPerAct":0.57}

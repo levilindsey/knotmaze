@@ -1,0 +1,1 @@
+muse_default_tw	cfgmin	finds 104	{"rbreak:plain":4,"rthin:plain":80,"rthin:ramp":17,"rthin:tie":3}	{"px":13866240,"act":7050389,"msPerMpx":1531,"usPerAct":3.01,"pcallsPerAct":0.276,"segsPerAct":2.35,"cfgsPerAct":1.019,"nSegPerAct":27.3,"nKPerAct":0.87}

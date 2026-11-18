@@ -1,0 +1,1 @@
+muse_hash	cfgmin	finds 624	{"dbreak:tie":18,"dstray:tie":18,"dstray:plain":2,"rbreak:tie":8,"rbreak:plain":5,"rbreak:ramp":2,"rstray:plain":19,"rstray:ramp":1,"rthin:plain":417,"rthin:ramp":108,"rthin:tie":24,"rthin:thru":2}	{"px":14876088,"act":10100660,"msPerMpx":2370,"usPerAct":3.49,"pcallsPerAct":0.32,"segsPerAct":3.7,"cfgsPerAct":1.023,"nSegPerAct":39.2,"nKPerAct":0.59}

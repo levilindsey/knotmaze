@@ -1,0 +1,1 @@
+g41_ring_tw64	src	finds 203	{"dbreak:tie":9,"dstray:tie":28,"rbreak:plain":32,"rbreak:tie":14,"rbreak:ramp":2,"rstray:tie":10,"rthin:plain":97,"rthin:tie":11}	{"px":6212316,"act":2201641,"msPerMpx":835,"usPerAct":2.36,"pcallsPerAct":0.125,"segsPerAct":1.06,"cfgsPerAct":1.051,"nSegPerAct":26.6,"nKPerAct":0.23}

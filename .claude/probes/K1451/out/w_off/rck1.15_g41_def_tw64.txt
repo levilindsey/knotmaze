@@ -1,0 +1,1 @@
+g41_def_tw64	rck1.15	finds 544	{"dbreak:tie":28,"dstray:tie":86,"rbreak:tie":17,"rstray:tie":68,"rstray:ramp":1,"rthin:plain":320,"rthin:tie":16,"rthin:ramp":7,"rthin:thru":1}	{"px":14041776,"act":8356431,"msPerMpx":1218,"usPerAct":2.05,"pcallsPerAct":0.286,"segsPerAct":2.92,"cfgsPerAct":1.105,"nSegPerAct":32.9,"nKPerAct":0.51}

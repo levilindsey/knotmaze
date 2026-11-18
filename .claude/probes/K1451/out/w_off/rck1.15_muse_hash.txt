@@ -1,0 +1,1 @@
+muse_hash	rck1.15	finds 905	{"dbreak:tie":47,"dstray:tie":131,"rbreak:tie":31,"rstray:plain":12,"rstray:tie":80,"rstray:ramp":22,"rthin:plain":522,"rthin:tie":28,"rthin:ramp":31,"rthin:thru":1}	{"px":14876088,"act":10100660,"msPerMpx":1567,"usPerAct":2.31,"pcallsPerAct":0.237,"segsPerAct":2.67,"cfgsPerAct":1.113,"nSegPerAct":39.2,"nKPerAct":0.59}

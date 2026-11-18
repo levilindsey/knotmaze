@@ -1,0 +1,1 @@
+g41_user_tw64	src	finds 521	{"dbreak:tie":24,"dstray:tie":86,"rbreak:plain":41,"rbreak:tie":34,"rbreak:ramp":9,"rstray:tie":28,"rthin:plain":250,"rthin:tie":43,"rthin:thru":1,"rthin:ramp":5}	{"px":6482592,"act":3474290,"msPerMpx":1060,"usPerAct":1.98,"pcallsPerAct":0.232,"segsPerAct":2.29,"cfgsPerAct":1.091,"nSegPerAct":33.9,"nKPerAct":0.4}

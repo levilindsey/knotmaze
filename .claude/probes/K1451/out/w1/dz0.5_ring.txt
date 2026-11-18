@@ -1,0 +1,1 @@
+ring	dz0.5	finds 85	{"dbreak:tie":1,"dstray:tie":1,"rbreak:plain":20,"rbreak:tie":1,"rthin:plain":57,"rthin:ramp":1,"rthin:tie":4}	{"px":6132842,"act":2025607,"msPerMpx":1081,"usPerAct":3.27,"pcallsPerAct":0.14,"segsPerAct":1.1,"cfgsPerAct":1.008,"nSegPerAct":24.7,"nKPerAct":0.27}

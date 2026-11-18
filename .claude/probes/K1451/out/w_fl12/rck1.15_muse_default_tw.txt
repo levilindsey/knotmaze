@@ -1,0 +1,1 @@
+muse_default_tw	rck1.15	finds 99	{"rbreak:plain":1,"rstray:tie":3,"rstray:ramp":1,"rthin:plain":81,"rthin:ramp":6,"rthin:tie":7}	{"px":13866240,"act":7050389,"msPerMpx":956,"usPerAct":1.88,"pcallsPerAct":0.276,"segsPerAct":2.35,"cfgsPerAct":1.019,"nSegPerAct":27.3,"nKPerAct":0.87}

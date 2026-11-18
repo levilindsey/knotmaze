@@ -1,0 +1,1 @@
+g41_def_tw42	cfgmax	finds 2	{"rbreak:plain":1,"rstray:ramp":1}	{"px":13616484,"act":5978087,"msPerMpx":2030,"usPerAct":4.62,"pcallsPerAct":0.26,"segsPerAct":1.93,"cfgsPerAct":1.048,"nSegPerAct":23.8,"nKPerAct":0.57}

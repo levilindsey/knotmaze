@@ -1,0 +1,1 @@
+ring	src	finds 129	{"dbreak:tie":4,"dstray:tie":19,"rbreak:plain":18,"rbreak:tie":9,"rbreak:ramp":2,"rstray:tie":9,"rthin:plain":58,"rthin:tie":9,"rthin:ramp":1}	{"px":6132842,"act":2025607,"msPerMpx":619,"usPerAct":1.87,"pcallsPerAct":0.132,"segsPerAct":1.03,"cfgsPerAct":1.048,"nSegPerAct":24.7,"nKPerAct":0.27}

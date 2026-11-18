@@ -1,0 +1,1 @@
+g41_ring_tw64	rch1.15	finds 137	{"rbreak:plain":34,"rstray:tie":1,"rthin:plain":95,"rthin:ramp":5,"rthin:tie":2}	{"px":6212316,"act":2201641,"msPerMpx":799,"usPerAct":2.26,"pcallsPerAct":0.137,"segsPerAct":1.17,"cfgsPerAct":1.016,"nSegPerAct":26.6,"nKPerAct":0.23}

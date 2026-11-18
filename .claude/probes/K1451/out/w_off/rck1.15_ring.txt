@@ -1,0 +1,1 @@
+ring	rck1.15	finds 122	{"dbreak:tie":5,"dstray:tie":19,"rbreak:plain":18,"rbreak:tie":4,"rbreak:ramp":2,"rstray:tie":10,"rthin:plain":58,"rthin:tie":5,"rthin:ramp":1}	{"px":6132842,"act":2025607,"msPerMpx":614,"usPerAct":1.86,"pcallsPerAct":0.132,"segsPerAct":1.03,"cfgsPerAct":1.048,"nSegPerAct":24.7,"nKPerAct":0.27}

@@ -1,0 +1,1 @@
+g41_user_tw64	dz1	finds 327	{"dbreak:tie":1,"rbreak:plain":50,"rstray:tie":1,"rthin:plain":234,"rthin:ramp":30,"rthin:tie":10,"rthin:thru":1}	{"px":6482592,"act":3474290,"msPerMpx":1994,"usPerAct":3.72,"pcallsPerAct":0.274,"segsPerAct":2.72,"cfgsPerAct":1.019,"nSegPerAct":33.9,"nKPerAct":0.4}

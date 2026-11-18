@@ -1,0 +1,1 @@
+g41_user_tw64	rch1.15	finds 330	{"rbreak:plain":50,"rstray:tie":3,"rstray:ramp":6,"rthin:plain":243,"rthin:ramp":17,"rthin:tie":10,"rthin:thru":1}	{"px":6482592,"act":3474290,"msPerMpx":960,"usPerAct":1.79,"pcallsPerAct":0.259,"segsPerAct":2.57,"cfgsPerAct":1.033,"nSegPerAct":33.9,"nKPerAct":0.4}

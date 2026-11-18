@@ -1,0 +1,1 @@
+g41_user_tw64	cfgmin	finds 326	{"dbreak:tie":1,"rbreak:plain":51,"rthin:plain":232,"rthin:ramp":38,"rthin:thru":1,"rthin:tie":3}	{"px":6482592,"act":3474290,"msPerMpx":1417,"usPerAct":2.64,"pcallsPerAct":0.274,"segsPerAct":2.72,"cfgsPerAct":1.019,"nSegPerAct":33.9,"nKPerAct":0.4}

@@ -1,0 +1,1 @@
+muse_default_tw	cfgmax	finds 101	{"rbreak:plain":1,"rstray:ramp":1,"rstray:tie":2,"rthin:plain":81,"rthin:ramp":10,"rthin:tie":6}	{"px":13866240,"act":7050389,"msPerMpx":2652,"usPerAct":5.22,"pcallsPerAct":0.276,"segsPerAct":2.35,"cfgsPerAct":1.019,"nSegPerAct":27.3,"nKPerAct":0.87}

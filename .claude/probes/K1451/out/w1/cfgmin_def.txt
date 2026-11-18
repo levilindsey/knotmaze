@@ -1,0 +1,1 @@
+def	cfgmin	finds 109	{"rbreak:plain":3,"rthin:plain":93,"rthin:ramp":11,"rthin:tie":2}	{"px":13809720,"act":7084305,"msPerMpx":1957,"usPerAct":3.82,"pcallsPerAct":0.291,"segsPerAct":2.56,"cfgsPerAct":1.021,"nSegPerAct":27.8,"nKPerAct":0.59}
