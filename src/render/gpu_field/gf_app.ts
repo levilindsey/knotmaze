@@ -907,15 +907,9 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
       if (!pass) {
         // K1468: every program writes one packed RGBA32UI output (gf_pass.ts packForm): the look's three targets
         // made its first draw compile a second shader on the GPU process's main thread (cold: watchdog kill)
-        if ((globalThis as { __k1468p?: string }).__k1468p === "nopack") { // PROBE (revert): pre-K1468 targets
-          pass = new GfPass(g, false, undefined, undefined, false, { home: gfHome() });
-          target = new GfTarget(g, pass.lookable ? 3 : 1, false);
-          comp = new GfComposite(g);
-        } else {
         pass = new GfPass(g, false, undefined, undefined, false, { home: gfHome(), pack: true });
         target = new GfTarget(g, 1, false, true);
         comp = new GfComposite(g, { packed: true });
-        }
       }
       startWorker();
       if (r !== lastR) {

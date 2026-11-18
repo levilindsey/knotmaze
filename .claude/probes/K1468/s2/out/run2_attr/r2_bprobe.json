@@ -1,0 +1,291 @@
+{
+ "when": "2026-11-18T06:27:49.430Z",
+ "SEC": 10,
+ "REDRAW": true,
+ "summary": {
+  "http://localhost:5660/?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&rp=gf&gfh=1&prp=off&phw=0&fw=0&bg=none&snd=none&fl=0.14&tlk=fill": {
+   "runs": 1,
+   "frameP50": [
+    17.3
+   ],
+   "frameP50med": 17.3,
+   "intervalP50": [
+    24.2
+   ]
+  },
+  "http://localhost:5660/?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&rp=gf&gfh=1&prp=off&phw=0&fw=0&bg=none&snd=none&fl=0.14&tlk=fill#k1468p=nopack": {
+   "runs": 1,
+   "frameP50": [
+    19.2
+   ],
+   "frameP50med": 19.2,
+   "intervalP50": [
+    27.7
+   ]
+  },
+  "http://localhost:5660/?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&rp=gf&gfh=1&prp=off&phw=0&fw=0&bg=none&snd=none&fl=0.14&tlk=fill#k1468p=lazy": {
+   "runs": 1,
+   "frameP50": [
+    18.2
+   ],
+   "frameP50med": 18.2,
+   "intervalP50": [
+    22.1
+   ]
+  }
+ },
+ "runs": [
+  {
+   "round": 0,
+   "url": "http://localhost:5660/?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&rp=gf&gfh=1&prp=off&phw=0&fw=0&bg=none&snd=none&fl=0.14&tlk=fill",
+   "restMs": 5745,
+   "composites": 413,
+   "fallback": "",
+   "frameMs": {
+    "n": 412,
+    "mean": 17.295,
+    "p50": 17.3,
+    "p90": 18.1,
+    "p95": 18.4,
+    "max": 23
+   },
+   "submitMs": {
+    "n": 412,
+    "mean": 0.334,
+    "p50": 0.3,
+    "p90": 0.4,
+    "p95": 0.5,
+    "max": 1.1
+   },
+   "finishMs": {
+    "n": 412,
+    "mean": 16.961,
+    "p50": 16.9,
+    "p90": 17.7,
+    "p95": 18,
+    "max": 22.7
+   },
+   "intervalMs": {
+    "n": 410,
+    "mean": 24.263,
+    "p50": 24.2,
+    "p90": 25.2,
+    "p95": 25.7,
+    "max": 34.6
+   },
+   "framesDrawn": 412,
+   "rafFrames": 412,
+   "drawsPerFrame": 9,
+   "updateMsPerCall": 4.709,
+   "updateCalls": 413,
+   "perf": {
+    "state": "live",
+    "asleep": true
+   },
+   "contextLost": 0,
+   "gpuTimer": true,
+   "gpuMs": {
+    "other": {
+     "n": 411,
+     "mean": 0.023,
+     "p50": 0.002,
+     "p90": 0.002,
+     "p95": 0.002,
+     "max": 8.608
+    },
+    "comp:look": {
+     "n": 411,
+     "mean": 0.255,
+     "p50": 0.249,
+     "p90": 0.262,
+     "p95": 0.267,
+     "max": 0.581
+    },
+    "gf:8/6:pk": {
+     "n": 411,
+     "mean": 0.176,
+     "p50": 0.174,
+     "p90": 0.188,
+     "p95": 0.19,
+     "max": 0.337
+    },
+    "gf:3/2:LabPgrPksSca:pk": {
+     "n": 1,
+     "mean": 16.58,
+     "p50": 16.58,
+     "p90": 16.58,
+     "p95": 16.58,
+     "max": 16.58
+    }
+   }
+  },
+  {
+   "round": 0,
+   "url": "http://localhost:5660/?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&rp=gf&gfh=1&prp=off&phw=0&fw=0&bg=none&snd=none&fl=0.14&tlk=fill#k1468p=nopack",
+   "restMs": 34389,
+   "composites": 360,
+   "fallback": "",
+   "frameMs": {
+    "n": 359,
+    "mean": 19.113,
+    "p50": 19.2,
+    "p90": 20.4,
+    "p95": 20.5,
+    "max": 70.8
+   },
+   "submitMs": {
+    "n": 359,
+    "mean": 0.38,
+    "p50": 0.4,
+    "p90": 0.5,
+    "p95": 0.6,
+    "max": 1.1
+   },
+   "finishMs": {
+    "n": 359,
+    "mean": 18.733,
+    "p50": 18.8,
+    "p90": 19.9,
+    "p95": 20.1,
+    "max": 70.2
+   },
+   "intervalMs": {
+    "n": 357,
+    "mean": 27.851,
+    "p50": 27.7,
+    "p90": 30.3,
+    "p95": 30.8,
+    "max": 78
+   },
+   "framesDrawn": 359,
+   "rafFrames": 359,
+   "drawsPerFrame": 9,
+   "updateMsPerCall": 6.056,
+   "updateCalls": 360,
+   "perf": {
+    "state": "live",
+    "asleep": true
+   },
+   "contextLost": 0,
+   "gpuTimer": true,
+   "gpuMs": {
+    "other": {
+     "n": 358,
+     "mean": 0.002,
+     "p50": 0.002,
+     "p90": 0.002,
+     "p95": 0.002,
+     "max": 0.147
+    },
+    "comp:look": {
+     "n": 358,
+     "mean": 0.148,
+     "p50": 0.139,
+     "p90": 0.152,
+     "p95": 0.158,
+     "max": 0.418
+    },
+    "gf:8/6": {
+     "n": 358,
+     "mean": 0.176,
+     "p50": 0.175,
+     "p90": 0.194,
+     "p95": 0.199,
+     "max": 0.343
+    },
+    "gf:3/2:LabPgrPksSca": {
+     "n": 1,
+     "mean": 5.229,
+     "p50": 5.229,
+     "p90": 5.229,
+     "p95": 5.229,
+     "max": 5.229
+    }
+   }
+  },
+  {
+   "round": 0,
+   "url": "http://localhost:5660/?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&rp=gf&gfh=1&prp=off&phw=0&fw=0&bg=none&snd=none&fl=0.14&tlk=fill#k1468p=lazy",
+   "restMs": 39512,
+   "composites": 456,
+   "fallback": "",
+   "frameMs": {
+    "n": 454,
+    "mean": 18.067,
+    "p50": 18.2,
+    "p90": 21.2,
+    "p95": 22.2,
+    "max": 33.1
+   },
+   "submitMs": {
+    "n": 454,
+    "mean": 0.578,
+    "p50": 0.5,
+    "p90": 0.7,
+    "p95": 0.9,
+    "max": 2.8
+   },
+   "finishMs": {
+    "n": 454,
+    "mean": 17.489,
+    "p50": 17.6,
+    "p90": 20.5,
+    "p95": 21.6,
+    "max": 32.4
+   },
+   "intervalMs": {
+    "n": 452,
+    "mean": 22.016,
+    "p50": 22.1,
+    "p90": 25.5,
+    "p95": 26.5,
+    "max": 36.6
+   },
+   "framesDrawn": 454,
+   "rafFrames": 454,
+   "drawsPerFrame": 9,
+   "updateMsPerCall": null,
+   "updateCalls": 0,
+   "perf": {
+    "state": "live",
+    "asleep": true
+   },
+   "contextLost": 0,
+   "gpuTimer": true,
+   "gpuMs": {
+    "other": {
+     "n": 453,
+     "mean": 0.006,
+     "p50": 0.002,
+     "p90": 0.002,
+     "p95": 0.012,
+     "max": 1.529
+    },
+    "comp:look": {
+     "n": 453,
+     "mean": 0.148,
+     "p50": 0.143,
+     "p90": 0.156,
+     "p95": 0.164,
+     "max": 0.978
+    },
+    "gf:8/6:pk": {
+     "n": 453,
+     "mean": 0.184,
+     "p50": 0.18,
+     "p90": 0.22,
+     "p95": 0.241,
+     "max": 0.456
+    },
+    "gf:3/2:LabPgrPksSca:pk": {
+     "n": 1,
+     "mean": 17.839,
+     "p50": 17.839,
+     "p90": 17.839,
+     "p95": 17.839,
+     "max": 17.839
+    }
+   }
+  }
+ ]
+}

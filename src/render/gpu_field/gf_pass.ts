@@ -1040,21 +1040,17 @@ export function packForm(src: string): string {
   return src.slice(0, head) + PACK_DECL + src.slice(b).replace(PACK_END, PACK_WRITE + PACK_END);
 }
 
-const K1468P = (globalThis as { __k1468p?: string }).__k1468p ?? ""; // PROBE (revert)
-const GF_U8 = K1468P === "div" ? `vec4 gfU8(highp uint w) { return vec4(uvec4(w & 255u, (w >> 8) & 255u, (w >> 16) & 255u, w >> 24)) / 255.0; }
-` : K1468P === "alu" ? `highp float gfK(highp uint k) {
-  if (k == 0u) return 0.0;
-  if (k == 255u) return 1.0;
-  int e = findMSB(k) - 8;
-  highp uint m = ((k << uint(23 - e)) + 127u) / 255u;
-  return uintBitsToFloat((uint(127 + e) << 23) + m - 0x800000u);
-}
-vec4 gfU8(highp uint w) { return vec4(gfK(w & 255u), gfK((w >> 8) & 255u), gfK((w >> 16) & 255u), gfK(w >> 24)); }
-` : K1468P.includes("uni") ? `uniform float uU8[256];
-vec4 gfU8(highp uint w) { return vec4(uU8[w & 255u], uU8[(w >> 8) & 255u], uU8[(w >> 16) & 255u], uU8[w >> 24]); }
-` : `const float GF_U8[256] = float[256](${Array.from({ length: 256 }, (_, k) => { const s = Math.fround(k / 255).toPrecision(9); return /[.e]/.test(s) ? s : `${s}.0`; }).join(", ")});
+const GF_U8 = `const float GF_U8[256] = float[256](${Array.from({ length: 256 }, (_, k) => { const s = Math.fround(k / 255).toPrecision(9); return /[.e]/.test(s) ? s : `${s}.0`; }).join(", ")});
 vec4 gfU8(highp uint w) { return vec4(GF_U8[w & 255u], GF_U8[(w >> 8) & 255u], GF_U8[(w >> 16) & 255u], GF_U8[w >> 24]); }
 `;
+
+/** K1468 s2: gf_look.ts LOOK_COMP_FS's fringe search after the generic rewrite, and its lazy form. */
+const FRINGE: [string, string][] = [
+  ["vec4 j = gfU8(texelFetch(uC, r, 0).y);", "highp uint jw = texelFetch(uC, r, 0).y;"],
+  ["float bd = 1e9;", "float bd = 1e9; ivec2 rb = q;"],
+  ["if (j.a > 0.0 && dd < bd) { bd = dd; k = j; hh = gfU8(texelFetch(uC, r, 0).z); }\n    }\n",
+    "if ((jw >> 24) != 0u && dd < bd) { bd = dd; rb = r; }\n    }\n    if (bd < 1e9) { highp uvec2 wb = texelFetch(uC, rb, 0).yz; k = gfU8(wb.x); hh = gfU8(wb.y); }\n"],
+];
 
 /** K1468: a composite over the RGBA8 targets uC (o0), uCo (o1) and uHi (o2) made to read packForm's one uint target uC. */
 export function packComp(fs: string): string {
@@ -1062,13 +1058,12 @@ export function packComp(fs: string): string {
   let out = fs.replace("uniform sampler2D uC;\n", "uniform highp usampler2D uC;\n" + GF_U8).replace("uniform sampler2D uCo;\n", "").replace("uniform sampler2D uHi;\n", "");
   out = out.replace(/texelFetch\((uC|uCo|uHi), ((?:[^(),]|\([^()]*\))+), 0\)/g, (_m, s: string, at: string) => `gfU8(texelFetch(uC, ${at}, 0).${lane[s]})`);
   out = out.replace(/textureSize\((uCo|uHi), 0\)/g, "textureSize(uC, 0)");
-  if (K1468P.includes("lazy") && out.includes("vec4 j = gfU8(texelFetch(uC, r, 0).y);")) { // PROBE (revert)
-    const parts: [string, string][] = [
-      ["float bd = 1e9;", "float bd = 1e9; ivec2 rb = q;"],
-      ["vec4 j = gfU8(texelFetch(uC, r, 0).y);", "highp uint jw = texelFetch(uC, r, 0).y;"],
-      ["if (j.a > 0.0 && dd < bd) { bd = dd; k = j; hh = gfU8(texelFetch(uC, r, 0).z); }\n    }\n", "if ((jw >> 24) != 0u && dd < bd) { bd = dd; rb = r; }\n    }\n    if (bd < 1e9) { highp uvec4 wb = texelFetch(uC, rb, 0); k = gfU8(wb.y); hh = gfU8(wb.z); }\n"],
-    ];
-    for (const [a, b] of parts) { if (!out.includes(a)) throw new Error(`packComp lazy: ${a}`); out = out.replace(a, b); }
+  // K1468 s2: the look composite's 5x5 fringe search tests each tap's label alpha only. Converting all four
+  // bytes of 25 taps through GF_U8 doubled the composite's GPU time (0.25 vs 0.13 ms on link A, the RGBA8
+  // targets' figure); the search now tests the alpha byte and converts the chosen texel once, same output.
+  if (out.includes(FRINGE[0][0])) for (const [a, b] of FRINGE) {
+    if (!out.includes(a)) throw new Error(`packComp: the fringe search changed (${a})`);
+    out = out.replace(a, b);
   }
   if (!out.includes("usampler2D uC;") || /\buCo\b|\buHi\b|sampler2D uC;/.test(out.replace("usampler2D uC;", ""))) throw new Error("packComp: a target read was not converted");
   return out;
@@ -1113,12 +1108,7 @@ export class GfComposite {
       if (!job) return null;
       if (this.khr && !gl.getProgramParameter(job.prog, COMPLETION_STATUS_KHR)) return job;
       try {
-        const fp = finishProgram(gl, job);
-        if (this.packed && K1468P.includes("uni")) { // PROBE (revert)
-          gl.useProgram(fp);
-          gl.uniform1fv(gl.getUniformLocation(fp, "uU8"), Float32Array.from({ length: 256 }, (_, k) => k / 255));
-        }
-        take(fp);
+        take(finishProgram(gl, job));
       } catch (e) {
         this.err = e instanceof Error ? e.message : String(e);
       }
