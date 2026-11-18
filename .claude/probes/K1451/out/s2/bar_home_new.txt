@@ -1,0 +1,38 @@
+stray_ink muse_hash:22.163:5.654 px 427 (master 427) near j5 ?
+stray_ink muse_hash:5.869:8.912 px 101 NEW near j78 ?
+stray_ink muse_hash:5.627:14.995 px 443 (master 443) near j73 ?
+stray_ink muse_hash:1.239:17.275 px 63 (master 63) near j23 ?
+stray_ink muse_hash:22:18.59 px 215 NEW near x301 ?
+stray_ink muse_hash:34.17:18.49 px 220 (master 220) near j57 ?
+stray_ink muse_hash:30.52:20.278 px 1911 NEW near j36 ?
+stray_ink muse_hash:8.283:22.664 px 528 (master 528) near j48 ?
+stray_ink muse_hash:26.745:23.318 px 984 (master 984) near j37 ?
+stray_ink muse_hash:28.942:23.871 px 66 (master 66) near j62 ?
+stray_ink muse_hash:29.189:24.015 px 143 (master 66) near j62 ?
+stray_ink muse_hash:21.764:34.337 px 2943 NEW near j50 ?
+stray_ink ring:19.619:20.254 px 1987 NEW near x68 ?
+stray_ink user_tw42.lightpaper:11.738:1.717 px 68 (master 68) near j31 ?
+stray_ink user_tw42.lightpaper:11.407:11.479 px 77 (master 77) near j62 ?
+stray_ink g41_def_tw64:19.652:30.79 px 58 (master 58) near j76 ?
+stray_ink g41_def_tw64:3.483:34.245 px 40 (master 40) near j14 ?
+stray_ink g41_ring_tw64:19.773:20.227 px 3687 NEW near x68 ?
+stray_ink g41_ring_tw64:18.08:20.722 px 781 NEW near x67 ?
+stray_ink g41_user_tw42:11.739:1.717 px 69 (master 69) near j31 ?
+stray_ink g41_user_tw42:11.407:11.479 px 77 (master 77) near j62 ?
+stray_ink g41_user_tw64:2.701:6.427 px 91 (master 91) near j26 ?
+stray_ink g41_user_tw64:2.143:7.163 px 757 (master 757) near j55 ?
+stray_ink g41_user_tw64:2.499:8.588 px 61 (master 61) near j54 ?
+stray_ink g41_user_tw64:3.184:12.128 px 1527 (master 1527) near j60 ?
+stray_ink g41_user_tw64:9.039:18.312 px 67 (master 67) near j63 ?
+stray_ink g41_user_tw64:8.811:18.515 px 61 (master 67) near j64 ?
+hard_edge muse_hash:16.796:3.917 px 201 NEW near j149 fill:none
+hard_edge muse_hash:16.827:4.187 px 344 NEW near j126 fill:none
+hard_edge muse_hash:5.905:8.502 px 41 NEW near j78 fill:
+hard_edge muse_hash:5.869:8.829 px 54 NEW near j78 fill:none
+hard_edge muse_hash:12.79:10.46 px 168 NEW near j124 fill:none
+hard_edge muse_hash:15.189:30.001 px 354 NEW near j152 fill:none
+hard_edge muse_hash:12.394:31.556 px 143 NEW near j53 fill:none
+hard_edge g41_def_tw64:1.349:25.659 px 261 NEW near j118 fill:none
+hard_edge g41_def_tw64:2.854:27.821 px 58 NEW near j119 fill:none
+hard_edge g41_user_tw64:4.981:7.472 px 172 NEW near j71 fill:none
+hard_edge g41_user_tw64:5.015:15.302 px 194 NEW near j35 fill:none
