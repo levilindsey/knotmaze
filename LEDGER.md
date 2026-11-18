@@ -2158,17 +2158,14 @@ Every other item below waits on the trigger it names.
   / 2,398 pass; 2830d103 0.14): dashes gone, outline faint; centre-sampled field ink speckles against today's
   MSAA mesh coverage, so 0.5 likely needs area-averaged sampling (wider outline sample, MSAA chain), not
   another threshold (.claude/probes/K1417/out/24A/)
-- **K1424** · K1414 bands: gf route-band same-state mask still misses the bar after 24F (gf 1121 px vs today
-  747, ratio 1.50, IoU 0.276; seed 7 walk, out/24F). 24F measured per junction first (all 8 routed junctions
-  have fan records and one fan band each - the no-record suspect does not apply here): ji0 287 vs 110 gf/today,
-  ji156 96 vs 231, ji80 32 vs 80 (same-chain bands worst), ji155/169 near parity (IoU 0.78/0.54); gf-only
-  clusters along arms near ji80 (203+130+69 px, unchanged by the disc fix - caps or band arm material, next
-  suspect). Two real fixes are in the kept implementation: band vertices were packed 3 floats per vertex
-  while lkRoute fetches RGBA texels (present since 24B's patch - likely its speckle/overdraw), and bands now
-  take the fan's own resolved routes (d/m via fieldProbe) with the suppression disc shrunk to the fan
-  polygon's inscribed circle. Implementation kept as .claude/probes/K1414/k1414_part1_bands_24f.patch
-  (on 52891e5e; the rim half landed separately in 52891e5e). Remaining: per-junction geometry - band arm
-  coverage vs the fan's cover strips and the caps - then re-measure
+- **K1424** · K1414 bands: 25C landed the bands (5e3b6944) but the same-state mask still misses the bar
+  (gf 634 px vs today 747, ratio 0.849, IoU 0.378; floor 1.000; seed 7 walk, out/25C; Handoff 25C in
+  K1448s brief). The ji80 arm clusters are gone and ji169 passes (75/84, IoU 0.674); left: ji80 80/25 and
+  ji156 231/67 under-draw (turn centres won by a non-route arms piece/corner, whose arc lives on its own
+  chain - the missing discriminator is fan membership, not labels/arcs), ji0 110/184 over-draw (gf shades
+  the whole fan disc; todays inside-turn fill is per-pixel by the bracketing arms). Next: bake junction
+  identity beside the tables (as GfExploreTable bakes pieces) so suppression and bands act on fan pixels
+  exactly, then re-measure per junction
 - **K1425** · rp=gf in the border look (tlk=border) does not draw the pulse/telegraph indications in the
   cleared interior: today's border branch composes them over an empty base with their own coverage
   (ribbon_shader hiRgb/hiA), while gf's LOOK_COMP_FS border draws only the stroke over form B ink, and o1
