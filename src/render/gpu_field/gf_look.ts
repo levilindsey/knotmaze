@@ -34,9 +34,6 @@
  * K1395 (24D): while the appearance reveal runs, the look draws over the reveal form and the site shades the
  * label by the baked FX (lkFx over uFx, GfFxTable: burn/roots tint, rainbow stripes, materialize alpha,
  * frontier glow; o0.z carries the border interior's solidity to LOOK_COMP_FS's uRvFx branch).
- * K1431 (25B): the FX texel 1 also carries the sample's drawn-arc distance to its chain's nearest
- * junction; the label site windows the interior solidity by it (uLkJ, today's junction cut), so the
- * reveal's interior fill stops at the fan reach as today's ribbons hand over to the fan rim.
  * K1414 part 2 (24C): the same site then brightens by the label's pulse field (lkPulse over uDyn, GfDynTable:
  * paint_glsl kPulseCrest over the reduced clocks) toward the pulse colour, and mixes toward the telegraph
  * colour by its rims (lkTele, shaped across by the foot's distance over uH), in ribbon_shader's order.
@@ -798,7 +795,7 @@ export class GfDynTable {
  * K1395 (24D): the appearance reveal's colours under the look. GfFxTable bakes, per kept sample in
  * GfLookTable.positions' layout (two RGBA texels a sample), what paint_math's kFxColor / kGlow give
  * today's shader at that sample this frame: texel 0 = (rainbow progress, materialize alpha, burn age,
- * interior solidity), texel 1 = (sample index, frontier glow, junction distance, 0). The burn age rides to the shader,
+ * interior solidity), texel 1 = (sample index, frontier glow, 0, 0). The burn age rides to the shader,
  * which runs kBurn's envelope over the label's section colour with the live flicker phases (uFxPh);
  * the rainbow's stripes and white wash run there too (their across coordinate is the pixel's own).
  * Interior solidity (kComposePaint's hiA over an empty base: the stronger of the glow and, while the
@@ -814,10 +811,9 @@ export class GfFxTable {
   private ign: KIgn = { hit: false, tA: 0, cFrom: 0, dir: 1, t0: 0, rate: 1, tEnd: 0, span: 0 };
   private rgb = [0, 0, 0];
   private pOut = { pRain: 0, alpha: 1 };
-  private sScr = new Float64Array(0);
 
-  /** Each kept sample's FX fields from the renderer's reveal state, in GfLookTable.positions' layout. `jn` (the installed tables' corners) adds each sample's junction distance (1e9 without). */
-  values(r: GfLookSource, out?: Float32Array, jn?: { nK: number; kCa: ArrayLike<number>; kCb: ArrayLike<number>; kSa: ArrayLike<number>; kSb: ArrayLike<number> } | null): Float32Array {
+  /** Each kept sample's FX fields from the renderer's reveal state, in GfLookTable.positions' layout. */
+  values(r: GfLookSource, out?: Float32Array): Float32Array {
     const t0 = performance.now();
     const U = knotUniformValues();
     const D = r.kd;
@@ -839,34 +835,6 @@ export class GfFxTable {
       const tmp = this.tmp;
       tmp.fill(0, 0, count * 8);
       const fxHere = U.uKFx[3] > 0.5 && st > 0 && U.uKFx[2] < c.fxDone;
-      // K1431 (25B): this chain's junction arcs (the tables' corner arms, drawn-arc frame as in
-      // gf_reveal.ts) and the samples' drawn arcs, for each sample's junction distance
-      const xyJ = r.chainSamples[ch]!.positions;
-      if (this.sScr.length < count + 1) this.sScr = new Float64Array((count + 1) * 2);
-      const SJ = this.sScr;
-      SJ[0] = 0;
-      for (let k = 1; k < count; k++) { const dx = xyJ[2 * k] - xyJ[2 * k - 2]; const dy = xyJ[2 * k + 1] - xyJ[2 * k - 1]; SJ[k] = SJ[k - 1] + Math.hypot(dx, dy); }
-      let jRing = 0;
-      if (c.closed && count > 1) jRing = SJ[count - 1] + Math.hypot(xyJ[0] - xyJ[2 * count - 2], xyJ[1] - xyJ[2 * count - 1]);
-      let jArcs: number[] | null = null;
-      if (jn) {
-        const list: number[] = [];
-        for (let q = 0; q < jn.nK; q++) { if (jn.kCa[q] === ch) list.push(jn.kSa[q]); if (jn.kCb[q] === ch) list.push(jn.kSb[q]); }
-        if (list.length) { list.sort((x, y) => x - y); jArcs = list; }
-      }
-      const jDist = (a: number): number => {
-        if (!jArcs) return 1e9;
-        let lo = 0; let hi = jArcs.length;
-        while (lo < hi) { const mid = (lo + hi) >> 1; if (jArcs[mid] < a) lo = mid + 1; else hi = mid; }
-        let d = 1e9;
-        for (let q = lo - 1; q <= lo; q++) {
-          const ja = jArcs[((q % jArcs.length) + jArcs.length) % jArcs.length];
-          let dd = Math.abs(a - ja);
-          if (jRing > 0) dd = Math.min(dd, jRing - dd);
-          if (dd < d) d = dd;
-        }
-        return d;
-      };
       let slot = 0;
       for (let k = 0; k < count; k++) {
         const a = kSampleArc(c, k);
@@ -898,7 +866,6 @@ export class GfFxTable {
         tmp[o + 3] = Math.max(glow, fxHere ? this.pOut.alpha : 0);
         tmp[o + 4] = k;
         tmp[o + 5] = glow;
-        tmp[o + 6] = jDist(SJ[k]);
       }
       // compact to the kept samples and pad the tail, exactly as positions() does
       const xy = r.chainSamples[ch]!.positions;
@@ -927,13 +894,13 @@ export class GfFxTable {
   }
 }
 
-/** CPU twin of the look shader's lkFx over one baked sample (segment k, fraction u): (pRain, alpha, burnAge, hiA, kSample, glow, jDist). */
+/** CPU twin of the look shader's lkFx over one baked sample (segment k, fraction u): (pRain, alpha, burnAge, hiA, kSample, glow). */
 export function fxAt(V: ArrayLike<number>, b: number, n: number, closed: boolean, k: number, u: number): number[] {
   const last = closed ? n : n - 1;
   if (k < 0) { k = 0; u = 0; }
   if (k >= last) { k = last; u = 0; }
   const out: number[] = [];
-  for (let j = 0; j < 7; j++) {
+  for (let j = 0; j < 6; j++) {
     const A = V[(b + k) * 8 + j];
     const B = V[(b + Math.min(k + 1, last)) * 8 + j];
     out.push(A + (B - A) * u);
@@ -1038,7 +1005,7 @@ int lkj[MAXS]; float lks[MAXS];
 const M_ANCHOR = "\nvoid main() {\n";
 function lkF(v: number): string { const s = String(v); return /[.eE]/.test(s) ? s : s + ".0"; }
 const M_LOOK = `
-uniform highp sampler2D uLk; uniform highp sampler2D uLkP; uniform float uLkG; uniform float uLkF; uniform float uLkJ;
+uniform highp sampler2D uLk; uniform highp sampler2D uLkP; uniform float uLkG; uniform float uLkF;
 uniform highp sampler2D uPt; uniform vec3 uGold;
 uniform highp sampler2D uGw; uniform float uGwLive;
 uniform vec4 uRimA; uniform vec4 uRimB; uniform vec4 uRimC; uniform vec3 uHov;
@@ -1365,7 +1332,7 @@ const SITES: [string | RegExp, string, number][] = [
   ["if (lab < 0 && ink > 0.0) { lab = own;", "if (lab < 0 && ink > 0.0) { lab = own; lkJb = -1; lkSb = K3.z; lkKb = BIG;", 1],
   // the output: the gap cut and the colour
   ["    oInk = min(1.0, ink); oCov = min(1.0, cov);",
-    "    lkCo = vec4(0.0); lkHiC = vec3(0.0); lkHiA = 0.0;\n    if (lab >= 0) { vec2 lq = lkJb >= 0 ? lookQ(lkJb, p) : lookQs(lab, lkSb); lkCo = lkColour(lab, lq); float lkgp = lkPaint(lab, lq); lkCo.rgb = mix(lkCo.rgb, uGold, lkgp); float lkRimV = lkRimF(lab, lq, p); lkCo.rgb = lkRim(lkCo.rgb, lab, lq, p); float lkD = length(p - lkFoot(lab, lq)); float lke = clamp(lkD / uH, 0.0, 1.0); lkE = 0.7 * ss(0.62, 0.85, lke); float lkv = lkPulse(lab, lq); if (lkv > 0.0) { if (uPulseW < 1.0) lkv *= clamp((uPulseW - lke) / max(3.0 * uAA / uH, 0.02) + 0.5, 0.0, 1.0); lkCo.rgb += (uPulseCol - lkCo.rgb) * (0.9315315315315316 * clamp(lkv, 0.0, 1.0)); } float lkt = lkTele(lab, lq); if (lkt > 0.0) lkCo.rgb += (uTeleU.rgb - lkCo.rgb) * clamp(lkt * lkTeleAcross(lke) * uTeleU.w, 0.0, 1.0); lkHiC = uGold * lkgp; float lkPulseHi = lkJb >= 0 ? lkv * lkFanWin(lab, lq) : 0.0; if (lkPulseHi > 0.0) lkHiC += (uPulseCol - lkHiC) * (0.9315315315315316 * clamp(lkPulseHi, 0.0, 1.0)); float lkTeleHi = lkt * uTeleU.w; if (lkTeleHi > 0.0) lkHiC += (uTeleU.rgb - lkHiC) * clamp(lkTeleHi, 0.0, 1.0); if (lkRimV > 0.0) lkHiC += (uHov - lkHiC) * (uRimC.y * clamp(lkRimV, 0.0, 1.0)); lkHiA = clamp(max(max(lkgp, lkPulseHi), max(lkRimV, lkTeleHi)), 0.0, 1.0); if (uFxLive > 0.5) { vec4 f0 = lkFx(lab, lq, 0); vec4 f1 = lkFx(lab, lq, 1); if (uFxStyle > 3.5) lkCo.rgb = lkBurn(lkCo.rgb, f0.z, f1.x, uFxStyle > 4.5); else if (uFxStyle > 0.5 && uFxStyle < 1.5 && f0.x > 0.0) { vec2 tn = lkTan(lab, lq.x); float sd = clamp(dot(p - lkFoot(lab, lq), vec2(-tn.y, tn.x)) / uH, -1.0, 1.0); lkCo.rgb = lkRainbow(lkCo.rgb, f0.x, 0.5 + 0.5 * sd); } if (f1.y > 0.0) lkCo.rgb += (vec3(1.0) - lkCo.rgb) * (0.9315315315315316 * clamp(f1.y, 0.0, 1.0)); ink *= f0.y; cov *= f0.y; lkHi = f0.w; if (uLkJ > 0.0) lkHi *= clamp((f1.z - uLkJ) / max(2.0 * uAA, 1e-5) + 0.5, 0.0, 1.0); } float lkg = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : 0.0; ink *= 1.0 - lkg; cov *= 1.0 - lkg; lkHiA *= 1.0 - lkg; if (uExLive > 0.5) { vec4 exs = exAt(lab, lkArc(lab, lq)); float evv = exs.x; if (exs.y >= 0.0 && uExLook > 1) { vec2 etn = lkTan(lab, lq.x); float elat = dot(p - lkFoot(lab, lq), vec2(-etn.y, etn.x)); if (uExLook == 2) { float eg = lkSmooth(exs.y / 0.3) * (1.0 - lkSmooth((exs.y - 0.55) / 0.45)); lkCo.rgb = mix(lkCo.rgb, vec3(0.78, 0.94, 1.0), 0.85 * eg * uExBr); } evv = lkExploreLook(uExLook, exs.x, exs.y, exs.y * exs.z, exs.z, elat, (2.0 * uAA) / max(uExTw, 1e-6), 2.0 * uAA); if (uExOn > 1.5) lkCo.rgb = mix(lkCo.rgb, vec3(1.0), lkExDot); } ink *= evv; cov *= evv; lkHiA *= evv; } }\n    oInk = min(1.0, ink); oCov = min(1.0, cov);", 1],
+    "    lkCo = vec4(0.0); lkHiC = vec3(0.0); lkHiA = 0.0;\n    if (lab >= 0) { vec2 lq = lkJb >= 0 ? lookQ(lkJb, p) : lookQs(lab, lkSb); lkCo = lkColour(lab, lq); float lkgp = lkPaint(lab, lq); lkCo.rgb = mix(lkCo.rgb, uGold, lkgp); float lkRimV = lkRimF(lab, lq, p); lkCo.rgb = lkRim(lkCo.rgb, lab, lq, p); float lkD = length(p - lkFoot(lab, lq)); float lke = clamp(lkD / uH, 0.0, 1.0); lkE = 0.7 * ss(0.62, 0.85, lke); float lkv = lkPulse(lab, lq); if (lkv > 0.0) { if (uPulseW < 1.0) lkv *= clamp((uPulseW - lke) / max(3.0 * uAA / uH, 0.02) + 0.5, 0.0, 1.0); lkCo.rgb += (uPulseCol - lkCo.rgb) * (0.9315315315315316 * clamp(lkv, 0.0, 1.0)); } float lkt = lkTele(lab, lq); if (lkt > 0.0) lkCo.rgb += (uTeleU.rgb - lkCo.rgb) * clamp(lkt * lkTeleAcross(lke) * uTeleU.w, 0.0, 1.0); lkHiC = uGold * lkgp; float lkPulseHi = lkJb >= 0 ? lkv * lkFanWin(lab, lq) : 0.0; if (lkPulseHi > 0.0) lkHiC += (uPulseCol - lkHiC) * (0.9315315315315316 * clamp(lkPulseHi, 0.0, 1.0)); float lkTeleHi = lkt * uTeleU.w; if (lkTeleHi > 0.0) lkHiC += (uTeleU.rgb - lkHiC) * clamp(lkTeleHi, 0.0, 1.0); if (lkRimV > 0.0) lkHiC += (uHov - lkHiC) * (uRimC.y * clamp(lkRimV, 0.0, 1.0)); lkHiA = clamp(max(max(lkgp, lkPulseHi), max(lkRimV, lkTeleHi)), 0.0, 1.0); if (uFxLive > 0.5) { vec4 f0 = lkFx(lab, lq, 0); vec4 f1 = lkFx(lab, lq, 1); if (uFxStyle > 3.5) lkCo.rgb = lkBurn(lkCo.rgb, f0.z, f1.x, uFxStyle > 4.5); else if (uFxStyle > 0.5 && uFxStyle < 1.5 && f0.x > 0.0) { vec2 tn = lkTan(lab, lq.x); float sd = clamp(dot(p - lkFoot(lab, lq), vec2(-tn.y, tn.x)) / uH, -1.0, 1.0); lkCo.rgb = lkRainbow(lkCo.rgb, f0.x, 0.5 + 0.5 * sd); } if (f1.y > 0.0) lkCo.rgb += (vec3(1.0) - lkCo.rgb) * (0.9315315315315316 * clamp(f1.y, 0.0, 1.0)); ink *= f0.y; cov *= f0.y; lkHi = f0.w; } float lkg = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : 0.0; ink *= 1.0 - lkg; cov *= 1.0 - lkg; lkHiA *= 1.0 - lkg; if (uExLive > 0.5) { vec4 exs = exAt(lab, lkArc(lab, lq)); float evv = exs.x; if (exs.y >= 0.0 && uExLook > 1) { vec2 etn = lkTan(lab, lq.x); float elat = dot(p - lkFoot(lab, lq), vec2(-etn.y, etn.x)); if (uExLook == 2) { float eg = lkSmooth(exs.y / 0.3) * (1.0 - lkSmooth((exs.y - 0.55) / 0.45)); lkCo.rgb = mix(lkCo.rgb, vec3(0.78, 0.94, 1.0), 0.85 * eg * uExBr); } evv = lkExploreLook(uExLook, exs.x, exs.y, exs.y * exs.z, exs.z, elat, (2.0 * uAA) / max(uExTw, 1e-6), 2.0 * uAA); if (uExOn > 1.5) lkCo.rgb = mix(lkCo.rgb, vec3(1.0), lkExDot); } ink *= evv; cov *= evv; lkHiA *= evv; } }\n    oInk = min(1.0, ink); oCov = min(1.0, cov);", 1],
   ["  o0 = vec4(oInk, oCov, 0.0, 1.0);\n#endif", "  o0 = vec4(oInk, oCov, lkHi, lkE); o1 = lkCo; o2 = vec4(lkHiC, lkHiA);\n#endif", 1],
 ];
 
