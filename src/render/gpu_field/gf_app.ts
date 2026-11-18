@@ -871,10 +871,11 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
       const g = gl();
       if (!g) return fallback("no WebGL2 context");
       if (!pass) {
-        pass = new GfPass(g, false, undefined, undefined, false, { home: gfHome() });
-        // K1389 s2: the look writes its colours to a second attachment
-        target = new GfTarget(g, pass.lookable ? 3 : 1, false);
-        comp = new GfComposite(g);
+        // K1468: every program writes one packed RGBA32UI output (gf_pass.ts packForm): the look's three targets
+        // made its first draw compile a second shader on the GPU process's main thread (cold: watchdog kill)
+        pass = new GfPass(g, false, undefined, undefined, false, { home: gfHome(), pack: true });
+        target = new GfTarget(g, 1, false, true);
+        comp = new GfComposite(g, { packed: true });
       }
       startWorker();
       if (r !== lastR) {
