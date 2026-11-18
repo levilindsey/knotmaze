@@ -22,28 +22,59 @@ export type GfMap = [number, number, number, number];
 
 interface TimerExt { TIME_ELAPSED_EXT: number; GPU_DISJOINT_EXT: number }
 
-export function compileProgram(gl: WebGL2RenderingContext, vs: string, fs: string): WebGLProgram {
+// K1456 (26A): a program's link is issued without reading any status back. On a cold shader cache each
+// of gf's 40-63k-char programs waits seconds in the GPU process, and the first status or uniform read
+// blocks the main thread until it lands (105 s for the set on a fresh profile). Issued this way, the
+// compile runs in the GPU process while the main thread only polls COMPLETION_STATUS_KHR once a frame
+// (KHR_parallel_shader_compile; D3D11 exposes it), so today's renderer keeps drawing until gf's first
+// program is ready. Without the extension the poll reads LINK_STATUS, which can still wait: that path
+// is the fallback, not the measured desktop one.
+const COMPLETION_STATUS_KHR = 0x91b1;
+
+interface ProgJob {
+  prog: WebGLProgram;
+  vs: WebGLShader;
+  fs: WebGLShader;
+}
+
+/** Issue a program's compile and link; no status is read, so this never waits for the GPU. */
+function startProgram(gl: WebGL2RenderingContext, vs: string, fs: string): ProgJob {
   const mk = (type: number, src: string): WebGLShader => {
     const s = gl.createShader(type)!;
     gl.shaderSource(s, src);
     gl.compileShader(s);
-    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
-      const log = gl.getShaderInfoLog(s);
-      gl.deleteShader(s);
-      throw new Error(`gf shader: ${log}`);
-    }
     return s;
   };
-  const p = gl.createProgram()!;
   const v = mk(gl.VERTEX_SHADER, vs);
   const f = mk(gl.FRAGMENT_SHADER, fs);
+  const p = gl.createProgram()!;
   gl.attachShader(p, v);
   gl.attachShader(p, f);
   gl.linkProgram(p);
-  gl.deleteShader(v);
-  gl.deleteShader(f);
-  if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(`gf link: ${gl.getProgramInfoLog(p)}`);
-  return p;
+  return { prog: p, vs: v, fs: f };
+}
+
+/** Read a started program's statuses (instant once its completion has been reported); throws on failure. */
+function finishProgram(gl: WebGL2RenderingContext, job: ProgJob): WebGLProgram {
+  for (const s of [job.vs, job.fs]) {
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+      const log = gl.getShaderInfoLog(s);
+      gl.deleteShader(job.vs); gl.deleteShader(job.fs); gl.deleteProgram(job.prog);
+      throw new Error(`gf shader: ${log}`);
+    }
+  }
+  gl.deleteShader(job.vs);
+  gl.deleteShader(job.fs);
+  if (!gl.getProgramParameter(job.prog, gl.LINK_STATUS)) {
+    const log = gl.getProgramInfoLog(job.prog);
+    gl.deleteProgram(job.prog);
+    throw new Error(`gf link: ${log}`);
+  }
+  return job.prog;
+}
+
+export function compileProgram(gl: WebGL2RenderingContext, vs: string, fs: string): WebGLProgram {
+  return finishProgram(gl, startProgram(gl, vs, fs));
 }
 
 /** A framebuffer of n colour textures (RGBA8, or RGBA32F for the probe). */
@@ -143,7 +174,18 @@ export const GF_TIERS: GfTier[] = [{ p: 3, k: 2, ramps: true, s: 3, lab: true, g
 const UNIFORMS = ["uD", "uOCh", "uOV", "uOPin", "uOArm", "uOK", "uOChk", "uOCell", "uOChL", "uOKL", "uOKC", "uOKB", "uOKA", "uOKP", "uH", "uW", "uAA", "uSigma", "uZt", "uWin", "uRc", "uGrid", "uGDim", "uMap", "uP0", "uP1", "uP2", "uP3", "uRv", "uORvK", "uLk", "uLkP", "uLkG", "uLkF", "uPt", "uGold", "uDyn", "uKPulseU", "uKReachU", "uPulseCol", "uTeleU", "uTeleAtU", "uTeleScale", "uPulseW", "uFx", "uFxStyle", "uFxPh", "uFxLive", "uEx", "uOExK", "uExLive", "uExLook", "uExTw", "uExOn", "uExBr", "uRimA", "uRimB", "uRimC", "uHov", "uGw", "uGwLive", "uRt"];
 /** K1362 s12: a program drawn only in frames where some cell lists a corner ("corners") or none does ("none"). */
 type GfWhen = "corners" | "none";
-interface GfProg { prog: WebGLProgram; u: Map<string, WebGLUniformLocation | null>; tier: GfTier | null; split?: 1 | 2; when?: GfWhen }
+interface GfProg {
+  prog: WebGLProgram | null;
+  u: Map<string, WebGLUniformLocation | null>;
+  tier: GfTier | null; split?: 1 | 2; when?: GfWhen;
+  // K1456: the app's programs compile async (startProgram above): "spec" until issued, "compiling" until
+  // a frame's poll reports completion, then "ready" (or "failed"; GfPass.compileError holds the message).
+  // The probe, split and bench forms stay synchronous: state "ready" from construction.
+  state: "spec" | "compiling" | "ready" | "failed";
+  job: ProgJob | null;
+  /** The fragment source, until the program is issued. */
+  src: string;
+}
 /**
  * K1362 s12 kz (gf_glsl.ts cornerRoute): a tier's programs. "route" is free for the corner-free cells, then the tier
  * for the cells with corners (only in a frame where some cell has one); "frame" is free in a frame where no cell has
@@ -253,6 +295,15 @@ export class GfPass {
   homeFade = 0;
   /** K1362 s7: the split's pieces (gf_split.ts), when the one tier runs as two passes. */
   private pieces: GfPieces | null = null;
+  // K1456: the app's compile queue (pollPrograms). khr is null until the first poll asks the context.
+  private readonly asyncCompile: boolean = false;
+  private khr: boolean | null = null;
+  private compileErr: string | null = null;
+  private compileIssued = 0;
+  private compileDone = 0;
+  private compileT0 = 0;
+  private compileFirstMs = -1;
+  private uniformsOf: (prog: WebGLProgram) => Map<string, WebGLUniformLocation | null> = () => new Map();
   /**
    * K1362 s7 "skip": pass 1 also writes depth (1 where the pixel has nothing to draw, 0 elsewhere) and pass 2 is
    * routed by depth alone (0.5 GREATER, no stencil test), so pass 2 never runs on an empty pixel.
@@ -270,13 +321,20 @@ export class GfPass {
     this.skip = !!sf.skip; const keys = !!sf.keys;
     const plan: { tier: GfTier | null; split?: 1 | 2; when?: GfWhen }[] = split ? [{ tier: tiers[0], split: 1 }, { tier: tiers[0], split: 2 }, { tier: null }]
       : [...tiers.flatMap((t) => (probe ? [{ tier: t.zc ? { ...t, zc: undefined } : t }] : cornerPlan(t))), { tier: null }]; // the probe ignores kz and zc (gfFs)
-    const make = (form: (src: string) => string): GfProg[] => plan.map(({ tier, split: s, when }) => {
-      const src = hf(fs ? fs(tier, s) : gfFs(probe, true, tier ?? undefined, s ? { reg: tier?.reg, unroll: tier?.unroll, pack: tier?.pack, split: s, splitSkip: this.skip, splitKeys: keys } : undefined));
-      const prog = compileProgram(gl, GF_VS, form(src));
+    this.asyncCompile = !probe && !split && !fs;
+    const uniformsOf = (prog: WebGLProgram): Map<string, WebGLUniformLocation | null> => {
       const u = new Map<string, WebGLUniformLocation | null>();
       for (const n of UNIFORMS) u.set(n, gl.getUniformLocation(prog, n));
       if (this.home) u.set("uHomeZ", gl.getUniformLocation(prog, "uHomeZ"));
-      return { prog, u, tier, split: s, when };
+      return u;
+    };
+    this.uniformsOf = uniformsOf;
+    const make = (form: (src: string) => string): GfProg[] => plan.map(({ tier, split: s, when }) => {
+      const src = hf(fs ? fs(tier, s) : gfFs(probe, true, tier ?? undefined, s ? { reg: tier?.reg, unroll: tier?.unroll, pack: tier?.pack, split: s, splitSkip: this.skip, splitKeys: keys } : undefined));
+      const fsrc = form(src);
+      if (this.asyncCompile) return { prog: null, u: new Map(), tier, split: s, when, state: "spec" as const, job: null, src: fsrc };
+      const prog = compileProgram(gl, GF_VS, fsrc);
+      return { prog, u: uniformsOf(prog), tier, split: s, when, state: "ready" as const, job: null, src: "" };
     });
     this.progs = make((src) => src);
     // K1383 s1: the reveal form exists for the app's programs only (no probe, split or source override)
@@ -286,6 +344,152 @@ export class GfPass {
     this.vao = gl.createVertexArray()!;
     this.tex = gl.createTexture()!;
     this.ext = gl.getExtension("EXT_disjoint_timer_query_webgl2") as TimerExt | null;
+  }
+
+  // ---- K1456: the async compile queue (the app's pass only; synchronous passes never queue) ----
+
+  private allSets(): (GfProg[] | null)[] {
+    return [this.progs, this.rprogs, this.lprogs[0], this.lprogs[1]];
+  }
+
+  /** The set the current frame routes to (look over reveal over plain), creating its specs on demand. */
+  private activeProgs(): GfProg[] {
+    if (this.lk && this.lplan) {
+      const i = this.rv ? 1 : 0;
+      if (!this.lprogs[i]) this.lprogs[i] = this.lplan(!!this.rv);
+      return this.lprogs[i]!;
+    }
+    if (this.rv && this.rplan) {
+      if (!this.rprogs) this.rprogs = this.rplan();
+      return this.rprogs;
+    }
+    return this.progs;
+  }
+
+  /** Sets draw() may fall back to, best first, while the routed set still compiles. */
+  private drawSets(): GfProg[][] {
+    const out: GfProg[][] = [];
+    const add = (set: GfProg[] | null): void => { if (set && !out.includes(set)) out.push(set); };
+    add(this.activeProgs());
+    add(this.lprogs[0]); add(this.progs); add(this.rprogs); add(this.lprogs[1]);
+    return out;
+  }
+
+  private static fullOf(set: GfProg[]): GfProg {
+    return set.find((g) => !g.tier && g.split === undefined) ?? set[set.length - 1];
+  }
+
+  /** Issue order: the routed set's full program (it draws every pixel exactly on its own), then the
+   *  tier this frame routes to, then that set's other tier, then the other sets the same way. */
+  private priority(): GfProg[] {
+    const active = this.activeProgs();
+    const full = GfPass.fullOf(active);
+    const now = active.filter((g) => g !== full && (!g.when || (g.when === "corners") === this.cellCorners));
+    const out = [full, ...now, ...active.filter((g) => g !== full && !now.includes(g))];
+    for (const set of this.allSets()) {
+      if (!set || set === active) continue;
+      const f = GfPass.fullOf(set);
+      out.push(f, ...set.filter((g) => g !== f));
+    }
+    return out;
+  }
+
+  private issue(g: GfProg): void {
+    if (!this.compileT0) this.compileT0 = performance.now();
+    g.job = startProgram(this.gl, GF_VS, g.src);
+    g.state = "compiling";
+    this.compileIssued++;
+  }
+
+  /** Create one not-yet-built set's specs (idle prewarm, one set a poll so its source build spreads out). */
+  private prewarmNext(): void {
+    if (!this.rplan || !this.lplan) return;
+    if (!this.rprogs) { this.rprogs = this.rplan(); return; }
+    if (!this.lprogs[0]) { this.lprogs[0] = this.lplan(false); return; }
+    if (!this.lprogs[1]) { this.lprogs[1] = this.lplan(true); }
+  }
+
+  /**
+   * K1456: one frame's compile step: finish every program the GPU reports complete, then issue the
+   * next one in priority order (one at a time: the GPU compiles while the maze stays on screen, and
+   * first-ready order stays the priority's). Never reads a status that can wait, except on a context
+   * without KHR_parallel_shader_compile, where the completion poll is LINK_STATUS itself.
+   */
+  pollPrograms(prewarm = true): void {
+    if (!this.asyncCompile || this.compileErr) return;
+    const gl = this.gl;
+    if (this.khr === null) this.khr = !!gl.getExtension("KHR_parallel_shader_compile");
+    for (const set of this.allSets()) {
+      for (const g of set ?? []) {
+        if (g.state !== "compiling" || !g.job) continue;
+        if (this.khr && !gl.getProgramParameter(g.job.prog, COMPLETION_STATUS_KHR)) continue;
+        try {
+          g.prog = finishProgram(gl, g.job);
+          g.u = this.uniformsOf(g.prog);
+        } catch (e) {
+          g.state = "failed";
+          g.job = null;
+          this.compileErr = e instanceof Error ? e.message : String(e);
+          return;
+        }
+        g.job = null;
+        g.state = "ready";
+        this.compileDone++;
+
+        if (this.compileFirstMs < 0 && this.compileT0) this.compileFirstMs = performance.now() - this.compileT0;
+      }
+    }
+    if (this.allSets().some((set) => (set ?? []).some((g) => g.state === "compiling"))) return;
+    const next = this.priority().find((g) => g.state === "spec");
+    if (next) { this.issue(next); return; }
+    if (prewarm) this.prewarmNext();
+  }
+
+  /** K1456: poll until every built set is ready (tests and probes on a stand-in context; a real one spins on the GPU). */
+  flushPrograms(): void {
+    // No prewarm: only the sets already built are flushed, and no idle set is created here.
+    for (let i = 0; i < 100000 && this.pendingCompile(); i++) this.pollPrograms(false);
+  }
+
+  /** K1456: the routed set's full program can draw (the moment gf may take the screen over). */
+  drawReady(): boolean {
+    if (!this.asyncCompile) return true;
+    return GfPass.fullOf(this.activeProgs()).state === "ready";
+  }
+
+  /** K1456: any built program still compiling, or a set still to prewarm. */
+  pendingCompile(): boolean {
+    if (!this.asyncCompile || this.compileErr) return false;
+    return this.allSets().some((set) => (set ?? []).some((g) => g.state === "spec" || g.state === "compiling"));
+  }
+
+  compileError(): string | null { return this.compileErr; }
+
+  /**
+   * K1456: every program's (vertex, fragment) sources, the look set first (the first frame's route),
+   * for the compile worker (gf_compile_worker.ts), which links them once on a KHR-free context so
+   * they persist in the disk cache. Building the sets is source generation only; nothing compiles here.
+   */
+  compileSources(): [string, string][] {
+    if (!this.asyncCompile) return [];
+    this.prewarmNext(); this.prewarmNext(); this.prewarmNext();
+    const out: [string, string][] = [];
+    const seen = new Set<string>();
+    for (const set of [this.lprogs[0], this.progs, this.rprogs, this.lprogs[1]]) {
+      if (!set) continue;
+      const full = GfPass.fullOf(set);
+      for (const g of [full, ...set.filter((x) => x !== full)]) {
+        if (seen.has(g.src)) continue;
+        seen.add(g.src);
+        out.push([GF_VS, g.src]);
+      }
+    }
+    return out;
+  }
+
+  /** K1456: the queue's numbers for __knotGf.stats. */
+  compileInfo(): { issued: number; ready: number; firstMs: number } {
+    return { issued: this.compileIssued, ready: this.compileDone, firstMs: this.compileFirstMs };
   }
 
   get timed(): boolean { return !!this.ext; }
@@ -578,12 +782,14 @@ export class GfPass {
     return [x0, y0, Math.max(x0, x1), Math.max(y0, y1)];
   }
 
-  /** Draw into target (bound and cleared here) over rect; the world point of fragment (fx, fy) is map's. */
-  draw(target: GfTarget, map: GfMap, rect: [number, number, number, number], time = true): void {
+  /** Draw into target (bound and cleared here) over rect; the world point of fragment (fx, fy) is map's.
+   *  K1456: false when no program that may draw is ready yet (the caller keeps today's frame). */
+  draw(target: GfTarget, map: GfMap, rect: [number, number, number, number], time = true): boolean {
     const gl = this.gl;
     const T = this.T;
     const P = this.packed;
-    if (!T || !P) return;
+    if (!T || !P) return false;
+    if (this.asyncCompile) this.pollPrograms();
     gl.bindFramebuffer(gl.FRAMEBUFFER, target.fbo);
     gl.viewport(0, 0, target.w, target.h);
     gl.disable(gl.SCISSOR_TEST);
@@ -601,7 +807,14 @@ export class GfPass {
     // K1389 s2: the look form writes its colour to the target's second attachment; the original programs only o0
     if (!target.float && target.n > 1) gl.drawBuffers(lk ? (target.n > 2 ? [gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1, gl.COLOR_ATTACHMENT2] : [gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]) : [gl.COLOR_ATTACHMENT0, gl.NONE]);
     if (lk && !this.lprogs[rv ? 1 : 0]) this.lprogs[rv ? 1 : 0] = this.lplan!(!!rv);
-    const progs = (lk ? this.lprogs[rv ? 1 : 0]! : rv ? this.rprogs! : this.progs).filter((g) => (!g.tier || !g.tier.half || halfOk) && (!g.when || (g.when === "corners") === corners));
+    // K1456: draw the routed set once its full program is ready; while a newly routed set (a reveal's
+    // form, say) still compiles, the best ready set draws instead, so the maze never leaves the screen.
+    let progs: GfProg[] | null = null;
+    for (const set of this.drawSets()) {
+      const cand = set.filter((g) => g.state === "ready" && (!g.tier || !g.tier.half || halfOk) && (!g.when || (g.when === "corners") === corners));
+      if (cand.some((g) => !g.tier)) { progs = cand; break; }
+    }
+    if (!progs) return false;
     const routed = progs.length > 1;
     const pieces = this.pieces;
     if (routed) target.ensureStencil();
@@ -609,7 +822,7 @@ export class GfPass {
     else { gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT); }
     if (routed && !pieces) { gl.stencilMask(0xff); gl.depthMask(true); gl.clearBufferfi(gl.DEPTH_STENCIL, 0, 1, 0); }
     const [x0, y0, x1, y1] = rect;
-    if (x1 <= x0 || y1 <= y0) return;
+    if (x1 <= x0 || y1 <= y0) return true;
     if (pieces) {
       // K1362 s7: pass 1 draws into the pieces (over the target's depth-stencil): their old contents are never read
       // (pass 2 reads only the pixels pass 1 just wrote), so a tile-based GPU need not load them
@@ -700,6 +913,7 @@ export class GfPass {
     }
     gl.bindVertexArray(null);
     gl.disable(gl.SCISSOR_TEST);
+    return true;
   }
 
   /** Collect finished timer queries. */
@@ -725,8 +939,10 @@ export class GfPass {
     const gl = this.gl;
     for (const { q, e } of this.pending) { gl.deleteQuery(q); gl.deleteQuery(e); }
     this.pending = [];
-    for (const g of this.progs) gl.deleteProgram(g.prog);
-    for (const g of this.rprogs ?? []) gl.deleteProgram(g.prog);
+    for (const set of this.allSets()) for (const g of set ?? []) {
+      if (g.job) { gl.deleteProgram(g.job.prog); gl.deleteShader(g.job.vs); gl.deleteShader(g.job.fs); g.job = null; }
+      if (g.prog) gl.deleteProgram(g.prog);
+    }
     if (this.rvTex) gl.deleteTexture(this.rvTex);
     if (this.fxTex) gl.deleteTexture(this.fxTex);
     if (this.exTex) gl.deleteTexture(this.exTex);
@@ -757,22 +973,58 @@ void main() {
 export interface GfLookComp { mode: number; bd: [number, number, number, number]; fx?: boolean }
 
 export class GfComposite {
-  private prog: WebGLProgram;
+  // K1456: both composite programs compile async like the pass's (startProgram): on a cold cache even
+  // this 525-char program waited 34 s in the queue behind gf's programs when its status was read.
+  private job: ProgJob | null;
+  private ljob: ProgJob | null;
+  private prog: WebGLProgram | null = null;
   private lprog: WebGLProgram | null = null;
   private lu = new Map<string, WebGLUniformLocation | null>();
   private vao: WebGLVertexArrayObject;
-  private uC: WebGLUniformLocation | null; private uFill: WebGLUniformLocation | null; private uInk: WebGLUniformLocation | null;
+  private uC: WebGLUniformLocation | null = null; private uFill: WebGLUniformLocation | null = null; private uInk: WebGLUniformLocation | null = null;
+  private khr: boolean | null = null;
+  private err: string | null = null;
   readonly gl: WebGL2RenderingContext;
   constructor(gl: WebGL2RenderingContext) {
     this.gl = gl;
-    this.prog = compileProgram(gl, GF_VS, COMP_FS);
+    this.job = startProgram(gl, GF_VS, COMP_FS);
+    this.ljob = startProgram(gl, GF_VS, LOOK_COMP_FS);
     this.vao = gl.createVertexArray()!;
-    this.uC = gl.getUniformLocation(this.prog, "uC");
-    this.uFill = gl.getUniformLocation(this.prog, "uFill");
-    this.uInk = gl.getUniformLocation(this.prog, "uInk");
   }
-  /** Into the currently bound framebuffer (the canvas), viewport w x h. */
-  draw(src: GfTarget, fill: [number, number, number], ink: [number, number, number], look?: GfLookComp | null): void {
+
+  /** K1456: one frame's poll of the two composite programs. */
+  poll(): void {
+    if (this.err) return;
+    const gl = this.gl;
+    if (this.khr === null) this.khr = !!gl.getExtension("KHR_parallel_shader_compile");
+    const step = (job: ProgJob | null, take: (p: WebGLProgram) => void): ProgJob | null => {
+      if (!job) return null;
+      if (this.khr && !gl.getProgramParameter(job.prog, COMPLETION_STATUS_KHR)) return job;
+      try {
+        take(finishProgram(gl, job));
+      } catch (e) {
+        this.err = e instanceof Error ? e.message : String(e);
+      }
+      return null;
+    };
+    this.job = step(this.job, (p) => {
+      this.prog = p;
+      this.uC = gl.getUniformLocation(p, "uC");
+      this.uFill = gl.getUniformLocation(p, "uFill");
+      this.uInk = gl.getUniformLocation(p, "uInk");
+    });
+    if (!this.err) this.ljob = step(this.ljob, (p) => { this.lprog = p; });
+  }
+
+  /** K1456: the plain composite can draw / the look composite can draw / a compile failed. */
+  get ready(): boolean { return !!this.prog; }
+  get lookReady(): boolean { return !!this.lprog; }
+  compileError(): string | null { return this.err; }
+  /** Into the currently bound framebuffer (the canvas), viewport w x h.
+   *  K1456: false while the needed composite program still compiles (the caller keeps today's frame). */
+  draw(src: GfTarget, fill: [number, number, number], ink: [number, number, number], look?: GfLookComp | null): boolean {
+    this.poll();
+    if (look ? !this.lprog : !this.prog) return false;
     const gl = this.gl;
     gl.viewport(0, 0, src.w, src.h);
     gl.disable(gl.SCISSOR_TEST);
@@ -784,10 +1036,7 @@ export class GfComposite {
     gl.blendEquation(gl.FUNC_ADD);
     gl.blendFuncSeparate(gl.ONE, gl.ONE_MINUS_SRC_ALPHA, gl.ZERO, gl.ONE);
     if (look) {
-      if (!this.lprog) {
-        this.lprog = compileProgram(gl, GF_VS, LOOK_COMP_FS);
-        for (const n of ["uC", "uCo", "uHi", "uLook", "uBd", "uFill", "uRvFx"]) this.lu.set(n, gl.getUniformLocation(this.lprog, n));
-      }
+      if (!this.lu.size) for (const n of ["uC", "uCo", "uHi", "uLook", "uBd", "uFill", "uRvFx"]) this.lu.set(n, gl.getUniformLocation(this.lprog!, n));
       const u = (n: string): WebGLUniformLocation | null => this.lu.get(n) ?? null;
       gl.useProgram(this.lprog);
       // K1389 s2: the pass's second attachment holds the colours; K1425: the third holds the border indication
@@ -812,7 +1061,7 @@ export class GfComposite {
       gl.activeTexture(gl.TEXTURE1);
       gl.bindTexture(gl.TEXTURE_2D, null);
       gl.activeTexture(gl.TEXTURE0);
-      return;
+      return true;
     }
     gl.useProgram(this.prog);
     gl.activeTexture(gl.TEXTURE0);
@@ -823,10 +1072,13 @@ export class GfComposite {
     gl.bindVertexArray(this.vao);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     gl.bindVertexArray(null);
+    return true;
   }
   dispose(): void {
-    this.gl.deleteProgram(this.prog);
-    if (this.lprog) this.gl.deleteProgram(this.lprog);
-    this.gl.deleteVertexArray(this.vao);
+    const gl = this.gl;
+    for (const job of [this.job, this.ljob]) if (job) { gl.deleteProgram(job.prog); gl.deleteShader(job.vs); gl.deleteShader(job.fs); }
+    if (this.prog) gl.deleteProgram(this.prog);
+    if (this.lprog) gl.deleteProgram(this.lprog);
+    gl.deleteVertexArray(this.vao);
   }
 }

@@ -81,6 +81,9 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
   // K1369 s3: the renderer attach() put in lean mode.
   let leanOn: { lean: boolean } | null = null;
   let rc: RenderContainer | null = null;
+  // K1456: true once gf has taken the screen over from today's renderer (attach() has hidden it);
+  // until then today's ribbons draw every frame while gf's programs compile.
+  let switched = false;
   let drawn: (Float32Array | null)[] = [];
   // K1396 (24E): the explore table (gf_explore.ts), rebuilt when the declaration or the installed positions move
   let exTab: GfExploreTable | null = null;
@@ -165,6 +168,11 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
     // the gf worker's sample + gather ms per build, and the replies dropped
     // (an older channel's).
     chan: "", chanOpens: 0, chanBuilds: 0, chanGatherMs: [] as number[], chanStale: 0,
+    // K1456: the async compiles (gf_pass): programs issued / ready, the first ready program's ms from
+    // the first issue, and the ms (performance.now) gf took the screen over (-1 while today's draws).
+    compileIssued: 0, compileReady: 0, compileFirstMs: -1, switchedMs: -1,
+    // K1456: the compile worker's state (gf_compile_worker.ts): "" until started, then its count/error.
+    compileWorker: "", compileWarmed: 0,
   };
 
   // The build worker: started on the first frame; until it says hello (and
@@ -232,6 +240,29 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
     chanOn = false;
     stats.worker = why;
     requestFrame();
+  };
+
+  // K1456: link gf's programs once in the compile worker (its KHR-free context persists them in the
+  // disk cache; see gf_compile_worker.ts). Started with the pass; failure only loses the warm restart.
+  let compileWorkerDone = false;
+  const startCompileWorker = (): void => {
+    if (compileWorkerDone || !pass) return;
+    compileWorkerDone = true;
+    try {
+      const sources = pass.compileSources();
+      if (!sources.length) { stats.compileWorker = "none"; return; }
+      const w = new Worker(new URL("./gf_compile_worker.ts", import.meta.url), { type: "module", name: "knot-gf-compile" });
+      stats.compileWorker = "compiling";
+      w.onmessage = (e: MessageEvent<{ done?: number; all?: boolean; error?: string }>) => {
+        stats.compileWarmed = e.data?.done ?? stats.compileWarmed;
+        if (e.data?.all) { stats.compileWorker = "done"; w.terminate(); }
+        else if (e.data?.error) { stats.compileWorker = `failed (${e.data.error})`; w.terminate(); }
+      };
+      w.onerror = () => { stats.compileWorker = "failed (onerror)"; try { w.terminate(); } catch { /* gone */ } };
+      w.postMessage({ sources });
+    } catch (err) {
+      stats.compileWorker = `failed (${err instanceof Error ? err.message : String(err)})`;
+    }
   };
 
   const startWorker = (): void => {
@@ -444,6 +475,7 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
     root.addChildAt(rc, Math.min(2, root.children.length));
   };
   const detach = (): void => {
+    switched = false;
     for (const c of hidden) c.visible = true;
     hidden = [];
     if (filletsOff) {
@@ -840,7 +872,9 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
         chanRefused = null;
         pending = null;
         T = null;
-        attach();
+        // K1456: no attach() here: today's renderer keeps drawing until gf's first program is ready;
+        // the switch below attaches (hiding it) on the first frame gf can actually draw.
+        if (switched) detach();
       }
       if (pending) {
         const p = pending;
@@ -992,6 +1026,27 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
         rimKeyV = -1;
         dirty = true;
       }
+      // K1456: one compile poll a frame. While a program is outstanding the frame loop stays alive;
+      // a failed compile falls back to today's renderer for good, never a blank.
+      pass.pollPrograms();
+      comp!.poll();
+      const ci = pass.compileInfo();
+      stats.compileIssued = ci.issued; stats.compileReady = ci.ready; stats.compileFirstMs = ci.firstMs;
+      const compileFailed = pass.compileError() ?? comp!.compileError();
+      if (compileFailed) return fallback(`failed (shader compile: ${compileFailed})`);
+      if (pass.pendingCompile()) requestFrame();
+      // K1456: the compile worker runs only once gf's own queue has drained, so its compiles never
+      // share the GPU process with a gf status read (a read behind another context's compile can wait
+      // for it: a 23 s main task, measured). It persists the programs for the next visit instead.
+      if (switched && !pass.pendingCompile()) startCompileWorker();
+      if (!switched) {
+        const lookComp = pass.looking ? comp!.lookReady : comp!.ready;
+        if (!pass.drawReady() || !lookComp) return; // today's renderer is still on screen
+        attach();
+        switched = true;
+        stats.switchedMs = performance.now();
+        dirty = true;
+      }
       const key = `${cam.a},${cam.d},${cam.e},${cam.f},${cam.w},${cam.h}`;
       if (key !== drawnKey) dirty = true;
       pass.poll();
@@ -1001,7 +1056,7 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
       map = [1 / cam.a, -cam.e / cam.a, -1 / cam.d, (cam.h - cam.f) / cam.d];
       rect = pass.gridRect(map, cam.w, cam.h);
       const t0 = performance.now();
-      pass.draw(target, map, rect);
+      if (!pass.draw(target, map, rect)) { dirty = true; requestFrame(); return; }
       stats.cpuPassMs.push(performance.now() - t0);
       if (rvDrawn) { stats.rvPasses++; stats.rvLast = performance.now(); }
       stats.px.push((rect[2] - rect[0]) * (rect[3] - rect[1]));
@@ -1023,6 +1078,8 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
   // would feed nothing gf draws, so frame_loop.ts skips it (main's frame then
   // leaves the big core to the physics worker). Asked once per awake frame.
   const busy = (): boolean => {
+    // K1456: before the switch today's renderer is what draws, so its update always runs.
+    if (!switched) return false;
     // K1369 s4: with the channel open the gf worker samples; main never
     // runs the ribbon update (a pick or pluck still refreshes it).
     if (chanOn && !off) {

@@ -34,6 +34,9 @@ function fakeGl(srcs: string[]): WebGL2RenderingContext {
 function sources(probe: boolean, home?: boolean): { srcs: string[]; pass: GfPass } {
   const srcs: string[] = [];
   const pass = home === undefined ? new GfPass(fakeGl(srcs), probe) : new GfPass(fakeGl(srcs), probe, undefined, undefined, false, { home });
+  // K1456: the app pass compiles async (nothing is issued at construction); flush it so the recorded
+  // sources are the whole base set, as the synchronous constructor used to compile.
+  (pass as unknown as { flushPrograms(): void }).flushPrograms();
   return { srcs, pass };
 }
 const keysDigest = (T: GfTables): string => {
@@ -48,8 +51,11 @@ const packDigest = (T: GfTables): string => {
 describe("K1439 flag off: master's programs and tables", () => {
   it("GfPass compiles master's sources (app and probe)", () => {
     const app = sources(false); const probe = sources(true);
-    expect(app.srcs.length).toBe(6);
-    expect(sha(...app.srcs)).toBe("1df27e98ef00c13fc934878781ca071c1dcf43971b38910ffedb765abed2fe36");
+    expect(new Set(app.srcs).size).toBe(4); // three fragment programs on one shared vertex source
+    // K1456: the app pass issues its full program first (the old constructor's plan order is gone);
+    // the source SET is master's, pinned over the distinct sources, sorted (master's distinct
+    // sources are the same four strings).
+    expect(sha(...[...new Set(app.srcs)].sort())).toBe("632795ab2c1ecc252927aa4912c7cf1e8699191c578c62410d48da2749a1c87a");
     expect(probe.srcs.length).toBe(4);
     expect(sha(...probe.srcs)).toBe("36a98d2e84fdb9fb484729d4674ce66d987b1617df454a2a671416c0bf541df2");
     // { home: false } is the default
@@ -91,9 +97,11 @@ describe("K1439 flag on: homeForm on every program", () => {
   it("the reveal and look forms compose over it", () => {
     const { srcs, pass } = sources(false, true);
     const n0 = srcs.length;
-    const p = pass as unknown as { rplan: () => unknown; lplan: (reveal: boolean) => unknown };
-    p.rplan(); p.lplan(false); p.lplan(true);
-    expect(srcs.length).toBe(n0 * 4);
+    const p = pass as unknown as { rplan: () => unknown; lplan: (reveal: boolean) => unknown; rprogs: unknown; lprogs: unknown[] };
+    // K1456: the plans only build specs now; install them as draw() would, then flush.
+    p.rprogs = p.rplan(); p.lprogs[0] = p.lplan(false); p.lprogs[1] = p.lplan(true);
+    (pass as unknown as { flushPrograms(): void }).flushPrograms();
+    expect(new Set(srcs).size).toBe(13); // four sets of three fragment programs on one vertex source
     for (const s of srcs.slice(n0)) if (s !== GF_VS) {
       expect(s).toContain("uniform float uHomeZ;");
       expect(s).toContain("void member(int c, float s, vec4 KB, float z) {");
