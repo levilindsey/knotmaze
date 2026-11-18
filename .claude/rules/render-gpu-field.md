@@ -12,6 +12,12 @@ rp=gf draws form B's junction look per pixel: main builds tables
 briefs and handoffs are `docs/design/K1362_*.md`; their numbers are
 not repeated here.
 
+**The border look (`tlk=border`) under gf is gf's own** (Levi, 2026-11-17,
+shown today's thin, dim, section-tinted strokes beside gf's thick
+near-black strokes on both edges: "Keep gf as it is"; K1455,
+`.claude/probes/K1458/live/sheet_border.png`). Do not move gf's border
+strokes toward today's, and do not use today's border strokes as a bar.
+
 ## Tables
 
 - `buildTables` is bit-identical to its pre-Muse output (digest

@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1465.
+Next free ID: K1466.
 
 ## Waiting on Levi
 
@@ -303,9 +303,6 @@ Next free ID: K1465.
   never unlocks it. If it should stay unlocked on the charger overnight, that is a phone setting only Levi can
   change (K1362). 2026-11-13 10:34-10:57: unlocked, but the Claude app stayed in front, so the run never
   started: the pass needs the HOME SCREEN in front and the phone untouched for 2 min (Claude never presses Home).
-- **K1455** · the border look (tlk=border) under rp=gf: today draws thin, dim, section-tinted edge strokes; gf draws
-  thick near-black strokes on both edges of every thread (live c5fc87d1). Asked 2026-11-17 with the picture: match
-  today, or keep gf as it is? Also: should rp=outline follow the setting? (.claude/probes/K1458/live/sheet_border.png)
 - **K1444** · rp=gf home membership looks (after K1439 makes it live behind a flag): (1) on by default? (2)
   spot 4 (muse_hash 5.88,8.50) rounds the corner where rp=outline draws a dive shadow; (3) g41_user_tw64
   17.80,9.55: soft band at the default fadeLength, no line at 1.2, where master and rp=outline draw a fading
@@ -638,8 +635,7 @@ Next free ID: K1465.
   - next: build the per-pin reach window into tables.ts and the field, verify on the GPU
   - brief: `docs/design/K1451_s2_reach_window.md`
 - **K1464** · Muse batch 26 (rp=gf on an ordinary load): 26A K1456 cold first load, 26B K1459 reveal ink per
-  thread, 26C K1424 route bands by fan membership, 26D K1455 border strokes as today draws them (held if Levi
-  keeps gf's look)
+  thread, 26C K1424 route bands by fan membership, 26D K1454 a pluck ripple bends the threads
   - owner: muse session, the K1053 chain (.claude/probes/K1053/chain.log names each run's agent); coordinating claude session 01SUPGULDxvE5gKXozfaFaFG
   - branch: mainline; last commit: `b7e8e805`
   - evidence: .claude/probes/K1053/chain.log, done.txt
@@ -2603,9 +2599,12 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   per-frame cost, the physics' own sim/wall and thermals (K1362_c1_cpu_off_main.md, K1369_s2_motion_rate.md)
 - **K1403** · rp=gf look: move the per-build colour position compute (0.4 ms on the desktop, now the look's
   main cost) to the gf worker (K1389 s2 handoff)
+- **K1465** · rp=outline ignores the thread look setting (tlk); if it is kept, decide whether it follows
+  tlk=border as gf does (from K1455)
 
 ## Done
 
+- **K1455** · the border look (tlk=border) under rp=gf: gf's thick near-black strokes on both edges stay; today's thin section-tinted strokes are not the bar. Dropped: decided, no work: Levi 2026-11-17 "Keep gf as it is" (recorded in .claude/rules/render-gpu-field.md) (2026-11-17).
 - **K1458** · rp=gf fades the under thread before a crossing as today's does and follows the live slider (gf baked the gap only inside the pixel's candidate list; joint window cap, per-side clearance scales and a re-bake on a sleeping knot ported); panel rewrites keep rp/gfh. Live on c5fc87d1: hold.mjs 60/60 on both links, real slider drags change the fade at 0.14/0.28/0.62/1.2 in gf and gf+gfh. Done in c5fc87d1 (2026-11-17).
 - **K1450** · rp=gf's maze blinked: its render callback skipped any frame drawn into a filter texture, and a live pluck ripple (K279) filters the world, so music mode's auto plucks hid the maze most of the time (since adac76dd); it now draws to the screen and restores the filter's target; guard: .claude/probes/K1450/hold.mjs (ordinary load, 60 frames). Done in dcf4b082 (2026-11-17).
 - **K1449** · home leftovers (gfh=1 only): the home ramp is full to the tie depth; fadeLength 0 is a crisp cut (690 -> 203 finds); default 435 -> 368, short of 250 (rest in K1451); flag-off pixels equal (0 px). Done in 7657e03b (2026-11-17).

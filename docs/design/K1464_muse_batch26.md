@@ -65,16 +65,21 @@ gf-only connected component over 12 px and no today-only component over 12 px at
 ji0 tick and patch, ji80's purple centre). 3. 0 px against master gf with no route showing. 4. Crops per
 junction. 5. `npm test` green. 6. The guards.
 
-## Run D (26D): K1455, the border look's strokes as today draws them
+## Run D (26D): K1454, a pluck ripple bends the threads under rp=gf
 
-Under `tlk=border` today's renderer draws thin, dim, section-tinted edge strokes; gf draws thick near-black
-strokes on both edges of every thread (`.claude/probes/K1458/live/sheet_border.png`: today above, gf below).
-The bar is today's. First repair the measuring tool: `.claude/probes/K1458/border.mjs` crashes with "Target
-closed" (ledger K1461). Files: `gf_look.ts`, `gf_pass.ts`.
+(This run was K1455, the border look's strokes. Levi, 2026-11-17: "Keep gf as it is". gf's border strokes
+stay; do not move them toward today's.)
 
-**Done:** 1. Floor first (two today loads). On `?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&rp=gf&gfh=1` against
-the same link without `rp`/`gfh`, same physics state, at Crossing fade 0.14 and 1.2: the stroke mask within
-15% of today's count and IoU at least 0.6 after a 1 px dilation; median stroke width within 1 px; mean stroke
-colour within 12 levels per channel. 2. Per-thread guard: every stroke run today draws is drawn by gf, and gf
-draws no stroke run today does not (list each exception with its crop). 3. The fill look 0 px against master
-gf. 4. Six 4x crops, two of them at junctions. 5. `npm test` green. 6. The guards.
+Under rp=gf a pluck ripple (K279, `pluck_ripple.ts`) draws over the maze instead of refracting the threads:
+K1450's blink fix draws the maze to the screen past the ripple's filter, so the maze is not in the filter's
+texture. Read ledger K1454, the "While a pluck ripple lives" paragraph of `.claude/rules/render-gpu-field.md` and Handoff K1450
+(`docs/design/K1450_gf_blink.md`): the full fix composites into the filter texture through Pixi's projection.
+Files: the composite shaders in `gf_pass.ts` / `gf_look.ts`, `gf_app.ts`.
+
+**Done:** 1. A probe that plucks one fixed thread point on `?3&xp=off&am=instant` and captures the frame at
+three ripple ages, today and gf on the same physics state, plus the same state with `prp=off`. The displaced
+mask (pixels that differ from the `prp=off` frame by more than the two-load floor): gf's within 25% of
+today's count and IoU at least 0.6 at each age; on master gf it fails (show the numbers). 2. The blink must
+not come back: `hold.mjs` 60/60 on both links with the ripple on and music mode's auto plucks running, and
+`DRAG=1` (Handoff K1450). 3. With no ripple live, 0 px against master gf. 4. 4x crops of the ring at each
+age (today | master gf | new gf). 5. `npm test` green. 6. The guards.
