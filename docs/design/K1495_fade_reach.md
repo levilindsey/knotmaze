@@ -87,3 +87,80 @@ confirmed on the tiles.
 comes first. A compaction is not a stop: re-read this brief and `git log`. On stopping: commit WIP, append
 `### Handoff K1495` here, commit, and report: the table, the sheet's path, which commits are confirmed on
 screen, a `Ledger items` list and K1495's handle fields.
+
+### Handoff K1495
+
+**Verdict: no reach fault in gf, so no src change.** On link A at hash fff8c9e5, today's renderer fades
+over the same short stretch as gf. The slider asks for 51 px of arc at fl 1.2 (smoothstep 10-90% would be
+about 31 px), but the ramp is about 12 px in both renderers. **Today's own caps** set that length on this dense
+link, and gf copies them faithfully:
+- **The junction clearance scale** (crossing_gaps.ts: fadeScale, floored at FADE_JOINT_FLOOR 0.45).
+- **The gap window**, which ends at the joint room or the neighbour clearance.
+Measured by patching today's shader (`patch_*.json`, `out/prof_cause.txt`; medians at fl 0.14 / 0.5 / 1.2):
+
+| today's | fl 0.14 | fl 0.5 | fl 1.2 |
+|---|---|---|---|
+| as shipped | 1.7 | 6.0 | 11.5 px |
+| no clearance scale | 3.8 | 11.1 | 14.5 px |
+| no scale and no window cut | 3.8 | 11.9 | 14.5 px |
+
+With both terms off, the fade still stops abruptly at about 43 px of arc from the crossing centre. That is
+where the slot's marched window ends. So a longer fade on links like this one means changing today's
+joint-room caps in crossing_gaps.ts, for both renderers. That decision is Levi's, not a gf port fix.
+
+**Item 1 table** (master 63d06c9f; the tip is the same because src is unchanged). Values are the median
+10-90% ramp in device px over 49 clean crossing sides. Per-site rows, with where each ramp starts and ends,
+are in `.claude/probes/K1495/out/prof_master.txt` / `.json`.
+
+| fl | today fill | gf fill | gf border + | gf border - | today border +/- |
+|---|---|---|---|---|---|
+| 0 | 0.0 | 0.4 | 0.0 | 0.0 | 3.8 / 0.4 |
+| 0.14 | 1.7 | 1.7 | 1.3 | 1.7 | 3.8 / 1.3 |
+| 0.5 | 6.0 | 6.4 | 5.5 | 5.1 | 3.8 / 2.6 |
+| 1.2 | 11.5 | 11.9 | 8.9 | 9.8 | 3.8 / 3.0 |
+
+Today's border look keeps its faint outline through the gap, so its outline "ramp" is flat and mostly
+unreadable. The usable comparison is gf border against today's fill: gf's outline fades a little shorter
+than the fill.
+
+**gf fill against today's, within 15% or 2 px:** 48/49 sides at fl 0, 48/49 at 0.14, 44/49 at 0.5, 42/49 at
+1.2. Every side outside tolerance is one where gf fades longer and smoother, never shorter. Per-pixel ratio
+of fl 1.2 to fl 0 along the centre line:
+- x132+, x227+, x308+: today's window cuts its fade to a crisp step within 1-2 px; gf ramps over about 12 px.
+- x171-: today's fade is chopped at 62 px; gf continues to 99%.
+- x2-: today's draws no gap on that side at all.
+- x289-, x331-: today's cut starts later than gf's.
+
+Copying those chops into gf would make gf worse, so I did not.
+
+**Item 3 (x75+, x103+):** the probe reads correctly, and the + outline's fade there is genuinely short, about
+1-3 px. That outline is the junction crotch (the ">" hook) where the under thread dives under a junction. The
+window ends at the joint, and **today's fill at that same edge also cuts within about 3 px** (ratio 8 -> 58 -> 100).
+So it is not a gf fault. Their - outlines read 6.4 / 4.7 px.
+
+**Sheets, looked at:**
+- `out/sheet_reach.png`: six crossings at 4x, columns today fill | gf border | gf fill at fl 1.2, then the
+  same at 0.5. The tip columns are left out because the tip equals master.
+  - gf's fade reads as long as today's at every row, and smooth.
+  - The border outlines fade softly over about the fill's length.
+  - No stairs, ticks or dots on these crossings.
+  - Both renderers show the same crisp window-end edge where a fade meets a junction notch (x75, x104).
+  - **K1458's stairs and radial bands:** not visible on these crossings. The hard-edged pieces sit at junction
+    dives (below).
+- `out/sheet_dives.png`: four dives under a junction, found as the cells where today's and gf's fill differ
+  most at fl 1.2 but not at fl 0.
+  - gf's gap geometry differs from today's already at fl 0: a dark block in dive 1, a full looped gap in
+    dives 2 and 3, small triangles in dive 4.
+  - At fl 1.2, gf adds straight hard edges across the fade: a vertical edge in dive 1, bright vertical
+    slivers in dive 2, a diagonal edge in dive 3. These are the remaining stair/band artifacts.
+  - Today's has some window-end straight edges too, but fewer.
+- **The start/exit marker disc** (frame 880,144): today's fades the thread away from the disc radially over a
+  long stretch at fl 1.2. gf keeps the crisp fl 0 cut there, so it has no marker fade at all. gf_look.ts has
+  no marker-gap port; the cut there comes from elsewhere.
+
+**Not done:** the src-change gates (sweep, dragchecks, hold, npm test) do not apply, since nothing in src
+changed.
+**Commits:** f15164a4 (probes, tables, sheets). The sheets confirm master 63d06c9f on screen.
+**Next (Levi's call):** whether fl 1.2 should reach further on dense links, by relaxing today's joint caps
+(crossing_gaps.ts, both renderers). Separately: gf's junction-dive gap geometry and hard edges, and gf's
+missing marker-disc fade.
