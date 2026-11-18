@@ -71,3 +71,38 @@ comes first. A compaction is not a stop: re-read this brief and `git log`. On st
 `### Handoff K1482 s4` here, commit, and report: the sweep's faulted count by class, the sheets' paths (each
 site named), the numbers, which commits are confirmed on screen, a `Ledger items` list and K1482's handle
 fields.
+
+### Handoff K1482 s4
+
+Stopped 02:45 (2 h cap ~03:32; stopped early: no fix can land with its Done evidence in the time left).
+No src change: `git diff origin/master...HEAD -- src` is empty, so the tip renders as master (sweep 46:
+wedge 11, notch 9, sliver 7, dot 6, tick 5, dash 3, stub 3, break 2; bar, hold, mirror_caps and the
+carry-across sheets equal master's and were not re-run). Running notes: `.claude/probes/K1482/s4/notes.md`.
+
+- **Item 0 done** (d47ad7b8): `.claude/probes/K1482/out/s4/card_sharp_v.png`.
+- **The page's tables.** gfh=1 builds tables with no home (`buildTables(scene, {aa})`: gf_app.ts:416,
+  gf_worker.ts:405, gf_build.ts:55) and gf_pass.ts:782 uploads `{...T, homeOn: true}`, so K1451 s3's pin clip
+  (tables.ts, only when built with home) never reaches the screen. The page-exact mirror is
+  `HOME1=2` in `.claude/probes/K1482/scene_tables.ts` (equal to the page's tables in every array). Home-off
+  mirror runs (older K1482 tools, mirror_caps.py) do not match gfh=1.
+- **Item 1, notches: cause found, not fixed.** At a T junction a crossing pin near the junction cuts the
+  through arm's Lcut to ~0-0.3, solveGfCorners rejects the concave pair (L0 or feet-out gate), and the home
+  membership still joins the cut arm out to aHome: the outlines meet in a sharp V or notch, the same family
+  as item 0's sharp V. Gate tally on master: corner pass 157, feet out 144, th out 76, L0 70, null r 47.
+  Retrying the pair with arms extended to Lcut + KEXT h (mirror only, reverted): KEXT 1.5 fixes j14 j47
+  t58e, rounds t4s, slightly improves t16e, leaves j4 j41 j59 t45s; it also rounds the sharp-V sites
+  (j50 j158 t73e j147) and many tail corners, and unconditionally (home off) it draws wedges and blobs.
+  Sheets: `out/s4/sheets/notch_shH1.png`, `notch_shH15*.png`, `notch_shH2.png`. Landing needs Levi's
+  sharp-V answer (K1490) and corners keyed on home (a buildTables home option in gf_app.ts, another
+  agent's file).
+- **Item 2: the mirror cannot see the dots.** The probe GLSL equals eval.ts (0.000 at t1s t37e j4 j47,
+  `gpu_home.mjs`), but the screen lacks ink the mirror draws at 187 of 327 sites (>= 5 px). The difference
+  is the look's crossing gap (gf_look.ts lkGap / lkCut / lkFringe with the K1423 window and K1458 bake),
+  which eval.ts does not model: `gap_emul.ts` (a crude cut, no window) brings mirror-only ink from 3102 to
+  1082 px and the item-2 fault sites from 1-46 to 1-8 px (`out/s4/gm_mir_pageexact.txt`,
+  `gm_gap_emul.txt`; sheets `dots_screen_vs_mirror.png`, `dots_screen_vs_mirror_gap.png`). The dots,
+  ticks and dashes sit where that gap cuts an under thread's border. j58's tick: chain 43's side stroke
+  inside chain 23's fill at a T with no corner at all (nK 0, also at KEXT 1.5).
+- **Next:** a mirror that carries the real lkGap (export the GfGapTable bake so eval can read the window
+  and slot), then attribute each dot/tick/dash to the gap term that leaves its fragment, then fix the
+  largest group. K1451's gpu.mjs live/full variants read all black on lookable passes (harness bug).
