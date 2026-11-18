@@ -632,11 +632,11 @@ Next free ID: K1464.
   junction (a look, K1444); fadeLength under about 0.066 (0.1 win) draws one hard cut, a dead zone at the
   slider's bottom; the bench never settled (two more rounds of k1449_bench.ps1 alone). Handoff K1449 in
   docs/design/K1449_home_leftovers.md, sheets .claude/probes/K1449/out/ (worktree agent-a02a2023ec92cd84f)
-  - owner: nobody since 2026-11-17 12:04 (merged; agent `adec56ce45de83bd3` of claude session 01SUPGULDxvE5gKXozfaFaFG)
-  - branch: mainline; last commit: `70cbb806`
-  - evidence: .claude/probes/K1458/live/zoom0_a.png, .claude/probes/K1449/ (scan tools)
-  - next: stage 2: build the reach window (rck1.15: per-pin depth window = the ribbon overlap's arc, keys only) into tables.ts / eval.ts / gf_glsl.ts / gf_keys.ts and verify on the GPU; brief docs/design/K1451_s2_reach_window.md
-  - brief: `docs/design/K1451_crossing_ties.md`
+  - owner: agent `a53218bf2f47c89c2` of claude session 01SUPGULDxvE5gKXozfaFaFG (opus, started 2026-11-17 12:04, 2 h cap ~14:04)
+  - branch: `worktree-agent-a53218bf2f47c89c2`, worktree `.claude/worktrees/agent-a53218bf2f47c89c2`; last commit: `ae9362e3`
+  - evidence: .claude/probes/K1451/ (k1451_sev.ts variant rck1.15, out/fix_a.png, out/fix_b.png)
+  - next: build the per-pin reach window into tables.ts and the field, verify on the GPU
+  - brief: `docs/design/K1451_s2_reach_window.md`
 
 ## Next, in order
 
