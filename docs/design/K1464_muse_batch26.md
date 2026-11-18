@@ -192,3 +192,49 @@ without `gfh=1`. 2. Where the colour departs, named in the code, with the value 
 `?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&rp=gf&gfh=1`: 0 px against your starting master. 5. 4x crops
 today | master gf | new gf at junction B and five more spots, looked at. 6. `npm test` green; a pin that
 moves because the colour moved is re-taken and named in the commit. 7. The guards.
+
+## Run G (26G): K1476, rp=gf's stray dark line across the fill at j64
+
+Added 2026-11-17, from K1436 stage 3's work list of gf's largest faults on screen
+(`.claude/probes/K1436/out/s3/worklist_named.tsv`; sheets `out/s3/sheets/worklist_h1_1.png` row 3 and
+`worklist_h1_2.png` row 1, each row today fill | gf fill || today border | gf border at 4x; read Handoff
+K1436 s3 in `docs/design/K1436_s3_screen_bar.md` for the tools and their traps). On the census scenes
+muse_default_tw and muse_hash (K868 frozen states), at junction j64, world (5.6, 2.8), gf's fill shows a soft
+dark line running from the junction across the section (362 px and 182 px in the screen scan, cut:plain), and
+on muse_default_tw a small dark notch at the junction's top edge. Today's fill has neither (it has a small
+sliver hole of its own there, which is not the bar). `gfh=1` and `gfh=0` show the same.
+
+The scan's precision is 75%: read a find on its tile before acting on it. Cold gf loads hang under load: cap
+each load and retry, as the handoff says. A Claude agent (K1472 stage 2) is editing the reveal's code in
+`gf_reveal.ts`, `gf_look.ts` (`lkJCut`, `lkFx`), `gf_app.ts` and `gf_pass.ts`: keep out of those functions.
+
+Done: 1. The number first, failing on master: the screen scan's find at j64 on both scenes
+(`k1436_screen.mjs` then `k1436_screen_scan.ts`, as `k1436_s3_screenscan.ps1` runs them, STRICT=1), and a 4x
+tile today | master gf. 2. The cause named in the code: which piece's ink draws the line (the label, home
+and gap values at three pixels on it). 3. Fixed: no find at j64 on either scene with `gfh=1` and with
+`gfh=0`; `k1436_bar.ps1 -Ref <your tip> -Base <your starting master> -Scenes muse_default_tw,muse_hash
+-HomeFlag 1` under STRICT=1 prints PASS (new 0, grown 0) with j64 under gone, and the same with
+`-HomeFlag 0`. 4. 4x tiles today | master gf | new gf at j64 on both scenes, fill and border capture,
+looked at: the line and the notch gone, nothing new. 5. Every other census scene: output unchanged by the
+digests batch 25 defines, or every changed spot named and looked at. 6. `npm test` green. 7. The guards.
+
+## Run H (26H): K1477, rp=gf's border stroke ends in a stub past a crossing (ring x68)
+
+Added 2026-11-17, from the same work list (`worklist_h1_1.png` rows 1, 2 and 4). On the census scene ring at
+crossing x68, world (19.4, 20.0), and on g41_ring_tw64 at j24 (19.7, 20.1: the same spot) and x67
+(18.0, 20.6), the border capture shows the under thread's border stroke tapering to a point and stopping
+past the crossing; today's stroke runs through. The fill matches today's. 963, 660 and 296 px in the screen
+scan (cut:plain). gf's border look stays darker than today's (Levi, 2026-11-17): the bar here is that the
+stroke runs on unbroken, not its shade. A hint, unchecked: x68 is a site K1436's bar is expected to name
+on 17053a36 against a3a9a6b4 (K1451 stage 2), so read K1451's reach windows (`tables.ts`) early.
+
+The same cautions as Run G (precision, hung loads, K1472 stage 2's functions).
+
+Done: 1. The number first, failing on master: the screen scan's finds at the three sites (STRICT=1), and
+4x tiles today | master gf, fill and border capture. 2. The cause named in the code, with the values at
+three pixels where the stroke should be. 3. Fixed: no find at x68, j24 or x67 with `gfh=1` and with
+`gfh=0`; `k1436_bar.ps1 -Ref <your tip> -Base <your starting master> -Scenes ring,g41_ring_tw64 -HomeFlag 1`
+under STRICT=1 prints PASS (new 0, grown 0) with the three sites under gone, and the same with
+`-HomeFlag 0`. 4. 4x tiles today | master gf | new gf at the three sites, looked at: the stroke runs
+through as today's does, and the fill still matches. 5. Every other census scene: output unchanged by the
+digests batch 25 defines, or every changed spot named and looked at. 6. `npm test` green. 7. The guards.

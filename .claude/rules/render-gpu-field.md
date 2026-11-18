@@ -197,3 +197,27 @@ the GPU process; the context is lost, gf recompiles and it loops. So warm the pr
 any capture (`--disable-gpu-watchdog` lets a cold load finish), count `webglcontextlost` on the app's canvas,
 and when a load stalls look in `<profile>/Crashpad/reports` before blaming the build under test.
 `.claude/probes/K1468/gfts.mjs` and `gputhreads.ps1` are the time series.
+
+K1436 s3 (2026-11-17), THE SCREEN SCAN ON MASTER:
+- What the scan reads. `k1436_screen.mjs` captures a K868 frozen state at DSF 3, in fill and border looks,
+  under rp=gf. It also captures today's renderer (job.today) for the same state, so a crop sheet shows
+  today | gf at one device pixel. `k1436_screen_scan.ts` finds cut / speck / rstray / vdip and labels each
+  by class and site.
+- h0 and h1 agree. On master, gfh=1 and gfh=0 give the same screen finds in every scene captured both
+  ways. The mirror's 10x larger h0 count (dstray:tie, rstray:tie) does not reach the screen.
+- Precision is 75% (40 sampled, cc1ee890). It drops to 0% on vdip:plain. Read a find on its today | gf
+  tile before acting on it. The false classes are:
+  - 4-5 px cuts at crossings;
+  - cuts where gf's taper differs from today's ragged end (gf's border look is meant to differ);
+  - V junction ends read as rstray:tie.
+- The scan masks the markers and the head's glow from `meta.markers`, which is
+  `__knotFabricRenderer().markers`, by world position and scale.
+- Loads hang under load. Cold gf loads took 85-270 s, and some hung past 15 min with a lost context
+  (g41_def_tw64). Cap each load (JOBMS) and retry. Close only the hung page: closing every page kills the
+  parallel loads. Builds before fc520c2d also need `--disable-gpu-watchdog`.
+- The frozen state is NOT always one state per build. In the bar's control, ring froze on 50dd4ffd in one
+  load and on 0a0ee15e in the next.
+- g41_user_tw42 froze on user_tw42.lightpaper's state, so its finds duplicate lightpaper's.
+- The capture keeps a hash mismatch unless STRICT=1. A bar comparison needs STRICT=1, plus equal hashes
+  across the pair.
+- The bar's control PASSED once, on def and ring. The known-FAIL pair has not been run.
