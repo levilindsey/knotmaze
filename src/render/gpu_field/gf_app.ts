@@ -253,27 +253,61 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
     requestFrame();
   };
 
-  // K1456: link gf's programs once in the compile worker (its KHR-free context persists them in the
-  // disk cache; see gf_compile_worker.ts). Started with the pass; failure only loses the warm restart.
+  // K1456 / K1472 s2: the compile worker links each gf program first, on a context of its own whose
+  // links reach the disk cache (gf_compile_worker.ts); the app links a program only once the worker
+  // has (pass.compileGate), so its own link reads the cache. Started with the pass, fed the app's
+  // issue order whenever it changes. A failed worker opens the gate: the app compiles on its own.
   let compileWorkerDone = false;
+  let cwWorker: Worker | null = null;
+  const cwIndex = new Map<string, number>();
+  const cwLinked = new Set<number>();
+  let cwOrderKey = "";
   const startCompileWorker = (): void => {
     if (compileWorkerDone || !pass) return;
     compileWorkerDone = true;
     try {
       const sources = pass.compileSources();
       if (!sources.length) { stats.compileWorker = "none"; return; }
+      sources.forEach(([, fs], i) => cwIndex.set(fs, i));
       const w = new Worker(new URL("./gf_compile_worker.ts", import.meta.url), { type: "module", name: "knot-gf-compile" });
+      cwWorker = w;
       stats.compileWorker = "compiling";
-      w.onmessage = (e: MessageEvent<{ done?: number; all?: boolean; error?: string }>) => {
-        stats.compileWarmed = e.data?.done ?? stats.compileWarmed;
-        if (e.data?.all) { stats.compileWorker = "done"; w.terminate(); }
-        else if (e.data?.error) { stats.compileWorker = `failed (${e.data.error})`; w.terminate(); }
+      const end = (state: string): void => {
+        stats.compileWorker = state;
+        cwWorker = null;
+        try { w.terminate(); } catch { /* gone */ }
+        requestFrame();
       };
-      w.onerror = () => { stats.compileWorker = "failed (onerror)"; try { w.terminate(); } catch { /* gone */ } };
+      w.onmessage = (e: MessageEvent<{ idx?: number; done?: number; all?: boolean; error?: string }>) => {
+        stats.compileWarmed = e.data?.done ?? stats.compileWarmed;
+        if (typeof e.data?.idx === "number") { cwLinked.add(e.data.idx); requestFrame(); }
+        if (e.data?.all) end("done");
+        else if (e.data?.error) end(`failed (${e.data.error})`);
+      };
+      w.onerror = () => end("failed (onerror)");
+      pass.compileGate = (src: string): boolean => {
+        if (stats.compileWorker !== "compiling") return true;
+        const i = cwIndex.get(src);
+        return i === undefined || cwLinked.has(i);
+      };
       w.postMessage({ sources });
+      postCompileOrder();
     } catch (err) {
       stats.compileWorker = `failed (${err instanceof Error ? err.message : String(err)})`;
     }
+  };
+  /** Tell the worker the app's current issue order (only when it changed). */
+  const postCompileOrder = (): void => {
+    if (!cwWorker || !pass) return;
+    const order: number[] = [];
+    for (const src of pass.issueOrder()) {
+      const i = cwIndex.get(src);
+      if (i !== undefined && !cwLinked.has(i) && !order.includes(i)) order.push(i);
+    }
+    const key = order.join(",");
+    if (key === cwOrderKey) return;
+    cwOrderKey = key;
+    cwWorker.postMessage({ order });
   };
 
   const startWorker = (): void => {
@@ -1045,6 +1079,8 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
       }
       // K1456: one compile poll a frame. While a program is outstanding the frame loop stays alive;
       // a failed compile falls back to today's renderer for good, never a blank.
+      startCompileWorker();
+      postCompileOrder();
       pass.pollPrograms();
       comp!.poll();
       const ci = pass.compileInfo();
@@ -1052,10 +1088,6 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
       const compileFailed = pass.compileError() ?? comp!.compileError();
       if (compileFailed) return fallback(`failed (shader compile: ${compileFailed})`);
       if (pass.pendingCompile()) requestFrame();
-      // K1456: the compile worker runs only once gf's own queue has drained, so its compiles never
-      // share the GPU process with a gf status read (a read behind another context's compile can wait
-      // for it: a 23 s main task, measured). It persists the programs for the next visit instead.
-      if (switched && !pass.pendingCompile()) startCompileWorker();
       if (!switched) {
         const lookComp = pass.looking ? comp!.lookReady : comp!.ready;
         if (!pass.drawReady() || !lookComp) return; // today's renderer is still on screen

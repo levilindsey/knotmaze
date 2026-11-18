@@ -1,35 +1,80 @@
-// K1456 (26A): gf's shader-compile worker. A compile that COMPLETES on a context where
-// KHR_parallel_shader_compile was never enabled lands in Chrome's on-disk program cache (the K307
-// warm-up's late-enable lesson, K385); one resolved by polling COMPLETION_STATUS_KHR on the app
-// context stays in memory only, so every visit recompiled gf's 40-63k-char programs. This worker
-// links every gf program once, blocking, on its own OffscreenCanvas context (never asking for the
-// extension), off the main thread: the app's own async links (gf_pass.ts) then hit the cache, on the
-// first visit as each link lands and on later visits at once. Best-effort: without a worker or
-// WebGL2 here, gf still compiles async on the app context, just without the warm restart.
-import { compileProgram } from "./gf_pass";
+// K1456 (26A), reworked by K1472 s2: gf's shader-compile worker, the one place gf's programs reach
+// Chrome's on-disk program cache. The app's context has KHR_parallel_shader_compile enabled (the K307
+// warm-up enables it), and a link resolved by polling COMPLETION_STATUS_KHR on such a context stays in
+// the in-memory cache only: every visit recompiled gf's 40-80k-char programs (35-75 s each, cold).
+// The K307 late-enable lesson (render-shaders.md, K385): a link ISSUED before the context enables the
+// extension, then polled through COMPLETION_STATUS_KHR, persists to disk and never blocks a read.
+// So each program gets a fresh context here: issue the link, enable the extension, poll on a timer,
+// read the statuses once complete, lose the context.
+//
+// It runs from gf's first frame, one program at a time, in the order the app last posted (gf_pass.ts
+// issueOrder); the app links a program only once this worker has (GfPass.compileGate), so that link
+// reads the cache instead of compiling a second time. K1456's worker ran only after gf's own queue had
+// drained: by then every link hit the in-memory cache, nothing was written, and the next visit was
+// cold again (K1472 s2, measured: a second visit's first program took 35 s).
+//
+// Messages in: { sources } once (every program's [vertex, fragment]), then { order } (source indices,
+// most wanted first) whenever the app's order changes. Out: { idx, done } per program, then
+// { done, all: true }, or { done, error } (the app then compiles on its own context, as before).
+import { COMPLETION_STATUS_KHR, finishProgram, startProgram } from "./gf_pass";
 
-interface CompileMsg { sources: [string, string][] }
+interface CompileMsg { sources?: [string, string][]; order?: number[] }
 
 const ctx = globalThis as unknown as {
   onmessage: ((e: MessageEvent<CompileMsg>) => void) | null;
   postMessage(m: unknown): void;
 };
 
-ctx.onmessage = (e: MessageEvent<CompileMsg>): void => {
-  const sources = e.data?.sources ?? [];
-  let done = 0;
+let sources: [string, string][] = [];
+let order: number[] = [];
+const done = new Set<number>();
+let running = false;
+
+const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
+
+/** Link one program on a fresh context, late-enable (see the header). Resolves false without the extension. */
+async function linkOne(vs: string, fs: string): Promise<boolean> {
+  const cv = new OffscreenCanvas(1, 1);
+  const gl = cv.getContext("webgl2");
+  if (!gl) throw new Error("no webgl2");
   try {
-    const cv = new OffscreenCanvas(1, 1);
-    const gl = cv.getContext("webgl2");
-    if (!gl) { ctx.postMessage({ done, error: "no webgl2" }); return; }
-    for (const [vs, fs] of sources) {
-      try {
-        gl.deleteProgram(compileProgram(gl, vs, fs));
-      } catch { /* one bad source must not stop the rest */ }
-      done++;
+    const job = startProgram(gl, vs, fs);
+    // Enabled only after the link is issued: that is what lets the binary reach the disk cache.
+    if (!gl.getExtension("KHR_parallel_shader_compile")) {
+      // Without the extension the status read would block the GPU process's main thread for the
+      // whole compile (every context's frames stall); leave the compile to the app's own queue.
+      return false;
     }
-    ctx.postMessage({ done, all: true });
-  } catch (err) {
-    ctx.postMessage({ done, error: err instanceof Error ? err.message : String(err) });
+    while (!gl.getProgramParameter(job.prog, COMPLETION_STATUS_KHR)) await sleep(50);
+    try { gl.deleteProgram(finishProgram(gl, job)); } catch { /* one bad source must not stop the rest */ }
+    return true;
+  } finally {
+    gl.getExtension("WEBGL_lose_context")?.loseContext();
   }
+}
+
+async function run(): Promise<void> {
+  if (running) return;
+  running = true;
+  try {
+    for (;;) {
+      const i = order.find((k) => !done.has(k)) ?? sources.findIndex((_, k) => !done.has(k));
+      if (i < 0 || i >= sources.length) break;
+      if (!(await linkOne(sources[i][0], sources[i][1]))) {
+        ctx.postMessage({ done: done.size, error: "no KHR_parallel_shader_compile" });
+        return;
+      }
+      done.add(i);
+      ctx.postMessage({ idx: i, done: done.size });
+    }
+    ctx.postMessage({ done: done.size, all: true });
+  } catch (err) {
+    ctx.postMessage({ done: done.size, error: err instanceof Error ? err.message : String(err) });
+  }
+}
+
+ctx.onmessage = (e: MessageEvent<CompileMsg>): void => {
+  if (e.data?.sources) { sources = e.data.sources; order = sources.map((_, k) => k); }
+  if (e.data?.order) order = e.data.order;
+  void run();
 };

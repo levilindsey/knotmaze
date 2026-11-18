@@ -75,6 +75,33 @@ describe("K1456: the app pass compiles without blocking", () => {
     pass.dispose();
   });
 
+  it("K1472 s2: the gate holds a link until the compile worker has linked that source", () => {
+    const { gl, srcs } = fakeGl();
+    const pass = new GfPass(gl, false);
+    const allowed = new Set<string>();
+    pass.compileGate = (src) => allowed.has(src);
+    for (let i = 0; i < 4; i++) pass.pollPrograms();
+    expect(srcs.length).toBe(0);
+    expect(pass.pendingCompile()).toBe(true);
+    const first = pass.issueOrder()[0];
+    allowed.add(first);
+    pass.pollPrograms();
+    expect(srcs).toEqual([expect.any(String), first]);
+    pass.dispose();
+  });
+
+  it("K1472 s2: during the reveal the set it ends on goes first, then the reveal's own full program", () => {
+    const { gl } = fakeGl();
+    const pass = new GfPass(gl, false);
+    const rest = pass.issueOrder();
+    (pass as unknown as { rv: { oK: number } | null }).rv = { oK: 0 };
+    const during = pass.issueOrder();
+    expect(during[0]).toBe(rest[0]);
+    expect(rest).not.toContain(during[1]); // the reveal form's full program, second
+    expect(new Set(during).size).toBe(during.length);
+    pass.dispose();
+  });
+
   it("a failed link surfaces as a compile error, never a silent blank", () => {
     const { gl } = fakeGl(1, false);
     const pass = new GfPass(gl, false);

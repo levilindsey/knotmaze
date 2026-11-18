@@ -29,16 +29,16 @@ interface TimerExt { TIME_ELAPSED_EXT: number; GPU_DISJOINT_EXT: number }
 // (KHR_parallel_shader_compile; D3D11 exposes it), so today's renderer keeps drawing until gf's first
 // program is ready. Without the extension the poll reads LINK_STATUS, which can still wait: that path
 // is the fallback, not the measured desktop one.
-const COMPLETION_STATUS_KHR = 0x91b1;
+export const COMPLETION_STATUS_KHR = 0x91b1;
 
-interface ProgJob {
+export interface ProgJob {
   prog: WebGLProgram;
   vs: WebGLShader;
   fs: WebGLShader;
 }
 
 /** Issue a program's compile and link; no status is read, so this never waits for the GPU. */
-function startProgram(gl: WebGL2RenderingContext, vs: string, fs: string): ProgJob {
+export function startProgram(gl: WebGL2RenderingContext, vs: string, fs: string): ProgJob {
   const mk = (type: number, src: string): WebGLShader => {
     const s = gl.createShader(type)!;
     gl.shaderSource(s, src);
@@ -55,7 +55,7 @@ function startProgram(gl: WebGL2RenderingContext, vs: string, fs: string): ProgJ
 }
 
 /** Read a started program's statuses (instant once its completion has been reported); throws on failure. */
-function finishProgram(gl: WebGL2RenderingContext, job: ProgJob): WebGLProgram {
+export function finishProgram(gl: WebGL2RenderingContext, job: ProgJob): WebGLProgram {
   for (const s of [job.vs, job.fs]) {
     if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
       const log = gl.getShaderInfoLog(s);
@@ -388,18 +388,35 @@ export class GfPass {
   }
 
   /** Issue order: the routed set's full program (it draws every pixel exactly on its own), then the
-   *  tier this frame routes to, then that set's other tier, then the other sets the same way. */
+   *  tier this frame routes to, then that set's other tier, then the other sets the same way. During
+   *  the reveal (K1472 s2) the full program of the set it ends on comes first: a cold link takes
+   *  35-75 s and the reveal 12.5 s, so the reveal's own program first only delayed the switch (it
+   *  landed after the reveal had ended); warm, both land within a few frames either way. */
   private priority(): GfProg[] {
     const active = this.activeProgs();
     const full = GfPass.fullOf(active);
     const now = active.filter((g) => g !== full && (!g.when || (g.when === "corners") === this.cellCorners));
     const out = [full, ...now, ...active.filter((g) => g !== full && !now.includes(g))];
+    if (this.rv) {
+      if (this.lk && this.lplan && !this.lprogs[0]) this.lprogs[0] = this.lplan(false);
+      const rest = this.lk && this.lplan ? this.lprogs[0] : this.progs;
+      if (rest && rest !== active) out.unshift(GfPass.fullOf(rest));
+    }
     for (const set of this.allSets()) {
       if (!set || set === active) continue;
       const f = GfPass.fullOf(set);
-      out.push(f, ...set.filter((g) => g !== f));
+      for (const g of [f, ...set.filter((x) => x !== f)]) if (!out.includes(g)) out.push(g);
     }
     return out;
+  }
+
+  /**
+   * K1472 s2: the sources still to issue, in issue order (the compile worker compiles them in this
+   * order, and the app links each only once the worker has, so its link reads the cache).
+   */
+  issueOrder(): string[] {
+    if (!this.asyncCompile || this.compileErr) return [];
+    return this.priority().filter((g) => g.state === "spec").map((g) => g.src);
   }
 
   private issue(g: GfProg): void {
@@ -449,9 +466,15 @@ export class GfPass {
     }
     if (this.allSets().some((set) => (set ?? []).some((g) => g.state === "compiling"))) return;
     const next = this.priority().find((g) => g.state === "spec");
-    if (next) { this.issue(next); return; }
+    if (next) { if (!this.compileGate || this.compileGate(next.src)) this.issue(next); return; }
     if (prewarm) this.prewarmNext();
   }
+
+  /**
+   * K1472 s2: when set, a program is issued only once this returns true for its source (the app's
+   * compile worker has linked it, so the app's link reads the cache instead of compiling again).
+   */
+  compileGate: ((src: string) => boolean) | null = null;
 
   /** K1456: poll until every built set is ready (tests and probes on a stand-in context; a real one spins on the GPU). */
   flushPrograms(): void {

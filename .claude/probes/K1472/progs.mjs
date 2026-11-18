@@ -16,6 +16,7 @@ try {
     const W = WebGL2RenderingContext.prototype;
     const src = new WeakMap(), tag = new WeakMap(), done = new WeakSet();
     const ev = (globalThis.__k1472p = []);
+    globalThis.__k1472gap = 0; let lastF = 0; const tick = (n) => { if (lastF) globalThis.__k1472gap = Math.max(globalThis.__k1472gap, n - lastF); lastF = n; requestAnimationFrame(tick); }; requestAnimationFrame(tick);
     const ss = W.shaderSource; W.shaderSource = function (s, x) { src.set(s, x); return ss.call(this, s, x); };
     const at = W.attachShader; W.attachShader = function (pr, s) {
       const x = src.get(s) ?? "";
@@ -38,11 +39,11 @@ try {
   let seen = 0, last = "";
   for (let i = 1; i <= +secs; i++) {
     await new Promise((r) => setTimeout(r, Math.max(0, t0 + i * 1000 - Date.now())));
-    const s = await p.evaluate(() => { const r = globalThis.__knotReveal?.(); const g = globalThis.__knotGf?.stats; return { ev: globalThis.__k1472p ?? [], rv: r ? `${r.clock.toFixed(2)}/${r.duration.toFixed(2)}${r.done ? " done" : ""} fx=${r.fxAlive}` : null, gf: g ? `i${g.compileIssued} r${g.compileReady} sw=${g.switchedMs > 0} c=${g.composites} rvP=${g.rvPasses}` : null }; }).catch((e) => ({ ev: [], err: e.message }));
+    const s = await p.evaluate(() => { const r = globalThis.__knotReveal?.(); const g = globalThis.__knotGf?.stats; return { ev: globalThis.__k1472p ?? [], rv: r ? `${r.clock.toFixed(2)}/${r.duration.toFixed(2)}${r.done ? " done" : ""} fx=${r.fxAlive}` : null, gf: g ? `i${g.compileIssued} r${g.compileReady} sw=${g.switchedMs > 0} c=${g.composites} rvP=${g.rvPasses} w=${g.compileWorker}:${g.compileWarmed} gap=${Math.round(globalThis.__k1472gap)}` + ((globalThis.__k1472gap = 0), "") : null }; }).catch((e) => ({ ev: [], err: e.message }));
     for (; seen < s.ev.length; seen++) console.log(`  page ${s.ev[seen].t}s ${s.ev[seen].what} ${s.ev[seen].prog}`);
     const line = `rv=${s.rv} gf=${s.gf}`;
     if (line !== last || i % 30 === 0) console.log(`${i}s ${line}`);
     last = line;
-    if (/sw=true/.test(line) && /i(\d+) r\1 /.test(line) && i > 30) { console.log("all compiled, switched"); break; }
+    if (/sw=true/.test(line) && /i(\d+) r\1 /.test(line) && /w=(done|failed|none)/.test(line)) { console.log("all compiled, switched, worker over"); break; }
   }
 } finally { await b.close(); }
