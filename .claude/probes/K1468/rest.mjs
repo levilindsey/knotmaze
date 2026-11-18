@@ -102,7 +102,8 @@ try {
   for (let round = 0; round < +roundsArg; round++) {
     for (const url of (round % 2 ? [...urls].reverse() : urls)) {
       const page = await browser.newPage();
-      await page.evaluateOnNewDocument(() => { window.__knotLoopMode = "continuous"; });
+      // K1468 s2: a `#k1468p=<variant>` hash reaches probe builds as __k1468p (the app's URL rewrite drops the hash)
+      await page.evaluateOnNewDocument(() => { window.__knotLoopMode = "continuous"; window.__k1468p = (location.hash.match(/k1468p=(\w+)/) || [])[1]; });
       await page.goto(url, { waitUntil: "load", timeout: 600000 });
       await page.bringToFront();
       await page.mouse.move(1, 1);
