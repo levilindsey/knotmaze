@@ -38,6 +38,19 @@
   program (tiers, pack) differs from eval.ts there. Next check: K1451's gpu.mjs (live | full | probe |
   mirror on the page's tables) with home forced, gpu_home.mjs GFHOME=1, on a vite dev server.
 
+## Screen = mirror + the look's crossing gap (02:35)
+- gpu_home.mjs GFHOME=1 (K1451 gpu.mjs, home forced on): the probe GLSL program equals eval.ts exactly
+  (max |ink - mirror| 0.000 at t1s t37e j4 j47). Its live / full variants read all black for the lookable
+  passes (the harness is broken there), so they say nothing.
+- eval.ts has NO crossing gap; the look cuts one (gf_look.ts lkGap / lkCut, plus lkFringe, the K1423
+  window and the K1458 bake). gap_emul.ts adds a CRUDE copy (no window, no bake, no fringe):
+  mirror-only ink over all 327 sites 3102 -> 1082 px, sites with >= 5 px 187 -> 77; at the item-2 fault
+  sites miss drops from 1-46 to 1-8 (out/s4/gm_mir_pageexact.txt, gm_gap_emul.txt). Its over-cut (GPU ink
+  the emulation lacks, 2153 px) is the missing window. Sheets: sheets/dots_screen_vs_mirror.png,
+  dots_screen_vs_mirror_gap.png (t1s j64 j88 t24s t46e t80s j55 j87).
+- So the dots, ticks and dashes sit where the gap cuts an under thread's border: diagnose them with a
+  mirror that carries the real lkGap (window + bake), not eval.ts alone. Not done (time).
+
 ## Item 2
 - dots (home-off look, not rechecked home-on): winKind 4 tangent + partial ink haze at tail tips (j64, t1s).
 - j58 tick (home-on): pixel tile (36,26) = chain 43 side stroke (winKind 1), inside chain 23's fill.
