@@ -1,0 +1,114 @@
+[
+ {
+  "file": "full_pp.frag",
+  "len": 60379,
+  "ms": 142767,
+  "ok": true,
+  "log": ""
+ },
+ {
+  "file": "stub_depth.frag",
+  "len": 59080,
+  "ms": 127160,
+  "ok": true,
+  "log": ""
+ },
+ {
+  "file": "stub_fillBur.frag",
+  "len": 59041,
+  "ms": 102310,
+  "ok": true,
+  "log": ""
+ },
+ {
+  "file": "stub_layers.frag",
+  "len": 55622,
+  "ms": 18428,
+  "ok": true,
+  "log": ""
+ },
+ {
+  "file": "stub_lkBurn.frag",
+  "len": 59407,
+  "ms": 140875,
+  "ok": true,
+  "log": ""
+ },
+ {
+  "file": "stub_lkColour.frag",
+  "len": 59841,
+  "ms": 127639,
+  "ok": true,
+  "log": ""
+ },
+ {
+  "file": "stub_lkCrest.frag",
+  "len": 59864,
+  "ms": 134978,
+  "ok": true,
+  "log": ""
+ },
+ {
+  "file": "stub_lkExploreLook.frag",
+  "len": 59709,
+  "ms": 133126,
+  "ok": true,
+  "log": ""
+ },
+ {
+  "file": "stub_lkGap.frag",
+  "len": 58501,
+  "ms": 95355,
+  "ok": true,
+  "log": ""
+ },
+ {
+  "file": "stub_lkGwSlot.frag",
+  "len": 59819,
+  "ms": 128181,
+  "ok": true,
+  "log": ""
+ },
+ {
+  "file": "stub_lkNearOn.frag",
+  "len": 59151,
+  "ms": 122084,
+  "ok": true,
+  "log": ""
+ },
+ {
+  "file": "stub_lkRimF.frag",
+  "len": 59565,
+  "ms": 140950,
+  "ok": true,
+  "log": ""
+ },
+ {
+  "file": "stub_lkRoute.frag",
+  "len": 56182,
+  "ms": 110190,
+  "ok": true,
+  "log": ""
+ },
+ {
+  "file": "stub_lkTanS.frag",
+  "len": 59793,
+  "ms": 124807,
+  "ok": true,
+  "log": ""
+ },
+ {
+  "file": "stub_member.frag",
+  "len": 58944,
+  "ms": 136947,
+  "ok": true,
+  "log": ""
+ },
+ {
+  "file": "stub_vtx.frag",
+  "len": 58290,
+  "ms": 92365,
+  "ok": true,
+  "log": ""
+ }
+]
