@@ -617,6 +617,27 @@ Next free ID: K1462.
   - evidence: .claude/probes/K1053/chain.log, each run's .claude/probes/<ID>/out/25<X>/
   - next: 25A running, then 25B, 25C, 25D; after each handoff Claude views its crops against today and files follow-ups; restart with .claude/probes/K1053/start.ps1 if the chain stops on a gate
   - brief: `docs/design/K1448_muse_batch25.md`
+- **K1460** · rp=gf crossing-fade leftovers after K1458 (live c5fc87d1, crops scratch live2 zoom_a/zoom_b,
+  agent's .claude/probes/K1458/ sheet pv6): (1) a thin dotted line continues the over thread's edge across the
+  faded under thread at fade 0.28 and up; (2) radial bands and a stepped outer edge on long fades in curved
+  threads (junction B, ci3 upper right, the blue kink loop at ?3); (3) a dashed dark tick across the kink loop
+  at ?3 at every fade; (4) today's protect term (pr) is not ported to gf's gap window; (5) a round blob at
+  junction B at fade 0. Next: bake.mjs on those crossings (missing over threads, the +-40-sample scan cap)
+  - owner: agent `af9d883f955f02076` of claude session 01SUPGULDxvE5gKXozfaFaFG (opus, started 2026-11-17 11:10, 2 h cap ~13:10)
+  - branch: `worktree-agent-af9d883f955f02076`, worktree `.claude/worktrees/agent-af9d883f955f02076`; last commit: `854ac158`
+  - evidence: .claude/probes/K1458/live/ (coordinator sheets), .claude/probes/K1458/ (tools)
+  - next: remove the dotted edge line, bands and stairs at long fades; port the protect term
+  - brief: `docs/design/K1460_gf_fade_leftovers.md`
+- **K1451** · gfh=1 after K1449: default fadeLength reads 368 finds (target 250): 246 are crossing-tie
+  wedges/dashes the flag-off renderer has too, 122 the fade's outline taper where a diving arm leaves its
+  junction (a look, K1444); fadeLength under about 0.066 (0.1 win) draws one hard cut, a dead zone at the
+  slider's bottom; the bench never settled (two more rounds of k1449_bench.ps1 alone). Handoff K1449 in
+  docs/design/K1449_home_leftovers.md, sheets .claude/probes/K1449/out/ (worktree agent-a02a2023ec92cd84f)
+  - owner: agent `adec56ce45de83bd3` of claude session 01SUPGULDxvE5gKXozfaFaFG (opus, started 2026-11-17 11:10, 2 h cap ~13:10)
+  - branch: `worktree-agent-adec56ce45de83bd3`, worktree `.claude/worktrees/agent-adec56ce45de83bd3`; last commit: `854ac158`
+  - evidence: .claude/probes/K1458/live/zoom0_a.png, .claude/probes/K1449/ (scan tools)
+  - next: reproduce the kink-loop tick in the CPU mirror, classify the 246 tie finds, fix the largest class
+  - brief: `docs/design/K1451_crossing_ties.md`
 
 ## Next, in order
 
@@ -636,12 +657,6 @@ Binding for every stage:
   new, and pause running agents with their WIP committed.
 
 Running agents are listed under In progress, each with its own next step.
-- **K1460** · rp=gf crossing-fade leftovers after K1458 (live c5fc87d1, crops scratch live2 zoom_a/zoom_b,
-  agent's .claude/probes/K1458/ sheet pv6): (1) a thin dotted line continues the over thread's edge across the
-  faded under thread at fade 0.28 and up; (2) radial bands and a stepped outer edge on long fades in curved
-  threads (junction B, ci3 upper right, the blue kink loop at ?3); (3) a dashed dark tick across the kink loop
-  at ?3 at every fade; (4) today's protect term (pr) is not ported to gf's gap window; (5) a round blob at
-  junction B at fade 0. Next: bake.mjs on those crossings (missing over threads, the +-40-sample scan cap)
 - **K1315** · Junction under-tail ends in rp=outline: a bug, not a choice. Levi, 2026-11-12, on k1315_now.png: "Not a
   single tile in the image shows an acceptable scenario" (form B's round dots and the outline's square stubs both
   fail). Bar: no ink past the over thread's outline, no dot, no stub. K1314 group 1, 18 census finds (e.g. muse_default_tw j150, g41_user_tw64 j63/j64, x134); sheet
@@ -2202,11 +2217,6 @@ Every other item below waits on the trigger it names.
   pulse suppression in the look (corner/fan reach), not more window tuning. Telegraph in border is done
   (1.017, IoU 0.958). Probe: .claude/probes/K1414/k1414h_ab.mjs + mask_h.mjs, state seed 7 10 moves clocks
   100/100.45/101.3 tlk=border.
-- **K1451** · gfh=1 after K1449: default fadeLength reads 368 finds (target 250): 246 are crossing-tie
-  wedges/dashes the flag-off renderer has too, 122 the fade's outline taper where a diving arm leaves its
-  junction (a look, K1444); fadeLength under about 0.066 (0.1 win) draws one hard cut, a dead zone at the
-  slider's bottom; the bench never settled (two more rounds of k1449_bench.ps1 alone). Handoff K1449 in
-  docs/design/K1449_home_leftovers.md, sheets .claude/probes/K1449/out/ (worktree agent-a02a2023ec92cd84f)
 - **K1452** · rp=gf cold start: a fresh profile's first load blocks the main thread about 110 s on the
   desktop, then 38 s and 29 s more after the reveal ends (shader compiles, unconfirmed; warm profiles show
   none); it also breaks every bench that waits 120 s (K1449's handoff, .claude/probes/K1444/blink2.mjs GAPS)
