@@ -5,7 +5,7 @@ import { buildModel } from "C:/Users/lsl/Repositories/knotmaze/.claude/probes/K1
 import { buildTables } from "../../../src/render/gpu_field/tables.ts";
 import { GfEval } from "../../../src/render/gpu_field/eval.ts";
 import { writePng } from "../K1314/k1314_crops.ts";
-import { rule, type Rule } from "./k1451_s4_rules.ts";
+import { rule, keyMember, type Rule } from "./k1451_s4_rules.ts";
 const args = process.argv.slice(2); const out = args[0]; const span = +args[1]; const P = +args[2]; const specs = args.slice(3);
 const cols = (process.env.COLS ?? "m,clip,s2,armL_hin").split(",");
 const GAP = 4; const W = cols.length * (P + GAP); const H = specs.length * (P + GAP);
@@ -18,7 +18,7 @@ specs.forEach((spec, si) => {
     const Ev: any = {};
     for (const c of cols) {
       const [a, b] = c === "m" ? [new Float64Array(T.pinWL.length).fill(T.win), new Float64Array(T.pinWR.length).fill(T.win)] : rule(T, c as Rule);
-      Ev[c] = new GfEval({ ...T, pinWL: a, pinWR: b }); if (fl !== undefined) Ev[c].fadeLength = +fl;
+      Ev[c] = new GfEval({ ...T, pinWL: a, pinWR: b }); if (c.endsWith("+k")) keyMember(Ev[c]); if (fl !== undefined) Ev[c].fadeLength = +fl;
     }
     cache.set(key, { T, Ev });
   }

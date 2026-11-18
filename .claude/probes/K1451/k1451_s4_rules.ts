@@ -7,10 +7,17 @@ import { buildModel } from "C:/Users/lsl/Repositories/knotmaze/.claude/probes/K1
 import { buildTables } from "../../../src/render/gpu_field/tables.ts";
 import { GfEval } from "../../../src/render/gpu_field/eval.ts";
 const args = process.argv.slice(2); const span = +args[0]; const N = +args[1]; const specs = args.slice(2);
-export type Rule = "s2" | "clip" | "armL" | "armL_hin" | "half" | "rootcut" | "long";
+export type Rule = "s2" | "clip" | "armL" | "armL_hin" | "half" | "rootcut" | "long" | "over";
 /** The windows under a rule. ext(i) = the interval each arm blocks: [aSR, aSR + aDir ext]; inside -> win both sides. */
 export function rule(T: any, r: Rule): [Float64Array, Float64Array] {
+  if ((r as string).endsWith("+k")) return rule(T, (r as string).slice(0, -2) as Rule);
   const wL = Float64Array.from(T.pinWL); const wR = Float64Array.from(T.pinWR); if (r === "s2") return [wL, wR];
+  if (r === "over") {
+    // armL_hin on over pins (z > 0), the clip on under pins
+    const [aL, aR] = rule(T, "armL_hin"); const [cL, cR] = rule(T, "clip");
+    for (let q = 0; q < wL.length; q++) { const o = T.pinZ[q] > 0; wL[q] = o ? aL[q] : cL[q]; wR[q] = o ? aR[q] : cR[q]; }
+    return [wL, wR];
+  }
   if (r === "long") {
     // armL_hin on a side whose stage 2 window is at least LONGK win, the clip on the others
     const K = +(process.env.LONGK ?? 2); const [aL, aR] = rule(T, "armL_hin"); const [cL, cR] = rule(T, "clip");
@@ -40,6 +47,8 @@ export function rule(T: any, r: Rule): [Float64Array, Float64Array] {
   }
   return [wL, wR];
 }
+/** "+k" variants: member() reads the key depth (the home ramp then fades with the key, not the win depth). */
+export function keyMember(E: any): void { const d0 = E.depth.bind(E); E.depth = (c: number, s: number): number => { const z = d0(c, s); E.mz = z; return z; }; }
 const cache = new Map<string, any>();
 const rules: Rule[] = (process.env.RULES ?? "clip,armL,armL_hin,half,rootcut").split(",") as Rule[];
 if (import.meta.url.endsWith(process.argv[1].replace(/\\/g, "/").split("/").pop()!)) {
@@ -50,7 +59,7 @@ if (import.meta.url.endsWith(process.argv[1].replace(/\\/g, "/").split("/").pop(
     if (!cache.has(key)) {
       const m = buildModel(nm); const sc = m.scene as any; const aa = 0.5 / (sc.camera.pxPerUnit * 2); const T: any = buildTables(sc, { aa, home: true });
       const Ev: any = { m: new GfEval({ ...T, pinWL: new Float64Array(T.pinWL.length).fill(T.win), pinWR: new Float64Array(T.pinWR.length).fill(T.win) }) };
-      for (const r of ["s2", "clip", ...rules] as Rule[]) { const [a, b] = rule(T, r); Ev[r] = new GfEval({ ...T, pinWL: a, pinWR: b }); }
+      for (const r of ["s2", "clip", ...rules] as Rule[]) { const [a, b] = rule(T, r); Ev[r] = new GfEval({ ...T, pinWL: a, pinWR: b }); if ((r as string).endsWith("+k")) keyMember(Ev[r]); }
       if (fl !== undefined) for (const k of Object.keys(Ev)) Ev[k].fadeLength = +fl;
       cache.set(key, { T, Ev });
     }

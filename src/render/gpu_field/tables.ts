@@ -958,27 +958,29 @@ export function mergeGfChunkBins(parts: { cellChN: Int32Array; cellChList: Int32
 const GF_NOCLIP: boolean = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.GF_NOCLIP === "1";
 
 /** K1451 s3: pinWL / pinWR cut at the nearest arm interval [aSR, aSR + aDir max(aL, aHome)] on the pin's chain
- * each way (0 inside one), never below win. */
-function clipPinWindows(P: Pick<GfPrefix, "nC" | "cClosed" | "cLen" | "cPin0" | "cPinN" | "pinS" | "pinWL" | "pinWR" | "win" | "cArm0" | "cArmN" | "aSR" | "aDir" | "aL">, aHome: Float64Array): [Float64Array, Float64Array] {
-  const { nC, cClosed, cLen, cPin0, cPinN, pinS, win, cArm0, cArmN, aSR, aDir, aL } = P;
+ * each way (win both ways inside one), never below win.
+ * K1451 s4: an OVER pin (pinZ > 0) is cut at the arm's own interval [aSR, aSR + aDir aL] instead, so its window may
+ * run into a home tail (aL..aHome); inside a whole home interval it still takes win. Spots 5 and 7 (muse_hash
+ * 21.86,18.64 and 16.17,18.39): the over pin 0.09-0.46 short of a home tail lost its long window to the s3 cut, and
+ * the tie smear beside the over thread (master's grey wedge) came back. An UNDER pin keeps the s3 cut: run into a
+ * home tail, its key dives where member() (win depth) keeps the piece home, a hard edge (muse_hash 12.79,10.46). */
+function clipPinWindows(P: Pick<GfPrefix, "nC" | "cClosed" | "cLen" | "cPin0" | "cPinN" | "pinS" | "pinZ" | "pinWL" | "pinWR" | "win" | "cArm0" | "cArmN" | "aSR" | "aDir" | "aL">, aHome: Float64Array): [Float64Array, Float64Array] {
+  const { nC, cClosed, cLen, cPin0, cPinN, pinS, pinZ, win, cArm0, cArmN, aSR, aDir, aL } = P;
   const wL = Float64Array.from(P.pinWL); const wR = Float64Array.from(P.pinWR);
   for (let c = 0; c < nC; c++) {
     const a0 = cArm0[c]; const an = cArmN[c]; if (an === 0) continue;
     const closed = cClosed[c] === 1; const len = cLen[c];
+    const md = (v: number): number => ((v % len) + len) % len;
     for (let q = cPin0[c]; q < cPin0[c] + cPinN[c]; q++) {
       if (!(wL[q] > win) && !(wR[q] > win)) continue;
-      const s = pinS[q]; let dR = Infinity; let dL = Infinity;
+      const s = pinS[q]; const over = pinZ[q] > 0; let dR = Infinity; let dL = Infinity;
       for (let i = a0; i < a0 + an; i++) {
         const ext = Math.max(aL[i], aHome[i]); if (!(ext > 0)) continue;
-        const e2 = aSR[i] + aDir[i] * ext; const lo = Math.min(aSR[i], e2); const hi = Math.max(aSR[i], e2);
-        if (closed) {
-          const md = (v: number): number => ((v % len) + len) % len;
-          if (md(s - lo) <= hi - lo) { dR = 0; dL = 0; break; }
-          dR = Math.min(dR, md(lo - s)); dL = Math.min(dL, md(s - hi));
-        } else {
-          if (s >= lo && s <= hi) { dR = 0; dL = 0; break; }
-          if (lo > s) dR = Math.min(dR, lo - s); else dL = Math.min(dL, s - hi);
-        }
+        const e2 = aSR[i] + aDir[i] * ext; let lo = Math.min(aSR[i], e2); let hi = Math.max(aSR[i], e2);
+        if (closed ? md(s - lo) <= hi - lo : s >= lo && s <= hi) { dR = 0; dL = 0; break; }
+        if (over) { if (!(aL[i] > 0)) continue; const e3 = aSR[i] + aDir[i] * aL[i]; lo = Math.min(aSR[i], e3); hi = Math.max(aSR[i], e3); }
+        if (closed) { dR = Math.min(dR, md(lo - s)); dL = Math.min(dL, md(s - hi)); }
+        else if (lo > s) dR = Math.min(dR, lo - s); else dL = Math.min(dL, s - hi);
       }
       wR[q] = Math.max(win, Math.min(wR[q], dR)); wL[q] = Math.max(win, Math.min(wL[q], dL));
     }
