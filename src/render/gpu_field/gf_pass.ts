@@ -1142,13 +1142,16 @@ export class GfComposite {
     gl.colorMask(true, true, true, true);
     gl.enable(gl.BLEND);
     gl.blendEquation(gl.FUNC_ADD);
-    // K1454: in the ripple filter's texture the composite writes its own alpha. K1474: on the canvas
-    // too: with a transparent backdrop (background "none", or intensity 0) keeping the destination
+    // K1454: in the ripple filter's texture the composite writes its own alpha. K1474: on the canvas in
+    // the fill look too: with a transparent backdrop (background "none", or intensity 0) keeping the
     // alpha left thread pixels at alpha 0, and the browser composited the page's CSS colour over the
     // premultiplied thread colour (section colours read exactly the backdrop, (21, 27, 40), too
     // light). The written coverage alpha is the standard over: over an opaque backdrop the
-    // resulting alpha and colour are the ones keeping it produced, so that frame cannot move.
-    gl.blendFuncSeparate(gl.ONE, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    // resulting alpha and colour are the ones keeping it produced, so that frame cannot move. The
+    // border and both looks (and the look-off frame) keep the destination alpha exactly as before:
+    // their captures must not move (K1474's scope is the fill look only).
+    if (dest?.flip || look?.mode === 0) gl.blendFuncSeparate(gl.ONE, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    else gl.blendFuncSeparate(gl.ONE, gl.ONE_MINUS_SRC_ALPHA, gl.ZERO, gl.ONE);
     if (look) {
       if (!this.lu.size) for (const n of ["uC", "uCo", "uHi", "uLook", "uBd", "uFill", "uRvFx", "uFlip"]) this.lu.set(n, gl.getUniformLocation(this.lprog!, n));
       const u = (n: string): WebGLUniformLocation | null => this.lu.get(n) ?? null;

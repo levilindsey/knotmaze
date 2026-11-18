@@ -111,9 +111,9 @@ describe("K1474 (26F): the composite writes its alpha on the canvas too", () => 
   it("never keeps the destination alpha (a transparent backdrop lightened every thread by its colour)", async () => {
     const { readFileSync } = await import("node:fs");
     const pass = readFileSync(new URL("../../src/render/gpu_field/gf_pass.ts", import.meta.url), "utf8");
-    // GfComposite.draw's one blend call: rgb and alpha both the standard premultiplied over
+    // the fill look (and the filter texture) writes the composite's alpha; every other draw keeps it
     expect(pass).toContain("gl.blendFuncSeparate(gl.ONE, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);");
-    expect(pass).not.toContain("gl.ZERO, gl.ONE");
+    expect(pass).toContain("else gl.blendFuncSeparate(gl.ONE, gl.ONE_MINUS_SRC_ALPHA, gl.ZERO, gl.ONE);");
     // both composite shaders emit the coverage as the alpha the blend writes
     expect(COMP_FS).toContain("o = vec4(uInk * ink + uFill * cov * (1.0 - ink), ink + (1.0 - ink) * cov);");
     expect(LOOK_COMP_FS).toContain("if (uLook == 0) o = vec4(C * cov, cov);");
