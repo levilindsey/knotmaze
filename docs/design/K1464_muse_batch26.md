@@ -114,9 +114,18 @@ angle: teach lkRoute to sharpen the off-frame too: when no route shows (or in Gf
 a corner pixel inside a fan disc blends the bracketing arms' materials instead of reading one side -
 then re-measure the same mask.
 
-Done 3 (0 px against master gf with no route showing) not re-measured in this run - the mask keeps
-the whole value and `lkRoute` still returns the colour untouched when nB and nD are both 0 - and
-Done 1 and 2 above stand in its place. Crops are the ones this handoff names. `npm test` green (252
+Continuation (same run, after this handoff first landed): Done 3 measured - a no-route gf frame
+(noroute26c.mjs, seed 7, no walk) against the code commit's parent 93aa4ef4 differs by 181 px, all
+of it the panel's build-stamp text (x 1080-1200); in the knot area (x < 870) the count is 0 px, and
+master against itself is 0, so Done 3 passes where it is defined. Two off-frame web fixes were then
+tried and reverted on measurement: a fan-wide angle blend at every junction (a GfWebTable beside
+the look tables, uWeb on unit 14) took the overall mask to gf 1834, IoU 0.253 (the blend reaches
+ribbon and wedge pixels today's fan never touches, so gf's webs differ from their off frames far
+outside today's fan), and confining the blend to lkRoute's suppression (the disc's own arms) took
+it to IoU 0.332 with the ji155/169 boxes at ratio 1.95. Both are worse than the landed 0.366, so
+the tree stands at e820cadd; the numbers stay here as the record that the naive angle blend is not
+the missing half either - today's mask is shaped by the fan mesh's wedge polygons and striations,
+and matching it needs the fan's own per-pixel (jbA, jbB, jbT), not a centre-angle weight. Crops are the ones this handoff names. `npm test` green (252
 files: 3135 passed, 9 skipped; tsc clean; K1424 covered in test/render/gf_route.test.ts). Guards (the
 last row, preview of e820cadd on :5520, one profileDir kept across runs
 `%TEMP%\k1414-26c-guards`, saved under out/26C): `hold.mjs` 60 250 5000: plain link
