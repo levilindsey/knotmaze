@@ -153,7 +153,7 @@ try {
       const m = await page.evaluate(BENCH, SEC);
       const c1 = await page.evaluate(() => ({ c: globalThis.__knotGf.stats.composites, fb: globalThis.__knotGf.stats.fallback ?? null }));
       runs.push({ round, url, restMs, composites: c1.c - c0, fallback: c1.fb, ...m });
-      console.log(round, url.slice(22, 60), "gpu", JSON.stringify(Object.fromEntries(Object.entries(m.gpuMs ?? {}).map(([l, v]) => [l, v?.p50]))), "frameP50", m.frameMs?.p50, "intervalP50", m.intervalMs?.p50, "composites", c1.c - c0, "lost", m.contextLost);
+      console.log(round, url.slice(17, 21), url.includes("gfh=1") ? "A" : "B", (url.match(/#.*/) || ["#default"])[0], "gpu", JSON.stringify(Object.fromEntries(Object.entries(m.gpuMs ?? {}).map(([l, v]) => [l, v?.p50]))), "frameP50", m.frameMs?.p50, "intervalP50", m.intervalMs?.p50, "composites", c1.c - c0, "lost", m.contextLost);
       await page.close();
     }
   }
