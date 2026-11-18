@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1501.
+Next free ID: K1502.
 Next free ID: K1493.
 
 ## Waiting on Levi
@@ -2434,6 +2434,11 @@ Every other item below waits on the trigger it names.
   and bright slivers across the fade (K1458's stairs and bands). Fill look only; the border look on Levi's
   link reads clean there. Picture: .claude/probes/K1495/out/sheet_dives.png (four dives, today's | gf at fl 0,
   0.5, 1.2). Likely the far-reach bake or the junction gap geometry (tables.ts / eval.ts)
+- **K1501** · K1476 follow-up (26G): the never-clearing gap-window fix (9ae14f27) changed 2-10 baked window
+  sides on every census scene but fat (trigger scan .claude/probes/K1476/out/26G/triggers.txt, approximate);
+  only muse_default_tw/muse_hash were screen-checked (bar PASS both flags, j81/x307/j138 also gone there).
+  Screen-look the changed sides on def, ring, g41_* and user_tw42.lightpaper (4x tiles vs today/master), then
+  close K1476.
 
 ## Approved, to schedule (2026-10-11)
 
