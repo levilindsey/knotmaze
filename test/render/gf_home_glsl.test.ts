@@ -55,9 +55,9 @@ describe("K1439 flag off: master's programs and tables", () => {
     // K1456: the app pass issues its full program first (the old constructor's plan order is gone);
     // the source SET is master's, pinned over the distinct sources, sorted (master's distinct
     // sources are the same four strings).
-    expect(sha(...[...new Set(app.srcs)].sort())).toBe("9064f282376b7d3846e3d1354d43dd74e75c2615236e842a5c1c0223c38e6969");
+    expect(sha(...[...new Set(app.srcs)].sort())).toBe("110b97ed49290dbd46ae5d094f922875b7035e54a8d97546e3907a961071720a");
     expect(probe.srcs.length).toBe(4);
-    expect(sha(...probe.srcs)).toBe("eca8fee6c9b353a232a808cd4fbe346d02356772d3a8130a5302d9fdfb3c9cb1");
+    expect(sha(...probe.srcs)).toBe("884f7b3c4f62851333978792fc3629620e9a47b2ecc2f5f5616e3c7364ab617a");
     // { home: false } is the default
     expect(sha(...sources(false, false).srcs)).toBe(sha(...app.srcs));
     expect(app.pass.home).toBe(false);

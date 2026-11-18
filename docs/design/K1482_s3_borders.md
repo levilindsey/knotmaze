@@ -73,3 +73,58 @@ comes first. A compaction is not a stop: re-read this brief and `git log`. On st
 `### Handoff K1482 s3` here, commit, and report: the sweep's faulted count by class, the sheets' paths (each
 site named), the numbers, which commits are confirmed on screen, a `Ledger items` list and K1482's handle
 fields.
+
+### Handoff K1482 s3
+
+Agent stage 3, 2026-11-18 00:37-01:40, branch `worktree-agent-a3b732fc927c3682b`, rebased on 517f508c.
+The fix is 059b5a04; the rest are probes and sheets.
+
+**Cause (items 1 and 2, one cause).** Stage 2's tip sink stepped from 0 to 10·zt at the tip's perpendicular,
+so the end piece's key jumped there. Each jump drew a hard edge: square ink knobs where a tail meets the
+thread it runs into, the hairlines at j77/t64e, j102/t62e, t30e, j126/t55s and t20e, and ring's fill-look
+block. 059b5a04 tapers the sink with a smoothstep over the last h/2 of arc length, in `eval.ts` and
+`gf_glsl.ts` (`tipSink`). `gf_home_glsl.test.ts`'s digests were re-frozen.
+
+**Numbers.**
+- Mirror, all 327 link A sites, step vs taper (`mt_diff.py`): ink flips at 312 sites, all of them removals
+  except 2 px at j61/t25e, 2 at t6s/j21 and 1 at j55. Ink only the step drew: j77/t64e 40 px, j102/t62e 34,
+  j126/t55s 36, t20e 33, t30e 33, t81s 12. The taper draws none of it.
+- Stage 2's gate holds: `mirror_caps.py` sliver sites with at least 20 px of cap ink, 0.
+- The K1436 bar, `STRICT=1`, ring+def against 7c739b42 (`.claude/probes/K1436/out/bar/k1482s3/`): FAIL by the
+  script, new 1, gone 13. Stage 2's three new finds are gone: ring 1.77,15.26 and both def relabels.
+  - The one new find is def 23.55,13.09, 3 px, mirror dstray:tie. It sits 0.09 from a gone 20 px vdip:plain
+    (23.63,13.13). Its tile (`sheet.png`) is stage 2's tail-stops-short look: the gap now ends short of the
+    thread. Levi left that look as it is. Read it as a relabel, not a fault.
+  - The screen finds are equal on both scenes (ring: the one cut x68 in base and ref; same hashes 910ff135
+    and 50dd4ffd).
+- Link A screen, stage 2's tip vs 059b5a04, hash fff8c9e5: 595 px in 23 spots, every one ink removed.
+  `out/s3/chg_00.png` and `chg_01.png` hold the 4x tiles. Each spot was looked at: a knob or bridge at a tail
+  tip is gone, and the over thread's outline is smooth there. `out/s3/hair_00.png` shows pre-s2 | stage 2 |
+  tip at the item 2 and 3 sites.
+- Carry-across without gfh=1, against stage 2's tip: fl 0 changed 805 px in 28 spots, fl 1.2 changed 885 px
+  in 27. Every spot was ink removed at a tail tip and was looked at. Sheets: `out/s3/nogfh_fl0_0*.png` and
+  `nogfh_fl1.2_0*.png`.
+- hold.mjs, warm, on link A: 60/60 PASS.
+- npm test: 254 files, 3169 tests green.
+
+**Sites.**
+- Fixed: j77, t64e, j102, t62e, t30e, j126, t55s (all sliver) and t20e (dash). j126, t55s and t20e now stop
+  short; that is the look Levi left as it is.
+- Same as master: t81s's step (wedge) and everything else in `out/s3/classes_tip.txt`.
+- No site clean on master turned faulty.
+
+**Sweep on the tip: 46 faulted** (master 54): wedge 11, notch 9, sliver 7, dot 6, tick 5, dash 3, stub 3,
+break 2.
+
+**Item 3: open, no cause found.** `wk_map.py` gives each site's mirror winning term and chain:
+- Wedge sites (j15 j50 j82 j143 j158 t23e t59s t73e t84e): plain strokes (winKind 1) where two outlines
+  converge at an acute angle. A few winKind 2 blocks sit at j82, j143, t59s and t84e, and winKind 3/6 px at
+  j158, t73e and t59s. No one term is shared across the sites.
+- Sliver sites (j95 j147 t43s t56s): also winKind 1. The bright sliver is the paper between two outlines
+  narrowing below a pixel.
+- Both look like gf's border look at acute V junctions, not a cap. Changing them would change the border look
+  itself, which Levi said to keep. Ask him before stage 4 touches them.
+- t81s's step is unchanged by the taper; its 12 mirror px came from the old step.
+
+**Next.** Show Levi j15, j95, j147 and t43s at 4x and ask whether converging outlines at an acute V are faults
+or gf's look. If they are faults, the largest group is wedge.
