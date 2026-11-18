@@ -706,11 +706,16 @@ Next free ID: K1491.
 - **K1456** · cut rp=gf's cold first load (K1452: 105 s main-thread block, six 40-63k-char programs at 4-19 s
   each): KHR_parallel_shader_compile with today's renderer on screen until gf is ready, compile only the first
   frame's program, then smaller programs (.claude/probes/K1450/cold.mjs, Handoff K1450)
-  - owner: agent `aa439c7176a2f52db` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-18 00:37, 2 h cap ~02:37)
-  - branch: `worktree-agent-aa439c7176a2f52db`, worktree `.claude/worktrees/agent-aa439c7176a2f52db`; last commit: `b28822bc`
-  - evidence: `.claude/probes/K1456/`
-  - next: the agent's report (stage 2, cap about 02:45 on 2026-11-18): the per-program table, the cold first visit's seconds before and after, the picture unchanged; merge, check the live link's first visit
-  - brief: `docs/design/K1456_s2_first_visit.md`
+  Stage 2 (merged 0fc195b8): one program gates the first composite, the look's full program (78.7k
+  characters), linked by the worker in 40-96 s; the first composite came 55-106 s after the load (under load).
+  Nearly all of it is the corner code of layers() (143 s whole, 18 s with layers() stubbed), so a smaller first
+  program does not help; the worker also starts 8-10 s after the load and links one program at a time
+  (Handoff K1456 s2 in docs/design/K1456_s2_first_visit.md)
+  - owner: agent `aca0749f26e28002e` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-18 01:50, 2 h cap ~03:50)
+  - branch: `worktree-agent-aca0749f26e28002e`, worktree `.claude/worktrees/agent-aca0749f26e28002e`; last commit: `6d127903`
+  - evidence: .claude/probes/K1456/s2/ (table.mjs, ctime.mjs, variants.mjs, loopflags.mjs, out/), .claude/probes/K1456/s3/
+  - next: stage 3's report (cap about 03:55 on 2026-11-18): the cold wait settled (0fc195b8 against 3586c33b), the compile started in the loading phase, compiles run wider; merge, check the live link's first visit. Muse run 26J (queued after 26I) cuts the look program's compile time, the corner code of layers()
+  - brief: `docs/design/K1456_s3_first_visit.md`
 
 ## Next, in order
 
@@ -2333,9 +2338,6 @@ Every other item below waits on the trigger it names.
   levels against the app's own links (scattered single pixels; 0 px with the worker blocked). Cause not found;
   candidate: the worker's GL context at link time differs from the app's (no float-colour extension, default
   attributes). .claude/probes/K1472/restab.mjs, out/s2/rest/
-- **K1481** · rp=gf keeps composing about 56 frames a second at rest while compiles are pending (K1472 s2),
-  and a cold first visit to Levi's link still waits about 85 s before gf takes over (121 s before 62964f14;
-  K1456 is the cold-load item)
 - **K1483** · rp=gf: today's renderer on Levi's link (3.FGH1HtvQeDjm6e4BII, border look) draws fragmentary
   strokes whose geometry differs from gf's, so it cannot serve as the "where a stroke runs" reference there: a
   border fault on that link is judged against Levi's approved look alone (K1482's sweep,
@@ -2735,6 +2737,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1481** · gf's compile poll waits on a 250 ms timer, so it no longer asks for a full rebuild on every frame while programs compile (251 of 251 rest frames before, 46 per 10 s after); the frames left are the link's own ambient paint, which today's renderer runs at the same rate without gf. The cold wait stays with K1456. Done in 0fc195b8 (2026-11-18).
 - **K1454** · rp=gf: a pluck ripple (K279) draws over the maze instead of bending the threads (K1450's fix draws the maze to the screen past the ripple's filter); the full fix composites into the filter texture through Pixi's projection, in gf_pass.ts / gf_look.ts composite shaders (Handoff K1450). Done in b01cc37b (2026-11-17).
 - **K1460** · rp=gf crossing-fade leftovers: stages 1-4 fixed the dotted line, the kink-loop tick, the radial bands and the long-fade seams; stage 5 found today's protect term makes no visible difference at 4x at any fade (d23f3473 tried, e25d042f reverted) and junction B matches today once gf's thread colour is mapped to today's (sheets .claude/probes/K1460/out/s5/jb_*.png): the colour goes to K1474. Done in 7fe4b9c6 (2026-11-17).
 - **K1434** · rp=gf: under a burn (K290) the explore shader's char/ember/smolder shading is not ported, and corner gates read the declared pieces rather than the burn gate pieces; gf draws the pieces' visibility (burnt-gone holes included) but no char darkening (K1396 24E handoff). Done in 44d54de8 (2026-11-17).
