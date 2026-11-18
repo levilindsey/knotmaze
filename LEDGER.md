@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1489.
+Next free ID: K1490.
 
 ## Waiting on Levi
 
@@ -2345,6 +2345,13 @@ Every other item below waits on the trigger it names.
   of af53913c is still owed and needs a noise-free capture
 - **K1488** · scripts/preview.ps1 -Ref fails from an agent worktree whose node_modules lacks packages: it
   junctions the worktree's node_modules instead of the main checkout's (K1482 s2)
+- **K1489** · rp=gf at rest on Levi's link (live 16e0c573, 2026-11-18): a moving highlight lights a few
+  strands brown to pink over the black border look, 300-900 px a frame, in a different place every few
+  seconds; today's renderer on the same link shows the same travelling highlight on its brown lines (about
+  1,000 px change between rest frames 4 s apart). Inferred, not checked: the link's idle effect, drawn by gf
+  in today's colours. Open: which setting it is, and whether brown on the black border look is the wanted
+  colour (a look for Levi once named). Frames: scratchpad only (liveshots.mjs on the live link, times 10-40 s,
+  visit 2 or later)
 
 ## Approved, to schedule (2026-10-11)
 
