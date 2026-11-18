@@ -85,3 +85,59 @@ A partial result lands: Done 1 alone is worth merging.
 whichever comes first. A compaction is not a stop: re-read this brief and `git log`. On stopping: commit WIP,
 append `### Handoff K1472` here, commit, and report: the account, the sheets' paths (each spot named), the
 numbers, a `Ledger items` list and K1472's handle fields.
+
+### Handoff K1472
+
+Stopped 2026-11-17 20:20 on the disk rule: C: had 2.0 GB free (3.9 GB after deleting this run's previews and
+profiles), under the brief's 5 GB. Not every Done holds.
+
+**Landed (01933aa3).** The missing reveal ink on rp=gf. 9b48e44f (K1458 WIP) moved the gap window (unit 12) to
+RGBA32F and, in the same edit, turned the reveal FX table (unit 10) and the pulse/telegraph table (unit 9) from
+RGBA32F into R32F uploads of their RGBA data (`GfPass.setLook`, `gf_pass.ts`). The look shader reads both as
+vec4 (FT, DT), so `lkFx`'s `.y`, which scales ink and coverage while the reveal runs (`ink *= f0.y; cov *=
+f0.y`), read 0: no thread ink during the reveal, only today's frontier glows and particles. 01933aa3 restores
+RGBA32F/RGBA on both. `gf_pass.ts` is outside the brief's file list: the bug was there and nowhere else. The pulse
+table's revert is the same accidental edit; it also restores pulses and the turn telegraph under rp=gf (not
+checked on screen). Number: `test/render/gf_look_upload.test.ts`, uploads whose data length disagrees with their
+format: master 4 of 14 (units 9 and 10, texImage2D and texSubImage2D), 01933aa3 0 of 14. `npm test` green
+(254 files, 3165 tests).
+
+**On screen** (`.claude/probes/K1472/out/pin/`, Levi's link `?3.FGH1HtvQeDjm6e4BII&gfh=1`, 900x900, `phw=0 fw=0
+snd=none`, the reveal clock pinned from load, gf frames only after all 12 programs compiled; pinsheet.mjs,
+sheet.py; run1.log): `levi_sheet_whole.png` (today | master gf | my gf at 0, 0.1, 0.25, 0.4, 0.55, 0.7, 0.85,
+0.97 of 12.549 s, and rest), `levi_sheet_crop0.png` (380,560 120x120 at 4x), `levi_sheet_crop1.png` (600,140
+at 4x), `levi_f6_zoom8.png` (640,170 60x60 at 8x, today | mine). Spots:
+- Thread ink during the reveal, f1-f7: master gf none (glows only), mine drawn and following today's front.
+  FIXED (probe frames; a page observation for master, since K1469 saw the same live).
+- f0: all three blank. Same.
+- Rest look: master and mine match (292 px differ, max channel > 24), both differ from today (2950 / 2684 px):
+  gf's darker border outlines, which Levi keeps. Same as master.
+- Frontier cut shape (8x, f6): today's cut at a thread end is notched, mine is a straight diagonal; a few
+  fringe pixels at mine's cut. OPEN, not judged.
+- Threads behind the front at f4-f7: mine shows the rest look's dark outlines more strongly than today, because
+  the rest look itself is darker in gf. Same as the rest look; not a reveal difference.
+- Whole-frame counts (px, max channel > 24), master~mine / today~master / today~mine: f3 44228/32418/35862,
+  f5 128680/107768/73343, f7 110753/88470/45978. Mine sits closer to today than master at every reveal time.
+
+**Levi's complaint, inferred, not observed on his device:** with no ink during the reveal, the maze vanished for
+each reveal and came back whole at its end ("blinks in and out"), and the fade (fadeLength) had nothing to act
+on while the reveal ran ("no fading regardless of the slider"). Whether a slider edit replays the reveal (which
+would make it "constant") is unchecked. "Border artifacts" not re-examined after the fix beyond the frontier
+spot above.
+
+**Two-program wait (Do 4), from the code, unmeasured this run:** the switch (`gf_app.ts` ~1060) needs two
+programs: the routed pass set's full program (`GfPass.drawReady`: lprogs[1], look over reveal, while the reveal
+runs; lprogs[0], look, otherwise) and the look composite (`GfComposite` LOOK_COMP_FS, `lookReady`). The
+composite starts at construction and is small; the pass queue issues one program at a time in `priority()`
+order, routed set first. The brief's `compileIssued=3 compileReady=2` cold load fits a route that changed under
+the queue (a set issued before the reveal or the look table existed, then the reveal's set): composing with the
+first set would draw the plain look over pieces the reveal has not reached, so it is not correct. On this run,
+pinned from load, the first composite came after ONE pass program (mine 128 s cold, master 56 s on the warmer
+profile). `.claude/probes/K1472/progs.mjs` (written, not run) tags each issued/ready program (R, L, L+R, C) on a
+cold load and settles which set was issued first.
+
+**Not done:** hold.mjs 60/60 on the `xp=off&am=instant` gfh=1 link; a second link (`?b.FMKB4DIQ`); progs.mjs;
+live (unpinned) frames of the fix.
+
+Next: when C: has 5 GB free, build 01933aa3 (or master after the merge), run progs.mjs cold on Levi's link and
+hold.mjs warm, then judge the frontier cut against today.
