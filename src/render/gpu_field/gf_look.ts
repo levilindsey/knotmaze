@@ -1918,18 +1918,6 @@ float lkGap(float key, vec2 p, vec2 qU, int cU) {
   vec3 sl = uGwLive > 0.5 && wm > -pxw ? lkGwSlot(cU, qU) : vec3(-1.0, 0.0, 0.0);
   vec2 sc = vec2(1.0);
   if (sl.x >= 0.0) { int pk = int(fract(sl.z) * 1024.0 + 0.5); sc = vec2(float(pk - (pk / 32) * 32), float(pk / 32)) / 31.0; }
-  // K1460 s3, today's PROTECT (gap_mask.ts): where this thread covers a lower one, it keeps everything but the
-  // over thread's silhouette - margin and fade scale by 1 - pr, pr = the lower ribbon's cover of the pixel. Today
-  // also restricts pr to an arc interval of this thread (gapInterval): the measured stretch where the two ribbons
-  // overlap at the neighbouring crossing, padded, which a lower piece covering this labelled pixel already implies.
-  float pr = 0.0;
-  for (int j = 0; j < np; j++) {
-    if (!(pkey[j] < key - uZt) || pd[j] > uH + uAA) continue;
-    float cv = clamp((uH - pd[j]) / pxw + 0.5, 0.0, 1.0);
-    if (uExLive > 0.5 && cv > 0.0) cv *= exAt(PC(j), lkArc(PC(j), lookQ(j, p))).x;
-    pr = max(pr, cv);
-  }
-  sc *= 1.0 - pr;
   // K1460 s3: a self crossing's own thread is no over pass near the pixel's own arc (today's polyDist skips over points
   // within selfEx = both half-widths + margin + fade + the exit pad of the under arc): where a kink loop's halves meet,
   // the half keyed above read as an over piece at distance 0 and cut the other half out to its window's end, a radial edge.

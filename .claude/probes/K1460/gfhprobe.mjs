@@ -11,9 +11,9 @@ p.on("console", (m) => { if (m.type() === "error" || m.type() === "warning") con
 await p.evaluateOnNewDocument(() => { window.__knotLoopMode = "continuous"; });
 await p.setViewport({ width: 1600, height: 900, deviceScaleFactor: 2 });
 await p.goto(url, { waitUntil: "load", timeout: 900000 });
-for (let i = 0; i < 60; i++) {
+for (let i = 0; i < 20; i++) {
   await new Promise((r) => setTimeout(r, 3000));
-  const s = await p.evaluate(() => { const g = globalThis.__knotGf; return g ? { sw: g.stats.switchedMs, comp: g.stats.composites, home: globalThis.__knotGfHome, st: window.__knotPerf?.()?.state } : null; });
+  const s = await p.evaluate(() => { const g = globalThis.__knotGf; return g ? { sw: g.stats.switchedMs, comp: g.stats.composites, iss: g.stats.compileIssued, rdy: g.stats.compileReady, fb: g.stats.fallback, cw: g.stats.compileWorker, st: window.__knotPerf?.()?.state } : null; });
   console.log(i, JSON.stringify(s));
   if (s && s.sw > 0 && i > 3) {
     await p.evaluate(() => { globalThis.__knotGfOpts = { ...(globalThis.__knotGfOpts ?? {}), redraw: true }; });
