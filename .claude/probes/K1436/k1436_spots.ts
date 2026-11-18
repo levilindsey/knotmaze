@@ -21,7 +21,7 @@ const col: RGB = [0, 0, 0];
 const rows: string[] = [];
 for (const spec of list.split(",")) {
   const [nm, xs, ys] = spec.split(":"); const X = +xs, Y = +ys;
-  const m = modelOf(nm); const T = tablesOf(nm); const h = T.h; const ppu = P / (2.5 * h);
+  const m = modelOf(nm); const T = tablesOf(nm); const h = T.h; const ppu = +(process.env.PPU ?? P / (2.5 * h));
   const pad = Math.ceil((T.W * 1.5 + 3 * T.aa) * ppu + 8 + Math.max(PAR.SMOOTH, PAR.NSM * T.aa * ppu));
   const W2 = P + 2 * pad;
   const c0 = Math.round(X * ppu - P / 2) - pad, r0 = Math.round(Y * ppu - P / 2) - pad;

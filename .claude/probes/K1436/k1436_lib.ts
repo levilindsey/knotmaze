@@ -28,15 +28,18 @@ const env = (k: string, d: number): number => (process.env[k] !== undefined && p
 export const P = {
   STEP: 0.25,                       // px between ray samples
   SMOOTH: 2.5,                      // px: the normal's least averaging radius
-  NSM: env("K1436_NSM", 1),
-  CORNER: env("K1436_CORNER", 0.87), // the normal turn (cos) within the normal radius that marks a corner         // aa: the normal's averaging radius
-  LEVEL: env("K1436_LEVEL", 4),     // aa: the running level's half window along the edge
-  DW: env("K1436_DW", 0.08),        // aa: the width residual that flags (dip or wide)
+  NSM: env("K1436_NSM", 1),         // U: the normal's averaging radius
+  CORNER: env("K1436_CORNER", 0.87), // the normal turn (cos) within the normal radius that marks a corner
+  LEVEL: env("K1436_LEVEL", 4),     // U: the running level's half window along the edge
+  DW: env("K1436_DW", 0.08),        // aa: the width residual that flags (dip or wide), at least DWPX
   CORE: env("K1436_CORE", 0.75),    // ink: a hole in the band's core
   PAST: env("K1436_PAST", 0.5),     // aa of full ink past the band
-  MINLEN: env("K1436_MINLEN", 0.5),
-  RSM: env("K1436_RSM", 0.5),     // aa: the residual's averaging radius along the edge
-  FIT: env("K1436_FIT", 2),         // the level's polynomial degree (1 line, 2 quadratic) // aa: the least edge length (px of flagged sites) a find needs, at least 2 px
+  MINLEN: env("K1436_MINLEN", 0.5), // U: the least edge length (px of flagged sites) a find needs, at least 2 px
+  RSM: env("K1436_RSM", 0.5),       // U: the residual's median radius along the edge
+  FIT: env("K1436_FIT", 2),         // the level's polynomial degree (1 line, 2 quadratic)
+  UPX: env("K1436_UPX", 3),         // px: the least length unit U = max(aa, UPX) (radii in aa shrink below a pixel at 100 px/unit)
+  MINPX: env("K1436_MINPX", 4),     // px: the least find length (2-3 px width finds do not repeat between two loads at 100 px/unit)
+  DWPX: env("K1436_DWPX", 0),       // px: the least width residual that flags (the sampling noise at coarse px/unit)
 };
 
 export interface Sites {
@@ -55,7 +58,7 @@ export function sameFn(R: Raster, T: any): (a: number, b: number) => boolean {
 export function bandSites(R: Raster, T: any): Sites {
   const { w, h, ppu } = R; const same = sameFn(R, T);
   const aaP = T.aa * ppu, WP = T.W * ppu; const tMax = WP + 3 * aaP + WP / 2 + 1; const t0 = -2 * aaP - 1;
-  const margin = Math.ceil(tMax + Math.max(P.SMOOTH, P.NSM * aaP) + 3);
+  const margin = Math.ceil(tMax + Math.max(P.SMOOTH, P.NSM * Math.max(aaP, P.UPX)) + 3);
   const X: number[] = [], Y: number[] = [], NX: number[] = [], NY: number[] = [], PI: number[] = [], PO: number[] = [];
   const add = (i: number, j: number, mx: number, my: number, nx: number, ny: number): void => { X.push(mx); Y.push(my); NX.push(nx); NY.push(ny); PI.push(i); PO.push(j); };
   for (let r = margin; r < h - margin; r++) for (let c = margin; c < w - margin; c++) {
@@ -81,14 +84,14 @@ export function bandSites(R: Raster, T: any): Sites {
     const x = S.x[k], y = S.y[k]; const cx0 = Math.floor((x - rad) / CS), cx1 = Math.floor((x + rad) / CS), cy0 = Math.floor((y - rad) / CS), cy1 = Math.floor((y + rad) / CS);
     for (let cy = cy0; cy <= cy1; cy++) for (let cx = cx0; cx <= cx1; cx++) { const a = head.get(cy * gw + cx); if (!a) continue; for (const q of a) { const dx = S.x[q] - x, dy = S.y[q] - y; if (dx * dx + dy * dy <= rad * rad && S.nx[k] * S.nx[q] + S.ny[k] * S.ny[q] >= 0) fn(q); } }
   };
-  const SM = Math.max(P.SMOOTH, P.NSM * aaP); for (let k = 0; k < n; k++) { let sx = 0, sy = 0; nearG(k, SM, (q) => { sx += S.nx[q]; sy += S.ny[q]; }); const l = Math.hypot(sx, sy) || 1; nx2[k] = sx / l; ny2[k] = sy / l; }
+  const SM = Math.max(P.SMOOTH, P.NSM * Math.max(aaP, P.UPX)); for (let k = 0; k < n; k++) { let sx = 0, sy = 0; nearG(k, SM, (q) => { sx += S.nx[q]; sy += S.ny[q]; }); const l = Math.hypot(sx, sy) || 1; nx2[k] = sx / l; ny2[k] = sy / l; }
   S.nx.set(nx2); S.ny.set(ny2);
   // corners: a site whose smoothed normal turns by more than acos(CORNER) within SM along its boundary (a cusp,
   // the band's mitre at a sharp tip: the width there follows no smooth level); width flags skip sites within
   // one aa of one
   const cornr = new Uint8Array(n); const nearC = new Uint8Array(n);
   for (let k = 0; k < n; k++) { let mn = 1; near(k, SM, (q) => { const d = nx2[k] * nx2[q] + ny2[k] * ny2[q]; if (d < mn) mn = d; }); if (mn < P.CORNER) cornr[k] = 1; }
-  for (let k = 0; k < n; k++) if (cornr[k]) near(k, aaP, (q) => { nearC[q] = 1; });
+  for (let k = 0; k < n; k++) if (cornr[k]) near(k, Math.max(aaP, P.UPX), (q) => { nearC[q] = 1; });
   const ink = (x: number, y: number): number => {
     const c = Math.floor(x), r = Math.floor(y); const fx = x - c, fy = y - r; const i = r * w + c;
     return (R.ink[i] * (1 - fx) + R.ink[i + 1] * fx) * (1 - fy) + (R.ink[i + w] * (1 - fx) + R.ink[i + w + 1] * fx) * fy;
@@ -118,7 +121,7 @@ export function bandSites(R: Raster, T: any): Sites {
   }
   // the running level: a least-squares line of width against the tangent coordinate over the boundary's
   // measured sites within LEVEL aa; the residual is the site's step
-  const LR = P.LEVEL * aaP; const DW = P.DW * aaP;
+  const U = Math.max(aaP, P.UPX); const LR = P.LEVEL * U; const DW = Math.max(P.DW * aaP, P.DWPX);
   for (let k = 0; k < n; k++) {
     const tx = -S.ny[k], ty = S.nx[k];
     let s0 = 0, s1 = 0, s2 = 0, s3 = 0, s4 = 0, sw = 0, suw = 0, suuw = 0;
@@ -138,7 +141,7 @@ export function bandSites(R: Raster, T: any): Sites {
   }
   // the residual's MEDIAN over the boundary's measured sites within RSM aa (a lone staircase outlier is noise;
   // a notch spans more than an aa), then the flags
-  const RS = Math.max(1.01, P.RSM * aaP); const res2 = new Float32Array(n);
+  const RS = Math.max(1.01, P.RSM * Math.max(aaP, P.UPX)); const res2 = new Float32Array(n);
   for (let k = 0; k < n; k++) { if (S.lvl[k] < 2 * aaP || S.wIn[k] < 0) continue; const bf: number[] = []; near(k, RS, (q) => { if (S.lvl[q] >= 2 * aaP && S.wIn[q] >= 0) bf.push(S.res[q]); }); bf.sort((a, b) => a - b); const m = bf.length; res2[k] = m ? (m & 1 ? bf[m >> 1] : 0.5 * (bf[m / 2 - 1] + bf[m / 2])) : 0; }
   for (let k = 0; k < n; k++) {
     let why = 0; const r = res2[k];
@@ -155,7 +158,7 @@ export function bandSites(R: Raster, T: any): Sites {
 export function bandFinds(R: Raster, T: any, c0: number, r0: number, S: Sites): Find[] {
   const n = R.w * R.h; const dip = new Uint8Array(n), wide = new Uint8Array(n); const pk = new Float32Array(n); const aaP = T.aa * R.ppu;
   for (let k = 0; k < S.n; k++) if (S.flag[k]) { const i = S.pix[k]; if (S.why[k] <= 2) dip[i] = 1; else wide[i] = 1; const d = S.why[k] === 2 ? 1 - S.core[k] : S.why[k] === 4 ? S.past[k] / aaP : Math.abs(S.res[k]) / aaP; if (d > pk[i]) pk[i] = d; }
-  const minPx = Math.max(2, Math.round(P.MINLEN * aaP));
+  const minPx = Math.max(P.MINPX, Math.round(P.MINLEN * Math.max(aaP, P.UPX)));
   return [...finds(dip, R, c0, r0, "vdip", (i) => pk[i], minPx), ...finds(wide, R, c0, r0, "vwide", (i) => pk[i], minPx)];
 }
 
