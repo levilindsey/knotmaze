@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1450.
+Next free ID: K1454.
 
 ## Waiting on Levi
 
@@ -310,6 +310,15 @@ Next free ID: K1450.
 
 ## In progress
 
+- **K1450** · rp=gf draws the maze only in flashes on the deployed build (Levi 2026-11-17: "the entire maze
+  blinks in and out constantly"); reproduced on live with and without gfh, any look, xp=off + am=instant
+  included; the border look's flashes also lack the fill. Blocks K1444 and every gf look call. Bisect, fix,
+  add an ordinary-load guard probe (docs/design/K1450_gf_blink.md)
+  - owner: agent `ad30609f43a2c2a15` of claude session 01SUPGULDxvE5gKXozfaFaFG (opus, started 2026-11-17 08:05, 2 h cap ~10:05)
+  - branch: `worktree-agent-ad30609f43a2c2a15`, worktree `.claude/worktrees/agent-ad30609f43a2c2a15`; last commit: `22411b68`
+  - evidence: .claude/probes/K1444/, .claude/probes/K1450/
+  - next: bisect the blink on local builds (preview.ps1 -Ref), fix, guard probe; then the coordinator re-captures Levi's link and re-asks K1444
+  - brief: `docs/design/K1450_gf_blink.md`
 - **K1407** · rp=gf look to zero artifacts: K1362 s1's census against form B reads 301 finds on 12 scenes
   (rp=outline then: 17), every one an incomplete port of form B (corner set, stray arcs, K1049 radii, burial;
   docs/design/K1362_s1_gpu_formb.md, Accuracy). No stage has fixed one since 11-12: the speed stages held the
@@ -613,14 +622,6 @@ Next free ID: K1450.
   - evidence: .claude/probes/K1053/chain.log, each run's .claude/probes/<ID>/out/25<X>/
   - next: 25A running, then 25B, 25C, 25D; after each handoff Claude views its crops against today and files follow-ups; restart with .claude/probes/K1053/start.ps1 if the chain stops on a gate
   - brief: `docs/design/K1448_muse_batch25.md`
-- **K1449** · rp=gf home membership (gfh=1), what is left: flag-off pixel A/B (K1445) first, then classify the
-  remaining tie/ramp finds and the K1441/K1443 sites with the flag on and fix the largest classes in tables.ts
-  / eval.ts / gf_glsl.ts; brief docs/design/K1449_home_leftovers.md
-  - owner: agent `a02a2023ec92cd84f` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-17 05:58, 2 h cap ~07:58)
-  - branch: `worktree-agent-a02a2023ec92cd84f`, worktree `.claude/worktrees/agent-a02a2023ec92cd84f`; last commit: `5285760f`
-  - evidence: `.claude/probes/K1449/`
-  - next: stage running (flag-off pixel check, then classify and fix what is left with gfh=1): on its report Claude checks the sheets and merges
-  - brief: `docs/design/K1449_home_leftovers.md`
 
 ## Next, in order
 
@@ -2184,6 +2185,17 @@ Every other item below waits on the trigger it names.
   pulse suppression in the look (corner/fan reach), not more window tuning. Telegraph in border is done
   (1.017, IoU 0.958). Probe: .claude/probes/K1414/k1414h_ab.mjs + mask_h.mjs, state seed 7 10 moves clocks
   100/100.45/101.3 tlk=border.
+- **K1451** · gfh=1 after K1449: default fadeLength reads 368 finds (target 250): 246 are crossing-tie
+  wedges/dashes the flag-off renderer has too, 122 the fade's outline taper where a diving arm leaves its
+  junction (a look, K1444); fadeLength under about 0.066 (0.1 win) draws one hard cut, a dead zone at the
+  slider's bottom; the bench never settled (two more rounds of k1449_bench.ps1 alone). Handoff K1449 in
+  docs/design/K1449_home_leftovers.md, sheets .claude/probes/K1449/out/ (worktree agent-a02a2023ec92cd84f)
+- **K1452** · rp=gf cold start: a fresh profile's first load blocks the main thread about 110 s on the
+  desktop, then 38 s and 29 s more after the reveal ends (shader compiles, unconfirmed; warm profiles show
+  none); it also breaks every bench that waits 120 s (K1449's handoff, .claude/probes/K1444/blink2.mjs GAPS)
+- **K1453** · Muse batch 25 overwrote a held perf lock at 06:45 and 07:45 (2026-11-17) during K1449's parity
+  and bench runs: the batch's lock step must wait on another owner's lock, not replace it (K1448 brief's How
+  to work, chain.ps1)
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2555,6 +2567,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1449** · home leftovers (gfh=1 only): the home ramp is full to the tie depth; fadeLength 0 is a crisp cut (690 -> 203 finds); default 435 -> 368, short of 250 (rest in K1451); flag-off pixels equal (0 px). Done in 7657e03b (2026-11-17).
 - **K1418** · Muse batch 24 (rp=gf look matches today): 24C, 24E, 24G landed whole; 24D, 24F, 24H, 24I in part; leftovers K1424, K1431, K1434, K1446, K1447 go to batch 25 (K1448). Done in fc861dea (2026-11-17).
 - **K1423** · K1415 residual (24A): rp=gf shallow-crossing fade still off at eye walls (seed3 ci346 err 0.110, seed5 ci248 0.481; ci77 0.033, ci345 0.063 pass): window-end and along-eye behaviour plus section-colour contamination of the scan, not fadeP width; needs a window-aware gap or a direct edge scan (.claude/probes/K1417/out/24A/fade_*.txt). Done in 72620196 (2026-11-17).
 - **K1439** · rp=gf home membership mirrored in the shader behind gfh=1 (off by default, acts only with rp=gf); fade follows fadeLength live with no rebuild; GPU = mirror on def, 3 px past 1e-2 on muse_hash (float ties); flag off pinned by shader/keys/pack digests; no measurable frame cost on the desktop. Done in c11be7ae (2026-11-16).
