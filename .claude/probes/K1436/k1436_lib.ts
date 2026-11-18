@@ -44,6 +44,7 @@ export const P = {
   SEAM: env("K1436_SEAM", 0.08),     // a label change with no band flags when the fills either side differ by more than this (max RGB, 0..1): a missing band between two colours is real, a seam inside one colour is invisible   // 1: a label change with no band at all flags as a dip (v2 s1 did; 0 of 2 such finds sampled were visible)
   MINPX: env("K1436_MINPX", 4),     // px: the least find length (2-3 px width finds do not repeat between two loads at 100 px/unit)
   DWPX: env("K1436_DWPX", 0),       // px: the least width residual that flags (the sampling noise at coarse px/unit)
+  RSTRAY: env("K1436_RSTRAY", 0),   // px: the least rstray find (the scan sets 7: stage 1's false rstray finds were 3-6 px with no ink)
 };
 
 export interface Sites {
@@ -186,7 +187,7 @@ export function allFindsV2(R: Raster, T: any, c0: number, r0: number, minPx = 2,
   }
   return { S, finds: [
     ...finds(ds, R, c0, r0, "dstray", (i) => R.ink[i], minPx),
-    ...finds(rs, R, c0, r0, "rstray", (i) => R.ink[i], minPx),
+    ...finds(rs, R, c0, r0, "rstray", (i) => R.ink[i], Math.max(minPx, P.RSTRAY)),
     ...bandFinds(R, T, c0, r0, S),
   ] };
 }

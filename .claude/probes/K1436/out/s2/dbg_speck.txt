@@ -1,0 +1,9 @@
+rows left to right, top to bottom; per find: fill | border, 60 device px at 4x
+1. ring_h1 speck:plain 4.601:19.926 x82 8px
+2. ring_h1 speck:plain 23.300:12.682 x23 6px
+3. ring_h1 speck:plain 17.876:21.908 x67 5px
+4. ring_h1 speck:plain 18.632:11.095 x19 4px
+5. ring_h1 speck:plain 20.444:13.764 x20 4px
+6. ring_h1 speck:plain 7.745:21.503 x84 7px
+7. ring_h1 speck:plain 19.754:4.817 x14 8px
+8. ring_h1 speck:plain 18.722:17.843 x69 6px

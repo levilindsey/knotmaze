@@ -16,7 +16,8 @@
 // whose mirror (chain, s) lies within Lg = (2h + gap + fade) / max(sin, 0.25) + 3 aa of such a pin is in the zone; band
 // finds there are dropped (the mirror's edges do not know the cut), and the look checks split on it:
 //   cut   - mirror cov > 0.9, screen cov < 0.5, OUTSIDE the zone: thread removed where the look has no cut (the kink tick)
-//   speck - INSIDE the zone, |screen cov - the 7x7 median of same-chain pixels| > 0.3: dots or dashes in the cut/fade
+//   speck - INSIDE the zone, |screen cov - the median of its 8 same-chain neighbours| > 0.35: dots or dashes in the cut/fade
+//           (a 7x7 median read the fade's own steep gradient as specks: 8 of 8 sampled false on ring)
 //           (the dotted line across a faded under thread)
 //   spill - screen cov > 0.5 where mirror cov < 0.1, 2 px or more from any mirror cover: paint where the field has none
 // Finds keep scan v2's JSON form ({kind, cls, x, y, px, peak} in world units) plus `site`: the nearest named crossing
@@ -76,12 +77,32 @@ const med = (a: number[]): number => { a.sort((p, q) => p - q); return a[a.lengt
 const paper = [0, 1, 2].map((k) => med([px(F, 0, 0, k), px(F, w - 1, 0, k), px(F, 0, h - 1, k), px(F, w - 1, h - 1, k), px(B, 0, 0, k), px(B, w - 1, h - 1, k)]));
 const full: number[][] = [[], [], []];
 for (let i = 0; i < w * h; i += 7) if (mcov[i] > 0.99) { const c = i % w, r = (i / w) | 0; for (let k = 0; k < 3; k++) full[k].push(px(F, c, r, k)); }
-const fillC = full.map(med); const white = [1, 1, 1];
+const fillC = full.map(med);
+// the border look's stroke colour (borderColor white still draws a toned stroke): the median where the mirror ink is full
+const bfull: number[][] = [[], [], []];
+for (let i = 0; i < w * h; i += 3) if (mink[i] > 0.97) { const c = i % w, r = (i / w) | 0; for (let k = 0; k < 3; k++) bfull[k].push(px(B, c, r, k)); }
+const white = bfull.map(med);
 const proj = (I: typeof F, c: number, r: number, A: number[], Bc: number[]): number => { let num = 0, den = 0; for (let k = 0; k < 3; k++) { const d = Bc[k] - A[k]; num += (px(I, c, r, k) - A[k]) * d; den += d * d; } return den > 1e-9 ? Math.min(1, Math.max(0, num / den)) : 0; };
 const scov = new Float32Array(w * h), sink = new Float32Array(w * h);
 for (let r = 0; r < h; r++) for (let c = 0; c < w; c++) { const i = r * w + c; scov[i] = proj(F, c, r, paper, fillC); sink[i] = proj(B, c, r, paper, white); }
+// off-colour mask: a fill pixel far from the paper-fill line is not thread (markers, their glow, chrome the CSS
+// hide missed): excluded from every check, dilated 3 px
+const offc = new Uint8Array(w * h);
+for (let r = 0; r < h; r++) for (let c = 0; c < w; c++) { const i = r * w + c; const a = scov[i]; let e = 0; for (let k = 0; k < 3; k++) e = Math.max(e, Math.abs(px(F, c, r, k) - (paper[k] + a * (fillC[k] - paper[k])))); if (e > 0.08) offc[i] = 1; }
+// dilated 12 px (4 css px at DSF 3: a marker's fill-coloured ring and glow sit inside it), separable box max
+const DIL = 12, tmpM = new Uint8Array(w * h), mask = new Uint8Array(w * h);
+for (let r = 0; r < h; r++) { let run = -1e9; for (let c = 0; c < w; c++) { if (offc[r * w + c]) run = c; if (c - run <= DIL) tmpM[r * w + c] = 1; } run = 1e9; for (let c = w - 1; c >= 0; c--) { if (offc[r * w + c]) run = c; if (run - c <= DIL) tmpM[r * w + c] = 1; } }
+for (let c = 0; c < w; c++) { let run = -1e9; for (let r = 0; r < h; r++) { if (tmpM[r * w + c]) run = r; if (r - run <= DIL) mask[r * w + c] = 1; } run = 1e9; for (let r = h - 1; r >= 0; r--) { if (tmpM[r * w + c]) run = r; if (run - r <= DIL) mask[r * w + c] = 1; } }
+// a MARKER (start / finish: black and white glyph on a darker fill disc) is a large off-colour blob: mask a disc of 2.2x
+// its equivalent radius round each blob of >= 300 px (ring's two markers left 7 of 9 finds before this)
+{ const seen = new Uint8Array(w * h), st: number[] = [];
+  for (let i0 = 0; i0 < w * h; i0++) { if (!offc[i0] || seen[i0]) continue; let n = 0, sx = 0, sy = 0; st.push(i0); seen[i0] = 1;
+    while (st.length) { const i = st.pop()!; const c = i % w, r = (i / w) | 0; n++; sx += c; sy += r;
+      for (const q of [i - 1, i + 1, i - w, i + w]) if (q >= 0 && q < w * h && offc[q] && !seen[q] && Math.abs((q % w) - c) <= 1) { seen[q] = 1; st.push(q); } }
+    if (n < 300) continue; const cx = sx / n, cy = sy / n, rad = 2.2 * Math.sqrt(n / Math.PI);
+    for (let r = Math.max(0, Math.floor(cy - rad)); r <= Math.min(h - 1, Math.ceil(cy + rad)); r++) for (let c = Math.max(0, Math.floor(cx - rad)); c <= Math.min(w - 1, Math.ceil(cx + rad)); c++) if ((c - cx) ** 2 + (r - cy) ** 2 < rad * rad) mask[r * w + c] = 1; } }
 // alignment check: mean |screen - mirror| ink at offsets (the device grid must be the mirror's)
-let agree = 0, nA = 0; for (let i = 0; i < w * h; i += 3) if (mcov[i] > 0.02) { agree += Math.abs(scov[i] - mcov[i]); nA++; }
+let agree = 0, nA = 0; for (let i = 0; i < w * h; i += 3) if (mcov[i] > 0.02 && !mask[i]) { agree += Math.abs(scov[i] - mcov[i]); nA++; }
 R.ink = sink; R.dstray = new Uint8Array(w * h);
 // --- the legit gap zone
 const gap = Math.max(0, (meta.style.casingWidth - meta.style.threadWidth) / 2) + 0.02; const fade = Math.max(0, meta.fadeLength ?? 0);
@@ -91,8 +112,10 @@ for (let c = 0; c < T.cPinN.length; c++) for (let k = 0; k < T.cPinN[c]; k++) { 
 for (const u of unders as any[]) { let best = Infinity, sn = 0.25; for (const o of overs) { const d = Math.hypot(o.x - u.x, o.y - u.y); if (d < best) { best = d; sn = Math.abs(u.tx * o.ty - u.ty * o.tx); } } u.L = (2 * T.h + gap + fade) / Math.max(sn, 0.25) + 3 * T.aa; }
 const byChain = new Map<number, UPin[]>(); for (const u of unders) { if (!byChain.has(u.c)) byChain.set(u.c, []); byChain.get(u.c)!.push(u); }
 const zone = new Uint8Array(w * h);
-for (let i = 0; i < w * h; i++) { const ch = R.chain[i]; if (ch < 0 || mcov[i] < 0.02) continue; const L = byChain.get(ch); if (!L) continue; const s = R.s[i];
-  for (const u of L) { let d = Math.abs(s - u.s); if (T.cClosed[ch]) d = Math.min(d, T.cLen[ch] - d); if (d < u.L) { zone[i] = 1; break; } } }
+// a world disc of radius L round each under pass (every chain in it: the over thread's band rays cross the faded under
+// thread too; the same-chain arc window let the border look's fade read as band dips, ring 21 of 21 vdip false)
+for (const u of unders as any[]) { const cx = u.x * ppu - c0, cy = u.y * ppu - r0, rad = u.L * ppu;
+  for (let r = Math.max(0, Math.floor(cy - rad)); r <= Math.min(h - 1, Math.ceil(cy + rad)); r++) for (let c = Math.max(0, Math.floor(cx - rad)); c <= Math.min(w - 1, Math.ceil(cx + rad)); c++) if ((c + 0.5 - cx) ** 2 + (r + 0.5 - cy) ** 2 < rad * rad) zone[r * w + c] = 1; }
 // --- band profile (screen ink, mirror edges; mono: no colour seams) and strays, gap zone dropped
 const Fl = analyze(R, T);
 const S = bandSites(R, T, () => 0);
@@ -112,10 +135,13 @@ for (let r = 3; r < h - 3; r++) for (let c = 3; c < w - 3; c++) { const i = r * 
     if (ok) cut[i] = 1;
   }
   if (zone[i] && mcov[i] > 0.5) { nb.length = 0; const ch = R.chain[i];
-    for (let dr = -3; dr <= 3; dr++) for (let dc = -3; dc <= 3; dc++) { const q = i + dr * w + dc; if (R.chain[q] === ch && mcov[q] > 0.5 && Math.abs(R.s[q] - R.s[i]) < 2 * T.h) nb.push(scov[q]); }
-    if (nb.length >= 20 && Math.abs(scov[i] - med(nb)) > 0.3) speck[i] = 1; }
+    for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) { if (!dr && !dc) continue; const q = i + dr * w + dc; if (R.chain[q] === ch && mcov[q] > 0.5) nb.push(scov[q]); }
+    if (nb.length >= 6 && Math.abs(scov[i] - med(nb)) > 0.35) speck[i] = 1; }
   if (scov[i] > 0.5 && mcov[i] < 0.1 && dC[i] >= 2) spill[i] = 1;
 }
+for (let i = 0; i < w * h; i++) if (mask[i]) { cut[i] = 0; speck[i] = 0; spill[i] = 0; rs[i] = 0; }
+for (let k = 0; k < S.n; k++) if (mask[S.pix[k]]) S.flag[k] = 0;
+let nMask = 0; for (let i = 0; i < w * h; i++) nMask += mask[i];
 const MINLOOK = +(process.env.K1436_MINLOOK ?? 4);
 const all: (Find & { site?: string })[] = [
   ...finds(rs, R, c0, r0, "rstray", (i) => R.ink[i], RSTRAY_MIN),
@@ -135,5 +161,5 @@ const cnt: Record<string, number> = {}, pxs: Record<string, number> = {};
 for (const f of all) { const k = `${f.kind}:${f.cls}`; cnt[k] = (cnt[k] ?? 0) + 1; pxs[k] = (pxs[k] ?? 0) + f.px; }
 let nz = 0; for (let i = 0; i < w * h; i++) nz += zone[i];
 const ms = Date.now() - t0;
-writeFileSync(out, JSON.stringify({ cap: capDir, hash: meta.hash, job: meta.job, ppu, roi: [pc0, pr0, pc1, pr1], paper, fill: fillC, align: nA ? agree / nA : -1, zonePx: nz, params: PAR, rstrayMin: RSTRAY_MIN, cnt, px: pxs, ms: { raster: msR, all: ms }, finds: all }));
+writeFileSync(out, JSON.stringify({ cap: capDir, hash: meta.hash, job: meta.job, ppu, roi: [pc0, pr0, pc1, pr1], paper, fill: fillC, align: nA ? agree / nA : -1, maskPx: nMask, zonePx: nz, params: PAR, rstrayMin: RSTRAY_MIN, cnt, px: pxs, ms: { raster: msR, all: ms }, finds: all }));
 console.log(`${meta.job?.name ?? capDir}\t${all.length}\t${JSON.stringify(cnt)}\talign ${(nA ? agree / nA : -1).toFixed(3)}\t${ms} ms`);

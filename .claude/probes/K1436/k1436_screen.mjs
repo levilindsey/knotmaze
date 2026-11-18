@@ -23,18 +23,24 @@ const browser = await puppeteer.launch({
 });
 async function redraw(page) {
   const c0 = await page.evaluate(() => { globalThis.__knotGfOpts = { ...(globalThis.__knotGfOpts ?? {}), redraw: true }; globalThis.__knotGf.redraw(); return globalThis.__knotGf.stats.composites; });
-  await page.waitForFunction((c) => globalThis.__knotGf.stats.composites > c + 2, { timeout: 120000, polling: 100 }, c0);
+  await page.waitForFunction((c) => globalThis.__knotGf.stats.composites > c + 2, { timeout: 900000, polling: 200 }, c0);
   await sleep(500);
 }
 async function once(job) {
+  try { return await once1(job); } catch (e) { console.log(`[${job.name}] ${e.message.slice(0, 160)}`); for (const p of await browser.pages()) if (p.url() !== "about:blank") await p.close().catch(() => {}); return { hash: "error", meta: { lost: 1 }, ms: 0 }; }
+}
+async function once1(job) {
   const page = await browser.newPage();
   page.on("pageerror", (e) => console.log(`[${job.name}] pageerror ${e.message}`));
-  await page.evaluateOnNewDocument(() => { window.__knotLoopMode = "continuous"; });
+  await page.evaluateOnNewDocument(() => { window.__knotLoopMode = "continuous"; window.__lost = 0; try { localStorage.setItem("knotmaze.panelOpen", "0"); } catch {} const gc = HTMLCanvasElement.prototype.getContext; HTMLCanvasElement.prototype.getContext = function (...a) { if (!this.__h) { this.__h = 1; this.addEventListener("webglcontextlost", () => { if (this.isConnected) window.__lost++; }); } return gc.apply(this, a); }; });
   await page.setViewport({ width: job.w ?? 1240, height: job.h ?? 900, deviceScaleFactor: DSF });
   const t0 = Date.now();
   await page.goto(`${base}/?${job.query}`, { waitUntil: "load", timeout: 900000 });
   await page.waitForFunction(() => { const s = window.__knotPerf?.()?.state; return s && s !== "loading"; }, { timeout: 900000, polling: 300 });
   await page.waitForFunction(() => (globalThis.__knotGf?.stats?.switchedMs ?? -1) > 0 && globalThis.__knotGf.stats.composites > 0, { timeout: 900000, polling: 300 });
+  // after the switch gf compiles its other programs: frames stall for ~1-2 min (cold) before they flow again
+  const f0 = await page.evaluate(() => window.__knotLoop().frames);
+  await page.waitForFunction((f) => window.__knotLoop().frames > f + 20, { timeout: 900000, polling: 500 }, f0);
   const hash = await page.evaluate(async (t) => {
     await window.__knotPhysFreeze(true);
     await window.__knotStepUntil(t);
@@ -43,7 +49,9 @@ async function once(job) {
     window.__knotLoop?.({ continuous: true });
     const d = await window.__knotPhysDump();
     const h = d?.hashes ?? d; return String(h?.all ?? JSON.stringify(h).slice(0, 80));
-  }, job.t ?? 40);
+  }, (job.t ?? 40) - 0.008); // K868 stepped to 40 and landed on the frame at 40.0167 (40.0083): step to just under it
+  // DOM chrome off the capture (chips, buttons, HUD, a closed panel's menu): only the canvas shows
+  await page.addStyleTag({ content: "body * { visibility: hidden !important; } canvas { visibility: visible !important; }" });
   await sleep(2000);
   await page.evaluate(() => { const r = window.__knotRenderer(); r.threadLook = 0; });
   await redraw(page);
@@ -60,7 +68,7 @@ async function once(job) {
     const r = window.__knotRenderer();
     return { view: window.__knotView(), dpr: window.devicePixelRatio, w: innerWidth, h: innerHeight,
       style: { casingWidth: r.style.casingWidth, threadWidth: r.style.threadWidth }, fadeLength: r.fadeLength,
-      home: globalThis.__knotGf.home, switchedMs: globalThis.__knotGf.stats.switchedMs, T: o };
+      home: globalThis.__knotGf.home, switchedMs: globalThis.__knotGf.stats.switchedMs, lost: window.__lost, T: o };
   });
   await page.close();
   return { hash, fill, border, meta, ms: Date.now() - t0 };
@@ -69,9 +77,11 @@ async function run(job) {
   let got = null;
   for (let k = 0; k < TRIES; k++) {
     const P = await once(job);
+    if (P.meta.lost) { console.log(`[${job.name}] webgl context lost (${P.meta.lost}), retry`); got = P; continue; }
     if (!job.hash || P.hash === job.hash) { got = P; break; }
     console.log(`[${job.name}] hash ${P.hash} != ${job.hash}, retry`); got = P;
   }
+  if (!got?.fill) { console.log(`[${job.name}] NO CAPTURE`); return; }
   const d = join(outDir, job.name); mkdirSync(d, { recursive: true });
   writeFileSync(join(d, "fill.png"), got.fill); writeFileSync(join(d, "border.png"), got.border);
   writeFileSync(join(d, "meta.json"), JSON.stringify({ ...got.meta, hash: got.hash, job }));
