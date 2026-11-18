@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1483.
+Next free ID: K1485.
 
 ## Waiting on Levi
 
@@ -675,13 +675,17 @@ Next free ID: K1483.
   - brief: `docs/design/K1472_s3_reveal_parity.md`
 - **K1482** · rp=gf's border look on Levi's own link at rest (3.FGH1HtvQeDjm6e4BII, gfh=1), junction by
   junction against his approved look: sweep every junction and under-tail end at 4x, class each fault (break,
-  stub, wedge, tick, notch, sliver, dot, stray dash), fix the largest classes. Levi 2026-11-17: "I still see
+  stub, wedge, tick, notch, sliver, dot, stray dash), fix the largest classes. Stage 1 (merged e063ee09, no source change): 327 sites, 242 clean, sliver 33,
+  wedge 19, notch 11, dot 7, tick 5, dash 4, break 3, stub 3; the sliver class (and 9 wedges) is an open
+  end's round cap drawn across the neighbour it should pass under (the end piece takes its junction group's
+  flat depth key); a 2x2 opening of the border alpha was tried and reverted (cut 1-px strokes at 14 sites).
+  Delete the local probe branch `k1482-gwoff` once its evidence is no longer needed. Levi 2026-11-17: "I still see
   plenty of border artifacts". The stub past a crossing is K1477 (Muse 26H)
-  - owner: agent `a9a536be366802d97` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-17 22:04, 2 h cap ~00:04)
-  - branch: `worktree-agent-a9a536be366802d97`, worktree `.claude/worktrees/agent-a9a536be366802d97`; last commit: `0cd730f2`
+  - owner: agent `a8d924c8a5107064c` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-17 22:52, 2 h cap ~00:52)
+  - branch: `worktree-agent-a8d924c8a5107064c`, worktree `.claude/worktrees/agent-a8d924c8a5107064c`; last commit: `3c1076c2`
   - evidence: `.claude/probes/K1482/`
-  - next: the agent's report (cap about 00:10 on 2026-11-18): view its tiles, merge, verify on the live link
-  - brief: `docs/design/K1482_levi_link_borders.md`
+  - next: the agent's report (cap about 00:55 on 2026-11-18): view its tiles at the 33 sliver and 19 wedge sites, merge, verify on the live link
+  - brief: `docs/design/K1482_s2_end_caps.md`
 
 ## Next, in order
 
@@ -1047,7 +1051,8 @@ Every other item below waits on the trigger it names.
   .claude/probes/K1436/out/s3/worklist_named.tsv, sheets/worklist_h1_1.png row 3)
 - **K1477** · rp=gf: the under thread's border stroke tapers to a point and stops past a crossing at ring x68
   (19.4, 20.0; 963 px in K1436's screen scan), g41_ring_tw64 j24 (the same spot, 660 px) and x67 (18.0, 20.6;
-  296 px); today's stroke runs through, the fill matches. Queued as Muse run 26H
+  296 px); today's stroke runs through, the fill matches. Likely the same class on Levi's link (K1482's sweep):
+  j138, t36s, t70s, j81, j139 (`.claude/probes/K1482/out/master/sheets/faults_00.png`). Queued as Muse run 26H
   (docs/design/K1464_muse_batch26.md; .claude/probes/K1436/out/s3/sheets/worklist_h1_1.png rows 1, 2, 4)
 - **K1478** · rp=gf: the rest of K1436 s3's work list of screen faults (each tile viewed;
   .claude/probes/K1436/out/s3/worklist_named.tsv, sheets/worklist_h1_*.png and worklist_h0_*.png): muse_hash
@@ -2296,9 +2301,6 @@ Every other item below waits on the trigger it names.
 - **K1453** · Muse batch 25 overwrote a held perf lock at 06:45 and 07:45 (2026-11-17) during K1449's parity
   and bench runs: the batch's lock step must wait on another owner's lock, not replace it (K1448 brief's How
   to work, chain.ps1)
-- **K1454** · rp=gf: a pluck ripple (K279) draws over the maze instead of bending the threads (K1450's fix
-  draws the maze to the screen past the ripple's filter); the full fix composites into the filter texture
-  through Pixi's projection, in gf_pass.ts / gf_look.ts composite shaders (Handoff K1450)
 - **K1466** · the gf census tools (k1407c1_bar.ps1, the GPU census) die with 'Fatal process out of memory:
   Zone' when six scene groups run at once; two at a time complete. Give them a throttle (Handoff K1451 s3,
   docs/design/K1451_s3_home_on_bar.md)
@@ -2315,6 +2317,16 @@ Every other item below waits on the trigger it names.
 - **K1481** · rp=gf keeps composing about 56 frames a second at rest while compiles are pending (K1472 s2),
   and a cold first visit to Levi's link still waits about 85 s before gf takes over (121 s before 62964f14;
   K1456 is the cold-load item)
+- **K1483** · rp=gf: today's renderer on Levi's link (3.FGH1HtvQeDjm6e4BII, border look) draws fragmentary
+  strokes whose geometry differs from gf's, so it cannot serve as the "where a stroke runs" reference there: a
+  border fault on that link is judged against Levi's approved look alone (K1482's sweep,
+  `.claude/probes/K1482/out/master/sheets/faults_00..03.png`, left tile of each pair)
+- **K1484** · rp=gf pluck ripple after Muse 26D (b01cc37b, K1454): the run left no handoff. Coordinator's
+  measure from its saved frames (`.claude/probes/K1454/out/26D/final2/`, pixels over 30 levels from the
+  prp=off frame inside 110 px of the pluck): gf against today's count 0.74 / 0.85 / 0.89 at ages 0.12 / 0.3 /
+  0.55 s (master 0.52 / 0.43 / 0.52), IoU 0.65 / 0.74 / 0.72 (master 0.49 / 0.41 / 0.50), 0 px with no ripple.
+  Not re-run: hold.mjs 60/60 with the ripple on and music mode's auto plucks, DRAG=1, dragcheck; age 0.12 s is
+  1% short of the 25% bar
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2688,6 +2700,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1454** · rp=gf: a pluck ripple (K279) draws over the maze instead of bending the threads (K1450's fix draws the maze to the screen past the ripple's filter); the full fix composites into the filter texture through Pixi's projection, in gf_pass.ts / gf_look.ts composite shaders (Handoff K1450). Done in b01cc37b (2026-11-17).
 - **K1460** · rp=gf crossing-fade leftovers: stages 1-4 fixed the dotted line, the kink-loop tick, the radial bands and the long-fade seams; stage 5 found today's protect term makes no visible difference at 4x at any fade (d23f3473 tried, e25d042f reverted) and junction B matches today once gf's thread colour is mapped to today's (sheets .claude/probes/K1460/out/s5/jb_*.png): the colour goes to K1474. Done in 7fe4b9c6 (2026-11-17).
 - **K1434** · rp=gf: under a burn (K290) the explore shader's char/ember/smolder shading is not ported, and corner gates read the declared pieces rather than the burn gate pieces; gf draws the pieces' visibility (burnt-gone holes included) but no char darkening (K1396 24E handoff). Done in 44d54de8 (2026-11-17).
 - **K1455** · the border look (tlk=border) under rp=gf: gf's thick near-black strokes on both edges stay; today's thin section-tinted strokes are not the bar. Dropped: decided, no work: Levi 2026-11-17 "Keep gf as it is" (recorded in .claude/rules/render-gpu-field.md) (2026-11-17).
