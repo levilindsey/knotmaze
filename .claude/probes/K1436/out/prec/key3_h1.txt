@@ -1,0 +1,8 @@
+1	user_tw42.lightpaper	3.719	4.879	rstray	local: rstray:ramp:89
+2	user_tw42.lightpaper	16.697	5.625	rstray	local: rstray:ramp:19
+3	muse_hash	11.337	32.443	vdip	local: vdip:ramp:11
+4	g41_user_tw42	6.770	13.585	rstray	local: rstray:ramp:42
+5	muse_hash	27.732	17.317	vdip	local: vdip:ramp:16
+6	muse_hash	30.408	20.162	dstray	local: dstray:tie:137
+7	muse_hash	16.338	18.342	dstray	local: dstray:tie:3 vdip:tie:11
+8	muse_hash	19.151	32.600	vdip	local: vdip:plain:13

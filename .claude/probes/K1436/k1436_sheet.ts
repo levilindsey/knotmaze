@@ -24,7 +24,7 @@ rows.forEach(([nm, xs, ys, kind], n) => {
   const half = TS / Z / 2; const pad = Math.ceil((T.W * 1.5 + 3 * T.aa) * ppu + 4 * Math.max(PAR.UPX, T.aa * ppu) + 12);
   const c0 = Math.round(X * ppu - half) - pad, r0 = Math.round(Y * ppu - half) - pad; const W2 = Math.round(2 * half) + 2 * pad;
   const R = rasterJudge(J, c0, r0, W2, W2, ppu);
-  const { finds: fs, S } = allFindsV2(R, T, c0, r0, 3);
+  const { finds: fs, S } = allFindsV2(R, T, c0, r0, 3, undefined, m);
   // flag maps at scan resolution: band sites by why, strays from the raster / the v1 analysis kept in v2
   const fl = new Uint8Array(W2 * W2);
   for (let k = 0; k < S.n; k++) if (S.flag[k]) fl[S.pix[k]] = S.why[k] <= 2 ? 1 : 2;

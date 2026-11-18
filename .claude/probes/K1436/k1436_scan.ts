@@ -33,6 +33,20 @@
 //   CORNER cos 0.87 (30 deg) within NSM 1 aa: the eye's cusps on muse_hash:5.53 (0.167 aa, clean in every evaluator
 //     that has no eye) flag without it; 0.96 loses two of the three def notches.
 //   CORE 0.75, PAST 0.5 aa: a band with a hole in it, ink past the inner edge.
+//   SEAM 0.08 (max RGB, 0..1): a label change with NO band flags as a dip only when the fills either side differ by
+//     more than this: g41_ring_tw64:19.78:20.37 (purple against cyan, no band; one of K1451's twelve) flags, the
+//     invisible same-colour seams (fat:2.425:1.472, 359 px of "vdip" in v2 s1) do not. NOBAND=1 flags every one.
+// AT THE SCAN'S 100 px/unit (aa ~1.1 px) the crop thresholds sit under a pixel, so the scan raises them (the spots
+// tool, at the crops' 5.6-8.3 px aa, keeps the defaults above):
+//   UPX 3 px: every aa-based radius (normal smoothing, corners, the median) is at least 3 px. Without it def flagged
+//     2484 band finds.
+//   DWPX 0.6 px: the width floor. Two loads at sub-pixel phases 0 and 0.37 px repeat 84% (def) and 94% (muse_hash) of
+//     their finds at 0.6 px with 4 px finds; 52% at 0.3 px with 2 px finds (k1436_agree.ts, out/noise/).
+//   MINPX 9: band finds under 9 px dropped (precision sheet 1: every sampled vdip under 9 px was a clean corner).
+//   WIDE 0: no vwide (sheet 1: 10 of 11 sampled vwide were clean band edges or corners; the notches vwide exists for
+//     are 0.14-0.32 aa = 0.15-0.35 px here, under the noise). The crops keep vwide (validation 2b needs it).
+// MEASURED PRECISION (by eye, 4x tiles, out/prec/sheet2_*, sheet3_*; 50 finds): 88% real; tie 16/16, plain 14/15,
+// ramp 14/19 (vdip:ramp 3 of 6 false: clean band edges by white). Run time: 12 scenes in parallel, ~65-85 s wall.
 import { writeFileSync } from "node:fs";
 import { makeJudge, modelOf, tablesOf, rasterJudge, allFindsV2, loadEval, P as PAR } from "./k1436_lib.ts";
 import { allFinds } from "../K1433/k1433_lib.ts";
@@ -47,7 +61,7 @@ if (process.env.K1436_MINPX === undefined) PAR.MINPX = 9;
 const ppu = +ppuS; const ev = process.env.K1436_EV ?? "src"; const ph = +(process.env.K1436_PH ?? 0);
 const G = ev === "src" ? (await import("../../../src/render/gpu_field/eval.ts")).GfEval : await loadEval(ev);
 if (ev === "u") G.MODE = "master";
-const T = tablesOf(nm); modelOf(nm);
+const T = tablesOf(nm); const M = modelOf(nm);
 let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
 for (let i = 0; i < T.vx.length; i++) { const x = T.vx[i], y = T.vy[i]; if (!(x === x) || !(y === y)) continue; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
 const pad = T.h * 2; const c0 = Math.floor((x0 - pad) * ppu) + ph, r0 = Math.floor((y0 - pad) * ppu) + ph;
@@ -55,7 +69,7 @@ const w = Math.ceil((x1 + pad) * ppu) - Math.floor((x0 - pad) * ppu), h = Math.c
 const J = makeJudge(new G(T));
 const t0 = Date.now(); const R = rasterJudge(J, c0, r0, w, h, ppu); const msR = Date.now() - t0;
 const t1 = Date.now(); const f1 = allFinds(R, T, c0, r0, 3); const ms1 = Date.now() - t1;
-const t2 = Date.now(); const { finds: fs, S } = allFindsV2(R, T, c0, r0, 3); const ms2 = Date.now() - t2;
+const t2 = Date.now(); const { finds: fs, S } = allFindsV2(R, T, c0, r0, 3, undefined, M); const ms2 = Date.now() - t2;
 const tally = (a: { kind: string; cls: string; px: number }[]): [Record<string, number>, Record<string, number>] => { const c: Record<string, number> = {}, p: Record<string, number> = {}; for (const f of a) { const k = `${f.kind}:${f.cls}`; c[k] = (c[k] ?? 0) + 1; p[k] = (p[k] ?? 0) + f.px; } return [c, p]; };
 const [cnt, px] = tally(fs); const [cnt1, px1] = tally(f1);
 let noise: Record<string, number> | undefined;

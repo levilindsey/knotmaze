@@ -1,0 +1,12 @@
+g41_ring_tw64:19.43:20.05 scan: dstray:tie:104 dstray:tie:104 vdip:tie:10
+g41_ring_tw64:19.78:20.37 scan: 
+muse_hash:16.17:18.39 scan: dstray:tie:3 vdip:tie:10
+muse_hash:16.43:4.77 scan: vdip:plain:28
+muse_hash:2.02:9.63 scan: 
+muse_hash:21.86:18.64 scan: dstray:tie:17 dstray:tie:4 vdip:tie:15
+muse_hash:22.38:10.76 scan: vdip:plain:34
+muse_hash:30.46:20.29 scan: dstray:tie:137 dstray:tie:161 vdip:tie:9 vdip:tie:18
+muse_hash:30.61:19.95 scan: vdip:tie:9
+muse_hash:31.56:7.41 scan: dstray:tie:51 dstray:tie:51 vdip:tie:36
+muse_hash:5.09:8.32 scan: vdip:plain:34
+ring:19.63:20.34 scan: dstray:tie:429

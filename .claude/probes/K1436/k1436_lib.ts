@@ -22,6 +22,7 @@
 // Finds: v1's finds() (connected flagged pixels, gaps of 2 bridged) with a length floor of MINLEN aa of edge.
 // Classes as v1 (plain, ramp, tie, thru) from the site's pixel. Thresholds and their measurement: k1436_scan.ts.
 import { analyze, finds, type Find, type Raster } from "../K1433/k1433_lib.ts";
+import { runAt, runColour, type RGB } from "../../../src/render/outline/paint.ts";
 export { makeJudge, rasterJudge, modelOf, tablesOf, loadEval, CLS, type Find, type Raster } from "../K1433/k1433_lib.ts";
 
 const env = (k: string, d: number): number => (process.env[k] !== undefined && process.env[k] !== "" ? +process.env[k]! : d);
@@ -39,7 +40,8 @@ export const P = {
   FIT: env("K1436_FIT", 2),         // the level's polynomial degree (1 line, 2 quadratic)
   UPX: env("K1436_UPX", 3),         // px: the least length unit U = max(aa, UPX) (radii in aa shrink below a pixel at 100 px/unit)
   WIDE: env("K1436_WIDE", 1),       // 0: no vwide finds (the scan: at 100 px/unit 10 of 11 sampled were clean band edges)
-  NOBAND: env("K1436_NOBAND", 0),   // 1: a label change with no band at all flags as a dip (v2 s1 did; 0 of 2 such finds sampled were visible)
+  NOBAND: env("K1436_NOBAND", 0),
+  SEAM: env("K1436_SEAM", 0.08),     // a label change with no band flags when the fills either side differ by more than this (max RGB, 0..1): a missing band between two colours is real, a seam inside one colour is invisible   // 1: a label change with no band at all flags as a dip (v2 s1 did; 0 of 2 such finds sampled were visible)
   MINPX: env("K1436_MINPX", 4),     // px: the least find length (2-3 px width finds do not repeat between two loads at 100 px/unit)
   DWPX: env("K1436_DWPX", 0),       // px: the least width residual that flags (the sampling noise at coarse px/unit)
 };
@@ -57,7 +59,14 @@ export function sameFn(R: Raster, T: any): (a: number, b: number) => boolean {
   };
 }
 
-export function bandSites(R: Raster, T: any): Sites {
+// the fill colour difference (max over RGB, 0..1) between two raster pixels, from the scene's run colours (paper white)
+export function colourDiff(R: Raster, m: any): (a: number, b: number) => number {
+  const ca: RGB = [0, 0, 0], cb: RGB = [0, 0, 0];
+  const at = (i: number, c: RGB): void => { c[0] = c[1] = c[2] = 1; if (i < 0 || i >= R.chain.length || R.chain[i] < 0) return; const k = runAt(m.sp, R.chain[i], R.s[i]); if (k >= 0) runColour(m.sp.runs[k], R.s[i], c); };
+  return (a, b) => { at(a, ca); at(b, cb); return Math.max(Math.abs(ca[0] - cb[0]), Math.abs(ca[1] - cb[1]), Math.abs(ca[2] - cb[2])); };
+}
+
+export function bandSites(R: Raster, T: any, colDiff?: (a: number, b: number) => number): Sites {
   const { w, h, ppu } = R; const same = sameFn(R, T);
   const aaP = T.aa * ppu, WP = T.W * ppu; const tMax = WP + 3 * aaP + WP / 2 + 1; const t0 = -2 * aaP - 1;
   const margin = Math.ceil(tMax + Math.max(P.SMOOTH, P.NSM * Math.max(aaP, P.UPX)) + 3);
@@ -110,7 +119,7 @@ export function bandSites(R: Raster, T: any): Sites {
     S.cut[k] = cut;
     // tOut: the last rise through 0.5 at or before t = aa; tIn: the next fall through 0.5
     let jo = -1; for (let j = 1; j < m; j++) { const t = t0 + j * P.STEP; if (t > aaP) break; if (prof[j - 1] < 0.5 && prof[j] >= 0.5) jo = j; }
-    if (jo < 0) { if (prof[0] < 0.5 && P.NOBAND) { S.wIn[k] = 0; S.core[k] = 0; } continue; } // no band at the edge (flags only with NOBAND: a label change with no band is mostly a junction's or a section's invisible seam) / ink on both sides // no band at the edge / ink on both sides
+    if (jo < 0) { if (prof[0] < 0.5 && (P.NOBAND || (colDiff && colDiff(Math.round(y0 + ny * 1.5) * w + Math.round(x0 + nx * 1.5), Math.round(y0 - ny * 1.5) * w + Math.round(x0 - nx * 1.5)) > P.SEAM))) { S.wIn[k] = 0; S.core[k] = 0; } continue; } // no band at the edge (flags only with NOBAND: a label change with no band is mostly a junction's or a section's invisible seam) / ink on both sides // no band at the edge / ink on both sides
     const tOut = t0 + jo * P.STEP - P.STEP * (prof[jo] - 0.5) / Math.max(1e-6, prof[jo] - prof[jo - 1]);
     let ji = -1; for (let j = jo + 1; j < m; j++) if (prof[j] < 0.5) { ji = j; break; }
     const tEnd = ji < 0 ? t0 + (m - 1) * P.STEP : t0 + ji * P.STEP - P.STEP * (0.5 - prof[ji]) / Math.max(1e-6, prof[ji - 1] - prof[ji]);
@@ -167,8 +176,8 @@ export function bandFinds(R: Raster, T: any, c0: number, r0: number, S: Sites): 
 // every v2 test: v1's depth and raster strays, plus the band profile
 // roi = [col0, row0, col1, row1] (raster px): flags outside are dropped first (the spots tool rasterizes a
 // padded frame for the rays but judges v1's 480 px frame, so a stray's centroid stays where v1 put it)
-export function allFindsV2(R: Raster, T: any, c0: number, r0: number, minPx = 2, roi?: number[]): { finds: Find[]; S: Sites } {
-  const F = analyze(R, T); const S = bandSites(R, T);
+export function allFindsV2(R: Raster, T: any, c0: number, r0: number, minPx = 2, roi?: number[], m?: any): { finds: Find[]; S: Sites } {
+  const F = analyze(R, T); const S = bandSites(R, T, m ? colourDiff(R, m) : undefined);
   let ds = R.dstray, rs = F.rstray;
   if (roi) {
     const clip = (a: Uint8Array): Uint8Array => { const b = new Uint8Array(a.length); for (let r = roi[1]; r < roi[3]; r++) for (let c = roi[0]; c < roi[2]; c++) b[r * R.w + c] = a[r * R.w + c]; return b; };

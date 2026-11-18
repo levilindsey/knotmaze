@@ -1,0 +1,5 @@
+1	muse_hash	20.357	21.002	rstray	local: rstray:ramp:6
+2	g41_user_tw42	18.161	9.239	rstray	local: rstray:ramp:8
+3	user_tw42.lightpaper	6.770	13.585	rstray	local: rstray:ramp:42
+4	g41_user_tw42	3.645	7.272	rstray	local: rstray:ramp:116
+5	muse_hash	24.885	28.645	rstray	local: rstray:ramp:3

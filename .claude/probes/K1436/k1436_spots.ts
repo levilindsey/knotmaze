@@ -27,7 +27,7 @@ for (const spec of list.split(",")) {
   const c0 = Math.round(X * ppu - P / 2) - pad, r0 = Math.round(Y * ppu - P / 2) - pad;
   let J = judges.get(nm); if (!J) { J = makeJudge(new G(T)); judges.set(nm, J); }
   const Rr = rasterJudge(J, c0, r0, W2, W2, ppu);
-  const { finds: fs0, S } = allFindsV2(Rr, T, c0, r0, 6, [pad, pad, pad + P, pad + P]);
+  const { finds: fs0, S } = allFindsV2(Rr, T, c0, r0, 6, [pad, pad, pad + P, pad + P], m);
   const fs = fs0.filter((f) => Math.hypot(f.x - X, f.y - Y) < R);
   const sum: Record<string, string> = {};
   for (const f of fs) { const k = `${f.kind}:${f.cls}`; sum[k] = (sum[k] ? sum[k] + "+" : "") + f.px; }
