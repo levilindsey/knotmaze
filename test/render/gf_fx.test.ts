@@ -69,6 +69,18 @@ describe("K1395 gf FX table", () => {
     expect(fxAt(V, 0, N, false, 2, 0)[2]).toBeLessThan(1.3);
     expect(fxAt(V, 0, N, false, 4, 0)[2]).toBe(9);
   });
+  it("bakes each sample's junction distance from the tables' corner arcs (1e9 without)", () => {
+    setU(4, 1.2, 1.2);
+    const jn = { nK: 1, kCa: new Int32Array([0]), kCb: new Int32Array([0]), kSa: new Float64Array([2]), kSb: new Float64Array([3]) };
+    const V = new GfFxTable().values(rSrc, undefined, jn);
+    for (let k = 0; k < N; k++) expect(fxAt(V, 0, N, false, k, 0)[6]).toBeCloseTo(Math.min(Math.abs(k - 2), Math.abs(k - 3)), 5);
+    const V0 = new GfFxTable().values(rSrc);
+    for (let k = 0; k < N; k++) expect(fxAt(V0, 0, N, false, k, 0)[6]).toBe(1e9);
+    // the shader windows the reveal interior by that distance (today's junction cut, uLkJ)
+    const f = lookForm(revealForm(gfFs(false, true)));
+    expect(f).toContain("lkHi = f0.w; if (uLkJ > 0.0) lkHi *= clamp((f1.z - uLkJ) / max(2.0 * uAA, 1e-5) + 0.5, 0.0, 1.0);");
+    expect(f).toContain("uniform float uLkJ;");
+  });
   it("bakes the rainbow progress (kFxColor) and the materialize alpha (dust)", () => {
     setU(1, 1.2, 1.2);
     let V = new GfFxTable().values(rSrc);

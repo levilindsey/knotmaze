@@ -34,6 +34,7 @@ import { knotUniformValues } from "../paint_model";
 import { GfDynTable, GfFxTable, GfGapTable, GfLookGate, GfLookTable, GfPaintTable, dynKey, lookFade, lookGap, lookKey, paintKey, rimKey, rimUniforms, type GfDynSource, type GfGapSource, type GfPaintSource, type GfRimSource } from "./gf_look";
 import { kArcU, kWrap } from "../paint_math";
 import { GfComposite, GfPass, GfTarget, type GfMap } from "./gf_pass";
+import { FILLET_REACH_PER_HALF } from "../ribbon/joinery";
 
 interface GfReply {
   hello?: boolean;
@@ -99,6 +100,7 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
   const lkPool: Float32Array[] = [];
   let lkGap = -1;
   let lkFadeV = -1;
+  let lkJReach = -1;
   // K1405: the baked gold paint (gf_look.ts GfPaintTable), snapshotted like the look positions
   let ptTab: GfPaintTable | null = null;
   let ptP: Float32Array | null = null;
@@ -574,7 +576,7 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
     const r = ctx.scene.renderer;
     if (!r || !fxTab || lkKey < 0 || !pass?.lookable || opts().look === false) return null;
     const src = r as unknown as GfPaintSource;
-    return fxTab.values({ kd: src.kd, kcv: src.kcv, chainSamples: src.chainSamples }, fxPool.pop());
+    return fxTab.values({ kd: src.kd, kcv: src.kcv, chainSamples: src.chainSamples }, fxPool.pop(), T);
   };
   const fxShow = (P: Float32Array | null): void => {
     if (!P) return;
@@ -900,6 +902,14 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
         const gap = lookGap(r);
         const fade = lookFade(r);
         if (gap !== lkGap || fade !== lkFadeV) { lkGap = gap; lkFadeV = fade; dirty = true; }
+        // K1431 (25B): the reveal interior's junction window reach (gf_look.ts lkHi over uLkJ):
+        // today's ribbons hand over to the fan at the junction-cut reach (paint_state.ts), but the
+        // corner arm arcs sit at the fan's root inside that reach, so the fill windows at 0.45 of it
+        const jfh = r.style.threadWidth / 2;
+        const jcr = (r as unknown as { cuspRadius: number }).cuspRadius;
+        const jL = jfh * FILLET_REACH_PER_HALF * jcr;
+        const jReach = jcr > 0.05 && jL > jfh * 0.97 * 0.3 ? jL * 0.45 : 0;
+        if (jReach !== lkJReach) { lkJReach = jReach; dirty = true; }
         // K1395 (24D): the look draws over the reveal form while the reveal runs, shaded by the
         // FX baked above (fxShow per revealing frame); gfLookDraws holds it off only for an A/B's
         // look: false. (K1404 held the look off here: its border interior was clear, so the ribbons
@@ -909,13 +919,14 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
         } else {
           const up = pass.lkPMs;
           if (rvDrawn) fxShow(fxSnap());
-          pass.setLook(lkTab, gap, lkP, lkPVer, ptP, ptVer, fade, dynP, dynVer, teleAtU, fxP, fxVer, rvDrawn, rimUniforms(rimSrc(r)), gwP, gwVer);
+          pass.setLook(lkTab, gap, lkP, lkPVer, ptP, ptVer, fade, dynP, dynVer, teleAtU, fxP, fxVer, rvDrawn, rimUniforms(rimSrc(r)), gwP, gwVer, jReach);
           if (pass.lkPMs !== up) stats.lkUpMs.push(pass.lkPMs);
         }
       } else if (lkGap >= 0) {
         pass.setLook(null);
         lkGap = -1;
         lkFadeV = -1;
+        lkJReach = -1;
         ptKey = -1;
         dynKeyV = -1;
         rimKeyV = -1;

@@ -140,7 +140,7 @@ export class GfTarget {
  * means of 10 runs over three benches, p14f and p14h); level on the desktop. 0 px on its 12 scenes on both.
  */
 export const GF_TIERS: GfTier[] = [{ p: 3, k: 2, ramps: true, s: 3, lab: true, grp: true, ks: true, kz: "frame", fs: "c", kd: true }];
-const UNIFORMS = ["uD", "uOCh", "uOV", "uOPin", "uOArm", "uOK", "uOChk", "uOCell", "uOChL", "uOKL", "uOKC", "uOKB", "uOKA", "uOKP", "uH", "uW", "uAA", "uSigma", "uZt", "uWin", "uRc", "uGrid", "uGDim", "uMap", "uP0", "uP1", "uP2", "uP3", "uRv", "uORvK", "uLk", "uLkP", "uLkG", "uLkF", "uPt", "uGold", "uDyn", "uKPulseU", "uKReachU", "uPulseCol", "uTeleU", "uTeleAtU", "uTeleScale", "uPulseW", "uFx", "uFxStyle", "uFxPh", "uFxLive", "uEx", "uOExK", "uExLive", "uExLook", "uExTw", "uExOn", "uExBr", "uRimA", "uRimB", "uRimC", "uHov", "uGw", "uGwLive"];
+const UNIFORMS = ["uD", "uOCh", "uOV", "uOPin", "uOArm", "uOK", "uOChk", "uOCell", "uOChL", "uOKL", "uOKC", "uOKB", "uOKA", "uOKP", "uH", "uW", "uAA", "uSigma", "uZt", "uWin", "uRc", "uGrid", "uGDim", "uMap", "uP0", "uP1", "uP2", "uP3", "uRv", "uORvK", "uLk", "uLkP", "uLkG", "uLkF", "uLkJ", "uPt", "uGold", "uDyn", "uKPulseU", "uKReachU", "uPulseCol", "uTeleU", "uTeleAtU", "uTeleScale", "uPulseW", "uFx", "uFxStyle", "uFxPh", "uFxLive", "uEx", "uOExK", "uExLive", "uExLook", "uExTw", "uExOn", "uExBr", "uRimA", "uRimB", "uRimC", "uHov", "uGw", "uGwLive"];
 /** K1362 s12: a program drawn only in frames where some cell lists a corner ("corners") or none does ("none"). */
 type GfWhen = "corners" | "none";
 interface GfProg { prog: WebGLProgram; u: Map<string, WebGLUniformLocation | null>; tier: GfTier | null; split?: 1 | 2; when?: GfWhen }
@@ -192,7 +192,7 @@ export class GfPass {
   private lkTex: WebGLTexture | null = null;
   private lkRows = 0;
   private lkVer = -1;
-  private lk: { gap: number; fade: number } | null = null;
+  private lk: { gap: number; fade: number; jReach: number } | null = null;
   // K1389 s2: the sample positions (R32F, texture unit 7)
   private lkPTex: WebGLTexture | null = null;
   private lkPRows = 0;
@@ -358,7 +358,7 @@ export class GfPass {
    * colour table and these sample positions (s2: gf_look.ts positions, pVer bumped with each new array) until the
    * next call; null draws the original programs. Each uploads only when it changed.
    */
-  setLook(L: GfLookTable | null, gap = 0, P: Float32Array | null = null, pVer = 0, Pt: Float32Array | null = null, ptVer = 0, fade = 0, Dyn: Float32Array | null = null, dynVer = 0, teleAtU = 0, Fx: Float32Array | null = null, fxVer = 0, fxLive = false, rim: GfRimUniforms | null = null, Gw: Float32Array | null = null, gwVer = 0): void {
+  setLook(L: GfLookTable | null, gap = 0, P: Float32Array | null = null, pVer = 0, Pt: Float32Array | null = null, ptVer = 0, fade = 0, Dyn: Float32Array | null = null, dynVer = 0, teleAtU = 0, Fx: Float32Array | null = null, fxVer = 0, fxLive = false, rim: GfRimUniforms | null = null, Gw: Float32Array | null = null, gwVer = 0, jReach = 0): void {
     if (!L || !P || !this.lplan) { this.lk = null; this.fxLive = false; this.gwLive = false; return; }
     this.fxLive = fxLive;
     const gl = this.gl;
@@ -508,7 +508,7 @@ export class GfPass {
       this.gwVer = gwVer;
     }
     this.rim = rim;
-    this.lk = { gap, fade };
+    this.lk = { gap, fade, jReach };
   }
 
   upload(T: GfTables): void {
@@ -639,7 +639,7 @@ export class GfPass {
       gl.uniform1i(u("uD"), 0);
       if (g.split === 2) for (let i = 0; i < 4; i++) gl.uniform1i(u(`uP${i}`), 1 + i);
       if (rv) { gl.uniform1i(u("uRv"), 5); gl.uniform1i(u("uORvK"), rv.oK); }
-      if (lk) { gl.uniform1i(u("uLk"), 6); gl.uniform1i(u("uLkP"), 7); gl.uniform1f(u("uLkG"), lk.gap); gl.uniform1f(u("uLkF"), lk.fade); gl.uniform1i(u("uPt"), 8); const G = knotUniformValues().uKGold; gl.uniform3f(u("uGold"), G ? G[0] : 1, G ? G[1] : 0.8235, G ? G[2] : 0.2902); gl.uniform1i(u("uDyn"), 9); const U = knotUniformValues(); const KP = U.uKPulse; gl.uniform4f(u("uKPulseU"), KP ? KP[0] : 0, KP ? KP[1] : 0, KP ? KP[2] : 2.5, KP ? KP[3] : 1); const KR = U.uKReach; const KH = U.uKHead; gl.uniform4f(u("uKReachU"), KR ? KR[0] : 1e6, KR ? KR[1] : 1, U.uKPaint ? U.uKPaint[3] : 0.5, KH ? KH[0] : 0); const PC = U.uKHlPulse; gl.uniform3f(u("uPulseCol"), PC ? PC[0] : 1, PC ? PC[1] : 1, PC ? PC[2] : 1); const TU = U.uKTele; gl.uniform4f(u("uTeleU"), TU ? TU[0] : 0, TU ? TU[1] : 0, TU ? TU[2] : 0, TU ? TU[3] : 0); gl.uniform1f(u("uTeleAtU"), this.teleAtU); const HV = U.uKHlHover; gl.uniform1f(u("uTeleScale"), HV ? HV[3] : 1); const PW = U.uKPath; gl.uniform1f(u("uPulseW"), PW ? PW[2] : 1); gl.uniform1i(u("uFx"), 10); gl.uniform1f(u("uFxStyle"), U.uKFx ? U.uKFx[0] : 0); const FP = U.uKFx2; gl.uniform4f(u("uFxPh"), FP ? FP[0] : 0, FP ? FP[1] : 0, FP ? FP[2] : 0, FP ? FP[3] : 0); gl.uniform1f(u("uFxLive"), this.fxLive ? 1 : 0); const EX = this.ex; gl.uniform1i(u("uEx"), 11); gl.uniform1i(u("uOExK"), EX ? EX.oK : 0); gl.uniform1f(u("uExLive"), EX ? 1 : 0); gl.uniform1i(u("uExLook"), EX ? EX.look : 0); gl.uniform1f(u("uExTw"), EX ? EX.tw : 0); gl.uniform1f(u("uExOn"), EX ? EX.on : 0); gl.uniform1f(u("uExBr"), EX ? EX.breath : 1); const RM = this.rim; gl.uniform4f(u("uRimA"), RM ? RM.a[0] : -1, RM ? RM.a[1] : 0, RM ? RM.a[2] : 0, RM ? RM.a[3] : 0); gl.uniform4f(u("uRimB"), RM ? RM.b[0] : 0, RM ? RM.b[1] : 0, RM ? RM.b[2] : 1, RM ? RM.b[3] : 0); gl.uniform4f(u("uRimC"), RM ? RM.c[0] : 1, RM ? RM.c[1] : 0, RM ? RM.c[2] : 1, RM ? RM.c[3] : 0); gl.uniform3f(u("uHov"), RM ? RM.hov[0] : 1, RM ? RM.hov[1] : 1, RM ? RM.hov[2] : 1); gl.uniform1i(u("uGw"), 12); gl.uniform1f(u("uGwLive"), this.gwLive ? 1 : 0); }
+      if (lk) { gl.uniform1i(u("uLk"), 6); gl.uniform1i(u("uLkP"), 7); gl.uniform1f(u("uLkG"), lk.gap); gl.uniform1f(u("uLkF"), lk.fade); gl.uniform1f(u("uLkJ"), lk.jReach); gl.uniform1i(u("uPt"), 8); const G = knotUniformValues().uKGold; gl.uniform3f(u("uGold"), G ? G[0] : 1, G ? G[1] : 0.8235, G ? G[2] : 0.2902); gl.uniform1i(u("uDyn"), 9); const U = knotUniformValues(); const KP = U.uKPulse; gl.uniform4f(u("uKPulseU"), KP ? KP[0] : 0, KP ? KP[1] : 0, KP ? KP[2] : 2.5, KP ? KP[3] : 1); const KR = U.uKReach; const KH = U.uKHead; gl.uniform4f(u("uKReachU"), KR ? KR[0] : 1e6, KR ? KR[1] : 1, U.uKPaint ? U.uKPaint[3] : 0.5, KH ? KH[0] : 0); const PC = U.uKHlPulse; gl.uniform3f(u("uPulseCol"), PC ? PC[0] : 1, PC ? PC[1] : 1, PC ? PC[2] : 1); const TU = U.uKTele; gl.uniform4f(u("uTeleU"), TU ? TU[0] : 0, TU ? TU[1] : 0, TU ? TU[2] : 0, TU ? TU[3] : 0); gl.uniform1f(u("uTeleAtU"), this.teleAtU); const HV = U.uKHlHover; gl.uniform1f(u("uTeleScale"), HV ? HV[3] : 1); const PW = U.uKPath; gl.uniform1f(u("uPulseW"), PW ? PW[2] : 1); gl.uniform1i(u("uFx"), 10); gl.uniform1f(u("uFxStyle"), U.uKFx ? U.uKFx[0] : 0); const FP = U.uKFx2; gl.uniform4f(u("uFxPh"), FP ? FP[0] : 0, FP ? FP[1] : 0, FP ? FP[2] : 0, FP ? FP[3] : 0); gl.uniform1f(u("uFxLive"), this.fxLive ? 1 : 0); const EX = this.ex; gl.uniform1i(u("uEx"), 11); gl.uniform1i(u("uOExK"), EX ? EX.oK : 0); gl.uniform1f(u("uExLive"), EX ? 1 : 0); gl.uniform1i(u("uExLook"), EX ? EX.look : 0); gl.uniform1f(u("uExTw"), EX ? EX.tw : 0); gl.uniform1f(u("uExOn"), EX ? EX.on : 0); gl.uniform1f(u("uExBr"), EX ? EX.breath : 1); const RM = this.rim; gl.uniform4f(u("uRimA"), RM ? RM.a[0] : -1, RM ? RM.a[1] : 0, RM ? RM.a[2] : 0, RM ? RM.a[3] : 0); gl.uniform4f(u("uRimB"), RM ? RM.b[0] : 0, RM ? RM.b[1] : 0, RM ? RM.b[2] : 1, RM ? RM.b[3] : 0); gl.uniform4f(u("uRimC"), RM ? RM.c[0] : 1, RM ? RM.c[1] : 0, RM ? RM.c[2] : 1, RM ? RM.c[3] : 0); gl.uniform3f(u("uHov"), RM ? RM.hov[0] : 1, RM ? RM.hov[1] : 1, RM ? RM.hov[2] : 1); gl.uniform1i(u("uGw"), 12); gl.uniform1f(u("uGwLive"), this.gwLive ? 1 : 0); }
       const o = P.o;
       gl.uniform1i(u("uOCh"), o.ch); gl.uniform1i(u("uOV"), o.v); gl.uniform1i(u("uOPin"), o.pin); gl.uniform1i(u("uOArm"), o.arm);
       gl.uniform1i(u("uOK"), o.k); gl.uniform1i(u("uOChk"), o.chk); gl.uniform1i(u("uOCell"), o.cell); gl.uniform1i(u("uOChL"), o.chl); gl.uniform1i(u("uOKL"), o.kl);
