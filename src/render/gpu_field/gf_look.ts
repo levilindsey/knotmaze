@@ -2245,11 +2245,6 @@ void main() {
   // is the background between its outlines). The border alpha strengthens form B's centre-sampled band
   // to today's area-averaged stroke (the pass target has no MSAA) and darkens S toward today's dark edge colour, so the faint continuous outline reads at today's darkness; fill and both keep the band and S as they are.
   if (uLook == 0) o = vec4(C * cov, cov);
-  // K1482: the border alpha hard-thresholds a centre-sampled band, so a band cut thinner than 2 device px (a
-  // cut taper's tip, a sub-pixel piece left in a crossing gap, an AA remnant where two strokes meet at a
-  // shallow angle) comes out as hard 1-px dots, ticks and dashes. A 2x2 grey opening of the alpha (the max,
-  // over the four 2x2 blocks holding the pixel, of each block's min) drops exactly those and leaves every
-  // stroke 2 px or wider, its AA edge and the gaps between strokes as they are (an opening never fills).
-  else if (uLook == 1) { vec3 Sb = mix(S, vec3(0.055, 0.07, 0.10), 0.85); ivec2 csz = textureSize(uC, 0); float an[9]; for (int dy = -1; dy <= 1; dy++) for (int dx = -1; dx <= 1; dx++) { ivec2 rq = clamp(q + ivec2(dx, dy), ivec2(0), csz - 1); an[(dy + 1) * 3 + dx + 1] = clamp((texelFetch(uC, rq, 0).x - 0.36) * 3.5, 0.0, 1.0); } float a = max(max(min(min(an[0], an[1]), min(an[3], an[4])), min(min(an[1], an[2]), min(an[4], an[5]))), max(min(min(an[3], an[4]), min(an[6], an[7])), min(min(an[4], an[5]), min(an[7], an[8])))); if (uRvFx > 0.5) { float ia = clamp(c.z, 0.0, 1.0) * cov * (1.0 - a); o = vec4(C * ia + Sb * a * (1.0 - ia), ia + a * (1.0 - ia)); } else { float ia = clamp(hh.a, 0.0, 1.0) * cov * (1.0 - clamp(c.w, 0.0, 1.0)); o = vec4(hh.rgb * ia + Sb * a * (1.0 - ia), ia + a * (1.0 - ia)); } }
+  else if (uLook == 1) { vec3 Sb = mix(S, vec3(0.055, 0.07, 0.10), 0.85); float a = clamp((ink - 0.36) * 3.5, 0.0, 1.0); if (uRvFx > 0.5) { float ia = clamp(c.z, 0.0, 1.0) * cov * (1.0 - a); o = vec4(C * ia + Sb * a * (1.0 - ia), ia + a * (1.0 - ia)); } else { float ia = clamp(hh.a, 0.0, 1.0) * cov * (1.0 - clamp(c.w, 0.0, 1.0)); o = vec4(hh.rgb * ia + Sb * a * (1.0 - ia), ia + a * (1.0 - ia)); } }
   else { float a = ink + (1.0 - ink) * cov; o = vec4(S * (0.9 * ink) + C * (a - 0.9 * ink), a); }
 }`;
