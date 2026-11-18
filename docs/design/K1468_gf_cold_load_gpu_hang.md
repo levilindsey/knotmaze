@@ -82,3 +82,47 @@ writes one target, or whose first draw is skipped, and `gputhreads.ps1` beside i
 whichever comes first. A compaction is not a stop: re-read this brief and `git log`. On stopping: commit WIP,
 append `### Handoff K1468` here, commit, and report: what holds, the numbers, a `Ledger items` list and
 K1468's handle fields.
+
+### Handoff K1468
+
+Stopped 2026-11-17 18:50 (2 h cap 19:05). Branch `worktree-agent-afd07fccfe473c7f9`, rebased on origin/master
+aad94eb7; `npm test` green after the rebase (253 files, 3160 tests). Evidence: `.claude/probes/K1468/`
+(`runs/`, `ab/*.txt`, `rest.mjs`, `ab.mjs`, `diff.py`, `cold.ps1`; pngs untracked, about 50 MB).
+
+- Cause, proved: ANGLE D3D11 links a pixel shader for the first output alone; gf's three-output programs compile
+  their real variant at the first draw on the GPU main thread. Master pins it at 9.7 s / 10 s (`runs/master1`);
+  a one-attachment probe build (ef7b9283, reverted) read 0.5-1.1 s / 10 s and drew 2100 composites.
+- Fix (9ef3c076): every app program writes one `uvec4 oP` into one RGBA32UI target (o0/o1/o2 as RGBA8 words;
+  write = fp16 truncation then round, 0 bad of 696613 values against AMD's RGBA8 export, `exact.mjs`; read =
+  a const k/255 table, exact). Guard (faff6d70): a second context loss while gf compiles, or in its first 10 s of
+  drawing, turns gf off for the tab's session (sessionStorage `knotmaze.gfLosses`) with one console warning.
+- Done 1 HOLDS: fresh profile, watchdog on, 5 loads per link (`runs/fixA1b`, `fixA2-5`, `fixB1-5`): 0 dumps,
+  0 losses after 1 s, GPU main max 1.2-1.4 s / 10 s, first composite A 83.6 / 95.7 / 100.4 / 97.7 / 116.7 s,
+  B 178.1 / 127.3 / 131.9 / 144.3 / 136.4 s. fixA1 (120 s window) ended before its first composite (slow
+  compile, GPU main 1.4) and was rerun as fixA1b with 200 s. Master fails: `masterB1` 5.8 s / 10 s, stuck at 2
+  composites; `master1` 9.7 s / 10 s, stuck at 3.
+- Done 2 HOLDS: largest frame gap from load to the first composite 534-750 ms on every fix run.
+- Done 3 NOT SHOWN: `ab.mjs` (K1460's freeze, `--disable-gpu-watchdog`) is not repeatable on one build. Master
+  against master at the same physics hash differs 0 px (B 0.14 fill, B 1.2 border) up to 14693 / 24420 /
+  67669 px (A 0.14 border, B 0.14 border, B 1.2 fill), on thread edges; the hash itself flips between two
+  values per link from load to load (A fff8c9e5 / 10104c64, B f9d72040 / 49c20566) whatever fl and tlk are.
+  Fix against master at a matching hash: A 0.14 border and B 0.14 border 751 px each, all in the panel
+  header's build SHA (x 3052-3139, y 221-234), 0 px in the maze; the other matched pairs (B 1.2 fill: 65266 px
+  vs master, 7882 vs master2) sit inside the probe's own master-vs-master spread. Next: find what the freeze
+  leaves unpinned (two physics hashes per link; thread-edge drift at one hash), then rerun the 8 pairs until
+  each has a 0 px control.
+- Done 4 HOLDS: `hold.mjs` 60/60 on both links on the fix build (A edges 7987-9238, B 103024-104376), `npm
+  test` green. Its first composites were still 85.8 s (A) and 61.6 s (B) on a profile warmed only by ab.mjs's
+  links (other params): not a warm start.
+- Done 5 PARTLY: cold first composite, fix A 84-117 s and B 127-178 s against master's 51-66 s (a first
+  composite that then hangs). Master's link compiles with o1/o2 dead; the fix's packed program is one
+  D3DCompile of 70-90 s on one pool thread while today's renderer keeps drawing. Rest frame time (perf lock;
+  the 26C Muse lock was 35 min old and taken as stale; REDRAW=1, SEC=10, 2 rounds, warm per-build profiles,
+  links with `&prp=off&phw=0&fw=0&bg=none&snd=none&fl=0.14&tlk=fill`; `runs/rest_*.json`): B fix 16.7 / 17.4
+  ms vs master 16.7 / 17.3 (within 1%); A (gfh=1) fix 17.3 / 19.0 vs master 9.6 / 15.8, intervals 24-28 vs
+  17.5-18 ms, composites 359-410 vs 562-567: NOT within 5%, cause not isolated (the packed write, the U8
+  table read in the composite, or master's A drawing a lighter program set; the noisy master pair needs more
+  rounds first).
+
+Next: Done 3's repeatable freeze and Done 5's A frame-time gap (more ABBA rounds, then a program-by-program
+attribution); the cold compile length (FXC flags or a smaller packed program).

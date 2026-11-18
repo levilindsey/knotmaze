@@ -1,0 +1,229 @@
+{
+ "when": "2026-11-18T02:45:31.510Z",
+ "SEC": 10,
+ "REDRAW": true,
+ "summary": {
+  "http://localhost:5663/?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&rp=gf&gfh=1&prp=off&phw=0&fw=0&bg=none&snd=none&fl=0.14&tlk=fill": {
+   "runs": 2,
+   "frameP50": [
+    17.3,
+    19
+   ],
+   "frameP50med": 19,
+   "intervalP50": [
+    24.4,
+    27.9
+   ]
+  },
+  "http://localhost:5663/?3&xp=off&am=instant&rp=gf&prp=off&phw=0&fw=0&bg=none&snd=none&fl=0.14&tlk=fill": {
+   "runs": 2,
+   "frameP50": [
+    16.7,
+    17.4
+   ],
+   "frameP50med": 17.4,
+   "intervalP50": [
+    25.8,
+    26.4
+   ]
+  }
+ },
+ "runs": [
+  {
+   "round": 0,
+   "url": "http://localhost:5663/?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&rp=gf&gfh=1&prp=off&phw=0&fw=0&bg=none&snd=none&fl=0.14&tlk=fill",
+   "restMs": 24835,
+   "composites": 410,
+   "fallback": "",
+   "frameMs": {
+    "n": 409,
+    "mean": 17.344,
+    "p50": 17.3,
+    "p90": 18.2,
+    "p95": 18.6,
+    "max": 57.4
+   },
+   "submitMs": {
+    "n": 409,
+    "mean": 0.187,
+    "p50": 0.2,
+    "p90": 0.3,
+    "p95": 0.3,
+    "max": 0.5
+   },
+   "finishMs": {
+    "n": 409,
+    "mean": 17.157,
+    "p50": 17.1,
+    "p90": 17.9,
+    "p95": 18.4,
+    "max": 57.2
+   },
+   "intervalMs": {
+    "n": 407,
+    "mean": 24.44,
+    "p50": 24.4,
+    "p90": 25.5,
+    "p95": 26,
+    "max": 67
+   },
+   "framesDrawn": 409,
+   "rafFrames": 409,
+   "drawsPerFrame": 9,
+   "updateMsPerCall": 4.847,
+   "updateCalls": 410,
+   "perf": {
+    "state": "live",
+    "asleep": true
+   },
+   "contextLost": 0
+  },
+  {
+   "round": 0,
+   "url": "http://localhost:5663/?3&xp=off&am=instant&rp=gf&prp=off&phw=0&fw=0&bg=none&snd=none&fl=0.14&tlk=fill",
+   "restMs": 1,
+   "composites": 391,
+   "fallback": "",
+   "frameMs": {
+    "n": 390,
+    "mean": 16.554,
+    "p50": 16.7,
+    "p90": 17.4,
+    "p95": 17.5,
+    "max": 21.6
+   },
+   "submitMs": {
+    "n": 390,
+    "mean": 0.243,
+    "p50": 0.2,
+    "p90": 0.3,
+    "p95": 0.3,
+    "max": 0.6
+   },
+   "finishMs": {
+    "n": 390,
+    "mean": 16.311,
+    "p50": 16.5,
+    "p90": 17.1,
+    "p95": 17.2,
+    "max": 21.4
+   },
+   "intervalMs": {
+    "n": 388,
+    "mean": 25.642,
+    "p50": 25.8,
+    "p90": 27.8,
+    "p95": 28.1,
+    "max": 33.5
+   },
+   "framesDrawn": 390,
+   "rafFrames": 390,
+   "drawsPerFrame": 9,
+   "updateMsPerCall": 6.32,
+   "updateCalls": 391,
+   "perf": {
+    "state": "live",
+    "asleep": true
+   },
+   "contextLost": 0
+  },
+  {
+   "round": 1,
+   "url": "http://localhost:5663/?3&xp=off&am=instant&rp=gf&prp=off&phw=0&fw=0&bg=none&snd=none&fl=0.14&tlk=fill",
+   "restMs": 25119,
+   "composites": 380,
+   "fallback": "",
+   "frameMs": {
+    "n": 379,
+    "mean": 17.262,
+    "p50": 17.4,
+    "p90": 17.9,
+    "p95": 18,
+    "max": 21.1
+   },
+   "submitMs": {
+    "n": 379,
+    "mean": 0.22,
+    "p50": 0.2,
+    "p90": 0.3,
+    "p95": 0.3,
+    "max": 0.6
+   },
+   "finishMs": {
+    "n": 379,
+    "mean": 17.042,
+    "p50": 17.1,
+    "p90": 17.6,
+    "p95": 17.7,
+    "max": 21
+   },
+   "intervalMs": {
+    "n": 377,
+    "mean": 26.407,
+    "p50": 26.4,
+    "p90": 28.4,
+    "p95": 28.8,
+    "max": 36.1
+   },
+   "framesDrawn": 379,
+   "rafFrames": 379,
+   "drawsPerFrame": 9,
+   "updateMsPerCall": 6.357,
+   "updateCalls": 380,
+   "perf": {
+    "state": "live",
+    "asleep": true
+   },
+   "contextLost": 0
+  },
+  {
+   "round": 1,
+   "url": "http://localhost:5663/?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&rp=gf&gfh=1&prp=off&phw=0&fw=0&bg=none&snd=none&fl=0.14&tlk=fill",
+   "restMs": 32654,
+   "composites": 359,
+   "fallback": "",
+   "frameMs": {
+    "n": 358,
+    "mean": 18.807,
+    "p50": 19,
+    "p90": 20,
+    "p95": 20.1,
+    "max": 29
+   },
+   "submitMs": {
+    "n": 358,
+    "mean": 0.247,
+    "p50": 0.2,
+    "p90": 0.3,
+    "p95": 0.3,
+    "max": 0.7
+   },
+   "finishMs": {
+    "n": 358,
+    "mean": 18.56,
+    "p50": 18.7,
+    "p90": 19.7,
+    "p95": 19.8,
+    "max": 28.8
+   },
+   "intervalMs": {
+    "n": 356,
+    "mean": 27.905,
+    "p50": 27.9,
+    "p90": 30.3,
+    "p95": 30.6,
+    "max": 40.6
+   },
+   "framesDrawn": 358,
+   "rafFrames": 358,
+   "drawsPerFrame": 9,
+   "updateMsPerCall": 6.355,
+   "updateCalls": 359,
+   "perf": {
+    "state": "live",
+    "asleep": true
+   },
+   "contextLost": 0
+  }
+ ]
+}
