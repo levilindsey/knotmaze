@@ -83,3 +83,75 @@ confirmed on the tiles.
 comes first. A compaction is not a stop: re-read this brief and `git log`. On stopping: commit WIP, append
 `### Handoff K1492` here, commit, and report: the table, the sheet's path, which commits are confirmed on
 screen, a `Ledger items` list and K1492's handle fields.
+
+### Handoff K1492
+
+Agent aebdeea6fdd0e38c8, 2026-11-18 04:34-05:50, branch `worktree-agent-aebdeea6fdd0e38c8`, rebased on
+origin/master dedff12b. Commits: 8877d612 (the fix: `gf_look.ts` + `test/render/gf_look.test.ts`), acaacf1b
+(sheet, ramp tables, probes), 6b3d450c (sweep tiles). Not pushed.
+
+**Cause.** The border look's composite thresholds the outline ink AFTER the gap has scaled it
+(`a = clamp((ink - 0.36) * 3.5)` on `ink *= 1 - lkg`). The outline therefore moves only while the cut ink sits
+in [0.36, 0.65]: about a fifth to a half of the gap's ramp. At fl 0.14 that is no ramp at all.
+
+**Fix (8877d612, `gf_look.ts` only).** The label site writes the gap's keep factor into the label flag lane,
+`lkCo.a = max(1 - lkg, 1/255)` for labelled pixels (it was 1). The border composite divides it back out before
+its threshold and multiplies after: `m = k.a > 0 ? k.a : 1; a = clamp((min(ink / m, 1) - 0.36) * 3.5) * m`.
+The outline is then thresholded on its uncut ink and faded by the gap's own ramp, exactly like the fill. The
+fill and every other reader of `k.a` test only `k.a > 0`, so they are unchanged. `gf_pass.ts` is untouched.
+
+**Ramp table** (`prof.py`, link A, one physics hash, 41 clean crossing sides; median 10-90% ramp along the
+under thread in device px; the fade set live as a slider drag does):
+
+| fl | fill | master outline | tip outline |
+|---|---|---|---|
+| 0 | 0 | 0 | 0 |
+| 0.14 | 2.6 | 0.0 | 1.5 |
+| 0.5 | 6.4 | 3.6 | 5.5 |
+| 1.2 | 11.5 | 6.4 | 10.2 |
+
+Link B (`?3&xp=off&am=instant&rp=gf&tlk=border`, tip, 36 sides): fill 0 / 3.6 / 20.5, outline 0 / 3.8 / 21.8
+at fl 0 / 0.14 / 1.2. Link A without gfh=1 (tip): fill 0 / 2.6 / 11.7, outline 0 / 1.5 / 10.2. Per site:
+`out/m_prof.json`, `out/t_prof.json`.
+
+**Sheet.** `.claude/probes/K1492/out/sheet_fade.png`: six crossing sides at 4x, master fl 0 | 0.14 | 1.2, then
+tip at the same three. Looked at: master's outline ends are blunt at 0.14 and short at 1.2; the tip's fade
+softly at 0.14 and over a long smooth ramp at 1.2, with no stairs, bands, ticks or dots; tip fl 0 is the same
+crisp cut as master. Link B's tiles (not committed) look the same way.
+
+**Checks.**
+- Fill look, master against tip, same hash: 0 px differ at fl 0, 0.14, 0.5 and 1.2.
+- Border look at fl 0: 12,156 px differ by at most 13 levels, all within about 1 world of a crossing (median
+  0.56): the cut's own anti-aliasing, now scaled rather than thresholded. The tiles read the same as master's.
+- Sweep at fl 0.14 (link A, same-hash frames, K1482's 327 sites; `sweep_diff.py`, `out/sweep_fl0.14.txt`):
+  87 sites changed (36 junctions, 51 tails), 20,652 px by more than 2 levels, max 14. Every changed site is
+  tiled master | tip | diff in `out/sweep_tiles_00..02.png` (K1482's `tiles.py`) and I looked at all of them:
+  the changes are under-thread outline ends at crossings. Only 56 changed pixels lie more than 1.3 world from
+  an on-screen crossing; not examined one by one.
+- `dragcheck_b.mjs` (K1458's dragcheck with TLK=border) on the tip: PASS at stops 0.5, 1.2, 0.14 in one run
+  and 0, 0.14 in a re-run from 0.5 (the first run's stop 0 never got a fresh load in the dragged state, so it
+  was not compared); 0 px over 24 levels at every stop.
+- `hold.mjs` (K1450), link A, warm, EDGE 16: 60/60.
+- `npm test` green after the rebase (254 files, 3171 tests).
+- On screen: the fix was built and shot as e222acf5 (the same patch before the rebase). The rebase brought
+  26F's composite blend change (`gf_pass.ts`, K1474); that combination has not been on screen.
+
+**Open.**
+- x75+ and x103+ still read short outline ramps at fl 1.2 (3.8/6.8 and 2.1/5.1 px against the fill's 11):
+  maybe the probe (the outline ring there runs beside the over thread), not looked at on tiles.
+- Some sides' outline ramps now run longer than the fill's (x104+ 28/21 against 18, x63+ 21/17 against 15).
+- The fill's own ramp on link A at fl 1.2 is 11.5 px, far short of the nominal ~51 device px (link B: 20.5).
+  Inferred, untested: K1458's clearance or the gap's window caps it. That is the fill's ramp, outside this
+  brief; the outline now follows whatever it is.
+- The four dives were not measured separately.
+
+**Ledger items.**
+- K1492 · border outline fade: fixed on the branch (8877d612); merge it, then a look on screen with 26F's blend
+  change.
+- New: x75/x103 outline ramps short at fl 1.2 (probe or real; `out/t_prof.json`).
+- New: the fill's crossing ramp on link A at fl 1.2 is ~11.5 px against ~51 nominal: find what caps it.
+
+**Handle.** branch `worktree-agent-aebdeea6fdd0e38c8` (worktree
+`.claude/worktrees/agent-aebdeea6fdd0e38c8`); last commit: this handoff's commit; evidence
+`.claude/probes/K1492/` (`out/sheet_fade.png`, `out/*_prof.json`, `out/sweep_*`); next: merge to master,
+then check one border-look frame on screen with K1474's blend.

@@ -1,0 +1,1 @@
+[["float a = clamp((ink - 0.36) * 3.5, 0.0, 1.0);", "float a = ink;"], ["ink *= 1.0 - lkg; cov *= 1.0 - lkg;", "ink = 1.0 - lkg; cov = ink;"], ["ink *= f; cov *= f;", "ink = f; cov = f;"]]
