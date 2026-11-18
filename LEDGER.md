@@ -720,10 +720,15 @@ Next free ID: K1492.
   Nearly all of it is the corner code of layers() (143 s whole, 18 s with layers() stubbed), so a smaller first
   program does not help; the worker also starts 8-10 s after the load and links one program at a time
   (Handoff K1456 s2 in docs/design/K1456_s2_first_visit.md)
-  - owner: agent `aca0749f26e28002e` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-18 01:50, 2 h cap ~03:50)
-  - branch: `worktree-agent-aca0749f26e28002e`, worktree `.claude/worktrees/agent-aca0749f26e28002e`; last commit: `6d127903`
-  - evidence: .claude/probes/K1456/s2/ (table.mjs, ctime.mjs, variants.mjs, loopflags.mjs, out/), .claude/probes/K1456/s3/
-  - next: stage 3's report (cap about 03:55 on 2026-11-18): the cold wait settled (0fc195b8 against 3586c33b), the compile started in the loading phase, compiles run wider; merge, check the live link's first visit. Muse run 26J (queued after 26I) cuts the look program's compile time, the corner code of layers()
+  Stage 3 (probes and handoff on master, src held on the branch): cold, interleaved, under load, stage 2's merge
+  made no measurable change (0fc195b8 median 80.9 s, its parent 84.1 s). Starting the compile in the loading
+  phase (955de39d: the worker gets its sources 0.8 s after the load, not 8-13 s) did not bring the first
+  composite sooner (early 77-93 s, master 74-132 s); a second worker for the gating program was slower. What
+  bounds the wait is that one program's own FXC compile, 56-123 s under load (Handoff K1456 s3)
+  - owner: nobody since 2026-11-18 03:09 (agent `aca0749f26e28002e` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-18 01:50, 2 h cap ~03:50); stage 3 stopped at its handoff 2026-11-18 03:08; its probes and handoff are on master, its src (955de39d, the early compile start) is held on the branch: safe by every check but not faster under load)
+  - branch: `worktree-agent-aca0749f26e28002e`, worktree `.claude/worktrees/agent-aca0749f26e28002e` (src held: 955de39d early start, 857b5bb4 drops the gfcw=2 trial); last commit: `eca3a09a`
+  - evidence: .claude/probes/K1456/s3/ (ab.ps1, checks.ps1, nogf.mjs, out/), .claude/probes/K1456/s2/ (table.mjs, ctime.mjs, variants.mjs)
+  - next: Muse run 26J (queued: cut the compile time of layers()' corner code in gf_glsl.ts, the one program that gates the first composite, 56-123 s under load). Then, on a quiet machine under the perf lock, cold A/B of 955de39d (compile starts 0.8 s after load, not 8-13 s) against master: merge it only if the first composite comes sooner (under load: early 77-93 s, master 74-132 s, no gain; the early compile seems to compete with today's renderer's own compiles). Untried: deferring today's renderer's programs the rest look does not need; gf_split's two passes as two programs. A second worker for the gating program was slower (median 104.5 s) and is dropped
   - brief: `docs/design/K1456_s3_first_visit.md`
 
 ## Next, in order

@@ -1,0 +1,46 @@
+== item23 round 1 master (other chrome procs: 30) 2:19:22 AM
+  page-only small fs 2682 issue 19.17 ready 56.49 block 0
+  page-only small fs 2585 issue 19.17 ready 56.49 block 0
+  page-only small fs 2524 issue 19.17 ready 56.49 block 0
+  page-only small fs 2438 issue 19.17 ready 56.49 block 0
+== item23 round 1 early (other chrome procs: 28) 2:21:15 AM
+  page-only small fs 2682 issue 19.43 ready 75.2 block 0
+  page-only small fs 2585 issue 19.43 ready 75.2 block 0
+  page-only small fs 2524 issue 19.43 ready 75.2 block 0
+  page-only small fs 2438 issue 19.43 ready 75.2 block 0
+== item23 round 1 wide (other chrome procs: 28) 2:22:53 AM
+  page-only small fs 2682 issue 19.15 ready 53.77 block 0
+  page-only small fs 2585 issue 19.15 ready 53.77 block 0
+  page-only small fs 2524 issue 19.15 ready 53.77 block 0
+  page-only small fs 2438 issue 19.15 ready 53.77 block 0
+== item23 round 2 master (other chrome procs: 30) 2:24:42 AM
+  page-only small fs 2682 issue 14.5 ready 76.34 block 0
+  page-only small fs 2585 issue 14.5 ready 76.34 block 0
+  page-only small fs 2524 issue 14.5 ready 76.34 block 0
+  page-only small fs 2438 issue 14.5 ready 76.34 block 0
+waiting: vm 4.5 GB disk 4.3 GB
+waiting: vm 0.8 GB disk 4.3 GB
+waiting: vm 3.3 GB disk 2.0 GB
+waiting: vm 4.7 GB disk 2.0 GB
+waiting: vm 6.7 GB disk 2.0 GB
+waiting: vm 6.8 GB disk 2.0 GB
+waiting: vm 6.7 GB disk 2.0 GB
+waiting: vm 6.3 GB disk 2.0 GB
+waiting: vm 6.8 GB disk 2.0 GB
+waiting: vm 4.0 GB disk 2.0 GB
+waiting: vm 8.8 GB disk 3.0 GB
+waiting: vm 9.0 GB disk 3.4 GB
+waiting: vm 8.9 GB disk 3.4 GB
+waiting: vm 9.0 GB disk 3.4 GB
+waiting: vm 8.9 GB disk 3.4 GB
+waiting: vm 8.9 GB disk 3.4 GB
+waiting: vm 10.3 GB disk 3.5 GB
+waiting: vm 8.6 GB disk 3.5 GB
+waiting: vm 8.6 GB disk 3.6 GB
+waiting: vm 8.7 GB disk 3.6 GB
+waiting: vm 8.8 GB disk 3.5 GB
+waiting: vm 8.8 GB disk 3.6 GB
+waiting: vm 10.1 GB disk 3.6 GB
+waiting: vm 8.4 GB disk 3.6 GB
+waiting: vm 8.9 GB disk 3.6 GB
+waiting: vm 8.9 GB disk 3.6 GB

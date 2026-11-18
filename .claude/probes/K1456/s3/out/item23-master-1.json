@@ -1,0 +1,1070 @@
+{
+ "url": "http://localhost:5640/?3.FGH1HtvQeDjm6e4BII&rp=gf&gfh=1",
+ "build": "KnotMaze ",
+ "loadMs": 450,
+ "firstCompositeSecs": 107.86,
+ "switchSecs": 107.85,
+ "worker": {
+  "created": 13.16,
+  "sources": 13.16,
+  "n": 12,
+  "all": null,
+  "orders": [
+   {
+    "t": 13.16,
+    "order": "0,9,11,10,3,4,5,6,7,8,1,2"
+   },
+   {
+    "t": 19.21,
+    "order": "0,2,1,3,4,5,6,7,8,9,10,11"
+   },
+   {
+    "t": 107.72,
+    "order": "2,1,3,4,5,6,7,8,9,10,11"
+   }
+  ]
+ },
+ "rows": [
+  {
+   "idx": 0,
+   "tag": "look",
+   "fs": 78900,
+   "wStart": 13.16,
+   "wEnd": 107.68,
+   "wSecs": 94.52,
+   "pIssue": 107.72,
+   "pReady": 107.83,
+   "pSecs": 0.11,
+   "pBlockMs": 0
+  }
+ ],
+ "pageOnly": [
+  {
+   "tag": "plain",
+   "fs": 59075,
+   "pIssue": 0.05,
+   "pReady": 9.35,
+   "pBlockMs": 834
+  },
+  {
+   "tag": "plain",
+   "fs": 37348,
+   "pIssue": 0.05,
+   "pReady": 9.36,
+   "pBlockMs": 5
+  },
+  {
+   "tag": "plain",
+   "fs": 35637,
+   "pIssue": 0.05,
+   "pReady": 12.86,
+   "pBlockMs": 187
+  },
+  {
+   "tag": "small",
+   "fs": 5837,
+   "pIssue": 0.05,
+   "pReady": 12.87,
+   "pBlockMs": 1
+  },
+  {
+   "tag": "small",
+   "fs": 2767,
+   "pIssue": 0.05,
+   "pReady": 12.87,
+   "pBlockMs": 1
+  },
+  {
+   "tag": "small",
+   "fs": 2192,
+   "pIssue": 0.05,
+   "pReady": 12.87,
+   "pBlockMs": 1
+  },
+  {
+   "tag": "small",
+   "fs": 2767,
+   "pIssue": 12.93,
+   "pReady": 12.94,
+   "pBlockMs": 2
+  },
+  {
+   "tag": "small",
+   "fs": 3915,
+   "pIssue": 12.94,
+   "pReady": 13.16,
+   "pBlockMs": 0
+  },
+  {
+   "tag": "comp-look",
+   "fs": 5660,
+   "pIssue": 12.94,
+   "pReady": 13.64,
+   "pBlockMs": 0
+  },
+  {
+   "tag": "plain",
+   "fs": 59075,
+   "pIssue": 13.18,
+   "pReady": 13.24,
+   "pBlockMs": 64
+  },
+  {
+   "tag": "small",
+   "fs": 5837,
+   "pIssue": 13.25,
+   "pReady": 13.26,
+   "pBlockMs": 3
+  },
+  {
+   "tag": "small",
+   "fs": 2192,
+   "pIssue": 13.26,
+   "pReady": 13.26,
+   "pBlockMs": 1
+  },
+  {
+   "tag": "plain",
+   "fs": 35637,
+   "pIssue": 13.37,
+   "pReady": 13.4,
+   "pBlockMs": 32
+  },
+  {
+   "tag": "plain",
+   "fs": 37348,
+   "pIssue": 13.4,
+   "pReady": 13.43,
+   "pBlockMs": 26
+  },
+  {
+   "tag": "plain",
+   "fs": 78142,
+   "pIssue": 19.17,
+   "pReady": 55.75,
+   "pBlockMs": 20
+  },
+  {
+   "tag": "plain",
+   "fs": 75545,
+   "pIssue": 19.17,
+   "pReady": 56.49,
+   "pBlockMs": 1
+  },
+  {
+   "tag": "plain",
+   "fs": 61958,
+   "pIssue": 19.17,
+   "pReady": 56.49,
+   "pBlockMs": 0
+  },
+  {
+   "tag": "plain",
+   "fs": 47074,
+   "pIssue": 19.17,
+   "pReady": 56.49,
+   "pBlockMs": 0
+  },
+  {
+   "tag": "plain",
+   "fs": 41646,
+   "pIssue": 19.17,
+   "pReady": 56.49,
+   "pBlockMs": 0
+  },
+  {
+   "tag": "plain",
+   "fs": 29812,
+   "pIssue": 19.17,
+   "pReady": 56.49,
+   "pBlockMs": 0
+  },
+  {
+   "tag": "plain",
+   "fs": 20595,
+   "pIssue": 19.17,
+   "pReady": 56.49,
+   "pBlockMs": 0
+  },
+  {
+   "tag": "small",
+   "fs": 3132,
+   "pIssue": 19.17,
+   "pReady": 56.49,
+   "pBlockMs": 0
+  },
+  {
+   "tag": "small",
+   "fs": 2993,
+   "pIssue": 19.17,
+   "pReady": 56.49,
+   "pBlockMs": 0
+  },
+  {
+   "tag": "small",
+   "fs": 2965,
+   "pIssue": 19.17,
+   "pReady": 56.49,
+   "pBlockMs": 0
+  },
+  {
+   "tag": "small",
+   "fs": 2927,
+   "pIssue": 19.17,
+   "pReady": 56.49,
+   "pBlockMs": 0
+  },
+  {
+   "tag": "small",
+   "fs": 2874,
+   "pIssue": 19.17,
+   "pReady": 56.49,
+   "pBlockMs": 0
+  },
+  {
+   "tag": "small",
+   "fs": 2859,
+   "pIssue": 19.17,
+   "pReady": 56.49,
+   "pBlockMs": 0
+  },
+  {
+   "tag": "small",
+   "fs": 2806,
+   "pIssue": 19.17,
+   "pReady": 56.49,
+   "pBlockMs": 0
+  },
+  {
+   "tag": "small",
+   "fs": 2768,
+   "pIssue": 19.17,
+   "pReady": 56.49,
+   "pBlockMs": 0
+  },
+  {
+   "tag": "small",
+   "fs": 2737,
+   "pIssue": 19.17,
+   "pReady": 56.49,
+   "pBlockMs": 0
+  },
+  {
+   "tag": "small",
+   "fs": 2721,
+   "pIssue": 19.17,
+   "pReady": 56.49,
+   "pBlockMs": 0
+  },
+  {
+   "tag": "small",
+   "fs": 2682,
+   "pIssue": 19.17,
+   "pReady": 56.49,
+   "pBlockMs": 0
+  },
+  {
+   "tag": "small",
+   "fs": 2585,
+   "pIssue": 19.17,
+   "pReady": 56.49,
+   "pBlockMs": 0
+  },
+  {
+   "tag": "small",
+   "fs": 2524,
+   "pIssue": 19.17,
+   "pReady": 56.49,
+   "pBlockMs": 0
+  },
+  {
+   "tag": "small",
+   "fs": 2438,
+   "pIssue": 19.17,
+   "pReady": 56.49,
+   "pBlockMs": 0
+  }
+ ],
+ "frames": [
+  {
+   "t": 0.86,
+   "raf": 7,
+   "draw": 0,
+   "gap": 377
+  },
+  {
+   "t": 1.86,
+   "raf": 56,
+   "draw": 0,
+   "gap": 18
+  },
+  {
+   "t": 2.86,
+   "raf": 56,
+   "draw": 0,
+   "gap": 19
+  },
+  {
+   "t": 3.86,
+   "raf": 56,
+   "draw": 0,
+   "gap": 18
+  },
+  {
+   "t": 4.86,
+   "raf": 56,
+   "draw": 0,
+   "gap": 19
+  },
+  {
+   "t": 5.86,
+   "raf": 56,
+   "draw": 0,
+   "gap": 18
+  },
+  {
+   "t": 6.86,
+   "raf": 55,
+   "draw": 0,
+   "gap": 19
+  },
+  {
+   "t": 7.86,
+   "raf": 56,
+   "draw": 0,
+   "gap": 18
+  },
+  {
+   "t": 8.86,
+   "raf": 56,
+   "draw": 0,
+   "gap": 18
+  },
+  {
+   "t": 9.86,
+   "raf": 56,
+   "draw": 0,
+   "gap": 19
+  },
+  {
+   "t": 10.86,
+   "raf": 56,
+   "draw": 0,
+   "gap": 19
+  },
+  {
+   "t": 11.86,
+   "raf": 55,
+   "draw": 0,
+   "gap": 18
+  },
+  {
+   "t": 12.86,
+   "raf": 56,
+   "draw": 0,
+   "gap": 19
+  },
+  {
+   "t": 13.98,
+   "raf": 9,
+   "draw": 7,
+   "gap": 359
+  },
+  {
+   "t": 14.99,
+   "raf": 14,
+   "draw": 14,
+   "gap": 90
+  },
+  {
+   "t": 15.88,
+   "raf": 12,
+   "draw": 12,
+   "gap": 90
+  },
+  {
+   "t": 16.87,
+   "raf": 12,
+   "draw": 12,
+   "gap": 107
+  },
+  {
+   "t": 17.99,
+   "raf": 13,
+   "draw": 13,
+   "gap": 90
+  },
+  {
+   "t": 18.9,
+   "raf": 11,
+   "draw": 11,
+   "gap": 90
+  },
+  {
+   "t": 19.92,
+   "raf": 12,
+   "draw": 12,
+   "gap": 125
+  },
+  {
+   "t": 20.92,
+   "raf": 10,
+   "draw": 10,
+   "gap": 143
+  },
+  {
+   "t": 21.93,
+   "raf": 11,
+   "draw": 11,
+   "gap": 124
+  },
+  {
+   "t": 22.86,
+   "raf": 11,
+   "draw": 11,
+   "gap": 90
+  },
+  {
+   "t": 24.01,
+   "raf": 14,
+   "draw": 14,
+   "gap": 90
+  },
+  {
+   "t": 24.97,
+   "raf": 12,
+   "draw": 12,
+   "gap": 90
+  },
+  {
+   "t": 25.99,
+   "raf": 13,
+   "draw": 13,
+   "gap": 90
+  },
+  {
+   "t": 26.94,
+   "raf": 11,
+   "draw": 11,
+   "gap": 124
+  },
+  {
+   "t": 27.91,
+   "raf": 12,
+   "draw": 12,
+   "gap": 90
+  },
+  {
+   "t": 29,
+   "raf": 14,
+   "draw": 14,
+   "gap": 90
+  },
+  {
+   "t": 29.95,
+   "raf": 12,
+   "draw": 12,
+   "gap": 91
+  },
+  {
+   "t": 30.88,
+   "raf": 43,
+   "draw": 43,
+   "gap": 90
+  },
+  {
+   "t": 31.86,
+   "raf": 53,
+   "draw": 53,
+   "gap": 36
+  },
+  {
+   "t": 32.86,
+   "raf": 53,
+   "draw": 53,
+   "gap": 36
+  },
+  {
+   "t": 33.86,
+   "raf": 53,
+   "draw": 53,
+   "gap": 36
+  },
+  {
+   "t": 34.86,
+   "raf": 51,
+   "draw": 51,
+   "gap": 54
+  },
+  {
+   "t": 35.86,
+   "raf": 53,
+   "draw": 53,
+   "gap": 36
+  },
+  {
+   "t": 36.86,
+   "raf": 52,
+   "draw": 43,
+   "gap": 36
+  },
+  {
+   "t": 37.89,
+   "raf": 54,
+   "draw": 35,
+   "gap": 36
+  },
+  {
+   "t": 38.86,
+   "raf": 51,
+   "draw": 51,
+   "gap": 36
+  },
+  {
+   "t": 39.86,
+   "raf": 53,
+   "draw": 53,
+   "gap": 36
+  },
+  {
+   "t": 40.86,
+   "raf": 53,
+   "draw": 53,
+   "gap": 36
+  },
+  {
+   "t": 41.86,
+   "raf": 52,
+   "draw": 52,
+   "gap": 36
+  },
+  {
+   "t": 42.86,
+   "raf": 52,
+   "draw": 52,
+   "gap": 36
+  },
+  {
+   "t": 43.86,
+   "raf": 53,
+   "draw": 46,
+   "gap": 36
+  },
+  {
+   "t": 44.87,
+   "raf": 52,
+   "draw": 52,
+   "gap": 36
+  },
+  {
+   "t": 45.86,
+   "raf": 53,
+   "draw": 53,
+   "gap": 36
+  },
+  {
+   "t": 46.86,
+   "raf": 53,
+   "draw": 53,
+   "gap": 36
+  },
+  {
+   "t": 47.86,
+   "raf": 54,
+   "draw": 54,
+   "gap": 36
+  },
+  {
+   "t": 48.86,
+   "raf": 51,
+   "draw": 51,
+   "gap": 36
+  },
+  {
+   "t": 49.86,
+   "raf": 53,
+   "draw": 53,
+   "gap": 36
+  },
+  {
+   "t": 50.86,
+   "raf": 53,
+   "draw": 53,
+   "gap": 36
+  },
+  {
+   "t": 51.86,
+   "raf": 52,
+   "draw": 52,
+   "gap": 36
+  },
+  {
+   "t": 52.86,
+   "raf": 53,
+   "draw": 53,
+   "gap": 36
+  },
+  {
+   "t": 53.86,
+   "raf": 53,
+   "draw": 53,
+   "gap": 36
+  },
+  {
+   "t": 54.86,
+   "raf": 51,
+   "draw": 51,
+   "gap": 36
+  },
+  {
+   "t": 55.86,
+   "raf": 53,
+   "draw": 53,
+   "gap": 36
+  },
+  {
+   "t": 56.86,
+   "raf": 54,
+   "draw": 54,
+   "gap": 36
+  },
+  {
+   "t": 57.86,
+   "raf": 52,
+   "draw": 52,
+   "gap": 36
+  },
+  {
+   "t": 58.86,
+   "raf": 54,
+   "draw": 54,
+   "gap": 36
+  },
+  {
+   "t": 59.86,
+   "raf": 53,
+   "draw": 48,
+   "gap": 36
+  },
+  {
+   "t": 60.87,
+   "raf": 53,
+   "draw": 29,
+   "gap": 36
+  },
+  {
+   "t": 61.86,
+   "raf": 53,
+   "draw": 52,
+   "gap": 36
+  },
+  {
+   "t": 62.86,
+   "raf": 53,
+   "draw": 53,
+   "gap": 36
+  },
+  {
+   "t": 63.86,
+   "raf": 53,
+   "draw": 53,
+   "gap": 36
+  },
+  {
+   "t": 64.86,
+   "raf": 52,
+   "draw": 52,
+   "gap": 36
+  },
+  {
+   "t": 65.86,
+   "raf": 54,
+   "draw": 54,
+   "gap": 36
+  },
+  {
+   "t": 66.86,
+   "raf": 54,
+   "draw": 47,
+   "gap": 36
+  },
+  {
+   "t": 67.86,
+   "raf": 53,
+   "draw": 53,
+   "gap": 36
+  },
+  {
+   "t": 68.86,
+   "raf": 54,
+   "draw": 54,
+   "gap": 36
+  },
+  {
+   "t": 69.86,
+   "raf": 54,
+   "draw": 54,
+   "gap": 36
+  },
+  {
+   "t": 70.86,
+   "raf": 53,
+   "draw": 53,
+   "gap": 36
+  },
+  {
+   "t": 71.86,
+   "raf": 54,
+   "draw": 54,
+   "gap": 36
+  },
+  {
+   "t": 72.88,
+   "raf": 55,
+   "draw": 55,
+   "gap": 36
+  },
+  {
+   "t": 73.86,
+   "raf": 52,
+   "draw": 52,
+   "gap": 36
+  },
+  {
+   "t": 74.86,
+   "raf": 53,
+   "draw": 53,
+   "gap": 36
+  },
+  {
+   "t": 75.86,
+   "raf": 53,
+   "draw": 53,
+   "gap": 36
+  },
+  {
+   "t": 76.86,
+   "raf": 51,
+   "draw": 51,
+   "gap": 36
+  },
+  {
+   "t": 77.86,
+   "raf": 54,
+   "draw": 54,
+   "gap": 36
+  },
+  {
+   "t": 78.86,
+   "raf": 53,
+   "draw": 53,
+   "gap": 36
+  },
+  {
+   "t": 79.86,
+   "raf": 54,
+   "draw": 54,
+   "gap": 36
+  },
+  {
+   "t": 80.86,
+   "raf": 54,
+   "draw": 54,
+   "gap": 36
+  },
+  {
+   "t": 81.86,
+   "raf": 54,
+   "draw": 54,
+   "gap": 36
+  },
+  {
+   "t": 82.86,
+   "raf": 53,
+   "draw": 53,
+   "gap": 36
+  },
+  {
+   "t": 83.86,
+   "raf": 52,
+   "draw": 27,
+   "gap": 36
+  },
+  {
+   "t": 84.86,
+   "raf": 53,
+   "draw": 49,
+   "gap": 36
+  },
+  {
+   "t": 85.86,
+   "raf": 52,
+   "draw": 52,
+   "gap": 36
+  },
+  {
+   "t": 86.86,
+   "raf": 53,
+   "draw": 53,
+   "gap": 36
+  },
+  {
+   "t": 87.86,
+   "raf": 55,
+   "draw": 55,
+   "gap": 36
+  },
+  {
+   "t": 88.86,
+   "raf": 52,
+   "draw": 52,
+   "gap": 36
+  },
+  {
+   "t": 89.86,
+   "raf": 53,
+   "draw": 53,
+   "gap": 36
+  },
+  {
+   "t": 90.86,
+   "raf": 54,
+   "draw": 54,
+   "gap": 36
+  },
+  {
+   "t": 91.86,
+   "raf": 54,
+   "draw": 54,
+   "gap": 36
+  },
+  {
+   "t": 92.86,
+   "raf": 53,
+   "draw": 53,
+   "gap": 36
+  },
+  {
+   "t": 93.86,
+   "raf": 54,
+   "draw": 54,
+   "gap": 36
+  },
+  {
+   "t": 94.86,
+   "raf": 52,
+   "draw": 52,
+   "gap": 36
+  },
+  {
+   "t": 95.86,
+   "raf": 54,
+   "draw": 54,
+   "gap": 36
+  },
+  {
+   "t": 96.86,
+   "raf": 55,
+   "draw": 55,
+   "gap": 36
+  },
+  {
+   "t": 97.86,
+   "raf": 55,
+   "draw": 55,
+   "gap": 36
+  },
+  {
+   "t": 98.86,
+   "raf": 53,
+   "draw": 53,
+   "gap": 36
+  },
+  {
+   "t": 99.86,
+   "raf": 54,
+   "draw": 54,
+   "gap": 36
+  },
+  {
+   "t": 100.86,
+   "raf": 53,
+   "draw": 53,
+   "gap": 36
+  },
+  {
+   "t": 101.86,
+   "raf": 55,
+   "draw": 55,
+   "gap": 36
+  },
+  {
+   "t": 102.87,
+   "raf": 54,
+   "draw": 54,
+   "gap": 36
+  },
+  {
+   "t": 103.86,
+   "raf": 53,
+   "draw": 53,
+   "gap": 36
+  },
+  {
+   "t": 104.86,
+   "raf": 54,
+   "draw": 54,
+   "gap": 36
+  },
+  {
+   "t": 105.87,
+   "raf": 54,
+   "draw": 54,
+   "gap": 37
+  },
+  {
+   "t": 106.86,
+   "raf": 54,
+   "draw": 34,
+   "gap": 36
+  },
+  {
+   "t": 107.88,
+   "raf": 47,
+   "draw": 37,
+   "gap": 108
+  },
+  {
+   "t": 108.86,
+   "raf": 55,
+   "draw": 55,
+   "gap": 19
+  },
+  {
+   "t": 109.86,
+   "raf": 57,
+   "draw": 57,
+   "gap": 18
+  },
+  {
+   "t": 110.87,
+   "raf": 56,
+   "draw": 56,
+   "gap": 18
+  }
+ ],
+ "log": [
+  "1s rv=- gf=- fps(raf/draw/gap)=undefined/undefined/0",
+  "2s rv=- gf=i0 r0 sw=false c=0 w=:0 fps(raf/draw/gap)=7/0/377",
+  "3s rv=- gf=i0 r0 sw=false c=0 w=:0 fps(raf/draw/gap)=56/0/18",
+  "4s rv=- gf=i0 r0 sw=false c=0 w=:0 fps(raf/draw/gap)=56/0/19",
+  "5s rv=- gf=i0 r0 sw=false c=0 w=:0 fps(raf/draw/gap)=56/0/18",
+  "6s rv=- gf=i0 r0 sw=false c=0 w=:0 fps(raf/draw/gap)=56/0/19",
+  "7s rv=- gf=i0 r0 sw=false c=0 w=:0 fps(raf/draw/gap)=56/0/18",
+  "8s rv=- gf=i0 r0 sw=false c=0 w=:0 fps(raf/draw/gap)=55/0/19",
+  "9s rv=- gf=i0 r0 sw=false c=0 w=:0 fps(raf/draw/gap)=56/0/18",
+  "10s rv=- gf=i0 r0 sw=false c=0 w=:0 fps(raf/draw/gap)=56/0/18",
+  "11s rv=- gf=i0 r0 sw=false c=0 w=:0 fps(raf/draw/gap)=56/0/19",
+  "12s rv=- gf=i0 r0 sw=false c=0 w=:0 fps(raf/draw/gap)=56/0/19",
+  "13s rv=- gf=i0 r0 sw=false c=0 w=:0 fps(raf/draw/gap)=55/0/18",
+  "14s rv=0.4fx gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=56/0/19",
+  "15s rv=2.5fx gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=9/7/359",
+  "16s rv=4.7fx gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=14/14/90",
+  "17s rv=6.9fx gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=12/12/90",
+  "18s rv=9.2fx gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=12/12/107",
+  "19s rv=11.3fx gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=13/13/90",
+  "20s rv=12.7dfx gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=11/11/90",
+  "21s rv=12.7dfx gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=12/12/125",
+  "22s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=10/10/143",
+  "23s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=11/11/124",
+  "24s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=11/11/90",
+  "25s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=14/14/90",
+  "26s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=12/12/90",
+  "27s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=13/13/90",
+  "28s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=11/11/124",
+  "29s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=12/12/90",
+  "30s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=14/14/90",
+  "31s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=12/12/91",
+  "32s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=43/43/90",
+  "33s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=53/53/36",
+  "34s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=53/53/36",
+  "35s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=53/53/36",
+  "36s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=51/51/54",
+  "37s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=53/53/36",
+  "38s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=52/43/36",
+  "39s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=54/35/36",
+  "40s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=51/51/36",
+  "41s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=53/53/36",
+  "42s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=53/53/36",
+  "43s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=52/52/36",
+  "44s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=52/52/36",
+  "45s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=53/46/36",
+  "46s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=52/52/36",
+  "47s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=53/53/36",
+  "48s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=53/53/36",
+  "49s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=54/54/36",
+  "50s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=51/51/36",
+  "51s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=53/53/36",
+  "52s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=53/53/36",
+  "53s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=52/52/36",
+  "54s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=53/53/36",
+  "55s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=53/53/36",
+  "56s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=51/51/36",
+  "57s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=53/53/36",
+  "58s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=54/54/36",
+  "59s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=52/52/36",
+  "60s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=54/54/36",
+  "61s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=53/48/36",
+  "62s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=53/29/36",
+  "63s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=53/52/36",
+  "64s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=53/53/36",
+  "65s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=53/53/36",
+  "66s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=52/52/36",
+  "67s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=54/54/36",
+  "68s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=54/47/36",
+  "69s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=53/53/36",
+  "70s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=54/54/36",
+  "71s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=54/54/36",
+  "72s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=53/53/36",
+  "73s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=54/54/36",
+  "74s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=55/55/36",
+  "75s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=52/52/36",
+  "76s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=53/53/36",
+  "77s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=53/53/36",
+  "78s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=51/51/36",
+  "79s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=54/54/36",
+  "80s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=53/53/36",
+  "81s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=54/54/36",
+  "82s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=54/54/36",
+  "83s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=54/54/36",
+  "84s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=53/53/36",
+  "85s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=52/27/36",
+  "86s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=53/49/36",
+  "87s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=52/52/36",
+  "88s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=53/53/36",
+  "89s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=55/55/36",
+  "90s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=52/52/36",
+  "91s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=53/53/36",
+  "92s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=54/54/36",
+  "93s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=54/54/36",
+  "94s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=53/53/36",
+  "95s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=54/54/36",
+  "96s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=52/52/36",
+  "97s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=54/54/36",
+  "98s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=55/55/36",
+  "99s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=55/55/36",
+  "100s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=53/53/36",
+  "101s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=54/54/36",
+  "102s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=53/53/36",
+  "103s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=55/55/36",
+  "104s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=54/54/36",
+  "105s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=53/53/36",
+  "106s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=54/54/36",
+  "107s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=54/54/37",
+  "108s rv=12.7d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=54/34/36",
+  "109s rv=12.7d gf=i1 r1 sw=true c=40 w=compiling:1 fps(raf/draw/gap)=47/37/108",
+  "110s rv=12.7d gf=i1 r1 sw=true c=96 w=compiling:1 fps(raf/draw/gap)=55/55/19",
+  "111s rv=12.7d gf=i1 r1 sw=true c=152 w=compiling:1 fps(raf/draw/gap)=57/57/18",
+  "112s rv=12.7d gf=i1 r1 sw=true c=208 w=compiling:1 fps(raf/draw/gap)=56/56/18"
+ ]
+}

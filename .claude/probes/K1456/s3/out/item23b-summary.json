@@ -1,0 +1,62 @@
+[
+  {
+    "round": 1,
+    "build": "early",
+    "first": 77.11,
+    "wkCreated": 0.89,
+    "wkSources": 0.89,
+    "idx0End": 76.86,
+    "idx0Secs": 75.97,
+    "chrome": 30
+  },
+  {
+    "round": 1,
+    "build": "wide",
+    "first": 114.73,
+    "wkCreated": 0.8,
+    "wkSources": 0.8,
+    "idx0End": 114.54,
+    "idx0Secs": 113.74,
+    "chrome": 28
+  },
+  {
+    "round": 1,
+    "build": "master",
+    "first": 77.65,
+    "wkCreated": 12.83,
+    "wkSources": 12.83,
+    "idx0End": 77.48,
+    "idx0Secs": 64.65,
+    "chrome": 28
+  },
+  {
+    "round": 2,
+    "build": "early",
+    "first": 81.63,
+    "wkCreated": 0.78,
+    "wkSources": 0.78,
+    "idx0End": 81.44,
+    "idx0Secs": 80.66,
+    "chrome": 30
+  },
+  {
+    "round": 2,
+    "build": "wide",
+    "first": 95.37,
+    "wkCreated": 0.78,
+    "wkSources": 0.78,
+    "idx0End": 95.13,
+    "idx0Secs": 94.35,
+    "chrome": 28
+  },
+  {
+    "round": 2,
+    "build": "master",
+    "first": 74.42,
+    "wkCreated": 12.02,
+    "wkSources": 12.02,
+    "idx0End": 74.22,
+    "idx0Secs": 62.19,
+    "chrome": 20
+  }
+]

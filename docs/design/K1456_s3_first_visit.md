@@ -76,3 +76,50 @@ A partial result lands: item 2 alone is worth merging. Say plainly which commits
 comes first. A compaction is not a stop: re-read this brief and `git log`. On stopping: commit WIP, append
 `### Handoff K1456 s3` here, commit, and report: the numbers, which commits are confirmed, a `Ledger items`
 list and K1456's handle fields.
+
+### Handoff K1456 s3
+
+Agent stage, 2026-11-18 01:50-03:10 (claude session 09c7a672, worktree `.claude/worktrees/agent-aca0749f26e28002e`, branch `worktree-agent-aca0749f26e28002e`). Every number below is cold (fresh `--user-data-dir`), at 1600x900, interleaved, and taken under load: 20-30 other Chrome processes, free disk 3.5-7 GB (under the brief's 8 GB line after the 15-minute wait). The perf lock was stale and was taken. Seconds count from the load event to gf's first composite. Probes and raw JSON are in `.claude/probes/K1456/s3/` (`ab.ps1` is the A/B runner, `checks.ps1` the picture checks, `nogf.mjs` the no-gf count, and `out/` the results).
+
+**Item 1 (stage 2, cold): no measurable change.**
+
+| Build | Rounds (s) | Median (s) | Spread (s) |
+|---|---|---|---|
+| 0fc195b8 (stage 2) | 80.9, 83.0, 70.7 | 80.9 | 70.7-83.0 |
+| parent 3586c33b | 108.8, 84.1, 66.4 | 84.1 | 66.4-108.8 |
+
+The worker got its sources 8.3-12.1 s after the load. idx0 then took 56-97 s on the worker, and that compile is the whole wait.
+
+**Item 2 (start the compile in the loading phase), 955de39d:**
+- How it works: `frame_loop.ts` calls `startGfCompileEarly()` under rp=gf before the first frame. `gf_app.ts` adopts that run when the pass's `compileSources()` equal `gfAppSources()`, which is a pure function in `gf_pass.ts`, pinned equal by `gf_compile.test.ts`. Otherwise it terminates the run and spawns its own.
+- The worker now gets its sources 0.77-0.89 s after the load, against 8.5-13.2 s on master.
+- The first composite did not get measurably sooner:
+  - early: 92.9, 77.1 and 81.6 s (median 81.6);
+  - master: 107.9, 131.9, 77.7 and 74.4 s.
+- In the quieter second run (`out/item23b-*`), master read 74.4 and 77.7 s, early 77.1 and 81.6 s.
+- There, idx0 took 76-81 s when issued at 0.8 s against 62-65 s when issued at 12-13 s.
+  - Inferred, not isolated: the early compile competes with the loading phase's own work (today's renderer's compiles in the same GPU process, the physics and the scene build) and loses about the head start.
+- Not confirmed as a speedup. It is safe: see the checks below.
+
+**Item 3 (wider):**
+- gfcw=2 (2fed79ff): the gating program on a worker and context of its own, the rest on a second.
+  - First composite 104.5, 114.7 and 95.4 s (median 104.5), against early's 81.6 s in the same runs.
+  - idx0 took 94-114 s on its worker: two FXC compiles at once slow the one that gates.
+  - Dropped in 857b5bb4.
+- The deferral and gf_split options were not tried (out of time). Neither shortens idx0's own compile.
+
+**What bounds the rest:** idx0's own D3D11 FXC compile, one single-threaded compile of 56-123 s under this load. The wait depends on that source (`gf_glsl.ts`, layers()' corner code; K1482's file), not on when or where the compile runs.
+
+**Picture and behaviour checks.** The branch build was 2fed79ff's, whose code equals HEAD's but for the gfcw=2 flag (the flag was unset). Master was 0fc195b8.
+- Link A froze at physics hash fff8c9e5 in all four loads.
+- Branch against master was 0 px (cold against cold, warm against warm). inkbox matches cell for cell.
+- The master-against-master control (cold load against warm) was 169 px, and the branch showed the same 169 px.
+- Reveal: the repeat visit shows today's ink at 3, 5 and 7 s. On the first visit, both builds show the loader through 10 s and today's reveal by 14 s.
+- takeover.mjs (repeat visit): the reveal ran 2.29-7.47 s and gf took over at 8.89 s, 1.42 s after the end.
+- A link without rp=gf: 43 frag programs, 13 over 20k chars, no gf worker and no gf chunk, on both builds, twice at 45 s. A 20 s count read 20 against 43, which was load progress.
+- hold.mjs, warm, link A: 60/60 PASS.
+- `npm test`: green after item 2 (3170 passed). After the rebase on origin/master a28929be: 3170 passed, 18 skipped.
+
+**Next:**
+- Cut idx0's compile in `gf_glsl.ts` (K1482's lane), or give the first composite a smaller program that compiles fast and swap the full one in later. Splitting and deferring do not shorten the program that gates.
+- Re-measure item 2 on a quiet machine before deciding whether it stays: under load it shows no gain.
