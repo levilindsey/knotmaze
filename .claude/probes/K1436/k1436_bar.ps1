@@ -57,6 +57,7 @@ $buildRoot = Join-Path $env:TEMP "k1436s3-prev"; New-Item -ItemType Directory $b
 $made = @()
 function Wait-Lock {
   $l = Join-Path $env:TEMP "claude-perf.lock"; $t0 = Get-Date
+  if (Test-Path $l) { Write-Host "waiting on the perf lock: $(Get-Content $l)" }
   while (Test-Path $l) {
     if (((Get-Date) - (Get-Item $l).LastWriteTime).TotalMinutes -gt 30) { Write-Host "perf lock stale, going on"; break }
     if (((Get-Date) - $t0).TotalMinutes -gt 60) { throw "perf lock held over 60 min: $(Get-Content $l)" }
