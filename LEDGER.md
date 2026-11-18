@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1469.
+Next free ID: K1470.
 
 ## Waiting on Levi
 
@@ -1010,6 +1010,13 @@ Every other item below waits on the trigger it names.
   MB, K1186 64, K1407 60, K863 56, K1198 43), so each agent worktree costs 0.8 GB (224 worktrees = 123 GB when
   C: filled on 2026-11-17, claude-config CC156). Stop tracking closed items' sheets (history keeps them) or
   give agent worktrees a sparse checkout; measured 2026-11-17 with git ls-tree -r -l HEAD
+- **K1469** · Verify Muse 26B's K1459 fix on screen (01c72dfc, live in aad94eb7: the reveal's interior cut at
+  junctions by today's own cuts, lkJCut): only its unit test and a rest frame were checked, because pinned gf
+  reveal frames came out blank or frontier-glow only (gf's stats resetting between polls on master too:
+  K1468's context loss, or a pin and async-compile interaction since 26A, not established). Once K1468 lands:
+  k1459_cap + k1459_guard2, k1431_inkcmp counts and ghost, an instant sheet pair and the two 4x crops (today |
+  master gf | new gf) under .claude/probes/K1395/out/26B/; look at the lateral sign of lkJCut by eye; then
+  close K1459 or revert (Handoff 26B, docs/design/K1464_muse_batch26.md)
 
 ## Residuals (known, not fixed)
 
