@@ -2186,9 +2186,6 @@ Every other item below waits on the trigger it names.
 - **K1429** · K1407 c3's GPU census lost its WebGL context once (GL error 37442, group 1) while preview builds
   ran on the machine; inferred cause, not isolated; the group re-run alone was clean
   (.claude/probes/K1407/out/c3/census_c3g.log)
-- **K1434** · rp=gf: under a burn (K290) the explore shader's char/ember/smolder shading is not ported, and
-  corner gates read the declared pieces rather than the burn gate pieces; gf draws the pieces' visibility
-  (burnt-gone holes included) but no char darkening (K1396 24E handoff)
 - **K1437** · rp=gf: about 2,030 tie- and ramp-class smudge finds on master over the 12 census scenes (11 of
   11 sampled real by eye; 431 dstray:tie in muse_hash alone); per-scene counts in
   .claude/probes/K1433/out/scan/summary.txt; K1435 is the fix path
@@ -2604,6 +2601,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1434** · rp=gf: under a burn (K290) the explore shader's char/ember/smolder shading is not ported, and corner gates read the declared pieces rather than the burn gate pieces; gf draws the pieces' visibility (burnt-gone holes included) but no char darkening (K1396 24E handoff). Done in 44d54de8 (2026-11-17).
 - **K1455** · the border look (tlk=border) under rp=gf: gf's thick near-black strokes on both edges stay; today's thin section-tinted strokes are not the bar. Dropped: decided, no work: Levi 2026-11-17 "Keep gf as it is" (recorded in .claude/rules/render-gpu-field.md) (2026-11-17).
 - **K1458** · rp=gf fades the under thread before a crossing as today's does and follows the live slider (gf baked the gap only inside the pixel's candidate list; joint window cap, per-side clearance scales and a re-bake on a sleeping knot ported); panel rewrites keep rp/gfh. Live on c5fc87d1: hold.mjs 60/60 on both links, real slider drags change the fade at 0.14/0.28/0.62/1.2 in gf and gf+gfh. Done in c5fc87d1 (2026-11-17).
 - **K1450** · rp=gf's maze blinked: its render callback skipped any frame drawn into a filter texture, and a live pluck ripple (K279) filters the world, so music mode's auto plucks hid the maze most of the time (since adac76dd); it now draws to the screen and restores the filter's target; guard: .claude/probes/K1450/hold.mjs (ordinary load, 60 frames). Done in dcf4b082 (2026-11-17).
