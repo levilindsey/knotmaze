@@ -1,0 +1,41 @@
+flag	n	scene	site	x	y	kind:cls	px	class	what (today | gf, viewed 2026-11-17)
+h1	1	ring	x68	19.43	20.04	cut:plain	963	stub	border: the faded under thread's stroke tapers to a point and stops past the crossing; today's runs through. Fill matches today.
+h1	2	g41_ring_tw64	j24	19.71	20.07	cut:plain	660	stub	border: the lower thread's stroke is missing across the tile (a fragment at the left edge); same spot as ring x68. Fill matches.
+h1	3	muse_default_tw	j64	5.58	2.84	cut:plain	362	smear + notch	fill: a soft dark smear line across the section and a small dark notch at the top junction edge (today: a dark sliver hole instead); border: outlined blob.
+h1	4	g41_ring_tw64	x67	18.01	20.55	cut:plain	296	stub	border: the arc's stroke tapers to a wedge and breaks, a fragment below. Fill matches.
+h1	5	g41_user_tw64	j22	7.09	1.57	cut:plain	195	false find	gf fill and border look clean (today's border has a stepped band).
+h1	6	muse_hash	j64	5.67	2.77	cut:plain	182	smear	fill: a thin dark stray line across the section from the junction (today: a notch at the edge).
+h1	7	muse_hash	j81	25.15	23.50	cut:plain	141	wedge	border: the left stroke is a wedge fragment; fill near today (gf's line reaches the band, today's stops short).
+h1	8	g41_user_tw64	x100	4.88	16.20	cut:ramp	102	false find	gf's fading end closes cleanly (today's border end is ragged).
+h1	9	g41_user_tw64	x116	15.95	7.43	cut:plain	86	notch (shared)	a small notch on the band edge, in today too.
+h1	10	g41_def_tw42	j132	33.58	5.29	cut:ramp	66	wedge + dash	fill: a dark sliver cuts into the section from the junction step; border: an isolated dash.
+h1	11	g41_ring_tw42	j8	15.40	5.26	cut:plain	52	notch	fill: a small dark triangular notch at the junction corner; border: a break in the stroke.
+h1	12	user_tw42.lightpaper	j29	5.77	2.94	rstray:tie	49	wedge	fill: a dark wedge enters from the right where today's fill has none.
+h1	13	user_tw42.lightpaper	j7	17.56	9.86	cut:ramp	42	dash + notch	fill: a ragged dark dash along the junction step edge, a notch at its corner.
+h1	14	muse_hash	j144	23.53	8.06	cut:plain	34	tick	fill: a thin dark slit beside the junction (today has a short dash elsewhere).
+h1	15	user_tw42.lightpaper	j27	3.87	4.96	cut:ramp	31	smear	fill: a dark S-curved line cuts across the section from the junction.
+h1	16	g41_user_tw64	j50	21.13	8.30	cut:plain	30	notch (shared)	a small notch on the band; today has one too.
+h1	17	g41_def_tw42	j89	15.76	21.25	cut:ramp	27	notch + dash	fill: a rounded hook at the step corner; border: an isolated dash.
+h1	18	user_tw42.lightpaper	j23	11.55	4.06	cut:ramp	27	notch + dash	fill: a notch at the step corner and a short dark dash in the section below.
+h1	19	g41_ring_tw64	x6	6.16	6.31	cut:plain	26	false find	gf clean; today has the dark wedge here.
+h1	20	muse_hash	j81	25.03	24.14	cut:ramp	26	smear	fill: a dark outline arc across the section; border: wedge stroke ends.
+h0	1	ring	x68	19.36	20.00	cut:plain	809	stub	as h1 1.
+h0	2	muse_default_tw	j64	5.58	2.84	cut:plain	362	smear + notch	as h1 3.
+h0	3	g41_ring_tw64	x67	18.01	20.55	cut:plain	296	stub	as h1 4.
+h0	4	g41_def_tw64	j148	12.99	10.26	cut:plain	222	smear + dotted line	fill: a dark stray curve across the section and a dotted line of three specks; today none. (no h1 capture of this scene)
+h0	5	g41_def_tw64	j24	25.40	0.82	cut:plain	215	dash	fill: a long straight dark dash from a blob (today: a small speck).
+h0	6	g41_user_tw64	j22	7.09	1.57	cut:plain	195	false find	as h1 5.
+h0	7	muse_hash	j64	5.67	2.77	cut:plain	182	smear	as h1 6.
+h0	8	g41_ring_tw64	j24	19.39	19.88	cut:plain	148	stub	border: the stroke tapers to a wedge (h1 read 660 px here).
+h0	9	muse_hash	j81	25.15	23.50	cut:plain	141	wedge	as h1 7.
+h0	10	g41_user_tw64	x100	4.88	16.20	cut:ramp	102	false find	as h1 8.
+h0	11	g41_user_tw64	x116	15.95	7.43	cut:plain	86	notch (shared)	as h1 9.
+h0	12	g41_def_tw42	j132	33.58	5.29	cut:ramp	66	wedge + dash	as h1 10.
+h0	13	g41_ring_tw42	j8	15.40	5.26	cut:plain	52	notch	as h1 11.
+h0	14	g41_user_tw42	j29	5.78	2.94	rstray:tie	49	wedge	= lightpaper j29 (g41_user_tw42 lands on user_tw42's state: stale K868 hash).
+h0	15	user_tw42.lightpaper	j29	5.77	2.94	rstray:tie	49	wedge	as h1 12.
+h0	16	g41_user_tw42	j7	17.56	9.86	cut:ramp	42	dash + notch	= lightpaper j7.
+h0	17	user_tw42.lightpaper	j7	17.56	9.86	cut:ramp	42	dash + notch	as h1 13.
+h0	18	muse_hash	j144	23.53	8.06	cut:plain	34	tick	as h1 14.
+h0	19	user_tw42.lightpaper	j27	3.87	4.96	cut:ramp	31	smear	as h1 15.
+h0	20	g41_user_tw42	j27	3.87	4.96	cut:ramp	30	smear	= lightpaper j27.

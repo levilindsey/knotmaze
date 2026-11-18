@@ -95,11 +95,19 @@ for (let r = 0; r < h; r++) { let run = -1e9; for (let c = 0; c < w; c++) { if (
 for (let c = 0; c < w; c++) { let run = -1e9; for (let r = 0; r < h; r++) { if (tmpM[r * w + c]) run = r; if (r - run <= DIL) mask[r * w + c] = 1; } run = 1e9; for (let r = h - 1; r >= 0; r--) { if (tmpM[r * w + c]) run = r; if (run - r <= DIL) mask[r * w + c] = 1; } }
 // a MARKER (start / finish: black and white glyph on a darker fill disc) is a large off-colour blob: mask a disc of 2.2x
 // its equivalent radius round each blob of >= 300 px (ring's two markers left 7 of 9 finds before this)
+// K1436 s3: the HEAD marker carries a soft glow (fabric_maze_renderer's walker glow, ~3 marker radii) that the 2.2x
+// disc missed: s3's twelve largest gf finds were all that glow, read as rstray. When meta.markers holds the renderer's
+// marker placements (k1436_screen.mjs s3: mesh position + scale, world), mask MKR (4) placed radii round each visible
+// one; captures without it fall back to MKB (4) x the blob's equivalent radius.
+const MKR = +(process.env.MKR ?? 4), MKB = +(process.env.MKB ?? 4);
+const disc = (cx: number, cy: number, rad: number) => { for (let r = Math.max(0, Math.floor(cy - rad)); r <= Math.min(h - 1, Math.ceil(cy + rad)); r++) for (let c = Math.max(0, Math.floor(cx - rad)); c <= Math.min(w - 1, Math.ceil(cx + rad)); c++) if ((c - cx) ** 2 + (r - cy) ** 2 < rad * rad) mask[r * w + c] = 1; };
+const MK: { x: number; y: number; s: number; vis: boolean }[] | undefined = meta.markers;
+if (MK) for (const m of MK) if (m.vis && m.s > 0) disc(m.x * ppu - c0 - 0.5, m.y * ppu - r0 - 0.5, MKR * m.s * ppu);
 { const seen = new Uint8Array(w * h), st: number[] = [];
   for (let i0 = 0; i0 < w * h; i0++) { if (!offc[i0] || seen[i0]) continue; let n = 0, sx = 0, sy = 0; st.push(i0); seen[i0] = 1;
     while (st.length) { const i = st.pop()!; const c = i % w, r = (i / w) | 0; n++; sx += c; sy += r;
       for (const q of [i - 1, i + 1, i - w, i + w]) if (q >= 0 && q < w * h && offc[q] && !seen[q] && Math.abs((q % w) - c) <= 1) { seen[q] = 1; st.push(q); } }
-    if (n < 300) continue; const cx = sx / n, cy = sy / n, rad = 2.2 * Math.sqrt(n / Math.PI);
+    if (n < 300) continue; const cx = sx / n, cy = sy / n, rad = (MK ? 2.2 : MKB) * Math.sqrt(n / Math.PI);
     for (let r = Math.max(0, Math.floor(cy - rad)); r <= Math.min(h - 1, Math.ceil(cy + rad)); r++) for (let c = Math.max(0, Math.floor(cx - rad)); c <= Math.min(w - 1, Math.ceil(cx + rad)); c++) if ((c - cx) ** 2 + (r - cy) ** 2 < rad * rad) mask[r * w + c] = 1; } }
 // alignment check: mean |screen - mirror| ink at offsets (the device grid must be the mirror's)
 let agree = 0, nA = 0; for (let i = 0; i < w * h; i += 3) if (mcov[i] > 0.02 && !mask[i]) { agree += Math.abs(scov[i] - mcov[i]); nA++; }

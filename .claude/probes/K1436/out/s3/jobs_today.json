@@ -1,0 +1,110 @@
+[
+  {
+    "name": "muse_hash_today",
+    "query": "3&tw=1.1&cr=6&am=instant&snd=none&stb=0&fw=0&phw=0&tlk=fill&cs=mono&bg=none",
+    "hash": "733ee14a",
+    "t": 40.01666666666504,
+    "w": 1240,
+    "h": 900,
+    "today": true
+  },
+  {
+    "name": "g41_def_tw42_today",
+    "query": "s=b&tw=.42&cr=3&fl=0&am=instant&snd=none&phw=0&fw=0&stb=0&tlk=fill&cs=mono&bg=none",
+    "hash": "da10b9a5",
+    "t": 40.01666666666504,
+    "w": 1240,
+    "h": 900,
+    "today": true
+  },
+  {
+    "name": "g41_ring_tw64_today",
+    "query": "s=1rphqy1&gs=12&shp=ring&wd=.45&sl=1&dr=.75&rep=1.45&bd=2.5&sm=.6&ga=.2&tw=.64&gap=.04&cr=3&fl=0&fv=1&am=instant&snd=none&phw=0&fw=0&stb=0&tlk=fill&cs=mono&bg=none",
+    "hash": "ea67fc77",
+    "t": 40.01666666666504,
+    "w": 1240,
+    "h": 900,
+    "today": true
+  },
+  {
+    "name": "user_tw42.lightpaper_today",
+    "query": "s=1471kin&gs=12&rep=1&bd=1&sm=.25&ga=0&tw=.42&gap=.12&cr=3&fl=0&fv=1.15&vol=.18&hs=312&pal=moss&pc=6c644c&as=2.1&am=instant&snd=none&phw=0&fw=0&stb=0&tlk=fill&cs=mono&bg=none",
+    "hash": "462652e7",
+    "t": 40.01666666666504,
+    "w": 1240,
+    "h": 900,
+    "today": true
+  },
+  {
+    "name": "def_today",
+    "query": "s=b&am=instant&snd=none&phw=0&fw=0&stb=0&tlk=fill&cs=mono&bg=none",
+    "hash": "910ff135",
+    "t": 40.01666666666504,
+    "w": 1240,
+    "h": 900,
+    "today": true
+  },
+  {
+    "name": "fat_today",
+    "query": "s=p9ar6&mf=0&rep=.4&bd=1.75&sm=.7&tw=.52&am=instant&snd=none&phw=0&fw=0&stb=0&tlk=fill&cs=mono&bg=none",
+    "hash": "814c4e1e",
+    "t": 40.01666666666504,
+    "w": 1240,
+    "h": 900,
+    "today": true
+  },
+  {
+    "name": "g41_def_tw64_today",
+    "query": "s=b&tw=.64&cr=3&fl=0&am=instant&snd=none&phw=0&fw=0&stb=0&tlk=fill&cs=mono&bg=none",
+    "hash": "5ccb276f",
+    "t": 40.01666666666504,
+    "w": 1240,
+    "h": 900,
+    "today": true
+  },
+  {
+    "name": "g41_user_tw42_today",
+    "query": "s=1471kin&gs=12&rep=1&bd=1&sm=.25&ga=0&tw=.42&gap=.12&cr=3&fl=0&fv=1.15&vol=.18&hs=312&pal=moss&pc=6c644c&as=2.1&am=instant&snd=none&phw=0&fw=0&stb=0&tlk=fill&cs=mono&bg=none",
+    "hash": "a5f6d198",
+    "t": 40.008333333331706,
+    "w": 1240,
+    "h": 900,
+    "today": true
+  },
+  {
+    "name": "muse_default_tw_today",
+    "query": "3&cr=6&am=instant&snd=none&stb=0&fw=0&phw=0&tlk=fill&cs=mono&bg=none",
+    "hash": "c5d9f3b6",
+    "t": 40.01666666666504,
+    "w": 1240,
+    "h": 900,
+    "today": true
+  },
+  {
+    "name": "ring_today",
+    "query": "s=1rphqy1&gs=12&shp=ring&wd=.45&sl=1&dr=.75&rep=1.45&bd=2.5&sm=.6&ga=.2&tw=.58&gap=.04&cr=3&fl=.26&fv=1&am=instant&snd=none&phw=0&fw=0&stb=0&tlk=fill&cs=mono&bg=none",
+    "hash": "50dd4ffd",
+    "t": 40.01666666666504,
+    "w": 1240,
+    "h": 900,
+    "today": true
+  },
+  {
+    "name": "g41_ring_tw42_today",
+    "query": "s=1rphqy1&gs=12&shp=ring&wd=.45&sl=1&dr=.75&rep=1.45&bd=2.5&sm=.6&ga=.2&tw=.42&gap=.04&cr=3&fl=0&fv=1&am=instant&snd=none&phw=0&fw=0&stb=0&tlk=fill&cs=mono&bg=none",
+    "hash": "f7b1dff2",
+    "t": 40.01666666666504,
+    "w": 1240,
+    "h": 900,
+    "today": true
+  },
+  {
+    "name": "g41_user_tw64_today",
+    "query": "s=1471kin&gs=12&rep=1&bd=1&sm=.25&ga=0&tw=.64&gap=.12&cr=3&fl=0&fv=1.15&vol=.18&hs=312&pal=moss&pc=6c644c&as=2.1&am=instant&snd=none&phw=0&fw=0&stb=0&tlk=fill&cs=mono&bg=none",
+    "hash": "0d51331b",
+    "t": 40.008333333331706,
+    "w": 1240,
+    "h": 900,
+    "today": true
+  }
+]
