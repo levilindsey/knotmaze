@@ -622,7 +622,7 @@ Next free ID: K1466.
   - owner: agent `ae13158a4930b03bd` of claude session 01SUPGULDxvE5gKXozfaFaFG (opus, started 2026-11-17 13:32, 2 h cap ~15:32)
   - branch: `worktree-agent-ae13158a4930b03bd`, worktree `.claude/worktrees/agent-ae13158a4930b03bd`; last commit: `da5ee44c`
   - evidence: .claude/probes/K1460/ (stage 1 sheets in out/), .claude/probes/K1458/
-  - next: stage 2 running: bands and stairs, the loop at 1.2, jB bite and blob, protect, numbers
+  - next: stage 2 running (started 13:33, cap 15:35): bands and stairs, the loop at 1.2, jB bite and blob, protect, numbers
   - brief: `docs/design/K1460_s2_fade_bands.md`
 - **K1451** · gfh=1 after K1449: default fadeLength reads 368 finds (target 250): 246 are crossing-tie
   wedges/dashes the flag-off renderer has too, 122 the fade's outline taper where a diving arm leaves its
@@ -639,6 +639,15 @@ Next free ID: K1466.
   - owner: muse session, the K1053 chain (.claude/probes/K1053/chain.log names each run's agent); coordinating claude session 01SUPGULDxvE5gKXozfaFaFG
   - branch: mainline; last commit: `b7e8e805`
   - evidence: .claude/probes/K1053/chain.log, done.txt
+- **K1436** · rp=gf bar test v2: K1433's reference-free test (.claude/probes/K1433/k1433_scan.ts) misses ink
+  dips shallower than about 0.4 (the d547dab6 def notches) and its plain class is 0 of 9 real; add a
+  band-profile check along each exposed edge and a crossing exemption, then replace the form-B census bars
+  with it (Handoff K1433)
+  - owner: agent `a6098dba61a4f2f8b` of claude session 01SUPGULDxvE5gKXozfaFaFG (opus, started 2026-11-17 13:48, 2 h cap ~15:48)
+  - branch: `worktree-agent-a6098dba61a4f2f8b`, worktree `.claude/worktrees/agent-a6098dba61a4f2f8b`; last commit: `7035d1b2`
+  - evidence: .claude/probes/K1436/ (v2), .claude/probes/K1433/ (v1)
+  - next: stage running: band-profile check, crossing exemption, precision and recall sheets
+  - brief: `docs/design/K1436_bar_test_v2.md`
 
 ## Next, in order
 
@@ -960,10 +969,6 @@ Every other item below waits on the trigger it names.
 - **K1432** · rp=gf smudges (muse_hash 5.88,8.50 extra 1243; 19.41,14.16 extra 752): composite()'s equal-depth
   tie blend smears dark into the fill where today's fill shows none; narrowing the window everywhere fails the
   bar (37 new wedges), so it needs a discriminator (K1407 c5; docs/design/K1407_c4_bar.md Handoff c4)
-- **K1436** · rp=gf bar test v2: K1433's reference-free test (.claude/probes/K1433/k1433_scan.ts) misses ink
-  dips shallower than about 0.4 (the d547dab6 def notches) and its plain class is 0 of 9 real; add a
-  band-profile check along each exposed edge and a crossing exemption, then replace the form-B census bars
-  with it (Handoff K1433)
 - **K1456** · cut rp=gf's cold first load (K1452: 105 s main-thread block, six 40-63k-char programs at 4-19 s
   each): KHR_parallel_shader_compile with today's renderer on screen until gf is ready, compile only the first
   frame's program, then smaller programs (.claude/probes/K1450/cold.mjs, Handoff K1450)
