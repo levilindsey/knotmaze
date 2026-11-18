@@ -58,6 +58,8 @@ if (process.env.K1436_DWPX === undefined) PAR.DWPX = 0.6;
 // exists for are 0.15 px there) and band finds of 9 px or more (5 of 5 sampled vdip finds under 9 px were clean corners)
 if (process.env.K1436_WIDE === undefined) PAR.WIDE = 0;
 if (process.env.K1436_MINPX === undefined) PAR.MINPX = 9;
+// rstray finds of 7 px or more (stage 1's sheets: the 3-6 px rstray finds had no ink at 4x; K1436 s2)
+if (process.env.K1436_RSTRAY === undefined) PAR.RSTRAY = 7;
 const ppu = +ppuS; const ev = process.env.K1436_EV ?? "src"; const ph = +(process.env.K1436_PH ?? 0);
 const G = ev === "src" ? (await import("../../../src/render/gpu_field/eval.ts")).GfEval : await loadEval(ev);
 if (ev === "u") G.MODE = "master";

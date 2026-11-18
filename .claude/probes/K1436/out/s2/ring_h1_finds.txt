@@ -1,0 +1,4 @@
+rows left to right, top to bottom; per find: fill | border, 60 device px at 4x
+1. ring_h1 rstray:plain 1.860:1.436  12421px
+2. ring_h1 cut:plain 19.429:20.037 x68 963px
+3. ring_h1 rstray:plain 3.167:2.098  506px

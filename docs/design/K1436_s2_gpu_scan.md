@@ -69,3 +69,68 @@ the bar every gf stage is judged by:
 whichever comes first. A compaction is not a stop: re-read this brief and `git log`. On stopping: commit WIP,
 append `### Handoff K1436 s2` here, commit, and report: what holds, the sheets' paths, the numbers, a
 `Ledger items` list and the item's handle fields.
+
+### Handoff K1436 s2
+
+Stopped at 16:56 PT, 30 min before the 2 h cap (started ~15:27): the last K1460 capture died in a context loss again (pageerror "reading 'stats'" after gf's dispose), and every remaining Done needs captures. WIP in ad7c4480 (screen scan fixes, sheet tool) and 04dd9b32 (capture,
+bar script, comparison). Probes only; nothing under src/ or test/.
+
+**What holds**
+- Mirror scan, rstray floor (Do 3): rstray finds need 7 px (`K1436_RSTRAY`, default 7 in k1436_scan.ts). On the 12
+  scenes at gfh=1, rstray goes from 59 to 46 finds (plain 19 -> 9, ramp 19 -> 18, tie 21 -> 19), which is the
+  stage 1 JSONs filtered to px >= 7, not a rerun. The 10-sample precision check was not done.
+- Mirror v2 on the 12 scenes (before the floor): gfh=1 156 finds (tie 60, ramp 25, plain 71; v1 read 2434), wall
+  58 s, cpu 173 s; flag off 1164 (dstray:tie 710, rstray:tie 284, vdip:tie 116; v1 3964), wall 56 s.
+- vdip:ramp has 6 finds at gfh=1 and 3 with the flag off. By eye, 3 of the 9 are false (beside white or a clean band
+  edge: muse_hash 11.337:32.443, def 3.936:8.398 h0, muse_default_tw 9.714:15.219 h0). Not fixed.
+- Screen scan (Do 1) runs end to end on ring at gfh=1, master, DSF 3 (~100 device px per world unit): 921 finds
+  went to 3 after four fixes, each checked on a crop sheet:
+  - speck took a 7x7 same-chain median, which read the fade's own gradient (8 of 8 sampled specks false). It now
+    takes the 8-neighbour median and flags a deviation over 0.35.
+  - The zone was a same-chain arc window, which read the border look's fade as band dips (21 of 21 vdip false).
+    It is now a world disc of radius L round each under pass, over every chain.
+  - The border look's stroke colour is measured (the median where the mirror ink is full), not assumed white.
+  - Markers: off-colour pixels are dilated 12 px, and a disc of 2.2x the equivalent radius is masked round each
+    off-colour blob of 300 px or more.
+  Ring's 3 left (sheet `out/s2/ring_h1_finds.png`): 2 are the start marker, which the mask still leaks round, and
+  1 is a cut at x68 where the border look's under thread ends in a tapered stub, plausibly real. align 0.101
+  device px rms (not diagnosed). One scene, 13.8 s.
+- Not done: the other 11 scenes, flag off, the 12-scene table, the twenty largest finds, the 40-find precision
+  sample, K1460's tick and dotted line (master vs c5fc87d1), the bar runs, the def notch spots mode.
+
+**Why the time went: rp=gf capture on a fresh build is slow and unstable**
+- After gf switches in (`__knotGf.stats.switchedMs > 0`, about 50 s after load on a cold profile), it compiles
+  its other programs and the frame loop stalls for 1-3 min.
+- At DSF 3, and at DSF 2 on the seed-3 1600x900 K1460 link, the stall ended in a WebGL context loss: gf is
+  disposed, recreated and recompiled (`sw` back to -1).
+- With a warm profile on the same build and link, a capture takes about 20 s.
+- Another owner's Chrome (muse K1459, lock dated 15:38, stale by 16:08) was on the GPU the whole time; that load is
+  inferred as a cause, not measured.
+- The K868 recipe's hash matched only on the 3rd try (0a0ee15e vs 50dd4ffd) even stepping to t - 0.008.
+- k1436_screen.mjs therefore waits for 20 frames after the switch, counts losses on connected canvases, retries
+  (TRIES), and closes the panel through localStorage `knotmaze.panelOpen=0` and CSS.
+- k1436_dbg.mjs prints gf state every 3 s through one capture: run it first on any new link.
+
+**Labels and depth come from the mirror.** A capture has no chain, s, depth or class: the screen scan reads them
+from the mirror's GfEval tables at the same device pixel (after the align step). A fault where the screen and
+mirror geometry disagree by more than ~1 px is read against the wrong labels.
+
+**Next (stage 3)**
+1. Warm the profile once per build, before timing: load each link and wait out the compile, then capture.
+2. Capture the 12 scenes at DSF 3, h1 and h0, three at a time; build the table.
+3. Run K1460's link (`out/s2/jobs_k1460.json`) on master and c5fc87d1 and check the tick and dotted line.
+4. Run the bar, and the 40 and 10 samples.
+5. Mask markers from the fabric renderer's marker positions (put them in meta.json) instead of by colour.
+6. Add the def notch spots mode.
+
+**Paragraph for `.claude/rules/render-gpu-field.md`**
+> K1436 s2 (2026-11-17), screening rp=gf on the GPU: `.claude/probes/K1436/k1436_screen.mjs` captures a frozen
+> K868 state in fill and border looks at DSF 3, and `k1436_screen_scan.ts` runs scan v2's band profile and strays
+> on the screen's ink (labels and depth from the mirror's tables at the same pixel). `k1436_bar.ps1 -Ref <c>`
+> is the A/B (untested end to end). GOTCHAS:
+> - A fresh build's first gf switch compiles the rest of gf's programs and stalls frames for 1-3 min; under GPU
+>   load at DSF 3 it can lose the context (gf disposes and recompiles).
+> - Warm the Chrome profile per build before timing.
+> - Count `webglcontextlost` on the app's canvas and retry.
+> - Close the panel with localStorage `knotmaze.panelOpen=0`, or it covers the knot.
+> - Speck tests need an 8-neighbour median: a 7x7 one reads every fade ramp as specks.

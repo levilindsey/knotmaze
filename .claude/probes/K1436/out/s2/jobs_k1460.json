@@ -1,0 +1,18 @@
+[
+  {
+    "name": "k1460_fl0",
+    "query": "3&xp=off&am=instant&prp=off&phw=0&fw=0&bg=none&snd=none&tlk=fill&cs=mono&rp=gf&fl=0",
+    "hash": "49c20566",
+    "t": 20,
+    "w": 1600,
+    "h": 900
+  },
+  {
+    "name": "k1460_fl05",
+    "query": "3&xp=off&am=instant&prp=off&phw=0&fw=0&bg=none&snd=none&tlk=fill&cs=mono&rp=gf&fl=0.5",
+    "hash": "49c20566",
+    "t": 20,
+    "w": 1600,
+    "h": 900
+  }
+]
