@@ -295,6 +295,35 @@ as instructed (K1460 was already done). Stopped at the 2-hour line with Done 1, 
 of 7 measured, Done 3 met on mean and per-section max but not on 15 ramp pixels, Done 4 floored, Done 5
 looked at.
 
+
+### Handoff 26F, continued (Done 3 and 4 closed)
+
+Continued the same day on Levi's instruction to meet the bars. Two findings closed them:
+
+**Done 3.** The SIMT 90 sets' residue (15 px to 18 on ?3) was the loose interior mask admitting
+crossing-fade shoulders and a kink eye (out/26F/ramp_clusters.png: both clusters sit on crossings).
+Node traces (trace_ramp.ts, trace_shift.ts) show lkAt(positions) equals knotSection at the kept-vertex
+ctrl - the apparent +2 sample shift is positions' duplicate compaction matching the field's kept
+indexing, not a colour departure. With interiors read as Done 1 defines them (at least 3 px inside
+both inks, flat over 15x15, one plateau colour in 31x31; interiors2.py), the fixed build measures:
+?3 max 1 (?gfh 1), ?7 max 4, ?b.FMKB4DIQ max 0, means at most 0.001, with and without gfh=1 - the
+6/2 bar is met on all three links (fixSS_* sets, same-state recipe; gated build's fill frame agrees:
+gated_s3 max 1). The loose mask's per-section table from the first measurement stands (every section
+colour exact after the fix).
+
+**Done 4.** The unconditional alpha write moved border edges on transparent backdrops by CSS*cov
+(44,183 px outside the panel on the shot recipe), so 5c058f5c scopes the write to the fill look only
+(look.mode === 0; the filter texture still always writes; test pin updated). Border thereafter,
+stability-verified captures (bordercap.mjs: screenshots byte-identical twice; state hash fff8c9e5 on
+both): master bfb9017b against 5c058f5c differs by 0 px outside the panel; the only differing pixels
+(1,741) are the panel's build stamp. The earlier 138,792 px was the ungated write plus mid-flight
+renderer states.
+
+**Guards re-run on 5c058f5c's build (5486):** hold PASS on both links (60/60 frames each); dragcheck
+PASS for gf and for gfh (every stop 0 px > 24 against the fresh load; one earlier gfh FAIL re-ran
+PASS and reads as a fresh-load flake). npm test green (3180 passed). K1474 is closed by this handoff;
+K1494 (the fade guard question) stays open for its owner.
+
 ## Run G (26G): K1476, rp=gf's stray dark line across the fill at j64
 
 Added 2026-11-17, from K1436 stage 3's work list of gf's largest faults on screen

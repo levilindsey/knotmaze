@@ -1115,11 +1115,6 @@ Every other item below waits on the trigger it names.
 - **K1473** · rp=gf: check pulses and the turn telegraph on screen. Their table (unit 9) uploaded as R32F from
   9b48e44f until K1472's fix (998be573), so the shader read zeros; nobody has looked since (gf_pass.ts
   setLook; test/render/gf_look_upload.test.ts counts mismatched uploads)
-- **K1474** · rp=gf's thread fill is lighter than today's on ?3 (default look): e195e8 against today's cc7ac0
-  at junction B (866,138), and the lighter fill makes a visible edge where a long crossing fade ends (K1460
-  s5: .claude/probes/K1460/out/s5/jb_*.png, recol.py, jbdiff.py). Find where the colour departs (K1389's
-  colour table, the look composite) and make interiors equal today's; number: max channel diff over thread
-  interiors on ?3 at rest
 - **K1476** · rp=gf: a stray dark line across the fill at j64 on the census scenes muse_default_tw and
   muse_hash (world 5.6, 2.8; 362 and 182 px in K1436's screen scan), plus a notch at the junction's top edge
   on muse_default_tw; today's fill has neither. Queued as Muse run 26G (docs/design/K1464_muse_batch26.md;
@@ -2806,6 +2801,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 ## Done
 
 - **K1492** · rp=gf's border outline fades over the crossing gap's whole ramp and follows the Crossing fade slider; seen on Levi's live link at fl 0.14 and 1.2 (.claude/probes/K1492/live/crop_014_vs_12.png). Done in 3d7acffe (2026-11-18).
+- **K1474** · gf fill matched today: the composite kept destination alpha, so a transparent backdrop added its colour (21,27,40) to every section colour; fill look now writes coverage alpha (border/both keep old blend). Strict interiors max 1/4/0 on ?3/?7/?b, border 0 px outside panel. Done in 5c058f5c (2026-11-18).
 - **K1481** · gf's compile poll waits on a 250 ms timer, so it no longer asks for a full rebuild on every frame while programs compile (251 of 251 rest frames before, 46 per 10 s after); the frames left are the link's own ambient paint, which today's renderer runs at the same rate without gf. The cold wait stays with K1456. Done in 0fc195b8 (2026-11-18).
 - **K1454** · rp=gf: a pluck ripple (K279) draws over the maze instead of bending the threads (K1450's fix draws the maze to the screen past the ripple's filter); the full fix composites into the filter texture through Pixi's projection, in gf_pass.ts / gf_look.ts composite shaders (Handoff K1450). Done in b01cc37b (2026-11-17).
 - **K1460** · rp=gf crossing-fade leftovers: stages 1-4 fixed the dotted line, the kink-loop tick, the radial bands and the long-fade seams; stage 5 found today's protect term makes no visible difference at 4x at any fade (d23f3473 tried, e25d042f reverted) and junction B matches today once gf's thread colour is mapped to today's (sheets .claude/probes/K1460/out/s5/jb_*.png): the colour goes to K1474. Done in 7fe4b9c6 (2026-11-17).
