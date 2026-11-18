@@ -1,0 +1,1 @@
+g41_ring_tw42	rck1.15	finds 33	{"rbreak:plain":21,"rbreak:ramp":2,"rthin:plain":10}	{"px":5921916,"act":1544479,"msPerMpx":528,"usPerAct":2.03,"pcallsPerAct":0.122,"segsPerAct":0.76,"cfgsPerAct":1.034,"nSegPerAct":20,"nKPerAct":0.28}

@@ -1,0 +1,1 @@
+user_tw42.lightpaper	cfgmin	finds 126	{"rbreak:plain":50,"rbreak:ramp":1,"rthin:plain":63,"rthin:ramp":12}	{"px":6426640,"act":2463396,"msPerMpx":2009,"usPerAct":5.24,"pcallsPerAct":0.217,"segsPerAct":1.58,"cfgsPerAct":1.039,"nSegPerAct":23.9,"nKPerAct":0.47}
