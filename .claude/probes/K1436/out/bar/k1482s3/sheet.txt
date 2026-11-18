@@ -1,0 +1,2 @@
+rows top to bottom; tiles: base fill | ref fill | base border | ref border (80 device px at 4x, ring = the find)
+1. new mirror dstray:tie def:23.55:13.09 3px
