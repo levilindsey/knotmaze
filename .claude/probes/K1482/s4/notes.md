@@ -25,6 +25,19 @@
   - Landing needs: corners keyed on home (buildTables home option: gf_app.ts is another agent's),
     and Levi's sharp-V answer. Not landed. nK 198 -> 325 / 358 / 351 (KEXT 1 / 1.5 / 2).
 
+## Mirror fidelity (02:10)
+- HOME1=2 (scene_tables.ts) = the page exactly: built home off (no K1451 pin clip, since the page passes
+  no home to buildTables), then homeOn true. Its tables equal the page's tables_gf.json in every array.
+  vs HOME1=1: ink differs only at j50 (21 px) and t84e (3 px). So K1451 s3's clip never reaches the page.
+- gm_count.py (GPU frame ink = RGB sum <= 73, the histogram valley; mirror ink >= 0.5; 1 px slack):
+  aligned at offset 0,0 the GPU has NO ink the mirror lacks, but the mirror has extra ink at many sites:
+  >= 5 px at 148 of 281 clean sites (median 5, max 46), and at the fault sites medians 10-32
+  (out/s4/gm_count_all.txt). Shapes, not AA: t1s's GPU "dot" is a thin ink island between two paper
+  channels where the mirror inks solid (gpu_vs_mir.py t1s 3,20,6,22 73); t37e's mirror hook is absent on
+  screen (sheets/gpu_vs_mirror_clean_mismatch.png). So the mirror cannot diagnose the dots: the screen's
+  program (tiers, pack) differs from eval.ts there. Next check: K1451's gpu.mjs (live | full | probe |
+  mirror on the page's tables) with home forced, gpu_home.mjs GFHOME=1, on a vite dev server.
+
 ## Item 2
 - dots (home-off look, not rechecked home-on): winKind 4 tangent + partial ink haze at tail tips (j64, t1s).
 - j58 tick (home-on): pixel tile (36,26) = chain 43 side stroke (winKind 1), inside chain 23's fill.

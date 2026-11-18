@@ -15,7 +15,9 @@ export const dec = (v: any): any => {
 const [, , sp, tp, op] = process.argv;
 const scene = dec(JSON.parse(readFileSync(sp, "utf8"))); const P = dec(JSON.parse(readFileSync(tp, "utf8")));
 scene.look.ctrlArc ??= CTRL_ARC; (globalThis as any).__WDBG = !!process.env.WDBG;
-const T = buildTables(scene, { aa: P.aa, home: process.env.HOME1 === "1" || !!P.homeOn });
+// HOME1=1: built with home (K1451 clip on); HOME1=2: the page exactly (built home off, then homeOn set, as gf_pass.ts:782)
+const T0 = buildTables(scene, { aa: P.aa, home: process.env.HOME1 === "1" || !!P.homeOn });
+const T = process.env.HOME1 === "2" ? { ...T0, homeOn: true } : T0;
 console.log("nK node", T.nK, "page", P.nK, "nC", T.nC, P.nC, "h", T.h, P.h);
 let bad = 0;
 for (const k of ["kCx", "kCy", "kR", "kCa", "kCb", "kJ", "vx", "vy"]) {
