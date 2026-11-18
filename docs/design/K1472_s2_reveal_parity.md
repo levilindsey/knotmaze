@@ -12,8 +12,34 @@ Links: Levi's `?3.FGH1HtvQeDjm6e4BII&rp=gf&gfh=1` (trace, burn, border look) and
 default look and with trace-rainbow (K1469's link: `.claude/probes/K1459/k1469_pinwatch.mjs`,
 `k1469_live.mjs`, `docs/design/K1469_reveal_cut_check.md`).
 
+## Observed on the live site (coordinator, 2026-11-17 20:30-20:40, build 998be57, 1600x900, two other agents' Chromes running, so times are inflated)
+
+Unpinned frames 3-17 s after the load event (`.claude/probes/K1472/liveshots.mjs <url> <profileDir> <outPrefix> [times]`):
+
+- Today's renderer on Levi's link: coloured thread ink behind the burn front at 3 s and 5 s; by 7 s the reveal
+  is over and the maze is at rest, nearly invisible (black borders on the dark page). The unpinned reveal
+  lasts about 6 s.
+- The same link with `rp=gf&gfh=1`, gf not yet composing (`composites=0 compileIssued=1 compileReady=0`): smoke
+  at 3 s and 5 s and **no thread ink**; rest from 7 s. Today's renderer is meant to stay on screen until the
+  switch (`gf_app.ts` ~1061), yet its reveal ink is missing while gf waits. The page's rAF ran at 16-21 fps
+  through the wait.
+- gf's first composite on the same Chrome profile: first load of the new build 208 s (first program ready at
+  110 s), third load 107 s (first program at 48 s). `compileWorker=""` and `compileWarmed=0` on every load:
+  the probe closes 20 s after the first composite, with the queue still at issued 3 / ready 2, so the worker
+  that persists programs never ran. On fc520c2d earlier today a warm load composed at 2.6 s.
+
+So a visit to Levi's link today shows: a reveal with no ink, a nearly invisible maze for one to three minutes,
+then gf's dark outlines arriving at once. Stage 1's fix is on screen only if gf composes inside the reveal's
+6 s, which did not happen on any live load here.
+
 ## Do
 
+0. **Before the switch.** Find why the reveal's ink is missing on an rp=gf link while today's renderer is
+   still the one on screen, and fix it: until gf composes, the page must look exactly as it does without
+   `rp=gf` (number: pixels differing from today's frame at 3 s and 5 s on a load where gf has not composed;
+   pin the reveal clock if you need matched times). Then the wait itself: why a repeat visit is not warm
+   (does the compile worker ever run on a visit of a minute or two; does the next load find its programs),
+   and what makes the first program take 48-110 s. Shorten what you can and say what bounds the rest.
 1. **Sheets first.** Three builds: today (no `rp=gf`), origin/master, and origin/master with 01c72dfc
    reverted (a probe branch; 01c72dfc is Muse 26B's junction cut in the reveal, `lkJCut`, never seen on
    screen). Pinned frames at eight reveal times on the three links, whole frame and 4x crops at twelve or
@@ -35,6 +61,8 @@ default look and with trace-rainbow (K1469's link: `.claude/probes/K1459/k1469_p
 
 ## Done
 
+0. Item 0's number failing on master and passing on your tip, and the measured wait before and after (same
+   profile, first and second load).
 1. Sheets today | master gf | your gf under `.claude/probes/K1472/out/s2/`, every tile looked at, each spot
    named fixed, same as master or open.
 2. Each number failing on master and passing on your tip; a plain verdict on 01c72dfc.
@@ -67,7 +95,7 @@ A partial result lands: say plainly which commits are confirmed on the sheets.
 - Own the technique; do not stop at the cause. For anything open at the stop line, report what you tried
   and why each attempt fell short.
 
-**Stop rule.** Stop when every Done holds, or after 2 h of wall clock (`Get-Date` at each milestone),
+**Stop rule.** Items 0, 4 and 5 come before the parity sheets if time is short. Stop when every Done holds, or after 2 h of wall clock (`Get-Date` at each milestone),
 whichever comes first. A compaction is not a stop: re-read this brief and `git log`. On stopping: commit WIP,
 append `### Handoff K1472 s2` here, commit, and report: what holds, the sheets' paths (each spot named), the
 numbers, which commits are confirmed on screen, a `Ledger items` list and K1472's handle fields.
