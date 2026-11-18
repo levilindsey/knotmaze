@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1471.
+Next free ID: K1472.
 
 ## Waiting on Levi
 
@@ -658,10 +658,10 @@ Next free ID: K1471.
   loops; seen on live b4e0a08e, a3a9a6b4 and b423013a, never on a warm profile. Likely Levi's "the entire maze
   blinks in and out". Fix: one target per program, plus a no-loop guard
   (docs/design/K1468_gf_cold_load_gpu_hang.md; probes .claude/probes/K1468/)
-  - owner: agent `afd07fccfe473c7f9` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-17 17:05, 2 h cap ~19:05)
-  - branch: `worktree-agent-afd07fccfe473c7f9`, worktree `.claude/worktrees/agent-afd07fccfe473c7f9`; last commit: `e83fa5a6`
+  - owner: nobody since 2026-11-17 19:04 (merged; agent `afd07fccfe473c7f9` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `fc520c2d`
   - evidence: `.claude/probes/K1468/`
-  - next: prove the draw-time compile, then one target per program; Done 1 is five cold loads per link with the watchdog on
+  - next: stage 2: (1) the frame time on the gfh=1 link (packed build 17.3-19.0 ms and 41-46 composites/s against master's 9.6-15.8 ms and 56/s; the plain gf link is within 1%): interleaved rounds under the perf lock, then attribute it (the packed write, the k/255 table read in the composite, or a lighter program set on master); (2) the pixel A/B (Done 3): the freeze lands on one of two physics hashes per link and thread edges drift at one hash, so make it repeatable and rerun the 8 pairs with 0 px controls; (3) the cold compile (84-178 s to gf's first composite, one D3DCompile of 70-90 s). Brief: Handoff K1468 in docs/design/K1468_gf_cold_load_gpu_hang.md; probes .claude/probes/K1468/ (rest.mjs, ab.mjs, cold.ps1, exact.mjs, reload.mjs)
   - brief: `docs/design/K1468_gf_cold_load_gpu_hang.md`
 
 ## Next, in order
@@ -2265,6 +2265,9 @@ Every other item below waits on the trigger it names.
 - **K1466** · the gf census tools (k1407c1_bar.ps1, the GPU census) die with 'Fatal process out of memory:
   Zone' when six scene groups run at once; two at a time complete. Give them a throttle (Handoff K1451 s3,
   docs/design/K1451_s3_home_on_bar.md)
+- **K1471** · rp=gf's packed target (K1468): the write's fp16-truncate-then-round is calibrated on the
+  desktop's AMD GPU only (0 wrong of 696,613 values, .claude/probes/K1468/exact.mjs). Another GPU (the phone's
+  above all) may show a 1-bit residual: run exact.mjs there before gf is judged on it
 
 ## Approved, to schedule (2026-10-11)
 
