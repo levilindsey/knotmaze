@@ -14,7 +14,7 @@ vi.mock("../../src/render/paint_model", async (orig) => ({
   knotUniformValues: () => ({}),
 }));
 import { gfFs } from "../../src/render/gpu_field/gf_glsl";
-import { cornerPlan, GF_TIERS } from "../../src/render/gpu_field/gf_pass";
+import { cornerPlan, GF_TIERS, packComp } from "../../src/render/gpu_field/gf_pass";
 import { revealForm } from "../../src/render/gpu_field/gf_reveal";
 import { GfLookGate, GfLookTable, lookColour, lookFade, lookForm, lookGap, lookHi, lookKey, LOOK_COMP_FS, LOOK_R } from "../../src/render/gpu_field/gf_look";
 import { kComposePaint, kRimOver, kTeleOver, type KChain, type KData, type KPaintState, type KUniforms } from "../../src/render/paint_math";
@@ -76,7 +76,11 @@ describe("K1389 look form", () => {
     }
     expect(LOOK_COMP_FS).toContain("if (!(ink > 0.0) && !(cov > 0.0))");
     expect(LOOK_COMP_FS).not.toContain("CASE");
-    expect(LOOK_COMP_FS).toContain("vec3 Sb = mix(S, vec3(0.055, 0.07, 0.10), 0.85); float a = clamp((ink - 0.36) * 3.5, 0.0, 1.0); if (uRvFx > 0.5) { float ia = clamp(c.z, 0.0, 1.0) * cov * (1.0 - a); o = vec4(C * ia + Sb * a * (1.0 - ia), ia + a * (1.0 - ia)); } else { float ia = clamp(hh.a, 0.0, 1.0) * cov * (1.0 - clamp(c.w, 0.0, 1.0)); o = vec4(hh.rgb * ia + Sb * a * (1.0 - ia), ia + a * (1.0 - ia)); }");
+    // K1482: the border alpha is the 2x2 grey opening of the thresholded band over the 3x3 neighbourhood
+    expect(LOOK_COMP_FS).toContain("an[(dy + 1) * 3 + dx + 1] = clamp((texelFetch(uC, rq, 0).x - 0.36) * 3.5, 0.0, 1.0);");
+    expect(LOOK_COMP_FS).toContain("float a = max(max(min(min(an[0], an[1]), min(an[3], an[4])), min(min(an[1], an[2]), min(an[4], an[5]))), max(min(min(an[3], an[4]), min(an[6], an[7])), min(min(an[4], an[5]), min(an[7], an[8]))));");
+    expect(packComp(LOOK_COMP_FS)).toContain("gfU8(texelFetch(uC, rq, 0).x)");
+    expect(LOOK_COMP_FS).toContain("min(an[7], an[8])))); if (uRvFx > 0.5) { float ia = clamp(c.z, 0.0, 1.0) * cov * (1.0 - a); o = vec4(C * ia + Sb * a * (1.0 - ia), ia + a * (1.0 - ia)); } else { float ia = clamp(hh.a, 0.0, 1.0) * cov * (1.0 - clamp(c.w, 0.0, 1.0)); o = vec4(hh.rgb * ia + Sb * a * (1.0 - ia), ia + a * (1.0 - ia)); }");
     expect(LOOK_COMP_FS).toContain("uniform float uRvFx;");
     expect(lookGap({ style: { casingWidth: 0.34, threadWidth: 0.26 } })).toBeCloseTo(0.07, 9);
     expect(lookFade({ fadeLength: 0.14 })).toBe(0.14);
