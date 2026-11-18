@@ -109,7 +109,7 @@ describe("K1423 GfGapTable", () => {
   it("eye walls: the window from each crossing ends near the eye's midpoint (twin cap)", () => {
     const T = new GfGapTable();
     const V = T.values(src);
-    const at = (x: number) => V[over.count + Math.round(x / under.arcPer)]; // chain 1 follows chain 0 in the layout
+    const at = (x: number) => V[4 * (over.count + Math.round(x / under.arcPer))]; // chain 1 follows chain 0 in the layout
     // at the crossing the sample is deep inside (winM near the window's reach)
     expect(at(10)).toBeGreaterThan(0.5);
     // the eye's middle (x=11.5) sits at both windows' ends: winM near or below
@@ -118,5 +118,24 @@ describe("K1423 GfGapTable", () => {
     // just inside the first window's end it is still positive but small
     expect(at(11)).toBeGreaterThan(0);
     expect(at(11)).toBeLessThan(at(10));
+  });
+  it("K1458: each windowed under sample names its over pass and the over sample nearest it", () => {
+    const V = new GfGapTable().values(src);
+    const ent = (x: number) => 4 * (over.count + Math.round(x / under.arcPer));
+    for (const x of [9.6, 10, 10.4, 13]) {
+      const i = ent(x);
+      expect(V[i + 1]).toBe(0); // the over chain
+      const k = V[i + 2];
+      expect(Number.isInteger(k)).toBe(true);
+      // the named over sample sits within the scan of the over point nearest (x, 0)
+      const d = Math.hypot(over.positions[2 * k] - x, over.positions[2 * k + 1]);
+      let best = 1e9;
+      for (let j = 0; j < over.count; j++) best = Math.min(best, Math.hypot(over.positions[2 * j] - x, over.positions[2 * j + 1]));
+      expect(d - best).toBeLessThan(V[i + 3] * over.arcPer + 1e-6);
+      expect(V[i + 3]).toBeGreaterThan(0);
+    }
+    // far from both crossings no over pass is named
+    expect(V[ent(2) + 1]).toBe(-1);
+    expect(V[ent(18) + 1]).toBe(-1);
   });
 });

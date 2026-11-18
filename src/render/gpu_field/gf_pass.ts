@@ -428,11 +428,11 @@ export class GfPass {
       gl.bindTexture(gl.TEXTURE_2D, this.dynTex);
       const view = Dyn.subarray(0, rows * GF_TW * 4);
       if (rows !== this.dynRows) {
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, GF_TW, rows, 0, gl.RGBA, gl.FLOAT, view);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.R32F, GF_TW, rows, 0, gl.RED, gl.FLOAT, view);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
         this.dynRows = rows;
-      } else gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, GF_TW, rows, gl.RGBA, gl.FLOAT, view);
+      } else gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, GF_TW, rows, gl.RED, gl.FLOAT, view);
       gl.bindTexture(gl.TEXTURE_2D, null);
       gl.activeTexture(gl.TEXTURE0);
       this.dynVer = dynVer;
@@ -452,11 +452,11 @@ export class GfPass {
       gl.bindTexture(gl.TEXTURE_2D, this.fxTex);
       const view = Fx.subarray(0, rows * GF_TW * 4);
       if (rows !== this.fxRows) {
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, GF_TW, rows, 0, gl.RGBA, gl.FLOAT, view);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.R32F, GF_TW, rows, 0, gl.RED, gl.FLOAT, view);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
         this.fxRows = rows;
-      } else gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, GF_TW, rows, gl.RGBA, gl.FLOAT, view);
+      } else gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, GF_TW, rows, gl.RED, gl.FLOAT, view);
       gl.bindTexture(gl.TEXTURE_2D, null);
       gl.activeTexture(gl.TEXTURE0);
       this.fxVer = fxVer;
@@ -496,13 +496,13 @@ export class GfPass {
       gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
       gl.activeTexture(gl.TEXTURE12);
       gl.bindTexture(gl.TEXTURE_2D, this.gwTex);
-      const view = Gw.subarray(0, rows * GF_TW);
+      const view = Gw.subarray(0, rows * GF_TW * 4); // K1458: RGBA (winM, over chain, over arc, scan)
       if (rows !== this.gwRows) {
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.R32F, GF_TW, rows, 0, gl.RED, gl.FLOAT, view);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, GF_TW, rows, 0, gl.RGBA, gl.FLOAT, view);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
         this.gwRows = rows;
-      } else gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, GF_TW, rows, gl.RED, gl.FLOAT, view);
+      } else gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, GF_TW, rows, gl.RGBA, gl.FLOAT, view);
       gl.bindTexture(gl.TEXTURE_2D, null);
       gl.activeTexture(gl.TEXTURE0);
       this.gwVer = gwVer;
