@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1470.
+Next free ID: K1471.
 
 ## Waiting on Levi
 
@@ -307,6 +307,10 @@ Next free ID: K1470.
   spot 4 (muse_hash 5.88,8.50) rounds the corner where rp=outline draws a dive shadow; (3) g41_user_tw64
   17.80,9.55: soft band at the default fadeLength, no line at 1.2, where master and rp=outline draw a fading
   stub; sheets .claude/probes/K1438/out/sheet_fl_1..2.png, sheet_worse.png
+- **K1470** · rp=gf gfh=1, junction j71 (g41_user_tw64 4.981:7.472): since K1451 stage 4 the colour seam
+  inside the web is a small trapezoid bump where it was a thin spike (21 px at 4x; pin 278 L's over window
+  0.658 -> 0.770). No rule tried fixes spot 7 without changing it. Keep, or go back to the spike and reopen
+  spot 7? Picture: .claude/probes/K1451/out/s4/g_j71.png (columns 3 and 4), m_j71wide.png
 
 ## In progress
 
@@ -629,10 +633,10 @@ Next free ID: K1470.
   junction (a look, K1444); fadeLength under about 0.066 (0.1 win) draws one hard cut, a dead zone at the
   slider's bottom; the bench never settled (two more rounds of k1449_bench.ps1 alone). Handoff K1449 in
   docs/design/K1449_home_leftovers.md, sheets .claude/probes/K1449/out/ (worktree agent-a02a2023ec92cd84f)
-  - owner: agent `aa84d5035d75f3084` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-17 17:05, 2 h cap ~19:05)
-  - branch: `worktree-agent-aa84d5035d75f3084`, worktree `.claude/worktrees/agent-aa84d5035d75f3084`; last commit: `e83fa5a6`
+  - owner: nobody since 2026-11-17 18:39 (merged; agent `aa84d5035d75f3084` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `ae2b4dfb`
   - evidence: `.claude/probes/K1451/out/s3/`
-  - next: stage 4: spots 5 and 7 without the in-arm hard edges, pinReach's build time, the owed GPU census, scan and bench
+  - next: owed from stage 4, each alone under the perf lock (Muse 26C held it): k1362c1_bench.ps1 at gfh=1 against a3a9a6b4 (GPU and work p50 within 5%) and k1451_buildtime.ts 5 (needs tables_k1451m.ts copied from e83fa5a6, deleted after; unlocked it read 190.6 ms against 191.6); rerun hold.mjs on the gfh=1 link once K1468 lands (it fails on master too, with GPU-process dumps); the original k1362s2_census at gfh=1 never turns home on or sets the pass's fade (use census_s4*); then K1460's protect-interval row
   - brief: `docs/design/K1451_s4_spots_5_7.md`
 - **K1464** · Muse batch 26 (rp=gf on an ordinary load): 26A K1456 cold first load, 26B K1459 reveal ink per
   thread, 26C K1424 route bands by fan membership, 26D K1454 a pluck ripple bends the threads
