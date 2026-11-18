@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1494.
+Next free ID: K1497.
 Next free ID: K1493.
 
 ## Waiting on Levi
@@ -754,11 +754,21 @@ Next free ID: K1493.
   fade_sheet.png) shows fl 0 to 1.2 only pulls the under thread's outline ends back a few px where 1.2 asks
   for about 51 device px, on master and with the home build alike. Target: the outline's ramp equals the fill
   look's at fl 0, 0.14, 0.5, 1.2 and follows a live slider move; the border look is otherwise unchanged
-  - owner: agent `aebdeea6fdd0e38c8` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-18 04:35, 2 h cap ~06:35)
-  - branch: `worktree-agent-aebdeea6fdd0e38c8`, worktree `.claude/worktrees/agent-aebdeea6fdd0e38c8`; last commit: `b88a4108`
+  - owner: nobody since 2026-11-18 05:50 (merged; agent `aebdeea6fdd0e38c8` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `3d7acffe`
   - evidence: .claude/probes/K1482/out/s5/fade_sheet_wide.png, fade_sheet.png; .claude/probes/K1458/ (fade.mjs, dragcheck.mjs, border.mjs unrun); the stage writes .claude/probes/K1492/
-  - next: the stage's report (cap about 06:45 on 2026-11-18): the outline-ramp table on master and tip, sheet .claude/probes/K1492/out/sheet_fade.png; view it, check the sweep at fl 0.14 changes only at under-thread outline ends, merge (gf_look.ts; Muse 26G and 26H edit the same file), CI, live check, show Levi the sheet
+  - next: live check of Levi's link at fl 1.2 and the default after CI on 3d7acffe (with K1474's blend change, not yet seen together); show Levi .claude/probes/K1492/out/sheet_fade.png; then K1495 (the fade's reach on link A)
   - brief: `docs/design/K1492_border_fade.md`
+- **K1495** · rp=gf's crossing fade on link A reaches about 11.5 device px at fl 1.2 where the slider asks for
+  about 51 (link B reaches 20.5); the border outline now follows the fill (K1492), so both are short.
+  Suspects, untested: K1458's clearance scales, the gap's window. Number: the fill's 10-90% ramp at fl 1.2 at
+  K1492's eight crossings (.claude/probes/K1492/prof.py, out/t_prof.json) against today's renderer on the same
+  link
+  - owner: agent `ab03fad2cb648ebf8` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-18 05:51, 2 h cap ~07:51)
+  - branch: `worktree-agent-ab03fad2cb648ebf8`, worktree `.claude/worktrees/agent-ab03fad2cb648ebf8`; last commit: `63d06c9f`
+  - evidence: .claude/probes/K1492/ (prof.py, out/t_prof.json, out/sheet_fade.png); the stage writes .claude/probes/K1495/
+  - next: the stage's report (cap about 08:00 on 2026-11-18): today's against gf ramp table; if a fix, view .claude/probes/K1495/out/sheet_reach.png, merge (gf_look.ts; Muse 26G and 26H edit the same file), CI, live check, show Levi
+  - brief: `docs/design/K1495_fade_reach.md`
 
 ## Next, in order
 
@@ -2416,6 +2426,10 @@ Every other item below waits on the trigger it names.
   build home-off tables, which match the gfh=1 page only until the page builds with home (K1482 stage 5 item
   0): then they need `HOME1=1`. Fix or retire each when next used (.claude/probes/K1451/gpu.mjs,
   .claude/probes/K1482/)
+- **K1496** · K1492's outline fade at crossings x75 and x103 on link A reads 2-7 px at fl 1.2 against the
+  fill's 11 (the probe may be at fault: the outline runs beside the over thread; not looked at on tiles), and
+  at some crossings the outline fades over a longer stretch than the fill (x104: 28 and 21 px against 18).
+  .claude/probes/K1492/out/t_prof.json
 
 ## Approved, to schedule (2026-10-11)
 
