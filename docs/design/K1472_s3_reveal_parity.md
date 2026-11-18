@@ -77,3 +77,42 @@ A partial result lands: say plainly which commits are confirmed on the sheets.
 whichever comes first. A compaction is not a stop: re-read this brief and `git log`. On stopping: commit WIP,
 append `### Handoff K1472 s3` here, commit, and report: what holds, the sheets' paths (each spot named), the
 numbers, which commits are confirmed on screen, a `Ledger items` list and K1472's handle fields.
+
+### Handoff K1472 s3
+
+Stopped 2026-11-18 00:22 PT, stage 3 partial. Branch `worktree-agent-af888a799cf269dde`, rebased on
+origin/master. Same-state stands throughout: `phw=0`, shots at the slept state (hash all=15294c37, sim 5.0).
+
+**Holds.**
+- Item 0, the takeover (7a518b9c, 5130685e): gf never switches in mid-reveal (`midReveal` opt for probes)
+  and waits out today's FX tail. Takeover diff (today's last frame vs gf's first): master warm
+  45708 / 37862 / 49130 px, master cold 2853; tip warm 5426 / 10423 / 624. For scale, today's own step
+  across the FX end is 9605 / 286 px, and gf post0 vs today post0 is 20 / 173 / 283 px.
+- At rest, gf on master vs gf on the tip: 0 px (pin2, `rest`).
+- `npm test` green (254 files, 3169 tests).
+
+**pin2 sheets** (`.claude/probes/K1472/out/s3/pin2/`, `spot_00..12.png`, rows f3 f5 f6 rest, columns
+today | master gf | tip gf; `spots_counts.txt`, `whole_counts.txt`). master~tip, whole frame f0-f7, rest:
+0 / 70 / 217 / 596 / 624 / 429 / 40 / 53 / 0 px. Every mid-reveal pixel sits in appear_fx's smoke and ember
+particles, which `revealPin` does not pin. In every spot box master~tip is 0-25 px: all 13 spots are
+**same as master**. today~master is **open** in all 13 (peak counts: 00 start marker f3 262, rest 55;
+01 1761; 02 1157; 03 1681; 04 869; 05 1212; 06 1415; 07 903; 08 235; 09 1384; 10 437; 11 2507; 12 1814).
+Whole frame today~master: f1-f7 965 / 9012 / 24734 / 40077 / 48230 / 43381 / 36448, rest 59.
+
+**Difference 1 (broken pieces vs whole strands): attribution, not fixed.** Ruled out, each with a number:
+- settle and timing skew: the same hash at every shot;
+- the thread reveal: today `xp=off` vs today at f4, 715 px (`out/s3/xpoff/xo_f3..5.png`, `xm_f4`, `xt_f4`);
+- today's crossing gaps: gaps on vs `gaps.setEnabled(false)` at f4, 3644 px, almost all smoke
+  (`xpoff/gaps_onoff.png`, `gaps_offtint.png`);
+- the reveal mask: `maskprobe.mjs` in spot 01's box at f3 reads mask 1 and width 1 on every sample of every
+  chain there (`xpoff/mask_spot01_f3.json`), but today draws that strand broken.
+So today's pieces come from a term after the mask. Next suspect: the burn FX paint (kBurnAge / char in
+today's paint shader vs gf_look's lookForm burn, gf_look.ts ~1032-1036, `U.uKFx[2] < c.fxDone`), then the
+over-patch meshes. Next step: shoot today at f4 with the FX style forced off (or the burn age pinned past
+fxDone) and see whether the strand joins; if yes, diff gf's burn term against `paint_glsl.ts`.
+
+**Not done:** differences 2-4 (staircase cut ends, crossing seams, the start marker's glint), item 2
+(01c72dfc verdict), item 3 (`?b.FMKB4DIQ` sheets), `hold.mjs` 60/60.
+
+Probes: `.claude/probes/K1472/` `pinsheet.mjs`, `spots4.py`, `pairmask.py`, `takeover.mjs`,
+`maskprobe.mjs`, `gapsoff.mjs`, `run_xpoff.ps1`.
