@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1454.
+Next free ID: K1458.
 
 ## Waiting on Levi
 
@@ -307,18 +307,13 @@ Next free ID: K1454.
   spot 4 (muse_hash 5.88,8.50) rounds the corner where rp=outline draws a dive shadow; (3) g41_user_tw64
   17.80,9.55: soft band at the default fadeLength, no line at 1.2, where master and rp=outline draw a fading
   stub; sheets .claude/probes/K1438/out/sheet_fl_1..2.png, sheet_worse.png
+- **K1455** · the border look (tlk=border) under rp=gf: outlines only with no fill, as K797b defines it and as
+  today's renderer draws it (fainter); rp=outline ignores the thread look and always fills. Should border
+  carry colour under gf, and should rp=outline follow the setting? Crops:
+  .claude/probes/K1450/runs/crop_today.png, crop_gf.png, crop_outl.png (worktree agent-ad30609f43a2c2a15)
 
 ## In progress
 
-- **K1450** · rp=gf draws the maze only in flashes on the deployed build (Levi 2026-11-17: "the entire maze
-  blinks in and out constantly"); reproduced on live with and without gfh, any look, xp=off + am=instant
-  included; the border look's flashes also lack the fill. Blocks K1444 and every gf look call. Bisect, fix,
-  add an ordinary-load guard probe (docs/design/K1450_gf_blink.md)
-  - owner: agent `ad30609f43a2c2a15` of claude session 01SUPGULDxvE5gKXozfaFaFG (opus, started 2026-11-17 08:05, 2 h cap ~10:05)
-  - branch: `worktree-agent-ad30609f43a2c2a15`, worktree `.claude/worktrees/agent-ad30609f43a2c2a15`; last commit: `22411b68`
-  - evidence: .claude/probes/K1444/, .claude/probes/K1450/
-  - next: bisect the blink on local builds (preview.ps1 -Ref), fix, guard probe; then the coordinator re-captures Levi's link and re-asks K1444
-  - brief: `docs/design/K1450_gf_blink.md`
 - **K1407** · rp=gf look to zero artifacts: K1362 s1's census against form B reads 301 finds on 12 scenes
   (rp=outline then: 17), every one an incomplete port of form B (corner set, stray arcs, K1049 radii, burial;
   docs/design/K1362_s1_gpu_formb.md, Accuracy). No stage has fixed one since 11-12: the speed stages held the
@@ -947,6 +942,12 @@ Every other item below waits on the trigger it names.
   dips shallower than about 0.4 (the d547dab6 def notches) and its plain class is 0 of 9 real; add a
   band-profile check along each exposed edge and a crossing exemption, then replace the form-B census bars
   with it (Handoff K1433)
+- **K1456** · cut rp=gf's cold first load (K1452: 105 s main-thread block, six 40-63k-char programs at 4-19 s
+  each): KHR_parallel_shader_compile with today's renderer on screen until gf is ready, compile only the first
+  frame's program, then smaller programs (.claude/probes/K1450/cold.mjs, Handoff K1450)
+- **K1457** · every gf brief's Done list (Muse and agents) runs the ordinary-load guard: node
+  .claude/probes/K1450/hold.mjs <url> <outDir> <profileDir> 60 250 5000 on ?3&xp=off&am=instant&rp=gf and the
+  border link, no prp=off / snd=none; forced-frame probes missed a blink that stood since 2026-11-12
 
 ## Residuals (known, not fixed)
 
@@ -2196,6 +2197,9 @@ Every other item below waits on the trigger it names.
 - **K1453** · Muse batch 25 overwrote a held perf lock at 06:45 and 07:45 (2026-11-17) during K1449's parity
   and bench runs: the batch's lock step must wait on another owner's lock, not replace it (K1448 brief's How
   to work, chain.ps1)
+- **K1454** · rp=gf: a pluck ripple (K279) draws over the maze instead of bending the threads (K1450's fix
+  draws the maze to the screen past the ripple's filter); the full fix composites into the filter texture
+  through Pixi's projection, in gf_pass.ts / gf_look.ts composite shaders (Handoff K1450)
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2567,6 +2571,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1450** · rp=gf's maze blinked: its render callback skipped any frame drawn into a filter texture, and a live pluck ripple (K279) filters the world, so music mode's auto plucks hid the maze most of the time (since adac76dd); it now draws to the screen and restores the filter's target; guard: .claude/probes/K1450/hold.mjs (ordinary load, 60 frames). Done in dcf4b082 (2026-11-17).
 - **K1449** · home leftovers (gfh=1 only): the home ramp is full to the tie depth; fadeLength 0 is a crisp cut (690 -> 203 finds); default 435 -> 368, short of 250 (rest in K1451); flag-off pixels equal (0 px). Done in 7657e03b (2026-11-17).
 - **K1418** · Muse batch 24 (rp=gf look matches today): 24C, 24E, 24G landed whole; 24D, 24F, 24H, 24I in part; leftovers K1424, K1431, K1434, K1446, K1447 go to batch 25 (K1448). Done in fc861dea (2026-11-17).
 - **K1423** · K1415 residual (24A): rp=gf shallow-crossing fade still off at eye walls (seed3 ci346 err 0.110, seed5 ci248 0.481; ci77 0.033, ci345 0.063 pass): window-end and along-eye behaviour plus section-colour contamination of the scan, not fadeP width; needs a window-aware gap or a direct edge scan (.claude/probes/K1417/out/24A/fade_*.txt). Done in 72620196 (2026-11-17).
