@@ -93,6 +93,7 @@ async function shoot(gf, name) {
       const A = S.toDevA;
       for (const s of S.sites) { s.x = A[0] * s.wx + A[2] * s.wy + A[4]; s.y = A[1] * s.wx + A[3] * s.wy + A[5]; delete s.particles; }
       if (gf && process.env.TABLES === "1") { const TT = await page.evaluate(() => { const T = globalThis.__knotGf.tables; const o = {}; for (const [k, v] of Object.entries(T)) { if (ArrayBuffer.isView(v)) o[k] = { __t: v.constructor.name, v: Array.from(v, (x) => (x === Infinity ? "Inf" : x === -Infinity ? "-Inf" : x !== x ? "NaN" : x)) }; else o[k] = v; } return o; }); writeFileSync(join(outDir, `tables_${name}.json`), JSON.stringify(TT)); }
+      if (gf && process.env.SCENE === "1") { const SC = await page.evaluate(async () => { const enc = (v) => { if (ArrayBuffer.isView(v)) return { __t: v.constructor.name, v: Array.from(v, (x) => (x === Infinity ? "Inf" : x === -Infinity ? "-Inf" : x !== x ? "NaN" : x)) }; if (Array.isArray(v)) return v.map(enc); if (v && typeof v === "object") { const o = {}; for (const [k, x] of Object.entries(v)) o[k] = enc(x); return o; } if (typeof v === "number" && !Number.isFinite(v)) return v !== v ? "NaN" : v > 0 ? "Inf" : "-Inf"; return v; }; const r = await window.__knotSceneExport({ name: "k1482s4" }); return enc(r.scene); }); writeFileSync(join(outDir, `scene_${name}.json`), JSON.stringify(SC)); }
       writeFileSync(join(outDir, `sites_${name}.json`), JSON.stringify({ hash: h, query, simT: SIMT, ...S }, null, 1));
     }
     console.log(T(), `${name}: hash ${h}, lost ${await page.evaluate(() => window.__lost)}`);
