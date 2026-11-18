@@ -303,10 +303,9 @@ Next free ID: K1462.
   never unlocks it. If it should stay unlocked on the charger overnight, that is a phone setting only Levi can
   change (K1362). 2026-11-13 10:34-10:57: unlocked, but the Claude app stayed in front, so the run never
   started: the pass needs the HOME SCREEN in front and the phone untouched for 2 min (Claude never presses Home).
-- **K1455** · the border look (tlk=border) under rp=gf: outlines only with no fill, as K797b defines it and as
-  today's renderer draws it (fainter); rp=outline ignores the thread look and always fills. Should border
-  carry colour under gf, and should rp=outline follow the setting? Crops:
-  .claude/probes/K1450/runs/crop_today.png, crop_gf.png, crop_outl.png (worktree agent-ad30609f43a2c2a15)
+- **K1455** · the border look (tlk=border) under rp=gf: today draws thin, dim, section-tinted edge strokes; gf draws
+  thick near-black strokes on both edges of every thread (live c5fc87d1). Asked 2026-11-17 with the picture: match
+  today, or keep gf as it is? Also: should rp=outline follow the setting? (.claude/probes/K1458/live/sheet_border.png)
 - **K1444** · rp=gf home membership looks (after K1439 makes it live behind a flag): (1) on by default? (2)
   spot 4 (muse_hash 5.88,8.50) rounds the corner where rp=outline draws a dive shadow; (3) g41_user_tw64
   17.80,9.55: soft band at the default fadeLength, no line at 1.2, where master and rp=outline draw a fading
