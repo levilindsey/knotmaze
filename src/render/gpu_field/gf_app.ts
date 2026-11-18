@@ -31,7 +31,7 @@ import { CTRL_ARC, gfBuild, gfDepth, gfLookDraws, tablesDiff } from "./gf_build"
 import { GfRevealTable, gfRevealing } from "./gf_reveal";
 import { GfExploreTable, gfExploring } from "./gf_explore";
 import { knotUniformValues } from "../paint_model";
-import { GfDynTable, GfFxTable, GfGapTable, GfLookGate, GfLookTable, GfPaintTable, dynKey, lookFade, lookGap, lookKey, paintKey, rimKey, rimUniforms, type GfDynSource, type GfGapSource, type GfPaintSource, type GfRimSource } from "./gf_look";
+import { GfDynTable, GfFxTable, GfGapTable, GfLookGate, GfLookTable, GfPaintTable, dynKey, gfJointClear, lookFade, lookGap, lookKey, paintKey, rimKey, rimUniforms, type GfDynSource, type GfGapSource, type GfPaintSource, type GfRimSource } from "./gf_look";
 import { kArcU, kWrap } from "../paint_math";
 import { GfComposite, GfPass, GfTarget, type GfMap } from "./gf_pass";
 
@@ -537,6 +537,7 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
       ps: { crossings: readonly { over: { chain: number }; under: { chain: number } }[] };
       renderCtrl: (p: never) => number;
       style: { threadWidth: number };
+      junctionArcCtrls: ReadonlyMap<number, readonly { ctrl: number }[]>; FILLET_REACH_PER_HALF: number; cuspRadius: number;
     };
     const src = r as unknown as GfGapSource;
     const P = gwTab.values({
@@ -546,6 +547,7 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
         underChain: c.under.chain, underCtrl: xr.renderCtrl(c.under as never),
       })),
       fillHalf: xr.style.threadWidth / 2, margin: lookGap(r), fade: lookFade(r),
+      joints: xr.junctionArcCtrls, jointClear: gfJointClear(xr.style.threadWidth / 2, xr.FILLET_REACH_PER_HALF, xr.cuspRadius, lookGap(r)),
     }, gwPool.pop());
     stats.gwMs.push(performance.now() - t0);
     return P;

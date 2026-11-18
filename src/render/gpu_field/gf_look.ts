@@ -391,6 +391,9 @@ export interface GfGapCrossing { overChain: number; overCtrl: number; underChain
 export interface GfGapSource extends GfLookSource {
   crossings: readonly GfGapCrossing[];
   fillHalf: number; margin: number; fade: number;
+  /** K1458: each chain's fused-joint ctrls (the renderer's junctionArcCtrls) and their clearance (crossing_gaps.ts jointClear): today's joint window cap. */
+  joints?: ReadonlyMap<number, readonly { ctrl: number }[]>;
+  jointClear?: number;
 }
 // crossing_gaps.ts's march constants, kept by value here (MARCH_STEP, GAP_EXIT_PAD, the uCap floors/reach).
 const GAP_MARCH_STEP = 0.07;
@@ -416,7 +419,7 @@ function gapPointAt(S: GapSamples, arc: number, o: { x: number; y: number }): vo
  * [winNeg, winPos] of arc from the under centre. capNeg/capPos bound the march (the caller's neighbour
  * caps); a side whose distance never clears runs to its cap, as the solve's does.
  */
-export function gapWindow(su: GapSamples, so: GapSamples, uC: number, oC: number, fillHalf: number, margin: number, fade: number, capNeg: number, capPos: number): [number, number] {
+export function gapWindow(su: GapSamples, so: GapSamples, uC: number, oC: number, fillHalf: number, margin: number, fade: number, capNeg: number, capPos: number, roomNeg = 1e6, roomPos = 1e6): [number, number, number, number, number, number] {
   const R = 3.4; // the over polyline's reach around the crossing (the march's caps stay inside it)
   const stepO = Math.max(1, Math.round(0.1 / so.arcPer)) * so.arcPer; // today's coarse march spacing
   const nO = Math.max(2, Math.round((2 * R) / stepO) + 1);
@@ -441,28 +444,45 @@ export function gapWindow(su: GapSamples, so: GapSamples, uC: number, oC: number
     const lo = Math.hypot(tox, toy) || 1; tox /= lo; toy /= lo;
     return { d: Math.sqrt(bd), sin: Math.abs(tux * toy - tuy * tox) };
   };
-  const march = (dir: number, cap: number): number => {
+  const sc6: [number, number, number, number, number, number] = [0, 0, 1, 1, 1, 1];
+  const march = (dir: number, cap: number, room: number): number => {
     const allD = 2 * fillHalf + margin, exitD = allD + fade;
-    let all = Number.NaN, allSin = 1, win = Number.NaN, prevS = 0, prevD = Number.NaN;
+    let all = Number.NaN, allSin = 1, win = Number.NaN, prevS = 0, prevD = Number.NaN, sil = Number.NaN, cut = Number.NaN;
     for (let s = 0; ; s += GAP_MARCH_STEP) {
       const sc = Math.min(s, cap);
       const { d, sin } = dAt(uC + dir * sc);
       const cross = (lvl: number): number => Number.isNaN(prevD) || d === prevD ? sc : prevS + (sc - prevS) * ((lvl - prevD) / (d - prevD));
+      if (Number.isNaN(sil) && d >= fillHalf) sil = cross(fillHalf);
+      if (Number.isNaN(cut) && d >= fillHalf + margin) cut = cross(fillHalf + margin);
       if (Number.isNaN(all) && d >= allD) { all = cross(allD); allSin = sin; }
       if (Number.isNaN(win) && d >= exitD) win = Math.min(cap, cross(exitD) + GAP_MARCH_STEP + GAP_EXIT_PAD);
       if (Number.isNaN(win) && !Number.isNaN(all) && sc >= all + fade / Math.max(allSin, 0.2) + GAP_MARCH_STEP) win = Math.min(cap, sc + GAP_EXIT_PAD);
       if (!Number.isNaN(win) || sc >= cap) break;
       prevD = d; prevS = sc;
     }
-    return Number.isNaN(win) ? cap : win;
+    const w = Number.isNaN(win) ? cap : win;
+    // K1458: crossing_gaps.ts clearScales: near a fused joint the side's margin (floor 0.5) and then its fade
+    // (floor 0.45) shrink by the shortfall only
+    if (room < 1e5) {
+      const ct = Math.min(Number.isNaN(cut) ? w : cut, w), sl = Math.min(Number.isNaN(sil) ? ct : sil, ct);
+      const mArc = Math.max(ct - sl, 1e-6);
+      const ms = Math.min(1, Math.max(0.5, (room - sl) / mArc));
+      sc6[dir > 0 ? 4 : 2] = ms;
+      if (fade > 0) sc6[dir > 0 ? 5 : 3] = Math.min(1, Math.max(0.45, (room - (sl + mArc * ms)) / fade));
+    }
+    // K1458: crossing_gaps.ts's K1218 S3 joint window cap (perp): once every lane is out, the window ends at the joint's room
+    return Number.isNaN(all) ? w : Math.min(w, Math.max(room, all + GAP_EXIT_PAD));
   };
-  return [march(-1, capNeg), march(1, capPos)];
+  sc6[0] = march(-1, capNeg, roomNeg); sc6[1] = march(1, capPos, roomPos);
+  return sc6;
 }
 
 export class GfGapTable {
   /** The baked entries (samples, plus one a closed chain), in positions()' layout. */
   nPos = 0;
   ms = 0;
+  /** K1458 probes: set to [] to collect (crossing, winNeg, winPos, capNeg, capPos) per crossing. */
+  wins: number[] | null = null;
 
   /**
    * Each kept under sample's (winM, over chain, over arc, scan half-range), four floats per entry in
@@ -543,7 +563,19 @@ export class GfGapTable {
       const roomN = su.closed ? su.total / 4 : uC;
       const capP = Math.max(0.15, Math.min(CUT_REACH, (twinP ? 0.5 : 0.8) * gapP, splitP, roomP));
       const capN = Math.max(0.15, Math.min(CUT_REACH, (twinN ? 0.5 : 0.8) * gapN, splitN, roomN));
-      const [wn, wp] = gapWindow(su, so, uC, oC, r.fillHalf, r.margin, r.fade, capN, capP);
+      // K1458: the room to the nearest fused joint on each side, past its clearance (crossing_gaps.ts jRoomNeg/Pos)
+      let jRoomP = 1e6, jRoomN = 1e6;
+      const jl = r.joints?.get(x.underChain);
+      if (jl) for (const jc of jl) {
+        let d = kArcOfCtrl(D, r.kcv[x.underChain], jc.ctrl) - uC;
+        if (su.closed) { d = ((d % su.total) + su.total) % su.total; if (d > su.total / 2) d -= su.total; }
+        if (d >= 0) jRoomP = Math.min(jRoomP, Math.max(0, d - (r.jointClear ?? 0)));
+        else jRoomN = Math.min(jRoomN, Math.max(0, -d - (r.jointClear ?? 0)));
+      }
+      const [wn, wp, msN, fsN, msP, fsP] = gapWindow(su, so, uC, oC, r.fillHalf, r.margin, r.fade, capN, capP, jRoomN, jRoomP);
+      // K1458: the side's clearance scales ride the scan field's fraction (gwScales)
+      const packN = (Math.round(fsN * 31) * 32 + Math.round(msN * 31)) / 1024, packP = (Math.round(fsP * 31) * 32 + Math.round(msP * 31)) / 1024;
+      this.wins?.push(cents.indexOf(e), wn, wp, capN, capP);
       let ent = byChain.get(x.underChain);
       if (!ent) { ent = { m: new Float32Array(su.count).fill(-GAP_FAR), o: new Float32Array(su.count * 3).fill(-1) }; byChain.set(x.underChain, ent); }
       const tmp = ent.m;
@@ -601,7 +633,7 @@ export class GfGapTable {
           const km = keptOf(x.overChain, so);
           ent.o[3 * k] = x.overChain;
           ent.o[3 * k + 1] = km[Math.max(0, Math.min(so.count - 1, Math.round(s / so.arcPer)))];
-          ent.o[3 * k + 2] = w / so.arcPer;
+          ent.o[3 * k + 2] = Math.ceil(w / so.arcPer) + (off >= 0 ? packP : packN);
         }
       }
     }
@@ -1058,6 +1090,11 @@ export function lookFade(r: { fadeLength: number }): number {
   return Math.max(0, r.fadeLength);
 }
 
+/** K1458: a fused joint's clearance along a crossing's under thread (crossing_gaps.ts jointClear; JOINT_CLEAR_REACH_SCALE 0.55). */
+export function gfJointClear(fillHalf: number, filletReachPerHalf: number, cuspRadius: number, gap: number): number {
+  return Math.max(fillHalf * 1.1, fillHalf * filletReachPerHalf * cuspRadius * 0.55) + gap;
+}
+
 /**
  * CPU twin of the look form's lkColour: chain c's colour at sample k (counted from the chain's first sample, its
  * extension vertex already taken off) and fraction u, or null (no label).
@@ -1402,10 +1439,11 @@ vec2 lkTan(int c, float q) {
 // the cut at distance d from an over centreline (gap_mask.ts gapKeepAt's ramp), inside today's window
 // (K1423: the cut lives only inside the window marched along the under thread, and its fade part
 // dissolves over the window's last half fade of arc)
-float lkCut(float d, float sinT, float exg, float wm, float pxw) {
+// K1458: sc = the side's (margin, fade) clearance scales near a fused joint (today's marginScale / fadeScale)
+float lkCut(float d, float sinT, float exg, float wm, float pxw, vec2 sc) {
   float inner = ss(uH - uAA, uH + uAA, d);
-  float fw = max(uLkF * max(sinT, 0.2), 2.0 * uAA);
-  float e = d - uH - uLkG;
+  float fw = max(uLkF * sc.y * max(sinT, 0.2), 2.0 * uAA);
+  float e = d - uH - uLkG * sc.x;
   float kk = clamp((e + 0.5 * pxw) / max(fw, pxw), 0.0, 1.0);
   float cut = (1.0 - kk * kk * (3.0 - 2.0 * kk)) * inner * exg;
   if (uGwLive > 0.5) {
@@ -1420,12 +1458,15 @@ float lkGap(float key, vec2 p, vec2 qU, int cU) {
   vec2 tu = lkTan(cU, qU.x);
   float wm = uGwLive > 0.5 ? lkWinM(cU, qU) : 1e3;
   float pxw = 2.0 * uAA;
+  vec3 sl = uGwLive > 0.5 && wm > -pxw ? lkGwSlot(cU, qU) : vec3(-1.0, 0.0, 0.0);
+  vec2 sc = vec2(1.0);
+  if (sl.x >= 0.0) { int pk = int(fract(sl.z) * 1024.0 + 0.5); sc = vec2(float(pk - (pk / 32) * 32), float(pk / 32)) / 31.0; }
   for (int j = 0; j < np; j++) {
     if (!(pkey[j] > key + uZt)) continue;
     vec2 to = lkTan(PC(j), lookQ(j, p).x);
     float sinT = abs(tu.x * to.y - tu.y * to.x);
     float exg = uExLive > 0.5 ? exAt(PC(j), lkArc(PC(j), lookQ(j, p))).x : 1.0;
-    g = max(g, lkCut(pd[j], sinT, exg, wm, pxw));
+    g = max(g, lkCut(pd[j], sinT, exg, wm, pxw, sc));
     // K1417: no casing term (the composite clears the gap to the background in every look).
   }
   // K1458: the over thread past the candidate list's reach. A piece enters the list only within
@@ -1433,7 +1474,6 @@ float lkGap(float key, vec2 p, vec2 qU, int cU) {
   // the ramp stopped there, a hard edge whatever the fade. Inside a window, the bake names the over
   // pass and its arc near this sample; the pass's true nearest point gives today's distance.
   if (uGwLive > 0.5 && wm > -pxw && g < 0.999) {
-    vec3 sl = lkGwSlot(cU, qU);
     if (sl.x >= 0.0) {
       int cO = int(sl.x + 0.5);
       vec3 N = lkNearOn(cO, sl.y, sl.z, p);
@@ -1441,7 +1481,7 @@ float lkGap(float key, vec2 p, vec2 qU, int cU) {
         vec2 to = lkTan(cO, N.y);
         float sinT = abs(tu.x * to.y - tu.y * to.x);
         float exg = uExLive > 0.5 ? exAt(cO, lkArc(cO, N.yz)).x : 1.0;
-        g = max(g, lkCut(N.x, sinT, exg, wm, pxw));
+        g = max(g, lkCut(N.x, sinT, exg, wm, pxw, sc));
       }
     }
   }
