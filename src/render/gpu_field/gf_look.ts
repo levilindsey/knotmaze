@@ -1490,7 +1490,7 @@ vec3 lkGwSlot(int c, vec2 q) {
   return P.yzw;
 }
 // K1458: the nearest point to p on chain c within w samples of kept sample s: (distance, segment, fraction)
-vec3 lkNearOn(int c, float s, float w, vec2 p) {
+vec3 lkNearOn(int c, float s, float w, vec2 p, float qx) {
   vec4 C0 = F(uOCh + 3 * c); int cV0 = int(C0.x); int nseg = int(C0.y) - 1; bool closed = C0.z > 0.5;
   int k0 = int(s + 0.5);
   if (!closed && F(uOV + cV0).z < 0.0) k0 += 1;
@@ -1501,6 +1501,9 @@ vec3 lkNearOn(int c, float s, float w, vec2 p) {
     if (i > n) break;
     int q = k0 + i;
     if (closed) q = pmod(q, nseg); else if (q < 0 || q >= nseg) continue;
+    // K1460: a self-crossing (qx >= 0, the under pass's own segment on this chain): search only the over pass's
+    // half of the chain, or the under thread's own centreline reads as the over pass (a dark tick across a kink loop)
+    if (qx >= 0.0) { int du = abs(q - int(qx)); int dv = abs(q - k0); if (closed) { du = min(du, nseg - du); dv = min(dv, nseg - dv); } if (du <= dv) continue; }
     vec4 A = F(uOV + cV0 + q); vec4 B = F(uOV + cV0 + q + 1);
     vec2 d = B.xy - A.xy; float l2 = dot(d, d);
     float t = l2 > 0.0 ? clamp(dot(p - A.xy, d) / l2, 0.0, 1.0) : 0.0;
@@ -1806,6 +1809,19 @@ vec2 lkTan(int c, float q) {
   vec2 t = B.xy - A.xy; float l = length(t);
   return l > 0.0 ? t / l : vec2(1.0, 0.0);
 }
+// K1460: central-difference tangents at segment q.x's ends, blended by q.y (today's gap shader: a per-segment
+// direction steps at every vertex, and the fade's width, fade * sin, stepped with it: radial bands and a stepped
+// edge on a long fade along a curved thread)
+vec2 lkTanS(int c, vec2 q) {
+  vec4 C0 = F(uOCh + 3 * c); int v0 = int(C0.x); int nv = int(C0.y); bool closed = C0.z > 0.5;
+  int k = int(q.x); int n = closed ? nv - 1 : nv;
+  int im = closed ? pmod(k - 1, n) : max(k - 1, 0); int i1 = closed ? pmod(k + 1, n) : min(k + 1, nv - 1);
+  int i2 = closed ? pmod(k + 2, n) : min(k + 2, nv - 1); int i0 = closed ? pmod(k, n) : k;
+  vec2 ta = F(uOV + v0 + i1).xy - F(uOV + v0 + im).xy; vec2 tb = F(uOV + v0 + i2).xy - F(uOV + v0 + i0).xy;
+  ta /= max(length(ta), 1e-6); tb /= max(length(tb), 1e-6);
+  vec2 t = mix(ta, tb, q.y); float l = length(t);
+  return l > 1e-6 ? t / l : vec2(1.0, 0.0);
+}
 // the cut at distance d from an over centreline (gap_mask.ts gapKeepAt's ramp), inside today's window
 // (K1423: the cut lives only inside the window marched along the under thread, and its fade part
 // dissolves over the window's last half fade of arc)
@@ -1825,17 +1841,22 @@ float lkCut(float d, float sinT, float exg, float wm, float pxw, vec2 sc) {
 }
 float lkGap(float key, vec2 p, vec2 qU, int cU) {
   float g = 0.0;
-  vec2 tu = lkTan(cU, qU.x);
+  vec2 tu = lkTanS(cU, qU);
   float wm = uGwLive > 0.5 ? lkWinM(cU, qU) : 1e3;
   float pxw = 2.0 * uAA;
   vec3 sl = uGwLive > 0.5 && wm > -pxw ? lkGwSlot(cU, qU) : vec3(-1.0, 0.0, 0.0);
   vec2 sc = vec2(1.0);
   if (sl.x >= 0.0) { int pk = int(fract(sl.z) * 1024.0 + 0.5); sc = vec2(float(pk - (pk / 32) * 32), float(pk / 32)) / 31.0; }
+  // K1460: today's PROTECT (gap_mask.ts): where this thread itself covers another (a lower piece under the pixel),
+  // the margin and fade are waived and only the silhouette cuts, so a cyclic triangle keeps its middle thread
+  float pr = 0.0;
+  for (int j = 0; j < np; j++) { if (pkey[j] < key - uZt) pr = max(pr, clamp((uH - pd[j]) / pxw + 0.5, 0.0, 1.0)); }
+  sc *= 1.0 - pr;
   for (int j = 0; j < np; j++) {
     if (!(pkey[j] > key + uZt)) continue;
-    vec2 to = lkTan(PC(j), lookQ(j, p).x);
+    vec2 qO = lookQ(j, p); vec2 to = lkTanS(PC(j), qO);
     float sinT = abs(tu.x * to.y - tu.y * to.x);
-    float exg = uExLive > 0.5 ? exAt(PC(j), lkArc(PC(j), lookQ(j, p))).x : 1.0;
+    float exg = uExLive > 0.5 ? exAt(PC(j), lkArc(PC(j), qO)).x : 1.0;
     g = max(g, lkCut(pd[j], sinT, exg, wm, pxw, sc));
     // K1417: no casing term (the composite clears the gap to the background in every look).
   }
@@ -1846,9 +1867,9 @@ float lkGap(float key, vec2 p, vec2 qU, int cU) {
   if (uGwLive > 0.5 && wm > -pxw && g < 0.999) {
     if (sl.x >= 0.0) {
       int cO = int(sl.x + 0.5);
-      vec3 N = lkNearOn(cO, sl.y, sl.z, p);
+      vec3 N = lkNearOn(cO, sl.y, sl.z, p, cO == cU ? qU.x : -1.0);
       if (N.y >= 0.0) {
-        vec2 to = lkTan(cO, N.y);
+        vec2 to = lkTanS(cO, N.yz);
         float sinT = abs(tu.x * to.y - tu.y * to.x);
         float exg = uExLive > 0.5 ? exAt(cO, lkArc(cO, N.yz)).x : 1.0;
         g = max(g, lkCut(N.x, sinT, exg, wm, pxw, sc));
