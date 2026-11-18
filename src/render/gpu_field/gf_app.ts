@@ -567,6 +567,7 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
     T = null;
     pending = null;
     gen++;
+    if (compilePollTimer !== null) { clearTimeout(compilePollTimer); compilePollTimer = null; }
     detach();
   };
 
@@ -1094,13 +1095,19 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
       // a failed compile falls back to today's renderer for good, never a blank.
       startCompileWorker();
       postCompileOrder();
+      const ci0 = pass.compileInfo();
       pass.pollPrograms();
       comp!.poll();
       const ci = pass.compileInfo();
       stats.compileIssued = ci.issued; stats.compileReady = ci.ready; stats.compileFirstMs = ci.firstMs;
       const compileFailed = pass.compileError() ?? comp!.compileError();
       if (compileFailed) return fallback(`failed (shader compile: ${compileFailed})`);
-      if (pass.pendingCompile()) pollCompileSoon();
+      // a poll that issued or finished a program asks for the next frame at once (a warm visit's links
+      // run one a frame, as before); a poll that only waited on the driver waits for the timer
+      if (pass.pendingCompile()) {
+        if (ci.issued !== ci0.issued || ci.ready !== ci0.ready) requestFrame();
+        else pollCompileSoon();
+      }
       if (!switched) {
         // K1472 s3: never in the middle of a reveal. A warm visit's programs are ready about 1.7 s
         // into the reveal (its ink already on screen), a cold one's long after it; a takeover there
