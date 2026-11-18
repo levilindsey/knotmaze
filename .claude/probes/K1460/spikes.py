@@ -15,7 +15,9 @@ def m4(a):
 gs = np.abs(g - m4(g)).max(axis=2)
 ts = np.abs(t - m4(t)).max(axis=2)
 gt = np.abs(g - t).max(axis=2)
-s = (gs > 24) & (gt > 24) & (ts < 8)
+from numpy.lib.stride_tricks import sliding_window_view as swv
+tsw = swv(np.pad(ts, 3, mode='edge'), (7, 7)).max(axis=(2, 3))  # today smooth over 7x7: no edge of today's nearby
+s = (gs > 24) & (gt > 24) & (tsw < 6)
 s[:4, :] = False; s[-4:, :] = False; s[:, :4] = False; s[:, -4:] = False
 n = int(s.sum())
 ys, xs = np.where(s)
