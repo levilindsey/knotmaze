@@ -24,17 +24,23 @@ async function load(mode, fl) {
   page.on("pageerror", (e) => console.log(`[${mode} ${fl}] pageerror ${e.message}`));
   page.on("console", (m) => { if (m.type() === "error") console.log(`[${mode} ${fl}] console ${m.text().slice(0, 300)}`); });
   await page.evaluateOnNewDocument(() => { window.__knotLoopMode = "continuous"; });
+  // K1460 s3: since be6ae5f6 a gf page leaves "loading" a substep earlier than today's (sim 0.017 against 0.025),
+  // and stepping on to SIMT from there gives another state. EARLY=1 freezes the sim the moment the hook exists,
+  // the same point in every mode and build.
+  if (process.env.EARLY === "1") await page.evaluateOnNewDocument(() => {
+    const iv = setInterval(() => { if (typeof window.__knotPhysFreeze === "function" && window.__knotPS?.()) { clearInterval(iv); window.__knotPhysFreeze(true); } }, 0);
+  });
   await page.setViewport({ width: 1600, height: 900, deviceScaleFactor: DSF });
   await page.goto(linkOf(mode, fl), { waitUntil: "load", timeout: 900000 });
   await page.waitForFunction(() => { const s = window.__knotPerf?.()?.state; return s && s !== "loading"; }, { timeout: 900000, polling: 300 });
   const hash = await page.evaluate(async (t) => {
-    await window.__knotPhysFreeze(true);
+    const fz = await window.__knotPhysFreeze(true);
     await window.__knotStepUntil(t);
     const r = window.__knotRenderer();
     r.advanceClocks = () => {}; r.paintClock = 100; r.pulseBorn = 0;
     window.__knotLoop?.({ continuous: true });
     const d = await window.__knotPhysDump();
-    const h = d?.hashes ?? d; return String(h?.all ?? JSON.stringify(h).slice(0, 80));
+    const h = d?.hashes ?? d; return String(h?.all ?? JSON.stringify(h).slice(0, 80)) + " " + (fz?.simTime ?? -1).toFixed(3);
   }, SIMT);
   if (mode !== "today") await page.waitForFunction(() => (globalThis.__knotGf?.stats?.switchedMs ?? -1) > 0 && (globalThis.__knotGf?.stats?.composites ?? 0) > 2, { timeout: 900000, polling: 300 }); // K1460 s3 (after the freeze: the sim must not run on during the compile): gf has switched in (be6ae5f6)
   await sleep(2500);
@@ -51,8 +57,8 @@ try {
     let r;
     for (let t = 0; t < TRIES; t++) {
       r = await load(mode, fl);
-      if (!want) want = r.hash;
-      if (r.hash === want) break;
+      if (!want) want = r.hash.split(" ")[0];
+      if (r.hash.split(" ")[0] === want) break;
       console.log(`[${tag} ${fl}] hash ${r.hash} != ${want}, retry`);
       await r.page.close();
       r = null;
