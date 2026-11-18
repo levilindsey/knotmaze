@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1474.
+Next free ID: K1476.
 
 ## Waiting on Levi
 
@@ -617,17 +617,6 @@ Next free ID: K1474.
   - evidence: .claude/probes/K1053/chain.log, each run's .claude/probes/<ID>/out/25<X>/
   - next: 25A running, then 25B, 25C, 25D; after each handoff Claude views its crops against today and files follow-ups; restart with .claude/probes/K1053/start.ps1 if the chain stops on a gate
   - brief: `docs/design/K1448_muse_batch25.md`
-- **K1460** · rp=gf crossing-fade leftovers after K1458 (live c5fc87d1, crops scratch live2 zoom_a/zoom_b,
-  agent's .claude/probes/K1458/ sheet pv6): (1) a thin dotted line continues the over thread's edge across the
-  faded under thread at fade 0.28 and up; (2) radial bands and a stepped outer edge on long fades in curved
-  threads (junction B, ci3 upper right, the blue kink loop at ?3); (3) a dashed dark tick across the kink loop
-  at ?3 at every fade; (4) today's protect term (pr) is not ported to gf's gap window; (5) a round blob at
-  junction B at fade 0. Next: bake.mjs on those crossings (missing over threads, the +-40-sample scan cap)
-  - owner: agent `a5b5b3f6d71b848f1` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-17 19:08, 2 h cap ~21:08)
-  - branch: `worktree-agent-a5b5b3f6d71b848f1`, worktree `.claude/worktrees/agent-a5b5b3f6d71b848f1`; last commit: `6ae3e994`
-  - evidence: .claude/probes/K1460/ (out/s4 sheets; out/s5 on the agent's branch)
-  - next: stage 5 running: today's protect term as a per-crossing interval row (only if a site shows it at 4x), junction B's line, fade end and notch
-  - brief: `docs/design/K1460_s5_protect.md`
 - **K1451** · gfh=1 after K1449: default fadeLength reads 368 finds (target 250): 246 are crossing-tie
   wedges/dashes the flag-off renderer has too, 122 the fade's outline taper where a diving arm leaves its
   junction (a look, K1444); fadeLength under about 0.066 (0.1 win) draws one hard cut, a dead zone at the
@@ -1038,6 +1027,11 @@ Every other item below waits on the trigger it names.
 - **K1473** · rp=gf: check pulses and the turn telegraph on screen. Their table (unit 9) uploaded as R32F from
   9b48e44f until K1472's fix (998be573), so the shader read zeros; nobody has looked since (gf_pass.ts
   setLook; test/render/gf_look_upload.test.ts counts mismatched uploads)
+- **K1474** · rp=gf's thread fill is lighter than today's on ?3 (default look): e195e8 against today's cc7ac0
+  at junction B (866,138), and the lighter fill makes a visible edge where a long crossing fade ends (K1460
+  s5: .claude/probes/K1460/out/s5/jb_*.png, recol.py, jbdiff.py). Find where the colour departs (K1389's
+  colour table, the look composite) and make interiors equal today's; number: max channel diff over thread
+  interiors on ?3 at rest
 
 ## Residuals (known, not fixed)
 
@@ -2285,6 +2279,9 @@ Every other item below waits on the trigger it names.
 - **K1471** · rp=gf's packed target (K1468): the write's fp16-truncate-then-round is calibrated on the
   desktop's AMD GPU only (0 wrong of 696,613 values, .claude/probes/K1468/exact.mjs). Another GPU (the phone's
   above all) may show a 1-bit residual: run exact.mjs there before gf is judged on it
+- **K1475** · Probe: .claude/probes/K1458/dragcheck.mjs for gf at fade 1.2 sometimes finds no fresh load in
+  state f9d72040 within 4 tries, so the stop compares nothing (2 of 3 runs in K1460 s5; K550's worker
+  nondeterminism suspected, untested). Fix: more tries or phw=0
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2658,6 +2655,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K1460** · rp=gf crossing-fade leftovers: stages 1-4 fixed the dotted line, the kink-loop tick, the radial bands and the long-fade seams; stage 5 found today's protect term makes no visible difference at 4x at any fade (d23f3473 tried, e25d042f reverted) and junction B matches today once gf's thread colour is mapped to today's (sheets .claude/probes/K1460/out/s5/jb_*.png): the colour goes to K1474. Done in 7fe4b9c6 (2026-11-17).
 - **K1434** · rp=gf: under a burn (K290) the explore shader's char/ember/smolder shading is not ported, and corner gates read the declared pieces rather than the burn gate pieces; gf draws the pieces' visibility (burnt-gone holes included) but no char darkening (K1396 24E handoff). Done in 44d54de8 (2026-11-17).
 - **K1455** · the border look (tlk=border) under rp=gf: gf's thick near-black strokes on both edges stay; today's thin section-tinted strokes are not the bar. Dropped: decided, no work: Levi 2026-11-17 "Keep gf as it is" (recorded in .claude/rules/render-gpu-field.md) (2026-11-17).
 - **K1458** · rp=gf fades the under thread before a crossing as today's does and follows the live slider (gf baked the gap only inside the pixel's candidate list; joint window cap, per-side clearance scales and a re-bake on a sleeping knot ported); panel rewrites keep rp/gfh. Live on c5fc87d1: hold.mjs 60/60 on both links, real slider drags change the fade at 0.14/0.28/0.62/1.2 in gf and gf+gfh. Done in c5fc87d1 (2026-11-17).
