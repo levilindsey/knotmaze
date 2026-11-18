@@ -229,6 +229,8 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
     reveal?: boolean;
     /** K1389 s1: false draws the pre-K1389 look (cream fill, ink outlines) in place of today's thread look. */
     look?: boolean;
+    /** K1472 s3: true lets gf take over while a reveal runs (probes that pin the reveal clock). */
+    midReveal?: boolean;
   };
   const opts = (): GfOpts => (globalThis as unknown as { __knotGfOpts?: GfOpts }).__knotGfOpts ?? {};
 // K1439: home membership, the `gfh=1` render flag (frame_loop.ts reads it before the URL rewrite)
@@ -1089,6 +1091,11 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
       if (compileFailed) return fallback(`failed (shader compile: ${compileFailed})`);
       if (pass.pendingCompile()) requestFrame();
       if (!switched) {
+        // K1472 s3: never in the middle of a reveal. A warm visit's programs are ready about 1.7 s
+        // into the reveal (its ink already on screen), a cold one's long after it; a takeover there
+        // jumped 38-49k px, against 2.9k (the rest look) at the reveal's end. So today's renderer
+        // draws the whole first reveal on every visit and gf takes over the frame it ends.
+        if (rvDrawn && !opts().midReveal) return;
         const lookComp = pass.looking ? comp!.lookReady : comp!.ready;
         if (!pass.drawReady() || !lookComp) return; // today's renderer is still on screen
         attach();

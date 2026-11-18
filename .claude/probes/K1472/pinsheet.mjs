@@ -18,7 +18,7 @@ const say = (...a) => { const s = a.join(" "); console.log(s); log.push(s); };
 try {
   const p = await b.newPage();
   await p.setViewport({ width: VW, height: VH, deviceScaleFactor: 1 });
-  await p.evaluateOnNewDocument(() => { try { localStorage.setItem("knotmaze.panelOpen", "0"); } catch {} window.__lost = 0; window.addEventListener("webglcontextlost", () => { window.__lost++; }, true); });
+  await p.evaluateOnNewDocument(() => { try { localStorage.setItem("knotmaze.panelOpen", "0"); } catch {} window.__knotGfOpts = Object.assign(window.__knotGfOpts ?? {}, { midReveal: true }); window.__lost = 0; window.addEventListener("webglcontextlost", () => { window.__lost++; }, true); });
   p.on("pageerror", (e) => say("pageerror", e.message.slice(0, 200)));
   const url = `${base}/?${link}&snd=none&phw=0&fw=0${mode === "gf" ? "&rp=gf" : ""}`;
   const t0 = Date.now(); const T = () => ((Date.now() - t0) / 1000).toFixed(0);
