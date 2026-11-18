@@ -1490,7 +1490,7 @@ vec3 lkGwSlot(int c, vec2 q) {
   return P.yzw;
 }
 // K1458: the nearest point to p on chain c within w samples of kept sample s: (distance, segment, fraction)
-vec3 lkNearOn(int c, float s, float w, vec2 p) {
+vec3 lkNearOn(int c, float s, float w, vec2 p, float qx) {
   vec4 C0 = F(uOCh + 3 * c); int cV0 = int(C0.x); int nseg = int(C0.y) - 1; bool closed = C0.z > 0.5;
   int k0 = int(s + 0.5);
   if (!closed && F(uOV + cV0).z < 0.0) k0 += 1;
@@ -1501,11 +1501,20 @@ vec3 lkNearOn(int c, float s, float w, vec2 p) {
     if (i > n) break;
     int q = k0 + i;
     if (closed) q = pmod(q, nseg); else if (q < 0 || q >= nseg) continue;
+    // K1460: a self-crossing (qx >= 0: the under pass's own segment on this chain) searches only the over pass's
+    // half of the chain, or the under thread's own centreline reads as the over pass (a dark tick across a kink loop)
+    if (qx >= 0.0) { int du = abs(q - int(qx)); int dv = abs(q - k0); if (closed) { du = min(du, nseg - du); dv = min(dv, nseg - dv); } if (du <= dv) continue; }
     vec4 A = F(uOV + cV0 + q); vec4 B = F(uOV + cV0 + q + 1);
     vec2 d = B.xy - A.xy; float l2 = dot(d, d);
     float t = l2 > 0.0 ? clamp(dot(p - A.xy, d) / l2, 0.0, 1.0) : 0.0;
     vec2 e = p - A.xy - d * t; float d2 = dot(e, e);
     if (d2 < bd) { bd = d2; bq = vec2(float(q), t); }
+  }
+  // K1460: a self-crossing's nearest point clamped at the excluded half's border is no over pass (a soft smear)
+  if (qx >= 0.0 && bq.x >= 0.0 && (bq.y <= 0.0 || bq.y >= 1.0)) {
+    int q2 = int(bq.x) + (bq.y <= 0.0 ? -1 : 1); if (closed) q2 = pmod(q2, nseg);
+    int du = abs(q2 - int(qx)); int dv = abs(q2 - k0); if (closed) { du = min(du, nseg - du); dv = min(dv, nseg - dv); }
+    if (du <= dv) return vec3(BIG, -1.0, 0.0);
   }
   return vec3(sqrt(bd), bq);
 }
@@ -1846,7 +1855,7 @@ float lkGap(float key, vec2 p, vec2 qU, int cU) {
   if (uGwLive > 0.5 && wm > -pxw && g < 0.999) {
     if (sl.x >= 0.0) {
       int cO = int(sl.x + 0.5);
-      vec3 N = lkNearOn(cO, sl.y, sl.z, p);
+      vec3 N = lkNearOn(cO, sl.y, sl.z, p, cO == cU ? qU.x : -1.0);
       if (N.y >= 0.0) {
         vec2 to = lkTan(cO, N.y);
         float sinT = abs(tu.x * to.y - tu.y * to.x);
