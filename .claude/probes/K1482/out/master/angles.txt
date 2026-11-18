@@ -1,0 +1,3 @@
+sliver 17 median 89 deg <35deg: 0 t62e:66 t30e:67 t36e:71 t25e:83 t6s:83 t51e:84 t83e:84 t1e:85 t64e:89 t77s:90 t55s:90 t0s:90 t26s:90 t43s:90 t56s:90 t70s:90 t41s:90
+clean 119 median 87 deg <35deg: 0 t8e:36 t49e:38 t82e:44 t80e:50 t71e:55 t60e:56 t9e:63 t81e:64 t79e:64 t14e:66 t15e:67 t4e:67 t70e:67 t13e:68 t59e:69 t45e:69 t6e:70 t63e:70 t57e:70 t65e:70 t66e:71 t34e:71 t50e:71 t67e:71 t38e:72 t41e:72 t72e:72 t42e:73 t85e:74 t29e:75 t48e:75 t52e:75 t40e:75 t18s:76 t26e:77 t54e:78 t22e:78 t43e:79 t33e:79 t21s:80
+other 25 median 89 deg <35deg: 0 t76e:52 t53e:54 t84e:54 t16e:59 t37e:73 t73e:75 t23e:77 t79s:81 t42s:82 t46e:84 t58e:86 t20e:86 t19e:89 t18e:90 t24s:90 t36s:90 t4s:90 t81s:90 t39s:90 t59s:90 t80s:90 t45s:90 t65s:90 t23s:90 t1s:90

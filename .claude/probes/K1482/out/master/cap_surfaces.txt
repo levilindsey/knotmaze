@@ -1,0 +1,28 @@
+== t55s
+(1532,318) ink 0.73 chain 68 winA 55 | S149 key -0.058 cov 1 ch 68
+    pieces: c55 surf 149 d 0.253 key -0.059 end 1 ; c68 surf 149 d 0.250 key -0.058 end 0
+(1524,330) ink 0.79 chain 55 winA 55 | S149 key -0.088 cov 1 ch 55 ; S-3 key -0.126 cov 1 ch 68
+    pieces: c46 surf -1 d 0.505 key 0.232 end 0 ; c55 surf 149 d 0.378 key -0.088 end 1 ; c68 surf -3 d 0.230 key -0.126 end 0
+(1526,330) ink 0.51 chain 55 winA 55 | S149 key -0.077 cov 1 ch 55 ; S-3 key -0.078 cov 1 ch 68
+    pieces: c46 surf -1 d 0.540 key 0.266 end 0 ; c55 surf 149 d 0.333 key -0.077 end 1 ; c68 surf -3 d 0.192 key -0.078 end 0
+== t64e
+(1057,480) ink 0.99 chain 64 winA 64 | S79 key -0.092 cov 1 ch 64 ; S-1 key -0.200 cov 1 ch 33
+    pieces: c33 surf -1 d 0.258 key -0.200 end 0 ; c64 surf -2 d 0.484 key 0.389 end 0 ; c64 surf 79 d 0.398 key -0.092 end 1
+(1059,480) ink 1.00 chain 64 winA 64 | S79 key -0.090 cov 1 ch 64 ; S-1 key -0.143 cov 1 ch 33
+    pieces: c33 surf -1 d 0.286 key -0.143 end 0 ; c64 surf -2 d 0.514 key 0.297 end 0 ; c64 surf 79 d 0.387 key -0.090 end 1
+(1061,480) ink 1.00 chain 64 winA 64 | S79 key -0.088 cov 1 ch 64 ; S-1 key -0.095 cov 1 ch 33
+    pieces: c33 surf -1 d 0.313 key -0.095 end 0 ; c64 surf -2 d 0.544 key 0.202 end 0 ; c64 surf 79 d 0.381 key -0.088 end 1
+== t0s
+(1787,577) ink 0.92 chain 77 winA 0 | S150 key -0.059 cov 1 ch 77
+    pieces: c0 surf 150 d 0.256 key -0.059 end 1 ; c77 surf 150 d 0.255 key -0.059 end 0
+(1779,583) ink 1.00 chain 0 winA 0 | S150 key -0.091 cov 1 ch 0 ; S-3 key -0.124 cov 1 ch 77
+    pieces: c0 surf 150 d 0.391 key -0.091 end 1 ; c50 surf -2 d 0.575 key 0.389 end 0 ; c77 surf -3 d 0.299 key -0.124 end 0
+(1779,585) ink 1.00 chain 0 winA 0 | S150 key -0.091 cov 1 ch 0 ; S-3 key -0.163 cov 1 ch 77
+    pieces: c0 surf 150 d 0.392 key -0.091 end 1 ; c50 surf -2 d 0.541 key 0.449 end 0 ; c77 surf -3 d 0.266 key -0.163 end 0
+== j62
+(2083,1120) ink 1.00 chain 26 winA 26 | S63 key -0.085 cov 1 ch 26 ; S-2 key -0.154 cov 1 ch 71
+    pieces: c26 surf 63 d 0.367 key -0.085 end 1 ; c71 surf -2 d 0.302 key -0.154 end 0
+(2085,1120) ink 1.00 chain 26 winA 26 | S63 key -0.086 cov 1 ch 26 ; S-3 key -0.193 cov 1 ch 71
+    pieces: c26 surf 63 d 0.370 key -0.086 end 1 ; c66 surf -2 d 0.553 key 0.449 end 0 ; c71 surf -3 d 0.269 key -0.193 end 0
+(2087,1120) ink 1.00 chain 26 winA 26 | S63 key -0.088 cov 1 ch 26 ; S-3 key -0.235 cov 1 ch 71
+    pieces: c26 surf 63 d 0.378 key -0.088 end 1 ; c66 surf -2 d 0.521 key 0.505 end 0 ; c71 surf -3 d 0.236 key -0.235 end 0
