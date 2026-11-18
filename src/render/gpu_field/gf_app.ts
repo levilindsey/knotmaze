@@ -873,7 +873,7 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
       if (!pass) {
         pass = new GfPass(g, false, undefined, undefined, false, { home: gfHome() });
         // K1389 s2: the look writes its colours to a second attachment
-        target = new GfTarget(g, pass.lookable ? 3 : 1, false);
+        target = new GfTarget(g, 1, false); // K1468 PROBE: one attachment
         comp = new GfComposite(g);
       }
       startWorker();
