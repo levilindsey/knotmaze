@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K1473.
+Next free ID: K1474.
 
 ## Waiting on Levi
 
@@ -673,16 +673,16 @@ Next free ID: K1473.
   - owner: nobody since 2026-11-17 19:56 (agent `ab2cc2513ac20a475` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (sonnet, started 2026-11-17 19:08, 1 h cap ~20:08); stopped at its 1 h cap about 20:00: gf's reveal draws no thread ink on master (pinned and live, all programs ready, link b.FMKB4DIQ), so the cut cannot be judged)
   - branch: `worktree-agent-ab2cc2513ac20a475`, worktree `.claude/worktrees/agent-ab2cc2513ac20a475`; last commit: `b1118def`
   - evidence: .claude/probes/K1395/out/26B/ (M_def_f4_whole.png, pw_live.png), .claude/probes/K1459/k1469_pinwatch.mjs, k1469_live.mjs
-  - next: after K1472 restores the reveal's ink: rerun the brief's three-way captures (today | 01c72dfc~1 | master), the k1459_cap / k1459_guard2 / k1431_inkcmp counts and the per-spot verdicts; then close K1459 or revert 01c72dfc
+  - next: the reveal's ink is back (998be573): rerun the brief's three-way captures (today | 01c72dfc~1 | master), the k1459_cap / k1459_guard2 / k1431_inkcmp counts and the per-spot verdicts; then close K1459 or revert 01c72dfc
   - brief: `docs/design/K1469_reveal_cut_check.md`
 - **K1472** · rp=gf on Levi's own link (`?3.FGH1HtvQeDjm6e4BII&rp=gf&gfh=1`: the trace/burn reveal plays,
   unlike every checked link). Live fc520c2d: no blink, but gf needs two programs before it composes (cold
   151-282 s under load), shows only fragments meanwhile and stray dashes and outlines after; today's reveal
   also barely moves in the probe (page or probe not yet told apart)
-  - owner: agent `a2e3c83320287ebff` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-17 19:53, 2 h cap ~21:53)
-  - branch: `worktree-agent-a2e3c83320287ebff`, worktree `.claude/worktrees/agent-a2e3c83320287ebff`; last commit: `e820cadd`
+  - owner: nobody since 2026-11-17 20:22 (merged; agent `a2e3c83320287ebff` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `998be573`
   - evidence: .claude/probes/K1472/, .claude/probes/K1468/gfshots.mjs
-  - next: first: rp=gf's reveal draws no thread ink on master on any link (K1469's sheets; Muse says b42188db, before K1456's async compile, draws it): bisect, fix, show today | master gf | fixed gf at pinned reveal times; then the brief's Do 1-4
+  - next: ink fix merged (998be573, sheets .claude/probes/K1472/out/pin/levi_sheet_whole.png). Left: progs.mjs cold on Levi's link (which program compiles first; the two-program wait), hold.mjs warm, unpinned live frames, the link ?b.FMKB4DIQ, the thread-end cut at 8x (today notched, gf a straight diagonal with stray pixels: levi_f6_zoom8.png), whether a slider edit replays the reveal
   - brief: `docs/design/K1472_gf_levis_link.md`
 
 ## Next, in order
@@ -1035,6 +1035,9 @@ Every other item below waits on the trigger it names.
   MB, K1186 64, K1407 60, K863 56, K1198 43), so each agent worktree costs 0.8 GB (224 worktrees = 123 GB when
   C: filled on 2026-11-17, claude-config CC156). Stop tracking closed items' sheets (history keeps them) or
   give agent worktrees a sparse checkout; measured 2026-11-17 with git ls-tree -r -l HEAD
+- **K1473** · rp=gf: check pulses and the turn telegraph on screen. Their table (unit 9) uploaded as R32F from
+  9b48e44f until K1472's fix (998be573), so the shader read zeros; nobody has looked since (gf_pass.ts
+  setLook; test/render/gf_look_upload.test.ts counts mismatched uploads)
 
 ## Residuals (known, not fixed)
 
