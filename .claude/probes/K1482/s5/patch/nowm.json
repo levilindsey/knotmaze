@@ -1,0 +1,1 @@
+[["float wm = uGwLive > 0.5 ? lkWinM(cU, qU) : 1e3;","float wm = 1e3;"]]

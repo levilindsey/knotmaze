@@ -1,0 +1,1 @@
+[["float fw = max(uLkF * sc.y * max(sinT, 0.2), 2.0 * uAA);","float fw = 2.0 * uAA;"]]

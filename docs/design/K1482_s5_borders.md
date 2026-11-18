@@ -87,3 +87,49 @@ comes first. A compaction is not a stop: re-read this brief, your notes and `git
 append `### Handoff K1482 s5` here, commit, and report: the sweep's faulted count by class, the sheets' paths
 (each site named), the numbers, which commits are confirmed on screen, a `Ledger items` list and K1482's
 handle fields.
+
+### Handoff K1482 s5
+
+Stopped 04:30 on 2026-11-18 (started 02:53), before the 2 h line, with item 1 unfixed. Branch
+`worktree-agent-a5dca968eeb3d79f3`, rebased on origin/master 82405bf9. The src commit is 3b2bde03 (69a63364
+before the rebase; the bar and the captures ran on 69a63364, same tree). Running notes, numbers and every sheet:
+`.claude/probes/K1482/s5/notes.md`.
+
+- **Item 0, the page builds with home at gfh=1 (3b2bde03).** On the page at gfh=1, both pooled and single, the
+  tables equal Node `buildTables(scene, {aa, home: true})` in all 58 arrays, within 1e-12 (ULPs from the scene
+  export). Master's page equals home false. Without gfh=1, the tip's tables equal master's exactly, and ink at all
+  327 sites is unchanged (0 px; the master-against-master control is also 0). On link A (gfh=1), 4 of 327 sites
+  change:
+  - t18e: the tail that stopped short now joins the other outline as a T (the stub fault is gone);
+  - t50s: joins as a Y;
+  - t21e and t2s: 3-4 px edge changes.
+
+  So link A falls from 46 to 45 faults: wedge 11, notch 9, sliver 7, dot 6, tick 5, dash 3, stub 2, break 2. K1451
+  s4's spots 5 and 7 are fixed on screen (out/s5/spots_5_7_j71.png). **But the STRICT bar FAILs** on the census
+  scenes:
+  - g41_user_tw64 x154: the cut's fill edge turns ragged (59 px), which is worse;
+  - g41 j25: a small extra step;
+  - muse_hash j49: a tail drawn into the junction as a T, the same look question as t18e;
+  - the remaining finds only change class at the same px.
+
+  Not confirmed for landing until x154 is fixed or judged.
+- **Item 1: no fix.** The look's crossing gap is not the cause. Switching off the shader terms on the page (nogap,
+  nofringe) changes 0-2 px at all 16 dot, tick, dash and break sites. With the page's home tables, the mirror equals
+  the screen there (extra 0, a few px missed). Stage 4's "the mirror cannot see the dots" came from home-off tables.
+  The fragments are field ink. The j58/t23s triangle is chain 43's side (winKind 1) inside chain 23 at a T with no
+  corner. It is not the vertex cap (switching vtx off in the mirror leaves it).
+- **Crossing fade (coordinator's addition).** On master and on the tip alike, fl 0 to 1.2 only pulls the under
+  outline's ends back a few px; nothing ramps over the ~51 device px that fl 1.2 asks for. The home-off build was not
+  why the slider looks dead. From the code (not measured): lkCut's ramp lives only inside the h + gap band of the
+  over piece, so that band bounds the fade. Sheets: out/s5/fade_sheet_wide.png and fade_sheet.png.
+- **Other checks:**
+  - hold: 60/60 on link A, tip build;
+  - npm test: green (254 files, 3170 tests) on 69a63364;
+  - carry-across with gfh=1 removed: 0 of 327 sites change at fl 0 and at fl 1.2 (no sheet: nothing to tile);
+  - build time under the perf lock: tablesMs master [17.7, 14.0, 20.4, 14.1], tip [15.5, 16.2, 23.5, 26.4]. These
+    are one load each, and the spread is as large as the difference.
+- **Next:**
+  1. Attribute x154's ragged cut, the g41_user_tw64 7.22:15.51 site in the bar's captures (probably `clipPinWindows`
+     against the cut), fix it, and re-run the bar.
+  2. For item 1, take the j58/t23s triangle: a count in eval.ts of chain-43 side ink inside chain 23 at the T,
+     which fails on master.

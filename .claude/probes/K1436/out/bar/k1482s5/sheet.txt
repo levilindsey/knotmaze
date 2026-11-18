@@ -1,0 +1,11 @@
+rows top to bottom; tiles: base fill | ref fill | base border | ref border (80 device px at 4x, ring = the find)
+1. new screen cut:plain g41_user_tw64:15.12:7.75 j0 20px
+2. new screen cut:plain g41_user_tw64:7.93:11.70 x69 4px
+3. new screen cut:plain g41_user_tw64:1.48:14.39 j66 15px
+4. new screen cut:plain g41_user_tw64:7.22:15.51 x154 59px
+5. new screen cut:plain g41_user_tw64:4.88:16.20 x100 102px
+6. new screen cut:ramp g41_user_tw64:9.33:17.07 j25 26px
+7. new screen speck:ramp g41_user_tw64:17.28:10.21 j7 4px
+8. new screen rstray:plain muse_hash:4.72:33.58 j58 22px
+9. new screen cut:plain muse_hash:25.03:24.14 j81 26px
+10. new screen cut:plain muse_hash:22.04:34.65 j49 17px

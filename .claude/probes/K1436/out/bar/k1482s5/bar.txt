@@ -1,0 +1,20 @@
+FAIL  new 10  grown 0  gone 7  (match radius 0.3, grow > 10% and >= 3 px)
+
+screen cut:plain
+  new 7: g41_user_tw64:15.12:7.75 j0 20px; g41_user_tw64:7.93:11.70 x69 4px; g41_user_tw64:1.48:14.39 j66 15px; g41_user_tw64:7.22:15.51 x154 59px; g41_user_tw64:4.88:16.20 x100 102px; muse_hash:25.03:24.14 j81 26px; muse_hash:22.04:34.65 j49 17px
+
+screen cut:ramp
+  new 1: g41_user_tw64:9.33:17.07 j25 26px
+  gone 5: g41_user_tw64:15.12:7.75 j0 20px; g41_user_tw64:7.93:11.70 x69 4px; g41_user_tw64:1.48:14.39 j66 15px; g41_user_tw64:4.88:16.20 x100 102px; muse_hash:25.03:24.14 j81 26px
+
+screen cut:tie
+  gone 1: g41_user_tw64:9.33:17.05 j25 15px
+
+screen rstray:plain
+  new 1: muse_hash:4.72:33.58 j58 22px
+
+screen speck:plain
+  gone 1: g41_user_tw64:17.28:10.21 j7 4px
+
+screen speck:ramp
+  new 1: g41_user_tw64:17.28:10.21 j7 4px
