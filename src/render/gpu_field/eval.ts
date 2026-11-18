@@ -93,10 +93,14 @@ export class GfEval {
 
   /** K1482 s2: an open chain's end cap (the foot clamped to the chain's tip, s at the chain's first or last vertex)
    * sinks one pass (amp = 10 zt, tables.ts) when its piece belongs to a junction group: a fused tail's cap yields to
-   * the thread it meets, as the approved look's outline runs on unbroken at under-tail ends. gf_glsl.ts tipSink. */
+   * the thread it meets, as the approved look's outline runs on unbroken at under-tail ends. gf_glsl.ts tipSink.
+   * K1482 s3: the sink tapers to 0 over the last h/2 of arc length (e = s's distance from the nearer tip). Stage 2's
+   * step (cap only) put a key jump of 10 zt across the tip's perpendicular: square ink knobs at the tail ends and,
+   * in the fill look, a hard dark block (ring 1.77, 15.26). A longer taper (h) grows spurs. */
   tipSink(c: number, s: number): number {
     const T = this.T; if (T.cClosed[c] === 1) return 0;
-    const v0 = T.cV0[c]; return s <= T.vs[v0] || s >= T.vs[v0 + T.cNV[c] - 1] ? 10 * T.zt : 0;
+    const v0 = T.cV0[c]; const e = Math.min(s - T.vs[v0], T.vs[v0 + T.cNV[c] - 1] - s);
+    return 10 * T.zt * (1 - ss(0, 0.5 * T.h, e));
   }
 
   /** Membership of (c, s) as eval() takes it (group -1 = none; ramp 1 = full): for tests and probes. */

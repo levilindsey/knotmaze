@@ -911,10 +911,12 @@ vec4 keyBin(int c, float s) {
 #endif
 
 // K1482 s2: an open chain's end cap (the foot clamped to the chain's tip) sinks one pass (amp = 10 zt) when the piece
-// belongs to a junction group: a fused tail's cap yields to the thread it meets (eval.ts tipSink mirrors it)
+// belongs to a junction group: a fused tail's cap yields to the thread it meets (eval.ts tipSink mirrors it). K1482 s3:
+// the sink tapers to 0 over the last h/2 of arc length, so the key has no step at the tip's perpendicular
 float tipSink(int c, float s) {
   vec4 C0 = F(uOCh + 3 * c); if (C0.z > 0.5) return 0.0;
-  int v0 = int(C0.x); return s <= F(uOV + v0).z || s >= F(uOV + v0 + int(C0.y) - 1).z ? 10.0 * uZt : 0.0;
+  int v0 = int(C0.x); float e = min(s - F(uOV + v0).z, F(uOV + v0 + int(C0.y) - 1).z - s);
+  return 10.0 * uZt * (1.0 - smoothstep(0.0, 0.5 * uH, e));
 }
 int mg; float mramp;
 void member(int c, float s, vec4 KB) {
