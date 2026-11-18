@@ -1084,8 +1084,13 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
       ctx.app.renderer.resetState();
       fallback(`failed (${e instanceof Error ? e.message : String(e)})`);
       return;
+    } finally {
+      // K1472 s2: every exit, the early returns included. The frame's table uploads (setLook, setReveal,
+      // install) bind gf's textures on Pixi's units behind its back; before the switch the early return
+      // above ("today's renderer is still on screen") skipped this reset, so today's paint shader sampled
+      // gf's tables on the units Pixi believed it had bound (no reveal ink, a grey start marker).
+      ctx.app.renderer.resetState();
     }
-    ctx.app.renderer.resetState();
   };
 
   const after = (): void => {
