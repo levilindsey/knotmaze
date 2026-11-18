@@ -68,3 +68,63 @@ Frames are in `.claude/probes/K1444/` of the coordinator worktree `agent-af52b1a
 whichever comes first. A compaction is not a stop: re-read this brief and `git log`. On stopping: commit WIP,
 append `### Handoff K1450` here, commit, and report: what holds, the frames' paths, the numbers, a
 `Ledger items` list and K1450's handle fields.
+
+### Handoff K1450
+
+Stopped 2026-11-17 08:45 PDT (started 08:04), every Done item holding. Fix: 6779cecb (gf_app.ts only).
+
+**Cause.** gf's composite is a Pixi `RenderContainer` whose callback returned whenever a framebuffer was bound
+(`if (g.getParameter(g.FRAMEBUFFER_BINDING) !== null) return;`, adac76dd, K1362 s2). While a pluck ripple
+lives, `pluck_ripple.ts` (K279) sets `filters = [ripple]` on the world container, so Pixi's
+`FilterSystem.push` binds a pooled filter texture's framebuffer around the whole world, rc included, and
+the composite skipped that frame. Music mode's auto plucks (`auto_audio.ts`, `rippleAuto`) keep a ripple
+live most of the time, so the maze showed only in the gaps. `&prp=off` alone holds every frame (30/30).
+Bisect: 648d3df9, 963029e8 and fe889b0d (gf's first working commit) all blink alike (26/30 frames bad), so
+no later commit started it; it has been there since gf first drew. Found with `fbwho.mjs` (the stack of
+the last framebuffer bind before the callback: `FilterSystem.push`).
+
+**Fix.** Inside a frame bound for the canvas (`renderTarget.renderingToScreen`), the callback binds the
+canvas, draws the composite (its shaders texelFetch the target at gl_FragCoord, so they need the canvas's
+pixel grid), then rebinds the filter's framebuffer and viewport. Any other render target still gets
+nothing. Residual: the ripple now draws over the maze (the maze is not in the filter's texture), so under
+rp=gf the ripple's refraction does not bend the threads. The full fix composites into the filter texture
+through Pixi's projection (its y is flipped against the canvas), which touches the composite shaders in
+gf_pass.ts / gf_look.ts (Muse's files).
+
+**Border look (Do 3).** Not a gf defect. K797b's border look is "only a dark edge stroke along each side,
+no fill" (`docs/K339_inventory.md`), and today's renderer draws it so (`runs/crop_today.png`: fainter
+still). rp=outline ignores `tlk` (nothing under `src/render/outline/` reads threadLook), so it always
+draws filled threads (`runs/crop_outl.png`); gf honours it (`runs/crop_gf.png`). If Levi wants the border
+look under gf to carry colour, that is a look decision, not a fix.
+
+**Numbers** (`.claude/probes/K1450/runs/*.json`; edges = luminance step > 16, x < 0.78 w):
+- D1 `?3&xp=off&am=instant&rp=gf`: 60/60, 103165-104786; composites = passes 1475.
+- D2 `?3.FGH1HtvQeDjm6e4BII&rp=gf&gfh=1` (25 s wait, past the reveal): 60/60, 7550-8826; 2683 = 2683.
+- D3 `?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&rp=gf&gfh=1`: 60/60, 7480-9201; 1845 = 1845.
+- D4 the D1 link, `DRAG=1`: 60/60, 103157-104640; 2240 = 2240 (`runs/drag_sheet.png`: the knot moves).
+- origin/master ffa3c960, D1 link: FAIL 54/60 (bad frames 1203-6391, good 103232-103725); composites 191 of
+  1542 passes (`runs/origin_ffa3c960.json`). D3's link there: 19/20 bad (`runs/cal5566.json`).
+- Six frames looked at: `runs/done_sheet.png` (D1 f07, f42 with a live ripple, D2 f30, D3 f50, D4 f15, f45).
+- `npm test`: 250 files, 3104 tests green (gf_home_glsl included; no shader file changed).
+
+**The guard.** `node .claude/probes/K1450/hold.mjs <url> <outDir> <profileDir> [frames=60] [gapMs=250]
+[waitMs=5000]`, exit 1 when any frame has under 0.6 x the run's largest edge count or under 4000. Briefs that
+touch rp=gf (Muse's included) add a Done line: "`hold.mjs` passes on `?3&xp=off&am=instant&rp=gf` and
+`?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&rp=gf&gfh=1`, 60 frames, on a build of the branch (`preview.ps1
+-Ref`), one profileDir kept across runs". Load the link the ordinary way: no frame-forcing hooks, no
+`prp=off`, no `snd=none` (the auto plucks are what exposed this). Env: `DRAG=1` drags a thread through the
+burst, `SAVE=all` keeps every frame, `EDGE`, `XMAX`, `RATIO`, `MIN`. Headed, off-screen, real time; a cold
+profile waits about 2 min for the first composite.
+
+**Cold compile** (`cold.mjs`, fresh profile, fix build, `?3&xp=off&am=instant&rp=gf`; `cold_fix_build.json`):
+first composite at 114.8 s, main blocked 105.4 s inside first LINK_STATUS / uniform reads. Six gf programs
+(40-63k chars of GLSL each, the `gf_split.ts` tier and full forms with and without SCAP / corners) wait
+4.0-19.4 s each, 71 s together; `bg-blit-vertex` waits 34.6 s at 80 s, which I read as queue time behind
+the gf programs in the GPU process (inferred: a 525-char program does not compile for 35 s). Everything
+else is under 0.1 s. Levi's later 38 s and 29 s blocks are probably the reveal and explore variants
+(`revealForm`, compiled on the first revealing frame), which this xp=off/am=instant link never builds
+(inferred, not run). What would cut it: (1) KHR_parallel_shader_compile, polling COMPLETION_STATUS_KHR
+and drawing today's renderer until gf's programs are ready, so main never blocks (the compile time stays);
+(2) compiling only the program the first frame routes to, the others on demand or idle; (3) smaller
+programs (fewer unrolled MAXP/MAXK loops, which D3D's compiler pays for superlinearly). A warm profile
+reaches the first composite in about 1.2 s.

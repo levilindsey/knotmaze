@@ -1,0 +1,538 @@
+{
+ "url": "http://localhost:5565/?3&xp=off&am=instant&rp=gf",
+ "firstComposite": 114817,
+ "programs": 53,
+ "blockedMs": 105423,
+ "progs": [
+  {
+   "at": 80019,
+   "fsLen": 525,
+   "hash": "89845fb",
+   "name": "bg-blit-vertex",
+   "defines": "#define SHADER_NAME",
+   "linkMs": 0,
+   "waitMs": 34620.7,
+   "waited": true
+  },
+  {
+   "at": 13139,
+   "fsLen": 42539,
+   "hash": "5f976e29",
+   "name": "// pieces 0 and 1, then piece 2 and the corners (gf_split.ts, 32 bytes)",
+   "defines": "#define MAXP #define MAXK #define MAXR #define MAXS #define SCAP #define LOG #define TWM #define BIG",
+   "linkMs": 0,
+   "waitMs": 19359.1,
+   "waited": true
+  },
+  {
+   "at": 32530,
+   "fsLen": 42211,
+   "hash": "fc9a3bd5",
+   "name": "// pieces 0 and 1, then piece 2 and the corners (gf_split.ts, 32 bytes)",
+   "defines": "#define MAXP #define MAXK #define MAXR #define MAXS #define LOG #define TWM #define BIG #define BIGT",
+   "linkMs": 0,
+   "waitMs": 16219.6,
+   "waited": true
+  },
+  {
+   "at": 66622,
+   "fsLen": 62382,
+   "hash": "2a14c3b5",
+   "name": "// pieces 0 and 1, then piece 2 and the corners (gf_split.ts, 32 bytes)",
+   "defines": "#define MAXP #define MAXK #define MAXR #define MAXS #define LOG #define TWM #define BIG #define BIGT",
+   "linkMs": 0,
+   "waitMs": 13391.2,
+   "waited": true
+  },
+  {
+   "at": 53641,
+   "fsLen": 62710,
+   "hash": "bc9f8125",
+   "name": "// pieces 0 and 1, then piece 2 and the corners (gf_split.ts, 32 bytes)",
+   "defines": "#define MAXP #define MAXK #define MAXR #define MAXS #define SCAP #define LOG #define TWM #define BIG",
+   "linkMs": 0,
+   "waitMs": 12935.5,
+   "waited": true
+  },
+  {
+   "at": 48904,
+   "fsLen": 60628,
+   "hash": "4e7cb595",
+   "name": "// pieces 0 and 1, then piece 2 and the corners (gf_split.ts, 32 bytes)",
+   "defines": "#define MAXP #define MAXK #define MAXR #define MAXS #define SCAP #define LOG #define TWM #define BIG",
+   "linkMs": 0,
+   "waitMs": 4698.1,
+   "waited": true
+  },
+  {
+   "at": 9058,
+   "fsLen": 40619,
+   "hash": "46d2e5f",
+   "name": "// pieces 0 and 1, then piece 2 and the corners (gf_split.ts, 32 bytes)",
+   "defines": "#define MAXP #define MAXK #define MAXR #define MAXS #define SCAP #define LOG #define TWM #define BIG",
+   "linkMs": 0,
+   "waitMs": 4050.4,
+   "waited": true
+  },
+  {
+   "at": 340,
+   "fsLen": 59075,
+   "hash": "a23b50d7",
+   "name": "section-rgb-fragment",
+   "defines": "#define SHADER_NAME",
+   "linkMs": 0,
+   "waitMs": 87.5,
+   "waited": true
+  },
+  {
+   "at": 114654,
+   "fsLen": 1987,
+   "hash": "48f9edfb",
+   "name": "    // the fringe outside h has no label: its nearest labelled neighbour's",
+   "defines": "",
+   "linkMs": 0,
+   "waitMs": 28.4,
+   "waited": true
+  },
+  {
+   "at": 8942,
+   "fsLen": 2767,
+   "hash": "47ebf73d",
+   "name": "bg-vellum-fragment",
+   "defines": "#define SHADER_NAME",
+   "linkMs": 0,
+   "waitMs": 18.7,
+   "waited": true
+  },
+  {
+   "at": 114687,
+   "fsLen": 1637,
+   "hash": "15d4f4b9",
+   "name": "pluck-ripple-fragment",
+   "defines": "#define SHADER_NAME",
+   "linkMs": 0,
+   "waitMs": 4.4,
+   "waited": true
+  },
+  {
+   "at": 48751,
+   "fsLen": 294,
+   "hash": "1f17f4bd",
+   "name": "",
+   "defines": "",
+   "linkMs": 0,
+   "waitMs": 4,
+   "waited": true
+  },
+  {
+   "at": 114682,
+   "fsLen": 5837,
+   "hash": "83a6620d",
+   "name": "pluck-blur-fragment",
+   "defines": "#define SHADER_NAME",
+   "linkMs": 0,
+   "waitMs": 1.8,
+   "waited": true
+  },
+  {
+   "at": 114685,
+   "fsLen": 2192,
+   "hash": "514ce615",
+   "name": "knot-marker-fragment",
+   "defines": "#define SHADER_NAME",
+   "linkMs": 0,
+   "waitMs": 1.1,
+   "waited": true
+  },
+  {
+   "at": 114643,
+   "fsLen": 2027,
+   "hash": "bf92e2e4",
+   "name": "batch-vertex",
+   "defines": "#define SHADER_NAME",
+   "linkMs": 0,
+   "waitMs": 0.8,
+   "waited": true
+  },
+  {
+   "at": 341,
+   "fsLen": 35637,
+   "hash": "23f2c582",
+   "name": "arm-strip-fragment",
+   "defines": "#define SHADER_NAME",
+   "linkMs": 0,
+   "waitMs": 0.5,
+   "waited": true
+  },
+  {
+   "at": 341,
+   "fsLen": 37348,
+   "hash": "1fbaed0",
+   "name": "junction-field-fragment",
+   "defines": "#define SHADER_NAME",
+   "linkMs": 0,
+   "waitMs": 0.3,
+   "waited": true
+  },
+  {
+   "at": 341,
+   "fsLen": 5837,
+   "hash": "83a6620d",
+   "name": "pluck-blur-fragment",
+   "defines": "#define SHADER_NAME",
+   "linkMs": 0,
+   "waitMs": 0.2,
+   "waited": true
+  },
+  {
+   "at": 341,
+   "fsLen": 1154,
+   "hash": "2545901c",
+   "name": "pixi-program-vertex",
+   "defines": "#define SHADER_NAME",
+   "linkMs": 0,
+   "waitMs": 0.2,
+   "waited": true
+  },
+  {
+   "at": 114643,
+   "fsLen": 2027,
+   "hash": "bf92e2e4",
+   "name": "batch-vertex",
+   "defines": "#define SHADER_NAME",
+   "linkMs": 0,
+   "waitMs": 0.2,
+   "waited": true
+  },
+  {
+   "at": 114691,
+   "fsLen": 1637,
+   "hash": "15d4f4b9",
+   "name": "pluck-ripple-fragment",
+   "defines": "#define SHADER_NAME",
+   "linkMs": 0,
+   "waitMs": 0.2,
+   "waited": true
+  },
+  {
+   "at": 341,
+   "fsLen": 2027,
+   "hash": "bf92e2e4",
+   "name": "batch-vertex",
+   "defines": "#define SHADER_NAME",
+   "linkMs": 0,
+   "waitMs": 0.1,
+   "waited": true
+  },
+  {
+   "at": 341,
+   "fsLen": 2767,
+   "hash": "47ebf73d",
+   "name": "bg-vellum-fragment",
+   "defines": "#define SHADER_NAME",
+   "linkMs": 0,
+   "waitMs": 0.1,
+   "waited": true
+  },
+  {
+   "at": 341,
+   "fsLen": 2192,
+   "hash": "514ce615",
+   "name": "knot-marker-fragment",
+   "defines": "#define SHADER_NAME",
+   "linkMs": 0,
+   "waitMs": 0.1,
+   "waited": true
+  },
+  {
+   "at": 341,
+   "fsLen": 1637,
+   "hash": "15d4f4b9",
+   "name": "pluck-ripple-fragment",
+   "defines": "#define SHADER_NAME",
+   "linkMs": 0,
+   "waitMs": 0.1,
+   "waited": true
+  },
+  {
+   "at": 8847,
+   "fsLen": 2027,
+   "hash": "bf92e2e4",
+   "name": "batch-vertex",
+   "defines": "#define SHADER_NAME",
+   "linkMs": 0.1,
+   "waitMs": 0,
+   "waited": true
+  },
+  {
+   "at": 342,
+   "fsLen": 525,
+   "hash": "89845fb",
+   "name": "bg-blit-vertex",
+   "defines": "#define SHADER_NAME",
+   "linkMs": 0,
+   "waitMs": 0,
+   "waited": true
+  },
+  {
+   "at": 8850,
+   "fsLen": 1637,
+   "hash": "15d4f4b9",
+   "name": "pluck-ripple-fragment",
+   "defines": "#define SHADER_NAME",
+   "linkMs": 0,
+   "waitMs": 0,
+   "waited": true
+  },
+  {
+   "at": 8850,
+   "fsLen": 1154,
+   "hash": "2545901c",
+   "name": "pixi-program-vertex",
+   "defines": "#define SHADER_NAME",
+   "linkMs": 0,
+   "waitMs": 0,
+   "waited": true
+  },
+  {
+   "at": 8936,
+   "fsLen": 78142,
+   "hash": "99587133",
+   "name": "ribbon-sdf-explore-fragment",
+   "defines": "#define SHADER_NAME",
+   "linkMs": 0,
+   "waitMs": 0,
+   "waited": true
+  },
+  {
+   "at": 8938,
+   "fsLen": 75545,
+   "hash": "dcaabf25",
+   "name": "section-rgb-explore-fragment",
+   "defines": "#define SHADER_NAME",
+   "linkMs": 0,
+   "waitMs": 0,
+   "waited": true
+  },
+  {
+   "at": 8939,
+   "fsLen": 61958,
+   "hash": "26828a08",
+   "name": "ribbon-sdf-fragment",
+   "defines": "#define SHADER_NAME",
+   "linkMs": 0,
+   "waitMs": 0,
+   "waited": true
+  },
+  {
+   "at": 8939,
+   "fsLen": 47074,
+   "hash": "3cade07e",
+   "name": "junction-field-explore-fragment",
+   "defines": "#define SHADER_NAME",
+   "linkMs": 0,
+   "waitMs": 0,
+   "waited": true
+  },
+  {
+   "at": 8939,
+   "fsLen": 41646,
+   "hash": "7420c65e",
+   "name": "arm-strip-explore-fragment",
+   "defines": "#define SHADER_NAME",
+   "linkMs": 0,
+   "waitMs": 0,
+   "waited": true
+  },
+  {
+   "at": 8939,
+   "fsLen": 29812,
+   "hash": "b7ab94a0",
+   "name": "pluck-still-explore-fragment",
+   "defines": "#define SHADER_NAME",
+   "linkMs": 0,
+   "waitMs": 0,
+   "waited": true
+  },
+  {
+   "at": 8940,
+   "fsLen": 20595,
+   "hash": "bb2b6a7d",
+   "name": "pluck-still-fragment",
+   "defines": "#define SHADER_NAME",
+   "linkMs": 0,
+   "waitMs": 0,
+   "waited": true
+  },
+  {
+   "at": 8940,
+   "fsLen": 3132,
+   "hash": "ce79b465",
+   "name": "bg-vellum-x-fragment",
+   "defines": "#define SHADER_NAME",
+   "linkMs": 0,
+   "waitMs": 0,
+   "waited": true
+  },
+  {
+   "at": 8940,
+   "fsLen": 2993,
+   "hash": "661bf444",
+   "name": "bg-paper-x-fragment",
+   "defines": "#define SHADER_NAME",
+   "linkMs": 0,
+   "waitMs": 0,
+   "waited": true
+  },
+  {
+   "at": 8940,
+   "fsLen": 2965,
+   "hash": "90aff319",
+   "name": "bg-contours-x-fragment",
+   "defines": "#define SHADER_NAME",
+   "linkMs": 0,
+   "waitMs": 0,
+   "waited": true
+  },
+  {
+   "at": 8940,
+   "fsLen": 2927,
+   "hash": "5708f846",
+   "name": "bg-aurora-x-fragment",
+   "defines": "#define SHADER_NAME",
+   "linkMs": 0,
+   "waitMs": 0,
+   "waited": true
+  },
+  {
+   "at": 8940,
+   "fsLen": 2874,
+   "hash": "735cc982",
+   "name": "bg-vellum-drift-fragment",
+   "defines": "#define SHADER_NAME",
+   "linkMs": 0,
+   "waitMs": 0,
+   "waited": true
+  },
+  {
+   "at": 8940,
+   "fsLen": 2859,
+   "hash": "2ee3ac9f",
+   "name": "bg-silk-x-fragment",
+   "defines": "#define SHADER_NAME",
+   "linkMs": 0,
+   "waitMs": 0,
+   "waited": true
+  },
+  {
+   "at": 8940,
+   "fsLen": 2806,
+   "hash": "bf3cc11c",
+   "name": "bg-aurora-fragment",
+   "defines": "#define SHADER_NAME",
+   "linkMs": 0,
+   "waitMs": 0,
+   "waited": true
+  },
+  {
+   "at": 8940,
+   "fsLen": 2768,
+   "hash": "bf92b5ba",
+   "name": "bg-mist-x-fragment",
+   "defines": "#define SHADER_NAME",
+   "linkMs": 0,
+   "waitMs": 0,
+   "waited": true
+  },
+  {
+   "at": 8940,
+   "fsLen": 2737,
+   "hash": "a9e8e40b",
+   "name": "bg-paper-fragment",
+   "defines": "#define SHADER_NAME",
+   "linkMs": 0,
+   "waitMs": 0,
+   "waited": true
+  },
+  {
+   "at": 8940,
+   "fsLen": 2721,
+   "hash": "a976edc5",
+   "name": "bg-contours-fragment",
+   "defines": "#define SHADER_NAME",
+   "linkMs": 0,
+   "waitMs": 0,
+   "waited": true
+  },
+  {
+   "at": 8940,
+   "fsLen": 2682,
+   "hash": "8bd25743",
+   "name": "bg-wash-x-fragment",
+   "defines": "#define SHADER_NAME",
+   "linkMs": 0,
+   "waitMs": 0,
+   "waited": true
+  },
+  {
+   "at": 8940,
+   "fsLen": 2585,
+   "hash": "8f13b6b0",
+   "name": "bg-silk-fragment",
+   "defines": "#define SHADER_NAME",
+   "linkMs": 0,
+   "waitMs": 0,
+   "waited": true
+  },
+  {
+   "at": 8940,
+   "fsLen": 2524,
+   "hash": "d851566e",
+   "name": "bg-mist-fragment",
+   "defines": "#define SHADER_NAME",
+   "linkMs": 0,
+   "waitMs": 0,
+   "waited": true
+  },
+  {
+   "at": 8940,
+   "fsLen": 2438,
+   "hash": "30d3af6b",
+   "name": "bg-wash-fragment",
+   "defines": "#define SHADER_NAME",
+   "linkMs": 0,
+   "waitMs": 0,
+   "waited": true
+  },
+  {
+   "at": 8940,
+   "fsLen": 1026,
+   "hash": "bfdbba90",
+   "name": "displacement-filter-vertex",
+   "defines": "#define SHADER_NAME",
+   "linkMs": 0,
+   "waitMs": 0,
+   "waited": true
+  },
+  {
+   "at": 8940,
+   "fsLen": 868,
+   "hash": "38b64e62",
+   "name": "bg-fog-fragment",
+   "defines": "#define SHADER_NAME",
+   "linkMs": 0,
+   "waitMs": 0,
+   "waited": true
+  },
+  {
+   "at": 114696,
+   "fsLen": 1026,
+   "hash": "bfdbba90",
+   "name": "displacement-filter-vertex",
+   "defines": "#define SHADER_NAME",
+   "linkMs": 0,
+   "waitMs": 0,
+   "waited": true
+  }
+ ]
+}
