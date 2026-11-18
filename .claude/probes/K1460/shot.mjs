@@ -1,71 +1,44 @@
 // K1460: fade.mjs's frozen-state captures, nothing measured. Saves <outDir>/shot_<tag>_<fl>.png per
 // (mode, fl) and prints each load's physics hash. With HASH=<h>, a load whose hash differs is retried (up to
-// TRIES) so every shot shows the same state (loads settle in one of two states, Handoff K1458).
+// TRIES) so every shot shows the same state; a load that lost its WebGL context or timed out is retried too.
+// K1460 s4: the capture itself is cap.mjs (shared with oneshot.mjs): --disable-gpu-watchdog, the EARLY freeze
+// then __knotStepUntil(SIMT), a redraw wait that times out. WARM=1 first warms this profile on the gf link
+// (and gfh's when a gfh job is listed): one profile per build, reused.
 //
 //   node .claude/probes/K1460/shot.mjs <base> <outDir> <profileDir> "<mode>:<fl>[:tag],..." [extra query]
-//     mode = today | gf | gfh; env SIMT=20 DSF=2 HASH= TRIES=6
-import puppeteer from "puppeteer-core";
+//     mode = today | gf | gfh; env SIMT=20 DSF=2 HASH= TRIES=6 WARM=0
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { launch, load, warm } from "./cap.mjs";
 const [, , base, outDir, profileDir, jobArg, extra = ""] = process.argv;
 const SIMT = +(process.env.SIMT ?? 20), DSF = +(process.env.DSF ?? 2), TRIES = +(process.env.TRIES ?? 6);
 let want = process.env.HASH ?? "";
 mkdirSync(outDir, { recursive: true });
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const browser = await puppeteer.launch({
-  executablePath: "C:/Program Files/Google/Chrome/Application/chrome.exe", headless: false, userDataDir: profileDir, protocolTimeout: 1800000,
-  args: ["--use-angle=d3d11", "--no-first-run", "--no-default-browser-check", "--window-position=2200,50", "--window-size=1720,1000",
-    "--disable-features=CalculateNativeWinOcclusion", "--disable-backgrounding-occluded-windows", "--disable-renderer-backgrounding"],
-});
 const linkOf = (mode, fl) => `${base}/?3&xp=off&am=instant&prp=off&phw=0&fw=0&bg=none&snd=none&fl=${fl}` +
   (mode === "gf" ? "&rp=gf" : mode === "gfh" ? "&rp=gf&gfh=1" : "") + extra;
-async function load(mode, fl) {
-  const page = await browser.newPage();
-  page.on("pageerror", (e) => console.log(`[${mode} ${fl}] pageerror ${e.message}`));
-  page.on("console", (m) => { if (m.type() === "error") console.log(`[${mode} ${fl}] console ${m.text().slice(0, 300)}`); });
-  await page.evaluateOnNewDocument(() => { window.__knotLoopMode = "continuous"; });
-  // K1460 s3: since be6ae5f6 a gf page leaves "loading" a substep earlier than today's (sim 0.017 against 0.025),
-  // and stepping on to SIMT from there gives another state. EARLY=1 freezes the sim the moment the hook exists,
-  // the same point in every mode and build.
-  if (process.env.EARLY === "1") await page.evaluateOnNewDocument(() => {
-    const iv = setInterval(() => { if (typeof window.__knotPhysFreeze === "function" && window.__knotPS?.()) { clearInterval(iv); window.__knotPhysFreeze(true); } }, 0);
-  });
-  await page.setViewport({ width: 1600, height: 900, deviceScaleFactor: DSF });
-  await page.goto(linkOf(mode, fl), { waitUntil: "load", timeout: 900000 });
-  await page.waitForFunction(() => { const s = window.__knotPerf?.()?.state; return s && s !== "loading"; }, { timeout: 900000, polling: 300 });
-  const hash = await page.evaluate(async (t) => {
-    const fz = await window.__knotPhysFreeze(true);
-    await window.__knotStepUntil(t);
-    const r = window.__knotRenderer();
-    r.advanceClocks = () => {}; r.paintClock = 100; r.pulseBorn = 0;
-    window.__knotLoop?.({ continuous: true });
-    const d = await window.__knotPhysDump();
-    const h = d?.hashes ?? d; return String(h?.all ?? JSON.stringify(h).slice(0, 80)) + " " + (fz?.simTime ?? -1).toFixed(3);
-  }, SIMT);
-  if (mode !== "today") await page.waitForFunction(() => (globalThis.__knotGf?.stats?.switchedMs ?? -1) > 0 && (globalThis.__knotGf?.stats?.composites ?? 0) > 2, { timeout: 900000, polling: 300 }); // K1460 s3 (after the freeze: the sim must not run on during the compile): gf has switched in (be6ae5f6)
-  await sleep(2500);
-  if (mode !== "today") {
-    const c0 = await page.evaluate(() => { globalThis.__knotGfOpts = { ...(globalThis.__knotGfOpts ?? {}), redraw: true }; return globalThis.__knotGf.stats.composites; });
-    await page.waitForFunction((c) => globalThis.__knotGf.stats.composites > c + 2, { timeout: 900000, polling: 100 }, c0); // K1460 s3: gfh's home programs compile for minutes on a new build
-    await sleep(600);
-  }
-  return { page, hash };
-}
+const browser = await launch(profileDir);
 try {
-  for (const job of jobArg.split(",")) {
-    const [mode, fl, tag = mode] = job.split(":");
-    let r;
+  const jobs = jobArg.split(",").map((j) => j.split(":"));
+  if (process.env.WARM === "1") {
+    for (const m of ["gf", "gfh"]) if (jobs.some(([mode]) => mode === m)) {
+      const w = await warm(browser, linkOf(m, 0.5));
+      console.log(`[warm ${m}] ${w.ok ? "ok" : "NOT WARM"} after ${w.secs.toFixed(0)} s ${JSON.stringify(w.s)}`);
+    }
+  }
+  for (const [mode, fl, tag = mode] of jobs) {
+    let r = null;
     for (let t = 0; t < TRIES; t++) {
-      r = await load(mode, fl);
-      if (!want) want = r.hash.split(" ")[0];
-      if (r.hash.split(" ")[0] === want) break;
-      console.log(`[${tag} ${fl}] hash ${r.hash} != ${want}, retry`);
+      r = await load(browser, linkOf(mode, fl), { tag: `${tag} ${fl}`, gf: mode !== "today", simT: SIMT, dsf: DSF });
+      const h = r.hash.split(" ")[0];
+      if (!want && r.ok) want = h;
+      if (r.ok && h === want) break;
+      console.log(`[${tag} ${fl}] retry: ok=${r.ok} lost=${r.lost} hash ${r.hash} (want ${want}) ${JSON.stringify(r.stat)}`);
       await r.page.close();
       r = null;
     }
-    if (!r) { console.log(`[${tag} ${fl}] no same-state load`); continue; }
+    if (!r) { console.log(`[${tag} ${fl}] no good same-state load`); continue; }
     writeFileSync(join(outDir, `shot_${tag}_${fl}.png`), await r.page.screenshot({ type: "png" }));
-    console.log(`[${tag} ${fl}] hash ${r.hash}`);
+    console.log(`[${tag} ${fl}] hash ${r.hash} lost ${r.lost}`);
     await r.page.close();
   }
 } finally { await browser.close(); }
