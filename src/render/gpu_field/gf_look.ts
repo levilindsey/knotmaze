@@ -1930,9 +1930,16 @@ float lkGap(float key, vec2 p, vec2 qU, int cU) {
     pr = max(pr, cv);
   }
   sc *= 1.0 - pr;
-  for (int j = 0; j < np; j++) {
+  // K1460 s3: a self crossing's own thread is no over pass near the pixel's own arc (today's polyDist skips over points
+  // within selfEx = both half-widths + margin + fade + the exit pad of the under arc): where a kink loop's halves meet,
+  // the half keyed above read as an over piece at distance 0 and cut the other half out to its window's end, a radial edge.
+  vec4 CU = F(uOCh + 3 * cU);
+  float aU = lkArc(cU, qU), perU = CU.z > 0.5 ? F(uOV + int(CU.x) + int(CU.y) - 1).z : 0.0;
+  float sx = 2.0 * uH + uLkG + uLkF + ${lkF(GAP_EXIT_PAD)};  for (int j = 0; j < np; j++) {
     if (!(pkey[j] > key + uZt)) continue;
-    vec2 qO = lookQ(j, p); vec2 to = lkTanS(PC(j), qO);
+    vec2 qO = lookQ(j, p);
+    if (PC(j) == cU) { float da = lkArc(cU, qO) - aU; if (perU > 0.0) da -= perU * floor(da / perU + 0.5); if (abs(da) < sx) continue; }
+    vec2 to = lkTanS(PC(j), qO);
     float sinT = abs(tu.x * to.y - tu.y * to.x);
     float exg = uExLive > 0.5 ? exAt(PC(j), lkArc(PC(j), qO)).x : 1.0;
     g = max(g, lkCut(pd[j], sinT, exg, wm, pxw, sc));

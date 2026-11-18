@@ -46,7 +46,7 @@ async function load(mode, fl) {
   await sleep(2500);
   if (mode !== "today") {
     const c0 = await page.evaluate(() => { globalThis.__knotGfOpts = { ...(globalThis.__knotGfOpts ?? {}), redraw: true }; return globalThis.__knotGf.stats.composites; });
-    await page.waitForFunction((c) => globalThis.__knotGf.stats.composites > c + 2, { timeout: 60000, polling: 100 }, c0);
+    await page.waitForFunction((c) => globalThis.__knotGf.stats.composites > c + 2, { timeout: 900000, polling: 100 }, c0); // K1460 s3: gfh's home programs compile for minutes on a new build
     await sleep(600);
   }
   return { page, hash };
