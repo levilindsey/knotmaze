@@ -41,7 +41,7 @@
  * drops a hidden segment and a corner draws only under its gate flag (both in exAt's sites, live only while
  * uExLive is set), lkGap's cut scales by the over piece's visibility at its foot, and at the label the
  * visibility reshaped by the end look (lkExploreLook, explore_glsl.ts kExploreLook's port: the glow tint,
- * fray and dots/beacon shapes included) multiplies ink and coverage after the paint, pulses and FX. K1423: lkGap's cut is windowed by the baked winM (GfGapTable, uGw), as today's gap shader windows it.
+ * fray and dots/beacon shapes included) multiplies ink and coverage after the paint, pulses and FX. K1434: the label then takes the burn's char, ember and smolder (exBurnAt over the explore table's burn texels, lkCharLook/lkEmberLook; explore_glsl.ts kCharAt/kCharLook/kEmberLook's port), so a burnt thread darkens and glows under gf as under today's explore programs. K1423: lkGap's cut is windowed by the baked winM (GfGapTable, uGw), as today's gap shader windows it.
  * K1425: the label site also composes today's border indication over black (the gold, the pulse,
  * the unshaped telegraph, the rim; lookHi) into a third target o2 = (hiRgb, hiA), which the
  * composite's border branch draws in the cleared interior under the stroke; fill and both never
@@ -52,7 +52,7 @@
 import { kArcOfCtrl, kArcU, kBurnAge, kCA, kFxColor, kFxTail, kGlow, kIgnition, kSampleArc, kWall, kWrap, knotSection, type KChain, type KData, type KIgn } from "../paint_math";
 import { PAINT_CONST, PULSE_RIDGE_FADE } from "../paint_const";
 import { kStatic, knotUniformValues } from "../paint_model";
-import { EXPLORE_DOT_AT, EXPLORE_DOT_R, EXPLORE_DOTS_SPAN } from "../explore_glsl";
+import { EXPLORE_ASH_ALPHA, EXPLORE_ASH_RGB, EXPLORE_CHAR_ALPHA, EXPLORE_CHAR_RGB, EXPLORE_DOT_AT, EXPLORE_DOT_R, EXPLORE_DOTS_SPAN, EXPLORE_EMBER_ALPHA, EXPLORE_EMBER_CORE_RGB, EXPLORE_EMBER_RGB } from "../explore_glsl";
 import { kRimScale } from "../paint_math";
 import { routeCorner, routeCubic } from "../junction_routes";
 import { normArc, paintArcAt, sampleAtSafe } from "../ribbon/sampling";
@@ -1884,7 +1884,7 @@ const SITES: [string | RegExp, string, number][] = [
   ["if (lab < 0 && ink > 0.0) { lab = own;", "if (lab < 0 && ink > 0.0) { lab = own; lkJb = -1; lkSb = K3.z; lkKb = BIG;", 1],
   // the output: the gap cut and the colour
   ["    oInk = min(1.0, ink); oCov = min(1.0, cov);",
-    "    lkCo = vec4(0.0); lkHiC = vec3(0.0); lkHiA = 0.0;\n    if (lab >= 0) { vec2 lq = lkJb >= 0 ? lookQ(lkJb, p) : lookQs(lab, lkSb); lkCo = lkColour(lab, lq); float lkgp = lkPaint(lab, lq); lkCo.rgb = mix(lkCo.rgb, uGold, lkgp); lkCo.rgb = lkRoute(lkCo.rgb, lab, lq, p, lkJb >= 0); float lkRimV = lkRimF(lab, lq, p); lkCo.rgb = lkRim(lkCo.rgb, lab, lq, p); float lkD = length(p - lkFoot(lab, lq)); float lke = clamp(lkD / uH, 0.0, 1.0); lkE = 0.7 * ss(0.62, 0.85, lke); float lkv = lkPulse(lab, lq); if (lkv > 0.0) { if (uPulseW < 1.0) lkv *= clamp((uPulseW - lke) / max(3.0 * uAA / uH, 0.02) + 0.5, 0.0, 1.0); lkCo.rgb += (uPulseCol - lkCo.rgb) * (0.9315315315315316 * clamp(lkv, 0.0, 1.0)); } float lkt = lkTele(lab, lq); if (lkt > 0.0) lkCo.rgb += (uTeleU.rgb - lkCo.rgb) * clamp(lkt * lkTeleAcross(lke) * uTeleU.w, 0.0, 1.0); lkHiC = uGold * lkgp; float lkPulseHi = lkJb >= 0 ? lkv * lkFanWin(lab, lq) : 0.0; if (lkPulseHi > 0.0) lkHiC += (uPulseCol - lkHiC) * (0.9315315315315316 * clamp(lkPulseHi, 0.0, 1.0)); float lkTeleHi = lkt * uTeleU.w; if (lkTeleHi > 0.0) lkHiC += (uTeleU.rgb - lkHiC) * clamp(lkTeleHi, 0.0, 1.0); if (lkRimV > 0.0) lkHiC += (uHov - lkHiC) * (uRimC.y * clamp(lkRimV, 0.0, 1.0)); lkHiA = clamp(max(max(lkgp, lkPulseHi), max(lkRimV, lkTeleHi)), 0.0, 1.0); if (uFxLive > 0.5) { vec4 f0 = lkFx(lab, lq, 0); vec4 f1 = lkFx(lab, lq, 1); if (uFxStyle > 3.5) lkCo.rgb = lkBurn(lkCo.rgb, f0.z, f1.x, uFxStyle > 4.5); else if (uFxStyle > 0.5 && uFxStyle < 1.5 && f0.x > 0.0) { vec2 tn = lkTan(lab, lq.x); float sd = clamp(dot(p - lkFoot(lab, lq), vec2(-tn.y, tn.x)) / uH, -1.0, 1.0); lkCo.rgb = lkRainbow(lkCo.rgb, f0.x, 0.5 + 0.5 * sd); } if (f1.y > 0.0) lkCo.rgb += (vec3(1.0) - lkCo.rgb) * (0.9315315315315316 * clamp(f1.y, 0.0, 1.0)); ink *= f0.y; cov *= f0.y; lkHi = f0.w; } float lkg = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : 0.0; ink *= 1.0 - lkg; cov *= 1.0 - lkg; lkHiA *= 1.0 - lkg; if (uExLive > 0.5) { vec4 exs = exAt(lab, lkArc(lab, lq)); float evv = exs.x; if (exs.y >= 0.0 && uExLook > 1) { vec2 etn = lkTan(lab, lq.x); float elat = dot(p - lkFoot(lab, lq), vec2(-etn.y, etn.x)); if (uExLook == 2) { float eg = lkSmooth(exs.y / 0.3) * (1.0 - lkSmooth((exs.y - 0.55) / 0.45)); lkCo.rgb = mix(lkCo.rgb, vec3(0.78, 0.94, 1.0), 0.85 * eg * uExBr); } evv = lkExploreLook(uExLook, exs.x, exs.y, exs.y * exs.z, exs.z, elat, (2.0 * uAA) / max(uExTw, 1e-6), 2.0 * uAA); if (uExOn > 1.5) lkCo.rgb = mix(lkCo.rgb, vec3(1.0), lkExDot); } ink *= evv; cov *= evv; lkHiA *= evv; } }\n    oInk = min(1.0, ink); oCov = min(1.0, cov);", 1],
+    "    lkCo = vec4(0.0); lkHiC = vec3(0.0); lkHiA = 0.0;\n    if (lab >= 0) { vec2 lq = lkJb >= 0 ? lookQ(lkJb, p) : lookQs(lab, lkSb); lkCo = lkColour(lab, lq); float lkgp = lkPaint(lab, lq); lkCo.rgb = mix(lkCo.rgb, uGold, lkgp); lkCo.rgb = lkRoute(lkCo.rgb, lab, lq, p, lkJb >= 0); float lkRimV = lkRimF(lab, lq, p); lkCo.rgb = lkRim(lkCo.rgb, lab, lq, p); float lkD = length(p - lkFoot(lab, lq)); float lke = clamp(lkD / uH, 0.0, 1.0); lkE = 0.7 * ss(0.62, 0.85, lke); float lkv = lkPulse(lab, lq); if (lkv > 0.0) { if (uPulseW < 1.0) lkv *= clamp((uPulseW - lke) / max(3.0 * uAA / uH, 0.02) + 0.5, 0.0, 1.0); lkCo.rgb += (uPulseCol - lkCo.rgb) * (0.9315315315315316 * clamp(lkv, 0.0, 1.0)); } float lkt = lkTele(lab, lq); if (lkt > 0.0) lkCo.rgb += (uTeleU.rgb - lkCo.rgb) * clamp(lkt * lkTeleAcross(lke) * uTeleU.w, 0.0, 1.0); lkHiC = uGold * lkgp; float lkPulseHi = lkJb >= 0 ? lkv * lkFanWin(lab, lq) : 0.0; if (lkPulseHi > 0.0) lkHiC += (uPulseCol - lkHiC) * (0.9315315315315316 * clamp(lkPulseHi, 0.0, 1.0)); float lkTeleHi = lkt * uTeleU.w; if (lkTeleHi > 0.0) lkHiC += (uTeleU.rgb - lkHiC) * clamp(lkTeleHi, 0.0, 1.0); if (lkRimV > 0.0) lkHiC += (uHov - lkHiC) * (uRimC.y * clamp(lkRimV, 0.0, 1.0)); lkHiA = clamp(max(max(lkgp, lkPulseHi), max(lkRimV, lkTeleHi)), 0.0, 1.0); if (uFxLive > 0.5) { vec4 f0 = lkFx(lab, lq, 0); vec4 f1 = lkFx(lab, lq, 1); if (uFxStyle > 3.5) lkCo.rgb = lkBurn(lkCo.rgb, f0.z, f1.x, uFxStyle > 4.5); else if (uFxStyle > 0.5 && uFxStyle < 1.5 && f0.x > 0.0) { vec2 tn = lkTan(lab, lq.x); float sd = clamp(dot(p - lkFoot(lab, lq), vec2(-tn.y, tn.x)) / uH, -1.0, 1.0); lkCo.rgb = lkRainbow(lkCo.rgb, f0.x, 0.5 + 0.5 * sd); } if (f1.y > 0.0) lkCo.rgb += (vec3(1.0) - lkCo.rgb) * (0.9315315315315316 * clamp(f1.y, 0.0, 1.0)); ink *= f0.y; cov *= f0.y; lkHi = f0.w; } float lkg = lkKb < BIG ? lkGap(lkKb, p, lq, lab) : 0.0; ink *= 1.0 - lkg; cov *= 1.0 - lkg; lkHiA *= 1.0 - lkg; if (uExLive > 0.5) { vec4 exs = exAt(lab, lkArc(lab, lq)); float evv = exs.x; if (exs.y >= 0.0 && uExLook > 1) { vec2 etn = lkTan(lab, lq.x); float elat = dot(p - lkFoot(lab, lq), vec2(-etn.y, etn.x)); if (uExLook == 2) { float eg = lkSmooth(exs.y / 0.3) * (1.0 - lkSmooth((exs.y - 0.55) / 0.45)); lkCo.rgb = mix(lkCo.rgb, vec3(0.78, 0.94, 1.0), 0.85 * eg * uExBr); } evv = lkExploreLook(uExLook, exs.x, exs.y, exs.y * exs.z, exs.z, elat, (2.0 * uAA) / max(uExTw, 1e-6), 2.0 * uAA); if (uExOn > 1.5) lkCo.rgb = mix(lkCo.rgb, vec3(1.0), lkExDot); } vec3 exb = exBurnAt(lab, lkArc(lab, lq)); if (exb.x > 0.0 || exb.y > 0.0 || exb.z > 0.0) { vec2 btn = lkTan(lab, lq.x); float blat = dot(p - lkFoot(lab, lq), vec2(-btn.y, btn.x)); float bacr = abs(blat) / max(uExTw, 1e-6); float bsfw = max((2.0 * uAA) / max(uExTw, 1e-6), 1e-4); if (exb.x > 0.0) lkCo.rgb = lkCharLook(lkCo.rgb, exb.x, clamp((0.15000 - bacr) / bsfw + 0.5, 0.0, 1.0)); if (exb.y > 0.0) lkCo.rgb = lkEmberLook(lkCo.rgb, exb.y, clamp((0.22000 - bacr) / bsfw + 0.5, 0.0, 1.0)); if (exb.z > 0.0) lkCo.rgb = mix(lkCo.rgb, vec3(1.0, 0.23137, 0.12157), 0.9 * exb.z * clamp((0.22500 - bacr) / bsfw + 0.5, 0.0, 1.0)); } ink *= evv; cov *= evv; lkHiA *= evv; } }\n    oInk = min(1.0, ink); oCov = min(1.0, cov);", 1],
   ["  o0 = vec4(oInk, oCov, 0.0, 1.0);\n#endif", "  o0 = vec4(oInk, oCov, lkHi, lkE); o1 = lkCo; o2 = vec4(lkHiC, lkHiA);\n#endif", 1],
 ];
 
@@ -1902,13 +1902,39 @@ vec4 exAt(int c, float s) {
   if (H.w > 0.0) s -= H.w * floor(s / H.w);
   vec4 P = EX(lo);
   if (s <= P.x) return vec4(P.y, P.z, P.w, 0.0);
-  vec4 Q = EX(lo + n - 1);
+  vec4 Q = EX(lo + 2 * (n - 1));
   if (s >= Q.x) return vec4(Q.y, Q.z, Q.w, 0.0);
   int a = 0; int b = n - 1;
-  for (int it = 0; it < 24; it++) { if (b - a <= 1) break; int h = (a + b) >> 1; if (EX(lo + h).x <= s) a = h; else b = h; }
-  P = EX(lo + a); Q = EX(lo + b);
+  for (int it = 0; it < 24; it++) { if (b - a <= 1) break; int h = (a + b) >> 1; if (EX(lo + 2 * h).x <= s) a = h; else b = h; }
+  P = EX(lo + 2 * a); Q = EX(lo + 2 * b);
   float t = Q.x > P.x ? (s - P.x) / (Q.x - P.x) : 0.0;
   return vec4(mix(P.y, Q.y, t), mix(P.z, Q.z, t), mix(P.w, Q.w, t), 0.0);
+}
+// K1434: the burn state (char, ember, smolder) at arc s of chain c (gf_explore.ts exBurnAt)
+vec3 exBurnAt(int c, float s) {
+  vec4 H = EX(c);
+  if (H.x < 1.5) return vec3(0.0);
+  int lo = int(H.y); int n = int(H.z);
+  if (n <= 0) return vec3(0.0);
+  if (H.w > 0.0) s -= H.w * floor(s / H.w);
+  vec4 P = EX(lo);
+  if (s <= P.x) return EX(lo + 1).rgb;
+  vec4 Q = EX(lo + 2 * (n - 1));
+  if (s >= Q.x) return EX(lo + 2 * (n - 1) + 1).rgb;
+  int a = 0; int b = n - 1;
+  for (int it = 0; it < 24; it++) { if (b - a <= 1) break; int h = (a + b) >> 1; if (EX(lo + 2 * h).x <= s) a = h; else b = h; }
+  P = EX(lo + 2 * a); Q = EX(lo + 2 * b);
+  float t = Q.x > P.x ? (s - P.x) / (Q.x - P.x) : 0.0;
+  return mix(EX(lo + 2 * a + 1).rgb, EX(lo + 2 * b + 1).rgb, t);
+}
+// K1434: explore_glsl.ts kCharLook / kEmberLook over a composed thread colour
+vec3 lkCharLook(vec3 rgb, float ch, float ash) {
+  rgb = mix(rgb, vec3(${lkF(EXPLORE_CHAR_RGB[0])}, ${lkF(EXPLORE_CHAR_RGB[1])}, ${lkF(EXPLORE_CHAR_RGB[2])}), ${lkF(EXPLORE_CHAR_ALPHA)} * ch);
+  return mix(rgb, vec3(${lkF(EXPLORE_ASH_RGB[0])}, ${lkF(EXPLORE_ASH_RGB[1])}, ${lkF(EXPLORE_ASH_RGB[2])}), ${lkF(EXPLORE_ASH_ALPHA)} * ash * ch);
+}
+vec3 lkEmberLook(vec3 rgb, float e, float core) {
+  rgb = mix(rgb, vec3(${lkF(EXPLORE_EMBER_RGB[0])}, ${lkF(EXPLORE_EMBER_RGB[1])}, ${lkF(EXPLORE_EMBER_RGB[2])}), ${lkF(EXPLORE_EMBER_ALPHA)} * e);
+  return mix(rgb, vec3(${lkF(EXPLORE_EMBER_CORE_RGB[0])}, ${lkF(EXPLORE_EMBER_CORE_RGB[1])}, ${lkF(EXPLORE_EMBER_CORE_RGB[2])}), e * e * e * core);
 }
 `;
 const SEG_PLAIN = "float d = sqrt(d2); float s = A.z + u * (B.z - A.z); int k = v - cV0;";
@@ -1943,7 +1969,7 @@ export function lookForm(src: string): string {
     out = out.replace(sdPlain, "float sd = clamp(dot(p - lkFoot(lab, lq), vec2(-tn.y, tn.x)) / (uH * max(rvM(lab, lkArc(lab, lq)), 1e-6)), -1.0, 1.0);");
   }
   // the sites every program carries
-  for (const must of ["lkJb = lkJ;", "lkCo = vec4(0.0); lkHiC = vec3(0.0); lkHiA = 0.0;\n", "lkPulse(lab, lq)", "lkTele(lab, lq)", "lkBurn(lkCo.rgb", "lkRainbow(lkCo.rgb", "lkExploreLook(uExLook", "exAt(c, s)", "o0 = vec4(oInk, oCov, lkHi, lkE); o1 = lkCo; o2 = vec4(lkHiC, lkHiA);", "layout(location = 1) out vec4 o1;", "layout(location = 2) out vec4 o2;", "lkHiC = uGold * lkgp;", "ss(uW - max(3.0 * uAA, 0.02 * uH), uW, D)"]) if (!out.includes(must)) throw new Error(`gf look: ${must} missing`);
+  for (const must of ["lkJb = lkJ;", "lkCo = vec4(0.0); lkHiC = vec3(0.0); lkHiA = 0.0;\n", "lkPulse(lab, lq)", "lkTele(lab, lq)", "lkBurn(lkCo.rgb", "lkRainbow(lkCo.rgb", "lkExploreLook(uExLook", "exAt(c, s)", "exBurnAt(lab, lkArc(lab, lq))", "lkCharLook(lkCo.rgb", "lkEmberLook(lkCo.rgb", "o0 = vec4(oInk, oCov, lkHi, lkE); o1 = lkCo; o2 = vec4(lkHiC, lkHiA);", "layout(location = 1) out vec4 o1;", "layout(location = 2) out vec4 o2;", "lkHiC = uGold * lkgp;", "ss(uW - max(3.0 * uAA, 0.02 * uH), uW, D)"]) if (!out.includes(must)) throw new Error(`gf look: ${must} missing`);
   return out;
 }
 

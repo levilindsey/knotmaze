@@ -925,6 +925,15 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
           const E = knotUniformValues().uKExplore ?? [0, 0, 1, 0];
           const pieces = r.explorePieces ?? [];
           let ekey = `${lkPVer}|${E[0]},${E[1]},${E[2]},${E[3]}|${pieces.length}`;
+          // K1434: the burn (char spans, fronts, smolder, gate pieces) rebakes too
+          const burn = r.exploreBurn;
+          if (burn) {
+            ekey += `|B${burn.char ? burn.char.length : -1},${burn.fronts?.length ?? -1},${burn.smolder?.length ?? -1},${burn.gate?.length ?? -1}`;
+            for (const s of burn.char ?? []) ekey += `|c${s.chain},${s.b0},${s.b1}`;
+            for (const f of burn.fronts ?? []) ekey += `|f${f.chain},${f.c},${f.dir},${f.kind}`;
+            for (const s of burn.smolder ?? []) ekey += `|s${s.chain},${s.b0},${s.b1}`;
+            for (const p of burn.gate ?? []) ekey += `|g${p.chain},${p.c0},${p.c1},${p.f0},${p.f1}`;
+          }
           for (const p of pieces) ekey += `|${p.chain},${p.c0},${p.c1},${p.f0},${p.f1},${p.tip0 ? 1 : 0}${p.tip1 ? 1 : 0}`;
           if (ekey !== exKey || !exDrawn) {
             exKey = ekey;
