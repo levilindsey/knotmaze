@@ -70,6 +70,32 @@ describe("K1423 gapWindow (marchUnder's perp window on polylines)", () => {
     expect(wp).toBeGreaterThan(0.7);
     expect(wp).toBeLessThan(0.95);
   });
+  it("K1458: a fused joint's room caps the window past the all-lanes exit (crossing_gaps.ts K1218 S3)", () => {
+    const under = straight(0, 0, 30, 0);
+    const s = 0.1, c = Math.sqrt(1 - s * s);
+    const over = samples([[10 - 12 * c, -12 * s], [10 + 12 * c, 12 * s]]);
+    // no joint: the eye-wall limit near 4.0 (above); a joint whose room ends at 3.5 caps the positive side there
+    const [wn, wp] = gapWindow(under, over, 10, 12, H, MARGIN, FADE, 4.5, 4.5, 1e6, 3.5);
+    expect(wp).toBeCloseTo(3.5, 5);
+    expect(wn).toBeGreaterThan(3.7);
+    // a window never ends before its all-lanes exit (~3.3), however close the joint
+    const [, wp2] = gapWindow(under, over, 10, 12, H, MARGIN, FADE, 4.5, 4.5, 1e6, 0.5);
+    expect(wp2).toBeGreaterThan(3.2);
+    expect(wp2).toBeLessThan(3.5);
+  });
+  it("K1458: the joint's clearance scales (crossing_gaps.ts clearScales): margin then fade, to their floors", () => {
+    const under = straight(0, 0, 20, 0);
+    const over = straight(10, -10, 10, 10);
+    // steep: sil = h = 0.13, cut = h + margin = 0.2; room 0.3 leaves the margin whole and the fade 0.1/0.14
+    const r1 = gapWindow(under, over, 10, 10, H, MARGIN, FADE, 4.5, 4.5, 1e6, 0.3);
+    expect(r1[2]).toBe(1); expect(r1[3]).toBe(1); // no joint on the negative side
+    expect(r1[4]).toBe(1);
+    expect(r1[5]).toBeCloseTo(0.1 / FADE, 1);
+    // room 0.15: the margin shrinks to (0.15 - 0.13) / 0.07, below its floor 0.5; the fade sits on its floor 0.45
+    const r2 = gapWindow(under, over, 10, 10, H, MARGIN, FADE, 4.5, 4.5, 1e6, 0.15);
+    expect(r2[4]).toBe(0.5);
+    expect(r2[5]).toBe(0.45);
+  });
 });
 
 describe("K1423 GfGapTable", () => {
@@ -109,7 +135,7 @@ describe("K1423 GfGapTable", () => {
   it("eye walls: the window from each crossing ends near the eye's midpoint (twin cap)", () => {
     const T = new GfGapTable();
     const V = T.values(src);
-    const at = (x: number) => V[over.count + Math.round(x / under.arcPer)]; // chain 1 follows chain 0 in the layout
+    const at = (x: number) => V[4 * (over.count + Math.round(x / under.arcPer))]; // chain 1 follows chain 0 in the layout
     // at the crossing the sample is deep inside (winM near the window's reach)
     expect(at(10)).toBeGreaterThan(0.5);
     // the eye's middle (x=11.5) sits at both windows' ends: winM near or below
@@ -118,5 +144,24 @@ describe("K1423 GfGapTable", () => {
     // just inside the first window's end it is still positive but small
     expect(at(11)).toBeGreaterThan(0);
     expect(at(11)).toBeLessThan(at(10));
+  });
+  it("K1458: each windowed under sample names its over pass and the over sample nearest it", () => {
+    const V = new GfGapTable().values(src);
+    const ent = (x: number) => 4 * (over.count + Math.round(x / under.arcPer));
+    for (const x of [9.6, 10, 10.4, 13]) {
+      const i = ent(x);
+      expect(V[i + 1]).toBe(0); // the over chain
+      const k = V[i + 2];
+      expect(Number.isInteger(k)).toBe(true);
+      // the named over sample sits within the scan of the over point nearest (x, 0)
+      const d = Math.hypot(over.positions[2 * k] - x, over.positions[2 * k + 1]);
+      let best = 1e9;
+      for (let j = 0; j < over.count; j++) best = Math.min(best, Math.hypot(over.positions[2 * j] - x, over.positions[2 * j + 1]));
+      expect(d - best).toBeLessThan(V[i + 3] * over.arcPer + 1e-6);
+      expect(V[i + 3]).toBeGreaterThan(0);
+    }
+    // far from both crossings no over pass is named
+    expect(V[ent(2) + 1]).toBe(-1);
+    expect(V[ent(18) + 1]).toBe(-1);
   });
 });

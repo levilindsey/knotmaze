@@ -2461,6 +2461,46 @@ export function encodeParams(params: UrlParams): string {
 
 // RELATIVE ("?<token>"): the path survives, so the same build works at the
 // root and under a prefix (levi.dev/knotmaze/).
+// K1458: the link flags that are no param (`rp`, `gfh`, `oe`, `ob`, `gln`, ...) stay
+// after the token: their readers read the address once at load, so a rewrite that
+// dropped them would give a reload a different renderer. Param keys (they live in
+// the token), the seed keys and `daily` (a panel edit leaves the daily) drop.
 export function writeParams(params: UrlParams): void {
-  history.replaceState(null, "", `?${encodeParams(params)}`);
+  const search = typeof location !== "undefined" ? location.search : "";
+  history.replaceState(null, "", `?${encodeParams(params)}${urlOnlyFlags(search)}`);
+}
+
+let PARAM_KEYS: ReadonlySet<string> | null = null;
+// Every key the key=value reader looks at, recorded by running it once on an
+// empty query (its get/has calls), plus the seed keys and `daily`.
+function paramKeys(): ReadonlySet<string> {
+  if (PARAM_KEYS) return PARAM_KEYS;
+  const keys = new Set<string>(["s", "seed", "daily"]);
+  const spy = {
+    get(k: string): string | null { keys.add(k); return null; },
+    has(k: string): boolean { keys.add(k); return false; },
+  } as unknown as URLSearchParams;
+  readLegacy(spy, PARAM_DEFAULTS);
+  PARAM_KEYS = keys;
+  return keys;
+}
+
+// The query's `&key[=value]` pairs that are no param key, as written (the
+// token or a first key=value pair excluded when it is a param), each with its
+// leading "&"; "" when none.
+export function urlOnlyFlags(search: string): string {
+  const query = search.startsWith("?") ? search.slice(1) : search;
+  if (query === "") return "";
+  const keys = paramKeys();
+  let out = "";
+  query.split("&").forEach((part, i) => {
+    if (part === "") return;
+    const eq = part.indexOf("=");
+    if (i === 0 && eq < 0) return; // the token
+    let k = eq < 0 ? part : part.slice(0, eq);
+    try { k = decodeURIComponent(k.replace(/\+/g, " ")); } catch { /* keep it raw */ }
+    if (keys.has(k)) return;
+    out += `&${part}`;
+  });
+  return out;
 }
