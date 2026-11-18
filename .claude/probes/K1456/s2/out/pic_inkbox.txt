@@ -1,0 +1,6 @@
+image                                             NW       N      NE       W       C       E      SW       S      SE     mid
+pic_m1.png                                      7333    7205    6978    7654    7601    7154    6969    7281    7206   48293
+pic_m2.png                                      7333    7205    6978    7654    7601    7154    6969    7281    7206   48293
+pic_b1.png                                      7333    7205    6978    7654    7601    7154    6969    7281    7206   48293
+d pic_m2.png                                       0       0       0       0       0       0       0       0       0       0   max|d| 0   px differing 0
+d pic_b1.png                                       0       0       0       0       0       0       0       0       0       0   max|d| 0   px differing 0

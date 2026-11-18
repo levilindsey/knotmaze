@@ -1,0 +1,79 @@
+[
+ {
+  "file": "ctl.frag",
+  "len": 60379,
+  "ms": 94317,
+  "ok": true,
+  "log": ""
+ },
+ {
+  "file": "noAllEK.frag",
+  "len": 60394,
+  "ms": 42618,
+  "ok": true,
+  "log": ""
+ },
+ {
+  "file": "noAllFb.frag",
+  "len": 60277,
+  "ms": 65376,
+  "ok": true,
+  "log": ""
+ },
+ {
+  "file": "noArc.frag",
+  "len": 60387,
+  "ms": 81675,
+  "ok": true,
+  "log": ""
+ },
+ {
+  "file": "noFbArc.frag",
+  "len": 60328,
+  "ms": 85928,
+  "ok": true,
+  "log": ""
+ },
+ {
+  "file": "noFbTip.frag",
+  "len": 60328,
+  "ms": 87019,
+  "ok": true,
+  "log": ""
+ },
+ {
+  "file": "noKeyK.frag",
+  "len": 60378,
+  "ms": 89207,
+  "ok": true,
+  "log": ""
+ },
+ {
+  "file": "noPieceK.frag",
+  "len": 60378,
+  "ms": 90755,
+  "ok": true,
+  "log": ""
+ },
+ {
+  "file": "noPieceM.frag",
+  "len": 60378,
+  "ms": 90157,
+  "ok": true,
+  "log": ""
+ },
+ {
+  "file": "noTip.frag",
+  "len": 60387,
+  "ms": 75716,
+  "ok": true,
+  "log": ""
+ },
+ {
+  "file": "noVtx.frag",
+  "len": 60366,
+  "ms": 77639,
+  "ok": true,
+  "log": ""
+ }
+]

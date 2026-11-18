@@ -57,6 +57,8 @@ interface GfReply {
 }
 const FILL: [number, number, number] = [0.96, 0.93, 0.86];
 const INK_AUTO: [number, number, number] = [0.12, 0.11, 0.09];
+/** K1456 s2 (K1481): the idle compile poll's period while programs compile (pollCompileSoon). */
+const COMPILE_POLL_MS = 250;
 
 export interface GfApp { frame(): void; after(): void; dispose(): void; busy(): boolean }
 // K1369 s4: the builds in flight by gesture (gf_build.ts gfDepth; the
@@ -260,6 +262,15 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
   // has (pass.compileGate), so its own link reads the cache. Started with the pass, fed the app's
   // issue order whenever it changes. A failed worker opens the gate: the app compiles on its own.
   let compileWorkerDone = false;
+  // K1456 s2 (K1481): while programs compile, the compile poll asks for a frame on a timer, not every
+  // frame: a frame that only polls redraws today's whole scene (the GEOM flag), 27-56 a second at rest
+  // through a cold visit's 60-100 s of compiles. The worker's per-program message still asks at once,
+  // and a reveal or input asks on its own, so only an idle wait slows to the timer's rate.
+  let compilePollTimer: ReturnType<typeof setTimeout> | null = null;
+  const pollCompileSoon = (): void => {
+    if (compilePollTimer !== null) return;
+    compilePollTimer = setTimeout(() => { compilePollTimer = null; if (!off) requestFrame(); }, COMPILE_POLL_MS);
+  };
   let cwWorker: Worker | null = null;
   const cwIndex = new Map<string, number>();
   const cwLinked = new Set<number>();
@@ -556,6 +567,7 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
     T = null;
     pending = null;
     gen++;
+    if (compilePollTimer !== null) { clearTimeout(compilePollTimer); compilePollTimer = null; }
     detach();
   };
 
@@ -1083,13 +1095,19 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
       // a failed compile falls back to today's renderer for good, never a blank.
       startCompileWorker();
       postCompileOrder();
+      const ci0 = pass.compileInfo();
       pass.pollPrograms();
       comp!.poll();
       const ci = pass.compileInfo();
       stats.compileIssued = ci.issued; stats.compileReady = ci.ready; stats.compileFirstMs = ci.firstMs;
       const compileFailed = pass.compileError() ?? comp!.compileError();
       if (compileFailed) return fallback(`failed (shader compile: ${compileFailed})`);
-      if (pass.pendingCompile()) requestFrame();
+      // a poll that issued or finished a program asks for the next frame at once (a warm visit's links
+      // run one a frame, as before); a poll that only waited on the driver waits for the timer
+      if (pass.pendingCompile()) {
+        if (ci.issued !== ci0.issued || ci.ready !== ci0.ready) requestFrame();
+        else pollCompileSoon();
+      }
       if (!switched) {
         // K1472 s3: never in the middle of a reveal. A warm visit's programs are ready about 1.7 s
         // into the reveal (its ink already on screen), a cold one's long after it; a takeover there

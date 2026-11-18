@@ -1,0 +1,51 @@
+[
+ {
+  "file": "full.frag",
+  "len": 78783,
+  "ms": 90047,
+  "ok": true,
+  "log": ""
+ },
+ {
+  "file": "full_p3.frag",
+  "len": 78783,
+  "ms": 83102,
+  "ok": true,
+  "log": ""
+ },
+ {
+  "file": "full_k2.frag",
+  "len": 78783,
+  "ms": 86002,
+  "ok": true,
+  "log": ""
+ },
+ {
+  "file": "full_s3.frag",
+  "len": 78782,
+  "ms": 85989,
+  "ok": true,
+  "log": ""
+ },
+ {
+  "file": "free.frag",
+  "len": 77029,
+  "ms": 22547,
+  "ok": true,
+  "log": ""
+ },
+ {
+  "file": "corners.frag",
+  "len": 79111,
+  "ms": 87340,
+  "ok": true,
+  "log": ""
+ },
+ {
+  "file": "plainfull.frag",
+  "len": 44197,
+  "ms": 20700,
+  "ok": true,
+  "log": ""
+ }
+]
