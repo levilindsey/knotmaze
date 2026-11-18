@@ -625,7 +625,7 @@ Next free ID: K1485.
   - owner: nobody since 2026-11-17 18:39 (merged; agent `aa84d5035d75f3084` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
   - branch: mainline; last commit: `ae2b4dfb`
   - evidence: `.claude/probes/K1451/out/s3/`
-  - next: owed from stage 4, each alone under the perf lock (Muse 26C held it): k1362c1_bench.ps1 at gfh=1 against a3a9a6b4 (GPU and work p50 within 5%) and k1451_buildtime.ts 5 (needs tables_k1451m.ts copied from e83fa5a6, deleted after; unlocked it read 190.6 ms against 191.6); rerun hold.mjs on the gfh=1 link once K1468 lands (it fails on master too, with GPU-process dumps); the original k1362s2_census at gfh=1 never turns home on or sets the pass's fade (use census_s4*); then K1460's protect-interval row
+  - next: the bench verdict is in (K1468 s2, under contention: ae2b4dfb against 8711ef35 link A frame -6.2%, link B +2.1%: pass) and the build time read e83fa5a6 184.0 ms against dc335eab 197.1 (+7.1%, per scene -9% to +29%; Muse 26E is on it); still owed: rerun hold.mjs on the gfh=1 link; the original k1362s2_census at gfh=1 never turns home on or sets the pass's fade (use census_s4*); then K1460's protect-interval row
   - brief: `docs/design/K1451_s4_spots_5_7.md`
 - **K1464** · Muse batch 26 (rp=gf on an ordinary load): 26A K1456 cold first load, 26B K1459 reveal ink per
   thread, 26C K1424 route bands by fan membership, 26D K1454 a pluck ripple bends the threads
@@ -647,10 +647,10 @@ Next free ID: K1485.
   loops; seen on live b4e0a08e, a3a9a6b4 and b423013a, never on a warm profile. Likely Levi's "the entire maze
   blinks in and out". Fix: one target per program, plus a no-loop guard
   (docs/design/K1468_gf_cold_load_gpu_hang.md; probes .claude/probes/K1468/)
-  - owner: agent `ad4db178a3a26c189` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-17 21:13, 2 h cap ~23:13)
-  - branch: `worktree-agent-ad4db178a3a26c189`, worktree `.claude/worktrees/agent-ad4db178a3a26c189`; last commit: `dc335eab`
+  - owner: nobody since 2026-11-17 23:23 (merged; agent `ad4db178a3a26c189` of claude session 09c7a672-a414-402a-97da-b3176839a2e5)
+  - branch: mainline; last commit: `af53913c`
   - evidence: .claude/probes/K1468/s2/ (warm.ps1, interleave.ps1, summarize.mjs), rest.mjs, probe build 182fb101 (#k1468p=div|alu)
-  - next: stage 2, second run, started 21:20: items 1 and 2 only (the interleaved table on 8711ef35 / ae2b4dfb / origin/master, K1451's bench verdict and build time, link A's gap attributed and removed, then the pixel A/B); item 3 (the cold compile) is K1472 stage 2's
+  - next: Muse run 26I (docs/design/K1464_muse_batch26.md, queued behind 26E-26H): link A's rAF interval on master is 24.5 ms against ae2b4dfb's 18.0 (409 against 561 composites per 10 s, two clean rounds under the lock); not the packed target (the old RGBA8 targets ran 27.7-28.7 ms); bisect 158f75be, e820cadd, 01933aa3 with .claude/probes/K1468/s2/attr.ps1, then remove it. Still owed after that: item 2, the pixel A/B (the coordinator's check of the merged fringe fix on link A: tip against master 11-46k px, the same as master against master and tip against tip, so K1482's cap.mjs captures differ load to load, mostly by 1-2 levels, the start marker's edges included)
   - brief: `docs/design/K1468_s2_frame_time.md`
 - **K1469** · Verify Muse 26B's K1459 fix on screen (01c72dfc, live in aad94eb7: the reveal's interior cut at
   junctions by today's own cuts, lkJCut): only its unit test and a rest frame were checked, because pinned gf
@@ -668,10 +668,10 @@ Next free ID: K1485.
   unlike every checked link). Live fc520c2d: no blink, but gf needs two programs before it composes (cold
   151-282 s under load), shows only fragments meanwhile and stray dashes and outlines after; today's reveal
   also barely moves in the probe (page or probe not yet told apart)
-  - owner: nobody since 2026-11-17 22:00: stage 2 merged; stage 3 briefed, waits for a free agent slot (two Chrome agents at most beside Muse)
-  - branch: mainline; last commit: `2b0fe219`
-  - evidence: .claude/probes/K1472/ (liveshots.mjs, pinsheet.mjs, progs.mjs; out/pin sheets; out/s2 on the agent's branch)
-  - next: stage 3 (docs/design/K1472_s3_reveal_parity.md): the reveal's differences from today's renderer on Levi's link, largest first: gf brings strands in whole where today's come in as broken pieces (1.2-2.5k px a spot), staircase cut ends, hard dark seams at crossings where today fades, the start marker's glint missing during the reveal; then the verdict on 01c72dfc's lkJCut (a build with it reverted) and the two other links
+  - owner: agent `af888a799cf269dde` of claude session 09c7a672-a414-402a-97da-b3176839a2e5 (opus, started 2026-11-17 23:23, 2 h cap ~01:23)
+  - branch: `worktree-agent-af888a799cf269dde`, worktree `.claude/worktrees/agent-af888a799cf269dde`; last commit: `7a518b9c`
+  - evidence: `.claude/probes/K1472/`
+  - next: the agent's report (stage 3, cap about 01:00 on 2026-11-18): view its sheets and the takeover table, merge, check the live link on visits 1 and 2
   - brief: `docs/design/K1472_s3_reveal_parity.md`
 - **K1482** · rp=gf's border look on Levi's own link at rest (3.FGH1HtvQeDjm6e4BII, gfh=1), junction by
   junction against his approved look: sweep every junction and under-tail end at 4x, class each fault (break,
@@ -2321,7 +2321,7 @@ Every other item below waits on the trigger it names.
   strokes whose geometry differs from gf's, so it cannot serve as the "where a stroke runs" reference there: a
   border fault on that link is judged against Levi's approved look alone (K1482's sweep,
   `.claude/probes/K1482/out/master/sheets/faults_00..03.png`, left tile of each pair)
-- **K1484** · rp=gf pluck ripple after Muse 26D (b01cc37b, K1454): the run left no handoff. Coordinator's
+- **K1484** · rp=gf pluck ripple after Muse 26D (b01cc37b, K1454): its handoff (c609eadd) says the guards were not measured. Coordinator's
   measure from its saved frames (`.claude/probes/K1454/out/26D/final2/`, pixels over 30 levels from the
   prp=off frame inside 110 px of the pluck): gf against today's count 0.74 / 0.85 / 0.89 at ages 0.12 / 0.3 /
   0.55 s (master 0.52 / 0.43 / 0.52), IoU 0.65 / 0.74 / 0.72 (master 0.49 / 0.41 / 0.50), 0 px with no ripple.
