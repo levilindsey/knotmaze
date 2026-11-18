@@ -1,6 +1,10 @@
 import { describe, it, expect } from "vitest";
 import {
   ContextLossModel,
+  GfLossGuard,
+  GF_EARLY_MS,
+  GF_LOSS_LIMIT,
+  type GfLossStore,
   MESSAGE_DELAY_MS,
   LOSS_POLL_MS,
   LOSS_COVER_ID,
@@ -290,5 +294,52 @@ describe("context loss (K456): the cover", () => {
     expect(body.children[0].children[0].children[1].textContent).toBe(
       "The browser lost the graphics context."
     );
+  });
+});
+
+describe("K1468: gf's context-loss guard", () => {
+  const mem = (init: string | null = null): GfLossStore & { v: string | null } => {
+    const s = { v: init, read: () => s.v, write: (v: string) => { s.v = v; } };
+    return s;
+  };
+  it("the second loss while gf compiles turns gf off, and says so once", () => {
+    const g = new GfLossGuard(mem());
+    expect(GF_LOSS_LIMIT).toBe(2);
+    expect(g.lost(true, null)).toBe(false);
+    expect(g.off).toBe(false);
+    expect(g.lost(true, null)).toBe(true);
+    expect(g.off).toBe(true);
+    expect(g.lost(true, null)).toBe(false); // already off: no second turn-off
+  });
+  it("counts a loss before the first composite or within GF_EARLY_MS of it, not a later one", () => {
+    const g = new GfLossGuard();
+    expect(g.lost(false, GF_EARLY_MS + 1)).toBe(false);
+    expect(g.losses).toBe(0);
+    expect(g.lost(false, null)).toBe(false);
+    expect(g.losses).toBe(1);
+    expect(g.lost(false, GF_EARLY_MS - 1)).toBe(true);
+  });
+  it("a late loss while programs still compile counts", () => {
+    const g = new GfLossGuard();
+    g.lost(true, GF_EARLY_MS * 10);
+    expect(g.losses).toBe(1);
+  });
+  it("keeps the count in the tab's session store, so a reload stays off", () => {
+    const s = mem();
+    new GfLossGuard(s).lost(true, null);
+    expect(s.v).toBe("1");
+    const again = new GfLossGuard(s);
+    expect(again.losses).toBe(1);
+    expect(again.lost(false, 0)).toBe(true);
+    expect(new GfLossGuard(s).off).toBe(true);
+  });
+  it("survives a store that throws or holds junk", () => {
+    const bad: GfLossStore = { read: () => { throw new Error("denied"); }, write: () => { throw new Error("denied"); } };
+    const g = new GfLossGuard(bad);
+    expect(g.losses).toBe(0);
+    expect(g.lost(true, null)).toBe(false);
+    expect(g.lost(true, null)).toBe(true);
+    expect(new GfLossGuard(mem("abc")).losses).toBe(0);
+    expect(new GfLossGuard(mem("-3")).losses).toBe(0);
   });
 });

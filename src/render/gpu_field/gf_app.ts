@@ -34,6 +34,7 @@ import { knotUniformValues } from "../paint_model";
 import { GfDynTable, GfFxTable, GfGapTable, GfLookGate, GfLookTable, GfPaintTable, dynKey, gfJointClear, lookFade, lookGap, lookKey, paintKey, rimKey, rimUniforms, type GfDynSource, type GfGapSource, type GfPaintSource, type GfRimSource, GfRouteTable, routeDeclKey, type GfRouteSource } from "./gf_look";
 import { kArcU, kWrap } from "../paint_math";
 import { GfComposite, GfPass, GfTarget, type GfMap } from "./gf_pass";
+import { GfLossGuard, sessionLossStore } from "../../app/context_loss";
 
 interface GfReply {
   hello?: boolean;
@@ -61,6 +62,9 @@ export interface GfApp { frame(): void; after(): void; dispose(): void; busy(): 
 // K1369 s4: the builds in flight by gesture (gf_build.ts gfDepth; the
 // `__knotGfOpts` knobs `depth` and `gesture` override it).
 let warned = false;
+// K1468: the context-loss guard, one per page (app/context_loss.ts GfLossGuard): gf apps come and go across a restore.
+let lossGuard: GfLossGuard | null = null;
+const gfLossGuard = (): GfLossGuard => (lossGuard ??= new GfLossGuard(sessionLossStore()));
 
 export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfApp {
   let pass: GfPass | null = null;
@@ -68,6 +72,8 @@ export function createGfApp(ctx: SceneExportCtx, requestFrame: () => void): GfAp
   let comp: GfComposite | null = null;
   let T: GfTables | null = null;
   let off = false;
+  // K1468: when gf's first composite drew (performance.now()), -1 before it
+  let firstCompAt = -1;
   let lastR: unknown = null;
   let builtCount = -1;
   let builtScale = 0;
@@ -463,6 +469,7 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
           // K1389 s1: today's thread look (gf_look.ts): the section colours by fill / border / both
           comp.draw(target, FILL, ink, lt && lr ? { mode: lr.threadLook, bd: bc ? [ink[0], ink[1], ink[2], 1] : [0, 0, 0, 0], fx: rvDrawn } : null);
           stats.composites++;
+          if (firstCompAt < 0) firstCompAt = performance.now();
         } finally {
           if (fb !== null && vp) {
             g.bindFramebuffer(g.FRAMEBUFFER, fb);
@@ -526,6 +533,17 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
     release();
     requestFrame();
   };
+
+  // K1468: a context lost while gf compiles, or before or just after its first composite, counts toward the page's
+  // guard (app/context_loss.ts GfLossGuard); the second turns gf off for the tab's session.
+  const LOSS_WHY = "the WebGL context was lost twice while gf compiled or first drew (K1468)";
+  const onGlLost = (): void => {
+    if (off || !pass) return;
+    const compiling = pass.pendingCompile() || !comp?.ready;
+    if (gfLossGuard().lost(compiling, firstCompAt < 0 ? null : performance.now() - firstCompAt)) fallback(LOSS_WHY);
+  };
+  const lossCanvas = ctx.app.canvas as HTMLCanvasElement;
+  lossCanvas.addEventListener("webglcontextlost", onGlLost);
 
   // The camera: world to device pixels (field_b_app.ts's), and its inverse
   // as the pass's map from gl_FragCoord (bottom-up) to world.
@@ -870,6 +888,7 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
     try {
       const g = gl();
       if (!g) return fallback("no WebGL2 context");
+      if (!pass && gfLossGuard().off) return fallback(LOSS_WHY);
       if (!pass) {
         // K1468: every program writes one packed RGBA32UI output (gf_pass.ts packForm): the look's three targets
         // made its first draw compile a second shader on the GPU process's main thread (cold: watchdog kill)
@@ -1160,6 +1179,7 @@ const gfHome = (): boolean => (globalThis as { __knotGfHome?: boolean }).__knotG
     applyCap(0);
     off = true;
     if (worker) dropWorker("disposed");
+    lossCanvas.removeEventListener("webglcontextlost", onGlLost);
     const G = globalThis as unknown as Record<string, unknown>;
     if (G.__knotGf === api) delete G.__knotGf;
   };
