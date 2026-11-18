@@ -4,6 +4,8 @@
 #   interleave.ps1 -Out <dir> -Rounds 4 -Builds "b8711=5660","bae2b=5661","bmaster=5662" [-Extra '<link keys>'] [-BuildTime]
 param([string]$Out, [int]$Rounds = 4, [string[]]$Builds, [string]$Extra = "", [switch]$BuildTime)
 . "$PSScriptRoot/common.ps1"
+# pwsh -File passes "-Builds a=1,b=2" as one string: split it (the second run's first try measured nothing for this)
+$Builds = @($Builds | ForEach-Object { $_ -split "," } | Where-Object { $_ })
 $lock = Join-Path $env:TEMP "claude-perf.lock"
 $owner = "K1468s2-agent-a517b983"
 New-Item -ItemType Directory $Out -Force | Out-Null
