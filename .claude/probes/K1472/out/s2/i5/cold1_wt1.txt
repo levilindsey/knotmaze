@@ -1,0 +1,265 @@
+  page 0.3s issue P len=59075
+  page 0.3s issue P len=37348
+  page 0.3s issue P len=35637
+  page 0.3s issue P len=5837
+  page 0.3s issue C-plain/small len=1820
+  page 0.3s issue C-plain/small len=2767
+  page 0.3s issue C-plain/small len=2192
+  page 0.3s issue C-plain/small len=1637
+  page 0.3s issue C-plain/small len=419
+  page 0.3s issue C-plain/small len=468
+1s rv=null gf=null
+2s rv=null gf=i0 r0 sw=false c=0 rvP=0 w=:0
+  page 8.5s ready P len=59075
+  page 8.5s ready P len=37348
+  page 10.9s ready P len=35637
+  page 11s ready P len=5837
+  page 11s ready C-plain/small len=1820
+  page 11s issue C-plain/small len=1820
+  page 11s ready C-plain/small len=2767
+  page 11s ready C-plain/small len=2192
+  page 11s ready C-plain/small len=1637
+  page 11s issue C-plain/small len=1637
+  page 11s ready C-plain/small len=419
+  page 11s issue C-plain/small len=419
+  page 11s ready C-plain/small len=468
+  page 11s issue C-plain/small len=2767
+  page 11s ready C-plain/small len=2767
+  page 11s issue C-plain/small len=3822
+  page 11s issue C-look len=5496
+  page 11.2s issue L+R len=79182
+  page 11.2s ready C-plain/small len=3822
+  page 11.2s issue C-plain/small len=468
+  page 11.2s ready C-plain/small len=468
+  page 11.2s issue C-plain/small len=1820
+  page 11.2s ready C-plain/small len=1820
+  page 11.2s issue C-plain/small len=1820
+  page 11.2s issue P len=59075
+  page 11.3s ready P len=59075
+  page 11.3s issue P len=5837
+  page 11.3s ready P len=5837
+  page 11.3s issue C-plain/small len=2192
+  page 11.3s ready C-plain/small len=2192
+  page 11.3s issue C-plain/small len=1637
+  page 11.3s ready C-plain/small len=1637
+  page 11.3s issue C-plain/small len=1637
+  page 11.4s issue P len=35637
+  page 11.4s ready P len=35637
+  page 11.4s issue P len=37348
+  page 11.4s ready P len=37348
+  page 11.4s issue C-plain/small len=419
+  page 11.5s ready C-plain/small len=419
+  page 11.5s issue C-plain/small len=419
+  page 11.6s ready C-look len=5496
+12s rv=1.25/12.55 fx=153 gf=i1 r0 sw=false c=0 rvP=0 w=:0
+13s rv=3.41/12.55 fx=1088 gf=i1 r0 sw=false c=0 rvP=0 w=:0
+14s rv=5.54/12.55 fx=3121 gf=i1 r0 sw=false c=0 rvP=0 w=:0
+15s rv=7.79/12.55 fx=3004 gf=i1 r0 sw=false c=0 rvP=0 w=:0
+16s rv=10.03/12.55 fx=2973 gf=i1 r0 sw=false c=0 rvP=0 w=:0
+17s rv=12.19/12.55 fx=1781 gf=i1 r0 sw=false c=0 rvP=0 w=:0
+  page 17.2s issue P len=78142
+  page 17.2s issue P len=75545
+  page 17.2s issue P len=61958
+  page 17.2s issue P len=47074
+  page 17.2s issue P len=41646
+  page 17.2s issue P len=29812
+  page 17.2s issue P len=20595
+  page 17.2s issue C-plain/small len=3132
+  page 17.2s issue C-plain/small len=2993
+  page 17.2s issue C-plain/small len=2965
+  page 17.2s issue C-plain/small len=2927
+  page 17.2s issue C-plain/small len=2874
+  page 17.2s issue C-plain/small len=2859
+  page 17.2s issue C-plain/small len=2806
+  page 17.2s issue C-plain/small len=2768
+  page 17.2s issue C-plain/small len=2737
+  page 17.2s issue C-plain/small len=2721
+  page 17.2s issue C-plain/small len=2682
+  page 17.2s issue C-plain/small len=2585
+  page 17.2s issue C-plain/small len=2524
+  page 17.2s issue C-plain/small len=2438
+  page 17.2s issue C-plain/small len=713
+  page 17.2s issue C-plain/small len=868
+18s rv=12.76/12.55 done fx=563 gf=i1 r0 sw=false c=0 rvP=0 w=:0
+19s rv=12.76/12.55 done fx=63 gf=i1 r0 sw=false c=0 rvP=0 w=:0
+20s rv=12.76/12.55 done fx=0 gf=i1 r0 sw=false c=0 rvP=0 w=:0
+30s rv=12.76/12.55 done fx=0 gf=i1 r0 sw=false c=0 rvP=0 w=:0
+  page 42s ready P len=78142
+  page 42s ready P len=75545
+  page 42s ready P len=61958
+  page 42s ready P len=47074
+  page 42s ready P len=41646
+  page 42s ready P len=29812
+  page 42s ready P len=20595
+  page 42s ready C-plain/small len=3132
+  page 42s ready C-plain/small len=2993
+  page 42s ready C-plain/small len=2965
+  page 42s ready C-plain/small len=2927
+  page 42s ready C-plain/small len=2874
+  page 42s ready C-plain/small len=2859
+  page 42s ready C-plain/small len=2806
+  page 42s ready C-plain/small len=2768
+  page 42s ready C-plain/small len=2737
+  page 42s ready C-plain/small len=2721
+  page 42s ready C-plain/small len=2682
+  page 42s ready C-plain/small len=2585
+  page 42s ready C-plain/small len=2524
+  page 42s ready C-plain/small len=2438
+  page 42s ready C-plain/small len=713
+  page 42s issue C-plain/small len=713
+  page 42s ready C-plain/small len=868
+60s rv=12.76/12.55 done fx=0 gf=i1 r0 sw=false c=0 rvP=0 w=:0
+  page 84.9s ready L+R len=79182
+  page 84.9s issue L len=78173
+85s rv=12.76/12.55 done fx=0 gf=i2 r1 sw=false c=0 rvP=0 w=:0
+90s rv=12.76/12.55 done fx=0 gf=i2 r1 sw=false c=0 rvP=0 w=:0
+120s rv=12.76/12.55 done fx=0 gf=i2 r1 sw=false c=0 rvP=0 w=:0
+  page 120.6s ready L len=78173
+  page 120.6s issue L len=78501
+121s rv=12.76/12.55 done fx=0 gf=i3 r2 sw=true c=17 rvP=0 w=:0
+122s rv=12.76/12.55 done fx=0 gf=i3 r2 sw=true c=72 rvP=0 w=:0
+123s rv=12.76/12.55 done fx=0 gf=i3 r2 sw=true c=128 rvP=0 w=:0
+124s rv=12.76/12.55 done fx=0 gf=i3 r2 sw=true c=185 rvP=0 w=:0
+125s rv=12.76/12.55 done fx=0 gf=i3 r2 sw=true c=240 rvP=0 w=:0
+126s rv=12.76/12.55 done fx=0 gf=i3 r2 sw=true c=296 rvP=0 w=:0
+127s rv=12.76/12.55 done fx=0 gf=i3 r2 sw=true c=351 rvP=0 w=:0
+128s rv=12.76/12.55 done fx=0 gf=i3 r2 sw=true c=408 rvP=0 w=:0
+129s rv=12.76/12.55 done fx=0 gf=i3 r2 sw=true c=463 rvP=0 w=:0
+130s rv=12.76/12.55 done fx=0 gf=i3 r2 sw=true c=519 rvP=0 w=:0
+131s rv=12.76/12.55 done fx=0 gf=i3 r2 sw=true c=575 rvP=0 w=:0
+132s rv=12.76/12.55 done fx=0 gf=i3 r2 sw=true c=631 rvP=0 w=:0
+133s rv=12.76/12.55 done fx=0 gf=i3 r2 sw=true c=687 rvP=0 w=:0
+134s rv=12.76/12.55 done fx=0 gf=i3 r2 sw=true c=743 rvP=0 w=:0
+135s rv=12.76/12.55 done fx=0 gf=i3 r2 sw=true c=798 rvP=0 w=:0
+136s rv=12.76/12.55 done fx=0 gf=i3 r2 sw=true c=855 rvP=0 w=:0
+137s rv=12.76/12.55 done fx=0 gf=i3 r2 sw=true c=911 rvP=0 w=:0
+138s rv=12.76/12.55 done fx=0 gf=i3 r2 sw=true c=966 rvP=0 w=:0
+139s rv=12.76/12.55 done fx=0 gf=i3 r2 sw=true c=1023 rvP=0 w=:0
+140s rv=12.76/12.55 done fx=0 gf=i3 r2 sw=true c=1079 rvP=0 w=:0
+141s rv=12.76/12.55 done fx=0 gf=i3 r2 sw=true c=1134 rvP=0 w=:0
+142s rv=12.76/12.55 done fx=0 gf=i3 r2 sw=true c=1191 rvP=0 w=:0
+143s rv=12.76/12.55 done fx=0 gf=i3 r2 sw=true c=1247 rvP=0 w=:0
+144s rv=12.76/12.55 done fx=0 gf=i3 r2 sw=true c=1302 rvP=0 w=:0
+145s rv=12.76/12.55 done fx=0 gf=i3 r2 sw=true c=1359 rvP=0 w=:0
+146s rv=12.76/12.55 done fx=0 gf=i3 r2 sw=true c=1414 rvP=0 w=:0
+  page 146.8s ready L len=78501
+  page 146.8s issue L len=76419
+147s rv=12.76/12.55 done fx=0 gf=i4 r3 sw=true c=1471 rvP=0 w=:0
+148s rv=12.76/12.55 done fx=0 gf=i4 r3 sw=true c=1526 rvP=0 w=:0
+149s rv=12.76/12.55 done fx=0 gf=i4 r3 sw=true c=1583 rvP=0 w=:0
+150s rv=12.76/12.55 done fx=0 gf=i4 r3 sw=true c=1638 rvP=0 w=:0
+151s rv=12.76/12.55 done fx=0 gf=i4 r3 sw=true c=1694 rvP=0 w=:0
+152s rv=12.76/12.55 done fx=0 gf=i4 r3 sw=true c=1750 rvP=0 w=:0
+153s rv=12.76/12.55 done fx=0 gf=i4 r3 sw=true c=1807 rvP=0 w=:0
+154s rv=12.76/12.55 done fx=0 gf=i4 r3 sw=true c=1862 rvP=0 w=:0
+155s rv=12.76/12.55 done fx=0 gf=i4 r3 sw=true c=1918 rvP=0 w=:0
+156s rv=12.76/12.55 done fx=0 gf=i4 r3 sw=true c=1974 rvP=0 w=:0
+  page 156.2s ready L len=76419
+  page 156.2s issue P len=43587
+157s rv=12.76/12.55 done fx=0 gf=i5 r4 sw=true c=2030 rvP=0 w=:0
+158s rv=12.76/12.55 done fx=0 gf=i5 r4 sw=true c=2086 rvP=0 w=:0
+159s rv=12.76/12.55 done fx=0 gf=i5 r4 sw=true c=2143 rvP=0 w=:0
+160s rv=12.76/12.55 done fx=0 gf=i5 r4 sw=true c=2198 rvP=0 w=:0
+161s rv=12.76/12.55 done fx=0 gf=i5 r4 sw=true c=2255 rvP=0 w=:0
+162s rv=12.76/12.55 done fx=0 gf=i5 r4 sw=true c=2310 rvP=0 w=:0
+163s rv=12.76/12.55 done fx=0 gf=i5 r4 sw=true c=2366 rvP=0 w=:0
+164s rv=12.76/12.55 done fx=0 gf=i5 r4 sw=true c=2422 rvP=0 w=:0
+165s rv=12.76/12.55 done fx=0 gf=i5 r4 sw=true c=2478 rvP=0 w=:0
+166s rv=12.76/12.55 done fx=0 gf=i5 r4 sw=true c=2534 rvP=0 w=:0
+167s rv=12.76/12.55 done fx=0 gf=i5 r4 sw=true c=2590 rvP=0 w=:0
+168s rv=12.76/12.55 done fx=0 gf=i5 r4 sw=true c=2646 rvP=0 w=:0
+  page 168.1s ready P len=43587
+  page 168.1s issue P len=41995
+169s rv=12.76/12.55 done fx=0 gf=i6 r5 sw=true c=2701 rvP=0 w=:0
+170s rv=12.76/12.55 done fx=0 gf=i6 r5 sw=true c=2757 rvP=0 w=:0
+  page 170.7s ready P len=41995
+  page 170.7s issue P len=43915
+171s rv=12.76/12.55 done fx=0 gf=i7 r6 sw=true c=2813 rvP=0 w=:0
+172s rv=12.76/12.55 done fx=0 gf=i7 r6 sw=true c=2869 rvP=0 w=:0
+173s rv=12.76/12.55 done fx=0 gf=i7 r6 sw=true c=2926 rvP=0 w=:0
+174s rv=12.76/12.55 done fx=0 gf=i7 r6 sw=true c=2981 rvP=0 w=:0
+175s rv=12.76/12.55 done fx=0 gf=i7 r6 sw=true c=3037 rvP=0 w=:0
+176s rv=12.76/12.55 done fx=0 gf=i7 r6 sw=true c=3094 rvP=0 w=:0
+177s rv=12.76/12.55 done fx=0 gf=i7 r6 sw=true c=3149 rvP=0 w=:0
+178s rv=12.76/12.55 done fx=0 gf=i7 r6 sw=true c=3205 rvP=0 w=:0
+179s rv=12.76/12.55 done fx=0 gf=i7 r6 sw=true c=3262 rvP=0 w=:0
+180s rv=12.76/12.55 done fx=0 gf=i7 r6 sw=true c=3318 rvP=0 w=:0
+181s rv=12.76/12.55 done fx=0 gf=i7 r6 sw=true c=3373 rvP=0 w=:0
+182s rv=12.76/12.55 done fx=0 gf=i7 r6 sw=true c=3430 rvP=0 w=:0
+  page 182.5s ready P len=43915
+  page 182.5s issue R len=44556
+183s rv=12.76/12.55 done fx=0 gf=i8 r7 sw=true c=3485 rvP=0 w=:0
+184s rv=12.76/12.55 done fx=0 gf=i8 r7 sw=true c=3541 rvP=0 w=:0
+185s rv=12.76/12.55 done fx=0 gf=i8 r7 sw=true c=3597 rvP=0 w=:0
+186s rv=12.76/12.55 done fx=0 gf=i8 r7 sw=true c=3653 rvP=0 w=:0
+187s rv=12.76/12.55 done fx=0 gf=i8 r7 sw=true c=3709 rvP=0 w=:0
+188s rv=12.76/12.55 done fx=0 gf=i8 r7 sw=true c=3764 rvP=0 w=:0
+189s rv=12.76/12.55 done fx=0 gf=i8 r7 sw=true c=3821 rvP=0 w=:0
+190s rv=12.76/12.55 done fx=0 gf=i8 r7 sw=true c=3877 rvP=0 w=:0
+191s rv=12.76/12.55 done fx=0 gf=i8 r7 sw=true c=3932 rvP=0 w=:0
+192s rv=12.76/12.55 done fx=0 gf=i8 r7 sw=true c=3988 rvP=0 w=:0
+193s rv=12.76/12.55 done fx=0 gf=i8 r7 sw=true c=4044 rvP=0 w=:0
+194s rv=12.76/12.55 done fx=0 gf=i8 r7 sw=true c=4100 rvP=0 w=:0
+  page 194.7s ready R len=44556
+  page 194.7s issue R len=42853
+195s rv=12.76/12.55 done fx=0 gf=i9 r8 sw=true c=4157 rvP=0 w=:0
+196s rv=12.76/12.55 done fx=0 gf=i9 r8 sw=true c=4212 rvP=0 w=:0
+197s rv=12.76/12.55 done fx=0 gf=i9 r8 sw=true c=4268 rvP=0 w=:0
+  page 197.4s ready R len=42853
+  page 197.4s issue R len=44884
+198s rv=12.76/12.55 done fx=0 gf=i10 r9 sw=true c=4324 rvP=0 w=:0
+199s rv=12.76/12.55 done fx=0 gf=i10 r9 sw=true c=4380 rvP=0 w=:0
+200s rv=12.76/12.55 done fx=0 gf=i10 r9 sw=true c=4436 rvP=0 w=:0
+201s rv=12.76/12.55 done fx=0 gf=i10 r9 sw=true c=4492 rvP=0 w=:0
+202s rv=12.76/12.55 done fx=0 gf=i10 r9 sw=true c=4548 rvP=0 w=:0
+203s rv=12.76/12.55 done fx=0 gf=i10 r9 sw=true c=4604 rvP=0 w=:0
+204s rv=12.76/12.55 done fx=0 gf=i10 r9 sw=true c=4660 rvP=0 w=:0
+205s rv=12.76/12.55 done fx=0 gf=i10 r9 sw=true c=4716 rvP=0 w=:0
+206s rv=12.76/12.55 done fx=0 gf=i10 r9 sw=true c=4772 rvP=0 w=:0
+207s rv=12.76/12.55 done fx=0 gf=i10 r9 sw=true c=4827 rvP=0 w=:0
+208s rv=12.76/12.55 done fx=0 gf=i10 r9 sw=true c=4884 rvP=0 w=:0
+209s rv=12.76/12.55 done fx=0 gf=i10 r9 sw=true c=4940 rvP=0 w=:0
+  page 209.6s ready R len=44884
+  page 209.6s issue L+R len=77317
+210s rv=12.76/12.55 done fx=0 gf=i11 r10 sw=true c=4995 rvP=0 w=:0
+211s rv=12.76/12.55 done fx=0 gf=i11 r10 sw=true c=5052 rvP=0 w=:0
+212s rv=12.76/12.55 done fx=0 gf=i11 r10 sw=true c=5107 rvP=0 w=:0
+213s rv=12.76/12.55 done fx=0 gf=i11 r10 sw=true c=5163 rvP=0 w=:0
+214s rv=12.76/12.55 done fx=0 gf=i11 r10 sw=true c=5219 rvP=0 w=:0
+215s rv=12.76/12.55 done fx=0 gf=i11 r10 sw=true c=5275 rvP=0 w=:0
+216s rv=12.76/12.55 done fx=0 gf=i11 r10 sw=true c=5331 rvP=0 w=:0
+217s rv=12.76/12.55 done fx=0 gf=i11 r10 sw=true c=5387 rvP=0 w=:0
+218s rv=12.76/12.55 done fx=0 gf=i11 r10 sw=true c=5443 rvP=0 w=:0
+219s rv=12.76/12.55 done fx=0 gf=i11 r10 sw=true c=5499 rvP=0 w=:0
+  page 219.6s ready L+R len=77317
+  page 219.6s issue L+R len=79510
+220s rv=12.76/12.55 done fx=0 gf=i12 r11 sw=true c=5555 rvP=0 w=:0
+221s rv=12.76/12.55 done fx=0 gf=i12 r11 sw=true c=5611 rvP=0 w=:0
+222s rv=12.76/12.55 done fx=0 gf=i12 r11 sw=true c=5667 rvP=0 w=:0
+223s rv=12.76/12.55 done fx=0 gf=i12 r11 sw=true c=5723 rvP=0 w=:0
+224s rv=12.76/12.55 done fx=0 gf=i12 r11 sw=true c=5779 rvP=0 w=:0
+225s rv=12.76/12.55 done fx=0 gf=i12 r11 sw=true c=5835 rvP=0 w=:0
+226s rv=12.76/12.55 done fx=0 gf=i12 r11 sw=true c=5891 rvP=0 w=:0
+227s rv=12.76/12.55 done fx=0 gf=i12 r11 sw=true c=5946 rvP=0 w=:0
+228s rv=12.76/12.55 done fx=0 gf=i12 r11 sw=true c=6002 rvP=0 w=:0
+229s rv=12.76/12.55 done fx=0 gf=i12 r11 sw=true c=6058 rvP=0 w=:0
+230s rv=12.76/12.55 done fx=0 gf=i12 r11 sw=true c=6114 rvP=0 w=:0
+231s rv=12.76/12.55 done fx=0 gf=i12 r11 sw=true c=6170 rvP=0 w=:0
+232s rv=12.76/12.55 done fx=0 gf=i12 r11 sw=true c=6226 rvP=0 w=:0
+233s rv=12.76/12.55 done fx=0 gf=i12 r11 sw=true c=6282 rvP=0 w=:0
+234s rv=12.76/12.55 done fx=0 gf=i12 r11 sw=true c=6338 rvP=0 w=:0
+235s rv=12.76/12.55 done fx=0 gf=i12 r11 sw=true c=6394 rvP=0 w=:0
+236s rv=12.76/12.55 done fx=0 gf=i12 r11 sw=true c=6450 rvP=0 w=:0
+237s rv=12.76/12.55 done fx=0 gf=i12 r11 sw=true c=6506 rvP=0 w=:0
+238s rv=12.76/12.55 done fx=0 gf=i12 r11 sw=true c=6561 rvP=0 w=:0
+239s rv=12.76/12.55 done fx=0 gf=i12 r11 sw=true c=6617 rvP=0 w=:0
+240s rv=12.76/12.55 done fx=0 gf=i12 r11 sw=true c=6673 rvP=0 w=:0
+241s rv=12.76/12.55 done fx=0 gf=i12 r11 sw=true c=6730 rvP=0 w=:0
+242s rv=12.76/12.55 done fx=0 gf=i12 r11 sw=true c=6785 rvP=0 w=:0
+243s rv=12.76/12.55 done fx=0 gf=i12 r11 sw=true c=6841 rvP=0 w=:0
+244s rv=12.76/12.55 done fx=0 gf=i12 r11 sw=true c=6897 rvP=0 w=:0
+245s rv=12.76/12.55 done fx=0 gf=i12 r11 sw=true c=6952 rvP=0 w=:0
+246s rv=12.76/12.55 done fx=0 gf=i12 r11 sw=true c=7009 rvP=0 w=:0
+  page 246.2s ready L+R len=79510
+247s rv=12.76/12.55 done fx=0 gf=i12 r12 sw=true c=7040 rvP=0 w=done:12
+all compiled, switched, worker over

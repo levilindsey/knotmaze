@@ -1,0 +1,13 @@
+K1472 s2 rest A/B (am=instant), ?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&rp=gf&gfh=1 + &phw=0&snd=none, frozen at sim 20 (hash fff8c9e5), 900x900 DSF 1, restab.mjs.
+master = cfabf14f (5640), tip = 879f9a4d build wt2 (5641).
+master (first composite) vs master (all 12 programs ready, 246 s): 0 px
+tip vs tip (control): 0 px
+master vs tip: 169 px (>8: 17, max delta 17), single pixels scattered over the maze (crops: levi_master_tip_crops.png)
+tip with Pixi resetState no-oped vs tip: 0 px  -> not the 28b3e0c7 finally
+tip with the compile worker refused (fresh profile, the app links its own programs) vs master: 0 px
+=> every one of the 169 px comes from the program BINARIES the compile worker links (OffscreenCanvas webgl2 in a worker;
+   the app loads them from Chrome's program cache). Cause of the binary difference not found (inferred candidates: the
+   worker context's state at link - no EXT_color_buffer_float, default attributes - entering ANGLE's translation).
+(master on tip's profile: physics hash 10104c64, a different frozen state; not used.)
+hold.mjs warm on tip: PASS 60/60 (hold_wt2.txt), gf first composite 1921 ms.
+npm test on 879f9a4d+e4976efe: 254 files passed, 3167 tests passed.

@@ -1,0 +1,74 @@
+{
+ "url": "http://localhost:5641/?3.FGH1HtvQeDjm6e4BII&gfh=1&snd=none&phw=0&fw=0",
+ "dur": 12.54901478226457,
+ "shots": [
+  {
+   "i": 0,
+   "fr": 0,
+   "t": 0.0001,
+   "file": ".claude/probes/K1472/out/s2/pin/levi_today_f0.png",
+   "gf": null
+  },
+  {
+   "i": 1,
+   "fr": 0.1,
+   "t": 1.254901478226457,
+   "file": ".claude/probes/K1472/out/s2/pin/levi_today_f1.png",
+   "gf": null
+  },
+  {
+   "i": 2,
+   "fr": 0.25,
+   "t": 3.1372536955661423,
+   "file": ".claude/probes/K1472/out/s2/pin/levi_today_f2.png",
+   "gf": null
+  },
+  {
+   "i": 3,
+   "fr": 0.4,
+   "t": 5.019605912905828,
+   "file": ".claude/probes/K1472/out/s2/pin/levi_today_f3.png",
+   "gf": null
+  },
+  {
+   "i": 4,
+   "fr": 0.55,
+   "t": 6.9019581302455135,
+   "file": ".claude/probes/K1472/out/s2/pin/levi_today_f4.png",
+   "gf": null
+  },
+  {
+   "i": 5,
+   "fr": 0.7,
+   "t": 8.784310347585198,
+   "file": ".claude/probes/K1472/out/s2/pin/levi_today_f5.png",
+   "gf": null
+  },
+  {
+   "i": 6,
+   "fr": 0.85,
+   "t": 10.666662564924884,
+   "file": ".claude/probes/K1472/out/s2/pin/levi_today_f6.png",
+   "gf": null
+  },
+  {
+   "i": 7,
+   "fr": 0.97,
+   "t": 12.172544338796632,
+   "file": ".claude/probes/K1472/out/s2/pin/levi_today_f7.png",
+   "gf": null
+  }
+ ],
+ "log": [
+  "1 reveal duration 12.549 pin true",
+  "3 f0 t=0.000 (0) {\"c\":0.0001,\"done\":false} null",
+  "5 f1 t=1.255 (0.1) {\"c\":1.254901478226457,\"done\":false} null",
+  "7 f2 t=3.137 (0.25) {\"c\":3.1372536955661423,\"done\":false} null",
+  "9 f3 t=5.020 (0.4) {\"c\":5.019605912905828,\"done\":false} null",
+  "11 f4 t=6.902 (0.55) {\"c\":6.9019581302455135,\"done\":false} null",
+  "13 f5 t=8.784 (0.7) {\"c\":8.784310347585198,\"done\":false} null",
+  "14 f6 t=10.667 (0.85) {\"c\":10.666662564924884,\"done\":false} null",
+  "16 f7 t=12.173 (0.97) {\"c\":12.172544338796632,\"done\":false} null",
+  "23 rest null"
+ ]
+}

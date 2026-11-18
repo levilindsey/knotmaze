@@ -99,3 +99,44 @@ A partial result lands: say plainly which commits are confirmed on the sheets.
 whichever comes first. A compaction is not a stop: re-read this brief and `git log`. On stopping: commit WIP,
 append `### Handoff K1472 s2` here, commit, and report: what holds, the sheets' paths (each spot named), the
 numbers, which commits are confirmed on screen, a `Ledger items` list and K1472's handle fields.
+
+### Handoff K1472 s2
+
+Agent, 2026-11-17 20:44-21:50 PT, branch `worktree-agent-afc6826ee5adb2d40`, rebased on origin/master 6cc2663d.
+Builds: master = cfabf14f (port 5640), tip = the worker-first build (5641; src identical to the branch tip).
+
+**Item 0, held (observed).** 8d63c583: gf's raw GL leaked into Pixi's cached state, so today's frames before gf's
+switch drew no reveal ink. `frame()` now ends in `ctx.app.renderer.resetState()`. Pre-switch frames differed from
+today's by 5654-101815 px on master, by 279-35565 px on tip, and by 226-3626 px on the today-vs-today control
+(`preswitch.mjs`, `out/s2/`).
+**Item 0's wait / item 5, held (observed).** 62964f14: the compile worker links every program first on a fresh
+OffscreenCanvas context, enables KHR_parallel_shader_compile only after issuing the link (so the binary reaches
+Chrome's disk cache), and the app's own links wait behind it (`compileGate`). During the reveal, the set the reveal
+ends on goes first, then the reveal's own full program. Timings on Levi's link: cold switch about 121 s on master,
+85 s on tip; repeat visit 60 s on master (and 431 s for all 12 programs on a third master visit tonight), against
+1.9 s on tip with all 12 ready by 2.8 s. Tests: `gf_compile.test.ts` (the gate, the reveal order).
+**Item 4, answered (observed).** 98e76485, `fadedrag.mjs` and `out/s2/i4/fade_response.txt`. The real-mouse drag
+of Crossing fade on a warm page causes no reveal replay, no fallback and no compile. Pixels changed between fl
+0.02 and 1.18: today 4012; master pre-switch 49 (frozen, no ink); tip pre-switch 4081; after the switch 15998 on
+master and 15966 on tip. Levi's "vanished maze, dead slider" was the item-0 ink loss lasting the whole uncached
+pre-switch wait. INFERRED, not caught: "blinking" = that wait, then gf's switch bringing in its border look at once.
+**Rest A/B (observed).** `out/s2/rest/rest_ab.txt`: tip vs master 169 px (max delta 17). The tip with the compile
+worker refused is 0 px against master, and with Pixi's resetState no-oped it still differs, so every pixel comes
+from the binaries the worker links. Cause not found. INFERRED candidates: the worker context's state at link time
+(no EXT_color_buffer_float, default attributes).
+**hold.mjs** 60/60 warm on the tip (`out/s2/hold_wt2.txt`). **npm test** green after the rebase (3167 passed).
+
+**Sheets (items 1-2, partial).** Levi's link only. The 01c72dfc-reverted build and the two other links were not
+run. `out/s2/pin/levi_sheet_whole.png` (today | master gf | my gf, f0-f7 + rest) and `levi_spots_x3_{0,1,2}.png`
+(13 spots at 3x, f3/f5/f6/rest; counts in `levi_spots_counts.txt`; tool `spots.py`). Every tile was looked at.
+Master and my gf match at every spot except reveal-FX sparkles (0-57 px). Differences from today's, largest first:
+1. gf reveals more ink than today's. Today's strands come in as broken pieces where gf's are whole: TR cluster
+   f6 1681 px, R flare f6 2491, unrevealed top-mid f3 2108 and f5/f6 550 (today shows a small lilac quad, gf a
+   long strand), blue loop f6 1212, centre f5 1415. Unexplained: a different per-piece reveal clock or extent is
+   the first suspect (gf_reveal.ts KREVEAL against today's reveal widths).
+2. gf's cut ends are staircase diagonals, today's straight or notched (unrevealed top-mid, centre f6, L middle f6).
+3. The underlay: today draws thin dark-brown centrelines under unrevealed thread, gf its black border look (the
+   rest difference, 3.9k px). By design per the brief: keep.
+4. gf draws hard dark seams across a strand at crossings where today fades softly (BR f5, BL f5, bottom orange).
+5. Start marker: today shows the white stub glint right of the marker at f3/f5, gf only at rest (start marker 415/199 px).
+Not fixed; no lkJCut verdict (needs the revert build).

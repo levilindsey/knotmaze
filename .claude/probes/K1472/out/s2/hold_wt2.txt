@@ -1,0 +1,3 @@
+gf first composite at 1921 ms
+{"url":"http://localhost:5641/?3.FGH1HtvQeDjm6e4BII&xp=off&am=instant&rp=gf&gfh=1","frames":60,"gapMs":250,"drag":false,"edge":16,"xmax":0.78,"max":8951,"min":7423,"minFrame":52,"bad":[],"edges":"7755 7913 7619 7816 7821 7869 7697 7867 7842 7921 7770 8116 7911 8928 8722 7544 7993 7967 8285 8803 7873 7765 7816 8351 7731 7891 8138 7870 8187 8359 7811 7979 7718 7884 8120 7714 8039 7702 7878 7806 7794 8005 8211 7790 8895 8065 8018 7655 7836 8282 8133 8951 7423 7858 7905 8155 8426 7845 7741 7913","gf":{"passes":1810,"composites":1810,"rebuilds":286,"fallback":""},"logs":[]}
+PASS: all 60 frames show the maze
