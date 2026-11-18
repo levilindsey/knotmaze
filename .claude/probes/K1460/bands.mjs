@@ -12,14 +12,15 @@
 // over body. Width lines: lateral offsets -0.7h..0.7h, every device px.
 //
 // BANDS (Done 1), per side and renderer: along each width line the coverage quantised to 8 levels; a step is a level
-// change, and the EXTRA steps are the changes beyond |last - first| (a reversal: a band). Plus the width-wise
+// change; EXTRA is the levels travelled beyond |last - first| (a reversal: a band), averaged over the width lines. Plus the width-wise
 // spread per station (max - min across the width) above today's at that station (wedges), and the mean |c - today|.
 // A side is BANDED when extra steps > 2 + today's, or the mean spread excess > 0.08.
 // DOTS (Done 2): pixels between 0.5 and 2.5 device px outside the over thread's edge, inside the under thread's
-// footprint where today's coverage is under 0.5 (the faded span), whose colour differs from today's by more than
-// 48 (RGB distance): stage 1's dotted line continued the over thread's edge there.
+// footprint where today's coverage is under 0.5 (the faded span), whose coverage exceeds today's by more than 0.35
+// (each against its own full colour): stage 1's dotted line continued the over thread's edge there. REUSE=1 reads
+// shots already in outDir (today's fl=0 still loads, for the geometry).
 import puppeteer from "puppeteer-core";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, writeFileSync, readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 const [, , outDir, profileDir, modeArg, flArg = "0.5,1.2", qArg = "3&xp=off&am=instant&prp=off&phw=0&fw=0&bg=none&snd=none"] = process.argv;
 const SIMT = +(process.env.SIMT ?? 20), DSF = +(process.env.DSF ?? 2), TRIES = +(process.env.TRIES ?? 8);
@@ -174,19 +175,23 @@ async function measure(geo, ref, shots) {
         for (const k of keys) {
           let extra = 0, steps = 0;
           for (let w = 0; w < offs.length; w++) {
-            let prev = null, first = null, last = null, ch = 0;
-            for (let i = i0; i <= i1; i++) { const q = Math.max(0, Math.min(8, Math.floor(G[k][i][w] * 8))); if (prev !== null && q !== prev) ch++; if (first === null) first = q; prev = q; last = q; }
-            steps += ch; extra += ch - Math.abs(last - first);
+            let prev = null, first = null, last = null, ch = 0, tv = 0;
+            for (let i = i0; i <= i1; i++) { const q = Math.max(0, Math.min(8, Math.floor(G[k][i][w] * 8))); if (prev !== null && q !== prev) { ch++; tv += Math.abs(q - prev); } if (first === null) first = q; prev = q; last = q; }
+            steps += ch; extra += tv - Math.abs(last - first);
           }
+          // roughness: per width line, |c - mean of the neighbours 1 device px away along the arc|, mean over the span
+          const st = Math.max(1, Math.round(1 / (0.01 * d.scale)));
+          let rough = 0, nr = 0;
+          for (let w = 0; w < offs.length; w++) for (let i = i0 + st; i <= i1 - st; i += st) { rough += Math.abs(G[k][i][w] - (G[k][i - st][w] + G[k][i + st][w]) / 2); nr++; }
           let spreadEx = 0, dev = 0, nd = 0;
           for (let i = i0; i <= i1; i++) {
             const sp = (a) => Math.max(...a) - Math.min(...a);
             spreadEx += Math.max(0, sp(G[k][i]) - sp(G.today[i]));
             for (let w = 0; w < offs.length; w++) { dev += Math.abs(G[k][i][w] - G.today[i][w]); nd++; }
           }
-          row[k] = { steps, extra, spreadEx: spreadEx / (i1 - i0 + 1), dev: dev / nd };
+          row[k] = { steps, rough: rough / Math.max(1, nr), extra: extra / offs.length, spreadEx: spreadEx / (i1 - i0 + 1), dev: dev / nd };
         }
-        for (const k of others) row[k].banded = row[k].extra > row.today.extra + 2 || row[k].spreadEx > 0.08;
+        for (const k of others) row[k].banded = row[k].rough > row.today.rough + 0.006 || row[k].extra > row.today.extra + 1 || row[k].spreadEx > 0.08;
       }
       // DOTS: pixels 0.5..2.5 device px outside the over edge, in the under footprint, where today's c < 0.5
       const hp = g.hOver * d.scale, seen = new Set(), pix = [];
@@ -203,7 +208,7 @@ async function measure(geo, ref, shots) {
         }
       }
       row.dotPix = pix.length; row.dots = {};
-      for (const k of others) { let c = 0; for (const [x, y] of pix) { const a = px(S[k], x, y), b = px(S.today, x, y); if (Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]) > 48) c++; } row.dots[k] = c; }
+      const ii = Math.max(iu, n - 1); for (const k of others) { let c = 0; for (const [x, y] of pix) { if (covXY(S[k], x, y, ii) / full[k] - covXY(S.today, x, y, ii) / full.today > 0.35) c++; } row.dots[k] = c; }
       sides.push(row);
     }
     return { BG, sides };
@@ -217,6 +222,7 @@ try {
   writeFileSync(join(outDir, `shot_${T.tag}_0.png`), R.png);
   const geo = await geometry(R.page);
   await R.page.close();
+  writeFileSync(join(outDir, "geo.json"), JSON.stringify(geo.sides.map((g) => ({ ci: g.ci, side: g.side, self: g.sel, at: g.at, lim: g.lim, pts: g.prof.filter((_, i) => i % 10 === 0).map((p) => [+(p.x / DSF).toFixed(1), +(p.y / DSF).toFixed(1), +p.dO.toFixed(3)]) }))));
   console.log(`view s ${geo.view.s.toFixed(2)}, crossings ${geo.crossings}, sides on screen ${geo.sides.length}, hash ${want}`);
   const summary = [];
   for (const fl of FLS) {
@@ -224,6 +230,7 @@ try {
     for (const m of MODES) {
       let png;
       if (m === T && fl === 0) png = R.png;
+      else if (process.env.REUSE && existsSync(join(outDir, `shot_${m.tag}_${fl}.png`))) png = readFileSync(join(outDir, `shot_${m.tag}_${fl}.png`));
       else { const P = await same(m, fl); png = P.png; if (P.hash !== want) console.log(`[${m.tag} fl=${fl}] NOT same state`); await P.page.close(); }
       writeFileSync(join(outDir, `shot_${m.tag}_${fl}.png`), png);
       shots[m === T ? "today" : m.tag] = png;
@@ -235,8 +242,17 @@ try {
       const banded = S.filter((s) => s[m.tag].banded);
       const sum = (f) => S.reduce((p, s) => p + f(s), 0);
       const dots = res.sides.reduce((p, s) => p + s.dots[m.tag], 0), dpix = res.sides.reduce((p, s) => p + s.dotPix, 0);
-      const line = `fl=${fl} ${m.tag}: span sides ${S.length}, banded ${banded.length} [${banded.slice(0, 10).map((s) => `x${s.ci}${s.side > 0 ? "+" : "-"}@${s.at}`).join(" ")}], extra steps ${sum((s) => s[m.tag].extra)} (today ${sum((s) => s.today.extra)}), spread excess mean ${(sum((s) => s[m.tag].spreadEx) / Math.max(1, S.length)).toFixed(4)}, |c-today| mean ${(sum((s) => s[m.tag].dev) / Math.max(1, S.length)).toFixed(4)}; dots ${dots} of ${dpix} edge px`;
+      const line = `fl=${fl} ${m.tag}: span sides ${S.length}, banded ${banded.length} [${banded.slice(0, 10).map((s) => `x${s.ci}${s.side > 0 ? "+" : "-"}@${s.at}`).join(" ")}], extra steps ${sum((s) => s[m.tag].extra)} (today ${sum((s) => s.today.extra)}), rough mean ${(sum((s) => s[m.tag].rough) / Math.max(1, S.length)).toFixed(4)} (today ${(sum((s) => s.today.rough) / Math.max(1, S.length)).toFixed(4)}), spread excess mean ${(sum((s) => s[m.tag].spreadEx) / Math.max(1, S.length)).toFixed(4)}, |c-today| mean ${(sum((s) => s[m.tag].dev) / Math.max(1, S.length)).toFixed(4)}; dots ${dots} of ${dpix} edge px`;
       console.log(line); summary.push(line);
+    }
+    const SITES = (process.env.SITES ?? "").split(";").filter(Boolean).map((t) => t.split(",").map(Number));
+    for (const [sx, sy] of SITES) {
+      for (const r of res.sides) {
+        const g = geo.sides.find((q) => q.ci === r.ci && q.side === r.side);
+        if (!g || !r.today || !g.prof.some((p) => Math.hypot(p.x / DSF - sx, p.y / DSF - sy) < 14)) continue;
+        const line = `  site ${sx},${sy} fl=${fl} x${r.ci}${r.side > 0 ? "+" : "-"} span ${r.span}: ` + MODES.map((m) => { const k = m === T ? "today" : m.tag, v = r[k]; return `${m.tag} rough ${v.rough.toFixed(4)} extra ${v.extra.toFixed(2)} spreadEx ${v.spreadEx.toFixed(3)} dev ${v.dev.toFixed(3)}${v.banded ? " BANDED" : ""}`; }).join(" | ") + ` | dots ${JSON.stringify(r.dots)}`;
+        console.log(line); summary.push(line);
+      }
     }
   }
   writeFileSync(join(outDir, `summary_${FLS.join("_")}.txt`), summary.join("\n") + "\n");

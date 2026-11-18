@@ -1846,6 +1846,19 @@ float lkCut(float d, float sinT, float exg, float wm, float pxw, vec2 sc) {
   }
   return cut;
 }
+// K1460: whether chain c's own segment qo may cut its under pass at segment qx: only inside a self-crossing's window
+// (the bake names c as the over chain) and on the over pass's half of the scan range (lkNearOn's rule). Today cuts
+// only by the slot's over pass; any higher piece of the same chain cut a kink loop past its window (the loop's
+// other half, across the eye: a fade around the loop's top that ended where the halves' keys cross, a hard edge).
+bool lkSelfOver(int c, vec3 sl, float qx, float qo) {
+  if (!(sl.x >= 0.0) || int(sl.x + 0.5) != c) return false;
+  vec4 C0 = F(uOCh + 3 * c); int nseg = int(C0.y) - 1; bool closed = C0.z > 0.5;
+  int k0 = int(sl.y + 0.5);
+  if (!closed && F(uOV + int(C0.x)).z < 0.0) k0 += 1;
+  int q = int(qo); int du = abs(q - int(qx)); int dv = abs(q - k0);
+  if (closed) { du = min(du, nseg - du); dv = min(dv, nseg - dv); }
+  return du > dv && dv <= min(int(sl.z) + 1, 40);
+}
 float lkGap(float key, vec2 p, vec2 qU, int cU) {
   float g = 0.0;
   vec2 tu = lkTanS(cU, qU);
@@ -1856,7 +1869,9 @@ float lkGap(float key, vec2 p, vec2 qU, int cU) {
   if (sl.x >= 0.0) { int pk = int(fract(sl.z) * 1024.0 + 0.5); sc = vec2(float(pk - (pk / 32) * 32), float(pk / 32)) / 31.0; }
   for (int j = 0; j < np; j++) {
     if (!(pkey[j] > key + uZt)) continue;
-    vec2 qO = lookQ(j, p); vec2 to = lkTanS(PC(j), qO);
+    vec2 qO = lookQ(j, p);
+    if (PC(j) == cU && !lkSelfOver(cU, sl, qU.x, qO.x)) continue;
+    vec2 to = lkTanS(PC(j), qO);
     float sinT = abs(tu.x * to.y - tu.y * to.x);
     float exg = uExLive > 0.5 ? exAt(PC(j), lkArc(PC(j), qO)).x : 1.0;
     g = max(g, lkCut(pd[j], sinT, exg, wm, pxw, sc));
