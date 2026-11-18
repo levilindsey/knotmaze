@@ -41,6 +41,15 @@ try {
     }
     say(T(), "gf all compiled", JSON.stringify(await gfs()));
   }
+  // K1472 s3: the knot keeps settling under a pinned reveal, and gf's compile wait made its shots
+  // later than today's: s2's sheets compared a mid-settle knot (today) with a settled one (gf).
+  // Shoot both at the slept state (phw=0: one state every load) and record its hash.
+  if (process.env.SLEEP !== "0") {
+    await p.waitForFunction(() => window.__knotPerf?.().asleep === true, { timeout: 180000, polling: 250 }).catch(() => say("not asleep in 180 s"));
+    await sleep(1000);
+    const h = await p.evaluate(async () => { const d = await window.__knotPhysDump?.({}); return d ? JSON.stringify(d).slice(0, 300) : null; });
+    say(T(), "asleep, phys", h);
+  }
   const shots = [];
   for (let i = 0; i < FR.length; i++) {
     const t = Math.max(FR[i] * dur, 1e-4);

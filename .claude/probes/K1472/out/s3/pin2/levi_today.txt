@@ -1,0 +1,11 @@
+2 reveal duration 12.549 pin true
+34 asleep, phys {"gen":1,"simTime":5.000000000000038,"n":2951,"c":350,"kind":"in-thread","hashes":{"all":"15294c37","positions":"59b0a172","prev":"d56de51f","zPos":"105ffe57","passes":"8705e288"}}
+36 f0 t=0.000 (0) {"c":0.0001,"done":false} null
+38 f1 t=1.255 (0.1) {"c":1.254901478226457,"done":false} null
+39 f2 t=3.137 (0.25) {"c":3.1372536955661423,"done":false} null
+41 f3 t=5.020 (0.4) {"c":5.019605912905828,"done":false} null
+43 f4 t=6.902 (0.55) {"c":6.9019581302455135,"done":false} null
+45 f5 t=8.784 (0.7) {"c":8.784310347585198,"done":false} null
+47 f6 t=10.667 (0.85) {"c":10.666662564924884,"done":false} null
+49 f7 t=12.173 (0.97) {"c":12.172544338796632,"done":false} null
+55 rest null
