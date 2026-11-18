@@ -1,0 +1,53 @@
+# K1482 s7: link A border look at rest (fff8c9e5), tip b765b461. Master 0b9913dc had 46 faulted sites (out/s3/classes_tip.txt).
+# Corrected classes from 4x tiles (out/s7/i2_*.png): j2 dash->dot, t65s tick->break, t80s dot->pocket, j22 break (+speck), j29 break, j64 dot.
+# owner: K1490 = sharp V / notch (not mine); K1470 = j71 seam; GAP = changes when the look's crossing gap (gf_look.ts lkGap) is patched
+#   to 0 (out/s7/gap_tiles_00.png, rest_tiles_00.png): the fault is outline the gap's cut leaves behind, outside my files.
+# PIN = j64: the mirror draws it too: chains 28 and 56 (one surface, group 64) part at the junction and their union leaves a pinhole ~0.1 wide; the outline rings it (out/s7/j64_gm.png, world 5.14,3.16).
+# Fixed on the tip by b765b461 (fold burial, out/s7/fix1_tiles_00.png): j58 (tick), t23s (dash).
+# site class px owner
+j2 dot 10 GAP
+j4 notch 6 K1490
+j14 notch 6 K1490
+j15 wedge 15 K1490
+j22 break 6 GAP
+j29 break 5 GAP
+j36 stub 8 GAP
+j41 notch 4 K1490
+j47 notch 4 K1490
+j49 tick 4 GAP
+j50 wedge 10 K1490
+j55 tick 4 GAP
+j59 notch 5 K1490
+j64 dot 4 PIN
+j71 sliver 12 K1470
+j81 wedge 25 GAP
+j82 wedge 15 K1490
+j87 tick 4 GAP
+j88 dot 4 GAP
+j95 sliver 20 K1490
+j138 sliver 25 GAP
+j143 wedge 10 K1490
+j147 sliver 10 K1490
+j158 wedge 10 K1490
+t1s dot 6 GAP
+t4s notch 6 K1490
+t16e notch 8 K1490
+t18e stub 10 GAP
+t23e wedge 12 K1490
+t24s dot 6 GAP
+t39s dash 12 GAP
+t43s sliver 20 K1490
+t45s notch 6 K1490
+t46e dot 6 GAP
+t56s sliver 12 K1490
+t58e notch 6 K1490
+t59s wedge 12 K1490
+t65s break 6 GAP
+t70s sliver 15 GAP
+t73e wedge 12 K1490
+t79s stub 8 GAP
+t80s pocket 8 GAP
+t81s wedge 10 GAP
+t84e wedge 8 K1490
+# tip total 44: wedge 11, notch 9, sliver 7, dot 6, tick 3, stub 3, break 3, dash 1, pocket 1 (master 46).
+# by owner: K1490 22, GAP 20, K1470 1, PIN 1 (j64).
