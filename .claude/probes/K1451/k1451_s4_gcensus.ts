@@ -1,6 +1,8 @@
 // K1451 s4: a copy of K1362's k1362s2_census.ts for home on: the GPU pass gets { home: true } (GF_HOME=1; the original builds
 // GfPass without it, so at gfh=1 its GPU drew home off against a home-on mirror), the bridge listens on CPORT (5540-5559),
 // Chrome gets --disable-gpu-watchdog (K1468) and a k1451s4- profile, output goes to K1451/out/s4census.
+// The pass's homeFade defaults to 0 while GfEval.fadeLength defaults to GF_FADE_LENGTH: the pass gets the mirror's
+// (env FL overrides both), or the GPU draws fade 0 against a default-fade mirror (the first s4a run: ink max 1).
 //   $env:GF_HOME='1'; $env:CPORT='5550'; $env:BASE='http://127.0.0.1:5541/'; node scripts/run_node.mjs .claude/probes/K1451/k1451_s4_gcensus.ts <tag> --scene=a,b --ppu=160 --min=40 --nolock
 // K1362 s2: the K1314 census on the GPU pass's own pixels (gf_glsl.ts's probe variant, read back),
 // and those pixels against the CPU mirror (eval.ts) at the same pixels on float32-rounded tables.
@@ -24,7 +26,8 @@ import {
 } from "C:/Users/lsl/Repositories/knotmaze/.claude/probes/K1314/k1314_census.ts";
 import { runAt, runColour, type RGB } from "../../../src/render/outline/paint";
 import { buildTables, type GfTables } from "../../../src/render/gpu_field/tables";
-import { GfEval } from "../../../src/render/gpu_field/eval";
+import { GfEval, GF_FADE_LENGTH } from "../../../src/render/gpu_field/eval";
+const FADE = process.env.FL !== undefined && process.env.FL !== "" ? +process.env.FL : GF_FADE_LENGTH;
 
 type Model = ReturnType<typeof buildModel>;
 const here = dirname(fileURLToPath(import.meta.url));
@@ -45,7 +48,7 @@ function gfCornerFor(m: Model, ji: number, i: number, k: number): { r: number; t
 export const STATS = { px: 0, ms: 0 };
 const SEGH = new Float64Array(4096); const KH = new Float64Array(256);
 export function rasterGf(m: Model, c0: number, r0: number, Wd: number, Hd: number, ppu: number): Ras {
-  const T = gfTablesOf(m); const E = new GfEval(T); const n = Wd * Hd;
+  const T = gfTablesOf(m); const E = new GfEval(T); E.fadeLength = FADE; const n = Wd * Hd;
   const own = new Int32Array(n); const item = new Int32Array(n).fill(-1); const rgb = new Float32Array(3 * n).fill(-1);
   const ink = new Float32Array(n); const pc = new Int32Array(n).fill(-1); const pa = new Float32Array(n); const geo = new Uint8Array(n);
   const col: RGB = [0, 0, 0]; const t0 = Date.now();
@@ -98,17 +101,18 @@ async function gpuStart(): Promise<void> {
   page = await browser.newPage();
   page.on("pageerror", (e) => console.error("pageerror", String(e)));
   await page.goto(`${BASE}@vite/client`, { waitUntil: "load" });
-  GPU.renderer = await page.evaluate(async () => {
+  GPU.renderer = await page.evaluate(async (fade: number) => {
     const W = window as unknown as Record<string, unknown>;
     // A string body: the SSR loader rewrites a literal import() in this function.
     const mod = await (new Function("p", "return import(p)") as (p: string) => Promise<any>)("/src/render/gpu_field/gf_pass.ts");
     const cv = document.createElement("canvas"); cv.width = 4; cv.height = 4;
     cv.addEventListener("webglcontextlost", () => { W.__lost = ((W.__lost as number) ?? 0) + 1; });
     const gl = cv.getContext("webgl2", { antialias: false })!;
-    W.__gf = { gl, pass: new mod.GfPass(gl, true, undefined, undefined, false, { home: true }), tg: new mod.GfTarget(gl, 3, true) };
+    const pass = new mod.GfPass(gl, true, undefined, undefined, false, { home: true }); pass.homeFade = fade;
+    W.__gf = { gl, pass, tg: new mod.GfTarget(gl, 3, true) };
     const dbg = gl.getExtension("WEBGL_debug_renderer_info");
     return dbg ? String(gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL)) : "?";
-  });
+  }, FADE);
 }
 export async function gpuStop(): Promise<void> {
   try { await browser?.close(); } catch { /* closing */ }
@@ -179,7 +183,7 @@ function diffReport(D: ReturnType<typeof newDiff>): Record<string, unknown> {
 export async function rasterGpu(m: Model, c0: number, r0: number, Wd: number, Hd: number, ppu: number): Promise<Ras> {
   await gpuTables(m);
   const G = await gpuTile(c0, r0, Wd, Hd, ppu);
-  const E = new GfEval(t32Of(m)); const n = Wd * Hd; const n4 = 4 * n;
+  const E = new GfEval(t32Of(m)); E.fadeLength = FADE; const n = Wd * Hd; const n4 = 4 * n;
   const own = new Int32Array(n); const item = new Int32Array(n).fill(-1); const rgb = new Float32Array(3 * n).fill(-1);
   const ink = new Float32Array(n); const pc = new Int32Array(n).fill(-1); const pa = new Float32Array(n); const geo = new Uint8Array(n);
   const col: RGB = [0, 0, 0]; const t0 = Date.now(); const D = DIFF;
