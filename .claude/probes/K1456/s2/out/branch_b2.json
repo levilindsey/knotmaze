@@ -1,0 +1,741 @@
+{
+ "url": "http://localhost:5641/?3.FGH1HtvQeDjm6e4BII&rp=gf&gfh=1",
+ "build": "KnotMaze ",
+ "loadMs": 445,
+ "firstCompositeSecs": 49.52,
+ "switchSecs": 49.5,
+ "worker": {
+  "created": 7.82,
+  "sources": 7.82,
+  "n": 12,
+  "all": null,
+  "orders": [
+   {
+    "t": 7.82,
+    "order": "0,9,11,10,3,4,5,6,7,8,1,2"
+   },
+   {
+    "t": 13.73,
+    "order": "0,2,1,3,4,5,6,7,8,9,10,11"
+   },
+   {
+    "t": 49.38,
+    "order": "2,1,3,4,5,6,7,8,9,10,11"
+   }
+  ]
+ },
+ "rows": [
+  {
+   "idx": 0,
+   "tag": "look",
+   "fs": 78737,
+   "wStart": 7.82,
+   "wEnd": 49.36,
+   "wSecs": 41.54,
+   "pIssue": 49.38,
+   "pReady": 49.48,
+   "pSecs": 0.1,
+   "pBlockMs": 0
+  }
+ ],
+ "pageOnly": [
+  {
+   "tag": "plain",
+   "fs": 59075,
+   "pIssue": 0.04,
+   "pReady": 6.87,
+   "pBlockMs": 355
+  },
+  {
+   "tag": "plain",
+   "fs": 37348,
+   "pIssue": 0.04,
+   "pReady": 6.88,
+   "pBlockMs": 4
+  },
+  {
+   "tag": "plain",
+   "fs": 35637,
+   "pIssue": 0.04,
+   "pReady": 7.57,
+   "pBlockMs": 31
+  },
+  {
+   "tag": "small",
+   "fs": 5837,
+   "pIssue": 0.04,
+   "pReady": 7.57,
+   "pBlockMs": 1
+  },
+  {
+   "tag": "small",
+   "fs": 2767,
+   "pIssue": 0.04,
+   "pReady": 7.57,
+   "pBlockMs": 1
+  },
+  {
+   "tag": "small",
+   "fs": 2192,
+   "pIssue": 0.04,
+   "pReady": 7.58,
+   "pBlockMs": 1
+  },
+  {
+   "tag": "small",
+   "fs": 2767,
+   "pIssue": 7.64,
+   "pReady": 7.64,
+   "pBlockMs": 2
+  },
+  {
+   "tag": "small",
+   "fs": 3915,
+   "pIssue": 7.64,
+   "pReady": 7.82,
+   "pBlockMs": 0
+  },
+  {
+   "tag": "comp-look",
+   "fs": 5660,
+   "pIssue": 7.64,
+   "pReady": 8.21,
+   "pBlockMs": 0
+  },
+  {
+   "tag": "plain",
+   "fs": 59075,
+   "pIssue": 7.83,
+   "pReady": 7.89,
+   "pBlockMs": 60
+  },
+  {
+   "tag": "small",
+   "fs": 5837,
+   "pIssue": 7.9,
+   "pReady": 7.91,
+   "pBlockMs": 6
+  },
+  {
+   "tag": "small",
+   "fs": 2192,
+   "pIssue": 7.91,
+   "pReady": 7.91,
+   "pBlockMs": 1
+  },
+  {
+   "tag": "plain",
+   "fs": 35637,
+   "pIssue": 8,
+   "pReady": 8.02,
+   "pBlockMs": 20
+  },
+  {
+   "tag": "plain",
+   "fs": 37348,
+   "pIssue": 8.03,
+   "pReady": 8.05,
+   "pBlockMs": 24
+  },
+  {
+   "tag": "plain",
+   "fs": 78142,
+   "pIssue": 13.7,
+   "pReady": 34.55,
+   "pBlockMs": 7
+  },
+  {
+   "tag": "plain",
+   "fs": 75545,
+   "pIssue": 13.7,
+   "pReady": 34.55,
+   "pBlockMs": 0
+  },
+  {
+   "tag": "plain",
+   "fs": 61958,
+   "pIssue": 13.7,
+   "pReady": 34.55,
+   "pBlockMs": 0
+  },
+  {
+   "tag": "plain",
+   "fs": 47074,
+   "pIssue": 13.7,
+   "pReady": 34.55,
+   "pBlockMs": 0
+  },
+  {
+   "tag": "plain",
+   "fs": 41646,
+   "pIssue": 13.7,
+   "pReady": 34.55,
+   "pBlockMs": 0
+  },
+  {
+   "tag": "plain",
+   "fs": 29812,
+   "pIssue": 13.7,
+   "pReady": 34.55,
+   "pBlockMs": 0
+  },
+  {
+   "tag": "plain",
+   "fs": 20595,
+   "pIssue": 13.7,
+   "pReady": 34.55,
+   "pBlockMs": 0
+  },
+  {
+   "tag": "small",
+   "fs": 3132,
+   "pIssue": 13.7,
+   "pReady": 34.55,
+   "pBlockMs": 0
+  },
+  {
+   "tag": "small",
+   "fs": 2993,
+   "pIssue": 13.7,
+   "pReady": 34.55,
+   "pBlockMs": 0
+  },
+  {
+   "tag": "small",
+   "fs": 2965,
+   "pIssue": 13.7,
+   "pReady": 34.55,
+   "pBlockMs": 0
+  },
+  {
+   "tag": "small",
+   "fs": 2927,
+   "pIssue": 13.7,
+   "pReady": 34.55,
+   "pBlockMs": 0
+  },
+  {
+   "tag": "small",
+   "fs": 2874,
+   "pIssue": 13.7,
+   "pReady": 34.55,
+   "pBlockMs": 0
+  },
+  {
+   "tag": "small",
+   "fs": 2859,
+   "pIssue": 13.7,
+   "pReady": 34.55,
+   "pBlockMs": 0
+  },
+  {
+   "tag": "small",
+   "fs": 2806,
+   "pIssue": 13.7,
+   "pReady": 34.55,
+   "pBlockMs": 0
+  },
+  {
+   "tag": "small",
+   "fs": 2768,
+   "pIssue": 13.7,
+   "pReady": 34.55,
+   "pBlockMs": 0
+  },
+  {
+   "tag": "small",
+   "fs": 2737,
+   "pIssue": 13.7,
+   "pReady": 34.55,
+   "pBlockMs": 0
+  },
+  {
+   "tag": "small",
+   "fs": 2721,
+   "pIssue": 13.7,
+   "pReady": 34.55,
+   "pBlockMs": 0
+  },
+  {
+   "tag": "small",
+   "fs": 2682,
+   "pIssue": 13.7,
+   "pReady": 34.55,
+   "pBlockMs": 0
+  },
+  {
+   "tag": "small",
+   "fs": 2585,
+   "pIssue": 13.7,
+   "pReady": 34.55,
+   "pBlockMs": 0
+  },
+  {
+   "tag": "small",
+   "fs": 2524,
+   "pIssue": 13.7,
+   "pReady": 34.55,
+   "pBlockMs": 0
+  },
+  {
+   "tag": "small",
+   "fs": 2438,
+   "pIssue": 13.7,
+   "pReady": 34.55,
+   "pBlockMs": 0
+  }
+ ],
+ "frames": [
+  {
+   "t": 0.65,
+   "raf": 4,
+   "draw": 0,
+   "gap": 161
+  },
+  {
+   "t": 1.64,
+   "raf": 56,
+   "draw": 0,
+   "gap": 19
+  },
+  {
+   "t": 2.64,
+   "raf": 56,
+   "draw": 0,
+   "gap": 18
+  },
+  {
+   "t": 3.64,
+   "raf": 56,
+   "draw": 0,
+   "gap": 18
+  },
+  {
+   "t": 4.63,
+   "raf": 56,
+   "draw": 0,
+   "gap": 19
+  },
+  {
+   "t": 5.64,
+   "raf": 56,
+   "draw": 0,
+   "gap": 19
+  },
+  {
+   "t": 6.64,
+   "raf": 55,
+   "draw": 0,
+   "gap": 19
+  },
+  {
+   "t": 8.07,
+   "raf": 56,
+   "draw": 2,
+   "gap": 302
+  },
+  {
+   "t": 8.73,
+   "raf": 8,
+   "draw": 8,
+   "gap": 160
+  },
+  {
+   "t": 9.68,
+   "raf": 18,
+   "draw": 18,
+   "gap": 89
+  },
+  {
+   "t": 10.68,
+   "raf": 18,
+   "draw": 18,
+   "gap": 72
+  },
+  {
+   "t": 11.68,
+   "raf": 15,
+   "draw": 15,
+   "gap": 72
+  },
+  {
+   "t": 12.69,
+   "raf": 16,
+   "draw": 16,
+   "gap": 90
+  },
+  {
+   "t": 13.74,
+   "raf": 15,
+   "draw": 15,
+   "gap": 90
+  },
+  {
+   "t": 14.72,
+   "raf": 11,
+   "draw": 11,
+   "gap": 234
+  },
+  {
+   "t": 15.73,
+   "raf": 15,
+   "draw": 15,
+   "gap": 89
+  },
+  {
+   "t": 16.71,
+   "raf": 15,
+   "draw": 15,
+   "gap": 72
+  },
+  {
+   "t": 17.7,
+   "raf": 15,
+   "draw": 15,
+   "gap": 90
+  },
+  {
+   "t": 18.72,
+   "raf": 16,
+   "draw": 16,
+   "gap": 72
+  },
+  {
+   "t": 19.64,
+   "raf": 14,
+   "draw": 14,
+   "gap": 72
+  },
+  {
+   "t": 20.7,
+   "raf": 17,
+   "draw": 17,
+   "gap": 90
+  },
+  {
+   "t": 21.7,
+   "raf": 15,
+   "draw": 15,
+   "gap": 90
+  },
+  {
+   "t": 22.7,
+   "raf": 17,
+   "draw": 17,
+   "gap": 72
+  },
+  {
+   "t": 23.64,
+   "raf": 23,
+   "draw": 23,
+   "gap": 72
+  },
+  {
+   "t": 24.63,
+   "raf": 54,
+   "draw": 54,
+   "gap": 36
+  },
+  {
+   "t": 25.64,
+   "raf": 53,
+   "draw": 53,
+   "gap": 37
+  },
+  {
+   "t": 26.64,
+   "raf": 53,
+   "draw": 53,
+   "gap": 36
+  },
+  {
+   "t": 27.63,
+   "raf": 55,
+   "draw": 55,
+   "gap": 36
+  },
+  {
+   "t": 28.64,
+   "raf": 54,
+   "draw": 54,
+   "gap": 36
+  },
+  {
+   "t": 29.64,
+   "raf": 54,
+   "draw": 54,
+   "gap": 36
+  },
+  {
+   "t": 30.64,
+   "raf": 53,
+   "draw": 53,
+   "gap": 36
+  },
+  {
+   "t": 31.64,
+   "raf": 55,
+   "draw": 42,
+   "gap": 36
+  },
+  {
+   "t": 32.63,
+   "raf": 54,
+   "draw": 35,
+   "gap": 36
+  },
+  {
+   "t": 33.64,
+   "raf": 55,
+   "draw": 55,
+   "gap": 36
+  },
+  {
+   "t": 34.63,
+   "raf": 54,
+   "draw": 54,
+   "gap": 36
+  },
+  {
+   "t": 35.63,
+   "raf": 55,
+   "draw": 55,
+   "gap": 36
+  },
+  {
+   "t": 36.64,
+   "raf": 55,
+   "draw": 55,
+   "gap": 36
+  },
+  {
+   "t": 37.64,
+   "raf": 56,
+   "draw": 56,
+   "gap": 19
+  },
+  {
+   "t": 38.65,
+   "raf": 56,
+   "draw": 48,
+   "gap": 18
+  },
+  {
+   "t": 39.64,
+   "raf": 54,
+   "draw": 54,
+   "gap": 36
+  },
+  {
+   "t": 40.63,
+   "raf": 55,
+   "draw": 55,
+   "gap": 36
+  },
+  {
+   "t": 41.63,
+   "raf": 55,
+   "draw": 55,
+   "gap": 36
+  },
+  {
+   "t": 42.63,
+   "raf": 54,
+   "draw": 54,
+   "gap": 36
+  },
+  {
+   "t": 43.67,
+   "raf": 55,
+   "draw": 55,
+   "gap": 36
+  },
+  {
+   "t": 44.63,
+   "raf": 54,
+   "draw": 54,
+   "gap": 36
+  },
+  {
+   "t": 45.64,
+   "raf": 56,
+   "draw": 56,
+   "gap": 19
+  },
+  {
+   "t": 46.64,
+   "raf": 54,
+   "draw": 54,
+   "gap": 36
+  },
+  {
+   "t": 47.64,
+   "raf": 55,
+   "draw": 55,
+   "gap": 36
+  },
+  {
+   "t": 48.66,
+   "raf": 56,
+   "draw": 56,
+   "gap": 36
+  },
+  {
+   "t": 49.64,
+   "raf": 48,
+   "draw": 48,
+   "gap": 106
+  },
+  {
+   "t": 50.64,
+   "raf": 56,
+   "draw": 56,
+   "gap": 18
+  },
+  {
+   "t": 51.63,
+   "raf": 56,
+   "draw": 56,
+   "gap": 18
+  },
+  {
+   "t": 52.64,
+   "raf": 56,
+   "draw": 56,
+   "gap": 18
+  },
+  {
+   "t": 53.64,
+   "raf": 56,
+   "draw": 56,
+   "gap": 18
+  },
+  {
+   "t": 54.63,
+   "raf": 55,
+   "draw": 47,
+   "gap": 18
+  },
+  {
+   "t": 55.64,
+   "raf": 56,
+   "draw": 32,
+   "gap": 18
+  },
+  {
+   "t": 56.64,
+   "raf": 56,
+   "draw": 56,
+   "gap": 18
+  },
+  {
+   "t": 57.64,
+   "raf": 56,
+   "draw": 56,
+   "gap": 19
+  },
+  {
+   "t": 58.64,
+   "raf": 56,
+   "draw": 56,
+   "gap": 19
+  },
+  {
+   "t": 59.64,
+   "raf": 56,
+   "draw": 56,
+   "gap": 18
+  },
+  {
+   "t": 60.64,
+   "raf": 56,
+   "draw": 56,
+   "gap": 19
+  },
+  {
+   "t": 61.63,
+   "raf": 55,
+   "draw": 47,
+   "gap": 18
+  },
+  {
+   "t": 62.63,
+   "raf": 56,
+   "draw": 56,
+   "gap": 18
+  },
+  {
+   "t": 63.64,
+   "raf": 56,
+   "draw": 56,
+   "gap": 18
+  }
+ ],
+ "log": [
+  "1s rv=- gf=- fps(raf/draw/gap)=undefined/undefined/0",
+  "2s rv=- gf=i0 r0 sw=false c=0 w=:0 fps(raf/draw/gap)=4/0/161",
+  "3s rv=- gf=i0 r0 sw=false c=0 w=:0 fps(raf/draw/gap)=56/0/19",
+  "4s rv=- gf=i0 r0 sw=false c=0 w=:0 fps(raf/draw/gap)=56/0/18",
+  "5s rv=- gf=i0 r0 sw=false c=0 w=:0 fps(raf/draw/gap)=56/0/18",
+  "6s rv=- gf=i0 r0 sw=false c=0 w=:0 fps(raf/draw/gap)=56/0/19",
+  "7s rv=- gf=i0 r0 sw=false c=0 w=:0 fps(raf/draw/gap)=56/0/19",
+  "8s rv=- gf=i0 r0 sw=false c=0 w=:0 fps(raf/draw/gap)=55/0/19",
+  "9s rv=1.3fx gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=56/2/302",
+  "10s rv=3.6fx gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=8/8/160",
+  "11s rv=5.8fx gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=18/18/89",
+  "12s rv=7.9fx gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=18/18/72",
+  "13s rv=10.1fx gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=15/15/72",
+  "14s rv=12.3fx gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=16/16/90",
+  "15s rv=12.6dfx gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=15/15/90",
+  "16s rv=12.6dfx gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=11/11/234",
+  "17s rv=12.6d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=15/15/89",
+  "18s rv=12.6d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=15/15/72",
+  "19s rv=12.6d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=15/15/90",
+  "20s rv=12.6d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=16/16/72",
+  "21s rv=12.6d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=14/14/72",
+  "22s rv=12.6d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=17/17/90",
+  "23s rv=12.6d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=15/15/90",
+  "24s rv=12.6d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=17/17/72",
+  "25s rv=12.6d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=23/23/72",
+  "26s rv=12.6d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=54/54/36",
+  "27s rv=12.6d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=53/53/37",
+  "28s rv=12.6d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=53/53/36",
+  "29s rv=12.6d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=55/55/36",
+  "30s rv=12.6d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=54/54/36",
+  "31s rv=12.6d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=54/54/36",
+  "32s rv=12.6d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=53/53/36",
+  "33s rv=12.6d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=55/42/36",
+  "34s rv=12.6d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=54/35/36",
+  "35s rv=12.6d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=55/55/36",
+  "36s rv=12.6d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=54/54/36",
+  "37s rv=12.6d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=55/55/36",
+  "38s rv=12.6d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=55/55/36",
+  "39s rv=12.6d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=56/56/19",
+  "40s rv=12.6d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=56/48/18",
+  "41s rv=12.6d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=54/54/36",
+  "42s rv=12.6d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=55/55/36",
+  "43s rv=12.6d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=55/55/36",
+  "44s rv=12.6d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=54/54/36",
+  "45s rv=12.6d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=55/55/36",
+  "46s rv=12.6d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=54/54/36",
+  "47s rv=12.6d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=56/56/19",
+  "48s rv=12.6d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=54/54/36",
+  "49s rv=12.6d gf=i0 r0 sw=false c=0 w=compiling:0 fps(raf/draw/gap)=55/55/36",
+  "50s rv=12.6d gf=i1 r1 sw=true c=5 w=compiling:1 fps(raf/draw/gap)=56/56/36",
+  "51s rv=12.6d gf=i1 r1 sw=true c=61 w=compiling:1 fps(raf/draw/gap)=48/48/106",
+  "52s rv=12.6d gf=i1 r1 sw=true c=117 w=compiling:1 fps(raf/draw/gap)=56/56/18",
+  "53s rv=12.6d gf=i1 r1 sw=true c=172 w=compiling:1 fps(raf/draw/gap)=56/56/18",
+  "54s rv=12.6d gf=i1 r1 sw=true c=228 w=compiling:1 fps(raf/draw/gap)=56/56/18",
+  "55s rv=12.6d gf=i1 r1 sw=true c=278 w=compiling:1 fps(raf/draw/gap)=56/56/18",
+  "56s rv=12.6d gf=i1 r1 sw=true c=308 w=compiling:1 fps(raf/draw/gap)=55/47/18",
+  "57s rv=12.6d gf=i1 r1 sw=true c=364 w=compiling:1 fps(raf/draw/gap)=56/32/18",
+  "58s rv=12.6d gf=i1 r1 sw=true c=420 w=compiling:1 fps(raf/draw/gap)=56/56/18",
+  "59s rv=12.6d gf=i1 r1 sw=true c=476 w=compiling:1 fps(raf/draw/gap)=56/56/19",
+  "60s rv=12.6d gf=i1 r1 sw=true c=531 w=compiling:1 fps(raf/draw/gap)=56/56/19",
+  "61s rv=12.6d gf=i1 r1 sw=true c=587 w=compiling:1 fps(raf/draw/gap)=56/56/18",
+  "62s rv=12.6d gf=i1 r1 sw=true c=635 w=compiling:1 fps(raf/draw/gap)=56/56/19",
+  "63s rv=12.6d gf=i1 r1 sw=true c=691 w=compiling:1 fps(raf/draw/gap)=55/47/18",
+  "64s rv=12.6d gf=i1 r1 sw=true c=747 w=compiling:1 fps(raf/draw/gap)=56/56/18",
+  "65s rv=12.6d gf=i1 r1 sw=true c=803 w=compiling:1 fps(raf/draw/gap)=56/56/18"
+ ]
+}

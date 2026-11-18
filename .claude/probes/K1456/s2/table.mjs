@@ -88,6 +88,7 @@ try {
     if (s.first > 0 && firstSeenAt < 0) firstSeenAt = i;
     if (firstSeenAt > 0 && i >= firstSeenAt + +afterArg && /w=(done|failed|none)/.test(s.gf ?? "")) break;
     if (firstSeenAt > 0 && i >= firstSeenAt + 120) break;
+    if (process.env.QUICK && firstSeenAt > 0 && i >= firstSeenAt + +afterArg) break; // QUICK=1: stop afterSecs past the first composite
   }
   const K = await p.evaluate(() => { const k = globalThis.__k; const g = globalThis.__knotGf?.stats; return { ...k, switchedMs: g?.switchedMs ?? -1, build: document.title + " " + (globalThis.__knotBuild ?? "") }; });
   const rel = (t) => (t < 0 ? null : +((t - K.load) / 1000).toFixed(2));
